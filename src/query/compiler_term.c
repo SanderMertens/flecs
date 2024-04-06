@@ -853,7 +853,7 @@ int flecs_query_compile_begin_member_term(
     first_id = ECS_TERM_REF_ID(&term->first);
 
     /* First compile as if it's a regular term, to match the component */
-    term->flags &= (ecs_termset_t)~EcsTermIsMember;
+    term->flags_ &= (ecs_termset_t)~EcsTermIsMember;
 
     /* Replace term id with member parent (the component) */
     ecs_entity_t component = ecs_get_parent(world, first_id);
@@ -905,7 +905,7 @@ int flecs_query_compile_end_member_term(
     term->id = term_id;
     term->first.id = first_id;
     term->second.id = second_id;
-    term->flags |= EcsTermIsMember;
+    term->flags_ |= EcsTermIsMember;
     term->oper = flecs_ito(int16_t, ctx->oper);
 
     first_id = ECS_TERM_REF_ID(&term->first);
@@ -1056,13 +1056,13 @@ void flecs_query_set_op_kind(
         op->kind = EcsQueryNotFrom;
 
     /* If query is transitive, use Trav(ersal) instruction */
-    } else if (term->flags & EcsTermTransitive) {
+    } else if (term->flags_ & EcsTermTransitive) {
         ecs_assert(ecs_term_ref_is_set(&term->second), ECS_INTERNAL_ERROR, NULL);
         op->kind = EcsQueryTrav;
     } else {
         /* Ignore cascade flag */
         ecs_entity_t trav_flags = EcsTraverseFlags & ~(EcsCascade|EcsDesc);
-        if (term->flags & (EcsTermMatchAny|EcsTermMatchAnySrc)) {
+        if (term->flags_ & (EcsTermMatchAny|EcsTermMatchAnySrc)) {
             op->kind = EcsQueryAndAny;
         } else if ((term->src.id & trav_flags) == EcsUp) {
             op->kind = EcsQueryUp;
@@ -1094,8 +1094,8 @@ int flecs_query_compile_term(
     ecs_id_t term_id = term->id;
     ecs_entity_t first_id = term->first.id;
     ecs_entity_t second_id = term->second.id;
-    bool toggle_term = (term->flags & EcsTermIsToggle) != 0;
-    bool member_term = (term->flags & EcsTermIsMember) != 0;
+    bool toggle_term = (term->flags_ & EcsTermIsToggle) != 0;
+    bool member_term = (term->flags_ & EcsTermIsMember) != 0;
     if (member_term) {
         (*populated) |= (1llu << term->field_index);
         flecs_query_compile_begin_member_term(world, term, ctx, first_id);
@@ -1253,7 +1253,7 @@ int flecs_query_compile_term(
 
     /* If source is Any (_) and first and/or second are unconstrained, insert an
      * ids instruction instead of an And */
-    if (term->flags & EcsTermMatchAnySrc) {
+    if (term->flags_ & EcsTermMatchAnySrc) {
         op.kind = EcsQueryIds;
         /* Use up-to-date written values after potentially inserting each */
         if (!first_written || !second_written) {
@@ -1289,7 +1289,7 @@ int flecs_query_compile_term(
      * find the targets for the relationship first. This clusters together 
      * tables for the same target, which allows for more efficient usage of the
      * traversal caches. */
-    if (term->flags & EcsTermTransitive && src_is_var && second_is_var) {
+    if (term->flags_ & EcsTermTransitive && src_is_var && second_is_var) {
         if (!src_written && !second_written) {
             flecs_query_insert_unconstrained_transitive(
                 query, &op, ctx, cond_write);
@@ -1322,11 +1322,11 @@ int flecs_query_compile_term(
 
     /* If term has component inheritance enabled, insert instruction to walk
      * down the relationship tree of the id. */
-    if (term->flags & EcsTermIdInherited) {
+    if (term->flags_ & EcsTermIdInherited) {
         flecs_query_insert_inheritance(query, term, &op, ctx, cond_write);
     }
 
-    op.match_flags = term->flags;
+    op.match_flags = term->flags_;
 
     ecs_write_flags_t write_state = ctx->written;
     if (first_is_var) {
@@ -1447,7 +1447,7 @@ int flecs_query_compile_term(
     }
 
     /* Ensure that term id is set after evaluating Not */
-    if (term->flags & EcsTermIdInherited) {
+    if (term->flags_ & EcsTermIdInherited) {
         if (is_not) {
             ecs_query_op_t set_id = {0};
             set_id.kind = EcsQuerySetId;

@@ -2866,7 +2866,7 @@ bool flecs_query_run_block(
     ecs_query_ctrl_ctx_t *op_ctx)
 {
     ecs_iter_t *it = ctx->it;
-    ecs_query_iter_t *qit = &it->priv.iter.query;
+    ecs_query_iter_t *qit = &it->priv_.iter.query;
 
     if (!redo) {
         op_ctx->op_index = flecs_itolbl(ctx->op_index + 1);
@@ -2932,7 +2932,7 @@ bool flecs_query_select_or(
     ecs_query_run_ctx_t *ctx)
 {
     ecs_iter_t *it = ctx->it;
-    ecs_query_iter_t *qit = &it->priv.iter.query;
+    ecs_query_iter_t *qit = &it->priv_.iter.query;
     ecs_query_ctrl_ctx_t *op_ctx = flecs_op_ctx(ctx, ctrl);
 
     ecs_query_lbl_t first = flecs_itolbl(ctx->op_index + 1);
@@ -3511,7 +3511,7 @@ bool ecs_query_next_instanced(
     ecs_assert(it != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(it->next == ecs_query_next, ECS_INVALID_PARAMETER, NULL);
 
-    ecs_query_iter_t *qit = &it->priv.iter.query;
+    ecs_query_iter_t *qit = &it->priv_.iter.query;
     ecs_query_impl_t *impl = ECS_CONST_CAST(ecs_query_impl_t*, qit->query);
     ecs_query_run_ctx_t ctx;
     ctx.world = it->real_world;
@@ -3669,7 +3669,7 @@ static
 void flecs_query_iter_fini(
     ecs_iter_t *it)
 {
-    ecs_query_iter_t *qit = &it->priv.iter.query;
+    ecs_query_iter_t *qit = &it->priv_.iter.query;
     ecs_assert(qit->query != NULL, ECS_INVALID_OPERATION, NULL);
     ecs_poly_assert(qit->query, ecs_query_t);
     int32_t op_count = flecs_query_impl(qit->query)->op_count;
@@ -3700,7 +3700,7 @@ ecs_iter_t flecs_query_iter(
     const ecs_query_t *q)
 {
     ecs_iter_t it = {0};
-    ecs_query_iter_t *qit = &it.priv.iter.query;
+    ecs_query_iter_t *qit = &it.priv_.iter.query;
     ecs_check(q != NULL, ECS_INVALID_PARAMETER, NULL);
     
     ecs_poly_assert(q, ecs_query_t);

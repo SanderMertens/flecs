@@ -5,7 +5,7 @@ ecs_query_cache_table_match_t* flecs_query_next(
     const ecs_query_run_ctx_t *ctx)
 {
     ecs_iter_t *it = ctx->it;
-    ecs_query_iter_t *qit = &it->priv.iter.query;
+    ecs_query_iter_t *qit = &it->priv_.iter.query;
     ecs_query_cache_table_match_t *node = qit->node;
     ecs_query_cache_table_match_t *prev = qit->prev;
 
@@ -41,7 +41,7 @@ ecs_query_cache_table_match_t* flecs_query_test(
             return NULL;
         }
 
-        ecs_query_iter_t *qit = &it->priv.iter.query;
+        ecs_query_iter_t *qit = &it->priv_.iter.query;
         qit->prev = NULL;
         qit->node = qt->first;
         qit->last = qt->last;
@@ -287,7 +287,7 @@ bool flecs_query_cache_data_search(
     }
 
     ecs_iter_t *it = ctx->it;
-    ecs_query_iter_t *qit = &it->priv.iter.query;
+    ecs_query_iter_t *qit = &it->priv_.iter.query;
     flecs_query_cache_data_populate(impl, it, ctx, qit->prev);
     return true;
 }
@@ -302,7 +302,7 @@ bool flecs_query_is_cache_data_search(
     }
 
     ecs_iter_t *it = ctx->it;
-    ecs_query_iter_t *qit = &it->priv.iter.query;
+    ecs_query_iter_t *qit = &it->priv_.iter.query;
     flecs_query_is_cache_data_populate(it, ctx, qit->prev);
     return true;
 }
@@ -353,7 +353,7 @@ bool flecs_query_cache_data_test(
     }
 
     ecs_iter_t *it = ctx->it;
-    ecs_query_iter_t *qit = &it->priv.iter.query;
+    ecs_query_iter_t *qit = &it->priv_.iter.query;
     flecs_query_cache_data_populate(impl, it, ctx, qit->prev);
     return true;
 }
@@ -369,7 +369,7 @@ bool flecs_query_is_cache_data_test(
     }
 
     ecs_iter_t *it = ctx->it;
-    ecs_query_iter_t *qit = &it->priv.iter.query;
+    ecs_query_iter_t *qit = &it->priv_.iter.query;
     flecs_query_is_cache_data_populate(it, ctx, qit->prev);
     return true;
 }

@@ -175,7 +175,7 @@ int flecs_query_discover_vars(
         if (first_var_id == EcsVarNone) {
             /* If first is not a variable, check if we need to insert anonymous
              * variable for resolving component inheritance */
-            if (term->flags & EcsTermIdInherited) {
+            if (term->flags_ & EcsTermIdInherited) {
                 anonymous_count += 2; /* table & entity variable */
             }
 
@@ -207,7 +207,7 @@ int flecs_query_discover_vars(
                         anonymous_table_count ++;
                     }
 
-                    if (!(term->flags & EcsTermNoData)) {
+                    if (!(term->flags_ & EcsTermNoData)) {
                         /* Can't have an anonymous variable as source of a term
                          * that returns a component. We need to return each
                          * instance of the component, whereas anonymous 
@@ -250,7 +250,7 @@ int flecs_query_discover_vars(
         }
 
         if (src->id & EcsIsVariable && second->id & EcsIsVariable) {
-            if (term->flags & EcsTermTransitive) {
+            if (term->flags_ & EcsTermTransitive) {
                 /* Anonymous variable to store temporary id for finding 
                  * targets for transitive relationship, see compile_term. */
                 anonymous_count ++;
@@ -258,7 +258,7 @@ int flecs_query_discover_vars(
         }
 
         /* If member term, make sure source is available as entity */
-        if (term->flags & EcsTermIsMember) {
+        if (term->flags_ & EcsTermIsMember) {
             flecs_query_add_var_for_term_id(query, src, vars, EcsVarEntity);
         }
 
@@ -520,7 +520,7 @@ int32_t flecs_query_term_next_known(
         }
 
         /* Don't reorder terms in scopes */
-        if (term->flags & EcsTermIsScope) {
+        if (term->flags_ & EcsTermIsScope) {
             continue;
         }
 
@@ -564,7 +564,7 @@ void flecs_query_insert_trivial_search(
         }
 
         ecs_term_t *term = &terms[i];
-        if (!(term->flags & EcsTermIsTrivial)) {
+        if (!(term->flags_ & EcsTermIsTrivial)) {
             continue;
         }
 
@@ -639,7 +639,7 @@ void flecs_query_insert_cache_search(
 
         for (i = 0; i < count; i ++) {
             ecs_term_t *term = &terms[i];
-            if (term->flags & (EcsTermIsToggle | EcsTermIsMember)) {
+            if (term->flags_ & (EcsTermIsToggle | EcsTermIsMember)) {
                 /* If query returns individual entities, let dedicated populate
                  * instruction handle populating data fields */
                 populate = false;
@@ -654,7 +654,7 @@ void flecs_query_insert_cache_search(
                 continue;
             }
 
-            if (!(term->flags & EcsTermIsCacheable)) {
+            if (!(term->flags_ & EcsTermIsCacheable)) {
                 continue;
             }
 
@@ -763,7 +763,7 @@ int flecs_query_insert_toggle(
         }
 
         ecs_term_t *term = &terms[i];
-        if (term->flags & EcsTermIsToggle) {
+        if (term->flags_ & EcsTermIsToggle) {
             ecs_query_op_t cur = {0};
             flecs_query_compile_term_ref(NULL, impl, &cur, &term->src, 
                 &cur.src, EcsQuerySrc, EcsVarAny, ctx, false);
@@ -887,7 +887,7 @@ int flecs_query_insert_fixed_src_terms(
         }
 
         /* Don't reorder terms in scopes */
-        if (term->flags & EcsTermIsScope) {
+        if (term->flags_ & EcsTermIsScope) {
             continue;
         }
 

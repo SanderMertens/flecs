@@ -2981,7 +2981,7 @@ struct ecs_term_t {
     int16_t oper;               /**< Operator of term */
 
     int16_t field_index;        /**< Index of field for term in iterator */
-    ecs_flags16_t flags;        /**< Flags that help eval, set by ecs_query_init */
+    ecs_flags16_t flags_;       /**< Flags that help eval, set by ecs_query_init */
 };
 
 /** Queries are lists of constraints (terms) that match entities. */
@@ -3037,21 +3037,6 @@ struct ecs_observer_t {
 
     ecs_observable_t *observable; /**< Observable for observer */
 
-    int32_t *last_event_id;     /**< Last handled event id */
-    int32_t last_event_id_storage;
-
-    ecs_id_t register_id;       /**< Id observer is registered with (single term observers only) */
-    int32_t term_index;         /**< Index of the term in parent observer (single term observers only) */
-
-    ecs_flags32_t flags;        /**< Observer flags */
-    uint64_t id;                /**< Internal id (not entity id) */
-    ecs_vec_t children;         /**< If multi observer, vector stores child observers */
-
-    ecs_query_t *not_query;     /**< Query used to populate observer data when a
-                                     term with a not operator triggers. */
-
-    /* Mixins */
-    ecs_poly_dtor_t dtor;
     ecs_world_t *world;
     ecs_entity_t entity;
 };
@@ -3889,7 +3874,7 @@ struct ecs_iter_t {
     /* Misc */
     ecs_flags32_t flags;          /**< Iterator flags */
     ecs_entity_t interrupted_by;  /**< When set, system execution is interrupted */
-    ecs_iter_private_t priv;      /**< Private data */
+    ecs_iter_private_t priv_;     /**< Private data */
 
     /* Chained iterators */
     ecs_iter_next_action_t next;  /**< Function to progress iterator */
@@ -25035,7 +25020,7 @@ struct iter_iterable final : iterable<Components...> {
     }
 
     iter_iterable<Components...>& set_var(const char *name, flecs::entity_t value) {
-        ecs_query_iter_t *qit = &it_.priv.iter.query;
+        ecs_query_iter_t *qit = &it_.priv_.iter.query;
         int var_id = ecs_query_find_var(qit->query, name);
         ecs_assert(var_id != -1, ECS_INVALID_PARAMETER, name);
         ecs_iter_set_var(&it_, var_id, value);
@@ -30434,7 +30419,7 @@ inline flecs::entity iter::get_var(int var_id) const {
  * Get value of a query variable for current result.
  */
 inline flecs::entity iter::get_var(const char *name) const {
-    ecs_query_iter_t *qit = &iter_->priv.iter.query;
+    ecs_query_iter_t *qit = &iter_->priv_.iter.query;
     const flecs::query_t *q = qit->query;
     int var_id = ecs_query_find_var(q, name);
     ecs_assert(var_id != -1, ECS_INVALID_PARAMETER, name);

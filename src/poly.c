@@ -42,7 +42,7 @@ ecs_mixins_t ecs_observer_t_mixins = {
     .elems = {
         [EcsMixinWorld] = offsetof(ecs_observer_t, world),
         [EcsMixinEntity] = offsetof(ecs_observer_t, entity),
-        [EcsMixinDtor] = offsetof(ecs_observer_t, dtor)
+        [EcsMixinDtor] = offsetof(ecs_observer_impl_t, dtor)
     }
 };
 

@@ -28,7 +28,7 @@ ecs_iter_t ecs_each_id(
         return it;
     }
 
-    ecs_each_iter_t *each_iter = &it.priv.iter.each;
+    ecs_each_iter_t *each_iter = &it.priv_.iter.each;
     each_iter->ids = id;
     each_iter->sizes = 0;
     if (idr->type_info) {
@@ -46,7 +46,7 @@ error:
 bool ecs_each_next(
     ecs_iter_t *it)
 {
-    ecs_each_iter_t *each_iter = &it->priv.iter.each;
+    ecs_each_iter_t *each_iter = &it->priv_.iter.each;
     ecs_table_record_t *next = flecs_table_cache_next(
         &each_iter->it, ecs_table_record_t);
     it->flags |= EcsIterIsValid;

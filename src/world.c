@@ -569,7 +569,7 @@ void flecs_init_store(
 
     /* Initilaize observer sparse set */
     flecs_sparse_init_t(&world->store.observers,
-        a, &world->allocators.sparse_chunk, ecs_observer_t);
+        a, &world->allocators.sparse_chunk, ecs_observer_impl_t);
 }
 
 static

@@ -620,7 +620,7 @@ void Validator_validate_1_term_transitive_pair(void) {
     test_uint(q->terms[0].src.id, EcsThis|EcsSelf|EcsUp|EcsIsVariable);
     test_uint(q->terms[0].trav, EcsIsA);
     test_uint(q->terms[0].second.id, Tgt|EcsSelf|EcsIsEntity);
-    test_assert(q->terms[0].flags & EcsTermTransitive);
+    test_assert(q->terms[0].flags_ & EcsTermTransitive);
 
     ecs_query_fini(q);
 
@@ -1742,7 +1742,7 @@ void Validator_validate_w_no_transitive_pair(void) {
         }
     });
 
-    test_assert(!(q->terms[0].flags & EcsTermTransitive));
+    test_assert(!(q->terms[0].flags_ & EcsTermTransitive));
 
     ecs_query_fini(q);
 
@@ -1764,7 +1764,7 @@ void Validator_validate_w_transitive_pair_any_src(void) {
         }
     });
 
-    test_assert(!(q->terms[0].flags & EcsTermTransitive));
+    test_assert(!(q->terms[0].flags_ & EcsTermTransitive));
 
     ecs_query_fini(q);
 
@@ -1782,7 +1782,7 @@ void Validator_validate_w_transitive_pair(void) {
         }
     });
 
-    test_assert(q->terms[0].flags & EcsTermTransitive);
+    test_assert(q->terms[0].flags_ & EcsTermTransitive);
 
     ecs_query_fini(q);
 
@@ -1800,7 +1800,7 @@ void Validator_validate_w_transitive_tag_no_pair(void) {
         }
     });
 
-    test_assert(!(q->terms[0].flags & EcsTermTransitive));
+    test_assert(!(q->terms[0].flags_ & EcsTermTransitive));
 
     ecs_query_fini(q);
 
@@ -1818,7 +1818,7 @@ void Validator_validate_w_transitive_tag_self_tgt(void) {
         }
     });
 
-    test_assert(!(q->terms[0].flags & EcsTermTransitive));
+    test_assert(!(q->terms[0].flags_ & EcsTermTransitive));
 
     ecs_query_fini(q);
 
@@ -1836,7 +1836,7 @@ void Validator_validate_w_transitive_tag_any_tgt(void) {
         }
     });
 
-    test_assert(!(q->terms[0].flags & EcsTermTransitive));
+    test_assert(!(q->terms[0].flags_ & EcsTermTransitive));
 
     ecs_query_fini(q);
 
@@ -2033,7 +2033,7 @@ void Validator_validate_w_inherited_id(void) {
         }
     });
 
-    test_assert(q->terms[0].flags & EcsTermIdInherited);
+    test_assert(q->terms[0].flags_ & EcsTermIdInherited);
     test_uint(q->terms[0].first.id, Unit|EcsIsEntity|EcsSelf);
 
     ecs_query_fini(q);
@@ -2053,7 +2053,7 @@ void Validator_validate_w_inherited_pair(void) {
         }
     });
 
-    test_assert(q->terms[0].flags & EcsTermIdInherited);
+    test_assert(q->terms[0].flags_ & EcsTermIdInherited);
     test_uint(q->terms[0].first.id, Unit|EcsIsEntity|EcsSelf);
     test_uint(q->terms[0].second.id, EcsWildcard|EcsIsVariable|EcsSelf);
 
@@ -2073,7 +2073,7 @@ void Validator_validate_w_non_inherited_id(void) {
         }
     });
 
-    test_assert(!(q->terms[0].flags & EcsTermIdInherited));
+    test_assert(!(q->terms[0].flags_ & EcsTermIdInherited));
 
     ecs_query_fini(q);
 
@@ -2091,7 +2091,7 @@ void Validator_validate_w_non_inherited_pair(void) {
         }
     });
 
-    test_assert(!(q->terms[0].flags & EcsTermIdInherited));
+    test_assert(!(q->terms[0].flags_ & EcsTermIdInherited));
 
     ecs_query_fini(q);
 

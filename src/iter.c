@@ -18,12 +18,12 @@
 #define INIT_CACHE(it, stack, fields, f, T, count)\
     if (!it->f && (fields & flecs_iter_cache_##f) && count) {\
         it->f = flecs_stack_calloc_n(stack, T, count);\
-        it->priv.cache.used |= flecs_iter_cache_##f;\
+        it->priv_.cache.used |= flecs_iter_cache_##f;\
     }
 
 /* If array is allocated, free it when finalizing the iterator */
 #define FINI_CACHE(it, f, T, count)\
-    if (it->priv.cache.used & flecs_iter_cache_##f) {\
+    if (it->priv_.cache.used & flecs_iter_cache_##f) {\
         flecs_stack_free_n((void*)it->f, T, count);\
     }
 
@@ -57,9 +57,9 @@ void flecs_iter_init(
         ECS_CONST_CAST(ecs_world_t**, &world));
     ecs_stack_t *stack = &stage->allocators.iter_stack;
 
-    it->priv.cache.used = 0;
-    it->priv.cache.allocated = 0;
-    it->priv.cache.stack_cursor = flecs_stack_get_cursor(stack);
+    it->priv_.cache.used = 0;
+    it->priv_.cache.allocated = 0;
+    it->priv_.cache.stack_cursor = flecs_stack_get_cursor(stack);
 
     INIT_CACHE(it, stack, fields, ids, ecs_id_t, it->field_count);
     INIT_CACHE(it, stack, fields, sources, ecs_entity_t, it->field_count);
@@ -106,7 +106,7 @@ void ecs_iter_fini(
 
     ecs_stage_t *stage = flecs_stage_from_world(&world);
     flecs_stack_restore_cursor(&stage->allocators.iter_stack, 
-        it->priv.cache.stack_cursor);
+        it->priv_.cache.stack_cursor);
 }
 
 bool flecs_iter_next_row(
@@ -674,9 +674,9 @@ ecs_iter_t ecs_page_iter(
     ecs_check(it->next != NULL, ECS_INVALID_PARAMETER, NULL);
 
     ecs_iter_t result = *it;
-    result.priv.cache.stack_cursor = NULL; /* Don't copy allocator cursor */
+    result.priv_.cache.stack_cursor = NULL; /* Don't copy allocator cursor */
 
-    result.priv.iter.page = (ecs_page_iter_t){
+    result.priv_.iter.page = (ecs_page_iter_t){
         .offset = offset,
         .limit = limit,
         .remaining = limit
@@ -731,10 +731,10 @@ bool ecs_page_next_instanced(
             goto depleted;
         }
 
-        ecs_page_iter_t *iter = &it->priv.iter.page;
+        ecs_page_iter_t *iter = &it->priv_.iter.page;
         
         /* Copy everything up to the private iterator data */
-        ecs_os_memcpy(it, chain_it, offsetof(ecs_iter_t, priv));
+        ecs_os_memcpy(it, chain_it, offsetof(ecs_iter_t, priv_));
 
         /* Keep instancing setting from original iterator */
         ECS_BIT_COND(it->flags, EcsIterIsInstanced, instanced);
@@ -827,9 +827,9 @@ ecs_iter_t ecs_worker_iter(
     ecs_check(index < count, ECS_INVALID_PARAMETER, NULL);
 
     ecs_iter_t result = *it;
-    result.priv.cache.stack_cursor = NULL; /* Don't copy allocator cursor */
+    result.priv_.cache.stack_cursor = NULL; /* Don't copy allocator cursor */
     
-    result.priv.iter.worker = (ecs_worker_iter_t){
+    result.priv_.iter.worker = (ecs_worker_iter_t){
         .index = index,
         .count = count
     };
@@ -853,7 +853,7 @@ bool ecs_worker_next_instanced(
     bool instanced = ECS_BIT_IS_SET(it->flags, EcsIterIsInstanced);
 
     ecs_iter_t *chain_it = it->chain_it;
-    ecs_worker_iter_t *iter = &it->priv.iter.worker;
+    ecs_worker_iter_t *iter = &it->priv_.iter.worker;
     int32_t res_count = iter->count, res_index = iter->index;
     int32_t per_worker, instances_per_worker, first;
 
@@ -863,7 +863,7 @@ bool ecs_worker_next_instanced(
         }
 
         /* Copy everything up to the private iterator data */
-        ecs_os_memcpy(it, chain_it, offsetof(ecs_iter_t, priv));
+        ecs_os_memcpy(it, chain_it, offsetof(ecs_iter_t, priv_));
 
         /* Keep instancing setting from original iterator */
         ECS_BIT_COND(it->flags, EcsIterIsInstanced, instanced);

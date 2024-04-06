@@ -763,7 +763,7 @@ struct ecs_term_t {
     int16_t oper;               /**< Operator of term */
 
     int16_t field_index;        /**< Index of field for term in iterator */
-    ecs_flags16_t flags;        /**< Flags that help eval, set by ecs_query_init */
+    ecs_flags16_t flags_;       /**< Flags that help eval, set by ecs_query_init */
 };
 
 /** Queries are lists of constraints (terms) that match entities. */
@@ -819,21 +819,6 @@ struct ecs_observer_t {
 
     ecs_observable_t *observable; /**< Observable for observer */
 
-    int32_t *last_event_id;     /**< Last handled event id */
-    int32_t last_event_id_storage;
-
-    ecs_id_t register_id;       /**< Id observer is registered with (single term observers only) */
-    int32_t term_index;         /**< Index of the term in parent observer (single term observers only) */
-
-    ecs_flags32_t flags;        /**< Observer flags */
-    uint64_t id;                /**< Internal id (not entity id) */
-    ecs_vec_t children;         /**< If multi observer, vector stores child observers */
-
-    ecs_query_t *not_query;     /**< Query used to populate observer data when a
-                                     term with a not operator triggers. */
-
-    /* Mixins */
-    ecs_poly_dtor_t dtor;
     ecs_world_t *world;
     ecs_entity_t entity;
 };
@@ -1082,7 +1067,7 @@ struct ecs_iter_t {
     /* Misc */
     ecs_flags32_t flags;          /**< Iterator flags */
     ecs_entity_t interrupted_by;  /**< When set, system execution is interrupted */
-    ecs_iter_private_t priv;      /**< Private data */
+    ecs_iter_private_t priv_;     /**< Private data */
 
     /* Chained iterators */
     ecs_iter_next_action_t next;  /**< Function to progress iterator */

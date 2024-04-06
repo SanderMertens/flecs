@@ -172,7 +172,7 @@ int flecs_query_create_cache(
         ecs_term_t *terms = q->terms;
         for (i = 0; i < count; i ++) {
             ecs_term_t *term = &terms[i];
-            if (term->flags & EcsTermIsCacheable) {
+            if (term->flags_ & EcsTermIsCacheable) {
                 cache_desc.terms[dst_count] = *term;
                 field_map[dst_field] = flecs_ito(int8_t, term->field_index);
                 dst_count ++;

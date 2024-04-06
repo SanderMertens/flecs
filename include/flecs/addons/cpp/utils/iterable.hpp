@@ -186,7 +186,7 @@ struct iter_iterable final : iterable<Components...> {
     }
 
     iter_iterable<Components...>& set_var(const char *name, flecs::entity_t value) {
-        ecs_query_iter_t *qit = &it_.priv.iter.query;
+        ecs_query_iter_t *qit = &it_.priv_.iter.query;
         int var_id = ecs_query_find_var(qit->query, name);
         ecs_assert(var_id != -1, ECS_INVALID_PARAMETER, name);
         ecs_iter_set_var(&it_, var_id, value);

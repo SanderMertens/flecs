@@ -59,7 +59,7 @@ bool flecs_term_is_fixed_id(
     ecs_term_t *term)
 {
     /* Transitive/inherited terms have variable ids */
-    if (term->flags & (EcsTermTransitive|EcsTermIdInherited)) {
+    if (term->flags_ & (EcsTermTransitive|EcsTermIdInherited)) {
         return false;
     }
 
@@ -77,7 +77,7 @@ bool flecs_term_is_fixed_id(
     }
 
     /* Any terms can have fixed ids, but they require special handling */
-    if (term->flags & (EcsTermMatchAny|EcsTermMatchAnySrc)) {
+    if (term->flags_ & (EcsTermMatchAny|EcsTermMatchAnySrc)) {
         return false;
     }
 
@@ -313,7 +313,7 @@ char* ecs_query_str_w_profile(
 
         if (it) {
 #ifdef FLECS_DEBUG
-            const ecs_query_iter_t *rit = &it->priv.iter.query;
+            const ecs_query_iter_t *rit = &it->priv_.iter.query;
             ecs_strbuf_append(&buf, 
                 "#[green]%4d -> #[red]%4d <- #[grey]  |   ",
                 rit->profile[i].count[0],

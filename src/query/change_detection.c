@@ -589,7 +589,7 @@ bool ecs_iter_changed(
     ecs_check(ECS_BIT_IS_SET(it->flags, EcsIterIsValid), 
         ECS_INVALID_PARAMETER, NULL);
 
-    ecs_query_iter_t *qit = &it->priv.iter.query;
+    ecs_query_iter_t *qit = &it->priv_.iter.query;
     ecs_query_impl_t *impl = flecs_query_impl(qit->query);
     ecs_query_t *q = &impl->pub;
 
@@ -611,7 +611,7 @@ bool ecs_iter_changed(
     /* If query has a cache, check for changes in current matched result */
     if (impl->cache) {
         ecs_query_cache_table_match_t *qm = 
-            (ecs_query_cache_table_match_t*)it->priv.iter.query.prev;
+            (ecs_query_cache_table_match_t*)it->priv_.iter.query.prev;
         ecs_check(qm != NULL, ECS_INVALID_PARAMETER, NULL);
         return flecs_query_check_match_monitor(impl, qm, it);
     }
@@ -627,7 +627,7 @@ void ecs_iter_skip(
     ecs_assert(ECS_BIT_IS_SET(it->flags, EcsIterIsValid), 
         ECS_INVALID_PARAMETER, NULL);
 
-    ecs_query_iter_t *qit = &it->priv.iter.query;
+    ecs_query_iter_t *qit = &it->priv_.iter.query;
     if (it->instance_count > it->count) {
         qit->skip_count ++;
         if (qit->skip_count == it->instance_count) {
