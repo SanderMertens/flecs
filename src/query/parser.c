@@ -992,31 +992,6 @@ char* ecs_parse_term(
         goto error;
     }
 
-    /* Check for $() notation */
-    if (term->first.name && !ecs_os_strcmp(term->first.name, "$")) {
-        if (term->src.name) {            
-            term->first = term->src;
-
-            if (term->second.name) {
-                term->src = term->second;       
-            } else {
-                term->src.id = EcsThis | (term->src.id & EcsTermRefFlags);
-                term->src.id |= EcsIsVariable;
-                term->src.name = NULL;
-            }
-
-            const char *var_name = strrchr(term->first.name, '.');
-            if (var_name) {
-                var_name ++;
-            } else {
-                var_name = term->first.name;
-            }
-
-            term->second.name = var_name;
-            term->second.id |= EcsIsVariable;
-        }
-    }
-
     /* Post-parse consistency checks */
 
     /* If next token is OR, term is part of an OR expression */

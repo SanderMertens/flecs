@@ -268,9 +268,6 @@ void Parser_entity_obj_no_name(void);
 void Parser_this_pred_no_name(void);
 void Parser_this_subj_no_name(void);
 void Parser_this_obj_no_name(void);
-void Parser_auto_object_variable(void);
-void Parser_auto_object_variable_w_subj(void);
-void Parser_auto_scoped_variable(void);
 void Parser_invalid_variable_only(void);
 void Parser_oneof_self_pred_w_relative_obj(void);
 void Parser_oneof_other_pred_w_relative_obj(void);
@@ -2773,18 +2770,6 @@ bake_test_case Parser_testcases[] = {
     {
         "this_obj_no_name",
         Parser_this_obj_no_name
-    },
-    {
-        "auto_object_variable",
-        Parser_auto_object_variable
-    },
-    {
-        "auto_object_variable_w_subj",
-        Parser_auto_object_variable_w_subj
-    },
-    {
-        "auto_scoped_variable",
-        Parser_auto_scoped_variable
     },
     {
         "invalid_variable_only",
@@ -8586,7 +8571,7 @@ static bake_test_suite suites[] = {
         "Parser",
         NULL,
         NULL,
-        249,
+        246,
         Parser_testcases
     },
     {
