@@ -868,7 +868,7 @@ void Iter_paged_iter_w_shared_comp(void) {
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
 
-    ecs_entity_t foo = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t foo = ecs_insert(world, ecs_value(Position, {10, 20}));
 
     ecs_entity_t e1 = ecs_new(world); ecs_set(world, e1, Self, {e1});
     ecs_entity_t e2 = ecs_new(world); ecs_set(world, e2, Self, {e2});
@@ -961,7 +961,7 @@ void Iter_worker_iter_w_shared_comp(void) {
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
 
-    ecs_entity_t foo = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t foo = ecs_insert(world, ecs_value(Position, {10, 20}));
 
     ecs_entity_t e1 = ecs_new(world); ecs_set(world, e1, Self, {e1});
     ecs_entity_t e2 = ecs_new(world); ecs_set(world, e2, Self, {e2});
@@ -1162,10 +1162,10 @@ void Iter_worker_iter_w_singleton(void) {
     ECS_COMPONENT(world, Position);
 
     ecs_singleton_add(world, Singleton);
-    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
-    ecs_entity_t e2 = ecs_set(world, 0, Position, {20, 30});
-    ecs_entity_t e3 = ecs_set(world, 0, Position, {30, 40});
-    ecs_entity_t e4 = ecs_set(world, 0, Position, {40, 50});
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Position, {10, 20}));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Position, {20, 30}));
+    ecs_entity_t e3 = ecs_insert(world, ecs_value(Position, {30, 40}));
+    ecs_entity_t e4 = ecs_insert(world, ecs_value(Position, {40, 50}));
 
     ecs_query_t *q = ecs_query(world, { .expr = "Position, Singleton($)" });
 
@@ -1210,10 +1210,10 @@ void Iter_worker_iter_w_singleton_component(void) {
     ECS_COMPONENT(world, Velocity);
 
     ecs_singleton_set(world, Velocity, {1, 2});
-    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
-    ecs_entity_t e2 = ecs_set(world, 0, Position, {20, 30});
-    ecs_entity_t e3 = ecs_set(world, 0, Position, {30, 40});
-    ecs_entity_t e4 = ecs_set(world, 0, Position, {40, 50});
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Position, {10, 20}));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Position, {20, 30}));
+    ecs_entity_t e3 = ecs_insert(world, ecs_value(Position, {30, 40}));
+    ecs_entity_t e4 = ecs_insert(world, ecs_value(Position, {40, 50}));
 
     ecs_query_t *q = ecs_query(world, { .expr = "Position, Velocity($)" });
 
@@ -1280,10 +1280,10 @@ void Iter_worker_iter_w_singleton_instanced(void) {
     ECS_COMPONENT(world, Position);
 
     ecs_singleton_add(world, Singleton);
-    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
-    ecs_entity_t e2 = ecs_set(world, 0, Position, {20, 30});
-    ecs_entity_t e3 = ecs_set(world, 0, Position, {30, 40});
-    ecs_entity_t e4 = ecs_set(world, 0, Position, {40, 50});
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Position, {10, 20}));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Position, {20, 30}));
+    ecs_entity_t e3 = ecs_insert(world, ecs_value(Position, {30, 40}));
+    ecs_entity_t e4 = ecs_insert(world, ecs_value(Position, {40, 50}));
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "Position, Singleton($)",
@@ -1330,10 +1330,10 @@ void Iter_worker_iter_w_singleton_component_instanced(void) {
     ECS_COMPONENT(world, Velocity);
 
     ecs_singleton_set(world, Velocity, {1, 2});
-    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
-    ecs_entity_t e2 = ecs_set(world, 0, Position, {20, 30});
-    ecs_entity_t e3 = ecs_set(world, 0, Position, {30, 40});
-    ecs_entity_t e4 = ecs_set(world, 0, Position, {40, 50});
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Position, {10, 20}));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Position, {20, 30}));
+    ecs_entity_t e3 = ecs_insert(world, ecs_value(Position, {30, 40}));
+    ecs_entity_t e4 = ecs_insert(world, ecs_value(Position, {40, 50}));
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "Position, Velocity($)",
@@ -1387,10 +1387,10 @@ void Iter_paged_iter_w_singleton(void) {
     ECS_COMPONENT(world, Position);
 
     ecs_singleton_add(world, Singleton);
-    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
-    ecs_entity_t e2 = ecs_set(world, 0, Position, {20, 30});
-    ecs_entity_t e3 = ecs_set(world, 0, Position, {30, 40});
-    ecs_entity_t e4 = ecs_set(world, 0, Position, {40, 50});
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Position, {10, 20}));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Position, {20, 30}));
+    ecs_entity_t e3 = ecs_insert(world, ecs_value(Position, {30, 40}));
+    ecs_entity_t e4 = ecs_insert(world, ecs_value(Position, {40, 50}));
 
     ecs_query_t *q = ecs_query(world, { .expr = "Position, Singleton($)" });
 
@@ -1434,10 +1434,10 @@ void Iter_paged_iter_w_singleton_component(void) {
     ECS_COMPONENT(world, Velocity);
 
     ecs_singleton_set(world, Velocity, {1, 2});
-    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
-    ecs_entity_t e2 = ecs_set(world, 0, Position, {20, 30});
-    ecs_entity_t e3 = ecs_set(world, 0, Position, {30, 40});
-    ecs_entity_t e4 = ecs_set(world, 0, Position, {40, 50});
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Position, {10, 20}));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Position, {20, 30}));
+    ecs_entity_t e3 = ecs_insert(world, ecs_value(Position, {30, 40}));
+    ecs_entity_t e4 = ecs_insert(world, ecs_value(Position, {40, 50}));
 
     ecs_query_t *q = ecs_query(world, { .expr = "Position, Velocity($)" });
 
@@ -1500,10 +1500,10 @@ void Iter_paged_iter_w_singleton_instanced(void) {
     ECS_COMPONENT(world, Position);
 
     ecs_singleton_add(world, Singleton);
-    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
-    ecs_entity_t e2 = ecs_set(world, 0, Position, {20, 30});
-    ecs_entity_t e3 = ecs_set(world, 0, Position, {30, 40});
-    ecs_entity_t e4 = ecs_set(world, 0, Position, {40, 50});
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Position, {10, 20}));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Position, {20, 30}));
+    ecs_entity_t e3 = ecs_insert(world, ecs_value(Position, {30, 40}));
+    ecs_entity_t e4 = ecs_insert(world, ecs_value(Position, {40, 50}));
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "Position, Singleton($)",
@@ -1550,10 +1550,10 @@ void Iter_paged_iter_w_singleton_component_instanced(void) {
     ECS_COMPONENT(world, Velocity);
 
     ecs_singleton_set(world, Velocity, {1, 2});
-    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
-    ecs_entity_t e2 = ecs_set(world, 0, Position, {20, 30});
-    ecs_entity_t e3 = ecs_set(world, 0, Position, {30, 40});
-    ecs_entity_t e4 = ecs_set(world, 0, Position, {40, 50});
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Position, {10, 20}));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Position, {20, 30}));
+    ecs_entity_t e3 = ecs_insert(world, ecs_value(Position, {30, 40}));
+    ecs_entity_t e4 = ecs_insert(world, ecs_value(Position, {40, 50}));
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "Position, Velocity($)",
@@ -2382,10 +2382,10 @@ void Iter_page_iter_comb_10_entities_2_types(void) {
     ecs_entity_t ids_1[5], ids_2[5];
 
     for (int i = 0; i < ENTITIES / 2; i ++) {
-        ids_1[i] = ecs_set(world, 0, Position, {1, 2});
+        ids_1[i] = ecs_insert(world, ecs_value(Position, {1, 2}));
     }
     for (int i = 0; i < ENTITIES / 2; i ++) {
-        ids_2[i] = ecs_set(world, 0, Position, {1, 2});
+        ids_2[i] = ecs_insert(world, ecs_value(Position, {1, 2}));
         ecs_add(world, ids_2[i], Velocity);
     } 
 
@@ -2868,8 +2868,8 @@ void Iter_page_iter_w_fini(void) {
         .terms = {{ ecs_id(Position) }}
     });
 
-    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
-    ecs_entity_t e2 = ecs_set(world, 0, Position, {20, 30});
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Position, {10, 20}));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Position, {20, 30}));
     ecs_add(world, e2, Foo);
 
     ecs_iter_t it = ecs_query_iter(world, f);
@@ -2895,8 +2895,8 @@ void Iter_worker_iter_w_fini(void) {
         .terms = {{ ecs_id(Position) }}
     });
 
-    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
-    ecs_entity_t e2 = ecs_set(world, 0, Position, {20, 30});
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Position, {10, 20}));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Position, {20, 30}));
     ecs_add(world, e2, Foo);
 
     ecs_iter_t it = ecs_query_iter(world, f);
@@ -2921,8 +2921,8 @@ void Iter_rule_page_iter_w_fini(void) {
         .terms = {{ ecs_id(Position) }}
     });
 
-    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
-    ecs_entity_t e2 = ecs_set(world, 0, Position, {20, 30});
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Position, {10, 20}));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Position, {20, 30}));
     ecs_add(world, e2, Foo);
 
     ecs_iter_t it = ecs_query_iter(world, r);
@@ -2947,8 +2947,8 @@ void Iter_rule_worker_iter_w_fini(void) {
         .terms = {{ ecs_id(Position) }}
     });
 
-    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
-    ecs_entity_t e2 = ecs_set(world, 0, Position, {20, 30});
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Position, {10, 20}));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Position, {20, 30}));
     ecs_add(world, e2, Foo);
 
     ecs_iter_t it = ecs_query_iter(world, r);

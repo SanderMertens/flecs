@@ -1258,10 +1258,10 @@ void Cascade_cascade_rematch_2_lvls(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t e_0 = ecs_set(world, 0, Position, {10, 20});
-    ecs_entity_t e_1 = ecs_set(world, 0, Position, {30, 40});
-    ecs_entity_t e_2 = ecs_set(world, 0, Position, {50, 60});
-    ecs_entity_t e_3 = ecs_set(world, 0, Position, {70, 80});
+    ecs_entity_t e_0 = ecs_insert(world, ecs_value(Position, {10, 20}));
+    ecs_entity_t e_1 = ecs_insert(world, ecs_value(Position, {30, 40}));
+    ecs_entity_t e_2 = ecs_insert(world, ecs_value(Position, {50, 60}));
+    ecs_entity_t e_3 = ecs_insert(world, ecs_value(Position, {70, 80}));
     ecs_add_pair(world, e_3, EcsChildOf, e_2);
 
     ecs_add_pair(world, e_2, EcsChildOf, e_1);
@@ -1361,10 +1361,10 @@ void Cascade_cascade_rematch_2_lvls_2_relations(void) {
     ECS_ENTITY(world, R, Traversable);
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t e_0 = ecs_set(world, 0, Position, {10, 20});
-    ecs_entity_t e_1 = ecs_set(world, 0, Position, {30, 40});
-    ecs_entity_t e_2 = ecs_set(world, 0, Position, {50, 60});
-    ecs_entity_t e_3 = ecs_set(world, 0, Position, {70, 80});
+    ecs_entity_t e_0 = ecs_insert(world, ecs_value(Position, {10, 20}));
+    ecs_entity_t e_1 = ecs_insert(world, ecs_value(Position, {30, 40}));
+    ecs_entity_t e_2 = ecs_insert(world, ecs_value(Position, {50, 60}));
+    ecs_entity_t e_3 = ecs_insert(world, ecs_value(Position, {70, 80}));
 
     ecs_add_pair(world, e_3, R, e_2);
     ecs_add_pair(world, e_2, R, e_1);
@@ -1473,10 +1473,10 @@ void Cascade_cascade_desc_rematch_2_lvls(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t e_0 = ecs_set(world, 0, Position, {10, 20});
-    ecs_entity_t e_1 = ecs_set(world, 0, Position, {30, 40});
-    ecs_entity_t e_2 = ecs_set(world, 0, Position, {50, 60});
-    ecs_entity_t e_3 = ecs_set(world, 0, Position, {70, 80});
+    ecs_entity_t e_0 = ecs_insert(world, ecs_value(Position, {10, 20}));
+    ecs_entity_t e_1 = ecs_insert(world, ecs_value(Position, {30, 40}));
+    ecs_entity_t e_2 = ecs_insert(world, ecs_value(Position, {50, 60}));
+    ecs_entity_t e_3 = ecs_insert(world, ecs_value(Position, {70, 80}));
     
     ecs_add_pair(world, e_3, EcsChildOf, e_2);
     ecs_add_pair(world, e_2, EcsChildOf, e_1);
@@ -1560,10 +1560,10 @@ void Cascade_cascade_desc_rematch_2_lvls_2_relations(void) {
     ECS_ENTITY(world, R, Traversable);
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t e_0 = ecs_set(world, 0, Position, {10, 20});
-    ecs_entity_t e_1 = ecs_set(world, 0, Position, {30, 40});
-    ecs_entity_t e_2 = ecs_set(world, 0, Position, {50, 60});
-    ecs_entity_t e_3 = ecs_set(world, 0, Position, {70, 80});
+    ecs_entity_t e_0 = ecs_insert(world, ecs_value(Position, {10, 20}));
+    ecs_entity_t e_1 = ecs_insert(world, ecs_value(Position, {30, 40}));
+    ecs_entity_t e_2 = ecs_insert(world, ecs_value(Position, {50, 60}));
+    ecs_entity_t e_3 = ecs_insert(world, ecs_value(Position, {70, 80}));
 
     ecs_add_pair(world, e_3, R, e_2);
     ecs_add_pair(world, e_2, R, e_1);

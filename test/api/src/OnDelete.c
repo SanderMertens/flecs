@@ -956,7 +956,7 @@ void OnDelete_component_throw(void) {
 
     ecs_add_pair(world, ecs_id(Position), EcsOnDelete, EcsPanic);
 
-    ecs_set(world, 0, Position, {10, 20});
+    ecs_insert(world, ecs_value(Position, {10, 20}));
 
     test_expect_abort();
     ecs_delete(world, ecs_id(Position));
@@ -2776,7 +2776,7 @@ void OnDelete_create_after_delete_with(void) {
     const ecs_type_info_t *ti = ecs_get_type_info(world, ecs_id(Position));
     test_assert(ti != NULL);
 
-    ecs_entity_t e = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e = ecs_insert(world, ecs_value(Position, {10, 20}));
     test_assert(ecs_is_alive(world, e));
     test_assert(ecs_has(world, e, Position));
 
@@ -2789,7 +2789,7 @@ void OnDelete_create_after_delete_with(void) {
 
     ecs_entity_t id = ecs_new(world);
     test_assert(ecs_get_table(world, id) == NULL);
-    e = ecs_set(world, 0, Position, {10, 20});
+    e = ecs_insert(world, ecs_value(Position, {10, 20}));
     test_assert(ecs_is_alive(world, e));
     test_assert(ecs_has(world, e, Position));
 

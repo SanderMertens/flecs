@@ -2301,7 +2301,7 @@ void Commands_defer_override_after_remove(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t base = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t base = ecs_insert(world, ecs_value(Position, {10, 20}));
     ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
     ecs_set(world, inst, Position, {20, 30});
 
@@ -2326,7 +2326,7 @@ void Commands_defer_override_after_remove_3_ops(void) {
     ECS_COMPONENT(world, Position);
     ECS_TAG(world, Tag);
 
-    ecs_entity_t base = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t base = ecs_insert(world, ecs_value(Position, {10, 20}));
     ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
     ecs_set(world, inst, Position, {20, 30});
 
@@ -3138,7 +3138,7 @@ void Commands_ensure_override(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t base = ecs_set(world, 0, Position, {1, 2});
+    ecs_entity_t base = ecs_insert(world, ecs_value(Position, {1, 2}));
     ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, base);
 
     ecs_defer_begin(world);
@@ -3174,7 +3174,7 @@ void Commands_set_override(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t base = ecs_set(world, 0, Position, {1, 2});
+    ecs_entity_t base = ecs_insert(world, ecs_value(Position, {1, 2}));
     ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, base);
 
     ecs_defer_begin(world);
@@ -3503,7 +3503,7 @@ void Commands_on_set_hook_while_defer_suspended(void) {
     ecs_defer_begin(world);
     ecs_defer_suspend(world);
 
-    ecs_entity_t e = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e = ecs_insert(world, ecs_value(Position, {10, 20}));
     test_assert(e != 0);
     test_assert(ecs_has(world, e, Position));
     test_assert(!ecs_has(world, e, Velocity));

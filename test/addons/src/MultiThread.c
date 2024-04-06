@@ -10,7 +10,7 @@ void MultiThread_setup(void) {
 static
 void set_worker_kind(ecs_world_t *world, int32_t thread_count) {
     const char *worker_kind = test_param("worker_kind");
-    if (!strcmp(worker_kind, "thread")) {
+    if (!worker_kind || !strcmp(worker_kind, "thread")) {
         ecs_set_threads(world, thread_count);
     } else if (!strcmp(worker_kind, "task")) {
         ecs_set_task_threads(world, thread_count);
@@ -1082,8 +1082,8 @@ void MultiThread_2_threads_single_threaded_system(void) {
         .multi_threaded = false
     });
 
-    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
-    ecs_entity_t e2 = ecs_set(world, 0, Position, {20, 30});
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Position, {10, 20}));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Position, {20, 30}));
 
     set_worker_kind(world, 2);
 

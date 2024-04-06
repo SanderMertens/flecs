@@ -21,7 +21,7 @@ void Metrics_member_gauge_1_entity(void) {
     });
     test_assert(m != 0);
 
-    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Position, {10, 20}));
 
     ecs_progress(world, 0);
     
@@ -65,8 +65,8 @@ void Metrics_member_gauge_2_entities(void) {
     });
     test_assert(m != 0);
 
-    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
-    ecs_entity_t e2 = ecs_set(world, 0, Position, {20, 30});
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Position, {10, 20}));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Position, {20, 30}));
 
     ecs_progress(world, 0);
     
@@ -113,7 +113,7 @@ void Metrics_member_gauge_2_entities_1_existing(void) {
         }
     });
 
-    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Position, {10, 20}));
 
     ecs_entity_t m = ecs_metric(world, {
         .entity = ecs_entity(world, { .name = "metrics.position_y" }),
@@ -122,7 +122,7 @@ void Metrics_member_gauge_2_entities_1_existing(void) {
     });
     test_assert(m != 0);
 
-    ecs_entity_t e2 = ecs_set(world, 0, Position, {20, 30});
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Position, {20, 30}));
 
     ecs_progress(world, 0);
     
@@ -176,8 +176,8 @@ void Metrics_member_gauge_2_entities_update(void) {
     });
     test_assert(m != 0);
 
-    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
-    ecs_entity_t e2 = ecs_set(world, 0, Position, {20, 30});
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Position, {10, 20}));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Position, {20, 30}));
 
     ecs_progress(world, 0);
     
@@ -265,8 +265,8 @@ void Metrics_member_gauge_w_remove(void) {
     });
     test_assert(m != 0);
 
-    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
-    ecs_entity_t e2 = ecs_set(world, 0, Position, {20, 30});
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Position, {10, 20}));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Position, {20, 30}));
     ecs_add(world, e1, Foo);
     ecs_add(world, e2, Foo);
 
@@ -344,8 +344,8 @@ void Metrics_member_gauge_w_clear(void) {
     });
     test_assert(m != 0);
 
-    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
-    ecs_entity_t e2 = ecs_set(world, 0, Position, {20, 30});
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Position, {10, 20}));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Position, {20, 30}));
     ecs_add(world, e1, Foo);
     ecs_add(world, e2, Foo);
 
@@ -423,8 +423,8 @@ void Metrics_member_gauge_w_delete(void) {
     });
     test_assert(m != 0);
 
-    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
-    ecs_entity_t e2 = ecs_set(world, 0, Position, {20, 30});
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Position, {10, 20}));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Position, {20, 30}));
     ecs_add(world, e1, Foo);
     ecs_add(world, e2, Foo);
 
@@ -1360,7 +1360,7 @@ void Metrics_member_counter(void) {
     });
     test_assert(m != 0);
 
-    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Position, {10, 20}));
     ecs_progress(world, 1.0);
     
     {
@@ -1423,7 +1423,7 @@ void Metrics_member_auto_counter(void) {
     });
     test_assert(m != 0);
 
-    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Position, {10, 20}));
     ecs_progress(world, 1.0);
     
     {
@@ -1660,7 +1660,7 @@ void Metrics_metric_description(void) {
 
     test_str(ecs_doc_get_brief(world, m), "Position y");
 
-    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Position, {10, 20}));
 
     ecs_progress(world, 0);
     
@@ -1697,7 +1697,7 @@ void Metrics_id_count(void) {
     });
     test_assert(m != 0);
 
-    ecs_set(world, 0, Position, {10, 20});
+    ecs_insert(world, ecs_value(Position, {10, 20}));
 
     ecs_progress(world, 1);
 
@@ -1707,8 +1707,8 @@ void Metrics_id_count(void) {
         test_int(v->value, 1);
     }
 
-    ecs_set(world, 0, Position, {10, 20});
-    ecs_set(world, 0, Position, {10, 20});
+    ecs_insert(world, ecs_value(Position, {10, 20}));
+    ecs_insert(world, ecs_value(Position, {10, 20}));
 
     ecs_progress(world, 1);
 
@@ -2070,7 +2070,7 @@ void Metrics_id_w_member_same_type(void) {
     });
     test_assert(m != 0);
 
-    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Position, {10, 20}));
 
     ecs_progress(world, 0);
     

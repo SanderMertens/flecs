@@ -839,7 +839,7 @@ Flecs has builtin support for instancing (sharing a single component with multip
 
 ```c
 // Shortcut to create entity & set a component
-ecs_entity_t base = ecs_set(world, 0, Triangle, {{0, 0}, {1, 1}, {-1, -1}});
+ecs_entity_t base = ecs_insert(world, ecs_value(Triangle, {{0, 0}, {1, 1}, {-1, -1}}));
 
 // Create entity that shares components with base
 ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, base);

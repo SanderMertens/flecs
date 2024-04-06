@@ -291,7 +291,7 @@ void Set_set_and_new(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t e = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e = ecs_insert(world, ecs_value(Position, {10, 20}));
     test_assert(e != 0);
 
     test_assert(ecs_has(world, e, Position));
@@ -468,7 +468,7 @@ void Set_get_mut_existing(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t e = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e = ecs_insert(world, ecs_value(Position, {10, 20}));
     Position *p = ecs_get_mut(world, e, Position);
     test_assert(p != NULL);
     test_int(p->x, 10);

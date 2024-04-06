@@ -6,7 +6,7 @@ void ReadWrite_read(void) {
     ECS_COMPONENT(world, Position);
     ECS_TAG(world, Tag);
 
-    ecs_entity_t e = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e = ecs_insert(world, ecs_value(Position, {10, 20}));
 
     const ecs_record_t *r = ecs_read_begin(world, e);
     test_assert(r != NULL);
@@ -28,7 +28,7 @@ void ReadWrite_nested_read(void) {
     ECS_COMPONENT(world, Position);
     ECS_TAG(world, Tag);
 
-    ecs_entity_t e = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e = ecs_insert(world, ecs_value(Position, {10, 20}));
 
     const ecs_record_t *r = ecs_read_begin(world, e);
     const ecs_record_t *r_2 = ecs_read_begin(world, e);
@@ -54,7 +54,7 @@ void ReadWrite_write(void) {
     ECS_COMPONENT(world, Position);
     ECS_TAG(world, Tag);
 
-    ecs_entity_t e = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e = ecs_insert(world, ecs_value(Position, {10, 20}));
 
     ecs_record_t *r = ecs_write_begin(world, e);
     test_assert(r != NULL);
@@ -78,7 +78,7 @@ void ReadWrite_nested_write(void) {
     ECS_COMPONENT(world, Position);
     ECS_TAG(world, Tag);
 
-    ecs_entity_t e = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e = ecs_insert(world, ecs_value(Position, {10, 20}));
 
     ecs_record_t *r = ecs_write_begin(world, e);
     test_assert(r != NULL);
@@ -94,7 +94,7 @@ void ReadWrite_add_while_read(void) {
     ECS_COMPONENT(world, Position);
     ECS_TAG(world, Tag);
 
-    ecs_entity_t e = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e = ecs_insert(world, ecs_value(Position, {10, 20}));
 
     const ecs_record_t *r = ecs_read_begin(world, e);
     test_assert(r != NULL);
@@ -110,7 +110,7 @@ void ReadWrite_add_while_write(void) {
     ECS_COMPONENT(world, Position);
     ECS_TAG(world, Tag);
 
-    ecs_entity_t e = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e = ecs_insert(world, ecs_value(Position, {10, 20}));
 
     ecs_record_t *r = ecs_write_begin(world, e);
     test_assert(r != NULL);
@@ -125,7 +125,7 @@ void ReadWrite_read_from_stage(void) {
     ECS_COMPONENT(world, Position);
     ECS_TAG(world, Tag);
 
-    ecs_entity_t e = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e = ecs_insert(world, ecs_value(Position, {10, 20}));
 
     ecs_world_t *s = ecs_get_stage(world, 0);
     ecs_readonly_begin(world, false);
@@ -152,7 +152,7 @@ void ReadWrite_write_from_stage(void) {
     ECS_COMPONENT(world, Position);
     ECS_TAG(world, Tag);
 
-    ecs_entity_t e = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e = ecs_insert(world, ecs_value(Position, {10, 20}));
 
     ecs_world_t *s = ecs_get_stage(world, 0);
     ecs_readonly_begin(world, false);

@@ -66,7 +66,7 @@ void System_w_FromSystem_2_column_1_from_system(void) {
     Probe ctx = {0};
     ecs_set_ctx(world, &ctx, NULL);
 
-    ecs_entity_t e = ecs_set(world, 0, Position, {0, 0});
+    ecs_entity_t e = ecs_insert(world, ecs_value(Position, {0, 0}));
 
     ecs_progress(world, 1);
     
@@ -120,7 +120,7 @@ void System_w_FromSystem_3_column_2_from_system(void) {
     Probe ctx = {0};
     ecs_set_ctx(world, &ctx, NULL);
 
-    ecs_entity_t e = ecs_set(world, 0, Position, {0, 0});
+    ecs_entity_t e = ecs_insert(world, ecs_value(Position, {0, 0}));
 
     ecs_progress(world, 1);
     

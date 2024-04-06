@@ -9,7 +9,7 @@ void Reference_get_ref(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t e = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e = ecs_insert(world, ecs_value(Position, {10, 20}));
     
     ecs_ref_t ref = ecs_ref_init(world, e, Position);
     const Position *p = ecs_ref_get(world, &ref, Position);
@@ -26,7 +26,7 @@ void Reference_get_ref_after_add(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t e = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e = ecs_insert(world, ecs_value(Position, {10, 20}));
     
     ecs_ref_t ref = ecs_ref_init(world, e, Position);
     const Position *p = ecs_ref_get(world, &ref, Position);
@@ -50,7 +50,7 @@ void Reference_get_ref_after_remove(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t e = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e = ecs_insert(world, ecs_value(Position, {10, 20}));
     ecs_add(world, e, Velocity);
     
     ecs_ref_t ref = ecs_ref_init(world, e, Position);
@@ -75,7 +75,7 @@ void Reference_get_ref_after_delete(void) {
     ECS_COMPONENT(world, Position);
 
     ecs_entity_t dummy = ecs_new_w(world, Position);
-    ecs_entity_t e = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e = ecs_insert(world, ecs_value(Position, {10, 20}));
     
     ecs_ref_t ref = ecs_ref_init(world, e, Position);
     const Position *p = ecs_ref_get(world, &ref, Position);
@@ -98,7 +98,7 @@ void Reference_get_ref_after_realloc(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t e = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e = ecs_insert(world, ecs_value(Position, {10, 20}));
     
     ecs_ref_t ref = ecs_ref_init(world, e, Position);
     const Position *p = ecs_ref_get(world, &ref, Position);
@@ -125,7 +125,7 @@ void Reference_get_ref_staged(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t e = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e = ecs_insert(world, ecs_value(Position, {10, 20}));
     
     ecs_ref_t ref = ecs_ref_init(world, e, Position);
     const Position *p = ecs_ref_get(world, &ref, Position);
@@ -158,7 +158,7 @@ void Reference_get_ref_after_new_in_stage(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t e = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e = ecs_insert(world, ecs_value(Position, {10, 20}));
     
     ecs_ref_t ref = ecs_ref_init(world, e, Position);
     const Position *p = ecs_ref_get(world, &ref, Position);
@@ -194,7 +194,7 @@ void Reference_get_ref_monitored(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t e = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e = ecs_insert(world, ecs_value(Position, {10, 20}));
     ecs_new_w_pair(world, EcsChildOf, e);
     
     ecs_ref_t ref = ecs_ref_init(world, e, Position);

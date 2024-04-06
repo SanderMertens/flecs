@@ -930,7 +930,7 @@ void Pairs_get_typeid_w_recycled_rel(void) {
     ecs_delete(world, dummy); // force recycle
 
     // don't use ECS_COMPONENT, because it will try to get low ids first
-    ecs_entity_t pos = ecs_set(world, 0, EcsComponent, {1, 1});
+    ecs_entity_t pos = ecs_insert(world, ecs_value(EcsComponent, {1, 1}));
     test_assert(pos != 0);
     test_assert((uint32_t)pos != pos); // ensure recycled
 
@@ -952,7 +952,7 @@ void Pairs_get_typeid_w_recycled_obj(void) {
     ecs_delete(world, dummy); // force recycle
 
     // don't use ECS_COMPONENT, because it will try to get low ids first
-    ecs_entity_t pos = ecs_set(world, 0, EcsComponent, {1, 1});
+    ecs_entity_t pos = ecs_insert(world, ecs_value(EcsComponent, {1, 1}));
     test_assert(pos != 0);
     test_assert((uint32_t)pos != pos); // ensure recycled
 
@@ -1007,7 +1007,7 @@ void Pairs_id_str_w_recycled_obj(void) {
 void Pairs_set_object_w_zero_sized_rel_comp(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t r = ecs_set(world, 0, EcsComponent, {0});
+    ecs_entity_t r = ecs_insert(world, ecs_value(EcsComponent, {0}));
 
     ECS_COMPONENT(world, Position);
 
@@ -1725,7 +1725,7 @@ void Pairs_typeid_from_pair_w_rel_obj_type(void) {
 void Pairs_typeid_from_pair_w_rel_0_obj_type(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_id_t rel_id = ecs_set(world, 0, EcsComponent, {0});
+    ecs_id_t rel_id = ecs_insert(world, ecs_value(EcsComponent, {0}));
     test_assert(rel_id != 0);
 
     ECS_COMPONENT(world, Obj);
@@ -1748,7 +1748,7 @@ void Pairs_typeid_from_pair_w_rel_obj_0_type(void) {
     ecs_id_t rel_id = ecs_id(Rel);
     test_assert(rel_id != 0);
 
-    ecs_id_t obj_id = ecs_set(world, 0, EcsComponent, {0});
+    ecs_id_t obj_id = ecs_insert(world, ecs_value(EcsComponent, {0}));
     test_assert(obj_id != 0);
 
     ecs_id_t pair_id = ecs_pair(rel_id, obj_id);
@@ -1763,10 +1763,10 @@ void Pairs_typeid_from_pair_w_rel_obj_0_type(void) {
 void Pairs_typeid_from_pair_w_rel_0_obj_0_type(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_id_t rel_id = ecs_set(world, 0, EcsComponent, {0});
+    ecs_id_t rel_id = ecs_insert(world, ecs_value(EcsComponent, {0}));
     test_assert(rel_id != 0);
 
-    ecs_id_t obj_id = ecs_set(world, 0, EcsComponent, {0});
+    ecs_id_t obj_id = ecs_insert(world, ecs_value(EcsComponent, {0}));
     test_assert(obj_id != 0);
 
     ecs_id_t pair_id = ecs_pair(rel_id, obj_id);

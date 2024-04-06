@@ -374,7 +374,7 @@ void ComponentLifecycle_copy_on_clone(void) {
         .ctx = &ctx
     });
 
-    ecs_entity_t e = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e = ecs_insert(world, ecs_value(Position, {10, 20}));
     test_assert(ctx.copy.invoked != 0);
     memset(&ctx, 0, sizeof(ctx));
 
@@ -400,7 +400,7 @@ void ComponentLifecycle_no_copy_on_move(void) {
         .ctx = &ctx
     });
 
-    ecs_entity_t e = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e = ecs_insert(world, ecs_value(Position, {10, 20}));
     test_assert(ctx.copy.invoked != 0);
     memset(&ctx, 0, sizeof(ctx));
 
@@ -1925,11 +1925,11 @@ void ComponentLifecycle_on_add_after_set(void) {
         .on_add = ecs_on_add(Position)
     });
 
-    ecs_set(world, 0, Position, {10, 20});
+    ecs_insert(world, ecs_value(Position, {10, 20}));
     test_int(on_add_position, 1);
-    ecs_set(world, 0, Position, {10, 20});
+    ecs_insert(world, ecs_value(Position, {10, 20}));
     test_int(on_add_position, 2);
-    ecs_set(world, 0, Position, {10, 20});
+    ecs_insert(world, ecs_value(Position, {10, 20}));
     test_int(on_add_position, 3);
 
     ecs_fini(world);
@@ -1958,9 +1958,9 @@ void ComponentLifecycle_on_remove_after_remove(void) {
         .on_remove = ecs_on_remove(Position)
     });
 
-    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
-    ecs_entity_t e2 = ecs_set(world, 0, Position, {10, 20});
-    ecs_entity_t e3 = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Position, {10, 20}));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Position, {10, 20}));
+    ecs_entity_t e3 = ecs_insert(world, ecs_value(Position, {10, 20}));
 
     ecs_remove(world, e1, Position);
     test_int(on_remove_position, 1);
@@ -1981,9 +1981,9 @@ void ComponentLifecycle_on_remove_after_clear(void) {
         .on_remove = ecs_on_remove(Position)
     });
 
-    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
-    ecs_entity_t e2 = ecs_set(world, 0, Position, {10, 20});
-    ecs_entity_t e3 = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Position, {10, 20}));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Position, {10, 20}));
+    ecs_entity_t e3 = ecs_insert(world, ecs_value(Position, {10, 20}));
 
     ecs_clear(world, e1);
     test_int(on_remove_position, 1);
@@ -2004,9 +2004,9 @@ void ComponentLifecycle_on_remove_after_delete(void) {
         .on_remove = ecs_on_remove(Position)
     });
 
-    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
-    ecs_entity_t e2 = ecs_set(world, 0, Position, {10, 20});
-    ecs_entity_t e3 = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Position, {10, 20}));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Position, {10, 20}));
+    ecs_entity_t e3 = ecs_insert(world, ecs_value(Position, {10, 20}));
 
     ecs_delete(world, e1);
     test_int(on_remove_position, 1);
@@ -2803,15 +2803,15 @@ void ComponentLifecycle_on_add_hook_check_offset(void) {
         .on_add = hook_w_offset
     });
 
-    ecs_set(world, 0, Position, {10, 20});
+    ecs_insert(world, ecs_value(Position, {10, 20}));
     test_int(hook_w_offset_invoked, 1);
     test_int(hook_w_offset_offset, 0);
 
-    ecs_set(world, 0, Position, {30, 40});
+    ecs_insert(world, ecs_value(Position, {30, 40}));
     test_int(hook_w_offset_invoked, 2);
     test_int(hook_w_offset_offset, 1);
 
-    ecs_set(world, 0, Position, {50, 60});
+    ecs_insert(world, ecs_value(Position, {50, 60}));
     test_int(hook_w_offset_invoked, 3);
     test_int(hook_w_offset_offset, 2);
 
@@ -2827,9 +2827,9 @@ void ComponentLifecycle_on_remove_hook_check_offset(void) {
         .on_remove = hook_w_offset
     });
 
-    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
-    ecs_entity_t e2 = ecs_set(world, 0, Position, {30, 40});
-    ecs_entity_t e3 = ecs_set(world, 0, Position, {50, 60});
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Position, {10, 20}));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Position, {30, 40}));
+    ecs_entity_t e3 = ecs_insert(world, ecs_value(Position, {50, 60}));
     test_int(hook_w_offset_invoked, 0);
 
     ecs_remove(world, e3, Position);
@@ -2862,19 +2862,19 @@ void ComponentLifecycle_on_set_hook_check_offset(void) {
         .on_set = hook_w_offset
     });
 
-    ecs_set(world, 0, Position, {10, 20});
+    ecs_insert(world, ecs_value(Position, {10, 20}));
     test_int(hook_w_offset_invoked, 1);
     test_int(hook_w_offset_offset, 0);
     test_int(hook_w_offset_position.x, 10);
     test_int(hook_w_offset_position.y, 20);
 
-    ecs_set(world, 0, Position, {30, 40});
+    ecs_insert(world, ecs_value(Position, {30, 40}));
     test_int(hook_w_offset_invoked, 2);
     test_int(hook_w_offset_offset, 1);
     test_int(hook_w_offset_position.x, 30);
     test_int(hook_w_offset_position.y, 40);
 
-    ecs_set(world, 0, Position, {50, 60});
+    ecs_insert(world, ecs_value(Position, {50, 60}));
     test_int(hook_w_offset_invoked, 3);
     test_int(hook_w_offset_offset, 2);
     test_int(hook_w_offset_position.x, 50);
@@ -2905,7 +2905,7 @@ void ComponentLifecycle_on_set_hook_on_override(void) {
         .on_set = on_set_position
     });
 
-    ecs_entity_t p = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t p = ecs_insert(world, ecs_value(Position, {10, 20}));
     ecs_add_id(world, p, EcsPrefab);
     test_int(on_set_position_invoked, 1);
 
@@ -2934,7 +2934,7 @@ void ComponentLifecycle_on_set_hook_on_auto_override(void) {
         .on_set = on_set_position
     });
 
-    ecs_entity_t p = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t p = ecs_insert(world, ecs_value(Position, {10, 20}));
     ecs_add_id(world, p, ECS_OVERRIDE | ecs_id(Position));
     ecs_add_id(world, p, EcsPrefab);
     test_int(on_set_position_invoked, 1);

@@ -2079,7 +2079,7 @@ void Observer_write_in_unset(void) {
 
     ECS_OBSERVER(world, UnSet_WriteComp, EcsUnSet, Position, Velocity);
 
-    ecs_entity_t e = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e = ecs_insert(world, ecs_value(Position, {10, 20}));
     ecs_set(world, e, Velocity, {1, 2});
 
     Probe ctx = { 0 };
@@ -2125,7 +2125,7 @@ void Observer_filter_term(void) {
     });
 
     /* Create entities before trigger */
-    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Position, {10, 20}));
     test_assert(e1 != 0);
 
     test_int(ctx.invoked, 1);
@@ -2160,7 +2160,7 @@ void Observer_2_terms_1_filter(void) {
     });
 
     /* Create entities before trigger */
-    ecs_entity_t e1 = ecs_set(world, 0, Velocity, {1, 2});
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Velocity, {1, 2}));
     test_assert(e1 != 0);
     test_int(ctx.invoked, 0);
 
@@ -2201,7 +2201,7 @@ void Observer_3_terms_2_filter(void) {
     });
 
     /* Create entities before trigger */
-    ecs_entity_t e1 = ecs_set(world, 0, Velocity, {1, 2});
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Velocity, {1, 2}));
     test_assert(e1 != 0);
     test_int(ctx.invoked, 0);
 
@@ -3524,7 +3524,7 @@ void Observer_propagate_isa_of_parent_set(void) {
         .ctx = &ctx
     });
 
-    ecs_entity_t base = ecs_set(world, 0, Position, {0, 0});
+    ecs_entity_t base = ecs_insert(world, ecs_value(Position, {0, 0}));
     ecs_entity_t parent = ecs_new_w_pair(world, EcsIsA, base);
     ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, parent);
 

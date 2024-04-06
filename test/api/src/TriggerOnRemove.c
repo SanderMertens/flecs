@@ -159,7 +159,7 @@ void TriggerOnRemove_remove_watched(void) {
 
     ECS_OBSERVER(world, RemovePosition, EcsOnRemove, Position);
 
-    ecs_entity_t e = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e = ecs_insert(world, ecs_value(Position, {10, 20}));
     test_assert(e != 0);
 
     /* Make parent entity watched */
@@ -181,7 +181,7 @@ void TriggerOnRemove_delete_watched(void) {
 
     ECS_OBSERVER(world, RemovePosition, EcsOnRemove, Position);
 
-    ecs_entity_t e = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e = ecs_insert(world, ecs_value(Position, {10, 20}));
     test_assert(e != 0);
 
     /* Make parent entity watched */

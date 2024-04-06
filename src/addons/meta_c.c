@@ -665,7 +665,7 @@ ecs_entity_t meta_lookup(
     if (count != 1) {
         ecs_check(count <= INT32_MAX, ECS_INVALID_PARAMETER, NULL);
 
-        type = ecs_set(world, 0, EcsArray, {type, (int32_t)count});
+        type = ecs_insert(world, ecs_value(EcsArray, {type, (int32_t)count}));
     }
 
     if (!type) {

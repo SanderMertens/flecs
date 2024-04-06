@@ -1035,7 +1035,7 @@ Derived entities can override components from their base by adding the component
 
 ```c
 // Shortcut for creating a base entity and setting Position
-ecs_entity_t base = ecs_set(world, 0, Position, {10, 20});
+ecs_entity_t base = ecs_insert(world, ecs_value(Position, {10, 20}));
 
 // Derive from the base
 ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, base);
@@ -1086,7 +1086,7 @@ In some scenarios it is desirable that an entity is initialized with a specific 
 
 ```c
 // Create a base. Simply deriving the base will share the component, but not override it.
-ecs_entity_t Base = ecs_set(world, 0, Position, {10, 20});
+ecs_entity_t Base = ecs_insert(world, ecs_value(Position, {10, 20}));
 
 // Mark as OVERRIDE. This ensures that when base is derived from, Position is overridden
 ecs_add_id(world, world, Base, ECS_OVERRIDE | ecs_id(Position));

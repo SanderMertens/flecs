@@ -2294,11 +2294,11 @@ void SerializeIterToJson_serialize_paged_iterator(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_set(world, 0, Position, {10, 20});
-    ecs_entity_t e2 = ecs_set(world, 0, Position, {10, 20});
-    ecs_entity_t e3 = ecs_set(world, 0, Position, {20, 30});
-    ecs_entity_t e4 = ecs_set(world, 0, Position, {30, 40});
-    ecs_set(world, 0, Position, {10, 20});
+    ecs_insert(world, ecs_value(Position, {10, 20}));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Position, {10, 20}));
+    ecs_entity_t e3 = ecs_insert(world, ecs_value(Position, {20, 30}));
+    ecs_entity_t e4 = ecs_insert(world, ecs_value(Position, {30, 40}));
+    ecs_insert(world, ecs_value(Position, {10, 20}));
 
     ecs_query_t *r = ecs_query_init(world, &(ecs_query_desc_t){
         .terms = {{ .id = ecs_id(Position) }}
@@ -2334,11 +2334,11 @@ void SerializeIterToJson_serialize_paged_iterator_w_optional_component(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_set(world, 0, Position, {10, 20});
-    ecs_entity_t e2 = ecs_set(world, 0, Position, {10, 20});
-    ecs_entity_t e3 = ecs_set(world, 0, Position, {20, 30});
-    ecs_entity_t e4 = ecs_set(world, 0, Position, {30, 40});
-    ecs_entity_t e5 = ecs_set(world, 0, Position, {40, 50});
+    ecs_insert(world, ecs_value(Position, {10, 20}));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Position, {10, 20}));
+    ecs_entity_t e3 = ecs_insert(world, ecs_value(Position, {20, 30}));
+    ecs_entity_t e4 = ecs_insert(world, ecs_value(Position, {30, 40}));
+    ecs_entity_t e5 = ecs_insert(world, ecs_value(Position, {40, 50}));
 
     ecs_set(world, e4, Velocity, {1, 2});
     ecs_set(world, e5, Velocity, {2, 3});
@@ -2393,11 +2393,11 @@ void SerializeIterToJson_serialize_paged_iterator_w_optional_tag(void) {
     ECS_COMPONENT(world, Position);
     ECS_TAG(world, Tag);
 
-    ecs_set(world, 0, Position, {10, 20});
-    ecs_entity_t e2 = ecs_set(world, 0, Position, {10, 20});
-    ecs_entity_t e3 = ecs_set(world, 0, Position, {20, 30});
-    ecs_entity_t e4 = ecs_set(world, 0, Position, {30, 40});
-    ecs_entity_t e5 = ecs_set(world, 0, Position, {40, 50});
+    ecs_insert(world, ecs_value(Position, {10, 20}));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Position, {10, 20}));
+    ecs_entity_t e3 = ecs_insert(world, ecs_value(Position, {20, 30}));
+    ecs_entity_t e4 = ecs_insert(world, ecs_value(Position, {30, 40}));
+    ecs_entity_t e5 = ecs_insert(world, ecs_value(Position, {40, 50}));
 
     ecs_add(world, e4, Tag);
     ecs_add(world, e5, Tag);
@@ -3290,14 +3290,14 @@ void SerializeIterToJson_serialize_rule_w_optional_component(void) {
         }
     });
 
-    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Position, {10, 20}));
     ecs_set_name(world, e1, "e1");
 
-    ecs_entity_t e2 = ecs_set(world, 0, Position, {30, 40});
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Position, {30, 40}));
     ecs_set_name(world, e2, "e2");
     ecs_set(world, e2, Velocity, {1, 2});
 
-    ecs_entity_t e3 = ecs_set(world, 0, Position, {50, 60});
+    ecs_entity_t e3 = ecs_insert(world, ecs_value(Position, {50, 60}));
     ecs_set_name(world, e3, "e3");
     ecs_add(world, e3, Foo);
 

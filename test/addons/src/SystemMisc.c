@@ -478,7 +478,7 @@ void SystemMisc_add_own_component(void) {
     ECS_SYSTEM(world, FooSystem, 0, Position);
     ECS_SYSTEM(world, BarSystem, 0, Position);
 
-    ecs_set_ptr(world, BarSystem, Position, NULL);
+    ecs_set(world, BarSystem, Position, {0, 0});
 
     /* Make sure code didn't assert */
     test_assert(true);
@@ -1014,9 +1014,9 @@ void SystemMisc_get_query(void) {
 
     ECS_SYSTEM(world, Dummy, EcsOnUpdate, Position);
 
-    ecs_set(world, 0, Position, {0, 0});
-    ecs_set(world, 0, Position, {1, 0});
-    ecs_set(world, 0, Position, {2, 0});
+    ecs_insert(world, ecs_value(Position, {0, 0}));
+    ecs_insert(world, ecs_value(Position, {1, 0}));
+    ecs_insert(world, ecs_value(Position, {2, 0}));
 
     ecs_query_t *q = ecs_system_get_query(world, Dummy);
     test_assert(q != NULL);

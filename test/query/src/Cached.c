@@ -1508,7 +1508,7 @@ void Cached_query_iter_10_components(void) {
     ECS_COMPONENT(world, CompJ);
     ECS_COMPONENT(world, CompK);
 
-    ecs_entity_t e_1 = ecs_set(world, 0, CompA, {10});
+    ecs_entity_t e_1 = ecs_insert(world, ecs_value(CompA, {10}));
     ecs_set(world, e_1, CompB, {10});
     ecs_set(world, e_1, CompC, {10});
     ecs_set(world, e_1, CompD, {10});
@@ -1519,7 +1519,7 @@ void Cached_query_iter_10_components(void) {
     ecs_set(world, e_1, CompI, {10});
     ecs_set(world, e_1, CompJ, {10});
     
-    ecs_entity_t e_2 = ecs_set(world, 0, CompA, {10});
+    ecs_entity_t e_2 = ecs_insert(world, ecs_value(CompA, {10}));
     ecs_set(world, e_2, CompB, {10});
     ecs_set(world, e_2, CompC, {10});
     ecs_set(world, e_2, CompD, {10});
@@ -1627,7 +1627,7 @@ void Cached_filter_term(void) {
         .cache_kind = EcsQueryCacheAuto
     });
 
-    ecs_entity_t e = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e = ecs_insert(world, ecs_value(Position, {10, 20}));
 
     ecs_iter_t it = ecs_query_iter(world, q);
 
@@ -1661,7 +1661,7 @@ void Cached_2_terms_1_filter(void) {
         .cache_kind = EcsQueryCacheAuto
     });
 
-    ecs_entity_t e = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e = ecs_insert(world, ecs_value(Position, {10, 20}));
     ecs_set(world, e, Velocity, {1, 1});
 
     ecs_iter_t it = ecs_query_iter(world, q);
@@ -1703,7 +1703,7 @@ void Cached_3_terms_2_filter(void) {
         .cache_kind = EcsQueryCacheAuto
     });
 
-    ecs_entity_t e = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e = ecs_insert(world, ecs_value(Position, {10, 20}));
     ecs_set(world, e, Velocity, {1, 1});
     ecs_set(world, e, Mass, {1});
 
@@ -1742,12 +1742,12 @@ void Cached_no_instancing_w_singleton(void) {
 
     ecs_singleton_set(world, Velocity, {1, 2});
 
-    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
-    ecs_entity_t e2 = ecs_set(world, 0, Position, {20, 30});
-    ecs_entity_t e3 = ecs_set(world, 0, Position, {30, 40});
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Position, {10, 20}));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Position, {20, 30}));
+    ecs_entity_t e3 = ecs_insert(world, ecs_value(Position, {30, 40}));
 
-    ecs_entity_t e4 = ecs_set(world, 0, Position, {40, 50});
-    ecs_entity_t e5 = ecs_set(world, 0, Position, {50, 60});
+    ecs_entity_t e4 = ecs_insert(world, ecs_value(Position, {40, 50}));
+    ecs_entity_t e5 = ecs_insert(world, ecs_value(Position, {50, 60}));
 
     ecs_add(world, e4, Tag);
     ecs_add(world, e5, Tag);
@@ -2275,10 +2275,10 @@ void Cached_superset_2_targets(void) {
     ECS_ENTITY(world, R, Traversable);
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t e_0 = ecs_set(world, 0, Position, {10, 20});
-    ecs_entity_t e_1 = ecs_set(world, 0, Position, {30, 40});
-    ecs_entity_t e_2 = ecs_set(world, 0, Position, {50, 60});
-    ecs_entity_t e_3 = ecs_set(world, 0, Position, {70, 80});
+    ecs_entity_t e_0 = ecs_insert(world, ecs_value(Position, {10, 20}));
+    ecs_entity_t e_1 = ecs_insert(world, ecs_value(Position, {30, 40}));
+    ecs_entity_t e_2 = ecs_insert(world, ecs_value(Position, {50, 60}));
+    ecs_entity_t e_3 = ecs_insert(world, ecs_value(Position, {70, 80}));
 
     ecs_add_pair(world, e_3, R, e_2);
     ecs_add_pair(world, e_2, R, e_1);
@@ -2419,8 +2419,8 @@ void Cached_superset_2_relations_w_component(void) {
         .cache_kind = EcsQueryCacheAuto
     });
 
-    ecs_entity_t base = ecs_set(world, 0, Position, {10, 20});
-    ecs_entity_t parent = ecs_set(world, 0, Position, {30, 40});
+    ecs_entity_t base = ecs_insert(world, ecs_value(Position, {10, 20}));
+    ecs_entity_t parent = ecs_insert(world, ecs_value(Position, {30, 40}));
 
     ecs_entity_t e1 = ecs_new(world);
     ecs_add_pair(world, e1, EcsIsA, base);
@@ -2481,8 +2481,8 @@ void Cached_superset_2_relations_instanced_w_component(void) {
         .cache_kind = EcsQueryCacheAuto
     });
 
-    ecs_entity_t base = ecs_set(world, 0, Position, {10, 20});
-    ecs_entity_t parent = ecs_set(world, 0, Position, {30, 40});
+    ecs_entity_t base = ecs_insert(world, ecs_value(Position, {10, 20}));
+    ecs_entity_t parent = ecs_insert(world, ecs_value(Position, {30, 40}));
 
     ecs_entity_t e1 = ecs_new(world);
     ecs_add_pair(world, e1, EcsIsA, base);
@@ -2724,8 +2724,8 @@ void Cached_isa_rematch(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t base_1 = ecs_set(world, 0, Position, {10, 20});
-    ecs_entity_t base_2 = ecs_set(world, 0, Position, {30, 40});
+    ecs_entity_t base_1 = ecs_insert(world, ecs_value(Position, {10, 20}));
+    ecs_entity_t base_2 = ecs_insert(world, ecs_value(Position, {30, 40}));
     ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base_1);
 
     ecs_query_t *q = ecs_query(world, {
@@ -2787,8 +2787,8 @@ void Cached_childof_rematch(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t base_1 = ecs_set(world, 0, Position, {10, 20});
-    ecs_entity_t base_2 = ecs_set(world, 0, Position, {30, 40});
+    ecs_entity_t base_1 = ecs_insert(world, ecs_value(Position, {10, 20}));
+    ecs_entity_t base_2 = ecs_insert(world, ecs_value(Position, {30, 40}));
     ecs_entity_t inst = ecs_new_w_pair(world, EcsChildOf, base_1);
 
     ecs_query_t *q = ecs_query(world, {
@@ -2827,8 +2827,8 @@ void Cached_isa_unmatch(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t base_1 = ecs_set(world, 0, Position, {10, 20});
-    ecs_entity_t base_2 = ecs_set(world, 0, Position, {30, 40});
+    ecs_entity_t base_1 = ecs_insert(world, ecs_value(Position, {10, 20}));
+    ecs_entity_t base_2 = ecs_insert(world, ecs_value(Position, {30, 40}));
     ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base_1);
 
     ecs_query_t *q = ecs_query(world, {
@@ -2879,7 +2879,7 @@ void Cached_childof_unmatch(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t base_1 = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t base_1 = ecs_insert(world, ecs_value(Position, {10, 20}));
     ecs_entity_t inst = ecs_new_w_pair(world, EcsChildOf, base_1);
 
     ecs_query_t *q = ecs_query(world, {
@@ -2911,8 +2911,8 @@ void Cached_isa_rematch_2_lvls(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t base_1 = ecs_set(world, 0, Position, {10, 20});
-    ecs_entity_t base_2 = ecs_set(world, 0, Position, {30, 40});
+    ecs_entity_t base_1 = ecs_insert(world, ecs_value(Position, {10, 20}));
+    ecs_entity_t base_2 = ecs_insert(world, ecs_value(Position, {30, 40}));
     ecs_entity_t base = ecs_new_w_pair(world, EcsIsA, base_1);
     ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
 
@@ -2992,8 +2992,8 @@ void Cached_childof_rematch_2_lvls(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t base_1 = ecs_set(world, 0, Position, {10, 20});
-    ecs_entity_t base_2 = ecs_set(world, 0, Position, {30, 40});
+    ecs_entity_t base_1 = ecs_insert(world, ecs_value(Position, {10, 20}));
+    ecs_entity_t base_2 = ecs_insert(world, ecs_value(Position, {30, 40}));
     ecs_entity_t base = ecs_new_w_pair(world, EcsChildOf, base_1);
     ecs_entity_t inst = ecs_new_w_pair(world, EcsChildOf, base);
 
@@ -3050,8 +3050,8 @@ void Cached_childof_rematch_from_isa(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t base_1 = ecs_set(world, 0, Position, {10, 20});
-    ecs_entity_t base_2 = ecs_set(world, 0, Position, {30, 40});
+    ecs_entity_t base_1 = ecs_insert(world, ecs_value(Position, {10, 20}));
+    ecs_entity_t base_2 = ecs_insert(world, ecs_value(Position, {30, 40}));
     ecs_entity_t base = ecs_new_w_pair(world, EcsIsA, base_1);
     ecs_entity_t inst = ecs_new_w_pair(world, EcsChildOf, base);
 
@@ -3099,7 +3099,7 @@ void Cached_rematch_optional_ref(void) {
     });
     test_assert(q != NULL);
 
-    ecs_entity_t parent = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t parent = ecs_insert(world, ecs_value(Position, {10, 20}));
     ecs_entity_t child = ecs_new_w(world, Tag);
     ecs_add_pair(world, child, EcsChildOf, parent);
 
@@ -3149,7 +3149,7 @@ void Cached_rematch_optional_ref_w_2_refs(void) {
     });
     test_assert(q != NULL);
 
-    ecs_entity_t parent = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t parent = ecs_insert(world, ecs_value(Position, {10, 20}));
     ecs_set(world, parent, Velocity, {1, 2});
     ecs_entity_t child = ecs_new_w(world, Tag);
     ecs_add_pair(world, child, EcsChildOf, parent);
@@ -3213,7 +3213,7 @@ void Cached_rematch_optional_ref_tag_w_ref_component(void) {
     });
     test_assert(q != NULL);
 
-    ecs_entity_t parent = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t parent = ecs_insert(world, ecs_value(Position, {10, 20}));
     ecs_add(world, parent, TagB);
 
     ecs_entity_t child = ecs_new_w(world, TagA);

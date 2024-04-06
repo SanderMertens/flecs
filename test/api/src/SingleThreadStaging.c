@@ -2046,7 +2046,7 @@ void SingleThreadStaging_match_table_created_w_new_in_progress(void) {
     ECS_SYSTEM(world, Set_velocity_on_new, EcsOnUpdate, Position);
     ECS_SYSTEM(world, On_V, EcsOnUpdate, Velocity);
 
-    ecs_set(world, 0, Position, {10, 20});
+    ecs_insert(world, ecs_value(Position, {10, 20}));
 
     Probe ctx = {0};
     ecs_set_ctx(world, &ctx, NULL);
@@ -2076,7 +2076,7 @@ void SingleThreadStaging_match_table_created_w_new_in_on_set(void) {
     IterData add_ctx = {.component = ecs_id(Velocity)};
     ecs_set_ctx(world, &add_ctx, NULL);
 
-    ecs_set(world, 0, Position, {10, 20});
+    ecs_insert(world, ecs_value(Position, {10, 20}));
 
     Probe ctx = {0};
     ecs_set_ctx(world, &ctx, NULL);
@@ -2355,7 +2355,7 @@ void SingleThreadStaging_merge_once(void) {
     ECS_SYSTEM(world, AddInProgress, EcsOnUpdate, Position, [out] !Velocity);
     ECS_SYSTEM(world, Move, EcsOnUpdate, Position, Velocity);
 
-    ecs_entity_t e = ecs_set(world, 0, Position, {0, 0});
+    ecs_entity_t e = ecs_insert(world, ecs_value(Position, {0, 0}));
     ecs_progress(world, 1);
 
     const Position *p = ecs_get(world, e, Position);

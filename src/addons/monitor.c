@@ -211,8 +211,7 @@ void AggregateStats(ecs_iter_t *it) {
 static
 void flecs_stats_monitor_import(
     ecs_world_t *world,
-    ecs_id_t kind,
-    size_t size)
+    ecs_id_t kind)
 {
     ecs_entity_t prev = ecs_set_scope(world, kind);
 
@@ -289,11 +288,11 @@ void flecs_stats_monitor_import(
 
     ecs_set_scope(world, prev);
 
-    ecs_set_id(world, EcsWorld, ecs_pair(kind, EcsPeriod1s), size, NULL);
-    ecs_set_id(world, EcsWorld, ecs_pair(kind, EcsPeriod1m), size, NULL);
-    ecs_set_id(world, EcsWorld, ecs_pair(kind, EcsPeriod1h), size, NULL);
-    ecs_set_id(world, EcsWorld, ecs_pair(kind, EcsPeriod1d), size, NULL);
-    ecs_set_id(world, EcsWorld, ecs_pair(kind, EcsPeriod1w), size, NULL);
+    ecs_add_pair(world, EcsWorld, kind, EcsPeriod1s);
+    ecs_add_pair(world, EcsWorld, kind, EcsPeriod1m);
+    ecs_add_pair(world, EcsWorld, kind, EcsPeriod1h);
+    ecs_add_pair(world, EcsWorld, kind, EcsPeriod1d);
+    ecs_add_pair(world, EcsWorld, kind, EcsPeriod1w);
 }
 
 static
@@ -302,8 +301,11 @@ void flecs_world_monitor_import(
 {
     ECS_COMPONENT_DEFINE(world, EcsWorldStats);
 
-    flecs_stats_monitor_import(world, ecs_id(EcsWorldStats), 
-        sizeof(EcsWorldStats));
+    ecs_set_hooks(world, EcsWorldStats, {
+        .ctor = ecs_default_ctor
+    });
+
+    flecs_stats_monitor_import(world, ecs_id(EcsWorldStats));
 }
 
 static
@@ -319,8 +321,7 @@ void flecs_pipeline_monitor_import(
         .dtor = ecs_dtor(EcsPipelineStats)
     });
 
-    flecs_stats_monitor_import(world, ecs_id(EcsPipelineStats),
-        sizeof(EcsPipelineStats));
+    flecs_stats_monitor_import(world, ecs_id(EcsPipelineStats));
 }
 
 void FlecsMonitorImport(

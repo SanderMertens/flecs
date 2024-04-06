@@ -64,7 +64,7 @@ void System_w_FromParent_1_column_from_container(void) {
         .query.flags = EcsQueryIsInstanced
     });
 
-    ecs_entity_t parent = ecs_set(world, 0, Mass, {2});
+    ecs_entity_t parent = ecs_insert(world, ecs_value(Mass, {2}));
     ecs_add_pair(world, e1, EcsChildOf, parent);
     ecs_add_pair(world, e2, EcsChildOf, parent);
     ecs_add_pair(world, e3, EcsChildOf, parent);
@@ -124,7 +124,7 @@ void System_w_FromParent_2_column_1_from_container(void) {
         .query.flags = EcsQueryIsInstanced
     });
 
-    ecs_entity_t parent = ecs_set(world, 0, Mass, {2});
+    ecs_entity_t parent = ecs_insert(world, ecs_value(Mass, {2}));
     ecs_add_pair(world, e1, EcsChildOf, parent);
     ecs_add_pair(world, e2, EcsChildOf, parent);
     ecs_add_pair(world, e3, EcsChildOf, parent);
@@ -247,7 +247,7 @@ void System_w_FromParent_3_column_2_from_container(void) {
         .query.flags = EcsQueryIsInstanced
     });
 
-    ecs_entity_t parent = ecs_set(world, 0, Mass, {2});
+    ecs_entity_t parent = ecs_insert(world, ecs_value(Mass, {2}));
     ecs_set(world, parent, Rotation, {3});
 
     ecs_add_pair(world, e1, EcsChildOf, parent);
@@ -312,8 +312,8 @@ void System_w_FromParent_2_column_1_from_container_w_not(void) {
         .query.flags = EcsQueryIsInstanced
     });
 
-    ecs_entity_t parent_1 = ecs_set(world, 0, Mass, {2});
-    ecs_entity_t parent_2 = ecs_set(world, 0, Rotation, {3});
+    ecs_entity_t parent_1 = ecs_insert(world, ecs_value(Mass, {2}));
+    ecs_entity_t parent_2 = ecs_insert(world, ecs_value(Rotation, {3}));
 
     ecs_add_pair(world, e1, EcsChildOf, parent_2);
     ecs_add_pair(world, e2, EcsChildOf, parent_2);
@@ -387,9 +387,9 @@ void System_w_FromParent_3_column_1_from_comtainer_1_from_container_w_not(void) 
         .query.flags = EcsQueryIsInstanced
     });
 
-    ecs_entity_t parent_1 = ecs_set(world, 0, Mass, {2});
-    ecs_entity_t parent_2 = ecs_set(world, 0, Rotation, {3});
-    ecs_entity_t parent_3 = ecs_set(world, 0, Mass, {4});
+    ecs_entity_t parent_1 = ecs_insert(world, ecs_value(Mass, {2}));
+    ecs_entity_t parent_2 = ecs_insert(world, ecs_value(Rotation, {3}));
+    ecs_entity_t parent_3 = ecs_insert(world, ecs_value(Mass, {4}));
     ecs_set(world, parent_3, Rotation, {5});
 
     ecs_add_pair(world, e1, EcsChildOf, parent_2);
@@ -455,7 +455,7 @@ void System_w_FromParent_2_column_1_from_container_w_not_prefab(void) {
         .query.flags = EcsQueryIsInstanced
     });
 
-    ecs_entity_t parent_1 = ecs_set(world, 0, Mass, {2});
+    ecs_entity_t parent_1 = ecs_insert(world, ecs_value(Mass, {2}));
     ecs_add_pair(world, e1, EcsIsA, Prefab);
 
     ecs_add_pair(world, e1, EcsChildOf, parent_1);
@@ -512,11 +512,11 @@ void System_w_FromParent_2_column_1_from_container_w_or(void) {
         .query.flags = EcsQueryIsInstanced
     });
 
-    ecs_entity_t parent_1 = ecs_set(world, 0, Mass, {2});
-    ecs_entity_t parent_2 = ecs_set(world, 0, Rotation, {3});
-    ecs_entity_t parent_3 = ecs_set(world, 0, Rotation, {4});
+    ecs_entity_t parent_1 = ecs_insert(world, ecs_value(Mass, {2}));
+    ecs_entity_t parent_2 = ecs_insert(world, ecs_value(Rotation, {3}));
+    ecs_entity_t parent_3 = ecs_insert(world, ecs_value(Rotation, {4}));
                             ecs_set(world, parent_3, Mass, {5});
-    ecs_entity_t parent_4 = ecs_set(world, 0, Velocity, {10, 20});
+    ecs_entity_t parent_4 = ecs_insert(world, ecs_value(Velocity, {10, 20}));
 
     ecs_add_pair(world, e1, EcsChildOf, parent_1);
     ecs_add_pair(world, e2, EcsChildOf, parent_2);
@@ -1178,7 +1178,7 @@ void System_w_FromParent_select_same_from_container(void) {
         .query.flags = EcsQueryIsInstanced
     });
 
-    ecs_entity_t parent = ecs_set(world, 0, Position, {1, 2});
+    ecs_entity_t parent = ecs_insert(world, ecs_value(Position, {1, 2}));
     ecs_add_pair(world, e1, EcsChildOf, parent);
     ecs_add_pair(world, e2, EcsChildOf, parent);
     ecs_add_pair(world, e3, EcsChildOf, parent);
@@ -1234,7 +1234,7 @@ void System_w_FromParent_realloc_after_match(void) {
 
     ECS_SYSTEM(world, Iter, EcsOnUpdate, Mass(up), Position);
 
-    ecs_entity_t parent = ecs_set(world, 0, Mass, {2});
+    ecs_entity_t parent = ecs_insert(world, ecs_value(Mass, {2}));
     ecs_add_pair(world, e1, EcsChildOf, parent);
 
     Probe ctx = {0};

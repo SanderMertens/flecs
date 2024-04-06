@@ -1245,6 +1245,7 @@ ecs_entity_t ecs_new_w_id(
     }
 
     ecs_table_diff_builder_t diff_builder = ECS_TABLE_DIFF_INIT;
+    flecs_table_diff_builder_init(world, &diff_builder);
     ecs_table_t *table = flecs_find_table_add(
         world, &world->store.root, id, &diff_builder);
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -1253,6 +1254,7 @@ ecs_entity_t ecs_new_w_id(
     flecs_table_diff_build_noalloc(&diff_builder, &diff);
     ecs_record_t *r = flecs_entities_get(world, entity);
     flecs_new_entity(world, entity, r, table, &diff, true, 0);
+    flecs_table_diff_builder_fini(world, &diff_builder);
 
     flecs_defer_end(world, stage);
 
@@ -1281,7 +1283,6 @@ error:
 static
 void flecs_copy_id(
     ecs_world_t *world,
-    ecs_entity_t entity,
     ecs_record_t *r,
     ecs_id_t id,
     size_t size,
@@ -1537,7 +1538,10 @@ int flecs_traverse_add(
         ecs_assert(r->table != NULL, ECS_INTERNAL_ERROR, NULL);
         int32_t i = 0, row = ECS_RECORD_TO_ROW(r->row);
         const ecs_value_t *v;
-        while ((v = &desc->set[i ++]), v->type) {
+        
+        flecs_defer_begin(world, world->stages[0]);
+
+        while ((void)(v = &desc->set[i ++]), v->type) {
             if (!v->ptr) {
                 continue;
             }
@@ -1545,9 +1549,11 @@ int flecs_traverse_add(
             flecs_component_ptr_t ptr = flecs_get_component_ptr(
                 world, table, row, v->type);
             ecs_check(ptr.ptr != NULL, ECS_INTERNAL_ERROR, NULL);
-            flecs_copy_id(world, result, r, v->type, ptr.ti->size, ptr.ptr, 
-                v->ptr, ptr.ti);
+            flecs_copy_id(world, r, v->type, 
+                flecs_itosize(ptr.ti->size), ptr.ptr, v->ptr, ptr.ti);
         }
+
+        flecs_defer_end(world, world->stages[0]);
     }
 
     flecs_table_diff_builder_fini(world, &diff);
@@ -1608,7 +1614,7 @@ void flecs_deferred_add_remove(
     if (desc->set) {
         int32_t i = 0;
         const ecs_value_t *v;
-        while ((v = &desc->set[i ++]), v->type) {
+        while ((void)(v = &desc->set[i ++]), v->type) {
             if (v->ptr) {
                 ecs_set_id(world, entity, v->type, 0, v->ptr);
             } else {
@@ -3161,7 +3167,7 @@ void flecs_set_id_copy(
     ecs_record_t *r = flecs_entities_get(world, entity);
     flecs_component_ptr_t dst = flecs_ensure(world, entity, id, r);
 
-    flecs_copy_id(world, entity, r, id, size, dst.ptr, ptr, dst.ti);
+    flecs_copy_id(world, r, id, size, dst.ptr, ptr, dst.ti);
 
     flecs_defer_end(world, stage);
 }

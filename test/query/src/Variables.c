@@ -4582,8 +4582,8 @@ void Variables_1_set_src_this_to_entiy_in_table(void) {
         .cache_kind = cache_kind
     });
 
-    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
-    ecs_entity_t e2 = ecs_set(world, 0, Position, {20, 30});
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Position, {10, 20}));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Position, {20, 30}));
 
     {
         ecs_iter_t it = ecs_query_iter(world, q);
@@ -4626,8 +4626,8 @@ void Variables_1_set_src_this_to_entiy_in_table_self(void) {
         .cache_kind = cache_kind
     });
 
-    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
-    ecs_entity_t e2 = ecs_set(world, 0, Position, {20, 30});
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Position, {10, 20}));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Position, {20, 30}));
 
     {
         ecs_iter_t it = ecs_query_iter(world, q);
@@ -4799,15 +4799,15 @@ void Variables_2_set_src_this_component(void) {
         .cache_kind = cache_kind
     });
 
-    ecs_entity_t prefab = ecs_set(world, 0, Velocity, {3, 4});
+    ecs_entity_t prefab = ecs_insert(world, ecs_value(Velocity, {3, 4}));
 
-    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Position, {10, 20}));
     ecs_set(world, e1, Velocity, {1, 2});
 
-    ecs_entity_t e2 = ecs_set(world, 0, Position, {20, 30});
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Position, {20, 30}));
     ecs_set(world, e2, Velocity, {2, 3});
 
-    ecs_entity_t e3 = ecs_set(world, 0, Position, {30, 40});
+    ecs_entity_t e3 = ecs_insert(world, ecs_value(Position, {30, 40}));
     ecs_add_pair(world, e3, EcsIsA, prefab);
 
     {
@@ -4890,15 +4890,15 @@ void Variables_2_set_src_this_self_component(void) {
         .cache_kind = cache_kind
     });
 
-    ecs_entity_t prefab = ecs_set(world, 0, Velocity, {4, 5});
+    ecs_entity_t prefab = ecs_insert(world, ecs_value(Velocity, {4, 5}));
 
-    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Position, {10, 20}));
     ecs_set(world, e1, Velocity, {1, 2});
 
-    ecs_entity_t e2 = ecs_set(world, 0, Position, {20, 30});
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Position, {20, 30}));
     ecs_set(world, e2, Velocity, {2, 3});
 
-    ecs_entity_t e3 = ecs_set(world, 0, Position, {40, 50});
+    ecs_entity_t e3 = ecs_insert(world, ecs_value(Position, {40, 50}));
     ecs_add_pair(world, e3, EcsIsA, prefab);
 
     {
@@ -5113,18 +5113,18 @@ void Variables_2_set_src_this_component_w_up(void) {
         .cache_kind = cache_kind
     });
 
-    ecs_entity_t prefab = ecs_set(world, 0, Velocity, {3, 4});
-    ecs_entity_t parent = ecs_set(world, 0, Mass, {60});
+    ecs_entity_t prefab = ecs_insert(world, ecs_value(Velocity, {3, 4}));
+    ecs_entity_t parent = ecs_insert(world, ecs_value(Mass, {60}));
 
-    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Position, {10, 20}));
     ecs_set(world, e1, Velocity, {1, 2});
     ecs_add_pair(world, e1, EcsChildOf, parent);
 
-    ecs_entity_t e2 = ecs_set(world, 0, Position, {20, 30});
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Position, {20, 30}));
     ecs_set(world, e2, Velocity, {2, 3});
     ecs_add_pair(world, e2, EcsChildOf, parent);
 
-    ecs_entity_t e3 = ecs_set(world, 0, Position, {30, 40});
+    ecs_entity_t e3 = ecs_insert(world, ecs_value(Position, {30, 40}));
     ecs_add_pair(world, e3, EcsIsA, prefab);
     ecs_add_pair(world, e3, EcsChildOf, parent);
 
@@ -5225,18 +5225,18 @@ void Variables_2_set_src_this_self_component_w_up(void) {
         .cache_kind = cache_kind
     });
 
-    ecs_entity_t prefab = ecs_set(world, 0, Velocity, {3, 4});
-    ecs_entity_t parent = ecs_set(world, 0, Mass, {60});
+    ecs_entity_t prefab = ecs_insert(world, ecs_value(Velocity, {3, 4}));
+    ecs_entity_t parent = ecs_insert(world, ecs_value(Mass, {60}));
 
-    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Position, {10, 20}));
     ecs_set(world, e1, Velocity, {1, 2});
     ecs_add_pair(world, e1, EcsChildOf, parent);
 
-    ecs_entity_t e2 = ecs_set(world, 0, Position, {20, 30});
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Position, {20, 30}));
     ecs_set(world, e2, Velocity, {2, 3});
     ecs_add_pair(world, e2, EcsChildOf, parent);
 
-    ecs_entity_t e3 = ecs_set(world, 0, Position, {30, 40});
+    ecs_entity_t e3 = ecs_insert(world, ecs_value(Position, {30, 40}));
     ecs_add_pair(world, e3, EcsIsA, prefab);
     ecs_add_pair(world, e3, EcsChildOf, parent);
 

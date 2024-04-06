@@ -2881,9 +2881,9 @@ void Trigger_on_set_yield_existing(void) {
     ECS_COMPONENT(world, Position);
 
     /* Create entities before trigger */
-    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
-    ecs_entity_t e2 = ecs_set(world, 0, Position, {30, 40});
-    ecs_entity_t e3 = ecs_set(world, 0, Position, {50, 60});
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Position, {10, 20}));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Position, {30, 40}));
+    ecs_entity_t e3 = ecs_insert(world, ecs_value(Position, {50, 60}));
 
     test_assert(e1 != 0);
     test_assert(e2 != 0);
@@ -2937,7 +2937,7 @@ void Trigger_filter_term(void) {
     });
 
     /* Create entities before trigger */
-    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Position, {10, 20}));
     test_assert(e1 != 0);
 
     test_int(ctx.invoked, 1);
@@ -3845,7 +3845,7 @@ void Trigger_on_set_self_trigger_with_add_isa(void) {
     test_assert(t1 != 0);
     test_int(ctx.invoked, 0);
 
-    ecs_entity_t base = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t base = ecs_insert(world, ecs_value(Position, {10, 20}));
     test_int(ctx.invoked, 1);
 
     ctx = (Probe){0};
@@ -4505,7 +4505,7 @@ void Trigger_on_set_self_auto_override(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t base = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t base = ecs_insert(world, ecs_value(Position, {10, 20}));
     ecs_add_id(world, base, ECS_OVERRIDE | ecs_id(Position));
 
     Probe ctx = {0};
@@ -4536,7 +4536,7 @@ void Trigger_on_set_self_superset_auto_override(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t base = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t base = ecs_insert(world, ecs_value(Position, {10, 20}));
     ecs_add_id(world, base, ECS_OVERRIDE | ecs_id(Position));
 
     Probe ctx = {0};
@@ -4568,7 +4568,7 @@ void Trigger_on_set_superset_auto_override(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t base = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t base = ecs_insert(world, ecs_value(Position, {10, 20}));
     ecs_add_id(world, base, ECS_OVERRIDE | ecs_id(Position));
 
     Probe ctx = {0};

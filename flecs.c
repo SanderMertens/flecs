@@ -5332,6 +5332,7 @@ ecs_entity_t ecs_new_w_id(
     }
 
     ecs_table_diff_builder_t diff_builder = ECS_TABLE_DIFF_INIT;
+    flecs_table_diff_builder_init(world, &diff_builder);
     ecs_table_t *table = flecs_find_table_add(
         world, &world->store.root, id, &diff_builder);
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -5340,6 +5341,7 @@ ecs_entity_t ecs_new_w_id(
     flecs_table_diff_build_noalloc(&diff_builder, &diff);
     ecs_record_t *r = flecs_entities_get(world, entity);
     flecs_new_entity(world, entity, r, table, &diff, true, 0);
+    flecs_table_diff_builder_fini(world, &diff_builder);
 
     flecs_defer_end(world, stage);
 
@@ -5368,7 +5370,6 @@ error:
 static
 void flecs_copy_id(
     ecs_world_t *world,
-    ecs_entity_t entity,
     ecs_record_t *r,
     ecs_id_t id,
     size_t size,
@@ -5624,7 +5625,10 @@ int flecs_traverse_add(
         ecs_assert(r->table != NULL, ECS_INTERNAL_ERROR, NULL);
         int32_t i = 0, row = ECS_RECORD_TO_ROW(r->row);
         const ecs_value_t *v;
-        while ((v = &desc->set[i ++]), v->type) {
+        
+        flecs_defer_begin(world, world->stages[0]);
+
+        while ((void)(v = &desc->set[i ++]), v->type) {
             if (!v->ptr) {
                 continue;
             }
@@ -5632,9 +5636,11 @@ int flecs_traverse_add(
             flecs_component_ptr_t ptr = flecs_get_component_ptr(
                 world, table, row, v->type);
             ecs_check(ptr.ptr != NULL, ECS_INTERNAL_ERROR, NULL);
-            flecs_copy_id(world, result, r, v->type, ptr.ti->size, ptr.ptr, 
-                v->ptr, ptr.ti);
+            flecs_copy_id(world, r, v->type, 
+                flecs_itosize(ptr.ti->size), ptr.ptr, v->ptr, ptr.ti);
         }
+
+        flecs_defer_end(world, world->stages[0]);
     }
 
     flecs_table_diff_builder_fini(world, &diff);
@@ -5695,7 +5701,7 @@ void flecs_deferred_add_remove(
     if (desc->set) {
         int32_t i = 0;
         const ecs_value_t *v;
-        while ((v = &desc->set[i ++]), v->type) {
+        while ((void)(v = &desc->set[i ++]), v->type) {
             if (v->ptr) {
                 ecs_set_id(world, entity, v->type, 0, v->ptr);
             } else {
@@ -7248,7 +7254,7 @@ void flecs_set_id_copy(
     ecs_record_t *r = flecs_entities_get(world, entity);
     flecs_component_ptr_t dst = flecs_ensure(world, entity, id, r);
 
-    flecs_copy_id(world, entity, r, id, size, dst.ptr, ptr, dst.ti);
+    flecs_copy_id(world, r, id, size, dst.ptr, ptr, dst.ti);
 
     flecs_defer_end(world, stage);
 }
@@ -22819,7 +22825,7 @@ ecs_entity_t meta_lookup(
     if (count != 1) {
         ecs_check(count <= INT32_MAX, ECS_INVALID_PARAMETER, NULL);
 
-        type = ecs_set(world, 0, EcsArray, {type, (int32_t)count});
+        type = ecs_insert(world, ecs_value(EcsArray, {type, (int32_t)count}));
     }
 
     if (!type) {
@@ -24413,8 +24419,7 @@ void AggregateStats(ecs_iter_t *it) {
 static
 void flecs_stats_monitor_import(
     ecs_world_t *world,
-    ecs_id_t kind,
-    size_t size)
+    ecs_id_t kind)
 {
     ecs_entity_t prev = ecs_set_scope(world, kind);
 
@@ -24491,11 +24496,11 @@ void flecs_stats_monitor_import(
 
     ecs_set_scope(world, prev);
 
-    ecs_set_id(world, EcsWorld, ecs_pair(kind, EcsPeriod1s), size, NULL);
-    ecs_set_id(world, EcsWorld, ecs_pair(kind, EcsPeriod1m), size, NULL);
-    ecs_set_id(world, EcsWorld, ecs_pair(kind, EcsPeriod1h), size, NULL);
-    ecs_set_id(world, EcsWorld, ecs_pair(kind, EcsPeriod1d), size, NULL);
-    ecs_set_id(world, EcsWorld, ecs_pair(kind, EcsPeriod1w), size, NULL);
+    ecs_add_pair(world, EcsWorld, kind, EcsPeriod1s);
+    ecs_add_pair(world, EcsWorld, kind, EcsPeriod1m);
+    ecs_add_pair(world, EcsWorld, kind, EcsPeriod1h);
+    ecs_add_pair(world, EcsWorld, kind, EcsPeriod1d);
+    ecs_add_pair(world, EcsWorld, kind, EcsPeriod1w);
 }
 
 static
@@ -24504,8 +24509,11 @@ void flecs_world_monitor_import(
 {
     ECS_COMPONENT_DEFINE(world, EcsWorldStats);
 
-    flecs_stats_monitor_import(world, ecs_id(EcsWorldStats), 
-        sizeof(EcsWorldStats));
+    ecs_set_hooks(world, EcsWorldStats, {
+        .ctor = ecs_default_ctor
+    });
+
+    flecs_stats_monitor_import(world, ecs_id(EcsWorldStats));
 }
 
 static
@@ -24521,8 +24529,7 @@ void flecs_pipeline_monitor_import(
         .dtor = ecs_dtor(EcsPipelineStats)
     });
 
-    flecs_stats_monitor_import(world, ecs_id(EcsPipelineStats),
-        sizeof(EcsPipelineStats));
+    flecs_stats_monitor_import(world, ecs_id(EcsPipelineStats));
 }
 
 void FlecsMonitorImport(

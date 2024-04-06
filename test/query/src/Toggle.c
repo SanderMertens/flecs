@@ -4050,10 +4050,10 @@ void Toggle_this_sort(void) {
 
     ecs_add_id(world, ecs_id(Position), EcsCanToggle);
 
-    ecs_entity_t e1 = ecs_set(world, 0, Position, {3, 2});
-    ecs_entity_t e2 = ecs_set(world, 0, Position, {2, 2});
-    ecs_entity_t e3 = ecs_set(world, 0, Position, {1, 2});
-    ecs_entity_t e4 = ecs_set(world, 0, Position, {0, 2});
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Position, {3, 2}));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Position, {2, 2}));
+    ecs_entity_t e3 = ecs_insert(world, ecs_value(Position, {1, 2}));
+    ecs_entity_t e4 = ecs_insert(world, ecs_value(Position, {0, 2}));
 
     ecs_enable_component(world, e1, Position, true);
     ecs_enable_component(world, e2, Position, true);
@@ -4103,9 +4103,9 @@ void Toggle_this_table_move_2_from_3(void) {
         .cache_kind = cache_kind
     });
 
-    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
-    ecs_entity_t e2 = ecs_set(world, 0, Position, {20, 30});
-    ecs_entity_t e3 = ecs_set(world, 0, Position, {30, 40});
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Position, {10, 20}));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Position, {20, 30}));
+    ecs_entity_t e3 = ecs_insert(world, ecs_value(Position, {30, 40}));
 
     ecs_enable_component(world, e1, Position, true);
     ecs_enable_component(world, e2, Position, false);

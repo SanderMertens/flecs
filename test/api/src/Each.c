@@ -35,9 +35,9 @@ void Each_each_component(void) {
     ECS_COMPONENT(world, Position);
     ECS_TAG(world, Bar);
 
-    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
-    ecs_entity_t e2 = ecs_set(world, 0, Position, {20, 30});
-    ecs_entity_t e3 = ecs_set(world, 0, Position, {30, 40});
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Position, {10, 20}));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Position, {20, 30}));
+    ecs_entity_t e3 = ecs_insert(world, ecs_value(Position, {30, 40}));
     ecs_add(world, e3, Bar);
 
     ecs_iter_t it = ecs_each(world, Position);

@@ -1480,7 +1480,7 @@ void Event_enqueue_custom_after_large_cmd(void) {
     ECS_OBSERVER(world, OnPosition, ecs_id(Position), LargeType);
 
     ecs_defer_begin(world);
-    ecs_entity_t e = ecs_set(world, 0, LargeType, {{0}});
+    ecs_entity_t e = ecs_insert(world, ecs_value(LargeType, {{0}}));
     ecs_defer_end(world);
     test_assert(ecs_has(world, e, LargeType));
 

@@ -532,9 +532,9 @@ void ObserverOnSet_add_to_current_in_on_set(void) {
     ecs_set_ctx(world, &ctx, NULL);
 
     /* Create entities from scratch so they don't have the EcsName component */
-    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
-    ecs_entity_t e2 = ecs_set(world, 0, Position, {11, 21});
-    ecs_entity_t e3 = ecs_set(world, 0, Position, {12, 22});
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Position, {10, 20}));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Position, {11, 21}));
+    ecs_entity_t e3 = ecs_insert(world, ecs_value(Position, {12, 22}));
 
     test_assert( ecs_has(world, e1, Position));
     test_assert( ecs_has(world, e2, Position));
@@ -644,9 +644,9 @@ void ObserverOnSet_match_table_created_w_add_in_on_set(void) {
     IterData add_ctx = {.component = ecs_id(Velocity)};
     ecs_set_ctx(world, &add_ctx, NULL);
 
-    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
-    ecs_entity_t e2 = ecs_set(world, 0, Position, {10, 20});
-    ecs_entity_t e3 = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Position, {10, 20}));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Position, {10, 20}));
+    ecs_entity_t e3 = ecs_insert(world, ecs_value(Position, {10, 20}));
 
     ecs_progress(world, 1);
 
@@ -709,7 +709,7 @@ void ObserverOnSet_set_from_nothing(void) {
     Probe ctx = { 0 };
     ecs_set_ctx(world, &ctx, NULL);
 
-    ecs_entity_t e = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e = ecs_insert(world, ecs_value(Position, {10, 20}));
     test_int(ctx.invoked, 1);
     test_int(ctx.count, 1);
     test_int(ctx.system, OnPosition);
@@ -752,7 +752,7 @@ void ObserverOnSet_add_0_entity_in_on_set(void) {
     ecs_set_ctx(world, &ctx, NULL);
 
     test_expect_abort();
-    ecs_set(world, 0, Position, {10, 20});
+    ecs_insert(world, ecs_value(Position, {10, 20}));
 }
 
 static int dummy_invoked = 0;

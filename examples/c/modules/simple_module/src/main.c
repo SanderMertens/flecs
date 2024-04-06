@@ -20,7 +20,7 @@ int main(int argc, char *argv[]) {
     ECS_SYSTEM(world, PrintPosition, EcsOnUpdate, simple.module.Position);
 
     // Create entity with components imported from module
-    ecs_entity_t e = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e = ecs_insert(world, ecs_value(Position, {10, 20}));
                      ecs_set(world, e, Velocity, {1, 2});
 
     // Call progress which runs imported Move system

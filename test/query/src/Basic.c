@@ -3383,7 +3383,7 @@ void Basic_1_any_src_component_w_this_component(void) {
 
     test_assert(r != NULL);
 
-    ecs_entity_t e = ecs_set(world, 0, Velocity, {10, 20});
+    ecs_entity_t e = ecs_insert(world, ecs_value(Velocity, {10, 20}));
 
     {
         ecs_iter_t it = ecs_query_iter(world, r);
@@ -4354,9 +4354,9 @@ void Basic_not_instanced_table_src(void) {
 
     test_assert(r != NULL);
 
-    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
-    ecs_entity_t e2 = ecs_set(world, 0, Position, {20, 30});
-    ecs_entity_t e3 = ecs_set(world, 0, Position, {30, 40});
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Position, {10, 20}));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Position, {20, 30}));
+    ecs_entity_t e3 = ecs_insert(world, ecs_value(Position, {30, 40}));
 
     ecs_iter_t it = ecs_query_iter(world, r);
     {
@@ -4435,9 +4435,9 @@ void Basic_not_instanced_mixed_src(void) {
 
     test_assert(r != NULL);
 
-    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
-    ecs_entity_t e2 = ecs_set(world, 0, Position, {20, 30});
-    ecs_entity_t e3 = ecs_set(world, 0, Position, {30, 40});
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Position, {10, 20}));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Position, {20, 30}));
+    ecs_entity_t e3 = ecs_insert(world, ecs_value(Position, {30, 40}));
 
     ecs_set(world, e0, Velocity, {1, 2});
 
@@ -4520,14 +4520,14 @@ void Basic_not_instanced_inherited(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t base = ecs_set(world, 0, Velocity, {1, 2});
+    ecs_entity_t base = ecs_insert(world, ecs_value(Velocity, {1, 2}));
 
-    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
-    ecs_entity_t e2 = ecs_set(world, 0, Position, {20, 30});
-    ecs_entity_t e3 = ecs_set(world, 0, Position, {30, 40});
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Position, {10, 20}));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Position, {20, 30}));
+    ecs_entity_t e3 = ecs_insert(world, ecs_value(Position, {30, 40}));
 
-    ecs_entity_t e4 = ecs_set(world, 0, Position, {40, 50});
-    ecs_entity_t e5 = ecs_set(world, 0, Position, {50, 60});
+    ecs_entity_t e4 = ecs_insert(world, ecs_value(Position, {40, 50}));
+    ecs_entity_t e5 = ecs_insert(world, ecs_value(Position, {50, 60}));
     ecs_add(world, e4, Tag);
     ecs_add(world, e5, Tag);
 
@@ -4537,8 +4537,8 @@ void Basic_not_instanced_inherited(void) {
     ecs_add_pair(world, e4, EcsIsA, base);
     ecs_add_pair(world, e5, EcsIsA, base);
 
-    ecs_entity_t e6 = ecs_set(world, 0, Position, {60, 70});
-    ecs_entity_t e7 = ecs_set(world, 0, Position, {70, 80});
+    ecs_entity_t e6 = ecs_insert(world, ecs_value(Position, {60, 70}));
+    ecs_entity_t e7 = ecs_insert(world, ecs_value(Position, {70, 80}));
     ecs_set(world, e6, Velocity, {2, 3});
     ecs_set(world, e7, Velocity, {4, 5});
 
@@ -4648,9 +4648,9 @@ void Basic_instanced_table_src(void) {
 
     test_assert(r != NULL);
 
-    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
-    ecs_entity_t e2 = ecs_set(world, 0, Position, {20, 30});
-    ecs_entity_t e3 = ecs_set(world, 0, Position, {30, 40});
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Position, {10, 20}));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Position, {20, 30}));
+    ecs_entity_t e3 = ecs_insert(world, ecs_value(Position, {30, 40}));
 
     ecs_iter_t it = ecs_query_iter(world, r);
     {
@@ -4731,9 +4731,9 @@ void Basic_instanced_mixed_src(void) {
 
     test_assert(r != NULL);
 
-    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
-    ecs_entity_t e2 = ecs_set(world, 0, Position, {20, 30});
-    ecs_entity_t e3 = ecs_set(world, 0, Position, {30, 40});
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Position, {10, 20}));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Position, {20, 30}));
+    ecs_entity_t e3 = ecs_insert(world, ecs_value(Position, {30, 40}));
 
     ecs_set(world, e0, Velocity, {1, 2});
 
@@ -4774,14 +4774,14 @@ void Basic_instanced_inherited(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t base = ecs_set(world, 0, Velocity, {1, 2});
+    ecs_entity_t base = ecs_insert(world, ecs_value(Velocity, {1, 2}));
 
-    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
-    ecs_entity_t e2 = ecs_set(world, 0, Position, {20, 30});
-    ecs_entity_t e3 = ecs_set(world, 0, Position, {30, 40});
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Position, {10, 20}));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Position, {20, 30}));
+    ecs_entity_t e3 = ecs_insert(world, ecs_value(Position, {30, 40}));
 
-    ecs_entity_t e4 = ecs_set(world, 0, Position, {40, 50});
-    ecs_entity_t e5 = ecs_set(world, 0, Position, {50, 60});
+    ecs_entity_t e4 = ecs_insert(world, ecs_value(Position, {40, 50}));
+    ecs_entity_t e5 = ecs_insert(world, ecs_value(Position, {50, 60}));
     ecs_add(world, e4, Tag);
     ecs_add(world, e5, Tag);
 
@@ -4791,8 +4791,8 @@ void Basic_instanced_inherited(void) {
     ecs_add_pair(world, e4, EcsIsA, base);
     ecs_add_pair(world, e5, EcsIsA, base);
 
-    ecs_entity_t e6 = ecs_set(world, 0, Position, {60, 70});
-    ecs_entity_t e7 = ecs_set(world, 0, Position, {70, 80});
+    ecs_entity_t e6 = ecs_insert(world, ecs_value(Position, {60, 70}));
+    ecs_entity_t e7 = ecs_insert(world, ecs_value(Position, {70, 80}));
     ecs_set(world, e6, Velocity, {2, 3});
     ecs_set(world, e7, Velocity, {4, 5});
 
@@ -7598,12 +7598,12 @@ void Basic_instanced_w_singleton(void) {
 
     ecs_singleton_set(world, Velocity, {1, 2});
 
-    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
-    ecs_entity_t e2 = ecs_set(world, 0, Position, {20, 30});
-    ecs_entity_t e3 = ecs_set(world, 0, Position, {30, 40});
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Position, {10, 20}));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Position, {20, 30}));
+    ecs_entity_t e3 = ecs_insert(world, ecs_value(Position, {30, 40}));
 
-    ecs_entity_t e4 = ecs_set(world, 0, Position, {40, 50});
-    ecs_entity_t e5 = ecs_set(world, 0, Position, {50, 60});
+    ecs_entity_t e4 = ecs_insert(world, ecs_value(Position, {40, 50}));
+    ecs_entity_t e5 = ecs_insert(world, ecs_value(Position, {50, 60}));
 
     ecs_add(world, e4, Tag);
     ecs_add(world, e5, Tag);
@@ -7671,15 +7671,15 @@ void Basic_instanced_w_base(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t base_1 = ecs_set(world, 0, Velocity, {1, 2});
-    ecs_entity_t base_2 = ecs_set(world, 0, Position, {80, 90});
+    ecs_entity_t base_1 = ecs_insert(world, ecs_value(Velocity, {1, 2}));
+    ecs_entity_t base_2 = ecs_insert(world, ecs_value(Position, {80, 90}));
 
-    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
-    ecs_entity_t e2 = ecs_set(world, 0, Position, {20, 30});
-    ecs_entity_t e3 = ecs_set(world, 0, Position, {30, 40});
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Position, {10, 20}));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Position, {20, 30}));
+    ecs_entity_t e3 = ecs_insert(world, ecs_value(Position, {30, 40}));
 
-    ecs_entity_t e4 = ecs_set(world, 0, Position, {40, 50});
-    ecs_entity_t e5 = ecs_set(world, 0, Position, {50, 60});
+    ecs_entity_t e4 = ecs_insert(world, ecs_value(Position, {40, 50}));
+    ecs_entity_t e5 = ecs_insert(world, ecs_value(Position, {50, 60}));
     ecs_add(world, e4, Tag);
     ecs_add(world, e5, Tag);
 
@@ -7689,13 +7689,13 @@ void Basic_instanced_w_base(void) {
     ecs_add_pair(world, e4, EcsIsA, base_1);
     ecs_add_pair(world, e5, EcsIsA, base_1);
 
-    ecs_entity_t e6 = ecs_set(world, 0, Position, {60, 70});
-    ecs_entity_t e7 = ecs_set(world, 0, Position, {70, 80});
+    ecs_entity_t e6 = ecs_insert(world, ecs_value(Position, {60, 70}));
+    ecs_entity_t e7 = ecs_insert(world, ecs_value(Position, {70, 80}));
     ecs_set(world, e6, Velocity, {2, 3});
     ecs_set(world, e7, Velocity, {4, 5});
 
-    ecs_entity_t e8 = ecs_set(world, 0, Velocity, {6, 7});
-    ecs_entity_t e9 = ecs_set(world, 0, Velocity, {8, 9});
+    ecs_entity_t e8 = ecs_insert(world, ecs_value(Velocity, {6, 7}));
+    ecs_entity_t e9 = ecs_insert(world, ecs_value(Velocity, {8, 9}));
     ecs_add_pair(world, e8, EcsIsA, base_2);
     ecs_add_pair(world, e9, EcsIsA, base_2);
 
@@ -7818,12 +7818,12 @@ void Basic_not_instanced_w_singleton(void) {
 
     ecs_singleton_set(world, Velocity, {1, 2});
 
-    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
-    ecs_entity_t e2 = ecs_set(world, 0, Position, {20, 30});
-    ecs_entity_t e3 = ecs_set(world, 0, Position, {30, 40});
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Position, {10, 20}));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Position, {20, 30}));
+    ecs_entity_t e3 = ecs_insert(world, ecs_value(Position, {30, 40}));
 
-    ecs_entity_t e4 = ecs_set(world, 0, Position, {40, 50});
-    ecs_entity_t e5 = ecs_set(world, 0, Position, {50, 60});
+    ecs_entity_t e4 = ecs_insert(world, ecs_value(Position, {40, 50}));
+    ecs_entity_t e5 = ecs_insert(world, ecs_value(Position, {50, 60}));
 
     ecs_add(world, e4, Tag);
     ecs_add(world, e5, Tag);
@@ -7939,15 +7939,15 @@ void Basic_not_instanced_w_base(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t base_1 = ecs_set(world, 0, Velocity, {1, 2});
-    ecs_entity_t base_2 = ecs_set(world, 0, Position, {80, 90});
+    ecs_entity_t base_1 = ecs_insert(world, ecs_value(Velocity, {1, 2}));
+    ecs_entity_t base_2 = ecs_insert(world, ecs_value(Position, {80, 90}));
 
-    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
-    ecs_entity_t e2 = ecs_set(world, 0, Position, {20, 30});
-    ecs_entity_t e3 = ecs_set(world, 0, Position, {30, 40});
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Position, {10, 20}));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Position, {20, 30}));
+    ecs_entity_t e3 = ecs_insert(world, ecs_value(Position, {30, 40}));
 
-    ecs_entity_t e4 = ecs_set(world, 0, Position, {40, 50});
-    ecs_entity_t e5 = ecs_set(world, 0, Position, {50, 60});
+    ecs_entity_t e4 = ecs_insert(world, ecs_value(Position, {40, 50}));
+    ecs_entity_t e5 = ecs_insert(world, ecs_value(Position, {50, 60}));
     ecs_add(world, e4, Tag);
     ecs_add(world, e5, Tag);
 
@@ -7957,13 +7957,13 @@ void Basic_not_instanced_w_base(void) {
     ecs_add_pair(world, e4, EcsIsA, base_1);
     ecs_add_pair(world, e5, EcsIsA, base_1);
 
-    ecs_entity_t e6 = ecs_set(world, 0, Position, {60, 70});
-    ecs_entity_t e7 = ecs_set(world, 0, Position, {70, 80});
+    ecs_entity_t e6 = ecs_insert(world, ecs_value(Position, {60, 70}));
+    ecs_entity_t e7 = ecs_insert(world, ecs_value(Position, {70, 80}));
     ecs_set(world, e6, Velocity, {2, 3});
     ecs_set(world, e7, Velocity, {4, 5});
 
-    ecs_entity_t e8 = ecs_set(world, 0, Velocity, {6, 7});
-    ecs_entity_t e9 = ecs_set(world, 0, Velocity, {8, 9});
+    ecs_entity_t e8 = ecs_insert(world, ecs_value(Velocity, {6, 7}));
+    ecs_entity_t e9 = ecs_insert(world, ecs_value(Velocity, {8, 9}));
     ecs_add_pair(world, e8, EcsIsA, base_2);
     ecs_add_pair(world, e9, EcsIsA, base_2);
 

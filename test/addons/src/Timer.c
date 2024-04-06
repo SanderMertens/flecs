@@ -597,7 +597,7 @@ void Timer_nested_rate_entity_empty_src(void) {
 void Timer_naked_tick_entity(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t tick = ecs_set(world, 0, EcsTickSource, {0});
+    ecs_entity_t tick = ecs_insert(world, ecs_value(EcsTickSource, {0}));
 
     int i;
     for (i = 0; i < 10; i ++) {

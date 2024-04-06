@@ -2835,7 +2835,7 @@ void Prefab_rematch_after_add_instanceof_to_parent(void) {
     ecs_query_t *q = ecs_query(world, { .expr = "Position(up)" });
     test_assert(q != NULL);
 
-    ecs_entity_t base = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t base = ecs_insert(world, ecs_value(Position, {10, 20}));
     ecs_entity_t parent = ecs_new(world);
     ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, parent);
     test_assert(base != 0);
@@ -2883,7 +2883,7 @@ void Prefab_rematch_after_prefab_delete(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t base = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t base = ecs_insert(world, ecs_value(Position, {10, 20}));
     ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, base);
 
     ecs_query_t *q = ecs_query(world, { .expr = "Position(up(IsA))" });
@@ -2914,7 +2914,7 @@ void Prefab_add_tag_w_low_id_to_instance(void) {
     ecs_entity_t Tag = ecs_new_low_id(world);
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t base = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t base = ecs_insert(world, ecs_value(Position, {10, 20}));
     ecs_add_id(world, base, Tag);
 
     ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, base);
@@ -3042,7 +3042,7 @@ void Prefab_get_from_recycled_base(void) {
     ecs_delete(world, base);
     test_assert( !ecs_is_alive(world, base));
 
-    base = ecs_set(world, 0, Position, {10, 20});
+    base = ecs_insert(world, ecs_value(Position, {10, 20}));
     test_assert(base != 0);
     test_assert(ecs_entity_t_lo(base) != base); // Ensure recycled
     test_assert( ecs_get_type(world, base) != NULL);
@@ -3074,7 +3074,7 @@ void Prefab_override_from_recycled_base(void) {
     ecs_delete(world, base);
     test_assert( !ecs_is_alive(world, base));
 
-    base = ecs_set(world, 0, Position, {10, 20});
+    base = ecs_insert(world, ecs_value(Position, {10, 20}));
     test_assert(base != 0);
     test_assert(ecs_entity_t_lo(base) != base); // Ensure recycled
 
@@ -3107,7 +3107,7 @@ void Prefab_remove_override_from_recycled_base(void) {
     ecs_delete(world, base);
     test_assert( !ecs_is_alive(world, base));
 
-    base = ecs_set(world, 0, Position, {10, 20});
+    base = ecs_insert(world, ecs_value(Position, {10, 20}));
     test_assert(base != 0);
     test_assert(ecs_entity_t_lo(base) != base); // Ensure recycled
 
@@ -3139,7 +3139,7 @@ void Prefab_instantiate_tree_from_recycled_base(void) {
     ecs_delete(world, base);
     test_assert( !ecs_is_alive(world, base));
 
-    base = ecs_set(world, 0, Position, {10, 20});
+    base = ecs_insert(world, ecs_value(Position, {10, 20}));
     test_assert(base != 0);
     ecs_add_id(world, base, EcsPrefab);
 
@@ -3570,7 +3570,7 @@ void Prefab_override_dont_inherit(void) {
         .ctor = ecs_default_ctor
     });
 
-    ecs_entity_t base = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t base = ecs_insert(world, ecs_value(Position, {10, 20}));
     ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
     test_assert( !ecs_has(world, inst, Position));
 

@@ -67,11 +67,11 @@ void MemberTarget_this_member_eq_1(void) {
 
     test_assert(q != NULL);
 
-    ecs_entity_t e1 = ecs_set(world, 0, Movement, { Running });
-    ecs_entity_t e2 = ecs_set(world, 0, Movement, { Running });
-    /* ecs_entity_t e3 = */ ecs_set(world, 0, Movement, { Walking });
-    /* ecs_entity_t e4 = */ ecs_set(world, 0, Movement, { Sitting });
-    ecs_entity_t e5 = ecs_set(world, 0, Movement, { Running });
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Movement, { Running }));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Movement, { Running }));
+    /* ecs_entity_t e3 = */ ecs_insert(world, ecs_value(Movement, { Walking }));
+    /* ecs_entity_t e4 = */ ecs_insert(world, ecs_value(Movement, { Sitting }));
+    ecs_entity_t e5 = ecs_insert(world, ecs_value(Movement, { Running }));
 
     {
         ecs_iter_t it = ecs_query_iter(world, q);
@@ -127,11 +127,11 @@ void MemberTarget_this_member_eq_2(void) {
 
     test_assert(q != NULL);
 
-    /* ecs_entity_t e1 = */ ecs_set(world, 0, Movement, { Walking });
-    ecs_entity_t e2 = ecs_set(world, 0, Movement, { Running });
-    /* ecs_entity_t e3 = */ ecs_set(world, 0, Movement, { Walking });
-    ecs_entity_t e4 = ecs_set(world, 0, Movement, { Running });
-    /* ecs_entity_t e5 = */ ecs_set(world, 0, Movement, { Sitting });
+    /* ecs_entity_t e1 = */ ecs_insert(world, ecs_value(Movement, { Walking }));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Movement, { Running }));
+    /* ecs_entity_t e3 = */ ecs_insert(world, ecs_value(Movement, { Walking }));
+    ecs_entity_t e4 = ecs_insert(world, ecs_value(Movement, { Running }));
+    /* ecs_entity_t e5 = */ ecs_insert(world, ecs_value(Movement, { Sitting }));
 
     {
         ecs_iter_t it = ecs_query_iter(world, q);
@@ -177,11 +177,11 @@ void MemberTarget_this_member_eq_no_matches(void) {
 
     test_assert(q != NULL);
 
-    /* ecs_entity_t e1 = */ ecs_set(world, 0, Movement, { Walking });
-    /* ecs_entity_t e2 = */ ecs_set(world, 0, Movement, { Walking });
-    /* ecs_entity_t e3 = */ ecs_set(world, 0, Movement, { Sitting });
-    /* ecs_entity_t e4 = */ ecs_set(world, 0, Movement, { Walking });
-    /* ecs_entity_t e5 = */ ecs_set(world, 0, Movement, { Sitting });
+    /* ecs_entity_t e1 = */ ecs_insert(world, ecs_value(Movement, { Walking }));
+    /* ecs_entity_t e2 = */ ecs_insert(world, ecs_value(Movement, { Walking }));
+    /* ecs_entity_t e3 = */ ecs_insert(world, ecs_value(Movement, { Sitting }));
+    /* ecs_entity_t e4 = */ ecs_insert(world, ecs_value(Movement, { Walking }));
+    /* ecs_entity_t e5 = */ ecs_insert(world, ecs_value(Movement, { Sitting }));
 
     {
         ecs_iter_t it = ecs_query_iter(world, q);
@@ -207,11 +207,11 @@ void MemberTarget_this_member_eq_all_matches(void) {
 
     test_assert(q != NULL);
 
-    ecs_entity_t e1 = ecs_set(world, 0, Movement, { Running });
-    ecs_entity_t e2 = ecs_set(world, 0, Movement, { Running });
-    ecs_entity_t e3 = ecs_set(world, 0, Movement, { Running });
-    ecs_entity_t e4 = ecs_set(world, 0, Movement, { Running });
-    ecs_entity_t e5 = ecs_set(world, 0, Movement, { Running });
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Movement, { Running }));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Movement, { Running }));
+    ecs_entity_t e3 = ecs_insert(world, ecs_value(Movement, { Running }));
+    ecs_entity_t e4 = ecs_insert(world, ecs_value(Movement, { Running }));
+    ecs_entity_t e5 = ecs_insert(world, ecs_value(Movement, { Running }));
 
     {
         ecs_iter_t it = ecs_query_iter(world, q);
@@ -287,11 +287,11 @@ void MemberTarget_this_member_wildcard(void) {
 
     test_assert(q != NULL);
 
-    ecs_entity_t e1 = ecs_set(world, 0, Movement, { Running });
-    ecs_entity_t e2 = ecs_set(world, 0, Movement, { Running });
-    ecs_entity_t e3 = ecs_set(world, 0, Movement, { Walking });
-    ecs_entity_t e4 = ecs_set(world, 0, Movement, { Sitting });
-    ecs_entity_t e5 = ecs_set(world, 0, Movement, { Running });
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Movement, { Running }));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Movement, { Running }));
+    ecs_entity_t e3 = ecs_insert(world, ecs_value(Movement, { Walking }));
+    ecs_entity_t e4 = ecs_insert(world, ecs_value(Movement, { Sitting }));
+    ecs_entity_t e5 = ecs_insert(world, ecs_value(Movement, { Running }));
 
     {
         ecs_iter_t it = ecs_query_iter(world, q);
@@ -370,11 +370,11 @@ void MemberTarget_this_member_var(void) {
     int x_var = ecs_query_find_var(q, "x");
     test_assert(x_var != -1);
 
-    ecs_entity_t e1 = ecs_set(world, 0, Movement, { Running });
-    ecs_entity_t e2 = ecs_set(world, 0, Movement, { Running });
-    ecs_entity_t e3 = ecs_set(world, 0, Movement, { Walking });
-    ecs_entity_t e4 = ecs_set(world, 0, Movement, { Sitting });
-    ecs_entity_t e5 = ecs_set(world, 0, Movement, { Running });
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Movement, { Running }));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Movement, { Running }));
+    ecs_entity_t e3 = ecs_insert(world, ecs_value(Movement, { Walking }));
+    ecs_entity_t e4 = ecs_insert(world, ecs_value(Movement, { Sitting }));
+    ecs_entity_t e5 = ecs_insert(world, ecs_value(Movement, { Running }));
 
     {
         ecs_iter_t it = ecs_query_iter(world, q);
@@ -461,11 +461,11 @@ void MemberTarget_this_member_var_written(void) {
 
     ecs_add(world, Running, Foo);
 
-    ecs_entity_t e1 = ecs_set(world, 0, Movement, { Running });
-    ecs_entity_t e2 = ecs_set(world, 0, Movement, { Running });
-    /* ecs_entity_t e3 = */ ecs_set(world, 0, Movement, { Walking });
-    /* ecs_entity_t e4 = */ ecs_set(world, 0, Movement, { Sitting });
-    ecs_entity_t e5 = ecs_set(world, 0, Movement, { Running });
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Movement, { Running }));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Movement, { Running }));
+    /* ecs_entity_t e3 = */ ecs_insert(world, ecs_value(Movement, { Walking }));
+    /* ecs_entity_t e4 = */ ecs_insert(world, ecs_value(Movement, { Sitting }));
+    ecs_entity_t e5 = ecs_insert(world, ecs_value(Movement, { Running }));
 
     {
         ecs_iter_t it = ecs_query_iter(world, q);
@@ -533,11 +533,11 @@ void MemberTarget_this_member_var_read(void) {
 
     ecs_add(world, Running, Foo);
 
-    ecs_entity_t e1 = ecs_set(world, 0, Movement, { Running });
-    ecs_entity_t e2 = ecs_set(world, 0, Movement, { Running });
-    /* ecs_entity_t e3 = */ ecs_set(world, 0, Movement, { Walking });
-    /* ecs_entity_t e4 = */ ecs_set(world, 0, Movement, { Sitting });
-    ecs_entity_t e5 = ecs_set(world, 0, Movement, { Running });
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Movement, { Running }));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Movement, { Running }));
+    /* ecs_entity_t e3 = */ ecs_insert(world, ecs_value(Movement, { Walking }));
+    /* ecs_entity_t e4 = */ ecs_insert(world, ecs_value(Movement, { Sitting }));
+    ecs_entity_t e5 = ecs_insert(world, ecs_value(Movement, { Running }));
 
     {
         ecs_iter_t it = ecs_query_iter(world, q);
@@ -599,11 +599,11 @@ void MemberTarget_this_member_eq_1_2nd_member(void) {
 
     test_assert(q != NULL);
 
-    ecs_entity_t e1 = ecs_set(world, 0, TwoMembers, { Walking, Running });
-    ecs_entity_t e2 = ecs_set(world, 0, TwoMembers, { Walking, Running });
-    /* ecs_entity_t e3 = */ ecs_set(world, 0, TwoMembers, { Walking, Walking });
-    /* ecs_entity_t e4 = */ ecs_set(world, 0, TwoMembers, { Walking, Sitting });
-    ecs_entity_t e5 = ecs_set(world, 0, TwoMembers, { Walking, Running });
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(TwoMembers, { Walking, Running }));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(TwoMembers, { Walking, Running }));
+    /* ecs_entity_t e3 = */ ecs_insert(world, ecs_value(TwoMembers, { Walking, Walking }));
+    /* ecs_entity_t e4 = */ ecs_insert(world, ecs_value(TwoMembers, { Walking, Sitting }));
+    ecs_entity_t e5 = ecs_insert(world, ecs_value(TwoMembers, { Walking, Running }));
 
     {
         ecs_iter_t it = ecs_query_iter(world, q);
@@ -659,11 +659,11 @@ void MemberTarget_this_member_eq_2_2nd_member(void) {
 
     test_assert(q != NULL);
 
-    /* ecs_entity_t e1 = */ ecs_set(world, 0, TwoMembers, { Sitting, Walking });
-    ecs_entity_t e2 = ecs_set(world, 0, TwoMembers, { Sitting, Running });
-    /* ecs_entity_t e3 = */ ecs_set(world, 0, TwoMembers, { Sitting, Walking });
-    ecs_entity_t e4 = ecs_set(world, 0, TwoMembers, { Sitting, Running });
-    /* ecs_entity_t e5 = */ ecs_set(world, 0, TwoMembers, { Sitting, Sitting });
+    /* ecs_entity_t e1 = */ ecs_insert(world, ecs_value(TwoMembers, { Sitting, Walking }));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(TwoMembers, { Sitting, Running }));
+    /* ecs_entity_t e3 = */ ecs_insert(world, ecs_value(TwoMembers, { Sitting, Walking }));
+    ecs_entity_t e4 = ecs_insert(world, ecs_value(TwoMembers, { Sitting, Running }));
+    /* ecs_entity_t e5 = */ ecs_insert(world, ecs_value(TwoMembers, { Sitting, Sitting }));
 
     {
         ecs_iter_t it = ecs_query_iter(world, q);
@@ -713,11 +713,11 @@ void MemberTarget_this_member_var_same_1(void) {
     int x_var = ecs_query_find_var(q, "x");
     test_assert(x_var != -1);
 
-    ecs_entity_t e1 = ecs_set(world, 0, TwoMembers, { Running, Running });
-    ecs_entity_t e2 = ecs_set(world, 0, TwoMembers, { Walking, Walking });
-    /* ecs_entity_t e3 = */ ecs_set(world, 0, TwoMembers, { Walking, Sitting });
-    /* ecs_entity_t e4 = */ ecs_set(world, 0, TwoMembers, { Sitting, Walking });
-    ecs_entity_t e5 = ecs_set(world, 0, TwoMembers, { Sitting, Sitting });
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(TwoMembers, { Running, Running }));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(TwoMembers, { Walking, Walking }));
+    /* ecs_entity_t e3 = */ ecs_insert(world, ecs_value(TwoMembers, { Walking, Sitting }));
+    /* ecs_entity_t e4 = */ ecs_insert(world, ecs_value(TwoMembers, { Sitting, Walking }));
+    ecs_entity_t e5 = ecs_insert(world, ecs_value(TwoMembers, { Sitting, Sitting }));
 
     {
         ecs_iter_t it = ecs_query_iter(world, q);
@@ -798,11 +798,11 @@ void MemberTarget_this_member_var_same_2(void) {
     int x_var = ecs_query_find_var(q, "x");
     test_assert(x_var != -1);
 
-    /* ecs_entity_t e1 = */ ecs_set(world, 0, TwoMembers, { Walking, Running });
-    ecs_entity_t e2 = ecs_set(world, 0, TwoMembers, { Running, Running });
-    /* ecs_entity_t e3 = */ ecs_set(world, 0, TwoMembers, { Walking, Sitting });
-    ecs_entity_t e4 = ecs_set(world, 0, TwoMembers, { Walking, Walking });
-    /* ecs_entity_t e5 = */ ecs_set(world, 0, TwoMembers, { Running, Sitting });
+    /* ecs_entity_t e1 = */ ecs_insert(world, ecs_value(TwoMembers, { Walking, Running }));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(TwoMembers, { Running, Running }));
+    /* ecs_entity_t e3 = */ ecs_insert(world, ecs_value(TwoMembers, { Walking, Sitting }));
+    ecs_entity_t e4 = ecs_insert(world, ecs_value(TwoMembers, { Walking, Walking }));
+    /* ecs_entity_t e5 = */ ecs_insert(world, ecs_value(TwoMembers, { Running, Sitting }));
 
     {
         ecs_iter_t it = ecs_query_iter(world, q);
@@ -863,11 +863,11 @@ void MemberTarget_this_written_member_eq_1(void) {
 
     test_assert(q != NULL);
 
-    ecs_entity_t e1 = ecs_set(world, 0, Movement, { Running });
-    ecs_entity_t e2 = ecs_set(world, 0, Movement, { Running });
-    ecs_entity_t e3 = ecs_set(world, 0, Movement, { Walking });
-    ecs_entity_t e4 = ecs_set(world, 0, Movement, { Sitting });
-    ecs_entity_t e5 = ecs_set(world, 0, Movement, { Running });
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Movement, { Running }));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Movement, { Running }));
+    ecs_entity_t e3 = ecs_insert(world, ecs_value(Movement, { Walking }));
+    ecs_entity_t e4 = ecs_insert(world, ecs_value(Movement, { Sitting }));
+    ecs_entity_t e5 = ecs_insert(world, ecs_value(Movement, { Running }));
 
     ecs_add(world, e1, Foo);
     ecs_add(world, e2, Foo);
@@ -933,11 +933,11 @@ void MemberTarget_this_written_member_eq_2(void) {
 
     test_assert(q != NULL);
 
-    ecs_entity_t e1 = ecs_set(world, 0, Movement, { Walking });
-    ecs_entity_t e2 = ecs_set(world, 0, Movement, { Running });
-    ecs_entity_t e3 = ecs_set(world, 0, Movement, { Walking });
-    ecs_entity_t e4 = ecs_set(world, 0, Movement, { Running });
-    ecs_entity_t e5 = ecs_set(world, 0, Movement, { Sitting });
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Movement, { Walking }));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Movement, { Running }));
+    ecs_entity_t e3 = ecs_insert(world, ecs_value(Movement, { Walking }));
+    ecs_entity_t e4 = ecs_insert(world, ecs_value(Movement, { Running }));
+    ecs_entity_t e5 = ecs_insert(world, ecs_value(Movement, { Sitting }));
 
     ecs_add(world, e1, Foo);
     ecs_add(world, e2, Foo);
@@ -992,11 +992,11 @@ void MemberTarget_this_written_member_wildcard(void) {
 
     test_assert(q != NULL);
 
-    ecs_entity_t e1 = ecs_set(world, 0, Movement, { Running });
-    ecs_entity_t e2 = ecs_set(world, 0, Movement, { Running });
-    ecs_entity_t e3 = ecs_set(world, 0, Movement, { Walking });
-    ecs_entity_t e4 = ecs_set(world, 0, Movement, { Sitting });
-    ecs_entity_t e5 = ecs_set(world, 0, Movement, { Running });
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Movement, { Running }));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Movement, { Running }));
+    ecs_entity_t e3 = ecs_insert(world, ecs_value(Movement, { Walking }));
+    ecs_entity_t e4 = ecs_insert(world, ecs_value(Movement, { Sitting }));
+    ecs_entity_t e5 = ecs_insert(world, ecs_value(Movement, { Running }));
 
     ecs_add(world, e1, Foo);
     ecs_add(world, e2, Foo);
@@ -1087,11 +1087,11 @@ void MemberTarget_this_written_member_var(void) {
     int x_var = ecs_query_find_var(q, "x");
     test_assert(x_var != -1);
 
-    ecs_entity_t e1 = ecs_set(world, 0, Movement, { Running });
-    ecs_entity_t e2 = ecs_set(world, 0, Movement, { Running });
-    ecs_entity_t e3 = ecs_set(world, 0, Movement, { Walking });
-    ecs_entity_t e4 = ecs_set(world, 0, Movement, { Sitting });
-    ecs_entity_t e5 = ecs_set(world, 0, Movement, { Running });
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Movement, { Running }));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Movement, { Running }));
+    ecs_entity_t e3 = ecs_insert(world, ecs_value(Movement, { Walking }));
+    ecs_entity_t e4 = ecs_insert(world, ecs_value(Movement, { Sitting }));
+    ecs_entity_t e5 = ecs_insert(world, ecs_value(Movement, { Running }));
 
     ecs_add(world, e1, Foo);
     ecs_add(world, e2, Foo);
@@ -1185,11 +1185,11 @@ void MemberTarget_this_member_neq_1(void) {
     test_assert(q != NULL);
 
     ecs_entity_t e0 = ecs_new_w(world, Foo);
-    ecs_entity_t e1 = ecs_set(world, 0, Movement, { Running });
-    ecs_entity_t e2 = ecs_set(world, 0, Movement, { Running });
-    ecs_entity_t e3 = ecs_set(world, 0, Movement, { Walking });
-    ecs_entity_t e4 = ecs_set(world, 0, Movement, { Sitting });
-    ecs_entity_t e5 = ecs_set(world, 0, Movement, { Running });
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Movement, { Running }));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Movement, { Running }));
+    ecs_entity_t e3 = ecs_insert(world, ecs_value(Movement, { Walking }));
+    ecs_entity_t e4 = ecs_insert(world, ecs_value(Movement, { Sitting }));
+    ecs_entity_t e5 = ecs_insert(world, ecs_value(Movement, { Running }));
 
     bool e0_found = false;
     bool e1_found = false;
@@ -1246,11 +1246,11 @@ void MemberTarget_this_member_neq_2(void) {
     test_assert(q != NULL);
 
     ecs_entity_t e0 = ecs_new_w(world, Foo);
-    ecs_entity_t e1 = ecs_set(world, 0, Movement, { Walking });
-    ecs_entity_t e2 = ecs_set(world, 0, Movement, { Running });
-    ecs_entity_t e3 = ecs_set(world, 0, Movement, { Walking });
-    ecs_entity_t e4 = ecs_set(world, 0, Movement, { Running });
-    ecs_entity_t e5 = ecs_set(world, 0, Movement, { Sitting });
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Movement, { Walking }));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Movement, { Running }));
+    ecs_entity_t e3 = ecs_insert(world, ecs_value(Movement, { Walking }));
+    ecs_entity_t e4 = ecs_insert(world, ecs_value(Movement, { Running }));
+    ecs_entity_t e5 = ecs_insert(world, ecs_value(Movement, { Sitting }));
 
     bool e0_found = false;
     bool e1_found = false;
@@ -1306,11 +1306,11 @@ void MemberTarget_this_member_neq_no_matches(void) {
     test_assert(q != NULL);
 
     ecs_entity_t e0 = ecs_new_w(world, Foo);
-    ecs_entity_t e1 = ecs_set(world, 0, Movement, { Running });
-    ecs_entity_t e2 = ecs_set(world, 0, Movement, { Running });
-    ecs_entity_t e3 = ecs_set(world, 0, Movement, { Running });
-    ecs_entity_t e4 = ecs_set(world, 0, Movement, { Running });
-    ecs_entity_t e5 = ecs_set(world, 0, Movement, { Running });
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Movement, { Running }));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Movement, { Running }));
+    ecs_entity_t e3 = ecs_insert(world, ecs_value(Movement, { Running }));
+    ecs_entity_t e4 = ecs_insert(world, ecs_value(Movement, { Running }));
+    ecs_entity_t e5 = ecs_insert(world, ecs_value(Movement, { Running }));
 
     bool e0_found = false;
     bool e1_found = false;
@@ -1362,11 +1362,11 @@ void MemberTarget_this_member_neq_all_matches(void) {
     test_assert(q != NULL);
 
     ecs_entity_t e0 = ecs_new_w(world, Foo);
-    ecs_entity_t e1 = ecs_set(world, 0, Movement, { Walking });
-    ecs_entity_t e2 = ecs_set(world, 0, Movement, { Sitting });
-    ecs_entity_t e3 = ecs_set(world, 0, Movement, { Walking });
-    ecs_entity_t e4 = ecs_set(world, 0, Movement, { Sitting });
-    ecs_entity_t e5 = ecs_set(world, 0, Movement, { Walking });
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Movement, { Walking }));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Movement, { Sitting }));
+    ecs_entity_t e3 = ecs_insert(world, ecs_value(Movement, { Walking }));
+    ecs_entity_t e4 = ecs_insert(world, ecs_value(Movement, { Sitting }));
+    ecs_entity_t e5 = ecs_insert(world, ecs_value(Movement, { Walking }));
 
     bool e0_found = false;
     bool e1_found = false;
@@ -1418,11 +1418,11 @@ void MemberTarget_this_member_neq_wildcard(void) {
     test_assert(q != NULL);
 
     ecs_entity_t e0 = ecs_new_w(world, Foo);
-    ecs_entity_t e1 = ecs_set(world, 0, Movement, { Running });
-    ecs_entity_t e2 = ecs_set(world, 0, Movement, { Running });
-    ecs_entity_t e3 = ecs_set(world, 0, Movement, { Walking });
-    ecs_entity_t e4 = ecs_set(world, 0, Movement, { Sitting });
-    ecs_entity_t e5 = ecs_set(world, 0, Movement, { Running });
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Movement, { Running }));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Movement, { Running }));
+    ecs_entity_t e3 = ecs_insert(world, ecs_value(Movement, { Walking }));
+    ecs_entity_t e4 = ecs_insert(world, ecs_value(Movement, { Sitting }));
+    ecs_entity_t e5 = ecs_insert(world, ecs_value(Movement, { Running }));
 
     bool e0_found = false;
     bool e1_found = false;
@@ -1479,11 +1479,11 @@ void MemberTarget_this_written_member_neq_1(void) {
     test_assert(q != NULL);
 
     ecs_entity_t e0 = ecs_new_w(world, Foo);
-    ecs_entity_t e1 = ecs_set(world, 0, Movement, { Running });
-    ecs_entity_t e2 = ecs_set(world, 0, Movement, { Running });
-    ecs_entity_t e3 = ecs_set(world, 0, Movement, { Walking });
-    ecs_entity_t e4 = ecs_set(world, 0, Movement, { Sitting });
-    ecs_entity_t e5 = ecs_set(world, 0, Movement, { Running });
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Movement, { Running }));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Movement, { Running }));
+    ecs_entity_t e3 = ecs_insert(world, ecs_value(Movement, { Walking }));
+    ecs_entity_t e4 = ecs_insert(world, ecs_value(Movement, { Sitting }));
+    ecs_entity_t e5 = ecs_insert(world, ecs_value(Movement, { Running }));
 
     ecs_add(world, e1, Foo);
     ecs_add(world, e2, Foo);
@@ -1548,11 +1548,11 @@ void MemberTarget_this_written_member_neq_2(void) {
     test_assert(q != NULL);
 
     ecs_entity_t e0 = ecs_new_w(world, Foo);
-    ecs_entity_t e1 = ecs_set(world, 0, Movement, { Walking });
-    ecs_entity_t e2 = ecs_set(world, 0, Movement, { Running });
-    ecs_entity_t e3 = ecs_set(world, 0, Movement, { Walking });
-    ecs_entity_t e4 = ecs_set(world, 0, Movement, { Running });
-    ecs_entity_t e5 = ecs_set(world, 0, Movement, { Sitting });
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Movement, { Walking }));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Movement, { Running }));
+    ecs_entity_t e3 = ecs_insert(world, ecs_value(Movement, { Walking }));
+    ecs_entity_t e4 = ecs_insert(world, ecs_value(Movement, { Running }));
+    ecs_entity_t e5 = ecs_insert(world, ecs_value(Movement, { Sitting }));
 
     ecs_add(world, e1, Foo);
     ecs_add(world, e2, Foo);
@@ -1629,11 +1629,11 @@ void MemberTarget_this_written_member_neq_no_matches(void) {
     test_assert(q != NULL);
 
     ecs_entity_t e0 = ecs_new_w(world, Foo);
-    ecs_entity_t e1 = ecs_set(world, 0, Movement, { Running });
-    ecs_entity_t e2 = ecs_set(world, 0, Movement, { Running });
-    ecs_entity_t e3 = ecs_set(world, 0, Movement, { Running });
-    ecs_entity_t e4 = ecs_set(world, 0, Movement, { Running });
-    ecs_entity_t e5 = ecs_set(world, 0, Movement, { Running });
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Movement, { Running }));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Movement, { Running }));
+    ecs_entity_t e3 = ecs_insert(world, ecs_value(Movement, { Running }));
+    ecs_entity_t e4 = ecs_insert(world, ecs_value(Movement, { Running }));
+    ecs_entity_t e5 = ecs_insert(world, ecs_value(Movement, { Running }));
 
     ecs_add(world, e1, Foo);
     ecs_add(world, e2, Foo);
@@ -1674,11 +1674,11 @@ void MemberTarget_this_written_member_neq_all_matches(void) {
     test_assert(q != NULL);
 
     ecs_entity_t e0 = ecs_new_w(world, Foo);
-    ecs_entity_t e1 = ecs_set(world, 0, Movement, { Walking });
-    ecs_entity_t e2 = ecs_set(world, 0, Movement, { Sitting });
-    ecs_entity_t e3 = ecs_set(world, 0, Movement, { Walking });
-    ecs_entity_t e4 = ecs_set(world, 0, Movement, { Sitting });
-    ecs_entity_t e5 = ecs_set(world, 0, Movement, { Walking });
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Movement, { Walking }));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Movement, { Sitting }));
+    ecs_entity_t e3 = ecs_insert(world, ecs_value(Movement, { Walking }));
+    ecs_entity_t e4 = ecs_insert(world, ecs_value(Movement, { Sitting }));
+    ecs_entity_t e5 = ecs_insert(world, ecs_value(Movement, { Walking }));
 
     ecs_add(world, e1, Foo);
     ecs_add(world, e2, Foo);
@@ -1779,11 +1779,11 @@ void MemberTarget_this_written_member_neq_wildcard(void) {
     test_assert(q != NULL);
 
     ecs_entity_t e0 = ecs_new_w(world, Foo);
-    ecs_entity_t e1 = ecs_set(world, 0, Movement, { Running });
-    ecs_entity_t e2 = ecs_set(world, 0, Movement, { Walking });
-    ecs_entity_t e3 = ecs_set(world, 0, Movement, { Sitting });
-    ecs_entity_t e4 = ecs_set(world, 0, Movement, { Running });
-    ecs_entity_t e5 = ecs_set(world, 0, Movement, { Walking });
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Movement, { Running }));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Movement, { Walking }));
+    ecs_entity_t e3 = ecs_insert(world, ecs_value(Movement, { Sitting }));
+    ecs_entity_t e4 = ecs_insert(world, ecs_value(Movement, { Running }));
+    ecs_entity_t e5 = ecs_insert(world, ecs_value(Movement, { Walking }));
 
     ecs_add(world, e1, Foo);
     ecs_add(world, e2, Foo);
@@ -1824,11 +1824,11 @@ void MemberTarget_this_member_eq_optional(void) {
     test_assert(q != NULL);
 
     ecs_entity_t e0 = ecs_new_w(world, Foo);
-    ecs_entity_t e1 = ecs_set(world, 0, Movement, { Running });
-    ecs_entity_t e2 = ecs_set(world, 0, Movement, { Running });
-    ecs_entity_t e3 = ecs_set(world, 0, Movement, { Walking });
-    ecs_entity_t e4 = ecs_set(world, 0, Movement, { Sitting });
-    ecs_entity_t e5 = ecs_set(world, 0, Movement, { Running });
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Movement, { Running }));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Movement, { Running }));
+    ecs_entity_t e3 = ecs_insert(world, ecs_value(Movement, { Walking }));
+    ecs_entity_t e4 = ecs_insert(world, ecs_value(Movement, { Sitting }));
+    ecs_entity_t e5 = ecs_insert(world, ecs_value(Movement, { Running }));
 
     bool e0_found = false;
     bool e1_found = false;
@@ -1885,11 +1885,11 @@ void MemberTarget_this_member_eq_optional_wildcard(void) {
     test_assert(q != NULL);
 
     ecs_entity_t e0 = ecs_new_w(world, Foo);
-    ecs_entity_t e1 = ecs_set(world, 0, Movement, { Running });
-    ecs_entity_t e2 = ecs_set(world, 0, Movement, { Running });
-    ecs_entity_t e3 = ecs_set(world, 0, Movement, { Walking });
-    ecs_entity_t e4 = ecs_set(world, 0, Movement, { Sitting });
-    ecs_entity_t e5 = ecs_set(world, 0, Movement, { Running });
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Movement, { Running }));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Movement, { Running }));
+    ecs_entity_t e3 = ecs_insert(world, ecs_value(Movement, { Walking }));
+    ecs_entity_t e4 = ecs_insert(world, ecs_value(Movement, { Sitting }));
+    ecs_entity_t e5 = ecs_insert(world, ecs_value(Movement, { Running }));
 
     bool e0_found = false;
     bool e1_found = false;
@@ -1946,11 +1946,11 @@ void MemberTarget_this_written_member_eq_optional(void) {
     test_assert(q != NULL);
 
     ecs_entity_t e0 = ecs_new_w(world, Foo);
-    ecs_entity_t e1 = ecs_set(world, 0, Movement, { Running });
-    ecs_entity_t e2 = ecs_set(world, 0, Movement, { Running });
-    ecs_entity_t e3 = ecs_set(world, 0, Movement, { Walking });
-    ecs_entity_t e4 = ecs_set(world, 0, Movement, { Sitting });
-    ecs_entity_t e5 = ecs_set(world, 0, Movement, { Running });
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Movement, { Running }));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Movement, { Running }));
+    ecs_entity_t e3 = ecs_insert(world, ecs_value(Movement, { Walking }));
+    ecs_entity_t e4 = ecs_insert(world, ecs_value(Movement, { Sitting }));
+    ecs_entity_t e5 = ecs_insert(world, ecs_value(Movement, { Running }));
 
     ecs_add(world, e1, Foo);
     ecs_add(world, e2, Foo);
@@ -2051,11 +2051,11 @@ void MemberTarget_this_written_member_eq_optional_wildcard(void) {
     test_assert(q != NULL);
 
     ecs_entity_t e0 = ecs_new_w(world, Foo);
-    ecs_entity_t e1 = ecs_set(world, 0, Movement, { Running });
-    ecs_entity_t e2 = ecs_set(world, 0, Movement, { Running });
-    ecs_entity_t e3 = ecs_set(world, 0, Movement, { Walking });
-    ecs_entity_t e4 = ecs_set(world, 0, Movement, { Sitting });
-    ecs_entity_t e5 = ecs_set(world, 0, Movement, { Running });
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Movement, { Running }));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Movement, { Running }));
+    ecs_entity_t e3 = ecs_insert(world, ecs_value(Movement, { Walking }));
+    ecs_entity_t e4 = ecs_insert(world, ecs_value(Movement, { Sitting }));
+    ecs_entity_t e5 = ecs_insert(world, ecs_value(Movement, { Running }));
 
     ecs_add(world, e1, Foo);
     ecs_add(world, e2, Foo);
@@ -2155,11 +2155,11 @@ void MemberTarget_this_member_eq_w_other_tag(void) {
 
     test_assert(q != NULL);
 
-    ecs_entity_t e1 = ecs_set(world, 0, Movement, { Running });
-    ecs_entity_t e2 = ecs_set(world, 0, Movement, { Walking });
-    ecs_entity_t e3 = ecs_set(world, 0, Movement, { Running });
-    /* ecs_entity_t e4 = */ ecs_set(world, 0, Movement, { Sitting });
-    /* ecs_entity_t e5 = */ ecs_set(world, 0, Movement, { Running });
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Movement, { Running }));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Movement, { Walking }));
+    ecs_entity_t e3 = ecs_insert(world, ecs_value(Movement, { Running }));
+    /* ecs_entity_t e4 = */ ecs_insert(world, ecs_value(Movement, { Sitting }));
+    /* ecs_entity_t e5 = */ ecs_insert(world, ecs_value(Movement, { Running }));
 
     ecs_add(world, e1, Tag);
     ecs_add(world, e2, Tag);
@@ -2212,11 +2212,11 @@ void MemberTarget_this_member_eq_w_other_component(void) {
 
     test_assert(q != NULL);
 
-    ecs_entity_t e1 = ecs_set(world, 0, Movement, { Running });
-    ecs_entity_t e2 = ecs_set(world, 0, Movement, { Walking });
-    ecs_entity_t e3 = ecs_set(world, 0, Movement, { Running });
-    /* ecs_entity_t e4 = */ ecs_set(world, 0, Movement, { Sitting });
-    /* ecs_entity_t e5 = */ ecs_set(world, 0, Movement, { Running });
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Movement, { Running }));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Movement, { Walking }));
+    ecs_entity_t e3 = ecs_insert(world, ecs_value(Movement, { Running }));
+    /* ecs_entity_t e4 = */ ecs_insert(world, ecs_value(Movement, { Sitting }));
+    /* ecs_entity_t e5 = */ ecs_insert(world, ecs_value(Movement, { Running }));
 
     ecs_set(world, e1, Position, {10, 20});
     ecs_set(world, e2, Position, {20, 30});
@@ -2282,11 +2282,11 @@ void MemberTarget_this_written_member_eq_w_other_tag(void) {
 
     test_assert(q != NULL);
 
-    ecs_entity_t e1 = ecs_set(world, 0, Movement, { Running });
-    ecs_entity_t e2 = ecs_set(world, 0, Movement, { Walking });
-    ecs_entity_t e3 = ecs_set(world, 0, Movement, { Running });
-    ecs_entity_t e4 = ecs_set(world, 0, Movement, { Sitting });
-    ecs_entity_t e5 = ecs_set(world, 0, Movement, { Running });
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Movement, { Running }));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Movement, { Walking }));
+    ecs_entity_t e3 = ecs_insert(world, ecs_value(Movement, { Running }));
+    ecs_entity_t e4 = ecs_insert(world, ecs_value(Movement, { Sitting }));
+    ecs_entity_t e5 = ecs_insert(world, ecs_value(Movement, { Running }));
 
     ecs_add(world, e1, Foo);
     ecs_add(world, e2, Foo);
@@ -2348,11 +2348,11 @@ void MemberTarget_this_written_member_eq_w_other_component(void) {
 
     test_assert(q != NULL);
 
-    ecs_entity_t e1 = ecs_set(world, 0, Movement, { Running });
-    ecs_entity_t e2 = ecs_set(world, 0, Movement, { Walking });
-    ecs_entity_t e3 = ecs_set(world, 0, Movement, { Running });
-    ecs_entity_t e4 = ecs_set(world, 0, Movement, { Sitting });
-    ecs_entity_t e5 = ecs_set(world, 0, Movement, { Running });
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Movement, { Running }));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Movement, { Walking }));
+    ecs_entity_t e3 = ecs_insert(world, ecs_value(Movement, { Running }));
+    ecs_entity_t e4 = ecs_insert(world, ecs_value(Movement, { Sitting }));
+    ecs_entity_t e5 = ecs_insert(world, ecs_value(Movement, { Running }));
 
     ecs_add(world, e1, Foo);
     ecs_add(world, e2, Foo);
@@ -2426,11 +2426,11 @@ void MemberTarget_this_2_or(void) {
     test_assert(q != NULL);
 
     /* ecs_entity_t e0 = */ ecs_new_w(world, Foo);
-    ecs_entity_t e1 = ecs_set(world, 0, Movement, { Running });
-    ecs_entity_t e2 = ecs_set(world, 0, Movement, { Running });
-    ecs_entity_t e3 = ecs_set(world, 0, Movement, { Walking });
-    ecs_entity_t e4 = ecs_set(world, 0, Movement, { Sitting });
-    ecs_entity_t e5 = ecs_set(world, 0, Movement, { Running });
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Movement, { Running }));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Movement, { Running }));
+    ecs_entity_t e3 = ecs_insert(world, ecs_value(Movement, { Walking }));
+    ecs_entity_t e4 = ecs_insert(world, ecs_value(Movement, { Sitting }));
+    ecs_entity_t e5 = ecs_insert(world, ecs_value(Movement, { Running }));
 
     ecs_add(world, e1, Foo);
     ecs_add(world, e2, Foo);
@@ -2510,12 +2510,12 @@ void MemberTarget_this_3_or(void) {
     ecs_entity_t Idle = ecs_new(world);
 
     /* ecs_entity_t e0 = */ ecs_new_w(world, Foo);
-    ecs_entity_t e1 = ecs_set(world, 0, Movement, { Running });
-    ecs_entity_t e2 = ecs_set(world, 0, Movement, { Idle });
-    ecs_entity_t e3 = ecs_set(world, 0, Movement, { Walking });
-    ecs_entity_t e4 = ecs_set(world, 0, Movement, { Sitting });
-    ecs_entity_t e5 = ecs_set(world, 0, Movement, { Idle });
-    ecs_entity_t e6 = ecs_set(world, 0, Movement, { Running });
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Movement, { Running }));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Movement, { Idle }));
+    ecs_entity_t e3 = ecs_insert(world, ecs_value(Movement, { Walking }));
+    ecs_entity_t e4 = ecs_insert(world, ecs_value(Movement, { Sitting }));
+    ecs_entity_t e5 = ecs_insert(world, ecs_value(Movement, { Idle }));
+    ecs_entity_t e6 = ecs_insert(world, ecs_value(Movement, { Running }));
 
     ecs_add(world, e1, Foo);
     ecs_add(world, e2, Foo);
@@ -2594,11 +2594,11 @@ void MemberTarget_this_written_2_or(void) {
     test_assert(q != NULL);
 
     /* ecs_entity_t e0 = */ ecs_new_w(world, Foo);
-    ecs_entity_t e1 = ecs_set(world, 0, Movement, { Running });
-    ecs_entity_t e2 = ecs_set(world, 0, Movement, { Running });
-    ecs_entity_t e3 = ecs_set(world, 0, Movement, { Walking });
-    ecs_entity_t e4 = ecs_set(world, 0, Movement, { Sitting });
-    ecs_entity_t e5 = ecs_set(world, 0, Movement, { Running });
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Movement, { Running }));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Movement, { Running }));
+    ecs_entity_t e3 = ecs_insert(world, ecs_value(Movement, { Walking }));
+    ecs_entity_t e4 = ecs_insert(world, ecs_value(Movement, { Sitting }));
+    ecs_entity_t e5 = ecs_insert(world, ecs_value(Movement, { Running }));
 
     ecs_add(world, e1, Foo);
     ecs_add(world, e2, Foo);
@@ -2682,12 +2682,12 @@ void MemberTarget_this_written_3_or(void) {
     ecs_entity_t Idle = ecs_new(world);
 
     /* ecs_entity_t e0 = */ ecs_new_w(world, Foo);
-    ecs_entity_t e1 = ecs_set(world, 0, Movement, { Running });
-    ecs_entity_t e2 = ecs_set(world, 0, Movement, { Idle });
-    ecs_entity_t e3 = ecs_set(world, 0, Movement, { Walking });
-    ecs_entity_t e4 = ecs_set(world, 0, Movement, { Sitting });
-    ecs_entity_t e5 = ecs_set(world, 0, Movement, { Idle });
-    ecs_entity_t e6 = ecs_set(world, 0, Movement, { Running });
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Movement, { Running }));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Movement, { Idle }));
+    ecs_entity_t e3 = ecs_insert(world, ecs_value(Movement, { Walking }));
+    ecs_entity_t e4 = ecs_insert(world, ecs_value(Movement, { Sitting }));
+    ecs_entity_t e5 = ecs_insert(world, ecs_value(Movement, { Idle }));
+    ecs_entity_t e6 = ecs_insert(world, ecs_value(Movement, { Running }));
 
     ecs_add(world, e1, Foo);
     ecs_add(world, e2, Foo);
@@ -2777,11 +2777,11 @@ void MemberTarget_var_2_or(void) {
     test_assert(x_var != -1);
 
     /* ecs_entity_t e0 = */ ecs_new_w(world, Foo);
-    ecs_entity_t e1 = ecs_set(world, 0, Movement, { Running });
-    ecs_entity_t e2 = ecs_set(world, 0, Movement, { Running });
-    ecs_entity_t e3 = ecs_set(world, 0, Movement, { Walking });
-    ecs_entity_t e4 = ecs_set(world, 0, Movement, { Sitting });
-    ecs_entity_t e5 = ecs_set(world, 0, Movement, { Running });
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Movement, { Running }));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Movement, { Running }));
+    ecs_entity_t e3 = ecs_insert(world, ecs_value(Movement, { Walking }));
+    ecs_entity_t e4 = ecs_insert(world, ecs_value(Movement, { Sitting }));
+    ecs_entity_t e5 = ecs_insert(world, ecs_value(Movement, { Running }));
 
     ecs_add(world, e1, Foo);
     ecs_add(world, e2, Foo);
@@ -2864,12 +2864,12 @@ void MemberTarget_var_3_or(void) {
     ecs_entity_t Idle = ecs_new(world);
 
     /* ecs_entity_t e0 = */ ecs_new_w(world, Foo);
-    ecs_entity_t e1 = ecs_set(world, 0, Movement, { Running });
-    ecs_entity_t e2 = ecs_set(world, 0, Movement, { Idle });
-    ecs_entity_t e3 = ecs_set(world, 0, Movement, { Walking });
-    ecs_entity_t e4 = ecs_set(world, 0, Movement, { Sitting });
-    ecs_entity_t e5 = ecs_set(world, 0, Movement, { Idle });
-    ecs_entity_t e6 = ecs_set(world, 0, Movement, { Running });
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Movement, { Running }));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Movement, { Idle }));
+    ecs_entity_t e3 = ecs_insert(world, ecs_value(Movement, { Walking }));
+    ecs_entity_t e4 = ecs_insert(world, ecs_value(Movement, { Sitting }));
+    ecs_entity_t e5 = ecs_insert(world, ecs_value(Movement, { Idle }));
+    ecs_entity_t e6 = ecs_insert(world, ecs_value(Movement, { Running }));
 
     ecs_add(world, e1, Foo);
     ecs_add(world, e2, Foo);
@@ -2951,11 +2951,11 @@ void MemberTarget_var_written_2_or(void) {
     test_assert(x_var != -1);
 
     /* ecs_entity_t e0 = */ ecs_new_w(world, Foo);
-    ecs_entity_t e1 = ecs_set(world, 0, Movement, { Running });
-    ecs_entity_t e2 = ecs_set(world, 0, Movement, { Running });
-    ecs_entity_t e3 = ecs_set(world, 0, Movement, { Walking });
-    ecs_entity_t e4 = ecs_set(world, 0, Movement, { Sitting });
-    ecs_entity_t e5 = ecs_set(world, 0, Movement, { Running });
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Movement, { Running }));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Movement, { Running }));
+    ecs_entity_t e3 = ecs_insert(world, ecs_value(Movement, { Walking }));
+    ecs_entity_t e4 = ecs_insert(world, ecs_value(Movement, { Sitting }));
+    ecs_entity_t e5 = ecs_insert(world, ecs_value(Movement, { Running }));
 
     ecs_add(world, e1, Foo);
     ecs_add(world, e2, Foo);
@@ -3042,12 +3042,12 @@ void MemberTarget_var_written_3_or(void) {
     ecs_entity_t Idle = ecs_new(world);
 
     /* ecs_entity_t e0 = */ ecs_new_w(world, Foo);
-    ecs_entity_t e1 = ecs_set(world, 0, Movement, { Running });
-    ecs_entity_t e2 = ecs_set(world, 0, Movement, { Idle });
-    ecs_entity_t e3 = ecs_set(world, 0, Movement, { Walking });
-    ecs_entity_t e4 = ecs_set(world, 0, Movement, { Sitting });
-    ecs_entity_t e5 = ecs_set(world, 0, Movement, { Idle });
-    ecs_entity_t e6 = ecs_set(world, 0, Movement, { Running });
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Movement, { Running }));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Movement, { Idle }));
+    ecs_entity_t e3 = ecs_insert(world, ecs_value(Movement, { Walking }));
+    ecs_entity_t e4 = ecs_insert(world, ecs_value(Movement, { Sitting }));
+    ecs_entity_t e5 = ecs_insert(world, ecs_value(Movement, { Idle }));
+    ecs_entity_t e6 = ecs_insert(world, ecs_value(Movement, { Running }));
 
     ecs_add(world, e1, Foo);
     ecs_add(world, e2, Foo);
@@ -3132,11 +3132,11 @@ void MemberTarget_this_2_or_w_2_members(void) {
 
     test_assert(q != NULL);
 
-    /* ecs_entity_t e1 = */ ecs_set(world, 0, TwoMembers, { Walking, Running });
-    ecs_entity_t e2 = ecs_set(world, 0, TwoMembers, { Running, Sitting });
-    ecs_entity_t e3 = ecs_set(world, 0, TwoMembers, { Sitting, Walking });
-    ecs_entity_t e4 = ecs_set(world, 0, TwoMembers, { Running, Walking });
-    /* ecs_entity_t e5 = */ ecs_set(world, 0, TwoMembers, { Walking, Running });
+    /* ecs_entity_t e1 = */ ecs_insert(world, ecs_value(TwoMembers, { Walking, Running }));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(TwoMembers, { Running, Sitting }));
+    ecs_entity_t e3 = ecs_insert(world, ecs_value(TwoMembers, { Sitting, Walking }));
+    ecs_entity_t e4 = ecs_insert(world, ecs_value(TwoMembers, { Running, Walking }));
+    /* ecs_entity_t e5 = */ ecs_insert(world, ecs_value(TwoMembers, { Walking, Running }));
 
     {
         ecs_iter_t it = ecs_query_iter(world, q);
@@ -3192,11 +3192,11 @@ void MemberTarget_this_2_or_w_2_types(void) {
 
     test_assert(q != NULL);
 
-    ecs_entity_t e1 = ecs_set(world, 0, TwoMembers, { Walking, Running });
-    ecs_entity_t e2 = ecs_set(world, 0, TwoMembers, { Sitting, Sitting });
-    ecs_entity_t e3 = ecs_set(world, 0, TwoMembers, { Sitting, Walking });
-    ecs_entity_t e4 = ecs_set(world, 0, TwoMembers, { Sitting, Walking });
-    ecs_entity_t e5 = ecs_set(world, 0, TwoMembers, { Walking, Running });
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(TwoMembers, { Walking, Running }));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(TwoMembers, { Sitting, Sitting }));
+    ecs_entity_t e3 = ecs_insert(world, ecs_value(TwoMembers, { Sitting, Walking }));
+    ecs_entity_t e4 = ecs_insert(world, ecs_value(TwoMembers, { Sitting, Walking }));
+    ecs_entity_t e5 = ecs_insert(world, ecs_value(TwoMembers, { Walking, Running }));
     
     ecs_set(world, e1, Movement, { Walking });
     ecs_set(world, e2, Movement, { Running });
@@ -3259,11 +3259,11 @@ void MemberTarget_this_written_2_or_w_2_members(void) {
 
     test_assert(q != NULL);
 
-    ecs_entity_t e1 = ecs_set(world, 0, TwoMembers, { Walking, Running });
-    ecs_entity_t e2 = ecs_set(world, 0, TwoMembers, { Running, Sitting });
-    ecs_entity_t e3 = ecs_set(world, 0, TwoMembers, { Sitting, Walking });
-    ecs_entity_t e4 = ecs_set(world, 0, TwoMembers, { Running, Walking });
-    ecs_entity_t e5 = ecs_set(world, 0, TwoMembers, { Walking, Running });
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(TwoMembers, { Walking, Running }));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(TwoMembers, { Running, Sitting }));
+    ecs_entity_t e3 = ecs_insert(world, ecs_value(TwoMembers, { Sitting, Walking }));
+    ecs_entity_t e4 = ecs_insert(world, ecs_value(TwoMembers, { Running, Walking }));
+    ecs_entity_t e5 = ecs_insert(world, ecs_value(TwoMembers, { Walking, Running }));
 
     ecs_add(world, e1, Foo);
     ecs_add(world, e2, Foo);
@@ -3329,11 +3329,11 @@ void MemberTarget_this_written_2_or_w_2_types(void) {
 
     test_assert(q != NULL);
 
-    ecs_entity_t e1 = ecs_set(world, 0, TwoMembers, { Walking, Running });
-    ecs_entity_t e2 = ecs_set(world, 0, TwoMembers, { Sitting, Sitting });
-    ecs_entity_t e3 = ecs_set(world, 0, TwoMembers, { Sitting, Walking });
-    ecs_entity_t e4 = ecs_set(world, 0, TwoMembers, { Sitting, Walking });
-    ecs_entity_t e5 = ecs_set(world, 0, TwoMembers, { Walking, Running });
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(TwoMembers, { Walking, Running }));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(TwoMembers, { Sitting, Sitting }));
+    ecs_entity_t e3 = ecs_insert(world, ecs_value(TwoMembers, { Sitting, Walking }));
+    ecs_entity_t e4 = ecs_insert(world, ecs_value(TwoMembers, { Sitting, Walking }));
+    ecs_entity_t e5 = ecs_insert(world, ecs_value(TwoMembers, { Walking, Running }));
     
     ecs_set(world, e1, Movement, { Walking });
     ecs_set(world, e2, Movement, { Running });
@@ -3404,12 +3404,12 @@ void MemberTarget_this_2_or_2_types_wildcard(void) {
 
     test_assert(q != NULL);
 
-    ecs_entity_t e1 = ecs_set(world, 0, TwoMembers, { Walking, Running });
-    ecs_entity_t e5 = ecs_set(world, 0, TwoMembers, { Walking, Sitting });
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(TwoMembers, { Walking, Running }));
+    ecs_entity_t e5 = ecs_insert(world, ecs_value(TwoMembers, { Walking, Sitting }));
     
-    ecs_entity_t e2 = ecs_set(world, 0, Movement, { Running });
-    ecs_entity_t e3 = ecs_set(world, 0, Movement, { Sitting });
-    ecs_entity_t e4 = ecs_set(world, 0, Movement, { Running });
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Movement, { Running }));
+    ecs_entity_t e3 = ecs_insert(world, ecs_value(Movement, { Sitting }));
+    ecs_entity_t e4 = ecs_insert(world, ecs_value(Movement, { Running }));
     ecs_set(world, e4, TwoMembers, { Running, Walking });
 
     {
@@ -3492,12 +3492,12 @@ void MemberTarget_this_2_or_2_types_dep_var(void) {
     int y_var = ecs_query_find_var(q, "y");
     test_assert(y_var != -1);
 
-    ecs_entity_t e1 = ecs_set(world, 0, TwoMembers, { Walking, Running });
-    ecs_entity_t e5 = ecs_set(world, 0, TwoMembers, { Walking, Sitting });
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(TwoMembers, { Walking, Running }));
+    ecs_entity_t e5 = ecs_insert(world, ecs_value(TwoMembers, { Walking, Sitting }));
     
-    ecs_entity_t e2 = ecs_set(world, 0, Movement, { Running });
-    ecs_entity_t e3 = ecs_set(world, 0, Movement, { Sitting });
-    ecs_entity_t e4 = ecs_set(world, 0, Movement, { Running });
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Movement, { Running }));
+    ecs_entity_t e3 = ecs_insert(world, ecs_value(Movement, { Sitting }));
+    ecs_entity_t e4 = ecs_insert(world, ecs_value(Movement, { Running }));
     ecs_set(world, e4, TwoMembers, { Running, Walking });
 
     {
@@ -3587,11 +3587,11 @@ void MemberTarget_var_member_eq(void) {
     int x_var = ecs_query_find_var(q, "x");
     test_assert(x_var != -1);
 
-    ecs_entity_t e1 = ecs_set(world, 0, Movement, { Running });
-    ecs_entity_t e2 = ecs_set(world, 0, Movement, { Running });
-    /* ecs_entity_t e3 = */ ecs_set(world, 0, Movement, { Walking });
-    /* ecs_entity_t e4 = */ ecs_set(world, 0, Movement, { Sitting });
-    ecs_entity_t e5 = ecs_set(world, 0, Movement, { Running });
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Movement, { Running }));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Movement, { Running }));
+    /* ecs_entity_t e3 = */ ecs_insert(world, ecs_value(Movement, { Walking }));
+    /* ecs_entity_t e4 = */ ecs_insert(world, ecs_value(Movement, { Sitting }));
+    ecs_entity_t e5 = ecs_insert(world, ecs_value(Movement, { Running }));
 
     {
         ecs_iter_t it = ecs_query_iter(world, q);
@@ -3650,11 +3650,11 @@ void MemberTarget_var_member_eq_no_matches(void) {
     int x_var = ecs_query_find_var(q, "x");
     test_assert(x_var != -1);
 
-    /* ecs_entity_t e1 = */ ecs_set(world, 0, Movement, { Walking });
-    /* ecs_entity_t e2 = */ ecs_set(world, 0, Movement, { Sitting });
-    /* ecs_entity_t e3 = */ ecs_set(world, 0, Movement, { Walking });
-    /* ecs_entity_t e4 = */ ecs_set(world, 0, Movement, { Sitting });
-    /* ecs_entity_t e5 = */ ecs_set(world, 0, Movement, { Walking });
+    /* ecs_entity_t e1 = */ ecs_insert(world, ecs_value(Movement, { Walking }));
+    /* ecs_entity_t e2 = */ ecs_insert(world, ecs_value(Movement, { Sitting }));
+    /* ecs_entity_t e3 = */ ecs_insert(world, ecs_value(Movement, { Walking }));
+    /* ecs_entity_t e4 = */ ecs_insert(world, ecs_value(Movement, { Sitting }));
+    /* ecs_entity_t e5 = */ ecs_insert(world, ecs_value(Movement, { Walking }));
 
     {
         ecs_iter_t it = ecs_query_iter(world, q);
@@ -3683,11 +3683,11 @@ void MemberTarget_var_member_eq_all_matches(void) {
     int x_var = ecs_query_find_var(q, "x");
     test_assert(x_var != -1);
 
-    ecs_entity_t e1 = ecs_set(world, 0, Movement, { Running });
-    ecs_entity_t e2 = ecs_set(world, 0, Movement, { Running });
-    ecs_entity_t e3 = ecs_set(world, 0, Movement, { Running });
-    ecs_entity_t e4 = ecs_set(world, 0, Movement, { Running });
-    ecs_entity_t e5 = ecs_set(world, 0, Movement, { Running });
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Movement, { Running }));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Movement, { Running }));
+    ecs_entity_t e3 = ecs_insert(world, ecs_value(Movement, { Running }));
+    ecs_entity_t e4 = ecs_insert(world, ecs_value(Movement, { Running }));
+    ecs_entity_t e5 = ecs_insert(world, ecs_value(Movement, { Running }));
 
     {
         ecs_iter_t it = ecs_query_iter(world, q);
@@ -3766,11 +3766,11 @@ void MemberTarget_var_member_wildcard(void) {
     int x_var = ecs_query_find_var(q, "x");
     test_assert(x_var != -1);
 
-    ecs_entity_t e1 = ecs_set(world, 0, Movement, { Running });
-    ecs_entity_t e2 = ecs_set(world, 0, Movement, { Running });
-    ecs_entity_t e3 = ecs_set(world, 0, Movement, { Walking });
-    ecs_entity_t e4 = ecs_set(world, 0, Movement, { Sitting });
-    ecs_entity_t e5 = ecs_set(world, 0, Movement, { Running });
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Movement, { Running }));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Movement, { Running }));
+    ecs_entity_t e3 = ecs_insert(world, ecs_value(Movement, { Walking }));
+    ecs_entity_t e4 = ecs_insert(world, ecs_value(Movement, { Sitting }));
+    ecs_entity_t e5 = ecs_insert(world, ecs_value(Movement, { Running }));
 
     {
         ecs_iter_t it = ecs_query_iter(world, q);
@@ -3851,11 +3851,11 @@ void MemberTarget_var_member_neq(void) {
     test_assert(x_var != -1);
 
     ecs_entity_t e0 = ecs_new_w(world, Foo);
-    ecs_entity_t e1 = ecs_set(world, 0, Movement, { Running });
-    ecs_entity_t e2 = ecs_set(world, 0, Movement, { Running });
-    ecs_entity_t e3 = ecs_set(world, 0, Movement, { Walking });
-    ecs_entity_t e4 = ecs_set(world, 0, Movement, { Sitting });
-    ecs_entity_t e5 = ecs_set(world, 0, Movement, { Running });
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Movement, { Running }));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Movement, { Running }));
+    ecs_entity_t e3 = ecs_insert(world, ecs_value(Movement, { Walking }));
+    ecs_entity_t e4 = ecs_insert(world, ecs_value(Movement, { Sitting }));
+    ecs_entity_t e5 = ecs_insert(world, ecs_value(Movement, { Running }));
 
     bool e0_found = false;
     bool e1_found = false;
@@ -3907,11 +3907,11 @@ void MemberTarget_var_member_neq_no_matches(void) {
     test_assert(x_var != -1);
 
     ecs_entity_t e0 = ecs_new_w(world, Foo);
-    ecs_entity_t e1 = ecs_set(world, 0, Movement, { Running });
-    ecs_entity_t e2 = ecs_set(world, 0, Movement, { Running });
-    ecs_entity_t e3 = ecs_set(world, 0, Movement, { Running });
-    ecs_entity_t e4 = ecs_set(world, 0, Movement, { Running });
-    ecs_entity_t e5 = ecs_set(world, 0, Movement, { Running });
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Movement, { Running }));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Movement, { Running }));
+    ecs_entity_t e3 = ecs_insert(world, ecs_value(Movement, { Running }));
+    ecs_entity_t e4 = ecs_insert(world, ecs_value(Movement, { Running }));
+    ecs_entity_t e5 = ecs_insert(world, ecs_value(Movement, { Running }));
 
     bool e0_found = false;
     bool e1_found = false;
@@ -3963,11 +3963,11 @@ void MemberTarget_var_member_neq_all_matches(void) {
     test_assert(x_var != -1);
 
     ecs_entity_t e0 = ecs_new_w(world, Foo);
-    ecs_entity_t e1 = ecs_set(world, 0, Movement, { Walking });
-    ecs_entity_t e2 = ecs_set(world, 0, Movement, { Sitting });
-    ecs_entity_t e3 = ecs_set(world, 0, Movement, { Walking });
-    ecs_entity_t e4 = ecs_set(world, 0, Movement, { Sitting });
-    ecs_entity_t e5 = ecs_set(world, 0, Movement, { Walking });
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Movement, { Walking }));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Movement, { Sitting }));
+    ecs_entity_t e3 = ecs_insert(world, ecs_value(Movement, { Walking }));
+    ecs_entity_t e4 = ecs_insert(world, ecs_value(Movement, { Sitting }));
+    ecs_entity_t e5 = ecs_insert(world, ecs_value(Movement, { Walking }));
 
     bool e0_found = false;
     bool e1_found = false;
@@ -4018,11 +4018,11 @@ void MemberTarget_var_written_member_eq(void) {
     int x_var = ecs_query_find_var(q, "x");
     test_assert(x_var != -1);
 
-    ecs_entity_t e1 = ecs_set(world, 0, Movement, { Running });
-    ecs_entity_t e2 = ecs_set(world, 0, Movement, { Running });
-    ecs_entity_t e3 = ecs_set(world, 0, Movement, { Walking });
-    ecs_entity_t e4 = ecs_set(world, 0, Movement, { Sitting });
-    ecs_entity_t e5 = ecs_set(world, 0, Movement, { Running });
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Movement, { Running }));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Movement, { Running }));
+    ecs_entity_t e3 = ecs_insert(world, ecs_value(Movement, { Walking }));
+    ecs_entity_t e4 = ecs_insert(world, ecs_value(Movement, { Sitting }));
+    ecs_entity_t e5 = ecs_insert(world, ecs_value(Movement, { Running }));
 
     ecs_add(world, e1, Foo);
     ecs_add(world, e2, Foo);
@@ -4091,11 +4091,11 @@ void MemberTarget_var_written_member_eq_no_matches(void) {
     int x_var = ecs_query_find_var(q, "x");
     test_assert(x_var != -1);
 
-    ecs_entity_t e1 = ecs_set(world, 0, Movement, { Walking });
-    ecs_entity_t e2 = ecs_set(world, 0, Movement, { Sitting });
-    ecs_entity_t e3 = ecs_set(world, 0, Movement, { Walking });
-    ecs_entity_t e4 = ecs_set(world, 0, Movement, { Sitting });
-    ecs_entity_t e5 = ecs_set(world, 0, Movement, { Walking });
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Movement, { Walking }));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Movement, { Sitting }));
+    ecs_entity_t e3 = ecs_insert(world, ecs_value(Movement, { Walking }));
+    ecs_entity_t e4 = ecs_insert(world, ecs_value(Movement, { Sitting }));
+    ecs_entity_t e5 = ecs_insert(world, ecs_value(Movement, { Walking }));
 
     ecs_add(world, e1, Foo);
     ecs_add(world, e2, Foo);
@@ -4131,11 +4131,11 @@ void MemberTarget_var_written_member_eq_all_matches(void) {
     int x_var = ecs_query_find_var(q, "x");
     test_assert(x_var != -1);
 
-    ecs_entity_t e1 = ecs_set(world, 0, Movement, { Running });
-    ecs_entity_t e2 = ecs_set(world, 0, Movement, { Running });
-    ecs_entity_t e3 = ecs_set(world, 0, Movement, { Running });
-    ecs_entity_t e4 = ecs_set(world, 0, Movement, { Running });
-    ecs_entity_t e5 = ecs_set(world, 0, Movement, { Running });
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Movement, { Running }));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Movement, { Running }));
+    ecs_entity_t e3 = ecs_insert(world, ecs_value(Movement, { Running }));
+    ecs_entity_t e4 = ecs_insert(world, ecs_value(Movement, { Running }));
+    ecs_entity_t e5 = ecs_insert(world, ecs_value(Movement, { Running }));
 
     ecs_add(world, e1, Foo);
     ecs_add(world, e2, Foo);
@@ -4226,11 +4226,11 @@ void MemberTarget_var_written_member_wildcard(void) {
     int x_var = ecs_query_find_var(q, "x");
     test_assert(x_var != -1);
 
-    ecs_entity_t e1 = ecs_set(world, 0, Movement, { Running });
-    ecs_entity_t e2 = ecs_set(world, 0, Movement, { Walking });
-    ecs_entity_t e3 = ecs_set(world, 0, Movement, { Sitting });
-    ecs_entity_t e4 = ecs_set(world, 0, Movement, { Running });
-    ecs_entity_t e5 = ecs_set(world, 0, Movement, { Walking });
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Movement, { Running }));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Movement, { Walking }));
+    ecs_entity_t e3 = ecs_insert(world, ecs_value(Movement, { Sitting }));
+    ecs_entity_t e4 = ecs_insert(world, ecs_value(Movement, { Running }));
+    ecs_entity_t e5 = ecs_insert(world, ecs_value(Movement, { Walking }));
 
     ecs_add(world, e1, Foo);
     ecs_add(world, e2, Foo);
@@ -4322,11 +4322,11 @@ void MemberTarget_var_written_member_neq(void) {
     test_assert(x_var != -1);
 
     ecs_entity_t e0 = ecs_new_w(world, Foo);
-    ecs_entity_t e1 = ecs_set(world, 0, Movement, { Running });
-    ecs_entity_t e2 = ecs_set(world, 0, Movement, { Running });
-    ecs_entity_t e3 = ecs_set(world, 0, Movement, { Walking });
-    ecs_entity_t e4 = ecs_set(world, 0, Movement, { Sitting });
-    ecs_entity_t e5 = ecs_set(world, 0, Movement, { Running });
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Movement, { Running }));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Movement, { Running }));
+    ecs_entity_t e3 = ecs_insert(world, ecs_value(Movement, { Walking }));
+    ecs_entity_t e4 = ecs_insert(world, ecs_value(Movement, { Sitting }));
+    ecs_entity_t e5 = ecs_insert(world, ecs_value(Movement, { Running }));
 
     ecs_add(world, e1, Foo);
     ecs_add(world, e2, Foo);
@@ -4394,11 +4394,11 @@ void MemberTarget_var_written_member_neq_no_matches(void) {
     test_assert(x_var != -1);
 
     ecs_entity_t e0 = ecs_new_w(world, Foo);
-    ecs_entity_t e1 = ecs_set(world, 0, Movement, { Running });
-    ecs_entity_t e2 = ecs_set(world, 0, Movement, { Running });
-    ecs_entity_t e3 = ecs_set(world, 0, Movement, { Running });
-    ecs_entity_t e4 = ecs_set(world, 0, Movement, { Running });
-    ecs_entity_t e5 = ecs_set(world, 0, Movement, { Running });
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Movement, { Running }));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Movement, { Running }));
+    ecs_entity_t e3 = ecs_insert(world, ecs_value(Movement, { Running }));
+    ecs_entity_t e4 = ecs_insert(world, ecs_value(Movement, { Running }));
+    ecs_entity_t e5 = ecs_insert(world, ecs_value(Movement, { Running }));
 
     ecs_add(world, e1, Foo);
     ecs_add(world, e2, Foo);
@@ -4442,11 +4442,11 @@ void MemberTarget_var_written_member_neq_all_matches(void) {
     test_assert(x_var != -1);
 
     ecs_entity_t e0 = ecs_new_w(world, Foo);
-    ecs_entity_t e1 = ecs_set(world, 0, Movement, { Walking });
-    ecs_entity_t e2 = ecs_set(world, 0, Movement, { Sitting });
-    ecs_entity_t e3 = ecs_set(world, 0, Movement, { Walking });
-    ecs_entity_t e4 = ecs_set(world, 0, Movement, { Sitting });
-    ecs_entity_t e5 = ecs_set(world, 0, Movement, { Walking });
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Movement, { Walking }));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Movement, { Sitting }));
+    ecs_entity_t e3 = ecs_insert(world, ecs_value(Movement, { Walking }));
+    ecs_entity_t e4 = ecs_insert(world, ecs_value(Movement, { Sitting }));
+    ecs_entity_t e5 = ecs_insert(world, ecs_value(Movement, { Walking }));
 
     ecs_add(world, e1, Foo);
     ecs_add(world, e2, Foo);

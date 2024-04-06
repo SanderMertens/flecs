@@ -1812,7 +1812,7 @@ void DeserializeFromJson_ser_deser_new_world_1_entity_w_component_meta(void) {
         }
     });
 
-    ecs_entity_t e = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e = ecs_insert(world, ecs_value(Position, {10, 20}));
     test_assert(e != 0);
 
     char *json = ecs_world_to_json(world, NULL);
@@ -2034,7 +2034,7 @@ void DeserializeFromJson_ser_deser_new_world_1_entity_w_component_meta_serialize
         }
     });
 
-    ecs_entity_t e = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e = ecs_insert(world, ecs_value(Position, {10, 20}));
     test_assert(e != 0);
 
     ecs_world_to_json_desc_t desc = {0};
@@ -4172,10 +4172,10 @@ void DeserializeFromJson_ser_deser_w_hooks(void) {
         .copy = ecs_copy(StringType)
     });
 
-    ecs_entity_t e1 = ecs_set(world, 0, StringType, {"foo"});
-    ecs_entity_t e2 = ecs_set(world, 0, StringType, {"bar"});
-    ecs_entity_t e3 = ecs_set(world, 0, StringType, {"hello"});
-    ecs_entity_t e4 = ecs_set(world, 0, StringType, {"world"});
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(StringType, {"foo"}));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(StringType, {"bar"}));
+    ecs_entity_t e3 = ecs_insert(world, ecs_value(StringType, {"hello"}));
+    ecs_entity_t e4 = ecs_insert(world, ecs_value(StringType, {"world"}));
 
     ecs_set_name(world, e1, "e1");
     ecs_set_name(world, e2, "e2");

@@ -775,7 +775,7 @@ void TriggerOnAdd_remove_added_component_in_on_add_w_set(void) {
 
     test_expect_abort();
 
-    ecs_set(world, 0, Position, {0, 0});
+    ecs_insert(world, ecs_value(Position, {0, 0}));
 }
 
 void Add_3_to_current(ecs_iter_t *it) {

@@ -76,7 +76,7 @@ void TriggerOnSet_set_new(void) {
     Probe ctx = {0};
     ecs_set_ctx(world, &ctx, NULL);
 
-    ecs_entity_t e = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e = ecs_insert(world, ecs_value(Position, {10, 20}));
     
     test_int(ctx.count, 1);
     test_int(ctx.invoked, 1);
@@ -146,7 +146,7 @@ void TriggerOnSet_clone(void) {
     Probe ctx = {0};
     ecs_set_ctx(world, &ctx, NULL);
 
-    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Position, {10, 20}));
     
     test_int(ctx.count, 1);
     test_int(ctx.invoked, 1);
@@ -184,7 +184,7 @@ void TriggerOnSet_clone_w_value(void) {
     Probe ctx = {0};
     ecs_set_ctx(world, &ctx, NULL);
 
-    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Position, {10, 20}));
     
     test_int(ctx.count, 1);
     test_int(ctx.invoked, 1);

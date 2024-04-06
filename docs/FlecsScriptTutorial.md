@@ -547,8 +547,8 @@ ECS_COMPONENT(world, Fence);
 ecs_plecs_from_file(world, "fence.flecs");
 
 // Set the component as usual
-ecs_entity_t fence_a = ecs_set(world, 0, Fence, {10, 20});
-ecs_entity_t fence_b = ecs_set(world, 0, Fence, {25, 10});
+ecs_entity_t fence_a = ecs_insert(world, ecs_value(Fence, {10, 20}));
+ecs_entity_t fence_b = ecs_insert(world, ecs_value(Fence, {25, 10}));
 
 ecs_set(world, fence_a, EcsPosition3, {-10});
 ecs_set(world, fence_b, EcsPosition3, {10});

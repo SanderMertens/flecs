@@ -964,7 +964,7 @@ void ChangeDetection_query_changed_w_singleton(void) {
         test_bool(false, ecs_query_changed(q));
     }
 
-    ecs_entity_t e = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e = ecs_insert(world, ecs_value(Position, {10, 20}));
 
     test_bool(true, ecs_query_changed(q));
 
@@ -1236,7 +1236,7 @@ void ChangeDetection_query_changed_w_only_parent(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t parent = ecs_set(world, 0, Position, {1, 2});
+    ecs_entity_t parent = ecs_insert(world, ecs_value(Position, {1, 2}));
     ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, parent);
 
     ecs_query_t *q = ecs_query(world, {
@@ -1278,7 +1278,7 @@ void ChangeDetection_query_changed_w_only_parent_after_set(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t parent = ecs_set(world, 0, Position, {1, 2});
+    ecs_entity_t parent = ecs_insert(world, ecs_value(Position, {1, 2}));
     ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, parent);
 
     ecs_query_t *q = ecs_query(world, {
@@ -1334,7 +1334,7 @@ void ChangeDetection_query_changed_w_only_parent_after_out_term(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t parent = ecs_set(world, 0, Position, {1, 2});
+    ecs_entity_t parent = ecs_insert(world, ecs_value(Position, {1, 2}));
     ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, parent);
 
     ecs_query_t *q = ecs_query(world, {
@@ -1404,7 +1404,7 @@ void ChangeDetection_query_changed_w_only_parent_after_parent_out_term(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t parent = ecs_set(world, 0, Position, {1, 2});
+    ecs_entity_t parent = ecs_insert(world, ecs_value(Position, {1, 2}));
     ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, parent);
 
     ecs_query_t *q = ecs_query(world, {

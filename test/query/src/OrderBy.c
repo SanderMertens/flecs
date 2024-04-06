@@ -28,11 +28,11 @@ void OrderBy_sort_by_component(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t e1 = ecs_set(world, 0, Position, {3, 0});
-    ecs_entity_t e2 = ecs_set(world, 0, Position, {1, 0});
-    ecs_entity_t e3 = ecs_set(world, 0, Position, {5, 0});
-    ecs_entity_t e4 = ecs_set(world, 0, Position, {2, 0});
-    ecs_entity_t e5 = ecs_set(world, 0, Position, {4, 0});
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Position, {3, 0}));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Position, {1, 0}));
+    ecs_entity_t e3 = ecs_insert(world, ecs_value(Position, {5, 0}));
+    ecs_entity_t e4 = ecs_insert(world, ecs_value(Position, {2, 0}));
+    ecs_entity_t e5 = ecs_insert(world, ecs_value(Position, {4, 0}));
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "Position",
@@ -62,11 +62,11 @@ void OrderBy_sort_by_component_same_value_1(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t e1 = ecs_set(world, 0, Position, {3, 0});
-    ecs_entity_t e2 = ecs_set(world, 0, Position, {3, 0});
-    ecs_entity_t e3 = ecs_set(world, 0, Position, {2, 0});
-    ecs_entity_t e4 = ecs_set(world, 0, Position, {2, 0});
-    ecs_entity_t e5 = ecs_set(world, 0, Position, {1, 0});
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Position, {3, 0}));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Position, {3, 0}));
+    ecs_entity_t e3 = ecs_insert(world, ecs_value(Position, {2, 0}));
+    ecs_entity_t e4 = ecs_insert(world, ecs_value(Position, {2, 0}));
+    ecs_entity_t e5 = ecs_insert(world, ecs_value(Position, {1, 0}));
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "Position",
@@ -98,12 +98,12 @@ void OrderBy_sort_by_component_same_value_2(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t e1 = ecs_set(world, 0, Position, {2, 0});
-    ecs_entity_t e2 = ecs_set(world, 0, Position, {1, 0});
-    ecs_entity_t e3 = ecs_set(world, 0, Position, {2, 0});
-    ecs_entity_t e4 = ecs_set(world, 0, Position, {1, 0});
-    ecs_entity_t e5 = ecs_set(world, 0, Position, {2, 0});
-    ecs_entity_t e6 = ecs_set(world, 0, Position, {1, 0});
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Position, {2, 0}));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Position, {1, 0}));
+    ecs_entity_t e3 = ecs_insert(world, ecs_value(Position, {2, 0}));
+    ecs_entity_t e4 = ecs_insert(world, ecs_value(Position, {1, 0}));
+    ecs_entity_t e5 = ecs_insert(world, ecs_value(Position, {2, 0}));
+    ecs_entity_t e6 = ecs_insert(world, ecs_value(Position, {1, 0}));
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "Position",
@@ -136,11 +136,11 @@ void OrderBy_sort_by_component_2_tables(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t e1 = ecs_set(world, 0, Position, {3, 0});
-    ecs_entity_t e2 = ecs_set(world, 0, Position, {1, 0});
-    ecs_entity_t e3 = ecs_set(world, 0, Position, {5, 0});
-    ecs_entity_t e4 = ecs_set(world, 0, Position, {2, 0});
-    ecs_entity_t e5 = ecs_set(world, 0, Position, {4, 0});
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Position, {3, 0}));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Position, {1, 0}));
+    ecs_entity_t e3 = ecs_insert(world, ecs_value(Position, {5, 0}));
+    ecs_entity_t e4 = ecs_insert(world, ecs_value(Position, {2, 0}));
+    ecs_entity_t e5 = ecs_insert(world, ecs_value(Position, {4, 0}));
 
     ecs_add(world, e3, Velocity);
     ecs_add(world, e4, Velocity);
@@ -185,13 +185,13 @@ void OrderBy_sort_by_component_3_tables(void) {
     ECS_COMPONENT(world, Velocity);
     ECS_COMPONENT(world, Mass);
 
-    ecs_entity_t e1 = ecs_set(world, 0, Position, {3, 0});
-    ecs_entity_t e2 = ecs_set(world, 0, Position, {1, 0});
-    ecs_entity_t e3 = ecs_set(world, 0, Position, {6, 0});
-    ecs_entity_t e4 = ecs_set(world, 0, Position, {2, 0});
-    ecs_entity_t e5 = ecs_set(world, 0, Position, {4, 0});
-    ecs_entity_t e6 = ecs_set(world, 0, Position, {5, 0});
-    ecs_entity_t e7 = ecs_set(world, 0, Position, {7, 0});
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Position, {3, 0}));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Position, {1, 0}));
+    ecs_entity_t e3 = ecs_insert(world, ecs_value(Position, {6, 0}));
+    ecs_entity_t e4 = ecs_insert(world, ecs_value(Position, {2, 0}));
+    ecs_entity_t e5 = ecs_insert(world, ecs_value(Position, {4, 0}));
+    ecs_entity_t e6 = ecs_insert(world, ecs_value(Position, {5, 0}));
+    ecs_entity_t e7 = ecs_insert(world, ecs_value(Position, {7, 0}));
 
     ecs_add(world, e5, Velocity);
     ecs_add(world, e6, Mass);
@@ -241,11 +241,11 @@ void OrderBy_sort_by_entity(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_entity_t e1 = ecs_set(world, 0, Position, {3, 0});
-    ecs_entity_t e2 = ecs_set(world, 0, Position, {1, 0});
-    ecs_entity_t e3 = ecs_set(world, 0, Position, {5, 0});
-    ecs_entity_t e4 = ecs_set(world, 0, Position, {2, 0});
-    ecs_entity_t e5 = ecs_set(world, 0, Position, {4, 0});
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Position, {3, 0}));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Position, {1, 0}));
+    ecs_entity_t e3 = ecs_insert(world, ecs_value(Position, {5, 0}));
+    ecs_entity_t e4 = ecs_insert(world, ecs_value(Position, {2, 0}));
+    ecs_entity_t e5 = ecs_insert(world, ecs_value(Position, {4, 0}));
 
     ecs_add(world, e2, Velocity);
     ecs_add(world, e4, Velocity);
@@ -289,11 +289,11 @@ void OrderBy_sort_after_add(void) {
     ECS_COMPONENT(world, Velocity);
     ECS_COMPONENT(world, Mass);
 
-    ecs_entity_t e1 = ecs_set(world, 0, Position, {3, 0});
-    ecs_entity_t e2 = ecs_set(world, 0, Position, {1, 0});
-    ecs_entity_t e3 = ecs_set(world, 0, Position, {6, 0});
-    ecs_entity_t e4 = ecs_set(world, 0, Position, {2, 0});
-    ecs_entity_t e5 = ecs_set(world, 0, Position, {5, 0});
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Position, {3, 0}));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Position, {1, 0}));
+    ecs_entity_t e3 = ecs_insert(world, ecs_value(Position, {6, 0}));
+    ecs_entity_t e4 = ecs_insert(world, ecs_value(Position, {2, 0}));
+    ecs_entity_t e5 = ecs_insert(world, ecs_value(Position, {5, 0}));
 
     ecs_add(world, e3, Velocity);
     ecs_add(world, e4, Velocity);
@@ -369,11 +369,11 @@ void OrderBy_sort_after_remove(void) {
     ECS_COMPONENT(world, Velocity);
     ECS_COMPONENT(world, Mass);
 
-    ecs_entity_t e1 = ecs_set(world, 0, Position, {3, 0});
-    ecs_entity_t e2 = ecs_set(world, 0, Position, {1, 0});
-    ecs_entity_t e3 = ecs_set(world, 0, Position, {6, 0});
-    ecs_entity_t e4 = ecs_set(world, 0, Position, {2, 0});
-    ecs_entity_t e5 = ecs_set(world, 0, Position, {5, 0});
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Position, {3, 0}));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Position, {1, 0}));
+    ecs_entity_t e3 = ecs_insert(world, ecs_value(Position, {6, 0}));
+    ecs_entity_t e4 = ecs_insert(world, ecs_value(Position, {2, 0}));
+    ecs_entity_t e5 = ecs_insert(world, ecs_value(Position, {5, 0}));
 
     ecs_add(world, e1, Velocity);
     ecs_add(world, e2, Velocity);   
@@ -471,11 +471,11 @@ void OrderBy_sort_after_delete(void) {
     ECS_COMPONENT(world, Velocity);
     ECS_COMPONENT(world, Mass);
 
-    ecs_entity_t e1 = ecs_set(world, 0, Position, {3, 0});
-    ecs_entity_t e2 = ecs_set(world, 0, Position, {1, 0});
-    ecs_entity_t e3 = ecs_set(world, 0, Position, {6, 0});
-    ecs_entity_t e4 = ecs_set(world, 0, Position, {2, 0});
-    ecs_entity_t e5 = ecs_set(world, 0, Position, {5, 0});
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Position, {3, 0}));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Position, {1, 0}));
+    ecs_entity_t e3 = ecs_insert(world, ecs_value(Position, {6, 0}));
+    ecs_entity_t e4 = ecs_insert(world, ecs_value(Position, {2, 0}));
+    ecs_entity_t e5 = ecs_insert(world, ecs_value(Position, {5, 0}));
 
     ecs_add(world, e1, Velocity);
     ecs_add(world, e2, Velocity);   
@@ -557,11 +557,11 @@ void OrderBy_sort_after_set(void) {
     ECS_COMPONENT(world, Velocity);
     ECS_COMPONENT(world, Mass);
 
-    ecs_entity_t e1 = ecs_set(world, 0, Position, {3, 0});
-    ecs_entity_t e2 = ecs_set(world, 0, Position, {1, 0});
-    ecs_entity_t e3 = ecs_set(world, 0, Position, {6, 0});
-    ecs_entity_t e4 = ecs_set(world, 0, Position, {2, 0});
-    ecs_entity_t e5 = ecs_set(world, 0, Position, {5, 0});
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Position, {3, 0}));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Position, {1, 0}));
+    ecs_entity_t e3 = ecs_insert(world, ecs_value(Position, {6, 0}));
+    ecs_entity_t e4 = ecs_insert(world, ecs_value(Position, {2, 0}));
+    ecs_entity_t e5 = ecs_insert(world, ecs_value(Position, {5, 0}));
 
     ecs_add(world, e1, Velocity);
     ecs_add(world, e2, Velocity);   
@@ -646,11 +646,11 @@ void OrderBy_sort_after_system(void) {
 
     ECS_SYSTEM(world, FlipP, EcsOnUpdate, Position);
 
-    ecs_entity_t e1 = ecs_set(world, 0, Position, {3, 5});
-    ecs_entity_t e2 = ecs_set(world, 0, Position, {1, 2});
-    ecs_entity_t e3 = ecs_set(world, 0, Position, {6, 6});
-    ecs_entity_t e4 = ecs_set(world, 0, Position, {2, 1});
-    ecs_entity_t e5 = ecs_set(world, 0, Position, {5, 3});
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Position, {3, 5}));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Position, {1, 2}));
+    ecs_entity_t e3 = ecs_insert(world, ecs_value(Position, {6, 6}));
+    ecs_entity_t e4 = ecs_insert(world, ecs_value(Position, {2, 1}));
+    ecs_entity_t e5 = ecs_insert(world, ecs_value(Position, {5, 3}));
 
     ecs_add(world, e1, Velocity);
     ecs_add(world, e2, Velocity);   
@@ -743,11 +743,11 @@ void OrderBy_sort_after_query(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Mass);
 
-    ecs_entity_t e1 = ecs_set(world, 0, Position, {3, 5});
-    ecs_entity_t e2 = ecs_set(world, 0, Position, {1, 2});
-    ecs_entity_t e3 = ecs_set(world, 0, Position, {6, 6});
-    ecs_entity_t e4 = ecs_set(world, 0, Position, {2, 1});
-    ecs_entity_t e5 = ecs_set(world, 0, Position, {5, 3});
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Position, {3, 5}));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Position, {1, 2}));
+    ecs_entity_t e3 = ecs_insert(world, ecs_value(Position, {6, 6}));
+    ecs_entity_t e4 = ecs_insert(world, ecs_value(Position, {2, 1}));
+    ecs_entity_t e5 = ecs_insert(world, ecs_value(Position, {5, 3}));
 
     ecs_add(world, e1, Velocity);
     ecs_add(world, e2, Velocity);   
@@ -849,10 +849,10 @@ void OrderBy_sort_by_component_move_pivot(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t e1 = ecs_set(world, 0, Position, {5, 0});
-    ecs_entity_t e2 = ecs_set(world, 0, Position, {10, 0});
-    ecs_entity_t e3 = ecs_set(world, 0, Position, {2, 0});
-    ecs_entity_t e4 = ecs_set(world, 0, Position, {1, 0});
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Position, {5, 0}));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Position, {10, 0}));
+    ecs_entity_t e3 = ecs_insert(world, ecs_value(Position, {2, 0}));
+    ecs_entity_t e4 = ecs_insert(world, ecs_value(Position, {1, 0}));
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "Position",
@@ -890,7 +890,7 @@ void OrderBy_sort_1000_entities(void) {
 
     for (int i = 0; i < 1000; i ++) {
         int32_t v = rand();
-        ecs_set(world, 0, Position, {v});
+        ecs_insert(world, ecs_value(Position, {v}));
 
         int32_t x = 0;
 
@@ -926,8 +926,8 @@ void OrderBy_sort_1000_entities_w_duplicates(void) {
 
     for (int i = 0; i < 500; i ++) {
         int32_t v = rand();
-        ecs_set(world, 0, Position, {v});
-        ecs_set(world, 0, Position, {v});
+        ecs_insert(world, ecs_value(Position, {v}));
+        ecs_insert(world, ecs_value(Position, {v}));
 
         int32_t x = 0;
 
@@ -1021,8 +1021,8 @@ void OrderBy_sort_1000_entities_2_types(void) {
 
     for (int i = 0; i < 500; i ++) {
         int32_t v = rand();
-        ecs_set(world, 0, Position, {v});
-        ecs_entity_t e = ecs_set(world, 0, Position, {v});
+        ecs_insert(world, ecs_value(Position, {v}));
+        ecs_entity_t e = ecs_insert(world, ecs_value(Position, {v}));
         ecs_add(world, e, Velocity);
 
         ecs_iter_t it = ecs_query_iter(world, q);
@@ -1191,11 +1191,11 @@ void OrderBy_sort_1500_entities_3_types(void) {
     });
 
     for (int i = 0; i < 500; i ++) {
-        ecs_set(world, 0, Position, {rand()});
-        ecs_entity_t e = ecs_set(world, 0, Position, {rand()});
+        ecs_insert(world, ecs_value(Position, {rand()}));
+        ecs_entity_t e = ecs_insert(world, ecs_value(Position, {rand()}));
         ecs_add(world, e, Velocity);
 
-        e = ecs_set(world, 0, Position, {rand()});
+        e = ecs_insert(world, ecs_value(Position, {rand()}));
         ecs_add(world, e, Mass);
 
         ecs_iter_t it = ecs_query_iter(world, q);
@@ -1234,15 +1234,15 @@ void OrderBy_sort_2000_entities_4_types(void) {
     });
 
     for (int i = 0; i < 500; i ++) {
-        ecs_set(world, 0, Position, {rand()});
+        ecs_insert(world, ecs_value(Position, {rand()}));
 
-        ecs_entity_t e = ecs_set(world, 0, Position, {rand()});
+        ecs_entity_t e = ecs_insert(world, ecs_value(Position, {rand()}));
         ecs_add(world, e, Velocity);
 
-        e = ecs_set(world, 0, Position, {rand()});
+        e = ecs_insert(world, ecs_value(Position, {rand()}));
         ecs_add(world, e, Mass);
 
-        e = ecs_set(world, 0, Position, {rand()});
+        e = ecs_insert(world, ecs_value(Position, {rand()}));
         ecs_add(world, e, Velocity);
         ecs_add(world, e, Mass);        
 
@@ -1273,15 +1273,15 @@ void OrderBy_sort_shared_component(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t base_1 = ecs_set(world, 0, Position, {0, 0});
-    ecs_entity_t base_2 = ecs_set(world, 0, Position, {3, 0});
-    ecs_entity_t base_3 = ecs_set(world, 0, Position, {7, 0});
+    ecs_entity_t base_1 = ecs_insert(world, ecs_value(Position, {0, 0}));
+    ecs_entity_t base_2 = ecs_insert(world, ecs_value(Position, {3, 0}));
+    ecs_entity_t base_3 = ecs_insert(world, ecs_value(Position, {7, 0}));
 
-    ecs_entity_t e1 = ecs_set(world, 0, Position, {6, 0});
-    ecs_entity_t e2 = ecs_set(world, 0, Position, {1, 0});
-    ecs_entity_t e3 = ecs_set(world, 0, Position, {5, 0});
-    ecs_entity_t e4 = ecs_set(world, 0, Position, {2, 0});
-    ecs_entity_t e5 = ecs_set(world, 0, Position, {4, 0});
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Position, {6, 0}));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Position, {1, 0}));
+    ecs_entity_t e3 = ecs_insert(world, ecs_value(Position, {5, 0}));
+    ecs_entity_t e4 = ecs_insert(world, ecs_value(Position, {2, 0}));
+    ecs_entity_t e5 = ecs_insert(world, ecs_value(Position, {4, 0}));
     ecs_entity_t e6 = ecs_new_w_pair(world, EcsIsA, base_3);
     ecs_entity_t e7 = ecs_new_w_pair(world, EcsIsA, base_2);
     ecs_entity_t e8 = ecs_new_w_pair(world, EcsIsA, base_1);
@@ -1337,15 +1337,15 @@ void OrderBy_sort_shared_component_childof(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t base_1 = ecs_set(world, 0, Position, {0, 0});
-    ecs_entity_t base_2 = ecs_set(world, 0, Position, {3, 0});
-    ecs_entity_t base_3 = ecs_set(world, 0, Position, {7, 0});
+    ecs_entity_t base_1 = ecs_insert(world, ecs_value(Position, {0, 0}));
+    ecs_entity_t base_2 = ecs_insert(world, ecs_value(Position, {3, 0}));
+    ecs_entity_t base_3 = ecs_insert(world, ecs_value(Position, {7, 0}));
 
-    ecs_entity_t e1 = ecs_set(world, 0, Position, {6, 0});
-    ecs_entity_t e2 = ecs_set(world, 0, Position, {1, 0});
-    ecs_entity_t e3 = ecs_set(world, 0, Position, {5, 0});
-    ecs_entity_t e4 = ecs_set(world, 0, Position, {2, 0});
-    ecs_entity_t e5 = ecs_set(world, 0, Position, {4, 0});
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Position, {6, 0}));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Position, {1, 0}));
+    ecs_entity_t e3 = ecs_insert(world, ecs_value(Position, {5, 0}));
+    ecs_entity_t e4 = ecs_insert(world, ecs_value(Position, {2, 0}));
+    ecs_entity_t e5 = ecs_insert(world, ecs_value(Position, {4, 0}));
     ecs_entity_t e6 = ecs_new_w_pair(world, EcsChildOf, base_3);
     ecs_entity_t e7 = ecs_new_w_pair(world, EcsChildOf, base_2);
     ecs_entity_t e8 = ecs_new_w_pair(world, EcsChildOf, base_1);
@@ -1408,9 +1408,9 @@ void OrderBy_sort_2_entities_2_types(void) {
         .order_by_callback = compare_position
     });
 
-    ecs_set(world, 0, Position, {rand()});
+    ecs_insert(world, ecs_value(Position, {rand()}));
 
-    ecs_entity_t e = ecs_set(world, 0, Position, {rand()});
+    ecs_entity_t e = ecs_insert(world, ecs_value(Position, {rand()}));
     ecs_add(world, e, Velocity); 
 
     ecs_iter_t it = ecs_query_iter(world, q);
@@ -1447,12 +1447,12 @@ void OrderBy_sort_3_entities_3_types(void) {
         .order_by_callback = compare_position
     });
 
-    ecs_set(world, 0, Position, {rand()});
+    ecs_insert(world, ecs_value(Position, {rand()}));
 
-    ecs_entity_t e = ecs_set(world, 0, Position, {rand()});
+    ecs_entity_t e = ecs_insert(world, ecs_value(Position, {rand()}));
     ecs_add(world, e, Velocity);
 
-    e = ecs_set(world, 0, Position, {rand()});
+    e = ecs_insert(world, ecs_value(Position, {rand()}));
     ecs_add(world, e, Mass);   
 
     ecs_iter_t it = ecs_query_iter(world, q);
@@ -1529,15 +1529,15 @@ void OrderBy_sort_4_entities_4_types(void) {
         .order_by_callback = compare_position
     });
 
-    ecs_set(world, 0, Position, {rand()});
+    ecs_insert(world, ecs_value(Position, {rand()}));
 
-    ecs_entity_t e = ecs_set(world, 0, Position, {rand()});
+    ecs_entity_t e = ecs_insert(world, ecs_value(Position, {rand()}));
     ecs_add(world, e, Velocity);
 
-    e = ecs_set(world, 0, Position, {rand()});
+    e = ecs_insert(world, ecs_value(Position, {rand()}));
     ecs_add(world, e, Mass);
 
-    e = ecs_set(world, 0, Position, {rand()});
+    e = ecs_insert(world, ecs_value(Position, {rand()}));
     ecs_add(world, e, Velocity);
     ecs_add(world, e, Mass);     
 
@@ -1939,7 +1939,7 @@ void Sorting_sort_shared_w_delete(void) {
         .order_by = ecs_id(Position)
     });
 
-    ecs_entity_t base = ecs_set(world, 0, Position, {0, 0});
+    ecs_entity_t base = ecs_insert(world, ecs_value(Position, {0, 0}));
     ecs_add_id(world, base, EcsPrefab);
 
     ecs_entity_t e1 = ecs_new_w_pair(world, EcsIsA, base);
@@ -2044,7 +2044,7 @@ void OrderBy_sort_shared_w_delete(void) {
         .order_by = ecs_id(Position)
     });
 
-    ecs_entity_t base = ecs_set(world, 0, Position, {0, 0});
+    ecs_entity_t base = ecs_insert(world, ecs_value(Position, {0, 0}));
     ecs_add_id(world, base, EcsPrefab);
 
     ecs_entity_t e1 = ecs_new_w_pair(world, EcsIsA, base);
