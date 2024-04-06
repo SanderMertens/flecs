@@ -3,9 +3,9 @@
  * @brief C utilities for meta addon.
  */
 
-#include "../private_api.h"
+#include "../../private_api.h"
 
-#ifdef FLECS_META_C
+#ifdef FLECS_META
 
 #include <ctype.h>
 

@@ -2434,7 +2434,6 @@ PREDEFINED             = FLECS_APP \
                          FLECS_JSON \
                          FLECS_LOG \
                          FLECS_META \
-                         FLECS_META_C \
                          FLECS_MODULE \
                          FLECS_MONITOR \
                          FLECS_OS_API_IMPL \

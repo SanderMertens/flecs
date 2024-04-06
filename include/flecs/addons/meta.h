@@ -960,6 +960,8 @@ void FlecsMetaImport(
 }
 #endif
 
+#include "meta_c.h"
+
 #endif
 
 /** @} */

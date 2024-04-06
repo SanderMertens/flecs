@@ -354,11 +354,6 @@ jobs:
           bake rebuild --strict -D FLECS_CUSTOM_BUILD -D FLECS_META
           bake rebuild --strict --cfg release -D FLECS_CUSTOM_BUILD -D FLECS_META
 
-      - name: FLECS_META_C
-        run: |
-          bake rebuild --strict -D FLECS_CUSTOM_BUILD -D FLECS_META_C
-          bake rebuild --strict --cfg release -D FLECS_CUSTOM_BUILD -D FLECS_META_C
-
       - name: FLECS_EXPR
         run: |
           bake rebuild --strict -D FLECS_CUSTOM_BUILD -D FLECS_EXPR

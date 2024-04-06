@@ -36,9 +36,6 @@
 #ifdef FLECS_NO_META
 #undef FLECS_META
 #endif
-#ifdef FLECS_NO_META_C
-#undef FLECS_META_C
-#endif
 #ifdef FLECS_NO_UNITS
 #undef FLECS_UNITS
 #endif
@@ -179,7 +176,7 @@
 #include "../addons/json.h"
 #endif
 
-#if defined(FLECS_EXPR) || defined(FLECS_META_C)
+#if defined(FLECS_EXPR)
 #ifndef FLECS_META
 #define FLECS_META
 #endif
@@ -203,13 +200,6 @@
 #error "FLECS_NO_EXPR failed: EXPR is required by other addons"
 #endif
 #include "../addons/expr.h"
-#endif
-
-#ifdef FLECS_META_C
-#ifdef FLECS_NO_META_C
-#error "FLECS_NO_META_C failed: META_C is required by other addons"
-#endif
-#include "../addons/meta_c.h"
 #endif
 
 #ifdef FLECS_PLECS
