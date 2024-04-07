@@ -122,6 +122,18 @@ void ecs_script_clear(
     ecs_entity_t script,
     ecs_entity_t instance);
 
+
+typedef struct ecs_script_t ecs_script_t;
+
+FLECS_API
+ecs_script_t* ecs_script_parse(
+    const char *name,
+    const char *code);
+
+FLECS_API
+ecs_script_t* ecs_script_parse_file(
+    const char *filename);
+
 /* Module import */
 FLECS_API
 void FlecsScriptImport(
