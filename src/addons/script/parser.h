@@ -35,7 +35,7 @@
         if (!(ptr = flecs_script_expr(parser, ptr, t, until))) {\
             goto error;\
         }\
-        if (!t->value[0]) {\
+        if (!t->value[0] && (until == '\n')) {\
             ptr ++;\
             Error(parser, "empty expression");\
         }\
@@ -47,7 +47,7 @@
     {\
         ecs_assert(token_stack.count < 256, ECS_INTERNAL_ERROR, NULL);\
         ecs_script_token_t *t = &token_stack.tokens[token_stack.count ++];\
-        if (!(ptr = flecs_script_token(parser, ptr, t))) {\
+        if (!(ptr = flecs_script_token(parser, ptr, t, false))) {\
             goto error;\
         }\
         switch(t->kind) {\
@@ -108,12 +108,14 @@
 
 /* Same as Parse, but doesn't error out if token is not in handled cases */
 #define LookAhead(...)\
-    ecs_script_token_t lookahead_token;\
     const char *lookahead;\
-    if ((lookahead = flecs_script_token(parser, ptr, &lookahead_token))) {\
+    ecs_script_token_t lookahead_token;\
+    if ((lookahead = flecs_script_token(parser, ptr, &lookahead_token, true))) {\
+        token_stack.tokens[++ token_stack.count] = lookahead_token;\
         switch(lookahead_token.kind) {\
             __VA_ARGS__\
         default:\
+            token_stack.count --;\
             break;\
         }\
     }
@@ -123,6 +125,18 @@
         case tok: {\
             __VA_ARGS__\
         }\
+    )
+
+#define LookAhead_2(tok1, tok2, ...)\
+    LookAhead_1(tok1, \
+        const char *old_ptr = ptr;\
+        ptr = lookahead;\
+        LookAhead(\
+            case tok2: {\
+                __VA_ARGS__\
+            }\
+        )\
+        ptr = old_ptr;\
     )
 
 #define Scope(s, ...) {\

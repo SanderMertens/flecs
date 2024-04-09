@@ -64,7 +64,6 @@ ecs_script_entity_t* flecs_script_insert_entity(
 
 static
 void flecs_script_set_id(
-    ecs_script_parser_t *parser,
     ecs_script_id_t *id,
     const char *first,
     const char *second)
@@ -72,6 +71,23 @@ void flecs_script_set_id(
     ecs_assert(first != NULL, ECS_INTERNAL_ERROR, NULL);
     id->first = first;
     id->second = second;
+}
+
+ecs_script_pair_scope_t* flecs_script_insert_pair_scope(
+    ecs_script_parser_t *parser,
+    const char *first,
+    const char *second)
+{
+    ecs_script_t *script = parser->script;
+    ecs_script_scope_t *scope = parser->scope;
+
+    ecs_script_pair_scope_t *result = flecs_ast_new(
+        script, ecs_script_pair_scope_t, EcsAstPairScope);
+    flecs_script_set_id(&result->id, first, second);
+    result->scope = flecs_script_scope_new(script);
+
+    flecs_ast_append(script, scope->stmts, ecs_script_pair_scope_t, result);
+    return result;
 }
 
 ecs_script_tag_t* flecs_script_insert_pair_tag(
@@ -86,7 +102,7 @@ ecs_script_tag_t* flecs_script_insert_pair_tag(
 
     ecs_script_tag_t *result = flecs_ast_new(
         script, ecs_script_tag_t, EcsAstTag);
-    flecs_script_set_id(parser, &result->id, first, second);
+    flecs_script_set_id(&result->id, first, second);
 
     flecs_ast_append(script, scope->stmts, ecs_script_tag_t, result);
 
@@ -112,7 +128,7 @@ ecs_script_component_t* flecs_script_insert_pair_component(
 
     ecs_script_component_t *result = flecs_ast_new(
             script, ecs_script_component_t, EcsAstComponent);
-    flecs_script_set_id(parser, &result->id, first, second);
+    flecs_script_set_id(&result->id, first, second);
 
     flecs_ast_append(script, scope->stmts, ecs_script_component_t, result);
 
@@ -143,7 +159,7 @@ ecs_script_default_component_t* flecs_script_insert_default_component(
     return result;
 }
 
-ecs_script_variable_component_t* flecs_script_insert_variable_component(
+ecs_script_var_component_t* flecs_script_insert_var_component(
     ecs_script_parser_t *parser,
     const char *var_name)
 {
@@ -153,13 +169,12 @@ ecs_script_variable_component_t* flecs_script_insert_variable_component(
     ecs_assert(scope != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(var_name != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_script_variable_component_t *result = flecs_ast_new(
-            script, ecs_script_variable_component_t, EcsAstVariableComponent);
+    ecs_script_var_component_t *result = flecs_ast_new(
+            script, ecs_script_var_component_t, EcsAstVariableComponent);
     result->var_name = var_name;
 
     flecs_ast_append(script, scope->stmts, 
-        ecs_script_variable_component_t, result);
-
+        ecs_script_var_component_t, result);
     return result;
 }
 
@@ -177,12 +192,13 @@ ecs_script_with_t* flecs_script_insert_with(
     result->expressions = flecs_script_scope_new(script);
     result->scope = flecs_script_scope_new(script);
 
+    flecs_ast_append(script, scope->stmts, ecs_script_with_t, result);
     return result;
 }
 
 ecs_script_using_t* flecs_script_insert_using(
     ecs_script_parser_t *parser,
-    const char *identifier)
+    const char *name)
 {
     ecs_script_t *script = parser->script;
     ecs_script_scope_t *scope = parser->scope;
@@ -192,14 +208,15 @@ ecs_script_using_t* flecs_script_insert_using(
     ecs_script_using_t *result = flecs_ast_new(
         script, ecs_script_using_t, EcsAstUsing);
 
-    result->identifier = identifier;
+    result->name = name;
 
+    flecs_ast_append(script, scope->stmts, ecs_script_using_t, result);
     return result;
 }
 
-ecs_script_annotation_t* flecs_script_insert_annotation(
+ecs_script_annot_t* flecs_script_insert_annot(
     ecs_script_parser_t *parser,
-    const char *identifier,
+    const char *name,
     const char *expr)
 {
     ecs_script_t *script = parser->script;
@@ -207,12 +224,13 @@ ecs_script_annotation_t* flecs_script_insert_annotation(
     ecs_assert(script != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(scope != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_script_annotation_t *result = flecs_ast_new(
-        script, ecs_script_annotation_t, EcsAstAnnotation);
+    ecs_script_annot_t *result = flecs_ast_new(
+        script, ecs_script_annot_t, EcsAstAnnotation);
 
-    result->identifier = identifier;
+    result->name = name;
     result->expr = expr;
 
+    flecs_ast_append(script, scope->stmts, ecs_script_annot_t, result);
     return result;
 }
 
@@ -230,10 +248,11 @@ ecs_script_assembly_t* flecs_script_insert_assembly(
     result->name = name;
     result->scope = flecs_script_scope_new(script);
 
+    flecs_ast_append(script, scope->stmts, ecs_script_assembly_t, result);
     return result;
 }
 
-ecs_script_var_t* flecs_script_insert_var(
+ecs_script_prop_t* flecs_script_insert_prop(
     ecs_script_parser_t *parser,
     const char *name)
 {
@@ -242,9 +261,27 @@ ecs_script_var_t* flecs_script_insert_var(
     ecs_assert(script != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(scope != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_script_var_t *result = flecs_ast_new(
-        script, ecs_script_var_t, EcsAstVar);
+    ecs_script_prop_t *result = flecs_ast_new(
+        script, ecs_script_prop_t, EcsAstProp);
     result->name = name;
 
+    flecs_ast_append(script, scope->stmts, ecs_script_prop_t, result);
+    return result;
+}
+
+ecs_script_const_t* flecs_script_insert_const(
+    ecs_script_parser_t *parser,
+    const char *name)
+{
+    ecs_script_t *script = parser->script;
+    ecs_script_scope_t *scope = parser->scope;
+    ecs_assert(script != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(scope != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_script_const_t *result = flecs_ast_new(
+        script, ecs_script_const_t, EcsAstConst);
+    result->name = name;
+
+    flecs_ast_append(script, scope->stmts, ecs_script_const_t, result);
     return result;
 }

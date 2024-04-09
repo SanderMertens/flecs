@@ -134,6 +134,15 @@ FLECS_API
 ecs_script_t* ecs_script_parse_file(
     const char *filename);
 
+FLECS_API
+void ecs_script_to_buf(
+    ecs_script_t *script,
+    ecs_strbuf_t *buf);
+
+FLECS_API
+char* ecs_script_to_str(
+    ecs_script_t *script);
+
 /* Module import */
 FLECS_API
 void FlecsScriptImport(

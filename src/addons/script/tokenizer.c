@@ -222,6 +222,7 @@ const char* flecs_script_expr(
     out->value = parser->token_cur;
     parser->token_cur += len;
     parser->token_cur[0] = '\0';
+    parser->token_cur ++;
 
     return ptr;
 }
@@ -229,7 +230,8 @@ const char* flecs_script_expr(
 const char* flecs_script_token(
     ecs_script_parser_t *parser,
     const char *ptr,
-    ecs_script_token_t *out)
+    ecs_script_token_t *out,
+    bool is_lookahead)
 {
     // Skip whitespace and comments
     do {
@@ -244,6 +246,7 @@ const char* flecs_script_token(
 
     if (ptr[0] == '\0') {
         out->kind = EcsTokEnd;
+        return ptr;
     } else if (ptr[0] == '\n') {
         out->kind = EcsTokNewline;
         return ptr + 1;
@@ -267,6 +270,11 @@ const char* flecs_script_token(
     } else if (flecs_script_is_identifier(ptr[0])) {
         ptr = flecs_script_identifier(parser, ptr, out);
         return ptr;
+    }
+
+    if (!is_lookahead) {
+        ecs_parser_error(parser->script->name, parser->script->code,
+            ptr - parser->script->code, "unknown token '%c'", ptr[0]);
     }
 
     return NULL;

@@ -18,6 +18,8 @@ const char* flecs_script_scope(
     ecs_script_scope_t *scope,
     const char *ptr)
 {
+    ParserBegin;
+
     ecs_assert(scope != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(ptr[-1] == '{', ECS_INTERNAL_ERROR, NULL);
 
@@ -25,9 +27,13 @@ const char* flecs_script_scope(
     parser->scope = scope;
 
     do {
-        LookAhead_1(EcsTokScopeClose,
-            ptr = lookahead;
-            goto scope_close;
+        LookAhead(
+            case EcsTokScopeClose:
+                ptr = lookahead;
+                goto scope_close;
+            case EcsTokEnd:
+                Error(parser, "unexpected end of script");
+                goto error;
         )
 
         ptr = flecs_script_stmt(parser, ptr);
@@ -41,8 +47,8 @@ scope_close:
 
     ecs_assert(ptr[-1] == '}', ECS_INTERNAL_ERROR, NULL);
     return ptr;
-error:
-    return NULL;
+
+    ParserEnd;
 }
 
 const char* flecs_script_with_expr(
@@ -67,13 +73,14 @@ const char* flecs_script_with_expr(
                 )
             )
 
+            flecs_script_insert_component(parser, Token(0));
             EndOfRule;
         }
         
         case '$': {
             // $color
             Parse_1(EcsTokIdentifier,
-                flecs_script_insert_variable_component(parser, Token(1));
+                flecs_script_insert_var_component(parser, Token(1));
                 EndOfRule;
             )
         }
@@ -132,7 +139,7 @@ const char* flecs_script_stmt(
         case EcsTokKeywordProp:       goto prop_var;
         case EcsTokKeywordConst:      goto const_var;
         case '\n':                    EndOfRule;
-        case '\0':                    EndOfRule;
+        case '\0':                    printf("end\n"); EndOfRule;
     );
 
 identifier: {
@@ -183,7 +190,7 @@ variable: {
         Parse(
             // $color\n
             case '\n': {
-                flecs_script_insert_variable_component(parser, Token(1));
+                flecs_script_insert_var_component(parser, Token(1));
                 EndOfRule;
             }
 
@@ -204,7 +211,7 @@ annotation: {
     Parse_1(EcsTokIdentifier,
         // $brief expr
         Expr('\n', 
-            flecs_script_insert_annotation(parser, Token(1), Token(2));
+            flecs_script_insert_annot(parser, Token(1), Token(2));
             EndOfRule;
         )
     )
@@ -228,7 +235,7 @@ using: {
 
 // assembly
 assembly: {
-    // assembly SpaceShip
+    // assembly SpaceShip {
     Parse_2(EcsTokIdentifier, '{',
         ecs_script_assembly_t *assembly = flecs_script_insert_assembly(
             parser, Token(1));
@@ -240,23 +247,23 @@ assembly: {
 prop_var: {
     // prop color : Color =
     Parse_4(EcsTokIdentifier, ':', EcsTokIdentifier, '=',
-        ecs_script_var_t *var = flecs_script_insert_var(
+        ecs_script_prop_t *var = flecs_script_insert_prop(
             parser, Token(1));
         var->type = Token(3);
-        var->is_prop = true;
 
         // prop color : Color = {
         LookAhead_1('{',
             // prop color : Color = {expr}
+            ptr = lookahead;
             Expr('}',
-                var->expr = Token(7);
+                var->expr = Token(6);
                 EndOfRule;
             )
         )
 
         // prop color : Color = expr\n
         Expr('\n',
-            var->expr = Token(6);
+            var->expr = Token(5);
             EndOfRule;
         )
     )
@@ -266,32 +273,30 @@ prop_var: {
 const_var: {
     // const color
     Parse_1(EcsTokIdentifier,
-        ecs_script_var_t *var = flecs_script_insert_var(
+        ecs_script_const_t *var = flecs_script_insert_const(
             parser, Token(1));
 
         Parse(
             // const color :
             case ':': {
                 // const color : Color
-                Parse_1(EcsTokIdentifier,
+                Parse_2(EcsTokIdentifier, '=',
                     var->type = Token(4);
 
-                    // const color : Color =
-                    Parse_1('=',
-                        // const color : Color = {
-                        LookAhead_1('{',
-                            // const color : Color = {expr}
-                            Expr('}',
-                                var->expr = Token(7);
-                                EndOfRule;
-                            )
-                        )
-
-                        // const color : Color = expr
-                        Expr('=',
+                    // const color : Color = {
+                    LookAhead_1('{',
+                        // const color : Color = {expr}
+                        ptr = lookahead;
+                        Expr('}',
                             var->expr = Token(6);
                             EndOfRule;
                         )
+                    )
+
+                    // const color : Color = expr\n
+                    Expr('\n',
+                        var->expr = Token(5);
+                        EndOfRule;
                     )
                 )
             }
@@ -320,27 +325,59 @@ pair: {
     Parse(
         // (Likes, Apples)\n
         case '\n': {
+            flecs_script_insert_pair_tag(parser, Token(1), Token(3));
             EndOfRule;
         }
 
         // (Eats, Apples):
         case ':': {
-            Parse_2('{', '}', EndOfRule; )
+            // (Eats, Apples): {
+            Parse_1('{',
+                // (Eats, Apples): { expr }
+                Expr('}',
+                    ecs_script_component_t *comp = 
+                        flecs_script_insert_pair_component(
+                            parser, Token(1), Token(3));
+                    comp->expr = Token(7);
+                    EndOfRule;
+                )
+            )
         }
 
         // (IsA, Machine) {
         case '{': {
-            Parse_1('}', EndOfRule; )
+            ecs_script_pair_scope_t *ps = flecs_script_insert_pair_scope(
+                parser, Token(1), Token(3));
+            return flecs_script_scope(parser, ps->scope, ptr);
         }
     )
 }
 
 // Position:
 identifier_colon: {
-    LookAhead_1('{',
-        ptr = lookahead;
-        goto component_expr_scope;
-    )
+    {
+        // Position: {
+        LookAhead_1('{',
+            ptr = lookahead;
+            goto component_expr_scope;
+        )
+    }
+
+    {
+        // enterprise : SpaceShip {
+        LookAhead_2(EcsTokIdentifier, '{', {
+            ptr = lookahead;
+
+            ecs_script_entity_t *entity = flecs_script_insert_entity(
+                parser, Token(0));
+
+            Scope(entity->scope, 
+                flecs_script_insert_pair_tag(parser, "IsA", Token(2));
+            )
+
+            return flecs_script_scope(parser, entity->scope, ptr);
+        })
+    }
 
     // x : f32
     Expr('\n',
@@ -386,26 +423,32 @@ identifier_identifier: {
 // SpaceShip(
 identifier_paren: {
     // SpaceShip()
-    Parse_1(')', 
+    Expr(')', 
         Parse(
-            // SpaceShip()\n
+            // SpaceShip(expr)\n
             case '\n': {
                 ecs_script_entity_t *entity = flecs_script_insert_entity(
                         parser, NULL);
 
                 Scope(entity->scope, 
-                    flecs_script_insert_component(parser, Token(0)); )
+                    ecs_script_component_t *comp = 
+                        flecs_script_insert_component(parser, Token(0)); 
+                    comp->expr = Token(2);
+                )
 
                 EndOfRule;
             }
 
-            // SpaceShip() {
+            // SpaceShip(expr) {
             case '{': {
                 ecs_script_entity_t *entity = flecs_script_insert_entity(
                     parser, NULL);
 
                 Scope(entity->scope, 
-                    flecs_script_insert_component(parser, Token(0)); )
+                    ecs_script_component_t *comp = 
+                        flecs_script_insert_component(parser, Token(0)); 
+                    comp->expr = Token(2);
+                )
 
                 return flecs_script_scope(parser, entity->scope, ptr);
             }
@@ -415,15 +458,14 @@ identifier_paren: {
 
 // Position: {
 component_expr_scope: {
-    // Position: {}
-    LookAhead_1('}', 
-        ptr = lookahead;
-        EndOfRule;
-    )
 
-    Expr('}', 
+    // Position: {expr}
+    Expr('}', {
+        ecs_script_component_t *comp = flecs_script_insert_component(
+            parser, Token(0));
+        comp->expr = Token(3);
         EndOfRule; 
-    )
+    })
 }
 
 // Position spaceship (
@@ -469,10 +511,10 @@ ecs_script_t* ecs_script_parse(
     ecs_script_parser_t parser = {
         .script = script,
         .scope = script->root,
-        .token_buffer = ecs_os_malloc(ecs_os_strlen(code) * 2 + 1),
     };
 
-    parser.token_cur = parser.token_buffer;
+    script->token_buffer = ecs_os_malloc(ecs_os_strlen(code) * 2 + 1),
+    parser.token_cur = script->token_buffer;
 
     const char *ptr = code;
 
@@ -487,10 +529,9 @@ ecs_script_t* ecs_script_parse(
         }
     } while (true);
 
-    ecs_os_free(parser.token_buffer);
     return script;
 error:
-    ecs_os_free(parser.token_buffer);
+    ecs_os_free(script->token_buffer);
     return NULL;
 }
 

@@ -67773,12 +67773,12 @@ struct ecs_script_t {
     const char *code;
     ecs_allocator_t allocator;
     ecs_script_scope_t *root;
+    char *token_buffer;
 };
 
 typedef struct ecs_script_parser_t {
     ecs_script_t *script;
     ecs_script_scope_t *scope;
-    char *token_buffer;
     char *token_cur;
 } ecs_script_parser_t;
 
@@ -67826,7 +67826,8 @@ const char* flecs_script_token_kind_str(
 const char* flecs_script_token(
     ecs_script_parser_t *parser,
     const char *ptr,
-    ecs_script_token_t *out);
+    ecs_script_token_t *out,
+    bool is_lookahead);
 
 /* AST */
 typedef enum ecs_script_node_kind_t {
@@ -67839,8 +67840,10 @@ typedef enum ecs_script_node_kind_t {
     EcsAstUsing,
     EcsAstAnnotation,
     EcsAstAssembly,
-    EcsAstVar,
+    EcsAstProp,
+    EcsAstConst,
     EcsAstEntity,
+    EcsAstPairScope,
 } ecs_script_node_kind_t;
 
 typedef struct ecs_script_node_t {
@@ -67873,11 +67876,10 @@ typedef struct ecs_script_default_component_t {
     const char *expr;
 } ecs_script_default_component_t;
 
-typedef struct ecs_script_variable_component_t {
+typedef struct ecs_script_var_component_t {
     ecs_script_node_t node;
     const char *var_name;
-    const char *expr;
-} ecs_script_variable_component_t;
+} ecs_script_var_component_t;
 
 struct ecs_script_entity_t {
     ecs_script_node_t node;
@@ -67888,31 +67890,49 @@ struct ecs_script_entity_t {
 };
 
 typedef struct ecs_script_with_t {
+    ecs_script_node_t node;
     ecs_script_scope_t *parent;
     ecs_script_scope_t *expressions;
     ecs_script_scope_t *scope;
 } ecs_script_with_t;
 
+typedef struct ecs_script_pair_scope_t {
+    ecs_script_node_t node;
+    ecs_script_scope_t *parent;
+    ecs_script_id_t id;
+    ecs_script_scope_t *scope;
+} ecs_script_pair_scope_t;
+
 typedef struct ecs_script_using_t {
-    const char *identifier;
+    ecs_script_node_t node;
+    const char *name;
 } ecs_script_using_t;
 
-typedef struct ecs_script_annotation_t {
-    const char *identifier;
+typedef struct ecs_script_annot_t {
+    ecs_script_node_t node;
+    const char *name;
     const char *expr;
-} ecs_script_annotation_t;
+} ecs_script_annot_t;
 
 typedef struct ecs_script_assembly_t {
+    ecs_script_node_t node;
     const char *name;
     ecs_script_scope_t* scope;
 } ecs_script_assembly_t;
 
-typedef struct ecs_script_var_t {
+typedef struct ecs_script_prop_t {
+    ecs_script_node_t node;
     const char *name;
     const char *type;
     const char *expr;
-    bool is_prop;
-} ecs_script_var_t;
+} ecs_script_prop_t;
+
+typedef struct ecs_script_const_t {
+    ecs_script_node_t node;
+    const char *name;
+    const char *type;
+    const char *expr;
+} ecs_script_const_t;
 
 ecs_script_t* flecs_script_new(void);
 
@@ -67920,23 +67940,32 @@ ecs_script_entity_t* flecs_script_insert_entity(
     ecs_script_parser_t *parser,
     const char *name);
 
+ecs_script_pair_scope_t* flecs_script_insert_pair_scope(
+    ecs_script_parser_t *parser,
+    const char *first,
+    const char *second);
+
 ecs_script_with_t* flecs_script_insert_with(
     ecs_script_parser_t *parser);
 
 ecs_script_using_t* flecs_script_insert_using(
     ecs_script_parser_t *parser,
-    const char *identifier);
+    const char *name);
 
 ecs_script_assembly_t* flecs_script_insert_assembly(
     ecs_script_parser_t *parser,
     const char *name);
 
-ecs_script_annotation_t* flecs_script_insert_annotation(
+ecs_script_annot_t* flecs_script_insert_annot(
     ecs_script_parser_t *parser,
-    const char *identifier,
+    const char *name,
     const char *expr);
 
-ecs_script_var_t* flecs_script_insert_var(
+ecs_script_prop_t* flecs_script_insert_prop(
+    ecs_script_parser_t *parser,
+    const char *name);
+
+ecs_script_const_t* flecs_script_insert_const(
     ecs_script_parser_t *parser,
     const char *name);
 
@@ -67961,7 +67990,7 @@ ecs_script_component_t* flecs_script_insert_pair_component(
 ecs_script_default_component_t* flecs_script_insert_default_component(
     ecs_script_parser_t *parser);
 
-ecs_script_variable_component_t* flecs_script_insert_variable_component(
+ecs_script_var_component_t* flecs_script_insert_var_component(
     ecs_script_parser_t *parser,
     const char *name);
 
@@ -68028,7 +68057,6 @@ ecs_script_entity_t* flecs_script_insert_entity(
 
 static
 void flecs_script_set_id(
-    ecs_script_parser_t *parser,
     ecs_script_id_t *id,
     const char *first,
     const char *second)
@@ -68036,6 +68064,23 @@ void flecs_script_set_id(
     ecs_assert(first != NULL, ECS_INTERNAL_ERROR, NULL);
     id->first = first;
     id->second = second;
+}
+
+ecs_script_pair_scope_t* flecs_script_insert_pair_scope(
+    ecs_script_parser_t *parser,
+    const char *first,
+    const char *second)
+{
+    ecs_script_t *script = parser->script;
+    ecs_script_scope_t *scope = parser->scope;
+
+    ecs_script_pair_scope_t *result = flecs_ast_new(
+        script, ecs_script_pair_scope_t, EcsAstPairScope);
+    flecs_script_set_id(&result->id, first, second);
+    result->scope = flecs_script_scope_new(script);
+
+    flecs_ast_append(script, scope->stmts, ecs_script_pair_scope_t, result);
+    return result;
 }
 
 ecs_script_tag_t* flecs_script_insert_pair_tag(
@@ -68050,7 +68095,7 @@ ecs_script_tag_t* flecs_script_insert_pair_tag(
 
     ecs_script_tag_t *result = flecs_ast_new(
         script, ecs_script_tag_t, EcsAstTag);
-    flecs_script_set_id(parser, &result->id, first, second);
+    flecs_script_set_id(&result->id, first, second);
 
     flecs_ast_append(script, scope->stmts, ecs_script_tag_t, result);
 
@@ -68076,7 +68121,7 @@ ecs_script_component_t* flecs_script_insert_pair_component(
 
     ecs_script_component_t *result = flecs_ast_new(
             script, ecs_script_component_t, EcsAstComponent);
-    flecs_script_set_id(parser, &result->id, first, second);
+    flecs_script_set_id(&result->id, first, second);
 
     flecs_ast_append(script, scope->stmts, ecs_script_component_t, result);
 
@@ -68107,7 +68152,7 @@ ecs_script_default_component_t* flecs_script_insert_default_component(
     return result;
 }
 
-ecs_script_variable_component_t* flecs_script_insert_variable_component(
+ecs_script_var_component_t* flecs_script_insert_var_component(
     ecs_script_parser_t *parser,
     const char *var_name)
 {
@@ -68117,13 +68162,12 @@ ecs_script_variable_component_t* flecs_script_insert_variable_component(
     ecs_assert(scope != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(var_name != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_script_variable_component_t *result = flecs_ast_new(
-            script, ecs_script_variable_component_t, EcsAstVariableComponent);
+    ecs_script_var_component_t *result = flecs_ast_new(
+            script, ecs_script_var_component_t, EcsAstVariableComponent);
     result->var_name = var_name;
 
     flecs_ast_append(script, scope->stmts, 
-        ecs_script_variable_component_t, result);
-
+        ecs_script_var_component_t, result);
     return result;
 }
 
@@ -68141,12 +68185,13 @@ ecs_script_with_t* flecs_script_insert_with(
     result->expressions = flecs_script_scope_new(script);
     result->scope = flecs_script_scope_new(script);
 
+    flecs_ast_append(script, scope->stmts, ecs_script_with_t, result);
     return result;
 }
 
 ecs_script_using_t* flecs_script_insert_using(
     ecs_script_parser_t *parser,
-    const char *identifier)
+    const char *name)
 {
     ecs_script_t *script = parser->script;
     ecs_script_scope_t *scope = parser->scope;
@@ -68156,14 +68201,15 @@ ecs_script_using_t* flecs_script_insert_using(
     ecs_script_using_t *result = flecs_ast_new(
         script, ecs_script_using_t, EcsAstUsing);
 
-    result->identifier = identifier;
+    result->name = name;
 
+    flecs_ast_append(script, scope->stmts, ecs_script_using_t, result);
     return result;
 }
 
-ecs_script_annotation_t* flecs_script_insert_annotation(
+ecs_script_annot_t* flecs_script_insert_annot(
     ecs_script_parser_t *parser,
-    const char *identifier,
+    const char *name,
     const char *expr)
 {
     ecs_script_t *script = parser->script;
@@ -68171,12 +68217,13 @@ ecs_script_annotation_t* flecs_script_insert_annotation(
     ecs_assert(script != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(scope != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_script_annotation_t *result = flecs_ast_new(
-        script, ecs_script_annotation_t, EcsAstAnnotation);
+    ecs_script_annot_t *result = flecs_ast_new(
+        script, ecs_script_annot_t, EcsAstAnnotation);
 
-    result->identifier = identifier;
+    result->name = name;
     result->expr = expr;
 
+    flecs_ast_append(script, scope->stmts, ecs_script_annot_t, result);
     return result;
 }
 
@@ -68194,10 +68241,11 @@ ecs_script_assembly_t* flecs_script_insert_assembly(
     result->name = name;
     result->scope = flecs_script_scope_new(script);
 
+    flecs_ast_append(script, scope->stmts, ecs_script_assembly_t, result);
     return result;
 }
 
-ecs_script_var_t* flecs_script_insert_var(
+ecs_script_prop_t* flecs_script_insert_prop(
     ecs_script_parser_t *parser,
     const char *name)
 {
@@ -68206,10 +68254,28 @@ ecs_script_var_t* flecs_script_insert_var(
     ecs_assert(script != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(scope != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_script_var_t *result = flecs_ast_new(
-        script, ecs_script_var_t, EcsAstVar);
+    ecs_script_prop_t *result = flecs_ast_new(
+        script, ecs_script_prop_t, EcsAstProp);
     result->name = name;
 
+    flecs_ast_append(script, scope->stmts, ecs_script_prop_t, result);
+    return result;
+}
+
+ecs_script_const_t* flecs_script_insert_const(
+    ecs_script_parser_t *parser,
+    const char *name)
+{
+    ecs_script_t *script = parser->script;
+    ecs_script_scope_t *scope = parser->scope;
+    ecs_assert(script != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(scope != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_script_const_t *result = flecs_ast_new(
+        script, ecs_script_const_t, EcsAstConst);
+    result->name = name;
+
+    flecs_ast_append(script, scope->stmts, ecs_script_const_t, result);
     return result;
 }
 
@@ -68255,7 +68321,7 @@ ecs_script_var_t* flecs_script_insert_var(
         if (!(ptr = flecs_script_expr(parser, ptr, t, until))) {\
             goto error;\
         }\
-        if (!t->value[0]) {\
+        if (!t->value[0] && (until == '\n')) {\
             ptr ++;\
             Error(parser, "empty expression");\
         }\
@@ -68267,7 +68333,7 @@ ecs_script_var_t* flecs_script_insert_var(
     {\
         ecs_assert(token_stack.count < 256, ECS_INTERNAL_ERROR, NULL);\
         ecs_script_token_t *t = &token_stack.tokens[token_stack.count ++];\
-        if (!(ptr = flecs_script_token(parser, ptr, t))) {\
+        if (!(ptr = flecs_script_token(parser, ptr, t, false))) {\
             goto error;\
         }\
         switch(t->kind) {\
@@ -68328,12 +68394,14 @@ ecs_script_var_t* flecs_script_insert_var(
 
 /* Same as Parse, but doesn't error out if token is not in handled cases */
 #define LookAhead(...)\
-    ecs_script_token_t lookahead_token;\
     const char *lookahead;\
-    if ((lookahead = flecs_script_token(parser, ptr, &lookahead_token))) {\
+    ecs_script_token_t lookahead_token;\
+    if ((lookahead = flecs_script_token(parser, ptr, &lookahead_token, true))) {\
+        token_stack.tokens[++ token_stack.count] = lookahead_token;\
         switch(lookahead_token.kind) {\
             __VA_ARGS__\
         default:\
+            token_stack.count --;\
             break;\
         }\
     }
@@ -68343,6 +68411,18 @@ ecs_script_var_t* flecs_script_insert_var(
         case tok: {\
             __VA_ARGS__\
         }\
+    )
+
+#define LookAhead_2(tok1, tok2, ...)\
+    LookAhead_1(tok1, \
+        const char *old_ptr = ptr;\
+        ptr = lookahead;\
+        LookAhead(\
+            case tok2: {\
+                __VA_ARGS__\
+            }\
+        )\
+        ptr = old_ptr;\
     )
 
 #define Scope(s, ...) {\
@@ -68366,6 +68446,8 @@ const char* flecs_script_scope(
     ecs_script_scope_t *scope,
     const char *ptr)
 {
+    ParserBegin;
+
     ecs_assert(scope != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(ptr[-1] == '{', ECS_INTERNAL_ERROR, NULL);
 
@@ -68373,9 +68455,13 @@ const char* flecs_script_scope(
     parser->scope = scope;
 
     do {
-        LookAhead_1(EcsTokScopeClose,
-            ptr = lookahead;
-            goto scope_close;
+        LookAhead(
+            case EcsTokScopeClose:
+                ptr = lookahead;
+                goto scope_close;
+            case EcsTokEnd:
+                Error(parser, "unexpected end of script");
+                goto error;
         )
 
         ptr = flecs_script_stmt(parser, ptr);
@@ -68389,8 +68475,8 @@ scope_close:
 
     ecs_assert(ptr[-1] == '}', ECS_INTERNAL_ERROR, NULL);
     return ptr;
-error:
-    return NULL;
+
+    ParserEnd;
 }
 
 const char* flecs_script_with_expr(
@@ -68415,13 +68501,14 @@ const char* flecs_script_with_expr(
                 )
             )
 
+            flecs_script_insert_component(parser, Token(0));
             EndOfRule;
         }
         
         case '$': {
             // $color
             Parse_1(EcsTokIdentifier,
-                flecs_script_insert_variable_component(parser, Token(1));
+                flecs_script_insert_var_component(parser, Token(1));
                 EndOfRule;
             )
         }
@@ -68480,7 +68567,7 @@ const char* flecs_script_stmt(
         case EcsTokKeywordProp:       goto prop_var;
         case EcsTokKeywordConst:      goto const_var;
         case '\n':                    EndOfRule;
-        case '\0':                    EndOfRule;
+        case '\0':                    printf("end\n"); EndOfRule;
     );
 
 identifier: {
@@ -68531,7 +68618,7 @@ variable: {
         Parse(
             // $color\n
             case '\n': {
-                flecs_script_insert_variable_component(parser, Token(1));
+                flecs_script_insert_var_component(parser, Token(1));
                 EndOfRule;
             }
 
@@ -68552,7 +68639,7 @@ annotation: {
     Parse_1(EcsTokIdentifier,
         // $brief expr
         Expr('\n', 
-            flecs_script_insert_annotation(parser, Token(1), Token(2));
+            flecs_script_insert_annot(parser, Token(1), Token(2));
             EndOfRule;
         )
     )
@@ -68576,7 +68663,7 @@ using: {
 
 // assembly
 assembly: {
-    // assembly SpaceShip
+    // assembly SpaceShip {
     Parse_2(EcsTokIdentifier, '{',
         ecs_script_assembly_t *assembly = flecs_script_insert_assembly(
             parser, Token(1));
@@ -68588,23 +68675,23 @@ assembly: {
 prop_var: {
     // prop color : Color =
     Parse_4(EcsTokIdentifier, ':', EcsTokIdentifier, '=',
-        ecs_script_var_t *var = flecs_script_insert_var(
+        ecs_script_prop_t *var = flecs_script_insert_prop(
             parser, Token(1));
         var->type = Token(3);
-        var->is_prop = true;
 
         // prop color : Color = {
         LookAhead_1('{',
             // prop color : Color = {expr}
+            ptr = lookahead;
             Expr('}',
-                var->expr = Token(7);
+                var->expr = Token(6);
                 EndOfRule;
             )
         )
 
         // prop color : Color = expr\n
         Expr('\n',
-            var->expr = Token(6);
+            var->expr = Token(5);
             EndOfRule;
         )
     )
@@ -68614,32 +68701,30 @@ prop_var: {
 const_var: {
     // const color
     Parse_1(EcsTokIdentifier,
-        ecs_script_var_t *var = flecs_script_insert_var(
+        ecs_script_const_t *var = flecs_script_insert_const(
             parser, Token(1));
 
         Parse(
             // const color :
             case ':': {
                 // const color : Color
-                Parse_1(EcsTokIdentifier,
+                Parse_2(EcsTokIdentifier, '=',
                     var->type = Token(4);
 
-                    // const color : Color =
-                    Parse_1('=',
-                        // const color : Color = {
-                        LookAhead_1('{',
-                            // const color : Color = {expr}
-                            Expr('}',
-                                var->expr = Token(7);
-                                EndOfRule;
-                            )
-                        )
-
-                        // const color : Color = expr
-                        Expr('=',
+                    // const color : Color = {
+                    LookAhead_1('{',
+                        // const color : Color = {expr}
+                        ptr = lookahead;
+                        Expr('}',
                             var->expr = Token(6);
                             EndOfRule;
                         )
+                    )
+
+                    // const color : Color = expr\n
+                    Expr('\n',
+                        var->expr = Token(5);
+                        EndOfRule;
                     )
                 )
             }
@@ -68668,27 +68753,59 @@ pair: {
     Parse(
         // (Likes, Apples)\n
         case '\n': {
+            flecs_script_insert_pair_tag(parser, Token(1), Token(3));
             EndOfRule;
         }
 
         // (Eats, Apples):
         case ':': {
-            Parse_2('{', '}', EndOfRule; )
+            // (Eats, Apples): {
+            Parse_1('{',
+                // (Eats, Apples): { expr }
+                Expr('}',
+                    ecs_script_component_t *comp = 
+                        flecs_script_insert_pair_component(
+                            parser, Token(1), Token(3));
+                    comp->expr = Token(7);
+                    EndOfRule;
+                )
+            )
         }
 
         // (IsA, Machine) {
         case '{': {
-            Parse_1('}', EndOfRule; )
+            ecs_script_pair_scope_t *ps = flecs_script_insert_pair_scope(
+                parser, Token(1), Token(3));
+            return flecs_script_scope(parser, ps->scope, ptr);
         }
     )
 }
 
 // Position:
 identifier_colon: {
-    LookAhead_1('{',
-        ptr = lookahead;
-        goto component_expr_scope;
-    )
+    {
+        // Position: {
+        LookAhead_1('{',
+            ptr = lookahead;
+            goto component_expr_scope;
+        )
+    }
+
+    {
+        // enterprise : SpaceShip {
+        LookAhead_2(EcsTokIdentifier, '{', {
+            ptr = lookahead;
+
+            ecs_script_entity_t *entity = flecs_script_insert_entity(
+                parser, Token(0));
+
+            Scope(entity->scope, 
+                flecs_script_insert_pair_tag(parser, "IsA", Token(2));
+            )
+
+            return flecs_script_scope(parser, entity->scope, ptr);
+        })
+    }
 
     // x : f32
     Expr('\n',
@@ -68734,26 +68851,32 @@ identifier_identifier: {
 // SpaceShip(
 identifier_paren: {
     // SpaceShip()
-    Parse_1(')', 
+    Expr(')', 
         Parse(
-            // SpaceShip()\n
+            // SpaceShip(expr)\n
             case '\n': {
                 ecs_script_entity_t *entity = flecs_script_insert_entity(
                         parser, NULL);
 
                 Scope(entity->scope, 
-                    flecs_script_insert_component(parser, Token(0)); )
+                    ecs_script_component_t *comp = 
+                        flecs_script_insert_component(parser, Token(0)); 
+                    comp->expr = Token(2);
+                )
 
                 EndOfRule;
             }
 
-            // SpaceShip() {
+            // SpaceShip(expr) {
             case '{': {
                 ecs_script_entity_t *entity = flecs_script_insert_entity(
                     parser, NULL);
 
                 Scope(entity->scope, 
-                    flecs_script_insert_component(parser, Token(0)); )
+                    ecs_script_component_t *comp = 
+                        flecs_script_insert_component(parser, Token(0)); 
+                    comp->expr = Token(2);
+                )
 
                 return flecs_script_scope(parser, entity->scope, ptr);
             }
@@ -68763,15 +68886,14 @@ identifier_paren: {
 
 // Position: {
 component_expr_scope: {
-    // Position: {}
-    LookAhead_1('}', 
-        ptr = lookahead;
-        EndOfRule;
-    )
 
-    Expr('}', 
+    // Position: {expr}
+    Expr('}', {
+        ecs_script_component_t *comp = flecs_script_insert_component(
+            parser, Token(0));
+        comp->expr = Token(3);
         EndOfRule; 
-    )
+    })
 }
 
 // Position spaceship (
@@ -68817,10 +68939,10 @@ ecs_script_t* ecs_script_parse(
     ecs_script_parser_t parser = {
         .script = script,
         .scope = script->root,
-        .token_buffer = ecs_os_malloc(ecs_os_strlen(code) * 2 + 1),
     };
 
-    parser.token_cur = parser.token_buffer;
+    script->token_buffer = ecs_os_malloc(ecs_os_strlen(code) * 2 + 1),
+    parser.token_cur = script->token_buffer;
 
     const char *ptr = code;
 
@@ -68835,10 +68957,9 @@ ecs_script_t* ecs_script_parse(
         }
     } while (true);
 
-    ecs_os_free(parser.token_buffer);
     return script;
 error:
-    ecs_os_free(parser.token_buffer);
+    ecs_os_free(script->token_buffer);
     return NULL;
 }
 
@@ -68851,6 +68972,360 @@ ecs_script_t* ecs_script_parse_file(
     }
 
     return ecs_script_parse(filename, code);
+}
+
+
+typedef struct ecs_script_str_visitor_t {
+    ecs_script_t *script;
+    ecs_strbuf_t *buf;
+    int32_t depth;
+    bool newline;
+} ecs_script_str_visitor_t;
+
+static
+void flecs_script_scope_to_str(
+    ecs_script_str_visitor_t *v,
+    ecs_script_scope_t *scope);
+
+static
+void flecs_scriptbuf_append(
+    ecs_script_str_visitor_t *v,
+    const char *fmt,
+    ...)
+{
+    if (v->newline) {
+        ecs_strbuf_append(v->buf, "%*s", v->depth * 2, "");
+        v->newline = false;
+    }
+
+    va_list args;
+    va_start(args, fmt);
+    ecs_strbuf_vappend(v->buf, fmt, args);
+    va_end(args);
+
+    if (fmt[strlen(fmt) - 1] == '\n') {
+        v->newline = true;
+    }
+}
+
+static
+void flecs_scriptbuf_appendstr(
+    ecs_script_str_visitor_t *v,
+    const char *str)
+{
+    if (v->newline) {
+        ecs_strbuf_append(v->buf, "%*s", v->depth * 2, "");
+        v->newline = false;
+    }
+
+    ecs_strbuf_appendstr(v->buf, str);
+
+    if (str[strlen(str) - 1] == '\n') {
+        v->newline = true;
+    }
+}
+
+static
+void flecs_script_id_to_str(
+    ecs_script_str_visitor_t *v,
+    ecs_script_id_t *id)
+{
+    if (id->second) {
+        flecs_scriptbuf_append(v, "(%s, %s)", 
+            id->first, id->second);
+    } else {
+        flecs_scriptbuf_appendstr(v, id->first);
+    }
+}
+
+static
+void flecs_script_expr_to_str(
+    ecs_script_str_visitor_t *v,
+    const char *expr)
+{
+    flecs_scriptbuf_append(v, "{%s%s%s}", ECS_MAGENTA, expr, ECS_NORMAL);
+}
+
+static
+char* flecs_script_node_to_str(
+    ecs_script_node_t *node)
+{
+    switch(node->kind) {
+    case EcsAstScope:              return "scope";
+    case EcsAstTag:                return "tag";
+    case EcsAstComponent:          return "component";
+    case EcsAstDefaultComponent:   return "default_component";
+    case EcsAstVariableComponent:  return "var_component";
+    case EcsAstWith:               return "with";
+    case EcsAstUsing:              return "using";
+    case EcsAstAnnotation:         return "annot";
+    case EcsAstAssembly:           return "assembly";
+    case EcsAstProp:               return "prop";
+    case EcsAstConst:              return "const";
+    case EcsAstEntity:             return "entity";
+    case EcsAstPairScope:          return "pair_scope";
+    }
+    return "???";
+}
+
+static
+void flecs_scriptbuf_node(
+    ecs_script_str_visitor_t *v,
+    ecs_script_node_t *node)
+{
+    flecs_scriptbuf_append(v, "%s%s%s: ", 
+        ECS_BLUE, flecs_script_node_to_str(node), ECS_NORMAL);
+}
+
+static
+void flecs_script_tag_to_str(
+    ecs_script_str_visitor_t *v,
+    ecs_script_tag_t *node)
+{
+    flecs_scriptbuf_node(v, &node->node);
+    flecs_script_id_to_str(v, &node->id);
+    flecs_scriptbuf_appendstr(v, "\n");
+}
+
+static
+void flecs_script_component_to_str(
+    ecs_script_str_visitor_t *v,
+    ecs_script_component_t *node)
+{
+    flecs_scriptbuf_node(v, &node->node);
+    flecs_script_id_to_str(v, &node->id);
+    if (node->expr) {
+        flecs_scriptbuf_appendstr(v, " = ");
+        flecs_script_expr_to_str(v, node->expr);
+    }
+    flecs_scriptbuf_appendstr(v, "\n");
+}
+
+static
+void flecs_script_default_component_to_str(
+    ecs_script_str_visitor_t *v,
+    ecs_script_default_component_t *node)
+{
+    flecs_scriptbuf_node(v, &node->node);
+    if (node->expr) {
+        flecs_script_expr_to_str(v, node->expr);
+    }
+    flecs_scriptbuf_appendstr(v, "\n");
+}
+
+static
+void flecs_script_var_component_to_str(
+    ecs_script_str_visitor_t *v,
+    ecs_script_var_component_t *node)
+{
+    flecs_scriptbuf_node(v, &node->node);
+    flecs_scriptbuf_append(v, "%s ", node->var_name);
+    flecs_scriptbuf_appendstr(v, "\n");
+}
+
+static
+void flecs_script_with_to_str(
+    ecs_script_str_visitor_t *v,
+    ecs_script_with_t *node)
+{
+    flecs_scriptbuf_node(v, &node->node);
+    
+    flecs_scriptbuf_appendstr(v, "{\n");
+    v->depth ++;
+    flecs_scriptbuf_append(v, "%sexpressions%s: ", ECS_CYAN, ECS_NORMAL);
+    flecs_script_scope_to_str(v, node->expressions);
+    flecs_scriptbuf_append(v, "%sscope%s: ", ECS_CYAN, ECS_NORMAL);
+    flecs_script_scope_to_str(v, node->scope);
+    v->depth --;
+    flecs_scriptbuf_appendstr(v, "}\n");
+}
+
+static
+void flecs_script_using_to_str(
+    ecs_script_str_visitor_t *v,
+    ecs_script_using_t *node)
+{
+    flecs_scriptbuf_node(v, &node->node);
+    flecs_scriptbuf_append(v, "%s\n", node->name);
+}
+
+static
+void flecs_script_annot_to_str(
+    ecs_script_str_visitor_t *v,
+    ecs_script_annot_t *node)
+{
+    flecs_scriptbuf_node(v, &node->node);
+    flecs_scriptbuf_append(v, "%s = ", node->name);
+    flecs_script_expr_to_str(v, node->expr);
+    flecs_scriptbuf_appendstr(v, "\n");
+}
+
+static
+void flecs_script_assembly_to_str(
+    ecs_script_str_visitor_t *v,
+    ecs_script_assembly_t *node)
+{
+    flecs_scriptbuf_node(v, &node->node);
+    flecs_scriptbuf_append(v, "%s ", node->name);
+    flecs_script_scope_to_str(v, node->scope);
+}
+
+static
+void flecs_script_prop_to_str(
+    ecs_script_str_visitor_t *v,
+    ecs_script_prop_t *node)
+{
+    flecs_scriptbuf_node(v, &node->node);
+    flecs_scriptbuf_append(v, "%s : %s = ", 
+        node->name,
+        node->type,
+        node->expr);
+    flecs_script_expr_to_str(v, node->expr);
+    flecs_scriptbuf_appendstr(v, "\n");
+}
+
+static
+void flecs_script_const_to_str(
+    ecs_script_str_visitor_t *v,
+    ecs_script_const_t *node)
+{
+    flecs_scriptbuf_node(v, &node->node);
+    if (node->type) {
+        flecs_scriptbuf_append(v, "%s : %s = ", 
+            node->name,
+            node->type);
+    } else {
+        flecs_scriptbuf_append(v, "%s = ", 
+            node->name);
+    }
+    flecs_script_expr_to_str(v, node->expr);
+    flecs_scriptbuf_appendstr(v, "\n");
+}
+
+static
+void flecs_script_entity_to_str(
+    ecs_script_str_visitor_t *v,
+    ecs_script_entity_t *node)
+{
+    flecs_scriptbuf_node(v, &node->node);
+    if (node->name) {
+        flecs_scriptbuf_append(v, "%s ", node->name);
+    } else {
+        flecs_scriptbuf_appendstr(v, "<anon> ");
+    }
+    flecs_script_scope_to_str(v, node->scope);
+}
+
+static
+void flecs_script_pair_scope_to_str(
+    ecs_script_str_visitor_t *v,
+    ecs_script_pair_scope_t *node)
+{
+    flecs_scriptbuf_node(v, &node->node);
+    flecs_script_id_to_str(v, &node->id);
+    flecs_scriptbuf_appendstr(v, " ");
+    flecs_script_scope_to_str(v, node->scope);
+}
+
+static
+void flecs_script_stmt_to_str(
+    ecs_script_str_visitor_t *v,
+    ecs_script_node_t *node)
+{
+    switch(node->kind) {
+    case EcsAstScope:
+        flecs_script_scope_to_str(v, (ecs_script_scope_t*)node);
+        break;
+    case EcsAstTag:
+        flecs_script_tag_to_str(v, (ecs_script_tag_t*)node);
+        break;
+    case EcsAstComponent:
+        flecs_script_component_to_str(v, (ecs_script_component_t*)node);
+        break;
+    case EcsAstDefaultComponent:
+        flecs_script_default_component_to_str(v, 
+            (ecs_script_default_component_t*)node);
+        break;
+    case EcsAstVariableComponent:
+        flecs_script_var_component_to_str(v, 
+            (ecs_script_var_component_t*)node);
+        break;
+    case EcsAstWith:
+        flecs_script_with_to_str(v, (ecs_script_with_t*)node);
+        break;
+    case EcsAstUsing:
+        flecs_script_using_to_str(v, (ecs_script_using_t*)node);
+        break;
+    case EcsAstAnnotation:
+        flecs_script_annot_to_str(v, (ecs_script_annot_t*)node);
+        break;
+    case EcsAstAssembly:
+        flecs_script_assembly_to_str(v, (ecs_script_assembly_t*)node);
+        break;
+    case EcsAstProp:
+        flecs_script_prop_to_str(v, (ecs_script_prop_t*)node);
+        break;
+    case EcsAstConst:
+        flecs_script_const_to_str(v, (ecs_script_const_t*)node);
+        break;
+    case EcsAstEntity:
+        flecs_script_entity_to_str(v, (ecs_script_entity_t*)node);
+        break;
+    case EcsAstPairScope:
+        flecs_script_pair_scope_to_str(v, (ecs_script_pair_scope_t*)node);
+        break;
+    }
+}
+
+static
+void flecs_script_scope_to_str(
+    ecs_script_str_visitor_t *v,
+    ecs_script_scope_t *scope)
+{
+    ecs_script_node_t **nodes = ecs_vec_first_t(
+        &scope->stmts, ecs_script_node_t*);
+
+    int32_t i, count = ecs_vec_count(&scope->stmts);
+
+    if (!count) {
+        flecs_scriptbuf_appendstr(v, "{}\n");
+        return;
+    }
+
+    flecs_scriptbuf_appendstr(v, "{\n");
+
+    v->depth ++;
+
+    for (i = 0; i < count; i ++) {
+        flecs_script_stmt_to_str(v, nodes[i]);
+    }
+
+    v->depth --;
+
+    flecs_scriptbuf_appendstr(v, "}\n");
+}
+
+void ecs_script_to_buf(
+    ecs_script_t *script,
+    ecs_strbuf_t *buf)
+{
+    ecs_check(script != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(buf != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_script_str_visitor_t v = { .script = script, .buf = buf };
+    flecs_script_scope_to_str(&v, script->root);
+error:
+    return;
+}
+
+char* ecs_script_to_str(
+    ecs_script_t *script)
+{
+    ecs_check(script != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_strbuf_t buf = ECS_STRBUF_INIT;
+    ecs_script_to_buf(script, &buf);
+    return ecs_strbuf_get(&buf);
+error:
+    return NULL;
 }
 
 /**
@@ -69075,6 +69550,7 @@ const char* flecs_script_expr(
     out->value = parser->token_cur;
     parser->token_cur += len;
     parser->token_cur[0] = '\0';
+    parser->token_cur ++;
 
     return ptr;
 }
@@ -69082,7 +69558,8 @@ const char* flecs_script_expr(
 const char* flecs_script_token(
     ecs_script_parser_t *parser,
     const char *ptr,
-    ecs_script_token_t *out)
+    ecs_script_token_t *out,
+    bool is_lookahead)
 {
     // Skip whitespace and comments
     do {
@@ -69097,6 +69574,7 @@ const char* flecs_script_token(
 
     if (ptr[0] == '\0') {
         out->kind = EcsTokEnd;
+        return ptr;
     } else if (ptr[0] == '\n') {
         out->kind = EcsTokNewline;
         return ptr + 1;
@@ -69120,6 +69598,11 @@ const char* flecs_script_token(
     } else if (flecs_script_is_identifier(ptr[0])) {
         ptr = flecs_script_identifier(parser, ptr, out);
         return ptr;
+    }
+
+    if (!is_lookahead) {
+        ecs_parser_error(parser->script->name, parser->script->code,
+            ptr - parser->script->code, "unknown token '%c'", ptr[0]);
     }
 
     return NULL;
