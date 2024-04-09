@@ -138,6 +138,7 @@ const char* flecs_script_stmt(
         case EcsTokKeywordAssembly:   goto assembly;
         case EcsTokKeywordProp:       goto prop_var;
         case EcsTokKeywordConst:      goto const_var;
+        case EcsTokKeywordIf:         goto if_stmt;
         case '\n':                    EndOfRule;
         case '\0':                    printf("end\n"); EndOfRule;
     );
@@ -309,6 +310,28 @@ const_var: {
                 )
             }
         )
+    )
+}
+
+// if
+if_stmt: {
+    // if expr {
+    Expr('{',
+        ecs_script_if_t *stmt = flecs_script_insert_if(parser);
+        stmt->expr = Token(1);
+        ptr = flecs_script_scope(parser, stmt->if_true, ptr);
+        if (!ptr) {
+            goto error;
+        }
+
+        LookAhead_1(EcsTokKeywordElse, 
+            ptr = lookahead;
+            Parse_1('{',
+                return flecs_script_scope(parser, stmt->if_false, ptr);
+            )
+        )
+
+        EndOfRule;
     )
 }
 

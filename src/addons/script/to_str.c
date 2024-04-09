@@ -69,7 +69,7 @@ void flecs_script_expr_to_str(
     ecs_script_str_visitor_t *v,
     const char *expr)
 {
-    flecs_scriptbuf_append(v, "{%s%s%s}", ECS_MAGENTA, expr, ECS_NORMAL);
+    flecs_scriptbuf_append(v, "{%s%s%s}", ECS_GREEN, expr, ECS_NORMAL);
 }
 
 static
@@ -90,6 +90,7 @@ char* flecs_script_node_to_str(
     case EcsAstConst:              return "const";
     case EcsAstEntity:             return "entity";
     case EcsAstPairScope:          return "pair_scope";
+    case EcsAstIf:                 return "if";
     }
     return "???";
 }
@@ -254,6 +255,24 @@ void flecs_script_pair_scope_to_str(
 }
 
 static
+void flecs_script_if_to_str(
+    ecs_script_str_visitor_t *v,
+    ecs_script_if_t *node)
+{
+    flecs_scriptbuf_node(v, &node->node);
+    flecs_script_expr_to_str(v, node->expr);
+
+    flecs_scriptbuf_appendstr(v, " {\n");
+    v->depth ++;
+    flecs_scriptbuf_append(v, "%strue%s: ", ECS_CYAN, ECS_NORMAL);
+    flecs_script_scope_to_str(v, node->if_true);
+    flecs_scriptbuf_append(v, "%sfalse%s: ", ECS_CYAN, ECS_NORMAL);
+    flecs_script_scope_to_str(v, node->if_false);
+    v->depth --;
+    flecs_scriptbuf_appendstr(v, "}\n");
+}
+
+static
 void flecs_script_stmt_to_str(
     ecs_script_str_visitor_t *v,
     ecs_script_node_t *node)
@@ -299,6 +318,9 @@ void flecs_script_stmt_to_str(
         break;
     case EcsAstPairScope:
         flecs_script_pair_scope_to_str(v, (ecs_script_pair_scope_t*)node);
+        break;
+    case EcsAstIf:
+        flecs_script_if_to_str(v, (ecs_script_if_t*)node);
         break;
     }
 }

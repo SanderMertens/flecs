@@ -285,3 +285,20 @@ ecs_script_const_t* flecs_script_insert_const(
     flecs_ast_append(script, scope->stmts, ecs_script_const_t, result);
     return result;
 }
+
+ecs_script_if_t* flecs_script_insert_if(
+    ecs_script_parser_t *parser)
+{
+    ecs_script_t *script = parser->script;
+    ecs_script_scope_t *scope = parser->scope;
+    ecs_assert(script != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(scope != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_script_if_t *result = flecs_ast_new(
+        script, ecs_script_if_t, EcsAstIf);
+    result->if_true = flecs_script_scope_new(script);
+    result->if_false = flecs_script_scope_new(script);
+
+    flecs_ast_append(script, scope->stmts, ecs_script_if_t, result);
+    return result;
+}

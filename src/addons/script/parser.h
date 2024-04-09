@@ -35,7 +35,7 @@
         if (!(ptr = flecs_script_expr(parser, ptr, t, until))) {\
             goto error;\
         }\
-        if (!t->value[0] && (until == '\n')) {\
+        if (!t->value[0] && (until == '\n' || until == '{')) {\
             ptr ++;\
             Error(parser, "empty expression");\
         }\

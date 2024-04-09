@@ -39,6 +39,7 @@ const char* flecs_script_token_kind_str(
     case EcsTokKeywordAssembly:
     case EcsTokKeywordProp:
     case EcsTokKeywordConst:
+    case EcsTokKeywordIf:
         return "keyword ";
     case EcsTokIdentifier:
         return "identifier ";
@@ -148,6 +149,9 @@ const char* flecs_script_expr(
 
     for (; (ch = ptr[0]); ptr ++) {
         if (ch == '{') {
+            if (ch == until) {
+                break;
+            }
             scope_depth ++;
         } else 
         if (ch == '}') {
@@ -196,13 +200,16 @@ const char* flecs_script_expr(
         if (until == '\0') {
             ecs_parser_error(parser->script->name, parser->script->code,
                 ptr - parser->script->code, "expected end of script");
+            return NULL;
         } else
         if (until == '\n') {
             ecs_parser_error(parser->script->name, parser->script->code,
                 ptr - parser->script->code, "expected newline");
+            return NULL;
         } else {
             ecs_parser_error(parser->script->name, parser->script->code,
                 ptr - parser->script->code, "expected '%c'", until);
+            return NULL;
         }
     }
 
@@ -221,6 +228,11 @@ const char* flecs_script_expr(
     ecs_os_memcpy(parser->token_cur, start, len);
     out->value = parser->token_cur;
     parser->token_cur += len;
+    
+    while (isspace(parser->token_cur[-1])) {
+        parser->token_cur --;
+    }
+
     parser->token_cur[0] = '\0';
     parser->token_cur ++;
 
@@ -266,6 +278,8 @@ const char* flecs_script_token(
     Keyword ("assembly", EcsTokKeywordAssembly)
     Keyword ("prop",     EcsTokKeywordProp)
     Keyword ("const",    EcsTokKeywordConst)
+    Keyword ("if",       EcsTokKeywordIf)
+    Keyword ("else",     EcsTokKeywordElse)
 
     } else if (flecs_script_is_identifier(ptr[0])) {
         ptr = flecs_script_identifier(parser, ptr, out);

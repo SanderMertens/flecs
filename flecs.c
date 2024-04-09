@@ -67792,6 +67792,8 @@ typedef enum ecs_script_token_kind_t {
     EcsTokKeywordAssembly,
     EcsTokKeywordProp,
     EcsTokKeywordConst,
+    EcsTokKeywordIf,
+    EcsTokKeywordElse,
     EcsTokColon = ':',
     EcsTokScopeOpen = '{',
     EcsTokScopeClose = '}',
@@ -67844,6 +67846,7 @@ typedef enum ecs_script_node_kind_t {
     EcsAstConst,
     EcsAstEntity,
     EcsAstPairScope,
+    EcsAstIf,
 } ecs_script_node_kind_t;
 
 typedef struct ecs_script_node_t {
@@ -67934,6 +67937,13 @@ typedef struct ecs_script_const_t {
     const char *expr;
 } ecs_script_const_t;
 
+typedef struct ecs_script_if_t {
+    ecs_script_node_t node;
+    ecs_script_scope_t *if_true;
+    ecs_script_scope_t *if_false;
+    const char *expr;
+} ecs_script_if_t;
+
 ecs_script_t* flecs_script_new(void);
 
 ecs_script_entity_t* flecs_script_insert_entity(
@@ -67993,6 +68003,9 @@ ecs_script_default_component_t* flecs_script_insert_default_component(
 ecs_script_var_component_t* flecs_script_insert_var_component(
     ecs_script_parser_t *parser,
     const char *name);
+
+ecs_script_if_t* flecs_script_insert_if(
+    ecs_script_parser_t *parser);
 
 
 #define flecs_ast_strdup(script, str)\
@@ -68279,6 +68292,23 @@ ecs_script_const_t* flecs_script_insert_const(
     return result;
 }
 
+ecs_script_if_t* flecs_script_insert_if(
+    ecs_script_parser_t *parser)
+{
+    ecs_script_t *script = parser->script;
+    ecs_script_scope_t *scope = parser->scope;
+    ecs_assert(script != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(scope != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_script_if_t *result = flecs_ast_new(
+        script, ecs_script_if_t, EcsAstIf);
+    result->if_true = flecs_script_scope_new(script);
+    result->if_false = flecs_script_scope_new(script);
+
+    flecs_ast_append(script, scope->stmts, ecs_script_if_t, result);
+    return result;
+}
+
 /**
  * @file addons/plecs.c
  * @brief Plecs addon.
@@ -68321,7 +68351,7 @@ ecs_script_const_t* flecs_script_insert_const(
         if (!(ptr = flecs_script_expr(parser, ptr, t, until))) {\
             goto error;\
         }\
-        if (!t->value[0] && (until == '\n')) {\
+        if (!t->value[0] && (until == '\n' || until == '{')) {\
             ptr ++;\
             Error(parser, "empty expression");\
         }\
@@ -68566,6 +68596,7 @@ const char* flecs_script_stmt(
         case EcsTokKeywordAssembly:   goto assembly;
         case EcsTokKeywordProp:       goto prop_var;
         case EcsTokKeywordConst:      goto const_var;
+        case EcsTokKeywordIf:         goto if_stmt;
         case '\n':                    EndOfRule;
         case '\0':                    printf("end\n"); EndOfRule;
     );
@@ -68737,6 +68768,28 @@ const_var: {
                 )
             }
         )
+    )
+}
+
+// if
+if_stmt: {
+    // if expr {
+    Expr('{',
+        ecs_script_if_t *stmt = flecs_script_insert_if(parser);
+        stmt->expr = Token(1);
+        ptr = flecs_script_scope(parser, stmt->if_true, ptr);
+        if (!ptr) {
+            goto error;
+        }
+
+        LookAhead_1(EcsTokKeywordElse, 
+            ptr = lookahead;
+            Parse_1('{',
+                return flecs_script_scope(parser, stmt->if_false, ptr);
+            )
+        )
+
+        EndOfRule;
     )
 }
 
@@ -69043,7 +69096,7 @@ void flecs_script_expr_to_str(
     ecs_script_str_visitor_t *v,
     const char *expr)
 {
-    flecs_scriptbuf_append(v, "{%s%s%s}", ECS_MAGENTA, expr, ECS_NORMAL);
+    flecs_scriptbuf_append(v, "{%s%s%s}", ECS_GREEN, expr, ECS_NORMAL);
 }
 
 static
@@ -69064,6 +69117,7 @@ char* flecs_script_node_to_str(
     case EcsAstConst:              return "const";
     case EcsAstEntity:             return "entity";
     case EcsAstPairScope:          return "pair_scope";
+    case EcsAstIf:                 return "if";
     }
     return "???";
 }
@@ -69228,6 +69282,24 @@ void flecs_script_pair_scope_to_str(
 }
 
 static
+void flecs_script_if_to_str(
+    ecs_script_str_visitor_t *v,
+    ecs_script_if_t *node)
+{
+    flecs_scriptbuf_node(v, &node->node);
+    flecs_script_expr_to_str(v, node->expr);
+
+    flecs_scriptbuf_appendstr(v, " {\n");
+    v->depth ++;
+    flecs_scriptbuf_append(v, "%strue%s: ", ECS_CYAN, ECS_NORMAL);
+    flecs_script_scope_to_str(v, node->if_true);
+    flecs_scriptbuf_append(v, "%sfalse%s: ", ECS_CYAN, ECS_NORMAL);
+    flecs_script_scope_to_str(v, node->if_false);
+    v->depth --;
+    flecs_scriptbuf_appendstr(v, "}\n");
+}
+
+static
 void flecs_script_stmt_to_str(
     ecs_script_str_visitor_t *v,
     ecs_script_node_t *node)
@@ -69273,6 +69345,9 @@ void flecs_script_stmt_to_str(
         break;
     case EcsAstPairScope:
         flecs_script_pair_scope_to_str(v, (ecs_script_pair_scope_t*)node);
+        break;
+    case EcsAstIf:
+        flecs_script_if_to_str(v, (ecs_script_if_t*)node);
         break;
     }
 }
@@ -69367,6 +69442,7 @@ const char* flecs_script_token_kind_str(
     case EcsTokKeywordAssembly:
     case EcsTokKeywordProp:
     case EcsTokKeywordConst:
+    case EcsTokKeywordIf:
         return "keyword ";
     case EcsTokIdentifier:
         return "identifier ";
@@ -69476,6 +69552,9 @@ const char* flecs_script_expr(
 
     for (; (ch = ptr[0]); ptr ++) {
         if (ch == '{') {
+            if (ch == until) {
+                break;
+            }
             scope_depth ++;
         } else 
         if (ch == '}') {
@@ -69524,13 +69603,16 @@ const char* flecs_script_expr(
         if (until == '\0') {
             ecs_parser_error(parser->script->name, parser->script->code,
                 ptr - parser->script->code, "expected end of script");
+            return NULL;
         } else
         if (until == '\n') {
             ecs_parser_error(parser->script->name, parser->script->code,
                 ptr - parser->script->code, "expected newline");
+            return NULL;
         } else {
             ecs_parser_error(parser->script->name, parser->script->code,
                 ptr - parser->script->code, "expected '%c'", until);
+            return NULL;
         }
     }
 
@@ -69549,6 +69631,11 @@ const char* flecs_script_expr(
     ecs_os_memcpy(parser->token_cur, start, len);
     out->value = parser->token_cur;
     parser->token_cur += len;
+    
+    while (isspace(parser->token_cur[-1])) {
+        parser->token_cur --;
+    }
+
     parser->token_cur[0] = '\0';
     parser->token_cur ++;
 
@@ -69594,6 +69681,8 @@ const char* flecs_script_token(
     Keyword ("assembly", EcsTokKeywordAssembly)
     Keyword ("prop",     EcsTokKeywordProp)
     Keyword ("const",    EcsTokKeywordConst)
+    Keyword ("if",       EcsTokKeywordIf)
+    Keyword ("else",     EcsTokKeywordElse)
 
     } else if (flecs_script_is_identifier(ptr[0])) {
         ptr = flecs_script_identifier(parser, ptr, out);
