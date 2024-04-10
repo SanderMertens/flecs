@@ -45661,14 +45661,14 @@ void flecs_table_merge_column(
     } else {
         int32_t src_count = src->data.count;
 
-        flecs_table_grow_column(world, dst, src_count, column_size, true);
+        flecs_table_grow_column(world, dst, src_count, column_size, false);
         void *dst_ptr = ECS_ELEM(dst->data.array, size, dst_count);
         void *src_ptr = src->data.array;
 
         /* Move values into column */
         ecs_type_info_t *ti = dst->ti;
         ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
-        ecs_move_t move = ti->hooks.move_dtor;
+        ecs_move_t move = ti->hooks.ctor_move_dtor;
         if (move) {
             move(dst_ptr, src_ptr, src_count, ti);
         } else {
