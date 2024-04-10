@@ -993,6 +993,7 @@ void ComponentLifecycle_set_override_pair_no_copy(void);
 void ComponentLifecycle_set_override_pair_w_entity_no_copy(void);
 void ComponentLifecycle_dtor_after_defer_set(void);
 void ComponentLifecycle_dtor_with_relation(void);
+void ComponentLifecycle_dtor_relation_target(void);
 void ComponentLifecycle_register_parent_after_child_w_hooks(void);
 void ComponentLifecycle_register_parent_after_child_w_hooks_implicit(void);
 
@@ -5221,6 +5222,10 @@ bake_test_case ComponentLifecycle_testcases[] = {
         ComponentLifecycle_dtor_with_relation
     },
     {
+        "dtor_relation_target",
+        ComponentLifecycle_dtor_relation_target
+    },
+    {
         "register_parent_after_child_w_hooks",
         ComponentLifecycle_register_parent_after_child_w_hooks
     },
@@ -6639,7 +6644,6 @@ bake_test_case Doc_testcases[] = {
     }
 };
 
-
 static bake_test_suite suites[] = {
     {
         "PrettyFunction",
@@ -6757,7 +6761,7 @@ static bake_test_suite suites[] = {
         "ComponentLifecycle",
         NULL,
         NULL,
-        75,
+        76,
         ComponentLifecycle_testcases
     },
     {
