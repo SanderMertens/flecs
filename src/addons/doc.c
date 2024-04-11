@@ -189,7 +189,7 @@ void flecs_doc_import_core_definitions(
     ecs_doc_set_brief(world, EcsRemove, "Cleanup action used with OnDelete/OnDeleteTarget");
     ecs_doc_set_brief(world, EcsDelete, "Cleanup action used with OnDelete/OnDeleteTarget");
     ecs_doc_set_brief(world, EcsPanic, "Cleanup action used with OnDelete/OnDeleteTarget");
-    ecs_doc_set_brief(world, EcsDefaultChildComponent, "Sets default component hint for children of entity");
+    ecs_doc_set_brief(world, ecs_id(EcsDefaultChildComponent), "Sets default component hint for children of entity");
     ecs_doc_set_brief(world, EcsIsA, "Relationship used for expressing inheritance");
     ecs_doc_set_brief(world, EcsChildOf, "Relationship used for expressing hierarchies");
     ecs_doc_set_brief(world, EcsDependsOn, "Relationship used for expressing dependencies");

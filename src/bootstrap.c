@@ -685,6 +685,10 @@ void flecs_bootstrap(
         .dtor = ecs_dtor(EcsPoly)
     });
 
+    flecs_type_info_init(world, EcsDefaultChildComponent, { 
+        .ctor = ecs_default_ctor,
+    });
+
     /* Create and cache often used id records on world */
     flecs_init_id_records(world);
 
@@ -698,6 +702,7 @@ void flecs_bootstrap(
     flecs_bootstrap_builtin_t(world, table, EcsIdentifier);
     flecs_bootstrap_builtin_t(world, table, EcsComponent);
     flecs_bootstrap_builtin_t(world, table, EcsPoly);
+    flecs_bootstrap_builtin_t(world, table, EcsDefaultChildComponent);
 
     /* Initialize default entity id range */
     world->info.last_component_id = EcsFirstUserComponentId;
@@ -781,8 +786,6 @@ void flecs_bootstrap(
     flecs_bootstrap_tag(world, EcsDelete);
     flecs_bootstrap_tag(world, EcsPanic);
 
-    flecs_bootstrap_tag(world, EcsDefaultChildComponent);
-
     /* Builtin predicates */
     flecs_bootstrap_tag(world, EcsPredEq);
     flecs_bootstrap_tag(world, EcsPredMatch);
@@ -816,7 +819,6 @@ void flecs_bootstrap(
     ecs_add_id(world, EcsChildOf, EcsPairIsTag);
     ecs_add_id(world, EcsSlotOf, EcsPairIsTag);
     ecs_add_id(world, EcsDependsOn, EcsPairIsTag);
-    ecs_add_id(world, EcsDefaultChildComponent, EcsPairIsTag);
     ecs_add_id(world, EcsFlag, EcsPairIsTag);
     ecs_add_id(world, EcsWith, EcsPairIsTag);
 
@@ -824,7 +826,6 @@ void flecs_bootstrap(
     ecs_add_id(world, EcsChildOf, EcsExclusive);
     ecs_add_id(world, EcsOnDelete, EcsExclusive);
     ecs_add_id(world, EcsOnDeleteTarget, EcsExclusive);
-    ecs_add_id(world, EcsDefaultChildComponent, EcsExclusive);
 
     /* Sync properties of ChildOf and Identifier with bootstrapped flags */
     ecs_add_pair(world, EcsChildOf, EcsOnDeleteTarget, EcsDelete);

@@ -3714,6 +3714,8 @@ typedef struct ecs_entity_desc_t {
 
     ecs_entity_t id;      /**< Set to modify existing entity (optional) */
 
+    ecs_entity_t parent;  /**< Parent entity. */
+
     const char *name;     /**< Name of the entity. If no entity is provided, an
                            * entity with this name will be looked up first. When
                            * an entity is provided, the name will be verified
@@ -4219,6 +4221,15 @@ typedef struct EcsPoly {
     ecs_poly_t *poly;          /**< Pointer to poly object */
 } EcsPoly;
 
+/** When added to an entity this informs serialization formats which component 
+ * to use when a value is assigned to an entity without specifying the 
+ * component. This is intended as a hint, serialization formats are not required 
+ * to use it. Adding this component does not change the behavior of core ECS 
+ * operations. */
+typedef struct EcsDefaultChildComponent {
+    ecs_id_t component;
+} EcsDefaultChildComponent;
+
 /** @} */
 /** @} */
 
@@ -4282,6 +4293,7 @@ FLECS_API extern const ecs_id_t ECS_TOGGLE;
 FLECS_API extern const ecs_entity_t ecs_id(EcsComponent);
 FLECS_API extern const ecs_entity_t ecs_id(EcsIdentifier);
 FLECS_API extern const ecs_entity_t ecs_id(EcsPoly);
+FLECS_API extern const ecs_entity_t ecs_id(EcsDefaultChildComponent);
 
 FLECS_API extern const ecs_entity_t EcsQuery;
 FLECS_API extern const ecs_entity_t EcsObserver;
@@ -4482,13 +4494,6 @@ FLECS_API extern const ecs_entity_t EcsDelete;
 /** Panic cleanup policy. Must be used as target in pair with EcsOnDelete or
  * EcsOnDeleteTarget. */
 FLECS_API extern const ecs_entity_t EcsPanic;
-
-/** Used like (EcsDefaultChildComponent, Component). When added to an entity,
- * this informs serialization formats which component to use when a value is
- * assigned to an entity without specifying the component. This is intended as
- * a hint, serialization formats are not required to use it. Adding this
- * component does not change the behavior of core ECS operations. */
-FLECS_API extern const ecs_entity_t EcsDefaultChildComponent;
 
 /* Builtin predicates for comparing entity ids in queries. Only supported by queries */
 FLECS_API extern const ecs_entity_t EcsPredEq;
@@ -14512,6 +14517,7 @@ typedef struct ecs_parse_expr_desc_t {
         void *ctx);
     void *lookup_ctx;
     ecs_vars_t *vars;
+    struct ecs_stack_t *deser_stack;
 } ecs_parse_expr_desc_t;
 
 /** Parse expression into value.
@@ -14830,25 +14836,30 @@ void ecs_script_clear(
     ecs_entity_t script,
     ecs_entity_t instance);
 
-
 typedef struct ecs_script_t ecs_script_t;
 
 FLECS_API
 ecs_script_t* ecs_script_parse(
+    ecs_world_t *world,
     const char *name,
     const char *code);
 
 FLECS_API
 ecs_script_t* ecs_script_parse_file(
+    ecs_world_t *world,
     const char *filename);
 
 FLECS_API
-void ecs_script_to_buf(
+int ecs_script_to_buf(
     ecs_script_t *script,
     ecs_strbuf_t *buf);
 
 FLECS_API
 char* ecs_script_to_str(
+    ecs_script_t *script);
+
+FLECS_API
+int ecs_script_eval(
     ecs_script_t *script);
 
 /* Module import */
@@ -24148,7 +24159,7 @@ struct each_delegate : public delegate {
             invoke_callback< each_ref_column >(iter, func_, 0, terms.terms_);
         } else {
             invoke_callback< each_column >(iter, func_, 0, terms.terms_);
-        }   
+        }
     }
 
     // Static function that can be used as callback for systems/triggers

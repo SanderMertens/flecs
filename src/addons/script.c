@@ -1526,11 +1526,11 @@ const char* plecs_parse_scope_open(
 
             /* Check if scope has a default child component */
             ecs_entity_t def_type_src = ecs_get_target_for_id(world, scope, 
-                0, ecs_pair(EcsDefaultChildComponent, EcsWildcard));
+                0, ecs_id(EcsDefaultChildComponent));
 
             if (def_type_src) {
-                default_scope_type = ecs_get_target(
-                    world, def_type_src, EcsDefaultChildComponent, 0);
+                default_scope_type = ecs_get(
+                    world, def_type_src, EcsDefaultChildComponent)->component;
             }
         } else {
             if (state->last_object) {

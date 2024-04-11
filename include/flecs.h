@@ -906,6 +906,8 @@ typedef struct ecs_entity_desc_t {
 
     ecs_entity_t id;      /**< Set to modify existing entity (optional) */
 
+    ecs_entity_t parent;  /**< Parent entity. */
+
     const char *name;     /**< Name of the entity. If no entity is provided, an
                            * entity with this name will be looked up first. When
                            * an entity is provided, the name will be verified
@@ -1411,6 +1413,15 @@ typedef struct EcsPoly {
     ecs_poly_t *poly;          /**< Pointer to poly object */
 } EcsPoly;
 
+/** When added to an entity this informs serialization formats which component 
+ * to use when a value is assigned to an entity without specifying the 
+ * component. This is intended as a hint, serialization formats are not required 
+ * to use it. Adding this component does not change the behavior of core ECS 
+ * operations. */
+typedef struct EcsDefaultChildComponent {
+    ecs_id_t component;
+} EcsDefaultChildComponent;
+
 /** @} */
 /** @} */
 
@@ -1453,6 +1464,7 @@ FLECS_API extern const ecs_id_t ECS_TOGGLE;
 FLECS_API extern const ecs_entity_t ecs_id(EcsComponent);
 FLECS_API extern const ecs_entity_t ecs_id(EcsIdentifier);
 FLECS_API extern const ecs_entity_t ecs_id(EcsPoly);
+FLECS_API extern const ecs_entity_t ecs_id(EcsDefaultChildComponent);
 
 FLECS_API extern const ecs_entity_t EcsQuery;
 FLECS_API extern const ecs_entity_t EcsObserver;
@@ -1653,13 +1665,6 @@ FLECS_API extern const ecs_entity_t EcsDelete;
 /** Panic cleanup policy. Must be used as target in pair with EcsOnDelete or
  * EcsOnDeleteTarget. */
 FLECS_API extern const ecs_entity_t EcsPanic;
-
-/** Used like (EcsDefaultChildComponent, Component). When added to an entity,
- * this informs serialization formats which component to use when a value is
- * assigned to an entity without specifying the component. This is intended as
- * a hint, serialization formats are not required to use it. Adding this
- * component does not change the behavior of core ECS operations. */
-FLECS_API extern const ecs_entity_t EcsDefaultChildComponent;
 
 /* Builtin predicates for comparing entity ids in queries. Only supported by queries */
 FLECS_API extern const ecs_entity_t EcsPredEq;

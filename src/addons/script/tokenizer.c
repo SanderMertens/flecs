@@ -7,16 +7,16 @@
 #include "script.h"
 
 #define Keyword(keyword, _kind)\
-    } else if (!ecs_os_strncmp(ptr, keyword " ", ecs_os_strlen(keyword) + 1)) {\
+    } else if (!ecs_os_strncmp(pos, keyword " ", ecs_os_strlen(keyword) + 1)) {\
         out->value = keyword;\
         out->kind = _kind;\
-        return ptr + ecs_os_strlen(keyword);
+        return pos + ecs_os_strlen(keyword);
 
 #define Operator(oper, _kind)\
-    } else if (ptr[0] == oper[0]) {\
+    } else if (pos[0] == oper[0]) {\
         out->value = oper;\
         out->kind = _kind;\
-        return ptr + 1;
+        return pos + 1;
 
 const char* flecs_script_token_kind_str(
     ecs_script_token_kind_t kind)
@@ -55,35 +55,35 @@ const char* flecs_script_token_kind_str(
 static
 const char* flecs_script_scan_token(
     ecs_script_parser_t *parser,
-    const char *ptr,
+    const char *pos,
     bool (*scanfunc)(char))
 {
     char *out = parser->token_cur;
     do {
-        if (!*ptr || !scanfunc(*ptr)) {
+        if (!*pos || !scanfunc(*pos)) {
             *out = '\0';
             parser->token_cur = out + 1;
-            return ptr;
+            return pos;
         }
 
-        *out = *ptr;
+        *out = *pos;
         out ++;
-        ptr ++;
+        pos ++;
     } while (true);
 }
 
 static
 const char* flecs_scan_whitespace(
     ecs_script_parser_t *parser,
-    const char *ptr) 
+    const char *pos) 
 {
     (void)parser;
 
-    while (ptr[0] && isspace(ptr[0]) && ptr[0] != '\n') {
-        ptr ++;
+    while (pos[0] && isspace(pos[0]) && pos[0] != '\n') {
+        pos ++;
     }
 
-    return ptr;
+    return pos;
 }
 
 // Identifier token
@@ -104,50 +104,52 @@ bool flecs_script_scan_identifier(
 static
 const char* flecs_script_identifier(
     ecs_script_parser_t *parser,
-    const char *ptr,
+    const char *pos,
     ecs_script_token_t *out) 
 {
     out->kind = EcsTokIdentifier;
     out->value = parser->token_cur;
-    return flecs_script_scan_token(parser, ptr, 
+    return flecs_script_scan_token(parser, pos, 
         flecs_script_scan_identifier);
 }
 
 static
 const char* flecs_script_skip_string(
     ecs_script_parser_t *parser,
-    const char *ptr, 
+    const char *pos, 
     char delim)
 {
     char ch;
-    for (; (ch = ptr[0]) && ptr[0] != delim; ptr ++) {
+    for (; (ch = pos[0]) && pos[0] != delim; pos ++) {
         if (ch == '\\') {
-            ptr ++;
+            pos ++;
         }
     }
 
-    if (!ptr[0]) {
+    if (!pos[0]) {
         ecs_parser_error(parser->script->name, parser->script->code,
-            ptr - parser->script->code, "unterminated string");
+            pos - parser->script->code, "unterminated string");
         return NULL;
     }
 
-    return ptr;
+    return pos;
 }
 
 const char* flecs_script_expr(
     ecs_script_parser_t *parser,
-    const char *ptr,
+    const char *pos,
     ecs_script_token_t *out,
     char until)
 {
+    parser->pos = pos;
+
     int32_t scope_depth = until == '}' ? 1 : 0;
     int32_t paren_depth = until == ')' ? 1 : 0;
     
-    const char *start = ptr = flecs_scan_whitespace(parser, ptr);
+    const char *start = pos = flecs_scan_whitespace(parser, pos);
     char ch;
 
-    for (; (ch = ptr[0]); ptr ++) {
+    for (; (ch = pos[0]); pos ++) {
         if (ch == '{') {
             if (ch == until) {
                 break;
@@ -161,7 +163,7 @@ const char* flecs_script_expr(
             }
             if (scope_depth < 0) {
                 ecs_parser_error(parser->script->name, parser->script->code,
-                    ptr - parser->script->code, "mismatching { }");
+                    pos - parser->script->code, "mismatching { }");
                 return NULL;
             }
         } else
@@ -175,19 +177,19 @@ const char* flecs_script_expr(
             }
             if (paren_depth < 0) {
                 ecs_parser_error(parser->script->name, parser->script->code,
-                    ptr - parser->script->code, "mismatching ( )");
+                    pos - parser->script->code, "mismatching ( )");
                 return NULL;
             }
         } else
         if (ch == '"') {
-            ptr = flecs_script_skip_string(parser, ptr + 1, '"');
-            if (!ptr) {
+            pos = flecs_script_skip_string(parser, pos + 1, '"');
+            if (!pos) {
                 return NULL;
             }
         } else
         if (ch == '`') {
-            ptr = flecs_script_skip_string(parser, ptr + 1, '`');
-            if (!ptr) {
+            pos = flecs_script_skip_string(parser, pos + 1, '`');
+            if (!pos) {
                 return NULL;
             }
         } else
@@ -196,39 +198,93 @@ const char* flecs_script_expr(
         }
     }
 
-    if (!ptr[0]) {
+    if (!pos[0]) {
         if (until == '\0') {
             ecs_parser_error(parser->script->name, parser->script->code,
-                ptr - parser->script->code, "expected end of script");
+                pos - parser->script->code, "expected end of script");
             return NULL;
         } else
         if (until == '\n') {
             ecs_parser_error(parser->script->name, parser->script->code,
-                ptr - parser->script->code, "expected newline");
+                pos - parser->script->code, "expected newline");
             return NULL;
         } else {
             ecs_parser_error(parser->script->name, parser->script->code,
-                ptr - parser->script->code, "expected '%c'", until);
+                pos - parser->script->code, "expected '%c'", until);
             return NULL;
         }
     }
 
     if (scope_depth) {
         ecs_parser_error(parser->script->name, parser->script->code,
-            ptr - parser->script->code, "mismatching { }");
+            pos - parser->script->code, "mismatching { }");
         return NULL;
     }
     if (paren_depth) {
         ecs_parser_error(parser->script->name, parser->script->code,
-            ptr - parser->script->code, "mismatching ( )");
+            pos - parser->script->code, "mismatching ( )");
         return NULL;
     }
 
-    int32_t len = ptr - start;
+    parser->token_cur[0] = '{';
+    
+    int32_t len = pos - start;
+    ecs_os_memcpy(parser->token_cur + 1, start, len);
+    out->value = parser->token_cur;
+    parser->token_cur += len + 1;
+
+    while (isspace(parser->token_cur[-1])) {
+        parser->token_cur --;
+    }
+
+    parser->token_cur[0] = '}';
+    parser->token_cur ++;
+
+    parser->token_cur[0] = '\0';
+    parser->token_cur ++;
+
+    return pos;
+}
+
+const char* flecs_script_until(
+    ecs_script_parser_t *parser,
+    const char *pos,
+    ecs_script_token_t *out,
+    char until)
+{
+    parser->pos = pos;
+    
+    const char *start = pos = flecs_scan_whitespace(parser, pos);
+    char ch;
+
+    for (; (ch = pos[0]); pos ++) {
+        if (ch == until) {
+            break;
+        }
+    }
+
+    if (!pos[0]) {
+        if (until == '\0') {
+            ecs_parser_error(parser->script->name, parser->script->code,
+                pos - parser->script->code, "expected end of script");
+            return NULL;
+        } else
+        if (until == '\n') {
+            ecs_parser_error(parser->script->name, parser->script->code,
+                pos - parser->script->code, "expected newline");
+            return NULL;
+        } else {
+            ecs_parser_error(parser->script->name, parser->script->code,
+                pos - parser->script->code, "expected '%c'", until);
+            return NULL;
+        }
+    }
+
+    int32_t len = pos - start;
     ecs_os_memcpy(parser->token_cur, start, len);
     out->value = parser->token_cur;
     parser->token_cur += len;
-    
+
     while (isspace(parser->token_cur[-1])) {
         parser->token_cur --;
     }
@@ -236,32 +292,34 @@ const char* flecs_script_expr(
     parser->token_cur[0] = '\0';
     parser->token_cur ++;
 
-    return ptr;
+    return pos;
 }
 
 const char* flecs_script_token(
     ecs_script_parser_t *parser,
-    const char *ptr,
+    const char *pos,
     ecs_script_token_t *out,
     bool is_lookahead)
 {
+    parser->pos = pos;
+
     // Skip whitespace and comments
     do {
-        ptr = flecs_scan_whitespace(parser, ptr);
-        if (ptr[0] == '/' && ptr[1] == '/') {
-            for (ptr = ptr + 2; ptr[0] && ptr[0] != '\n'; ptr ++) { }
+        pos = flecs_scan_whitespace(parser, pos);
+        if (pos[0] == '/' && pos[1] == '/') {
+            for (pos = pos + 2; pos[0] && pos[0] != '\n'; pos ++) { }
         }
-    } while (isspace(ptr[0]) && ptr[0] != '\n');
+    } while (isspace(pos[0]) && pos[0] != '\n');
 
     out->kind = EcsTokUnknown;
     out->value = NULL;
 
-    if (ptr[0] == '\0') {
+    if (pos[0] == '\0') {
         out->kind = EcsTokEnd;
-        return ptr;
-    } else if (ptr[0] == '\n') {
+        return pos;
+    } else if (pos[0] == '\n') {
         out->kind = EcsTokNewline;
-        return ptr + 1;
+        return pos + 1;
 
     Operator(":",        EcsTokColon)
     Operator("{",        EcsTokScopeOpen)
@@ -281,14 +339,14 @@ const char* flecs_script_token(
     Keyword ("if",       EcsTokKeywordIf)
     Keyword ("else",     EcsTokKeywordElse)
 
-    } else if (flecs_script_is_identifier(ptr[0])) {
-        ptr = flecs_script_identifier(parser, ptr, out);
-        return ptr;
+    } else if (flecs_script_is_identifier(pos[0])) {
+        pos = flecs_script_identifier(parser, pos, out);
+        return pos;
     }
 
     if (!is_lookahead) {
         ecs_parser_error(parser->script->name, parser->script->code,
-            ptr - parser->script->code, "unknown token '%c'", ptr[0]);
+            pos - parser->script->code, "unknown token '%c'", pos[0]);
     }
 
     return NULL;

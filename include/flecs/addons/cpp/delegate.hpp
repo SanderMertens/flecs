@@ -205,7 +205,7 @@ struct each_delegate : public delegate {
             invoke_callback< each_ref_column >(iter, func_, 0, terms.terms_);
         } else {
             invoke_callback< each_column >(iter, func_, 0, terms.terms_);
-        }   
+        }
     }
 
     // Static function that can be used as callback for systems/triggers

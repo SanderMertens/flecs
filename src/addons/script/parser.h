@@ -1,5 +1,10 @@
+/**
+ * @file addons/script/parser.h
+ * @brief Flecs script parser.
+ */
 
-/* Parser utilities */
+#ifndef FLECS_SCRIPT_PARSER_H
+#define FLECS_SCRIPT_PARSER_H
 
 #if defined(ECS_TARGET_CLANG)
 /* Ignore unused enum constants in switch as it would blow up the parser code */
@@ -24,7 +29,7 @@
 /* Error */
 #define Error(parser, ...)\
     ecs_parser_error(parser->script->name, parser->script->code,\
-        (ptr - parser->script->code) - 1, __VA_ARGS__);\
+        (pos - parser->script->code) - 1, __VA_ARGS__);\
     goto error
 
 /* Parse expression */
@@ -32,12 +37,23 @@
     {\
         ecs_assert(token_stack.count < 256, ECS_INTERNAL_ERROR, NULL);\
         ecs_script_token_t *t = &token_stack.tokens[token_stack.count ++];\
-        if (!(ptr = flecs_script_expr(parser, ptr, t, until))) {\
+        if (!(pos = flecs_script_expr(parser, pos, t, until))) {\
             goto error;\
         }\
         if (!t->value[0] && (until == '\n' || until == '{')) {\
-            ptr ++;\
+            pos ++;\
             Error(parser, "empty expression");\
+        }\
+    }\
+    Parse_1(until, __VA_ARGS__)
+
+/* Parse token until character */
+#define Until(until, ...)\
+    {\
+        ecs_assert(token_stack.count < 256, ECS_INTERNAL_ERROR, NULL);\
+        ecs_script_token_t *t = &token_stack.tokens[token_stack.count ++];\
+        if (!(pos = flecs_script_until(parser, pos, t, until))) {\
+            goto error;\
         }\
     }\
     Parse_1(until, __VA_ARGS__)
@@ -47,7 +63,7 @@
     {\
         ecs_assert(token_stack.count < 256, ECS_INTERNAL_ERROR, NULL);\
         ecs_script_token_t *t = &token_stack.tokens[token_stack.count ++];\
-        if (!(ptr = flecs_script_token(parser, ptr, t, false))) {\
+        if (!(pos = flecs_script_token(parser, pos, t, false))) {\
             goto error;\
         }\
         switch(t->kind) {\
@@ -110,8 +126,8 @@
 #define LookAhead(...)\
     const char *lookahead;\
     ecs_script_token_t lookahead_token;\
-    if ((lookahead = flecs_script_token(parser, ptr, &lookahead_token, true))) {\
-        token_stack.tokens[++ token_stack.count] = lookahead_token;\
+    if ((lookahead = flecs_script_token(parser, pos, &lookahead_token, true))) {\
+        token_stack.tokens[token_stack.count ++] = lookahead_token;\
         switch(lookahead_token.kind) {\
             __VA_ARGS__\
         default:\
@@ -129,14 +145,14 @@
 
 #define LookAhead_2(tok1, tok2, ...)\
     LookAhead_1(tok1, \
-        const char *old_ptr = ptr;\
-        ptr = lookahead;\
+        const char *old_ptr = pos;\
+        pos = lookahead;\
         LookAhead(\
             case tok2: {\
                 __VA_ARGS__\
             }\
         )\
-        ptr = old_ptr;\
+        pos = old_ptr;\
     )
 
 #define Scope(s, ...) {\
@@ -146,4 +162,6 @@
         parser->scope = old_scope;\
     }
 
-#define EndOfRule return ptr
+#define EndOfRule return pos
+
+#endif
