@@ -86,10 +86,12 @@ char* flecs_script_node_to_str(
     case EcsAstTag:                return "tag";
     case EcsAstWithComponent:
     case EcsAstComponent:          return "component";
+    case EcsAstWithVar:
+    case EcsAstVar:                return "var";
     case EcsAstDefaultComponent:   return "default_component";
-    case EcsAstWithVar:            return "var";
     case EcsAstWith:               return "with";
     case EcsAstUsing:              return "using";
+    case EcsAstModule:             return "module";
     case EcsAstAnnotation:         return "annot";
     case EcsAstAssembly:           return "assembly";
     case EcsAstProp:               return "prop";
@@ -128,7 +130,7 @@ void flecs_script_component_to_str(
     flecs_scriptbuf_node(v, &node->node);
     flecs_script_id_to_str(v, &node->id);
     if (node->expr) {
-        flecs_scriptbuf_appendstr(v, " = ");
+        flecs_scriptbuf_appendstr(v, ": ");
         flecs_script_expr_to_str(v, node->expr);
     }
     flecs_scriptbuf_appendstr(v, "\n");
@@ -183,6 +185,15 @@ void flecs_script_using_to_str(
 }
 
 static
+void flecs_script_module_to_str(
+    ecs_script_str_visitor_t *v,
+    ecs_script_module_t *node)
+{
+    flecs_scriptbuf_node(v, &node->node);
+    flecs_scriptbuf_append(v, "%s\n", node->name);
+}
+
+static
 void flecs_script_annot_to_str(
     ecs_script_str_visitor_t *v,
     ecs_script_annot_t *node)
@@ -196,7 +207,7 @@ void flecs_script_annot_to_str(
 static
 void flecs_script_assembly_to_str(
     ecs_script_str_visitor_t *v,
-    ecs_script_assembly_t *node)
+    ecs_script_assembly_node_t *node)
 {
     flecs_scriptbuf_node(v, &node->node);
     flecs_scriptbuf_append(v, "%s ", node->name);
@@ -297,7 +308,6 @@ int flecs_script_scope_to_str(
     return 0;
 }
 
-
 static
 int flecs_script_stmt_to_str(
     ecs_script_str_visitor_t *v,
@@ -317,13 +327,14 @@ int flecs_script_stmt_to_str(
     case EcsAstWithComponent:
         flecs_script_component_to_str(v, (ecs_script_component_t*)node);
         break;
-    case EcsAstDefaultComponent:
-        flecs_script_default_component_to_str(v, 
-            (ecs_script_default_component_t*)node);
-        break;
+    case EcsAstVar:
     case EcsAstWithVar:
         flecs_script_with_var_to_str(v, 
             (ecs_script_var_component_t*)node);
+        break;
+    case EcsAstDefaultComponent:
+        flecs_script_default_component_to_str(v, 
+            (ecs_script_default_component_t*)node);
         break;
     case EcsAstWith:
         flecs_script_with_to_str(v, (ecs_script_with_t*)node);
@@ -331,11 +342,14 @@ int flecs_script_stmt_to_str(
     case EcsAstUsing:
         flecs_script_using_to_str(v, (ecs_script_using_t*)node);
         break;
+    case EcsAstModule:
+        flecs_script_module_to_str(v, (ecs_script_module_t*)node);
+        break;
     case EcsAstAnnotation:
         flecs_script_annot_to_str(v, (ecs_script_annot_t*)node);
         break;
     case EcsAstAssembly:
-        flecs_script_assembly_to_str(v, (ecs_script_assembly_t*)node);
+        flecs_script_assembly_to_str(v, (ecs_script_assembly_node_t*)node);
         break;
     case EcsAstConst:
     case EcsAstProp:

@@ -23,17 +23,44 @@ struct ecs_script_t {
     char *token_buffer;
 };
 
-typedef struct ecs_script_parser_t {
+typedef struct ecs_script_parser_t ecs_script_parser_t;
+
+#include "tokenizer.h"
+
+struct ecs_script_parser_t {
     ecs_script_t *script;
     ecs_script_scope_t *scope;
     const char *pos;
     char *token_cur;
-} ecs_script_parser_t;
+};
 
-#include "tokenizer.h"
 #include "ast.h"
 #include "visit.h"
 #include "vars.h"
+#include "eval.h"
+
+struct ecs_script_assembly_t {
+    /* Assembly handle */
+    ecs_entity_t entity;
+
+    /* Assembly AST node */
+    ecs_script_assembly_node_t *node;
+
+    /* Hoisted using statements */
+    ecs_vec_t using_;
+
+    /* Hoisted variables */
+    ecs_vec_t vars;
+
+    /* Default values for props */
+    ecs_vec_t prop_defaults;
+
+    /* Type info for assembly component */
+    const ecs_type_info_t *type_info;
+
+    /* Allocator */
+    ecs_allocator_t allocator;
+};
 
 #endif // FLECS_SCRIPT
 #endif // FLECS_SCRIPT_PRIVATE_H

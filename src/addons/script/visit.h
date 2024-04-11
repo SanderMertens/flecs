@@ -51,6 +51,19 @@ ecs_script_node_t* ecs_script_parent_node_(
 #define ecs_script_parent_node(visitor) \
     ecs_script_parent_node_((ecs_script_visit_t*)visitor)
 
+ecs_script_scope_t* ecs_script_current_scope_(
+    ecs_script_visit_t *v);
+
+#define ecs_script_current_scope(visitor) \
+    ecs_script_current_scope_((ecs_script_visit_t*)visitor)
+
+ecs_script_node_t* ecs_script_parent_(
+    ecs_script_visit_t *v,
+    ecs_script_node_t *node);
+
+#define ecs_script_parent(visitor, node) \
+    ecs_script_parent_((ecs_script_visit_t*)visitor, (ecs_script_node_t*)node)
+
 ecs_script_node_t* ecs_script_next_node_(
     ecs_script_visit_t *v);
 

@@ -107,6 +107,7 @@ void flecs_dump_backtrace(
 static
 void flecs_log_msg(
     int32_t level,
+    const char *func,
     const char *file, 
     int32_t line,  
     const char *msg)
@@ -203,6 +204,26 @@ void flecs_log_msg(
     }
 
     if (level < 0) {
+        if (func) {
+            const char *func_ret = strchr(func, ' ');
+            if (func_ret) {
+                func = func_ret + 1;
+            }
+
+            if (func[0] == '*') {
+                func ++;
+            }
+
+            char *funcdup = ecs_os_strdup(func);
+            char *func_args = strchr(funcdup, '(');
+            if (func_args) {
+                func_args[0] = '\0';
+            }
+
+            fprintf(stream, "%s: ", funcdup);
+            ecs_os_free(funcdup);
+        }
+
         if (file) {
             const char *file_ptr = strrchr(file, '/');
             if (!file_ptr) {
@@ -232,52 +253,57 @@ void flecs_log_msg(
 }
 
 void ecs_os_dbg(
-    const char *file, 
+    const char *func,
+    const char *file,
     int32_t line, 
     const char *msg)
 {
     if (ecs_os_api.log_) {
-        ecs_os_api.log_(1, file, line, msg);
+        ecs_os_api.log_(1, func, file, line, msg);
     }
 }
 
 void ecs_os_trace(
+    const char *func,
     const char *file, 
     int32_t line, 
     const char *msg) 
 {
     if (ecs_os_api.log_) {
-        ecs_os_api.log_(0, file, line, msg);
+        ecs_os_api.log_(0, func, file, line, msg);
     }
 }
 
 void ecs_os_warn(
+    const char *func,
     const char *file, 
     int32_t line, 
     const char *msg) 
 {
     if (ecs_os_api.log_) {
-        ecs_os_api.log_(-2, file, line, msg);
+        ecs_os_api.log_(-2, func, file, line, msg);
     }
 }
 
 void ecs_os_err(
+    const char *func,
     const char *file, 
     int32_t line, 
     const char *msg) 
 {
     if (ecs_os_api.log_) {
-        ecs_os_api.log_(-3, file, line, msg);
+        ecs_os_api.log_(-3, func, file, line, msg);
     }
 }
 
 void ecs_os_fatal(
+    const char *func,
     const char *file, 
     int32_t line, 
     const char *msg) 
 {
     if (ecs_os_api.log_) {
-        ecs_os_api.log_(-4, file, line, msg);
+        ecs_os_api.log_(-4, func, file, line, msg);
     }
 }
 

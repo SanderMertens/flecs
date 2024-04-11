@@ -181,7 +181,13 @@
                 "entity_init_w_set_1_comp_1_tag_w_set_defer",
                 "insert_1_comp",
                 "insert_2_comp",
-                "insert_1_comp_1_tag"
+                "insert_1_comp_1_tag",
+                "entity_w_parent",
+                "entity_w_parent_w_name",
+                "entity_w_parent_w_add",
+                "entity_w_parent_w_add_w_parent",
+                "entity_w_parent_w_set",
+                "entity_w_parent_w_set_w_parent"
             ]
         }, {
             "id": "Each",

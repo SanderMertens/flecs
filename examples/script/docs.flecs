@@ -1,7 +1,7 @@
 // To see what the result of parsing this file looks like, copy the code and
 // paste it into the editor at https://flecs.dev/explorer
 //
-// To load this file yourself, call ecs_script_from_file("docs.flecs");
+// To load this file yourself, call ecs_script_run_file("docs.flecs");
 
 // Plecs files can be used to annotate entities and components with 
 // documentation. These annotations use the flecs.doc addon.

@@ -580,6 +580,16 @@ extern "C" {
     #endif
 #endif
 
+#if defined(__clang__)
+#define ECS_FUNC_NAME __PRETTY_FUNCTION__
+#elif defined(__GNUC__)
+#define ECS_FUNC_NAME __PRETTY_FUNCTION__
+#elif defined(_WIN32)
+#define ECS_FUNC_NAME __FUNCSIG__
+#else
+#define ECS_FUNC_NAME NULL
+#endif
+
 /* Ignored warnings */
 #if defined(ECS_TARGET_CLANG)
 /* Ignore unknown options so we don't have to care about the compiler version */
@@ -2134,6 +2144,7 @@ uint64_t (*ecs_os_api_now_t)(void);
 typedef
 void (*ecs_os_api_log_t)(
     int32_t level,     /* Logging level */
+    const char *func,  /* Function where message was logged */
     const char *file,  /* File where message was logged */
     int32_t line,      /* Line it was logged */
     const char *msg);
@@ -2408,19 +2419,19 @@ void ecs_os_set_api_defaults(void);
 
 /* Logging */
 FLECS_API
-void ecs_os_dbg(const char *file, int32_t line, const char *msg);
+void ecs_os_dbg(const char *func, const char *file, int32_t line, const char *msg);
 
 FLECS_API
-void ecs_os_trace(const char *file, int32_t line, const char *msg);
+void ecs_os_trace(const char *func, const char *file, int32_t line, const char *msg);
 
 FLECS_API
-void ecs_os_warn(const char *file, int32_t line, const char *msg);
+void ecs_os_warn(const char *func, const char *file, int32_t line, const char *msg);
 
 FLECS_API
-void ecs_os_err(const char *file, int32_t line, const char *msg);
+void ecs_os_err(const char *func, const char *file, int32_t line, const char *msg);
 
 FLECS_API
-void ecs_os_fatal(const char *file, int32_t line, const char *msg);
+void ecs_os_fatal(const char *func, const char *file, int32_t line, const char *msg);
 
 FLECS_API
 const char* ecs_os_strerror(int err);
@@ -9487,6 +9498,7 @@ extern "C" {
 
 FLECS_API
 void ecs_deprecated_(
+    const char *func,
     const char *file,
     int32_t line,
     const char *msg);
@@ -9556,6 +9568,7 @@ const char* ecs_strerror(
 FLECS_API
 void ecs_print_(
     int32_t level,
+    const char *func,
     const char *file,
     int32_t line,
     const char *fmt,
@@ -9564,6 +9577,7 @@ void ecs_print_(
 FLECS_API
 void ecs_printv_(
     int level,
+    const char *func,
     const char *file,
     int32_t line,
     const char *fmt,
@@ -9572,6 +9586,7 @@ void ecs_printv_(
 FLECS_API
 void ecs_log_(
     int32_t level,
+    const char *func,
     const char *file,
     int32_t line,
     const char *fmt,
@@ -9580,6 +9595,7 @@ void ecs_log_(
 FLECS_API
 void ecs_logv_(
     int level,
+    const char *func,
     const char *file,
     int32_t line,
     const char *fmt,
@@ -9588,6 +9604,7 @@ void ecs_logv_(
 FLECS_API
 void ecs_abort_(
     int32_t error_code,
+    const char *func,
     const char *file,
     int32_t line,
     const char *fmt,
@@ -9597,6 +9614,7 @@ FLECS_API
 void ecs_assert_log_(
     int32_t error_code,
     const char *condition_str,
+    const char *func,
     const char *file,
     int32_t line,
     const char *fmt,
@@ -9627,37 +9645,37 @@ void ecs_parser_errorv_(
 
 /* Base logging function. Accepts a custom level */
 #define ecs_print(level, ...)\
-    ecs_print_(level, __FILE__, __LINE__, __VA_ARGS__)
+    ecs_print_(level, ECS_FUNC_NAME, __FILE__, __LINE__, __VA_ARGS__)
 
 #define ecs_printv(level, fmt, args)\
-    ecs_printv_(level, __FILE__, __LINE__, fmt, args)
+    ecs_printv_(level, ECS_FUNC_NAME, __FILE__, __LINE__, fmt, args)
 
 #define ecs_log(level, ...)\
-    ecs_log_(level, __FILE__, __LINE__, __VA_ARGS__)
+    ecs_log_(level, ECS_FUNC_NAME, __FILE__, __LINE__, __VA_ARGS__)
 
 #define ecs_logv(level, fmt, args)\
-    ecs_logv_(level, __FILE__, __LINE__, fmt, args)
+    ecs_logv_(level, ECS_FUNC_NAME, __FILE__, __LINE__, fmt, args)
 
 /* Tracing. Used for logging of infrequent events  */
 #define ecs_trace_(file, line, ...) ecs_log_(0, file, line, __VA_ARGS__)
-#define ecs_trace(...) ecs_trace_(__FILE__, __LINE__, __VA_ARGS__)
+#define ecs_trace(...) ecs_trace_(ECS_FUNC_NAME, __FILE__, __LINE__, __VA_ARGS__)
 
 /* Warning. Used when an issue occurs, but operation is successful */
 #define ecs_warn_(file, line, ...) ecs_log_(-2, file, line, __VA_ARGS__)
-#define ecs_warn(...) ecs_warn_(__FILE__, __LINE__, __VA_ARGS__)
+#define ecs_warn(...) ecs_warn_(ECS_FUNC_NAME, __FILE__, __LINE__, __VA_ARGS__)
 
 /* Error. Used when an issue occurs, and operation failed. */
 #define ecs_err_(file, line, ...) ecs_log_(-3, file, line, __VA_ARGS__)
-#define ecs_err(...) ecs_err_(__FILE__, __LINE__, __VA_ARGS__)
+#define ecs_err(...) ecs_err_(ECS_FUNC_NAME, __FILE__, __LINE__, __VA_ARGS__)
 
 /* Fatal. Used when an issue occurs, and the application cannot continue. */
 #define ecs_fatal_(file, line, ...) ecs_log_(-4, file, line, __VA_ARGS__)
-#define ecs_fatal(...) ecs_fatal_(__FILE__, __LINE__, __VA_ARGS__)
+#define ecs_fatal(...) ecs_fatal_(ECS_FUNC_NAME, __FILE__, __LINE__, __VA_ARGS__)
 
 /* Optionally include warnings about using deprecated features */
 #ifndef FLECS_NO_DEPRECATED_WARNINGS
 #define ecs_deprecated(...)\
-    ecs_deprecated_(__FILE__, __LINE__, __VA_ARGS__)
+    ecs_deprecated_(ECS_FUNC_NAME, __FILE__, __LINE__, __VA_ARGS__)
 #else
 #define ecs_deprecated(...)
 #endif // FLECS_NO_DEPRECATED_WARNINGS
@@ -9779,7 +9797,7 @@ void ecs_parser_errorv_(
 /** Abort.
  * Unconditionally aborts process. */
 #define ecs_abort(error_code, ...)\
-    ecs_abort_(error_code, __FILE__, __LINE__, __VA_ARGS__);\
+    ecs_abort_(error_code, ECS_FUNC_NAME, __FILE__, __LINE__, __VA_ARGS__);\
     ecs_os_abort(); abort(); /* satisfy compiler/static analyzers */
 
 /** Assert.
@@ -9789,7 +9807,7 @@ void ecs_parser_errorv_(
 #else
 #define ecs_assert(condition, error_code, ...)\
     if (!(condition)) {\
-        ecs_assert_log_(error_code, #condition, __FILE__, __LINE__, __VA_ARGS__);\
+        ecs_assert_log_(error_code, #condition, ECS_FUNC_NAME, __FILE__, __LINE__, __VA_ARGS__);\
         ecs_os_abort();\
     }\
     assert(condition) /* satisfy compiler/static analyzers */
@@ -9830,7 +9848,7 @@ void ecs_parser_errorv_(
 #ifdef FLECS_SOFT_ASSERT
 #define ecs_check(condition, error_code, ...)\
     if (!(condition)) {\
-        ecs_assert_log_(error_code, #condition, __FILE__, __LINE__, __VA_ARGS__);\
+        ecs_assert_log_(error_code, #condition, ECS_FUNC_NAME, __FILE__, __LINE__, __VA_ARGS__);\
         goto error;\
     }
 #else // FLECS_SOFT_ASSERT
@@ -9847,7 +9865,7 @@ void ecs_parser_errorv_(
 #else
 #ifdef FLECS_SOFT_ASSERT
 #define ecs_throw(error_code, ...)\
-    ecs_abort_(error_code, __FILE__, __LINE__, __VA_ARGS__);\
+    ecs_abort_(error_code, ECS_FUNC_NAME, __FILE__, __LINE__, __VA_ARGS__);\
     goto error;
 #else
 #define ecs_throw(error_code, ...)\
@@ -14507,40 +14525,6 @@ ecs_expr_var_t* ecs_vars_lookup(
     const ecs_vars_t *vars,
     const char *name);
 
-/** Used with ecs_parse_expr(). */
-typedef struct ecs_parse_expr_desc_t {
-    const char *name;
-    const char *expr;
-    ecs_entity_t (*lookup_action)(
-        const ecs_world_t*,
-        const char *value,
-        void *ctx);
-    void *lookup_ctx;
-    ecs_vars_t *vars;
-    struct ecs_stack_t *deser_stack;
-} ecs_parse_expr_desc_t;
-
-/** Parse expression into value.
- * This operation parses a flecs expression into the provided pointer. The
- * memory pointed to must be large enough to contain a value of the used type.
- *
- * If no type and pointer are provided for the value argument, the operation
- * will discover the type from the expression and allocate storage for the
- * value. The allocated value must be freed with ecs_value_free().
- *
- * @param world The world.
- * @param ptr The pointer to the expression to parse.
- * @param value The value containing type & pointer to write to.
- * @param desc Configuration parameters for deserializer.
- * @return Pointer to the character after the last one read, or NULL if failed.
- */
-FLECS_API
-const char* ecs_parse_expr(
-    ecs_world_t *world,
-    const char *ptr,
-    ecs_value_t *value,
-    const ecs_parse_expr_desc_t *desc);
-
 /** Serialize value into expression string.
  * This operation serializes a value of the provided type to a string. The
  * memory pointed to must be large enough to contain a value of the used type.
@@ -14747,12 +14731,13 @@ extern "C" {
 FLECS_API
 extern ECS_COMPONENT_DECLARE(EcsScript);
 
+typedef struct ecs_script_t ecs_script_t;
+typedef struct ecs_script_assembly_t ecs_script_assembly_t;
+
 /* Script component */
 typedef struct EcsScript {
-    ecs_vec_t using_;
-    char *script;
-    ecs_vec_t prop_defaults;
-    ecs_world_t *world;
+    ecs_script_t *script;
+    ecs_script_assembly_t *assembly; /* Only set for assemblies */
 } EcsScript;
 
 /** Parse plecs string.
@@ -14764,7 +14749,7 @@ typedef struct EcsScript {
  * @return Zero if success, non-zero otherwise.
  */
 FLECS_API
-int ecs_script_from_str(
+int ecs_script_run(
     ecs_world_t *world,
     const char *name,
     const char *str);
@@ -14772,14 +14757,14 @@ int ecs_script_from_str(
 /** Parse plecs file.
  * This parses a plecs file and instantiates the entities in the world. This
  * operation is equivalent to loading the file contents and passing it to
- * ecs_script_from_str().
+ * ecs_script_run().
  *
  * @param world The world.
  * @param filename The plecs file name.
  * @return Zero if success, non-zero otherwise.
  */
 FLECS_API
-int ecs_script_from_file(
+int ecs_script_run_file(
     ecs_world_t *world,
     const char *filename);
 
@@ -14836,8 +14821,6 @@ void ecs_script_clear(
     ecs_entity_t script,
     ecs_entity_t instance);
 
-typedef struct ecs_script_t ecs_script_t;
-
 FLECS_API
 ecs_script_t* ecs_script_parse(
     ecs_world_t *world,
@@ -14861,6 +14844,77 @@ char* ecs_script_to_str(
 FLECS_API
 int ecs_script_eval(
     ecs_script_t *script);
+
+
+typedef struct ecs_script_var_t {
+    const char *name;
+    ecs_value_t value;
+} ecs_script_var_t;
+
+typedef struct ecs_script_vars_t {
+    struct ecs_script_vars_t *parent;
+    ecs_hashmap_t var_index;
+    ecs_vec_t vars;
+
+    struct ecs_stack_t *stack;
+    ecs_stack_cursor_t *cursor;
+    ecs_allocator_t *allocator;
+} ecs_script_vars_t;
+
+ecs_script_vars_t* ecs_script_vars_push(
+    ecs_script_vars_t *parent,
+    struct ecs_stack_t *stack,
+    ecs_allocator_t *allocator);
+
+ecs_script_vars_t* ecs_script_vars_pop(
+    ecs_script_vars_t *vars);
+
+ecs_script_var_t* ecs_script_vars_declare(
+    ecs_script_vars_t *vars,
+    const char *name);
+
+ecs_script_var_t* ecs_script_vars_lookup(
+    const ecs_script_vars_t *vars,
+    const char *name);
+
+
+/** Used with ecs_parse_expr(). */
+typedef struct ecs_parse_expr_desc_t {
+    const char *name;
+    const char *expr;
+    ecs_entity_t (*lookup_action)(
+        const ecs_world_t*,
+        const char *value,
+        void *ctx);
+    void *lookup_ctx;
+    ecs_script_vars_t *vars;
+} ecs_parse_expr_desc_t;
+
+/** Parse expression into value.
+ * This operation parses a flecs expression into the provided pointer. The
+ * memory pointed to must be large enough to contain a value of the used type.
+ *
+ * If no type and pointer are provided for the value argument, the operation
+ * will discover the type from the expression and allocate storage for the
+ * value. The allocated value must be freed with ecs_value_free().
+ *
+ * @param world The world.
+ * @param ptr The pointer to the expression to parse.
+ * @param value The value containing type & pointer to write to.
+ * @param desc Configuration parameters for deserializer.
+ * @return Pointer to the character after the last one read, or NULL if failed.
+ */
+FLECS_API
+const char* ecs_parse_expr(
+    ecs_world_t *world,
+    const char *ptr,
+    ecs_value_t *value,
+    const ecs_parse_expr_desc_t *desc);
+
+
+
+
+
 
 /* Module import */
 FLECS_API
@@ -15083,15 +15137,12 @@ extern "C" {
 #if defined(__clang__)
 #define ECS_FUNC_NAME_FRONT(type, name) ((sizeof(#type) + sizeof(" flecs::_::() [T = ") + sizeof(#name)) - 3u)
 #define ECS_FUNC_NAME_BACK (sizeof("]") - 1u)
-#define ECS_FUNC_NAME __PRETTY_FUNCTION__
 #elif defined(__GNUC__)
 #define ECS_FUNC_NAME_FRONT(type, name) ((sizeof(#type) + sizeof(" flecs::_::() [with T = ") + sizeof(#name)) - 3u)
 #define ECS_FUNC_NAME_BACK (sizeof("]") - 1u)
-#define ECS_FUNC_NAME __PRETTY_FUNCTION__
 #elif defined(_WIN32)
 #define ECS_FUNC_NAME_FRONT(type, name) ((sizeof(#type) + sizeof(" __cdecl flecs::_::<") + sizeof(#name)) - 3u)
 #define ECS_FUNC_NAME_BACK (sizeof(">(void)") - 1u)
-#define ECS_FUNC_NAME __FUNCSIG__
 #else
 #error "implicit component registration not supported"
 #endif
@@ -15311,6 +15362,7 @@ static const flecs::entity_t Toggle = ECS_TOGGLE;
 using Component = EcsComponent;
 using Identifier = EcsIdentifier;
 using Poly = EcsPoly;
+using DefaultChildComponent = EcsDefaultChildComponent;
 
 /* Builtin tags */
 static const flecs::entity_t Query = EcsQuery;
@@ -15384,9 +15436,6 @@ static const flecs::entity_t OnDeleteTarget = EcsOnDeleteTarget;
 static const flecs::entity_t Remove = EcsRemove;
 static const flecs::entity_t Delete = EcsDelete;
 static const flecs::entity_t Panic = EcsPanic;
-
-/* Misc */
-static const flecs::entity_t DefaultChildComponent = EcsDefaultChildComponent;
 
 /* Builtin predicates for comparing entity ids in queries. Only supported by rules */
 static const flecs::entity_t PredEq = EcsPredEq;
@@ -20504,17 +20553,17 @@ void randomize_timers() const;
  */
 
 /** Load plecs string.
- * @see ecs_script_from_str
+ * @see ecs_script_run
  */
 int plecs_from_str(const char *name, const char *str) const {
-    return ecs_script_from_str(world_, name, str);
+    return ecs_script_run(world_, name, str);
 }
 
 /** Load plecs from file.
- * @see ecs_script_from_file
+ * @see ecs_script_run_file
  */
 int plecs_from_file(const char *filename) const {
-    return ecs_script_from_file(world_, filename);
+    return ecs_script_run_file(world_, filename);
 }
 
 /** @} */

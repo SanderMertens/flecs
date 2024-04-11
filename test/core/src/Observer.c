@@ -4541,7 +4541,7 @@ void Observer_disable_observer_module(void) {
 
     Probe ctx = {0};
     ecs_entity_t o = ecs_observer(ecs, {
-        .entity = ecs_entity(ecs, { .add = ecs_ids( ecs_childof(module) )}),
+        .entity = ecs_entity(ecs, { .parent = module }),
         .query.terms = {
             { .id = ecs_id(Position) }
         },
@@ -4582,7 +4582,7 @@ void Observer_disable_observer_module_nested(void) {
 
     Probe ctx = {0};
     ecs_observer(ecs, {
-        .entity = ecs_entity(ecs, { .add = ecs_ids( ecs_childof(module_child) )}),
+        .entity = ecs_entity(ecs, { .parent = module_child }),
         .query.terms = {
             { .id = ecs_id(Position) }
         },
@@ -4635,7 +4635,7 @@ void Observer_disable_observer_and_module(void) {
 
     Probe ctx = {0};
     ecs_entity_t o = ecs_observer(ecs, {
-        .entity = ecs_entity(ecs, { .add = ecs_ids( ecs_childof(module) )}),
+        .entity = ecs_entity(ecs, { .parent = module }),
         .query.terms = {
             { .id = ecs_id(Position) }
         },
@@ -4734,7 +4734,7 @@ void Observer_disable_multi_observer_module(void) {
 
     Probe ctx = {0};
     ecs_entity_t o = ecs_observer(ecs, {
-        .entity = ecs_entity(ecs, { .add = ecs_ids( ecs_childof(module) )}),
+        .entity = ecs_entity(ecs, { .parent = module }),
         .query.terms = {
             { .id = ecs_id(Position) },
             { .id = ecs_id(Velocity) },
@@ -4786,7 +4786,7 @@ void Observer_disable_multi_observer_module_nested(void) {
 
     Probe ctx = {0};
     ecs_observer(ecs, {
-        .entity = ecs_entity(ecs, { .add = ecs_ids( ecs_childof(module_child) )}),
+        .entity = ecs_entity(ecs, { .parent = module_child }),
         .query.terms = {
             { .id = ecs_id(Position) },
             { .id = ecs_id(Velocity) }
@@ -4856,7 +4856,7 @@ void Observer_disable_multi_observer_and_module(void) {
 
     Probe ctx = {0};
     ecs_entity_t o = ecs_observer(ecs, {
-        .entity = ecs_entity(ecs, { .add = ecs_ids( ecs_childof(module) )}),
+        .entity = ecs_entity(ecs, { .parent = module }),
         .query.terms = {
             { .id = ecs_id(Position) },
             { .id = ecs_id(Velocity) }

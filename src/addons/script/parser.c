@@ -9,6 +9,11 @@
 
 /* Parser implementation */
 
+#define EcsTokEndOfStatement\
+    case ';':\
+    case '\n':\
+    case '\0'
+
 const char* flecs_script_stmt(
     ecs_script_parser_t *parser,
     const char *pos);
@@ -26,7 +31,7 @@ const char* flecs_script_scope(
     ecs_script_scope_t *prev = parser->scope;
     parser->scope = scope;
 
-    do {
+    Loop(
         LookAhead(
             case EcsTokScopeClose:
                 pos = lookahead;
@@ -40,7 +45,7 @@ const char* flecs_script_scope(
         if (!pos) {
             goto error;
         }
-    } while(true);
+    )
 
 scope_close:
     parser->scope = prev;
@@ -49,6 +54,40 @@ scope_close:
     return pos;
 
     ParserEnd;
+}
+
+const char* flecs_script_comma_expr(
+    ecs_script_parser_t *parser,
+    const char *pos,
+    bool is_base_list)
+{
+    ParserBegin;
+
+    Loop(
+        LookAhead(
+            case '\n':
+                pos = lookahead;
+                continue;
+
+            case EcsTokIdentifier:
+                pos = lookahead;
+
+                if (is_base_list) {
+                    flecs_script_insert_pair_tag(parser, "IsA", Token(0));
+                } else {
+                    flecs_script_insert_entity(parser, Token(0));
+                }
+
+                LookAhead_1(',',
+                    pos = lookahead;
+                    continue;
+                )
+        )
+
+        break;
+    )
+
+    return pos;
 }
 
 const char* flecs_script_with_expr(
@@ -74,19 +113,43 @@ const char* flecs_script_with_expr(
                 )
             )
 
-            ecs_script_tag_t *tag =
-                flecs_script_insert_tag(parser, Token(0));
-            tag->node.kind = EcsAstWithTag;
+            if (Token(0)[0] == '$') {
+                ecs_script_var_component_t *var = 
+                    flecs_script_insert_var_component(parser, &Token(0)[1]);
+                var->node.kind = EcsAstWithVar;
+            } else {
+                ecs_script_tag_t *tag =
+                    flecs_script_insert_tag(parser, Token(0));
+                tag->node.kind = EcsAstWithTag;
+            }
+
             EndOfRule;
         }
-        
-        case '$': {
-            // $color
-            Parse_1(EcsTokIdentifier,
-                flecs_script_insert_with_var(parser, Token(1));
+
+        // (
+        case '(':
+            // (Eats, Apples)
+            Parse_4(EcsTokIdentifier, ',', EcsTokIdentifier, ')',
+                // (Eats, Apples) ( expr
+                LookAhead_1('(',
+                    pos = lookahead;
+
+                    // (Eats, Apples) ( expr )
+                    Expr(')',
+                        ecs_script_component_t *component =
+                            flecs_script_insert_pair_component(parser, 
+                                Token(1), Token(3));
+                        component->node.kind = EcsAstWithComponent;
+                        component->expr = Token(6);
+                        EndOfRule;
+                    )
+                )
+
+                ecs_script_tag_t *tag = 
+                    flecs_script_insert_pair_tag(parser, Token(1), Token(3));
+                tag->node.kind = EcsAstWithTag;
                 EndOfRule;
             )
-        }
     )
 
     ParserEnd;
@@ -133,21 +196,26 @@ const char* flecs_script_stmt(
 
     Parse(
         case EcsTokIdentifier:        goto identifier;
-        case '{':                     return flecs_script_scope(parser, parser->scope, pos);
+        case '{':                     return flecs_script_scope(parser, 
+                                        flecs_script_insert_scope(parser), pos);
         case '(':                     goto paren;
-        case '$':                     goto variable;
         case '@':                     goto annotation;
-        case EcsTokKeywordWith:       goto with;
-        case EcsTokKeywordUsing:      goto using;
-        case EcsTokKeywordAssembly:   goto assembly;
+        case EcsTokKeywordWith:       goto with_stmt;
+        case EcsTokKeywordModule:     goto module_stmt;
+        case EcsTokKeywordUsing:      goto using_stmt;
+        case EcsTokKeywordAssembly:   goto assembly_stmt;
         case EcsTokKeywordProp:       goto prop_var;
         case EcsTokKeywordConst:      goto const_var;
         case EcsTokKeywordIf:         goto if_stmt;
-        case '\n':                    EndOfRule;
-        case '\0':                    printf("end\n"); EndOfRule;
+        EcsTokEndOfStatement:         EndOfRule;
     );
 
 identifier: {
+    // enterprise } (end of scope)
+    LookAhead_1('}',
+        goto insert_tag;
+    )
+
     Parse(
         // enterprise {
         case '{': {
@@ -159,22 +227,31 @@ identifier: {
         // Red,
         case ',': {
             flecs_script_insert_entity(parser, Token(0));
+            pos = flecs_script_comma_expr(parser, pos, false);
             EndOfRule;
         }
 
         // Npc\n
-        case '\n': {
-            if (!flecs_script_insert_tag(parser, Token(0))) {
-                Error(parser, 
-                    "invalid context for tag '%s': must be part of entity", 
-                    tokens[0].value);
-            }
-            EndOfRule;
+        EcsTokEndOfStatement: {
+            // Npc\n{
+            LookAhead_1('{',
+                pos = lookahead;
+                return flecs_script_scope(parser, 
+                    flecs_script_insert_entity(
+                        parser, Token(0))->scope, pos);
+            )
+
+            goto insert_tag;
         }
 
         // Position:
         case ':': {
             goto identifier_colon;
+        }
+
+        // x =
+        case '=': {
+            goto identifier_assign;
         }
 
         // SpaceShip(
@@ -189,25 +266,22 @@ identifier: {
     )
 }
 
-// $
-variable: {
-    Parse_1(EcsTokIdentifier,
-        Parse(
-            // $color\n
-            case '\n': {
-                flecs_script_insert_with_var(parser, Token(1));
-                EndOfRule;
-            }
+insert_tag: {
+    if (Token(0)[0] == '$') {
+        if (!flecs_script_insert_var_component(parser, &Token(0)[1])) {
+            Error(parser, 
+                "invalid context for variable component '%s': must be "
+                    "part of entity", tokens[0].value);
+        }
+    } else {
+        if (!flecs_script_insert_tag(parser, Token(0))) {
+            Error(parser, 
+                "invalid context for tag '%s': must be part of entity", 
+                tokens[0].value);
+        }
+    }
 
-            // $entity_name {
-            case '{': {
-                ecs_script_entity_t *entity = flecs_script_insert_entity(
-                    parser, Token(1));
-                entity->name_is_var = true;
-                return flecs_script_scope(parser, entity->scope, pos);
-            }
-        )
-    )
+    EndOfRule;
 }
 
 // @
@@ -223,14 +297,14 @@ annotation: {
 }
 
 // with
-with: {
+with_stmt: {
     ecs_script_with_t *with = flecs_script_insert_with(parser);
     pos = flecs_script_with(parser, with, pos);
     EndOfRule;
 }
 
 // using
-using: {
+using_stmt: {
     // using flecs.meta\n
     Parse_2(EcsTokIdentifier, '\n',
         flecs_script_insert_using(parser, Token(1));
@@ -238,28 +312,46 @@ using: {
     )
 }
 
+// module
+module_stmt: {
+    // using flecs.meta\n
+    Parse_2(EcsTokIdentifier, '\n',
+        flecs_script_insert_module(parser, Token(1));
+        EndOfRule;
+    )
+}
+
 // assembly
-assembly: {
-    // assembly SpaceShip {
-    Parse_2(EcsTokIdentifier, '{',
-        ecs_script_assembly_t *assembly = flecs_script_insert_assembly(
+assembly_stmt: {
+    // assembly SpaceShip
+    Parse_1(EcsTokIdentifier, 
+        ecs_script_assembly_node_t *assembly = flecs_script_insert_assembly(
             parser, Token(1));
-        return flecs_script_scope(parser, assembly->scope, pos);
+
+        Parse(
+            // assembly SpaceShip {
+            case '{':
+                return flecs_script_scope(parser, assembly->scope, pos);
+
+            // assembly SpaceShip\n
+            EcsTokEndOfStatement:
+                EndOfRule;
+        )
     )
 }
 
 // prop
 prop_var: {
-    // prop color : Color =
-    Parse_4(EcsTokIdentifier, ':', EcsTokIdentifier, '=',
+    // prop color = Color:
+    Parse_4(EcsTokIdentifier, '=', EcsTokIdentifier, ':',
         ecs_script_var_node_t *var = flecs_script_insert_var(
             parser, Token(1));
         var->node.kind = EcsAstProp;
         var->type = Token(3);
 
-        // prop color : Color = {
+        // prop color = Color : {
         LookAhead_1('{',
-            // prop color : Color = {expr}
+            // prop color = Color: {expr}
             pos = lookahead;
             Expr('}',
                 var->expr = Token(6);
@@ -267,7 +359,7 @@ prop_var: {
             )
         )
 
-        // prop color : Color = expr\n
+        // prop color = Color : expr\n
         Expr('\n',
             var->expr = Token(5);
             EndOfRule;
@@ -284,15 +376,17 @@ const_var: {
         var->node.kind = EcsAstConst;
 
         Parse(
-            // const color :
-            case ':': {
-                // const color : Color =
-                Parse_2(EcsTokIdentifier, '=',
+            // const color =
+            case '=': {
+                // const color = Color :
+                LookAhead_2(EcsTokIdentifier, ':',
+                    pos = lookahead;
+
                     var->type = Token(3);
 
-                    // const color : Color = {
+                    // const color = Color: {
                     LookAhead_1('{',
-                        // const color : Color = {expr}
+                        // const color = Color: {expr}
                         pos = lookahead;
                         Expr('}',
                             var->expr = Token(6);
@@ -300,18 +394,16 @@ const_var: {
                         )
                     )
 
-                    // const color : Color = expr\n
+                    // const color = Color: expr\n
                     Expr('\n',
                         var->expr = Token(5);
                         EndOfRule;
                     )
                 )
-            }
 
-            case '=': {
                 // const PI = expr\n
                 Expr('\n',
-                    var->expr = Token(4);
+                    var->expr = Token(3);
                     EndOfRule;
                 )
             }
@@ -354,9 +446,15 @@ paren: {
 
 // (Likes, Apples)
 pair: {
+    // (Likes, Apples) } (end of scope)
+    LookAhead_1('}',
+        flecs_script_insert_pair_tag(parser, Token(1), Token(3));
+        EndOfRule;
+    )
+
     Parse(
         // (Likes, Apples)\n
-        case '\n': {
+        EcsTokEndOfStatement: {
             flecs_script_insert_pair_tag(parser, Token(1), Token(3));
             EndOfRule;
         }
@@ -396,28 +494,68 @@ identifier_colon: {
     }
 
     {
-        // enterprise : SpaceShip {
-        LookAhead_2(EcsTokIdentifier, '{', {
+        // Position: {
+        LookAhead_1('[',
             pos = lookahead;
-
-            ecs_script_entity_t *entity = flecs_script_insert_entity(
-                parser, Token(0));
-
-            printf(" -: %s %s %s %s\n", Token(0), Token(1), Token(2), Token(3));
-
-            Scope(entity->scope, 
-                flecs_script_insert_pair_tag(parser, "IsA", Token(2));
-            )
-
-            return flecs_script_scope(parser, entity->scope, pos);
-        })
+            goto component_expr_collection;
+        )
     }
 
-    // x : f32
-    Expr('\n',
+    // enterprise : SpaceShip
+    Parse_1(EcsTokIdentifier, {
         ecs_script_entity_t *entity = flecs_script_insert_entity(
             parser, Token(0));
 
+        Scope(entity->scope, 
+            flecs_script_insert_pair_tag(parser, "IsA", Token(2));
+
+            LookAhead_1(',', {
+                pos = lookahead;
+                pos = flecs_script_comma_expr(parser, pos, true);
+            })
+        )
+
+        Parse(
+            // enterprise : SpaceShip\n
+            EcsTokEndOfStatement:
+                EndOfRule;
+
+            // enterprise : SpaceShip {
+            case '{':
+                return flecs_script_scope(parser, entity->scope, pos);
+        )
+    })
+}
+
+// x =
+identifier_assign: {
+    ecs_script_entity_t *entity = flecs_script_insert_entity(
+        parser, Token(0));
+
+    // x = Position: {
+    LookAhead_2(EcsTokIdentifier, ':',
+        pos = lookahead;
+
+        Parse_1('{', {
+            // x = Position: {expr}
+            Expr('}', 
+                Scope(entity->scope, 
+                    ecs_script_component_t *comp = 
+                        flecs_script_insert_component(parser, Token(2));
+                    comp->expr = Token(5);
+                )
+
+                // x = Position: {expr}\n
+                Parse(
+                    EcsTokEndOfStatement:
+                        EndOfRule;
+                )
+            )
+        })
+    )
+
+    // x = f32\n
+    Expr('\n',
         Scope(entity->scope, 
             ecs_script_default_component_t *comp = 
                 flecs_script_insert_default_component(parser);
@@ -432,7 +570,7 @@ identifier_colon: {
 identifier_identifier: {
     Parse(
         // Spaceship enterprise\n
-        case '\n': {
+        EcsTokEndOfStatement: {
             ecs_script_entity_t *entity = flecs_script_insert_entity(
                 parser, Token(1));
             entity->kind = Token(0);
@@ -460,7 +598,7 @@ identifier_paren: {
     Expr(')', 
         Parse(
             // SpaceShip(expr)\n
-            case '\n': {
+            EcsTokEndOfStatement: {
                 ecs_script_entity_t *entity = flecs_script_insert_entity(
                     parser, NULL);
 
@@ -468,6 +606,9 @@ identifier_paren: {
                     ecs_script_component_t *comp = 
                         flecs_script_insert_component(parser, Token(0)); 
                     comp->expr = Token(2);
+                    if (!ecs_os_strcmp(comp->expr, "{}")) {
+                        comp->expr = NULL;
+                    }
                 )
 
                 EndOfRule;
@@ -502,38 +643,48 @@ component_expr_scope: {
     })
 }
 
-// Position spaceship (
-component_expr_paren: {
-    Parse(
-        // Position spaceship ()
-        case ')': {
-            Parse(
-                case '\n': {
-                    ecs_script_entity_t *entity = flecs_script_insert_entity(
-                        parser, Token(1));
-                    entity->kind = Token(0);
-
-                    Scope(entity->scope, 
-                        flecs_script_insert_component(parser, Token(0)); )
-
-                    EndOfRule;
-                }
-                case '{': {
-                    ecs_script_entity_t *entity = flecs_script_insert_entity(
-                        parser, Token(1));
-                    entity->kind = Token(0);
-
-                    Scope(entity->scope, 
-                        flecs_script_insert_component(parser, Token(0)); )
-
-                    return flecs_script_scope(parser, entity->scope, pos);
-                }
-            )
-        }
-    )
+// Points: [
+component_expr_collection: {
+    // Position: [expr]
+    Expr(']', {
+        ecs_script_component_t *comp = flecs_script_insert_component(
+            parser, Token(0));
+        comp->expr = Token(3);
+        comp->is_collection = true;
+        EndOfRule; 
+    })
 }
 
+// Position spaceship (
+component_expr_paren: {
+    // Position spaceship (expr)
+    Expr(')',
+        ecs_script_entity_t *entity = flecs_script_insert_entity(
+            parser, Token(1));
+        entity->kind = Token(0);
+
+        Scope(entity->scope, 
+            ecs_script_component_t *component = 
+                flecs_script_insert_component(parser, Token(0));
+            component->expr = Token(3);
+        )
+
+        Parse(
+            // Position spaceship (expr)\n
+            EcsTokEndOfStatement: {
+                EndOfRule;
+            }
+
+            // Position spaceship (expr) {
+            case '{': {
+                return flecs_script_scope(parser, entity->scope, pos);
+            }
+        )
+    )
+
     ParserEnd;
+}
+
 }
 
 ecs_script_t* ecs_script_parse(
@@ -541,6 +692,10 @@ ecs_script_t* ecs_script_parse(
     const char *name,
     const char *code) 
 {
+    if (!code) {
+        code = "";
+    }
+
     ecs_script_t *script = flecs_script_new(world);
     script->name = name;
     script->code = code;
@@ -570,16 +725,4 @@ ecs_script_t* ecs_script_parse(
 error:
     ecs_os_free(script->token_buffer);
     return NULL;
-}
-
-ecs_script_t* ecs_script_parse_file(
-    ecs_world_t *world,
-    const char *filename) 
-{
-    char *code = flecs_load_from_file(filename);
-    if (!code) {
-        return NULL;
-    }
-
-    return ecs_script_parse(world, filename, code);
 }

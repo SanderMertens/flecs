@@ -33,12 +33,13 @@ extern "C" {
 FLECS_API
 extern ECS_COMPONENT_DECLARE(EcsScript);
 
+typedef struct ecs_script_t ecs_script_t;
+typedef struct ecs_script_assembly_t ecs_script_assembly_t;
+
 /* Script component */
 typedef struct EcsScript {
-    ecs_vec_t using_;
-    char *script;
-    ecs_vec_t prop_defaults;
-    ecs_world_t *world;
+    ecs_script_t *script;
+    ecs_script_assembly_t *assembly; /* Only set for assemblies */
 } EcsScript;
 
 /** Parse plecs string.
@@ -50,7 +51,7 @@ typedef struct EcsScript {
  * @return Zero if success, non-zero otherwise.
  */
 FLECS_API
-int ecs_script_from_str(
+int ecs_script_run(
     ecs_world_t *world,
     const char *name,
     const char *str);
@@ -58,14 +59,14 @@ int ecs_script_from_str(
 /** Parse plecs file.
  * This parses a plecs file and instantiates the entities in the world. This
  * operation is equivalent to loading the file contents and passing it to
- * ecs_script_from_str().
+ * ecs_script_run().
  *
  * @param world The world.
  * @param filename The plecs file name.
  * @return Zero if success, non-zero otherwise.
  */
 FLECS_API
-int ecs_script_from_file(
+int ecs_script_run_file(
     ecs_world_t *world,
     const char *filename);
 
@@ -122,8 +123,6 @@ void ecs_script_clear(
     ecs_entity_t script,
     ecs_entity_t instance);
 
-typedef struct ecs_script_t ecs_script_t;
-
 FLECS_API
 ecs_script_t* ecs_script_parse(
     ecs_world_t *world,
@@ -147,6 +146,77 @@ char* ecs_script_to_str(
 FLECS_API
 int ecs_script_eval(
     ecs_script_t *script);
+
+
+typedef struct ecs_script_var_t {
+    const char *name;
+    ecs_value_t value;
+} ecs_script_var_t;
+
+typedef struct ecs_script_vars_t {
+    struct ecs_script_vars_t *parent;
+    ecs_hashmap_t var_index;
+    ecs_vec_t vars;
+
+    struct ecs_stack_t *stack;
+    ecs_stack_cursor_t *cursor;
+    ecs_allocator_t *allocator;
+} ecs_script_vars_t;
+
+ecs_script_vars_t* ecs_script_vars_push(
+    ecs_script_vars_t *parent,
+    struct ecs_stack_t *stack,
+    ecs_allocator_t *allocator);
+
+ecs_script_vars_t* ecs_script_vars_pop(
+    ecs_script_vars_t *vars);
+
+ecs_script_var_t* ecs_script_vars_declare(
+    ecs_script_vars_t *vars,
+    const char *name);
+
+ecs_script_var_t* ecs_script_vars_lookup(
+    const ecs_script_vars_t *vars,
+    const char *name);
+
+
+/** Used with ecs_parse_expr(). */
+typedef struct ecs_parse_expr_desc_t {
+    const char *name;
+    const char *expr;
+    ecs_entity_t (*lookup_action)(
+        const ecs_world_t*,
+        const char *value,
+        void *ctx);
+    void *lookup_ctx;
+    ecs_script_vars_t *vars;
+} ecs_parse_expr_desc_t;
+
+/** Parse expression into value.
+ * This operation parses a flecs expression into the provided pointer. The
+ * memory pointed to must be large enough to contain a value of the used type.
+ *
+ * If no type and pointer are provided for the value argument, the operation
+ * will discover the type from the expression and allocate storage for the
+ * value. The allocated value must be freed with ecs_value_free().
+ *
+ * @param world The world.
+ * @param ptr The pointer to the expression to parse.
+ * @param value The value containing type & pointer to write to.
+ * @param desc Configuration parameters for deserializer.
+ * @return Pointer to the character after the last one read, or NULL if failed.
+ */
+FLECS_API
+const char* ecs_parse_expr(
+    ecs_world_t *world,
+    const char *ptr,
+    ecs_value_t *value,
+    const ecs_parse_expr_desc_t *desc);
+
+
+
+
+
 
 /* Module import */
 FLECS_API

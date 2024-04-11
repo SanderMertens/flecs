@@ -155,12 +155,31 @@
         pos = old_ptr;\
     )
 
+#define LookAhead_3(tok1, tok2, tok3, ...)\
+    LookAhead_2(tok1, tok2, \
+        const char *old_ptr = pos;\
+        pos = lookahead;\
+        LookAhead(\
+            case tok3: {\
+                __VA_ARGS__\
+            }\
+        )\
+        pos = old_ptr;\
+    )
+
 #define Scope(s, ...) {\
         ecs_script_scope_t *old_scope = parser->scope;\
         parser->scope = s;\
         __VA_ARGS__\
         parser->scope = old_scope;\
     }
+
+#define Loop(...)\
+    int32_t token_stack_count = token_stack.count;\
+    do {\
+        token_stack.count = token_stack_count;\
+        __VA_ARGS__\
+    } while (true);
 
 #define EndOfRule return pos
 

@@ -175,6 +175,12 @@ void Entity_entity_init_w_set_1_comp_1_tag_w_set_defer(void);
 void Entity_insert_1_comp(void);
 void Entity_insert_2_comp(void);
 void Entity_insert_1_comp_1_tag(void);
+void Entity_entity_w_parent(void);
+void Entity_entity_w_parent_w_name(void);
+void Entity_entity_w_parent_w_add(void);
+void Entity_entity_w_parent_w_add_w_parent(void);
+void Entity_entity_w_parent_w_set(void);
+void Entity_entity_w_parent_w_set_w_parent(void);
 
 // Testsuite 'Each'
 void Each_each_tag(void);
@@ -2584,6 +2590,30 @@ bake_test_case Entity_testcases[] = {
     {
         "insert_1_comp_1_tag",
         Entity_insert_1_comp_1_tag
+    },
+    {
+        "entity_w_parent",
+        Entity_entity_w_parent
+    },
+    {
+        "entity_w_parent_w_name",
+        Entity_entity_w_parent_w_name
+    },
+    {
+        "entity_w_parent_w_add",
+        Entity_entity_w_parent_w_add
+    },
+    {
+        "entity_w_parent_w_add_w_parent",
+        Entity_entity_w_parent_w_add_w_parent
+    },
+    {
+        "entity_w_parent_w_set",
+        Entity_entity_w_parent_w_set
+    },
+    {
+        "entity_w_parent_w_set_w_parent",
+        Entity_entity_w_parent_w_set_w_parent
     }
 };
 
@@ -9326,7 +9356,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        127,
+        133,
         Entity_testcases
     },
     {

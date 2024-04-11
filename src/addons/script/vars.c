@@ -34,7 +34,6 @@ ecs_script_var_t* ecs_script_vars_declare(
         flecs_name_index_init(&vars->var_index, vars->allocator);
     } else {
         if (flecs_name_index_find(&vars->var_index, name, 0, 0) != 0) {
-            ecs_err("variable %s redeclared", name);
             goto error;
         }
     }

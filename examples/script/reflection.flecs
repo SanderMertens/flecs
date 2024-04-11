@@ -1,7 +1,7 @@
 // To see what the result of parsing this file looks like, copy the code and
 // paste it into the editor at https://flecs.dev/explorer
 //
-// To load this file yourself, call ecs_script_from_file("reflection.flecs");
+// To load this file yourself, call ecs_script_run_file("reflection.flecs");
 
 // It is possible to set component values in a plecs file as long as the 
 // component is described with reflection data. Since we don't have a component
@@ -20,15 +20,15 @@ using flecs.meta
 // open a scope after the statement
 struct Position {
   // Add two child entities with the Member component
-  x :- member{type: f32}
-  y :- member{type: f32}
+  x { member: {type: f32} }
+  y { member: {type: f32} }
 }
 
 // Plecs has a feature which makes it possible to specify a default type for a
 // scope. The Struct component has Member as default type. This means we can
 // also create a type like this, which is a bit shorter:
 struct Mass {
-  value :- {f32} // 'type' can be ommitted since it's the first member
+  value : f32 // 'type' can be ommitted since it's the first member
 }
 
 // Similarly we can also define an enumeration type. The default scope type for

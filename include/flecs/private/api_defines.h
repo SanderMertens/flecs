@@ -67,6 +67,16 @@
     #endif
 #endif
 
+#if defined(__clang__)
+#define ECS_FUNC_NAME __PRETTY_FUNCTION__
+#elif defined(__GNUC__)
+#define ECS_FUNC_NAME __PRETTY_FUNCTION__
+#elif defined(_WIN32)
+#define ECS_FUNC_NAME __FUNCSIG__
+#else
+#define ECS_FUNC_NAME NULL
+#endif
+
 /* Ignored warnings */
 #if defined(ECS_TARGET_CLANG)
 /* Ignore unknown options so we don't have to care about the compiler version */

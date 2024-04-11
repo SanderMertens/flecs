@@ -43,6 +43,13 @@ void flecs_meta_import_core_definitions(
         }
     });
 
+    ecs_struct(world, {
+        .entity = ecs_id(EcsDefaultChildComponent),
+        .members = {
+            { .name = "component", .type = ecs_id(ecs_entity_t) }
+        }
+    });
+
     ecs_entity_t string_vec = ecs_vector(world, {
         .entity = ecs_entity(world, { 
             .name = "flecs.core.string_vec_t",

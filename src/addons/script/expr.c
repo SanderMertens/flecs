@@ -257,7 +257,7 @@ bool flecs_parse_is_float(
 static
 ecs_value_t flecs_dotresolve_var(
     ecs_world_t *world,
-    ecs_vars_t *vars,
+    ecs_script_vars_t *vars,
     char *token)
 {
     char *dot = strchr(token, '.');
@@ -267,7 +267,7 @@ ecs_value_t flecs_dotresolve_var(
 
     dot[0] = '\0';
 
-    const ecs_expr_var_t *var = ecs_vars_lookup(vars, token);
+    const ecs_script_var_t *var = ecs_script_vars_lookup(vars, token);
     if (!var) {
         return (ecs_value_t){0};
     }
@@ -395,7 +395,7 @@ ecs_entity_t flecs_parse_discover_type(
             return 0;
         }
 
-        const ecs_expr_var_t *var = ecs_vars_lookup(desc->vars, token);
+        const ecs_script_var_t *var = ecs_script_vars_lookup(desc->vars, token);
         if (!var) {
             ecs_size_t len = ecs_os_strlen(token);
             if (ptr[len + 1] == '(') {
@@ -980,7 +980,7 @@ const char* flecs_funccall_parse(
             goto error;
         }
     } else {
-        const ecs_expr_var_t *var = ecs_vars_lookup(desc->vars, token);
+        const ecs_script_var_t *var = ecs_script_vars_lookup(desc->vars, token);
         ecs_meta_set_value(cur, &var->value);
     }
 
@@ -1233,7 +1233,7 @@ const char* flecs_parse_expr(
                 ecs_os_strcpy(&token[1], member);
             }
 
-            const ecs_expr_var_t *var = ecs_vars_lookup(desc->vars, &token[1]);
+            const ecs_script_var_t *var = ecs_script_vars_lookup(desc->vars, &token[1]);
             if (!var) {
                 if (ptr[0] == '(') {
                     /* Function */

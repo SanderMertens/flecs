@@ -186,6 +186,7 @@ uint64_t (*ecs_os_api_now_t)(void);
 typedef
 void (*ecs_os_api_log_t)(
     int32_t level,     /* Logging level */
+    const char *func,  /* Function where message was logged */
     const char *file,  /* File where message was logged */
     int32_t line,      /* Line it was logged */
     const char *msg);
@@ -460,19 +461,19 @@ void ecs_os_set_api_defaults(void);
 
 /* Logging */
 FLECS_API
-void ecs_os_dbg(const char *file, int32_t line, const char *msg);
+void ecs_os_dbg(const char *func, const char *file, int32_t line, const char *msg);
 
 FLECS_API
-void ecs_os_trace(const char *file, int32_t line, const char *msg);
+void ecs_os_trace(const char *func, const char *file, int32_t line, const char *msg);
 
 FLECS_API
-void ecs_os_warn(const char *file, int32_t line, const char *msg);
+void ecs_os_warn(const char *func, const char *file, int32_t line, const char *msg);
 
 FLECS_API
-void ecs_os_err(const char *file, int32_t line, const char *msg);
+void ecs_os_err(const char *func, const char *file, int32_t line, const char *msg);
 
 FLECS_API
-void ecs_os_fatal(const char *file, int32_t line, const char *msg);
+void ecs_os_fatal(const char *func, const char *file, int32_t line, const char *msg);
 
 FLECS_API
 const char* ecs_os_strerror(int err);

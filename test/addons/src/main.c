@@ -19,35 +19,31 @@ void Script_newline_trailing_space(void);
 void Script_newline_trailing_spaces(void);
 void Script_multiple_trailing_newlines(void);
 void Script_entity(void);
-void Script_entity_w_entity(void);
-void Script_entity_w_pair(void);
+void Script_entity_w_core_name(void);
 void Script_2_entities(void);
-void Script_2_entities_w_entities(void);
-void Script_3_entities_w_pairs(void);
 void Script_line_comment(void);
 void Script_line_comment_before_stmt(void);
 void Script_line_comment_after_stmt(void);
 void Script_line_comment_between_stmt(void);
 void Script_multiple_line_comment(void);
+void Script_multiple_line_comment_w_newlines(void);
 void Script_line_comment_after_stmt_same_line(void);
-void Script_comma_separated_pred(void);
-void Script_comma_separated_pred_w_subj(void);
-void Script_comma_separated_pred_w_subj_obj(void);
-void Script_comma_separated_pred_trailing_comma(void);
-void Script_comma_separated_pred_trailing_comma_newline(void);
-void Script_comma_separated_pred_trailing_comma_newline_multiline(void);
 void Script_hierarchy_1_child(void);
 void Script_hierarchy_2_children(void);
 void Script_hierarchy_1_child_same_line(void);
 void Script_hierarchy_2_children_same_line(void);
+void Script_hierarchy_2_children_same_line_no_trailing_comma(void);
 void Script_entity_after_hierarchy(void);
 void Script_newline_before_scope_open(void);
+void Script_newline_w_whitespace_before_scope_open(void);
+void Script_2_newline_before_scope_open(void);
+void Script_2_newline_w_whitespace_before_scope_open(void);
 void Script_comment_before_scope_open(void);
 void Script_comment_after_newline_before_scope_open(void);
+void Script_comment_after_newline_before_newline_scope_open(void);
 void Script_hierarchy_2_levels(void);
 void Script_hierarchy_2_levels_2_subtrees(void);
 void Script_missing_end_of_scope(void);
-void Script_missing_end_of_predicate_scope(void);
 void Script_create_in_scope(void);
 void Script_hierarchy_w_pred_subj(void);
 void Script_hierarchy_custom_relation(void);
@@ -56,32 +52,29 @@ void Script_hierarchy_custom_relation_apply_to_object(void);
 void Script_hierarchy_custom_relation_apply_to_object_2_levels(void);
 void Script_entity_after_hierarchy_custom_relation(void);
 void Script_entity_after_hierarchy_custom_relation_2_levels(void);
-void Script_pred_scope(void);
-void Script_pred_scope_2_levels(void);
-void Script_pred_scope_inside_with(void);
-void Script_pred_scope_nested_w_subj_scope(void);
 void Script_with_tag(void);
 void Script_with_tag_2_entities(void);
 void Script_with_tag_same_line(void);
 void Script_with_tag_2_entities_same_line(void);
+void Script_with_tag_2_entities_same_line_no_trailing_comma(void);
 void Script_with_tag_2_levels(void);
 void Script_with_tag_2_levels_2_subtrees(void);
 void Script_with_n_tags(void);
 void Script_with_n_tags_2_levels(void);
+void Script_with_n_tags_2_levels_invalid_tag(void);
 void Script_with_after_scope(void);
 void Script_with_after_with(void);
 void Script_scope_inside_with_inside_scope(void);
 void Script_with_inside_scope(void);
-void Script_assignment_w_1(void);
-void Script_assignment_w_2(void);
-void Script_assignment_w_pair(void);
-void Script_assignment_w_invalid_subject(void);
-void Script_assignment_w_invalid_with(void);
+void Script_with_tag_core_name(void);
+void Script_inherit(void);
+void Script_inherit_newline(void);
 void Script_inherit_w_colon(void);
 void Script_inherit_w_colon_w_scope(void);
-void Script_inherit_w_colon_w_assign(void);
-void Script_assign_component_value(void);
-void Script_assign_2_component_values(void);
+void Script_assign_component_w_value(void);
+void Script_assign_tag_in_assign_scope(void);
+void Script_assign_tag_in_assign_scope_same_line(void);
+void Script_assign_tag_in_assign_scope_core_name(void);
 void Script_assign_component_value_in_assign_scope(void);
 void Script_assign_2_component_values_in_assign_scope(void);
 void Script_type_and_assign_in_plecs(void);
@@ -112,10 +105,11 @@ void Script_struct_w_member_w_assignment_to_nothing(void);
 void Script_struct_w_member_w_assignment_to_empty_scope(void);
 void Script_scope_after_assign(void);
 void Script_assign_after_inherit(void);
+void Script_multiple_tags_single_line(void);
+void Script_multiple_pairs_single_line(void);
+void Script_multiple_vars_single_line(void);
 void Script_multiple_assignments_single_line(void);
 void Script_2_stmts_in_scope_w_no_parent(void);
-void Script_scope_after_assign_1_tag(void);
-void Script_scope_after_assign_2_tags(void);
 void Script_invalid_nested_assignment(void);
 void Script_invalid_partial_pair_assignment(void);
 void Script_empty_assignment(void);
@@ -130,6 +124,10 @@ void Script_struct_type_w_default_child_component(void);
 void Script_struct_type_w_default_child_component_nested_member(void);
 void Script_enum_type_w_default_child_component(void);
 void Script_default_type_from_with(void);
+void Script_default_type_from_nested_with(void);
+void Script_default_type_with_tag(void);
+void Script_default_type_from_with_in_entity_scope_w_default_type(void);
+void Script_default_type_from_entity_scope_in_with(void);
 void Script_scope_w_1_subj_and_2_pairs(void);
 void Script_inherit_from_multiple(void);
 void Script_assign_pair_component(void);
@@ -181,12 +179,21 @@ void Script_assign_const_w_expr(void);
 void Script_const_w_type(void);
 void Script_assembly_no_scope(void);
 void Script_assembly_empty(void);
+void Script_assembly_unresolved_tag(void);
+void Script_assembly_unresolved_component(void);
+void Script_assembly_unresolved_pair_relationship(void);
+void Script_assembly_unresolved_pair_target(void);
+void Script_assembly_unresolved_with_tag(void);
+void Script_assembly_unresolved_with_component(void);
+void Script_assembly_unresolved_with_pair_relationship(void);
+void Script_assembly_unresolved_with_pair_target(void);
 void Script_assembly_no_props(void);
 void Script_assembly_prop_no_type(void);
 void Script_assembly_prop_no_default(void);
 void Script_assembly_prop(void);
 void Script_assembly_prop_space_colon(void);
 void Script_assembly_2_props(void);
+void Script_assembly_w_using(void);
 void Script_assembly_instance_w_default_values(void);
 void Script_assembly_instance_w_assign_default_values(void);
 void Script_assembly_instance_w_overridden_values(void);
@@ -230,15 +237,14 @@ void Script_assign_singleton_2_tags_w_scope(void);
 void Script_assign_singleton_component_w_scope(void);
 void Script_assign_singleton_2_components_w_scope(void);
 void Script_with_pair_in_scope(void);
+void Script_with_pair_component_in_scope(void);
 void Script_assembly_redeclare_prop_as_const(void);
 void Script_assembly_redeclare_prop_as_prop(void);
 void Script_assembly_redeclare_const_as_const(void);
-void Script_add_auto_override(void);
-void Script_add_auto_override_pair(void);
-void Script_scope_w_auto_override(void);
-void Script_scope_w_auto_override_pair(void);
 void Script_pair_w_rel_var(void);
 void Script_pair_w_tgt_var(void);
+void Script_pair_w_rel_var_invalid_type(void);
+void Script_pair_w_tgt_var_invalid_type(void);
 void Script_assembly_w_pair_w_this_var(void);
 void Script_with_value_not_a_component(void);
 void Script_component_in_with_scope(void);
@@ -246,6 +252,8 @@ void Script_component_in_with_scope_nested(void);
 void Script_component_in_with_scope_in_scope(void);
 void Script_assign_after_with_in_scope(void);
 void Script_array_component(void);
+void Script_not_an_array_component(void);
+void Script_array_component_w_curly_brackets(void);
 
 // Testsuite 'Doc'
 void Doc_get_set_name(void);
@@ -803,24 +811,12 @@ bake_test_case Script_testcases[] = {
         Script_entity
     },
     {
-        "entity_w_entity",
-        Script_entity_w_entity
-    },
-    {
-        "entity_w_pair",
-        Script_entity_w_pair
+        "entity_w_core_name",
+        Script_entity_w_core_name
     },
     {
         "2_entities",
         Script_2_entities
-    },
-    {
-        "2_entities_w_entities",
-        Script_2_entities_w_entities
-    },
-    {
-        "3_entities_w_pairs",
-        Script_3_entities_w_pairs
     },
     {
         "line_comment",
@@ -843,32 +839,12 @@ bake_test_case Script_testcases[] = {
         Script_multiple_line_comment
     },
     {
+        "multiple_line_comment_w_newlines",
+        Script_multiple_line_comment_w_newlines
+    },
+    {
         "line_comment_after_stmt_same_line",
         Script_line_comment_after_stmt_same_line
-    },
-    {
-        "comma_separated_pred",
-        Script_comma_separated_pred
-    },
-    {
-        "comma_separated_pred_w_subj",
-        Script_comma_separated_pred_w_subj
-    },
-    {
-        "comma_separated_pred_w_subj_obj",
-        Script_comma_separated_pred_w_subj_obj
-    },
-    {
-        "comma_separated_pred_trailing_comma",
-        Script_comma_separated_pred_trailing_comma
-    },
-    {
-        "comma_separated_pred_trailing_comma_newline",
-        Script_comma_separated_pred_trailing_comma_newline
-    },
-    {
-        "comma_separated_pred_trailing_comma_newline_multiline",
-        Script_comma_separated_pred_trailing_comma_newline_multiline
     },
     {
         "hierarchy_1_child",
@@ -887,6 +863,10 @@ bake_test_case Script_testcases[] = {
         Script_hierarchy_2_children_same_line
     },
     {
+        "hierarchy_2_children_same_line_no_trailing_comma",
+        Script_hierarchy_2_children_same_line_no_trailing_comma
+    },
+    {
         "entity_after_hierarchy",
         Script_entity_after_hierarchy
     },
@@ -895,12 +875,28 @@ bake_test_case Script_testcases[] = {
         Script_newline_before_scope_open
     },
     {
+        "newline_w_whitespace_before_scope_open",
+        Script_newline_w_whitespace_before_scope_open
+    },
+    {
+        "2_newline_before_scope_open",
+        Script_2_newline_before_scope_open
+    },
+    {
+        "2_newline_w_whitespace_before_scope_open",
+        Script_2_newline_w_whitespace_before_scope_open
+    },
+    {
         "comment_before_scope_open",
         Script_comment_before_scope_open
     },
     {
         "comment_after_newline_before_scope_open",
         Script_comment_after_newline_before_scope_open
+    },
+    {
+        "comment_after_newline_before_newline_scope_open",
+        Script_comment_after_newline_before_newline_scope_open
     },
     {
         "hierarchy_2_levels",
@@ -913,10 +909,6 @@ bake_test_case Script_testcases[] = {
     {
         "missing_end_of_scope",
         Script_missing_end_of_scope
-    },
-    {
-        "missing_end_of_predicate_scope",
-        Script_missing_end_of_predicate_scope
     },
     {
         "create_in_scope",
@@ -951,22 +943,6 @@ bake_test_case Script_testcases[] = {
         Script_entity_after_hierarchy_custom_relation_2_levels
     },
     {
-        "pred_scope",
-        Script_pred_scope
-    },
-    {
-        "pred_scope_2_levels",
-        Script_pred_scope_2_levels
-    },
-    {
-        "pred_scope_inside_with",
-        Script_pred_scope_inside_with
-    },
-    {
-        "pred_scope_nested_w_subj_scope",
-        Script_pred_scope_nested_w_subj_scope
-    },
-    {
         "with_tag",
         Script_with_tag
     },
@@ -981,6 +957,10 @@ bake_test_case Script_testcases[] = {
     {
         "with_tag_2_entities_same_line",
         Script_with_tag_2_entities_same_line
+    },
+    {
+        "with_tag_2_entities_same_line_no_trailing_comma",
+        Script_with_tag_2_entities_same_line_no_trailing_comma
     },
     {
         "with_tag_2_levels",
@@ -999,6 +979,10 @@ bake_test_case Script_testcases[] = {
         Script_with_n_tags_2_levels
     },
     {
+        "with_n_tags_2_levels_invalid_tag",
+        Script_with_n_tags_2_levels_invalid_tag
+    },
+    {
         "with_after_scope",
         Script_with_after_scope
     },
@@ -1015,24 +999,16 @@ bake_test_case Script_testcases[] = {
         Script_with_inside_scope
     },
     {
-        "assignment_w_1",
-        Script_assignment_w_1
+        "with_tag_core_name",
+        Script_with_tag_core_name
     },
     {
-        "assignment_w_2",
-        Script_assignment_w_2
+        "inherit",
+        Script_inherit
     },
     {
-        "assignment_w_pair",
-        Script_assignment_w_pair
-    },
-    {
-        "assignment_w_invalid_subject",
-        Script_assignment_w_invalid_subject
-    },
-    {
-        "assignment_w_invalid_with",
-        Script_assignment_w_invalid_with
+        "inherit_newline",
+        Script_inherit_newline
     },
     {
         "inherit_w_colon",
@@ -1043,16 +1019,20 @@ bake_test_case Script_testcases[] = {
         Script_inherit_w_colon_w_scope
     },
     {
-        "inherit_w_colon_w_assign",
-        Script_inherit_w_colon_w_assign
+        "assign_component_w_value",
+        Script_assign_component_w_value
     },
     {
-        "assign_component_value",
-        Script_assign_component_value
+        "assign_tag_in_assign_scope",
+        Script_assign_tag_in_assign_scope
     },
     {
-        "assign_2_component_values",
-        Script_assign_2_component_values
+        "assign_tag_in_assign_scope_same_line",
+        Script_assign_tag_in_assign_scope_same_line
+    },
+    {
+        "assign_tag_in_assign_scope_core_name",
+        Script_assign_tag_in_assign_scope_core_name
     },
     {
         "assign_component_value_in_assign_scope",
@@ -1175,20 +1155,24 @@ bake_test_case Script_testcases[] = {
         Script_assign_after_inherit
     },
     {
+        "multiple_tags_single_line",
+        Script_multiple_tags_single_line
+    },
+    {
+        "multiple_pairs_single_line",
+        Script_multiple_pairs_single_line
+    },
+    {
+        "multiple_vars_single_line",
+        Script_multiple_vars_single_line
+    },
+    {
         "multiple_assignments_single_line",
         Script_multiple_assignments_single_line
     },
     {
         "2_stmts_in_scope_w_no_parent",
         Script_2_stmts_in_scope_w_no_parent
-    },
-    {
-        "scope_after_assign_1_tag",
-        Script_scope_after_assign_1_tag
-    },
-    {
-        "scope_after_assign_2_tags",
-        Script_scope_after_assign_2_tags
     },
     {
         "invalid_nested_assignment",
@@ -1245,6 +1229,22 @@ bake_test_case Script_testcases[] = {
     {
         "default_type_from_with",
         Script_default_type_from_with
+    },
+    {
+        "default_type_from_nested_with",
+        Script_default_type_from_nested_with
+    },
+    {
+        "default_type_with_tag",
+        Script_default_type_with_tag
+    },
+    {
+        "default_type_from_with_in_entity_scope_w_default_type",
+        Script_default_type_from_with_in_entity_scope_w_default_type
+    },
+    {
+        "default_type_from_entity_scope_in_with",
+        Script_default_type_from_entity_scope_in_with
     },
     {
         "scope_w_1_subj_and_2_pairs",
@@ -1451,6 +1451,38 @@ bake_test_case Script_testcases[] = {
         Script_assembly_empty
     },
     {
+        "assembly_unresolved_tag",
+        Script_assembly_unresolved_tag
+    },
+    {
+        "assembly_unresolved_component",
+        Script_assembly_unresolved_component
+    },
+    {
+        "assembly_unresolved_pair_relationship",
+        Script_assembly_unresolved_pair_relationship
+    },
+    {
+        "assembly_unresolved_pair_target",
+        Script_assembly_unresolved_pair_target
+    },
+    {
+        "assembly_unresolved_with_tag",
+        Script_assembly_unresolved_with_tag
+    },
+    {
+        "assembly_unresolved_with_component",
+        Script_assembly_unresolved_with_component
+    },
+    {
+        "assembly_unresolved_with_pair_relationship",
+        Script_assembly_unresolved_with_pair_relationship
+    },
+    {
+        "assembly_unresolved_with_pair_target",
+        Script_assembly_unresolved_with_pair_target
+    },
+    {
         "assembly_no_props",
         Script_assembly_no_props
     },
@@ -1473,6 +1505,10 @@ bake_test_case Script_testcases[] = {
     {
         "assembly_2_props",
         Script_assembly_2_props
+    },
+    {
+        "assembly_w_using",
+        Script_assembly_w_using
     },
     {
         "assembly_instance_w_default_values",
@@ -1647,6 +1683,10 @@ bake_test_case Script_testcases[] = {
         Script_with_pair_in_scope
     },
     {
+        "with_pair_component_in_scope",
+        Script_with_pair_component_in_scope
+    },
+    {
         "assembly_redeclare_prop_as_const",
         Script_assembly_redeclare_prop_as_const
     },
@@ -1659,28 +1699,20 @@ bake_test_case Script_testcases[] = {
         Script_assembly_redeclare_const_as_const
     },
     {
-        "add_auto_override",
-        Script_add_auto_override
-    },
-    {
-        "add_auto_override_pair",
-        Script_add_auto_override_pair
-    },
-    {
-        "scope_w_auto_override",
-        Script_scope_w_auto_override
-    },
-    {
-        "scope_w_auto_override_pair",
-        Script_scope_w_auto_override_pair
-    },
-    {
         "pair_w_rel_var",
         Script_pair_w_rel_var
     },
     {
         "pair_w_tgt_var",
         Script_pair_w_tgt_var
+    },
+    {
+        "pair_w_rel_var_invalid_type",
+        Script_pair_w_rel_var_invalid_type
+    },
+    {
+        "pair_w_tgt_var_invalid_type",
+        Script_pair_w_tgt_var_invalid_type
     },
     {
         "assembly_w_pair_w_this_var",
@@ -1709,6 +1741,14 @@ bake_test_case Script_testcases[] = {
     {
         "array_component",
         Script_array_component
+    },
+    {
+        "not_an_array_component",
+        Script_not_an_array_component
+    },
+    {
+        "array_component_w_curly_brackets",
+        Script_array_component_w_curly_brackets
     }
 };
 
@@ -3648,7 +3688,7 @@ static bake_test_suite suites[] = {
         "Script",
         NULL,
         NULL,
-        237,
+        245,
         Script_testcases
     },
     {

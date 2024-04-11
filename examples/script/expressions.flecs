@@ -1,19 +1,19 @@
 // To see what the result of parsing this file looks like, copy the code and
 // paste it into the editor at https://flecs.dev/explorer
 //
-// To load this file yourself, call ecs_script_from_file("expressions.flecs");
+// To load this file yourself, call ecs_script_run_file("expressions.flecs");
 
 using flecs.meta
 
 // Create component types, see reflection example
 struct Position {
-  x :- {f32}
-  y :- {f32}
+  x : f32
+  y : f32
 }
 
 struct Rectangle {
-  width :- {f32}
-  height :- {f32}
+  width : f32
+  height : f32
 }
 
 // Plecs files can contain variables that can be referenced later on when 
@@ -26,5 +26,5 @@ const height = $width * 2
 
 e {
   - Position{0, -($height / 2)}
-  - Rectangle{$width, $height}
+  Rectangle: {$width, $height}
 }

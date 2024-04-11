@@ -1,7 +1,7 @@
 // To see what the result of parsing this file looks like, copy the code and
 // paste it into the editor at https://flecs.dev/explorer
 //
-// To load this file yourself, call ecs_script_from_file("with.flecs");
+// To load this file yourself, call ecs_script_run_file("with.flecs");
 
 // Sometimes you want to add the same component to a lot of entities. To avoid
 // repeating yourself, you can use the "with" keyword:

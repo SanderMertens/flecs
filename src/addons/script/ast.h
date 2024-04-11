@@ -11,11 +11,13 @@ typedef enum ecs_script_node_kind_t {
     EcsAstTag,
     EcsAstComponent,
     EcsAstDefaultComponent,
+    EcsAstVar,
     EcsAstWithVar,
     EcsAstWithTag,
     EcsAstWithComponent,
     EcsAstWith,
     EcsAstUsing,
+    EcsAstModule,
     EcsAstAnnotation,
     EcsAstAssembly,
     EcsAstProp,
@@ -33,6 +35,8 @@ typedef struct ecs_script_node_t {
 struct ecs_script_scope_t {
     ecs_script_node_t node;
     ecs_vec_t stmts;
+    ecs_script_scope_t *parent;
+    ecs_id_t default_component_eval;
 };
 
 typedef struct ecs_script_id_t {
@@ -51,6 +55,7 @@ typedef struct ecs_script_component_t {
     ecs_script_id_t id;
     const char *expr;
     ecs_value_t eval;
+    bool is_collection;
 } ecs_script_component_t;
 
 typedef struct ecs_script_default_component_t {
@@ -83,6 +88,11 @@ typedef struct ecs_script_with_t {
     ecs_script_scope_t *scope;
 } ecs_script_with_t;
 
+typedef struct ecs_script_inherit_t {
+    ecs_script_node_t node;
+    ecs_script_scope_t *base_list;
+} ecs_script_inherit_t;
+
 typedef struct ecs_script_pair_scope_t {
     ecs_script_node_t node;
     ecs_script_id_t id;
@@ -94,17 +104,22 @@ typedef struct ecs_script_using_t {
     const char *name;
 } ecs_script_using_t;
 
+typedef struct ecs_script_module_t {
+    ecs_script_node_t node;
+    const char *name;
+} ecs_script_module_t;
+
 typedef struct ecs_script_annot_t {
     ecs_script_node_t node;
     const char *name;
     const char *expr;
 } ecs_script_annot_t;
 
-typedef struct ecs_script_assembly_t {
+typedef struct ecs_script_assembly_node_t {
     ecs_script_node_t node;
     const char *name;
     ecs_script_scope_t* scope;
-} ecs_script_assembly_t;
+} ecs_script_assembly_node_t;
 
 typedef struct ecs_script_var_node_t {
     ecs_script_node_t node;
@@ -129,6 +144,9 @@ ecs_script_t* flecs_script_new(
 bool flecs_scope_is_empty(
     ecs_script_scope_t *scope);
 
+ecs_script_scope_t* flecs_script_insert_scope(
+    ecs_script_parser_t *parser);
+
 ecs_script_entity_t* flecs_script_insert_entity(
     ecs_script_parser_t *parser,
     const char *name);
@@ -145,7 +163,11 @@ ecs_script_using_t* flecs_script_insert_using(
     ecs_script_parser_t *parser,
     const char *name);
 
-ecs_script_assembly_t* flecs_script_insert_assembly(
+ecs_script_module_t* flecs_script_insert_module(
+    ecs_script_parser_t *parser,
+    const char *name);
+
+ecs_script_assembly_node_t* flecs_script_insert_assembly(
     ecs_script_parser_t *parser,
     const char *name);
 
@@ -179,7 +201,7 @@ ecs_script_component_t* flecs_script_insert_pair_component(
 ecs_script_default_component_t* flecs_script_insert_default_component(
     ecs_script_parser_t *parser);
 
-ecs_script_var_component_t* flecs_script_insert_with_var(
+ecs_script_var_component_t* flecs_script_insert_var_component(
     ecs_script_parser_t *parser,
     const char *name);
 

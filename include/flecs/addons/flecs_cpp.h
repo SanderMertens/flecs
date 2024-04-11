@@ -22,15 +22,12 @@ extern "C" {
 #if defined(__clang__)
 #define ECS_FUNC_NAME_FRONT(type, name) ((sizeof(#type) + sizeof(" flecs::_::() [T = ") + sizeof(#name)) - 3u)
 #define ECS_FUNC_NAME_BACK (sizeof("]") - 1u)
-#define ECS_FUNC_NAME __PRETTY_FUNCTION__
 #elif defined(__GNUC__)
 #define ECS_FUNC_NAME_FRONT(type, name) ((sizeof(#type) + sizeof(" flecs::_::() [with T = ") + sizeof(#name)) - 3u)
 #define ECS_FUNC_NAME_BACK (sizeof("]") - 1u)
-#define ECS_FUNC_NAME __PRETTY_FUNCTION__
 #elif defined(_WIN32)
 #define ECS_FUNC_NAME_FRONT(type, name) ((sizeof(#type) + sizeof(" __cdecl flecs::_::<") + sizeof(#name)) - 3u)
 #define ECS_FUNC_NAME_BACK (sizeof(">(void)") - 1u)
-#define ECS_FUNC_NAME __FUNCSIG__
 #else
 #error "implicit component registration not supported"
 #endif

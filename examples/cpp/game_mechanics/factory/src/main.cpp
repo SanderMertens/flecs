@@ -332,8 +332,8 @@ int main(int argc, char *argv[]) {
 
   world.import<factories>();
 
-  ecs_script_from_file(world, "resources.flecs");
-  ecs_script_from_file(world, "scene.flecs");
+  ecs_script_run_file(world, "resources.flecs");
+  ecs_script_run_file(world, "scene.flecs");
 
   return world.app()
     .enable_rest()

@@ -70,6 +70,7 @@ static const flecs::entity_t Toggle = ECS_TOGGLE;
 using Component = EcsComponent;
 using Identifier = EcsIdentifier;
 using Poly = EcsPoly;
+using DefaultChildComponent = EcsDefaultChildComponent;
 
 /* Builtin tags */
 static const flecs::entity_t Query = EcsQuery;
@@ -143,9 +144,6 @@ static const flecs::entity_t OnDeleteTarget = EcsOnDeleteTarget;
 static const flecs::entity_t Remove = EcsRemove;
 static const flecs::entity_t Delete = EcsDelete;
 static const flecs::entity_t Panic = EcsPanic;
-
-/* Misc */
-static const flecs::entity_t DefaultChildComponent = EcsDefaultChildComponent;
 
 /* Builtin predicates for comparing entity ids in queries. Only supported by rules */
 static const flecs::entity_t PredEq = EcsPredEq;

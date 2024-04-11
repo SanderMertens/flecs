@@ -63,7 +63,8 @@ static ecs_os_api_log_t rest_prev_log;
 static 
 void flecs_rest_capture_log(
     int32_t level, 
-    const char *file, 
+    const char *func,
+    const char *file,
     int32_t line, 
     const char *msg)
 {
@@ -74,7 +75,7 @@ void flecs_rest_capture_log(
         /* Also log to previous log function in debug mode */
         if (rest_prev_log) {
             ecs_log_enable_colors(true);
-            rest_prev_log(level, file, line, msg);
+            rest_prev_log(level, func, file, line, msg);
             ecs_log_enable_colors(false);
         }
     }

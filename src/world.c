@@ -1180,7 +1180,8 @@ void ecs_set_hooks_id(
             world, component, EcsComponent);
 
         /* Cannot register lifecycle actions for things that aren't a component */
-        ecs_check(component_ptr != NULL, ECS_INVALID_PARAMETER, NULL);
+        ecs_check(component_ptr != NULL, ECS_INVALID_PARAMETER, 
+            "provided entity is not a component");
         /* Cannot register lifecycle actions for components with size 0 */
         ecs_check(component_ptr->size != 0, ECS_INVALID_PARAMETER, NULL);
 

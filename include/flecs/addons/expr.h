@@ -176,39 +176,6 @@ ecs_expr_var_t* ecs_vars_lookup(
     const ecs_vars_t *vars,
     const char *name);
 
-/** Used with ecs_parse_expr(). */
-typedef struct ecs_parse_expr_desc_t {
-    const char *name;
-    const char *expr;
-    ecs_entity_t (*lookup_action)(
-        const ecs_world_t*,
-        const char *value,
-        void *ctx);
-    void *lookup_ctx;
-    ecs_vars_t *vars;
-} ecs_parse_expr_desc_t;
-
-/** Parse expression into value.
- * This operation parses a flecs expression into the provided pointer. The
- * memory pointed to must be large enough to contain a value of the used type.
- *
- * If no type and pointer are provided for the value argument, the operation
- * will discover the type from the expression and allocate storage for the
- * value. The allocated value must be freed with ecs_value_free().
- *
- * @param world The world.
- * @param ptr The pointer to the expression to parse.
- * @param value The value containing type & pointer to write to.
- * @param desc Configuration parameters for deserializer.
- * @return Pointer to the character after the last one read, or NULL if failed.
- */
-FLECS_API
-const char* ecs_parse_expr(
-    ecs_world_t *world,
-    const char *ptr,
-    ecs_value_t *value,
-    const ecs_parse_expr_desc_t *desc);
-
 /** Serialize value into expression string.
  * This operation serializes a value of the provided type to a string. The
  * memory pointed to must be large enough to contain a value of the used type.

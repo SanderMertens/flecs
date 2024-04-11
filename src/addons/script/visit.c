@@ -11,6 +11,35 @@ ecs_script_node_t* ecs_script_parent_node_(
     }
 }
 
+ecs_script_scope_t* ecs_script_current_scope_(
+    ecs_script_visit_t *v)
+{
+    int32_t depth;
+    for(depth = v->depth - 1; depth >= 0; depth --) {
+        ecs_script_node_t *node = v->nodes[depth];
+        if (node->kind == EcsAstScope) {
+            return (ecs_script_scope_t*)node;
+        }
+    }
+
+    return NULL;
+}
+
+ecs_script_node_t* ecs_script_parent_(
+    ecs_script_visit_t *v,
+    ecs_script_node_t *child)
+{
+    int32_t depth;
+    for(depth = v->depth - 1; depth >= 0; depth --) {
+        ecs_script_node_t *node = v->nodes[depth];
+        if (node == child && depth) {
+            return v->nodes[depth - 1];
+        }
+    }
+
+    return NULL;
+}
+
 int32_t ecs_script_node_line_number_(
     ecs_script_t *script,
     ecs_script_node_t *node)
@@ -34,6 +63,8 @@ int ecs_script_visit_scope_(
     ecs_script_node_t **nodes = ecs_vec_first_t(
         &scope->stmts, ecs_script_node_t*);
 
+    v->nodes[v->depth ++] = (ecs_script_node_t*)scope;
+
     int32_t i, count = ecs_vec_count(&scope->stmts);
     for (i = 0; i < count; i ++) {
         if (!i) {
@@ -56,6 +87,8 @@ int ecs_script_visit_scope_(
 
         v->depth --;
     }
+
+    v->depth --;
 
     return 0;
 }
