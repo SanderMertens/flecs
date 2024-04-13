@@ -1667,6 +1667,16 @@ void flecs_table_delete(
                 }
 
                 ecs_move_t move_dtor = ti->hooks.move_dtor;
+                
+                // if move_ctor & move is not set and ctor_move_dtor & move_dtor is set,
+                // use move_dtor as ctor_move_dtor. The reason we
+                // do this is to influence how the operation within the table
+                // is performed from different language bindings where the memory
+                // model may be different than C.
+                if (!ti->hooks.move_ctor && ti->hooks.ctor_move_dtor) {
+                  move_dtor = ti->hooks.ctor_move_dtor;
+                }
+
                 if (move_dtor) {
                     move_dtor(dst, src, 1, ti);
                 } else {

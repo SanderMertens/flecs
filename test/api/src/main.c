@@ -1017,6 +1017,7 @@ void ComponentLifecycle_on_set_hook_on_auto_override(void);
 void ComponentLifecycle_batched_set_new_component_w_lifecycle(void);
 void ComponentLifecycle_batched_ensure_new_component_w_lifecycle(void);
 void ComponentLifecycle_on_nested_prefab_copy_test_invokes_copy_count(void);
+void ComponentLifecycle_no_move_no_move_ctor_with_move_dtor_with_ctor_move_dtor(void);
 
 // Testsuite 'Sorting'
 void Sorting_sort_by_component(void);
@@ -6635,6 +6636,10 @@ bake_test_case ComponentLifecycle_testcases[] = {
     {
         "on_nested_prefab_copy_test_invokes_copy_count",
         ComponentLifecycle_on_nested_prefab_copy_test_invokes_copy_count
+    },
+    {
+        "no_move_no_move_ctor_with_move_dtor_with_ctor_move_dtor",
+        ComponentLifecycle_no_move_no_move_ctor_with_move_dtor_with_ctor_move_dtor
     }
 };
 
@@ -13581,7 +13586,7 @@ static bake_test_suite suites[] = {
         "ComponentLifecycle",
         ComponentLifecycle_setup,
         NULL,
-        90,
+        91,
         ComponentLifecycle_testcases
     },
     {

@@ -39070,7 +39070,6 @@ error:
 int64_t ecs_block_allocator_alloc_count = 0;
 int64_t ecs_block_allocator_free_count = 0;
 
-#ifndef FLECS_USE_OS_ALLOC
 static
 ecs_block_allocator_chunk_header_t* flecs_balloc_block(
     ecs_block_allocator_t *allocator)
@@ -39109,7 +39108,6 @@ ecs_block_allocator_chunk_header_t* flecs_balloc_block(
     chunk->next = NULL;
     return first_chunk;
 }
-#endif
 
 void flecs_ballocator_init(
     ecs_block_allocator_t *ba,
@@ -39251,7 +39249,6 @@ void* flecs_brealloc(
 {
     void *result;
 #ifdef FLECS_USE_OS_ALLOC
-    (void)src;
     result = ecs_os_realloc(memory, dst->data_size);
 #else
     if (dst == src) {
@@ -45245,6 +45242,16 @@ void flecs_table_delete(
                 }
 
                 ecs_move_t move_dtor = ti->hooks.move_dtor;
+                
+                // if move_ctor is not set and ctor_move_dtor is set,
+                // use move_dtor as ctor_move_dtor. The reason we
+                // do this is to influence how the operation within the table
+                // is performed from different language bindings where the memory
+                // model may be different than C.
+                if (!ti->hooks.move_ctor && ti->hooks.ctor_move_dtor) {
+                  move_dtor = ti->hooks.ctor_move_dtor;
+                }
+
                 if (move_dtor) {
                     move_dtor(dst, src, 1, ti);
                 } else {
