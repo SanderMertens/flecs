@@ -1174,7 +1174,7 @@ f.Each((Entity e, ref Position p) =>
 });
 
 // Option 2: Iter() function that iterates each archetype
-f.Iter((Iter it, Column<Position> p) =>
+f.Iter((Iter it, Field<Position> p) =>
 {
     foreach (int i in it)
         Console.WriteLine($"{it.Entity(i).Name()}: ({p[i].X}, {p[i].Y})")
@@ -1336,7 +1336,7 @@ move_sys.run();
 ```cs
 // Use Each() function that iterates each individual entity
 Routine moveSys = world.Routine<Position, Velocity>()
-    .Iter((Iter it, Column<Position> p, Column<Velocity> v) =>
+    .Iter((Iter it, Field<Position> p, Field<Velocity> v) =>
     {
         foreach (int i in it) 
         {

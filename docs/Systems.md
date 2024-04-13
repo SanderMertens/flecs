@@ -230,7 +230,7 @@ world.Routine<Position, Velocity>("Move")
 ```
 ```cs
 // Query iteration (Iter)
-q.Iter((Iter it, Column<Position> p, Column<Velocity> v) =>
+q.Iter((Iter it, Field<Position> p, Field<Velocity> v) =>
 {
     foreach (int i in it) 
     {
@@ -241,7 +241,7 @@ q.Iter((Iter it, Column<Position> p, Column<Velocity> v) =>
 
 // System iteration (Iter)
 world.Routine<Position, Velocity>("Move")
-    .Iter((Iter it, Column<Position> p, Column<Velocity> v) =>
+    .Iter((Iter it, Field<Position> p, Field<Velocity> v) =>
     {
         foreach (int i in it)
         {
@@ -303,7 +303,7 @@ world.Routine<Position, Velocity>("Move")
     });
 
 world.Routine<Position, Velocity>("Move")
-    .Iter((Iter it, Column<Position> p, Column<Velocity> v) =>
+    .Iter((Iter it, Field<Position> p, Field<Velocity> v) =>
     {
         foreach (int i in it)
         {
