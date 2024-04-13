@@ -3353,4 +3353,6 @@ void ComponentLifecycle_no_move_no_move_ctor_with_move_dtor_with_ctor_move_dtor(
 
     test_int(ctx.move_dtor.invoked, 0);
     test_int(ctx.ctor_move_dtor.invoked, 2);
+
+    ecs_fini(world);
 }
