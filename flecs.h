@@ -363,9 +363,6 @@ extern "C" {
 #define EcsIdWith                      (1u << 10)
 #define EcsIdUnion                     (1u << 11)
 #define EcsIdAlwaysOverride            (1u << 12)
-#define EcsIdTrait                     (1u << 13)
-#define EcsIdPairRelationship          (1u << 14)
-#define EcsIdPairTarget                (1u << 15)
 
 #define EcsIdHasOnAdd                  (1u << 16) /* Same values as table flags */
 #define EcsIdHasOnRemove               (1u << 17) 
@@ -16232,6 +16229,9 @@ static const flecs::entity_t Traversable = EcsTraversable;
 static const flecs::entity_t Symmetric = EcsSymmetric;
 static const flecs::entity_t With = EcsWith;
 static const flecs::entity_t OneOf = EcsOneOf;
+static const flecs::entity_t Trait = EcsTrait;
+static const flecs::entity_t PairRelationship = EcsPairRelationship;
+static const flecs::entity_t PairTarget = EcsPairTarget;
 
 /* Builtin relationships */
 static const flecs::entity_t IsA = EcsIsA;

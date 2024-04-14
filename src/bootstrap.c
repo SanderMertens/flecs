@@ -232,8 +232,14 @@ void flecs_register_id_flag_for_relation(
         bool changed = false;
 
         if (event == EcsOnAdd) {
-            ecs_id_record_t *idr = flecs_id_record_ensure(world, e);
-            changed |= flecs_set_id_flag(idr, flag);
+            ecs_id_record_t *idr;
+            if (!ecs_has_id(world, e, EcsPairRelationship) &&
+                !ecs_has_id(world, e, EcsPairTarget)) 
+            {
+                idr = flecs_id_record_ensure(world, e);
+                changed |= flecs_set_id_flag(idr, flag);
+            }
+
             idr = flecs_id_record_ensure(world, ecs_pair(e, EcsWildcard));
             do {
                 changed |= flecs_set_id_flag(idr, flag);
@@ -772,7 +778,7 @@ void flecs_bootstrap(
     /* Make EcsOnAdd, EcsOnSet events iterable to enable .yield_existing */
     ecs_set(world, EcsOnAdd, EcsIterable, { .init = flecs_on_event_iterable_init });
     ecs_set(world, EcsOnSet, EcsIterable, { .init = flecs_on_event_iterable_init });
-    
+
     /* Register observer for tag property before adding EcsTag */
     ecs_observer(world, {
         .entity = ecs_entity(world, {.add = { ecs_childof(EcsFlecsInternals)}}),
@@ -828,25 +834,26 @@ void flecs_bootstrap(
     flecs_bootstrap_entity(world, EcsFlag, "Flag", EcsFlecsCore);
 
     /* Component/relationship properties */
-    flecs_bootstrap_tag(world, EcsTransitive);
-    flecs_bootstrap_tag(world, EcsReflexive);
-    flecs_bootstrap_tag(world, EcsSymmetric);
-    flecs_bootstrap_tag(world, EcsFinal);
-    flecs_bootstrap_tag(world, EcsDontInherit);
-    flecs_bootstrap_tag(world, EcsAlwaysOverride);
-    flecs_bootstrap_tag(world, EcsTag);
-    flecs_bootstrap_tag(world, EcsUnion);
-    flecs_bootstrap_tag(world, EcsExclusive);
-    flecs_bootstrap_tag(world, EcsAcyclic);
-    flecs_bootstrap_tag(world, EcsTraversable);
-    flecs_bootstrap_tag(world, EcsWith);
-    flecs_bootstrap_tag(world, EcsOneOf);
-    flecs_bootstrap_tag(world, EcsTrait);
-    flecs_bootstrap_tag(world, EcsPairRelationship);
-    flecs_bootstrap_tag(world, EcsPairTarget);
+    flecs_bootstrap_trait(world, EcsTransitive);
+    flecs_bootstrap_trait(world, EcsReflexive);
+    flecs_bootstrap_trait(world, EcsSymmetric);
+    flecs_bootstrap_trait(world, EcsFinal);
+    flecs_bootstrap_trait(world, EcsDontInherit);
+    flecs_bootstrap_trait(world, EcsAlwaysOverride);
+    flecs_bootstrap_trait(world, EcsTag);
+    flecs_bootstrap_trait(world, EcsUnion);
+    flecs_bootstrap_trait(world, EcsExclusive);
+    flecs_bootstrap_trait(world, EcsAcyclic);
+    flecs_bootstrap_trait(world, EcsTraversable);
+    flecs_bootstrap_trait(world, EcsWith);
+    flecs_bootstrap_trait(world, EcsOneOf);
+    flecs_bootstrap_trait(world, EcsTrait);
+    flecs_bootstrap_trait(world, EcsPairRelationship);
+    flecs_bootstrap_trait(world, EcsPairTarget);
+    flecs_bootstrap_trait(world, EcsOnDelete);
+    flecs_bootstrap_trait(world, EcsOnDeleteTarget);
+    ecs_add_id(world, ecs_id(EcsTarget), EcsTrait);
 
-    flecs_bootstrap_tag(world, EcsOnDelete);
-    flecs_bootstrap_tag(world, EcsOnDeleteTarget);
     flecs_bootstrap_tag(world, EcsRemove);
     flecs_bootstrap_tag(world, EcsDelete);
     flecs_bootstrap_tag(world, EcsPanic);
@@ -893,6 +900,15 @@ void flecs_bootstrap(
     ecs_add_id(world, EcsOnDelete, EcsExclusive);
     ecs_add_id(world, EcsOnDeleteTarget, EcsExclusive);
     ecs_add_id(world, EcsDefaultChildComponent, EcsExclusive);
+
+    /* Relationships */
+    ecs_add_id(world, EcsChildOf, EcsPairRelationship);
+    ecs_add_id(world, EcsIsA, EcsPairRelationship);
+    ecs_add_id(world, EcsSlotOf, EcsPairRelationship);
+    ecs_add_id(world, EcsDependsOn, EcsPairRelationship);
+    ecs_add_id(world, EcsWith, EcsPairRelationship);
+    ecs_add_id(world, EcsOnDelete, EcsPairRelationship);
+    ecs_add_id(world, EcsOnDeleteTarget, EcsPairRelationship);
 
     /* Sync properties of ChildOf and Identifier with bootstrapped flags */
     ecs_add_pair(world, EcsChildOf, EcsOnDeleteTarget, EcsDelete);

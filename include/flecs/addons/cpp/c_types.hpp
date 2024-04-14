@@ -121,6 +121,9 @@ static const flecs::entity_t Traversable = EcsTraversable;
 static const flecs::entity_t Symmetric = EcsSymmetric;
 static const flecs::entity_t With = EcsWith;
 static const flecs::entity_t OneOf = EcsOneOf;
+static const flecs::entity_t Trait = EcsTrait;
+static const flecs::entity_t PairRelationship = EcsPairRelationship;
+static const flecs::entity_t PairTarget = EcsPairTarget;
 
 /* Builtin relationships */
 static const flecs::entity_t IsA = EcsIsA;
