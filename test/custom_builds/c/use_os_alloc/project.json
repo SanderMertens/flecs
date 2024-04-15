@@ -1,0 +1,14 @@
+{
+    "id": "use_os_alloc",
+    "type": "application",
+    "value": {
+        "public": false,
+        "use": [
+            "flecs"
+        ],
+        "standalone": true
+    },
+    "lang.c": {
+        "defines": ["FLECS_USE_OS_ALLOC"]
+    }
+}
