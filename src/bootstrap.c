@@ -233,8 +233,8 @@ void flecs_register_id_flag_for_relation(
 
         if (event == EcsOnAdd) {
             ecs_id_record_t *idr;
-            if (!ecs_has_id(world, e, EcsPairRelationship) &&
-                !ecs_has_id(world, e, EcsPairTarget)) 
+            if (!ecs_has_id(world, e, EcsRelationship) &&
+                !ecs_has_id(world, e, EcsTarget)) 
             {
                 idr = flecs_id_record_ensure(world, e);
                 changed |= flecs_set_id_flag(idr, flag);
@@ -747,7 +747,7 @@ void flecs_bootstrap(
     });
 
     flecs_type_info_init(world, EcsIterable, { 0 });
-    flecs_type_info_init(world, EcsTarget, { 0 });
+    flecs_type_info_init(world, EcsFlattenTarget, { 0 });
 
     /* Create and cache often used id records on world */
     flecs_init_id_records(world);
@@ -763,7 +763,7 @@ void flecs_bootstrap(
     flecs_bootstrap_builtin_t(world, table, EcsComponent);
     flecs_bootstrap_builtin_t(world, table, EcsIterable);
     flecs_bootstrap_builtin_t(world, table, EcsPoly);
-    flecs_bootstrap_builtin_t(world, table, EcsTarget);
+    flecs_bootstrap_builtin_t(world, table, EcsFlattenTarget);
 
     /* Patch up symbol of EcsIterable. The type is a typedef, which causes a
      * symbol mismatch when registering the type with the C++ API. */
@@ -848,11 +848,11 @@ void flecs_bootstrap(
     flecs_bootstrap_trait(world, EcsWith);
     flecs_bootstrap_trait(world, EcsOneOf);
     flecs_bootstrap_trait(world, EcsTrait);
-    flecs_bootstrap_trait(world, EcsPairRelationship);
-    flecs_bootstrap_trait(world, EcsPairTarget);
+    flecs_bootstrap_trait(world, EcsRelationship);
+    flecs_bootstrap_trait(world, EcsTarget);
     flecs_bootstrap_trait(world, EcsOnDelete);
     flecs_bootstrap_trait(world, EcsOnDeleteTarget);
-    ecs_add_id(world, ecs_id(EcsTarget), EcsTrait);
+    ecs_add_id(world, ecs_id(EcsFlattenTarget), EcsTrait);
 
     flecs_bootstrap_tag(world, EcsRemove);
     flecs_bootstrap_tag(world, EcsDelete);
@@ -902,13 +902,14 @@ void flecs_bootstrap(
     ecs_add_id(world, EcsDefaultChildComponent, EcsExclusive);
 
     /* Relationships */
-    ecs_add_id(world, EcsChildOf, EcsPairRelationship);
-    ecs_add_id(world, EcsIsA, EcsPairRelationship);
-    ecs_add_id(world, EcsSlotOf, EcsPairRelationship);
-    ecs_add_id(world, EcsDependsOn, EcsPairRelationship);
-    ecs_add_id(world, EcsWith, EcsPairRelationship);
-    ecs_add_id(world, EcsOnDelete, EcsPairRelationship);
-    ecs_add_id(world, EcsOnDeleteTarget, EcsPairRelationship);
+    ecs_add_id(world, EcsChildOf, EcsRelationship);
+    ecs_add_id(world, EcsIsA, EcsRelationship);
+    ecs_add_id(world, EcsSlotOf, EcsRelationship);
+    ecs_add_id(world, EcsDependsOn, EcsRelationship);
+    ecs_add_id(world, EcsWith, EcsRelationship);
+    ecs_add_id(world, EcsOnDelete, EcsRelationship);
+    ecs_add_id(world, EcsOnDeleteTarget, EcsRelationship);
+    ecs_add_id(world, ecs_id(EcsIdentifier), EcsRelationship);
 
     /* Sync properties of ChildOf and Identifier with bootstrapped flags */
     ecs_add_pair(world, EcsChildOf, EcsOnDeleteTarget, EcsDelete);

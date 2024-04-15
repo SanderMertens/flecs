@@ -4100,10 +4100,10 @@ typedef struct EcsPoly {
 } EcsPoly;
 
 /** Target data for flattened relationships. */
-typedef struct EcsTarget {
+typedef struct EcsFlattenTarget {
     int32_t count;
     ecs_record_t *target;
-} EcsTarget;
+} EcsFlattenTarget;
 
 /** Component for iterable entities */
 typedef ecs_iterable_t EcsIterable;
@@ -4298,7 +4298,7 @@ FLECS_API extern const ecs_entity_t EcsTrait;
  *   e.add(R) panics
  *   e.add(X, R) panics, unless X has the "Trait" trait
  */
-FLECS_API extern const ecs_entity_t EcsPairRelationship;
+FLECS_API extern const ecs_entity_t EcsRelationship;
 
 /** Ensure that an entity is always used in pair as target.
  *
@@ -4306,7 +4306,7 @@ FLECS_API extern const ecs_entity_t EcsPairRelationship;
  *   e.add(T) panics
  *   e.add(T, X) panics
  */
-FLECS_API extern const ecs_entity_t EcsPairTarget;
+FLECS_API extern const ecs_entity_t EcsTarget;
 
 /** Tag to indicate that relationship is stored as union. Union relationships
  * enable changing the target of a union without switching tables. Union
@@ -4395,7 +4395,7 @@ FLECS_API extern const ecs_entity_t EcsDelete;
 FLECS_API extern const ecs_entity_t EcsPanic;
 
 /** Component that stores data for flattened relationships */
-FLECS_API extern const ecs_entity_t ecs_id(EcsTarget);
+FLECS_API extern const ecs_entity_t ecs_id(EcsFlattenTarget);
 
 /** Tag added to root entity to indicate its subtree should be flattened. Used
  * together with assemblies. */
@@ -16172,7 +16172,7 @@ using Component = EcsComponent;
 using Identifier = EcsIdentifier;
 using Iterable = EcsIterable;
 using Poly = EcsPoly;
-using Target = EcsTarget;
+using Target = EcsFlattenTarget;
 
 /* Builtin tags */
 static const flecs::entity_t Query = EcsQuery;
@@ -16230,8 +16230,8 @@ static const flecs::entity_t Symmetric = EcsSymmetric;
 static const flecs::entity_t With = EcsWith;
 static const flecs::entity_t OneOf = EcsOneOf;
 static const flecs::entity_t Trait = EcsTrait;
-static const flecs::entity_t PairRelationship = EcsPairRelationship;
-static const flecs::entity_t PairTarget = EcsPairTarget;
+static const flecs::entity_t Relationship = EcsRelationship;
+static const flecs::entity_t Target = EcsTarget;
 
 /* Builtin relationships */
 static const flecs::entity_t IsA = EcsIsA;

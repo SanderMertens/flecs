@@ -170,7 +170,7 @@ ecs_id_record_t* flecs_id_record_new(
             ecs_assert(tgt != 0, ECS_INTERNAL_ERROR, NULL);
 
             /* Can't use relationship as target */
-            if (ecs_has_id(world, tgt, EcsPairRelationship)) {
+            if (ecs_has_id(world, tgt, EcsRelationship)) {
                 if (!ecs_id_is_wildcard(rel) && 
                     !ecs_has_id(world, rel, EcsTrait)) 
                 {
@@ -187,7 +187,7 @@ ecs_id_record_t* flecs_id_record_new(
             }
         }
 
-        if (ecs_has_id(world, rel, EcsPairTarget)) {
+        if (ecs_has_id(world, rel, EcsTarget)) {
             char *idstr = ecs_id_str(world, id);
             char *relstr = ecs_id_str(world, rel);
             ecs_err("constraint violated: "
@@ -264,8 +264,8 @@ ecs_id_record_t* flecs_id_record_new(
         /* Can't use relationship outside of a pair */
 #ifdef FLECS_DEBUG
         rel = flecs_entities_get_alive(world, rel);
-        if (ecs_has_id(world, rel, EcsPairRelationship) ||
-            ecs_has_id(world, rel, EcsPairTarget)) 
+        if (ecs_has_id(world, rel, EcsRelationship) ||
+            ecs_has_id(world, rel, EcsTarget)) 
         {
             char *idstr = ecs_id_str(world, id);
             char *relstr = ecs_id_str(world, rel);
@@ -279,7 +279,7 @@ ecs_id_record_t* flecs_id_record_new(
             #endif
         }
 
-        if (ecs_has_id(world, rel, EcsPairTarget)) {
+        if (ecs_has_id(world, rel, EcsTarget)) {
             char *idstr = ecs_id_str(world, id);
             char *relstr = ecs_id_str(world, rel);
             ecs_err("constraint violated: "
