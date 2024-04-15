@@ -3039,3 +3039,85 @@ void Pairs_set_w_recycled_tgt(void) {
 
     ecs_fini(world);
 }
+
+void Pairs_force_relationship_on_component(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_init();
+
+    ECS_ENTITY(world, Rel, Relationship);
+
+    test_expect_abort();
+    ecs_new(world, Rel);
+}
+
+void Pairs_force_relationship_on_target(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, RelA);
+    ECS_ENTITY(world, Rel, Relationship);
+
+    test_expect_abort();
+    ecs_new_w_pair(world, RelA, Rel);
+}
+
+void Pairs_force_relationship_on_target_trait(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_ENTITY(world, Trait, Trait);
+    ECS_ENTITY(world, Rel, Relationship);
+
+    ecs_entity_t e = ecs_new_w_pair(world, Trait, Rel);
+    test_assert(ecs_has_pair(world, e, Trait, Rel));
+
+    ecs_fini(world);
+}
+
+void Pairs_force_relationship_on_relationship(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_ENTITY(world, Rel, Relationship);
+    ECS_TAG(world, Tgt);
+
+    ecs_entity_t e = ecs_new_w_pair(world, Rel, Tgt);
+    test_assert(ecs_has_pair(world, e, Rel, Tgt));
+
+    ecs_fini(world);
+}
+
+void Pairs_force_target_on_component(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_init();
+
+    ECS_ENTITY(world, Tgt, Target);
+
+    test_expect_abort();
+    ecs_new(world, Tgt);
+}
+
+void Pairs_force_target_on_relationship(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, RelA);
+    ECS_ENTITY(world, Tgt, Target);
+
+    test_expect_abort();
+    ecs_new_w_pair(world, Tgt, RelA);
+}
+
+void Pairs_force_target_on_target(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, RelA);
+    ECS_ENTITY(world, Tgt, Target);
+
+    ecs_entity_t e = ecs_new_w_pair(world, RelA, Tgt);
+    test_assert(ecs_has_pair(world, e, RelA, Tgt));
+
+    ecs_fini(world);
+}
