@@ -1668,10 +1668,10 @@ void flecs_table_delete(
 
                 ecs_move_t move_dtor = ti->hooks.move_dtor;
                 
-                // If move_ctor is not set but ctor_move_dtor is set, assign move_dtor to ctor_move_dtor.
-                // This adjustment is crucial for compatibility across different language bindings where
-                // the standard memory model of C may not apply, potentially altering how operations
-                // within the table are handled.
+                // If neither move nor move_ctor are set, this indicates that non-destructive move 
+                // semantics are not supported for this type. In such cases, we set the move_dtor
+                // as ctor_move_dtor, which indicates a destructive move operation. 
+                // This adjustment ensures compatibility with different language bindings.
                 if (!ti->hooks.move_ctor && ti->hooks.ctor_move_dtor) {
                   move_dtor = ti->hooks.ctor_move_dtor;
                 }

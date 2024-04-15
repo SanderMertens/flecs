@@ -3314,10 +3314,10 @@ void ComponentLifecycle_on_nested_prefab_copy_test_invokes_copy_count(void) {
     ecs_fini(world);
 }
 
-// tests if move_dtor does not get invoked when a component is moved within the table
-// when you don't set move and move_ctor, but do set move_dtor and ctor_move_dtor
-// instead of move_dtor, ctor_move_dtor should be invoked.
-// In total ctor_move_dtor should be invoked 2 times. 
+// Tests if neither move nor move_ctor are set but move_dtor and ctor_move_dtor are set, 
+// the move_dtor does not get invoked when a component is moved within the table.
+// Instead ctor_move_dtor should be invoked for a destructive move operation. 
+// Hence in total ctor_move_dtor should be invoked 2 times. 
 // Once for the initial move, and once for the move within the table.
 void ComponentLifecycle_no_move_no_move_ctor_with_move_dtor_with_ctor_move_dtor(void) {
     ecs_world_t *world = ecs_mini();
