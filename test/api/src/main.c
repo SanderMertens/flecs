@@ -1843,6 +1843,13 @@ void Pairs_oneof_other_constraint_violated(void);
 void Pairs_oneof_other_rel_parent_constraint_violated(void);
 void Pairs_set_w_recycled_rel(void);
 void Pairs_set_w_recycled_tgt(void);
+void Pairs_force_relationship_on_component(void);
+void Pairs_force_relationship_on_target(void);
+void Pairs_force_relationship_on_target_trait(void);
+void Pairs_force_relationship_on_relationship(void);
+void Pairs_force_target_on_component(void);
+void Pairs_force_target_on_relationship(void);
+void Pairs_force_target_on_target(void);
 
 // Testsuite 'Trigger'
 void Trigger_on_add_trigger_before_table(void);
@@ -9904,6 +9911,34 @@ bake_test_case Pairs_testcases[] = {
     {
         "set_w_recycled_tgt",
         Pairs_set_w_recycled_tgt
+    },
+    {
+        "force_relationship_on_component",
+        Pairs_force_relationship_on_component
+    },
+    {
+        "force_relationship_on_target",
+        Pairs_force_relationship_on_target
+    },
+    {
+        "force_relationship_on_target_trait",
+        Pairs_force_relationship_on_target_trait
+    },
+    {
+        "force_relationship_on_relationship",
+        Pairs_force_relationship_on_relationship
+    },
+    {
+        "force_target_on_component",
+        Pairs_force_target_on_component
+    },
+    {
+        "force_target_on_relationship",
+        Pairs_force_target_on_relationship
+    },
+    {
+        "force_target_on_target",
+        Pairs_force_target_on_target
     }
 };
 
@@ -13631,7 +13666,7 @@ static bake_test_suite suites[] = {
         "Pairs",
         NULL,
         NULL,
-        117,
+        124,
         Pairs_testcases
     },
     {

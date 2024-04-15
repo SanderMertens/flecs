@@ -841,6 +841,9 @@ void flecs_bootstrap(
     flecs_bootstrap_tag(world, EcsTraversable);
     flecs_bootstrap_tag(world, EcsWith);
     flecs_bootstrap_tag(world, EcsOneOf);
+    flecs_bootstrap_tag(world, EcsTrait);
+    flecs_bootstrap_tag(world, EcsPairRelationship);
+    flecs_bootstrap_tag(world, EcsPairTarget);
 
     flecs_bootstrap_tag(world, EcsOnDelete);
     flecs_bootstrap_tag(world, EcsOnDeleteTarget);
