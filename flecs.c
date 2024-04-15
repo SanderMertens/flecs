@@ -22522,7 +22522,7 @@ const ecs_entity_t EcsDelete =                      FLECS_HI_COMPONENT_ID + 51;
 const ecs_entity_t EcsPanic =                       FLECS_HI_COMPONENT_ID + 52;
 
 /* Misc */
-const ecs_entity_t ecs_id(EcsFlattenTarget) =              FLECS_HI_COMPONENT_ID + 53;
+const ecs_entity_t ecs_id(EcsFlattenTarget) =       FLECS_HI_COMPONENT_ID + 53;
 const ecs_entity_t EcsFlatten =                     FLECS_HI_COMPONENT_ID + 54;
 const ecs_entity_t EcsDefaultChildComponent =       FLECS_HI_COMPONENT_ID + 55;
 
@@ -22530,8 +22530,8 @@ const ecs_entity_t EcsDefaultChildComponent =       FLECS_HI_COMPONENT_ID + 55;
 const ecs_entity_t EcsPredEq =                      FLECS_HI_COMPONENT_ID + 56;
 const ecs_entity_t EcsPredMatch =                   FLECS_HI_COMPONENT_ID + 57;
 const ecs_entity_t EcsPredLookup =                  FLECS_HI_COMPONENT_ID + 58;
-const ecs_entity_t EcsScopeOpen =                    FLECS_HI_COMPONENT_ID + 59;
-const ecs_entity_t EcsScopeClose =                   FLECS_HI_COMPONENT_ID + 60;
+const ecs_entity_t EcsScopeOpen =                   FLECS_HI_COMPONENT_ID + 59;
+const ecs_entity_t EcsScopeClose =                  FLECS_HI_COMPONENT_ID + 60;
 
 /* Systems */
 const ecs_entity_t EcsMonitor =                     FLECS_HI_COMPONENT_ID + 61;
@@ -39098,11 +39098,8 @@ error:
 int64_t ecs_block_allocator_alloc_count = 0;
 int64_t ecs_block_allocator_free_count = 0;
 
-<<<<<<< HEAD
 #ifndef FLECS_USE_OS_ALLOC
 
-=======
->>>>>>> 6f39be5b5 (Add Relationship/Target/Trait traits)
 static
 ecs_block_allocator_chunk_header_t* flecs_balloc_block(
     ecs_block_allocator_t *allocator)
@@ -39141,11 +39138,8 @@ ecs_block_allocator_chunk_header_t* flecs_balloc_block(
     chunk->next = NULL;
     return first_chunk;
 }
-<<<<<<< HEAD
 
 #endif
-=======
->>>>>>> 6f39be5b5 (Add Relationship/Target/Trait traits)
 
 void flecs_ballocator_init(
     ecs_block_allocator_t *ba,
@@ -39289,6 +39283,7 @@ void* flecs_brealloc(
 {
     void *result;
 #ifdef FLECS_USE_OS_ALLOC
+    (void)src;
     result = ecs_os_realloc(memory, dst->data_size);
 #else
     if (dst == src) {

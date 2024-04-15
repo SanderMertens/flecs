@@ -1775,6 +1775,179 @@ The last step will delete all remaining entities. At this point cleanup policies
 ## Relationship properties
 Relationship properties are tags that can be added to relationships to modify their behavior.
 
+## Trait property
+The trait property marks an entity as a trait, which is any tag that is added to another tag/component/relationship to modify its behavior. All properties in this section are marked as trait. It is not required to mark a property as a trait before adding it to another tag/component/relationship. The main reason for the trait property is to ease some of the constraints on relationships (see the Relationship property).
+
+```c
+ECS_TAG(world, Serializable);
+
+ecs_add_id(world, Serializable, EcsTrait);
+```
+
+</li>
+<li><b class="tab-title">C++</b>
+
+```cpp
+struct Serializable { };
+
+world.component<Serializable>().add(flecs::Trait);
+```
+
+</li>
+<li><b class="tab-title">C#</b>
+
+```cs
+public struct Serializable { }
+
+world.Component<Serializable>().Entity.Add(Ecs.Trait);
+```
+
+</li>
+</ul>
+</div>
+
+## Relationship property
+The relationship property enforces that an entity can only be used as relationship. Consider the following example:
+
+```c
+ECS_TAG(world, Likes);
+ECS_TAG(world, Apples);
+
+ecs_add_id(world, Likes, EcsRelationship);
+
+ecs_entity_t e = ecs_new_id(world);
+ecs_add(world, Likes);              // Panic, 'Likes' is not used as relationship
+ecs_add_pair(world, Apples, Likes); // Panic, 'Likes' is not used as relationship
+ecs_add_pair(world, Likes, Apples); // OK
+```
+
+</li>
+<li><b class="tab-title">C++</b>
+
+```cpp
+struct Likes { };
+struct Apples { };
+
+world.component<Likes>().add(flecs::Relationship);
+
+flecs::entity e = world.entity()
+  .add<Likes>()          // Panic, 'Likes' is not used as relationship
+  .add<Apples, Likes>()  // Panic, 'Likes' is not used as relationship
+  .add<Likes, Apples>(); // OK
+```
+
+</li>
+<li><b class="tab-title">C#</b>
+
+```cs
+public struct Likes { }
+public struct Apples { }
+
+world.Component<Likes>().Entity.Add(Ecs.Relationship);
+
+Entity e = ecs.Entity()
+    .Add<Likes>()          // Panic, 'Likes' is not used as relationship
+    .Add<Apples, Likes>()  // Panic, 'Likes' is not used as relationship
+    .add<Likes, Apples>(); // OK
+```
+
+</li>
+</ul>
+</div>
+
+Entities marked with `Relationship` may still be used as target if the relationship part of the pair has the `Trait` property. This ensures the relationship can still be used to configure the behavior of other entities. Consider the following code example:
+
+```c
+ECS_TAG(world, Likes);
+ECS_TAG(world, Loves);
+
+ecs_add_id(world, Likes, EcsRelationship);
+
+// Even though Likes is marked as relationship and used as target here, this 
+// won't panic as With is marked as trait.
+ecs_add_pair(world, Loves, EcsWith, Likes);
+```
+
+</li>
+<li><b class="tab-title">C++</b>
+
+```cpp
+struct Likes { };
+struct Loves { };
+
+world.component<Likes>().add(flecs::Relationship);
+
+// Even though Likes is marked as relationship and used as target here, this 
+// won't panic as With is marked as trait.
+world.component<Loves>().add(flecs::With, world.component<Likes>());
+```
+
+</li>
+<li><b class="tab-title">C#</b>
+
+```cs
+public struct Likes { }
+public struct Loves { }
+
+world.Component<Likes>().Entity.Add(Ecs.Relationship);
+
+world.Component<Loves>().Entity.Add(Ecs.With, world.Component<Likes>().Entity);
+```
+
+</li>
+</ul>
+</div>
+
+## Target property
+The target property enforces that an entity can only be used as relationship target. Consider the following example:
+
+```c
+ECS_TAG(world, Likes);
+ECS_TAG(world, Apples);
+
+ecs_add_id(world, Apples, EcsTarget);
+
+ecs_entity_t e = ecs_new_id(world);
+ecs_add(world, Apples);             // Panic, 'Apples' is not used as target
+ecs_add_pair(world, Apples, Likes); // Panic, 'Apples' is not used as target
+ecs_add_pair(world, Likes, Apples); // OK
+```
+
+</li>
+<li><b class="tab-title">C++</b>
+
+```cpp
+struct Likes { };
+struct Apples { };
+
+world.component<Apples>().add(flecs::Target);
+
+flecs::entity e = world.entity()
+  .add<Apples>()         // Panic, 'Apples' is not used as target
+  .add<Apples, Likes>()  // Panic, 'Apples' is not used as target
+  .add<Likes, Apples>(); // OK
+```
+
+</li>
+<li><b class="tab-title">C#</b>
+
+```cs
+public struct Likes { }
+public struct Apples { }
+
+world.Component<Apples>().Entity.Add(Ecs.Target);
+
+Entity e = ecs.Entity()
+    .Add<Apples>()         // Panic, 'Apples' is not used as target
+    .Add<Apples, Likes>()  // Panic, 'Apples' is not used as target
+    .add<Likes, Apples>(); // OK
+```
+
+</li>
+</ul>
+</div>
+
+
 ### Tag property
 A relationship can be marked as a tag in which case it will never contain data. By default the data associated with a pair is determined by whether either the relationship or target are components. For some relationships however, even if the target is a component, no data should be added to the relationship. Consider the following example:
 

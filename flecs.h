@@ -16172,7 +16172,7 @@ using Component = EcsComponent;
 using Identifier = EcsIdentifier;
 using Iterable = EcsIterable;
 using Poly = EcsPoly;
-using Target = EcsFlattenTarget;
+using FlattenTarget = EcsFlattenTarget;
 
 /* Builtin tags */
 static const flecs::entity_t Query = EcsQuery;
@@ -32172,7 +32172,7 @@ inline void world::init_builtin_components() {
     this->component<Identifier>();
     this->component<Iterable>("flecs::core::Iterable");
     this->component<Poly>();
-    this->component<Target>();
+    this->component<FlattenTarget>();
 
 #   ifdef FLECS_SYSTEM
     _::system_init(*this);

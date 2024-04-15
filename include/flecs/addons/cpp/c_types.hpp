@@ -64,7 +64,7 @@ using Component = EcsComponent;
 using Identifier = EcsIdentifier;
 using Iterable = EcsIterable;
 using Poly = EcsPoly;
-using Target = EcsFlattenTarget;
+using FlattenTarget = EcsFlattenTarget;
 
 /* Builtin tags */
 static const flecs::entity_t Query = EcsQuery;

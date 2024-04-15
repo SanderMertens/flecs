@@ -90,7 +90,7 @@ const ecs_entity_t EcsDelete =                      FLECS_HI_COMPONENT_ID + 51;
 const ecs_entity_t EcsPanic =                       FLECS_HI_COMPONENT_ID + 52;
 
 /* Misc */
-const ecs_entity_t ecs_id(EcsFlattenTarget) =              FLECS_HI_COMPONENT_ID + 53;
+const ecs_entity_t ecs_id(EcsFlattenTarget) =       FLECS_HI_COMPONENT_ID + 53;
 const ecs_entity_t EcsFlatten =                     FLECS_HI_COMPONENT_ID + 54;
 const ecs_entity_t EcsDefaultChildComponent =       FLECS_HI_COMPONENT_ID + 55;
 
@@ -98,8 +98,8 @@ const ecs_entity_t EcsDefaultChildComponent =       FLECS_HI_COMPONENT_ID + 55;
 const ecs_entity_t EcsPredEq =                      FLECS_HI_COMPONENT_ID + 56;
 const ecs_entity_t EcsPredMatch =                   FLECS_HI_COMPONENT_ID + 57;
 const ecs_entity_t EcsPredLookup =                  FLECS_HI_COMPONENT_ID + 58;
-const ecs_entity_t EcsScopeOpen =                    FLECS_HI_COMPONENT_ID + 59;
-const ecs_entity_t EcsScopeClose =                   FLECS_HI_COMPONENT_ID + 60;
+const ecs_entity_t EcsScopeOpen =                   FLECS_HI_COMPONENT_ID + 59;
+const ecs_entity_t EcsScopeClose =                  FLECS_HI_COMPONENT_ID + 60;
 
 /* Systems */
 const ecs_entity_t EcsMonitor =                     FLECS_HI_COMPONENT_ID + 61;
