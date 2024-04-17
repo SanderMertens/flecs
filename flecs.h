@@ -26494,7 +26494,7 @@ struct cpp_type_impl {
             // If no world was provided the component cannot be registered
             ecs_assert(world != nullptr, ECS_COMPONENT_NOT_REGISTERED, name);
         } else {
-            ecs_assert(!id, ECS_INCONSISTENT_COMPONENT_ID, NULL);
+            ecs_assert(!id || s_id == id, ECS_INCONSISTENT_COMPONENT_ID, NULL);
         }
 
         // If no id has been registered yet for the component (indicating the
@@ -32315,7 +32315,7 @@ template <typename First, typename Second, typename P, typename A>
 A* world::get_mut() const {
     flecs::entity e(m_world, _::cpp_type<First>::id(m_world));
     return e.get_mut<First, Second>();
-} //hello
+}
 
 template <typename First, typename Second>
 First* world::get_mut(Second second) const {
