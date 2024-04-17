@@ -1069,7 +1069,8 @@
                 "on_set_hook_on_auto_override",
                 "batched_set_new_component_w_lifecycle",
                 "batched_ensure_new_component_w_lifecycle",
-                "on_nested_prefab_copy_test_invokes_copy_count"
+                "on_nested_prefab_copy_test_invokes_copy_count",
+                "no_move_no_move_ctor_with_move_dtor_with_ctor_move_dtor"
             ]
         }, {
             "id": "Sorting",
@@ -1909,7 +1910,14 @@
                 "oneof_other_constraint_violated",
                 "oneof_other_rel_parent_constraint_violated",
                 "set_w_recycled_rel",
-                "set_w_recycled_tgt"
+                "set_w_recycled_tgt",
+                "force_relationship_on_component",
+                "force_relationship_on_target",
+                "force_relationship_on_target_trait",
+                "force_relationship_on_relationship",
+                "force_target_on_component",
+                "force_target_on_relationship",
+                "force_target_on_target"
             ]
         }, {
            "id": "Trigger",

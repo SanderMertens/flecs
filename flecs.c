@@ -2200,7 +2200,12 @@ void flecs_bootstrap(
     ecs_add_id(world, name, EcsFinal);\
     ecs_add_pair(world, name, EcsChildOf, ecs_get_scope(world));\
     ecs_set_name(world, name, (const char*)&#name[ecs_os_strlen(world->info.name_prefix)]);\
-    ecs_set_symbol(world, name, #name)
+    ecs_set_symbol(world, name, #name);
+
+#define flecs_bootstrap_trait(world, name)\
+    flecs_bootstrap_tag(world, name)\
+    ecs_add_id(world, name, EcsTrait)
+
 
 /* Bootstrap functions for other parts in the code */
 void flecs_bootstrap_hierarchy(ecs_world_t *world);
@@ -2716,8 +2721,14 @@ void flecs_register_id_flag_for_relation(
         bool changed = false;
 
         if (event == EcsOnAdd) {
-            ecs_id_record_t *idr = flecs_id_record_ensure(world, e);
-            changed |= flecs_set_id_flag(idr, flag);
+            ecs_id_record_t *idr;
+            if (!ecs_has_id(world, e, EcsRelationship) &&
+                !ecs_has_id(world, e, EcsTarget)) 
+            {
+                idr = flecs_id_record_ensure(world, e);
+                changed |= flecs_set_id_flag(idr, flag);
+            }
+
             idr = flecs_id_record_ensure(world, ecs_pair(e, EcsWildcard));
             do {
                 changed |= flecs_set_id_flag(idr, flag);
@@ -3225,7 +3236,7 @@ void flecs_bootstrap(
     });
 
     flecs_type_info_init(world, EcsIterable, { 0 });
-    flecs_type_info_init(world, EcsTarget, { 0 });
+    flecs_type_info_init(world, EcsFlattenTarget, { 0 });
 
     /* Create and cache often used id records on world */
     flecs_init_id_records(world);
@@ -3241,7 +3252,7 @@ void flecs_bootstrap(
     flecs_bootstrap_builtin_t(world, table, EcsComponent);
     flecs_bootstrap_builtin_t(world, table, EcsIterable);
     flecs_bootstrap_builtin_t(world, table, EcsPoly);
-    flecs_bootstrap_builtin_t(world, table, EcsTarget);
+    flecs_bootstrap_builtin_t(world, table, EcsFlattenTarget);
 
     /* Patch up symbol of EcsIterable. The type is a typedef, which causes a
      * symbol mismatch when registering the type with the C++ API. */
@@ -3256,7 +3267,7 @@ void flecs_bootstrap(
     /* Make EcsOnAdd, EcsOnSet events iterable to enable .yield_existing */
     ecs_set(world, EcsOnAdd, EcsIterable, { .init = flecs_on_event_iterable_init });
     ecs_set(world, EcsOnSet, EcsIterable, { .init = flecs_on_event_iterable_init });
-    
+
     /* Register observer for tag property before adding EcsTag */
     ecs_observer(world, {
         .entity = ecs_entity(world, {.add = { ecs_childof(EcsFlecsInternals)}}),
@@ -3312,22 +3323,26 @@ void flecs_bootstrap(
     flecs_bootstrap_entity(world, EcsFlag, "Flag", EcsFlecsCore);
 
     /* Component/relationship properties */
-    flecs_bootstrap_tag(world, EcsTransitive);
-    flecs_bootstrap_tag(world, EcsReflexive);
-    flecs_bootstrap_tag(world, EcsSymmetric);
-    flecs_bootstrap_tag(world, EcsFinal);
-    flecs_bootstrap_tag(world, EcsDontInherit);
-    flecs_bootstrap_tag(world, EcsAlwaysOverride);
-    flecs_bootstrap_tag(world, EcsTag);
-    flecs_bootstrap_tag(world, EcsUnion);
-    flecs_bootstrap_tag(world, EcsExclusive);
-    flecs_bootstrap_tag(world, EcsAcyclic);
-    flecs_bootstrap_tag(world, EcsTraversable);
-    flecs_bootstrap_tag(world, EcsWith);
-    flecs_bootstrap_tag(world, EcsOneOf);
+    flecs_bootstrap_trait(world, EcsTransitive);
+    flecs_bootstrap_trait(world, EcsReflexive);
+    flecs_bootstrap_trait(world, EcsSymmetric);
+    flecs_bootstrap_trait(world, EcsFinal);
+    flecs_bootstrap_trait(world, EcsDontInherit);
+    flecs_bootstrap_trait(world, EcsAlwaysOverride);
+    flecs_bootstrap_trait(world, EcsTag);
+    flecs_bootstrap_trait(world, EcsUnion);
+    flecs_bootstrap_trait(world, EcsExclusive);
+    flecs_bootstrap_trait(world, EcsAcyclic);
+    flecs_bootstrap_trait(world, EcsTraversable);
+    flecs_bootstrap_trait(world, EcsWith);
+    flecs_bootstrap_trait(world, EcsOneOf);
+    flecs_bootstrap_trait(world, EcsTrait);
+    flecs_bootstrap_trait(world, EcsRelationship);
+    flecs_bootstrap_trait(world, EcsTarget);
+    flecs_bootstrap_trait(world, EcsOnDelete);
+    flecs_bootstrap_trait(world, EcsOnDeleteTarget);
+    ecs_add_id(world, ecs_id(EcsFlattenTarget), EcsTrait);
 
-    flecs_bootstrap_tag(world, EcsOnDelete);
-    flecs_bootstrap_tag(world, EcsOnDeleteTarget);
     flecs_bootstrap_tag(world, EcsRemove);
     flecs_bootstrap_tag(world, EcsDelete);
     flecs_bootstrap_tag(world, EcsPanic);
@@ -3374,6 +3389,16 @@ void flecs_bootstrap(
     ecs_add_id(world, EcsOnDelete, EcsExclusive);
     ecs_add_id(world, EcsOnDeleteTarget, EcsExclusive);
     ecs_add_id(world, EcsDefaultChildComponent, EcsExclusive);
+
+    /* Relationships */
+    ecs_add_id(world, EcsChildOf, EcsRelationship);
+    ecs_add_id(world, EcsIsA, EcsRelationship);
+    ecs_add_id(world, EcsSlotOf, EcsRelationship);
+    ecs_add_id(world, EcsDependsOn, EcsRelationship);
+    ecs_add_id(world, EcsWith, EcsRelationship);
+    ecs_add_id(world, EcsOnDelete, EcsRelationship);
+    ecs_add_id(world, EcsOnDeleteTarget, EcsRelationship);
+    ecs_add_id(world, ecs_id(EcsIdentifier), EcsRelationship);
 
     /* Sync properties of ChildOf and Identifier with bootstrapped flags */
     ecs_add_pair(world, EcsChildOf, EcsOnDeleteTarget, EcsDelete);
@@ -7067,8 +7092,8 @@ ecs_entity_t ecs_get_target(
             return 0;
         }
     } else if (table->flags & EcsTableHasTarget) {
-        EcsTarget *tf = ecs_table_get_id(world, table, 
-            ecs_pair_t(EcsTarget, rel), ECS_RECORD_TO_ROW(r->row));
+        EcsFlattenTarget *tf = ecs_table_get_id(world, table, 
+            ecs_pair_t(EcsFlattenTarget, rel), ECS_RECORD_TO_ROW(r->row));
         if (tf) {
             return ecs_record_get_entity(tf->target);
         }
@@ -7241,7 +7266,7 @@ void flecs_flatten(
 
     ecs_entity_t depth_id = flecs_id_for_depth(world, depth);
     ecs_id_t root_pair = ecs_pair(EcsChildOf, root);
-    ecs_id_t tgt_pair = ecs_pair_t(EcsTarget, EcsChildOf);
+    ecs_id_t tgt_pair = ecs_pair_t(EcsFlattenTarget, EcsChildOf);
     ecs_id_t depth_pair = ecs_pair(EcsFlatten, depth_id);
     ecs_id_t name_pair = ecs_pair_t(EcsIdentifier, EcsName);
 
@@ -7305,7 +7330,7 @@ void flecs_flatten(
                 &td.added, 0);
             flecs_table_diff_builder_fini(world, &diff);
 
-            EcsTarget *fh = ecs_table_get_id(world, dst, tgt_pair, 0);
+            EcsFlattenTarget *fh = ecs_table_get_id(world, dst, tgt_pair, 0);
             ecs_assert(fh != NULL, ECS_INTERNAL_ERROR, NULL);
             ecs_assert(count != 0, ECS_INTERNAL_ERROR, NULL);
             int32_t remain = count;
@@ -9029,7 +9054,7 @@ done:
 static
 int32_t flecs_get_flattened_target(
     ecs_world_t *world,
-    EcsTarget *cur,
+    EcsFlattenTarget *cur,
     ecs_entity_t rel,
     ecs_id_t id,
     ecs_entity_t *src_out,
@@ -9058,8 +9083,8 @@ int32_t flecs_get_flattened_target(
     if (table->flags & EcsTableHasTarget) {
         int32_t col = table->column_map[table->_->ft_offset];
         ecs_assert(col != -1, ECS_INTERNAL_ERROR, NULL);
-        EcsTarget *next = table->data.columns[col].data.array;
-        next = ECS_ELEM_T(next, EcsTarget, ECS_RECORD_TO_ROW(r->row));
+        EcsFlattenTarget *next = table->data.columns[col].data.array;
+        next = ECS_ELEM_T(next, EcsFlattenTarget, ECS_RECORD_TO_ROW(r->row));
         return flecs_get_flattened_target(
             world, next, rel, id, src_out, tr_out);
     }
@@ -9159,7 +9184,7 @@ void flecs_entity_filter_init(
     /* Look for flattened fields */
     if (table->flags & EcsTableHasTarget) {
         const ecs_table_record_t *tr = flecs_table_record_get(world, table, 
-            ecs_pair_t(EcsTarget, EcsWildcard));
+            ecs_pair_t(EcsFlattenTarget, EcsWildcard));
         ecs_assert(tr != NULL, ECS_INTERNAL_ERROR, NULL);
         int32_t column = tr->index;
         ecs_assert(column != -1, ECS_INTERNAL_ERROR, NULL);
@@ -9266,7 +9291,7 @@ int flecs_entity_filter_next(
             bool first_for_table = it->prev != table;
             ecs_iter_t *iter = it->it;
             ecs_world_t *world = iter->real_world;
-            EcsTarget *ft = table->data.columns[flat_tree_column].data.array;
+            EcsFlattenTarget *ft = table->data.columns[flat_tree_column].data.array;
             int32_t ft_offset;
             int32_t ft_count;
 
@@ -9282,7 +9307,7 @@ int flecs_entity_filter_next(
             ecs_assert(ft_offset < ecs_table_count(table), 
                 ECS_INTERNAL_ERROR, NULL);
 
-            EcsTarget *cur = &ft[ft_offset];
+            EcsFlattenTarget *cur = &ft[ft_offset];
             ft_count = cur->count;
             bool is_last = (ft_offset + ft_count) >= range_end;
 
@@ -21210,7 +21235,7 @@ int32_t flecs_relation_depth(
     int32_t depth_offset = 0;
     if (table->flags & EcsTableHasTarget) {
         if (ecs_table_get_type_index(world, table, 
-            ecs_pair_t(EcsTarget, r)) != -1)
+            ecs_pair_t(EcsFlattenTarget, r)) != -1)
         {
             ecs_id_t id;
             int32_t col = ecs_search(world, table, 
@@ -22460,27 +22485,30 @@ const ecs_entity_t EcsAcyclic =                     FLECS_HI_COMPONENT_ID + 23;
 const ecs_entity_t EcsTraversable =                 FLECS_HI_COMPONENT_ID + 24;
 const ecs_entity_t EcsWith =                        FLECS_HI_COMPONENT_ID + 25;
 const ecs_entity_t EcsOneOf =                       FLECS_HI_COMPONENT_ID + 26;
+const ecs_entity_t EcsTrait =                       FLECS_HI_COMPONENT_ID + 27;
+const ecs_entity_t EcsRelationship =            FLECS_HI_COMPONENT_ID + 28;
+const ecs_entity_t EcsTarget =                  FLECS_HI_COMPONENT_ID + 29;
 
 /* Builtin relationships */
-const ecs_entity_t EcsChildOf =                     FLECS_HI_COMPONENT_ID + 27;
-const ecs_entity_t EcsIsA =                         FLECS_HI_COMPONENT_ID + 28;
-const ecs_entity_t EcsDependsOn =                   FLECS_HI_COMPONENT_ID + 29;
+const ecs_entity_t EcsChildOf =                     FLECS_HI_COMPONENT_ID + 30;
+const ecs_entity_t EcsIsA =                         FLECS_HI_COMPONENT_ID + 31;
+const ecs_entity_t EcsDependsOn =                   FLECS_HI_COMPONENT_ID + 32;
 
 /* Identifier tags */
-const ecs_entity_t EcsName =                        FLECS_HI_COMPONENT_ID + 30;
-const ecs_entity_t EcsSymbol =                      FLECS_HI_COMPONENT_ID + 31;
-const ecs_entity_t EcsAlias =                       FLECS_HI_COMPONENT_ID + 32;
+const ecs_entity_t EcsName =                        FLECS_HI_COMPONENT_ID + 33;
+const ecs_entity_t EcsSymbol =                      FLECS_HI_COMPONENT_ID + 34;
+const ecs_entity_t EcsAlias =                       FLECS_HI_COMPONENT_ID + 35;
 
 /* Events */
-const ecs_entity_t EcsOnAdd =                       FLECS_HI_COMPONENT_ID + 33;
-const ecs_entity_t EcsOnRemove =                    FLECS_HI_COMPONENT_ID + 34;
-const ecs_entity_t EcsOnSet =                       FLECS_HI_COMPONENT_ID + 35;
-const ecs_entity_t EcsUnSet =                       FLECS_HI_COMPONENT_ID + 36;
-const ecs_entity_t EcsOnDelete =                    FLECS_HI_COMPONENT_ID + 37;
-const ecs_entity_t EcsOnTableCreate =               FLECS_HI_COMPONENT_ID + 38;
-const ecs_entity_t EcsOnTableDelete =               FLECS_HI_COMPONENT_ID + 39;
-const ecs_entity_t EcsOnTableEmpty =                FLECS_HI_COMPONENT_ID + 40;
-const ecs_entity_t EcsOnTableFill =                 FLECS_HI_COMPONENT_ID + 41;
+const ecs_entity_t EcsOnAdd =                       FLECS_HI_COMPONENT_ID + 36;
+const ecs_entity_t EcsOnRemove =                    FLECS_HI_COMPONENT_ID + 37;
+const ecs_entity_t EcsOnSet =                       FLECS_HI_COMPONENT_ID + 38;
+const ecs_entity_t EcsUnSet =                       FLECS_HI_COMPONENT_ID + 39;
+const ecs_entity_t EcsOnDelete =                    FLECS_HI_COMPONENT_ID + 40;
+const ecs_entity_t EcsOnTableCreate =               FLECS_HI_COMPONENT_ID + 41;
+const ecs_entity_t EcsOnTableDelete =               FLECS_HI_COMPONENT_ID + 42;
+const ecs_entity_t EcsOnTableEmpty =                FLECS_HI_COMPONENT_ID + 43;
+const ecs_entity_t EcsOnTableFill =                 FLECS_HI_COMPONENT_ID + 44;
 const ecs_entity_t EcsOnDeleteTarget =              FLECS_HI_COMPONENT_ID + 46;
 
 /* Timers */
@@ -22494,7 +22522,7 @@ const ecs_entity_t EcsDelete =                      FLECS_HI_COMPONENT_ID + 51;
 const ecs_entity_t EcsPanic =                       FLECS_HI_COMPONENT_ID + 52;
 
 /* Misc */
-const ecs_entity_t ecs_id(EcsTarget) =              FLECS_HI_COMPONENT_ID + 53;
+const ecs_entity_t ecs_id(EcsFlattenTarget) =       FLECS_HI_COMPONENT_ID + 53;
 const ecs_entity_t EcsFlatten =                     FLECS_HI_COMPONENT_ID + 54;
 const ecs_entity_t EcsDefaultChildComponent =       FLECS_HI_COMPONENT_ID + 55;
 
@@ -22502,8 +22530,8 @@ const ecs_entity_t EcsDefaultChildComponent =       FLECS_HI_COMPONENT_ID + 55;
 const ecs_entity_t EcsPredEq =                      FLECS_HI_COMPONENT_ID + 56;
 const ecs_entity_t EcsPredMatch =                   FLECS_HI_COMPONENT_ID + 57;
 const ecs_entity_t EcsPredLookup =                  FLECS_HI_COMPONENT_ID + 58;
-const ecs_entity_t EcsScopeOpen =                    FLECS_HI_COMPONENT_ID + 59;
-const ecs_entity_t EcsScopeClose =                   FLECS_HI_COMPONENT_ID + 60;
+const ecs_entity_t EcsScopeOpen =                   FLECS_HI_COMPONENT_ID + 59;
+const ecs_entity_t EcsScopeClose =                  FLECS_HI_COMPONENT_ID + 60;
 
 /* Systems */
 const ecs_entity_t EcsMonitor =                     FLECS_HI_COMPONENT_ID + 61;
@@ -25748,7 +25776,7 @@ void flecs_doc_import_core_definitions(
     ecs_doc_set_brief(world, ecs_id(EcsIterable), "Internal component to make (query) entities iterable");
     ecs_doc_set_brief(world, ecs_id(EcsPoly), "Internal component that stores pointer to poly objects");
     
-    ecs_doc_set_brief(world, ecs_id(EcsTarget), "Internal component that stores information for flattened trees");
+    ecs_doc_set_brief(world, ecs_id(EcsFlattenTarget), "Internal component that stores information for flattened trees");
     ecs_doc_set_brief(world, EcsFlatten, "Tag that when added to assembly automatically flattens tree");
 
     ecs_doc_set_brief(world, ecs_id(EcsIdentifier), "Component used for entity names");
@@ -39071,6 +39099,7 @@ int64_t ecs_block_allocator_alloc_count = 0;
 int64_t ecs_block_allocator_free_count = 0;
 
 #ifndef FLECS_USE_OS_ALLOC
+
 static
 ecs_block_allocator_chunk_header_t* flecs_balloc_block(
     ecs_block_allocator_t *allocator)
@@ -39109,6 +39138,7 @@ ecs_block_allocator_chunk_header_t* flecs_balloc_block(
     chunk->next = NULL;
     return first_chunk;
 }
+
 #endif
 
 void flecs_ballocator_init(
@@ -39201,12 +39231,12 @@ void* flecs_bcalloc(
 {
 #ifdef FLECS_USE_OS_ALLOC
     return ecs_os_calloc(ba->data_size);
-#endif
-
+#else
     if (!ba) return NULL;
     void *result = flecs_balloc(ba);
     ecs_os_memset(result, 0, ba->data_size);
     return result;
+#endif
 }
 
 void flecs_bfree(
@@ -39214,9 +39244,10 @@ void flecs_bfree(
     void *memory) 
 {
 #ifdef FLECS_USE_OS_ALLOC
+    (void)ba;
     ecs_os_free(memory);
     return;
-#endif
+#else
 
     if (!ba) {
         ecs_assert(memory == NULL, ECS_INTERNAL_ERROR, NULL);
@@ -39242,6 +39273,7 @@ void flecs_bfree(
     chunk->next = ba->head;
     ba->head = chunk;
     ecs_assert(ba->alloc_count >= 0, ECS_INTERNAL_ERROR, "corrupted allocator");
+#endif
 }
 
 void* flecs_brealloc(
@@ -39290,13 +39322,13 @@ void* flecs_bdup(
     } else {
         return NULL;
     }
-#endif
-
+#else
     void *result = flecs_balloc(ba);
     if (result) {
         ecs_os_memcpy(result, memory, ba->data_size);
     }
     return result;
+#endif
 }
 
 // This is free and unencumbered software released into the public domain under The Unlicense (http://unlicense.org/)
@@ -43140,7 +43172,38 @@ ecs_id_record_t* flecs_id_record_new(
         if (tgt) {
             tgt = flecs_entities_get_alive(world, tgt);
             ecs_assert(tgt != 0, ECS_INTERNAL_ERROR, NULL);
+
+            /* Can't use relationship as target */
+            if (ecs_has_id(world, tgt, EcsRelationship)) {
+                if (!ecs_id_is_wildcard(rel) && 
+                    !ecs_has_id(world, rel, EcsTrait)) 
+                {
+                    char *idstr = ecs_id_str(world, id);
+                    char *tgtstr = ecs_id_str(world, tgt);
+                    ecs_err("constraint violated: relationship '%s' cannot be used"
+                        " as target in pair '%s'", tgtstr, idstr);
+                    ecs_os_free(tgtstr);
+                    ecs_os_free(idstr);
+                    #ifndef FLECS_SOFT_ASSERT
+                    ecs_abort(ECS_CONSTRAINT_VIOLATED, NULL);
+                    #endif
+                }
+            }
         }
+
+        if (ecs_has_id(world, rel, EcsTarget)) {
+            char *idstr = ecs_id_str(world, id);
+            char *relstr = ecs_id_str(world, rel);
+            ecs_err("constraint violated: "
+                "%s: target '%s' cannot be used as relationship",
+                    idstr, relstr);
+            ecs_os_free(relstr);
+            ecs_os_free(idstr);
+            #ifndef FLECS_SOFT_ASSERT
+            ecs_abort(ECS_CONSTRAINT_VIOLATED, NULL);
+            #endif
+        }
+
         if (tgt && !ecs_id_is_wildcard(tgt)) {
             /* Check if target of relationship satisfies OneOf property */
             ecs_entity_t oneof = flecs_get_oneof(world, rel);
@@ -43201,6 +43264,38 @@ ecs_id_record_t* flecs_id_record_new(
     } else {
         rel = id & ECS_COMPONENT_MASK;
         ecs_assert(rel != 0, ECS_INTERNAL_ERROR, NULL);
+
+        /* Can't use relationship outside of a pair */
+#ifdef FLECS_DEBUG
+        rel = flecs_entities_get_alive(world, rel);
+        if (ecs_has_id(world, rel, EcsRelationship) ||
+            ecs_has_id(world, rel, EcsTarget)) 
+        {
+            char *idstr = ecs_id_str(world, id);
+            char *relstr = ecs_id_str(world, rel);
+            ecs_err("constraint violated: "
+                "%s: relationship '%s' cannot be used as component",
+                    idstr, relstr);
+            ecs_os_free(relstr);
+            ecs_os_free(idstr);
+            #ifndef FLECS_SOFT_ASSERT
+            ecs_abort(ECS_CONSTRAINT_VIOLATED, NULL);
+            #endif
+        }
+
+        if (ecs_has_id(world, rel, EcsTarget)) {
+            char *idstr = ecs_id_str(world, id);
+            char *relstr = ecs_id_str(world, rel);
+            ecs_err("constraint violated: "
+                "%s: target '%s' cannot be used as component",
+                    idstr, relstr);
+            ecs_os_free(relstr);
+            ecs_os_free(idstr);
+            #ifndef FLECS_SOFT_ASSERT
+            ecs_abort(ECS_CONSTRAINT_VIOLATED, NULL);
+            #endif
+        }
+#endif
     }
 
     /* Initialize type info if id is not a tag */
@@ -43844,7 +43939,7 @@ void flecs_table_init_flags(
                         meta->sw_offset = flecs_ito(int16_t, i);
                     }
                     meta->sw_count ++;
-                } else if (r == ecs_id(EcsTarget)) {
+                } else if (r == ecs_id(EcsFlattenTarget)) {
                     ecs_table__t *meta = table->_;
                     table->flags |= EcsTableHasTarget;
                     meta->ft_offset = flecs_ito(int16_t, i);
@@ -45245,6 +45340,15 @@ void flecs_table_delete(
                 }
 
                 ecs_move_t move_dtor = ti->hooks.move_dtor;
+                
+                // If move_ctor is not set but ctor_move_dtor is set, assign move_dtor to ctor_move_dtor.
+                // This adjustment is crucial for compatibility across different language bindings where
+                // the standard memory model of C may not apply, potentially altering how operations
+                // within the table are handled.
+                if (!ti->hooks.move_ctor && ti->hooks.ctor_move_dtor) {
+                  move_dtor = ti->hooks.ctor_move_dtor;
+                }
+
                 if (move_dtor) {
                     move_dtor(dst, src, 1, ti);
                 } else {

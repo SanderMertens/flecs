@@ -1017,6 +1017,7 @@ void ComponentLifecycle_on_set_hook_on_auto_override(void);
 void ComponentLifecycle_batched_set_new_component_w_lifecycle(void);
 void ComponentLifecycle_batched_ensure_new_component_w_lifecycle(void);
 void ComponentLifecycle_on_nested_prefab_copy_test_invokes_copy_count(void);
+void ComponentLifecycle_no_move_no_move_ctor_with_move_dtor_with_ctor_move_dtor(void);
 
 // Testsuite 'Sorting'
 void Sorting_sort_by_component(void);
@@ -1843,6 +1844,13 @@ void Pairs_oneof_other_constraint_violated(void);
 void Pairs_oneof_other_rel_parent_constraint_violated(void);
 void Pairs_set_w_recycled_rel(void);
 void Pairs_set_w_recycled_tgt(void);
+void Pairs_force_relationship_on_component(void);
+void Pairs_force_relationship_on_target(void);
+void Pairs_force_relationship_on_target_trait(void);
+void Pairs_force_relationship_on_relationship(void);
+void Pairs_force_target_on_component(void);
+void Pairs_force_target_on_relationship(void);
+void Pairs_force_target_on_target(void);
 
 // Testsuite 'Trigger'
 void Trigger_on_add_trigger_before_table(void);
@@ -6635,6 +6643,10 @@ bake_test_case ComponentLifecycle_testcases[] = {
     {
         "on_nested_prefab_copy_test_invokes_copy_count",
         ComponentLifecycle_on_nested_prefab_copy_test_invokes_copy_count
+    },
+    {
+        "no_move_no_move_ctor_with_move_dtor_with_ctor_move_dtor",
+        ComponentLifecycle_no_move_no_move_ctor_with_move_dtor_with_ctor_move_dtor
     }
 };
 
@@ -9904,6 +9916,34 @@ bake_test_case Pairs_testcases[] = {
     {
         "set_w_recycled_tgt",
         Pairs_set_w_recycled_tgt
+    },
+    {
+        "force_relationship_on_component",
+        Pairs_force_relationship_on_component
+    },
+    {
+        "force_relationship_on_target",
+        Pairs_force_relationship_on_target
+    },
+    {
+        "force_relationship_on_target_trait",
+        Pairs_force_relationship_on_target_trait
+    },
+    {
+        "force_relationship_on_relationship",
+        Pairs_force_relationship_on_relationship
+    },
+    {
+        "force_target_on_component",
+        Pairs_force_target_on_component
+    },
+    {
+        "force_target_on_relationship",
+        Pairs_force_target_on_relationship
+    },
+    {
+        "force_target_on_target",
+        Pairs_force_target_on_target
     }
 };
 
@@ -13408,6 +13448,7 @@ bake_test_case StackAlloc_testcases[] = {
     }
 };
 
+
 static bake_test_suite suites[] = {
     {
         "Id",
@@ -13581,7 +13622,7 @@ static bake_test_suite suites[] = {
         "ComponentLifecycle",
         ComponentLifecycle_setup,
         NULL,
-        90,
+        91,
         ComponentLifecycle_testcases
     },
     {
@@ -13630,7 +13671,7 @@ static bake_test_suite suites[] = {
         "Pairs",
         NULL,
         NULL,
-        117,
+        124,
         Pairs_testcases
     },
     {

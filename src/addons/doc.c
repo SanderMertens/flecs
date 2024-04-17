@@ -165,7 +165,7 @@ void flecs_doc_import_core_definitions(
     ecs_doc_set_brief(world, ecs_id(EcsIterable), "Internal component to make (query) entities iterable");
     ecs_doc_set_brief(world, ecs_id(EcsPoly), "Internal component that stores pointer to poly objects");
     
-    ecs_doc_set_brief(world, ecs_id(EcsTarget), "Internal component that stores information for flattened trees");
+    ecs_doc_set_brief(world, ecs_id(EcsFlattenTarget), "Internal component that stores information for flattened trees");
     ecs_doc_set_brief(world, EcsFlatten, "Tag that when added to assembly automatically flattens tree");
 
     ecs_doc_set_brief(world, ecs_id(EcsIdentifier), "Component used for entity names");

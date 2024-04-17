@@ -168,7 +168,38 @@ ecs_id_record_t* flecs_id_record_new(
         if (tgt) {
             tgt = flecs_entities_get_alive(world, tgt);
             ecs_assert(tgt != 0, ECS_INTERNAL_ERROR, NULL);
+
+            /* Can't use relationship as target */
+            if (ecs_has_id(world, tgt, EcsRelationship)) {
+                if (!ecs_id_is_wildcard(rel) && 
+                    !ecs_has_id(world, rel, EcsTrait)) 
+                {
+                    char *idstr = ecs_id_str(world, id);
+                    char *tgtstr = ecs_id_str(world, tgt);
+                    ecs_err("constraint violated: relationship '%s' cannot be used"
+                        " as target in pair '%s'", tgtstr, idstr);
+                    ecs_os_free(tgtstr);
+                    ecs_os_free(idstr);
+                    #ifndef FLECS_SOFT_ASSERT
+                    ecs_abort(ECS_CONSTRAINT_VIOLATED, NULL);
+                    #endif
+                }
+            }
         }
+
+        if (ecs_has_id(world, rel, EcsTarget)) {
+            char *idstr = ecs_id_str(world, id);
+            char *relstr = ecs_id_str(world, rel);
+            ecs_err("constraint violated: "
+                "%s: target '%s' cannot be used as relationship",
+                    idstr, relstr);
+            ecs_os_free(relstr);
+            ecs_os_free(idstr);
+            #ifndef FLECS_SOFT_ASSERT
+            ecs_abort(ECS_CONSTRAINT_VIOLATED, NULL);
+            #endif
+        }
+
         if (tgt && !ecs_id_is_wildcard(tgt)) {
             /* Check if target of relationship satisfies OneOf property */
             ecs_entity_t oneof = flecs_get_oneof(world, rel);
@@ -229,6 +260,38 @@ ecs_id_record_t* flecs_id_record_new(
     } else {
         rel = id & ECS_COMPONENT_MASK;
         ecs_assert(rel != 0, ECS_INTERNAL_ERROR, NULL);
+
+        /* Can't use relationship outside of a pair */
+#ifdef FLECS_DEBUG
+        rel = flecs_entities_get_alive(world, rel);
+        if (ecs_has_id(world, rel, EcsRelationship) ||
+            ecs_has_id(world, rel, EcsTarget)) 
+        {
+            char *idstr = ecs_id_str(world, id);
+            char *relstr = ecs_id_str(world, rel);
+            ecs_err("constraint violated: "
+                "%s: relationship '%s' cannot be used as component",
+                    idstr, relstr);
+            ecs_os_free(relstr);
+            ecs_os_free(idstr);
+            #ifndef FLECS_SOFT_ASSERT
+            ecs_abort(ECS_CONSTRAINT_VIOLATED, NULL);
+            #endif
+        }
+
+        if (ecs_has_id(world, rel, EcsTarget)) {
+            char *idstr = ecs_id_str(world, id);
+            char *relstr = ecs_id_str(world, rel);
+            ecs_err("constraint violated: "
+                "%s: target '%s' cannot be used as component",
+                    idstr, relstr);
+            ecs_os_free(relstr);
+            ecs_os_free(idstr);
+            #ifndef FLECS_SOFT_ASSERT
+            ecs_abort(ECS_CONSTRAINT_VIOLATED, NULL);
+            #endif
+        }
+#endif
     }
 
     /* Initialize type info if id is not a tag */
