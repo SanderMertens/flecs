@@ -160,7 +160,7 @@ struct entity_view : public id {
      * @param func The function invoked for each id.
      */
     template <typename Func>
-    void each(flecs::id_t pred, flecs::id_t obj, const Func& func) const;
+    void each(flecs::id_t first, flecs::id_t second, const Func& func) const;
 
     /** Iterate targets for a given relationship.
      * The function parameter must match the following signature:
