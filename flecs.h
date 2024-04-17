@@ -20575,6 +20575,22 @@ struct world {
     template <typename Func, if_t< is_callable<Func>::value > = 0 >
     void get(const Func& func) const;
 
+    /** Get mutable singleton component.
+     */
+    template <typename T>
+    T* get_mut() const;
+
+    /** Get mutable singleton pair.
+     */
+    template <typename First, typename Second, typename P = flecs::pair<First, Second>,
+        typename A = actual_type_t<P>>
+    A* get_mut() const;
+
+    /** Get mutable singleton pair.
+     */
+    template <typename First, typename Second>
+    First* get_mut(Second second) const;
+
     /** Test if world has singleton component.
      */
     template <typename T>
@@ -26478,7 +26494,7 @@ struct cpp_type_impl {
             // If no world was provided the component cannot be registered
             ecs_assert(world != nullptr, ECS_COMPONENT_NOT_REGISTERED, name);
         } else {
-            ecs_assert(!id || s_id == id, ECS_INCONSISTENT_COMPONENT_ID, NULL);
+            ecs_assert(!id, ECS_INCONSISTENT_COMPONENT_ID, NULL);
         }
 
         // If no id has been registered yet for the component (indicating the
@@ -32287,6 +32303,24 @@ template <typename First, typename Second>
 const First* world::get(Second second) const {
     flecs::entity e(m_world, _::cpp_type<First>::id(m_world));
     return e.get<First>(second);
+}
+
+template <typename T>
+T* world::get_mut() const {
+    flecs::entity e(m_world, _::cpp_type<T>::id(m_world));
+    return e.get_mut<T>();
+}
+
+template <typename First, typename Second, typename P, typename A>
+A* world::get_mut() const {
+    flecs::entity e(m_world, _::cpp_type<First>::id(m_world));
+    return e.get_mut<First, Second>();
+} //hello
+
+template <typename First, typename Second>
+First* world::get_mut(Second second) const {
+    flecs::entity e(m_world, _::cpp_type<First>::id(m_world));
+    return e.get_mut<First>(second);
 }
 
 template <typename T>

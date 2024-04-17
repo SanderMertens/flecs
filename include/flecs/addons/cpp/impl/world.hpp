@@ -131,6 +131,24 @@ const First* world::get(Second second) const {
 }
 
 template <typename T>
+T* world::get_mut() const {
+    flecs::entity e(m_world, _::cpp_type<T>::id(m_world));
+    return e.get_mut<T>();
+}
+
+template <typename First, typename Second, typename P, typename A>
+A* world::get_mut() const {
+    flecs::entity e(m_world, _::cpp_type<First>::id(m_world));
+    return e.get_mut<First, Second>();
+}
+
+template <typename First, typename Second>
+First* world::get_mut(Second second) const {
+    flecs::entity e(m_world, _::cpp_type<First>::id(m_world));
+    return e.get_mut<First>(second);
+}
+
+template <typename T>
 inline bool world::has() const {
     flecs::entity e(m_world, _::cpp_type<T>::id(m_world));
     return e.has<T>();
