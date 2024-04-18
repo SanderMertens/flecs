@@ -14267,12 +14267,6 @@ int ecs_meta_set_id(
     ecs_meta_cursor_t *cursor,
     ecs_id_t value);
 
-/** Set field with (component) id value */
-FLECS_API
-int ecs_meta_set_component(
-    ecs_meta_cursor_t *cursor,
-    ecs_id_t value);
-
 /** Set field with null value */
 FLECS_API
 int ecs_meta_set_null(
