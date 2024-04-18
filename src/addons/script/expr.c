@@ -3,10 +3,8 @@
  * @brief Deserialize flecs string format into (component) values.
  */
 
-#include "../../private_api.h"
+#include "script.h"
 #include <ctype.h>
-
-#ifdef FLECS_EXPR
 
 /* String deserializer for values & simple expressions */
 
@@ -1417,5 +1415,3 @@ const char* ecs_parse_expr(
 
     return ptr;
 }
-
-#endif

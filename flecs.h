@@ -580,10 +580,12 @@ extern "C" {
     #endif
 #endif
 
-#if defined(__clang__)
+#if defined(__GNUC__) || defined(__clang__)
+#ifdef __PRETTY_FUNCTION__
 #define ECS_FUNC_NAME __PRETTY_FUNCTION__
-#elif defined(__GNUC__)
-#define ECS_FUNC_NAME __PRETTY_FUNCTION__
+#else
+#define ECS_FUNC_NAME NULL
+#endif
 #elif defined(_WIN32)
 #define ECS_FUNC_NAME __FUNCSIG__
 #else
@@ -1497,6 +1499,12 @@ void flecs_bfree(
     void *memory);
 
 FLECS_API
+void flecs_bfree_w_dbg_info(
+    ecs_block_allocator_t *allocator, 
+    void *memory,
+    const char *type_name);
+
+FLECS_API
 void* flecs_brealloc(
     ecs_block_allocator_t *dst, 
     ecs_block_allocator_t *src, 
@@ -1760,9 +1768,13 @@ void* flecs_dup(
 #define flecs_calloc_t(a, T) flecs_calloc(a, ECS_SIZEOF(T))
 #define flecs_calloc_n(a, T, count) flecs_calloc(a, ECS_SIZEOF(T) * (count))
 
-#define flecs_free(a, size, ptr) flecs_bfree(flecs_allocator_get(a, size), ptr)
-#define flecs_free_t(a, T, ptr) flecs_free(a, ECS_SIZEOF(T), ptr)
-#define flecs_free_n(a, T, count, ptr) flecs_free(a, ECS_SIZEOF(T) * (count), ptr)
+#define flecs_free(a, size, ptr)\
+    flecs_bfree(flecs_allocator_get(a, size), ptr)
+#define flecs_free_t(a, T, ptr)\
+    flecs_bfree_w_dbg_info(flecs_allocator_get(a, ECS_SIZEOF(T)), ptr, #T)
+#define flecs_free_n(a, T, count, ptr)\
+    flecs_bfree_w_dbg_info(flecs_allocator_get(a, ECS_SIZEOF(T) * (count))\
+        , ptr, #T)
 
 #define flecs_realloc(a, size_dst, size_src, ptr)\
     flecs_brealloc(flecs_allocator_get(a, size_dst),\
@@ -14697,16 +14709,16 @@ void ecs_iter_to_vars(
 #error "FLECS_NO_SCRIPT failed: SCRIPT is required by other addons"
 #endif
 /**
- * @file addons/plecs.h
+ * @file addons/script.h
  * @brief Flecs script module.
  *
- * For script, see examples/plecs.
+ * For script, see examples/script.
  */
 
 #ifdef FLECS_SCRIPT
 
 /**
- * @defgroup c_addons_plecs Flecs script
+ * @defgroup c_addons_script Flecs script
  * @ingroup c_addons
  * Data definition format for loading entity data.
  *
@@ -14733,40 +14745,71 @@ extern ECS_COMPONENT_DECLARE(EcsScript);
 
 typedef struct ecs_script_t ecs_script_t;
 typedef struct ecs_script_assembly_t ecs_script_assembly_t;
+typedef struct ecs_script_vars_t ecs_script_vars_t;
+typedef struct ecs_script_var_t ecs_script_var_t;
 
 /* Script component */
 typedef struct EcsScript {
     ecs_script_t *script;
-    ecs_script_assembly_t *assembly; /* Only set for assemblies */
+    ecs_script_assembly_t *assembly; /* Only set for assembly scripts */
 } EcsScript;
 
-/** Parse plecs string.
- * This parses a plecs string and instantiates the entities in the world.
- *
+/** Parse script.
+ * This parses a script and instantiates the entities in the world.
+ * This operation is the equivalent to doing:
+ * 
+ * @code
+ * ecs_script_t *script = ecs_script_parse(world, name, code);
+ * ecs_script_eval(script);
+ * ecs_script_free(script);
+ * @endcode
+ * 
  * @param world The world.
  * @param name The script name (typically the file).
- * @param str The plecs string.
+ * @param code The script.
  * @return Zero if success, non-zero otherwise.
  */
 FLECS_API
 int ecs_script_run(
     ecs_world_t *world,
     const char *name,
-    const char *str);
+    const char *code);
 
-/** Parse plecs file.
- * This parses a plecs file and instantiates the entities in the world. This
+/** Parse script file.
+ * This parses a script file and instantiates the entities in the world. This
  * operation is equivalent to loading the file contents and passing it to
  * ecs_script_run().
  *
  * @param world The world.
- * @param filename The plecs file name.
+ * @param filename The script file name.
  * @return Zero if success, non-zero otherwise.
  */
 FLECS_API
 int ecs_script_run_file(
     ecs_world_t *world,
     const char *filename);
+
+
+
+FLECS_API
+ecs_script_t* ecs_script_parse(
+    ecs_world_t *world,
+    const char *name,
+    const char *code);
+
+FLECS_API
+int ecs_script_eval(
+    ecs_script_t *script);
+
+FLECS_API
+void ecs_script_free(
+    ecs_script_t *script);
+
+
+
+
+
+
 
 /** Used with ecs_script_init() */
 typedef struct ecs_script_desc_t {
@@ -14809,6 +14852,7 @@ int ecs_script_update(
     const char *str,
     ecs_vars_t *vars);
 
+
 /** Clear all entities associated with script.
  *
  * @param world The world.
@@ -14821,16 +14865,12 @@ void ecs_script_clear(
     ecs_entity_t script,
     ecs_entity_t instance);
 
-FLECS_API
-ecs_script_t* ecs_script_parse(
-    ecs_world_t *world,
-    const char *name,
-    const char *code);
 
-FLECS_API
-ecs_script_t* ecs_script_parse_file(
-    ecs_world_t *world,
-    const char *filename);
+
+
+
+
+
 
 FLECS_API
 int ecs_script_to_buf(
@@ -14841,25 +14881,10 @@ FLECS_API
 char* ecs_script_to_str(
     ecs_script_t *script);
 
-FLECS_API
-int ecs_script_eval(
-    ecs_script_t *script);
 
 
-typedef struct ecs_script_var_t {
-    const char *name;
-    ecs_value_t value;
-} ecs_script_var_t;
 
-typedef struct ecs_script_vars_t {
-    struct ecs_script_vars_t *parent;
-    ecs_hashmap_t var_index;
-    ecs_vec_t vars;
 
-    struct ecs_stack_t *stack;
-    ecs_stack_cursor_t *cursor;
-    ecs_allocator_t *allocator;
-} ecs_script_vars_t;
 
 ecs_script_vars_t* ecs_script_vars_push(
     ecs_script_vars_t *parent,

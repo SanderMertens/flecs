@@ -6,13 +6,30 @@
 #ifndef FLECS_SCRIPT_PRIVATE_H
 #define FLECS_SCRIPT_PRIVATE_H
 
+#include "../../private_api.h"
+
 #ifdef FLECS_SCRIPT
 
-#include "../../private_api.h"
 #include <ctype.h>
 
 typedef struct ecs_script_scope_t ecs_script_scope_t;
 typedef struct ecs_script_entity_t ecs_script_entity_t;
+
+struct ecs_script_var_t {
+    const char *name;
+    ecs_value_t value;
+    const ecs_type_info_t *type_info;
+};
+
+struct ecs_script_vars_t {
+    struct ecs_script_vars_t *parent;
+    ecs_hashmap_t var_index;
+    ecs_vec_t vars;
+
+    struct ecs_stack_t *stack;
+    ecs_stack_cursor_t *cursor;
+    ecs_allocator_t *allocator;
+};
 
 struct ecs_script_t {
     ecs_world_t *world;
@@ -21,6 +38,8 @@ struct ecs_script_t {
     ecs_allocator_t allocator;
     ecs_script_scope_t *root;
     char *token_buffer;
+    int32_t token_buffer_size;
+    int32_t refcount;
 };
 
 typedef struct ecs_script_parser_t ecs_script_parser_t;
@@ -36,8 +55,7 @@ struct ecs_script_parser_t {
 
 #include "ast.h"
 #include "visit.h"
-#include "vars.h"
-#include "eval.h"
+#include "visit_eval.h"
 
 struct ecs_script_assembly_t {
     /* Assembly handle */
@@ -57,10 +75,16 @@ struct ecs_script_assembly_t {
 
     /* Type info for assembly component */
     const ecs_type_info_t *type_info;
-
-    /* Allocator */
-    ecs_allocator_t allocator;
 };
+
+ecs_script_t* flecs_script_new(
+    ecs_world_t *world);
+
+ecs_script_scope_t* flecs_script_scope_new(
+    ecs_script_parser_t *parser);
+
+int flecs_script_visit_free(
+    ecs_script_t *script);
 
 #endif // FLECS_SCRIPT
 #endif // FLECS_SCRIPT_PRIVATE_H

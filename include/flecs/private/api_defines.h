@@ -67,10 +67,12 @@
     #endif
 #endif
 
-#if defined(__clang__)
+#if defined(__GNUC__) || defined(__clang__)
+#ifdef __PRETTY_FUNCTION__
 #define ECS_FUNC_NAME __PRETTY_FUNCTION__
-#elif defined(__GNUC__)
-#define ECS_FUNC_NAME __PRETTY_FUNCTION__
+#else
+#define ECS_FUNC_NAME NULL
+#endif
 #elif defined(_WIN32)
 #define ECS_FUNC_NAME __FUNCSIG__
 #else

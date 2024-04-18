@@ -58,7 +58,10 @@ flecs_component_ptr_t flecs_get_component_ptr(
 
     ecs_table_record_t *tr = flecs_table_record_get(world, table, id);
     if (!tr || (tr->column == -1)) {
-        ecs_check(tr == NULL, ECS_NOT_A_COMPONENT, NULL);
+        char *idstr = ecs_id_str(world, id);
+        ecs_check(tr == NULL, ECS_NOT_A_COMPONENT, 
+            "cannot get '%s' as a component", idstr);
+        ecs_os_free(idstr);
         return (flecs_component_ptr_t){0};
     }
 

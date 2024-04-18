@@ -664,7 +664,7 @@ int flecs_script_eval_default_component(
 static
 int flecs_script_eval_with_var(
     ecs_script_eval_visitor_t *v,
-    ecs_script_var_component_t *node)
+    ecs_script_var_node_t *node)
 {
     ecs_script_var_t *var = ecs_script_vars_lookup(v->vars, node->name);
     if (!var) {
@@ -859,13 +859,16 @@ int flecs_script_eval_const(
             return -1;
         }
 
+        var->value.ptr = flecs_stack_calloc(&v->stack, ti->size, ti->alignment);
         var->value.type = type;
-        var->value.ptr = flecs_stack_alloc(&v->stack, ti->size, ti->alignment);
+        var->type_info = ti;
 
         if (flecs_script_eval_expr(v, node->expr, &var->value)) {
             return -1;
         }
     } else {
+        /* We don't know the type yet, so we can't create a storage for it yet.
+         * Run the expression first to deduce the type. */
         ecs_value_t value = {0};
         if (flecs_script_eval_expr(v, node->expr, &value)) {
             return -1;
@@ -875,10 +878,13 @@ int flecs_script_eval_const(
         const ecs_type_info_t *ti = ecs_get_type_info(v->world, value.type);
         ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
 
-        var->value.ptr = flecs_stack_alloc(&v->stack, ti->size, ti->alignment);
+        var->value.ptr = flecs_stack_calloc(&v->stack, ti->size, ti->alignment);
         var->value.type = value.type;
+        var->type_info = ti;
+
         ecs_value_copy_w_type_info(v->world, ti, var->value.ptr, value.ptr);
         ecs_value_fini_w_type_info(v->world, ti, value.ptr);
+        flecs_free(&v->world->allocator, ti->size, value.ptr);
     }
 
     return 0;
@@ -910,6 +916,7 @@ int flecs_script_eval_pair_scope(
         /* Append new element to with stack */
         ecs_value_t *value = flecs_script_with_append(a, v);
         value->type = ecs_pair(first, second);
+        value->ptr = NULL;
         v->with_relationship_sp = flecs_script_with_count(v) - 1;
     } else {
         /* Get existing with element for current relationhip stack */
@@ -919,6 +926,7 @@ int flecs_script_eval_pair_scope(
             ECS_INTERNAL_ERROR, NULL);
         prev_second = ECS_PAIR_SECOND(value->type);
         value->type = ecs_pair(first, second);
+        value->ptr = NULL;
     }
 
     if (ecs_script_visit_scope(v, node->scope)) {
@@ -996,7 +1004,7 @@ int flecs_script_eval_node(
     case EcsAstComponent:
         return flecs_script_eval_component(
             v, (ecs_script_component_t*)node);
-    case EcsAstVar:
+    case EcsAstVarComponent:
         return flecs_script_eval_var_component(
             v, (ecs_script_var_component_t*)node);
     case EcsAstDefaultComponent:
@@ -1004,7 +1012,7 @@ int flecs_script_eval_node(
             v, (ecs_script_default_component_t*)node);
     case EcsAstWithVar:
         return flecs_script_eval_with_var(
-            v, (ecs_script_var_component_t*)node);
+            v, (ecs_script_var_node_t*)node);
     case EcsAstWithTag:
         return flecs_script_eval_with_tag(
             v, (ecs_script_tag_t*)node);
@@ -1047,10 +1055,11 @@ int flecs_script_eval_node(
     return -1;
 }
 
-ecs_script_eval_visitor_t flecs_script_eval_visit_init(
-    ecs_script_t *script)
+void flecs_script_eval_visit_init(
+    ecs_script_t *script,
+    ecs_script_eval_visitor_t *v)
 {
-    ecs_script_eval_visitor_t result = {
+    *v = (ecs_script_eval_visitor_t){
         .base = {
             .script = script,
             .visit = (ecs_visit_action_t)flecs_script_eval_node
@@ -1059,11 +1068,10 @@ ecs_script_eval_visitor_t flecs_script_eval_visit_init(
         .allocator = &script->allocator
     };
 
-    flecs_stack_init(&result.stack);
-    ecs_vec_init_t(result.allocator, &result.using, ecs_entity_t, 0);
-    ecs_vec_init_t(result.allocator, &result.with, ecs_value_t, 0);
-    ecs_vec_init_t(result.allocator, &result.annot, ecs_script_annot_t*, 0);
-    return result;
+    flecs_stack_init(&v->stack);
+    ecs_vec_init_t(v->allocator, &v->using, ecs_entity_t, 0);
+    ecs_vec_init_t(v->allocator, &v->with, ecs_value_t, 0);
+    ecs_vec_init_t(v->allocator, &v->annot, ecs_script_annot_t*, 0);
 }
 
 void flecs_script_eval_visit_fini(
@@ -1078,7 +1086,8 @@ void flecs_script_eval_visit_fini(
 int ecs_script_eval(
     ecs_script_t *script)
 {
-    ecs_script_eval_visitor_t v = flecs_script_eval_visit_init(script);
+    ecs_script_eval_visitor_t v;
+    flecs_script_eval_visit_init(script, &v);
     int result = ecs_script_visit(script, &v, flecs_script_eval_node);
     flecs_script_eval_visit_fini(&v);
     return result;

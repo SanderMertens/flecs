@@ -34,21 +34,17 @@ void flecs_script_assembly_ctor(
 
     const ecs_member_t *members = st->members.array;
     int32_t i, m, member_count = st->members.count;
-    ecs_value_t *values = assembly->prop_defaults.array;
+    ecs_script_var_t *values = assembly->prop_defaults.array;
     for (m = 0; m < member_count; m ++) {
         const ecs_member_t *member = &members[m];
-        ecs_value_t *value = &values[m];
-        const ecs_type_info_t *mti = ecs_get_type_info(world, member->type);
-        if (!mti) {
-            ecs_err("failed to get type info for prop '%s' of assembly '%s'",
-                member->name, ti->name);
-            return;
-        }
+        ecs_script_var_t *value = &values[m];
+        const ecs_type_info_t *mti = value->type_info;
+        ecs_assert(mti != NULL, ECS_INTERNAL_ERROR, NULL);
 
         for (i = 0; i < count; i ++) {
             void *el = ECS_ELEM(ptr, ti->size, i);
             ecs_value_copy_w_type_info(world, mti, 
-                ECS_OFFSET(el, member->offset), value->ptr);
+                ECS_OFFSET(el, member->offset), value->value.ptr);
         }
     }
 }
@@ -85,7 +81,8 @@ void flecs_script_assembly_on_set(
 
     void *data = ecs_field_w_size(it, flecs_ito(size_t, ti->size), 0);
 
-    ecs_script_eval_visitor_t v = flecs_script_eval_visit_init(script->script);
+    ecs_script_eval_visitor_t v;
+    flecs_script_eval_visit_init(script->script, &v);
     ecs_vec_t prev_using = v.using;
     v.using = assembly->using_;
 
@@ -171,7 +168,7 @@ int flecs_script_eval_prop(
             "variable '%s' redeclared", node->name);
         return -1;
     }
-    
+
     if (node->type) {
         ecs_entity_t type = flecs_script_find_entity(v, 0, node->type);
         if (!type) {
@@ -188,16 +185,19 @@ int flecs_script_eval_prop(
 
         var->value.type = type;
         var->value.ptr = flecs_stack_alloc(&v->stack, ti->size, ti->alignment);
+        var->type_info = ti;
 
         if (flecs_script_eval_expr(v, node->expr, &var->value)) {
             return -1;
         }
 
-        ecs_value_t *value = ecs_vec_append_t(
-            &v->base.script->allocator, &assembly->prop_defaults, ecs_value_t);
-        value->ptr = flecs_calloc(&v->base.script->allocator, ti->size);
-        value->type = type;
-        ecs_value_copy_w_type_info(v->world, ti, value->ptr, var->value.ptr);
+        ecs_script_var_t *value = ecs_vec_append_t(&v->base.script->allocator, 
+            &assembly->prop_defaults, ecs_script_var_t);
+        value->value.ptr = flecs_calloc(&v->base.script->allocator, ti->size);
+        value->value.type = type;
+        value->type_info = ti;
+        ecs_value_copy_w_type_info(
+            v->world, ti, value->value.ptr, var->value.ptr);
 
         ecs_entity_t mbr = ecs_entity(v->world, {
             .name = node->name,
@@ -221,7 +221,7 @@ int flecs_script_assembly_eval(
     case EcsAstScope:
     case EcsAstTag:
     case EcsAstComponent:
-    case EcsAstVar:
+    case EcsAstVarComponent:
     case EcsAstDefaultComponent:
     case EcsAstWithVar:
     case EcsAstWithTag:
@@ -275,20 +275,35 @@ int flecs_script_assembly_hoist_using(
 }
 
 ecs_script_assembly_t* flecs_script_assembly_init(
-    ecs_allocator_t *a)
+    ecs_script_t *script)
 {
+    ecs_allocator_t *a = &script->allocator;
     ecs_script_assembly_t *result = flecs_alloc_t(a, ecs_script_assembly_t);
-    ecs_vec_init_t(NULL, &result->prop_defaults, ecs_value_t, 0);
+    ecs_vec_init_t(NULL, &result->prop_defaults, ecs_script_var_t, 0);
     ecs_vec_init_t(NULL, &result->using_, ecs_entity_t, 0);
     return result;
 }
 
 void flecs_script_assembly_fini(
-    ecs_allocator_t *a,
+    ecs_script_t *script,
     ecs_script_assembly_t *assembly)
 {
-    ecs_vec_fini_t(NULL, &assembly->prop_defaults, ecs_value_t);
-    ecs_vec_fini_t(NULL, &assembly->using_, ecs_entity_t);
+    ecs_assert(script != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_allocator_t *a = &script->allocator;
+
+    int32_t i, count = ecs_vec_count(&assembly->prop_defaults);
+    ecs_script_var_t *values = ecs_vec_first(&assembly->prop_defaults);
+    for (i = 0; i < count; i ++) {
+        ecs_script_var_t *value = &values[i];
+        const ecs_type_info_t *ti = value->type_info;
+        if (ti->hooks.dtor) {
+            ti->hooks.dtor(value->value.ptr, 1, ti);
+        }
+        flecs_free(a, ti->size, value->value.ptr);
+    }
+
+    ecs_vec_fini_t(a, &assembly->prop_defaults, ecs_script_var_t);
+    ecs_vec_fini_t(a, &assembly->using_, ecs_entity_t);
     flecs_free_t(a, ecs_script_assembly_t, assembly);
 }
 
@@ -302,17 +317,16 @@ int flecs_script_eval_assembly(
         return -1;
     }
 
-    ecs_allocator_t *a = &v->base.script->allocator;
-    ecs_script_assembly_t *assembly = flecs_script_assembly_init(a);
+    ecs_script_assembly_t *assembly = flecs_script_assembly_init(v->base.script);
     assembly->entity = assembly_entity;
     assembly->node = node;
 
     if (flecs_script_assembly_preprocess(v, assembly)) {
-        return -1;
+        goto error;
     }
 
     if (flecs_script_assembly_hoist_using(v, assembly)) {
-        return -1;
+        goto error;
     }
 
     /* If assembly has no props, give assembly dummy size so we can register
@@ -337,5 +351,11 @@ int flecs_script_eval_assembly(
         .ctx = v->world
     });
 
+    /* Keep script alive for as long as assembly is alive */
+    v->base.script->refcount ++;
+
     return 0;
+error:
+    flecs_script_assembly_fini(v->base.script, assembly);
+    return -1;
 }

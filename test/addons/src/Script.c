@@ -6439,7 +6439,7 @@ void Script_instantiate_prefab_w_assembly(void) {
     test_assert(p != 0);
     test_assert(ecs_lookup(world, "p.child") == 0);
     test_assert(ecs_lookup(world, "child") == 0);
-    
+
     const char *expr_instance =
     LINE "e : p"
     LINE "";

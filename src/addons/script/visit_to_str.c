@@ -87,7 +87,7 @@ char* flecs_script_node_to_str(
     case EcsAstWithComponent:
     case EcsAstComponent:          return "component";
     case EcsAstWithVar:
-    case EcsAstVar:                return "var";
+    case EcsAstVarComponent:       return "var";
     case EcsAstDefaultComponent:   return "default_component";
     case EcsAstWith:               return "with";
     case EcsAstUsing:              return "using";
@@ -327,7 +327,7 @@ int flecs_script_stmt_to_str(
     case EcsAstWithComponent:
         flecs_script_component_to_str(v, (ecs_script_component_t*)node);
         break;
-    case EcsAstVar:
+    case EcsAstVarComponent:
     case EcsAstWithVar:
         flecs_script_with_var_to_str(v, 
             (ecs_script_var_component_t*)node);

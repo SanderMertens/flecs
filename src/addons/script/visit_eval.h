@@ -56,14 +56,15 @@ int flecs_script_eval_assembly(
     ecs_script_assembly_node_t *assembly);
 
 ecs_script_assembly_t* flecs_script_assembly_init(
-    ecs_allocator_t *a);
+    ecs_script_t *script);
 
 void flecs_script_assembly_fini(
-    ecs_allocator_t *a,
+    ecs_script_t *script,
     ecs_script_assembly_t *assembly);
 
-ecs_script_eval_visitor_t flecs_script_eval_visit_init(
-    ecs_script_t *script);
+void flecs_script_eval_visit_init(
+    ecs_script_t *script,
+    ecs_script_eval_visitor_t *v);
 
 void flecs_script_eval_visit_fini(
     ecs_script_eval_visitor_t *v);

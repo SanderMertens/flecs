@@ -11,7 +11,7 @@ typedef enum ecs_script_node_kind_t {
     EcsAstTag,
     EcsAstComponent,
     EcsAstDefaultComponent,
-    EcsAstVar,
+    EcsAstVarComponent,
     EcsAstWithVar,
     EcsAstWithTag,
     EcsAstWithComponent,
@@ -137,9 +137,6 @@ typedef struct ecs_script_if_t {
 
 #define ecs_script_node(kind, node)\
     ((ecs_script_##kind##_t*)node)
-
-ecs_script_t* flecs_script_new(
-    ecs_world_t *world);
 
 bool flecs_scope_is_empty(
     ecs_script_scope_t *scope);

@@ -21,6 +21,25 @@ ecs_script_vars_t* ecs_script_vars_pop(
 {
     ecs_script_vars_t *parent = vars->parent;
     ecs_stack_cursor_t *cursor = vars->cursor;
+    int32_t i, count = ecs_vec_count(&vars->vars);
+    if (count) {
+        ecs_script_var_t *var_array = ecs_vec_first(&vars->vars);
+        for (i = 0; i < count; i ++) {
+            ecs_script_var_t *var = &var_array[i];
+            if (!var->value.ptr) {
+                continue;
+            }
+
+            if (!var->type_info || !var->type_info->hooks.dtor) {
+                continue;
+            }
+
+            var->type_info->hooks.dtor(var->value.ptr, 1, var->type_info);
+        }
+
+        flecs_name_index_fini(&vars->var_index);
+    }
+
     ecs_vec_fini_t(vars->allocator, &vars->vars, ecs_script_var_t);
     flecs_stack_restore_cursor(vars->stack, cursor);
     return parent;
@@ -41,6 +60,9 @@ ecs_script_var_t* ecs_script_vars_declare(
     ecs_script_var_t *var = ecs_vec_append_t(
         vars->allocator, &vars->vars, ecs_script_var_t);
     var->name = name;
+    var->value.ptr = NULL;
+    var->value.type = 0;
+    var->type_info = NULL;
 
     flecs_name_index_ensure(&vars->var_index,
         flecs_ito(uint64_t, ecs_vec_count(&vars->vars)), name, 0, 0);

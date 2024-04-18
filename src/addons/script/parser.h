@@ -11,6 +11,8 @@
 #pragma clang diagnostic ignored "-Wswitch-enum"
 /* To allow for nested Parse statements */
 #pragma clang diagnostic ignored "-Wshadow"
+#elif defined(__GNUC__)
+#pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
 #endif
 
 /* Definitions for parser functions */

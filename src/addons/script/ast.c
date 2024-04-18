@@ -24,7 +24,6 @@ void* flecs_ast_new_(
     return result;
 }
 
-static
 ecs_script_scope_t* flecs_script_scope_new(
     ecs_script_parser_t *parser)
 {
@@ -38,17 +37,6 @@ bool flecs_scope_is_empty(
     ecs_script_scope_t *scope)
 {
     return ecs_vec_count(&scope->stmts) == 0;
-}
-
-ecs_script_t* flecs_script_new(
-    ecs_world_t *world) 
-{
-    ecs_script_t *result = ecs_os_calloc_t(ecs_script_t);
-    flecs_allocator_init(&result->allocator);
-    ecs_script_parser_t parser = { .script = result };
-    result->root = flecs_script_scope_new(&parser);
-    result->world = world;
-    return result;
 }
 
 ecs_script_scope_t* flecs_script_insert_scope(
@@ -183,7 +171,7 @@ ecs_script_var_component_t* flecs_script_insert_var_component(
     ecs_assert(var_name != NULL, ECS_INTERNAL_ERROR, NULL);
 
     ecs_script_var_component_t *result = flecs_ast_new(
-            parser, ecs_script_var_component_t, EcsAstVar);
+            parser, ecs_script_var_component_t, EcsAstVarComponent);
     result->name = var_name;
 
     flecs_ast_append(parser, scope->stmts, 

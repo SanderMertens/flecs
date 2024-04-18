@@ -33,6 +33,8 @@ void* flecs_stack_alloc(
     ecs_size_t size,
     ecs_size_t align)
 {
+    ecs_assert(size > 0, ECS_INTERNAL_ERROR, NULL);
+
     ecs_stack_page_t *page = stack->tail_page;
     if (page == &stack->first && !page->data) {
         page->data = ecs_os_malloc(ECS_STACK_PAGE_SIZE);
@@ -91,6 +93,8 @@ void flecs_stack_free(
 ecs_stack_cursor_t* flecs_stack_get_cursor(
     ecs_stack_t *stack)
 {
+    ecs_assert(stack != NULL, ECS_INTERNAL_ERROR, NULL);
+
     ecs_stack_page_t *page = stack->tail_page;
     int16_t sp = stack->tail_page->sp;
     ecs_stack_cursor_t *result = flecs_stack_alloc_t(stack, ecs_stack_cursor_t);
