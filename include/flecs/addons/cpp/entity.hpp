@@ -242,13 +242,13 @@ struct entity : entity_builder<entity>
     template <typename T, typename A = actual_type_t<T>, if_t< flecs::is_pair<T>::value > = 0>
     ref<A> get_ref() const {
         return ref<A>(m_world, m_id,
-                      ecs_pair(_::cpp_type<T::first>::id(m_world),
-                               _::cpp_type<T::second>::id(m_world)));
+                      ecs_pair(_::cpp_type<typename T::first>::id(m_world),
+                               _::cpp_type<typename T::second>::id(m_world)));
     }
 
 
     template <typename First, typename Second, typename P = flecs::pair<First, Second>,
-    typename A = actual_type_t<P>>
+        typename A = actual_type_t<P>>
     ref<A> get_ref() const {
         return ref<A>(m_world, m_id,
             ecs_pair(_::cpp_type<First>::id(m_world),
