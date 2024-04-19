@@ -118,8 +118,7 @@ int ecs_script_update(
     ecs_world_t *world,
     ecs_entity_t e,
     ecs_entity_t instance,
-    const char *code,
-    ecs_vars_t *vars)
+    const char *code)
 {
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(code != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -198,7 +197,7 @@ ecs_entity_t ecs_script_init(
         }
     }
 
-    if (ecs_script_update(world, e, 0, script, NULL)) {
+    if (ecs_script_update(world, e, 0, script)) {
         goto error;
     }
 

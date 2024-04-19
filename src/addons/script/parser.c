@@ -707,7 +707,7 @@ ecs_script_t* ecs_script_parse(
 
     script->token_buffer_size = ecs_os_strlen(code) * 2 + 1;
     script->token_buffer = flecs_alloc(
-        &script->allocator, script->token_buffer_size),
+        &script->allocator, script->token_buffer_size);
     parser.token_cur = script->token_buffer;
 
     const char *pos = code;

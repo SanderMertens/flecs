@@ -664,6 +664,22 @@ void flecs_stage_free(
     ecs_os_free(stage);
 }
 
+ecs_allocator_t* flecs_stage_get_allocator(
+    ecs_world_t *world)
+{
+    ecs_stage_t *stage = flecs_stage_from_world(
+        ECS_CONST_CAST(ecs_world_t**, &world));
+    return &stage->allocator;
+}
+
+ecs_stack_t* flecs_stage_get_stack_allocator(
+    ecs_world_t *world)
+{
+    ecs_stage_t *stage = flecs_stage_from_world(
+        ECS_CONST_CAST(ecs_world_t**, &world));
+    return &stage->allocators.iter_stack;
+}
+
 ecs_world_t* ecs_stage_new(
     ecs_world_t *world)
 {

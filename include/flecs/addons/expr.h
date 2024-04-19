@@ -112,70 +112,6 @@ char* ecs_astresc(
     char delimiter,
     const char *in);
 
-/** Storage for parser variables. Variables make it possible to parameterize
- * expression strings, and are referenced with the $ operator (e.g. $var). */
-typedef struct ecs_expr_var_t {
-    char *name;
-    ecs_value_t value;
-    bool owned; /* Set to false if ecs_vars_t should not take ownership of var */
-} ecs_expr_var_t;
-
-typedef struct ecs_expr_var_scope_t {
-    ecs_hashmap_t var_index;
-    ecs_vec_t vars;
-    struct ecs_expr_var_scope_t *parent;
-} ecs_expr_var_scope_t;
-
-typedef struct ecs_vars_t {
-    ecs_world_t *world;
-    ecs_expr_var_scope_t root;
-    ecs_expr_var_scope_t *cur;
-} ecs_vars_t;
-
-/** Init variable storage */
-FLECS_API
-void ecs_vars_init(
-    ecs_world_t *world,
-    ecs_vars_t *vars);
-
-/** Cleanup variable storage */
-FLECS_API
-void ecs_vars_fini(
-    ecs_vars_t *vars);
-
-/** Push variable scope */
-FLECS_API
-void ecs_vars_push(
-    ecs_vars_t *vars);
-
-/** Pop variable scope */
-FLECS_API
-int ecs_vars_pop(
-    ecs_vars_t *vars);
-
-/** Declare variable in current scope */
-FLECS_API
-ecs_expr_var_t* ecs_vars_declare(
-    ecs_vars_t *vars,
-    const char *name,
-    ecs_entity_t type);
-
-/** Declare variable in current scope from value.
- * This operation takes ownership of the value. The value pointer must be
- * allocated with ecs_value_new().
- */
-FLECS_API
-ecs_expr_var_t* ecs_vars_declare_w_value(
-    ecs_vars_t *vars,
-    const char *name,
-    ecs_value_t *value);
-
-/** Lookup variable in scope and parent scopes */
-FLECS_API
-ecs_expr_var_t* ecs_vars_lookup(
-    const ecs_vars_t *vars,
-    const char *name);
-
 /** Serialize value into expression string.
  * This operation serializes a value of the provided type to a string. The
  * memory pointed to must be large enough to contain a value of the used type.
@@ -275,61 +211,6 @@ const char *ecs_parse_expr_token(
     const char *ptr,
     char *token);
 
-/** Evaluate interpolated expressions in string.
- * This operation evaluates expressions in a string, and replaces them with
- * their evaluated result. Supported expression formats are:
- *  - $variable_name
- *  - {expression}
- *
- * The $, { and } characters can be escaped with a backslash (\).
- *
- * @param world The world.
- * @param str The string to evaluate.
- * @param vars The variables to use for evaluation.
- */
-FLECS_API
-char* ecs_interpolate_string(
-    ecs_world_t *world,
-    const char *str,
-    const ecs_vars_t *vars);
-
-/** Convert iterator to vars
- * This operation converts an iterator to a variable array. This allows for
- * using iterator results in expressions. The operation only converts a
- * single result at a time, and does not progress the iterator.
- *
- * Iterator fields with data will be made available as variables with as name
- * the field index (e.g. "$1"). The operation does not check if reflection data
- * is registered for a field type. If no reflection data is registered for the
- * type, using the field variable in expressions will fail.
- *
- * Field variables will only contain single elements, even if the iterator
- * returns component arrays. The offset parameter can be used to specify which
- * element in the component arrays to return. The offset parameter must be
- * smaller than it->count.
- *
- * The operation will create a variable for query variables that contain a
- * single entity.
- *
- * The operation will attempt to use existing variables. If a variable does not
- * yet exist, the operation will create it. If an existing variable exists with
- * a mismatching type, the operation will fail.
- *
- * Accessing variables after progressing the iterator or after the iterator is
- * destroyed will result in undefined behavior.
- *
- * If vars contains a variable that is not present in the iterator, the variable
- * will not be modified.
- *
- * @param it The iterator to convert to variables.
- * @param vars The variables to write to.
- * @param offset The offset to the current element.
- */
-FLECS_API
-void ecs_iter_to_vars(
-    const ecs_iter_t *it,
-    ecs_vars_t *vars,
-    int offset);
 
 /** @} */
 

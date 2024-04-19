@@ -3662,7 +3662,7 @@ void Script_assign_pair_component_in_script_update(void) {
     });
     test_assert(s != 0);
 
-    test_assert(ecs_script_update(world, s, 0, expr, NULL) == 0);
+    test_assert(ecs_script_update(world, s, 0, expr) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "Foo");
     ecs_entity_t bar = ecs_lookup(world, "Bar");

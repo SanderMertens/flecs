@@ -1051,8 +1051,6 @@ int flecs_script_eval_node(
     }
 
     ecs_abort(ECS_INTERNAL_ERROR, "corrupt AST node kind");
-
-    return -1;
 }
 
 void flecs_script_eval_visit_init(

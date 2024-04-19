@@ -1,6 +1,6 @@
 /**
- * @file expr/deserialize.c
- * @brief Deserialize flecs string format into (component) values.
+ * @file script/expr.c
+ * @brief Evaluate expressions.
  */
 
 #include "script.h"

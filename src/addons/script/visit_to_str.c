@@ -77,7 +77,7 @@ void flecs_script_expr_to_str(
 }
 
 static
-char* flecs_script_node_to_str(
+const char* flecs_script_node_to_str(
     ecs_script_node_t *node)
 {
     switch(node->kind) {

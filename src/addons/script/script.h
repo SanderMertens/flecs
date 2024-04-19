@@ -15,22 +15,6 @@
 typedef struct ecs_script_scope_t ecs_script_scope_t;
 typedef struct ecs_script_entity_t ecs_script_entity_t;
 
-struct ecs_script_var_t {
-    const char *name;
-    ecs_value_t value;
-    const ecs_type_info_t *type_info;
-};
-
-struct ecs_script_vars_t {
-    struct ecs_script_vars_t *parent;
-    ecs_hashmap_t var_index;
-    ecs_vec_t vars;
-
-    struct ecs_stack_t *stack;
-    ecs_stack_cursor_t *cursor;
-    ecs_allocator_t *allocator;
-};
-
 struct ecs_script_t {
     ecs_world_t *world;
     const char *name;

@@ -42,6 +42,7 @@ const char* flecs_script_token_kind_str(
     case EcsTokKeywordProp:
     case EcsTokKeywordConst:
     case EcsTokKeywordIf:
+    case EcsTokKeywordElse:
     case EcsTokKeywordModule:
         return "keyword ";
     case EcsTokIdentifier:
@@ -253,7 +254,7 @@ const char* flecs_script_expr(
         parser->token_cur[0] = '[';
     }
     
-    int32_t len = pos - start;
+    int32_t len = flecs_ito(int32_t, pos - start);
     ecs_os_memcpy(parser->token_cur + 1, start, len);
     out->value = parser->token_cur;
     parser->token_cur += len + 1;
@@ -310,7 +311,7 @@ const char* flecs_script_until(
         }
     }
 
-    int32_t len = pos - start;
+    int32_t len = flecs_ito(int32_t, pos - start);
     ecs_os_memcpy(parser->token_cur, start, len);
     out->value = parser->token_cur;
     parser->token_cur += len;

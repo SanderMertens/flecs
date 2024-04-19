@@ -103,4 +103,10 @@ ecs_entity_t flecs_stage_set_system(
     ecs_stage_t *stage,
     ecs_entity_t system);
 
+ecs_allocator_t* flecs_stage_get_allocator(
+    ecs_world_t *world);
+
+ecs_stack_t* flecs_stage_get_stack_allocator(
+    ecs_world_t *world);
+
 #endif
