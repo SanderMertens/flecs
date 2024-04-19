@@ -701,44 +701,42 @@ void DeserExprOperators_struct_result_lparen_int_rparen(void) {
 void DeserExprOperators_add_to_var(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_vars_t vars = {0};
-    ecs_vars_init(world, &vars);
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
 
-    ecs_expr_var_t *var = ecs_vars_declare(
-        &vars, "foo", ecs_id(ecs_i32_t));
+    ecs_script_var_t *var = ecs_script_vars_define(
+        vars, "foo", ecs_i32_t);
     *(int32_t*)var->value.ptr = 10;
 
     ecs_value_t v = {0};
-    ecs_parse_expr_desc_t desc = { .vars = &vars };
+    ecs_parse_expr_desc_t desc = { .vars = vars };
     const char *ptr = ecs_parse_expr(world, "$foo + 20", &v, &desc);
     test_assert(ptr != NULL);
     test_assert(!ptr[0]);
     test_int(*(int32_t*)v.ptr, 10 + 20);
     ecs_value_free(world, v.type, v.ptr);
 
-    ecs_vars_fini(&vars);
+    ecs_script_vars_fini(vars);
     ecs_fini(world);
 }
 
 void DeserExprOperators_add_var_to(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_vars_t vars = {0};
-    ecs_vars_init(world, &vars);
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
 
-    ecs_expr_var_t *var = ecs_vars_declare(
-        &vars, "foo", ecs_id(ecs_i32_t));
+    ecs_script_var_t *var = ecs_script_vars_define(
+        vars, "foo", ecs_i32_t);
     *(int32_t*)var->value.ptr = 10;
 
     ecs_value_t v = {0};
-    ecs_parse_expr_desc_t desc = { .vars = &vars };
+    ecs_parse_expr_desc_t desc = { .vars = vars };
     const char *ptr = ecs_parse_expr(world, "20 + $foo", &v, &desc);
     test_assert(ptr != NULL);
     test_assert(!ptr[0]);
     test_int(*(int32_t*)v.ptr, 20 + 10);
     ecs_value_free(world, v.type, v.ptr);
 
-    ecs_vars_fini(&vars);
+    ecs_script_vars_fini(vars);
     ecs_fini(world);
 }
 
@@ -755,13 +753,13 @@ void DeserExprOperators_var_member(void) {
         }
     });
 
-    ecs_vars_t vars = {0};
-    ecs_vars_init(world, &vars);
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
 
-    ecs_expr_var_t *var = ecs_vars_declare(&vars, "foo", ecs_id(Position));
+    ecs_script_var_t *var = ecs_script_vars_define(
+        vars, "foo", Position);
     *(Position*)var->value.ptr = (Position){10, 20};
 
-    ecs_parse_expr_desc_t desc = { .vars = &vars };
+    ecs_parse_expr_desc_t desc = { .vars = vars };
     {
         ecs_value_t v = {0};
         const char *ptr = ecs_parse_expr(world, "$foo.x", &v, &desc);
@@ -781,7 +779,7 @@ void DeserExprOperators_var_member(void) {
         ecs_value_free(world, v.type, v.ptr);
     }
 
-    ecs_vars_fini(&vars);
+    ecs_script_vars_fini(vars);
     ecs_fini(world);
 }
 
@@ -1553,22 +1551,21 @@ void DeserExprOperators_min_lparen_int_add_int_rparen(void) {
 void DeserExprOperators_min_var(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_vars_t vars = {0};
-    ecs_vars_init(world, &vars);
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
 
-    ecs_expr_var_t *var = ecs_vars_declare(
-        &vars, "foo", ecs_id(ecs_u64_t));
+    ecs_script_var_t *var = ecs_script_vars_define(
+        vars, "foo", ecs_u64_t);
     *(ecs_u64_t*)var->value.ptr = 10;
 
     ecs_value_t v = {0};
-    ecs_parse_expr_desc_t desc = { .vars = &vars };
+    ecs_parse_expr_desc_t desc = { .vars = vars };
     test_assert(ecs_parse_expr(world, "-$foo", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_int(*(ecs_i64_t*)v.ptr, -10);
     ecs_value_free(world, v.type, v.ptr);
 
-    ecs_vars_fini(&vars);
+    ecs_script_vars_fini(vars);
 
     ecs_fini(world);
 }
@@ -1612,15 +1609,14 @@ void DeserExprOperators_struct_w_min_var(void) {
         }
     });
 
-    ecs_vars_t vars = {0};
-    ecs_vars_init(world, &vars);
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
 
-    ecs_expr_var_t *var = ecs_vars_declare(
-        &vars, "foo", ecs_id(ecs_u64_t));
+    ecs_script_var_t *var = ecs_script_vars_define(
+        vars, "foo", ecs_u64_t);
     *(ecs_u64_t*)var->value.ptr = 10;
 
     Mass v = {0};
-    ecs_parse_expr_desc_t desc = { .vars = &vars };
+    ecs_parse_expr_desc_t desc = { .vars = vars };
     const char *ptr = ecs_parse_expr(world, "{-$foo}", &(ecs_value_t){
         .type = t, .ptr = &v
     }, &desc);
@@ -1628,7 +1624,7 @@ void DeserExprOperators_struct_w_min_var(void) {
     test_assert(!ptr[0]);
 
     test_uint(v.value, -10);
-    ecs_vars_fini(&vars);
+    ecs_script_vars_fini(vars);
 
     ecs_fini(world);
 }
@@ -1671,15 +1667,14 @@ void DeserExprOperators_struct_w_min_lparen_var_rparen(void) {
         }
     });
 
-    ecs_vars_t vars = {0};
-    ecs_vars_init(world, &vars);
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
 
-    ecs_expr_var_t *var = ecs_vars_declare(
-        &vars, "foo", ecs_id(ecs_u64_t));
+    ecs_script_var_t *var = ecs_script_vars_define(
+        vars, "foo", ecs_u64_t);
     *(ecs_u64_t*)var->value.ptr = 10;
 
     Mass v = {0};
-    ecs_parse_expr_desc_t desc = { .vars = &vars };
+    ecs_parse_expr_desc_t desc = { .vars = vars };
     const char *ptr = ecs_parse_expr(world, "{-($foo)}", &(ecs_value_t){
         .type = t, .ptr = &v
     }, &desc);
@@ -1687,7 +1682,7 @@ void DeserExprOperators_struct_w_min_lparen_var_rparen(void) {
     test_assert(!ptr[0]);
 
     test_uint(v.value, -10);
-    ecs_vars_fini(&vars);
+    ecs_script_vars_fini(vars);
 
     ecs_fini(world);
 }
@@ -1917,22 +1912,22 @@ void DeserExprOperators_var_parent_func(void) {
     ecs_entity_t child = ecs_entity(world, { .name = "parent.child" });
     test_assert(child != 0);
 
-    ecs_vars_t vars = {0};
-    ecs_vars_init(world, &vars);
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
 
-    ecs_expr_var_t *var = ecs_vars_declare(&vars, "foo", ecs_id(ecs_entity_t));
+    ecs_script_var_t *var = ecs_script_vars_define(
+        vars, "foo", ecs_entity_t);
     test_assert(var != NULL);
     *(ecs_entity_t*)var->value.ptr = child;
 
     ecs_value_t v = {0};
-    ecs_parse_expr_desc_t desc = { .vars = &vars };
+    ecs_parse_expr_desc_t desc = { .vars = vars };
     test_assert(ecs_parse_expr(world, "$foo.parent()", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_entity_t));
     test_assert(v.ptr != NULL);
     test_uint(*(ecs_entity_t*)v.ptr, parent);
     ecs_value_free(world, v.type, v.ptr);
 
-    ecs_vars_fini(&vars);
+    ecs_script_vars_fini(vars);
 
     ecs_fini(world);
 }
@@ -1946,22 +1941,22 @@ void DeserExprOperators_var_name_func(void) {
     ecs_entity_t child = ecs_entity(world, { .name = "parent.child" });
     test_assert(child != 0);
 
-    ecs_vars_t vars = {0};
-    ecs_vars_init(world, &vars);
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
 
-    ecs_expr_var_t *var = ecs_vars_declare(&vars, "foo", ecs_id(ecs_entity_t));
+    ecs_script_var_t *var = ecs_script_vars_define(
+        vars, "foo", ecs_entity_t);
     test_assert(var != NULL);
     *(ecs_entity_t*)var->value.ptr = child;
 
     ecs_value_t v = {0};
-    ecs_parse_expr_desc_t desc = { .vars = &vars };
+    ecs_parse_expr_desc_t desc = { .vars = vars };
     test_assert(ecs_parse_expr(world, "$foo.name()", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_string_t));
     test_assert(v.ptr != NULL);
     test_str(*(char**)v.ptr, "child");
     ecs_value_free(world, v.type, v.ptr);
 
-    ecs_vars_fini(&vars);
+    ecs_script_vars_fini(vars);
 
     ecs_fini(world);
 }
@@ -1976,22 +1971,22 @@ void DeserExprOperators_var_doc_name_func(void) {
     test_assert(child != 0);
     ecs_doc_set_name(world, child, "ChildDoc");
 
-    ecs_vars_t vars = {0};
-    ecs_vars_init(world, &vars);
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
 
-    ecs_expr_var_t *var = ecs_vars_declare(&vars, "foo", ecs_id(ecs_entity_t));
+    ecs_script_var_t *var = ecs_script_vars_define(
+        vars, "foo", ecs_entity_t);
     test_assert(var != NULL);
     *(ecs_entity_t*)var->value.ptr = child;
 
     ecs_value_t v = {0};
-    ecs_parse_expr_desc_t desc = { .vars = &vars };
+    ecs_parse_expr_desc_t desc = { .vars = vars };
     test_assert(ecs_parse_expr(world, "$foo.doc_name()", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_string_t));
     test_assert(v.ptr != NULL);
     test_str(*(char**)v.ptr, "ChildDoc");
     ecs_value_free(world, v.type, v.ptr);
 
-    ecs_vars_fini(&vars);
+    ecs_script_vars_fini(vars);
 
     ecs_fini(world);
 }
@@ -2005,22 +2000,22 @@ void DeserExprOperators_var_chain_func(void) {
     ecs_entity_t child = ecs_entity(world, { .name = "parent.child" });
     test_assert(child != 0);
 
-    ecs_vars_t vars = {0};
-    ecs_vars_init(world, &vars);
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
 
-    ecs_expr_var_t *var = ecs_vars_declare(&vars, "foo", ecs_id(ecs_entity_t));
+    ecs_script_var_t *var = ecs_script_vars_define(
+        vars, "foo", ecs_entity_t);
     test_assert(var != NULL);
     *(ecs_entity_t*)var->value.ptr = child;
 
     ecs_value_t v = {0};
-    ecs_parse_expr_desc_t desc = { .vars = &vars };
+    ecs_parse_expr_desc_t desc = { .vars = vars };
     test_assert(ecs_parse_expr(world, "$foo.parent().name()", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_string_t));
     test_assert(v.ptr != NULL);
     test_str(*(char**)v.ptr, "parent");
     ecs_value_free(world, v.type, v.ptr);
 
-    ecs_vars_fini(&vars);
+    ecs_script_vars_fini(vars);
 
     ecs_fini(world);
 }
@@ -2028,20 +2023,19 @@ void DeserExprOperators_var_chain_func(void) {
 void DeserExprOperators_interpolate_string_w_i32_var(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_vars_t vars = {0};
-    ecs_vars_init(world, &vars);
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
 
-    ecs_expr_var_t *v = ecs_vars_declare(
-        &vars, "foo", ecs_id(ecs_i32_t));
+    ecs_script_var_t *v = ecs_script_vars_define(
+        vars, "foo", ecs_i32_t);
     test_assert(v != NULL);
     *(int32_t*)v->value.ptr = 10;
 
-    char *result = ecs_interpolate_string(world, "$foo", &vars);
+    char *result = ecs_interpolate_string(world, "$foo", vars);
     test_assert(result != NULL);
     test_str(result, "10");
     ecs_os_free(result);
 
-    ecs_vars_fini(&vars);
+    ecs_script_vars_fini(vars);
 
     ecs_fini(world);
 }
@@ -2049,20 +2043,19 @@ void DeserExprOperators_interpolate_string_w_i32_var(void) {
 void DeserExprOperators_interpolate_string_w_string_var(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_vars_t vars = {0};
-    ecs_vars_init(world, &vars);
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
 
-    ecs_expr_var_t *v = ecs_vars_declare(
-        &vars, "foo", ecs_id(ecs_string_t));
+    ecs_script_var_t *v = ecs_script_vars_define(
+        vars, "foo", ecs_string_t);
     test_assert(v != NULL);
     *(ecs_string_t*)v->value.ptr = ecs_os_strdup("Hello World");
 
-    char *result = ecs_interpolate_string(world, "$foo", &vars);
+    char *result = ecs_interpolate_string(world, "$foo", vars);
     test_assert(result != NULL);
     test_str(result, "Hello World");
     ecs_os_free(result);
 
-    ecs_vars_fini(&vars);
+    ecs_script_vars_fini(vars);
 
     ecs_fini(world);
 }
@@ -2070,20 +2063,19 @@ void DeserExprOperators_interpolate_string_w_string_var(void) {
 void DeserExprOperators_interpolate_string_w_entity_var(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_vars_t vars = {0};
-    ecs_vars_init(world, &vars);
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
 
-    ecs_expr_var_t *v = ecs_vars_declare(
-        &vars, "foo", ecs_id(ecs_entity_t));
+    ecs_script_var_t *v = ecs_script_vars_define(
+        vars, "foo", ecs_entity_t);
     test_assert(v != NULL);
     *(ecs_entity_t*)v->value.ptr = ecs_id(ecs_i32_t);
 
-    char *result = ecs_interpolate_string(world, "$foo", &vars);
+    char *result = ecs_interpolate_string(world, "$foo", vars);
     test_assert(result != NULL);
     test_str(result, "flecs.meta.i32");
     ecs_os_free(result);
 
-    ecs_vars_fini(&vars);
+    ecs_script_vars_fini(vars);
 
     ecs_fini(world);
 }
@@ -2091,20 +2083,19 @@ void DeserExprOperators_interpolate_string_w_entity_var(void) {
 void DeserExprOperators_interpolate_string_w_id_var(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_vars_t vars = {0};
-    ecs_vars_init(world, &vars);
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
 
-    ecs_expr_var_t *v = ecs_vars_declare(
-        &vars, "foo", ecs_id(ecs_id_t));
+    ecs_script_var_t *v = ecs_script_vars_define(
+        vars, "foo", ecs_id_t);
     test_assert(v != NULL);
     *(ecs_id_t*)v->value.ptr = ecs_id(ecs_i32_t);
 
-    char *result = ecs_interpolate_string(world, "$foo", &vars);
+    char *result = ecs_interpolate_string(world, "$foo", vars);
     test_assert(result != NULL);
     test_str(result, "flecs.meta.i32");
     ecs_os_free(result);
 
-    ecs_vars_fini(&vars);
+    ecs_script_vars_fini(vars);
 
     ecs_fini(world);
 }
@@ -2112,14 +2103,13 @@ void DeserExprOperators_interpolate_string_w_id_var(void) {
 void DeserExprOperators_interpolate_string_w_var_not_found(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_vars_t vars = {0};
-    ecs_vars_init(world, &vars);
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
 
     ecs_log_set_level(-4);
-    char *result = ecs_interpolate_string(world, "$foo", &vars);
+    char *result = ecs_interpolate_string(world, "$foo", vars);
     test_assert(result == NULL);
 
-    ecs_vars_fini(&vars);
+    ecs_script_vars_fini(vars);
 
     ecs_fini(world);
 }
@@ -2127,20 +2117,19 @@ void DeserExprOperators_interpolate_string_w_var_not_found(void) {
 void DeserExprOperators_interpolate_string_w_entity_var_0(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_vars_t vars = {0};
-    ecs_vars_init(world, &vars);
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
 
-    ecs_expr_var_t *v = ecs_vars_declare(
-        &vars, "foo", ecs_id(ecs_entity_t));
+    ecs_script_var_t *v = ecs_script_vars_define(
+        vars, "foo", ecs_entity_t);
     test_assert(v != NULL);
     *(ecs_entity_t*)v->value.ptr = 0;
 
-    char *result = ecs_interpolate_string(world, "$foo", &vars);
+    char *result = ecs_interpolate_string(world, "$foo", vars);
     test_assert(result != NULL);
     test_str(result, "0");
     ecs_os_free(result);
 
-    ecs_vars_fini(&vars);
+    ecs_script_vars_fini(vars);
 
     ecs_fini(world);
 }
@@ -2148,20 +2137,19 @@ void DeserExprOperators_interpolate_string_w_entity_var_0(void) {
 void DeserExprOperators_interpolate_string_w_var_special_chars(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_vars_t vars = {0};
-    ecs_vars_init(world, &vars);
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
 
-    ecs_expr_var_t *v = ecs_vars_declare(
-        &vars, "_foo_bar_10", ecs_id(ecs_i32_t));
+    ecs_script_var_t *v = ecs_script_vars_define(
+        vars, "_foo_bar_10", ecs_i32_t);
     test_assert(v != NULL);
     *(int32_t*)v->value.ptr = 10;
 
-    char *result = ecs_interpolate_string(world, "$_foo_bar_10", &vars);
+    char *result = ecs_interpolate_string(world, "$_foo_bar_10", vars);
     test_assert(result != NULL);
     test_str(result, "10");
     ecs_os_free(result);
 
-    ecs_vars_fini(&vars);
+    ecs_script_vars_fini(vars);
 
     ecs_fini(world);
 }
@@ -2169,20 +2157,19 @@ void DeserExprOperators_interpolate_string_w_var_special_chars(void) {
 void DeserExprOperators_interpolate_string_w_var_before_after_text(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_vars_t vars = {0};
-    ecs_vars_init(world, &vars);
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
 
-    ecs_expr_var_t *v = ecs_vars_declare(
-        &vars, "foo", ecs_id(ecs_i32_t));
+    ecs_script_var_t *v = ecs_script_vars_define(
+        vars, "foo", ecs_i32_t);
     test_assert(v != NULL);
     *(int32_t*)v->value.ptr = 10;
 
-    char *result = ecs_interpolate_string(world, "Hello $foo World", &vars);
+    char *result = ecs_interpolate_string(world, "Hello $foo World", vars);
     test_assert(result != NULL);
     test_str(result, "Hello 10 World");
     ecs_os_free(result);
 
-    ecs_vars_fini(&vars);
+    ecs_script_vars_fini(vars);
 
     ecs_fini(world);
 }
@@ -2190,20 +2177,19 @@ void DeserExprOperators_interpolate_string_w_var_before_after_text(void) {
 void DeserExprOperators_interpolate_string_w_curly_brackets_var(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_vars_t vars = {0};
-    ecs_vars_init(world, &vars);
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
 
-    ecs_expr_var_t *v = ecs_vars_declare(
-        &vars, "foo", ecs_id(ecs_i32_t));
+    ecs_script_var_t *v = ecs_script_vars_define(
+        vars, "foo", ecs_i32_t);
     test_assert(v != NULL);
     *(int32_t*)v->value.ptr = 10;
 
-    char *result = ecs_interpolate_string(world, "Hello {$foo}World", &vars);
+    char *result = ecs_interpolate_string(world, "Hello {$foo}World", vars);
     test_assert(result != NULL);
     test_str(result, "Hello 10World");
     ecs_os_free(result);
 
-    ecs_vars_fini(&vars);
+    ecs_script_vars_fini(vars);
 
     ecs_fini(world);
 }
@@ -2222,20 +2208,19 @@ void DeserExprOperators_interpolate_string_w_curly_brackets_expr(void) {
 void DeserExprOperators_interpolate_string_w_curly_brackets_expr_w_var(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_vars_t vars = {0};
-    ecs_vars_init(world, &vars);
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
 
-    ecs_expr_var_t *v = ecs_vars_declare(
-        &vars, "foo", ecs_id(ecs_i32_t));
+    ecs_script_var_t *v = ecs_script_vars_define(
+        vars, "foo", ecs_i32_t);
     test_assert(v != NULL);
     *(int32_t*)v->value.ptr = 10;
 
-    char *result = ecs_interpolate_string(world, "Hello {$foo + 5}World", &vars);
+    char *result = ecs_interpolate_string(world, "Hello {$foo + 5}World", vars);
     test_assert(result != NULL);
     test_str(result, "Hello 15World");
     ecs_os_free(result);
 
-    ecs_vars_fini(&vars);
+    ecs_script_vars_fini(vars);
 
     ecs_fini(world);
 }
@@ -2253,20 +2238,20 @@ void DeserExprOperators_interpolate_string_w_curly_brackets_expr_w_composite_var
         }
     });
 
-    ecs_vars_t vars = {0};
-    ecs_vars_init(world, &vars);
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
 
-    ecs_expr_var_t *v = ecs_vars_declare(
-        &vars, "foo", ecs_id(Position));
+    ecs_script_var_t *v = ecs_script_vars_define(
+        vars, "foo", Position);
     test_assert(v != NULL);
     *(Position*)v->value.ptr = (Position){10, 20};
 
-    char *result = ecs_interpolate_string(world, "Hello {$foo.x + $foo.y}World", &vars);
+    char *result = ecs_interpolate_string(
+        world, "Hello {$foo.x + $foo.y}World", vars);
     test_assert(result != NULL);
     test_str(result, "Hello 30World");
     ecs_os_free(result);
 
-    ecs_vars_fini(&vars);
+    ecs_script_vars_fini(vars);
 
     ecs_fini(world);
 }
@@ -2274,20 +2259,19 @@ void DeserExprOperators_interpolate_string_w_curly_brackets_expr_w_composite_var
 void DeserExprOperators_interpolate_string_w_escape_var_operator(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_vars_t vars = {0};
-    ecs_vars_init(world, &vars);
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
 
-    ecs_expr_var_t *v = ecs_vars_declare(
-        &vars, "foo", ecs_id(ecs_i32_t));
+    ecs_script_var_t *v = ecs_script_vars_define(
+        vars, "foo", ecs_i32_t);
     test_assert(v != NULL);
     *(int32_t*)v->value.ptr = 10;
 
-    char *result = ecs_interpolate_string(world, "Hello \\$foo World", &vars);
+    char *result = ecs_interpolate_string(world, "Hello \\$foo World", vars);
     test_assert(result != NULL);
     test_str(result, "Hello $foo World");
     ecs_os_free(result);
 
-    ecs_vars_fini(&vars);
+    ecs_script_vars_fini(vars);
 
     ecs_fini(world);
 }
@@ -2312,19 +2296,20 @@ void DeserExprOperators_interpolate_string_w_func(void) {
     ecs_entity_t child = ecs_entity(world, { .name = "parent.child" });
     test_assert(child != 0);
 
-    ecs_vars_t vars = {0};
-    ecs_vars_init(world, &vars);
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
 
-    ecs_expr_var_t *var = ecs_vars_declare(&vars, "foo", ecs_id(ecs_entity_t));
+    ecs_script_var_t *var = ecs_script_vars_define(
+        vars, "foo", ecs_entity_t);
     test_assert(var != NULL);
     *(ecs_entity_t*)var->value.ptr = child;
 
-    char *result = ecs_interpolate_string(world, "Hello {$foo.name()} World", &vars);
+    char *result = ecs_interpolate_string(
+        world, "Hello {$foo.name()} World", vars);
     test_assert(result != NULL);
     test_str(result, "Hello child World");
     ecs_os_free(result);
 
-    ecs_vars_fini(&vars);
+    ecs_script_vars_fini(vars);
 
     ecs_fini(world);
 }
@@ -2339,19 +2324,20 @@ void DeserExprOperators_interpolate_string_w_func_chain(void) {
     ecs_entity_t child = ecs_entity(world, { .name = "parent.child" });
     test_assert(child != 0);
 
-    ecs_vars_t vars = {0};
-    ecs_vars_init(world, &vars);
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
 
-    ecs_expr_var_t *var = ecs_vars_declare(&vars, "foo", ecs_id(ecs_entity_t));
+    ecs_script_var_t *var = ecs_script_vars_define(
+        vars, "foo", ecs_entity_t);
     test_assert(var != NULL);
     *(ecs_entity_t*)var->value.ptr = child;
 
-    char *result = ecs_interpolate_string(world, "Hello {$foo.parent().doc_name()} World", &vars);
+    char *result = ecs_interpolate_string(
+        world, "Hello {$foo.parent().doc_name()} World", vars);
     test_assert(result != NULL);
     test_str(result, "Hello Parent World");
     ecs_os_free(result);
 
-    ecs_vars_fini(&vars);
+    ecs_script_vars_fini(vars);
 
     ecs_fini(world);
 }
@@ -2367,8 +2353,7 @@ void DeserExprOperators_iter_to_vars_no_data(void) {
     ecs_entity_t e1 = ecs_new_w(world, Foo);
     ecs_entity_t e2 = ecs_new_w(world, Foo);
 
-    ecs_vars_t vars = {0};
-    ecs_vars_init(world, &vars);
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
 
     ecs_iter_t it = ecs_query_iter(world, query);
     test_bool(ecs_query_next(&it), true);
@@ -2376,18 +2361,18 @@ void DeserExprOperators_iter_to_vars_no_data(void) {
     test_uint(it.entities[0], e1);
     test_uint(it.entities[1], e2);
 
-    ecs_iter_to_vars(&it, &vars, 0);
+    ecs_iter_to_vars(&it, vars, 0);
     {
-        ecs_expr_var_t *v = ecs_vars_lookup(&vars, "this");
+        ecs_script_var_t *v = ecs_script_vars_lookup(vars, "this");
         test_assert(v != NULL);
         test_assert(v->value.type == ecs_id(ecs_entity_t));
         test_assert(v->value.ptr != NULL);
         test_uint(*(ecs_entity_t*)v->value.ptr, e1);
     }
 
-    ecs_iter_to_vars(&it, &vars, 1);
+    ecs_iter_to_vars(&it, vars, 1);
     {
-        ecs_expr_var_t *v = ecs_vars_lookup(&vars, "this");
+        ecs_script_var_t *v = ecs_script_vars_lookup(vars, "this");
         test_assert(v != NULL);
         test_assert(v->value.type == ecs_id(ecs_entity_t));
         test_assert(v->value.ptr != NULL);
@@ -2396,7 +2381,7 @@ void DeserExprOperators_iter_to_vars_no_data(void) {
 
     test_bool(ecs_query_next(&it), false);
 
-    ecs_vars_fini(&vars);
+    ecs_script_vars_fini(vars);
     ecs_query_fini(query);
 
     ecs_fini(world);
@@ -2413,8 +2398,7 @@ void DeserExprOperators_iter_to_vars_1_comp(void) {
     ecs_entity_t e1 = ecs_new_w(world, Position);
     ecs_entity_t e2 = ecs_new_w(world, Position);
 
-    ecs_vars_t vars = {0};
-    ecs_vars_init(world, &vars);
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
 
     ecs_iter_t it = ecs_query_iter(world, query);
     test_bool(ecs_query_next(&it), true);
@@ -2422,32 +2406,32 @@ void DeserExprOperators_iter_to_vars_1_comp(void) {
     test_uint(it.entities[0], e1);
     test_uint(it.entities[1], e2);
 
-    ecs_iter_to_vars(&it, &vars, 0);
+    ecs_iter_to_vars(&it, vars, 0);
     {
-        ecs_expr_var_t *v = ecs_vars_lookup(&vars, "this");
+        ecs_script_var_t *v = ecs_script_vars_lookup(vars, "this");
         test_assert(v != NULL);
         test_assert(v->value.type == ecs_id(ecs_entity_t));
         test_assert(v->value.ptr != NULL);
         test_uint(*(ecs_entity_t*)v->value.ptr, e1);
     }
     {
-        ecs_expr_var_t *v = ecs_vars_lookup(&vars, "1");
+        ecs_script_var_t *v = ecs_script_vars_lookup(vars, "0");
         test_assert(v != NULL);
         test_assert(v->value.type == ecs_id(Position));
         test_assert(v->value.ptr != NULL);
         test_assert(v->value.ptr == ecs_get(world, e1, Position));
     }
 
-    ecs_iter_to_vars(&it, &vars, 1);
+    ecs_iter_to_vars(&it, vars, 1);
     {
-        ecs_expr_var_t *v = ecs_vars_lookup(&vars, "this");
+        ecs_script_var_t *v = ecs_script_vars_lookup(vars, "this");
         test_assert(v != NULL);
         test_assert(v->value.type == ecs_id(ecs_entity_t));
         test_assert(v->value.ptr != NULL);
         test_uint(*(ecs_entity_t*)v->value.ptr, e2);
     }
     {
-        ecs_expr_var_t *v = ecs_vars_lookup(&vars, "1");
+        ecs_script_var_t *v = ecs_script_vars_lookup(vars, "0");
         test_assert(v != NULL);
         test_assert(v->value.type == ecs_id(Position));
         test_assert(v->value.ptr != NULL);
@@ -2456,7 +2440,7 @@ void DeserExprOperators_iter_to_vars_1_comp(void) {
 
     test_bool(ecs_query_next(&it), false);
 
-    ecs_vars_fini(&vars);
+    ecs_script_vars_fini(vars);
     ecs_query_fini(query);
 
     ecs_fini(world);
@@ -2476,8 +2460,7 @@ void DeserExprOperators_iter_to_vars_2_comps(void) {
     ecs_add(world, e1, Velocity);
     ecs_add(world, e2, Velocity);
 
-    ecs_vars_t vars = {0};
-    ecs_vars_init(world, &vars);
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
 
     ecs_iter_t it = ecs_query_iter(world, query);
     test_bool(ecs_query_next(&it), true);
@@ -2485,46 +2468,46 @@ void DeserExprOperators_iter_to_vars_2_comps(void) {
     test_uint(it.entities[0], e1);
     test_uint(it.entities[1], e2);
 
-    ecs_iter_to_vars(&it, &vars, 0);
+    ecs_iter_to_vars(&it, vars, 0);
     {
-        ecs_expr_var_t *v = ecs_vars_lookup(&vars, "this");
+        ecs_script_var_t *v = ecs_script_vars_lookup(vars, "this");
         test_assert(v != NULL);
         test_assert(v->value.type == ecs_id(ecs_entity_t));
         test_assert(v->value.ptr != NULL);
         test_uint(*(ecs_entity_t*)v->value.ptr, e1);
     }
     {
-        ecs_expr_var_t *v = ecs_vars_lookup(&vars, "1");
+        ecs_script_var_t *v = ecs_script_vars_lookup(vars, "0");
         test_assert(v != NULL);
         test_assert(v->value.type == ecs_id(Position));
         test_assert(v->value.ptr != NULL);
         test_assert(v->value.ptr == ecs_get(world, e1, Position));
     }
     {
-        ecs_expr_var_t *v = ecs_vars_lookup(&vars, "2");
+        ecs_script_var_t *v = ecs_script_vars_lookup(vars, "1");
         test_assert(v != NULL);
         test_assert(v->value.type == ecs_id(Velocity));
         test_assert(v->value.ptr != NULL);
         test_assert(v->value.ptr == ecs_get(world, e1, Velocity));
     }
 
-    ecs_iter_to_vars(&it, &vars, 1);
+    ecs_iter_to_vars(&it, vars, 1);
     {
-        ecs_expr_var_t *v = ecs_vars_lookup(&vars, "this");
+        ecs_script_var_t *v = ecs_script_vars_lookup(vars, "this");
         test_assert(v != NULL);
         test_assert(v->value.type == ecs_id(ecs_entity_t));
         test_assert(v->value.ptr != NULL);
         test_uint(*(ecs_entity_t*)v->value.ptr, e2);
     }
     {
-        ecs_expr_var_t *v = ecs_vars_lookup(&vars, "1");
+        ecs_script_var_t *v = ecs_script_vars_lookup(vars, "0");
         test_assert(v != NULL);
         test_assert(v->value.type == ecs_id(Position));
         test_assert(v->value.ptr != NULL);
         test_assert(v->value.ptr == ecs_get(world, e2, Position));
     }
     {
-        ecs_expr_var_t *v = ecs_vars_lookup(&vars, "2");
+        ecs_script_var_t *v = ecs_script_vars_lookup(vars, "1");
         test_assert(v != NULL);
         test_assert(v->value.type == ecs_id(Velocity));
         test_assert(v->value.ptr != NULL);
@@ -2533,7 +2516,7 @@ void DeserExprOperators_iter_to_vars_2_comps(void) {
 
     test_bool(ecs_query_next(&it), false);
 
-    ecs_vars_fini(&vars);
+    ecs_script_vars_fini(vars);
     ecs_query_fini(query);
 
     ecs_fini(world);
@@ -2556,8 +2539,7 @@ void DeserExprOperators_iter_to_vars_1_comp_1_tag(void) {
     ecs_add(world, e1, Foo);
     ecs_add(world, e2, Foo);
 
-    ecs_vars_t vars = {0};
-    ecs_vars_init(world, &vars);
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
 
     ecs_iter_t it = ecs_query_iter(world, query);
     test_bool(ecs_query_next(&it), true);
@@ -2565,48 +2547,48 @@ void DeserExprOperators_iter_to_vars_1_comp_1_tag(void) {
     test_uint(it.entities[0], e1);
     test_uint(it.entities[1], e2);
 
-    ecs_iter_to_vars(&it, &vars, 0);
+    ecs_iter_to_vars(&it, vars, 0);
     {
-        ecs_expr_var_t *v = ecs_vars_lookup(&vars, "this");
+        ecs_script_var_t *v = ecs_script_vars_lookup(vars, "this");
         test_assert(v != NULL);
         test_assert(v->value.type == ecs_id(ecs_entity_t));
         test_assert(v->value.ptr != NULL);
         test_uint(*(ecs_entity_t*)v->value.ptr, e1);
     }
     {
-        ecs_expr_var_t *v = ecs_vars_lookup(&vars, "1");
+        ecs_script_var_t *v = ecs_script_vars_lookup(vars, "0");
         test_assert(v != NULL);
         test_assert(v->value.type == ecs_id(Position));
         test_assert(v->value.ptr != NULL);
         test_assert(v->value.ptr == ecs_get(world, e1, Position));
     }
-    test_assert(ecs_vars_lookup(&vars, "2") == NULL);
+    test_assert(ecs_script_vars_lookup(vars, "1") == NULL);
     {
-        ecs_expr_var_t *v = ecs_vars_lookup(&vars, "3");
+        ecs_script_var_t *v = ecs_script_vars_lookup(vars, "2");
         test_assert(v != NULL);
         test_assert(v->value.type == ecs_id(Velocity));
         test_assert(v->value.ptr != NULL);
         test_assert(v->value.ptr == ecs_get(world, e1, Velocity));
     }
 
-    ecs_iter_to_vars(&it, &vars, 1);
+    ecs_iter_to_vars(&it, vars, 1);
     {
-        ecs_expr_var_t *v = ecs_vars_lookup(&vars, "this");
+        ecs_script_var_t *v = ecs_script_vars_lookup(vars, "this");
         test_assert(v != NULL);
         test_assert(v->value.type == ecs_id(ecs_entity_t));
         test_assert(v->value.ptr != NULL);
         test_uint(*(ecs_entity_t*)v->value.ptr, e2);
     }
     {
-        ecs_expr_var_t *v = ecs_vars_lookup(&vars, "1");
+        ecs_script_var_t *v = ecs_script_vars_lookup(vars, "0");
         test_assert(v != NULL);
         test_assert(v->value.type == ecs_id(Position));
         test_assert(v->value.ptr != NULL);
         test_assert(v->value.ptr == ecs_get(world, e2, Position));
     }
-    test_assert(ecs_vars_lookup(&vars, "2") == NULL);
+    test_assert(ecs_script_vars_lookup(vars, "1") == NULL);
     {
-        ecs_expr_var_t *v = ecs_vars_lookup(&vars, "3");
+        ecs_script_var_t *v = ecs_script_vars_lookup(vars, "2");
         test_assert(v != NULL);
         test_assert(v->value.type == ecs_id(Velocity));
         test_assert(v->value.ptr != NULL);
@@ -2615,7 +2597,7 @@ void DeserExprOperators_iter_to_vars_1_comp_1_tag(void) {
 
     test_bool(ecs_query_next(&it), false);
 
-    ecs_vars_fini(&vars);
+    ecs_script_vars_fini(vars);
     ecs_query_fini(query);
 
     ecs_fini(world);
@@ -2632,24 +2614,23 @@ void DeserExprOperators_iter_to_vars_w_1_query_var(void) {
     ecs_entity_t e1 = ecs_new_w(world, Position);
     ecs_entity_t e2 = ecs_new_w(world, Position);
 
-    ecs_vars_t vars = {0};
-    ecs_vars_init(world, &vars);
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
 
     ecs_iter_t it = ecs_query_iter(world, query);
     test_bool(ecs_query_next(&it), true);
     test_int(it.count, 0);
 
-    ecs_iter_to_vars(&it, &vars, 0);
-    test_assert(ecs_vars_lookup(&vars, "this") == NULL);
+    ecs_iter_to_vars(&it, vars, 0);
+    test_assert(ecs_script_vars_lookup(vars, "this") == NULL);
     {
-        ecs_expr_var_t *v = ecs_vars_lookup(&vars, "x");
+        ecs_script_var_t *v = ecs_script_vars_lookup(vars, "x");
         test_assert(v != NULL);
         test_assert(v->value.type == ecs_id(ecs_entity_t));
         test_assert(v->value.ptr != NULL);
         test_assert(*(ecs_entity_t*)v->value.ptr == e1);
     }
     {
-        ecs_expr_var_t *v = ecs_vars_lookup(&vars, "1");
+        ecs_script_var_t *v = ecs_script_vars_lookup(vars, "0");
         test_assert(v != NULL);
         test_assert(v->value.type == ecs_id(Position));
         test_assert(v->value.ptr != NULL);
@@ -2659,17 +2640,17 @@ void DeserExprOperators_iter_to_vars_w_1_query_var(void) {
     test_bool(ecs_query_next(&it), true);
     test_int(it.count, 0);
 
-    ecs_iter_to_vars(&it, &vars, 0);
-    test_assert(ecs_vars_lookup(&vars, "this") == NULL);
+    ecs_iter_to_vars(&it, vars, 0);
+    test_assert(ecs_script_vars_lookup(vars, "this") == NULL);
     {
-        ecs_expr_var_t *v = ecs_vars_lookup(&vars, "x");
+        ecs_script_var_t *v = ecs_script_vars_lookup(vars, "x");
         test_assert(v != NULL);
         test_assert(v->value.type == ecs_id(ecs_entity_t));
         test_assert(v->value.ptr != NULL);
         test_assert(*(ecs_entity_t*)v->value.ptr == e2);
     }
     {
-        ecs_expr_var_t *v = ecs_vars_lookup(&vars, "1");
+        ecs_script_var_t *v = ecs_script_vars_lookup(vars, "0");
         test_assert(v != NULL);
         test_assert(v->value.type == ecs_id(Position));
         test_assert(v->value.ptr != NULL);
@@ -2678,7 +2659,7 @@ void DeserExprOperators_iter_to_vars_w_1_query_var(void) {
 
     test_bool(ecs_query_next(&it), false);
 
-    ecs_vars_fini(&vars);
+    ecs_script_vars_fini(vars);
     ecs_query_fini(query);
 
     ecs_fini(world);
@@ -2698,31 +2679,30 @@ void DeserExprOperators_iter_to_vars_w_2_query_vars(void) {
     ecs_add_pair(world, e1, EcsChildOf, parent);
     ecs_add_pair(world, e2, EcsChildOf, parent);
 
-    ecs_vars_t vars = {0};
-    ecs_vars_init(world, &vars);
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
 
     ecs_iter_t it = ecs_query_iter(world, query);
     test_bool(ecs_query_next(&it), true);
     test_int(it.count, 0);
 
-    ecs_iter_to_vars(&it, &vars, 0);
-    test_assert(ecs_vars_lookup(&vars, "this") == NULL);
+    ecs_iter_to_vars(&it, vars, 0);
+    test_assert(ecs_script_vars_lookup(vars, "this") == NULL);
     {
-        ecs_expr_var_t *v = ecs_vars_lookup(&vars, "x");
+        ecs_script_var_t *v = ecs_script_vars_lookup(vars, "x");
         test_assert(v != NULL);
         test_assert(v->value.type == ecs_id(ecs_entity_t));
         test_assert(v->value.ptr != NULL);
         test_assert(*(ecs_entity_t*)v->value.ptr == e1);
     }
     {
-        ecs_expr_var_t *v = ecs_vars_lookup(&vars, "y");
+        ecs_script_var_t *v = ecs_script_vars_lookup(vars, "y");
         test_assert(v != NULL);
         test_assert(v->value.type == ecs_id(ecs_entity_t));
         test_assert(v->value.ptr != NULL);
         test_assert(*(ecs_entity_t*)v->value.ptr == parent);
     }
     {
-        ecs_expr_var_t *v = ecs_vars_lookup(&vars, "1");
+        ecs_script_var_t *v = ecs_script_vars_lookup(vars, "0");
         test_assert(v != NULL);
         test_assert(v->value.type == ecs_id(Position));
         test_assert(v->value.ptr != NULL);
@@ -2732,24 +2712,24 @@ void DeserExprOperators_iter_to_vars_w_2_query_vars(void) {
     test_bool(ecs_query_next(&it), true);
     test_int(it.count, 0);
 
-    ecs_iter_to_vars(&it, &vars, 0);
-    test_assert(ecs_vars_lookup(&vars, "this") == NULL);
+    ecs_iter_to_vars(&it, vars, 0);
+    test_assert(ecs_script_vars_lookup(vars, "this") == NULL);
     {
-        ecs_expr_var_t *v = ecs_vars_lookup(&vars, "x");
+        ecs_script_var_t *v = ecs_script_vars_lookup(vars, "x");
         test_assert(v != NULL);
         test_assert(v->value.type == ecs_id(ecs_entity_t));
         test_assert(v->value.ptr != NULL);
         test_assert(*(ecs_entity_t*)v->value.ptr == e2);
     }
     {
-        ecs_expr_var_t *v = ecs_vars_lookup(&vars, "y");
+        ecs_script_var_t *v = ecs_script_vars_lookup(vars, "y");
         test_assert(v != NULL);
         test_assert(v->value.type == ecs_id(ecs_entity_t));
         test_assert(v->value.ptr != NULL);
         test_assert(*(ecs_entity_t*)v->value.ptr == parent);
     }
     {
-        ecs_expr_var_t *v = ecs_vars_lookup(&vars, "1");
+        ecs_script_var_t *v = ecs_script_vars_lookup(vars, "0");
         test_assert(v != NULL);
         test_assert(v->value.type == ecs_id(Position));
         test_assert(v->value.ptr != NULL);
@@ -2758,7 +2738,7 @@ void DeserExprOperators_iter_to_vars_w_2_query_vars(void) {
 
     test_bool(ecs_query_next(&it), false);
 
-    ecs_vars_fini(&vars);
+    ecs_script_vars_fini(vars);
     ecs_query_fini(query);
 
     ecs_fini(world);

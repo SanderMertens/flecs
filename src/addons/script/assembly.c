@@ -105,7 +105,7 @@ void flecs_script_assembly_on_set(
         instance_node.eval = it->entities[i];
 
         /* Create variables to hold assembly properties */
-        ecs_script_vars_t *vars = ecs_script_vars_push(
+        ecs_script_vars_t *vars = flecs_script_vars_push(
             NULL, &v.stack, v.allocator);
 
         /* Populate properties from assembly members */
@@ -248,7 +248,7 @@ int flecs_script_assembly_preprocess(
 {
     v->assembly = assembly;
     v->base.visit = (ecs_visit_action_t)flecs_script_assembly_eval;
-    v->vars = ecs_script_vars_push(v->vars, &v->stack, v->allocator);
+    v->vars = flecs_script_vars_push(v->vars, &v->stack, v->allocator);
     int result = ecs_script_visit_scope(v, assembly->node->scope);
     v->vars = ecs_script_vars_pop(v->vars);
     v->assembly = NULL;

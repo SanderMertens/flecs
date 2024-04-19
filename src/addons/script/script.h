@@ -70,5 +70,10 @@ ecs_script_scope_t* flecs_script_scope_new(
 int flecs_script_visit_free(
     ecs_script_t *script);
 
+ecs_script_vars_t* flecs_script_vars_push(
+    ecs_script_vars_t *parent,
+    ecs_stack_t *stack,
+    ecs_allocator_t *allocator);
+
 #endif // FLECS_SCRIPT
 #endif // FLECS_SCRIPT_PRIVATE_H

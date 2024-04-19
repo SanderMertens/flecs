@@ -170,6 +170,12 @@ error:
     return NULL;
 }
 
+/* Static names for iterator fields */
+static const char* flecs_script_iter_field_names[] = {
+    "0", "1",  "2",  "3",  "4",  "5",  "6",  "7",
+    "8", "9", "10", "11", "12", "13", "14", "15"
+};
+
 void ecs_iter_to_vars(
     const ecs_iter_t *it,
     ecs_script_vars_t *vars,
@@ -205,11 +211,12 @@ void ecs_iter_to_vars(
 
             ptr = ECS_OFFSET(ptr, offset * size);
 
-            char name[16];
-            ecs_os_sprintf(name, "%d", i + 1);
+            const char *name = flecs_script_iter_field_names[i];
             ecs_script_var_t *var = ecs_script_vars_lookup(vars, name);
             if (!var) {
                 var = ecs_script_vars_declare(vars, name);
+                ecs_assert(ecs_script_vars_lookup(vars, name) != NULL,  
+                    ECS_INTERNAL_ERROR, NULL);
                 var->value.type = it->ids[i];
             } else {
                 ecs_check(var->value.type == it->ids[i], 
@@ -238,7 +245,8 @@ void ecs_iter_to_vars(
                 continue;
             }
 
-            ecs_script_var_t *var = ecs_script_vars_lookup(vars, it->variable_names[i]);
+            ecs_script_var_t *var = ecs_script_vars_lookup(
+                vars, it->variable_names[i]);
             if (!var) {
                 var = ecs_script_vars_declare(vars, it->variable_names[i]);
                 var->value.type = ecs_id(ecs_entity_t);

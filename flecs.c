@@ -18506,10 +18506,7 @@ void MonitorAlertInstances(ecs_iter_t *it) {
         ranges = ecs_ref_get(world, &alert->ranges, EcsMemberRanges);
     }
 
-    ecs_script_vars_t *vars = ecs_script_vars_push(NULL,
-        flecs_stage_get_stack_allocator(it->world),
-        flecs_stage_get_allocator(it->world));
-
+    ecs_script_vars_t *vars = ecs_script_vars_init(it->world);
     int32_t i, count = it->count;
     for (i = 0; i < count; i ++) {
         ecs_entity_t ai = it->entities[i];
@@ -18615,7 +18612,7 @@ void MonitorAlertInstances(ecs_iter_t *it) {
         ecs_delete(world, ai);
     }
 
-    ecs_script_vars_pop(vars);
+    ecs_script_vars_fini(vars);
 }
 
 ecs_entity_t ecs_alert_init(
@@ -64419,6 +64416,11 @@ ecs_script_scope_t* flecs_script_scope_new(
 int flecs_script_visit_free(
     ecs_script_t *script);
 
+ecs_script_vars_t* flecs_script_vars_push(
+    ecs_script_vars_t *parent,
+    ecs_stack_t *stack,
+    ecs_allocator_t *allocator);
+
 #endif // FLECS_SCRIPT
 #endif // FLECS_SCRIPT_PRIVATE_H
 
@@ -64527,7 +64529,7 @@ void flecs_script_assembly_on_set(
         instance_node.eval = it->entities[i];
 
         /* Create variables to hold assembly properties */
-        ecs_script_vars_t *vars = ecs_script_vars_push(
+        ecs_script_vars_t *vars = flecs_script_vars_push(
             NULL, &v.stack, v.allocator);
 
         /* Populate properties from assembly members */
@@ -64670,7 +64672,7 @@ int flecs_script_assembly_preprocess(
 {
     v->assembly = assembly;
     v->base.visit = (ecs_visit_action_t)flecs_script_assembly_eval;
-    v->vars = ecs_script_vars_push(v->vars, &v->stack, v->allocator);
+    v->vars = flecs_script_vars_push(v->vars, &v->stack, v->allocator);
     int result = ecs_script_visit_scope(v, assembly->node->scope);
     v->vars = ecs_script_vars_pop(v->vars);
     v->assembly = NULL;
@@ -66661,6 +66663,12 @@ error:
     return NULL;
 }
 
+/* Static names for iterator fields */
+static const char* flecs_script_iter_field_names[] = {
+    "0", "1",  "2",  "3",  "4",  "5",  "6",  "7",
+    "8", "9", "10", "11", "12", "13", "14", "15"
+};
+
 void ecs_iter_to_vars(
     const ecs_iter_t *it,
     ecs_script_vars_t *vars,
@@ -66696,11 +66704,12 @@ void ecs_iter_to_vars(
 
             ptr = ECS_OFFSET(ptr, offset * size);
 
-            char name[16];
-            ecs_os_sprintf(name, "%d", i + 1);
+            const char *name = flecs_script_iter_field_names[i];
             ecs_script_var_t *var = ecs_script_vars_lookup(vars, name);
             if (!var) {
                 var = ecs_script_vars_declare(vars, name);
+                ecs_assert(ecs_script_vars_lookup(vars, name) != NULL,  
+                    ECS_INTERNAL_ERROR, NULL);
                 var->value.type = it->ids[i];
             } else {
                 ecs_check(var->value.type == it->ids[i], 
@@ -66729,7 +66738,8 @@ void ecs_iter_to_vars(
                 continue;
             }
 
-            ecs_script_var_t *var = ecs_script_vars_lookup(vars, it->variable_names[i]);
+            ecs_script_var_t *var = ecs_script_vars_lookup(
+                vars, it->variable_names[i]);
             if (!var) {
                 var = ecs_script_vars_declare(vars, it->variable_names[i]);
                 var->value.type = ecs_id(ecs_entity_t);
@@ -68292,19 +68302,75 @@ const char* flecs_script_token(
 }
 
 
-ecs_script_vars_t* ecs_script_vars_push(
+ecs_script_vars_t* flecs_script_vars_push(
     ecs_script_vars_t *parent,
     ecs_stack_t *stack,
     ecs_allocator_t *allocator)
 {
+    ecs_check(stack || parent, ECS_INVALID_PARAMETER, 
+        "must provide either parent scope or stack allocator");
+    ecs_check(allocator || parent, ECS_INVALID_PARAMETER, 
+        "must provide either parent scope or allocator");
+
+    if (!stack) {
+        stack = parent->stack;
+    } else if (parent) {
+        ecs_check(stack == parent->stack, ECS_INVALID_PARAMETER, 
+            "provided stack allocator is different from parent scope");
+    }
+    if (!allocator) {
+        allocator = parent->allocator;
+    } else if (parent) {
+        ecs_check(allocator == parent->allocator, ECS_INVALID_PARAMETER, 
+            "provided allocator is different from parent scope");        
+    }
+
     ecs_stack_cursor_t *cursor = flecs_stack_get_cursor(stack);
     ecs_script_vars_t *result = flecs_stack_calloc_t(stack, ecs_script_vars_t);
     ecs_vec_init_t(allocator, &result->vars, ecs_script_var_t, 0);
     result->parent = parent;
+    if (parent) {
+        result->world = parent->world;
+    }
     result->stack = stack;
     result->allocator = allocator;
     result->cursor = cursor;
     return result;
+error:
+    return NULL;
+}
+
+ecs_script_vars_t* ecs_script_vars_init(
+    ecs_world_t *world)
+{
+    ecs_script_vars_t *result = flecs_script_vars_push(NULL, 
+        flecs_stage_get_stack_allocator(world),
+        flecs_stage_get_allocator(world));
+    result->world = ecs_get_world(world); /* Provided world can be stage */
+    return result;
+}
+
+void ecs_script_vars_fini(
+    ecs_script_vars_t *vars)
+{
+    ecs_check(vars->parent == NULL, ECS_INVALID_PARAMETER,
+        "ecs_script_vars_fini can only be called on the roots cope");
+    ecs_script_vars_pop(vars);
+error:
+    return;
+}
+
+ecs_script_vars_t* ecs_script_vars_push(
+    ecs_script_vars_t *parent)
+{
+    ecs_check(parent != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_stack_t *stack = parent->stack;
+    ecs_allocator_t *allocator = parent->allocator;
+    ecs_check(stack != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(allocator != NULL, ECS_INVALID_PARAMETER, NULL);
+    return flecs_script_vars_push(parent, stack, allocator);
+error:
+    return NULL;
 }
 
 ecs_script_vars_t* ecs_script_vars_pop(
@@ -68359,6 +68425,36 @@ ecs_script_var_t* ecs_script_vars_declare(
         flecs_ito(uint64_t, ecs_vec_count(&vars->vars)), name, 0, 0);
 
     return var;
+error:
+    return NULL;
+}
+
+ecs_script_var_t* ecs_script_vars_define_id(
+    ecs_script_vars_t *vars,
+    const char *name,
+    ecs_entity_t type)
+{
+    ecs_check(vars->world != NULL, ECS_INVALID_OPERATION, "variable scope is "
+        "not associated with world, create scope with ecs_script_vars_init");
+
+    const ecs_type_info_t *ti = ecs_get_type_info(vars->world, type);
+    ecs_check(ti != NULL, ECS_INVALID_PARAMETER, 
+        "the entity provided for the type parameter is not a type");
+
+    ecs_script_var_t *result = ecs_script_vars_declare(vars, name);
+    if (!result) {
+        return NULL;
+    }
+
+    result->value.type = type;
+    result->value.ptr = flecs_stack_alloc(vars->stack, ti->size, ti->alignment);
+    result->type_info = ti;
+
+    if (ti->hooks.ctor) {
+        ti->hooks.ctor(result->value.ptr, 1, ti);
+    }
+
+    return result;
 error:
     return NULL;
 }
@@ -68837,7 +68933,7 @@ int flecs_script_eval_scope(
     }
 
     ecs_allocator_t *a = v->allocator;
-    v->vars = ecs_script_vars_push(v->vars, &v->stack, a);
+    v->vars = flecs_script_vars_push(v->vars, &v->stack, a);
 
     if (scope_parent && (scope_parent->kind == EcsAstEntity)) {
         v->parent = ecs_script_node(entity, scope_parent)->eval;

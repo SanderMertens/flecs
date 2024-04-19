@@ -49,6 +49,7 @@ typedef struct ecs_script_vars_t {
     ecs_hashmap_t var_index;
     ecs_vec_t vars;
 
+    const ecs_world_t *world;
     struct ecs_stack_t *stack;
     ecs_stack_cursor_t *cursor;
     ecs_allocator_t *allocator;
@@ -79,7 +80,7 @@ ecs_script_t* ecs_script_parse(
     const char *code);
 
 /** Evaluate script.
- * This operation evaluates (runs) a script.
+ * This operation evaluates (runs) a parsed script.
  * 
  * @param script The script.
  * @return Zero if success, non-zero if failed.
@@ -217,24 +218,51 @@ void ecs_script_clear(
 
 /* Script variables */
 
+/** Create new variable scope.
+ * Create root variable scope. A variable scope contains one or more variables. 
+ * Scopes can be nested, which allows variables in different scopes to have the 
+ * same name. Variables from parent scopes will be shadowed by variables in 
+ * child scopes with the same name.
+ * 
+ * Use the `ecs_script_vars_push()` and `ecs_script_vars_pop()` functions to
+ * push and pop variable scopes.
+ * 
+ * When a variable contains allocated resources (e.g. a string), its resources
+ * will be freed when `ecs_script_vars_pop()` is called on the scope, the
+ * ecs_script_vars_t::type_info field is initialized for the variable, and 
+ * `ecs_type_info_t::hooks::dtor` is set.
+ * 
+ * @param world The world.
+ * @param vars The variable scope.
+ */
+FLECS_API
+ecs_script_vars_t* ecs_script_vars_init(
+    ecs_world_t *world);
+
+/** Free variable scope.
+ * Free root variable scope. The provided scope should not have a parent. This
+ * operation calls `ecs_script_vars_pop()` on the scope.
+ *
+ * @param vars The variable scope.
+ */
+FLECS_API
+void ecs_script_vars_fini(
+    ecs_script_vars_t *vars);
+
 /** Push new variable scope.
- * A variable scope contains one or more variables. Scopes can be nested, which
- * allows variables in different scopes to have the same name. Variables from
- * parent scopes will be shadowed by variables in child scopes with the same
- * name.
  * 
  * Scopes created with ecs_script_vars_push() must be cleaned up with
  * ecs_script_vars_pop().
+ * 
+ * If the stack and allocator arguments are left to NULL, their values will be
+ * copied from the parent.
  *
  * @param parent The parent scope (provide NULL for root scope).
- * @param stack The stack allocator to use.
- * @param allocator The allocator to use.
  * @return The new variable scope.
  */
+FLECS_API
 ecs_script_vars_t* ecs_script_vars_push(
-    ecs_script_vars_t *parent,
-    struct ecs_stack_t *stack,
-    ecs_allocator_t *allocator);
+    ecs_script_vars_t *parent);
 
 /** Pop variable scope.
  * This frees up the resources for a variable scope. The scope must be at the
@@ -244,6 +272,7 @@ ecs_script_vars_t* ecs_script_vars_push(
  * @param vars The scope to free.
  * @return The parent scope.
  */
+FLECS_API
 ecs_script_vars_t* ecs_script_vars_pop(
     ecs_script_vars_t *vars);
 
@@ -251,13 +280,42 @@ ecs_script_vars_t* ecs_script_vars_pop(
  * This operation declares a new variable in the current scope. If a variable
  * with the specified name already exists, the operation will fail.
  * 
+ * This operation does not allocate storage for the variable. This is done to
+ * allow for variables that point to existing storage, which prevents having
+ * to copy existing values to a variable scope.
+ * 
  * @param vars The variable scope.
  * @param name The variable name.
  * @return The new variable, or NULL if the operation failed.
  */
+FLECS_API
 ecs_script_var_t* ecs_script_vars_declare(
     ecs_script_vars_t *vars,
     const char *name);
+
+/** Define a variable.
+ * This operation calls `ecs_script_vars_declare()` and allocates storage for
+ * the variable. If the type has a ctor, it will be called on the new storage.
+ * 
+ * The scope's stack allocator will be used to allocate the storage. After 
+ * `ecs_script_vars_pop()` is called on the scope, the variable storage will no
+ * longer be valid.
+ * 
+ * The operation will fail if the type argument is not a type.
+ * 
+ * @param vars The variable scope.
+ * @param name The variable name.
+ * @param type The variable type.
+ * @return The new variable, or NULL if the operation failed.
+ */
+FLECS_API
+ecs_script_var_t* ecs_script_vars_define_id(
+    ecs_script_vars_t *vars,
+    const char *name,
+    ecs_entity_t type);
+
+#define ecs_script_vars_define(vars, name, type)\
+    ecs_script_vars_define_id(vars, name, ecs_id(type))
 
 /** Lookup a variable.
  * This operation looks up a variable in the current scope. If the variable 
@@ -268,6 +326,7 @@ ecs_script_var_t* ecs_script_vars_declare(
  * @param name The variable name.
  * @return The variable, or NULL if a one with the provided name does not exist.
  */
+FLECS_API
 ecs_script_var_t* ecs_script_vars_lookup(
     const ecs_script_vars_t *vars,
     const char *name);

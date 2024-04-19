@@ -979,7 +979,6 @@ void Vars_string_expr_w_string_var(void);
 void Vars_struct_expr_w_i32_vars(void);
 void Vars_struct_expr_w_struct_var(void);
 void Vars_nested_struct_expr_w_struct_var(void);
-void Vars_declare_w_value(void);
 void Vars_redeclare_in_scope(void);
 void Vars_init_fini_vars(void);
 
@@ -4954,10 +4953,6 @@ bake_test_case Vars_testcases[] = {
         Vars_nested_struct_expr_w_struct_var
     },
     {
-        "declare_w_value",
-        Vars_declare_w_value
-    },
-    {
         "redeclare_in_scope",
         Vars_redeclare_in_scope
     },
@@ -5854,7 +5849,7 @@ static bake_test_suite suites[] = {
         "Vars",
         NULL,
         NULL,
-        15,
+        14,
         Vars_testcases
     },
     {

@@ -325,7 +325,7 @@ int flecs_script_eval_scope(
     }
 
     ecs_allocator_t *a = v->allocator;
-    v->vars = ecs_script_vars_push(v->vars, &v->stack, a);
+    v->vars = flecs_script_vars_push(v->vars, &v->stack, a);
 
     if (scope_parent && (scope_parent->kind == EcsAstEntity)) {
         v->parent = ecs_script_node(entity, scope_parent)->eval;

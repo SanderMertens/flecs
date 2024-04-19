@@ -385,10 +385,7 @@ void MonitorAlertInstances(ecs_iter_t *it) {
         ranges = ecs_ref_get(world, &alert->ranges, EcsMemberRanges);
     }
 
-    ecs_script_vars_t *vars = ecs_script_vars_push(NULL,
-        flecs_stage_get_stack_allocator(it->world),
-        flecs_stage_get_allocator(it->world));
-
+    ecs_script_vars_t *vars = ecs_script_vars_init(it->world);
     int32_t i, count = it->count;
     for (i = 0; i < count; i ++) {
         ecs_entity_t ai = it->entities[i];
@@ -494,7 +491,7 @@ void MonitorAlertInstances(ecs_iter_t *it) {
         ecs_delete(world, ai);
     }
 
-    ecs_script_vars_pop(vars);
+    ecs_script_vars_fini(vars);
 }
 
 ecs_entity_t ecs_alert_init(
