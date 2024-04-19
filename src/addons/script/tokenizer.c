@@ -1,9 +1,11 @@
 /**
- * @file addons/plecs.c
- * @brief Plecs addon.
+ * @file addons/script/tokenizer.c
+ * @brief Script tokenizer.
  */
 
 #include "flecs.h"
+
+#ifdef FLECS_SCRIPT
 #include "script.h"
 
 #define Keyword(keyword, _kind)\
@@ -386,3 +388,5 @@ const char* flecs_script_token(
 
     return NULL;
 }
+
+#endif

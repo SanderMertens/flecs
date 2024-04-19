@@ -447,8 +447,8 @@ void MonitorAlertInstances(ecs_iter_t *it) {
                         ecs_os_free(alert_instance[i].message);
                     }
 
-                    ecs_iter_to_vars(&rit, vars, 0);
-                    alert_instance[i].message = ecs_interpolate_string(
+                    ecs_script_vars_from_iter(&rit, vars, 0);
+                    alert_instance[i].message = ecs_script_string_interpolate(
                         world, alert->message, vars);
                 }
 

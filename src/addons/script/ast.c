@@ -1,4 +1,11 @@
+/**
+ * @file addons/script/ast.c
+ * @brief Script AST implementation.
+ */
+
 #include "flecs.h"
+
+#ifdef FLECS_SCRIPT
 #include "script.h"
 
 #define flecs_ast_strdup(parser, str)\
@@ -290,3 +297,5 @@ ecs_script_if_t* flecs_script_insert_if(
     flecs_ast_append(parser, scope->stmts, ecs_script_if_t, result);
     return result;
 }
+
+#endif

@@ -188,7 +188,6 @@
 #define FLECS_TIMER         /**< Timer support */
 #define FLECS_META          /**< Reflection support */
 #define FLECS_UNITS         /**< Builtin standard units */
-#define FLECS_EXPR          /**< Parsing strings to/from component values */
 #define FLECS_JSON          /**< Parsing JSON to/from component values */
 #define FLECS_DOC           /**< Document entities & components */
 #define FLECS_LOG           /**< When enabled ECS provides more detailed logs */

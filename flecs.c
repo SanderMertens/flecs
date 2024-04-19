@@ -10971,6 +10971,176 @@ error:
     return NULL;
 }
 
+char* ecs_chresc(
+    char *out, 
+    char in, 
+    char delimiter) 
+{
+    char *bptr = out;
+    switch(in) {
+    case '\a':
+        *bptr++ = '\\';
+        *bptr = 'a';
+        break;
+    case '\b':
+        *bptr++ = '\\';
+        *bptr = 'b';
+        break;
+    case '\f':
+        *bptr++ = '\\';
+        *bptr = 'f';
+        break;
+    case '\n':
+        *bptr++ = '\\';
+        *bptr = 'n';
+        break;
+    case '\r':
+        *bptr++ = '\\';
+        *bptr = 'r';
+        break;
+    case '\t':
+        *bptr++ = '\\';
+        *bptr = 't';
+        break;
+    case '\v':
+        *bptr++ = '\\';
+        *bptr = 'v';
+        break;
+    case '\\':
+        *bptr++ = '\\';
+        *bptr = '\\';
+        break;
+    case '\033':
+        *bptr = '['; /* Used for terminal colors */
+        break;
+    default:
+        if (in == delimiter) {
+            *bptr++ = '\\';
+            *bptr = delimiter;
+        } else {
+            *bptr = in;
+        }
+        break;
+    }
+
+    *(++bptr) = '\0';
+
+    return bptr;
+}
+
+const char* ecs_chrparse(
+    const char *in, 
+    char *out) 
+{
+    const char *result = in + 1;
+    char ch;
+
+    if (in[0] == '\\') {
+        result ++;
+
+        switch(in[1]) {
+        case 'a':
+            ch = '\a';
+            break;
+        case 'b':
+            ch = '\b';
+            break;
+        case 'f':
+            ch = '\f';
+            break;
+        case 'n':
+            ch = '\n';
+            break;
+        case 'r':
+            ch = '\r';
+            break;
+        case 't':
+            ch = '\t';
+            break;
+        case 'v':
+            ch = '\v';
+            break;
+        case '\\':
+            ch = '\\';
+            break;
+        case '"':
+            ch = '"';
+            break;
+        case '0':
+            ch = '\0';
+            break;
+        case ' ':
+            ch = ' ';
+            break;
+        case '$':
+            ch = '$';
+            break;
+        default:
+            goto error;
+        }
+    } else {
+        ch = in[0];
+    }
+
+    if (out) {
+        *out = ch;
+    }
+
+    return result;
+error:
+    return NULL;
+}
+
+ecs_size_t ecs_stresc(
+    char *out, 
+    ecs_size_t n, 
+    char delimiter, 
+    const char *in) 
+{
+    const char *ptr = in;
+    char ch, *bptr = out, buff[3];
+    ecs_size_t written = 0;
+    while ((ch = *ptr++)) {
+        if ((written += (ecs_size_t)(ecs_chresc(
+            buff, ch, delimiter) - buff)) <= n) 
+        {
+            /* If size != 0, an out buffer must be provided. */
+            ecs_check(out != NULL, ECS_INVALID_PARAMETER, NULL);
+            *bptr++ = buff[0];
+            if ((ch = buff[1])) {
+                *bptr = ch;
+                bptr++;
+            }
+        }
+    }
+
+    if (bptr) {
+        while (written < n) {
+            *bptr = '\0';
+            bptr++;
+            written++;
+        }
+    }
+    return written;
+error:
+    return 0;
+}
+
+char* ecs_astresc(
+    char delimiter, 
+    const char *in)
+{
+    if (!in) {
+        return NULL;
+    }
+
+    ecs_size_t len = ecs_stresc(NULL, 0, delimiter, in);
+    char *out = ecs_os_malloc_n(char, len + 1);
+    ecs_stresc(out, len, delimiter, in);
+    out[len] = '\0';
+    return out;
+}
+
 /**
  * @file observable.c
  * @brief Observable implementation.
@@ -16722,9 +16892,6 @@ static const char *flecs_addons_info[] = {
 #ifdef FLECS_UNITS
     "FLECS_UNITS",
 #endif
-#ifdef FLECS_EXPR
-    "FLECS_EXPR",
-#endif
 #ifdef FLECS_JSON
     "FLECS_JSON",
 #endif
@@ -18568,8 +18735,8 @@ void MonitorAlertInstances(ecs_iter_t *it) {
                         ecs_os_free(alert_instance[i].message);
                     }
 
-                    ecs_iter_to_vars(&rit, vars, 0);
-                    alert_instance[i].message = ecs_interpolate_string(
+                    ecs_script_vars_from_iter(&rit, vars, 0);
+                    alert_instance[i].message = ecs_script_string_interpolate(
                         world, alert->message, vars);
                 }
 
@@ -49810,950 +49977,6 @@ ecs_table_t* ecs_table_find(
 }
 
 /**
- * @file expr/serialize.c
- * @brief Serialize (component) values to flecs string format.
- */
-
-
-#ifdef FLECS_EXPR
-
-static
-int flecs_expr_ser_type(
-    const ecs_world_t *world,
-    const ecs_vec_t *ser, 
-    const void *base, 
-    ecs_strbuf_t *str,
-    bool is_expr);
-
-static
-int flecs_expr_ser_type_ops(
-    const ecs_world_t *world,
-    ecs_meta_type_op_t *ops,
-    int32_t op_count,
-    const void *base, 
-    ecs_strbuf_t *str,
-    int32_t in_array,
-    bool is_expr);
-
-static
-int flecs_expr_ser_type_op(
-    const ecs_world_t *world,
-    ecs_meta_type_op_t *op, 
-    const void *base,
-    ecs_strbuf_t *str,
-    bool is_expr);
-
-static
-ecs_primitive_kind_t flecs_expr_op_to_primitive_kind(ecs_meta_type_op_kind_t kind) {
-    return kind - EcsOpPrimitive;
-}
-
-/* Serialize a primitive value */
-static
-int flecs_expr_ser_primitive(
-    const ecs_world_t *world,
-    ecs_primitive_kind_t kind,
-    const void *base, 
-    ecs_strbuf_t *str,
-    bool is_expr) 
-{
-    switch(kind) {
-    case EcsBool:
-        if (*(const bool*)base) {
-            ecs_strbuf_appendlit(str, "true");
-        } else {
-            ecs_strbuf_appendlit(str, "false");
-        }
-        break;
-    case EcsChar: {
-        char chbuf[3];
-        char ch = *(const char*)base;
-        if (ch) {
-            ecs_chresc(chbuf, *(const char*)base, '"');
-            if (is_expr) ecs_strbuf_appendch(str, '"');
-            ecs_strbuf_appendstr(str, chbuf);
-            if (is_expr) ecs_strbuf_appendch(str, '"');
-        } else {
-            ecs_strbuf_appendch(str, '0');
-        }
-        break;
-    }
-    case EcsByte:
-        ecs_strbuf_appendint(str, flecs_uto(int64_t, *(const uint8_t*)base));
-        break;
-    case EcsU8:
-        ecs_strbuf_appendint(str, flecs_uto(int64_t, *(const uint8_t*)base));
-        break;
-    case EcsU16:
-        ecs_strbuf_appendint(str, flecs_uto(int64_t, *(const uint16_t*)base));
-        break;
-    case EcsU32:
-        ecs_strbuf_appendint(str, flecs_uto(int64_t, *(const uint32_t*)base));
-        break;
-    case EcsU64:
-        ecs_strbuf_append(str, "%llu", *(const uint64_t*)base);
-        break;
-    case EcsI8:
-        ecs_strbuf_appendint(str, flecs_ito(int64_t, *(const int8_t*)base));
-        break;
-    case EcsI16:
-        ecs_strbuf_appendint(str, flecs_ito(int64_t, *(const int16_t*)base));
-        break;
-    case EcsI32:
-        ecs_strbuf_appendint(str, flecs_ito(int64_t, *(const int32_t*)base));
-        break;
-    case EcsI64:
-        ecs_strbuf_appendint(str, *(const int64_t*)base);
-        break;
-    case EcsF32:
-        ecs_strbuf_appendflt(str, (double)*(const float*)base, 0);
-        break;
-    case EcsF64:
-        ecs_strbuf_appendflt(str, *(const double*)base, 0);
-        break;
-    case EcsIPtr:
-        ecs_strbuf_appendint(str, flecs_ito(int64_t, *(const intptr_t*)base));
-        break;
-    case EcsUPtr:
-        ecs_strbuf_append(str, "%u", *(const uintptr_t*)base);
-        break;
-    case EcsString: {
-        const char *value = *ECS_CONST_CAST(const char**, base);
-        if (value) {
-            if (!is_expr) {
-                ecs_strbuf_appendstr(str, value);
-            } else {
-                ecs_size_t length = ecs_stresc(NULL, 0, '"', value);
-                if (length == ecs_os_strlen(value)) {
-                    ecs_strbuf_appendch(str, '"');
-                    ecs_strbuf_appendstrn(str, value, length);
-                    ecs_strbuf_appendch(str, '"');
-                } else {
-                    char *out = ecs_os_malloc(length + 3);
-                    ecs_stresc(out + 1, length, '"', value);
-                    out[0] = '"';
-                    out[length + 1] = '"';
-                    out[length + 2] = '\0';
-                    ecs_strbuf_appendstr(str, out);
-                    ecs_os_free(out);
-                }
-            }
-        } else {
-            ecs_strbuf_appendlit(str, "null");
-        }
-        break;
-    }
-    case EcsEntity: {
-        ecs_entity_t e = *(const ecs_entity_t*)base;
-        if (!e) {
-            ecs_strbuf_appendch(str, '0');
-        } else {
-            ecs_get_path_w_sep_buf(world, 0, e, ".", NULL, str);
-        }
-        break;
-    }
-    case EcsId: {
-        ecs_id_t id = *(const ecs_id_t*)base;
-        if (!id) {
-            ecs_strbuf_appendch(str, '0');
-        } else {
-            ecs_id_str_buf(world, id, str);
-        }
-        break;
-    }
-    default:
-        ecs_err("invalid primitive kind");
-        return -1;
-    }
-
-    return 0;
-}
-
-/* Serialize enumeration */
-static
-int flecs_expr_ser_enum(
-    const ecs_world_t *world,
-    ecs_meta_type_op_t *op, 
-    const void *base, 
-    ecs_strbuf_t *str) 
-{
-    const EcsEnum *enum_type = ecs_get(world, op->type, EcsEnum);
-    ecs_check(enum_type != NULL, ECS_INVALID_PARAMETER, NULL);
-
-    int32_t val = *(const int32_t*)base;
-    
-    /* Enumeration constants are stored in a map that is keyed on the
-     * enumeration value. */
-    ecs_enum_constant_t *c = ecs_map_get_deref(&enum_type->constants, 
-        ecs_enum_constant_t, (ecs_map_key_t)val);
-    if (!c) {
-        char *path = ecs_get_fullpath(world, op->type);
-        ecs_err("value %d is not valid for enum type '%s'", val, path);
-        ecs_os_free(path);
-        goto error;
-    }
-
-    ecs_strbuf_appendstr(str, ecs_get_name(world, c->constant));
-
-    return 0;
-error:
-    return -1;
-}
-
-/* Serialize bitmask */
-static
-int flecs_expr_ser_bitmask(
-    const ecs_world_t *world,
-    ecs_meta_type_op_t *op, 
-    const void *ptr, 
-    ecs_strbuf_t *str) 
-{
-    const EcsBitmask *bitmask_type = ecs_get(world, op->type, EcsBitmask);
-    ecs_check(bitmask_type != NULL, ECS_INVALID_PARAMETER, NULL);
-    uint32_t value = *(const uint32_t*)ptr;
-
-    ecs_strbuf_list_push(str, "", "|");
-
-    /* Multiple flags can be set at a given time. Iterate through all the flags
-     * and append the ones that are set. */
-    ecs_map_iter_t it = ecs_map_iter(&bitmask_type->constants);
-    int count = 0;
-    while (ecs_map_next(&it)) {
-        ecs_bitmask_constant_t *c = ecs_map_ptr(&it);
-        ecs_map_key_t key = ecs_map_key(&it);
-        if ((value & key) == key) {
-            ecs_strbuf_list_appendstr(str, ecs_get_name(world, c->constant));
-            count ++;
-            value -= (uint32_t)key;
-        }
-    }
-
-    if (value != 0) {
-        /* All bits must have been matched by a constant */
-        char *path = ecs_get_fullpath(world, op->type);
-        ecs_err(
-            "value for bitmask %s contains bits (%u) that cannot be mapped to constant", 
-            path, value);
-        ecs_os_free(path);
-        goto error;
-    }
-
-    if (!count) {
-        ecs_strbuf_list_appendstr(str, "0");
-    }
-
-    ecs_strbuf_list_pop(str, "");
-
-    return 0;
-error:
-    return -1;
-}
-
-/* Serialize elements of a contiguous array */
-static
-int expr_ser_elements(
-    const ecs_world_t *world,
-    ecs_meta_type_op_t *ops, 
-    int32_t op_count,
-    const void *base, 
-    int32_t elem_count, 
-    int32_t elem_size,
-    ecs_strbuf_t *str,
-    bool is_array)
-{
-    ecs_strbuf_list_push(str, "[", ", ");
-
-    const void *ptr = base;
-
-    int i;
-    for (i = 0; i < elem_count; i ++) {
-        ecs_strbuf_list_next(str);
-        if (flecs_expr_ser_type_ops(
-            world, ops, op_count, ptr, str, is_array, true)) 
-        {
-            return -1;
-        }
-        ptr = ECS_OFFSET(ptr, elem_size);
-    }
-
-    ecs_strbuf_list_pop(str, "]");
-
-    return 0;
-}
-
-static
-int expr_ser_type_elements(
-    const ecs_world_t *world,
-    ecs_entity_t type, 
-    const void *base, 
-    int32_t elem_count, 
-    ecs_strbuf_t *str,
-    bool is_array)
-{
-    const EcsTypeSerializer *ser = ecs_get(
-        world, type, EcsTypeSerializer);
-    ecs_assert(ser != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    const EcsComponent *comp = ecs_get(world, type, EcsComponent);
-    ecs_assert(comp != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    ecs_meta_type_op_t *ops = ecs_vec_first_t(&ser->ops, ecs_meta_type_op_t);
-    int32_t op_count = ecs_vec_count(&ser->ops);
-    return expr_ser_elements(
-        world, ops, op_count, base, elem_count, comp->size, str, is_array);
-}
-
-/* Serialize array */
-static
-int expr_ser_array(
-    const ecs_world_t *world,
-    ecs_meta_type_op_t *op, 
-    const void *ptr, 
-    ecs_strbuf_t *str) 
-{
-    const EcsArray *a = ecs_get(world, op->type, EcsArray);
-    ecs_assert(a != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    return expr_ser_type_elements(
-        world, a->type, ptr, a->count, str, true);
-}
-
-/* Serialize vector */
-static
-int expr_ser_vector(
-    const ecs_world_t *world,
-    ecs_meta_type_op_t *op, 
-    const void *base, 
-    ecs_strbuf_t *str) 
-{
-    const ecs_vec_t *value = base;
-    const EcsVector *v = ecs_get(world, op->type, EcsVector);
-    ecs_assert(v != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    int32_t count = ecs_vec_count(value);
-    void *array = ecs_vec_first(value);
-
-    /* Serialize contiguous buffer of vector */
-    return expr_ser_type_elements(world, v->type, array, count, str, false);
-}
-
-/* Forward serialization to the different type kinds */
-static
-int flecs_expr_ser_type_op(
-    const ecs_world_t *world,
-    ecs_meta_type_op_t *op, 
-    const void *ptr,
-    ecs_strbuf_t *str,
-    bool is_expr)
-{
-    switch(op->kind) {
-    case EcsOpPush:
-    case EcsOpPop:
-        /* Should not be parsed as single op */
-        ecs_throw(ECS_INVALID_PARAMETER, NULL);
-        break;
-    case EcsOpEnum:
-        if (flecs_expr_ser_enum(world, op, ECS_OFFSET(ptr, op->offset), str)) {
-            goto error;
-        }
-        break;
-    case EcsOpBitmask:
-        if (flecs_expr_ser_bitmask(world, op, ECS_OFFSET(ptr, op->offset), str)) {
-            goto error;
-        }
-        break;
-    case EcsOpArray:
-        if (expr_ser_array(world, op, ECS_OFFSET(ptr, op->offset), str)) {
-            goto error;
-        }
-        break;
-    case EcsOpVector:
-        if (expr_ser_vector(world, op, ECS_OFFSET(ptr, op->offset), str)) {
-            goto error;
-        }
-        break;
-    case EcsOpScope:
-    case EcsOpPrimitive:
-    case EcsOpBool:
-    case EcsOpChar:
-    case EcsOpByte:
-    case EcsOpU8:
-    case EcsOpU16:
-    case EcsOpU32:
-    case EcsOpU64:
-    case EcsOpI8:
-    case EcsOpI16:
-    case EcsOpI32:
-    case EcsOpI64:
-    case EcsOpF32:
-    case EcsOpF64:
-    case EcsOpUPtr:
-    case EcsOpIPtr:
-    case EcsOpEntity:
-    case EcsOpId:
-    case EcsOpString:
-    case EcsOpOpaque:
-        if (flecs_expr_ser_primitive(world, flecs_expr_op_to_primitive_kind(op->kind), 
-            ECS_OFFSET(ptr, op->offset), str, is_expr))
-        {
-            /* Unknown operation */
-            ecs_err("unknown serializer operation kind (%d)", op->kind);
-            goto error;
-        }
-        break;
-    default:
-        ecs_throw(ECS_INVALID_PARAMETER, "invalid operation");
-    }
-
-    return 0;
-error:
-    return -1;
-}
-
-/* Iterate over a slice of the type ops array */
-static
-int flecs_expr_ser_type_ops(
-    const ecs_world_t *world,
-    ecs_meta_type_op_t *ops,
-    int32_t op_count,
-    const void *base,
-    ecs_strbuf_t *str,
-    int32_t in_array,
-    bool is_expr) 
-{
-    for (int i = 0; i < op_count; i ++) {
-        ecs_meta_type_op_t *op = &ops[i];
-
-        if (in_array <= 0) {
-            if (op->name) {
-                ecs_strbuf_list_next(str);
-                ecs_strbuf_append(str, "%s: ", op->name);
-            }
-
-            int32_t elem_count = op->count;
-            if (elem_count > 1) {
-                /* Serialize inline array */
-                if (expr_ser_elements(world, op, op->op_count, base,
-                    elem_count, op->size, str, true))
-                {
-                    return -1;
-                }
-
-                i += op->op_count - 1;
-                continue;
-            }
-        }
-
-        switch(op->kind) {
-        case EcsOpPush:
-            ecs_strbuf_list_push(str, "{", ", ");
-            in_array --;
-            break;
-        case EcsOpPop:
-            ecs_strbuf_list_pop(str, "}");
-            in_array ++;
-            break;
-        case EcsOpArray:
-        case EcsOpVector:
-        case EcsOpEnum:
-        case EcsOpBitmask:
-        case EcsOpScope:
-        case EcsOpPrimitive:
-        case EcsOpBool:
-        case EcsOpChar:
-        case EcsOpByte:
-        case EcsOpU8:
-        case EcsOpU16:
-        case EcsOpU32:
-        case EcsOpU64:
-        case EcsOpI8:
-        case EcsOpI16:
-        case EcsOpI32:
-        case EcsOpI64:
-        case EcsOpF32:
-        case EcsOpF64:
-        case EcsOpUPtr:
-        case EcsOpIPtr:
-        case EcsOpEntity:
-        case EcsOpId:
-        case EcsOpString:
-        case EcsOpOpaque:
-            if (flecs_expr_ser_type_op(world, op, base, str, is_expr)) {
-                goto error;
-            }
-            break;
-        default:
-            ecs_throw(ECS_INVALID_PARAMETER, "invalid operation");
-        }
-    }
-
-    return 0;
-error:
-    return -1;
-}
-
-/* Iterate over the type ops of a type */
-static
-int flecs_expr_ser_type(
-    const ecs_world_t *world,
-    const ecs_vec_t *v_ops,
-    const void *base, 
-    ecs_strbuf_t *str,
-    bool is_expr) 
-{
-    ecs_meta_type_op_t *ops = ecs_vec_first_t(v_ops, ecs_meta_type_op_t);
-    int32_t count = ecs_vec_count(v_ops);
-    return flecs_expr_ser_type_ops(world, ops, count, base, str, 0, is_expr);
-}
-
-int ecs_ptr_to_expr_buf(
-    const ecs_world_t *world,
-    ecs_entity_t type,
-    const void *ptr,
-    ecs_strbuf_t *buf_out)
-{
-    const EcsTypeSerializer *ser = ecs_get(
-        world, type, EcsTypeSerializer);
-    if (ser == NULL) {
-        char *path = ecs_get_fullpath(world, type);
-        ecs_err("cannot serialize value for type '%s'", path);
-        ecs_os_free(path);
-        goto error;
-    }
-
-    if (flecs_expr_ser_type(world, &ser->ops, ptr, buf_out, true)) {
-        goto error;
-    }
-
-    return 0;
-error:
-    return -1;
-}
-
-char* ecs_ptr_to_expr(
-    const ecs_world_t *world, 
-    ecs_entity_t type, 
-    const void* ptr)
-{
-    ecs_strbuf_t str = ECS_STRBUF_INIT;
-
-    if (ecs_ptr_to_expr_buf(world, type, ptr, &str) != 0) {
-        ecs_strbuf_reset(&str);
-        return NULL;
-    }
-
-    return ecs_strbuf_get(&str);
-}
-
-int ecs_ptr_to_str_buf(
-    const ecs_world_t *world,
-    ecs_entity_t type,
-    const void *ptr,
-    ecs_strbuf_t *buf_out)
-{
-    const EcsTypeSerializer *ser = ecs_get(
-        world, type, EcsTypeSerializer);
-    if (ser == NULL) {
-        char *path = ecs_get_fullpath(world, type);
-        ecs_err("cannot serialize value for type '%s'", path);
-        ecs_os_free(path);
-        goto error;
-    }
-
-    if (flecs_expr_ser_type(world, &ser->ops, ptr, buf_out, false)) {
-        goto error;
-    }
-
-    return 0;
-error:
-    return -1;
-}
-
-char* ecs_ptr_to_str(
-    const ecs_world_t *world, 
-    ecs_entity_t type, 
-    const void* ptr)
-{
-    ecs_strbuf_t str = ECS_STRBUF_INIT;
-
-    if (ecs_ptr_to_str_buf(world, type, ptr, &str) != 0) {
-        ecs_strbuf_reset(&str);
-        return NULL;
-    }
-
-    return ecs_strbuf_get(&str);
-}
-
-int ecs_primitive_to_expr_buf(
-    const ecs_world_t *world,
-    ecs_primitive_kind_t kind,
-    const void *base, 
-    ecs_strbuf_t *str)
-{
-    return flecs_expr_ser_primitive(world, kind, base, str, true);
-}
-
-#endif
-
-/**
- * @file expr/utils.c
- * @brief String parsing utilities.
- */
-
-
-#ifdef FLECS_EXPR
-
-#include <ctype.h>
-
-char* ecs_chresc(
-    char *out, 
-    char in, 
-    char delimiter) 
-{
-    char *bptr = out;
-    switch(in) {
-    case '\a':
-        *bptr++ = '\\';
-        *bptr = 'a';
-        break;
-    case '\b':
-        *bptr++ = '\\';
-        *bptr = 'b';
-        break;
-    case '\f':
-        *bptr++ = '\\';
-        *bptr = 'f';
-        break;
-    case '\n':
-        *bptr++ = '\\';
-        *bptr = 'n';
-        break;
-    case '\r':
-        *bptr++ = '\\';
-        *bptr = 'r';
-        break;
-    case '\t':
-        *bptr++ = '\\';
-        *bptr = 't';
-        break;
-    case '\v':
-        *bptr++ = '\\';
-        *bptr = 'v';
-        break;
-    case '\\':
-        *bptr++ = '\\';
-        *bptr = '\\';
-        break;
-    case '\033':
-        *bptr = '['; /* Used for terminal colors */
-        break;
-    default:
-        if (in == delimiter) {
-            *bptr++ = '\\';
-            *bptr = delimiter;
-        } else {
-            *bptr = in;
-        }
-        break;
-    }
-
-    *(++bptr) = '\0';
-
-    return bptr;
-}
-
-const char* ecs_chrparse(
-    const char *in, 
-    char *out) 
-{
-    const char *result = in + 1;
-    char ch;
-
-    if (in[0] == '\\') {
-        result ++;
-
-        switch(in[1]) {
-        case 'a':
-            ch = '\a';
-            break;
-        case 'b':
-            ch = '\b';
-            break;
-        case 'f':
-            ch = '\f';
-            break;
-        case 'n':
-            ch = '\n';
-            break;
-        case 'r':
-            ch = '\r';
-            break;
-        case 't':
-            ch = '\t';
-            break;
-        case 'v':
-            ch = '\v';
-            break;
-        case '\\':
-            ch = '\\';
-            break;
-        case '"':
-            ch = '"';
-            break;
-        case '0':
-            ch = '\0';
-            break;
-        case ' ':
-            ch = ' ';
-            break;
-        case '$':
-            ch = '$';
-            break;
-        default:
-            goto error;
-        }
-    } else {
-        ch = in[0];
-    }
-
-    if (out) {
-        *out = ch;
-    }
-
-    return result;
-error:
-    return NULL;
-}
-
-ecs_size_t ecs_stresc(
-    char *out, 
-    ecs_size_t n, 
-    char delimiter, 
-    const char *in) 
-{
-    const char *ptr = in;
-    char ch, *bptr = out, buff[3];
-    ecs_size_t written = 0;
-    while ((ch = *ptr++)) {
-        if ((written += (ecs_size_t)(ecs_chresc(
-            buff, ch, delimiter) - buff)) <= n) 
-        {
-            /* If size != 0, an out buffer must be provided. */
-            ecs_check(out != NULL, ECS_INVALID_PARAMETER, NULL);
-            *bptr++ = buff[0];
-            if ((ch = buff[1])) {
-                *bptr = ch;
-                bptr++;
-            }
-        }
-    }
-
-    if (bptr) {
-        while (written < n) {
-            *bptr = '\0';
-            bptr++;
-            written++;
-        }
-    }
-    return written;
-error:
-    return 0;
-}
-
-char* ecs_astresc(
-    char delimiter, 
-    const char *in)
-{
-    if (!in) {
-        return NULL;
-    }
-
-    ecs_size_t len = ecs_stresc(NULL, 0, delimiter, in);
-    char *out = ecs_os_malloc_n(char, len + 1);
-    ecs_stresc(out, len, delimiter, in);
-    out[len] = '\0';
-    return out;
-}
-
-#endif
-
-/**
- * @file expr/vars.c
- * @brief Utilities for variable substitution in flecs string expressions.
- */
-
-
-// #ifdef FLECS_EXPR
-
-// static
-// void flecs_expr_var_scope_init(
-//     ecs_world_t *world,
-//     ecs_expr_var_scope_t *scope,
-//     ecs_expr_var_scope_t *parent)
-// {
-//     flecs_name_index_init(&scope->var_index, &world->allocator);
-//     ecs_vec_init_t(&world->allocator, &scope->vars, ecs_expr_var_t, 0);
-//     scope->parent = parent;
-// }
-
-// static
-// void flecs_expr_var_scope_fini(
-//     ecs_world_t *world,
-//     ecs_expr_var_scope_t *scope)
-// {
-//     ecs_vec_t *vars = &scope->vars;
-//     int32_t i, count = vars->count;
-//     for (i = 0; i < count; i++) {
-//         ecs_expr_var_t *var = ecs_vec_get_t(vars, ecs_expr_var_t, i);
-//         if (var->owned) {
-//             ecs_value_free(world, var->value.type, var->value.ptr);
-//         }
-//         flecs_strfree(&world->allocator, var->name);
-//     }
-
-//     ecs_vec_fini_t(&world->allocator, &scope->vars, ecs_expr_var_t);
-//     flecs_name_index_fini(&scope->var_index);
-// }
-
-// void ecs_vars_init(
-//     ecs_world_t *world,
-//     ecs_vars_t *vars)
-// {
-//     flecs_expr_var_scope_init(world, &vars->root, NULL);
-//     vars->world = world;
-//     vars->cur = &vars->root;
-// }
-
-// void ecs_vars_fini(
-//     ecs_vars_t *vars)
-// {
-//     ecs_expr_var_scope_t *cur = vars->cur, *next;
-//     do {
-//         next = cur->parent;
-//         flecs_expr_var_scope_fini(vars->world, cur);
-//         if (cur != &vars->root) {
-//             flecs_free_t(&vars->world->allocator, ecs_expr_var_scope_t, cur);
-//         } else {
-//             break;
-//         }
-//     } while ((cur = next));
-// }
-
-// void ecs_vars_push(
-//     ecs_vars_t *vars)
-// {
-//     ecs_expr_var_scope_t *scope = flecs_calloc_t(&vars->world->allocator, 
-//         ecs_expr_var_scope_t);
-//     flecs_expr_var_scope_init(vars->world, scope, vars->cur);
-//     vars->cur = scope;
-// }
-
-// int ecs_vars_pop(
-//     ecs_vars_t *vars)
-// {
-//     ecs_expr_var_scope_t *scope = vars->cur;
-//     ecs_check(scope != &vars->root, ECS_INVALID_OPERATION,
-//         "cannot pop the root frame");
-//     vars->cur = scope->parent;
-//     flecs_expr_var_scope_fini(vars->world, scope);
-//     flecs_free_t(&vars->world->allocator, ecs_expr_var_scope_t, scope);
-//     return 0;
-// error:
-//     return 1;
-// }
-
-// ecs_expr_var_t* ecs_vars_declare(
-//     ecs_vars_t *vars,
-//     const char *name,
-//     ecs_entity_t type)
-// {
-//     ecs_assert(vars != NULL, ECS_INVALID_PARAMETER, NULL);
-//     ecs_assert(name != NULL, ECS_INVALID_PARAMETER, NULL);
-//     ecs_assert(type != 0, ECS_INVALID_PARAMETER, NULL);
-//     ecs_expr_var_scope_t *scope = vars->cur;
-//     ecs_hashmap_t *var_index = &scope->var_index;
-
-//     if (flecs_name_index_find(var_index, name, 0, 0) != 0) {
-//         ecs_err("variable %s redeclared", name);
-//         goto error;
-//     }
-
-//     ecs_expr_var_t *var = ecs_vec_append_t(&vars->world->allocator, 
-//         &scope->vars, ecs_expr_var_t);
-    
-//     var->value.ptr = ecs_value_new(vars->world, type);
-//     if (!var->value.ptr) {
-//         goto error;
-//     }
-//     var->value.type = type;
-//     var->name = flecs_strdup(&vars->world->allocator, name);
-//     var->owned = true;
-
-//     flecs_name_index_ensure(var_index, 
-//         flecs_ito(uint64_t, ecs_vec_count(&scope->vars)), var->name, 0, 0);
-//     return var;
-// error:
-//     return NULL;
-// }
-
-// ecs_expr_var_t* ecs_vars_declare_w_value(
-//     ecs_vars_t *vars,
-//     const char *name,
-//     ecs_value_t *value)
-// {
-//     ecs_assert(vars != NULL, ECS_INVALID_PARAMETER, NULL);
-//     ecs_assert(name != NULL, ECS_INVALID_PARAMETER, NULL);
-//     ecs_assert(value != NULL, ECS_INVALID_PARAMETER, NULL);
-//     ecs_expr_var_scope_t *scope = vars->cur;
-//     ecs_hashmap_t *var_index = &scope->var_index;
-
-//     if (flecs_name_index_find(var_index, name, 0, 0) != 0) {
-//         ecs_err("variable %s redeclared", name);
-//         ecs_value_free(vars->world, value->type, value->ptr);
-//         goto error;
-//     }
-
-//     ecs_expr_var_t *var = ecs_vec_append_t(&vars->world->allocator, 
-//         &scope->vars, ecs_expr_var_t);
-//     var->value = *value;
-//     var->name = flecs_strdup(&vars->world->allocator, name);
-//     var->owned = true;
-//     value->ptr = NULL; /* Take ownership, prevent double free */
-
-//     flecs_name_index_ensure(var_index, 
-//         flecs_ito(uint64_t, ecs_vec_count(&scope->vars)), var->name, 0, 0);
-//     return var;
-// error:
-//     return NULL;
-// }
-
-// static
-// ecs_expr_var_t* flecs_vars_scope_lookup(
-//     ecs_expr_var_scope_t *scope,
-//     const char *name)
-// {
-//     uint64_t var_id = flecs_name_index_find(&scope->var_index, name, 0, 0);
-//     if (var_id == 0) {
-//         if (scope->parent) {
-//             return flecs_vars_scope_lookup(scope->parent, name);
-//         }
-//         return NULL;
-//     }
-
-//     return ecs_vec_get_t(&scope->vars, ecs_expr_var_t, 
-//         flecs_uto(int32_t, var_id - 1));
-// }
-
-// ecs_expr_var_t* ecs_vars_lookup(
-//     const ecs_vars_t *vars,
-//     const char *name)
-// {
-//     return flecs_vars_scope_lookup(vars->cur, name);
-// }
-
-// #endif
-
-/**
  * @file json/deserialize.c
  * @brief Deserialize JSON strings into (component) values.
  */
@@ -52780,6 +52003,45 @@ ecs_primitive_kind_t flecs_json_op_to_primitive_kind(
  * @brief Serialize (component) values to JSON strings.
  */
 
+/**
+ * @file meta/meta.h
+ * @brief Private functions for meta addon.
+ */
+
+#ifndef FLECS_META_PRIVATE_H
+#define FLECS_META_PRIVATE_H
+
+
+#ifdef FLECS_META
+
+void ecs_meta_type_serialized_init(
+    ecs_iter_t *it);
+
+void ecs_meta_dtor_serialized(
+    EcsTypeSerializer *ptr);
+
+ecs_meta_type_op_kind_t flecs_meta_primitive_to_op_kind(
+    ecs_primitive_kind_t kind);
+
+bool flecs_unit_validate(
+    ecs_world_t *world,
+    ecs_entity_t t,
+    EcsUnit *data);
+
+void flecs_meta_import_definitions(
+    ecs_world_t *world);
+
+int flecs_expr_ser_primitive(
+    const ecs_world_t *world,
+    ecs_primitive_kind_t kind,
+    const void *base, 
+    ecs_strbuf_t *str,
+    bool is_expr);
+
+#endif
+    
+#endif
+
 
 #ifdef FLECS_JSON
 
@@ -53159,9 +52421,9 @@ int flecs_json_ser_type_op(
     case EcsOpUPtr:
     case EcsOpIPtr:
     case EcsOpString:
-        if (ecs_primitive_to_expr_buf(world, 
+        if (flecs_expr_ser_primitive(world, 
             flecs_json_op_to_primitive_kind(op->kind), 
-            ECS_OFFSET(ptr, op->offset), str)) 
+            ECS_OFFSET(ptr, op->offset), str, true)) 
         {
             ecs_throw(ECS_INTERNAL_ERROR, NULL);
         }
@@ -56593,38 +55855,6 @@ char* ecs_type_info_to_json(
  * @brief API for creating entities with reflection data.
  */
 
-/**
- * @file meta/meta.h
- * @brief Private functions for meta addon.
- */
-
-#ifndef FLECS_META_PRIVATE_H
-#define FLECS_META_PRIVATE_H
-
-
-#ifdef FLECS_META
-
-void ecs_meta_type_serialized_init(
-    ecs_iter_t *it);
-
-void ecs_meta_dtor_serialized(
-    EcsTypeSerializer *ptr);
-
-ecs_meta_type_op_kind_t flecs_meta_primitive_to_op_kind(
-    ecs_primitive_kind_t kind);
-
-bool flecs_unit_validate(
-    ecs_world_t *world,
-    ecs_entity_t t,
-    EcsUnit *data);
-
-void flecs_meta_import_definitions(
-    ecs_world_t *world);
-
-#endif
-    
-#endif
-
 
 #ifdef FLECS_META
 
@@ -56663,6 +55893,126 @@ bool flecs_type_is_number(
     default:
         ecs_abort(ECS_INVALID_PARAMETER, NULL);
     }
+}
+
+/* Serialize a primitive value */
+int flecs_expr_ser_primitive(
+    const ecs_world_t *world,
+    ecs_primitive_kind_t kind,
+    const void *base, 
+    ecs_strbuf_t *str,
+    bool is_expr) 
+{
+    switch(kind) {
+    case EcsBool:
+        if (*(const bool*)base) {
+            ecs_strbuf_appendlit(str, "true");
+        } else {
+            ecs_strbuf_appendlit(str, "false");
+        }
+        break;
+    case EcsChar: {
+        char chbuf[3];
+        char ch = *(const char*)base;
+        if (ch) {
+            ecs_chresc(chbuf, *(const char*)base, '"');
+            if (is_expr) ecs_strbuf_appendch(str, '"');
+            ecs_strbuf_appendstr(str, chbuf);
+            if (is_expr) ecs_strbuf_appendch(str, '"');
+        } else {
+            ecs_strbuf_appendch(str, '0');
+        }
+        break;
+    }
+    case EcsByte:
+        ecs_strbuf_appendint(str, flecs_uto(int64_t, *(const uint8_t*)base));
+        break;
+    case EcsU8:
+        ecs_strbuf_appendint(str, flecs_uto(int64_t, *(const uint8_t*)base));
+        break;
+    case EcsU16:
+        ecs_strbuf_appendint(str, flecs_uto(int64_t, *(const uint16_t*)base));
+        break;
+    case EcsU32:
+        ecs_strbuf_appendint(str, flecs_uto(int64_t, *(const uint32_t*)base));
+        break;
+    case EcsU64:
+        ecs_strbuf_append(str, "%llu", *(const uint64_t*)base);
+        break;
+    case EcsI8:
+        ecs_strbuf_appendint(str, flecs_ito(int64_t, *(const int8_t*)base));
+        break;
+    case EcsI16:
+        ecs_strbuf_appendint(str, flecs_ito(int64_t, *(const int16_t*)base));
+        break;
+    case EcsI32:
+        ecs_strbuf_appendint(str, flecs_ito(int64_t, *(const int32_t*)base));
+        break;
+    case EcsI64:
+        ecs_strbuf_appendint(str, *(const int64_t*)base);
+        break;
+    case EcsF32:
+        ecs_strbuf_appendflt(str, (double)*(const float*)base, 0);
+        break;
+    case EcsF64:
+        ecs_strbuf_appendflt(str, *(const double*)base, 0);
+        break;
+    case EcsIPtr:
+        ecs_strbuf_appendint(str, flecs_ito(int64_t, *(const intptr_t*)base));
+        break;
+    case EcsUPtr:
+        ecs_strbuf_append(str, "%u", *(const uintptr_t*)base);
+        break;
+    case EcsString: {
+        const char *value = *ECS_CONST_CAST(const char**, base);
+        if (value) {
+            if (!is_expr) {
+                ecs_strbuf_appendstr(str, value);
+            } else {
+                ecs_size_t length = ecs_stresc(NULL, 0, '"', value);
+                if (length == ecs_os_strlen(value)) {
+                    ecs_strbuf_appendch(str, '"');
+                    ecs_strbuf_appendstrn(str, value, length);
+                    ecs_strbuf_appendch(str, '"');
+                } else {
+                    char *out = ecs_os_malloc(length + 3);
+                    ecs_stresc(out + 1, length, '"', value);
+                    out[0] = '"';
+                    out[length + 1] = '"';
+                    out[length + 2] = '\0';
+                    ecs_strbuf_appendstr(str, out);
+                    ecs_os_free(out);
+                }
+            }
+        } else {
+            ecs_strbuf_appendlit(str, "null");
+        }
+        break;
+    }
+    case EcsEntity: {
+        ecs_entity_t e = *(const ecs_entity_t*)base;
+        if (!e) {
+            ecs_strbuf_appendch(str, '0');
+        } else {
+            ecs_get_path_w_sep_buf(world, 0, e, ".", NULL, str);
+        }
+        break;
+    }
+    case EcsId: {
+        ecs_id_t id = *(const ecs_id_t*)base;
+        if (!id) {
+            ecs_strbuf_appendch(str, '0');
+        } else {
+            ecs_id_str_buf(world, id, str);
+        }
+        break;
+    }
+    default:
+        ecs_err("invalid primitive kind");
+        return -1;
+    }
+
+    return 0;
 }
 
 ecs_entity_t ecs_primitive_init(
@@ -63915,6 +63265,13 @@ bool ecs_using_task_threads(
 #endif
 
 /**
+ * @file addons/script/assembly.c
+ * @brief Script assembly implementation.
+ */
+
+
+#ifdef FLECS_SCRIPT
+/**
  * @file addons/script/script.h
  * @brief Flecs script implementation.
  */
@@ -63945,7 +63302,7 @@ typedef struct ecs_script_parser_t ecs_script_parser_t;
 
 /**
  * @file addons/script/tokenizer.h
- * @brief Flecs script tokenizer.
+ * @brief Script tokenizer.
  */
 
 #ifndef FLECS_SCRIPT_TOKENIZER_H
@@ -64021,7 +63378,7 @@ struct ecs_script_parser_t {
 
 /**
  * @file addons/script/ast.h
- * @brief Flecs script AST.
+ * @brief Script AST.
  */
 
 #ifndef FLECS_SCRIPT_AST_H
@@ -64230,7 +63587,7 @@ ecs_script_if_t* flecs_script_insert_if(
 
 /**
  * @file addons/script/visit.h
- * @brief Flecs script AST visitor.
+ * @brief Script AST visitor utilities.
  */
 
 #ifndef FLECS_SCRIPT_VISIT_H
@@ -64310,12 +63667,12 @@ int32_t ecs_script_node_line_number_(
 #endif
 
 /**
- * @file addons/script/assembly.h
- * @brief Flecs assembly code.
+ * @file addons/script/visit_eval.h
+ * @brief Script evaluation visitor.
  */
 
-#ifndef FLECS_SCRIPT_EVAL_H
-#define FLECS_SCRIPT_EVAL_H
+#ifndef FLECS_SCRIPT_VISIT_EVAL_H
+#define FLECS_SCRIPT_VISIT_EVAL_H
 
 typedef struct ecs_script_eval_visitor_t {
     ecs_script_visit_t base;
@@ -64784,6 +64141,15 @@ error:
     return -1;
 }
 
+#endif
+
+/**
+ * @file addons/script/ast.c
+ * @brief Script AST implementation.
+ */
+
+
+#ifdef FLECS_SCRIPT
 
 #define flecs_ast_strdup(parser, str)\
     (str ? flecs_strdup(&parser->script->allocator, str) : NULL)
@@ -65075,11 +64441,15 @@ ecs_script_if_t* flecs_script_insert_if(
     return result;
 }
 
+#endif
+
 /**
- * @file script/expr.c
+ * @file addons/script/expr.c
  * @brief Evaluate expressions.
  */
 
+
+#ifdef FLECS_SCRIPT
 #include <ctype.h>
 
 /* String deserializer for values & simple expressions */
@@ -65122,13 +64492,13 @@ typedef struct ecs_value_stack_t {
 } ecs_value_stack_t;
 
 static
-const char* flecs_parse_expr(
+const char* flecs_script_expr_run(
     ecs_world_t *world,
     ecs_value_stack_t *stack,
     const char *ptr,
     ecs_value_t *value,
     ecs_expr_oper_t op,
-    const ecs_parse_expr_desc_t *desc);
+    const ecs_script_expr_run_desc_t *desc);
 
 static
 void* flecs_expr_value_new(
@@ -65217,7 +64587,7 @@ const char* flecs_str_to_expr_oper(
     return NULL;
 }
 
-const char *ecs_parse_expr_token(
+const char *flecs_script_expr_parse_token(
     const char *name,
     const char *expr,
     const char *ptr,
@@ -65425,7 +64795,7 @@ ecs_entity_t flecs_parse_discover_type(
     const char *expr,
     const char *ptr,
     ecs_entity_t input_type,
-    const ecs_parse_expr_desc_t *desc)
+    const ecs_script_expr_run_desc_t *desc)
 {
     /* String literal */
     if (ptr[0] == '"' || ptr[0] == '`') {
@@ -65465,7 +64835,7 @@ ecs_entity_t flecs_parse_discover_type(
             return 0;
         }
         char token[ECS_MAX_TOKEN_SIZE];
-        if (ecs_parse_expr_token(name, expr, &ptr[1], token) == NULL) {
+        if (flecs_script_expr_parse_token(name, expr, &ptr[1], token) == NULL) {
             return 0;
         }
 
@@ -65976,7 +65346,7 @@ const char* flecs_binary_expr_parse(
     ecs_value_t *lvalue,
     ecs_value_t *result,
     ecs_expr_oper_t left_op,
-    const ecs_parse_expr_desc_t *desc)
+    const ecs_script_expr_run_desc_t *desc)
 {
     ecs_entity_t result_type = result->type;
     do {
@@ -65990,7 +65360,7 @@ const char* flecs_binary_expr_parse(
         ptr = ecs_parse_ws_eol(ptr);
 
         ecs_value_t rvalue = {0};
-        const char *rptr = flecs_parse_expr(world, stack, ptr, &rvalue, op, desc);
+        const char *rptr = flecs_script_expr_run(world, stack, ptr, &rvalue, op, desc);
         if (!rptr) {
             return NULL;
         }
@@ -66037,7 +65407,7 @@ const char* flecs_funccall_parse(
     ecs_meta_cursor_t *cur,
     ecs_value_t *value,
     bool isvar,
-    const ecs_parse_expr_desc_t *desc)
+    const ecs_script_expr_run_desc_t *desc)
 {
     char *sep = strrchr(token, '.');
     if (!sep) {
@@ -66106,13 +65476,13 @@ error:
 }
 
 static
-const char* flecs_parse_expr(
+const char* flecs_script_expr_run(
     ecs_world_t *world,
     ecs_value_stack_t *stack,
     const char *ptr,
     ecs_value_t *value,
     ecs_expr_oper_t left_op,
-    const ecs_parse_expr_desc_t *desc)
+    const ecs_script_expr_run_desc_t *desc)
 {
     ecs_assert(value != NULL, ECS_INTERNAL_ERROR, NULL);
     char token[ECS_MAX_TOKEN_SIZE];
@@ -66159,7 +65529,7 @@ const char* flecs_parse_expr(
     }
 
     /* Loop that parses all values in a value scope */
-    while ((ptr = ecs_parse_expr_token(name, expr, ptr, token))) {
+    while ((ptr = flecs_script_expr_parse_token(name, expr, ptr, token))) {
         /* Used to track of the result of the parsed token can be used as the
          * lvalue for a binary expression */
         bool is_lvalue = false;
@@ -66181,7 +65551,7 @@ const char* flecs_parse_expr(
             }
 
             /* Parenthesis, parse nested expression */
-            ptr = flecs_parse_expr(world, stack, ptr, out, EcsLeftParen, desc);
+            ptr = flecs_script_expr_run(world, stack, ptr, out, EcsLeftParen, desc);
             if (ptr[0] != ')') {
                 ecs_parser_error(name, expr, ptr - expr, 
                     "missing closing parenthesis");
@@ -66453,11 +65823,11 @@ error:
     return NULL;
 }
 
-const char* ecs_parse_expr(
+const char* ecs_script_expr_run(
     ecs_world_t *world,
     const char *ptr,
     ecs_value_t *value,
-    const ecs_parse_expr_desc_t *desc)
+    const ecs_script_expr_run_desc_t *desc)
 {
     /* Prepare storage for temporary values */
     ecs_stage_t *stage = flecs_stage_from_world(&world);
@@ -66469,7 +65839,7 @@ const char* ecs_parse_expr(
 
     /* Parse expression */
     bool storage_provided = value->ptr != NULL;
-    ptr = flecs_parse_expr(world, &stack, ptr, value, EcsExprOperUnknown, desc);
+    ptr = flecs_script_expr_run(world, &stack, ptr, value, EcsExprOperUnknown, desc);
 
     /* If no result value was provided, allocate one as we can't return a 
      * pointer to a temporary storage */
@@ -66492,11 +65862,15 @@ const char* ecs_parse_expr(
     return ptr;
 }
 
+#endif
+
 /**
- * @file script/expr_utils.c
- * @brief Expression utility functions.
+ * @file addons/script/interpolate.c
+ * @brief String interpolation.
  */
 
+
+#ifdef FLECS_SCRIPT
 #include <ctype.h>
 
 static
@@ -66573,7 +65947,7 @@ error:
     return NULL;
 }
 
-char* ecs_interpolate_string(
+char* ecs_script_string_interpolate(
     ecs_world_t *world,
     const char *str,
     const ecs_script_vars_t *vars)
@@ -66635,12 +66009,12 @@ char* ecs_interpolate_string(
                 goto error;
             }
 
-            ecs_parse_expr_desc_t expr_desc = { 
+            ecs_script_expr_run_desc_t expr_desc = { 
                 .vars = ECS_CONST_CAST(ecs_script_vars_t*, vars) 
             };
 
             ecs_value_t expr_result = {0};
-            if (!ecs_parse_expr(world, token, &expr_result, &expr_desc)) {
+            if (!ecs_script_expr_run(world, token, &expr_result, &expr_desc)) {
                 goto error;
             }
 
@@ -66663,106 +66037,20 @@ error:
     return NULL;
 }
 
-/* Static names for iterator fields */
-static const char* flecs_script_iter_field_names[] = {
-    "0", "1",  "2",  "3",  "4",  "5",  "6",  "7",
-    "8", "9", "10", "11", "12", "13", "14", "15"
-};
-
-void ecs_iter_to_vars(
-    const ecs_iter_t *it,
-    ecs_script_vars_t *vars,
-    int offset)
-{
-    ecs_check(vars != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(!offset || offset < it->count, ECS_INVALID_PARAMETER, NULL);
-
-    /* Set variable for $this */
-    if (it->count) {
-        ecs_script_var_t *var = ecs_script_vars_lookup(vars, "this");
-        if (!var) {
-            var = ecs_script_vars_declare(vars, "this");
-            var->value.type = ecs_id(ecs_entity_t);
-        }
-        var->value.ptr = &it->entities[offset];
-    }
-
-    /* Set variables for fields */
-    {
-        int32_t i, field_count = it->field_count;
-        for (i = 0; i < field_count; i ++) {
-            ecs_size_t size = it->sizes[i];
-            if (!size) {
-                continue;
-            }
-
-            void *ptr = it->ptrs[i];
-            if (!ptr) {
-                continue;
-            }
-
-            ptr = ECS_OFFSET(ptr, offset * size);
-
-            const char *name = flecs_script_iter_field_names[i];
-            ecs_script_var_t *var = ecs_script_vars_lookup(vars, name);
-            if (!var) {
-                var = ecs_script_vars_declare(vars, name);
-                ecs_assert(ecs_script_vars_lookup(vars, name) != NULL,  
-                    ECS_INTERNAL_ERROR, NULL);
-                var->value.type = it->ids[i];
-            } else {
-                ecs_check(var->value.type == it->ids[i], 
-                    ECS_INVALID_PARAMETER, NULL);
-            }
-            var->value.ptr = ptr;
-        }
-    }
-
-    /* Set variables for query variables */
-    {
-        int32_t i, var_count = it->variable_count;
-        for (i = 1 /* skip this variable */ ; i < var_count; i ++) {
-            ecs_entity_t *e_ptr = NULL;
-            ecs_var_t *query_var = &it->variables[i];
-            if (query_var->entity) {
-                e_ptr = &query_var->entity;
-            } else {
-                ecs_table_range_t *range = &query_var->range;
-                if (range->count == 1) {
-                    ecs_entity_t *entities = range->table->data.entities.array;
-                    e_ptr = &entities[range->offset];
-                }
-            }
-            if (!e_ptr) {
-                continue;
-            }
-
-            ecs_script_var_t *var = ecs_script_vars_lookup(
-                vars, it->variable_names[i]);
-            if (!var) {
-                var = ecs_script_vars_declare(vars, it->variable_names[i]);
-                var->value.type = ecs_id(ecs_entity_t);
-            } else {
-                ecs_check(var->value.type == ecs_id(ecs_entity_t), 
-                    ECS_INVALID_PARAMETER, NULL);
-            }
-            var->value.ptr = e_ptr;
-        }
-    }
-
-error:
-    return;
-}
+#endif
 
 /**
- * @file addons/plecs.c
- * @brief Plecs addon.
+ * @file addons/script/parser.c
+ * @brief Script grammar parser.
  */
 
+
+#ifdef FLECS_SCRIPT
 /**
  * @file addons/script/parser.h
- * @brief Flecs script parser.
+ * @brief Script grammar parser.
+ * 
+ * Macro utilities that facilitate a simple recursive descent parser.
  */
 
 #ifndef FLECS_SCRIPT_PARSER_H
@@ -66843,6 +66131,7 @@ error:
         }\
     }
 
+/* Parse N consecutive tokens */
 #define Parse_1(tok, ...)\
     Parse(\
         case tok: {\
@@ -66900,6 +66189,7 @@ error:
         }\
     }
 
+/* Lookahead N consecutive tokens */
 #define LookAhead_1(tok, ...)\
     LookAhead(\
         case tok: {\
@@ -66931,6 +66221,7 @@ error:
         pos = old_ptr;\
     )
 
+/* Open scope */
 #define Scope(s, ...) {\
         ecs_script_scope_t *old_scope = parser->scope;\
         parser->scope = s;\
@@ -66938,6 +66229,7 @@ error:
         parser->scope = old_scope;\
     }
 
+/* Parser loop */
 #define Loop(...)\
     int32_t token_stack_count = token_stack.count;\
     do {\
@@ -66950,8 +66242,6 @@ error:
 #endif
 
 
-/* Parser implementation */
-
 #define EcsTokEndOfStatement\
     case ';':\
     case '\n':\
@@ -66961,6 +66251,7 @@ const char* flecs_script_stmt(
     ecs_script_parser_t *parser,
     const char *pos);
 
+/* Parse scope (statements inside {}) */
 const char* flecs_script_scope(
     ecs_script_parser_t *parser,
     ecs_script_scope_t *scope,
@@ -66999,6 +66290,7 @@ scope_close:
     ParserEnd;
 }
 
+/* Parse comma expression (expressions separated by ',') */
 const char* flecs_script_comma_expr(
     ecs_script_parser_t *parser,
     const char *pos,
@@ -67033,6 +66325,7 @@ const char* flecs_script_comma_expr(
     return pos;
 }
 
+/* Parse with expression (expression after 'with' keyword) */
 const char* flecs_script_with_expr(
     ecs_script_parser_t *parser,
     const char *pos)
@@ -67098,6 +66391,7 @@ const char* flecs_script_with_expr(
     ParserEnd;
 }
 
+/* Parse with expression list (expression list after 'with' keyword) */
 const char* flecs_script_with(
     ecs_script_parser_t *parser,
     ecs_script_with_t *with,
@@ -67131,6 +66425,7 @@ const char* flecs_script_with(
     ParserEnd;
 }
 
+/* Parse a single statement */
 const char* flecs_script_stmt(
     ecs_script_parser_t *parser,
     const char *pos) 
@@ -67630,6 +66925,7 @@ component_expr_paren: {
 
 }
 
+/* Parse script */
 ecs_script_t* ecs_script_parse(
     ecs_world_t *world,
     const char *name,
@@ -67648,20 +66944,29 @@ ecs_script_t* ecs_script_parse(
         .scope = script->root,
     };
 
+    /* Allocate a buffer that is able to store all parsed tokens. Multiply the
+     * size of the script by two so that there is enough space to add \0
+     * terminators and expression deliminators ('""') 
+     * The token buffer will exist for as long as the script object exists, and
+     * ensures that AST nodes don't need to do separate allocations for the data
+     * they contain. */
     script->token_buffer_size = ecs_os_strlen(code) * 2 + 1;
     script->token_buffer = flecs_alloc(
         &script->allocator, script->token_buffer_size);
     parser.token_cur = script->token_buffer;
 
+    /* Start parsing code */
     const char *pos = code;
 
     do {
         pos = flecs_script_stmt(&parser, pos);
         if (!pos) {
+            /* NULL means error */
             goto error;
         }
 
         if (!pos[0]) {
+            /* \0 means end of input */
             break;
         }
     } while (true);
@@ -67672,6 +66977,15 @@ error:
     return NULL;
 }
 
+#endif
+
+/**
+ * @file addons/script/script.c
+ * @brief Script API.
+ */
+
+
+#ifdef FLECS_SCRIPT
 
 ECS_COMPONENT_DECLARE(EcsScript);
 
@@ -67914,11 +67228,471 @@ void FlecsScriptImport(
     ecs_add_id(world, ecs_id(EcsScript), EcsPrivate);
 }
 
+#endif
+
 /**
- * @file addons/plecs.c
- * @brief Plecs addon.
+ * @file addons/script/serialize.c
+ * @brief Serialize values to string.
  */
 
+
+#ifdef FLECS_SCRIPT
+
+static
+int flecs_expr_ser_type(
+    const ecs_world_t *world,
+    const ecs_vec_t *ser, 
+    const void *base, 
+    ecs_strbuf_t *str,
+    bool is_expr);
+
+static
+int flecs_expr_ser_type_ops(
+    const ecs_world_t *world,
+    ecs_meta_type_op_t *ops,
+    int32_t op_count,
+    const void *base, 
+    ecs_strbuf_t *str,
+    int32_t in_array,
+    bool is_expr);
+
+static
+int flecs_expr_ser_type_op(
+    const ecs_world_t *world,
+    ecs_meta_type_op_t *op, 
+    const void *base,
+    ecs_strbuf_t *str,
+    bool is_expr);
+
+static
+ecs_primitive_kind_t flecs_expr_op_to_primitive_kind(ecs_meta_type_op_kind_t kind) {
+    return kind - EcsOpPrimitive;
+}
+
+/* Serialize enumeration */
+static
+int flecs_expr_ser_enum(
+    const ecs_world_t *world,
+    ecs_meta_type_op_t *op, 
+    const void *base, 
+    ecs_strbuf_t *str) 
+{
+    const EcsEnum *enum_type = ecs_get(world, op->type, EcsEnum);
+    ecs_check(enum_type != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    int32_t val = *(const int32_t*)base;
+    
+    /* Enumeration constants are stored in a map that is keyed on the
+     * enumeration value. */
+    ecs_enum_constant_t *c = ecs_map_get_deref(&enum_type->constants, 
+        ecs_enum_constant_t, (ecs_map_key_t)val);
+    if (!c) {
+        char *path = ecs_get_fullpath(world, op->type);
+        ecs_err("value %d is not valid for enum type '%s'", val, path);
+        ecs_os_free(path);
+        goto error;
+    }
+
+    ecs_strbuf_appendstr(str, ecs_get_name(world, c->constant));
+
+    return 0;
+error:
+    return -1;
+}
+
+/* Serialize bitmask */
+static
+int flecs_expr_ser_bitmask(
+    const ecs_world_t *world,
+    ecs_meta_type_op_t *op, 
+    const void *ptr, 
+    ecs_strbuf_t *str) 
+{
+    const EcsBitmask *bitmask_type = ecs_get(world, op->type, EcsBitmask);
+    ecs_check(bitmask_type != NULL, ECS_INVALID_PARAMETER, NULL);
+    uint32_t value = *(const uint32_t*)ptr;
+
+    ecs_strbuf_list_push(str, "", "|");
+
+    /* Multiple flags can be set at a given time. Iterate through all the flags
+     * and append the ones that are set. */
+    ecs_map_iter_t it = ecs_map_iter(&bitmask_type->constants);
+    int count = 0;
+    while (ecs_map_next(&it)) {
+        ecs_bitmask_constant_t *c = ecs_map_ptr(&it);
+        ecs_map_key_t key = ecs_map_key(&it);
+        if ((value & key) == key) {
+            ecs_strbuf_list_appendstr(str, ecs_get_name(world, c->constant));
+            count ++;
+            value -= (uint32_t)key;
+        }
+    }
+
+    if (value != 0) {
+        /* All bits must have been matched by a constant */
+        char *path = ecs_get_fullpath(world, op->type);
+        ecs_err(
+            "value for bitmask %s contains bits (%u) that cannot be mapped to constant", 
+            path, value);
+        ecs_os_free(path);
+        goto error;
+    }
+
+    if (!count) {
+        ecs_strbuf_list_appendstr(str, "0");
+    }
+
+    ecs_strbuf_list_pop(str, "");
+
+    return 0;
+error:
+    return -1;
+}
+
+/* Serialize elements of a contiguous array */
+static
+int expr_ser_elements(
+    const ecs_world_t *world,
+    ecs_meta_type_op_t *ops, 
+    int32_t op_count,
+    const void *base, 
+    int32_t elem_count, 
+    int32_t elem_size,
+    ecs_strbuf_t *str,
+    bool is_array)
+{
+    ecs_strbuf_list_push(str, "[", ", ");
+
+    const void *ptr = base;
+
+    int i;
+    for (i = 0; i < elem_count; i ++) {
+        ecs_strbuf_list_next(str);
+        if (flecs_expr_ser_type_ops(
+            world, ops, op_count, ptr, str, is_array, true)) 
+        {
+            return -1;
+        }
+        ptr = ECS_OFFSET(ptr, elem_size);
+    }
+
+    ecs_strbuf_list_pop(str, "]");
+
+    return 0;
+}
+
+static
+int expr_ser_type_elements(
+    const ecs_world_t *world,
+    ecs_entity_t type, 
+    const void *base, 
+    int32_t elem_count, 
+    ecs_strbuf_t *str,
+    bool is_array)
+{
+    const EcsTypeSerializer *ser = ecs_get(
+        world, type, EcsTypeSerializer);
+    ecs_assert(ser != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    const EcsComponent *comp = ecs_get(world, type, EcsComponent);
+    ecs_assert(comp != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_meta_type_op_t *ops = ecs_vec_first_t(&ser->ops, ecs_meta_type_op_t);
+    int32_t op_count = ecs_vec_count(&ser->ops);
+    return expr_ser_elements(
+        world, ops, op_count, base, elem_count, comp->size, str, is_array);
+}
+
+/* Serialize array */
+static
+int expr_ser_array(
+    const ecs_world_t *world,
+    ecs_meta_type_op_t *op, 
+    const void *ptr, 
+    ecs_strbuf_t *str) 
+{
+    const EcsArray *a = ecs_get(world, op->type, EcsArray);
+    ecs_assert(a != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    return expr_ser_type_elements(
+        world, a->type, ptr, a->count, str, true);
+}
+
+/* Serialize vector */
+static
+int expr_ser_vector(
+    const ecs_world_t *world,
+    ecs_meta_type_op_t *op, 
+    const void *base, 
+    ecs_strbuf_t *str) 
+{
+    const ecs_vec_t *value = base;
+    const EcsVector *v = ecs_get(world, op->type, EcsVector);
+    ecs_assert(v != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    int32_t count = ecs_vec_count(value);
+    void *array = ecs_vec_first(value);
+
+    /* Serialize contiguous buffer of vector */
+    return expr_ser_type_elements(world, v->type, array, count, str, false);
+}
+
+/* Forward serialization to the different type kinds */
+static
+int flecs_expr_ser_type_op(
+    const ecs_world_t *world,
+    ecs_meta_type_op_t *op, 
+    const void *ptr,
+    ecs_strbuf_t *str,
+    bool is_expr)
+{
+    switch(op->kind) {
+    case EcsOpPush:
+    case EcsOpPop:
+        /* Should not be parsed as single op */
+        ecs_throw(ECS_INVALID_PARAMETER, NULL);
+        break;
+    case EcsOpEnum:
+        if (flecs_expr_ser_enum(world, op, ECS_OFFSET(ptr, op->offset), str)) {
+            goto error;
+        }
+        break;
+    case EcsOpBitmask:
+        if (flecs_expr_ser_bitmask(world, op, ECS_OFFSET(ptr, op->offset), str)) {
+            goto error;
+        }
+        break;
+    case EcsOpArray:
+        if (expr_ser_array(world, op, ECS_OFFSET(ptr, op->offset), str)) {
+            goto error;
+        }
+        break;
+    case EcsOpVector:
+        if (expr_ser_vector(world, op, ECS_OFFSET(ptr, op->offset), str)) {
+            goto error;
+        }
+        break;
+    case EcsOpScope:
+    case EcsOpPrimitive:
+    case EcsOpBool:
+    case EcsOpChar:
+    case EcsOpByte:
+    case EcsOpU8:
+    case EcsOpU16:
+    case EcsOpU32:
+    case EcsOpU64:
+    case EcsOpI8:
+    case EcsOpI16:
+    case EcsOpI32:
+    case EcsOpI64:
+    case EcsOpF32:
+    case EcsOpF64:
+    case EcsOpUPtr:
+    case EcsOpIPtr:
+    case EcsOpEntity:
+    case EcsOpId:
+    case EcsOpString:
+    case EcsOpOpaque:
+        if (flecs_expr_ser_primitive(world, flecs_expr_op_to_primitive_kind(op->kind), 
+            ECS_OFFSET(ptr, op->offset), str, is_expr))
+        {
+            /* Unknown operation */
+            ecs_err("unknown serializer operation kind (%d)", op->kind);
+            goto error;
+        }
+        break;
+    default:
+        ecs_throw(ECS_INVALID_PARAMETER, "invalid operation");
+    }
+
+    return 0;
+error:
+    return -1;
+}
+
+/* Iterate over a slice of the type ops array */
+static
+int flecs_expr_ser_type_ops(
+    const ecs_world_t *world,
+    ecs_meta_type_op_t *ops,
+    int32_t op_count,
+    const void *base,
+    ecs_strbuf_t *str,
+    int32_t in_array,
+    bool is_expr) 
+{
+    for (int i = 0; i < op_count; i ++) {
+        ecs_meta_type_op_t *op = &ops[i];
+
+        if (in_array <= 0) {
+            if (op->name) {
+                ecs_strbuf_list_next(str);
+                ecs_strbuf_append(str, "%s: ", op->name);
+            }
+
+            int32_t elem_count = op->count;
+            if (elem_count > 1) {
+                /* Serialize inline array */
+                if (expr_ser_elements(world, op, op->op_count, base,
+                    elem_count, op->size, str, true))
+                {
+                    return -1;
+                }
+
+                i += op->op_count - 1;
+                continue;
+            }
+        }
+
+        switch(op->kind) {
+        case EcsOpPush:
+            ecs_strbuf_list_push(str, "{", ", ");
+            in_array --;
+            break;
+        case EcsOpPop:
+            ecs_strbuf_list_pop(str, "}");
+            in_array ++;
+            break;
+        case EcsOpArray:
+        case EcsOpVector:
+        case EcsOpEnum:
+        case EcsOpBitmask:
+        case EcsOpScope:
+        case EcsOpPrimitive:
+        case EcsOpBool:
+        case EcsOpChar:
+        case EcsOpByte:
+        case EcsOpU8:
+        case EcsOpU16:
+        case EcsOpU32:
+        case EcsOpU64:
+        case EcsOpI8:
+        case EcsOpI16:
+        case EcsOpI32:
+        case EcsOpI64:
+        case EcsOpF32:
+        case EcsOpF64:
+        case EcsOpUPtr:
+        case EcsOpIPtr:
+        case EcsOpEntity:
+        case EcsOpId:
+        case EcsOpString:
+        case EcsOpOpaque:
+            if (flecs_expr_ser_type_op(world, op, base, str, is_expr)) {
+                goto error;
+            }
+            break;
+        default:
+            ecs_throw(ECS_INVALID_PARAMETER, "invalid operation");
+        }
+    }
+
+    return 0;
+error:
+    return -1;
+}
+
+/* Iterate over the type ops of a type */
+static
+int flecs_expr_ser_type(
+    const ecs_world_t *world,
+    const ecs_vec_t *v_ops,
+    const void *base, 
+    ecs_strbuf_t *str,
+    bool is_expr) 
+{
+    ecs_meta_type_op_t *ops = ecs_vec_first_t(v_ops, ecs_meta_type_op_t);
+    int32_t count = ecs_vec_count(v_ops);
+    return flecs_expr_ser_type_ops(world, ops, count, base, str, 0, is_expr);
+}
+
+int ecs_ptr_to_expr_buf(
+    const ecs_world_t *world,
+    ecs_entity_t type,
+    const void *ptr,
+    ecs_strbuf_t *buf_out)
+{
+    const EcsTypeSerializer *ser = ecs_get(
+        world, type, EcsTypeSerializer);
+    if (ser == NULL) {
+        char *path = ecs_get_fullpath(world, type);
+        ecs_err("cannot serialize value for type '%s'", path);
+        ecs_os_free(path);
+        goto error;
+    }
+
+    if (flecs_expr_ser_type(world, &ser->ops, ptr, buf_out, true)) {
+        goto error;
+    }
+
+    return 0;
+error:
+    return -1;
+}
+
+char* ecs_ptr_to_expr(
+    const ecs_world_t *world, 
+    ecs_entity_t type, 
+    const void* ptr)
+{
+    ecs_strbuf_t str = ECS_STRBUF_INIT;
+
+    if (ecs_ptr_to_expr_buf(world, type, ptr, &str) != 0) {
+        ecs_strbuf_reset(&str);
+        return NULL;
+    }
+
+    return ecs_strbuf_get(&str);
+}
+
+int ecs_ptr_to_str_buf(
+    const ecs_world_t *world,
+    ecs_entity_t type,
+    const void *ptr,
+    ecs_strbuf_t *buf_out)
+{
+    const EcsTypeSerializer *ser = ecs_get(
+        world, type, EcsTypeSerializer);
+    if (ser == NULL) {
+        char *path = ecs_get_fullpath(world, type);
+        ecs_err("cannot serialize value for type '%s'", path);
+        ecs_os_free(path);
+        goto error;
+    }
+
+    if (flecs_expr_ser_type(world, &ser->ops, ptr, buf_out, false)) {
+        goto error;
+    }
+
+    return 0;
+error:
+    return -1;
+}
+
+char* ecs_ptr_to_str(
+    const ecs_world_t *world, 
+    ecs_entity_t type, 
+    const void* ptr)
+{
+    ecs_strbuf_t str = ECS_STRBUF_INIT;
+
+    if (ecs_ptr_to_str_buf(world, type, ptr, &str) != 0) {
+        ecs_strbuf_reset(&str);
+        return NULL;
+    }
+
+    return ecs_strbuf_get(&str);
+}
+
+#endif
+
+/**
+ * @file addons/script/tokenizer.c
+ * @brief Script tokenizer.
+ */
+
+
+#ifdef FLECS_SCRIPT
 
 #define Keyword(keyword, _kind)\
     } else if (!ecs_os_strncmp(pos, keyword " ", ecs_os_strlen(keyword) + 1)) {\
@@ -68301,6 +68075,15 @@ const char* flecs_script_token(
     return NULL;
 }
 
+#endif
+
+/**
+ * @file addons/script/vars.c
+ * @brief Script variables.
+ */
+
+
+#ifdef FLECS_SCRIPT
 
 ecs_script_vars_t* flecs_script_vars_push(
     ecs_script_vars_t *parent,
@@ -68479,6 +68262,107 @@ ecs_script_var_t* ecs_script_vars_lookup(
         flecs_uto(int32_t, var_id - 1));
 }
 
+/* Static names for iterator fields */
+static const char* flecs_script_iter_field_names[] = {
+    "0", "1",  "2",  "3",  "4",  "5",  "6",  "7",
+    "8", "9", "10", "11", "12", "13", "14", "15"
+};
+
+void ecs_script_vars_from_iter(
+    const ecs_iter_t *it,
+    ecs_script_vars_t *vars,
+    int offset)
+{
+    ecs_check(vars != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(!offset || offset < it->count, ECS_INVALID_PARAMETER, NULL);
+
+    /* Set variable for $this */
+    if (it->count) {
+        ecs_script_var_t *var = ecs_script_vars_lookup(vars, "this");
+        if (!var) {
+            var = ecs_script_vars_declare(vars, "this");
+            var->value.type = ecs_id(ecs_entity_t);
+        }
+        var->value.ptr = &it->entities[offset];
+    }
+
+    /* Set variables for fields */
+    {
+        int32_t i, field_count = it->field_count;
+        for (i = 0; i < field_count; i ++) {
+            ecs_size_t size = it->sizes[i];
+            if (!size) {
+                continue;
+            }
+
+            void *ptr = it->ptrs[i];
+            if (!ptr) {
+                continue;
+            }
+
+            ptr = ECS_OFFSET(ptr, offset * size);
+
+            const char *name = flecs_script_iter_field_names[i];
+            ecs_script_var_t *var = ecs_script_vars_lookup(vars, name);
+            if (!var) {
+                var = ecs_script_vars_declare(vars, name);
+                ecs_assert(ecs_script_vars_lookup(vars, name) != NULL,  
+                    ECS_INTERNAL_ERROR, NULL);
+                var->value.type = it->ids[i];
+            } else {
+                ecs_check(var->value.type == it->ids[i], 
+                    ECS_INVALID_PARAMETER, NULL);
+            }
+            var->value.ptr = ptr;
+        }
+    }
+
+    /* Set variables for query variables */
+    {
+        int32_t i, var_count = it->variable_count;
+        for (i = 1 /* skip this variable */ ; i < var_count; i ++) {
+            ecs_entity_t *e_ptr = NULL;
+            ecs_var_t *query_var = &it->variables[i];
+            if (query_var->entity) {
+                e_ptr = &query_var->entity;
+            } else {
+                ecs_table_range_t *range = &query_var->range;
+                if (range->count == 1) {
+                    ecs_entity_t *entities = range->table->data.entities.array;
+                    e_ptr = &entities[range->offset];
+                }
+            }
+            if (!e_ptr) {
+                continue;
+            }
+
+            ecs_script_var_t *var = ecs_script_vars_lookup(
+                vars, it->variable_names[i]);
+            if (!var) {
+                var = ecs_script_vars_declare(vars, it->variable_names[i]);
+                var->value.type = ecs_id(ecs_entity_t);
+            } else {
+                ecs_check(var->value.type == ecs_id(ecs_entity_t), 
+                    ECS_INVALID_PARAMETER, NULL);
+            }
+            var->value.ptr = e_ptr;
+        }
+    }
+
+error:
+    return;
+}
+
+#endif
+
+/**
+ * @file addons/script/visit.c
+ * @brief Script AST visitor utilities.
+ */
+
+
+#ifdef FLECS_SCRIPT
 
 ecs_script_node_t* ecs_script_parent_node_(
     ecs_script_visit_t *v)
@@ -68608,6 +68492,15 @@ int ecs_script_visit_(
     return 0;
 }
 
+#endif
+
+/**
+ * @file addons/script/visit_eval.c
+ * @brief Script evaluation visitor.
+ */
+
+
+#ifdef FLECS_SCRIPT
 
 void flecs_script_eval_error_(
     ecs_script_eval_visitor_t *v,
@@ -68901,7 +68794,7 @@ int flecs_script_eval_expr(
         expr ++;
     }
 
-    ecs_parse_expr_desc_t desc = {
+    ecs_script_expr_run_desc_t desc = {
         .name = v->base.script->name,
         .expr = expr,
         .lookup_action = flecs_script_find_entity_action,
@@ -68909,7 +68802,7 @@ int flecs_script_eval_expr(
         .vars = v->vars
     };
 
-    if (!ecs_parse_expr(v->world, expr, value, &desc)) {
+    if (!ecs_script_expr_run(v->world, expr, value, &desc)) {
         return -1;
     }
 
@@ -69699,6 +69592,15 @@ int ecs_script_eval(
     return result;
 }
 
+#endif
+
+/**
+ * @file addons/script/visit_free.c
+ * @brief Script free visitor (frees AST resources).
+ */
+
+
+#ifdef FLECS_SCRIPT
 
 static
 void flecs_script_scope_free(
@@ -69838,8 +69740,15 @@ error:
     return - 1;
 }
 
+#endif
+
+/**
+ * @file addons/script/visit_to_str.c
+ * @brief Script AST to string visitor.
+ */
 
 
+#ifdef FLECS_SCRIPT
 
 typedef struct ecs_script_str_visitor_t {
     ecs_script_visit_t base;
@@ -70209,7 +70118,7 @@ int flecs_script_stmt_to_str(
     return 0;
 }
 
-int ecs_script_to_buf(
+int ecs_script_ast_to_buf(
     ecs_script_t *script,
     ecs_strbuf_t *buf)
 {
@@ -70226,12 +70135,12 @@ error:
     return - 1;
 }
 
-char* ecs_script_to_str(
+char* ecs_script_ast_to_str(
     ecs_script_t *script)
 {
     ecs_check(script != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_strbuf_t buf = ECS_STRBUF_INIT;
-    if (ecs_script_to_buf(script, &buf)) {
+    if (ecs_script_ast_to_buf(script, &buf)) {
         goto error;
     }
 
@@ -70239,6 +70148,8 @@ char* ecs_script_to_str(
 error:
     return NULL;
 }
+
+#endif
 
 /**
  * @file addons/system/system.c

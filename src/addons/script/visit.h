@@ -1,6 +1,6 @@
 /**
  * @file addons/script/visit.h
- * @brief Flecs script AST visitor.
+ * @brief Script AST visitor utilities.
  */
 
 #ifndef FLECS_SCRIPT_VISIT_H

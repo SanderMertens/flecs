@@ -1,6 +1,6 @@
 /**
  * @file addons/script/tokenizer.h
- * @brief Flecs script tokenizer.
+ * @brief Script tokenizer.
  */
 
 #ifndef FLECS_SCRIPT_TOKENIZER_H

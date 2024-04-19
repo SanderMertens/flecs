@@ -1,4 +1,11 @@
+/**
+ * @file addons/script/visit_eval.c
+ * @brief Script evaluation visitor.
+ */
+
 #include "flecs.h"
+
+#ifdef FLECS_SCRIPT
 #include "script.h"
 
 void flecs_script_eval_error_(
@@ -293,7 +300,7 @@ int flecs_script_eval_expr(
         expr ++;
     }
 
-    ecs_parse_expr_desc_t desc = {
+    ecs_script_expr_run_desc_t desc = {
         .name = v->base.script->name,
         .expr = expr,
         .lookup_action = flecs_script_find_entity_action,
@@ -301,7 +308,7 @@ int flecs_script_eval_expr(
         .vars = v->vars
     };
 
-    if (!ecs_parse_expr(v->world, expr, value, &desc)) {
+    if (!ecs_script_expr_run(v->world, expr, value, &desc)) {
         return -1;
     }
 
@@ -1090,3 +1097,5 @@ int ecs_script_eval(
     flecs_script_eval_visit_fini(&v);
     return result;
 }
+
+#endif

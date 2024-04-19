@@ -1,10 +1,13 @@
 /**
- * @file script/expr.c
+ * @file addons/script/expr.c
  * @brief Evaluate expressions.
  */
 
-#include "script.h"
+#include "flecs.h"
+
+#ifdef FLECS_SCRIPT
 #include <ctype.h>
+#include "script.h"
 
 /* String deserializer for values & simple expressions */
 
@@ -46,13 +49,13 @@ typedef struct ecs_value_stack_t {
 } ecs_value_stack_t;
 
 static
-const char* flecs_parse_expr(
+const char* flecs_script_expr_run(
     ecs_world_t *world,
     ecs_value_stack_t *stack,
     const char *ptr,
     ecs_value_t *value,
     ecs_expr_oper_t op,
-    const ecs_parse_expr_desc_t *desc);
+    const ecs_script_expr_run_desc_t *desc);
 
 static
 void* flecs_expr_value_new(
@@ -141,7 +144,7 @@ const char* flecs_str_to_expr_oper(
     return NULL;
 }
 
-const char *ecs_parse_expr_token(
+const char *flecs_script_expr_parse_token(
     const char *name,
     const char *expr,
     const char *ptr,
@@ -349,7 +352,7 @@ ecs_entity_t flecs_parse_discover_type(
     const char *expr,
     const char *ptr,
     ecs_entity_t input_type,
-    const ecs_parse_expr_desc_t *desc)
+    const ecs_script_expr_run_desc_t *desc)
 {
     /* String literal */
     if (ptr[0] == '"' || ptr[0] == '`') {
@@ -389,7 +392,7 @@ ecs_entity_t flecs_parse_discover_type(
             return 0;
         }
         char token[ECS_MAX_TOKEN_SIZE];
-        if (ecs_parse_expr_token(name, expr, &ptr[1], token) == NULL) {
+        if (flecs_script_expr_parse_token(name, expr, &ptr[1], token) == NULL) {
             return 0;
         }
 
@@ -900,7 +903,7 @@ const char* flecs_binary_expr_parse(
     ecs_value_t *lvalue,
     ecs_value_t *result,
     ecs_expr_oper_t left_op,
-    const ecs_parse_expr_desc_t *desc)
+    const ecs_script_expr_run_desc_t *desc)
 {
     ecs_entity_t result_type = result->type;
     do {
@@ -914,7 +917,7 @@ const char* flecs_binary_expr_parse(
         ptr = ecs_parse_ws_eol(ptr);
 
         ecs_value_t rvalue = {0};
-        const char *rptr = flecs_parse_expr(world, stack, ptr, &rvalue, op, desc);
+        const char *rptr = flecs_script_expr_run(world, stack, ptr, &rvalue, op, desc);
         if (!rptr) {
             return NULL;
         }
@@ -961,7 +964,7 @@ const char* flecs_funccall_parse(
     ecs_meta_cursor_t *cur,
     ecs_value_t *value,
     bool isvar,
-    const ecs_parse_expr_desc_t *desc)
+    const ecs_script_expr_run_desc_t *desc)
 {
     char *sep = strrchr(token, '.');
     if (!sep) {
@@ -1030,13 +1033,13 @@ error:
 }
 
 static
-const char* flecs_parse_expr(
+const char* flecs_script_expr_run(
     ecs_world_t *world,
     ecs_value_stack_t *stack,
     const char *ptr,
     ecs_value_t *value,
     ecs_expr_oper_t left_op,
-    const ecs_parse_expr_desc_t *desc)
+    const ecs_script_expr_run_desc_t *desc)
 {
     ecs_assert(value != NULL, ECS_INTERNAL_ERROR, NULL);
     char token[ECS_MAX_TOKEN_SIZE];
@@ -1083,7 +1086,7 @@ const char* flecs_parse_expr(
     }
 
     /* Loop that parses all values in a value scope */
-    while ((ptr = ecs_parse_expr_token(name, expr, ptr, token))) {
+    while ((ptr = flecs_script_expr_parse_token(name, expr, ptr, token))) {
         /* Used to track of the result of the parsed token can be used as the
          * lvalue for a binary expression */
         bool is_lvalue = false;
@@ -1105,7 +1108,7 @@ const char* flecs_parse_expr(
             }
 
             /* Parenthesis, parse nested expression */
-            ptr = flecs_parse_expr(world, stack, ptr, out, EcsLeftParen, desc);
+            ptr = flecs_script_expr_run(world, stack, ptr, out, EcsLeftParen, desc);
             if (ptr[0] != ')') {
                 ecs_parser_error(name, expr, ptr - expr, 
                     "missing closing parenthesis");
@@ -1377,11 +1380,11 @@ error:
     return NULL;
 }
 
-const char* ecs_parse_expr(
+const char* ecs_script_expr_run(
     ecs_world_t *world,
     const char *ptr,
     ecs_value_t *value,
-    const ecs_parse_expr_desc_t *desc)
+    const ecs_script_expr_run_desc_t *desc)
 {
     /* Prepare storage for temporary values */
     ecs_stage_t *stage = flecs_stage_from_world(&world);
@@ -1393,7 +1396,7 @@ const char* ecs_parse_expr(
 
     /* Parse expression */
     bool storage_provided = value->ptr != NULL;
-    ptr = flecs_parse_expr(world, &stack, ptr, value, EcsExprOperUnknown, desc);
+    ptr = flecs_script_expr_run(world, &stack, ptr, value, EcsExprOperUnknown, desc);
 
     /* If no result value was provided, allocate one as we can't return a 
      * pointer to a temporary storage */
@@ -1415,3 +1418,5 @@ const char* ecs_parse_expr(
 
     return ptr;
 }
+
+#endif

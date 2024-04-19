@@ -2428,7 +2428,6 @@ INCLUDE_FILE_PATTERNS  =
 
 PREDEFINED             = FLECS_APP \
                          FLECS_DOC \
-                         FLECS_EXPR \
                          FLECS_HTTP \
                          FLECS_JOURNAL \
                          FLECS_JSON \

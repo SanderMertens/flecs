@@ -1,4 +1,11 @@
+/**
+ * @file addons/script/visit.c
+ * @brief Script AST visitor utilities.
+ */
+
 #include "flecs.h"
+
+#ifdef FLECS_SCRIPT
 #include "script.h"
 
 ecs_script_node_t* ecs_script_parent_node_(
@@ -128,3 +135,5 @@ int ecs_script_visit_(
 
     return 0;
 }
+
+#endif

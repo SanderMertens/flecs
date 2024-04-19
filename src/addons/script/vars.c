@@ -1,4 +1,11 @@
+/**
+ * @file addons/script/vars.c
+ * @brief Script variables.
+ */
+
 #include "flecs.h"
+
+#ifdef FLECS_SCRIPT
 #include "script.h"
 
 ecs_script_vars_t* flecs_script_vars_push(
@@ -177,3 +184,97 @@ ecs_script_var_t* ecs_script_vars_lookup(
     return ecs_vec_get_t(&vars->vars, ecs_script_var_t, 
         flecs_uto(int32_t, var_id - 1));
 }
+
+/* Static names for iterator fields */
+static const char* flecs_script_iter_field_names[] = {
+    "0", "1",  "2",  "3",  "4",  "5",  "6",  "7",
+    "8", "9", "10", "11", "12", "13", "14", "15"
+};
+
+void ecs_script_vars_from_iter(
+    const ecs_iter_t *it,
+    ecs_script_vars_t *vars,
+    int offset)
+{
+    ecs_check(vars != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(!offset || offset < it->count, ECS_INVALID_PARAMETER, NULL);
+
+    /* Set variable for $this */
+    if (it->count) {
+        ecs_script_var_t *var = ecs_script_vars_lookup(vars, "this");
+        if (!var) {
+            var = ecs_script_vars_declare(vars, "this");
+            var->value.type = ecs_id(ecs_entity_t);
+        }
+        var->value.ptr = &it->entities[offset];
+    }
+
+    /* Set variables for fields */
+    {
+        int32_t i, field_count = it->field_count;
+        for (i = 0; i < field_count; i ++) {
+            ecs_size_t size = it->sizes[i];
+            if (!size) {
+                continue;
+            }
+
+            void *ptr = it->ptrs[i];
+            if (!ptr) {
+                continue;
+            }
+
+            ptr = ECS_OFFSET(ptr, offset * size);
+
+            const char *name = flecs_script_iter_field_names[i];
+            ecs_script_var_t *var = ecs_script_vars_lookup(vars, name);
+            if (!var) {
+                var = ecs_script_vars_declare(vars, name);
+                ecs_assert(ecs_script_vars_lookup(vars, name) != NULL,  
+                    ECS_INTERNAL_ERROR, NULL);
+                var->value.type = it->ids[i];
+            } else {
+                ecs_check(var->value.type == it->ids[i], 
+                    ECS_INVALID_PARAMETER, NULL);
+            }
+            var->value.ptr = ptr;
+        }
+    }
+
+    /* Set variables for query variables */
+    {
+        int32_t i, var_count = it->variable_count;
+        for (i = 1 /* skip this variable */ ; i < var_count; i ++) {
+            ecs_entity_t *e_ptr = NULL;
+            ecs_var_t *query_var = &it->variables[i];
+            if (query_var->entity) {
+                e_ptr = &query_var->entity;
+            } else {
+                ecs_table_range_t *range = &query_var->range;
+                if (range->count == 1) {
+                    ecs_entity_t *entities = range->table->data.entities.array;
+                    e_ptr = &entities[range->offset];
+                }
+            }
+            if (!e_ptr) {
+                continue;
+            }
+
+            ecs_script_var_t *var = ecs_script_vars_lookup(
+                vars, it->variable_names[i]);
+            if (!var) {
+                var = ecs_script_vars_declare(vars, it->variable_names[i]);
+                var->value.type = ecs_id(ecs_entity_t);
+            } else {
+                ecs_check(var->value.type == ecs_id(ecs_entity_t), 
+                    ECS_INVALID_PARAMETER, NULL);
+            }
+            var->value.ptr = e_ptr;
+        }
+    }
+
+error:
+    return;
+}
+
+#endif

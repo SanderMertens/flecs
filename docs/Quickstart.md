@@ -115,13 +115,11 @@ Addon         | Description                                      | Define       
 [Timer](/flecs/group__c__addons__timer.html)               | Run systems at time intervals or at a rate       | FLECS_TIMER         |
 [Meta](/flecs/group__c__addons__meta.html)                 | Flecs reflection system                          | FLECS_META          |
 [Units](/flecs/group__c__addons__units.html)               | Builtin unit types                               | FLECS_UNITS         |
-[Expr](/flecs/group__c__addons__expr.html)                 | String format optimized for ECS data             | FLECS_EXPR          |
 [JSON](/flecs/group__c__addons__json.html)                 | JSON format                                      | FLECS_JSON          |
 [Doc](/flecs/group__c__addons__doc.html)                   | Add documentation to components, systems & more  | FLECS_DOC           |
 [Http](/flecs/group__c__addons__http.html)                 | Tiny HTTP server for processing simple requests  | FLECS_HTTP          |
 [Rest](/flecs/group__c__addons__rest.html)                 | REST API for showing entities in the browser     | FLECS_REST          |
-[Parser](/flecs/group__c__addons__parser.html)             | Create entities & queries from strings           | FLECS_PARSER        |
-[Plecs](/flecs/group__c__addons__plecs.html)               | Small utility language for asset/scene loading   | FLECS_SCRIPT         |
+[Script](/flecs/group__c__addons__script.html)             | DSL for assets, scenes and configuration         | FLECS_SCRIPT         |
 [Rules](/flecs/group__c__addons__rules.html)               | Powerful prolog-like query language              | FLECS_RULES         |
 [Stats](/flecs/group__c__addons__stats.html)               | Functions for collecting statistics              | FLECS_STATS         |
 [Monitor](/flecs/group__c__addons__monitor.html)           | Periodically collect & store flecs statistics    | FLECS_MONITOR       |

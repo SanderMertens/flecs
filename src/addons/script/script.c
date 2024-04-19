@@ -1,4 +1,11 @@
+/**
+ * @file addons/script/script.c
+ * @brief Script API.
+ */
+
 #include "flecs.h"
+
+#ifdef FLECS_SCRIPT
 #include "script.h"
 
 ECS_COMPONENT_DECLARE(EcsScript);
@@ -241,3 +248,5 @@ void FlecsScriptImport(
     ecs_add_id(world, ecs_id(EcsScript), EcsPairIsTag);
     ecs_add_id(world, ecs_id(EcsScript), EcsPrivate);
 }
+
+#endif

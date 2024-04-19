@@ -951,6 +951,7 @@ ecs_entity_t ecs_quantity_init(
 #define ecs_quantity(world, ...)\
     ecs_quantity_init(world, &(ecs_entity_desc_t) __VA_ARGS__ )
 
+
 /* Module import */
 FLECS_API
 void FlecsMetaImport(

@@ -1,10 +1,10 @@
 /**
- * @file addons/script/assembly.h
- * @brief Flecs assembly code.
+ * @file addons/script/visit_eval.h
+ * @brief Script evaluation visitor.
  */
 
-#ifndef FLECS_SCRIPT_EVAL_H
-#define FLECS_SCRIPT_EVAL_H
+#ifndef FLECS_SCRIPT_VISIT_EVAL_H
+#define FLECS_SCRIPT_VISIT_EVAL_H
 
 typedef struct ecs_script_eval_visitor_t {
     ecs_script_visit_t base;

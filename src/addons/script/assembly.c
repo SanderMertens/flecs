@@ -1,4 +1,11 @@
+/**
+ * @file addons/script/assembly.c
+ * @brief Script assembly implementation.
+ */
+
 #include "flecs.h"
+
+#ifdef FLECS_SCRIPT
 #include "script.h"
 
 /* Assembly ctor to initialize with default property values */
@@ -359,3 +366,5 @@ error:
     flecs_script_assembly_fini(v->base.script, assembly);
     return -1;
 }
+
+#endif

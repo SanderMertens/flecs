@@ -5,7 +5,7 @@ void DeserializeFromExpr_bool(void) {
 
     bool value = false;
 
-    const char *ptr = ecs_parse_expr(world, "true", &ecs_value_ptr(ecs_bool_t, &value), NULL);
+    const char *ptr = ecs_script_expr_run(world, "true", &ecs_value_ptr(ecs_bool_t, &value), NULL);
     test_assert(ptr != NULL);
     test_assert(ptr[0] == '\0');        
 
@@ -19,7 +19,7 @@ void DeserializeFromExpr_byte(void) {
 
     ecs_byte_t value = 0;
 
-    const char *ptr = ecs_parse_expr(world, "10", &ecs_value_ptr(ecs_byte_t, &value), NULL);
+    const char *ptr = ecs_script_expr_run(world, "10", &ecs_value_ptr(ecs_byte_t, &value), NULL);
     test_assert(ptr != NULL);
     test_assert(ptr[0] == '\0');        
 
@@ -33,7 +33,7 @@ void DeserializeFromExpr_char(void) {
 
     ecs_char_t value = 0;
 
-    const char *ptr = ecs_parse_expr(world, "10", &ecs_value_ptr(ecs_char_t, &value), NULL);
+    const char *ptr = ecs_script_expr_run(world, "10", &ecs_value_ptr(ecs_char_t, &value), NULL);
     test_assert(ptr != NULL);
     test_assert(ptr[0] == '\0');        
 
@@ -47,7 +47,7 @@ void DeserializeFromExpr_char_literal(void) {
 
     ecs_char_t value = 0;
 
-    const char *ptr = ecs_parse_expr(world, "\"a\"", &ecs_value_ptr(ecs_char_t, &value), NULL);
+    const char *ptr = ecs_script_expr_run(world, "\"a\"", &ecs_value_ptr(ecs_char_t, &value), NULL);
     test_assert(ptr != NULL);
 
     test_int(value, 'a');
@@ -60,7 +60,7 @@ void DeserializeFromExpr_i8(void) {
 
     ecs_i8_t value = 0;
 
-    const char *ptr = ecs_parse_expr(world, "10", &ecs_value_ptr(ecs_i8_t, &value), NULL);
+    const char *ptr = ecs_script_expr_run(world, "10", &ecs_value_ptr(ecs_i8_t, &value), NULL);
     test_assert(ptr != NULL);
 
     test_int(value, 10);
@@ -73,7 +73,7 @@ void DeserializeFromExpr_i16(void) {
 
     ecs_i16_t value = 0;
 
-    const char *ptr = ecs_parse_expr(world, "10", &ecs_value_ptr(ecs_i16_t, &value), NULL);
+    const char *ptr = ecs_script_expr_run(world, "10", &ecs_value_ptr(ecs_i16_t, &value), NULL);
     test_assert(ptr != NULL);
 
     test_int(value, 10);
@@ -86,7 +86,7 @@ void DeserializeFromExpr_i32(void) {
 
     ecs_i32_t value = 0;
 
-    const char *ptr = ecs_parse_expr(world, "10", &ecs_value_ptr(ecs_i32_t, &value), NULL);
+    const char *ptr = ecs_script_expr_run(world, "10", &ecs_value_ptr(ecs_i32_t, &value), NULL);
     test_assert(ptr != NULL);
 
     test_int(value, 10);
@@ -99,7 +99,7 @@ void DeserializeFromExpr_i64(void) {
 
     ecs_i64_t value = 0;
 
-    const char *ptr = ecs_parse_expr(world, "10", &ecs_value_ptr(ecs_i64_t, &value), NULL);
+    const char *ptr = ecs_script_expr_run(world, "10", &ecs_value_ptr(ecs_i64_t, &value), NULL);
     test_assert(ptr != NULL);
 
     test_int(value, 10);
@@ -112,7 +112,7 @@ void DeserializeFromExpr_iptr(void) {
 
     ecs_iptr_t value = 0;
 
-    const char *ptr = ecs_parse_expr(world, "10", &ecs_value_ptr(ecs_iptr_t, &value), NULL);
+    const char *ptr = ecs_script_expr_run(world, "10", &ecs_value_ptr(ecs_iptr_t, &value), NULL);
     test_assert(ptr != NULL);
 
     test_int(value, 10);
@@ -125,7 +125,7 @@ void DeserializeFromExpr_u8(void) {
 
     ecs_u8_t value = 0;
 
-    const char *ptr = ecs_parse_expr(world, "10", &ecs_value_ptr(ecs_u8_t, &value), NULL);
+    const char *ptr = ecs_script_expr_run(world, "10", &ecs_value_ptr(ecs_u8_t, &value), NULL);
     test_assert(ptr != NULL);
 
     test_int(value, 10);
@@ -138,7 +138,7 @@ void DeserializeFromExpr_u16(void) {
 
     ecs_u16_t value = 0;
 
-    const char *ptr = ecs_parse_expr(world, "10", &ecs_value_ptr(ecs_u16_t, &value), NULL);
+    const char *ptr = ecs_script_expr_run(world, "10", &ecs_value_ptr(ecs_u16_t, &value), NULL);
     test_assert(ptr != NULL);
 
     test_int(value, 10);
@@ -151,7 +151,7 @@ void DeserializeFromExpr_u32(void) {
 
     ecs_u32_t value = 0;
 
-    const char *ptr = ecs_parse_expr(world, "10", &ecs_value_ptr(ecs_u32_t, &value), NULL);
+    const char *ptr = ecs_script_expr_run(world, "10", &ecs_value_ptr(ecs_u32_t, &value), NULL);
     test_assert(ptr != NULL);
 
     test_int(value, 10);
@@ -164,7 +164,7 @@ void DeserializeFromExpr_u64(void) {
 
     {
         ecs_u64_t value = 0;
-        const char *ptr = ecs_parse_expr(
+        const char *ptr = ecs_script_expr_run(
             world, "0", &ecs_value_ptr(ecs_u64_t, &value), NULL);
         test_assert(ptr != NULL);
         test_int(value, 0);
@@ -172,7 +172,7 @@ void DeserializeFromExpr_u64(void) {
 
     {
         ecs_u64_t value = 0;
-        const char *ptr = ecs_parse_expr(
+        const char *ptr = ecs_script_expr_run(
             world, "10", &ecs_value_ptr(ecs_u64_t, &value), NULL);
         test_assert(ptr != NULL);
         test_int(value, 10);
@@ -180,7 +180,7 @@ void DeserializeFromExpr_u64(void) {
 
     {
         ecs_u64_t value = 0;
-        const char *ptr = ecs_parse_expr(
+        const char *ptr = ecs_script_expr_run(
             world, "2366700781656087864", &ecs_value_ptr(ecs_u64_t, &value), NULL);
         test_assert(ptr != NULL);
         test_int(value, 2366700781656087864);
@@ -194,7 +194,7 @@ void DeserializeFromExpr_uptr(void) {
 
     ecs_uptr_t value = 0;
 
-    const char *ptr = ecs_parse_expr(world, "10", &ecs_value_ptr(ecs_uptr_t, &value), NULL);
+    const char *ptr = ecs_script_expr_run(world, "10", &ecs_value_ptr(ecs_uptr_t, &value), NULL);
     test_assert(ptr != NULL);
 
     test_int(value, 10);
@@ -207,7 +207,7 @@ void DeserializeFromExpr_float(void) {
 
     ecs_f32_t value = 0;
 
-    const char *ptr = ecs_parse_expr(world, "10.5", &ecs_value_ptr(ecs_f32_t, &value), NULL);
+    const char *ptr = ecs_script_expr_run(world, "10.5", &ecs_value_ptr(ecs_f32_t, &value), NULL);
     test_assert(ptr != NULL);
 
     test_flt(value, 10.5);
@@ -220,7 +220,7 @@ void DeserializeFromExpr_double(void) {
 
     ecs_f64_t value = 0;
 
-    const char *ptr = ecs_parse_expr(world, "10.5", &ecs_value_ptr(ecs_f64_t, &value), NULL);
+    const char *ptr = ecs_script_expr_run(world, "10.5", &ecs_value_ptr(ecs_f64_t, &value), NULL);
     test_assert(ptr != NULL);
 
     test_flt(value, 10.5);
@@ -233,7 +233,7 @@ void DeserializeFromExpr_negative_int(void) {
 
     ecs_i8_t value = 0;
 
-    const char *ptr = ecs_parse_expr(world, "-10", &ecs_value_ptr(ecs_i8_t, &value), NULL);
+    const char *ptr = ecs_script_expr_run(world, "-10", &ecs_value_ptr(ecs_i8_t, &value), NULL);
     test_assert(ptr != NULL);
 
     test_int(value, -10);
@@ -246,7 +246,7 @@ void DeserializeFromExpr_negative_float(void) {
 
     ecs_f32_t value = 0;
 
-    const char *ptr = ecs_parse_expr(world, "-10.5", &ecs_value_ptr(ecs_f32_t, &value), NULL);
+    const char *ptr = ecs_script_expr_run(world, "-10.5", &ecs_value_ptr(ecs_f32_t, &value), NULL);
     test_assert(ptr != NULL);
 
     test_flt(value, -10.5);
@@ -259,7 +259,7 @@ void DeserializeFromExpr_string(void) {
 
     ecs_string_t value = 0;
 
-    const char *ptr = ecs_parse_expr(world, "\"Hello World\"", &ecs_value_ptr(ecs_string_t, &value), NULL);
+    const char *ptr = ecs_script_expr_run(world, "\"Hello World\"", &ecs_value_ptr(ecs_string_t, &value), NULL);
     test_assert(ptr != NULL);
 
     test_str(value, "Hello World");
@@ -273,11 +273,11 @@ void DeserializeFromExpr_entity(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t value = 0;
-    const char *ptr = ecs_parse_expr(world, "flecs.core", &ecs_value_ptr(ecs_entity_t, &value), NULL);
+    const char *ptr = ecs_script_expr_run(world, "flecs.core", &ecs_value_ptr(ecs_entity_t, &value), NULL);
     test_assert(ptr != NULL);
     test_uint(value, EcsFlecsCore);
 
-    ptr = ecs_parse_expr(world, "0", &ecs_value_ptr(ecs_entity_t, &value), NULL);
+    ptr = ecs_script_expr_run(world, "0", &ecs_value_ptr(ecs_entity_t, &value), NULL);
     test_assert(ptr != NULL);
     test_uint(value, 0);
 
@@ -288,11 +288,11 @@ void DeserializeFromExpr_id(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_id_t value = 0;
-    const char *ptr = ecs_parse_expr(world, "flecs.core", &ecs_value_ptr(ecs_id_t, &value), NULL);
+    const char *ptr = ecs_script_expr_run(world, "flecs.core", &ecs_value_ptr(ecs_id_t, &value), NULL);
     test_assert(ptr != NULL);
     test_uint(value, EcsFlecsCore);
 
-    ptr = ecs_parse_expr(world, "0", &ecs_value_ptr(ecs_id_t, &value), NULL);
+    ptr = ecs_script_expr_run(world, "0", &ecs_value_ptr(ecs_id_t, &value), NULL);
     test_assert(ptr != NULL);
     test_uint(value, 0);
 
@@ -316,21 +316,21 @@ void DeserializeFromExpr_enum(void) {
 
     {
     T value = 0;
-    const char *ptr = ecs_parse_expr(world, "Red", &(ecs_value_t){t, &value}, NULL);
+    const char *ptr = ecs_script_expr_run(world, "Red", &(ecs_value_t){t, &value}, NULL);
     test_assert(ptr != NULL);
     test_int(value, Red);
     }
 
     {
     T value = 0;
-    const char *ptr = ecs_parse_expr(world, "Blue", &(ecs_value_t){t, &value}, NULL);
+    const char *ptr = ecs_script_expr_run(world, "Blue", &(ecs_value_t){t, &value}, NULL);
     test_assert(ptr != NULL);
     test_int(value, Blue);
     }
 
     {
     T value = 0;
-    const char *ptr = ecs_parse_expr(world, "Green", &(ecs_value_t){t, &value}, NULL);
+    const char *ptr = ecs_script_expr_run(world, "Green", &(ecs_value_t){t, &value}, NULL);
     test_assert(ptr != NULL);
     test_int(value, Green);
     }
@@ -338,7 +338,7 @@ void DeserializeFromExpr_enum(void) {
     {
     ecs_log_set_level(-4);
     T value = 0;
-    const char *ptr = ecs_parse_expr(world, "Black", &(ecs_value_t){t, &value}, NULL);
+    const char *ptr = ecs_script_expr_run(world, "Black", &(ecs_value_t){t, &value}, NULL);
     test_assert(ptr == NULL);
     }
 
@@ -361,42 +361,42 @@ void DeserializeFromExpr_bitmask(void) {
 
     {
     uint32_t value = 0;
-    const char *ptr = ecs_parse_expr(world, "Lettuce", &(ecs_value_t){t, &value}, NULL);
+    const char *ptr = ecs_script_expr_run(world, "Lettuce", &(ecs_value_t){t, &value}, NULL);
     test_assert(ptr != NULL);
     test_uint(value, Lettuce);
     }
 
     {
     uint32_t value = 0;
-    const char *ptr = ecs_parse_expr(world, "Lettuce|Bacon", &(ecs_value_t){t, &value}, NULL);
+    const char *ptr = ecs_script_expr_run(world, "Lettuce|Bacon", &(ecs_value_t){t, &value}, NULL);
     test_assert(ptr != NULL);
     test_uint(value, Lettuce|Bacon);
     }
 
     {
     uint32_t value = 0;
-    const char *ptr = ecs_parse_expr(world, "Lettuce|Bacon|Tomato|Cheese", &(ecs_value_t){t, &value}, NULL);
+    const char *ptr = ecs_script_expr_run(world, "Lettuce|Bacon|Tomato|Cheese", &(ecs_value_t){t, &value}, NULL);
     test_assert(ptr != NULL);
     test_uint(value, Lettuce|Bacon|Tomato|Cheese);
     }
 
     {
     uint32_t value = 0;
-    const char *ptr = ecs_parse_expr(world, "Lettuce | Bacon | Tomato | Cheese", &(ecs_value_t){t, &value}, NULL);
+    const char *ptr = ecs_script_expr_run(world, "Lettuce | Bacon | Tomato | Cheese", &(ecs_value_t){t, &value}, NULL);
     test_assert(ptr != NULL);
     test_uint(value, Lettuce|Bacon|Tomato|Cheese);
     }
 
     {
     uint32_t value = 0;
-    const char *ptr = ecs_parse_expr(world, "BLT", &(ecs_value_t){t, &value}, NULL);
+    const char *ptr = ecs_script_expr_run(world, "BLT", &(ecs_value_t){t, &value}, NULL);
     test_assert(ptr != NULL);
     test_uint(value, Lettuce|Bacon|Tomato);
     }
 
     {
     uint32_t value = 0;
-    const char *ptr = ecs_parse_expr(world, "0", &(ecs_value_t){t, &value}, NULL);
+    const char *ptr = ecs_script_expr_run(world, "0", &(ecs_value_t){t, &value}, NULL);
     test_assert(ptr != NULL);
     test_uint(value, 0);
     }
@@ -404,7 +404,7 @@ void DeserializeFromExpr_bitmask(void) {
     {
     ecs_log_set_level(-4);
     uint32_t value = 0;
-    const char *ptr = ecs_parse_expr(world, "Foo", &(ecs_value_t){t, &value}, NULL);
+    const char *ptr = ecs_script_expr_run(world, "Foo", &(ecs_value_t){t, &value}, NULL);
     test_assert(ptr == NULL);
     }
 
@@ -441,21 +441,21 @@ void DeserializeFromExpr_struct_enum(void) {
 
     {
     T value = {0};
-    const char *ptr = ecs_parse_expr(world, "{v: Red}", &(ecs_value_t){t, &value}, NULL);
+    const char *ptr = ecs_script_expr_run(world, "{v: Red}", &(ecs_value_t){t, &value}, NULL);
     test_assert(ptr != NULL);
     test_int(value.v, Red);
     }
 
     {
     T value = {0};
-    const char *ptr = ecs_parse_expr(world, "{v: Blue}", &(ecs_value_t){t, &value}, NULL);
+    const char *ptr = ecs_script_expr_run(world, "{v: Blue}", &(ecs_value_t){t, &value}, NULL);
     test_assert(ptr != NULL);
     test_int(value.v, Blue);
     }
 
     {
     T value = {0};
-    const char *ptr = ecs_parse_expr(world, "{v: Green}", &(ecs_value_t){t, &value}, NULL);
+    const char *ptr = ecs_script_expr_run(world, "{v: Green}", &(ecs_value_t){t, &value}, NULL);
     test_assert(ptr != NULL);
     test_int(value.v, Green);
     }
@@ -463,7 +463,7 @@ void DeserializeFromExpr_struct_enum(void) {
     {
     ecs_log_set_level(-4);
     T value = {0};
-    const char *ptr = ecs_parse_expr(world, "{v: Black}", &(ecs_value_t){t, &value}, NULL);
+    const char *ptr = ecs_script_expr_run(world, "{v: Black}", &(ecs_value_t){t, &value}, NULL);
     test_assert(ptr == NULL);
     }
 
@@ -501,35 +501,35 @@ void DeserializeFromExpr_struct_bitmask(void) {
 
     {
     T value = {0};
-    const char *ptr = ecs_parse_expr(world, "{v:Lettuce}", &(ecs_value_t){t, &value}, NULL);
+    const char *ptr = ecs_script_expr_run(world, "{v:Lettuce}", &(ecs_value_t){t, &value}, NULL);
     test_assert(ptr != NULL);
     test_uint(value.v, Lettuce);
     }
 
     {
     T value = {0};
-    const char *ptr = ecs_parse_expr(world, "{v:Lettuce|Bacon}", &(ecs_value_t){t, &value}, NULL);
+    const char *ptr = ecs_script_expr_run(world, "{v:Lettuce|Bacon}", &(ecs_value_t){t, &value}, NULL);
     test_assert(ptr != NULL);
     test_uint(value.v, Lettuce|Bacon);
     }
 
     {
     T value = {0};
-    const char *ptr = ecs_parse_expr(world, "{v:Lettuce|Bacon|Tomato|Cheese}", &(ecs_value_t){t, &value}, NULL);
+    const char *ptr = ecs_script_expr_run(world, "{v:Lettuce|Bacon|Tomato|Cheese}", &(ecs_value_t){t, &value}, NULL);
     test_assert(ptr != NULL);
     test_uint(value.v, Lettuce|Bacon|Tomato|Cheese);
     }
 
     {
     T value = {0};
-    const char *ptr = ecs_parse_expr(world, "{v:BLT}", &(ecs_value_t){t, &value}, NULL);
+    const char *ptr = ecs_script_expr_run(world, "{v:BLT}", &(ecs_value_t){t, &value}, NULL);
     test_assert(ptr != NULL);
     test_uint(value.v, Lettuce|Bacon|Tomato);
     }
 
     {
     T value = {0};
-    const char *ptr = ecs_parse_expr(world, "{v:0}", &(ecs_value_t){t, &value}, NULL);
+    const char *ptr = ecs_script_expr_run(world, "{v:0}", &(ecs_value_t){t, &value}, NULL);
     test_assert(ptr != NULL);
     test_uint(value.v, 0);
     }
@@ -537,7 +537,7 @@ void DeserializeFromExpr_struct_bitmask(void) {
     {
     ecs_log_set_level(-4);
     T value = {0};
-    const char *ptr = ecs_parse_expr(world, "{v:Foo\"}", &(ecs_value_t){t, &value}, NULL);
+    const char *ptr = ecs_script_expr_run(world, "{v:Foo\"}", &(ecs_value_t){t, &value}, NULL);
     test_assert(ptr == NULL);
     }
 
@@ -560,7 +560,7 @@ void DeserializeFromExpr_struct_i32(void) {
 
     T value = {0};
 
-    const char *ptr = ecs_parse_expr(world, "{10}", &(ecs_value_t){t, &value}, NULL);
+    const char *ptr = ecs_script_expr_run(world, "{10}", &(ecs_value_t){t, &value}, NULL);
     test_assert(ptr != NULL);
     test_assert(ptr[0] == '\0');
 
@@ -585,7 +585,7 @@ void DeserializeFromExpr_struct_i32_neg(void) {
 
     T value = {0};
 
-    const char *ptr = ecs_parse_expr(world, "{-10}", &(ecs_value_t){t, &value}, NULL);
+    const char *ptr = ecs_script_expr_run(world, "{-10}", &(ecs_value_t){t, &value}, NULL);
     test_assert(ptr != NULL);
     test_assert(ptr[0] == '\0');
 
@@ -612,7 +612,7 @@ void DeserializeFromExpr_struct_i32_i32(void) {
 
     T value = {0, 0};
 
-    const char *ptr = ecs_parse_expr(world, "{10, 20}", &(ecs_value_t){t, &value}, NULL);
+    const char *ptr = ecs_script_expr_run(world, "{10, 20}", &(ecs_value_t){t, &value}, NULL);
     test_assert(ptr != NULL);
     test_assert(ptr[0] == '\0');
 
@@ -638,7 +638,7 @@ void DeserializeFromExpr_struct_entity(void) {
 
     T value = {0};
 
-    const char *ptr = ecs_parse_expr(world, "{flecs.core}", &(ecs_value_t){t, &value}, NULL);
+    const char *ptr = ecs_script_expr_run(world, "{flecs.core}", &(ecs_value_t){t, &value}, NULL);
     test_assert(ptr != NULL);
     test_assert(ptr[0] == '\0');
 
@@ -663,7 +663,7 @@ void DeserializeFromExpr_struct_id(void) {
 
     T value = {0};
 
-    const char *ptr = ecs_parse_expr(world, "{flecs.core}", &(ecs_value_t){t, &value}, NULL);
+    const char *ptr = ecs_script_expr_run(world, "{flecs.core}", &(ecs_value_t){t, &value}, NULL);
     test_assert(ptr != NULL);
     test_assert(ptr[0] == '\0');
 
@@ -699,7 +699,7 @@ void DeserializeFromExpr_struct_nested_i32(void) {
 
     T value = {{0}};
 
-    const char *ptr = ecs_parse_expr(world, "{{10}}", &(ecs_value_t){t, &value}, NULL);
+    const char *ptr = ecs_script_expr_run(world, "{{10}}", &(ecs_value_t){t, &value}, NULL);
     test_assert(ptr != NULL);
     test_assert(ptr[0] == '\0');
 
@@ -737,7 +737,7 @@ void DeserializeFromExpr_struct_nested_i32_i32(void) {
 
     T value = {{0}};
 
-    const char *ptr = ecs_parse_expr(world, "{{10, 20}}", &(ecs_value_t){t, &value}, NULL);
+    const char *ptr = ecs_script_expr_run(world, "{{10, 20}}", &(ecs_value_t){t, &value}, NULL);
     test_assert(ptr != NULL);
     test_assert(ptr[0] == '\0');
 
@@ -778,7 +778,7 @@ void DeserializeFromExpr_struct_2_nested_i32_i32(void) {
 
     T value = {{0}};
 
-    const char *ptr = ecs_parse_expr(world, "{{10, 20}, {30, 40}}", &(ecs_value_t){t, &value}, NULL);
+    const char *ptr = ecs_script_expr_run(world, "{{10, 20}, {30, 40}}", &(ecs_value_t){t, &value}, NULL);
     test_assert(ptr != NULL);
     test_assert(ptr[0] == '\0');
 
@@ -806,7 +806,7 @@ void DeserializeFromExpr_struct_member_i32(void) {
 
     T value = {0};
 
-    const char *ptr = ecs_parse_expr(world, "{x: 10}", &(ecs_value_t){t, &value}, NULL);
+    const char *ptr = ecs_script_expr_run(world, "{x: 10}", &(ecs_value_t){t, &value}, NULL);
     test_assert(ptr != NULL);
     test_assert(ptr[0] == '\0');
 
@@ -831,7 +831,7 @@ void DeserializeFromExpr_struct_member_i32_neg(void) {
 
     T value = {0};
 
-    const char *ptr = ecs_parse_expr(world, "{x: -10}", &(ecs_value_t){t, &value}, NULL);
+    const char *ptr = ecs_script_expr_run(world, "{x: -10}", &(ecs_value_t){t, &value}, NULL);
     test_assert(ptr != NULL);
     test_assert(ptr[0] == '\0');
 
@@ -858,7 +858,7 @@ void DeserializeFromExpr_struct_member_i32_i32(void) {
 
     T value = {0};
 
-    const char *ptr = ecs_parse_expr(world, "{x: 10, y: 20}", &(ecs_value_t){t, &value}, NULL);
+    const char *ptr = ecs_script_expr_run(world, "{x: 10, y: 20}", &(ecs_value_t){t, &value}, NULL);
     test_assert(ptr != NULL);
     test_assert(ptr[0] == '\0');
 
@@ -895,7 +895,7 @@ void DeserializeFromExpr_struct_member_nested_i32(void) {
 
     T value = {{0}};
 
-    const char *ptr = ecs_parse_expr(world, "{n_1: {x: 10}}", &(ecs_value_t){t, &value}, NULL);
+    const char *ptr = ecs_script_expr_run(world, "{n_1: {x: 10}}", &(ecs_value_t){t, &value}, NULL);
     test_assert(ptr != NULL);
     test_assert(ptr[0] == '\0');
 
@@ -933,7 +933,7 @@ void DeserializeFromExpr_struct_member_nested_i32_i32(void) {
 
     T value = {{0}};
 
-    const char *ptr = ecs_parse_expr(world, "{n_1: {x: 10, y: 20}}", &(ecs_value_t){t, &value}, NULL);
+    const char *ptr = ecs_script_expr_run(world, "{n_1: {x: 10, y: 20}}", &(ecs_value_t){t, &value}, NULL);
     test_assert(ptr != NULL);
     test_assert(ptr[0] == '\0');
 
@@ -980,7 +980,7 @@ void DeserializeFromExpr_struct_member_2_nested_i32_i32(void) {
     LINE " n_2: {x: 30, y: 40}"
     LINE "}";
 
-    const char *ptr = ecs_parse_expr(world, expr, &(ecs_value_t){t, &value}, NULL);
+    const char *ptr = ecs_script_expr_run(world, expr, &(ecs_value_t){t, &value}, NULL);
     test_assert(ptr != NULL);
     test_assert(ptr[0] == '\0');
 
@@ -1029,7 +1029,7 @@ void DeserializeFromExpr_struct_member_2_nested_i32_i32_reverse(void) {
     LINE " n_1: {x: 10, y: 20}"
     LINE "}";
 
-    const char *ptr = ecs_parse_expr(world, expr, &(ecs_value_t){t, &value}, NULL);
+    const char *ptr = ecs_script_expr_run(world, expr, &(ecs_value_t){t, &value}, NULL);
     test_assert(ptr != NULL);
     test_assert(ptr[0] == '\0');
 
@@ -1057,7 +1057,7 @@ void DeserializeFromExpr_struct_i32_array_3(void) {
 
     T value = {0};
 
-    const char *ptr = ecs_parse_expr(world, "{x: [10, 20, 30]}", &(ecs_value_t){t, &value}, NULL);
+    const char *ptr = ecs_script_expr_run(world, "{x: [10, 20, 30]}", &(ecs_value_t){t, &value}, NULL);
     test_assert(ptr != NULL);
     test_assert(ptr[0] == '\0');
 
@@ -1095,7 +1095,7 @@ void DeserializeFromExpr_struct_struct_i32_array_3(void) {
 
     T value = {{{0}}};
 
-    const char *ptr = ecs_parse_expr(world, "{n_1: [{x: 10}, {x: 20}, {x: 30}]}", &(ecs_value_t){t, &value}, NULL);
+    const char *ptr = ecs_script_expr_run(world, "{n_1: [{x: 10}, {x: 20}, {x: 30}]}", &(ecs_value_t){t, &value}, NULL);
     test_assert(ptr != NULL);
     test_assert(ptr[0] == '\0');
 
@@ -1135,7 +1135,7 @@ void DeserializeFromExpr_struct_struct_i32_i32_array_3(void) {
 
     T value = {{{0}}};
 
-    const char *ptr = ecs_parse_expr(world, "{n_1: [{x: 10, y: 20}, {x: 30, y: 40}, {x: 50, y: 60}]}", &(ecs_value_t){t, &value}, NULL);
+    const char *ptr = ecs_script_expr_run(world, "{n_1: [{x: 10, y: 20}, {x: 30, y: 40}, {x: 50, y: 60}]}", &(ecs_value_t){t, &value}, NULL);
     test_assert(ptr != NULL);
     test_assert(ptr[0] == '\0');
 
@@ -1173,7 +1173,7 @@ void DeserializeFromExpr_struct_w_array_type_i32_i32(void) {
 
     T value = {{ 0 }};
 
-    const char *ptr = ecs_parse_expr(world, "{n_1: [10, 20]}", &(ecs_value_t){t, &value}, NULL);
+    const char *ptr = ecs_script_expr_run(world, "{n_1: [10, 20]}", &(ecs_value_t){t, &value}, NULL);
     test_assert(ptr != NULL);
     test_assert(ptr[0] == '\0');
 
@@ -1209,7 +1209,7 @@ void DeserializeFromExpr_struct_w_2_array_type_i32_i32(void) {
 
     T value = {{ 0 }};
 
-    const char *ptr = ecs_parse_expr(world, "{n_1: [10, 20], n_2: [30, 40]}", &(ecs_value_t){t, &value}, NULL);
+    const char *ptr = ecs_script_expr_run(world, "{n_1: [10, 20], n_2: [30, 40]}", &(ecs_value_t){t, &value}, NULL);
     test_assert(ptr != NULL);
     test_assert(ptr[0] == '\0');
 
@@ -1264,7 +1264,7 @@ void DeserializeFromExpr_struct_w_array_type_struct(void) {
 
     T value;
 
-    const char *ptr = ecs_parse_expr(world, "{n_1: [{x: 10, y: 20}, {x: 30, y: 40}]}", &(ecs_value_t){t, &value}, NULL);
+    const char *ptr = ecs_script_expr_run(world, "{n_1: [{x: 10, y: 20}, {x: 30, y: 40}]}", &(ecs_value_t){t, &value}, NULL);
     test_assert(ptr != NULL);
     test_assert(ptr[0] == '\0');
 
@@ -1321,7 +1321,7 @@ void DeserializeFromExpr_struct_w_2_array_type_struct(void) {
 
     T value;
 
-    const char *ptr = ecs_parse_expr(world, 
+    const char *ptr = ecs_script_expr_run(world, 
         "{n_1: [{x: 10, y: 20}, {x: 30, y: 40}], n_2: [{x: 50, y: 60}, {x: 70, y: 80}]}", 
         &(ecs_value_t){t, &value}, NULL);
     test_assert(ptr != NULL);
@@ -1344,7 +1344,7 @@ void DeserializeFromExpr_discover_type_int(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
-    test_assert(ecs_parse_expr(world, "10", &v, NULL) != NULL);
+    test_assert(ecs_script_expr_run(world, "10", &v, NULL) != NULL);
     test_uint(v.type, ecs_id(ecs_u64_t));
     test_assert(v.ptr != NULL);
     test_int(*(uint64_t*)v.ptr, 10);
@@ -1357,7 +1357,7 @@ void DeserializeFromExpr_discover_type_negative_int(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
-    test_assert(ecs_parse_expr(world, "-10", &v, NULL) != NULL);
+    test_assert(ecs_script_expr_run(world, "-10", &v, NULL) != NULL);
     test_uint(v.type, ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_int(*(int64_t*)v.ptr, -10);
@@ -1370,7 +1370,7 @@ void DeserializeFromExpr_discover_type_float(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
-    test_assert(ecs_parse_expr(world, "10.5", &v, NULL) != NULL);
+    test_assert(ecs_script_expr_run(world, "10.5", &v, NULL) != NULL);
     test_uint(v.type, ecs_id(ecs_f64_t));
     test_assert(v.ptr != NULL);
     test_flt(*(ecs_f64_t*)v.ptr, 10.5);
@@ -1383,7 +1383,7 @@ void DeserializeFromExpr_discover_type_negative_float(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
-    test_assert(ecs_parse_expr(world, "-10.5", &v, NULL) != NULL);
+    test_assert(ecs_script_expr_run(world, "-10.5", &v, NULL) != NULL);
     test_uint(v.type, ecs_id(ecs_f64_t));
     test_assert(v.ptr != NULL);
     test_flt(*(ecs_f64_t*)v.ptr, -10.5);
@@ -1396,7 +1396,7 @@ void DeserializeFromExpr_discover_type_string(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
-    test_assert(ecs_parse_expr(world, "\"foo\"", &v, NULL) != NULL);
+    test_assert(ecs_script_expr_run(world, "\"foo\"", &v, NULL) != NULL);
     test_uint(v.type, ecs_id(ecs_string_t));
     test_assert(v.ptr != NULL);
     test_str(*(ecs_string_t*)v.ptr, "foo");
@@ -1409,7 +1409,7 @@ void DeserializeFromExpr_discover_type_multiline_string(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
-    test_assert(ecs_parse_expr(world, "`foo\nbar`", &v, NULL) != NULL);
+    test_assert(ecs_script_expr_run(world, "`foo\nbar`", &v, NULL) != NULL);
     test_uint(v.type, ecs_id(ecs_string_t));
     test_assert(v.ptr != NULL);
     test_str(*(ecs_string_t*)v.ptr, "foo\nbar");
@@ -1424,7 +1424,7 @@ void DeserializeFromExpr_discover_type_entity(void) {
     ecs_entity_t foo = ecs_entity(world, { .name = "foo" });
 
     ecs_value_t v = {0};
-    test_assert(ecs_parse_expr(world, "foo", &v, NULL) != NULL);
+    test_assert(ecs_script_expr_run(world, "foo", &v, NULL) != NULL);
     test_uint(v.type, ecs_id(ecs_entity_t));
     test_assert(v.ptr != NULL);
     test_uint(*(ecs_entity_t*)v.ptr, foo);
@@ -1437,14 +1437,14 @@ void DeserializeFromExpr_discover_type_bool(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
-    test_assert(ecs_parse_expr(world, "true", &v, NULL) != NULL);
+    test_assert(ecs_script_expr_run(world, "true", &v, NULL) != NULL);
     test_uint(v.type, ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(ecs_bool_t*)v.ptr, true);
     ecs_value_free(world, v.type, v.ptr);
 
     ecs_os_zeromem(&v);
-    test_assert(ecs_parse_expr(world, "false", &v, NULL) != NULL);
+    test_assert(ecs_script_expr_run(world, "false", &v, NULL) != NULL);
     test_uint(v.type, ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(ecs_bool_t*)v.ptr, false);
@@ -1459,8 +1459,8 @@ void DeserializeFromExpr_discover_type_unknown(void) {
     ecs_value_t v = {0};
 
     ecs_log_set_level(-4);
-    test_assert(ecs_parse_expr(world, "{10}", &v, NULL) == NULL);
-    test_assert(ecs_parse_expr(world, "[10]", &v, NULL) == NULL);
+    test_assert(ecs_script_expr_run(world, "{10}", &v, NULL) == NULL);
+    test_assert(ecs_script_expr_run(world, "[10]", &v, NULL) == NULL);
 
     ecs_fini(world);
 }
@@ -1471,7 +1471,7 @@ void DeserializeFromExpr_discover_type_invalid(void) {
     ecs_value_t v = {0};
 
     ecs_log_set_level(-4);
-    test_assert(ecs_parse_expr(world, "-", &v, NULL) == NULL);
+    test_assert(ecs_script_expr_run(world, "-", &v, NULL) == NULL);
 
     ecs_fini(world);
 }

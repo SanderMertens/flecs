@@ -1,6 +1,8 @@
 /**
  * @file addons/script/parser.h
- * @brief Flecs script parser.
+ * @brief Script grammar parser.
+ * 
+ * Macro utilities that facilitate a simple recursive descent parser.
  */
 
 #ifndef FLECS_SCRIPT_PARSER_H
@@ -81,6 +83,7 @@
         }\
     }
 
+/* Parse N consecutive tokens */
 #define Parse_1(tok, ...)\
     Parse(\
         case tok: {\
@@ -138,6 +141,7 @@
         }\
     }
 
+/* Lookahead N consecutive tokens */
 #define LookAhead_1(tok, ...)\
     LookAhead(\
         case tok: {\
@@ -169,6 +173,7 @@
         pos = old_ptr;\
     )
 
+/* Open scope */
 #define Scope(s, ...) {\
         ecs_script_scope_t *old_scope = parser->scope;\
         parser->scope = s;\
@@ -176,6 +181,7 @@
         parser->scope = old_scope;\
     }
 
+/* Parser loop */
 #define Loop(...)\
     int32_t token_stack_count = token_stack.count;\
     do {\

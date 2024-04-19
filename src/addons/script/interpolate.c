@@ -1,10 +1,13 @@
 /**
- * @file script/expr_utils.c
- * @brief Expression utility functions.
+ * @file addons/script/interpolate.c
+ * @brief String interpolation.
  */
 
-#include "script.h"
+#include "flecs.h"
+
+#ifdef FLECS_SCRIPT
 #include <ctype.h>
+#include "script.h"
 
 static
 const char* flecs_parse_var_name(
@@ -80,7 +83,7 @@ error:
     return NULL;
 }
 
-char* ecs_interpolate_string(
+char* ecs_script_string_interpolate(
     ecs_world_t *world,
     const char *str,
     const ecs_script_vars_t *vars)
@@ -142,12 +145,12 @@ char* ecs_interpolate_string(
                 goto error;
             }
 
-            ecs_parse_expr_desc_t expr_desc = { 
+            ecs_script_expr_run_desc_t expr_desc = { 
                 .vars = ECS_CONST_CAST(ecs_script_vars_t*, vars) 
             };
 
             ecs_value_t expr_result = {0};
-            if (!ecs_parse_expr(world, token, &expr_result, &expr_desc)) {
+            if (!ecs_script_expr_run(world, token, &expr_result, &expr_desc)) {
                 goto error;
             }
 
@@ -170,94 +173,4 @@ error:
     return NULL;
 }
 
-/* Static names for iterator fields */
-static const char* flecs_script_iter_field_names[] = {
-    "0", "1",  "2",  "3",  "4",  "5",  "6",  "7",
-    "8", "9", "10", "11", "12", "13", "14", "15"
-};
-
-void ecs_iter_to_vars(
-    const ecs_iter_t *it,
-    ecs_script_vars_t *vars,
-    int offset)
-{
-    ecs_check(vars != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(!offset || offset < it->count, ECS_INVALID_PARAMETER, NULL);
-
-    /* Set variable for $this */
-    if (it->count) {
-        ecs_script_var_t *var = ecs_script_vars_lookup(vars, "this");
-        if (!var) {
-            var = ecs_script_vars_declare(vars, "this");
-            var->value.type = ecs_id(ecs_entity_t);
-        }
-        var->value.ptr = &it->entities[offset];
-    }
-
-    /* Set variables for fields */
-    {
-        int32_t i, field_count = it->field_count;
-        for (i = 0; i < field_count; i ++) {
-            ecs_size_t size = it->sizes[i];
-            if (!size) {
-                continue;
-            }
-
-            void *ptr = it->ptrs[i];
-            if (!ptr) {
-                continue;
-            }
-
-            ptr = ECS_OFFSET(ptr, offset * size);
-
-            const char *name = flecs_script_iter_field_names[i];
-            ecs_script_var_t *var = ecs_script_vars_lookup(vars, name);
-            if (!var) {
-                var = ecs_script_vars_declare(vars, name);
-                ecs_assert(ecs_script_vars_lookup(vars, name) != NULL,  
-                    ECS_INTERNAL_ERROR, NULL);
-                var->value.type = it->ids[i];
-            } else {
-                ecs_check(var->value.type == it->ids[i], 
-                    ECS_INVALID_PARAMETER, NULL);
-            }
-            var->value.ptr = ptr;
-        }
-    }
-
-    /* Set variables for query variables */
-    {
-        int32_t i, var_count = it->variable_count;
-        for (i = 1 /* skip this variable */ ; i < var_count; i ++) {
-            ecs_entity_t *e_ptr = NULL;
-            ecs_var_t *query_var = &it->variables[i];
-            if (query_var->entity) {
-                e_ptr = &query_var->entity;
-            } else {
-                ecs_table_range_t *range = &query_var->range;
-                if (range->count == 1) {
-                    ecs_entity_t *entities = range->table->data.entities.array;
-                    e_ptr = &entities[range->offset];
-                }
-            }
-            if (!e_ptr) {
-                continue;
-            }
-
-            ecs_script_var_t *var = ecs_script_vars_lookup(
-                vars, it->variable_names[i]);
-            if (!var) {
-                var = ecs_script_vars_declare(vars, it->variable_names[i]);
-                var->value.type = ecs_id(ecs_entity_t);
-            } else {
-                ecs_check(var->value.type == ecs_id(ecs_entity_t), 
-                    ECS_INVALID_PARAMETER, NULL);
-            }
-            var->value.ptr = e_ptr;
-        }
-    }
-
-error:
-    return;
-}
+#endif

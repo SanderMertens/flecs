@@ -39,9 +39,6 @@
 #ifdef FLECS_NO_UNITS
 #undef FLECS_UNITS
 #endif
-#ifdef FLECS_NO_EXPR
-#undef FLECS_EXPR
-#endif
 #ifdef FLECS_NO_JSON
 #undef FLECS_JSON
 #endif
@@ -86,10 +83,6 @@
 
 #ifdef FLECS_REST
 #define FLECS_HTTP
-#endif
-
-#ifdef FLECS_SCRIPT
-#define FLECS_EXPR
 #endif
 
 #ifdef FLECS_APP
@@ -162,13 +155,6 @@
 #include "../addons/monitor.h"
 #endif
 
-#ifdef FLECS_DOC
-#ifdef FLECS_NO_DOC
-#error "FLECS_NO_DOC failed: DOC is required by other addons"
-#endif
-#include "../addons/doc.h"
-#endif
-
 #ifdef FLECS_JSON
 #ifdef FLECS_NO_JSON
 #error "FLECS_NO_JSON failed: JSON is required by other addons"
@@ -176,11 +162,6 @@
 #include "../addons/json.h"
 #endif
 
-#if defined(FLECS_EXPR)
-#ifndef FLECS_META
-#define FLECS_META
-#endif
-#endif
 #ifdef FLECS_UNITS
 #ifdef FLECS_NO_UNITS
 #error "FLECS_NO_UNITS failed: UNITS is required by other addons"
@@ -188,25 +169,25 @@
 #include "../addons/units.h"
 #endif
 
-#ifdef FLECS_META
-#ifdef FLECS_NO_META
-#error "FLECS_NO_META failed: META is required by other addons"
-#endif
-#include "../addons/meta.h"
-#endif
-
-#ifdef FLECS_EXPR
-#ifdef FLECS_NO_EXPR
-#error "FLECS_NO_EXPR failed: EXPR is required by other addons"
-#endif
-#include "../addons/expr.h"
-#endif
-
 #ifdef FLECS_SCRIPT
 #ifdef FLECS_NO_SCRIPT
 #error "FLECS_NO_SCRIPT failed: SCRIPT is required by other addons"
 #endif
 #include "../addons/script.h"
+#endif
+
+#ifdef FLECS_DOC
+#ifdef FLECS_NO_DOC
+#error "FLECS_NO_DOC failed: DOC is required by other addons"
+#endif
+#include "../addons/doc.h"
+#endif
+
+#ifdef FLECS_META
+#ifdef FLECS_NO_META
+#error "FLECS_NO_META failed: META is required by other addons"
+#endif
+#include "../addons/meta.h"
 #endif
 
 #ifdef FLECS_OS_API_IMPL

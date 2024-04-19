@@ -1,4 +1,11 @@
+/**
+ * @file addons/script/visit_to_str.c
+ * @brief Script AST to string visitor.
+ */
+
 #include "flecs.h"
+
+#ifdef FLECS_SCRIPT
 #include "script.h"
 
 typedef struct ecs_script_str_visitor_t {
@@ -369,7 +376,7 @@ int flecs_script_stmt_to_str(
     return 0;
 }
 
-int ecs_script_to_buf(
+int ecs_script_ast_to_buf(
     ecs_script_t *script,
     ecs_strbuf_t *buf)
 {
@@ -386,12 +393,12 @@ error:
     return - 1;
 }
 
-char* ecs_script_to_str(
+char* ecs_script_ast_to_str(
     ecs_script_t *script)
 {
     ecs_check(script != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_strbuf_t buf = ECS_STRBUF_INIT;
-    if (ecs_script_to_buf(script, &buf)) {
+    if (ecs_script_ast_to_buf(script, &buf)) {
         goto error;
     }
 
@@ -399,3 +406,5 @@ char* ecs_script_to_str(
 error:
     return NULL;
 }
+
+#endif

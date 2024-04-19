@@ -779,9 +779,6 @@ static const char *flecs_addons_info[] = {
 #ifdef FLECS_UNITS
     "FLECS_UNITS",
 #endif
-#ifdef FLECS_EXPR
-    "FLECS_EXPR",
-#endif
 #ifdef FLECS_JSON
     "FLECS_JSON",
 #endif

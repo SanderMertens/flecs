@@ -1,13 +1,13 @@
 /**
- * @file addons/plecs.c
- * @brief Plecs addon.
+ * @file addons/script/parser.c
+ * @brief Script grammar parser.
  */
 
 #include "flecs.h"
+
+#ifdef FLECS_SCRIPT
 #include "script.h"
 #include "parser.h"
-
-/* Parser implementation */
 
 #define EcsTokEndOfStatement\
     case ';':\
@@ -18,6 +18,7 @@ const char* flecs_script_stmt(
     ecs_script_parser_t *parser,
     const char *pos);
 
+/* Parse scope (statements inside {}) */
 const char* flecs_script_scope(
     ecs_script_parser_t *parser,
     ecs_script_scope_t *scope,
@@ -56,6 +57,7 @@ scope_close:
     ParserEnd;
 }
 
+/* Parse comma expression (expressions separated by ',') */
 const char* flecs_script_comma_expr(
     ecs_script_parser_t *parser,
     const char *pos,
@@ -90,6 +92,7 @@ const char* flecs_script_comma_expr(
     return pos;
 }
 
+/* Parse with expression (expression after 'with' keyword) */
 const char* flecs_script_with_expr(
     ecs_script_parser_t *parser,
     const char *pos)
@@ -155,6 +158,7 @@ const char* flecs_script_with_expr(
     ParserEnd;
 }
 
+/* Parse with expression list (expression list after 'with' keyword) */
 const char* flecs_script_with(
     ecs_script_parser_t *parser,
     ecs_script_with_t *with,
@@ -188,6 +192,7 @@ const char* flecs_script_with(
     ParserEnd;
 }
 
+/* Parse a single statement */
 const char* flecs_script_stmt(
     ecs_script_parser_t *parser,
     const char *pos) 
@@ -687,6 +692,7 @@ component_expr_paren: {
 
 }
 
+/* Parse script */
 ecs_script_t* ecs_script_parse(
     ecs_world_t *world,
     const char *name,
@@ -705,20 +711,29 @@ ecs_script_t* ecs_script_parse(
         .scope = script->root,
     };
 
+    /* Allocate a buffer that is able to store all parsed tokens. Multiply the
+     * size of the script by two so that there is enough space to add \0
+     * terminators and expression deliminators ('""') 
+     * The token buffer will exist for as long as the script object exists, and
+     * ensures that AST nodes don't need to do separate allocations for the data
+     * they contain. */
     script->token_buffer_size = ecs_os_strlen(code) * 2 + 1;
     script->token_buffer = flecs_alloc(
         &script->allocator, script->token_buffer_size);
     parser.token_cur = script->token_buffer;
 
+    /* Start parsing code */
     const char *pos = code;
 
     do {
         pos = flecs_script_stmt(&parser, pos);
         if (!pos) {
+            /* NULL means error */
             goto error;
         }
 
         if (!pos[0]) {
+            /* \0 means end of input */
             break;
         }
     } while (true);
@@ -728,3 +743,5 @@ error:
     ecs_script_free(script);
     return NULL;
 }
+
+#endif

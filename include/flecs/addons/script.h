@@ -15,13 +15,14 @@
  * @{
  */
 
-#ifndef FLECS_MODULE
-#define FLECS_MODULE
+#ifndef FLECS_META
+#define FLECS_META
 #endif
 
-#ifndef FLECS_EXPR
-#define FLECS_EXPR
+#ifndef FLECS_DOC
+#define FLECS_DOC
 #endif
+
 
 #ifndef FLECS_SCRIPT_H
 #define FLECS_SCRIPT_H
@@ -55,7 +56,9 @@ typedef struct ecs_script_vars_t {
     ecs_allocator_t *allocator;
 } ecs_script_vars_t;
 
-/* Script component */
+/** Script component. 
+ * This component is added to the entities of managed scripts and assemblies.
+ */
 typedef struct EcsScript {
     ecs_script_t *script;
     ecs_script_assembly_t *assembly; /* Only set for assembly scripts */
@@ -146,7 +149,7 @@ int ecs_script_run_file(
  * @return Zero if success, non-zero if failed.
  */
 FLECS_API
-int ecs_script_to_buf(
+int ecs_script_ast_to_buf(
     ecs_script_t *script,
     ecs_strbuf_t *buf);
 
@@ -158,11 +161,11 @@ int ecs_script_to_buf(
  * @return The string if success, NULL if failed.
  */
 FLECS_API
-char* ecs_script_to_str(
+char* ecs_script_ast_to_str(
     ecs_script_t *script);
 
 
-/* Managed scripts */
+/* Managed scripts (script associated with entity that outlives the function) */
 
 /** Used with ecs_script_init() */
 typedef struct ecs_script_desc_t {
@@ -233,7 +236,6 @@ void ecs_script_clear(
  * `ecs_type_info_t::hooks::dtor` is set.
  * 
  * @param world The world.
- * @param vars The variable scope.
  */
 FLECS_API
 ecs_script_vars_t* ecs_script_vars_init(
@@ -331,60 +333,6 @@ ecs_script_var_t* ecs_script_vars_lookup(
     const ecs_script_vars_t *vars,
     const char *name);
 
-
-/* Script utilities */
-
-/** Used with ecs_parse_expr(). */
-typedef struct ecs_parse_expr_desc_t {
-    const char *name;
-    const char *expr;
-    ecs_entity_t (*lookup_action)(
-        const ecs_world_t*,
-        const char *value,
-        void *ctx);
-    void *lookup_ctx;
-    ecs_script_vars_t *vars;
-} ecs_parse_expr_desc_t;
-
-/** Parse expression into value.
- * This operation parses a flecs expression into the provided pointer. The
- * memory pointed to must be large enough to contain a value of the used type.
- *
- * If no type and pointer are provided for the value argument, the operation
- * will discover the type from the expression and allocate storage for the
- * value. The allocated value must be freed with ecs_value_free().
- *
- * @param world The world.
- * @param ptr The pointer to the expression to parse.
- * @param value The value containing type & pointer to write to.
- * @param desc Configuration parameters for deserializer.
- * @return Pointer to the character after the last one read, or NULL if failed.
- */
-FLECS_API
-const char* ecs_parse_expr(
-    ecs_world_t *world,
-    const char *ptr,
-    ecs_value_t *value,
-    const ecs_parse_expr_desc_t *desc);
-
-/** Evaluate interpolated expressions in string.
- * This operation evaluates expressions in a string, and replaces them with
- * their evaluated result. Supported expression formats are:
- *  - $variable_name
- *  - {expression}
- *
- * The $, { and } characters can be escaped with a backslash (\).
- *
- * @param world The world.
- * @param str The string to evaluate.
- * @param vars The variables to use for evaluation.
- */
-FLECS_API
-char* ecs_interpolate_string(
-    ecs_world_t *world,
-    const char *str,
-    const ecs_script_vars_t *vars);
-
 /** Convert iterator to vars
  * This operation converts an iterator to a variable array. This allows for
  * using iterator results in expressions. The operation only converts a
@@ -418,10 +366,132 @@ char* ecs_interpolate_string(
  * @param offset The offset to the current element.
  */
 FLECS_API
-void ecs_iter_to_vars(
+void ecs_script_vars_from_iter(
     const ecs_iter_t *it,
     ecs_script_vars_t *vars,
     int offset);
+
+
+/* Standalone expression evaluation */
+
+/** Used with ecs_script_expr_run(). */
+typedef struct ecs_script_expr_run_desc_t {
+    const char *name;
+    const char *expr;
+    ecs_entity_t (*lookup_action)(
+        const ecs_world_t*,
+        const char *value,
+        void *ctx);
+    void *lookup_ctx;
+    ecs_script_vars_t *vars;
+} ecs_script_expr_run_desc_t;
+
+/** Parse standalone expression into value.
+ * This operation parses a flecs expression into the provided pointer. The
+ * memory pointed to must be large enough to contain a value of the used type.
+ *
+ * If no type and pointer are provided for the value argument, the operation
+ * will discover the type from the expression and allocate storage for the
+ * value. The allocated value must be freed with ecs_value_free().
+ *
+ * @param world The world.
+ * @param ptr The pointer to the expression to parse.
+ * @param value The value containing type & pointer to write to.
+ * @param desc Configuration parameters for deserializer.
+ * @return Pointer to the character after the last one read, or NULL if failed.
+ */
+FLECS_API
+const char* ecs_script_expr_run(
+    ecs_world_t *world,
+    const char *ptr,
+    ecs_value_t *value,
+    const ecs_script_expr_run_desc_t *desc);
+
+/** Evaluate interpolated expressions in string.
+ * This operation evaluates expressions in a string, and replaces them with
+ * their evaluated result. Supported expression formats are:
+ *  - $variable_name
+ *  - {expression}
+ *
+ * The $, { and } characters can be escaped with a backslash (\).
+ *
+ * @param world The world.
+ * @param str The string to evaluate.
+ * @param vars The variables to use for evaluation.
+ */
+FLECS_API
+char* ecs_script_string_interpolate(
+    ecs_world_t *world,
+    const char *str,
+    const ecs_script_vars_t *vars);
+
+
+/* Value serialization */
+
+/** Serialize value into expression string.
+ * This operation serializes a value of the provided type to a string. The
+ * memory pointed to must be large enough to contain a value of the used type.
+ *
+ * @param world The world.
+ * @param type The type of the value to serialize.
+ * @param data The value to serialize.
+ * @return String with expression, or NULL if failed.
+ */
+FLECS_API
+char* ecs_ptr_to_expr(
+    const ecs_world_t *world,
+    ecs_entity_t type,
+    const void *data);
+
+/** Serialize value into expression buffer.
+ * Same as ecs_ptr_to_expr(), but serializes to an ecs_strbuf_t instance.
+ *
+ * @param world The world.
+ * @param type The type of the value to serialize.
+ * @param data The value to serialize.
+ * @param buf The strbuf to append the string to.
+ * @return Zero if success, non-zero if failed.
+ */
+FLECS_API
+int ecs_ptr_to_expr_buf(
+    const ecs_world_t *world,
+    ecs_entity_t type,
+    const void *data,
+    ecs_strbuf_t *buf);
+
+/** Similar as ecs_ptr_to_expr(), but serializes values to string.
+ * Whereas the output of ecs_ptr_to_expr() is a valid expression, the output of
+ * ecs_ptr_to_str() is a string representation of the value. In most cases the
+ * output of the two operations is the same, but there are some differences:
+ * - Strings are not quoted
+ *
+ * @param world The world.
+ * @param type The type of the value to serialize.
+ * @param data The value to serialize.
+ * @return String with result, or NULL if failed.
+ */
+FLECS_API
+char* ecs_ptr_to_str(
+    const ecs_world_t *world,
+    ecs_entity_t type,
+    const void *data);
+
+/** Serialize value into string buffer.
+ * Same as ecs_ptr_to_str(), but serializes to an ecs_strbuf_t instance.
+ *
+ * @param world The world.
+ * @param type The type of the value to serialize.
+ * @param data The value to serialize.
+ * @param buf The strbuf to append the string to.
+ * @return Zero if success, non-zero if failed.
+ */
+FLECS_API
+int ecs_ptr_to_str_buf(
+    const ecs_world_t *world,
+    ecs_entity_t type,
+    const void *data,
+    ecs_strbuf_t *buf);
+
 
 /* Module import */
 FLECS_API

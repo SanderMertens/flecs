@@ -1,6 +1,6 @@
 /**
  * @file addons/script/ast.h
- * @brief Flecs script AST.
+ * @brief Script AST.
  */
 
 #ifndef FLECS_SCRIPT_AST_H

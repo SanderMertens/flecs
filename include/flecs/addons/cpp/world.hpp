@@ -1041,7 +1041,7 @@ struct world {
 #   include "mixins/timer/mixin.inl"
 #   endif
 #   ifdef FLECS_SCRIPT
-#   include "mixins/plecs/mixin.inl"
+#   include "mixins/script/mixin.inl"
 #   endif
 #   ifdef FLECS_META
 #   include "mixins/meta/world.inl"

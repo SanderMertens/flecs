@@ -1,4 +1,11 @@
+/**
+ * @file addons/script/visit_free.c
+ * @brief Script free visitor (frees AST resources).
+ */
+
 #include "flecs.h"
+
+#ifdef FLECS_SCRIPT
 #include "script.h"
 
 static
@@ -139,4 +146,4 @@ error:
     return - 1;
 }
 
-
+#endif
