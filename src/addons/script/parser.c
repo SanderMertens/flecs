@@ -173,8 +173,6 @@ const char* flecs_script_with(
 
     bool has_next;
     do {
-        has_next = false;
-
         Scope(with->expressions, 
             pos = flecs_script_with_expr(parser, pos);
         )

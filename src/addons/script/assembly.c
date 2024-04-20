@@ -347,6 +347,13 @@ int flecs_script_eval_assembly(
     ecs_add_id(v->world, assembly_entity, EcsAlwaysOverride);
 
     EcsScript *script = ecs_ensure(v->world, assembly_entity, EcsScript);
+    if (script->script) {
+        if (script->assembly) {
+            flecs_script_assembly_fini(script->script, script->assembly);
+        }
+        ecs_script_free(script->script);
+    }
+
     script->script = v->base.script;
     script->assembly = assembly;
     ecs_modified(v->world, assembly_entity, EcsScript);
@@ -354,7 +361,6 @@ int flecs_script_eval_assembly(
     ecs_set_hooks_id(v->world, assembly_entity, &(ecs_type_hooks_t) {
         .ctor = flecs_script_assembly_ctor,
         .on_set = flecs_script_assembly_on_set,
-        // .on_remove = flecs_assembly_on_remove,
         .ctx = v->world
     });
 

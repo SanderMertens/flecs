@@ -118,6 +118,10 @@ ecs_entity_t flecs_script_find_entity(
     ecs_entity_t from,
     const char *path)
 {
+    if (!path) {
+        return 0;
+    }
+
     if (path[0] == '$') {
         const ecs_script_var_t *var = ecs_script_vars_lookup(v->vars, &path[1]);
         if (!var) {
@@ -210,9 +214,15 @@ int flecs_script_eval_id(
 {
     ecs_entity_t second_from = 0;
 
+    if (!id->first) {
+        flecs_script_eval_error(v, node, 
+            "invalid component/tag identifier");
+        return -1;
+    }
+
     if (v->assembly) {
         /* Can't resolve variables while preprocessing assembly scope */
-        if (id->first && id->first[0] == '$') {
+        if (id->first[0] == '$') {
             return 0;
         }
         if (id->second && id->second[0] == '$') {

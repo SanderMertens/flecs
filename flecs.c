@@ -64130,6 +64130,13 @@ int flecs_script_eval_assembly(
     ecs_add_id(v->world, assembly_entity, EcsAlwaysOverride);
 
     EcsScript *script = ecs_ensure(v->world, assembly_entity, EcsScript);
+    if (script->script) {
+        if (script->assembly) {
+            flecs_script_assembly_fini(script->script, script->assembly);
+        }
+        ecs_script_free(script->script);
+    }
+
     script->script = v->base.script;
     script->assembly = assembly;
     ecs_modified(v->world, assembly_entity, EcsScript);
@@ -64137,7 +64144,6 @@ int flecs_script_eval_assembly(
     ecs_set_hooks_id(v->world, assembly_entity, &(ecs_type_hooks_t) {
         .ctor = flecs_script_assembly_ctor,
         .on_set = flecs_script_assembly_on_set,
-        // .on_remove = flecs_assembly_on_remove,
         .ctx = v->world
     });
 
@@ -66417,8 +66423,6 @@ const char* flecs_script_with(
 
     bool has_next;
     do {
-        has_next = false;
-
         Scope(with->expressions, 
             pos = flecs_script_with_expr(parser, pos);
         )
@@ -68630,6 +68634,10 @@ ecs_entity_t flecs_script_find_entity(
     ecs_entity_t from,
     const char *path)
 {
+    if (!path) {
+        return 0;
+    }
+
     if (path[0] == '$') {
         const ecs_script_var_t *var = ecs_script_vars_lookup(v->vars, &path[1]);
         if (!var) {
@@ -68722,9 +68730,15 @@ int flecs_script_eval_id(
 {
     ecs_entity_t second_from = 0;
 
+    if (!id->first) {
+        flecs_script_eval_error(v, node, 
+            "invalid component/tag identifier");
+        return -1;
+    }
+
     if (v->assembly) {
         /* Can't resolve variables while preprocessing assembly scope */
-        if (id->first && id->first[0] == '$') {
+        if (id->first[0] == '$') {
             return 0;
         }
         if (id->second && id->second[0] == '$') {
