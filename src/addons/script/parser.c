@@ -667,6 +667,7 @@ component_expr_paren: {
         ecs_script_entity_t *entity = flecs_script_insert_entity(
             parser, Token(1));
         entity->kind = Token(0);
+        entity->kind_w_expr = true;
 
         Scope(entity->scope, 
             ecs_script_component_t *component = 

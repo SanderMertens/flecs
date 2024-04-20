@@ -63497,6 +63497,7 @@ struct ecs_script_entity_t {
     const char *kind;
     const char *name;
     bool name_is_var;
+    bool kind_w_expr;
     ecs_script_scope_t *scope;
 
     // Populated during eval
@@ -66944,6 +66945,7 @@ component_expr_paren: {
         ecs_script_entity_t *entity = flecs_script_insert_entity(
             parser, Token(1));
         entity->kind = Token(0);
+        entity->kind_w_expr = true;
 
         Scope(entity->scope, 
             ecs_script_component_t *component = 
@@ -67098,6 +67100,8 @@ int ecs_script_run(
     if (!script) {
         goto error;
     }
+
+    printf("%s\n", ecs_script_ast_to_str(script));
 
     ecs_entity_t prev_scope = ecs_set_scope(world, 0);
 

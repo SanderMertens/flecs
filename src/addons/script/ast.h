@@ -74,6 +74,7 @@ struct ecs_script_entity_t {
     const char *kind;
     const char *name;
     bool name_is_var;
+    bool kind_w_expr;
     ecs_script_scope_t *scope;
 
     // Populated during eval

@@ -6289,3 +6289,236 @@ void Eval_unknown_identifier_for_int_field(void) {
 
     ecs_fini(world);
 }
+
+ECS_CTOR(Position, ptr, {
+    ptr->x = 100;
+    ptr->y = 200;
+})
+
+static int on_set_position_invoked = 0;
+
+static void on_set_position(ecs_iter_t *it) {
+    on_set_position_invoked ++;
+
+    Position *p = ecs_field(it, Position, 0);
+    test_assert(p != NULL);
+}
+
+void Eval_on_set_w_kind_paren_no_reflection(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .ctor = ecs_ctor(Position),
+        .on_set = on_set_position
+    });
+
+    const char *expr =
+    HEAD "Position e()";
+
+    test_int(on_set_position_invoked, 0);
+
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    test_int(on_set_position_invoked, 1);
+
+    const Position *p = ecs_get(world, e, Position);
+    test_int(p->x, 100);
+    test_int(p->y, 200);
+
+    ecs_fini(world);
+}
+
+void Eval_on_set_w_kind_paren(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .ctor = ecs_ctor(Position),
+        .on_set = on_set_position
+    });
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "Position e()";
+
+    test_int(on_set_position_invoked, 0);
+
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    test_int(on_set_position_invoked, 1);
+
+    const Position *p = ecs_get(world, e, Position);
+    test_int(p->x, 100);
+    test_int(p->y, 200);
+
+    ecs_fini(world);
+}
+
+void Eval_on_set_w_kind_no_paren(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .ctor = ecs_ctor(Position),
+        .on_set = on_set_position
+    });
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "Position e()";
+
+    test_int(on_set_position_invoked, 0);
+
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    test_int(on_set_position_invoked, 1);
+
+    const Position *p = ecs_get(world, e, Position);
+    test_int(p->x, 100);
+    test_int(p->y, 200);
+
+    ecs_fini(world);
+}
+
+void Eval_on_set_w_kind_no_paren_no_reflection(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .ctor = ecs_ctor(Position),
+        .on_set = on_set_position
+    });
+
+    const char *expr =
+    HEAD "Position e";
+
+    test_int(on_set_position_invoked, 0);
+
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    test_int(on_set_position_invoked, 1);
+
+    const Position *p = ecs_get(world, e, Position);
+    test_int(p->x, 100);
+    test_int(p->y, 200);
+
+    ecs_fini(world);
+}
+
+void Eval_on_set_w_single_assign(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .ctor = ecs_ctor(Position),
+        .on_set = on_set_position
+    });
+
+    const char *expr =
+    HEAD "e = Position: {}";
+
+    test_int(on_set_position_invoked, 0);
+
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    test_int(on_set_position_invoked, 1);
+
+    const Position *p = ecs_get(world, e, Position);
+    test_int(p->x, 100);
+    test_int(p->y, 200);
+
+    ecs_fini(world);
+}
+
+void Eval_on_set_w_single_assign_scoped_w_value(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .ctor = ecs_ctor(Position),
+        .on_set = on_set_position
+    });
+
+    const char *expr =
+    HEAD "e { Position: {} }";
+
+    test_int(on_set_position_invoked, 0);
+
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    test_int(on_set_position_invoked, 1);
+
+    const Position *p = ecs_get(world, e, Position);
+    test_int(p->x, 100);
+    test_int(p->y, 200);
+
+    ecs_fini(world);
+}
+
+void Eval_on_set_w_single_assign_scoped_no_value(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .ctor = ecs_ctor(Position),
+        .on_set = on_set_position
+    });
+
+    const char *expr =
+    HEAD "e { Position }";
+
+    test_int(on_set_position_invoked, 0);
+
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    test_int(on_set_position_invoked, 0);
+
+    const Position *p = ecs_get(world, e, Position);
+    test_int(p->x, 100);
+    test_int(p->y, 200);
+
+    ecs_fini(world);
+}

@@ -213,6 +213,13 @@ void Eval_not_an_array_component(void);
 void Eval_array_component_w_curly_brackets(void);
 void Eval_unknown_identifier(void);
 void Eval_unknown_identifier_for_int_field(void);
+void Eval_on_set_w_kind_paren_no_reflection(void);
+void Eval_on_set_w_kind_paren(void);
+void Eval_on_set_w_kind_no_paren_no_reflection(void);
+void Eval_on_set_w_kind_no_paren(void);
+void Eval_on_set_w_single_assign(void);
+void Eval_on_set_w_single_assign_scoped_w_value(void);
+void Eval_on_set_w_single_assign_scoped_no_value(void);
 
 // Testsuite 'Assembly'
 void Assembly_assembly_no_scope(void);
@@ -1349,6 +1356,34 @@ bake_test_case Eval_testcases[] = {
     {
         "unknown_identifier_for_int_field",
         Eval_unknown_identifier_for_int_field
+    },
+    {
+        "on_set_w_kind_paren_no_reflection",
+        Eval_on_set_w_kind_paren_no_reflection
+    },
+    {
+        "on_set_w_kind_paren",
+        Eval_on_set_w_kind_paren
+    },
+    {
+        "on_set_w_kind_no_paren_no_reflection",
+        Eval_on_set_w_kind_no_paren_no_reflection
+    },
+    {
+        "on_set_w_kind_no_paren",
+        Eval_on_set_w_kind_no_paren
+    },
+    {
+        "on_set_w_single_assign",
+        Eval_on_set_w_single_assign
+    },
+    {
+        "on_set_w_single_assign_scoped_w_value",
+        Eval_on_set_w_single_assign_scoped_w_value
+    },
+    {
+        "on_set_w_single_assign_scoped_no_value",
+        Eval_on_set_w_single_assign_scoped_no_value
     }
 };
 
@@ -2609,7 +2644,7 @@ static bake_test_suite suites[] = {
         "Eval",
         NULL,
         NULL,
-        204,
+        211,
         Eval_testcases
     },
     {

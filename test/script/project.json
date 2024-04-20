@@ -216,7 +216,14 @@
                 "not_an_array_component",
                 "array_component_w_curly_brackets",
                 "unknown_identifier",
-                "unknown_identifier_for_int_field"
+                "unknown_identifier_for_int_field",
+                "on_set_w_kind_paren_no_reflection",
+                "on_set_w_kind_paren",
+                "on_set_w_kind_no_paren_no_reflection",
+                "on_set_w_kind_no_paren",
+                "on_set_w_single_assign",
+                "on_set_w_single_assign_scoped_w_value",
+                "on_set_w_single_assign_scoped_no_value"
             ]
         }, {
             "id": "Assembly",

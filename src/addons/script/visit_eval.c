@@ -440,6 +440,14 @@ int flecs_script_eval_entity(
         return -1;
     }
 
+    if (node->eval_kind) {
+        if (!node->kind_w_expr) {
+            if (ecs_get_type_info(v->world, node->eval_kind) != NULL) {
+                ecs_modified_id(v->world, node->eval, node->eval_kind);
+            }
+        }
+    }
+
     v->entity = old_entity;
 
     return 0;
