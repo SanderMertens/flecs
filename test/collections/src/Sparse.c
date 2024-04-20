@@ -392,3 +392,50 @@ void Sparse_remove_low_after_ensure_high(void) {
 
     flecs_sparse_free(sp);
 }
+
+void Sparse_ensure_skip_generation(void) {
+    ecs_sparse_t *sp1 = flecs_sparse_new(NULL, NULL, int);
+    ecs_sparse_t *sp2 = flecs_sparse_new(NULL, NULL, int);
+
+    uint64_t id = flecs_sparse_new_id(sp1);
+    flecs_sparse_ensure(sp2, 0, id);
+
+    test_assert(flecs_sparse_is_alive(sp1, id));
+    test_assert(flecs_sparse_is_alive(sp2, id));
+
+    flecs_sparse_remove(sp1, 0, id);
+    flecs_sparse_remove(sp2, 0, id);
+
+    test_assert(!flecs_sparse_is_alive(sp1, id));
+    test_assert(!flecs_sparse_is_alive(sp2, id));
+
+    uint64_t id_2 = flecs_sparse_new_id(sp1);
+    test_assert((uint32_t)id_2 == id);
+
+    test_assert(flecs_sparse_is_alive(sp1, id_2));
+    test_assert(!flecs_sparse_is_alive(sp2, id_2));
+    test_assert(!flecs_sparse_is_alive(sp1, id));
+    test_assert(!flecs_sparse_is_alive(sp2, id));
+
+    flecs_sparse_remove(sp1, 0, id_2);
+
+    test_assert(!flecs_sparse_is_alive(sp1, id_2));
+    test_assert(!flecs_sparse_is_alive(sp2, id_2));
+    test_assert(!flecs_sparse_is_alive(sp1, id));
+    test_assert(!flecs_sparse_is_alive(sp2, id));
+
+    uint64_t id_3 = flecs_sparse_new_id(sp1);
+    test_assert((uint32_t)id_3 == id);
+    flecs_sparse_ensure(sp2, 0, id_3);
+
+    test_assert(flecs_sparse_is_alive(sp1, id_3));
+    test_assert(flecs_sparse_is_alive(sp2, id_3));
+
+    test_assert(!flecs_sparse_is_alive(sp1, id_2));
+    test_assert(!flecs_sparse_is_alive(sp2, id_2));
+    test_assert(!flecs_sparse_is_alive(sp1, id));
+    test_assert(!flecs_sparse_is_alive(sp2, id));
+
+    flecs_sparse_free(sp1);
+    flecs_sparse_free(sp2);
+}

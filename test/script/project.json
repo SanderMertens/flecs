@@ -261,7 +261,9 @@
                 "assembly_with_with",
                 "module_w_assembly",
                 "module_w_nested_assembly",
-                "assembly_w_pair_w_this_var"
+                "assembly_w_pair_w_this_var",
+                "run_assembly_after_error",
+                "update_assembly_after_error"
             ]
         }, {
             "id": "Expr",

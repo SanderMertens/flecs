@@ -963,6 +963,8 @@
                 "component_init_set_hooks",
                 "component_init_name_from_type_info",
                 "component_init_scoped_name_from_type_info",
+                "component_init_w_recycled_id",
+                "component_init_w_recycled_non_component_id",
                 "on_add_after_ctor_w_add",
                 "on_add_after_ctor_w_add_to",
                 "with_before_hooks",

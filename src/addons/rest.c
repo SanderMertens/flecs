@@ -355,7 +355,7 @@ bool flecs_rest_script(
 
     ecs_entity_t script = ecs_script(world, {
         .entity = ecs_entity(world, { .name = "scripts.main" }),
-        .str = data
+        .code = data
     });
 
     if (!script) {

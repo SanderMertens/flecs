@@ -3618,7 +3618,7 @@ void Eval_assign_pair_component_in_script(void) {
 
     ecs_entity_t s = ecs_script(world, {
         .entity = ecs_entity(world, { .name = "main" }),
-        .str = expr
+        .code = expr
     });
     test_assert(s != 0);
 
@@ -3655,7 +3655,7 @@ void Eval_assign_pair_component_in_script_update(void) {
 
     ecs_entity_t s = ecs_script(world, {
         .entity = ecs_entity(world, { .name = "main" }),
-        .str = expr
+        .code = expr
     });
     test_assert(s != 0);
 

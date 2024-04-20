@@ -648,7 +648,7 @@ void Assembly_assembly_w_child_parse_script(void) {
 
     test_assert(ecs_script(world, {
         .entity = ecs_entity(world, { .name = "main" }),
-        .str = expr
+        .code = expr
     }) != 0);
 
     ecs_entity_t tree = ecs_lookup(world, "Tree");
@@ -709,12 +709,12 @@ void Assembly_assembly_w_child_parse_script_twice(void) {
 
     test_assert(ecs_script(world, {
         .entity = ecs_entity(world, { .name = "main" }),
-        .str = expr
+        .code = expr
     }) != 0);
 
     test_assert(ecs_script(world, {
         .entity = ecs_entity(world, { .name = "main" }),
-        .str = expr
+        .code = expr
     }) != 0);
 
     ecs_entity_t tree = ecs_lookup(world, "Tree");
@@ -775,7 +775,7 @@ void Assembly_assembly_w_child_update_after_parse(void) {
 
     test_assert(ecs_script(world, {
         .entity = ecs_entity(world, { .name = "main" }),
-        .str = expr
+        .code = expr
     }) != 0);
 
     {
@@ -1964,6 +1964,109 @@ void Assembly_assembly_w_pair_w_this_var(void) {
 
     test_assert(ecs_has_id(world, ent, foo));
     test_assert(ecs_has_pair(world, ent, Rel, ent));
+
+    ecs_fini(world);
+}
+
+void Assembly_run_assembly_after_error(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "Foo {}"
+    LINE "assembly Tree {"
+    LINE "  Foo"
+    LINE "}";
+
+    const char *expr_err =
+    HEAD "Foo {}"
+    LINE "assembly Tree {"
+    LINE "  Fo"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+
+    {
+        ecs_entity_t tree = ecs_lookup(world, "Tree");
+        test_assert(tree != 0);
+
+        ecs_entity_t foo = ecs_lookup(world, "Foo");
+        test_assert(foo != 0);
+    }
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr_err) != 0);
+    ecs_log_set_level(-1);
+
+    /* Because script is not managed, entiites created by script aren't deleted */
+
+    {
+        ecs_entity_t tree = ecs_lookup(world, "Tree");
+        test_assert(tree != 0);
+
+        ecs_entity_t foo = ecs_lookup(world, "Foo");
+        test_assert(foo != 0);
+    }
+
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+
+    {
+        ecs_entity_t tree = ecs_lookup(world, "Tree");
+        test_assert(tree != 0);
+
+        ecs_entity_t foo = ecs_lookup(world, "Foo");
+        test_assert(foo != 0);
+    }
+
+    ecs_fini(world);
+}
+
+void Assembly_update_assembly_after_error(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "Foo {}"
+    LINE "assembly Tree {"
+    LINE "  Foo"
+    LINE "}";
+
+    const char *expr_err =
+    HEAD "Foo {}"
+    LINE "assembly Tree {"
+    LINE "  Fo"
+    LINE "}";
+
+    ecs_entity_t s = ecs_script(world, { .code = expr });
+    test_assert(s != 0);
+
+    {
+        ecs_entity_t tree = ecs_lookup(world, "Tree");
+        test_assert(tree != 0);
+
+        ecs_entity_t foo = ecs_lookup(world, "Foo");
+        test_assert(foo != 0);
+    }
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_update(world, s, 0, expr_err) != 0);
+    ecs_log_set_level(-1);
+
+    {
+        ecs_entity_t tree = ecs_lookup(world, "Tree");
+        test_assert(tree == 0);
+
+        ecs_entity_t foo = ecs_lookup(world, "Foo");
+        test_assert(foo == 0);
+    }
+
+    test_assert(ecs_script_update(world, s, 0, expr) == 0);
+
+    {
+        ecs_entity_t tree = ecs_lookup(world, "Tree");
+        test_assert(tree != 0);
+
+        ecs_entity_t foo = ecs_lookup(world, "Foo");
+        test_assert(foo != 0);
+    }
 
     ecs_fini(world);
 }

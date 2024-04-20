@@ -256,6 +256,8 @@ void Assembly_assembly_with_with(void);
 void Assembly_module_w_assembly(void);
 void Assembly_module_w_nested_assembly(void);
 void Assembly_assembly_w_pair_w_this_var(void);
+void Assembly_run_assembly_after_error(void);
+void Assembly_update_assembly_after_error(void);
 
 // Testsuite 'Expr'
 void Expr_add_2_int_literals(void);
@@ -1500,6 +1502,14 @@ bake_test_case Assembly_testcases[] = {
     {
         "assembly_w_pair_w_this_var",
         Assembly_assembly_w_pair_w_this_var
+    },
+    {
+        "run_assembly_after_error",
+        Assembly_run_assembly_after_error
+    },
+    {
+        "update_assembly_after_error",
+        Assembly_update_assembly_after_error
     }
 };
 
@@ -2536,7 +2546,7 @@ static bake_test_suite suites[] = {
         "Assembly",
         NULL,
         NULL,
-        43,
+        45,
         Assembly_testcases
     },
     {

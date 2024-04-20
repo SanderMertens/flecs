@@ -171,7 +171,7 @@ char* ecs_script_ast_to_str(
 typedef struct ecs_script_desc_t {
     ecs_entity_t entity;   /* Set to customize entity handle associated with script */
     const char *filename;  /* Set to load script from file */
-    const char *str;       /* Set to parse script from string */
+    const char *code;      /* Set to parse script from string */
 } ecs_script_desc_t;
 
 /** Load managed script.
@@ -197,14 +197,14 @@ ecs_entity_t ecs_script_init(
  * @param world The world.
  * @param script The script entity.
  * @param instance An assembly instance (optional).
- * @param str The script code.
+ * @param code The script code.
  */
 FLECS_API
 int ecs_script_update(
     ecs_world_t *world,
     ecs_entity_t script,
     ecs_entity_t instance,
-    const char *str);
+    const char *code);
 
 /** Clear all entities associated with script.
  *

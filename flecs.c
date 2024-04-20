@@ -24399,7 +24399,7 @@ bool flecs_rest_script(
 
     ecs_entity_t script = ecs_script(world, {
         .entity = ecs_entity(world, { .name = "scripts.main" }),
-        .str = data
+        .code = data
     });
 
     if (!script) {
@@ -67175,7 +67175,7 @@ ecs_entity_t ecs_script_init(
         }
     }
 
-    script = desc->str;
+    script = desc->code;
     if (!script && desc->filename) {
         script = flecs_load_from_file(desc->filename);
         if (!script) {
@@ -67187,14 +67187,14 @@ ecs_entity_t ecs_script_init(
         goto error;
     }
 
-    if (script != desc->str) {
+    if (script != desc->code) {
         /* Safe cast, only happens when script is loaded from file */
         ecs_os_free(ECS_CONST_CAST(char*, script));
     }
 
     return e;
 error:
-    if (script != desc->str) {
+    if (script != desc->code) {
         /* Safe cast, only happens when script is loaded from file */
         ecs_os_free(ECS_CONST_CAST(char*, script));
     }
