@@ -3,6 +3,9 @@
  * @brief Internal types and functions for rules addon.
  */
 
+#ifndef FLECS_RULES_PRIVATE_H
+#define FLECS_RULES_PRIVATE_H
+
 #include "../../private_api.h"
 
 #ifdef FLECS_RULES
@@ -437,3 +440,5 @@ bool flecs_rule_trivial_test_w_wildcards(
 #endif /* FLECS_RULES_ADDON_H */
 
 #endif
+
+#endif /* FLECS_RULES_PRIVATE_H */

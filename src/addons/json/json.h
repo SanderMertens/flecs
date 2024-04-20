@@ -3,6 +3,9 @@
  * @brief Internal functions for JSON addon.
  */
 
+#ifndef FLECS_JSON_PRIVATE_H
+#define FLECS_JSON_PRIVATE_H
+
 #include "../../private_api.h"
 
 #ifdef FLECS_JSON
@@ -209,3 +212,5 @@ int flecs_json_ser_type(
 #endif /* FLECS_JSON_ADDON_H */
 
 #endif
+
+#endif /* FLECS_JSON_PRIVATE_H */
