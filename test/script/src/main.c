@@ -220,6 +220,15 @@ void Eval_on_set_w_kind_no_paren(void);
 void Eval_on_set_w_single_assign(void);
 void Eval_on_set_w_single_assign_scoped_w_value(void);
 void Eval_on_set_w_single_assign_scoped_no_value(void);
+void Eval_if_true(void);
+void Eval_if_true_no_else(void);
+void Eval_if_false(void);
+void Eval_if_true_var(void);
+void Eval_if_false_var(void);
+void Eval_if_10(void);
+void Eval_if_0(void);
+void Eval_if_true_in_scope(void);
+void Eval_if_false_in_scope(void);
 
 // Testsuite 'Assembly'
 void Assembly_assembly_no_scope(void);
@@ -1384,6 +1393,42 @@ bake_test_case Eval_testcases[] = {
     {
         "on_set_w_single_assign_scoped_no_value",
         Eval_on_set_w_single_assign_scoped_no_value
+    },
+    {
+        "if_true",
+        Eval_if_true
+    },
+    {
+        "if_true_no_else",
+        Eval_if_true_no_else
+    },
+    {
+        "if_false",
+        Eval_if_false
+    },
+    {
+        "if_true_var",
+        Eval_if_true_var
+    },
+    {
+        "if_false_var",
+        Eval_if_false_var
+    },
+    {
+        "if_10",
+        Eval_if_10
+    },
+    {
+        "if_0",
+        Eval_if_0
+    },
+    {
+        "if_true_in_scope",
+        Eval_if_true_in_scope
+    },
+    {
+        "if_false_in_scope",
+        Eval_if_false_in_scope
     }
 };
 
@@ -2644,7 +2689,7 @@ static bake_test_suite suites[] = {
         "Eval",
         NULL,
         NULL,
-        211,
+        220,
         Eval_testcases
     },
     {

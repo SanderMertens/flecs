@@ -1896,7 +1896,6 @@ void Eval_type_and_assign_in_plecs_w_enum_primitive_using_meta(void) {
     ecs_fini(world);
 }
 
-
 void Eval_type_and_assign_in_plecs_w_enum_primitive_and_struct(void) {
     ecs_world_t *world = ecs_init();
 
@@ -2060,7 +2059,6 @@ void Eval_dot_assign_nested_member(void) {
     test_int(ptr->start.y, 20);
     test_int(ptr->stop.x, 30);
     test_int(ptr->stop.y, 40);
-    
     
     ecs_fini(world);
 }
@@ -6519,6 +6517,191 @@ void Eval_on_set_w_single_assign_scoped_no_value(void) {
     const Position *p = ecs_get(world, e, Position);
     test_int(p->x, 100);
     test_int(p->y, 200);
+
+    ecs_fini(world);
+}
+
+void Eval_if_true(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "if true {"
+    LINE "  a{}"
+    LINE "} else {"
+    LINE "  b{}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_lookup(world, "a") != 0);
+    test_assert(ecs_lookup(world, "b") == 0);
+
+    ecs_fini(world);
+}
+
+void Eval_if_true_no_else(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "if true {"
+    LINE "  a{}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_lookup(world, "a") != 0);
+
+    ecs_fini(world);
+}
+
+void Eval_if_false(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "if false {"
+    LINE "  a{}"
+    LINE "} else {"
+    LINE "  b{}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_lookup(world, "a") == 0);
+    test_assert(ecs_lookup(world, "b") != 0);
+
+    ecs_fini(world);
+}
+
+void Eval_if_10(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "if 10 {"
+    LINE "  a{}"
+    LINE "} else {"
+    LINE "  b{}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_lookup(world, "a") != 0);
+    test_assert(ecs_lookup(world, "b") == 0);
+
+    ecs_fini(world);
+}
+
+void Eval_if_256(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "if 256 {"
+    LINE "  a{}"
+    LINE "} else {"
+    LINE "  b{}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_lookup(world, "a") != 0);
+    test_assert(ecs_lookup(world, "b") == 0);
+
+    ecs_fini(world);
+}
+
+void Eval_if_0(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "if 0 {"
+    LINE "  a{}"
+    LINE "} else {"
+    LINE "  b{}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_lookup(world, "a") == 0);
+    test_assert(ecs_lookup(world, "b") != 0);
+
+    ecs_fini(world);
+}
+
+void Eval_if_true_var(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "const v = true"
+    LINE "if $v {"
+    LINE "  a{}"
+    LINE "} else {"
+    LINE "  b{}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_lookup(world, "a") != 0);
+    test_assert(ecs_lookup(world, "b") == 0);
+
+    ecs_fini(world);
+}
+
+void Eval_if_false_var(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "const v = false"
+    LINE "if $v {"
+    LINE "  a{}"
+    LINE "} else {"
+    LINE "  b{}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    test_assert(ecs_lookup(world, "a") == 0);
+    test_assert(ecs_lookup(world, "b") != 0);
+
+    ecs_fini(world);
+}
+
+void Eval_if_true_in_scope(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "e {"
+    LINE "  if true {"
+    LINE "    Foo"
+    LINE "  } else {"
+    LINE "    Bar"
+    LINE "  }"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    ecs_entity_t bar = ecs_lookup(world, "Bar");
+    test_assert(e != 0);
+    test_assert(foo != 0);
+    test_assert(bar == 0);
+    test_assert(ecs_has_id(world, e, foo));
+
+    ecs_fini(world);
+}
+
+void Eval_if_false_in_scope(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "e {"
+    LINE "  if false {"
+    LINE "    Foo"
+    LINE "  } else {"
+    LINE "    Bar"
+    LINE "  }"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    ecs_entity_t bar = ecs_lookup(world, "Bar");
+    test_assert(e != 0);
+    test_assert(foo == 0);
+    test_assert(bar != 0);
+    test_assert(ecs_has_id(world, e, bar));
 
     ecs_fini(world);
 }

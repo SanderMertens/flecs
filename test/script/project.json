@@ -223,7 +223,16 @@
                 "on_set_w_kind_no_paren",
                 "on_set_w_single_assign",
                 "on_set_w_single_assign_scoped_w_value",
-                "on_set_w_single_assign_scoped_no_value"
+                "on_set_w_single_assign_scoped_no_value",
+                "if_true",
+                "if_true_no_else",
+                "if_false",
+                "if_true_var",
+                "if_false_var",
+                "if_10",
+                "if_0",
+                "if_true_in_scope",
+                "if_false_in_scope"
             ]
         }, {
             "id": "Assembly",
