@@ -144,6 +144,7 @@ const char* flecs_str_to_expr_oper(
     return NULL;
 }
 
+static
 const char *flecs_script_expr_parse_token(
     const char *name,
     const char *expr,

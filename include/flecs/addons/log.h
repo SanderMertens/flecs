@@ -48,7 +48,6 @@ extern "C" {
 
 FLECS_API
 void ecs_deprecated_(
-    const char *func,
     const char *file,
     int32_t line,
     const char *msg);
@@ -118,7 +117,6 @@ const char* ecs_strerror(
 FLECS_API
 void ecs_print_(
     int32_t level,
-    const char *func,
     const char *file,
     int32_t line,
     const char *fmt,
@@ -127,7 +125,6 @@ void ecs_print_(
 FLECS_API
 void ecs_printv_(
     int level,
-    const char *func,
     const char *file,
     int32_t line,
     const char *fmt,
@@ -136,7 +133,6 @@ void ecs_printv_(
 FLECS_API
 void ecs_log_(
     int32_t level,
-    const char *func,
     const char *file,
     int32_t line,
     const char *fmt,
@@ -145,7 +141,6 @@ void ecs_log_(
 FLECS_API
 void ecs_logv_(
     int level,
-    const char *func,
     const char *file,
     int32_t line,
     const char *fmt,
@@ -154,7 +149,6 @@ void ecs_logv_(
 FLECS_API
 void ecs_abort_(
     int32_t error_code,
-    const char *func,
     const char *file,
     int32_t line,
     const char *fmt,
@@ -164,7 +158,6 @@ FLECS_API
 void ecs_assert_log_(
     int32_t error_code,
     const char *condition_str,
-    const char *func,
     const char *file,
     int32_t line,
     const char *fmt,
@@ -195,37 +188,37 @@ void ecs_parser_errorv_(
 
 /* Base logging function. Accepts a custom level */
 #define ecs_print(level, ...)\
-    ecs_print_(level, ECS_FUNC_NAME, __FILE__, __LINE__, __VA_ARGS__)
+    ecs_print_(level, __FILE__, __LINE__, __VA_ARGS__)
 
 #define ecs_printv(level, fmt, args)\
-    ecs_printv_(level, ECS_FUNC_NAME, __FILE__, __LINE__, fmt, args)
+    ecs_printv_(level, __FILE__, __LINE__, fmt, args)
 
 #define ecs_log(level, ...)\
-    ecs_log_(level, ECS_FUNC_NAME, __FILE__, __LINE__, __VA_ARGS__)
+    ecs_log_(level, __FILE__, __LINE__, __VA_ARGS__)
 
 #define ecs_logv(level, fmt, args)\
-    ecs_logv_(level, ECS_FUNC_NAME, __FILE__, __LINE__, fmt, args)
+    ecs_logv_(level, __FILE__, __LINE__, fmt, args)
 
 /* Tracing. Used for logging of infrequent events  */
 #define ecs_trace_(file, line, ...) ecs_log_(0, file, line, __VA_ARGS__)
-#define ecs_trace(...) ecs_trace_(ECS_FUNC_NAME, __FILE__, __LINE__, __VA_ARGS__)
+#define ecs_trace(...) ecs_trace_(__FILE__, __LINE__, __VA_ARGS__)
 
 /* Warning. Used when an issue occurs, but operation is successful */
 #define ecs_warn_(file, line, ...) ecs_log_(-2, file, line, __VA_ARGS__)
-#define ecs_warn(...) ecs_warn_(ECS_FUNC_NAME, __FILE__, __LINE__, __VA_ARGS__)
+#define ecs_warn(...) ecs_warn_(__FILE__, __LINE__, __VA_ARGS__)
 
 /* Error. Used when an issue occurs, and operation failed. */
 #define ecs_err_(file, line, ...) ecs_log_(-3, file, line, __VA_ARGS__)
-#define ecs_err(...) ecs_err_(ECS_FUNC_NAME, __FILE__, __LINE__, __VA_ARGS__)
+#define ecs_err(...) ecs_err_(__FILE__, __LINE__, __VA_ARGS__)
 
 /* Fatal. Used when an issue occurs, and the application cannot continue. */
 #define ecs_fatal_(file, line, ...) ecs_log_(-4, file, line, __VA_ARGS__)
-#define ecs_fatal(...) ecs_fatal_(ECS_FUNC_NAME, __FILE__, __LINE__, __VA_ARGS__)
+#define ecs_fatal(...) ecs_fatal_(__FILE__, __LINE__, __VA_ARGS__)
 
 /* Optionally include warnings about using deprecated features */
 #ifndef FLECS_NO_DEPRECATED_WARNINGS
 #define ecs_deprecated(...)\
-    ecs_deprecated_(ECS_FUNC_NAME, __FILE__, __LINE__, __VA_ARGS__)
+    ecs_deprecated_(__FILE__, __LINE__, __VA_ARGS__)
 #else
 #define ecs_deprecated(...)
 #endif // FLECS_NO_DEPRECATED_WARNINGS
@@ -347,7 +340,7 @@ void ecs_parser_errorv_(
 /** Abort.
  * Unconditionally aborts process. */
 #define ecs_abort(error_code, ...)\
-    ecs_abort_(error_code, ECS_FUNC_NAME, __FILE__, __LINE__, __VA_ARGS__);\
+    ecs_abort_(error_code, __FILE__, __LINE__, __VA_ARGS__);\
     ecs_os_abort(); abort(); /* satisfy compiler/static analyzers */
 
 /** Assert.
@@ -357,7 +350,7 @@ void ecs_parser_errorv_(
 #else
 #define ecs_assert(condition, error_code, ...)\
     if (!(condition)) {\
-        ecs_assert_log_(error_code, #condition, ECS_FUNC_NAME, __FILE__, __LINE__, __VA_ARGS__);\
+        ecs_assert_log_(error_code, #condition, __FILE__, __LINE__, __VA_ARGS__);\
         ecs_os_abort();\
     }\
     assert(condition) /* satisfy compiler/static analyzers */
@@ -398,7 +391,7 @@ void ecs_parser_errorv_(
 #ifdef FLECS_SOFT_ASSERT
 #define ecs_check(condition, error_code, ...)\
     if (!(condition)) {\
-        ecs_assert_log_(error_code, #condition, ECS_FUNC_NAME, __FILE__, __LINE__, __VA_ARGS__);\
+        ecs_assert_log_(error_code, #condition, __FILE__, __LINE__, __VA_ARGS__);\
         goto error;\
     }
 #else // FLECS_SOFT_ASSERT
@@ -415,7 +408,7 @@ void ecs_parser_errorv_(
 #else
 #ifdef FLECS_SOFT_ASSERT
 #define ecs_throw(error_code, ...)\
-    ecs_abort_(error_code, ECS_FUNC_NAME, __FILE__, __LINE__, __VA_ARGS__);\
+    ecs_abort_(error_code, __FILE__, __LINE__, __VA_ARGS__);\
     goto error;
 #else
 #define ecs_throw(error_code, ...)\

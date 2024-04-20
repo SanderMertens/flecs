@@ -13938,7 +13938,6 @@ void flecs_dump_backtrace(
 static
 void flecs_log_msg(
     int32_t level,
-    const char *func,
     const char *file, 
     int32_t line,  
     const char *msg)
@@ -14035,26 +14034,6 @@ void flecs_log_msg(
     }
 
     if (level < 0) {
-        if (func) {
-            const char *func_ret = strchr(func, ' ');
-            if (func_ret) {
-                func = func_ret + 1;
-            }
-
-            if (func[0] == '*') {
-                func ++;
-            }
-
-            char *funcdup = ecs_os_strdup(func);
-            char *func_args = strchr(funcdup, '(');
-            if (func_args) {
-                func_args[0] = '\0';
-            }
-
-            fprintf(stream, "%s: ", funcdup);
-            ecs_os_free(funcdup);
-        }
-
         if (file) {
             const char *file_ptr = strrchr(file, '/');
             if (!file_ptr) {
@@ -14084,57 +14063,52 @@ void flecs_log_msg(
 }
 
 void ecs_os_dbg(
-    const char *func,
     const char *file,
     int32_t line, 
     const char *msg)
 {
     if (ecs_os_api.log_) {
-        ecs_os_api.log_(1, func, file, line, msg);
+        ecs_os_api.log_(1, file, line, msg);
     }
 }
 
 void ecs_os_trace(
-    const char *func,
     const char *file, 
     int32_t line, 
     const char *msg) 
 {
     if (ecs_os_api.log_) {
-        ecs_os_api.log_(0, func, file, line, msg);
+        ecs_os_api.log_(0, file, line, msg);
     }
 }
 
 void ecs_os_warn(
-    const char *func,
     const char *file, 
     int32_t line, 
     const char *msg) 
 {
     if (ecs_os_api.log_) {
-        ecs_os_api.log_(-2, func, file, line, msg);
+        ecs_os_api.log_(-2, file, line, msg);
     }
 }
 
 void ecs_os_err(
-    const char *func,
     const char *file, 
     int32_t line, 
     const char *msg) 
 {
     if (ecs_os_api.log_) {
-        ecs_os_api.log_(-3, func, file, line, msg);
+        ecs_os_api.log_(-3, file, line, msg);
     }
 }
 
 void ecs_os_fatal(
-    const char *func,
     const char *file, 
     int32_t line, 
     const char *msg) 
 {
     if (ecs_os_api.log_) {
-        ecs_os_api.log_(-4, func, file, line, msg);
+        ecs_os_api.log_(-4, file, line, msg);
     }
 }
 
@@ -22016,7 +21990,6 @@ void flecs_colorize_buf(
 
 void ecs_printv_(
     int level,
-    const char *func,
     const char *file,
     int32_t line,
     const char *fmt,
@@ -22037,16 +22010,15 @@ void ecs_printv_(
     char *msg = ecs_strbuf_get(&msg_buf);
 
     if (msg) {
-        ecs_os_api.log_(level, func, file, line, msg);
+        ecs_os_api.log_(level, file, line, msg);
         ecs_os_free(msg);
     } else {
-        ecs_os_api.log_(level, func, file, line, "");
+        ecs_os_api.log_(level, file, line, "");
     }
 }
 
 void ecs_print_(
     int level,
-    const char *func,
     const char *file,
     int32_t line,
     const char *fmt,
@@ -22054,13 +22026,12 @@ void ecs_print_(
 {
     va_list args;
     va_start(args, fmt);
-    ecs_printv_(level, func, file, line, fmt, args);
+    ecs_printv_(level, file, line, fmt, args);
     va_end(args);    
 }
 
 void ecs_logv_(
     int level,
-    const char *func,
     const char *file,
     int32_t line,
     const char *fmt,
@@ -22070,12 +22041,11 @@ void ecs_logv_(
         return;
     }
 
-    ecs_printv_(level, func, file, line, fmt, args);
+    ecs_printv_(level, file, line, fmt, args);
 }
 
 void ecs_log_(
     int level,
-    const char *func,
     const char *file,
     int32_t line,
     const char *fmt,
@@ -22087,7 +22057,7 @@ void ecs_log_(
 
     va_list args;
     va_start(args, fmt);
-    ecs_printv_(level, func, file, line, fmt, args);
+    ecs_printv_(level, file, line, fmt, args);
     va_end(args);    
 }
 
@@ -22190,7 +22160,7 @@ void ecs_parser_errorv_(
         }
 
         char *msg = ecs_strbuf_get(&msg_buf);
-        ecs_os_err(name, 0, 0, msg);
+        ecs_os_err(name, 0, msg);
         ecs_os_free(msg);
     }
 }
@@ -22212,7 +22182,6 @@ void ecs_parser_error_(
 
 void ecs_abort_(
     int32_t err,
-    const char *func,
     const char *file,
     int32_t line,
     const char *fmt,
@@ -22223,10 +22192,10 @@ void ecs_abort_(
         va_start(args, fmt);
         char *msg = ecs_vasprintf(fmt, args);
         va_end(args);
-        ecs_fatal_(func, file, line, "%s (%s)", msg, ecs_strerror(err));
+        ecs_fatal_(file, line, "%s (%s)", msg, ecs_strerror(err));
         ecs_os_free(msg);
     } else {
-        ecs_fatal_(func, file, line, "%s", ecs_strerror(err));
+        ecs_fatal_(file, line, "%s", ecs_strerror(err));
     }
     ecs_os_api.log_last_error_ = err;
 }
@@ -22234,7 +22203,6 @@ void ecs_abort_(
 void ecs_assert_log_(
     int32_t err,
     const char *cond_str,
-    const char *func,
     const char *file,
     int32_t line,
     const char *fmt,
@@ -22245,23 +22213,22 @@ void ecs_assert_log_(
         va_start(args, fmt);
         char *msg = ecs_vasprintf(fmt, args);
         va_end(args);
-        ecs_fatal_(func, file, line, "assert: %s %s (%s)",
+        ecs_fatal_(file, line, "assert: %s %s (%s)",
             cond_str, msg, ecs_strerror(err));
         ecs_os_free(msg);
     } else {
-        ecs_fatal_(func, file, line, "assert: %s %s",
+        ecs_fatal_(file, line, "assert: %s %s",
             cond_str, ecs_strerror(err));
     }
     ecs_os_api.log_last_error_ = err;
 }
 
 void ecs_deprecated_(
-    const char *func,
     const char *file,
     int32_t line,
     const char *msg)
 {
-    ecs_err_(func, file, line, "%s", msg);
+    ecs_err_(file, line, "%s", msg);
 }
 
 bool ecs_should_log(int32_t level) {
@@ -22335,7 +22302,6 @@ const char* ecs_strerror(
 
 void ecs_log_(
     int32_t level,
-    const char *func,
     const char *file,
     int32_t line,
     const char *fmt,
@@ -22376,7 +22342,6 @@ void ecs_parser_errorv_(
 
 void ecs_abort_(
     int32_t error_code,
-    const char *func,
     const char *file,
     int32_t line,
     const char *fmt,
@@ -22391,7 +22356,6 @@ void ecs_abort_(
 void ecs_assert_log_(
     int32_t error_code,
     const char *condition_str,
-    const char *func,
     const char *file,
     int32_t line,
     const char *fmt,
@@ -24107,7 +24071,6 @@ static ecs_os_api_log_t rest_prev_log;
 static 
 void flecs_rest_capture_log(
     int32_t level, 
-    const char *func,
     const char *file,
     int32_t line, 
     const char *msg)
@@ -24119,7 +24082,7 @@ void flecs_rest_capture_log(
         /* Also log to previous log function in debug mode */
         if (rest_prev_log) {
             ecs_log_enable_colors(true);
-            rest_prev_log(level, func, file, line, msg);
+            rest_prev_log(level, file, line, msg);
             ecs_log_enable_colors(false);
         }
     }
@@ -64633,6 +64596,7 @@ const char* flecs_str_to_expr_oper(
     return NULL;
 }
 
+static
 const char *flecs_script_expr_parse_token(
     const char *name,
     const char *expr,
@@ -66108,6 +66072,8 @@ error:
 #pragma clang diagnostic ignored "-Wshadow"
 #elif defined(__GNUC__)
 #pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
+#pragma GCC diagnostic ignored "-Wswitch-enum"
+#pragma GCC diagnostic ignored "-Wshadow"
 #endif
 
 /* Definitions for parser functions */
@@ -66292,11 +66258,13 @@ error:
     case '\n':\
     case '\0'
 
+static
 const char* flecs_script_stmt(
     ecs_script_parser_t *parser,
     const char *pos);
 
 /* Parse scope (statements inside {}) */
+static
 const char* flecs_script_scope(
     ecs_script_parser_t *parser,
     ecs_script_scope_t *scope,
@@ -66336,6 +66304,7 @@ scope_close:
 }
 
 /* Parse comma expression (expressions separated by ',') */
+static
 const char* flecs_script_comma_expr(
     ecs_script_parser_t *parser,
     const char *pos,
@@ -66371,6 +66340,7 @@ const char* flecs_script_comma_expr(
 }
 
 /* Parse with expression (expression after 'with' keyword) */
+static
 const char* flecs_script_with_expr(
     ecs_script_parser_t *parser,
     const char *pos)
@@ -66437,6 +66407,7 @@ const char* flecs_script_with_expr(
 }
 
 /* Parse with expression list (expression list after 'with' keyword) */
+static
 const char* flecs_script_with(
     ecs_script_parser_t *parser,
     ecs_script_with_t *with,
@@ -66471,6 +66442,7 @@ const char* flecs_script_with(
 }
 
 /* Parse a single statement */
+static
 const char* flecs_script_stmt(
     ecs_script_parser_t *parser,
     const char *pos) 
@@ -67100,8 +67072,6 @@ int ecs_script_run(
     if (!script) {
         goto error;
     }
-
-    printf("%s\n", ecs_script_ast_to_str(script));
 
     ecs_entity_t prev_scope = ecs_set_scope(world, 0);
 
@@ -68980,6 +68950,14 @@ int flecs_script_eval_entity(
 
     if (ecs_script_visit_node(v, node->scope)) {
         return -1;
+    }
+
+    if (node->eval_kind) {
+        if (!node->kind_w_expr) {
+            if (ecs_get_type_info(v->world, node->eval_kind) != NULL) {
+                ecs_modified_id(v->world, node->eval, node->eval_kind);
+            }
+        }
     }
 
     v->entity = old_entity;

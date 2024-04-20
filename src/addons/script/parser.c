@@ -14,11 +14,13 @@
     case '\n':\
     case '\0'
 
+static
 const char* flecs_script_stmt(
     ecs_script_parser_t *parser,
     const char *pos);
 
 /* Parse scope (statements inside {}) */
+static
 const char* flecs_script_scope(
     ecs_script_parser_t *parser,
     ecs_script_scope_t *scope,
@@ -58,6 +60,7 @@ scope_close:
 }
 
 /* Parse comma expression (expressions separated by ',') */
+static
 const char* flecs_script_comma_expr(
     ecs_script_parser_t *parser,
     const char *pos,
@@ -93,6 +96,7 @@ const char* flecs_script_comma_expr(
 }
 
 /* Parse with expression (expression after 'with' keyword) */
+static
 const char* flecs_script_with_expr(
     ecs_script_parser_t *parser,
     const char *pos)
@@ -159,6 +163,7 @@ const char* flecs_script_with_expr(
 }
 
 /* Parse with expression list (expression list after 'with' keyword) */
+static
 const char* flecs_script_with(
     ecs_script_parser_t *parser,
     ecs_script_with_t *with,
@@ -193,6 +198,7 @@ const char* flecs_script_with(
 }
 
 /* Parse a single statement */
+static
 const char* flecs_script_stmt(
     ecs_script_parser_t *parser,
     const char *pos) 
