@@ -385,9 +385,7 @@ void MonitorAlertInstances(ecs_iter_t *it) {
         ranges = ecs_ref_get(world, &alert->ranges, EcsMemberRanges);
     }
 
-    ecs_vars_t vars = {0};
-    ecs_vars_init(world, &vars);
-
+    ecs_script_vars_t *vars = ecs_script_vars_init(it->world);
     int32_t i, count = it->count;
     for (i = 0; i < count; i ++) {
         ecs_entity_t ai = it->entities[i];
@@ -449,9 +447,9 @@ void MonitorAlertInstances(ecs_iter_t *it) {
                         ecs_os_free(alert_instance[i].message);
                     }
 
-                    ecs_iter_to_vars(&rit, &vars, 0);
-                    alert_instance[i].message = ecs_interpolate_string(
-                        world, alert->message, &vars);
+                    ecs_script_vars_from_iter(&rit, vars, 0);
+                    alert_instance[i].message = ecs_script_string_interpolate(
+                        world, alert->message, vars);
                 }
 
                 if (timeout) {
@@ -472,7 +470,6 @@ void MonitorAlertInstances(ecs_iter_t *it) {
         }
 
         /* Alert instance is no longer active */
-
         if (timeout) {
             if (ECS_EQZERO(timeout[i].inactive_time)) {
                 /* The alert just became inactive. Add Disabled tag */
@@ -494,7 +491,7 @@ void MonitorAlertInstances(ecs_iter_t *it) {
         ecs_delete(world, ai);
     }
 
-    ecs_vars_fini(&vars);
+    ecs_script_vars_fini(vars);
 }
 
 ecs_entity_t ecs_alert_init(

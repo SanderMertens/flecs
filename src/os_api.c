@@ -232,7 +232,7 @@ void flecs_log_msg(
 }
 
 void ecs_os_dbg(
-    const char *file, 
+    const char *file,
     int32_t line, 
     const char *msg)
 {

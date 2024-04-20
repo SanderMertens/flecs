@@ -27,6 +27,13 @@ bool flecs_unit_validate(
 void flecs_meta_import_definitions(
     ecs_world_t *world);
 
+int flecs_expr_ser_primitive(
+    const ecs_world_t *world,
+    ecs_primitive_kind_t kind,
+    const void *base, 
+    ecs_strbuf_t *str,
+    bool is_expr);
+
 #endif
     
 #endif

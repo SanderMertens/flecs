@@ -190,7 +190,6 @@
 #define FLECS_TIMER         /**< Timer support */
 #define FLECS_META          /**< Reflection support */
 #define FLECS_UNITS         /**< Builtin standard units */
-#define FLECS_EXPR          /**< Parsing strings to/from component values */
 #define FLECS_JSON          /**< Parsing JSON to/from component values */
 #define FLECS_DOC           /**< Document entities & components */
 #define FLECS_LOG           /**< When enabled ECS provides more detailed logs */
@@ -1487,6 +1486,12 @@ void flecs_bfree(
     void *memory);
 
 FLECS_API
+void flecs_bfree_w_dbg_info(
+    ecs_block_allocator_t *allocator, 
+    void *memory,
+    const char *type_name);
+
+FLECS_API
 void* flecs_brealloc(
     ecs_block_allocator_t *dst, 
     ecs_block_allocator_t *src, 
@@ -1750,9 +1755,13 @@ void* flecs_dup(
 #define flecs_calloc_t(a, T) flecs_calloc(a, ECS_SIZEOF(T))
 #define flecs_calloc_n(a, T, count) flecs_calloc(a, ECS_SIZEOF(T) * (count))
 
-#define flecs_free(a, size, ptr) flecs_bfree(flecs_allocator_get(a, size), ptr)
-#define flecs_free_t(a, T, ptr) flecs_free(a, ECS_SIZEOF(T), ptr)
-#define flecs_free_n(a, T, count, ptr) flecs_free(a, ECS_SIZEOF(T) * (count), ptr)
+#define flecs_free(a, size, ptr)\
+    flecs_bfree(flecs_allocator_get(a, size), ptr)
+#define flecs_free_t(a, T, ptr)\
+    flecs_bfree_w_dbg_info(flecs_allocator_get(a, ECS_SIZEOF(T)), ptr, #T)
+#define flecs_free_n(a, T, count, ptr)\
+    flecs_bfree_w_dbg_info(flecs_allocator_get(a, ECS_SIZEOF(T) * (count))\
+        , ptr, #T)
 
 #define flecs_realloc(a, size_dst, size_src, ptr)\
     flecs_brealloc(flecs_allocator_get(a, size_dst),\
@@ -3352,6 +3361,63 @@ char* ecs_asprintf(
     const char *fmt,
     ...);
 
+/** Write an escaped character.
+ * Write a character to an output string, insert escape character if necessary.
+ *
+ * @param out The string to write the character to.
+ * @param in The input character.
+ * @param delimiter The delimiter used (for example '"')
+ * @return Pointer to the character after the last one written.
+ */
+FLECS_API
+char* ecs_chresc(
+    char *out,
+    char in,
+    char delimiter);
+
+/** Parse an escaped character.
+ * Parse a character with a potential escape sequence.
+ *
+ * @param in Pointer to character in input string.
+ * @param out Output string.
+ * @return Pointer to the character after the last one read.
+ */
+const char* ecs_chrparse(
+    const char *in,
+    char *out);
+
+/** Write an escaped string.
+ * Write an input string to an output string, escape characters where necessary.
+ * To determine the size of the output string, call the operation with a NULL
+ * argument for 'out', and use the returned size to allocate a string that is
+ * large enough.
+ *
+ * @param out Pointer to output string (must be).
+ * @param size Maximum number of characters written to output.
+ * @param delimiter The delimiter used (for example '"').
+ * @param in The input string.
+ * @return The number of characters that (would) have been written.
+ */
+FLECS_API
+ecs_size_t ecs_stresc(
+    char *out,
+    ecs_size_t size,
+    char delimiter,
+    const char *in);
+
+/** Return escaped string.
+ * Return escaped version of input string. Same as ecs_stresc(), but returns an
+ * allocated string of the right size.
+ *
+ * @param delimiter The delimiter used (for example '"').
+ * @param in The input string.
+ * @return Escaped string.
+ */
+FLECS_API
+char* ecs_astresc(
+    char delimiter,
+    const char *in);
+
 /* Convert identifier to snake case */
 FLECS_API
 char* flecs_to_snake_case(
@@ -3713,6 +3779,8 @@ typedef struct ecs_entity_desc_t {
     int32_t _canary;
 
     ecs_entity_t id;      /**< Set to modify existing entity (optional) */
+
+    ecs_entity_t parent;  /**< Parent entity. */
 
     const char *name;     /**< Name of the entity. If no entity is provided, an
                            * entity with this name will be looked up first. When
@@ -4219,6 +4287,15 @@ typedef struct EcsPoly {
     ecs_poly_t *poly;          /**< Pointer to poly object */
 } EcsPoly;
 
+/** When added to an entity this informs serialization formats which component 
+ * to use when a value is assigned to an entity without specifying the 
+ * component. This is intended as a hint, serialization formats are not required 
+ * to use it. Adding this component does not change the behavior of core ECS 
+ * operations. */
+typedef struct EcsDefaultChildComponent {
+    ecs_id_t component;
+} EcsDefaultChildComponent;
+
 /** @} */
 /** @} */
 
@@ -4282,6 +4359,7 @@ FLECS_API extern const ecs_id_t ECS_TOGGLE;
 FLECS_API extern const ecs_entity_t ecs_id(EcsComponent);
 FLECS_API extern const ecs_entity_t ecs_id(EcsIdentifier);
 FLECS_API extern const ecs_entity_t ecs_id(EcsPoly);
+FLECS_API extern const ecs_entity_t ecs_id(EcsDefaultChildComponent);
 
 FLECS_API extern const ecs_entity_t EcsQuery;
 FLECS_API extern const ecs_entity_t EcsObserver;
@@ -4482,13 +4560,6 @@ FLECS_API extern const ecs_entity_t EcsDelete;
 /** Panic cleanup policy. Must be used as target in pair with EcsOnDelete or
  * EcsOnDeleteTarget. */
 FLECS_API extern const ecs_entity_t EcsPanic;
-
-/** Used like (EcsDefaultChildComponent, Component). When added to an entity,
- * this informs serialization formats which component to use when a value is
- * assigned to an entity without specifying the component. This is intended as
- * a hint, serialization formats are not required to use it. Adding this
- * component does not change the behavior of core ECS operations. */
-FLECS_API extern const ecs_entity_t EcsDefaultChildComponent;
 
 /* Builtin predicates for comparing entity ids in queries. Only supported by queries */
 FLECS_API extern const ecs_entity_t EcsPredEq;
@@ -9327,9 +9398,6 @@ int ecs_value_move_ctor(
 #ifdef FLECS_NO_UNITS
 #undef FLECS_UNITS
 #endif
-#ifdef FLECS_NO_EXPR
-#undef FLECS_EXPR
-#endif
 #ifdef FLECS_NO_JSON
 #undef FLECS_JSON
 #endif
@@ -10024,10 +10092,6 @@ int ecs_log_last_error(void);
 
 #ifdef FLECS_REST
 #define FLECS_HTTP
-#endif
-
-#ifdef FLECS_SCRIPT
-#define FLECS_EXPR
 #endif
 
 #ifdef FLECS_APP
@@ -11985,7 +12049,7 @@ typedef struct ecs_alert_desc_t {
 
     /** Template for alert message. This string is used to generate the alert
      * message and may refer to variables in the query result. The format for
-     * the template expressions is as specified by ecs_interpolate_string().
+     * the template expressions is as specified by ecs_script_string_interpolate().
      *
      * Examples:
      *
@@ -12213,240 +12277,6 @@ void FlecsMonitorImport(
 
 #endif
 
-#ifdef FLECS_DOC
-#ifdef FLECS_NO_DOC
-#error "FLECS_NO_DOC failed: DOC is required by other addons"
-#endif
-/**
- * @file addons/doc.h
- * @brief Doc module.
- *
- * The doc module allows for documenting entities (and thus components, systems)
- * by adding brief and/or detailed descriptions as components. Documentation
- * added with the doc module can be retrieved at runtime, and can be used by
- * tooling such as UIs or documentation frameworks.
- */
-
-#ifdef FLECS_DOC
-
-#ifndef FLECS_DOC_H
-#define FLECS_DOC_H
-
-#ifndef FLECS_MODULE
-#define FLECS_MODULE
-#endif
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-/**
- * @defgroup c_addons_doc Doc
- * @ingroup c_addons
- * Utilities for documenting entities, components and systems.
- *
- * @{
- */
-
-FLECS_API extern const ecs_entity_t ecs_id(EcsDocDescription);
-FLECS_API extern const ecs_entity_t EcsDocBrief;
-FLECS_API extern const ecs_entity_t EcsDocDetail;
-FLECS_API extern const ecs_entity_t EcsDocLink;
-FLECS_API extern const ecs_entity_t EcsDocColor;
-
-typedef struct EcsDocDescription {
-    char *value;
-} EcsDocDescription;
-
-/** Add human-readable name to entity.
- * Contrary to entity names, human readable names do not have to be unique and
- * can contain special characters used in the query language like '*'.
- *
- * @param world The world.
- * @param entity The entity to which to add the name.
- * @param name The name to add.
- *
- * @see ecs_doc_get_name()
- * @see flecs::doc::set_name()
- * @see flecs::entity_builder::set_doc_name()
- */
-FLECS_API
-void ecs_doc_set_name(
-    ecs_world_t *world,
-    ecs_entity_t entity,
-    const char *name);
-
-/** Add brief description to entity.
- *
- * @param world The world.
- * @param entity The entity to which to add the description.
- * @param description The description to add.
- *
- * @see ecs_doc_get_brief()
- * @see flecs::doc::set_brief()
- * @see flecs::entity_builder::set_doc_brief()
- */
-FLECS_API
-void ecs_doc_set_brief(
-    ecs_world_t *world,
-    ecs_entity_t entity,
-    const char *description);
-
-/** Add detailed description to entity.
- *
- * @param world The world.
- * @param entity The entity to which to add the description.
- * @param description The description to add.
- *
- * @see ecs_doc_get_detail()
- * @see flecs::doc::set_detail()
- * @see flecs::entity_builder::set_doc_detail()
- */
-FLECS_API
-void ecs_doc_set_detail(
-    ecs_world_t *world,
-    ecs_entity_t entity,
-    const char *description);
-
-/** Add link to external documentation to entity.
- *
- * @param world The world.
- * @param entity The entity to which to add the link.
- * @param link The link to add.
- *
- * @see ecs_doc_get_link()
- * @see flecs::doc::set_link()
- * @see flecs::entity_builder::set_doc_link()
- */
-FLECS_API
-void ecs_doc_set_link(
-    ecs_world_t *world,
-    ecs_entity_t entity,
-    const char *link);
-
-/** Add color to entity.
- * UIs can use color as hint to improve visualizing entities.
- *
- * @param world The world.
- * @param entity The entity to which to add the link.
- * @param color The color to add.
- *
- * @see ecs_doc_get_color()
- * @see flecs::doc::set_color()
- * @see flecs::entity_builder::set_doc_color()
- */
-FLECS_API
-void ecs_doc_set_color(
-    ecs_world_t *world,
-    ecs_entity_t entity,
-    const char *color);
-
-/** Get human readable name from entity.
- * If entity does not have an explicit human readable name, this operation will
- * return the entity name.
- *
- * To test if an entity has a human readable name, use:
- *
- * @code
- * ecs_has_pair(world, e, ecs_id(EcsDocDescription), EcsName);
- * @endcode
- *
- * Or in C++:
- *
- * @code
- * e.has<flecs::doc::Description>(flecs::Name);
- * @endcode
- *
- * @param world The world.
- * @param entity The entity from which to get the name.
- * @return The name.
- *
- * @see ecs_doc_set_name()
- * @see flecs::doc::get_name()
- * @see flecs::entity_view::get_doc_name()
- */
-FLECS_API
-const char* ecs_doc_get_name(
-    const ecs_world_t *world,
-    ecs_entity_t entity);
-
-/** Get brief description from entity.
- *
- * @param world The world.
- * @param entity The entity from which to get the description.
- * @return The description.
- *
- * @see ecs_doc_set_brief()
- * @see flecs::doc::get_brief()
- * @see flecs::entity_view::get_doc_brief()
- */
-FLECS_API
-const char* ecs_doc_get_brief(
-    const ecs_world_t *world,
-    ecs_entity_t entity);
-
-/** Get detailed description from entity.
- *
- * @param world The world.
- * @param entity The entity from which to get the description.
- * @return The description.
- *
- * @see ecs_doc_set_detail()
- * @see flecs::doc::get_detail()
- * @see flecs::entity_view::get_doc_detail()
- */
-FLECS_API
-const char* ecs_doc_get_detail(
-    const ecs_world_t *world,
-    ecs_entity_t entity);
-
-/** Get link to external documentation from entity.
- *
- * @param world The world.
- * @param entity The entity from which to get the link.
- * @return The link.
- *
- * @see ecs_doc_set_link()
- * @see flecs::doc::get_link()
- * @see flecs::entity_view::get_doc_link()
- */
-FLECS_API
-const char* ecs_doc_get_link(
-    const ecs_world_t *world,
-    ecs_entity_t entity);
-
-/** Get color from entity.
- *
- * @param world The world.
- * @param entity The entity from which to get the color.
- * @return The color.
- *
- * @see ecs_doc_set_color()
- * @see flecs::doc::get_color()
- * @see flecs::entity_view::get_doc_color()
- */
-FLECS_API
-const char* ecs_doc_get_color(
-    const ecs_world_t *world,
-    ecs_entity_t entity);
-
-/* Module import */
-FLECS_API
-void FlecsDocImport(
-    ecs_world_t *world);
-
-/** @} */
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif
-
-#endif
-
-#endif
-
 #ifdef FLECS_JSON
 #ifdef FLECS_NO_JSON
 #error "FLECS_NO_JSON failed: JSON is required by other addons"
@@ -12463,8 +12293,8 @@ void FlecsDocImport(
 
 #ifdef FLECS_JSON
 
-#ifndef FLECS_EXPR
-#define FLECS_EXPR
+#ifndef FLECS_META
+#define FLECS_META
 #endif
 
 #ifndef FLECS_JSON_H
@@ -12850,11 +12680,6 @@ int ecs_world_to_json_buf(
 
 #endif
 
-#if defined(FLECS_EXPR)
-#ifndef FLECS_META
-#define FLECS_META
-#endif
-#endif
 #ifdef FLECS_UNITS
 #ifdef FLECS_NO_UNITS
 #error "FLECS_NO_UNITS failed: UNITS is required by other addons"
@@ -13191,6 +13016,756 @@ void FlecsUnitsImport(
 #endif
 
 /** @} */
+
+#endif
+
+#endif
+
+#ifdef FLECS_SCRIPT
+#ifdef FLECS_NO_SCRIPT
+#error "FLECS_NO_SCRIPT failed: SCRIPT is required by other addons"
+#endif
+/**
+ * @file addons/script.h
+ * @brief Flecs script module.
+ *
+ * For script, see examples/script.
+ */
+
+#ifdef FLECS_SCRIPT
+
+/**
+ * @defgroup c_addons_script Flecs script
+ * @ingroup c_addons
+ * DSL for loading scenes, assets and configuration.
+ *
+ * @{
+ */
+
+#ifndef FLECS_META
+#define FLECS_META
+#endif
+
+#ifndef FLECS_DOC
+#define FLECS_DOC
+#endif
+
+
+#ifndef FLECS_SCRIPT_H
+#define FLECS_SCRIPT_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+FLECS_API
+extern ECS_COMPONENT_DECLARE(EcsScript);
+
+typedef struct ecs_script_t ecs_script_t;
+typedef struct ecs_script_assembly_t ecs_script_assembly_t;
+
+/** Script variable. */
+typedef struct ecs_script_var_t {
+    const char *name;
+    ecs_value_t value;
+    const ecs_type_info_t *type_info;
+} ecs_script_var_t;
+
+/** Script variable scope. */
+typedef struct ecs_script_vars_t {
+    struct ecs_script_vars_t *parent;
+    ecs_hashmap_t var_index;
+    ecs_vec_t vars;
+
+    const ecs_world_t *world;
+    struct ecs_stack_t *stack;
+    ecs_stack_cursor_t *cursor;
+    ecs_allocator_t *allocator;
+} ecs_script_vars_t;
+
+/** Script component. 
+ * This component is added to the entities of managed scripts and assemblies.
+ */
+typedef struct EcsScript {
+    ecs_script_t *script;
+    ecs_script_assembly_t *assembly; /* Only set for assembly scripts */
+} EcsScript;
+
+
+/* Parsing & running scripts */
+
+/** Parse script.
+ * This operation parses a script and returns a script object upon success. To
+ * run the script, call ecs_script_eval().
+ * 
+ * @param world The world.
+ * @param name Name of the script (typically a file/module name).
+ * @param code The script code.
+ * @return Script object if success, NULL if failed.
+*/
+FLECS_API
+ecs_script_t* ecs_script_parse(
+    ecs_world_t *world,
+    const char *name,
+    const char *code);
+
+/** Evaluate script.
+ * This operation evaluates (runs) a parsed script.
+ * 
+ * @param script The script.
+ * @return Zero if success, non-zero if failed.
+*/
+FLECS_API
+int ecs_script_eval(
+    ecs_script_t *script);
+
+/** Free script.
+ * This operation frees a script object.
+ * 
+ * Assemblies created by the script rely upon resources in the script object,
+ * and for that reason keep the script alive until all assemblies created by the
+ * script are deleted.
+ *
+ * @param script The script.
+ */
+FLECS_API
+void ecs_script_free(
+    ecs_script_t *script);
+
+/** Parse script.
+ * This parses a script and instantiates the entities in the world.
+ * This operation is the equivalent to doing:
+ * 
+ * @code
+ * ecs_script_t *script = ecs_script_parse(world, name, code);
+ * ecs_script_eval(script);
+ * ecs_script_free(script);
+ * @endcode
+ * 
+ * @param world The world.
+ * @param name The script name (typically the file).
+ * @param code The script.
+ * @return Zero if success, non-zero otherwise.
+ */
+FLECS_API
+int ecs_script_run(
+    ecs_world_t *world,
+    const char *name,
+    const char *code);
+
+/** Parse script file.
+ * This parses a script file and instantiates the entities in the world. This
+ * operation is equivalent to loading the file contents and passing it to
+ * ecs_script_run().
+ *
+ * @param world The world.
+ * @param filename The script file name.
+ * @return Zero if success, non-zero if failed.
+ */
+FLECS_API
+int ecs_script_run_file(
+    ecs_world_t *world,
+    const char *filename);
+
+/** Convert script AST to string.
+ * This operation converts the script abstract syntax tree to a string, which
+ * can be used to debug a script.
+ * 
+ * @param script The script.
+ * @param buf The buffer to write to.
+ * @return Zero if success, non-zero if failed.
+ */
+FLECS_API
+int ecs_script_ast_to_buf(
+    ecs_script_t *script,
+    ecs_strbuf_t *buf);
+
+/** Convert script AST to string.
+ * This operation converts the script abstract syntax tree to a string, which
+ * can be used to debug a script.
+ * 
+ * @param script The script.
+ * @return The string if success, NULL if failed.
+ */
+FLECS_API
+char* ecs_script_ast_to_str(
+    ecs_script_t *script);
+
+
+/* Managed scripts (script associated with entity that outlives the function) */
+
+/** Used with ecs_script_init() */
+typedef struct ecs_script_desc_t {
+    ecs_entity_t entity;   /* Set to customize entity handle associated with script */
+    const char *filename;  /* Set to load script from file */
+    const char *code;      /* Set to parse script from string */
+} ecs_script_desc_t;
+
+/** Load managed script.
+ * A managed script tracks which entities it creates, and keeps those entities
+ * synchronized when the contents of the script are updated. When the script is
+ * updated, entities that are no longer in the new version will be deleted.
+ *
+ * This feature is experimental.
+ *
+ * @param world The world.
+ * @param desc Script descriptor.
+ */
+FLECS_API
+ecs_entity_t ecs_script_init(
+    ecs_world_t *world,
+    const ecs_script_desc_t *desc);
+
+#define ecs_script(world, ...)\
+    ecs_script_init(world, &(ecs_script_desc_t) __VA_ARGS__)
+
+/** Update script with new code.
+ *
+ * @param world The world.
+ * @param script The script entity.
+ * @param instance An assembly instance (optional).
+ * @param code The script code.
+ */
+FLECS_API
+int ecs_script_update(
+    ecs_world_t *world,
+    ecs_entity_t script,
+    ecs_entity_t instance,
+    const char *code);
+
+/** Clear all entities associated with script.
+ *
+ * @param world The world.
+ * @param script The script entity.
+ * @param instance The script instance.
+ */
+FLECS_API
+void ecs_script_clear(
+    ecs_world_t *world,
+    ecs_entity_t script,
+    ecs_entity_t instance);
+
+
+/* Script variables */
+
+/** Create new variable scope.
+ * Create root variable scope. A variable scope contains one or more variables. 
+ * Scopes can be nested, which allows variables in different scopes to have the 
+ * same name. Variables from parent scopes will be shadowed by variables in 
+ * child scopes with the same name.
+ * 
+ * Use the `ecs_script_vars_push()` and `ecs_script_vars_pop()` functions to
+ * push and pop variable scopes.
+ * 
+ * When a variable contains allocated resources (e.g. a string), its resources
+ * will be freed when `ecs_script_vars_pop()` is called on the scope, the
+ * ecs_script_vars_t::type_info field is initialized for the variable, and 
+ * `ecs_type_info_t::hooks::dtor` is set.
+ * 
+ * @param world The world.
+ */
+FLECS_API
+ecs_script_vars_t* ecs_script_vars_init(
+    ecs_world_t *world);
+
+/** Free variable scope.
+ * Free root variable scope. The provided scope should not have a parent. This
+ * operation calls `ecs_script_vars_pop()` on the scope.
+ *
+ * @param vars The variable scope.
+ */
+FLECS_API
+void ecs_script_vars_fini(
+    ecs_script_vars_t *vars);
+
+/** Push new variable scope.
+ * 
+ * Scopes created with ecs_script_vars_push() must be cleaned up with
+ * ecs_script_vars_pop().
+ * 
+ * If the stack and allocator arguments are left to NULL, their values will be
+ * copied from the parent.
+ *
+ * @param parent The parent scope (provide NULL for root scope).
+ * @return The new variable scope.
+ */
+FLECS_API
+ecs_script_vars_t* ecs_script_vars_push(
+    ecs_script_vars_t *parent);
+
+/** Pop variable scope.
+ * This frees up the resources for a variable scope. The scope must be at the
+ * top of a vars stack. Calling ecs_script_vars_pop() on a scope that is not the
+ * last scope causes undefined behavior.
+ *
+ * @param vars The scope to free.
+ * @return The parent scope.
+ */
+FLECS_API
+ecs_script_vars_t* ecs_script_vars_pop(
+    ecs_script_vars_t *vars);
+
+/** Declare a variable.
+ * This operation declares a new variable in the current scope. If a variable
+ * with the specified name already exists, the operation will fail.
+ * 
+ * This operation does not allocate storage for the variable. This is done to
+ * allow for variables that point to existing storage, which prevents having
+ * to copy existing values to a variable scope.
+ * 
+ * @param vars The variable scope.
+ * @param name The variable name.
+ * @return The new variable, or NULL if the operation failed.
+ */
+FLECS_API
+ecs_script_var_t* ecs_script_vars_declare(
+    ecs_script_vars_t *vars,
+    const char *name);
+
+/** Define a variable.
+ * This operation calls `ecs_script_vars_declare()` and allocates storage for
+ * the variable. If the type has a ctor, it will be called on the new storage.
+ * 
+ * The scope's stack allocator will be used to allocate the storage. After 
+ * `ecs_script_vars_pop()` is called on the scope, the variable storage will no
+ * longer be valid.
+ * 
+ * The operation will fail if the type argument is not a type.
+ * 
+ * @param vars The variable scope.
+ * @param name The variable name.
+ * @param type The variable type.
+ * @return The new variable, or NULL if the operation failed.
+ */
+FLECS_API
+ecs_script_var_t* ecs_script_vars_define_id(
+    ecs_script_vars_t *vars,
+    const char *name,
+    ecs_entity_t type);
+
+#define ecs_script_vars_define(vars, name, type)\
+    ecs_script_vars_define_id(vars, name, ecs_id(type))
+
+/** Lookup a variable.
+ * This operation looks up a variable in the current scope. If the variable 
+ * can't be found in the current scope, the operation will recursively search
+ * the parent scopes.
+ * 
+ * @param vars The variable scope.
+ * @param name The variable name.
+ * @return The variable, or NULL if a one with the provided name does not exist.
+ */
+FLECS_API
+ecs_script_var_t* ecs_script_vars_lookup(
+    const ecs_script_vars_t *vars,
+    const char *name);
+
+/** Convert iterator to vars
+ * This operation converts an iterator to a variable array. This allows for
+ * using iterator results in expressions. The operation only converts a
+ * single result at a time, and does not progress the iterator.
+ *
+ * Iterator fields with data will be made available as variables with as name
+ * the field index (e.g. "$1"). The operation does not check if reflection data
+ * is registered for a field type. If no reflection data is registered for the
+ * type, using the field variable in expressions will fail.
+ *
+ * Field variables will only contain single elements, even if the iterator
+ * returns component arrays. The offset parameter can be used to specify which
+ * element in the component arrays to return. The offset parameter must be
+ * smaller than it->count.
+ *
+ * The operation will create a variable for query variables that contain a
+ * single entity.
+ *
+ * The operation will attempt to use existing variables. If a variable does not
+ * yet exist, the operation will create it. If an existing variable exists with
+ * a mismatching type, the operation will fail.
+ *
+ * Accessing variables after progressing the iterator or after the iterator is
+ * destroyed will result in undefined behavior.
+ *
+ * If vars contains a variable that is not present in the iterator, the variable
+ * will not be modified.
+ *
+ * @param it The iterator to convert to variables.
+ * @param vars The variables to write to.
+ * @param offset The offset to the current element.
+ */
+FLECS_API
+void ecs_script_vars_from_iter(
+    const ecs_iter_t *it,
+    ecs_script_vars_t *vars,
+    int offset);
+
+
+/* Standalone expression evaluation */
+
+/** Used with ecs_script_expr_run(). */
+typedef struct ecs_script_expr_run_desc_t {
+    const char *name;
+    const char *expr;
+    ecs_entity_t (*lookup_action)(
+        const ecs_world_t*,
+        const char *value,
+        void *ctx);
+    void *lookup_ctx;
+    ecs_script_vars_t *vars;
+} ecs_script_expr_run_desc_t;
+
+/** Parse standalone expression into value.
+ * This operation parses a flecs expression into the provided pointer. The
+ * memory pointed to must be large enough to contain a value of the used type.
+ *
+ * If no type and pointer are provided for the value argument, the operation
+ * will discover the type from the expression and allocate storage for the
+ * value. The allocated value must be freed with ecs_value_free().
+ *
+ * @param world The world.
+ * @param ptr The pointer to the expression to parse.
+ * @param value The value containing type & pointer to write to.
+ * @param desc Configuration parameters for deserializer.
+ * @return Pointer to the character after the last one read, or NULL if failed.
+ */
+FLECS_API
+const char* ecs_script_expr_run(
+    ecs_world_t *world,
+    const char *ptr,
+    ecs_value_t *value,
+    const ecs_script_expr_run_desc_t *desc);
+
+/** Evaluate interpolated expressions in string.
+ * This operation evaluates expressions in a string, and replaces them with
+ * their evaluated result. Supported expression formats are:
+ *  - $variable_name
+ *  - {expression}
+ *
+ * The $, { and } characters can be escaped with a backslash (\).
+ *
+ * @param world The world.
+ * @param str The string to evaluate.
+ * @param vars The variables to use for evaluation.
+ */
+FLECS_API
+char* ecs_script_string_interpolate(
+    ecs_world_t *world,
+    const char *str,
+    const ecs_script_vars_t *vars);
+
+
+/* Value serialization */
+
+/** Serialize value into expression string.
+ * This operation serializes a value of the provided type to a string. The
+ * memory pointed to must be large enough to contain a value of the used type.
+ *
+ * @param world The world.
+ * @param type The type of the value to serialize.
+ * @param data The value to serialize.
+ * @return String with expression, or NULL if failed.
+ */
+FLECS_API
+char* ecs_ptr_to_expr(
+    const ecs_world_t *world,
+    ecs_entity_t type,
+    const void *data);
+
+/** Serialize value into expression buffer.
+ * Same as ecs_ptr_to_expr(), but serializes to an ecs_strbuf_t instance.
+ *
+ * @param world The world.
+ * @param type The type of the value to serialize.
+ * @param data The value to serialize.
+ * @param buf The strbuf to append the string to.
+ * @return Zero if success, non-zero if failed.
+ */
+FLECS_API
+int ecs_ptr_to_expr_buf(
+    const ecs_world_t *world,
+    ecs_entity_t type,
+    const void *data,
+    ecs_strbuf_t *buf);
+
+/** Similar as ecs_ptr_to_expr(), but serializes values to string.
+ * Whereas the output of ecs_ptr_to_expr() is a valid expression, the output of
+ * ecs_ptr_to_str() is a string representation of the value. In most cases the
+ * output of the two operations is the same, but there are some differences:
+ * - Strings are not quoted
+ *
+ * @param world The world.
+ * @param type The type of the value to serialize.
+ * @param data The value to serialize.
+ * @return String with result, or NULL if failed.
+ */
+FLECS_API
+char* ecs_ptr_to_str(
+    const ecs_world_t *world,
+    ecs_entity_t type,
+    const void *data);
+
+/** Serialize value into string buffer.
+ * Same as ecs_ptr_to_str(), but serializes to an ecs_strbuf_t instance.
+ *
+ * @param world The world.
+ * @param type The type of the value to serialize.
+ * @param data The value to serialize.
+ * @param buf The strbuf to append the string to.
+ * @return Zero if success, non-zero if failed.
+ */
+FLECS_API
+int ecs_ptr_to_str_buf(
+    const ecs_world_t *world,
+    ecs_entity_t type,
+    const void *data,
+    ecs_strbuf_t *buf);
+
+
+/* Module import */
+FLECS_API
+void FlecsScriptImport(
+    ecs_world_t *world);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif
+
+/** @} */
+
+#endif
+
+#endif
+
+#ifdef FLECS_DOC
+#ifdef FLECS_NO_DOC
+#error "FLECS_NO_DOC failed: DOC is required by other addons"
+#endif
+/**
+ * @file addons/doc.h
+ * @brief Doc module.
+ *
+ * The doc module allows for documenting entities (and thus components, systems)
+ * by adding brief and/or detailed descriptions as components. Documentation
+ * added with the doc module can be retrieved at runtime, and can be used by
+ * tooling such as UIs or documentation frameworks.
+ */
+
+#ifdef FLECS_DOC
+
+#ifndef FLECS_DOC_H
+#define FLECS_DOC_H
+
+#ifndef FLECS_MODULE
+#define FLECS_MODULE
+#endif
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/**
+ * @defgroup c_addons_doc Doc
+ * @ingroup c_addons
+ * Utilities for documenting entities, components and systems.
+ *
+ * @{
+ */
+
+FLECS_API extern const ecs_entity_t ecs_id(EcsDocDescription);
+FLECS_API extern const ecs_entity_t EcsDocBrief;
+FLECS_API extern const ecs_entity_t EcsDocDetail;
+FLECS_API extern const ecs_entity_t EcsDocLink;
+FLECS_API extern const ecs_entity_t EcsDocColor;
+
+typedef struct EcsDocDescription {
+    char *value;
+} EcsDocDescription;
+
+/** Add human-readable name to entity.
+ * Contrary to entity names, human readable names do not have to be unique and
+ * can contain special characters used in the query language like '*'.
+ *
+ * @param world The world.
+ * @param entity The entity to which to add the name.
+ * @param name The name to add.
+ *
+ * @see ecs_doc_get_name()
+ * @see flecs::doc::set_name()
+ * @see flecs::entity_builder::set_doc_name()
+ */
+FLECS_API
+void ecs_doc_set_name(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    const char *name);
+
+/** Add brief description to entity.
+ *
+ * @param world The world.
+ * @param entity The entity to which to add the description.
+ * @param description The description to add.
+ *
+ * @see ecs_doc_get_brief()
+ * @see flecs::doc::set_brief()
+ * @see flecs::entity_builder::set_doc_brief()
+ */
+FLECS_API
+void ecs_doc_set_brief(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    const char *description);
+
+/** Add detailed description to entity.
+ *
+ * @param world The world.
+ * @param entity The entity to which to add the description.
+ * @param description The description to add.
+ *
+ * @see ecs_doc_get_detail()
+ * @see flecs::doc::set_detail()
+ * @see flecs::entity_builder::set_doc_detail()
+ */
+FLECS_API
+void ecs_doc_set_detail(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    const char *description);
+
+/** Add link to external documentation to entity.
+ *
+ * @param world The world.
+ * @param entity The entity to which to add the link.
+ * @param link The link to add.
+ *
+ * @see ecs_doc_get_link()
+ * @see flecs::doc::set_link()
+ * @see flecs::entity_builder::set_doc_link()
+ */
+FLECS_API
+void ecs_doc_set_link(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    const char *link);
+
+/** Add color to entity.
+ * UIs can use color as hint to improve visualizing entities.
+ *
+ * @param world The world.
+ * @param entity The entity to which to add the link.
+ * @param color The color to add.
+ *
+ * @see ecs_doc_get_color()
+ * @see flecs::doc::set_color()
+ * @see flecs::entity_builder::set_doc_color()
+ */
+FLECS_API
+void ecs_doc_set_color(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    const char *color);
+
+/** Get human readable name from entity.
+ * If entity does not have an explicit human readable name, this operation will
+ * return the entity name.
+ *
+ * To test if an entity has a human readable name, use:
+ *
+ * @code
+ * ecs_has_pair(world, e, ecs_id(EcsDocDescription), EcsName);
+ * @endcode
+ *
+ * Or in C++:
+ *
+ * @code
+ * e.has<flecs::doc::Description>(flecs::Name);
+ * @endcode
+ *
+ * @param world The world.
+ * @param entity The entity from which to get the name.
+ * @return The name.
+ *
+ * @see ecs_doc_set_name()
+ * @see flecs::doc::get_name()
+ * @see flecs::entity_view::get_doc_name()
+ */
+FLECS_API
+const char* ecs_doc_get_name(
+    const ecs_world_t *world,
+    ecs_entity_t entity);
+
+/** Get brief description from entity.
+ *
+ * @param world The world.
+ * @param entity The entity from which to get the description.
+ * @return The description.
+ *
+ * @see ecs_doc_set_brief()
+ * @see flecs::doc::get_brief()
+ * @see flecs::entity_view::get_doc_brief()
+ */
+FLECS_API
+const char* ecs_doc_get_brief(
+    const ecs_world_t *world,
+    ecs_entity_t entity);
+
+/** Get detailed description from entity.
+ *
+ * @param world The world.
+ * @param entity The entity from which to get the description.
+ * @return The description.
+ *
+ * @see ecs_doc_set_detail()
+ * @see flecs::doc::get_detail()
+ * @see flecs::entity_view::get_doc_detail()
+ */
+FLECS_API
+const char* ecs_doc_get_detail(
+    const ecs_world_t *world,
+    ecs_entity_t entity);
+
+/** Get link to external documentation from entity.
+ *
+ * @param world The world.
+ * @param entity The entity from which to get the link.
+ * @return The link.
+ *
+ * @see ecs_doc_set_link()
+ * @see flecs::doc::get_link()
+ * @see flecs::entity_view::get_doc_link()
+ */
+FLECS_API
+const char* ecs_doc_get_link(
+    const ecs_world_t *world,
+    ecs_entity_t entity);
+
+/** Get color from entity.
+ *
+ * @param world The world.
+ * @param entity The entity from which to get the color.
+ * @return The color.
+ *
+ * @see ecs_doc_set_color()
+ * @see flecs::doc::get_color()
+ * @see flecs::entity_view::get_doc_color()
+ */
+FLECS_API
+const char* ecs_doc_get_color(
+    const ecs_world_t *world,
+    ecs_entity_t entity);
+
+/* Module import */
+FLECS_API
+void FlecsDocImport(
+    ecs_world_t *world);
+
+/** @} */
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif
 
 #endif
 
@@ -14153,6 +14728,7 @@ ecs_entity_t ecs_quantity_init(
 #define ecs_quantity(world, ...)\
     ecs_quantity_init(world, &(ecs_entity_desc_t) __VA_ARGS__ )
 
+
 /* Module import */
 FLECS_API
 void FlecsMetaImport(
@@ -14311,533 +14887,6 @@ int ecs_meta_from_desc(
 
 #endif // FLECS_META
 
-
-#endif
-
-/** @} */
-
-#endif
-
-#endif
-
-#ifdef FLECS_EXPR
-#ifdef FLECS_NO_EXPR
-#error "FLECS_NO_EXPR failed: EXPR is required by other addons"
-#endif
-/**
- * @file addons/expr.h
- * @brief Flecs expression parser addon.
- *
- * Parse expression strings into component values. The notation is similar to
- * JSON but with a smaller footprint, native support for (large) integer types,
- * character types, enumerations, bitmasks and entity identifiers.
- *
- * Examples:
- *
- * Member names:
- *
- *     {x: 10, y: 20}
- *
- * No member names (uses member ordering):
- *
- *     {10, 20}
- *
- * Enum values:
- *
- *     {color: Red}
- *
- * Bitmask values:
- *
- *     {toppings: Lettuce|Tomato}
- *
- * Collections:
- *
- *     {points: [10, 20, 30]}
- *
- * Nested objects:
- *
- *     {start: {x: 10, y: 20}, stop: {x: 30, y: 40}}
- *
- */
-
-#ifdef FLECS_EXPR
-
-#ifndef FLECS_META
-#define FLECS_META
-#endif
-
-#ifndef FLECS_EXPR_H
-#define FLECS_EXPR_H
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-/**
- * @defgroup c_addons_expr Expr
- * @ingroup c_addons
- * Serialize/deserialize values to string.
- *
- * @{
- */
-
-/** Write an escaped character.
- * Write a character to an output string, insert escape character if necessary.
- *
- * @param out The string to write the character to.
- * @param in The input character.
- * @param delimiter The delimiter used (for example '"')
- * @return Pointer to the character after the last one written.
- */
-FLECS_API
-char* ecs_chresc(
-    char *out,
-    char in,
-    char delimiter);
-
-/** Parse an escaped character.
- * Parse a character with a potential escape sequence.
- *
- * @param in Pointer to character in input string.
- * @param out Output string.
- * @return Pointer to the character after the last one read.
- */
-const char* ecs_chrparse(
-    const char *in,
-    char *out);
-
-/** Write an escaped string.
- * Write an input string to an output string, escape characters where necessary.
- * To determine the size of the output string, call the operation with a NULL
- * argument for 'out', and use the returned size to allocate a string that is
- * large enough.
- *
- * @param out Pointer to output string (must be).
- * @param size Maximum number of characters written to output.
- * @param delimiter The delimiter used (for example '"').
- * @param in The input string.
- * @return The number of characters that (would) have been written.
- */
-FLECS_API
-ecs_size_t ecs_stresc(
-    char *out,
-    ecs_size_t size,
-    char delimiter,
-    const char *in);
-
-/** Return escaped string.
- * Return escaped version of input string. Same as ecs_stresc(), but returns an
- * allocated string of the right size.
- *
- * @param delimiter The delimiter used (for example '"').
- * @param in The input string.
- * @return Escaped string.
- */
-FLECS_API
-char* ecs_astresc(
-    char delimiter,
-    const char *in);
-
-/** Storage for parser variables. Variables make it possible to parameterize
- * expression strings, and are referenced with the $ operator (e.g. $var). */
-typedef struct ecs_expr_var_t {
-    char *name;
-    ecs_value_t value;
-    bool owned; /* Set to false if ecs_vars_t should not take ownership of var */
-} ecs_expr_var_t;
-
-typedef struct ecs_expr_var_scope_t {
-    ecs_hashmap_t var_index;
-    ecs_vec_t vars;
-    struct ecs_expr_var_scope_t *parent;
-} ecs_expr_var_scope_t;
-
-typedef struct ecs_vars_t {
-    ecs_world_t *world;
-    ecs_expr_var_scope_t root;
-    ecs_expr_var_scope_t *cur;
-} ecs_vars_t;
-
-/** Init variable storage */
-FLECS_API
-void ecs_vars_init(
-    ecs_world_t *world,
-    ecs_vars_t *vars);
-
-/** Cleanup variable storage */
-FLECS_API
-void ecs_vars_fini(
-    ecs_vars_t *vars);
-
-/** Push variable scope */
-FLECS_API
-void ecs_vars_push(
-    ecs_vars_t *vars);
-
-/** Pop variable scope */
-FLECS_API
-int ecs_vars_pop(
-    ecs_vars_t *vars);
-
-/** Declare variable in current scope */
-FLECS_API
-ecs_expr_var_t* ecs_vars_declare(
-    ecs_vars_t *vars,
-    const char *name,
-    ecs_entity_t type);
-
-/** Declare variable in current scope from value.
- * This operation takes ownership of the value. The value pointer must be
- * allocated with ecs_value_new().
- */
-FLECS_API
-ecs_expr_var_t* ecs_vars_declare_w_value(
-    ecs_vars_t *vars,
-    const char *name,
-    ecs_value_t *value);
-
-/** Lookup variable in scope and parent scopes */
-FLECS_API
-ecs_expr_var_t* ecs_vars_lookup(
-    const ecs_vars_t *vars,
-    const char *name);
-
-/** Used with ecs_parse_expr(). */
-typedef struct ecs_parse_expr_desc_t {
-    const char *name;
-    const char *expr;
-    ecs_entity_t (*lookup_action)(
-        const ecs_world_t*,
-        const char *value,
-        void *ctx);
-    void *lookup_ctx;
-    ecs_vars_t *vars;
-} ecs_parse_expr_desc_t;
-
-/** Parse expression into value.
- * This operation parses a flecs expression into the provided pointer. The
- * memory pointed to must be large enough to contain a value of the used type.
- *
- * If no type and pointer are provided for the value argument, the operation
- * will discover the type from the expression and allocate storage for the
- * value. The allocated value must be freed with ecs_value_free().
- *
- * @param world The world.
- * @param ptr The pointer to the expression to parse.
- * @param value The value containing type & pointer to write to.
- * @param desc Configuration parameters for deserializer.
- * @return Pointer to the character after the last one read, or NULL if failed.
- */
-FLECS_API
-const char* ecs_parse_expr(
-    ecs_world_t *world,
-    const char *ptr,
-    ecs_value_t *value,
-    const ecs_parse_expr_desc_t *desc);
-
-/** Serialize value into expression string.
- * This operation serializes a value of the provided type to a string. The
- * memory pointed to must be large enough to contain a value of the used type.
- *
- * @param world The world.
- * @param type The type of the value to serialize.
- * @param data The value to serialize.
- * @return String with expression, or NULL if failed.
- */
-FLECS_API
-char* ecs_ptr_to_expr(
-    const ecs_world_t *world,
-    ecs_entity_t type,
-    const void *data);
-
-/** Serialize value into expression buffer.
- * Same as ecs_ptr_to_expr(), but serializes to an ecs_strbuf_t instance.
- *
- * @param world The world.
- * @param type The type of the value to serialize.
- * @param data The value to serialize.
- * @param buf The strbuf to append the string to.
- * @return Zero if success, non-zero if failed.
- */
-FLECS_API
-int ecs_ptr_to_expr_buf(
-    const ecs_world_t *world,
-    ecs_entity_t type,
-    const void *data,
-    ecs_strbuf_t *buf);
-
-/** Similar as ecs_ptr_to_expr(), but serializes values to string.
- * Whereas the output of ecs_ptr_to_expr() is a valid expression, the output of
- * ecs_ptr_to_str() is a string representation of the value. In most cases the
- * output of the two operations is the same, but there are some differences:
- * - Strings are not quoted
- *
- * @param world The world.
- * @param type The type of the value to serialize.
- * @param data The value to serialize.
- * @return String with result, or NULL if failed.
- */
-FLECS_API
-char* ecs_ptr_to_str(
-    const ecs_world_t *world,
-    ecs_entity_t type,
-    const void *data);
-
-/** Serialize value into string buffer.
- * Same as ecs_ptr_to_str(), but serializes to an ecs_strbuf_t instance.
- *
- * @param world The world.
- * @param type The type of the value to serialize.
- * @param data The value to serialize.
- * @param buf The strbuf to append the string to.
- * @return Zero if success, non-zero if failed.
- */
-FLECS_API
-int ecs_ptr_to_str_buf(
-    const ecs_world_t *world,
-    ecs_entity_t type,
-    const void *data,
-    ecs_strbuf_t *buf);
-
-/** Serialize primitive value into string buffer.
- * Serializes a primitive value to an ecs_strbuf_t instance. This operation can
- * be reused by other serializers to avoid having to write boilerplate code that
- * serializes primitive values to a string.
- *
- * @param world The world.
- * @param kind The kind of primitive value.
- * @param data The value to serialize
- * @param buf The strbuf to append the string to.
- * @return Zero if success, non-zero if failed.
- */
-FLECS_API
-int ecs_primitive_to_expr_buf(
-    const ecs_world_t *world,
-    ecs_primitive_kind_t kind,
-    const void *data,
-    ecs_strbuf_t *buf);
-
-/** Parse expression token.
- * Expression tokens can contain more characters (such as '|') than tokens
- * parsed by the query (term) parser.
- *
- * @param name The name of the expression (used for debug logs).
- * @param expr The full expression (used for debug logs).
- * @param ptr The pointer to the expression to parse.
- * @param token The buffer to write to (must have size ECS_MAX_TOKEN_SIZE)
- * @return Pointer to the character after the last one read, or NULL if failed.
- */
-FLECS_API
-const char *ecs_parse_expr_token(
-    const char *name,
-    const char *expr,
-    const char *ptr,
-    char *token);
-
-/** Evaluate interpolated expressions in string.
- * This operation evaluates expressions in a string, and replaces them with
- * their evaluated result. Supported expression formats are:
- *  - $variable_name
- *  - {expression}
- *
- * The $, { and } characters can be escaped with a backslash (\).
- *
- * @param world The world.
- * @param str The string to evaluate.
- * @param vars The variables to use for evaluation.
- */
-FLECS_API
-char* ecs_interpolate_string(
-    ecs_world_t *world,
-    const char *str,
-    const ecs_vars_t *vars);
-
-/** Convert iterator to vars
- * This operation converts an iterator to a variable array. This allows for
- * using iterator results in expressions. The operation only converts a
- * single result at a time, and does not progress the iterator.
- *
- * Iterator fields with data will be made available as variables with as name
- * the field index (e.g. "$1"). The operation does not check if reflection data
- * is registered for a field type. If no reflection data is registered for the
- * type, using the field variable in expressions will fail.
- *
- * Field variables will only contain single elements, even if the iterator
- * returns component arrays. The offset parameter can be used to specify which
- * element in the component arrays to return. The offset parameter must be
- * smaller than it->count.
- *
- * The operation will create a variable for query variables that contain a
- * single entity.
- *
- * The operation will attempt to use existing variables. If a variable does not
- * yet exist, the operation will create it. If an existing variable exists with
- * a mismatching type, the operation will fail.
- *
- * Accessing variables after progressing the iterator or after the iterator is
- * destroyed will result in undefined behavior.
- *
- * If vars contains a variable that is not present in the iterator, the variable
- * will not be modified.
- *
- * @param it The iterator to convert to variables.
- * @param vars The variables to write to.
- * @param offset The offset to the current element.
- */
-FLECS_API
-void ecs_iter_to_vars(
-    const ecs_iter_t *it,
-    ecs_vars_t *vars,
-    int offset);
-
-/** @} */
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif
-
-#endif
-
-#endif
-
-#ifdef FLECS_SCRIPT
-#ifdef FLECS_NO_SCRIPT
-#error "FLECS_NO_SCRIPT failed: SCRIPT is required by other addons"
-#endif
-/**
- * @file addons/plecs.h
- * @brief Flecs script module.
- *
- * For script, see examples/plecs.
- */
-
-#ifdef FLECS_SCRIPT
-
-/**
- * @defgroup c_addons_plecs Flecs script
- * @ingroup c_addons
- * Data definition format for loading entity data.
- *
- * @{
- */
-
-#ifndef FLECS_MODULE
-#define FLECS_MODULE
-#endif
-
-#ifndef FLECS_EXPR
-#define FLECS_EXPR
-#endif
-
-#ifndef FLECS_SCRIPT_H
-#define FLECS_SCRIPT_H
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-FLECS_API
-extern ECS_COMPONENT_DECLARE(EcsScript);
-
-/* Script component */
-typedef struct EcsScript {
-    ecs_vec_t using_;
-    char *script;
-    ecs_vec_t prop_defaults;
-    ecs_world_t *world;
-} EcsScript;
-
-/** Parse plecs string.
- * This parses a plecs string and instantiates the entities in the world.
- *
- * @param world The world.
- * @param name The script name (typically the file).
- * @param str The plecs string.
- * @return Zero if success, non-zero otherwise.
- */
-FLECS_API
-int ecs_script_from_str(
-    ecs_world_t *world,
-    const char *name,
-    const char *str);
-
-/** Parse plecs file.
- * This parses a plecs file and instantiates the entities in the world. This
- * operation is equivalent to loading the file contents and passing it to
- * ecs_script_from_str().
- *
- * @param world The world.
- * @param filename The plecs file name.
- * @return Zero if success, non-zero otherwise.
- */
-FLECS_API
-int ecs_script_from_file(
-    ecs_world_t *world,
-    const char *filename);
-
-/** Used with ecs_script_init() */
-typedef struct ecs_script_desc_t {
-    ecs_entity_t entity;   /* Set to customize entity handle associated with script */
-    const char *filename;  /* Set to load script from file */
-    const char *str;       /* Set to parse script from string */
-} ecs_script_desc_t;
-
-/** Load managed script.
- * A managed script tracks which entities it creates, and keeps those entities
- * synchronized when the contents of the script are updated. When the script is
- * updated, entities that are no longer in the new version will be deleted.
- *
- * This feature is experimental.
- *
- * @param world The world.
- * @param desc Script descriptor.
- */
-FLECS_API
-ecs_entity_t ecs_script_init(
-    ecs_world_t *world,
-    const ecs_script_desc_t *desc);
-
-#define ecs_script(world, ...)\
-    ecs_script_init(world, &(ecs_script_desc_t) __VA_ARGS__)
-
-/** Update script with new code.
- *
- * @param world The world.
- * @param script The script entity.
- * @param instance An assembly instance (optional).
- * @param str The script code.
- * @param vars Optional preset variables for script parameterization.
- */
-FLECS_API
-int ecs_script_update(
-    ecs_world_t *world,
-    ecs_entity_t script,
-    ecs_entity_t instance,
-    const char *str,
-    ecs_vars_t *vars);
-
-/** Clear all entities associated with script.
- *
- * @param world The world.
- * @param script The script entity.
- * @param instance The script instance.
- */
-FLECS_API
-void ecs_script_clear(
-    ecs_world_t *world,
-    ecs_entity_t script,
-    ecs_entity_t instance);
-
-/* Module import */
-FLECS_API
-void FlecsScriptImport(
-    ecs_world_t *world);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif
 
@@ -15279,6 +15328,7 @@ static const flecs::entity_t Toggle = ECS_TOGGLE;
 using Component = EcsComponent;
 using Identifier = EcsIdentifier;
 using Poly = EcsPoly;
+using DefaultChildComponent = EcsDefaultChildComponent;
 
 /* Builtin tags */
 static const flecs::entity_t Query = EcsQuery;
@@ -15352,9 +15402,6 @@ static const flecs::entity_t OnDeleteTarget = EcsOnDeleteTarget;
 static const flecs::entity_t Remove = EcsRemove;
 static const flecs::entity_t Delete = EcsDelete;
 static const flecs::entity_t Panic = EcsPanic;
-
-/* Misc */
-static const flecs::entity_t DefaultChildComponent = EcsDefaultChildComponent;
 
 /* Builtin predicates for comparing entity ids in queries. Only supported by rules */
 static const flecs::entity_t PredEq = EcsPredEq;
@@ -20459,31 +20506,45 @@ void randomize_timers() const;
 #   endif
 #   ifdef FLECS_SCRIPT
 /**
- * @file addons/cpp/mixins/plecs/mixin.inl
- * @brief Plecs world mixin.
+ * @file addons/cpp/mixins/script/mixin.inl
+ * @brief Script world mixin.
  */
 
 /**
- * @defgroup cpp_addons_plecs Plecs
+ * @defgroup cpp_addons_script Script
  * @ingroup cpp_addons
  * Data definition format for loading entity data.
  *
  * @{
  */
 
-/** Load plecs string.
- * @see ecs_script_from_str
+/** Run script.
+ * @see ecs_script_run
  */
-int plecs_from_str(const char *name, const char *str) const {
-    return ecs_script_from_str(world_, name, str);
+int script_run(const char *name, const char *str) const {
+    return ecs_script_run(world_, name, str);
 }
 
-/** Load plecs from file.
- * @see ecs_script_from_file
+/** Run script from file.
+ * @see ecs_script_run_file
  */
-int plecs_from_file(const char *filename) const {
-    return ecs_script_from_file(world_, filename);
+int script_run_file(const char *filename) const {
+    return ecs_script_run_file(world_, filename);
 }
+
+/** Convert value to string */
+flecs::string to_expr(flecs::entity_t tid, const void* value) {
+    char *expr = ecs_ptr_to_expr(world_, tid, value);
+    return flecs::string(expr);
+}
+
+/** Convert value to string */
+template <typename T>
+flecs::string to_expr(const T* value) {
+    flecs::entity_t tid = _::type<T>::id(world_);
+    return to_expr(tid, value);
+}
+
 
 /** @} */
 
@@ -20500,19 +20561,6 @@ int plecs_from_file(const char *filename) const {
  * 
  * @{
  */
-
-/** Convert value to string */
-flecs::string to_expr(flecs::entity_t tid, const void* value) {
-    char *expr = ecs_ptr_to_expr(world_, tid, value);
-    return flecs::string(expr);
-}
-
-/** Convert value to string */
-template <typename T>
-flecs::string to_expr(const T* value) {
-    flecs::entity_t tid = _::type<T>::id(world_);
-    return to_expr(tid, value);
-}
 
 /** Return meta cursor to value */
 flecs::cursor cursor(flecs::entity_t tid, void *ptr) {
@@ -24127,7 +24175,7 @@ struct each_delegate : public delegate {
             invoke_callback< each_ref_column >(iter, func_, 0, terms.terms_);
         } else {
             invoke_callback< each_column >(iter, func_, 0, terms.terms_);
-        }   
+        }
     }
 
     // Static function that can be used as callback for systems/triggers
@@ -25541,9 +25589,8 @@ struct untyped_component : entity {
 /** Add member with unit. */
 untyped_component& member(flecs::entity_t type_id, flecs::entity_t unit, const char *name, int32_t count = 0, size_t offset = 0) {
     ecs_entity_desc_t desc = {};
-    ecs_id_t add_ids[2] = { ecs_pair(flecs::ChildOf, id_), 0 };
     desc.name = name;
-    desc.add = add_ids;
+    desc.parent = id_;
     ecs_entity_t eid = ecs_entity_init(world_, &desc);
     ecs_assert(eid != 0, ECS_INTERNAL_ERROR, NULL);
 
@@ -25615,10 +25662,9 @@ untyped_component& member(const char* name, const MemberType ComponentType::* pt
 untyped_component& constant(const char *name, int32_t value) {
     ecs_add_id(world_, id_, _::type<flecs::Enum>::id(world_));
 
-    ecs_id_t add_ids[2] = { ecs_pair(flecs::ChildOf, id_), 0 };
     ecs_entity_desc_t desc = {};
     desc.name = name;
-    desc.add = add_ids;
+    desc.parent = id_;
     ecs_entity_t eid = ecs_entity_init(world_, &desc);
     ecs_assert(eid != 0, ECS_INTERNAL_ERROR, NULL);
 
@@ -25633,10 +25679,9 @@ untyped_component& constant(const char *name, int32_t value) {
 untyped_component& bit(const char *name, uint32_t value) {
     ecs_add_id(world_, id_, _::type<flecs::Bitmask>::id(world_));
 
-    ecs_id_t add_ids[2] = { ecs_pair(flecs::ChildOf, id_), 0 };
     ecs_entity_desc_t desc = {};
     desc.name = name;
-    desc.add = add_ids;
+    desc.parent = id_;
     ecs_entity_t eid = ecs_entity_init(world_, &desc);
     ecs_assert(eid != 0, ECS_INTERNAL_ERROR, NULL);
 

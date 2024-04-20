@@ -4,6 +4,7 @@
  */
 
 #include "json.h"
+#include "../meta/meta.h"
 
 #ifdef FLECS_JSON
 
@@ -383,9 +384,9 @@ int flecs_json_ser_type_op(
     case EcsOpUPtr:
     case EcsOpIPtr:
     case EcsOpString:
-        if (ecs_primitive_to_expr_buf(world, 
+        if (flecs_expr_ser_primitive(world, 
             flecs_json_op_to_primitive_kind(op->kind), 
-            ECS_OFFSET(ptr, op->offset), str)) 
+            ECS_OFFSET(ptr, op->offset), str, true)) 
         {
             ecs_throw(ECS_INTERNAL_ERROR, NULL);
         }

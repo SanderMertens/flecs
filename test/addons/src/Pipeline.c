@@ -2499,12 +2499,18 @@ void Pipeline_disable_parent(void) {
     ecs_entity_t p2 = ecs_new(world);
 
     ecs_system(world, {
-        .entity = ecs_entity(world, { .add = ecs_ids( ecs_childof(p1), ecs_dependson(EcsOnUpdate) )}),
+        .entity = ecs_entity(world, {
+            .parent = p1,
+            .add = ecs_ids( ecs_dependson(EcsOnUpdate) )
+        }),
         .callback = SysA
     });
 
     ecs_system(world, {
-        .entity = ecs_entity(world, { .add = ecs_ids( ecs_childof(p2), ecs_dependson(EcsPostUpdate) )}),
+        .entity = ecs_entity(world, {
+            .parent = p2,
+            .add = ecs_ids( ecs_dependson(EcsPostUpdate) )
+        }),
         .callback = SysB
     });
 

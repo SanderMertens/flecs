@@ -238,10 +238,23 @@ void ecs_parser_errorv_(
          * function is called with (expr - ptr), and expr is NULL. */
         column_arg = 0;
     }
+    
     int32_t column = flecs_itoi32(column_arg);
 
     if (ecs_os_api.log_level_ >= -2) {
         ecs_strbuf_t msg_buf = ECS_STRBUF_INIT;
+
+        /* Count number of newlines up until column_arg */
+        int32_t i, line = 1;
+        if (expr) {
+            for (i = 0; i < column; i ++) {
+                if (expr[i] == '\n') {
+                    line ++;
+                }
+            }
+            
+            ecs_strbuf_append(&msg_buf, "%d: ", line);
+        }
 
         ecs_strbuf_vappend(&msg_buf, fmt, args);
 
@@ -252,15 +265,23 @@ void ecs_parser_errorv_(
              * last occurring newline */
             if (column != -1) {
                 const char *ptr = &expr[column];
+                if (ptr[0] == '\n') {
+                    ptr --;
+                }
+
                 while (ptr[0] != '\n' && ptr > expr) {
                     ptr --;
+                }
+                
+                if (ptr[0] == '\n') {
+                    ptr ++;
                 }
 
                 if (ptr == expr) {
                     /* ptr is already at start of line */
                 } else {
-                    column -= (int32_t)(ptr - expr + 1);
-                    expr = ptr + 1;
+                    column -= (int32_t)(ptr - expr);
+                    expr = ptr;
                 }
             }
 

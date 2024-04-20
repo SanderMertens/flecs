@@ -58,7 +58,10 @@ flecs_component_ptr_t flecs_get_component_ptr(
 
     ecs_table_record_t *tr = flecs_table_record_get(world, table, id);
     if (!tr || (tr->column == -1)) {
-        ecs_check(tr == NULL, ECS_NOT_A_COMPONENT, NULL);
+        char *idstr = ecs_id_str(world, id);
+        ecs_check(tr == NULL, ECS_NOT_A_COMPONENT, 
+            "cannot get '%s' as a component", idstr);
+        ecs_os_free(idstr);
         return (flecs_component_ptr_t){0};
     }
 
@@ -1317,14 +1320,12 @@ error:
 /* Traverse table graph by either adding or removing identifiers parsed from the
  * passed in expression. */
 static
-ecs_table_t *flecs_traverse_from_expr(
+int flecs_traverse_from_expr(
     ecs_world_t *world,
-    ecs_table_t *table,
     const char *name,
     const char *expr,
-    ecs_table_diff_builder_t *diff,
-    bool replace_and,
-    bool *error)
+    ecs_vec_t *ids,
+    bool replace_and)
 {
     const char *ptr = expr;
     if (ptr) {
@@ -1339,41 +1340,39 @@ ecs_table_t *flecs_traverse_from_expr(
             if (!(term.first.id & (EcsSelf|EcsUp))) {
                 term.first.id |= EcsSelf;
             }
+
             if (!(term.second.id & (EcsSelf|EcsUp))) {
                 term.second.id |= EcsSelf;
             }
+
             if (!(term.src.id & (EcsSelf|EcsUp))) {
                 term.src.id |= EcsSelf;
             }
 
             if (ecs_term_finalize(world, &term)) {
-                if (error) {
-                    *error = true;
-                }
-                return NULL;
+                goto error;
             }
 
             if (!ecs_id_is_valid(world, term.id)) {
                 ecs_parser_error(name, expr, (ptr - expr), 
                     "invalid term for add expression");
-                return NULL;
+                goto error;
             }
 
             if (term.oper == EcsAnd || !replace_and) {
                 /* Regular AND expression */
-                table = flecs_find_table_add(world, table, term.id, diff);
+                ecs_vec_append_t(&world->allocator, ids, ecs_id_t)[0] = term.id;
             }
         }
 
         if (!ptr) {
-            if (error) {
-                *error = true;
-            }
-            return NULL;
+            goto error;
         }
     }
 
-    return table;
+    return 0;
+error:
+    return -1;
 }
 
 /* Add/remove components based on the parsed expression. This operation is 
@@ -1430,24 +1429,35 @@ int flecs_traverse_add(
     const ecs_entity_desc_t *desc,
     ecs_entity_t scope,
     ecs_id_t with,
-    bool flecs_new_entity,
+    bool new_entity,
     bool name_assigned)
 {
     const char *sep = desc->sep;
     const char *root_sep = desc->root_sep;
     ecs_table_diff_builder_t diff = ECS_TABLE_DIFF_INIT;
     flecs_table_diff_builder_init(world, &diff);
+    ecs_vec_t ids;
+
+    /* Add components from the 'add_expr' expression. Look up before naming 
+     * entity, so that expression can't resolve to self. */
+    ecs_vec_init_t(&world->allocator, &ids, ecs_id_t, 0);
+    if (desc->add_expr && ecs_os_strcmp(desc->add_expr, "0")) {
+        if (flecs_traverse_from_expr(world, name, desc->add_expr, &ids, true)) {
+            goto error;
+        }
+    }
+
+    /* If a name is provided but not yet assigned, add the Name component */
+    if (name && !name_assigned) {
+        ecs_add_path_w_sep(world, result, scope, name, sep, root_sep);
+    } else if (new_entity && scope) {
+        ecs_add_pair(world, result, EcsChildOf, scope);
+    }
 
     /* Find existing table */
     ecs_table_t *src_table = NULL, *table = NULL;
     ecs_record_t *r = flecs_entities_get(world, result);
     table = r->table;
-
-    /* If a name is provided but not yet assigned, add the Name component */
-    if (name && !name_assigned) {
-        table = flecs_find_table_add(world, table, 
-            ecs_pair(ecs_id(EcsIdentifier), EcsName), &diff);
-    }
 
     /* Add components from the 'add' array */
     if (desc->add) {
@@ -1455,20 +1465,7 @@ int flecs_traverse_add(
         ecs_id_t id;
 
         while ((id = desc->add[i ++])) {
-            bool should_add = true;
-            if (ECS_HAS_ID_FLAG(id, PAIR) && ECS_PAIR_FIRST(id) == EcsChildOf) {
-                scope = ECS_PAIR_SECOND(id);
-                if ((!desc->id && desc->name) || (name && !name_assigned)) {
-                    /* If name is added to entity, pass scope to add_path instead
-                    * of adding it to the table. The provided name may have nested
-                    * elements, in which case the parent provided here is not the
-                    * parent the entity will end up with. */
-                    should_add = false;
-                }
-            }
-            if (should_add) {
-                table = flecs_find_table_add(world, table, id, &diff);
-            }
+            table = flecs_find_table_add(world, table, id, &diff);
         }
     }
 
@@ -1482,27 +1479,25 @@ int flecs_traverse_add(
         }
     }
 
+    /* Add ids from .expr */
+    {
+        int32_t i, count = ecs_vec_count(&ids);
+        ecs_id_t *expr_ids = ecs_vec_first(&ids);
+        for (i = 0; i < count; i ++) {
+            table = flecs_find_table_add(world, table, expr_ids[i], &diff);
+        }
+    }
+
     /* Find destination table */
     /* If this is a new entity without a name, add the scope. If a name is
      * provided, the scope will be added by the add_path_w_sep function */
-    if (flecs_new_entity) {
-        if (flecs_new_entity && scope && !name && !name_assigned) {
+    if (new_entity) {
+        if (new_entity && scope && !name && !name_assigned) {
             table = flecs_find_table_add(
                 world, table, ecs_pair(EcsChildOf, scope), &diff);
         }
         if (with) {
             table = flecs_find_table_add(world, table, with, &diff);
-        }
-    }
-
-    /* Add components from the 'add_expr' expression */
-    if (desc->add_expr && ecs_os_strcmp(desc->add_expr, "0")) {
-        bool error = false;
-        table = flecs_traverse_from_expr(
-            world, table, name, desc->add_expr, &diff, true, &error);
-        if (error) {
-            flecs_table_diff_builder_fini(world, &diff);
-            return -1;
         }
     }
 
@@ -1514,13 +1509,6 @@ int flecs_traverse_add(
         flecs_commit(world, result, r, table, &table_diff, true, 0);
         flecs_table_diff_builder_fini(world, &diff);
         flecs_defer_end(world, world->stages[0]);
-    }
-
-    /* Set name */
-    if (name && !name_assigned) {
-        ecs_add_path_w_sep(world, result, scope, name, sep, root_sep);
-        ecs_assert(ecs_get_name(world, result) != NULL,
-            ECS_INTERNAL_ERROR, NULL);
     }
 
     /* Set symbol */
@@ -1536,7 +1524,7 @@ int flecs_traverse_add(
 
     /* Set component values */
     if (desc->set) {
-        ecs_assert(r->table == table, ECS_INTERNAL_ERROR, NULL);
+        table = r->table;
         ecs_assert(r->table != NULL, ECS_INTERNAL_ERROR, NULL);
         int32_t i = 0, row = ECS_RECORD_TO_ROW(r->row);
         const ecs_value_t *v;
@@ -1559,8 +1547,11 @@ int flecs_traverse_add(
     }
 
     flecs_table_diff_builder_fini(world, &diff);
-error:
+    ecs_vec_fini_t(&world->allocator, &ids, ecs_id_t);
     return 0;
+error:
+    ecs_vec_fini_t(&world->allocator, &ids, ecs_id_t);
+    return -1;
 }
 
 /* When in deferred mode, we need to add/remove components one by one using
@@ -1667,6 +1658,27 @@ ecs_entity_t ecs_entity_init(
     ecs_id_t with = ecs_get_with(world);
     ecs_entity_t result = desc->id;
 
+#ifdef FLECS_DEBUG
+    if (desc->add) {
+        ecs_id_t id;
+        int32_t i = 0;
+        while ((id = desc->add[i ++])) {
+            if (ECS_HAS_ID_FLAG(id, PAIR) && 
+                (ECS_PAIR_FIRST(id) == EcsChildOf))
+            {
+                if (desc->name) {
+                    ecs_check(false, ECS_INVALID_PARAMETER, "%s: cannot set parent in "
+                        "ecs_entity_desc_t::add, use ecs_entity_desc_t::parent",
+                            desc->name);
+                } else {
+                    ecs_check(false, ECS_INVALID_PARAMETER, "cannot set parent in "
+                        "ecs_entity_desc_t::add, use ecs_entity_desc_t::parent");
+                }
+            }
+        }
+    }
+#endif
+
     const char *name = desc->name;
     const char *sep = desc->sep;
     if (!sep) {
@@ -1715,22 +1727,15 @@ ecs_entity_t ecs_entity_init(
         }
     }
 
+    /* Parent field takes precedence over scope */
+    if (desc->parent) {
+        scope = desc->parent;
+    }
+
     /* Find or create entity */
     if (!result) {
         if (name) {
             /* If add array contains a ChildOf pair, use it as scope instead */
-            if (desc->add) {
-                ecs_id_t id;
-                int32_t i = 0;
-                while ((id = desc->add[i ++])) {
-                    if (ECS_HAS_ID_FLAG(id, PAIR) && 
-                        (ECS_PAIR_FIRST(id) == EcsChildOf))
-                    {
-                        scope = ECS_PAIR_SECOND(id);
-                    }
-                }
-            }
-
             result = ecs_lookup_path_w_sep(
                 world, scope, name, sep, root_sep, false);
             if (result) {
@@ -3778,7 +3783,8 @@ void ecs_make_alive(
     }
 
     /* If the id is currently alive but did not match the argument, fail */
-    ecs_check(!any, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(!any, ECS_INVALID_PARAMETER, 
+        "entity is alive with different generation");
 
     /* Set generation if not alive. The sparse set checks if the provided
      * id matches its own generation which is necessary for alive ids. This

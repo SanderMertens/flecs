@@ -2529,6 +2529,77 @@ void ComponentLifecycle_component_init_scoped_name_from_type_info(void) {
     ecs_fini(world);
 }
 
+void ComponentLifecycle_component_init_w_recycled_id(void) {
+    ecs_world_t *world = ecs_init();
+
+    {
+        ecs_entity_t c = ecs_component(world, {
+            .entity = ecs_new(world),
+            .type.size = 4,
+            .type.alignment = 4
+        });
+
+        test_assert(c != 0);
+        test_assert(ecs_has(world, c, EcsComponent));
+
+        ecs_delete(world, c);
+    }
+
+    {
+        ecs_entity_t c = ecs_component(world, {
+            .entity = ecs_new(world),
+            .type.size = 4,
+            .type.alignment = 4
+        });
+
+        test_assert(c != 0);
+        test_assert(ecs_has(world, c, EcsComponent));
+
+        ecs_delete(world, c);
+    }
+
+    ecs_fini(world);
+}
+
+void ComponentLifecycle_component_init_w_recycled_non_component_id(void) {
+    ecs_world_t *world = ecs_init();
+
+    {
+        ecs_entity_t c = ecs_component(world, {
+            .entity = ecs_new(world),
+            .type.size = 4,
+            .type.alignment = 4
+        });
+
+        test_assert(c != 0);
+        test_assert(ecs_has(world, c, EcsComponent));
+
+        ecs_delete(world, c);
+    }
+
+    {
+        ecs_entity_t c = ecs_new(world);
+        test_assert(c != 0);
+        test_assert(!ecs_has(world, c, EcsComponent));
+        ecs_delete(world, c);
+    }
+
+    {
+        ecs_entity_t c = ecs_component(world, {
+            .entity = ecs_new(world),
+            .type.size = 4,
+            .type.alignment = 4
+        });
+
+        test_assert(c != 0);
+        test_assert(ecs_has(world, c, EcsComponent));
+
+        ecs_delete(world, c);
+    }
+
+    ecs_fini(world);
+}
+
 static int ctor_before_on_add_count = 0;
 static int on_add_after_ctor_count = 0;
 

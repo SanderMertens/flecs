@@ -88,7 +88,7 @@ const ecs_entity_t EcsDelete =                      FLECS_HI_COMPONENT_ID + 51;
 const ecs_entity_t EcsPanic =                       FLECS_HI_COMPONENT_ID + 52;
 
 /* Misc */
-const ecs_entity_t EcsDefaultChildComponent =       FLECS_HI_COMPONENT_ID + 55;
+const ecs_entity_t ecs_id(EcsDefaultChildComponent) = FLECS_HI_COMPONENT_ID + 55;
 
 /* Builtin predicate ids (used by query engine) */
 const ecs_entity_t EcsPredEq =                      FLECS_HI_COMPONENT_ID + 56;
@@ -779,9 +779,6 @@ static const char *flecs_addons_info[] = {
 #ifdef FLECS_UNITS
     "FLECS_UNITS",
 #endif
-#ifdef FLECS_EXPR
-    "FLECS_EXPR",
-#endif
 #ifdef FLECS_JSON
     "FLECS_JSON",
 #endif
@@ -1180,7 +1177,8 @@ void ecs_set_hooks_id(
             world, component, EcsComponent);
 
         /* Cannot register lifecycle actions for things that aren't a component */
-        ecs_check(component_ptr != NULL, ECS_INVALID_PARAMETER, NULL);
+        ecs_check(component_ptr != NULL, ECS_INVALID_PARAMETER, 
+            "provided entity is not a component");
         /* Cannot register lifecycle actions for components with size 0 */
         ecs_check(component_ptr->size != 0, ECS_INVALID_PARAMETER, NULL);
 

@@ -14,7 +14,7 @@ jobs:
       
       - name: install bake
         run: |
-          git clone -b test_params https://github.com/SanderMertens/bake
+          git clone https://github.com/SanderMertens/bake
           make -C bake/build-$(uname)
           bake/bake setup
 
@@ -33,7 +33,7 @@ jobs:
       
       - name: install bake
         run: |
-          git clone -b test_params https://github.com/SanderMertens/bake
+          git clone https://github.com/SanderMertens/bake
           make -C bake/build-$(uname)
           bake/bake setup
 
@@ -52,7 +52,7 @@ jobs:
       - uses: ilammy/msvc-dev-cmd@v1
       - name: install bake
         run: |
-          git clone -b test_params https://github.com/SanderMertens/bake
+          git clone https://github.com/SanderMertens/bake
           cd bake\build-Windows
           nmake
           cd ..
@@ -162,7 +162,7 @@ jobs:
       
       - name: install bake
         run: |
-          git clone -b test_params https://github.com/SanderMertens/bake
+          git clone https://github.com/SanderMertens/bake
           make -C bake/build-$(uname)
           bake/bake setup
 
@@ -300,7 +300,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install bake
         run: |
-          git clone -b test_params https://github.com/SanderMertens/bake
+          git clone https://github.com/SanderMertens/bake
           make -C bake/build-$(uname)
           bake/bake setup
 
@@ -353,11 +353,6 @@ jobs:
         run: |
           bake rebuild --strict -D FLECS_CUSTOM_BUILD -D FLECS_META
           bake rebuild --strict --cfg release -D FLECS_CUSTOM_BUILD -D FLECS_META
-
-      - name: FLECS_EXPR
-        run: |
-          bake rebuild --strict -D FLECS_CUSTOM_BUILD -D FLECS_EXPR
-          bake rebuild --strict --cfg release -D FLECS_CUSTOM_BUILD -D FLECS_EXPR
 
       - name: FLECS_JSON
         run: |
@@ -439,7 +434,7 @@ jobs:
       
       - name: install bake
         run: |
-          git clone -b test_params https://github.com/SanderMertens/bake
+          git clone https://github.com/SanderMertens/bake
           make -C bake/build-$(uname)
           bake/bake setup
 
@@ -466,7 +461,7 @@ jobs:
 
       - name: install bake
         run: |
-          git clone -b test_params https://github.com/SanderMertens/bake
+          git clone https://github.com/SanderMertens/bake
           make -C bake/build-$(uname)
           bake/bake setup
 
@@ -484,6 +479,9 @@ jobs:
 
       - name: test meta
         run: bake run test/meta -- -j 8
+
+      - name: test script
+        run: bake run test/script -- -j 8
 
       - name: test collections
         run: bake run test/collections -- -j 8
@@ -530,7 +528,7 @@ jobs:
 
       - name: install bake
         run: |
-          git clone -b test_params https://github.com/SanderMertens/bake
+          git clone https://github.com/SanderMertens/bake
           make -C bake/build-$(uname)
           bake/bake setup
 
@@ -570,7 +568,7 @@ jobs:
 
       - name: install bake
         run: |
-          git clone -b test_params https://github.com/SanderMertens/bake
+          git clone https://github.com/SanderMertens/bake
           make -C bake/build-$(uname)
           bake/bake setup
 
@@ -592,7 +590,7 @@ jobs:
       - uses: ilammy/msvc-dev-cmd@v1
       - name: install bake
         run: |
-          git clone -b test_params https://github.com/SanderMertens/bake
+          git clone https://github.com/SanderMertens/bake
           cd bake\build-Windows
           nmake
           cd ..
@@ -610,6 +608,9 @@ jobs:
       - name: test meta
         run: bake/bake run test\meta -- -j 8
 
+      - name: test script
+        run: bake/bake run test\script -- -j 8
+
       - name: test collections
         run: bake/bake run test\collections -- -j 8
 
@@ -623,14 +624,18 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { sys: mingw64 }
-          - { sys: mingw32 }
-          - { sys: ucrt64 }
-          - { sys: clang64 }
+          - { sys: mingw64, cc: gcc, cxx: g++ }
+          - { sys: mingw32, cc: gcc, cxx: g++ }
+          - { sys: ucrt64, cc: gcc, cxx: g++ }
+          - { sys: clang64, cc: clang, cxx: clang++ }
 
     defaults:
       run:
         shell: msys2 {0}
+
+    env:
+      CC: ${{ matrix.cc }}
+      CXX: ${{ matrix.cxx }}
 
     steps:
       - uses: actions/checkout@v4
@@ -648,12 +653,12 @@ jobs:
       - name: install bake
         run: |
           cp `which mingw32-make` /usr/bin/make
-          git clone -b test_params https://github.com/SanderMertens/bake
+          git clone https://github.com/SanderMertens/bake
           make -C bake/build-Mingw
           bake/bake setup
 
       - name: build flecs
-        run: bake/bake --strict
+        run: bake/bake --strict --trace
 
       - name: test core
         run: bake/bake run test/core -- -j 8
@@ -666,6 +671,9 @@ jobs:
 
       - name: test meta
         run: bake/bake run test/meta -- -j 8
+
+      - name: test script
+        run: bake/bake run test/script -- -j 8
 
       - name: test collections
         run: bake/bake run test/collections -- -j 8
@@ -686,7 +694,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: install bake
         run: |
-          git clone -b test_params https://github.com/SanderMertens/bake
+          git clone https://github.com/SanderMertens/bake
           make -C bake/build-$(uname)
           bake/bake setup
 
@@ -710,7 +718,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: install bake
         run: |
-          git clone -b test_params https://github.com/SanderMertens/bake
+          git clone https://github.com/SanderMertens/bake
           make -C bake/build-$(uname)
           bake/bake setup
 
@@ -734,7 +742,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: install bake
         run: |
-          git clone -b test_params https://github.com/SanderMertens/bake
+          git clone https://github.com/SanderMertens/bake
           make -C bake/build-$(uname)
           bake/bake setup
 
@@ -758,7 +766,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: install bake
         run: |
-          git clone -b test_params https://github.com/SanderMertens/bake
+          git clone https://github.com/SanderMertens/bake
           make -C bake/build-$(uname)
           bake/bake setup
 
@@ -768,6 +776,30 @@ jobs:
       - name: run tests
         run: |
           bake run test/meta --cfg sanitize -- -j 8
+
+  test-sanitized-script:
+    needs: [ build-linux ]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ ubuntu-20.04 ]
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: install bake
+        run: |
+          git clone https://github.com/SanderMertens/bake
+          make -C bake/build-$(uname)
+          bake/bake setup
+
+      - name: build flecs
+        run: bake --strict
+
+      - name: run tests
+        run: |
+          bake run test/script --cfg sanitize -- -j 8
 
   test-sanitized-collections:
     needs: [ build-linux ]
@@ -782,7 +814,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: install bake
         run: |
-          git clone -b test_params https://github.com/SanderMertens/bake
+          git clone https://github.com/SanderMertens/bake
           make -C bake/build-$(uname)
           bake/bake setup
 
@@ -806,7 +838,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: install bake
         run: |
-          git clone -b test_params https://github.com/SanderMertens/bake
+          git clone https://github.com/SanderMertens/bake
           make -C bake/build-$(uname)
           bake/bake setup
 
@@ -830,7 +862,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: clone bake
         run: |
-          git clone -b test_params https://github.com/SanderMertens/bake
+          git clone https://github.com/SanderMertens/bake
 
       - name: build flecs & tests
         run: |

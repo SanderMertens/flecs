@@ -63,7 +63,7 @@ static ecs_os_api_log_t rest_prev_log;
 static 
 void flecs_rest_capture_log(
     int32_t level, 
-    const char *file, 
+    const char *file,
     int32_t line, 
     const char *msg)
 {
@@ -354,7 +354,7 @@ bool flecs_rest_script(
 
     ecs_entity_t script = ecs_script(world, {
         .entity = ecs_entity(world, { .name = "scripts.main" }),
-        .str = data
+        .code = data
     });
 
     if (!script) {

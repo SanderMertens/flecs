@@ -69,6 +69,12 @@ void flecs_bfree(
     void *memory);
 
 FLECS_API
+void flecs_bfree_w_dbg_info(
+    ecs_block_allocator_t *allocator, 
+    void *memory,
+    const char *type_name);
+
+FLECS_API
 void* flecs_brealloc(
     ecs_block_allocator_t *dst, 
     ecs_block_allocator_t *src, 

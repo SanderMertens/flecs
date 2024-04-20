@@ -175,6 +175,12 @@ void Entity_entity_init_w_set_1_comp_1_tag_w_set_defer(void);
 void Entity_insert_1_comp(void);
 void Entity_insert_2_comp(void);
 void Entity_insert_1_comp_1_tag(void);
+void Entity_entity_w_parent(void);
+void Entity_entity_w_parent_w_name(void);
+void Entity_entity_w_parent_w_add(void);
+void Entity_entity_w_parent_w_add_w_parent(void);
+void Entity_entity_w_parent_w_set(void);
+void Entity_entity_w_parent_w_set_w_parent(void);
 
 // Testsuite 'Each'
 void Each_each_tag(void);
@@ -906,6 +912,8 @@ void ComponentLifecycle_on_remove_w_existing_component(void);
 void ComponentLifecycle_component_init_set_hooks(void);
 void ComponentLifecycle_component_init_name_from_type_info(void);
 void ComponentLifecycle_component_init_scoped_name_from_type_info(void);
+void ComponentLifecycle_component_init_w_recycled_id(void);
+void ComponentLifecycle_component_init_w_recycled_non_component_id(void);
 void ComponentLifecycle_on_add_after_ctor_w_add(void);
 void ComponentLifecycle_on_add_after_ctor_w_add_to(void);
 void ComponentLifecycle_with_before_hooks(void);
@@ -2584,6 +2592,30 @@ bake_test_case Entity_testcases[] = {
     {
         "insert_1_comp_1_tag",
         Entity_insert_1_comp_1_tag
+    },
+    {
+        "entity_w_parent",
+        Entity_entity_w_parent
+    },
+    {
+        "entity_w_parent_w_name",
+        Entity_entity_w_parent_w_name
+    },
+    {
+        "entity_w_parent_w_add",
+        Entity_entity_w_parent_w_add
+    },
+    {
+        "entity_w_parent_w_add_w_parent",
+        Entity_entity_w_parent_w_add_w_parent
+    },
+    {
+        "entity_w_parent_w_set",
+        Entity_entity_w_parent_w_set
+    },
+    {
+        "entity_w_parent_w_set_w_parent",
+        Entity_entity_w_parent_w_set_w_parent
     }
 };
 
@@ -5370,6 +5402,14 @@ bake_test_case ComponentLifecycle_testcases[] = {
     {
         "component_init_scoped_name_from_type_info",
         ComponentLifecycle_component_init_scoped_name_from_type_info
+    },
+    {
+        "component_init_w_recycled_id",
+        ComponentLifecycle_component_init_w_recycled_id
+    },
+    {
+        "component_init_w_recycled_non_component_id",
+        ComponentLifecycle_component_init_w_recycled_non_component_id
     },
     {
         "on_add_after_ctor_w_add",
@@ -9326,7 +9366,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        127,
+        133,
         Entity_testcases
     },
     {
@@ -9480,7 +9520,7 @@ static bake_test_suite suites[] = {
         "ComponentLifecycle",
         ComponentLifecycle_setup,
         NULL,
-        86,
+        88,
         ComponentLifecycle_testcases
     },
     {

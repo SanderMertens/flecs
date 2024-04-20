@@ -1438,17 +1438,10 @@ void FlecsMetaImport(
     });
 
     /* Set default child components */
-    ecs_add_pair(world, ecs_id(EcsStruct), 
-        EcsDefaultChildComponent, ecs_id(EcsMember));
-
-    ecs_add_pair(world, ecs_id(EcsMember), 
-        EcsDefaultChildComponent, ecs_id(EcsMember));
-
-    ecs_add_pair(world, ecs_id(EcsEnum), 
-        EcsDefaultChildComponent, EcsConstant);
-
-    ecs_add_pair(world, ecs_id(EcsBitmask), 
-        EcsDefaultChildComponent, EcsConstant);
+    ecs_set(world, ecs_id(EcsStruct),  EcsDefaultChildComponent, {ecs_id(EcsMember)});
+    ecs_set(world, ecs_id(EcsMember),  EcsDefaultChildComponent, {ecs_id(EcsMember)});
+    ecs_set(world, ecs_id(EcsEnum),    EcsDefaultChildComponent, {EcsConstant});
+    ecs_set(world, ecs_id(EcsBitmask), EcsDefaultChildComponent, {EcsConstant});
 
     /* Relationship properties */
     ecs_add_id(world, EcsQuantity, EcsExclusive);

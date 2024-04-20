@@ -10,8 +10,8 @@
 
 #ifdef FLECS_JSON
 
-#ifndef FLECS_EXPR
-#define FLECS_EXPR
+#ifndef FLECS_META
+#define FLECS_META
 #endif
 
 #ifndef FLECS_JSON_H

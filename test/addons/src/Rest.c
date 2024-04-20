@@ -474,6 +474,7 @@ void Rest_script_error(void) {
 
     {
         ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+        ecs_log_set_level(-4);
         test_int(-1, ecs_http_server_request(srv, "PUT",
             "/script/?data=struct%20Position%20%7B%0A%20%20x%20%3A%0A%7D",
             &reply));

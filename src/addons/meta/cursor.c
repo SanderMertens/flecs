@@ -1266,6 +1266,13 @@ int flecs_meta_cursor_lookup(
     return 0;
 }
 
+static
+bool flecs_meta_valid_digit(
+    const char *str)
+{
+    return str[0] == '-' || isdigit(str[0]);
+}
+
 int ecs_meta_set_string(
     ecs_meta_cursor_t *cursor,
     const char *value)
@@ -1273,6 +1280,41 @@ int ecs_meta_set_string(
     ecs_meta_scope_t *scope = flecs_meta_cursor_get_scope(cursor);
     ecs_meta_type_op_t *op = flecs_meta_cursor_get_op(scope);
     void *ptr = flecs_meta_cursor_get_ptr(cursor->world, scope);
+
+    switch(op->kind) {
+    case EcsOpI8:
+    case EcsOpU8:
+    case EcsOpByte:
+    case EcsOpI16:
+    case EcsOpU16:
+    case EcsOpI32:
+    case EcsOpU32:
+    case EcsOpI64:
+    case EcsOpU64:
+    case EcsOpIPtr:
+    case EcsOpUPtr:
+    case EcsOpF32:
+    case EcsOpF64:
+        if (!flecs_meta_valid_digit(value)) {
+            ecs_err("expected number, got '%s'", value);
+            goto error;
+        }
+    case EcsOpEnum:
+    case EcsOpBitmask:
+    case EcsOpArray:
+    case EcsOpVector:
+    case EcsOpOpaque:
+    case EcsOpPush:
+    case EcsOpPop:
+    case EcsOpPrimitive:
+    case EcsOpBool:
+    case EcsOpChar:
+    case EcsOpString:
+    case EcsOpEntity:
+    case EcsOpId:
+    case EcsOpScope:
+        break;
+    }
 
     switch(op->kind) {
     case EcsOpBool:

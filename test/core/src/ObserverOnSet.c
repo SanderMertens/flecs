@@ -769,6 +769,7 @@ void ObserverOnSet_on_set_prefab(void) {
     ECS_OBSERVER(world, Dummy, EcsOnSet, Position);
 
     ECS_PREFAB(world, Prefab, 0);
+    test_assert(ecs_has_id(world, Prefab, EcsPrefab));
     ecs_set(world, Prefab, Position, {10, 20});
 
     test_int(dummy_invoked, 0);

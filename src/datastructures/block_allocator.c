@@ -97,6 +97,7 @@ void flecs_ballocator_fini(
         ecs_os_linc(&ecs_block_allocator_free_count);
         block = next;
     }
+
     ba->block_head = NULL;
 }
 
@@ -154,8 +155,19 @@ void* flecs_bcalloc(
 
 void flecs_bfree(
     ecs_block_allocator_t *ba, 
-    void *memory) 
+    void *memory)
 {
+    flecs_bfree_w_dbg_info(ba, memory, NULL);
+}
+
+FLECS_API
+void flecs_bfree_w_dbg_info(
+    ecs_block_allocator_t *ba, 
+    void *memory,
+    const char *type_name)
+{
+    (void)type_name;
+
 #ifdef FLECS_USE_OS_ALLOC
     ecs_os_free(memory);
     return;
@@ -172,9 +184,15 @@ void flecs_bfree(
 #ifdef FLECS_SANITIZE
     memory = ECS_OFFSET(memory, -ECS_SIZEOF(int64_t));
     if (*(int64_t*)memory != ba->chunk_size) {
-        ecs_err("chunk %p returned to wrong allocator "
-            "(chunk = %ub, allocator = %ub)",
-                memory, *(int64_t*)memory, ba->chunk_size);
+        if (type_name) {
+            ecs_err("chunk %p returned to wrong allocator "
+                "(chunk = %ub, allocator = %ub, type = %s)",
+                    memory, *(int64_t*)memory, ba->chunk_size, type_name);
+        } else {
+            ecs_err("chunk %p returned to wrong allocator "
+                "(chunk = %ub, allocator = %ub)",
+                    memory, *(int64_t*)memory, ba->chunk_size);
+        }
         ecs_abort(ECS_INTERNAL_ERROR, NULL);
     }
 
