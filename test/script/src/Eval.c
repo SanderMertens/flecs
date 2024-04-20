@@ -1,9 +1,6 @@
-#include <addons.h>
+#include <script.h>
 
-#define HEAD
-#define LINE "\n"
-
-void Script_null(void) {
+void Eval_null(void) {
     ecs_world_t *world = ecs_init();
 
     test_assert(ecs_script_run(world, NULL, NULL) == 0);
@@ -11,7 +8,7 @@ void Script_null(void) {
     ecs_fini(world);
 }
 
-void Script_empty(void) {
+void Eval_empty(void) {
     ecs_world_t *world = ecs_init();
 
     test_assert(ecs_script_run(world, NULL, "") == 0);
@@ -19,7 +16,7 @@ void Script_empty(void) {
     ecs_fini(world);
 }
 
-void Script_space(void) {
+void Eval_space(void) {
     ecs_world_t *world = ecs_init();
 
     test_assert(ecs_script_run(world, NULL, " ") == 0);
@@ -27,7 +24,7 @@ void Script_space(void) {
     ecs_fini(world);
 }
 
-void Script_space_newline(void) {
+void Eval_space_newline(void) {
     ecs_world_t *world = ecs_init();
 
     test_assert(ecs_script_run(world, NULL, " \n \n") == 0);
@@ -35,7 +32,7 @@ void Script_space_newline(void) {
     ecs_fini(world);
 }
 
-void Script_two_empty_newlines(void) {
+void Eval_two_empty_newlines(void) {
     ecs_world_t *world = ecs_init();
 
     test_assert(ecs_script_run(world, NULL, "\n\n") == 0);
@@ -43,7 +40,7 @@ void Script_two_empty_newlines(void) {
     ecs_fini(world);
 }
 
-void Script_three_empty_newlines(void) {
+void Eval_three_empty_newlines(void) {
     ecs_world_t *world = ecs_init();
 
     test_assert(ecs_script_run(world, NULL, "\n\n\n") == 0);
@@ -51,7 +48,7 @@ void Script_three_empty_newlines(void) {
     ecs_fini(world);
 }
 
-void Script_newline_trailing_space(void) {
+void Eval_newline_trailing_space(void) {
     ecs_world_t *world = ecs_init();
 
     test_assert(ecs_script_run(world, NULL, "\n ") == 0);
@@ -59,7 +56,7 @@ void Script_newline_trailing_space(void) {
     ecs_fini(world);
 }
 
-void Script_newline_trailing_spaces(void) {
+void Eval_newline_trailing_spaces(void) {
     ecs_world_t *world = ecs_init();
 
     test_assert(ecs_script_run(world, NULL, "\n   ") == 0);
@@ -67,7 +64,7 @@ void Script_newline_trailing_spaces(void) {
     ecs_fini(world);
 }
 
-void Script_multiple_trailing_newlines(void) {
+void Eval_multiple_trailing_newlines(void) {
     ecs_world_t *world = ecs_init();
 
     test_assert(ecs_script_run(world, NULL, "Foo{}\n\n\n") == 0);
@@ -80,7 +77,7 @@ void Script_multiple_trailing_newlines(void) {
     ecs_fini(world);
 }
 
-void Script_entity(void) {
+void Eval_entity(void) {
     ecs_world_t *world = ecs_init();
 
     test_assert(ecs_script_run(world, NULL, "Foo{}") == 0);
@@ -93,7 +90,7 @@ void Script_entity(void) {
     ecs_fini(world);
 }
 
-void Script_entity_w_core_name(void) {
+void Eval_entity_w_core_name(void) {
     ecs_world_t *world = ecs_init();
 
     test_assert(ecs_script_run(world, NULL, "World{}") == 0);
@@ -107,7 +104,7 @@ void Script_entity_w_core_name(void) {
     ecs_fini(world);
 }
 
-void Script_2_entities(void) {
+void Eval_2_entities(void) {
     ecs_world_t *world = ecs_init();
 
     test_assert(ecs_script_run(world, NULL, "Foo{}\nBar{}\n") == 0);
@@ -119,7 +116,7 @@ void Script_2_entities(void) {
     ecs_fini(world);
 }
 
-void Script_line_comment(void) {
+void Eval_line_comment(void) {
     ecs_world_t *world = ecs_init();
 
     test_assert(ecs_script_run(world, NULL, "// Foo{}\n") == 0);
@@ -129,7 +126,7 @@ void Script_line_comment(void) {
     ecs_fini(world);
 }
 
-void Script_line_comment_before_stmt(void) {
+void Eval_line_comment_before_stmt(void) {
     ecs_world_t *world = ecs_init();
 
     test_assert(ecs_script_run(world, NULL, "// Hello\nFoo {}\n") == 0);
@@ -140,7 +137,7 @@ void Script_line_comment_before_stmt(void) {
     ecs_fini(world);
 }
 
-void Script_line_comment_after_stmt(void) {
+void Eval_line_comment_after_stmt(void) {
     ecs_world_t *world = ecs_init();
 
     test_assert(ecs_script_run(world, NULL, "Foo{}\n// Hello\n") == 0);
@@ -151,7 +148,7 @@ void Script_line_comment_after_stmt(void) {
     ecs_fini(world);
 }
 
-void Script_line_comment_between_stmt(void) {
+void Eval_line_comment_between_stmt(void) {
     ecs_world_t *world = ecs_init();
 
     test_assert(ecs_script_run(world, NULL, "Foo{}\n// Hello\nBar{}\n") == 0);
@@ -163,7 +160,7 @@ void Script_line_comment_between_stmt(void) {
     ecs_fini(world);
 }
 
-void Script_multiple_line_comment(void) {
+void Eval_multiple_line_comment(void) {
     ecs_world_t *world = ecs_init();
 
     test_assert(ecs_script_run(world, NULL, "// Hello\n// World\nFoo{}") == 0);
@@ -175,7 +172,7 @@ void Script_multiple_line_comment(void) {
     ecs_fini(world);
 }
 
-void Script_multiple_line_comment_w_newlines(void) {
+void Eval_multiple_line_comment_w_newlines(void) {
     ecs_world_t *world = ecs_init();
 
     test_assert(ecs_script_run(world, NULL, "// Hello\n\n// World\n\nFoo{}") == 0);
@@ -187,7 +184,7 @@ void Script_multiple_line_comment_w_newlines(void) {
     ecs_fini(world);
 }
 
-void Script_line_comment_after_stmt_same_line(void) {
+void Eval_line_comment_after_stmt_same_line(void) {
     ecs_world_t *world = ecs_init();
 
     test_assert(ecs_script_run(world, NULL, "Foo{} // Hello\nBar{}\n") == 0);
@@ -199,7 +196,7 @@ void Script_line_comment_after_stmt_same_line(void) {
     ecs_fini(world);
 }
 
-void Script_hierarchy_1_child(void) {
+void Eval_hierarchy_1_child(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -222,7 +219,7 @@ void Script_hierarchy_1_child(void) {
     ecs_fini(world);
 }
 
-void Script_hierarchy_2_children(void) {
+void Eval_hierarchy_2_children(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -250,7 +247,7 @@ void Script_hierarchy_2_children(void) {
     ecs_fini(world);
 }
 
-void Script_hierarchy_1_child_same_line(void) {
+void Eval_hierarchy_1_child_same_line(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -271,7 +268,7 @@ void Script_hierarchy_1_child_same_line(void) {
     ecs_fini(world);
 }
 
-void Script_hierarchy_2_children_same_line(void) {
+void Eval_hierarchy_2_children_same_line(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -296,7 +293,7 @@ void Script_hierarchy_2_children_same_line(void) {
     ecs_fini(world);
 }
 
-void Script_hierarchy_2_children_same_line_no_trailing_comma(void) {
+void Eval_hierarchy_2_children_same_line_no_trailing_comma(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -321,7 +318,7 @@ void Script_hierarchy_2_children_same_line_no_trailing_comma(void) {
     ecs_fini(world);
 }
 
-void Script_entity_after_hierarchy(void) {
+void Eval_entity_after_hierarchy(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -349,7 +346,7 @@ void Script_entity_after_hierarchy(void) {
     ecs_fini(world);
 }
 
-void Script_newline_before_scope_open(void) {
+void Eval_newline_before_scope_open(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -374,7 +371,7 @@ void Script_newline_before_scope_open(void) {
     ecs_fini(world);
 }
 
-void Script_newline_w_whitespace_before_scope_open(void) {
+void Eval_newline_w_whitespace_before_scope_open(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -399,7 +396,7 @@ void Script_newline_w_whitespace_before_scope_open(void) {
     ecs_fini(world);
 }
 
-void Script_2_newline_before_scope_open(void) {
+void Eval_2_newline_before_scope_open(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -425,7 +422,7 @@ void Script_2_newline_before_scope_open(void) {
     ecs_fini(world);
 }
 
-void Script_2_newline_w_whitespace_before_scope_open(void) {
+void Eval_2_newline_w_whitespace_before_scope_open(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -451,7 +448,7 @@ void Script_2_newline_w_whitespace_before_scope_open(void) {
     ecs_fini(world);
 }
 
-void Script_comment_before_scope_open(void) {
+void Eval_comment_before_scope_open(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -479,7 +476,7 @@ void Script_comment_before_scope_open(void) {
     ecs_fini(world);
 }
 
-void Script_comment_after_newline_before_scope_open(void) {
+void Eval_comment_after_newline_before_scope_open(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -508,7 +505,7 @@ void Script_comment_after_newline_before_scope_open(void) {
     ecs_fini(world);
 }
 
-void Script_comment_after_newline_before_newline_scope_open(void) {
+void Eval_comment_after_newline_before_newline_scope_open(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -538,7 +535,7 @@ void Script_comment_after_newline_before_newline_scope_open(void) {
     ecs_fini(world);
 }
 
-void Script_hierarchy_2_levels(void) {
+void Eval_hierarchy_2_levels(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -567,7 +564,7 @@ void Script_hierarchy_2_levels(void) {
     ecs_fini(world);
 }
 
-void Script_hierarchy_2_levels_2_subtrees(void) {
+void Eval_hierarchy_2_levels_2_subtrees(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -608,7 +605,7 @@ void Script_hierarchy_2_levels_2_subtrees(void) {
     ecs_fini(world);
 }
 
-void Script_missing_end_of_scope(void) {
+void Eval_missing_end_of_scope(void) {
     ecs_log_set_level(-4);
     ecs_world_t *world = ecs_init();
 
@@ -624,7 +621,7 @@ void Script_missing_end_of_scope(void) {
     ecs_fini(world);
 }
 
-void Script_create_in_scope(void) {
+void Eval_create_in_scope(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Root);
@@ -654,7 +651,7 @@ void Script_create_in_scope(void) {
     ecs_fini(world);
 }
 
-void Script_hierarchy_w_pred_subj(void) {
+void Eval_hierarchy_w_pred_subj(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -680,7 +677,7 @@ void Script_hierarchy_w_pred_subj(void) {
     ecs_fini(world);
 }
 
-void Script_hierarchy_custom_relation(void) {
+void Eval_hierarchy_custom_relation(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -707,7 +704,7 @@ void Script_hierarchy_custom_relation(void) {
     ecs_fini(world);
 }
 
-void Script_hierarchy_custom_relation_2_levels(void) {
+void Eval_hierarchy_custom_relation_2_levels(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -763,7 +760,7 @@ void Script_hierarchy_custom_relation_2_levels(void) {
     ecs_fini(world);
 }
 
-void Script_entity_after_hierarchy_custom_relation(void) {
+void Eval_entity_after_hierarchy_custom_relation(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -794,7 +791,7 @@ void Script_entity_after_hierarchy_custom_relation(void) {
     ecs_fini(world);
 }
 
-void Script_entity_after_hierarchy_custom_relation_2_levels(void) {
+void Eval_entity_after_hierarchy_custom_relation_2_levels(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -864,7 +861,7 @@ void Script_entity_after_hierarchy_custom_relation_2_levels(void) {
     ecs_fini(world);
 }
 
-void Script_hierarchy_custom_relation_apply_to_object(void) {
+void Eval_hierarchy_custom_relation_apply_to_object(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -893,7 +890,7 @@ void Script_hierarchy_custom_relation_apply_to_object(void) {
     ecs_fini(world);
 }
 
-void Script_hierarchy_custom_relation_apply_to_object_2_levels(void) {
+void Eval_hierarchy_custom_relation_apply_to_object_2_levels(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -929,7 +926,7 @@ void Script_hierarchy_custom_relation_apply_to_object_2_levels(void) {
     ecs_fini(world);
 }
 
-void Script_with_tag(void) {
+void Eval_with_tag(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -950,7 +947,7 @@ void Script_with_tag(void) {
     ecs_fini(world);
 }
 
-void Script_with_tag_2_entities(void) {
+void Eval_with_tag_2_entities(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -975,7 +972,7 @@ void Script_with_tag_2_entities(void) {
     ecs_fini(world);
 }
 
-void Script_with_tag_same_line(void) {
+void Eval_with_tag_same_line(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -994,7 +991,7 @@ void Script_with_tag_same_line(void) {
     ecs_fini(world);
 }
 
-void Script_with_tag_2_entities_same_line(void) {
+void Eval_with_tag_2_entities_same_line(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -1016,7 +1013,7 @@ void Script_with_tag_2_entities_same_line(void) {
     ecs_fini(world);
 }
 
-void Script_with_tag_2_entities_same_line_no_trailing_comma(void) {
+void Eval_with_tag_2_entities_same_line_no_trailing_comma(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -1038,7 +1035,7 @@ void Script_with_tag_2_entities_same_line_no_trailing_comma(void) {
     ecs_fini(world);
 }
 
-void Script_with_tag_2_levels(void) {
+void Eval_with_tag_2_levels(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -1064,7 +1061,7 @@ void Script_with_tag_2_levels(void) {
     ecs_fini(world);
 }
 
-void Script_with_tag_2_levels_2_subtrees(void) {
+void Eval_with_tag_2_levels_2_subtrees(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -1110,7 +1107,7 @@ void Script_with_tag_2_levels_2_subtrees(void) {
     ecs_fini(world);
 }
 
-void Script_with_n_tags(void) {
+void Eval_with_n_tags(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -1140,7 +1137,7 @@ void Script_with_n_tags(void) {
     ecs_fini(world);
 }
 
-void Script_with_n_tags_2_levels(void) {
+void Eval_with_n_tags_2_levels(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -1236,7 +1233,7 @@ void Script_with_n_tags_2_levels(void) {
     ecs_fini(world);
 }
 
-void Script_with_n_tags_2_levels_invalid_tag(void) {
+void Eval_with_n_tags_2_levels_invalid_tag(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -1258,7 +1255,7 @@ void Script_with_n_tags_2_levels_invalid_tag(void) {
     ecs_fini(world);
 }
 
-void Script_with_after_scope(void) {
+void Eval_with_after_scope(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -1290,7 +1287,7 @@ void Script_with_after_scope(void) {
     ecs_fini(world);
 }
 
-void Script_with_after_with(void) {
+void Eval_with_after_with(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -1322,7 +1319,7 @@ void Script_with_after_with(void) {
     ecs_fini(world);
 }
 
-void Script_scope_inside_with_inside_scope(void) {
+void Eval_scope_inside_with_inside_scope(void) {
     ecs_world_t *world = ecs_init();
     
     const char *expr =
@@ -1366,7 +1363,7 @@ void Script_scope_inside_with_inside_scope(void) {
     ecs_fini(world);
 }
 
-void Script_with_tag_core_name(void) {
+void Eval_with_tag_core_name(void) {
     ecs_world_t *world = ecs_init();
     
     const char *expr =
@@ -1383,7 +1380,7 @@ void Script_with_tag_core_name(void) {
     ecs_fini(world);
 }
 
-void Script_with_inside_scope(void) {
+void Eval_with_inside_scope(void) {
     ecs_world_t *world = ecs_init();
     
     const char *expr =
@@ -1412,7 +1409,7 @@ void Script_with_inside_scope(void) {
     ecs_fini(world);
 }
 
-void Script_inherit(void) {    
+void Eval_inherit(void) {    
     ecs_world_t *world = ecs_init();
     
     const char *expr =
@@ -1431,7 +1428,7 @@ void Script_inherit(void) {
     ecs_fini(world);
 }
 
-void Script_inherit_newline(void) {    
+void Eval_inherit_newline(void) {    
     ecs_world_t *world = ecs_init();
     
     const char *expr =
@@ -1450,7 +1447,7 @@ void Script_inherit_newline(void) {
     ecs_fini(world);
 }
 
-void Script_inherit_w_colon(void) {    
+void Eval_inherit_w_colon(void) {    
     ecs_world_t *world = ecs_init();
     
     const char *expr =
@@ -1469,7 +1466,7 @@ void Script_inherit_w_colon(void) {
     ecs_fini(world);
 }
 
-void Script_inherit_w_colon_w_scope(void) {
+void Eval_inherit_w_colon_w_scope(void) {
     ecs_world_t *world = ecs_init();
     
     const char *expr =
@@ -1491,7 +1488,7 @@ void Script_inherit_w_colon_w_scope(void) {
     ecs_fini(world);
 }
 
-void Script_assign_component_w_value(void) {
+void Eval_assign_component_w_value(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct_init(world, &(ecs_struct_desc_t){
@@ -1521,7 +1518,7 @@ void Script_assign_component_w_value(void) {
     ecs_fini(world);
 }
 
-void Script_assign_tag_in_assign_scope(void) {
+void Eval_assign_tag_in_assign_scope(void) {
     ecs_world_t *world = ecs_init();
     
     const char *expr =
@@ -1540,7 +1537,7 @@ void Script_assign_tag_in_assign_scope(void) {
     ecs_fini(world);
 }
 
-void Script_assign_tag_in_assign_scope_same_line(void) {
+void Eval_assign_tag_in_assign_scope_same_line(void) {
     ecs_world_t *world = ecs_init();
     
     const char *expr =
@@ -1557,7 +1554,7 @@ void Script_assign_tag_in_assign_scope_same_line(void) {
     ecs_fini(world);
 }
 
-void Script_assign_tag_in_assign_scope_core_name(void) {
+void Eval_assign_tag_in_assign_scope_core_name(void) {
     ecs_world_t *world = ecs_init();
     
     const char *expr =
@@ -1574,7 +1571,7 @@ void Script_assign_tag_in_assign_scope_core_name(void) {
     ecs_fini(world);
 }
 
-void Script_assign_component_value_in_assign_scope(void) {
+void Eval_assign_component_value_in_assign_scope(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct_init(world, &(ecs_struct_desc_t){
@@ -1606,7 +1603,7 @@ void Script_assign_component_value_in_assign_scope(void) {
     ecs_fini(world);
 }
 
-void Script_assign_2_component_values_in_assign_scope(void) {
+void Eval_assign_2_component_values_in_assign_scope(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct_init(world, &(ecs_struct_desc_t){
@@ -1656,7 +1653,7 @@ void Script_assign_2_component_values_in_assign_scope(void) {
     ecs_fini(world);
 }
 
-void Script_type_and_assign_in_plecs(void) {
+void Eval_type_and_assign_in_plecs(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -1688,7 +1685,7 @@ void Script_type_and_assign_in_plecs(void) {
     ecs_fini(world);
 }
 
-void Script_type_and_assign_in_plecs_w_2_members(void) {
+void Eval_type_and_assign_in_plecs_w_2_members(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -1720,7 +1717,7 @@ void Script_type_and_assign_in_plecs_w_2_members(void) {
     ecs_fini(world);
 }
 
-void Script_type_and_assign_in_plecs_w_3_members(void) {
+void Eval_type_and_assign_in_plecs_w_3_members(void) {
     ecs_world_t *world = ecs_init();
 
     typedef struct {
@@ -1760,7 +1757,7 @@ void Script_type_and_assign_in_plecs_w_3_members(void) {
     ecs_fini(world);
 }
 
-void Script_type_and_assign_in_plecs_w_enum(void) {
+void Eval_type_and_assign_in_plecs_w_enum(void) {
     ecs_world_t *world = ecs_init();
 
     typedef enum {
@@ -1804,7 +1801,7 @@ void Script_type_and_assign_in_plecs_w_enum(void) {
     ecs_fini(world);
 }
 
-void Script_type_and_assign_in_plecs_w_enum_using_meta(void) {
+void Eval_type_and_assign_in_plecs_w_enum_using_meta(void) {
     ecs_world_t *world = ecs_init();
 
     typedef enum {
@@ -1856,7 +1853,7 @@ void Script_type_and_assign_in_plecs_w_enum_using_meta(void) {
     ecs_fini(world);
 }
 
-void Script_type_and_assign_in_plecs_w_enum_primitive_using_meta(void) {
+void Eval_type_and_assign_in_plecs_w_enum_primitive_using_meta(void) {
     ecs_world_t *world = ecs_init();
 
     typedef enum {
@@ -1900,7 +1897,7 @@ void Script_type_and_assign_in_plecs_w_enum_primitive_using_meta(void) {
 }
 
 
-void Script_type_and_assign_in_plecs_w_enum_primitive_and_struct(void) {
+void Eval_type_and_assign_in_plecs_w_enum_primitive_and_struct(void) {
     ecs_world_t *world = ecs_init();
 
     typedef enum {
@@ -1962,7 +1959,7 @@ void Script_type_and_assign_in_plecs_w_enum_primitive_and_struct(void) {
     ecs_fini(world);
 }
 
-void Script_type_and_assign_in_plecs_nested_member(void) {
+void Eval_type_and_assign_in_plecs_nested_member(void) {
     ecs_world_t *world = ecs_init();
 
     typedef struct {
@@ -2015,7 +2012,7 @@ void Script_type_and_assign_in_plecs_nested_member(void) {
     ecs_fini(world);
 }
 
-void Script_dot_assign_nested_member(void) {
+void Eval_dot_assign_nested_member(void) {
     ecs_world_t *world = ecs_init();
 
     typedef struct {
@@ -2068,7 +2065,7 @@ void Script_dot_assign_nested_member(void) {
     ecs_fini(world);
 }
 
-void Script_dot_assign_binary_expr(void) {
+void Eval_dot_assign_binary_expr(void) {
     ecs_world_t *world = ecs_init();
 
     typedef struct {
@@ -2121,7 +2118,7 @@ void Script_dot_assign_binary_expr(void) {
     ecs_fini(world);
 }
 
-void Script_open_scope_no_parent(void) {
+void Eval_open_scope_no_parent(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -2151,7 +2148,7 @@ void Script_open_scope_no_parent(void) {
     ecs_fini(world);
 }
 
-void Script_create_subject_in_root_scope_w_resolvable_id(void) {
+void Eval_create_subject_in_root_scope_w_resolvable_id(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -2165,7 +2162,7 @@ void Script_create_subject_in_root_scope_w_resolvable_id(void) {
     ecs_fini(world);
 }
 
-void Script_create_subject_in_scope_w_resolvable_id(void) {
+void Eval_create_subject_in_scope_w_resolvable_id(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -2186,7 +2183,7 @@ void Script_create_subject_in_scope_w_resolvable_id(void) {
     ecs_fini(world);
 }
 
-void Script_create_subject_in_scope_w_resolvable_id_using(void) {
+void Eval_create_subject_in_scope_w_resolvable_id_using(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -2217,7 +2214,7 @@ void Script_create_subject_in_scope_w_resolvable_id_using(void) {
     ecs_fini(world);
 }
 
-void Script_using_scope(void) {
+void Eval_using_scope(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -2251,7 +2248,7 @@ void Script_using_scope(void) {
     ecs_fini(world);
 }
 
-void Script_using_nested_scope(void) {
+void Eval_using_nested_scope(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -2290,7 +2287,7 @@ void Script_using_nested_scope(void) {
     ecs_fini(world);
 }
 
-void Script_using_nested_in_scope(void) {
+void Eval_using_nested_in_scope(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -2330,7 +2327,7 @@ void Script_using_nested_in_scope(void) {
     ecs_fini(world);
 }
 
-void Script_using_with_scope(void) {
+void Eval_using_with_scope(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -2370,7 +2367,7 @@ void Script_using_with_scope(void) {
     ecs_fini(world);
 }
 
-void Script_using_w_entity_ref_in_value_2_members(void) {
+void Eval_using_w_entity_ref_in_value_2_members(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -2402,7 +2399,7 @@ void Script_using_w_entity_ref_in_value_2_members(void) {
     ecs_fini(world);
 }
 
-void Script_using_w_entity_ref_in_value_3_members(void) {
+void Eval_using_w_entity_ref_in_value_3_members(void) {
     ecs_world_t *world = ecs_init();
 
     typedef struct {
@@ -2442,7 +2439,7 @@ void Script_using_w_entity_ref_in_value_3_members(void) {
     ecs_fini(world);
 }
 
-void Script_2_using_scope(void) {
+void Eval_2_using_scope(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -2487,7 +2484,7 @@ void Script_2_using_scope(void) {
     ecs_fini(world);
 }
 
-void Script_2_using_in_different_scope(void) {
+void Eval_2_using_in_different_scope(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -2563,7 +2560,7 @@ void Script_2_using_in_different_scope(void) {
     ecs_fini(world);
 }
 
-void Script_assignment_to_non_component(void) {
+void Eval_assignment_to_non_component(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -2575,7 +2572,7 @@ void Script_assignment_to_non_component(void) {
     ecs_fini(world);
 }
 
-void Script_struct_w_member_w_assignment_to_nothing(void) {
+void Eval_struct_w_member_w_assignment_to_nothing(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -2589,7 +2586,7 @@ void Script_struct_w_member_w_assignment_to_nothing(void) {
     ecs_fini(world);
 }
 
-void Script_struct_w_member_w_assignment_to_empty_scope(void) {
+void Eval_struct_w_member_w_assignment_to_empty_scope(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -2603,7 +2600,7 @@ void Script_struct_w_member_w_assignment_to_empty_scope(void) {
     ecs_fini(world);
 }
 
-void Script_scope_after_assign(void) {
+void Eval_scope_after_assign(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct_init(world, &(ecs_struct_desc_t){
@@ -2636,7 +2633,7 @@ void Script_scope_after_assign(void) {
     ecs_fini(world);
 }
 
-void Script_assign_after_inherit(void) {
+void Eval_assign_after_inherit(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct_init(world, &(ecs_struct_desc_t){
@@ -2673,7 +2670,7 @@ void Script_assign_after_inherit(void) {
     ecs_fini(world);
 }
 
-void Script_multiple_tags_single_line(void) {
+void Eval_multiple_tags_single_line(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -2696,7 +2693,7 @@ void Script_multiple_tags_single_line(void) {
     ecs_fini(world);
 }
 
-void Script_multiple_pairs_single_line(void) {
+void Eval_multiple_pairs_single_line(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -2722,7 +2719,7 @@ void Script_multiple_pairs_single_line(void) {
     ecs_fini(world);
 }
 
-void Script_multiple_assignments_single_line(void) {
+void Eval_multiple_assignments_single_line(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct_init(world, &(ecs_struct_desc_t){
@@ -2766,7 +2763,7 @@ void Script_multiple_assignments_single_line(void) {
     ecs_fini(world);
 }
 
-void Script_multiple_vars_single_line(void) {
+void Eval_multiple_vars_single_line(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct_init(world, &(ecs_struct_desc_t){
@@ -2812,7 +2809,7 @@ void Script_multiple_vars_single_line(void) {
     ecs_fini(world);
 }
 
-void Script_2_stmts_in_scope_w_no_parent(void) {
+void Eval_2_stmts_in_scope_w_no_parent(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -2838,7 +2835,7 @@ void Script_2_stmts_in_scope_w_no_parent(void) {
     ecs_fini(world);
 }
 
-void Script_empty_scope_after_using(void) {
+void Eval_empty_scope_after_using(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -2856,7 +2853,7 @@ void Script_empty_scope_after_using(void) {
     ecs_fini(world);
 }
 
-void Script_invalid_nested_assignment(void) {
+void Eval_invalid_nested_assignment(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -2869,7 +2866,7 @@ void Script_invalid_nested_assignment(void) {
     ecs_fini(world);
 }
 
-void Script_invalid_partial_pair_assignment(void) {
+void Eval_invalid_partial_pair_assignment(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -2881,7 +2878,7 @@ void Script_invalid_partial_pair_assignment(void) {
     ecs_fini(world);
 }
 
-void Script_empty_assignment(void) {
+void Eval_empty_assignment(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -2893,7 +2890,7 @@ void Script_empty_assignment(void) {
     ecs_fini(world);
 }
 
-void Script_empty_assignment_before_end_of_scope(void) {
+void Eval_empty_assignment_before_end_of_scope(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -2905,7 +2902,7 @@ void Script_empty_assignment_before_end_of_scope(void) {
     ecs_fini(world);
 }
 
-void Script_assign_tag_to_parent(void) {
+void Eval_assign_tag_to_parent(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -2932,7 +2929,7 @@ void Script_assign_tag_to_parent(void) {
     ecs_fini(world);
 }
 
-void Script_assign_component_to_parent(void) {
+void Eval_assign_component_to_parent(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct_init(world, &(ecs_struct_desc_t){
@@ -2970,7 +2967,7 @@ void Script_assign_component_to_parent(void) {
     ecs_fini(world);
 }
 
-void Script_assign_to_parent_pair_w_new_entities_in_scope(void) {
+void Eval_assign_to_parent_pair_w_new_entities_in_scope(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -2995,7 +2992,7 @@ void Script_assign_to_parent_pair_w_new_entities_in_scope(void) {
     ecs_fini(world);
 }
 
-void Script_assign_to_parent_pair_w_existing_entities_in_scope(void) {
+void Eval_assign_to_parent_pair_w_existing_entities_in_scope(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -3021,7 +3018,7 @@ void Script_assign_to_parent_pair_w_existing_entities_in_scope(void) {
     ecs_fini(world);
 }
 
-void Script_default_child_component(void) {
+void Eval_default_child_component(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -3062,7 +3059,7 @@ void Script_default_child_component(void) {
     ecs_fini(world);
 }
 
-void Script_default_child_component_w_assign(void) {
+void Eval_default_child_component_w_assign(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct_init(world, &(ecs_struct_desc_t){
@@ -3108,7 +3105,7 @@ void Script_default_child_component_w_assign(void) {
     ecs_fini(world);
 }
 
-void Script_struct_type_w_default_child_component(void) {
+void Eval_struct_type_w_default_child_component(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -3148,7 +3145,7 @@ void Script_struct_type_w_default_child_component(void) {
     ecs_fini(world);
 }
 
-void Script_struct_type_w_default_child_component_nested_member(void) {
+void Eval_struct_type_w_default_child_component_nested_member(void) {
     ecs_world_t *world = ecs_init();
 
     typedef struct {
@@ -3199,7 +3196,7 @@ void Script_struct_type_w_default_child_component_nested_member(void) {
     ecs_fini(world);
 }
 
-void Script_enum_type_w_default_child_component(void) {
+void Eval_enum_type_w_default_child_component(void) {
     ecs_world_t *world = ecs_init();
 
     typedef enum {
@@ -3232,7 +3229,7 @@ void Script_enum_type_w_default_child_component(void) {
     ecs_fini(world);
 }
 
-void Script_default_type_from_with(void) {
+void Eval_default_type_from_with(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct_init(world, &(ecs_struct_desc_t){
@@ -3270,7 +3267,7 @@ void Script_default_type_from_with(void) {
     ecs_fini(world);
 }
 
-void Script_default_type_from_nested_with(void) {
+void Eval_default_type_from_nested_with(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct_init(world, &(ecs_struct_desc_t){
@@ -3334,7 +3331,7 @@ void Script_default_type_from_nested_with(void) {
     ecs_fini(world);
 }
 
-void Script_default_type_with_tag(void) {
+void Eval_default_type_with_tag(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -3349,7 +3346,7 @@ void Script_default_type_with_tag(void) {
     ecs_fini(world);
 }
 
-void Script_default_type_from_with_in_entity_scope_w_default_type(void) {
+void Eval_default_type_from_with_in_entity_scope_w_default_type(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct_init(world, &(ecs_struct_desc_t){
@@ -3424,7 +3421,7 @@ void Script_default_type_from_with_in_entity_scope_w_default_type(void) {
     ecs_fini(world);
 }
 
-void Script_default_type_from_entity_scope_in_with(void) {
+void Eval_default_type_from_entity_scope_in_with(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct_init(world, &(ecs_struct_desc_t){
@@ -3477,7 +3474,7 @@ void Script_default_type_from_entity_scope_in_with(void) {
     ecs_fini(world);
 }
 
-void Script_scope_w_1_subj_and_2_pairs(void) {
+void Eval_scope_w_1_subj_and_2_pairs(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -3506,7 +3503,7 @@ void Script_scope_w_1_subj_and_2_pairs(void) {
     ecs_fini(world);
 }
 
-void Script_inherit_from_multiple(void) {
+void Eval_inherit_from_multiple(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -3528,7 +3525,7 @@ void Script_inherit_from_multiple(void) {
     ecs_fini(world);
 }
 
-void Script_assign_pair_component(void) {
+void Eval_assign_pair_component(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -3561,7 +3558,7 @@ void Script_assign_pair_component(void) {
     ecs_fini(world);
 }
 
-void Script_assign_pair_component_in_scope(void) {
+void Eval_assign_pair_component_in_scope(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -3606,7 +3603,7 @@ void Script_assign_pair_component_in_scope(void) {
     ecs_fini(world);
 }
 
-void Script_assign_pair_component_in_script(void) {
+void Eval_assign_pair_component_in_script(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -3643,7 +3640,7 @@ void Script_assign_pair_component_in_script(void) {
     ecs_fini(world);
 }
 
-void Script_assign_pair_component_in_script_update(void) {
+void Eval_assign_pair_component_in_script_update(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -3682,7 +3679,7 @@ void Script_assign_pair_component_in_script_update(void) {
     ecs_fini(world);
 }
 
-void Script_set_entity_names(void) {
+void Eval_set_entity_names(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -3717,7 +3714,7 @@ void Script_set_entity_names(void) {
     ecs_fini(world);
 }
 
-void Script_oneof(void) {
+void Eval_oneof(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -3746,7 +3743,7 @@ void Script_oneof(void) {
     ecs_fini(world);
 }
 
-void Script_invalid_oneof(void) {
+void Eval_invalid_oneof(void) {
     ecs_log_set_level(-4);
     
     ecs_world_t *world = ecs_init();
@@ -3774,7 +3771,7 @@ void Script_invalid_oneof(void) {
     ecs_fini(world);
 }
 
-void Script_brief_annotation(void) {
+void Eval_brief_annotation(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -3802,7 +3799,7 @@ void Script_brief_annotation(void) {
     ecs_fini(world);
 }
 
-void Script_name_annotation(void) {
+void Eval_name_annotation(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -3830,7 +3827,7 @@ void Script_name_annotation(void) {
     ecs_fini(world);
 }
 
-void Script_link_annotation(void) {
+void Eval_link_annotation(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -3858,7 +3855,7 @@ void Script_link_annotation(void) {
     ecs_fini(world);
 }
 
-void Script_color_annotation(void) {
+void Eval_color_annotation(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -3886,7 +3883,7 @@ void Script_color_annotation(void) {
     ecs_fini(world);
 }
 
-void Script_multiple_annotations(void) {
+void Eval_multiple_annotations(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -3922,7 +3919,7 @@ void Script_multiple_annotations(void) {
     ecs_fini(world);
 }
 
-void Script_annotation_w_trailing_space(void) {
+void Eval_annotation_w_trailing_space(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -3943,7 +3940,7 @@ typedef struct String {
     char *value;
 } String;
 
-void Script_multiline_string(void) {
+void Eval_multiline_string(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(String) = ecs_struct_init(world, &(ecs_struct_desc_t){
@@ -3981,7 +3978,7 @@ void Script_multiline_string(void) {
     ecs_fini(world);
 }
 
-void Script_unterminated_multiline_string(void) {
+void Eval_unterminated_multiline_string(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_struct_init(world, &(ecs_struct_desc_t){
@@ -4004,7 +4001,7 @@ void Script_unterminated_multiline_string(void) {
     ecs_fini(world);
 }
 
-void Script_annotate_declaration(void) {
+void Eval_annotate_declaration(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -4028,7 +4025,7 @@ void Script_annotate_declaration(void) {
     ecs_fini(world);
 }
 
-void Script_declaration_w_underscore_name(void) {
+void Eval_declaration_w_underscore_name(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -4048,7 +4045,7 @@ void Script_declaration_w_underscore_name(void) {
     ecs_fini(world);
 }
 
-void Script_anonymous_entity(void) {
+void Eval_anonymous_entity(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -4070,7 +4067,7 @@ void Script_anonymous_entity(void) {
     ecs_fini(world);
 }
 
-void Script_anonymous_entity_in_scope(void) {
+void Eval_anonymous_entity_in_scope(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -4097,7 +4094,7 @@ void Script_anonymous_entity_in_scope(void) {
     ecs_fini(world);
 }
 
-void Script_anonymous_declaration(void) {
+void Eval_anonymous_declaration(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -4119,7 +4116,7 @@ void Script_anonymous_declaration(void) {
     ecs_fini(world);
 }
 
-void Script_const_var_int(void) {
+void Eval_const_var_int(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct(world, {
@@ -4150,7 +4147,7 @@ void Script_const_var_int(void) {
     ecs_fini(world);
 }
 
-void Script_const_var_float(void) {
+void Eval_const_var_float(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct(world, {
@@ -4181,7 +4178,7 @@ void Script_const_var_float(void) {
     ecs_fini(world);
 }
 
-void Script_const_var_bool(void) {
+void Eval_const_var_bool(void) {
     ecs_world_t *world = ecs_init();
 
     typedef struct Bools {
@@ -4217,7 +4214,7 @@ void Script_const_var_bool(void) {
     ecs_fini(world);
 }
 
-void Script_const_var_string(void) {
+void Eval_const_var_string(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct(world, {
@@ -4248,16 +4245,11 @@ void Script_const_var_string(void) {
     ecs_fini(world);
 }
 
-typedef struct Line {
-    Position start;
-    Position stop;
-} Line;
-
-void Script_const_var_struct(void) {
+void Eval_const_var_struct(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
-        .entity = ecs_entity(world, {.name = "Position"}),
+    ecs_entity_t ecs_id(Point) = ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "Point"}),
         .members = {
             {"x", ecs_id(ecs_f32_t)},
             {"y", ecs_id(ecs_f32_t)}
@@ -4267,14 +4259,14 @@ void Script_const_var_struct(void) {
     ecs_entity_t ecs_id(Line) = ecs_struct(world, {
         .entity = ecs_entity(world, {.name = "Line"}),
         .members = {
-            {"start", ecs_id(Position)},
-            {"stop", ecs_id(Position)}
+            {"start", ecs_id(Point)},
+            {"stop", ecs_id(Point)}
         }
     });
 
     const char *expr =
-    HEAD "const var_start = Position: {10.5, 20.5}"
-    LINE "const var_stop = Position: {30.5, 40.5}"
+    HEAD "const var_start = Point: {10.5, 20.5}"
+    LINE "const var_stop = Point: {30.5, 40.5}"
     LINE ""
     LINE "e { Line: {start: $var_start, stop: $var_stop} }";
 
@@ -4294,7 +4286,7 @@ void Script_const_var_struct(void) {
     ecs_fini(world);
 }
 
-void Script_const_var_redeclare(void) {
+void Eval_const_var_redeclare(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -4307,7 +4299,7 @@ void Script_const_var_redeclare(void) {
     ecs_fini(world);
 }
 
-void Script_const_var_scoped(void) {
+void Eval_const_var_scoped(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct(world, {
@@ -4363,7 +4355,7 @@ void Script_const_var_scoped(void) {
     ecs_fini(world);
 }
 
-void Script_assign_component_from_var(void) {
+void Eval_assign_component_from_var(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct(world, {
@@ -4395,7 +4387,7 @@ void Script_assign_component_from_var(void) {
     ecs_fini(world);
 }
 
-void Script_assign_component_from_var_in_scope(void) {
+void Eval_assign_component_from_var_in_scope(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct(world, {
@@ -4429,7 +4421,7 @@ void Script_assign_component_from_var_in_scope(void) {
     ecs_fini(world);
 }
 
-void Script_scope_w_component_after_const_var(void) {
+void Eval_scope_w_component_after_const_var(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct(world, {
@@ -4460,7 +4452,7 @@ void Script_scope_w_component_after_const_var(void) {
     ecs_fini(world);
 }
 
-void Script_component_after_const_add_expr(void) {
+void Eval_component_after_const_add_expr(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct(world, {
@@ -4491,7 +4483,7 @@ void Script_component_after_const_add_expr(void) {
     ecs_fini(world);
 }
 
-void Script_component_after_const_sub_expr(void) {
+void Eval_component_after_const_sub_expr(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct(world, {
@@ -4522,7 +4514,7 @@ void Script_component_after_const_sub_expr(void) {
     ecs_fini(world);
 }
 
-void Script_component_after_const_mul_expr(void) {
+void Eval_component_after_const_mul_expr(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct(world, {
@@ -4553,7 +4545,7 @@ void Script_component_after_const_mul_expr(void) {
     ecs_fini(world);
 }
 
-void Script_component_after_const_div_expr(void) {
+void Eval_component_after_const_div_expr(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct(world, {
@@ -4584,7 +4576,7 @@ void Script_component_after_const_div_expr(void) {
     ecs_fini(world);
 }
 
-void Script_component_after_const_paren_expr(void) {
+void Eval_component_after_const_paren_expr(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -4617,7 +4609,7 @@ void Script_component_after_const_paren_expr(void) {
     ecs_fini(world);
 }
 
-void Script_parse_with(void) {
+void Eval_parse_with(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -4647,7 +4639,7 @@ void Script_parse_with(void) {
     ecs_fini(world);
 }
 
-void Script_parse_with_w_with(void) {
+void Eval_parse_with_w_with(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, TagA);
@@ -4685,7 +4677,7 @@ void Script_parse_with_w_with(void) {
     ecs_fini(world);
 }
 
-void Script_parse_with_w_tag(void) {
+void Eval_parse_with_w_tag(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, TagA);
@@ -4724,7 +4716,7 @@ void Script_parse_with_w_tag(void) {
     ecs_fini(world);
 }
 
-void Script_parse_with_value(void) {
+void Eval_parse_with_value(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -4768,7 +4760,7 @@ void Script_parse_with_value(void) {
     ecs_fini(world);
 }
 
-void Script_parse_with_2_values(void) {
+void Eval_parse_with_2_values(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -4833,7 +4825,7 @@ void Script_parse_with_2_values(void) {
     ecs_fini(world);
 }
 
-void Script_parse_with_2_nested_values(void) {
+void Eval_parse_with_2_nested_values(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -4900,7 +4892,7 @@ void Script_parse_with_2_nested_values(void) {
     ecs_fini(world);
 }
 
-void Script_parse_with_var(void) {
+void Eval_parse_with_var(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -4944,7 +4936,7 @@ void Script_parse_with_var(void) {
     ecs_fini(world);
 }
 
-void Script_parse_with_2_vars(void) {
+void Eval_parse_with_2_vars(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -5011,7 +5003,7 @@ void Script_parse_with_2_vars(void) {
     ecs_fini(world);
 }
 
-void Script_parse_with_2_nested_vars(void) {
+void Eval_parse_with_2_nested_vars(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -5080,7 +5072,7 @@ void Script_parse_with_2_nested_vars(void) {
     ecs_fini(world);
 }
 
-void Script_parse_with_var_in_scope(void) {
+void Eval_parse_with_var_in_scope(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -5129,7 +5121,7 @@ void Script_parse_with_var_in_scope(void) {
 }
 
 
-void Script_assign_const_w_expr(void) {
+void Eval_assign_const_w_expr(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct(world, {
@@ -5158,7 +5150,7 @@ void Script_assign_const_w_expr(void) {
     ecs_fini(world);
 }
 
-void Script_const_w_type(void) {
+void Eval_const_w_type(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct(world, {
@@ -5187,1649 +5179,7 @@ void Script_const_w_type(void) {
     ecs_fini(world);
 }
 
-void Script_assembly_no_scope(void) {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-
-    ecs_struct(world, {
-        .entity = ecs_id(Position),
-        .members = {
-            {"x", ecs_id(ecs_f32_t)},
-            {"y", ecs_id(ecs_f32_t)}
-        }
-    });
-
-    const char *expr =
-    LINE "assembly Tree";
-
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
-
-    ecs_entity_t tree = ecs_lookup(world, "Tree");
-    test_assert(tree != 0);
-
-    ecs_fini(world);
-}
-
-void Script_assembly_empty(void) {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-
-    ecs_struct(world, {
-        .entity = ecs_id(Position),
-        .members = {
-            {"x", ecs_id(ecs_f32_t)},
-            {"y", ecs_id(ecs_f32_t)}
-        }
-    });
-
-    const char *expr =
-    LINE "assembly Tree {"
-    LINE "}";
-
-    ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
-
-    ecs_entity_t tree = ecs_lookup(world, "Tree");
-    test_assert(tree != 0);
-
-    ecs_fini(world);
-}
-
-void Script_assembly_unresolved_tag(void) {
-    ecs_world_t *world = ecs_init();
-
-    const char *expr =
-    LINE "assembly Tree {"
-    LINE "  Foo"
-    LINE "}"
-    LINE "Tree ent()";
-
-    ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr) != 0);
-
-    ecs_fini(world);
-}
-
-void Script_assembly_unresolved_component(void) {
-    ecs_world_t *world = ecs_init();
-
-    const char *expr =
-    HEAD "using flecs.meta"
-    LINE "assembly Tree {"
-    LINE "  struct Position {"
-    LINE "    x = f32"
-    LINE "  }"
-    LINE ""
-    LINE "  Position: {10, 20}"
-    LINE "}";
-
-    ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr) != 0);
-
-    ecs_fini(world);
-}
-
-void Script_assembly_unresolved_pair_relationship(void) {
-    ecs_world_t *world = ecs_init();
-
-    const char *expr =
-    HEAD "Bar {}"
-    LINE "assembly Tree {"
-    LINE "  (Foo, Bar)"
-    LINE "}"
-    LINE "Tree ent()";
-
-    ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr) != 0);
-
-    ecs_fini(world);
-}
-
-void Script_assembly_unresolved_pair_target(void) {
-    ecs_world_t *world = ecs_init();
-
-    const char *expr =
-    HEAD "Foo {}"
-    LINE "assembly Tree {"
-    LINE "  (Foo, Bar)"
-    LINE "}"
-    LINE "Tree ent()";
-
-    ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr) != 0);
-
-    ecs_fini(world);
-}
-
-void Script_assembly_unresolved_with_tag(void) {
-    ecs_world_t *world = ecs_init();
-
-    const char *expr =
-    LINE "assembly Tree {"
-    LINE "  with Foo {"
-    LINE "  }"
-    LINE "}"
-    LINE "Tree ent()";
-
-    ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr) != 0);
-
-    ecs_fini(world);
-}
-
-void Script_assembly_unresolved_with_component(void) {
-    ecs_world_t *world = ecs_init();
-
-    const char *expr =
-    HEAD "using flecs.meta"
-    LINE "assembly Tree {"
-    LINE "  struct Position {"
-    LINE "    x = f32"
-    LINE "  }"
-    LINE ""
-    LINE "  with Position(10, 20) {"
-    LINE "  }"
-    LINE "}";
-
-    ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr) != 0);
-
-    ecs_fini(world);
-}
-
-void Script_assembly_unresolved_with_pair_relationship(void) {
-    ecs_world_t *world = ecs_init();
-
-    const char *expr =
-    HEAD "Bar {}"
-    LINE "assembly Tree {"
-    LINE "  with (Foo, Bar) {"
-    LINE "  }"
-    LINE "}"
-    LINE "Tree ent()";
-
-    ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr) != 0);
-
-    ecs_fini(world);
-}
-
-void Script_assembly_unresolved_with_pair_target(void) {
-    ecs_world_t *world = ecs_init();
-
-    const char *expr =
-    HEAD "Foo {}"
-    LINE "assembly Tree {"
-    LINE "  with (Foo, Bar) {"
-    LINE "  }"
-    LINE "}"
-    LINE "Tree ent()";
-
-    ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr) != 0);
-
-    ecs_fini(world);
-}
-
-void Script_assembly_no_props(void) {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-
-    const char *expr =
-    HEAD "Foo {}"
-    LINE "assembly Tree {"
-    LINE "  Foo"
-    LINE "}"
-    LINE "Tree ent()";
-
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
-
-    ecs_entity_t tree = ecs_lookup(world, "Tree");
-    test_assert(tree != 0);
-
-    ecs_entity_t foo = ecs_lookup(world, "Foo");
-    test_assert(foo != 0);
-
-    ecs_entity_t ent = ecs_lookup(world, "ent");
-    test_assert(ent != 0);
-    test_assert(ecs_has_id(world, ent, foo));
-
-    ecs_fini(world);
-}
-
-void Script_assembly_prop_no_type(void) {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-
-    ecs_struct(world, {
-        .entity = ecs_id(Position),
-        .members = {
-            {"x", ecs_id(ecs_f32_t)},
-            {"y", ecs_id(ecs_f32_t)}
-        }
-    });
-
-    const char *expr =
-    LINE "assembly Tree {"
-    LINE "  prop height"
-    LINE "}";
-
-    ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr) != 0);
-
-    ecs_fini(world);
-}
-
-void Script_assembly_prop_no_default(void) {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-
-    ecs_struct(world, {
-        .entity = ecs_id(Position),
-        .members = {
-            {"x", ecs_id(ecs_f32_t)},
-            {"y", ecs_id(ecs_f32_t)}
-        }
-    });
-
-    const char *expr =
-    LINE "assembly Tree {"
-    LINE "  prop height: flecs.meta.f32"
-    LINE "}";
-
-    ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr) != 0);
-
-    ecs_fini(world);
-}
-
-void Script_assembly_prop(void) {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-
-    ecs_struct(world, {
-        .entity = ecs_id(Position),
-        .members = {
-            {"x", ecs_id(ecs_f32_t)},
-            {"y", ecs_id(ecs_f32_t)}
-        }
-    });
-
-    const char *expr =
-    LINE "assembly Tree {"
-    LINE "  prop height = flecs.meta.f32: 0"
-    LINE "}";
-
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
-
-    ecs_entity_t tree = ecs_lookup(world, "Tree");
-    test_assert(tree != 0);
-
-    const EcsStruct *st = ecs_get(world, tree, EcsStruct);
-    test_assert(st != NULL);
-    test_int(st->members.count, 1);
-    test_str(ecs_vec_get_t(&st->members, ecs_member_t, 0)->name, "height");
-    test_uint(ecs_vec_get_t(&st->members, ecs_member_t, 0)->type, ecs_id(ecs_f32_t));
-
-    ecs_fini(world);
-}
-
-void Script_assembly_prop_space_colon(void) {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-
-    ecs_struct(world, {
-        .entity = ecs_id(Position),
-        .members = {
-            {"x", ecs_id(ecs_f32_t)},
-            {"y", ecs_id(ecs_f32_t)}
-        }
-    });
-
-    const char *expr =
-    LINE "assembly Tree {"
-    LINE "  prop height = flecs.meta.f32: 0"
-    LINE "}";
-
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
-
-    ecs_entity_t tree = ecs_lookup(world, "Tree");
-    test_assert(tree != 0);
-
-    const EcsStruct *st = ecs_get(world, tree, EcsStruct);
-    test_assert(st != NULL);
-    test_int(st->members.count, 1);
-    test_str(ecs_vec_get_t(&st->members, ecs_member_t, 0)->name, "height");
-    test_uint(ecs_vec_get_t(&st->members, ecs_member_t, 0)->type, ecs_id(ecs_f32_t));
-
-    ecs_fini(world);
-}
-
-void Script_assembly_2_props(void) {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-
-    ecs_struct(world, {
-        .entity = ecs_id(Position),
-        .members = {
-            {"x", ecs_id(ecs_f32_t)},
-            {"y", ecs_id(ecs_f32_t)}
-        }
-    });
-
-    const char *expr =
-    LINE "assembly Tree {"
-    LINE "  prop width = flecs.meta.i32: 0"
-    LINE "  prop height = flecs.meta.f32: 0"
-    LINE "}";
-
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
-
-    ecs_entity_t tree = ecs_lookup(world, "Tree");
-    test_assert(tree != 0);
-
-    const EcsStruct *st = ecs_get(world, tree, EcsStruct);
-    test_assert(st != NULL);
-    test_int(st->members.count, 2);
-    test_str(ecs_vec_get_t(&st->members, ecs_member_t, 0)->name, "width");
-    test_uint(ecs_vec_get_t(&st->members, ecs_member_t, 0)->type, ecs_id(ecs_i32_t));
-    test_str(ecs_vec_get_t(&st->members, ecs_member_t, 1)->name, "height");
-    test_uint(ecs_vec_get_t(&st->members, ecs_member_t, 1)->type, ecs_id(ecs_f32_t));
-
-    ecs_fini(world);
-}
-
-void Script_assembly_w_using(void) {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-
-    ecs_struct(world, {
-        .entity = ecs_id(Position),
-        .members = {
-            {"x", ecs_id(ecs_f32_t)},
-            {"y", ecs_id(ecs_f32_t)}
-        }
-    });
-
-    const char *expr =
-    HEAD "using flecs.meta"
-    LINE "Foo {}"
-    LINE "assembly Tree {"
-    LINE "  prop width = i32: 10"
-    LINE "  prop height = f32: 20"
-    LINE "  Foo"
-    LINE "}"
-    LINE "Tree ent()";
-
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
-
-    ecs_entity_t tree = ecs_lookup(world, "Tree");
-    test_assert(tree != 0);
-
-    ecs_entity_t foo = ecs_lookup(world, "Foo");
-    test_assert(foo != 0);
-
-    ecs_entity_t ent = ecs_lookup(world, "ent");
-    test_assert(ent != 0);
-
-    const EcsStruct *st = ecs_get(world, tree, EcsStruct);
-    test_assert(st != NULL);
-    test_int(st->members.count, 2);
-    test_str(ecs_vec_get_t(&st->members, ecs_member_t, 0)->name, "width");
-    test_uint(ecs_vec_get_t(&st->members, ecs_member_t, 0)->type, ecs_id(ecs_i32_t));
-    test_str(ecs_vec_get_t(&st->members, ecs_member_t, 1)->name, "height");
-    test_uint(ecs_vec_get_t(&st->members, ecs_member_t, 1)->type, ecs_id(ecs_f32_t));
-
-    test_assert(ecs_has_id(world, ent, tree));
-    test_assert(ecs_has_id(world, ent, foo));
-
-    const void *ptr = ecs_get_id(world, ent, tree);
-    test_assert(ptr != NULL);
-    char *str = ecs_ptr_to_expr(world, tree, ptr);
-    test_assert(str != NULL);
-    test_str(str, "{width: 10, height: 20}");
-    ecs_os_free(str);
-
-    ecs_fini(world);
-}
-
-void Script_assembly_instance_w_default_values(void) {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-
-    ecs_struct(world, {
-        .entity = ecs_id(Position),
-        .members = {
-            {"x", ecs_id(ecs_f32_t)},
-            {"y", ecs_id(ecs_f32_t)}
-        }
-    });
-
-    const char *expr =
-    LINE "assembly Tree {"
-    LINE "  prop width = flecs.meta.f32: 10"
-    LINE "  prop height = flecs.meta.f32: 20"
-    LINE "}"
-    LINE ""
-    LINE "e { Tree }"
-    LINE "";
-
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
-
-    ecs_entity_t tree = ecs_lookup(world, "Tree");
-    test_assert(tree != 0);
-
-    ecs_entity_t e = ecs_lookup(world, "e");
-    test_assert(e != 0);
-
-    const EcsStruct *st = ecs_get(world, tree, EcsStruct);
-    test_assert(st != NULL);
-    test_int(st->members.count, 2);
-    test_str(ecs_vec_get_t(&st->members, ecs_member_t, 0)->name, "width");
-    test_uint(ecs_vec_get_t(&st->members, ecs_member_t, 0)->type, ecs_id(ecs_f32_t));
-    test_str(ecs_vec_get_t(&st->members, ecs_member_t, 1)->name, "height");
-    test_uint(ecs_vec_get_t(&st->members, ecs_member_t, 1)->type, ecs_id(ecs_f32_t));
-
-    test_assert(ecs_has_id(world, e, tree));
-    const void *ptr = ecs_get_id(world, e, tree);
-    test_assert(ptr != NULL);
-    char *str = ecs_ptr_to_expr(world, tree, ptr);
-    test_assert(str != NULL);
-    test_str(str, "{width: 10, height: 20}");
-    ecs_os_free(str);
-
-    ecs_fini(world);
-}
-
-void Script_assembly_instance_w_assign_default_values(void) {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-
-    ecs_struct(world, {
-        .entity = ecs_id(Position),
-        .members = {
-            {"x", ecs_id(ecs_f32_t)},
-            {"y", ecs_id(ecs_f32_t)}
-        }
-    });
-
-    const char *expr =
-    LINE "assembly Tree {"
-    LINE "  prop width = flecs.meta.f32: 10"
-    LINE "  prop height = flecs.meta.f32: 20"
-    LINE "}"
-    LINE ""
-    LINE "e { Tree: {} }"
-    LINE "";
-
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
-
-    ecs_entity_t tree = ecs_lookup(world, "Tree");
-    test_assert(tree != 0);
-
-    ecs_entity_t e = ecs_lookup(world, "e");
-    test_assert(e != 0);
-
-    const EcsStruct *st = ecs_get(world, tree, EcsStruct);
-    test_assert(st != NULL);
-    test_int(st->members.count, 2);
-    test_str(ecs_vec_get_t(&st->members, ecs_member_t, 0)->name, "width");
-    test_uint(ecs_vec_get_t(&st->members, ecs_member_t, 0)->type, ecs_id(ecs_f32_t));
-    test_str(ecs_vec_get_t(&st->members, ecs_member_t, 1)->name, "height");
-    test_uint(ecs_vec_get_t(&st->members, ecs_member_t, 1)->type, ecs_id(ecs_f32_t));
-
-    test_assert(ecs_has_id(world, e, tree));
-    const void *ptr = ecs_get_id(world, e, tree);
-    test_assert(ptr != NULL);
-    char *str = ecs_ptr_to_expr(world, tree, ptr);
-    test_assert(str != NULL);
-    test_str(str, "{width: 10, height: 20}");
-    ecs_os_free(str);
-
-    ecs_fini(world);
-}
-
-void Script_assembly_instance_w_overridden_values(void) {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-
-    ecs_struct(world, {
-        .entity = ecs_id(Position),
-        .members = {
-            {"x", ecs_id(ecs_f32_t)},
-            {"y", ecs_id(ecs_f32_t)}
-        }
-    });
-
-    const char *expr =
-    LINE "assembly Tree {"
-    LINE "  prop width = flecs.meta.f32: 10"
-    LINE "  prop height = flecs.meta.f32: 20"
-    LINE "}"
-    LINE ""
-    LINE "e { Tree: {width: 30, height: 40} }"
-    LINE "";
-
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
-
-    ecs_entity_t tree = ecs_lookup(world, "Tree");
-    test_assert(tree != 0);
-
-    ecs_entity_t e = ecs_lookup(world, "e");
-    test_assert(e != 0);
-
-    const EcsStruct *st = ecs_get(world, tree, EcsStruct);
-    test_assert(st != NULL);
-    test_int(st->members.count, 2);
-    test_str(ecs_vec_get_t(&st->members, ecs_member_t, 0)->name, "width");
-    test_uint(ecs_vec_get_t(&st->members, ecs_member_t, 0)->type, ecs_id(ecs_f32_t));
-    test_str(ecs_vec_get_t(&st->members, ecs_member_t, 1)->name, "height");
-    test_uint(ecs_vec_get_t(&st->members, ecs_member_t, 1)->type, ecs_id(ecs_f32_t));
-
-    test_assert(ecs_has_id(world, e, tree));
-    const void *ptr = ecs_get_id(world, e, tree);
-    test_assert(ptr != NULL);
-    char *str = ecs_ptr_to_expr(world, tree, ptr);
-    test_assert(str != NULL);
-    test_str(str, "{width: 30, height: 40}");
-    ecs_os_free(str);
-
-    ecs_fini(world);
-}
-
-void Script_assembly_w_child(void) {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-
-    ecs_struct(world, {
-        .entity = ecs_id(Position),
-        .members = {
-            {"x", ecs_id(ecs_f32_t)},
-            {"y", ecs_id(ecs_f32_t)}
-        }
-    });
-
-    const char *expr =
-    LINE "assembly Tree {"
-    LINE "  prop width = flecs.meta.f32: 0"
-    LINE "  prop height = flecs.meta.f32: 0"
-    LINE "  child { Position: {$width * 10 + 1, $height * 20 + 2} }"
-    LINE "}"
-    LINE ""
-    LINE "e { Tree: {width: 1, height: 2} }"
-    LINE "";
-
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
-
-    ecs_entity_t tree = ecs_lookup(world, "Tree");
-    test_assert(tree != 0);
-
-    ecs_entity_t e = ecs_lookup(world, "e");
-    test_assert(e != 0);
-
-    ecs_entity_t root_child = ecs_lookup(world, "child");
-    test_assert(root_child == 0);
-
-    ecs_entity_t child = ecs_lookup(world, "e.child");
-    test_assert(child != 0);
-
-    const EcsStruct *st = ecs_get(world, tree, EcsStruct);
-    test_assert(st != NULL);
-    test_int(st->members.count, 2);
-    test_str(ecs_vec_get_t(&st->members, ecs_member_t, 0)->name, "width");
-    test_uint(ecs_vec_get_t(&st->members, ecs_member_t, 0)->type, ecs_id(ecs_f32_t));
-    test_str(ecs_vec_get_t(&st->members, ecs_member_t, 1)->name, "height");
-    test_uint(ecs_vec_get_t(&st->members, ecs_member_t, 1)->type, ecs_id(ecs_f32_t));
-
-    test_assert(ecs_has_id(world, e, tree));
-    const void *ptr = ecs_get_id(world, e, tree);
-    test_assert(ptr != NULL);
-    char *str = ecs_ptr_to_expr(world, tree, ptr);
-    test_assert(str != NULL);
-    test_str(str, "{width: 1, height: 2}");
-    ecs_os_free(str);
-
-    const Position *p = ecs_get(world, child, Position);
-    test_assert(p != NULL);
-    test_int(p->x, 11);
-    test_int(p->y, 42);
-
-    ecs_fini(world);
-}
-
-void Script_assembly_w_child_parse_script(void) {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-
-    ecs_struct(world, {
-        .entity = ecs_id(Position),
-        .members = {
-            {"x", ecs_id(ecs_f32_t)},
-            {"y", ecs_id(ecs_f32_t)}
-        }
-    });
-
-    const char *expr =
-    LINE "assembly Tree {"
-    LINE "  prop width = flecs.meta.f32: 0"
-    LINE "  prop height = flecs.meta.f32: 0"
-    LINE "  child { Position: {$width * 10 + 1, $height * 20 + 2} }"
-    LINE "}"
-    LINE ""
-    LINE "e { Tree: {width: 1, height: 2} }"
-    LINE "";
-
-    test_assert(ecs_script(world, {
-        .entity = ecs_entity(world, { .name = "main" }),
-        .str = expr
-    }) != 0);
-
-    ecs_entity_t tree = ecs_lookup(world, "Tree");
-    test_assert(tree != 0);
-
-    ecs_entity_t e = ecs_lookup(world, "e");
-    test_assert(e != 0);
-
-    ecs_entity_t child = ecs_lookup(world, "e.child");
-    test_assert(child != 0);
-
-    const EcsStruct *st = ecs_get(world, tree, EcsStruct);
-    test_assert(st != NULL);
-    test_int(st->members.count, 2);
-    test_str(ecs_vec_get_t(&st->members, ecs_member_t, 0)->name, "width");
-    test_uint(ecs_vec_get_t(&st->members, ecs_member_t, 0)->type, ecs_id(ecs_f32_t));
-    test_str(ecs_vec_get_t(&st->members, ecs_member_t, 1)->name, "height");
-    test_uint(ecs_vec_get_t(&st->members, ecs_member_t, 1)->type, ecs_id(ecs_f32_t));
-
-    test_assert(ecs_has_id(world, e, tree));
-    const void *ptr = ecs_get_id(world, e, tree);
-    test_assert(ptr != NULL);
-    char *str = ecs_ptr_to_expr(world, tree, ptr);
-    test_assert(str != NULL);
-    test_str(str, "{width: 1, height: 2}");
-    ecs_os_free(str);
-
-    const Position *p = ecs_get(world, child, Position);
-    test_assert(p != NULL);
-    test_int(p->x, 11);
-    test_int(p->y, 42);
-
-    ecs_fini(world);
-}
-
-void Script_assembly_w_child_parse_script_twice(void) {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-
-    ecs_struct(world, {
-        .entity = ecs_id(Position),
-        .members = {
-            {"x", ecs_id(ecs_f32_t)},
-            {"y", ecs_id(ecs_f32_t)}
-        }
-    });
-
-    const char *expr =
-    LINE "assembly Tree {"
-    LINE "  prop width = flecs.meta.f32: 0"
-    LINE "  prop height = flecs.meta.f32: 0"
-    LINE "  child { Position: {$width * 10 + 1, $height * 20 + 2} }"
-    LINE "}"
-    LINE ""
-    LINE "e { Tree: {width: 1, height: 2} }"
-    LINE "";
-
-    test_assert(ecs_script(world, {
-        .entity = ecs_entity(world, { .name = "main" }),
-        .str = expr
-    }) != 0);
-
-    test_assert(ecs_script(world, {
-        .entity = ecs_entity(world, { .name = "main" }),
-        .str = expr
-    }) != 0);
-
-    ecs_entity_t tree = ecs_lookup(world, "Tree");
-    test_assert(tree != 0);
-
-    ecs_entity_t e = ecs_lookup(world, "e");
-    test_assert(e != 0);
-
-    ecs_entity_t child = ecs_lookup(world, "e.child");
-    test_assert(child != 0);
-
-    const EcsStruct *st = ecs_get(world, tree, EcsStruct);
-    test_assert(st != NULL);
-    test_int(st->members.count, 2);
-    test_str(ecs_vec_get_t(&st->members, ecs_member_t, 0)->name, "width");
-    test_uint(ecs_vec_get_t(&st->members, ecs_member_t, 0)->type, ecs_id(ecs_f32_t));
-    test_str(ecs_vec_get_t(&st->members, ecs_member_t, 1)->name, "height");
-    test_uint(ecs_vec_get_t(&st->members, ecs_member_t, 1)->type, ecs_id(ecs_f32_t));
-
-    test_assert(ecs_has_id(world, e, tree));
-    const void *ptr = ecs_get_id(world, e, tree);
-    test_assert(ptr != NULL);
-    char *str = ecs_ptr_to_expr(world, tree, ptr);
-    test_assert(str != NULL);
-    test_str(str, "{width: 1, height: 2}");
-    ecs_os_free(str);
-
-    const Position *p = ecs_get(world, child, Position);
-    test_assert(p != NULL);
-    test_int(p->x, 11);
-    test_int(p->y, 42);
-
-    ecs_fini(world);
-}
-
-void Script_assembly_w_child_update_after_parse(void) {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-
-    ecs_struct(world, {
-        .entity = ecs_id(Position),
-        .members = {
-            {"x", ecs_id(ecs_f32_t)},
-            {"y", ecs_id(ecs_f32_t)}
-        }
-    });
-
-    const char *expr =
-    LINE "assembly Tree {"
-    LINE "  prop width = flecs.meta.f32: 0"
-    LINE "  prop height = flecs.meta.f32: 0"
-    LINE "  child { Position: {$width * 10 + 1, $height * 20 + 2} }"
-    LINE "}"
-    LINE ""
-    LINE "e { Tree: {width: 1, height: 2} }"
-    LINE "";
-
-    test_assert(ecs_script(world, {
-        .entity = ecs_entity(world, { .name = "main" }),
-        .str = expr
-    }) != 0);
-
-    {
-        ecs_entity_t tree = ecs_lookup(world, "Tree");
-        test_assert(tree != 0);
-
-        ecs_entity_t e = ecs_lookup(world, "e");
-        test_assert(e != 0);
-
-        ecs_entity_t child = ecs_lookup(world, "e.child");
-        test_assert(child != 0);
-    }
-
-    test_assert(!ecs_is_deferred(world));
-
-    const char *expr_update =
-    LINE "e { Tree: {width: 3, height: 4} }"
-    LINE "";
-
-    test_assert(ecs_script_run(world, NULL, expr_update) == 0);
-
-    ecs_entity_t tree = ecs_lookup(world, "Tree");
-    test_assert(tree != 0);
-
-    ecs_entity_t e = ecs_lookup(world, "e");
-    test_assert(e != 0);
-
-    ecs_entity_t child = ecs_lookup(world, "e.child");
-    test_assert(child != 0);
-
-    const EcsStruct *st = ecs_get(world, tree, EcsStruct);
-    test_assert(st != NULL);
-    test_int(st->members.count, 2);
-    test_str(ecs_vec_get_t(&st->members, ecs_member_t, 0)->name, "width");
-    test_uint(ecs_vec_get_t(&st->members, ecs_member_t, 0)->type, ecs_id(ecs_f32_t));
-    test_str(ecs_vec_get_t(&st->members, ecs_member_t, 1)->name, "height");
-    test_uint(ecs_vec_get_t(&st->members, ecs_member_t, 1)->type, ecs_id(ecs_f32_t));
-
-    test_assert(ecs_has_id(world, e, tree));
-    const void *ptr = ecs_get_id(world, e, tree);
-    test_assert(ptr != NULL);
-    char *str = ecs_ptr_to_expr(world, tree, ptr);
-    test_assert(str != NULL);
-    test_str(str, "{width: 3, height: 4}");
-    ecs_os_free(str);
-
-    const Position *p = ecs_get(world, child, Position);
-    test_assert(p != NULL);
-    test_int(p->x, 31);
-    test_int(p->y, 82);
-
-    ecs_fini(world);
-}
-
-void Script_assembly_w_nested_child(void) {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-
-    ecs_struct(world, {
-        .entity = ecs_id(Position),
-        .members = {
-            {"x", ecs_id(ecs_f32_t)},
-            {"y", ecs_id(ecs_f32_t)}
-        }
-    });
-
-    const char *expr =
-    LINE "assembly Tree {"
-    LINE "  prop width = flecs.meta.f32: 0"
-    LINE "  prop height = flecs.meta.f32: 0"
-    LINE "  child {"
-    LINE "    Position: {$width, $height}"
-    LINE "    grand_child { Position: {$height, $width} }"
-    LINE "  }"
-    LINE "}"
-    LINE ""
-    LINE "e { Tree: {width: 1, height: 2} }"
-    LINE "";
-
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
-
-    ecs_entity_t tree = ecs_lookup(world, "Tree");
-    test_assert(tree != 0);
-
-    ecs_entity_t e = ecs_lookup(world, "e");
-    test_assert(e != 0);
-
-    ecs_entity_t child = ecs_lookup(world, "e.child");
-    test_assert(child != 0);
-
-    ecs_entity_t grand_child = ecs_lookup(world, "e.child.grand_child");
-    test_assert(grand_child != 0);
-
-    const EcsStruct *st = ecs_get(world, tree, EcsStruct);
-    test_assert(st != NULL);
-    test_int(st->members.count, 2);
-    test_str(ecs_vec_get_t(&st->members, ecs_member_t, 0)->name, "width");
-    test_uint(ecs_vec_get_t(&st->members, ecs_member_t, 0)->type, ecs_id(ecs_f32_t));
-    test_str(ecs_vec_get_t(&st->members, ecs_member_t, 1)->name, "height");
-    test_uint(ecs_vec_get_t(&st->members, ecs_member_t, 1)->type, ecs_id(ecs_f32_t));
-
-    test_assert(ecs_has_id(world, e, tree));
-    const void *ptr = ecs_get_id(world, e, tree);
-    test_assert(ptr != NULL);
-    char *str = ecs_ptr_to_expr(world, tree, ptr);
-    test_assert(str != NULL);
-    test_str(str, "{width: 1, height: 2}");
-    ecs_os_free(str);
-
-    {
-        const Position *p = ecs_get(world, child, Position);
-        test_assert(p != NULL);
-        test_int(p->x, 1);
-        test_int(p->y, 2);
-    }
-
-    {
-        const Position *p = ecs_get(world, grand_child, Position);
-        test_assert(p != NULL);
-        test_int(p->x, 2);
-        test_int(p->y, 1);
-    }
-
-    ecs_fini(world);
-}
-
-void Script_assembly_w_prefab(void) {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-    ECS_COMPONENT(world, Velocity);
-
-    ecs_struct(world, {
-        .entity = ecs_id(Position),
-        .members = {
-            {"x", ecs_id(ecs_f32_t)},
-            {"y", ecs_id(ecs_f32_t)}
-        }
-    });
-
-    ecs_struct(world, {
-        .entity = ecs_id(Velocity),
-        .members = {
-            {"x", ecs_id(ecs_f32_t)},
-            {"y", ecs_id(ecs_f32_t)}
-        }
-    });
-
-    const char *expr =
-    LINE "assembly Tree {"
-    LINE "  prop width = flecs.meta.f32: 0"
-    LINE "  prop height = flecs.meta.f32: 0"
-    LINE "  Prefab base {"
-    LINE "    Velocity: {$width * 2, $height * 3}"
-    LINE "  }"
-    LINE "  child : base {"
-    LINE "    Position: {$width, $height}"
-    LINE "  }"
-    LINE "}"
-    LINE ""
-    LINE "e { Tree: {width: 1, height: 2} }"
-    LINE "";
-
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
-
-    ecs_entity_t tree = ecs_lookup(world, "Tree");
-    test_assert(tree != 0);
-
-    ecs_entity_t e = ecs_lookup(world, "e");
-    test_assert(e != 0);
-
-    ecs_entity_t child = ecs_lookup(world, "e.child");
-    test_assert(child != 0);
-
-    ecs_entity_t base = ecs_lookup(world, "e.base");
-    test_assert(base != 0);
-
-    const EcsStruct *st = ecs_get(world, tree, EcsStruct);
-    test_assert(st != NULL);
-    test_int(st->members.count, 2);
-    test_str(ecs_vec_get_t(&st->members, ecs_member_t, 0)->name, "width");
-    test_uint(ecs_vec_get_t(&st->members, ecs_member_t, 0)->type, ecs_id(ecs_f32_t));
-    test_str(ecs_vec_get_t(&st->members, ecs_member_t, 1)->name, "height");
-    test_uint(ecs_vec_get_t(&st->members, ecs_member_t, 1)->type, ecs_id(ecs_f32_t));
-
-    test_assert(ecs_has_id(world, e, tree));
-    const void *ptr = ecs_get_id(world, e, tree);
-    test_assert(ptr != NULL);
-    char *str = ecs_ptr_to_expr(world, tree, ptr);
-    test_assert(str != NULL);
-    test_str(str, "{width: 1, height: 2}");
-    ecs_os_free(str);
-
-    test_assert(ecs_has_pair(world, child, EcsIsA, base));
-
-    {
-        const Position *p = ecs_get(world, child, Position);
-        test_assert(p != NULL);
-        test_int(p->x, 1);
-        test_int(p->y, 2);
-    }
-
-    {
-        const Velocity *v = ecs_get(world, child, Velocity);
-        test_assert(v != NULL);
-        test_int(v->x, 2);
-        test_int(v->y, 6);
-    }
-
-    {
-        const Velocity *v = ecs_get(world, base, Velocity);
-        test_assert(v != NULL);
-        test_int(v->x, 2);
-        test_int(v->y, 6);
-    }
-
-    ecs_fini(world);
-}
-
-void Script_assembly_w_prefab_tree(void) {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-    ECS_COMPONENT(world, Velocity);
-
-    ecs_struct(world, {
-        .entity = ecs_id(Position),
-        .members = {
-            {"x", ecs_id(ecs_f32_t)},
-            {"y", ecs_id(ecs_f32_t)}
-        }
-    });
-
-    ecs_struct(world, {
-        .entity = ecs_id(Velocity),
-        .members = {
-            {"x", ecs_id(ecs_f32_t)},
-            {"y", ecs_id(ecs_f32_t)}
-        }
-    });
-
-    const char *expr =
-    LINE "assembly Tree {"
-    LINE "  prop width = flecs.meta.f32: 0"
-    LINE "  prop height = flecs.meta.f32: 0"
-    LINE "  Prefab base {"
-    LINE "    Velocity: {$width * 2, $height * 3}"
-    LINE "    Prefab child {"
-    LINE "      Velocity: {$height * 3, $width * 2}"
-    LINE "    }"
-    LINE "  }"
-    LINE "  child : base {"
-    LINE "    Position: {$width, $height}"
-    LINE "  }"
-    LINE "}"
-    LINE ""
-    LINE "e { Tree: {width: 1, height: 2} }"
-    LINE "";
-
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
-
-    ecs_entity_t tree = ecs_lookup(world, "Tree");
-    test_assert(tree != 0);
-
-    ecs_entity_t e = ecs_lookup(world, "e");
-    test_assert(e != 0);
-
-    ecs_entity_t child = ecs_lookup(world, "e.child");
-    test_assert(child != 0);
-
-    ecs_entity_t base = ecs_lookup(world, "e.base");
-    test_assert(base != 0);
-
-    ecs_entity_t base_child = ecs_lookup(world, "e.base.child");
-    test_assert(base_child != 0);
-
-    const EcsStruct *st = ecs_get(world, tree, EcsStruct);
-    test_assert(st != NULL);
-    test_int(st->members.count, 2);
-    test_str(ecs_vec_get_t(&st->members, ecs_member_t, 0)->name, "width");
-    test_uint(ecs_vec_get_t(&st->members, ecs_member_t, 0)->type, ecs_id(ecs_f32_t));
-    test_str(ecs_vec_get_t(&st->members, ecs_member_t, 1)->name, "height");
-    test_uint(ecs_vec_get_t(&st->members, ecs_member_t, 1)->type, ecs_id(ecs_f32_t));
-
-    test_assert(ecs_has_id(world, e, tree));
-    const void *ptr = ecs_get_id(world, e, tree);
-    test_assert(ptr != NULL);
-    char *str = ecs_ptr_to_expr(world, tree, ptr);
-    test_assert(str != NULL);
-    test_str(str, "{width: 1, height: 2}");
-    ecs_os_free(str);
-
-    test_assert(ecs_has_pair(world, child, EcsIsA, base));
-
-    {
-        const Position *p = ecs_get(world, child, Position);
-        test_assert(p != NULL);
-        test_int(p->x, 1);
-        test_int(p->y, 2);
-    }
-
-    {
-        const Velocity *v = ecs_get(world, child, Velocity);
-        test_assert(v != NULL);
-        test_int(v->x, 2);
-        test_int(v->y, 6);
-    }
-
-    {
-        const Velocity *v = ecs_get(world, base, Velocity);
-        test_assert(v != NULL);
-        test_int(v->x, 2);
-        test_int(v->y, 6);
-    }
-
-    {
-        const Velocity *v = ecs_get(world, base_child, Velocity);
-        test_assert(v != NULL);
-        test_int(v->x, 6);
-        test_int(v->y, 2);
-    }
-
-    ecs_fini(world);
-}
-
-void Script_assembly_w_nested_assembly(void) {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-    ECS_COMPONENT(world, Velocity);
-
-    ecs_struct(world, {
-        .entity = ecs_id(Position),
-        .members = {
-            {"x", ecs_id(ecs_f32_t)},
-            {"y", ecs_id(ecs_f32_t)}
-        }
-    });
-
-    const char *expr =
-    LINE "assembly Tree {"
-    LINE "  prop width = flecs.meta.f32: 0"
-    LINE "  prop height = flecs.meta.f32: 0"
-    LINE "  child {"
-    LINE "    Position: {$width, $height}"
-    LINE "  }"
-    LINE "}"
-    LINE ""
-    LINE "assembly Forest {"
-    LINE "  prop width = flecs.meta.f32: 0"
-    LINE "  prop height = flecs.meta.f32: 0"
-    LINE "  tree_1 { Tree: {-$width, -$height} }"
-    LINE "  tree_2 { Tree: {$width + 1, $height + 1} }"
-    LINE "}"
-    LINE "";
-
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
-
-    ecs_entity_t tree = ecs_lookup(world, "Tree");
-    test_assert(tree != 0);
-    ecs_entity_t forest = ecs_lookup(world, "Forest");
-    test_assert(forest != 0);
-
-    test_assert(ecs_lookup(world, "tree_1") == 0);
-    test_assert(ecs_lookup(world, "tree_2") == 0);
-    test_assert(ecs_lookup(world, "Forest.tree_1.child") == 0);
-    test_assert(ecs_lookup(world, "Forest.tree_2.child") == 0);
-
-    {
-        const EcsStruct *st = ecs_get(world, tree, EcsStruct);
-        test_assert(st != NULL);
-        test_int(st->members.count, 2);
-        test_str(ecs_vec_get_t(&st->members, ecs_member_t, 0)->name, "width");
-        test_uint(ecs_vec_get_t(&st->members, ecs_member_t, 0)->type, ecs_id(ecs_f32_t));
-        test_str(ecs_vec_get_t(&st->members, ecs_member_t, 1)->name, "height");
-        test_uint(ecs_vec_get_t(&st->members, ecs_member_t, 1)->type, ecs_id(ecs_f32_t));
-    }
-
-    {
-        const EcsStruct *st = ecs_get(world, forest, EcsStruct);
-        test_assert(st != NULL);
-        test_int(st->members.count, 2);
-        test_str(ecs_vec_get_t(&st->members, ecs_member_t, 0)->name, "width");
-        test_uint(ecs_vec_get_t(&st->members, ecs_member_t, 0)->type, ecs_id(ecs_f32_t));
-        test_str(ecs_vec_get_t(&st->members, ecs_member_t, 1)->name, "height");
-        test_uint(ecs_vec_get_t(&st->members, ecs_member_t, 1)->type, ecs_id(ecs_f32_t));
-    }
-
-    test_assert(!ecs_is_deferred(world));
-
-    const char *expr_instance =
-    LINE "f { Forest: {10, 20} }"
-    LINE "";
-    test_assert(ecs_script_run(world, NULL, expr_instance) == 0);
-
-    ecs_entity_t f = ecs_lookup(world, "f");
-    test_assert(f != 0);
-    ecs_entity_t f_tree_1 = ecs_lookup(world, "f.tree_1");
-    test_assert(f_tree_1 != 0);
-    ecs_entity_t f_tree_2 = ecs_lookup(world, "f.tree_2");
-    test_assert(f_tree_2 != 0);
-    ecs_entity_t f_tree_1_child = ecs_lookup(world, "f.tree_1.child");
-    test_assert(f_tree_1_child != 0);
-    ecs_entity_t f_tree_2_child = ecs_lookup(world, "f.tree_2.child");
-    test_assert(f_tree_2_child != 0);
-
-    {
-        const void *ptr = ecs_get_id(world, f, forest);
-        test_assert(ptr != NULL);
-        char *str = ecs_ptr_to_expr(world, forest, ptr);
-        test_str(str, "{width: 10, height: 20}");
-        ecs_os_free(str);
-    }
-    {
-        const void *ptr = ecs_get_id(world, f_tree_1, tree);
-        test_assert(ptr != NULL);
-        char *str = ecs_ptr_to_expr(world, tree, ptr);
-        test_str(str, "{width: -10, height: -20}");
-        ecs_os_free(str);
-    }
-    {
-        const void *ptr = ecs_get_id(world, f_tree_2, tree);
-        test_assert(ptr != NULL);
-        char *str = ecs_ptr_to_expr(world, tree, ptr);
-        test_str(str, "{width: 11, height: 21}");
-        ecs_os_free(str);
-    }
-
-    {
-        const Position *p = ecs_get(world, f_tree_1_child, Position);
-        test_assert(p != NULL);
-        test_int(p->x, -10);
-        test_int(p->y, -20);
-    }
-    {
-        const Position *p = ecs_get(world, f_tree_2_child, Position);
-        test_assert(p != NULL);
-        test_int(p->x, 11);
-        test_int(p->y, 21);
-    }
-
-    ecs_fini(world);
-}
-
-void Script_instantiate_prefab_w_assembly(void) {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-
-    ecs_struct(world, {
-        .entity = ecs_id(Position),
-        .members = {
-            {"x", ecs_id(ecs_f32_t)},
-            {"y", ecs_id(ecs_f32_t)}
-        }
-    });
-
-    const char *expr =
-    LINE "assembly Tree {"
-    LINE "  prop width = flecs.meta.f32: 0"
-    LINE "  prop height = flecs.meta.f32: 0"
-    LINE "  child { Position: {$width, $height} }"
-    LINE "}"
-    LINE ""
-    LINE "Prefab p { Tree: {width: 10, height: 20} }"
-    LINE "";
-
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
-
-    ecs_entity_t tree = ecs_lookup(world, "Tree");
-    test_assert(tree != 0);
-    ecs_entity_t p = ecs_lookup(world, "p");
-    test_assert(p != 0);
-    test_assert(ecs_lookup(world, "p.child") == 0);
-    test_assert(ecs_lookup(world, "child") == 0);
-
-    const char *expr_instance =
-    LINE "e : p"
-    LINE "";
-    test_assert(ecs_script_run(world, NULL, expr_instance) == 0);
-
-    ecs_entity_t e = ecs_lookup(world, "e");
-    test_assert(e != 0);
-    ecs_entity_t child = ecs_lookup(world, "e.child");
-    test_assert(child != 0);
-
-    test_assert(ecs_lookup(world, "e.child") != 0);
-
-    const EcsStruct *st = ecs_get(world, tree, EcsStruct);
-    test_assert(st != NULL);
-    test_int(st->members.count, 2);
-    test_str(ecs_vec_get_t(&st->members, ecs_member_t, 0)->name, "width");
-    test_uint(ecs_vec_get_t(&st->members, ecs_member_t, 0)->type, ecs_id(ecs_f32_t));
-    test_str(ecs_vec_get_t(&st->members, ecs_member_t, 1)->name, "height");
-    test_uint(ecs_vec_get_t(&st->members, ecs_member_t, 1)->type, ecs_id(ecs_f32_t));
-
-    {
-        const void *ptr = ecs_get_id(world, p, tree);
-        test_assert(ptr != NULL);
-        char *str = ecs_ptr_to_expr(world, tree, ptr);
-        test_str(str, "{width: 10, height: 20}");
-        ecs_os_free(str);
-    }
-
-    test_assert(ecs_has_pair(world, e, EcsIsA, p));
-
-    {
-        const Position *p = ecs_get(world, child, Position);
-        test_assert(p != NULL);
-        test_int(p->x, 10);
-        test_int(p->y, 20);
-    }
-
-    ecs_fini(world);
-}
-
-void Script_assembly_w_prefab_w_assembly(void) {
-    ecs_world_t *world = ecs_init();
-
-    const char *expr =
-    LINE "assembly Tree {"
-    LINE "  prop count = flecs.meta.f32: 0"
-    LINE "}"
-    LINE ""
-    LINE "assembly Forest {"
-    LINE "  prop count = flecs.meta.f32: 0"
-    LINE ""
-    LINE "  Prefab TreePrefab {"
-    LINE "    Tree: {count: $count}"
-    LINE "  }"
-    LINE ""
-    LINE "  child : TreePrefab"
-    LINE "}"
-    LINE "f { Forest: {10} }";
-
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
-
-    ecs_entity_t tree = ecs_lookup(world, "Tree");
-    test_assert(tree != 0);
-    ecs_entity_t forest = ecs_lookup(world, "Forest");
-    test_assert(forest != 0);
-
-    ecs_entity_t f = ecs_lookup(world, "f");
-    test_assert(f != 0);
-    ecs_entity_t child = ecs_lookup(world, "f.child");
-    test_assert(child != 0);
-
-    {
-        const EcsStruct *st = ecs_get(world, tree, EcsStruct);
-        test_assert(st != NULL);
-        test_int(st->members.count, 1);
-        test_str(ecs_vec_get_t(&st->members, ecs_member_t, 0)->name, "count");
-        test_uint(ecs_vec_get_t(&st->members, ecs_member_t, 0)->type, ecs_id(ecs_f32_t));
-    }
-    
-    {
-        const EcsStruct *st = ecs_get(world, forest, EcsStruct);
-        test_assert(st != NULL);
-        test_int(st->members.count, 1);
-        test_str(ecs_vec_get_t(&st->members, ecs_member_t, 0)->name, "count");
-        test_uint(ecs_vec_get_t(&st->members, ecs_member_t, 0)->type, ecs_id(ecs_f32_t));
-    }
-    
-    {
-        const void *ptr = ecs_get_id(world, f, forest);
-        test_assert(ptr != NULL);
-        char *str = ecs_ptr_to_expr(world, forest, ptr);
-        test_str(str, "{count: 10}");
-        ecs_os_free(str);
-    }
-
-    ecs_fini(world);
-}
-
-void Script_3_assemblies(void) {
-    ecs_world_t *world = ecs_init();
-
-    const char *expr =
-    LINE "assembly Tree {"
-    LINE "  prop t = flecs.meta.f32: 10"
-    LINE "}"
-    LINE ""
-    LINE "assembly Forest {"
-    LINE "  prop f = flecs.meta.f32: 20"
-    LINE "}"
-    LINE ""
-    LINE "assembly Park {"
-    LINE "  prop p = flecs.meta.f32: 30"
-    LINE "}"
-    LINE ""
-    LINE "Tree a()"
-    LINE "Forest b()"
-    LINE "Park c()"
-    LINE "";
-
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
-
-    ecs_entity_t tree = ecs_lookup(world, "Tree");
-    test_assert(tree != 0);
-    ecs_entity_t forest = ecs_lookup(world, "Forest");
-    test_assert(forest != 0);
-    ecs_entity_t park = ecs_lookup(world, "Park");
-    test_assert(park != 0);
-    
-    ecs_entity_t a = ecs_lookup(world, "a");
-    test_assert(a != 0);
-    ecs_entity_t b = ecs_lookup(world, "b");
-    test_assert(b != 0);
-    ecs_entity_t c = ecs_lookup(world, "c");
-    test_assert(c != 0);
-
-    {
-        const EcsStruct *st = ecs_get(world, tree, EcsStruct);
-        test_assert(st != NULL);
-        test_int(st->members.count, 1);
-        test_str(ecs_vec_get_t(&st->members, ecs_member_t, 0)->name, "t");
-        test_uint(ecs_vec_get_t(&st->members, ecs_member_t, 0)->type, ecs_id(ecs_f32_t));
-    }  
-    {
-        const EcsStruct *st = ecs_get(world, forest, EcsStruct);
-        test_assert(st != NULL);
-        test_int(st->members.count, 1);
-        test_str(ecs_vec_get_t(&st->members, ecs_member_t, 0)->name, "f");
-        test_uint(ecs_vec_get_t(&st->members, ecs_member_t, 0)->type, ecs_id(ecs_f32_t));
-    }
-    {
-        const EcsStruct *st = ecs_get(world, park, EcsStruct);
-        test_assert(st != NULL);
-        test_int(st->members.count, 1);
-        test_str(ecs_vec_get_t(&st->members, ecs_member_t, 0)->name, "p");
-        test_uint(ecs_vec_get_t(&st->members, ecs_member_t, 0)->type, ecs_id(ecs_f32_t));
-    }
-    
-    {
-        const void *ptr = ecs_get_id(world, a, tree);
-        test_assert(ptr != NULL);
-        char *str = ecs_ptr_to_expr(world, tree, ptr);
-        test_str(str, "{t: 10}");
-        ecs_os_free(str);
-    }
-    {
-        const void *ptr = ecs_get_id(world, b, forest);
-        test_assert(ptr != NULL);
-        char *str = ecs_ptr_to_expr(world, forest, ptr);
-        test_str(str, "{f: 20}");
-        ecs_os_free(str);
-    }
-    {
-        const void *ptr = ecs_get_id(world, c, park);
-        test_assert(ptr != NULL);
-        char *str = ecs_ptr_to_expr(world, park, ptr);
-        test_str(str, "{p: 30}");
-        ecs_os_free(str);
-    }
-
-    ecs_fini(world);
-}
-
-void Script_assembly_nested_w_default_var(void) {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-
-    ecs_struct(world, {
-        .entity = ecs_id(Position),
-        .members = {
-            {"x", ecs_id(ecs_f32_t)},
-            {"y", ecs_id(ecs_f32_t)}
-        }
-    });
-
-    const char *expr =
-    LINE "assembly Tree {"
-    LINE "  prop count = flecs.meta.f32: 0"
-    LINE "  trunk { Position: {$count, $count * 2} }"
-    LINE "}"
-    LINE ""
-    LINE "assembly Forest {"
-    LINE "  prop count = flecs.meta.f32: 0"
-    LINE "  child { Tree: {count:$} }"
-    LINE "}"
-    LINE "f { Forest: {10} }";
-
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
-
-    ecs_entity_t tree = ecs_lookup(world, "Tree");
-    test_assert(tree != 0);
-    ecs_entity_t forest = ecs_lookup(world, "Forest");
-    test_assert(forest != 0);
-
-    ecs_entity_t f = ecs_lookup(world, "f");
-    test_assert(f != 0);
-    ecs_entity_t child = ecs_lookup(world, "f.child");
-    test_assert(child != 0);
-    ecs_entity_t trunk = ecs_lookup(world, "f.child.trunk");
-    test_assert(trunk != 0);
-
-    {
-        const EcsStruct *st = ecs_get(world, tree, EcsStruct);
-        test_assert(st != NULL);
-        test_int(st->members.count, 1);
-        test_str(ecs_vec_get_t(&st->members, ecs_member_t, 0)->name, "count");
-        test_uint(ecs_vec_get_t(&st->members, ecs_member_t, 0)->type, ecs_id(ecs_f32_t));
-    }
-    
-    {
-        const EcsStruct *st = ecs_get(world, forest, EcsStruct);
-        test_assert(st != NULL);
-        test_int(st->members.count, 1);
-        test_str(ecs_vec_get_t(&st->members, ecs_member_t, 0)->name, "count");
-        test_uint(ecs_vec_get_t(&st->members, ecs_member_t, 0)->type, ecs_id(ecs_f32_t));
-    }
-
-    {
-        const void *ptr = ecs_get_id(world, f, forest);
-        test_assert(ptr != NULL);
-        char *str = ecs_ptr_to_expr(world, forest, ptr);
-        test_str(str, "{count: 10}");
-        ecs_os_free(str);
-    }
-    {
-        const void *ptr = ecs_get_id(world, child, tree);
-        test_assert(ptr != NULL);
-        char *str = ecs_ptr_to_expr(world, tree, ptr);
-        test_str(str, "{count: 10}");
-        ecs_os_free(str);
-    }
-
-    {
-        const Position *p = ecs_get(world, trunk, Position);
-        test_assert(p != NULL);
-        test_int(p->x, 10);
-        test_int(p->y, 20);
-    }
-
-    ecs_fini(world);
-}
-
-void Script_assembly_w_anonymous(void) {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-
-    ecs_struct(world, {
-        .entity = ecs_id(Position),
-        .members = {
-            {"x", ecs_id(ecs_f32_t)},
-            {"y", ecs_id(ecs_f32_t)}
-        }
-    });
-
-    const char *expr =
-    LINE "assembly Tree {"
-    LINE "  prop count = flecs.meta.i32: 0"
-    LINE "  _ { Position: {$count, $count * 2} }"
-    LINE "  _ { Position: {$count, $count * 2} }"
-    LINE "}"
-    LINE ""
-    LINE "t { Tree: {10} }";
-
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
-
-    ecs_entity_t tree = ecs_lookup(world, "Tree");
-    test_assert(tree != 0);
-    ecs_entity_t t = ecs_lookup(world, "t");
-    test_assert(t != 0);
-
-    {
-        ecs_query_t *f = ecs_query(world, {
-            .terms = {
-                { .id = ecs_childof(t) },
-                { .id = ecs_id(Position) },
-            }
-        });
-
-        ecs_iter_t it = ecs_query_iter(world, f);
-        test_int(2, ecs_iter_count(&it));
-        ecs_query_fini(f);
-    }
-
-    ecs_fini(world);
-}
-
-void Script_assembly_w_anonymous_parse_again(void) {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-
-    ecs_struct(world, {
-        .entity = ecs_id(Position),
-        .members = {
-            {"x", ecs_id(ecs_f32_t)},
-            {"y", ecs_id(ecs_f32_t)}
-        }
-    });
-
-    const char *expr =
-    LINE "assembly Tree {"
-    LINE "  prop count = flecs.meta.i32: 0"
-    LINE "  _ { Position: {$count, $count * 2} }"
-    LINE "  _ { Position: {$count, $count * 2} }"
-    LINE "}"
-    LINE ""
-    LINE "t { Tree: {10} }";
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
-
-    {
-        ecs_entity_t tree = ecs_lookup(world, "Tree");
-        test_assert(tree != 0);
-        ecs_entity_t t = ecs_lookup(world, "t");
-        test_assert(t != 0);
-
-        {
-            ecs_query_t *f = ecs_query(world, {
-                .terms = {
-                    { .id = ecs_childof(t) },
-                    { .id = ecs_id(Position) },
-                }
-            });
-
-            ecs_iter_t it = ecs_query_iter(world, f);
-            test_bool(true, ecs_query_next(&it));
-            test_int(2, it.count);
-            test_assert(ecs_get_name(world, it.entities[0]) == NULL);
-            Position *p = ecs_field(&it, Position, 1);
-            test_int(p[0].x, 10); test_int(p[0].y, 20);
-            test_int(p[1].x, 10); test_int(p[1].y, 20);
-            test_bool(false, ecs_query_next(&it));
-            ecs_query_fini(f);
-        }
-    }
-
-    const char *expr_again =
-    LINE "t { Tree: {10} }";
-    test_assert(ecs_script_run(world, NULL, expr_again) == 0);
-
-    {
-        ecs_entity_t tree = ecs_lookup(world, "Tree");
-        test_assert(tree != 0);
-        ecs_entity_t t = ecs_lookup(world, "t");
-        test_assert(t != 0);
-
-        {
-            ecs_query_t *f = ecs_query(world, {
-                .terms = {
-                    { .id = ecs_childof(t) },
-                    { .id = ecs_id(Position) },
-                }
-            });
-
-            ecs_iter_t it = ecs_query_iter(world, f);
-            test_bool(true, ecs_query_next(&it));
-            test_int(2, it.count);
-            test_assert(ecs_get_name(world, it.entities[0]) == NULL);
-            Position *p = ecs_field(&it, Position, 1);
-            test_int(p[0].x, 10); test_int(p[0].y, 20);
-            test_int(p[1].x, 10); test_int(p[1].y, 20);
-            test_bool(false, ecs_query_next(&it));
-            ecs_query_fini(f);
-        }
-    }
-
-    ecs_fini(world);
-}
-
-void Script_typed_const_w_composite_type_invalid_assignment(void) {
+void Eval_typed_const_w_composite_type_invalid_assignment(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_struct(world, {
@@ -6851,7 +5201,7 @@ void Script_typed_const_w_composite_type_invalid_assignment(void) {
     ecs_fini(world);
 }
 
-void Script_typed_const_w_composite_type(void) {
+void Eval_typed_const_w_composite_type(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct(world, {
@@ -6883,7 +5233,7 @@ void Script_typed_const_w_composite_type(void) {
     ecs_fini(world);
 }
 
-void Script_assign_var_to_typed_const_w_composite_type(void) {
+void Eval_assign_var_to_typed_const_w_composite_type(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct(world, {
@@ -6916,133 +5266,7 @@ void Script_assign_var_to_typed_const_w_composite_type(void) {
     ecs_fini(world);
 }
 
-void Script_assembly_w_composite_prop_invalid_assignment(void) {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-
-    ecs_struct(world, {
-        .entity = ecs_id(Position),
-        .members = {
-            {"x", ecs_id(ecs_f32_t)},
-            {"y", ecs_id(ecs_f32_t)}
-        }
-    });
-
-    const char *expr =
-    LINE "assembly Tree {"
-    LINE "  prop pos = Position: Position{10, 20}"
-    LINE "  child { $pos }"
-    LINE "}"
-    LINE ""
-    LINE "t { Tree: {pos: {20, 30}} }";
-
-    ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr) != 0);
-
-    ecs_fini(world);
-}
-
-void Script_assembly_w_composite_prop(void) {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-
-    ecs_struct(world, {
-        .entity = ecs_id(Position),
-        .members = {
-            {"x", ecs_id(ecs_f32_t)},
-            {"y", ecs_id(ecs_f32_t)}
-        }
-    });
-
-    const char *expr =
-    LINE "assembly Tree {"
-    LINE "  prop pos = Position: {10, 20}"
-    LINE "  child { $pos }"
-    LINE "}"
-    LINE "t { Tree: {pos: {20, 30}} }"
-    LINE "";
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
-
-    ecs_entity_t tree = ecs_lookup(world, "Tree");
-    test_assert(tree != 0);
-    ecs_entity_t t = ecs_lookup(world, "t");
-    test_assert(t != 0);
-    ecs_entity_t t_child = ecs_lookup(world, "t.child");
-    test_assert(t_child != 0);
-
-    {
-        const void *ptr = ecs_get_id(world, t, tree);
-        test_assert(ptr != NULL);
-        char *str = ecs_ptr_to_expr(world, tree, ptr);
-        test_str(str, "{pos: {x: 20, y: 30}}");
-        ecs_os_free(str);
-    }
-
-    {
-        const Position *p = ecs_get(world, t_child, Position);
-        test_assert(p != NULL);
-        test_int(p->x, 20);
-        test_int(p->y, 30);
-    }
-
-    ecs_fini(world);
-}
-
-void Script_assembly_with_with(void) {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-
-    ecs_struct(world, {
-        .entity = ecs_id(Position),
-        .members = {
-            {"x", ecs_id(ecs_f32_t)},
-            {"y", ecs_id(ecs_f32_t)}
-        }
-    });
-
-    const char *expr =
-    HEAD "Foo {}"
-    LINE "assembly Tree {"
-    LINE "  prop count = flecs.meta.i32: 0"
-    LINE "  with Foo {"
-    LINE "    child { Position: {$count, $count * 2} }"
-    LINE "  }"
-    LINE "}"
-    LINE "t { Tree: {count: 10} }"
-    LINE "";
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
-
-    ecs_entity_t tree = ecs_lookup(world, "Tree");
-    test_assert(tree != 0);
-    ecs_entity_t foo = ecs_lookup(world, "Foo");
-    test_assert(foo != 0);
-    ecs_entity_t t = ecs_lookup(world, "t");
-    test_assert(t != 0);
-    ecs_entity_t t_child = ecs_lookup(world, "t.child");
-    test_assert(t_child != 0);
-
-    {
-        const void *ptr = ecs_get_id(world, t, tree);
-        test_assert(ptr != NULL);
-        char *str = ecs_ptr_to_expr(world, tree, ptr);
-        test_str(str, "{count: 10}");
-        ecs_os_free(str);
-    }
-
-    {
-        const Position *p = ecs_get(world, t_child, Position);
-        test_assert(p != NULL);
-        test_int(p->x, 10);
-        test_int(p->y, 20);
-    }
-
-    ecs_fini(world);
-}
-
-void Script_using_wildcard(void) {
+void Eval_using_wildcard(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t p1 = ecs_entity(world, { .name = "foo.p1" });
@@ -7104,7 +5328,7 @@ void Script_using_wildcard(void) {
     ecs_fini(world);
 }
 
-void Script_single_line_comment_in_value(void) {
+void Eval_single_line_comment_in_value(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -7138,7 +5362,7 @@ void Script_single_line_comment_in_value(void) {
     ecs_fini(world);
 }
 
-void Script_single_line_comment_in_value_after_scope(void) {
+void Eval_single_line_comment_in_value_after_scope(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -7172,7 +5396,7 @@ void Script_single_line_comment_in_value_after_scope(void) {
     ecs_fini(world);
 }
 
-void Script_multi_line_comment_in_value(void) {
+void Eval_multi_line_comment_in_value(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -7208,7 +5432,7 @@ void Script_multi_line_comment_in_value(void) {
     ecs_fini(world);
 }
 
-void Script_multi_line_comment_in_value_after_scope(void) {
+void Eval_multi_line_comment_in_value_after_scope(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -7244,7 +5468,7 @@ void Script_multi_line_comment_in_value_after_scope(void) {
     ecs_fini(world);
 }
 
-void Script_unterminated_multi_line_comment_in_value(void) {
+void Eval_unterminated_multi_line_comment_in_value(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -7270,7 +5494,7 @@ void Script_unterminated_multi_line_comment_in_value(void) {
     ecs_fini(world);
 }
 
-void Script_module_stmt(void) {
+void Eval_module_stmt(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -7312,7 +5536,7 @@ void Script_module_stmt(void) {
     ecs_fini(world);
 }
 
-void Script_nested_module_stmt(void) {
+void Eval_nested_module_stmt(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -7356,7 +5580,7 @@ void Script_nested_module_stmt(void) {
     ecs_fini(world);
 }
 
-void Script_module_stmt_w_scope(void) {
+void Eval_module_stmt_w_scope(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -7417,7 +5641,7 @@ void Script_module_stmt_w_scope(void) {
     ecs_fini(world);
 }
 
-void Script_module_stmt_w_nested_scope(void) {
+void Eval_module_stmt_w_nested_scope(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -7482,128 +5706,7 @@ void Script_module_stmt_w_nested_scope(void) {
     ecs_fini(world);
 }
 
-void Script_module_w_assembly(void) {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-
-    ecs_struct(world, {
-        .entity = ecs_id(Position),
-        .members = {
-            {"x", ecs_id(ecs_f32_t)},
-            {"y", ecs_id(ecs_f32_t)}
-        }
-    });
-
-    const char *expr =
-    LINE "module hello.world\n"
-    LINE "assembly Tree {\n"
-    LINE "  prop count = flecs.meta.i32: 0\n"
-    LINE "  child { Position: {$count, $count * 2} }\n"
-    LINE "}\n"
-    LINE "";
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
-
-    const char *expr_inst =
-    LINE "t = hello.world.Tree: {10}\n";
-    test_assert(ecs_script_run(world, NULL, expr_inst) == 0);
-
-    ecs_entity_t tree = ecs_lookup(world, "hello.world.Tree");
-    test_assert(tree != 0);
-    ecs_entity_t t = ecs_lookup(world, "t");
-    test_assert(t != 0);
-    ecs_entity_t child = ecs_lookup(world, "t.child");
-    test_assert(child != 0);
-
-    {
-        const void *ptr = ecs_get_id(world, t, tree);
-        test_assert(ptr != NULL);
-        char *str = ecs_ptr_to_expr(world, tree, ptr);
-        test_str(str, "{count: 10}");
-        ecs_os_free(str);
-    }
-
-    test_assert(ecs_has(world, child, Position));
-
-    {
-        const Position *ptr = ecs_get(world, child, Position);
-        test_assert(ptr != NULL);
-        test_int(ptr->x, 10);
-        test_int(ptr->y, 20);
-    }
-
-    ecs_fini(world);
-}
-
-void Script_module_w_nested_assembly(void) {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-
-    ecs_struct(world, {
-        .entity = ecs_id(Position),
-        .members = {
-            {"x", ecs_id(ecs_f32_t)},
-            {"y", ecs_id(ecs_f32_t)}
-        }
-    });
-
-    const char *expr =
-    LINE "module hello.world"
-    LINE "assembly Tree {"
-    LINE "  prop count = flecs.meta.i32: 0"
-    LINE "  child { Position: {$count, $count * 2} }"
-    LINE "}"
-    LINE "assembly Forest {"
-    LINE "  prop count = flecs.meta.i32: 0"
-    LINE "  t { Tree: {count:$} }"
-    LINE "}"
-    LINE "";
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
-
-    const char *expr_inst =
-    LINE "f = hello.world.Forest: {10}\n";
-    test_assert(ecs_script_run(world, NULL, expr_inst) == 0);
-
-    ecs_entity_t forest = ecs_lookup(world, "hello.world.Forest");
-    test_assert(forest != 0);
-    ecs_entity_t tree = ecs_lookup(world, "hello.world.Tree");
-    test_assert(tree != 0);
-    ecs_entity_t f = ecs_lookup(world, "f");
-    test_assert(f != 0);
-    ecs_entity_t t = ecs_lookup(world, "f.t");
-    test_assert(t != 0);
-    ecs_entity_t child = ecs_lookup(world, "f.t.child");
-    test_assert(child != 0);
-
-    {
-        const void *ptr = ecs_get_id(world, f, forest);
-        test_assert(ptr != NULL);
-        char *str = ecs_ptr_to_expr(world, forest, ptr);
-        test_str(str, "{count: 10}");
-        ecs_os_free(str);
-    }
-    {
-        const void *ptr = ecs_get_id(world, t, tree);
-        test_assert(ptr != NULL);
-        char *str = ecs_ptr_to_expr(world, tree, ptr);
-        test_str(str, "{count: 10}");
-        ecs_os_free(str);
-    }
-
-    test_assert(ecs_has(world, child, Position));
-
-    {
-        const Position *ptr = ecs_get(world, child, Position);
-        test_assert(ptr != NULL);
-        test_int(ptr->x, 10);
-        test_int(ptr->y, 20);
-    }
-
-    ecs_fini(world);
-}
-
-void Script_assign_singleton_tag(void) {
+void Eval_assign_singleton_tag(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -7618,7 +5721,7 @@ void Script_assign_singleton_tag(void) {
     ecs_fini(world);
 }
 
-void Script_assign_singleton_component(void) {
+void Eval_assign_singleton_component(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -7645,7 +5748,7 @@ void Script_assign_singleton_component(void) {
     ecs_fini(world);
 }
 
-void Script_assign_singleton_tag_w_scope(void) {
+void Eval_assign_singleton_tag_w_scope(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -7662,7 +5765,7 @@ void Script_assign_singleton_tag_w_scope(void) {
     ecs_fini(world);
 }
 
-void Script_assign_singleton_2_tags_w_scope(void) {
+void Eval_assign_singleton_2_tags_w_scope(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -7683,7 +5786,7 @@ void Script_assign_singleton_2_tags_w_scope(void) {
     ecs_fini(world);
 }
 
-void Script_assign_singleton_component_w_scope(void) {
+void Eval_assign_singleton_component_w_scope(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -7712,7 +5815,7 @@ void Script_assign_singleton_component_w_scope(void) {
     ecs_fini(world);
 }
 
-void Script_assign_singleton_2_components_w_scope(void) {
+void Eval_assign_singleton_2_components_w_scope(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -7754,7 +5857,7 @@ void Script_assign_singleton_2_components_w_scope(void) {
     ecs_fini(world);
 }
 
-void Script_with_pair_in_scope(void) {
+void Eval_with_pair_in_scope(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -7787,7 +5890,7 @@ void Script_with_pair_in_scope(void) {
     ecs_fini(world);
 }
 
-void Script_with_pair_component_in_scope(void) {
+void Eval_with_pair_component_in_scope(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct(world, {
@@ -7830,61 +5933,7 @@ void Script_with_pair_component_in_scope(void) {
     ecs_fini(world);
 }
 
-void Script_assembly_redeclare_prop_as_const(void) {
-    ecs_world_t *world = ecs_init();
-
-    const char *expr =
-    LINE "assembly Foo {\n"
-    LINE "  prop x = flecs.meta.f32: 10\n"
-    LINE "  prop y = flecs.meta.f32: 10\n"
-    LINE "  const y = flecs.meta.f32: 20\n"
-    LINE "}"
-    LINE "ent { Foo: {} }\n"
-    LINE "\n";
-
-    ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr) != 0);
-
-    ecs_fini(world);
-}
-
-void Script_assembly_redeclare_prop_as_prop(void) {
-    ecs_world_t *world = ecs_init();
-
-    const char *expr =
-    LINE "assembly Foo {\n"
-    LINE "  prop x = flecs.meta.f32: 10\n"
-    LINE "  prop y = flecs.meta.f32: 10\n"
-    LINE "  prop y = flecs.meta.f32: 20\n"
-    LINE "}"
-    LINE "ent { Foo: {} }\n"
-    LINE "\n";
-
-    ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr) != 0);
-
-    ecs_fini(world);
-}
-
-void Script_assembly_redeclare_const_as_const(void) {
-    ecs_world_t *world = ecs_init();
-
-    const char *expr =
-    LINE "assembly Foo {\n"
-    LINE "  prop x = flecs.meta.f32: 10\n"
-    LINE "  const y = flecs.meta.f32: 10\n"
-    LINE "  const y = flecs.meta.f32: 20\n"
-    LINE "}"
-    LINE "ent { Foo: {} }\n"
-    LINE "\n";
-
-    ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr) != 0);
-
-    ecs_fini(world);
-}
-
-void Script_pair_w_rel_var(void) {
+void Eval_pair_w_rel_var(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Rel);
@@ -7906,7 +5955,7 @@ void Script_pair_w_rel_var(void) {
     ecs_fini(world);
 }
 
-void Script_pair_w_tgt_var(void) {
+void Eval_pair_w_tgt_var(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Rel);
@@ -7928,7 +5977,7 @@ void Script_pair_w_tgt_var(void) {
     ecs_fini(world);
 }
 
-void Script_pair_w_rel_var_invalid_type(void) {
+void Eval_pair_w_rel_var_invalid_type(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Rel);
@@ -7947,7 +5996,7 @@ void Script_pair_w_rel_var_invalid_type(void) {
     ecs_fini(world);
 }
 
-void Script_pair_w_tgt_var_invalid_type(void) {
+void Eval_pair_w_tgt_var_invalid_type(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Rel);
@@ -7966,31 +6015,7 @@ void Script_pair_w_tgt_var_invalid_type(void) {
     ecs_fini(world);
 }
 
-void Script_assembly_w_pair_w_this_var(void) {
-    ecs_world_t *world = ecs_init();
-
-    ECS_TAG(world, Rel);
-
-    const char *expr =
-    LINE "assembly Foo {\n"
-    LINE "  prop x = flecs.meta.f32: 10\n" // dummy prop
-    LINE "  (Rel, $this)\n"
-    LINE "}\n"
-    LINE "ent { Foo: {} }\n"
-    LINE "\n";
-
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
-
-    ecs_entity_t foo = ecs_lookup(world, "Foo");
-    ecs_entity_t ent = ecs_lookup(world, "ent");
-
-    test_assert(ecs_has_id(world, ent, foo));
-    test_assert(ecs_has_pair(world, ent, Rel, ent));
-
-    ecs_fini(world);
-}
-
-void Script_with_value_not_a_component(void) {
+void Eval_with_value_not_a_component(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -8005,7 +6030,7 @@ void Script_with_value_not_a_component(void) {
     ecs_fini(world);
 }
 
-void Script_component_in_with_scope(void) {
+void Eval_component_in_with_scope(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -8030,7 +6055,7 @@ void Script_component_in_with_scope(void) {
     ecs_fini(world);
 }
 
-void Script_component_in_with_scope_nested(void) {
+void Eval_component_in_with_scope_nested(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -8066,7 +6091,7 @@ void Script_component_in_with_scope_nested(void) {
     ecs_fini(world);
 }
 
-void Script_component_in_with_scope_in_scope(void) {
+void Eval_component_in_with_scope_in_scope(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -8106,7 +6131,7 @@ void Script_component_in_with_scope_in_scope(void) {
     ecs_fini(world);
 }
 
-void Script_assign_after_with_in_scope(void) {
+void Eval_assign_after_with_in_scope(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -8158,7 +6183,7 @@ void Script_assign_after_with_in_scope(void) {
     ecs_fini(world);
 }
 
-void Script_array_component(void) {
+void Eval_array_component(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -8186,7 +6211,7 @@ void Script_array_component(void) {
     ecs_fini(world);
 }
 
-void Script_not_an_array_component(void) {
+void Eval_not_an_array_component(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -8209,7 +6234,7 @@ void Script_not_an_array_component(void) {
 }
 
 
-void Script_array_component_w_curly_brackets(void) {
+void Eval_array_component_w_curly_brackets(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);

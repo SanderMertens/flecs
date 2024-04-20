@@ -1,6 +1,6 @@
-#include <meta.h>
+#include <script.h>
 
-void DeserializeFromExpr_bool(void) {
+void Deserialize_bool(void) {
     ecs_world_t *world = ecs_init();
 
     bool value = false;
@@ -14,7 +14,7 @@ void DeserializeFromExpr_bool(void) {
     ecs_fini(world);
 }
 
-void DeserializeFromExpr_byte(void) {
+void Deserialize_byte(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_byte_t value = 0;
@@ -28,7 +28,7 @@ void DeserializeFromExpr_byte(void) {
     ecs_fini(world);
 }
 
-void DeserializeFromExpr_char(void) {
+void Deserialize_char(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_char_t value = 0;
@@ -42,7 +42,7 @@ void DeserializeFromExpr_char(void) {
     ecs_fini(world);
 }
 
-void DeserializeFromExpr_char_literal(void) {
+void Deserialize_char_literal(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_char_t value = 0;
@@ -55,7 +55,7 @@ void DeserializeFromExpr_char_literal(void) {
     ecs_fini(world);
 }
 
-void DeserializeFromExpr_i8(void) {
+void Deserialize_i8(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_i8_t value = 0;
@@ -68,7 +68,7 @@ void DeserializeFromExpr_i8(void) {
     ecs_fini(world);
 }
 
-void DeserializeFromExpr_i16(void) {
+void Deserialize_i16(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_i16_t value = 0;
@@ -81,7 +81,7 @@ void DeserializeFromExpr_i16(void) {
     ecs_fini(world);
 }
 
-void DeserializeFromExpr_i32(void) {
+void Deserialize_i32(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_i32_t value = 0;
@@ -94,7 +94,7 @@ void DeserializeFromExpr_i32(void) {
     ecs_fini(world);
 }
 
-void DeserializeFromExpr_i64(void) {
+void Deserialize_i64(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_i64_t value = 0;
@@ -107,7 +107,7 @@ void DeserializeFromExpr_i64(void) {
     ecs_fini(world);
 }
 
-void DeserializeFromExpr_iptr(void) {
+void Deserialize_iptr(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_iptr_t value = 0;
@@ -120,7 +120,7 @@ void DeserializeFromExpr_iptr(void) {
     ecs_fini(world);
 }
 
-void DeserializeFromExpr_u8(void) {
+void Deserialize_u8(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_u8_t value = 0;
@@ -133,7 +133,7 @@ void DeserializeFromExpr_u8(void) {
     ecs_fini(world);
 }
 
-void DeserializeFromExpr_u16(void) {
+void Deserialize_u16(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_u16_t value = 0;
@@ -146,7 +146,7 @@ void DeserializeFromExpr_u16(void) {
     ecs_fini(world);
 }
 
-void DeserializeFromExpr_u32(void) {
+void Deserialize_u32(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_u32_t value = 0;
@@ -159,7 +159,7 @@ void DeserializeFromExpr_u32(void) {
     ecs_fini(world);
 }
 
-void DeserializeFromExpr_u64(void) {
+void Deserialize_u64(void) {
     ecs_world_t *world = ecs_init();
 
     {
@@ -189,7 +189,7 @@ void DeserializeFromExpr_u64(void) {
     ecs_fini(world);
 }
 
-void DeserializeFromExpr_uptr(void) {
+void Deserialize_uptr(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_uptr_t value = 0;
@@ -202,7 +202,7 @@ void DeserializeFromExpr_uptr(void) {
     ecs_fini(world);
 }
 
-void DeserializeFromExpr_float(void) {
+void Deserialize_float(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_f32_t value = 0;
@@ -215,7 +215,7 @@ void DeserializeFromExpr_float(void) {
     ecs_fini(world);
 }
 
-void DeserializeFromExpr_double(void) {
+void Deserialize_double(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_f64_t value = 0;
@@ -228,7 +228,7 @@ void DeserializeFromExpr_double(void) {
     ecs_fini(world);
 }
 
-void DeserializeFromExpr_negative_int(void) {
+void Deserialize_negative_int(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_i8_t value = 0;
@@ -241,7 +241,7 @@ void DeserializeFromExpr_negative_int(void) {
     ecs_fini(world);
 }
 
-void DeserializeFromExpr_negative_float(void) {
+void Deserialize_negative_float(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_f32_t value = 0;
@@ -254,7 +254,7 @@ void DeserializeFromExpr_negative_float(void) {
     ecs_fini(world);
 }
 
-void DeserializeFromExpr_string(void) {
+void Deserialize_string(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_string_t value = 0;
@@ -269,7 +269,7 @@ void DeserializeFromExpr_string(void) {
     ecs_fini(world);
 }
 
-void DeserializeFromExpr_entity(void) {
+void Deserialize_entity(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t value = 0;
@@ -284,7 +284,7 @@ void DeserializeFromExpr_entity(void) {
     ecs_fini(world);
 }
 
-void DeserializeFromExpr_id(void) {
+void Deserialize_id(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_id_t value = 0;
@@ -299,7 +299,7 @@ void DeserializeFromExpr_id(void) {
     ecs_fini(world);
 }
 
-void DeserializeFromExpr_enum(void) {
+void Deserialize_enum(void) {
     typedef enum {
         Red, Blue, Green
     } T;
@@ -345,7 +345,7 @@ void DeserializeFromExpr_enum(void) {
     ecs_fini(world);
 }
 
-void DeserializeFromExpr_bitmask(void) {
+void Deserialize_bitmask(void) {
     uint32_t Lettuce = 0x1;
     uint32_t Bacon =   0x1 << 1;
     uint32_t Tomato =  0x1 << 2;
@@ -411,7 +411,7 @@ void DeserializeFromExpr_bitmask(void) {
     ecs_fini(world);
 }
 
-void DeserializeFromExpr_struct_enum(void) {
+void Deserialize_struct_enum(void) {
     typedef enum {
         Red, Blue, Green
     } E;
@@ -470,7 +470,7 @@ void DeserializeFromExpr_struct_enum(void) {
     ecs_fini(world);
 }
 
-void DeserializeFromExpr_struct_bitmask(void) {
+void Deserialize_struct_bitmask(void) {
     uint32_t Lettuce = 0x1;
     uint32_t Bacon =   0x1 << 1;
     uint32_t Tomato =  0x1 << 2;
@@ -544,7 +544,7 @@ void DeserializeFromExpr_struct_bitmask(void) {
     ecs_fini(world);
 }
 
-void DeserializeFromExpr_struct_i32(void) {
+void Deserialize_struct_i32(void) {
     typedef struct {
         int32_t x;
     } T;
@@ -569,7 +569,7 @@ void DeserializeFromExpr_struct_i32(void) {
     ecs_fini(world);
 }
 
-void DeserializeFromExpr_struct_i32_neg(void) {
+void Deserialize_struct_i32_neg(void) {
     typedef struct {
         int32_t x;
     } T;
@@ -594,7 +594,7 @@ void DeserializeFromExpr_struct_i32_neg(void) {
     ecs_fini(world);
 }
 
-void DeserializeFromExpr_struct_i32_i32(void) {
+void Deserialize_struct_i32_i32(void) {
     typedef struct {
         int32_t x;
         int32_t y;
@@ -622,7 +622,7 @@ void DeserializeFromExpr_struct_i32_i32(void) {
     ecs_fini(world);
 }
 
-void DeserializeFromExpr_struct_entity(void) {
+void Deserialize_struct_entity(void) {
     typedef struct {
         ecs_entity_t entity;
     } T;
@@ -647,7 +647,7 @@ void DeserializeFromExpr_struct_entity(void) {
     ecs_fini(world);
 }
 
-void DeserializeFromExpr_struct_id(void) {
+void Deserialize_struct_id(void) {
     typedef struct {
         ecs_id_t entity;
     } T;
@@ -672,7 +672,7 @@ void DeserializeFromExpr_struct_id(void) {
     ecs_fini(world);
 }
 
-void DeserializeFromExpr_struct_nested_i32(void) {
+void Deserialize_struct_nested_i32(void) {
     typedef struct {
         ecs_i32_t x;
     } N1;
@@ -708,7 +708,7 @@ void DeserializeFromExpr_struct_nested_i32(void) {
     ecs_fini(world);
 }
 
-void DeserializeFromExpr_struct_nested_i32_i32(void) {
+void Deserialize_struct_nested_i32_i32(void) {
     typedef struct {
         ecs_i32_t x;
         ecs_i32_t y;
@@ -747,7 +747,7 @@ void DeserializeFromExpr_struct_nested_i32_i32(void) {
     ecs_fini(world);
 }
 
-void DeserializeFromExpr_struct_2_nested_i32_i32(void) {
+void Deserialize_struct_2_nested_i32_i32(void) {
     typedef struct {
         ecs_i32_t x;
         ecs_i32_t y;
@@ -790,7 +790,7 @@ void DeserializeFromExpr_struct_2_nested_i32_i32(void) {
     ecs_fini(world);
 }
 
-void DeserializeFromExpr_struct_member_i32(void) {
+void Deserialize_struct_member_i32(void) {
     typedef struct {
         int32_t x;
     } T;
@@ -815,7 +815,7 @@ void DeserializeFromExpr_struct_member_i32(void) {
     ecs_fini(world);
 }
 
-void DeserializeFromExpr_struct_member_i32_neg(void) {
+void Deserialize_struct_member_i32_neg(void) {
     typedef struct {
         int32_t x;
     } T;
@@ -840,7 +840,7 @@ void DeserializeFromExpr_struct_member_i32_neg(void) {
     ecs_fini(world);
 }
 
-void DeserializeFromExpr_struct_member_i32_i32(void) {
+void Deserialize_struct_member_i32_i32(void) {
     typedef struct {
         int32_t x;
         int32_t y;
@@ -868,7 +868,7 @@ void DeserializeFromExpr_struct_member_i32_i32(void) {
     ecs_fini(world);
 }
 
-void DeserializeFromExpr_struct_member_nested_i32(void) {
+void Deserialize_struct_member_nested_i32(void) {
     typedef struct {
         ecs_i32_t x;
     } N1;
@@ -904,7 +904,7 @@ void DeserializeFromExpr_struct_member_nested_i32(void) {
     ecs_fini(world);
 }
 
-void DeserializeFromExpr_struct_member_nested_i32_i32(void) {
+void Deserialize_struct_member_nested_i32_i32(void) {
     typedef struct {
         ecs_i32_t x;
         ecs_i32_t y;
@@ -943,7 +943,7 @@ void DeserializeFromExpr_struct_member_nested_i32_i32(void) {
     ecs_fini(world);
 }
 
-void DeserializeFromExpr_struct_member_2_nested_i32_i32(void) {
+void Deserialize_struct_member_2_nested_i32_i32(void) {
     typedef struct {
         ecs_i32_t x;
         ecs_i32_t y;
@@ -992,7 +992,7 @@ void DeserializeFromExpr_struct_member_2_nested_i32_i32(void) {
     ecs_fini(world);
 }
 
-void DeserializeFromExpr_struct_member_2_nested_i32_i32_reverse(void) {
+void Deserialize_struct_member_2_nested_i32_i32_reverse(void) {
     typedef struct {
         ecs_i32_t x;
         ecs_i32_t y;
@@ -1041,7 +1041,7 @@ void DeserializeFromExpr_struct_member_2_nested_i32_i32_reverse(void) {
     ecs_fini(world);
 }
 
-void DeserializeFromExpr_struct_i32_array_3(void) {
+void Deserialize_struct_i32_array_3(void) {
     typedef struct {
         int32_t x[3];
     } T;
@@ -1068,7 +1068,7 @@ void DeserializeFromExpr_struct_i32_array_3(void) {
     ecs_fini(world);
 }
 
-void DeserializeFromExpr_struct_struct_i32_array_3(void) {
+void Deserialize_struct_struct_i32_array_3(void) {
     typedef struct {
         ecs_i32_t x;
     } N1;
@@ -1106,7 +1106,7 @@ void DeserializeFromExpr_struct_struct_i32_array_3(void) {
     ecs_fini(world);
 }
 
-void DeserializeFromExpr_struct_struct_i32_i32_array_3(void) {
+void Deserialize_struct_struct_i32_i32_array_3(void) {
     typedef struct {
         ecs_i32_t x;
         ecs_i32_t y;
@@ -1149,7 +1149,7 @@ void DeserializeFromExpr_struct_struct_i32_i32_array_3(void) {
     ecs_fini(world);
 }
 
-void DeserializeFromExpr_struct_w_array_type_i32_i32(void) {
+void Deserialize_struct_w_array_type_i32_i32(void) {
     typedef int32_t N1[2];
 
     typedef struct {
@@ -1183,7 +1183,7 @@ void DeserializeFromExpr_struct_w_array_type_i32_i32(void) {
     ecs_fini(world);
 }
 
-void DeserializeFromExpr_struct_w_2_array_type_i32_i32(void) {
+void Deserialize_struct_w_2_array_type_i32_i32(void) {
     typedef int32_t N1[2];
 
     typedef struct {
@@ -1221,7 +1221,7 @@ void DeserializeFromExpr_struct_w_2_array_type_i32_i32(void) {
     ecs_fini(world);
 }
 
-void DeserializeFromExpr_struct_w_array_type_struct(void) {
+void Deserialize_struct_w_array_type_struct(void) {
     typedef struct {
         ecs_i32_t x;
         ecs_i32_t y;
@@ -1276,7 +1276,7 @@ void DeserializeFromExpr_struct_w_array_type_struct(void) {
     ecs_fini(world);
 }
 
-void DeserializeFromExpr_struct_w_2_array_type_struct(void) {
+void Deserialize_struct_w_2_array_type_struct(void) {
     typedef struct {
         ecs_i32_t x;
         ecs_i32_t y;
@@ -1340,7 +1340,7 @@ void DeserializeFromExpr_struct_w_2_array_type_struct(void) {
     ecs_fini(world);
 }
 
-void DeserializeFromExpr_discover_type_int(void) {
+void Deserialize_discover_type_int(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
@@ -1353,7 +1353,7 @@ void DeserializeFromExpr_discover_type_int(void) {
     ecs_fini(world);
 }
 
-void DeserializeFromExpr_discover_type_negative_int(void) {
+void Deserialize_discover_type_negative_int(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
@@ -1366,7 +1366,7 @@ void DeserializeFromExpr_discover_type_negative_int(void) {
     ecs_fini(world);
 }
 
-void DeserializeFromExpr_discover_type_float(void) {
+void Deserialize_discover_type_float(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
@@ -1379,7 +1379,7 @@ void DeserializeFromExpr_discover_type_float(void) {
     ecs_fini(world);
 }
 
-void DeserializeFromExpr_discover_type_negative_float(void) {
+void Deserialize_discover_type_negative_float(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
@@ -1392,7 +1392,7 @@ void DeserializeFromExpr_discover_type_negative_float(void) {
     ecs_fini(world);
 }
 
-void DeserializeFromExpr_discover_type_string(void) {
+void Deserialize_discover_type_string(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
@@ -1405,7 +1405,7 @@ void DeserializeFromExpr_discover_type_string(void) {
     ecs_fini(world);
 }
 
-void DeserializeFromExpr_discover_type_multiline_string(void) {
+void Deserialize_discover_type_multiline_string(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
@@ -1418,7 +1418,7 @@ void DeserializeFromExpr_discover_type_multiline_string(void) {
     ecs_fini(world);
 }
 
-void DeserializeFromExpr_discover_type_entity(void) {
+void Deserialize_discover_type_entity(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t foo = ecs_entity(world, { .name = "foo" });
@@ -1433,7 +1433,7 @@ void DeserializeFromExpr_discover_type_entity(void) {
     ecs_fini(world);
 }
 
-void DeserializeFromExpr_discover_type_bool(void) {
+void Deserialize_discover_type_bool(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
@@ -1453,7 +1453,7 @@ void DeserializeFromExpr_discover_type_bool(void) {
     ecs_fini(world);
 }
 
-void DeserializeFromExpr_discover_type_unknown(void) {
+void Deserialize_discover_type_unknown(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
@@ -1465,7 +1465,7 @@ void DeserializeFromExpr_discover_type_unknown(void) {
     ecs_fini(world);
 }
 
-void DeserializeFromExpr_discover_type_invalid(void) {
+void Deserialize_discover_type_invalid(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};

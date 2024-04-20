@@ -480,6 +480,9 @@ jobs:
       - name: test meta
         run: bake run test/meta -- -j 8
 
+      - name: test script
+        run: bake run test/script -- -j 8
+
       - name: test collections
         run: bake run test/collections -- -j 8
 
@@ -605,6 +608,9 @@ jobs:
       - name: test meta
         run: bake/bake run test\meta -- -j 8
 
+      - name: test script
+        run: bake/bake run test\script -- -j 8
+
       - name: test collections
         run: bake/bake run test\collections -- -j 8
 
@@ -661,6 +667,9 @@ jobs:
 
       - name: test meta
         run: bake/bake run test/meta -- -j 8
+
+      - name: test script
+        run: bake/bake run test/script -- -j 8
 
       - name: test collections
         run: bake/bake run test/collections -- -j 8
@@ -763,6 +772,30 @@ jobs:
       - name: run tests
         run: |
           bake run test/meta --cfg sanitize -- -j 8
+
+  test-sanitized-script:
+    needs: [ build-linux ]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ ubuntu-20.04 ]
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: install bake
+        run: |
+          git clone -b test_params https://github.com/SanderMertens/bake
+          make -C bake/build-$(uname)
+          bake/bake setup
+
+      - name: build flecs
+        run: bake --strict
+
+      - name: run tests
+        run: |
+          bake run test/script --cfg sanitize -- -j 8
 
   test-sanitized-collections:
     needs: [ build-linux ]

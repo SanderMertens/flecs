@@ -1,21 +1,20 @@
-#ifndef ADDONS_H
-#define ADDONS_H
+#ifndef SCRIPT_H
+#define SCRIPT_H
 
 /* This generated file contains includes for project dependencies */
-#include <addons/bake_config.h>
-#include <stdio.h>
+#include "script/bake_config.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#define MAX_SYS_COLUMNS (20)
-#define MAX_ENTITIES (256)
-#define MAX_INVOCATIONS (1024)
-
 /* Multiline strings */
 #define HEAD
 #define LINE "\n"
+
+#define MAX_SYS_COLUMNS (20)
+#define MAX_ENTITIES (256)
+#define MAX_INVOCATIONS (1024)
 
 typedef struct Probe {
     ecs_entity_t system;
@@ -40,43 +39,33 @@ typedef struct IterData {
     int32_t entity_count;
 } IterData;
 
-typedef struct Position {
-    float x;
-    float y;
-} Position;
+typedef struct {
+    float x, y;
+} Position, Velocity;
 
-typedef struct Velocity {
-    float x;
-    float y;
-} Velocity;
+typedef struct {
+    int32_t x, y;
+} PositionI;
 
-typedef float Mass;
+typedef struct {
+    float value;
+} Mass;
 
-typedef float Rotation;
+typedef struct {
+    float x, y;
+} Point;
 
-typedef struct Color {
-    float r;
-    float g;
-    float b;
-    float a;
-} Color;
+typedef struct {
+    Point start, stop;
+} Line;
 
-typedef struct Self {
-    ecs_entity_t value;
-} Self;
+typedef struct {
+    PositionI start, stop;
+} LineI;
 
-void probe_system_w_ctx(
-    ecs_iter_t *it,
-    Probe *ctx);
-
-void probe_iter(ecs_iter_t *it);
-
-void probe_has_entity(Probe *probe, ecs_entity_t e);
-
-void install_test_abort(void);
-
-const ecs_entity_t* bulk_new_w_type(
-    ecs_world_t *world, ecs_entity_t type_ent, int32_t count);
+typedef struct {
+    float x, y, z;
+} Vec3;
 
 #ifdef __cplusplus
 }

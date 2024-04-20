@@ -1,4 +1,4 @@
-#include <addons.h>
+#include <script.h>
 #include <stdio.h>
 
 void probe_system_w_ctx(

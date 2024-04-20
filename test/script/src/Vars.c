@@ -1,4 +1,4 @@
-#include <meta.h>
+#include <script.h>
 
 void Vars_declare_1_var(void) {
     ecs_world_t *world = ecs_init();
@@ -249,7 +249,7 @@ void Vars_struct_expr_w_i32_vars(void) {
     ecs_script_var_t *bar = ecs_script_vars_define(vars, "bar", ecs_i32_t);
     *(int32_t*)bar->value.ptr = 20;
 
-    Position v = {0};
+    PositionI v = {0};
     ecs_script_expr_run_desc_t desc = { .vars = vars };
     const char *ptr = ecs_script_expr_run(world, "{$foo, $bar}", &(ecs_value_t){point, &v}, &desc);
     test_assert(ptr != NULL);
@@ -276,9 +276,9 @@ void Vars_struct_expr_w_struct_var(void) {
     ecs_script_vars_t *vars = ecs_script_vars_init(world);
 
     ecs_script_var_t *foo = ecs_script_vars_define_id(vars, "foo", point);
-    *(Position*)foo->value.ptr = (Position){10, 20};
+    *(PositionI*)foo->value.ptr = (PositionI){10, 20};
 
-    Position v = {0};
+    PositionI v = {0};
     ecs_script_expr_run_desc_t desc = { .vars = vars };
     const char *ptr = ecs_script_expr_run(world, "$foo", &(ecs_value_t){point, &v}, &desc);
     test_assert(ptr != NULL);
@@ -312,11 +312,11 @@ void Vars_nested_struct_expr_w_struct_var(void) {
     ecs_script_vars_t *vars = ecs_script_vars_init(world);
 
     ecs_script_var_t *foo = ecs_script_vars_define_id(vars, "foo", point);
-    *(Position*)foo->value.ptr = (Position){10, 20};
+    *(PositionI*)foo->value.ptr = (PositionI){10, 20};
     ecs_script_var_t *bar = ecs_script_vars_define_id(vars, "bar", point);
-    *(Position*)bar->value.ptr = (Position){30, 40};
+    *(PositionI*)bar->value.ptr = (PositionI){30, 40};
 
-    Line v = {0};
+    LineI v = {0};
     ecs_script_expr_run_desc_t desc = { .vars = vars };
     const char *ptr = ecs_script_expr_run(world, 
         "{start: $foo, stop: $bar}", &(ecs_value_t){line, &v}, &desc);

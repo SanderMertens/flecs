@@ -1,6 +1,6 @@
-#include <meta.h>
+#include <script.h>
 
-void DeserExprOperators_add_2_int_literals(void) {
+void Expr_add_2_int_literals(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
@@ -13,7 +13,7 @@ void DeserExprOperators_add_2_int_literals(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_add_2_int_literals_twice(void) {
+void Expr_add_2_int_literals_twice(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
@@ -31,7 +31,7 @@ void DeserExprOperators_add_2_int_literals_twice(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_sub_2_int_literals(void) {
+void Expr_sub_2_int_literals(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
@@ -44,7 +44,7 @@ void DeserExprOperators_sub_2_int_literals(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_mul_2_int_literals(void) {
+void Expr_mul_2_int_literals(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
@@ -57,7 +57,7 @@ void DeserExprOperators_mul_2_int_literals(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_div_2_int_literals(void) {
+void Expr_div_2_int_literals(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
@@ -70,7 +70,7 @@ void DeserExprOperators_div_2_int_literals(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_add_3_int_literals(void) {
+void Expr_add_3_int_literals(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
@@ -83,7 +83,7 @@ void DeserExprOperators_add_3_int_literals(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_add_3_int_literals_twice(void) {
+void Expr_add_3_int_literals_twice(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
@@ -101,7 +101,7 @@ void DeserExprOperators_add_3_int_literals_twice(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_sub_3_int_literals(void) {
+void Expr_sub_3_int_literals(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
@@ -114,7 +114,7 @@ void DeserExprOperators_sub_3_int_literals(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_mul_3_int_literals(void) {
+void Expr_mul_3_int_literals(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
@@ -127,7 +127,7 @@ void DeserExprOperators_mul_3_int_literals(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_div_3_int_literals(void) {
+void Expr_div_3_int_literals(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
@@ -140,7 +140,7 @@ void DeserExprOperators_div_3_int_literals(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_int_to_bool(void) {
+void Expr_int_to_bool(void) {
     ecs_world_t *world = ecs_init();
 
     bool b = false;
@@ -164,7 +164,7 @@ void DeserExprOperators_int_to_bool(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_bool_to_int(void) {
+void Expr_bool_to_int(void) {
     ecs_world_t *world = ecs_init();
 
     int32_t i = 0;
@@ -183,7 +183,7 @@ void DeserExprOperators_bool_to_int(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_bool_to_uint(void) {
+void Expr_bool_to_uint(void) {
     ecs_world_t *world = ecs_init();
 
     uint32_t i = 0;
@@ -202,7 +202,7 @@ void DeserExprOperators_bool_to_uint(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_add_mul_3_int_literals(void) {
+void Expr_add_mul_3_int_literals(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
@@ -215,7 +215,7 @@ void DeserExprOperators_add_mul_3_int_literals(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_sub_mul_3_int_literals(void) {
+void Expr_sub_mul_3_int_literals(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
@@ -228,7 +228,7 @@ void DeserExprOperators_sub_mul_3_int_literals(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_div_mul_3_int_literals(void) {
+void Expr_div_mul_3_int_literals(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
@@ -241,7 +241,7 @@ void DeserExprOperators_div_mul_3_int_literals(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_add_div_3_int_literals(void) {
+void Expr_add_div_3_int_literals(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
@@ -254,7 +254,7 @@ void DeserExprOperators_add_div_3_int_literals(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_sub_div_3_int_literals(void) {
+void Expr_sub_div_3_int_literals(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
@@ -267,7 +267,7 @@ void DeserExprOperators_sub_div_3_int_literals(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_mul_div_3_int_literals(void) {
+void Expr_mul_div_3_int_literals(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
@@ -280,7 +280,7 @@ void DeserExprOperators_mul_div_3_int_literals(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_mul_add_mul_add_int_literals(void) {
+void Expr_mul_add_mul_add_int_literals(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
@@ -293,7 +293,7 @@ void DeserExprOperators_mul_add_mul_add_int_literals(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_mul_sub_mul_sub_int_literals(void) {
+void Expr_mul_sub_mul_sub_int_literals(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
@@ -306,7 +306,7 @@ void DeserExprOperators_mul_sub_mul_sub_int_literals(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_mul_div_mul_div_int_literals(void) {
+void Expr_mul_div_mul_div_int_literals(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
@@ -319,7 +319,7 @@ void DeserExprOperators_mul_div_mul_div_int_literals(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_div_add_div_add_int_literals(void) {
+void Expr_div_add_div_add_int_literals(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
@@ -332,7 +332,7 @@ void DeserExprOperators_div_add_div_add_int_literals(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_div_sub_div_sub_int_literals(void) {
+void Expr_div_sub_div_sub_int_literals(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
@@ -345,7 +345,7 @@ void DeserExprOperators_div_sub_div_sub_int_literals(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_div_mul_div_mul_int_literals(void) {
+void Expr_div_mul_div_mul_int_literals(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
@@ -358,7 +358,7 @@ void DeserExprOperators_div_mul_div_mul_int_literals(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_div_sub_div_mul_int_literals(void) {
+void Expr_div_sub_div_mul_int_literals(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
@@ -371,7 +371,7 @@ void DeserExprOperators_div_sub_div_mul_int_literals(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_add_2_flt_literals(void) {
+void Expr_add_2_flt_literals(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
@@ -384,7 +384,7 @@ void DeserExprOperators_add_2_flt_literals(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_sub_2_flt_literals(void) {
+void Expr_sub_2_flt_literals(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
@@ -397,7 +397,7 @@ void DeserExprOperators_sub_2_flt_literals(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_mul_2_flt_literals(void) {
+void Expr_mul_2_flt_literals(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
@@ -410,7 +410,7 @@ void DeserExprOperators_mul_2_flt_literals(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_div_2_flt_literals(void) {
+void Expr_div_2_flt_literals(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
@@ -423,7 +423,7 @@ void DeserExprOperators_div_2_flt_literals(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_add_2_int_neg_literals(void) {
+void Expr_add_2_int_neg_literals(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
@@ -436,7 +436,7 @@ void DeserExprOperators_add_2_int_neg_literals(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_sub_2_int_neg_literals(void) {
+void Expr_sub_2_int_neg_literals(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
@@ -449,7 +449,7 @@ void DeserExprOperators_sub_2_int_neg_literals(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_mul_2_int_neg_literals(void) {
+void Expr_mul_2_int_neg_literals(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
@@ -462,7 +462,7 @@ void DeserExprOperators_mul_2_int_neg_literals(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_div_2_int_neg_literals(void) {
+void Expr_div_2_int_neg_literals(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
@@ -475,7 +475,7 @@ void DeserExprOperators_div_2_int_neg_literals(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_mul_lparen_add_add_rparen_int_literals(void) {
+void Expr_mul_lparen_add_add_rparen_int_literals(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
@@ -488,7 +488,7 @@ void DeserExprOperators_mul_lparen_add_add_rparen_int_literals(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_mul_lparen_add_add_add_rparen_int_literals(void) {
+void Expr_mul_lparen_add_add_add_rparen_int_literals(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
@@ -501,7 +501,7 @@ void DeserExprOperators_mul_lparen_add_add_add_rparen_int_literals(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_mul_lparen_add_add_rparen_add_int_literals(void) {
+void Expr_mul_lparen_add_add_rparen_add_int_literals(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
@@ -514,7 +514,7 @@ void DeserExprOperators_mul_lparen_add_add_rparen_add_int_literals(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_lparen_add_add_rparen_mul_int_literals(void) {
+void Expr_lparen_add_add_rparen_mul_int_literals(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
@@ -527,7 +527,7 @@ void DeserExprOperators_lparen_add_add_rparen_mul_int_literals(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_lparen_add_add_add_rparen_mul_int_literals(void) {
+void Expr_lparen_add_add_add_rparen_mul_int_literals(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
@@ -540,7 +540,7 @@ void DeserExprOperators_lparen_add_add_add_rparen_mul_int_literals(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_double_paren_add_add(void) {
+void Expr_double_paren_add_add(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
@@ -553,7 +553,7 @@ void DeserExprOperators_double_paren_add_add(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_double_paren_literal(void) {
+void Expr_double_paren_literal(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
@@ -566,7 +566,7 @@ void DeserExprOperators_double_paren_literal(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_lparen_add_add_rparen_mul_lparen_add_add_rparen(void) {
+void Expr_lparen_add_add_rparen_mul_lparen_add_add_rparen(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
@@ -579,7 +579,7 @@ void DeserExprOperators_lparen_add_add_rparen_mul_lparen_add_add_rparen(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_float_result_add_2_int_literals(void) {
+void Expr_float_result_add_2_int_literals(void) {
     ecs_world_t *world = ecs_init();
 
     float value = 0;
@@ -595,7 +595,7 @@ void DeserExprOperators_float_result_add_2_int_literals(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_struct_result_add_2_int_literals(void) {
+void Expr_struct_result_add_2_int_literals(void) {
     ecs_world_t *world = ecs_init();
 
     typedef struct {
@@ -620,7 +620,7 @@ void DeserExprOperators_struct_result_add_2_int_literals(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_struct_result_add_2_2_fields_int_literals(void) {
+void Expr_struct_result_add_2_2_fields_int_literals(void) {
     ecs_world_t *world = ecs_init();
 
     typedef struct {
@@ -648,7 +648,7 @@ void DeserExprOperators_struct_result_add_2_2_fields_int_literals(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_struct_result_add_3_int_literals(void) {
+void Expr_struct_result_add_3_int_literals(void) {
     ecs_world_t *world = ecs_init();
 
     typedef struct {
@@ -673,7 +673,7 @@ void DeserExprOperators_struct_result_add_3_int_literals(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_struct_result_lparen_int_rparen(void) {
+void Expr_struct_result_lparen_int_rparen(void) {
     ecs_world_t *world = ecs_init();
 
     typedef struct {
@@ -698,7 +698,7 @@ void DeserExprOperators_struct_result_lparen_int_rparen(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_add_to_var(void) {
+void Expr_add_to_var(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_script_vars_t *vars = ecs_script_vars_init(world);
@@ -719,7 +719,7 @@ void DeserExprOperators_add_to_var(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_add_var_to(void) {
+void Expr_add_var_to(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_script_vars_t *vars = ecs_script_vars_init(world);
@@ -740,13 +740,13 @@ void DeserExprOperators_add_var_to(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_var_member(void) {
+void Expr_var_member(void) {
     ecs_world_t *world = ecs_init();
 
-    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, PositionI);
 
     ecs_struct(world, {
-        .entity = ecs_id(Position),
+        .entity = ecs_id(PositionI),
         .members = {
             { .name = "x", .type = ecs_id(ecs_i32_t) },
             { .name = "y", .type = ecs_id(ecs_i32_t) }
@@ -756,8 +756,8 @@ void DeserExprOperators_var_member(void) {
     ecs_script_vars_t *vars = ecs_script_vars_init(world);
 
     ecs_script_var_t *var = ecs_script_vars_define(
-        vars, "foo", Position);
-    *(Position*)var->value.ptr = (Position){10, 20};
+        vars, "foo", PositionI);
+    *(PositionI*)var->value.ptr = (PositionI){10, 20};
 
     ecs_script_expr_run_desc_t desc = { .vars = vars };
     {
@@ -783,7 +783,7 @@ void DeserExprOperators_var_member(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_bool_cond_and_bool(void) {
+void Expr_bool_cond_and_bool(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
@@ -811,7 +811,7 @@ void DeserExprOperators_bool_cond_and_bool(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_bool_cond_or_bool(void) {
+void Expr_bool_cond_or_bool(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
@@ -839,7 +839,7 @@ void DeserExprOperators_bool_cond_or_bool(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_int_cond_and_int(void) {
+void Expr_int_cond_and_int(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
@@ -867,7 +867,7 @@ void DeserExprOperators_int_cond_and_int(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_int_cond_or_int(void) {
+void Expr_int_cond_or_int(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
@@ -895,7 +895,7 @@ void DeserExprOperators_int_cond_or_int(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_bool_cond_and_int(void) {
+void Expr_bool_cond_and_int(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
@@ -923,7 +923,7 @@ void DeserExprOperators_bool_cond_and_int(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_int_cond_and_bool(void) {
+void Expr_int_cond_and_bool(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
@@ -951,7 +951,7 @@ void DeserExprOperators_int_cond_and_bool(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_bool_cond_or_int(void) {
+void Expr_bool_cond_or_int(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
@@ -979,7 +979,7 @@ void DeserExprOperators_bool_cond_or_int(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_int_cond_or_bool(void) {
+void Expr_int_cond_or_bool(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
@@ -1007,7 +1007,7 @@ void DeserExprOperators_int_cond_or_bool(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_cond_eq_bool(void) {
+void Expr_cond_eq_bool(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
@@ -1035,7 +1035,7 @@ void DeserExprOperators_cond_eq_bool(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_cond_eq_int(void) {
+void Expr_cond_eq_int(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
@@ -1063,7 +1063,7 @@ void DeserExprOperators_cond_eq_int(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_cond_neq_bool(void) {
+void Expr_cond_neq_bool(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
@@ -1091,7 +1091,7 @@ void DeserExprOperators_cond_neq_bool(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_cond_neq_int(void) {
+void Expr_cond_neq_int(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
@@ -1119,7 +1119,7 @@ void DeserExprOperators_cond_neq_int(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_cond_eq_bool_int(void) {
+void Expr_cond_eq_bool_int(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
@@ -1132,7 +1132,7 @@ void DeserExprOperators_cond_eq_bool_int(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_cond_eq_int_flt(void) {
+void Expr_cond_eq_int_flt(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
@@ -1145,7 +1145,7 @@ void DeserExprOperators_cond_eq_int_flt(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_cond_eq_cond_and(void) {
+void Expr_cond_eq_cond_and(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
@@ -1168,7 +1168,7 @@ void DeserExprOperators_cond_eq_cond_and(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_cond_eq_cond_or(void) {
+void Expr_cond_eq_cond_or(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
@@ -1186,7 +1186,7 @@ void DeserExprOperators_cond_eq_cond_or(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_cond_gt_bool(void) {
+void Expr_cond_gt_bool(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
@@ -1214,7 +1214,7 @@ void DeserExprOperators_cond_gt_bool(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_cond_gt_int(void) {
+void Expr_cond_gt_int(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
@@ -1242,7 +1242,7 @@ void DeserExprOperators_cond_gt_int(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_cond_gt_flt(void) {
+void Expr_cond_gt_flt(void) {
         ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
@@ -1270,7 +1270,7 @@ void DeserExprOperators_cond_gt_flt(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_cond_gteq_bool(void) {
+void Expr_cond_gteq_bool(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
@@ -1298,7 +1298,7 @@ void DeserExprOperators_cond_gteq_bool(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_cond_gteq_int(void) {
+void Expr_cond_gteq_int(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
@@ -1326,7 +1326,7 @@ void DeserExprOperators_cond_gteq_int(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_cond_gteq_flt(void) {
+void Expr_cond_gteq_flt(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
@@ -1354,7 +1354,7 @@ void DeserExprOperators_cond_gteq_flt(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_cond_lt_bool(void) {
+void Expr_cond_lt_bool(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
@@ -1382,7 +1382,7 @@ void DeserExprOperators_cond_lt_bool(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_cond_lt_int(void) {
+void Expr_cond_lt_int(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
@@ -1410,7 +1410,7 @@ void DeserExprOperators_cond_lt_int(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_cond_lt_flt(void) {
+void Expr_cond_lt_flt(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
@@ -1438,7 +1438,7 @@ void DeserExprOperators_cond_lt_flt(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_cond_lteq_bool(void) {
+void Expr_cond_lteq_bool(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
@@ -1466,7 +1466,7 @@ void DeserExprOperators_cond_lteq_bool(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_cond_lteq_int(void) {
+void Expr_cond_lteq_int(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
@@ -1494,7 +1494,7 @@ void DeserExprOperators_cond_lteq_int(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_cond_lteq_flt(void) {
+void Expr_cond_lteq_flt(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
@@ -1522,7 +1522,7 @@ void DeserExprOperators_cond_lteq_flt(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_min_lparen_int_rparen(void) {
+void Expr_min_lparen_int_rparen(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
@@ -1535,7 +1535,7 @@ void DeserExprOperators_min_lparen_int_rparen(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_min_lparen_int_add_int_rparen(void) {
+void Expr_min_lparen_int_add_int_rparen(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
@@ -1548,7 +1548,7 @@ void DeserExprOperators_min_lparen_int_add_int_rparen(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_min_var(void) {
+void Expr_min_var(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_script_vars_t *vars = ecs_script_vars_init(world);
@@ -1570,7 +1570,7 @@ void DeserExprOperators_min_var(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_min_lparen_int_rparen_to_i64(void) {
+void Expr_min_lparen_int_rparen_to_i64(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_i64_t vi = 0;
@@ -1583,7 +1583,7 @@ void DeserExprOperators_min_lparen_int_rparen_to_i64(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_min_lparen_int_rparen_to_i32(void) {
+void Expr_min_lparen_int_rparen_to_i32(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_i32_t vi = 0;
@@ -1596,7 +1596,7 @@ void DeserExprOperators_min_lparen_int_rparen_to_i32(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_struct_w_min_var(void) {
+void Expr_struct_w_min_var(void) {
     ecs_world_t *world = ecs_init();
 
     typedef struct {
@@ -1629,7 +1629,7 @@ void DeserExprOperators_struct_w_min_var(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_struct_w_min_lparen_int_rparen(void) {
+void Expr_struct_w_min_lparen_int_rparen(void) {
     ecs_world_t *world = ecs_init();
 
     typedef struct {
@@ -1654,7 +1654,7 @@ void DeserExprOperators_struct_w_min_lparen_int_rparen(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_struct_w_min_lparen_var_rparen(void) {
+void Expr_struct_w_min_lparen_var_rparen(void) {
     ecs_world_t *world = ecs_init();
 
     typedef struct {
@@ -1687,7 +1687,7 @@ void DeserExprOperators_struct_w_min_lparen_var_rparen(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_shift_left_int(void) {
+void Expr_shift_left_int(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
@@ -1700,7 +1700,7 @@ void DeserExprOperators_shift_left_int(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_shift_right_int(void) {
+void Expr_shift_right_int(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
@@ -1713,7 +1713,7 @@ void DeserExprOperators_shift_right_int(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_shift_left_int_add_int(void) {
+void Expr_shift_left_int_add_int(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
@@ -1726,7 +1726,7 @@ void DeserExprOperators_shift_left_int_add_int(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_shift_left_int_mul_int(void) {
+void Expr_shift_left_int_mul_int(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
@@ -1739,7 +1739,7 @@ void DeserExprOperators_shift_left_int_mul_int(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_add_int_shift_left_int(void) {
+void Expr_add_int_shift_left_int(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
@@ -1752,7 +1752,7 @@ void DeserExprOperators_add_int_shift_left_int(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_mul_int_shift_left_int(void) {
+void Expr_mul_int_shift_left_int(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
@@ -1765,7 +1765,7 @@ void DeserExprOperators_mul_int_shift_left_int(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_add_int_shift_left_int_add_int(void) {
+void Expr_add_int_shift_left_int_add_int(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
@@ -1778,7 +1778,7 @@ void DeserExprOperators_add_int_shift_left_int_add_int(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_mul_int_shift_left_int_mul_int(void) {
+void Expr_mul_int_shift_left_int_mul_int(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
@@ -1791,7 +1791,7 @@ void DeserExprOperators_mul_int_shift_left_int_mul_int(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_entity_expr(void) {
+void Expr_entity_expr(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t foo = ecs_entity(world, { .name = "foo" });
@@ -1807,7 +1807,7 @@ void DeserExprOperators_entity_expr(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_entity_path_expr(void) {
+void Expr_entity_path_expr(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t parent = ecs_entity(world, { .name = "parent" });
@@ -1826,7 +1826,7 @@ void DeserExprOperators_entity_path_expr(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_entity_parent_func(void) {
+void Expr_entity_parent_func(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t parent = ecs_entity(world, { .name = "parent" });
@@ -1845,7 +1845,7 @@ void DeserExprOperators_entity_parent_func(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_entity_name_func(void) {
+void Expr_entity_name_func(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t parent = ecs_entity(world, { .name = "parent" });
@@ -1864,7 +1864,7 @@ void DeserExprOperators_entity_name_func(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_entity_doc_name_func(void) {
+void Expr_entity_doc_name_func(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t parent = ecs_entity(world, { .name = "parent" });
@@ -1884,7 +1884,7 @@ void DeserExprOperators_entity_doc_name_func(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_entity_chain_func(void) {
+void Expr_entity_chain_func(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t parent = ecs_entity(world, { .name = "parent" });
@@ -1903,7 +1903,7 @@ void DeserExprOperators_entity_chain_func(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_var_parent_func(void) {
+void Expr_var_parent_func(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t parent = ecs_entity(world, { .name = "parent" });
@@ -1932,7 +1932,7 @@ void DeserExprOperators_var_parent_func(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_var_name_func(void) {
+void Expr_var_name_func(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t parent = ecs_entity(world, { .name = "parent" });
@@ -1961,7 +1961,7 @@ void DeserExprOperators_var_name_func(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_var_doc_name_func(void) {
+void Expr_var_doc_name_func(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t parent = ecs_entity(world, { .name = "parent" });
@@ -1991,7 +1991,7 @@ void DeserExprOperators_var_doc_name_func(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_var_chain_func(void) {
+void Expr_var_chain_func(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t parent = ecs_entity(world, { .name = "parent" });
@@ -2020,7 +2020,7 @@ void DeserExprOperators_var_chain_func(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_interpolate_string_w_i32_var(void) {
+void Expr_interpolate_string_w_i32_var(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_script_vars_t *vars = ecs_script_vars_init(world);
@@ -2040,7 +2040,7 @@ void DeserExprOperators_interpolate_string_w_i32_var(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_interpolate_string_w_string_var(void) {
+void Expr_interpolate_string_w_string_var(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_script_vars_t *vars = ecs_script_vars_init(world);
@@ -2060,7 +2060,7 @@ void DeserExprOperators_interpolate_string_w_string_var(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_interpolate_string_w_entity_var(void) {
+void Expr_interpolate_string_w_entity_var(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_script_vars_t *vars = ecs_script_vars_init(world);
@@ -2080,7 +2080,7 @@ void DeserExprOperators_interpolate_string_w_entity_var(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_interpolate_string_w_id_var(void) {
+void Expr_interpolate_string_w_id_var(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_script_vars_t *vars = ecs_script_vars_init(world);
@@ -2100,7 +2100,7 @@ void DeserExprOperators_interpolate_string_w_id_var(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_interpolate_string_w_var_not_found(void) {
+void Expr_interpolate_string_w_var_not_found(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_script_vars_t *vars = ecs_script_vars_init(world);
@@ -2114,7 +2114,7 @@ void DeserExprOperators_interpolate_string_w_var_not_found(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_interpolate_string_w_entity_var_0(void) {
+void Expr_interpolate_string_w_entity_var_0(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_script_vars_t *vars = ecs_script_vars_init(world);
@@ -2134,7 +2134,7 @@ void DeserExprOperators_interpolate_string_w_entity_var_0(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_interpolate_string_w_var_special_chars(void) {
+void Expr_interpolate_string_w_var_special_chars(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_script_vars_t *vars = ecs_script_vars_init(world);
@@ -2154,7 +2154,7 @@ void DeserExprOperators_interpolate_string_w_var_special_chars(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_interpolate_string_w_var_before_after_text(void) {
+void Expr_interpolate_string_w_var_before_after_text(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_script_vars_t *vars = ecs_script_vars_init(world);
@@ -2174,7 +2174,7 @@ void DeserExprOperators_interpolate_string_w_var_before_after_text(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_interpolate_string_w_curly_brackets_var(void) {
+void Expr_interpolate_string_w_curly_brackets_var(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_script_vars_t *vars = ecs_script_vars_init(world);
@@ -2194,7 +2194,7 @@ void DeserExprOperators_interpolate_string_w_curly_brackets_var(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_interpolate_string_w_curly_brackets_expr(void) {
+void Expr_interpolate_string_w_curly_brackets_expr(void) {
     ecs_world_t *world = ecs_init();
 
     char *result = ecs_script_string_interpolate(world, "Hello {10 + 20}World", NULL);
@@ -2205,7 +2205,7 @@ void DeserExprOperators_interpolate_string_w_curly_brackets_expr(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_interpolate_string_w_curly_brackets_expr_w_var(void) {
+void Expr_interpolate_string_w_curly_brackets_expr_w_var(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_script_vars_t *vars = ecs_script_vars_init(world);
@@ -2225,13 +2225,13 @@ void DeserExprOperators_interpolate_string_w_curly_brackets_expr_w_var(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_interpolate_string_w_curly_brackets_expr_w_composite_var(void) {
+void Expr_interpolate_string_w_curly_brackets_expr_w_composite_var(void) {
     ecs_world_t *world = ecs_init();
 
-    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, PositionI);
 
     ecs_struct(world, {
-        .entity = ecs_id(Position),
+        .entity = ecs_id(PositionI),
         .members = {
             { .name = "x", .type = ecs_id(ecs_i32_t) },
             { .name = "y", .type = ecs_id(ecs_i32_t) }
@@ -2241,9 +2241,9 @@ void DeserExprOperators_interpolate_string_w_curly_brackets_expr_w_composite_var
     ecs_script_vars_t *vars = ecs_script_vars_init(world);
 
     ecs_script_var_t *v = ecs_script_vars_define(
-        vars, "foo", Position);
+        vars, "foo", PositionI);
     test_assert(v != NULL);
-    *(Position*)v->value.ptr = (Position){10, 20};
+    *(PositionI*)v->value.ptr = (PositionI){10, 20};
 
     char *result = ecs_script_string_interpolate(
         world, "Hello {$foo.x + $foo.y}World", vars);
@@ -2256,7 +2256,7 @@ void DeserExprOperators_interpolate_string_w_curly_brackets_expr_w_composite_var
     ecs_fini(world);
 }
 
-void DeserExprOperators_interpolate_string_w_escape_var_operator(void) {
+void Expr_interpolate_string_w_escape_var_operator(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_script_vars_t *vars = ecs_script_vars_init(world);
@@ -2276,7 +2276,7 @@ void DeserExprOperators_interpolate_string_w_escape_var_operator(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_interpolate_string_w_escape_curly_brackets(void) {
+void Expr_interpolate_string_w_escape_curly_brackets(void) {
     ecs_world_t *world = ecs_init();
 
     char *result = ecs_script_string_interpolate(world, "Hello \\{10 + 20}World", NULL);
@@ -2287,7 +2287,7 @@ void DeserExprOperators_interpolate_string_w_escape_curly_brackets(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_interpolate_string_w_func(void) {
+void Expr_interpolate_string_w_func(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t parent = ecs_entity(world, { .name = "parent" });
@@ -2314,7 +2314,7 @@ void DeserExprOperators_interpolate_string_w_func(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_interpolate_string_w_func_chain(void) {
+void Expr_interpolate_string_w_func_chain(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t parent = ecs_entity(world, { .name = "parent" });
@@ -2342,7 +2342,7 @@ void DeserExprOperators_interpolate_string_w_func_chain(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_iter_to_vars_no_data(void) {
+void Expr_iter_to_vars_no_data(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Foo);
@@ -2387,16 +2387,16 @@ void DeserExprOperators_iter_to_vars_no_data(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_iter_to_vars_1_comp(void) {
+void Expr_iter_to_vars_1_comp(void) {
     ecs_world_t *world = ecs_init();
 
-    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, PositionI);
 
-    ecs_query_t *query = ecs_query(world, { .expr = "Position" });
+    ecs_query_t *query = ecs_query(world, { .expr = "PositionI" });
     test_assert(query != NULL);
 
-    ecs_entity_t e1 = ecs_new_w(world, Position);
-    ecs_entity_t e2 = ecs_new_w(world, Position);
+    ecs_entity_t e1 = ecs_new_w(world, PositionI);
+    ecs_entity_t e2 = ecs_new_w(world, PositionI);
 
     ecs_script_vars_t *vars = ecs_script_vars_init(world);
 
@@ -2417,9 +2417,9 @@ void DeserExprOperators_iter_to_vars_1_comp(void) {
     {
         ecs_script_var_t *v = ecs_script_vars_lookup(vars, "0");
         test_assert(v != NULL);
-        test_assert(v->value.type == ecs_id(Position));
+        test_assert(v->value.type == ecs_id(PositionI));
         test_assert(v->value.ptr != NULL);
-        test_assert(v->value.ptr == ecs_get(world, e1, Position));
+        test_assert(v->value.ptr == ecs_get(world, e1, PositionI));
     }
 
     ecs_script_vars_from_iter(&it, vars, 1);
@@ -2433,9 +2433,9 @@ void DeserExprOperators_iter_to_vars_1_comp(void) {
     {
         ecs_script_var_t *v = ecs_script_vars_lookup(vars, "0");
         test_assert(v != NULL);
-        test_assert(v->value.type == ecs_id(Position));
+        test_assert(v->value.type == ecs_id(PositionI));
         test_assert(v->value.ptr != NULL);
-        test_assert(v->value.ptr == ecs_get(world, e2, Position));
+        test_assert(v->value.ptr == ecs_get(world, e2, PositionI));
     }
 
     test_bool(ecs_query_next(&it), false);
@@ -2446,17 +2446,17 @@ void DeserExprOperators_iter_to_vars_1_comp(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_iter_to_vars_2_comps(void) {
+void Expr_iter_to_vars_2_comps(void) {
     ecs_world_t *world = ecs_init();
 
-    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, PositionI);
     ECS_COMPONENT(world, Velocity);
 
-    ecs_query_t *query = ecs_query(world, { .expr = "Position, Velocity" });
+    ecs_query_t *query = ecs_query(world, { .expr = "PositionI, Velocity" });
     test_assert(query != NULL);
 
-    ecs_entity_t e1 = ecs_new_w(world, Position);
-    ecs_entity_t e2 = ecs_new_w(world, Position);
+    ecs_entity_t e1 = ecs_new_w(world, PositionI);
+    ecs_entity_t e2 = ecs_new_w(world, PositionI);
     ecs_add(world, e1, Velocity);
     ecs_add(world, e2, Velocity);
 
@@ -2479,9 +2479,9 @@ void DeserExprOperators_iter_to_vars_2_comps(void) {
     {
         ecs_script_var_t *v = ecs_script_vars_lookup(vars, "0");
         test_assert(v != NULL);
-        test_assert(v->value.type == ecs_id(Position));
+        test_assert(v->value.type == ecs_id(PositionI));
         test_assert(v->value.ptr != NULL);
-        test_assert(v->value.ptr == ecs_get(world, e1, Position));
+        test_assert(v->value.ptr == ecs_get(world, e1, PositionI));
     }
     {
         ecs_script_var_t *v = ecs_script_vars_lookup(vars, "1");
@@ -2502,9 +2502,9 @@ void DeserExprOperators_iter_to_vars_2_comps(void) {
     {
         ecs_script_var_t *v = ecs_script_vars_lookup(vars, "0");
         test_assert(v != NULL);
-        test_assert(v->value.type == ecs_id(Position));
+        test_assert(v->value.type == ecs_id(PositionI));
         test_assert(v->value.ptr != NULL);
-        test_assert(v->value.ptr == ecs_get(world, e2, Position));
+        test_assert(v->value.ptr == ecs_get(world, e2, PositionI));
     }
     {
         ecs_script_var_t *v = ecs_script_vars_lookup(vars, "1");
@@ -2522,18 +2522,18 @@ void DeserExprOperators_iter_to_vars_2_comps(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_iter_to_vars_1_comp_1_tag(void) {
+void Expr_iter_to_vars_1_comp_1_tag(void) {
     ecs_world_t *world = ecs_init();
 
-    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, PositionI);
     ECS_COMPONENT(world, Velocity);
     ECS_TAG(world, Foo);
 
-    ecs_query_t *query = ecs_query(world, { .expr = "Position, Foo, Velocity" });
+    ecs_query_t *query = ecs_query(world, { .expr = "PositionI, Foo, Velocity" });
     test_assert(query != NULL);
 
-    ecs_entity_t e1 = ecs_new_w(world, Position);
-    ecs_entity_t e2 = ecs_new_w(world, Position);
+    ecs_entity_t e1 = ecs_new_w(world, PositionI);
+    ecs_entity_t e2 = ecs_new_w(world, PositionI);
     ecs_add(world, e1, Velocity);
     ecs_add(world, e2, Velocity);
     ecs_add(world, e1, Foo);
@@ -2558,9 +2558,9 @@ void DeserExprOperators_iter_to_vars_1_comp_1_tag(void) {
     {
         ecs_script_var_t *v = ecs_script_vars_lookup(vars, "0");
         test_assert(v != NULL);
-        test_assert(v->value.type == ecs_id(Position));
+        test_assert(v->value.type == ecs_id(PositionI));
         test_assert(v->value.ptr != NULL);
-        test_assert(v->value.ptr == ecs_get(world, e1, Position));
+        test_assert(v->value.ptr == ecs_get(world, e1, PositionI));
     }
     test_assert(ecs_script_vars_lookup(vars, "1") == NULL);
     {
@@ -2582,9 +2582,9 @@ void DeserExprOperators_iter_to_vars_1_comp_1_tag(void) {
     {
         ecs_script_var_t *v = ecs_script_vars_lookup(vars, "0");
         test_assert(v != NULL);
-        test_assert(v->value.type == ecs_id(Position));
+        test_assert(v->value.type == ecs_id(PositionI));
         test_assert(v->value.ptr != NULL);
-        test_assert(v->value.ptr == ecs_get(world, e2, Position));
+        test_assert(v->value.ptr == ecs_get(world, e2, PositionI));
     }
     test_assert(ecs_script_vars_lookup(vars, "1") == NULL);
     {
@@ -2603,16 +2603,16 @@ void DeserExprOperators_iter_to_vars_1_comp_1_tag(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_iter_to_vars_w_1_query_var(void) {
+void Expr_iter_to_vars_w_1_query_var(void) {
     ecs_world_t *world = ecs_init();
 
-    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, PositionI);
 
-    ecs_query_t *query = ecs_query(world, { .expr = "Position($x)" });
+    ecs_query_t *query = ecs_query(world, { .expr = "PositionI($x)" });
     test_assert(query != NULL);
 
-    ecs_entity_t e1 = ecs_new_w(world, Position);
-    ecs_entity_t e2 = ecs_new_w(world, Position);
+    ecs_entity_t e1 = ecs_new_w(world, PositionI);
+    ecs_entity_t e2 = ecs_new_w(world, PositionI);
 
     ecs_script_vars_t *vars = ecs_script_vars_init(world);
 
@@ -2632,9 +2632,9 @@ void DeserExprOperators_iter_to_vars_w_1_query_var(void) {
     {
         ecs_script_var_t *v = ecs_script_vars_lookup(vars, "0");
         test_assert(v != NULL);
-        test_assert(v->value.type == ecs_id(Position));
+        test_assert(v->value.type == ecs_id(PositionI));
         test_assert(v->value.ptr != NULL);
-        test_assert(v->value.ptr == ecs_get(world, e1, Position));
+        test_assert(v->value.ptr == ecs_get(world, e1, PositionI));
     }
 
     test_bool(ecs_query_next(&it), true);
@@ -2652,9 +2652,9 @@ void DeserExprOperators_iter_to_vars_w_1_query_var(void) {
     {
         ecs_script_var_t *v = ecs_script_vars_lookup(vars, "0");
         test_assert(v != NULL);
-        test_assert(v->value.type == ecs_id(Position));
+        test_assert(v->value.type == ecs_id(PositionI));
         test_assert(v->value.ptr != NULL);
-        test_assert(v->value.ptr == ecs_get(world, e2, Position));
+        test_assert(v->value.ptr == ecs_get(world, e2, PositionI));
     }
 
     test_bool(ecs_query_next(&it), false);
@@ -2665,17 +2665,17 @@ void DeserExprOperators_iter_to_vars_w_1_query_var(void) {
     ecs_fini(world);
 }
 
-void DeserExprOperators_iter_to_vars_w_2_query_vars(void) {
+void Expr_iter_to_vars_w_2_query_vars(void) {
     ecs_world_t *world = ecs_init();
 
-    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, PositionI);
 
-    ecs_query_t *query = ecs_query(world, { .expr = "Position($x), ChildOf($x, $y)" });
+    ecs_query_t *query = ecs_query(world, { .expr = "PositionI($x), ChildOf($x, $y)" });
     test_assert(query != NULL);
 
     ecs_entity_t parent = ecs_new(world);
-    ecs_entity_t e1 = ecs_new_w(world, Position);
-    ecs_entity_t e2 = ecs_new_w(world, Position);
+    ecs_entity_t e1 = ecs_new_w(world, PositionI);
+    ecs_entity_t e2 = ecs_new_w(world, PositionI);
     ecs_add_pair(world, e1, EcsChildOf, parent);
     ecs_add_pair(world, e2, EcsChildOf, parent);
 
@@ -2704,9 +2704,9 @@ void DeserExprOperators_iter_to_vars_w_2_query_vars(void) {
     {
         ecs_script_var_t *v = ecs_script_vars_lookup(vars, "0");
         test_assert(v != NULL);
-        test_assert(v->value.type == ecs_id(Position));
+        test_assert(v->value.type == ecs_id(PositionI));
         test_assert(v->value.ptr != NULL);
-        test_assert(v->value.ptr == ecs_get(world, e1, Position));
+        test_assert(v->value.ptr == ecs_get(world, e1, PositionI));
     }
 
     test_bool(ecs_query_next(&it), true);
@@ -2731,9 +2731,9 @@ void DeserExprOperators_iter_to_vars_w_2_query_vars(void) {
     {
         ecs_script_var_t *v = ecs_script_vars_lookup(vars, "0");
         test_assert(v != NULL);
-        test_assert(v->value.type == ecs_id(Position));
+        test_assert(v->value.type == ecs_id(PositionI));
         test_assert(v->value.ptr != NULL);
-        test_assert(v->value.ptr == ecs_get(world, e2, Position));
+        test_assert(v->value.ptr == ecs_get(world, e2, PositionI));
     }
 
     test_bool(ecs_query_next(&it), false);
