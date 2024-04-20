@@ -7,6 +7,9 @@
 
 #ifdef FLECS_RULES
 
+#ifndef FLECS_RULES_ADDON_H
+#define FLECS_RULES_ADDON_H
+
 typedef uint8_t ecs_var_id_t;
 typedef int16_t ecs_rule_lbl_t;
 typedef ecs_flags64_t ecs_write_flags_t;
@@ -161,7 +164,7 @@ typedef struct {
     ecs_trav_up_cache_t cache;
 } ecs_rule_up_ctx_t;
 
-/* Cache for storing results of upward/downward "all" traversal. This type of 
+/* Cache for storing results of upward/downward "all" traversal. This type of
  * traversal iterates and caches the entire tree. */
 typedef struct {
     ecs_entity_t entity;
@@ -256,7 +259,7 @@ typedef struct {
 
     int32_t scope; /* Nesting level of query scopes */
     ecs_flags32_t scope_is_not; /* Whether scope is prefixed with not */
-} ecs_rule_compile_ctx_t;    
+} ecs_rule_compile_ctx_t;
 
 /* Rule run state */
 typedef struct {
@@ -290,7 +293,7 @@ struct ecs_rule_t {
     ecs_hashmap_t evar_index;     /* Name index for entity variables */
     ecs_rule_var_cache_t vars_cache; /* For trivial rules with only This variables */
     char **var_names;             /* Array with variable names for iterator */
-    
+
     ecs_var_id_t *src_vars;       /* Array with ids to source variables for fields */
     ecs_rule_op_t *ops;           /* Operations */
     int32_t op_count;             /* Number of operations */
@@ -361,7 +364,7 @@ void flecs_rule_trav_cache_fini(
 /* Traversal caches for up traversal. Enables searching upwards until an entity
  * with the queried for id has been found. */
 
-/* Traverse downwards from starting entity to find all tables for which the 
+/* Traverse downwards from starting entity to find all tables for which the
  * specified entity is the source of the queried for id ('with'). */
 ecs_trav_down_t* flecs_rule_get_down_cache(
     const ecs_rule_run_ctx_t *ctx,
@@ -430,5 +433,7 @@ bool flecs_rule_trivial_test_w_wildcards(
     const ecs_rule_run_ctx_t *ctx,
     bool first,
     int32_t term_count);
+
+#endif /* FLECS_RULES_ADDON_H */
 
 #endif

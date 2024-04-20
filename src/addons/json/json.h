@@ -7,6 +7,9 @@
 
 #ifdef FLECS_JSON
 
+#ifndef FLECS_JSON_ADDON_H
+#define FLECS_JSON_ADDON_H
+
 /* Deserialize from JSON */
 typedef enum ecs_json_token_t {
     JsonObjectOpen,
@@ -171,8 +174,8 @@ bool flecs_json_serialize_get_field_ctx(
     ecs_json_ser_ctx_t *ser_ctx);
 
 int flecs_json_serialize_iter_result_rows(
-    const ecs_world_t *world, 
-    const ecs_iter_t *it, 
+    const ecs_world_t *world,
+    const ecs_iter_t *it,
     ecs_strbuf_t *buf,
     const ecs_iter_to_json_desc_t *desc,
     ecs_json_ser_ctx_t *ser_ctx);
@@ -199,8 +202,10 @@ void flecs_json_serialize_query(
 
 int flecs_json_ser_type(
     const ecs_world_t *world,
-    const ecs_vec_t *ser, 
-    const void *base, 
+    const ecs_vec_t *ser,
+    const void *base,
     ecs_strbuf_t *str);
+
+#endif /* FLECS_JSON_ADDON_H */
 
 #endif
