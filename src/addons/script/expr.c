@@ -1257,7 +1257,6 @@ const char* flecs_script_expr_run(
                 ecs_meta_set_value(&cur, &var->value);
             }
             is_lvalue = true;
-
         } else {
             const char *tptr = ecs_parse_ws(ptr);
             for (; ptr != tptr; ptr ++) {

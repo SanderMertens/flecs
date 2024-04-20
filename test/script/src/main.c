@@ -211,6 +211,8 @@ void Eval_assign_after_with_in_scope(void);
 void Eval_array_component(void);
 void Eval_not_an_array_component(void);
 void Eval_array_component_w_curly_brackets(void);
+void Eval_unknown_identifier(void);
+void Eval_unknown_identifier_for_int_field(void);
 
 // Testsuite 'Assembly'
 void Assembly_assembly_no_scope(void);
@@ -479,6 +481,18 @@ void Deserialize_float(void);
 void Deserialize_double(void);
 void Deserialize_negative_int(void);
 void Deserialize_negative_float(void);
+void Deserialize_invalid_i8(void);
+void Deserialize_invalid_i16(void);
+void Deserialize_invalid_i32(void);
+void Deserialize_invalid_i64(void);
+void Deserialize_invalid_iptr(void);
+void Deserialize_invalid_u8(void);
+void Deserialize_invalid_u16(void);
+void Deserialize_invalid_u32(void);
+void Deserialize_invalid_u64(void);
+void Deserialize_invalid_uptr(void);
+void Deserialize_invalid_float(void);
+void Deserialize_invalid_double(void);
 void Deserialize_string(void);
 void Deserialize_entity(void);
 void Deserialize_id(void);
@@ -1327,6 +1341,14 @@ bake_test_case Eval_testcases[] = {
     {
         "array_component_w_curly_brackets",
         Eval_array_component_w_curly_brackets
+    },
+    {
+        "unknown_identifier",
+        Eval_unknown_identifier
+    },
+    {
+        "unknown_identifier_for_int_field",
+        Eval_unknown_identifier_for_int_field
     }
 };
 
@@ -2376,6 +2398,54 @@ bake_test_case Deserialize_testcases[] = {
         Deserialize_negative_float
     },
     {
+        "invalid_i8",
+        Deserialize_invalid_i8
+    },
+    {
+        "invalid_i16",
+        Deserialize_invalid_i16
+    },
+    {
+        "invalid_i32",
+        Deserialize_invalid_i32
+    },
+    {
+        "invalid_i64",
+        Deserialize_invalid_i64
+    },
+    {
+        "invalid_iptr",
+        Deserialize_invalid_iptr
+    },
+    {
+        "invalid_u8",
+        Deserialize_invalid_u8
+    },
+    {
+        "invalid_u16",
+        Deserialize_invalid_u16
+    },
+    {
+        "invalid_u32",
+        Deserialize_invalid_u32
+    },
+    {
+        "invalid_u64",
+        Deserialize_invalid_u64
+    },
+    {
+        "invalid_uptr",
+        Deserialize_invalid_uptr
+    },
+    {
+        "invalid_float",
+        Deserialize_invalid_float
+    },
+    {
+        "invalid_double",
+        Deserialize_invalid_double
+    },
+    {
         "string",
         Deserialize_string
     },
@@ -2539,7 +2609,7 @@ static bake_test_suite suites[] = {
         "Eval",
         NULL,
         NULL,
-        202,
+        204,
         Eval_testcases
     },
     {
@@ -2574,7 +2644,7 @@ static bake_test_suite suites[] = {
         "Deserialize",
         NULL,
         NULL,
-        57,
+        69,
         Deserialize_testcases
     }
 };

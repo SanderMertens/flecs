@@ -6253,3 +6253,39 @@ void Eval_array_component_w_curly_brackets(void) {
 
     ecs_fini(world);
 }
+
+void Eval_unknown_identifier(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "using flecs.meta"
+    LINE
+    LINE "struct Comp {"
+    LINE "  value = entity"
+    LINE "}"
+    LINE
+    LINE "Foo { Comp: {A} }";
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr) != 0);
+
+    ecs_fini(world);
+}
+
+void Eval_unknown_identifier_for_int_field(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "using flecs.meta"
+    LINE
+    LINE "struct Comp {"
+    LINE "  value = i32"
+    LINE "}"
+    LINE
+    LINE "Foo { Comp: {A} }";
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr) != 0);
+
+    ecs_fini(world);
+}

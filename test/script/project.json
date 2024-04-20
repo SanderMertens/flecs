@@ -214,7 +214,9 @@
                 "assign_after_with_in_scope",
                 "array_component",
                 "not_an_array_component",
-                "array_component_w_curly_brackets"
+                "array_component_w_curly_brackets",
+                "unknown_identifier",
+                "unknown_identifier_for_int_field"
             ]
         }, {
             "id": "Assembly",
@@ -493,6 +495,18 @@
                 "double",
                 "negative_int",
                 "negative_float",
+                "invalid_i8",
+                "invalid_i16",
+                "invalid_i32",
+                "invalid_i64",
+                "invalid_iptr",
+                "invalid_u8",
+                "invalid_u16",
+                "invalid_u32",
+                "invalid_u64",
+                "invalid_uptr",
+                "invalid_float",
+                "invalid_double",
                 "string",
                 "entity",
                 "id",

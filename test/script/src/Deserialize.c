@@ -254,6 +254,162 @@ void Deserialize_negative_float(void) {
     ecs_fini(world);
 }
 
+void Deserialize_invalid_i8(void) {
+    ecs_world_t *world = ecs_init();
+
+    uint64_t value = 0;
+
+    ecs_log_set_level(-4);
+    const char *ptr = ecs_script_expr_run(
+        world, "a", &ecs_value_ptr(ecs_i8_t, &value), NULL);
+    test_assert(ptr == NULL);
+
+    ecs_fini(world);
+}
+
+void Deserialize_invalid_i16(void) {
+    ecs_world_t *world = ecs_init();
+
+    uint64_t value = 0;
+
+    ecs_log_set_level(-4);
+    const char *ptr = ecs_script_expr_run(
+        world, "a", &ecs_value_ptr(ecs_i16_t, &value), NULL);
+    test_assert(ptr == NULL);
+
+    ecs_fini(world);
+}
+
+void Deserialize_invalid_i32(void) {
+    ecs_world_t *world = ecs_init();
+
+    uint64_t value = 0;
+
+    ecs_log_set_level(-4);
+    const char *ptr = ecs_script_expr_run(
+        world, "a", &ecs_value_ptr(ecs_i32_t, &value), NULL);
+    test_assert(ptr == NULL);
+
+    ecs_fini(world);
+}
+
+void Deserialize_invalid_i64(void) {
+    ecs_world_t *world = ecs_init();
+
+    uint64_t value = 0;
+
+    ecs_log_set_level(-4);
+    const char *ptr = ecs_script_expr_run(
+        world, "a", &ecs_value_ptr(ecs_i64_t, &value), NULL);
+    test_assert(ptr == NULL);
+
+    ecs_fini(world);
+}
+
+void Deserialize_invalid_iptr(void) {
+    ecs_world_t *world = ecs_init();
+
+    uint64_t value = 0;
+
+    ecs_log_set_level(-4);
+    const char *ptr = ecs_script_expr_run(
+        world, "a", &ecs_value_ptr(ecs_iptr_t, &value), NULL);
+    test_assert(ptr == NULL);
+
+    ecs_fini(world);
+}
+
+void Deserialize_invalid_u8(void) {
+    ecs_world_t *world = ecs_init();
+
+    uint64_t value = 0;
+
+    ecs_log_set_level(-4);
+    const char *ptr = ecs_script_expr_run(
+        world, "a", &ecs_value_ptr(ecs_u8_t, &value), NULL);
+    test_assert(ptr == NULL);
+
+    ecs_fini(world);
+}
+
+void Deserialize_invalid_u16(void) {
+    ecs_world_t *world = ecs_init();
+
+    uint64_t value = 0;
+
+    ecs_log_set_level(-4);
+    const char *ptr = ecs_script_expr_run(
+        world, "a", &ecs_value_ptr(ecs_u16_t, &value), NULL);
+    test_assert(ptr == NULL);
+
+    ecs_fini(world);
+}
+
+void Deserialize_invalid_u32(void) {
+    ecs_world_t *world = ecs_init();
+
+    uint64_t value = 0;
+
+    ecs_log_set_level(-4);
+    const char *ptr = ecs_script_expr_run(
+        world, "a", &ecs_value_ptr(ecs_u32_t, &value), NULL);
+    test_assert(ptr == NULL);
+
+    ecs_fini(world);
+}
+
+void Deserialize_invalid_u64(void) {
+    ecs_world_t *world = ecs_init();
+
+    uint64_t value = 0;
+
+    ecs_log_set_level(-4);
+    const char *ptr = ecs_script_expr_run(
+        world, "a", &ecs_value_ptr(ecs_u64_t, &value), NULL);
+    test_assert(ptr == NULL);
+
+    ecs_fini(world);
+}
+
+void Deserialize_invalid_uptr(void) {
+    ecs_world_t *world = ecs_init();
+
+    uint64_t value = 0;
+
+    ecs_log_set_level(-4);
+    const char *ptr = ecs_script_expr_run(
+        world, "a", &ecs_value_ptr(ecs_uptr_t, &value), NULL);
+    test_assert(ptr == NULL);
+
+    ecs_fini(world);
+}
+
+void Deserialize_invalid_float(void) {
+    ecs_world_t *world = ecs_init();
+
+    uint64_t value = 0;
+
+    ecs_log_set_level(-4);
+    const char *ptr = ecs_script_expr_run(
+        world, "a", &ecs_value_ptr(ecs_f32_t, &value), NULL);
+    test_assert(ptr == NULL);
+
+    ecs_fini(world);
+}
+
+void Deserialize_invalid_double(void) {
+    ecs_world_t *world = ecs_init();
+
+    uint64_t value = 0;
+
+    ecs_log_set_level(-4);
+    const char *ptr = ecs_script_expr_run(
+        world, "a", &ecs_value_ptr(ecs_f64_t, &value), NULL);
+    test_assert(ptr == NULL);
+
+    ecs_fini(world);
+}
+
 void Deserialize_string(void) {
     ecs_world_t *world = ecs_init();
 
