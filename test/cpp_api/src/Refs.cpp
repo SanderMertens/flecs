@@ -94,6 +94,30 @@ void Refs_pair_ref(void) {
     test_int((e.get<Position, Tag>()->x), 11);
 }
 
+using PositionTag = flecs::pair<Position, Tag>;
+
+void Refs_pair_ref_w_pair_type(void) {
+    flecs::world world;
+
+    auto e = world.entity().set<PositionTag>({10, 20});
+    auto ref = e.get_ref<PositionTag>();
+    ref->x++;
+
+    test_int((e.get<PositionTag>()->x), 11);
+}
+
+using TagPosition = flecs::pair<Tag, Position>;
+
+void Refs_pair_ref_w_pair_type_second(void) {
+    flecs::world world;
+
+    auto e = world.entity().set<TagPosition>({10, 20});
+    auto ref = e.get_ref<TagPosition>();
+    ref->x++;
+
+    test_int((e.get<TagPosition>()->x), 11);
+}
+
 void Refs_pair_ref_w_entity(void) {
     flecs::world world;
 
