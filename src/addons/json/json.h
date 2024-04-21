@@ -10,9 +10,6 @@
 
 #ifdef FLECS_JSON
 
-#ifndef FLECS_JSON_ADDON_H
-#define FLECS_JSON_ADDON_H
-
 /* Deserialize from JSON */
 typedef enum ecs_json_token_t {
     JsonObjectOpen,
@@ -208,8 +205,6 @@ int flecs_json_ser_type(
     const ecs_vec_t *ser,
     const void *base,
     ecs_strbuf_t *str);
-
-#endif /* FLECS_JSON_ADDON_H */
 
 #endif
 

@@ -10,9 +10,6 @@
 
 #ifdef FLECS_RULES
 
-#ifndef FLECS_RULES_ADDON_H
-#define FLECS_RULES_ADDON_H
-
 typedef uint8_t ecs_var_id_t;
 typedef int16_t ecs_rule_lbl_t;
 typedef ecs_flags64_t ecs_write_flags_t;
@@ -436,8 +433,6 @@ bool flecs_rule_trivial_test_w_wildcards(
     const ecs_rule_run_ctx_t *ctx,
     bool first,
     int32_t term_count);
-
-#endif /* FLECS_RULES_ADDON_H */
 
 #endif
 
