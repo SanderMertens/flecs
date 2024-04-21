@@ -19451,7 +19451,7 @@ using actual_type_t = typename actual_type<T>::type;
 // Get type without const, *, &
 template<typename T>
 struct base_type {
-    using type = decay_t< remove_pointer_t< actual_type_t<T> > >;
+    using type = decay_t< actual_type_t<T> >;
 };
 
 template <typename T>
@@ -24927,10 +24927,27 @@ struct entity : entity_builder<entity>
      * @tparam T component for which to get a reference.
      * @return The reference.
      */
-    template <typename T>
+    template <typename T, if_t< is_actual<T>::value > = 0>
     ref<T> get_ref() const {
         return ref<T>(m_world, m_id, _::cpp_type<T>::id(m_world));
     }
+
+    /** Get reference to component.
+     * Overload for when T is not the same as the actual type, which happens
+     * when using pair types.
+     * A reference allows for quick and safe access to a component value, and is
+     * a faster alternative to repeatedly calling 'get' for the same component.
+     *
+     * @tparam T component for which to get a reference.
+     * @return The reference.
+     */
+    template <typename T, typename A = actual_type_t<T>, if_t< flecs::is_pair<T>::value > = 0>
+    ref<A> get_ref() const {
+        return ref<A>(m_world, m_id,
+                      ecs_pair(_::cpp_type<typename T::first>::id(m_world),
+                               _::cpp_type<typename T::second>::id(m_world)));
+    }
+
 
     template <typename First, typename Second, typename P = flecs::pair<First, Second>,
         typename A = actual_type_t<P>>
@@ -26429,6 +26446,8 @@ void register_lifecycle_actions(
 // will register it as a component, and verify whether the input is consistent.
 template <typename T>
 struct cpp_type_impl {
+    static_assert(is_pointer<T>::value == false,
+        "pointer types are not allowed for components");
     // Initialize component identifier
     static void init(
         entity_t entity,
@@ -27964,7 +27983,7 @@ namespace _ {
     struct sig {
         sig(flecs::world_t *world) 
             : m_world(world)
-            , ids({ (_::cpp_type<Components>::id(world))... })
+            , ids({ (_::cpp_type<remove_pointer_t<Components>>::id(world))... })
             , inout ({ (type_to_inout<Components>())... })
             , oper ({ (type_to_oper<Components>())... }) 
         { }

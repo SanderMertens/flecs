@@ -1825,7 +1825,7 @@ void ComponentLifecycle_dtor_relation_target(void) {
 
         auto e = ecs.entity();
         auto e2 = ecs.entity().emplace<CountNoDefaultCtor>(5).add<Tag>(e);
-        auto e3 = ecs.entity().emplace<CountNoDefaultCtor>(5);
+        ecs.entity().emplace<CountNoDefaultCtor>(5);
 
         test_int(CountNoDefaultCtor::ctor_invoked, 2);
         test_int(CountNoDefaultCtor::dtor_invoked, 1);

@@ -40,7 +40,7 @@ namespace _ {
     struct sig {
         sig(flecs::world_t *world) 
             : m_world(world)
-            , ids({ (_::cpp_type<Components>::id(world))... })
+            , ids({ (_::cpp_type<remove_pointer_t<Components>>::id(world))... })
             , inout ({ (type_to_inout<Components>())... })
             , oper ({ (type_to_oper<Components>())... }) 
         { }

@@ -1057,7 +1057,6 @@ void ImplicitComponents_use_const_w_threads(void);
 void ImplicitComponents_implicit_base(void);
 void ImplicitComponents_implicit_const(void);
 void ImplicitComponents_implicit_ref(void);
-void ImplicitComponents_implicit_ptr(void);
 void ImplicitComponents_implicit_const_ref(void);
 void ImplicitComponents_vector_elem_type(void);
 
@@ -5463,10 +5462,6 @@ bake_test_case ImplicitComponents_testcases[] = {
         ImplicitComponents_implicit_ref
     },
     {
-        "implicit_ptr",
-        ImplicitComponents_implicit_ptr
-    },
-    {
         "implicit_const_ref",
         ImplicitComponents_implicit_const_ref
     },
@@ -6783,7 +6778,7 @@ static bake_test_suite suites[] = {
         "ImplicitComponents",
         NULL,
         NULL,
-        28,
+        27,
         ImplicitComponents_testcases
     },
     {

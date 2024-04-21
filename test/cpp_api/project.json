@@ -1101,7 +1101,6 @@
                 "implicit_base",
                 "implicit_const",
                 "implicit_ref",
-                "implicit_ptr",
                 "implicit_const_ref",
                 "vector_elem_type"
             ]
