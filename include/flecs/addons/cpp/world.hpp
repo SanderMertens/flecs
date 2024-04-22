@@ -633,6 +633,22 @@ struct world {
     template <typename Func, if_t< is_callable<Func>::value > = 0 >
     void get(const Func& func) const;
 
+    /** Get mutable singleton component.
+     */
+    template <typename T>
+    T* get_mut() const;
+
+    /** Get mutable singleton pair.
+     */
+    template <typename First, typename Second, typename P = flecs::pair<First, Second>,
+        typename A = actual_type_t<P>>
+    A* get_mut() const;
+
+    /** Get mutable singleton pair.
+     */
+    template <typename First, typename Second>
+    First* get_mut(Second second) const;
+
     /** Test if world has singleton component.
      */
     template <typename T>
