@@ -1111,7 +1111,8 @@
                 "dont_resort_after_set_unsorted_component_w_tag_w_out_term",
                 "sort_component_not_queried_for",
                 "sort_by_wildcard",
-                "sort_shared_w_delete"
+                "sort_shared_w_delete",
+                "sort_w_nontrivial_component"
             ]
         }, {
             "id": "SortingEntireTable",
