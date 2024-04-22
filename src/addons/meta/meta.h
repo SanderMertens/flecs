@@ -28,5 +28,5 @@ void flecs_meta_import_definitions(
     ecs_world_t *world);
 
 #endif
-    
+
 #endif
