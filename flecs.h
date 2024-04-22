@@ -3508,6 +3508,12 @@ FLECS_DBG_API
 void flecs_dump_backtrace(
     void *stream);
 
+FLECS_API
+ecs_iter_t flecs_children(
+    const ecs_world_t *stage,
+    ecs_entity_t rel,
+    ecs_entity_t parent);
+
 /** Calculate offset from address */
 #ifdef __cplusplus
 #define ECS_OFFSET(o, offset) reinterpret_cast<void*>((reinterpret_cast<uintptr_t>(o)) + (static_cast<uintptr_t>(offset)))
@@ -22531,14 +22537,8 @@ struct entity_view : public id {
             return;
         }
 
-        ecs_term_t term = {};
-        term.first.id = rel;
-        term.second.id = m_id;
-        term.second.flags = EcsIsEntity;
-        term.flags = EcsTermMatchPrefab;
-
-        ecs_iter_t it = ecs_term_iter(m_world, &term);
-        while (ecs_term_next(&it)) {
+        ecs_iter_t it = flecs_children(m_world, rel, m_id);
+        while (ecs_children_next(&it)) {
             _::each_delegate<Func>(FLECS_MOV(func)).invoke(&it);
         }
     }

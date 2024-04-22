@@ -210,14 +210,8 @@ struct entity_view : public id {
             return;
         }
 
-        ecs_term_t term = {};
-        term.first.id = rel;
-        term.second.id = m_id;
-        term.second.flags = EcsIsEntity;
-        term.flags = EcsTermMatchPrefab;
-
-        ecs_iter_t it = ecs_term_iter(m_world, &term);
-        while (ecs_term_next(&it)) {
+        ecs_iter_t it = flecs_children(m_world, rel, m_id);
+        while (ecs_children_next(&it)) {
             _::each_delegate<Func>(FLECS_MOV(func)).invoke(&it);
         }
     }

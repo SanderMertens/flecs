@@ -2547,17 +2547,98 @@ error:
     return (ecs_iter_t){ 0 };
 }
 
-ecs_iter_t ecs_children(
-    const ecs_world_t *world,
+ecs_iter_t flecs_children(
+    const ecs_world_t *stage,
+    ecs_entity_t rel,
     ecs_entity_t parent)
 {
-    return ecs_term_iter(world,  &(ecs_term_t){ .id = ecs_childof(parent) });
+    ecs_check(stage != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    const ecs_world_t *world = ecs_get_world(stage);
+
+    flecs_process_pending_tables(world);
+
+    ecs_iter_t it = {
+        .real_world = ECS_CONST_CAST(ecs_world_t*, world),
+        .world = ECS_CONST_CAST(ecs_world_t*, stage),
+        .field_count = 1,
+        .next = ecs_children_next
+    };
+    
+    ecs_id_t id = ecs_pair(rel, parent);
+
+    ecs_id_record_t *idr = flecs_id_record_get(world, id);
+    if (!idr) {
+        return it;
+    }
+
+    ecs_term_iter_t *each_iter = &it.priv.iter.term;
+    each_iter->id = id;
+    each_iter->subject = 0;
+    each_iter->size = 0;
+    flecs_table_cache_iter((ecs_table_cache_t*)idr, &each_iter->it);
+
+    return it;
+error:
+    return (ecs_iter_t){0};
+}
+
+ecs_iter_t ecs_children(
+    const ecs_world_t *stage,
+    ecs_entity_t parent)
+{
+    ecs_check(stage != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    const ecs_world_t *world = ecs_get_world(stage);
+
+    flecs_process_pending_tables(world);
+
+    ecs_iter_t it = {
+        .real_world = ECS_CONST_CAST(ecs_world_t*, world),
+        .world = ECS_CONST_CAST(ecs_world_t*, stage),
+        .field_count = 1,
+        .next = ecs_children_next
+    };
+    
+    ecs_id_t id = ecs_childof(parent);
+
+    ecs_id_record_t *idr = flecs_id_record_get(world, id);
+    if (!idr) {
+        return it;
+    }
+
+    ecs_term_iter_t *each_iter = &it.priv.iter.term;
+    each_iter->id = id;
+    each_iter->subject = 0;
+    each_iter->size = 0;
+    flecs_table_cache_iter((ecs_table_cache_t*)idr, &each_iter->it);
+
+    return it;
+error:
+    return (ecs_iter_t){0};
 }
 
 bool ecs_children_next(
     ecs_iter_t *it)
 {
-    return ecs_term_next(it);
+    ecs_term_iter_t *each_iter = &it->priv.iter.term;
+    ecs_table_record_t *next = flecs_table_cache_next(
+        &each_iter->it, ecs_table_record_t);
+    it->flags |= EcsIterIsValid;
+    if (next) {
+        ecs_table_t *table = next->hdr.table;
+        it->table = table;
+        it->count = ecs_table_count(table);
+        it->entities = flecs_table_entities_array(table);
+        it->ids = &table->type.array[next->index];
+        it->sources = &each_iter->subject;
+        it->sizes = &each_iter->size;
+        it->columns = NULL;
+        it->ptrs = NULL;
+        return true;
+    } else {
+        return false;
+    }
 }
 
 static
