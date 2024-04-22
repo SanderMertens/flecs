@@ -1057,6 +1057,7 @@ void Sorting_dont_resort_after_set_unsorted_component_w_tag_w_out_term(void);
 void Sorting_sort_component_not_queried_for(void);
 void Sorting_sort_by_wildcard(void);
 void Sorting_sort_shared_w_delete(void);
+void Sorting_sort_w_nontrivial_component(void);
 
 // Testsuite 'SortingEntireTable'
 void SortingEntireTable_sort_by_component(void);
@@ -6798,6 +6799,10 @@ bake_test_case Sorting_testcases[] = {
     {
         "sort_shared_w_delete",
         Sorting_sort_shared_w_delete
+    },
+    {
+        "sort_w_nontrivial_component",
+        Sorting_sort_w_nontrivial_component
     }
 };
 
@@ -13628,7 +13633,7 @@ static bake_test_suite suites[] = {
         "Sorting",
         NULL,
         NULL,
-        37,
+        38,
         Sorting_testcases
     },
     {

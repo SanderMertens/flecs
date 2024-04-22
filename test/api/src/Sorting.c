@@ -1899,3 +1899,95 @@ void Sorting_sort_shared_w_delete(void) {
 
     ecs_fini(world);
 }
+
+static int ctor_invoked = 0;
+static int move_invoked = 0;
+static int dtor_invoked = 0;
+
+ECS_CTOR(Velocity, ptr, {
+    ctor_invoked ++;
+})
+
+ECS_MOVE(Velocity, dst, src, {
+    *dst = *src;
+    move_invoked ++;
+})
+
+ECS_DTOR(Velocity, ptr, {
+    dtor_invoked ++;
+})
+
+void Sorting_sort_w_nontrivial_component(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_set_hooks(world, Velocity, {
+        .ctor = ecs_ctor(Velocity),
+        .move = ecs_move(Velocity),
+        .dtor = ecs_dtor(Velocity)
+    });
+
+    ecs_entity_t e1 = ecs_set(world, 0, Position, {3, 0});
+    ecs_entity_t e2 = ecs_set(world, 0, Position, {1, 0});
+    ecs_entity_t e3 = ecs_set(world, 0, Position, {5, 0});
+    ecs_entity_t e4 = ecs_set(world, 0, Position, {2, 0});
+    ecs_entity_t e5 = ecs_set(world, 0, Position, {4, 0});
+
+    ecs_set(world, e1, Velocity, {0, 3});
+    ecs_set(world, e2, Velocity, {0, 1});
+    ecs_set(world, e3, Velocity, {0, 5});
+    ecs_set(world, e4, Velocity, {0, 2});
+    ecs_set(world, e5, Velocity, {0, 4});
+
+    ctor_invoked = 0;
+    move_invoked = 0;
+    dtor_invoked = 0;
+
+    ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
+        .filter.expr = "Position",
+        .order_by_component = ecs_id(Position),
+        .order_by = compare_position
+    });
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+
+    test_assert(ecs_query_next(&it));
+    test_int(it.count, 5);
+
+    test_assert(it.entities[0] == e2);
+    test_assert(it.entities[1] == e4);
+    test_assert(it.entities[2] == e1);
+    test_assert(it.entities[3] == e5);
+    test_assert(it.entities[4] == e3);
+
+    test_assert(!ecs_query_next(&it));
+
+    {
+        const Velocity *v = ecs_get(world, e1, Velocity);
+        test_int(v->x, 0); test_int(v->y, 3);
+    }
+    {
+        const Velocity *v = ecs_get(world, e2, Velocity);
+        test_int(v->x, 0); test_int(v->y, 1);
+    }
+    {
+        const Velocity *v = ecs_get(world, e3, Velocity);
+        test_int(v->x, 0); test_int(v->y, 5);
+    }
+    {
+        const Velocity *v = ecs_get(world, e4, Velocity);
+        test_int(v->x, 0); test_int(v->y, 2);
+    }
+    {
+        const Velocity *v = ecs_get(world, e5, Velocity);
+        test_int(v->x, 0); test_int(v->y, 4);
+    }
+
+    test_int(ctor_invoked, 4);
+    test_int(move_invoked, 12);
+    test_int(dtor_invoked, 4);
+
+    ecs_fini(world);
+}
