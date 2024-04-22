@@ -1894,3 +1894,36 @@ void World_atfini_w_ctx(void) {
     test_int(atfini_invoked, 1);
     test_assert(atfini_ctx == &ctx);
 }
+
+void World_get_mut_T(void) {
+    flecs::world world;
+
+    Position *p = world.get_mut<Position>();
+
+    test_assert(p == nullptr);
+
+    world.set<Position>({10, 20});
+    p = world.get_mut<Position>();
+
+    test_assert(p != nullptr);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+}
+
+void World_get_mut_R_T(void) {
+    flecs::world world;
+
+    struct Tgt { };
+
+    Position *p = world.get_mut<Position, Tgt>();
+    test_assert(p == nullptr);
+
+    world.set<Position, Tgt>({10, 20});
+    
+    p = world.get_mut<Position, Tgt>();
+    test_assert(p != nullptr);
+
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+}
+

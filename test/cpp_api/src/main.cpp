@@ -1189,6 +1189,8 @@ void World_make_pair_of_pair_type(void);
 void World_delta_time(void);
 void World_atfini(void);
 void World_atfini_w_ctx(void);
+void World_get_mut_T(void);
+void World_get_mut_R_T(void);
 
 // Testsuite 'Singleton'
 void Singleton_set_get_singleton(void);
@@ -5974,6 +5976,14 @@ bake_test_case World_testcases[] = {
     {
         "atfini_w_ctx",
         World_atfini_w_ctx
+    },
+    {
+        "get_mut_T",
+        World_get_mut_T
+    },
+    {
+        "get_mut_R_T",
+        World_get_mut_R_T
     }
 };
 
@@ -6644,7 +6654,6 @@ bake_test_case Doc_testcases[] = {
     }
 };
 
-
 static bake_test_suite suites[] = {
     {
         "PrettyFunction",
@@ -6804,7 +6813,7 @@ static bake_test_suite suites[] = {
         "World",
         NULL,
         NULL,
-        110,
+        112,
         World_testcases
     },
     {
