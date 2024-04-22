@@ -50440,6 +50440,9 @@ ecs_expr_var_t* ecs_vars_lookup(
  * @brief Internal functions for JSON addon.
  */
 
+#ifndef FLECS_JSON_PRIVATE_H
+#define FLECS_JSON_PRIVATE_H
+
 
 #ifdef FLECS_JSON
 
@@ -50607,8 +50610,8 @@ bool flecs_json_serialize_get_field_ctx(
     ecs_json_ser_ctx_t *ser_ctx);
 
 int flecs_json_serialize_iter_result_rows(
-    const ecs_world_t *world, 
-    const ecs_iter_t *it, 
+    const ecs_world_t *world,
+    const ecs_iter_t *it,
     ecs_strbuf_t *buf,
     const ecs_iter_to_json_desc_t *desc,
     ecs_json_ser_ctx_t *ser_ctx);
@@ -50635,11 +50638,13 @@ void flecs_json_serialize_query(
 
 int flecs_json_ser_type(
     const ecs_world_t *world,
-    const ecs_vec_t *ser, 
-    const void *base, 
+    const ecs_vec_t *ser,
+    const void *base,
     ecs_strbuf_t *str);
 
 #endif
+
+#endif /* FLECS_JSON_PRIVATE_H */
 
 #include <ctype.h>
 
@@ -56328,7 +56333,7 @@ void flecs_meta_import_definitions(
     ecs_world_t *world);
 
 #endif
-    
+
 #endif
 
 
@@ -62674,6 +62679,9 @@ bool ecs_using_task_threads(
  * @brief Internal types and functions for rules addon.
  */
 
+#ifndef FLECS_RULES_PRIVATE_H
+#define FLECS_RULES_PRIVATE_H
+
 
 #ifdef FLECS_RULES
 
@@ -62831,7 +62839,7 @@ typedef struct {
     ecs_trav_up_cache_t cache;
 } ecs_rule_up_ctx_t;
 
-/* Cache for storing results of upward/downward "all" traversal. This type of 
+/* Cache for storing results of upward/downward "all" traversal. This type of
  * traversal iterates and caches the entire tree. */
 typedef struct {
     ecs_entity_t entity;
@@ -62926,7 +62934,7 @@ typedef struct {
 
     int32_t scope; /* Nesting level of query scopes */
     ecs_flags32_t scope_is_not; /* Whether scope is prefixed with not */
-} ecs_rule_compile_ctx_t;    
+} ecs_rule_compile_ctx_t;
 
 /* Rule run state */
 typedef struct {
@@ -62960,7 +62968,7 @@ struct ecs_rule_t {
     ecs_hashmap_t evar_index;     /* Name index for entity variables */
     ecs_rule_var_cache_t vars_cache; /* For trivial rules with only This variables */
     char **var_names;             /* Array with variable names for iterator */
-    
+
     ecs_var_id_t *src_vars;       /* Array with ids to source variables for fields */
     ecs_rule_op_t *ops;           /* Operations */
     int32_t op_count;             /* Number of operations */
@@ -63031,7 +63039,7 @@ void flecs_rule_trav_cache_fini(
 /* Traversal caches for up traversal. Enables searching upwards until an entity
  * with the queried for id has been found. */
 
-/* Traverse downwards from starting entity to find all tables for which the 
+/* Traverse downwards from starting entity to find all tables for which the
  * specified entity is the source of the queried for id ('with'). */
 ecs_trav_down_t* flecs_rule_get_down_cache(
     const ecs_rule_run_ctx_t *ctx,
@@ -63102,6 +63110,8 @@ bool flecs_rule_trivial_test_w_wildcards(
     int32_t term_count);
 
 #endif
+
+#endif /* FLECS_RULES_PRIVATE_H */
 
 #include <ctype.h>
 
