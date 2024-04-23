@@ -813,7 +813,7 @@ void Cascade_existing_isa_cascade(void) {
     ecs_entity_t e3 = ecs_entity(world, { .add = ecs_ids( ecs_pair(EcsIsA, e2)) });
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "Tag(cascade(IsA))",
+        .expr = "Tag(cascade IsA)",
         .cache_kind = EcsQueryCacheAuto
     });
     test_assert(q != NULL);
@@ -852,7 +852,7 @@ void Cascade_new_isa_cascade(void) {
     ECS_TAG(world, Bar);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "Tag(cascade(IsA))",
+        .expr = "Tag(cascade IsA)",
         .cache_kind = EcsQueryCacheAuto
     });
     test_assert(q != NULL);
@@ -987,7 +987,7 @@ void Cascade_existing_custom_rel_cascade(void) {
     ecs_entity_t e3 = ecs_entity(world, { .add = ecs_ids( ecs_pair(Rel, e2)) });
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "Tag(cascade(Rel))",
+        .expr = "Tag(cascade Rel)",
         .cache_kind = EcsQueryCacheAuto
     });
     test_assert(q != NULL);
@@ -1026,7 +1026,7 @@ void Cascade_new_custom_rel_cascade(void) {
     ECS_TAG(world, Bar);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "Tag(cascade(Rel))",
+        .expr = "Tag(cascade Rel)",
         .cache_kind = EcsQueryCacheAuto
     });
     test_assert(q != NULL);
@@ -1070,7 +1070,7 @@ void Cascade_cascade_w_2_depths(void) {
     ECS_TAG(world, Bar);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "Tag(cascade(Rel))",
+        .expr = "Tag(cascade Rel)",
         .cache_kind = EcsQueryCacheAuto
     });
     test_assert(q != NULL);
@@ -1118,7 +1118,7 @@ void Cascade_cascade_w_3_depths(void) {
     ECS_TAG(world, Bar);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "Tag(cascade(Rel))",
+        .expr = "Tag(cascade Rel)",
         .cache_kind = EcsQueryCacheAuto
     });
     test_assert(q != NULL);
@@ -1166,7 +1166,7 @@ void Cascade_cascade_w_2_depths_desc(void) {
     ECS_TAG(world, Bar);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "Tag(cascade|desc(Rel))",
+        .expr = "Tag(cascade|desc Rel)",
         .cache_kind = EcsQueryCacheAuto
     });
     test_assert(q != NULL);
@@ -1214,7 +1214,7 @@ void Cascade_cascade_w_3_depths_desc(void) {
     ECS_TAG(world, Bar);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "Tag(cascade|desc(Rel))",
+        .expr = "Tag(cascade|desc Rel)",
         .cache_kind = EcsQueryCacheAuto
     });
     test_assert(q != NULL);
@@ -1377,7 +1377,7 @@ void Cascade_cascade_rematch_2_lvls_2_relations(void) {
     ecs_delete(world, t);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "Position(cascade(R))",
+        .expr = "Position(cascade R)",
         .cache_kind = EcsQueryCacheAuto
     });
 
@@ -1434,7 +1434,7 @@ void Cascade_cascade_topological(void) {
     ecs_add_pair(world, e4, R, e2);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "Tag, ?Tag(cascade(R))",
+        .expr = "Tag, ?Tag(cascade R)",
         .cache_kind = EcsQueryCacheAuto
     });
     test_assert(q != NULL);
@@ -1576,7 +1576,7 @@ void Cascade_cascade_desc_rematch_2_lvls_2_relations(void) {
     ecs_delete(world, t);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "Position(cascade|desc(R))",
+        .expr = "Position(cascade|desc R)",
         .cache_kind = EcsQueryCacheAuto
     });
 
@@ -1633,7 +1633,7 @@ void Cascade_cascade_desc_topological(void) {
     ecs_add_pair(world, e4, R, e2);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "Tag, ?Tag(cascade|desc(R))",
+        .expr = "Tag, ?Tag(cascade|desc R)",
         .cache_kind = EcsQueryCacheAuto
     });
     test_assert(q != NULL);

@@ -1129,7 +1129,7 @@ void Cached_query_rematch_optional_after_add(void) {
     ecs_entity_t e3 = ecs_new_w(world, Position);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "Position, ?Velocity(up(IsA))",
+        .expr = "Position, ?Velocity(up IsA)",
         .cache_kind = EcsQueryCacheAuto
     });
     test_assert(q != NULL);
@@ -1231,7 +1231,7 @@ void Cached_get_shared_tag(void) {
     ecs_entity_t instance = ecs_new_w_pair(world, EcsIsA, base);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "Tag(up(IsA))",
+        .expr = "Tag(up IsA)",
         .cache_kind = EcsQueryCacheAuto
     });
 
@@ -1373,7 +1373,7 @@ void Cached_query_optional_shared_tag(void) {
     ecs_add_pair(world, e3, EcsIsA, e2);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "TagA, ?TagB(self|up(IsA))",
+        .expr = "TagA, ?TagB(self|up IsA)",
         .cache_kind = EcsQueryCacheAuto
     });
     test_assert(q != NULL);
@@ -1999,7 +1999,7 @@ void Cached_isa_superset(void) {
     ECS_TAG(world, Tag);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "Tag(up(IsA))",
+        .expr = "Tag(up IsA)",
         .cache_kind = EcsQueryCacheAuto
     });
     test_assert(q != NULL);
@@ -2023,7 +2023,7 @@ void Cached_isa_superset_2_lvls(void) {
     ECS_TAG(world, Tag);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "Tag(up(IsA))",
+        .expr = "Tag(up IsA)",
         .cache_kind = EcsQueryCacheAuto
     });
     test_assert(q != NULL);
@@ -2054,7 +2054,7 @@ void Cached_isa_superset_3_lvls(void) {
     ECS_TAG(world, Tag);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "Tag(up(IsA))",
+        .expr = "Tag(up IsA)",
         .cache_kind = EcsQueryCacheAuto
     });
     test_assert(q != NULL);
@@ -2091,7 +2091,7 @@ void Cached_isa_superset_2_lvls_owned(void) {
     ECS_TAG(world, Tag);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "Tag(up(IsA))",
+        .expr = "Tag(up IsA)",
         .cache_kind = EcsQueryCacheAuto
     });
     test_assert(q != NULL);
@@ -2125,7 +2125,7 @@ void Cached_isa_superset_3_lvls_owned(void) {
     ECS_TAG(world, Tag);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "Tag(up(IsA))",
+        .expr = "Tag(up IsA)",
         .cache_kind = EcsQueryCacheAuto
     });
     test_assert(q != NULL);
@@ -2166,7 +2166,7 @@ void Cached_isa_superset_owned_empty_table_after_match(void) {
     ECS_TAG(world, Tag);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "Tag(up(IsA))",
+        .expr = "Tag(up IsA)",
         .cache_kind = EcsQueryCacheAuto
     });
     test_assert(q != NULL);
@@ -2222,7 +2222,7 @@ void Cached_isa_self_superset(void) {
     ECS_TAG(world, Tag);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "Tag(self|up(IsA))",
+        .expr = "Tag(self|up IsA)",
         .cache_kind = EcsQueryCacheAuto
     });
     test_assert(q != NULL);
@@ -2291,7 +2291,7 @@ void Cached_superset_2_targets(void) {
     ecs_delete(world, t);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "Position(up(R))",
+        .expr = "Position(up R)",
         .cache_kind = EcsQueryCacheAuto
     });
 
@@ -3521,7 +3521,7 @@ void Cached_2_self_up_terms_new_tables(void) {
     ECS_TAG(world, Tag);
 
     ecs_query_t *r = ecs_query(world, {
-        .expr = "Tag, Foo(self|up(IsA))",
+        .expr = "Tag, Foo(self|up IsA)",
         .cache_kind = EcsQueryCacheAuto
     });
 

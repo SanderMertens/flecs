@@ -104,6 +104,11 @@ void Validator_validate_childof_this(void);
 void Validator_validate_childof_this_entity(void);
 void Validator_validate_childof_this_by_id(void);
 void Validator_validate_filter_flag(void);
+void Validator_validate_first_0_name(void);
+void Validator_validate_src_0_name(void);
+void Validator_validate_second_0_name(void);
+void Validator_validate_singleton_src_w_first_name(void);
+void Validator_validate_singleton_second_w_first_name(void);
 
 // Testsuite 'Parser'
 void Parser_resolve_this(void);
@@ -162,6 +167,8 @@ void Parser_out_component_explicit_subject(void);
 void Parser_out_pair_implicit_subject(void);
 void Parser_out_pair_explicit_subject(void);
 void Parser_inout_filter_component(void);
+void Parser_inout_w_not_operator(void);
+void Parser_inout_w_optional_operator(void);
 void Parser_component_singleton(void);
 void Parser_this_singleton(void);
 void Parser_component_implicit_no_subject(void);
@@ -210,6 +217,11 @@ void Parser_2_or_pred_explicit_subj(void);
 void Parser_2_or_pair_implicit_subj(void);
 void Parser_2_or_pair_explicit_subj(void);
 void Parser_2_or_pred_inout(void);
+void Parser_2_or_no_space(void);
+void Parser_2_or_w_not_1st_arg(void);
+void Parser_2_or_w_not_2nd_arg(void);
+void Parser_2_or_w_optional_1st_arg(void);
+void Parser_2_or_w_optional_2nd_arg(void);
 void Parser_1_digit_pred_implicit_subj(void);
 void Parser_1_digit_pred_no_subj(void);
 void Parser_1_digit_pred_explicit_subj(void);
@@ -254,6 +266,11 @@ void Parser_2_trailing_newlines(void);
 void Parser_trailing_space(void);
 void Parser_2_trailing_spaces(void);
 void Parser_template_type(void);
+void Parser_template_type_nested(void);
+void Parser_template_type_multiple_args(void);
+void Parser_template_type_multiple_args_nested(void);
+void Parser_template_type_unbalanced_open(void);
+void Parser_template_type_unbalanced_close(void);
 void Parser_predicate_w_parens(void);
 void Parser_not_alive_pred(void);
 void Parser_not_alive_subj(void);
@@ -309,9 +326,18 @@ void Parser_eq_same_var(void);
 void Parser_neq_same_var(void);
 void Parser_eq_same_var_this(void);
 void Parser_neq_same_var_this(void);
+void Parser_eq_w_not(void);
+void Parser_neq_w_not(void);
+void Parser_match_w_not(void);
 void Parser_eq_w_optional(void);
 void Parser_neq_w_optional(void);
 void Parser_match_w_optional(void);
+void Parser_eq_0(void);
+void Parser_neq_0(void);
+void Parser_eq_wildcard(void);
+void Parser_neq_wildcard(void);
+void Parser_eq_any(void);
+void Parser_neq_any(void);
 void Parser_query_scope_1_term(void);
 void Parser_query_scope_1_term_spaces(void);
 void Parser_query_scope_2_terms(void);
@@ -322,6 +348,7 @@ void Parser_query_not_scope(void);
 void Parser_query_empty_scope(void);
 void Parser_query_scope_newline_after_open(void);
 void Parser_query_scope_newline_after_close(void);
+void Parser_query_term_after_scope(void);
 void Parser_override_tag(void);
 void Parser_override_pair(void);
 void Parser_pair_3_args(void);
@@ -336,6 +363,10 @@ void Parser_pair_3_or_args(void);
 void Parser_pair_3_or_args_implicit_this(void);
 void Parser_pair_4_or_args(void);
 void Parser_pair_4_or_args_implicit_this(void);
+void Parser_pair_3_args_w_vars(void);
+void Parser_pair_4_args_w_vars(void);
+void Parser_pair_3_args_w_vars_w_term_after(void);
+void Parser_pair_4_args_w_vars_w_term_after(void);
 void Parser_pair_or_before_and_oper(void);
 void Parser_pair_and_before_or_oper(void);
 void Parser_cascade_desc(void);
@@ -352,6 +383,12 @@ void Parser_pair_first_w_space(void);
 void Parser_pair_second_w_space_implicit_this(void);
 void Parser_pair_second_w_space(void);
 void Parser_pair_src_w_space(void);
+void Parser_empty_term(void);
+void Parser_empty_term_w_space(void);
+void Parser_empty_term_w_newline(void);
+void Parser_mixed_1_desc_and_1_expr(void);
+void Parser_mixed_2_desc_and_1_expr(void);
+void Parser_mixed_1_desc_and_2_expr(void);
 
 // Testsuite 'Basic'
 void Basic_setup(void);
@@ -796,6 +833,9 @@ void Variables_1_trivial_1_any(void);
 void Variables_2_trivial_1_any(void);
 void Variables_1_trivial_1_any_component(void);
 void Variables_2_trivial_1_any_component(void);
+void Variables_first_invalid_var_name_and_id(void);
+void Variables_src_invalid_var_name_and_id(void);
+void Variables_second_invalid_var_name_and_id(void);
 
 // Testsuite 'Operators'
 void Operators_setup(void);
@@ -2136,6 +2176,26 @@ bake_test_case Validator_testcases[] = {
     {
         "validate_filter_flag",
         Validator_validate_filter_flag
+    },
+    {
+        "validate_first_0_name",
+        Validator_validate_first_0_name
+    },
+    {
+        "validate_src_0_name",
+        Validator_validate_src_0_name
+    },
+    {
+        "validate_second_0_name",
+        Validator_validate_second_0_name
+    },
+    {
+        "validate_singleton_src_w_first_name",
+        Validator_validate_singleton_src_w_first_name
+    },
+    {
+        "validate_singleton_second_w_first_name",
+        Validator_validate_singleton_second_w_first_name
     }
 };
 
@@ -2365,6 +2425,14 @@ bake_test_case Parser_testcases[] = {
         Parser_inout_filter_component
     },
     {
+        "inout_w_not_operator",
+        Parser_inout_w_not_operator
+    },
+    {
+        "inout_w_optional_operator",
+        Parser_inout_w_optional_operator
+    },
+    {
         "component_singleton",
         Parser_component_singleton
     },
@@ -2557,6 +2625,26 @@ bake_test_case Parser_testcases[] = {
         Parser_2_or_pred_inout
     },
     {
+        "2_or_no_space",
+        Parser_2_or_no_space
+    },
+    {
+        "2_or_w_not_1st_arg",
+        Parser_2_or_w_not_1st_arg
+    },
+    {
+        "2_or_w_not_2nd_arg",
+        Parser_2_or_w_not_2nd_arg
+    },
+    {
+        "2_or_w_optional_1st_arg",
+        Parser_2_or_w_optional_1st_arg
+    },
+    {
+        "2_or_w_optional_2nd_arg",
+        Parser_2_or_w_optional_2nd_arg
+    },
+    {
         "1_digit_pred_implicit_subj",
         Parser_1_digit_pred_implicit_subj
     },
@@ -2731,6 +2819,26 @@ bake_test_case Parser_testcases[] = {
     {
         "template_type",
         Parser_template_type
+    },
+    {
+        "template_type_nested",
+        Parser_template_type_nested
+    },
+    {
+        "template_type_multiple_args",
+        Parser_template_type_multiple_args
+    },
+    {
+        "template_type_multiple_args_nested",
+        Parser_template_type_multiple_args_nested
+    },
+    {
+        "template_type_unbalanced_open",
+        Parser_template_type_unbalanced_open
+    },
+    {
+        "template_type_unbalanced_close",
+        Parser_template_type_unbalanced_close
     },
     {
         "predicate_w_parens",
@@ -2953,6 +3061,18 @@ bake_test_case Parser_testcases[] = {
         Parser_neq_same_var_this
     },
     {
+        "eq_w_not",
+        Parser_eq_w_not
+    },
+    {
+        "neq_w_not",
+        Parser_neq_w_not
+    },
+    {
+        "match_w_not",
+        Parser_match_w_not
+    },
+    {
         "eq_w_optional",
         Parser_eq_w_optional
     },
@@ -2963,6 +3083,30 @@ bake_test_case Parser_testcases[] = {
     {
         "match_w_optional",
         Parser_match_w_optional
+    },
+    {
+        "eq_0",
+        Parser_eq_0
+    },
+    {
+        "neq_0",
+        Parser_neq_0
+    },
+    {
+        "eq_wildcard",
+        Parser_eq_wildcard
+    },
+    {
+        "neq_wildcard",
+        Parser_neq_wildcard
+    },
+    {
+        "eq_any",
+        Parser_eq_any
+    },
+    {
+        "neq_any",
+        Parser_neq_any
     },
     {
         "query_scope_1_term",
@@ -3003,6 +3147,10 @@ bake_test_case Parser_testcases[] = {
     {
         "query_scope_newline_after_close",
         Parser_query_scope_newline_after_close
+    },
+    {
+        "query_term_after_scope",
+        Parser_query_term_after_scope
     },
     {
         "override_tag",
@@ -3059,6 +3207,22 @@ bake_test_case Parser_testcases[] = {
     {
         "pair_4_or_args_implicit_this",
         Parser_pair_4_or_args_implicit_this
+    },
+    {
+        "pair_3_args_w_vars",
+        Parser_pair_3_args_w_vars
+    },
+    {
+        "pair_4_args_w_vars",
+        Parser_pair_4_args_w_vars
+    },
+    {
+        "pair_3_args_w_vars_w_term_after",
+        Parser_pair_3_args_w_vars_w_term_after
+    },
+    {
+        "pair_4_args_w_vars_w_term_after",
+        Parser_pair_4_args_w_vars_w_term_after
     },
     {
         "pair_or_before_and_oper",
@@ -3123,6 +3287,30 @@ bake_test_case Parser_testcases[] = {
     {
         "pair_src_w_space",
         Parser_pair_src_w_space
+    },
+    {
+        "empty_term",
+        Parser_empty_term
+    },
+    {
+        "empty_term_w_space",
+        Parser_empty_term_w_space
+    },
+    {
+        "empty_term_w_newline",
+        Parser_empty_term_w_newline
+    },
+    {
+        "mixed_1_desc_and_1_expr",
+        Parser_mixed_1_desc_and_1_expr
+    },
+    {
+        "mixed_2_desc_and_1_expr",
+        Parser_mixed_2_desc_and_1_expr
+    },
+    {
+        "mixed_1_desc_and_2_expr",
+        Parser_mixed_1_desc_and_2_expr
     }
 };
 
@@ -4876,6 +5064,18 @@ bake_test_case Variables_testcases[] = {
     {
         "2_trivial_1_any_component",
         Variables_2_trivial_1_any_component
+    },
+    {
+        "first_invalid_var_name_and_id",
+        Variables_first_invalid_var_name_and_id
+    },
+    {
+        "src_invalid_var_name_and_id",
+        Variables_src_invalid_var_name_and_id
+    },
+    {
+        "second_invalid_var_name_and_id",
+        Variables_second_invalid_var_name_and_id
     }
 };
 
@@ -8649,14 +8849,14 @@ static bake_test_suite suites[] = {
         "Validator",
         NULL,
         NULL,
-        95,
+        100,
         Validator_testcases
     },
     {
         "Parser",
         NULL,
         NULL,
-        246,
+        278,
         Parser_testcases
     },
     {
@@ -8679,7 +8879,7 @@ static bake_test_suite suites[] = {
         "Variables",
         Variables_setup,
         NULL,
-        183,
+        186,
         Variables_testcases,
         1,
         Variables_params

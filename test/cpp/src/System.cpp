@@ -66,7 +66,7 @@ void System_iter_shared(void) {
         .set<Position>({10, 20})
         .set<Velocity>({3, 4});
 
-    world.system<Position>().expr("Velocity(self|up(IsA))")
+    world.system<Position>().expr("Velocity(self|up IsA)")
         .iter([](flecs::iter&it, Position *p) {
             auto v = it.field<const Velocity>(1);
 
@@ -342,7 +342,7 @@ void System_signature_shared(void) {
         .set<Position>({10, 20})
         .set<Velocity>({3, 4});
 
-    world.system<>().expr("Position, [in] Velocity(self|up(IsA))")
+    world.system<>().expr("Position, [in] Velocity(self|up IsA)")
         .iter([](flecs::iter&it) {
             flecs::field<Position> p(it, 0);
             flecs::field<const Velocity> v(it, 1);

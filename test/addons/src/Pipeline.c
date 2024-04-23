@@ -637,7 +637,7 @@ void Pipeline_switch_pipeline(void) {
 
     ecs_add(world, ecs_id(SysC), Tag);
 
-    ECS_PIPELINE(world, P1, flecs.system.System, flecs.pipeline.Phase(cascade(DependsOn)), !Tag);
+    ECS_PIPELINE(world, P1, flecs.system.System, flecs.pipeline.Phase(cascade DependsOn), !Tag);
 
     ecs_progress(world, 1);
 
@@ -669,7 +669,7 @@ void Pipeline_run_pipeline(void) {
 
     ecs_add(world, ecs_id(SysC), Tag);
 
-    ECS_PIPELINE(world, P1, flecs.system.System, flecs.pipeline.Phase(cascade(DependsOn)), !Tag);
+    ECS_PIPELINE(world, P1, flecs.system.System, flecs.pipeline.Phase(cascade DependsOn), !Tag);
 
     const ecs_world_info_t *stats = ecs_get_world_info(world);
 
@@ -1012,7 +1012,7 @@ void Pipeline_system_reverse_order_by_phase_custom_pipeline(void) {
     ecs_add_pair(world, OnFrame, EcsDependsOn, PreFrame);
     ecs_add_pair(world, PostFrame, EcsDependsOn, OnFrame);
 
-    ECS_PIPELINE(world, P, flecs.system.System, flecs.pipeline.Phase(cascade(DependsOn)), Tag);
+    ECS_PIPELINE(world, P, flecs.system.System, flecs.pipeline.Phase(cascade DependsOn), Tag);
 
     int count = 0;
 
@@ -1067,7 +1067,7 @@ void Pipeline_stage_write_before_read(void) {
         .callback = SysC
     });
 
-    ECS_PIPELINE(world, P, flecs.system.System, flecs.pipeline.Phase(cascade(DependsOn)), Tag);
+    ECS_PIPELINE(world, P, flecs.system.System, flecs.pipeline.Phase(cascade DependsOn), Tag);
     ecs_set_pipeline(world, P);
 
     test_assert(s1 != 0);
@@ -1139,7 +1139,7 @@ void Pipeline_mixed_multithreaded_internal(bool task_threads) {
         .callback = SysF
     });
 
-    ECS_PIPELINE(world, P, flecs.system.System, flecs.pipeline.Phase(cascade(DependsOn)), Tag);
+    ECS_PIPELINE(world, P, flecs.system.System, flecs.pipeline.Phase(cascade DependsOn), Tag);
     ecs_set_pipeline(world, P);
 
     test_assert(s1 != 0);
@@ -1239,7 +1239,7 @@ void Pipeline_mixed_staging(void) {
         .callback = SysF
     });
 
-    ECS_PIPELINE(world, P, flecs.system.System, flecs.pipeline.Phase(cascade(DependsOn)), Tag);
+    ECS_PIPELINE(world, P, flecs.system.System, flecs.pipeline.Phase(cascade DependsOn), Tag);
     ecs_set_pipeline(world, P);
 
     test_assert(s1 != 0);
@@ -1570,7 +1570,7 @@ void Pipeline_no_staging_system_create_query(void) {
         .immediate = true
     });
 
-    ECS_PIPELINE(world, P, flecs.system.System, flecs.pipeline.Phase(cascade(DependsOn)), Tag);
+    ECS_PIPELINE(world, P, flecs.system.System, flecs.pipeline.Phase(cascade DependsOn), Tag);
     ecs_set_pipeline(world, P);
 
     test_assert(s != 0);
@@ -3134,7 +3134,7 @@ void Pipeline_run_pipeline_multithreaded_internal(bool task_threads) {
         .callback = SysF
     });
 
-    ECS_PIPELINE(world, P, flecs.system.System, flecs.pipeline.Phase(cascade(DependsOn)), Tag);
+    ECS_PIPELINE(world, P, flecs.system.System, flecs.pipeline.Phase(cascade DependsOn), Tag);
 
     test_assert(s1 != 0);
     test_assert(s2 != 0);

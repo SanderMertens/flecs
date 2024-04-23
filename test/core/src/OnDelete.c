@@ -2598,7 +2598,7 @@ void OnDelete_delete_tree_w_query(void) {
     ECS_ENTITY(world, Rel, Traversable);
     ECS_TAG(world, Foo);
 
-    ecs_query_t *q = ecs_query(world, { .expr = "Tag(up(Rel))" });
+    ecs_query_t *q = ecs_query(world, { .expr = "Tag(up Rel)" });
     test_assert(q != NULL);
 
     ecs_entity_t e1 = ecs_new_w(world, Tag);

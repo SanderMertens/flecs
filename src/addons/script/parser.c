@@ -40,7 +40,7 @@ const char* flecs_script_scope(
                 pos = lookahead;
                 goto scope_close;
             case EcsTokEnd:
-                Error(parser, "unexpected end of script");
+                Error("unexpected end of script");
                 goto error;
         )
 
@@ -278,13 +278,13 @@ identifier: {
 insert_tag: {
     if (Token(0)[0] == '$') {
         if (!flecs_script_insert_var_component(parser, &Token(0)[1])) {
-            Error(parser, 
+            Error(
                 "invalid context for variable component '%s': must be "
                     "part of entity", tokens[0].value);
         }
     } else {
         if (!flecs_script_insert_tag(parser, Token(0))) {
-            Error(parser, 
+            Error(
                 "invalid context for tag '%s': must be part of entity", 
                 tokens[0].value);
         }
@@ -714,6 +714,7 @@ ecs_script_t* ecs_script_parse(
     ecs_script_parser_t parser = {
         .script = script,
         .scope = script->root,
+        .significant_newline = true
     };
 
     /* Allocate a buffer that is able to store all parsed tokens. Multiply the

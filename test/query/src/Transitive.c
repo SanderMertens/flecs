@@ -5020,7 +5020,7 @@ void Transitive_self_target(void) {
     populate_facts(world);
 
     ecs_query_t *r = ecs_query(world, {
-        .expr = "LocatedIn($this, $x:self)"
+        .expr = "LocatedIn($this, $x|self)"
     });
 
     test_assert(r != NULL);

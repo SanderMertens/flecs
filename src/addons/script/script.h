@@ -35,6 +35,12 @@ struct ecs_script_parser_t {
     ecs_script_scope_t *scope;
     const char *pos;
     char *token_cur;
+    bool significant_newline;
+
+    /* For term parser */
+    ecs_term_t *term;
+    ecs_oper_kind_t extra_oper;
+    ecs_term_ref_t *extra_args;
 };
 
 #include "ast.h"
@@ -74,6 +80,11 @@ ecs_script_vars_t* flecs_script_vars_push(
     ecs_script_vars_t *parent,
     ecs_stack_t *stack,
     ecs_allocator_t *allocator);
+
+int flecs_script_parse_terms(
+    ecs_script_t *script,
+    ecs_term_t *terms,
+    int32_t *term_count_out);
 
 #endif // FLECS_SCRIPT
 #endif // FLECS_SCRIPT_PRIVATE_H

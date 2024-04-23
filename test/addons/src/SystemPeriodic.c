@@ -1548,7 +1548,7 @@ void SystemPeriodic_shared_column(void) {
     ECS_ENTITY(world, e2, Position, (IsA, base));
     ECS_ENTITY(world, e3, Position);
 
-    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, Velocity(up(IsA)));
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, Velocity(up IsA));
 
     Probe ctx = {0};
     ecs_set_ctx(world, &ctx, NULL);
@@ -1577,7 +1577,7 @@ void SystemPeriodic_shared_not_column(void) {
     ECS_ENTITY(world, e1, Position, Velocity);
     ECS_ENTITY(world, e2, Position, (IsA, base));
 
-    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, !Velocity(up(IsA)));
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, !Velocity(up IsA));
 
     Probe ctx = {0};
     ecs_set_ctx(world, &ctx, NULL);
@@ -1614,7 +1614,7 @@ void SystemPeriodic_shared_or_column(void) {
     ECS_ENTITY(world, e3, Position, (IsA, base1));
     ECS_ENTITY(world, e4, Position, (IsA, base2));
 
-    ECS_SYSTEM(world, SharedOr, EcsOnUpdate, Position, Velocity(up(IsA)) || Mass(up(IsA)));
+    ECS_SYSTEM(world, SharedOr, EcsOnUpdate, Position, Velocity(up IsA) || Mass(up IsA));
 
     Probe ctx = {0};
     ecs_set_ctx(world, &ctx, NULL);
@@ -1813,7 +1813,7 @@ void SystemPeriodic_shared_only(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ECS_SYSTEM(world, AssertReadonly, EcsOnUpdate, Position(up(IsA)));
+    ECS_SYSTEM(world, AssertReadonly, EcsOnUpdate, Position(up IsA));
 
     ecs_entity_t base = ecs_new_w(world, Position);
     ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, base);

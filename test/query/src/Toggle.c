@@ -996,7 +996,7 @@ void Toggle_this_toggle_shared_self_up(void) {
     ecs_entity_t e = ecs_new_w_pair(world, EcsChildOf, p);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "Position(self|up(ChildOf))",
+        .expr = "Position(self|up ChildOf)",
         .cache_kind = cache_kind
     });
 
@@ -1096,7 +1096,7 @@ void Toggle_this_toggle_shared_up(void) {
     ecs_entity_t e = ecs_new_w_pair(world, EcsChildOf, p);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "Position(up(ChildOf))",
+        .expr = "Position(up ChildOf)",
         .cache_kind = cache_kind
     });
 
@@ -1172,7 +1172,7 @@ void Toggle_this_toggle_shared_self_up_w_self(void) {
     ecs_entity_t e = ecs_new_w_pair(world, EcsChildOf, p);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "Position(self|up(ChildOf)), Velocity",
+        .expr = "Position(self|up ChildOf), Velocity",
         .cache_kind = cache_kind
     });
 
@@ -1312,7 +1312,7 @@ void Toggle_this_toggle_shared_up_w_self(void) {
     ecs_entity_t e = ecs_new_w_pair(world, EcsChildOf, p);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "Position(up(ChildOf)), Velocity",
+        .expr = "Position(up ChildOf), Velocity",
         .cache_kind = cache_kind
     });
 
@@ -1408,7 +1408,7 @@ void Toggle_this_toggle_shared_self_up_w_self_reverse(void) {
     ecs_entity_t e = ecs_new_w_pair(world, EcsChildOf, p);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "Velocity, Position(self|up(ChildOf))",
+        .expr = "Velocity, Position(self|up ChildOf)",
         .cache_kind = cache_kind
     });
 
@@ -1548,7 +1548,7 @@ void Toggle_this_toggle_shared_up_w_self_reverse(void) {
     ecs_entity_t e = ecs_new_w_pair(world, EcsChildOf, p);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "Velocity, Position(up(ChildOf))",
+        .expr = "Velocity, Position(up ChildOf)",
         .cache_kind = cache_kind
     });
 
@@ -1644,7 +1644,7 @@ void Toggle_this_toggle_shared_self_up_w_self_toggle(void) {
     ecs_entity_t e = ecs_new_w_pair(world, EcsChildOf, p);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "Position(self|up(ChildOf)), Velocity",
+        .expr = "Position(self|up ChildOf), Velocity",
         .cache_kind = cache_kind
     });
 
@@ -1787,7 +1787,7 @@ void Toggle_this_toggle_shared_up_w_self_toggle(void) {
     ecs_entity_t e = ecs_new_w_pair(world, EcsChildOf, p);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "Position(up(ChildOf)), Velocity",
+        .expr = "Position(up ChildOf), Velocity",
         .cache_kind = cache_kind
     });
 
@@ -1886,7 +1886,7 @@ void Toggle_this_toggle_shared_self_up_w_self_toggle_reverse(void) {
     ecs_entity_t e = ecs_new_w_pair(world, EcsChildOf, p);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "Velocity, Position(self|up(ChildOf))",
+        .expr = "Velocity, Position(self|up ChildOf)",
         .cache_kind = cache_kind
     });
 
@@ -2029,7 +2029,7 @@ void Toggle_this_toggle_shared_up_w_self_toggle_reverse(void) {
     ecs_entity_t e = ecs_new_w_pair(world, EcsChildOf, p);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "Velocity, Position(up(ChildOf))",
+        .expr = "Velocity, Position(up ChildOf)",
         .cache_kind = cache_kind
     });
 
@@ -2129,7 +2129,7 @@ void Toggle_this_toggle_not_shared_self_up(void) {
     ecs_add(world, e, Foo);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "Foo, !Position(self|up(ChildOf))",
+        .expr = "Foo, !Position(self|up ChildOf)",
         .cache_kind = cache_kind
     });
 
@@ -2218,7 +2218,7 @@ void Toggle_this_toggle_not_shared_up(void) {
     ecs_add(world, e, Foo);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "Foo, !Position(up(ChildOf))",
+        .expr = "Foo, !Position(up ChildOf)",
         .cache_kind = cache_kind
     });
 
@@ -2325,7 +2325,7 @@ void Toggle_this_toggle_optional_shared_self_up(void) {
     ecs_add(world, e, Foo);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "Foo, ?Position(self|up(ChildOf))",
+        .expr = "Foo, ?Position(self|up ChildOf)",
         .cache_kind = cache_kind
     });
 
@@ -2451,7 +2451,7 @@ void Toggle_this_toggle_optional_shared_up(void) {
     ecs_add(world, e, Foo);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "Foo, ?Position(up(ChildOf))",
+        .expr = "Foo, ?Position(up ChildOf)",
         .cache_kind = cache_kind
     });
 

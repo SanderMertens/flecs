@@ -2435,7 +2435,7 @@ void BuiltinPredicates_this_match_eq_written_self(void) {
     ecs_add(world, ent_6, Tag);
 
     ecs_query_t *r = ecs_query(world, {
-        .expr = "RelA($this:self), $this ~= \"nt_\"",
+        .expr = "RelA($this|self), $this ~= \"nt_\"",
         .cache_kind = cache_kind
     });
 

@@ -14,6 +14,12 @@
         out->kind = _kind;\
         return pos + ecs_os_strlen(keyword);
 
+#define OperatorMultiChar(oper, _kind)\
+    } else if (!ecs_os_strncmp(pos, oper, ecs_os_strlen(oper))) {\
+        out->value = oper;\
+        out->kind = _kind;\
+        return pos + ecs_os_strlen(oper);
+
 #define Operator(oper, _kind)\
     } else if (pos[0] == oper[0]) {\
         out->value = oper;\
@@ -36,7 +42,15 @@ const char* flecs_script_token_kind_str(
     case EcsTokAnnotation:
     case EcsTokComma:
     case EcsTokSemiColon:
+    case EcsTokMul:
     case EcsTokAssign:
+    case EcsTokBitwiseOr:
+    case EcsTokNot:
+    case EcsTokOptional:
+    case EcsTokEq:
+    case EcsTokNeq:
+    case EcsTokMatch:
+    case EcsTokOr:
         return "";
     case EcsTokKeywordWith:
     case EcsTokKeywordUsing:
@@ -49,6 +63,10 @@ const char* flecs_script_token_kind_str(
         return "keyword ";
     case EcsTokIdentifier:
         return "identifier ";
+    case EcsTokString:
+        return "string ";
+    case EcsTokNumber:
+        return "number ";
     case EcsTokNewline:
         return "newline";
     case EcsTokEnd:
@@ -59,34 +77,20 @@ const char* flecs_script_token_kind_str(
 }
 
 static
-const char* flecs_script_scan_token(
-    ecs_script_parser_t *parser,
-    const char *pos,
-    bool (*scanfunc)(char))
-{
-    char *out = parser->token_cur;
-    do {
-        if (!*pos || !scanfunc(*pos)) {
-            *out = '\0';
-            parser->token_cur = out + 1;
-            return pos;
-        }
-
-        *out = *pos;
-        out ++;
-        pos ++;
-    } while (true);
-}
-
-static
 const char* flecs_scan_whitespace(
     ecs_script_parser_t *parser,
     const char *pos) 
 {
     (void)parser;
 
-    while (pos[0] && isspace(pos[0]) && pos[0] != '\n') {
-        pos ++;
+    if (parser->significant_newline) {
+        while (pos[0] && isspace(pos[0]) && pos[0] != '\n') {
+            pos ++;
+        }
+    } else {
+        while (pos[0] && isspace(pos[0])) {
+            pos ++;
+        }
     }
 
     return pos;
@@ -119,13 +123,6 @@ bool flecs_script_is_identifier(
 }
 
 static
-bool flecs_script_scan_identifier(
-    char c)
-{
-    return flecs_script_is_identifier(c) || isdigit(c) || (c == '.') || (c == '*');
-}
-
-static
 const char* flecs_script_identifier(
     ecs_script_parser_t *parser,
     const char *pos,
@@ -133,8 +130,95 @@ const char* flecs_script_identifier(
 {
     out->kind = EcsTokIdentifier;
     out->value = parser->token_cur;
-    return flecs_script_scan_token(parser, pos, 
-        flecs_script_scan_identifier);
+
+    ecs_assert(flecs_script_is_identifier(pos[0]), ECS_INTERNAL_ERROR, NULL);
+    char *outpos = parser->token_cur;
+    do {
+        char c = pos[0];
+        bool is_ident = flecs_script_is_identifier(c) || 
+            isdigit(c) || (c == '.') || (c == '*');
+
+        if (!is_ident) {
+            if (c == '\\') {
+                pos ++;
+            } else if (c == '<') {
+                int32_t indent = 0;
+                do {
+                    c = *pos;
+
+                    if (c == '<') {
+                        indent ++;
+                    } else if (c == '>') {
+                        indent --;
+                    } else if (!c) {
+                        ecs_parser_error(parser->script->name, 
+                            parser->script->code, pos - parser->script->code, 
+                                "< without > in identifier");
+                        return NULL;
+                    }
+
+                    *outpos = c;
+                    outpos ++;
+                    pos ++;
+
+                    if (!indent) {
+                        break;
+                    }
+                } while (true);
+
+                *outpos = '\0';
+                parser->token_cur = outpos + 1;
+                return pos;
+            } else if (c == '>') {
+                ecs_parser_error(parser->script->name, parser->script->code,
+                    pos - parser->script->code, "> without < in identifier");
+                return NULL;
+            } else {
+                *outpos = '\0';
+                parser->token_cur = outpos + 1;
+                return pos;
+            }
+        }
+
+        *outpos = *pos;
+        outpos ++;
+        pos ++;
+    } while (true);
+}
+
+// Number token
+static
+bool flecs_script_is_number(
+    char c)
+{
+    return isdigit(c) || (c == '-');
+}
+
+static
+const char* flecs_script_number(
+    ecs_script_parser_t *parser,
+    const char *pos,
+    ecs_script_token_t *out) 
+{
+    out->kind = EcsTokNumber;
+    out->value = parser->token_cur;
+
+    ecs_assert(flecs_script_is_number(pos[0]), ECS_INTERNAL_ERROR, NULL);
+    char *outpos = parser->token_cur;
+    do {
+        char c = pos[0];
+        if (!isdigit(c)) {
+            *outpos = '\0';
+            parser->token_cur = outpos + 1;
+            break;
+        }
+
+        outpos[0] = pos[0];
+        outpos ++;
+        pos ++;
+    } while (true);
+
+    return pos;
 }
 
 static
@@ -157,6 +241,30 @@ const char* flecs_script_skip_string(
     }
 
     return pos;
+}
+
+static
+const char* flecs_script_string(
+    ecs_script_parser_t *parser,
+    const char *pos,
+    ecs_script_token_t *out) 
+{
+    const char *end = flecs_script_skip_string(parser, pos + 1, '"');
+    if (!end) {
+        return NULL;
+    }
+
+    ecs_assert(end[0] == '"', ECS_INTERNAL_ERROR, NULL);
+    end --;
+
+    int32_t len = flecs_ito(int32_t, end - pos);
+    ecs_os_memcpy(parser->token_cur, pos + 1, len);
+    parser->token_cur[len] = '\0';
+
+    out->kind = EcsTokString;
+    out->value = parser->token_cur;
+    parser->token_cur += len + 1;
+    return end + 2;
 }
 
 const char* flecs_script_expr(
@@ -355,30 +463,45 @@ const char* flecs_script_token(
         }
         return pos;
 
-    Operator(":",        EcsTokColon)
-    Operator("{",        EcsTokScopeOpen)
-    Operator("}",        EcsTokScopeClose)
-    Operator("(",        EcsTokParenOpen)
-    Operator(")",        EcsTokParenClose)
-    Operator("[",        EcsTokBracketOpen)
-    Operator("]",        EcsTokBracketClose)
-    Operator("@",        EcsTokAnnotation)
-    Operator(",",        EcsTokComma)
-    Operator(";",        EcsTokSemiColon)
-    Operator("=",        EcsTokAssign)
+    Operator          (":",        EcsTokColon)
+    Operator          ("{",        EcsTokScopeOpen)
+    Operator          ("}",        EcsTokScopeClose)
+    Operator          ("(",        EcsTokParenOpen)
+    Operator          (")",        EcsTokParenClose)
+    Operator          ("[",        EcsTokBracketOpen)
+    Operator          ("]",        EcsTokBracketClose)
+    Operator          ("@",        EcsTokAnnotation)
+    Operator          (",",        EcsTokComma)
+    Operator          (";",        EcsTokSemiColon)
+    Operator          ("*",        EcsTokMul)
+    Operator          ("?",        EcsTokOptional)
 
-    Keyword ("with",     EcsTokKeywordWith)
-    Keyword ("using",    EcsTokKeywordUsing)
-    Keyword ("assembly", EcsTokKeywordAssembly)
-    Keyword ("prop",     EcsTokKeywordProp)
-    Keyword ("const",    EcsTokKeywordConst)
-    Keyword ("if",       EcsTokKeywordIf)
-    Keyword ("else",     EcsTokKeywordElse)
-    Keyword ("module",   EcsTokKeywordModule)
+    OperatorMultiChar ("==",       EcsTokEq)
+    OperatorMultiChar ("!=",       EcsTokNeq)
+    OperatorMultiChar ("~=",       EcsTokMatch)
+    OperatorMultiChar ("||",       EcsTokOr)
+
+    OperatorMultiChar ("!",        EcsTokNot)
+    OperatorMultiChar ("=",        EcsTokAssign)
+    OperatorMultiChar ("|",        EcsTokBitwiseOr)
+
+    Keyword           ("with",     EcsTokKeywordWith)
+    Keyword           ("using",    EcsTokKeywordUsing)
+    Keyword           ("assembly", EcsTokKeywordAssembly)
+    Keyword           ("prop",     EcsTokKeywordProp)
+    Keyword           ("const",    EcsTokKeywordConst)
+    Keyword           ("if",       EcsTokKeywordIf)
+    Keyword           ("else",     EcsTokKeywordElse)
+    Keyword           ("module",   EcsTokKeywordModule)
+
+    } else if (pos[0] == '"') {
+        return flecs_script_string(parser, pos, out);
+
+    } else if (flecs_script_is_number(pos[0])) {
+        return flecs_script_number(parser, pos, out);
 
     } else if (flecs_script_is_identifier(pos[0])) {
-        pos = flecs_script_identifier(parser, pos, out);
-        return pos;
+        return flecs_script_identifier(parser, pos, out);
     }
 
     if (!is_lookahead) {

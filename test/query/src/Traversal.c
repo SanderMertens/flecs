@@ -448,7 +448,7 @@ void Traversal_var_self_up_childof(void) {
     ecs_entity(world, { .parent = p0 });
 
     ecs_query_t *r = ecs_query(world, {
-        .expr = "Foo($x:self|up)",
+        .expr = "Foo($x|self|up)",
         .cache_kind = cache_kind
     });
 
@@ -554,7 +554,7 @@ void Traversal_var_up_childof(void) {
     ecs_entity(world, { .parent = p0 });
 
     ecs_query_t *r = ecs_query(world, {
-        .expr = "Foo($x:up)",
+        .expr = "Foo($x|up)",
         .cache_kind = cache_kind
     });
 
@@ -645,7 +645,7 @@ void Traversal_var_written_self_up_childof(void) {
     ecs_set_with(world, 0);
 
     ecs_query_t *r = ecs_query(world, {
-        .expr = "Tag($x:self), Foo($x:self|up)",
+        .expr = "Tag($x|self), Foo($x|self|up)",
         .cache_kind = cache_kind
     });
 
@@ -774,7 +774,7 @@ void Traversal_var_written_up_childof(void) {
     ecs_set_with(world, 0);
 
     ecs_query_t *r = ecs_query(world, {
-        .expr = "Tag($x:self), Foo($x:up)",
+        .expr = "Tag($x|self), Foo($x|up)",
         .cache_kind = cache_kind
     });
 
@@ -876,7 +876,7 @@ void Traversal_set_var_self_up_childof(void) {
     ecs_entity_t e8 = ecs_entity(world, { .parent = p0 });
 
     ecs_query_t *r = ecs_query(world, {
-        .expr = "Foo($x:self|up)",
+        .expr = "Foo($x|self|up)",
         .cache_kind = cache_kind
     });
 
@@ -978,7 +978,7 @@ void Traversal_set_var_up_childof(void) {
     ecs_entity_t e8 = ecs_entity(world, { .parent = p0 });
 
     ecs_query_t *r = ecs_query(world, {
-        .expr = "Foo($x:up)",
+        .expr = "Foo($x|up)",
         .cache_kind = cache_kind
     });
 
@@ -1077,7 +1077,7 @@ void Traversal_set_var_written_self_up_childof(void) {
     ecs_set_with(world, 0);
 
     ecs_query_t *r = ecs_query(world, {
-        .expr = "Tag($x:self), Foo($x:self|up)",
+        .expr = "Tag($x|self), Foo($x|self|up)",
         .cache_kind = cache_kind
     });
 
@@ -1166,7 +1166,7 @@ void Traversal_set_var_written_up_childof(void) {
     ECS_TAG(world, Tag);
 
     ecs_query_t *r = ecs_query(world, {
-        .expr = "Tag($x:self), Foo($x:up)",
+        .expr = "Tag($x|self), Foo($x|up)",
         .cache_kind = cache_kind
     });
 
@@ -1272,7 +1272,7 @@ void Traversal_ent_self_up_childof(void) {
     ecs_entity_t e = ecs_entity(world, { .name = "ent" });
 
     ecs_query_t *r = ecs_query(world, {
-        .expr = "Foo(ent:self|up)",
+        .expr = "Foo(ent|self|up)",
         .cache_kind = cache_kind
     });
 
@@ -1329,7 +1329,7 @@ void Traversal_ent_up_childof(void) {
     ecs_entity_t e = ecs_entity(world, { .name = "ent" });
 
     ecs_query_t *r = ecs_query(world, {
-        .expr = "Foo(ent:up)",
+        .expr = "Foo(ent|up)",
         .cache_kind = cache_kind
     });
 
@@ -1498,7 +1498,7 @@ void Traversal_implicit_this_up_isa(void) {
     ecs_entity(world, { .add = ecs_ids(ecs_isa(p0)) });
 
     ecs_query_t *r = ecs_query(world, {
-        .expr = "Foo(up(IsA))",
+        .expr = "Foo(up IsA)",
         .cache_kind = cache_kind
     });
 
@@ -1667,7 +1667,7 @@ void Traversal_implicit_var_up_isa(void) {
     ECS_TAG(world, Bar);
 
     ecs_query_t *r = ecs_query(world, {
-        .expr = "Foo($x:up(IsA))",
+        .expr = "Foo($x|up IsA)",
         .cache_kind = cache_kind
     });
 
@@ -1757,7 +1757,7 @@ void Traversal_implicit_ent_self_up_isa(void) {
     ecs_entity_t e = ecs_entity(world, { .name = "ent" });
 
     ecs_query_t *r = ecs_query(world, {
-        .expr = "Foo(ent:self|up(IsA))",
+        .expr = "Foo(ent|self|up IsA)",
         .cache_kind = cache_kind
     });
 
@@ -1814,7 +1814,7 @@ void Traversal_implicit_ent_up_isa(void) {
     ecs_entity_t e = ecs_entity(world, { .name = "ent" });
 
     ecs_query_t *r = ecs_query(world, {
-        .expr = "Foo(ent:up(IsA))",
+        .expr = "Foo(ent|up IsA)",
         .cache_kind = cache_kind
     });
 
@@ -1862,7 +1862,7 @@ void Traversal_self_up_2_targets(void) {
     ECS_TAG(world, Foo);
 
     ecs_query_t *r = ecs_query(world, {
-        .expr = "Foo(self|up(IsA))",
+        .expr = "Foo(self|up IsA)",
         .cache_kind = cache_kind
     });
 
@@ -1917,7 +1917,7 @@ void Traversal_up_2_targets(void) {
     ECS_TAG(world, Foo);
 
     ecs_query_t *r = ecs_query(world, {
-        .expr = "Foo(up(IsA))",
+        .expr = "Foo(up IsA)",
         .cache_kind = cache_kind
     });
 
@@ -1975,7 +1975,7 @@ void Traversal_self_up_2_targets_diamond(void) {
     ecs_entity_t e_3 = ecs_entity(world, { .add = ecs_ids(ecs_isa(parent_c)) });
 
     ecs_query_t *r = ecs_query(world, {
-        .expr = "Foo(self|up(IsA))",
+        .expr = "Foo(self|up IsA)",
         .cache_kind = cache_kind
     });
 
@@ -2042,7 +2042,7 @@ void Traversal_up_2_targets_diamond(void) {
     ecs_entity_t e_3 = ecs_entity(world, { .add = ecs_ids(ecs_isa(parent_c)) });
 
     ecs_query_t *r = ecs_query(world, {
-        .expr = "Foo(up(IsA))",
+        .expr = "Foo(up IsA)",
         .cache_kind = cache_kind
     });
 
@@ -2094,7 +2094,7 @@ void Traversal_written_self_up_2_targets(void) {
     ECS_TAG(world, Tag);
 
     ecs_query_t *r = ecs_query(world, {
-        .expr = "Tag(self), Foo(self|up(IsA))",
+        .expr = "Tag(self), Foo(self|up IsA)",
         .cache_kind = cache_kind
     });
 
@@ -2159,7 +2159,7 @@ void Traversal_written_up_2_targets(void) {
     ECS_TAG(world, Tag);
 
     ecs_query_t *r = ecs_query(world, {
-        .expr = "Tag(self), Foo(up(IsA))",
+        .expr = "Tag(self), Foo(up IsA)",
         .cache_kind = cache_kind
     });
 
@@ -2216,7 +2216,7 @@ void Traversal_written_self_up_2_targets_diamond(void) {
     ECS_TAG(world, Tag);
 
     ecs_query_t *r = ecs_query(world, {
-        .expr = "Tag(self), Foo(self|up(IsA))",
+        .expr = "Tag(self), Foo(self|up IsA)",
         .cache_kind = cache_kind
     });
 
@@ -2298,7 +2298,7 @@ void Traversal_written_up_2_targets_diamond(void) {
     ECS_TAG(world, Tag);
 
     ecs_query_t *r = ecs_query(world, {
-        .expr = "Tag(self), Foo(up(IsA))",
+        .expr = "Tag(self), Foo(up IsA)",
         .cache_kind = cache_kind
     });
 
@@ -2380,7 +2380,7 @@ void Traversal_2_self_up_terms(void) {
     ecs_set_with(world, 0);
 
     ecs_query_t *r = ecs_query(world, {
-        .expr = "Tag, Foo(self|up(IsA))",
+        .expr = "Tag, Foo(self|up IsA)",
         .cache_kind = cache_kind
     });
 
@@ -2437,7 +2437,7 @@ void Traversal_2_self_up_terms_2_targets(void) {
     ecs_set_with(world, 0);
 
     ecs_query_t *r = ecs_query(world, {
-        .expr = "Tag, Foo(self|up(IsA))",
+        .expr = "Tag, Foo(self|up IsA)",
         .cache_kind = cache_kind
     });
 
@@ -2490,7 +2490,7 @@ void Traversal_self_up_empty_table(void) {
     ECS_TAG(world, Foo);
 
     ecs_query_t *r = ecs_query(world, {
-        .expr = "Foo(self|up(IsA))",
+        .expr = "Foo(self|up IsA)",
         .cache_kind = cache_kind
     });
 
@@ -2520,7 +2520,7 @@ void Traversal_up_empty_table(void) {
     ECS_TAG(world, Foo);
 
     ecs_query_t *r = ecs_query(world, {
-        .expr = "Foo(up(IsA))",
+        .expr = "Foo(up IsA)",
         .cache_kind = cache_kind
     });
 
@@ -2544,7 +2544,7 @@ void Traversal_self_up_all_owned(void) {
     ECS_TAG(world, Tag);
 
     ecs_query_t *r = ecs_query(world, {
-        .expr = "Tag(self|up(IsA))",
+        .expr = "Tag(self|up IsA)",
         .cache_kind = cache_kind
     });
 
@@ -2613,7 +2613,7 @@ void Traversal_up_all_owned(void) {
     ECS_TAG(world, Tag);
 
     ecs_query_t *r = ecs_query(world, {
-        .expr = "Tag(up(IsA))",
+        .expr = "Tag(up IsA)",
         .cache_kind = cache_kind
     });
 
@@ -2820,7 +2820,7 @@ void Traversal_var_self_up_childof_inherited(void) {
     ECS_TAG(world, Foo);
 
     ecs_query_t *r = ecs_query(world, {
-        .expr = "Foo($x:self|up)",
+        .expr = "Foo($x|self|up)",
         .cache_kind = cache_kind
     });
 
@@ -2859,7 +2859,7 @@ void Traversal_var_up_childof_inherited(void) {
     ECS_TAG(world, Foo);
 
     ecs_query_t *r = ecs_query(world, {
-        .expr = "Foo($x:up)",
+        .expr = "Foo($x|up)",
         .cache_kind = cache_kind
     });
 
@@ -2893,7 +2893,7 @@ void Traversal_var_written_self_up_childof_inherited(void) {
     ECS_TAG(world, Tag);
 
     ecs_query_t *r = ecs_query(world, {
-        .expr = "Tag($x:self), Foo($x:self|up)",
+        .expr = "Tag($x|self), Foo($x|self|up)",
         .cache_kind = cache_kind
     });
 
@@ -2939,7 +2939,7 @@ void Traversal_var_written_up_childof_inherited(void) {
     ECS_TAG(world, Tag);
 
     ecs_query_t *r = ecs_query(world, {
-        .expr = "Tag($x:self), Foo($x:up)",
+        .expr = "Tag($x|self), Foo($x|up)",
         .cache_kind = cache_kind
     });
 
@@ -2982,7 +2982,7 @@ void Traversal_ent_self_up_childof_inherited(void) {
     ecs_set_name(world, child, "child");
 
     ecs_query_t *r = ecs_query(world, {
-        .expr = "Foo(parent.child:self|up)",
+        .expr = "Foo(parent.child|self|up)",
         .cache_kind = cache_kind
     });
 
@@ -3025,7 +3025,7 @@ void Traversal_ent_up_childof_inherited(void) {
     ecs_set_name(world, child, "child");
 
     ecs_query_t *r = ecs_query(world, {
-        .expr = "Foo(parent.child:up)",
+        .expr = "Foo(parent.child|up)",
         .cache_kind = cache_kind
     });
 
@@ -3071,7 +3071,7 @@ void Traversal_ent_written_self_up_childof_inherited(void) {
     ecs_set_with(world, 0);
 
     ecs_query_t *r = ecs_query(world, {
-        .expr = "Foo(parent.child:self|up)",
+        .expr = "Foo(parent.child|self|up)",
         .cache_kind = cache_kind
     });
 
@@ -3117,7 +3117,7 @@ void Traversal_ent_written_up_childof_inherited(void) {
     ecs_set_with(world, 0);
 
     ecs_query_t *r = ecs_query(world, {
-        .expr = "Foo(parent.child:up)",
+        .expr = "Foo(parent.child|up)",
         .cache_kind = cache_kind
     });
 
@@ -3757,7 +3757,7 @@ void Traversal_var_self_up_childof_component(void) {
     ECS_TAG(world, Bar);
 
     ecs_query_t *r = ecs_query(world, {
-        .expr = "Position($x:self|up)",
+        .expr = "Position($x|self|up)",
         .cache_kind = cache_kind
     });
 
@@ -3921,7 +3921,7 @@ void Traversal_var_up_childof_component(void) {
     ECS_TAG(world, Bar);
 
     ecs_query_t *r = ecs_query(world, {
-        .expr = "Position($x:up)",
+        .expr = "Position($x|up)",
         .cache_kind = cache_kind
     });
 
@@ -4052,7 +4052,7 @@ void Traversal_var_written_self_up_childof_component(void) {
     ECS_TAG(world, Tag);
 
     ecs_query_t *r = ecs_query(world, {
-        .expr = "Tag($x:self), Position($x:self|up)",
+        .expr = "Tag($x|self), Position($x|self|up)",
         .cache_kind = cache_kind
     });
 
@@ -4241,7 +4241,7 @@ void Traversal_var_written_up_childof_component(void) {
     ECS_TAG(world, Tag);
 
     ecs_query_t *r = ecs_query(world, {
-        .expr = "Tag($x:self), Position($x:up)",
+        .expr = "Tag($x|self), Position($x|up)",
         .cache_kind = cache_kind
     });
 
@@ -6849,7 +6849,7 @@ void Traversal_this_self_up_childof_pair_for_var_written(void) {
     ECS_ENTITY(world, ent, (Rel, TagA), (Rel, TagB), (Rel, TagC));
 
     ecs_query_t *r = ecs_query(world, {
-        .expr = "Rel(ent, $x), $x(self|up(IsA))",
+        .expr = "Rel(ent, $x), $x(self|up IsA)",
         .cache_kind = cache_kind
     });
 
@@ -6939,7 +6939,7 @@ void Traversal_this_up_childof_pair_for_var_written(void) {
     ECS_ENTITY(world, ent, (Rel, TagA), (Rel, TagB), (Rel, TagC));
 
     ecs_query_t *r = ecs_query(world, {
-        .expr = "Rel(ent, $x), $x(up(IsA))",
+        .expr = "Rel(ent, $x), $x(up IsA)",
         .cache_kind = cache_kind
     });
 
@@ -7084,7 +7084,7 @@ void Traversal_this_self_up_childof_pair_for_var_written_n_targets(void) {
     ECS_ENTITY(world, ent, (Rel, TagA), (Rel, TagB), (Rel, TagC));
 
     ecs_query_t *r = ecs_query(world, {
-        .expr = "Rel(ent, $x), $x(self|up(IsA))",
+        .expr = "Rel(ent, $x), $x(self|up IsA)",
         .cache_kind = cache_kind
     });
 
@@ -7218,7 +7218,7 @@ void Traversal_this_written_self_up_childof_pair_for_var_written_n_targets(void)
     ECS_TAG(world, TagC);
 
     ecs_query_t *r = ecs_query(world, {
-        .expr = "Rel(self, $x), $x(self|up(IsA))",
+        .expr = "Rel(self, $x), $x(self|up IsA)",
         .cache_kind = cache_kind
     });
 
@@ -7461,7 +7461,7 @@ void Traversal_up_only_w_owned(void) {
     ecs_add_pair(world, e_1, R, e_0);
 
     ecs_query_t *f = ecs_query(world, {
-        .expr = "Position(up(R))",
+        .expr = "Position(up R)",
         .cache_kind = cache_kind
     });
 
@@ -7503,7 +7503,7 @@ void Traversal_this_up_trav_unused_rel(void) {
     ECS_ENTITY(world, Rel, Traversable);
 
     ecs_query_t *r = ecs_query(world, {
-        .expr = "Foo(up(Rel))",
+        .expr = "Foo(up Rel)",
         .cache_kind = cache_kind
     });
 
@@ -7597,7 +7597,7 @@ void Traversal_this_optional_up(void) {
     ecs_entity_t e3 = ecs_new_w(world, Position);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "?Velocity(up(IsA)), Position",
+        .expr = "?Velocity(up IsA), Position",
         .cache_kind = cache_kind
     });
     test_assert(q != NULL);
@@ -7651,7 +7651,7 @@ void Traversal_this_optional_self_up(void) {
     ecs_entity_t e3 = ecs_new_w(world, Position);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "?Velocity(self|up(IsA)), Position",
+        .expr = "?Velocity(self|up IsA), Position",
         .cache_kind = cache_kind
     });
     test_assert(q != NULL);
@@ -7762,7 +7762,7 @@ void Traversal_this_written_optional_up(void) {
     ecs_entity_t e3 = ecs_new_w(world, Position);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "Position, ?Velocity(up(IsA))",
+        .expr = "Position, ?Velocity(up IsA)",
         .cache_kind = cache_kind
     });
     test_assert(q != NULL);
@@ -7816,7 +7816,7 @@ void Traversal_this_written_optional_self_up(void) {
     ecs_entity_t e3 = ecs_new_w(world, Position);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "Position, ?Velocity(self|up(IsA))",
+        .expr = "Position, ?Velocity(self|up IsA)",
         .cache_kind = cache_kind
     });
     test_assert(q != NULL);
@@ -7870,7 +7870,7 @@ void Traversal_fixed_src_w_up(void) {
     ecs_entity_t e = ecs_entity(world, { .add = ecs_ids(ecs_isa(p)) });
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "Velocity(Game), Mass(up(IsA))",
+        .expr = "Velocity(Game), Mass(up IsA)",
         .cache_kind = cache_kind
     });
 
@@ -8101,7 +8101,7 @@ void Traversal_match_empty_table_up_isa(void) {
     ECS_TAG(world, TagA);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "Position(up(IsA))",
+        .expr = "Position(up IsA)",
         .cache_kind = cache_kind,
         .flags =  EcsQueryMatchEmptyTables
     });
@@ -8149,7 +8149,7 @@ void Traversal_match_empty_table_up_written_isa(void) {
     ECS_TAG(world, TagB);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "TagB, Position(up(IsA))",
+        .expr = "TagB, Position(up IsA)",
         .cache_kind = cache_kind,
         .flags =  EcsQueryMatchEmptyTables
     });

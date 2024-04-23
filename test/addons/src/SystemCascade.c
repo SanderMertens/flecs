@@ -180,7 +180,7 @@ void SystemCascade_cascade_depth_2_new_syntax(void) {
     ECS_ENTITY(world, e5, Position);
     ECS_ENTITY(world, e6, Position);
 
-    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, ?Position(cascade(ChildOf)));
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, ?Position(cascade ChildOf));
     ecs_system_init(world, &(ecs_system_desc_t){
         .entity = Iter,
         .query.flags = EcsQueryIsInstanced
@@ -426,7 +426,7 @@ void SystemCascade_custom_relation_cascade_depth_1(void) {
     ECS_ENTITY(world, e3, Position);
     ECS_ENTITY(world, e4, Position);
 
-    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, ?Position(cascade(Rel)));
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, ?Position(cascade Rel));
     ecs_system_init(world, &(ecs_system_desc_t){
         .entity = Iter,
         .query.flags = EcsQueryIsInstanced
@@ -495,7 +495,7 @@ void SystemCascade_custom_relation_cascade_depth_2(void) {
     ECS_ENTITY(world, e5, Position);
     ECS_ENTITY(world, e6, Position);
 
-    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, ?Position(cascade(Rel)));
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, ?Position(cascade Rel));
     ecs_system_init(world, &(ecs_system_desc_t){
         .entity = Iter,
         .query.flags = EcsQueryIsInstanced
@@ -575,7 +575,7 @@ void SystemCascade_custom_relation_add_after_match(void) {
     ECS_ENTITY(world, e3, Position);
     ECS_ENTITY(world, e4, Position);
 
-    ECS_SYSTEM(world, AddParent, EcsOnUpdate, Position, ?Position(cascade(Rel)));
+    ECS_SYSTEM(world, AddParent, EcsOnUpdate, Position, ?Position(cascade Rel));
     ecs_system_init(world, &(ecs_system_desc_t){
         .entity = AddParent,
         .query.flags = EcsQueryIsInstanced
@@ -653,7 +653,7 @@ void SystemCascade_custom_relation_adopt_after_match(void) {
     ECS_ENTITY(world, e3, Position);
     ECS_ENTITY(world, e4, Position);
 
-    ECS_SYSTEM(world, AddParent, EcsOnUpdate, Position, ?Position(cascade(Rel)));
+    ECS_SYSTEM(world, AddParent, EcsOnUpdate, Position, ?Position(cascade Rel));
     ecs_system_init(world, &(ecs_system_desc_t){
         .entity = AddParent,
         .query.flags = EcsQueryIsInstanced

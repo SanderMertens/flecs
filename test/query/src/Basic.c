@@ -8396,7 +8396,7 @@ void Basic_2_trivial_mixed_2_tables(void) {
     ecs_entity_t ent = ecs_entity(world, { .name = "ent" });
 
     ecs_query_t *r = ecs_query(world, {
-        .expr = "Foo(self), Bar(self), Mass(ent:self)",
+        .expr = "Foo(self), Bar(self), Mass(ent|self)",
         .flags = EcsQueryIsInstanced,
         .cache_kind = cache_kind
     });
@@ -8479,7 +8479,7 @@ void Basic_2_trivial_mixed_2_tables_component(void) {
     ecs_entity_t ent = ecs_entity(world, { .name = "ent" });
 
     ecs_query_t *r = ecs_query(world, {
-        .expr = "Position(self), Velocity(self), Mass(ent:self)",
+        .expr = "Position(self), Velocity(self), Mass(ent|self)",
         .flags = EcsQueryIsInstanced,
         .cache_kind = cache_kind
     });
@@ -8581,7 +8581,7 @@ void Basic_2_trivial_mixed_2_tables_wildcard(void) {
     ecs_entity_t ent = ecs_entity(world, { .name = "ent" });
 
     ecs_query_t *r = ecs_query(world, {
-        .expr = "Foo(self), ChildOf(self, *), Mass(ent:self)",
+        .expr = "Foo(self), ChildOf(self, *), Mass(ent|self)",
         .flags = EcsQueryIsInstanced,
         .cache_kind = cache_kind
     });

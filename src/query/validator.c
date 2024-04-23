@@ -6,6 +6,10 @@
 #include "../private_api.h"
 #include <ctype.h>
 
+#ifdef FLECS_SCRIPT
+#include "../addons/script/script.h"
+#endif
+
 static
 void flecs_query_validator_error(
     const ecs_query_validator_ctx_t *ctx,
@@ -43,9 +47,21 @@ int flecs_term_ref_finalize_flags(
         return -1;
     }
 
-    if (ref->name && ref->name[0] == '$' && ref->name[1]) {
+    if (ref->name && ref->name[0] == '$') {
+        if (!ref->name[1]) {
+            if (ref->id & ~EcsTermRefFlags) {
+                flecs_query_validator_error(ctx, 
+                    "conflicting values for .name and .id");
+                return -1;
+            }
+
+            ref->id |= EcsVariable;
+        } else {
+            ref->name = &ref->name[1];
+        }
+
         ref->id |= EcsIsVariable;
-    }
+    } 
 
     if (!(ref->id & (EcsIsEntity|EcsIsVariable|EcsIsName))) {
         if (ECS_TERM_REF_ID(ref) || ref->name) {
@@ -96,9 +112,11 @@ int flecs_term_ref_lookup(
 
     if (flecs_identifier_is_0(name)) {
         if (ECS_TERM_REF_ID(ref)) {
-            flecs_query_validator_error(ctx, "name '0' does not match entity id");
+            flecs_query_validator_error(
+                ctx, "name '0' does not match entity id");
             return -1;
         }
+        ref->name = NULL;
         return 0;
     }
 
@@ -226,6 +244,11 @@ int flecs_term_refs_finalize(
     ecs_entity_t oneof = 0;
     if (first->id & EcsIsEntity) {
         first_id = ECS_TERM_REF_ID(first);
+
+        if (!first_id) {
+            flecs_query_validator_error(ctx, "invalid \"0\" for first.name");
+            return -1;
+        }
 
         /* If first element of pair has OneOf property, lookup second element of
          * pair in the value of the OneOf property */
@@ -604,6 +627,23 @@ int flecs_term_finalize(
     ecs_flags64_t first_flags = ECS_TERM_REF_FLAGS(first);
     ecs_flags64_t second_flags = ECS_TERM_REF_FLAGS(second);
 
+    if (first->name && (first->id & ~EcsTermRefFlags)) {
+        flecs_query_validator_error(ctx, 
+            "first.name and first.id have competing values");
+        return -1;
+    }
+    if (src->name && (src->id & ~EcsTermRefFlags)) {
+        flecs_query_validator_error(ctx, 
+            "src.name and src.id have competing values");
+        return -1;
+    }
+    if (second->name && (second->id & ~EcsTermRefFlags)) {
+        flecs_query_validator_error(ctx, 
+            "second.name and second.id have competing values");
+        return -1;
+    }
+
+
     if (term->id & ~ECS_ID_FLAGS_MASK) {
         if (flecs_term_populate_from_id(world, term, ctx)) {
             return -1;
@@ -637,12 +677,14 @@ int flecs_term_finalize(
         src->id = first->id | ECS_TERM_REF_FLAGS(src);
         src->id &= ~ent_var_mask;
         src->id |= first->id & ent_var_mask;
+        src->name = first->name;
     }
 
     if ((ECS_TERM_REF_ID(second) == EcsVariable) && (second->id & EcsIsVariable)) {
         second->id = first->id | ECS_TERM_REF_FLAGS(second);
         second->id &= ~ent_var_mask;
         second->id |= first->id & ent_var_mask;
+        second->name = first->name;
     }
 
     if (!(term->id & ~ECS_ID_FLAGS_MASK)) {
@@ -898,6 +940,13 @@ void flecs_normalize_term_name(
         ecs_assert(ref->id & EcsIsVariable, ECS_INTERNAL_ERROR, NULL);
         const char *old = ref->name;
         ref->name = &old[1];
+
+        if (!ecs_os_strcmp(ref->name, "This") || 
+            !ecs_os_strcmp(ref->name, "this")) 
+        {
+            ref->name = NULL;
+            ref->id |= EcsThis;
+        }
     }
 }
 
@@ -1110,6 +1159,8 @@ int flecs_query_finalize_terms(
             first_id == EcsPredLookup)
         {
             q->flags |= EcsQueryHasPred;
+            term->src.id = (term->src.id & ~EcsTraverseFlags) | EcsSelf;
+            term->inout = EcsInOutNone;
         } else {
             if (!ecs_term_match_0(term) && term->oper != EcsNot && 
                 term->oper != EcsNotFrom) 
@@ -1277,79 +1328,29 @@ int flecs_query_query_populate_terms(
     /* Parse query expression if set */
     const char *expr = desc->expr;
     if (expr && expr[0]) {
-        ecs_entity_t entity = desc->entity;
-        const char *query_name = entity ? ecs_get_name(world, entity) : NULL;
-        const char *ptr = desc->expr;
-        ecs_oper_kind_t extra_oper = 0;
-        ecs_term_ref_t extra_args[FLECS_TERM_ARG_COUNT_MAX];
-        ecs_os_memset_n(extra_args, 0, ecs_term_ref_t, 
-            FLECS_TERM_ARG_COUNT_MAX);
+        ecs_script_t script = {
+            .world = world,
+            .name = desc->entity ? ecs_get_name(world, desc->entity) : NULL,
+            .code = expr
+        };
 
-        do {
-            if (term_count == FLECS_TERM_COUNT_MAX) {
-                ecs_err("max number of terms (%d) reached, increase "
-                    "FLECS_TERM_COUNT_MAX to support more",
-                    FLECS_TERM_COUNT_MAX);
-                goto error;
-            }
+        /* Allocate buffer that's large enough to tokenize the query string */
+        script.token_buffer_size = ecs_os_strlen(expr) * 2 + 1;
+        script.token_buffer = flecs_alloc(
+            &stage->allocator, script.token_buffer_size);
 
-            /* Parse next term */
-            ecs_term_t *term = &q->terms[term_count];
-            ptr = ecs_parse_term(world, stage, query_name, expr, ptr, 
-                term, &extra_oper, extra_args, true);
-            if (!ptr) {
-                /* Parser error */
-                goto error;
-            }
+        if (flecs_script_parse_terms(&script, &q->terms[term_count], 
+            &term_count))
+        {
+            flecs_free(&stage->allocator, 
+                script.token_buffer_size, script.token_buffer);
+            goto error;
+        }
 
-            if (!ecs_term_is_initialized(term)) {
-                /* Last term parsed */
-                break;
-            }
-
-            term_count ++;
-
-            /* Unpack terms with more than two args into multiple terms so that:
-             *   Rel(X, Y, Z)
-             * becomes:
-             *   Rel(X, Y), Rel(Y, Z) */
-            int32_t arg = 0;
-            while (ecs_term_ref_is_set(&extra_args[arg ++])) {
-                ecs_assert(arg <= FLECS_TERM_ARG_COUNT_MAX, 
-                    ECS_INTERNAL_ERROR, NULL);
-
-                if (term_count == FLECS_TERM_COUNT_MAX) {
-                    ecs_err("max number of terms (%d) reached, increase "
-                        "FLECS_TERM_COUNT_MAX to support more",
-                        FLECS_TERM_COUNT_MAX);
-                    goto error;
-                }
-
-                term = &q->terms[term_count ++];
-                *term = term[-1];
-
-                if (extra_oper == EcsAnd) {
-                    term->src = term[-1].second;
-                    term->second = extra_args[arg - 1];
-                } else if (extra_oper == EcsOr) {
-                    term->src = term[-1].src;
-                    term->second = extra_args[arg - 1];
-                    term[-1].oper = EcsOr;
-                }
-
-                if (term->first.name != NULL) {
-                    term->first.name = term->first.name;
-                }
-                if (term->src.name != NULL) {
-                    term->src.name = term->src.name;
-                }
-            }
-
-            if (arg) {
-                ecs_os_memset_n(extra_args, 0, ecs_term_ref_t, 
-                    FLECS_TERM_ARG_COUNT_MAX);
-            }
-        } while (ptr[0] && ptr[0] != '\n');
+        /* Store on query object so we can free later */
+        flecs_query_impl(q)->tokens = script.token_buffer;
+        flecs_query_impl(q)->tokens_len = 
+            flecs_ito(int16_t, script.token_buffer_size);
     }
 
     q->term_count = flecs_ito(int8_t, term_count);

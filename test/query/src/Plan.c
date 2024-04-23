@@ -1456,7 +1456,7 @@ void Plan_populate_1_fixed_1_var_self(void) {
     ecs_entity(world, { .name = "e" });
 
     ecs_query_t *r = ecs_query(world, {
-        .expr = "Position(e), Velocity($var:self)",
+        .expr = "Position(e), Velocity($var|self)",
         .cache_kind = EcsQueryCacheAuto
     });
 
@@ -1496,7 +1496,7 @@ void Plan_populate_2_fixed_2_var_self(void) {
     ecs_entity(world, { .name = "e" });
 
     ecs_query_t *r = ecs_query(world, {
-        .expr = "Position(e), Velocity(e), Mass($var:self), Rotation($var:self)",
+        .expr = "Position(e), Velocity(e), Mass($var|self), Rotation($var|self)",
         .cache_kind = EcsQueryCacheAuto
     });
 
@@ -1538,7 +1538,7 @@ void Plan_populate_2_fixed_2_var_self_interleaved(void) {
     ecs_entity(world, { .name = "e" });
 
     ecs_query_t *r = ecs_query(world, {
-        .expr = "Position(e), Mass($var:self), Velocity(e), Rotation($var:self)",
+        .expr = "Position(e), Mass($var|self), Velocity(e), Rotation($var|self)",
         .cache_kind = EcsQueryCacheAuto
     });
 
@@ -1580,7 +1580,7 @@ void Plan_populate_2_var_self_2_fixed(void) {
     ecs_entity(world, { .name = "e" });
 
     ecs_query_t *r = ecs_query(world, {
-        .expr = "Mass($var:self), Rotation($var:self), Position(e), Velocity(e)",
+        .expr = "Mass($var|self), Rotation($var|self), Position(e), Velocity(e)",
         .cache_kind = EcsQueryCacheAuto
     });
 
@@ -1622,7 +1622,7 @@ void Plan_populate_1_fixed_1_var_up(void) {
     ecs_entity(world, { .name = "e" });
 
     ecs_query_t *r = ecs_query(world, {
-        .expr = "Position(e), Velocity($var:up)",
+        .expr = "Position(e), Velocity($var|up)",
         .cache_kind = EcsQueryCacheAuto
     });
 
@@ -1662,7 +1662,7 @@ void Plan_populate_2_fixed_2_var_up(void) {
     ecs_entity(world, { .name = "e" });
 
     ecs_query_t *r = ecs_query(world, {
-        .expr = "Position(e), Velocity(e), Mass($var:up), Rotation($var:up)",
+        .expr = "Position(e), Velocity(e), Mass($var|up), Rotation($var|up)",
         .cache_kind = EcsQueryCacheAuto
     });
 
@@ -1704,7 +1704,7 @@ void Plan_populate_2_fixed_2_var_up_interleaved(void) {
     ecs_entity(world, { .name = "e" });
 
     ecs_query_t *r = ecs_query(world, {
-        .expr = "Position(e), Mass($var:up), Velocity(e), Rotation($var:up)",
+        .expr = "Position(e), Mass($var|up), Velocity(e), Rotation($var|up)",
         .cache_kind = EcsQueryCacheAuto
     });
 
@@ -1746,7 +1746,7 @@ void Plan_populate_2_var_up_2_fixed(void) {
     ecs_entity(world, { .name = "e" });
 
     ecs_query_t *r = ecs_query(world, {
-        .expr = "Mass($var:up), Rotation($var:up), Position(e), Velocity(e)",
+        .expr = "Mass($var|up), Rotation($var|up), Position(e), Velocity(e)",
         .cache_kind = EcsQueryCacheAuto
     });
 

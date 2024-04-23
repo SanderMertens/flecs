@@ -1244,7 +1244,7 @@ void ComponentInheritance_1_ent_1_lvl_self(void) {
     ecs_add(world, e1, Warlock);
 
     ecs_query_t *r = ecs_query(world, {
-        .expr = "Warrior(e1:self)"
+        .expr = "Warrior(e1|self)"
     });
 
     test_assert(r != NULL);
@@ -1404,7 +1404,7 @@ void ComponentInheritance_1_var_1_lvl_self(void) {
     /* ecs_entity_t e7 = */ ecs_new_w(world, Unit);
 
     ecs_query_t *r = ecs_query(world, {
-        .expr = "MeleeUnit($x:self)"
+        .expr = "MeleeUnit($x|self)"
     });
 
     test_assert(r != NULL);
@@ -3291,7 +3291,7 @@ void ComponentInheritance_first_self(void) {
 
     {
         ecs_query_t *r = ecs_query(world, {
-            .expr = "Warrior:self:(e1)"
+            .expr = "Warrior|self(e1)"
         });
 
         test_assert(r != NULL);
@@ -3306,7 +3306,7 @@ void ComponentInheritance_first_self(void) {
 
     {
         ecs_query_t *r = ecs_query(world, {
-            .expr = "Warlock:self:(e1)"
+            .expr = "Warlock|self(e1)"
         });
 
         test_assert(r != NULL);
@@ -3327,7 +3327,7 @@ void ComponentInheritance_first_self(void) {
 
     {
         ecs_query_t *r = ecs_query(world, {
-            .expr = "Warrior:self:(e2)"
+            .expr = "Warrior|self(e2)"
         });
 
         test_assert(r != NULL);

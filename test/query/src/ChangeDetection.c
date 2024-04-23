@@ -546,7 +546,7 @@ void ChangeDetection_query_change_prefab_term(void) {
     ecs_new_w_pair(world, EcsIsA, base);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "[in] Position(up(IsA))",
+        .expr = "[in] Position(up IsA)",
         .cache_kind = EcsQueryCacheAuto
     });
     test_assert(q != NULL);
@@ -620,7 +620,7 @@ void ChangeDetection_query_change_prefab_term_w_tag(void) {
     ecs_new_w_pair(world, EcsIsA, base);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "[in] Position(up(IsA))",
+        .expr = "[in] Position(up IsA)",
         .cache_kind = EcsQueryCacheAuto
     });
     test_assert(q != NULL);
@@ -669,13 +669,13 @@ void ChangeDetection_query_change_skip_non_instanced(void) {
     ecs_add(world, e4, Tag);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "Position(up(IsA)), [out] Velocity",
+        .expr = "Position(up IsA), [out] Velocity",
         .cache_kind = EcsQueryCacheAuto
     });
     test_assert(q != NULL);
 
     ecs_query_t *q_r = ecs_query(world, {
-        .expr = "Position(up(IsA)), [in] Velocity",
+        .expr = "Position(up IsA), [in] Velocity",
         .cache_kind = EcsQueryCacheAuto
     });
     test_assert(q_r != NULL);

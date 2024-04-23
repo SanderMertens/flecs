@@ -1305,7 +1305,7 @@ void OrderByEntireTable_sort_shared_component(void) {
     ecs_entity_t e9 = ecs_new_w_pair(world, EcsIsA, base_1);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "Position(self|up(IsA))",
+        .expr = "Position(self|up IsA)",
         .flags = EcsQueryIsInstanced,
         .order_by = ecs_id(Position),
         .order_by_callback = ecs_compare(Position),

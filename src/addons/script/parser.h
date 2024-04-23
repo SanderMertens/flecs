@@ -26,6 +26,7 @@
     (void)tokens
 
 #define ParserEnd\
+        Error("unexpected end of rule (parser error)");\
     error:\
         return NULL
 
@@ -33,7 +34,7 @@
 #define Token(n) (tokens[n].value)
 
 /* Error */
-#define Error(parser, ...)\
+#define Error(...)\
     ecs_parser_error(parser->script->name, parser->script->code,\
         (pos - parser->script->code) - 1, __VA_ARGS__);\
     goto error
@@ -48,7 +49,7 @@
         }\
         if (!t->value[0] && (until == '\n' || until == '{')) {\
             pos ++;\
-            Error(parser, "empty expression");\
+            Error("empty expression");\
         }\
     }\
     Parse_1(until, __VA_ARGS__)
@@ -76,10 +77,10 @@
             __VA_ARGS__\
         default:\
             if (t->value) {\
-                Error(parser, "unexpected %s'%s'", \
+                Error("unexpected %s'%s'", \
                     flecs_script_token_kind_str(t->kind), t->value);\
             } else {\
-                Error(parser, "unexpected %s", \
+                Error("unexpected %s", \
                     flecs_script_token_kind_str(t->kind));\
             }\
         }\

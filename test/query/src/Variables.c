@@ -11353,3 +11353,57 @@ void Variables_2_trivial_1_any_component(void) {
 
     ecs_fini(world);
 }
+
+void Variables_first_invalid_var_name_and_id(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+
+    ecs_log_set_level(-4);
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {
+            { .first.id = Tag, .first.name = "$this" }
+        },
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q == NULL);
+
+    ecs_fini(world);
+}
+
+void Variables_src_invalid_var_name_and_id(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+
+    ecs_log_set_level(-4);
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {
+            { .first.id = Tag, .src.id = Tag, .src.name = "$this" }
+        },
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q == NULL);
+
+    ecs_fini(world);
+}
+
+void Variables_second_invalid_var_name_and_id(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+
+    ecs_log_set_level(-4);
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {
+            { .first.id = Tag, .second.id = Tag, .second.name = "$this" }
+        },
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q == NULL);
+
+    ecs_fini(world);
+}

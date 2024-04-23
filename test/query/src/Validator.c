@@ -2250,3 +2250,90 @@ void Validator_validate_filter_flag(void) {
 
     ecs_fini(world);
 }
+
+void Validator_validate_first_0_name(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_log_set_level(-4);
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ .first.name = "0" }}
+    });
+
+    test_assert(q == NULL);
+
+    ecs_fini(world);
+}
+
+void Validator_validate_src_0_name(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ .first.id = Tag, .src.name = "0" }}
+    });
+
+    test_assert(q != NULL);
+    test_int(q->term_count, 1);
+    test_uint(q->terms[0].id, Tag);
+    test_uint(q->terms[0].first.id, Tag|EcsIsEntity|EcsSelf);
+    test_uint(q->terms[0].src.id, EcsIsEntity);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Validator_validate_second_0_name(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+
+    ecs_log_set_level(-4);
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ .first.id = Tag, .second.name = "0" }}
+    });
+
+    test_assert(q == NULL);
+
+    ecs_fini(world);
+}
+
+void Validator_validate_singleton_src_w_first_name(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+
+    ecs_log_set_level(-4);
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ .first.id = Tag, .src.id = EcsVariable }}
+    });
+
+    test_assert(q != NULL);
+    test_int(q->term_count, 1);
+    test_uint(q->terms[0].id, Tag);
+    test_uint(q->terms[0].first.id, Tag|EcsIsEntity|EcsSelf);
+    test_uint(q->terms[0].src.id, Tag|EcsIsEntity|EcsSelf|EcsUp);
+
+    ecs_fini(world);
+}
+
+void Validator_validate_singleton_second_w_first_name(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+
+    ecs_log_set_level(-4);
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ .first.id = Tag, .second.id = EcsVariable }}
+    });
+
+    test_assert(q != NULL);
+    test_int(q->term_count, 1);
+    test_uint(q->terms[0].id, ecs_pair(Tag, Tag));
+    test_uint(q->terms[0].first.id, Tag|EcsIsEntity|EcsSelf);
+    test_uint(q->terms[0].src.id, EcsThis|EcsIsVariable|EcsSelf|EcsUp);
+    test_uint(q->terms[0].second.id, Tag|EcsIsEntity|EcsSelf);
+
+    ecs_fini(world);
+}

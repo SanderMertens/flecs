@@ -280,6 +280,11 @@ void flecs_query_populate_tokens(
 {
     ecs_query_t *q = &impl->pub;
     int32_t i, term_count = q->term_count;
+
+    char *old_tokens = impl->tokens;
+    int32_t old_tokens_len = impl->tokens_len;
+    impl->tokens = NULL;
+    impl->tokens_len = 0;
     
     /* Step 1: determine size of token buffer */
     int32_t len = 0;
@@ -287,13 +292,13 @@ void flecs_query_populate_tokens(
         ecs_term_t *term = &q->terms[i];
         
         if (term->first.name) {
-            len += ecs_os_strlen(term->first.name);
+            len += ecs_os_strlen(term->first.name) + 1;
         }
         if (term->second.name) {
-            len += ecs_os_strlen(term->second.name);
+            len += ecs_os_strlen(term->second.name) + 1;
         }
         if (term->src.name) {
-            len += ecs_os_strlen(term->src.name);
+            len += ecs_os_strlen(term->src.name) + 1;
         }
     }
 
@@ -321,6 +326,10 @@ void flecs_query_populate_tokens(
                 token = next;
             }
         }
+    }
+
+    if (old_tokens) {
+        flecs_free(&q->stage->allocator, old_tokens_len, old_tokens);
     }
 }
 
@@ -381,6 +390,10 @@ ecs_query_t* ecs_query_init(
     /* If query terms have itself as source, add term ids to self */
     flecs_query_add_self_ref(&result->pub);
 
+    /* Store remaining string tokens in terms (after entity lookups) in single
+     * token buffer which simplifies memory management & reduces allocations. */
+    flecs_query_populate_tokens(result);
+
     /* Initialize static context & mixins */
     result->pub.stage = stage;
     result->pub.ctx = const_desc->ctx;
@@ -399,10 +412,6 @@ ecs_query_t* ecs_query_init(
     if (flecs_query_compile(world, stage, result)) {
         goto error;
     }
-
-    /* Store remaining string tokens in terms (after entity lookups) in single
-     * token buffer which simplifies memory management & reduces allocations. */
-    flecs_query_populate_tokens(result);
 
     /* Entity could've been set by finalize query if query is cached */
     entity = result->pub.entity;
