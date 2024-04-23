@@ -1028,7 +1028,13 @@
                 "optional_transitive_var_tgt_written",
                 "2_var_src_w_same_tgt_ent",
                 "self_target",
-                "any_target"
+                "any_target",
+                "isa_prefab",
+                "isa_disabled",
+                "isa_prefab_match_prefab_flag",
+                "isa_prefab_match_prefab_term",
+                "isa_disabled_match_disabled_flag",
+                "isa_disabled_match_disabled_term"
             ]
         }, {
             "id": "ComponentInheritance",

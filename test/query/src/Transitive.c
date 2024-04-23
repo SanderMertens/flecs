@@ -5154,3 +5154,175 @@ void Transitive_any_target(void) {
 
     ecs_fini(world);
 }
+
+void Transitive_isa_prefab(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t prefab = ecs_new_w_id(world, EcsPrefab);
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, prefab);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms =  {{ ecs_pair(EcsIsA, prefab) }}
+    });
+    
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(inst, it.entities[0]);
+    test_uint(ecs_pair(EcsIsA, prefab), ecs_field_id(&it, 0));
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Transitive_isa_disabled(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t prefab = ecs_new_w_id(world, EcsDisabled);
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, prefab);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms =  {{ ecs_pair(EcsIsA, prefab) }}
+    });
+    
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(inst, it.entities[0]);
+    test_uint(ecs_pair(EcsIsA, prefab), ecs_field_id(&it, 0));
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Transitive_isa_prefab_match_prefab_flag(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t prefab = ecs_new_w_id(world, EcsPrefab);
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, prefab);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms =  {{ ecs_pair(EcsIsA, prefab) }},
+        .flags = EcsQueryMatchPrefab
+    });
+    
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(prefab, it.entities[0]);
+    test_uint(ecs_pair(EcsIsA, prefab), ecs_field_id(&it, 0));
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(inst, it.entities[0]);
+    test_uint(ecs_pair(EcsIsA, prefab), ecs_field_id(&it, 0));
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Transitive_isa_prefab_match_prefab_term(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t prefab = ecs_new_w_id(world, EcsPrefab);
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, prefab);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms =  {
+            { ecs_pair(EcsIsA, prefab) },
+            { EcsPrefab, .oper = EcsOptional }
+        }
+    });
+    
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(prefab, it.entities[0]);
+    test_uint(ecs_pair(EcsIsA, prefab), ecs_field_id(&it, 0));
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(inst, it.entities[0]);
+    test_uint(ecs_pair(EcsIsA, prefab), ecs_field_id(&it, 0));
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Transitive_isa_disabled_match_disabled_flag(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t prefab = ecs_new_w_id(world, EcsDisabled);
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, prefab);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms =  {{ ecs_pair(EcsIsA, prefab) }},
+        .flags = EcsQueryMatchDisabled
+    });
+    
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(prefab, it.entities[0]);
+    test_uint(ecs_pair(EcsIsA, prefab), ecs_field_id(&it, 0));
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(inst, it.entities[0]);
+    test_uint(ecs_pair(EcsIsA, prefab), ecs_field_id(&it, 0));
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Transitive_isa_disabled_match_disabled_term(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t prefab = ecs_new_w_id(world, EcsDisabled);
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, prefab);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms =  {
+            { ecs_pair(EcsIsA, prefab) },
+            { EcsDisabled, .oper = EcsOptional }
+        }
+    });
+    
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(prefab, it.entities[0]);
+    test_uint(ecs_pair(EcsIsA, prefab), ecs_field_id(&it, 0));
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(inst, it.entities[0]);
+    test_uint(ecs_pair(EcsIsA, prefab), ecs_field_id(&it, 0));
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}

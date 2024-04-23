@@ -1231,6 +1231,16 @@ bool flecs_query_trav_unknown_src_reflexive(
     ecs_var_id_t src_var = op->src.var;
     flecs_query_var_set_entity(op, src_var, second, ctx);
     flecs_query_var_get_table(src_var, ctx);
+
+    ecs_table_t *table = ctx->vars[src_var].range.table;
+    if (table) {
+        if (flecs_query_table_filter(table, op->other, 
+            (EcsTableNotQueryable|EcsTableIsPrefab|EcsTableIsDisabled)))
+        {
+            return false;
+        }
+    }
+
     flecs_query_set_trav_match(op, -1, trav, second, ctx);
     return true;
 }
@@ -1299,8 +1309,13 @@ bool flecs_query_trav_unknown_src_up_fixed_second(
 
         if (op->match_flags & EcsTermReflexive) {
             trav_ctx->index = -1;
-            return flecs_query_trav_unknown_src_reflexive(
-                op, ctx, trav, second);
+            if(flecs_query_trav_unknown_src_reflexive(
+                op, ctx, trav, second))
+            {
+                /* It's possible that we couldn't return the entity required for
+                 * reflexive matching, like when it's a prefab or disabled. */
+                return true;
+            }
         }
     } else {
         if (!trav_ctx->cache.id) {

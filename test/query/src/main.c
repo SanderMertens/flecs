@@ -1003,6 +1003,12 @@ void Transitive_optional_transitive_var_tgt_written(void);
 void Transitive_2_var_src_w_same_tgt_ent(void);
 void Transitive_self_target(void);
 void Transitive_any_target(void);
+void Transitive_isa_prefab(void);
+void Transitive_isa_disabled(void);
+void Transitive_isa_prefab_match_prefab_flag(void);
+void Transitive_isa_prefab_match_prefab_term(void);
+void Transitive_isa_disabled_match_disabled_flag(void);
+void Transitive_isa_disabled_match_disabled_term(void);
 
 // Testsuite 'ComponentInheritance'
 void ComponentInheritance_1_ent_0_lvl(void);
@@ -5684,6 +5690,30 @@ bake_test_case Transitive_testcases[] = {
     {
         "any_target",
         Transitive_any_target
+    },
+    {
+        "isa_prefab",
+        Transitive_isa_prefab
+    },
+    {
+        "isa_disabled",
+        Transitive_isa_disabled
+    },
+    {
+        "isa_prefab_match_prefab_flag",
+        Transitive_isa_prefab_match_prefab_flag
+    },
+    {
+        "isa_prefab_match_prefab_term",
+        Transitive_isa_prefab_match_prefab_term
+    },
+    {
+        "isa_disabled_match_disabled_flag",
+        Transitive_isa_disabled_match_disabled_flag
+    },
+    {
+        "isa_disabled_match_disabled_term",
+        Transitive_isa_disabled_match_disabled_term
     }
 };
 
@@ -8667,7 +8697,7 @@ static bake_test_suite suites[] = {
         "Transitive",
         NULL,
         NULL,
-        66,
+        72,
         Transitive_testcases
     },
     {
