@@ -1251,6 +1251,7 @@ void Filter_filter_iter_2_or(void);
 void Filter_filter_iter_3_or(void);
 void Filter_filter_iter_2_or_other_type(void);
 void Filter_filter_iter_2_or_same_type(void);
+void Filter_filter_or_w_wildcard(void);
 void Filter_filter_iter_1_component(void);
 void Filter_filter_iter_2_components(void);
 void Filter_filter_iter_pair_id(void);
@@ -7567,6 +7568,10 @@ bake_test_case Filter_testcases[] = {
         Filter_filter_iter_2_or_same_type
     },
     {
+        "filter_or_w_wildcard",
+        Filter_filter_or_w_wildcard
+    },
+    {
         "filter_iter_1_component",
         Filter_filter_iter_1_component
     },
@@ -13648,7 +13653,7 @@ static bake_test_suite suites[] = {
         "Filter",
         NULL,
         NULL,
-        304,
+        305,
         Filter_testcases
     },
     {
