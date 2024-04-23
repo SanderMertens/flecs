@@ -1148,17 +1148,20 @@ ecs_term_t* flecs_filter_or_other_type(
         if (f->terms[t].oper != EcsOr) {
             break;
         }
+
         first = &f->terms[t];
     }
 
     if (first) {
         ecs_world_t *world = f->world;
         const ecs_type_info_t *first_type;
+
         if (first->idr) {
             first_type = first->idr->type_info;
         } else {
             first_type = ecs_get_type_info(world, first->id);
         }
+
         const ecs_type_info_t *term_type;
         if (term->idr) {
             term_type = term->idr->type_info;
@@ -1169,6 +1172,7 @@ ecs_term_t* flecs_filter_or_other_type(
         if (first_type == term_type) {
             return NULL;
         }
+
         return first;
     } else {
         return NULL;
@@ -1278,7 +1282,9 @@ int ecs_filter_finalize(
                 ecs_term_t *first = flecs_filter_or_other_type(f, i);
                 if (first) {
                     if (first == &term[-1]) {
-                        filter_terms ++;
+                        if (!(term[-1].flags & EcsTermNoData)) {
+                            filter_terms ++;
+                        }
                     }
                     filter_term = true;
                 }
@@ -2156,6 +2162,7 @@ bool flecs_term_match_table(
     bool first,
     ecs_flags32_t iter_flags)
 {
+    ecs_assert(term != NULL, ECS_INTERNAL_ERROR, NULL);
     const ecs_term_id_t *src = &term->src;
     ecs_oper_kind_t oper = term->oper;
     const ecs_table_t *match_table = table;
@@ -3247,9 +3254,11 @@ bool ecs_filter_next_instanced(
 
                 /* Match the remainder of the terms */
                 int32_t skip_term = pivot_term;
-                if (ecs_id_is_wildcard(filter->terms[pivot_term].id)) {
-                    skip_term = -1;
-                    iter->matches_left = 1;
+                if (pivot_term != -1) {
+                    if (ecs_id_is_wildcard(filter->terms[pivot_term].id)) {
+                        skip_term = -1;
+                        iter->matches_left = 1;
+                    }
                 }
 
                 match = flecs_filter_match_table(world, filter, table,
@@ -3301,10 +3310,10 @@ bool ecs_filter_next_instanced(
                 }
 
                 int32_t t, term_count = filter->term_count;
-                ecs_term_t *term = NULL;
+                ecs_term_t *cur_term = NULL;
                 for (t = 0; t < term_count; t ++) {
                     if (filter->terms[t].field_index == i) {
-                        term = &filter->terms[t];
+                        cur_term = &filter->terms[t];
                         break;
                     }
                 }
@@ -3312,7 +3321,7 @@ bool ecs_filter_next_instanced(
                 ecs_assert(term != NULL, ECS_INTERNAL_ERROR, NULL);
 
                 it->columns[i] = column + 1;
-                flecs_term_match_table(world, term, table, 
+                flecs_term_match_table(world, cur_term, table, 
                     &it->ids[i], &it->columns[i], &it->sources[i],
                     &it->match_indices[i], false, it->flags);
 

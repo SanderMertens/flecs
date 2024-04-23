@@ -4643,7 +4643,7 @@ void Filter_filter_iter_2_or_same_type(void) {
     ecs_fini(world);
 }
 
-void Filter_filter_or_w_wildcard(void) {
+void Filter_filter_iter_or_w_wildcard(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Rel);
@@ -4680,6 +4680,68 @@ void Filter_filter_or_w_wildcard(void) {
     test_uint(e, it.entities[0]);
     test_uint(TagA, ecs_field_id(&it, 1));
     test_uint(ecs_pair(Rel, TgtB), ecs_field_id(&it, 2));
+    test_bool(false, ecs_filter_next(&it));
+
+    ecs_filter_fini(q);
+
+    ecs_fini(world);
+}
+
+void Filter_filer_iter_or_w_component_and_tag(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, TagA);
+
+    ecs_filter_t *q = ecs_filter(world, {
+        .terms = {
+            { ecs_id(Position), .oper = EcsOr },
+            { TagA }
+        }
+    });
+
+    test_assert(q != NULL);
+
+    ecs_entity_t e = ecs_new_id(world);
+    ecs_set(world, e, Position, {10, 20});
+    ecs_add(world, e, TagA);
+
+    ecs_iter_t it = ecs_filter_iter(world, q);
+    test_bool(true, ecs_filter_next(&it));
+    test_int(1, it.count);
+    test_uint(e, it.entities[0]);
+    test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+    test_bool(false, ecs_filter_next(&it));
+
+    ecs_filter_fini(q);
+
+    ecs_fini(world);
+}
+
+void Filter_filer_iter_or_w_tag_and_component(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, TagA);
+
+    ecs_filter_t *q = ecs_filter(world, {
+        .terms = {
+            { TagA, .oper = EcsOr },
+            { ecs_id(Position) }
+        }
+    });
+
+    test_assert(q != NULL);
+
+    ecs_entity_t e = ecs_new_id(world);
+    ecs_set(world, e, Position, {10, 20});
+    ecs_add(world, e, TagA);
+
+    ecs_iter_t it = ecs_filter_iter(world, q);
+    test_bool(true, ecs_filter_next(&it));
+    test_int(1, it.count);
+    test_uint(e, it.entities[0]);
+    test_uint(TagA, ecs_field_id(&it, 1));
     test_bool(false, ecs_filter_next(&it));
 
     ecs_filter_fini(q);
