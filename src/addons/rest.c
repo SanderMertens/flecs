@@ -359,7 +359,7 @@ bool flecs_rest_script(
 
     if (!script) {
         char *err = flecs_rest_get_captured_log();
-        char *escaped_err = ecs_astresc('"', err);
+        char *escaped_err = flecs_astresc('"', err);
         if (escaped_err) {
             flecs_reply_error(reply, escaped_err);
         } else {
@@ -385,7 +385,7 @@ void flecs_rest_reply_set_captured_log(
 {
     char *err = flecs_rest_get_captured_log();
     if (err) {
-        char *escaped_err = ecs_astresc('"', err);
+        char *escaped_err = flecs_astresc('"', err);
         flecs_reply_error(reply, escaped_err);
         ecs_os_free(escaped_err);
         ecs_os_free(err);
@@ -398,7 +398,7 @@ static
 void flecs_rest_iter_to_reply(
     const ecs_http_request_t* req,
     ecs_http_reply_t *reply,
-    ecs_poly_t *query,
+    flecs_poly_t *query,
     ecs_iter_t *it)
 {
     ecs_iter_to_json_desc_t desc = {0};
@@ -768,7 +768,7 @@ bool flecs_rest_reply_stats(
 
     ecs_entity_t period = EcsPeriod1s;
     if (period_str) {
-        char *period_name = ecs_asprintf("Period%s", period_str);
+        char *period_name = flecs_asprintf("Period%s", period_str);
         period = ecs_lookup_child(world, ecs_id(FlecsMonitor), period_name);
         ecs_os_free(period_name);
         if (!period) {
@@ -1381,7 +1381,7 @@ void FlecsRestImport(
     flecs_bootstrap_component(world, EcsRest);
 
     ecs_set_hooks(world, EcsRest, { 
-        .ctor = ecs_default_ctor,
+        .ctor = flecs_default_ctor,
         .move = ecs_move(EcsRest),
         .copy = ecs_copy(EcsRest),
         .dtor = ecs_dtor(EcsRest),

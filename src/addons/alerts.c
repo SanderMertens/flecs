@@ -252,7 +252,7 @@ void MonitorAlerts(ecs_iter_t *it) {
             continue;
         }
 
-        ecs_poly_assert(q, ecs_query_t);
+        flecs_poly_assert(q, ecs_query_t);
 
         ecs_id_t member_id = alert[i].id;
         const EcsMemberRanges *ranges = NULL;
@@ -377,7 +377,7 @@ void MonitorAlertInstances(ecs_iter_t *it) {
         return;
     }
 
-    ecs_poly_assert(query, ecs_query_t);
+    flecs_poly_assert(query, ecs_query_t);
 
     ecs_id_t member_id = alert->id;
     const EcsMemberRanges *ranges = NULL;
@@ -498,7 +498,7 @@ ecs_entity_t ecs_alert_init(
     ecs_world_t *world,
     const ecs_alert_desc_t *desc)
 {
-    ecs_poly_assert(world, ecs_world_t);
+    flecs_poly_assert(world, ecs_world_t);
     ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(desc->_canary == 0, ECS_INVALID_PARAMETER, NULL);
     ecs_check(!desc->query.entity || desc->entity == desc->query.entity, 
@@ -664,7 +664,7 @@ int32_t ecs_get_alert_count(
     ecs_entity_t entity,
     ecs_entity_t alert)
 {
-    ecs_poly_assert(world, ecs_world_t);
+    flecs_poly_assert(world, ecs_world_t);
     ecs_check(entity != 0, ECS_INVALID_PARAMETER, NULL);
     ecs_check(!alert || ecs_has(world, alert, EcsAlert), 
         ECS_INVALID_PARAMETER, NULL);
@@ -688,7 +688,7 @@ ecs_entity_t ecs_get_alert(
     ecs_entity_t entity,
     ecs_entity_t alert)
 {
-    ecs_poly_assert(world, ecs_world_t);
+    flecs_poly_assert(world, ecs_world_t);
     ecs_check(entity != 0, ECS_INVALID_PARAMETER, NULL);
     ecs_check(alert != 0, ECS_INVALID_PARAMETER, NULL);
 
@@ -754,7 +754,7 @@ void FlecsAlertsImport(ecs_world_t *world) {
     });
 
     ecs_set_hooks(world, EcsAlertInstance, {
-        .ctor = ecs_default_ctor,
+        .ctor = flecs_default_ctor,
         .dtor = ecs_dtor(EcsAlertInstance),
         .move = ecs_move(EcsAlertInstance),
         .copy = ecs_copy(EcsAlertInstance)

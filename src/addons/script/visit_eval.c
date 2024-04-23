@@ -16,7 +16,7 @@ void flecs_script_eval_error_(
 {
     va_list args;
     va_start(args, fmt);
-    char *msg = ecs_vasprintf(fmt, args);
+    char *msg = flecs_vasprintf(fmt, args);
     va_end(args);
 
     if (node) {

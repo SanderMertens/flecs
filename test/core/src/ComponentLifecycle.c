@@ -1877,7 +1877,7 @@ void ComponentLifecycle_on_add_after_new(void) {
     ECS_COMPONENT(world, Position);
 
     ecs_set_hooks(world, Position, {
-        .ctor = ecs_default_ctor,
+        .ctor = flecs_default_ctor,
         .on_add = ecs_on_add(Position)
     });
 
@@ -1897,7 +1897,7 @@ void ComponentLifecycle_on_add_after_add(void) {
     ECS_COMPONENT(world, Position);
 
     ecs_set_hooks(world, Position, {
-        .ctor = ecs_default_ctor,
+        .ctor = flecs_default_ctor,
         .on_add = ecs_on_add(Position)
     });
 
@@ -1921,7 +1921,7 @@ void ComponentLifecycle_on_add_after_set(void) {
     ECS_COMPONENT(world, Position);
 
     ecs_set_hooks(world, Position, {
-        .ctor = ecs_default_ctor,
+        .ctor = flecs_default_ctor,
         .on_add = ecs_on_add(Position)
     });
 
@@ -2078,7 +2078,7 @@ void ComponentLifecycle_dtor_component_new_id_while_fini(void) {
     });
 
     ecs_set_hooks(world, Position, {
-        .ctor = ecs_default_ctor,
+        .ctor = flecs_default_ctor,
         .dtor = ecs_dtor(Position)
     });
 
@@ -2124,7 +2124,7 @@ void ComponentLifecycle_dtor_component_new_pair_id_while_fini(void) {
     });
 
     ecs_set_hooks(world, Position, {
-        .ctor = ecs_default_ctor,
+        .ctor = flecs_default_ctor,
         .dtor = ecs_dtor(Position)
     });
 
@@ -2170,7 +2170,7 @@ void ComponentLifecycle_dtor_component_new_obj_pair_id_while_fini(void) {
     });
 
     ecs_set_hooks(world, Position, {
-        .ctor = ecs_default_ctor,
+        .ctor = flecs_default_ctor,
         .dtor = ecs_dtor(Position)
     });
 
@@ -2706,7 +2706,7 @@ void ComponentLifecycle_with_component_on_add(void) {
                 .size = ECS_SIZEOF(Position),
                 .alignment = ECS_ALIGNOF(Position),
                 .hooks = {
-                    .ctor = ecs_default_ctor,
+                    .ctor = flecs_default_ctor,
                     .on_add = ecs_on_add(Position)
                 }
             }

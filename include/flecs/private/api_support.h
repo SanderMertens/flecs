@@ -33,28 +33,28 @@ extern "C" {
 ////////////////////////////////////////////////////////////////////////////////
 
 FLECS_API
-char* ecs_module_path_from_c(
+char* flecs_module_path_from_c(
     const char *c_name);
 
-bool ecs_identifier_is_0(
+bool flecs_identifier_is_0(
     const char *id);
 
 /* Constructor that zeromem's a component value */
 FLECS_API
-void ecs_default_ctor(
+void flecs_default_ctor(
     void *ptr, 
     int32_t count, 
     const ecs_type_info_t *ctx);
 
 /* Create allocated string from format */
 FLECS_DBG_API
-char* ecs_vasprintf(
+char* flecs_vasprintf(
     const char *fmt,
     va_list args);
 
 /* Create allocated string from format */
 FLECS_API
-char* ecs_asprintf(
+char* flecs_asprintf(
     const char *fmt,
     ...);
 
@@ -67,7 +67,7 @@ char* ecs_asprintf(
  * @return Pointer to the character after the last one written.
  */
 FLECS_API
-char* ecs_chresc(
+char* flecs_chresc(
     char *out,
     char in,
     char delimiter);
@@ -79,7 +79,7 @@ char* ecs_chresc(
  * @param out Output string.
  * @return Pointer to the character after the last one read.
  */
-const char* ecs_chrparse(
+const char* flecs_chrparse(
     const char *in,
     char *out);
 
@@ -96,14 +96,14 @@ const char* ecs_chrparse(
  * @return The number of characters that (would) have been written.
  */
 FLECS_API
-ecs_size_t ecs_stresc(
+ecs_size_t flecs_stresc(
     char *out,
     ecs_size_t size,
     char delimiter,
     const char *in);
 
 /** Return escaped string.
- * Return escaped version of input string. Same as ecs_stresc(), but returns an
+ * Return escaped version of input string. Same as flecs_stresc(), but returns an
  * allocated string of the right size.
  *
  * @param delimiter The delimiter used (for example '"').
@@ -111,7 +111,7 @@ ecs_size_t ecs_stresc(
  * @return Escaped string.
  */
 FLECS_API
-char* ecs_astresc(
+char* flecs_astresc(
     char delimiter,
     const char *in);
 
@@ -162,21 +162,21 @@ void flecs_resume_readonly(
     ecs_suspend_readonly_state_t *state);
 
 FLECS_API
-int32_t ecs_poly_claim_(
-    ecs_poly_t *poly);
+int32_t flecs_poly_claim_(
+    flecs_poly_t *poly);
 
 FLECS_API
-int32_t ecs_poly_release_(
-    ecs_poly_t *poly);
+int32_t flecs_poly_release_(
+    flecs_poly_t *poly);
 
 FLECS_API
-int32_t ecs_poly_refcount(
-    ecs_poly_t *poly);
+int32_t flecs_poly_refcount(
+    flecs_poly_t *poly);
 
-#define ecs_poly_claim(poly) \
-    ecs_poly_claim_(ECS_CONST_CAST(void*, reinterpret_cast<const void*>(poly)))
-#define ecs_poly_release(poly) \
-    ecs_poly_release_(ECS_CONST_CAST(void*, reinterpret_cast<const void*>(poly)))
+#define flecs_poly_claim(poly) \
+    flecs_poly_claim_(ECS_CONST_CAST(void*, reinterpret_cast<const void*>(poly)))
+#define flecs_poly_release(poly) \
+    flecs_poly_release_(ECS_CONST_CAST(void*, reinterpret_cast<const void*>(poly)))
 
 /** Calculate offset from address */
 #ifdef __cplusplus

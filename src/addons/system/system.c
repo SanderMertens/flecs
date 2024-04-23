@@ -140,7 +140,7 @@ ecs_entity_t ecs_run_worker(
     void *param)
 {
     ecs_stage_t *stage = flecs_stage_from_world(&world);
-    ecs_system_t *system_data = ecs_poly_get(world, system, ecs_system_t);
+    ecs_system_t *system_data = flecs_poly_get(world, system, ecs_system_t);
     ecs_assert(system_data != NULL, ECS_INVALID_PARAMETER, NULL);
 
     return flecs_run_intern(
@@ -155,7 +155,7 @@ ecs_entity_t ecs_run(
     void *param)
 {
     ecs_stage_t *stage = flecs_stage_from_world(&world);
-    ecs_system_t *system_data = ecs_poly_get(world, system, ecs_system_t);
+    ecs_system_t *system_data = flecs_poly_get(world, system, ecs_system_t);
     ecs_assert(system_data != NULL, ECS_INVALID_PARAMETER, NULL);
     return flecs_run_intern(
         world, stage, system, system_data, 0, 0, delta_time, param);
@@ -165,7 +165,7 @@ ecs_query_t* ecs_system_get_query(
     const ecs_world_t *world,
     ecs_entity_t system)
 {
-    const ecs_system_t *s = ecs_poly_get(world, system, ecs_system_t);
+    const ecs_system_t *s = flecs_poly_get(world, system, ecs_system_t);
     if (s) {
         return s->query;
     } else {
@@ -177,7 +177,7 @@ void* ecs_system_get_ctx(
     const ecs_world_t *world,
     ecs_entity_t system)
 {
-    const ecs_system_t *s = ecs_poly_get(world, system, ecs_system_t);
+    const ecs_system_t *s = flecs_poly_get(world, system, ecs_system_t);
     if (s) {
         return s->ctx;
     } else {
@@ -189,7 +189,7 @@ void* ecs_system_get_binding_ctx(
     const ecs_world_t *world,
     ecs_entity_t system)
 {
-    const ecs_system_t *s = ecs_poly_get(world, system, ecs_system_t);
+    const ecs_system_t *s = flecs_poly_get(world, system, ecs_system_t);
     if (s) {
         return s->binding_ctx;
     } else {
@@ -208,7 +208,7 @@ void flecs_system_fini(ecs_system_t *sys) {
         sys->binding_ctx_free(sys->binding_ctx);
     }
 
-    ecs_poly_free(sys, ecs_system_t);
+    flecs_poly_free(sys, ecs_system_t);
 }
 
 static
@@ -246,7 +246,7 @@ ecs_entity_t ecs_system_init(
     ecs_world_t *world,
     const ecs_system_desc_t *desc)
 {
-    ecs_poly_assert(world, ecs_world_t);
+    flecs_poly_assert(world, ecs_world_t);
     ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(desc->_canary == 0, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(!(world->flags & EcsWorldReadonly), 
@@ -257,14 +257,14 @@ ecs_entity_t ecs_system_init(
         entity = ecs_entity(world, {0});
     }
 
-    EcsPoly *poly = ecs_poly_bind(world, entity, ecs_system_t);
+    EcsPoly *poly = flecs_poly_bind(world, entity, ecs_system_t);
     if (!poly->poly) {
-        ecs_system_t *system = ecs_poly_new(ecs_system_t);
+        ecs_system_t *system = flecs_poly_new(ecs_system_t);
         ecs_assert(system != NULL, ECS_INTERNAL_ERROR, NULL);
         
         poly->poly = system;
         system->world = world;
-        system->dtor = (ecs_poly_dtor_t)flecs_system_fini;
+        system->dtor = (flecs_poly_dtor_t)flecs_system_fini;
         system->entity = entity;
 
         ecs_query_desc_t query_desc = desc->query;
@@ -305,7 +305,7 @@ ecs_entity_t ecs_system_init(
 
         ecs_defer_end(world);            
     } else {
-        ecs_poly_assert(poly->poly, ecs_system_t);
+        flecs_poly_assert(poly->poly, ecs_system_t);
         ecs_system_t *system = (ecs_system_t*)poly->poly;
 
         if (desc->run) {
@@ -351,7 +351,7 @@ ecs_entity_t ecs_system_init(
         flecs_system_init_timer(world, entity, desc);
     }
 
-    ecs_poly_modified(world, entity, ecs_system_t);
+    flecs_poly_modified(world, entity, ecs_system_t);
 
     return entity;
 error:

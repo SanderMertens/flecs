@@ -4166,7 +4166,7 @@ void DeserializeFromJson_ser_deser_w_hooks(void) {
     });
 
     ecs_set_hooks(world, StringType, {
-        .ctor = ecs_default_ctor,
+        .ctor = flecs_default_ctor,
         .dtor = ecs_dtor(StringType),
         .move = ecs_move(StringType),
         .copy = ecs_copy(StringType)
@@ -4257,7 +4257,7 @@ void DeserializeFromJson_ser_deser_large_data(void) {
         .v = long_str
     };
 
-    char *long_str_ser = ecs_asprintf("{\"v\":\"%s\"}", long_str);
+    char *long_str_ser = flecs_asprintf("{\"v\":\"%s\"}", long_str);
     char *json = ecs_ptr_to_json(world, t, &value);
     test_assert(json != NULL);
     test_str(json, long_str_ser);

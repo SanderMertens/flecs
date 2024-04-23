@@ -149,7 +149,7 @@ void ecs_printv_(
 
     /* Apply color. Even if we don't want color, we still need to call the
      * colorize function to get rid of the color tags (e.g. #[green]) */
-    char *msg_nocolor = ecs_vasprintf(fmt, args);
+    char *msg_nocolor = flecs_vasprintf(fmt, args);
     flecs_colorize_buf(msg_nocolor, 
         ecs_os_api.flags_ & EcsOsApiLogWithColors, &msg_buf);
     ecs_os_free(msg_nocolor);
@@ -337,7 +337,7 @@ void ecs_abort_(
     if (fmt) {
         va_list args;
         va_start(args, fmt);
-        char *msg = ecs_vasprintf(fmt, args);
+        char *msg = flecs_vasprintf(fmt, args);
         va_end(args);
         ecs_fatal_(file, line, "%s (%s)", msg, ecs_strerror(err));
         ecs_os_free(msg);
@@ -358,7 +358,7 @@ void ecs_assert_log_(
     if (fmt) {
         va_list args;
         va_start(args, fmt);
-        char *msg = ecs_vasprintf(fmt, args);
+        char *msg = flecs_vasprintf(fmt, args);
         va_end(args);
         ecs_fatal_(file, line, "assert: %s %s (%s)",
             cond_str, msg, ecs_strerror(err));

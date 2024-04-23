@@ -3567,7 +3567,7 @@ void Prefab_override_dont_inherit(void) {
     ecs_add_id(world, ecs_id(Position), EcsDontInherit);
 
     ecs_set_hooks(world, Position, {
-        .ctor = ecs_default_ctor
+        .ctor = flecs_default_ctor
     });
 
     ecs_entity_t base = ecs_insert(world, ecs_value(Position, {10, 20}));

@@ -94,7 +94,7 @@ int flecs_term_ref_lookup(
 
     ecs_assert(ref->id & EcsIsEntity, ECS_INTERNAL_ERROR, NULL);
 
-    if (ecs_identifier_is_0(name)) {
+    if (flecs_identifier_is_0(name)) {
         if (ECS_TERM_REF_ID(ref)) {
             flecs_query_validator_error(ctx, "name '0' does not match entity id");
             return -1;
@@ -822,7 +822,7 @@ int flecs_term_finalize(
     return 0;
 }
 
-bool ecs_identifier_is_0(
+bool flecs_identifier_is_0(
     const char *id)
 {
     return id[0] == '0' && !id[1];

@@ -3686,7 +3686,7 @@ void flecs_query_iter_fini(
 {
     ecs_query_iter_t *qit = &it->priv_.iter.query;
     ecs_assert(qit->query != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_poly_assert(qit->query, ecs_query_t);
+    flecs_poly_assert(qit->query, ecs_query_t);
     int32_t op_count = flecs_query_impl(qit->query)->op_count;
     int32_t var_count = flecs_query_impl(qit->query)->var_count;
 
@@ -3718,7 +3718,7 @@ ecs_iter_t flecs_query_iter(
     ecs_query_iter_t *qit = &it.priv_.iter.query;
     ecs_check(q != NULL, ECS_INVALID_PARAMETER, NULL);
     
-    ecs_poly_assert(q, ecs_query_t);
+    flecs_poly_assert(q, ecs_query_t);
     ecs_query_impl_t *impl = flecs_query_impl(q);
 
     int32_t i, var_count = impl->var_count, op_count = impl->op_count;

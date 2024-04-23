@@ -42,7 +42,7 @@ typedef struct ecs_system_t {
     /* Mixins */
     ecs_world_t *world;
     ecs_entity_t entity;
-    ecs_poly_dtor_t dtor;      
+    flecs_poly_dtor_t dtor;      
 } ecs_system_t;
 
 /* Invoked when system becomes active / inactive */

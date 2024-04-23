@@ -1761,7 +1761,7 @@ void SerializeIterToJson_serialize_ids(void) {
     char *json = ecs_iter_to_json(&it, &desc);
     test_assert(json != NULL);
 
-    char *expect = ecs_asprintf(
+    char *expect = flecs_asprintf(
         "{\"ids\":[[\"Tag\"]], \"results\":[{\"entities\":[\"e\"], \"entity_ids\":[%u]}]}",
         (uint32_t)e);
     test_str(json, expect);
@@ -1797,7 +1797,7 @@ void SerializeIterToJson_serialize_ids_2_entities(void) {
     char *json = ecs_iter_to_json(&it, &desc);
     test_assert(json != NULL);
 
-    char *expect = ecs_asprintf(
+    char *expect = flecs_asprintf(
         "{\"ids\":[[\"Tag\"]], \"results\":[{\"entities\":[\"e1\", \"e2\"], \"entity_ids\":[%u, %u]}]}",
         (uint32_t)e1, (uint32_t)e2);
     test_str(json, expect);
@@ -1836,7 +1836,7 @@ void SerializeIterToJson_serialize_anonymous(void) {
     char *json = ecs_iter_to_json(&it, &desc);
     test_assert(json != NULL);
 
-    char *expect = ecs_asprintf(
+    char *expect = flecs_asprintf(
         "{\"results\":[{\"entities\":[5000, 10000, 100000, 1000000]}]}");
     test_str(json, expect);
 
@@ -1874,7 +1874,7 @@ void SerializeIterToJson_serialize_anonymous_ids(void) {
     char *json = ecs_iter_to_json(&it, &desc);
     test_assert(json != NULL);
 
-    char *expect = ecs_asprintf(
+    char *expect = flecs_asprintf(
         "{\"results\":[{\"entity_ids\":[5000, 10000, 100000, 1000000]}]}");
     test_str(json, expect);
 
@@ -1906,7 +1906,7 @@ void SerializeIterToJson_serialize_variable_ids(void) {
     char *json = ecs_iter_to_json(&it, &desc);
     test_assert(json != NULL);
 
-    char *expect = ecs_asprintf(
+    char *expect = flecs_asprintf(
         "{\"ids\":[[\"Tag\"]], \"vars\":[\"Entity\"], \"results\":[{\"vars\":[\"e\"], \"var_ids\":[%u]}]}",
         (uint32_t)e);
     test_str(json, expect);
@@ -1942,7 +1942,7 @@ void SerializeIterToJson_serialize_variable_ids_2_entities(void) {
     char *json = ecs_iter_to_json(&it, &desc);
     test_assert(json != NULL);
 
-    char *expect = ecs_asprintf(
+    char *expect = flecs_asprintf(
         "{\"ids\":[[\"Tag\"]], \"vars\":[\"Entity\"], \"results\":[{\"vars\":[\"e1\"], \"var_ids\":[%u]}, {\"vars\":[\"e2\"], \"var_ids\":[%u]}]}",
         (uint32_t)e1, (uint32_t)e2);
     test_str(json, expect);
@@ -1975,7 +1975,7 @@ void SerializeIterToJson_serialize_variable_anonymous(void) {
     char *json = ecs_iter_to_json(&it, &desc);
     test_assert(json != NULL);
 
-    char *expect = ecs_asprintf(
+    char *expect = flecs_asprintf(
         "{\"ids\":[[\"Tag\"]], \"vars\":[\"Entity\"], \"results\":[{\"vars\":[\"10000\"]}]}",
         (uint32_t)e);
     test_str(json, expect);
@@ -2010,7 +2010,7 @@ void SerializeIterToJson_serialize_variable_anonymous_ids(void) {
     char *json = ecs_iter_to_json(&it, &desc);
     test_assert(json != NULL);
 
-    char *expect = ecs_asprintf(
+    char *expect = flecs_asprintf(
         "{\"ids\":[[\"Tag\"]], \"vars\":[\"Entity\"], \"results\":[{\"var_ids\":[10000]}]}",
         (uint32_t)e);
     test_str(json, expect);
@@ -2041,7 +2041,7 @@ void SerializeIterToJson_serialize_anonymous_tag(void) {
     char *json = ecs_iter_to_json(&it, &desc);
     test_assert(json != NULL);
 
-    char *expect = ecs_asprintf(
+    char *expect = flecs_asprintf(
         "{\"ids\":[[\"10000\"]], \"results\":[{\"ids\":[[\"10000\"]], \"entities\":[\"e\"]}]}");
     test_str(json, expect);
 
@@ -2081,7 +2081,7 @@ void SerializeIterToJson_serialize_anonymous_component(void) {
     char *json = ecs_iter_to_json(&it, &desc);
     test_assert(json != NULL);
 
-    char *expect = ecs_asprintf(
+    char *expect = flecs_asprintf(
         "{\"ids\":[[\"10000\"]], \"type_info\":{\"10000\":{\"value\":[\"int\"]}}, "
         "\"results\":[{\"ids\":[[\"10000\"]], \"entities\":[\"e\"], \"values\":[[{\"value\":10}]]}]}");
     test_str(json, expect);
@@ -2114,7 +2114,7 @@ void SerializeIterToJson_serialize_anonymous_pair(void) {
     char *json = ecs_iter_to_json(&it, &desc);
     test_assert(json != NULL);
 
-    char *expect = ecs_asprintf(
+    char *expect = flecs_asprintf(
         "{\"ids\":[[\"10000\",\"20000\"]], \"results\":[{\"ids\":[[\"10000\",\"20000\"]], \"entities\":[\"e\"]}]}");
     test_str(json, expect);
 
@@ -2983,7 +2983,7 @@ void SerializeIterToJson_serialize_anonymous_entities_w_offset(void) {
     desc.serialize_entities = true;
     char *json = ecs_iter_to_json(&it, &desc);
 
-    char *expect = ecs_asprintf(
+    char *expect = flecs_asprintf(
         "{\"results\":[{\"entities\":[%u]}, {\"entities\":[%u]}]}",
             (uint32_t)e1, (uint32_t)e2);
 

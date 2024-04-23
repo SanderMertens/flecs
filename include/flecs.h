@@ -454,13 +454,13 @@ typedef struct ecs_table_record_t ecs_table_record_t;
 /** A poly object.
  * A poly (short for polymorph) object is an object that has a variable list of
  * capabilities, determined by a mixin table. This is the current list of types
- * in the flecs API that can be used as an ecs_poly_t:
+ * in the flecs API that can be used as an flecs_poly_t:
  *
  * - ecs_world_t
  * - ecs_stage_t
  * - ecs_query_t
  *
- * Functions that accept an ecs_poly_t argument can accept objects of these
+ * Functions that accept an flecs_poly_t argument can accept objects of these
  * types. If the object does not have the requested mixin the API will throw an
  * assert.
  *
@@ -470,12 +470,12 @@ typedef struct ecs_table_record_t ecs_table_record_t;
  * (in some ways it's like a mini-ECS). Additionally, each poly object has a
  * header that enables the API to do sanity checking on the input arguments.
  */
-typedef void ecs_poly_t;
+typedef void flecs_poly_t;
 
 /** Type that stores poly mixins */
 typedef struct ecs_mixins_t ecs_mixins_t;
 
-/** Header for ecs_poly_t objects. */
+/** Header for flecs_poly_t objects. */
 typedef struct ecs_header_t {
     int32_t magic;    /* Magic number verifying it's a flecs object */
     int32_t type;     /* Magic number indicating which type of flecs object */
@@ -612,8 +612,8 @@ typedef void (*ecs_move_t)(
     const ecs_type_info_t *type_info);
 
 /* Destructor function for poly objects */
-typedef void (*ecs_poly_dtor_t)(
-    ecs_poly_t *poly);
+typedef void (*flecs_poly_dtor_t)(
+    flecs_poly_t *poly);
 
 /** @} */
 
@@ -1239,7 +1239,7 @@ typedef struct ecs_observer_desc_t {
     ecs_ctx_free_t binding_ctx_free;
 
     /** Observable with which to register the observer */
-    ecs_poly_t *observable;
+    flecs_poly_t *observable;
 
     /** Optional shared last event id for multiple observers. Ensures only one
      * of the observers with the shared id gets triggered for an event */
@@ -1292,7 +1292,7 @@ typedef struct ecs_event_desc_t {
     const void *const_param;
 
     /** Observable (usually the world) */
-    ecs_poly_t *observable;
+    flecs_poly_t *observable;
 
     /** Event flags */
     ecs_flags32_t flags;
@@ -1411,7 +1411,7 @@ typedef struct EcsComponent {
 
 /** Component for storing a poly object */
 typedef struct EcsPoly {
-    ecs_poly_t *poly;          /**< Pointer to poly object */
+    flecs_poly_t *poly;          /**< Pointer to poly object */
 } EcsPoly;
 
 /** When added to an entity this informs serialization formats which component 
@@ -2358,7 +2358,7 @@ int32_t ecs_delete_empty_tables(
  */
 FLECS_API
 const ecs_world_t* ecs_get_world(
-    const ecs_poly_t *poly);
+    const flecs_poly_t *poly);
 
 /** Get entity from poly.
  *
@@ -2367,13 +2367,13 @@ const ecs_world_t* ecs_get_world(
  */
 FLECS_API
 ecs_entity_t ecs_get_entity(
-    const ecs_poly_t *poly);
+    const flecs_poly_t *poly);
 
 /** Test if pointer is of specified type.
  * Usage:
  *
  * @code
- * ecs_poly_is(ptr, ecs_world_t)
+ * flecs_poly_is(ptr, ecs_world_t)
  * @endcode
  *
  * This operation only works for poly types.
@@ -2383,12 +2383,12 @@ ecs_entity_t ecs_get_entity(
  * @return True if the pointer is of the specified type.
  */
 FLECS_API
-bool ecs_poly_is_(
-    const ecs_poly_t *object,
+bool flecs_poly_is_(
+    const flecs_poly_t *object,
     int32_t type);
 
-#define ecs_poly_is(object, type)\
-    ecs_poly_is_(object, type##_magic)
+#define flecs_poly_is(object, type)\
+    flecs_poly_is_(object, type##_magic)
 
 /** Make a pair id.
  * This function is equivalent to using the ecs_pair() macro, and is added for

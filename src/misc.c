@@ -141,7 +141,7 @@ uint64_t flecs_string_hash(
     return str->hash;
 }
 
-char* ecs_vasprintf(
+char* flecs_vasprintf(
     const char *fmt,
     va_list args)
 {
@@ -170,13 +170,13 @@ char* ecs_vasprintf(
     return result;
 }
 
-char* ecs_asprintf(
+char* flecs_asprintf(
     const char *fmt,
     ...)
 {
     va_list args;
     va_start(args, fmt);
-    char *result = ecs_vasprintf(fmt, args);
+    char *result = flecs_vasprintf(fmt, args);
     va_end(args);
     return result;
 }
@@ -256,7 +256,7 @@ error:
     return NULL;
 }
 
-char* ecs_chresc(
+char* flecs_chresc(
     char *out, 
     char in, 
     char delimiter) 
@@ -313,7 +313,7 @@ char* ecs_chresc(
     return bptr;
 }
 
-const char* ecs_chrparse(
+const char* flecs_chrparse(
     const char *in, 
     char *out) 
 {
@@ -376,7 +376,7 @@ error:
     return NULL;
 }
 
-ecs_size_t ecs_stresc(
+ecs_size_t flecs_stresc(
     char *out, 
     ecs_size_t n, 
     char delimiter, 
@@ -386,7 +386,7 @@ ecs_size_t ecs_stresc(
     char ch, *bptr = out, buff[3];
     ecs_size_t written = 0;
     while ((ch = *ptr++)) {
-        if ((written += (ecs_size_t)(ecs_chresc(
+        if ((written += (ecs_size_t)(flecs_chresc(
             buff, ch, delimiter) - buff)) <= n) 
         {
             /* If size != 0, an out buffer must be provided. */
@@ -411,7 +411,7 @@ error:
     return 0;
 }
 
-char* ecs_astresc(
+char* flecs_astresc(
     char delimiter, 
     const char *in)
 {
@@ -419,9 +419,9 @@ char* ecs_astresc(
         return NULL;
     }
 
-    ecs_size_t len = ecs_stresc(NULL, 0, delimiter, in);
+    ecs_size_t len = flecs_stresc(NULL, 0, delimiter, in);
     char *out = ecs_os_malloc_n(char, len + 1);
-    ecs_stresc(out, len, delimiter, in);
+    flecs_stresc(out, len, delimiter, in);
     out[len] = '\0';
     return out;
 }

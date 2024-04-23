@@ -17,7 +17,7 @@ bool flecs_path_append(
     const char *prefix,
     ecs_strbuf_t *buf)
 {
-    ecs_poly_assert(world, ecs_world_t);
+    flecs_poly_assert(world, ecs_world_t);
     ecs_assert(sep[0] != 0, ECS_INVALID_PARAMETER, NULL);
 
     ecs_entity_t cur = 0;
@@ -510,7 +510,7 @@ const char* ecs_set_name_prefix(
     ecs_world_t *world,
     const char *prefix)
 {
-    ecs_poly_assert(world, ecs_world_t);
+    flecs_poly_assert(world, ecs_world_t);
     const char *old_prefix = world->info.name_prefix;
     world->info.name_prefix = prefix;
     return old_prefix;

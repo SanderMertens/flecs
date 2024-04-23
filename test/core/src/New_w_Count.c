@@ -581,7 +581,7 @@ void New_w_Count_add_after_bulk_w_ctor(void) {
     ECS_COMPONENT(world, Position);
 
     ecs_set_hooks(world, Position, {
-        .ctor = ecs_default_ctor
+        .ctor = flecs_default_ctor
     });
 
     const ecs_entity_t *ids = ecs_bulk_new(world, Position, 10);

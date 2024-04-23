@@ -194,7 +194,7 @@ int32_t flecs_search_relation_w_idr(
 {
     if (!table) return -1;
 
-    ecs_poly_assert(world, ecs_world_t);
+    flecs_poly_assert(world, ecs_world_t);
     ecs_assert(id != 0, ECS_INVALID_PARAMETER, NULL);
 
     flags = flags ? flags : (EcsSelf|EcsUp);
@@ -236,7 +236,7 @@ int32_t ecs_search_relation(
 {
     if (!table) return -1;
 
-    ecs_poly_assert(world, ecs_world_t);
+    flecs_poly_assert(world, ecs_world_t);
     ecs_assert(id != 0, ECS_INVALID_PARAMETER, NULL);
 
     flags = flags ? flags : (EcsSelf|EcsUp);
@@ -266,7 +266,7 @@ int32_t flecs_search_w_idr(
 {
     if (!table) return -1;
 
-    ecs_poly_assert(world, ecs_world_t);
+    flecs_poly_assert(world, ecs_world_t);
     (void)world;
 
     ecs_type_t type = table->type;
@@ -282,7 +282,7 @@ int32_t ecs_search(
 {
     if (!table) return -1;
 
-    ecs_poly_assert(world, ecs_world_t);
+    flecs_poly_assert(world, ecs_world_t);
     ecs_assert(id != 0, ECS_INVALID_PARAMETER, NULL);
 
     ecs_id_record_t *idr = flecs_id_record_get(world, id);
@@ -303,7 +303,7 @@ int32_t ecs_search_offset(
     ecs_id_t *id_out)
 {
     if (!offset) {
-        ecs_poly_assert(world, ecs_world_t);
+        flecs_poly_assert(world, ecs_world_t);
         return ecs_search(world, table, id, id_out);
     }
 

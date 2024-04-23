@@ -1153,7 +1153,7 @@ int flecs_json_serialize_matches(
                 int32_t i, count = ecs_table_count(table);
                 ecs_entity_t *entities = ecs_vec_first(&table->data.entities);
                 for (i = 0; i < count; i ++) {
-                    ecs_poly_t *q = queries[i].poly;
+                    flecs_poly_t *q = queries[i].poly;
                     if (!q) {
                         continue;
                     }
@@ -1509,7 +1509,7 @@ void flecs_json_serialize_query_plan(
     }
 
     const ecs_query_t *q = desc->query;
-    ecs_poly_assert(q, ecs_query_t);
+    flecs_poly_assert(q, ecs_query_t);
 
     flecs_json_memberl(buf, "query_plan");
 

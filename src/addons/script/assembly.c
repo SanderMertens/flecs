@@ -138,7 +138,7 @@ void flecs_script_assembly_on_set(
         ecs_suspend_readonly_state_t srs;
         ecs_world_t *real_world = NULL;
         if (is_defer) {
-            ecs_assert(ecs_poly_is(world, ecs_world_t), ECS_INTERNAL_ERROR, NULL);
+            ecs_assert(flecs_poly_is(world, ecs_world_t), ECS_INTERNAL_ERROR, NULL);
             real_world = flecs_suspend_readonly(world, &srs);
             ecs_assert(real_world != NULL, ECS_INTERNAL_ERROR, NULL);
         }

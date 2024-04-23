@@ -882,10 +882,10 @@ ecs_observer_t* flecs_observer_init(
     ecs_observer_impl_t *impl = flecs_sparse_add_t(
         &world->store.observers, ecs_observer_impl_t);
     ecs_assert(impl != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_poly_init(impl, ecs_observer_t);
+    flecs_poly_init(impl, ecs_observer_t);
     ecs_observer_t *o = &impl->pub;
     impl->id = flecs_sparse_last_id(&world->store.observers);
-    impl->dtor = (ecs_poly_dtor_t)flecs_observer_fini;
+    impl->dtor = (flecs_poly_dtor_t)flecs_observer_fini;
 
     /* Make writeable copy of query desc so that we can set name. This will
      * make debugging easier, as any error messages related to creating the
@@ -902,7 +902,7 @@ ecs_observer_t* flecs_observer_init(
         return 0;
     }
 
-    ecs_poly_assert(query, ecs_query_t);
+    flecs_poly_assert(query, ecs_query_t);
 
     /* Observer must have at least one term */
     ecs_check(o->query->term_count > 0, ECS_INVALID_PARAMETER, NULL);
@@ -999,7 +999,7 @@ ecs_entity_t ecs_observer_init(
         entity = ecs_entity(world, {0});
     }
 
-    EcsPoly *poly = ecs_poly_bind(world, entity, ecs_observer_t);
+    EcsPoly *poly = flecs_poly_bind(world, entity, ecs_observer_t);
     if (!poly->poly) {
         ecs_observer_t *o = flecs_observer_init(world, entity, desc);
         ecs_assert(o->entity == entity, ECS_INTERNAL_ERROR, NULL);
@@ -1010,7 +1010,7 @@ ecs_entity_t ecs_observer_init(
                 ecs_get_name(world, entity));
         }
     } else {
-        ecs_poly_assert(poly->poly, ecs_observer_t);
+        flecs_poly_assert(poly->poly, ecs_observer_t);
         ecs_observer_t *o = (ecs_observer_t*)poly->poly;
 
         if (desc->run) {
@@ -1052,7 +1052,7 @@ ecs_entity_t ecs_observer_init(
         }
     }
 
-    ecs_poly_modified(world, entity, ecs_observer_t);
+    flecs_poly_modified(world, entity, ecs_observer_t);
 
     return entity;
 error:
@@ -1066,9 +1066,9 @@ void* ecs_observer_get_ctx(
     const ecs_world_t *world,
     ecs_entity_t observer)
 {
-    const EcsPoly *o = ecs_poly_bind_get(world, observer, ecs_observer_t);
+    const EcsPoly *o = flecs_poly_bind_get(world, observer, ecs_observer_t);
     if (o) {
-        ecs_poly_assert(o->poly, ecs_observer_t);
+        flecs_poly_assert(o->poly, ecs_observer_t);
         return ((ecs_observer_t*)o->poly)->ctx;
     } else {
         return NULL;
@@ -1079,9 +1079,9 @@ void* ecs_observer_get_binding_ctx(
     const ecs_world_t *world,
     ecs_entity_t observer)
 {
-    const EcsPoly *o = ecs_poly_bind_get(world, observer, ecs_observer_t);
+    const EcsPoly *o = flecs_poly_bind_get(world, observer, ecs_observer_t);
     if (o) {
-        ecs_poly_assert(o->poly, ecs_observer_t);
+        flecs_poly_assert(o->poly, ecs_observer_t);
         return ((ecs_observer_t*)o->poly)->binding_ctx;
     } else {
         return NULL;
@@ -1092,9 +1092,9 @@ const ecs_query_t* ecs_observer_get_query(
     const ecs_world_t *world,
     ecs_entity_t observer)
 {
-    const EcsPoly *o = ecs_poly_bind_get(world, observer, ecs_observer_t);
+    const EcsPoly *o = flecs_poly_bind_get(world, observer, ecs_observer_t);
     if (o) {
-        ecs_poly_assert(o->poly, ecs_observer_t);
+        flecs_poly_assert(o->poly, ecs_observer_t);
         return ((ecs_observer_t*)o->poly)->query;
     } else {
         return NULL;
@@ -1143,7 +1143,7 @@ void flecs_observer_fini(
         o->binding_ctx_free(o->binding_ctx);
     }
 
-    ecs_poly_fini(o, ecs_observer_t);
+    flecs_poly_fini(o, ecs_observer_t);
     flecs_sparse_remove_t(
         &world->store.observers, ecs_observer_impl_t, impl->id);
 }
@@ -1170,7 +1170,7 @@ void flecs_observer_set_disable_bit(
             }
         }
     } else {
-        ecs_poly_assert(o, ecs_observer_t);
+        flecs_poly_assert(o, ecs_observer_t);
         ECS_BIT_COND(impl->flags, bit, cond);
     }
 }

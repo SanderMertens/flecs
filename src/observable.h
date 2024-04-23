@@ -42,7 +42,7 @@ typedef struct ecs_observer_impl_t {
                                      term with a not operator triggers. */
 
     /* Mixins */
-    ecs_poly_dtor_t dtor;
+    flecs_poly_dtor_t dtor;
 } ecs_observer_impl_t;
 
 #define flecs_observer_impl(observer) (ECS_CONST_CAST(ecs_observer_impl_t*, observer))

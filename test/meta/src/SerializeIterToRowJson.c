@@ -126,7 +126,7 @@ void SerializeIterToRowJson_serialize_this_w_1_tag_no_name(void) {
         "{\"parent\":\"p1\", \"name\":\"%u\", \"tags\":[\"TagA\"]}, "
         "{\"parent\":\"p1\", \"name\":\"%u\", \"tags\":[\"TagA\"]}]}";
 
-    char *expect = ecs_asprintf(expect_fmt, 
+    char *expect = flecs_asprintf(expect_fmt, 
         (uint32_t)e1, 
         (uint32_t)e2, 
         (uint32_t)e3);
@@ -3199,7 +3199,7 @@ void SerializeIterToRowJson_serialize_recycled_id(void) {
     });
     test_assert(json != NULL);
 
-    char* expect = ecs_asprintf("{\"results\":["
+    char* expect = flecs_asprintf("{\"results\":["
         "{\"name\":\"%u\", \"tags\":[\"TagA\"]}]}", (uint32_t)e1);
     test_str(json, expect);
 

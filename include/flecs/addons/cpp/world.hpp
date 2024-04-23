@@ -151,7 +151,7 @@ struct world {
     explicit world(world_t *w)
         : world_( w ) { 
             if (w) {
-                ecs_poly_claim(w);
+                flecs_poly_claim(w);
             }
         }
 
@@ -159,12 +159,12 @@ struct world {
      */
     world(const world& obj) {
         this->world_ = obj.world_;
-        ecs_poly_claim(this->world_);
+        flecs_poly_claim(this->world_);
     }
 
     world& operator=(const world& obj) noexcept {
         this->world_ = obj.world_;
-        ecs_poly_claim(this->world_);
+        flecs_poly_claim(this->world_);
         return *this;
     }
 
@@ -181,7 +181,7 @@ struct world {
 
     ~world() {
         if (world_) {
-            if (!ecs_poly_release(world_)) {
+            if (!flecs_poly_release(world_)) {
                 if (ecs_stage_get_id(world_) == -1) {
                     ecs_stage_free(world_);
                 } else {
@@ -197,7 +197,7 @@ struct world {
     /** Deletes and recreates the world. */
     void reset() {
         /* Make sure there's only one reference to the world */
-        ecs_assert(ecs_poly_refcount(world_) == 1, ECS_INVALID_OPERATION,
+        ecs_assert(flecs_poly_refcount(world_) == 1, ECS_INVALID_OPERATION,
             "reset would invalidate other handles");
         ecs_fini(world_);
         world_ = ecs_init();
@@ -346,10 +346,10 @@ struct world {
      */
     bool is_stage() const {
         ecs_assert(
-            ecs_poly_is(world_, ecs_world_t) ||
-            ecs_poly_is(world_, ecs_stage_t),
+            flecs_poly_is(world_, ecs_world_t) ||
+            flecs_poly_is(world_, ecs_stage_t),
                 ECS_INVALID_PARAMETER, NULL);
-        return ecs_poly_is(world_, ecs_stage_t);
+        return flecs_poly_is(world_, ecs_stage_t);
     }
 
     /** Merge world or stage.
@@ -399,7 +399,7 @@ struct world {
      */
     flecs::world async_stage() const {
         ecs_world_t *as = ecs_stage_new(world_);
-        ecs_poly_release(as); // world object will claim
+        flecs_poly_release(as); // world object will claim
         return flecs::world(as);
     }
 
@@ -1083,7 +1083,7 @@ struct scoped_world : world {
     scoped_world(const scoped_world& obj) : world(nullptr) {
         prev_scope_ = obj.prev_scope_;
         world_ = obj.world_;
-        ecs_poly_claim(world_);
+        flecs_poly_claim(world_);
     }
 
     flecs::entity_t prev_scope_;

@@ -440,7 +440,7 @@ bool ecs_system_stats_get(
 
     world = ecs_get_world(world);
 
-    const ecs_system_t *ptr = ecs_poly_get(world, system, ecs_system_t);
+    const ecs_system_t *ptr = flecs_poly_get(world, system, ecs_system_t);
     if (!ptr) {
         return false;
     }

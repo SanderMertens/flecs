@@ -73,7 +73,7 @@ static
 void flecs_stage_merge(
     ecs_world_t *world)
 {
-    bool is_stage = ecs_poly_is(world, ecs_stage_t);
+    bool is_stage = flecs_poly_is(world, ecs_stage_t);
     ecs_stage_t *stage = flecs_stage_from_world(&world);
 
     bool measure_frame_time = ECS_BIT_IS_SET(world->flags, 
@@ -100,7 +100,7 @@ void flecs_stage_merge(
         int32_t i, count = ecs_get_stage_count(world);
         for (i = 0; i < count; i ++) {
             ecs_stage_t *s = (ecs_stage_t*)ecs_get_stage(world, i);
-            ecs_poly_assert(s, ecs_stage_t);
+            flecs_poly_assert(s, ecs_stage_t);
             flecs_defer_end(world, s);
         }
     }
@@ -125,8 +125,8 @@ bool flecs_defer_begin(
     ecs_world_t *world,
     ecs_stage_t *stage)
 {
-    ecs_poly_assert(world, ecs_world_t);
-    ecs_poly_assert(stage, ecs_stage_t);
+    flecs_poly_assert(world, ecs_world_t);
+    flecs_poly_assert(stage, ecs_stage_t);
     (void)world;
     if (stage->defer < 0) return false;
     return (++ stage->defer) == 1;
@@ -605,9 +605,9 @@ static
 ecs_stage_t* flecs_stage_new(
     ecs_world_t *world)
 {
-    ecs_poly_assert(world, ecs_world_t);
+    flecs_poly_assert(world, ecs_world_t);
     ecs_stage_t *stage = ecs_os_calloc(sizeof(ecs_stage_t));
-    ecs_poly_init(stage, ecs_stage_t);
+    flecs_poly_init(stage, ecs_stage_t);
 
     stage->world = world;
     stage->thread_ctx = world;
@@ -638,10 +638,10 @@ void flecs_stage_free(
     ecs_stage_t *stage)
 {
     (void)world;
-    ecs_poly_assert(world, ecs_world_t);
-    ecs_poly_assert(stage, ecs_stage_t);
+    flecs_poly_assert(world, ecs_world_t);
+    flecs_poly_assert(stage, ecs_stage_t);
 
-    ecs_poly_fini(stage, ecs_stage_t);
+    flecs_poly_fini(stage, ecs_stage_t);
 
     ecs_allocator_t *a = &stage->allocator;
     
@@ -694,7 +694,7 @@ ecs_world_t* ecs_stage_new(
 void ecs_stage_free(
     ecs_world_t *world)
 {
-    ecs_poly_assert(world, ecs_stage_t);
+    flecs_poly_assert(world, ecs_stage_t);
     ecs_stage_t *stage = (ecs_stage_t*)world;
     ecs_check(stage->id == -1, ECS_INVALID_PARAMETER, 
         "cannot free stage that's owned by world");
@@ -707,7 +707,7 @@ void ecs_set_stage_count(
     ecs_world_t *world,
     int32_t stage_count)
 {
-    ecs_poly_assert(world, ecs_world_t);
+    flecs_poly_assert(world, ecs_world_t);
 
     /* World must have at least one default stage */
     ecs_assert(stage_count >= 1 || (world->flags & EcsWorldFini), 
@@ -725,7 +725,7 @@ void ecs_set_stage_count(
              * create the stages. ecs_set_threads and ecs_set_stage_count should 
              * not be mixed. */
             ecs_stage_t *stage = world->stages[i];
-            ecs_poly_assert(stage, ecs_stage_t);
+            flecs_poly_assert(stage, ecs_stage_t);
             ecs_check(stage->thread == 0, ECS_INVALID_OPERATION, 
                 "cannot mix using set_stage_count and set_threads");
             flecs_stage_free(world, stage);
@@ -775,12 +775,12 @@ int32_t ecs_stage_get_id(
 {
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
 
-    if (ecs_poly_is(world, ecs_stage_t)) {
+    if (flecs_poly_is(world, ecs_stage_t)) {
         ecs_stage_t *stage = ECS_CONST_CAST(ecs_stage_t*, world);
 
         /* Index 0 is reserved for main stage */
         return stage->id;
-    } else if (ecs_poly_is(world, ecs_world_t)) {
+    } else if (flecs_poly_is(world, ecs_world_t)) {
         return 0;
     } else {
         ecs_throw(ECS_INTERNAL_ERROR, NULL);
@@ -793,7 +793,7 @@ ecs_world_t* ecs_get_stage(
     const ecs_world_t *world,
     int32_t stage_id)
 {
-    ecs_poly_assert(world, ecs_world_t);
+    flecs_poly_assert(world, ecs_world_t);
     ecs_check(world->stage_count > stage_id, ECS_INVALID_PARAMETER, NULL);
     return (ecs_world_t*)world->stages[stage_id];
 error:
@@ -804,7 +804,7 @@ bool ecs_readonly_begin(
     ecs_world_t *world,
     bool multi_threaded)
 {
-    ecs_poly_assert(world, ecs_world_t);
+    flecs_poly_assert(world, ecs_world_t);
 
     flecs_process_pending_tables(world);
 
@@ -833,7 +833,7 @@ bool ecs_readonly_begin(
 void ecs_readonly_end(
     ecs_world_t *world)
 {
-    ecs_poly_assert(world, ecs_world_t);
+    flecs_poly_assert(world, ecs_world_t);
     ecs_check(world->flags & EcsWorldReadonly, ECS_INVALID_OPERATION,
         "world is not in readonly mode");
 
@@ -852,8 +852,8 @@ void ecs_merge(
     ecs_world_t *world)
 {
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(ecs_poly_is(world, ecs_world_t) || 
-               ecs_poly_is(world, ecs_stage_t), ECS_INVALID_PARAMETER, NULL);
+    ecs_check(flecs_poly_is(world, ecs_world_t) || 
+               flecs_poly_is(world, ecs_stage_t), ECS_INVALID_PARAMETER, NULL);
     flecs_stage_merge(world);
 error:
     return;
@@ -864,7 +864,7 @@ bool ecs_stage_is_readonly(
 {
     const ecs_world_t *world = ecs_get_world(stage);
 
-    if (ecs_poly_is(stage, ecs_stage_t)) {
+    if (flecs_poly_is(stage, ecs_stage_t)) {
         if (((const ecs_stage_t*)stage)->id == -1) {
             /* Stage is not owned by world, so never readonly */
             return false;
@@ -872,11 +872,11 @@ bool ecs_stage_is_readonly(
     }
 
     if (world->flags & EcsWorldReadonly) {
-        if (ecs_poly_is(stage, ecs_world_t)) {
+        if (flecs_poly_is(stage, ecs_world_t)) {
             return true;
         }
     } else {
-        if (ecs_poly_is(stage, ecs_stage_t)) {
+        if (flecs_poly_is(stage, ecs_stage_t)) {
             return true;
         }
     }

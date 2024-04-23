@@ -64,7 +64,7 @@ int flecs_expr_ser_primitive(
         char chbuf[3];
         char ch = *(const char*)base;
         if (ch) {
-            ecs_chresc(chbuf, *(const char*)base, '"');
+            flecs_chresc(chbuf, *(const char*)base, '"');
             if (is_expr) ecs_strbuf_appendch(str, '"');
             ecs_strbuf_appendstr(str, chbuf);
             if (is_expr) ecs_strbuf_appendch(str, '"');
@@ -118,14 +118,14 @@ int flecs_expr_ser_primitive(
             if (!is_expr) {
                 ecs_strbuf_appendstr(str, value);
             } else {
-                ecs_size_t length = ecs_stresc(NULL, 0, '"', value);
+                ecs_size_t length = flecs_stresc(NULL, 0, '"', value);
                 if (length == ecs_os_strlen(value)) {
                     ecs_strbuf_appendch(str, '"');
                     ecs_strbuf_appendstrn(str, value, length);
                     ecs_strbuf_appendch(str, '"');
                 } else {
                     char *out = ecs_os_malloc(length + 3);
-                    ecs_stresc(out + 1, length, '"', value);
+                    flecs_stresc(out + 1, length, '"', value);
                     out[0] = '"';
                     out[length + 1] = '"';
                     out[length + 2] = '\0';

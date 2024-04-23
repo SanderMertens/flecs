@@ -337,7 +337,7 @@ typedef struct ecs_allocator_t ecs_allocator_t;
 #define ecs_pair_relation ecs_pair_first
 #define ecs_pair_target ecs_pair_second
 
-#define ecs_poly_id(tag) ecs_pair(ecs_id(EcsPoly), tag)
+#define flecs_poly_id(tag) ecs_pair(ecs_id(EcsPoly), tag)
 
 
 ////////////////////////////////////////////////////////////////////////////////

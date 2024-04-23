@@ -249,7 +249,7 @@ void FlecsDocImport(
     flecs_bootstrap_tag(world, EcsDocColor);
 
     ecs_set_hooks(world, EcsDocDescription, { 
-        .ctor = ecs_default_ctor,
+        .ctor = flecs_default_ctor,
         .move = ecs_move(EcsDocDescription),
         .copy = ecs_copy(EcsDocDescription),
         .dtor = ecs_dtor(EcsDocDescription)

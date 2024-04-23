@@ -1316,10 +1316,10 @@ void World_use_after_clear_empty_w_component_w_lifecycle(void) {
     ECS_COMPONENT(world, Velocity);
 
     ecs_set_hooks(world, Position, { 
-        .ctor = ecs_default_ctor 
+        .ctor = flecs_default_ctor 
     });
     ecs_set_hooks(world, Velocity, { 
-        .ctor = ecs_default_ctor 
+        .ctor = flecs_default_ctor 
     });
 
     ecs_entity_t e = ecs_new(world);

@@ -124,7 +124,7 @@ ecs_entity_t ecs_set_timeout(
         .active = true
     });
 
-    ecs_system_t *system_data = ecs_poly_get(world, timer, ecs_system_t);
+    ecs_system_t *system_data = flecs_poly_get(world, timer, ecs_system_t);
     if (system_data) {
         system_data->tick_source = timer;
     }
@@ -165,7 +165,7 @@ ecs_entity_t ecs_set_interval(
     t->active = true;
     ecs_modified(world, timer, EcsTimer);
 
-    ecs_system_t *system_data = ecs_poly_get(world, timer, ecs_system_t);
+    ecs_system_t *system_data = flecs_poly_get(world, timer, ecs_system_t);
     if (system_data) {
         system_data->tick_source = timer;
     }
@@ -242,7 +242,7 @@ ecs_entity_t ecs_set_rate(
         .src = source
     });
 
-    ecs_system_t *system_data = ecs_poly_get(world, filter, ecs_system_t);
+    ecs_system_t *system_data = flecs_poly_get(world, filter, ecs_system_t);
     if (system_data) {
         system_data->tick_source = filter;
     }  
@@ -260,7 +260,7 @@ void ecs_set_tick_source(
     ecs_check(system != 0, ECS_INVALID_PARAMETER, NULL);
     ecs_check(tick_source != 0, ECS_INVALID_PARAMETER, NULL);
 
-    ecs_system_t *system_data = ecs_poly_get(world, system, ecs_system_t);
+    ecs_system_t *system_data = flecs_poly_get(world, system, ecs_system_t);
     ecs_check(system_data != NULL, ECS_INVALID_PARAMETER, NULL);
 
     system_data->tick_source = tick_source;
@@ -309,7 +309,7 @@ void FlecsTimerImport(
     flecs_bootstrap_component(world, EcsRateFilter);
 
     ecs_set_hooks(world, EcsTimer, {
-        .ctor = ecs_default_ctor
+        .ctor = flecs_default_ctor
     });
 
     /* Add EcsTickSource to timers and rate filters */

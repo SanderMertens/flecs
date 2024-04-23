@@ -302,7 +302,7 @@ void flecs_world_monitor_import(
     ECS_COMPONENT_DEFINE(world, EcsWorldStats);
 
     ecs_set_hooks(world, EcsWorldStats, {
-        .ctor = ecs_default_ctor
+        .ctor = flecs_default_ctor
     });
 
     flecs_stats_monitor_import(world, ecs_id(EcsWorldStats));
@@ -315,7 +315,7 @@ void flecs_pipeline_monitor_import(
     ECS_COMPONENT_DEFINE(world, EcsPipelineStats);
 
     ecs_set_hooks(world, EcsPipelineStats, {
-        .ctor = ecs_default_ctor,
+        .ctor = flecs_default_ctor,
         .copy = ecs_copy(EcsPipelineStats),
         .move = ecs_move(EcsPipelineStats),
         .dtor = ecs_dtor(EcsPipelineStats)

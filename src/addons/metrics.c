@@ -738,7 +738,7 @@ ecs_entity_t ecs_metric_init(
 {
     ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(desc->_canary == 0, ECS_INVALID_PARAMETER, NULL);
-    ecs_poly_assert(world, ecs_world_t);
+    flecs_poly_assert(world, ecs_world_t);
 
     ecs_entity_t result = desc->entity;
     if (!result) {
@@ -888,25 +888,25 @@ void FlecsMetricsImport(ecs_world_t *world) {
     });
 
     ecs_set_hooks(world, EcsMetricMember, {
-        .ctor = ecs_default_ctor,
+        .ctor = flecs_default_ctor,
         .dtor = ecs_dtor(EcsMetricMember),
         .move = ecs_move(EcsMetricMember)
     });
 
     ecs_set_hooks(world, EcsMetricId, {
-        .ctor = ecs_default_ctor,
+        .ctor = flecs_default_ctor,
         .dtor = ecs_dtor(EcsMetricId),
         .move = ecs_move(EcsMetricId)
     });
 
     ecs_set_hooks(world, EcsMetricOneOf, {
-        .ctor = ecs_default_ctor,
+        .ctor = flecs_default_ctor,
         .dtor = ecs_dtor(EcsMetricOneOf),
         .move = ecs_move(EcsMetricOneOf)
     });
 
     ecs_set_hooks(world, EcsMetricCountTargets, {
-        .ctor = ecs_default_ctor,
+        .ctor = flecs_default_ctor,
         .dtor = ecs_dtor(EcsMetricCountTargets),
         .move = ecs_move(EcsMetricCountTargets)
     });

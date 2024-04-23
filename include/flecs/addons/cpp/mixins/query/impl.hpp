@@ -15,12 +15,12 @@ struct query_base {
 
     query_base(query_t *q)
         : query_(q) { 
-            ecs_poly_claim(q);
+            flecs_poly_claim(q);
         }
 
     query_base(const query_t *q)
         : query_(ECS_CONST_CAST(query_t*, q)) { 
-            ecs_poly_claim(q);
+            flecs_poly_claim(q);
         }
 
     query_base(world_t *world, ecs_query_desc_t *desc) {
@@ -29,12 +29,12 @@ struct query_base {
 
     query_base(const query_base& obj) {
         this->query_ = obj.query_;
-        ecs_poly_claim(this->query_);
+        flecs_poly_claim(this->query_);
     }
 
     query_base& operator=(const query_base& obj) {
         this->query_ = obj.query_;
-        ecs_poly_claim(this->query_);
+        flecs_poly_claim(this->query_);
         return *this; 
     }
 
@@ -79,7 +79,7 @@ struct query_base {
          * deleted with the .destruct() method, or will be deleted when the
          * world is deleted. */
         if (query_ && !query_->entity) {
-            if (!ecs_poly_release(query_)) {
+            if (!flecs_poly_release(query_)) {
                 ecs_query_fini(query_);
                 query_ = nullptr;
             }

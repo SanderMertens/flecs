@@ -155,7 +155,7 @@ int ecs_script_update(
     ecs_suspend_readonly_state_t srs;
     ecs_world_t *real_world = NULL;
     if (is_defer) {
-        ecs_assert(ecs_poly_is(world, ecs_world_t), ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(flecs_poly_is(world, ecs_world_t), ECS_INTERNAL_ERROR, NULL);
         real_world = flecs_suspend_readonly(world, &srs);
         ecs_assert(real_world != NULL, ECS_INTERNAL_ERROR, NULL);
     }
@@ -240,7 +240,7 @@ void FlecsScriptImport(
     ECS_COMPONENT_DEFINE(world, EcsScript);
 
     ecs_set_hooks(world, EcsScript, {
-        .ctor = ecs_default_ctor,
+        .ctor = flecs_default_ctor,
         .move = ecs_move(EcsScript),
         .dtor = ecs_dtor(EcsScript)
     });

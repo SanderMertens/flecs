@@ -1531,7 +1531,7 @@ void Serialize_vector_array_i32_3(void) {
 void Serialize_escape_simple_string(void) {
     ecs_world_t *world = ecs_init();
 
-    char *str = ecs_astresc('"', "Hello World");
+    char *str = flecs_astresc('"', "Hello World");
     test_str(str, "Hello World");
     ecs_os_free(str);
 
@@ -1541,7 +1541,7 @@ void Serialize_escape_simple_string(void) {
 void Serialize_escape_newline(void) {
     ecs_world_t *world = ecs_init();
 
-    char *str = ecs_astresc('"', "\n");
+    char *str = flecs_astresc('"', "\n");
     test_str(str, "\\n");
     ecs_os_free(str);
 
@@ -1551,7 +1551,7 @@ void Serialize_escape_newline(void) {
 void Serialize_escape_2_newlines(void) {
     ecs_world_t *world = ecs_init();
 
-    char *str = ecs_astresc('"', "\n\n");
+    char *str = flecs_astresc('"', "\n\n");
     test_str(str, "\\n\\n");
     ecs_os_free(str);
 
@@ -1561,7 +1561,7 @@ void Serialize_escape_2_newlines(void) {
 void Serialize_escape_string_w_trailing_newline(void) {
     ecs_world_t *world = ecs_init();
 
-    char *str = ecs_astresc('"', "Hello World\n");
+    char *str = flecs_astresc('"', "Hello World\n");
     test_str(str, "Hello World\\n");
     ecs_os_free(str);
 
@@ -1571,7 +1571,7 @@ void Serialize_escape_string_w_trailing_newline(void) {
 void Serialize_escape_string_w_2_trailing_newlines(void) {
     ecs_world_t *world = ecs_init();
 
-    char *str = ecs_astresc('"', "Hello World\n\n");
+    char *str = flecs_astresc('"', "Hello World\n\n");
     test_str(str, "Hello World\\n\\n");
     ecs_os_free(str);
 
@@ -1581,7 +1581,7 @@ void Serialize_escape_string_w_2_trailing_newlines(void) {
 void Serialize_escape_string_w_delim(void) {
     ecs_world_t *world = ecs_init();
 
-    char *str = ecs_astresc('"', "\"Hello World\"");
+    char *str = flecs_astresc('"', "\"Hello World\"");
     test_str(str, "\\\"Hello World\\\"");
     ecs_os_free(str);
 

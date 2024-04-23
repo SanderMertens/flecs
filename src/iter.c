@@ -75,7 +75,7 @@ void flecs_iter_validate(
 
     /* Make sure multithreaded iterator isn't created for real world */
     ecs_world_t *world = it->real_world;
-    ecs_poly_assert(world, ecs_world_t);
+    flecs_poly_assert(world, ecs_world_t);
     ecs_check(!(world->flags & EcsWorldMultiThreaded) || it->world != it->real_world,
         ECS_INVALID_PARAMETER, 
             "create iterator for stage when world is in multithreaded mode");

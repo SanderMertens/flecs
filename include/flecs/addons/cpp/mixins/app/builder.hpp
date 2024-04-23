@@ -76,7 +76,7 @@ struct app_builder {
             // Only free world if quit flag is set. This ensures that we won't
             // try to cleanup the world if the app is used in an environment
             // that takes over the main loop, like with emscripten.
-            if (!ecs_poly_release(world_)) {
+            if (!flecs_poly_release(world_)) {
                 ecs_fini(world_);
             }
         }
