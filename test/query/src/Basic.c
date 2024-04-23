@@ -10095,3 +10095,117 @@ void Basic_add_on_self_ref_by_name(void) {
 
     ecs_fini(world);
 }
+
+void Basic_delete_id_after_delete_query(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t i = ecs_new(world);
+    ecs_make_alive(world, i);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ .id = i }},
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    test_int(ecs_query_count(q).entities, 0);
+    ecs_entity_t e = ecs_new_w_id(world, i);
+    test_int(ecs_query_count(q).entities, 1);
+    ecs_delete(world, e);
+    test_int(ecs_query_count(q).entities, 0);
+
+    ecs_query_fini(q);
+
+    ecs_delete(world, i);
+
+    ecs_fini(world);
+}
+
+void Basic_pair_sweep_tag(void) {
+    ecs_world_t *world = ecs_mini();
+
+    for (ecs_entity_t i = 1023; i < 4097; i ++) {
+        ecs_entity_t i = 1024;
+        test_assert(!ecs_is_alive(world, i));
+        ecs_make_alive(world, i);
+
+        ecs_query_t *q = ecs_query(world, {
+            .terms = {{ .id = i }},
+            .cache_kind = cache_kind
+        });
+
+        test_assert(q != NULL);
+
+        test_int(ecs_query_count(q).entities, 0);
+        ecs_entity_t e = ecs_new_w_id(world, i);
+        test_int(ecs_query_count(q).entities, 1);
+        ecs_delete(world, e);
+        test_int(ecs_query_count(q).entities, 0);
+
+        ecs_query_fini(q);
+
+        ecs_delete(world, i);
+    }
+
+    ecs_fini(world);
+}
+
+void Basic_pair_sweep_wildcard_first(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+
+    for (ecs_entity_t i = 1023; i < 4097; i ++) {
+        test_assert(!ecs_is_alive(world, i));
+        ecs_make_alive(world, i);
+
+        ecs_query_t *q = ecs_query(world, {
+            .terms = {{ .id = ecs_pair(EcsWildcard, i) }},
+            .cache_kind = cache_kind
+        });
+
+        test_assert(q != NULL);
+
+        test_int(ecs_query_count(q).entities, 0);
+        ecs_entity_t e = ecs_new_w_pair(world, Rel, i);
+        test_int(ecs_query_count(q).entities, 1);
+        ecs_delete(world, e);
+        test_int(ecs_query_count(q).entities, 0);
+
+        ecs_query_fini(q);
+
+        ecs_delete(world, i);
+    }
+
+    ecs_fini(world);
+}
+
+void Basic_pair_sweep_wildcard_second(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tgt);
+
+    for (ecs_entity_t i = 1023; i < 4097; i ++) {
+        test_assert(!ecs_is_alive(world, i));
+        ecs_make_alive(world, i);
+
+        ecs_query_t *q = ecs_query(world, {
+            .terms = {{ .id = ecs_pair(i, EcsWildcard) }}
+        });
+
+        test_assert(q != NULL);
+
+        test_int(ecs_query_count(q).entities, 0);
+        ecs_entity_t e = ecs_new_w_pair(world, i, Tgt);
+        test_int(ecs_query_count(q).entities, 1);
+        ecs_delete(world, e);
+        test_int(ecs_query_count(q).entities, 0);
+
+        ecs_query_fini(q);
+
+        ecs_delete(world, i);
+    }
+
+    ecs_fini(world);
+}

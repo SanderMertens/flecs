@@ -545,6 +545,10 @@ void Basic_no_results_after_delete_tree(void);
 void Basic_no_results_after_delete_tree_deferred(void);
 void Basic_add_on_self_ref(void);
 void Basic_add_on_self_ref_by_name(void);
+void Basic_delete_id_after_delete_query(void);
+void Basic_pair_sweep_tag(void);
+void Basic_pair_sweep_wildcard_first(void);
+void Basic_pair_sweep_wildcard_second(void);
 
 // Testsuite 'Plan'
 void Plan_reordered_plan_1(void);
@@ -599,6 +603,13 @@ void Plan_populate_2_fixed_2_var_up_interleaved(void);
 void Plan_populate_2_var_up_2_fixed(void);
 void Plan_cache_2_or(void);
 void Plan_cache_2_or_w_not(void);
+void Plan_1_plan_any_src(void);
+void Plan_1_plan_not_any_src(void);
+void Plan_1_plan_optional_any_src(void);
+void Plan_pair_first_wildcard(void);
+void Plan_pair_first_wildcard_cached(void);
+void Plan_pair_second_wildcard(void);
+void Plan_pair_second_wildcard_cached(void);
 
 // Testsuite 'Variables'
 void Variables_setup(void);
@@ -3869,6 +3880,22 @@ bake_test_case Basic_testcases[] = {
     {
         "add_on_self_ref_by_name",
         Basic_add_on_self_ref_by_name
+    },
+    {
+        "delete_id_after_delete_query",
+        Basic_delete_id_after_delete_query
+    },
+    {
+        "pair_sweep_tag",
+        Basic_pair_sweep_tag
+    },
+    {
+        "pair_sweep_wildcard_first",
+        Basic_pair_sweep_wildcard_first
+    },
+    {
+        "pair_sweep_wildcard_second",
+        Basic_pair_sweep_wildcard_second
     }
 };
 
@@ -4080,6 +4107,34 @@ bake_test_case Plan_testcases[] = {
     {
         "cache_2_or_w_not",
         Plan_cache_2_or_w_not
+    },
+    {
+        "1_plan_any_src",
+        Plan_1_plan_any_src
+    },
+    {
+        "1_plan_not_any_src",
+        Plan_1_plan_not_any_src
+    },
+    {
+        "1_plan_optional_any_src",
+        Plan_1_plan_optional_any_src
+    },
+    {
+        "pair_first_wildcard",
+        Plan_pair_first_wildcard
+    },
+    {
+        "pair_first_wildcard_cached",
+        Plan_pair_first_wildcard_cached
+    },
+    {
+        "pair_second_wildcard",
+        Plan_pair_second_wildcard
+    },
+    {
+        "pair_second_wildcard_cached",
+        Plan_pair_second_wildcard_cached
     }
 };
 
@@ -8578,7 +8633,7 @@ static bake_test_suite suites[] = {
         "Basic",
         Basic_setup,
         NULL,
-        190,
+        194,
         Basic_testcases,
         1,
         Basic_params
@@ -8587,7 +8642,7 @@ static bake_test_suite suites[] = {
         "Plan",
         NULL,
         NULL,
-        52,
+        59,
         Plan_testcases
     },
     {

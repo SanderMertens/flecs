@@ -1862,7 +1862,7 @@ void Plan_1_plan_any_src(void) {
     HEAD " 0. [-1,  1]  ids         $[_'1]            (RelA)"
     LINE " 1. [ 0,  2]  yield       "
     LINE "";
-    char *plan = ecs_query_str(r);
+    char *plan = ecs_query_plan(r);
 
     test_str(expect, plan);
     ecs_os_free(plan);
@@ -1891,11 +1891,13 @@ void Plan_1_plan_not_any_src(void) {
     LINE " 2. [ 0,  3]  end         $[_'1]            (RelA)"
     LINE " 3. [ 2,  4]  yield       "
     LINE "";
-    char *plan = ecs_query_str(r);
+    char *plan = ecs_query_plan(r);
 
     test_str(expect, plan);
     ecs_os_free(plan);
+
     ecs_query_fini(r);
+    
     ecs_fini(world);
 }
 
@@ -1920,9 +1922,120 @@ void Plan_1_plan_optional_any_src(void) {
     LINE " 2. [ 0,  3]  end         $[_'1]            (RelA)"
     LINE " 3. [ 2,  4]  yield       "
     LINE "";
-    char *plan = ecs_query_str(r);
+    char *plan = ecs_query_plan(r);
     test_str(expect, plan);
     ecs_os_free(plan);
+
     ecs_query_fini(r);
+
+    ecs_fini(world);
+}
+
+void Plan_pair_first_wildcard(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tgt);
+
+    ecs_query_t *r = ecs_query(world, {
+        .expr = "(*, Tgt)",
+        .cache_kind = EcsQueryCacheDefault
+    });
+
+    test_assert(r != NULL);
+
+    ecs_log_enable_colors(false);
+
+    const char *expect = 
+    HEAD " 0. [-1,  1]  selfup      $[this]           ($*'1, Tgt)"
+    LINE " 1. [ 0,  2]  yield       "
+    LINE "";
+    char *plan = ecs_query_plan(r);
+    test_str(expect, plan);
+    ecs_os_free(plan);
+
+    ecs_query_fini(r);
+
+    ecs_fini(world);
+}
+
+void Plan_pair_first_wildcard_cached(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tgt);
+
+    ecs_query_t *r = ecs_query(world, {
+        .expr = "(*, Tgt)",
+        .cache_kind = EcsQueryCacheAuto
+    });
+
+    test_assert(r != NULL);
+
+    ecs_log_enable_colors(false);
+
+    const char *expect = 
+    HEAD " 0. [-1,  1]  xcache      "
+    LINE " 1. [ 0,  2]  yield       "
+    LINE "";    
+    char *plan = ecs_query_plan(r);
+    test_str(expect, plan);
+    ecs_os_free(plan);
+
+    ecs_query_fini(r);
+
+    ecs_fini(world);
+}
+
+void Plan_pair_second_wildcard(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Rel);
+
+    ecs_query_t *r = ecs_query(world, {
+        .expr = "(Rel, *)",
+        .cache_kind = EcsQueryCacheDefault
+    });
+
+    test_assert(r != NULL);
+
+    ecs_log_enable_colors(false);
+
+    const char *expect = 
+    HEAD " 0. [-1,  1]  selfup      $[this]           (Rel, $*'1)"
+    LINE " 1. [ 0,  2]  yield       "
+    LINE "";
+    char *plan = ecs_query_plan(r);
+    test_str(expect, plan);
+    ecs_os_free(plan);
+
+    ecs_query_fini(r);
+
+    ecs_fini(world);
+}
+
+void Plan_pair_second_wildcard_cached(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Rel);
+
+    ecs_query_t *r = ecs_query(world, {
+        .expr = "(Rel, *)",
+        .cache_kind = EcsQueryCacheAuto
+    });
+
+    test_assert(r != NULL);
+
+    ecs_log_enable_colors(false);
+
+    const char *expect = 
+    HEAD " 0. [-1,  1]  xcache      "
+    LINE " 1. [ 0,  2]  yield       "
+    LINE "";
+    char *plan = ecs_query_plan(r);
+
+    test_str(expect, plan);
+    ecs_os_free(plan);
+
+    ecs_query_fini(r);
+
     ecs_fini(world);
 }

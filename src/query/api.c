@@ -233,13 +233,20 @@ void flecs_query_fini(
     int i, count = q->term_count;
     for (i = 0; i < count; i ++) {
         ecs_term_t *term = &q->terms[i];
+        if (!(term->flags_ & EcsTermKeepAlive)) {
+            continue;
+        }
+
         ecs_id_record_t *idr = flecs_id_record_get(q->world, term->id);
         if (idr) {
             if (!(q->world->flags & EcsWorldQuit)) {
                 if (ecs_os_has_threading()) {
-                    ecs_os_adec(&idr->keep_alive);
+                    int32_t idr_keep_alive = ecs_os_adec(&idr->keep_alive);
+                    ecs_assert(idr_keep_alive >= 0, ECS_INTERNAL_ERROR, NULL);
+                    (void)idr_keep_alive;
                 } else {
                     idr->keep_alive --;
+                    ecs_assert(idr->keep_alive >= 0, ECS_INTERNAL_ERROR, NULL);
                 }
             }
         }

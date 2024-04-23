@@ -556,7 +556,11 @@
                 "no_results_after_delete_tree",
                 "no_results_after_delete_tree_deferred",
                 "add_on_self_ref",
-                "add_on_self_ref_by_name"
+                "add_on_self_ref_by_name",
+                "delete_id_after_delete_query",
+                "pair_sweep_tag",
+                "pair_sweep_wildcard_first",
+                "pair_sweep_wildcard_second"
             ]
         }, {
             "id": "Plan",
@@ -612,7 +616,14 @@
                 "populate_2_fixed_2_var_up_interleaved",
                 "populate_2_var_up_2_fixed",
                 "cache_2_or",
-                "cache_2_or_w_not"
+                "cache_2_or_w_not",
+                "1_plan_any_src",
+                "1_plan_not_any_src",
+                "1_plan_optional_any_src",
+                "pair_first_wildcard",
+                "pair_first_wildcard_cached",
+                "pair_second_wildcard",
+                "pair_second_wildcard_cached"
             ]
         }, {
             "id": "Variables",

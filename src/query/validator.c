@@ -621,9 +621,11 @@ int flecs_term_finalize(
     if ((first->id & EcsIsVariable) && (first_id == EcsAny)) {
         term->flags_ |= EcsTermMatchAny;
     }
+
     if ((second->id & EcsIsVariable) && (second_id == EcsAny)) {
         term->flags_ |= EcsTermMatchAny;
     }
+
     if ((src->id & EcsIsVariable) && (src_id == EcsAny)) {
         term->flags_ |= EcsTermMatchAnySrc;
     }
@@ -636,6 +638,7 @@ int flecs_term_finalize(
         src->id &= ~ent_var_mask;
         src->id |= first->id & ent_var_mask;
     }
+
     if ((ECS_TERM_REF_ID(second) == EcsVariable) && (second->id & EcsIsVariable)) {
         second->id = first->id | ECS_TERM_REF_FLAGS(second);
         second->id &= ~ent_var_mask;
@@ -660,14 +663,15 @@ int flecs_term_finalize(
         }
     }
 
-    if (!(first->id & EcsIsEntity)) {
-        first_id = 0;
+    ecs_entity_t first_entity = 0;
+    if ((first->id & EcsIsEntity)) {
+        first_entity = first_id;
     }
 
     ecs_id_record_t *idr = flecs_id_record_get(world, term->id);
     ecs_flags32_t id_flags = idr ? idr->flags : 0;
 
-    if (first_id) {
+    if (first_entity) {
         /* Only enable inheritance for ids which are inherited from at the time
          * of query creation. To force component inheritance to be evaluated,
          * an application can explicitly set traversal flags. */
@@ -689,7 +693,7 @@ int flecs_term_finalize(
         }
 
         /* If component id is final, don't attempt component inheritance */
-        ecs_record_t *first_record = flecs_entities_get(world, first_id);
+        ecs_record_t *first_record = flecs_entities_get(world, first_entity);
         ecs_table_t *first_table = first_record ? first_record->table : NULL;
         if (first_table) {
             /* Add traversal flags for transitive relationships */
@@ -716,8 +720,8 @@ int flecs_term_finalize(
         /* Check if this is a member query */
 #ifdef FLECS_META
         if (ecs_id(EcsMember) != 0) {
-            if (first_id && (term->first.id & EcsIsEntity)) {
-                if (ecs_has(world, first_id, EcsMember)) {
+            if (first_entity) {
+                if (ecs_has(world, first_entity, EcsMember)) {
                     term->flags_ |= EcsTermIsMember;
                 }
             }
@@ -749,12 +753,14 @@ int flecs_term_finalize(
         if (!(id_flags & EcsIdExclusive)) {
             trivial_term = false;
         }
+
         if (first->id & EcsIsVariable) {
             if (!ecs_id_is_wildcard(first_id) || first_id == EcsAny) {
                 trivial_term = false;
                 cacheable_term = false;
             }
         }
+
         if (second->id & EcsIsVariable) {
             if (!ecs_id_is_wildcard(second_id) || second_id == EcsAny) {
                 trivial_term = false;
@@ -800,6 +806,7 @@ int flecs_term_finalize(
     if (term->flags_ & EcsTermIsMember) {
         trivial_term = false;
         cacheable_term = false;
+
     }
     if (term->flags_ & EcsTermIsToggle) {
         trivial_term = false;
@@ -1091,6 +1098,7 @@ int flecs_query_finalize_terms(
             } else {
                 idr->keep_alive ++;
             }
+            term->flags_ |= EcsTermKeepAlive;
         }
 
         if (term->oper == EcsOptional || term->oper == EcsNot) {
