@@ -759,8 +759,8 @@ int flecs_query_cache_process_signature(
             "invalid usage of InOutFilter for query");
 
         if (src->id & EcsCascade) {
-            /* Query can only have one cascade column */
-            ecs_assert(cache->cascade_by == 0, ECS_INVALID_PARAMETER, NULL);
+            ecs_assert(cache->cascade_by == 0, ECS_INVALID_PARAMETER,
+                "query can only have one cascade term");
             cache->cascade_by = i + 1;
         }
     }
@@ -1228,7 +1228,8 @@ ecs_query_cache_t* flecs_query_cache_init(
     ecs_stage_t *stage = impl->pub.stage;
     ecs_check(world != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_check(const_desc != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(const_desc->_canary == 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(const_desc->_canary == 0, ECS_INVALID_PARAMETER,
+        "ecs_query_desc_t was not initialized to zero");
     ecs_check(!(world->flags & EcsWorldFini), ECS_INVALID_OPERATION, 
         "cannot create query during world fini");
 
@@ -1308,9 +1309,8 @@ ecs_query_cache_t* flecs_query_cache_init(
     }
 
     if (const_desc->group_by_callback || const_desc->group_by) {
-        /* Can't have a cascade term and group by at the same time, as cascade
-         * uses the group_by mechanism */
-        ecs_check(!result->cascade_by, ECS_INVALID_PARAMETER, NULL);
+        ecs_check(!result->cascade_by, ECS_INVALID_PARAMETER,
+            "cannot mix cascade and group_by");
         flecs_query_cache_group_by(result, 
             const_desc->group_by, const_desc->group_by_callback);
         result->group_by_ctx = const_desc->group_by_ctx;

@@ -97,7 +97,8 @@ void flecs_create_worker_threads(
             /* workers are using long-running os threads */
             stage->thread = ecs_os_thread_new(flecs_worker, stage);
         }
-        ecs_assert(stage->thread != 0, ECS_OPERATION_FAILED, NULL);
+        ecs_assert(stage->thread != 0, ECS_OPERATION_FAILED,
+            "failed to create thread");
     }
 }
 

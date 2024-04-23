@@ -13,7 +13,8 @@ namespace flecs
 // set(T&&), T = constructible
 template <typename T, if_t< is_flecs_constructible<T>::value > = 0>
 inline void set(world_t *world, flecs::entity_t entity, T&& value, flecs::id_t id) {
-    ecs_assert(_::type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(_::type<T>::size() != 0, ECS_INVALID_PARAMETER,
+            "operation invalid for empty type");
 
     if (!ecs_is_deferred(world)) {
         T& dst = *static_cast<T*>(ecs_ensure_id(world, entity, id));
@@ -29,7 +30,8 @@ inline void set(world_t *world, flecs::entity_t entity, T&& value, flecs::id_t i
 // set(const T&), T = constructible
 template <typename T, if_t< is_flecs_constructible<T>::value > = 0>
 inline void set(world_t *world, flecs::entity_t entity, const T& value, flecs::id_t id) {
-    ecs_assert(_::type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(_::type<T>::size() != 0, ECS_INVALID_PARAMETER,
+            "operation invalid for empty type");
 
     if (!ecs_is_deferred(world)) {
         T& dst = *static_cast<T*>(ecs_ensure_id(world, entity, id));
@@ -45,7 +47,8 @@ inline void set(world_t *world, flecs::entity_t entity, const T& value, flecs::i
 // set(T&&), T = not constructible
 template <typename T, if_not_t< is_flecs_constructible<T>::value > = 0>
 inline void set(world_t *world, flecs::entity_t entity, T&& value, flecs::id_t id) {
-    ecs_assert(_::type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(_::type<T>::size() != 0, ECS_INVALID_PARAMETER,
+            "operation invalid for empty type");
 
     if (!ecs_is_deferred(world)) {
         T& dst = *static_cast<remove_reference_t<T>*>(ecs_ensure_id(world, entity, id));
@@ -61,7 +64,8 @@ inline void set(world_t *world, flecs::entity_t entity, T&& value, flecs::id_t i
 // set(const T&), T = not constructible
 template <typename T, if_not_t< is_flecs_constructible<T>::value > = 0>
 inline void set(world_t *world, flecs::entity_t entity, const T& value, flecs::id_t id) {
-    ecs_assert(_::type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(_::type<T>::size() != 0, ECS_INVALID_PARAMETER,
+            "operation invalid for empty type");
 
     if (!ecs_is_deferred(world)) {
         T& dst = *static_cast<remove_reference_t<T>*>(ecs_ensure_id(world, entity, id));
@@ -79,7 +83,8 @@ template <typename T, typename ... Args, if_t<
     std::is_constructible<actual_type_t<T>, Args...>::value ||
     std::is_default_constructible<actual_type_t<T>>::value > = 0>
 inline void emplace(world_t *world, flecs::entity_t entity, flecs::id_t id, Args&&... args) {
-    ecs_assert(_::type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(_::type<T>::size() != 0, ECS_INVALID_PARAMETER,
+            "operation invalid for empty type");
     T& dst = *static_cast<T*>(ecs_emplace_id(world, entity, id));
 
     FLECS_PLACEMENT_NEW(&dst, T{FLECS_FWD(args)...});
@@ -347,8 +352,9 @@ struct world {
     bool is_stage() const {
         ecs_assert(
             flecs_poly_is(world_, ecs_world_t) ||
-            flecs_poly_is(world_, ecs_stage_t),
-                ECS_INVALID_PARAMETER, NULL);
+            flecs_poly_is(world_, ecs_stage_t), 
+                ECS_INVALID_PARAMETER, 
+                "flecs::world instance contains invalid reference to world or stage");
         return flecs_poly_is(world_, ecs_stage_t);
     }
 

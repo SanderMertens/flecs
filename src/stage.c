@@ -332,7 +332,6 @@ void* flecs_defer_set(
          * application is not multithreaded. */
         if (world->flags & EcsWorldMultiThreaded) {
             ti = ecs_get_type_info(world, id);
-            ecs_assert(ti != NULL, ECS_INVALID_PARAMETER, NULL);
         } else {
             /* When not in multi threaded mode, it's safe to find or 
              * create the id record. */
@@ -350,10 +349,12 @@ void* flecs_defer_set(
     }
 
     /* If the id isn't associated with a type, we can't set anything */
-    ecs_check(ti != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ti != NULL, ECS_INVALID_PARAMETER, 
+        "provided component is not a type");
 
     /* Make sure the size of the value equals the type size */
-    ecs_assert(!size || size == ti->size, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(!size || size == ti->size, ECS_INVALID_PARAMETER,
+        "mismatching size specified for component in ensure/emplace/set");
     size = ti->size;
 
     /* Find existing component. Make sure it's owned, so that we won't use the

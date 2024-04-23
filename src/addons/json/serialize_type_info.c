@@ -214,7 +214,8 @@ int json_typeinfo_ser_type_op(
     case EcsOpPush:
     case EcsOpPop:
         /* Should not be parsed as single op */
-        ecs_throw(ECS_INVALID_PARAMETER, NULL);
+        ecs_throw(ECS_INVALID_PARAMETER, 
+            "unexpected push/pop serializer instruction");
         break;
     case EcsOpEnum:
         json_typeinfo_ser_enum(world, op->type, str);

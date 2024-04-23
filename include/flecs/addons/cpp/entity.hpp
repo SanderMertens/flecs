@@ -98,7 +98,8 @@ struct entity : entity_builder<entity>
     template <typename T>
     T& ensure() const {
         auto comp_id = _::type<T>::id(world_);
-        ecs_assert(_::type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(_::type<T>::size() != 0, ECS_INVALID_PARAMETER,
+            "operation invalid for empty type");
         return *static_cast<T*>(ecs_ensure_id(world_, id_, comp_id));
     }
 
@@ -138,7 +139,8 @@ struct entity : entity_builder<entity>
     template <typename First>
     First& ensure(entity_t second) const {
         auto comp_id = _::type<First>::id(world_);
-        ecs_assert(_::type<First>::size() != 0, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(_::type<First>::size() != 0, ECS_INVALID_PARAMETER,
+            "operation invalid for empty type");
         return *static_cast<First*>(
             ecs_ensure_id(world_, id_, ecs_pair(comp_id, second)));
     }
@@ -166,7 +168,8 @@ struct entity : entity_builder<entity>
     template <typename Second>
     Second& ensure_second(entity_t first) const {
         auto second = _::type<Second>::id(world_);
-        ecs_assert(_::type<Second>::size() != 0, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(_::type<Second>::size() != 0, ECS_INVALID_PARAMETER,
+            "operation invalid for empty type");
         return *static_cast<Second*>(
             ecs_ensure_id(world_, id_, ecs_pair(first, second)));
     }
@@ -178,7 +181,8 @@ struct entity : entity_builder<entity>
     template <typename T>
     void modified() const {
         auto comp_id = _::type<T>::id(world_);
-        ecs_assert(_::type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(_::type<T>::size() != 0, ECS_INVALID_PARAMETER,
+            "operation invalid for empty type");
         this->modified(comp_id);
     }
 
@@ -200,7 +204,8 @@ struct entity : entity_builder<entity>
     template <typename First>
     void modified(entity_t second) const {
         auto first = _::type<First>::id(world_);
-        ecs_assert(_::type<First>::size() != 0, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(_::type<First>::size() != 0, ECS_INVALID_PARAMETER,
+            "operation invalid for empty type");
         this->modified(first, second);
     }
 

@@ -34,7 +34,8 @@ struct ref {
             id = _::type<T>::id(world);
         }
 
-        ecs_assert(_::type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(_::type<T>::size() != 0, ECS_INVALID_PARAMETER,
+            "operation invalid for empty type");
 
         ref_ = ecs_ref_init_id(world_, entity, id);
     }
@@ -43,7 +44,8 @@ struct ref {
         T* result = static_cast<T*>(ecs_ref_get_id(
             world_, &ref_, this->ref_.id));
 
-        ecs_assert(result != NULL, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(result != NULL, ECS_INVALID_PARAMETER,
+            "nullptr dereference by flecs::ref");
 
         return result;
     }

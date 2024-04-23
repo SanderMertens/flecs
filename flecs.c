@@ -4088,8 +4088,8 @@ void* flecs_get_base_component(
     ecs_id_record_t *table_index,
     int32_t recur_depth)
 {
-    /* Cycle detected in IsA relationship */
-    ecs_check(recur_depth < ECS_MAX_RECURSION, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(recur_depth < ECS_MAX_RECURSION, ECS_INVALID_PARAMETER,
+        "cycle detected in IsA relationship");
 
     /* Table (and thus entity) does not have component, look for base */
     if (!(table->flags & EcsTableHasIsA)) {
@@ -4402,7 +4402,8 @@ void flecs_instantiate_children(
 #ifdef FLECS_DEBUG
         for (j = 0; j < child_count; j ++) {
             ecs_entity_t child = children[j];        
-            ecs_check(child != instance, ECS_INVALID_PARAMETER, NULL);
+            ecs_check(child != instance, ECS_INVALID_PARAMETER, 
+                "cycle detected in IsA relationship");
         }
 #else
         /* Bit of boilerplate to ensure that we don't get warnings about the
@@ -4955,7 +4956,8 @@ flecs_component_ptr_t flecs_ensure(
     ecs_check(id != 0, ECS_INVALID_PARAMETER, NULL);
     ecs_check(r != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check((id & ECS_COMPONENT_MASK) == id || 
-        ECS_HAS_ID_FLAG(id, PAIR), ECS_INVALID_PARAMETER, NULL);
+        ECS_HAS_ID_FLAG(id, PAIR), ECS_INVALID_PARAMETER,
+            "invalid component id specified for ensure");
 
     if (r->table) {
         dst = flecs_get_component_ptr(
@@ -5652,7 +5654,8 @@ ecs_entity_t ecs_entity_init(
 {
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(desc->_canary == 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(desc->_canary == 0, ECS_INVALID_PARAMETER,
+        "ecs_entity_desc_t was not initialized to zero");
 
     ecs_stage_t *stage = flecs_stage_from_world(&world);
     ecs_entity_t scope = stage->scope;
@@ -5824,7 +5827,8 @@ const ecs_entity_t* ecs_bulk_init(
     flecs_poly_assert(world, ecs_world_t);
     ecs_assert(!(world->flags & EcsWorldReadonly), ECS_INTERNAL_ERROR, NULL);
     ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(desc->_canary == 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(desc->_canary == 0, ECS_INVALID_PARAMETER,
+        "ecs_bulk_desc_t was not initialized to zero");
 
     const ecs_entity_t *entities = desc->entities;
     int32_t count = desc->count;
@@ -5909,7 +5913,8 @@ ecs_entity_t ecs_component_init(
 {
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(desc->_canary == 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(desc->_canary == 0, ECS_INVALID_PARAMETER,
+        "ecs_component_desc_t was not initialized to 0");
 
     /* If existing entity is provided, check if it is already registered as a
      * component and matches the size/alignment. This can prevent having to
@@ -7031,10 +7036,10 @@ void* ecs_ref_get_id(
 {
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(ref != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(ref->entity != 0, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(ref->id != 0, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(ref->record != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(id == ref->id, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ref->entity != 0, ECS_INVALID_PARAMETER, "ref not initialized");
+    ecs_check(ref->id != 0, ECS_INVALID_PARAMETER, "ref not initialized");
+    ecs_check(ref->record != NULL, ECS_INVALID_PARAMETER, "ref not initialized");
+    ecs_check(id == ref->id, ECS_INVALID_PARAMETER, "ref not initialized");
 
     ecs_record_t *r = ref->record;
     ecs_table_t *table = r->table;
@@ -7085,7 +7090,9 @@ void* ecs_emplace_id(
     flecs_defer_end(world, stage);
 
     void *ptr = flecs_get_component(world, r->table, ECS_RECORD_TO_ROW(r->row), id);
-    ecs_check(ptr != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ptr != NULL, ECS_INVALID_PARAMETER, 
+        "emplaced component was removed during operation, make sure to not "
+        "remove component T in on_add(T) hook/OnAdd(T) observer");
 
     return ptr;
 error:
@@ -7535,7 +7542,9 @@ int32_t ecs_get_depth(
     ecs_entity_t rel)
 {
     ecs_check(ecs_is_valid(world, rel), ECS_INVALID_PARAMETER, NULL);
-    ecs_check(ecs_has_id(world, rel, EcsAcyclic), ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ecs_has_id(world, rel, EcsAcyclic), ECS_INVALID_PARAMETER, 
+        "cannot safely determine depth for relationship that is not acyclic "
+            "(add Acyclic property to relationship)");
 
     ecs_table_t *table = ecs_get_table(world, entity);
     if (table) {
@@ -9563,11 +9572,15 @@ bool ecs_id_match(
         ecs_entity_t pattern_first = ECS_PAIR_FIRST(pattern);
         ecs_entity_t pattern_second = ECS_PAIR_SECOND(pattern);
 
-        ecs_check(id_first != 0, ECS_INVALID_PARAMETER, NULL);
-        ecs_check(id_second != 0, ECS_INVALID_PARAMETER, NULL);
+        ecs_check(id_first != 0, ECS_INVALID_PARAMETER, 
+            "first element of pair cannot be 0");
+        ecs_check(id_second != 0, ECS_INVALID_PARAMETER, 
+            "second element of pair cannot be 0");
 
-        ecs_check(pattern_first != 0, ECS_INVALID_PARAMETER, NULL);
-        ecs_check(pattern_second != 0, ECS_INVALID_PARAMETER, NULL);
+        ecs_check(pattern_first != 0, ECS_INVALID_PARAMETER,
+            "first element of pair cannot be 0");
+        ecs_check(pattern_second != 0, ECS_INVALID_PARAMETER,
+            "second element of pair cannot be 0");
         
         if (pattern_first == EcsWildcard) {
             if (pattern_second == EcsWildcard || pattern_second == id_second) {
@@ -9835,12 +9848,15 @@ void* ecs_field_w_size(
     size_t size,
     int32_t index)
 {
-    ecs_check(it->flags & EcsIterIsValid, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(index >= 0, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(index < it->field_count, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(it->flags & EcsIterIsValid, ECS_INVALID_PARAMETER,
+        "operation invalid before calling next()");
+    ecs_check(index >= 0, ECS_INVALID_PARAMETER, 
+        "invalid field index %d", index);
+    ecs_check(index < it->field_count, ECS_INVALID_PARAMETER, 
+        "field index %d out of bounds", index);
     ecs_check(!size || ecs_field_size(it, index) == size ||
         (!ecs_field_size(it, index) && (!it->ptrs[index])),
-            ECS_INVALID_PARAMETER, NULL);
+            ECS_INVALID_PARAMETER, "mismatching size for field %d", index);
     (void)size;
 
     return it->ptrs[index];
@@ -9852,11 +9868,15 @@ bool ecs_field_is_readonly(
     const ecs_iter_t *it,
     int32_t index)
 {
-    ecs_check(it->flags & EcsIterIsValid, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(it->query != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(it->flags & EcsIterIsValid, ECS_INVALID_PARAMETER,
+        "operation invalid before calling next()");
+    ecs_check(it->query != NULL, ECS_INVALID_PARAMETER,
+        "operation only valid for query iterators");
     ecs_check(it->query->terms != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(index >= 0, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(index < it->field_count, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(index >= 0, ECS_INVALID_PARAMETER, 
+        "invalid field index %d", index);
+    ecs_check(index < it->field_count, ECS_INVALID_PARAMETER, 
+        "field index %d out of bounds", index);
     const ecs_term_t *term = &it->query->terms[index];
 
     if (term->inout == EcsIn) {
@@ -9879,11 +9899,15 @@ bool ecs_field_is_writeonly(
     const ecs_iter_t *it,
     int32_t index)
 {
-    ecs_check(it->flags & EcsIterIsValid, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(it->query != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(it->flags & EcsIterIsValid, ECS_INVALID_PARAMETER,
+        "operation invalid before calling next()");
+    ecs_check(it->query != NULL, ECS_INVALID_PARAMETER,
+        "operation only valid for query iterators");
     ecs_check(it->query->terms != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(index >= 0, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(index < it->field_count, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(index >= 0, ECS_INVALID_PARAMETER, 
+        "invalid field index %d", index);
+    ecs_check(index < it->field_count, ECS_INVALID_PARAMETER, 
+        "field index %d out of bounds", index);
 
     const ecs_term_t *term = &it->query->terms[index];
     return term->inout == EcsOut;
@@ -9895,9 +9919,12 @@ bool ecs_field_is_set(
     const ecs_iter_t *it,
     int32_t index)
 {
-    ecs_check(it->flags & EcsIterIsValid, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(index >= 0, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(index < it->field_count, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(it->flags & EcsIterIsValid, ECS_INVALID_PARAMETER,
+        "operation invalid before calling next()");
+    ecs_check(index >= 0, ECS_INVALID_PARAMETER, 
+        "invalid field index %d", index);
+    ecs_check(index < it->field_count, ECS_INVALID_PARAMETER, 
+        "field index %d out of bounds", index);
 
     return it->set_fields & (1llu << (index));
 error:
@@ -9908,8 +9935,10 @@ bool ecs_field_is_self(
     const ecs_iter_t *it,
     int32_t index)
 {
-    ecs_check(index >= 0, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(index < it->field_count, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(index >= 0, ECS_INVALID_PARAMETER, 
+        "invalid field index %d", index);
+    ecs_check(index < it->field_count, ECS_INVALID_PARAMETER, 
+        "field index %d out of bounds", index);
 
     return it->sources == NULL || it->sources[index] == 0;
 error:
@@ -9920,8 +9949,10 @@ ecs_id_t ecs_field_id(
     const ecs_iter_t *it,
     int32_t index)
 {
-    ecs_check(index >= 0, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(index < it->field_count, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(index >= 0, ECS_INVALID_PARAMETER, 
+        "invalid field index %d", index);
+    ecs_check(index < it->field_count, ECS_INVALID_PARAMETER, 
+        "field index %d out of bounds", index);
 
     return it->ids[index];
 error:
@@ -9932,8 +9963,10 @@ int32_t ecs_field_column(
     const ecs_iter_t *it,
     int32_t index)
 {
-    ecs_check(index >= 0, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(index < it->field_count, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(index >= 0, ECS_INVALID_PARAMETER, 
+        "invalid field index %d", index);
+    ecs_check(index < it->field_count, ECS_INVALID_PARAMETER, 
+        "field index %d out of bounds", index);
 
     return it->columns[index];
 error:
@@ -9944,8 +9977,10 @@ ecs_entity_t ecs_field_src(
     const ecs_iter_t *it,
     int32_t index)
 {
-    ecs_check(index >= 0, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(index < it->field_count, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(index >= 0, ECS_INVALID_PARAMETER, 
+        "invalid field index %d", index);
+    ecs_check(index < it->field_count, ECS_INVALID_PARAMETER, 
+        "field index %d out of bounds", index);
 
     if (it->sources) {
         return it->sources[index];
@@ -9960,8 +9995,10 @@ size_t ecs_field_size(
     const ecs_iter_t *it,
     int32_t index)
 {
-    ecs_check(index >= 0, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(index < it->field_count, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(index >= 0, ECS_INVALID_PARAMETER, 
+        "invalid field index %d", index);
+    ecs_check(index < it->field_count, ECS_INVALID_PARAMETER, 
+        "field index %d out of bounds", index);
 
     return (size_t)it->sizes[index];
 error:
@@ -10121,8 +10158,10 @@ ecs_entity_t ecs_iter_get_var(
     ecs_iter_t *it,
     int32_t var_id)
 {
-    ecs_check(var_id >= 0, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(var_id < it->variable_count, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(var_id >= 0, ECS_INVALID_PARAMETER, 
+        "invalid variable index %d", var_id);
+    ecs_check(var_id < it->variable_count, ECS_INVALID_PARAMETER,
+        "variable index %d out of bounds", var_id);
     ecs_check(it->variables != NULL, ECS_INVALID_PARAMETER, NULL);
 
     ecs_var_t *var = &it->variables[var_id];
@@ -10153,8 +10192,10 @@ ecs_table_t* ecs_iter_get_var_as_table(
     ecs_iter_t *it,
     int32_t var_id)
 {
-    ecs_check(var_id >= 0, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(var_id < it->variable_count, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(var_id >= 0, ECS_INVALID_PARAMETER, 
+        "invalid variable index %d", index);
+    ecs_check(var_id < it->variable_count, ECS_INVALID_PARAMETER, 
+        "variable index %d out of bounds", index);
     ecs_check(it->variables != NULL, ECS_INVALID_PARAMETER, NULL);
 
     ecs_var_t *var = &it->variables[var_id];
@@ -10199,8 +10240,10 @@ ecs_table_range_t ecs_iter_get_var_as_range(
     ecs_iter_t *it,
     int32_t var_id)
 {
-    ecs_check(var_id >= 0, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(var_id < it->variable_count, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(var_id >= 0, ECS_INVALID_PARAMETER, 
+        "invalid variable index %d", index);
+    ecs_check(var_id < it->variable_count, ECS_INVALID_PARAMETER, 
+        "variable index %d out of bounds", index);
     ecs_check(it->variables != NULL, ECS_INVALID_PARAMETER, NULL);
 
     ecs_table_range_t result = { 0 };
@@ -10241,12 +10284,14 @@ void ecs_iter_set_var(
     ecs_entity_t entity)
 {
     ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(var_id >= 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(var_id >= 0, ECS_INVALID_PARAMETER, 
+        "invalid variable index %d", index);
     ecs_check(var_id < FLECS_QUERY_VARIABLE_COUNT_MAX, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(var_id < it->variable_count, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(var_id < it->variable_count, ECS_INVALID_PARAMETER, 
+        "variable index %d out of bounds", index);
     ecs_check(entity != 0, ECS_INVALID_PARAMETER, NULL);
-    /* Can't set variable while iterating */
-    ecs_check(!(it->flags & EcsIterIsValid), ECS_INVALID_PARAMETER, NULL);
+    ecs_check(!(it->flags & EcsIterIsValid), ECS_INVALID_PARAMETER,
+        "cannot constrain variable while iterating");
     ecs_check(it->variables != NULL, ECS_INTERNAL_ERROR, NULL);
 
     ecs_var_t *var = &it->variables[var_id];
@@ -10284,9 +10329,10 @@ void ecs_iter_set_var_as_range(
     const ecs_table_range_t *range)
 {
     ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(var_id >= 0, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(var_id < FLECS_QUERY_VARIABLE_COUNT_MAX, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(var_id < it->variable_count, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(var_id >= 0, ECS_INVALID_PARAMETER, 
+        "invalid variable index %d", index);
+    ecs_check(var_id < it->variable_count, ECS_INVALID_PARAMETER, 
+        "variable index %d out of bounds", index);
     ecs_check(range != 0, ECS_INVALID_PARAMETER, NULL);
     ecs_check(range->table != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(!range->offset || range->offset < ecs_table_count(range->table), 
@@ -10491,7 +10537,8 @@ ecs_iter_t ecs_worker_iter(
     ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(it->next != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(count > 0, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(index >= 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(index >= 0, ECS_INVALID_PARAMETER, 
+        "invalid field index %d", index);
     ecs_check(index < count, ECS_INVALID_PARAMETER, NULL);
 
     ecs_iter_t result = *it;
@@ -13444,8 +13491,8 @@ ecs_observer_t* flecs_observer_init(
 
     flecs_poly_assert(query, ecs_query_t);
 
-    /* Observer must have at least one term */
-    ecs_check(o->query->term_count > 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(o->query->term_count > 0, ECS_INVALID_PARAMETER,
+        "observer must have at least one term");
 
     ecs_observable_t *observable = desc->observable;
     if (!observable) {
@@ -13473,8 +13520,8 @@ ecs_observer_t* flecs_observer_init(
         }
 
         if (event == EcsMonitor) {
-            /* Monitor event must be first and last event */
-            ecs_check(i == 0, ECS_INVALID_PARAMETER, NULL);
+            ecs_check(i == 0, ECS_INVALID_PARAMETER,
+                "monitor observers can only have a single Monitor event");
 
             o->events[0] = EcsOnAdd;
             o->events[1] = EcsOnRemove;
@@ -13488,7 +13535,8 @@ ecs_observer_t* flecs_observer_init(
     }
 
     /* Observer must have at least one event */
-    ecs_check(o->event_count != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(o->event_count != 0, ECS_INVALID_PARAMETER,
+        "observer must have at least one event");
 
     bool multi = false;
 
@@ -13530,7 +13578,8 @@ ecs_entity_t ecs_observer_init(
     ecs_entity_t entity = 0;
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(desc->_canary == 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(desc->_canary == 0, ECS_INVALID_PARAMETER,
+        "ecs_observer_desc_t was not initialized to zero");
     ecs_check(!(world->flags & EcsWorldFini), ECS_INVALID_OPERATION, 
         "cannot create observer while world is being deleted");
 
@@ -14302,7 +14351,8 @@ void* assert_mixin(
     
     const ecs_header_t *hdr = poly;
     ecs_assert(hdr != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(hdr->magic == ECS_OBJECT_MAGIC, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(hdr->magic == ECS_OBJECT_MAGIC, ECS_INVALID_PARAMETER,
+        "invalid/freed pointer to flecs object detected");
 
     const ecs_mixins_t *mixins = hdr->mixins;
     ecs_assert(mixins != NULL, ECS_INVALID_PARAMETER, NULL);
@@ -14346,8 +14396,10 @@ void flecs_poly_fini_(
     ecs_header_t *hdr = poly;
 
     /* Don't deinit poly that wasn't initialized */
-    ecs_assert(hdr->magic == ECS_OBJECT_MAGIC, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(hdr->type == type, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(hdr->magic == ECS_OBJECT_MAGIC, ECS_INVALID_PARAMETER,
+        "invalid/freed pointer to flecs object detected");
+    ecs_assert(hdr->type == type, ECS_INVALID_PARAMETER,
+        "incorrect function called to free flecs object");
     hdr->magic = 0;
 }
 
@@ -14356,7 +14408,8 @@ int32_t flecs_poly_claim_(
 {
     ecs_assert(poly != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_header_t *hdr = poly;
-    ecs_assert(hdr->magic == ECS_OBJECT_MAGIC, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(hdr->magic == ECS_OBJECT_MAGIC, ECS_INVALID_PARAMETER,
+        "invalid/freed pointer to flecs object detected");
     if (ecs_os_has_threading()) {
         return ecs_os_ainc(&hdr->refcount);
     } else {
@@ -14369,7 +14422,8 @@ int32_t flecs_poly_release_(
 {
     ecs_assert(poly != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_header_t *hdr = poly;
-    ecs_assert(hdr->magic == ECS_OBJECT_MAGIC, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(hdr->magic == ECS_OBJECT_MAGIC, ECS_INVALID_PARAMETER,
+        "invalid/freed pointer to flecs object detected");
     if (ecs_os_has_threading()) {
         return ecs_os_adec(&hdr->refcount);
     } else {
@@ -14382,7 +14436,8 @@ int32_t flecs_poly_refcount(
 {
     ecs_assert(poly != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_header_t *hdr = poly;
-    ecs_assert(hdr->magic == ECS_OBJECT_MAGIC, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(hdr->magic == ECS_OBJECT_MAGIC, ECS_INVALID_PARAMETER,
+        "invalid/freed pointer to flecs object detected");
     return hdr->refcount;
 }
 
@@ -14450,7 +14505,8 @@ bool flecs_poly_is_(
     ecs_assert(poly != NULL, ECS_INVALID_PARAMETER, NULL);
 
     const ecs_header_t *hdr = poly;
-    ecs_assert(hdr->magic == ECS_OBJECT_MAGIC, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(hdr->magic == ECS_OBJECT_MAGIC, ECS_INVALID_PARAMETER,
+        "invalid/freed pointer to flecs object detected");
     return hdr->type == type;    
 }
 
@@ -15177,7 +15233,6 @@ void* flecs_defer_set(
          * application is not multithreaded. */
         if (world->flags & EcsWorldMultiThreaded) {
             ti = ecs_get_type_info(world, id);
-            ecs_assert(ti != NULL, ECS_INVALID_PARAMETER, NULL);
         } else {
             /* When not in multi threaded mode, it's safe to find or 
              * create the id record. */
@@ -15195,10 +15250,12 @@ void* flecs_defer_set(
     }
 
     /* If the id isn't associated with a type, we can't set anything */
-    ecs_check(ti != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ti != NULL, ECS_INVALID_PARAMETER, 
+        "provided component is not a type");
 
     /* Make sure the size of the value equals the type size */
-    ecs_assert(!size || size == ti->size, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(!size || size == ti->size, ECS_INVALID_PARAMETER,
+        "mismatching size specified for component in ensure/emplace/set");
     size = ti->size;
 
     /* Find existing component. Make sure it's owned, so that we won't use the
@@ -17151,8 +17208,8 @@ void ecs_set_hooks_id(
         /* Cannot register lifecycle actions for things that aren't a component */
         ecs_check(component_ptr != NULL, ECS_INVALID_PARAMETER, 
             "provided entity is not a component");
-        /* Cannot register lifecycle actions for components with size 0 */
-        ecs_check(component_ptr->size != 0, ECS_INVALID_PARAMETER, NULL);
+        ecs_check(component_ptr->size != 0, ECS_INVALID_PARAMETER,
+            "cannot register type hooks for type with size 0");
 
         ti->size = component_ptr->size;
         ti->alignment = component_ptr->alignment;
@@ -18647,7 +18704,8 @@ ecs_entity_t ecs_alert_init(
 {
     flecs_poly_assert(world, ecs_world_t);
     ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(desc->_canary == 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(desc->_canary == 0, ECS_INVALID_PARAMETER,
+        "ecs_alert_desc_t was not initialized to zero");
     ecs_check(!desc->query.entity || desc->entity == desc->query.entity, 
         ECS_INVALID_PARAMETER, NULL);
 
@@ -19547,9 +19605,12 @@ const char* ecs_cpp_trim_module(
         if (!ecs_os_strncmp(path, type_name, len)) {
             // Type is a child of current parent, trim name of parent
             type_name += len;
-            ecs_assert(type_name[0], ECS_INVALID_PARAMETER, NULL);
-            ecs_assert(type_name[0] == ':', ECS_INVALID_PARAMETER, NULL);
-            ecs_assert(type_name[1] == ':', ECS_INVALID_PARAMETER, NULL);
+            ecs_assert(type_name[0], ECS_INVALID_PARAMETER, 
+                "invalid C++ type name");
+            ecs_assert(type_name[0] == ':', ECS_INVALID_PARAMETER,
+                "invalid C++ type name");
+            ecs_assert(type_name[1] == ':', ECS_INVALID_PARAMETER,
+                "invalid C++ type name");
             type_name += 2;
         } else {
             // Type is not a child of current parent, trim entire path
@@ -22899,7 +22960,7 @@ int flecs_id_metric_init(
     ctx->metric.metric = metric;
     ctx->metric.kind = desc->kind;
     ctx->idr = flecs_id_record_ensure(world, desc->id);
-    ecs_check(ctx->idr != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ctx->idr != NULL, ECS_INTERNAL_ERROR, NULL);
 
     ecs_observer(world, {
         .entity = metric,
@@ -22935,7 +22996,7 @@ int flecs_oneof_metric_init(
     ctx->metric.metric = metric;
     ctx->metric.kind = desc->kind;
     ctx->idr = flecs_id_record_ensure(world, desc->id);
-    ecs_check(ctx->idr != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ctx->idr != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_map_init(&ctx->target_offset, NULL);
 
     /* Add member for each child of oneof to metric, so it can be used as metric
@@ -23008,7 +23069,7 @@ int flecs_count_id_targets_metric_init(
     ctx->metric.metric = metric;
     ctx->metric.kind = desc->kind;
     ctx->idr = flecs_id_record_ensure(world, desc->id);
-    ecs_check(ctx->idr != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ctx->idr != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_map_init(&ctx->targets, NULL);
 
     ecs_set(world, metric, EcsMetricCountTargets, { .ctx = ctx });
@@ -23036,7 +23097,8 @@ ecs_entity_t ecs_metric_init(
     const ecs_metric_desc_t *desc)
 {
     ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(desc->_canary == 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(desc->_canary == 0, ECS_INVALID_PARAMETER,
+        "ecs_metric_desc_t was not initialized to zero");
     flecs_poly_assert(world, ecs_world_t);
 
     ecs_entity_t result = desc->entity;
@@ -26443,7 +26505,7 @@ ecs_entity_t ecs_set_interval(
     }
 
     EcsTimer *t = ecs_ensure(world, timer, EcsTimer);
-    ecs_check(t != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(t != NULL, ECS_INTERNAL_ERROR, NULL);
     t->timeout = interval;
     t->active = true;
     ecs_modified(world, timer, EcsTimer);
@@ -26479,7 +26541,7 @@ void ecs_start_timer(
     ecs_entity_t timer)
 {
     EcsTimer *ptr = ecs_ensure(world, timer, EcsTimer);
-    ecs_check(ptr != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
     ptr->active = true;
     ptr->time = 0;
 error:
@@ -26491,7 +26553,7 @@ void ecs_stop_timer(
     ecs_entity_t timer)
 {
     EcsTimer *ptr = ecs_ensure(world, timer, EcsTimer);
-    ecs_check(ptr != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
     ptr->active = false;
 error:
     return;
@@ -26502,7 +26564,7 @@ void ecs_reset_timer(
     ecs_entity_t timer)
 {
     EcsTimer *ptr = ecs_ensure(world, timer, EcsTimer);
-    ecs_check(ptr != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
     ptr->time = 0;
 error:
     return;   
@@ -32307,8 +32369,8 @@ int flecs_query_cache_process_signature(
             "invalid usage of InOutFilter for query");
 
         if (src->id & EcsCascade) {
-            /* Query can only have one cascade column */
-            ecs_assert(cache->cascade_by == 0, ECS_INVALID_PARAMETER, NULL);
+            ecs_assert(cache->cascade_by == 0, ECS_INVALID_PARAMETER,
+                "query can only have one cascade term");
             cache->cascade_by = i + 1;
         }
     }
@@ -32776,7 +32838,8 @@ ecs_query_cache_t* flecs_query_cache_init(
     ecs_stage_t *stage = impl->pub.stage;
     ecs_check(world != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_check(const_desc != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(const_desc->_canary == 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(const_desc->_canary == 0, ECS_INVALID_PARAMETER,
+        "ecs_query_desc_t was not initialized to zero");
     ecs_check(!(world->flags & EcsWorldFini), ECS_INVALID_OPERATION, 
         "cannot create query during world fini");
 
@@ -32856,9 +32919,8 @@ ecs_query_cache_t* flecs_query_cache_init(
     }
 
     if (const_desc->group_by_callback || const_desc->group_by) {
-        /* Can't have a cascade term and group by at the same time, as cascade
-         * uses the group_by mechanism */
-        ecs_check(!result->cascade_by, ECS_INVALID_PARAMETER, NULL);
+        ecs_check(!result->cascade_by, ECS_INVALID_PARAMETER,
+            "cannot mix cascade and group_by");
         flecs_query_cache_group_by(result, 
             const_desc->group_by, const_desc->group_by_callback);
         result->group_by_ctx = const_desc->group_by_ctx;
@@ -45018,7 +45080,8 @@ int flecs_query_finalize_query(
 {
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(desc->_canary == 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(desc->_canary == 0, ECS_INVALID_PARAMETER,
+        "ecs_query_desc_t was not initialized to zero");
     ecs_stage_t *stage = flecs_stage_from_world(&world);
 
     q->flags |= desc->flags;
@@ -45098,7 +45161,7 @@ ecs_record_t* flecs_entity_index_get_any(
     ecs_entity_index_page_t *page = ecs_vec_get_t(&index->pages, 
         ecs_entity_index_page_t*, page_index)[0];
     ecs_record_t *r = &page->records[id & FLECS_ENTITY_PAGE_MASK];
-    ecs_assert(r->dense != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(r->dense != 0, ECS_INVALID_PARAMETER, "entity does not exist");
     return r;
 }
 
@@ -45109,7 +45172,7 @@ ecs_record_t* flecs_entity_index_get(
     ecs_record_t *r = flecs_entity_index_get_any(index, entity);
     ecs_assert(r->dense < index->alive_count, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(ecs_vec_get_t(&index->dense, uint64_t, r->dense)[0] == entity, 
-        ECS_INVALID_PARAMETER, NULL);
+        ECS_INVALID_PARAMETER, "mismatching liveliness generation for entity");
     return r;
 }
 
@@ -48296,7 +48359,9 @@ int32_t ecs_table_get_depth(
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(table != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(ecs_id_is_valid(world, rel), ECS_INVALID_PARAMETER, NULL);
-    ecs_check(ecs_has_id(world, rel, EcsAcyclic), ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ecs_has_id(world, rel, EcsAcyclic), ECS_INVALID_PARAMETER,
+        "cannot safely determine depth for relationship that is not acyclic "
+            "(add Acyclic property to relationship)");
 
     world = ecs_get_world(world);
 
@@ -55517,7 +55582,8 @@ int json_typeinfo_ser_type_op(
     case EcsOpPush:
     case EcsOpPop:
         /* Should not be parsed as single op */
-        ecs_throw(ECS_INVALID_PARAMETER, NULL);
+        ecs_throw(ECS_INVALID_PARAMETER, 
+            "unexpected push/pop serializer instruction");
         break;
     case EcsOpEnum:
         json_typeinfo_ser_enum(world, op->type, str);
@@ -62977,7 +63043,8 @@ void flecs_create_worker_threads(
             /* workers are using long-running os threads */
             stage->thread = ecs_os_thread_new(flecs_worker, stage);
         }
-        ecs_assert(stage->thread != 0, ECS_OPERATION_FAILED, NULL);
+        ecs_assert(stage->thread != 0, ECS_OPERATION_FAILED,
+            "failed to create thread");
     }
 }
 
@@ -70355,7 +70422,8 @@ ecs_entity_t ecs_system_init(
 {
     flecs_poly_assert(world, ecs_world_t);
     ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(desc->_canary == 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(desc->_canary == 0, ECS_INVALID_PARAMETER,
+        "ecs_system_desc_t was not initialized to zero");
     ecs_assert(!(world->flags & EcsWorldReadonly), 
         ECS_INVALID_WHILE_READONLY, NULL);
 

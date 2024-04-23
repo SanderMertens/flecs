@@ -160,7 +160,7 @@ ecs_entity_t ecs_set_interval(
     }
 
     EcsTimer *t = ecs_ensure(world, timer, EcsTimer);
-    ecs_check(t != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(t != NULL, ECS_INTERNAL_ERROR, NULL);
     t->timeout = interval;
     t->active = true;
     ecs_modified(world, timer, EcsTimer);
@@ -196,7 +196,7 @@ void ecs_start_timer(
     ecs_entity_t timer)
 {
     EcsTimer *ptr = ecs_ensure(world, timer, EcsTimer);
-    ecs_check(ptr != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
     ptr->active = true;
     ptr->time = 0;
 error:
@@ -208,7 +208,7 @@ void ecs_stop_timer(
     ecs_entity_t timer)
 {
     EcsTimer *ptr = ecs_ensure(world, timer, EcsTimer);
-    ecs_check(ptr != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
     ptr->active = false;
 error:
     return;
@@ -219,7 +219,7 @@ void ecs_reset_timer(
     ecs_entity_t timer)
 {
     EcsTimer *ptr = ecs_ensure(world, timer, EcsTimer);
-    ecs_check(ptr != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
     ptr->time = 0;
 error:
     return;   

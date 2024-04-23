@@ -59,7 +59,7 @@ ecs_record_t* flecs_entity_index_get_any(
     ecs_entity_index_page_t *page = ecs_vec_get_t(&index->pages, 
         ecs_entity_index_page_t*, page_index)[0];
     ecs_record_t *r = &page->records[id & FLECS_ENTITY_PAGE_MASK];
-    ecs_assert(r->dense != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(r->dense != 0, ECS_INVALID_PARAMETER, "entity does not exist");
     return r;
 }
 
@@ -70,7 +70,7 @@ ecs_record_t* flecs_entity_index_get(
     ecs_record_t *r = flecs_entity_index_get_any(index, entity);
     ecs_assert(r->dense < index->alive_count, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(ecs_vec_get_t(&index->dense, uint64_t, r->dense)[0] == entity, 
-        ECS_INVALID_PARAMETER, NULL);
+        ECS_INVALID_PARAMETER, "mismatching liveliness generation for entity");
     return r;
 }
 

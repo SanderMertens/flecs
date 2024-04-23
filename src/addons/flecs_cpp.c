@@ -186,9 +186,12 @@ const char* ecs_cpp_trim_module(
         if (!ecs_os_strncmp(path, type_name, len)) {
             // Type is a child of current parent, trim name of parent
             type_name += len;
-            ecs_assert(type_name[0], ECS_INVALID_PARAMETER, NULL);
-            ecs_assert(type_name[0] == ':', ECS_INVALID_PARAMETER, NULL);
-            ecs_assert(type_name[1] == ':', ECS_INVALID_PARAMETER, NULL);
+            ecs_assert(type_name[0], ECS_INVALID_PARAMETER, 
+                "invalid C++ type name");
+            ecs_assert(type_name[0] == ':', ECS_INVALID_PARAMETER,
+                "invalid C++ type name");
+            ecs_assert(type_name[1] == ':', ECS_INVALID_PARAMETER,
+                "invalid C++ type name");
             type_name += 2;
         } else {
             // Type is not a child of current parent, trim entire path

@@ -258,7 +258,8 @@ struct entity_view : public id {
     template <typename T, if_t< is_actual<T>::value > = 0>
     const T* get() const {
         auto comp_id = _::type<T>::id(world_);
-        ecs_assert(_::type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(_::type<T>::size() != 0, ECS_INVALID_PARAMETER,
+            "operation invalid for empty type");
         return static_cast<const T*>(ecs_get_id(world_, id_, comp_id));
     }
 
@@ -274,7 +275,8 @@ struct entity_view : public id {
         if_t< flecs::is_pair<T>::value > = 0>
     const A* get() const {
         auto comp_id = _::type<T>::id(world_);
-        ecs_assert(_::type<A>::size() != 0, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(_::type<A>::size() != 0, ECS_INVALID_PARAMETER,
+            "operation invalid for empty type");
         return static_cast<const A*>(ecs_get_id(world_, id_, comp_id));
     }
 
@@ -299,7 +301,8 @@ struct entity_view : public id {
     template<typename First, typename Second, if_not_t< is_enum<Second>::value> = 0>
     const First* get(Second second) const {
         auto comp_id = _::type<First>::id(world_);
-        ecs_assert(_::type<First>::size() != 0, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(_::type<First>::size() != 0, ECS_INVALID_PARAMETER,
+            "operation invalid for empty type");
         return static_cast<const First*>(
             ecs_get_id(world_, id_, ecs_pair(comp_id, second)));
     }
@@ -394,7 +397,8 @@ struct entity_view : public id {
     template<typename Second>
     const Second* get_second(flecs::entity_t first) const {
         auto second = _::type<Second>::id(world_);
-        ecs_assert(_::type<Second>::size() != 0, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(_::type<Second>::size() != 0, ECS_INVALID_PARAMETER,
+            "operation invalid for empty type");
         return static_cast<const Second*>(
             ecs_get_id(world_, id_, ecs_pair(first, second)));
     }
@@ -420,7 +424,8 @@ struct entity_view : public id {
     template <typename T, if_t< is_actual<T>::value > = 0>
     T* get_mut() const {
         auto comp_id = _::type<T>::id(world_);
-        ecs_assert(_::type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(_::type<T>::size() != 0, ECS_INVALID_PARAMETER,
+            "operation invalid for empty type");
         return static_cast<T*>(ecs_get_mut_id(world_, id_, comp_id));
     }
 
@@ -436,7 +441,8 @@ struct entity_view : public id {
         if_t< flecs::is_pair<T>::value > = 0>
     A* get_mut() const {
         auto comp_id = _::type<T>::id(world_);
-        ecs_assert(_::type<A>::size() != 0, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(_::type<A>::size() != 0, ECS_INVALID_PARAMETER,
+            "operation invalid for empty type");
         return static_cast<A*>(ecs_get_mut_id(world_, id_, comp_id));
     }
 
@@ -461,7 +467,8 @@ struct entity_view : public id {
     template<typename First, typename Second, if_not_t< is_enum<Second>::value> = 0>
     First* get_mut(Second second) const {
         auto comp_id = _::type<First>::id(world_);
-        ecs_assert(_::type<First>::size() != 0, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(_::type<First>::size() != 0, ECS_INVALID_PARAMETER, 
+            "operation invalid for empty type");
         return static_cast<First*>(
             ecs_get_mut_id(world_, id_, ecs_pair(comp_id, second)));
     }
@@ -511,7 +518,8 @@ struct entity_view : public id {
     template<typename Second>
     Second* get_mut_second(flecs::entity_t first) const {
         auto second = _::type<Second>::id(world_);
-        ecs_assert(_::type<Second>::size() != 0, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(_::type<Second>::size() != 0, ECS_INVALID_PARAMETER, 
+            "operation invalid for empty type");
         return static_cast<Second*>(
             ecs_get_mut_id(world_, id_, ecs_pair(first, second)));
     }

@@ -167,12 +167,15 @@ void* ecs_field_w_size(
     size_t size,
     int32_t index)
 {
-    ecs_check(it->flags & EcsIterIsValid, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(index >= 0, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(index < it->field_count, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(it->flags & EcsIterIsValid, ECS_INVALID_PARAMETER,
+        "operation invalid before calling next()");
+    ecs_check(index >= 0, ECS_INVALID_PARAMETER, 
+        "invalid field index %d", index);
+    ecs_check(index < it->field_count, ECS_INVALID_PARAMETER, 
+        "field index %d out of bounds", index);
     ecs_check(!size || ecs_field_size(it, index) == size ||
         (!ecs_field_size(it, index) && (!it->ptrs[index])),
-            ECS_INVALID_PARAMETER, NULL);
+            ECS_INVALID_PARAMETER, "mismatching size for field %d", index);
     (void)size;
 
     return it->ptrs[index];
@@ -184,11 +187,15 @@ bool ecs_field_is_readonly(
     const ecs_iter_t *it,
     int32_t index)
 {
-    ecs_check(it->flags & EcsIterIsValid, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(it->query != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(it->flags & EcsIterIsValid, ECS_INVALID_PARAMETER,
+        "operation invalid before calling next()");
+    ecs_check(it->query != NULL, ECS_INVALID_PARAMETER,
+        "operation only valid for query iterators");
     ecs_check(it->query->terms != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(index >= 0, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(index < it->field_count, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(index >= 0, ECS_INVALID_PARAMETER, 
+        "invalid field index %d", index);
+    ecs_check(index < it->field_count, ECS_INVALID_PARAMETER, 
+        "field index %d out of bounds", index);
     const ecs_term_t *term = &it->query->terms[index];
 
     if (term->inout == EcsIn) {
@@ -211,11 +218,15 @@ bool ecs_field_is_writeonly(
     const ecs_iter_t *it,
     int32_t index)
 {
-    ecs_check(it->flags & EcsIterIsValid, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(it->query != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(it->flags & EcsIterIsValid, ECS_INVALID_PARAMETER,
+        "operation invalid before calling next()");
+    ecs_check(it->query != NULL, ECS_INVALID_PARAMETER,
+        "operation only valid for query iterators");
     ecs_check(it->query->terms != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(index >= 0, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(index < it->field_count, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(index >= 0, ECS_INVALID_PARAMETER, 
+        "invalid field index %d", index);
+    ecs_check(index < it->field_count, ECS_INVALID_PARAMETER, 
+        "field index %d out of bounds", index);
 
     const ecs_term_t *term = &it->query->terms[index];
     return term->inout == EcsOut;
@@ -227,9 +238,12 @@ bool ecs_field_is_set(
     const ecs_iter_t *it,
     int32_t index)
 {
-    ecs_check(it->flags & EcsIterIsValid, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(index >= 0, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(index < it->field_count, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(it->flags & EcsIterIsValid, ECS_INVALID_PARAMETER,
+        "operation invalid before calling next()");
+    ecs_check(index >= 0, ECS_INVALID_PARAMETER, 
+        "invalid field index %d", index);
+    ecs_check(index < it->field_count, ECS_INVALID_PARAMETER, 
+        "field index %d out of bounds", index);
 
     return it->set_fields & (1llu << (index));
 error:
@@ -240,8 +254,10 @@ bool ecs_field_is_self(
     const ecs_iter_t *it,
     int32_t index)
 {
-    ecs_check(index >= 0, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(index < it->field_count, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(index >= 0, ECS_INVALID_PARAMETER, 
+        "invalid field index %d", index);
+    ecs_check(index < it->field_count, ECS_INVALID_PARAMETER, 
+        "field index %d out of bounds", index);
 
     return it->sources == NULL || it->sources[index] == 0;
 error:
@@ -252,8 +268,10 @@ ecs_id_t ecs_field_id(
     const ecs_iter_t *it,
     int32_t index)
 {
-    ecs_check(index >= 0, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(index < it->field_count, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(index >= 0, ECS_INVALID_PARAMETER, 
+        "invalid field index %d", index);
+    ecs_check(index < it->field_count, ECS_INVALID_PARAMETER, 
+        "field index %d out of bounds", index);
 
     return it->ids[index];
 error:
@@ -264,8 +282,10 @@ int32_t ecs_field_column(
     const ecs_iter_t *it,
     int32_t index)
 {
-    ecs_check(index >= 0, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(index < it->field_count, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(index >= 0, ECS_INVALID_PARAMETER, 
+        "invalid field index %d", index);
+    ecs_check(index < it->field_count, ECS_INVALID_PARAMETER, 
+        "field index %d out of bounds", index);
 
     return it->columns[index];
 error:
@@ -276,8 +296,10 @@ ecs_entity_t ecs_field_src(
     const ecs_iter_t *it,
     int32_t index)
 {
-    ecs_check(index >= 0, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(index < it->field_count, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(index >= 0, ECS_INVALID_PARAMETER, 
+        "invalid field index %d", index);
+    ecs_check(index < it->field_count, ECS_INVALID_PARAMETER, 
+        "field index %d out of bounds", index);
 
     if (it->sources) {
         return it->sources[index];
@@ -292,8 +314,10 @@ size_t ecs_field_size(
     const ecs_iter_t *it,
     int32_t index)
 {
-    ecs_check(index >= 0, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(index < it->field_count, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(index >= 0, ECS_INVALID_PARAMETER, 
+        "invalid field index %d", index);
+    ecs_check(index < it->field_count, ECS_INVALID_PARAMETER, 
+        "field index %d out of bounds", index);
 
     return (size_t)it->sizes[index];
 error:
@@ -453,8 +477,10 @@ ecs_entity_t ecs_iter_get_var(
     ecs_iter_t *it,
     int32_t var_id)
 {
-    ecs_check(var_id >= 0, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(var_id < it->variable_count, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(var_id >= 0, ECS_INVALID_PARAMETER, 
+        "invalid variable index %d", var_id);
+    ecs_check(var_id < it->variable_count, ECS_INVALID_PARAMETER,
+        "variable index %d out of bounds", var_id);
     ecs_check(it->variables != NULL, ECS_INVALID_PARAMETER, NULL);
 
     ecs_var_t *var = &it->variables[var_id];
@@ -485,8 +511,10 @@ ecs_table_t* ecs_iter_get_var_as_table(
     ecs_iter_t *it,
     int32_t var_id)
 {
-    ecs_check(var_id >= 0, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(var_id < it->variable_count, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(var_id >= 0, ECS_INVALID_PARAMETER, 
+        "invalid variable index %d", index);
+    ecs_check(var_id < it->variable_count, ECS_INVALID_PARAMETER, 
+        "variable index %d out of bounds", index);
     ecs_check(it->variables != NULL, ECS_INVALID_PARAMETER, NULL);
 
     ecs_var_t *var = &it->variables[var_id];
@@ -531,8 +559,10 @@ ecs_table_range_t ecs_iter_get_var_as_range(
     ecs_iter_t *it,
     int32_t var_id)
 {
-    ecs_check(var_id >= 0, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(var_id < it->variable_count, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(var_id >= 0, ECS_INVALID_PARAMETER, 
+        "invalid variable index %d", index);
+    ecs_check(var_id < it->variable_count, ECS_INVALID_PARAMETER, 
+        "variable index %d out of bounds", index);
     ecs_check(it->variables != NULL, ECS_INVALID_PARAMETER, NULL);
 
     ecs_table_range_t result = { 0 };
@@ -573,12 +603,14 @@ void ecs_iter_set_var(
     ecs_entity_t entity)
 {
     ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(var_id >= 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(var_id >= 0, ECS_INVALID_PARAMETER, 
+        "invalid variable index %d", index);
     ecs_check(var_id < FLECS_QUERY_VARIABLE_COUNT_MAX, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(var_id < it->variable_count, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(var_id < it->variable_count, ECS_INVALID_PARAMETER, 
+        "variable index %d out of bounds", index);
     ecs_check(entity != 0, ECS_INVALID_PARAMETER, NULL);
-    /* Can't set variable while iterating */
-    ecs_check(!(it->flags & EcsIterIsValid), ECS_INVALID_PARAMETER, NULL);
+    ecs_check(!(it->flags & EcsIterIsValid), ECS_INVALID_PARAMETER,
+        "cannot constrain variable while iterating");
     ecs_check(it->variables != NULL, ECS_INTERNAL_ERROR, NULL);
 
     ecs_var_t *var = &it->variables[var_id];
@@ -616,9 +648,10 @@ void ecs_iter_set_var_as_range(
     const ecs_table_range_t *range)
 {
     ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(var_id >= 0, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(var_id < FLECS_QUERY_VARIABLE_COUNT_MAX, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(var_id < it->variable_count, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(var_id >= 0, ECS_INVALID_PARAMETER, 
+        "invalid variable index %d", index);
+    ecs_check(var_id < it->variable_count, ECS_INVALID_PARAMETER, 
+        "variable index %d out of bounds", index);
     ecs_check(range != 0, ECS_INVALID_PARAMETER, NULL);
     ecs_check(range->table != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(!range->offset || range->offset < ecs_table_count(range->table), 
@@ -823,7 +856,8 @@ ecs_iter_t ecs_worker_iter(
     ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(it->next != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(count > 0, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(index >= 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(index >= 0, ECS_INVALID_PARAMETER, 
+        "invalid field index %d", index);
     ecs_check(index < count, ECS_INVALID_PARAMETER, NULL);
 
     ecs_iter_t result = *it;

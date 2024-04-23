@@ -500,7 +500,8 @@ ecs_entity_t ecs_alert_init(
 {
     flecs_poly_assert(world, ecs_world_t);
     ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(desc->_canary == 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(desc->_canary == 0, ECS_INVALID_PARAMETER,
+        "ecs_alert_desc_t was not initialized to zero");
     ecs_check(!desc->query.entity || desc->entity == desc->query.entity, 
         ECS_INVALID_PARAMETER, NULL);
 

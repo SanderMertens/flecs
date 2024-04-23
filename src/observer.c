@@ -904,8 +904,8 @@ ecs_observer_t* flecs_observer_init(
 
     flecs_poly_assert(query, ecs_query_t);
 
-    /* Observer must have at least one term */
-    ecs_check(o->query->term_count > 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(o->query->term_count > 0, ECS_INVALID_PARAMETER,
+        "observer must have at least one term");
 
     ecs_observable_t *observable = desc->observable;
     if (!observable) {
@@ -933,8 +933,8 @@ ecs_observer_t* flecs_observer_init(
         }
 
         if (event == EcsMonitor) {
-            /* Monitor event must be first and last event */
-            ecs_check(i == 0, ECS_INVALID_PARAMETER, NULL);
+            ecs_check(i == 0, ECS_INVALID_PARAMETER,
+                "monitor observers can only have a single Monitor event");
 
             o->events[0] = EcsOnAdd;
             o->events[1] = EcsOnRemove;
@@ -948,7 +948,8 @@ ecs_observer_t* flecs_observer_init(
     }
 
     /* Observer must have at least one event */
-    ecs_check(o->event_count != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(o->event_count != 0, ECS_INVALID_PARAMETER,
+        "observer must have at least one event");
 
     bool multi = false;
 
@@ -990,7 +991,8 @@ ecs_entity_t ecs_observer_init(
     ecs_entity_t entity = 0;
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(desc->_canary == 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(desc->_canary == 0, ECS_INVALID_PARAMETER,
+        "ecs_observer_desc_t was not initialized to zero");
     ecs_check(!(world->flags & EcsWorldFini), ECS_INVALID_OPERATION, 
         "cannot create observer while world is being deleted");
 
