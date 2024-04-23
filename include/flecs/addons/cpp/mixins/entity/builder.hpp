@@ -843,6 +843,12 @@ struct entity_builder : entity_view {
     template <typename Func, if_t< is_callable<Func>::value > = 0>
     Self& set(const Func& func);
 
+    template<typename ... Args>
+    Self& pipe(flecs::entity (*fn)(flecs::entity, Args...), Args... args) {
+        fn(to_base(), FLECS_FWD(args)...);
+        return to_base();
+    }
+
     /** Emplace component.
      * Emplace constructs a component in the storage, which prevents calling the
      * destructor on the value passed into the function.
