@@ -1505,6 +1505,100 @@ void* flecs_bdup(
 #endif
 
 /**
+ * @file datastructures/stack_allocator.h
+ * @brief Stack allocator.
+ */
+
+#ifndef FLECS_STACK_ALLOCATOR_H
+#define FLECS_STACK_ALLOCATOR_H
+
+/** Stack allocator for quick allocation of small temporary values */
+#define ECS_STACK_PAGE_SIZE (4096)
+
+typedef struct ecs_stack_page_t {
+    void *data;
+    struct ecs_stack_page_t *next;
+    int16_t sp;
+    uint32_t id;
+} ecs_stack_page_t;
+
+typedef struct ecs_stack_cursor_t {
+    struct ecs_stack_cursor_t *prev;
+    struct ecs_stack_page_t *page;
+    int16_t sp;
+    bool is_free;
+#ifdef FLECS_DEBUG
+    struct ecs_stack_t *owner;
+#endif
+} ecs_stack_cursor_t;
+
+typedef struct ecs_stack_t {
+    ecs_stack_page_t first;
+    ecs_stack_page_t *tail_page;
+    ecs_stack_cursor_t *tail_cursor;
+#ifdef FLECS_DEBUG
+    int32_t cursor_count;
+#endif
+} ecs_stack_t;
+
+FLECS_DBG_API
+void flecs_stack_init(
+    ecs_stack_t *stack);
+
+FLECS_DBG_API
+void flecs_stack_fini(
+    ecs_stack_t *stack);
+
+FLECS_DBG_API
+void* flecs_stack_alloc(
+    ecs_stack_t *stack, 
+    ecs_size_t size,
+    ecs_size_t align);
+
+#define flecs_stack_alloc_t(stack, T)\
+    flecs_stack_alloc(stack, ECS_SIZEOF(T), ECS_ALIGNOF(T))
+
+#define flecs_stack_alloc_n(stack, T, count)\
+    flecs_stack_alloc(stack, ECS_SIZEOF(T) * count, ECS_ALIGNOF(T))
+
+FLECS_DBG_API
+void* flecs_stack_calloc(
+    ecs_stack_t *stack, 
+    ecs_size_t size,
+    ecs_size_t align);
+
+#define flecs_stack_calloc_t(stack, T)\
+    flecs_stack_calloc(stack, ECS_SIZEOF(T), ECS_ALIGNOF(T))
+
+#define flecs_stack_calloc_n(stack, T, count)\
+    flecs_stack_calloc(stack, ECS_SIZEOF(T) * count, ECS_ALIGNOF(T))
+
+FLECS_DBG_API
+void flecs_stack_free(
+    void *ptr,
+    ecs_size_t size);
+
+#define flecs_stack_free_t(ptr, T)\
+    flecs_stack_free(ptr, ECS_SIZEOF(T))
+
+#define flecs_stack_free_n(ptr, T, count)\
+    flecs_stack_free(ptr, ECS_SIZEOF(T) * count)
+
+void flecs_stack_reset(
+    ecs_stack_t *stack);
+
+FLECS_DBG_API
+ecs_stack_cursor_t* flecs_stack_get_cursor(
+    ecs_stack_t *stack);
+
+FLECS_DBG_API
+void flecs_stack_restore_cursor(
+    ecs_stack_t *stack,
+    ecs_stack_cursor_t *cursor);
+
+#endif
+
+/**
  * @file map.h
  * @brief Map data structure.
  */
@@ -3198,18 +3292,6 @@ struct ecs_ref_t {
     ecs_record_t *record;   /* Entity index record */
 };
 
-/* Cursor to stack allocator. Type is public to allow for white box testing. */
-struct ecs_stack_page_t;
-
-typedef struct ecs_stack_cursor_t {
-    struct ecs_stack_cursor_t *prev;
-    struct ecs_stack_page_t *page;
-    int16_t sp;
-    bool is_free;
-#ifdef FLECS_DEBUG
-    struct ecs_stack_t *owner;
-#endif
-} ecs_stack_cursor_t;
 
 /* Page-iterator specific data */
 typedef struct ecs_page_iter_t {
@@ -3431,6 +3513,39 @@ int32_t flecs_table_observed_count(
 FLECS_DBG_API
 void flecs_dump_backtrace(
     void *stream);
+
+/* Suspend/resume readonly state. To fully support implicit registration of
+ * components, it should be possible to register components while the world is
+ * in readonly mode. It is not uncommon that a component is used first from
+ * within a system, which are often ran while in readonly mode.
+ * 
+ * Suspending readonly mode is only allowed when the world is not multithreaded.
+ * When a world is multithreaded, it is not safe to (even temporarily) leave
+ * readonly mode, so a multithreaded application should always explicitly
+ * register components in advance. 
+ * 
+ * These operations also suspend deferred mode.
+ */
+typedef struct ecs_suspend_readonly_state_t {
+    bool is_readonly;
+    bool is_deferred;
+    int32_t defer_count;
+    ecs_entity_t scope;
+    ecs_entity_t with;
+    ecs_vec_t commands;
+    ecs_stack_t defer_stack;
+    ecs_stage_t *stage;
+} ecs_suspend_readonly_state_t;
+
+FLECS_API
+ecs_world_t* flecs_suspend_readonly(
+    const ecs_world_t *world,
+    ecs_suspend_readonly_state_t *state);
+
+FLECS_API
+void flecs_resume_readonly(
+    ecs_world_t *world,
+    ecs_suspend_readonly_state_t *state);
 
 FLECS_API
 int32_t ecs_poly_claim_(

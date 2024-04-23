@@ -301,6 +301,7 @@
 #include "flecs/datastructures/vec.h"              /* Vector datatype */
 #include "flecs/datastructures/sparse.h"           /* Sparse set */
 #include "flecs/datastructures/block_allocator.h"  /* Block allocator */
+#include "flecs/datastructures/stack_allocator.h"  /* Stack allocator */
 #include "flecs/datastructures/map.h"              /* Map */
 #include "flecs/datastructures/allocator.h"        /* Allocator */
 #include "flecs/datastructures/strbuf.h"           /* String builder */

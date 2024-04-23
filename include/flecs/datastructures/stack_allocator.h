@@ -16,6 +16,16 @@ typedef struct ecs_stack_page_t {
     uint32_t id;
 } ecs_stack_page_t;
 
+typedef struct ecs_stack_cursor_t {
+    struct ecs_stack_cursor_t *prev;
+    struct ecs_stack_page_t *page;
+    int16_t sp;
+    bool is_free;
+#ifdef FLECS_DEBUG
+    struct ecs_stack_t *owner;
+#endif
+} ecs_stack_cursor_t;
+
 typedef struct ecs_stack_t {
     ecs_stack_page_t first;
     ecs_stack_page_t *tail_page;

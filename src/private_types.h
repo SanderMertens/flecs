@@ -18,7 +18,6 @@
 
 #include "flecs.h"
 #include "storage/entity_index.h"
-#include "datastructures/stack_allocator.h"
 #include "flecs/datastructures/bitset.h"
 #include "storage/table.h"
 
