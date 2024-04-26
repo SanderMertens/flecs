@@ -126,10 +126,10 @@ public:
 	FORCEINLINE NO_DISCARD const T* GetPtr() const { return GetEntity().get<T>(); }
 
 	template <typename T>
-	FORCEINLINE NO_DISCARD T& GetRef() { return GetEntity().get_ref<T>(); }
+	FORCEINLINE NO_DISCARD T& GetRef() { return *GetEntity().get_ref<T>().get(); }
 
 	template <typename T>
-	FORCEINLINE NO_DISCARD const T& GetRef() const { return GetEntity().get_ref<T>(); }
+	FORCEINLINE NO_DISCARD const T& GetRef() const { return *GetEntity().get_ref<T>().get(); }
 
 	template <typename T>
 	FORCEINLINE NO_DISCARD bool Has() { return GetEntity().has<T>(); }
@@ -206,7 +206,7 @@ public:
 
 	FORCEINLINE NO_DISCARD bool IsComponent() const
 	{
-		return Has<flecs::Component>();
+		return Has<flecs::Component>() || Has(flecs::IsA);
 	}
 
 	FORCEINLINE NO_DISCARD flecs::untyped_component& GetUntypedComponent()
@@ -295,7 +295,10 @@ public:
 		return GetEntity().to_constant<TEnum>();
 	}
 
-	FORCEINLINE NO_DISCARD FString ToJson() const
+	FORCEINLINE NO_DISCARD FString ToJson(const bool bSerializePath = true,
+		const bool bSerializeLabel = false, const bool bSerializeBrief = false, const bool bSerializeLink = false,
+		const bool bSerializeColor = false, const bool bSerializeIds = true, const bool bSerializeIdLabels = false,
+		const bool bSerializeBaseComponents = true, const bool bSerializeComponents = true)
 	{
 		return FString(GetEntity().to_json().c_str());
 	}

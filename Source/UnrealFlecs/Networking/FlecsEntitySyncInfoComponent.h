@@ -18,6 +18,8 @@ enum class EFlecsComponentReplicationType : uint8
 USTRUCT(BlueprintType)
 struct FFlecsComponentReplicationInfo
 {
+	GENERATED_BODY()
+	
 public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Component Replication Info")

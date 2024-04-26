@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "FlecsEntitySyncInfoComponent.h"
 #include "FlecsNetworkIdComponent.h"
 #include "Entities/FlecsEntityHandle.h"
 #include "GameFramework/Actor.h"
@@ -25,9 +26,16 @@ enum class EFlecsNetworkingEvent : uint8
 USTRUCT()
 struct FFlecsNetworkEntityInitData
 {
+	GENERATED_BODY()
+	
 	UPROPERTY()
 	FFlecsNetworkIdComponent NetworkId;
 
+	UPROPERTY()
+	TArray<FFlecsComponentReplicationInfo> ComponentReplicationInfo;
+
+	UPROPERTY()
+	TArray<FInstancedStruct> ComponentData;
 	
 }; // struct FFlecsNetworkEntityInitData
 

@@ -8,7 +8,7 @@
 #include "FlecsId.generated.h"
 
 USTRUCT(BlueprintType)
-struct FFlecsId
+struct FFlecsId final
 {
     GENERATED_BODY()
 
@@ -65,6 +65,8 @@ public:
     {
         return Id != *Other;
     }
+
+    FORCEINLINE NO_DISCARD FFlecsEntityHandle GetTypeId() const { return FFlecsEntityHandle(Id.type_id()); }
 
 private:
     flecs::id Id;

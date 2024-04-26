@@ -17,6 +17,8 @@
 USTRUCT()
 struct FNetworkedEntityInfo
 {
+	GENERATED_BODY()
+	
 	UPROPERTY()
 	FFlecsNetworkIdComponent NetworkId;
 

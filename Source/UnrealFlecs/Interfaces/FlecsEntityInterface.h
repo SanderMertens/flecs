@@ -22,22 +22,4 @@ public:
 	virtual [[nodiscard]] FFlecsEntityHandle GetEntityHandle() const
 		PURE_VIRTUAL(IFlecsEntityInterface::GetEntityHandle, return FFlecsEntityHandle(););
 
-	UFUNCTION(BlueprintCallable, Category = "Flecs | Entity", meta = (DisplayName = "Get Entity Handle"))
-	FORCEINLINE FFlecsEntityHandle K2_GetEntityHandle() const
-	{
-		return GetEntityHandle();
-	}
-
-	UFUNCTION(BlueprintCallable, Category = "Flecs | Entity")
-	FORCEINLINE bool IsValid() const
-	{
-		return GetEntityHandle().IsValid();
-	}
-
-	UFUNCTION(BlueprintCallable, Category = "Flecs | Entity")
-	FORCEINLINE bool IsAlive() const
-	{
-		return GetEntityHandle().IsAlive();
-	}
-
 }; // class IFlecsEntityInterface
