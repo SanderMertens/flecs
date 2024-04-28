@@ -74,4 +74,8 @@ const char* flecs_script_token(
     ecs_script_token_t *out,
     bool is_lookahead);
 
+const char* flecs_scan_whitespace(
+    ecs_script_parser_t *parser,
+    const char *pos);
+
 #endif

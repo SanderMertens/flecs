@@ -76,7 +76,6 @@ const char* flecs_script_token_kind_str(
     }
 }
 
-static
 const char* flecs_scan_whitespace(
     ecs_script_parser_t *parser,
     const char *pos) 

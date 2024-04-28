@@ -4014,6 +4014,551 @@ bool ecs_children_next(
 
 #include <ctype.h>
 
+#ifdef FLECS_SCRIPT
+/**
+ * @file addons/script/script.h
+ * @brief Flecs script implementation.
+ */
+
+#ifndef FLECS_SCRIPT_PRIVATE_H
+#define FLECS_SCRIPT_PRIVATE_H
+
+
+#ifdef FLECS_SCRIPT
+
+#include <ctype.h>
+
+typedef struct ecs_script_scope_t ecs_script_scope_t;
+typedef struct ecs_script_entity_t ecs_script_entity_t;
+
+struct ecs_script_t {
+    ecs_world_t *world;
+    const char *name;
+    const char *code;
+    ecs_allocator_t allocator;
+    ecs_script_scope_t *root;
+    char *token_buffer;
+    int32_t token_buffer_size;
+    int32_t refcount;
+};
+
+typedef struct ecs_script_parser_t ecs_script_parser_t;
+
+/**
+ * @file addons/script/tokenizer.h
+ * @brief Script tokenizer.
+ */
+
+#ifndef FLECS_SCRIPT_TOKENIZER_H
+#define FLECS_SCRIPT_TOKENIZER_H
+
+/* Tokenizer */
+typedef enum ecs_script_token_kind_t {
+    EcsTokEnd = '\0',
+    EcsTokUnknown,
+    EcsTokScopeOpen = '{',
+    EcsTokScopeClose = '}',
+    EcsTokParenOpen = '(',
+    EcsTokParenClose = ')',
+    EcsTokBracketOpen = '[',
+    EcsTokBracketClose = ']',
+    EcsTokMul = '*',
+    EcsTokComma = ',',
+    EcsTokSemiColon = ';',
+    EcsTokColon = ':',
+    EcsTokAssign = '=',
+    EcsTokBitwiseOr = '|',
+    EcsTokNot = '!',
+    EcsTokOptional = '?',
+    EcsTokAnnotation = '@',
+    EcsTokNewline = '\n',
+    EcsTokEq,
+    EcsTokNeq,
+    EcsTokMatch,
+    EcsTokOr,
+    EcsTokIdentifier,
+    EcsTokString,
+    EcsTokNumber,
+    EcsTokKeywordModule,
+    EcsTokKeywordUsing,
+    EcsTokKeywordWith,
+    EcsTokKeywordIf,
+    EcsTokKeywordElse,
+    EcsTokKeywordAssembly,
+    EcsTokKeywordProp,
+    EcsTokKeywordConst,
+} ecs_script_token_kind_t;
+
+typedef struct ecs_script_token_t {
+    const char *value;
+    ecs_script_token_kind_t kind;
+} ecs_script_token_t;
+
+typedef struct ecs_script_tokens_t {
+    int32_t count;
+    ecs_script_token_t tokens[256];
+} ecs_script_tokens_t;
+
+const char* flecs_script_expr(
+    ecs_script_parser_t *parser,
+    const char *ptr,
+    ecs_script_token_t *out,
+    char until);
+
+const char* flecs_script_until(
+    ecs_script_parser_t *parser,
+    const char *ptr,
+    ecs_script_token_t *out,
+    char until);
+
+const char* flecs_script_token_kind_str(
+    ecs_script_token_kind_t kind);
+
+const char* flecs_script_token(
+    ecs_script_parser_t *parser,
+    const char *ptr,
+    ecs_script_token_t *out,
+    bool is_lookahead);
+
+const char* flecs_scan_whitespace(
+    ecs_script_parser_t *parser,
+    const char *pos);
+
+#endif
+
+
+struct ecs_script_parser_t {
+    ecs_script_t *script;
+    ecs_script_scope_t *scope;
+    const char *pos;
+    char *token_cur;
+    bool significant_newline;
+
+    /* For term parser */
+    ecs_term_t *term;
+    ecs_oper_kind_t extra_oper;
+    ecs_term_ref_t *extra_args;
+};
+
+/**
+ * @file addons/script/ast.h
+ * @brief Script AST.
+ */
+
+#ifndef FLECS_SCRIPT_AST_H
+#define FLECS_SCRIPT_AST_H
+
+typedef enum ecs_script_node_kind_t {
+    EcsAstScope,
+    EcsAstTag,
+    EcsAstComponent,
+    EcsAstDefaultComponent,
+    EcsAstVarComponent,
+    EcsAstWithVar,
+    EcsAstWithTag,
+    EcsAstWithComponent,
+    EcsAstWith,
+    EcsAstUsing,
+    EcsAstModule,
+    EcsAstAnnotation,
+    EcsAstAssembly,
+    EcsAstProp,
+    EcsAstConst,
+    EcsAstEntity,
+    EcsAstPairScope,
+    EcsAstIf,
+} ecs_script_node_kind_t;
+
+typedef struct ecs_script_node_t {
+    ecs_script_node_kind_t kind;
+    const char *pos;
+} ecs_script_node_t;
+
+struct ecs_script_scope_t {
+    ecs_script_node_t node;
+    ecs_vec_t stmts;
+    ecs_script_scope_t *parent;
+    ecs_id_t default_component_eval;
+};
+
+typedef struct ecs_script_id_t {
+    const char *first;
+    const char *second;
+    ecs_id_t eval;
+} ecs_script_id_t;
+
+typedef struct ecs_script_tag_t {
+    ecs_script_node_t node;
+    ecs_script_id_t id;
+} ecs_script_tag_t;
+
+typedef struct ecs_script_component_t {
+    ecs_script_node_t node;
+    ecs_script_id_t id;
+    const char *expr;
+    ecs_value_t eval;
+    bool is_collection;
+} ecs_script_component_t;
+
+typedef struct ecs_script_default_component_t {
+    ecs_script_node_t node;
+    const char *expr;
+    ecs_value_t eval;
+} ecs_script_default_component_t;
+
+typedef struct ecs_script_var_component_t {
+    ecs_script_node_t node;
+    const char *name;
+} ecs_script_var_component_t;
+
+struct ecs_script_entity_t {
+    ecs_script_node_t node;
+    const char *kind;
+    const char *name;
+    bool name_is_var;
+    bool kind_w_expr;
+    ecs_script_scope_t *scope;
+
+    // Populated during eval
+    ecs_script_entity_t *parent;
+    ecs_entity_t eval;
+    ecs_entity_t eval_kind;
+};
+
+typedef struct ecs_script_with_t {
+    ecs_script_node_t node;
+    ecs_script_scope_t *expressions;
+    ecs_script_scope_t *scope;
+} ecs_script_with_t;
+
+typedef struct ecs_script_inherit_t {
+    ecs_script_node_t node;
+    ecs_script_scope_t *base_list;
+} ecs_script_inherit_t;
+
+typedef struct ecs_script_pair_scope_t {
+    ecs_script_node_t node;
+    ecs_script_id_t id;
+    ecs_script_scope_t *scope;
+} ecs_script_pair_scope_t;
+
+typedef struct ecs_script_using_t {
+    ecs_script_node_t node;
+    const char *name;
+} ecs_script_using_t;
+
+typedef struct ecs_script_module_t {
+    ecs_script_node_t node;
+    const char *name;
+} ecs_script_module_t;
+
+typedef struct ecs_script_annot_t {
+    ecs_script_node_t node;
+    const char *name;
+    const char *expr;
+} ecs_script_annot_t;
+
+typedef struct ecs_script_assembly_node_t {
+    ecs_script_node_t node;
+    const char *name;
+    ecs_script_scope_t* scope;
+} ecs_script_assembly_node_t;
+
+typedef struct ecs_script_var_node_t {
+    ecs_script_node_t node;
+    const char *name;
+    const char *type;
+    const char *expr;
+} ecs_script_var_node_t;
+
+typedef struct ecs_script_if_t {
+    ecs_script_node_t node;
+    ecs_script_scope_t *if_true;
+    ecs_script_scope_t *if_false;
+    const char *expr;
+} ecs_script_if_t;
+
+#define ecs_script_node(kind, node)\
+    ((ecs_script_##kind##_t*)node)
+
+bool flecs_scope_is_empty(
+    ecs_script_scope_t *scope);
+
+ecs_script_scope_t* flecs_script_insert_scope(
+    ecs_script_parser_t *parser);
+
+ecs_script_entity_t* flecs_script_insert_entity(
+    ecs_script_parser_t *parser,
+    const char *name);
+
+ecs_script_pair_scope_t* flecs_script_insert_pair_scope(
+    ecs_script_parser_t *parser,
+    const char *first,
+    const char *second);
+
+ecs_script_with_t* flecs_script_insert_with(
+    ecs_script_parser_t *parser);
+
+ecs_script_using_t* flecs_script_insert_using(
+    ecs_script_parser_t *parser,
+    const char *name);
+
+ecs_script_module_t* flecs_script_insert_module(
+    ecs_script_parser_t *parser,
+    const char *name);
+
+ecs_script_assembly_node_t* flecs_script_insert_assembly(
+    ecs_script_parser_t *parser,
+    const char *name);
+
+ecs_script_annot_t* flecs_script_insert_annot(
+    ecs_script_parser_t *parser,
+    const char *name,
+    const char *expr);
+
+ecs_script_var_node_t* flecs_script_insert_var(
+    ecs_script_parser_t *parser,
+    const char *name);
+
+ecs_script_tag_t* flecs_script_insert_tag(
+    ecs_script_parser_t *parser,
+    const char *name);
+
+ecs_script_tag_t* flecs_script_insert_pair_tag(
+    ecs_script_parser_t *parser,
+    const char *first,
+    const char *second);
+
+ecs_script_component_t* flecs_script_insert_component(
+    ecs_script_parser_t *parser,
+    const char *name);
+
+ecs_script_component_t* flecs_script_insert_pair_component(
+    ecs_script_parser_t *parser,
+    const char *first,
+    const char *second);
+
+ecs_script_default_component_t* flecs_script_insert_default_component(
+    ecs_script_parser_t *parser);
+
+ecs_script_var_component_t* flecs_script_insert_var_component(
+    ecs_script_parser_t *parser,
+    const char *name);
+
+ecs_script_if_t* flecs_script_insert_if(
+    ecs_script_parser_t *parser);
+
+#endif
+
+/**
+ * @file addons/script/visit.h
+ * @brief Script AST visitor utilities.
+ */
+
+#ifndef FLECS_SCRIPT_VISIT_H
+#define FLECS_SCRIPT_VISIT_H
+
+typedef struct ecs_script_visit_t ecs_script_visit_t;
+
+typedef int (*ecs_visit_action_t)(
+    ecs_script_visit_t *visitor, 
+    ecs_script_node_t *node);
+
+struct ecs_script_visit_t {
+    ecs_script_t *script;
+    ecs_visit_action_t visit;
+    ecs_script_node_t* nodes[256];
+    ecs_script_node_t *prev, *next;
+    int32_t depth;
+};
+
+int ecs_script_visit_(
+    ecs_script_visit_t *visitor,
+    ecs_visit_action_t visit,
+    ecs_script_t *script);
+
+#define ecs_script_visit(script, visitor, visit) \
+    ecs_script_visit_((ecs_script_visit_t*)visitor,\
+        (ecs_visit_action_t)visit,\
+        script)
+
+int ecs_script_visit_node_(
+    ecs_script_visit_t *v,
+    ecs_script_node_t *node);
+
+#define ecs_script_visit_node(visitor, node) \
+    ecs_script_visit_node_((ecs_script_visit_t*)visitor, \
+        (ecs_script_node_t*)node)
+
+int ecs_script_visit_scope_(
+    ecs_script_visit_t *v,
+    ecs_script_scope_t *node);
+
+#define ecs_script_visit_scope(visitor, node) \
+    ecs_script_visit_scope_((ecs_script_visit_t*)visitor, node)
+
+ecs_script_node_t* ecs_script_parent_node_(
+    ecs_script_visit_t *v);
+
+#define ecs_script_parent_node(visitor) \
+    ecs_script_parent_node_((ecs_script_visit_t*)visitor)
+
+ecs_script_scope_t* ecs_script_current_scope_(
+    ecs_script_visit_t *v);
+
+#define ecs_script_current_scope(visitor) \
+    ecs_script_current_scope_((ecs_script_visit_t*)visitor)
+
+ecs_script_node_t* ecs_script_parent_(
+    ecs_script_visit_t *v,
+    ecs_script_node_t *node);
+
+#define ecs_script_parent(visitor, node) \
+    ecs_script_parent_((ecs_script_visit_t*)visitor, (ecs_script_node_t*)node)
+
+ecs_script_node_t* ecs_script_next_node_(
+    ecs_script_visit_t *v);
+
+#define ecs_script_next_node(visitor) \
+    ecs_script_next_node_((ecs_script_visit_t*)visitor)
+
+int32_t ecs_script_node_line_number_(
+    ecs_script_t *script,
+    ecs_script_node_t *node);
+
+#define ecs_script_node_line_number(script, node) \
+    ecs_script_node_line_number_(script, (ecs_script_node_t*)node)
+
+#endif
+
+/**
+ * @file addons/script/visit_eval.h
+ * @brief Script evaluation visitor.
+ */
+
+#ifndef FLECS_SCRIPT_VISIT_EVAL_H
+#define FLECS_SCRIPT_VISIT_EVAL_H
+
+typedef struct ecs_script_eval_visitor_t {
+    ecs_script_visit_t base;
+    ecs_world_t *world;
+    ecs_allocator_t *allocator;
+    ecs_script_assembly_t *assembly;
+    ecs_entity_t module;
+    ecs_entity_t parent;
+    ecs_script_entity_t *entity;
+    ecs_vec_t using;
+    ecs_vec_t with;
+    ecs_vec_t annot;
+    ecs_entity_t with_relationship;
+    int32_t with_relationship_sp;
+    ecs_script_vars_t *vars;
+    ecs_stack_t stack;
+} ecs_script_eval_visitor_t;
+
+void flecs_script_eval_error_(
+    ecs_script_eval_visitor_t *v,
+    ecs_script_node_t *node,
+    const char *fmt,
+    ...);
+
+#define flecs_script_eval_error(v, node, ...)\
+    flecs_script_eval_error_(v, (ecs_script_node_t*)node, __VA_ARGS__)
+
+ecs_entity_t flecs_script_find_entity(
+    ecs_script_eval_visitor_t *v,
+    ecs_entity_t from,
+    const char *path);
+
+ecs_entity_t flecs_script_create_entity(
+    ecs_script_eval_visitor_t *v,
+    const char *name);
+
+const ecs_type_info_t* flecs_script_get_type_info(
+    ecs_script_eval_visitor_t *v,
+    void *node,
+    ecs_id_t id);
+
+int flecs_script_eval_expr(
+    ecs_script_eval_visitor_t *v,
+    const char *expr,
+    ecs_value_t *value);
+
+int flecs_script_eval_assembly(
+    ecs_script_eval_visitor_t *v,
+    ecs_script_assembly_node_t *assembly);
+
+ecs_script_assembly_t* flecs_script_assembly_init(
+    ecs_script_t *script);
+
+void flecs_script_assembly_fini(
+    ecs_script_t *script,
+    ecs_script_assembly_t *assembly);
+
+void flecs_script_eval_visit_init(
+    ecs_script_t *script,
+    ecs_script_eval_visitor_t *v);
+
+void flecs_script_eval_visit_fini(
+    ecs_script_eval_visitor_t *v);
+
+int flecs_script_eval_node(
+    ecs_script_eval_visitor_t *v,
+    ecs_script_node_t *node);
+
+#endif
+
+
+struct ecs_script_assembly_t {
+    /* Assembly handle */
+    ecs_entity_t entity;
+
+    /* Assembly AST node */
+    ecs_script_assembly_node_t *node;
+
+    /* Hoisted using statements */
+    ecs_vec_t using_;
+
+    /* Hoisted variables */
+    ecs_vec_t vars;
+
+    /* Default values for props */
+    ecs_vec_t prop_defaults;
+
+    /* Type info for assembly component */
+    const ecs_type_info_t *type_info;
+};
+
+ecs_script_t* flecs_script_new(
+    ecs_world_t *world);
+
+ecs_script_scope_t* flecs_script_scope_new(
+    ecs_script_parser_t *parser);
+
+int flecs_script_visit_free(
+    ecs_script_t *script);
+
+ecs_script_vars_t* flecs_script_vars_push(
+    ecs_script_vars_t *parent,
+    ecs_stack_t *stack,
+    ecs_allocator_t *allocator);
+
+int flecs_terms_parse(
+    ecs_script_t *script,
+    ecs_term_t *terms,
+    int32_t *term_count_out);
+
+const char* flecs_id_parse(
+    const ecs_world_t *world,
+    const char *name,
+    const char *expr,
+    ecs_id_t *id);
+
+#endif // FLECS_SCRIPT
+#endif // FLECS_SCRIPT_PRIVATE_H
+
+#endif
+
 static
 const ecs_entity_t* flecs_bulk_new(
     ecs_world_t *world,
@@ -5327,45 +5872,16 @@ int flecs_traverse_from_expr(
     ecs_world_t *world,
     const char *name,
     const char *expr,
-    ecs_vec_t *ids,
-    bool replace_and)
+    ecs_vec_t *ids)
 {
     const char *ptr = expr;
     if (ptr) {
-        ecs_term_t term = {0};
-        while (ptr[0] && (ptr = ecs_parse_term(
-            world, world->stages[0], name, expr, ptr, &term, NULL, NULL, false)))
-        {
-            if (!ecs_term_is_initialized(&term)) {
+        ecs_id_t id = 0;
+        while (ptr[0] && (ptr = flecs_id_parse(world, name, ptr, &id))) {
+            if (!id) {
                 break;
             }
-
-            if (!(term.first.id & (EcsSelf|EcsUp))) {
-                term.first.id |= EcsSelf;
-            }
-
-            if (!(term.second.id & (EcsSelf|EcsUp))) {
-                term.second.id |= EcsSelf;
-            }
-
-            if (!(term.src.id & (EcsSelf|EcsUp))) {
-                term.src.id |= EcsSelf;
-            }
-
-            if (ecs_term_finalize(world, &term)) {
-                goto error;
-            }
-
-            if (!ecs_id_is_valid(world, term.id)) {
-                ecs_parser_error(name, expr, (ptr - expr), 
-                    "invalid term for add expression");
-                goto error;
-            }
-
-            if (term.oper == EcsAnd || !replace_and) {
-                /* Regular AND expression */
-                ecs_vec_append_t(&world->allocator, ids, ecs_id_t)[0] = term.id;
-            }
+            ecs_vec_append_t(&world->allocator, ids, ecs_id_t)[0] = id;
         }
 
         if (!ptr) {
@@ -5386,38 +5902,16 @@ void flecs_defer_from_expr(
     ecs_stage_t *stage,
     ecs_entity_t entity,
     const char *name,
-    const char *expr,
-    bool is_add,
-    bool replace_and)
+    const char *expr)
 {
     const char *ptr = expr;
     if (ptr) {
-        ecs_term_t term = {0};
-        while (ptr[0] && (ptr = ecs_parse_term(
-            world, stage, name, expr, ptr, &term, NULL, NULL, false)))
-        {
-            if (!ecs_term_is_initialized(&term)) {
+        ecs_id_t id = 0;
+        while (ptr[0] && (ptr = flecs_id_parse(world, name, ptr, &id))) {
+            if (!id) {
                 break;
             }
-
-            if (ecs_term_finalize(world, &term)) {
-                return;
-            }
-
-            if (!ecs_id_is_valid(world, term.id)) {
-                ecs_parser_error(name, expr, (ptr - expr), 
-                    "invalid term for add expression");
-                return;
-            }
-
-            if (term.oper == EcsAnd || !replace_and) {
-                /* Regular AND expression */
-                if (is_add) {
-                    ecs_add_id(world, entity, term.id);
-                } else {
-                    ecs_remove_id(world, entity, term.id);
-                }
-            }
+            ecs_add_id(world, entity, id);
         }
     }
 }
@@ -5445,7 +5939,7 @@ int flecs_traverse_add(
      * entity, so that expression can't resolve to self. */
     ecs_vec_init_t(&world->allocator, &ids, ecs_id_t, 0);
     if (desc->add_expr && ecs_os_strcmp(desc->add_expr, "0")) {
-        if (flecs_traverse_from_expr(world, name, desc->add_expr, &ids, true)) {
+        if (flecs_traverse_from_expr(world, name, desc->add_expr, &ids)) {
             goto error;
         }
     }
@@ -5622,7 +6116,7 @@ void flecs_deferred_add_remove(
     /* Add components from the 'add_expr' expression */
     if (desc->add_expr) {
         flecs_defer_from_expr(world, (ecs_stage_t*)world , entity, name,
-            desc->add_expr, true, true);
+            desc->add_expr);
     }
 
     int32_t thread_count = ecs_get_stage_count(world);
@@ -40801,53 +41295,7 @@ ecs_iter_t ecs_query_iter(
 
 #include <ctype.h>
 
-#define TOK_COLON ':'
-#define TOK_AND ','
-#define TOK_OR "||"
-#define TOK_NOT '!'
-#define TOK_OPTIONAL '?'
-#define TOK_BITWISE_OR '|'
-#define TOK_BRACKET_OPEN '['
-#define TOK_BRACKET_CLOSE ']'
-#define TOK_SCOPE_OPEN '{'
-#define TOK_SCOPE_CLOSE '}'
 #define TOK_VARIABLE '$'
-#define TOK_PAREN_OPEN '('
-#define TOK_PAREN_CLOSE ')'
-#define TOK_EQ "=="
-#define TOK_NEQ "!="
-#define TOK_MATCH "~="
-#define TOK_EXPR_STRING '"'
-
-#define TOK_SELF "self"
-#define TOK_UP "up"
-#define TOK_CASCADE "cascade"
-#define TOK_DESC "desc"
-
-#define TOK_OVERRIDE "OVERRIDE"
-#define TOK_ROLE_AND "AND"
-#define TOK_ROLE_OR "OR"
-#define TOK_ROLE_NOT "NOT"
-#define TOK_ROLE_TOGGLE "TOGGLE"
-
-#define TOK_IN "in"
-#define TOK_OUT "out"
-#define TOK_INOUT "inout"
-#define TOK_INOUT_NONE "none"
-
-static
-const ecs_id_t ECS_AND =                                           (1ull << 60);
-
-static
-const ecs_id_t ECS_OR =                                            (1ull << 59);
-
-static
-const ecs_id_t ECS_NOT =                                           (1ull << 58);
-
-#define ECS_MAX_TOKEN_SIZE (256)
-
-typedef char ecs_token_t[ECS_MAX_TOKEN_SIZE];
-
 
 /* -- Private functions -- */
 
@@ -40889,17 +41337,6 @@ bool flecs_valid_token_char(
     char ch)
 {
     if (ch && (flecs_isident(ch) || isdigit(ch) || ch == '.' || ch == '"')) {
-        return true;
-    }
-
-    return false;
-}
-
-static
-bool flecs_valid_operator_char(
-    char ch)
-{
-    if (ch == TOK_OPTIONAL || ch == TOK_NOT) {
         return true;
     }
 
@@ -41002,878 +41439,6 @@ const char* ecs_parse_identifier(
     ptr = ecs_parse_token(name, expr, ptr, token_out, 0);
 
     return ptr;
-}
-
-static
-int flecs_parse_identifier(
-    char **token,
-    ecs_term_ref_t *out)
-{
-    char *tptr = *token;
-    if (tptr[0] == TOK_VARIABLE && tptr[1]) {
-        out->id |= EcsIsVariable;
-        tptr ++;
-    }
-    if (tptr[0] == TOK_EXPR_STRING && tptr[1]) {
-        out->id |= EcsIsName;
-        tptr ++;
-        if (tptr[0] == TOK_NOT) {
-            /* Already parsed */
-            tptr ++;
-        }
-    }
-
-    char *name = tptr;
-    out->name = name;
-
-    ecs_size_t len = ecs_os_strlen(name);
-    if (out->id & EcsIsName) {
-        if (name[len - 1] != TOK_EXPR_STRING) {
-            ecs_parser_error(NULL, *token, 0, "missing '\"' at end of string");
-            return -1;
-        } else {
-            name[len - 1] = '\0';
-        }
-    }
-
-    (*token) += (name - *token) + len + 1;
-
-    return 0;
-}
-
-static
-ecs_entity_t flecs_parse_role(
-    const char *name,
-    const char *sig,
-    int64_t column,
-    const char *token)
-{
-    if (!ecs_os_strcmp(token, TOK_ROLE_AND)) {
-        return ECS_AND;
-    } else if (!ecs_os_strcmp(token, TOK_ROLE_OR)) {
-        return ECS_OR;
-    } else if (!ecs_os_strcmp(token, TOK_ROLE_NOT)) {
-        return ECS_NOT;
-    } else if (!ecs_os_strcmp(token, TOK_OVERRIDE)) {
-        return ECS_OVERRIDE;
-    } else if (!ecs_os_strcmp(token, TOK_ROLE_TOGGLE)) {
-        return ECS_TOGGLE;        
-    } else {
-        ecs_parser_error(name, sig, column, "invalid role '%s'", token);
-        return 0;
-    }
-}
-
-static
-ecs_oper_kind_t flecs_parse_operator(
-    char ch)
-{
-    if (ch == TOK_OPTIONAL) {
-        return EcsOptional;
-    } else if (ch == TOK_NOT) {
-        return EcsNot;
-    } else {
-        ecs_throw(ECS_INTERNAL_ERROR, NULL);
-    }
-error:
-    return 0;
-}
-
-static
-const char* flecs_parse_annotation(
-    const char *name,
-    const char *sig,
-    int64_t column,
-    const char *ptr, 
-    int16_t *inout_kind_out)
-{
-    char token[ECS_MAX_TOKEN_SIZE];
-
-    ptr = ecs_parse_identifier(name, sig, ptr, token);
-    if (!ptr) {
-        return NULL;
-    }
-
-    if (!ecs_os_strcmp(token, TOK_IN)) {
-        *inout_kind_out = EcsIn;
-    } else
-    if (!ecs_os_strcmp(token, TOK_OUT)) {
-        *inout_kind_out = EcsOut;
-    } else
-    if (!ecs_os_strcmp(token, TOK_INOUT)) {
-        *inout_kind_out = EcsInOut;
-    } else if (!ecs_os_strcmp(token, TOK_INOUT_NONE)) {
-        *inout_kind_out = EcsInOutNone;
-    }
-
-    ptr = ecs_parse_ws(ptr);
-
-    if (ptr[0] != TOK_BRACKET_CLOSE) {
-        ecs_parser_error(name, sig, column, "expected ]");
-        return NULL;
-    }
-
-    return ptr + 1;
-}
-
-static
-ecs_flags64_t flecs_parse_set_token(
-    const char *token)
-{
-    if (!ecs_os_strcmp(token, TOK_SELF)) {
-        return EcsSelf;
-    } else if (!ecs_os_strcmp(token, TOK_UP)) {
-        return EcsUp;
-    } else if (!ecs_os_strcmp(token, TOK_CASCADE)) {
-        return EcsCascade;
-    } else if (!ecs_os_strcmp(token, TOK_DESC)) {
-        return EcsDesc;
-    } else {
-        return 0;
-    }
-}
-
-static
-const char* flecs_parse_term_flags(
-    const ecs_world_t *world,
-    const char *name,
-    const char *expr,
-    int64_t column,
-    const char *ptr,
-    char *token,
-    ecs_term_t *term,
-    ecs_term_ref_t *ref,
-    char tok_end)
-{
-    ecs_assert(term != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    char token_buf[ECS_MAX_TOKEN_SIZE] = {0};
-    if (!token) {
-        token = token_buf;
-        ptr = ecs_parse_identifier(name, expr, ptr, token);
-        if (!ptr) {
-            return NULL;
-        }
-    }
-
-    do {
-        ecs_flags64_t tok = flecs_parse_set_token(token);
-        if (!tok) {
-            ecs_parser_error(name, expr, column, 
-                "invalid set token '%s'", token);
-            return NULL;
-        }
-
-        if (ref->id & tok) {
-            ecs_parser_error(name, expr, column, 
-                "duplicate set token '%s'", token);
-            return NULL;            
-        }
-        
-        ref->id |= tok;
-
-        if (ptr[0] == TOK_PAREN_OPEN) {
-            ptr ++;
-
-            /* Relationship (overrides IsA default) */
-            if (!isdigit(ptr[0]) && flecs_valid_token_start_char(ptr[0])) {
-                ptr = ecs_parse_identifier(name, expr, ptr, token);
-                if (!ptr) {
-                    return NULL;
-                }         
-
-                term->trav = ecs_lookup(world, token);
-                if (!term->trav) {
-                    ecs_parser_error(name, expr, column, 
-                        "unresolved identifier '%s'", token);
-                    return NULL;
-                }
-
-                if (ptr[0] == TOK_AND) {
-                    ptr = ecs_parse_ws(ptr + 1);
-                } else if (ptr[0] != TOK_PAREN_CLOSE) {
-                    ecs_parser_error(name, expr, column, 
-                        "expected ',' or ')'");
-                    return NULL;
-                }
-            }
-
-            if (ptr[0] != TOK_PAREN_CLOSE) {
-                ecs_parser_error(name, expr, column, "expected ')', got '%c'",
-                    ptr[0]);
-                return NULL;                
-            } else {
-                ptr = ecs_parse_ws(ptr + 1);
-                if (ptr[0] != tok_end && ptr[0] != TOK_AND && ptr[0] != 0) {
-                    ecs_parser_error(name, expr, column, 
-                        "expected end of set expr");
-                    return NULL;
-                }
-            }
-        }
-
-        /* Next token in set expression */
-        if (ptr[0] == TOK_BITWISE_OR) {
-            ptr ++;
-            if (flecs_valid_token_start_char(ptr[0])) {
-                ptr = ecs_parse_identifier(name, expr, ptr, token);
-                if (!ptr) {
-                    return NULL;
-                }
-            }
-
-        /* End of set expression */
-        } else if (ptr[0] == tok_end || ptr[0] == TOK_AND || !ptr[0]) {
-            break;
-        }
-    } while (true);
-
-    return ptr;
-}
-
-static
-const char* flecs_parse_arguments(
-    const ecs_world_t *world,
-    const char *name,
-    const char *expr,
-    int64_t column,
-    const char *ptr,
-    char **token,
-    ecs_term_t *term,
-    ecs_oper_kind_t *extra_oper,
-    ecs_term_ref_t *extra_args)
-{
-    (void)column;
-
-    int32_t arg = 0;
-
-    if (extra_args) {
-        ecs_os_memset_n(extra_args, 0, ecs_term_ref_t, FLECS_TERM_ARG_COUNT_MAX);
-    }
-
-    if (!term) {
-        arg = 2;
-    }
-
-    do {
-        if (flecs_valid_token_start_char(ptr[0])) {
-            if ((arg == FLECS_TERM_ARG_COUNT_MAX) || (!extra_args && arg == 2)) {
-                ecs_parser_error(name, expr, (ptr - expr), 
-                    "too many arguments in term");
-                goto error;
-            }
-
-            ptr = ecs_parse_identifier(name, expr, ptr, *token);
-            if (!ptr) {
-                goto error;
-            }
-
-            ecs_term_ref_t *term_ref = NULL;
-            ptr = ecs_parse_ws_eol(ptr);
-
-            if (arg == 0) {
-                term_ref = &term->src;
-            } else if (arg == 1) {
-                term_ref = &term->second;
-            } else {
-                term_ref = &extra_args[arg - 2];
-            }
-
-            /* If token is a colon, the token is an identifier followed by a
-             * set expression. */
-            if (ptr[0] == TOK_COLON) {
-                if (flecs_parse_identifier(token, term_ref)) {
-                    ecs_parser_error(name, expr, (ptr - expr), 
-                        "invalid identifier '%s'", *token);
-                    goto error;
-                }
-
-                ptr = ecs_parse_ws_eol(ptr + 1);
-                ptr = flecs_parse_term_flags(world, name, expr, (ptr - expr), ptr,
-                    NULL, term, term_ref, TOK_PAREN_CLOSE);
-                if (!ptr) {
-                    goto error;
-                }
-
-            /* Check for term flags */
-            } else if (!ecs_os_strcmp(*token, TOK_CASCADE) ||
-                !ecs_os_strcmp(*token, TOK_DESC) ||
-                !ecs_os_strcmp(*token, TOK_SELF) || 
-                !ecs_os_strcmp(*token, TOK_UP))
-            {
-                ptr = flecs_parse_term_flags(world, name, expr, (ptr - expr), ptr, 
-                    *token, term, term_ref, TOK_PAREN_CLOSE);
-                if (!ptr) {
-                    goto error;
-                }
-
-            /* Regular identifier */
-            } else if (flecs_parse_identifier(token, term_ref)) {
-                ecs_parser_error(name, expr, (ptr - expr), 
-                    "invalid identifier '%s'", *token);
-                goto error;
-            }
-
-            if (ptr[0] == TOK_AND) {
-                if (extra_oper && *extra_oper != EcsAnd) {
-                    ecs_parser_error(name, expr, (ptr - expr), 
-                        "cannot mix ',' and '||' in term arguments");
-                    goto error;
-                }
-                ptr = ecs_parse_ws_eol(ptr + 1);
-
-            } else if (ptr[0] == TOK_PAREN_CLOSE) {
-                ptr = ecs_parse_ws(ptr + 1);
-                break;
-
-            } else if (extra_oper && ptr[0] == TOK_OR[0] && ptr[1] == TOK_OR[1]){
-                if (arg >= 2 && *extra_oper != EcsOr) {
-                    ecs_parser_error(name, expr, (ptr - expr), 
-                        "cannot mix ',' and '||' in term arguments");
-                    goto error;
-                }
-
-                *extra_oper = EcsOr;
-                ptr = ecs_parse_ws_eol(ptr + 2);
-
-            } else {
-                ecs_parser_error(name, expr, (ptr - expr), 
-                    "expected ',' or ')'");
-                goto error;
-            }
-
-        } else {
-            ecs_parser_error(name, expr, (ptr - expr), 
-                "expected identifier or set expression");
-            goto error;
-        }
-
-        arg ++;
-
-    } while (true);
-
-    return ptr;
-error:
-    return NULL;
-}
-
-static
-void flecs_parser_unexpected_char(
-    const char *name,
-    const char *expr,
-    const char *ptr,
-    char ch)
-{
-    if (ch && (ch != '\n')) {
-        ecs_parser_error(name, expr, (ptr - expr), 
-            "unexpected character '%c'", ch);
-    } else {
-        ecs_parser_error(name, expr, (ptr - expr), 
-            "unexpected end of term");
-    }
-}
-
-static
-const char* flecs_parse_term(
-    const ecs_world_t *world,
-    ecs_stage_t *stage,
-    const char *name,
-    const char *expr,
-    ecs_term_t *term_out,
-    ecs_oper_kind_t *extra_oper,
-    ecs_term_ref_t *extra_args)
-{
-    const char *ptr = expr;
-    ecs_term_t term = {0};
-
-    ptr = ecs_parse_ws(ptr);
-
-    /* Inout specifiers always come first */
-    if (ptr[0] == TOK_BRACKET_OPEN) {
-        ptr = flecs_parse_annotation(
-            name, expr, (ptr - expr), ptr + 1, &term.inout);
-        if (!ptr) {
-            goto error;
-        }
-        ptr = ecs_parse_ws_eol(ptr);
-    }
-
-    if (flecs_valid_operator_char(ptr[0])) {
-        term.oper = flecs_ito(int16_t, flecs_parse_operator(ptr[0]));
-        ptr = ecs_parse_ws(ptr + 1);
-    }
-
-    /* If next token is the start of an identifier, it could be either a type
-     * role, source or component identifier */
-    if (flecs_valid_identifier_start_char(ptr[0])) {
-        ptr = ecs_parse_identifier(name, expr, ptr, stage->parser_token);
-        if (!ptr) {
-            goto error;
-        }
-
-        /* Is token a type role? */
-        if (ptr[0] == TOK_BITWISE_OR && ptr[1] != TOK_BITWISE_OR) {
-            ptr ++;
-            goto flecs_parse_role;
-        }
-
-        /* Is token a predicate? */
-        if (ptr[0] == TOK_PAREN_OPEN) {
-            goto parse_predicate;    
-        }
-
-        /* Next token must be a predicate */
-        goto parse_predicate;
-
-    /* Pair with implicit subject */
-    } else if (ptr[0] == TOK_PAREN_OPEN) {
-        goto parse_pair;
-
-    /* Open query scope */
-    } else if (ptr[0] == TOK_SCOPE_OPEN) {
-        term.first.id = EcsScopeOpen;
-        term.src.id = EcsIsEntity;
-        term.inout = EcsInOutNone;
-        goto parse_done;
-
-    /* Close query scope */
-    } else if (ptr[0] == TOK_SCOPE_CLOSE) {
-        term.first.id = EcsScopeClose;
-        term.src.id = EcsIsEntity;
-        term.inout = EcsInOutNone;
-        ptr = ecs_parse_ws(ptr + 1);
-        goto parse_done;
-
-    /* Nothing else expected here */
-    } else {
-        flecs_parser_unexpected_char(name, expr, ptr, ptr[0]);
-        goto error;
-    }
-
-flecs_parse_role:
-    term.id = flecs_parse_role(name, expr, (ptr - expr), stage->parser_token);
-    if (!term.id) {
-        goto error;
-    }
-
-    ptr = ecs_parse_ws(ptr);
-
-    /* If next token is the source token, this is an empty source */
-    if (flecs_valid_token_start_char(ptr[0])) {
-        ptr = ecs_parse_identifier(name, expr, ptr, stage->parser_token);
-        if (!ptr) {
-            goto error;
-        }
-
-        /* If not, it's a predicate */
-        goto parse_predicate;
-
-    } else if (ptr[0] == TOK_PAREN_OPEN) {
-        goto parse_pair;
-    } else {
-        ecs_parser_error(name, expr, (ptr - expr), 
-            "expected identifier after role");
-        goto error;
-    }
-
-parse_predicate:
-    if (flecs_parse_identifier(&stage->parser_token, &term.first)) {
-        ecs_parser_error(name, expr, (ptr - expr), 
-            "invalid identifier '%s'", stage->parser_token); 
-        goto error;
-    }
-
-    /* Set expression */
-    if (ptr[0] == TOK_COLON) {
-        ptr = ecs_parse_ws(ptr + 1);
-        ptr = flecs_parse_term_flags(world, name, expr, (ptr - expr), ptr, NULL, 
-            &term, &term.first, TOK_COLON);
-        if (!ptr) {
-            goto error;
-        }
-
-        ptr = ecs_parse_ws(ptr);
-
-        if (ptr[0] == TOK_AND || !ptr[0]) {
-            goto parse_done;
-        }
-
-        if (ptr[0] != TOK_COLON) {
-            ecs_parser_error(name, expr, (ptr - expr), 
-                "unexpected token '%c' after predicate set expression", ptr[0]);
-            goto error;
-        }
-
-        ptr = ecs_parse_ws(ptr + 1);
-    } else if (!ecs_os_strncmp(ptr, TOK_EQ, 2)) {
-        ptr = ecs_parse_ws(ptr + 2);
-        goto parse_eq;
-    } else if (!ecs_os_strncmp(ptr, TOK_NEQ, 2)) {
-        ptr = ecs_parse_ws(ptr + 2);
-        goto parse_neq;
-    } else if (!ecs_os_strncmp(ptr, TOK_MATCH, 2)) {
-        ptr = ecs_parse_ws(ptr + 2);
-        goto parse_match;
-    } else {
-        ptr = ecs_parse_ws(ptr);
-    }
-
-    if (ptr[0] == TOK_PAREN_OPEN) {
-        ptr = ecs_parse_ws_eol(ptr + 1);
-        if (ptr[0] == TOK_PAREN_CLOSE) {
-            term.src.id = EcsIsEntity;
-            ptr ++;
-            ptr = ecs_parse_ws(ptr);
-        } else {
-            ptr = flecs_parse_arguments(
-                world, name, expr, (ptr - expr), ptr, &stage->parser_token, 
-                &term, extra_oper, extra_args);
-        }
-
-        goto parse_done;
-    }
-
-    goto parse_done;
-
-parse_eq:
-    term.src = term.first;
-    term.first = (ecs_term_ref_t){0};
-    term.first.id = EcsPredEq;
-    goto parse_right_operand;
-
-parse_neq:
-    term.src = term.first;
-    term.first = (ecs_term_ref_t){0};
-    term.first.id = EcsPredEq;
-    if (term.oper != EcsAnd) {
-        ecs_parser_error(name, expr, (ptr - expr), 
-            "invalid operator combination");
-        goto error;
-    }
-    term.oper = EcsNot;
-    goto parse_right_operand;
-    
-parse_match:
-    term.src = term.first;
-    term.first = (ecs_term_ref_t){0};
-    term.first.id = EcsPredMatch;
-    goto parse_right_operand;
-
-parse_right_operand:
-    if (flecs_valid_token_start_char(ptr[0])) {
-        ptr = ecs_parse_identifier(name, expr, ptr, stage->parser_token);
-        if (!ptr) {
-            goto error;
-        }
-
-        if (ECS_TERM_REF_ID(&term.first) == EcsPredMatch) {
-            if (stage->parser_token[0] == '"' && stage->parser_token[1] == '!') {
-                term.oper = EcsNot;
-            }
-        }
-
-        if (flecs_parse_identifier(&stage->parser_token, &term.second)) {
-            ecs_parser_error(name, expr, (ptr - expr), 
-                "invalid identifier '%s'", stage->parser_token); 
-            goto error;
-        }
-
-        term.src.id &= ~EcsTraverseFlags;
-        term.src.id |= EcsSelf;
-        term.inout = EcsInOutNone;
-    } else {
-        ecs_parser_error(name, expr, (ptr - expr), 
-            "expected identifier");
-        goto error;
-    }
-    goto parse_done;
-parse_pair:
-    ptr = ecs_parse_identifier(name, expr, ptr + 1, stage->parser_token);
-    if (!ptr) {
-        goto error;
-    }
-
-    if (ptr[0] == TOK_COLON) {
-        ptr = ecs_parse_ws(ptr + 1);
-        ptr = flecs_parse_term_flags(world, name, expr, (ptr - expr), ptr,
-            NULL, &term, &term.first, TOK_PAREN_CLOSE);
-        if (!ptr) {
-            goto error;
-        }
-    }
-
-    if (ptr[0] == TOK_AND) {
-        ptr = ecs_parse_ws(ptr + 1);
-        if (ptr[0] == TOK_PAREN_CLOSE) {
-            ecs_parser_error(name, expr, (ptr - expr), 
-                "expected identifier for second element of pair"); 
-            goto error;
-        }
-        
-        term.src.id = EcsThis;
-        term.src.id |= EcsIsVariable;
-        goto parse_pair_predicate;
-    } else if (ptr[0] == TOK_PAREN_CLOSE) {
-        term.src.id = EcsThis;
-        term.src.id |= EcsIsVariable;
-        goto parse_pair_predicate;
-    } else {
-        flecs_parser_unexpected_char(name, expr, ptr, ptr[0]);
-        goto error;
-    }
-
-parse_pair_predicate:
-    if (flecs_parse_identifier(&stage->parser_token, &term.first)) {
-        ecs_parser_error(name, expr, (ptr - expr), 
-            "invalid identifier '%s'", stage->parser_token); 
-        goto error;
-    }
-
-    ptr = ecs_parse_ws(ptr);
-    if (flecs_valid_token_start_char(ptr[0])) {
-        ptr = ecs_parse_identifier(name, expr, ptr, stage->parser_token);
-        if (!ptr) {
-            goto error;
-        }
-
-        if (ptr[0] == TOK_COLON) {
-            ptr = ecs_parse_ws(ptr + 1);
-            ptr = flecs_parse_term_flags(world, name, expr, (ptr - expr), ptr,
-                NULL, &term, &term.second, TOK_PAREN_CLOSE);
-            if (!ptr) {
-                goto error;
-            }
-        }
-
-        if (ptr[0] == TOK_PAREN_CLOSE || ptr[0] == TOK_AND || ptr[0] == TOK_OR[0]) {
-            goto parse_pair_object;
-        } else {
-            flecs_parser_unexpected_char(name, expr, ptr, ptr[0]);
-            goto error;
-        }
-    } else if (ptr[0] == TOK_PAREN_CLOSE) {
-        /* No object */
-        ptr ++;
-        goto parse_done;
-    } else {
-        ecs_parser_error(name, expr, (ptr - expr), 
-            "expected pair object or ')'");
-        goto error;
-    }
-
-parse_pair_object:
-    if (flecs_parse_identifier(&stage->parser_token, &term.second)) {
-        ecs_parser_error(name, expr, (ptr - expr), 
-            "invalid identifier '%s'", stage->parser_token); 
-        goto error;
-    }
-
-    if (term.id == 0) {
-        term.id = ECS_PAIR;
-    }
-
-    if (ptr[0] == TOK_AND) {
-        ptr = ecs_parse_ws(ptr + 1);
-        ptr = flecs_parse_arguments(world, name, expr, (ptr - expr), ptr, 
-            &stage->parser_token, NULL, extra_oper, extra_args);
-        if (!ptr) {
-            goto error;
-        }
-    } else if (extra_oper && ptr[0] == TOK_OR[0] && ptr[1] == TOK_OR[1]) {
-        ptr = ecs_parse_ws_eol(ptr + 2);
-        *extra_oper = EcsOr;
-        ptr = flecs_parse_arguments(world, name, expr, (ptr - expr), ptr, 
-            &stage->parser_token, NULL, extra_oper, extra_args);
-        if (!ptr) {
-            goto error;
-        }
-    } else {
-        ptr ++;
-    }
-
-    ptr = ecs_parse_ws(ptr);
-    goto parse_done;
-
-parse_done:
-    *term_out = term;
-    return ptr;
-
-error:
-    *term_out = (ecs_term_t){0};
-    return NULL;
-}
-
-static
-bool flecs_is_valid_end_of_term(
-    const char *ptr)
-{
-    if ((ptr[0] == TOK_AND) ||    /* another term with And operator */
-        (ptr[0] == TOK_OR[0]) ||  /* another term with Or operator */
-        (ptr[0] == '\n') ||       /* newlines are valid */
-        (ptr[0] == '\0') ||       /* end of string */
-        (ptr[0] == '/') ||        /* comment (in plecs) */
-        (ptr[0] == '{') ||        /* scope (in plecs) */
-        (ptr[0] == '}') ||
-        (ptr[0] == '[') ||        /* collection scope (in plecs) */
-        (ptr[0] == ']') ||
-        (ptr[0] == ':') ||        /* inheritance (in plecs) */
-        (ptr[0] == '='))          /* assignment (in plecs) */
-    {
-        return true;
-    }
-    return false;
-}
-
-char* ecs_parse_term(
-    const ecs_world_t *world,
-    ecs_stage_t *stage,
-    const char *name,
-    const char *expr,
-    const char *ptr,
-    ecs_term_t *term,
-    ecs_oper_kind_t *extra_oper,
-    ecs_term_ref_t *extra_args,
-    bool allow_newline)
-{
-    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(ptr != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(term != NULL, ECS_INVALID_PARAMETER, NULL);
-
-    if (extra_oper) {
-        *extra_oper = EcsAnd;
-    }
-
-    ecs_term_ref_t *src = &term->src;
-
-    if (ptr != expr) {
-        if (ptr[0]) {
-            if (ptr[0] == ',') {
-                ptr ++;
-            } else if (ptr[0] == '|') {
-                ptr += 2;
-            } else if (ptr[0] == '{') {
-                ptr ++;
-            } else if (ptr[0] == '}') {
-                /* nothing to be done */
-            } else {
-                ecs_parser_error(name, expr, (ptr - expr), 
-                    "invalid preceding token");
-            }
-        }
-    } else {
-        /* If this is first term in expression, reset token buffer */
-        stage->parser_token = stage->parser_tokens;
-    }
-
-    ptr = ecs_parse_ws_eol(ptr);
-    if (!ptr[0]) {
-        *term = (ecs_term_t){0};
-        return ECS_CONST_CAST(char*, ptr);
-    }
-
-    if (extra_oper) {
-        *extra_oper = EcsAnd;
-    }
-
-    if (ptr == expr && !strcmp(expr, "0")) {
-        return ECS_CONST_CAST(char*, &ptr[1]);
-    }
-
-    /* Parse next element */
-    ptr = flecs_parse_term(world, stage, name, ptr, term, extra_oper, extra_args);
-    if (!ptr) {
-        goto error;
-    }
-
-    /* Post-parse consistency checks */
-
-    /* If next token is OR, term is part of an OR expression */
-    if (!ecs_os_strncmp(ptr, TOK_OR, 2)) {
-        /* An OR operator must always follow an AND or another OR */
-        if (term->oper != EcsAnd) {
-            ecs_parser_error(name, expr, (ptr - expr), 
-                "cannot combine || with other operators");
-            goto error;
-        }
-
-        term->oper = EcsOr;
-    }
-
-    /* Term must either end in end of expression, AND or OR token */
-    if (!flecs_is_valid_end_of_term(ptr)) {
-        if (!flecs_isident(ptr[0]) || ((ptr != expr) && (ptr[-1] != ' '))) {
-            ecs_parser_error(name, expr, (ptr - expr), 
-                "expected end of expression or next term");
-            goto error;
-        }
-    }
-
-    /* If the term just contained a 0, the expression has nothing. Ensure
-     * that after the 0 nothing else follows */
-    if (term->first.name && !ecs_os_strcmp(term->first.name, "0")) {
-        if (ptr[0]) {
-            ecs_parser_error(name, expr, (ptr - expr), 
-                "unexpected term after 0"); 
-            goto error;
-        }
-
-        if ((src->id & EcsTermRefFlags) != 0) {
-            ecs_parser_error(name, expr, (ptr - expr), 
-                "invalid combination of 0 with non-default subject");
-            goto error;
-        }
-
-        src->id = EcsIsEntity;
-        term->first.name = NULL;
-    }
-
-    /* Cannot combine EcsIsEntity/0 with operators other than AND */
-    if (term->oper != EcsAnd && ecs_term_match_0(term)) {
-        if ((ECS_TERM_REF_ID(&term->first) != EcsScopeOpen) && 
-            (ECS_TERM_REF_ID(&term->first) != EcsScopeClose)) 
-        {
-            ecs_parser_error(name, expr, (ptr - expr), 
-                "invalid operator for empty source"); 
-            goto error;
-        }
-    }
-
-    /* Automatically assign This if entity is not assigned and the set is
-     * nothing */
-    if (!(src->id & EcsIsEntity)) {
-        if (!src->name) {
-            if (!src->id) {
-                src->id = EcsThis | (src->id & EcsTermRefFlags);
-                src->id |= EcsIsVariable;
-            }
-        }
-    }
-
-    if (src->name && !ecs_os_strcmp(src->name, "0")) {
-        src->id = EcsIsEntity;
-    }
-
-    /* Process role */
-    if (term->id == ECS_AND) {
-        term->oper = EcsAndFrom;
-        term->id = 0;
-    } else if (term->id == ECS_OR) {
-        term->oper = EcsOrFrom;
-        term->id = 0;
-    } else if (term->id == ECS_NOT) {
-        term->oper = EcsNotFrom;
-        term->id = 0;
-    }
-
-    if (allow_newline) {
-        ptr = ecs_parse_ws_eol(ptr);
-    } else {
-        ptr = ecs_parse_ws(ptr);
-    }
-
-    return ECS_CONST_CAST(char*, ptr);
-error:
-    return NULL;
 }
 
 const char* ecs_parse_ws_eol(
@@ -43730,538 +43295,6 @@ void flecs_query_apply_iter_flags(
 #include <ctype.h>
 
 #ifdef FLECS_SCRIPT
-/**
- * @file addons/script/script.h
- * @brief Flecs script implementation.
- */
-
-#ifndef FLECS_SCRIPT_PRIVATE_H
-#define FLECS_SCRIPT_PRIVATE_H
-
-
-#ifdef FLECS_SCRIPT
-
-#include <ctype.h>
-
-typedef struct ecs_script_scope_t ecs_script_scope_t;
-typedef struct ecs_script_entity_t ecs_script_entity_t;
-
-struct ecs_script_t {
-    ecs_world_t *world;
-    const char *name;
-    const char *code;
-    ecs_allocator_t allocator;
-    ecs_script_scope_t *root;
-    char *token_buffer;
-    int32_t token_buffer_size;
-    int32_t refcount;
-};
-
-typedef struct ecs_script_parser_t ecs_script_parser_t;
-
-/**
- * @file addons/script/tokenizer.h
- * @brief Script tokenizer.
- */
-
-#ifndef FLECS_SCRIPT_TOKENIZER_H
-#define FLECS_SCRIPT_TOKENIZER_H
-
-/* Tokenizer */
-typedef enum ecs_script_token_kind_t {
-    EcsTokEnd = '\0',
-    EcsTokUnknown,
-    EcsTokScopeOpen = '{',
-    EcsTokScopeClose = '}',
-    EcsTokParenOpen = '(',
-    EcsTokParenClose = ')',
-    EcsTokBracketOpen = '[',
-    EcsTokBracketClose = ']',
-    EcsTokMul = '*',
-    EcsTokComma = ',',
-    EcsTokSemiColon = ';',
-    EcsTokColon = ':',
-    EcsTokAssign = '=',
-    EcsTokBitwiseOr = '|',
-    EcsTokNot = '!',
-    EcsTokOptional = '?',
-    EcsTokAnnotation = '@',
-    EcsTokNewline = '\n',
-    EcsTokEq,
-    EcsTokNeq,
-    EcsTokMatch,
-    EcsTokOr,
-    EcsTokIdentifier,
-    EcsTokString,
-    EcsTokNumber,
-    EcsTokKeywordModule,
-    EcsTokKeywordUsing,
-    EcsTokKeywordWith,
-    EcsTokKeywordIf,
-    EcsTokKeywordElse,
-    EcsTokKeywordAssembly,
-    EcsTokKeywordProp,
-    EcsTokKeywordConst,
-} ecs_script_token_kind_t;
-
-typedef struct ecs_script_token_t {
-    const char *value;
-    ecs_script_token_kind_t kind;
-} ecs_script_token_t;
-
-typedef struct ecs_script_tokens_t {
-    int32_t count;
-    ecs_script_token_t tokens[256];
-} ecs_script_tokens_t;
-
-const char* flecs_script_expr(
-    ecs_script_parser_t *parser,
-    const char *ptr,
-    ecs_script_token_t *out,
-    char until);
-
-const char* flecs_script_until(
-    ecs_script_parser_t *parser,
-    const char *ptr,
-    ecs_script_token_t *out,
-    char until);
-
-const char* flecs_script_token_kind_str(
-    ecs_script_token_kind_t kind);
-
-const char* flecs_script_token(
-    ecs_script_parser_t *parser,
-    const char *ptr,
-    ecs_script_token_t *out,
-    bool is_lookahead);
-
-#endif
-
-
-struct ecs_script_parser_t {
-    ecs_script_t *script;
-    ecs_script_scope_t *scope;
-    const char *pos;
-    char *token_cur;
-    bool significant_newline;
-
-    /* For term parser */
-    ecs_term_t *term;
-    ecs_oper_kind_t extra_oper;
-    ecs_term_ref_t *extra_args;
-};
-
-/**
- * @file addons/script/ast.h
- * @brief Script AST.
- */
-
-#ifndef FLECS_SCRIPT_AST_H
-#define FLECS_SCRIPT_AST_H
-
-typedef enum ecs_script_node_kind_t {
-    EcsAstScope,
-    EcsAstTag,
-    EcsAstComponent,
-    EcsAstDefaultComponent,
-    EcsAstVarComponent,
-    EcsAstWithVar,
-    EcsAstWithTag,
-    EcsAstWithComponent,
-    EcsAstWith,
-    EcsAstUsing,
-    EcsAstModule,
-    EcsAstAnnotation,
-    EcsAstAssembly,
-    EcsAstProp,
-    EcsAstConst,
-    EcsAstEntity,
-    EcsAstPairScope,
-    EcsAstIf,
-} ecs_script_node_kind_t;
-
-typedef struct ecs_script_node_t {
-    ecs_script_node_kind_t kind;
-    const char *pos;
-} ecs_script_node_t;
-
-struct ecs_script_scope_t {
-    ecs_script_node_t node;
-    ecs_vec_t stmts;
-    ecs_script_scope_t *parent;
-    ecs_id_t default_component_eval;
-};
-
-typedef struct ecs_script_id_t {
-    const char *first;
-    const char *second;
-    ecs_id_t eval;
-} ecs_script_id_t;
-
-typedef struct ecs_script_tag_t {
-    ecs_script_node_t node;
-    ecs_script_id_t id;
-} ecs_script_tag_t;
-
-typedef struct ecs_script_component_t {
-    ecs_script_node_t node;
-    ecs_script_id_t id;
-    const char *expr;
-    ecs_value_t eval;
-    bool is_collection;
-} ecs_script_component_t;
-
-typedef struct ecs_script_default_component_t {
-    ecs_script_node_t node;
-    const char *expr;
-    ecs_value_t eval;
-} ecs_script_default_component_t;
-
-typedef struct ecs_script_var_component_t {
-    ecs_script_node_t node;
-    const char *name;
-} ecs_script_var_component_t;
-
-struct ecs_script_entity_t {
-    ecs_script_node_t node;
-    const char *kind;
-    const char *name;
-    bool name_is_var;
-    bool kind_w_expr;
-    ecs_script_scope_t *scope;
-
-    // Populated during eval
-    ecs_script_entity_t *parent;
-    ecs_entity_t eval;
-    ecs_entity_t eval_kind;
-};
-
-typedef struct ecs_script_with_t {
-    ecs_script_node_t node;
-    ecs_script_scope_t *expressions;
-    ecs_script_scope_t *scope;
-} ecs_script_with_t;
-
-typedef struct ecs_script_inherit_t {
-    ecs_script_node_t node;
-    ecs_script_scope_t *base_list;
-} ecs_script_inherit_t;
-
-typedef struct ecs_script_pair_scope_t {
-    ecs_script_node_t node;
-    ecs_script_id_t id;
-    ecs_script_scope_t *scope;
-} ecs_script_pair_scope_t;
-
-typedef struct ecs_script_using_t {
-    ecs_script_node_t node;
-    const char *name;
-} ecs_script_using_t;
-
-typedef struct ecs_script_module_t {
-    ecs_script_node_t node;
-    const char *name;
-} ecs_script_module_t;
-
-typedef struct ecs_script_annot_t {
-    ecs_script_node_t node;
-    const char *name;
-    const char *expr;
-} ecs_script_annot_t;
-
-typedef struct ecs_script_assembly_node_t {
-    ecs_script_node_t node;
-    const char *name;
-    ecs_script_scope_t* scope;
-} ecs_script_assembly_node_t;
-
-typedef struct ecs_script_var_node_t {
-    ecs_script_node_t node;
-    const char *name;
-    const char *type;
-    const char *expr;
-} ecs_script_var_node_t;
-
-typedef struct ecs_script_if_t {
-    ecs_script_node_t node;
-    ecs_script_scope_t *if_true;
-    ecs_script_scope_t *if_false;
-    const char *expr;
-} ecs_script_if_t;
-
-#define ecs_script_node(kind, node)\
-    ((ecs_script_##kind##_t*)node)
-
-bool flecs_scope_is_empty(
-    ecs_script_scope_t *scope);
-
-ecs_script_scope_t* flecs_script_insert_scope(
-    ecs_script_parser_t *parser);
-
-ecs_script_entity_t* flecs_script_insert_entity(
-    ecs_script_parser_t *parser,
-    const char *name);
-
-ecs_script_pair_scope_t* flecs_script_insert_pair_scope(
-    ecs_script_parser_t *parser,
-    const char *first,
-    const char *second);
-
-ecs_script_with_t* flecs_script_insert_with(
-    ecs_script_parser_t *parser);
-
-ecs_script_using_t* flecs_script_insert_using(
-    ecs_script_parser_t *parser,
-    const char *name);
-
-ecs_script_module_t* flecs_script_insert_module(
-    ecs_script_parser_t *parser,
-    const char *name);
-
-ecs_script_assembly_node_t* flecs_script_insert_assembly(
-    ecs_script_parser_t *parser,
-    const char *name);
-
-ecs_script_annot_t* flecs_script_insert_annot(
-    ecs_script_parser_t *parser,
-    const char *name,
-    const char *expr);
-
-ecs_script_var_node_t* flecs_script_insert_var(
-    ecs_script_parser_t *parser,
-    const char *name);
-
-ecs_script_tag_t* flecs_script_insert_tag(
-    ecs_script_parser_t *parser,
-    const char *name);
-
-ecs_script_tag_t* flecs_script_insert_pair_tag(
-    ecs_script_parser_t *parser,
-    const char *first,
-    const char *second);
-
-ecs_script_component_t* flecs_script_insert_component(
-    ecs_script_parser_t *parser,
-    const char *name);
-
-ecs_script_component_t* flecs_script_insert_pair_component(
-    ecs_script_parser_t *parser,
-    const char *first,
-    const char *second);
-
-ecs_script_default_component_t* flecs_script_insert_default_component(
-    ecs_script_parser_t *parser);
-
-ecs_script_var_component_t* flecs_script_insert_var_component(
-    ecs_script_parser_t *parser,
-    const char *name);
-
-ecs_script_if_t* flecs_script_insert_if(
-    ecs_script_parser_t *parser);
-
-#endif
-
-/**
- * @file addons/script/visit.h
- * @brief Script AST visitor utilities.
- */
-
-#ifndef FLECS_SCRIPT_VISIT_H
-#define FLECS_SCRIPT_VISIT_H
-
-typedef struct ecs_script_visit_t ecs_script_visit_t;
-
-typedef int (*ecs_visit_action_t)(
-    ecs_script_visit_t *visitor, 
-    ecs_script_node_t *node);
-
-struct ecs_script_visit_t {
-    ecs_script_t *script;
-    ecs_visit_action_t visit;
-    ecs_script_node_t* nodes[256];
-    ecs_script_node_t *prev, *next;
-    int32_t depth;
-};
-
-int ecs_script_visit_(
-    ecs_script_visit_t *visitor,
-    ecs_visit_action_t visit,
-    ecs_script_t *script);
-
-#define ecs_script_visit(script, visitor, visit) \
-    ecs_script_visit_((ecs_script_visit_t*)visitor,\
-        (ecs_visit_action_t)visit,\
-        script)
-
-int ecs_script_visit_node_(
-    ecs_script_visit_t *v,
-    ecs_script_node_t *node);
-
-#define ecs_script_visit_node(visitor, node) \
-    ecs_script_visit_node_((ecs_script_visit_t*)visitor, \
-        (ecs_script_node_t*)node)
-
-int ecs_script_visit_scope_(
-    ecs_script_visit_t *v,
-    ecs_script_scope_t *node);
-
-#define ecs_script_visit_scope(visitor, node) \
-    ecs_script_visit_scope_((ecs_script_visit_t*)visitor, node)
-
-ecs_script_node_t* ecs_script_parent_node_(
-    ecs_script_visit_t *v);
-
-#define ecs_script_parent_node(visitor) \
-    ecs_script_parent_node_((ecs_script_visit_t*)visitor)
-
-ecs_script_scope_t* ecs_script_current_scope_(
-    ecs_script_visit_t *v);
-
-#define ecs_script_current_scope(visitor) \
-    ecs_script_current_scope_((ecs_script_visit_t*)visitor)
-
-ecs_script_node_t* ecs_script_parent_(
-    ecs_script_visit_t *v,
-    ecs_script_node_t *node);
-
-#define ecs_script_parent(visitor, node) \
-    ecs_script_parent_((ecs_script_visit_t*)visitor, (ecs_script_node_t*)node)
-
-ecs_script_node_t* ecs_script_next_node_(
-    ecs_script_visit_t *v);
-
-#define ecs_script_next_node(visitor) \
-    ecs_script_next_node_((ecs_script_visit_t*)visitor)
-
-int32_t ecs_script_node_line_number_(
-    ecs_script_t *script,
-    ecs_script_node_t *node);
-
-#define ecs_script_node_line_number(script, node) \
-    ecs_script_node_line_number_(script, (ecs_script_node_t*)node)
-
-#endif
-
-/**
- * @file addons/script/visit_eval.h
- * @brief Script evaluation visitor.
- */
-
-#ifndef FLECS_SCRIPT_VISIT_EVAL_H
-#define FLECS_SCRIPT_VISIT_EVAL_H
-
-typedef struct ecs_script_eval_visitor_t {
-    ecs_script_visit_t base;
-    ecs_world_t *world;
-    ecs_allocator_t *allocator;
-    ecs_script_assembly_t *assembly;
-    ecs_entity_t module;
-    ecs_entity_t parent;
-    ecs_script_entity_t *entity;
-    ecs_vec_t using;
-    ecs_vec_t with;
-    ecs_vec_t annot;
-    ecs_entity_t with_relationship;
-    int32_t with_relationship_sp;
-    ecs_script_vars_t *vars;
-    ecs_stack_t stack;
-} ecs_script_eval_visitor_t;
-
-void flecs_script_eval_error_(
-    ecs_script_eval_visitor_t *v,
-    ecs_script_node_t *node,
-    const char *fmt,
-    ...);
-
-#define flecs_script_eval_error(v, node, ...)\
-    flecs_script_eval_error_(v, (ecs_script_node_t*)node, __VA_ARGS__)
-
-ecs_entity_t flecs_script_find_entity(
-    ecs_script_eval_visitor_t *v,
-    ecs_entity_t from,
-    const char *path);
-
-ecs_entity_t flecs_script_create_entity(
-    ecs_script_eval_visitor_t *v,
-    const char *name);
-
-const ecs_type_info_t* flecs_script_get_type_info(
-    ecs_script_eval_visitor_t *v,
-    void *node,
-    ecs_id_t id);
-
-int flecs_script_eval_expr(
-    ecs_script_eval_visitor_t *v,
-    const char *expr,
-    ecs_value_t *value);
-
-int flecs_script_eval_assembly(
-    ecs_script_eval_visitor_t *v,
-    ecs_script_assembly_node_t *assembly);
-
-ecs_script_assembly_t* flecs_script_assembly_init(
-    ecs_script_t *script);
-
-void flecs_script_assembly_fini(
-    ecs_script_t *script,
-    ecs_script_assembly_t *assembly);
-
-void flecs_script_eval_visit_init(
-    ecs_script_t *script,
-    ecs_script_eval_visitor_t *v);
-
-void flecs_script_eval_visit_fini(
-    ecs_script_eval_visitor_t *v);
-
-int flecs_script_eval_node(
-    ecs_script_eval_visitor_t *v,
-    ecs_script_node_t *node);
-
-#endif
-
-
-struct ecs_script_assembly_t {
-    /* Assembly handle */
-    ecs_entity_t entity;
-
-    /* Assembly AST node */
-    ecs_script_assembly_node_t *node;
-
-    /* Hoisted using statements */
-    ecs_vec_t using_;
-
-    /* Hoisted variables */
-    ecs_vec_t vars;
-
-    /* Default values for props */
-    ecs_vec_t prop_defaults;
-
-    /* Type info for assembly component */
-    const ecs_type_info_t *type_info;
-};
-
-ecs_script_t* flecs_script_new(
-    ecs_world_t *world);
-
-ecs_script_scope_t* flecs_script_scope_new(
-    ecs_script_parser_t *parser);
-
-int flecs_script_visit_free(
-    ecs_script_t *script);
-
-ecs_script_vars_t* flecs_script_vars_push(
-    ecs_script_vars_t *parent,
-    ecs_stack_t *stack,
-    ecs_allocator_t *allocator);
-
-int flecs_script_parse_terms(
-    ecs_script_t *script,
-    ecs_term_t *terms,
-    int32_t *term_count_out);
-
-#endif // FLECS_SCRIPT
-#endif // FLECS_SCRIPT_PRIVATE_H
-
 #endif
 
 static
@@ -45593,7 +44626,7 @@ int flecs_query_query_populate_terms(
         script.token_buffer = flecs_alloc(
             &stage->allocator, script.token_buffer_size);
 
-        if (flecs_script_parse_terms(&script, &q->terms[term_count], 
+        if (flecs_terms_parse(&script, &q->terms[term_count], 
             &term_count))
         {
             flecs_free(&stage->allocator, 
@@ -57796,6 +56829,8 @@ error:
 #include <ctype.h>
 
 #ifdef FLECS_META
+#ifdef FLECS_SCRIPT
+#endif
 
 static
 const char* flecs_meta_op_kind_str(
@@ -59196,16 +58231,7 @@ int ecs_meta_set_string(
     }
     case EcsOpId: {
         ecs_id_t id = 0;
-        ecs_term_t term = {0};
-        ecs_stage_t *stage = flecs_stage_from_readonly_world(cursor->world);
-        if (ecs_parse_term(
-            cursor->world, stage, NULL, value, value, &term, NULL, NULL, false)) 
-        {
-            if (ecs_term_finalize(cursor->world, &term)) {
-                goto error;
-            }
-            id = term.id;
-        } else {
+        if (flecs_id_parse(cursor->world, NULL, value, &id) == NULL) {
             goto error;
         }
 
@@ -67523,7 +66549,7 @@ const char* flecs_query_parse_term(
     ParserEnd;
 }
 
-int flecs_script_parse_terms(
+int flecs_terms_parse(
     ecs_script_t *script,
     ecs_term_t *terms,
     int32_t *term_count_out)
@@ -67625,6 +66651,69 @@ int flecs_script_parse_terms(
     return 0;
 error:
     return -1;
+}
+
+const char* flecs_id_parse(
+    const ecs_world_t *world,
+    const char *name,
+    const char *expr,
+    ecs_id_t *id)
+{
+    ecs_script_t script = {
+        /* Safe, won't mutate world */
+        .world = ECS_CONST_CAST(ecs_world_t*, world),
+        .name = name,
+        .code = expr
+    };
+
+    char token_buffer[256];
+    script.token_buffer_size = 256;
+    script.token_buffer = token_buffer;
+
+    ecs_term_t term = {0};
+    ecs_script_parser_t parser = {
+        .script = &script,
+        .pos = expr,
+        .term = &term,
+        .token_cur = token_buffer
+    };
+
+    expr = flecs_scan_whitespace(&parser, expr);
+    if (!ecs_os_strcmp(expr, "0")) {
+        *id = 0;
+        return &expr[1];
+    }
+
+    const char *result = flecs_query_parse_term(&parser, expr);
+    if (!result) {
+        return NULL;
+    }
+
+    if (ecs_term_finalize(world, &term)) {
+        return NULL;
+    }
+
+    if (!ecs_id_is_valid(world, term.id)) {
+        ecs_parser_error(name, expr, (result - expr), 
+            "invalid term for add expression");
+        return NULL;
+    }
+
+    if (term.oper != EcsAnd) {
+        ecs_parser_error(name, expr, (result - expr), 
+            "invalid operator for add expression");
+        return NULL;
+    }
+
+    if ((term.src.id & ~EcsTraverseFlags) != (EcsThis|EcsIsVariable)) {
+        ecs_parser_error(name, expr, (result - expr), 
+            "invalid source for add expression (must be $this)");
+        return NULL;
+    }
+
+    *id = term.id;
+    
+    return result;
 }
 
 #endif
@@ -68412,7 +67501,6 @@ const char* flecs_script_token_kind_str(
     }
 }
 
-static
 const char* flecs_scan_whitespace(
     ecs_script_parser_t *parser,
     const char *pos) 

@@ -13,6 +13,10 @@
 #include "private_api.h"
 #include <ctype.h>
 
+#ifdef FLECS_SCRIPT
+#include "addons/script/script.h"
+#endif
+
 static
 const ecs_entity_t* flecs_bulk_new(
     ecs_world_t *world,
@@ -1326,45 +1330,16 @@ int flecs_traverse_from_expr(
     ecs_world_t *world,
     const char *name,
     const char *expr,
-    ecs_vec_t *ids,
-    bool replace_and)
+    ecs_vec_t *ids)
 {
     const char *ptr = expr;
     if (ptr) {
-        ecs_term_t term = {0};
-        while (ptr[0] && (ptr = ecs_parse_term(
-            world, world->stages[0], name, expr, ptr, &term, NULL, NULL, false)))
-        {
-            if (!ecs_term_is_initialized(&term)) {
+        ecs_id_t id = 0;
+        while (ptr[0] && (ptr = flecs_id_parse(world, name, ptr, &id))) {
+            if (!id) {
                 break;
             }
-
-            if (!(term.first.id & (EcsSelf|EcsUp))) {
-                term.first.id |= EcsSelf;
-            }
-
-            if (!(term.second.id & (EcsSelf|EcsUp))) {
-                term.second.id |= EcsSelf;
-            }
-
-            if (!(term.src.id & (EcsSelf|EcsUp))) {
-                term.src.id |= EcsSelf;
-            }
-
-            if (ecs_term_finalize(world, &term)) {
-                goto error;
-            }
-
-            if (!ecs_id_is_valid(world, term.id)) {
-                ecs_parser_error(name, expr, (ptr - expr), 
-                    "invalid term for add expression");
-                goto error;
-            }
-
-            if (term.oper == EcsAnd || !replace_and) {
-                /* Regular AND expression */
-                ecs_vec_append_t(&world->allocator, ids, ecs_id_t)[0] = term.id;
-            }
+            ecs_vec_append_t(&world->allocator, ids, ecs_id_t)[0] = id;
         }
 
         if (!ptr) {
@@ -1385,38 +1360,16 @@ void flecs_defer_from_expr(
     ecs_stage_t *stage,
     ecs_entity_t entity,
     const char *name,
-    const char *expr,
-    bool is_add,
-    bool replace_and)
+    const char *expr)
 {
     const char *ptr = expr;
     if (ptr) {
-        ecs_term_t term = {0};
-        while (ptr[0] && (ptr = ecs_parse_term(
-            world, stage, name, expr, ptr, &term, NULL, NULL, false)))
-        {
-            if (!ecs_term_is_initialized(&term)) {
+        ecs_id_t id = 0;
+        while (ptr[0] && (ptr = flecs_id_parse(world, name, ptr, &id))) {
+            if (!id) {
                 break;
             }
-
-            if (ecs_term_finalize(world, &term)) {
-                return;
-            }
-
-            if (!ecs_id_is_valid(world, term.id)) {
-                ecs_parser_error(name, expr, (ptr - expr), 
-                    "invalid term for add expression");
-                return;
-            }
-
-            if (term.oper == EcsAnd || !replace_and) {
-                /* Regular AND expression */
-                if (is_add) {
-                    ecs_add_id(world, entity, term.id);
-                } else {
-                    ecs_remove_id(world, entity, term.id);
-                }
-            }
+            ecs_add_id(world, entity, id);
         }
     }
 }
@@ -1444,7 +1397,7 @@ int flecs_traverse_add(
      * entity, so that expression can't resolve to self. */
     ecs_vec_init_t(&world->allocator, &ids, ecs_id_t, 0);
     if (desc->add_expr && ecs_os_strcmp(desc->add_expr, "0")) {
-        if (flecs_traverse_from_expr(world, name, desc->add_expr, &ids, true)) {
+        if (flecs_traverse_from_expr(world, name, desc->add_expr, &ids)) {
             goto error;
         }
     }
@@ -1621,7 +1574,7 @@ void flecs_deferred_add_remove(
     /* Add components from the 'add_expr' expression */
     if (desc->add_expr) {
         flecs_defer_from_expr(world, (ecs_stage_t*)world , entity, name,
-            desc->add_expr, true, true);
+            desc->add_expr);
     }
 
     int32_t thread_count = ecs_get_stage_count(world);

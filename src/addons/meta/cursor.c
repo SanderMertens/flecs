@@ -7,6 +7,9 @@
 #include <ctype.h>
 
 #ifdef FLECS_META
+#ifdef FLECS_SCRIPT
+#include "../script/script.h"
+#endif
 
 static
 const char* flecs_meta_op_kind_str(
@@ -1407,16 +1410,7 @@ int ecs_meta_set_string(
     }
     case EcsOpId: {
         ecs_id_t id = 0;
-        ecs_term_t term = {0};
-        ecs_stage_t *stage = flecs_stage_from_readonly_world(cursor->world);
-        if (ecs_parse_term(
-            cursor->world, stage, NULL, value, value, &term, NULL, NULL, false)) 
-        {
-            if (ecs_term_finalize(cursor->world, &term)) {
-                goto error;
-            }
-            id = term.id;
-        } else {
+        if (flecs_id_parse(cursor->world, NULL, value, &id) == NULL) {
             goto error;
         }
 

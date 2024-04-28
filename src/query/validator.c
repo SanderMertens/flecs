@@ -1339,7 +1339,7 @@ int flecs_query_query_populate_terms(
         script.token_buffer = flecs_alloc(
             &stage->allocator, script.token_buffer_size);
 
-        if (flecs_script_parse_terms(&script, &q->terms[term_count], 
+        if (flecs_terms_parse(&script, &q->terms[term_count], 
             &term_count))
         {
             flecs_free(&stage->allocator, 

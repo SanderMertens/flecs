@@ -507,7 +507,7 @@ const char* flecs_query_parse_term(
     ParserEnd;
 }
 
-int flecs_script_parse_terms(
+int flecs_terms_parse(
     ecs_script_t *script,
     ecs_term_t *terms,
     int32_t *term_count_out)
@@ -609,6 +609,69 @@ int flecs_script_parse_terms(
     return 0;
 error:
     return -1;
+}
+
+const char* flecs_id_parse(
+    const ecs_world_t *world,
+    const char *name,
+    const char *expr,
+    ecs_id_t *id)
+{
+    ecs_script_t script = {
+        /* Safe, won't mutate world */
+        .world = ECS_CONST_CAST(ecs_world_t*, world),
+        .name = name,
+        .code = expr
+    };
+
+    char token_buffer[256];
+    script.token_buffer_size = 256;
+    script.token_buffer = token_buffer;
+
+    ecs_term_t term = {0};
+    ecs_script_parser_t parser = {
+        .script = &script,
+        .pos = expr,
+        .term = &term,
+        .token_cur = token_buffer
+    };
+
+    expr = flecs_scan_whitespace(&parser, expr);
+    if (!ecs_os_strcmp(expr, "0")) {
+        *id = 0;
+        return &expr[1];
+    }
+
+    const char *result = flecs_query_parse_term(&parser, expr);
+    if (!result) {
+        return NULL;
+    }
+
+    if (ecs_term_finalize(world, &term)) {
+        return NULL;
+    }
+
+    if (!ecs_id_is_valid(world, term.id)) {
+        ecs_parser_error(name, expr, (result - expr), 
+            "invalid term for add expression");
+        return NULL;
+    }
+
+    if (term.oper != EcsAnd) {
+        ecs_parser_error(name, expr, (result - expr), 
+            "invalid operator for add expression");
+        return NULL;
+    }
+
+    if ((term.src.id & ~EcsTraverseFlags) != (EcsThis|EcsIsVariable)) {
+        ecs_parser_error(name, expr, (result - expr), 
+            "invalid source for add expression (must be $this)");
+        return NULL;
+    }
+
+    *id = term.id;
+    
+    return result;
 }
 
 #endif
