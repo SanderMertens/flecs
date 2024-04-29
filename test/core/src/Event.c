@@ -596,7 +596,7 @@ void Event_emit_custom_empty_type(void) {
 void Event_emit_w_param(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Position); /* Used as event type */
     
     ecs_entity_t id = ecs_new(world);
     ecs_entity_t e = ecs_new_w_id(world, id);
@@ -606,6 +606,44 @@ void Event_emit_w_param(void) {
 
     ecs_entity_t s = ecs_observer_init(world, &(ecs_observer_desc_t){
         .query.terms[0].id = id,
+        .events = {ecs_id(Position)},
+        .callback = system_w_param_callback,
+        .ctx = &ctx
+    });
+
+    ecs_emit(world, &(ecs_event_desc_t){
+        .event = ecs_id(Position),
+        .ids = &(ecs_type_t){.count = 1, .array = (ecs_id_t[]){ id }},
+        .entity = e,
+        .param = &p
+    });
+
+    test_int(ctx.invoked, 1);
+    test_assert(ctx.system == s);
+    test_assert(ctx.event == ecs_id(Position));
+    test_assert(ctx.event_id == id);
+    test_int(ctx.count, 1);
+    test_assert(ctx.e[0] == e);
+    test_assert(system_param == &p);
+
+    ecs_fini(world);
+}
+
+void Event_emit_w_param_multi_observer(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position); /* Used as event type */
+    ECS_TAG(world, Foo);
+
+    ecs_entity_t id = ecs_new(world);
+    ecs_entity_t e = ecs_new_w_id(world, id);
+    ecs_add(world, e, Foo);
+
+    Probe ctx = {0};
+    Position p = {10, 20};
+
+    ecs_entity_t s = ecs_observer_init(world, &(ecs_observer_desc_t){
+        .query.terms = {{ id }, { Foo }},
         .events = {ecs_id(Position)},
         .callback = system_w_param_callback,
         .ctx = &ctx
@@ -1537,4 +1575,3 @@ void Event_enqueue_on_readonly_world(void) {
 
     ecs_fini(world);
 }
-

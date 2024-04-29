@@ -304,6 +304,7 @@
                 "emit_custom_implicit_any",
                 "emit_custom_empty_type",
                 "emit_w_param",
+                "emit_w_param_multi_observer",
                 "emit_w_const_param",
                 "emit_nested",
                 "enqueue_event_1_id",

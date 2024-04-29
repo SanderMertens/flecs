@@ -13664,6 +13664,7 @@ bool flecs_multi_observer_invoke(
 
         user_it.ctx = o->ctx;
         user_it.binding_ctx = o->binding_ctx;
+        user_it.param = it->param;
         user_it.callback = o->callback;
         user_it.system = o->entity;
         user_it.event = it->event;
@@ -41336,15 +41337,6 @@ ecs_iter_t ecs_query_iter(
 
     return flecs_query_iter(world, q);
 }
-
-/**
- * @file addons/parser.c
- * @brief Parser addon.
- */
-
-
-#include <ctype.h>
-
 
 /**
  * @file addons/rules/trav_cache.c
