@@ -1534,7 +1534,7 @@ Position, !{ Velocity || Speed }
 ### Source
 > *Supported by: filters, cached queries, rules*
 
-Source is a property of a term that specifies the entity on which the term should be matched. Queries support two kinds of sources: static and variable. A static source is known when the query is created (for example: match `SimTime` on entity `Game`), whereas a variable source is resolved while the query is evaluated. When no explicit source is specified, a default variable source called `$This` is used (see [Variables](#variables)). 
+Source is a property of a term that specifies the entity on which the term should be matched. Queries support two kinds of sources: static and variable. A static source is known when the query is created (for example: match `SimTime` on entity `Game`), whereas a variable source is resolved while the query is evaluated. When no explicit source is specified, a default variable source called `$this` is used (see [Variables](#variables)). 
 
 When a query only has terms with fixed sources, iterating the query will return a result at least once when it matches, and at most once if the query terms do not match wildcards. If a query has one or more terms with a fixed source that do not match the entity, the query will return no results. A source does not need to match the query when the query is created.
 
@@ -1551,8 +1551,8 @@ ecs_add(world, Game, SimTime);
 
 ecs_query_t *f = ecs_query(world, {
   .terms = {
-    { ecs_id(Position) }, // normal term, uses $This source
-    { ecs_id(Velocity) },  // normal term, also uses $This source
+    { ecs_id(Position) }, // normal term, uses $this source
+    { ecs_id(Velocity) },  // normal term, also uses $this source
     { ecs_id(SimTime), .src.id = Game } // fixed source, match SimTime on Game
   }
 });
@@ -1587,12 +1587,12 @@ ecs_query_t *f = ecs_query(world, {
 });
 ```
 
-This examples shows how to access the entities matched by the default `$This` source and a fixed source:
+This examples shows how to access the entities matched by the default `$this` source and a fixed source:
 
 ```c
 ecs_query_t *f = ecs_query(world, {
   .terms = {
-    { ecs_id(Position) }, // normal term, uses $This source
+    { ecs_id(Position) }, // normal term, uses $this source
     { ecs_id(SimTime), .src.id = Game } // fixed source, match SimTime on Game
   }
 });
@@ -1602,14 +1602,14 @@ while (ecs_query_next(&it)) {
   ecs_entity_t src_2 = ecs_field_src(&it, 1); // Returns Game
 
   for (int i = 0; i < it.count; i ++) {
-    printf("$This = %s, src_2 = %s\n", 
+    printf("$this = %s, src_2 = %s\n", 
       ecs_get_name(world, it.entities[i]),
       ecs_get_name(world, src_2));
   }
 }
 ```
 
-The `entities` and `count` member are solely populated by the number of entities matched by the default `$This` source. If a query only contains fixed sources, `count` will be set to 0. This is important to keep in mind, as the inner for loop from the last example would never be iterated for a query that only has fixed sources.
+The `entities` and `count` member are solely populated by the number of entities matched by the default `$this` source. If a query only contains fixed sources, `count` will be set to 0. This is important to keep in mind, as the inner for loop from the last example would never be iterated for a query that only has fixed sources.
 
 #### Query Builder (C++)
 To specify a fixed source, call the `src` method to the entity to match. The following example shows how to set a source, and how to access the value provided by a term with a fixed source:
@@ -1619,8 +1619,8 @@ flecs::entity Game = world.entity()
   .add<SimTime>();
 
 flecs::query<> f = world.query_builder()
-  .term<Position>()  // normal term, uses $This source
-  .term<Velocity>()  // normal term, also uses $This source
+  .term<Position>()  // normal term, uses $this source
+  .term<Velocity>()  // normal term, also uses $this source
   .term<SimTime>().src(Game) // fixed source, match SimTime on Game
   .build();
 
@@ -1640,7 +1640,7 @@ Note how in this example all components can be accessed as arrays. When a query 
 
 Returning entities one at a time can negatively affect performance, especially for large tables. To learn more about why this behavior exists and how to ensure that mixed results use table-based iteration, see [Instancing](#instancing). 
 
-The next example shows how queries with mixed `$This` and fixed sources can be iterated with `each`. The `each` function does not have the performance drawback of the last `iter` example, as it uses [instancing](#instancing) by default.
+The next example shows how queries with mixed `$this` and fixed sources can be iterated with `each`. The `each` function does not have the performance drawback of the last `iter` example, as it uses [instancing](#instancing) by default.
 
 ```cpp
 flecs::query<Position, Velocity, SimTime> f = 
@@ -1655,7 +1655,7 @@ f.each([](flecs::entity e, Position& p, Velocity& v, SimTime& st) {
 });
 ```
 
-When a query has no terms for the `$This` source, it must be iterated with the `iter` function or with a variant of `each` that does not have a signature with `flecs::entity` as first argument:
+When a query has no terms for the `$this` source, it must be iterated with the `iter` function or with a variant of `each` that does not have a signature with `flecs::entity` as first argument:
 
 ```cpp
 flecs::query<SimConfig, SimTime> f = 
@@ -1696,7 +1696,7 @@ flecs::query<SimConfig, SimTime> f =
 ```
 
 #### Query DSL
-To specify a source in the DSL, use parenthesis after the component identifier. The following example uses the default `$This` source for `Position` and `Velocity`, and `Game` as source for `SimTime`.
+To specify a source in the DSL, use parenthesis after the component identifier. The following example uses the default `$this` source for `Position` and `Velocity`, and `Game` as source for `SimTime`.
 
 ```
 Position, Velocity, SimTime(Game)
@@ -1705,10 +1705,10 @@ Position, Velocity, SimTime(Game)
 In the previous example the source for `Position` and `Velocity` is implicit. The following example shows the same query with explicit sources for all terms:
 
 ```
-Position($This), Velocity($This), SimTime(Game)
+Position($this), Velocity($this), SimTime(Game)
 ```
 
-To specify a source for a pair, the second element of the pair is placed inside the parenthesis after the source. The following query uses the default `$This` source for the `(Color, Diffuse)` pair, and `Game` as source for the  `(Color, Sky)` pair.
+To specify a source for a pair, the second element of the pair is placed inside the parenthesis after the source. The following query uses the default `$this` source for the `(Color, Diffuse)` pair, and `Game` as source for the  `(Color, Sky)` pair.
 
 ```
 (Color, Diffuse), Color(Game, Sky)
@@ -1717,7 +1717,7 @@ To specify a source for a pair, the second element of the pair is placed inside 
 In the previous example the source for `(Color, Diffuse)` is implicit. The following example shows the same query with explicit sources for all terms:
 
 ```
-Color($This, Diffuse), Color(Game, Sky)
+Color($this, Diffuse), Color(Game, Sky)
 ```
 
 ### Singletons
@@ -2269,12 +2269,12 @@ Query variables represent the state of a query while it is being evaluated. The 
 Consider this query example, written down with explicit term [sources](#source):
 
 ```
-Position($This), Velocity($This)
+Position($this), Velocity($this)
 ```
 
 The first term to encounter a variable is usually the one to populate it with all candidates that could match that term. Subsequent terms then use the already populated variable to test if it matches. If the condition matches, the query moves on to the next term. If the condition fails, the query moves back to the previous term and, if necessary, populates the variable with the next candidate. These kinds of conditions are usually referred to as [predicates](https://en.wikipedia.org/wiki/Predicate_(mathematical_logic)), and this evaluation process is called [backtracking](https://en.wikipedia.org/wiki/Backtracking).
 
-This process effectively _constrains_ the possible results that a term could yield. By itself, the `Velocity` term would return all entities with the `Velocity` component, but because `$This` has been assigned already with entities that have `Position`, the term only feeds forward entities that have both `Position` and `Velocity`.
+This process effectively _constrains_ the possible results that a term could yield. By itself, the `Velocity` term would return all entities with the `Velocity` component, but because `$this` has been assigned already with entities that have `Position`, the term only feeds forward entities that have both `Position` and `Velocity`.
 
 While using variables as [source](#source) is the most common application for variables, variables can be used in any part of the term. Consider constructing a query for all spaceships that are docked to a planet. A first attempt could look like this:
 
@@ -2285,24 +2285,24 @@ SpaceShip, (DockedTo, *)
 When rewritten with explicit sources, the query looks like this:
 
 ```
-SpaceShip($This), DockedTo($This, *)
+SpaceShip($this), DockedTo($this, *)
 ```
 
 This returns all spaceships that are docked to _anything_, instead of docked to planets. To constrain the result of this query, the wildcard used as target for the `DockedTo` relationship can be replaced with a variable. An example:
 
 ```
-SpaceShip($This), DockedTo($This, $Location)
+SpaceShip($this), DockedTo($this, $Location)
 ```
 
 When the second term is evaluated for the first time, `$Location` will not yet be populated. This causes the term to do two things:
 
-1. Test if the entity/table populated in `$This` has `(DockedTo, *)`
+1. Test if the entity/table populated in `$this` has `(DockedTo, *)`
 2. If so, populate `$Location` with the id matched by `*`.
 
 After evaluating the second term, the `$Location` variable is populated with the location the spaceship is docked to. We can now use this variable in a new term, that constrains the location to only entities that have `Planet`:
 
 ```
-SpaceShip($This), DockedTo($This, $Location), Planet($Location)
+SpaceShip($this), DockedTo($this, $Location), Planet($Location)
 ```
 
 This query returns the desired result ("return all spaceships docked to a planet").
@@ -2310,7 +2310,7 @@ This query returns the desired result ("return all spaceships docked to a planet
 Variables can also be used to constrain matched components. Consider the following example query:
 
 ```
-Serializable($Component), $Component($This)
+Serializable($Component), $Component($this)
 ```
 
 This query returns serializable components for all entities that have at least one.
@@ -2319,12 +2319,12 @@ This query returns serializable components for all entities that have at least o
 By default variables are assigned while the query is being iterated, but variables can be set before query iteration to constrain the results of a query. Consider the previous example:
 
 ```
-SpaceShip($This), DockedTo($This, $Location)
+SpaceShip($this), DockedTo($this, $Location)
 ```
 
-An application can set the `$This` variable or `$Location` variables, or both, before starting iteration to constrain the results returned by the query. This makes it possible to reuse a single query for multiple purposes, which provides better performance when compared to creating multiple queries.
+An application can set the `$this` variable or `$Location` variables, or both, before starting iteration to constrain the results returned by the query. This makes it possible to reuse a single query for multiple purposes, which provides better performance when compared to creating multiple queries.
 
-The following sections show how to use queries in the different language bindings. The code examples use rules queries, which currently are the only queries that support using variables other than `$This`.
+The following sections show how to use queries in the different language bindings. The code examples use rules queries, which currently are the only queries that support using variables other than `$this`.
 
 #### Query Descriptor (C)
 Query variables can be specified by setting the `name` member in combination with setting the `EcsIsVariable` bit in the `flags` member:

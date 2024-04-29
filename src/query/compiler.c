@@ -1025,7 +1025,7 @@ int flecs_query_compile(
         compiled |= (1ull << compile);
     }
 
-    ecs_var_id_t this_id = flecs_query_find_var_id(query, "This", EcsVarEntity);
+    ecs_var_id_t this_id = flecs_query_find_var_id(query, "this", EcsVarEntity);
 
     /* If This variable has been written as entity, insert an operation to 
      * assign it to it.entities for consistency. */

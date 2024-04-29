@@ -179,7 +179,7 @@ void Parser_component_explicit_subject_this(void) {
     ECS_TAG(world, Pred);
 
     ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
-        .expr = "Pred($This)"
+        .expr = "Pred($this)"
     });
     test_assert(q != NULL);
     test_int(term_count(q), 1);
@@ -225,7 +225,7 @@ void Parser_component_explicit_subject_this_by_var_name(void) {
     ECS_TAG(world, Pred);
 
     ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
-        .expr = "Pred($This)"
+        .expr = "Pred($this)"
     });
     test_assert(q != NULL);
 
@@ -337,7 +337,7 @@ void Parser_this_var_as_predicate(void) {
     ECS_TAG(world, Subj);
 
     ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
-        .expr = "$This(Subj)"
+        .expr = "$this(Subj)"
     });
     test_assert(q != NULL);
     test_int(term_count(q), 1);
@@ -406,7 +406,7 @@ void Parser_this_var_as_object(void) {
     ECS_TAG(world, Subj);
 
     ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
-        .expr = "Pred(Subj, $This)"
+        .expr = "Pred(Subj, $this)"
     });
     test_assert(q != NULL);
     test_int(term_count(q), 1);
@@ -550,7 +550,7 @@ void Parser_pair_implicit_subject_this_pred(void) {
     ECS_TAG(world, Obj);
 
     ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
-        .expr = "($This, Obj)"
+        .expr = "($this, Obj)"
     });
     test_assert(q != NULL);
     test_int(term_count(q), 1);
@@ -574,7 +574,7 @@ void Parser_pair_implicit_subject_this_obj(void) {
     ECS_TAG(world, Obj);
 
     ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
-        .expr = "(Pred, $This)"
+        .expr = "(Pred, $this)"
     });
     test_assert(q != NULL);
     test_int(term_count(q), 1);
@@ -797,7 +797,7 @@ void Parser_pair_explicit_subject_this(void) {
     ECS_TAG(world, Obj);
 
     ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
-        .expr = "Pred($This, Obj)"
+        .expr = "Pred($this, Obj)"
     });
     test_assert(q != NULL);
     test_int(term_count(q), 1);
@@ -845,7 +845,7 @@ void Parser_pair_explicit_subject_this_by_var_name(void) {
     ECS_TAG(world, Obj);
 
     ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
-        .expr = "Pred($This, Obj)"
+        .expr = "Pred($this, Obj)"
     });
     test_assert(q != NULL);
     test_int(term_count(q), 1);
@@ -869,7 +869,7 @@ void Parser_pair_explicit_subject_wildcard_pred(void) {
     ECS_TAG(world, Obj);
 
     ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
-        .expr = "*($This, Obj)"
+        .expr = "*($this, Obj)"
     });
     test_assert(q != NULL);
     test_int(term_count(q), 1);
@@ -917,7 +917,7 @@ void Parser_pair_explicit_subject_wildcard_obj(void) {
     ECS_TAG(world, Obj);
 
     ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
-        .expr = "Pred($This, *)"
+        .expr = "Pred($this, *)"
     });
     test_assert(q != NULL);
     test_int(term_count(q), 1);
@@ -960,7 +960,7 @@ void Parser_pair_explicit_subject_0_object(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
-        .expr = "ChildOf($This, 0)"
+        .expr = "ChildOf($this, 0)"
     });
     test_assert(q != NULL);
     test_int(term_count(q), 1);
@@ -1380,7 +1380,7 @@ void Parser_this_singleton(void) {
     ECS_TAG(world, Obj);
 
     ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
-        .expr = "$This($)"
+        .expr = "$this($)"
     });
     test_assert(q != NULL);
     test_int(term_count(q), 1);
@@ -1974,7 +1974,7 @@ void Parser_pred_explicit_subject_w_role(void) {
     ECS_TAG(world, Pred);
 
     ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
-        .expr = "TOGGLE | Pred($This)"
+        .expr = "TOGGLE | Pred($this)"
     });
     test_assert(q != NULL);
     test_int(term_count(q), 1);
@@ -2043,7 +2043,7 @@ void Parser_pair_explicit_subject_w_role(void) {
     ECS_TAG(world, Obj);
 
     ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
-        .expr = "Pred($This, Obj)"
+        .expr = "Pred($this, Obj)"
     });
     test_assert(q != NULL);
     test_int(term_count(q), 1);
@@ -2110,7 +2110,7 @@ void Parser_inout_role_pred_explicit_subject(void) {
     ECS_TAG(world, Pred);
 
     ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
-        .expr = "[inout] TOGGLE | Pred($This)"
+        .expr = "[inout] TOGGLE | Pred($this)"
     });
     test_assert(q != NULL);
     test_int(term_count(q), 1);
@@ -2157,7 +2157,7 @@ void Parser_inout_role_pair_explicit_subject(void) {
     ECS_TAG(world, Obj);
 
     ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
-        .expr = "[inout] Pred($This, Obj)"
+        .expr = "[inout] Pred($this, Obj)"
     });
     test_assert(q != NULL);
     test_int(term_count(q), 1);
@@ -2239,7 +2239,7 @@ void Parser_2_pred_explicit_subject(void) {
     ECS_TAG(world, Pred_2);
 
     ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
-        .expr = "Pred_1($This), Pred_2($This)"
+        .expr = "Pred_1($this), Pred_2($this)"
     });
     test_assert(q != NULL);
     test_int(term_count(q), 2);
@@ -2303,7 +2303,7 @@ void Parser_2_pair_explicit_subject(void) {
     ECS_TAG(world, Obj_2);
 
     ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
-        .expr = "Pred_1($This, Obj_1), Pred_2($This, Obj_2)"
+        .expr = "Pred_1($this, Obj_1), Pred_2($this, Obj_2)"
     });
     test_assert(q != NULL);
     test_int(term_count(q), 2);
@@ -2398,7 +2398,7 @@ void Parser_2_pair_explicit_subj_role(void) {
     ECS_TAG(world, Obj_2);
 
     ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
-        .expr = "Pred_1($This, Obj_1), Pred_2($This, Obj_2)"
+        .expr = "Pred_1($this, Obj_1), Pred_2($this, Obj_2)"
     });
     test_assert(q != NULL);
     test_int(term_count(q), 2);
@@ -2457,7 +2457,7 @@ void Parser_2_or_pred_explicit_subj(void) {
     ECS_TAG(world, Pred_2);
 
     ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
-        .expr = "Pred_1($This) || Pred_2($This)"
+        .expr = "Pred_1($this) || Pred_2($this)"
     });
     test_assert(q != NULL);
     test_int(term_count(q), 2);
@@ -2519,7 +2519,7 @@ void Parser_2_or_pair_explicit_subj(void) {
     ECS_TAG(world, Obj_2);
 
     ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
-        .expr = "Pred_1($This, Obj_1) || Pred_2($This, Obj_2)"
+        .expr = "Pred_1($this, Obj_1) || Pred_2($this, Obj_2)"
     });
     test_assert(q != NULL);
     test_int(term_count(q), 2);
@@ -3843,7 +3843,7 @@ void Parser_this_subj_var_kind(void) {
     ECS_TAG(world, TagB);
 
     ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
-        .expr = "TagA, TagB($This)"
+        .expr = "TagA, TagB($this)"
     });
     test_assert(q != NULL);
     test_int(term_count(q), 2);
@@ -3872,7 +3872,7 @@ void Parser_this_obj_var_kind(void) {
     ECS_TAG(world, Subj);
 
     ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
-        .expr = "TagA, TagB(Subj, $This)"
+        .expr = "TagA, TagB(Subj, $this)"
     });
     test_assert(q != NULL);
     test_int(term_count(q), 2);
@@ -3901,7 +3901,7 @@ void Parser_this_subj_obj_var_kind(void) {
     ECS_TAG(world, TagB);
 
     ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
-        .expr = "TagA, TagB($This, $This)"
+        .expr = "TagA, TagB($this, $this)"
     });
     test_assert(q != NULL);
     test_int(term_count(q), 2);
@@ -4026,7 +4026,7 @@ void Parser_this_pred_no_name(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
-        .expr = "$This"
+        .expr = "$this"
     });
     test_assert(q != NULL);
     test_int(term_count(q), 1);
@@ -4051,7 +4051,7 @@ void Parser_this_subj_no_name(void) {
     ECS_TAG(world, Subj);
 
     ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
-        .expr = "TagA($This)"
+        .expr = "TagA($this)"
     });
     test_assert(q != NULL);
     test_int(term_count(q), 1);
@@ -4076,7 +4076,7 @@ void Parser_this_obj_no_name(void) {
     ECS_TAG(world, Subj);
 
     ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
-        .expr = "TagA(Subj, $This)"
+        .expr = "TagA(Subj, $this)"
     });
     test_assert(q != NULL);
     test_int(term_count(q), 1);

@@ -1745,7 +1745,7 @@ void Variables_1_src_pair_first_same_var_this(void) {
 
     test_assert(q != NULL);
 
-    int32_t this_var = ecs_query_find_var(q, "This");
+    int32_t this_var = ecs_query_find_var(q, "this");
     test_assert(this_var != -1);
     test_assert(this_var != 0);
 
@@ -1817,7 +1817,7 @@ void Variables_1_src_pair_second_same_var_this(void) {
 
     test_assert(q != NULL);
 
-    int32_t this_var = ecs_query_find_var(q, "This");
+    int32_t this_var = ecs_query_find_var(q, "this");
     test_assert(this_var != -1);
     test_assert(this_var != 0);
 
@@ -1897,7 +1897,7 @@ void Variables_1_src_pair_first_and_second_same_var_this(void) {
 
     test_assert(q != NULL);
 
-    int32_t this_var = ecs_query_find_var(q, "This");
+    int32_t this_var = ecs_query_find_var(q, "this");
     test_assert(this_var != -1);
     test_assert(this_var != 0);
 
@@ -1975,7 +1975,7 @@ void Variables_1_src_id_same_var_this_after_write(void) {
 
     test_assert(q != NULL);
 
-    int32_t this_var = ecs_query_find_var(q, "This");
+    int32_t this_var = ecs_query_find_var(q, "this");
     test_assert(this_var != -1);
     test_assert(this_var != 0);
 
@@ -2048,7 +2048,7 @@ void Variables_1_src_pair_first_same_var_this_after_write(void) {
 
     test_assert(q != NULL);
 
-    int32_t this_var = ecs_query_find_var(q, "This");
+    int32_t this_var = ecs_query_find_var(q, "this");
     test_assert(this_var != -1);
     test_assert(this_var != 0);
 
@@ -2135,7 +2135,7 @@ void Variables_1_src_pair_second_same_var_this_after_write(void) {
 
     test_assert(q != NULL);
 
-    int32_t this_var = ecs_query_find_var(q, "This");
+    int32_t this_var = ecs_query_find_var(q, "this");
     test_assert(this_var != -1);
 
     {
@@ -2225,7 +2225,7 @@ void Variables_1_src_pair_first_and_second_same_var_this_after_write(void) {
 
     test_assert(q != NULL);
 
-    int32_t this_var = ecs_query_find_var(q, "This");
+    int32_t this_var = ecs_query_find_var(q, "this");
     test_assert(this_var != -1);
 
     {
@@ -2314,7 +2314,7 @@ void Variables_1_ent_src_w_this_var(void) {
 
     test_assert(q != NULL);
 
-    int this_var = ecs_query_find_var(q, "This");
+    int this_var = ecs_query_find_var(q, "this");
     test_assert(this_var != -1);
     test_assert(this_var != 0);
 
@@ -2366,7 +2366,7 @@ void Variables_1_ent_src_w_pair_this_rel(void) {
 
     test_assert(q != NULL);
 
-    int this_var = ecs_query_find_var(q, "This");
+    int this_var = ecs_query_find_var(q, "this");
     test_assert(this_var != -1);
     test_assert(this_var != 0);
 
@@ -2426,7 +2426,7 @@ void Variables_1_ent_src_w_pair_this_tgt(void) {
 
     test_assert(q != NULL);
 
-    int this_var = ecs_query_find_var(q, "This");
+    int this_var = ecs_query_find_var(q, "this");
     test_assert(this_var != -1);
     test_assert(this_var != 0);
 
@@ -2486,7 +2486,7 @@ void Variables_1_ent_src_w_pair_this_rel_tgt(void) {
 
     test_assert(q != NULL);
 
-    int this_var = ecs_query_find_var(q, "This");
+    int this_var = ecs_query_find_var(q, "this");
     test_assert(this_var != -1);
     test_assert(this_var != 0);
 
@@ -2553,7 +2553,7 @@ void Variables_1_this_src_w_this(void) {
 
     test_assert(q != NULL);
 
-    int this_var = ecs_query_find_var(q, "This");
+    int this_var = ecs_query_find_var(q, "this");
     test_assert(this_var != -1);
     test_assert(this_var != 0);
 
@@ -2604,7 +2604,7 @@ void Variables_1_this_src_w_pair_this_rel_tgt(void) {
 
     test_assert(q != NULL);
 
-    int this_var = ecs_query_find_var(q, "This");
+    int this_var = ecs_query_find_var(q, "this");
     test_assert(this_var != -1);
     test_assert(this_var != 0);
 
@@ -2662,7 +2662,7 @@ void Variables_1_this_src_w_this_after_write(void) {
 
     test_assert(q != NULL);
 
-    int this_var = ecs_query_find_var(q, "This");
+    int this_var = ecs_query_find_var(q, "this");
     test_assert(this_var != -1);
     test_assert(this_var != 0);
 
@@ -2713,7 +2713,7 @@ void Variables_1_this_src_w_pair_this_rel_tgt_after_write(void) {
 
     test_assert(q != NULL);
 
-    int this_var = ecs_query_find_var(q, "This");
+    int this_var = ecs_query_find_var(q, "this");
     test_assert(this_var != -1);
     test_assert(this_var != 0);
 
@@ -4180,7 +4180,7 @@ void Variables_1_set_src_this(void) {
 
     test_assert(q != NULL);
 
-    int this_var = ecs_query_find_var(q, "This");
+    int this_var = ecs_query_find_var(q, "this");
     test_assert(this_var == 0);
 
     {
@@ -4233,7 +4233,7 @@ void Variables_1_set_src_this_w_pair(void) {
 
     test_assert(q != NULL);
 
-    int this_var = ecs_query_find_var(q, "This");
+    int this_var = ecs_query_find_var(q, "this");
     test_assert(this_var != -1);
 
     {
@@ -4290,7 +4290,7 @@ void Variables_1_set_src_this_w_pair_set_rel(void) {
 
     test_assert(q != NULL);
 
-    int this_var = ecs_query_find_var(q, "This");
+    int this_var = ecs_query_find_var(q, "this");
     test_assert(this_var != -1);
 
     {
@@ -4353,7 +4353,7 @@ void Variables_1_set_src_this_w_pair_set_tgt(void) {
 
     test_assert(q != NULL);
 
-    int this_var = ecs_query_find_var(q, "This");
+    int this_var = ecs_query_find_var(q, "this");
     test_assert(this_var != -1);
 
     {
@@ -4416,7 +4416,7 @@ void Variables_1_set_src_this_w_pair_set_rel_tgt(void) {
 
     test_assert(q != NULL);
 
-    int this_var = ecs_query_find_var(q, "This");
+    int this_var = ecs_query_find_var(q, "this");
     test_assert(this_var != -1);
 
     {
@@ -7975,7 +7975,7 @@ void Variables_2_cycle_w_this_var(void) {
 
     test_assert(q != NULL);
 
-    int this_var = ecs_query_find_var(q, "This");
+    int this_var = ecs_query_find_var(q, "this");
     test_assert(this_var != -1);
 
     int y_var = ecs_query_find_var(q, "y");
@@ -8045,7 +8045,7 @@ void Variables_2_cycle_w_var_this(void) {
 
     test_assert(q != NULL);
 
-    int this_var = ecs_query_find_var(q, "This");
+    int this_var = ecs_query_find_var(q, "this");
     test_assert(this_var != -1);
 
     int x_var = ecs_query_find_var(q, "x");
@@ -8178,7 +8178,7 @@ void Variables_2_cycle_pair_w_this_var_var(void) {
 
     test_assert(q != NULL);
 
-    int this_var = ecs_query_find_var(q, "This");
+    int this_var = ecs_query_find_var(q, "this");
     test_assert(this_var != -1);
 
     int y_var = ecs_query_find_var(q, "y");
@@ -8251,7 +8251,7 @@ void Variables_2_cycle_pair_w_var_this_var(void) {
     int x_var = ecs_query_find_var(q, "x");
     test_assert(x_var != -1);
 
-    int this_var = ecs_query_find_var(q, "This");
+    int this_var = ecs_query_find_var(q, "this");
     test_assert(this_var != -1);
 
     int z_var = ecs_query_find_var(q, "z");
@@ -8324,7 +8324,7 @@ void Variables_2_cycle_pair_w_var_var_this(void) {
     int y_var = ecs_query_find_var(q, "y");
     test_assert(y_var != -1);
 
-    int this_var = ecs_query_find_var(q, "This");
+    int this_var = ecs_query_find_var(q, "this");
     test_assert(this_var != -1);
 
     {
@@ -8477,7 +8477,7 @@ void Variables_2_cycle_pair_ent_this_var(void) {
 
     test_assert(q != NULL);
 
-    int this_var = ecs_query_find_var(q, "This");
+    int this_var = ecs_query_find_var(q, "this");
     test_assert(this_var != -1);
     test_assert(this_var != 0);
 
@@ -8575,7 +8575,7 @@ void Variables_2_cycle_pair_ent_var_this(void) {
     int x_var = ecs_query_find_var(q, "x");
     test_assert(x_var != -1);
 
-    int this_var = ecs_query_find_var(q, "This");
+    int this_var = ecs_query_find_var(q, "this");
     test_assert(this_var != -1);
     test_assert(this_var != 0);
 

@@ -1258,7 +1258,7 @@ void Validator_validate_w_this_variable_name(void) {
 
     ecs_query_t *q = ecs_query(world, {
         .terms[0].first.id = Tag,
-        .terms[0].src.name = "This",
+        .terms[0].src.name = "this",
         .terms[0].src.id = EcsIsVariable
     });
 

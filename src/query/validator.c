@@ -94,7 +94,7 @@ int flecs_term_ref_lookup(
     }
 
     if (ref->id & EcsIsVariable) {
-        if (!ecs_os_strcmp(name, "This") || !ecs_os_strcmp(name, "this")) {
+        if (!ecs_os_strcmp(name, "this")) {
             ref->id = EcsThis | ECS_TERM_REF_FLAGS(ref);
             ref->name = NULL;
             return 0;
@@ -941,9 +941,7 @@ void flecs_normalize_term_name(
         const char *old = ref->name;
         ref->name = &old[1];
 
-        if (!ecs_os_strcmp(ref->name, "This") || 
-            !ecs_os_strcmp(ref->name, "this")) 
-        {
+        if (!ecs_os_strcmp(ref->name, "this")) {
             ref->name = NULL;
             ref->id |= EcsThis;
         }

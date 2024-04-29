@@ -369,7 +369,7 @@ char* ecs_iter_str(
         int32_t actual_count = 0;
         for (i = 0; i < it->variable_count; i ++) {
             const char *var_name = it->variable_names[i];
-            if (!var_name || var_name[0] == '_' || !strcmp(var_name, "This")) {
+            if (!var_name || var_name[0] == '_' || !strcmp(var_name, "this")) {
                 /* Skip anonymous variables */
                 continue;
             }

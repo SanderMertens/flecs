@@ -147,7 +147,7 @@ void Recycled_recycled_this_ent_var(void) {
     test_assert(x_var != -1);
     int32_t y_var = ecs_query_find_var(r, "y");
     test_assert(y_var != -1);
-    int32_t this_var = ecs_query_find_var(r, "This");
+    int32_t this_var = ecs_query_find_var(r, "this");
     test_assert(this_var != -1);
 
     ecs_iter_t it = ecs_query_iter(world, r);

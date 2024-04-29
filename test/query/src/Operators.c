@@ -6610,7 +6610,7 @@ void Operators_root_entities_w_children(void) {
 
     test_assert(q != NULL);
 
-    int this_var = ecs_query_find_var(q, "This");
+    int this_var = ecs_query_find_var(q, "this");
     test_assert(this_var != -1);
     test_assert(this_var != 0);
 
@@ -6665,7 +6665,7 @@ void Operators_root_entities_w_optional_children(void) {
 
     test_assert(q != NULL);
 
-    int this_var = ecs_query_find_var(q, "This");
+    int this_var = ecs_query_find_var(q, "this");
     test_assert(this_var != -1);
     test_assert(this_var != 0);
 
@@ -6740,7 +6740,7 @@ void Operators_core_entities_w_optional_children(void) {
 
     test_assert(q != NULL);
 
-    int this_var = ecs_query_find_var(q, "This");
+    int this_var = ecs_query_find_var(q, "this");
     test_assert(this_var != -1);
     test_assert(this_var != 0);
 
@@ -6785,7 +6785,7 @@ void Operators_root_entities_w_not_children(void) {
 
     test_assert(q != NULL);
 
-    int this_var = ecs_query_find_var(q, "This");
+    int this_var = ecs_query_find_var(q, "this");
     test_assert(this_var != -1);
     test_assert(this_var != 0);
 
@@ -6842,7 +6842,7 @@ void Operators_core_entities_w_not_children(void) {
 
     test_assert(q != NULL);
 
-    int this_var = ecs_query_find_var(q, "This");
+    int this_var = ecs_query_find_var(q, "this");
     test_assert(this_var != -1);
     test_assert(this_var != 0);
 

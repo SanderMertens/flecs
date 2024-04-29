@@ -14,11 +14,6 @@ ecs_var_id_t flecs_query_find_var_id(
 {
     ecs_assert(name != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    /* Backwards compatibility */
-    if (!ecs_os_strcmp(name, "This")) {
-        name = "this";
-    }
-
     if (kind == EcsVarTable) {
         if (!ecs_os_strcmp(name, EcsThisName)) {
             if (query->has_table_this) {

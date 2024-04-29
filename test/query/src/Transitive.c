@@ -2436,7 +2436,7 @@ void Transitive_1_ent_src_tgt_this_0_lvl(void) {
 
     test_assert(r != NULL);
 
-    int this_var = ecs_query_find_var(r, "This");
+    int this_var = ecs_query_find_var(r, "this");
     test_assert(this_var != -1);
     test_assert(this_var != 0);
 
@@ -2486,7 +2486,7 @@ void Transitive_1_ent_src_tgt_this_1_lvl(void) {
 
     test_assert(r != NULL);
 
-    int this_var = ecs_query_find_var(r, "This");
+    int this_var = ecs_query_find_var(r, "this");
     test_assert(this_var != -1);
     test_assert(this_var != 0);
 
@@ -2543,7 +2543,7 @@ void Transitive_1_ent_src_tgt_this_2_lvl(void) {
 
     test_assert(r != NULL);
 
-    int this_var = ecs_query_find_var(r, "This");
+    int this_var = ecs_query_find_var(r, "this");
     test_assert(this_var != -1);
     test_assert(this_var != 0);
 
@@ -2609,7 +2609,7 @@ void Transitive_1_ent_src_tgt_this_reflexive(void) {
 
     test_assert(r != NULL);
 
-    int this_var = ecs_query_find_var(r, "This");
+    int this_var = ecs_query_find_var(r, "this");
     test_assert(this_var != -1);
     test_assert(this_var != 0);
 
@@ -2673,7 +2673,7 @@ void Transitive_1_var_src_tgt_this(void) {
 
     test_assert(r != NULL);
 
-    int this_var = ecs_query_find_var(r, "This");
+    int this_var = ecs_query_find_var(r, "this");
     test_assert(this_var != -1);
     test_assert(this_var != 0);
 
@@ -2865,7 +2865,7 @@ void Transitive_1_var_src_tgt_this_reflexive(void) {
 
     test_assert(r != NULL);
 
-    int this_var = ecs_query_find_var(r, "This");
+    int this_var = ecs_query_find_var(r, "this");
     test_assert(this_var != -1);
 
     int r_var = ecs_query_find_var(r, "r");
@@ -4045,7 +4045,7 @@ void Transitive_1_src_tgt_same_this_var_reflexive(void) {
 
     test_assert(r != NULL);
 
-    int this_var = ecs_query_find_var(r, "This");
+    int this_var = ecs_query_find_var(r, "this");
     test_assert(this_var != -1);
     test_assert(this_var != 0);
 

@@ -3191,7 +3191,7 @@ void Basic_1_wildcard_src_w_pair_tgt_this(void) {
 
     test_assert(r != NULL);
 
-    int this_var = ecs_query_find_var(r, "This");
+    int this_var = ecs_query_find_var(r, "this");
     test_assert(this_var != -1);
 
     {
@@ -3249,7 +3249,7 @@ void Basic_1_wildcard_src_w_pair_rel_this(void) {
 
     test_assert(r != NULL);
 
-    int this_var = ecs_query_find_var(r, "This");
+    int this_var = ecs_query_find_var(r, "this");
     test_assert(this_var != -1);
 
     {
@@ -3676,7 +3676,7 @@ void Basic_1_any_src_w_pair_tgt_this(void) {
 
     test_assert(r != NULL);
 
-    int this_var = ecs_query_find_var(r, "This");
+    int this_var = ecs_query_find_var(r, "this");
     test_assert(this_var != -1);
 
     {
@@ -3737,7 +3737,7 @@ void Basic_1_any_src_w_pair_rel_this(void) {
 
     test_assert(r != NULL);
 
-    int this_var = ecs_query_find_var(r, "This");
+    int this_var = ecs_query_find_var(r, "this");
     test_assert(this_var != -1);
 
     {
@@ -5058,7 +5058,7 @@ void Basic_find_this_uppercase(void) {
 
     test_assert(r != NULL);
 
-    int this_var = ecs_query_find_var(r, "This");
+    int this_var = ecs_query_find_var(r, "this");
     test_assert(this_var != -1);
     test_assert(this_var == 0);
 
@@ -5094,7 +5094,7 @@ void Basic_find_this_tgt_uppercase(void) {
     ECS_TAG(world, Rel);
 
     ecs_query_t *r = ecs_query(world, {
-        .expr = "Rel(*, $This)",
+        .expr = "Rel(*, $this)",
         .cache_kind = cache_kind
     });
 

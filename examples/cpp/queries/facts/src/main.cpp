@@ -8,7 +8,7 @@
 // When written out in full, this query looks like:
 //   Position($this), Velocity($this)
 //
-// "This" is a (builtin) query variable that is unknown before we evaluate the 
+// "this" is a (builtin) query variable that is unknown before we evaluate the 
 // query. Therefore this query does not test a fact, we can't know which values
 // This will assume.
 //

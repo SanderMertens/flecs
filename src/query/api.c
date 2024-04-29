@@ -32,9 +32,6 @@ int32_t ecs_query_find_var(
     ecs_var_id_t var_id = flecs_query_find_var_id(impl, name, EcsVarEntity);
     if (var_id == EcsVarNone) {
         if (q->flags & EcsQueryMatchThis) {
-            if (!ecs_os_strcmp(name, "This")) {
-                name = "this";
-            }
             if (!ecs_os_strcmp(name, EcsThisName)) {
                 var_id = 0;
             }
