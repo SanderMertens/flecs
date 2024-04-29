@@ -102,11 +102,23 @@ const char* flecs_scan_whitespace_and_comment(
 {
 repeat_skip_whitespace_comment:
     pos = flecs_scan_whitespace(parser, pos);
-    if (pos[0] == '/' && pos[1] == '/') {
-        for (pos = pos + 2; pos[0] && pos[0] != '\n'; pos ++) { }
-        if (pos[0] == '\n') {
-            pos ++;
-            goto repeat_skip_whitespace_comment;
+    if (pos[0] == '/') {
+        if (pos[1] == '/') {
+            for (pos = pos + 2; pos[0] && pos[0] != '\n'; pos ++) { }
+            if (pos[0] == '\n') {
+                pos ++;
+                goto repeat_skip_whitespace_comment;
+            }
+        } else if (pos[1] == '*') {
+            for (pos = &pos[2]; pos[0] != 0; pos ++) {
+                if (pos[0] == '*' && pos[1] == '/') {
+                    pos += 2;
+                    goto repeat_skip_whitespace_comment;
+                }
+            }
+
+            ecs_parser_error(parser->script->name, parser->script->code, 
+                pos - parser->script->code, "missing */ for multiline comment");
         }
     }
 

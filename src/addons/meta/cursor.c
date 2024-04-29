@@ -319,6 +319,28 @@ int ecs_meta_member(
     return 0;
 }
 
+const char* flecs_meta_parse_member(
+    const char *start,
+    char *token_out)
+{
+    const char *ptr;
+    char ch;
+    for (ptr = start; (ch = *ptr); ptr ++) {
+        if (ch == '.') {
+            break;
+        }
+    }
+
+    int32_t len = flecs_ito(int32_t, ptr - start);
+    ecs_os_strncpy(token_out, start, len);
+    token_out[len] = '\0';
+    if (ch == '.') {
+        ptr ++;
+    }
+
+    return ptr;
+}
+
 int ecs_meta_dotmember(
     ecs_meta_cursor_t *cursor,
     const char *name)
@@ -331,13 +353,7 @@ int ecs_meta_dotmember(
 
     char token[ECS_MAX_TOKEN_SIZE];
     const char *ptr = name;
-    while ((ptr = ecs_parse_token(NULL, NULL, ptr, token, '.'))) {
-        if (ptr[0] != '.' && ptr[0]) {
-            ecs_parser_error(NULL, name, ptr - name, 
-                "expected '.' or end of string");
-            goto error;
-        }
-
+    while ((ptr = flecs_meta_parse_member(ptr, token))) {
         if (dotcount) {
             ecs_meta_push(cursor);
         }
@@ -349,8 +365,6 @@ int ecs_meta_dotmember(
         if (!ptr[0]) {
             break;   
         }
-
-        ptr ++; /* Skip . */
 
         dotcount ++;
     }
@@ -1409,6 +1423,7 @@ int ecs_meta_set_string(
         break;
     }
     case EcsOpId: {
+    #ifdef FLECS_SCRIPT
         ecs_id_t id = 0;
         if (flecs_id_parse(cursor->world, NULL, value, &id) == NULL) {
             goto error;
@@ -1417,6 +1432,9 @@ int ecs_meta_set_string(
         set_T(ecs_id_t, ptr, id);
 
         break;
+    #else
+        ecs_err("cannot parse component expression: script addon required");
+    #endif
     }
     case EcsOpPop:
         ecs_err("excess element '%s' in scope", value);

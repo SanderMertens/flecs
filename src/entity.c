@@ -1332,6 +1332,7 @@ int flecs_traverse_from_expr(
     const char *expr,
     ecs_vec_t *ids)
 {
+#ifdef FLECS_SCRIPT
     const char *ptr = expr;
     if (ptr) {
         ecs_id_t id = 0;
@@ -1346,8 +1347,15 @@ int flecs_traverse_from_expr(
             goto error;
         }
     }
-
     return 0;
+#else
+    (void)world;
+    (void)name;
+    (void)expr;
+    (void)ids;
+    ecs_err("cannot parse component expression: script addon required");
+    goto error;
+#endif
 error:
     return -1;
 }
@@ -1357,11 +1365,11 @@ error:
 static
 void flecs_defer_from_expr(
     ecs_world_t *world,
-    ecs_stage_t *stage,
     ecs_entity_t entity,
     const char *name,
     const char *expr)
 {
+#ifdef FLECS_SCRIPT
     const char *ptr = expr;
     if (ptr) {
         ecs_id_t id = 0;
@@ -1372,6 +1380,13 @@ void flecs_defer_from_expr(
             ecs_add_id(world, entity, id);
         }
     }
+#else
+    (void)world;
+    (void)entity;
+    (void)name;
+    (void)expr;
+    ecs_err("cannot parse component expression: script addon required");
+#endif
 }
 
 /* If operation is not deferred, add components by finding the target
@@ -1573,8 +1588,7 @@ void flecs_deferred_add_remove(
 
     /* Add components from the 'add_expr' expression */
     if (desc->add_expr) {
-        flecs_defer_from_expr(world, (ecs_stage_t*)world , entity, name,
-            desc->add_expr);
+        flecs_defer_from_expr(world, entity, name, desc->add_expr);
     }
 
     int32_t thread_count = ecs_get_stage_count(world);

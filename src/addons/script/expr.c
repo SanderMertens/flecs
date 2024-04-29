@@ -1,6 +1,6 @@
 /**
  * @file addons/script/expr.c
- * @brief Evaluate expressions.
+ * @brief Evaluate script expressions.
  */
 
 #include "flecs.h"
@@ -9,7 +9,7 @@
 #include <ctype.h>
 #include "script.h"
 
-/* String deserializer for values & simple expressions */
+/* String deserializer for script expressions */
 
 /* Order in enumeration is important, as it is used for precedence */
 typedef enum ecs_expr_oper_t {
@@ -33,7 +33,7 @@ typedef enum ecs_expr_oper_t {
 } ecs_expr_oper_t;
 
 /* Used to track temporary values */
-#define EXPR_MAX_STACK_SIZE (256)
+#define FLECS_EXPR_MAX_STACK_SIZE (256)
 
 typedef struct ecs_expr_value_t {
     const ecs_type_info_t *ti;
@@ -41,7 +41,7 @@ typedef struct ecs_expr_value_t {
 } ecs_expr_value_t;
 
 typedef struct ecs_value_stack_t {
-    ecs_expr_value_t values[EXPR_MAX_STACK_SIZE];
+    ecs_expr_value_t values[FLECS_EXPR_MAX_STACK_SIZE];
     ecs_stack_cursor_t *cursor;
     ecs_stack_t *stack;
     ecs_stage_t *stage;
@@ -56,6 +56,148 @@ const char* flecs_script_expr_run(
     ecs_value_t *value,
     ecs_expr_oper_t op,
     const ecs_script_expr_run_desc_t *desc);
+
+#define TOK_VARIABLE '$'
+
+/* -- Private functions -- */
+
+static
+bool flecs_isident(
+    char ch)
+{
+    return isalpha(ch) || (ch == '_');
+}
+
+static
+bool flecs_valid_identifier_start_char(
+    char ch)
+{
+    if (ch && (flecs_isident(ch) || (ch == '*') ||
+        (ch == '0') || (ch == TOK_VARIABLE) || isdigit(ch))) 
+    {
+        return true;
+    }
+
+    return false;
+}
+
+static
+bool flecs_valid_token_start_char(
+    char ch)
+{
+    if ((ch == '"') || (ch == '{') || (ch == '}') || (ch == ',') || (ch == '-')
+        || (ch == '[') || (ch == ']') || (ch == '`') || 
+        flecs_valid_identifier_start_char(ch))
+    {
+        return true;
+    }
+
+    return false;
+}
+
+static
+bool flecs_valid_token_char(
+    char ch)
+{
+    if (ch && (flecs_isident(ch) || isdigit(ch) || ch == '.' || ch == '"')) {
+        return true;
+    }
+
+    return false;
+}
+
+static
+const char* flecs_parse_ws(
+    const char *ptr)
+{
+    while ((*ptr != '\n') && isspace(*ptr)) {
+        ptr ++;
+    }
+
+    return ptr;
+}
+
+static
+const char* flecs_parse_expr_token(
+    const char *name,
+    const char *expr,
+    const char *ptr,
+    char *token_out,
+    char delim)
+{
+    int64_t column = ptr - expr;
+
+    ptr = flecs_parse_ws(ptr);
+    char *tptr = token_out, ch = ptr[0];
+
+    if (!flecs_valid_token_start_char(ch)) {
+        if (ch == '\0' || ch == '\n') {
+            ecs_parser_error(name, expr, column, 
+                "unexpected end of expression");
+        } else {
+            ecs_parser_error(name, expr, column, 
+                "invalid start of token '%s'", ptr);
+        }
+        return NULL;
+    }
+
+    tptr[0] = ch;
+    tptr ++;
+    ptr ++;
+
+    if (ch == '{' || ch == '}' || ch == '[' || ch == ']' || ch == ',' || ch == '`') {
+        tptr[0] = 0;
+        return ptr;
+    }
+
+    int tmpl_nesting = 0;
+    bool in_str = ch == '"';
+
+    for (; (ch = *ptr); ptr ++) {
+        if (ch == '<') {
+            tmpl_nesting ++;
+        } else if (ch == '>') {
+            if (!tmpl_nesting) {
+                break;
+            }
+            tmpl_nesting --;
+        } else if (ch == '"') {
+            in_str = !in_str;
+        } else if (ch == '\\') {
+            ptr ++;
+            tptr[0] = ptr[0];
+            tptr ++;
+            continue;
+        } else if (!flecs_valid_token_char(ch) && !in_str) {
+            break;
+        }
+
+        if (delim && (ch == delim)) {
+            break;
+        }
+
+        tptr[0] = ch;
+        tptr ++;
+    }
+
+    tptr[0] = '\0';
+
+    if (tmpl_nesting != 0) {
+        ecs_parser_error(name, expr, column, 
+            "identifier '%s' has mismatching < > pairs", ptr);
+        return NULL;
+    }
+
+    const char *next_ptr = flecs_parse_ws(ptr);
+    if (next_ptr[0] == ':' && next_ptr != ptr) {
+        /* Whitespace between token and : is significant */
+        ptr = next_ptr - 1;
+    } else {
+        ptr = next_ptr;
+    }
+
+    return ptr;
+}
 
 static
 void* flecs_expr_value_new(
@@ -159,13 +301,13 @@ const char *flecs_script_expr_parse_token(
             // Single line comment
             for (ptr = &ptr[2]; (ch = ptr[0]) && (ch != '\n'); ptr ++) {}
             token[0] = 0;
-            return ecs_parse_ws_eol(ptr);
+            return flecs_parse_ws_eol(ptr);
         } else if (ptr[1] == '*') {
             // Multi line comment
             for (ptr = &ptr[2]; (ch = ptr[0]); ptr ++) {
                 if (ch == '*' && ptr[1] == '/') {
                     token[0] = 0;
-                    return ecs_parse_ws_eol(ptr + 2);
+                    return flecs_parse_ws_eol(ptr + 2);
                 }
             }
 
@@ -188,7 +330,7 @@ const char *flecs_script_expr_parse_token(
         }
     }
 
-    while ((ptr = ecs_parse_token(name, expr, ptr, token_ptr, 0))) {
+    while ((ptr = flecs_parse_expr_token(name, expr, ptr, token_ptr, 0))) {
         if (ptr[0] == '|' && ptr[1] != '|') {
             token_ptr = &token_ptr[ecs_os_strlen(token_ptr)];
             token_ptr[0] = '|';
@@ -915,7 +1057,7 @@ const char* flecs_binary_expr_parse(
             return NULL;
         }
 
-        ptr = ecs_parse_ws_eol(ptr);
+        ptr = flecs_parse_ws_eol(ptr);
 
         ecs_value_t rvalue = {0};
         const char *rptr = flecs_script_expr_run(world, stack, ptr, &rvalue, op, desc);
@@ -1052,13 +1194,13 @@ const char* flecs_script_expr_run(
     token[0] = '\0';
     expr = expr ? expr : ptr;
 
-    ptr = ecs_parse_ws_eol(ptr);
+    ptr = flecs_parse_ws_eol(ptr);
 
     /* Check for postfix operators */
     ecs_expr_oper_t unary_op = EcsExprOperUnknown;
     if (ptr[0] == '-' && !isdigit(ptr[1])) {
         unary_op = EcsMin;
-        ptr = ecs_parse_ws_eol(ptr + 1);
+        ptr = flecs_parse_ws_eol(ptr + 1);
     }
 
     /* Initialize storage and cursor. If expression starts with a '(' storage
@@ -1115,7 +1257,7 @@ const char* flecs_script_expr_run(
                     "missing closing parenthesis");
                 return NULL;
             }
-            ptr = ecs_parse_ws(ptr + 1);
+            ptr = flecs_parse_ws(ptr + 1);
             is_lvalue = true;
 
         } else if (!ecs_os_strcmp(token, "{")) {
@@ -1259,7 +1401,7 @@ const char* flecs_script_expr_run(
             }
             is_lvalue = true;
         } else {
-            const char *tptr = ecs_parse_ws(ptr);
+            const char *tptr = flecs_parse_ws(ptr);
             for (; ptr != tptr; ptr ++) {
                 if (ptr[0] == '\n') {
                     newline = true;
@@ -1359,7 +1501,7 @@ const char* flecs_script_expr_run(
             break;
         }
 
-        ptr = ecs_parse_ws_eol(ptr);
+        ptr = flecs_parse_ws_eol(ptr);
     }
 
     if (!value->ptr) {

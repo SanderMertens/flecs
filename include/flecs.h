@@ -890,7 +890,6 @@ struct ecs_type_info_t {
 #include "flecs/private/api_types.h"        /* Supporting API types */
 #include "flecs/private/api_support.h"      /* Supporting API functions */
 #include "flecs/datastructures/hashmap.h"   /* Hashmap */
-#include "flecs/private/parser.h"           /* Parser utilities */
 
 /* Utility to hold a value of a dynamic type */
 typedef struct ecs_value_t {
@@ -4282,13 +4281,15 @@ char* ecs_query_str_w_profile(
  *   var_a: value, var_b: value
  *
  * The key-value list may optionally be enclosed in parenthesis.
+ * 
+ * This function uses the script addon.
  *
  * @param query The query.
  * @param it The iterator for which to set the variables.
  * @param expr The key-value expression.
  */
 FLECS_API
-const char* ecs_query_parse_vars(
+const char* ecs_query_args_parse(
     ecs_query_t *query,
     ecs_iter_t *it,
     const char *expr);

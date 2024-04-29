@@ -425,3 +425,43 @@ char* flecs_astresc(
     out[len] = '\0';
     return out;
 }
+
+const char* flecs_parse_digit(
+    const char *ptr,
+    char *token)
+{
+    char *tptr = token;
+    char ch = ptr[0];
+
+    if (!isdigit(ch) && ch != '-') {
+        ecs_parser_error(NULL, NULL, 0, "invalid start of number '%s'", ptr);
+        return NULL;
+    }
+
+    tptr[0] = ch;
+    tptr ++;
+    ptr ++;
+
+    for (; (ch = *ptr); ptr ++) {
+        if (!isdigit(ch) && (ch != '.') && (ch != 'e')) {
+            break;
+        }
+
+        tptr[0] = ch;
+        tptr ++;
+    }
+
+    tptr[0] = '\0';
+    
+    return ptr;
+}
+
+const char* flecs_parse_ws_eol(
+    const char *ptr)
+{
+    while (isspace(*ptr)) {
+        ptr ++;
+    }
+
+    return ptr;
+}

@@ -8666,7 +8666,7 @@ void Variables_parse_0_var(void) {
     test_assert(y_var != -1);
 
     ecs_iter_t it = ecs_query_iter(world, q);
-    test_str("", ecs_query_parse_vars(q, &it, ""));
+    test_str("", ecs_query_args_parse(q, &it, ""));
     test_uint(it.variables[x_var].entity, EcsWildcard);
     test_uint(it.variables[y_var].entity, EcsWildcard);
     ecs_iter_fini(&it);
@@ -8693,7 +8693,7 @@ void Variables_parse_1_var(void) {
     test_assert(y_var != -1);
 
     ecs_iter_t it = ecs_query_iter(world, q);
-    test_str("", ecs_query_parse_vars(q, &it, "x:e1"));
+    test_str("", ecs_query_args_parse(q, &it, "x:e1"));
     test_uint(it.variables[x_var].entity, e1);
     test_uint(it.variables[y_var].entity, EcsWildcard);
     ecs_iter_fini(&it);
@@ -8721,7 +8721,7 @@ void Variables_parse_2_vars(void) {
     test_assert(y_var != -1);
 
     ecs_iter_t it = ecs_query_iter(world, q);
-    test_str("", ecs_query_parse_vars(q, &it, "x:e1,y:e2"));
+    test_str("", ecs_query_args_parse(q, &it, "x:e1,y:e2"));
     test_uint(it.variables[x_var].entity, e1);
     test_uint(it.variables[y_var].entity, e2);
     ecs_iter_fini(&it);
@@ -8746,7 +8746,7 @@ void Variables_parse_0_var_paren(void) {
     test_assert(y_var != -1);
 
     ecs_iter_t it = ecs_query_iter(world, q);
-    test_str("", ecs_query_parse_vars(q, &it, "()"));
+    test_str("", ecs_query_args_parse(q, &it, "()"));
     test_uint(it.variables[x_var].entity, EcsWildcard);
     test_uint(it.variables[y_var].entity, EcsWildcard);
     ecs_iter_fini(&it);
@@ -8773,7 +8773,7 @@ void Variables_parse_1_var_paren(void) {
     test_assert(y_var != -1);
 
     ecs_iter_t it = ecs_query_iter(world, q);
-    test_str("", ecs_query_parse_vars(q, &it, "(x:e1)"));
+    test_str("", ecs_query_args_parse(q, &it, "(x:e1)"));
     test_uint(it.variables[x_var].entity, e1);
     test_uint(it.variables[y_var].entity, EcsWildcard);
     ecs_iter_fini(&it);
@@ -8801,7 +8801,7 @@ void Variables_parse_2_vars_paren(void) {
     test_assert(y_var != -1);
 
     ecs_iter_t it = ecs_query_iter(world, q);
-    test_str("", ecs_query_parse_vars(q, &it, "(x:e1,y:e2)"));
+    test_str("", ecs_query_args_parse(q, &it, "(x:e1,y:e2)"));
     test_uint(it.variables[x_var].entity, e1);
     test_uint(it.variables[y_var].entity, e2);
     ecs_iter_fini(&it);
@@ -8828,7 +8828,7 @@ void Variables_parse_1_vars_w_path(void) {
     test_assert(y_var != -1);
 
     ecs_iter_t it = ecs_query_iter(world, q);
-    test_str("", ecs_query_parse_vars(q, &it, "x:parent.e1"));
+    test_str("", ecs_query_args_parse(q, &it, "x:parent.e1"));
     test_uint(it.variables[x_var].entity, e1);
     test_uint(it.variables[y_var].entity, EcsWildcard);
     ecs_iter_fini(&it);
@@ -8854,7 +8854,7 @@ void Variables_parse_missing_close_paren(void) {
 
     ecs_iter_t it = ecs_query_iter(world, q);
     ecs_log_set_level(-4);
-    test_str(NULL, ecs_query_parse_vars(q, &it, "(x:e1"));
+    test_str(NULL, ecs_query_args_parse(q, &it, "(x:e1"));
     ecs_iter_fini(&it);
 
     ecs_query_fini(q);
@@ -8878,7 +8878,7 @@ void Variables_parse_missing_open_paren(void) {
 
     ecs_iter_t it = ecs_query_iter(world, q);
     ecs_log_set_level(-4);
-    test_str(NULL, ecs_query_parse_vars(q, &it, "x:e1)"));
+    test_str(NULL, ecs_query_args_parse(q, &it, "x:e1)"));
     ecs_iter_fini(&it);
 
     ecs_query_fini(q);
@@ -8902,7 +8902,7 @@ void Variables_parse_missing_value(void) {
 
     ecs_iter_t it = ecs_query_iter(world, q);
     ecs_log_set_level(-4);
-    test_str(NULL, ecs_query_parse_vars(q, &it, "x:"));
+    test_str(NULL, ecs_query_args_parse(q, &it, "x:"));
     ecs_iter_fini(&it);
 
     ecs_query_fini(q);
@@ -8925,7 +8925,7 @@ void Variables_parse_0_var_w_spaces(void) {
     test_assert(y_var != -1);
 
     ecs_iter_t it = ecs_query_iter(world, q);
-    test_str("", ecs_query_parse_vars(q, &it, "  "));
+    test_str("", ecs_query_args_parse(q, &it, "  "));
     test_uint(it.variables[x_var].entity, EcsWildcard);
     test_uint(it.variables[y_var].entity, EcsWildcard);
     ecs_iter_fini(&it);
@@ -8952,7 +8952,7 @@ void Variables_parse_1_var_w_spaces(void) {
     test_assert(y_var != -1);
 
     ecs_iter_t it = ecs_query_iter(world, q);
-    test_str("", ecs_query_parse_vars(q, &it, "  x  :  e1  "));
+    test_str("", ecs_query_args_parse(q, &it, "  x  :  e1  "));
     test_uint(it.variables[x_var].entity, e1);
     test_uint(it.variables[y_var].entity, EcsWildcard);
     ecs_iter_fini(&it);
@@ -8980,7 +8980,7 @@ void Variables_parse_2_vars_w_spaces(void) {
     test_assert(y_var != -1);
 
     ecs_iter_t it = ecs_query_iter(world, q);
-    test_str("", ecs_query_parse_vars(q, &it, "  x  :  e1  ,  y  :  e2  "));
+    test_str("", ecs_query_args_parse(q, &it, "  x  :  e1  ,  y  :  e2  "));
     test_uint(it.variables[x_var].entity, e1);
     test_uint(it.variables[y_var].entity, e2);
     ecs_iter_fini(&it);
@@ -9005,7 +9005,7 @@ void Variables_parse_0_var_paren_w_spaces(void) {
     test_assert(y_var != -1);
 
     ecs_iter_t it = ecs_query_iter(world, q);
-    test_str("  ", ecs_query_parse_vars(q, &it, "  (  )  "));
+    test_str("  ", ecs_query_args_parse(q, &it, "  (  )  "));
     test_uint(it.variables[x_var].entity, EcsWildcard);
     test_uint(it.variables[y_var].entity, EcsWildcard);
     ecs_iter_fini(&it);
@@ -9032,7 +9032,7 @@ void Variables_parse_1_var_paren_w_spaces(void) {
     test_assert(y_var != -1);
 
     ecs_iter_t it = ecs_query_iter(world, q);
-    test_str("  ", ecs_query_parse_vars(q, &it, "  (  x  :  e1  )  "));
+    test_str("  ", ecs_query_args_parse(q, &it, "  (  x  :  e1  )  "));
     test_uint(it.variables[x_var].entity, e1);
     test_uint(it.variables[y_var].entity, EcsWildcard);
     ecs_iter_fini(&it);
@@ -9060,7 +9060,7 @@ void Variables_parse_2_vars_paren_w_spaces(void) {
     test_assert(y_var != -1);
 
     ecs_iter_t it = ecs_query_iter(world, q);
-    test_str("  ", ecs_query_parse_vars(q, &it, "  (  x  :  e1  ,  y  :  e2  )  "));
+    test_str("  ", ecs_query_args_parse(q, &it, "  (  x  :  e1  ,  y  :  e2  )  "));
     test_uint(it.variables[x_var].entity, e1);
     test_uint(it.variables[y_var].entity, e2);
     ecs_iter_fini(&it);

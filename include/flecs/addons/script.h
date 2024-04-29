@@ -492,7 +492,6 @@ int ecs_ptr_to_str_buf(
     const void *data,
     ecs_strbuf_t *buf);
 
-
 /* Module import */
 FLECS_API
 void FlecsScriptImport(

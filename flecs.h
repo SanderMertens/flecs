@@ -3501,6 +3501,29 @@ char* flecs_astresc(
     char delimiter,
     const char *in);
 
+/** Skip whitespace and newline characters.
+ * This function skips whitespace characters.
+ *
+ * @param ptr Pointer to (potential) whitespaces to skip.
+ * @return Pointer to the next non-whitespace character.
+ */
+FLECS_API
+const char* flecs_parse_ws_eol(
+    const char *ptr);
+
+/** Parse digit.
+ * This function will parse until the first non-digit character is found. The
+ * provided expression must contain at least one digit character.
+ *
+ * @param ptr The expression to parse.
+ * @param token The output buffer.
+ * @return Pointer to the first non-digit character.
+ */
+FLECS_API
+const char* flecs_parse_digit(
+    const char *ptr,
+    char *token);
+
 /* Convert identifier to snake case */
 FLECS_API
 char* flecs_to_snake_case(
@@ -3746,96 +3769,6 @@ void* flecs_hashmap_next_(
 #endif
 
 #endif
-
-/**
- * @file addons/parser.h
- * @brief Query parser.
- *
- * The query parser parses string expressions into lists of terms, and can be
- * used to construct queries.
- */
-
-/**
- * @defgroup c_queries Queries
- * Query DSL parser and parsing utilities.
- *
- * @{
- */
-
-#ifndef FLECS_PARSER_H
-#define FLECS_PARSER_H
-
-/** Maximum number of extra arguments in term expression */
-#define FLECS_TERM_ARG_COUNT_MAX (16)
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-/** Skip whitespace characters.
- * This function skips whitespace characters. Does not skip newlines.
- *
- * @param ptr Pointer to (potential) whitespaces to skip.
- * @return Pointer to the next non-whitespace character.
- */
-FLECS_API
-const char* ecs_parse_ws(
-    const char *ptr);
-
-/** Skip whitespace and newline characters.
- * This function skips whitespace characters.
- *
- * @param ptr Pointer to (potential) whitespaces to skip.
- * @return Pointer to the next non-whitespace character.
- */
-FLECS_API
-const char* ecs_parse_ws_eol(
-    const char *ptr);
-
-/** Utility function to parse an identifier */
-const char* ecs_parse_identifier(
-    const char *name,
-    const char *expr,
-    const char *ptr,
-    char *token_out);
-
-/** Parse digit.
- * This function will parse until the first non-digit character is found. The
- * provided expression must contain at least one digit character.
- *
- * @param ptr The expression to parse.
- * @param token The output buffer.
- * @return Pointer to the first non-digit character.
- */
-FLECS_API
-const char* ecs_parse_digit(
-    const char *ptr,
-    char *token);
-
-/** Parse a single token.
- * This function can be used as simple tokenizer by other parsers.
- *
- * @param name of program (used for logging).
- * @param expr pointer to token to parse.
- * @param ptr pointer to first character to parse.
- * @param token_out Parsed token (buffer should be ECS_MAX_TOKEN_SIZE large)
- * @return Pointer to the next token, or NULL if error occurred.
- */
-FLECS_API
-const char* ecs_parse_token(
-    const char *name,
-    const char *expr,
-    const char *ptr,
-    char *token_out,
-    char delim);
-
-#ifdef __cplusplus
-}
-#endif // __cplusplus
-
-#endif // FLECS_PARSER_H
-
-/** @} */
 
 
 /* Utility to hold a value of a dynamic type */
@@ -7249,13 +7182,15 @@ char* ecs_query_str_w_profile(
  *   var_a: value, var_b: value
  *
  * The key-value list may optionally be enclosed in parenthesis.
+ * 
+ * This function uses the script addon.
  *
  * @param query The query.
  * @param it The iterator for which to set the variables.
  * @param expr The key-value expression.
  */
 FLECS_API
-const char* ecs_query_parse_vars(
+const char* ecs_query_args_parse(
     ecs_query_t *query,
     ecs_iter_t *it,
     const char *expr);
@@ -13591,7 +13526,6 @@ int ecs_ptr_to_str_buf(
     ecs_entity_t type,
     const void *data,
     ecs_strbuf_t *buf);
-
 
 /* Module import */
 FLECS_API

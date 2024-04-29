@@ -28,6 +28,20 @@ void Eval_line_comment_between_stmt(void);
 void Eval_multiple_line_comment(void);
 void Eval_multiple_line_comment_w_newlines(void);
 void Eval_line_comment_after_stmt_same_line(void);
+void Eval_line_comment_before_scope_open(void);
+void Eval_line_comment_after_newline_before_scope_open(void);
+void Eval_line_comment_after_newline_before_newline_scope_open(void);
+void Eval_multi_line_comment(void);
+void Eval_multi_line_comment_before_stmt(void);
+void Eval_multi_line_comment_after_stmt(void);
+void Eval_multi_line_comment_between_stmt(void);
+void Eval_multiple_multi_line_comment(void);
+void Eval_multiple_multi_line_comment_w_newlines(void);
+void Eval_multi_line_comment_after_stmt_same_line(void);
+void Eval_multi_line_comment_before_scope_open(void);
+void Eval_multi_line_comment_after_newline_before_scope_open(void);
+void Eval_multi_line_comment_after_newline_before_newline_scope_open(void);
+void Eval_multi_line_comment_multiple_lines(void);
 void Eval_hierarchy_1_child(void);
 void Eval_hierarchy_2_children(void);
 void Eval_hierarchy_1_child_same_line(void);
@@ -38,9 +52,6 @@ void Eval_newline_before_scope_open(void);
 void Eval_newline_w_whitespace_before_scope_open(void);
 void Eval_2_newline_before_scope_open(void);
 void Eval_2_newline_w_whitespace_before_scope_open(void);
-void Eval_comment_before_scope_open(void);
-void Eval_comment_after_newline_before_scope_open(void);
-void Eval_comment_after_newline_before_newline_scope_open(void);
 void Eval_hierarchy_2_levels(void);
 void Eval_hierarchy_2_levels_2_subtrees(void);
 void Eval_missing_end_of_scope(void);
@@ -627,6 +638,62 @@ bake_test_case Eval_testcases[] = {
         Eval_line_comment_after_stmt_same_line
     },
     {
+        "line_comment_before_scope_open",
+        Eval_line_comment_before_scope_open
+    },
+    {
+        "line_comment_after_newline_before_scope_open",
+        Eval_line_comment_after_newline_before_scope_open
+    },
+    {
+        "line_comment_after_newline_before_newline_scope_open",
+        Eval_line_comment_after_newline_before_newline_scope_open
+    },
+    {
+        "multi_line_comment",
+        Eval_multi_line_comment
+    },
+    {
+        "multi_line_comment_before_stmt",
+        Eval_multi_line_comment_before_stmt
+    },
+    {
+        "multi_line_comment_after_stmt",
+        Eval_multi_line_comment_after_stmt
+    },
+    {
+        "multi_line_comment_between_stmt",
+        Eval_multi_line_comment_between_stmt
+    },
+    {
+        "multiple_multi_line_comment",
+        Eval_multiple_multi_line_comment
+    },
+    {
+        "multiple_multi_line_comment_w_newlines",
+        Eval_multiple_multi_line_comment_w_newlines
+    },
+    {
+        "multi_line_comment_after_stmt_same_line",
+        Eval_multi_line_comment_after_stmt_same_line
+    },
+    {
+        "multi_line_comment_before_scope_open",
+        Eval_multi_line_comment_before_scope_open
+    },
+    {
+        "multi_line_comment_after_newline_before_scope_open",
+        Eval_multi_line_comment_after_newline_before_scope_open
+    },
+    {
+        "multi_line_comment_after_newline_before_newline_scope_open",
+        Eval_multi_line_comment_after_newline_before_newline_scope_open
+    },
+    {
+        "multi_line_comment_multiple_lines",
+        Eval_multi_line_comment_multiple_lines
+    },
+    {
         "hierarchy_1_child",
         Eval_hierarchy_1_child
     },
@@ -665,18 +732,6 @@ bake_test_case Eval_testcases[] = {
     {
         "2_newline_w_whitespace_before_scope_open",
         Eval_2_newline_w_whitespace_before_scope_open
-    },
-    {
-        "comment_before_scope_open",
-        Eval_comment_before_scope_open
-    },
-    {
-        "comment_after_newline_before_scope_open",
-        Eval_comment_after_newline_before_scope_open
-    },
-    {
-        "comment_after_newline_before_newline_scope_open",
-        Eval_comment_after_newline_before_newline_scope_open
     },
     {
         "hierarchy_2_levels",
@@ -2689,7 +2744,7 @@ static bake_test_suite suites[] = {
         "Eval",
         NULL,
         NULL,
-        220,
+        231,
         Eval_testcases
     },
     {

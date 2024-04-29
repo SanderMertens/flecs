@@ -115,6 +115,29 @@ char* flecs_astresc(
     char delimiter,
     const char *in);
 
+/** Skip whitespace and newline characters.
+ * This function skips whitespace characters.
+ *
+ * @param ptr Pointer to (potential) whitespaces to skip.
+ * @return Pointer to the next non-whitespace character.
+ */
+FLECS_API
+const char* flecs_parse_ws_eol(
+    const char *ptr);
+
+/** Parse digit.
+ * This function will parse until the first non-digit character is found. The
+ * provided expression must contain at least one digit character.
+ *
+ * @param ptr The expression to parse.
+ * @param token The output buffer.
+ * @return Pointer to the first non-digit character.
+ */
+FLECS_API
+const char* flecs_parse_digit(
+    const char *ptr,
+    char *token);
+
 /* Convert identifier to snake case */
 FLECS_API
 char* flecs_to_snake_case(

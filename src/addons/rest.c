@@ -471,10 +471,17 @@ bool flecs_rest_reply_existing_query(
 
     const char *vars = ecs_http_get_param(req, "vars");
     if (vars) {
-        if (ecs_query_parse_vars(q, &it, vars) == NULL) {
+    #ifdef FLECS_SCRIPT
+        if (ecs_query_args_parse(q, &it, vars) == NULL) {
             flecs_rest_reply_set_captured_log(reply);
             return true;
         }
+    #else
+        flecs_reply_error(reply,
+            "cannot parse query arg expression: script addon required");
+        reply->code = 400;
+        return true;
+    #endif
     }
 
     flecs_rest_iter_to_reply(req, reply, q, &it);

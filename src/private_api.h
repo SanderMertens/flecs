@@ -247,9 +247,6 @@ void flecs_colorize_buf(
     bool enable_colors,
     ecs_strbuf_t *buf);
 
-bool flecs_isident(
-    char ch);
-
 int32_t flecs_search_w_idr(
     const ecs_world_t *world,
     const ecs_table_t *table,

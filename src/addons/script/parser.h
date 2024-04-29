@@ -19,6 +19,19 @@
 #pragma GCC diagnostic ignored "-Wshadow"
 #endif
 
+/* Create script & parser structs with static token buffer */
+#define EcsParserFixedBuffer(w, script_name, expr, tokens, tokens_len)\
+    ecs_script_t script = {\
+        .world = ECS_CONST_CAST(ecs_world_t*, w),\
+        .name = script_name,\
+        .code = expr\
+    };\
+    ecs_script_parser_t parser = {\
+        .script = &script,\
+        .pos = expr,\
+        .token_cur = tokens\
+    }
+
 /* Definitions for parser functions */
 #define ParserBegin\
     ecs_script_tokens_t token_stack = {0};\

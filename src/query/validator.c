@@ -1328,6 +1328,7 @@ int flecs_query_query_populate_terms(
     /* Parse query expression if set */
     const char *expr = desc->expr;
     if (expr && expr[0]) {
+    #ifdef FLECS_SCRIPT
         ecs_script_t script = {
             .world = world,
             .name = desc->entity ? ecs_get_name(world, desc->entity) : NULL,
@@ -1351,6 +1352,12 @@ int flecs_query_query_populate_terms(
         flecs_query_impl(q)->tokens = script.token_buffer;
         flecs_query_impl(q)->tokens_len = 
             flecs_ito(int16_t, script.token_buffer_size);
+    #else
+        (void)world;
+        (void)stage;
+        ecs_err("cannot parse query expression: script addon required");
+        goto error;
+    #endif
     }
 
     q->term_count = flecs_ito(int8_t, term_count);

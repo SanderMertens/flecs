@@ -41,7 +41,7 @@ const char* flecs_json_parse(
     char *token)
 {
     ecs_assert(json != NULL, ECS_INTERNAL_ERROR, NULL);
-    json = ecs_parse_ws_eol(json);
+    json = flecs_parse_ws_eol(json);
 
     char ch = json[0];
 
@@ -93,7 +93,7 @@ const char* flecs_json_parse(
         }
     } else if (isdigit(ch) || (ch == '-')) {
         token_kind[0] = JsonNumber;
-        const char *result = ecs_parse_digit(json, token);
+        const char *result = flecs_parse_digit(json, token);
         
         /* Cheap initial check if parsed token could represent large int */
         if (result - json > 15) {

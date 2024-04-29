@@ -93,15 +93,15 @@ const char* parse_c_digit(
     int64_t *value_out)
 {
     char token[24];
-    ptr = ecs_parse_ws_eol(ptr);
-    ptr = ecs_parse_digit(ptr, token);
+    ptr = flecs_parse_ws_eol(ptr);
+    ptr = flecs_parse_digit(ptr, token);
     if (!ptr) {
         goto error;
     }
 
     *value_out = strtol(token, NULL, 0);
 
-    return ecs_parse_ws_eol(ptr);
+    return flecs_parse_ws_eol(ptr);
 error:
     return NULL;
 }
@@ -124,7 +124,7 @@ const char* parse_c_identifier(
     }
 
     /* Ignore whitespaces */
-    ptr = ecs_parse_ws_eol(ptr);
+    ptr = flecs_parse_ws_eol(ptr);
     ch = *ptr;
 
     if (!isalpha(ch) && (ch != '_')) {
@@ -172,7 +172,7 @@ const char * meta_open_scope(
     meta_parse_ctx_t *ctx)    
 {
     /* Skip initial whitespaces */
-    ptr = ecs_parse_ws_eol(ptr);
+    ptr = flecs_parse_ws_eol(ptr);
 
     /* Is this the start of the type definition? */
     if (ctx->desc == ptr) {
@@ -182,7 +182,7 @@ const char * meta_open_scope(
         }
 
         ptr ++;
-        ptr = ecs_parse_ws_eol(ptr);
+        ptr = flecs_parse_ws_eol(ptr);
     }
 
     /* Is this the end of the type definition? */
@@ -193,7 +193,7 @@ const char * meta_open_scope(
 
     /* Is this the end of the type definition? */
     if (*ptr == '}') {
-        ptr = ecs_parse_ws_eol(ptr + 1);
+        ptr = flecs_parse_ws_eol(ptr + 1);
         if (*ptr) {
             ecs_meta_error(ctx, ptr, 
                 "stray characters after struct definition");
@@ -226,7 +226,7 @@ const char* meta_parse_constant(
         return NULL;
     }
 
-    ptr = ecs_parse_ws_eol(ptr);
+    ptr = flecs_parse_ws_eol(ptr);
     if (!ptr) {
         return NULL;
     }
@@ -263,7 +263,7 @@ const char* meta_parse_type(
     token->is_ptr = false;
     token->is_const = false;
 
-    ptr = ecs_parse_ws_eol(ptr);
+    ptr = flecs_parse_ws_eol(ptr);
 
     /* Parse token, expect type identifier or ECS_PROPERTY */
     ptr = parse_c_identifier(ptr, token->type, token->params, ctx);
@@ -286,7 +286,7 @@ const char* meta_parse_type(
     }
 
     /* Check if type is a pointer */
-    ptr = ecs_parse_ws_eol(ptr);
+    ptr = flecs_parse_ws_eol(ptr);
     if (*ptr == '*') {
         token->is_ptr = true;
         ptr ++;
@@ -330,7 +330,7 @@ const char* meta_parse_member(
     }
 
     /* Skip whitespace between member and [ or ; */
-    ptr = ecs_parse_ws_eol(ptr);
+    ptr = flecs_parse_ws_eol(ptr);
 
     /* Check if this is an array */
     char *array_start = strchr(token->name, '[');
@@ -386,7 +386,7 @@ int meta_parse_desc(
     token->is_key_value = false;
     token->is_fixed_size = false;
 
-    ptr = ecs_parse_ws_eol(ptr);
+    ptr = flecs_parse_ws_eol(ptr);
     if (*ptr != '(' && *ptr != '<') {
         ecs_meta_error(ctx, ptr, 
             "expected '(' at start of collection definition");
@@ -401,11 +401,11 @@ int meta_parse_desc(
         goto error;
     }
 
-    ptr = ecs_parse_ws_eol(ptr);
+    ptr = flecs_parse_ws_eol(ptr);
 
     /* If next token is a ',' the first type was a key type */
     if (*ptr == ',') {
-        ptr = ecs_parse_ws_eol(ptr + 1);
+        ptr = flecs_parse_ws_eol(ptr + 1);
         
         if (isdigit(*ptr)) {
             int64_t value;
@@ -421,7 +421,7 @@ int meta_parse_desc(
 
             /* Parse element type */
             ptr = meta_parse_type(ptr, &token->type, ctx);
-            ptr = ecs_parse_ws_eol(ptr);
+            ptr = flecs_parse_ws_eol(ptr);
 
             token->is_key_value = true;
         }

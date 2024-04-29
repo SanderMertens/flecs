@@ -617,24 +617,10 @@ const char* flecs_id_parse(
     const char *expr,
     ecs_id_t *id)
 {
-    ecs_script_t script = {
-        /* Safe, won't mutate world */
-        .world = ECS_CONST_CAST(ecs_world_t*, world),
-        .name = name,
-        .code = expr
-    };
-
     char token_buffer[256];
-    script.token_buffer_size = 256;
-    script.token_buffer = token_buffer;
-
     ecs_term_t term = {0};
-    ecs_script_parser_t parser = {
-        .script = &script,
-        .pos = expr,
-        .term = &term,
-        .token_cur = token_buffer
-    };
+    EcsParserFixedBuffer(world, name, expr, token_buffer, 256);
+    parser.term = &term;
 
     expr = flecs_scan_whitespace(&parser, expr);
     if (!ecs_os_strcmp(expr, "0")) {
@@ -672,6 +658,102 @@ const char* flecs_id_parse(
     *id = term.id;
     
     return result;
+}
+
+static
+const char* flecs_query_arg_parse(
+    ecs_script_parser_t *parser,
+    ecs_query_t *q,
+    ecs_iter_t *it,
+    const char *pos)
+{
+    ParserBegin;
+
+    Parse_3(EcsTokIdentifier, ':', EcsTokIdentifier, {
+        int var = ecs_query_find_var(q, Token(0));
+        if (var == -1) {
+            Error("unknown variable '%s'", Token(0));
+        }
+
+        ecs_entity_t val = ecs_lookup(q->world, Token(2));
+        if (!val) {
+            Error("unresolved entity '%s'", Token(2));
+        }
+
+        ecs_iter_set_var(it, var, val);
+
+        EndOfRule;
+    })
+
+    ParserEnd;
+}
+
+static
+const char* flecs_query_args_parse(
+    ecs_script_parser_t *parser,
+    ecs_query_t *q,
+    ecs_iter_t *it,
+    const char *pos)
+{
+    ParserBegin;
+
+    bool has_paren = false;
+    LookAhead(
+        case '\0':
+            pos = lookahead;
+            EndOfRule;
+        case '(': {
+            pos = lookahead;
+            has_paren = true;
+            LookAhead_1(')',
+                pos = lookahead;
+                EndOfRule;
+            )
+        }
+    )
+
+    Loop(
+        pos = flecs_query_arg_parse(parser, q, it, pos);
+        if (!pos) {
+            goto error;
+        }
+
+        Parse(
+            case ',':
+                continue;
+            case '\0':
+                EndOfRule;
+            case ')':
+                if (!has_paren) {
+                    Error("unexpected ')' without opening '(')");
+                }
+                EndOfRule;
+        )
+    )
+
+    ParserEnd;
+}
+
+const char* ecs_query_args_parse(
+    ecs_query_t *q,
+    ecs_iter_t *it,
+    const char *expr)
+{
+    flecs_poly_assert(q, ecs_query_t);
+    ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(expr != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    const char *q_name = q->entity ? ecs_get_name(q->world, q->entity) : NULL;
+    if (ecs_os_strlen(expr) > 512) {
+        ecs_parser_error(q_name, expr, 0, "query argument expression too long");
+        return NULL;
+    }
+
+    char token_buffer[1024];
+    EcsParserFixedBuffer(q->world, q_name, expr, token_buffer, 256);
+    return flecs_query_args_parse(&parser, q, it, expr);
+error:
+    return NULL;
 }
 
 #endif
