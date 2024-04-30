@@ -266,6 +266,8 @@ void Entity_emplace_w_observer(void);
 void Entity_scoped_world(void);
 void Entity_entity_lookup_not_recursive(void);
 void Entity_world_lookup_not_recursive(void);
+void Entity_world_lookup_custom_sep(void);
+void Entity_world_lookup_custom_root_sep(void);
 
 // Testsuite 'Pairs'
 void Pairs_add_component_pair(void);
@@ -631,6 +633,8 @@ void QueryBuilder_set_2_vars(void);
 void QueryBuilder_set_var_by_name(void);
 void QueryBuilder_set_2_vars_by_name(void);
 void QueryBuilder_expr_w_var(void);
+void QueryBuilder_set_var_on_query(void);
+void QueryBuilder_set_var_by_name_on_query(void);
 void QueryBuilder_add_1_type(void);
 void QueryBuilder_add_2_types(void);
 void QueryBuilder_add_1_type_w_1_type(void);
@@ -744,6 +748,8 @@ void QueryBuilder_group_by_iter_one_all_groups(void);
 void QueryBuilder_group_by_default_func_w_id(void);
 void QueryBuilder_group_by_default_func_w_type(void);
 void QueryBuilder_group_by_callbacks(void);
+void QueryBuilder_set_group_on_query(void);
+void QueryBuilder_set_group_type_on_query(void);
 void QueryBuilder_create_w_no_template_args(void);
 void QueryBuilder_any_wildcard(void);
 void QueryBuilder_cascade(void);
@@ -2287,6 +2293,14 @@ bake_test_case Entity_testcases[] = {
     {
         "world_lookup_not_recursive",
         Entity_world_lookup_not_recursive
+    },
+    {
+        "world_lookup_custom_sep",
+        Entity_world_lookup_custom_sep
+    },
+    {
+        "world_lookup_custom_root_sep",
+        Entity_world_lookup_custom_root_sep
     }
 };
 
@@ -3705,6 +3719,14 @@ bake_test_case QueryBuilder_testcases[] = {
         QueryBuilder_expr_w_var
     },
     {
+        "set_var_on_query",
+        QueryBuilder_set_var_on_query
+    },
+    {
+        "set_var_by_name_on_query",
+        QueryBuilder_set_var_by_name_on_query
+    },
+    {
         "add_1_type",
         QueryBuilder_add_1_type
     },
@@ -4155,6 +4177,14 @@ bake_test_case QueryBuilder_testcases[] = {
     {
         "group_by_callbacks",
         QueryBuilder_group_by_callbacks
+    },
+    {
+        "set_group_on_query",
+        QueryBuilder_set_group_on_query
+    },
+    {
+        "set_group_type_on_query",
+        QueryBuilder_set_group_type_on_query
     },
     {
         "create_w_no_template_args",
@@ -6182,7 +6212,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        253,
+        255,
         Entity_testcases
     },
     {
@@ -6238,7 +6268,7 @@ static bake_test_suite suites[] = {
         "QueryBuilder",
         QueryBuilder_setup,
         NULL,
-        154,
+        158,
         QueryBuilder_testcases,
         1,
         QueryBuilder_params

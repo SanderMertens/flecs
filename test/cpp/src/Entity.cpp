@@ -4522,5 +4522,27 @@ void Entity_world_lookup_not_recursive(void) {
     flecs::entity foo = world.scope(parent).entity("foo");
 
     test_assert(world.scope(child).lookup("foo") == foo);
-    test_assert(world.scope(child).lookup("foo", false) == 0);
+    test_assert(world.scope(child).lookup("foo", "::", "::", false) == 0);
+}
+
+void Entity_world_lookup_custom_sep(void) {
+    flecs::world world;
+
+    flecs::entity parent = world.entity("parent");
+    flecs::entity child = world.scope(parent).entity("child");
+    flecs::entity foo = world.scope(parent).entity("foo");
+
+    test_assert(world.lookup("parent.child", ".") == child);
+    test_assert(world.lookup("parent.foo", ".") == foo);
+}
+
+void Entity_world_lookup_custom_root_sep(void) {
+    flecs::world world;
+
+    flecs::entity parent = world.entity("parent");
+    flecs::entity child = world.scope(parent).entity("child");
+    flecs::entity foo = world.scope(parent).entity("foo");
+
+    test_assert(world.lookup(".parent.child", ".", ".") == child);
+    test_assert(world.lookup(".parent.foo", ".", ".") == foo);
 }

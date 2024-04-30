@@ -532,7 +532,7 @@ struct world {
      * @param search_path When false, only the current scope is searched.
      * @result The entity if found, or 0 if not found.
      */
-    flecs::entity lookup(const char *name, bool search_path = true) const;
+    flecs::entity lookup(const char *name, const char *sep = "::", const char *root_sep = "::", bool recursive = true) const;
 
     /** Set singleton component.
      */

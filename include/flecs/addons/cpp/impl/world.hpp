@@ -73,8 +73,8 @@ inline flecs::entity world::set_scope() const {
     return set_scope( _::type<T>::id(world_) ); 
 }
 
-inline entity world::lookup(const char *name, bool search_path) const {
-    auto e = ecs_lookup_path_w_sep(world_, 0, name, "::", "::", search_path);
+inline entity world::lookup(const char *name, const char *sep, const char *root_sep, bool recursive) const {
+    auto e = ecs_lookup_path_w_sep(world_, 0, name, sep, root_sep, recursive);
     return flecs::entity(*this, e);
 }
 

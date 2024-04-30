@@ -19546,7 +19546,7 @@ struct world {
      * @param search_path When false, only the current scope is searched.
      * @result The entity if found, or 0 if not found.
      */
-    flecs::entity lookup(const char *name, bool search_path = true) const;
+    flecs::entity lookup(const char *name, const char *sep = "::", const char *root_sep = "::", bool recursive = true) const;
 
     /** Set singleton component.
      */
@@ -25030,6 +25030,25 @@ struct iterable {
         return this->iter().first();
     }
 
+    iter_iterable<Components...> set_var(int var_id, flecs::entity_t value) {
+        return this->iter().set_var(var_id, value);
+    }
+
+    iter_iterable<Components...> set_var(const char *name, flecs::entity_t value) {
+        return this->iter().set_var(name, value);
+    }
+
+    // Limit results to tables with specified group id (grouped queries only)
+    iter_iterable<Components...> set_group(uint64_t group_id) {
+        return this->iter().set_group(group_id);
+    }
+
+    // Limit results to tables with specified group id (grouped queries only)
+    template <typename Group>
+    iter_iterable<Components...> set_group() {
+        return this->iter().template set_group<Group>();
+    }
+
     virtual ~iterable() { }
 protected:
     friend iter_iterable<Components...>;
@@ -25078,6 +25097,8 @@ struct iter_iterable final : iterable<Components...> {
         it_ = it->get_iter(world);
         next_ = it->next_action();
         next_each_ = it->next_action();
+        ecs_assert(next_ != nullptr, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(next_each_ != nullptr, ECS_INTERNAL_ERROR, NULL);
     }
 
     iter_iterable<Components...>& set_var(int var_id, flecs::entity_t value) {
@@ -30568,8 +30589,8 @@ inline flecs::entity world::set_scope() const {
     return set_scope( _::type<T>::id(world_) ); 
 }
 
-inline entity world::lookup(const char *name, bool search_path) const {
-    auto e = ecs_lookup_path_w_sep(world_, 0, name, "::", "::", search_path);
+inline entity world::lookup(const char *name, const char *sep, const char *root_sep, bool recursive) const {
+    auto e = ecs_lookup_path_w_sep(world_, 0, name, sep, root_sep, recursive);
     return flecs::entity(*this, e);
 }
 

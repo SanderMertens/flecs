@@ -273,7 +273,9 @@
                 "emplace_w_observer",
                 "scoped_world",
                 "entity_lookup_not_recursive",
-                "world_lookup_not_recursive"
+                "world_lookup_not_recursive",
+                "world_lookup_custom_sep",
+                "world_lookup_custom_root_sep"
             ]
         }, {
             "id": "Pairs",
@@ -658,6 +660,8 @@
                 "set_var_by_name",
                 "set_2_vars_by_name",
                 "expr_w_var",
+                "set_var_on_query",
+                "set_var_by_name_on_query",
                 "add_1_type",
                 "add_2_types",
                 "add_1_type_w_1_type",
@@ -771,6 +775,8 @@
                 "group_by_default_func_w_id",
                 "group_by_default_func_w_type",
                 "group_by_callbacks",
+                "set_group_on_query",
+                "set_group_type_on_query",
                 "create_w_no_template_args",
                 "any_wildcard",
                 "cascade",
