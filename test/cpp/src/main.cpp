@@ -268,6 +268,8 @@ void Entity_entity_lookup_not_recursive(void);
 void Entity_world_lookup_not_recursive(void);
 void Entity_world_lookup_custom_sep(void);
 void Entity_world_lookup_custom_root_sep(void);
+void Entity_depends_on(void);
+void Entity_depends_on_type(void);
 
 // Testsuite 'Pairs'
 void Pairs_add_component_pair(void);
@@ -2307,6 +2309,14 @@ bake_test_case Entity_testcases[] = {
     {
         "world_lookup_custom_root_sep",
         Entity_world_lookup_custom_root_sep
+    },
+    {
+        "depends_on",
+        Entity_depends_on
+    },
+    {
+        "depends_on_type",
+        Entity_depends_on_type
     }
 };
 
@@ -6242,7 +6252,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        255,
+        257,
         Entity_testcases
     },
     {

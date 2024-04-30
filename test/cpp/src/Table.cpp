@@ -155,7 +155,7 @@ void Table_multi_set(void) {
     auto e1 = ecs.entity().add<Position>().add<Velocity>();
     auto e2 = ecs.entity().add<Position>();
 
-    e1.set([&](Position& p, Velocity& v) {
+    e1.insert([&](Position& p, Velocity& v) {
         e2.add<Mass>();
     });
 
@@ -170,7 +170,7 @@ void Table_multi_set_locked(void) {
     auto e1 = ecs.entity().add<Position>().add<Velocity>();
     auto e2 = ecs.entity().add<Position>();
 
-    e1.set([&](Position& p, Velocity& v) {
+    e1.insert([&](Position& p, Velocity& v) {
         test_expect_abort();
         e2.add<Velocity>();
     });

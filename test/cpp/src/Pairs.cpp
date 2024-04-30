@@ -991,7 +991,7 @@ void Pairs_set_1_pair_arg(void) {
     flecs::world ecs;
 
     auto e = ecs.entity()
-        .set([](EatsApples&& a) {
+        .insert([](EatsApples&& a) {
             a->amount = 10;
         });
 
@@ -1003,7 +1003,7 @@ void Pairs_set_2_pair_arg(void) {
     flecs::world ecs;
 
     auto e = ecs.entity()
-        .set([](EatsApples&& a, EatsPears&& p) {
+        .insert([](EatsApples&& a, EatsPears&& p) {
             a->amount = 10;
             p->amount = 20;
         });
@@ -1031,7 +1031,7 @@ void Pairs_set_inline_pair_type(void) {
     flecs::world ecs;
 
     auto e = ecs.entity()
-        .set([](flecs::pair<Eats, Apples>&& a) {
+        .insert([](flecs::pair<Eats, Apples>&& a) {
             a->amount = 10;
         });
 
@@ -1054,7 +1054,7 @@ void Pairs_set_pair_type_object(void) {
     flecs::world ecs;
 
     auto e = ecs.entity()
-        .set([](flecs::pair_object<Apples, Eats>&& a) {
+        .insert([](flecs::pair_object<Apples, Eats>&& a) {
             a->amount = 10;
         });
 

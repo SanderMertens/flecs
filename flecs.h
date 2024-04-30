@@ -23072,29 +23072,27 @@ struct entity_builder : entity_view {
         return set_ptr(comp, cptr->size, ptr);
     }
 
-    template<typename T, if_t< 
-        !is_callable<T>::value && is_actual<T>::value> = 0 >
+    template<typename T, if_t<is_actual<T>::value> = 0 >
     Self& set(T&& value) {
         flecs::set<T>(this->world_, this->id_, FLECS_FWD(value));
         return to_base();
     }
 
-    template<typename T, if_t< 
-        !is_callable<T>::value && is_actual<T>::value > = 0>
+    template<typename T, if_t<is_actual<T>::value > = 0>
     Self& set(const T& value) {
         flecs::set<T>(this->world_, this->id_, value);
         return to_base();
     }
 
     template<typename T, typename A = actual_type_t<T>, if_not_t< 
-        is_callable<T>::value || is_actual<T>::value > = 0>
+        is_actual<T>::value > = 0>
     Self& set(A&& value) {
         flecs::set<T>(this->world_, this->id_, FLECS_FWD(value));
         return to_base();
     }
 
     template<typename T, typename A = actual_type_t<T>, if_not_t<
-        is_callable<T>::value || is_actual<T>::value > = 0>
+        is_actual<T>::value > = 0>
     Self& set(const A& value) {
         flecs::set<T>(this->world_, this->id_, value);
         return to_base();
@@ -23230,8 +23228,8 @@ struct entity_builder : entity_view {
      *
      * @param func The callback to invoke.
      */
-    template <typename Func, if_t< is_callable<Func>::value > = 0>
-    Self& set(const Func& func);
+    template <typename Func>
+    Self& insert(const Func& func);
 
     /** Emplace component.
      * Emplace constructs a component in the storage, which prevents calling the
@@ -23834,8 +23832,6 @@ struct entity : entity_builder<entity>
         return ecs_ensure_id(world_, id_, ecs_pair(first, second));
     }
 
-    #endif
-
     /** Get mutable pointer for the second element of a pair.
      * This operation gets the value for a pair from the entity.
      *
@@ -23850,6 +23846,8 @@ struct entity : entity_builder<entity>
         return *static_cast<Second*>(
             ecs_ensure_id(world_, id_, ecs_pair(first, second)));
     }
+
+    #endif
 
     /** Signal that component was modified.
      *
@@ -26691,8 +26689,8 @@ flecs::entity ref<T>::entity() const {
 }
 
 template <typename Self>
-template <typename Func, if_t< is_callable<Func>::value > >
-inline Self& entity_builder<Self>::set(const Func& func) {
+template <typename Func>
+inline Self& entity_builder<Self>::insert(const Func& func) {
     _::entity_with_delegate<Func>::invoke_ensure(
         this->world_, this->id_, func);
     return to_base();

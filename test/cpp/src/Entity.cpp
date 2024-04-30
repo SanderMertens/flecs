@@ -2121,7 +2121,7 @@ void Entity_set_1_component_w_callback(void) {
     flecs::world ecs;
 
     auto e = ecs.entity()
-        .set([](Position& p){
+        .insert([](Position& p){
             p.x = 10;
             p.y = 20;
         });
@@ -2138,7 +2138,7 @@ void Entity_set_2_components_w_callback(void) {
     flecs::world ecs;
 
     auto e = ecs.entity()
-        .set([](Position& p, Velocity& v){
+        .insert([](Position& p, Velocity& v){
             p = {10, 20};
             v = {1, 2};
         });
@@ -2160,7 +2160,7 @@ void Entity_set_3_components_w_callback(void) {
     flecs::world ecs;
 
     auto e = ecs.entity()
-        .set([](Position& p, Velocity& v, Mass& m){
+        .insert([](Position& p, Velocity& v, Mass& m){
             p = {10, 20};
             v = {1, 2};
             m = {50};
@@ -2189,7 +2189,7 @@ void Entity_defer_set_1_component(void) {
     ecs.defer_begin();
 
     auto e = ecs.entity()
-        .set([](Position& p){
+        .insert([](Position& p){
             p.x = 10;
             p.y = 20;
         });
@@ -2212,7 +2212,7 @@ void Entity_defer_set_2_components(void) {
     ecs.defer_begin();
 
     auto e = ecs.entity()
-        .set([](Position& p, Velocity& v){
+        .insert([](Position& p, Velocity& v){
             p = {10, 20};
             v = {1, 2};
         });
@@ -2240,7 +2240,7 @@ void Entity_defer_set_3_components(void) {
     ecs.defer_begin();
 
     auto e = ecs.entity()
-        .set([](Position& p, Velocity& v, Mass& m){
+        .insert([](Position& p, Velocity& v, Mass& m){
             p = {10, 20};
             v = {1, 2};
             m = {50};
@@ -2290,7 +2290,7 @@ void Entity_set_2_w_on_set(void) {
         });
 
     auto e = ecs.entity()
-        .set([](Position& p, Velocity& v){
+        .insert([](Position& p, Velocity& v){
             p = {10, 20};
             v = {1, 2};
         });
@@ -2332,7 +2332,7 @@ void Entity_defer_set_2_w_on_set(void) {
     ecs.defer_begin();   
 
     auto e = ecs.entity()
-        .set([](Position& p, Velocity& v){
+        .insert([](Position& p, Velocity& v){
             p = {10, 20};
             v = {1, 2};
         });
@@ -2359,7 +2359,7 @@ void Entity_set_2_after_fluent(void) {
 
     auto e = ecs.entity()
         .set<Mass>({50})
-        .set([](Position& p, Velocity& v){
+        .insert([](Position& p, Velocity& v){
             p = {10, 20};
             v = {1, 2};
         });
@@ -2383,7 +2383,7 @@ void Entity_set_2_before_fluent(void) {
     flecs::world ecs;
 
     auto e = ecs.entity()
-        .set([](Position& p, Velocity& v){
+        .insert([](Position& p, Velocity& v){
             p = {10, 20};
             v = {1, 2};
         })
@@ -2418,7 +2418,7 @@ void Entity_set_2_after_set_1(void) {
     }), true);
 
     // Set both Position and Velocity
-    e.set([](Position& p, Velocity& v) {
+    e.insert([](Position& p, Velocity& v) {
         p = {10, 20};
         v = {1, 2};
     });
@@ -2460,7 +2460,7 @@ void Entity_set_2_after_set_2(void) {
     test_int(called, 1);
 
     // Set both Position and Velocity (doesn't add any components)
-    e.set([](Position& p, Velocity& v) {
+    e.insert([](Position& p, Velocity& v) {
         p = {10, 20};
         v = {3, 4};
     });
@@ -4545,4 +4545,19 @@ void Entity_world_lookup_custom_root_sep(void) {
 
     test_assert(world.lookup(".parent.child", ".", ".") == child);
     test_assert(world.lookup(".parent.foo", ".", ".") == foo);
+}
+
+void Entity_depends_on(void) {
+    flecs::world world;
+
+    flecs::entity a = world.entity();
+    flecs::entity b = world.entity().depends_on(a);
+    test_assert(b.has(flecs::DependsOn, a));
+}
+
+void Entity_depends_on_type(void) {
+    flecs::world world;
+
+    flecs::entity b = world.entity().depends_on<Position>();
+    test_assert(b.has(flecs::DependsOn, world.id<Position>()));
 }

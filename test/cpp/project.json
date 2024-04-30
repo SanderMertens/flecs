@@ -275,7 +275,9 @@
                 "entity_lookup_not_recursive",
                 "world_lookup_not_recursive",
                 "world_lookup_custom_sep",
-                "world_lookup_custom_root_sep"
+                "world_lookup_custom_root_sep",
+                "depends_on",
+                "depends_on_type"
             ]
         }, {
             "id": "Pairs",

@@ -157,8 +157,6 @@ struct entity : entity_builder<entity>
         return ecs_ensure_id(world_, id_, ecs_pair(first, second));
     }
 
-    #endif
-
     /** Get mutable pointer for the second element of a pair.
      * This operation gets the value for a pair from the entity.
      *
@@ -173,6 +171,8 @@ struct entity : entity_builder<entity>
         return *static_cast<Second*>(
             ecs_ensure_id(world_, id_, ecs_pair(first, second)));
     }
+
+    #endif
 
     /** Signal that component was modified.
      *
