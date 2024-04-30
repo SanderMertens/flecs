@@ -26,10 +26,10 @@ static ECS_DTOR(ecs_string_t, ptr, {
 })
 
 
-/* EcsMetaTypeSerialized lifecycle */
+/* EcsTypeSerializer lifecycle */
 
 void ecs_meta_dtor_serialized(
-    EcsMetaTypeSerialized *ptr) 
+    EcsTypeSerializer *ptr) 
 {
     int32_t i, count = ecs_vec_count(&ptr->ops);
     ecs_meta_type_op_t *ops = ecs_vec_first(&ptr->ops);
@@ -44,7 +44,7 @@ void ecs_meta_dtor_serialized(
     ecs_vec_fini_t(NULL, &ptr->ops, ecs_meta_type_op_t);
 }
 
-static ECS_COPY(EcsMetaTypeSerialized, dst, src, {
+static ECS_COPY(EcsTypeSerializer, dst, src, {
     ecs_meta_dtor_serialized(dst);
 
     dst->ops = ecs_vec_copy_t(NULL, &src->ops, ecs_meta_type_op_t);
@@ -60,13 +60,13 @@ static ECS_COPY(EcsMetaTypeSerialized, dst, src, {
     }
 })
 
-static ECS_MOVE(EcsMetaTypeSerialized, dst, src, {
+static ECS_MOVE(EcsTypeSerializer, dst, src, {
     ecs_meta_dtor_serialized(dst);
     dst->ops = src->ops;
     src->ops = (ecs_vec_t){0};
 })
 
-static ECS_DTOR(EcsMetaTypeSerialized, ptr, { 
+static ECS_DTOR(EcsTypeSerializer, ptr, { 
     ecs_meta_dtor_serialized(ptr);
 })
 
@@ -257,7 +257,7 @@ int flecs_init_type(
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(type != 0, ECS_INTERNAL_ERROR, NULL);
 
-    EcsMetaType *meta_type = ecs_ensure(world, type, EcsMetaType);
+    EcsType *meta_type = ecs_ensure(world, type, EcsType);
     if (meta_type->kind == 0) {
         meta_type->existing = ecs_has(world, type, EcsComponent);
 
@@ -265,7 +265,7 @@ int flecs_init_type(
          * serializers on uninitialized values. */
         ecs_type_info_t *ti = flecs_type_info_ensure(world, type);
         if (!ti->hooks.ctor) {
-            ti->hooks.ctor = ecs_default_ctor;
+            ti->hooks.ctor = flecs_default_ctor;
         }
     } else {
         if (meta_type->kind != kind) {
@@ -306,7 +306,7 @@ int flecs_init_type(
     }
 
     meta_type->kind = kind;
-    ecs_modified(world, type, EcsMetaType);
+    ecs_modified(world, type, EcsType);
 
     return 0;
 }
@@ -544,7 +544,7 @@ int flecs_add_member_to_struct(
 
     ecs_modified(world, type, EcsStruct);
 
-    /* Do this last as it triggers the update of EcsMetaTypeSerialized */
+    /* Do this last as it triggers the update of EcsTypeSerializer */
     if (flecs_init_type(world, type, EcsStructType, size, alignment)) {
         return -1;
     }
@@ -593,7 +593,7 @@ int flecs_add_constant_to_enum(
             return -1;
         }
 
-        const int32_t *value_ptr = ecs_get_pair_object(
+        const int32_t *value_ptr = ecs_get_pair_second(
             world, e, EcsConstant, ecs_i32_t);
         ecs_assert(value_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
         value = *value_ptr;
@@ -626,7 +626,7 @@ int flecs_add_constant_to_enum(
     c->value = value;
     c->constant = e;
 
-    ecs_i32_t *cptr = ecs_ensure_pair_object(
+    ecs_i32_t *cptr = ecs_ensure_pair_second(
         world, e, EcsConstant, ecs_i32_t);
     ecs_assert(cptr != NULL, ECS_INTERNAL_ERROR, NULL);
     cptr[0] = value;
@@ -666,7 +666,7 @@ int flecs_add_constant_to_bitmask(
             return -1;
         }
 
-        const uint32_t *value_ptr = ecs_get_pair_object(
+        const uint32_t *value_ptr = ecs_get_pair_second(
             world, e, EcsConstant, ecs_u32_t);
         ecs_assert(value_ptr != NULL, ECS_INTERNAL_ERROR, NULL);
         value = *value_ptr;
@@ -695,7 +695,7 @@ int flecs_add_constant_to_bitmask(
     c->value = value;
     c->constant = e;
 
-    ecs_u32_t *cptr = ecs_ensure_pair_object(
+    ecs_u32_t *cptr = ecs_ensure_pair_second(
         world, e, EcsConstant, ecs_u32_t);
     ecs_assert(cptr != NULL, ECS_INTERNAL_ERROR, NULL);
     cptr[0] = value;
@@ -709,7 +709,7 @@ int flecs_add_constant_to_bitmask(
 static
 void flecs_set_primitive(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
-    EcsPrimitive *type = ecs_field(it, EcsPrimitive, 1);
+    EcsPrimitive *type = ecs_field(it, EcsPrimitive, 0);
 
     int i, count = it->count;
     for (i = 0; i < count; i ++) {
@@ -776,7 +776,7 @@ void flecs_set_primitive(ecs_iter_t *it) {
 static
 void flecs_set_member(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
-    EcsMember *member = ecs_field(it, EcsMember, 1);
+    EcsMember *member = ecs_field(it, EcsMember, 0);
     EcsMemberRanges *ranges = ecs_table_get_id(world, it->table, 
         ecs_id(EcsMemberRanges), it->offset);
 
@@ -797,7 +797,7 @@ void flecs_set_member(ecs_iter_t *it) {
 static
 void flecs_set_member_ranges(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
-    EcsMemberRanges *ranges = ecs_field(it, EcsMemberRanges, 1);
+    EcsMemberRanges *ranges = ecs_field(it, EcsMemberRanges, 0);
     EcsMember *member = ecs_table_get_id(world, it->table, 
         ecs_id(EcsMember), it->offset);
     if (!member) {
@@ -832,7 +832,7 @@ void flecs_add_enum(ecs_iter_t *it) {
 
         ecs_add_id(world, e, EcsExclusive);
         ecs_add_id(world, e, EcsOneOf);
-        ecs_add_id(world, e, EcsTag);
+        ecs_add_id(world, e, EcsPairIsTag);
     }
 }
 
@@ -874,7 +874,7 @@ void flecs_add_constant(ecs_iter_t *it) {
 static
 void flecs_set_array(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
-    EcsArray *array = ecs_field(it, EcsArray, 1);
+    EcsArray *array = ecs_field(it, EcsArray, 0);
 
     int i, count = it->count;
     for (i = 0; i < count; i ++) {
@@ -904,7 +904,7 @@ void flecs_set_array(ecs_iter_t *it) {
 static
 void flecs_set_vector(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
-    EcsVector *array = ecs_field(it, EcsVector, 1);
+    EcsVector *array = ecs_field(it, EcsVector, 0);
 
     int i, count = it->count;
     for (i = 0; i < count; i ++) {
@@ -925,7 +925,7 @@ void flecs_set_vector(ecs_iter_t *it) {
 static
 void flecs_set_custom_type(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
-    EcsOpaque *serialize = ecs_field(it, EcsOpaque, 1);
+    EcsOpaque *serialize = ecs_field(it, EcsOpaque, 0);
 
     int i, count = it->count;
     for (i = 0; i < count; i ++) {
@@ -1074,7 +1074,7 @@ error:
 
 static
 void flecs_set_unit(ecs_iter_t *it) {
-    EcsUnit *u = ecs_field(it, EcsUnit, 1);
+    EcsUnit *u = ecs_field(it, EcsUnit, 0);
 
     ecs_world_t *world = it->world;
 
@@ -1106,7 +1106,7 @@ void flecs_unit_quantity_monitor(ecs_iter_t *it) {
 static
 void ecs_meta_type_init_default_ctor(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
-    EcsMetaType *type = ecs_field(it, EcsMetaType, 1);
+    EcsType *type = ecs_field(it, EcsType, 0);
 
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -1120,7 +1120,7 @@ void ecs_meta_type_init_default_ctor(ecs_iter_t *it) {
             if (!ti || !ti->hooks.ctor) {
                 ecs_set_hooks_id(world, e, 
                     &(ecs_type_hooks_t){ 
-                        .ctor = ecs_default_ctor
+                        .ctor = flecs_default_ctor
                     });
             }
         }
@@ -1145,71 +1145,164 @@ void FlecsMetaImport(
 
     ecs_set_name_prefix(world, "Ecs");
 
-    flecs_bootstrap_component(world, EcsMetaType);
-    flecs_bootstrap_component(world, EcsMetaTypeSerialized);
-    flecs_bootstrap_component(world, EcsPrimitive);
-    flecs_bootstrap_component(world, EcsEnum);
-    flecs_bootstrap_component(world, EcsBitmask);
-    flecs_bootstrap_component(world, EcsMember);
-    flecs_bootstrap_component(world, EcsMemberRanges);
-    flecs_bootstrap_component(world, EcsStruct);
-    flecs_bootstrap_component(world, EcsArray);
-    flecs_bootstrap_component(world, EcsVector);
-    flecs_bootstrap_component(world, EcsOpaque);
-    flecs_bootstrap_component(world, EcsUnit);
-    flecs_bootstrap_component(world, EcsUnitPrefix);
+    flecs_bootstrap_component(world, EcsTypeSerializer);
 
-    flecs_bootstrap_tag(world, EcsConstant);
-    flecs_bootstrap_tag(world, EcsQuantity);
+    ecs_component(world, {
+        .entity = ecs_entity(world, { .id = ecs_id(EcsType),
+            .name = "type", .symbol = "EcsType"
+        }),
+        .type.size = sizeof(EcsType),
+        .type.alignment = ECS_ALIGNOF(EcsType)
+    });
 
-    ecs_set_hooks(world, EcsMetaType, { .ctor = ecs_default_ctor });
+    ecs_component(world, {
+        .entity = ecs_entity(world, { .id = ecs_id(EcsPrimitive),
+            .name = "primitive", .symbol = "EcsPrimitive"
+        }),
+        .type.size = sizeof(EcsPrimitive),
+        .type.alignment = ECS_ALIGNOF(EcsPrimitive)
+    });
 
-    ecs_set_hooks(world, EcsMetaTypeSerialized, { 
-        .ctor = ecs_default_ctor,
-        .move = ecs_move(EcsMetaTypeSerialized),
-        .copy = ecs_copy(EcsMetaTypeSerialized),
-        .dtor = ecs_dtor(EcsMetaTypeSerialized)
+    ecs_component(world, {
+        .entity = ecs_entity(world, { .id = EcsConstant,
+            .name = "constant", .symbol = "EcsConstant"
+        })
+    });
+
+    ecs_component(world, {
+        .entity = ecs_entity(world, { .id = ecs_id(EcsEnum),
+            .name = "enum", .symbol = "EcsEnum"
+        }),
+        .type.size = sizeof(EcsEnum),
+        .type.alignment = ECS_ALIGNOF(EcsEnum)
+    });
+
+    ecs_component(world, {
+        .entity = ecs_entity(world, { .id = ecs_id(EcsBitmask),
+            .name = "bitmask", .symbol = "EcsBitmask"
+        }),
+        .type.size = sizeof(EcsBitmask),
+        .type.alignment = ECS_ALIGNOF(EcsBitmask)
+    });
+
+    ecs_component(world, {
+        .entity = ecs_entity(world, { .id = ecs_id(EcsMember),
+            .name = "member", .symbol = "EcsMember"
+        }),
+        .type.size = sizeof(EcsMember),
+        .type.alignment = ECS_ALIGNOF(EcsMember)
+    });
+
+    ecs_component(world, {
+        .entity = ecs_entity(world, { .id = ecs_id(EcsMemberRanges),
+            .name = "member_ranges", .symbol = "EcsMemberRanges"
+        }),
+        .type.size = sizeof(EcsMemberRanges),
+        .type.alignment = ECS_ALIGNOF(EcsMemberRanges)
+    });
+
+    ecs_component(world, {
+        .entity = ecs_entity(world, { .id = ecs_id(EcsStruct),
+            .name = "struct", .symbol = "EcsStruct"
+        }),
+        .type.size = sizeof(EcsStruct),
+        .type.alignment = ECS_ALIGNOF(EcsStruct)
+    });
+
+    ecs_component(world, {
+        .entity = ecs_entity(world, { .id = ecs_id(EcsArray),
+            .name = "array", .symbol = "EcsArray"
+        }),
+        .type.size = sizeof(EcsArray),
+        .type.alignment = ECS_ALIGNOF(EcsArray)
+    });
+
+    ecs_component(world, {
+        .entity = ecs_entity(world, { .id = ecs_id(EcsVector),
+            .name = "vector", .symbol = "EcsVector"
+        }),
+        .type.size = sizeof(EcsVector),
+        .type.alignment = ECS_ALIGNOF(EcsVector)
+    });
+
+    ecs_component(world, {
+        .entity = ecs_entity(world, { .id = ecs_id(EcsOpaque),
+            .name = "opaque", .symbol = "EcsOpaque"
+        }),
+        .type.size = sizeof(EcsOpaque),
+        .type.alignment = ECS_ALIGNOF(EcsOpaque)
+    });
+
+    ecs_component(world, {
+        .entity = ecs_entity(world, { .id = ecs_id(EcsUnit),
+            .name = "unit", .symbol = "EcsUnit"
+        }),
+        .type.size = sizeof(EcsUnit),
+        .type.alignment = ECS_ALIGNOF(EcsUnit)
+    });
+
+    ecs_component(world, {
+        .entity = ecs_entity(world, { .id = ecs_id(EcsUnitPrefix),
+            .name = "unit_prefix", .symbol = "EcsUnitPrefix"
+        }),
+        .type.size = sizeof(EcsUnitPrefix),
+        .type.alignment = ECS_ALIGNOF(EcsUnitPrefix)
+    });
+
+    ecs_component(world, {
+        .entity = ecs_entity(world, { .id = EcsQuantity,
+            .name = "quantity", .symbol = "EcsQuantity"
+        })
+    });
+
+    ecs_set_hooks(world, EcsType, { .ctor = flecs_default_ctor });
+
+    ecs_set_hooks(world, EcsTypeSerializer, { 
+        .ctor = flecs_default_ctor,
+        .move = ecs_move(EcsTypeSerializer),
+        .copy = ecs_copy(EcsTypeSerializer),
+        .dtor = ecs_dtor(EcsTypeSerializer)
     });
 
     ecs_set_hooks(world, EcsStruct, { 
-        .ctor = ecs_default_ctor,
+        .ctor = flecs_default_ctor,
         .move = ecs_move(EcsStruct),
         .copy = ecs_copy(EcsStruct),
         .dtor = ecs_dtor(EcsStruct)
     });
 
     ecs_set_hooks(world, EcsMember, { 
-        .ctor = ecs_default_ctor,
+        .ctor = flecs_default_ctor,
         .on_set = flecs_member_on_set
     });
 
     ecs_set_hooks(world, EcsMemberRanges, { 
-        .ctor = ecs_default_ctor
+        .ctor = flecs_default_ctor
     });
 
     ecs_set_hooks(world, EcsEnum, { 
-        .ctor = ecs_default_ctor,
+        .ctor = flecs_default_ctor,
         .move = ecs_move(EcsEnum),
         .copy = ecs_copy(EcsEnum),
         .dtor = ecs_dtor(EcsEnum)
     });
 
     ecs_set_hooks(world, EcsBitmask, { 
-        .ctor = ecs_default_ctor,
+        .ctor = flecs_default_ctor,
         .move = ecs_move(EcsBitmask),
         .copy = ecs_copy(EcsBitmask),
         .dtor = ecs_dtor(EcsBitmask)
     });
 
     ecs_set_hooks(world, EcsUnit, { 
-        .ctor = ecs_default_ctor,
+        .ctor = flecs_default_ctor,
         .move = ecs_move(EcsUnit),
         .copy = ecs_copy(EcsUnit),
         .dtor = ecs_dtor(EcsUnit)
     });
 
     ecs_set_hooks(world, EcsUnitPrefix, { 
-        .ctor = ecs_default_ctor,
+        .ctor = flecs_default_ctor,
         .move = ecs_move(EcsUnitPrefix),
         .copy = ecs_copy(EcsUnitPrefix),
         .dtor = ecs_dtor(EcsUnitPrefix)
@@ -1219,85 +1312,85 @@ void FlecsMetaImport(
     ecs_entity_t old_scope = ecs_set_scope( /* Keep meta scope clean */
         world, EcsFlecsInternals);
     ecs_observer(world, {
-        .filter.terms[0] = { .id = ecs_id(EcsPrimitive), .src.flags = EcsSelf },
+        .query.terms[0] = { .id = ecs_id(EcsPrimitive), .src.id = EcsSelf },
         .events = {EcsOnSet},
         .callback = flecs_set_primitive
     });
 
     ecs_observer(world, {
-        .filter.terms[0] = { .id = ecs_id(EcsMember), .src.flags = EcsSelf },
+        .query.terms[0] = { .id = ecs_id(EcsMember), .src.id = EcsSelf },
         .events = {EcsOnSet},
         .callback = flecs_set_member
     });
 
     ecs_observer(world, {
-        .filter.terms[0] = { .id = ecs_id(EcsMemberRanges), .src.flags = EcsSelf },
+        .query.terms[0] = { .id = ecs_id(EcsMemberRanges), .src.id = EcsSelf },
         .events = {EcsOnSet},
         .callback = flecs_set_member_ranges
     });
 
     ecs_observer(world, {
-        .filter.terms[0] = { .id = ecs_id(EcsEnum), .src.flags = EcsSelf },
+        .query.terms[0] = { .id = ecs_id(EcsEnum), .src.id = EcsSelf },
         .events = {EcsOnAdd},
         .callback = flecs_add_enum
     });
 
     ecs_observer(world, {
-        .filter.terms[0] = { .id = ecs_id(EcsBitmask), .src.flags = EcsSelf },
+        .query.terms[0] = { .id = ecs_id(EcsBitmask), .src.id = EcsSelf },
         .events = {EcsOnAdd},
         .callback = flecs_add_bitmask
     });
 
     ecs_observer(world, {
-        .filter.terms[0] = { .id = EcsConstant, .src.flags = EcsSelf },
+        .query.terms[0] = { .id = EcsConstant, .src.id = EcsSelf },
         .events = {EcsOnAdd},
         .callback = flecs_add_constant
     });
 
     ecs_observer(world, {
-        .filter.terms[0] = { .id = ecs_pair(EcsConstant, EcsWildcard), .src.flags = EcsSelf },
+        .query.terms[0] = { .id = ecs_pair(EcsConstant, EcsWildcard), .src.id = EcsSelf },
         .events = {EcsOnSet},
         .callback = flecs_add_constant
     });
 
     ecs_observer(world, {
-        .filter.terms[0] = { .id = ecs_id(EcsArray), .src.flags = EcsSelf },
+        .query.terms[0] = { .id = ecs_id(EcsArray), .src.id = EcsSelf },
         .events = {EcsOnSet},
         .callback = flecs_set_array
     });
 
     ecs_observer(world, {
-        .filter.terms[0] = { .id = ecs_id(EcsVector), .src.flags = EcsSelf },
+        .query.terms[0] = { .id = ecs_id(EcsVector), .src.id = EcsSelf },
         .events = {EcsOnSet},
         .callback = flecs_set_vector
     });
 
     ecs_observer(world, {
-        .filter.terms[0] = { .id = ecs_id(EcsOpaque), .src.flags = EcsSelf },
+        .query.terms[0] = { .id = ecs_id(EcsOpaque), .src.id = EcsSelf },
         .events = {EcsOnSet},
         .callback = flecs_set_custom_type
     });
 
     ecs_observer(world, {
-        .filter.terms[0] = { .id = ecs_id(EcsUnit), .src.flags = EcsSelf },
+        .query.terms[0] = { .id = ecs_id(EcsUnit), .src.id = EcsSelf },
         .events = {EcsOnSet},
         .callback = flecs_set_unit
     });
 
     ecs_observer(world, {
-        .filter.terms[0] = { .id = ecs_id(EcsMetaType), .src.flags = EcsSelf },
+        .query.terms[0] = { .id = ecs_id(EcsType), .src.id = EcsSelf },
         .events = {EcsOnSet},
         .callback = ecs_meta_type_serialized_init
     });
 
     ecs_observer(world, {
-        .filter.terms[0] = { .id = ecs_id(EcsMetaType), .src.flags = EcsSelf },
+        .query.terms[0] = { .id = ecs_id(EcsType), .src.id = EcsSelf },
         .events = {EcsOnSet},
         .callback = ecs_meta_type_init_default_ctor
     });
 
     ecs_observer(world, {
-        .filter.terms = {
+        .query.terms = {
             { .id = ecs_id(EcsUnit) },
             { .id = EcsQuantity }
         },
@@ -1338,28 +1431,21 @@ void FlecsMetaImport(
     #undef ECS_PRIMITIVE
 
     ecs_set_hooks(world, ecs_string_t, {
-        .ctor = ecs_default_ctor,
+        .ctor = flecs_default_ctor,
         .copy = ecs_copy(ecs_string_t),
         .move = ecs_move(ecs_string_t),
         .dtor = ecs_dtor(ecs_string_t)
     });
 
     /* Set default child components */
-    ecs_add_pair(world, ecs_id(EcsStruct), 
-        EcsDefaultChildComponent, ecs_id(EcsMember));
-
-    ecs_add_pair(world, ecs_id(EcsMember), 
-        EcsDefaultChildComponent, ecs_id(EcsMember));
-
-    ecs_add_pair(world, ecs_id(EcsEnum), 
-        EcsDefaultChildComponent, EcsConstant);
-
-    ecs_add_pair(world, ecs_id(EcsBitmask), 
-        EcsDefaultChildComponent, EcsConstant);
+    ecs_set(world, ecs_id(EcsStruct),  EcsDefaultChildComponent, {ecs_id(EcsMember)});
+    ecs_set(world, ecs_id(EcsMember),  EcsDefaultChildComponent, {ecs_id(EcsMember)});
+    ecs_set(world, ecs_id(EcsEnum),    EcsDefaultChildComponent, {EcsConstant});
+    ecs_set(world, ecs_id(EcsBitmask), EcsDefaultChildComponent, {EcsConstant});
 
     /* Relationship properties */
     ecs_add_id(world, EcsQuantity, EcsExclusive);
-    ecs_add_id(world, EcsQuantity, EcsTag);
+    ecs_add_id(world, EcsQuantity, EcsPairIsTag);
 
     /* Import reflection definitions for builtin types */
     flecs_meta_import_definitions(world);

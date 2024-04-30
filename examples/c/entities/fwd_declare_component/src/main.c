@@ -38,7 +38,7 @@ ECS_DECLARE(Wizard);
 ecs_entity_t Platoon_1;
 
 ecs_entity_t create_npc(ecs_world_t *world) {
-    ecs_entity_t result = ecs_new(world, 0);
+    ecs_entity_t result = ecs_new(world);
     
     // Without the forward declaration, this would have thrown a compiler error
     ecs_set(world, result, Position, {10, 20});
@@ -62,7 +62,7 @@ int main(int argc, char *argv[]) {
     ECS_TAG_DEFINE(world, Wizard);
 
     // A forward declared entity can be assigned as any variable
-    Platoon_1 = ecs_new_id(world);
+    Platoon_1 = ecs_new(world);
 
     // Create new entity with Position
     ecs_entity_t e = create_npc(world);

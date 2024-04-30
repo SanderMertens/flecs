@@ -25,23 +25,23 @@ int main(int argc, char *argv[]) {
     ECS_COMPONENT(ecs, ImpulseSpeed);
 
     // Create a base prefab for SpaceShips.
-    ecs_entity_t SpaceShip = ecs_new_prefab(ecs, "SpaceShip");
+    ecs_entity_t SpaceShip = ecs_entity(ecs, { .name = "SpaceShip", .add = ecs_ids( EcsPrefab ) });
     ecs_set(ecs, SpaceShip, ImpulseSpeed, {50});
     ecs_set(ecs, SpaceShip, Defense, {25});
 
         // Create a Freighter variant which inherits from SpaceShip
-        ecs_entity_t Freighter = ecs_new_prefab(ecs, "Freighter");
+        ecs_entity_t Freighter = ecs_entity(ecs, { .name = "Freighter", .add = ecs_ids( EcsPrefab ) });
         ecs_add_pair(ecs, Freighter, EcsIsA, SpaceShip);
         ecs_set(ecs, Freighter, FreightCapacity, {100});
         ecs_set(ecs, Freighter, Defense, {50});
 
             // Create a MammothFreighter variant which inherits from Freighter
-            ecs_entity_t MammothFreighter = ecs_new_prefab(ecs, "MammothFreighter");
+            ecs_entity_t MammothFreighter = ecs_entity(ecs, { .name = "MammothFreighter", .add = ecs_ids( EcsPrefab ) });
             ecs_add_pair(ecs, MammothFreighter, EcsIsA, Freighter);
             ecs_set(ecs, MammothFreighter, FreightCapacity, {500});
 
         // Create a Frigate variant which inherits from SpaceShip
-        ecs_entity_t Frigate = ecs_new_prefab(ecs, "Frigate");
+        ecs_entity_t Frigate = ecs_entity(ecs, { .name = "Frigate", .add = ecs_ids( EcsPrefab ) });
         ecs_add_pair(ecs, Frigate, EcsIsA, SpaceShip);
         ecs_set(ecs, Frigate, Attack, {100});
         ecs_set(ecs, Frigate, Defense, {75});
@@ -51,7 +51,7 @@ int main(int argc, char *argv[]) {
     // Create an instance of the MammothFreighter. This entity will inherit the
     // ImpulseSpeed from SpaceShip, Defense from Freighter and FreightCapacity
     // from MammothFreighter.
-    ecs_entity_t inst = ecs_new_entity(ecs, "my_freighter");
+    ecs_entity_t inst = ecs_entity(ecs, { .name = "my_freighter" });
     ecs_add_pair(ecs, inst, EcsIsA, MammothFreighter);
 
     // Add a private Position component.
@@ -63,7 +63,7 @@ int main(int argc, char *argv[]) {
 
     // Queries can match components from multiple levels of inheritance
     ecs_query_t *q = ecs_query(ecs, {
-        .filter.terms = {
+        .terms = {
             { .id = ecs_id(Position) },
             { .id = ecs_id(ImpulseSpeed) }, 
             { .id = ecs_id(Defense) }, 
@@ -73,10 +73,10 @@ int main(int argc, char *argv[]) {
 
     ecs_iter_t it = ecs_query_iter(ecs, q);
     while (ecs_query_next(&it)) {
-        Position  *p = ecs_field(&it, Position, 1);
-        ImpulseSpeed *s = ecs_field(&it, ImpulseSpeed, 2);
-        Defense *d = ecs_field(&it, Defense, 3);
-        FreightCapacity *c = ecs_field(&it, FreightCapacity, 4);
+        Position  *p = ecs_field(&it, Position, 0);
+        ImpulseSpeed *s = ecs_field(&it, ImpulseSpeed, 1);
+        Defense *d = ecs_field(&it, Defense, 2);
+        FreightCapacity *c = ecs_field(&it, FreightCapacity, 3);
 
         for (int i = 0; i < it.count; i ++) {
             printf("%s:\n", ecs_get_name(ecs, it.entities[i]));

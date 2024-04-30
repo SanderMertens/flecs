@@ -32,34 +32,111 @@ extern "C" {
 //// Global type handles
 ////////////////////////////////////////////////////////////////////////////////
 
-/** This allows passing 0 as type to functions that accept ids */
-#define FLECS_ID0ID_ 0
-
 FLECS_API
-char* ecs_module_path_from_c(
+char* flecs_module_path_from_c(
     const char *c_name);
 
-bool ecs_identifier_is_0(
+bool flecs_identifier_is_0(
     const char *id);
 
 /* Constructor that zeromem's a component value */
 FLECS_API
-void ecs_default_ctor(
+void flecs_default_ctor(
     void *ptr, 
     int32_t count, 
     const ecs_type_info_t *ctx);
 
 /* Create allocated string from format */
 FLECS_DBG_API
-char* ecs_vasprintf(
+char* flecs_vasprintf(
     const char *fmt,
     va_list args);
 
 /* Create allocated string from format */
 FLECS_API
-char* ecs_asprintf(
+char* flecs_asprintf(
     const char *fmt,
     ...);
+
+/** Write an escaped character.
+ * Write a character to an output string, insert escape character if necessary.
+ *
+ * @param out The string to write the character to.
+ * @param in The input character.
+ * @param delimiter The delimiter used (for example '"')
+ * @return Pointer to the character after the last one written.
+ */
+FLECS_API
+char* flecs_chresc(
+    char *out,
+    char in,
+    char delimiter);
+
+/** Parse an escaped character.
+ * Parse a character with a potential escape sequence.
+ *
+ * @param in Pointer to character in input string.
+ * @param out Output string.
+ * @return Pointer to the character after the last one read.
+ */
+const char* flecs_chrparse(
+    const char *in,
+    char *out);
+
+/** Write an escaped string.
+ * Write an input string to an output string, escape characters where necessary.
+ * To determine the size of the output string, call the operation with a NULL
+ * argument for 'out', and use the returned size to allocate a string that is
+ * large enough.
+ *
+ * @param out Pointer to output string (must be).
+ * @param size Maximum number of characters written to output.
+ * @param delimiter The delimiter used (for example '"').
+ * @param in The input string.
+ * @return The number of characters that (would) have been written.
+ */
+FLECS_API
+ecs_size_t flecs_stresc(
+    char *out,
+    ecs_size_t size,
+    char delimiter,
+    const char *in);
+
+/** Return escaped string.
+ * Return escaped version of input string. Same as flecs_stresc(), but returns an
+ * allocated string of the right size.
+ *
+ * @param delimiter The delimiter used (for example '"').
+ * @param in The input string.
+ * @return Escaped string.
+ */
+FLECS_API
+char* flecs_astresc(
+    char delimiter,
+    const char *in);
+
+/** Skip whitespace and newline characters.
+ * This function skips whitespace characters.
+ *
+ * @param ptr Pointer to (potential) whitespaces to skip.
+ * @return Pointer to the next non-whitespace character.
+ */
+FLECS_API
+const char* flecs_parse_ws_eol(
+    const char *ptr);
+
+/** Parse digit.
+ * This function will parse until the first non-digit character is found. The
+ * provided expression must contain at least one digit character.
+ *
+ * @param ptr The expression to parse.
+ * @param token The output buffer.
+ * @return Pointer to the first non-digit character.
+ */
+FLECS_API
+const char* flecs_parse_digit(
+    const char *ptr,
+    char *token);
 
 /* Convert identifier to snake case */
 FLECS_API
@@ -74,11 +151,55 @@ FLECS_DBG_API
 void flecs_dump_backtrace(
     void *stream);
 
+/* Suspend/resume readonly state. To fully support implicit registration of
+ * components, it should be possible to register components while the world is
+ * in readonly mode. It is not uncommon that a component is used first from
+ * within a system, which are often ran while in readonly mode.
+ * 
+ * Suspending readonly mode is only allowed when the world is not multithreaded.
+ * When a world is multithreaded, it is not safe to (even temporarily) leave
+ * readonly mode, so a multithreaded application should always explicitly
+ * register components in advance. 
+ * 
+ * These operations also suspend deferred mode.
+ */
+typedef struct ecs_suspend_readonly_state_t {
+    bool is_readonly;
+    bool is_deferred;
+    int32_t defer_count;
+    ecs_entity_t scope;
+    ecs_entity_t with;
+    ecs_vec_t commands;
+    ecs_stack_t defer_stack;
+    ecs_stage_t *stage;
+} ecs_suspend_readonly_state_t;
+
 FLECS_API
-ecs_iter_t flecs_children(
-    const ecs_world_t *stage,
-    ecs_entity_t rel,
-    ecs_entity_t parent);
+ecs_world_t* flecs_suspend_readonly(
+    const ecs_world_t *world,
+    ecs_suspend_readonly_state_t *state);
+
+FLECS_API
+void flecs_resume_readonly(
+    ecs_world_t *world,
+    ecs_suspend_readonly_state_t *state);
+
+FLECS_API
+int32_t flecs_poly_claim_(
+    flecs_poly_t *poly);
+
+FLECS_API
+int32_t flecs_poly_release_(
+    flecs_poly_t *poly);
+
+FLECS_API
+int32_t flecs_poly_refcount(
+    flecs_poly_t *poly);
+
+#define flecs_poly_claim(poly) \
+    flecs_poly_claim_(ECS_CONST_CAST(void*, reinterpret_cast<const void*>(poly)))
+#define flecs_poly_release(poly) \
+    flecs_poly_release_(ECS_CONST_CAST(void*, reinterpret_cast<const void*>(poly)))
 
 /** Calculate offset from address */
 #ifdef __cplusplus
@@ -97,7 +218,17 @@ ecs_iter_t flecs_children(
 #define ECS_BIT_COND(flags, bit, cond) ((cond) \
     ? (ECS_BIT_SET(flags, bit)) \
     : (ECS_BIT_CLEAR(flags, bit)))
+
+#define ECS_BIT_CLEAR16(flags, bit) (flags) &= (ecs_flags16_t)~(bit)   
+#define ECS_BIT_COND16(flags, bit, cond) ((cond) \
+    ? (ECS_BIT_SET(flags, bit)) \
+    : (ECS_BIT_CLEAR16(flags, bit)))
+
 #define ECS_BIT_IS_SET(flags, bit) ((flags) & (bit))
+
+#define ECS_BIT_SETN(flags, n) ECS_BIT_SET(flags, 1llu << n)
+#define ECS_BIT_CLEARN(flags, n) ECS_BIT_CLEAR(flags, 1llu << n)
+#define ECS_BIT_CONDN(flags, n, cond) ECS_BIT_COND(flags, 1llu << n, cond)
 
 #ifdef __cplusplus
 }

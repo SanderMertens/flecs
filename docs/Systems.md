@@ -10,8 +10,8 @@ An example of a simple system:
 // System implementation
 void Move(ecs_iter_t *it) {
     // Get fields from system query
-    Position *p = ecs_field(it, Position, 1);
-    Velocity *v = ecs_field(it, Velocity, 2);
+    Position *p = ecs_field(it, Position, 0);
+    Velocity *v = ecs_field(it, Velocity, 1);
 
     // Iterate matched entities
     for (int i = 0; i < it->count, i++) {
@@ -30,9 +30,9 @@ In C, a system can also be created with the `ecs_system_init` function / `ecs_sy
 ecs_entity_t ecs_id(Move) = ecs_system(world, {
     .entity = ecs_entity(world, { /* ecs_entity_desc_t */
         .name = "Move",
-        .add = { ecs_dependson(EcsOnUpdate) }
+        .add = ecs_ids( ecs_dependson(EcsOnUpdate) )
     }),
-    .query.filter.terms = { /* ecs_filter_desc_t::terms */
+    .query.terms = { /* ecs_query_desc_t::terms */
         { ecs_id(Position) },
         { ecs_id(Velocity), .inout = EcsIn }
     }
@@ -161,8 +161,8 @@ ecs_iter_t it = ecs_query_iter(world, q);
 // Iterate tables matched by query
 while (ecs_query_next(&it)) {
     // Get fields from query
-    Position *p = ecs_field(it, Position, 1);
-    Velocity *v = ecs_field(it, Velocity, 2);
+    Position *p = ecs_field(it, Position, 0);
+    Velocity *v = ecs_field(it, Velocity, 1);
 
     // Iterate matched entities
     for (int i = 0; i < it->count, i++) {
@@ -174,8 +174,8 @@ while (ecs_query_next(&it)) {
 // System code
 void Move(ecs_iter_t *it) {
     // Get fields from system query
-    Position *p = ecs_field(it, Position, 1);
-    Velocity *v = ecs_field(it, Velocity, 2);
+    Position *p = ecs_field(it, Position, 0);
+    Velocity *v = ecs_field(it, Velocity, 1);
 
     // Iterate matched entities
     for (int i = 0; i < it->count, i++) {
@@ -265,8 +265,8 @@ A system provides a `delta_time` which contains the time passed since the last f
 <li><b class="tab-title">C</b>
 
 ```c
-Position *p = ecs_field(it, Position, 1);
-Velocity *v = ecs_field(it, Velocity, 2);
+Position *p = ecs_field(it, Position, 0);
+Velocity *v = ecs_field(it, Velocity, 1);
 
 for (int i = 0; i < it->count, i++) {
     p[i].x += v[i].x * it->delta_time;
@@ -385,7 +385,7 @@ ECS_SYSTEM(world, PrintTime, EcsOnUpdate, 0);
 ecs_system(world, {
     .entity = ecs_entity(world, {
         .name = "PrintTime",
-        .add = { ecs_dependson(EcsOnUpdate) }
+        .add = ecs_ids( ecs_dependson(EcsOnUpdate) )
     }),
     .callback = PrintTime
 });
@@ -433,7 +433,7 @@ Tasks may query for components from a fixed source or singleton:
 // System function
 void PrintTime(ecs_iter_t *it) {
     // Get singleton component
-    Game *g = ecs_field(it, Game, 1);
+    Game *g = ecs_field(it, Game, 0);
 
     printf("Time: %f\n", g->time);
 }
@@ -445,9 +445,9 @@ ECS_SYSTEM(world, PrintTime, EcsOnUpdate, Game($));
 ecs_system(world, {
     .entity = ecs_entity(world, {
         .name = "PrintTime",
-        .add = { ecs_dependson(EcsOnUpdate) }
+        .add = ecs_ids( ecs_dependson(EcsOnUpdate) )
     }),
-    .query.filter.terms = {
+    .query.terms = {
         { .id = ecs_id(Game), .src.id = ecs_id(Game) } // Singleton source
     },
     .callback = PrintTime
@@ -458,7 +458,7 @@ ecs_system(world, {
 
 ```cpp
 world.system<Game>("PrintTime")
-    .term_at(1).singleton()
+    .term_at(0).singleton()
     .kind(flecs::OnUpdate)
     .iter([](flecs::iter& it, Game *g) {
         printf("Time: %f\n", g->time);
@@ -608,11 +608,11 @@ The builtin pipeline query looks like this:
 
 ```c
 ecs_pipeline_init(world, &(ecs_pipeline_desc_t){
-    .query.filter.terms = {
+    .query.terms = {
         { .id = EcsSystem },
-        { .id = EcsPhase, .src.flags = EcsCascade, .src.trav = EcsDependsOn },
-        { .id = EcsDisabled, .src.flags = EcsUp, .src.trav = EcsDependsOn, .oper = EcsNot },
-        { .id = EcsDisabled, .src.flags = EcsUp, .src.trav = EcsChildOf, .oper = EcsNot }
+        { .id = EcsPhase, .src.flags = EcsCascade, .trav = EcsDependsOn },
+        { .id = EcsDisabled, .src.flags = EcsUp, .trav = EcsDependsOn, .oper = EcsNot },
+        { .id = EcsDisabled, .src.flags = EcsUp, .trav = EcsChildOf, .oper = EcsNot }
     }
 });
 ```
@@ -659,7 +659,7 @@ ECS_TAG(world, Foo);
 
 // Create custom pipeline
 ecs_entity_t pipeline = ecs_pipeline_init(world, &(ecs_pipeline_desc_t){
-    .query.filter.terms = {
+    .query.terms = {
         { .id = EcsSystem }, // mandatory
         { .id = Foo }
     }
@@ -840,7 +840,7 @@ There are a number of things applications can do to force merging of operations,
 1. Commands to be merged before another system
 2. Operations not to be enqueued as commands.
 
-The mechanisms to accomplish this are sync points for 1), and `no_readonly` systems for 2).
+The mechanisms to accomplish this are sync points for 1), and `immediate` systems for 2).
 
 ### Sync points
 Sync points are moments during the frame where all commands are flushed to the storage. Systems that run after a sync point will be able to see all operations that happened up until the sync point. Sync points are inserted automatically by analyzing which commands could have been inserted and which components are being read by systems.
@@ -868,7 +868,7 @@ ECS_SYSTEM(world, SetTransform, EcsOnUpdate, Position, [out] Transform());
 // When using the descriptor API for creating the system, set the EcsIsEntity
 // flag while leaving the id field to 0. This is equivalent to doing `()` in the DSL.
 ecs_system(world, {
-    .query.filter.terms = {
+    .query.terms = {
         { ecs_id(Position) },
         {
             .inout = EcsOut,
@@ -912,7 +912,7 @@ ECS_SYSTEM(world, SetTransform, EcsOnUpdate, Position, [in] Transform());
 ```
 ```c
 ecs_system(world, {
-    .query.filter.terms = {
+    .query.terms = {
         { ecs_id(Position) },
         {
             .inout = EcsIn,
@@ -951,14 +951,14 @@ By default systems are ran while the world is in "readonly" mode, where all ECS 
 
 In some cases however, operations need to be immediately visible to a system. A typical example is a system that assigns tasks to resources, like assigning plates to a waiter. A system should only assign plates to a waiter that hasn't been assigned any plates yet, but to know which waiters are free, the operation that assigns a plate to a waiter must be immediately visible.
 
-To accomplish this, systems can be marked with the `no_readonly` flag, which signals that a system should be ran while the world is not in readonly mode. This causes ECS operations to not get enqueued, and allows the system to directly see the results of operations. There are a few limitations to `no_readonly` systems:
+To accomplish this, systems can be marked with the `immediate` flag, which signals that a system should be ran while the world is not in readonly mode. This causes ECS operations to not get enqueued, and allows the system to directly see the results of operations. There are a few limitations to `immediate` systems:
 
-- `no_readonly` systems are always single threaded
+- `immediate` systems are always single threaded
 - operations on the iterated over entity must still be deferred
 
 The reason for the latter limitation is that allowing for operations on the iterated over entity would cause the system to modify the storage it is iterating, which could cause undefined behavior similar to what you'd see when changing a vector while iterating it.
 
-The following example shows how to create a `no_readonly` system:
+The following example shows how to create a `immediate` system:
 <div class="flecs-snippet-tabs">
 <ul>
 <li><b class="tab-title">C</b>
@@ -967,13 +967,13 @@ The following example shows how to create a `no_readonly` system:
 ecs_system(ecs, {
     .entity = ecs_entity(ecs, {
         .name = "AssignPlate",
-        .add = { ecs_dependson(EcsOnUpdate) }
+        .add = ecs_ids( ecs_dependson(EcsOnUpdate) )
     }),
-    .query.filter.terms = {
+    .query.terms = {
         { .id = Plate },
     },
     .callback = AssignPlate,
-    .no_readonly = true // disable readonly mode for this system
+    .immediate = true // disable readonly mode for this system
 });
 ```
 </li>
@@ -982,7 +982,7 @@ ecs_system(ecs, {
 ```cpp
     ecs.system("AssignPlate")
         .with<Plate>()
-        .no_readonly() // disable readonly mode for this system
+        .immediate() // disable readonly mode for this system
         .iter([&](flecs::iter& it) { /* ... */ })
 ```
 </li>
@@ -1048,7 +1048,7 @@ void AssignPlate(ecs_iter_t *it) {
 </ul>
 </div>
 
-Note that `defer_suspend` and `defer_resume` may only be called from within a `no_readonly` system.
+Note that `defer_suspend` and `defer_resume` may only be called from within a `immediate` system.
 
 ### Threading
 Systems in Flecs can be multithreaded. This requires both the system to be created as a multithreaded system, as well as configuring the world to have a number of worker threads. To create worker threads, use the `set_threads` function:
@@ -1083,9 +1083,9 @@ To create a multithreaded system, use the `multi_threaded` flag:
 ```c
 ecs_system(ecs, {
     .entity = ecs_entity(ecs, {
-        .add = { ecs_dependson(EcsOnUpdate) }
+        .add = ecs_ids( ecs_dependson(EcsOnUpdate) )
     }),
-    .query.filter.terms = {
+    .query.terms = {
         { .id = ecs_id(Position) }
     },
     .callback = Dummy,
@@ -1168,9 +1168,9 @@ ecs_set_interval(world, ecs_id(Move), 1.0); // Run at 1Hz
 ecs_system(world, {
     .entity = ecs_entity(world, {
         .name = "Move",
-        .add = { ecs_dependson(EcsOnUpdate) }
+        .add = ecs_ids( ecs_dependson(EcsOnUpdate) )
     }),
-    .query.filter.terms = {
+    .query.terms = {
         { ecs_id(Position) }, 
         { ecs_id(Velocity), .inout = EcsIn }
     },
@@ -1214,9 +1214,9 @@ ecs_set_rate(world, ecs_id(Move), 2); // Run every other frame
 ecs_system(world, {
     .entity = ecs_entity(world, {
         .name = "Move",
-        .add = { ecs_dependson(EcsOnUpdate) }
+        .add = ecs_ids( ecs_dependson(EcsOnUpdate) )
     }),
-    .query.filter.terms = {
+    .query.terms = {
         { ecs_id(Position) }, 
         { ecs_id(Velocity), .inout = EcsIn }
     },
@@ -1270,9 +1270,9 @@ ecs_entity_t tick_source = ecs_set_interval(world, 0, 1.0);
 ecs_system(world, {
     .entity = ecs_entity(world, {
         .name = "Move",
-        .add = { ecs_dependson(EcsOnUpdate) }
+        .add = ecs_ids( ecs_dependson(EcsOnUpdate) )
     }),
-    .query.filter.terms = {
+    .query.terms = {
         { ecs_id(Position) }, 
         { ecs_id(Velocity), .inout = EcsIn }
     },
@@ -1410,7 +1410,7 @@ Systems can also act as each others tick source:
 ecs_entity_t each_second = ecs_system(world, {
     .entity = ecs_entity(world, {
         .name = "EachSecond",
-        .add = { ecs_dependson(EcsOnUpdate) }
+        .add = ecs_ids( ecs_dependson(EcsOnUpdate) )
     }),
     .callback = Dummy,
     .interval = 1.0
@@ -1420,7 +1420,7 @@ ecs_entity_t each_second = ecs_system(world, {
 ecs_entity_t each_minute = ecs_system(world, {
     .entity = ecs_entity(world, {
         .name = "EachMinute",
-        .add = { ecs_dependson(EcsOnUpdate) }
+        .add = ecs_ids( ecs_dependson(EcsOnUpdate) )
     }),
     .callback = Dummy,
     .tick_source = each_second,
@@ -1431,7 +1431,7 @@ ecs_entity_t each_minute = ecs_system(world, {
 ecs_entity_t each_hour = ecs_system(world, {
     .entity = ecs_entity(world, {
         .name = "EachHour",
-        .add = { ecs_dependson(EcsOnUpdate) }
+        .add = ecs_ids( ecs_dependson(EcsOnUpdate) )
     }),
     .callback = Dummy,
     .tick_source = each_minute,

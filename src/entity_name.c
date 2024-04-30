@@ -17,7 +17,7 @@ bool flecs_path_append(
     const char *prefix,
     ecs_strbuf_t *buf)
 {
-    ecs_poly_assert(world, ecs_world_t);
+    flecs_poly_assert(world, ecs_world_t);
     ecs_assert(sep[0] != 0, ECS_INVALID_PARAMETER, NULL);
 
     ecs_entity_t cur = 0;
@@ -212,7 +212,7 @@ ecs_entity_t flecs_get_parent_from_path(
 
 static
 void flecs_on_set_symbol(ecs_iter_t *it) {
-    EcsIdentifier *n = ecs_field(it, EcsIdentifier, 1);
+    EcsIdentifier *n = ecs_field(it, EcsIdentifier, 0);
     ecs_world_t *world = it->world;
 
     int i;
@@ -225,10 +225,10 @@ void flecs_on_set_symbol(ecs_iter_t *it) {
 
 void flecs_bootstrap_hierarchy(ecs_world_t *world) {
     ecs_observer(world, {
-        .entity = ecs_entity(world, {.add = {ecs_childof(EcsFlecsInternals)}}),
-        .filter.terms[0] = {
+        .entity = ecs_entity(world, { .parent = EcsFlecsInternals }),
+        .query.terms[0] = {
             .id = ecs_pair(ecs_id(EcsIdentifier), EcsSymbol), 
-            .src.flags = EcsSelf 
+            .src.id = EcsSelf 
         },
         .callback = flecs_on_set_symbol,
         .events = {EcsOnSet},
@@ -510,7 +510,7 @@ const char* ecs_set_name_prefix(
     ecs_world_t *world,
     const char *prefix)
 {
-    ecs_poly_assert(world, ecs_world_t);
+    flecs_poly_assert(world, ecs_world_t);
     const char *old_prefix = world->info.name_prefix;
     world->info.name_prefix = prefix;
     return old_prefix;
@@ -560,7 +560,7 @@ ecs_entity_t ecs_add_path_w_sep(
 
     if (!path) {
         if (!entity) {
-            entity = ecs_new_id(world);
+            entity = ecs_new(world);
         }
 
         if (parent) {
@@ -623,10 +623,10 @@ ecs_entity_t ecs_add_path_w_sep(
                 if (!e) {
                     if (last_elem) {
                         ecs_entity_t prev = ecs_set_scope(world, 0);
-                        e = ecs_new(world, 0);
+                        e = ecs_entity(world, {0});
                         ecs_set_scope(world, prev);
                     } else {
-                        e = ecs_new_id(world);
+                        e = ecs_new(world);
                     }
                 }
 

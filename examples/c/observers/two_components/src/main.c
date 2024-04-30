@@ -15,8 +15,8 @@ void Observer(ecs_iter_t *it) {
     ecs_entity_t event = it->event;
     ecs_entity_t event_id = it->event_id;
 
-    Position *p = ecs_field(it, Position, 1);
-    Velocity *v = ecs_field(it, Velocity, 2);
+    Position *p = ecs_field(it, Position, 0);
+    Velocity *v = ecs_field(it, Velocity, 1);
 
     for (int i = 0; i < it->count; i ++) {
         ecs_entity_t e = it->entities[i];
@@ -38,7 +38,7 @@ int main(int argc, char *argv[]) {
     ECS_OBSERVER(ecs, Observer, EcsOnSet, Position, Velocity);
 
     // Create entity
-    ecs_entity_t e = ecs_new_entity(ecs, "e");
+    ecs_entity_t e = ecs_entity(ecs, { .name = "e" });
     
     // Set Position (emits EcsOnSet, does not yet match observer)
     ecs_set(ecs, e, Position, {10, 20});

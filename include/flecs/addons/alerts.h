@@ -81,11 +81,11 @@ typedef struct ecs_alert_desc_t {
     /** Alert query. An alert will be created for each entity that matches the
      * specified query. The query must have at least one term that uses the
      * $this variable (default). */
-    ecs_filter_desc_t filter;
+    ecs_query_desc_t query;
 
     /** Template for alert message. This string is used to generate the alert
      * message and may refer to variables in the query result. The format for
-     * the template expressions is as specified by ecs_interpolate_string().
+     * the template expressions is as specified by ecs_script_string_interpolate().
      *
      * Examples:
      *

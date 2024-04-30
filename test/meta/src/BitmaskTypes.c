@@ -11,7 +11,7 @@ void meta_test_bitmask(
     test_int(ct->size, ECS_SIZEOF(ecs_i32_t));
     test_int(ct->alignment, ECS_ALIGNOF(ecs_i32_t));
 
-    const EcsMetaType *mt = ecs_get(world, t, EcsMetaType);
+    const EcsType *mt = ecs_get(world, t, EcsType);
     test_assert(mt != NULL);
     test_assert(mt->kind == EcsBitmaskType);
 
@@ -48,7 +48,7 @@ void meta_test_constant(
         if (!ecs_os_strcmp(c->name, name)) {
             test_int(c->value, value);
 
-            const ecs_u32_t *vptr = ecs_get_pair_object(world, c->constant, 
+            const ecs_u32_t *vptr = ecs_get_pair_second(world, c->constant, 
                 EcsConstant, ecs_u32_t);
             if (vptr) {
                 test_int(*vptr, value);

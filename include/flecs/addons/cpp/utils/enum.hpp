@@ -484,7 +484,7 @@ struct enum_data {
 /** Convenience function for getting enum reflection data */
 template <typename E>
 enum_data<E> enum_type(flecs::world_t *world) {
-    _::cpp_type<E>::id(world); // Ensure enum is registered
+    _::type<E>::id(world); // Ensure enum is registered
     auto& ref = _::enum_type<E>::get();
     return enum_data<E>(world, ref.data);
 }

@@ -98,9 +98,8 @@ flecs::entity get_container(flecs::entity container) {
 // Iterate all items in an inventory
 template <typename Func>
 void for_each_item(flecs::entity container, const Func& func) {
-    container.world().filter_builder()
+    container.world().query_builder()
         .with<ContainedBy>(container)
-        .build()
         .each(func);
 }
 

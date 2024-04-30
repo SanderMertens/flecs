@@ -31,13 +31,13 @@ int main(int argc, char *argv[]) {
 
     // When one element of a pair is a component and the other element is a tag, 
     // the pair assumes the type of the component. 
-    ecs_entity_t e1 = ecs_new_id(ecs);
+    ecs_entity_t e1 = ecs_new(ecs);
     ecs_set_pair(ecs, e1, Requires, Gigawatts, {1.21});
     const Requires *r = ecs_get_pair(ecs, e1, Requires, Gigawatts);
     printf("requires: %.2f\n", r->amount);
 
     // The component can be either the first or second part of a pair:
-    ecs_entity_t e2 = ecs_new_id(ecs);
+    ecs_entity_t e2 = ecs_new(ecs);
     ecs_set_pair_second(ecs, e2, Gigawatts, Requires, {1.21});
     r = ecs_get_pair_second(ecs, e2, Gigawatts, Requires);
     printf("requires: %.2f\n", r->amount);
@@ -47,14 +47,14 @@ int main(int argc, char *argv[]) {
 
     // If both parts of a pair are components, the pair assumes the type of
     // the first element:
-    ecs_entity_t e3 = ecs_new_id(ecs);
+    ecs_entity_t e3 = ecs_new(ecs);
     ecs_set_pair(ecs, e3, Expires, ecs_id(Position), {0.5});
     const Expires *e = ecs_get_pair(ecs, e3, Expires, ecs_id(Position));
     printf("expires: %.1f\n", e->timeout);
 
     // You can prevent a pair from assuming the type of a component by adding
     // the Tag property to a relationship:
-    ecs_add_id(ecs, MustHave, EcsTag);
+    ecs_add_id(ecs, MustHave, EcsPairIsTag);
 
     // Even though Position is a component, <MustHave, Position> contains no
     // data because MustHave has the Tag property.
@@ -86,7 +86,7 @@ int main(int argc, char *argv[]) {
 
     // When querying for a relationship, provide both parts of the pair:
     ecs_query_t *q = ecs_query(ecs, {
-        .filter.terms = {
+        .terms = {
             { .id = ecs_pair(ecs_id(Requires), Gigawatts) }
         }
     });
@@ -94,7 +94,7 @@ int main(int argc, char *argv[]) {
     // When iterating, always use the pair type:
     ecs_iter_t it = ecs_query_iter(ecs, q);
     while (ecs_query_next(&it)) {
-        r = ecs_field(&it, Requires, 1);
+        r = ecs_field(&it, Requires, 0);
         for (int i = 0; i < it.count; i ++) {
             printf("requires %.2f gigawatts\n", r[i].amount);
         }

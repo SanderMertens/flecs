@@ -301,6 +301,7 @@ void* ecs_vec_get(
     int32_t index)
 {
     ecs_san_assert(size == v->elem_size, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(index >= 0, ECS_OUT_OF_RANGE, NULL);
     ecs_assert(index < v->count, ECS_OUT_OF_RANGE, NULL);
     return ECS_ELEM(v->array, size, index);
 }

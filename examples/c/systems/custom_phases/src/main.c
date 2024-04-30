@@ -25,7 +25,7 @@ int main(int argc, char *argv[]) {
     ecs_system(ecs, {
         .entity = ecs_entity(ecs, {
             .name = "CollisionSystem",
-            .add = { ecs_dependson(Collisions) }
+            .add = ecs_ids( ecs_dependson(Collisions) )
         }),
         .callback = Sys
     });
@@ -33,7 +33,7 @@ int main(int argc, char *argv[]) {
     ecs_system(ecs, {
         .entity = ecs_entity(ecs, {
             .name = "PhysicsSystem",
-            .add = { ecs_dependson(Physics) }
+            .add = ecs_ids( ecs_dependson(Physics) )
         }),
         .callback = Sys
     });
@@ -41,7 +41,7 @@ int main(int argc, char *argv[]) {
     ecs_system(ecs, {
         .entity = ecs_entity(ecs, {
             .name = "GameSystem",
-            .add = { ecs_dependson(EcsOnUpdate) }
+            .add = ecs_ids( ecs_dependson(EcsOnUpdate) )
         }),
         .callback = Sys
     });

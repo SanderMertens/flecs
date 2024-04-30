@@ -28,7 +28,7 @@ int main(int, char *[]) {
     // Create query that matches Gravity as singleton
     flecs::query<Velocity, const Gravity> q = 
         world.query_builder<Velocity, const Gravity>()
-            .term_at(2).singleton()
+            .term_at(1).singleton()
             .build();
 
     // In a query string expression you can use the $ shortcut for singletons:

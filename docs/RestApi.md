@@ -185,7 +185,7 @@ In C this is done by setting the `.entity` field to a named entity:
 ```c
 ecs_query_t *q = ecs_query(world, {
   .entity = ecs_entity(world, { .name = "Move" }),
-  .filter.terms = {
+  .terms = {
     { ecs_id(Position) },
     { ecs_id(Velocity) },
   }
@@ -215,14 +215,14 @@ This also works for filters and rules. Because systems are queries, the name of 
 
 ![Remote Explorer](img/explorer-system.png)
 
-When a named rule query has variables, variables can be optionally provided as arguments to the query. The following example provides the value `Apples` to the query variable `food` for query `eats_query`, which constrains the results to only show results with `Apples`:
+When a named query has variables, variables can be optionally provided as arguments to the query. The following example provides the value `Apples` to the query variable `food` for query `eats_query`, which constrains the results to only show results with `Apples`:
 
 ![Remote Explorer](img/explorer-arguments.png)
 
 The underlying query that was used for this screenshot was created like this:
 
 ```c
-ecs_rule(world, {
+ecs_query(world, {
     .entity = ecs_entity(world, { .name = "eats_query" }),
     .expr = "(Eats, $food)"
 });

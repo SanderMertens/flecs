@@ -114,7 +114,7 @@ void register_lifecycle_actions(
 }
 
 // Class that manages component ids across worlds & binaries.
-// The cpp_type class stores the component id for a C++ type in a static global
+// The type class stores the component id for a C++ type in a static global
 // variable that is shared between worlds. Whenever a component is used this
 // class will check if it already has been registered (has the global id been
 // set), and if not, register the component with the world.
@@ -127,6 +127,7 @@ template <typename T>
 struct cpp_type_impl {
     static_assert(is_pointer<T>::value == false,
         "pointer types are not allowed for components");
+
     // Initialize component identifier
     static void init(
         entity_t entity,
@@ -253,7 +254,7 @@ struct cpp_type_impl {
         (void)name;
         (void)allow_tag;
 
-        ecs_assert(registered(world), ECS_INVALID_OPERATION,
+        ecs_assert(registered(world), ECS_INVALID_OPERATION, 
             "component '%s' was not registered before use",
             type_name<T>());
 #endif
@@ -318,18 +319,18 @@ template <typename T> int32_t       cpp_type_impl<T>::s_reset_count;
 
 // Regular type
 template <typename T>
-struct cpp_type<T, if_not_t< is_pair<T>::value >>
+struct type<T, if_not_t< is_pair<T>::value >>
     : cpp_type_impl<base_type_t<T>> { };
 
 // Pair type
 template <typename T>
-struct cpp_type<T, if_t< is_pair<T>::value >>
+struct type<T, if_t< is_pair<T>::value >>
 {
     // Override id method to return id of pair
     static id_t id(world_t *world = nullptr) {
         return ecs_pair(
-            cpp_type< pair_first_t<T> >::id(world),
-            cpp_type< pair_second_t<T> >::id(world));
+            type< pair_first_t<T> >::id(world),
+            type< pair_second_t<T> >::id(world));
     }
 };
 
@@ -387,14 +388,14 @@ struct component : untyped_component {
             implicit_name = true;
         }
 
-        if (_::cpp_type<T>::registered(world)) {
+        if (_::type<T>::registered(world)) {
             /* Obtain component id. Because the component is already registered,
              * this operation does nothing besides returning the existing id */
-            id = _::cpp_type<T>::id_explicit(world, name, allow_tag, id);
+            id = _::type<T>::id_explicit(world, name, allow_tag, id);
 
             ecs_cpp_component_validate(world, id, n, _::symbol_name<T>(),
-                _::cpp_type<T>::size(),
-                _::cpp_type<T>::alignment(),
+                _::type<T>::size(),
+                _::type<T>::alignment(),
                 implicit_name);
         } else {
             /* If component is registered from an existing scope, ignore the
@@ -412,6 +413,7 @@ struct component : untyped_component {
                         last_elem = ptr;
                     }
                 }
+
                 if (last_elem) {
                     name = last_elem + 1;
                 }
@@ -423,16 +425,16 @@ struct component : untyped_component {
                 ECS_SIZEOF(T), ECS_ALIGNOF(T), implicit_name, &existing);
 
             /* Initialize static component data */
-            id = _::cpp_type<T>::id_explicit(world, name, allow_tag, id);
+            id = _::type<T>::id_explicit(world, name, allow_tag, id);
 
             /* Initialize lifecycle actions (ctor, dtor, copy, move) */
-            if (_::cpp_type<T>::size() && !existing) {
+            if (_::type<T>::size() && !existing) {
                 _::register_lifecycle_actions<T>(world, id);
             }
         }
 
-        m_world = world;
-        m_id = id;
+        world_ = world;
+        id_ = id;
     }
 
     /** Register on_add hook. */
@@ -447,7 +449,7 @@ struct component : untyped_component {
         ctx->on_add = FLECS_NEW(Delegate)(FLECS_FWD(func));
         ctx->free_on_add = reinterpret_cast<ecs_ctx_free_t>(
             _::free_obj<Delegate>);
-        ecs_set_hooks_id(m_world, m_id, &h);
+        ecs_set_hooks_id(world_, id_, &h);
         return *this;
     }
 
@@ -464,7 +466,7 @@ struct component : untyped_component {
         ctx->on_remove = FLECS_NEW(Delegate)(FLECS_FWD(func));
         ctx->free_on_remove = reinterpret_cast<ecs_ctx_free_t>(
             _::free_obj<Delegate>);
-        ecs_set_hooks_id(m_world, m_id, &h);
+        ecs_set_hooks_id(world_, id_, &h);
         return *this;
     }
 
@@ -481,7 +483,7 @@ struct component : untyped_component {
         ctx->on_set = FLECS_NEW(Delegate)(FLECS_FWD(func));
         ctx->free_on_set = reinterpret_cast<ecs_ctx_free_t>(
             _::free_obj<Delegate>);
-        ecs_set_hooks_id(m_world, m_id, &h);
+        ecs_set_hooks_id(world_, id_, &h);
         return *this;
     }
 
@@ -504,7 +506,7 @@ private:
     }
 
     flecs::type_hooks_t get_hooks() {
-        const flecs::type_hooks_t* h = ecs_get_hooks_id(m_world, m_id);
+        const flecs::type_hooks_t* h = ecs_get_hooks_id(world_, id_);
         if (h) {
             return *h;
         } else {
@@ -517,8 +519,8 @@ private:
  * component yet, this operation will return 0. */
 template <typename T>
 flecs::entity_t type_id() {
-    if (_::cpp_type<T>::s_reset_count == ecs_cpp_reset_count_get()) {
-        return _::cpp_type<T>::s_id;
+    if (_::type<T>::s_reset_count == ecs_cpp_reset_count_get()) {
+        return _::type<T>::s_id;
     } else {
         return 0;
     }

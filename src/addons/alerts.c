@@ -239,20 +239,20 @@ ecs_entity_t flecs_alert_out_of_range_kind(
 static
 void MonitorAlerts(ecs_iter_t *it) {
     ecs_world_t *world = it->real_world;
-    EcsAlert *alert = ecs_field(it, EcsAlert, 1);
-    EcsPoly *poly = ecs_field(it, EcsPoly, 2);
+    EcsAlert *alert = ecs_field(it, EcsAlert, 0);
+    EcsPoly *poly = ecs_field(it, EcsPoly, 1);
 
     int32_t i, count = it->count;
     for (i = 0; i < count; i ++) {
         ecs_entity_t a = it->entities[i]; /* Alert entity */
         ecs_entity_t default_severity = ecs_get_target(
             world, a, ecs_id(EcsAlert), 0);
-        ecs_rule_t *rule = poly[i].poly;
-        if (!rule) {
+        ecs_query_t *q = poly[i].poly;
+        if (!q) {
             continue;
         }
 
-        ecs_poly_assert(rule, ecs_rule_t);
+        flecs_poly_assert(q, ecs_query_t);
 
         ecs_id_t member_id = alert[i].id;
         const EcsMemberRanges *ranges = NULL;
@@ -260,11 +260,11 @@ void MonitorAlerts(ecs_iter_t *it) {
             ranges = ecs_ref_get(world, &alert[i].ranges, EcsMemberRanges);
         }
 
-        ecs_iter_t rit = ecs_rule_iter(world, rule);
+        ecs_iter_t rit = ecs_query_iter(world, q);
         rit.flags |= EcsIterNoData;
         rit.flags |= EcsIterIsInstanced;
 
-        while (ecs_rule_next(&rit)) {
+        while (ecs_query_next(&rit)) {
             ecs_entity_t severity = flecs_alert_get_severity(
                 world, &rit, &alert[i]);
             if (!severity) {
@@ -350,10 +350,10 @@ void MonitorAlerts(ecs_iter_t *it) {
 static
 void MonitorAlertInstances(ecs_iter_t *it) {
     ecs_world_t *world = it->real_world;
-    EcsAlertInstance *alert_instance = ecs_field(it, EcsAlertInstance, 1);
-    EcsMetricSource *source = ecs_field(it, EcsMetricSource, 2);
-    EcsMetricValue *value = ecs_field(it, EcsMetricValue, 3);
-    EcsAlertTimeout *timeout = ecs_field(it, EcsAlertTimeout, 4);
+    EcsAlertInstance *alert_instance = ecs_field(it, EcsAlertInstance, 0);
+    EcsMetricSource *source = ecs_field(it, EcsMetricSource, 1);
+    EcsMetricValue *value = ecs_field(it, EcsMetricValue, 2);
+    EcsAlertTimeout *timeout = ecs_field(it, EcsAlertTimeout, 3);
 
     /* Get alert component from alert instance parent (the alert) */
     ecs_id_t childof_pair;
@@ -361,20 +361,23 @@ void MonitorAlertInstances(ecs_iter_t *it) {
         ecs_err("alert instances must be a child of an alert");
         return;
     }
+
     ecs_entity_t parent = ecs_pair_second(world, childof_pair);
     ecs_assert(parent != 0, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(ecs_has(world, parent, EcsAlert), ECS_INVALID_OPERATION,
         "alert entity does not have Alert component");
+
     EcsAlert *alert = ecs_ensure(world, parent, EcsAlert);
     const EcsPoly *poly = ecs_get_pair(world, parent, EcsPoly, EcsQuery);
     ecs_assert(poly != NULL, ECS_INVALID_OPERATION, 
         "alert entity does not have (Poly, Query) component");
-    ecs_rule_t *rule = poly->poly;
-    if (!rule) {
+
+    ecs_query_t *query = poly->poly;
+    if (!query) {
         return;
     }
 
-    ecs_poly_assert(rule, ecs_rule_t);
+    flecs_poly_assert(query, ecs_query_t);
 
     ecs_id_t member_id = alert->id;
     const EcsMemberRanges *ranges = NULL;
@@ -382,9 +385,7 @@ void MonitorAlertInstances(ecs_iter_t *it) {
         ranges = ecs_ref_get(world, &alert->ranges, EcsMemberRanges);
     }
 
-    ecs_vars_t vars = {0};
-    ecs_vars_init(world, &vars);
-
+    ecs_script_vars_t *vars = ecs_script_vars_init(it->world);
     int32_t i, count = it->count;
     for (i = 0; i < count; i ++) {
         ecs_entity_t ai = it->entities[i];
@@ -397,13 +398,13 @@ void MonitorAlertInstances(ecs_iter_t *it) {
             continue;
         }
 
-        /* Check if alert instance still matches rule */
-        ecs_iter_t rit = ecs_rule_iter(world, rule);
+        /* Check if alert instance still matches query */
+        ecs_iter_t rit = ecs_query_iter(world, query);
         rit.flags |= EcsIterNoData;
         rit.flags |= EcsIterIsInstanced;
         ecs_iter_set_var(&rit, 0, e);
 
-        if (ecs_rule_next(&rit)) {
+        if (ecs_query_next(&rit)) {
             bool match = true;
 
             /* If alert is monitoring member range, test value against range */
@@ -435,7 +436,7 @@ void MonitorAlertInstances(ecs_iter_t *it) {
                 if (generate_message) {
                     if (alert_instance[i].message) {
                         /* If a message was already generated, only regenerate if
-                        * rule has multiple variables. Variable values could have 
+                        * query has multiple variables. Variable values could have 
                         * changed, this ensures the message remains up to date. */
                         generate_message = rit.variable_count > 1;
                     }
@@ -446,9 +447,9 @@ void MonitorAlertInstances(ecs_iter_t *it) {
                         ecs_os_free(alert_instance[i].message);
                     }
 
-                    ecs_iter_to_vars(&rit, &vars, 0);
-                    alert_instance[i].message = ecs_interpolate_string(
-                        world, alert->message, &vars);
+                    ecs_script_vars_from_iter(&rit, vars, 0);
+                    alert_instance[i].message = ecs_script_string_interpolate(
+                        world, alert->message, vars);
                 }
 
                 if (timeout) {
@@ -460,7 +461,7 @@ void MonitorAlertInstances(ecs_iter_t *it) {
                     timeout[i].inactive_time = 0;
                 }
 
-                /* Alert instance still matches rule, keep it alive */
+                /* Alert instance still matches query, keep it alive */
                 ecs_iter_fini(&rit);
                 continue;
             }
@@ -469,7 +470,6 @@ void MonitorAlertInstances(ecs_iter_t *it) {
         }
 
         /* Alert instance is no longer active */
-
         if (timeout) {
             if (ECS_EQZERO(timeout[i].inactive_time)) {
                 /* The alert just became inactive. Add Disabled tag */
@@ -479,49 +479,49 @@ void MonitorAlertInstances(ecs_iter_t *it) {
             ecs_ftime_t t = timeout[i].inactive_time;
             timeout[i].inactive_time += it->delta_system_time;
             if (t < timeout[i].expire_time) {
-                /* Alert instance no longer matches rule, but is still
+                /* Alert instance no longer matches query, but is still
                     * within the timeout period. Keep it alive. */
                 continue;
             }
         }
 
-        /* Alert instance no longer matches rule, remove it */        
+        /* Alert instance no longer matches query, remove it */ 
         flecs_alerts_remove_alert_from_src(world, e, parent);
         ecs_map_remove(&alert->instances, e);
         ecs_delete(world, ai);
     }
 
-    ecs_vars_fini(&vars);
+    ecs_script_vars_fini(vars);
 }
 
 ecs_entity_t ecs_alert_init(
     ecs_world_t *world,
     const ecs_alert_desc_t *desc)
 {
-    ecs_poly_assert(world, ecs_world_t);
+    flecs_poly_assert(world, ecs_world_t);
     ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(desc->_canary == 0, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(!desc->filter.entity || desc->entity == desc->filter.entity, 
+    ecs_check(desc->_canary == 0, ECS_INVALID_PARAMETER,
+        "ecs_alert_desc_t was not initialized to zero");
+    ecs_check(!desc->query.entity || desc->entity == desc->query.entity, 
         ECS_INVALID_PARAMETER, NULL);
 
     ecs_entity_t result = desc->entity;
     if (!result) {
-        result = ecs_new(world, 0);
+        result = ecs_new(world);
     }
 
-    ecs_filter_desc_t private_desc = desc->filter;
+    ecs_query_desc_t private_desc = desc->query;
     private_desc.entity = result;
 
-    ecs_rule_t *rule = ecs_rule_init(world, &private_desc);
-    if (!rule) {
+    ecs_query_t *q = ecs_query_init(world, &private_desc);
+    if (!q) {
         ecs_err("failed to create alert filter");
         return 0;
     }
 
-    const ecs_filter_t *filter = ecs_rule_get_filter(rule);
-    if (!(filter->flags & EcsFilterMatchThis)) {
+    if (!(q->flags & EcsQueryMatchThis)) {
         ecs_err("alert filter must have at least one '$this' term");
-        ecs_rule_fini(rule);
+        ecs_query_fini(q);
         return 0;
     }
 
@@ -543,7 +543,7 @@ ecs_entity_t ecs_alert_init(
                 &alert->severity_filters, ecs_alert_severity_filter_t);
             *sf = desc->severity_filters[i];
             if (sf->var) {
-                sf->_var_index = ecs_rule_find_var(rule, sf->var);
+                sf->_var_index = ecs_query_find_var(q, sf->var);
                 if (sf->_var_index == -1) {
                     ecs_err("unresolved variable '%s' in alert severity filter", 
                         sf->var);
@@ -606,7 +606,7 @@ ecs_entity_t ecs_alert_init(
 
         int32_t var_id = 0;
         if (desc->var) {
-            var_id = ecs_rule_find_var(rule, desc->var);
+            var_id = ecs_query_find_var(q, desc->var);
             if (var_id == -1) {
                 ecs_err("unresolved variable '%s' in alert member", desc->var);
                 goto error;
@@ -665,7 +665,7 @@ int32_t ecs_get_alert_count(
     ecs_entity_t entity,
     ecs_entity_t alert)
 {
-    ecs_poly_assert(world, ecs_world_t);
+    flecs_poly_assert(world, ecs_world_t);
     ecs_check(entity != 0, ECS_INVALID_PARAMETER, NULL);
     ecs_check(!alert || ecs_has(world, alert, EcsAlert), 
         ECS_INVALID_PARAMETER, NULL);
@@ -689,7 +689,7 @@ ecs_entity_t ecs_get_alert(
     ecs_entity_t entity,
     ecs_entity_t alert)
 {
-    ecs_poly_assert(world, ecs_world_t);
+    flecs_poly_assert(world, ecs_world_t);
     ecs_check(entity != 0, ECS_INVALID_PARAMETER, NULL);
     ecs_check(alert != 0, ECS_INVALID_PARAMETER, NULL);
 
@@ -731,7 +731,7 @@ void FlecsAlertsImport(ecs_world_t *world) {
     ECS_TAG_DEFINE(world, EcsAlertError);
     ECS_TAG_DEFINE(world, EcsAlertCritical);
 
-    ecs_add_id(world, ecs_id(EcsAlert), EcsTag);
+    ecs_add_id(world, ecs_id(EcsAlert), EcsPairIsTag);
     ecs_add_id(world, ecs_id(EcsAlert), EcsExclusive);
     ecs_add_id(world, ecs_id(EcsAlertsActive), EcsPrivate);
 
@@ -755,7 +755,7 @@ void FlecsAlertsImport(ecs_world_t *world) {
     });
 
     ecs_set_hooks(world, EcsAlertInstance, {
-        .ctor = ecs_default_ctor,
+        .ctor = flecs_default_ctor,
         .dtor = ecs_dtor(EcsAlertInstance),
         .move = ecs_move(EcsAlertInstance),
         .copy = ecs_copy(EcsAlertInstance)
@@ -770,13 +770,19 @@ void FlecsAlertsImport(ecs_world_t *world) {
         }
     });
 
-    ECS_SYSTEM(world, MonitorAlerts, EcsPreStore, Alert, (Poly, Query));
+    ECS_SYSTEM(world, MonitorAlerts, EcsPreStore, 
+        Alert, 
+        (Poly, Query));
+
     ECS_SYSTEM(world, MonitorAlertInstances, EcsOnStore, Instance, 
-        flecs.metrics.Source, flecs.metrics.Value, ?EcsAlertTimeout, ?Disabled);
+        flecs.metrics.Source, 
+        flecs.metrics.Value, 
+        ?Timeout,
+        ?Disabled);
 
     ecs_system(world, {
         .entity = ecs_id(MonitorAlerts),
-        .no_readonly = true,
+        .immediate = true,
         .interval = (ecs_ftime_t)0.5
     });
 

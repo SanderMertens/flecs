@@ -41,7 +41,7 @@ const char* flecs_json_parse(
     char *token)
 {
     ecs_assert(json != NULL, ECS_INTERNAL_ERROR, NULL);
-    json = ecs_parse_ws_eol(json);
+    json = flecs_parse_ws_eol(json);
 
     char ch = json[0];
 
@@ -81,7 +81,7 @@ const char* flecs_json_parse(
                 break;
             }
 
-            json = ecs_chrparse(json, token_ptr ++);
+            json = flecs_chrparse(json, token_ptr ++);
         }
 
         if (!ch) {
@@ -93,7 +93,7 @@ const char* flecs_json_parse(
         }
     } else if (isdigit(ch) || (ch == '-')) {
         token_kind[0] = JsonNumber;
-        const char *result = ecs_parse_digit(json, token);
+        const char *result = flecs_parse_digit(json, token);
         
         /* Cheap initial check if parsed token could represent large int */
         if (result - json > 15) {
@@ -146,7 +146,7 @@ const char* flecs_json_parse_large_string(
             break;
         }
 
-        json = ecs_chrparse(json, &ch_out);
+        json = flecs_chrparse(json, &ch_out);
         ecs_strbuf_appendch(buf, ch_out);
     }
 
@@ -282,7 +282,7 @@ const char* flecs_json_skip_string(
             break;
         }
 
-        json = ecs_chrparse(json, &ch_out);
+        json = flecs_chrparse(json, &ch_out);
     }
 
     if (!ch) {
@@ -433,14 +433,14 @@ void flecs_json_string_escape(
     ecs_strbuf_t *buf,
     const char *value)
 {
-    ecs_size_t length = ecs_stresc(NULL, 0, '"', value);
+    ecs_size_t length = flecs_stresc(NULL, 0, '"', value);
     if (length == ecs_os_strlen(value)) {
         ecs_strbuf_appendch(buf, '"');
         ecs_strbuf_appendstrn(buf, value, length);
         ecs_strbuf_appendch(buf, '"');
     } else {
         char *out = ecs_os_malloc(length + 3);
-        ecs_stresc(out + 1, length, '"', value);
+        flecs_stresc(out + 1, length, '"', value);
         out[0] = '"';
         out[length + 1] = '"';
         out[length + 2] = '\0';

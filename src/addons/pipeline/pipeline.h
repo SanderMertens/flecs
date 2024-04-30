@@ -16,7 +16,7 @@ typedef struct ecs_pipeline_op_t {
     double time_spent;          /* Time spent merging commands for sync point */
     int64_t commands_enqueued;  /* Number of commands enqueued for sync point */
     bool multi_threaded;        /* Whether systems can be ran multi threaded */
-    bool no_readonly;           /* Whether systems are staged or not */
+    bool immediate;           /* Whether systems are staged or not */
 } ecs_pipeline_op_t;
 
 struct ecs_pipeline_state_t {
@@ -35,7 +35,7 @@ struct ecs_pipeline_state_t {
     ecs_pipeline_op_t *cur_op;  /* Current pipeline op */
     int32_t cur_i;              /* Index in current result */
     int32_t ran_since_merge;    /* Index in current op */
-    bool no_readonly;           /* Is pipeline in readonly mode */
+    bool immediate;           /* Is pipeline in readonly mode */
 };
 
 typedef struct EcsPipeline {

@@ -22,9 +22,9 @@ int main(int argc, char *argv[]) {
     // Set singleton
     ecs_singleton_set(ecs, Gravity, { 9.81 });
 
-    ecs_entity_t e1 = ecs_new_entity(ecs, "e1");
-    ecs_entity_t e2 = ecs_new_entity(ecs, "e2");
-    ecs_entity_t e3 = ecs_new_entity(ecs, "e3");
+    ecs_entity_t e1 = ecs_entity(ecs, { .name = "e1" });
+    ecs_entity_t e2 = ecs_entity(ecs, { .name = "e2" });
+    ecs_entity_t e3 = ecs_entity(ecs, { .name = "e3" });
 
     // Set Velocity
     ecs_set(ecs, e1, Velocity, {0, 0});
@@ -33,7 +33,7 @@ int main(int argc, char *argv[]) {
 
     // Create query that matches Gravity as singleton
     ecs_query_t *q = ecs_query(ecs, {
-        .filter.terms = {
+        .terms = {
             { .id = ecs_id(Velocity) },
             // A singleton is a component matched on itself
             { .id = ecs_id(Gravity), .src.id =  ecs_id(Gravity) }
@@ -41,7 +41,7 @@ int main(int argc, char *argv[]) {
 
         // Optional, but lets us iterate entities in bulk even though the query
         // returns fields with mixed counts (see query manual).
-        .filter.instanced = true
+        .flags = EcsQueryIsInstanced
     });
 
     // In a query string expression you can use the $ shortcut for singletons:
@@ -49,8 +49,8 @@ int main(int argc, char *argv[]) {
 
     ecs_iter_t it = ecs_query_iter(ecs, q);
     while (ecs_query_next(&it)) {
-        Velocity *v = ecs_field(&it, Velocity, 1);
-        Gravity *g = ecs_field(&it, Gravity, 2);
+        Velocity *v = ecs_field(&it, Velocity, 0);
+        Gravity *g = ecs_field(&it, Gravity, 1);
 
         for (int i = 0; i < it.count; i ++) {
             // Make sure to access g as a pointer, as we only have a single

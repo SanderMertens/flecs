@@ -15,80 +15,25 @@ namespace flecs
  * descriptions can reference entities by id, name or by variable, which means
  * the entity will be resolved when the term is evaluated.
  * 
- * @ingroup cpp_core_filters
+ * @ingroup cpp_core_queries
  */
 template<typename Base>
 struct term_id_builder_i {
-    term_id_builder_i() : m_term_id(nullptr) { }
+    term_id_builder_i() : term_id_(nullptr) { }
 
     virtual ~term_id_builder_i() { }
 
     /* The self flag indicates the term identifier itself is used */
     Base& self() {
         this->assert_term_id();
-        m_term_id->flags |= flecs::Self;
-        return *this;
-    }
-
-    /* The up flag indicates that the term identifier may be substituted by
-     * traversing a relationship upwards. For example: substitute the identifier
-     * with its parent by traversing the ChildOf relationship. */
-    Base& up(flecs::entity_t trav = 0) {
-        this->assert_term_id();
-        m_term_id->flags |= flecs::Up;
-        if (trav) {
-            m_term_id->trav = trav;
-        }
-        return *this;
-    }
-
-    template <typename Trav>
-    Base& up() {
-        return this->up(_::cpp_type<Trav>::id(this->world_v()));
-    }
-
-    /* The cascade flag is like up, but returns results in breadth-first order.
-     * Only supported for flecs::query */
-    Base& cascade(flecs::entity_t trav = 0) {
-        this->assert_term_id();
-        m_term_id->flags |= flecs::Cascade;
-        if (trav) {
-            m_term_id->trav = trav;
-        }
-        return *this;
-    }
-
-    template <typename Trav>
-    Base& cascade() {
-        return this->cascade(_::cpp_type<Trav>::id(this->world_v()));
-    }
-
-    /* Use with cascade to iterate results in descending (bottom -> top) order */
-    Base& desc() {
-        this->assert_term_id();
-        m_term_id->flags |= flecs::Desc;
-        return *this;
-    }
-
-    /* The parent flag is short for up(flecs::ChildOf) */
-    Base& parent() {
-        this->assert_term_id();
-        m_term_id->flags |= flecs::Parent;
-        return *this;
-    }
-
-    /* Specify relationship to traverse, and flags to indicate direction */
-    Base& trav(flecs::entity_t trav, flecs::flags32_t flags = 0) {
-        this->assert_term_id();
-        m_term_id->trav = trav;
-        m_term_id->flags |= flags;
+        term_id_->id |= flecs::Self;
         return *this;
     }
 
     /* Specify value of identifier by id */
     Base& id(flecs::entity_t id) {
         this->assert_term_id();
-        m_term_id->id = id;
+        term_id_->id = id;
         return *this;
     }
 
@@ -102,45 +47,44 @@ struct term_id_builder_i {
      */
     Base& entity(flecs::entity_t entity) {
         this->assert_term_id();
-        m_term_id->flags = flecs::IsEntity;
-        m_term_id->id = entity;
+        term_id_->id = entity | flecs::IsEntity;
         return *this;
     }
 
     /* Specify value of identifier by name */
     Base& name(const char *name) {
         this->assert_term_id();
-        m_term_id->flags |= flecs::IsEntity;
-        m_term_id->name = const_cast<char*>(name);
+        term_id_->id |= flecs::IsEntity;
+        term_id_->name = const_cast<char*>(name);
         return *this;
     }
 
     /* Specify identifier is a variable (resolved at query evaluation time) */
     Base& var(const char *var_name) {
         this->assert_term_id();
-        m_term_id->flags |= flecs::IsVariable;
-        m_term_id->name = const_cast<char*>(var_name);
+        term_id_->id |= flecs::IsVariable;
+        term_id_->name = const_cast<char*>(var_name);
         return *this;
     }
 
     /* Override term id flags */
     Base& flags(flecs::flags32_t flags) {
         this->assert_term_id();
-        m_term_id->flags = flags;
+        term_id_->id = flags;
         return *this;
     }
 
-    ecs_term_id_t *m_term_id;
-    
+    ecs_term_ref_t *term_id_;
+
 protected:
     virtual flecs::world_t* world_v() = 0;
 
-private:
     void assert_term_id() {
-        ecs_assert(m_term_id != NULL, ECS_INVALID_PARAMETER, 
+        ecs_assert(term_id_ != NULL, ECS_INVALID_PARAMETER, 
             "no active term (call .term() first)");
     }
 
+private:
     operator Base&() {
         return *static_cast<Base*>(this);
     }
@@ -149,11 +93,11 @@ private:
 /** Term builder interface. 
  * A term is a single element of a query expression. 
  * 
- * @ingroup cpp_core_filters
+ * @ingroup cpp_core_queries
  */
 template<typename Base>
 struct term_builder_i : term_id_builder_i<Base> {
-    term_builder_i() : m_term(nullptr) { }
+    term_builder_i() : term_(nullptr) { }
 
     term_builder_i(ecs_term_t *term_ptr) { 
         set_term(term_ptr);
@@ -166,7 +110,7 @@ struct term_builder_i : term_id_builder_i<Base> {
     /* Call prior to setting values for src identifier */
     Base& src() {
         this->assert_term();
-        this->m_term_id = &m_term->src;
+        this->term_id_ = &term_->src;
         return *this;
     }
 
@@ -175,7 +119,7 @@ struct term_builder_i : term_id_builder_i<Base> {
      * populated as well). */
     Base& first() {
         this->assert_term();
-        this->m_term_id = &m_term->first;
+        this->term_id_ = &term_->first;
         return *this;
     }
 
@@ -183,7 +127,7 @@ struct term_builder_i : term_id_builder_i<Base> {
      * element of a pair. Requires that first() is populated as well. */
     Base& second() {
         this->assert_term();
-        this->m_term_id = &m_term->second;
+        this->term_id_ = &term_->second;
         return *this;
     }
 
@@ -197,7 +141,7 @@ struct term_builder_i : term_id_builder_i<Base> {
     /* Select src identifier, initialize it with id associated with type */
     template<typename T>
     Base& src() {
-        this->src(_::cpp_type<T>::id(this->world_v()));
+        this->src(_::type<T>::id(this->world_v()));
         return *this;
     }
 
@@ -224,7 +168,7 @@ struct term_builder_i : term_id_builder_i<Base> {
     /* Select first identifier, initialize it with id associated with type */
     template<typename T>
     Base& first() {
-        this->first(_::cpp_type<T>::id(this->world_v()));
+        this->first(_::type<T>::id(this->world_v()));
         return *this;
     }
 
@@ -251,7 +195,7 @@ struct term_builder_i : term_id_builder_i<Base> {
     /* Select second identifier, initialize it with id associated with type */
     template<typename T>
     Base& second() {
-        this->second(_::cpp_type<T>::id(this->world_v()));
+        this->second(_::type<T>::id(this->world_v()));
         return *this;
     }
 
@@ -268,17 +212,70 @@ struct term_builder_i : term_id_builder_i<Base> {
         return *this;
     }
 
-    /** Set role of term. */
-    Base& role(id_t role) {
+    /* The up flag indicates that the term identifier may be substituted by
+     * traversing a relationship upwards. For example: substitute the identifier
+     * with its parent by traversing the ChildOf relationship. */
+    Base& up(flecs::entity_t trav = 0) {
+        this->assert_term_id();
+        this->term_id_->id |= flecs::Up;
+        if (trav) {
+            term_->trav = trav;
+        }
+        return *this;
+    }
+
+    template <typename Trav>
+    Base& up() {
+        return this->up(_::type<Trav>::id(this->world_v()));
+    }
+
+    /* The cascade flag is like up, but returns results in breadth-first order.
+     * Only supported for flecs::query */
+    Base& cascade(flecs::entity_t trav = 0) {
+        this->assert_term_id();
+        this->term_id_->id |= flecs::Cascade;
+        if (trav) {
+            term_->trav = trav;
+        }
+        return *this;
+    }
+
+    template <typename Trav>
+    Base& cascade() {
+        return this->cascade(_::type<Trav>::id(this->world_v()));
+    }
+
+    /* Use with cascade to iterate results in descending (bottom -> top) order */
+    Base& desc() {
+        this->assert_term_id();
+        this->term_id_->id |= flecs::Desc;
+        return *this;
+    }
+
+    /* Same as up(), exists for backwards compatibility */
+    Base& parent() {
+        return this->up();
+    }
+
+    /* Specify relationship to traverse, and flags to indicate direction */
+    Base& trav(flecs::entity_t trav, flecs::flags32_t flags = 0) {
+        this->assert_term_id();
+        term_->trav = trav;
+        this->term_id_->id |= flags;
+        return *this;
+    }
+
+    /** Set id flags for term. */
+    Base& id_flags(id_t flags) {
         this->assert_term();
-        m_term->id_flags = role;
+        term_->id |= flags;
         return *this;
     }
 
     /** Set read/write access of term. */
     Base& inout(flecs::inout_kind_t inout) {
         this->assert_term();
-        m_term->inout = static_cast<ecs_inout_kind_t>(inout);
+        term_->inout = static_cast<ecs_inout_kind_t>(inout);
         return *this;
     }
 
@@ -292,8 +289,8 @@ struct term_builder_i : term_id_builder_i<Base> {
      */
     Base& inout_stage(flecs::inout_kind_t inout) {
         this->assert_term();
-        m_term->inout = static_cast<ecs_inout_kind_t>(inout);
-        if (m_term->oper != EcsNot) {
+        term_->inout = static_cast<ecs_inout_kind_t>(inout);
+        if (term_->oper != EcsNot) {
             this->src().entity(0);
         }
         return *this;
@@ -343,7 +340,7 @@ struct term_builder_i : term_id_builder_i<Base> {
     /** Set operator of term. */
     Base& oper(flecs::oper_kind_t oper) {
         this->assert_term();
-        m_term->oper = static_cast<ecs_oper_kind_t>(oper);
+        term_->oper = static_cast<ecs_oper_kind_t>(oper);
         return *this;
     }
 
@@ -385,47 +382,47 @@ struct term_builder_i : term_id_builder_i<Base> {
     /** Match singleton. */
     Base& singleton() {
         this->assert_term();
-        ecs_assert(m_term->id || m_term->first.id, ECS_INVALID_PARAMETER, 
+        ecs_assert(term_->id || term_->first.id, ECS_INVALID_PARAMETER, 
                 "no component specified for singleton");
         
-        flecs::id_t sid = m_term->id;
+        flecs::id_t sid = term_->id;
         if (!sid) {
-            sid = m_term->first.id;
+            sid = term_->first.id;
         }
 
         ecs_assert(sid != 0, ECS_INVALID_PARAMETER, NULL);
 
         if (!ECS_IS_PAIR(sid)) {
-            m_term->src.id = sid;
+            term_->src.id = sid;
         } else {
-            m_term->src.id = ecs_pair_first(world(), sid);
+            term_->src.id = ecs_pair_first(world(), sid);
         }
         return *this;
     }
 
-    /* Filter terms are not triggered on by observers */
+    /* Query terms are not triggered on by observers */
     Base& filter() {
-        m_term->src.flags |= flecs::Filter;
+        term_->inout = EcsInOutFilter;
         return *this;
     }
 
-    ecs_term_t *m_term;
+    ecs_term_t *term_;
 
 protected:
     virtual flecs::world_t* world_v() override = 0;
 
     void set_term(ecs_term_t *term) {
-        m_term = term;
+        term_ = term;
         if (term) {
-            this->m_term_id = &m_term->src; // default to subject
+            this->term_id_ = &term_->src; // default to subject
         } else {
-            this->m_term_id = nullptr;
+            this->term_id_ = nullptr;
         }
     }
 
 private:
     void assert_term() {
-        ecs_assert(m_term != NULL, ECS_INVALID_PARAMETER, 
+        ecs_assert(term_ != NULL, ECS_INVALID_PARAMETER, 
             "no active term (call .term() first)");
     }
 

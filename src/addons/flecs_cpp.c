@@ -186,9 +186,12 @@ const char* ecs_cpp_trim_module(
         if (!ecs_os_strncmp(path, type_name, len)) {
             // Type is a child of current parent, trim name of parent
             type_name += len;
-            ecs_assert(type_name[0], ECS_INVALID_PARAMETER, NULL);
-            ecs_assert(type_name[0] == ':', ECS_INVALID_PARAMETER, NULL);
-            ecs_assert(type_name[1] == ':', ECS_INVALID_PARAMETER, NULL);
+            ecs_assert(type_name[0], ECS_INVALID_PARAMETER, 
+                "invalid C++ type name");
+            ecs_assert(type_name[0] == ':', ECS_INVALID_PARAMETER,
+                "invalid C++ type name");
+            ecs_assert(type_name[1] == ':', ECS_INVALID_PARAMETER,
+                "invalid C++ type name");
             type_name += 2;
         } else {
             // Type is not a child of current parent, trim entire path
@@ -399,14 +402,16 @@ ecs_entity_t ecs_cpp_component_register_explicit(
             .symbol = symbol,
             .use_low_id = true
         });
-        ecs_assert(entity != 0, ECS_INVALID_OPERATION, NULL);
+        ecs_assert(entity != 0, ECS_INVALID_OPERATION, 
+            "registration failed for component %s", name);
 
         entity = ecs_component_init(world, &(ecs_component_desc_t){
             .entity = entity,
             .type.size = flecs_uto(int32_t, size),
             .type.alignment = flecs_uto(int32_t, alignment)
         });
-        ecs_assert(entity != 0, ECS_INVALID_OPERATION, NULL);
+        ecs_assert(entity != 0, ECS_INVALID_OPERATION, 
+            "registration failed for component %s", name);
     } else {
         entity = ecs_entity(world, {
             .id = s_id,

@@ -50,9 +50,8 @@ typedef struct ecs_system_desc_t {
      *
      * It should not be assumed that the input iterator can always be iterated
      * with ecs_query_next(). When a system is multithreaded and/or paged, the
-     * iterator can be either a worker or paged iterator. Future use cases may
-     * introduce additional inputs for a system, such as rules and filters. The
-     * correct function to use for iteration is ecs_iter_next().
+     * iterator can be either a worker or paged iterator. The correct function 
+     * to use for iteration is ecs_iter_next().
      *
      * An implementation can test whether the iterator is a query iterator by
      * testing whether the it->next value is equal to ecs_query_next(). */
@@ -89,7 +88,7 @@ typedef struct ecs_system_desc_t {
 
     /** If true, system will have access to the actual world. Cannot be true at the
      * same time as multi_threaded. */
-    bool no_readonly;
+    bool immediate;
 } ecs_system_desc_t;
 
 /** Create a system */
@@ -115,16 +114,20 @@ ecs_entity_t ecs_system_init(
     { \
         ecs_system_desc_t desc = {0}; \
         ecs_entity_desc_t edesc = {0}; \
+        ecs_id_t add_ids[3] = {\
+            ((phase) ? ecs_pair(EcsDependsOn, (phase)) : 0), \
+            (phase), \
+            0 \
+        };\
         edesc.id = ecs_id(id_);\
         edesc.name = #id_;\
-        edesc.add[0] = ((phase) ? ecs_pair(EcsDependsOn, (phase)) : 0); \
-        edesc.add[1] = (phase); \
+        edesc.add = add_ids;\
         desc.entity = ecs_entity_init(world, &edesc);\
-        desc.query.filter.expr = #__VA_ARGS__; \
+        desc.query.expr = #__VA_ARGS__; \
         desc.callback = id_; \
         ecs_id(id_) = ecs_system_init(world, &desc); \
     } \
-    ecs_assert(ecs_id(id_) != 0, ECS_INVALID_PARAMETER, NULL)
+    ecs_assert(ecs_id(id_) != 0, ECS_INVALID_PARAMETER, "failed to create system %s", #id_)
 
 /** Declare & define a system.
  *
@@ -148,9 +151,9 @@ ecs_entity_t ecs_system_init(
  * ecs_system(world, {
  *   .entity = ecs_entity(world, {
  *     .name = "MyEntity",
- *     .add = { ecs_dependson(EcsOnUpdate) }
+ *     .add = ecs_ids( ecs_dependson(EcsOnUpdate) )
  *   }),
- *   .query.filter.terms = {
+ *   .query.terms = {
  *     { ecs_id(Position) },
  *     { ecs_id(Velocity) }
  *   },
@@ -214,35 +217,6 @@ ecs_entity_t ecs_run_worker(
     int32_t stage_current,
     int32_t stage_count,
     ecs_ftime_t delta_time,
-    void *param);
-
-/** Run system with offset/limit and type filter.
- * This operation is the same as ecs_run(), but filters the entities that will be
- * iterated by the system.
- *
- * Entities can be filtered in two ways. Offset and limit control the range of
- * entities that is iterated over. The range is applied to all entities matched
- * with the system, thus may cover multiple archetypes.
- *
- * The type filter controls which entity types the system will evaluate. Only
- * types that contain all components in the type filter will be iterated over. A
- * type filter is only evaluated once per table, which makes filtering cheap if
- * the number of entities is large and the number of tables is small, but not as
- * cheap as filtering in the system signature.
- *
- * @param world The world.
- * @param system The system to invoke.
- * @param delta_time The time passed since the last system invocation.
- * @param param A user-defined parameter to pass to the system.
- * @return handle to last evaluated entity if system was interrupted.
- */
-FLECS_API
-ecs_entity_t ecs_run_w_filter(
-    ecs_world_t *world,
-    ecs_entity_t system,
-    ecs_ftime_t delta_time,
-    int32_t offset,
-    int32_t limit,
     void *param);
 
 /** Get the query object for a system.

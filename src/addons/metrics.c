@@ -153,7 +153,7 @@ static ECS_MOVE(EcsMetricCountTargets, dst, src, {
 static void flecs_metrics_on_member_metric(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
     ecs_member_metric_ctx_t *ctx = it->ctx;
-    ecs_id_t id = ecs_field_id(it, 1);
+    ecs_id_t id = ecs_field_id(it, 0);
 
     int32_t i, count = it->count;
     for (i = 0; i < count; i ++) {
@@ -161,7 +161,7 @@ static void flecs_metrics_on_member_metric(ecs_iter_t *it) {
         ecs_entity_t m = ecs_new_w_pair(world, EcsChildOf, ctx->metric.metric);
 
         EcsMetricMemberInstance *src = ecs_emplace(
-            world, m, EcsMetricMemberInstance);
+            world, m, EcsMetricMemberInstance, NULL);
         src->ref = ecs_ref_init_id(world, e, id);
         src->ctx = ctx;
         ecs_modified(world, m, EcsMetricMemberInstance);
@@ -182,7 +182,8 @@ static void flecs_metrics_on_id_metric(ecs_iter_t *it) {
         ecs_entity_t e = it->entities[i];
         ecs_entity_t m = ecs_new_w_pair(world, EcsChildOf, ctx->metric.metric);
 
-        EcsMetricIdInstance *src = ecs_emplace(world, m, EcsMetricIdInstance);
+        EcsMetricIdInstance *src = ecs_emplace(
+            world, m, EcsMetricIdInstance, NULL);
         src->r = ecs_record_find(world, e);
         src->ctx = ctx;
         ecs_modified(world, m, EcsMetricIdInstance);
@@ -207,7 +208,8 @@ static void flecs_metrics_on_oneof_metric(ecs_iter_t *it) {
         ecs_entity_t e = it->entities[i];
         ecs_entity_t m = ecs_new_w_pair(world, EcsChildOf, ctx->metric.metric);
 
-        EcsMetricOneOfInstance *src = ecs_emplace(world, m, EcsMetricOneOfInstance);
+        EcsMetricOneOfInstance *src = ecs_emplace(
+            world, m, EcsMetricOneOfInstance, NULL);
         src->r = ecs_record_find(world, e);
         src->ctx = ctx;
         ecs_modified(world, m, EcsMetricOneOfInstance);
@@ -222,7 +224,7 @@ static void flecs_metrics_on_oneof_metric(ecs_iter_t *it) {
 #ifdef FLECS_DOC
 static void SetMetricDocName(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
-    EcsMetricSource *src = ecs_field(it, EcsMetricSource, 1);
+    EcsMetricSource *src = ecs_field(it, EcsMetricSource, 0);
 
     int32_t i, count = it->count;
     for (i = 0; i < count; i ++) {
@@ -238,7 +240,7 @@ static void SetMetricDocName(ecs_iter_t *it) {
 /** Delete metric instances for entities that are no longer alive */
 static void ClearMetricInstance(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
-    EcsMetricSource *src = ecs_field(it, EcsMetricSource, 1);
+    EcsMetricSource *src = ecs_field(it, EcsMetricSource, 0);
 
     int32_t i, count = it->count;
     for (i = 0; i < count; i ++) {
@@ -252,8 +254,8 @@ static void ClearMetricInstance(ecs_iter_t *it) {
 /** Update member metric */
 static void UpdateMemberInstance(ecs_iter_t *it, bool counter) {
     ecs_world_t *world = it->real_world;
-    EcsMetricValue *m = ecs_field(it, EcsMetricValue, 1);
-    EcsMetricMemberInstance *mi = ecs_field(it, EcsMetricMemberInstance, 2);
+    EcsMetricValue *m = ecs_field(it, EcsMetricValue, 0);
+    EcsMetricMemberInstance *mi = ecs_field(it, EcsMetricMemberInstance, 1);
     ecs_ftime_t dt = it->delta_time;
 
     int32_t i, count = it->count;
@@ -294,8 +296,8 @@ static void UpdateCounterIncrementMemberInstance(ecs_iter_t *it) {
 /** Update id metric */
 static void UpdateIdInstance(ecs_iter_t *it, bool counter) {
     ecs_world_t *world = it->real_world;
-    EcsMetricValue *m = ecs_field(it, EcsMetricValue, 1);
-    EcsMetricIdInstance *mi = ecs_field(it, EcsMetricIdInstance, 2);
+    EcsMetricValue *m = ecs_field(it, EcsMetricValue, 0);
+    EcsMetricIdInstance *mi = ecs_field(it, EcsMetricIdInstance, 1);
     ecs_ftime_t dt = it->delta_time;
 
     int32_t i, count = it->count;
@@ -313,7 +315,7 @@ static void UpdateIdInstance(ecs_iter_t *it, bool counter) {
 
         ecs_id_metric_ctx_t *ctx = mi[i].ctx;
         ecs_id_record_t *idr = ctx->idr;
-        if (flecs_search_w_idr(world, table, idr->id, NULL, idr) != -1) {
+        if (flecs_search_w_idr(world, table, NULL, idr) != -1) {
             if (!counter) {
                 m[i].value = 1.0;
             } else {
@@ -338,8 +340,8 @@ static void UpdateOneOfInstance(ecs_iter_t *it, bool counter) {
     ecs_world_t *world = it->real_world;
     ecs_table_t *table = it->table;
     void *m = ecs_table_get_column(table, 
-        ecs_table_type_to_column_index(table, it->columns[0] - 1), it->offset);
-    EcsMetricOneOfInstance *mi = ecs_field(it, EcsMetricOneOfInstance, 2);
+        ecs_table_type_to_column_index(table, it->columns[0]), it->offset);
+    EcsMetricOneOfInstance *mi = ecs_field(it, EcsMetricOneOfInstance, 1);
     ecs_ftime_t dt = it->delta_time;
 
     int32_t i, count = it->count;
@@ -364,7 +366,7 @@ static void UpdateOneOfInstance(ecs_iter_t *it, bool counter) {
 
         ecs_id_record_t *idr = ctx->idr;
         ecs_id_t id;
-        if (flecs_search_w_idr(world, mtable, idr->id, &id, idr) == -1) {
+        if (flecs_search_w_idr(world, mtable, &id, idr) == -1) {
             ecs_delete(it->world, it->entities[i]);
             continue;
         }
@@ -396,7 +398,7 @@ static void UpdateCounterOneOfInstance(ecs_iter_t *it) {
 
 static void UpdateCountTargets(ecs_iter_t *it) {
     ecs_world_t *world = it->real_world;
-    EcsMetricCountTargets *m = ecs_field(it, EcsMetricCountTargets, 1);
+    EcsMetricCountTargets *m = ecs_field(it, EcsMetricCountTargets, 0);
 
     int32_t i, count = it->count;
     for (i = 0; i < count; i ++) {
@@ -427,8 +429,8 @@ static void UpdateCountTargets(ecs_iter_t *it) {
 
 static void UpdateCountIds(ecs_iter_t *it) {
     ecs_world_t *world = it->real_world;
-    EcsMetricCountIds *m = ecs_field(it, EcsMetricCountIds, 1);
-    EcsMetricValue *v = ecs_field(it, EcsMetricValue, 2);
+    EcsMetricCountIds *m = ecs_field(it, EcsMetricCountIds, 0);
+    EcsMetricValue *v = ecs_field(it, EcsMetricValue, 1);
 
     int32_t i, count = it->count;
     for (i = 0; i < count; i ++) {
@@ -540,7 +542,7 @@ int flecs_member_metric_init(
         goto error;
     }
 
-    const EcsMetaType *mt = ecs_get(world, type, EcsMetaType);
+    const EcsType *mt = ecs_get(world, type, EcsType);
     if (!mt) {
         char *metric_name = ecs_get_fullpath(world, metric);
         char *member_name = ecs_get_fullpath(world, desc->member);
@@ -570,9 +572,9 @@ int flecs_member_metric_init(
     ecs_observer(world, {
         .entity = metric,
         .events = { EcsOnAdd },
-        .filter.terms[0] = {
+        .query.terms[0] = {
             .id = id,
-            .src.flags = EcsSelf,
+            .src.id = EcsSelf,
             .inout = EcsInOutNone
         },
         .callback = flecs_metrics_on_member_metric,
@@ -600,14 +602,14 @@ int flecs_id_metric_init(
     ctx->metric.metric = metric;
     ctx->metric.kind = desc->kind;
     ctx->idr = flecs_id_record_ensure(world, desc->id);
-    ecs_check(ctx->idr != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ctx->idr != NULL, ECS_INTERNAL_ERROR, NULL);
 
     ecs_observer(world, {
         .entity = metric,
         .events = { EcsOnAdd },
-        .filter.terms[0] = {
+        .query.terms[0] = {
             .id = desc->id,
-            .src.flags = EcsSelf,
+            .src.id = EcsSelf,
             .inout = EcsInOutNone
         },
         .callback = flecs_metrics_on_id_metric,
@@ -636,7 +638,7 @@ int flecs_oneof_metric_init(
     ctx->metric.metric = metric;
     ctx->metric.kind = desc->kind;
     ctx->idr = flecs_id_record_ensure(world, desc->id);
-    ecs_check(ctx->idr != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ctx->idr != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_map_init(&ctx->target_offset, NULL);
 
     /* Add member for each child of oneof to metric, so it can be used as metric
@@ -657,7 +659,7 @@ int flecs_oneof_metric_init(
 
             ecs_entity_t mbr = ecs_entity(world, {
                 .name = to_snake_case,
-                .add = { ecs_childof(metric) }
+                .parent = ecs_childof(metric)
             });
 
             ecs_os_free(to_snake_case);
@@ -680,9 +682,9 @@ int flecs_oneof_metric_init(
     ecs_observer(world, {
         .entity = metric,
         .events = { EcsMonitor },
-        .filter.terms[0] = {
+        .query.terms[0] = {
             .id = desc->id,
-            .src.flags = EcsSelf,
+            .src.id = EcsSelf,
             .inout = EcsInOutNone
         },
         .callback = flecs_metrics_on_oneof_metric,
@@ -709,7 +711,7 @@ int flecs_count_id_targets_metric_init(
     ctx->metric.metric = metric;
     ctx->metric.kind = desc->kind;
     ctx->idr = flecs_id_record_ensure(world, desc->id);
-    ecs_check(ctx->idr != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ctx->idr != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_map_init(&ctx->targets, NULL);
 
     ecs_set(world, metric, EcsMetricCountTargets, { .ctx = ctx });
@@ -737,12 +739,13 @@ ecs_entity_t ecs_metric_init(
     const ecs_metric_desc_t *desc)
 {
     ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(desc->_canary == 0, ECS_INVALID_PARAMETER, NULL);
-    ecs_poly_assert(world, ecs_world_t);
+    ecs_check(desc->_canary == 0, ECS_INVALID_PARAMETER,
+        "ecs_metric_desc_t was not initialized to zero");
+    flecs_poly_assert(world, ecs_world_t);
 
     ecs_entity_t result = desc->entity;
     if (!result) {
-        result = ecs_new_id(world);
+        result = ecs_new(world);
     }
 
     ecs_entity_t kind = desc->kind;
@@ -888,25 +891,25 @@ void FlecsMetricsImport(ecs_world_t *world) {
     });
 
     ecs_set_hooks(world, EcsMetricMember, {
-        .ctor = ecs_default_ctor,
+        .ctor = flecs_default_ctor,
         .dtor = ecs_dtor(EcsMetricMember),
         .move = ecs_move(EcsMetricMember)
     });
 
     ecs_set_hooks(world, EcsMetricId, {
-        .ctor = ecs_default_ctor,
+        .ctor = flecs_default_ctor,
         .dtor = ecs_dtor(EcsMetricId),
         .move = ecs_move(EcsMetricId)
     });
 
     ecs_set_hooks(world, EcsMetricOneOf, {
-        .ctor = ecs_default_ctor,
+        .ctor = flecs_default_ctor,
         .dtor = ecs_dtor(EcsMetricOneOf),
         .move = ecs_move(EcsMetricOneOf)
     });
 
     ecs_set_hooks(world, EcsMetricCountTargets, {
-        .ctor = ecs_default_ctor,
+        .ctor = flecs_default_ctor,
         .dtor = ecs_dtor(EcsMetricCountTargets),
         .move = ecs_move(EcsMetricCountTargets)
     });
@@ -914,7 +917,8 @@ void FlecsMetricsImport(ecs_world_t *world) {
     ecs_add_id(world, EcsMetric, EcsOneOf);
 
 #ifdef FLECS_DOC
-    ECS_OBSERVER(world, SetMetricDocName, EcsOnSet, EcsMetricSource);
+    ECS_OBSERVER(world, SetMetricDocName, EcsOnSet, 
+        Source);
 #endif
 
     ECS_SYSTEM(world, ClearMetricInstance, EcsPreStore,

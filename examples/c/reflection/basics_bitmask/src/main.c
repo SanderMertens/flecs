@@ -35,7 +35,7 @@ int main(int argc, char *argv[]) {
     });
 
     // Create entity with Sandwich as usual
-    ecs_entity_t ent = ecs_new_id(ecs);
+    ecs_entity_t ent = ecs_new(ecs);
     ecs_set(ecs, ent, Sandwich, {Bacon | Lettuce});
 
     // Convert Sandwich component to flecs expression string

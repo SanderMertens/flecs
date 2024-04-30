@@ -17,7 +17,7 @@ void Observer(ecs_iter_t *it) {
 
     ecs_entity_t event = it->event;
     ecs_entity_t event_id = it->event_id;
-    Position *p = ecs_field(it, Position, 1);
+    Position *p = ecs_field(it, Position, 0);
 
     for (int i = 0; i < it->count; i ++) {
         ecs_entity_t e = it->entities[i];
@@ -35,13 +35,13 @@ int main(int argc, char *argv[]) {
     ECS_COMPONENT(ecs, Position);
 
     // Create existing entities with Position component
-    ecs_entity_t e1 = ecs_new_entity(ecs, "e1");
+    ecs_entity_t e1 = ecs_entity(ecs, { .name = "e1" });
     ecs_set(ecs, e1, Position, {10, 20});
-    ecs_entity_t e2 = ecs_new_entity(ecs, "e2");
+    ecs_entity_t e2 = ecs_entity(ecs, { .name = "e2" });
     ecs_set(ecs, e2, Position, {20, 30});
 
     ecs_observer(ecs, {
-        .filter = { .terms = {{ .id = ecs_id(Position) }}},
+        .query.terms = {{ .id = ecs_id(Position) }},
         .events = { EcsOnSet },
         .callback = Observer,
         .yield_existing = true // Trigger for existing matching entities

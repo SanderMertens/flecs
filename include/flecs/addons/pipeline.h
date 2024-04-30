@@ -51,11 +51,11 @@ extern "C" {
         edesc.id = id_;\
         edesc.name = #id_;\
         desc.entity = ecs_entity_init(world, &edesc);\
-        desc.query.filter.expr = #__VA_ARGS__; \
+        desc.query.expr = #__VA_ARGS__; \
         id_ = ecs_pipeline_init(world, &desc); \
         ecs_id(id_) = id_;\
     } \
-    ecs_assert(id_ != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(id_ != 0, ECS_INVALID_PARAMETER, "failed to create pipeline");
 
 #define ECS_PIPELINE(world, id, ...) \
     ecs_entity_t id = 0, ecs_id(id) = 0; ECS_PIPELINE_DEFINE(world, id, __VA_ARGS__);\

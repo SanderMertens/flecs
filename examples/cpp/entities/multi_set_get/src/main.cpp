@@ -16,7 +16,7 @@ int main(int, char *[]) {
 
     // Create new entity, set Position and Mass component
     flecs::entity e = ecs.entity()
-        .set([](Position& p, Mass& m) {
+        .insert([](Position& p, Mass& m) {
             p.x = 10;
             p.y = 20;
             m.value = 100;

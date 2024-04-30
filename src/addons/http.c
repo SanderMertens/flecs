@@ -1551,8 +1551,10 @@ void ecs_http_server_stop(
     ecs_http_server_t* srv) 
 {
     ecs_check(srv != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(srv->initialized, ECS_INVALID_OPERATION, NULL);
-    ecs_check(srv->should_run, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(srv->initialized, ECS_INVALID_OPERATION, 
+        "cannot stop HTTP server: not initialized");
+    ecs_check(srv->should_run, ECS_INVALID_PARAMETER, 
+        "cannot stop HTTP server: already stopped/stopping");
 
     /* Stop server thread */
     ecs_dbg("http: shutting down server thread");

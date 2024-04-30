@@ -6,7 +6,7 @@ typedef struct {
 } Position, Velocity;
 
 void Move(ecs_iter_t *it) {
-    Position *p = ecs_field(it, Position, 1);
+    Position *p = ecs_field(it, Position, 0);
     const Velocity *v = ecs_field(it, const Velocity, 2);
 
     for (int i = 0; i < it->count; i ++) {
@@ -16,7 +16,7 @@ void Move(ecs_iter_t *it) {
 }
 
 void DeleteEntity(ecs_iter_t *it) {
-    const Position *p = ecs_field(it, Position, 1);
+    const Position *p = ecs_field(it, Position, 0);
 
     for (int i = 0; i < it->count; i ++) {
         if (p[i].x >= 3) {
@@ -69,11 +69,11 @@ int main(int argc, char *argv[]) {
     ECS_SYSTEM(ecs, PrintPosition, EcsPostUpdate, [in] Position);
 
     // Create a few test entities for a Position, Velocity query
-    ecs_entity_t e1 = ecs_new_entity(ecs, "e1");
+    ecs_entity_t e1 = ecs_entity(ecs, { .name = "e1" });
     ecs_set(ecs, e1, Position, {0, 0});
     ecs_set(ecs, e1, Velocity, {1, 2});
 
-    ecs_entity_t e2 = ecs_new_entity(ecs, "e2");
+    ecs_entity_t e2 = ecs_entity(ecs, { .name = "e2" });
     ecs_set(ecs, e2, Position, {1, 2});
     ecs_set(ecs, e2, Velocity, {1, 2});
 
@@ -114,7 +114,7 @@ int main(int argc, char *argv[]) {
     //
     // To create the same system with ecs_system_init, do:
     //  ecs_system_init(ecs, &(ecs_system_desc_t){
-    //      .query.filter.terms = {
+    //      .query.terms = {
     //          { 
     //              .id = ecs_id(Position), 
     //              .inout = EcsIn
@@ -122,12 +122,12 @@ int main(int argc, char *argv[]) {
     //          { 
     //              .id = EcsWildcard, 
     //              .inout = EcsOut, 
-    //              .src.flags = EcsIsEntity 
+    //              .src.id = EcsIsEntity 
     //          }
     //      },
     //      .entity = {
     //          .name = "DeleteEntity",
-    //          .add = {ecs_dependson(EcsOnUpdate)}
+    //          .add = ecs_ids(ecs_dependson(EcsOnUpdate))
     //      },
     //      .callback = DeleteEntity
     //  });

@@ -192,6 +192,20 @@ typedef uint16_t ecs_flags16_t;
 typedef uint32_t ecs_flags32_t;
 typedef uint64_t ecs_flags64_t;
 
+/* Bitmask type with compile-time defined size */
+#define ecs_flagsn_t_(bits) ecs_flags##bits##_t
+#define ecs_flagsn_t(bits) ecs_flagsn_t_(bits)
+
+/* Bitset type that can store exactly as many bits as there are terms */
+#define ecs_termset_t ecs_flagsn_t(FLECS_TERM_COUNT_MAX)
+
+/* Utility macro's for setting/clearing termset bits */
+#define ECS_TERMSET_SET(set, flag) ((set) |= (ecs_termset_t)(flag))
+#define ECS_TERMSET_CLEAR(set, flag) ((set) &= (ecs_termset_t)~(flag))
+#define ECS_TERMSET_COND(set, flag, cond) ((cond) \
+    ? (ECS_TERMSET_SET(set, flag)) \
+    : (ECS_TERMSET_CLEAR(set, flag)))
+
 /* Keep unsigned integers out of the codebase as they do more harm than good */
 typedef int32_t ecs_size_t;
 
@@ -271,11 +285,7 @@ typedef struct ecs_allocator_t ecs_allocator_t;
 /* Magic number to identify the type of the object */
 #define ecs_world_t_magic     (0x65637377)
 #define ecs_stage_t_magic     (0x65637373)
-#define ecs_query_t_magic     (0x65637371)
-#define ecs_rule_t_magic      (0x65637375)
-#define ecs_table_t_magic     (0x65637374)
-#define ecs_filter_t_magic    (0x65637366)
-#define ecs_trigger_t_magic   (0x65637372)
+#define ecs_query_t_magic     (0x65637375)
 #define ecs_observer_t_magic  (0x65637362)
 
 
@@ -301,6 +311,8 @@ typedef struct ecs_allocator_t ecs_allocator_t;
 #define ECS_PAIR_SECOND(e)            (ecs_entity_t_lo(e))
 #define ECS_HAS_RELATION(e, rel)      (ECS_HAS_ID_FLAG(e, PAIR) && (ECS_PAIR_FIRST(e) == rel))
 
+#define ECS_TERM_REF_FLAGS(ref)       ((ref)->id & EcsTermRefFlags)
+#define ECS_TERM_REF_ID(ref)          ((ref)->id & ~EcsTermRefFlags)
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Convert between C typenames and variables
@@ -323,9 +335,9 @@ typedef struct ecs_allocator_t ecs_allocator_t;
 #define ecs_pair_first(world, pair) ecs_get_alive(world, ECS_PAIR_FIRST(pair))
 #define ecs_pair_second(world, pair) ecs_get_alive(world, ECS_PAIR_SECOND(pair))
 #define ecs_pair_relation ecs_pair_first
-#define ecs_pair_object ecs_pair_second
+#define ecs_pair_target ecs_pair_second
 
-#define ecs_poly_id(tag) ecs_pair(ecs_id(EcsPoly), tag)
+#define flecs_poly_id(tag) ecs_pair(ecs_id(EcsPoly), tag)
 
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -7,22 +7,22 @@ namespace flecs {
 
 struct stringstream {
     explicit stringstream() 
-        : m_buf({}) { }
+        : buf_({}) { }
 
     ~stringstream() {
-        ecs_strbuf_reset(&m_buf);
+        ecs_strbuf_reset(&buf_);
     }
 
     stringstream(stringstream&& str) noexcept {
-        ecs_strbuf_reset(&m_buf);
-        m_buf = str.m_buf;
-        str.m_buf = {};
+        ecs_strbuf_reset(&buf_);
+        buf_ = str.buf_;
+        str.buf_ = {};
     }
 
     stringstream& operator=(stringstream&& str) noexcept {
-        ecs_strbuf_reset(&m_buf);
-        m_buf = str.m_buf;
-        str.m_buf = {};
+        ecs_strbuf_reset(&buf_);
+        buf_ = str.buf_;
+        str.buf_ = {};
         return *this;
     }
 
@@ -31,16 +31,16 @@ struct stringstream {
     stringstream(const stringstream& str) = delete;    
 
     stringstream& operator<<(const char* str) {
-        ecs_strbuf_appendstr(&m_buf, str);
+        ecs_strbuf_appendstr(&buf_, str);
         return *this;
     }
 
     flecs::string str() {
-        return flecs::string(ecs_strbuf_get(&m_buf));
+        return flecs::string(ecs_strbuf_get(&buf_));
     }
 
 private:
-    ecs_strbuf_t m_buf;
+    ecs_strbuf_t buf_;
 };
 
 }

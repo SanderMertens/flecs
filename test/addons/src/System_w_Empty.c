@@ -2,7 +2,7 @@
 
 static
 void Iter(ecs_iter_t *it) {
-    Position *p = ecs_field(it, Position, 1);
+    Position *p = ecs_field(it, Position, 0);
 
     probe_iter(it);
 
@@ -24,7 +24,7 @@ void System_w_Empty_2_column_1_from_id(void) {
     Probe ctx = {0};
     ecs_set_ctx(world, &ctx, NULL);
 
-    ecs_entity_t e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new_w(world, Position);
 
     ecs_progress(world, 1);
     
@@ -55,7 +55,7 @@ void System_w_Empty_3_column_2_from_id(void) {
     Probe ctx = {0};
     ecs_set_ctx(world, &ctx, NULL);
 
-    ecs_entity_t e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new_w(world, Position);
 
     ecs_progress(world, 1);
     
@@ -78,9 +78,9 @@ void System_w_Empty_3_column_2_from_id(void) {
 
 static
 void CheckColumnType(ecs_iter_t *it) {
-    ecs_id_t ecs_id(Position) = ecs_field_id(it, 2);
+    ecs_id_t ecs_id(Position) = ecs_field_id(it, 1);
 
-    test_assert(ecs_id(Position) == ecs_field_id(it, 1));
+    test_assert(ecs_id(Position) == ecs_field_id(it, 0));
 
     probe_iter(it);
 }
@@ -97,7 +97,7 @@ void System_w_Empty_column_type(void) {
     Probe ctx = {0};
     ecs_set_ctx(world, &ctx, NULL);
 
-    ecs_new(world, Position);
+    ecs_new_w(world, Position);
 
     ecs_progress(world, 1);
 

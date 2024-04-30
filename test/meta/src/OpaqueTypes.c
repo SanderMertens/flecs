@@ -523,8 +523,8 @@ void OpaqueTypes_deser_entity_from_json(void) {
         .type.assign_entity = Opaque_entity_set
     });
 
-    ecs_entity_t e1 = ecs_new_entity(world, "e1");
-    ecs_entity_t e2 = ecs_new_entity(world, "e2");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
 
     Opaque_entity v = { 0 };
     {
@@ -597,8 +597,8 @@ void OpaqueTypes_ser_deser_entity(void) {
         .type.assign_entity = Entity_assign
     });
 
-    ecs_entity_t e1 = ecs_new_entity(world, "ent1");
-    ecs_entity_t e2 = ecs_new_entity(world, "ent2");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "ent1" });
+    ecs_entity_t e2 = ecs_entity(world, { .name = "ent2" });
 
     Entity v = { e1 };
     char *json = ecs_ptr_to_json(world, ecs_id(Entity), &v);

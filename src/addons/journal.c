@@ -15,13 +15,13 @@ char* flecs_journal_entitystr(
     char *path;
     const char *_path = ecs_get_symbol(world, entity);
     if (_path && !strchr(_path, '.')) {
-        path = ecs_asprintf("#[blue]%s", _path);
+        path = flecs_asprintf("#[blue]%s", _path);
     } else {
         uint32_t gen = entity >> 32;
         if (gen) {
-            path = ecs_asprintf("#[normal]_%u_%u", (uint32_t)entity, gen);
+            path = flecs_asprintf("#[normal]_%u_%u", (uint32_t)entity, gen);
         } else {
-            path = ecs_asprintf("#[normal]_%u", (uint32_t)entity);
+            path = flecs_asprintf("#[normal]_%u", (uint32_t)entity);
         }
     }
     return path;
@@ -37,7 +37,7 @@ char* flecs_journal_idstr(
             ecs_pair_first(world, id));
         char *second_path = flecs_journal_entitystr(world, 
             ecs_pair_second(world, id));
-        char *result = ecs_asprintf("#[cyan]ecs_pair#[normal](%s, %s)",
+        char *result = flecs_asprintf("#[cyan]ecs_pair#[normal](%s, %s)",
             first_path, second_path);
         ecs_os_free(first_path);
         ecs_os_free(second_path);

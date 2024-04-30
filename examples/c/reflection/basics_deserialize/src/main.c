@@ -21,7 +21,7 @@ int main(int argc, char *argv[]) {
     });
 
     // Create entity, set value of position using reflection API
-    ecs_entity_t ent = ecs_new_entity(ecs, "ent");
+    ecs_entity_t ent = ecs_entity(ecs, { .name = "ent" });
     Position *ptr = ecs_ensure(ecs, ent, Position);
 
     ecs_meta_cursor_t cur = ecs_meta_cursor(ecs, ecs_id(Position), ptr);

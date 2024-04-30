@@ -21,40 +21,42 @@ namespace flecs
  */
 template <typename T>
 struct ref {
-    ref() : m_world(nullptr), m_ref{} { }
+    ref() : world_(nullptr), ref_{} { }
 
     ref(world_t *world, entity_t entity, flecs::id_t id = 0)
-        : m_ref()
+        : ref_()
     {
         // the world we were called with may be a stage; convert it to a world
         // here if that is the case
-        m_world = world ? const_cast<flecs::world_t *>(ecs_get_world(world))
+        world_ = world ? const_cast<flecs::world_t *>(ecs_get_world(world))
             : nullptr;
         if (!id) {
-            id = _::cpp_type<T>::id(world);
+            id = _::type<T>::id(world);
         }
 
-        ecs_assert(_::cpp_type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(_::type<T>::size() != 0, ECS_INVALID_PARAMETER,
+            "operation invalid for empty type");
 
-        m_ref = ecs_ref_init_id(m_world, entity, id);
+        ref_ = ecs_ref_init_id(world_, entity, id);
     }
 
     T* operator->() {
         T* result = static_cast<T*>(ecs_ref_get_id(
-            m_world, &m_ref, this->m_ref.id));
+            world_, &ref_, this->ref_.id));
 
-        ecs_assert(result != NULL, ECS_INVALID_PARAMETER, NULL);
+        ecs_assert(result != NULL, ECS_INVALID_PARAMETER,
+            "nullptr dereference by flecs::ref");
 
         return result;
     }
 
     T* get() {
         return static_cast<T*>(ecs_ref_get_id(
-            m_world, &m_ref, this->m_ref.id));
+            world_, &ref_, this->ref_.id));
     }
 
     T* try_get() {
-        if (!m_world || !m_ref.entity) {
+        if (!world_ || !ref_.entity) {
             return nullptr;
         }
 
@@ -64,8 +66,8 @@ struct ref {
     flecs::entity entity() const;
 
 private:
-    world_t *m_world;
-    flecs::ref_t m_ref;
+    world_t *world_;
+    flecs::ref_t ref_;
 };
 
 /** @} */

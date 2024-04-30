@@ -19,7 +19,7 @@ bool flecs_json_serialize_row_tags(
     
     int32_t tag_count = 0;
     for (f = 0; f < field_count; f ++) {
-        if (!ecs_field_is_set(it, f + 1)) {
+        if (!ecs_field_is_set(it, f)) {
             continue;
         }
 
@@ -61,7 +61,7 @@ bool flecs_json_serialize_row_pairs(
     
     int32_t pair_count = 0;
     for (f = 0; f < field_count; f ++) {
-        if (!ecs_field_is_set(it, f + 1)) {
+        if (!ecs_field_is_set(it, f)) {
             continue;
         }
 
@@ -312,7 +312,7 @@ bool flecs_json_serialize_get_value_ctx(
         }
 
         ctx->type = type;
-        ctx->ser = ecs_get(world, type, EcsMetaTypeSerialized);
+        ctx->ser = ecs_get(world, type, EcsTypeSerializer);
         if (!ctx->ser) {
             return false;
         }
@@ -355,7 +355,7 @@ int flecs_json_serialize_row_components(
 
     int32_t f, field_count = it->field_count, component_count = 0;
     for (f = 0; f < field_count; f ++) {
-        if (!ecs_field_is_set(it, f + 1)) {
+        if (!ecs_field_is_set(it, f)) {
             continue;
         }
 
@@ -364,7 +364,7 @@ int flecs_json_serialize_row_components(
             continue;
         }
 
-        if (ecs_field_is_self(it, f + 1)) {
+        if (ecs_field_is_self(it, f)) {
             ptr = ECS_ELEM(ptr, it->sizes[f], row);
         }
 
