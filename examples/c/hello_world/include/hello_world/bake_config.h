@@ -18,7 +18,7 @@
 #define HELLO_WORLD_BAKE_CONFIG_H
 
 /* Headers of public dependencies */
-#include "../../deps/flecs.h"
+#include <flecs.h>
 
 #endif
 

@@ -87,7 +87,6 @@ flecs_src = files(
     'src/query/compiler_term.c',
     'src/query/compiler.c',
     'src/query/engine.c',
-    'src/query/query_parser.c',
     'src/query/trav_cache.c',
     'src/query/trav_down_cache.c',
     'src/query/trav_up_cache.c',

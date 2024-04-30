@@ -2774,7 +2774,8 @@ void* ecs_ensure_id(
 
     ecs_stage_t *stage = flecs_stage_from_world(&world);
     if (flecs_defer_cmd(stage)) {
-        return flecs_defer_set(world, stage, EcsCmdEnsure, entity, id, 0, NULL);
+        return flecs_defer_set(
+            world, stage, EcsCmdEnsure, entity, id, 0, NULL, NULL);
     }
 
     ecs_record_t *r = flecs_entities_get(world, entity);
@@ -2800,7 +2801,7 @@ void* ecs_ensure_modified_id(
     ecs_stage_t *stage = flecs_stage_from_world(&world);
     ecs_check(flecs_defer_cmd(stage), ECS_INVALID_PARAMETER, NULL);
 
-    return flecs_defer_set(world, stage, EcsCmdSet, entity, id, 0, NULL);
+    return flecs_defer_set(world, stage, EcsCmdSet, entity, id, 0, NULL, NULL);
 error:
     return NULL;
 }
@@ -3037,21 +3038,24 @@ error:
 void* ecs_emplace_id(
     ecs_world_t *world,
     ecs_entity_t entity,
-    ecs_id_t id)
+    ecs_id_t id,
+    bool *is_new)
 {
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(ecs_is_alive(world, entity), ECS_INVALID_PARAMETER, NULL);
     ecs_check(ecs_id_is_valid(world, id), ECS_INVALID_PARAMETER, NULL);
-    ecs_check(!ecs_has_id(world, entity, id), ECS_INVALID_PARAMETER, 
+    ecs_check(is_new || !ecs_has_id(world, entity, id), ECS_INVALID_PARAMETER, 
         "cannot emplace a component the entity already has");
 
     ecs_stage_t *stage = flecs_stage_from_world(&world);
 
     if (flecs_defer_cmd(stage)) {
-        return flecs_defer_set(world, stage, EcsCmdEmplace, entity, id, 0, NULL);
+        return flecs_defer_set(
+            world, stage, EcsCmdEmplace, entity, id, 0, NULL, is_new);
     }
 
     ecs_record_t *r = flecs_entities_get(world, entity);
+    ecs_table_t *table = r->table;
     flecs_add_id_w_record(world, entity, r, id, false /* Add without ctor */);
     flecs_defer_end(world, stage);
 
@@ -3059,6 +3063,10 @@ void* ecs_emplace_id(
     ecs_check(ptr != NULL, ECS_INVALID_PARAMETER, 
         "emplaced component was removed during operation, make sure to not "
         "remove component T in on_add(T) hook/OnAdd(T) observer");
+
+    if (is_new) {
+        *is_new = table != r->table;
+    }
 
     return ptr;
 error:
@@ -3141,7 +3149,7 @@ void flecs_set_id_copy(
 {
     if (flecs_defer_cmd(stage)) {
         flecs_defer_set(world, stage, EcsCmdSet, entity, id, 
-            flecs_utosize(size), ptr);
+            flecs_utosize(size), ptr, NULL);
         return;
     }
 
@@ -3165,7 +3173,7 @@ void flecs_set_id_move(
 {
     if (flecs_defer_cmd(stage)) {
         flecs_defer_set(world, stage, cmd_kind, entity, id, 
-            flecs_utosize(size), ptr);
+            flecs_utosize(size), ptr, NULL);
         return;
     }
 
@@ -4703,7 +4711,11 @@ bool flecs_defer_end(
                     break;
                 case EcsCmdEmplace:
                     if (merge_to_world) {
-                        ecs_emplace_id(world, e, id);
+                        bool is_new;
+                        ecs_emplace_id(world, e, id, &is_new);
+                        if (!is_new) {
+                            kind = EcsCmdEnsure;
+                        }
                     }
                     flecs_set_id_move(world, dst_stage, e, 
                         cmd->id, flecs_itosize(cmd->is._1.size), 

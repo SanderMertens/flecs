@@ -678,7 +678,7 @@ void Set_emplace(void) {
     ecs_entity_t e = ecs_new(world);
     test_assert(e != 0);
 
-    Position *p = ecs_emplace(world, e, Position);
+    Position *p = ecs_emplace(world, e, Position, NULL);
     test_assert(p != NULL);
     test_assert(ecs_has(world, e, Position));
     test_assert(p == ecs_get(world, e, Position));
@@ -695,12 +695,12 @@ void Set_emplace_2(void) {
     ecs_entity_t e = ecs_new(world);
     test_assert(e != 0);
 
-    Position *p = ecs_emplace(world, e, Position);
+    Position *p = ecs_emplace(world, e, Position, NULL);
     test_assert(p != NULL);
     test_assert(ecs_has(world, e, Position));
     test_assert(p == ecs_get(world, e, Position));
 
-    Velocity *v = ecs_emplace(world, e, Velocity);
+    Velocity *v = ecs_emplace(world, e, Velocity, NULL);
     test_assert(v != NULL);
     test_assert(ecs_has(world, e, Velocity));
     test_assert(v == ecs_get(world, e, Velocity));  
@@ -720,7 +720,7 @@ void Set_emplace_existing(void) {
     test_assert(e != 0);
 
     test_expect_abort();
-    ecs_emplace(world, e, Position);
+    ecs_emplace(world, e, Position, NULL);
 }
 
 void Set_emplace_w_move(void) {
@@ -733,7 +733,7 @@ void Set_emplace_w_move(void) {
     test_assert(e != 0);
     test_str("Foo", ecs_get_name(world, e));
 
-    Position *p = ecs_emplace(world, e, Position);
+    Position *p = ecs_emplace(world, e, Position, NULL);
     test_assert(p != NULL);
     test_assert(ecs_has(world, e, Position));
     test_assert(p == ecs_get(world, e, Position));
@@ -766,7 +766,7 @@ void Set_emplace_w_observer_w_add(void) {
     ecs_entity_t e = ecs_new(world);
     test_assert(e != 0);
 
-    Position *p = ecs_emplace(world, e, Position);
+    Position *p = ecs_emplace(world, e, Position, NULL);
     test_assert(p != NULL);
     p->x = 10;
     p->y = 20;
@@ -784,6 +784,25 @@ void Set_emplace_w_observer_w_add(void) {
         test_int(vc->x, 1);
         test_int(vc->y, 2);
     }
+
+    ecs_fini(world);
+}
+
+void Set_emplace_existing_w_check(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e = ecs_new(world);
+    test_assert(e != 0);
+
+    bool is_new;
+    ecs_emplace(world, e, Position, &is_new);
+    test_bool(is_new, true);
+    ecs_emplace(world, e, Position, &is_new);
+    test_bool(is_new, false);
 
     ecs_fini(world);
 }

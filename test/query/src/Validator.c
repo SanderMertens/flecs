@@ -2315,6 +2315,8 @@ void Validator_validate_singleton_src_w_first_name(void) {
     test_uint(q->terms[0].first.id, Tag|EcsIsEntity|EcsSelf);
     test_uint(q->terms[0].src.id, Tag|EcsIsEntity|EcsSelf|EcsUp);
 
+    ecs_query_fini(q);
+
     ecs_fini(world);
 }
 
@@ -2334,6 +2336,8 @@ void Validator_validate_singleton_second_w_first_name(void) {
     test_uint(q->terms[0].first.id, Tag|EcsIsEntity|EcsSelf);
     test_uint(q->terms[0].src.id, EcsThis|EcsIsVariable|EcsSelf|EcsUp);
     test_uint(q->terms[0].second.id, Tag|EcsIsEntity|EcsSelf);
+
+    ecs_query_fini(q);
 
     ecs_fini(world);
 }

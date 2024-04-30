@@ -2460,7 +2460,8 @@ void* flecs_defer_set(
     ecs_entity_t entity,
     ecs_entity_t component,
     ecs_size_t size,
-    void *value);
+    void *value,
+    bool *is_new);
 
 bool flecs_defer_end(
     ecs_world_t *world,
@@ -7313,7 +7314,8 @@ void* ecs_ensure_id(
 
     ecs_stage_t *stage = flecs_stage_from_world(&world);
     if (flecs_defer_cmd(stage)) {
-        return flecs_defer_set(world, stage, EcsCmdEnsure, entity, id, 0, NULL);
+        return flecs_defer_set(
+            world, stage, EcsCmdEnsure, entity, id, 0, NULL, NULL);
     }
 
     ecs_record_t *r = flecs_entities_get(world, entity);
@@ -7339,7 +7341,7 @@ void* ecs_ensure_modified_id(
     ecs_stage_t *stage = flecs_stage_from_world(&world);
     ecs_check(flecs_defer_cmd(stage), ECS_INVALID_PARAMETER, NULL);
 
-    return flecs_defer_set(world, stage, EcsCmdSet, entity, id, 0, NULL);
+    return flecs_defer_set(world, stage, EcsCmdSet, entity, id, 0, NULL, NULL);
 error:
     return NULL;
 }
@@ -7576,21 +7578,24 @@ error:
 void* ecs_emplace_id(
     ecs_world_t *world,
     ecs_entity_t entity,
-    ecs_id_t id)
+    ecs_id_t id,
+    bool *is_new)
 {
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(ecs_is_alive(world, entity), ECS_INVALID_PARAMETER, NULL);
     ecs_check(ecs_id_is_valid(world, id), ECS_INVALID_PARAMETER, NULL);
-    ecs_check(!ecs_has_id(world, entity, id), ECS_INVALID_PARAMETER, 
+    ecs_check(is_new || !ecs_has_id(world, entity, id), ECS_INVALID_PARAMETER, 
         "cannot emplace a component the entity already has");
 
     ecs_stage_t *stage = flecs_stage_from_world(&world);
 
     if (flecs_defer_cmd(stage)) {
-        return flecs_defer_set(world, stage, EcsCmdEmplace, entity, id, 0, NULL);
+        return flecs_defer_set(
+            world, stage, EcsCmdEmplace, entity, id, 0, NULL, is_new);
     }
 
     ecs_record_t *r = flecs_entities_get(world, entity);
+    ecs_table_t *table = r->table;
     flecs_add_id_w_record(world, entity, r, id, false /* Add without ctor */);
     flecs_defer_end(world, stage);
 
@@ -7598,6 +7603,10 @@ void* ecs_emplace_id(
     ecs_check(ptr != NULL, ECS_INVALID_PARAMETER, 
         "emplaced component was removed during operation, make sure to not "
         "remove component T in on_add(T) hook/OnAdd(T) observer");
+
+    if (is_new) {
+        *is_new = table != r->table;
+    }
 
     return ptr;
 error:
@@ -7680,7 +7689,7 @@ void flecs_set_id_copy(
 {
     if (flecs_defer_cmd(stage)) {
         flecs_defer_set(world, stage, EcsCmdSet, entity, id, 
-            flecs_utosize(size), ptr);
+            flecs_utosize(size), ptr, NULL);
         return;
     }
 
@@ -7704,7 +7713,7 @@ void flecs_set_id_move(
 {
     if (flecs_defer_cmd(stage)) {
         flecs_defer_set(world, stage, cmd_kind, entity, id, 
-            flecs_utosize(size), ptr);
+            flecs_utosize(size), ptr, NULL);
         return;
     }
 
@@ -9242,7 +9251,11 @@ bool flecs_defer_end(
                     break;
                 case EcsCmdEmplace:
                     if (merge_to_world) {
-                        ecs_emplace_id(world, e, id);
+                        bool is_new;
+                        ecs_emplace_id(world, e, id, &is_new);
+                        if (!is_new) {
+                            kind = EcsCmdEnsure;
+                        }
                     }
                     flecs_set_id_move(world, dst_stage, e, 
                         cmd->id, flecs_itosize(cmd->is._1.size), 
@@ -10698,9 +10711,9 @@ ecs_table_t* ecs_iter_get_var_as_table(
     int32_t var_id)
 {
     ecs_check(var_id >= 0, ECS_INVALID_PARAMETER, 
-        "invalid variable index %d", index);
+        "invalid variable index %d", var_id);
     ecs_check(var_id < it->variable_count, ECS_INVALID_PARAMETER, 
-        "variable index %d out of bounds", index);
+        "variable index %d out of bounds", var_id);
     ecs_check(it->variables != NULL, ECS_INVALID_PARAMETER, NULL);
 
     ecs_var_t *var = &it->variables[var_id];
@@ -10746,9 +10759,9 @@ ecs_table_range_t ecs_iter_get_var_as_range(
     int32_t var_id)
 {
     ecs_check(var_id >= 0, ECS_INVALID_PARAMETER, 
-        "invalid variable index %d", index);
+        "invalid variable index %d", var_id);
     ecs_check(var_id < it->variable_count, ECS_INVALID_PARAMETER, 
-        "variable index %d out of bounds", index);
+        "variable index %d out of bounds", var_id);
     ecs_check(it->variables != NULL, ECS_INVALID_PARAMETER, NULL);
 
     ecs_table_range_t result = { 0 };
@@ -10790,10 +10803,10 @@ void ecs_iter_set_var(
 {
     ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(var_id >= 0, ECS_INVALID_PARAMETER, 
-        "invalid variable index %d", index);
+        "invalid variable index %d", var_id);
     ecs_check(var_id < FLECS_QUERY_VARIABLE_COUNT_MAX, ECS_INVALID_PARAMETER, NULL);
     ecs_check(var_id < it->variable_count, ECS_INVALID_PARAMETER, 
-        "variable index %d out of bounds", index);
+        "variable index %d out of bounds", var_id);
     ecs_check(entity != 0, ECS_INVALID_PARAMETER, NULL);
     ecs_check(!(it->flags & EcsIterIsValid), ECS_INVALID_PARAMETER,
         "cannot constrain variable while iterating");
@@ -10835,9 +10848,9 @@ void ecs_iter_set_var_as_range(
 {
     ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(var_id >= 0, ECS_INVALID_PARAMETER, 
-        "invalid variable index %d", index);
+        "invalid variable index %d", var_id);
     ecs_check(var_id < it->variable_count, ECS_INVALID_PARAMETER, 
-        "variable index %d out of bounds", index);
+        "variable index %d out of bounds", var_id);
     ecs_check(range != 0, ECS_INVALID_PARAMETER, NULL);
     ecs_check(range->table != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(!range->offset || range->offset < ecs_table_count(range->table), 
@@ -15767,7 +15780,8 @@ void* flecs_defer_set(
     ecs_entity_t entity,
     ecs_id_t id,
     ecs_size_t size,
-    void *value)
+    void *value,
+    bool *is_new)
 {
     ecs_cmd_t *cmd = flecs_cmd_new_batched(stage, entity);
 
@@ -15912,6 +15926,10 @@ void* flecs_defer_set(
         cmd->entity = entity;
         cmd->is._1.size = size;
         cmd->is._1.value = cmd_value;
+
+        if (is_new) {
+            *is_new = true;
+        }
     } else {
         /* If component already exists, still insert an Add command to ensure
          * that any preceding remove commands won't remove the component. If the
@@ -15923,6 +15941,10 @@ void* flecs_defer_set(
         }
         cmd->id = id;
         cmd->entity = entity;
+
+        if (is_new) {
+            *is_new = false;
+        }
     }
 
     return cmd_value;
@@ -23067,7 +23089,7 @@ static void flecs_metrics_on_member_metric(ecs_iter_t *it) {
         ecs_entity_t m = ecs_new_w_pair(world, EcsChildOf, ctx->metric.metric);
 
         EcsMetricMemberInstance *src = ecs_emplace(
-            world, m, EcsMetricMemberInstance);
+            world, m, EcsMetricMemberInstance, NULL);
         src->ref = ecs_ref_init_id(world, e, id);
         src->ctx = ctx;
         ecs_modified(world, m, EcsMetricMemberInstance);
@@ -23088,7 +23110,8 @@ static void flecs_metrics_on_id_metric(ecs_iter_t *it) {
         ecs_entity_t e = it->entities[i];
         ecs_entity_t m = ecs_new_w_pair(world, EcsChildOf, ctx->metric.metric);
 
-        EcsMetricIdInstance *src = ecs_emplace(world, m, EcsMetricIdInstance);
+        EcsMetricIdInstance *src = ecs_emplace(
+            world, m, EcsMetricIdInstance, NULL);
         src->r = ecs_record_find(world, e);
         src->ctx = ctx;
         ecs_modified(world, m, EcsMetricIdInstance);
@@ -23113,7 +23136,8 @@ static void flecs_metrics_on_oneof_metric(ecs_iter_t *it) {
         ecs_entity_t e = it->entities[i];
         ecs_entity_t m = ecs_new_w_pair(world, EcsChildOf, ctx->metric.metric);
 
-        EcsMetricOneOfInstance *src = ecs_emplace(world, m, EcsMetricOneOfInstance);
+        EcsMetricOneOfInstance *src = ecs_emplace(
+            world, m, EcsMetricOneOfInstance, NULL);
         src->r = ecs_record_find(world, e);
         src->ctx = ctx;
         ecs_modified(world, m, EcsMetricOneOfInstance);
@@ -56894,6 +56918,7 @@ int ecs_meta_member(
     return 0;
 }
 
+static
 const char* flecs_meta_parse_member(
     const char *start,
     char *token_out)
@@ -56907,7 +56932,7 @@ const char* flecs_meta_parse_member(
     }
 
     int32_t len = flecs_ito(int32_t, ptr - start);
-    ecs_os_strncpy(token_out, start, len);
+    ecs_os_memcpy(token_out, start, len);
     token_out[len] = '\0';
     if (ch == '.') {
         ptr ++;
@@ -58005,11 +58030,10 @@ int ecs_meta_set_string(
         }
 
         set_T(ecs_id_t, ptr, id);
-
-        break;
     #else
         ecs_err("cannot parse component expression: script addon required");
     #endif
+        break;
     }
     case EcsOpPop:
         ecs_err("excess element '%s' in scope", value);

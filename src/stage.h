@@ -78,7 +78,8 @@ void* flecs_defer_set(
     ecs_entity_t entity,
     ecs_entity_t component,
     ecs_size_t size,
-    void *value);
+    void *value,
+    bool *is_new);
 
 bool flecs_defer_end(
     ecs_world_t *world,

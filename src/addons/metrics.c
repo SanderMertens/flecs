@@ -161,7 +161,7 @@ static void flecs_metrics_on_member_metric(ecs_iter_t *it) {
         ecs_entity_t m = ecs_new_w_pair(world, EcsChildOf, ctx->metric.metric);
 
         EcsMetricMemberInstance *src = ecs_emplace(
-            world, m, EcsMetricMemberInstance);
+            world, m, EcsMetricMemberInstance, NULL);
         src->ref = ecs_ref_init_id(world, e, id);
         src->ctx = ctx;
         ecs_modified(world, m, EcsMetricMemberInstance);
@@ -182,7 +182,8 @@ static void flecs_metrics_on_id_metric(ecs_iter_t *it) {
         ecs_entity_t e = it->entities[i];
         ecs_entity_t m = ecs_new_w_pair(world, EcsChildOf, ctx->metric.metric);
 
-        EcsMetricIdInstance *src = ecs_emplace(world, m, EcsMetricIdInstance);
+        EcsMetricIdInstance *src = ecs_emplace(
+            world, m, EcsMetricIdInstance, NULL);
         src->r = ecs_record_find(world, e);
         src->ctx = ctx;
         ecs_modified(world, m, EcsMetricIdInstance);
@@ -207,7 +208,8 @@ static void flecs_metrics_on_oneof_metric(ecs_iter_t *it) {
         ecs_entity_t e = it->entities[i];
         ecs_entity_t m = ecs_new_w_pair(world, EcsChildOf, ctx->metric.metric);
 
-        EcsMetricOneOfInstance *src = ecs_emplace(world, m, EcsMetricOneOfInstance);
+        EcsMetricOneOfInstance *src = ecs_emplace(
+            world, m, EcsMetricOneOfInstance, NULL);
         src->r = ecs_record_find(world, e);
         src->ctx = ctx;
         ecs_modified(world, m, EcsMetricOneOfInstance);

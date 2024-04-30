@@ -1162,7 +1162,7 @@ void ComponentLifecycle_ctor_w_emplace(void) {
     ecs_entity_t e = ecs_new(world);
     test_assert(e != 0);
 
-    const Position *ptr = ecs_emplace(world, e, Position);
+    const Position *ptr = ecs_emplace(world, e, Position, NULL);
     test_assert(ptr != NULL);
     test_int(ctx.ctor.invoked, 0);
 
@@ -1184,7 +1184,7 @@ void ComponentLifecycle_ctor_w_emplace_defer(void) {
     test_assert(e != 0);
 
     ecs_defer_begin(world);
-    Position *ptr = ecs_emplace(world, e, Position);
+    Position *ptr = ecs_emplace(world, e, Position, NULL);
     test_assert(ptr != NULL);
     test_int(ctor_position, 0);
     ptr->x = 10;
@@ -1216,7 +1216,7 @@ void ComponentLifecycle_on_add_w_emplace(void) {
     test_assert(e != 0);
 
     test_int(on_add_position, 0);
-    const Position *ptr = ecs_emplace(world, e, Position);
+    const Position *ptr = ecs_emplace(world, e, Position, NULL);
     test_assert(ptr != NULL);
     test_int(on_add_position, 1);
 
@@ -1239,7 +1239,7 @@ void ComponentLifecycle_on_add_w_emplace_existing(void) {
 
     test_int(ctor_position, 0);
     test_int(on_add_position, 0);
-    const Position *ptr = ecs_emplace(world, e, Position);
+    const Position *ptr = ecs_emplace(world, e, Position, NULL);
     test_assert(ptr != NULL);
     test_int(ctor_position, 0);
     test_int(on_add_position, 1);
@@ -1261,7 +1261,7 @@ void ComponentLifecycle_on_add_w_emplace_defer(void) {
 
     ecs_defer_begin(world);
     test_int(on_add_position, 0);
-    const Position *ptr = ecs_emplace(world, e, Position);
+    const Position *ptr = ecs_emplace(world, e, Position, NULL);
     test_assert(ptr != NULL);
     test_int(on_add_position, 0);
     ecs_defer_end(world);
@@ -1283,6 +1283,18 @@ void position_move_ctor(
     move_ctor_position ++;
 }
 
+static int move_dtor_position = 0;
+static
+void position_move_dtor(
+    void *dst,
+    void *src,
+    int32_t count,
+    const ecs_type_info_t *info)
+{
+    *((Position*)dst) = *((Position*)src);
+    move_dtor_position ++;
+}
+
 void ComponentLifecycle_ctor_w_emplace_defer_use_move_ctor(void) {
     ecs_world_t *world = ecs_mini();
 
@@ -1299,7 +1311,7 @@ void ComponentLifecycle_ctor_w_emplace_defer_use_move_ctor(void) {
 
     ecs_defer_begin(world);
     test_int(on_add_position, 0);
-    Position *ptr = ecs_emplace(world, e, Position);
+    Position *ptr = ecs_emplace(world, e, Position, NULL);
     ptr->x = 10;
     ptr->y = 20;
     test_assert(ptr != NULL);
@@ -1319,6 +1331,113 @@ void ComponentLifecycle_ctor_w_emplace_defer_use_move_ctor(void) {
     ecs_fini(world); 
 }
 
+void ComponentLifecycle_ctor_w_emplace_defer_twice(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .ctor = ecs_ctor(Position),
+        .move = ecs_move(Position),
+        .move_ctor = position_move_ctor,
+        .move_dtor = position_move_dtor
+    });
+
+    ecs_entity_t e = ecs_new(world);
+    test_assert(e != 0);
+
+    ecs_defer_begin(world);
+
+    {
+        bool is_new = false;
+        Position *ptr = ecs_emplace(world, e, Position, &is_new);
+        test_bool(is_new, true);
+        test_assert(ptr != NULL);
+        ptr->x = 10;
+        ptr->y = 20;
+    }
+    {
+        bool is_new = false;
+        Position *ptr = ecs_emplace(world, e, Position, &is_new);
+        test_bool(is_new, true);
+        test_assert(ptr != NULL);
+        ptr->x = 20;
+        ptr->y = 30;
+    }
+
+    test_int(ctor_position, 0);
+    test_int(move_position, 0);
+    test_int(move_ctor_position, 0);
+    test_int(move_dtor_position, 0);
+    ecs_defer_end(world);
+
+    test_int(ctor_position, 0);
+    test_int(move_position, 0);
+    test_int(move_ctor_position, 1);
+    test_int(move_dtor_position, 1);
+
+    const Position *p = ecs_get(world, e, Position);
+    test_int(p->x, 20);
+    test_int(p->y, 30);
+
+    ecs_fini(world); 
+}
+
+void ComponentLifecycle_ctor_w_emplace_defer_existing(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .ctor = ecs_ctor(Position),
+        .move = ecs_move(Position),
+        .move_ctor = position_move_ctor,
+        .move_dtor = position_move_dtor
+    });
+
+    ecs_entity_t e = ecs_new_w(world, Position);
+    test_assert(e != 0);
+
+    test_int(ctor_position, 1);
+    ctor_position = 0;
+
+    ecs_defer_begin(world);
+
+    {
+        bool is_new = false;
+        Position *ptr = ecs_emplace(world, e, Position, &is_new);
+        test_bool(is_new, false);
+        test_assert(ptr != NULL);
+        ptr->x = 10;
+        ptr->y = 20;
+    }
+    {
+        bool is_new = false;
+        Position *ptr = ecs_emplace(world, e, Position, &is_new);
+        test_bool(is_new, false);
+        test_assert(ptr != NULL);
+        ptr->x = 20;
+        ptr->y = 30;
+    }
+
+    test_int(ctor_position, 0);
+    test_int(move_position, 0);
+    test_int(move_ctor_position, 0);
+    test_int(move_dtor_position, 0);
+    ecs_defer_end(world);
+
+    test_int(ctor_position, 0);
+    test_int(move_position, 0);
+    test_int(move_ctor_position, 0);
+    test_int(move_dtor_position, 0);
+
+    const Position *p = ecs_get(world, e, Position);
+    test_int(p->x, 20);
+    test_int(p->y, 30);
+
+    ecs_fini(world);
+}
+
 void ComponentLifecycle_merge_async_stage_w_emplace(void) {
     ecs_world_t *world = ecs_mini();
 
@@ -1335,7 +1454,7 @@ void ComponentLifecycle_merge_async_stage_w_emplace(void) {
 
     ecs_world_t *async = ecs_stage_new(world);
 
-    Position *p = ecs_emplace(async, e, Position);
+    Position *p = ecs_emplace(async, e, Position, NULL);
     test_assert(!ecs_has(world, e, Position));
     test_int(ctor_position, 0);
     test_int(copy_position, 0);
@@ -1376,7 +1495,7 @@ void ComponentLifecycle_merge_async_stage_w_emplace_to_deferred_world(void) {
 
     ecs_world_t *async = ecs_stage_new(world);
 
-    Position *p = ecs_emplace(async, e, Position);
+    Position *p = ecs_emplace(async, e, Position, NULL);
     test_assert(!ecs_has(world, e, Position));
     test_int(ctor_position, 0);
     p->x = 10;
@@ -1424,17 +1543,17 @@ void ComponentLifecycle_emplace_grow_w_existing_component(void) {
     ecs_entity_t e3 = ecs_new_w(world, Velocity);
 
     {
-        Position *p = ecs_emplace(world, e1, Position);
+        Position *p = ecs_emplace(world, e1, Position, NULL);
         p->x = 10;
         p->y = 20;
     }
     {
-        Position *p = ecs_emplace(world, e2, Position);
+        Position *p = ecs_emplace(world, e2, Position, NULL);
         p->x = 30;
         p->y = 40;
     }
     {
-        Position *p = ecs_emplace(world, e3, Position);
+        Position *p = ecs_emplace(world, e3, Position, NULL);
         p->x = 50;
         p->y = 60;
     }
@@ -2742,9 +2861,9 @@ void ComponentLifecycle_move_ctor_on_move(void) {
     ecs_entity_t e2 = ecs_new(world);
     ecs_entity_t p = ecs_new(world);
 
-    Position *p1 = ecs_emplace(world, e1, Position);
+    Position *p1 = ecs_emplace(world, e1, Position, NULL);
     test_assert(p1 != NULL);
-    Position *p2 = ecs_emplace(world, e2, Position);
+    Position *p2 = ecs_emplace(world, e2, Position, NULL);
     test_assert(p2 != NULL);
 
     test_int(ctor_position, 0);
@@ -2829,7 +2948,7 @@ void ComponentLifecycle_ctor_move_dtor_from_move_ctor(void) {
 
     ecs_world_t *async = ecs_stage_new(world);
 
-    Position *p = ecs_emplace(async, e, Position);
+    Position *p = ecs_emplace(async, e, Position, NULL);
     test_assert(!ecs_has(world, e, Position));
     test_int(ctor_position, 0);
     test_int(copy_position, 0);

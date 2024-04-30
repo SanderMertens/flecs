@@ -792,7 +792,8 @@
                 "emplace_2",
                 "emplace_existing",
                 "emplace_w_move",
-                "emplace_w_observer_w_add"
+                "emplace_w_observer_w_add",
+                "emplace_existing_w_check"
             ]
         }, {
             "id": "ReadWrite",
@@ -925,6 +926,8 @@
                 "ctor_w_emplace",
                 "ctor_w_emplace_defer",
                 "ctor_w_emplace_defer_use_move_ctor",
+                "ctor_w_emplace_defer_twice",
+                "ctor_w_emplace_defer_existing",
                 "on_add_w_emplace",
                 "on_add_w_emplace_existing",
                 "on_add_w_emplace_defer",
@@ -1861,7 +1864,9 @@
                 "add_path_to_deleted_parent_w_stage",
                 "add_path_nested_w_stage",
                 "add_path_nested_to_deleted_parent_w_stage",
-                "add_path_nested_to_created_deleted_parent_w_stage"
+                "add_path_nested_to_created_deleted_parent_w_stage",
+                "defer_emplace_w_arg",
+                "defer_emplace_existing_w_arg"
             ]
         }, {
             "id": "SingleThreadStaging",

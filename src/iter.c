@@ -512,9 +512,9 @@ ecs_table_t* ecs_iter_get_var_as_table(
     int32_t var_id)
 {
     ecs_check(var_id >= 0, ECS_INVALID_PARAMETER, 
-        "invalid variable index %d", index);
+        "invalid variable index %d", var_id);
     ecs_check(var_id < it->variable_count, ECS_INVALID_PARAMETER, 
-        "variable index %d out of bounds", index);
+        "variable index %d out of bounds", var_id);
     ecs_check(it->variables != NULL, ECS_INVALID_PARAMETER, NULL);
 
     ecs_var_t *var = &it->variables[var_id];
@@ -560,9 +560,9 @@ ecs_table_range_t ecs_iter_get_var_as_range(
     int32_t var_id)
 {
     ecs_check(var_id >= 0, ECS_INVALID_PARAMETER, 
-        "invalid variable index %d", index);
+        "invalid variable index %d", var_id);
     ecs_check(var_id < it->variable_count, ECS_INVALID_PARAMETER, 
-        "variable index %d out of bounds", index);
+        "variable index %d out of bounds", var_id);
     ecs_check(it->variables != NULL, ECS_INVALID_PARAMETER, NULL);
 
     ecs_table_range_t result = { 0 };
@@ -604,10 +604,10 @@ void ecs_iter_set_var(
 {
     ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(var_id >= 0, ECS_INVALID_PARAMETER, 
-        "invalid variable index %d", index);
+        "invalid variable index %d", var_id);
     ecs_check(var_id < FLECS_QUERY_VARIABLE_COUNT_MAX, ECS_INVALID_PARAMETER, NULL);
     ecs_check(var_id < it->variable_count, ECS_INVALID_PARAMETER, 
-        "variable index %d out of bounds", index);
+        "variable index %d out of bounds", var_id);
     ecs_check(entity != 0, ECS_INVALID_PARAMETER, NULL);
     ecs_check(!(it->flags & EcsIterIsValid), ECS_INVALID_PARAMETER,
         "cannot constrain variable while iterating");
@@ -649,9 +649,9 @@ void ecs_iter_set_var_as_range(
 {
     ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(var_id >= 0, ECS_INVALID_PARAMETER, 
-        "invalid variable index %d", index);
+        "invalid variable index %d", var_id);
     ecs_check(var_id < it->variable_count, ECS_INVALID_PARAMETER, 
-        "variable index %d out of bounds", index);
+        "variable index %d out of bounds", var_id);
     ecs_check(range != 0, ECS_INVALID_PARAMETER, NULL);
     ecs_check(range->table != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(!range->offset || range->offset < ecs_table_count(range->table), 

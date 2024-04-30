@@ -108,7 +108,7 @@ int main(int argc, char *argv[]) {
     });
 
   auto e = ecs.entity()
-    .set([](Position& p, Velocity& v) {
+    .insert([](Position& p, Velocity& v) {
       p = {10, 20};
       v = {1, 2};
     });

@@ -513,7 +513,7 @@ void TriggerOnSet_emplace(void) {
     test_assert(e != 0);
     test_int(dummy_called, 0);
 
-    Position *p = ecs_emplace(world, e, Position);
+    Position *p = ecs_emplace(world, e, Position, NULL);
     test_assert(p != NULL);
     test_int(dummy_called, 0);
 

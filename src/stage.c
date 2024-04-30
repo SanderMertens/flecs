@@ -320,7 +320,8 @@ void* flecs_defer_set(
     ecs_entity_t entity,
     ecs_id_t id,
     ecs_size_t size,
-    void *value)
+    void *value,
+    bool *is_new)
 {
     ecs_cmd_t *cmd = flecs_cmd_new_batched(stage, entity);
 
@@ -465,6 +466,10 @@ void* flecs_defer_set(
         cmd->entity = entity;
         cmd->is._1.size = size;
         cmd->is._1.value = cmd_value;
+
+        if (is_new) {
+            *is_new = true;
+        }
     } else {
         /* If component already exists, still insert an Add command to ensure
          * that any preceding remove commands won't remove the component. If the
@@ -476,6 +481,10 @@ void* flecs_defer_set(
         }
         cmd->id = id;
         cmd->entity = entity;
+
+        if (is_new) {
+            *is_new = false;
+        }
     }
 
     return cmd_value;

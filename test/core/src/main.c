@@ -752,6 +752,7 @@ void Set_emplace_2(void);
 void Set_emplace_existing(void);
 void Set_emplace_w_move(void);
 void Set_emplace_w_observer_w_add(void);
+void Set_emplace_existing_w_check(void);
 
 // Testsuite 'ReadWrite'
 void ReadWrite_read(void);
@@ -874,6 +875,8 @@ void ComponentLifecycle_valid_entity_in_dtor_after_delete(void);
 void ComponentLifecycle_ctor_w_emplace(void);
 void ComponentLifecycle_ctor_w_emplace_defer(void);
 void ComponentLifecycle_ctor_w_emplace_defer_use_move_ctor(void);
+void ComponentLifecycle_ctor_w_emplace_defer_twice(void);
+void ComponentLifecycle_ctor_w_emplace_defer_existing(void);
 void ComponentLifecycle_on_add_w_emplace(void);
 void ComponentLifecycle_on_add_w_emplace_existing(void);
 void ComponentLifecycle_on_add_w_emplace_defer(void);
@@ -1785,6 +1788,8 @@ void Commands_add_path_to_deleted_parent_w_stage(void);
 void Commands_add_path_nested_w_stage(void);
 void Commands_add_path_nested_to_deleted_parent_w_stage(void);
 void Commands_add_path_nested_to_created_deleted_parent_w_stage(void);
+void Commands_defer_emplace_w_arg(void);
+void Commands_defer_emplace_existing_w_arg(void);
 
 // Testsuite 'SingleThreadStaging'
 void SingleThreadStaging_setup(void);
@@ -4796,6 +4801,10 @@ bake_test_case Set_testcases[] = {
     {
         "emplace_w_observer_w_add",
         Set_emplace_w_observer_w_add
+    },
+    {
+        "emplace_existing_w_check",
+        Set_emplace_existing_w_check
     }
 };
 
@@ -5251,6 +5260,14 @@ bake_test_case ComponentLifecycle_testcases[] = {
     {
         "ctor_w_emplace_defer_use_move_ctor",
         ComponentLifecycle_ctor_w_emplace_defer_use_move_ctor
+    },
+    {
+        "ctor_w_emplace_defer_twice",
+        ComponentLifecycle_ctor_w_emplace_defer_twice
+    },
+    {
+        "ctor_w_emplace_defer_existing",
+        ComponentLifecycle_ctor_w_emplace_defer_existing
     },
     {
         "on_add_w_emplace",
@@ -8814,6 +8831,14 @@ bake_test_case Commands_testcases[] = {
     {
         "add_path_nested_to_created_deleted_parent_w_stage",
         Commands_add_path_nested_to_created_deleted_parent_w_stage
+    },
+    {
+        "defer_emplace_w_arg",
+        Commands_defer_emplace_w_arg
+    },
+    {
+        "defer_emplace_existing_w_arg",
+        Commands_defer_emplace_existing_w_arg
     }
 };
 
@@ -9490,7 +9515,7 @@ static bake_test_suite suites[] = {
         "Set",
         NULL,
         NULL,
-        36,
+        37,
         Set_testcases
     },
     {
@@ -9525,7 +9550,7 @@ static bake_test_suite suites[] = {
         "ComponentLifecycle",
         ComponentLifecycle_setup,
         NULL,
-        88,
+        90,
         ComponentLifecycle_testcases
     },
     {
@@ -9616,7 +9641,7 @@ static bake_test_suite suites[] = {
         "Commands",
         NULL,
         NULL,
-        127,
+        129,
         Commands_testcases
     },
     {

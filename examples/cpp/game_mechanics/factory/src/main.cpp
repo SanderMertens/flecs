@@ -289,7 +289,7 @@ private:
         factory.add(FactoryState::WaitingForResources);
 
         // Initialize supply component
-        factory.set([&](FactorySupply& s) {
+        factory.insert([&](FactorySupply& s) {
           for (int i = 0; i < MaxInputs; i ++) {
             entity resource = world.entity(r.items[i].resource);
             entity input = world.entity(config.inputs[i]);

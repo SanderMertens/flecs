@@ -3010,23 +3010,30 @@ bool ecs_record_has_id(
     ecs_id_t id);
 
 /** Emplace a component.
- * Emplace is similar to ecs_ensure_id() except that the component constructor is not
- * invoked for the returned pointer, allowing the component to be "constructed"
- * directly in the storage.
- *
- * Emplace can only be used if the entity does not yet have the component. If
- * the entity has the component, the operation will fail.
+ * Emplace is similar to ecs_ensure_id() except that the component constructor
+ * is not invoked for the returned pointer, allowing the component to be 
+ * constructed directly in the storage.
+ * 
+ * When the is_new parameter is not provided, the operation will assert when the
+ * component already exists. When the is_new parameter is provided, it will
+ * indicate whether the returned storage has been constructed.
+ * 
+ * When is_new indicates that the storage has not yet been constructed, it must
+ * be constructed by the code invoking this operation. Not constructing the
+ * component will result in undefined behavior.
  *
  * @param world The world.
  * @param entity The entity.
  * @param id The component to obtain.
+ * @param is_new Whether this is an existing or new component.
  * @return The (uninitialized) component pointer.
  */
 FLECS_API
 void* ecs_emplace_id(
     ecs_world_t *world,
     ecs_entity_t entity,
-    ecs_id_t id);
+    ecs_id_t id,
+    bool *is_new);
 
 /** Signal that a component has been modified.
  * This operation is usually used after modifying a component value obtained by

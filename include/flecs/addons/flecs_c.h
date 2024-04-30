@@ -382,11 +382,11 @@
 
 /* emplace */
 
-#define ecs_emplace(world, entity, T)\
-    (ECS_CAST(T*, ecs_emplace_id(world, entity, ecs_id(T))))
+#define ecs_emplace(world, entity, T, is_new)\
+    (ECS_CAST(T*, ecs_emplace_id(world, entity, ecs_id(T), is_new)))
 
-#define ecs_emplace_pair(world, entity, First, second)\
-    (ECS_CAST(First*, ecs_emplace_id(world, entity, ecs_pair_t(First, second))))
+#define ecs_emplace_pair(world, entity, First, second, is_new)\
+    (ECS_CAST(First*, ecs_emplace_id(world, entity, ecs_pair_t(First, second), is_new)))
 
 /* get */
 

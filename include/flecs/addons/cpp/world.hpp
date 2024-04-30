@@ -85,7 +85,7 @@ template <typename T, typename ... Args, if_t<
 inline void emplace(world_t *world, flecs::entity_t entity, flecs::id_t id, Args&&... args) {
     ecs_assert(_::type<T>::size() != 0, ECS_INVALID_PARAMETER,
             "operation invalid for empty type");
-    T& dst = *static_cast<T*>(ecs_emplace_id(world, entity, id));
+    T& dst = *static_cast<T*>(ecs_emplace_id(world, entity, id, nullptr));
 
     FLECS_PLACEMENT_NEW(&dst, T{FLECS_FWD(args)...});
 
@@ -529,7 +529,7 @@ struct world {
     /** Lookup entity by name.
      *
      * @param name Entity name.
-     * @param search_path When false, only the current scope is searched.
+     * @param recursive When false, only the current scope is searched.
      * @result The entity if found, or 0 if not found.
      */
     flecs::entity lookup(const char *name, const char *sep = "::", const char *root_sep = "::", bool recursive = true) const;
@@ -583,8 +583,7 @@ struct world {
     template <typename T, typename ... Args>
     void emplace(Args&&... args) const {
         flecs::id_t component_id = _::type<T>::id(world_);
-        flecs::emplace<T>(world_, component_id, component_id,
-            FLECS_FWD(args)...);
+        flecs::emplace<T>(world_, component_id, component_id, FLECS_FWD(args)...);
     }
 
     /** Ensure singleton component.

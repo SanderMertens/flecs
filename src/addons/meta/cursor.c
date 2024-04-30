@@ -319,6 +319,7 @@ int ecs_meta_member(
     return 0;
 }
 
+static
 const char* flecs_meta_parse_member(
     const char *start,
     char *token_out)
@@ -332,7 +333,7 @@ const char* flecs_meta_parse_member(
     }
 
     int32_t len = flecs_ito(int32_t, ptr - start);
-    ecs_os_strncpy(token_out, start, len);
+    ecs_os_memcpy(token_out, start, len);
     token_out[len] = '\0';
     if (ch == '.') {
         ptr ++;
@@ -1430,11 +1431,10 @@ int ecs_meta_set_string(
         }
 
         set_T(ecs_id_t, ptr, id);
-
-        break;
     #else
         ecs_err("cannot parse component expression: script addon required");
     #endif
+        break;
     }
     case EcsOpPop:
         ecs_err("excess element '%s' in scope", value);

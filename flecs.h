@@ -5911,23 +5911,30 @@ bool ecs_record_has_id(
     ecs_id_t id);
 
 /** Emplace a component.
- * Emplace is similar to ecs_ensure_id() except that the component constructor is not
- * invoked for the returned pointer, allowing the component to be "constructed"
- * directly in the storage.
- *
- * Emplace can only be used if the entity does not yet have the component. If
- * the entity has the component, the operation will fail.
+ * Emplace is similar to ecs_ensure_id() except that the component constructor
+ * is not invoked for the returned pointer, allowing the component to be 
+ * constructed directly in the storage.
+ * 
+ * When the is_new parameter is not provided, the operation will assert when the
+ * component already exists. When the is_new parameter is provided, it will
+ * indicate whether the returned storage has been constructed.
+ * 
+ * When is_new indicates that the storage has not yet been constructed, it must
+ * be constructed by the code invoking this operation. Not constructing the
+ * component will result in undefined behavior.
  *
  * @param world The world.
  * @param entity The entity.
  * @param id The component to obtain.
+ * @param is_new Whether this is an existing or new component.
  * @return The (uninitialized) component pointer.
  */
 FLECS_API
 void* ecs_emplace_id(
     ecs_world_t *world,
     ecs_entity_t entity,
-    ecs_id_t id);
+    ecs_id_t id,
+    bool *is_new);
 
 /** Signal that a component has been modified.
  * This operation is usually used after modifying a component value obtained by
@@ -8865,11 +8872,11 @@ int ecs_value_move_ctor(
 
 /* emplace */
 
-#define ecs_emplace(world, entity, T)\
-    (ECS_CAST(T*, ecs_emplace_id(world, entity, ecs_id(T))))
+#define ecs_emplace(world, entity, T, is_new)\
+    (ECS_CAST(T*, ecs_emplace_id(world, entity, ecs_id(T), is_new)))
 
-#define ecs_emplace_pair(world, entity, First, second)\
-    (ECS_CAST(First*, ecs_emplace_id(world, entity, ecs_pair_t(First, second))))
+#define ecs_emplace_pair(world, entity, First, second, is_new)\
+    (ECS_CAST(First*, ecs_emplace_id(world, entity, ecs_pair_t(First, second), is_new)))
 
 /* get */
 
@@ -19099,7 +19106,7 @@ template <typename T, typename ... Args, if_t<
 inline void emplace(world_t *world, flecs::entity_t entity, flecs::id_t id, Args&&... args) {
     ecs_assert(_::type<T>::size() != 0, ECS_INVALID_PARAMETER,
             "operation invalid for empty type");
-    T& dst = *static_cast<T*>(ecs_emplace_id(world, entity, id));
+    T& dst = *static_cast<T*>(ecs_emplace_id(world, entity, id, nullptr));
 
     FLECS_PLACEMENT_NEW(&dst, T{FLECS_FWD(args)...});
 
@@ -19543,7 +19550,7 @@ struct world {
     /** Lookup entity by name.
      *
      * @param name Entity name.
-     * @param search_path When false, only the current scope is searched.
+     * @param recursive When false, only the current scope is searched.
      * @result The entity if found, or 0 if not found.
      */
     flecs::entity lookup(const char *name, const char *sep = "::", const char *root_sep = "::", bool recursive = true) const;
@@ -19597,8 +19604,7 @@ struct world {
     template <typename T, typename ... Args>
     void emplace(Args&&... args) const {
         flecs::id_t component_id = _::type<T>::id(world_);
-        flecs::emplace<T>(world_, component_id, component_id,
-            FLECS_FWD(args)...);
+        flecs::emplace<T>(world_, component_id, component_id, FLECS_FWD(args)...);
     }
 
     /** Ensure singleton component.

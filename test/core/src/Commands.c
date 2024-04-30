@@ -2581,7 +2581,7 @@ void Commands_defer_remove_after_emplace_different_id(void) {
     ecs_add(world, e, Tag);
 
     ecs_defer_begin(world);
-    Position *p = ecs_emplace(world, e, Position);
+    Position *p = ecs_emplace(world, e, Position, NULL);
     p->x = 10;
     p->y = 20;
     ecs_remove(world, e, Tag);
@@ -2611,7 +2611,7 @@ void Commands_defer_remove_after_set_and_emplace_different_id(void) {
     ecs_add(world, e, Tag);
 
     ecs_defer_begin(world);
-    Position *p = ecs_emplace(world, e, Position);
+    Position *p = ecs_emplace(world, e, Position, NULL);
     p->x = 10;
     p->y = 20;
     ecs_set(world, e, Velocity, {1, 2});
@@ -3815,6 +3815,70 @@ void Commands_add_path_nested_to_created_deleted_parent_w_stage(void) {
     test_assert(ecs_is_alive(world, p));
     test_assert(!ecs_is_alive(world, e));
     test_assert(!ecs_is_alive(world, foo));
+
+    ecs_fini(world);
+}
+
+void Commands_defer_emplace_w_arg(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e = ecs_new(world);
+
+    ecs_defer_begin(world);
+    {
+        bool is_new = false;
+        Position *p = ecs_emplace(world, e, Position, &is_new);
+        p->x = 1; p->y = 2;
+        test_bool(is_new, true);
+    }
+    {
+        bool is_new = false;
+        Position *p = ecs_emplace(world, e, Position, &is_new);
+        p->x = 10; p->y = 20;
+        test_bool(is_new, true); /* Might change after cmd queue temp storage refactor */
+    }
+    test_assert(!ecs_has(world, e, Position));
+    ecs_defer_end(world);
+    test_assert(ecs_has(world, e, Position));
+
+    const Position *p = ecs_get(world, e, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+void Commands_defer_emplace_existing_w_arg(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e = ecs_new_w(world, Position);
+
+    ecs_defer_begin(world);
+    {
+        bool is_new = false;
+        Position *p = ecs_emplace(world, e, Position, &is_new);
+        p->x = 1; p->y = 2;
+        test_bool(is_new, false);
+    }
+    {
+        bool is_new = false;
+        Position *p = ecs_emplace(world, e, Position, &is_new);
+        p->x = 10; p->y = 20;
+        test_bool(is_new, false); /* Might change after cmd queue temp storage refactor */
+    }
+    test_assert(ecs_has(world, e, Position));
+    ecs_defer_end(world);
+    test_assert(ecs_has(world, e, Position));
+
+    const Position *p = ecs_get(world, e, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
 
     ecs_fini(world);
 }
