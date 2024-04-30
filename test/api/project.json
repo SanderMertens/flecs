@@ -1741,7 +1741,16 @@
                 "set_this_w_wildcard",
                 "singleton_w_inout_none",
                 "singleton_w_inout_none_or",
-                "component_w_inout_none_or"
+                "component_w_inout_none_or",
+                "cached_match_empty",
+                "cached_match_new_empty",
+                "cached_match_empty_w_component",
+                "cached_match_new_empty_w_component",
+                "cached_match_empty_w_ref",
+                "cached_match_new_empty_w_ref",
+                "cached_match_empty_w_order_by",
+                "cached_match_new_empty_w_order_by",
+                "cached_match_empty_w_bitset"
             ]
         }, {
             "id": "Iter",

@@ -18,6 +18,12 @@ void ecs_table_cache_insert(
     const ecs_table_t *table,
     ecs_table_cache_hdr_t *result);
 
+void ecs_table_cache_insert_w_empty(
+    ecs_table_cache_t *cache,
+    const ecs_table_t *table,
+    ecs_table_cache_hdr_t *result,
+    bool is_empty);
+
 void ecs_table_cache_replace(
     ecs_table_cache_t *cache,
     const ecs_table_t *table,

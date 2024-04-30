@@ -1443,6 +1443,12 @@ void ecs_table_cache_insert(
     const ecs_table_t *table,
     ecs_table_cache_hdr_t *result);
 
+void ecs_table_cache_insert_w_empty(
+    ecs_table_cache_t *cache,
+    const ecs_table_t *table,
+    ecs_table_cache_hdr_t *result,
+    bool is_empty);
+
 void ecs_table_cache_replace(
     ecs_table_cache_t *cache,
     const ecs_table_t *table,
@@ -19037,7 +19043,7 @@ ecs_query_table_match_t* flecs_query_add_table_match(
     qm->sources = flecs_balloc(&query->allocators.sources);
 
     /* Insert match to iteration list if table is not empty */
-    if (!table || ecs_table_count(table) != 0) {
+    if (!table || ecs_table_count(table) != 0 || (query->flags & EcsQueryMatchEmptyTables)) {
         flecs_query_insert_table_node(query, qm);
     }
 
@@ -19135,7 +19141,12 @@ ecs_query_table_t* flecs_query_table_insert(
     } else {
         qt->table_id = 0;
     }
-    ecs_table_cache_insert(&query->cache, table, &qt->hdr);
+
+    if (query->flags & EcsQueryMatchEmptyTables) {
+        ecs_table_cache_insert_w_empty(&query->cache, table, &qt->hdr, false);
+    } else {
+        ecs_table_cache_insert(&query->cache, table, &qt->hdr);
+    }
     return qt;
 }
 
@@ -19304,7 +19315,9 @@ void flecs_query_build_sorted_table_range(
         ecs_table_t *table = cur->table;
         ecs_data_t *data = &table->data;
 
-        ecs_assert(ecs_table_count(table) != 0, ECS_INTERNAL_ERROR, NULL);
+        if (ecs_table_count(table) == 0) {
+            continue;
+        }
 
         if (id) {
             const ecs_term_t *term = &query->filter.terms[order_by_term];
@@ -20206,6 +20219,8 @@ ecs_query_t* ecs_query_init(
 
     ECS_BIT_COND(result->flags, EcsQueryTrivialIter, 
         !!(result->filter.flags & EcsFilterMatchOnlyThis));
+    ECS_BIT_COND(result->flags, EcsQueryMatchEmptyTables, 
+        !!(desc->filter.flags & EcsFilterMatchEmptyTables));
 
     flecs_query_allocators_init(result);
 
@@ -20213,24 +20228,31 @@ ecs_query_t* ecs_query_init(
         observer_desc.entity = entity;
         observer_desc.run = flecs_query_on_event;
         observer_desc.ctx = result;
-        observer_desc.events[0] = EcsOnTableEmpty;
-        observer_desc.events[1] = EcsOnTableFill;
-        if (!desc->parent) {
-            observer_desc.events[2] = EcsOnTableCreate;
-            observer_desc.events[3] = EcsOnTableDelete;
+
+        int32_t event_index = 0;
+        if (!(desc->filter.flags & EcsFilterMatchEmptyTables)) {
+            observer_desc.events[event_index ++] = EcsOnTableEmpty;
+            observer_desc.events[event_index ++] = EcsOnTableFill;
         }
-        observer_desc.filter.flags |= EcsFilterNoData;
-        observer_desc.filter.instanced = true;
+        if (!desc->parent) {
+            observer_desc.events[event_index ++] = EcsOnTableCreate;
+            observer_desc.events[event_index ++] = EcsOnTableDelete;
+        }
 
-        /* ecs_filter_init could have moved away resources from the terms array
-         * in the descriptor, so use the terms array from the filter. */
-        observer_desc.filter.terms_buffer = result->filter.terms;
-        observer_desc.filter.terms_buffer_count = result->filter.term_count;
-        observer_desc.filter.expr = NULL; /* Already parsed */
+        if (event_index) {
+            observer_desc.filter.flags |= EcsFilterNoData;
+            observer_desc.filter.instanced = true;
 
-        entity = ecs_observer_init(world, &observer_desc);
-        if (!entity) {
-            goto error;
+            /* ecs_filter_init could have moved away resources from the terms array
+            * in the descriptor, so use the terms array from the filter. */
+            observer_desc.filter.terms_buffer = result->filter.terms;
+            observer_desc.filter.terms_buffer_count = result->filter.term_count;
+            observer_desc.filter.expr = NULL; /* Already parsed */
+
+            entity = ecs_observer_init(world, &observer_desc);
+            if (!entity) {
+                goto error;
+            }
         }
     }
 
@@ -20403,8 +20425,10 @@ ecs_iter_t ecs_query_iter(
     query->filter.eval_count ++;
 
     /* Process table events to ensure that the list of iterated tables doesn't
-     * contain empty tables. */
-    flecs_process_pending_tables(world);
+     * contain empty tables. Not necessary if query matches empty tables. */
+    if (!(query->flags & EcsQueryMatchEmptyTables)) {
+        flecs_process_pending_tables(world);
+    }
 
     /* If query has order_by, apply sort */
     flecs_query_sort_tables(world, query);
@@ -20655,30 +20679,33 @@ void flecs_query_populate_trivial(
     it->references = ecs_vec_first(&match->refs);
 
     if (!it->references) {
-        ecs_data_t *data = &table->data;
-        if (!(it->flags & EcsIterNoData)) {
-            int32_t i;
-            for (i = 0; i < it->field_count; i ++) {
-                int32_t column = match->storage_columns[i];
-                if (column < 0) {
-                    it->ptrs[i] = NULL;
-                    continue;
-                }
+        if (count) {
+            ecs_data_t *data = &table->data;
+            if (!(it->flags & EcsIterNoData)) {
+                int32_t i;
+                for (i = 0; i < it->field_count; i ++) {
+                    int32_t column = match->storage_columns[i];
+                    if (column < 0) {
+                        it->ptrs[i] = NULL;
+                        continue;
+                    }
 
-                ecs_size_t size = it->sizes[i];
-                if (!size) {
-                    it->ptrs[i] = NULL;
-                    continue;
-                }
+                    ecs_size_t size = it->sizes[i];
+                    if (!size) {
+                        it->ptrs[i] = NULL;
+                        continue;
+                    }
 
-                it->ptrs[i] = ecs_vec_get(&data->columns[column].data,
-                    it->sizes[i], offset);
+                    it->ptrs[i] = ecs_vec_get(&data->columns[column].data,
+                        it->sizes[i], offset);
+                }
             }
+
+            it->entities = ecs_vec_get_t(&data->entities, ecs_entity_t, offset);
         }
 
         it->frame_offset += it->table ? ecs_table_count(it->table) : 0;
         it->table = table;
-        it->entities = ecs_vec_get_t(&data->entities, ecs_entity_t, offset);
     } else {
         flecs_iter_populate_data(
             it->real_world, it, table, offset, count, it->ptrs);
@@ -20734,7 +20761,6 @@ repeat:
         range->count = match->count;
         if (!range->count) {
             range->count = ecs_table_count(table);
-            ecs_assert(range->count != 0, ECS_INTERNAL_ERROR, NULL);
         }
 
         if (match->entity_filter) {
@@ -46485,22 +46511,16 @@ bool ecs_table_cache_is_empty(
     return ecs_map_count(&cache->index) == 0;
 }
 
-void ecs_table_cache_insert(
+void ecs_table_cache_insert_w_empty(
     ecs_table_cache_t *cache,
     const ecs_table_t *table,
-    ecs_table_cache_hdr_t *result)
+    ecs_table_cache_hdr_t *result,
+    bool empty)
 {
     ecs_assert(cache != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(ecs_table_cache_get(cache, table) == NULL,
         ECS_INTERNAL_ERROR, NULL);
     ecs_assert(result != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    bool empty;
-    if (!table) {
-        empty = false;
-    } else {
-        empty = ecs_table_count(table) == 0;
-    }
 
     result->cache = cache;
     result->table = ECS_CONST_CAST(ecs_table_t*, table);
@@ -46516,6 +46536,21 @@ void ecs_table_cache_insert(
         ECS_INTERNAL_ERROR, NULL);
     ecs_assert(!empty || cache->empty_tables.first != NULL, 
         ECS_INTERNAL_ERROR, NULL);
+}
+
+void ecs_table_cache_insert(
+    ecs_table_cache_t *cache,
+    const ecs_table_t *table,
+    ecs_table_cache_hdr_t *result)
+{
+    bool empty;
+    if (!table) {
+        empty = false;
+    } else {
+        empty = ecs_table_count(table) == 0;
+    }
+    
+    ecs_table_cache_insert_w_empty(cache, table, result, empty);
 }
 
 void ecs_table_cache_replace(
