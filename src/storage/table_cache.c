@@ -96,22 +96,16 @@ bool ecs_table_cache_is_empty(
     return ecs_map_count(&cache->index) == 0;
 }
 
-void ecs_table_cache_insert(
+void ecs_table_cache_insert_w_empty(
     ecs_table_cache_t *cache,
     const ecs_table_t *table,
-    ecs_table_cache_hdr_t *result)
+    ecs_table_cache_hdr_t *result,
+    bool empty)
 {
     ecs_assert(cache != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(ecs_table_cache_get(cache, table) == NULL,
         ECS_INTERNAL_ERROR, NULL);
     ecs_assert(result != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    bool empty;
-    if (!table) {
-        empty = false;
-    } else {
-        empty = ecs_table_count(table) == 0;
-    }
 
     result->cache = cache;
     result->table = ECS_CONST_CAST(ecs_table_t*, table);
@@ -127,6 +121,21 @@ void ecs_table_cache_insert(
         ECS_INTERNAL_ERROR, NULL);
     ecs_assert(!empty || cache->empty_tables.first != NULL, 
         ECS_INTERNAL_ERROR, NULL);
+}
+
+void ecs_table_cache_insert(
+    ecs_table_cache_t *cache,
+    const ecs_table_t *table,
+    ecs_table_cache_hdr_t *result)
+{
+    bool empty;
+    if (!table) {
+        empty = false;
+    } else {
+        empty = ecs_table_count(table) == 0;
+    }
+    
+    ecs_table_cache_insert_w_empty(cache, table, result, empty);
 }
 
 void ecs_table_cache_replace(

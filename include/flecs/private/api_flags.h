@@ -205,7 +205,7 @@ extern "C" {
 #define EcsQueryHasNonThisOutTerms     (1u << 5u)  /* Does query have non-this out terms */
 #define EcsQueryHasMonitor             (1u << 6u)  /* Does query track changes */
 #define EcsQueryTrivialIter            (1u << 7u)  /* Does the query require special features to iterate */
-
+#define EcsQueryMatchEmptyTables       (1u << 8u)  /* Query cache contains empty tables */
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Aperiodic action flags (used by ecs_run_aperiodic)

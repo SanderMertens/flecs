@@ -1679,6 +1679,15 @@ void Query_set_this_w_wildcard(void);
 void Query_singleton_w_inout_none(void);
 void Query_singleton_w_inout_none_or(void);
 void Query_component_w_inout_none_or(void);
+void Query_cached_match_empty(void);
+void Query_cached_match_new_empty(void);
+void Query_cached_match_empty_w_component(void);
+void Query_cached_match_new_empty_w_component(void);
+void Query_cached_match_empty_w_ref(void);
+void Query_cached_match_new_empty_w_ref(void);
+void Query_cached_match_empty_w_order_by(void);
+void Query_cached_match_new_empty_w_order_by(void);
+void Query_cached_match_empty_w_bitset(void);
 
 // Testsuite 'Iter'
 void Iter_page_iter_0_0(void);
@@ -9270,6 +9279,42 @@ bake_test_case Query_testcases[] = {
     {
         "component_w_inout_none_or",
         Query_component_w_inout_none_or
+    },
+    {
+        "cached_match_empty",
+        Query_cached_match_empty
+    },
+    {
+        "cached_match_new_empty",
+        Query_cached_match_new_empty
+    },
+    {
+        "cached_match_empty_w_component",
+        Query_cached_match_empty_w_component
+    },
+    {
+        "cached_match_new_empty_w_component",
+        Query_cached_match_new_empty_w_component
+    },
+    {
+        "cached_match_empty_w_ref",
+        Query_cached_match_empty_w_ref
+    },
+    {
+        "cached_match_new_empty_w_ref",
+        Query_cached_match_new_empty_w_ref
+    },
+    {
+        "cached_match_empty_w_order_by",
+        Query_cached_match_empty_w_order_by
+    },
+    {
+        "cached_match_new_empty_w_order_by",
+        Query_cached_match_new_empty_w_order_by
+    },
+    {
+        "cached_match_empty_w_bitset",
+        Query_cached_match_empty_w_bitset
     }
 };
 
@@ -13677,7 +13722,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        243,
+        252,
         Query_testcases
     },
     {
