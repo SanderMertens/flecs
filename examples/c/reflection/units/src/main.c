@@ -48,7 +48,7 @@ int main(int argc, char *argv[]) {
         }
     });
 
-    ecs_entity_t e = ecs_set(ecs, 0, WeatherStation, {24, 1.2, 0.5});
+    ecs_entity_t e = ecs_insert(ecs, ecs_value(WeatherStation, {24, 1.2, 0.5}));
 
     // Use cursor API to print values with units
     WeatherStation *ptr = ecs_ensure(ecs, e, WeatherStation);

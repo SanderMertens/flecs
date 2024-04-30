@@ -33,6 +33,8 @@ void* flecs_stack_alloc(
     ecs_size_t size,
     ecs_size_t align)
 {
+    ecs_assert(size > 0, ECS_INTERNAL_ERROR, NULL);
+
     ecs_stack_page_t *page = stack->tail_page;
     if (page == &stack->first && !page->data) {
         page->data = ecs_os_malloc(ECS_STACK_PAGE_SIZE);
@@ -91,6 +93,8 @@ void flecs_stack_free(
 ecs_stack_cursor_t* flecs_stack_get_cursor(
     ecs_stack_t *stack)
 {
+    ecs_assert(stack != NULL, ECS_INTERNAL_ERROR, NULL);
+
     ecs_stack_page_t *page = stack->tail_page;
     int16_t sp = stack->tail_page->sp;
     ecs_stack_cursor_t *result = flecs_stack_alloc_t(stack, ecs_stack_cursor_t);
@@ -108,6 +112,10 @@ ecs_stack_cursor_t* flecs_stack_get_cursor(
     return result;
 }
 
+#define FLECS_STACK_LEAK_MSG \
+    "a stack allocator leak is most likely due to an unterminated " \
+    "iteration: call ecs_iter_fini to fix"
+
 void flecs_stack_restore_cursor(
     ecs_stack_t *stack,
     ecs_stack_cursor_t *cursor)
@@ -116,9 +124,12 @@ void flecs_stack_restore_cursor(
         return;
     }
 
-    ecs_dbg_assert(stack == cursor->owner, ECS_INVALID_OPERATION, NULL);
-    ecs_dbg_assert(stack->cursor_count > 0, ECS_DOUBLE_FREE, NULL);
-    ecs_assert(cursor->is_free == false, ECS_DOUBLE_FREE, NULL);
+    ecs_dbg_assert(stack == cursor->owner, ECS_INVALID_OPERATION, 
+        "attempting to restore a cursor for the wrong stack");
+    ecs_dbg_assert(stack->cursor_count > 0, ECS_DOUBLE_FREE, 
+        "double free detected in stack allocator");
+    ecs_assert(cursor->is_free == false, ECS_DOUBLE_FREE,
+        "double free detected in stack allocator");
 
     cursor->is_free = true;
 
@@ -148,13 +159,14 @@ void flecs_stack_restore_cursor(
      * if the cursor count is non-zero, stack should not be empty */
     ecs_dbg_assert((stack->cursor_count == 0) == 
         (stack->tail_page == &stack->first && stack->tail_page->sp == 0), 
-            ECS_LEAK_DETECTED, NULL);
+            ECS_LEAK_DETECTED, FLECS_STACK_LEAK_MSG);
 }
 
 void flecs_stack_reset(
     ecs_stack_t *stack)
 {
-    ecs_dbg_assert(stack->cursor_count == 0, ECS_LEAK_DETECTED, NULL);
+    ecs_dbg_assert(stack->cursor_count == 0, ECS_LEAK_DETECTED, 
+        FLECS_STACK_LEAK_MSG);
     stack->tail_page = &stack->first;
     stack->first.sp = 0;
     stack->tail_cursor = NULL;
@@ -172,9 +184,12 @@ void flecs_stack_fini(
     ecs_stack_t *stack)
 {
     ecs_stack_page_t *next, *cur = &stack->first;
-    ecs_dbg_assert(stack->cursor_count == 0, ECS_LEAK_DETECTED, NULL);
-    ecs_assert(stack->tail_page == &stack->first, ECS_LEAK_DETECTED, NULL);
-    ecs_assert(stack->tail_page->sp == 0, ECS_LEAK_DETECTED, NULL);
+    ecs_dbg_assert(stack->cursor_count == 0, ECS_LEAK_DETECTED, 
+        FLECS_STACK_LEAK_MSG);
+    ecs_assert(stack->tail_page == &stack->first, ECS_LEAK_DETECTED, 
+        FLECS_STACK_LEAK_MSG);
+    ecs_assert(stack->tail_page->sp == 0, ECS_LEAK_DETECTED, 
+        FLECS_STACK_LEAK_MSG);
 
     do {
         next = cur->next;

@@ -26,8 +26,8 @@ void Observer(ecs_iter_t *it) {
     ecs_entity_t event_id = it->event_id;
 
     // Grab Position from self and parent
-    Position *p_self = ecs_field(it, Position, 1);
-    Position *p_parent = ecs_field(it, Position, 2);
+    Position *p_self = ecs_field(it, Position, 0);
+    Position *p_parent = ecs_field(it, Position, 1);
 
     for (int i = 0; i < it->count; i ++) {
         ecs_entity_t e = it->entities[i];
@@ -48,19 +48,19 @@ int main(int argc, char *argv[]) {
 
     // Create observer that listens for events from both self and parent
     ecs_observer(ecs, {
-        .filter = { .terms = {
+        .query = { .terms = {
             // Listen for Position events from self
             { .id = ecs_id(Position) },
             // Listen for Position events from parent
-            { .id = ecs_id(Position), .src.flags = EcsUp, .src.trav = EcsChildOf }
+            { .id = ecs_id(Position), .src.id = EcsUp, .trav = EcsChildOf }
         }},
         .events = { EcsOnSet },
         .callback = Observer
     });
 
     // Create entity and parent
-    ecs_entity_t p = ecs_new_entity(ecs, "p");
-    ecs_entity_t e = ecs_new_entity(ecs, "p.e"); // Create as child of p
+    ecs_entity_t p = ecs_entity(ecs, { .name = "p" });
+    ecs_entity_t e = ecs_entity(ecs, { .name = "p.e" }); // Create as child of p
 
     // Set Position on entity. This doesn't trigger the observer yet, since the
     // parent doesn't have Position yet.

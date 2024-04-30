@@ -37,8 +37,8 @@ using enum_constant_t = ecs_enum_constant_t;
 using bitmask_constant_t = ecs_bitmask_constant_t;
 
 /* Components */
-using MetaType = EcsMetaType;
-using MetaTypeSerialized = EcsMetaTypeSerialized;
+using Type = EcsType;
+using TypeSerializer = EcsTypeSerializer;
 using Primitive = EcsPrimitive;
 using Enum = EcsEnum;
 using Bitmask = EcsBitmask;

@@ -36,7 +36,7 @@ int main(int argc, char *argv[]) {
     });
 
     // Create entity with TypeWithEnum as usual
-    ecs_entity_t ent = ecs_new_id(ecs);
+    ecs_entity_t ent = ecs_new(ecs);
     ecs_set(ecs, ent, TypeWithEnum, {Green});
 
     // Convert TypeWithEnum component to flecs expression string

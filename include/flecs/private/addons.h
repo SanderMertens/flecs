@@ -15,17 +15,8 @@
 #ifdef FLECS_NO_MODULE
 #undef FLECS_MODULE
 #endif
-#ifdef FLECS_NO_PARSER
-#undef FLECS_PARSER
-#endif
-#ifdef FLECS_NO_PLECS
-#undef FLECS_PLECS
-#endif
-#ifdef FLECS_NO_RULES
-#undef FLECS_RULES
-#endif
-#ifdef FLECS_NO_SNAPSHOT
-#undef FLECS_SNAPSHOT
+#ifdef FLECS_NO_SCRIPT
+#undef FLECS_SCRIPT
 #endif
 #ifdef FLECS_NO_MONITOR
 #undef FLECS_MONITOR
@@ -45,14 +36,8 @@
 #ifdef FLECS_NO_META
 #undef FLECS_META
 #endif
-#ifdef FLECS_NO_META_C
-#undef FLECS_META_C
-#endif
 #ifdef FLECS_NO_UNITS
 #undef FLECS_UNITS
-#endif
-#ifdef FLECS_NO_EXPR
-#undef FLECS_EXPR
 #endif
 #ifdef FLECS_NO_JSON
 #undef FLECS_JSON
@@ -99,12 +84,6 @@
 #ifdef FLECS_REST
 #ifndef FLECS_HTTP
 #define FLECS_HTTP
-#endif
-#endif
-
-#ifdef FLECS_PLECS
-#ifndef FLECS_EXPR
-#define FLECS_EXPR
 #endif
 #endif
 
@@ -178,13 +157,6 @@
 #include "../addons/monitor.h"
 #endif
 
-#ifdef FLECS_DOC
-#ifdef FLECS_NO_DOC
-#error "FLECS_NO_DOC failed: DOC is required by other addons"
-#endif
-#include "../addons/doc.h"
-#endif
-
 #ifdef FLECS_JSON
 #ifdef FLECS_NO_JSON
 #error "FLECS_NO_JSON failed: JSON is required by other addons"
@@ -192,11 +164,6 @@
 #include "../addons/json.h"
 #endif
 
-#if defined(FLECS_EXPR) || defined(FLECS_META_C)
-#ifndef FLECS_META
-#define FLECS_META
-#endif
-#endif
 #ifdef FLECS_UNITS
 #ifdef FLECS_NO_UNITS
 #error "FLECS_NO_UNITS failed: UNITS is required by other addons"
@@ -204,53 +171,25 @@
 #include "../addons/units.h"
 #endif
 
+#ifdef FLECS_SCRIPT
+#ifdef FLECS_NO_SCRIPT
+#error "FLECS_NO_SCRIPT failed: SCRIPT is required by other addons"
+#endif
+#include "../addons/script.h"
+#endif
+
+#ifdef FLECS_DOC
+#ifdef FLECS_NO_DOC
+#error "FLECS_NO_DOC failed: DOC is required by other addons"
+#endif
+#include "../addons/doc.h"
+#endif
+
 #ifdef FLECS_META
 #ifdef FLECS_NO_META
 #error "FLECS_NO_META failed: META is required by other addons"
 #endif
 #include "../addons/meta.h"
-#endif
-
-#ifdef FLECS_EXPR
-#ifdef FLECS_NO_EXPR
-#error "FLECS_NO_EXPR failed: EXPR is required by other addons"
-#endif
-#include "../addons/expr.h"
-#endif
-
-#ifdef FLECS_META_C
-#ifdef FLECS_NO_META_C
-#error "FLECS_NO_META_C failed: META_C is required by other addons"
-#endif
-#include "../addons/meta_c.h"
-#endif
-
-#ifdef FLECS_PLECS
-#ifdef FLECS_NO_PLECS
-#error "FLECS_NO_PLECS failed: PLECS is required by other addons"
-#endif
-#include "../addons/plecs.h"
-#endif
-
-#ifdef FLECS_RULES
-#ifdef FLECS_NO_RULES
-#error "FLECS_NO_RULES failed: RULES is required by other addons"
-#endif
-#include "../addons/rules.h"
-#endif
-
-#ifdef FLECS_SNAPSHOT
-#ifdef FLECS_NO_SNAPSHOT
-#error "FLECS_NO_SNAPSHOT failed: SNAPSHOT is required by other addons"
-#endif
-#include "../addons/snapshot.h"
-#endif
-
-#ifdef FLECS_PARSER
-#ifdef FLECS_NO_PARSER
-#error "FLECS_NO_PARSER failed: PARSER is required by other addons"
-#endif
-#include "../addons/parser.h"
 #endif
 
 #ifdef FLECS_OS_API_IMPL

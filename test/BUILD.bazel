@@ -21,11 +21,11 @@ cc_test(
 )
 
 cc_test(
-    name = "cpp_api",
+    name = "cpp",
     deps = ["//:flecs", "@bake//:driver-test"],
     
-    srcs = glob(["cpp_api/src/*.cpp", "cpp_api/**/*.h"]),
-    includes = ["cpp_api/include"],
+    srcs = glob(["cpp/src/*.cpp", "cpp/**/*.h"]),
+    includes = ["cpp/include"],
 
     timeout = "short",
 )

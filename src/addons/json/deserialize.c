@@ -338,7 +338,7 @@ const char* ecs_entity_from_json(
                     ecs_parser_error(name, expr, values - expr, "expected ']'");
                     goto error;
                 }
-                json = ecs_parse_ws_eol(values + 1);
+                json = flecs_parse_ws_eol(values + 1);
             } else {
                 json = ids;
             }
@@ -433,7 +433,7 @@ const char* ecs_entity_from_json(
                     "expected ',' or ']'");
                 goto error;
             } else {
-                values = ecs_parse_ws_eol(values);
+                values = flecs_parse_ws_eol(values);
             }
 
             ecs_modified_id(world, e, id);
@@ -454,7 +454,7 @@ ecs_entity_t flecs_json_new_id(
     if (ser_id < FLECS_HI_COMPONENT_ID) {
         return ecs_new_low_id(world);
     } else {
-        return ecs_new_id(world);
+        return ecs_new(world);
     }
 }
 

@@ -10,7 +10,7 @@
 #include "../private_api.h"
 #include <ctype.h>
 
-char* ecs_module_path_from_c(
+char* flecs_module_path_from_c(
     const char *c_name)
 {
     ecs_strbuf_t str = ECS_STRBUF_INIT;
@@ -42,7 +42,7 @@ ecs_entity_t ecs_import(
     ecs_entity_t old_scope = ecs_set_scope(world, 0);
     const char *old_name_prefix = world->info.name_prefix;
 
-    char *path = ecs_module_path_from_c(module_name);
+    char *path = flecs_module_path_from_c(module_name);
     ecs_entity_t e = ecs_lookup(world, path);
     ecs_os_free(path);
     
@@ -74,7 +74,7 @@ ecs_entity_t ecs_import_c(
     ecs_module_action_t module,
     const char *c_name)
 {
-    char *name = ecs_module_path_from_c(c_name);
+    char *name = flecs_module_path_from_c(c_name);
     ecs_entity_t e = ecs_import(world, module, name);
     ecs_os_free(name);
     return e;
@@ -195,18 +195,18 @@ ecs_entity_t ecs_module_init(
     const ecs_component_desc_t *desc)
 {
     ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_poly_assert(world, ecs_world_t);
+    flecs_poly_assert(world, ecs_world_t);
 
     ecs_entity_t old_scope = ecs_set_scope(world, 0);
 
     ecs_entity_t e = desc->entity;
     if (!e) {
-        char *module_path = ecs_module_path_from_c(c_name);
-        e = ecs_new_from_fullpath(world, module_path);
+        char *module_path = flecs_module_path_from_c(c_name);
+        e = ecs_entity(world, { .name = module_path });
         ecs_set_symbol(world, e, module_path);
         ecs_os_free(module_path);
     } else if (!ecs_exists(world, e)) {
-        char *module_path = ecs_module_path_from_c(c_name);
+        char *module_path = flecs_module_path_from_c(c_name);
         ecs_make_alive(world, e);
         ecs_add_fullpath(world, e, module_path);
         ecs_set_symbol(world, e, module_path);

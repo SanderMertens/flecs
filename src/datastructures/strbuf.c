@@ -478,10 +478,11 @@ void ecs_strbuf_list_push(
     ecs_assert(b != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(list_open != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(separator != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(b->list_sp >= 0, ECS_INVALID_OPERATION, NULL);
+    ecs_assert(b->list_sp >= 0, ECS_INVALID_OPERATION, 
+        "strbuf list is corrupt");
     b->list_sp ++;
     ecs_assert(b->list_sp < ECS_STRBUF_MAX_LIST_DEPTH, 
-        ECS_INVALID_OPERATION, NULL);
+        ECS_INVALID_OPERATION, "max depth for strbuf list stack exceeded");
 
     b->list_stack[b->list_sp].count = 0;
     b->list_stack[b->list_sp].separator = separator;
@@ -502,7 +503,8 @@ void ecs_strbuf_list_pop(
 {
     ecs_assert(b != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(list_close != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(b->list_sp > 0, ECS_INVALID_OPERATION, NULL);
+    ecs_assert(b->list_sp > 0, ECS_INVALID_OPERATION, 
+        "pop called more often than push for strbuf list");
 
     b->list_sp --;
     

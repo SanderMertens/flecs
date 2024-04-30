@@ -11,11 +11,11 @@ int main(int argc, char *argv[]) {
     ecs_add_id(ecs, Platoon, EcsExclusive);
 
     // Create two platoons
-    ecs_entity_t platoon_1 = ecs_new_id(ecs);
-    ecs_entity_t platoon_2 = ecs_new_id(ecs);
+    ecs_entity_t platoon_1 = ecs_new(ecs);
+    ecs_entity_t platoon_2 = ecs_new(ecs);
 
     // Create a unit
-    ecs_entity_t unit = ecs_new_id(ecs);
+    ecs_entity_t unit = ecs_new(ecs);
 
     // Add unit to platoon 1
     ecs_add_pair(ecs, unit, Platoon, platoon_1);

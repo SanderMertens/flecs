@@ -32,9 +32,9 @@ The following code is a simple example that uses relationships:
 <li><b class="tab-title">C</b>
 
 ```c
-ecs_entity_t Likes = ecs_new_id(world);
-ecs_entity_t Bob = ecs_new_id(world);
-ecs_entity_t Alice = ecs_new_id(world);
+ecs_entity_t Likes = ecs_new(world);
+ecs_entity_t Bob = ecs_new(world);
+ecs_entity_t Alice = ecs_new(world);
 
 // Bob Likes Alice
 ecs_add_pair(world, Bob, Likes, Alice);
@@ -86,10 +86,10 @@ The same relationship can be added multiple times to an entity, as long as its t
 <li><b class="tab-title">C</b>
 
 ```c
-ecs_entity_t Bob = ecs_new_id(world);
-ecs_entity_t Eats = ecs_new_id(world);
-ecs_entity_t Apples = ecs_new_id(world);
-ecs_entity_t Pears = ecs_new_id(world);
+ecs_entity_t Bob = ecs_new(world);
+ecs_entity_t Eats = ecs_new(world);
+ecs_entity_t Apples = ecs_new(world);
+ecs_entity_t Pears = ecs_new(world);
 
 ecs_add_pair(world, Bob, Eats, Apples);
 ecs_add_pair(world, Bob, Eats, Pears);
@@ -142,14 +142,14 @@ An application can query for relationships with the `(Relationship, Target)` not
 
 ```c
 // Find all entities that eat apples
-ecs_query_t *q = ecs_query_new(world, "(Eats, Apples)");
+ecs_query_t *q = ecs_query(world, { .expr = "(Eats, Apples)" });
 
 // Find all entities that eat anything
-ecs_query_t *q = ecs_query_new(world, "(Eats, *)");
+ecs_query_t *q = ecs_query(world, { .expr = "(Eats, *)" });
 
-// Or with the ecs_query_init function:
-ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
-    .filter.terms = {{ecs_pair(Eats, Apples)}}
+// Or with the ecs_query_cache_init function:
+ecs_query_t *q = ecs_query(world, {
+    .terms = {{ecs_pair(Eats, Apples)}}
 });
 ```
 
@@ -437,25 +437,25 @@ Bob.Each((Id id) =>
 <li><b class="tab-title">C</b>
 
 ```c
-ecs_filter_t *f = ecs_filter(world, {
+ecs_query_t *f = ecs_query(world, {
   .terms[0] = ecs_pair(Eats, Apples)
 });
 
-ecs_iter_t it = ecs_filter_iter(world, f);
-while (ecs_filter_next(&it)) {
+ecs_iter_t it = ecs_query_iter(world, f);
+while (ecs_query_next(&it)) {
   for (int i = 0; i < it.count; i ++) {
     // Iterate as usual
   }
 }
 
-ecs_filter_fini(f);
+ecs_query_fini(f);
 ```
 
 </li>
 <li><b class="tab-title">C++</b>
 
 ```cpp
-world.filter_builder()
+world.query_builder()
   .term(Eats, Apples)
   .build()
   .each([](flecs::entity e) {
@@ -487,30 +487,30 @@ world.FilterBuilder()
 <li><b class="tab-title">C</b>
 
 ```c
-ecs_filter_t *f = ecs_filter(world, {
+ecs_query_t *f = ecs_query(world, {
   .terms[0] = ecs_pair(Eats, EcsWildcard)
 });
 
-ecs_iter_t it = ecs_filter_iter(world, f);
-while (ecs_filter_next(&it)) {
-  ecs_id_t pair_id = ecs_field_id(&it, 1);
+ecs_iter_t it = ecs_query_iter(world, f);
+while (ecs_query_next(&it)) {
+  ecs_id_t pair_id = ecs_field_id(&it, 0);
   ecs_entity_t food = ecs_pair_second(world, pair_id); // Apples, ...
   for (int i = 0; i < it.count; i ++) {
     // Iterate as usual
   }
 }
-ecs_filter_fini(f);
+ecs_query_fini(f);
 ```
 
 </li>
 <li><b class="tab-title">C++</b>
 
 ```cpp
-world.filter_builder()
+world.query_builder()
   .term(Eats, flecs::Wildcard)
   .build()
   .each([](flecs::iter& it, size_t i) {
-    flecs::entity food = it.pair(1).second(); // Apples, ...
+    flecs::entity food = it.pair(0).second(); // Apples, ...
     flecs::entity e = it.entity(i);
     // Iterate as usual
   });
@@ -604,12 +604,12 @@ ECS_COMPONENT(world, Position);
 ECS_COMPONENT(world, Eats);
 
 // Tags
-ecs_entity_t Likes = ecs_new_id(world);
-ecs_entity_t Begin = ecs_new_id(world);
-ecs_entity_t End = ecs_new_id(world);
-ecs_entity_t Apples = ecs_new_id(world);
+ecs_entity_t Likes = ecs_new(world);
+ecs_entity_t Begin = ecs_new(world);
+ecs_entity_t End = ecs_new(world);
+ecs_entity_t Apples = ecs_new(world);
 
-ecs_entity_t e = ecs_new_id(world);
+ecs_entity_t e = ecs_new(world);
 
 // Both Likes and Apples are tags, so (Likes, Apples) is a tag
 ecs_add_pair(world, e, Likes, Apples);
@@ -712,11 +712,11 @@ typedef struct {
   float y;
 } Position;
 
-ecs_entity_t e = ecs_new_id(world);
+ecs_entity_t e = ecs_new(world);
 
-ecs_entity_t first = ecs_new_id(world);
-ecs_entity_t second = ecs_new_id(world);
-ecs_entity_t third = ecs_new_id(world);
+ecs_entity_t first = ecs_new(world);
+ecs_entity_t second = ecs_new(world);
+ecs_entity_t third = ecs_new(world);
 
 // Add component position 3 times, for 3 different objects
 ecs_add_pair(world, e, Position, first, {1, 2});
@@ -775,8 +775,8 @@ When querying for relationship pairs, it is often useful to be able to find all 
 <li><b class="tab-title">C</b>
 
 ```c
-ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
-  .filter.terms = {
+ecs_query_t *q = ecs_query(world, {
+  .terms = {
     {ecs_pair(Likes, EcsWildcard)}
   }
 });
@@ -784,7 +784,7 @@ ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
 ecs_iter_t it = ecs_query_iter(world, q);
 
 while (ecs_query_next(&it)) {
-  ecs_id_t id = ecs_field_id(&it, 1); // Obtain pair id
+  ecs_id_t id = ecs_field_id(&it, 0); // Obtain pair id
 
   // Get relationship & target
   ecs_entity_t rel = ecs_pair_first(world, id);
@@ -808,7 +808,7 @@ auto q = world.query_builder()
   .build();
 
 q.iter([](flecs::iter& it) {
-  auto id = it.pair(1);
+  auto id = it.pair(0);
 
   for (auto i : it) {
     cout << "entity " << it.entity(i) << " has relationship "
@@ -846,8 +846,8 @@ Wildcards may appear in query expressions, using the `*` character:
 <li><b class="tab-title">C</b>
 
 ```c
-ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
-  .filter.expr = "(Likes, *)"
+ecs_query_t *q = ecs_query(world, {
+  .query.expr = "(Likes, *)"
 });
 ```
 
@@ -886,11 +886,11 @@ An application can use pair wildcard expressions to find all instances of a rela
 
 ```c
 // Bob eats apples and pears
-ecs_entity_t Eats = ecs_new_entity(world, "Eats");
-ecs_entity_t Apples = ecs_new_entity(world, "Apples");
-ecs_entity_t Pears = ecs_new_entity(world, "Pears");
+ecs_entity_t Eats = ecs_entity(world, { .name = "Eats" });
+ecs_entity_t Apples = ecs_entity(world, { .name = "Apples" });
+ecs_entity_t Pears = ecs_entity(world, { .name = "Pears" });
 
-ecs_entity_t Bob = ecs_new_id(world);
+ecs_entity_t Bob = ecs_new(world);
 ecs_add_pair(world, Bob, Eats, Apples);
 ecs_add_pair(world, Bob, Eats, Pears);
 
@@ -966,8 +966,8 @@ The `IsA` relationship is a builtin relationship that allows applications to exp
 <li><b class="tab-title">C</b>
 
 ```c
-ecs_entity_t Apple = ecs_new_id(world);
-ecs_entity_t Fruit = ecs_new_id(world);
+ecs_entity_t Apple = ecs_new(world);
+ecs_entity_t Fruit = ecs_new(world);
 ecs_add_pair(world, Apple, EcsIsA, Fruit);
 ```
 
@@ -1023,7 +1023,7 @@ We can also add `IsA` relationships to `Apple`:
 <li><b class="tab-title">C</b>
 
 ```c
-ecs_entity_t GrannySmith = ecs_new_id(world);
+ecs_entity_t GrannySmith = ecs_new(world);
 ecs_add_pair(world, GrannySmith, EcsIsA, Apple);
 ```
 
@@ -1057,11 +1057,11 @@ An entity with an `IsA` relationship to another entity is equivalent to the othe
 <li><b class="tab-title">C</b>
 
 ```c
-ecs_entity_t Spaceship = ecs_new_id(world);
+ecs_entity_t Spaceship = ecs_new(world);
 ecs_set(world, Spaceship, MaxSpeed, {100});
 ecs_set(world, SpaceShip, Defense, {50});
 
-ecs_entity_t Frigate = ecs_new_id(world);
+ecs_entity_t Frigate = ecs_new(world);
 ecs_add(world, Frigate, EcsIsA, Spaceship);
 ecs_set(world, Frigate, Defense, {100});
 ```
@@ -1170,7 +1170,7 @@ The ability to share components is also applied transitively, so `Frigate` could
 <li><b class="tab-title">C</b>
 
 ```c
-ecs_entity_t FastFrigate = ecs_new_id(world);
+ecs_entity_t FastFrigate = ecs_new(world);
 ecs_add(world, FastFrigate, EcsIsA, Frigate);
 ecs_set(world, FastFrigate, MaxSpeed, {200});
 
@@ -1231,8 +1231,8 @@ The `ChildOf` relationship is the builtin relationship that allows for the creat
 <li><b class="tab-title">C</b>
 
 ```c
-ecs_entity_t Spaceship = ecs_new_id(world);
-ecs_entity_t Cockpit = ecs_new_id(world);
+ecs_entity_t Spaceship = ecs_new(world);
+ecs_entity_t Cockpit = ecs_new(world);
 
 ecs_add_pair(world, Cockpit, EcsChildOf, Spaceship);
 ```
@@ -1346,13 +1346,13 @@ In some scenarios a number of entities all need to be created with the same pare
 <li><b class="tab-title">C</b>
 
 ```c
-ecs_entity_t parent = ecs_new_id(world);
+ecs_entity_t parent = ecs_new(world);
 ecs_entity_t prev = ecs_set_scope(world, parent);
 
 // Note that we're not using the ecs_new_id function for the children. This
 // function only generates a new id, and does not add the scope to the entity.
-ecs_entity_t child_a = ecs_new(world, 0);
-ecs_entity_t child_b = ecs_new(world, 0);
+ecs_entity_t child_a = ecs_new(world);
+ecs_entity_t child_b = ecs_new(world);
 
 // Restore the previous scope
 ecs_set_scope(world, prev);
@@ -1663,7 +1663,7 @@ world.Component<Archer>().Entity.Destruct();
 ECS_TAG(world, ChildOf);
 ecs_add_pair(world, ChildOf, EcsOnDeleteTarget, EcsDelete);
 
-ecs_entity_t p = ecs_new_id(world);
+ecs_entity_t p = ecs_new(world);
 ecs_entity_t e = ecs_new_w_pair(world, ChildOf, p);
 
 // This will delete both p and e
@@ -1760,10 +1760,10 @@ To understand why some ways to organize entities work better than others, having
 1. **Find all root entities**
 World teardown starts by finding all root entities, which are entities that do not have the builtin `ChildOf` relationship. Note that empty entities (entities without any components) are not found during this step.
 
-2. **Filter out modules, components, observers and systems**
+2. **Query out modules, components, observers and systems**
 This ensures that components are not cleaned up before the entities that use them, and triggers, observers and systems are not cleaned up while there are still conditions under which they could be invoked.
 
-3. **Filter out entities that have no children**
+3. **Query out entities that have no children**
 If entities have no children they cannot cause complex cleanup logic. This also decreases the likelihood of initiating cleanup actions that could impact other entities.
 
 4. **Delete root entities**
@@ -1947,9 +1947,8 @@ Entity e = ecs.Entity()
 </ul>
 </div>
 
-
-### Tag property
-A relationship can be marked as a tag in which case it will never contain data. By default the data associated with a pair is determined by whether either the relationship or target are components. For some relationships however, even if the target is a component, no data should be added to the relationship. Consider the following example:
+### PairIsTag property
+A relationship can be marked with PairIsTag in which case a pair with the relationship will never contain data. By default the data associated with a pair is determined by whether either the relationship or target are components. For some relationships however, even if the target is a component, no data should be added to the relationship. Consider the following example:
 
 <div class="flecs-snippet-tabs">
 <ul>
@@ -1964,7 +1963,7 @@ typedef struct {
 ECS_TAG(world, Serializable);
 ECS_COMPONENT(world, Position);
 
-ecs_entity_t e = ecs_new_id(world);
+ecs_entity_t e = ecs_new(world);
 ecs_set(world, e, Position, {10, 20});
 ecs_add_pair(world, e, Serializable, ecs_id(Position));
 
@@ -1972,7 +1971,7 @@ ecs_add_pair(world, e, Serializable, ecs_id(Position));
 const Position *p = ecs_get(world, e, Position);
 
 // Gets (unintended) value from (Serializable, Position) pair
-const Position *p = ecs_get_pair_object(world, e, Serializable, Position);
+const Position *p = ecs_get_pair_second(world, e, Serializable, Position);
 ```
 
 </li>
@@ -2029,7 +2028,7 @@ To prevent data from being associated with pairs that can apply to components, t
 
 ```c
 // Ensure that Serializable never contains data
-ecs_add_id(world, Serializable, EcsTag);
+ecs_add_id(world, Serializable, EcsPairIsTag);
 
 // Because Serializable is marked as a Tag, no data is added for the pair
 // even though Position is a component
@@ -2039,7 +2038,7 @@ ecs_add_pair(world, e, Serializable, ecs_id(Position));
 const Position *p = ecs_get(world, e, Position);
 
 // This no longer works, the pair has no data
-const Position *p = ecs_get_pair_object(world, e, Serializable, Position);
+const Position *p = ecs_get_pair_second(world, e, Serializable, Position);
 ```
 
 </li>
@@ -2048,7 +2047,7 @@ const Position *p = ecs_get_pair_object(world, e, Serializable, Position);
 ```cpp
 // Ensure that Serializable never contains data
 ecs.component<Serializable>()
-  .add<flecs::Tag>();
+  .add<flecs::PairIsTag>();
 
 auto e = ecs.entity()
   .set<Position>({10, 20})
@@ -2098,10 +2097,10 @@ Entities can be annotated with the `Final` property, which prevents using them w
 <li><b class="tab-title">C</b>
 
 ```c
-ecs_entity_t e = ecs_new_id(world);
+ecs_entity_t e = ecs_new(world);
 ecs_add_id(world, e, EcsFinal);
 
-ecs_entity_t i = ecs_new_id(world);
+ecs_entity_t i = ecs_new(world);
 ecs_add_pair(world, e, i, EcsIsA, e); // not allowed
 ```
 
@@ -2141,11 +2140,11 @@ The `DontInherit` property prevents inheriting a component from a base entity (`
 <li><b class="tab-title">C</b>
 
 ```c
-ecs_entity_t TagA = ecs_new_id(world);
-ecs_entity_t TagB = ecs_new_id(world);
+ecs_entity_t TagA = ecs_new(world);
+ecs_entity_t TagB = ecs_new(world);
 ecs_add_id(world, TagB, EcsDontInherit);
 
-ecs_entity_t base = ecs_new_id(world);
+ecs_entity_t base = ecs_new(world);
 ecs_add_id(world, base, TagA);
 ecs_add_id(world, base, TagB);
 
@@ -2209,7 +2208,7 @@ ECS_COMPONENT(world, Velocity);
 
 ecs_add_id(world, ecs_id(Position), EcsAlwaysOverride);
 
-ecs_entity_t base = ecs_new_id(world);
+ecs_entity_t base = ecs_new(world);
 ecs_set(world, base, Position, {10, 20});
 ecs_set(world, base, Velocity, {1, 2});
 
@@ -2286,10 +2285,10 @@ When relationships in Flecs are marked as transitive, queries can follow the tra
 <li><b class="tab-title">C</b>
 
 ```c
-ecs_entity_t LocatedIn = ecs_new_id(world);
-ecs_entity_t Manhattan = ecs_new_id(world);
-ecs_entity_t NewYork = ecs_new_id(world);
-ecs_entity_t USA = ecs_new_id(world);
+ecs_entity_t LocatedIn = ecs_new(world);
+ecs_entity_t Manhattan = ecs_new(world);
+ecs_entity_t NewYork = ecs_new(world);
+ecs_entity_t USA = ecs_new(world);
 
 ecs_add_pair(world, Manhattan, LocatedIn, NewYork);
 ecs_add_pair(world, NewYork, LocatedIn, USA);
@@ -2438,7 +2437,7 @@ To create a custom exclusive relationship, add the `Exclusive` property:
 <li><b class="tab-title">C</b>
 
 ```c
-ecs_entity_t MarriedTo = ecs_new_id(world);
+ecs_entity_t MarriedTo = ecs_new(world);
 ecs_add_id(world, MarriedTo, EcsExclusive);
 ```
 
@@ -2472,13 +2471,13 @@ The API for using the `Union` property is similar to regular relationships, as t
 <li><b class="tab-title">C</b>
 
 ```c
-ecs_entity_t Movement = ecs_new_id(world);
+ecs_entity_t Movement = ecs_new(world);
 ecs_add_id(world, Movement, EcsUnion);
 
-ecs_entity_t Walking = ecs_new_id(world);
-ecs_entity_t Running = ecs_new_id(world);
+ecs_entity_t Walking = ecs_new(world);
+ecs_entity_t Running = ecs_new(world);
 
-ecs_entity_t e = ecs_new_id(world);
+ecs_entity_t e = ecs_new(world);
 ecs_add_pair(world, e, Movement, Running);
 ecs_add_pair(world, e, Movement, Walking); // replaces (Movement, Running)
 ```
@@ -2514,7 +2513,7 @@ e.Add(Movement, Walking); // replaces (Movement, Running)
 When compared to regular relationships, union relationships have some differences and limitations:
 - Relationship cleanup does not work yet for union relationships
 - Removing a union relationship removes any target, even if the specified target is different
-- Filters and rules do not support union relationships
+- Querys and rules do not support union relationships
 - Union relationships cannot have data
 - Union relationship query terms can use only the `And` operator
 - Queries with a `(R, *)` term will return `(R, *)` as term id for each entity
@@ -2530,8 +2529,8 @@ The symmetric property is useful for relationships that do not make sense unless
 
 ```c
 ecs_entity_t MarriedTo = ecs_new_w_id(world, EcsSymmetric);
-ecs_entity_t Bob = ecs_new_id(world);
-ecs_entity_t Alice = ecs_new_id(world);
+ecs_entity_t Bob = ecs_new(world);
+ecs_entity_t Alice = ecs_new(world);
 ecs_add_pair(world, Bob, MarriedTo, Alice); // Also adds (MarriedTo, Bob) to Alice
 ```
 
@@ -2567,7 +2566,7 @@ The `With` relationship can be added to components to indicate that it must alwa
 <li><b class="tab-title">C</b>
 
 ```c
-ecs_entity_t Responsibility = ecs_new_id(world);
+ecs_entity_t Responsibility = ecs_new(world);
 ecs_entity_t Power = ecs_new_w_pair(world, EcsWith, Responsibility);
 
 // Create new entity that has both Power and Responsibility
@@ -2607,9 +2606,9 @@ When the `With` relationship is added to a relationship, the additional id added
 <li><b class="tab-title">C</b>
 
 ```c
-ecs_entity_t Likes = ecs_new_id(world);
+ecs_entity_t Likes = ecs_new(world);
 ecs_entity_t Loves = ecs_new_w_pair(world, EcsWith, Likes);
-ecs_entity_t Pears = ecs_new_id(world);
+ecs_entity_t Pears = ecs_new(world);
 
 // Create new entity with both (Loves, Pears) and (Likes, Pears)
 ecs_entity_t e = ecs_new_w_pair(world, Loves, Pears);
@@ -2653,13 +2652,13 @@ The following example shows how to constrain the relationship target to a child 
 <li><b class="tab-title">C</b>
 
 ```c
-ecs_entity_t Food = ecs_new_id(world);
+ecs_entity_t Food = ecs_new(world);
 
 // Enforce that target of relationship is child of Food
 ecs_add_id(world, Food, EcsOneOf);
 
 ecs_entity_t Apples = ecs_new_w_pair(world, EcsChildOf, Food);
-ecs_entity_t Fork = ecs_new_id(world);
+ecs_entity_t Fork = ecs_new(world);
 
 // This is ok, Apples is a child of Food
 ecs_entity_t a = ecs_new_w_pair(world, Food, Apples);
@@ -2711,14 +2710,14 @@ The following example shows how `OneOf` can be used to enforce that the relation
 <li><b class="tab-title">C</b>
 
 ```c
-ecs_entity_t Food = ecs_new_id(world);
-ecs_entity_t Eats = ecs_new_id(world);
+ecs_entity_t Food = ecs_new(world);
+ecs_entity_t Eats = ecs_new(world);
 
 // Enforce that target of relationship is child of Food
 ecs_add_pair(world, Eats, EcsOneOf, Food);
 
 ecs_entity_t Apples = ecs_new_w_pair(world, EcsChildOf, Food);
-ecs_entity_t Fork = ecs_new_id(world);
+ecs_entity_t Fork = ecs_new(world);
 
 // This is ok, Apples is a child of Food
 ecs_entity_t a = ecs_new_w_pair(world, Eats, Apples);
@@ -2786,11 +2785,11 @@ Because of this, adding/removing relationships to entities has the same performa
 ECS_COMPONENT(world, Position);
 
 // Tags
-ecs_entity_t Likes = ecs_new_id(world);
-ecs_entity_t Apples = ecs_new_id(world);
-ecs_entity_t Npc = ecs_new_id(world);
+ecs_entity_t Likes = ecs_new(world);
+ecs_entity_t Apples = ecs_new(world);
+ecs_entity_t Npc = ecs_new(world);
 
-ecs_entity_t e = ecs_new_id(world);
+ecs_entity_t e = ecs_new(world);
 
 // The ecs_add_id function can be used to add one id to another
 ecs_add_id(world, e, Npc);

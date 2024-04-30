@@ -26,8 +26,8 @@ double distance_sqr(const Position *p1, const Position *p2) {
 
 void Collide(ecs_iter_t *it) {
     ecs_query_t *q_collide = it->ctx; // Get query from system context
-    const Position *p1 = ecs_field(it, Position, 1);
-    const Radius *r1 = ecs_field(it, Radius, 2);
+    const Position *p1 = ecs_field(it, Position, 0);
+    const Radius *r1 = ecs_field(it, Radius, 1);
 
     for (int i = 0; i < it->count; i ++) {
         ecs_entity_t e1 = it->entities[i];
@@ -35,8 +35,8 @@ void Collide(ecs_iter_t *it) {
         // For each matching entity, iterate the query
         ecs_iter_t qit = ecs_query_iter(it->world, q_collide);
         while (ecs_query_next(&qit)) {
-            const Position *p2 = ecs_field(&qit, Position, 1);
-            const Radius *r2 = ecs_field(&qit, Radius, 2);
+            const Position *p2 = ecs_field(&qit, Position, 0);
+            const Radius *r2 = ecs_field(&qit, Radius, 1);
             for (int j = 0; j < qit.count; j ++) {
                 ecs_entity_t e2 = qit.entities[j];
                 if (e1 == e2) {
@@ -70,7 +70,7 @@ int main(int argc, char *argv[]) {
     // Create a query for Position that we can use inside the collide system to
     // check each entity with each other entity.
     ecs_query_t  *q_position = ecs_query(ecs, {
-        .filter.terms = {
+        .terms = {
             { ecs_id(Position), .inout = EcsIn },
             { ecs_id(Radius), .inout = EcsIn }
         }
@@ -78,7 +78,7 @@ int main(int argc, char *argv[]) {
 
     // Create collide system that passes query as context
     ecs_entity_t collide = ecs_system(ecs, {
-        .query.filter.terms = {
+        .query.terms = {
             { .id = ecs_id(Position), .inout = EcsIn },
             { ecs_id(Radius), .inout = EcsIn }
         },
@@ -88,7 +88,7 @@ int main(int argc, char *argv[]) {
 
     // Create a few test entities
     for (int i = 0; i < 10; i ++) {
-        ecs_entity_t e = ecs_new_id(ecs);
+        ecs_entity_t e = ecs_new(ecs);
         ecs_set(ecs, e, Position, { .x = rand() % 100, .y = rand() % 100 });
         ecs_set(ecs, e, Radius, { rand() % 10 + 1 });
     }

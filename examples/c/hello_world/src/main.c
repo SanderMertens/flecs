@@ -10,8 +10,8 @@ typedef struct {
  * as entities are grouped in tables by which components they have, and each 
  * table has its own set of component arrays. */
 void Move(ecs_iter_t *it) {
-    Position *p = ecs_field(it, Position, 1);
-    Velocity *v = ecs_field(it, Velocity, 2);
+    Position *p = ecs_field(it, Position, 0);
+    Velocity *v = ecs_field(it, Velocity, 1);
 
     /* Print the set of components for the iterated over entities */
     char *type_str = ecs_table_str(it->world, it->table);
@@ -42,7 +42,7 @@ int main(int argc, char *argv[]) {
     ECS_TAG(world, Pears);
 
     /* Create an entity with name Bob, add Position and food preference */
-    ecs_entity_t Bob = ecs_new_entity(world, "Bob");
+    ecs_entity_t Bob = ecs_entity(world, { .name = "Bob" });
     ecs_set(world, Bob, Position, {0, 0});
     ecs_set(world, Bob, Velocity, {1, 2});
     ecs_add_pair(world, Bob, Eats, Apples);

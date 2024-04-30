@@ -9,8 +9,8 @@ ECS_COMPONENT_DECLARE(Position);
 ECS_COMPONENT_DECLARE(Velocity);
 
 void Move(ecs_iter_t *it) {
-    Position *p = ecs_field(it, Position, 1);
-    const Velocity *v = ecs_field(it, Velocity, 2);
+    Position *p = ecs_field(it, Position, 0);
+    const Velocity *v = ecs_field(it, Velocity, 1);
 
     for (int i = 0; i < it->count; i ++) {
         p[i].x += v[i].x;
@@ -52,8 +52,8 @@ int main(int argc, char *argv[]) {
         ECS_IMPORT(world_a, MoveModule); // put in a scope so variable doens't overlap
     }
 
-    ecs_entity_t ent_1 = ecs_new_entity(world_a, "ent_1");
-    ecs_entity_t ent_2 = ecs_new_entity(world_a, "ent_2");
+    ecs_entity_t ent_1 = ecs_entity(world_a, { .name = "ent_1" });
+    ecs_entity_t ent_2 = ecs_entity(world_a, { .name = "ent_2" });
     ecs_set(world_a, ent_1, Position, {10, 20});
     ecs_set(world_a, ent_2, Position, {30, 40});
     ecs_set(world_a, ent_1, Velocity, {1, -1});

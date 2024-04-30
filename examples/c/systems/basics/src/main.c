@@ -6,8 +6,8 @@ typedef struct {
 } Position, Velocity;
 
 void Move(ecs_iter_t *it) {
-    Position *p = ecs_field(it, Position, 1);
-    const Velocity *v = ecs_field(it, Velocity, 2);
+    Position *p = ecs_field(it, Position, 0);
+    const Velocity *v = ecs_field(it, Velocity, 1);
 
     for (int i = 0; i < it->count; i ++) {
         p[i].x += v[i].x;
@@ -32,7 +32,7 @@ int main(int argc, char *argv[]) {
         .entity = ecs_entity(ecs, {
             .name = "Move" 
         }),
-        .query.filter.terms = {
+        .query.terms = {
             { .id = ecs_id(Position) },
             { .id = ecs_id(Velocity), .inout = EcsIn }
         },
@@ -43,16 +43,16 @@ int main(int argc, char *argv[]) {
     // ECS_SYSTEM(ecs, Move, 0, Position, [in] Velocity);
 
     // Create a few test entities for a Position, Velocity query
-    ecs_entity_t e1 = ecs_new_entity(ecs, "e1");
+    ecs_entity_t e1 = ecs_entity(ecs, { .name = "e1" });
     ecs_set(ecs, e1, Position, {10, 20});
     ecs_set(ecs, e1, Velocity, {1, 2});
 
-    ecs_entity_t e2 = ecs_new_entity(ecs, "e2");
+    ecs_entity_t e2 = ecs_entity(ecs, { .name = "e2" });
     ecs_set(ecs, e2, Position, {10, 20});
     ecs_set(ecs, e2, Velocity, {3, 4});
 
     // This entity will not match as it does not have Position, Velocity
-    ecs_entity_t e3 = ecs_new_entity(ecs, "e3");
+    ecs_entity_t e3 = ecs_entity(ecs, { .name = "e3" });
     ecs_set(ecs, e3, Position, {10, 20});
 
     // Run the system

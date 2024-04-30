@@ -60,8 +60,8 @@ typedef struct Velocity {
 // System names ('Move') use PascalCase. API types use snake_case_t
 void Move(ecs_iter_t *it) {
     // Functions use snake_case
-    Position *p = ecs_field(it, Position, 1);
-    Velocity *v = ecs_field(it, Velocity, 2);
+    Position *p = ecs_field(it, Position, 0);
+    Velocity *v = ecs_field(it, Velocity, 1);
 
     for (int i = 0; i < it->count; i++) {
         p[i].x += v[i].x;
@@ -83,7 +83,7 @@ int main(int argc, char *argv[]) {
     ECS_SYSTEM(world, Move, EcsOnUpdate, Position, Velocity);
 
     // Function wrapper macros use snake_case
-    ecs_entity_t e = ecs_new(world, 0);
+    ecs_entity_t e = ecs_new(world);
 
     // Builtin entities use PascalCase
     ecs_add(world, EcsWorld, Position);
@@ -206,7 +206,7 @@ ecs_entity_t e = ecs_lookup(world, "MyEntity");
 When an entity is part of a hierarchy, names can be used to form a path:
 
 ```c
-ecs_entity_t parent = ecs_new_id(world);
+ecs_entity_t parent = ecs_new(world);
 ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, parent);
 ecs_entity_t grandchild = ecs_new_w_pair(world, EcsChildOf, child);
 
@@ -250,7 +250,7 @@ typedef struct Position {
 
 ECS_COMPONENT(world, Position);
 
-ecs_entity_t e = ecs_new(world, Position);
+ecs_entity_t e = ecs_new_w(world, Position);
 ```
 
 From a readability perspective this code looks fine as we can easily tell what is happening here. Though if we take a closer look, we can see that a typename is used where we expect an expression, and that is not possible in plain C. So what is going on?
@@ -314,7 +314,7 @@ typedef uint64_t ecs_entity_t;
 Zero indicates an invalid entity. Applications can create new entities with the `ecs_new` operation:
 
 ```c
-ecs_entity_t e = ecs_new(world, 0);
+ecs_entity_t e = ecs_new(world);
 ```
 
 This operation guarantees to return an unused entity identifier. The first entity returned is not 1, as Flecs creates a number of builtin entities during the initialization of the world. The identifier of the first returned entity is stored in the `EcsFirstUserEntityId` constant.
@@ -330,10 +330,10 @@ When using multiple threads, the `ecs_new` operation guarantees that the returne
 When an entity is deleted, the generation count for that entity id is increased. The entity generation count enables an application to test whether an entity is still alive or whether it has been deleted, even after the id has been recycled. Consider:
 
 ```c
-ecs_entity_t e = ecs_new(world, 0);
+ecs_entity_t e = ecs_new(world);
 ecs_delete(world, e); // Increases generation
 
-e = ecs_new(world, 0); // Recycles id, but with new generation
+e = ecs_new(world); // Recycles id, but with new generation
 ```
 
 The generation is encoded in the entity id, which means that even though the base id is the same in the above example, the value returned by the second `ecs_new` is different than the first.
@@ -341,10 +341,10 @@ The generation is encoded in the entity id, which means that even though the bas
 To test whether an entity is alive, an application can use the `ecs_is_alive` call:
 
 ```c
-ecs_entity_t e1 = ecs_new(world, 0);
+ecs_entity_t e1 = ecs_new(world);
 ecs_delete(world, e1);
 
-ecs_entity_t e2 = ecs_new(world, 0);
+ecs_entity_t e2 = ecs_new(world);
 ecs_is_alive(world, e1); // false
 ecs_is_alive(world, e2); // true
 ```
@@ -400,7 +400,7 @@ A type is typically used to describe the contents (components) of an entity. A s
 
 ```c
 // Create entity with type Position
-ecs_entity_t e = ecs_new(world, Position);
+ecs_entity_t e = ecs_new_w(world, Position);
 
 // Add Velocity to the entity
 ecs_add(world, e, Velocity);
@@ -430,10 +430,10 @@ typedef vector<ecs_entity_t> ecs_type_t;
 As a result, an application is able to do this:
 
 ```c
-ecs_entity_t tag_1 = ecs_new(world, 0);
-ecs_entity_t tag_2 = ecs_new(world, 0);
+ecs_entity_t tag_1 = ecs_new(world);
+ecs_entity_t tag_2 = ecs_new(world);
 
-ecs_entity_t e = ecs_new(world, 0);
+ecs_entity_t e = ecs_new(world);
 ecs_add_id(world, e, tag_1);
 ecs_add_id(world, e, tag_2);
 ```
@@ -473,7 +473,7 @@ int main() {
     ECS_COMPONENT(world, Position);
 
     // Create a new entity with the component
-    ecs_entity_t e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new_w(world, Position);
 
     // Remove the component from the entity
     ecs_remove(world, e, Position);
@@ -517,7 +517,7 @@ ECS_COMPONENT_DECLARE(Position);
 
 // Function that uses the global component variable
 ecs_entity_t create_entity(ecs_world_t *world) {
-    return ecs_new(world, Position);
+    return ecs_new_w(world, Position);
 }
 
 int main(int argc, char *argv[]) {
@@ -554,7 +554,7 @@ typedef struct Position {
 
 void new_w_position(ecs_world_t *t, ecs_id_t ecs_id(Position)) {
     // ecs_new uses an ecs_id_t
-    ecs_new(world, Position);
+    ecs_new_w(world, Position);
 }
 
 int main() {
@@ -606,7 +606,7 @@ int main() {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new_w(world, Position);
 
     /* Component is enabled by default */
 
@@ -614,7 +614,7 @@ int main() {
     ecs_enable_component(world, e, Position, false);
 
     /* Will return false */
-    printf("%d\n", ecs_is_enabled_component(world, e, Position));
+    printf("%d\n", ecs_is_enabled(world, e, Position));
 
     /* Re-enable the component */
     ecs_enable_component(world, e, Position, true);
@@ -660,7 +660,7 @@ Just like components, the API needs a handle to a tag before it can use it, and 
 ```c
 void new_w_tag(ecs_world_t *t, ecs_type_t ecs_type(Tag)) {
     // ecs_new uses an ecs_type_t
-    ecs_new(world, Tag);
+    ecs_new_w(world, Tag);
 }
 
 int main() {
@@ -686,7 +686,7 @@ int main() {
 
     ECS_TAG(world, Tag);
 
-    ecs_entity_t e = ecs_new(world, 0);
+    ecs_entity_t e = ecs_new(world);
     add_tag(world, e, Tag);
 
     ecs_fini(world);
@@ -710,7 +710,7 @@ The implementation of the observer looks similar to a system:
 
 ```c
 void AddPosition(ecs_iter_t *it) {
-    Position *p = ecs_field(it, Position, 1);
+    Position *p = ecs_field(it, Position, 0);
 
     for (int i = 0; i < it->count; i++) {
         p[i].x = 10;
@@ -784,7 +784,7 @@ ecs_world_t *world = ecs_init();
 ECS_IMPORT(world, Vehicles);
 
 /* The module contents can now be used */
-ecs_entity_t e = ecs_new(world, Car);
+ecs_entity_t e = ecs_new_w(world, Car);
 ```
 
 Module contents are namespaced, which means that the identifiers of the content of the module (components, tags, systems) are stored in the scope of the module. For the above example module, everything would be stored in the `vehicles` scope. To resolve the `Car` component by name, an application would have to do:
@@ -829,7 +829,7 @@ world.import<vehicles>();
 Entities in Flecs can be organized in hierarchies, which is useful when for example constructing a scene graph. To create hierarchies, applications can add `ChildOf` relationships to entities. This creates a relationship between a parent entity and a child entity that the application can later traverse. This is an example of a simple hierarchy:
 
 ```c
-ecs_entity_t parent = ecs_new(world, 0);
+ecs_entity_t parent = ecs_new(world);
 ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, parent);
 ```
 
@@ -876,14 +876,14 @@ Queries and systems can request data from parents of the entity being iterated o
 
 ```c
 // Iterate all entities with Position that have a parent that also has Position
-ecs_query_t *q = ecs_query_new(world, "Position(parent), Position");
+ecs_query_t *q = ecs_query(world, { .expr = "Position(parent), Position" });
 ```
 
 Additionally, a query can iterate the hierarchy in breadth-first order by providing the `cascade` modifier:
 
 ```c
 // Iterate all entities with Position that have a parent that also has Position
-ecs_query_t *q = ecs_query_new(world, "Position(parent|cascade), Position");
+ecs_query_t *q = ecs_query(world, { .expr = "Position(cascade), Position" });
 ```
 
 This does two things. First, it will iterate over all entities that have Position and that _optionally_ have a parent that has `Position`. By making the parent component optional, it is ensured that if an application is iterating a tree of entities, the root is also included. Secondly, the query iterates over the children in breadth-first order. This is particularly useful when writing transform systems, as they require parent entities to be transformed before child entities.
@@ -891,7 +891,7 @@ This does two things. First, it will iterate over all entities that have Positio
 The above query does not match root entities, as they do not have a parent with `Position`. To also match root entities, add `?` to make the term optional:
 
 ```c
-ecs_query_t *q = ecs_query_new(world, "?Position(parent|cascade), Position");
+ecs_query_t *q = ecs_query(world, { .expr = "?Position(cascade), Position" });
 ```
 
 See the [query manual](Queries.md) section for more details.
@@ -937,13 +937,13 @@ Note that the path separator is provided twice, once for the prefix and once for
 Applications can set a default scope with the `ecs_set_scope` function, so that all operations are evaluated relative to a scope. The scope is set on a stage, which makes it thread safe when executed from within a flecs worker thread. This example shows how to set the scope:
 
 ```c
-ecs_entity_t parent = ecs_new(world, 0);
+ecs_entity_t parent = ecs_new(world);
 
 // Set the current scope to the parent
 ecs_entity_t prev_scope = ecs_set_scope(world, parent);
 
 // This entity is created as child of parent
-ecs_entity_t child = ecs_new(world, 0);
+ecs_entity_t child = ecs_new(world);
 
 // Look for "child" relative to parent
 ecs_entity_t e = ecs_lookup(world, "child");
@@ -990,7 +990,7 @@ Inheritance is the ability to share components between entities by _inheriting_ 
 
 ```c
 // Create a base entity
-ecs_entity_t base = ecs_new(world, 0);
+ecs_entity_t base = ecs_new(world);
 ecs_set(world, base, Position, {10, 20});
 
 // Derive from base
@@ -1017,7 +1017,7 @@ ECS_ENTITY(world, e, (IsA, base));
 `IsA` relationships can be nested:
 
 ```c
-ecs_entity_t base = ecs_new(world, 0);
+ecs_entity_t base = ecs_new(world);
 ecs_set(world, base, Position, {10, 20});
 
 ecs_entity_t derived = ecs_new_w_pair(world, EcsIsA, base);
@@ -1035,7 +1035,7 @@ Derived entities can override components from their base by adding the component
 
 ```c
 // Shortcut for creating a base entity and setting Position
-ecs_entity_t base = ecs_set(world, 0, Position, {10, 20});
+ecs_entity_t base = ecs_insert(world, ecs_value(Position, {10, 20}));
 
 // Derive from the base
 ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, base);
@@ -1067,7 +1067,7 @@ Overrides work with nested `IsA` relationships:
 
 ```c
 // Shortcut for creating a base entity and setting Position
-ecs_entity_t base = ecs_new(world, 0);
+ecs_entity_t base = ecs_new(world);
 ecs_set(world, base, Position, {10, 20});
 ecs_set(world, base, Velocity, {1, 1});
 
@@ -1086,7 +1086,7 @@ In some scenarios it is desirable that an entity is initialized with a specific 
 
 ```c
 // Create a base. Simply deriving the base will share the component, but not override it.
-ecs_entity_t Base = ecs_set(world, 0, Position, {10, 20});
+ecs_entity_t Base = ecs_insert(world, ecs_value(Position, {10, 20}));
 
 // Mark as OVERRIDE. This ensures that when base is derived from, Position is overridden
 ecs_add_id(world, world, Base, ECS_OVERRIDE | ecs_id(Position));
@@ -1110,7 +1110,7 @@ ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, Base);
 If a base entity has children, derived entities of that base entity will, when the `IsA` relationship is added, acquire the same set of children. Take this example:
 
 ```c
-ecs_entity_t parent = ecs_new(world, 0);
+ecs_entity_t parent = ecs_new(world);
 ecs_entity_t child_1 = ecs_new_w_pair(world, EcsChildOf, parent);
 ecs_entity_t child_2 = ecs_new_w_pair(world, EcsChildOf, parent);
 
@@ -1121,7 +1121,7 @@ ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, parent);
 The children that are copied to the entity will have exactly the same set of components as the children of the base. For example, if the base child has components `Position, Velocity`, the derived child will also have `Position, Velocity`. Furthermore, the values of the base child components will be copied to the entity child:
 
 ```c
-ecs_entity_t parent = ecs_new(world, 0);
+ecs_entity_t parent = ecs_new(world);
 ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, parent);
 ecs_set_name(world, child, "Child"); // Give child a name, so we can look it up
 ecs_set(world, child, Position, {10, 20});
@@ -1139,10 +1139,10 @@ ecs_get(world, child, Position) != ecs_get(world, e_child, Position); // 1
 Since the children of the derived entity have the exact same components as the base children, their components are not shared. Component sharing between children is possible however, as `IsA` relationships are also copied over to the child of the derived entity:
 
 ```c
-ecs_entity_t parent = ecs_new(world, 0);
+ecs_entity_t parent = ecs_new(world);
 
 // Create child base from which we will share components
-ecs_entity_t child_base = ecs_new(world, 0);
+ecs_entity_t child_base = ecs_new(world);
 ecs_set(world, child_base, Position, {10, 20});
 ecs_set_name(world, child, "Child");
 
@@ -1202,7 +1202,7 @@ Applications can defer entity with the `ecs_defer_begin` and `ecs_defer_end` fun
 
 ```c
 ecs_defer_begin(world);
-    ecs_entity_t e = ecs_new(world, 0);
+    ecs_entity_t e = ecs_new(world);
     ecs_add(world, e, Position);
     ecs_set(world, e, Velocity, {1, 1});
 ecs_defer_end(world);

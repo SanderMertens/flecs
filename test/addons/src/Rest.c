@@ -149,7 +149,7 @@ void Rest_query(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t e = ecs_new_entity(world, "e");
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
     ecs_set(world, e, Position, {10, 20});
 
     ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
@@ -177,13 +177,13 @@ void Rest_named_query(void) {
     ECS_COMPONENT(world, Position);
 
     ecs_query(world, {
-        .filter.entity = ecs_entity(world, { .name = "position_query" }),
-        .filter.terms = {
+        .entity = ecs_entity(world, { .name = "position_query" }),
+        .terms = {
             { .id = ecs_id(Position) }
         }
     });
 
-    ecs_entity_t e = ecs_new_entity(world, "e");
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
     ecs_set(world, e, Position, {10, 20});
 
     ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
@@ -242,8 +242,8 @@ void Rest_request_commands(void) {
         ecs_os_free(reply_str);
     }
 
-    ecs_entity_t e1 = ecs_new_id(world);
-    ecs_entity_t e2 = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_entity_t e2 = ecs_new(world);
 
     ecs_frame_begin(world, 0);
     ecs_defer_begin(world);
@@ -288,8 +288,8 @@ void Rest_request_commands_2_syncs(void) {
         ecs_os_free(reply_str);
     }
 
-    ecs_entity_t e1 = ecs_new_id(world);
-    ecs_entity_t e2 = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_entity_t e2 = ecs_new(world);
 
     ecs_frame_begin(world, 0);
     ecs_defer_begin(world);
@@ -401,8 +401,8 @@ void Rest_request_commands_garbage_collect(void) {
         ecs_os_free(reply_str);
     }
 
-    ecs_entity_t e1 = ecs_new_id(world);
-    ecs_entity_t e2 = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_entity_t e2 = ecs_new(world);
 
     ecs_frame_begin(world, 0);
     ecs_defer_begin(world);
@@ -454,6 +454,31 @@ void Rest_request_commands_garbage_collect(void) {
         test_int(0, ecs_http_server_request(srv, "GET",
             "/commands/frame/3601", &reply));
         test_int(reply.code, 200);
+        char *reply_str = ecs_strbuf_get(&reply.body);
+        test_assert(reply_str != NULL);
+        ecs_os_free(reply_str);
+    }
+
+    ecs_rest_server_fini(srv);
+
+    ecs_fini(world);
+}
+
+void Rest_script_error(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    {
+        ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+        ecs_log_set_level(-4);
+        test_int(-1, ecs_http_server_request(srv, "PUT",
+            "/script/?data=struct%20Position%20%7B%0A%20%20x%20%3A%0A%7D",
+            &reply));
+        test_int(reply.code, 400);
         char *reply_str = ecs_strbuf_get(&reply.body);
         test_assert(reply_str != NULL);
         ecs_os_free(reply_str);

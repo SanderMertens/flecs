@@ -78,6 +78,8 @@ void Pipeline_system_order_same_phase(void) {
     ECS_SYSTEM(world, SysC, EcsOnUpdate, Position);
 
     const ecs_world_info_t *stats = ecs_get_world_info(world);
+    
+    test_int(stats->pipeline_build_count_total, 0);
 
     ecs_progress(world, 1);
 
@@ -267,7 +269,7 @@ void Pipeline_system_order_after_new_system_lower_id(void) {
 
     ECS_ENTITY(world, E, Position);
 
-    ecs_entity_t Sys = ecs_new(world, 0);
+    ecs_entity_t Sys = ecs_new(world);
     ECS_SYSTEM(world, SysB, EcsOnUpdate, Position);
     ECS_SYSTEM(world, SysC, EcsOnUpdate, Position);
 
@@ -275,8 +277,8 @@ void Pipeline_system_order_after_new_system_lower_id(void) {
 
     /* Create new system with Sys id */
     ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, {.id = Sys, .name = "SysA", .add = {ecs_pair(EcsDependsOn, EcsOnUpdate)} }),
-        .query.filter.expr = "Position",
+        .entity = ecs_entity(world, {.id = Sys, .name = "SysA", .add = ecs_ids(ecs_pair(EcsDependsOn, EcsOnUpdate)) }),
+        .query.expr = "Position",
         .callback = SysA
     });
 
@@ -305,15 +307,15 @@ void Pipeline_system_order_after_new_system_inbetween_id(void) {
     ECS_ENTITY(world, E, Position);
 
     ECS_SYSTEM(world, SysA, EcsOnUpdate, Position);
-    ecs_entity_t Sys = ecs_new(world, 0);
+    ecs_entity_t Sys = ecs_new(world);
     ECS_SYSTEM(world, SysC, EcsOnUpdate, Position);
 
     const ecs_world_info_t *stats = ecs_get_world_info(world);
 
     /* Create new system with Sys id */
     ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, {.id = Sys, .name = "SysB", .add = {ecs_pair(EcsDependsOn, EcsOnUpdate)} }),
-        .query.filter.expr = "Position",
+        .entity = ecs_entity(world, {.id = Sys, .name = "SysB", .add = ecs_ids(ecs_pair(EcsDependsOn, EcsOnUpdate)) }),
+        .query.expr = "Position",
         .callback = SysB
     });
 
@@ -343,14 +345,14 @@ void Pipeline_system_order_after_new_system_higher_id(void) {
 
     ECS_SYSTEM(world, SysA, EcsOnUpdate, Position);
     ECS_SYSTEM(world, SysB, EcsOnUpdate, Position);
-    ecs_entity_t Sys = ecs_new(world, 0);
+    ecs_entity_t Sys = ecs_new(world);
 
     const ecs_world_info_t *stats = ecs_get_world_info(world);
 
     /* Create new system with Sys id */
     ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, {.id = Sys, .name = "SysC", .add = {ecs_pair(EcsDependsOn, EcsOnUpdate)} }),
-        .query.filter.expr = "Position",
+        .entity = ecs_entity(world, {.id = Sys, .name = "SysC", .add = ecs_ids(ecs_pair(EcsDependsOn, EcsOnUpdate)) }),
+        .query.expr = "Position",
         .callback = SysC
     });
 
@@ -374,7 +376,7 @@ static int sys_out_invoked;
 static int sys_in_invoked;
 
 static void SysOut(ecs_iter_t *it) {
-    ecs_id_t ecs_id(Velocity) = ecs_field_id(it, 2);
+    ecs_id_t ecs_id(Velocity) = ecs_field_id(it, 1);
 
     sys_out_invoked ++;
 
@@ -385,7 +387,7 @@ static void SysOut(ecs_iter_t *it) {
 }
 
 static void SysOutMain(ecs_iter_t *it) {
-    Velocity *v = ecs_field(it, Velocity, 2);
+    Velocity *v = ecs_field(it, Velocity, 1);
 
     sys_out_invoked ++;
 
@@ -397,7 +399,7 @@ static void SysOutMain(ecs_iter_t *it) {
 }
 
 static void SysIn(ecs_iter_t *it) {
-    ecs_id_t ecs_id(Velocity) = ecs_field_id(it, 1);
+    ecs_id_t ecs_id(Velocity) = ecs_field_id(it, 0);
 
     test_assert(sys_out_invoked != 0);
     sys_in_invoked ++;
@@ -414,8 +416,8 @@ static void SysIn(ecs_iter_t *it) {
 }
 
 static void SysInMain(ecs_iter_t *it) {
-    Velocity *v = ecs_field(it, Velocity, 1);
-    ecs_id_t ecs_id(Velocity) = ecs_field_id(it, 1);
+    Velocity *v = ecs_field(it, Velocity, 0);
+    ecs_id_t ecs_id(Velocity) = ecs_field_id(it, 0);
 
     test_assert(sys_out_invoked != 0);
     sys_in_invoked ++;
@@ -635,7 +637,7 @@ void Pipeline_switch_pipeline(void) {
 
     ecs_add(world, ecs_id(SysC), Tag);
 
-    ECS_PIPELINE(world, P1, flecs.system.System, flecs.pipeline.Phase(cascade(DependsOn)), !Tag);
+    ECS_PIPELINE(world, P1, flecs.system.System, flecs.pipeline.Phase(cascade DependsOn), !Tag);
 
     ecs_progress(world, 1);
 
@@ -667,7 +669,7 @@ void Pipeline_run_pipeline(void) {
 
     ecs_add(world, ecs_id(SysC), Tag);
 
-    ECS_PIPELINE(world, P1, flecs.system.System, flecs.pipeline.Phase(cascade(DependsOn)), !Tag);
+    ECS_PIPELINE(world, P1, flecs.system.System, flecs.pipeline.Phase(cascade DependsOn), !Tag);
 
     const ecs_world_info_t *stats = ecs_get_world_info(world);
 
@@ -714,18 +716,18 @@ void Pipeline_3_systems_3_types(void) {
     ECS_TAG(world, Tag);
 
     ecs_entity_t s1 = ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, { .name = "SysA", .add = {ecs_pair(EcsDependsOn, EcsOnUpdate)} }),
-        .query.filter.expr = "Position",
+        .entity = ecs_entity(world, { .name = "SysA", .add = ecs_ids(ecs_pair(EcsDependsOn, EcsOnUpdate)) }),
+        .query.expr = "Position",
         .callback = SysA
     });
     ecs_entity_t s2 = ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, { .name = NULL, .add = {ecs_pair(EcsDependsOn, EcsOnUpdate)} }),
-        .query.filter.expr = "Position",
+        .entity = ecs_entity(world, { .name = NULL, .add = ecs_ids(ecs_pair(EcsDependsOn, EcsOnUpdate)) }),
+        .query.expr = "Position",
         .callback = SysB
     });
     ecs_entity_t s3 = ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, { .name = "SysC", .add = {ecs_pair(EcsDependsOn, EcsOnUpdate)} }),
-        .query.filter.expr = "Position()",
+        .entity = ecs_entity(world, { .name = "SysC", .add = ecs_ids(ecs_pair(EcsDependsOn, EcsOnUpdate)) }),
+        .query.expr = "Position()",
         .callback = SysC
     });
 
@@ -735,7 +737,7 @@ void Pipeline_3_systems_3_types(void) {
 
     ecs_add_id(world, s3, Tag);
 
-    ecs_new(world, Position);
+    ecs_new_w(world, Position);
 
     ecs_progress(world, 1);  
 
@@ -748,7 +750,7 @@ void Pipeline_3_systems_3_types(void) {
 
 static
 void RandomWrite(ecs_iter_t *it) {
-    ecs_entity_t ecs_id(Position) = ecs_field_id(it, 2);
+    ecs_entity_t ecs_id(Position) = ecs_field_id(it, 1);
 
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -799,7 +801,7 @@ void RandomReadAfterRW(ecs_iter_t *it) {
 
 static
 void RandomRead_Not(ecs_iter_t *it) {
-    ecs_entity_t ecs_id(Position) = ecs_field_id(it, 2);
+    ecs_entity_t ecs_id(Position) = ecs_field_id(it, 1);
 
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -818,7 +820,7 @@ void Pipeline_random_read_after_random_write_out_in(void) {
     ECS_SYSTEM(world, RandomWrite, EcsOnUpdate, Tag, [out] Position());
     ECS_SYSTEM(world, RandomRead, EcsOnUpdate, Tag, [in] Position());
     
-    ecs_entity_t e = ecs_new(world, Tag);
+    ecs_entity_t e = ecs_new_w(world, Tag);
 
     ecs_progress(world, 1);  
 
@@ -839,7 +841,7 @@ void Pipeline_random_read_after_random_write_inout_in(void) {
     ECS_SYSTEM(world, RandomWrite, EcsOnUpdate, Tag, [inout] Position());
     ECS_SYSTEM(world, RandomRead, EcsOnUpdate, Tag, [in] Position());
     
-    ecs_entity_t e = ecs_new(world, Tag);
+    ecs_entity_t e = ecs_new_w(world, Tag);
 
     ecs_progress(world, 1);  
 
@@ -860,7 +862,7 @@ void Pipeline_random_read_after_random_write_out_inout(void) {
     ECS_SYSTEM(world, RandomWrite, EcsOnUpdate, Tag, [out] Position());
     ECS_SYSTEM(world, RandomRead, EcsOnUpdate, Tag, [inout] Position());
     
-    ecs_entity_t e = ecs_new(world, Tag);
+    ecs_entity_t e = ecs_new_w(world, Tag);
 
     ecs_progress(world, 1);  
 
@@ -881,7 +883,7 @@ void Pipeline_random_read_after_random_write_inout_inout(void) {
     ECS_SYSTEM(world, RandomWrite, EcsOnUpdate, Tag, [inout] Position());
     ECS_SYSTEM(world, RandomRead, EcsOnUpdate, Tag, [inout] Position());
     
-    ecs_entity_t e = ecs_new(world, Tag);
+    ecs_entity_t e = ecs_new_w(world, Tag);
 
     ecs_progress(world, 1);  
 
@@ -902,7 +904,7 @@ void Pipeline_random_read_after_random_write_w_not_write(void) {
     ECS_SYSTEM(world, RandomWrite, EcsOnUpdate, Tag, [out] !Position);
     ECS_SYSTEM(world, RandomRead, EcsOnUpdate, Tag, [in] Position());
     
-    ecs_entity_t e = ecs_new(world, Tag);
+    ecs_entity_t e = ecs_new_w(world, Tag);
 
     ecs_progress(world, 1);  
 
@@ -923,7 +925,7 @@ void Pipeline_random_read_after_random_write_w_not_read(void) {
     ECS_SYSTEM(world, RandomWrite, EcsOnUpdate, Tag, [out] Position());
     ECS_SYSTEM(world, RandomRead_Not, EcsOnUpdate, Tag, [in] !Position);
     
-    ecs_entity_t e = ecs_new(world, Tag);
+    ecs_entity_t e = ecs_new_w(world, Tag);
 
     ecs_progress(world, 1);
 
@@ -944,7 +946,7 @@ void Pipeline_random_read_after_random_write_w_wildcard(void) {
     ECS_SYSTEM(world, RandomWrite, EcsOnUpdate, Tag, [out] Position());
     ECS_SYSTEM(world, RandomRead, EcsOnUpdate, Tag, [in] *());
     
-    ecs_entity_t e = ecs_new(world, Tag);
+    ecs_entity_t e = ecs_new_w(world, Tag);
 
     ecs_progress(world, 1);
 
@@ -966,7 +968,7 @@ void Pipeline_random_in_after_random_inout_after_random_out(void) {
     ECS_SYSTEM(world, RandomReadWrite, EcsOnUpdate, Tag, [inout] Position());
     ECS_SYSTEM(world, RandomReadAfterRW, EcsOnUpdate, Tag, [in] Position());
     
-    ecs_entity_t e = ecs_new(world, Tag);
+    ecs_entity_t e = ecs_new_w(world, Tag);
 
     ecs_progress(world, 1);
 
@@ -1010,26 +1012,26 @@ void Pipeline_system_reverse_order_by_phase_custom_pipeline(void) {
     ecs_add_pair(world, OnFrame, EcsDependsOn, PreFrame);
     ecs_add_pair(world, PostFrame, EcsDependsOn, OnFrame);
 
-    ECS_PIPELINE(world, P, flecs.system.System, flecs.pipeline.Phase(cascade(DependsOn)), Tag);
+    ECS_PIPELINE(world, P, flecs.system.System, flecs.pipeline.Phase(cascade DependsOn), Tag);
 
     int count = 0;
 
     ecs_system_init(world, &(ecs_system_desc_t){
         .callback = cb_third,
         .ctx = &count,
-        .entity = ecs_entity(world, {.add = {Tag, ecs_pair(EcsDependsOn, PostFrame)}})
+        .entity = ecs_entity(world, {.add = ecs_ids(Tag, ecs_pair(EcsDependsOn, PostFrame))})
     });
 
     ecs_system_init(world, &(ecs_system_desc_t){
         .callback = cb_second,
         .ctx = &count,
-        .entity = ecs_entity(world, {.add = {Tag, ecs_pair(EcsDependsOn, OnFrame)}})
+        .entity = ecs_entity(world, {.add = ecs_ids(Tag, ecs_pair(EcsDependsOn, OnFrame))})
     });
 
     ecs_system_init(world, &(ecs_system_desc_t){
         .callback = cb_first,
         .ctx = &count,
-        .entity = ecs_entity(world, {.add = {Tag, ecs_pair(EcsDependsOn, PreFrame)}})
+        .entity = ecs_entity(world, {.add = ecs_ids(Tag, ecs_pair(EcsDependsOn, PreFrame))})
     });
 
     test_int(count, 0);
@@ -1050,29 +1052,29 @@ void Pipeline_stage_write_before_read(void) {
     ECS_COMPONENT(world, Position);
 
     ecs_entity_t s1 = ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, { .name = "SysA", .add = {Tag, ecs_pair(EcsDependsOn, EcsOnUpdate)} }),
-        .query.filter.expr = "Position",
+        .entity = ecs_entity(world, { .name = "SysA", .add = ecs_ids(Tag, ecs_pair(EcsDependsOn, EcsOnUpdate)) }),
+        .query.expr = "Position",
         .callback = SysA
     });
     ecs_entity_t s2 = ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, { .name = "SysB", .add = {Tag, ecs_pair(EcsDependsOn, EcsOnUpdate)} }),
-        .query.filter.expr = "[out] Position(), Position",
+        .entity = ecs_entity(world, { .name = "SysB", .add = ecs_ids(Tag, ecs_pair(EcsDependsOn, EcsOnUpdate)) }),
+        .query.expr = "[out] Position(), Position",
         .callback = SysB
     });
     ecs_entity_t s3 = ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, { .name = "SysC", .add = {Tag, ecs_pair(EcsDependsOn, EcsOnUpdate)} }),
-        .query.filter.expr = "Position",
+        .entity = ecs_entity(world, { .name = "SysC", .add = ecs_ids(Tag, ecs_pair(EcsDependsOn, EcsOnUpdate)) }),
+        .query.expr = "Position",
         .callback = SysC
     });
 
-    ECS_PIPELINE(world, P, flecs.system.System, flecs.pipeline.Phase(cascade(DependsOn)), Tag);
+    ECS_PIPELINE(world, P, flecs.system.System, flecs.pipeline.Phase(cascade DependsOn), Tag);
     ecs_set_pipeline(world, P);
 
     test_assert(s1 != 0);
     test_assert(s2 != 0);
     test_assert(s3 != 0);
 
-    ecs_new(world, Position);
+    ecs_new_w(world, Position);
 
     ecs_progress(world, 1);  
 
@@ -1104,40 +1106,40 @@ void Pipeline_mixed_multithreaded_internal(bool task_threads) {
     ECS_COMPONENT(world, Position);
 
     ecs_entity_t s1 = ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, { .name = "SysA", .add = {Tag, ecs_pair(EcsDependsOn, EcsOnUpdate)} }),
-        .query.filter.expr = "Position",
+        .entity = ecs_entity(world, { .name = "SysA", .add = ecs_ids(Tag, ecs_pair(EcsDependsOn, EcsOnUpdate)) }),
+        .query.expr = "Position",
         .callback = SysA,
         .multi_threaded = true
     });
     ecs_entity_t s2 = ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, { .name = "SysB", .add = {Tag, ecs_pair(EcsDependsOn, EcsOnUpdate)} }),
-        .query.filter.expr = "Position",
+        .entity = ecs_entity(world, { .name = "SysB", .add = ecs_ids(Tag, ecs_pair(EcsDependsOn, EcsOnUpdate)) }),
+        .query.expr = "Position",
         .callback = SysB
     });
     ecs_entity_t s3 = ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, { .name = "SysC", .add = {Tag, ecs_pair(EcsDependsOn, EcsOnUpdate)} }),
-        .query.filter.expr = "Position",
+        .entity = ecs_entity(world, { .name = "SysC", .add = ecs_ids(Tag, ecs_pair(EcsDependsOn, EcsOnUpdate)) }),
+        .query.expr = "Position",
         .callback = SysC
     });
     ecs_entity_t s4 = ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, { .name = "SysD", .add = {Tag, ecs_pair(EcsDependsOn, EcsOnUpdate)} }),
-        .query.filter.expr = "Position",
+        .entity = ecs_entity(world, { .name = "SysD", .add = ecs_ids(Tag, ecs_pair(EcsDependsOn, EcsOnUpdate)) }),
+        .query.expr = "Position",
         .callback = SysD,
         .multi_threaded = true
     });
     ecs_entity_t s5 = ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, { .name = "SysE", .add = {Tag, ecs_pair(EcsDependsOn, EcsOnUpdate)} }),
-        .query.filter.expr = "Position",
+        .entity = ecs_entity(world, { .name = "SysE", .add = ecs_ids(Tag, ecs_pair(EcsDependsOn, EcsOnUpdate)) }),
+        .query.expr = "Position",
         .callback = SysE,
         .multi_threaded = true
     });
     ecs_entity_t s6 = ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, { .name = "SysF", .add = {Tag, ecs_pair(EcsDependsOn, EcsOnUpdate)} }),
-        .query.filter.expr = "Position",
+        .entity = ecs_entity(world, { .name = "SysF", .add = ecs_ids(Tag, ecs_pair(EcsDependsOn, EcsOnUpdate)) }),
+        .query.expr = "Position",
         .callback = SysF
     });
 
-    ECS_PIPELINE(world, P, flecs.system.System, flecs.pipeline.Phase(cascade(DependsOn)), Tag);
+    ECS_PIPELINE(world, P, flecs.system.System, flecs.pipeline.Phase(cascade DependsOn), Tag);
     ecs_set_pipeline(world, P);
 
     test_assert(s1 != 0);
@@ -1147,8 +1149,8 @@ void Pipeline_mixed_multithreaded_internal(bool task_threads) {
     test_assert(s5 != 0);
     test_assert(s6 != 0);
 
-    ecs_new(world, Position);
-    ecs_new(world, Position);
+    ecs_new_w(world, Position);
+    ecs_new_w(world, Position);
 
     if (task_threads)
     {
@@ -1204,40 +1206,40 @@ void Pipeline_mixed_staging(void) {
     ECS_COMPONENT(world, Position);
 
     ecs_entity_t s1 = ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, { .name = "SysA", .add = {Tag, ecs_pair(EcsDependsOn, EcsOnUpdate)} }),
-        .query.filter.expr = "Position",
+        .entity = ecs_entity(world, { .name = "SysA", .add = ecs_ids(Tag, ecs_pair(EcsDependsOn, EcsOnUpdate)) }),
+        .query.expr = "Position",
         .callback = SysA,
-        .no_readonly = true
+        .immediate = true
     });
     ecs_entity_t s2 = ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, { .name = "SysB", .add = {Tag, ecs_pair(EcsDependsOn, EcsOnUpdate)} }),
-        .query.filter.expr = "Position",
+        .entity = ecs_entity(world, { .name = "SysB", .add = ecs_ids(Tag, ecs_pair(EcsDependsOn, EcsOnUpdate)) }),
+        .query.expr = "Position",
         .callback = SysB
     });
     ecs_entity_t s3 = ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, { .name = "SysC", .add = {Tag, ecs_pair(EcsDependsOn, EcsOnUpdate)} }),
-        .query.filter.expr = "Position",
+        .entity = ecs_entity(world, { .name = "SysC", .add = ecs_ids(Tag, ecs_pair(EcsDependsOn, EcsOnUpdate)) }),
+        .query.expr = "Position",
         .callback = SysC
     });
     ecs_entity_t s4 = ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, { .name = "SysD", .add = {Tag, ecs_pair(EcsDependsOn, EcsOnUpdate)} }),
-        .query.filter.expr = "Position",
+        .entity = ecs_entity(world, { .name = "SysD", .add = ecs_ids(Tag, ecs_pair(EcsDependsOn, EcsOnUpdate)) }),
+        .query.expr = "Position",
         .callback = SysD,
-        .no_readonly = true
+        .immediate = true
     });
     ecs_entity_t s5 = ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, { .name = "SysE", .add = {Tag, ecs_pair(EcsDependsOn, EcsOnUpdate)} }),
-        .query.filter.expr = "Position",
+        .entity = ecs_entity(world, { .name = "SysE", .add = ecs_ids(Tag, ecs_pair(EcsDependsOn, EcsOnUpdate)) }),
+        .query.expr = "Position",
         .callback = SysE,
-        .no_readonly = true
+        .immediate = true
     });
     ecs_entity_t s6 = ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, { .name = "SysF", .add = {Tag, ecs_pair(EcsDependsOn, EcsOnUpdate)} }),
-        .query.filter.expr = "Position",
+        .entity = ecs_entity(world, { .name = "SysF", .add = ecs_ids(Tag, ecs_pair(EcsDependsOn, EcsOnUpdate)) }),
+        .query.expr = "Position",
         .callback = SysF
     });
 
-    ECS_PIPELINE(world, P, flecs.system.System, flecs.pipeline.Phase(cascade(DependsOn)), Tag);
+    ECS_PIPELINE(world, P, flecs.system.System, flecs.pipeline.Phase(cascade DependsOn), Tag);
     ecs_set_pipeline(world, P);
 
     test_assert(s1 != 0);
@@ -1247,8 +1249,8 @@ void Pipeline_mixed_staging(void) {
     test_assert(s5 != 0);
     test_assert(s6 != 0);
 
-    ecs_new(world, Position);
-    ecs_new(world, Position);
+    ecs_new_w(world, Position);
+    ecs_new_w(world, Position);
 
     ecs_progress(world, 1);
     test_int(sys_a_invoked, 1);
@@ -1315,7 +1317,7 @@ void Pipeline_mixed_staging(void) {
 static
 void WritePosition(ecs_iter_t *it) {
     if (*(bool*)it->ctx) {
-        ecs_entity_t ecs_id(Position) = ecs_field_id(it, 2);
+        ecs_entity_t ecs_id(Position) = ecs_field_id(it, 1);
         for (int i = 0; i < it->count; i ++) {
             ecs_add(it->world, it->entities[i], Position);
         }
@@ -1331,33 +1333,33 @@ void Pipeline_single_threaded_pipeline_change(void) {
     bool write_position = false;
 
     ecs_entity_t s1 = ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, { .name = "SysA", .add = {ecs_pair(EcsDependsOn, EcsOnUpdate)} }),
-        .query.filter.expr = "Tag, !Position",
+        .entity = ecs_entity(world, { .name = "SysA", .add = ecs_ids(ecs_pair(EcsDependsOn, EcsOnUpdate)) }),
+        .query.expr = "Tag, !Position",
         .callback = SysA
     });
 
     ecs_entity_t s2 = ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, { .name = "SysB", .add = {ecs_pair(EcsDependsOn, EcsOnUpdate)} }),
-        .query.filter.expr = "Tag, Position",
+        .entity = ecs_entity(world, { .name = "SysB", .add = ecs_ids(ecs_pair(EcsDependsOn, EcsOnUpdate)) }),
+        .query.expr = "Tag, Position",
         .callback = SysB
     });
 
     ecs_entity_t s3 = ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, { .name = "WritePosition", .add = {ecs_pair(EcsDependsOn, EcsOnUpdate)} }),
-        .query.filter.expr = "Tag, [out] Position()",
+        .entity = ecs_entity(world, { .name = "WritePosition", .add = ecs_ids(ecs_pair(EcsDependsOn, EcsOnUpdate)) }),
+        .query.expr = "Tag, [out] Position()",
         .callback = WritePosition,
         .ctx = &write_position
     });
 
     ecs_entity_t s4 = ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, { .name = "SysC", .add = {ecs_pair(EcsDependsOn, EcsOnUpdate)} }),
-        .query.filter.expr = "Tag, Position",
+        .entity = ecs_entity(world, { .name = "SysC", .add = ecs_ids(ecs_pair(EcsDependsOn, EcsOnUpdate)) }),
+        .query.expr = "Tag, Position",
         .callback = SysC
     });
 
     ecs_entity_t s5 = ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, { .name = "SysD", .add = {ecs_pair(EcsDependsOn, EcsOnUpdate)} }),
-        .query.filter.expr = "Tag, !Position",
+        .entity = ecs_entity(world, { .name = "SysD", .add = ecs_ids(ecs_pair(EcsDependsOn, EcsOnUpdate)) }),
+        .query.expr = "Tag, !Position",
         .callback = SysD
     });
 
@@ -1367,8 +1369,8 @@ void Pipeline_single_threaded_pipeline_change(void) {
     sys_c_invoked = 1;
     sys_d_invoked = 1;
 
-    ecs_new(world, Tag);
-    ecs_new(world, Tag);
+    ecs_new_w(world, Tag);
+    ecs_new_w(world, Tag);
 
     test_assert(s1 != 0);
     test_assert(s2 != 0);
@@ -1414,37 +1416,37 @@ void Pipeline_multi_threaded_pipeline_change_internal(bool task_threads) {
     bool write_position = false;
 
     ecs_entity_t s1 = ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, { .name = "SysA", .add = {ecs_pair(EcsDependsOn, EcsOnUpdate)} }),
-        .query.filter.expr = "Tag, !Position",
+        .entity = ecs_entity(world, { .name = "SysA", .add = ecs_ids(ecs_pair(EcsDependsOn, EcsOnUpdate)) }),
+        .query.expr = "Tag, !Position",
         .callback = SysA,
         .multi_threaded = true
     });
 
     ecs_entity_t s2 = ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, { .name = "SysB", .add = {ecs_pair(EcsDependsOn, EcsOnUpdate)} }),
-        .query.filter.expr = "Tag, Position, [out] Position()",
+        .entity = ecs_entity(world, { .name = "SysB", .add = ecs_ids(ecs_pair(EcsDependsOn, EcsOnUpdate)) }),
+        .query.expr = "Tag, Position, [out] Position()",
         .callback = SysB,
         .multi_threaded = true
     });
 
     ecs_entity_t s3 = ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, { .name = "WritePosition", .add = {ecs_pair(EcsDependsOn, EcsOnUpdate)} }),
-        .query.filter.expr = "Tag, [out] Position(), [in] ?Position",
+        .entity = ecs_entity(world, { .name = "WritePosition", .add = ecs_ids(ecs_pair(EcsDependsOn, EcsOnUpdate)) }),
+        .query.expr = "Tag, [out] Position(), [in] ?Position",
         .callback = WritePosition,
         .ctx = &write_position,
         .multi_threaded = true
     });
 
     ecs_entity_t s4 = ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, { .name = "SysC", .add = {ecs_pair(EcsDependsOn, EcsOnUpdate)} }),
-        .query.filter.expr = "Tag, Position",
+        .entity = ecs_entity(world, { .name = "SysC", .add = ecs_ids(ecs_pair(EcsDependsOn, EcsOnUpdate)) }),
+        .query.expr = "Tag, Position",
         .callback = SysC,
         .multi_threaded = true
     });
 
     ecs_entity_t s5 = ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, { .name = "SysD", .add = {ecs_pair(EcsDependsOn, EcsOnUpdate)} }),
-        .query.filter.expr = "Tag, !Position",
+        .entity = ecs_entity(world, { .name = "SysD", .add = ecs_ids(ecs_pair(EcsDependsOn, EcsOnUpdate)) }),
+        .query.expr = "Tag, !Position",
         .callback = SysD,
         .multi_threaded = true
     });
@@ -1461,8 +1463,8 @@ void Pipeline_multi_threaded_pipeline_change_internal(bool task_threads) {
     sys_c_invoked = 1;
     sys_d_invoked = 1;
 
-    ecs_new(world, Tag);
-    ecs_new(world, Tag);
+    ecs_new_w(world, Tag);
+    ecs_new_w(world, Tag);
 
     test_assert(s1 != 0);
     test_assert(s2 != 0);
@@ -1515,19 +1517,19 @@ void Pipeline_activate_after_add(void) {
     bool write_position = false;
 
     ecs_entity_t s1 = ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, { .name = "WritePosition", .add = {ecs_pair(EcsDependsOn, EcsOnUpdate)} }),
-        .query.filter.expr = "Tag, [out] Position()",
+        .entity = ecs_entity(world, { .name = "WritePosition", .add = ecs_ids(ecs_pair(EcsDependsOn, EcsOnUpdate)) }),
+        .query.expr = "Tag, [out] Position()",
         .callback = WritePosition,
         .ctx = &write_position
     });
 
     ecs_entity_t s2 = ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, { .name = "SysA", .add = {ecs_pair(EcsDependsOn, EcsOnUpdate)} }),
-        .query.filter.expr = "Position",
+        .entity = ecs_entity(world, { .name = "SysA", .add = ecs_ids(ecs_pair(EcsDependsOn, EcsOnUpdate)) }),
+        .query.expr = "Position",
         .callback = SysA
     });
 
-    ecs_new(world, Tag);
+    ecs_new_w(world, Tag);
 
     test_assert(s1 != 0);
     test_assert(s2 != 0);
@@ -1552,7 +1554,8 @@ static ecs_query_t *q_result;
 static
 void CreateQuery(ecs_iter_t *it) {
     test_assert(it->real_world == it->world);
-    q_result = ecs_query_new(it->world, "Position");
+    q_result = ecs_query(it->world, { .expr = "Position" });
+    ecs_query_fini(q_result);
 }
 
 void Pipeline_no_staging_system_create_query(void) {
@@ -1562,12 +1565,12 @@ void Pipeline_no_staging_system_create_query(void) {
     ECS_COMPONENT(world, Position);
 
     ecs_entity_t s = ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, { .name = "CreateQuery", .add = {Tag, ecs_pair(EcsDependsOn, EcsOnUpdate)} }),
+        .entity = ecs_entity(world, { .name = "CreateQuery", .add = ecs_ids(Tag, ecs_pair(EcsDependsOn, EcsOnUpdate)) }),
         .callback = CreateQuery,
-        .no_readonly = true
+        .immediate = true
     });
 
-    ECS_PIPELINE(world, P, flecs.system.System, flecs.pipeline.Phase(cascade(DependsOn)), Tag);
+    ECS_PIPELINE(world, P, flecs.system.System, flecs.pipeline.Phase(cascade DependsOn), Tag);
     ecs_set_pipeline(world, P);
 
     test_assert(s != 0);
@@ -1613,20 +1616,20 @@ void Pipeline_match_all_after_pipeline_rebuild(void) {
     ECS_TAG_DEFINE(world, TagB);
 
     ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, { .add = {ecs_pair(EcsDependsOn, EcsOnUpdate)} }),
-        .query.filter.expr = "[out] TagB()",
+        .entity = ecs_entity(world, { .add = ecs_ids(ecs_pair(EcsDependsOn, EcsOnUpdate)) }),
+        .query.expr = "[out] TagB()",
         .callback = set_singleton
     });
 
     ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, { .add = {ecs_pair(EcsDependsOn, EcsOnUpdate)} }),
-        .query.filter.expr = "TagB",
+        .entity = ecs_entity(world, { .add = ecs_ids(ecs_pair(EcsDependsOn, EcsOnUpdate)) }),
+        .query.expr = "TagB",
         .callback = match_singleton
     });
 
     ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, { .add = {ecs_pair(EcsDependsOn, EcsOnUpdate)} }),
-        .query.filter.expr = "?TagA",
+        .entity = ecs_entity(world, { .add = ecs_ids(ecs_pair(EcsDependsOn, EcsOnUpdate)) }),
+        .query.expr = "?TagA",
         .callback = match_all
     });
 
@@ -1683,7 +1686,7 @@ void Pipeline_pipeline_w_short_notation(void) {
     ECS_TAG(world, Tag);
 
     ecs_entity_t p = ecs_pipeline(world, {
-        .query.filter.expr = "flecs.system.System, Tag"
+        .query.expr = "flecs.system.System, Tag"
     });
 
     test_assert(p != 0);
@@ -1699,23 +1702,23 @@ void Pipeline_stack_allocator_after_progress(void) {
 
     ECS_SYSTEM(world, SysA, EcsOnUpdate, Position);
 
-    ecs_filter_t *f = ecs_filter(world, {
+    ecs_query_t *f = ecs_query(world, {
         .terms = {{ ecs_id(Position) }}
     });
 
-    ecs_iter_t it = ecs_filter_iter(world, f);
-    ecs_stack_cursor_t cursor = *it.priv.cache.stack_cursor;
+    ecs_iter_t it = ecs_query_iter(world, f);
+    ecs_stack_cursor_t cursor = *it.priv_.cache.stack_cursor;
     ecs_iter_fini(&it);
 
     ecs_progress(world, 1);
     test_int(sys_a_invoked, 1);
 
-    it = ecs_filter_iter(world, f);
-    test_assert(it.priv.cache.stack_cursor->page == cursor.page);
-    test_assert(it.priv.cache.stack_cursor->sp == cursor.sp);
+    it = ecs_query_iter(world, f);
+    test_assert(it.priv_.cache.stack_cursor->page == cursor.page);
+    test_assert(it.priv_.cache.stack_cursor->sp == cursor.sp);
     ecs_iter_fini(&it);
 
-    ecs_filter_fini(f);
+    ecs_query_fini(f);
 
     ecs_fini(world);
 }
@@ -1729,21 +1732,21 @@ void Pipeline_stack_allocator_after_progress_w_pipeline_change(void) {
     ECS_SYSTEM(world, SysA, EcsOnUpdate, Position);
     ECS_SYSTEM(world, SysB, EcsOnUpdate, Position);
 
-    ecs_filter_t *f = ecs_filter(world, {
+    ecs_query_t *f = ecs_query(world, {
         .terms = {{ ecs_id(Position) }}
     });
 
-    ecs_iter_t it = ecs_filter_iter(world, f);
-    ecs_stack_cursor_t cursor = *it.priv.cache.stack_cursor;
+    ecs_iter_t it = ecs_query_iter(world, f);
+    ecs_stack_cursor_t cursor = *it.priv_.cache.stack_cursor;
     ecs_iter_fini(&it);
 
     ecs_progress(world, 1);
     test_int(sys_a_invoked, 1);
     test_int(sys_b_invoked, 1);
 
-    it = ecs_filter_iter(world, f);
-    test_assert(it.priv.cache.stack_cursor->page == cursor.page);
-    test_assert(it.priv.cache.stack_cursor->sp == cursor.sp);
+    it = ecs_query_iter(world, f);
+    test_assert(it.priv_.cache.stack_cursor->page == cursor.page);
+    test_assert(it.priv_.cache.stack_cursor->sp == cursor.sp);
     ecs_iter_fini(&it);
 
     ecs_enable(world, SysB, false);
@@ -1752,28 +1755,28 @@ void Pipeline_stack_allocator_after_progress_w_pipeline_change(void) {
     test_int(sys_a_invoked, 2);
     test_int(sys_b_invoked, 1);
 
-    it = ecs_filter_iter(world, f);
-    test_assert(it.priv.cache.stack_cursor->page == cursor.page);
-    test_assert(it.priv.cache.stack_cursor->sp == cursor.sp);
+    it = ecs_query_iter(world, f);
+    test_assert(it.priv_.cache.stack_cursor->page == cursor.page);
+    test_assert(it.priv_.cache.stack_cursor->sp == cursor.sp);
     ecs_iter_fini(&it);
 
-    ecs_filter_fini(f);
+    ecs_query_fini(f);
 
     ecs_fini(world);
 }
 
 static
 void Sys_w_MainWorldIter(ecs_iter_t *it) {
-    ecs_id_t ecs_id(Position) = ecs_field_id(it, 1);
-    ecs_filter_t *f = ecs_filter(it->real_world, {
+    ecs_id_t ecs_id(Position) = ecs_field_id(it, 0);
+    ecs_query_t *f = ecs_query(it->real_world, {
         .terms = {{ ecs_id(Position) }}
     });
 
-    ecs_iter_t fit = ecs_filter_iter(it->real_world, f);
-    test_bool(true, ecs_filter_next(&fit));
+    ecs_iter_t fit = ecs_query_iter(it->real_world, f);
+    test_bool(true, ecs_query_next(&fit));
     test_int(1, fit.count);
-    test_bool(false, ecs_filter_next(&fit));
-    ecs_filter_fini(f);
+    test_bool(false, ecs_query_next(&fit));
+    ecs_query_fini(f);
 }
 
 static
@@ -1782,7 +1785,7 @@ void Pipeline_iter_from_world_in_singlethread_system_multitead_app_internal(bool
 
     ECS_COMPONENT(world, Position);
 
-    ecs_new(world, Position);
+    ecs_new_w(world, Position);
 
     ECS_SYSTEM(world, Sys_w_MainWorldIter, EcsOnUpdate, Position());
 
@@ -1828,26 +1831,26 @@ void Pipeline_no_staging_after_inactive_system(void) {
 
     ecs_system(world, {
         .entity = ecs_entity(world, {
-            .add = { ecs_dependson(EcsOnUpdate )}
+            .add = ecs_ids( ecs_dependson(EcsOnUpdate ))
         }),
-        .query.filter.terms = {{ Tag, .oper = EcsNot }},
+        .query.terms = {{ Tag, .oper = EcsNot }},
         .callback = StagingSystem
     });
 
     ecs_system(world, {
         .entity = ecs_entity(world, {
-            .add = { ecs_dependson(EcsOnUpdate )}
+            .add = ecs_ids( ecs_dependson(EcsOnUpdate ))
         }),
-        .query.filter.terms = {{ ecs_id(Position) }, { Tag, .oper = EcsNot }},
+        .query.terms = {{ ecs_id(Position) }, { Tag, .oper = EcsNot }},
         .callback = StagingSystem
     });
 
     ecs_system(world, {
         .entity = ecs_entity(world, {
-            .add = { ecs_dependson(EcsOnUpdate )}
+            .add = ecs_ids( ecs_dependson(EcsOnUpdate ))
         }),
         .callback = NoStagingSystem,
-        .no_readonly = true
+        .immediate = true
     });
 
     ecs_progress(world, 0);
@@ -1873,20 +1876,20 @@ static int no_staging_create_velocity_invoked = 0;
 static void NoStagingSystemCreatePosition(ecs_iter_t *it) {
     ecs_defer_end(it->world);
     
-    create_position_e = ecs_new_id(it->world);
+    create_position_e = ecs_new(it->world);
     ecs_set(it->world, create_position_e, Position, {0, 0});
     
-    ecs_filter_t *f = ecs_filter(it->world, {
+    ecs_query_t *f = ecs_query(it->world, {
         .terms = {{ ecs_id(Position) }}
     });
 
-    ecs_iter_t fit = ecs_filter_iter(it->world, f);
-    test_bool(true, ecs_filter_next(&fit));
+    ecs_iter_t fit = ecs_query_iter(it->world, f);
+    test_bool(true, ecs_query_next(&fit));
     test_int(fit.count, 1);
     test_uint(fit.entities[0], create_position_e);
-    test_bool(false, ecs_filter_next(&fit));
+    test_bool(false, ecs_query_next(&fit));
 
-    ecs_filter_fini(f);
+    ecs_query_fini(f);
 
     ecs_defer_begin(it->world);
     no_staging_create_position_invoked ++;
@@ -1895,20 +1898,20 @@ static void NoStagingSystemCreatePosition(ecs_iter_t *it) {
 static void NoStagingSystemCreateVelocity(ecs_iter_t *it) {
     ecs_defer_end(it->world);
     
-    create_velocity_e = ecs_new_id(it->world);
+    create_velocity_e = ecs_new(it->world);
     ecs_set(it->world, create_velocity_e, Velocity, {0, 0});
     
-    ecs_filter_t *f = ecs_filter(it->world, {
+    ecs_query_t *f = ecs_query(it->world, {
         .terms = {{ ecs_id(Velocity) }}
     });
 
-    ecs_iter_t fit = ecs_filter_iter(it->world, f);
-    test_bool(true, ecs_filter_next(&fit));
+    ecs_iter_t fit = ecs_query_iter(it->world, f);
+    test_bool(true, ecs_query_next(&fit));
     test_int(fit.count, 1);
     test_uint(fit.entities[0], create_velocity_e);
-    test_bool(false, ecs_filter_next(&fit));
+    test_bool(false, ecs_query_next(&fit));
 
-    ecs_filter_fini(f);
+    ecs_query_fini(f);
 
     ecs_defer_begin(it->world);
     no_staging_create_velocity_invoked ++;
@@ -1931,17 +1934,17 @@ void Pipeline_inactive_system_after_no_staging_system_no_defer_w_filter(void) {
 
     ecs_system(world, {
         .entity = ecs_entity(world, {
-            .add = { ecs_dependson(EcsOnUpdate )}
+            .add = ecs_ids( ecs_dependson(EcsOnUpdate ))
         }),
         .callback = NoStagingSystemCreatePosition,
-        .no_readonly = true
+        .immediate = true
     });
 
     ecs_system(world, {
         .entity = ecs_entity(world, {
-            .add = { ecs_dependson(EcsOnUpdate )}
+            .add = ecs_ids( ecs_dependson(EcsOnUpdate ))
         }),
-        .query.filter.terms = {{ ecs_id(Position) }},
+        .query.terms = {{ ecs_id(Position) }},
         .callback = ReadPosition
     });
 
@@ -1967,26 +1970,26 @@ void Pipeline_inactive_system_after_no_staging_system_no_defer_w_filter_w_no_sta
 
     ecs_system(world, {
         .entity = ecs_entity(world, {
-            .add = { ecs_dependson(EcsOnUpdate )}
+            .add = ecs_ids( ecs_dependson(EcsOnUpdate ))
         }),
         .callback = NoStagingSystemCreatePosition,
-        .no_readonly = true
+        .immediate = true
     });
 
     ecs_system(world, {
         .entity = ecs_entity(world, {
-            .add = { ecs_dependson(EcsOnUpdate )}
+            .add = ecs_ids( ecs_dependson(EcsOnUpdate ))
         }),
-        .query.filter.terms = {{ ecs_id(Position) }},
+        .query.terms = {{ ecs_id(Position) }},
         .callback = ReadPosition
     });
 
     ecs_system(world, {
         .entity = ecs_entity(world, {
-            .add = { ecs_dependson(EcsOnUpdate )}
+            .add = ecs_ids( ecs_dependson(EcsOnUpdate ))
         }),
         .callback = SysA,
-        .no_readonly = true
+        .immediate = true
     });
 
     ecs_progress(world, 0);
@@ -2012,33 +2015,33 @@ void Pipeline_inactive_system_after_2_no_staging_system_no_defer_w_filter(void) 
 
     ecs_system(world, {
         .entity = ecs_entity(world, {
-            .add = { ecs_dependson(EcsOnUpdate )}
+            .add = ecs_ids( ecs_dependson(EcsOnUpdate ))
         }),
         .callback = NoStagingSystemCreatePosition,
-        .no_readonly = true
+        .immediate = true
     });
 
     ecs_system(world, {
         .entity = ecs_entity(world, {
-            .add = { ecs_dependson(EcsOnUpdate )}
+            .add = ecs_ids( ecs_dependson(EcsOnUpdate ))
         }),
         .callback = NoStagingSystemCreateVelocity,
-        .no_readonly = true
+        .immediate = true
     });
 
     ecs_system(world, {
         .entity = ecs_entity(world, {
-            .add = { ecs_dependson(EcsOnUpdate )}
+            .add = ecs_ids( ecs_dependson(EcsOnUpdate ))
         }),
-        .query.filter.terms = {{ ecs_id(Position) }},
+        .query.terms = {{ ecs_id(Position) }},
         .callback = ReadPosition
     });
 
     ecs_system(world, {
         .entity = ecs_entity(world, {
-            .add = { ecs_dependson(EcsOnUpdate )}
+            .add = ecs_ids( ecs_dependson(EcsOnUpdate ))
         }),
-        .query.filter.terms = {{ ecs_id(Velocity) }},
+        .query.terms = {{ ecs_id(Velocity) }},
         .callback = ReadVelocity
     });
 
@@ -2074,17 +2077,17 @@ void Pipeline_inactive_multithread_system_after_no_staging_system_no_defer_inter
 
     ecs_system(world, {
         .entity = ecs_entity(world, {
-            .add = { ecs_dependson(EcsOnUpdate )}
+            .add = ecs_ids( ecs_dependson(EcsOnUpdate ))
         }),
         .callback = NoStagingSystemCreatePosition,
-        .no_readonly = true
+        .immediate = true
     });
 
     ecs_system(world, {
         .entity = ecs_entity(world, {
-            .add = { ecs_dependson(EcsOnUpdate )}
+            .add = ecs_ids( ecs_dependson(EcsOnUpdate ))
         }),
-        .query.filter.terms = {{ ecs_id(Position) }},
+        .query.terms = {{ ecs_id(Position) }},
         .callback = ReadPosition,
         .multi_threaded = true
     });
@@ -2130,27 +2133,27 @@ void Pipeline_inactive_multithread_system_after_no_staging_system_no_defer_w_no_
 
     ecs_system(world, {
         .entity = ecs_entity(world, {
-            .add = { ecs_dependson(EcsOnUpdate )}
+            .add = ecs_ids( ecs_dependson(EcsOnUpdate ))
         }),
         .callback = NoStagingSystemCreatePosition,
-        .no_readonly = true
+        .immediate = true
     });
 
     ecs_system(world, {
         .entity = ecs_entity(world, {
-            .add = { ecs_dependson(EcsOnUpdate )}
+            .add = ecs_ids( ecs_dependson(EcsOnUpdate ))
         }),
-        .query.filter.terms = {{ ecs_id(Position) }},
+        .query.terms = {{ ecs_id(Position) }},
         .callback = ReadPosition,
         .multi_threaded = true
     });
 
     ecs_system(world, {
         .entity = ecs_entity(world, {
-            .add = { ecs_dependson(EcsOnUpdate )}
+            .add = ecs_ids( ecs_dependson(EcsOnUpdate ))
         }),
         .callback = ReadPosition,
-        .no_readonly = true
+        .immediate = true
     });
 
     if (task_threads)
@@ -2190,7 +2193,7 @@ static int foo_system_invoked = 0;
 
 static void AddId(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
-    ecs_id_t id = ecs_field_id(it, 1);
+    ecs_id_t id = ecs_field_id(it, 0);
 
     int i;
     for (i = 0; i < it->count; i++) {
@@ -2223,7 +2226,7 @@ void Pipeline_multi_threaded_pipeline_change_w_only_singlethreaded_internal(bool
         ecs_set_threads(world, 2);
     }
 
-    ecs_entity_t e = ecs_new(world, Tag);
+    ecs_entity_t e = ecs_new_w(world, Tag);
 
     ecs_progress(world, 0);
 
@@ -2243,7 +2246,7 @@ void Pipeline_multi_threaded_tasks_pipeline_change_w_only_singlethreaded(void) {
 }
 
 static void SetPosition(ecs_iter_t *it) {
-    Position *p = ecs_field(it, Position, 1);
+    Position *p = ecs_field(it, Position, 0);
 
     for (int i = 0; i < it->count; i ++) {
         p[i].x = 10;
@@ -2260,7 +2263,7 @@ void Pipeline_sync_after_not_out_for_out(void) {
     ECS_SYSTEM(world, AddId,       EcsOnUpdate, [out] !Position, Tag);
     ECS_SYSTEM(world, SetPosition, EcsOnUpdate, [out] Position);
 
-    ecs_entity_t e = ecs_new(world, Tag);
+    ecs_entity_t e = ecs_new_w(world, Tag);
 
     const ecs_world_info_t *wi = ecs_get_world_info(world);
 
@@ -2286,7 +2289,7 @@ void Pipeline_pair_wildcard_read_after_staged_write(void) {
     ECS_SYSTEM(world, AddId, EcsOnUpdate, [out] !(Rel, Position), Tag);
     ECS_SYSTEM(world, SysA,  EcsOnUpdate, [in]  (Rel, *));
 
-    ecs_new(world, Tag);
+    ecs_new_w(world, Tag);
 
     const ecs_world_info_t *wi = ecs_get_world_info(world);
 
@@ -2304,7 +2307,7 @@ static int add_pair_invoked = 0;
 
 static void AddPair(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
-    ecs_id_t id = ecs_field_id(it, 1);
+    ecs_id_t id = ecs_field_id(it, 0);
 
     int i;
     for (i = 0; i < it->count; i++) {
@@ -2325,7 +2328,7 @@ void Pipeline_pair_read_after_staged_wildcard_write(void) {
     ECS_SYSTEM(world, AddPair, EcsOnUpdate, [out] !(Rel, *), Tag);
     ECS_SYSTEM(world, SysA,    EcsOnUpdate, [in]  (Rel, Position));
 
-    ecs_new(world, Tag);
+    ecs_new_w(world, Tag);
 
     const ecs_world_info_t *wi = ecs_get_world_info(world);
 
@@ -2350,7 +2353,7 @@ void Pipeline_no_sync_after_pair_wildcard_read_after_unmatching_staged_write(voi
     ECS_SYSTEM(world, AddPair, EcsOnUpdate, [out] !(Rel2, Position), Tag);
     ECS_SYSTEM(world, SysA,    EcsOnUpdate, [in] (Rel, *));
 
-    ecs_new(world, Tag);
+    ecs_new_w(world, Tag);
 
     const ecs_world_info_t *wi = ecs_get_world_info(world);
 
@@ -2375,7 +2378,7 @@ void Pipeline_no_merge_after_from_nothing_w_default_inout(void) {
     ECS_SYSTEM(world, SysA, EcsOnUpdate, Tag, Position());
     ECS_SYSTEM(world, SysB, EcsOnUpdate, Tag, Position);
 
-    ecs_new(world, Tag);
+    ecs_new_w(world, Tag);
     
     const ecs_world_info_t *wi = ecs_get_world_info(world);
 
@@ -2393,8 +2396,8 @@ static int sys_add_tag_invoked = 0;
 static int sys_no_readonly_invoked = 0;
 
 static void sys_add_tag(ecs_iter_t *it) {
-  ecs_new(it->world, TagA);
-  ecs_new(it->world, TagB);
+  ecs_new_w(it->world, TagA);
+  ecs_new_w(it->world, TagB);
   sys_add_tag_invoked ++;
   test_assert(sys_a_invoked == 0);
 }
@@ -2414,23 +2417,23 @@ void Pipeline_on_merge_activate_system_before_merge(void) {
 
     // system is annotated with TagA but writes both TagA, TagB
     ecs_system(world, {
-        .entity = ecs_entity(world, { .add = { ecs_dependson(EcsOnUpdate) }}),
-        .query.filter.terms = {{ TagA, .inout = EcsOut, .src.flags = EcsIsEntity }},
+        .entity = ecs_entity(world, { .add = ecs_ids( ecs_dependson(EcsOnUpdate) )}),
+        .query.terms = {{ TagA, .inout = EcsOut, .src.id = EcsIsEntity }},
         .callback = sys_add_tag
     });
 
     // no merge inserted between systems, but system activates after merge
     ecs_system(world, {
-        .entity = ecs_entity(world, { .add = { ecs_dependson(EcsOnUpdate) }}),
-        .query.filter.terms = {{ TagB, .inout = EcsIn }},
+        .entity = ecs_entity(world, { .add = ecs_ids( ecs_dependson(EcsOnUpdate) )}),
+        .query.terms = {{ TagB, .inout = EcsIn }},
         .callback = SysA
     });
 
     // read TagA, causes insertion of merge
     ecs_system(world, {
-        .entity = ecs_entity(world, { .add = { ecs_dependson(EcsOnUpdate) }}),
-        .query.filter.terms = {{ TagA, .inout = EcsIn }},
-        .no_readonly = true,
+        .entity = ecs_entity(world, { .add = ecs_ids( ecs_dependson(EcsOnUpdate) )}),
+        .query.terms = {{ TagA, .inout = EcsIn }},
+        .immediate = true,
         .callback = sys_no_readonly
     });
 
@@ -2450,12 +2453,12 @@ void Pipeline_disable_phase(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_system(world, {
-        .entity = ecs_entity(world, { .add = { ecs_dependson(EcsOnUpdate) }}),
+        .entity = ecs_entity(world, { .add = ecs_ids( ecs_dependson(EcsOnUpdate) )}),
         .callback = SysA
     });
 
     ecs_system(world, {
-        .entity = ecs_entity(world, { .add = { ecs_dependson(EcsPostUpdate) }}),
+        .entity = ecs_entity(world, { .add = ecs_ids( ecs_dependson(EcsPostUpdate) )}),
         .callback = SysB
     });
 
@@ -2492,16 +2495,22 @@ void Pipeline_disable_phase(void) {
 void Pipeline_disable_parent(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t p1 = ecs_new_id(world);
-    ecs_entity_t p2 = ecs_new_id(world);
+    ecs_entity_t p1 = ecs_new(world);
+    ecs_entity_t p2 = ecs_new(world);
 
     ecs_system(world, {
-        .entity = ecs_entity(world, { .add = { ecs_childof(p1), ecs_dependson(EcsOnUpdate) }}),
+        .entity = ecs_entity(world, {
+            .parent = p1,
+            .add = ecs_ids( ecs_dependson(EcsOnUpdate) )
+        }),
         .callback = SysA
     });
 
     ecs_system(world, {
-        .entity = ecs_entity(world, { .add = { ecs_childof(p2), ecs_dependson(EcsPostUpdate) }}),
+        .entity = ecs_entity(world, {
+            .parent = p2,
+            .add = ecs_ids( ecs_dependson(EcsPostUpdate) )
+        }),
         .callback = SysB
     });
 
@@ -2541,7 +2550,7 @@ static void NoReadonlyAddPosition(ecs_iter_t *it) {
     test_assert(it->world == it->real_world);
     no_staging_add_position_invoked ++;
 
-    ecs_entity_t e = ecs_new_id(it->world);
+    ecs_entity_t e = ecs_new(it->world);
     ecs_add(it->world, e, Position);
 }
 
@@ -2561,15 +2570,15 @@ void Pipeline_multi_threaded_no_staging_w_add_after_read_internal(bool task_thre
     }
 
     ecs_system(world, {
-        .entity = ecs_entity(world, { .add = { ecs_dependson(EcsOnUpdate) }}),
-        .query.filter = { .terms = {{ ecs_id(Position) }}},
+        .entity = ecs_entity(world, { .add = ecs_ids( ecs_dependson(EcsOnUpdate) )}),
+        .query = { .terms = {{ ecs_id(Position) }}},
         .callback = SysA
     });
 
     ecs_system(world, {
-        .entity = ecs_entity(world, { .add = { ecs_dependson(EcsOnUpdate) }}),
+        .entity = ecs_entity(world, { .add = ecs_ids( ecs_dependson(EcsOnUpdate) )}),
         .callback = NoReadonlyAddPosition,
-        .no_readonly = true
+        .immediate = true
     });
 
     ecs_progress(world, 0);
@@ -2601,12 +2610,12 @@ void Pipeline_1_startup_system(void) {
     const ecs_world_info_t *stats = ecs_get_world_info(world);
 
     ecs_system(world, {
-        .entity = ecs_entity(world, { .add = { ecs_dependson(EcsOnStart) }}),
+        .entity = ecs_entity(world, { .add = ecs_ids( ecs_dependson(EcsOnStart) )}),
         .callback = SysA
     });
 
     ecs_system(world, {
-        .entity = ecs_entity(world, { .add = { ecs_dependson(EcsOnUpdate) }}),
+        .entity = ecs_entity(world, { .add = ecs_ids( ecs_dependson(EcsOnUpdate) )}),
         .callback = SysB
     });
 
@@ -2634,17 +2643,17 @@ void Pipeline_2_startup_systems(void) {
     const ecs_world_info_t *stats = ecs_get_world_info(world);
 
     ecs_system(world, {
-        .entity = ecs_entity(world, { .add = { ecs_dependson(EcsOnStart) }}),
+        .entity = ecs_entity(world, { .add = ecs_ids( ecs_dependson(EcsOnStart) )}),
         .callback = SysA
     });
 
     ecs_system(world, {
-        .entity = ecs_entity(world, { .add = { ecs_dependson(EcsOnStart) }}),
+        .entity = ecs_entity(world, { .add = ecs_ids( ecs_dependson(EcsOnStart) )}),
         .callback = SysB
     });
 
     ecs_system(world, {
-        .entity = ecs_entity(world, { .add = { ecs_dependson(EcsOnUpdate) }}),
+        .entity = ecs_entity(world, { .add = ecs_ids( ecs_dependson(EcsOnUpdate) )}),
         .callback = SysC
     });
 
@@ -2678,17 +2687,17 @@ void Pipeline_2_startup_phases(void) {
     ecs_add_pair(world, AfterStart, EcsDependsOn, EcsOnStart);
 
     ecs_system(world, {
-        .entity = ecs_entity(world, { .add = { ecs_dependson(AfterStart) }}),
+        .entity = ecs_entity(world, { .add = ecs_ids( ecs_dependson(AfterStart) )}),
         .callback = SysB
     });
 
     ecs_system(world, {
-        .entity = ecs_entity(world, { .add = { ecs_dependson(EcsOnStart) }}),
+        .entity = ecs_entity(world, { .add = ecs_ids( ecs_dependson(EcsOnStart) )}),
         .callback = SysA
     });
 
     ecs_system(world, {
-        .entity = ecs_entity(world, { .add = { ecs_dependson(EcsOnUpdate) }}),
+        .entity = ecs_entity(world, { .add = ecs_ids( ecs_dependson(EcsOnUpdate) )}),
         .callback = SysC
     });
 
@@ -2718,24 +2727,24 @@ void Pipeline_2_startup_systems_w_merge(void) {
 
     ECS_COMPONENT(world, Position);
     
-    ecs_new(world, Position);
+    ecs_new_w(world, Position);
 
     const ecs_world_info_t *stats = ecs_get_world_info(world);
 
     ecs_system(world, {
-        .entity = ecs_entity(world, { .add = { ecs_dependson(EcsOnStart) }}),
-        .query.filter = { .terms = {{ ecs_id(Position), .src.flags = EcsIsEntity, .inout = EcsOut }}},
+        .entity = ecs_entity(world, { .add = ecs_ids( ecs_dependson(EcsOnStart) )}),
+        .query = { .terms = {{ ecs_id(Position), .src.id = EcsIsEntity, .inout = EcsOut }}},
         .callback = SysA
     });
 
     ecs_system(world, {
-        .entity = ecs_entity(world, { .add = { ecs_dependson(EcsOnStart) }}),
-        .query.filter = { .terms = {{ ecs_id(Position) }}},
+        .entity = ecs_entity(world, { .add = ecs_ids( ecs_dependson(EcsOnStart) )}),
+        .query = { .terms = {{ ecs_id(Position) }}},
         .callback = SysB
     });
 
     ecs_system(world, {
-        .entity = ecs_entity(world, { .add = { ecs_dependson(EcsOnUpdate) }}),
+        .entity = ecs_entity(world, { .add = ecs_ids( ecs_dependson(EcsOnUpdate) )}),
         .callback = SysC
     });
 
@@ -2769,29 +2778,29 @@ void Pipeline_inactive_last_system_merge_count(void) {
 
     ecs_system(world, {
         .entity = ecs_entity(world, {
-            .add = { ecs_dependson(EcsOnUpdate) }
+            .add = ecs_ids( ecs_dependson(EcsOnUpdate) )
         }),
-        .query.filter.terms = {
+        .query.terms = {
             { TagA },
-            { TagB, .src.flags = EcsIsEntity, .inout = EcsOut }
+            { TagB, .src.id = EcsIsEntity, .inout = EcsOut }
         },
         .callback = SysA
     });
 
     ecs_system(world, {
         .entity = ecs_entity(world, {
-            .add = { ecs_dependson(EcsOnUpdate) }
+            .add = ecs_ids( ecs_dependson(EcsOnUpdate) )
         }),
-        .query.filter.terms = {
+        .query.terms = {
             { TagB },
-            { TagC, .src.flags = EcsIsEntity, .inout = EcsOut }
+            { TagC, .src.id = EcsIsEntity, .inout = EcsOut }
         },
         .callback = SysB
     });
 
     test_int(stats->merge_count_total, 0);
 
-    ecs_new(world, TagA);
+    ecs_new_w(world, TagA);
 
     ecs_progress(world, 0);
 
@@ -2815,42 +2824,42 @@ void Pipeline_inactive_middle_system_merge_count(void) {
 
     ecs_system(world, {
         .entity = ecs_entity(world, {
-            .add = { ecs_dependson(EcsOnUpdate) }
+            .add = ecs_ids( ecs_dependson(EcsOnUpdate) )
         }),
-        .query.filter.terms = {
+        .query.terms = {
             { TagA },
-            { TagB, .src.flags = EcsIsEntity, .inout = EcsOut }
+            { TagB, .src.id = EcsIsEntity, .inout = EcsOut }
         },
         .callback = SysA
     });
 
     ecs_system(world, {
         .entity = ecs_entity(world, {
-            .add = { ecs_dependson(EcsOnUpdate) }
+            .add = ecs_ids( ecs_dependson(EcsOnUpdate) )
         }),
-        .query.filter.terms = {
+        .query.terms = {
             { TagB },
-            { TagC, .src.flags = EcsIsEntity, .inout = EcsOut }
+            { TagC, .src.id = EcsIsEntity, .inout = EcsOut }
         },
         .callback = SysC
     });
 
     ecs_system(world, {
         .entity = ecs_entity(world, {
-            .add = { ecs_dependson(EcsOnUpdate) }
+            .add = ecs_ids( ecs_dependson(EcsOnUpdate) )
         }),
-        .query.filter.terms = {
+        .query.terms = {
             { TagC },
-            { TagD, .src.flags = EcsIsEntity, .inout = EcsOut }
+            { TagD, .src.id = EcsIsEntity, .inout = EcsOut }
         },
         .callback = SysD
     });
 
     ecs_system(world, {
         .entity = ecs_entity(world, {
-            .add = { ecs_dependson(EcsOnUpdate) }
+            .add = ecs_ids( ecs_dependson(EcsOnUpdate) )
         }),
-        .query.filter.terms = {
+        .query.terms = {
             { TagD }
         },
         .callback = SysB
@@ -2858,8 +2867,8 @@ void Pipeline_inactive_middle_system_merge_count(void) {
 
     test_int(stats->merge_count_total, 0);
 
-    ecs_new(world, TagA);
-    ecs_new(world, TagD);
+    ecs_new_w(world, TagA);
+    ecs_new_w(world, TagD);
 
     ecs_progress(world, 0);
 
@@ -2875,7 +2884,7 @@ void Pipeline_inactive_middle_system_merge_count(void) {
 
 static
 void CreateEntity(ecs_iter_t *it) {
-    ecs_id_t tag = ecs_field_id(it, 1);
+    ecs_id_t tag = ecs_field_id(it, 0);
     ecs_new_w_id(it->world, tag);
 }
 
@@ -2891,30 +2900,30 @@ void Pipeline_last_no_readonly_system_merge_count(void) {
 
     ecs_system(world, {
         .entity = ecs_entity(world, {
-            .add = { ecs_dependson(EcsOnUpdate) }
+            .add = ecs_ids( ecs_dependson(EcsOnUpdate) )
         }),
-        .query.filter.terms = {
+        .query.terms = {
             { TagA },
-            { TagB, .src.flags = EcsIsEntity, .inout = EcsOut }
+            { TagB, .src.id = EcsIsEntity, .inout = EcsOut }
         },
         .callback = SysA
     });
 
     ecs_system(world, {
         .entity = ecs_entity(world, {
-            .add = { ecs_dependson(EcsOnUpdate) }
+            .add = ecs_ids( ecs_dependson(EcsOnUpdate) )
         }),
-        .query.filter.terms = {
+        .query.terms = {
             { TagD }
         },
         .callback = CreateEntity,
-        .no_readonly = true
+        .immediate = true
     });
 
     test_int(stats->merge_count_total, 0);
 
-    ecs_new(world, TagA);
-    ecs_new(world, TagD);
+    ecs_new_w(world, TagA);
+    ecs_new_w(world, TagD);
 
     test_int(1, ecs_count(world, TagD));
 
@@ -2935,7 +2944,7 @@ void Pipeline_2_pipelines_1_system(void) {
 
     ecs_entity_t p1 = ecs_pipeline(world, {
         .query = {
-            .filter.terms = {
+            .terms = {
                 { .id = EcsSystem },
                 { .id = Phase1 }
             }
@@ -2944,7 +2953,7 @@ void Pipeline_2_pipelines_1_system(void) {
 
     ecs_entity_t p2 = ecs_pipeline(world, {
         .query = {
-            .filter.terms = {
+            .terms = {
                 { .id = EcsSystem },
                 { .id = Phase2 }
             }
@@ -2953,7 +2962,7 @@ void Pipeline_2_pipelines_1_system(void) {
 
     ecs_system(world, {
         .entity = ecs_entity(world, {
-            .add = { Phase1 }
+            .add = ecs_ids( Phase1 )
         }),
         .callback = SysA
     });
@@ -2980,12 +2989,11 @@ void Pipeline_builtin_pipeline_w_self_system_term(void) {
 
     const EcsPoly *p = ecs_get_pair(world, pipeline, EcsPoly, EcsQuery);
     test_assert(p != NULL);
-    test_assert(ecs_poly_is(p->poly, ecs_query_t));
+    test_assert(flecs_poly_is(p->poly, ecs_query_t));
 
     ecs_query_t *q = p->poly;
-    const ecs_filter_t *f = ecs_query_get_filter(q);
-    test_assert(f != NULL);
-    test_assert((f->terms[0].src.flags & EcsTraverseFlags) == EcsSelf);
+    test_assert(q != NULL);
+    test_assert((q->terms[0].src.id & EcsTraverseFlags) == EcsSelf);
 
     ecs_fini(world);
 }
@@ -2996,7 +3004,7 @@ void Pipeline_custom_pipeline_w_self_system_term(void) {
     ECS_TAG(world, Tag);
 
     ecs_entity_t pipeline = ecs_pipeline(world, {
-        .query.filter.terms = {
+        .query.terms = {
             { EcsSystem },
             { Tag }
         }
@@ -3005,12 +3013,11 @@ void Pipeline_custom_pipeline_w_self_system_term(void) {
 
     const EcsPoly *p = ecs_get_pair(world, pipeline, EcsPoly, EcsQuery);
     test_assert(p != NULL);
-    test_assert(ecs_poly_is(p->poly, ecs_query_t));
+    test_assert(flecs_poly_is(p->poly, ecs_query_t));
 
     ecs_query_t *q = p->poly;
-    const ecs_filter_t *f = ecs_query_get_filter(q);
-    test_assert(f != NULL);
-    test_assert((f->terms[0].src.flags & EcsTraverseFlags) == EcsSelf);
+    test_assert(q != NULL);
+    test_assert((q->terms[0].src.id & EcsTraverseFlags) == EcsSelf);
 
     ecs_fini(world);
 }
@@ -3021,15 +3028,15 @@ void Pipeline_switch_from_threads_to_tasks(void) {
     ECS_COMPONENT_DEFINE(world, Position);
 
     ecs_system(world, {
-        .entity = ecs_entity(world, {.add = { ecs_dependson(EcsOnUpdate) }}),
-        .query.filter = {.terms = {{ ecs_id(Position) }}},
+        .entity = ecs_entity(world, {.add = ecs_ids( ecs_dependson(EcsOnUpdate) )}),
+        .query = {.terms = {{ ecs_id(Position) }}},
         .callback = SysA
         });
 
     ecs_system(world, {
-        .entity = ecs_entity(world, {.add = { ecs_dependson(EcsOnUpdate) }}),
+        .entity = ecs_entity(world, {.add = ecs_ids( ecs_dependson(EcsOnUpdate) )}),
         .callback = NoReadonlyAddPosition,
-        .no_readonly = true
+        .immediate = true
         });
 
     ecs_set_threads(world, 2);
@@ -3057,15 +3064,15 @@ void Pipeline_switch_from_tasks_to_threads(void) {
     ECS_COMPONENT_DEFINE(world, Position);
 
     ecs_system(world, {
-        .entity = ecs_entity(world, {.add = { ecs_dependson(EcsOnUpdate) }}),
-        .query.filter = {.terms = {{ ecs_id(Position) }}},
+        .entity = ecs_entity(world, {.add = ecs_ids( ecs_dependson(EcsOnUpdate) )}),
+        .query = {.terms = {{ ecs_id(Position) }}},
         .callback = SysA
         });
 
     ecs_system(world, {
-        .entity = ecs_entity(world, {.add = { ecs_dependson(EcsOnUpdate) }}),
+        .entity = ecs_entity(world, {.add = ecs_ids( ecs_dependson(EcsOnUpdate) )}),
         .callback = NoReadonlyAddPosition,
-        .no_readonly = true
+        .immediate = true
         });
 
     ecs_set_threads(world, 2);
@@ -3094,40 +3101,40 @@ void Pipeline_run_pipeline_multithreaded_internal(bool task_threads) {
     ECS_COMPONENT(world, Position);
 
     ecs_entity_t s1 = ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, { .name = "SysA", .add = {Tag, ecs_pair(EcsDependsOn, EcsOnUpdate)} }),
-        .query.filter.expr = "Position",
+        .entity = ecs_entity(world, { .name = "SysA", .add = ecs_ids(Tag, ecs_pair(EcsDependsOn, EcsOnUpdate)) }),
+        .query.expr = "Position",
         .callback = SysA,
         .multi_threaded = true
     });
     ecs_entity_t s2 = ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, { .name = "SysB", .add = {Tag, ecs_pair(EcsDependsOn, EcsOnUpdate)} }),
-        .query.filter.expr = "Position",
+        .entity = ecs_entity(world, { .name = "SysB", .add = ecs_ids(Tag, ecs_pair(EcsDependsOn, EcsOnUpdate)) }),
+        .query.expr = "Position",
         .callback = SysB
     });
     ecs_entity_t s3 = ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, { .name = "SysC", .add = {Tag, ecs_pair(EcsDependsOn, EcsOnUpdate)} }),
-        .query.filter.expr = "Position",
+        .entity = ecs_entity(world, { .name = "SysC", .add = ecs_ids(Tag, ecs_pair(EcsDependsOn, EcsOnUpdate)) }),
+        .query.expr = "Position",
         .callback = SysC
     });
     ecs_entity_t s4 = ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, { .name = "SysD", .add = {Tag, ecs_pair(EcsDependsOn, EcsOnUpdate)} }),
-        .query.filter.expr = "Position",
+        .entity = ecs_entity(world, { .name = "SysD", .add = ecs_ids(Tag, ecs_pair(EcsDependsOn, EcsOnUpdate)) }),
+        .query.expr = "Position",
         .callback = SysD,
         .multi_threaded = true
     });
     ecs_entity_t s5 = ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, { .name = "SysE", .add = {Tag, ecs_pair(EcsDependsOn, EcsOnUpdate)} }),
-        .query.filter.expr = "Position",
+        .entity = ecs_entity(world, { .name = "SysE", .add = ecs_ids(Tag, ecs_pair(EcsDependsOn, EcsOnUpdate)) }),
+        .query.expr = "Position",
         .callback = SysE,
         .multi_threaded = true
     });
     ecs_entity_t s6 = ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, { .name = "SysF", .add = {Tag, ecs_pair(EcsDependsOn, EcsOnUpdate)} }),
-        .query.filter.expr = "Position",
+        .entity = ecs_entity(world, { .name = "SysF", .add = ecs_ids(Tag, ecs_pair(EcsDependsOn, EcsOnUpdate)) }),
+        .query.expr = "Position",
         .callback = SysF
     });
 
-    ECS_PIPELINE(world, P, flecs.system.System, flecs.pipeline.Phase(cascade(DependsOn)), Tag);
+    ECS_PIPELINE(world, P, flecs.system.System, flecs.pipeline.Phase(cascade DependsOn), Tag);
 
     test_assert(s1 != 0);
     test_assert(s2 != 0);
@@ -3136,8 +3143,8 @@ void Pipeline_run_pipeline_multithreaded_internal(bool task_threads) {
     test_assert(s5 != 0);
     test_assert(s6 != 0);
 
-    ecs_new(world, Position);
-    ecs_new(world, Position);
+    ecs_new_w(world, Position);
+    ecs_new_w(world, Position);
 
     if (task_threads)
     {
@@ -3203,6 +3210,6 @@ void Pipeline_pipeline_init_no_system_term(void) {
 
     test_expect_abort();
     ecs_pipeline(world, {
-        .query.filter.terms = {{ ecs_id(Position) }}
+        .query.terms = {{ ecs_id(Position) }}
     });
 }

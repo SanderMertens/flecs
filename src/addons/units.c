@@ -22,7 +22,7 @@ void FlecsUnitsImport(
 
     EcsUnitPrefixes = ecs_entity(world, {
         .name = "prefixes",
-        .add = { EcsModule }
+        .add = ecs_ids( EcsModule )
     });
 
     /* Initialize unit prefixes */

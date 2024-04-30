@@ -61,7 +61,7 @@ int main(int argc, char *argv[]) {
 
     // Query for components
     ecs_query_t *q = ecs_query(ecs, {
-        .filter.terms = {
+        .terms = {
             { .id = ecs_id(Position) }, { .id = ecs_id(Velocity) }
         }
     });
@@ -69,7 +69,7 @@ int main(int argc, char *argv[]) {
     // Serialize query to JSON. Note that this works for iterators from any
     // source, including filters & rules.
     ecs_iter_t it = ecs_query_iter(ecs, q);
-    char *json = ecs_iter_to_json(ecs, &it, NULL);
+    char *json = ecs_iter_to_json(&it, NULL);
     printf("%s\n", json);
     ecs_os_free(json);
 

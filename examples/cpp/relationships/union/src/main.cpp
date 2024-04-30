@@ -31,8 +31,9 @@ enum Direction {
 int main(int argc, char *argv[]) {
     flecs::world ecs(argc, argv);
 
-    ecs.component<Movement>().add(flecs::Union);
-    ecs.component<Direction>().add(flecs::Union);
+    // TODO
+    // ecs.component<Movement>().add(flecs::Union);
+    // ecs.component<Direction>().add(flecs::Union);
 
     // Create a query that subscribes for all entities that have a Direction
     // and that are walking.
@@ -63,8 +64,8 @@ int main(int argc, char *argv[]) {
     q.iter([&](const flecs::iter& it) {
         // Get the column with direction states. This is stored as an array
         // with identifiers to the individual states
-        auto movement = it.field<const flecs::entity_t>(1);
-        auto direction = it.field<const flecs::entity_t>(2);
+        auto movement = it.field<const flecs::entity_t>(0);
+        auto direction = it.field<const flecs::entity_t>(1);
 
         for (auto i : it) {
             // Movement will always be Walking, Direction can be any state

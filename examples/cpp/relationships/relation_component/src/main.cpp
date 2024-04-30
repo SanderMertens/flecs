@@ -48,7 +48,7 @@ int main(int, char*[]) {
 
     // You can prevent a pair from assuming the type of a component by adding
     // the Tag property to a relationship:
-    ecs.component<MustHave>().add(flecs::Tag);
+    ecs.component<MustHave>().add(flecs::PairIsTag);
 
     // Even though Position is a component, <MustHave, Position> contains no
     // data because MustHave has the Tag property.
@@ -63,7 +63,7 @@ int main(int, char*[]) {
     // When querying for a relationship component, add the pair type as template
     // argument to the builder:
     flecs::query<Requires> q = ecs.query_builder<Requires>()
-        .term_at(1).second<Gigawatts>() // set second part of pair for first term
+        .term_at(0).second<Gigawatts>() // set second part of pair for first term
         .build();
     
     // When iterating, always use the pair type:

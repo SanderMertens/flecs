@@ -10,7 +10,6 @@ namespace flecs {
 /**
  * @defgroup cpp_core_queries Queries
  * @ingroup cpp_core
- * Cached query implementation. Fast to iterate, but slower to create than flecs::filter.
  *
  * @{
  */

@@ -42,9 +42,9 @@ int main(int argc, char *argv[]) {
     ecs_remove(ecs, alice, Walking);
 
     // Iterate all entities with Position
-    ecs_iter_t it = ecs_term_iter(ecs, &(ecs_term_t){ .id = ecs_id(Position) });
-    while (ecs_term_next(&it)) {
-        Position *p = ecs_field(&it, Position, 1);
+    ecs_iter_t it = ecs_each(ecs, Position);
+    while (ecs_each_next(&it)) {
+        Position *p = ecs_field(&it, Position, 0);
         for (int i = 0; i < it.count; i ++) {
             printf("%s: {%f, %f}\n", ecs_get_name(ecs, it.entities[i]),
                 p[i].x, p[i].y);

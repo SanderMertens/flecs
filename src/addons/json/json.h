@@ -31,7 +31,7 @@ typedef enum ecs_json_token_t {
 
 typedef struct ecs_json_value_ser_ctx_t {
     ecs_entity_t type;
-    const EcsMetaTypeSerialized *ser;
+    const EcsTypeSerializer *ser;
     char *id_label;
     bool initialized;
 } ecs_json_value_ser_ctx_t;
@@ -190,14 +190,14 @@ bool flecs_json_skip_variable(
 void flecs_json_serialize_field(
     const ecs_world_t *world,
     const ecs_iter_t *it,
-    const ecs_filter_t *q,
+    const ecs_query_t *q,
     int field,
     ecs_strbuf_t *buf,
     ecs_json_ser_ctx_t *ctx);
 
 void flecs_json_serialize_query(
     const ecs_world_t *world,
-    const ecs_filter_t *q,
+    const ecs_query_t *q,
     ecs_strbuf_t *buf);
 
 int flecs_json_ser_type(

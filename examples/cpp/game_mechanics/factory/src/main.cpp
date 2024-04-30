@@ -199,7 +199,7 @@ struct factories {
 
     // System that transfers resource and resets factory for next item
     world.system<FactorySupply, FactoryProduction, Stores>("Transfer")
-      .term_at(3).second(Wildcard)
+      .term_at(2).second(Wildcard)
       .with(FactoryState::TransferResource)
       .interval(1.0f)
       .each([](entity factory, FactorySupply& s, FactoryProduction& p, Stores& out) {
@@ -289,7 +289,7 @@ private:
         factory.add(FactoryState::WaitingForResources);
 
         // Initialize supply component
-        factory.set([&](FactorySupply& s) {
+        factory.insert([&](FactorySupply& s) {
           for (int i = 0; i < MaxInputs; i ++) {
             entity resource = world.entity(r.items[i].resource);
             entity input = world.entity(config.inputs[i]);
@@ -332,8 +332,8 @@ int main(int argc, char *argv[]) {
 
   world.import<factories>();
 
-  ecs_plecs_from_file(world, "resources.flecs");
-  ecs_plecs_from_file(world, "scene.flecs");
+  ecs_script_run_file(world, "resources.flecs");
+  ecs_script_run_file(world, "scene.flecs");
 
   return world.app()
     .enable_rest()

@@ -17,9 +17,6 @@ typedef enum ecs_table_eventkind_t {
 typedef struct ecs_table_event_t {
     ecs_table_eventkind_t kind;
 
-    /* Query event */
-    ecs_query_t *query;
-
     /* Component info event */
     ecs_entity_t component;
 
@@ -42,10 +39,7 @@ typedef struct ecs_table__t {
     struct ecs_table_record_t *records; /* Array with table records */
     ecs_hashmap_t *name_index;       /* Cached pointer to name index */
 
-    ecs_switch_t *sw_columns;        /* Switch columns */
     ecs_bitset_t *bs_columns;        /* Bitset columns */
-    int16_t sw_count;
-    int16_t sw_offset;
     int16_t bs_count;
     int16_t bs_offset;
     int16_t ft_offset;
@@ -128,12 +122,6 @@ void flecs_table_clear_entities_silent(
     ecs_world_t *world,
     ecs_table_t *table);
 
-/* Clear table data. Don't call OnRemove handlers. */
-void flecs_table_clear_data(
-    ecs_world_t *world,
-    ecs_table_t *table,
-    ecs_data_t *data);    
-
 /* Return number of entities in data */
 int32_t flecs_table_data_count(
     const ecs_data_t *data);
@@ -204,7 +192,7 @@ void flecs_table_remove_actions(
     ecs_table_t *table);
 
 /* Free table */
-void flecs_table_free(
+void flecs_table_fini(
     ecs_world_t *world,
     ecs_table_t *table); 
 
@@ -212,20 +200,12 @@ void flecs_table_free(
 void flecs_table_free_type(
     ecs_world_t *world,
     ecs_table_t *table);     
-    
-/* Replace data */
-void flecs_table_replace_data(
-    ecs_world_t *world,
-    ecs_table_t *table,
-    ecs_data_t *data);
 
 /* Merge data of one table into another table */
 void flecs_table_merge(
     ecs_world_t *world,
     ecs_table_t *new_table,
-    ecs_table_t *old_table,
-    ecs_data_t *new_data,
-    ecs_data_t *old_data);
+    ecs_table_t *old_table);
 
 void flecs_table_swap(
     ecs_world_t *world,
@@ -247,10 +227,6 @@ void flecs_table_delete_entities(
     ecs_world_t *world,
     ecs_table_t *table);
 
-int32_t flecs_table_column_to_union_index(
-    const ecs_table_t *table,
-    int32_t column);
-
 /* Increase observer count of table */
 void flecs_table_traversable_add(
     ecs_table_t *table,
@@ -261,5 +237,18 @@ ecs_vec_t* flecs_table_entities(
 
 ecs_entity_t* flecs_table_entities_array(
     ecs_table_t *table);
+
+void flecs_table_emit(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_entity_t event);
+
+int32_t flecs_table_get_toggle_column(
+    ecs_table_t *table,
+    ecs_id_t id);
+
+ecs_bitset_t* flecs_table_get_toggle(
+    ecs_table_t *table,
+    ecs_id_t id);
 
 #endif

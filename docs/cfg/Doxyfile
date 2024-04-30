@@ -1650,7 +1650,7 @@ QHP_VIRTUAL_FOLDER     = doc
 
 # If the QHP_CUST_FILTER_NAME tag is set, it specifies the name of a custom
 # filter to add. For more information please see Qt Help Project / Custom
-# Filters (see:
+# Querys (see:
 # https://doc.qt.io/archives/qt-4.8/qthelpproject.html#custom-filters).
 # This tag requires that the tag GENERATE_QHP is set to YES.
 
@@ -1658,14 +1658,14 @@ QHP_CUST_FILTER_NAME   =
 
 # The QHP_CUST_FILTER_ATTRS tag specifies the list of the attributes of the
 # custom filter to add. For more information please see Qt Help Project / Custom
-# Filters (see:
+# Querys (see:
 # https://doc.qt.io/archives/qt-4.8/qthelpproject.html#custom-filters).
 # This tag requires that the tag GENERATE_QHP is set to YES.
 
 QHP_CUST_FILTER_ATTRS  =
 
 # The QHP_SECT_FILTER_ATTRS tag specifies the list of the attributes this
-# project's filter section matches. Qt Help Project / Filter Attributes (see:
+# project's filter section matches. Qt Help Project / Query Attributes (see:
 # https://doc.qt.io/archives/qt-4.8/qthelpproject.html#filter-attributes).
 # This tag requires that the tag GENERATE_QHP is set to YES.
 
@@ -2428,22 +2428,18 @@ INCLUDE_FILE_PATTERNS  =
 
 PREDEFINED             = FLECS_APP \
                          FLECS_DOC \
-                         FLECS_EXPR \
                          FLECS_HTTP \
                          FLECS_JOURNAL \
                          FLECS_JSON \
                          FLECS_LOG \
                          FLECS_META \
-                         FLECS_META_C \
                          FLECS_MODULE \
                          FLECS_MONITOR \
                          FLECS_OS_API_IMPL \
-                         FLECS_PARSER \
                          FLECS_PIPELINE \
-                         FLECS_PLECS \
+                         FLECS_SCRIPT \
                          FLECS_REST \
                          FLECS_RULES \
-                         FLECS_SNAPSHOT \
                          FLECS_STATS \
                          FLECS_SYSTEM \
                          FLECS_TIMER \

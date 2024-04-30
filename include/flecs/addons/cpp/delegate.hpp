@@ -50,7 +50,7 @@ struct term_ptrs {
                     *>(nullptr)...);
     }
 
-    array m_terms;
+    array terms_;
 
 private:
     /* Populate terms array without checking for references */
@@ -58,9 +58,9 @@ private:
 
     template <typename T, typename... Targs>
     bool populate(const ecs_iter_t *iter, size_t index, T, Targs... comps) {
-        m_terms[index].ptr = iter->ptrs[index];
+        terms_[index].ptr = iter->ptrs[index];
         bool is_ref = iter->sources && iter->sources[index] != 0;
-        m_terms[index].is_ref = is_ref;
+        terms_[index].is_ref = is_ref;
         is_ref |= populate(iter, index + 1, comps ...);
         return is_ref;
     }  
@@ -76,11 +76,11 @@ struct each_column { };
 // Base class
 struct each_column_base {
     each_column_base(const _::term_ptr& term, size_t row) 
-        : m_term(term), m_row(row) { }
+        : term_(term), row_(row) { }
 
 protected:
-    const _::term_ptr& m_term;
-    size_t m_row;    
+    const _::term_ptr& term_;
+    size_t row_;    
 };
 
 // If type is not a pointer, return a reference to the type (default case)
@@ -93,7 +93,7 @@ struct each_column<T, if_t< !is_pointer<T>::value &&
         : each_column_base(term, row) { }
 
     T& get_row() {
-        return static_cast<T*>(this->m_term.ptr)[this->m_row];
+        return static_cast<T*>(this->term_.ptr)[this->row_];
     }  
 };
 
@@ -109,7 +109,7 @@ struct each_column<T, if_t< !is_pointer<T>::value &&
         : each_column_base(term, row) { }
 
     T get_row() {
-        return static_cast<actual_type_t<T>*>(this->m_term.ptr)[this->m_row];
+        return static_cast<actual_type_t<T>*>(this->term_.ptr)[this->row_];
     }  
 };
 
@@ -140,8 +140,8 @@ struct each_column<T, if_t< is_pointer<T>::value &&
         : each_column_base(term, row) { }
 
     actual_type_t<T> get_row() {
-        if (this->m_term.ptr) {
-            return &static_cast<actual_type_t<T>>(this->m_term.ptr)[this->m_row];
+        if (this->term_.ptr) {
+            return &static_cast<actual_type_t<T>>(this->term_.ptr)[this->row_];
         } else {
             // optional argument doesn't have a value
             return nullptr;
@@ -164,7 +164,7 @@ struct each_ref_column : public each_column<T> {
             // This check only happens when the current table being iterated
             // over caused the query to match a reference. The check is
             // performed once per iterated table.
-            this->m_row = 0;
+            this->row_ = 0;
         }
     }
 };
@@ -188,10 +188,10 @@ struct each_delegate : public delegate {
 
     template < if_not_t< is_same< decay_t<Func>, decay_t<Func>& >::value > = 0>
     explicit each_delegate(Func&& func) noexcept 
-        : m_func(FLECS_MOV(func)) { }
+        : func_(FLECS_MOV(func)) { }
 
     explicit each_delegate(const Func& func) noexcept 
-        : m_func(func) { }
+        : func_(func) { }
 
     // Invoke object directly. This operation is useful when the calling
     // function has just constructed the delegate, such as what happens when
@@ -202,10 +202,10 @@ struct each_delegate : public delegate {
         iter->flags |= EcsIterCppEach;
 
         if (terms.populate(iter)) {
-            invoke_callback< each_ref_column >(iter, m_func, 0, terms.m_terms);
+            invoke_callback< each_ref_column >(iter, func_, 0, terms.terms_);
         } else {
-            invoke_callback< each_column >(iter, m_func, 0, terms.m_terms);
-        }   
+            invoke_callback< each_column >(iter, func_, 0, terms.terms_);
+        }
     }
 
     // Static function that can be used as callback for systems/triggers
@@ -342,7 +342,7 @@ private:
             iter, func, index + 1, columns, comps..., columns[index]);
     }    
 
-    Func m_func;
+    Func func_;
 };
 
 template <typename Func, typename ... Components>
@@ -364,10 +364,10 @@ struct find_delegate : public delegate {
 
     template < if_not_t< is_same< decay_t<Func>, decay_t<Func>& >::value > = 0>
     explicit find_delegate(Func&& func) noexcept 
-        : m_func(FLECS_MOV(func)) { }
+        : func_(FLECS_MOV(func)) { }
 
     explicit find_delegate(const Func& func) noexcept 
-        : m_func(func) { }
+        : func_(func) { }
 
     // Invoke object directly. This operation is useful when the calling
     // function has just constructed the delegate, such as what happens when
@@ -376,9 +376,9 @@ struct find_delegate : public delegate {
         term_ptrs<Components...> terms;
 
         if (terms.populate(iter)) {
-            return invoke_callback< each_ref_column >(iter, m_func, 0, terms.m_terms);
+            return invoke_callback< each_ref_column >(iter, func_, 0, terms.terms_);
         } else {
-            return invoke_callback< each_column >(iter, m_func, 0, terms.m_terms);
+            return invoke_callback< each_column >(iter, func_, 0, terms.terms_);
         }   
     }
 
@@ -496,7 +496,7 @@ private:
             iter, func, index + 1, columns, comps..., columns[index]);
     }
 
-    Func m_func;
+    Func func_;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -513,10 +513,10 @@ private:
 public:
     template < if_not_t< is_same< decay_t<Func>, decay_t<Func>& >::value > = 0>
     explicit iter_delegate(Func&& func) noexcept 
-        : m_func(FLECS_MOV(func)) { }
+        : func_(FLECS_MOV(func)) { }
 
     explicit iter_delegate(const Func& func) noexcept 
-        : m_func(func) { }
+        : func_(func) { }
 
     // Invoke object directly. This operation is useful when the calling
     // function has just constructed the delegate, such as what happens when
@@ -524,7 +524,7 @@ public:
     void invoke(ecs_iter_t *iter) const {
         term_ptrs<Components...> terms;
         terms.populate(iter);
-        invoke_callback(iter, m_func, 0, terms.m_terms);
+        invoke_callback(iter, func_, 0, terms.terms_);
     }
 
     // Static function that can be used as callback for systems/triggers
@@ -580,7 +580,7 @@ private:
             columns[index]);
     }
 
-    Func m_func;
+    Func func_;
 };
 
 
@@ -591,7 +591,7 @@ private:
 template <typename Func>
 struct entity_observer_delegate : delegate {
     explicit entity_observer_delegate(Func&& func) noexcept 
-        : m_func(FLECS_MOV(func)) { }
+        : func_(FLECS_MOV(func)) { }
 
     // Static function that can be used as callback for systems/triggers
     static void run(ecs_iter_t *iter) {
@@ -602,23 +602,23 @@ private:
     static void invoke(ecs_iter_t *iter) {
         auto self = static_cast<const entity_observer_delegate*>(iter->binding_ctx);
         ecs_assert(self != nullptr, ECS_INTERNAL_ERROR, NULL);
-        self->m_func(flecs::entity(iter->world, ecs_field_src(iter, 1)));
+        self->func_(flecs::entity(iter->world, ecs_field_src(iter, 0)));
     }
 
     template <typename F, if_t<arity<F>::value == 0> = 0>
     static void invoke(ecs_iter_t *iter) {
         auto self = static_cast<const entity_observer_delegate*>(iter->binding_ctx);
         ecs_assert(self != nullptr, ECS_INTERNAL_ERROR, NULL);
-        self->m_func();
+        self->func_();
     }
 
-    Func m_func;
+    Func func_;
 };
 
 template <typename Func, typename Event>
 struct entity_payload_observer_delegate : delegate {
     explicit entity_payload_observer_delegate(Func&& func) noexcept 
-        : m_func(FLECS_MOV(func)) { }
+        : func_(FLECS_MOV(func)) { }
 
     // Static function that can be used as callback for systems/triggers
     static void run(ecs_iter_t *iter) {
@@ -635,7 +635,7 @@ private:
             "entity observer invoked without payload");
 
         Event *data = static_cast<Event*>(iter->param);
-        self->m_func(*data);
+        self->func_(*data);
     }
 
     template <typename F, if_t<arity<F>::value == 2> = 0>
@@ -647,10 +647,10 @@ private:
             "entity observer invoked without payload");
 
         Event *data = static_cast<Event*>(iter->param);
-        self->m_func(flecs::entity(iter->world, ecs_field_src(iter, 1)), *data);
+        self->func_(flecs::entity(iter->world, ecs_field_src(iter, 0)), *data);
     }
 
-    Func m_func;
+    Func func_;
 };
 
 
@@ -696,7 +696,7 @@ struct entity_with_delegate_impl<arg_list<Args ...>> {
         /* Get column indices for components */
         ColumnArray columns ({
             ecs_table_get_column_index(real_world, table, 
-                _::cpp_type<Args>().id(world))...
+                _::type<Args>().id(world))...
         });
 
         /* Get pointers for columns for entity */
@@ -717,7 +717,7 @@ struct entity_with_delegate_impl<arg_list<Args ...>> {
         size_t i = 0;
         DummyArray dummy ({
             (ptrs[i ++] = ecs_ensure_id(world, e, 
-                _::cpp_type<Args>().id(world)), 0)...
+                _::type<Args>().id(world)), 0)...
         });
 
         return true;

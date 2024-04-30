@@ -7,8 +7,8 @@
 #include <ctype.h>
 
 #ifdef FLECS_META
-#ifdef FLECS_PARSER
-#include "flecs/addons/parser.h"
+#ifdef FLECS_SCRIPT
+#include "../script/script.h"
 #endif
 
 static
@@ -79,7 +79,8 @@ static
 ecs_meta_type_op_t* flecs_meta_cursor_get_op(
     ecs_meta_scope_t *scope)
 {
-    ecs_assert(scope->ops != NULL, ECS_INVALID_OPERATION, NULL);
+    ecs_assert(scope->ops != NULL, ECS_INVALID_OPERATION, 
+        "type serializer is missing instructions");
     return &scope->ops[scope->op_cur];
 }
 
@@ -175,8 +176,8 @@ int flecs_meta_cursor_push_type(
     ecs_entity_t type,
     void *ptr)
 {
-    const EcsMetaTypeSerialized *ser = ecs_get(
-        world, type, EcsMetaTypeSerialized);
+    const EcsTypeSerializer *ser = ecs_get(
+        world, type, EcsTypeSerializer);
     if (ser == NULL) {
         char *str = ecs_id_str(world, type);
         ecs_err("cannot open scope for '%s' (missing reflection data)", str);
@@ -318,11 +319,33 @@ int ecs_meta_member(
     return 0;
 }
 
+static
+const char* flecs_meta_parse_member(
+    const char *start,
+    char *token_out)
+{
+    const char *ptr;
+    char ch;
+    for (ptr = start; (ch = *ptr); ptr ++) {
+        if (ch == '.') {
+            break;
+        }
+    }
+
+    int32_t len = flecs_ito(int32_t, ptr - start);
+    ecs_os_memcpy(token_out, start, len);
+    token_out[len] = '\0';
+    if (ch == '.') {
+        ptr ++;
+    }
+
+    return ptr;
+}
+
 int ecs_meta_dotmember(
     ecs_meta_cursor_t *cursor,
     const char *name)
 {
-#ifdef FLECS_PARSER
     ecs_meta_scope_t *cur_scope = flecs_meta_cursor_get_scope(cursor);
     flecs_meta_cursor_restore_scope(cursor, cur_scope);
 
@@ -331,13 +354,7 @@ int ecs_meta_dotmember(
 
     char token[ECS_MAX_TOKEN_SIZE];
     const char *ptr = name;
-    while ((ptr = ecs_parse_token(NULL, NULL, ptr, token, '.'))) {
-        if (ptr[0] != '.' && ptr[0]) {
-            ecs_parser_error(NULL, name, ptr - name, 
-                "expected '.' or end of string");
-            goto error;
-        }
-
+    while ((ptr = flecs_meta_parse_member(ptr, token))) {
         if (dotcount) {
             ecs_meta_push(cursor);
         }
@@ -350,8 +367,6 @@ int ecs_meta_dotmember(
             break;   
         }
 
-        ptr ++; /* Skip . */
-
         dotcount ++;
     }
 
@@ -363,12 +378,6 @@ int ecs_meta_dotmember(
     return 0;
 error:
     return -1;
-#else
-    (void)cursor;
-    (void)name;
-    ecs_err("the FLECS_PARSER addon is required for ecs_meta_dotmember");
-    return -1;
-#endif
 }
 
 int ecs_meta_push(
@@ -484,7 +493,7 @@ int ecs_meta_push(
     case EcsOpOpaque: {
         const EcsOpaque *type_ptr = ecs_get(world, op->type, EcsOpaque);
         ecs_entity_t as_type = type_ptr->as_type;
-        const EcsMetaType *mtype_ptr = ecs_get(world, as_type, EcsMetaType);
+        const EcsType *mtype_ptr = ecs_get(world, as_type, EcsType);
 
         /* Check what kind of type the opaque type represents */
         switch(mtype_ptr->kind) {
@@ -631,8 +640,8 @@ int ecs_meta_pop(
         } else if (op->kind == EcsOpOpaque) {
             const EcsOpaque *opaque = scope->opaque;
             if (scope->is_collection) {
-                const EcsMetaType *mtype = ecs_get(cursor->world, 
-                    opaque->as_type, EcsMetaType);
+                const EcsType *mtype = ecs_get(cursor->world, 
+                    opaque->as_type, EcsType);
                 ecs_assert(mtype != NULL, ECS_INTERNAL_ERROR, NULL);
 
                 /* When popping a opaque collection type, call resize to make 
@@ -917,7 +926,9 @@ int ecs_meta_set_char(
     cases_T_signed(ptr, value, ecs_meta_bounds_signed);
     case EcsOpOpaque: {
         const EcsOpaque *opaque = ecs_get(cursor->world, op->type, EcsOpaque);
-        ecs_assert(opaque != NULL, ECS_INVALID_OPERATION, NULL);
+        ecs_assert(opaque != NULL, ECS_INVALID_OPERATION, 
+            "entity %s is not an opaque type but serializer thinks so",
+                ecs_get_name(cursor->world, op->type));
         if (opaque->assign_char) { /* preferred operation */
             opaque->assign_char(ptr, value);
             break;
@@ -974,7 +985,9 @@ int ecs_meta_set_int(
     cases_T_float(ptr, value);
     case EcsOpOpaque: {
         const EcsOpaque *opaque = ecs_get(cursor->world, op->type, EcsOpaque);
-        ecs_assert(opaque != NULL, ECS_INVALID_OPERATION, NULL);
+        ecs_assert(opaque != NULL, ECS_INVALID_OPERATION, 
+            "entity %s is not an opaque type but serializer thinks so",
+                ecs_get_name(cursor->world, op->type));
         if (opaque->assign_int) { /* preferred operation */
             opaque->assign_int(ptr, value);
             break;
@@ -1025,7 +1038,9 @@ int ecs_meta_set_uint(
     cases_T_float(ptr, value);
     case EcsOpOpaque: {
         const EcsOpaque *opaque = ecs_get(cursor->world, op->type, EcsOpaque);
-        ecs_assert(opaque != NULL, ECS_INVALID_OPERATION, NULL);
+        ecs_assert(opaque != NULL, ECS_INVALID_OPERATION, 
+            "entity %s is not an opaque type but serializer thinks so",
+                ecs_get_name(cursor->world, op->type));
         if (opaque->assign_uint) { /* preferred operation */
             opaque->assign_uint(ptr, value);
             break;
@@ -1081,7 +1096,9 @@ int ecs_meta_set_float(
     cases_T_float(ptr, value);
     case EcsOpOpaque: {
         const EcsOpaque *opaque = ecs_get(cursor->world, op->type, EcsOpaque);
-        ecs_assert(opaque != NULL, ECS_INVALID_OPERATION, NULL);
+        ecs_assert(opaque != NULL, ECS_INVALID_OPERATION, 
+            "entity %s is not an opaque type but serializer thinks so",
+                ecs_get_name(cursor->world, op->type));
         if (opaque->assign_float) { /* preferred operation */
             opaque->assign_float(ptr, value);
             break;
@@ -1126,7 +1143,7 @@ int ecs_meta_set_value(
     ecs_check(value != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_entity_t type = value->type;
     ecs_check(type != 0, ECS_INVALID_PARAMETER, NULL);
-    const EcsMetaType *mt = ecs_get(cursor->world, type, EcsMetaType);
+    const EcsType *mt = ecs_get(cursor->world, type, EcsType);
     if (!mt) {
         ecs_err("type of value does not have reflection data");
         return -1;
@@ -1200,7 +1217,7 @@ int flecs_meta_add_bitmask_constant(
         return -1;
     }
 
-    const ecs_u32_t *v = ecs_get_pair_object(
+    const ecs_u32_t *v = ecs_get_pair_second(
         cursor->world, c, EcsConstant, ecs_u32_t);
     if (v == NULL) {
         char *path = ecs_get_fullpath(cursor->world, op->type);
@@ -1267,6 +1284,13 @@ int flecs_meta_cursor_lookup(
     return 0;
 }
 
+static
+bool flecs_meta_valid_digit(
+    const char *str)
+{
+    return str[0] == '-' || isdigit(str[0]);
+}
+
 int ecs_meta_set_string(
     ecs_meta_cursor_t *cursor,
     const char *value)
@@ -1274,6 +1298,41 @@ int ecs_meta_set_string(
     ecs_meta_scope_t *scope = flecs_meta_cursor_get_scope(cursor);
     ecs_meta_type_op_t *op = flecs_meta_cursor_get_op(scope);
     void *ptr = flecs_meta_cursor_get_ptr(cursor->world, scope);
+
+    switch(op->kind) {
+    case EcsOpI8:
+    case EcsOpU8:
+    case EcsOpByte:
+    case EcsOpI16:
+    case EcsOpU16:
+    case EcsOpI32:
+    case EcsOpU32:
+    case EcsOpI64:
+    case EcsOpU64:
+    case EcsOpIPtr:
+    case EcsOpUPtr:
+    case EcsOpF32:
+    case EcsOpF64:
+        if (!flecs_meta_valid_digit(value)) {
+            ecs_err("expected number, got '%s'", value);
+            goto error;
+        }
+    case EcsOpEnum:
+    case EcsOpBitmask:
+    case EcsOpArray:
+    case EcsOpVector:
+    case EcsOpOpaque:
+    case EcsOpPush:
+    case EcsOpPop:
+    case EcsOpPrimitive:
+    case EcsOpBool:
+    case EcsOpChar:
+    case EcsOpString:
+    case EcsOpEntity:
+    case EcsOpId:
+    case EcsOpScope:
+        break;
+    }
 
     switch(op->kind) {
     case EcsOpBool:
@@ -1339,7 +1398,7 @@ int ecs_meta_set_string(
             goto error;
         }
 
-        const ecs_i32_t *v = ecs_get_pair_object(
+        const ecs_i32_t *v = ecs_get_pair_second(
             cursor->world, c, EcsConstant, ecs_i32_t);
         if (v == NULL) {
             char *path = ecs_get_fullpath(cursor->world, op->type);
@@ -1365,25 +1424,16 @@ int ecs_meta_set_string(
         break;
     }
     case EcsOpId: {
+    #ifdef FLECS_SCRIPT
         ecs_id_t id = 0;
-#ifdef FLECS_PARSER
-        ecs_term_t term = {0};
-        if (ecs_parse_term(
-            cursor->world, NULL, value, value, &term, NULL, NULL, false)) 
-        {
-            if (ecs_term_finalize(cursor->world, &term)) {
-                ecs_term_fini(&term);
-                goto error;
-            }
-            id = term.id;
-            ecs_term_fini(&term);
-        } else {
-            ecs_term_fini(&term);
+        if (flecs_id_parse(cursor->world, NULL, value, &id) == NULL) {
             goto error;
         }
-#endif
-        set_T(ecs_id_t, ptr, id);
 
+        set_T(ecs_id_t, ptr, id);
+    #else
+        ecs_err("cannot parse component expression: script addon required");
+    #endif
         break;
     }
     case EcsOpPop:
@@ -1391,7 +1441,9 @@ int ecs_meta_set_string(
         goto error;
     case EcsOpOpaque: {
         const EcsOpaque *opaque = ecs_get(cursor->world, op->type, EcsOpaque);
-        ecs_assert(opaque != NULL, ECS_INVALID_OPERATION, NULL);
+        ecs_assert(opaque != NULL, ECS_INVALID_OPERATION, 
+            "entity %s is not an opaque type but serializer thinks so",
+                ecs_get_name(cursor->world, op->type));
         if (opaque->assign_string) { /* preferred */
             opaque->assign_string(ptr, value);
             break;

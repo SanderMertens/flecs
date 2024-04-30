@@ -231,10 +231,10 @@ int flecs_meta_serialize_type(
     ecs_size_t offset,
     ecs_vec_t *ops)
 {
-    const EcsMetaType *ptr = ecs_get(world, type, EcsMetaType);
+    const EcsType *ptr = ecs_get(world, type, EcsType);
     if (!ptr) {
         char *path = ecs_get_fullpath(world, type);
-        ecs_err("missing EcsMetaType for type %s'", path);
+        ecs_err("missing EcsType for type %s'", path);
         ecs_os_free(path);
         return -1;
     }
@@ -258,10 +258,10 @@ int flecs_meta_serialize_component(
     ecs_entity_t type,
     ecs_vec_t *ops)
 {
-    const EcsMetaType *ptr = ecs_get(world, type, EcsMetaType);
+    const EcsType *ptr = ecs_get(world, type, EcsType);
     if (!ptr) {
         char *path = ecs_get_fullpath(world, type);
-        ecs_err("missing EcsMetaType for type %s'", path);
+        ecs_err("missing EcsType for type %s'", path);
         ecs_os_free(path);
         return -1;
     }
@@ -285,8 +285,8 @@ void ecs_meta_type_serialized_init(
         ecs_vec_init_t(NULL, &ops, ecs_meta_type_op_t, 0);
         flecs_meta_serialize_component(world, e, &ops);
 
-        EcsMetaTypeSerialized *ptr = ecs_ensure(
-            world, e, EcsMetaTypeSerialized);
+        EcsTypeSerializer *ptr = ecs_ensure(
+            world, e, EcsTypeSerializer);
         if (ptr->ops.array) {
             ecs_meta_dtor_serialized(ptr);
         }

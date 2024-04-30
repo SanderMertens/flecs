@@ -12,43 +12,43 @@ struct string_view;
 // wrapping in an std::string.
 struct string {
     explicit string() 
-        : m_str(nullptr)
-        , m_const_str("")
-        , m_length(0) { }
+        : str_(nullptr)
+        , const_str_("")
+        , length_(0) { }
 
     explicit string(char *str) 
-        : m_str(str)
-        , m_const_str(str ? str : "")
-        , m_length(str ? ecs_os_strlen(str) : 0) { }
+        : str_(str)
+        , const_str_(str ? str : "")
+        , length_(str ? ecs_os_strlen(str) : 0) { }
 
     ~string() {
         // If flecs is included in a binary but is not used, it is possible that
         // the OS API is not initialized. Calling ecs_os_free in that case could
         // crash the application during exit. However, if a string has been set
         // flecs has been used, and OS API should have been initialized.
-        if (m_str) {
-            ecs_os_free(m_str);
+        if (str_) {
+            ecs_os_free(str_);
         }
     }
 
     string(string&& str) noexcept {
-        ecs_os_free(m_str);
-        m_str = str.m_str;
-        m_const_str = str.m_const_str;
-        m_length = str.m_length;
-        str.m_str = nullptr;
+        ecs_os_free(str_);
+        str_ = str.str_;
+        const_str_ = str.const_str_;
+        length_ = str.length_;
+        str.str_ = nullptr;
     }
 
     operator const char*() const {
-        return m_const_str;
+        return const_str_;
     }
 
     string& operator=(string&& str) noexcept {
-        ecs_os_free(m_str);
-        m_str = str.m_str;
-        m_const_str = str.m_const_str;
-        m_length = str.m_length;
-        str.m_str = nullptr;
+        ecs_os_free(str_);
+        str_ = str.str_;
+        const_str_ = str.const_str_;
+        length_ = str.length_;
+        str.str_ = nullptr;
         return *this;
     }
 
@@ -57,19 +57,19 @@ struct string {
     string(const string& str) = delete;
 
     bool operator==(const flecs::string& str) const {
-        if (str.m_const_str == m_const_str) {
+        if (str.const_str_ == const_str_) {
             return true;
         }
 
-        if (!m_const_str || !str.m_const_str) {
+        if (!const_str_ || !str.const_str_) {
             return false;
         }
 
-        if (str.m_length != m_length) {
+        if (str.length_ != length_) {
             return false;
         }
 
-        return ecs_os_strcmp(str, m_const_str) == 0;
+        return ecs_os_strcmp(str, const_str_) == 0;
     }
 
     bool operator!=(const flecs::string& str) const {
@@ -77,15 +77,15 @@ struct string {
     }    
 
     bool operator==(const char *str) const {
-        if (m_const_str == str) {
+        if (const_str_ == str) {
             return true;
         }
 
-        if (!m_const_str || !str) {
+        if (!const_str_ || !str) {
             return false;
         }
 
-        return ecs_os_strcmp(str, m_const_str) == 0;
+        return ecs_os_strcmp(str, const_str_) == 0;
     }
 
     bool operator!=(const char *str) const {
@@ -93,11 +93,11 @@ struct string {
     }    
 
     const char* c_str() const {
-        return m_const_str;
+        return const_str_;
     }
 
     std::size_t length() const {
-        return static_cast<std::size_t>(m_length);
+        return static_cast<std::size_t>(length_);
     }
 
     template <size_t N>
@@ -110,14 +110,14 @@ struct string {
     }
 
     void clear() {
-        ecs_os_free(m_str);
-        m_str = nullptr;
-        m_const_str = nullptr;
+        ecs_os_free(str_);
+        str_ = nullptr;
+        const_str_ = nullptr;
     }
 
     bool contains(const char *substr) {
-        if (m_const_str) {
-            return strstr(m_const_str, substr) != nullptr;
+        if (const_str_) {
+            return strstr(const_str_, substr) != nullptr;
         } else {
             return false;
         }
@@ -130,13 +130,13 @@ protected:
     // Making this constructor private forces the code to explicitly create a
     // string_view which emphasizes that the string won't be freed by the class.
     string(const char *str)
-        : m_str(nullptr)
-        , m_const_str(str ? str : "")
-        , m_length(str ? ecs_os_strlen(str) : 0) { }
+        : str_(nullptr)
+        , const_str_(str ? str : "")
+        , length_(str ? ecs_os_strlen(str) : 0) { }
 
-    char *m_str = nullptr;
-    const char *m_const_str;
-    ecs_size_t m_length;
+    char *str_ = nullptr;
+    const char *const_str_;
+    ecs_size_t length_;
 };
 
 // For consistency, the API returns a string_view where it could have returned

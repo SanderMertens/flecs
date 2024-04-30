@@ -70,7 +70,7 @@ char* flecs_explorer_request(const char *method, char *request) {
         if (body) {
             return body;
         } else {
-            return ecs_asprintf(
+            return flecs_asprintf(
                 "{\"error\": \"bad request (code %d)\"}", reply.code);
         }
     }

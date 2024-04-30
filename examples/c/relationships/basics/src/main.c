@@ -7,15 +7,15 @@ int main(int argc, char *argv[]) {
     ECS_TAG(ecs, Eats);
 
     // Entity used for Grows relationship
-    ecs_entity_t grows = ecs_new_entity(ecs, "Grows");
+    ecs_entity_t grows = ecs_entity(ecs, { .name = "Grows" });
 
     // Relationship objects
-    ecs_entity_t apples = ecs_new_entity(ecs, "Apples");
-    ecs_entity_t pears = ecs_new_entity(ecs, "Pears");
+    ecs_entity_t apples = ecs_entity(ecs, { .name = "Apples" });
+    ecs_entity_t pears = ecs_entity(ecs, { .name = "Pears" });
 
     // Create an entity with 3 relationships. Relationships are like regular components,
     // but combine two types/identifiers into an (relationship, object) pair.
-    ecs_entity_t bob = ecs_new_entity(ecs, "Bob");
+    ecs_entity_t bob = ecs_entity(ecs, { .name = "Bob" });
     // Pairs can be constructed from a type and entity
     ecs_add_pair(ecs, bob, Eats, apples);
     ecs_add_pair(ecs, bob, Eats, pears);

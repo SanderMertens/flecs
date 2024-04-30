@@ -63,7 +63,7 @@ static ecs_os_api_log_t rest_prev_log;
 static 
 void flecs_rest_capture_log(
     int32_t level, 
-    const char *file, 
+    const char *file,
     int32_t line, 
     const char *msg)
 {
@@ -341,7 +341,7 @@ bool flecs_rest_script(
     (void)world;
     (void)req;
     (void)reply;
-#ifdef FLECS_PLECS
+#ifdef FLECS_SCRIPT
     const char *data = ecs_http_get_param(req, "data");
     if (!data) {
         flecs_reply_error(reply, "missing data parameter");
@@ -354,13 +354,17 @@ bool flecs_rest_script(
 
     ecs_entity_t script = ecs_script(world, {
         .entity = ecs_entity(world, { .name = "scripts.main" }),
-        .str = data
+        .code = data
     });
 
     if (!script) {
         char *err = flecs_rest_get_captured_log();
-        char *escaped_err = ecs_astresc('"', err);
-        flecs_reply_error(reply, escaped_err);
+        char *escaped_err = flecs_astresc('"', err);
+        if (escaped_err) {
+            flecs_reply_error(reply, escaped_err);
+        } else {
+            flecs_reply_error(reply, "error parsing script");
+        }
         reply->code = 400; /* bad request */
         ecs_os_free(escaped_err);
         ecs_os_free(err);
@@ -381,7 +385,7 @@ void flecs_rest_reply_set_captured_log(
 {
     char *err = flecs_rest_get_captured_log();
     if (err) {
-        char *escaped_err = ecs_astresc('"', err);
+        char *escaped_err = flecs_astresc('"', err);
         flecs_reply_error(reply, escaped_err);
         ecs_os_free(escaped_err);
         ecs_os_free(err);
@@ -392,10 +396,9 @@ void flecs_rest_reply_set_captured_log(
 
 static
 void flecs_rest_iter_to_reply(
-    ecs_world_t *world,
     const ecs_http_request_t* req,
     ecs_http_reply_t *reply,
-    ecs_poly_t *query,
+    flecs_poly_t *query,
     ecs_iter_t *it)
 {
     ecs_iter_to_json_desc_t desc = {0};
@@ -416,7 +419,7 @@ void flecs_rest_iter_to_reply(
     }
 
     ecs_iter_t pit = ecs_page_iter(it, offset, limit);
-    if (ecs_iter_to_json_buf(world, &pit, &reply->body, &desc)) {
+    if (ecs_iter_to_json_buf(&pit, &reply->body, &desc)) {
         flecs_rest_reply_set_captured_log(reply);
     }
 
@@ -430,19 +433,19 @@ bool flecs_rest_reply_existing_query(
     ecs_http_reply_t *reply,
     const char *name)
 {
-    ecs_entity_t q = ecs_lookup(world, name);
-    if (!q) {
+    ecs_entity_t qe = ecs_lookup(world, name);
+    if (!qe) {
         flecs_reply_error(reply, "unresolved identifier '%s'", name);
         reply->code = 404;
         return true;
     }
 
-    ecs_poly_t *poly = NULL;
-    const EcsPoly *poly_comp = ecs_get_pair(world, q, EcsPoly, EcsQuery);
+    ecs_query_t *q = NULL;
+    const EcsPoly *poly_comp = ecs_get_pair(world, qe, EcsPoly, EcsQuery);
     if (!poly_comp) {
-        poly_comp = ecs_get_pair(world, q, EcsPoly, EcsObserver);
+        poly_comp = ecs_get_pair(world, qe, EcsPoly, EcsObserver);
         if (poly_comp) {
-            poly = &((ecs_observer_t*)poly_comp->poly)->filter;
+            q = ((ecs_observer_t*)poly_comp->poly)->query;
         } else {
             flecs_reply_error(reply, 
                 "resolved identifier '%s' is not a query", name);
@@ -450,38 +453,38 @@ bool flecs_rest_reply_existing_query(
             return true;
         }
     } else {
-        poly = poly_comp->poly;
+        q = poly_comp->poly;
     }
 
-    if (!poly) {
+    if (!q) {
         flecs_reply_error(reply, "query '%s' is not initialized", name);
         reply->code = 400;
         return true;
     }
 
-    ecs_iter_t it;
-    ecs_iter_poly(world, poly, &it, NULL);
+    ecs_iter_t it = ecs_query_iter(world, q);
 
-    ecs_dbg_2("rest: request query '%s'", q);
+    ecs_dbg_2("rest: request query '%s'", name);
     bool prev_color = ecs_log_enable_colors(false);
     rest_prev_log = ecs_os_api.log_;
     ecs_os_api.log_ = flecs_rest_capture_log;
 
     const char *vars = ecs_http_get_param(req, "vars");
     if (vars) {
-        if (!ecs_poly_is(poly, ecs_rule_t)) {
-            flecs_reply_error(reply, 
-                "variables are only supported for rule queries");
-            reply->code = 400;
-            return true;
-        }
-        if (ecs_rule_parse_vars(poly, &it, vars) == NULL) {
+    #ifdef FLECS_SCRIPT
+        if (ecs_query_args_parse(q, &it, vars) == NULL) {
             flecs_rest_reply_set_captured_log(reply);
             return true;
         }
+    #else
+        flecs_reply_error(reply,
+            "cannot parse query arg expression: script addon required");
+        reply->code = 400;
+        return true;
+    #endif
     }
 
-    flecs_rest_iter_to_reply(world, req, reply, poly, &it);
+    flecs_rest_iter_to_reply(req, reply, q, &it);
 
     ecs_os_api.log_ = rest_prev_log;
     ecs_log_enable_colors(prev_color);    
@@ -500,8 +503,8 @@ bool flecs_rest_reply_query(
         return flecs_rest_reply_existing_query(world, req, reply, q_name);
     }
 
-    const char *q = ecs_http_get_param(req, "q");
-    if (!q) {
+    const char *expr = ecs_http_get_param(req, "q");
+    if (!expr) {
         ecs_strbuf_appendlit(&reply->body, "Missing parameter 'q'");
         reply->code = 400; /* bad request */
         return true;
@@ -510,24 +513,22 @@ bool flecs_rest_reply_query(
     bool try = false;
     flecs_rest_bool_param(req, "try", &try);
 
-    ecs_dbg_2("rest: request query '%s'", q);
+    ecs_dbg_2("rest: request query '%s'", expr);
     bool prev_color = ecs_log_enable_colors(false);
     rest_prev_log = ecs_os_api.log_;
     ecs_os_api.log_ = flecs_rest_capture_log;
 
-    ecs_rule_t *r = ecs_rule_init(world, &(ecs_filter_desc_t){
-        .expr = q
-    });
-    if (!r) {
+    ecs_query_t *q = ecs_query(world, { .expr = expr });
+    if (!q) {
         flecs_rest_reply_set_captured_log(reply);
         if (try) {
             /* If client is trying queries, don't spam console with errors */
             reply->code = 200;
         }
     } else {
-        ecs_iter_t it = ecs_rule_iter(world, r);
-        flecs_rest_iter_to_reply(world, req, reply, r, &it);
-        ecs_rule_fini(r);
+        ecs_iter_t it = ecs_query_iter(world, q);
+        flecs_rest_iter_to_reply(req, reply, q, &it);
+        ecs_query_fini(q);
     }
 
     ecs_os_api.log_ = rest_prev_log;
@@ -746,8 +747,8 @@ void flecs_pipeline_stats_to_json(
             ecs_strbuf_list_appendlit(reply, "\"multi_threaded\":");
             ecs_strbuf_appendbool(reply, sync_stats->multi_threaded);
 
-            ecs_strbuf_list_appendlit(reply, "\"no_readonly\":");
-            ecs_strbuf_appendbool(reply, sync_stats->no_readonly);
+            ecs_strbuf_list_appendlit(reply, "\"immediate\":");
+            ecs_strbuf_appendbool(reply, sync_stats->immediate);
 
             ECS_GAUGE_APPEND_T(reply, sync_stats, 
                 time_spent, stats->stats.t, "");
@@ -774,7 +775,7 @@ bool flecs_rest_reply_stats(
 
     ecs_entity_t period = EcsPeriod1s;
     if (period_str) {
-        char *period_name = ecs_asprintf("Period%s", period_str);
+        char *period_name = flecs_asprintf("Period%s", period_str);
         period = ecs_lookup_child(world, ecs_id(FlecsMonitor), period_name);
         ecs_os_free(period_name);
         if (!period) {
@@ -1320,7 +1321,7 @@ void flecs_on_set_rest(ecs_iter_t *it) {
 
 static
 void DequeueRest(ecs_iter_t *it) {
-    EcsRest *rest = ecs_field(it, EcsRest, 1);
+    EcsRest *rest = ecs_field(it, EcsRest, 0);
 
     if (it->delta_system_time > (ecs_ftime_t)1.0) {
         ecs_warn(
@@ -1342,15 +1343,12 @@ static
 void DisableRest(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
 
-    ecs_iter_t rit = ecs_term_iter(world, &(ecs_term_t){
-        .id = ecs_id(EcsRest),
-        .src.flags = EcsSelf
-    });
+    ecs_iter_t rit = ecs_each_id(world, ecs_id(EcsRest));
 
     if (it->event == EcsOnAdd) {
         /* REST module was disabled */
-        while (ecs_term_next(&rit)) {
-            EcsRest *rest = ecs_field(&rit, EcsRest, 1);
+        while (ecs_each_next(&rit)) {
+            EcsRest *rest = ecs_field(&rit, EcsRest, 0);
             int i;
             for (i = 0; i < rit.count; i ++) {
                 ecs_rest_ctx_t *ctx = rest[i].impl;
@@ -1359,8 +1357,8 @@ void DisableRest(ecs_iter_t *it) {
         }
     } else if (it->event == EcsOnRemove) {
         /* REST module was enabled */
-        while (ecs_term_next(&rit)) {
-            EcsRest *rest = ecs_field(&rit, EcsRest, 1);
+        while (ecs_each_next(&rit)) {
+            EcsRest *rest = ecs_field(&rit, EcsRest, 0);
             int i;
             for (i = 0; i < rit.count; i ++) {
                 ecs_rest_ctx_t *ctx = rest[i].impl;
@@ -1376,7 +1374,7 @@ void FlecsRestImport(
     ECS_MODULE(world, FlecsRest);
 
     ECS_IMPORT(world, FlecsPipeline);
-#ifdef FLECS_PLECS
+#ifdef FLECS_SCRIPT
     ECS_IMPORT(world, FlecsScript);
 #endif
 #ifdef FLECS_DOC
@@ -1390,22 +1388,24 @@ void FlecsRestImport(
     flecs_bootstrap_component(world, EcsRest);
 
     ecs_set_hooks(world, EcsRest, { 
-        .ctor = ecs_default_ctor,
+        .ctor = flecs_default_ctor,
         .move = ecs_move(EcsRest),
         .copy = ecs_copy(EcsRest),
         .dtor = ecs_dtor(EcsRest),
         .on_set = flecs_on_set_rest
     });
 
-    ECS_SYSTEM(world, DequeueRest, EcsPostFrame, EcsRest);
-
     ecs_system(world, {
-        .entity = ecs_id(DequeueRest),
-        .no_readonly = true
+        .entity = ecs_entity(world, {.name = "DequeueRest", .add = ecs_ids( ecs_dependson(EcsPostFrame))}),
+        .query.terms = {
+            { .id = ecs_id(EcsRest) },
+        },
+        .callback = DequeueRest,
+        .immediate = true
     });
 
     ecs_observer(world, {
-        .filter = { 
+        .query = { 
             .terms = {{ .id = EcsDisabled, .src.id = ecs_id(FlecsRest) }}
         },
         .events = {EcsOnAdd, EcsOnRemove},

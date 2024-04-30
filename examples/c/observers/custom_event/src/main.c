@@ -39,13 +39,13 @@ int main(int argc, char *argv[]) {
     ECS_COMPONENT(ecs, Position);
 
     // Create custom event
-    ecs_entity_t MyEvent = ecs_new_entity(ecs, "MyEvent");
+    ecs_entity_t MyEvent = ecs_entity(ecs, { .name = "MyEvent" });
 
     // Create observer for custom event
     ECS_OBSERVER(ecs, Observer, MyEvent, Position);
 
     // Create entity
-    ecs_entity_t e = ecs_new_entity(ecs, "e");
+    ecs_entity_t e = ecs_entity(ecs, { .name = "e" });
     
     // The observer filter can be matched against the entity, so make sure it
     // has the Position component before emitting the event. This does not 

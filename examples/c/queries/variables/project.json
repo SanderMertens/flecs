@@ -1,0 +1,10 @@
+{
+    "id": "variables",
+    "type": "application",
+    "value": {
+        "use": [
+            "flecs"
+        ],
+        "public": false
+    }
+}

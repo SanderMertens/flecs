@@ -14,14 +14,6 @@ void flecs_iter_init(
 void flecs_iter_validate(
     ecs_iter_t *it);
 
-void flecs_iter_populate_data(
-    ecs_world_t *world,
-    ecs_iter_t *it,
-    ecs_table_t *table,
-    int32_t offset,
-    int32_t count,
-    void **ptrs);
-
 bool flecs_iter_next_row(
     ecs_iter_t *it);
 

@@ -379,34 +379,23 @@ void ecs_query_stats_get(
     const ecs_query_t *query,
     ecs_query_stats_t *s)
 {
-    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(query != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(s != NULL, ECS_INVALID_PARAMETER, NULL);
     (void)world;
 
-    int32_t t = s->t = t_next(s->t);
-
-    if (query->filter.flags & EcsFilterMatchThis) {
-        ECS_GAUGE_RECORD(&s->matched_entity_count, t, 
-            ecs_query_entity_count(query));
-        ECS_GAUGE_RECORD(&s->matched_table_count, t, 
-            ecs_query_table_count(query));
-        ECS_GAUGE_RECORD(&s->matched_empty_table_count, t, 
-            ecs_query_empty_table_count(query));
-    } else {
-        ECS_GAUGE_RECORD(&s->matched_entity_count, t, 0);
-        ECS_GAUGE_RECORD(&s->matched_table_count, t, 0);
-        ECS_GAUGE_RECORD(&s->matched_empty_table_count, t, 0);
-    }
-    
-    const ecs_filter_t *f = ecs_query_get_filter(query);
-    ECS_COUNTER_RECORD(&s->eval_count, t, f->eval_count);
+    int32_t t = s->t = t_next(s->t);    
+    ecs_query_count_t counts = ecs_query_count(query);
+    ECS_COUNTER_RECORD(&s->result_count, t, counts.results);
+    ECS_COUNTER_RECORD(&s->matched_table_count, t, counts.tables);
+    ECS_COUNTER_RECORD(&s->matched_empty_table_count, t, counts.empty_tables);
+    ECS_COUNTER_RECORD(&s->matched_entity_count, t, counts.entities);
+    ECS_COUNTER_RECORD(&s->eval_count, t, query->eval_count);
 
 error:
     return;
 }
 
-void ecs_query_stats_reduce(
+void ecs_query_cache_stats_reduce(
     ecs_query_stats_t *dst,
     const ecs_query_stats_t *src)
 {
@@ -414,7 +403,7 @@ void ecs_query_stats_reduce(
         ECS_METRIC_FIRST(src), (dst->t = t_next(dst->t)), src->t);
 }
 
-void ecs_query_stats_reduce_last(
+void ecs_query_cache_stats_reduce_last(
     ecs_query_stats_t *dst,
     const ecs_query_stats_t *src,
     int32_t count)
@@ -423,14 +412,14 @@ void ecs_query_stats_reduce_last(
         ECS_METRIC_FIRST(src), (dst->t = t_prev(dst->t)), src->t, count);
 }
 
-void ecs_query_stats_repeat_last(
+void ecs_query_cache_stats_repeat_last(
     ecs_query_stats_t *stats)
 {
     flecs_stats_repeat_last(ECS_METRIC_FIRST(stats), ECS_METRIC_LAST(stats),
         (stats->t = t_next(stats->t)));
 }
 
-void ecs_query_stats_copy_last(
+void ecs_query_cache_stats_copy_last(
     ecs_query_stats_t *dst,
     const ecs_query_stats_t *src)
 {
@@ -451,7 +440,7 @@ bool ecs_system_stats_get(
 
     world = ecs_get_world(world);
 
-    const ecs_system_t *ptr = ecs_poly_get(world, system, ecs_system_t);
+    const ecs_system_t *ptr = flecs_poly_get(world, system, ecs_system_t);
     if (!ptr) {
         return false;
     }
@@ -461,7 +450,7 @@ bool ecs_system_stats_get(
 
     ECS_COUNTER_RECORD(&s->time_spent, t, ptr->time_spent);
 
-    s->task = !(ptr->query->filter.flags & EcsFilterMatchThis);
+    s->task = !(ptr->query->flags & EcsQueryMatchThis);
 
     return true;
 error:
@@ -472,7 +461,7 @@ void ecs_system_stats_reduce(
     ecs_system_stats_t *dst,
     const ecs_system_stats_t *src)
 {
-    ecs_query_stats_reduce(&dst->query, &src->query);
+    ecs_query_cache_stats_reduce(&dst->query, &src->query);
     dst->task = src->task;
     flecs_stats_reduce(ECS_METRIC_FIRST(dst), ECS_METRIC_LAST(dst), 
         ECS_METRIC_FIRST(src), dst->query.t, src->query.t);
@@ -483,7 +472,7 @@ void ecs_system_stats_reduce_last(
     const ecs_system_stats_t *src,
     int32_t count)
 {
-    ecs_query_stats_reduce_last(&dst->query, &src->query, count);
+    ecs_query_cache_stats_reduce_last(&dst->query, &src->query, count);
     dst->task = src->task;
     flecs_stats_reduce_last(ECS_METRIC_FIRST(dst), ECS_METRIC_LAST(dst), 
         ECS_METRIC_FIRST(src), dst->query.t, src->query.t, count);
@@ -492,7 +481,7 @@ void ecs_system_stats_reduce_last(
 void ecs_system_stats_repeat_last(
     ecs_system_stats_t *stats)
 {
-    ecs_query_stats_repeat_last(&stats->query);
+    ecs_query_cache_stats_repeat_last(&stats->query);
     flecs_stats_repeat_last(ECS_METRIC_FIRST(stats), ECS_METRIC_LAST(stats),
         (stats->query.t));
 }
@@ -501,7 +490,7 @@ void ecs_system_stats_copy_last(
     ecs_system_stats_t *dst,
     const ecs_system_stats_t *src)
 {
-    ecs_query_stats_copy_last(&dst->query, &src->query);
+    ecs_query_cache_stats_copy_last(&dst->query, &src->query);
     dst->task = src->task;
     flecs_stats_copy_last(ECS_METRIC_FIRST(dst), ECS_METRIC_LAST(dst),
         ECS_METRIC_FIRST(src), dst->query.t, t_next(src->query.t));
@@ -611,7 +600,7 @@ bool ecs_pipeline_stats_get(
 
                 el->system_count = cur->count;
                 el->multi_threaded = cur->multi_threaded;
-                el->no_readonly = cur->no_readonly;
+                el->immediate = cur->immediate;
             }
         }
     }
@@ -625,6 +614,7 @@ bool ecs_pipeline_stats_get(
             ecs_system_stats_t *stats = ecs_map_ensure_alloc_t(&s->system_stats, 
                 ecs_system_stats_t, it.entities[i]);
             stats->query.t = s->t;
+
             ecs_system_stats_get(world, it.entities[i], stats);
         }
     }
@@ -672,7 +662,7 @@ void ecs_pipeline_stats_reduce(
             ECS_METRIC_FIRST(src_el), dst->t, src->t);
         dst_el->system_count = src_el->system_count;
         dst_el->multi_threaded = src_el->multi_threaded;
-        dst_el->no_readonly = src_el->no_readonly;
+        dst_el->immediate = src_el->immediate;
     }
 
     ecs_map_init_if(&dst->system_stats, NULL);
@@ -704,7 +694,7 @@ void ecs_pipeline_stats_reduce_last(
             ECS_METRIC_FIRST(src_el), dst->t, src->t, count);
         dst_el->system_count = src_el->system_count;
         dst_el->multi_threaded = src_el->multi_threaded;
-        dst_el->no_readonly = src_el->no_readonly;
+        dst_el->immediate = src_el->immediate;
     }
 
     ecs_map_init_if(&dst->system_stats, NULL);
@@ -757,7 +747,7 @@ void ecs_pipeline_stats_copy_last(
             ECS_METRIC_FIRST(src_el), dst->t, t_next(src->t));
         dst_el->system_count = src_el->system_count;
         dst_el->multi_threaded = src_el->multi_threaded;
-        dst_el->no_readonly = src_el->no_readonly;
+        dst_el->immediate = src_el->immediate;
     }
 
     ecs_map_init_if(&dst->system_stats, NULL);

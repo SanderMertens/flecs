@@ -114,17 +114,13 @@ Addon         | Description                                      | Define       
 [Pipeline](/flecs/group__c__addons__pipeline.html)         | Automatically schedule & multithread systems     | FLECS_PIPELINE      |
 [Timer](/flecs/group__c__addons__timer.html)               | Run systems at time intervals or at a rate       | FLECS_TIMER         |
 [Meta](/flecs/group__c__addons__meta.html)                 | Flecs reflection system                          | FLECS_META          |
-[Meta_C](/flecs/group__c__addons__meta__c.html)            | (C) Utilities for auto-inserting reflection data | FLECS_META_C        |
 [Units](/flecs/group__c__addons__units.html)               | Builtin unit types                               | FLECS_UNITS         |
-[Expr](/flecs/group__c__addons__expr.html)                 | String format optimized for ECS data             | FLECS_EXPR          |
 [JSON](/flecs/group__c__addons__json.html)                 | JSON format                                      | FLECS_JSON          |
 [Doc](/flecs/group__c__addons__doc.html)                   | Add documentation to components, systems & more  | FLECS_DOC           |
 [Http](/flecs/group__c__addons__http.html)                 | Tiny HTTP server for processing simple requests  | FLECS_HTTP          |
 [Rest](/flecs/group__c__addons__rest.html)                 | REST API for showing entities in the browser     | FLECS_REST          |
-[Parser](/flecs/group__c__addons__parser.html)             | Create entities & queries from strings           | FLECS_PARSER        |
-[Plecs](/flecs/group__c__addons__plecs.html)               | Small utility language for asset/scene loading   | FLECS_PLECS         |
+[Script](/flecs/group__c__addons__script.html)             | DSL for assets, scenes and configuration         | FLECS_SCRIPT         |
 [Rules](/flecs/group__c__addons__rules.html)               | Powerful prolog-like query language              | FLECS_RULES         |
-[Snapshot](/flecs/group__c__addons__snapshot.html)         | Take snapshots of the world & restore them       | FLECS_SNAPSHOT      |
 [Stats](/flecs/group__c__addons__stats.html)               | Functions for collecting statistics              | FLECS_STATS         |
 [Monitor](/flecs/group__c__addons__monitor.html)           | Periodically collect & store flecs statistics    | FLECS_MONITOR       |
 [Metrics](/flecs/group__c__addons__metrics.html)           | Create metrics from user-defined components      | FLECS_METRICS       |
@@ -179,7 +175,7 @@ An entity is a unique thing in the world, and is represented by a 64 bit id. Ent
 <li><b class="tab-title">C</b>
 
 ```c
-ecs_entity_t e = ecs_new_id(world);
+ecs_entity_t e = ecs_new(world);
 ecs_is_alive(world, e); // true!
 
 ecs_delete(world, e);
@@ -279,7 +275,7 @@ A component is a type of which instances can be added and removed to entities. E
 ECS_COMPONENT(world, Position);
 ECS_COMPONENT(world, Velocity);
 
-ecs_entity_t e = ecs_new_id(world);
+ecs_entity_t e = ecs_new(world);
 
 // Add a component. This creates the component in the ECS storage, but does not
 // assign it with a value.
@@ -428,10 +424,10 @@ A tag is a component that does not have any data. In Flecs tags can be either em
 
 ```c
 // Create Enemy tag
-ecs_entity_t Enemy = ecs_new_id(world);
+ecs_entity_t Enemy = ecs_new(world);
 
 // Create entity, add Enemy tag
-ecs_entity_t e = ecs_new_id(world);
+ecs_entity_t e = ecs_new(world);
 
 ecs_add_id(world, e, Enemy);
 ecs_has_id(world, e, Enemy); // true!
@@ -505,11 +501,11 @@ A pair is a combination of two entity ids. Pairs can be used to store entity rel
 
 ```c
 // Create Likes relationship
-ecs_entity_t Likes = ecs_new_id(world);
+ecs_entity_t Likes = ecs_new(world);
 
 // Create a small graph with two entities that like each other
-ecs_entity_t Bob = ecs_new_id(world);
-ecs_entity_t Alice = ecs_new_id(world);
+ecs_entity_t Bob = ecs_new(world);
+ecs_entity_t Alice = ecs_new(world);
 
 ecs_add_pair(world, Bob, Likes, Alice); // Bob likes Alice
 ecs_add_pair(world, Alice, Likes, Bob); // Alice likes Bob
@@ -697,7 +693,7 @@ Flecs has builtin support for hierarchies with the builtin `EcsChildOf` (or `fle
 <li><b class="tab-title">C</b>
 
 ```c
-ecs_entity_t parent = ecs_new_id(world);
+ecs_entity_t parent = ecs_new(world);
 
 // ecs_new_w_pair is the same as ecs_new_id + ecs_add_pair
 ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, parent);
@@ -784,8 +780,8 @@ Queries (see below) can use hierarchies to order data breadth-first, which can c
 <li><b class="tab-title">C</b>
 
 ```c
-ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
-    .filter.terms = {
+ecs_query_t *q = ecs_query(world, {
+    .terms = {
         { ecs_id(Position) },
         { ecs_id(Position), .src = {
             .flags = EcsCascade,       // Breadth-first order
@@ -796,8 +792,8 @@ ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
 
 ecs_iter_t it = ecs_query_iter(world, q);
 while (ecs_query_next(&it)) {
-    Position *p = ecs_field(&it, Position, 1);
-    Position *p_parent = ecs_field(&it, Position, 2);
+    Position *p = ecs_field(&it, Position, 0);
+    Position *p_parent = ecs_field(&it, Position, 1);
     for (int i = 0; i < it.count; i++) {
         // Do the thing
     }
@@ -808,7 +804,7 @@ while (ecs_query_next(&it)) {
 
 ```cpp
 auto q = world.query_builder<Position, Position>()
-    .term_at(2).parent().cascade()
+    .term_at(1).parent().cascade()
     .build();
 
 q.each([](Position& p, Position& p_parent) {
@@ -840,7 +836,7 @@ Flecs has builtin support for instancing (sharing a single component with multip
 
 ```c
 // Shortcut to create entity & set a component
-ecs_entity_t base = ecs_set(world, 0, Triangle, {{0, 0}, {1, 1}, {-1, -1}});
+ecs_entity_t base = ecs_insert(world, ecs_value(Triangle, {{0, 0}, {1, 1}, {-1, -1}}));
 
 // Create entity that shares components with base
 ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, base);
@@ -909,7 +905,7 @@ The type (often referred to as "archetype") is the list of ids an entity has. Ty
 ECS_COMPONENT(world, Position);
 ECS_COMPONENT(world, Velocity);
 
-ecs_entity_t e = ecs_new_id(world);
+ecs_entity_t e = ecs_new(world);
 ecs_add(world, e, Position);
 ecs_add(world, e, Velocity);
 
@@ -1060,7 +1056,7 @@ The following examples show how to query for a singleton component:
 ```c
 // Create query that matches Gravity as singleton
 ecs_query_t *q = ecs_query(ecs, {
-    .filter.terms = {
+    .terms = {
         // Regular component
         { .id = ecs_id(Velocity) },
         // A singleton is a component matched on itself
@@ -1076,7 +1072,7 @@ ECS_SYSTEM(world, ApplyGravity, EcsOnUpdate, Velocity, Gravity($));
 
 ```cpp
 world.query_builder<Velocity, Gravity>()
-    .term_at(2).singleton()
+    .term_at(1).singleton()
     .build();
 ```
 </li>
@@ -1091,15 +1087,20 @@ world.QueryBuilder<Velocity, Gravity>()
 </ul>
 </div>
 
+<<<<<<< HEAD
 ### Filter
-Filters are a kind of uncached query that are cheap to create. This makes them a good fit for scenarios where an application doesn't know in advance what it has to query for, like when finding the children for a parent. The following example shows a simple filter:
+Queries are a kind of uncached query that are cheap to create. This makes them a good fit for scenarios where an application doesn't know in advance what it has to query for, like when finding the children for a parent. The following example shows a simple filter:
 <div class="flecs-snippet-tabs">
 <ul>
 <li><b class="tab-title">C</b>
+=======
+### Query
+Querys are a kind of uncached query that are cheap to create. This makes them a good fit for scenarios where an application doesn't know in advance what it has to query for, like when finding the children for a parent. The following example shows a simple filter:
+>>>>>>> 45a6e85b8 (v4)
 
 ```c
 // Initialize a filter with 2 terms on the stack
-ecs_filter_t *f = ecs_filter_init(world, &(ecs_filter_desc_t){
+ecs_query_t *f = ecs_query_init(world, &(ecs_query_desc_t){
     .terms = {
         { ecs_id(Position) },
         { ecs_pair(EcsChildOf, parent) }
@@ -1109,10 +1110,10 @@ ecs_filter_t *f = ecs_filter_init(world, &(ecs_filter_desc_t){
 // Iterate the filter results. Because entities are grouped by their type there
 // are two loops: an outer loop for the type, and an inner loop for the entities
 // for that type.
-ecs_iter_t it = ecs_filter_iter(world, f);
-while (ecs_filter_next(&it)) {
+ecs_iter_t it = ecs_query_iter(world, f);
+while (ecs_query_next(&it)) {
     // Each type has its own set of component arrays
-    Position *p = ecs_field(&it, Position, 1);
+    Position *p = ecs_field(&it, Position, 0);
 
     // Iterate all entities for the type
     for (int i = 0; i < it.count; i++) {
@@ -1121,7 +1122,7 @@ while (ecs_filter_next(&it)) {
     }
 }
 
-ecs_filter_fini(f);
+ecs_query_fini(f);
 ```
 </li>
 <li><b class="tab-title">C++</b>
@@ -1134,7 +1135,7 @@ world.each([](Position& p, Velocity& v) { // flecs::entity argument is optional
 });
 
 // More complex filters can first be created, then iterated
-auto f = world.filter_builder<Position>()
+auto f = world.query_builder<Position>()
     .term(flecs::ChildOf, parent)
     .build();
 
@@ -1184,7 +1185,7 @@ f.Iter((Iter it, Field<Position> p) =>
 </ul>
 </div>
 
-Filters can use operators to exclude components, optionally match components or match one out of a list of components. Additionally filters may contain wildcards for terms which is especially useful when combined with pairs.
+Querys can use operators to exclude components, optionally match components or match one out of a list of components. Additionally filters may contain wildcards for terms which is especially useful when combined with pairs.
 
 The following example shows a filter that matches all entities with a parent that do not have `Position`:
 <div class="flecs-snippet-tabs">
@@ -1192,7 +1193,7 @@ The following example shows a filter that matches all entities with a parent tha
 <li><b class="tab-title">C</b>
 
 ```c
-ecs_filter_t *f = ecs_filter_init(world, &(ecs_filter_desc_t){
+ecs_query_t *f = ecs_query_init(world, &(ecs_query_desc_t){
     .terms = {
         { ecs_pair(EcsChildOf, EcsWildcard) }
         { ecs_id(Position), .oper = EcsNot },
@@ -1205,7 +1206,7 @@ ecs_filter_t *f = ecs_filter_init(world, &(ecs_filter_desc_t){
 <li><b class="tab-title">C++</b>
 
 ```cpp
-auto f = world.filter_builder<>()
+auto f = world.query_builder<>()
     .term(flecs::ChildOf, flecs::Wildcard)
     .term<Position>().oper(flecs::Not)
     .build();
@@ -1237,8 +1238,8 @@ The API for queries is similar to filters:
 
 ```c
 // Create a query with 2 terms
-ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
-    .filter.terms = {
+ecs_query_t *q = ecs_query(world, {
+    .terms = {
         { ecs_id(Position) },
         { ecs_pair(EcsChildOf, EcsWildcard) }
     }
@@ -1292,7 +1293,7 @@ ecs_run(world, Move, delta_time, NULL); // Run system
 
 // Option 2, use the ecs_system_init function/ecs_system macro
 ecs_entity_t move_sys = ecs_system(world, {
-    .query.filter.terms = {
+    .query.terms = {
         {ecs_id(Position)},
         {ecs_id(Velocity)},
     },
@@ -1303,8 +1304,8 @@ ecs_run(world, move_sys, delta_time, NULL); // Run system
 
 // The callback code (same for both options)
 void Move(ecs_iter_t *it) {
-    Position *p = ecs_field(it, Position, 1);
-    Velocity *v = ecs_field(it, Velocity, 2);
+    Position *p = ecs_field(it, Position, 0);
+    Velocity *v = ecs_field(it, Velocity, 1);
 
     for (int i = 0; i < it->count; i++) {
         p[i].x += v[i].x * it->delta_time;
@@ -1507,14 +1508,14 @@ An example of an observer with two components:
 
 ```c
 ecs_observer(world, {
-    .filter.terms = { { ecs_id(Position) }, { ecs_id(Velocity) }},
+    .terms = { { ecs_id(Position) }, { ecs_id(Velocity) }},
     .event = EcsOnSet,
     .callback = OnSetPosition
 });
 
 // Callback code is same as system
 
-ecs_entity_t e = ecs_new_id(world);    // Doesn't invoke the observer
+ecs_entity_t e = ecs_new(world);    // Doesn't invoke the observer
 ecs_set(world, e, Position, {10, 20}); // Doesn't invoke the observer
 ecs_set(world, e, Velocity, {1, 2});   // Invokes the observer
 ecs_set(world, e, Position, {20, 40}); // Invokes the observer

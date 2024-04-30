@@ -32,7 +32,7 @@ struct component;
 namespace _
 {
 template <typename T, typename U = int>
-struct cpp_type;
+struct type;
 
 template <typename Func, typename ... Components>
 struct each_delegate;
@@ -49,9 +49,8 @@ struct each_delegate;
 // Mixin forward declarations
 #include "mixins/id/decl.hpp"
 #include "mixins/term/decl.hpp"
-#include "mixins/filter/decl.hpp"
-#include "mixins/event/decl.hpp"
 #include "mixins/query/decl.hpp"
+#include "mixins/event/decl.hpp"
 #include "mixins/observer/decl.hpp"
 #ifdef FLECS_SYSTEM
 #include "mixins/system/decl.hpp"
@@ -62,17 +61,11 @@ struct each_delegate;
 #ifdef FLECS_TIMER
 #include "mixins/timer/decl.hpp"
 #endif
-#ifdef FLECS_SNAPSHOT
-#include "mixins/snapshot/decl.hpp"
-#endif
 #ifdef FLECS_DOC
 #include "mixins/doc/decl.hpp"
 #endif
 #ifdef FLECS_REST
 #include "mixins/rest/decl.hpp"
-#endif
-#ifdef FLECS_RULES
-#include "mixins/rule/decl.hpp"
 #endif
 #ifdef FLECS_META
 #include "mixins/meta/decl.hpp"
@@ -105,17 +98,16 @@ struct each_delegate;
 #include "iter.hpp"
 #include "entity.hpp"
 #include "delegate.hpp"
-#include "utils/iterable.hpp"
 #include "component.hpp"
 #include "type.hpp"
 #include "table.hpp"
+#include "utils/iterable.hpp"
 
 // Mixin implementations
 #include "mixins/id/impl.hpp"
 #include "mixins/entity/impl.hpp"
 #include "mixins/component/impl.hpp"
 #include "mixins/term/impl.hpp"
-#include "mixins/filter/impl.hpp"
 #include "mixins/query/impl.hpp"
 #include "mixins/observer/impl.hpp"
 #include "mixins/event/impl.hpp"
@@ -132,9 +124,6 @@ struct each_delegate;
 #ifdef FLECS_TIMER
 #include "mixins/timer/impl.hpp"
 #endif
-#ifdef FLECS_SNAPSHOT
-#include "mixins/snapshot/impl.hpp"
-#endif
 #ifdef FLECS_DOC
 #include "mixins/doc/impl.hpp"
 #endif
@@ -143,9 +132,6 @@ struct each_delegate;
 #endif
 #ifdef FLECS_REST
 #include "mixins/rest/impl.hpp"
-#endif
-#ifdef FLECS_RULES
-#include "mixins/rule/impl.hpp"
 #endif
 #ifdef FLECS_META
 #include "mixins/meta/impl.hpp"

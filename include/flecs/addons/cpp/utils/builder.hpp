@@ -21,32 +21,32 @@ struct builder : IBuilder<Base, Components ...>
 
 public:
     builder(flecs::world_t *world)
-        : IBase(&m_desc)
-        , m_desc{}
-        , m_world(world) { }
+        : IBase(&desc_)
+        , desc_{}
+        , world_(world) { }
 
     builder(const builder& f) 
-        : IBase(&m_desc, f.m_term_index)
+        : IBase(&desc_, f.term_index_)
     {
-        m_world = f.m_world;
-        m_desc = f.m_desc;
+        world_ = f.world_;
+        desc_ = f.desc_;
     }
 
     builder(builder&& f)  noexcept
         : builder<T, TDesc, Base, IBuilder, Components...>(f) { }
 
     operator TDesc*() {
-        return &m_desc;
+        return &desc_;
     }
 
     T<Components ...> build() {
-        return T<Components...>(m_world, *static_cast<Base*>(this));
+        return T<Components...>(world_, *static_cast<Base*>(this));
     }
 
 protected:
-    flecs::world_t* world_v() override { return m_world; }
-    TDesc m_desc;
-    flecs::world_t *m_world;
+    flecs::world_t* world_v() override { return world_; }
+    TDesc desc_;
+    flecs::world_t *world_;
 };
 
 #undef FLECS_TBUILDER

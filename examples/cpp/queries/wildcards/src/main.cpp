@@ -16,7 +16,7 @@ int main(int, char *[]) {
 
     // Create a query that matches edible components
     flecs::query<Eats> q = ecs.query_builder<Eats>()
-        .term_at(1).second(flecs::Wildcard) // Change first argument to (Eats, *)
+        .term_at(0).second(flecs::Wildcard) // Change first argument to (Eats, *)
         .build();
 
     // Create a few entities that match the query
@@ -31,7 +31,7 @@ int main(int, char *[]) {
     // the pair that we are currently matched with.
     q.each([](flecs::iter& it, size_t index, Eats& eats) {
         flecs::entity e = it.entity(index);
-        flecs::entity food = it.pair(1).second();
+        flecs::entity food = it.pair(0).second();
 
         std::cout << e.name() << " eats " 
             << eats.amount << " " << food.name() << std::endl;

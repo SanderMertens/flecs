@@ -21,7 +21,7 @@ void Metrics_member_gauge_1_entity(void) {
     });
     test_assert(m != 0);
 
-    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Position, {10, 20}));
 
     ecs_progress(world, 0);
     
@@ -65,8 +65,8 @@ void Metrics_member_gauge_2_entities(void) {
     });
     test_assert(m != 0);
 
-    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
-    ecs_entity_t e2 = ecs_set(world, 0, Position, {20, 30});
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Position, {10, 20}));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Position, {20, 30}));
 
     ecs_progress(world, 0);
     
@@ -113,7 +113,7 @@ void Metrics_member_gauge_2_entities_1_existing(void) {
         }
     });
 
-    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Position, {10, 20}));
 
     ecs_entity_t m = ecs_metric(world, {
         .entity = ecs_entity(world, { .name = "metrics.position_y" }),
@@ -122,7 +122,7 @@ void Metrics_member_gauge_2_entities_1_existing(void) {
     });
     test_assert(m != 0);
 
-    ecs_entity_t e2 = ecs_set(world, 0, Position, {20, 30});
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Position, {20, 30}));
 
     ecs_progress(world, 0);
     
@@ -176,8 +176,8 @@ void Metrics_member_gauge_2_entities_update(void) {
     });
     test_assert(m != 0);
 
-    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
-    ecs_entity_t e2 = ecs_set(world, 0, Position, {20, 30});
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Position, {10, 20}));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Position, {20, 30}));
 
     ecs_progress(world, 0);
     
@@ -265,8 +265,8 @@ void Metrics_member_gauge_w_remove(void) {
     });
     test_assert(m != 0);
 
-    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
-    ecs_entity_t e2 = ecs_set(world, 0, Position, {20, 30});
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Position, {10, 20}));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Position, {20, 30}));
     ecs_add(world, e1, Foo);
     ecs_add(world, e2, Foo);
 
@@ -344,8 +344,8 @@ void Metrics_member_gauge_w_clear(void) {
     });
     test_assert(m != 0);
 
-    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
-    ecs_entity_t e2 = ecs_set(world, 0, Position, {20, 30});
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Position, {10, 20}));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Position, {20, 30}));
     ecs_add(world, e1, Foo);
     ecs_add(world, e2, Foo);
 
@@ -423,8 +423,8 @@ void Metrics_member_gauge_w_delete(void) {
     });
     test_assert(m != 0);
 
-    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
-    ecs_entity_t e2 = ecs_set(world, 0, Position, {20, 30});
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Position, {10, 20}));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Position, {20, 30}));
     ecs_add(world, e1, Foo);
     ecs_add(world, e2, Foo);
 
@@ -493,7 +493,7 @@ void Metrics_id_gauge_1_entity(void) {
     });
     test_assert(m != 0);
 
-    ecs_entity_t e1 = ecs_new(world, Foo);
+    ecs_entity_t e1 = ecs_new_w(world, Foo);
 
     ecs_progress(world, 0);
     
@@ -529,8 +529,8 @@ void Metrics_id_gauge_2_entities(void) {
     });
     test_assert(m != 0);
 
-    ecs_entity_t e1 = ecs_new(world, Foo);
-    ecs_entity_t e2 = ecs_new(world, Foo);
+    ecs_entity_t e1 = ecs_new_w(world, Foo);
+    ecs_entity_t e2 = ecs_new_w(world, Foo);
 
     ecs_progress(world, 0);
     
@@ -569,7 +569,7 @@ void Metrics_id_gauge_2_entities_1_existing(void) {
 
     ECS_TAG(world, Foo);
 
-    ecs_entity_t e1 = ecs_new(world, Foo);
+    ecs_entity_t e1 = ecs_new_w(world, Foo);
 
     ecs_entity_t m = ecs_metric(world, {
         .entity = ecs_entity(world, { .name = "metrics.has_foo" }),
@@ -578,7 +578,7 @@ void Metrics_id_gauge_2_entities_1_existing(void) {
     });
     test_assert(m != 0);
 
-    ecs_entity_t e2 = ecs_new(world, Foo);
+    ecs_entity_t e2 = ecs_new_w(world, Foo);
 
     ecs_progress(world, 0);
     
@@ -625,8 +625,8 @@ void Metrics_id_gauge_w_remove(void) {
     });
     test_assert(m != 0);
 
-    ecs_entity_t e1 = ecs_new(world, Foo);
-    ecs_entity_t e2 = ecs_new(world, Foo);
+    ecs_entity_t e1 = ecs_new_w(world, Foo);
+    ecs_entity_t e2 = ecs_new_w(world, Foo);
     ecs_add(world, e1, Bar);
     ecs_add(world, e2, Bar);
 
@@ -696,8 +696,8 @@ void Metrics_id_gauge_w_clear(void) {
     });
     test_assert(m != 0);
 
-    ecs_entity_t e1 = ecs_new(world, Foo);
-    ecs_entity_t e2 = ecs_new(world, Foo);
+    ecs_entity_t e1 = ecs_new_w(world, Foo);
+    ecs_entity_t e2 = ecs_new_w(world, Foo);
     ecs_add(world, e1, Bar);
     ecs_add(world, e2, Bar);
 
@@ -767,8 +767,8 @@ void Metrics_id_gauge_w_delete(void) {
     });
     test_assert(m != 0);
 
-    ecs_entity_t e1 = ecs_new(world, Foo);
-    ecs_entity_t e2 = ecs_new(world, Foo);
+    ecs_entity_t e1 = ecs_new_w(world, Foo);
+    ecs_entity_t e2 = ecs_new_w(world, Foo);
     ecs_add(world, e1, Bar);
     ecs_add(world, e2, Bar);
 
@@ -847,7 +847,7 @@ void Metrics_oneof_gauge_3_entities(void) {
 
     ecs_progress(world, 0);
 
-    ecs_filter_t *f = ecs_filter(world, {
+    ecs_query_t *f = ecs_query(world, {
         .terms = {
             { .id = ecs_childof(m) },
             { .id = ecs_pair(EcsMetric, EcsGauge) }
@@ -855,8 +855,8 @@ void Metrics_oneof_gauge_3_entities(void) {
     });
     test_assert(f != NULL);
 
-    ecs_iter_t it = ecs_filter_iter(world, f);
-    test_bool(true, ecs_filter_next(&it));
+    ecs_iter_t it = ecs_query_iter(world, f);
+    test_bool(true, ecs_query_next(&it));
     test_uint(it.count, 3);
     {
         ecs_entity_t e = it.entities[0];
@@ -891,9 +891,9 @@ void Metrics_oneof_gauge_3_entities(void) {
         test_int(((double*)inst)[1], 0);
         test_int(((double*)inst)[2], 1);
     }
-    test_bool(false, ecs_filter_next(&it));
+    test_bool(false, ecs_query_next(&it));
 
-    ecs_filter_fini(f);
+    ecs_query_fini(f);
 
     ecs_fini(world);
 }
@@ -922,7 +922,7 @@ void Metrics_oneof_gauge_3_entities_1_existing(void) {
 
     ecs_progress(world, 0);
 
-    ecs_filter_t *f = ecs_filter(world, {
+    ecs_query_t *f = ecs_query(world, {
         .terms = {
             { .id = ecs_childof(m) },
             { .id = ecs_pair(EcsMetric, EcsGauge) }
@@ -930,8 +930,8 @@ void Metrics_oneof_gauge_3_entities_1_existing(void) {
     });
     test_assert(f != NULL);
 
-    ecs_iter_t it = ecs_filter_iter(world, f);
-    test_bool(true, ecs_filter_next(&it));
+    ecs_iter_t it = ecs_query_iter(world, f);
+    test_bool(true, ecs_query_next(&it));
     test_uint(it.count, 3);
     {
         ecs_entity_t e = it.entities[0];
@@ -966,9 +966,9 @@ void Metrics_oneof_gauge_3_entities_1_existing(void) {
         test_int(((double*)inst)[1], 0);
         test_int(((double*)inst)[2], 1);
     }
-    test_bool(false, ecs_filter_next(&it));
+    test_bool(false, ecs_query_next(&it));
 
-    ecs_filter_fini(f);
+    ecs_query_fini(f);
 
     ecs_fini(world);
 }
@@ -1000,7 +1000,7 @@ void Metrics_oneof_gauge_w_remove(void) {
     
     ecs_progress(world, 0);
 
-    ecs_filter_t *f = ecs_filter(world, {
+    ecs_query_t *f = ecs_query(world, {
         .terms = {
             { .id = ecs_childof(m) },
             { .id = ecs_pair(EcsMetric, EcsGauge) }
@@ -1009,8 +1009,8 @@ void Metrics_oneof_gauge_w_remove(void) {
     test_assert(f != NULL);
 
     {
-        ecs_iter_t it = ecs_filter_iter(world, f);
-        test_bool(true, ecs_filter_next(&it));
+        ecs_iter_t it = ecs_query_iter(world, f);
+        test_bool(true, ecs_query_next(&it));
         test_uint(it.count, 3);
         {
             ecs_entity_t e = it.entities[0];
@@ -1045,15 +1045,15 @@ void Metrics_oneof_gauge_w_remove(void) {
             test_int(((double*)inst)[1], 0);
             test_int(((double*)inst)[2], 1);
         }
-        test_bool(false, ecs_filter_next(&it));
+        test_bool(false, ecs_query_next(&it));
     }
 
     ecs_remove_pair(world, e2, Color, EcsWildcard);
     ecs_progress(world, 0);
 
     {
-        ecs_iter_t it = ecs_filter_iter(world, f);
-        test_bool(true, ecs_filter_next(&it));
+        ecs_iter_t it = ecs_query_iter(world, f);
+        test_bool(true, ecs_query_next(&it));
         test_uint(it.count, 2);
         {
             ecs_entity_t e = it.entities[0];
@@ -1077,10 +1077,10 @@ void Metrics_oneof_gauge_w_remove(void) {
             test_int(((double*)inst)[1], 0);
             test_int(((double*)inst)[2], 1);
         }
-        test_bool(false, ecs_filter_next(&it));
+        test_bool(false, ecs_query_next(&it));
     }
 
-    ecs_filter_fini(f);
+    ecs_query_fini(f);
 
     ecs_fini(world);
 }
@@ -1112,7 +1112,7 @@ void Metrics_oneof_gauge_w_clear(void) {
     
     ecs_progress(world, 0);
 
-    ecs_filter_t *f = ecs_filter(world, {
+    ecs_query_t *f = ecs_query(world, {
         .terms = {
             { .id = ecs_childof(m) },
             { .id = ecs_pair(EcsMetric, EcsGauge) }
@@ -1121,8 +1121,8 @@ void Metrics_oneof_gauge_w_clear(void) {
     test_assert(f != NULL);
 
     {
-        ecs_iter_t it = ecs_filter_iter(world, f);
-        test_bool(true, ecs_filter_next(&it));
+        ecs_iter_t it = ecs_query_iter(world, f);
+        test_bool(true, ecs_query_next(&it));
         test_uint(it.count, 3);
         {
             ecs_entity_t e = it.entities[0];
@@ -1157,15 +1157,15 @@ void Metrics_oneof_gauge_w_clear(void) {
             test_int(((double*)inst)[1], 0);
             test_int(((double*)inst)[2], 1);
         }
-        test_bool(false, ecs_filter_next(&it));
+        test_bool(false, ecs_query_next(&it));
     }
 
     ecs_clear(world, e2);
     ecs_progress(world, 0);
 
     {
-        ecs_iter_t it = ecs_filter_iter(world, f);
-        test_bool(true, ecs_filter_next(&it));
+        ecs_iter_t it = ecs_query_iter(world, f);
+        test_bool(true, ecs_query_next(&it));
         test_uint(it.count, 2);
         {
             ecs_entity_t e = it.entities[0];
@@ -1189,10 +1189,10 @@ void Metrics_oneof_gauge_w_clear(void) {
             test_int(((double*)inst)[1], 0);
             test_int(((double*)inst)[2], 1);
         }
-        test_bool(false, ecs_filter_next(&it));
+        test_bool(false, ecs_query_next(&it));
     }
 
-    ecs_filter_fini(f);
+    ecs_query_fini(f);
 
     ecs_fini(world);
 }
@@ -1224,7 +1224,7 @@ void Metrics_oneof_gauge_w_delete(void) {
     
     ecs_progress(world, 0);
 
-    ecs_filter_t *f = ecs_filter(world, {
+    ecs_query_t *f = ecs_query(world, {
         .terms = {
             { .id = ecs_childof(m) },
             { .id = ecs_pair(EcsMetric, EcsGauge) }
@@ -1233,8 +1233,8 @@ void Metrics_oneof_gauge_w_delete(void) {
     test_assert(f != NULL);
 
     {
-        ecs_iter_t it = ecs_filter_iter(world, f);
-        test_bool(true, ecs_filter_next(&it));
+        ecs_iter_t it = ecs_query_iter(world, f);
+        test_bool(true, ecs_query_next(&it));
         test_uint(it.count, 3);
         {
             ecs_entity_t e = it.entities[0];
@@ -1269,15 +1269,15 @@ void Metrics_oneof_gauge_w_delete(void) {
             test_int(((double*)inst)[1], 0);
             test_int(((double*)inst)[2], 1);
         }
-        test_bool(false, ecs_filter_next(&it));
+        test_bool(false, ecs_query_next(&it));
     }
 
     ecs_delete(world, e2);
     ecs_progress(world, 0);
 
     {
-        ecs_iter_t it = ecs_filter_iter(world, f);
-        test_bool(true, ecs_filter_next(&it));
+        ecs_iter_t it = ecs_query_iter(world, f);
+        test_bool(true, ecs_query_next(&it));
         test_uint(it.count, 2);
         {
             ecs_entity_t e = it.entities[0];
@@ -1301,10 +1301,10 @@ void Metrics_oneof_gauge_w_delete(void) {
             test_int(((double*)inst)[1], 0);
             test_int(((double*)inst)[2], 1);
         }
-        test_bool(false, ecs_filter_next(&it));
+        test_bool(false, ecs_query_next(&it));
     }
 
-    ecs_filter_fini(f);
+    ecs_query_fini(f);
 
     ecs_fini(world);
 }
@@ -1360,7 +1360,7 @@ void Metrics_member_counter(void) {
     });
     test_assert(m != 0);
 
-    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Position, {10, 20}));
     ecs_progress(world, 1.0);
     
     {
@@ -1423,7 +1423,7 @@ void Metrics_member_auto_counter(void) {
     });
     test_assert(m != 0);
 
-    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Position, {10, 20}));
     ecs_progress(world, 1.0);
     
     {
@@ -1478,7 +1478,7 @@ void Metrics_id_counter(void) {
     });
     test_assert(m != 0);
 
-    ecs_entity_t e1 = ecs_new(world, Foo);
+    ecs_entity_t e1 = ecs_new_w(world, Foo);
 
     ecs_progress(world, 1.0);
 
@@ -1542,7 +1542,7 @@ void Metrics_oneof_counter(void) {
 
     ecs_progress(world, 1.0);
 
-    ecs_filter_t *f = ecs_filter(world, {
+    ecs_query_t *f = ecs_query(world, {
         .terms = {
             { .id = ecs_childof(m) },
             { .id = ecs_pair(EcsMetric, EcsCounter) }
@@ -1551,8 +1551,8 @@ void Metrics_oneof_counter(void) {
     test_assert(f != NULL);
 
     {
-        ecs_iter_t it = ecs_filter_iter(world, f);
-        test_bool(true, ecs_filter_next(&it));
+        ecs_iter_t it = ecs_query_iter(world, f);
+        test_bool(true, ecs_query_next(&it));
         test_uint(it.count, 1);
         {
             ecs_entity_t e = it.entities[0];
@@ -1565,15 +1565,15 @@ void Metrics_oneof_counter(void) {
             test_int(((double*)inst)[1], 0);
             test_int(((double*)inst)[2], 0);
         }
-        test_bool(false, ecs_filter_next(&it));
+        test_bool(false, ecs_query_next(&it));
     }
 
     ecs_add_pair(world, e1, Color, Green);
     ecs_progress(world, 1.0);
 
     {
-        ecs_iter_t it = ecs_filter_iter(world, f);
-        test_bool(true, ecs_filter_next(&it));
+        ecs_iter_t it = ecs_query_iter(world, f);
+        test_bool(true, ecs_query_next(&it));
         test_uint(it.count, 1);
         {
             ecs_entity_t e = it.entities[0];
@@ -1586,15 +1586,15 @@ void Metrics_oneof_counter(void) {
             test_int(((double*)inst)[1], 1);
             test_int(((double*)inst)[2], 0);
         }
-        test_bool(false, ecs_filter_next(&it));
+        test_bool(false, ecs_query_next(&it));
     }
 
     ecs_add_pair(world, e1, Color, Blue);
     ecs_progress(world, 1.0);
 
     {
-        ecs_iter_t it = ecs_filter_iter(world, f);
-        test_bool(true, ecs_filter_next(&it));
+        ecs_iter_t it = ecs_query_iter(world, f);
+        test_bool(true, ecs_query_next(&it));
         test_uint(it.count, 1);
         {
             ecs_entity_t e = it.entities[0];
@@ -1607,14 +1607,14 @@ void Metrics_oneof_counter(void) {
             test_int(((double*)inst)[1], 1);
             test_int(((double*)inst)[2], 1);
         }
-        test_bool(false, ecs_filter_next(&it));
+        test_bool(false, ecs_query_next(&it));
     }
 
     ecs_progress(world, 1.0);
 
     {
-        ecs_iter_t it = ecs_filter_iter(world, f);
-        test_bool(true, ecs_filter_next(&it));
+        ecs_iter_t it = ecs_query_iter(world, f);
+        test_bool(true, ecs_query_next(&it));
         test_uint(it.count, 1);
         {
             ecs_entity_t e = it.entities[0];
@@ -1627,10 +1627,10 @@ void Metrics_oneof_counter(void) {
             test_int(((double*)inst)[1], 1);
             test_int(((double*)inst)[2], 2);
         }
-        test_bool(false, ecs_filter_next(&it));
+        test_bool(false, ecs_query_next(&it));
     }
 
-    ecs_filter_fini(f);
+    ecs_query_fini(f);
 
     ecs_fini(world);
 }
@@ -1660,7 +1660,7 @@ void Metrics_metric_description(void) {
 
     test_str(ecs_doc_get_brief(world, m), "Position y");
 
-    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Position, {10, 20}));
 
     ecs_progress(world, 0);
     
@@ -1697,7 +1697,7 @@ void Metrics_id_count(void) {
     });
     test_assert(m != 0);
 
-    ecs_set(world, 0, Position, {10, 20});
+    ecs_insert(world, ecs_value(Position, {10, 20}));
 
     ecs_progress(world, 1);
 
@@ -1707,8 +1707,8 @@ void Metrics_id_count(void) {
         test_int(v->value, 1);
     }
 
-    ecs_set(world, 0, Position, {10, 20});
-    ecs_set(world, 0, Position, {10, 20});
+    ecs_insert(world, ecs_value(Position, {10, 20}));
+    ecs_insert(world, ecs_value(Position, {10, 20}));
 
     ecs_progress(world, 1);
 
@@ -1739,12 +1739,12 @@ void Metrics_id_target_count(void) {
     });
     test_assert(m != 0);
 
-    ecs_entity_t e1 = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new(world);
     ecs_add_pair(world, e1, Color, Red);
-    ecs_entity_t e2 = ecs_new_id(world);
+    ecs_entity_t e2 = ecs_new(world);
     ecs_add_pair(world, e2, Color, Green);
     ecs_add_pair(world, e2, Color, Blue);
-    ecs_entity_t e3 = ecs_new_id(world);
+    ecs_entity_t e3 = ecs_new(world);
     ecs_add_pair(world, e3, Color, Blue);
 
     ecs_progress(world, 1);
@@ -1797,7 +1797,7 @@ void Metrics_metric_instance_has_doc_name(void) {
     });
     test_assert(m != 0);
 
-    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
     ecs_set(world, e1, Position, {10, 20});
 
     ecs_progress(world, 0);
@@ -1864,7 +1864,7 @@ void Metrics_metric_nested_member(void) {
 
     test_assert(m != 0);
 
-    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
     ecs_set(world, e1, Position, {10, {20, 30}});
 
     ecs_progress(world, 0);
@@ -1931,7 +1931,7 @@ void Metrics_metric_nested_member_counter(void) {
 
     test_assert(m != 0);
 
-    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
     ecs_set(world, e1, Position, {10, {20, 30}});
 
     ecs_progress(world, 0);
@@ -1998,7 +1998,7 @@ void Metrics_metric_nested_member_counter_increment(void) {
 
     test_assert(m != 0);
 
-    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
     ecs_set(world, e1, Position, {10, {20, 30}});
 
     ecs_progress(world, 1);
@@ -2070,7 +2070,7 @@ void Metrics_id_w_member_same_type(void) {
     });
     test_assert(m != 0);
 
-    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Position, {10, 20}));
 
     ecs_progress(world, 0);
     
@@ -2144,7 +2144,7 @@ void Metrics_pair_member_rel_type(void) {
     });
     test_assert(m != 0);
 
-    ecs_entity_t e1 = ecs_set_pair(world, 0, Position, Foo, {10, 20});
+    ecs_entity_t e1 = ecs_insert(world, ecs_value_pair(Position, Foo, {10, 20}));
     ecs_set_pair(world, e1, Position, Bar, {1, 2});
 
     ecs_progress(world, 0);
@@ -2192,8 +2192,9 @@ void Metrics_pair_member_tgt_type(void) {
     });
     test_assert(m != 0);
 
-    ecs_entity_t e1 = ecs_set_pair_second(world, 0, Foo, Position, {10, 20});
-    ecs_set_pair_second(world, e1, Bar, Position, {1, 2});
+    ecs_entity_t e1 = ecs_insert(world, 
+        ecs_value_pair_2nd(Foo, Position, {10, 20}),
+        ecs_value_pair_2nd(Bar, Position, {1, 2}));
 
     ecs_progress(world, 0);
     
@@ -2258,7 +2259,7 @@ void Metrics_pair_dotmember_rel_type(void) {
     });
     test_assert(m != 0);
 
-    ecs_entity_t e1 = ecs_set_pair(world, 0, Position, Foo, {0, {10, 20}});
+    ecs_entity_t e1 = ecs_insert(world, ecs_value_pair(Position, Foo, {0, {10, 20}}));
     ecs_set_pair(world, e1, Position, Bar, {0, {1, 2}});
 
     ecs_progress(world, 0);
@@ -2324,8 +2325,9 @@ void Metrics_pair_dotmember_tgt_type(void) {
     });
     test_assert(m != 0);
 
-    ecs_entity_t e1 = ecs_set_pair_second(world, 0, Foo, Position, {0, {10, 20}});
-    ecs_set_pair_second(world, e1, Bar, Position, {0, {1, 2}});
+    ecs_entity_t e1 = ecs_insert(world, 
+        ecs_value_pair_2nd(Foo, Position, {0, {10, 20}}),
+        ecs_value_pair_2nd(Bar, Position, {0, {1, 2}}));
 
     ecs_progress(world, 0);
     
@@ -2372,7 +2374,7 @@ void Metrics_pair_member_counter_increment(void) {
     });
     test_assert(m != 0);
 
-    ecs_entity_t e1 = ecs_set_pair(world, 0, Position, Foo, {10, 20});
+    ecs_entity_t e1 = ecs_insert(world, ecs_value_pair(Position, Foo, {10, 20}));
     ecs_set_pair(world, e1, Position, Bar, {1, 2});
 
     ecs_progress(world, 1);

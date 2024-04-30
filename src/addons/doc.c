@@ -162,11 +162,7 @@ void flecs_doc_import_core_definitions(
     ecs_doc_set_brief(world, EcsDisabled, "Tag that is added to disabled entities");
     ecs_doc_set_brief(world, EcsPrivate, "Tag that is added to private components");
     ecs_doc_set_brief(world, EcsFlag, "Internal tag for tracking ids with special id flags");
-    ecs_doc_set_brief(world, ecs_id(EcsIterable), "Internal component to make (query) entities iterable");
     ecs_doc_set_brief(world, ecs_id(EcsPoly), "Internal component that stores pointer to poly objects");
-    
-    ecs_doc_set_brief(world, ecs_id(EcsFlattenTarget), "Internal component that stores information for flattened trees");
-    ecs_doc_set_brief(world, EcsFlatten, "Tag that when added to assembly automatically flattens tree");
 
     ecs_doc_set_brief(world, ecs_id(EcsIdentifier), "Component used for entity names");
     ecs_doc_set_brief(world, EcsName, "Tag used with EcsIdentifier to store entity name");
@@ -180,21 +176,20 @@ void flecs_doc_import_core_definitions(
     ecs_doc_set_brief(world, EcsReflexive, "Trait that enables reflexive evaluation of relationships");
     ecs_doc_set_brief(world, EcsFinal, "Trait that indicates an entity cannot be inherited from");
     ecs_doc_set_brief(world, EcsDontInherit, "Trait that indicates it should not be inherited");
-    ecs_doc_set_brief(world, EcsTag, "Trait that ensures a pair cannot contain a value");
+    ecs_doc_set_brief(world, EcsPairIsTag, "Trait that ensures a pair cannot contain a value");
     ecs_doc_set_brief(world, EcsAcyclic, "Trait that indicates a relationship is acyclic");
     ecs_doc_set_brief(world, EcsTraversable, "Trait that indicates a relationship is traversable");
     ecs_doc_set_brief(world, EcsExclusive, "Trait that ensures a relationship can only have one target");
     ecs_doc_set_brief(world, EcsSymmetric, "Trait that causes a relationship to be two-way");
     ecs_doc_set_brief(world, EcsWith, "Trait for adding additional components when a component is added");
     ecs_doc_set_brief(world, EcsAlwaysOverride, "Trait that indicates a component should always be overridden");
-    ecs_doc_set_brief(world, EcsUnion, "Trait for creating a non-fragmenting relationship");
     ecs_doc_set_brief(world, EcsOneOf, "Trait that enforces target of relationship is a child of <specified>");
     ecs_doc_set_brief(world, EcsOnDelete, "Cleanup trait for specifying what happens when component is deleted");
     ecs_doc_set_brief(world, EcsOnDeleteTarget, "Cleanup trait for specifying what happens when pair target is deleted");
     ecs_doc_set_brief(world, EcsRemove, "Cleanup action used with OnDelete/OnDeleteTarget");
     ecs_doc_set_brief(world, EcsDelete, "Cleanup action used with OnDelete/OnDeleteTarget");
     ecs_doc_set_brief(world, EcsPanic, "Cleanup action used with OnDelete/OnDeleteTarget");
-    ecs_doc_set_brief(world, EcsDefaultChildComponent, "Sets default component hint for children of entity");
+    ecs_doc_set_brief(world, ecs_id(EcsDefaultChildComponent), "Sets default component hint for children of entity");
     ecs_doc_set_brief(world, EcsIsA, "Relationship used for expressing inheritance");
     ecs_doc_set_brief(world, EcsChildOf, "Relationship used for expressing hierarchies");
     ecs_doc_set_brief(world, EcsDependsOn, "Relationship used for expressing dependencies");
@@ -254,7 +249,7 @@ void FlecsDocImport(
     flecs_bootstrap_tag(world, EcsDocColor);
 
     ecs_set_hooks(world, EcsDocDescription, { 
-        .ctor = ecs_default_ctor,
+        .ctor = flecs_default_ctor,
         .move = ecs_move(EcsDocDescription),
         .copy = ecs_copy(EcsDocDescription),
         .dtor = ecs_dtor(EcsDocDescription)

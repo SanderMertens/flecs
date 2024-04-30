@@ -40,35 +40,33 @@ int main(int argc, char *argv[]) {
     // Create a query for Position, Velocity. We'll create a few entities that
     // have Velocity as owned and shared component.
     ecs_query_t *q = ecs_query(world, {
-        .filter = {
-            .terms = {
-                // Position must always be owned by the entity
-                { .id = ecs_id(Position), .src.flags = EcsSelf }, 
-                { .id = ecs_id(Velocity) } // Velocity may be shared (default)
-            },
-            .instanced = true
-        }
+        .terms = {
+            // Position must always be owned by the entity
+            { .id = ecs_id(Position), .src.id = EcsSelf }, 
+            { .id = ecs_id(Velocity) } // Velocity may be shared (default)
+        },
+        .flags = EcsQueryIsInstanced
     });
 
     // Create a prefab with Velocity. Prefabs are not matched with queries.
-    ecs_entity_t prefab = ecs_new_prefab(world, "p");
+    ecs_entity_t prefab = ecs_entity(world, { .name = "p", .add = ecs_ids( EcsPrefab ) });
     ecs_set(world, prefab, Velocity, {1, 2});
 
     // Create a few entities that own Position & share Velocity from the prefab.
-    ecs_entity_t e1 = ecs_new_entity(world, "e1");
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
     ecs_add_pair(world, e1, EcsIsA, prefab);
     ecs_set(world, e1, Position, {10, 20});
 
-    ecs_entity_t e2 = ecs_new_entity(world, "e2");
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
     ecs_add_pair(world, e2, EcsIsA, prefab);
     ecs_set(world, e2, Position, {10, 20});
 
     // Create a few entities that own all components
-    ecs_entity_t e3 = ecs_new_entity(world, "e3");
+    ecs_entity_t e3 = ecs_entity(world, { .name = "e3" });
     ecs_set(world, e3, Position, {10, 20});
     ecs_set(world, e3, Velocity, {3, 4});
 
-    ecs_entity_t e4 = ecs_new_entity(world, "e4");
+    ecs_entity_t e4 = ecs_entity(world, { .name = "e4" });
     ecs_set(world, e4, Position, {10, 20});
     ecs_set(world, e4, Velocity, {4, 5});
 
@@ -78,12 +76,12 @@ int main(int argc, char *argv[]) {
     // in the case of a shared field, it is accessed as a pointer.
     ecs_iter_t it = ecs_query_iter(world, q);
     while (ecs_query_next(&it)) {
-        Position *p = ecs_field(&it, Position, 1);
-        Velocity *v = ecs_field(&it, Velocity, 2);
+        Position *p = ecs_field(&it, Position, 0);
+        Velocity *v = ecs_field(&it, Velocity, 1);
 
         // Check if Velocity is owned, in which case it's accessed as array.
         // Position will always be owned, since we set the term to Self.
-        if (ecs_field_is_self(&it, 2)) { // Velocity is term 2
+        if (ecs_field_is_self(&it, 1)) { // Velocity is term 2
             printf("Velocity is owned\n");
             for (int i = 0; i < it.count; i ++) {
                 // If Velocity is shared, access the field as an array.

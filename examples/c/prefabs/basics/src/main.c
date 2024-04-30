@@ -28,11 +28,11 @@ int main(int argc, char *argv[]) {
     ECS_COMPONENT(ecs, Defense);
 
     // Create a SpaceShip prefab with a Defense component.
-    ecs_entity_t SpaceShip = ecs_new_prefab(ecs, "SpaceShip");
+    ecs_entity_t SpaceShip = ecs_entity(ecs, { .name = "SpaceShip", .add = ecs_ids( EcsPrefab ) });
     ecs_set(ecs, SpaceShip, Defense, {50});
 
     // Create a prefab instance
-    ecs_entity_t inst = ecs_new_entity(ecs, "my_spaceship");
+    ecs_entity_t inst = ecs_entity(ecs, { .name = "my_spaceship" });
     ecs_add_pair(ecs, inst, EcsIsA, SpaceShip);
 
     // Because of the IsA relationship, the instance now shares the Defense
@@ -47,14 +47,14 @@ int main(int argc, char *argv[]) {
 
     // Prefab components can be iterated like regular components:
     ecs_query_t *q = ecs_query(ecs, {
-        .filter.terms = {
+        .terms = {
             { .id = ecs_id(Defense) }
         }
     });
 
     ecs_iter_t it = ecs_query_iter(ecs, q);
     while (ecs_query_next(&it)) {
-        Defense *d = ecs_field(&it, Defense, 1);
+        Defense *d = ecs_field(&it, Defense, 0);
         for (int i = 0; i < it.count; i ++) {
             printf("%s: defense: %f\n", 
                 ecs_get_name(ecs, it.entities[i]), d[i].value);
