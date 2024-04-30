@@ -98,10 +98,10 @@ struct each_delegate;
 #include "iter.hpp"
 #include "entity.hpp"
 #include "delegate.hpp"
-#include "utils/iterable.hpp"
 #include "component.hpp"
 #include "type.hpp"
 #include "table.hpp"
+#include "utils/iterable.hpp"
 
 // Mixin implementations
 #include "mixins/id/impl.hpp"

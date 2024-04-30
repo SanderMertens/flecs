@@ -84,7 +84,7 @@ int main(int, char *[]) {
     int platoon_var = q.find_var("Platoon");
 
     // Iterate query, limit the results to units of MyPlayer
-    q.iter().set_var(player_var, ecs.lookup("MyPlayer")) 
+    q.set_var(player_var, ecs.lookup("MyPlayer")) 
         .each([&](flecs::iter& it, size_t index, RangedUnit) {
             flecs::entity unit = it.entity(index);
             std::cout << "Unit " << unit.path() << " of class " 

@@ -137,6 +137,18 @@ struct iterable {
         return this->iter().set_var(name, value);
     }
 
+    iter_iterable<Components...> set_var(const char *name, flecs::table_t *value) {
+        return this->iter().set_var(name, value);
+    }
+
+    iter_iterable<Components...> set_var(const char *name, ecs_table_range_t value) {
+        return this->iter().set_var(name, value);
+    }
+
+    iter_iterable<Components...> set_var(const char *name, flecs::table_range value) {
+        return this->iter().set_var(name, value);
+    }
+
     // Limit results to tables with specified group id (grouped queries only)
     iter_iterable<Components...> set_group(uint64_t group_id) {
         return this->iter().set_group(group_id);
@@ -212,6 +224,30 @@ struct iter_iterable final : iterable<Components...> {
         ecs_assert(var_id != -1, ECS_INVALID_PARAMETER, name);
         ecs_iter_set_var(&it_, var_id, value);
         return *this;
+    }
+
+    iter_iterable<Components...>& set_var(const char *name, flecs::table_t *value) {
+        ecs_query_iter_t *qit = &it_.priv_.iter.query;
+        int var_id = ecs_query_find_var(qit->query, name);
+        ecs_assert(var_id != -1, ECS_INVALID_PARAMETER, name);
+        ecs_iter_set_var_as_table(&it_, var_id, value);
+        return *this;
+    }
+
+    iter_iterable<Components...>& set_var(const char *name, ecs_table_range_t value) {
+        ecs_query_iter_t *qit = &it_.priv_.iter.query;
+        int var_id = ecs_query_find_var(qit->query, name);
+        ecs_assert(var_id != -1, ECS_INVALID_PARAMETER, name);
+        ecs_iter_set_var_as_range(&it_, var_id, &value);
+        return *this;
+    }
+
+    iter_iterable<Components...>& set_var(const char *name, flecs::table_range value) {
+        ecs_table_range_t range;
+        range.table = value.get_table();
+        range.offset = value.offset();
+        range.count = value.count();
+        return set_var(name, range);
     }
 
 #   ifdef FLECS_JSON

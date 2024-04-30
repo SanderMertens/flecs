@@ -637,6 +637,10 @@ void QueryBuilder_set_2_vars_by_name(void);
 void QueryBuilder_expr_w_var(void);
 void QueryBuilder_set_var_on_query(void);
 void QueryBuilder_set_var_by_name_on_query(void);
+void QueryBuilder_set_table_var(void);
+void QueryBuilder_set_range_var(void);
+void QueryBuilder_set_table_var_chained(void);
+void QueryBuilder_set_range_var_chained(void);
 void QueryBuilder_add_1_type(void);
 void QueryBuilder_add_2_types(void);
 void QueryBuilder_add_1_type_w_1_type(void);
@@ -3737,6 +3741,22 @@ bake_test_case QueryBuilder_testcases[] = {
         QueryBuilder_set_var_by_name_on_query
     },
     {
+        "set_table_var",
+        QueryBuilder_set_table_var
+    },
+    {
+        "set_range_var",
+        QueryBuilder_set_range_var
+    },
+    {
+        "set_table_var_chained",
+        QueryBuilder_set_table_var_chained
+    },
+    {
+        "set_range_var_chained",
+        QueryBuilder_set_range_var_chained
+    },
+    {
         "add_1_type",
         QueryBuilder_add_1_type
     },
@@ -6278,7 +6298,7 @@ static bake_test_suite suites[] = {
         "QueryBuilder",
         QueryBuilder_setup,
         NULL,
-        158,
+        162,
         QueryBuilder_testcases,
         1,
         QueryBuilder_params

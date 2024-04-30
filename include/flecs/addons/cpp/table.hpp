@@ -296,6 +296,14 @@ struct table {
         return depth(_::type<Rel>::id(world_));
     }
 
+    /** Get table.
+     *
+     * @return The table.
+     */
+    table_t* get_table() const {
+        return table_;
+    }
+
     /* Implicit conversion to table_t */
     operator table_t*() const {
         return table_;

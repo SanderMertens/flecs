@@ -639,6 +639,133 @@ void QueryBuilder_set_var_by_name_on_query(void) {
     test_int(count, 1);
 }
 
+void QueryBuilder_set_table_var(void) {
+    flecs::world ecs;
+
+    auto e1 = ecs.entity().add<Position>();
+    auto e2 = ecs.entity().add<Position>();
+    auto e3 = ecs.entity().add<Position>().add<Velocity>();
+
+    auto r = ecs.query_builder<Position>()
+        .cache_kind(cache_kind)
+        .build();
+
+    int count = 0;
+    r.set_var("this", e1.table())
+     .each([&](flecs::iter& it, size_t index, Position&) {
+        if (index == 0) {
+            test_assert(it.entity(index) == e1);
+        } else if (index == 1) {
+            test_assert(it.entity(index) == e2);
+        }
+        count ++;
+     });
+
+    test_int(count, 2);
+
+    r.set_var("this", e3.table())
+     .each([&](flecs::iter& it, size_t index, Position&) {
+        test_assert(it.entity(index) == e3);
+        count ++;
+     });
+
+    test_int(count, 3);
+}
+
+void QueryBuilder_set_range_var(void) {
+    flecs::world ecs;
+
+    auto e1 = ecs.entity().add<Position>();
+    auto e2 = ecs.entity().add<Position>();
+    auto e3 = ecs.entity().add<Position>().add<Velocity>();
+
+    auto r = ecs.query_builder<Position>()
+        .cache_kind(cache_kind)
+        .build();
+
+    int count = 0;
+
+    r.set_var("this", e1.range())
+     .each([&](flecs::iter& it, size_t index, Position&) {
+        test_assert(it.entity(index) == e1);
+        count ++;
+     });
+
+    test_int(count, 1);
+
+    r.set_var("this", e2.range())
+     .each([&](flecs::iter& it, size_t index, Position&) {
+        test_assert(it.entity(index) == e2);
+        count ++;
+     });
+
+    test_int(count, 2);
+
+    r.set_var("this", e3.range())
+     .each([&](flecs::iter& it, size_t index, Position&) {
+        test_assert(it.entity(index) == e3);
+        count ++;
+     });
+
+    test_int(count, 3);
+}
+
+void QueryBuilder_set_table_var_chained(void) {
+    flecs::world ecs;
+
+    /* auto e1 = */ ecs.entity().add<Position>();
+    /* auto e2 = */ ecs.entity().add<Position>();
+    auto e3 = ecs.entity().add<Position>().add<Velocity>();
+    /* auto e4 = */ ecs.entity().add<Velocity>();
+
+    auto q1 = ecs.query_builder<Position>()
+        .cache_kind(cache_kind)
+        .build();
+
+    auto q2 = ecs.query_builder<Velocity>()
+        .cache_kind(cache_kind)
+        .build();
+
+    int count = 0;
+
+    q1.iter([&](flecs::iter& it, Position*) {
+        q2.set_var("this", it.table()).each([&](flecs::entity e, Velocity&) {
+            test_assert(e == e3);
+            count ++;
+        });
+    });
+
+    test_int(count, 1);
+}
+
+void QueryBuilder_set_range_var_chained(void) {
+    flecs::world ecs;
+
+    /* auto e1 = */ ecs.entity().add<Position>();
+    /* auto e2 = */ ecs.entity().add<Position>();
+    auto e3 = ecs.entity().add<Position>().add<Velocity>();
+    /* auto e4 = */ ecs.entity().add<Velocity>();
+
+    auto q1 = ecs.query_builder<Position>()
+        .cache_kind(cache_kind)
+        .build();
+
+    auto q2 = ecs.query_builder<Velocity>()
+        .cache_kind(cache_kind)
+        .build();
+
+    int count = 0;
+
+    q1.iter([&](flecs::iter& it, Position*) {
+        q2.set_var("this", it.range()).each([&](flecs::entity e, Velocity&) {
+            test_assert(e == e3);
+            count ++;
+        });
+    });
+
+    test_int(count, 1);
+}
+
 void QueryBuilder_expr_w_var(void) {
     flecs::world ecs;
 
