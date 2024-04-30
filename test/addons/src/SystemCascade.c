@@ -2,10 +2,10 @@
 
 static
 void Iter(ecs_iter_t *it) {
-    Position *p = ecs_field(it, Position, 1);
-    Position *p_parent = ecs_field(it, Position, 2);
+    Position *p = ecs_field(it, Position, 0);
+    Position *p_parent = ecs_field(it, Position, 1);
 
-    test_assert(!p_parent || !ecs_field_is_self(it, 2));
+    test_assert(!p_parent || !ecs_field_is_self(it, 1));
 
     probe_iter(it);
 
@@ -31,10 +31,10 @@ void SystemCascade_cascade_depth_1(void) {
     ECS_ENTITY(world, e3, Position);
     ECS_ENTITY(world, e4, Position);
 
-    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, ?Position(parent|cascade));
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, ?Position(cascade));
     ecs_system_init(world, &(ecs_system_desc_t){
         .entity = Iter,
-        .query.filter.instanced = true
+        .query.flags = EcsQueryIsInstanced
     });
 
     ecs_set(world, e1, Position, {1, 2});
@@ -99,10 +99,10 @@ void SystemCascade_cascade_depth_2(void) {
     ECS_ENTITY(world, e5, Position);
     ECS_ENTITY(world, e6, Position);
 
-    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, ?Position(parent|cascade));
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, ?Position(cascade));
     ecs_system_init(world, &(ecs_system_desc_t){
         .entity = Iter,
-        .query.filter.instanced = true
+        .query.flags = EcsQueryIsInstanced
     });
 
     ecs_set(world, e1, Position, {1, 2});
@@ -180,10 +180,10 @@ void SystemCascade_cascade_depth_2_new_syntax(void) {
     ECS_ENTITY(world, e5, Position);
     ECS_ENTITY(world, e6, Position);
 
-    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, ?Position(cascade(ChildOf)));
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, ?Position(cascade ChildOf));
     ecs_system_init(world, &(ecs_system_desc_t){
         .entity = Iter,
-        .query.filter.instanced = true
+        .query.flags = EcsQueryIsInstanced
     });
 
     ecs_set(world, e1, Position, {1, 2});
@@ -251,10 +251,10 @@ void SystemCascade_cascade_depth_2_new_syntax(void) {
 
 static
 void AddParent(ecs_iter_t *it) {
-    Position *p = ecs_field(it, Position, 1);
-    Position *p_parent = ecs_field(it, Position, 2);
+    Position *p = ecs_field(it, Position, 0);
+    Position *p_parent = ecs_field(it, Position, 1);
 
-    test_assert(!p_parent || !ecs_field_is_self(it, 2));
+    test_assert(!p_parent || !ecs_field_is_self(it, 1));
 
     probe_iter(it);
 
@@ -277,13 +277,13 @@ void SystemCascade_add_after_match(void) {
     ECS_ENTITY(world, e3, Position);
     ECS_ENTITY(world, e4, Position);
 
-    ECS_SYSTEM(world, AddParent, EcsOnUpdate, Position, ?Position(parent|cascade));
+    ECS_SYSTEM(world, AddParent, EcsOnUpdate, Position, ?Position(cascade));
     ecs_system_init(world, &(ecs_system_desc_t){
         .entity = AddParent,
-        .query.filter.instanced = true
+        .query.flags = EcsQueryIsInstanced
     });
 
-    ecs_entity_t parent = ecs_new(world, 0);
+    ecs_entity_t parent = ecs_new(world);
     ecs_set(world, e1, Position, {1, 2});
     ecs_set(world, e2, Position, {1, 2});
     ecs_set(world, e3, Position, {1, 2});
@@ -298,7 +298,7 @@ void SystemCascade_add_after_match(void) {
     ecs_progress(world, 1);
 
     /* Before adding Position to parent, it wasn't being considered for the
-     * column(parent|cascade), so tables could have been ordered randomly. Make sure
+     * column(cascade), so tables could have been ordered randomly. Make sure
      * that queries can handle changes to depth after all tables are matched */
     ecs_set(world, parent, Position, {1, 2});
 
@@ -354,13 +354,13 @@ void SystemCascade_adopt_after_match(void) {
     ECS_ENTITY(world, e3, Position);
     ECS_ENTITY(world, e4, Position);
 
-    ECS_SYSTEM(world, AddParent, EcsOnUpdate, Position, ?Position(parent|cascade));
+    ECS_SYSTEM(world, AddParent, EcsOnUpdate, Position, ?Position(cascade));
     ecs_system_init(world, &(ecs_system_desc_t){
         .entity = AddParent,
-        .query.filter.instanced = true
+        .query.flags = EcsQueryIsInstanced
     });
 
-    ecs_entity_t parent = ecs_set(world, 0, Position, {1, 2});
+    ecs_entity_t parent = ecs_insert(world, ecs_value(Position, {1, 2}));
     ecs_set(world, e1, Position, {1, 2});
     ecs_set(world, e2, Position, {1, 2});
     ecs_set(world, e3, Position, {1, 2});
@@ -426,10 +426,10 @@ void SystemCascade_custom_relation_cascade_depth_1(void) {
     ECS_ENTITY(world, e3, Position);
     ECS_ENTITY(world, e4, Position);
 
-    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, ?Position(cascade(Rel)));
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, ?Position(cascade Rel));
     ecs_system_init(world, &(ecs_system_desc_t){
         .entity = Iter,
-        .query.filter.instanced = true
+        .query.flags = EcsQueryIsInstanced
     });
 
     ecs_set(world, e1, Position, {1, 2});
@@ -495,10 +495,10 @@ void SystemCascade_custom_relation_cascade_depth_2(void) {
     ECS_ENTITY(world, e5, Position);
     ECS_ENTITY(world, e6, Position);
 
-    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, ?Position(cascade(Rel)));
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, ?Position(cascade Rel));
     ecs_system_init(world, &(ecs_system_desc_t){
         .entity = Iter,
-        .query.filter.instanced = true
+        .query.flags = EcsQueryIsInstanced
     });
 
     ecs_set(world, e1, Position, {1, 2});
@@ -575,13 +575,13 @@ void SystemCascade_custom_relation_add_after_match(void) {
     ECS_ENTITY(world, e3, Position);
     ECS_ENTITY(world, e4, Position);
 
-    ECS_SYSTEM(world, AddParent, EcsOnUpdate, Position, ?Position(cascade(Rel)));
+    ECS_SYSTEM(world, AddParent, EcsOnUpdate, Position, ?Position(cascade Rel));
     ecs_system_init(world, &(ecs_system_desc_t){
         .entity = AddParent,
-        .query.filter.instanced = true
+        .query.flags = EcsQueryIsInstanced
     });
 
-    ecs_entity_t parent = ecs_new(world, 0);
+    ecs_entity_t parent = ecs_new(world);
     ecs_set(world, e1, Position, {1, 2});
     ecs_set(world, e2, Position, {1, 2});
     ecs_set(world, e3, Position, {1, 2});
@@ -596,7 +596,7 @@ void SystemCascade_custom_relation_add_after_match(void) {
     ecs_progress(world, 1);
 
     /* Before adding Position to parent, it wasn't being considered for the
-     * column(parent|cascade), so tables could have been ordered randomly. Make sure
+     * column(cascade), so tables could have been ordered randomly. Make sure
      * that queries can handle changes to depth after all tables are matched */
     ecs_set(world, parent, Position, {1, 2});
 
@@ -653,13 +653,13 @@ void SystemCascade_custom_relation_adopt_after_match(void) {
     ECS_ENTITY(world, e3, Position);
     ECS_ENTITY(world, e4, Position);
 
-    ECS_SYSTEM(world, AddParent, EcsOnUpdate, Position, ?Position(cascade(Rel)));
+    ECS_SYSTEM(world, AddParent, EcsOnUpdate, Position, ?Position(cascade Rel));
     ecs_system_init(world, &(ecs_system_desc_t){
         .entity = AddParent,
-        .query.filter.instanced = true
+        .query.flags = EcsQueryIsInstanced
     });
 
-    ecs_entity_t parent = ecs_set(world, 0, Position, {1, 2});
+    ecs_entity_t parent = ecs_insert(world, ecs_value(Position, {1, 2}));
     ecs_set(world, e1, Position, {1, 2});
     ecs_set(world, e2, Position, {1, 2});
     ecs_set(world, e3, Position, {1, 2});

@@ -83,7 +83,7 @@ void Modules_simple_module(void) {
 
     ECS_IMPORT(world, SimpleModule);
 
-    ecs_entity_t e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new_w(world, Position);
     test_assert(e != 0);
     test_assert( ecs_has(world, e, Position));
     
@@ -107,7 +107,7 @@ void Modules_import_module_from_system(void) {
     ECS_IMPORT(world, SimpleModule);
     ECS_SYSTEM(world, AddVtoP, EcsOnUpdate, simple.module.Position);
 
-    ecs_entity_t e = ecs_new(world, Position);
+    ecs_entity_t e = ecs_new_w(world, Position);
     test_assert(e != 0);
     test_assert( ecs_has(world, e, Position));
 
@@ -325,7 +325,7 @@ void Modules_module_tag_on_namespace(void) {
 void Modules_module_tag_on_namespace_on_add(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t parent = ecs_new_id(world);
+    ecs_entity_t parent = ecs_new(world);
     test_assert(parent != 0);
 
     ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, parent);
@@ -341,7 +341,7 @@ void Modules_module_tag_on_namespace_on_add(void) {
 void Modules_module_tag_on_namespace_on_add_2_levels(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t root = ecs_new_id(world);
+    ecs_entity_t root = ecs_new(world);
     test_assert(root != 0);
 
     ecs_entity_t parent = ecs_new_w_pair(world, EcsChildOf, root);
@@ -369,14 +369,14 @@ void Modules_import_2_worlds(void) {
     test_assert(ecs_lookup(world_2, "simple.module") != 0);
 
     {
-        ecs_entity_t e = ecs_new(world_1, Position);
+        ecs_entity_t e = ecs_new_w(world_1, Position);
         test_assert(e != 0);
         test_assert( ecs_has(world_1, e, Position));
         ecs_add(world_1, e, Velocity);
         test_assert( ecs_has(world_1, e, Velocity));
     }
     {
-        ecs_entity_t e = ecs_new(world_2, Position);
+        ecs_entity_t e = ecs_new_w(world_2, Position);
         test_assert(e != 0);
         test_assert( ecs_has(world_2, e, Position));
         ecs_add(world_2, e, Velocity);
@@ -414,7 +414,7 @@ void Modules_import_monitor_after_mini(void) {
 void Modules_component_parent_becomes_module(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t parent = ecs_new_id(world);
+    ecs_entity_t parent = ecs_new(world);
     ecs_entity_t comp = ecs_new_w_pair(world, EcsChildOf, parent);
 
     test_assert(!ecs_has_id(world, parent, EcsModule));

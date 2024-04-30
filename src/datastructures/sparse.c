@@ -366,6 +366,9 @@ void* flecs_sparse_ensure(
 
             /* First unused element is now last used element */
             sparse->count ++;
+
+            /* Set dense element to new generation */
+            ecs_vec_first_t(&sparse->dense, uint64_t)[dense] = index | gen;
         } else {
             /* Dense is already alive, nothing to be done */
         }

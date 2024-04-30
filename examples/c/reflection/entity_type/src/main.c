@@ -11,7 +11,7 @@ int main(int argc, char *argv[]) {
     ECS_META_COMPONENT(ecs, TypeWithEntity);
 
     ecs_entity_t foo = ecs_set_name(ecs, 0, "Foo");
-    ecs_entity_t e = ecs_set(ecs, 0, TypeWithEntity, {foo});
+    ecs_entity_t e = ecs_insert(ecs, ecs_value(TypeWithEntity, {foo}));
 
     // Convert component to flecs expression string
     const TypeWithEntity *ptr = ecs_get(ecs, e, TypeWithEntity);

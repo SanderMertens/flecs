@@ -3,7 +3,7 @@
  * @brief Utility macros for populating reflection data in C.
  */
 
-#ifdef FLECS_META_C
+#ifdef FLECS_META
 
 /**
  * @defgroup c_addons_meta_c Meta Utilities
@@ -12,14 +12,6 @@
  *
  * @{
  */
-
-#ifndef FLECS_META
-#define FLECS_META
-#endif
-
-#ifndef FLECS_PARSER
-#define FLECS_PARSER
-#endif
 
 #ifndef FLECS_META_C_H
 #define FLECS_META_C_H
@@ -149,8 +141,8 @@ int ecs_meta_from_desc(
 }
 #endif
 
-#endif // FLECS_META_C_H
+#endif // FLECS_META_H
 
 /** @} */
 
-#endif // FLECS_META_C
+#endif // FLECS_META

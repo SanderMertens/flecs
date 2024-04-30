@@ -25,7 +25,7 @@ void Timer_timeout(void) {
 
     ECS_SYSTEM(world, SystemA, EcsOnUpdate, Position);
 
-    ecs_new(world, Position);
+    ecs_new_w(world, Position);
 
     ecs_entity_t timer = ecs_set_timeout(world, SystemA, 3.0);
     test_assert(timer != 0);
@@ -60,7 +60,7 @@ void Timer_interval(void) {
 
     ECS_SYSTEM(world, SystemA, EcsOnUpdate, Position);
 
-    ecs_new(world, Position);
+    ecs_new_w(world, Position);
 
     ecs_entity_t timer = ecs_set_interval(world, SystemA, 3.0);
     test_assert(timer != 0);
@@ -95,7 +95,7 @@ void Timer_shared_timeout(void) {
     ECS_SYSTEM(world, SystemA, EcsOnUpdate, Position);
     ECS_SYSTEM(world, SystemB, EcsOnUpdate, Position);
 
-    ecs_new(world, Position);
+    ecs_new_w(world, Position);
 
     ecs_entity_t timer = ecs_set_timeout(world, 0, 3.0);
     test_assert(timer != 0);
@@ -140,7 +140,7 @@ void Timer_shared_interval(void) {
     ECS_SYSTEM(world, SystemA, EcsOnUpdate, Position);
     ECS_SYSTEM(world, SystemB, EcsOnUpdate, Position);
 
-    ecs_new(world, Position);
+    ecs_new_w(world, Position);
 
     ecs_entity_t timer = ecs_set_interval(world, 0, 3.0);
     test_assert(timer != 0);
@@ -184,7 +184,7 @@ void Timer_start_stop_one_shot(void) {
 
     ECS_SYSTEM(world, SystemA, EcsOnUpdate, Position);
 
-    ecs_new(world, Position);
+    ecs_new_w(world, Position);
 
     ecs_entity_t timer = ecs_set_timeout(world, SystemA, 3.0);
     test_assert(timer != 0);
@@ -226,7 +226,7 @@ void Timer_start_stop_interval(void) {
 
     ECS_SYSTEM(world, SystemA, EcsOnUpdate, Position);
 
-    ecs_new(world, Position);
+    ecs_new_w(world, Position);
 
     ecs_entity_t timer = ecs_set_interval(world, SystemA, 3.0);
     test_assert(timer != 0);
@@ -279,7 +279,7 @@ void Timer_rate_filter(void) {
 
     ECS_SYSTEM(world, SystemA, EcsOnUpdate, Position);
 
-    ecs_new(world, Position);
+    ecs_new_w(world, Position);
 
     ecs_entity_t filter = ecs_set_rate(world, SystemA, 3, 0);
     test_assert(filter != 0);
@@ -321,7 +321,7 @@ void Timer_rate_filter_w_rate_filter_src(void) {
 
     ECS_SYSTEM(world, SystemC, EcsOnUpdate, Position);
 
-    ecs_new(world, Position);
+    ecs_new_w(world, Position);
 
     ecs_entity_t filter_a = ecs_set_rate(world, 0, 2, 0);
     test_assert(filter_a != 0);
@@ -401,10 +401,10 @@ void Timer_rate_filter_with_empty_src(void) {
 
     ECS_SYSTEM(world, SystemC, EcsOnUpdate, Position);
 
-    ecs_new(world, Position);
+    ecs_new_w(world, Position);
 
     // Not actually a tick source
-    ecs_entity_t filter_a = ecs_new_id(world);
+    ecs_entity_t filter_a = ecs_new(world);
     test_assert(filter_a != 0);
 
     ecs_entity_t filter_b = ecs_set_rate(world, SystemC, 6, filter_a);
@@ -519,7 +519,7 @@ void Timer_rate_entity(void) {
         test_bool(src->tick, false);
     }
 
-    /* Filter should tick again */
+    /* Query should tick again */
     ecs_progress(world, 0);
     test_bool(src->tick, true);
 
@@ -553,7 +553,7 @@ void Timer_nested_rate_entity(void) {
         test_bool(src->tick, false);
     }
 
-    /* Filter should tick again */
+    /* Query should tick again */
     ecs_progress(world, 0);
     test_bool(src->tick, true);
 
@@ -564,7 +564,7 @@ void Timer_nested_rate_entity_empty_src(void) {
     ecs_world_t *world = ecs_init();
 
     /* Rate filter with source that is not a tick source */
-    ecs_entity_t parent = ecs_new(world, 0);
+    ecs_entity_t parent = ecs_new(world);
     ecs_entity_t rate = ecs_set_rate(world, 0, 4, parent);
 
     int i;
@@ -587,7 +587,7 @@ void Timer_nested_rate_entity_empty_src(void) {
         test_bool(src->tick, false);
     }
 
-    /* Filter should tick again */
+    /* Query should tick again */
     ecs_progress(world, 0);
     test_bool(src->tick, true);
 
@@ -597,7 +597,7 @@ void Timer_nested_rate_entity_empty_src(void) {
 void Timer_naked_tick_entity(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t tick = ecs_set(world, 0, EcsTickSource, {0});
+    ecs_entity_t tick = ecs_insert(world, ecs_value(EcsTickSource, {0}));
 
     int i;
     for (i = 0; i < 10; i ++) {

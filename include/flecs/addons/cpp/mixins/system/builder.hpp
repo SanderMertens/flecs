@@ -28,8 +28,8 @@ struct system_builder final : _::system_builder_base<Components...> {
         _::sig<Components...>(world).populate(this);
 
 #ifdef FLECS_PIPELINE
-        ecs_add_id(world, this->m_desc.entity, ecs_dependson(flecs::OnUpdate));
-        ecs_add_id(world, this->m_desc.entity, flecs::OnUpdate);
+        ecs_add_id(world, this->desc_.entity, ecs_dependson(flecs::OnUpdate));
+        ecs_add_id(world, this->desc_.entity, flecs::OnUpdate);
 #endif
     }
 };

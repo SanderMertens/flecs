@@ -42,7 +42,7 @@ ECS_DTOR(EcsPipelineStats, ptr, {
 
 static
 void UpdateWorldSummary(ecs_iter_t *it) {
-    EcsWorldSummary *summary = ecs_field(it, EcsWorldSummary, 1);
+    EcsWorldSummary *summary = ecs_field(it, EcsWorldSummary, 0);
 
     const ecs_world_info_t *info = ecs_get_world_info(it->world);
 
@@ -79,8 +79,8 @@ static
 void MonitorStats(ecs_iter_t *it) {
     ecs_world_t *world = it->real_world;
 
-    EcsStatsHeader *hdr = ecs_field_w_size(it, 0, 1);
-    ecs_id_t kind = ecs_pair_first(it->world, ecs_field_id(it, 1));
+    EcsStatsHeader *hdr = ecs_field_w_size(it, 0, 0);
+    ecs_id_t kind = ecs_pair_first(it->world, ecs_field_id(it, 0));
     void *stats = ECS_OFFSET_T(hdr, EcsStatsHeader);
 
     ecs_ftime_t elapsed = hdr->elapsed;
@@ -138,10 +138,10 @@ void MonitorStats(ecs_iter_t *it) {
 
 static
 void ReduceStats(ecs_iter_t *it) {
-    void *dst = ecs_field_w_size(it, 0, 1);
-    void *src = ecs_field_w_size(it, 0, 2);
+    void *dst = ecs_field_w_size(it, 0, 0);
+    void *src = ecs_field_w_size(it, 0, 1);
 
-    ecs_id_t kind = ecs_pair_first(it->world, ecs_field_id(it, 1));
+    ecs_id_t kind = ecs_pair_first(it->world, ecs_field_id(it, 0));
 
     dst = ECS_OFFSET_T(dst, EcsStatsHeader);
     src = ECS_OFFSET_T(src, EcsStatsHeader);
@@ -157,13 +157,13 @@ static
 void AggregateStats(ecs_iter_t *it) {
     int32_t interval = *(int32_t*)it->ctx;
 
-    EcsStatsHeader *dst_hdr = ecs_field_w_size(it, 0, 1);
-    EcsStatsHeader *src_hdr = ecs_field_w_size(it, 0, 2);
+    EcsStatsHeader *dst_hdr = ecs_field_w_size(it, 0, 0);
+    EcsStatsHeader *src_hdr = ecs_field_w_size(it, 0, 1);
 
     void *dst = ECS_OFFSET_T(dst_hdr, EcsStatsHeader);
     void *src = ECS_OFFSET_T(src_hdr, EcsStatsHeader);
 
-    ecs_id_t kind = ecs_pair_first(it->world, ecs_field_id(it, 1));
+    ecs_id_t kind = ecs_pair_first(it->world, ecs_field_id(it, 0));
 
     ecs_world_stats_t last_world = {0};
     ecs_pipeline_stats_t last_pipeline = {0};
@@ -211,15 +211,14 @@ void AggregateStats(ecs_iter_t *it) {
 static
 void flecs_stats_monitor_import(
     ecs_world_t *world,
-    ecs_id_t kind,
-    size_t size)
+    ecs_id_t kind)
 {
     ecs_entity_t prev = ecs_set_scope(world, kind);
 
     // Called each frame, collects 60 measurements per second
     ecs_system(world, {
-        .entity = ecs_entity(world, { .name = "Monitor1s", .add = {ecs_dependson(EcsPreFrame)} }),
-        .query.filter.terms = {{
+        .entity = ecs_entity(world, { .name = "Monitor1s", .add = ecs_ids(ecs_dependson(EcsPreFrame)) }),
+        .query.terms = {{
             .id = ecs_pair(kind, EcsPeriod1s),
             .src.id = EcsWorld 
         }},
@@ -228,8 +227,8 @@ void flecs_stats_monitor_import(
 
     // Called each second, reduces into 60 measurements per minute
     ecs_entity_t mw1m = ecs_system(world, {
-        .entity = ecs_entity(world, { .name = "Monitor1m", .add = {ecs_dependson(EcsPreFrame)} }),
-        .query.filter.terms = {{
+        .entity = ecs_entity(world, { .name = "Monitor1m", .add = ecs_ids(ecs_dependson(EcsPreFrame)) }),
+        .query.terms = {{
             .id = ecs_pair(kind, EcsPeriod1m),
             .src.id = EcsWorld 
         }, {
@@ -242,8 +241,8 @@ void flecs_stats_monitor_import(
 
     // Called each minute, reduces into 60 measurements per hour
     ecs_system(world, {
-        .entity = ecs_entity(world, { .name = "Monitor1h", .add = {ecs_dependson(EcsPreFrame)} }),
-        .query.filter.terms = {{
+        .entity = ecs_entity(world, { .name = "Monitor1h", .add = ecs_ids(ecs_dependson(EcsPreFrame)) }),
+        .query.terms = {{
             .id = ecs_pair(kind, EcsPeriod1h),
             .src.id = EcsWorld 
         }, {
@@ -257,8 +256,8 @@ void flecs_stats_monitor_import(
 
     // Called each minute, reduces into 60 measurements per day
     ecs_system(world, {
-        .entity = ecs_entity(world, { .name = "Monitor1d", .add = {ecs_dependson(EcsPreFrame)} }),
-        .query.filter.terms = {{
+        .entity = ecs_entity(world, { .name = "Monitor1d", .add = ecs_ids(ecs_dependson(EcsPreFrame)) }),
+        .query.terms = {{
             .id = ecs_pair(kind, EcsPeriod1d),
             .src.id = EcsWorld 
         }, {
@@ -273,8 +272,8 @@ void flecs_stats_monitor_import(
 
     // Called each hour, reduces into 60 measurements per week
     ecs_system(world, {
-        .entity = ecs_entity(world, { .name = "Monitor1w", .add = {ecs_dependson(EcsPreFrame)} }),
-        .query.filter.terms = {{
+        .entity = ecs_entity(world, { .name = "Monitor1w", .add = ecs_ids(ecs_dependson(EcsPreFrame)) }),
+        .query.terms = {{
             .id = ecs_pair(kind, EcsPeriod1w),
             .src.id = EcsWorld 
         }, {
@@ -289,11 +288,11 @@ void flecs_stats_monitor_import(
 
     ecs_set_scope(world, prev);
 
-    ecs_set_id(world, EcsWorld, ecs_pair(kind, EcsPeriod1s), size, NULL);
-    ecs_set_id(world, EcsWorld, ecs_pair(kind, EcsPeriod1m), size, NULL);
-    ecs_set_id(world, EcsWorld, ecs_pair(kind, EcsPeriod1h), size, NULL);
-    ecs_set_id(world, EcsWorld, ecs_pair(kind, EcsPeriod1d), size, NULL);
-    ecs_set_id(world, EcsWorld, ecs_pair(kind, EcsPeriod1w), size, NULL);
+    ecs_add_pair(world, EcsWorld, kind, EcsPeriod1s);
+    ecs_add_pair(world, EcsWorld, kind, EcsPeriod1m);
+    ecs_add_pair(world, EcsWorld, kind, EcsPeriod1h);
+    ecs_add_pair(world, EcsWorld, kind, EcsPeriod1d);
+    ecs_add_pair(world, EcsWorld, kind, EcsPeriod1w);
 }
 
 static
@@ -302,8 +301,11 @@ void flecs_world_monitor_import(
 {
     ECS_COMPONENT_DEFINE(world, EcsWorldStats);
 
-    flecs_stats_monitor_import(world, ecs_id(EcsWorldStats), 
-        sizeof(EcsWorldStats));
+    ecs_set_hooks(world, EcsWorldStats, {
+        .ctor = flecs_default_ctor
+    });
+
+    flecs_stats_monitor_import(world, ecs_id(EcsWorldStats));
 }
 
 static
@@ -313,14 +315,13 @@ void flecs_pipeline_monitor_import(
     ECS_COMPONENT_DEFINE(world, EcsPipelineStats);
 
     ecs_set_hooks(world, EcsPipelineStats, {
-        .ctor = ecs_default_ctor,
+        .ctor = flecs_default_ctor,
         .copy = ecs_copy(EcsPipelineStats),
         .move = ecs_move(EcsPipelineStats),
         .dtor = ecs_dtor(EcsPipelineStats)
     });
 
-    flecs_stats_monitor_import(world, ecs_id(EcsPipelineStats),
-        sizeof(EcsPipelineStats));
+    flecs_stats_monitor_import(world, ecs_id(EcsPipelineStats));
 }
 
 void FlecsMonitorImport(
@@ -343,11 +344,11 @@ void FlecsMonitorImport(
 
     ecs_set_name_prefix(world, "Ecs");
 
-    EcsPeriod1s = ecs_new_entity(world, "EcsPeriod1s");
-    EcsPeriod1m = ecs_new_entity(world, "EcsPeriod1m");
-    EcsPeriod1h = ecs_new_entity(world, "EcsPeriod1h");
-    EcsPeriod1d = ecs_new_entity(world, "EcsPeriod1d");
-    EcsPeriod1w = ecs_new_entity(world, "EcsPeriod1w");
+    EcsPeriod1s = ecs_entity(world, { .name = "EcsPeriod1s" });
+    EcsPeriod1m = ecs_entity(world, { .name = "EcsPeriod1m" });
+    EcsPeriod1h = ecs_entity(world, { .name = "EcsPeriod1h" });
+    EcsPeriod1d = ecs_entity(world, { .name = "EcsPeriod1d" });
+    EcsPeriod1w = ecs_entity(world, { .name = "EcsPeriod1w" });
 
     ECS_COMPONENT_DEFINE(world, EcsWorldSummary);
 
@@ -373,9 +374,9 @@ void FlecsMonitorImport(
     ecs_system(world, {
         .entity = ecs_entity(world, { 
             .name = "UpdateWorldSummary", 
-            .add = {ecs_dependson(EcsPreFrame)} 
+            .add = ecs_ids(ecs_dependson(EcsPreFrame)) 
         }),
-        .query.filter.terms[0] = { .id = ecs_id(EcsWorldSummary) },
+        .query.terms[0] = { .id = ecs_id(EcsWorldSummary) },
         .callback = UpdateWorldSummary
     });
 

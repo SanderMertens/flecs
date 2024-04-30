@@ -10,57 +10,57 @@ namespace flecs {
 inline flecs::entity id::entity() const {
     ecs_assert(!is_pair(), ECS_INVALID_OPERATION, NULL);
     ecs_assert(!flags(), ECS_INVALID_OPERATION, NULL);
-    return flecs::entity(m_world, m_id);
+    return flecs::entity(world_, id_);
 }
 
 inline flecs::entity id::flags() const {
-    return flecs::entity(m_world, m_id & ECS_ID_FLAGS_MASK);
+    return flecs::entity(world_, id_ & ECS_ID_FLAGS_MASK);
 }
 
 inline flecs::entity id::first() const {
     ecs_assert(is_pair(), ECS_INVALID_OPERATION, NULL);
 
-    flecs::entity_t e = ECS_PAIR_FIRST(m_id);
-    if (m_world) {
-        return flecs::entity(m_world, ecs_get_alive(m_world, e));
+    flecs::entity_t e = ECS_PAIR_FIRST(id_);
+    if (world_) {
+        return flecs::entity(world_, ecs_get_alive(world_, e));
     } else {
         return flecs::entity(e);
     }
 }
 
 inline flecs::entity id::second() const {
-    flecs::entity_t e = ECS_PAIR_SECOND(m_id);
-    if (m_world) {
-        return flecs::entity(m_world, ecs_get_alive(m_world, e));
+    flecs::entity_t e = ECS_PAIR_SECOND(id_);
+    if (world_) {
+        return flecs::entity(world_, ecs_get_alive(world_, e));
     } else {
         return flecs::entity(e);
     }
 }
 
 inline flecs::entity id::add_flags(flecs::id_t flags) const {
-    return flecs::entity(m_world, m_id | flags);
+    return flecs::entity(world_, id_ | flags);
 }
 
 inline flecs::entity id::remove_flags(flecs::id_t flags) const {
     (void)flags;
-    ecs_assert((m_id & ECS_ID_FLAGS_MASK) == flags, ECS_INVALID_PARAMETER, NULL);
-    return flecs::entity(m_world, m_id & ECS_COMPONENT_MASK);
+    ecs_assert((id_ & ECS_ID_FLAGS_MASK) == flags, ECS_INVALID_PARAMETER, NULL);
+    return flecs::entity(world_, id_ & ECS_COMPONENT_MASK);
 }
 
 inline flecs::entity id::remove_flags() const {
-    return flecs::entity(m_world, m_id & ECS_COMPONENT_MASK);
+    return flecs::entity(world_, id_ & ECS_COMPONENT_MASK);
 }
 
 inline flecs::entity id::remove_generation() const {
-    return flecs::entity(m_world, static_cast<uint32_t>(m_id));
+    return flecs::entity(world_, static_cast<uint32_t>(id_));
 }
 
 inline flecs::world id::world() const {
-    return flecs::world(m_world);
+    return flecs::world(world_);
 }
 
 inline flecs::entity id::type_id() const {
-    return flecs::entity(m_world, ecs_get_typeid(m_world, m_id));
+    return flecs::entity(world_, ecs_get_typeid(world_, id_));
 }
 
 
@@ -68,21 +68,21 @@ inline flecs::entity id::type_id() const {
 
 template <typename T>
 inline flecs::id world::id() const {
-    return flecs::id(m_world, _::cpp_type<T>::id(m_world));
+    return flecs::id(world_, _::type<T>::id(world_));
 }
 
 template <typename ... Args>
 inline flecs::id world::id(Args&&... args) const {
-    return flecs::id(m_world, FLECS_FWD(args)...);
+    return flecs::id(world_, FLECS_FWD(args)...);
 }
 
 template <typename First, typename Second>
 inline flecs::id world::pair() const {
     return flecs::id(
-        m_world, 
+        world_, 
         ecs_pair(
-            _::cpp_type<First>::id(m_world), 
-            _::cpp_type<Second>::id(m_world)));
+            _::type<First>::id(world_), 
+            _::type<Second>::id(world_)));
 }
 
 template <typename First>
@@ -91,9 +91,9 @@ inline flecs::id world::pair(entity_t o) const {
         "cannot create nested pairs");
 
     return flecs::id(
-        m_world,
+        world_,
         ecs_pair(
-            _::cpp_type<First>::id(m_world), 
+            _::type<First>::id(world_), 
             o));
 }
 
@@ -102,7 +102,7 @@ inline flecs::id world::pair(entity_t r, entity_t o) const {
         "cannot create nested pairs");
 
     return flecs::id(
-        m_world,
+        world_,
         ecs_pair(r, o));
 }
 

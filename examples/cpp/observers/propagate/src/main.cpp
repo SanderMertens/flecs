@@ -21,7 +21,7 @@ int main(int, char *[]) {
 
     // Create observer that listens for events from both self and parent
     ecs.observer<Position, Position>()
-        .term_at(2).parent() // select 2nd Position from parent
+        .term_at(1).parent() // select 2nd Position from parent
         .event(flecs::OnSet)
         .each([](flecs::iter& it, size_t i, Position& p_self, Position& p_parent) {
             std::cout << " - " << it.event().name() << ": " 

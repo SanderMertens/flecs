@@ -44,7 +44,7 @@
         desc.add_expr = #__VA_ARGS__; \
         id_ = ecs_entity_init(world, &desc); \
         ecs_id(id_) = id_; \
-        ecs_assert(id_ != 0, ECS_INVALID_PARAMETER, NULL); \
+        ecs_assert(id_ != 0, ECS_INVALID_PARAMETER, "failed to create entity %s", #id_); \
     } \
     (void)id_; \
     (void)ecs_id(id_)
@@ -132,7 +132,7 @@
         desc.type.alignment = ECS_ALIGNOF(id_); \
         ecs_id(id_) = ecs_component_init(world, &desc);\
     }\
-    ecs_assert(ecs_id(id_) != 0, ECS_INVALID_PARAMETER, NULL)
+    ecs_assert(ecs_id(id_) != 0, ECS_INVALID_PARAMETER, "failed to create component %s", #id_)
 
 /** Declare & define a component.
  *
@@ -166,10 +166,10 @@
         edesc.name = #id_; \
         desc.entity = ecs_entity_init(world, &edesc); \
         desc.callback = id_;\
-        desc.filter.expr = #__VA_ARGS__;\
+        desc.query.expr = #__VA_ARGS__;\
         desc.events[0] = kind;\
         ecs_id(id_) = ecs_observer_init(world, &desc);\
-        ecs_assert(ecs_id(id_) != 0, ECS_INVALID_PARAMETER, NULL);\
+        ecs_assert(ecs_id(id_) != 0, ECS_INVALID_PARAMETER, "failed to create observer %s", #id_);\
     }
 
 /** Declare & define an observer.
@@ -186,6 +186,41 @@
     ecs_entity_t id = ecs_id(id);\
     (void)ecs_id(id);\
     (void)id
+
+/* Forward declare a query. */
+#define ECS_QUERY_DECLARE(name)         ecs_query_t* name
+
+/** Define a forward declared observer.
+ *
+ * Example:
+ *
+ * @code
+ * ECS_QUERY_DEFINE(world, AddPosition, Position);
+ * @endcode
+ */
+#define ECS_QUERY_DEFINE(world, name_, ...)\
+    {\
+        ecs_query_desc_t desc = {0};\
+        ecs_entity_desc_t edesc = {0}; \
+        edesc.name = #name_; \
+        desc.entity = ecs_entity_init(world, &edesc); \
+        desc.expr = #__VA_ARGS__;\
+        name_ = ecs_query_init(world, &desc);\
+        ecs_assert(name_ != NULL, ECS_INVALID_PARAMETER, "failed to create query %s", #name_);\
+    }
+
+/** Declare & define an observer.
+ *
+ * Example:
+ *
+ * @code
+ * ECS_OBSERVER(world, AddPosition, EcsOnAdd, Position);
+ * @endcode
+ */
+#define ECS_QUERY(world, name, ...)\
+    ecs_query_t* name = NULL; \
+    ECS_QUERY_DEFINE(world, name, __VA_ARGS__);\
+    (void)name
 
 /** Shorthand for creating an entity with ecs_entity_init().
  *
@@ -233,28 +268,12 @@
         .type.alignment = ECS_ALIGNOF(T) \
     })
 
-/** Shorthand for creating a filter with ecs_filter_init().
+/** Shorthand for creating a query with ecs_query_cache_init.
  *
  * Example:
- *
- * @code
- * ecs_filter(world, {
- *   .terms = {{ ecs_id(Position) }}
- * });
- * @endcode
- */
-#define ecs_filter(world, ...)\
-    ecs_filter_init(world, &(ecs_filter_desc_t) __VA_ARGS__ )
-
-/** Shorthand for creating a query with ecs_query_init().
- *
- * Example:
- *
- * @code
- * ecs_query(world, {
- *   .filter.terms = {{ ecs_id(Position) }}
- * });
- * @endcode
+ *   ecs_query(world, {
+ *     .terms = {{ ecs_id(Position) }}
+ *   });
  */
 #define ecs_query(world, ...)\
     ecs_query_init(world, &(ecs_query_desc_t) __VA_ARGS__ )
@@ -265,7 +284,7 @@
  *
  * @code
  * ecs_observer(world, {
- *   .filter.terms = {{ ecs_id(Position) }},
+ *   .terms = {{ ecs_id(Position) }},
  *   .events = { EcsOnAdd },
  *   .callback = AddPosition
  * });
@@ -293,27 +312,13 @@
  * @{
  */
 
-#define ecs_new(world, T) ecs_new_w_id(world, ecs_id(T))
+#define ecs_new_w(world, T) ecs_new_w_id(world, ecs_id(T))
 
 #define ecs_new_w_pair(world, first, second)\
     ecs_new_w_id(world, ecs_pair(first, second))
 
 #define ecs_bulk_new(world, component, count)\
     ecs_bulk_new_w_id(world, ecs_id(component), count)
-
-#define ecs_new_entity(world, n)\
-    ecs_entity_init(world, &(ecs_entity_desc_t){\
-        .name = n,\
-    })
-
-#define ecs_new_prefab(world, n)\
-    ecs_entity_init(world, &(ecs_entity_desc_t){\
-        .name = n,\
-        .add = {EcsPrefab}\
-    })
-
-#define ecs_delete_children(world, parent)\
-    ecs_delete_with(world, ecs_pair(EcsChildOf, parent))
 
 /** @} */
 
@@ -349,6 +354,10 @@
  * @{
  */
 
+/* insert */
+#define ecs_insert(world, ...)\
+    ecs_entity(world, { .set = ecs_values(__VA_ARGS__)})
+
 /* set */
 
 #define ecs_set_ptr(world, entity, component, ptr)\
@@ -367,19 +376,17 @@
         ecs_pair(first, ecs_id(Second)),\
         sizeof(Second), &(Second)__VA_ARGS__)
 
-#define ecs_set_pair_object ecs_set_pair_second
-
 #define ecs_set_override(world, entity, T, ...)\
     ecs_add_id(world, entity, ECS_OVERRIDE | ecs_id(T));\
     ecs_set(world, entity, T, __VA_ARGS__)
 
 /* emplace */
 
-#define ecs_emplace(world, entity, T)\
-    (ECS_CAST(T*, ecs_emplace_id(world, entity, ecs_id(T))))
+#define ecs_emplace(world, entity, T, is_new)\
+    (ECS_CAST(T*, ecs_emplace_id(world, entity, ecs_id(T), is_new)))
 
-#define ecs_emplace_pair(world, entity, First, second)\
-    (ECS_CAST(First*, ecs_emplace_id(world, entity, ecs_pair_t(First, second))))
+#define ecs_emplace_pair(world, entity, First, second, is_new)\
+    (ECS_CAST(First*, ecs_emplace_id(world, entity, ecs_pair_t(First, second), is_new)))
 
 /* get */
 
@@ -394,8 +401,6 @@
     (ECS_CAST(const Second*, ecs_get_id(world, subject,\
         ecs_pair(first, ecs_id(Second)))))
 
-#define ecs_get_pair_object ecs_get_pair_second
-
 /* get_mut */
 
 #define ecs_get_mut(world, entity, T)\
@@ -408,8 +413,6 @@
 #define ecs_get_mut_pair_second(world, subject, first, Second)\
     (ECS_CAST(Second*, ecs_get_mut_id(world, subject,\
         ecs_pair(first, ecs_id(Second)))))
-
-#define ecs_get_mut_pair_object ecs_get_mut_pair_second
 
 #define ecs_get_mut(world, entity, T)\
     (ECS_CAST(T*, ecs_get_mut_id(world, entity, ecs_id(T))))
@@ -427,8 +430,6 @@
     (ECS_CAST(Second*, ecs_ensure_id(world, subject,\
         ecs_pair(first, ecs_id(Second)))))
 
-#define ecs_ensure_pair_object ecs_ensure_pair_second
-
 #define ecs_ensure(world, entity, T)\
     (ECS_CAST(T*, ecs_ensure_id(world, entity, ecs_id(T))))
 
@@ -439,8 +440,6 @@
 #define ecs_ensure_pair_second(world, subject, first, Second)\
     (ECS_CAST(Second*, ecs_ensure_id(world, subject,\
         ecs_pair(first, ecs_id(Second)))))
-
-#define ecs_ensure_pair_object ecs_ensure_pair_second
 
 /* modified */
 
@@ -476,8 +475,6 @@
 #define ecs_record_ensure_pair_second(world, record, first, Second)\
     (ECS_CAST(Second*, ecs_record_ensure_id(world, record,\
         ecs_pair(first, ecs_id(Second)))))
-
-#define ecs_record_ensure_pair_object ecs_record_ensure_pair_second
 
 #define ecs_ref_init(world, entity, T)\
     ecs_ref_init_id(world, entity, ecs_id(T))
@@ -552,7 +549,7 @@
 #define ecs_enable_component(world, entity, T, enable)\
     ecs_enable_id(world, entity, ecs_id(T), enable)
 
-#define ecs_is_enabled_component(world, entity, T)\
+#define ecs_is_enabled(world, entity, T)\
     ecs_is_enabled_id(world, entity, ecs_id(T))
 
 #define ecs_enable_pair(world, entity, First, second, enable)\
@@ -571,10 +568,6 @@
 #define ecs_lookup_path(world, parent, path)\
     ecs_lookup_path_w_sep(world, parent, path, ".", NULL, true)
 
-/* Deprecated: use ecs_lookup instead */
-#define ecs_lookup_fullpath(world, path)\
-    ecs_lookup(world, path)
-
 #define ecs_get_path(world, parent, child)\
     ecs_get_path_w_sep(world, parent, child, ".", NULL)
 
@@ -586,9 +579,6 @@
 
 #define ecs_new_from_path(world, parent, path)\
     ecs_new_from_path_w_sep(world, parent, path, ".", NULL)
-
-#define ecs_new_from_fullpath(world, path)\
-    ecs_new_from_path_w_sep(world, 0, path, ".", NULL)
 
 #define ecs_add_path(world, entity, parent, path)\
     ecs_add_path_w_sep(world, entity, parent, path, ".", NULL)
@@ -717,8 +707,26 @@
  * @{
  */
 
-#define ecs_value(T, ptr) ((ecs_value_t){ecs_id(T), ptr})
+/** Convenience macro for creating compound literal id array */
+#define ecs_ids(...) (ecs_id_t[]){ __VA_ARGS__, 0 }
+
+/** Convenience macro for creating compound literal values array */
+#define ecs_values(...) (ecs_value_t[]){ __VA_ARGS__, {0, 0}}
+
+/** Convenience macro for creating compound literal value */
+#define ecs_value_ptr(T, ptr) ((ecs_value_t){ecs_id(T), ptr})
+
+/** Convenience macro for creating compound literal pair value */
+#define ecs_value_pair(R, t, ...) ((ecs_value_t){ecs_pair_t(R, t), &(R)__VA_ARGS__})
+
+/** Convenience macro for creating compound literal pair value */
+#define ecs_value_pair_2nd(r, T, ...) ((ecs_value_t){ecs_pair(r, ecs_id(T)), &(T)__VA_ARGS__})
+
+/** Convenience macro for creating heap allocated value */
 #define ecs_value_new_t(world, T) ecs_value_new(world, ecs_id(T))
+
+/** Convenience macro for creating compound literal value literal */
+#define ecs_value(T, ...) ((ecs_value_t){ecs_id(T), &(T)__VA_ARGS__})
 
 /** @} */
 
@@ -857,16 +865,11 @@
 #define ecs_isa(e)       ecs_pair(EcsIsA, e)
 #define ecs_childof(e)   ecs_pair(EcsChildOf, e)
 #define ecs_dependson(e) ecs_pair(EcsDependsOn, e)
+#define ecs_with(e)      ecs_pair(EcsWith, e)
 
-#define ecs_query_new(world, q_expr)\
-    ecs_query_init(world, &(ecs_query_desc_t){\
-        .filter.expr = q_expr\
-    })
-
-#define ecs_rule_new(world, q_expr)\
-    ecs_rule_init(world, &(ecs_filter_desc_t){\
-        .expr = q_expr\
-    })
+#define ecs_each(world, id) ecs_each_id(world, ecs_id(id))
+#define ecs_each_pair(world, r, t) ecs_each_id(world, ecs_pair(r, t))
+#define ecs_each_pair_t(world, R, t) ecs_each_id(world, ecs_pair(ecs_id(R), t))
 
 /** @} */
 

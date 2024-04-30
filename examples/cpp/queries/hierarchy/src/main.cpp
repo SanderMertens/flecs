@@ -43,12 +43,12 @@ int main(int, char *[]) {
         ecs.query_builder<const Position, const Position, Position>()
             // Modify terms from template to make sure the query selects the
             // local, world and parent position components.
-            .term_at(1).second<Local>()
+            .term_at(0).second<Local>()
+            .term_at(1).second<World>()
             .term_at(2).second<World>()
-            .term_at(3).second<World>()
 
             // Extend the 2nd query argument to select it from the parent
-            .term_at(2)
+            .term_at(1)
                 // Get from the parent, in breadth-first order (cascade)
                 .parent().cascade()
                 // Make term component optional so we also match the root (sun)

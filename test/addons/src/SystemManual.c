@@ -6,16 +6,16 @@ void SystemManual_setup(void) {
 
 static
 void Iter(ecs_iter_t *it) {
-    Position *p = ecs_field(it, Position, 1);
+    Position *p = ecs_field(it, Position, 0);
     Velocity *v = NULL;
     Mass *m = NULL;
         
     if (it->field_count >= 2) {
-        v = ecs_field(it, Velocity, 2);
+        v = ecs_field(it, Velocity, 1);
     }
 
     if (it->field_count >= 3) {
-        m = ecs_field(it, Mass, 3);
+        m = ecs_field(it, Mass, 2);
     }
 
     probe_iter(it);
@@ -82,57 +82,10 @@ void SystemManual_1_type_1_component(void) {
     ecs_fini(world);
 }
 
-static int normal_count;
-
-static
-void NormalSystem(ecs_iter_t *it) {
-    normal_count ++;
-}
-
-static
-void AddVelocity(ecs_iter_t *it) {
-    ecs_id_t ecs_id(Velocity) = ecs_field_id(it, 2);
-
-    int i;
-    for (i = 0; i < it->count; i ++) {
-        ecs_add(it->world, it->entities[i], Velocity);
-    }
-}
-
-void SystemManual_no_automerge(void) {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-    ECS_COMPONENT(world, Velocity);
-
-    ECS_SYSTEM(world, AddVelocity, 0, Position, Velocity());
-
-    ECS_ENTITY(world, e1, Position);
-
-    ecs_set_automerge(world, false);
-
-    ecs_readonly_begin(world, false);
-    ecs_world_t *stage = ecs_get_stage(world, 0);
-
-    ecs_run(stage, AddVelocity, 1, NULL);
-
-    test_assert(!ecs_has(stage, e1, Velocity));
-
-    ecs_readonly_end(world);
-
-    test_assert(!ecs_has(world, e1, Velocity));
-
-    ecs_merge(world);
-
-    test_assert(ecs_has(world, e1, Velocity));
-
-    ecs_fini(world);
-}
-
 static int dummy_ran = 0;
 
 void DummySystem(ecs_iter_t *it) {
-    ecs_entity_t Tag = ecs_field_id(it, 1);
+    ecs_entity_t Tag = ecs_field_id(it, 0);
     ecs_add_id(it->world, Tag, Tag);
     dummy_ran ++;
 }

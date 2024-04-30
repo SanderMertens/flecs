@@ -25,10 +25,7 @@ int main(int, char *[]) {
     ecs.entity("e3")
         .set<Position>({10, 20});
 
-    // Ad hoc queries are bit slower to iterate than flecs::query, but are 
-    // faster to create, and in most cases require no allocations. Under the
-    // hood this API uses flecs::filter, which can be used directly for more
-    // complex queries.
+    // world::each is a quick way to run simple component queries.
     ecs.each([](flecs::entity e, Position& p, Velocity& v) {
         p.x += v.x;
         p.y += v.y;

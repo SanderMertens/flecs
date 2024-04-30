@@ -27,7 +27,7 @@ typedef struct ecs_system_t {
     
     /* Schedule parameters */
     bool multi_threaded;
-    bool no_readonly;
+    bool immediate;
 
     ecs_ftime_t time_spent;         /* Time spent on running system */
     ecs_ftime_t time_passed;        /* Time passed since last invocation */
@@ -42,7 +42,7 @@ typedef struct ecs_system_t {
     /* Mixins */
     ecs_world_t *world;
     ecs_entity_t entity;
-    ecs_poly_dtor_t dtor;      
+    flecs_poly_dtor_t dtor;      
 } ecs_system_t;
 
 /* Invoked when system becomes active / inactive */
@@ -53,7 +53,7 @@ void ecs_system_activate(
     const ecs_system_t *system_data);
 
 /* Internal function to run a system */
-ecs_entity_t ecs_run_intern(
+ecs_entity_t flecs_run_intern(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_entity_t system,
@@ -61,8 +61,6 @@ ecs_entity_t ecs_run_intern(
     int32_t stage_current,
     int32_t stage_count,
     ecs_ftime_t delta_time,
-    int32_t offset,
-    int32_t limit,
     void *param);
 
 #endif

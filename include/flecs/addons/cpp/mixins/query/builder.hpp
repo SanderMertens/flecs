@@ -22,6 +22,13 @@ namespace _ {
  */
 template <typename ... Components>
 struct query_builder final : _::query_builder_base<Components...> {
+    query_builder(flecs::world_t* world, flecs::entity query_entity)
+        : _::query_builder_base<Components...>(world)
+    {
+        _::sig<Components...>(world).populate(this);
+        this->desc_.entity = query_entity.id();
+    }
+
     query_builder(flecs::world_t* world, const char *name = nullptr)
         : _::query_builder_base<Components...>(world)
     {
@@ -31,8 +38,13 @@ struct query_builder final : _::query_builder_base<Components...> {
             entity_desc.name = name;
             entity_desc.sep = "::";
             entity_desc.root_sep = "::";
-            this->m_desc.filter.entity = ecs_entity_init(world, &entity_desc);
+            this->desc_.entity = ecs_entity_init(world, &entity_desc);
         }
+    }
+
+    template <typename Func>
+    void each(Func&& func) {
+        this->build().each(FLECS_FWD(func));
     }
 };
 

@@ -10,10 +10,6 @@
  * Mixins are like a vtable, but for members. Each type populates the table with
  * offsets to the members that correspond with the mixin. If an entry in the
  * mixin table is not set, the type does not support the mixin.
- * 
- * An example is the Iterable mixin, which makes it possible to create an 
- * iterator for any poly object (like filters, queries, the world) that 
- * implements the Iterable mixin.
  */
 
 #include "private_api.h"
@@ -22,7 +18,6 @@ static const char* mixin_kind_str[] = {
     [EcsMixinWorld] = "world",
     [EcsMixinEntity] = "entity",
     [EcsMixinObservable] = "observable",
-    [EcsMixinIterable] = "iterable",
     [EcsMixinDtor] = "dtor",
     [EcsMixinMax] = "max (should never be requested by application)"
 };
@@ -32,7 +27,6 @@ ecs_mixins_t ecs_world_t_mixins = {
     .elems = {
         [EcsMixinWorld] = offsetof(ecs_world_t, self),
         [EcsMixinObservable] = offsetof(ecs_world_t, observable),
-        [EcsMixinIterable] = offsetof(ecs_world_t, iterable)
     }
 };
 
@@ -43,38 +37,18 @@ ecs_mixins_t ecs_stage_t_mixins = {
     }
 };
 
-ecs_mixins_t ecs_query_t_mixins = {
-    .type_name = "ecs_query_t",
-    .elems = {
-        [EcsMixinWorld] = offsetof(ecs_query_t, filter.world),
-        [EcsMixinEntity] = offsetof(ecs_query_t, filter.entity),
-        [EcsMixinIterable] = offsetof(ecs_query_t, iterable),
-        [EcsMixinDtor] = offsetof(ecs_query_t, dtor)
-    }
-};
-
 ecs_mixins_t ecs_observer_t_mixins = {
     .type_name = "ecs_observer_t",
     .elems = {
-        [EcsMixinWorld] = offsetof(ecs_observer_t, filter.world),
-        [EcsMixinEntity] = offsetof(ecs_observer_t, filter.entity),
-        [EcsMixinDtor] = offsetof(ecs_observer_t, dtor)
-    }
-};
-
-ecs_mixins_t ecs_filter_t_mixins = {
-    .type_name = "ecs_filter_t",
-    .elems = {
-        [EcsMixinWorld] = offsetof(ecs_filter_t, world),
-        [EcsMixinEntity] = offsetof(ecs_filter_t, entity),
-        [EcsMixinIterable] = offsetof(ecs_filter_t, iterable),
-        [EcsMixinDtor] = offsetof(ecs_filter_t, dtor)
+        [EcsMixinWorld] = offsetof(ecs_observer_t, world),
+        [EcsMixinEntity] = offsetof(ecs_observer_t, entity),
+        [EcsMixinDtor] = offsetof(ecs_observer_impl_t, dtor)
     }
 };
 
 static
 void* assert_mixin(
-    const ecs_poly_t *poly,
+    const flecs_poly_t *poly,
     ecs_mixin_kind_t kind)
 {
     ecs_assert(poly != NULL, ECS_INVALID_PARAMETER, NULL);
@@ -82,7 +56,8 @@ void* assert_mixin(
     
     const ecs_header_t *hdr = poly;
     ecs_assert(hdr != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(hdr->magic == ECS_OBJECT_MAGIC, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(hdr->magic == ECS_OBJECT_MAGIC, ECS_INVALID_PARAMETER,
+        "invalid/freed pointer to flecs object detected");
 
     const ecs_mixins_t *mixins = hdr->mixins;
     ecs_assert(mixins != NULL, ECS_INVALID_PARAMETER, NULL);
@@ -97,8 +72,8 @@ void* assert_mixin(
     return ECS_OFFSET(hdr, offset);
 }
 
-void* ecs_poly_init_(
-    ecs_poly_t *poly,
+void* flecs_poly_init_(
+    flecs_poly_t *poly,
     int32_t type,
     ecs_size_t size,
     ecs_mixins_t *mixins)
@@ -110,13 +85,14 @@ void* ecs_poly_init_(
 
     hdr->magic = ECS_OBJECT_MAGIC;
     hdr->type = type;
+    hdr->refcount = 1;
     hdr->mixins = mixins;
 
     return poly;
 }
 
-void ecs_poly_fini_(
-    ecs_poly_t *poly,
+void flecs_poly_fini_(
+    flecs_poly_t *poly,
     int32_t type)
 {
     ecs_assert(poly != NULL, ECS_INVALID_PARAMETER, NULL);
@@ -125,12 +101,52 @@ void ecs_poly_fini_(
     ecs_header_t *hdr = poly;
 
     /* Don't deinit poly that wasn't initialized */
-    ecs_assert(hdr->magic == ECS_OBJECT_MAGIC, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(hdr->type == type, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(hdr->magic == ECS_OBJECT_MAGIC, ECS_INVALID_PARAMETER,
+        "invalid/freed pointer to flecs object detected");
+    ecs_assert(hdr->type == type, ECS_INVALID_PARAMETER,
+        "incorrect function called to free flecs object");
     hdr->magic = 0;
 }
 
-EcsPoly* ecs_poly_bind_(
+int32_t flecs_poly_claim_(
+    flecs_poly_t *poly)
+{
+    ecs_assert(poly != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_header_t *hdr = poly;
+    ecs_assert(hdr->magic == ECS_OBJECT_MAGIC, ECS_INVALID_PARAMETER,
+        "invalid/freed pointer to flecs object detected");
+    if (ecs_os_has_threading()) {
+        return ecs_os_ainc(&hdr->refcount);
+    } else {
+        return ++hdr->refcount;
+    }
+}
+
+int32_t flecs_poly_release_(
+    flecs_poly_t *poly)
+{
+    ecs_assert(poly != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_header_t *hdr = poly;
+    ecs_assert(hdr->magic == ECS_OBJECT_MAGIC, ECS_INVALID_PARAMETER,
+        "invalid/freed pointer to flecs object detected");
+    if (ecs_os_has_threading()) {
+        return ecs_os_adec(&hdr->refcount);
+    } else {
+        return --hdr->refcount;
+    }
+}
+
+int32_t flecs_poly_refcount(
+    flecs_poly_t *poly)
+{
+    ecs_assert(poly != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_header_t *hdr = poly;
+    ecs_assert(hdr->magic == ECS_OBJECT_MAGIC, ECS_INVALID_PARAMETER,
+        "invalid/freed pointer to flecs object detected");
+    return hdr->refcount;
+}
+
+EcsPoly* flecs_poly_bind_(
     ecs_world_t *world,
     ecs_entity_t entity,
     ecs_entity_t tag)
@@ -159,7 +175,7 @@ EcsPoly* ecs_poly_bind_(
     return result;
 }
 
-void ecs_poly_modified_(
+void flecs_poly_modified_(
     ecs_world_t *world,
     ecs_entity_t entity,
     ecs_entity_t tag)
@@ -167,7 +183,7 @@ void ecs_poly_modified_(
     ecs_modified_pair(world, entity, ecs_id(EcsPoly), tag);
 }
 
-const EcsPoly* ecs_poly_bind_get_(
+const EcsPoly* flecs_poly_bind_get_(
     const ecs_world_t *world,
     ecs_entity_t entity,
     ecs_entity_t tag)
@@ -175,43 +191,38 @@ const EcsPoly* ecs_poly_bind_get_(
     return ecs_get_pair(world, entity, EcsPoly, tag);
 }
 
-ecs_poly_t* ecs_poly_get_(
+flecs_poly_t* flecs_poly_get_(
     const ecs_world_t *world,
     ecs_entity_t entity,
     ecs_entity_t tag)
 {
-    const EcsPoly *p = ecs_poly_bind_get_(world, entity, tag);
+    const EcsPoly *p = flecs_poly_bind_get_(world, entity, tag);
     if (p) {
         return p->poly;
     }
     return NULL;
 }
 
-bool ecs_poly_is_(
-    const ecs_poly_t *poly,
+bool flecs_poly_is_(
+    const flecs_poly_t *poly,
     int32_t type)
 {
     ecs_assert(poly != NULL, ECS_INVALID_PARAMETER, NULL);
 
     const ecs_header_t *hdr = poly;
-    ecs_assert(hdr->magic == ECS_OBJECT_MAGIC, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(hdr->magic == ECS_OBJECT_MAGIC, ECS_INVALID_PARAMETER,
+        "invalid/freed pointer to flecs object detected");
     return hdr->type == type;    
 }
 
-ecs_iterable_t* ecs_get_iterable(
-    const ecs_poly_t *poly)
-{
-    return (ecs_iterable_t*)assert_mixin(poly, EcsMixinIterable);
-}
-
 ecs_observable_t* ecs_get_observable(
-    const ecs_poly_t *poly)
+    const flecs_poly_t *poly)
 {
     return (ecs_observable_t*)assert_mixin(poly, EcsMixinObservable);
 }
 
 const ecs_world_t* ecs_get_world(
-    const ecs_poly_t *poly)
+    const flecs_poly_t *poly)
 {
     if (((const ecs_header_t*)poly)->type == ecs_world_t_magic) {
         return poly;
@@ -220,13 +231,13 @@ const ecs_world_t* ecs_get_world(
 }
 
 ecs_entity_t ecs_get_entity(
-    const ecs_poly_t *poly)
+    const flecs_poly_t *poly)
 {
     return *(ecs_entity_t*)assert_mixin(poly, EcsMixinEntity);
 }
 
-ecs_poly_dtor_t* ecs_get_dtor(
-    const ecs_poly_t *poly)
+flecs_poly_dtor_t* ecs_get_dtor(
+    const flecs_poly_t *poly)
 {
-    return (ecs_poly_dtor_t*)assert_mixin(poly, EcsMixinDtor);
+    return (flecs_poly_dtor_t*)assert_mixin(poly, EcsMixinDtor);
 }

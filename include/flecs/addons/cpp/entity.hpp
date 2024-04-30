@@ -37,8 +37,13 @@ struct entity : entity_builder<entity>
     explicit entity(world_t *world)
         : entity_builder()
     {
-        m_world = world;
-        m_id = ecs_new(world, 0);
+        world_ = world;
+        if (!ecs_get_scope(world_) && !ecs_get_with(world_)) {
+            id_ = ecs_new(world);
+        } else {
+            ecs_entity_desc_t desc = {};
+            id_ = ecs_entity_init(world_, &desc);
+        }
     }
 
     /** Wrap an existing entity id.
@@ -47,8 +52,8 @@ struct entity : entity_builder<entity>
      * @param id The entity id.
      */
     explicit entity(const flecs::world_t *world, flecs::entity_t id) {
-        m_world = const_cast<flecs::world_t*>(world);
-        m_id = id;
+        world_ = const_cast<flecs::world_t*>(world);
+        id_ = id;
     }
 
     /** Create a named entity.
@@ -63,13 +68,13 @@ struct entity : entity_builder<entity>
     explicit entity(world_t *world, const char *name)
         : entity_builder()
     {
-        m_world = world;
+        world_ = world;
 
         ecs_entity_desc_t desc = {};
         desc.name = name;
         desc.sep = "::";
         desc.root_sep = "::";
-        m_id = ecs_entity_init(world, &desc);
+        id_ = ecs_entity_init(world, &desc);
     }
 
     /** Conversion from flecs::entity_t to flecs::entity.
@@ -92,9 +97,10 @@ struct entity : entity_builder<entity>
      */
     template <typename T>
     T& ensure() const {
-        auto comp_id = _::cpp_type<T>::id(m_world);
-        ecs_assert(_::cpp_type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
-        return *static_cast<T*>(ecs_ensure_id(m_world, m_id, comp_id));
+        auto comp_id = _::type<T>::id(world_);
+        ecs_assert(_::type<T>::size() != 0, ECS_INVALID_PARAMETER,
+            "operation invalid for empty type");
+        return *static_cast<T*>(ecs_ensure_id(world_, id_, comp_id));
     }
 
     /** Get mutable component value (untyped).
@@ -107,7 +113,7 @@ struct entity : entity_builder<entity>
      * @return Pointer to the component value.
      */
     void* ensure(entity_t comp) const {
-        return ecs_ensure_id(m_world, m_id, comp);
+        return ecs_ensure_id(world_, id_, comp);
     }
 
     /** Get mutable pointer for a pair.
@@ -119,9 +125,9 @@ struct entity : entity_builder<entity>
     template <typename First, typename Second, typename P = pair<First, Second>,
         typename A = actual_type_t<P>, if_not_t< flecs::is_pair<First>::value> = 0>
     A& ensure() const {
-        return *static_cast<A*>(ecs_ensure_id(m_world, m_id, ecs_pair(
-            _::cpp_type<First>::id(m_world),
-            _::cpp_type<Second>::id(m_world))));
+        return *static_cast<A*>(ecs_ensure_id(world_, id_, ecs_pair(
+            _::type<First>::id(world_),
+            _::type<Second>::id(world_))));
     }
 
     /** Get mutable pointer for the first element of a pair.
@@ -132,10 +138,11 @@ struct entity : entity_builder<entity>
      */
     template <typename First>
     First& ensure(entity_t second) const {
-        auto comp_id = _::cpp_type<First>::id(m_world);
-        ecs_assert(_::cpp_type<First>::size() != 0, ECS_INVALID_PARAMETER, NULL);
+        auto comp_id = _::type<First>::id(world_);
+        ecs_assert(_::type<First>::size() != 0, ECS_INVALID_PARAMETER,
+            "operation invalid for empty type");
         return *static_cast<First*>(
-            ecs_ensure_id(m_world, m_id, ecs_pair(comp_id, second)));
+            ecs_ensure_id(world_, id_, ecs_pair(comp_id, second)));
     }
 
     /** Get mutable pointer for a pair (untyped).
@@ -147,10 +154,8 @@ struct entity : entity_builder<entity>
      * @param second The second element of the pair.
      */
     void* ensure(entity_t first, entity_t second) const {
-        return ecs_ensure_id(m_world, m_id, ecs_pair(first, second));
+        return ecs_ensure_id(world_, id_, ecs_pair(first, second));
     }
-
-    #endif
 
     /** Get mutable pointer for the second element of a pair.
      * This operation gets the value for a pair from the entity.
@@ -160,11 +165,14 @@ struct entity : entity_builder<entity>
      */
     template <typename Second>
     Second& ensure_second(entity_t first) const {
-        auto second = _::cpp_type<Second>::id(m_world);
-        ecs_assert(_::cpp_type<Second>::size() != 0, ECS_INVALID_PARAMETER, NULL);
+        auto second = _::type<Second>::id(world_);
+        ecs_assert(_::type<Second>::size() != 0, ECS_INVALID_PARAMETER,
+            "operation invalid for empty type");
         return *static_cast<Second*>(
-            ecs_ensure_id(m_world, m_id, ecs_pair(first, second)));
+            ecs_ensure_id(world_, id_, ecs_pair(first, second)));
     }
+
+    #endif
 
     /** Signal that component was modified.
      *
@@ -172,8 +180,9 @@ struct entity : entity_builder<entity>
      */
     template <typename T>
     void modified() const {
-        auto comp_id = _::cpp_type<T>::id(m_world);
-        ecs_assert(_::cpp_type<T>::size() != 0, ECS_INVALID_PARAMETER, NULL);
+        auto comp_id = _::type<T>::id(world_);
+        ecs_assert(_::type<T>::size() != 0, ECS_INVALID_PARAMETER,
+            "operation invalid for empty type");
         this->modified(comp_id);
     }
 
@@ -184,7 +193,7 @@ struct entity : entity_builder<entity>
      */
     template <typename First, typename Second>
     void modified() const {
-        this->modified<First>(_::cpp_type<Second>::id(m_world));
+        this->modified<First>(_::type<Second>::id(world_));
     }
 
     /** Signal that the first part of a pair was modified.
@@ -194,8 +203,9 @@ struct entity : entity_builder<entity>
      */
     template <typename First>
     void modified(entity_t second) const {
-        auto first = _::cpp_type<First>::id(m_world);
-        ecs_assert(_::cpp_type<First>::size() != 0, ECS_INVALID_PARAMETER, NULL);
+        auto first = _::type<First>::id(world_);
+        ecs_assert(_::type<First>::size() != 0, ECS_INVALID_PARAMETER,
+            "operation invalid for empty type");
         this->modified(first, second);
     }
 
@@ -215,7 +225,7 @@ struct entity : entity_builder<entity>
      * @param comp component that was modified.
      */
     void modified(entity_t comp) const {
-        ecs_modified_id(m_world, m_id, comp);
+        ecs_modified_id(world_, id_, comp);
     }
 
     /** Get reference to component.
@@ -227,7 +237,7 @@ struct entity : entity_builder<entity>
      */
     template <typename T, if_t< is_actual<T>::value > = 0>
     ref<T> get_ref() const {
-        return ref<T>(m_world, m_id, _::cpp_type<T>::id(m_world));
+        return ref<T>(world_, id_, _::type<T>::id(world_));
     }
 
     /** Get reference to component.
@@ -241,37 +251,30 @@ struct entity : entity_builder<entity>
      */
     template <typename T, typename A = actual_type_t<T>, if_t< flecs::is_pair<T>::value > = 0>
     ref<A> get_ref() const {
-        return ref<A>(m_world, m_id,
-                      ecs_pair(_::cpp_type<typename T::first>::id(m_world),
-                               _::cpp_type<typename T::second>::id(m_world)));
+        return ref<A>(world_, id_,
+                      ecs_pair(_::type<typename T::first>::id(world_),
+                               _::type<typename T::second>::id(world_)));
     }
 
 
     template <typename First, typename Second, typename P = flecs::pair<First, Second>,
         typename A = actual_type_t<P>>
     ref<A> get_ref() const {
-        return ref<A>(m_world, m_id,
-            ecs_pair(_::cpp_type<First>::id(m_world),
-                _::cpp_type<Second>::id(m_world)));
+        return ref<A>(world_, id_,
+            ecs_pair(_::type<First>::id(world_),
+                _::type<Second>::id(world_)));
     }
 
     template <typename First>
     ref<First> get_ref(flecs::entity_t second) const {
-        return ref<First>(m_world, m_id,
-            ecs_pair(_::cpp_type<First>::id(m_world), second));
+        return ref<First>(world_, id_,
+            ecs_pair(_::type<First>::id(world_), second));
     }
 
     template <typename Second>
     ref<Second> get_ref_second(flecs::entity_t first) const {
-        return ref<Second>(m_world, m_id,
-            ecs_pair(first, _::cpp_type<Second>::id(m_world)));
-    }
-
-    /** Recursively flatten relationship.
-     * @see ecs_flatten
-     */
-    void flatten(flecs::entity_t r, const ecs_flatten_desc_t *desc = nullptr) {
-        ecs_flatten(m_world, ecs_pair(r, m_id), desc);
+        return ref<Second>(world_, id_,
+            ecs_pair(first, _::type<Second>::id(world_)));
     }
 
     /** Clear an entity.
@@ -279,7 +282,7 @@ struct entity : entity_builder<entity>
      * the entity id.
      */
     void clear() const {
-        ecs_clear(m_world, m_id);
+        ecs_clear(world_, id_);
     }
 
     /** Delete an entity.
@@ -287,7 +290,7 @@ struct entity : entity_builder<entity>
      * entity object goes out of scope.
      */
     void destruct() const {
-        ecs_delete(m_world, m_id);
+        ecs_delete(world_, id_);
     }
 
     /** Return entity as entity_view.
@@ -300,7 +303,7 @@ struct entity : entity_builder<entity>
      */
     flecs::entity_view view() const {
         return flecs::entity_view(
-            const_cast<flecs::world_t*>(ecs_get_world(m_world)), m_id);
+            const_cast<flecs::world_t*>(ecs_get_world(world_)), id_);
     }
 
     /** Entity id 0.
@@ -312,7 +315,7 @@ struct entity : entity_builder<entity>
     static
     flecs::entity null(const flecs::world_t *world) {
         flecs::entity result;
-        result.m_world = const_cast<flecs::world_t*>(world);
+        result.world_ = const_cast<flecs::world_t*>(world);
         return result;
     }
 

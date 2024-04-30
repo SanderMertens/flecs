@@ -12,7 +12,7 @@ static void meta_test_primitive(
     test_assert(ct->size == size);
     test_assert(ct->alignment == alignment);
 
-    const EcsMetaType *mt = ecs_get(world, t, EcsMetaType);
+    const EcsType *mt = ecs_get(world, t, EcsType);
     test_assert(mt != NULL);
     test_assert(mt->kind == EcsPrimitiveType);
 
@@ -51,7 +51,7 @@ meta_test_type(EcsId, id)
 void PrimitiveTypes_bool(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t t = ecs_set(world, 0, EcsPrimitive, {.kind = EcsBool});
+    ecs_entity_t t = ecs_insert(world, ecs_value(EcsPrimitive, {.kind = EcsBool}));
     test_assert(t != 0);
 
     meta_test_bool(world, t);
@@ -62,7 +62,7 @@ void PrimitiveTypes_bool(void) {
 void PrimitiveTypes_byte(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t t = ecs_set(world, 0, EcsPrimitive, {.kind = EcsByte});
+    ecs_entity_t t = ecs_insert(world, ecs_value(EcsPrimitive, {.kind = EcsByte}));
     test_assert(t != 0);
 
     meta_test_byte(world, t);
@@ -73,7 +73,7 @@ void PrimitiveTypes_byte(void) {
 void PrimitiveTypes_char(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t t = ecs_set(world, 0, EcsPrimitive, {.kind = EcsChar});
+    ecs_entity_t t = ecs_insert(world, ecs_value(EcsPrimitive, {.kind = EcsChar}));
     test_assert(t != 0);
 
     meta_test_char(world, t);
@@ -84,7 +84,7 @@ void PrimitiveTypes_char(void) {
 void PrimitiveTypes_i8(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t t = ecs_set(world, 0, EcsPrimitive, {.kind = EcsI8});
+    ecs_entity_t t = ecs_insert(world, ecs_value(EcsPrimitive, {.kind = EcsI8}));
     test_assert(t != 0);
 
     meta_test_i8(world, t);
@@ -95,7 +95,7 @@ void PrimitiveTypes_i8(void) {
 void PrimitiveTypes_i16(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t t = ecs_set(world, 0, EcsPrimitive, {.kind = EcsI16});
+    ecs_entity_t t = ecs_insert(world, ecs_value(EcsPrimitive, {.kind = EcsI16}));
     test_assert(t != 0);
 
     meta_test_i16(world, t);
@@ -106,7 +106,7 @@ void PrimitiveTypes_i16(void) {
 void PrimitiveTypes_i32(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t t = ecs_set(world, 0, EcsPrimitive, {.kind = EcsI32});
+    ecs_entity_t t = ecs_insert(world, ecs_value(EcsPrimitive, {.kind = EcsI32}));
     test_assert(t != 0);
 
     meta_test_i32(world, t);
@@ -117,7 +117,7 @@ void PrimitiveTypes_i32(void) {
 void PrimitiveTypes_i64(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t t = ecs_set(world, 0, EcsPrimitive, {.kind = EcsI64});
+    ecs_entity_t t = ecs_insert(world, ecs_value(EcsPrimitive, {.kind = EcsI64}));
     test_assert(t != 0);
 
     meta_test_i64(world, t);
@@ -128,7 +128,7 @@ void PrimitiveTypes_i64(void) {
 void PrimitiveTypes_iptr(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t t = ecs_set(world, 0, EcsPrimitive, {.kind = EcsIPtr});
+    ecs_entity_t t = ecs_insert(world, ecs_value(EcsPrimitive, {.kind = EcsIPtr}));
     test_assert(t != 0);
 
     meta_test_iptr(world, t);
@@ -139,7 +139,7 @@ void PrimitiveTypes_iptr(void) {
 void PrimitiveTypes_u8(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t t = ecs_set(world, 0, EcsPrimitive, {.kind = EcsU8});
+    ecs_entity_t t = ecs_insert(world, ecs_value(EcsPrimitive, {.kind = EcsU8}));
     test_assert(t != 0);
 
     meta_test_u8(world, t);
@@ -150,7 +150,7 @@ void PrimitiveTypes_u8(void) {
 void PrimitiveTypes_u16(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t t = ecs_set(world, 0, EcsPrimitive, {.kind = EcsU16});
+    ecs_entity_t t = ecs_insert(world, ecs_value(EcsPrimitive, {.kind = EcsU16}));
     test_assert(t != 0);
 
     meta_test_u16(world, t);
@@ -161,7 +161,7 @@ void PrimitiveTypes_u16(void) {
 void PrimitiveTypes_u32(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t t = ecs_set(world, 0, EcsPrimitive, {.kind = EcsU32});
+    ecs_entity_t t = ecs_insert(world, ecs_value(EcsPrimitive, {.kind = EcsU32}));
     test_assert(t != 0);
 
     meta_test_u32(world, t);
@@ -172,7 +172,7 @@ void PrimitiveTypes_u32(void) {
 void PrimitiveTypes_u64(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t t = ecs_set(world, 0, EcsPrimitive, {.kind = EcsU64});
+    ecs_entity_t t = ecs_insert(world, ecs_value(EcsPrimitive, {.kind = EcsU64}));
     test_assert(t != 0);
 
     meta_test_u64(world, t);
@@ -183,7 +183,7 @@ void PrimitiveTypes_u64(void) {
 void PrimitiveTypes_uptr(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t t = ecs_set(world, 0, EcsPrimitive, {.kind = EcsUPtr});
+    ecs_entity_t t = ecs_insert(world, ecs_value(EcsPrimitive, {.kind = EcsUPtr}));
     test_assert(t != 0);
 
     meta_test_uptr(world, t);
@@ -194,7 +194,7 @@ void PrimitiveTypes_uptr(void) {
 void PrimitiveTypes_float(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t t = ecs_set(world, 0, EcsPrimitive, {.kind = EcsF32});
+    ecs_entity_t t = ecs_insert(world, ecs_value(EcsPrimitive, {.kind = EcsF32}));
     test_assert(t != 0);
 
     meta_test_f32(world, t);
@@ -205,7 +205,7 @@ void PrimitiveTypes_float(void) {
 void PrimitiveTypes_double(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t t = ecs_set(world, 0, EcsPrimitive, {.kind = EcsF64});
+    ecs_entity_t t = ecs_insert(world, ecs_value(EcsPrimitive, {.kind = EcsF64}));
     test_assert(t != 0);
 
     meta_test_f64(world, t);
@@ -216,7 +216,7 @@ void PrimitiveTypes_double(void) {
 void PrimitiveTypes_string(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t t = ecs_set(world, 0, EcsPrimitive, {.kind = EcsString});
+    ecs_entity_t t = ecs_insert(world, ecs_value(EcsPrimitive, {.kind = EcsString}));
     test_assert(t != 0);
 
     meta_test_string(world, t);
@@ -227,7 +227,7 @@ void PrimitiveTypes_string(void) {
 void PrimitiveTypes_entity(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t t = ecs_set(world, 0, EcsPrimitive, {.kind = EcsEntity});
+    ecs_entity_t t = ecs_insert(world, ecs_value(EcsPrimitive, {.kind = EcsEntity}));
     test_assert(t != 0);
 
     meta_test_entity(world, t);
@@ -238,7 +238,7 @@ void PrimitiveTypes_entity(void) {
 void PrimitiveTypes_id(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t t = ecs_set(world, 0, EcsPrimitive, {.kind = EcsId});
+    ecs_entity_t t = ecs_insert(world, ecs_value(EcsPrimitive, {.kind = EcsId}));
     test_assert(t != 0);
 
     meta_test_id(world, t);
@@ -505,7 +505,7 @@ void PrimitiveTypes_primitive_init(void) {
     test_assert(prim_ptr != NULL);
     test_int(prim_ptr->kind, EcsU16);
 
-    const EcsMetaType *type_ptr = ecs_get(world, t, EcsMetaType);
+    const EcsType *type_ptr = ecs_get(world, t, EcsType);
     test_assert(type_ptr != NULL);
     test_int(type_ptr->kind, EcsPrimitiveType);
 
@@ -527,7 +527,7 @@ void PrimitiveTypes_primitive_w_short_notation(void) {
     test_assert(prim_ptr != NULL);
     test_int(prim_ptr->kind, EcsU16);
 
-    const EcsMetaType *type_ptr = ecs_get(world, t, EcsMetaType);
+    const EcsType *type_ptr = ecs_get(world, t, EcsType);
     test_assert(type_ptr != NULL);
     test_int(type_ptr->kind, EcsPrimitiveType);
 

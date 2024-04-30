@@ -48,6 +48,7 @@ bool ecs_table_cache_is_empty(
 
 #define flecs_table_cache_count(cache) (cache)->tables.count
 #define flecs_table_cache_empty_count(cache) (cache)->empty_tables.count
+#define flecs_table_cache_all_count(cache) ((cache)->tables.count + (cache)->empty_tables.count)
 
 bool flecs_table_cache_iter(
     ecs_table_cache_t *cache,

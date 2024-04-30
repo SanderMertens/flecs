@@ -6,22 +6,22 @@ void System_w_FromParent_setup(void) {
 
 static
 void Iter(ecs_iter_t *it) {
-    Mass *m_ptr = ecs_field(it, Mass, 1);
+    Mass *m_ptr = ecs_field(it, Mass, 0);
     bool shared = false;
     
     if (m_ptr) {
-        shared = !ecs_field_is_self(it, 1);
+        shared = !ecs_field_is_self(it, 0);
     }
 
     Position *p = NULL;
     Velocity *v = NULL;
 
     if (it->field_count >= 2) {
-        p = ecs_field(it, Position, 2);
+        p = ecs_field(it, Position, 1);
     }
 
     if (it->field_count >= 3) {
-        v = ecs_field(it, Velocity, 3);
+        v = ecs_field(it, Velocity, 2);
     }
 
     probe_iter(it);
@@ -58,13 +58,13 @@ void System_w_FromParent_1_column_from_container(void) {
     ECS_ENTITY(world, e3, Position);
     ECS_ENTITY(world, e4, Position);
 
-    ECS_SYSTEM(world, Iter, EcsOnUpdate, Mass(parent), Position);
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, Mass(up), Position);
     ecs_system_init(world, &(ecs_system_desc_t){
         .entity = Iter,
-        .query.filter.instanced = true
+        .query.flags = EcsQueryIsInstanced
     });
 
-    ecs_entity_t parent = ecs_set(world, 0, Mass, {2});
+    ecs_entity_t parent = ecs_insert(world, ecs_value(Mass, {2}));
     ecs_add_pair(world, e1, EcsChildOf, parent);
     ecs_add_pair(world, e2, EcsChildOf, parent);
     ecs_add_pair(world, e3, EcsChildOf, parent);
@@ -118,13 +118,13 @@ void System_w_FromParent_2_column_1_from_container(void) {
     ECS_ENTITY(world, e3, Position, Velocity);
     ECS_ENTITY(world, e4, Position, Velocity);
 
-    ECS_SYSTEM(world, Iter, EcsOnUpdate, Mass(parent), Position, Velocity);
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, Mass(up), Position, Velocity);
     ecs_system_init(world, &(ecs_system_desc_t){
         .entity = Iter,
-        .query.filter.instanced = true
+        .query.flags = EcsQueryIsInstanced
     });
 
-    ecs_entity_t parent = ecs_set(world, 0, Mass, {2});
+    ecs_entity_t parent = ecs_insert(world, ecs_value(Mass, {2}));
     ecs_add_pair(world, e1, EcsChildOf, parent);
     ecs_add_pair(world, e2, EcsChildOf, parent);
     ecs_add_pair(world, e3, EcsChildOf, parent);
@@ -185,22 +185,22 @@ void System_w_FromParent_2_column_1_from_container(void) {
 
 static
 void Iter_2_shared(ecs_iter_t *it) {
-    Mass *m_ptr = ecs_field(it, Mass, 1);
+    Mass *m_ptr = ecs_field(it, Mass, 0);
 
     Rotation *r_ptr = NULL;
     Position *p = NULL;
     Velocity *v = NULL;
 
     if (it->field_count >= 2) {
-        r_ptr = ecs_field(it, Rotation, 2);
+        r_ptr = ecs_field(it, Rotation, 1);
     }
 
     if (it->field_count >= 3) {
-        p = ecs_field(it, Position, 3);
+        p = ecs_field(it, Position, 2);
     }
 
     if (it->field_count >= 4) {
-        v = ecs_field(it, Velocity, 4);
+        v = ecs_field(it, Velocity, 3);
     }    
 
     probe_iter(it);
@@ -241,13 +241,13 @@ void System_w_FromParent_3_column_2_from_container(void) {
     ECS_ENTITY(world, e3, Position);
     ECS_ENTITY(world, e4, Position);
 
-    ECS_SYSTEM(world, Iter_2_shared, EcsOnUpdate, Mass(parent), Rotation(parent), Position);
+    ECS_SYSTEM(world, Iter_2_shared, EcsOnUpdate, Mass(up), Rotation(up), Position);
     ecs_system_init(world, &(ecs_system_desc_t){
         .entity = Iter_2_shared,
-        .query.filter.instanced = true
+        .query.flags = EcsQueryIsInstanced
     });
 
-    ecs_entity_t parent = ecs_set(world, 0, Mass, {2});
+    ecs_entity_t parent = ecs_insert(world, ecs_value(Mass, {2}));
     ecs_set(world, parent, Rotation, {3});
 
     ecs_add_pair(world, e1, EcsChildOf, parent);
@@ -306,14 +306,14 @@ void System_w_FromParent_2_column_1_from_container_w_not(void) {
     ECS_ENTITY(world, e4, Position);
     ECS_ENTITY(world, e5, Position);
 
-    ECS_SYSTEM(world, Iter, EcsOnUpdate, !Mass(parent), Position);
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, !Mass(up), Position);
     ecs_system_init(world, &(ecs_system_desc_t){
         .entity = Iter,
-        .query.filter.instanced = true
+        .query.flags = EcsQueryIsInstanced
     });
 
-    ecs_entity_t parent_1 = ecs_set(world, 0, Mass, {2});
-    ecs_entity_t parent_2 = ecs_set(world, 0, Rotation, {3});
+    ecs_entity_t parent_1 = ecs_insert(world, ecs_value(Mass, {2}));
+    ecs_entity_t parent_2 = ecs_insert(world, ecs_value(Rotation, {3}));
 
     ecs_add_pair(world, e1, EcsChildOf, parent_2);
     ecs_add_pair(world, e2, EcsChildOf, parent_2);
@@ -381,15 +381,15 @@ void System_w_FromParent_3_column_1_from_comtainer_1_from_container_w_not(void) 
     ECS_ENTITY(world, e5, Position);
     ECS_ENTITY(world, e6, Position);
 
-    ECS_SYSTEM(world, Iter_2_shared, EcsOnUpdate, !Mass(parent), Rotation(parent), Position);
+    ECS_SYSTEM(world, Iter_2_shared, EcsOnUpdate, !Mass(up), Rotation(up), Position);
     ecs_system_init(world, &(ecs_system_desc_t){
         .entity = Iter_2_shared,
-        .query.filter.instanced = true
+        .query.flags = EcsQueryIsInstanced
     });
 
-    ecs_entity_t parent_1 = ecs_set(world, 0, Mass, {2});
-    ecs_entity_t parent_2 = ecs_set(world, 0, Rotation, {3});
-    ecs_entity_t parent_3 = ecs_set(world, 0, Mass, {4});
+    ecs_entity_t parent_1 = ecs_insert(world, ecs_value(Mass, {2}));
+    ecs_entity_t parent_2 = ecs_insert(world, ecs_value(Rotation, {3}));
+    ecs_entity_t parent_3 = ecs_insert(world, ecs_value(Mass, {4}));
     ecs_set(world, parent_3, Rotation, {5});
 
     ecs_add_pair(world, e1, EcsChildOf, parent_2);
@@ -449,13 +449,13 @@ void System_w_FromParent_2_column_1_from_container_w_not_prefab(void) {
     ECS_ENTITY(world, e1, Position);
     ECS_ENTITY(world, e2, Position);
 
-    ECS_SYSTEM(world, Iter, EcsOnUpdate, !Mass(parent), Position);
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, !Mass(up), Position);
     ecs_system_init(world, &(ecs_system_desc_t){
         .entity = Iter,
-        .query.filter.instanced = true
+        .query.flags = EcsQueryIsInstanced
     });
 
-    ecs_entity_t parent_1 = ecs_set(world, 0, Mass, {2});
+    ecs_entity_t parent_1 = ecs_insert(world, ecs_value(Mass, {2}));
     ecs_add_pair(world, e1, EcsIsA, Prefab);
 
     ecs_add_pair(world, e1, EcsChildOf, parent_1);
@@ -506,17 +506,17 @@ void System_w_FromParent_2_column_1_from_container_w_or(void) {
     ECS_ENTITY(world, e5, Position);
     ECS_ENTITY(world, e6, Position);
 
-    ECS_SYSTEM(world, Iter, EcsOnUpdate, Mass(parent) || Rotation(parent), Position);
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, Mass(up) || Rotation(up), Position);
     ecs_system_init(world, &(ecs_system_desc_t){
         .entity = Iter,
-        .query.filter.instanced = true
+        .query.flags = EcsQueryIsInstanced
     });
 
-    ecs_entity_t parent_1 = ecs_set(world, 0, Mass, {2});
-    ecs_entity_t parent_2 = ecs_set(world, 0, Rotation, {3});
-    ecs_entity_t parent_3 = ecs_set(world, 0, Rotation, {4});
+    ecs_entity_t parent_1 = ecs_insert(world, ecs_value(Mass, {2}));
+    ecs_entity_t parent_2 = ecs_insert(world, ecs_value(Rotation, {3}));
+    ecs_entity_t parent_3 = ecs_insert(world, ecs_value(Rotation, {4}));
                             ecs_set(world, parent_3, Mass, {5});
-    ecs_entity_t parent_4 = ecs_set(world, 0, Velocity, {10, 20});
+    ecs_entity_t parent_4 = ecs_insert(world, ecs_value(Velocity, {10, 20}));
 
     ecs_add_pair(world, e1, EcsChildOf, parent_1);
     ecs_add_pair(world, e2, EcsChildOf, parent_2);
@@ -555,10 +555,10 @@ void System_w_FromParent_2_column_1_from_container_w_or(void) {
 
 static
 void Dummy(ecs_iter_t *it) {
-    Mass *m_ptr = ecs_field(it, Mass, 1);
-    Position *p = ecs_field(it, Position, 2);
+    Mass *m_ptr = ecs_field(it, Mass, 0);
+    Position *p = ecs_field(it, Position, 1);
 
-    test_assert(!m_ptr || !ecs_field_is_self(it, 1));
+    test_assert(!m_ptr || !ecs_field_is_self(it, 0));
 
     probe_iter(it);
 
@@ -585,13 +585,13 @@ void System_w_FromParent_add_component_after_match(void) {
     ECS_ENTITY(world, e3, Position);
     ECS_ENTITY(world, e4, Position);
 
-    ECS_SYSTEM(world, Iter, EcsOnUpdate, Mass(parent), Position);
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, Mass(up), Position);
     ecs_system_init(world, &(ecs_system_desc_t){
         .entity = Iter,
-        .query.filter.instanced = true
+        .query.flags = EcsQueryIsInstanced
     });
 
-    ecs_entity_t parent = ecs_new(world, 0);
+    ecs_entity_t parent = ecs_new(world);
     ecs_add_pair(world, e1, EcsChildOf, parent);
     ecs_add_pair(world, e2, EcsChildOf, parent);
 
@@ -639,13 +639,13 @@ void System_w_FromParent_add_component_after_match_and_rematch(void) {
     ECS_ENTITY(world, e3, Position);
     ECS_ENTITY(world, e4, Position);
 
-    ECS_SYSTEM(world, Iter, EcsOnUpdate, Mass(parent), Position);
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, Mass(up), Position);
     ecs_system_init(world, &(ecs_system_desc_t){
         .entity = Iter,
-        .query.filter.instanced = true
+        .query.flags = EcsQueryIsInstanced
     });
 
-    ecs_entity_t parent = ecs_new(world, 0);
+    ecs_entity_t parent = ecs_new(world);
     ecs_add_pair(world, e1, EcsChildOf, parent);
     ecs_add_pair(world, e2, EcsChildOf, parent);
 
@@ -698,10 +698,10 @@ void System_w_FromParent_add_component_after_match_and_rematch_w_entity_type_exp
     ECS_ENTITY(world, e3, Position);
     ECS_ENTITY(world, e4, Position);
 
-    ECS_SYSTEM(world, Iter, EcsOnUpdate, Mass(parent), Position);
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, Mass(up), Position);
     ecs_system_init(world, &(ecs_system_desc_t){
         .entity = Iter,
-        .query.filter.instanced = true
+        .query.flags = EcsQueryIsInstanced
     });
 
     ECS_ENTITY(world, Parent, 0);
@@ -750,7 +750,7 @@ void System_w_FromParent_add_component_after_match_and_rematch_w_entity_type_exp
 
 static
 void SetMass(ecs_iter_t *it) {
-    ecs_id_t ecs_id(Mass) = ecs_field_id(it, 2);
+    ecs_id_t ecs_id(Mass) = ecs_field_id(it, 1);
 
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -769,10 +769,10 @@ void System_w_FromParent_add_component_after_match_and_rematch_w_entity_type_exp
     ECS_ENTITY(world, e4, Position);     
 
     ECS_SYSTEM(world, SetMass, EcsOnUpdate, Velocity, Mass());
-    ECS_SYSTEM(world, Iter, EcsOnUpdate, Mass(parent), Position);
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, Mass(up), Position);
     ecs_system_init(world, &(ecs_system_desc_t){
         .entity = Iter,
-        .query.filter.instanced = true
+        .query.flags = EcsQueryIsInstanced
     });
 
     ECS_ENTITY(world, Parent, Velocity);
@@ -821,9 +821,9 @@ void System_w_FromParent_add_component_after_match_unmatch(void) {
     ECS_ENTITY(world, e2, Position);
     ECS_ENTITY(world, e3, Position);
 
-    ECS_SYSTEM(world, Iter, EcsOnUpdate, !Mass(parent), Position);
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, !Mass(up), Position);
 
-    ecs_entity_t parent = ecs_new(world, 0);
+    ecs_entity_t parent = ecs_new(world);
     ecs_add_pair(world, e1, EcsChildOf, parent);
     ecs_add_pair(world, e2, EcsChildOf, parent);
 
@@ -863,15 +863,15 @@ void System_w_FromParent_add_component_after_match_unmatch_match(void) {
     ECS_ENTITY(world, e1, Position);
     ECS_ENTITY(world, e2, Position);
 
-    ECS_SYSTEM(world, Iter, EcsOnUpdate, Mass(parent), Position);
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, Mass(up), Position);
     ecs_system_init(world, &(ecs_system_desc_t){
         .entity = Iter,
-        .query.filter.instanced = true
+        .query.flags = EcsQueryIsInstanced
     });
 
-    ECS_SYSTEM(world, Dummy, EcsOnUpdate, !Mass(parent), Position);
+    ECS_SYSTEM(world, Dummy, EcsOnUpdate, !Mass(up), Position);
 
-    ecs_entity_t parent = ecs_new(world, 0);
+    ecs_entity_t parent = ecs_new(world);
     ecs_add_pair(world, e1, EcsChildOf, parent);
     ecs_add_pair(world, e2, EcsChildOf, parent);
 
@@ -918,19 +918,19 @@ void System_w_FromParent_add_component_after_match_2_systems(void) {
     ECS_ENTITY(world, e2, Position);
     ECS_ENTITY(world, e3, Position);
 
-    ECS_SYSTEM(world, Iter, EcsOnUpdate, Mass(parent), Position);
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, Mass(up), Position);
     ecs_system_init(world, &(ecs_system_desc_t){
         .entity = Iter,
-        .query.filter.instanced = true
+        .query.flags = EcsQueryIsInstanced
     });
 
-    ECS_SYSTEM(world, Dummy, EcsOnUpdate, Mass(parent), Position);
+    ECS_SYSTEM(world, Dummy, EcsOnUpdate, Mass(up), Position);
     ecs_system_init(world, &(ecs_system_desc_t){
         .entity = Dummy,
-        .query.filter.instanced = true
+        .query.flags = EcsQueryIsInstanced
     });
 
-    ecs_entity_t parent = ecs_new(world, 0);
+    ecs_entity_t parent = ecs_new(world);
     ecs_add_pair(world, e1, EcsChildOf, parent);
     ecs_add_pair(world, e2, EcsChildOf, parent);
 
@@ -992,10 +992,10 @@ void System_w_FromParent_add_component_in_progress_after_match(void) {
     ECS_ENTITY(world, e3, Position);
     ECS_ENTITY(world, e4, Position);
 
-    ECS_SYSTEM(world, Iter, EcsOnUpdate, Mass(parent), Position);
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, Mass(up), Position);
     ecs_system_init(world, &(ecs_system_desc_t){
         .entity = Iter,
-        .query.filter.instanced = true
+        .query.flags = EcsQueryIsInstanced
     });
 
     ECS_OBSERVER(world, AddMass, EcsOnAdd, Tag);
@@ -1005,7 +1005,7 @@ void System_w_FromParent_add_component_in_progress_after_match(void) {
         .ctx = &ecs_id(Mass)
     });
 
-    ecs_entity_t parent = ecs_new(world, 0);
+    ecs_entity_t parent = ecs_new(world);
     ecs_add_pair(world, e1, EcsChildOf, parent);
     ecs_add_pair(world, e2, EcsChildOf, parent);
 
@@ -1052,13 +1052,13 @@ void System_w_FromParent_adopt_after_match(void) {
     ECS_ENTITY(world, e2, Position);
     ECS_ENTITY(world, e3, Position);
 
-    ECS_SYSTEM(world, Iter, EcsOnUpdate, Mass(parent), Position);
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, Mass(up), Position);
     ecs_system_init(world, &(ecs_system_desc_t){
         .entity = Iter,
-        .query.filter.instanced = true
+        .query.flags = EcsQueryIsInstanced
     });
 
-    ecs_entity_t parent = ecs_new(world, Mass);
+    ecs_entity_t parent = ecs_new_w(world, Mass);
     ecs_add_pair(world, e1, EcsChildOf, parent);
     ecs_add_pair(world, e2, EcsChildOf, parent);
 
@@ -1103,10 +1103,10 @@ void System_w_FromParent_new_child_after_match(void) {
 
     ECS_ENTITY(world, e3, Position);
 
-    ECS_SYSTEM(world, Iter, EcsOnUpdate, Mass(parent), Position);
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, Mass(up), Position);
     ecs_system_init(world, &(ecs_system_desc_t){
         .entity = Iter,
-        .query.filter.instanced = true
+        .query.flags = EcsQueryIsInstanced
     });
     
     ECS_ENTITY(world, parent, Mass);
@@ -1147,10 +1147,10 @@ void System_w_FromParent_new_child_after_match(void) {
 }
 
 void IterSame(ecs_iter_t *it) {
-    Position *p_parent = ecs_field(it, Position, 1);
-    Position *p = ecs_field(it, Position, 2);
+    Position *p_parent = ecs_field(it, Position, 0);
+    Position *p = ecs_field(it, Position, 1);
 
-    test_assert(!ecs_field_is_self(it, 1));
+    test_assert(!ecs_field_is_self(it, 0));
 
     probe_iter(it);
 
@@ -1172,13 +1172,13 @@ void System_w_FromParent_select_same_from_container(void) {
     ECS_ENTITY(world, e3, Position);
     ECS_ENTITY(world, e4, Position);
 
-    ECS_SYSTEM(world, IterSame, EcsOnUpdate, Position(parent), Position);
+    ECS_SYSTEM(world, IterSame, EcsOnUpdate, Position(up), Position);
     ecs_system_init(world, &(ecs_system_desc_t){
         .entity = IterSame,
-        .query.filter.instanced = true
+        .query.flags = EcsQueryIsInstanced
     });
 
-    ecs_entity_t parent = ecs_set(world, 0, Position, {1, 2});
+    ecs_entity_t parent = ecs_insert(world, ecs_value(Position, {1, 2}));
     ecs_add_pair(world, e1, EcsChildOf, parent);
     ecs_add_pair(world, e2, EcsChildOf, parent);
     ecs_add_pair(world, e3, EcsChildOf, parent);
@@ -1232,9 +1232,9 @@ void System_w_FromParent_realloc_after_match(void) {
 
     ECS_ENTITY(world, e1, Position);
 
-    ECS_SYSTEM(world, Iter, EcsOnUpdate, Mass(parent), Position);
+    ECS_SYSTEM(world, Iter, EcsOnUpdate, Mass(up), Position);
 
-    ecs_entity_t parent = ecs_set(world, 0, Mass, {2});
+    ecs_entity_t parent = ecs_insert(world, ecs_value(Mass, {2}));
     ecs_add_pair(world, e1, EcsChildOf, parent);
 
     Probe ctx = {0};

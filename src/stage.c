@@ -70,11 +70,10 @@ ecs_cmd_t* flecs_cmd_new_batched(
 }
 
 static
-void flecs_stages_merge(
-    ecs_world_t *world,
-    bool force_merge)
+void flecs_stage_merge(
+    ecs_world_t *world)
 {
-    bool is_stage = ecs_poly_is(world, ecs_stage_t);
+    bool is_stage = flecs_poly_is(world, ecs_stage_t);
     ecs_stage_t *stage = flecs_stage_from_world(&world);
 
     bool measure_frame_time = ECS_BIT_IS_SET(world->flags, 
@@ -92,21 +91,17 @@ void flecs_stages_merge(
         /* Check for consistency if force_merge is enabled. In practice this
          * function will never get called with force_merge disabled for just
          * a single stage. */
-        if (force_merge || stage->auto_merge) {
-            ecs_assert(stage->defer == 1, ECS_INVALID_OPERATION, 
-                "mismatching defer_begin/defer_end detected");
-            flecs_defer_end(world, stage);
-        }
+        ecs_assert(stage->defer == 1, ECS_INVALID_OPERATION, 
+            "mismatching defer_begin/defer_end detected");
+        flecs_defer_end(world, stage);
     } else {
         /* Merge stages. Only merge if the stage has auto_merging turned on, or 
          * if this is a forced merge (like when ecs_merge is called) */
         int32_t i, count = ecs_get_stage_count(world);
         for (i = 0; i < count; i ++) {
             ecs_stage_t *s = (ecs_stage_t*)ecs_get_stage(world, i);
-            ecs_poly_assert(s, ecs_stage_t);
-            if (force_merge || s->auto_merge) {
-                flecs_defer_end(world, s);
-            }
+            flecs_poly_assert(s, ecs_stage_t);
+            flecs_defer_end(world, s);
         }
     }
 
@@ -118,34 +113,20 @@ void flecs_stages_merge(
 
     world->info.merge_count_total ++; 
 
-    /* If stage is asynchronous, deferring is always enabled */
-    if (stage->async) {
+    /* If stage is unmanaged, deferring is always enabled */
+    if (stage->id == -1) {
         flecs_defer_begin(world, stage);
     }
     
     ecs_log_pop_3();
 }
 
-static
-void flecs_stage_auto_merge(
-    ecs_world_t *world)
-{
-    flecs_stages_merge(world, false);
-}
-
-static
-void flecs_stage_manual_merge(
-    ecs_world_t *world)
-{
-    flecs_stages_merge(world, true);
-}
-
 bool flecs_defer_begin(
     ecs_world_t *world,
     ecs_stage_t *stage)
 {
-    ecs_poly_assert(world, ecs_world_t);
-    ecs_poly_assert(stage, ecs_stage_t);
+    flecs_poly_assert(world, ecs_world_t);
+    flecs_poly_assert(stage, ecs_stage_t);
     (void)world;
     if (stage->defer < 0) return false;
     return (++ stage->defer) == 1;
@@ -283,7 +264,7 @@ bool flecs_defer_bulk_new(
         /* Use ecs_new_id as this is thread safe */
         int i;
         for (i = 0; i < count; i ++) {
-            ids[i] = ecs_new_id(world);
+            ids[i] = ecs_new(world);
         }
 
         *ids_out = ids;
@@ -339,7 +320,8 @@ void* flecs_defer_set(
     ecs_entity_t entity,
     ecs_id_t id,
     ecs_size_t size,
-    void *value)
+    void *value,
+    bool *is_new)
 {
     ecs_cmd_t *cmd = flecs_cmd_new_batched(stage, entity);
 
@@ -349,9 +331,8 @@ void* flecs_defer_set(
     if (!idr) {
         /* If idr doesn't exist yet, create it but only if the 
          * application is not multithreaded. */
-        if (stage->async || (world->flags & EcsWorldMultiThreaded)) {
+        if (world->flags & EcsWorldMultiThreaded) {
             ti = ecs_get_type_info(world, id);
-            ecs_assert(ti != NULL, ECS_INVALID_PARAMETER, NULL);
         } else {
             /* When not in multi threaded mode, it's safe to find or 
              * create the id record. */
@@ -369,10 +350,12 @@ void* flecs_defer_set(
     }
 
     /* If the id isn't associated with a type, we can't set anything */
-    ecs_check(ti != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ti != NULL, ECS_INVALID_PARAMETER, 
+        "provided component is not a type");
 
     /* Make sure the size of the value equals the type size */
-    ecs_assert(!size || size == ti->size, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(!size || size == ti->size, ECS_INVALID_PARAMETER,
+        "mismatching size specified for component in ensure/emplace/set");
     size = ti->size;
 
     /* Find existing component. Make sure it's owned, so that we won't use the
@@ -483,6 +466,10 @@ void* flecs_defer_set(
         cmd->entity = entity;
         cmd->is._1.size = size;
         cmd->is._1.value = cmd_value;
+
+        if (is_new) {
+            *is_new = true;
+        }
     } else {
         /* If component already exists, still insert an Add command to ensure
          * that any preceding remove commands won't remove the component. If the
@@ -494,6 +481,10 @@ void* flecs_defer_set(
         }
         cmd->id = id;
         cmd->entity = entity;
+
+        if (is_new) {
+            *is_new = false;
+        }
     }
 
     return cmd_value;
@@ -611,23 +602,33 @@ void flecs_commands_pop(
     stage->cmd = &stage->cmd_stack[sp];
 }
 
-void flecs_stage_init(
-    ecs_world_t *world,
-    ecs_stage_t *stage)
+ecs_entity_t flecs_stage_set_system(
+    ecs_stage_t *stage,
+    ecs_entity_t system)
 {
-    ecs_poly_assert(world, ecs_world_t);
-    ecs_poly_init(stage, ecs_stage_t);
+    ecs_entity_t old = stage->system;
+    stage->system = system;
+    return old;
+}
+
+static
+ecs_stage_t* flecs_stage_new(
+    ecs_world_t *world)
+{
+    flecs_poly_assert(world, ecs_world_t);
+    ecs_stage_t *stage = ecs_os_calloc(sizeof(ecs_stage_t));
+    flecs_poly_init(stage, ecs_stage_t);
 
     stage->world = world;
     stage->thread_ctx = world;
-    stage->auto_merge = true;
-    stage->async = false;
 
     flecs_stack_init(&stage->allocators.iter_stack);
     flecs_stack_init(&stage->allocators.deser_stack);
     flecs_allocator_init(&stage->allocator);
     flecs_ballocator_init_n(&stage->allocators.cmd_entry_chunk, ecs_cmd_entry_t,
         FLECS_SPARSE_PAGE_SIZE);
+    flecs_ballocator_init_t(&stage->allocators.query_impl, ecs_query_impl_t);
+    flecs_ballocator_init_t(&stage->allocators.query_cache, ecs_query_cache_t);
 
     ecs_allocator_t *a = &stage->allocator;
     ecs_vec_init_t(a, &stage->post_frame_actions, ecs_action_elem_t, 0);
@@ -638,17 +639,19 @@ void flecs_stage_init(
     }
 
     stage->cmd = &stage->cmd_stack[0];
+    return stage;
 }
 
-void flecs_stage_fini(
+static
+void flecs_stage_free(
     ecs_world_t *world,
     ecs_stage_t *stage)
 {
     (void)world;
-    ecs_poly_assert(world, ecs_world_t);
-    ecs_poly_assert(stage, ecs_stage_t);
+    flecs_poly_assert(world, ecs_world_t);
+    flecs_poly_assert(stage, ecs_stage_t);
 
-    ecs_poly_fini(stage, ecs_stage_t);
+    flecs_poly_fini(stage, ecs_stage_t);
 
     ecs_allocator_t *a = &stage->allocator;
     
@@ -664,52 +667,87 @@ void flecs_stage_fini(
     flecs_stack_fini(&stage->allocators.iter_stack);
     flecs_stack_fini(&stage->allocators.deser_stack);
     flecs_ballocator_fini(&stage->allocators.cmd_entry_chunk);
+    flecs_ballocator_fini(&stage->allocators.query_impl);
+    flecs_ballocator_fini(&stage->allocators.query_cache);
     flecs_allocator_fini(&stage->allocator);
+
+    ecs_os_free(stage);
+}
+
+ecs_allocator_t* flecs_stage_get_allocator(
+    ecs_world_t *world)
+{
+    ecs_stage_t *stage = flecs_stage_from_world(
+        ECS_CONST_CAST(ecs_world_t**, &world));
+    return &stage->allocator;
+}
+
+ecs_stack_t* flecs_stage_get_stack_allocator(
+    ecs_world_t *world)
+{
+    ecs_stage_t *stage = flecs_stage_from_world(
+        ECS_CONST_CAST(ecs_world_t**, &world));
+    return &stage->allocators.iter_stack;
+}
+
+ecs_world_t* ecs_stage_new(
+    ecs_world_t *world)
+{
+    ecs_stage_t *stage = flecs_stage_new(world);
+    stage->id = -1;
+
+    flecs_defer_begin(world, stage);
+
+    return (ecs_world_t*)stage;
+}
+
+void ecs_stage_free(
+    ecs_world_t *world)
+{
+    flecs_poly_assert(world, ecs_stage_t);
+    ecs_stage_t *stage = (ecs_stage_t*)world;
+    ecs_check(stage->id == -1, ECS_INVALID_PARAMETER, 
+        "cannot free stage that's owned by world");
+    flecs_stage_free(stage->world, stage);
+error:
+    return;
 }
 
 void ecs_set_stage_count(
     ecs_world_t *world,
     int32_t stage_count)
 {
-    ecs_poly_assert(world, ecs_world_t);
+    flecs_poly_assert(world, ecs_world_t);
 
     /* World must have at least one default stage */
     ecs_assert(stage_count >= 1 || (world->flags & EcsWorldFini), 
         ECS_INTERNAL_ERROR, NULL);
 
-    bool auto_merge = true;
     const ecs_entity_t *lookup_path = NULL;
-    ecs_entity_t scope = 0;
-    ecs_entity_t with = 0;
     if (world->stage_count >= 1) {
-        auto_merge = world->stages[0].auto_merge;
-        lookup_path = world->stages[0].lookup_path;
-        scope = world->stages[0].scope;
-        with = world->stages[0].with;
+        lookup_path = world->stages[0]->lookup_path;
     }
 
     int32_t i, count = world->stage_count;
-    if (count && count != stage_count) {
-        ecs_stage_t *stages = world->stages;
-
-        for (i = 0; i < count; i ++) {
+    if (stage_count < count) {
+        for (i = stage_count; i < count; i ++) {
             /* If stage contains a thread handle, ecs_set_threads was used to
-             * create the stages. ecs_set_threads and ecs_set_stage_count should not
-             * be mixed. */
-            ecs_poly_assert(&stages[i], ecs_stage_t);
-            ecs_check(stages[i].thread == 0, ECS_INVALID_OPERATION, NULL);
-            flecs_stage_fini(world, &stages[i]);
+             * create the stages. ecs_set_threads and ecs_set_stage_count should 
+             * not be mixed. */
+            ecs_stage_t *stage = world->stages[i];
+            flecs_poly_assert(stage, ecs_stage_t);
+            ecs_check(stage->thread == 0, ECS_INVALID_OPERATION, 
+                "cannot mix using set_stage_count and set_threads");
+            flecs_stage_free(world, stage);
         }
-
-        ecs_os_free(world->stages);
     }
 
     if (stage_count) {
-        world->stages = ecs_os_malloc_n(ecs_stage_t, stage_count);
+        world->stages = ecs_os_realloc_n(
+            world->stages, ecs_stage_t*, stage_count);
 
-        for (i = 0; i < stage_count; i ++) {
-            ecs_stage_t *stage = &world->stages[i];
-            flecs_stage_init(world, stage);
+        for (i = count; i < stage_count; i ++) {
+            ecs_stage_t *stage = world->stages[i] = flecs_stage_new(world);
             stage->id = i;
 
             /* Set thread_ctx to stage, as this stage might be used in a
@@ -719,6 +757,7 @@ void ecs_set_stage_count(
         }
     } else {
         /* Set to NULL to prevent double frees */
+        ecs_os_free(world->stages);
         world->stages = NULL;
     }
 
@@ -726,10 +765,7 @@ void ecs_set_stage_count(
      * ecs_set_stage_count function is called, all stages inherit the auto_merge
      * property from the world */
     for (i = 0; i < stage_count; i ++) {
-        world->stages[i].auto_merge = auto_merge;
-        world->stages[i].lookup_path = lookup_path;
-        world->stages[0].scope = scope;
-        world->stages[0].with = with;
+        world->stages[i]->lookup_path = lookup_path;
     }
 
     world->stage_count = stage_count;
@@ -744,17 +780,17 @@ int32_t ecs_get_stage_count(
     return world->stage_count;
 }
 
-int32_t ecs_get_stage_id(
+int32_t ecs_stage_get_id(
     const ecs_world_t *world)
 {
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
 
-    if (ecs_poly_is(world, ecs_stage_t)) {
+    if (flecs_poly_is(world, ecs_stage_t)) {
         ecs_stage_t *stage = ECS_CONST_CAST(ecs_stage_t*, world);
 
         /* Index 0 is reserved for main stage */
         return stage->id;
-    } else if (ecs_poly_is(world, ecs_world_t)) {
+    } else if (flecs_poly_is(world, ecs_world_t)) {
         return 0;
     } else {
         ecs_throw(ECS_INTERNAL_ERROR, NULL);
@@ -767,9 +803,9 @@ ecs_world_t* ecs_get_stage(
     const ecs_world_t *world,
     int32_t stage_id)
 {
-    ecs_poly_assert(world, ecs_world_t);
+    flecs_poly_assert(world, ecs_world_t);
     ecs_check(world->stage_count > stage_id, ECS_INVALID_PARAMETER, NULL);
-    return (ecs_world_t*)&world->stages[stage_id];
+    return (ecs_world_t*)world->stages[stage_id];
 error:
     return NULL;
 }
@@ -778,7 +814,7 @@ bool ecs_readonly_begin(
     ecs_world_t *world,
     bool multi_threaded)
 {
-    ecs_poly_assert(world, ecs_world_t);
+    flecs_poly_assert(world, ecs_world_t);
 
     flecs_process_pending_tables(world);
 
@@ -787,8 +823,8 @@ bool ecs_readonly_begin(
 
     int32_t i, count = ecs_get_stage_count(world);
     for (i = 0; i < count; i ++) {
-        ecs_stage_t *stage = &world->stages[i];
-        stage->lookup_path = world->stages[0].lookup_path;
+        ecs_stage_t *stage = world->stages[i];
+        stage->lookup_path = world->stages[0]->lookup_path;
         ecs_assert(stage->defer == 0, ECS_INVALID_OPERATION, 
             "deferred mode cannot be enabled when entering readonly mode");
         flecs_defer_begin(world, stage);
@@ -807,8 +843,9 @@ bool ecs_readonly_begin(
 void ecs_readonly_end(
     ecs_world_t *world)
 {
-    ecs_poly_assert(world, ecs_world_t);
-    ecs_check(world->flags & EcsWorldReadonly, ECS_INVALID_OPERATION, NULL);
+    flecs_poly_assert(world, ecs_world_t);
+    ecs_check(world->flags & EcsWorldReadonly, ECS_INVALID_OPERATION,
+        "world is not in readonly mode");
 
     /* After this it is safe again to mutate the world directly */
     ECS_BIT_CLEAR(world->flags, EcsWorldReadonly);
@@ -816,7 +853,7 @@ void ecs_readonly_end(
 
     ecs_log_pop_3();
 
-    flecs_stage_auto_merge(world);
+    flecs_stage_merge(world);
 error:
     return;
 }
@@ -825,38 +862,11 @@ void ecs_merge(
     ecs_world_t *world)
 {
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(ecs_poly_is(world, ecs_world_t) || 
-               ecs_poly_is(world, ecs_stage_t), ECS_INVALID_PARAMETER, NULL);
-    flecs_stage_manual_merge(world);
+    ecs_check(flecs_poly_is(world, ecs_world_t) || 
+               flecs_poly_is(world, ecs_stage_t), ECS_INVALID_PARAMETER, NULL);
+    flecs_stage_merge(world);
 error:
     return;
-}
-
-void ecs_set_automerge(
-    ecs_world_t *world,
-    bool auto_merge)
-{
-    /* If a world is provided, set auto_merge globally for the world. This
-     * doesn't actually do anything (the main stage never merges) but it serves
-     * as the default for when stages are created. */
-    if (ecs_poly_is(world, ecs_world_t)) {
-        world->stages[0].auto_merge = auto_merge;
-
-        /* Propagate change to all stages */
-        int i, stage_count = ecs_get_stage_count(world);
-        for (i = 0; i < stage_count; i ++) {
-            ecs_stage_t *stage = (ecs_stage_t*)ecs_get_stage(world, i);
-            stage->auto_merge = auto_merge;
-        }
-
-    /* If a stage is provided, override the auto_merge value for the individual
-     * stage. This allows an application to control per-stage which stage should
-     * be automatically merged and which one shouldn't */
-    } else {
-        ecs_poly_assert(world, ecs_stage_t);
-        ecs_stage_t *stage = (ecs_stage_t*)world;
-        stage->auto_merge = auto_merge;
-    }
 }
 
 bool ecs_stage_is_readonly(
@@ -864,64 +874,24 @@ bool ecs_stage_is_readonly(
 {
     const ecs_world_t *world = ecs_get_world(stage);
 
-    if (ecs_poly_is(stage, ecs_stage_t)) {
-        if (((const ecs_stage_t*)stage)->async) {
+    if (flecs_poly_is(stage, ecs_stage_t)) {
+        if (((const ecs_stage_t*)stage)->id == -1) {
+            /* Stage is not owned by world, so never readonly */
             return false;
         }
     }
 
     if (world->flags & EcsWorldReadonly) {
-        if (ecs_poly_is(stage, ecs_world_t)) {
+        if (flecs_poly_is(stage, ecs_world_t)) {
             return true;
         }
     } else {
-        if (ecs_poly_is(stage, ecs_stage_t)) {
+        if (flecs_poly_is(stage, ecs_stage_t)) {
             return true;
         }
     }
 
     return false;
-}
-
-ecs_world_t* ecs_async_stage_new(
-    ecs_world_t *world)
-{
-    ecs_stage_t *stage = ecs_os_calloc(sizeof(ecs_stage_t));
-    flecs_stage_init(world, stage);
-
-    stage->id = -1;
-    stage->auto_merge = false;
-    stage->async = true;
-
-    flecs_defer_begin(world, stage);
-
-    return (ecs_world_t*)stage;
-}
-
-void ecs_async_stage_free(
-    ecs_world_t *world)
-{
-    ecs_poly_assert(world, ecs_stage_t);
-    ecs_stage_t *stage = (ecs_stage_t*)world;
-    ecs_check(stage->async == true, ECS_INVALID_PARAMETER, NULL);
-    flecs_stage_fini(stage->world, stage);
-    ecs_os_free(stage);
-error:
-    return;
-}
-
-bool ecs_stage_is_async(
-    ecs_world_t *stage)
-{
-    if (!stage) {
-        return false;
-    }
-    
-    if (!ecs_poly_is(stage, ecs_stage_t)) {
-        return false;
-    }
-
-    return ((ecs_stage_t*)stage)->async;
 }
 
 bool ecs_is_deferred(
@@ -932,13 +902,4 @@ bool ecs_is_deferred(
     return stage->defer > 0;
 error:
     return false;
-}
-
-ecs_entity_t flecs_stage_set_system(
-    ecs_stage_t *stage,
-    ecs_entity_t system)
-{
-    ecs_entity_t old = stage->system;
-    stage->system = system;
-    return old;
 }

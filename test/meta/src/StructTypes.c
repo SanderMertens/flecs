@@ -11,7 +11,7 @@ void _meta_test_struct(
     test_int(ct->size, size);
     test_int(ct->alignment, alignment);
 
-    const EcsMetaType *mt = ecs_get(world, t, EcsMetaType);
+    const EcsType *mt = ecs_get(world, t, EcsType);
     test_assert(mt != NULL);
     test_assert(mt->kind == EcsStructType);
 }
@@ -368,7 +368,7 @@ void StructTypes_incomplete_member(void) {
 
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t t = ecs_new_id(world);
+    ecs_entity_t t = ecs_new(world);
 
     ecs_entity_t m_x = ecs_new_w_pair(world, EcsChildOf, t);
     ecs_set_name(world, m_x, "x");
@@ -412,7 +412,7 @@ void StructTypes_partial_type(void) {
     test_int(cptr->size, sizeof(Position));
     test_int(cptr->alignment, ECS_ALIGNOF(Position));
 
-    const EcsMetaType *mptr = ecs_get(world, s, EcsMetaType);
+    const EcsType *mptr = ecs_get(world, s, EcsType);
     test_assert(mptr != NULL);
     test_bool(mptr->partial, true);
     test_bool(mptr->existing, true);
@@ -444,7 +444,7 @@ void StructTypes_partial_type_custom_offset(void) {
     test_int(cptr->size, sizeof(Vec3));
     test_int(cptr->alignment, ECS_ALIGNOF(Vec3));
 
-    const EcsMetaType *mptr = ecs_get(world, s, EcsMetaType);
+    const EcsType *mptr = ecs_get(world, s, EcsType);
     test_assert(mptr != NULL);
     test_bool(mptr->partial, true);
     test_bool(mptr->existing, true);
@@ -813,7 +813,7 @@ void StructTypes_struct_w_16_alignment(void) {
     test_int(cptr->size, sizeof(T));
     test_int(cptr->alignment, 16);
 
-    const EcsMetaType *mptr = ecs_get(world, t, EcsMetaType);
+    const EcsType *mptr = ecs_get(world, t, EcsType);
     test_assert(mptr != NULL);
     test_bool(mptr->partial, false);
     test_bool(mptr->existing, true);

@@ -75,7 +75,7 @@ int main(int argc, char *argv[]) {
 
     ecs_log_set_level(0);
 
-    ecs_entity_t e = ecs_new_entity(world, "Entity");
+    ecs_entity_t e = ecs_entity(world, { .name = "Entity" });
 
     ecs_trace("ecs_add(world, e, String)");
     ecs_log_push();

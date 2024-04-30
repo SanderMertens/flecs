@@ -37,7 +37,7 @@ void Observer(ecs_iter_t *it) {
     ecs_entity_t event_id = it->event_id;
 
     // Get component values as usual
-    Position *p = ecs_field(it, Position, 1);
+    Position *p = ecs_field(it, Position, 0);
 
     for (int i = 0; i < it->count; i ++) {
         ecs_entity_t e = it->entities[i];
@@ -68,8 +68,8 @@ int main(int argc, char *argv[]) {
     // The ecs_observer macro (which calls the ecs_observer_init function) can
     // be used to create an observer.
     ecs_observer(ecs, {
-        // Observer filter. Uses same ecs_filter_desc_t as systems/queries
-        .filter = { .terms = {{ .id = ecs_id(Position) }}},
+        // Observer filter. Uses same ecs_query_desc_t as systems/queries
+        .query  = { .terms = {{ .id = ecs_id(Position) }}},
         // Events the observer will listen for. Can contain multiple events
         .events = { EcsOnAdd, EcsOnRemove },
         // Observer callback
@@ -80,7 +80,7 @@ int main(int argc, char *argv[]) {
     ECS_OBSERVER(ecs, Observer, EcsOnSet, Position);
 
     // Create entity
-    ecs_entity_t e = ecs_new_entity(ecs, "e");
+    ecs_entity_t e = ecs_entity(ecs, { .name = "e" });
     
     // Set Position (emits EcsOnAdd and EcsOnSet)
     ecs_set(ecs, e, Position, {10, 20});

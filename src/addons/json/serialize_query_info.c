@@ -9,13 +9,14 @@
 
 static
 const char* flecs_json_inout_str(
-    ecs_inout_kind_t kind)
+    int16_t kind)
 {
     switch(kind) {
     case EcsIn: return "in";
     case EcsOut: return "out";
     case EcsInOut: return "inout";
     case EcsInOutNone: return "none";
+    case EcsInOutFilter: return "filter";
     case EcsInOutDefault: return "default";
     default: return "unknown";
     }
@@ -23,7 +24,7 @@ const char* flecs_json_inout_str(
 
 static
 const char* flecs_json_oper_str(
-    ecs_oper_kind_t kind)
+    int16_t kind)
 {
     switch(kind) {
     case EcsAnd: return "and";
@@ -63,24 +64,24 @@ void flecs_json_serialize_term_entity(
 static
 void flecs_json_serialize_term_ref(
     const ecs_world_t *world,
-    const ecs_term_id_t *ref,
+    const ecs_term_ref_t *ref,
     ecs_strbuf_t *buf)
 {
     flecs_json_object_push(buf);
-    if (ref->flags & EcsIsEntity) {
-        flecs_json_serialize_term_entity(world, ref->id, buf);
-    } else if (ref->flags & EcsIsVariable) {
+    if (ref->id & EcsIsEntity) {
+        flecs_json_serialize_term_entity(world, ECS_TERM_REF_ID(ref), buf);
+    } else if (ref->id & EcsIsVariable) {
         flecs_json_memberl(buf, "var");
         if (ref->name) {
             flecs_json_string(buf, ref->name);
         } else if (ref->id) {
-            if (ref->id == EcsThis) {
+            if (ECS_TERM_REF_ID(ref) == EcsThis) {
                 flecs_json_string(buf, "this");
             } else {
-                flecs_json_path(buf, world, ref->id);
+                flecs_json_path(buf, world, ECS_TERM_REF_ID(ref));
             }
         }
-    } else if (ref->flags & EcsIsName) {
+    } else if (ref->id & EcsIsName) {
         flecs_json_memberl(buf, "name");
         flecs_json_string(buf, ref->name);
     }
@@ -93,24 +94,24 @@ void flecs_json_serialize_term_trav(
     const ecs_term_t *term,
     ecs_strbuf_t *buf)
 {
-    if (term->src.trav) {
+    if (term->trav) {
         flecs_json_memberl(buf, "trav");
         flecs_json_object_push(buf);
-        flecs_json_serialize_term_entity(world, term->src.trav, buf);
+        flecs_json_serialize_term_entity(world, term->trav, buf);
         flecs_json_object_pop(buf);
     }
 
     flecs_json_memberl(buf, "flags");
     flecs_json_array_push(buf);
-    if (term->src.flags & EcsSelf) {
+    if (term->src.id & EcsSelf) {
         flecs_json_next(buf);
         flecs_json_string(buf, "self");
     }
-    if (term->src.flags & EcsCascade) {
+    if (term->src.id & EcsCascade) {
         flecs_json_next(buf);
         flecs_json_string(buf, "cascade");
     } else
-    if (term->src.flags & EcsUp) {
+    if (term->src.id & EcsUp) {
         flecs_json_next(buf);
         flecs_json_string(buf, "up");
     }
@@ -120,21 +121,21 @@ void flecs_json_serialize_term_trav(
 static
 void flecs_json_serialize_term(
     const ecs_world_t *world,
-    const ecs_filter_t *q,
+    const ecs_query_t *q,
     int t,
     ecs_strbuf_t *buf)
 {
-    ecs_term_t *term = &q->terms[t];
+    const ecs_term_t *term = &q->terms[t];
 
     flecs_json_object_push(buf);
     flecs_json_memberl(buf, "inout");
     flecs_json_string(buf, flecs_json_inout_str(term->inout));
 
     flecs_json_memberl(buf, "has_data");
-    flecs_json_bool(buf, 0 == (term->flags & EcsTermNoData));
+    flecs_json_bool(buf, 0 == (term->flags_ & EcsTermNoData));
 
-    if (term->first.flags & EcsIsEntity && term->first.id) {
-        if (ecs_has_id(world, term->first.id, EcsDontInherit)) {
+    if (term->first.id & EcsIsEntity && term->first.id) {
+        if (ecs_has_id(world, ECS_TERM_REF_ID(&term->first), EcsDontInherit)) {
             flecs_json_memberl(buf, "dont_inherit");
             flecs_json_true(buf);
         }
@@ -149,7 +150,7 @@ void flecs_json_serialize_term(
     flecs_json_memberl(buf, "first");
     flecs_json_serialize_term_ref(world, &term->first, buf);
     
-    if (term->second.id || term->second.name || term->second.flags & EcsIsEntity) {
+    if (ECS_TERM_REF_ID(&term->second) || term->second.name || term->second.id & EcsIsEntity) {
         flecs_json_memberl(buf, "second");
         flecs_json_serialize_term_ref(world, &term->second, buf);
     }
@@ -161,7 +162,7 @@ void flecs_json_serialize_term(
 
 void flecs_json_serialize_query(
     const ecs_world_t *world,
-    const ecs_filter_t *q,
+    const ecs_query_t *q,
     ecs_strbuf_t *buf)
 {
     flecs_json_object_push(buf);

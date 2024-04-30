@@ -58,11 +58,11 @@ int main(int, char *[]) {
     ecs.entity().add(Tile::Sand).add(TileStatus::Occupied);
 
     // Iterate all entities with a Tile relationship
-    ecs.filter_builder()
+    ecs.query_builder()
         .with<Tile>(flecs::Wildcard)
         .build()
         .each([&](flecs::iter& it, size_t) {
-            flecs::entity tile_constant = it.pair(1).second();
+            flecs::entity tile_constant = it.pair(0).second();
             printf("%s\n", tile_constant.path().c_str());
         });
 
@@ -72,12 +72,12 @@ int main(int, char *[]) {
     //  ::Tile::Sand
 
     // Iterate only occupied tiles
-    ecs.filter_builder()
+    ecs.query_builder()
         .with<Tile>(flecs::Wildcard)
         .with(TileStatus::Occupied)
         .build()
         .each([&](flecs::iter& it, size_t) {
-            flecs::entity tile_constant = it.pair(1).second();
+            flecs::entity tile_constant = it.pair(0).second();
             printf("%s\n", tile_constant.path().c_str());
         });
 

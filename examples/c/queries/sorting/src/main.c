@@ -18,7 +18,7 @@ int compare_position(
 }
 
 void print_position(ecs_iter_t *it) {
-    Position *p = ecs_field(it, Position, 1);
+    Position *p = ecs_field(it, Position, 0);
     for (int i = 0; i < it->count; i ++) {
         printf("{%.1f, %.1f}\n", p[i].x, p[i].y);
     }
@@ -37,27 +37,27 @@ int main(int argc, char *argv[]) {
 
     ECS_COMPONENT(ecs, Position);
 
-    ecs_entity_t e = ecs_set(ecs, 0, Position, {1, 0});
-    ecs_set(ecs, 0, Position, {6, 0});
-    ecs_set(ecs, 0, Position, {2, 0});
-    ecs_set(ecs, 0, Position, {5, 0});
-    ecs_set(ecs, 0, Position, {4, 0});
+    ecs_entity_t e = ecs_insert(ecs, ecs_value(Position, {1, 0}));
+    ecs_insert(ecs, ecs_value(Position, {6, 0}));
+    ecs_insert(ecs, ecs_value(Position, {2, 0}));
+    ecs_insert(ecs, ecs_value(Position, {5, 0}));
+    ecs_insert(ecs, ecs_value(Position, {4, 0}));
 
     // Create a sorted system
     ecs_entity_t sys = ecs_system(ecs, {
         .query = {
-            .filter.terms = {{ .id = ecs_id(Position) }},
-            .order_by = (ecs_order_by_action_t)compare_position,
-            .order_by_component = ecs_id(Position) 
+            .terms = {{ .id = ecs_id(Position) }},
+            .order_by_callback = (ecs_order_by_action_t)compare_position,
+            .order_by = ecs_id(Position) 
         },
         .callback = print_position
     });
 
     // Create sorted query
     ecs_query_t *q = ecs_query(ecs, {
-        .filter.terms = {{ .id = ecs_id(Position) }},
-        .order_by = (ecs_order_by_action_t)compare_position,
-        .order_by_component = ecs_id(Position)
+        .terms = {{ .id = ecs_id(Position) }},
+        .order_by_callback = (ecs_order_by_action_t)compare_position,
+        .order_by = ecs_id(Position)
     });
 
     // Iterate query, print values of Position

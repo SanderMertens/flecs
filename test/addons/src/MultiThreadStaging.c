@@ -244,7 +244,7 @@ void MultiThreadStaging_6_threads_add_to_current(void) {
 
 static
 void InitVelocity(ecs_iter_t *it) {
-    Velocity *v = ecs_field(it, Velocity, 1);
+    Velocity *v = ecs_field(it, Velocity, 0);
 
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -255,7 +255,7 @@ void InitVelocity(ecs_iter_t *it) {
 
 static
 void AddVelocity(ecs_iter_t *it) {
-    ecs_id_t ecs_id(Velocity) = ecs_field_id(it, 2);
+    ecs_id_t ecs_id(Velocity) = ecs_field_id(it, 1);
 
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -302,7 +302,7 @@ void MultiThreadStaging_2_threads_on_add(void) {
 
 static
 void New_w_count(ecs_iter_t *it) {
-    ecs_id_t ecs_id(Position) = ecs_field_id(it, 1);
+    ecs_id_t ecs_id(Position) = ecs_field_id(it, 0);
 
     ecs_bulk_new(it->world, Position, 10);
 }
@@ -333,8 +333,8 @@ void MultiThreadStaging_custom_thread_auto_merge(void) {
 
     ECS_COMPONENT(world, Position);
 
-    ecs_entity_t e1 = ecs_new_id(world);
-    ecs_entity_t e2 = ecs_new_id(world);
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_entity_t e2 = ecs_new(world);
 
     ecs_set_stage_count(world, 2);
 
@@ -369,127 +369,6 @@ void MultiThreadStaging_custom_thread_auto_merge(void) {
     test_assert(ecs_has(world, e2, Position));
 
     const Position *p1 = ecs_get(world, e1, Position);
-    test_int(p1->x, 10);
-    test_int(p1->y, 20);
-
-    const Position *p2 = ecs_get(world, e2, Position);
-    test_int(p2->x, 20);
-    test_int(p2->y, 30);    
-
-    ecs_fini(world);
-}
-
-void MultiThreadStaging_custom_thread_manual_merge(void) {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-
-    ecs_entity_t e1 = ecs_new_id(world);
-    ecs_entity_t e2 = ecs_new_id(world);
-
-    ecs_set_automerge(world, false);
-
-    ecs_set_stage_count(world, 2);
-
-    ecs_world_t *ctx_1 = ecs_get_stage(world, 0);
-    ecs_world_t *ctx_2 = ecs_get_stage(world, 1);
-
-    ecs_frame_begin(world, 0);
-    ecs_readonly_begin(world, true);
-
-    /* thread 1 */
-    ecs_defer_begin(ctx_1);
-    ecs_set(ctx_1, e1, Position, {10, 20});
-    test_assert(!ecs_has(world, e1, Position));
-    test_assert(!ecs_has(ctx_1, e1, Position));
-    ecs_defer_end(ctx_1);
-    test_assert(!ecs_has(world, e1, Position));
-    test_assert(!ecs_has(ctx_1, e1, Position));
-    
-    /* thread 2 */
-    ecs_defer_begin(ctx_2);
-    ecs_set(ctx_2, e2, Position, {20, 30});
-    test_assert(!ecs_has(world, e2, Position));
-    test_assert(!ecs_has(ctx_2, e2, Position));
-    ecs_defer_end(ctx_2);
-    test_assert(!ecs_has(world, e2, Position));
-    test_assert(!ecs_has(ctx_2, e2, Position));
-
-    ecs_readonly_end(world);
-    ecs_frame_end(world);
-
-    test_assert(!ecs_has(world, e1, Position));
-    test_assert(!ecs_has(world, e2, Position));
-
-    ecs_merge(world);
-
-    test_assert(ecs_has(world, e1, Position));
-    test_assert(ecs_has(world, e2, Position));
-
-    const Position *p1 = ecs_get(world, e1, Position);
-    test_int(p1->x, 10);
-    test_int(p1->y, 20);
-
-    const Position *p2 = ecs_get(world, e2, Position);
-    test_int(p2->x, 20);
-    test_int(p2->y, 30);    
-
-    ecs_fini(world);
-}
-
-void MultiThreadStaging_custom_thread_partial_manual_merge(void) {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-
-    ecs_entity_t e1 = ecs_new_id(world);
-    ecs_entity_t e2 = ecs_new_id(world);
-
-    ecs_set_stage_count(world, 2);
-
-    ecs_world_t *ctx_1 = ecs_get_stage(world, 0);
-    ecs_world_t *ctx_2 = ecs_get_stage(world, 1);
-
-    /* Only disable auto-merging for ctx_2 */
-    ecs_set_automerge(ctx_2, false);
-
-    ecs_frame_begin(world, 0);
-    ecs_readonly_begin(world, true);
-
-    /* thread 1 */
-    ecs_defer_begin(ctx_1);
-    ecs_set(ctx_1, e1, Position, {10, 20});
-    test_assert(!ecs_has(world, e1, Position));
-    test_assert(!ecs_has(ctx_1, e1, Position));
-    ecs_defer_end(ctx_1);
-    test_assert(!ecs_has(world, e1, Position));
-    test_assert(!ecs_has(ctx_1, e1, Position));
-    
-    /* thread 2 */
-    ecs_defer_begin(ctx_2);
-    ecs_set(ctx_2, e2, Position, {20, 30});
-    test_assert(!ecs_has(world, e2, Position));
-    test_assert(!ecs_has(ctx_2, e2, Position));
-    ecs_defer_end(ctx_2);
-    test_assert(!ecs_has(world, e2, Position));
-    test_assert(!ecs_has(ctx_2, e2, Position));
-
-    ecs_readonly_end(world);
-    ecs_frame_end(world);
-
-    test_assert(ecs_has(world, e1, Position));
-    test_assert(!ecs_has(world, e2, Position));
-
-    const Position *p1 = ecs_get(world, e1, Position);
-    test_int(p1->x, 10);
-    test_int(p1->y, 20);    
-
-    ecs_merge(ctx_2);
-
-    test_assert(ecs_has(world, e1, Position));
-    test_assert(ecs_has(world, e2, Position));
-
-    p1 = ecs_get(world, e1, Position);
     test_int(p1->x, 10);
     test_int(p1->y, 20);
 
@@ -507,14 +386,14 @@ void MultiThreadStaging_set_pair_w_new_target_readonly(void) {
 
     ecs_set_threads(world, 2);
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
 
     ecs_world_t *thr_1 = ecs_get_stage(world, 0);
 
     ecs_frame_begin(world, 0);
     ecs_readonly_begin(world, true);
 
-    ecs_entity_t tgt = ecs_new_id(thr_1);
+    ecs_entity_t tgt = ecs_new(thr_1);
     ecs_set_pair(thr_1, e, Position, tgt, {10, 20});
 
     ecs_readonly_end(world);
@@ -537,14 +416,14 @@ void MultiThreadStaging_set_pair_w_new_target_tgt_component_readonly(void) {
 
     ecs_set_threads(world, 2);
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
 
     ecs_world_t *thr_1 = ecs_get_stage(world, 0);
 
     ecs_frame_begin(world, 0);
     ecs_readonly_begin(world, true);
 
-    ecs_entity_t tgt = ecs_new_id(thr_1);
+    ecs_entity_t tgt = ecs_new(thr_1);
     ecs_set_pair_second(thr_1, e, tgt, Position, {10, 20});
 
     ecs_readonly_end(world);
@@ -567,11 +446,11 @@ void MultiThreadStaging_set_pair_w_new_target_defer(void) {
 
     ecs_set_threads(world, 2);
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
 
     ecs_defer_begin(world);
 
-    ecs_entity_t tgt = ecs_new_id(world);
+    ecs_entity_t tgt = ecs_new(world);
     ecs_set_pair(world, e, Position, tgt, {10, 20});
 
     ecs_defer_end(world);
@@ -593,11 +472,11 @@ void MultiThreadStaging_set_pair_w_new_target_tgt_component_defer(void) {
 
     ecs_set_threads(world, 2);
 
-    ecs_entity_t e = ecs_new_id(world);
+    ecs_entity_t e = ecs_new(world);
 
     ecs_defer_begin(world);
 
-    ecs_entity_t tgt = ecs_new_id(world);
+    ecs_entity_t tgt = ecs_new(world);
     ecs_set_pair_second(world, e, tgt, Position, {10, 20});
 
     ecs_defer_end(world);

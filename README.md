@@ -62,8 +62,8 @@ typedef struct {
 } Position, Velocity;
 
 void Move(ecs_iter_t *it) {
-  Position *p = ecs_field(it, Position, 1);
-  Velocity *v = ecs_field(it, Velocity, 2);
+  Position *p = ecs_field(it, Position, 0);
+  Velocity *v = ecs_field(it, Velocity, 1);
 
   for (int i = 0; i < it->count; i++) {
     p[i].x += v[i].x;
@@ -79,7 +79,7 @@ int main(int argc, char *argv[]) {
 
   ECS_SYSTEM(ecs, Move, EcsOnUpdate, Position, Velocity);
 
-  ecs_entity_t e = ecs_new_id(ecs);
+  ecs_entity_t e = ecs_new(ecs);
   ecs_set(ecs, e, Position, {10, 20});
   ecs_set(ecs, e, Velocity, {1, 2});
 
@@ -108,7 +108,7 @@ int main(int argc, char *argv[]) {
     });
 
   auto e = ecs.entity()
-    .set([](Position& p, Velocity& v) {
+    .insert([](Position& p, Velocity& v) {
       p = {10, 20};
       v = {1, 2};
     });

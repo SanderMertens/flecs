@@ -7,7 +7,7 @@ typedef struct {
 
 // System that deletes an entity after a timeout expires
 void Expire(ecs_iter_t *it) {
-    Timeout *t = ecs_field(it, Timeout, 1);
+    Timeout *t = ecs_field(it, Timeout, 0);
 
     for (int i = 0; i < it->count; i ++) {
         t[i].value -= (double)it->delta_time;
@@ -31,7 +31,7 @@ void Expire(ecs_iter_t *it) {
 
 // System that prints remaining expiry time
 void PrintExpire(ecs_iter_t *it) {
-    Timeout *t = ecs_field(it, Timeout, 1);
+    Timeout *t = ecs_field(it, Timeout, 0);
 
     for (int i = 0; i < it->count; i ++) {
         printf("PrintExpire: %s has %.2f seconds left\n", ecs_get_name(

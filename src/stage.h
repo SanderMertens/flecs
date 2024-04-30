@@ -6,16 +6,6 @@
 #ifndef FLECS_STAGE_H
 #define FLECS_STAGE_H
 
-/* Initialize stage data structures */
-void flecs_stage_init(
-    ecs_world_t *world,
-    ecs_stage_t *stage);
-
-/* Deinitialize stage */
-void flecs_stage_fini(
-    ecs_world_t *world,
-    ecs_stage_t *stage);
-
 /* Post-frame merge actions */
 void flecs_stage_merge_post_frame(
     ecs_world_t *world,
@@ -88,7 +78,8 @@ void* flecs_defer_set(
     ecs_entity_t entity,
     ecs_entity_t component,
     ecs_size_t size,
-    void *value);
+    void *value,
+    bool *is_new);
 
 bool flecs_defer_end(
     ecs_world_t *world,
@@ -112,5 +103,11 @@ void flecs_commands_pop(
 ecs_entity_t flecs_stage_set_system(
     ecs_stage_t *stage,
     ecs_entity_t system);
+
+ecs_allocator_t* flecs_stage_get_allocator(
+    ecs_world_t *world);
+
+ecs_stack_t* flecs_stage_get_stack_allocator(
+    ecs_world_t *world);
 
 #endif

@@ -252,10 +252,6 @@ ecs_id_record_t* flecs_id_record_new(
 
             idr_t = flecs_id_record_ensure(world, ecs_pair(EcsWildcard, tgt));
             flecs_insert_id_elem(world, idr, ecs_pair(EcsWildcard, tgt), idr_t);
-
-            if (rel == EcsUnion) {
-                idr->flags |= EcsIdUnion;
-            }
         }
     } else {
         rel = id & ECS_COMPONENT_MASK;
@@ -367,13 +363,13 @@ void flecs_id_record_free(
     ecs_world_t *world,
     ecs_id_record_t *idr)
 {
-    ecs_poly_assert(world, ecs_world_t);
+    flecs_poly_assert(world, ecs_world_t);
     ecs_assert(idr != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_id_t id = idr->id;
 
     flecs_id_record_assert_empty(idr);
 
-    /* Id is still in use by a filter, query, rule or observer */
+    /* Id is still in use by a query */
     ecs_assert((world->flags & EcsWorldQuit) || (idr->keep_alive == 0), 
         ECS_ID_IN_USE, "cannot delete id that is queried for");
 
@@ -456,7 +452,7 @@ ecs_id_record_t* flecs_id_record_get(
     const ecs_world_t *world,
     ecs_id_t id)
 {
-    ecs_poly_assert(world, ecs_world_t);
+    flecs_poly_assert(world, ecs_world_t);
     if (id == ecs_pair(EcsIsA, EcsWildcard)) {
         return world->idr_isa_wildcard;
     } else if (id == ecs_pair(EcsChildOf, EcsWildcard)) {
@@ -474,29 +470,6 @@ ecs_id_record_t* flecs_id_record_get(
         if (!idr->id) {
             idr = NULL;
         }
-    }
-
-    return idr;
-}
-
-ecs_id_record_t* flecs_query_id_record_get(
-    const ecs_world_t *world,
-    ecs_id_t id)
-{
-    ecs_id_record_t *idr = flecs_id_record_get(world, id);
-    if (!idr) {
-        ecs_entity_t first = ECS_PAIR_FIRST(id);
-        if (ECS_IS_PAIR(id) && (first != EcsWildcard)) {
-            idr = flecs_id_record_get(world, ecs_pair(EcsUnion, first));
-        }
-        return idr;
-    }
-    if (ECS_IS_PAIR(id) && 
-        ECS_PAIR_SECOND(id) == EcsWildcard && 
-        (idr->flags & EcsIdUnion)) 
-    {
-        idr = flecs_id_record_get(world, 
-            ecs_pair(EcsUnion, ECS_PAIR_FIRST(id)));
     }
 
     return idr;
@@ -537,7 +510,7 @@ void flecs_id_record_release_tables(
         ecs_table_record_t *tr;
         while ((tr = flecs_table_cache_next(&it, ecs_table_record_t))) {
             /* Release current table */
-            flecs_table_free(world, tr->hdr.table);
+            flecs_table_fini(world, tr->hdr.table);
         }
     }
 }
@@ -584,7 +557,7 @@ ecs_hashmap_t* flecs_id_name_index_ensure(
     ecs_world_t *world,
     ecs_id_t id)
 {
-    ecs_poly_assert(world, ecs_world_t);
+    flecs_poly_assert(world, ecs_world_t);
 
     ecs_id_record_t *idr = flecs_id_record_get(world, id);
     ecs_assert(idr != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -596,7 +569,7 @@ ecs_hashmap_t* flecs_id_name_index_get(
     const ecs_world_t *world,
     ecs_id_t id)
 {
-    ecs_poly_assert(world, ecs_world_t);
+    flecs_poly_assert(world, ecs_world_t);
 
     ecs_id_record_t *idr = flecs_id_record_get(world, id);
     if (!idr) {
@@ -611,7 +584,7 @@ ecs_table_record_t* flecs_table_record_get(
     const ecs_table_t *table,
     ecs_id_t id)
 {
-    ecs_poly_assert(world, ecs_world_t);
+    flecs_poly_assert(world, ecs_world_t);
 
     ecs_id_record_t* idr = flecs_id_record_get(world, id);
     if (!idr) {

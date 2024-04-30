@@ -7,8 +7,18 @@ void MultiThread_setup(void) {
     ecs_log_set_level(-3);
 }
 
+static
+void set_worker_kind(ecs_world_t *world, int32_t thread_count) {
+    const char *worker_kind = test_param("worker_kind");
+    if (!worker_kind || !strcmp(worker_kind, "thread")) {
+        ecs_set_threads(world, thread_count);
+    } else if (!strcmp(worker_kind, "task")) {
+        ecs_set_task_threads(world, thread_count);
+    }
+}
+
 void Progress(ecs_iter_t *it) {
-    Position *pos = ecs_field(it, Position, 1);
+    Position *pos = ecs_field(it, Position, 0);
     int row;
     for (row = 0; row < it->count; row ++) {
         Position *p = &pos[row];
@@ -38,11 +48,11 @@ void MultiThread_2_thread_10_entity(void) {
     ecs_entity_t *handles = ecs_os_alloca(sizeof(ecs_entity_t) * ENTITIES);
 
     for (i = 0; i < ENTITIES; i ++) {
-        handles[i] = ecs_new(world, Position);
+        handles[i] = ecs_new_w(world, Position);
         ecs_set(world, handles[i], Position, {0});
     }
 
-    ecs_set_threads(world, THREADS);
+    set_worker_kind(world, THREADS);
     ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
@@ -66,11 +76,11 @@ void MultiThread_2_thread_1_entity(void) {
     ecs_entity_t *handles = ecs_os_alloca(sizeof(ecs_entity_t) * ENTITIES);
 
     for (i = 0; i < ENTITIES; i ++) {
-        handles[i] = ecs_new(world, Position);
+        handles[i] = ecs_new_w(world, Position);
         ecs_set(world, handles[i], Position, {0});
     }
 
-    ecs_set_threads(world, THREADS);
+    set_worker_kind(world, THREADS);
     ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
@@ -93,11 +103,11 @@ void MultiThread_2_thread_2_entity(void) {
     ecs_entity_t *handles = ecs_os_alloca(sizeof(ecs_entity_t) * ENTITIES);
 
     for (i = 0; i < ENTITIES; i ++) {
-        handles[i] = ecs_new(world, Position);
+        handles[i] = ecs_new_w(world, Position);
         ecs_set(world, handles[i], Position, {0});
     }
 
-    ecs_set_threads(world, THREADS);
+    set_worker_kind(world, THREADS);
     ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
@@ -120,11 +130,11 @@ void MultiThread_2_thread_5_entity(void) {
     ecs_entity_t *handles = ecs_os_alloca(sizeof(ecs_entity_t) * ENTITIES);
 
     for (i = 0; i < ENTITIES; i ++) {
-        handles[i] = ecs_new(world, Position);
+        handles[i] = ecs_new_w(world, Position);
         ecs_set(world, handles[i], Position, {0});
     }
 
-    ecs_set_threads(world, THREADS);
+    set_worker_kind(world, THREADS);
     ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
@@ -148,11 +158,11 @@ void MultiThread_3_thread_10_entity(void) {
     ecs_entity_t *handles = ecs_os_alloca(sizeof(ecs_entity_t) * ENTITIES);
 
     for (i = 0; i < ENTITIES; i ++) {
-        handles[i] = ecs_new(world, Position);
+        handles[i] = ecs_new_w(world, Position);
         ecs_set(world, handles[i], Position, {0});
     }
 
-    ecs_set_threads(world, THREADS);
+    set_worker_kind(world, THREADS);
     ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
@@ -176,11 +186,11 @@ void MultiThread_3_thread_1_entity(void) {
     ecs_entity_t *handles = ecs_os_alloca(sizeof(ecs_entity_t) * ENTITIES);
 
     for (i = 0; i < ENTITIES; i ++) {
-        handles[i] = ecs_new(world, Position);
+        handles[i] = ecs_new_w(world, Position);
         ecs_set(world, handles[i], Position, {0});
     }
 
-    ecs_set_threads(world, THREADS);
+    set_worker_kind(world, THREADS);
     ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
@@ -204,11 +214,11 @@ void MultiThread_3_thread_2_entity(void) {
     ecs_entity_t *handles = ecs_os_alloca(sizeof(ecs_entity_t) * ENTITIES);
 
     for (i = 0; i < ENTITIES; i ++) {
-        handles[i] = ecs_new(world, Position);
+        handles[i] = ecs_new_w(world, Position);
         ecs_set(world, handles[i], Position, {0});
     }
 
-    ecs_set_threads(world, THREADS);
+    set_worker_kind(world, THREADS);
     ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
@@ -232,11 +242,11 @@ void MultiThread_3_thread_5_entity(void) {
     ecs_entity_t *handles = ecs_os_alloca(sizeof(ecs_entity_t) * ENTITIES);
 
     for (i = 0; i < ENTITIES; i ++) {
-        handles[i] = ecs_new(world, Position);
+        handles[i] = ecs_new_w(world, Position);
         ecs_set(world, handles[i], Position, {0});
     }
 
-    ecs_set_threads(world, THREADS);
+    set_worker_kind(world, THREADS);
     ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
@@ -260,11 +270,11 @@ void MultiThread_4_thread_10_entity(void) {
     ecs_entity_t *handles = ecs_os_alloca(sizeof(ecs_entity_t) * ENTITIES);
 
     for (i = 0; i < ENTITIES; i ++) {
-        handles[i] = ecs_new(world, Position);
+        handles[i] = ecs_new_w(world, Position);
         ecs_set(world, handles[i], Position, {0});
     }
 
-    ecs_set_threads(world, THREADS);
+    set_worker_kind(world, THREADS);
     ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
@@ -288,11 +298,11 @@ void MultiThread_4_thread_1_entity(void) {
     ecs_entity_t *handles = ecs_os_alloca(sizeof(ecs_entity_t) * ENTITIES);
 
     for (i = 0; i < ENTITIES; i ++) {
-        handles[i] = ecs_new(world, Position);
+        handles[i] = ecs_new_w(world, Position);
         ecs_set(world, handles[i], Position, {0});
     }
 
-    ecs_set_threads(world, THREADS);
+    set_worker_kind(world, THREADS);
     ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
@@ -316,11 +326,11 @@ void MultiThread_4_thread_2_entity(void) {
     ecs_entity_t *handles = ecs_os_alloca(sizeof(ecs_entity_t) * ENTITIES);
 
     for (i = 0; i < ENTITIES; i ++) {
-        handles[i] = ecs_new(world, Position);
+        handles[i] = ecs_new_w(world, Position);
         ecs_set(world, handles[i], Position, {0});
     }
 
-    ecs_set_threads(world, THREADS);
+    set_worker_kind(world, THREADS);
     ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
@@ -344,11 +354,11 @@ void MultiThread_4_thread_5_entity(void) {
     ecs_entity_t *handles = ecs_os_alloca(sizeof(ecs_entity_t) * ENTITIES);
 
     for (i = 0; i < ENTITIES; i ++) {
-        handles[i] = ecs_new(world, Position);
+        handles[i] = ecs_new_w(world, Position);
         ecs_set(world, handles[i], Position, {0});
     }
 
-    ecs_set_threads(world, THREADS);
+    set_worker_kind(world, THREADS);
     ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
@@ -372,11 +382,11 @@ void MultiThread_5_thread_10_entity(void) {
     ecs_entity_t *handles = ecs_os_alloca(sizeof(ecs_entity_t) * ENTITIES);
 
     for (i = 0; i < ENTITIES; i ++) {
-        handles[i] = ecs_new(world, Position);
+        handles[i] = ecs_new_w(world, Position);
         ecs_set(world, handles[i], Position, {0});
     }
 
-    ecs_set_threads(world, THREADS);
+    set_worker_kind(world, THREADS);
     ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
@@ -400,11 +410,11 @@ void MultiThread_5_thread_1_entity(void) {
     ecs_entity_t *handles = ecs_os_alloca(sizeof(ecs_entity_t) * ENTITIES);
 
     for (i = 0; i < ENTITIES; i ++) {
-        handles[i] = ecs_new(world, Position);
+        handles[i] = ecs_new_w(world, Position);
         ecs_set(world, handles[i], Position, {0});
     }
 
-    ecs_set_threads(world, THREADS);
+    set_worker_kind(world, THREADS);
     ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
@@ -428,11 +438,11 @@ void MultiThread_5_thread_2_entity(void) {
     ecs_entity_t *handles = ecs_os_alloca(sizeof(ecs_entity_t) * ENTITIES);
 
     for (i = 0; i < ENTITIES; i ++) {
-        handles[i] = ecs_new(world, Position);
+        handles[i] = ecs_new_w(world, Position);
         ecs_set(world, handles[i], Position, {0});
     }
 
-    ecs_set_threads(world, THREADS);
+    set_worker_kind(world, THREADS);
     ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
@@ -456,11 +466,11 @@ void MultiThread_5_thread_5_entity(void) {
     ecs_entity_t *handles = ecs_os_alloca(sizeof(ecs_entity_t) * ENTITIES);
 
     for (i = 0; i < ENTITIES; i ++) {
-        handles[i] = ecs_new(world, Position);
+        handles[i] = ecs_new_w(world, Position);
         ecs_set(world, handles[i], Position, {0});
     }
 
-    ecs_set_threads(world, THREADS);
+    set_worker_kind(world, THREADS);
     ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
@@ -484,11 +494,11 @@ void MultiThread_6_thread_10_entity(void) {
     ecs_entity_t *handles = ecs_os_alloca(sizeof(ecs_entity_t) * ENTITIES);
 
     for (i = 0; i < ENTITIES; i ++) {
-        handles[i] = ecs_new(world, Position);
+        handles[i] = ecs_new_w(world, Position);
         ecs_set(world, handles[i], Position, {0});
     }
 
-    ecs_set_threads(world, THREADS);
+    set_worker_kind(world, THREADS);
     ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
@@ -512,11 +522,11 @@ void MultiThread_6_thread_1_entity(void) {
     ecs_entity_t *handles = ecs_os_alloca(sizeof(ecs_entity_t) * ENTITIES);
 
     for (i = 0; i < ENTITIES; i ++) {
-        handles[i] = ecs_new(world, Position);
+        handles[i] = ecs_new_w(world, Position);
         ecs_set(world, handles[i], Position, {0});
     }
 
-    ecs_set_threads(world, THREADS);
+    set_worker_kind(world, THREADS);
     ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
@@ -540,11 +550,11 @@ void MultiThread_6_thread_2_entity(void) {
     ecs_entity_t *handles = ecs_os_alloca(sizeof(ecs_entity_t) * ENTITIES);
 
     for (i = 0; i < ENTITIES; i ++) {
-        handles[i] = ecs_new(world, Position);
+        handles[i] = ecs_new_w(world, Position);
         ecs_set(world, handles[i], Position, {0});
     }
 
-    ecs_set_threads(world, THREADS);
+    set_worker_kind(world, THREADS);
     ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
@@ -567,11 +577,11 @@ void MultiThread_6_thread_5_entity(void) {
     ecs_entity_t *handles = ecs_os_alloca(sizeof(ecs_entity_t) * ENTITIES);
 
     for (i = 0; i < ENTITIES; i ++) {
-        handles[i] = ecs_new(world, Position);
+        handles[i] = ecs_new_w(world, Position);
         ecs_set(world, handles[i], Position, {0});
     }
 
-    ecs_set_threads(world, THREADS);
+    set_worker_kind(world, THREADS);
     ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
@@ -592,11 +602,11 @@ void MultiThread_2_thread_1_entity_instanced(void) {
     ECS_COMPONENT_DEFINE(world, Position);
 
     ecs_entity_t s = ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, {.add = {ecs_dependson(EcsOnUpdate)}}),
+        .entity = ecs_entity(world, {.add = ecs_ids(ecs_dependson(EcsOnUpdate))}),
         .callback = Progress,
-        .query.filter = {
+        .query = {
             .expr = "Position",
-            .instanced = true
+            .flags = EcsQueryIsInstanced
         },
         .multi_threaded = true
     });
@@ -606,11 +616,11 @@ void MultiThread_2_thread_1_entity_instanced(void) {
     ecs_entity_t *handles = ecs_os_alloca(sizeof(ecs_entity_t) * ENTITIES);
 
     for (i = 0; i < ENTITIES; i ++) {
-        handles[i] = ecs_new(world, Position);
+        handles[i] = ecs_new_w(world, Position);
         ecs_set(world, handles[i], Position, {0});
     }
 
-    ecs_set_threads(world, THREADS);
+    set_worker_kind(world, THREADS);
     ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
@@ -631,11 +641,11 @@ void MultiThread_2_thread_5_entity_instanced(void) {
     ECS_COMPONENT_DEFINE(world, Position);
 
     ecs_entity_t s = ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, {.add = {ecs_dependson(EcsOnUpdate)}}),
+        .entity = ecs_entity(world, {.add = ecs_ids(ecs_dependson(EcsOnUpdate))}),
         .callback = Progress,
-        .query.filter = {
+        .query = {
             .expr = "Position",
-            .instanced = true
+            .flags = EcsQueryIsInstanced
         },
         .multi_threaded = true
     });
@@ -645,11 +655,11 @@ void MultiThread_2_thread_5_entity_instanced(void) {
     ecs_entity_t *handles = ecs_os_alloca(sizeof(ecs_entity_t) * ENTITIES);
 
     for (i = 0; i < ENTITIES; i ++) {
-        handles[i] = ecs_new(world, Position);
+        handles[i] = ecs_new_w(world, Position);
         ecs_set(world, handles[i], Position, {0});
     }
 
-    ecs_set_threads(world, THREADS);
+    set_worker_kind(world, THREADS);
     ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
@@ -670,11 +680,11 @@ void MultiThread_2_thread_10_entity_instanced(void) {
     ECS_COMPONENT_DEFINE(world, Position);
 
     ecs_entity_t s = ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, {.add = {ecs_dependson(EcsOnUpdate)}}),
+        .entity = ecs_entity(world, {.add = ecs_ids(ecs_dependson(EcsOnUpdate))}),
         .callback = Progress,
-        .query.filter = {
+        .query = {
             .expr = "Position",
-            .instanced = true
+            .flags = EcsQueryIsInstanced
         },
         .multi_threaded = true
     });
@@ -684,11 +694,11 @@ void MultiThread_2_thread_10_entity_instanced(void) {
     ecs_entity_t *handles = ecs_os_alloca(sizeof(ecs_entity_t) * ENTITIES);
 
     for (i = 0; i < ENTITIES; i ++) {
-        handles[i] = ecs_new(world, Position);
+        handles[i] = ecs_new_w(world, Position);
         ecs_set(world, handles[i], Position, {0});
     }
 
-    ecs_set_threads(world, THREADS);
+    set_worker_kind(world, THREADS);
     ecs_progress(world, 0);
 
     for (i = 0; i < ENTITIES; i ++) {
@@ -709,27 +719,29 @@ typedef struct Param {
     int count;
 } Param;
 
-static
-void TestSubset(ecs_iter_t *it) {
-    Param *param = it->param;
+static ECS_QUERY_DECLARE(qTestSubset);
 
-    int i;
-    for (i = 0; i < it->count; i ++) {
-        test_assert(param->entity != it->entities[i]);
-        param->count ++;
-    }    
+static
+void TestSubset(ecs_world_t *world, ecs_query_t *q, int32_t offset, int32_t count, Param *param) {
+    ecs_iter_t it = ecs_query_iter(world, q);
+    ecs_iter_t pit = ecs_page_iter(&it, offset, count);
+    while (ecs_page_next(&pit)) {
+        int i;
+        for (i = 0; i < pit.count; i ++) {
+            test_assert(param->entity != pit.entities[i]);
+            param->count ++;
+        }
+    }
 }
 
 static
 void TestAll(ecs_iter_t *it) {
-    Position *p = ecs_field(it, Position, 1);
-
-    ecs_entity_t TestSubset = ecs_field_id(it, 2);
+    Position *p = ecs_field(it, Position, 0);
 
     int i;
     for (i = 0; i < it->count; i ++) {
         Param param = {.entity = it->entities[i], 0};
-        ecs_run_w_filter(it->world, TestSubset, 1, it->frame_offset + i + 1, 0, &param);
+        TestSubset(it->world, qTestSubset, it->frame_offset + i + 1, 0, &param);
         p[i].x += param.count;
     }
 }
@@ -740,8 +752,8 @@ void test_combs_100_entity(int THREADS) {
 
     ECS_COMPONENT_DEFINE(world, Position);
 
-    ECS_SYSTEM(world, TestSubset, 0, Position);
-    ECS_SYSTEM(world, TestAll, EcsOnUpdate, Position, TestSubset());
+    ECS_QUERY_DEFINE(world, qTestSubset, Position);
+    ECS_SYSTEM(world, TestAll, EcsOnUpdate, Position);
 
     ecs_system_init(world, &(ecs_system_desc_t){
         .entity = TestAll,
@@ -756,7 +768,7 @@ void test_combs_100_entity(int THREADS) {
         ecs_set(world, ids[i], Position, {1, 2});
     }
 
-    ecs_set_threads(world, THREADS);
+    set_worker_kind(world, THREADS);
 
     ecs_progress(world, 0);
 
@@ -773,9 +785,9 @@ void MultiThread_2_thread_test_combs_100_entity_w_next_worker(void) {
 
     ECS_COMPONENT_DEFINE(world, Position);
 
-    ECS_SYSTEM(world, TestSubset, 0, Position);
+    ECS_QUERY_DEFINE(world, qTestSubset, Position);
 
-    ecs_query_t *q = ecs_query_new(world, "Position, TestSubset()");
+    ecs_query_t *q = ecs_query(world, { .expr = "Position" });
 
     int i, ENTITIES = 100;
 
@@ -801,6 +813,8 @@ void MultiThread_2_thread_test_combs_100_entity_w_next_worker(void) {
         const Position *p = ecs_get(world, ids[i], Position);
         test_int(p->x, ENTITIES - i);
     }
+
+    ecs_query_fini(q);
 
     ecs_fini(world); 
 }
@@ -833,8 +847,8 @@ void test_combs_100_entity_2_types(int THREADS) {
     ECS_COMPONENT(world, Velocity);
     ECS_PREFAB(world, Type, Position, Velocity);
 
-    ECS_SYSTEM(world, TestSubset, 0, Position);
-    ECS_SYSTEM(world, TestAll, EcsOnUpdate, Position, TestSubset());
+    ECS_QUERY_DEFINE(world, qTestSubset, Position);
+    ECS_SYSTEM(world, TestAll, EcsOnUpdate, Position);
 
     ecs_system_init(world, &(ecs_system_desc_t){
         .entity = TestAll,
@@ -853,7 +867,7 @@ void test_combs_100_entity_2_types(int THREADS) {
         ecs_set(world, ids_2[i], Position, {1, 2});
     }
 
-    ecs_set_threads(world, THREADS);
+    set_worker_kind(world, THREADS);
 
     ecs_progress(world, 0);
 
@@ -895,8 +909,8 @@ void MultiThread_change_thread_count(void) {
     ECS_COMPONENT(world, Velocity);
     ECS_PREFAB(world, Type, Position, Velocity);
 
-    ECS_SYSTEM(world, TestSubset, 0, Position);
-    ECS_SYSTEM(world, TestAll, EcsOnUpdate, Position, TestSubset());
+    ECS_QUERY_DEFINE(world, qTestSubset, Position);
+    ECS_SYSTEM(world, TestAll, EcsOnUpdate, Position);
 
     ecs_system_init(world, &(ecs_system_desc_t){
         .entity = TestAll,
@@ -915,7 +929,7 @@ void MultiThread_change_thread_count(void) {
         ecs_set(world, ids_2[i], Position, {1, 2});
     }
 
-    ecs_set_threads(world, 2);
+    set_worker_kind(world, 2);
 
     ecs_progress(world, 0);
 
@@ -929,7 +943,7 @@ void MultiThread_change_thread_count(void) {
         p->x = 1;
     }
 
-    ecs_set_threads(world, 3);
+    set_worker_kind(world, 3);
 
     ecs_progress(world, 0);
 
@@ -963,7 +977,7 @@ void MultiThread_multithread_quit(void) {
 
     ecs_bulk_new(world, Position, 100);
 
-    ecs_set_threads(world, 2);
+    set_worker_kind(world, 2);
 
     test_assert( ecs_progress(world, 0) == 0);
 
@@ -987,7 +1001,7 @@ void MultiThread_schedule_w_tasks(void) {
         .multi_threaded = true
     });
 
-    ecs_set_threads(world, 2);
+    set_worker_kind(world, 2);
 
     test_assert( ecs_progress(world, 0) != 0);
 
@@ -1003,7 +1017,7 @@ void ReactiveDummySystem(ecs_iter_t * it) {
 
 static
 void PeriodicDummySystem(ecs_iter_t * it) {
-    ecs_id_t ecs_id(Position) = ecs_field_id(it, 1);
+    ecs_id_t ecs_id(Position) = ecs_field_id(it, 0);
     
     int i;
     for (i = 0; i < it->count; i++ ) {
@@ -1024,7 +1038,7 @@ void MultiThread_reactive_system(void) {
     });
 
     ecs_bulk_new(world, Position, 2);
-    ecs_set_threads(world, 2);
+    set_worker_kind(world, 2);
 
     test_assert(has_ran == false);
 
@@ -1038,7 +1052,7 @@ void MultiThread_reactive_system(void) {
 void MultiThread_fini_after_set_threads(void) {
     ecs_world_t * world = ecs_init();
 
-    ecs_set_threads(world, 2);
+    set_worker_kind(world, 2);
 
     ecs_fini(world);
 
@@ -1048,7 +1062,7 @@ void MultiThread_fini_after_set_threads(void) {
 
 static
 void SingleThreadedSystem(ecs_iter_t * it) {
-    Position *p = ecs_field(it, Position, 1);
+    Position *p = ecs_field(it, Position, 0);
     
     int i;
     for (i = 0; i < it->count; i++ ) {
@@ -1068,10 +1082,10 @@ void MultiThread_2_threads_single_threaded_system(void) {
         .multi_threaded = false
     });
 
-    ecs_entity_t e1 = ecs_set(world, 0, Position, {10, 20});
-    ecs_entity_t e2 = ecs_set(world, 0, Position, {20, 30});
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Position, {10, 20}));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Position, {20, 30}));
 
-    ecs_set_threads(world, 2);
+    set_worker_kind(world, 2);
 
     ecs_progress(world, 0);
 
@@ -1092,7 +1106,8 @@ static int create_query_invoked = 0;
 
 static
 void CreateQuery(ecs_iter_t *it) {
-    ecs_query_new(it->world, "0");
+    ecs_query_t *q = ecs_query(it->world, { .expr = "0" });
+    ecs_query_fini(q);
     create_query_invoked ++;
 }
 
@@ -1100,12 +1115,12 @@ void MultiThread_no_staging_w_multithread(void) {
     for (int i = 0; i < 10; i ++) {
         ecs_world_t *world = ecs_init();
 
-        ecs_set_threads(world, 32);
+        set_worker_kind(world, 32);
 
         ecs_system_init(world, &(ecs_system_desc_t){
             .callback = CreateQuery,
-            .no_readonly = true,
-            .entity = ecs_entity(world, {.add = {ecs_dependson(EcsOnUpdate)}})
+            .immediate = true,
+            .entity = ecs_entity(world, {.add = ecs_ids(ecs_dependson(EcsOnUpdate))})
         });
 
         create_query_invoked = 0;
@@ -1121,7 +1136,7 @@ void MultiThread_no_staging_w_multithread(void) {
 void MultiThread_multithread_w_monitor_addon(void) {
     ecs_world_t *world = ecs_init();
     ECS_IMPORT(world, FlecsMonitor);
-    ecs_set_threads(world, 4);
+    set_worker_kind(world, 4);
     ecs_progress(world, 0);
     ecs_fini(world);
 
@@ -1162,10 +1177,10 @@ void System_run_w_binding_ctx(ecs_iter_t *it) {
 void MultiThread_get_ctx(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_set_threads(world, 2);
+    set_worker_kind(world, 2);
 
     ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, { .add = { ecs_dependson(EcsOnUpdate) } }),
+        .entity = ecs_entity(world, { .add = ecs_ids( ecs_dependson(EcsOnUpdate) ) }),
         .callback = System_w_ctx,
         .multi_threaded = true,
         .ctx = &system_ctx
@@ -1181,10 +1196,10 @@ void MultiThread_get_ctx(void) {
 void MultiThread_get_binding_ctx(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_set_threads(world, 2);
+    set_worker_kind(world, 2);
 
     ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, { .add = { ecs_dependson(EcsOnUpdate) } }),
+        .entity = ecs_entity(world, { .add = ecs_ids( ecs_dependson(EcsOnUpdate) ) }),
         .callback = System_w_binding_ctx,
         .multi_threaded = true,
         .binding_ctx = &system_ctx
@@ -1200,10 +1215,10 @@ void MultiThread_get_binding_ctx(void) {
 void MultiThread_get_ctx_w_run(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_set_threads(world, 2);
+    set_worker_kind(world, 2);
 
     ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, { .add = { ecs_dependson(EcsOnUpdate) } }),
+        .entity = ecs_entity(world, { .add = ecs_ids( ecs_dependson(EcsOnUpdate) ) }),
         .run = System_run_w_ctx,
         .multi_threaded = true,
         .ctx = &system_ctx
@@ -1219,10 +1234,10 @@ void MultiThread_get_ctx_w_run(void) {
 void MultiThread_get_binding_ctx_w_run(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_set_threads(world, 2);
+    set_worker_kind(world, 2);
 
     ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, { .add = { ecs_dependson(EcsOnUpdate) } }),
+        .entity = ecs_entity(world, { .add = ecs_ids( ecs_dependson(EcsOnUpdate) ) }),
         .run = System_run_w_binding_ctx,
         .multi_threaded = true,
         .binding_ctx = &system_ctx
@@ -1250,18 +1265,18 @@ void MultiThread_bulk_new_in_no_readonly_w_multithread(void) {
     ECS_TAG_DEFINE(world, Tag);
 
     ecs_system(world, {
-        .entity = ecs_entity(world, { .add = { ecs_dependson(EcsOnUpdate) }}),
-        .no_readonly = true,
+        .entity = ecs_entity(world, { .add = ecs_ids( ecs_dependson(EcsOnUpdate) )}),
+        .immediate = true,
         .callback = sys_bulk_init
     });
 
     ecs_system(world, {
-        .entity = ecs_entity(world, { .add = { ecs_dependson(EcsOnUpdate) }}),
+        .entity = ecs_entity(world, { .add = ecs_ids( ecs_dependson(EcsOnUpdate) )}),
         .multi_threaded = true,
         .callback = sys
     });
 
-    ecs_set_threads(world, 80);
+    set_worker_kind(world, 80);
 
     for (int i = 0; i < 100; i ++) {
         ecs_progress(world, 0);
@@ -1287,32 +1302,32 @@ void MultiThread_bulk_new_in_no_readonly_w_multithread_2(void) {
 
     ECS_COMPONENT_DEFINE(world, Position);
 
-    ecs_set_threads(world, 64);
+    set_worker_kind(world, 64);
 
     ecs_system(world, {
         .entity = ecs_entity(world, {
-            .add = { ecs_dependson(EcsOnUpdate) }
+            .add = ecs_ids( ecs_dependson(EcsOnUpdate) )
         }),
-        .query.filter.terms = {{ ecs_id(Position) }},
+        .query.terms = {{ ecs_id(Position) }},
         .callback = sys
     });
 
     ecs_query_t *q = ecs_query(world, {
-        .filter.terms = {{ ecs_id(Position) }}
+        .terms = {{ ecs_id(Position) }}
     });
 
     ecs_system(world, {
         .entity = ecs_entity(world, {
-            .add = { ecs_dependson(EcsOnUpdate) }
+            .add = ecs_ids( ecs_dependson(EcsOnUpdate) )
         }),
         .callback = sys_bulk_init_2,
-        .no_readonly = true,
+        .immediate = true,
         .ctx = q
     });
 
     ecs_system(world, {
         .entity = ecs_entity(world, {
-            .add = { ecs_dependson(EcsOnUpdate) }
+            .add = ecs_ids( ecs_dependson(EcsOnUpdate) )
         }),
         .callback = sys
     });
@@ -1320,6 +1335,8 @@ void MultiThread_bulk_new_in_no_readonly_w_multithread_2(void) {
     ecs_progress(world, 0);
 
     test_int(ecs_count(world, Position), 1);
+
+    ecs_query_fini(q);
 
     ecs_fini(world);
 }
@@ -1329,7 +1346,7 @@ static int invoked_count = 0;
 static int invoked_main_count = 0;
 
 static void dummy(ecs_iter_t *it) {
-    int stage_id = ecs_get_stage_id(it->world);
+    int stage_id = ecs_stage_get_id(it->world);
 
     if (stage_id == 0) {
         test_assert(main_thread == ecs_os_thread_self());
@@ -1345,12 +1362,12 @@ void MultiThread_run_first_worker_on_main(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_system(world, {
-        .entity = ecs_entity(world, { .add = { ecs_dependson(EcsOnUpdate) }}),
+        .entity = ecs_entity(world, { .add = ecs_ids( ecs_dependson(EcsOnUpdate) )}),
         .multi_threaded = true,
         .callback = dummy
     });
 
-    ecs_set_threads(world, 3);
+    set_worker_kind(world, 3);
 
     main_thread = ecs_os_thread_self();
 
@@ -1366,12 +1383,12 @@ void MultiThread_run_single_thread_on_main(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_system(world, {
-        .entity = ecs_entity(world, { .add = { ecs_dependson(EcsOnUpdate) }}),
+        .entity = ecs_entity(world, { .add = ecs_ids( ecs_dependson(EcsOnUpdate) )}),
         .multi_threaded = false,
         .callback = dummy
     });
 
-    ecs_set_threads(world, 3);
+    set_worker_kind(world, 3);
 
     main_thread = ecs_os_thread_self();
 

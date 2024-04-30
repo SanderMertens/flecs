@@ -11,7 +11,7 @@ void meta_test_enum(
     test_int(ct->size, ECS_SIZEOF(ecs_i32_t));
     test_int(ct->alignment, ECS_ALIGNOF(ecs_i32_t));
 
-    const EcsMetaType *mt = ecs_get(world, t, EcsMetaType);
+    const EcsType *mt = ecs_get(world, t, EcsType);
     test_assert(mt != NULL);
     test_assert(mt->kind == EcsEnumType);
 
@@ -48,7 +48,7 @@ void meta_test_constant(
         if (!ecs_os_strcmp(c->name, name)) {
             test_int(c->value, value);
 
-            const ecs_i32_t *vptr = ecs_get_pair_object(world, c->constant, 
+            const ecs_i32_t *vptr = ecs_get_pair_second(world, c->constant, 
                 EcsConstant, ecs_i32_t);
             if (vptr) {
                 test_int(*vptr, value);
@@ -183,7 +183,7 @@ void EnumTypes_zero_initialized(void) {
     test_assert(e != 0);
     test_assert(ecs_has(world, e, EcsComponent));
 
-    ecs_entity_t ent = ecs_new_id(world);
+    ecs_entity_t ent = ecs_new(world);
     ecs_add_id(world, ent, e);
 
     const int32_t *ptr = ecs_get_id(world, ent, e);
@@ -209,7 +209,7 @@ void EnumTypes_enum_relation(void) {
     test_assert(e != 0);
     test_assert(ecs_has(world, e, EcsComponent));
     test_assert(ecs_has_id(world, e, EcsExclusive));
-    test_assert(ecs_has_id(world, e, EcsTag));
+    test_assert(ecs_has_id(world, e, EcsPairIsTag));
 
     ecs_entity_t red = ecs_lookup_child(world, e, "Red");
     ecs_entity_t green = ecs_lookup_child(world, e, "Green");
@@ -221,7 +221,7 @@ void EnumTypes_enum_relation(void) {
 
     test_assert(ecs_get_typeid(world, ecs_pair(e, red)) == 0);
 
-    ecs_entity_t ent = ecs_new_id(world);
+    ecs_entity_t ent = ecs_new(world);
     ecs_add_pair(world, ent, e, red);
     test_assert( ecs_has_pair(world, ent, e, red));
 

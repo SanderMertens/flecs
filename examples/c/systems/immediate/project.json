@@ -1,0 +1,10 @@
+{
+    "id": "immediate",
+    "type": "application",
+    "value": {
+        "use": [
+            "flecs"
+        ],
+        "public": false
+    }
+}
