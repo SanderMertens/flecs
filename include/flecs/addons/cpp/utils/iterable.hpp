@@ -129,6 +129,25 @@ struct iterable {
         return this->iter().first();
     }
 
+    iter_iterable<Components...> set_var(int var_id, flecs::entity_t value) {
+        return this->iter().set_var(var_id, value);
+    }
+
+    iter_iterable<Components...> set_var(const char *name, flecs::entity_t value) {
+        return this->iter().set_var(name, value);
+    }
+
+    // Limit results to tables with specified group id (grouped queries only)
+    iter_iterable<Components...> set_group(uint64_t group_id) {
+        return this->iter().set_group(group_id);
+    }
+
+    // Limit results to tables with specified group id (grouped queries only)
+    template <typename Group>
+    iter_iterable<Components...> set_group() {
+        return this->iter().template set_group<Group>();
+    }
+
     virtual ~iterable() { }
 protected:
     friend iter_iterable<Components...>;
@@ -177,6 +196,8 @@ struct iter_iterable final : iterable<Components...> {
         it_ = it->get_iter(world);
         next_ = it->next_action();
         next_each_ = it->next_action();
+        ecs_assert(next_ != nullptr, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(next_each_ != nullptr, ECS_INTERNAL_ERROR, NULL);
     }
 
     iter_iterable<Components...>& set_var(int var_id, flecs::entity_t value) {

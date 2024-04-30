@@ -456,7 +456,6 @@ void QueryBuilder_set_var(void) {
         });
 
     test_int(count, 1);
-
 }
 
 void QueryBuilder_set_2_vars(void) {
@@ -575,6 +574,69 @@ void QueryBuilder_set_2_vars_by_name(void) {
         });
     test_int(count, 1);
 
+}
+
+void QueryBuilder_set_var_on_query(void) {
+    flecs::world ecs;
+
+    struct Likes { };
+    auto Apples = ecs.entity();
+    auto Pears = ecs.entity();
+
+    ecs.entity()
+        .add<Likes>(Apples);
+
+    auto e2 = ecs.entity()
+        .add<Likes>(Pears);
+
+    auto r = ecs.query_builder()
+        .with<Likes>().second().var("Food")
+        .cache_kind(cache_kind)
+        .build();
+
+    int food_var = r.find_var("Food");
+
+    int count = 0;
+    r.set_var(food_var, Pears)
+     .each([&](flecs::iter& it, size_t index) {
+         test_assert(it.entity(index) == e2);
+         test_assert((it.id(0) == ecs.pair<Likes>(Pears)));
+         test_assert(it.get_var("Food") == Pears);
+         test_assert(it.get_var(food_var) == Pears);
+         count ++;
+     });
+
+    test_int(count, 1);
+}
+
+void QueryBuilder_set_var_by_name_on_query(void) {
+    flecs::world ecs;
+
+    struct Likes { };
+    auto Apples = ecs.entity();
+    auto Pears = ecs.entity();
+
+    ecs.entity()
+        .add<Likes>(Apples);
+
+    auto e2 = ecs.entity()
+        .add<Likes>(Pears);
+
+    auto r = ecs.query_builder()
+        .with<Likes>().second().var("Food")
+        .cache_kind(cache_kind)
+        .build();
+
+    int count = 0;
+    r.set_var("Food", Pears)
+     .each([&](flecs::iter& it, size_t index) {
+         test_assert(it.entity(index) == e2);
+         test_assert((it.id(0) == ecs.pair<Likes>(Pears)));
+         test_assert(it.get_var("Food") == Pears);
+         count ++;
+     });
+
+    test_int(count, 1);
 }
 
 void QueryBuilder_expr_w_var(void) {
@@ -2236,6 +2298,87 @@ void QueryBuilder_group_by_callbacks(void) {
     test_bool(true, e1_found);
     test_bool(true, e2_found);
     test_bool(true, e3_found);
+}
+
+void QueryBuilder_set_group_on_query(void) {
+    flecs::world ecs;
+
+    auto Rel = ecs.entity();
+    auto TgtA = ecs.entity();
+    auto TgtB = ecs.entity();
+    auto TgtC = ecs.entity();
+    auto Tag = ecs.entity();
+
+    ecs.entity().add(Rel, TgtA);
+    auto e2 = ecs.entity().add(Rel, TgtB);
+    ecs.entity().add(Rel, TgtC);
+
+    ecs.entity().add(Rel, TgtA).add(Tag);
+    auto e5 = ecs.entity().add(Rel, TgtB).add(Tag);
+    ecs.entity().add(Rel, TgtC).add(Tag);
+
+    auto q = ecs.query_builder()
+        .with(Rel, flecs::Wildcard)
+        .group_by(Rel, group_by_rel)
+        .build();
+
+    bool e2_found = false;
+    bool e5_found = false;
+    int32_t count = 0;
+
+    q.set_group(TgtB).each([&](flecs::iter& it, size_t i) {
+        flecs::entity e = it.entity(i);
+        test_assert(it.group_id() == TgtB);
+
+        if (e == e2) e2_found = true;
+        if (e == e5) e5_found = true;
+        count ++;
+    });
+
+    test_int(2, count);
+    test_bool(true, e2_found);
+    test_bool(true, e5_found);
+}
+
+void QueryBuilder_set_group_type_on_query(void) {
+    flecs::world ecs;
+
+    struct Rel { };
+    struct TgtA { };
+    struct TgtB { };
+    struct TgtC { };
+
+    auto Tag = ecs.entity();
+
+    ecs.entity().add<Rel, TgtA>();
+    auto e2 = ecs.entity().add<Rel, TgtB>();
+    ecs.entity().add<Rel, TgtC>();
+
+    ecs.entity().add<Rel, TgtA>().add(Tag);
+    auto e5 = ecs.entity().add<Rel, TgtB>().add(Tag);
+    ecs.entity().add<Rel, TgtC>().add(Tag);
+
+    auto q = ecs.query_builder()
+        .with<Rel>(flecs::Wildcard)
+        .group_by<Rel>(group_by_rel)
+        .build();
+
+    bool e2_found = false;
+    bool e5_found = false;
+    int32_t count = 0;
+
+    q.set_group<TgtB>().each([&](flecs::iter& it, size_t i) {
+        flecs::entity e = it.entity(i);
+        test_assert(it.group_id() == ecs.id<TgtB>());
+
+        if (e == e2) e2_found = true;
+        if (e == e5) e5_found = true;
+        count ++;
+    });
+
+    test_int(2, count);
+    test_bool(true, e2_found);
+    test_bool(true, e5_found);
 }
 
 void QueryBuilder_create_w_no_template_args(void) {
