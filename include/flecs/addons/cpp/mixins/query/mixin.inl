@@ -17,6 +17,12 @@
 template <typename... Comps, typename... Args>
 flecs::query<Comps...> query(Args &&... args) const;
 
+/** Create a query from entity.
+ * 
+ * @see ecs_query_init
+ */
+flecs::query<> query(flecs::entity query_entity) const;
+
 /** Create a query builder.
  * 
  * @see ecs_query_init

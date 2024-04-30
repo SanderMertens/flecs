@@ -609,6 +609,8 @@ void Query_find(void);
 void Query_find_not_found(void);
 void Query_find_w_entity(void);
 void Query_optional_pair_term(void);
+void Query_query_from_entity(void);
+void Query_query_from_entity_name(void);
 
 // Testsuite 'QueryBuilder'
 void QueryBuilder_setup(void);
@@ -3630,6 +3632,14 @@ bake_test_case Query_testcases[] = {
     {
         "optional_pair_term",
         Query_optional_pair_term
+    },
+    {
+        "query_from_entity",
+        Query_query_from_entity
+    },
+    {
+        "query_from_entity_name",
+        Query_query_from_entity_name
     }
 };
 
@@ -6261,7 +6271,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        101,
+        103,
         Query_testcases
     },
     {

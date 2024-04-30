@@ -630,7 +630,9 @@
                 "find",
                 "find_not_found",
                 "find_w_entity",
-                "optional_pair_term"
+                "optional_pair_term",
+                "query_from_entity",
+                "query_from_entity_name"
             ]
         }, {
             "id": "QueryBuilder",

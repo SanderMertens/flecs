@@ -24,6 +24,16 @@ struct query_base {
         }
 
     query_base(world_t *world, ecs_query_desc_t *desc) {
+        if (desc->entity && desc->terms[0].id == 0) {
+            const flecs::Poly *query_poly = ecs_get_pair(
+                world, desc->entity, EcsPoly, EcsQuery);
+            if (query_poly) {
+                query_ = static_cast<flecs::query_t*>(query_poly->poly);
+                flecs_poly_claim(query_);
+                return;
+            }
+        }
+
         query_ = ecs_query_init(world, desc);
     }
 
@@ -213,6 +223,12 @@ template <typename... Comps, typename... Args>
 inline flecs::query<Comps...> world::query(Args &&... args) const {
     return flecs::query_builder<Comps...>(world_, FLECS_FWD(args)...)
         .build();
+}
+
+inline flecs::query<> world::query(flecs::entity query_entity) const {
+    ecs_query_desc_t desc = {};
+    desc.entity = query_entity;
+    return flecs::query<>(world_, &desc);
 }
 
 template <typename... Comps, typename... Args>

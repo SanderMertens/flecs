@@ -22,6 +22,13 @@ namespace _ {
  */
 template <typename ... Components>
 struct query_builder final : _::query_builder_base<Components...> {
+    query_builder(flecs::world_t* world, flecs::entity query_entity)
+        : _::query_builder_base<Components...>(world)
+    {
+        _::sig<Components...>(world).populate(this);
+        this->desc_.entity = query_entity.id();
+    }
+
     query_builder(flecs::world_t* world, const char *name = nullptr)
         : _::query_builder_base<Components...>(world)
     {

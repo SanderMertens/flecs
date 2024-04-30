@@ -2781,3 +2781,52 @@ void Query_iter_get_pair_w_id(void) {
 
     test_int(count, 1);
 }
+
+void Query_query_from_entity(void) {
+    flecs::world ecs;
+
+    flecs::entity qe = ecs.entity();
+    flecs::query<Position, Velocity> q1 = ecs.query_builder<Position, Velocity>(qe)
+        .build();
+
+    /* flecs::entity e1 = */ ecs.entity().add<Position>();
+    flecs::entity e2 = ecs.entity().add<Position>().add<Velocity>();
+
+    int32_t count = 0;
+    q1.each([&](flecs::entity e, Position&, Velocity&) {
+        count ++;
+        test_assert(e == e2);
+    });
+    test_int(count, 1);
+
+    flecs::query<> q2 = ecs.query(qe);
+    q2.each([&](flecs::entity e) {
+        count ++;
+        test_assert(e == e2);
+    });
+    test_int(count, 2);
+}
+
+void Query_query_from_entity_name(void) {
+    flecs::world ecs;
+
+    flecs::query<Position, Velocity> q1 = ecs.query_builder<Position, Velocity>("qe")
+        .build();
+
+    /* flecs::entity e1 = */ ecs.entity().add<Position>();
+    flecs::entity e2 = ecs.entity().add<Position>().add<Velocity>();
+
+    int32_t count = 0;
+    q1.each([&](flecs::entity e, Position&, Velocity&) {
+        count ++;
+        test_assert(e == e2);
+    });
+    test_int(count, 1);
+
+    flecs::query<> q2 = ecs.query("qe");
+    q2.each([&](flecs::entity e) {
+        count ++;
+        test_assert(e == e2);
+    });
+    test_int(count, 2);
+}
