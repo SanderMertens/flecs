@@ -46,7 +46,7 @@ struct entity : entity_builder<entity>
      * @param world The world in which the entity is created.
      * @param id The entity id.
      */
-    explicit entity(const flecs::world_t *world, flecs::id_t id) {
+    explicit entity(const flecs::world_t *world, flecs::entity_t id) {
         m_world = const_cast<flecs::world_t*>(world);
         m_id = id;
     }
@@ -225,10 +225,27 @@ struct entity : entity_builder<entity>
      * @tparam T component for which to get a reference.
      * @return The reference.
      */
-    template <typename T>
+    template <typename T, if_t< is_actual<T>::value > = 0>
     ref<T> get_ref() const {
         return ref<T>(m_world, m_id, _::cpp_type<T>::id(m_world));
     }
+
+    /** Get reference to component.
+     * Overload for when T is not the same as the actual type, which happens
+     * when using pair types.
+     * A reference allows for quick and safe access to a component value, and is
+     * a faster alternative to repeatedly calling 'get' for the same component.
+     *
+     * @tparam T component for which to get a reference.
+     * @return The reference.
+     */
+    template <typename T, typename A = actual_type_t<T>, if_t< flecs::is_pair<T>::value > = 0>
+    ref<A> get_ref() const {
+        return ref<A>(m_world, m_id,
+                      ecs_pair(_::cpp_type<typename T::first>::id(m_world),
+                               _::cpp_type<typename T::second>::id(m_world)));
+    }
+
 
     template <typename First, typename Second, typename P = flecs::pair<First, Second>,
         typename A = actual_type_t<P>>

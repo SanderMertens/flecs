@@ -635,14 +635,18 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { sys: mingw64 }
-          - { sys: mingw32 }
-          - { sys: ucrt64 }
-          - { sys: clang64 }
+          - { sys: mingw64, cc: gcc, cxx: g++ }
+          - { sys: mingw32, cc: gcc, cxx: g++ }
+          - { sys: ucrt64, cc: gcc, cxx: g++ }
+          - { sys: clang64, cc: clang, cxx: clang++ }
 
     defaults:
       run:
         shell: msys2 {0}
+
+    env:
+      CC: ${{ matrix.cc }}
+      CXX: ${{ matrix.cxx }}
 
     steps:
       - uses: actions/checkout@v4

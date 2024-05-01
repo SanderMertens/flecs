@@ -423,7 +423,6 @@ void ImplicitComponents_implicit_base(void) {
 
     test_int(v.id(), flecs::type_id<Position>());
     test_int(v.id(), flecs::type_id<const Position>());
-    test_int(v.id(), flecs::type_id<Position*>());
     test_int(v.id(), flecs::type_id<Position&>());
 }
 
@@ -434,7 +433,6 @@ void ImplicitComponents_implicit_const(void) {
 
     test_int(v.id(), flecs::type_id<Position>());
     test_int(v.id(), flecs::type_id<const Position>());
-    test_int(v.id(), flecs::type_id<Position*>());
     test_int(v.id(), flecs::type_id<Position&>());
 }
 
@@ -445,18 +443,6 @@ void ImplicitComponents_implicit_ref(void) {
 
     test_int(v.id(), flecs::type_id<Position>());
     test_int(v.id(), flecs::type_id<const Position>());
-    test_int(v.id(), flecs::type_id<Position*>());
-    test_int(v.id(), flecs::type_id<Position&>());
-}
-
-void ImplicitComponents_implicit_ptr(void) {
-    flecs::world world;
-
-    auto v = world.use<Position*>();
-
-    test_int(v.id(), flecs::type_id<Position>());
-    test_int(v.id(), flecs::type_id<const Position>());
-    test_int(v.id(), flecs::type_id<Position*>());
     test_int(v.id(), flecs::type_id<Position&>());
 }
 
@@ -467,7 +453,6 @@ void ImplicitComponents_implicit_const_ref(void) {
 
     test_int(v.id(), flecs::type_id<Position>());
     test_int(v.id(), flecs::type_id<const Position>());
-    test_int(v.id(), flecs::type_id<Position*>());
     test_int(v.id(), flecs::type_id<Position&>());
 }
 

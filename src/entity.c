@@ -3513,8 +3513,8 @@ ecs_entity_t ecs_get_target(
             return 0;
         }
     } else if (table->flags & EcsTableHasTarget) {
-        EcsTarget *tf = ecs_table_get_id(world, table, 
-            ecs_pair_t(EcsTarget, rel), ECS_RECORD_TO_ROW(r->row));
+        EcsFlattenTarget *tf = ecs_table_get_id(world, table, 
+            ecs_pair_t(EcsFlattenTarget, rel), ECS_RECORD_TO_ROW(r->row));
         if (tf) {
             return ecs_record_get_entity(tf->target);
         }
@@ -3687,7 +3687,7 @@ void flecs_flatten(
 
     ecs_entity_t depth_id = flecs_id_for_depth(world, depth);
     ecs_id_t root_pair = ecs_pair(EcsChildOf, root);
-    ecs_id_t tgt_pair = ecs_pair_t(EcsTarget, EcsChildOf);
+    ecs_id_t tgt_pair = ecs_pair_t(EcsFlattenTarget, EcsChildOf);
     ecs_id_t depth_pair = ecs_pair(EcsFlatten, depth_id);
     ecs_id_t name_pair = ecs_pair_t(EcsIdentifier, EcsName);
 
@@ -3751,7 +3751,7 @@ void flecs_flatten(
                 &td.added, 0);
             flecs_table_diff_builder_fini(world, &diff);
 
-            EcsTarget *fh = ecs_table_get_id(world, dst, tgt_pair, 0);
+            EcsFlattenTarget *fh = ecs_table_get_id(world, dst, tgt_pair, 0);
             ecs_assert(fh != NULL, ECS_INTERNAL_ERROR, NULL);
             ecs_assert(count != 0, ECS_INTERNAL_ERROR, NULL);
             int32_t remain = count;

@@ -13,7 +13,7 @@ inline void world::init_builtin_components() {
     this->component<Identifier>();
     this->component<Iterable>("flecs::core::Iterable");
     this->component<Poly>();
-    this->component<Target>();
+    this->component<FlattenTarget>();
 
 #   ifdef FLECS_SYSTEM
     _::system_init(*this);
@@ -128,6 +128,24 @@ template <typename First, typename Second>
 const First* world::get(Second second) const {
     flecs::entity e(m_world, _::cpp_type<First>::id(m_world));
     return e.get<First>(second);
+}
+
+template <typename T>
+T* world::get_mut() const {
+    flecs::entity e(m_world, _::cpp_type<T>::id(m_world));
+    return e.get_mut<T>();
+}
+
+template <typename First, typename Second, typename P, typename A>
+A* world::get_mut() const {
+    flecs::entity e(m_world, _::cpp_type<First>::id(m_world));
+    return e.get_mut<First, Second>();
+}
+
+template <typename First, typename Second>
+First* world::get_mut(Second second) const {
+    flecs::entity e(m_world, _::cpp_type<First>::id(m_world));
+    return e.get_mut<First>(second);
 }
 
 template <typename T>

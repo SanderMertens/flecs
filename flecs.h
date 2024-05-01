@@ -3508,6 +3508,12 @@ FLECS_DBG_API
 void flecs_dump_backtrace(
     void *stream);
 
+FLECS_API
+ecs_iter_t flecs_children(
+    const ecs_world_t *stage,
+    ecs_entity_t rel,
+    ecs_entity_t parent);
+
 /** Calculate offset from address */
 #ifdef __cplusplus
 #define ECS_OFFSET(o, offset) reinterpret_cast<void*>((reinterpret_cast<uintptr_t>(o)) + (static_cast<uintptr_t>(offset)))
@@ -4100,10 +4106,10 @@ typedef struct EcsPoly {
 } EcsPoly;
 
 /** Target data for flattened relationships. */
-typedef struct EcsTarget {
+typedef struct EcsFlattenTarget {
     int32_t count;
     ecs_record_t *target;
-} EcsTarget;
+} EcsFlattenTarget;
 
 /** Component for iterable entities */
 typedef ecs_iterable_t EcsIterable;
@@ -4287,6 +4293,27 @@ FLECS_API extern const ecs_entity_t EcsOneOf;
  * even when it or the relationship target is a component. */
 FLECS_API extern const ecs_entity_t EcsTag;
 
+/** Can be added to components to indicate it is a trait. Traits are components
+ * and/or tags that are added to other components to modify their behavior.
+ */
+FLECS_API extern const ecs_entity_t EcsTrait;
+
+/** Ensure that an entity is always used in pair as relationship.
+ *
+ * Behavior:
+ *   e.add(R) panics
+ *   e.add(X, R) panics, unless X has the "Trait" trait
+ */
+FLECS_API extern const ecs_entity_t EcsRelationship;
+
+/** Ensure that an entity is always used in pair as target.
+ *
+ * Behavior:
+ *   e.add(T) panics
+ *   e.add(T, X) panics
+ */
+FLECS_API extern const ecs_entity_t EcsTarget;
+
 /** Tag to indicate that relationship is stored as union. Union relationships
  * enable changing the target of a union without switching tables. Union
  * relationships are also marked as exclusive. */
@@ -4374,7 +4401,7 @@ FLECS_API extern const ecs_entity_t EcsDelete;
 FLECS_API extern const ecs_entity_t EcsPanic;
 
 /** Component that stores data for flattened relationships */
-FLECS_API extern const ecs_entity_t ecs_id(EcsTarget);
+FLECS_API extern const ecs_entity_t ecs_id(EcsFlattenTarget);
 
 /** Tag added to root entity to indicate its subtree should be flattened. Used
  * together with assemblies. */
@@ -10351,11 +10378,15 @@ int ecs_log_last_error(void);
 #endif
 
 #ifdef FLECS_REST
+#ifndef FLECS_HTTP
 #define FLECS_HTTP
+#endif
 #endif
 
 #ifdef FLECS_PLECS
+#ifndef FLECS_EXPR
 #define FLECS_EXPR
+#endif
 #endif
 
 #ifdef FLECS_APP
@@ -14242,12 +14273,6 @@ int ecs_meta_set_id(
     ecs_meta_cursor_t *cursor,
     ecs_id_t value);
 
-/** Set field with (component) id value */
-FLECS_API
-int ecs_meta_set_component(
-    ecs_meta_cursor_t *cursor,
-    ecs_id_t value);
-
 /** Set field with null value */
 FLECS_API
 int ecs_meta_set_null(
@@ -16147,7 +16172,7 @@ using Component = EcsComponent;
 using Identifier = EcsIdentifier;
 using Iterable = EcsIterable;
 using Poly = EcsPoly;
-using Target = EcsTarget;
+using FlattenTarget = EcsFlattenTarget;
 
 /* Builtin tags */
 static const flecs::entity_t Query = EcsQuery;
@@ -16204,6 +16229,9 @@ static const flecs::entity_t Traversable = EcsTraversable;
 static const flecs::entity_t Symmetric = EcsSymmetric;
 static const flecs::entity_t With = EcsWith;
 static const flecs::entity_t OneOf = EcsOneOf;
+static const flecs::entity_t Trait = EcsTrait;
+static const flecs::entity_t Relationship = EcsRelationship;
+static const flecs::entity_t Target = EcsTarget;
 
 /* Builtin relationships */
 static const flecs::entity_t IsA = EcsIsA;
@@ -19429,7 +19457,7 @@ using actual_type_t = typename actual_type<T>::type;
 // Get type without const, *, &
 template<typename T>
 struct base_type {
-    using type = decay_t< remove_pointer_t< actual_type_t<T> > >;
+    using type = decay_t< actual_type_t<T> >;
 };
 
 template <typename T>
@@ -20546,6 +20574,22 @@ struct world {
      */
     template <typename Func, if_t< is_callable<Func>::value > = 0 >
     void get(const Func& func) const;
+
+    /** Get mutable singleton component.
+     */
+    template <typename T>
+    T* get_mut() const;
+
+    /** Get mutable singleton pair.
+     */
+    template <typename First, typename Second, typename P = flecs::pair<First, Second>,
+        typename A = actual_type_t<P>>
+    A* get_mut() const;
+
+    /** Get mutable singleton pair.
+     */
+    template <typename First, typename Second>
+    First* get_mut(Second second) const;
 
     /** Test if world has singleton component.
      */
@@ -22493,27 +22537,9 @@ struct entity_view : public id {
             return;
         }
 
-        flecs::world world(m_world);
-
-        ecs_term_t terms[2];
-        ecs_filter_t f = ECS_FILTER_INIT;
-        f.terms = terms;
-        f.term_count = 2;
-
-        ecs_filter_desc_t desc = {};
-        desc.terms[0].first.id = rel;
-        desc.terms[0].second.id = m_id;
-        desc.terms[0].second.flags = EcsIsEntity;
-        desc.terms[1].id = flecs::Prefab;
-        desc.terms[1].oper = EcsOptional;
-        desc.storage = &f;
-        if (ecs_filter_init(m_world, &desc) != nullptr) {
-            ecs_iter_t it = ecs_filter_iter(m_world, &f);
-            while (ecs_filter_next(&it)) {
-                _::each_delegate<Func>(FLECS_MOV(func)).invoke(&it);
-            }
-
-            ecs_filter_fini(&f);
+        ecs_iter_t it = flecs_children(m_world, rel, m_id);
+        while (ecs_children_next(&it)) {
+            _::each_delegate<Func>(FLECS_MOV(func)).invoke(&it);
         }
     }
 
@@ -24740,7 +24766,7 @@ struct entity : entity_builder<entity>
      * @param world The world in which the entity is created.
      * @param id The entity id.
      */
-    explicit entity(const flecs::world_t *world, flecs::id_t id) {
+    explicit entity(const flecs::world_t *world, flecs::entity_t id) {
         m_world = const_cast<flecs::world_t*>(world);
         m_id = id;
     }
@@ -24919,10 +24945,27 @@ struct entity : entity_builder<entity>
      * @tparam T component for which to get a reference.
      * @return The reference.
      */
-    template <typename T>
+    template <typename T, if_t< is_actual<T>::value > = 0>
     ref<T> get_ref() const {
         return ref<T>(m_world, m_id, _::cpp_type<T>::id(m_world));
     }
+
+    /** Get reference to component.
+     * Overload for when T is not the same as the actual type, which happens
+     * when using pair types.
+     * A reference allows for quick and safe access to a component value, and is
+     * a faster alternative to repeatedly calling 'get' for the same component.
+     *
+     * @tparam T component for which to get a reference.
+     * @return The reference.
+     */
+    template <typename T, typename A = actual_type_t<T>, if_t< flecs::is_pair<T>::value > = 0>
+    ref<A> get_ref() const {
+        return ref<A>(m_world, m_id,
+                      ecs_pair(_::cpp_type<typename T::first>::id(m_world),
+                               _::cpp_type<typename T::second>::id(m_world)));
+    }
+
 
     template <typename First, typename Second, typename P = flecs::pair<First, Second>,
         typename A = actual_type_t<P>>
@@ -26421,6 +26464,8 @@ void register_lifecycle_actions(
 // will register it as a component, and verify whether the input is consistent.
 template <typename T>
 struct cpp_type_impl {
+    static_assert(is_pointer<T>::value == false,
+        "pointer types are not allowed for components");
     // Initialize component identifier
     static void init(
         entity_t entity,
@@ -27956,7 +28001,7 @@ namespace _ {
     struct sig {
         sig(flecs::world_t *world) 
             : m_world(world)
-            , ids({ (_::cpp_type<Components>::id(world))... })
+            , ids({ (_::cpp_type<remove_pointer_t<Components>>::id(world))... })
             , inout ({ (type_to_inout<Components>())... })
             , oper ({ (type_to_oper<Components>())... }) 
         { }
@@ -32158,7 +32203,7 @@ inline void world::init_builtin_components() {
     this->component<Identifier>();
     this->component<Iterable>("flecs::core::Iterable");
     this->component<Poly>();
-    this->component<Target>();
+    this->component<FlattenTarget>();
 
 #   ifdef FLECS_SYSTEM
     _::system_init(*this);
@@ -32273,6 +32318,24 @@ template <typename First, typename Second>
 const First* world::get(Second second) const {
     flecs::entity e(m_world, _::cpp_type<First>::id(m_world));
     return e.get<First>(second);
+}
+
+template <typename T>
+T* world::get_mut() const {
+    flecs::entity e(m_world, _::cpp_type<T>::id(m_world));
+    return e.get_mut<T>();
+}
+
+template <typename First, typename Second, typename P, typename A>
+A* world::get_mut() const {
+    flecs::entity e(m_world, _::cpp_type<First>::id(m_world));
+    return e.get_mut<First, Second>();
+}
+
+template <typename First, typename Second>
+First* world::get_mut(Second second) const {
+    flecs::entity e(m_world, _::cpp_type<First>::id(m_world));
+    return e.get_mut<First>(second);
 }
 
 template <typename T>

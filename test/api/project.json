@@ -1069,7 +1069,8 @@
                 "on_set_hook_on_auto_override",
                 "batched_set_new_component_w_lifecycle",
                 "batched_ensure_new_component_w_lifecycle",
-                "on_nested_prefab_copy_test_invokes_copy_count"
+                "on_nested_prefab_copy_test_invokes_copy_count",
+                "no_move_no_move_ctor_with_move_dtor_with_ctor_move_dtor"
             ]
         }, {
             "id": "Sorting",
@@ -1110,7 +1111,8 @@
                 "dont_resort_after_set_unsorted_component_w_tag_w_out_term",
                 "sort_component_not_queried_for",
                 "sort_by_wildcard",
-                "sort_shared_w_delete"
+                "sort_shared_w_delete",
+                "sort_w_nontrivial_component"
             ]
         }, {
             "id": "SortingEntireTable",
@@ -1308,6 +1310,9 @@
                 "filter_iter_3_or",
                 "filter_iter_2_or_other_type",
                 "filter_iter_2_or_same_type",
+                "filter_iter_or_w_wildcard",
+                "filer_iter_or_w_component_and_tag",
+                "filer_iter_or_w_tag_and_component",
                 "filter_iter_1_component",
                 "filter_iter_2_components",
                 "filter_iter_pair_id",
@@ -1909,7 +1914,14 @@
                 "oneof_other_constraint_violated",
                 "oneof_other_rel_parent_constraint_violated",
                 "set_w_recycled_rel",
-                "set_w_recycled_tgt"
+                "set_w_recycled_tgt",
+                "force_relationship_on_component",
+                "force_relationship_on_target",
+                "force_relationship_on_target_trait",
+                "force_relationship_on_relationship",
+                "force_target_on_component",
+                "force_target_on_relationship",
+                "force_target_on_target"
             ]
         }, {
            "id": "Trigger",

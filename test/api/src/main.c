@@ -1017,6 +1017,7 @@ void ComponentLifecycle_on_set_hook_on_auto_override(void);
 void ComponentLifecycle_batched_set_new_component_w_lifecycle(void);
 void ComponentLifecycle_batched_ensure_new_component_w_lifecycle(void);
 void ComponentLifecycle_on_nested_prefab_copy_test_invokes_copy_count(void);
+void ComponentLifecycle_no_move_no_move_ctor_with_move_dtor_with_ctor_move_dtor(void);
 
 // Testsuite 'Sorting'
 void Sorting_sort_by_component(void);
@@ -1056,6 +1057,7 @@ void Sorting_dont_resort_after_set_unsorted_component_w_tag_w_out_term(void);
 void Sorting_sort_component_not_queried_for(void);
 void Sorting_sort_by_wildcard(void);
 void Sorting_sort_shared_w_delete(void);
+void Sorting_sort_w_nontrivial_component(void);
 
 // Testsuite 'SortingEntireTable'
 void SortingEntireTable_sort_by_component(void);
@@ -1249,6 +1251,9 @@ void Filter_filter_iter_2_or(void);
 void Filter_filter_iter_3_or(void);
 void Filter_filter_iter_2_or_other_type(void);
 void Filter_filter_iter_2_or_same_type(void);
+void Filter_filter_iter_or_w_wildcard(void);
+void Filter_filer_iter_or_w_component_and_tag(void);
+void Filter_filer_iter_or_w_tag_and_component(void);
 void Filter_filter_iter_1_component(void);
 void Filter_filter_iter_2_components(void);
 void Filter_filter_iter_pair_id(void);
@@ -1843,6 +1848,13 @@ void Pairs_oneof_other_constraint_violated(void);
 void Pairs_oneof_other_rel_parent_constraint_violated(void);
 void Pairs_set_w_recycled_rel(void);
 void Pairs_set_w_recycled_tgt(void);
+void Pairs_force_relationship_on_component(void);
+void Pairs_force_relationship_on_target(void);
+void Pairs_force_relationship_on_target_trait(void);
+void Pairs_force_relationship_on_relationship(void);
+void Pairs_force_target_on_component(void);
+void Pairs_force_target_on_relationship(void);
+void Pairs_force_target_on_target(void);
 
 // Testsuite 'Trigger'
 void Trigger_on_add_trigger_before_table(void);
@@ -6635,6 +6647,10 @@ bake_test_case ComponentLifecycle_testcases[] = {
     {
         "on_nested_prefab_copy_test_invokes_copy_count",
         ComponentLifecycle_on_nested_prefab_copy_test_invokes_copy_count
+    },
+    {
+        "no_move_no_move_ctor_with_move_dtor_with_ctor_move_dtor",
+        ComponentLifecycle_no_move_no_move_ctor_with_move_dtor_with_ctor_move_dtor
     }
 };
 
@@ -6786,6 +6802,10 @@ bake_test_case Sorting_testcases[] = {
     {
         "sort_shared_w_delete",
         Sorting_sort_shared_w_delete
+    },
+    {
+        "sort_w_nontrivial_component",
+        Sorting_sort_w_nontrivial_component
     }
 };
 
@@ -7548,6 +7568,18 @@ bake_test_case Filter_testcases[] = {
     {
         "filter_iter_2_or_same_type",
         Filter_filter_iter_2_or_same_type
+    },
+    {
+        "filter_iter_or_w_wildcard",
+        Filter_filter_iter_or_w_wildcard
+    },
+    {
+        "filer_iter_or_w_component_and_tag",
+        Filter_filer_iter_or_w_component_and_tag
+    },
+    {
+        "filer_iter_or_w_tag_and_component",
+        Filter_filer_iter_or_w_tag_and_component
     },
     {
         "filter_iter_1_component",
@@ -9904,6 +9936,34 @@ bake_test_case Pairs_testcases[] = {
     {
         "set_w_recycled_tgt",
         Pairs_set_w_recycled_tgt
+    },
+    {
+        "force_relationship_on_component",
+        Pairs_force_relationship_on_component
+    },
+    {
+        "force_relationship_on_target",
+        Pairs_force_relationship_on_target
+    },
+    {
+        "force_relationship_on_target_trait",
+        Pairs_force_relationship_on_target_trait
+    },
+    {
+        "force_relationship_on_relationship",
+        Pairs_force_relationship_on_relationship
+    },
+    {
+        "force_target_on_component",
+        Pairs_force_target_on_component
+    },
+    {
+        "force_target_on_relationship",
+        Pairs_force_target_on_relationship
+    },
+    {
+        "force_target_on_target",
+        Pairs_force_target_on_target
     }
 };
 
@@ -13408,6 +13468,7 @@ bake_test_case StackAlloc_testcases[] = {
     }
 };
 
+
 static bake_test_suite suites[] = {
     {
         "Id",
@@ -13581,14 +13642,14 @@ static bake_test_suite suites[] = {
         "ComponentLifecycle",
         ComponentLifecycle_setup,
         NULL,
-        90,
+        91,
         ComponentLifecycle_testcases
     },
     {
         "Sorting",
         NULL,
         NULL,
-        37,
+        38,
         Sorting_testcases
     },
     {
@@ -13602,7 +13663,7 @@ static bake_test_suite suites[] = {
         "Filter",
         NULL,
         NULL,
-        304,
+        307,
         Filter_testcases
     },
     {
@@ -13630,7 +13691,7 @@ static bake_test_suite suites[] = {
         "Pairs",
         NULL,
         NULL,
-        117,
+        124,
         Pairs_testcases
     },
     {

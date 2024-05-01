@@ -125,6 +125,8 @@ void register_lifecycle_actions(
 // will register it as a component, and verify whether the input is consistent.
 template <typename T>
 struct cpp_type_impl {
+    static_assert(is_pointer<T>::value == false,
+        "pointer types are not allowed for components");
     // Initialize component identifier
     static void init(
         entity_t entity,

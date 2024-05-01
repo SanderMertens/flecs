@@ -1324,10 +1324,10 @@ typedef struct EcsPoly {
 } EcsPoly;
 
 /** Target data for flattened relationships. */
-typedef struct EcsTarget {
+typedef struct EcsFlattenTarget {
     int32_t count;
     ecs_record_t *target;
-} EcsTarget;
+} EcsFlattenTarget;
 
 /** Component for iterable entities */
 typedef ecs_iterable_t EcsIterable;
@@ -1490,6 +1490,27 @@ FLECS_API extern const ecs_entity_t EcsOneOf;
  * even when it or the relationship target is a component. */
 FLECS_API extern const ecs_entity_t EcsTag;
 
+/** Can be added to components to indicate it is a trait. Traits are components
+ * and/or tags that are added to other components to modify their behavior.
+ */
+FLECS_API extern const ecs_entity_t EcsTrait;
+
+/** Ensure that an entity is always used in pair as relationship.
+ *
+ * Behavior:
+ *   e.add(R) panics
+ *   e.add(X, R) panics, unless X has the "Trait" trait
+ */
+FLECS_API extern const ecs_entity_t EcsRelationship;
+
+/** Ensure that an entity is always used in pair as target.
+ *
+ * Behavior:
+ *   e.add(T) panics
+ *   e.add(T, X) panics
+ */
+FLECS_API extern const ecs_entity_t EcsTarget;
+
 /** Tag to indicate that relationship is stored as union. Union relationships
  * enable changing the target of a union without switching tables. Union
  * relationships are also marked as exclusive. */
@@ -1577,7 +1598,7 @@ FLECS_API extern const ecs_entity_t EcsDelete;
 FLECS_API extern const ecs_entity_t EcsPanic;
 
 /** Component that stores data for flattened relationships */
-FLECS_API extern const ecs_entity_t ecs_id(EcsTarget);
+FLECS_API extern const ecs_entity_t ecs_id(EcsFlattenTarget);
 
 /** Tag added to root entity to indicate its subtree should be flattened. Used
  * together with assemblies. */

@@ -27,6 +27,9 @@ typedef struct cl_ctx {
     xtor_ctx dtor;
     copy_ctx copy;
     copy_ctx move;
+    copy_ctx ctor_move_dtor;
+    copy_ctx move_dtor;
+
 } cl_ctx;
 
 static
@@ -90,6 +93,42 @@ void comp_move(
     data->move.size = info->size;
     data->move.count = count;
     data->move.invoked ++;
+
+    memcpy(dst_ptr, src_ptr, info->size * count);
+}
+
+static
+void comp_move_dtor(
+    void *dst_ptr,
+    void *src_ptr,
+    int32_t count,
+    const ecs_type_info_t *info)
+{
+    cl_ctx *data = info->hooks.ctx;
+    data->move_dtor.component = info->component;
+    data->move_dtor.size = info->size;
+    data->move_dtor.count += count;
+    data->move_dtor.invoked ++;
+
+    memcpy(dst_ptr, src_ptr, info->size * count);
+}
+
+static
+void comp_pos_ctor_move_dtor(void *dst_ptr, void *src_ptr,
+    int32_t count, const ecs_type_info_t *info)
+{
+    cl_ctx *data = info->hooks.ctx;
+    data->ctor_move_dtor.component = info->component;
+    data->ctor_move_dtor.size = info->size;
+    data->ctor_move_dtor.count += count;
+    data->ctor_move_dtor.invoked ++;
+
+    Position *p = src_ptr;
+    int i;
+    for (i = 0; i < count; i ++) {
+        p[i].x = 10;
+        p[i].y = 20;
+    }
 
     memcpy(dst_ptr, src_ptr, info->size * count);
 }
@@ -3271,6 +3310,49 @@ void ComponentLifecycle_on_nested_prefab_copy_test_invokes_copy_count(void) {
 
     test_int(ctx.copy.invoked, 7);
     test_int(ctx.copy.count, 9);
+
+    ecs_fini(world);
+}
+
+// Tests if neither move nor move_ctor are set but move_dtor and ctor_move_dtor are set, 
+// the move_dtor does not get invoked when a component is moved within the table.
+// Instead ctor_move_dtor should be invoked for a destructive move operation. 
+// Hence in total ctor_move_dtor should be invoked 2 times. 
+// Once for the initial move, and once for the move within the table.
+void ComponentLifecycle_no_move_no_move_ctor_with_move_dtor_with_ctor_move_dtor(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    cl_ctx ctx = { { 0 } };
+
+    ecs_set_hooks(world, Position, {
+        .ctor = NULL,
+        .move = NULL,
+        .move_ctor = NULL,
+        .dtor = comp_dtor,
+        .ctor_move_dtor = comp_pos_ctor_move_dtor,
+        .move_dtor = comp_move_dtor,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t e = ecs_new_id(world);
+    ecs_add(world, e, Position); 
+
+    ecs_entity_t e2 = ecs_new_id(world);
+    ecs_add(world, e2, Position);
+
+    ecs_entity_t e3 = ecs_new_id(world);
+    ecs_add(world, e3, Position);
+
+    ctx.ctor_move_dtor.invoked = 0;
+    ctx.move_dtor.invoked = 0;
+
+    ecs_add(world, e2, Velocity);
+
+    test_int(ctx.move_dtor.invoked, 0);
+    test_int(ctx.ctor_move_dtor.invoked, 2);
 
     ecs_fini(world);
 }

@@ -1780,10 +1780,10 @@ void ComponentLifecycle_dtor_with_relation(void) {
         test_int(Pod::move_ctor_invoked, 1);
     }
 
-    test_int(Pod::ctor_invoked, 5);
+    test_int(Pod::ctor_invoked, 4);
     test_int(Pod::dtor_invoked, 6);
-    test_int(Pod::move_invoked, 4);
-    test_int(Pod::move_ctor_invoked, 1);
+    test_int(Pod::move_invoked, 3);
+    test_int(Pod::move_ctor_invoked, 2);
 }
 
 void ComponentLifecycle_register_parent_after_child_w_hooks(void) {
@@ -1817,4 +1817,40 @@ void ComponentLifecycle_register_parent_after_child_w_hooks_implicit(void) {
     test_int(Pod::move_ctor_invoked, 0);
     test_int(Pod::copy_invoked, 0);
     test_int(Pod::copy_ctor_invoked, 0);
+}
+
+void ComponentLifecycle_dtor_relation_target(void) {
+    {
+        flecs::world ecs;
+
+        auto e = ecs.entity();
+        auto e2 = ecs.entity().emplace<CountNoDefaultCtor>(5).add<Tag>(e);
+        ecs.entity().emplace<CountNoDefaultCtor>(5);
+
+        test_int(CountNoDefaultCtor::ctor_invoked, 2);
+        test_int(CountNoDefaultCtor::dtor_invoked, 1);
+        test_int(CountNoDefaultCtor::move_invoked, 0);
+        test_int(CountNoDefaultCtor::move_ctor_invoked, 1);
+
+        const CountNoDefaultCtor *ptr = e2.get<CountNoDefaultCtor>();
+        test_assert(ptr != NULL);
+        test_int(ptr->value, 5);
+
+        test_int(CountNoDefaultCtor::ctor_invoked, 2);
+        test_int(CountNoDefaultCtor::dtor_invoked, 1);
+        test_int(CountNoDefaultCtor::move_invoked, 0);
+        test_int(CountNoDefaultCtor::move_ctor_invoked, 1);
+
+        e.destruct();
+
+        test_int(CountNoDefaultCtor::ctor_invoked, 2);
+        test_int(CountNoDefaultCtor::dtor_invoked, 2);
+        test_int(CountNoDefaultCtor::move_invoked, 0);
+        test_int(CountNoDefaultCtor::move_ctor_invoked, 2);
+    }
+
+    test_int(CountNoDefaultCtor::ctor_invoked, 2);
+    test_int(CountNoDefaultCtor::dtor_invoked, 4);
+    test_int(CountNoDefaultCtor::move_invoked, 0);
+    test_int(CountNoDefaultCtor::move_ctor_invoked, 2);
 }

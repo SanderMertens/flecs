@@ -649,6 +649,7 @@ const char* plecs_set_mask_to_name(
     return NULL;
 }
 
+#ifdef FLECS_DOC
 static
 char* plecs_trim_annot(
     char *annot)
@@ -661,6 +662,7 @@ char* plecs_trim_annot(
     }
     return annot;
 }
+#endif
 
 static
 void plecs_apply_annotations(

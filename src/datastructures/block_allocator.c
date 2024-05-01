@@ -15,6 +15,8 @@
 int64_t ecs_block_allocator_alloc_count = 0;
 int64_t ecs_block_allocator_free_count = 0;
 
+#ifndef FLECS_USE_OS_ALLOC
+
 static
 ecs_block_allocator_chunk_header_t* flecs_balloc_block(
     ecs_block_allocator_t *allocator)
@@ -53,6 +55,8 @@ ecs_block_allocator_chunk_header_t* flecs_balloc_block(
     chunk->next = NULL;
     return first_chunk;
 }
+
+#endif
 
 void flecs_ballocator_init(
     ecs_block_allocator_t *ba,
@@ -144,12 +148,12 @@ void* flecs_bcalloc(
 {
 #ifdef FLECS_USE_OS_ALLOC
     return ecs_os_calloc(ba->data_size);
-#endif
-
+#else
     if (!ba) return NULL;
     void *result = flecs_balloc(ba);
     ecs_os_memset(result, 0, ba->data_size);
     return result;
+#endif
 }
 
 void flecs_bfree(
@@ -157,9 +161,10 @@ void flecs_bfree(
     void *memory) 
 {
 #ifdef FLECS_USE_OS_ALLOC
+    (void)ba;
     ecs_os_free(memory);
     return;
-#endif
+#else
 
     if (!ba) {
         ecs_assert(memory == NULL, ECS_INTERNAL_ERROR, NULL);
@@ -185,6 +190,7 @@ void flecs_bfree(
     chunk->next = ba->head;
     ba->head = chunk;
     ecs_assert(ba->alloc_count >= 0, ECS_INTERNAL_ERROR, "corrupted allocator");
+#endif
 }
 
 void* flecs_brealloc(
@@ -194,6 +200,7 @@ void* flecs_brealloc(
 {
     void *result;
 #ifdef FLECS_USE_OS_ALLOC
+    (void)src;
     result = ecs_os_realloc(memory, dst->data_size);
 #else
     if (dst == src) {
@@ -232,11 +239,11 @@ void* flecs_bdup(
     } else {
         return NULL;
     }
-#endif
-
+#else
     void *result = flecs_balloc(ba);
     if (result) {
         ecs_os_memcpy(result, memory, ba->data_size);
     }
     return result;
+#endif
 }

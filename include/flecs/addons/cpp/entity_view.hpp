@@ -210,27 +210,9 @@ struct entity_view : public id {
             return;
         }
 
-        flecs::world world(m_world);
-
-        ecs_term_t terms[2];
-        ecs_filter_t f = ECS_FILTER_INIT;
-        f.terms = terms;
-        f.term_count = 2;
-
-        ecs_filter_desc_t desc = {};
-        desc.terms[0].first.id = rel;
-        desc.terms[0].second.id = m_id;
-        desc.terms[0].second.flags = EcsIsEntity;
-        desc.terms[1].id = flecs::Prefab;
-        desc.terms[1].oper = EcsOptional;
-        desc.storage = &f;
-        if (ecs_filter_init(m_world, &desc) != nullptr) {
-            ecs_iter_t it = ecs_filter_iter(m_world, &f);
-            while (ecs_filter_next(&it)) {
-                _::each_delegate<Func>(FLECS_MOV(func)).invoke(&it);
-            }
-
-            ecs_filter_fini(&f);
+        ecs_iter_t it = flecs_children(m_world, rel, m_id);
+        while (ecs_children_next(&it)) {
+            _::each_delegate<Func>(FLECS_MOV(func)).invoke(&it);
         }
     }
 

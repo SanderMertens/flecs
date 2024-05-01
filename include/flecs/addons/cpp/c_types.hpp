@@ -64,7 +64,7 @@ using Component = EcsComponent;
 using Identifier = EcsIdentifier;
 using Iterable = EcsIterable;
 using Poly = EcsPoly;
-using Target = EcsTarget;
+using FlattenTarget = EcsFlattenTarget;
 
 /* Builtin tags */
 static const flecs::entity_t Query = EcsQuery;
@@ -121,6 +121,9 @@ static const flecs::entity_t Traversable = EcsTraversable;
 static const flecs::entity_t Symmetric = EcsSymmetric;
 static const flecs::entity_t With = EcsWith;
 static const flecs::entity_t OneOf = EcsOneOf;
+static const flecs::entity_t Trait = EcsTrait;
+static const flecs::entity_t Relationship = EcsRelationship;
+static const flecs::entity_t Target = EcsTarget;
 
 /* Builtin relationships */
 static const flecs::entity_t IsA = EcsIsA;

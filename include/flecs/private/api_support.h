@@ -74,6 +74,12 @@ FLECS_DBG_API
 void flecs_dump_backtrace(
     void *stream);
 
+FLECS_API
+ecs_iter_t flecs_children(
+    const ecs_world_t *stage,
+    ecs_entity_t rel,
+    ecs_entity_t parent);
+
 /** Calculate offset from address */
 #ifdef __cplusplus
 #define ECS_OFFSET(o, offset) reinterpret_cast<void*>((reinterpret_cast<uintptr_t>(o)) + (static_cast<uintptr_t>(offset)))

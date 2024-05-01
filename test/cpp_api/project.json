@@ -1032,6 +1032,7 @@
                 "set_override_pair_w_entity_no_copy",
                 "dtor_after_defer_set",
                 "dtor_with_relation",
+                "dtor_relation_target",
                 "register_parent_after_child_w_hooks",
                 "register_parent_after_child_w_hooks_implicit"
             ]
@@ -1101,7 +1102,6 @@
                 "implicit_base",
                 "implicit_const",
                 "implicit_ref",
-                "implicit_ptr",
                 "implicit_const_ref",
                 "vector_elem_type"
             ]
@@ -1238,7 +1238,9 @@
                 "make_pair_of_pair_type",
                 "delta_time",
                 "atfini",
-                "atfini_w_ctx"
+                "atfini_w_ctx",
+                "get_mut_T",
+                "get_mut_R_T"
             ]
         }, {
             "id": "Singleton",

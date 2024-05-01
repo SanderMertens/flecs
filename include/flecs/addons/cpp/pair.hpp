@@ -116,7 +116,7 @@ using actual_type_t = typename actual_type<T>::type;
 // Get type without const, *, &
 template<typename T>
 struct base_type {
-    using type = decay_t< remove_pointer_t< actual_type_t<T> > >;
+    using type = decay_t< actual_type_t<T> >;
 };
 
 template <typename T>

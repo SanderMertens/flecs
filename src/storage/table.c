@@ -266,7 +266,7 @@ void flecs_table_init_flags(
                         meta->sw_offset = flecs_ito(int16_t, i);
                     }
                     meta->sw_count ++;
-                } else if (r == ecs_id(EcsTarget)) {
+                } else if (r == ecs_id(EcsFlattenTarget)) {
                     ecs_table__t *meta = table->_;
                     table->flags |= EcsTableHasTarget;
                     meta->ft_offset = flecs_ito(int16_t, i);
@@ -1667,6 +1667,15 @@ void flecs_table_delete(
                 }
 
                 ecs_move_t move_dtor = ti->hooks.move_dtor;
+                
+                // If neither move nor move_ctor are set, this indicates that non-destructive move 
+                // semantics are not supported for this type. In such cases, we set the move_dtor
+                // as ctor_move_dtor, which indicates a destructive move operation. 
+                // This adjustment ensures compatibility with different language bindings.
+                if (!ti->hooks.move_ctor && ti->hooks.ctor_move_dtor) {
+                  move_dtor = ti->hooks.ctor_move_dtor;
+                }
+
                 if (move_dtor) {
                     move_dtor(dst, src, 1, ti);
                 } else {
@@ -2016,14 +2025,28 @@ void flecs_table_swap(
     /* Swap columns */
     for (i = 0; i < column_count; i ++) {
         int32_t size = columns[i].size;
-        void *ptr = columns[i].data.array;
+        ecs_column_t *column = &columns[i];
+        void *ptr = column->data.array;
+        const ecs_type_info_t *ti = column->ti;
+        ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
 
         void *el_1 = ECS_ELEM(ptr, size, row_1);
         void *el_2 = ECS_ELEM(ptr, size, row_2);
 
-        ecs_os_memcpy(tmp, el_1, size);
-        ecs_os_memcpy(el_1, el_2, size);
-        ecs_os_memcpy(el_2, tmp, size);
+        ecs_move_t move = ti->hooks.move;
+        if (!move) {
+            ecs_os_memcpy(tmp, el_1, size);
+            ecs_os_memcpy(el_1, el_2, size);
+            ecs_os_memcpy(el_2, tmp, size);
+        } else {
+            ecs_move_t move_ctor = ti->hooks.move_ctor;
+            ecs_move_t move_dtor = ti->hooks.move_dtor;
+            ecs_assert(move_ctor != NULL, ECS_INTERNAL_ERROR, NULL);
+            ecs_assert(move_dtor != NULL, ECS_INTERNAL_ERROR, NULL);
+            move_ctor(tmp, el_1, 1, ti);
+            move(el_1, el_2, 1, ti);
+            move_dtor(el_2, tmp, 1, ti);
+        }
     }
 
     flecs_table_check_sanity(table);
@@ -2086,14 +2109,14 @@ void flecs_table_merge_column(
     } else {
         int32_t src_count = src->data.count;
 
-        flecs_table_grow_column(world, dst, src_count, column_size, true);
+        flecs_table_grow_column(world, dst, src_count, column_size, false);
         void *dst_ptr = ECS_ELEM(dst->data.array, size, dst_count);
         void *src_ptr = src->data.array;
 
         /* Move values into column */
         ecs_type_info_t *ti = dst->ti;
         ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
-        ecs_move_t move = ti->hooks.move_dtor;
+        ecs_move_t move = ti->hooks.ctor_move_dtor;
         if (move) {
             move(dst_ptr, src_ptr, src_count, ti);
         } else {

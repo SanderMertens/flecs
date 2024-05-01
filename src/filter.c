@@ -1148,17 +1148,20 @@ ecs_term_t* flecs_filter_or_other_type(
         if (f->terms[t].oper != EcsOr) {
             break;
         }
+
         first = &f->terms[t];
     }
 
     if (first) {
         ecs_world_t *world = f->world;
         const ecs_type_info_t *first_type;
+
         if (first->idr) {
             first_type = first->idr->type_info;
         } else {
             first_type = ecs_get_type_info(world, first->id);
         }
+
         const ecs_type_info_t *term_type;
         if (term->idr) {
             term_type = term->idr->type_info;
@@ -1169,6 +1172,7 @@ ecs_term_t* flecs_filter_or_other_type(
         if (first_type == term_type) {
             return NULL;
         }
+
         return first;
     } else {
         return NULL;
@@ -1278,7 +1282,9 @@ int ecs_filter_finalize(
                 ecs_term_t *first = flecs_filter_or_other_type(f, i);
                 if (first) {
                     if (first == &term[-1]) {
-                        filter_terms ++;
+                        if (!(term[-1].flags & EcsTermNoData)) {
+                            filter_terms ++;
+                        }
                     }
                     filter_term = true;
                 }
@@ -2156,6 +2162,7 @@ bool flecs_term_match_table(
     bool first,
     ecs_flags32_t iter_flags)
 {
+    ecs_assert(term != NULL, ECS_INTERNAL_ERROR, NULL);
     const ecs_term_id_t *src = &term->src;
     ecs_oper_kind_t oper = term->oper;
     const ecs_table_t *match_table = table;
@@ -2385,6 +2392,7 @@ bool flecs_filter_match_table(
         if (first && match_index) {
             match_count *= match_index;
         }
+
         if (match_indices) {
             match_indices[t_i] = match_index;
         }
@@ -2547,17 +2555,98 @@ error:
     return (ecs_iter_t){ 0 };
 }
 
-ecs_iter_t ecs_children(
-    const ecs_world_t *world,
+ecs_iter_t flecs_children(
+    const ecs_world_t *stage,
+    ecs_entity_t rel,
     ecs_entity_t parent)
 {
-    return ecs_term_iter(world,  &(ecs_term_t){ .id = ecs_childof(parent) });
+    ecs_check(stage != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    const ecs_world_t *world = ecs_get_world(stage);
+
+    flecs_process_pending_tables(world);
+
+    ecs_iter_t it = {
+        .real_world = ECS_CONST_CAST(ecs_world_t*, world),
+        .world = ECS_CONST_CAST(ecs_world_t*, stage),
+        .field_count = 1,
+        .next = ecs_children_next
+    };
+    
+    ecs_id_t id = ecs_pair(rel, parent);
+
+    ecs_id_record_t *idr = flecs_id_record_get(world, id);
+    if (!idr) {
+        return it;
+    }
+
+    ecs_term_iter_t *each_iter = &it.priv.iter.term;
+    each_iter->id = id;
+    each_iter->subject = 0;
+    each_iter->size = 0;
+    flecs_table_cache_iter((ecs_table_cache_t*)idr, &each_iter->it);
+
+    return it;
+error:
+    return (ecs_iter_t){0};
+}
+
+ecs_iter_t ecs_children(
+    const ecs_world_t *stage,
+    ecs_entity_t parent)
+{
+    ecs_check(stage != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    const ecs_world_t *world = ecs_get_world(stage);
+
+    flecs_process_pending_tables(world);
+
+    ecs_iter_t it = {
+        .real_world = ECS_CONST_CAST(ecs_world_t*, world),
+        .world = ECS_CONST_CAST(ecs_world_t*, stage),
+        .field_count = 1,
+        .next = ecs_children_next
+    };
+    
+    ecs_id_t id = ecs_childof(parent);
+
+    ecs_id_record_t *idr = flecs_id_record_get(world, id);
+    if (!idr) {
+        return it;
+    }
+
+    ecs_term_iter_t *each_iter = &it.priv.iter.term;
+    each_iter->id = id;
+    each_iter->subject = 0;
+    each_iter->size = 0;
+    flecs_table_cache_iter((ecs_table_cache_t*)idr, &each_iter->it);
+
+    return it;
+error:
+    return (ecs_iter_t){0};
 }
 
 bool ecs_children_next(
     ecs_iter_t *it)
 {
-    return ecs_term_next(it);
+    ecs_term_iter_t *each_iter = &it->priv.iter.term;
+    ecs_table_record_t *next = flecs_table_cache_next(
+        &each_iter->it, ecs_table_record_t);
+    it->flags |= EcsIterIsValid;
+    if (next) {
+        ecs_table_t *table = next->hdr.table;
+        it->table = table;
+        it->count = ecs_table_count(table);
+        it->entities = flecs_table_entities_array(table);
+        it->ids = &table->type.array[next->index];
+        it->sources = &each_iter->subject;
+        it->sizes = &each_iter->size;
+        it->columns = NULL;
+        it->ptrs = NULL;
+        return true;
+    } else {
+        return false;
+    }
 }
 
 static
@@ -3164,10 +3253,18 @@ bool ecs_filter_next_instanced(
                 }
 
                 /* Match the remainder of the terms */
+                int32_t skip_term = pivot_term;
+                if (pivot_term != -1) {
+                    if (ecs_id_is_wildcard(filter->terms[pivot_term].id)) {
+                        skip_term = -1;
+                        iter->matches_left = 1;
+                    }
+                }
+
                 match = flecs_filter_match_table(world, filter, table,
                     it->ids, it->columns, it->sources,
                     it->match_indices, &iter->matches_left, first, 
-                    pivot_term, it->flags);
+                    skip_term, it->flags);
                 if (!match) {
                     it->table = table;
                     iter->matches_left = 0;
@@ -3212,8 +3309,19 @@ bool ecs_filter_next_instanced(
                     column = -column;
                 }
 
+                int32_t t, term_count = filter->term_count;
+                ecs_term_t *cur_term = NULL;
+                for (t = 0; t < term_count; t ++) {
+                    if (filter->terms[t].field_index == i) {
+                        cur_term = &filter->terms[t];
+                        break;
+                    }
+                }
+
+                ecs_assert(term != NULL, ECS_INTERNAL_ERROR, NULL);
+
                 it->columns[i] = column + 1;
-                flecs_term_match_table(world, &filter->terms[i], table, 
+                flecs_term_match_table(world, cur_term, table, 
                     &it->ids[i], &it->columns[i], &it->sources[i],
                     &it->match_indices[i], false, it->flags);
 

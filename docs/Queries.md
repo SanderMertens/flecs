@@ -2582,17 +2582,16 @@ ecs_query_t *q = ecs_query(world, {
     .filter.terms = {
       // Use readonly term for component used for sorting
       { ecs_id(Depth), .inout = EcsIn }
-      { ecs_id(Position) },
     },
-    .order_by_component = ecs_id(Position), // The component to use for sorting
-    .order_by = compare_position,
+    .order_by_component = ecs_id(Depth), // The component to use for sorting
+    .order_by = compare_depth,
 });
 ```
 
 The function signature of the `order_by` function should look like the following example:
 
 ```c
-int compare_position(ecs_entity_t e1, const void *v1, ecs_entity_t e2, const void *v2) {
+int compare_depth(ecs_entity_t e1, const void *v1, ecs_entity_t e2, const void *v2) {
   const Depth *d1 = v1;
   const Depth *d2 = v2;
   return (d1->value > d2->value) - (d1->value < d2->value);
