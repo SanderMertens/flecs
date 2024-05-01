@@ -24236,8 +24236,16 @@ struct entity_builder : entity_view {
     template <typename Func, if_t< is_callable<Func>::value > = 0>
     Self& set(const Func& func);
 
-    template<typename ... Args>
-    Self& pipe(flecs::entity (*fn)(flecs::entity, Args...), Args... args) {
+    /** Entity dot chain pipe to function.
+     * Call a function with the current entity under construction, passing it
+     * as the first argument of the given function and forwards the rest of the
+     * arguments.
+     *
+     * @tparam T The return type of the function to invoke (which is ignored).
+     * @param fn The function to invoke -- Must take an entity as the first argument.
+     */
+    template<typename T, typename ... Args>
+    Self& pipe(T (*fn)(flecs::entity, Args...), Args... args) {
         fn(to_base(), FLECS_FWD(args)...);
         return to_base();
     }

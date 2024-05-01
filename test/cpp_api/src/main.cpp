@@ -266,6 +266,7 @@ void Entity_emplace_w_observer(void);
 void Entity_scoped_world(void);
 void Entity_entity_lookup_not_recursive(void);
 void Entity_world_lookup_not_recursive(void);
+void Entity_pipe_builder_fn(void);
 
 // Testsuite 'Pairs'
 void Pairs_add_component_pair(void);
@@ -2386,6 +2387,10 @@ bake_test_case Entity_testcases[] = {
     {
         "world_lookup_not_recursive",
         Entity_world_lookup_not_recursive
+    },
+    {
+        "pipe_builder_fn",
+        Entity_pipe_builder_fn
     }
 };
 
@@ -6639,7 +6644,6 @@ bake_test_case Doc_testcases[] = {
     }
 };
 
-
 static bake_test_suite suites[] = {
     {
         "PrettyFunction",
@@ -6652,7 +6656,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        253,
+        254,
         Entity_testcases
     },
     {

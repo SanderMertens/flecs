@@ -273,7 +273,8 @@
                 "emplace_w_observer",
                 "scoped_world",
                 "entity_lookup_not_recursive",
-                "world_lookup_not_recursive"
+                "world_lookup_not_recursive",
+                "pipe_builder_fn"
             ]
         }, {
             "id": "Pairs",

@@ -4494,3 +4494,27 @@ void Entity_world_lookup_not_recursive(void) {
     test_assert(world.scope(child).lookup("foo") == foo);
     test_assert(world.scope(child).lookup("foo", false) == 0);
 }
+
+void Entity_pipe_builder_fn(void) {
+    struct ATag {};
+    struct AComponent {
+        int value;
+
+        static flecs::entity builder_function(flecs::entity e, int x, int y) {
+            return e.emplace<AComponent>(e.has<ATag>()? x * y: x + y);
+        }
+    };
+
+    flecs::world world;
+
+    flecs::entity entity1 = world.entity()
+        .pipe(AComponent::builder_function, 4, 5);
+
+    test_int(entity1.ensure<AComponent>().value, 4 + 5);
+
+    flecs::entity entity2 = world.entity()
+        .add<ATag>()
+        .pipe(AComponent::builder_function, 6, 7);
+
+    test_int(entity2.ensure<AComponent>().value, 6 * 7);
+}
