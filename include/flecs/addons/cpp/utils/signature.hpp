@@ -11,28 +11,28 @@ namespace flecs {
 namespace _ {
 
     template <typename T, if_t< is_const_p<T>::value > = 0>
-    static constexpr flecs::inout_kind_t type_to_inout() {
+    constexpr flecs::inout_kind_t type_to_inout() {
         return flecs::In;
     }
 
     template <typename T, if_t< is_reference<T>::value > = 0>
-    static constexpr flecs::inout_kind_t type_to_inout() {
+    constexpr flecs::inout_kind_t type_to_inout() {
         return flecs::Out;
     }
 
     template <typename T, if_not_t< 
         is_const_p<T>::value || is_reference<T>::value > = 0>
-    static constexpr flecs::inout_kind_t type_to_inout() {
+    constexpr flecs::inout_kind_t type_to_inout() {
         return flecs::InOutDefault;
     }
 
     template <typename T, if_t< is_pointer<T>::value > = 0>
-    static constexpr flecs::oper_kind_t type_to_oper() {
+    constexpr flecs::oper_kind_t type_to_oper() {
         return flecs::Optional;
     }
 
     template <typename T, if_not_t< is_pointer<T>::value > = 0>
-    static constexpr flecs::oper_kind_t type_to_oper() {
+    constexpr flecs::oper_kind_t type_to_oper() {
         return flecs::And;
     }
 
