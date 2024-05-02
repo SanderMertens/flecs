@@ -26355,7 +26355,7 @@ namespace _ {
 
 #if defined(__GNUC__) || defined(_WIN32)
 template <typename T>
-inline static const char* type_name() {
+inline const char* type_name() {
     static const size_t len = ECS_FUNC_TYPE_LEN(const char*, type_name, ECS_FUNC_NAME);
     static char result[len + 1] = {};
     static const size_t front_len = ECS_FUNC_NAME_FRONT(const char*, type_name);
@@ -26368,7 +26368,7 @@ inline static const char* type_name() {
 // Translate a typename into a language-agnostic identifier. This allows for
 // registration of components/modules across language boundaries.
 template <typename T>
-inline static const char* symbol_name() {
+inline const char* symbol_name() {
     static const size_t len = ECS_FUNC_TYPE_LEN(const char*, symbol_name, ECS_FUNC_NAME);
     static char result[len + 1] = {};
     return ecs_cpp_get_symbol_name(result, type_name<T>(), len);
@@ -27958,28 +27958,28 @@ namespace flecs {
 namespace _ {
 
     template <typename T, if_t< is_const_p<T>::value > = 0>
-    static constexpr flecs::inout_kind_t type_to_inout() {
+    constexpr flecs::inout_kind_t type_to_inout() {
         return flecs::In;
     }
 
     template <typename T, if_t< is_reference<T>::value > = 0>
-    static constexpr flecs::inout_kind_t type_to_inout() {
+    constexpr flecs::inout_kind_t type_to_inout() {
         return flecs::Out;
     }
 
     template <typename T, if_not_t< 
         is_const_p<T>::value || is_reference<T>::value > = 0>
-    static constexpr flecs::inout_kind_t type_to_inout() {
+    constexpr flecs::inout_kind_t type_to_inout() {
         return flecs::InOutDefault;
     }
 
     template <typename T, if_t< is_pointer<T>::value > = 0>
-    static constexpr flecs::oper_kind_t type_to_oper() {
+    constexpr flecs::oper_kind_t type_to_oper() {
         return flecs::Optional;
     }
 
     template <typename T, if_not_t< is_pointer<T>::value > = 0>
-    static constexpr flecs::oper_kind_t type_to_oper() {
+    constexpr flecs::oper_kind_t type_to_oper() {
         return flecs::And;
     }
 
