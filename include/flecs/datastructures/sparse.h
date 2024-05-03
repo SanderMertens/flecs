@@ -78,6 +78,13 @@ void flecs_sparse_remove(
 #define flecs_sparse_remove_t(sparse, T, id)\
     flecs_sparse_remove(sparse, ECS_SIZEOF(T), id)
 
+/** Remove an element without liveliness checking */
+FLECS_DBG_API
+void* flecs_sparse_remove_fast(
+    ecs_sparse_t *sparse,
+    ecs_size_t size,
+    uint64_t index);
+
 /** Test if id is alive, which requires the generation count to match. */
 FLECS_DBG_API
 bool flecs_sparse_is_alive(

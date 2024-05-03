@@ -439,6 +439,44 @@ void* flecs_sparse_ensure_fast(
     return DATA(page->data, sparse->size, offset);
 }
 
+void* flecs_sparse_remove_fast(
+    ecs_sparse_t *sparse,
+    ecs_size_t size,
+    uint64_t index)
+{
+    ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(!size || size == sparse->size, ECS_INVALID_PARAMETER, NULL);
+    (void)size;
+
+    ecs_page_t *page = flecs_sparse_get_page(sparse, PAGE(index));
+    if (!page || !page->sparse) {
+        return NULL;
+    }
+
+    flecs_sparse_strip_generation(&index);
+    int32_t offset = OFFSET(index);
+    int32_t dense = page->sparse[offset];
+
+    if (dense) {
+        int32_t count = sparse->count;
+        if (dense == (count - 1)) {
+            /* If dense is the last used element, simply decrease count */
+            sparse->count --;
+        } else if (dense < count) {
+            /* If element is alive, move it to unused elements */
+            flecs_sparse_swap_dense(sparse, page, dense, count - 1);
+            sparse->count --;
+        }
+
+        /* Reset memory to zero on remove */
+        return DATA(page->data, sparse->size, offset);
+    } else {
+        /* Element is not paired and thus not alive, nothing to be done */
+        return NULL;
+    }
+}
+
+
 void flecs_sparse_remove(
     ecs_sparse_t *sparse,
     ecs_size_t size,

@@ -52,6 +52,9 @@ struct ecs_id_record_t {
     /* Name lookup index (currently only used for ChildOf pairs) */
     ecs_hashmap_t *name_index;
 
+    /* Sparse storage (only for sparse components) */
+    ecs_sparse_t *sparse;
+
     /* Lists for all id records that match a pair wildcard. The wildcard id
      * record is at the head of the list. */
     ecs_id_record_elem_t first;   /* (R, *) */

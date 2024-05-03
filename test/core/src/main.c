@@ -408,6 +408,40 @@ void GlobalComponentIds_declare_tag_w_entity(void);
 void GlobalComponentIds_declare_entity(void);
 void GlobalComponentIds_reuse_300_component_ids(void);
 
+// Testsuite 'Sparse'
+void Sparse_has(void);
+void Sparse_owns(void);
+void Sparse_get(void);
+void Sparse_get_mut(void);
+void Sparse_ensure(void);
+void Sparse_emplace(void);
+void Sparse_set(void);
+void Sparse_get_ref(void);
+void Sparse_update_ref(void);
+void Sparse_test_stable_ptr(void);
+void Sparse_has_after_remove(void);
+void Sparse_get_after_remove(void);
+void Sparse_get_mut_after_remove(void);
+void Sparse_record_get(void);
+void Sparse_has_inherited(void);
+void Sparse_owns_inherited(void);
+void Sparse_get_inherited(void);
+void Sparse_get_mut_inherited(void);
+void Sparse_ensure_inherited(void);
+void Sparse_emplace_inherited(void);
+void Sparse_ctor_after_emplace(void);
+void Sparse_ctor_dtor_after_remove(void);
+void Sparse_ctor_dtor_after_clear(void);
+void Sparse_ctor_dtor_after_delete(void);
+void Sparse_ctor_dtor_after_fini(void);
+void Sparse_on_add_remove_after_remove(void);
+void Sparse_on_add_remove_after_clear(void);
+void Sparse_on_add_remove_after_delete(void);
+void Sparse_on_add_remove_after_fini(void);
+void Sparse_on_set_after_set(void);
+void Sparse_on_set_after_modified(void);
+void Sparse_sparse_relationship(void);
+
 // Testsuite 'Hierarchies'
 void Hierarchies_setup(void);
 void Hierarchies_empty_scope(void);
@@ -3486,6 +3520,137 @@ bake_test_case GlobalComponentIds_testcases[] = {
     {
         "reuse_300_component_ids",
         GlobalComponentIds_reuse_300_component_ids
+    }
+};
+
+bake_test_case Sparse_testcases[] = {
+    {
+        "has",
+        Sparse_has
+    },
+    {
+        "owns",
+        Sparse_owns
+    },
+    {
+        "get",
+        Sparse_get
+    },
+    {
+        "get_mut",
+        Sparse_get_mut
+    },
+    {
+        "ensure",
+        Sparse_ensure
+    },
+    {
+        "emplace",
+        Sparse_emplace
+    },
+    {
+        "set",
+        Sparse_set
+    },
+    {
+        "get_ref",
+        Sparse_get_ref
+    },
+    {
+        "update_ref",
+        Sparse_update_ref
+    },
+    {
+        "test_stable_ptr",
+        Sparse_test_stable_ptr
+    },
+    {
+        "has_after_remove",
+        Sparse_has_after_remove
+    },
+    {
+        "get_after_remove",
+        Sparse_get_after_remove
+    },
+    {
+        "get_mut_after_remove",
+        Sparse_get_mut_after_remove
+    },
+    {
+        "record_get",
+        Sparse_record_get
+    },
+    {
+        "has_inherited",
+        Sparse_has_inherited
+    },
+    {
+        "owns_inherited",
+        Sparse_owns_inherited
+    },
+    {
+        "get_inherited",
+        Sparse_get_inherited
+    },
+    {
+        "get_mut_inherited",
+        Sparse_get_mut_inherited
+    },
+    {
+        "ensure_inherited",
+        Sparse_ensure_inherited
+    },
+    {
+        "emplace_inherited",
+        Sparse_emplace_inherited
+    },
+    {
+        "ctor_after_emplace",
+        Sparse_ctor_after_emplace
+    },
+    {
+        "ctor_dtor_after_remove",
+        Sparse_ctor_dtor_after_remove
+    },
+    {
+        "ctor_dtor_after_clear",
+        Sparse_ctor_dtor_after_clear
+    },
+    {
+        "ctor_dtor_after_delete",
+        Sparse_ctor_dtor_after_delete
+    },
+    {
+        "ctor_dtor_after_fini",
+        Sparse_ctor_dtor_after_fini
+    },
+    {
+        "on_add_remove_after_remove",
+        Sparse_on_add_remove_after_remove
+    },
+    {
+        "on_add_remove_after_clear",
+        Sparse_on_add_remove_after_clear
+    },
+    {
+        "on_add_remove_after_delete",
+        Sparse_on_add_remove_after_delete
+    },
+    {
+        "on_add_remove_after_fini",
+        Sparse_on_add_remove_after_fini
+    },
+    {
+        "on_set_after_set",
+        Sparse_on_set_after_set
+    },
+    {
+        "on_set_after_modified",
+        Sparse_on_set_after_modified
+    },
+    {
+        "sparse_relationship",
+        Sparse_sparse_relationship
     }
 };
 
@@ -9508,6 +9673,13 @@ static bake_test_suite suites[] = {
         GlobalComponentIds_testcases
     },
     {
+        "Sparse",
+        NULL,
+        NULL,
+        32,
+        Sparse_testcases
+    },
+    {
         "Hierarchies",
         Hierarchies_setup,
         NULL,
@@ -9741,5 +9913,5 @@ static bake_test_suite suites[] = {
 };
 
 int main(int argc, char *argv[]) {
-    return bake_test_run("core", argc, argv, suites, 44);
+    return bake_test_run("core", argc, argv, suites, 45);
 }
