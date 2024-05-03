@@ -390,10 +390,11 @@ extern "C" {
 #define EcsIdHasOnTableEmpty           (1u << 21)
 #define EcsIdHasOnTableCreate          (1u << 22)
 #define EcsIdHasOnTableDelete          (1u << 23)
+#define EcsIdIsSparse                  (1u << 24)
 #define EcsIdEventMask\
     (EcsIdHasOnAdd|EcsIdHasOnRemove|EcsIdHasOnSet|EcsIdHasUnSet|\
         EcsIdHasOnTableFill|EcsIdHasOnTableEmpty|EcsIdHasOnTableCreate|\
-            EcsIdHasOnTableDelete)
+            EcsIdHasOnTableDelete|EcsIdIsSparse)
 
 #define EcsIdMarkedForDelete           (1u << 30)
 
@@ -498,13 +499,14 @@ extern "C" {
 #define EcsTableHasOnTableEmpty        (1u << 21u)
 #define EcsTableHasOnTableCreate       (1u << 22u)
 #define EcsTableHasOnTableDelete       (1u << 23u)
+#define EcsTableHasSparse              (1u << 24u)
 
 #define EcsTableHasTraversable         (1u << 25u)
 #define EcsTableMarkedForDelete        (1u << 30u)
 
 /* Composite table flags */
 #define EcsTableHasLifecycle        (EcsTableHasCtors | EcsTableHasDtors)
-#define EcsTableIsComplex           (EcsTableHasLifecycle | EcsTableHasToggle)
+#define EcsTableIsComplex           (EcsTableHasLifecycle | EcsTableHasToggle | EcsTableHasSparse)
 #define EcsTableHasAddActions       (EcsTableHasIsA | EcsTableHasCtors | EcsTableHasOnAdd | EcsTableHasOnSet)
 #define EcsTableHasRemoveActions    (EcsTableHasIsA | EcsTableHasDtors | EcsTableHasOnRemove | EcsTableHasUnSet)
 
@@ -1301,6 +1303,13 @@ void flecs_sparse_remove(
 
 #define flecs_sparse_remove_t(sparse, T, id)\
     flecs_sparse_remove(sparse, ECS_SIZEOF(T), id)
+
+/** Remove an element without liveliness checking */
+FLECS_DBG_API
+void* flecs_sparse_remove_fast(
+    ecs_sparse_t *sparse,
+    ecs_size_t size,
+    uint64_t index);
 
 /** Test if id is alive, which requires the generation count to match. */
 FLECS_DBG_API
@@ -4603,6 +4612,9 @@ FLECS_API extern const ecs_entity_t EcsDelete;
 /** Panic cleanup policy. Must be used as target in pair with EcsOnDelete or
  * EcsOnDeleteTarget. */
 FLECS_API extern const ecs_entity_t EcsPanic;
+
+/** Mark component as sparse */
+FLECS_API extern const ecs_entity_t EcsSparse;
 
 /* Builtin predicates for comparing entity ids in queries. Only supported by queries */
 FLECS_API extern const ecs_entity_t EcsPredEq;

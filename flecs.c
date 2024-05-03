@@ -1145,6 +1145,9 @@ struct ecs_id_record_t {
     /* Name lookup index (currently only used for ChildOf pairs) */
     ecs_hashmap_t *name_index;
 
+    /* Sparse storage (only for sparse components) */
+    ecs_sparse_t *sparse;
+
     /* Lists for all id records that match a pair wildcard. The wildcard id
      * record is at the head of the list. */
     ecs_id_record_elem_t first;   /* (R, *) */
@@ -3130,6 +3133,12 @@ bool flecs_set_id_flag(
 {
     if (!(idr->flags & flag)) {
         idr->flags |= flag;
+        if (flag == EcsIdIsSparse) {
+            ecs_assert(idr->type_info != NULL, ECS_INVALID_OPERATION, 
+                "only components can be marked as sparse");
+            idr->sparse = ecs_os_calloc_t(ecs_sparse_t);
+            flecs_sparse_init(idr->sparse, NULL, NULL, idr->type_info->size);
+        }
         return true;
     }
     return false;
@@ -3288,6 +3297,11 @@ void flecs_register_can_toggle(ecs_iter_t *it) {
 static
 void flecs_register_with(ecs_iter_t *it) {
     flecs_register_id_flag_for_relation(it, EcsWith, EcsIdWith, 0, 0);
+}
+
+static
+void flecs_register_sparse(ecs_iter_t *it) {
+    flecs_register_id_flag_for_relation(it, EcsSparse, EcsIdIsSparse, 0, 0);
 }
 
 static
@@ -3710,6 +3724,7 @@ void flecs_bootstrap(
     flecs_bootstrap_entity(world, EcsFlag, "Flag", EcsFlecsCore);
 
     /* Component/relationship properties */
+    flecs_bootstrap_trait(world, EcsSparse);
     flecs_bootstrap_trait(world, EcsTransitive);
     flecs_bootstrap_trait(world, EcsReflexive);
     flecs_bootstrap_trait(world, EcsSymmetric);
@@ -3872,6 +3887,14 @@ void flecs_bootstrap(
         .query.flags = EcsQueryMatchPrefab,
         .events = {EcsOnAdd},
         .callback = flecs_register_with
+    });
+
+    ecs_observer(world, {
+        .query.terms = {
+            { .id = EcsSparse, .src.id = EcsSelf },
+        },
+        .events = {EcsOnAdd, EcsOnRemove},
+        .callback = flecs_register_sparse
     });
 
     /* Define observer to make sure that adding a module to a child entity also
@@ -4613,7 +4636,7 @@ typedef struct {
 } flecs_component_ptr_t;
 
 static
-flecs_component_ptr_t flecs_get_component_w_index(
+flecs_component_ptr_t flecs_table_get_component(
     ecs_table_t *table,
     int32_t column_index,
     int32_t row)
@@ -4630,43 +4653,46 @@ error:
 
 static
 flecs_component_ptr_t flecs_get_component_ptr(
-    const ecs_world_t *world,
     ecs_table_t *table,
     int32_t row,
-    ecs_id_t id)
+    ecs_id_record_t *idr)
 {
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(id != 0, ECS_INVALID_PARAMETER, NULL);
 
-    ecs_table_record_t *tr = flecs_table_record_get(world, table, id);
-    if (!tr || (tr->column == -1)) {
-        char *idstr = ecs_id_str(world, id);
-        ecs_check(tr == NULL, ECS_NOT_A_COMPONENT, 
-            "cannot get '%s' as a component", idstr);
-        ecs_os_free(idstr);
+    if (!idr) {
         return (flecs_component_ptr_t){0};
     }
 
-    return flecs_get_component_w_index(table, tr->column, row);
-error:
-    return (flecs_component_ptr_t){0};
+    if (idr->flags & EcsIdIsSparse) {
+        ecs_entity_t entity = flecs_table_entities_array(table)[row];
+        return (flecs_component_ptr_t){
+            .ti = idr->type_info,
+            .ptr = flecs_sparse_get_any(idr->sparse, 0, entity)
+        };
+    }
+
+    ecs_table_record_t *tr = flecs_id_record_get_table(idr, table);
+    if (!tr || (tr->column == -1)) {
+        return (flecs_component_ptr_t){0};
+    }
+
+    return flecs_table_get_component(table, tr->column, row);
 }
 
 static
 void* flecs_get_component(
-    const ecs_world_t *world,
     ecs_table_t *table,
     int32_t row,
-    ecs_id_t id)
+    ecs_id_record_t *idr)
 {
-    return flecs_get_component_ptr(world, table, row, id).ptr;
+    return flecs_get_component_ptr(table, row, idr).ptr;
 }
 
 void* flecs_get_base_component(
     const ecs_world_t *world,
     ecs_table_t *table,
     ecs_id_t id,
-    ecs_id_record_t *table_index,
+    ecs_id_record_t *idr,
     int32_t recur_depth)
 {
     ecs_check(recur_depth < ECS_MAX_RECURSION, ECS_INVALID_PARAMETER,
@@ -4705,14 +4731,17 @@ void* flecs_get_base_component(
             continue;
         }
 
-        const ecs_table_record_t *tr = 
-            flecs_id_record_get_table(table_index, table);
-        if (!tr || tr->column == -1) {
-            ptr = flecs_get_base_component(world, table, id, table_index, 
+        const ecs_table_record_t *tr = flecs_id_record_get_table(idr, table);
+        if (!tr) {
+            ptr = flecs_get_base_component(world, table, id, idr, 
                 recur_depth + 1);
         } else {
-            int32_t row = ECS_RECORD_TO_ROW(r->row);
-            ptr = flecs_get_component_w_index(table, tr->column, row).ptr;
+            if (idr->flags & EcsIdIsSparse) {
+                return flecs_sparse_get_any(idr->sparse, 0, base);
+            } else {
+                int32_t row = ECS_RECORD_TO_ROW(r->row);
+                return flecs_table_get_component(table, tr->column, row).ptr;
+            }
         }
     } while (!ptr && (i < end));
 
@@ -5043,6 +5072,73 @@ void flecs_instantiate(
 }
 
 static
+void flecs_sparse_on_add(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    int32_t row,
+    int32_t count,
+    const ecs_type_t *added,
+    bool construct)
+{
+    int32_t i, j;
+    for (i = 0; i < added->count; i ++) {
+        ecs_id_t id = added->array[i];
+        ecs_id_record_t *idr = flecs_id_record_get(world, id);
+        if (idr->flags & EcsIdIsSparse) {
+            const ecs_type_info_t *ti = idr->type_info;
+            ecs_xtor_t ctor = ti->hooks.ctor;
+            ecs_iter_action_t on_add = ti->hooks.on_add;
+            ecs_entity_t *entities = flecs_table_entities_array(table);
+            for (j = 0; j < count; j ++) {
+                ecs_entity_t e = entities[row + j];
+                void *ptr = flecs_sparse_ensure_fast(idr->sparse, 0, e);
+                ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
+                if (construct && ctor) {
+                    ctor(ptr, 1, ti);
+                }
+                if (on_add) {
+                    flecs_invoke_hook(world, table, count, row, &entities[row],
+                        ptr, id, ti, EcsOnAdd, on_add);
+                }
+            }
+        }
+    }
+}
+
+static
+void flecs_sparse_on_remove(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    int32_t row,
+    int32_t count,
+    const ecs_type_t *removed)
+{
+    int32_t i, j;
+    for (i = 0; i < removed->count; i ++) {
+        ecs_id_t id = removed->array[i];
+        ecs_id_record_t *idr = flecs_id_record_get(world, id);
+        if (idr->flags & EcsIdIsSparse) {
+            const ecs_type_info_t *ti = idr->type_info;
+            ecs_xtor_t dtor = ti->hooks.dtor;
+            ecs_iter_action_t on_remove = ti->hooks.on_remove;
+            ecs_entity_t *entities = flecs_table_entities_array(table);
+            for (j = 0; j < count; j ++) {
+                ecs_entity_t e = entities[row + j];
+                void *ptr = flecs_sparse_remove_fast(idr->sparse, 0, e);
+                ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
+                if (on_remove) {
+                    flecs_invoke_hook(world, table, count, row, &entities[row],
+                        ptr, id, ti, EcsOnRemove, on_remove);
+                }
+                if (dtor) {
+                    dtor(ptr, 1, ti);
+                }
+            }
+        }
+    }
+}
+
+static
 void flecs_notify_on_add(
     ecs_world_t *world,
     ecs_table_t *table,
@@ -5050,12 +5146,17 @@ void flecs_notify_on_add(
     int32_t row,
     int32_t count,
     const ecs_type_t *added,
-    ecs_flags32_t flags)
+    ecs_flags32_t flags,
+    bool construct)
 {
     ecs_assert(added != NULL, ECS_INTERNAL_ERROR, NULL);
 
     if (added->count) {
         ecs_flags32_t table_flags = table->flags;
+
+        if (table_flags & EcsTableHasSparse) {
+            flecs_sparse_on_add(world, table, row, count, added, construct);
+        }
 
         if (table_flags & (EcsTableHasOnAdd|EcsTableHasIsA|EcsTableHasTraversable)) {
             flecs_emit(world, world, &(ecs_event_desc_t){
@@ -5083,18 +5184,26 @@ void flecs_notify_on_remove(
     ecs_assert(removed != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(count != 0, ECS_INTERNAL_ERROR, NULL);
 
-    if (removed->count && (table->flags & 
-        (EcsTableHasOnRemove|EcsTableHasUnSet|EcsTableHasIsA|EcsTableHasTraversable))) 
-    {
-        flecs_emit(world, world, &(ecs_event_desc_t) {
-            .event = EcsOnRemove,
-            .ids = removed,
-            .table = table,
-            .other_table = other_table,
-            .offset = row,
-            .count = count,
-            .observable = world
-        });
+    if (removed->count) {
+        ecs_flags32_t table_flags = table->flags;
+
+        if (table_flags & EcsTableHasSparse) {
+            flecs_sparse_on_remove(world, table, row, count, removed);
+        }
+    
+        if (table_flags & (EcsTableHasOnRemove|EcsTableHasUnSet|EcsTableHasIsA|
+            EcsTableHasTraversable))
+        {
+            flecs_emit(world, world, &(ecs_event_desc_t) {
+                .event = EcsOnRemove,
+                .ids = removed,
+                .table = table,
+                .other_table = other_table,
+                .offset = row,
+                .count = count,
+                .observable = world
+            });
+        }
     }
 }
 
@@ -5166,7 +5275,8 @@ ecs_record_t* flecs_new_entity(
 
     ecs_assert(ecs_vec_count(&table->data.entities) > row, 
         ECS_INTERNAL_ERROR, NULL);
-    flecs_notify_on_add(world, table, NULL, row, 1, &diff->added, evt_flags);
+    flecs_notify_on_add(
+        world, table, NULL, row, 1, &diff->added, evt_flags, ctor);
 
     return record;
 }
@@ -5213,7 +5323,7 @@ void flecs_move_entity(
     
     flecs_table_delete(world, src_table, src_row, false);
     flecs_notify_on_add(
-        world, dst_table, src_table, dst_row, 1, &diff->added, evt_flags);
+        world, dst_table, src_table, dst_row, 1, &diff->added, evt_flags, ctor);
 
     flecs_update_name_index(world, src_table, dst_table, dst_row, 1);
 
@@ -5299,7 +5409,8 @@ void flecs_commit(
          * table, this suggests that a union relationship could have changed. */
         if (src_table) {
             flecs_notify_on_add(world, src_table, src_table, 
-                ECS_RECORD_TO_ROW(record->row), 1, &diff->added, evt_flags);
+                ECS_RECORD_TO_ROW(record->row), 1, &diff->added, evt_flags, 
+                    construct);
         }
         flecs_journal_end();
         return;
@@ -5395,7 +5506,7 @@ const ecs_entity_t* flecs_bulk_new(
     flecs_defer_begin(world, world->stages[0]);
 
     flecs_notify_on_add(world, table, NULL, row, count, &diff->added, 
-        (component_data == NULL) ? 0 : EcsEventNoOnSet);
+        (component_data == NULL) ? 0 : EcsEventNoOnSet, true);
 
     if (component_data) {
         int32_t c_i;
@@ -5540,9 +5651,9 @@ flecs_component_ptr_t flecs_ensure(
         ECS_HAS_ID_FLAG(id, PAIR), ECS_INVALID_PARAMETER,
             "invalid component id specified for ensure");
 
+    ecs_id_record_t *idr = flecs_id_record_ensure(world, id);
     if (r->table) {
-        dst = flecs_get_component_ptr(
-            world, r->table, ECS_RECORD_TO_ROW(r->row), id);
+        dst = flecs_get_component_ptr(r->table, ECS_RECORD_TO_ROW(r->row), idr);
         if (dst.ptr) {
             return dst;
         }
@@ -5556,9 +5667,7 @@ flecs_component_ptr_t flecs_ensure(
     flecs_defer_begin(world, world->stages[0]);
 
     ecs_assert(r->table != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(r->table->column_count != 0, ECS_INTERNAL_ERROR, NULL);
-    dst = flecs_get_component_ptr(
-        world, r->table, ECS_RECORD_TO_ROW(r->row), id);
+    dst = flecs_get_component_ptr(r->table, ECS_RECORD_TO_ROW(r->row), idr);
 error:
     return dst;
 }
@@ -5624,21 +5733,34 @@ void flecs_notify_on_set(
         int i;
         for (i = 0; i < ids->count; i ++) {
             ecs_id_t id = ids->array[i];
-            const ecs_table_record_t *tr = flecs_table_record_get(world, 
-                table, id);
-            ecs_assert(tr != NULL, ECS_INTERNAL_ERROR, NULL);
-            ecs_assert(tr->column != -1, ECS_INTERNAL_ERROR, NULL);
-            ecs_assert(tr->count == 1, ECS_INTERNAL_ERROR, NULL);
-
-            int32_t index = tr->column;
-            ecs_column_t *column = &table->data.columns[index];
-            const ecs_type_info_t *ti = column->ti;
+            ecs_id_record_t *idr = flecs_id_record_get(world, id);
+            ecs_assert(idr != NULL, ECS_INTERNAL_ERROR, NULL);
+            const ecs_type_info_t *ti = idr->type_info;
             ecs_iter_action_t on_set = ti->hooks.on_set;
-            if (on_set) {
-                ecs_vec_t *c = &column->data;
-                void *ptr = ecs_vec_get(c, column->size, row);
-                flecs_invoke_hook(world, table, count, row, entities, ptr, id, 
-                    ti, EcsOnSet, on_set);
+
+            if (idr->flags & EcsIdIsSparse) {
+                int32_t j;
+                for (j = 0; j < count; j ++) {
+                    void *ptr = flecs_sparse_get_any(
+                        idr->sparse, 0, entities[j]);
+                    flecs_invoke_hook(world, table, 1, row, &entities[j], ptr,
+                        id, ti, EcsOnSet, on_set);
+                }
+            } else {
+                const ecs_table_record_t *tr = 
+                    flecs_id_record_get_table(idr, table);
+                ecs_assert(tr != NULL, ECS_INTERNAL_ERROR, NULL);
+                ecs_assert(tr->column != -1, ECS_INTERNAL_ERROR, NULL);
+                ecs_assert(tr->count == 1, ECS_INTERNAL_ERROR, NULL);
+
+                int32_t index = tr->column;
+                ecs_column_t *column = &table->data.columns[index];
+                if (on_set) {
+                    ecs_vec_t *c = &column->data;
+                    void *ptr = ecs_vec_get(c, column->size, row);
+                    flecs_invoke_hook(world, table, count, row, entities, ptr, 
+                        id, ti, EcsOnSet, on_set);
+                }
             }
         }
     }
@@ -6084,11 +6206,12 @@ int flecs_traverse_add(
                 continue;
             }
             ecs_assert(ECS_RECORD_TO_ROW(r->row) == row, ECS_INTERNAL_ERROR, NULL);
-            flecs_component_ptr_t ptr = flecs_get_component_ptr(
-                world, table, row, v->type);
+            ecs_id_record_t *idr = flecs_id_record_get(world, v->type);
+            flecs_component_ptr_t ptr = flecs_get_component_ptr(table, row, idr);
             ecs_check(ptr.ptr != NULL, ECS_INTERNAL_ERROR, NULL);
+            const ecs_type_info_t *ti = idr->type_info;
             flecs_copy_id(world, r, v->type, 
-                flecs_itosize(ptr.ti->size), ptr.ptr, v->ptr, ptr.ti);
+                flecs_itosize(ti->size), ptr.ptr, v->ptr, ti);
         }
 
         flecs_defer_end(world, world->stages[0]);
@@ -7296,13 +7419,16 @@ const void* ecs_get_id(
 
     const ecs_table_record_t *tr = flecs_id_record_get_table(idr, table);
     if (!tr) {
-       return flecs_get_base_component(world, table, id, idr, 0);
+        return flecs_get_base_component(world, table, id, idr, 0);
     } else {
+        if (idr->flags & EcsIdIsSparse) {
+            return flecs_sparse_get_any(idr->sparse, 0, entity);
+        }
         ecs_check(tr->column != -1, ECS_NOT_A_COMPONENT, NULL);
     }
 
     int32_t row = ECS_RECORD_TO_ROW(r->row);
-    return flecs_get_component_w_index(table, tr->column, row).ptr;
+    return flecs_table_get_component(table, tr->column, row).ptr;
 error:
     return NULL;
 }
@@ -7326,17 +7452,8 @@ void* ecs_get_mut_id(
     }
 
     ecs_id_record_t *idr = flecs_id_record_get(world, id);
-    if (!idr) {
-        return NULL;
-    }
-
-    const ecs_table_record_t *tr = flecs_id_record_get_table(idr, table);
-    if (!tr || (tr->column == -1)) {
-       return NULL;
-    }
-
     int32_t row = ECS_RECORD_TO_ROW(r->row);
-    return flecs_get_component_w_index(table, tr->column, row).ptr;
+    return flecs_get_component_ptr(table, row, idr).ptr;
 error:
     return NULL;
 }
@@ -7478,7 +7595,8 @@ const void* ecs_record_get_id(
     ecs_id_t id)
 {
     const ecs_world_t *world = ecs_get_world(stage);
-    return flecs_get_component(world, r->table, ECS_RECORD_TO_ROW(r->row), id);
+    ecs_id_record_t *idr = flecs_id_record_get(world, id);
+    return flecs_get_component(r->table, ECS_RECORD_TO_ROW(r->row), idr);
 }
 
 bool ecs_record_has_id(
@@ -7499,7 +7617,8 @@ void* ecs_record_ensure_id(
     ecs_id_t id)
 {
     const ecs_world_t *world = ecs_get_world(stage);
-    return flecs_get_component(world, r->table, ECS_RECORD_TO_ROW(r->row), id);
+    ecs_id_record_t *idr = flecs_id_record_get(world, id);
+    return flecs_get_component(r->table, ECS_RECORD_TO_ROW(r->row), idr);
 }
 
 ecs_ref_t ecs_ref_init_id(
@@ -7607,8 +7726,13 @@ void* ecs_ref_get_id(
     }
 
     int32_t column = tr->column;
-    ecs_assert(column != -1, ECS_INTERNAL_ERROR, NULL);
-    return flecs_get_component_w_index(table, column, row).ptr;
+    if (column == -1) {
+        ecs_id_record_t *idr = (ecs_id_record_t*)tr->hdr.cache;
+        if (idr->flags & EcsIdIsSparse) {
+            return flecs_sparse_get_any(idr->sparse, 0, ref->entity);
+        }
+    }
+    return flecs_table_get_component(table, column, row).ptr;
 error:
     return NULL;
 }
@@ -7637,7 +7761,8 @@ void* ecs_emplace_id(
     flecs_add_id_w_record(world, entity, r, id, false /* Add without ctor */);
     flecs_defer_end(world, stage);
 
-    void *ptr = flecs_get_component(world, r->table, ECS_RECORD_TO_ROW(r->row), id);
+    ecs_id_record_t *idr = flecs_id_record_get(world, id);
+    void *ptr = flecs_get_component(r->table, ECS_RECORD_TO_ROW(r->row), idr);
     ecs_check(ptr != NULL, ECS_INVALID_PARAMETER, 
         "emplaced component was removed during operation, make sure to not "
         "remove component T in on_add(T) hook/OnAdd(T) observer");
@@ -9025,8 +9150,9 @@ void flecs_cmd_batch_for_entity(
                  * component value, the on_set hook has had the opportunity to
                  * run first to set any computed values of the component. */
                 int32_t row = ECS_RECORD_TO_ROW(r->row);
+                ecs_id_record_t *idr = flecs_id_record_get(world, cmd->id);
                 flecs_component_ptr_t ptr = flecs_get_component_ptr(
-                    world, start_table, row, cmd->id);
+                    start_table, row, idr);
                 if (ptr.ptr) {
                     const ecs_type_info_t *ti = ptr.ti;
                     ecs_iter_action_t on_set;
@@ -9124,8 +9250,9 @@ void flecs_cmd_batch_for_entity(
             case EcsCmdEnsure: {
                 flecs_component_ptr_t ptr = {0};
                 if (r->table) {
-                    ptr = flecs_get_component_ptr(world, 
-                        r->table, ECS_RECORD_TO_ROW(r->row), cmd->id);
+                    ecs_id_record_t *idr = flecs_id_record_get(world, cmd->id);
+                    ptr = flecs_get_component_ptr(
+                        r->table, ECS_RECORD_TO_ROW(r->row), idr);
                 }
 
                 /* It's possible that even though the component was set, the
@@ -15269,13 +15396,18 @@ repeat_event:
                     if (base_column != -1) {
                         /* Base found with component */
                         ecs_table_t *base_table = base_tr->hdr.table;
-                        base_column = base_tr->column;
-                        ecs_assert(base_column != -1, ECS_INTERNAL_ERROR, NULL);
-                        ecs_record_t *base_r = flecs_entities_get(world, base);
-                        ecs_assert(base_r != NULL, ECS_INTERNAL_ERROR, NULL);
-                        int32_t base_row = ECS_RECORD_TO_ROW(base_r->row);
-                        ecs_vec_t *base_v = &base_table->data.columns[base_column].data;
-                        override_ptr = ecs_vec_get(base_v, ti->size, base_row);
+                        if (idr->flags & EcsIdIsSparse) {
+                            override_ptr = flecs_sparse_get_any(
+                                idr->sparse, 0, base);
+                        } else {
+                            base_column = base_tr->column;
+                            ecs_assert(base_column != -1, ECS_INTERNAL_ERROR, NULL);
+                            ecs_record_t *base_r = flecs_entities_get(world, base);
+                            ecs_assert(base_r != NULL, ECS_INTERNAL_ERROR, NULL);
+                            int32_t base_row = ECS_RECORD_TO_ROW(base_r->row);
+                            ecs_vec_t *base_v = &base_table->data.columns[base_column].data;
+                            override_ptr = ecs_vec_get(base_v, ti->size, base_row);
+                        }
                     }
                 }
             }
@@ -15322,12 +15454,23 @@ repeat_event:
 
         if (count) {
             storage_i = tr->column;
-            if (storage_i != -1) {
-                /* If this is a component, fetch pointer & size */
-                ecs_assert(idr->type_info != NULL, ECS_INTERNAL_ERROR, NULL);
-                ecs_column_t *c = &columns[storage_i];
-                ecs_size_t size = c->ti->size;
-                void *ptr = ecs_vec_get(&c->data, size, offset);
+            bool is_sparse = idr->flags & EcsIdIsSparse;
+            if (storage_i != -1 || is_sparse) {
+                void *ptr;
+                ecs_size_t size = idr->type_info->size;
+
+                if (is_sparse) {
+                    ecs_assert(count == 1, ECS_UNSUPPORTED, 
+                        "events for multiple entities are currently unsupported"
+                        " for sparse components");
+                    ecs_entity_t e = flecs_table_entities_array(table)[offset];
+                    ptr = flecs_sparse_get(idr->sparse, 0, e);
+                } else{
+                    ecs_assert(idr->type_info != NULL, ECS_INTERNAL_ERROR, NULL);
+                    ecs_column_t *c = &columns[storage_i];
+                    ptr = ecs_vec_get(&c->data, size, offset);
+                }
+
                 /* safe, owned by observer */
                 ECS_CONST_CAST(int32_t*, it.sizes)[0] = size;
 
@@ -15362,6 +15505,7 @@ repeat_event:
                                 ecs_assert(it.event_cur == evtx, 
                                     ECS_INTERNAL_ERROR, NULL);
                             }
+
                             it.sources[0] = 0;
                         }
                     }
@@ -21986,6 +22130,9 @@ const ecs_entity_t ecs_id(EcsRateFilter) =          FLECS_HI_COMPONENT_ID + 49;
 const ecs_entity_t EcsRemove =                      FLECS_HI_COMPONENT_ID + 50;
 const ecs_entity_t EcsDelete =                      FLECS_HI_COMPONENT_ID + 51;
 const ecs_entity_t EcsPanic =                       FLECS_HI_COMPONENT_ID + 52;
+
+/* Storage */
+const ecs_entity_t EcsSparse =                      FLECS_HI_COMPONENT_ID + 53;
 
 /* Misc */
 const ecs_entity_t ecs_id(EcsDefaultChildComponent) = FLECS_HI_COMPONENT_ID + 55;
@@ -35609,6 +35756,44 @@ void* flecs_sparse_ensure_fast(
 
     return DATA(page->data, sparse->size, offset);
 }
+
+void* flecs_sparse_remove_fast(
+    ecs_sparse_t *sparse,
+    ecs_size_t size,
+    uint64_t index)
+{
+    ecs_assert(sparse != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(!size || size == sparse->size, ECS_INVALID_PARAMETER, NULL);
+    (void)size;
+
+    ecs_page_t *page = flecs_sparse_get_page(sparse, PAGE(index));
+    if (!page || !page->sparse) {
+        return NULL;
+    }
+
+    flecs_sparse_strip_generation(&index);
+    int32_t offset = OFFSET(index);
+    int32_t dense = page->sparse[offset];
+
+    if (dense) {
+        int32_t count = sparse->count;
+        if (dense == (count - 1)) {
+            /* If dense is the last used element, simply decrease count */
+            sparse->count --;
+        } else if (dense < count) {
+            /* If element is alive, move it to unused elements */
+            flecs_sparse_swap_dense(sparse, page, dense, count - 1);
+            sparse->count --;
+        }
+
+        /* Reset memory to zero on remove */
+        return DATA(page->data, sparse->size, offset);
+    } else {
+        /* Element is not paired and thus not alive, nothing to be done */
+        return NULL;
+    }
+}
+
 
 void flecs_sparse_remove(
     ecs_sparse_t *sparse,
@@ -50504,6 +50689,13 @@ ecs_id_record_t* flecs_id_record_new(
     idr->flags |= flecs_observers_exist(o, id, EcsOnTableCreate) * EcsIdHasOnTableCreate;
     idr->flags |= flecs_observers_exist(o, id, EcsOnTableDelete) * EcsIdHasOnTableDelete;
 
+    if (idr->flags & EcsIdIsSparse) {
+        ecs_check(idr->type_info != NULL, ECS_INVALID_OPERATION, 
+            "Sparse trait cannot be applied to tags");
+        idr->sparse = ecs_os_calloc_t(ecs_sparse_t);
+        flecs_sparse_init(idr->sparse, NULL, NULL, idr->type_info->size);
+    }
+
     if (ecs_should_log_1()) {
         char *id_str = ecs_id_str(world, id);
         ecs_dbg_1("#[green]id#[normal] %s #[green]created", id_str);
@@ -50516,6 +50708,7 @@ ecs_id_record_t* flecs_id_record_new(
     world->info.tag_id_count += idr->type_info == NULL;
     world->info.pair_id_count += is_pair;
 
+error:
     return idr;
 }
 
@@ -50581,6 +50774,13 @@ void flecs_id_record_free(
 
             ecs_log_pop_2();
         }
+    }
+
+    if (idr->sparse) {
+        ecs_assert(flecs_sparse_count(idr->sparse) == 0, 
+            ECS_INTERNAL_ERROR, NULL);
+        flecs_sparse_fini(idr->sparse);
+        ecs_os_free(idr->sparse);
     }
 
     /* Update counters */
@@ -50948,7 +51148,7 @@ void flecs_table_init_columns(
         ecs_table_record_t *tr = &records[i];
         ecs_id_record_t *idr = (ecs_id_record_t*)tr->hdr.cache;
         const ecs_type_info_t *ti = idr->type_info;
-        if (!ti) {
+        if (!ti || (idr->flags & EcsIdIsSparse)) {
             t2s[i] = -1;
             continue;
         }
@@ -51282,8 +51482,8 @@ void flecs_table_init(
         last_pair = dst_i;
 
         /* Add a (*, Target) record for each relationship target. Type
-         * ids are sorted relationship-first, so we can't simply do a single linear 
-         * scan to find all occurrences for a target. */
+         * ids are sorted relationship-first, so we can't simply do a single 
+         * linear scan to find all occurrences for a target. */
         for (dst_i = first_pair; dst_i < last_pair; dst_i ++) {
             ecs_id_t dst_id = dst_ids[dst_i];
             ecs_id_t tgt_id = ecs_pair(EcsWildcard, ECS_PAIR_SECOND(dst_id));
@@ -51359,7 +51559,9 @@ void flecs_table_init(
         }
 
         if ((i < table->type.count) && (idr->type_info != NULL)) {
-            column_count ++;
+            if (!(idr->flags & EcsIdIsSparse)) {
+                column_count ++;
+            }
         }
     }
 
@@ -51367,6 +51569,7 @@ void flecs_table_init(
         table->column_map = flecs_walloc_n(world, int32_t, 
             dst_count + column_count);
     }
+
     table->column_count = flecs_ito(int16_t, column_count);
     flecs_table_init_data(world, table);
 
@@ -52417,7 +52620,8 @@ void flecs_table_move(
         return;
     }
 
-    flecs_table_move_bitset_columns(dst_table, dst_index, src_table, src_index, 1, false);
+    flecs_table_move_bitset_columns(
+        dst_table, dst_index, src_table, src_index, 1, false);
 
     /* If the source and destination entities are the same, move component 
      * between tables. If the entities are not the same (like when cloning) use

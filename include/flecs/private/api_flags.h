@@ -77,10 +77,11 @@ extern "C" {
 #define EcsIdHasOnTableEmpty           (1u << 21)
 #define EcsIdHasOnTableCreate          (1u << 22)
 #define EcsIdHasOnTableDelete          (1u << 23)
+#define EcsIdIsSparse                  (1u << 24)
 #define EcsIdEventMask\
     (EcsIdHasOnAdd|EcsIdHasOnRemove|EcsIdHasOnSet|EcsIdHasUnSet|\
         EcsIdHasOnTableFill|EcsIdHasOnTableEmpty|EcsIdHasOnTableCreate|\
-            EcsIdHasOnTableDelete)
+            EcsIdHasOnTableDelete|EcsIdIsSparse)
 
 #define EcsIdMarkedForDelete           (1u << 30)
 
@@ -185,13 +186,14 @@ extern "C" {
 #define EcsTableHasOnTableEmpty        (1u << 21u)
 #define EcsTableHasOnTableCreate       (1u << 22u)
 #define EcsTableHasOnTableDelete       (1u << 23u)
+#define EcsTableHasSparse              (1u << 24u)
 
 #define EcsTableHasTraversable         (1u << 25u)
 #define EcsTableMarkedForDelete        (1u << 30u)
 
 /* Composite table flags */
 #define EcsTableHasLifecycle        (EcsTableHasCtors | EcsTableHasDtors)
-#define EcsTableIsComplex           (EcsTableHasLifecycle | EcsTableHasToggle)
+#define EcsTableIsComplex           (EcsTableHasLifecycle | EcsTableHasToggle | EcsTableHasSparse)
 #define EcsTableHasAddActions       (EcsTableHasIsA | EcsTableHasCtors | EcsTableHasOnAdd | EcsTableHasOnSet)
 #define EcsTableHasRemoveActions    (EcsTableHasIsA | EcsTableHasDtors | EcsTableHasOnRemove | EcsTableHasUnSet)
 

@@ -332,6 +332,13 @@ ecs_id_record_t* flecs_id_record_new(
     idr->flags |= flecs_observers_exist(o, id, EcsOnTableCreate) * EcsIdHasOnTableCreate;
     idr->flags |= flecs_observers_exist(o, id, EcsOnTableDelete) * EcsIdHasOnTableDelete;
 
+    if (idr->flags & EcsIdIsSparse) {
+        ecs_check(idr->type_info != NULL, ECS_INVALID_OPERATION, 
+            "Sparse trait cannot be applied to tags");
+        idr->sparse = ecs_os_calloc_t(ecs_sparse_t);
+        flecs_sparse_init(idr->sparse, NULL, NULL, idr->type_info->size);
+    }
+
     if (ecs_should_log_1()) {
         char *id_str = ecs_id_str(world, id);
         ecs_dbg_1("#[green]id#[normal] %s #[green]created", id_str);
@@ -344,6 +351,7 @@ ecs_id_record_t* flecs_id_record_new(
     world->info.tag_id_count += idr->type_info == NULL;
     world->info.pair_id_count += is_pair;
 
+error:
     return idr;
 }
 
@@ -409,6 +417,13 @@ void flecs_id_record_free(
 
             ecs_log_pop_2();
         }
+    }
+
+    if (idr->sparse) {
+        ecs_assert(flecs_sparse_count(idr->sparse) == 0, 
+            ECS_INTERNAL_ERROR, NULL);
+        flecs_sparse_fini(idr->sparse);
+        ecs_os_free(idr->sparse);
     }
 
     /* Update counters */

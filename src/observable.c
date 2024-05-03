@@ -1292,13 +1292,18 @@ repeat_event:
                     if (base_column != -1) {
                         /* Base found with component */
                         ecs_table_t *base_table = base_tr->hdr.table;
-                        base_column = base_tr->column;
-                        ecs_assert(base_column != -1, ECS_INTERNAL_ERROR, NULL);
-                        ecs_record_t *base_r = flecs_entities_get(world, base);
-                        ecs_assert(base_r != NULL, ECS_INTERNAL_ERROR, NULL);
-                        int32_t base_row = ECS_RECORD_TO_ROW(base_r->row);
-                        ecs_vec_t *base_v = &base_table->data.columns[base_column].data;
-                        override_ptr = ecs_vec_get(base_v, ti->size, base_row);
+                        if (idr->flags & EcsIdIsSparse) {
+                            override_ptr = flecs_sparse_get_any(
+                                idr->sparse, 0, base);
+                        } else {
+                            base_column = base_tr->column;
+                            ecs_assert(base_column != -1, ECS_INTERNAL_ERROR, NULL);
+                            ecs_record_t *base_r = flecs_entities_get(world, base);
+                            ecs_assert(base_r != NULL, ECS_INTERNAL_ERROR, NULL);
+                            int32_t base_row = ECS_RECORD_TO_ROW(base_r->row);
+                            ecs_vec_t *base_v = &base_table->data.columns[base_column].data;
+                            override_ptr = ecs_vec_get(base_v, ti->size, base_row);
+                        }
                     }
                 }
             }
@@ -1345,12 +1350,23 @@ repeat_event:
 
         if (count) {
             storage_i = tr->column;
-            if (storage_i != -1) {
-                /* If this is a component, fetch pointer & size */
-                ecs_assert(idr->type_info != NULL, ECS_INTERNAL_ERROR, NULL);
-                ecs_column_t *c = &columns[storage_i];
-                ecs_size_t size = c->ti->size;
-                void *ptr = ecs_vec_get(&c->data, size, offset);
+            bool is_sparse = idr->flags & EcsIdIsSparse;
+            if (storage_i != -1 || is_sparse) {
+                void *ptr;
+                ecs_size_t size = idr->type_info->size;
+
+                if (is_sparse) {
+                    ecs_assert(count == 1, ECS_UNSUPPORTED, 
+                        "events for multiple entities are currently unsupported"
+                        " for sparse components");
+                    ecs_entity_t e = flecs_table_entities_array(table)[offset];
+                    ptr = flecs_sparse_get(idr->sparse, 0, e);
+                } else{
+                    ecs_assert(idr->type_info != NULL, ECS_INTERNAL_ERROR, NULL);
+                    ecs_column_t *c = &columns[storage_i];
+                    ptr = ecs_vec_get(&c->data, size, offset);
+                }
+
                 /* safe, owned by observer */
                 ECS_CONST_CAST(int32_t*, it.sizes)[0] = size;
 
@@ -1385,6 +1401,7 @@ repeat_event:
                                 ecs_assert(it.event_cur == evtx, 
                                     ECS_INTERNAL_ERROR, NULL);
                             }
+
                             it.sources[0] = 0;
                         }
                     }
