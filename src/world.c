@@ -91,6 +91,9 @@ const ecs_entity_t EcsRemove =                      FLECS_HI_COMPONENT_ID + 50;
 const ecs_entity_t EcsDelete =                      FLECS_HI_COMPONENT_ID + 51;
 const ecs_entity_t EcsPanic =                       FLECS_HI_COMPONENT_ID + 52;
 
+/* Storage */
+const ecs_entity_t EcsSparse =                      FLECS_HI_COMPONENT_ID + 53;
+
 /* Misc */
 const ecs_entity_t ecs_id(EcsDefaultChildComponent) = FLECS_HI_COMPONENT_ID + 55;
 
