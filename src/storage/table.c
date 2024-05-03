@@ -134,7 +134,7 @@ void flecs_table_init_columns(
         ecs_table_record_t *tr = &records[i];
         ecs_id_record_t *idr = (ecs_id_record_t*)tr->hdr.cache;
         const ecs_type_info_t *ti = idr->type_info;
-        if (!ti) {
+        if (!ti || (idr->flags & EcsIdIsSparse)) {
             t2s[i] = -1;
             continue;
         }
@@ -468,8 +468,8 @@ void flecs_table_init(
         last_pair = dst_i;
 
         /* Add a (*, Target) record for each relationship target. Type
-         * ids are sorted relationship-first, so we can't simply do a single linear 
-         * scan to find all occurrences for a target. */
+         * ids are sorted relationship-first, so we can't simply do a single 
+         * linear scan to find all occurrences for a target. */
         for (dst_i = first_pair; dst_i < last_pair; dst_i ++) {
             ecs_id_t dst_id = dst_ids[dst_i];
             ecs_id_t tgt_id = ecs_pair(EcsWildcard, ECS_PAIR_SECOND(dst_id));
@@ -545,7 +545,9 @@ void flecs_table_init(
         }
 
         if ((i < table->type.count) && (idr->type_info != NULL)) {
-            column_count ++;
+            if (!(idr->flags & EcsIdIsSparse)) {
+                column_count ++;
+            }
         }
     }
 
@@ -553,6 +555,7 @@ void flecs_table_init(
         table->column_map = flecs_walloc_n(world, int32_t, 
             dst_count + column_count);
     }
+
     table->column_count = flecs_ito(int16_t, column_count);
     flecs_table_init_data(world, table);
 
@@ -1603,7 +1606,8 @@ void flecs_table_move(
         return;
     }
 
-    flecs_table_move_bitset_columns(dst_table, dst_index, src_table, src_index, 1, false);
+    flecs_table_move_bitset_columns(
+        dst_table, dst_index, src_table, src_index, 1, false);
 
     /* If the source and destination entities are the same, move component 
      * between tables. If the entities are not the same (like when cloning) use

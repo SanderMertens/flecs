@@ -196,6 +196,12 @@ bool flecs_set_id_flag(
 {
     if (!(idr->flags & flag)) {
         idr->flags |= flag;
+        if (flag == EcsIdIsSparse) {
+            ecs_assert(idr->type_info != NULL, ECS_INVALID_OPERATION, 
+                "only components can be marked as sparse");
+            idr->sparse = ecs_os_calloc_t(ecs_sparse_t);
+            flecs_sparse_init(idr->sparse, NULL, NULL, idr->type_info->size);
+        }
         return true;
     }
     return false;
@@ -354,6 +360,11 @@ void flecs_register_can_toggle(ecs_iter_t *it) {
 static
 void flecs_register_with(ecs_iter_t *it) {
     flecs_register_id_flag_for_relation(it, EcsWith, EcsIdWith, 0, 0);
+}
+
+static
+void flecs_register_sparse(ecs_iter_t *it) {
+    flecs_register_id_flag_for_relation(it, EcsSparse, EcsIdIsSparse, 0, 0);
 }
 
 static
@@ -776,6 +787,7 @@ void flecs_bootstrap(
     flecs_bootstrap_entity(world, EcsFlag, "Flag", EcsFlecsCore);
 
     /* Component/relationship properties */
+    flecs_bootstrap_trait(world, EcsSparse);
     flecs_bootstrap_trait(world, EcsTransitive);
     flecs_bootstrap_trait(world, EcsReflexive);
     flecs_bootstrap_trait(world, EcsSymmetric);
@@ -938,6 +950,14 @@ void flecs_bootstrap(
         .query.flags = EcsQueryMatchPrefab,
         .events = {EcsOnAdd},
         .callback = flecs_register_with
+    });
+
+    ecs_observer(world, {
+        .query.terms = {
+            { .id = EcsSparse, .src.id = EcsSelf },
+        },
+        .events = {EcsOnAdd, EcsOnRemove},
+        .callback = flecs_register_sparse
     });
 
     /* Define observer to make sure that adding a module to a child entity also

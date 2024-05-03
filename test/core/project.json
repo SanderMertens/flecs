@@ -434,6 +434,42 @@
                 "reuse_300_component_ids"
             ]
         }, {
+            "id": "Sparse",
+            "testcases": [
+                "has",
+                "owns",
+                "get",
+                "get_mut",
+                "ensure",
+                "emplace",
+                "set",
+                "get_ref",
+                "update_ref",
+                "test_stable_ptr",
+                "has_after_remove",
+                "get_after_remove",
+                "get_mut_after_remove",
+                "record_get",
+                "has_inherited",
+                "owns_inherited",
+                "get_inherited",
+                "get_mut_inherited",
+                "ensure_inherited",
+                "emplace_inherited",
+                "ctor_after_emplace",
+                "ctor_dtor_after_remove",
+                "ctor_dtor_after_clear",
+                "ctor_dtor_after_delete",
+                "ctor_dtor_after_fini",
+                "on_add_remove_after_remove",
+                "on_add_remove_after_clear",
+                "on_add_remove_after_delete",
+                "on_add_remove_after_fini",
+                "on_set_after_set",
+                "on_set_after_modified",
+                "sparse_relationship"
+            ]
+        }, {
             "id": "Hierarchies",
             "setup": true,
             "testcases": [
