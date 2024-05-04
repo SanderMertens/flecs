@@ -7329,6 +7329,43 @@ void Traversal_self_up_2_levels(void) {
     ecs_fini(world);
 }
 
+void Traversal_self_up_mixed_traversable(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+
+    ecs_entity_t p1 = ecs_new(world);
+    ecs_entity_t p2 = ecs_new(world);
+    ecs_entity_t c = ecs_new_w_pair(world, EcsChildOf, p2);
+
+    ecs_add(world, p1, TagA);
+    ecs_add(world, p2, TagA);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "TagA(self|up ChildOf)"
+    });
+
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(2, it.count);
+    test_uint(p1, it.entities[0]);
+    test_uint(p2, it.entities[1]);
+    test_uint(0, ecs_field_src(&it, 0));
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(c, it.entities[0]);
+    test_uint(p2, ecs_field_src(&it, 0));
+    
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
 void Traversal_not_up_disabled(void) {
     ecs_world_t *world = ecs_mini();
 
