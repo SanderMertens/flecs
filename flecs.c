@@ -38410,6 +38410,8 @@ bool flecs_query_up_select(
                     continue;
                 }
 
+                op_ctx->row = row;
+
                 bool match_empty = (q->flags & EcsQueryMatchEmptyTables) != 0;
                 down = op_ctx->down = flecs_query_get_down_cache(ctx, &op_ctx->cache, 
                     op_ctx->trav, entity, op_ctx->idr_with, self, match_empty);
