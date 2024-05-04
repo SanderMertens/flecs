@@ -1322,6 +1322,7 @@
                 "this_self_up_childof_pair_for_var_written_n_targets",
                 "this_written_self_up_childof_pair_for_var_written_n_targets",
                 "self_up_2_levels",
+                "self_up_mixed_traversable",
                 "not_up_disabled",
                 "up_2_rel_instances",
                 "up_2_rel_instances_match_2nd",
