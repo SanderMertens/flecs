@@ -8200,3 +8200,40 @@ void RulesTraversal_this_written_cascade_childof_w_parent_flag(void) {
 
     ecs_fini(world);
 }
+
+void RulesTraversal_self_up_mixed_traversable(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+
+    ecs_entity_t p1 = ecs_new_id(world);
+    ecs_entity_t p2 = ecs_new_id(world);
+    ecs_entity_t c = ecs_new_w_pair(world, EcsChildOf, p2);
+
+    ecs_add(world, p1, TagA);
+    ecs_add(world, p2, TagA);
+
+    ecs_rule_t *q = ecs_rule(world, {
+        .expr = "TagA(self|up(ChildOf))"
+    });
+
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_rule_iter(world, q);
+    test_bool(true, ecs_rule_next(&it));
+    test_int(2, it.count);
+    test_uint(p1, it.entities[0]);
+    test_uint(p2, it.entities[1]);
+    test_uint(0, ecs_field_src(&it, 1));
+
+    test_bool(true, ecs_rule_next(&it));
+    test_int(1, it.count);
+    test_uint(c, it.entities[0]);
+    test_uint(p2, ecs_field_src(&it, 1));
+    
+    test_bool(false, ecs_rule_next(&it));
+
+    ecs_rule_fini(q);
+
+    ecs_fini(world);
+}

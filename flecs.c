@@ -66642,6 +66642,8 @@ bool flecs_rule_up_select(
                     continue;
                 }
 
+                op_ctx->row = row;
+
                 down = op_ctx->down = flecs_rule_get_down_cache(ctx, &op_ctx->cache, 
                     op_ctx->trav, entity, op_ctx->idr_with, self);
                 op_ctx->cache_elem = -1;
