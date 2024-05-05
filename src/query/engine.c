@@ -428,6 +428,8 @@ void flecs_query_set_match(
     }
 
     ecs_iter_t *it = ctx->it;
+    ecs_assert(column >= 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(column < table->type.count, ECS_INTERNAL_ERROR, NULL);
     flecs_query_it_set_column(it, field_index, column);
     ecs_id_t matched = flecs_query_it_set_id(it, table, field_index, column);
     flecs_query_set_vars(op, matched, ctx);
@@ -570,6 +572,9 @@ bool flecs_query_with(
         op_ctx->column = flecs_ito(int16_t, tr->index);
         op_ctx->remaining = flecs_ito(int16_t, tr->count);
     } else {
+        ecs_assert((op_ctx->remaining + op_ctx->column - 1) < table->type.count, 
+            ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(op_ctx->remaining >= 0, ECS_INTERNAL_ERROR, NULL);
         if (--op_ctx->remaining <= 0) {
             return false;
         }
@@ -831,7 +836,6 @@ next_elem:
 
         ecs_trav_down_elem_t *elem = ecs_vec_get_t(
             &down->elems, ecs_trav_down_elem_t, op_ctx->cache_elem);
-
         flecs_query_var_set_range(op, op->src.var, elem->table, 0, 0, ctx);
         flecs_query_set_vars(op, op_ctx->matched, ctx);
 
@@ -915,6 +919,8 @@ bool flecs_query_self_up_with(
         bool result;
         if (id_only) {
             result = flecs_query_with_id(op, redo, ctx);
+            ecs_query_and_ctx_t *op_ctx = flecs_op_ctx(ctx, and);
+            op_ctx->remaining = 1;
         } else {
             result = flecs_query_with(op, redo, ctx);
         }
@@ -3224,8 +3230,10 @@ void flecs_query_populate_field(
         ecs_record_t *r = flecs_entities_get(ctx->world, src);
         ecs_table_t *src_table = r->table;
         if (src_table->column_map) {
+            ecs_assert(index < src_table->type.count, ECS_INTERNAL_ERROR, NULL);
             int32_t column = src_table->column_map[index];
             if (column != -1) {
+                ecs_assert(column >= 0, ECS_INTERNAL_ERROR, NULL);
                 it->ptrs[field_index] = ecs_vec_get(
                     &src_table->data.columns[column].data,
                     it->sizes[field_index],
