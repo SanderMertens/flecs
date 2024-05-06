@@ -91,6 +91,7 @@ typedef enum {
     EcsQueryPairEq,         /* Test if both elements of pair are the same */
     EcsQueryPopulate,       /* Populate any data fields */
     EcsQueryPopulateSelf,   /* Populate only self (owned) data fields */
+    EcsQueryPopulateSparse, /* Populate sparse fields */
     EcsQueryYield,          /* Yield result back to application */
     EcsQueryNothing         /* Must be last */
 } ecs_query_op_kind_t;
@@ -338,7 +339,6 @@ struct ecs_query_impl_t {
     int32_t var_count;            /* Number of variables */
     int32_t var_pub_count;        /* Number of public variables */
     int32_t var_size;             /* Size of variable array */
-    bool has_table_this;          /* Does query have [$this] */
     ecs_hashmap_t tvar_index;     /* Name index for table variables */
     ecs_hashmap_t evar_index;     /* Name index for entity variables */
     ecs_query_var_cache_t vars_cache; /* For trivial queries with only This variables */

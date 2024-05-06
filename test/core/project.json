@@ -443,6 +443,8 @@
                 "ensure",
                 "emplace",
                 "set",
+                "insert_1",
+                "insert_2",
                 "get_ref",
                 "update_ref",
                 "test_stable_ptr",

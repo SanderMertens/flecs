@@ -16,7 +16,7 @@ ecs_var_id_t flecs_query_find_var_id(
 
     if (kind == EcsVarTable) {
         if (!ecs_os_strcmp(name, EcsThisName)) {
-            if (query->has_table_this) {
+            if (query->pub.flags & EcsQueryHasTableThisVar) {
                 return 0;
             } else {
                 return EcsVarNone;

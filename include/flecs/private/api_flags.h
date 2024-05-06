@@ -147,6 +147,8 @@ extern "C" {
 #define EcsQueryIsTrivial             (1u << 22u) /* Query can use trivial evaluation function */
 #define EcsQueryHasCacheable          (1u << 23u) /* Query has cacheable terms */
 #define EcsQueryIsCacheable           (1u << 24u) /* All terms of query are cacheable */
+#define EcsQueryHasTableThisVar       (1u << 25u) /* Does query have $this table var */
+#define EcsQueryHasSparseThis         (1u << 26u) /* Does query have $this sparse fields */
 
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -174,61 +174,62 @@ const char* flecs_query_op_str(
     uint16_t kind)
 {
     switch(kind) {
-    case EcsQueryAnd:           return "and       ";
-    case EcsQueryAndId:         return "andid     ";
-    case EcsQueryAndAny:        return "andany    ";
-    case EcsQueryTriv:          return "triv      ";
-    case EcsQueryTrivData:      return "trivpop   ";
-    case EcsQueryTrivWildcard:  return "trivwc    ";
-    case EcsQueryCache:         return "cache     ";
-    case EcsQueryCacheData:     return "cachepop  ";
-    case EcsQueryIsCache:       return "xcache    ";
-    case EcsQueryIsCacheData:   return "xcachepop ";
-    case EcsQuerySelectAny:     return "any       ";
-    case EcsQueryUp:            return "up        ";
-    case EcsQueryUpId:          return "upid      ";
-    case EcsQuerySelfUp:        return "selfup    ";
-    case EcsQuerySelfUpId:      return "selfupid  ";
-    case EcsQueryWith:          return "with      ";
-    case EcsQueryTrav:          return "trav      ";
-    case EcsQueryAndFrom:       return "andfrom   ";
-    case EcsQueryOrFrom:        return "orfrom    ";
-    case EcsQueryNotFrom:       return "notfrom   ";
-    case EcsQueryIds:           return "ids       ";
-    case EcsQueryIdsRight:      return "idsr      ";
-    case EcsQueryIdsLeft:       return "idsl      ";
-    case EcsQueryEach:          return "each      ";
-    case EcsQueryStore:         return "store     ";
-    case EcsQueryReset:         return "reset     ";
-    case EcsQueryOr:            return "or        ";
-    case EcsQueryOptional:      return "option    ";
-    case EcsQueryIfVar:         return "ifvar     ";
-    case EcsQueryIfSet:         return "ifset     ";
-    case EcsQueryEnd:           return "end       ";
-    case EcsQueryNot:           return "not       ";
-    case EcsQueryPredEq:        return "eq        ";
-    case EcsQueryPredNeq:       return "neq       ";
-    case EcsQueryPredEqName:    return "eq_nm     ";
-    case EcsQueryPredNeqName:   return "neq_nm    ";
-    case EcsQueryPredEqMatch:   return "eq_m      ";
-    case EcsQueryPredNeqMatch:  return "neq_m     ";
-    case EcsQueryMemberEq:      return "membereq  ";
-    case EcsQueryMemberNeq:     return "memberneq ";
-    case EcsQueryToggle:        return "toggle    ";
-    case EcsQueryToggleOption:  return "togglopt  ";
-    case EcsQueryLookup:        return "lookup    ";
-    case EcsQuerySetVars:       return "setvars   ";
-    case EcsQuerySetThis:       return "setthis   ";
-    case EcsQuerySetFixed:      return "setfix    ";
-    case EcsQuerySetIds:        return "setids    ";
-    case EcsQuerySetId:         return "setid     ";
-    case EcsQueryContain:       return "contain   ";
-    case EcsQueryPairEq:        return "pair_eq   ";
-    case EcsQueryPopulate:      return "pop       ";
-    case EcsQueryPopulateSelf:  return "popself   ";
-    case EcsQueryYield:         return "yield     ";
-    case EcsQueryNothing:       return "nothing   ";
-    default:                   return "!invalid  ";
+    case EcsQueryAnd:            return "and       ";
+    case EcsQueryAndId:          return "andid     ";
+    case EcsQueryAndAny:         return "andany    ";
+    case EcsQueryTriv:           return "triv      ";
+    case EcsQueryTrivData:       return "trivpop   ";
+    case EcsQueryTrivWildcard:   return "trivwc    ";
+    case EcsQueryCache:          return "cache     ";
+    case EcsQueryCacheData:      return "cachepop  ";
+    case EcsQueryIsCache:        return "xcache    ";
+    case EcsQueryIsCacheData:    return "xcachepop ";
+    case EcsQuerySelectAny:      return "any       ";
+    case EcsQueryUp:             return "up        ";
+    case EcsQueryUpId:           return "upid      ";
+    case EcsQuerySelfUp:         return "selfup    ";
+    case EcsQuerySelfUpId:       return "selfupid  ";
+    case EcsQueryWith:           return "with      ";
+    case EcsQueryTrav:           return "trav      ";
+    case EcsQueryAndFrom:        return "andfrom   ";
+    case EcsQueryOrFrom:         return "orfrom    ";
+    case EcsQueryNotFrom:        return "notfrom   ";
+    case EcsQueryIds:            return "ids       ";
+    case EcsQueryIdsRight:       return "idsr      ";
+    case EcsQueryIdsLeft:        return "idsl      ";
+    case EcsQueryEach:           return "each      ";
+    case EcsQueryStore:          return "store     ";
+    case EcsQueryReset:          return "reset     ";
+    case EcsQueryOr:             return "or        ";
+    case EcsQueryOptional:       return "option    ";
+    case EcsQueryIfVar:          return "ifvar     ";
+    case EcsQueryIfSet:          return "ifset     ";
+    case EcsQueryEnd:            return "end       ";
+    case EcsQueryNot:            return "not       ";
+    case EcsQueryPredEq:         return "eq        ";
+    case EcsQueryPredNeq:        return "neq       ";
+    case EcsQueryPredEqName:     return "eq_nm     ";
+    case EcsQueryPredNeqName:    return "neq_nm    ";
+    case EcsQueryPredEqMatch:    return "eq_m      ";
+    case EcsQueryPredNeqMatch:   return "neq_m     ";
+    case EcsQueryMemberEq:       return "membereq  ";
+    case EcsQueryMemberNeq:      return "memberneq ";
+    case EcsQueryToggle:         return "toggle    ";
+    case EcsQueryToggleOption:   return "togglopt  ";
+    case EcsQueryLookup:         return "lookup    ";
+    case EcsQuerySetVars:        return "setvars   ";
+    case EcsQuerySetThis:        return "setthis   ";
+    case EcsQuerySetFixed:       return "setfix    ";
+    case EcsQuerySetIds:         return "setids    ";
+    case EcsQuerySetId:          return "setid     ";
+    case EcsQueryContain:        return "contain   ";
+    case EcsQueryPairEq:         return "pair_eq   ";
+    case EcsQueryPopulate:       return "pop       ";
+    case EcsQueryPopulateSelf:   return "popself   ";
+    case EcsQueryPopulateSparse: return "popsparse ";
+    case EcsQueryYield:          return "yield     ";
+    case EcsQueryNothing:        return "nothing   ";
+    default:                     return "!invalid  ";
     }
 }
 
@@ -351,6 +352,7 @@ char* ecs_query_str_w_profile(
 
         if (op->kind == EcsQueryPopulate || 
             op->kind == EcsQueryPopulateSelf ||
+            op->kind == EcsQueryPopulateSparse ||
             op->kind == EcsQueryTriv ||
             op->kind == EcsQueryTrivData ||
             op->kind == EcsQueryTrivWildcard)
