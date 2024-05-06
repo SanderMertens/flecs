@@ -460,6 +460,8 @@ extern "C" {
 #define EcsQueryIsTrivial             (1u << 22u) /* Query can use trivial evaluation function */
 #define EcsQueryHasCacheable          (1u << 23u) /* Query has cacheable terms */
 #define EcsQueryIsCacheable           (1u << 24u) /* All terms of query are cacheable */
+#define EcsQueryHasTableThisVar       (1u << 25u) /* Does query have $this table var */
+#define EcsQueryHasSparseThis         (1u << 26u) /* Does query have $this sparse fields */
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3059,6 +3061,7 @@ typedef enum ecs_query_cache_kind_t {
 #define EcsTermIsMember               (1u << 9)
 #define EcsTermIsToggle               (1u << 10)
 #define EcsTermKeepAlive              (1u << 11)
+#define EcsTermIsSparse               (1u << 12)
 
 /** Type that describes a reference to an entity or variable in a term. */
 typedef struct ecs_term_ref_t {
@@ -15448,6 +15451,9 @@ static const flecs::entity_t OnDeleteTarget = EcsOnDeleteTarget;
 static const flecs::entity_t Remove = EcsRemove;
 static const flecs::entity_t Delete = EcsDelete;
 static const flecs::entity_t Panic = EcsPanic;
+
+/* Storage */
+static const flecs::entity_t Sparse = EcsSparse;
 
 /* Builtin predicates for comparing entity ids in queries. Only supported by rules */
 static const flecs::entity_t PredEq = EcsPredEq;

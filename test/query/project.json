@@ -1754,6 +1754,33 @@
                 "this_table_move_2_from_3"
             ]
         }, {
+            "id": "Sparse",
+            "setup": true,
+            "params": {
+                "cache_kind": ["default", "auto"]
+            },
+            "testcases": [
+                "1_fixed_sparse",
+                "1_fixed_sparse_none",
+                "1_this_sparse",
+                "1_this_sparse_none",
+                "1_this_sparse_written",
+                "1_this_sparse_written_none",
+                "1_var_sparse",
+                "1_var_sparse_none",
+                "1_var_sparse_written",
+                "1_var_sparse_written_none",
+                "2_sparse",
+                "2_sparse_and_regular",
+                "2_regular_and_sparse",
+                "1_sparse_self",
+                "1_sparse_up",
+                "1_sparse_self_up",
+                "1_sparse_written_self",
+                "1_sparse_written_up",
+                "1_sparse_written_self_up"
+            ]            
+        }, {
             "id": "OrderBy",
             "testcases": [
                 "sort_by_component",

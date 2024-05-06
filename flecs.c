@@ -1329,6 +1329,7 @@ typedef enum {
     EcsQueryPairEq,         /* Test if both elements of pair are the same */
     EcsQueryPopulate,       /* Populate any data fields */
     EcsQueryPopulateSelf,   /* Populate only self (owned) data fields */
+    EcsQueryPopulateSparse, /* Populate sparse fields */
     EcsQueryYield,          /* Yield result back to application */
     EcsQueryNothing         /* Must be last */
 } ecs_query_op_kind_t;
@@ -1576,7 +1577,6 @@ struct ecs_query_impl_t {
     int32_t var_count;            /* Number of variables */
     int32_t var_pub_count;        /* Number of public variables */
     int32_t var_size;             /* Size of variable array */
-    bool has_table_this;          /* Does query have [$this] */
     ecs_hashmap_t tvar_index;     /* Name index for table variables */
     ecs_hashmap_t evar_index;     /* Name index for entity variables */
     ecs_query_var_cache_t vars_cache; /* For trivial queries with only This variables */
@@ -35315,7 +35315,7 @@ int flecs_query_discover_vars(
 
     /* For This table lookups during discovery. This will be overwritten after
      * discovery with whether the query actually has a This table variable. */
-    query->has_table_this = true;
+    query->pub.flags |= EcsQueryHasTableThisVar;
 
     for (i = 0; i < count; i ++) {
         ecs_term_t *term = &terms[i];
@@ -35412,6 +35412,20 @@ int flecs_query_discover_vars(
         } else if ((src->id & EcsIsVariable) && (ECS_TERM_REF_ID(src) == EcsThis)) {
             if (flecs_term_is_builtin_pred(term) && term->oper == EcsOr) {
                 flecs_query_add_var(query, EcsThisName, vars, EcsVarEntity);
+            }
+
+            if (term->flags_ & EcsTermIsSparse) {
+                /* If this is a sparse $this term entities have to be returned
+                 * one by one. */
+                flecs_query_add_var(query, EcsThisName, vars, EcsVarEntity);
+
+                /* Track if query contains $this sparse terms. Queries with 
+                 * sparse $this fields need to return results ony by one. */
+                if ((ECS_TERM_REF_ID(&term->src) == EcsThis) && 
+                    ((term->src.id & (EcsSelf|EcsIsVariable)) == (EcsSelf|EcsIsVariable)))
+                {
+                    query->pub.flags |= EcsQueryHasSparseThis;
+                }
             }
         }
 
@@ -35564,7 +35578,8 @@ int flecs_query_discover_vars(
     query->vars = query_vars;
     query->var_count = var_count;
     query->var_pub_count = var_count;
-    query->has_table_this = !entity_before_table_this;
+    ECS_BIT_COND(query->pub.flags, EcsQueryHasTableThisVar, 
+        !entity_before_table_this);
     query->var_size = var_count + anonymous_count;
 
     char **var_names = ECS_ELEM(query_vars, ECS_SIZEOF(ecs_query_var_t), 
@@ -35803,10 +35818,21 @@ void flecs_query_insert_cache_search(
     ecs_query_t *q = &query->pub;
     bool populate = true;
 
+    /* If query has a sparse $this field, fields can't be populated by the cache
+     * instruction. The reason for this is that sparse $this fields have to be
+     * returned one at a time. This means that the same needs to happen for
+     * cached fields, and the cache instruction only returns entire arrays. */
+    bool has_sparse_this = query->pub.flags & EcsQueryHasSparseThis;
+
+    int32_t populate_count = 0;
     if (q->cache_kind == EcsQueryCacheAll) {
         /* If all terms are cacheable, make sure no other terms are compiled */
         *compiled = 0xFFFFFFFFFFFFFFFF;
-        *populated = 0xFFFFFFFFFFFFFFFF;
+
+        if (!has_sparse_this) {
+            *populated = 0xFFFFFFFFFFFFFFFF;
+            populate_count = query->pub.field_count;
+        }
     } else if (q->cache_kind == EcsQueryCacheAuto) {
         /* The query is partially cacheable */
         ecs_term_t *terms = q->terms;
@@ -35835,15 +35861,18 @@ void flecs_query_insert_cache_search(
 
             *compiled |= (1ull << i);
 
-            if (populate) {
-                *populated |= (1ull << field);
+            if (!has_sparse_this) {
+                if (populate) {
+                    *populated |= (1ull << field);
+                    populate_count ++; 
+                }
             }
         }
     }
 
     /* Insert the operation for cache traversal */
     ecs_query_op_t op = {0};
-    if (!populate || (q->flags & EcsQueryNoData)) {
+    if (!populate_count || (q->flags & EcsQueryNoData)) {
         if (q->flags & EcsQueryIsCacheable) {
             op.kind = EcsQueryIsCache;
         } else {
@@ -35887,6 +35916,7 @@ void flecs_query_insert_populate(
     int32_t i, term_count = q->term_count;
 
     if (populated && !(q->flags & EcsQueryNoData)) {
+        ecs_flags64_t sparse_fields = 0;
         int32_t populate_count = 0;
         int32_t self_count = 0;
 
@@ -35894,8 +35924,9 @@ void flecs_query_insert_populate(
         for (i = 0; i < term_count; i ++) {
             ecs_term_t *term = &q->terms[i];
             int16_t field = term->field_index;
+            ecs_flags64_t field_bit = (1ull << field);
 
-            if (!(populated & (1ull << field))) {
+            if (!(populated & field_bit)) {
                 /* Only check fields that need to be populated */
                 continue;
             }
@@ -35906,19 +35937,36 @@ void flecs_query_insert_populate(
             if (ecs_term_match_this(term) && !(term->src.id & EcsUp)) {
                 self_count ++;
             }
+
+            /* Track sparse fields as they require a separate instruction */
+            if (term->flags_ & EcsTermIsSparse) {
+                sparse_fields |= field_bit;
+            }
         }
 
         ecs_assert(populate_count != 0, ECS_INTERNAL_ERROR, NULL);
 
-        ecs_query_op_kind_t kind = EcsQueryPopulate;
-        if (populate_count == self_count) {
-            kind = EcsQueryPopulateSelf;
+        /* Mask out the sparse fields as they are populated separately. */
+        populated &= ~sparse_fields;
+
+        if (populated) {
+            ecs_query_op_kind_t kind = EcsQueryPopulate;
+            if (populate_count == self_count) {
+                kind = EcsQueryPopulateSelf;
+            }
+
+            ecs_query_op_t op = {0};
+            op.kind = flecs_ito(uint8_t, kind);
+            op.src.entity = populated; /* Abuse for bitset w/fields to populate */
+            flecs_query_op_insert(&op, ctx);
         }
 
-        ecs_query_op_t op = {0};
-        op.kind = flecs_ito(uint8_t, kind);
-        op.src.entity = populated; /* Abuse for bitset w/fields to populate */
-        flecs_query_op_insert(&op, ctx);
+        if (sparse_fields) {
+            ecs_query_op_t op = {0};
+            op.kind = EcsQueryPopulateSparse;
+            op.src.entity = sparse_fields; /* Abuse for bitset w/fields to populate */
+            flecs_query_op_insert(&op, ctx);
+        }
     }
 }
 
@@ -36201,15 +36249,26 @@ int flecs_query_compile(
     }
 
     ecs_var_id_t this_id = flecs_query_find_var_id(query, "this", EcsVarEntity);
+    if (this_id != EcsVarNone) {
+        /* If query has a $this term with a sparse component value and so far
+         * we've only accessed $this as table, we need to insert an each 
+         * instruction. This is because we can't return multiple sparse 
+         * component instances in a single query result. */
+        if ((query->pub.flags & EcsQueryHasSparseThis) && 
+            !(ctx.written & (1ull << this_id))) 
+        {
+            flecs_query_insert_each(0, this_id, &ctx, false);
+        }
 
-    /* If This variable has been written as entity, insert an operation to 
-     * assign it to it.entities for consistency. */
-    if (this_id != EcsVarNone && (ctx.written & (1ull << this_id))) {
-        ecs_query_op_t set_this = {0};
-        set_this.kind = EcsQuerySetThis;
-        set_this.flags |= (EcsQueryIsVar << EcsQueryFirst);
-        set_this.first.var = this_id;
-        flecs_query_op_insert(&set_this, &ctx);
+        /* If This variable has been written as entity, insert an operation to 
+         * assign it to it.entities for consistency. */
+        if (ctx.written & (1ull << this_id)) {
+            ecs_query_op_t set_this = {0};
+            set_this.kind = EcsQuerySetThis;
+            set_this.flags |= (EcsQueryIsVar << EcsQueryFirst);
+            set_this.first.var = this_id;
+            flecs_query_op_insert(&set_this, &ctx);
+        }
     }
 
     /* Make sure non-This variables are written as entities */
@@ -36336,7 +36395,7 @@ ecs_var_id_t flecs_query_find_var_id(
 
     if (kind == EcsVarTable) {
         if (!ecs_os_strcmp(name, EcsThisName)) {
-            if (query->has_table_this) {
+            if (query->pub.flags & EcsQueryHasTableThisVar) {
                 return 0;
             } else {
                 return EcsVarNone;
@@ -37826,7 +37885,8 @@ void flecs_query_set_iter_this(
     ecs_iter_t *it,
     const ecs_query_run_ctx_t *ctx)
 {
-    const ecs_table_range_t *range = &ctx->vars[0].range;
+    const ecs_var_t *var = &ctx->vars[0];
+    const ecs_table_range_t *range = &var->range;
     ecs_table_t *table = range->table;
     int32_t count = range->count;
     if (table) {
@@ -41115,6 +41175,48 @@ bool flecs_query_populate_self(
 }
 
 static
+bool flecs_query_populate_sparse(
+    const ecs_query_op_t *op,
+    bool redo,
+    ecs_query_run_ctx_t *ctx)
+{
+    (void)op;
+    if (!redo) {
+        ecs_iter_t *it = ctx->it;
+        if (it->flags & EcsIterNoData) {
+            return true;
+        }
+
+        ecs_world_t *world = ctx->world;
+        const ecs_query_impl_t *query = ctx->query;
+        const ecs_query_t *q = &query->pub;
+        int8_t i, field_count = q->field_count;
+        ecs_flags64_t data_fields = op->src.entity; /* Bitset with fields to set */
+
+        /* Only populate fields that are set */
+        data_fields &= it->set_fields;
+        for (i = 0; i < field_count; i ++) {
+            if (!(data_fields & (1llu << i))) {
+                continue;
+            }
+
+            ecs_entity_t src = it->sources[i];
+            if (!src) {
+                src = ctx->vars[0].entity;
+            }
+
+            ecs_id_record_t *idr = flecs_id_record_get(world, it->ids[i]);
+            ecs_assert(idr != NULL, ECS_INTERNAL_ERROR, NULL);
+            it->ptrs[i] = flecs_sparse_get_any(idr->sparse, 0, src);
+        }
+
+        return true;
+    } else {
+        return false;
+    }
+}
+
+static
 bool flecs_query_dispatch(
     const ecs_query_op_t *op,
     bool redo,
@@ -41173,6 +41275,7 @@ bool flecs_query_dispatch(
     case EcsQueryPairEq: return flecs_query_pair_eq(op, redo, ctx);
     case EcsQueryPopulate: return flecs_query_populate(op, redo, ctx);
     case EcsQueryPopulateSelf: return flecs_query_populate_self(op, redo, ctx);
+    case EcsQueryPopulateSparse: return flecs_query_populate_sparse(op, redo, ctx);
     case EcsQueryYield: return false;
     case EcsQueryNothing: return false;
     }
@@ -42667,61 +42770,62 @@ const char* flecs_query_op_str(
     uint16_t kind)
 {
     switch(kind) {
-    case EcsQueryAnd:           return "and       ";
-    case EcsQueryAndId:         return "andid     ";
-    case EcsQueryAndAny:        return "andany    ";
-    case EcsQueryTriv:          return "triv      ";
-    case EcsQueryTrivData:      return "trivpop   ";
-    case EcsQueryTrivWildcard:  return "trivwc    ";
-    case EcsQueryCache:         return "cache     ";
-    case EcsQueryCacheData:     return "cachepop  ";
-    case EcsQueryIsCache:       return "xcache    ";
-    case EcsQueryIsCacheData:   return "xcachepop ";
-    case EcsQuerySelectAny:     return "any       ";
-    case EcsQueryUp:            return "up        ";
-    case EcsQueryUpId:          return "upid      ";
-    case EcsQuerySelfUp:        return "selfup    ";
-    case EcsQuerySelfUpId:      return "selfupid  ";
-    case EcsQueryWith:          return "with      ";
-    case EcsQueryTrav:          return "trav      ";
-    case EcsQueryAndFrom:       return "andfrom   ";
-    case EcsQueryOrFrom:        return "orfrom    ";
-    case EcsQueryNotFrom:       return "notfrom   ";
-    case EcsQueryIds:           return "ids       ";
-    case EcsQueryIdsRight:      return "idsr      ";
-    case EcsQueryIdsLeft:       return "idsl      ";
-    case EcsQueryEach:          return "each      ";
-    case EcsQueryStore:         return "store     ";
-    case EcsQueryReset:         return "reset     ";
-    case EcsQueryOr:            return "or        ";
-    case EcsQueryOptional:      return "option    ";
-    case EcsQueryIfVar:         return "ifvar     ";
-    case EcsQueryIfSet:         return "ifset     ";
-    case EcsQueryEnd:           return "end       ";
-    case EcsQueryNot:           return "not       ";
-    case EcsQueryPredEq:        return "eq        ";
-    case EcsQueryPredNeq:       return "neq       ";
-    case EcsQueryPredEqName:    return "eq_nm     ";
-    case EcsQueryPredNeqName:   return "neq_nm    ";
-    case EcsQueryPredEqMatch:   return "eq_m      ";
-    case EcsQueryPredNeqMatch:  return "neq_m     ";
-    case EcsQueryMemberEq:      return "membereq  ";
-    case EcsQueryMemberNeq:     return "memberneq ";
-    case EcsQueryToggle:        return "toggle    ";
-    case EcsQueryToggleOption:  return "togglopt  ";
-    case EcsQueryLookup:        return "lookup    ";
-    case EcsQuerySetVars:       return "setvars   ";
-    case EcsQuerySetThis:       return "setthis   ";
-    case EcsQuerySetFixed:      return "setfix    ";
-    case EcsQuerySetIds:        return "setids    ";
-    case EcsQuerySetId:         return "setid     ";
-    case EcsQueryContain:       return "contain   ";
-    case EcsQueryPairEq:        return "pair_eq   ";
-    case EcsQueryPopulate:      return "pop       ";
-    case EcsQueryPopulateSelf:  return "popself   ";
-    case EcsQueryYield:         return "yield     ";
-    case EcsQueryNothing:       return "nothing   ";
-    default:                   return "!invalid  ";
+    case EcsQueryAnd:            return "and       ";
+    case EcsQueryAndId:          return "andid     ";
+    case EcsQueryAndAny:         return "andany    ";
+    case EcsQueryTriv:           return "triv      ";
+    case EcsQueryTrivData:       return "trivpop   ";
+    case EcsQueryTrivWildcard:   return "trivwc    ";
+    case EcsQueryCache:          return "cache     ";
+    case EcsQueryCacheData:      return "cachepop  ";
+    case EcsQueryIsCache:        return "xcache    ";
+    case EcsQueryIsCacheData:    return "xcachepop ";
+    case EcsQuerySelectAny:      return "any       ";
+    case EcsQueryUp:             return "up        ";
+    case EcsQueryUpId:           return "upid      ";
+    case EcsQuerySelfUp:         return "selfup    ";
+    case EcsQuerySelfUpId:       return "selfupid  ";
+    case EcsQueryWith:           return "with      ";
+    case EcsQueryTrav:           return "trav      ";
+    case EcsQueryAndFrom:        return "andfrom   ";
+    case EcsQueryOrFrom:         return "orfrom    ";
+    case EcsQueryNotFrom:        return "notfrom   ";
+    case EcsQueryIds:            return "ids       ";
+    case EcsQueryIdsRight:       return "idsr      ";
+    case EcsQueryIdsLeft:        return "idsl      ";
+    case EcsQueryEach:           return "each      ";
+    case EcsQueryStore:          return "store     ";
+    case EcsQueryReset:          return "reset     ";
+    case EcsQueryOr:             return "or        ";
+    case EcsQueryOptional:       return "option    ";
+    case EcsQueryIfVar:          return "ifvar     ";
+    case EcsQueryIfSet:          return "ifset     ";
+    case EcsQueryEnd:            return "end       ";
+    case EcsQueryNot:            return "not       ";
+    case EcsQueryPredEq:         return "eq        ";
+    case EcsQueryPredNeq:        return "neq       ";
+    case EcsQueryPredEqName:     return "eq_nm     ";
+    case EcsQueryPredNeqName:    return "neq_nm    ";
+    case EcsQueryPredEqMatch:    return "eq_m      ";
+    case EcsQueryPredNeqMatch:   return "neq_m     ";
+    case EcsQueryMemberEq:       return "membereq  ";
+    case EcsQueryMemberNeq:      return "memberneq ";
+    case EcsQueryToggle:         return "toggle    ";
+    case EcsQueryToggleOption:   return "togglopt  ";
+    case EcsQueryLookup:         return "lookup    ";
+    case EcsQuerySetVars:        return "setvars   ";
+    case EcsQuerySetThis:        return "setthis   ";
+    case EcsQuerySetFixed:       return "setfix    ";
+    case EcsQuerySetIds:         return "setids    ";
+    case EcsQuerySetId:          return "setid     ";
+    case EcsQueryContain:        return "contain   ";
+    case EcsQueryPairEq:         return "pair_eq   ";
+    case EcsQueryPopulate:       return "pop       ";
+    case EcsQueryPopulateSelf:   return "popself   ";
+    case EcsQueryPopulateSparse: return "popsparse ";
+    case EcsQueryYield:          return "yield     ";
+    case EcsQueryNothing:        return "nothing   ";
+    default:                     return "!invalid  ";
     }
 }
 
@@ -42844,6 +42948,7 @@ char* ecs_query_str_w_profile(
 
         if (op->kind == EcsQueryPopulate || 
             op->kind == EcsQueryPopulateSelf ||
+            op->kind == EcsQueryPopulateSparse ||
             op->kind == EcsQueryTriv ||
             op->kind == EcsQueryTrivData ||
             op->kind == EcsQueryTrivWildcard)
@@ -44440,7 +44545,19 @@ int flecs_query_finalize_terms(
             } else {
                 idr->keep_alive ++;
             }
+
             term->flags_ |= EcsTermKeepAlive;
+
+            if (idr->flags & EcsIdIsSparse) {
+                if (!(term->flags_ & EcsTermNoData)) {
+                    term->flags_ |= EcsTermIsSparse;
+                    ECS_BIT_CLEAR16(term->flags_, EcsTermIsTrivial);
+                    if (term->flags_ & EcsTermIsCacheable) {
+                        cacheable_terms --;
+                        ECS_BIT_CLEAR16(term->flags_, EcsTermIsCacheable);
+                    }
+                }
+            }
         }
 
         if (term->oper == EcsOptional || term->oper == EcsNot) {
