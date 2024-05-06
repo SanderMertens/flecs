@@ -1775,7 +1775,7 @@ The last step will delete all remaining entities. At this point cleanup policies
 ## Relationship properties
 Relationship properties are tags that can be added to relationships to modify their behavior.
 
-## Trait property
+### Trait property
 The trait property marks an entity as a trait, which is any tag that is added to another tag/component/relationship to modify its behavior. All properties in this section are marked as trait. It is not required to mark a property as a trait before adding it to another tag/component/relationship. The main reason for the trait property is to ease some of the constraints on relationships (see the Relationship property).
 
 ```c
@@ -1806,7 +1806,7 @@ world.Component<Serializable>().Entity.Add(Ecs.Trait);
 </ul>
 </div>
 
-## Relationship property
+### Relationship property
 The relationship property enforces that an entity can only be used as relationship. Consider the following example:
 
 ```c
@@ -1898,7 +1898,7 @@ world.Component<Loves>().Entity.Add(Ecs.With, world.Component<Likes>().Entity);
 </ul>
 </div>
 
-## Target property
+### Target property
 The target property enforces that an entity can only be used as relationship target. Consider the following example:
 
 ```c
