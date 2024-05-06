@@ -125,6 +125,53 @@ void Sparse_set(void) {
     ecs_fini(world);
 }
 
+void Sparse_insert_1(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_add_id(world, ecs_id(Position), EcsSparse);
+
+    ecs_entity_t e = ecs_insert(world, ecs_value(Position, {10, 20}));
+    test_assert(ecs_has(world, e, Position));
+    
+    const Position *p = ecs_get(world, e, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+void Sparse_insert_2(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_add_id(world, ecs_id(Position), EcsSparse);
+    ecs_add_id(world, ecs_id(Velocity), EcsSparse);
+
+    ecs_entity_t e = ecs_insert(world, 
+        ecs_value(Position, {10, 20}),
+        ecs_value(Velocity, {1, 2}));
+
+    test_assert(ecs_has(world, e, Position));
+    test_assert(ecs_has(world, e, Velocity));
+    
+    const Position *p = ecs_get(world, e, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    const Velocity *v = ecs_get(world, e, Velocity);
+    test_assert(v != NULL);
+    test_int(v->x, 1);
+    test_int(v->y, 2);
+
+    ecs_fini(world);
+}
+
 void Sparse_get_ref(void) {
     ecs_world_t *world = ecs_mini();
 
@@ -872,3 +919,4 @@ void Sparse_sparse_relationship(void) {
 
     ecs_fini(world);
 }
+

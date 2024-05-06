@@ -45,7 +45,8 @@ void flecs_query_set_iter_this(
     ecs_iter_t *it,
     const ecs_query_run_ctx_t *ctx)
 {
-    const ecs_table_range_t *range = &ctx->vars[0].range;
+    const ecs_var_t *var = &ctx->vars[0];
+    const ecs_table_range_t *range = &var->range;
     ecs_table_t *table = range->table;
     int32_t count = range->count;
     if (table) {
@@ -3334,6 +3335,48 @@ bool flecs_query_populate_self(
 }
 
 static
+bool flecs_query_populate_sparse(
+    const ecs_query_op_t *op,
+    bool redo,
+    ecs_query_run_ctx_t *ctx)
+{
+    (void)op;
+    if (!redo) {
+        ecs_iter_t *it = ctx->it;
+        if (it->flags & EcsIterNoData) {
+            return true;
+        }
+
+        ecs_world_t *world = ctx->world;
+        const ecs_query_impl_t *query = ctx->query;
+        const ecs_query_t *q = &query->pub;
+        int8_t i, field_count = q->field_count;
+        ecs_flags64_t data_fields = op->src.entity; /* Bitset with fields to set */
+
+        /* Only populate fields that are set */
+        data_fields &= it->set_fields;
+        for (i = 0; i < field_count; i ++) {
+            if (!(data_fields & (1llu << i))) {
+                continue;
+            }
+
+            ecs_entity_t src = it->sources[i];
+            if (!src) {
+                src = ctx->vars[0].entity;
+            }
+
+            ecs_id_record_t *idr = flecs_id_record_get(world, it->ids[i]);
+            ecs_assert(idr != NULL, ECS_INTERNAL_ERROR, NULL);
+            it->ptrs[i] = flecs_sparse_get_any(idr->sparse, 0, src);
+        }
+
+        return true;
+    } else {
+        return false;
+    }
+}
+
+static
 bool flecs_query_dispatch(
     const ecs_query_op_t *op,
     bool redo,
@@ -3392,6 +3435,7 @@ bool flecs_query_dispatch(
     case EcsQueryPairEq: return flecs_query_pair_eq(op, redo, ctx);
     case EcsQueryPopulate: return flecs_query_populate(op, redo, ctx);
     case EcsQueryPopulateSelf: return flecs_query_populate_self(op, redo, ctx);
+    case EcsQueryPopulateSparse: return flecs_query_populate_sparse(op, redo, ctx);
     case EcsQueryYield: return false;
     case EcsQueryNothing: return false;
     }

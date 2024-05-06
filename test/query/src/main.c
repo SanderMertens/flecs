@@ -1687,6 +1687,28 @@ void Toggle_this_written_2_toggle_w_optional_toggle(void);
 void Toggle_this_sort(void);
 void Toggle_this_table_move_2_from_3(void);
 
+// Testsuite 'Sparse'
+void Sparse_setup(void);
+void Sparse_1_fixed_sparse(void);
+void Sparse_1_fixed_sparse_none(void);
+void Sparse_1_this_sparse(void);
+void Sparse_1_this_sparse_none(void);
+void Sparse_1_this_sparse_written(void);
+void Sparse_1_this_sparse_written_none(void);
+void Sparse_1_var_sparse(void);
+void Sparse_1_var_sparse_none(void);
+void Sparse_1_var_sparse_written(void);
+void Sparse_1_var_sparse_written_none(void);
+void Sparse_2_sparse(void);
+void Sparse_2_sparse_and_regular(void);
+void Sparse_2_regular_and_sparse(void);
+void Sparse_1_sparse_self(void);
+void Sparse_1_sparse_up(void);
+void Sparse_1_sparse_self_up(void);
+void Sparse_1_sparse_written_self(void);
+void Sparse_1_sparse_written_up(void);
+void Sparse_1_sparse_written_self_up(void);
+
 // Testsuite 'OrderBy'
 void OrderBy_sort_by_component(void);
 void OrderBy_sort_by_component_2_tables(void);
@@ -8391,6 +8413,85 @@ bake_test_case Toggle_testcases[] = {
     }
 };
 
+bake_test_case Sparse_testcases[] = {
+    {
+        "1_fixed_sparse",
+        Sparse_1_fixed_sparse
+    },
+    {
+        "1_fixed_sparse_none",
+        Sparse_1_fixed_sparse_none
+    },
+    {
+        "1_this_sparse",
+        Sparse_1_this_sparse
+    },
+    {
+        "1_this_sparse_none",
+        Sparse_1_this_sparse_none
+    },
+    {
+        "1_this_sparse_written",
+        Sparse_1_this_sparse_written
+    },
+    {
+        "1_this_sparse_written_none",
+        Sparse_1_this_sparse_written_none
+    },
+    {
+        "1_var_sparse",
+        Sparse_1_var_sparse
+    },
+    {
+        "1_var_sparse_none",
+        Sparse_1_var_sparse_none
+    },
+    {
+        "1_var_sparse_written",
+        Sparse_1_var_sparse_written
+    },
+    {
+        "1_var_sparse_written_none",
+        Sparse_1_var_sparse_written_none
+    },
+    {
+        "2_sparse",
+        Sparse_2_sparse
+    },
+    {
+        "2_sparse_and_regular",
+        Sparse_2_sparse_and_regular
+    },
+    {
+        "2_regular_and_sparse",
+        Sparse_2_regular_and_sparse
+    },
+    {
+        "1_sparse_self",
+        Sparse_1_sparse_self
+    },
+    {
+        "1_sparse_up",
+        Sparse_1_sparse_up
+    },
+    {
+        "1_sparse_self_up",
+        Sparse_1_sparse_self_up
+    },
+    {
+        "1_sparse_written_self",
+        Sparse_1_sparse_written_self
+    },
+    {
+        "1_sparse_written_up",
+        Sparse_1_sparse_written_up
+    },
+    {
+        "1_sparse_written_self_up",
+        Sparse_1_sparse_written_self_up
+    }
+};
+
 bake_test_case OrderBy_testcases[] = {
     {
         "sort_by_component",
@@ -8868,6 +8969,10 @@ const char* Toggle_cache_kind_param[] = {"default", "auto"};
 bake_test_param Toggle_params[] = {
     {"cache_kind", (char**)Toggle_cache_kind_param, 2}
 };
+const char* Sparse_cache_kind_param[] = {"default", "auto"};
+bake_test_param Sparse_params[] = {
+    {"cache_kind", (char**)Sparse_cache_kind_param, 2}
+};
 
 static bake_test_suite suites[] = {
     {
@@ -9015,6 +9120,15 @@ static bake_test_suite suites[] = {
         Toggle_params
     },
     {
+        "Sparse",
+        Sparse_setup,
+        NULL,
+        19,
+        Sparse_testcases,
+        1,
+        Sparse_params
+    },
+    {
         "OrderBy",
         NULL,
         NULL,
@@ -9038,5 +9152,5 @@ static bake_test_suite suites[] = {
 };
 
 int main(int argc, char *argv[]) {
-    return bake_test_run("query", argc, argv, suites, 21);
+    return bake_test_run("query", argc, argv, suites, 22);
 }

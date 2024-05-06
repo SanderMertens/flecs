@@ -416,6 +416,8 @@ void Sparse_get_mut(void);
 void Sparse_ensure(void);
 void Sparse_emplace(void);
 void Sparse_set(void);
+void Sparse_insert_1(void);
+void Sparse_insert_2(void);
 void Sparse_get_ref(void);
 void Sparse_update_ref(void);
 void Sparse_test_stable_ptr(void);
@@ -4275,6 +4277,14 @@ bake_test_case Sparse_testcases[] = {
     {
         "set",
         Sparse_set
+    },
+    {
+        "insert_1",
+        Sparse_insert_1
+    },
+    {
+        "insert_2",
+        Sparse_insert_2
     },
     {
         "get_ref",
@@ -13257,7 +13267,7 @@ static bake_test_suite suites[] = {
         "Sparse",
         NULL,
         NULL,
-        32,
+        34,
         Sparse_testcases
     },
     {
