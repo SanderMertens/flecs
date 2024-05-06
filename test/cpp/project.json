@@ -986,7 +986,8 @@
                 "dtor_with_relation",
                 "dtor_relation_target",
                 "register_parent_after_child_w_hooks",
-                "register_parent_after_child_w_hooks_implicit"
+                "register_parent_after_child_w_hooks_implicit",
+                "sparse_component"
             ]
         }, {
             "id": "Refs",
