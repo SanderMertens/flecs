@@ -1778,6 +1778,10 @@ Relationship properties are tags that can be added to relationships to modify th
 ### Trait property
 The trait property marks an entity as a trait, which is any tag that is added to another tag/component/relationship to modify its behavior. All properties in this section are marked as trait. It is not required to mark a property as a trait before adding it to another tag/component/relationship. The main reason for the trait property is to ease some of the constraints on relationships (see the Relationship property).
 
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">C</b>
+
 ```c
 ECS_TAG(world, Serializable);
 
@@ -1808,6 +1812,10 @@ world.Component<Serializable>().Entity.Add(Ecs.Trait);
 
 ### Relationship property
 The relationship property enforces that an entity can only be used as relationship. Consider the following example:
+
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">C</b>
 
 ```c
 ECS_TAG(world, Likes);
@@ -1857,6 +1865,10 @@ Entity e = ecs.Entity()
 
 Entities marked with `Relationship` may still be used as target if the relationship part of the pair has the `Trait` property. This ensures the relationship can still be used to configure the behavior of other entities. Consider the following code example:
 
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">C</b>
+
 ```c
 ECS_TAG(world, Likes);
 ECS_TAG(world, Loves);
@@ -1900,6 +1912,10 @@ world.Component<Loves>().Entity.Add(Ecs.With, world.Component<Likes>().Entity);
 
 ### Target property
 The target property enforces that an entity can only be used as relationship target. Consider the following example:
+
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">C</b>
 
 ```c
 ECS_TAG(world, Likes);
@@ -1946,7 +1962,6 @@ Entity e = ecs.Entity()
 </li>
 </ul>
 </div>
-
 
 ### Tag property
 A relationship can be marked as a tag in which case it will never contain data. By default the data associated with a pair is determined by whether either the relationship or target are components. For some relationships however, even if the target is a component, no data should be added to the relationship. Consider the following example:
