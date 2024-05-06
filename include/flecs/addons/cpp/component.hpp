@@ -111,6 +111,10 @@ void register_lifecycle_actions(
     cl.move_dtor = move_dtor<T>();
 
     ecs_set_hooks_id( world, component, &cl);
+
+    if (cl.move == ecs_move_illegal || cl.move_ctor == ecs_move_ctor_illegal) {
+        ecs_add_id(world, component, flecs::Sparse);
+    }
 }
 
 // Class that manages component ids across worlds & binaries.

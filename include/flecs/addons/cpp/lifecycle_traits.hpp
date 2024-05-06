@@ -265,8 +265,6 @@ ecs_move_t move() {
 // Component types must be move assignable
 template <typename T, if_not_t< std::is_move_assignable<T>::value > = 0>
 ecs_move_t move() {
-    flecs_static_assert(always_false<T>::value,
-        "component type must be move assignable");
     return ecs_move_illegal;
 }
 
@@ -309,8 +307,6 @@ ecs_move_t move_ctor() {
 // Component types must be move constructible
 template <typename T, if_not_t< std::is_move_constructible<T>::value > = 0>
 ecs_move_t move_ctor() {
-    flecs_static_assert(always_false<T>::value,
-        "component type must be move constructible");    
     return ecs_move_ctor_illegal;
 }
 
@@ -335,8 +331,6 @@ template <typename T, if_t<
     ! std::is_move_constructible<T>::value ||
     ! std::is_destructible<T>::value > = 0>
 ecs_move_t ctor_move_dtor() {
-    flecs_static_assert(always_false<T>::value,
-        "component type must be move constructible and destructible");
     return ecs_move_ctor_illegal;
 }
 
@@ -363,8 +357,6 @@ template <typename T, if_t<
     ! std::is_move_assignable<T>::value ||
     ! std::is_destructible<T>::value > = 0>
 ecs_move_t move_dtor() {
-    flecs_static_assert(always_false<T>::value,
-        "component type must be move constructible and destructible");
     return ecs_move_ctor_illegal;
 }
 

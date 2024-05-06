@@ -18865,8 +18865,6 @@ ecs_move_t move() {
 // Component types must be move assignable
 template <typename T, if_not_t< std::is_move_assignable<T>::value > = 0>
 ecs_move_t move() {
-    flecs_static_assert(always_false<T>::value,
-        "component type must be move assignable");
     return ecs_move_illegal;
 }
 
@@ -18909,8 +18907,6 @@ ecs_move_t move_ctor() {
 // Component types must be move constructible
 template <typename T, if_not_t< std::is_move_constructible<T>::value > = 0>
 ecs_move_t move_ctor() {
-    flecs_static_assert(always_false<T>::value,
-        "component type must be move constructible");    
     return ecs_move_ctor_illegal;
 }
 
@@ -18935,8 +18931,6 @@ template <typename T, if_t<
     ! std::is_move_constructible<T>::value ||
     ! std::is_destructible<T>::value > = 0>
 ecs_move_t ctor_move_dtor() {
-    flecs_static_assert(always_false<T>::value,
-        "component type must be move constructible and destructible");
     return ecs_move_ctor_illegal;
 }
 
@@ -18963,8 +18957,6 @@ template <typename T, if_t<
     ! std::is_move_assignable<T>::value ||
     ! std::is_destructible<T>::value > = 0>
 ecs_move_t move_dtor() {
-    flecs_static_assert(always_false<T>::value,
-        "component type must be move constructible and destructible");
     return ecs_move_ctor_illegal;
 }
 
@@ -25093,6 +25085,10 @@ void register_lifecycle_actions(
     cl.move_dtor = move_dtor<T>();
 
     ecs_set_hooks_id( world, component, &cl);
+
+    if (cl.move == ecs_move_illegal || cl.move_ctor == ecs_move_ctor_illegal) {
+        ecs_add_id(world, component, flecs::Sparse);
+    }
 }
 
 // Class that manages component ids across worlds & binaries.
