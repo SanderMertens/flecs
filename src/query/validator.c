@@ -1147,7 +1147,19 @@ int flecs_query_finalize_terms(
             } else {
                 idr->keep_alive ++;
             }
+
             term->flags_ |= EcsTermKeepAlive;
+
+            if (idr->flags & EcsIdIsSparse) {
+                if (!(term->flags_ & EcsTermNoData)) {
+                    term->flags_ |= EcsTermIsSparse;
+                    ECS_BIT_CLEAR16(term->flags_, EcsTermIsTrivial);
+                    if (term->flags_ & EcsTermIsCacheable) {
+                        cacheable_terms --;
+                        ECS_BIT_CLEAR16(term->flags_, EcsTermIsCacheable);
+                    }
+                }
+            }
         }
 
         if (term->oper == EcsOptional || term->oper == EcsNot) {
