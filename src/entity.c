@@ -483,7 +483,7 @@ void flecs_sparse_on_add(
     for (i = 0; i < added->count; i ++) {
         ecs_id_t id = added->array[i];
         ecs_id_record_t *idr = flecs_id_record_get(world, id);
-        if (idr->flags & EcsIdIsSparse) {
+        if (idr && idr->flags & EcsIdIsSparse) {
             const ecs_type_info_t *ti = idr->type_info;
             ecs_xtor_t ctor = ti->hooks.ctor;
             ecs_iter_action_t on_add = ti->hooks.on_add;
@@ -516,7 +516,7 @@ void flecs_sparse_on_remove(
     for (i = 0; i < removed->count; i ++) {
         ecs_id_t id = removed->array[i];
         ecs_id_record_t *idr = flecs_id_record_get(world, id);
-        if (idr->flags & EcsIdIsSparse) {
+        if (idr && idr->flags & EcsIdIsSparse) {
             const ecs_type_info_t *ti = idr->type_info;
             ecs_xtor_t dtor = ti->hooks.dtor;
             ecs_iter_action_t on_remove = ti->hooks.on_remove;
@@ -531,6 +531,30 @@ void flecs_sparse_on_remove(
                 }
                 if (dtor) {
                     dtor(ptr, 1, ti);
+                }
+            }
+        }
+    }
+}
+
+static
+void flecs_union_on_add(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    int32_t row,
+    int32_t count,
+    const ecs_type_t *added)
+{
+    int32_t i, j;
+    for (i = 0; i < added->count; i ++) {
+        ecs_id_t id = added->array[i];
+        if (ECS_IS_PAIR(id)) {
+            ecs_id_t wc = ecs_pair(ECS_PAIR_FIRST(id), EcsWildcard);
+            ecs_id_record_t *idr = flecs_id_record_get(world, wc);
+            if (idr && idr->flags & EcsIdIsUnion) {
+                ecs_entity_t *entities = flecs_table_entities_array(table);
+                for (j = 0; j < count; j ++) {
+                    ecs_entity_t e = entities[row + j];
                 }
             }
         }
@@ -555,6 +579,10 @@ void flecs_notify_on_add(
 
         if (table_flags & EcsTableHasSparse) {
             flecs_sparse_on_add(world, table, row, count, added, construct);
+        }
+
+        if (table_flags & EcsTableHasUnion) {
+            flecs_union_on_add(world, table, row, count, added);
         }
 
         if (table_flags & (EcsTableHasOnAdd|EcsTableHasIsA|EcsTableHasTraversable)) {

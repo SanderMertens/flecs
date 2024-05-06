@@ -303,6 +303,7 @@
 #include "flecs/datastructures/block_allocator.h"  /* Block allocator */
 #include "flecs/datastructures/stack_allocator.h"  /* Stack allocator */
 #include "flecs/datastructures/map.h"              /* Map */
+#include "flecs/datastructures/switch_list.h"      /* Switch list */
 #include "flecs/datastructures/allocator.h"        /* Allocator */
 #include "flecs/datastructures/strbuf.h"           /* String builder */
 #include "flecs/os_api.h"  /* Abstraction for operating system functions */
@@ -1690,6 +1691,9 @@ FLECS_API extern const ecs_entity_t EcsPanic;
 
 /** Mark component as sparse */
 FLECS_API extern const ecs_entity_t EcsSparse;
+
+/** Mark relationship as union */
+FLECS_API extern const ecs_entity_t EcsUnion;
 
 /* Builtin predicates for comparing entity ids in queries. Only supported by queries */
 FLECS_API extern const ecs_entity_t EcsPredEq;
