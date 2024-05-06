@@ -52,8 +52,8 @@ struct ecs_id_record_t {
     /* Name lookup index (currently only used for ChildOf pairs) */
     ecs_hashmap_t *name_index;
 
-    /* Sparse storage (only for sparse components) */
-    ecs_sparse_t *sparse;
+    /* Storage for sparse components or union relationships */
+    void *sparse;
 
     /* Lists for all id records that match a pair wildcard. The wildcard id
      * record is at the head of the list. */
@@ -131,6 +131,11 @@ ecs_table_record_t* flecs_table_record_get(
 ecs_table_record_t* flecs_id_record_get_table(
     const ecs_id_record_t *idr,
     const ecs_table_t *table);
+
+/* Init sparse storage */
+void flecs_id_record_init_sparse(
+    ecs_world_t *world,
+    ecs_id_record_t *idr);
 
 /* Bootstrap cached id records */
 void flecs_init_id_records(

@@ -472,6 +472,23 @@
                 "sparse_relationship"
             ]
         }, {
+            "id": "Union",
+            "testcases": [
+                "add",
+                "add_twice",
+                "add_replace",
+                "add_remove",
+                "add_remove_recycled",
+                "add_remove_add",
+                "get_target_none",
+                "get_target",
+                "get_recycled_target",
+                "get_target_after_replace",
+                "get_target_after_remove",
+                "has_wildcard",
+                "has_any"
+            ]
+        }, {
             "id": "Hierarchies",
             "setup": true,
             "testcases": [

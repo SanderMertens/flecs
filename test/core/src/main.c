@@ -444,6 +444,21 @@ void Sparse_on_set_after_set(void);
 void Sparse_on_set_after_modified(void);
 void Sparse_sparse_relationship(void);
 
+// Testsuite 'Union'
+void Union_add(void);
+void Union_add_twice(void);
+void Union_add_replace(void);
+void Union_add_remove(void);
+void Union_add_remove_recycled(void);
+void Union_add_remove_add(void);
+void Union_get_target_none(void);
+void Union_get_target(void);
+void Union_get_recycled_target(void);
+void Union_get_target_after_replace(void);
+void Union_get_target_after_remove(void);
+void Union_has_wildcard(void);
+void Union_has_any(void);
+
 // Testsuite 'Hierarchies'
 void Hierarchies_setup(void);
 void Hierarchies_empty_scope(void);
@@ -4385,6 +4400,61 @@ bake_test_case Sparse_testcases[] = {
     {
         "sparse_relationship",
         Sparse_sparse_relationship
+    }
+};
+
+bake_test_case Union_testcases[] = {
+    {
+        "add",
+        Union_add
+    },
+    {
+        "add_twice",
+        Union_add_twice
+    },
+    {
+        "add_replace",
+        Union_add_replace
+    },
+    {
+        "add_remove",
+        Union_add_remove
+    },
+    {
+        "add_remove_recycled",
+        Union_add_remove_recycled
+    },
+    {
+        "add_remove_add",
+        Union_add_remove_add
+    },
+    {
+        "get_target_none",
+        Union_get_target_none
+    },
+    {
+        "get_target",
+        Union_get_target
+    },
+    {
+        "get_recycled_target",
+        Union_get_recycled_target
+    },
+    {
+        "get_target_after_replace",
+        Union_get_target_after_replace
+    },
+    {
+        "get_target_after_remove",
+        Union_get_target_after_remove
+    },
+    {
+        "has_wildcard",
+        Union_has_wildcard
+    },
+    {
+        "has_any",
+        Union_has_any
     }
 };
 
@@ -13271,6 +13341,13 @@ static bake_test_suite suites[] = {
         Sparse_testcases
     },
     {
+        "Union",
+        NULL,
+        NULL,
+        13,
+        Union_testcases
+    },
+    {
         "Hierarchies",
         Hierarchies_setup,
         NULL,
@@ -13549,5 +13626,5 @@ static bake_test_suite suites[] = {
 };
 
 int main(int argc, char *argv[]) {
-    return bake_test_run("core", argc, argv, suites, 45);
+    return bake_test_run("core", argc, argv, suites, 46);
 }
