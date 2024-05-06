@@ -951,6 +951,7 @@ void ComponentLifecycle_dtor_with_relation(void);
 void ComponentLifecycle_dtor_relation_target(void);
 void ComponentLifecycle_register_parent_after_child_w_hooks(void);
 void ComponentLifecycle_register_parent_after_child_w_hooks_implicit(void);
+void ComponentLifecycle_sparse_component(void);
 
 // Testsuite 'Refs'
 void Refs_get_ref_by_ptr(void);
@@ -5000,6 +5001,10 @@ bake_test_case ComponentLifecycle_testcases[] = {
     {
         "register_parent_after_child_w_hooks_implicit",
         ComponentLifecycle_register_parent_after_child_w_hooks_implicit
+    },
+    {
+        "sparse_component",
+        ComponentLifecycle_sparse_component
     }
 };
 
@@ -6524,7 +6529,7 @@ static bake_test_suite suites[] = {
         "ComponentLifecycle",
         NULL,
         NULL,
-        76,
+        77,
         ComponentLifecycle_testcases
     },
     {
