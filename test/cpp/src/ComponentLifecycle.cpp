@@ -761,14 +761,61 @@ void ComponentLifecycle_no_copy_ctor(void) {
     try_set<NoCopyCtor>(ecs); 
 }
 
-void ComponentLifecycle_no_move_ctor(void) {
-    install_test_abort();
-
+void ComponentLifecycle_no_move(void) {
     flecs::world ecs;
 
-    test_expect_abort();
+    ecs.component<NoMove>();
+    ecs.component<Position>();
+
+    test_assert(ecs.component<NoMove>().has(flecs::Sparse));
+
+    flecs::entity e = ecs.entity().add<NoMove>();
+    const NoMove *ptr = e.get<NoMove>();
+    test_assert(ptr != NULL);
+    test_int(ptr->x_, 99);
+
+    e.add<Position>();
+
+    test_assert(ptr == e.get<NoMove>());
+    test_int(ptr->x_, 99);
+}
+
+void ComponentLifecycle_no_move_ctor(void) {
+    flecs::world ecs;
 
     ecs.component<NoMoveCtor>();
+    ecs.component<Position>();
+
+    test_assert(ecs.component<NoMoveCtor>().has(flecs::Sparse));
+
+    flecs::entity e = ecs.entity().add<NoMoveCtor>();
+    const NoMoveCtor *ptr = e.get<NoMoveCtor>();
+    test_assert(ptr != NULL);
+    test_int(ptr->x_, 99);
+
+    e.add<Position>();
+
+    test_assert(ptr == e.get<NoMoveCtor>());
+    test_int(ptr->x_, 99);
+}
+
+void ComponentLifecycle_no_move_assign(void) {
+    flecs::world ecs;
+
+    ecs.component<NoMoveAssign>();
+    ecs.component<Position>();
+
+    test_assert(ecs.component<NoMoveAssign>().has(flecs::Sparse));
+
+    flecs::entity e = ecs.entity().add<NoMoveAssign>();
+    const NoMoveAssign *ptr = e.get<NoMoveAssign>();
+    test_assert(ptr != NULL);
+    test_int(ptr->x_, 99);
+
+    e.add<Position>();
+
+    test_assert(ptr == e.get<NoMoveAssign>());
+    test_int(ptr->x_, 99);
 }
 
 void ComponentLifecycle_no_copy_assign(void) {
@@ -781,16 +828,6 @@ void ComponentLifecycle_no_copy_assign(void) {
     try_set<NoCopyAssign>(ecs);
 }
 
-void ComponentLifecycle_no_move_assign(void) {
-    install_test_abort();
-
-    flecs::world ecs;
-
-    test_expect_abort();
-
-    ecs.component<NoMoveAssign>();
-}
-
 void ComponentLifecycle_no_copy(void) {
     flecs::world ecs;
 
@@ -799,16 +836,6 @@ void ComponentLifecycle_no_copy(void) {
     try_add<NoCopy>(ecs);
 
     try_set<NoCopy>(ecs);
-}
-
-void ComponentLifecycle_no_move(void) {
-    install_test_abort();
-
-    flecs::world ecs;
-
-    test_expect_abort();
-
-    ecs.component<NoMove>();
 }
 
 void ComponentLifecycle_no_dtor(void) {
@@ -1853,4 +1880,43 @@ void ComponentLifecycle_dtor_relation_target(void) {
     test_int(CountNoDefaultCtor::dtor_invoked, 4);
     test_int(CountNoDefaultCtor::move_invoked, 0);
     test_int(CountNoDefaultCtor::move_ctor_invoked, 2);
+}
+
+void ComponentLifecycle_sparse_component(void) {
+    flecs::world world;
+
+    world.component<Pod>().add(flecs::Sparse);
+
+    auto e = world.entity().add<Pod>();
+    test_assert(e.id() != 0);
+    test_assert(e.has<Pod>());
+
+    const Pod *pod = e.get<Pod>();
+    test_assert(pod != NULL);
+    test_int(Pod::ctor_invoked, 1);
+    test_int(Pod::dtor_invoked, 0);
+    test_int(Pod::copy_invoked, 0);
+    test_int(Pod::move_invoked, 0);
+    test_int(Pod::copy_ctor_invoked, 0);
+    test_int(Pod::move_ctor_invoked, 0);
+
+    e.add<Position>();
+
+    test_int(Pod::ctor_invoked, 1);
+    test_int(Pod::dtor_invoked, 0);
+    test_int(Pod::copy_invoked, 0);
+    test_int(Pod::move_invoked, 0);
+    test_int(Pod::copy_ctor_invoked, 0);
+    test_int(Pod::move_ctor_invoked, 0);
+
+    test_int(pod->value, 10);
+
+    e.remove<Pod>();
+
+    test_int(Pod::ctor_invoked, 1);
+    test_int(Pod::dtor_invoked, 1);
+    test_int(Pod::copy_invoked, 0);
+    test_int(Pod::move_invoked, 0);
+    test_int(Pod::copy_ctor_invoked, 0);
+    test_int(Pod::move_ctor_invoked, 0);
 }
