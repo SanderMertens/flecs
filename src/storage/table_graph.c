@@ -659,6 +659,23 @@ void flecs_compute_table_diff(
     ecs_type_t node_type = node->type;
     ecs_type_t next_type = next->type;
 
+    if (ECS_IS_PAIR(id)) {
+        ecs_id_record_t *idr = flecs_id_record_get(world, ecs_pair(
+            ECS_PAIR_FIRST(id), EcsWildcard));
+        if (idr->flags & EcsIdIsUnion) {
+            if (node != next) {
+                id = ecs_pair(ECS_PAIR_FIRST(id), EcsUnion);
+            } else {
+                ecs_table_diff_t *diff = flecs_bcalloc(
+                    &world->allocators.table_diff);
+                diff->added.count = 1;
+                diff->added.array = flecs_wdup_n(world, ecs_id_t, 1, &id);
+                edge->diff = diff;
+                return;
+            }
+        }
+    }
+
     ecs_id_t *ids_node = node_type.array;
     ecs_id_t *ids_next = next_type.array;
     int32_t i_node = 0, node_count = node_type.count;
@@ -848,7 +865,9 @@ ecs_table_t* flecs_find_table_with(
         r = ECS_PAIR_FIRST(with);
         o = ECS_PAIR_SECOND(with);
         idr = flecs_id_record_ensure(world, ecs_pair(r, EcsWildcard));
-        if (idr->flags & EcsIdExclusive) {
+        if (idr->flags & EcsIdIsUnion) {
+            with = ecs_pair(r, EcsUnion);
+        } else if (idr->flags & EcsIdExclusive) {
             /* Relationship is exclusive, check if table already has it */
             ecs_table_record_t *tr = flecs_id_record_get_table(idr, node);
             if (tr) {
@@ -938,7 +957,7 @@ void flecs_init_edge_for_add(
 
     flecs_table_ensure_hi_edge(world, &table->node.add, id);
 
-    if (table != to) {
+    if ((table != to) || (table->flags & EcsTableHasUnion)) {
         /* Add edges are appended to refs.next */
         ecs_graph_edge_hdr_t *to_refs = &to->node.refs;
         ecs_graph_edge_hdr_t *next = to_refs->next;

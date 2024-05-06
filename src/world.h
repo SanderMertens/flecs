@@ -86,10 +86,14 @@ void flecs_process_pending_tables(
 /* Convenience macro's for world allocator */
 #define flecs_walloc(world, size)\
     flecs_alloc(&world->allocator, size)
+#define flecs_walloc_t(world, T)\
+    flecs_alloc_t(&world->allocator, T)
 #define flecs_walloc_n(world, T, count)\
     flecs_alloc_n(&world->allocator, T, count)
 #define flecs_wcalloc(world, size)\
     flecs_calloc(&world->allocator, size)
+#define flecs_wfree_t(world, T, ptr)\
+    flecs_free_t(&world->allocator, T, ptr)
 #define flecs_wcalloc_n(world, T, count)\
     flecs_calloc_n(&world->allocator, T, count)
 #define flecs_wfree(world, size, ptr)\

@@ -128,6 +128,46 @@ ecs_id_t flecs_id_record_hash(
     return id;
 }
 
+void flecs_id_record_init_sparse(
+    ecs_world_t *world,
+    ecs_id_record_t *idr)
+{
+    if (!idr->sparse) {
+        if (idr->flags & EcsIdIsSparse) {
+            ecs_assert(!(idr->flags & EcsIdIsUnion), ECS_CONSTRAINT_VIOLATED,
+                "cannot mix union and sparse traits");
+            ecs_assert(idr->type_info != NULL, ECS_INVALID_OPERATION, 
+                "only components can be marked as sparse");
+            idr->sparse = flecs_walloc_t(world, ecs_sparse_t);
+            flecs_sparse_init(idr->sparse, NULL, NULL, idr->type_info->size);
+        } else
+        if (idr->flags & EcsIdIsUnion) {
+            idr->sparse = flecs_walloc_t(world, ecs_switch_t);
+            flecs_switch_init(idr->sparse, &world->allocator, 0);
+        }
+    }
+}
+
+void flecs_id_record_fini_sparse(
+    ecs_world_t *world,
+    ecs_id_record_t *idr)
+{
+    if (idr->sparse) {
+        if (idr->flags & EcsIdIsSparse) {
+            ecs_assert(flecs_sparse_count(idr->sparse) == 0, 
+                ECS_INTERNAL_ERROR, NULL);
+            flecs_sparse_fini(idr->sparse);
+            flecs_wfree_t(world, ecs_sparse_t, idr->sparse);
+        } else
+        if (idr->flags & EcsIdIsUnion) {
+            ecs_assert(flecs_switch_count(idr->sparse) == 0,
+                ECS_INTERNAL_ERROR, NULL);
+            flecs_switch_fini(idr->sparse);
+            flecs_wfree_t(world, ecs_switch_t, idr->sparse);
+        }
+    }
+}
+
 static
 ecs_id_record_t* flecs_id_record_new(
     ecs_world_t *world,
@@ -419,12 +459,8 @@ void flecs_id_record_free(
         }
     }
 
-    if (idr->sparse) {
-        ecs_assert(flecs_sparse_count(idr->sparse) == 0, 
-            ECS_INTERNAL_ERROR, NULL);
-        flecs_sparse_fini(idr->sparse);
-        ecs_os_free(idr->sparse);
-    }
+    /* Cleanup sparse storage */
+    flecs_id_record_fini_sparse(world, idr);
 
     /* Update counters */
     world->info.id_delete_total ++;
