@@ -2048,8 +2048,9 @@ ecs_query_t* ecs_query_init(
     ecs_query_t *result = ecs_poly_new(ecs_query_t);
     ecs_observer_desc_t observer_desc = { .filter = desc->filter };
     ecs_entity_t entity = desc->filter.entity;
+    ecs_flags32_t filter_flags = desc->filter.flags|world->default_query_flags;
 
-    observer_desc.filter.flags = EcsFilterMatchEmptyTables;
+    observer_desc.filter.flags = EcsFilterMatchEmptyTables|filter_flags;
     observer_desc.filter.storage = &result->filter;
     result->filter = ECS_FILTER_INIT;
 
@@ -2060,7 +2061,7 @@ ecs_query_t* ecs_query_init(
     ECS_BIT_COND(result->flags, EcsQueryTrivialIter, 
         !!(result->filter.flags & EcsFilterMatchOnlyThis));
     ECS_BIT_COND(result->flags, EcsQueryMatchEmptyTables, 
-        !!(desc->filter.flags & EcsFilterMatchEmptyTables));
+        !!(filter_flags & EcsFilterMatchEmptyTables));
 
     flecs_query_allocators_init(result);
 
@@ -2070,7 +2071,7 @@ ecs_query_t* ecs_query_init(
         observer_desc.ctx = result;
 
         int32_t event_index = 0;
-        if (!(desc->filter.flags & EcsFilterMatchEmptyTables)) {
+        if (!(filter_flags & EcsFilterMatchEmptyTables)) {
             observer_desc.events[event_index ++] = EcsOnTableEmpty;
             observer_desc.events[event_index ++] = EcsOnTableFill;
         }

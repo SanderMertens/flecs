@@ -1564,6 +1564,15 @@ error:
     return;
 }
 
+void ecs_set_default_query_flags(
+    ecs_world_t *world,
+    ecs_flags32_t flags)
+{
+    ecs_poly_assert(world, ecs_world_t);
+    flecs_process_pending_tables(world);
+    world->default_query_flags = flags;
+}
+
 void* ecs_get_ctx(
     const ecs_world_t *world)
 {

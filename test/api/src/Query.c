@@ -10414,3 +10414,69 @@ void Query_cached_match_empty_w_bitset(void) {
 
     ecs_fini(world);
 }
+
+void Query_default_query_flags(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Foo);
+
+    ecs_set_default_query_flags(world, EcsFilterMatchEmptyTables);
+
+    ecs_query_t *q = ecs_query(world, {
+        .filter.terms = {{ecs_id(Position)}},
+    });
+
+    test_assert(q != NULL);
+    const ecs_filter_t *filter = ecs_query_get_filter(q);
+    test_assert(filter != NULL);
+    test_assert(filter->flags & EcsFilterMatchEmptyTables);
+
+    ecs_entity_t e1 = ecs_new(world, Position);
+    ecs_entity_t e2 = ecs_new(world, Position);
+    
+    ecs_add(world, e2, Foo);
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(true, ecs_query_next(&it));
+        test_int(1, it.count);
+        test_uint(e1, it.entities[0]);
+
+        test_bool(true, ecs_query_next(&it));
+        test_int(1, it.count);
+        test_uint(e2, it.entities[0]);
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_remove(world, e2, Foo);
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(true, ecs_query_next(&it));
+        test_int(2, it.count);
+        test_uint(e1, it.entities[0]);
+        test_uint(e2, it.entities[1]);
+
+        test_bool(true, ecs_query_next(&it));
+        test_int(0, it.count);
+
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_add(world, e2, Foo);
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(true, ecs_query_next(&it));
+        test_int(1, it.count);
+        test_uint(e1, it.entities[0]);
+
+        test_bool(true, ecs_query_next(&it));
+        test_int(1, it.count);
+        test_uint(e2, it.entities[0]);
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_fini(world);
+}

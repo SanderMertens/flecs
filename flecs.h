@@ -4658,6 +4658,28 @@ void ecs_set_target_fps(
     ecs_world_t *world,
     ecs_ftime_t fps);
 
+/** Set default query flags. 
+ * Set a default value for the ecs_filter_desc_t::flags field. Default flags
+ * are applied in addition to the flags provided in the descriptor. For a
+ * list of available flags, see include/flecs/private/api_flags.h. Typical flags
+ * to use are:
+ * 
+ *  - EcsFilterMatchInstanced
+ *  - EcsFilterMatchEmptyTables
+ *  - EcsFilterMatchDisabled
+ *  - EcsFilterMatchPrefab
+ * 
+ * Only use flags that start with EcsFilter. Do not use EcsQuery* flags. This
+ * function may only be called when no queries are created.
+ * 
+ * @param world The world.
+ * @param flags The query flags.
+ */
+FLECS_API
+void ecs_set_default_query_flags(
+    ecs_world_t *world,
+    ecs_flags32_t flags);
+
 /** @} */
 
 /**

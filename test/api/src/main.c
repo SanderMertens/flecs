@@ -1688,6 +1688,7 @@ void Query_cached_match_new_empty_w_ref(void);
 void Query_cached_match_empty_w_order_by(void);
 void Query_cached_match_new_empty_w_order_by(void);
 void Query_cached_match_empty_w_bitset(void);
+void Query_default_query_flags(void);
 
 // Testsuite 'Iter'
 void Iter_page_iter_0_0(void);
@@ -9315,6 +9316,10 @@ bake_test_case Query_testcases[] = {
     {
         "cached_match_empty_w_bitset",
         Query_cached_match_empty_w_bitset
+    },
+    {
+        "default_query_flags",
+        Query_default_query_flags
     }
 };
 
@@ -13722,7 +13727,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        252,
+        253,
         Query_testcases
     },
     {

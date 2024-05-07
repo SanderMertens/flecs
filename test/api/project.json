@@ -1750,7 +1750,8 @@
                 "cached_match_new_empty_w_ref",
                 "cached_match_empty_w_order_by",
                 "cached_match_new_empty_w_order_by",
-                "cached_match_empty_w_bitset"
+                "cached_match_empty_w_bitset",
+                "default_query_flags"
             ]
         }, {
             "id": "Iter",
