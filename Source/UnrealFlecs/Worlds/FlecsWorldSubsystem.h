@@ -70,7 +70,7 @@ public:
 	{
 		DeveloperSettings = GetDefault<UFlecsDeveloperSettings>();
 
-		checkf(DeveloperSettings->bEnableFlecs, TEXT("Flecs is not enabled in the Flecs Developer Settings"));
+		solid_checkf(DeveloperSettings->bEnableFlecs, TEXT("Flecs is not enabled in the Flecs Developer Settings"));
 		
 		if (DeveloperSettings->bAutoCreateWorld)
 		{
@@ -108,8 +108,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Flecs")
 	FORCEINLINE UFlecsWorld* CreateWorld(const FName& Name, const FFlecsWorldSettings& Settings)
 	{
-		checkf(!HasWorld(Name), TEXT("World with name %s already exists"), *Name.ToString());
-		checkf(Name != NAME_None, TEXT("World name cannot be NAME_None"));
+		solid_checkf(!HasWorld(Name), TEXT("World with name %s already exists"), *Name.ToString());
+		solid_checkf(Name != NAME_None, TEXT("World name cannot be NAME_None"));
 
 		flecs::world NewWorld = flecs::world();
 
@@ -121,8 +121,6 @@ public:
 		NewFlecsWorld->SetName(Name);
 		
 		NewFlecsWorld->SetContext(this);
-
-		NewFlecsWorld->SetAutoMerge(Settings.bAutoMerge);
 
 		NewFlecsWorld->SetSingleton<FFlecsWorldPtrComponent>(FFlecsWorldPtrComponent
 			{ NewFlecsWorld, GetWorld() });
@@ -207,7 +205,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Flecs")
 	FORCEINLINE UFlecsWorld* GetFlecsWorld(const FName& Name) const
 	{
-		checkf(HasWorld(Name), TEXT("World with name %s does not exist"), *Name.ToString());
+		solid_checkf(HasWorld(Name), TEXT("World with name %s does not exist"), *Name.ToString());
 		return WorldNameMap.at(Name);
 	}
 	

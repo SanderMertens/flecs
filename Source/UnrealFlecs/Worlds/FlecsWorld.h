@@ -64,9 +64,9 @@ public:
 	}
 	
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
-	FORCEINLINE FFlecsEntityHandle GetEntityWithName(const FString& Name, const bool bSearchPath = true) const
+	FORCEINLINE FFlecsEntityHandle LookupEntity(const FString& Name) const
 	{
-		return World.lookup(TCHAR_TO_ANSI(*Name), bSearchPath);
+		return World.lookup(TCHAR_TO_ANSI(*Name));
 	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
@@ -205,12 +205,6 @@ public:
 	FORCEINLINE void Merge() const
 	{
 		World.merge();
-	}
-
-	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
-	FORCEINLINE void SetAutoMerge(const bool bInAutoMerge) const
-	{
-		World.set_automerge(bInAutoMerge);
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
@@ -553,7 +547,7 @@ public:
 		for (TFieldIterator<FProperty> PropertyIt(ScriptStruct); PropertyIt; ++PropertyIt)
 		{
 			const FProperty* Property = *PropertyIt;
-			checkf(Property != nullptr, TEXT("Property is nullptr"));
+			solid_checkf(Property != nullptr, TEXT("Property is nullptr"));
 			
 			if (Property->IsA<FBoolProperty>())
 			{
@@ -647,7 +641,7 @@ public:
 		for (TFieldIterator<FProperty> PropertyIt(ScriptClass); PropertyIt; ++PropertyIt)
 		{
 			const FProperty* Property = *PropertyIt;
-			checkf(Property != nullptr, TEXT("Property is nullptr"));
+			solid_checkf(Property != nullptr, TEXT("Property is nullptr"));
 			
 			if (Property->IsA<FBoolProperty>())
 			{
@@ -821,16 +815,16 @@ public:
 	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs")
-	FORCEINLINE bool HasEntityWithName(const FString& Name, const bool bSearchPath = true) const
+	FORCEINLINE bool HasEntityWithName(const FString& Name) const
 	{
-		return World.lookup(TCHAR_TO_ANSI(*Name), bSearchPath).is_valid();
+		return World.lookup(TCHAR_TO_ANSI(*Name)).is_valid();
 	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs")
 	FORCEINLINE FFlecsEntityHandle GetTagEntity(const FGameplayTag& Tag) const
 	{
-		checkf(Tag.IsValid(), TEXT("Tag is not valid"));
-		return World.lookup(TCHAR_TO_ANSI(*Tag.ToString()), true);
+		solid_checkf(Tag.IsValid(), TEXT("Tag is not valid"));
+		return World.lookup(TCHAR_TO_ANSI(*Tag.ToString(), TEXT("."), TEXT(".")));
 	}
 	
 	flecs::world World;

@@ -19,7 +19,7 @@ FFlecsEntityHandle::FFlecsEntityHandle()
         return;
     }
     
-    if (GetEntity().world().m_world == nullptr)
+    if (GetEntity().world() == nullptr)
     {
         UFlecsWorldSubsystem* FlecsWorldSubsystem = GWorld->GetSubsystem<UFlecsWorldSubsystem>();
         if LIKELY_IF(FlecsWorldSubsystem->HasWorld(WorldName))

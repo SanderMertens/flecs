@@ -53,7 +53,8 @@ public:
 
 	FORCEINLINE operator bool() const { return IsValid(); }
 
-	FORCEINLINE NO_DISCARD int32 GetId() const { return GetEntity().id(); }
+	FORCEINLINE NO_DISCARD uint32 GetId() const { return GetEntity().id(); }
+	FORCEINLINE NO_DISCARD uint32 GetGeneration() const { return get_generation(GetEntity()); }
 	
 	FORCEINLINE NO_DISCARD UFlecsWorld* GetFlecsWorld() const;
 	FORCEINLINE NO_DISCARD UWorld* GetOuterWorld() const;
@@ -113,7 +114,7 @@ public:
 	FORCEINLINE void Set(UScriptStruct* StructType, const void* InValue) const;
 
 	FORCEINLINE void Set(const FInstancedStruct& InValue) const;
-
+	
 	template <typename T>
 	FORCEINLINE NO_DISCARD T Get() const { return GetEntity().get<T>(); }
 
@@ -211,19 +212,14 @@ public:
 
 	FORCEINLINE NO_DISCARD flecs::untyped_component& GetUntypedComponent()
 	{
-		checkf(IsComponent(), TEXT("Entity is not a component"));
+		solid_checkf(IsComponent(), TEXT("Entity is not a component"));
 		return GetRef<flecs::untyped_component>();
 	}
 
 	FORCEINLINE NO_DISCARD const flecs::untyped_component* GetUntypedComponent() const
 	{
-		checkf(IsComponent(), TEXT("Entity is not a component"));
+		solid_checkf(IsComponent(), TEXT("Entity is not a component"));
 		return GetPtr<flecs::untyped_component>();
-	}
-
-	FORCEINLINE void Flatten(const FFlecsEntityHandle& RelationshipEntity) const
-	{
-		GetEntity().flatten(RelationshipEntity, nullptr);
 	}
 
 	template <typename T>

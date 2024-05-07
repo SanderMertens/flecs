@@ -89,7 +89,7 @@ void UFlecsNetworkingManager::BeginPlay()
 
 void UFlecsNetworkingManager::AddNetworkingActorComponent(UFlecsNetworkingActorComponent* NetworkingActorComponent)
 {
-	checkf(IsValid(NetworkingActorComponent), TEXT("NetworkingActorComponent must be valid"));
+	solid_checkf(IsValid(NetworkingActorComponent), TEXT("NetworkingActorComponent must be valid"));
 
 	NetworkingActorComponents.Add(NetworkingActorComponent);
 }

@@ -45,14 +45,14 @@ public:
 	{
 		Super::BeginPlay();
 
-		checkf(GetOwner()->IsA<APlayerController>(),
+		solid_checkf(GetOwner()->IsA<APlayerController>(),
 			TEXT("Owner of UFlecsNetworkingActorComponent must be a APlayerController"));
 
 		const AGameStateBase* GameState = GetWorld()->GetGameState();
-		checkf(IsValid(GameState), TEXT("GameState must be valid"));
+		solid_checkf(IsValid(GameState), TEXT("GameState must be valid"));
 
 		UFlecsNetworkingManager* NetworkingManager = GameState->FindComponentByClass<UFlecsNetworkingManager>();
-		checkf(IsValid(NetworkingManager), TEXT("NetworkingManager must be valid"));
+		solid_checkf(IsValid(NetworkingManager), TEXT("NetworkingManager must be valid"));
 
 		NetworkingManager->AddNetworkingActorComponent(this);
 
@@ -61,11 +61,11 @@ public:
 		if (GetOwner()->HasAuthority())
 		{
 			const UFlecsWorld* FlecsWorld = UFlecsWorldSubsystem::GetDefaultWorld(GetOwner());
-			checkf(FlecsWorld, TEXT("FlecsWorld must be valid"));
+			solid_checkf(FlecsWorld, TEXT("FlecsWorld must be valid"));
 
 			TArray<FNetworkedEntityInfo> Entities;
 			FlecsWorld->World.query_builder<FFlecsNetworkIdComponent>()
-			.term(flecs::Name)
+			.term(flecs::Trait)
 				.and_()
 				.inout_none()
 			.read<FFlecsNetworkIdComponent>()

@@ -68,6 +68,9 @@ struct UNREALFLECS_API FFlecsEntityRecord
 			case EFlecsComponentNodeType::FGameplayTag:
 				EntityHandle.Add(GameplayTag);
 				break;
+			default: UNLIKELY_ATTRIBUTE
+				checkNoEntry();
+				break;
 			}
 		}
 	}

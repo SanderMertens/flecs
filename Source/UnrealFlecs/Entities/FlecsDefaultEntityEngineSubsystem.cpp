@@ -41,8 +41,6 @@ void UFlecsDefaultEntityEngineSubsystem::Initialize(FSubsystemCollectionBase& Co
 	REGISTER_FLECS_ENTITY_OPTION("Final", flecs::Final);
 	REGISTER_FLECS_ENTITY_OPTION("DontInherit", flecs::DontInherit);
 	REGISTER_FLECS_ENTITY_OPTION("AlwaysOverride", flecs::AlwaysOverride);
-	REGISTER_FLECS_ENTITY_OPTION("Tag", flecs::Tag);
-	REGISTER_FLECS_ENTITY_OPTION("Union", flecs::Union);
 	REGISTER_FLECS_ENTITY_OPTION("Exclusive", flecs::Exclusive);
 	REGISTER_FLECS_ENTITY_OPTION("Acyclic", flecs::Acyclic);
 	REGISTER_FLECS_ENTITY_OPTION("Traversable", flecs::Traversable);
@@ -60,18 +58,23 @@ void UFlecsDefaultEntityEngineSubsystem::Initialize(FSubsystemCollectionBase& Co
 	REGISTER_FLECS_ENTITY_OPTION("Remove", flecs::Remove);
 	REGISTER_FLECS_ENTITY_OPTION("Delete", flecs::Delete);
 	REGISTER_FLECS_ENTITY_OPTION("Panic", flecs::Panic);
-	REGISTER_FLECS_ENTITY_OPTION("Flatten", flecs::Flatten);
-	REGISTER_FLECS_ENTITY_OPTION("DefaultChildComponent", flecs::DefaultChildComponent);
 	REGISTER_FLECS_ENTITY_OPTION("PredEq", flecs::PredEq);
 	REGISTER_FLECS_ENTITY_OPTION("PredMatch", flecs::PredMatch);
 	REGISTER_FLECS_ENTITY_OPTION("PredLookup", flecs::PredLookup);
 	REGISTER_FLECS_ENTITY_OPTION("ScopeOpen", flecs::ScopeOpen);
 	REGISTER_FLECS_ENTITY_OPTION("ScopeClose", flecs::ScopeClose);
-	REGISTER_FLECS_ENTITY_OPTION("AndFrom", flecs::Union);
 	REGISTER_FLECS_ENTITY_OPTION("OrFrom", flecs::Exclusive);
+	REGISTER_FLECS_ENTITY_OPTION("NotFrom", flecs::NotFrom);
+	REGISTER_FLECS_ENTITY_OPTION("Or", flecs::Or);
+	REGISTER_FLECS_ENTITY_OPTION("Not", flecs::Not);
+	REGISTER_FLECS_ENTITY_OPTION("Optional", flecs::Optional);
+
+	REGISTER_FLECS_ENTITY_OPTION("Relationship", flecs::Relationship);
+	REGISTER_FLECS_ENTITY_OPTION("Target", flecs::Target);
+	REGISTER_FLECS_ENTITY_OPTION("Trait", flecs::Trait);
 
 	UFlecsDefaultEntitiesDeveloperSettings* Settings = GetMutableDefault<UFlecsDefaultEntitiesDeveloperSettings>();
-	checkf(Settings, TEXT("Default Entities Developer Settings not found"));
+	solid_checkf(Settings, TEXT("Default Entities Developer Settings not found"));
 	UpdateDefaultEntities();
 
 	#if WITH_EDITOR
@@ -98,7 +101,7 @@ const TMap<FName, flecs::entity_t>& UFlecsDefaultEntityEngineSubsystem::GetEntit
 void UFlecsDefaultEntityEngineSubsystem::UpdateDefaultEntities()
 {
 	const UFlecsDefaultEntitiesDeveloperSettings* Settings = GetDefault<UFlecsDefaultEntitiesDeveloperSettings>();
-	checkf(Settings, TEXT("Default Entities Developer Settings not found"));
+	solid_checkf(Settings != nullptr, TEXT("Default Entities Developer Settings not found"));
 	
 	DefaultEntityMap.Empty();
 

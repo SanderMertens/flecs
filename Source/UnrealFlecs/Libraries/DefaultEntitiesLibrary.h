@@ -236,14 +236,7 @@ public:
 	static FORCEINLINE FFlecsEntityHandle GetTagEntity(const UObject* WorldContextObject)
 	{
 		const UFlecsWorld* World = UFlecsWorldSubsystem::GetDefaultWorld(WorldContextObject);
-		return flecs::entity(World->World, flecs::Tag);
-	}
-
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Flecs | Default Entities", meta = (WorldContext = "WorldContextObject"))
-	static FORCEINLINE FFlecsEntityHandle GetUnionEntity(const UObject* WorldContextObject)
-	{
-		const UFlecsWorld* World = UFlecsWorldSubsystem::GetDefaultWorld(WorldContextObject);
-		return flecs::entity(World->World, flecs::Union);
+		return flecs::entity(World->World, flecs::Name);
 	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Flecs | Default Entities", meta = (WorldContext = "WorldContextObject"))
@@ -363,20 +356,6 @@ public:
 	{
 		const UFlecsWorld* World = UFlecsWorldSubsystem::GetDefaultWorld(WorldContextObject);
 		return FFlecsEntityHandle(flecs::entity(World->World, flecs::Panic));
-	}
-
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Flecs | Default Entities", meta = (WorldContext = "WorldContextObject"))
-	static FORCEINLINE FFlecsEntityHandle GetFlattenEntity(const UObject* WorldContextObject)
-	{
-		const UFlecsWorld* World = UFlecsWorldSubsystem::GetDefaultWorld(WorldContextObject);
-		return FFlecsEntityHandle(flecs::entity(World->World, flecs::Flatten));
-	}
-
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Flecs | Default Entities", meta = (WorldContext = "WorldContextObject"))
-	static FORCEINLINE FFlecsEntityHandle GetDefaultChildComponentEntity(const UObject* WorldContextObject)
-	{
-		const UFlecsWorld* World = UFlecsWorldSubsystem::GetDefaultWorld(WorldContextObject);
-		return FFlecsEntityHandle(flecs::entity(World->World, flecs::DefaultChildComponent));
 	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Flecs | Default Entities", meta = (WorldContext = "WorldContextObject"))
