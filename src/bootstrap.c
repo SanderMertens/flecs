@@ -197,7 +197,7 @@ bool flecs_set_id_flag(
 {
     if (!(idr->flags & flag)) {
         idr->flags |= flag;
-        if (flag == EcsIdIsSparse || flag == EcsIdIsUnion) {
+        if (flag == EcsIdIsSparse) {
             flecs_id_record_init_sparse(world, idr);
         }
         return true;
@@ -905,7 +905,7 @@ void flecs_bootstrap(
         .ctx = &exclusive_trait
     });
 
-    static ecs_on_trait_ctx_t dont_override_trait = { EcsIdDontInherit };
+    static ecs_on_trait_ctx_t dont_override_trait = { EcsIdDontInherit, 0 };
     ecs_observer(world, {
         .query.terms = {{ .id = EcsDontInherit, .src.id = EcsSelf }},
         .query.flags = EcsQueryMatchPrefab,
@@ -914,7 +914,7 @@ void flecs_bootstrap(
         .ctx = &dont_override_trait
     });
 
-    static ecs_on_trait_ctx_t always_override_trait = { EcsIdAlwaysOverride };
+    static ecs_on_trait_ctx_t always_override_trait = { EcsIdAlwaysOverride, 0 };
     ecs_observer(world, {
         .query.terms = {{ .id = EcsAlwaysOverride, .src.id = EcsSelf }},
         .query.flags = EcsQueryMatchPrefab,
@@ -923,7 +923,7 @@ void flecs_bootstrap(
         .ctx = &always_override_trait
     });
 
-    static ecs_on_trait_ctx_t toggle_trait = { EcsIdCanToggle };
+    static ecs_on_trait_ctx_t toggle_trait = { EcsIdCanToggle, 0 };
     ecs_observer(world, {
         .query.terms = {{ .id = EcsCanToggle, .src.id = EcsSelf }},
         .query.flags = EcsQueryMatchPrefab,
@@ -932,7 +932,7 @@ void flecs_bootstrap(
         .ctx = &toggle_trait
     });
 
-    static ecs_on_trait_ctx_t with_trait = { EcsIdWith };
+    static ecs_on_trait_ctx_t with_trait = { EcsIdWith, 0 };
     ecs_observer(world, {
         .query.terms = {
             { .id = ecs_pair(EcsWith, EcsWildcard), .src.id = EcsSelf },
@@ -943,7 +943,7 @@ void flecs_bootstrap(
         .ctx = &with_trait
     });
 
-    static ecs_on_trait_ctx_t sparse_trait = { EcsIdIsSparse };
+    static ecs_on_trait_ctx_t sparse_trait = { EcsIdIsSparse, 0 };
     ecs_observer(world, {
         .query.terms = {{ .id = EcsSparse, .src.id = EcsSelf }},
         .query.flags = EcsQueryMatchPrefab,
@@ -952,7 +952,7 @@ void flecs_bootstrap(
         .ctx = &sparse_trait
     });
 
-    static ecs_on_trait_ctx_t union_trait = { EcsIdIsUnion };
+    static ecs_on_trait_ctx_t union_trait = { EcsIdIsUnion, 0 };
     ecs_observer(world, {
         .query.terms = {{ .id = EcsUnion, .src.id = EcsSelf }},
         .query.flags = EcsQueryMatchPrefab,

@@ -458,6 +458,10 @@ void Union_get_target_after_replace(void);
 void Union_get_target_after_remove(void);
 void Union_has_wildcard(void);
 void Union_has_any(void);
+void Union_add_remove_2_tgts(void);
+void Union_add_remove_2_tgts_join(void);
+void Union_add_remove_3_tgts(void);
+void Union_add_remove_3_tgts_join(void);
 
 // Testsuite 'Hierarchies'
 void Hierarchies_setup(void);
@@ -3731,6 +3735,22 @@ bake_test_case Union_testcases[] = {
     {
         "has_any",
         Union_has_any
+    },
+    {
+        "add_remove_2_tgts",
+        Union_add_remove_2_tgts
+    },
+    {
+        "add_remove_2_tgts_join",
+        Union_add_remove_2_tgts_join
+    },
+    {
+        "add_remove_3_tgts",
+        Union_add_remove_3_tgts
+    },
+    {
+        "add_remove_3_tgts_join",
+        Union_add_remove_3_tgts_join
     }
 };
 
@@ -9763,7 +9783,7 @@ static bake_test_suite suites[] = {
         "Union",
         NULL,
         NULL,
-        13,
+        17,
         Union_testcases
     },
     {
