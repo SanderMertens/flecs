@@ -73,6 +73,7 @@ flecs_src = files(
     'src/datastructures/name_index.c',
     'src/datastructures/sparse.c',
     'src/datastructures/strbuf.c',
+    'src/datastructures/switch_list.c',
     'src/datastructures/vec.c',
     'src/storage/entity_index.c',
     'src/storage/id_index.c',

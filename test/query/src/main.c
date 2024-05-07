@@ -109,6 +109,12 @@ void Validator_validate_src_0_name(void);
 void Validator_validate_second_0_name(void);
 void Validator_validate_singleton_src_w_first_name(void);
 void Validator_validate_singleton_second_w_first_name(void);
+void Validator_not_wildcard(void);
+void Validator_not_first_wildcard(void);
+void Validator_not_second_wildcard(void);
+void Validator_not_wildcard_id(void);
+void Validator_not_wildcard_first_pair(void);
+void Validator_not_wildcard_second_pair(void);
 
 // Testsuite 'Parser'
 void Parser_resolve_this(void);
@@ -389,6 +395,9 @@ void Parser_empty_term_w_newline(void);
 void Parser_mixed_1_desc_and_1_expr(void);
 void Parser_mixed_2_desc_and_1_expr(void);
 void Parser_mixed_1_desc_and_2_expr(void);
+void Parser_not_wildcard(void);
+void Parser_not_first_wildcard(void);
+void Parser_not_second_wildcard(void);
 
 // Testsuite 'Basic'
 void Basic_setup(void);
@@ -1709,6 +1718,44 @@ void Sparse_1_sparse_written_self(void);
 void Sparse_1_sparse_written_up(void);
 void Sparse_1_sparse_written_self_up(void);
 
+// Testsuite 'Union'
+void Union_setup(void);
+void Union_1_fixed_union_any(void);
+void Union_1_fixed_union_wildcard(void);
+void Union_1_fixed_union_tgt(void);
+void Union_1_fixed_union_tgt_var(void);
+void Union_1_fixed_union_tgt_var_written(void);
+void Union_1_this_union_any(void);
+void Union_1_this_union_wildcard(void);
+void Union_1_this_union_tgt(void);
+void Union_1_this_union_tgt_var(void);
+void Union_1_this_union_tgt_var_written(void);
+void Union_1_var_union_any(void);
+void Union_1_var_union_wildcard(void);
+void Union_1_var_union_tgt(void);
+void Union_1_var_union_tgt_var(void);
+void Union_1_var_union_tgt_var_written(void);
+void Union_1_this_written_union_any(void);
+void Union_1_this_written_union_wildcard(void);
+void Union_1_this_written_union_tgt(void);
+void Union_1_this_written_union_tgt_var(void);
+void Union_1_this_written_union_tgt_var_written(void);
+void Union_1_var_written_union_any(void);
+void Union_1_var_written_union_wildcard(void);
+void Union_1_var_written_union_tgt(void);
+void Union_1_var_written_union_tgt_var(void);
+void Union_1_var_written_union_tgt_var_written(void);
+void Union_not_fixed_union_any(void);
+void Union_not_fixed_union_wildcard(void);
+void Union_not_fixed_union_tgt(void);
+void Union_not_fixed_union_var(void);
+void Union_not_fixed_union_var_written(void);
+void Union_not_this_written_union_any(void);
+void Union_not_this_written_union_wildcard(void);
+void Union_not_this_written_union_tgt(void);
+void Union_not_this_written_union_var(void);
+void Union_not_this_written_union_var_written(void);
+
 // Testsuite 'OrderBy'
 void OrderBy_sort_by_component(void);
 void OrderBy_sort_by_component_2_tables(void);
@@ -2223,6 +2270,30 @@ bake_test_case Validator_testcases[] = {
     {
         "validate_singleton_second_w_first_name",
         Validator_validate_singleton_second_w_first_name
+    },
+    {
+        "not_wildcard",
+        Validator_not_wildcard
+    },
+    {
+        "not_first_wildcard",
+        Validator_not_first_wildcard
+    },
+    {
+        "not_second_wildcard",
+        Validator_not_second_wildcard
+    },
+    {
+        "not_wildcard_id",
+        Validator_not_wildcard_id
+    },
+    {
+        "not_wildcard_first_pair",
+        Validator_not_wildcard_first_pair
+    },
+    {
+        "not_wildcard_second_pair",
+        Validator_not_wildcard_second_pair
     }
 };
 
@@ -3338,6 +3409,18 @@ bake_test_case Parser_testcases[] = {
     {
         "mixed_1_desc_and_2_expr",
         Parser_mixed_1_desc_and_2_expr
+    },
+    {
+        "not_wildcard",
+        Parser_not_wildcard
+    },
+    {
+        "not_first_wildcard",
+        Parser_not_first_wildcard
+    },
+    {
+        "not_second_wildcard",
+        Parser_not_second_wildcard
     }
 };
 
@@ -8492,6 +8575,149 @@ bake_test_case Sparse_testcases[] = {
     }
 };
 
+bake_test_case Union_testcases[] = {
+    {
+        "1_fixed_union_any",
+        Union_1_fixed_union_any
+    },
+    {
+        "1_fixed_union_wildcard",
+        Union_1_fixed_union_wildcard
+    },
+    {
+        "1_fixed_union_tgt",
+        Union_1_fixed_union_tgt
+    },
+    {
+        "1_fixed_union_tgt_var",
+        Union_1_fixed_union_tgt_var
+    },
+    {
+        "1_fixed_union_tgt_var_written",
+        Union_1_fixed_union_tgt_var_written
+    },
+    {
+        "1_this_union_any",
+        Union_1_this_union_any
+    },
+    {
+        "1_this_union_wildcard",
+        Union_1_this_union_wildcard
+    },
+    {
+        "1_this_union_tgt",
+        Union_1_this_union_tgt
+    },
+    {
+        "1_this_union_tgt_var",
+        Union_1_this_union_tgt_var
+    },
+    {
+        "1_this_union_tgt_var_written",
+        Union_1_this_union_tgt_var_written
+    },
+    {
+        "1_var_union_any",
+        Union_1_var_union_any
+    },
+    {
+        "1_var_union_wildcard",
+        Union_1_var_union_wildcard
+    },
+    {
+        "1_var_union_tgt",
+        Union_1_var_union_tgt
+    },
+    {
+        "1_var_union_tgt_var",
+        Union_1_var_union_tgt_var
+    },
+    {
+        "1_var_union_tgt_var_written",
+        Union_1_var_union_tgt_var_written
+    },
+    {
+        "1_this_written_union_any",
+        Union_1_this_written_union_any
+    },
+    {
+        "1_this_written_union_wildcard",
+        Union_1_this_written_union_wildcard
+    },
+    {
+        "1_this_written_union_tgt",
+        Union_1_this_written_union_tgt
+    },
+    {
+        "1_this_written_union_tgt_var",
+        Union_1_this_written_union_tgt_var
+    },
+    {
+        "1_this_written_union_tgt_var_written",
+        Union_1_this_written_union_tgt_var_written
+    },
+    {
+        "1_var_written_union_any",
+        Union_1_var_written_union_any
+    },
+    {
+        "1_var_written_union_wildcard",
+        Union_1_var_written_union_wildcard
+    },
+    {
+        "1_var_written_union_tgt",
+        Union_1_var_written_union_tgt
+    },
+    {
+        "1_var_written_union_tgt_var",
+        Union_1_var_written_union_tgt_var
+    },
+    {
+        "1_var_written_union_tgt_var_written",
+        Union_1_var_written_union_tgt_var_written
+    },
+    {
+        "not_fixed_union_any",
+        Union_not_fixed_union_any
+    },
+    {
+        "not_fixed_union_wildcard",
+        Union_not_fixed_union_wildcard
+    },
+    {
+        "not_fixed_union_tgt",
+        Union_not_fixed_union_tgt
+    },
+    {
+        "not_fixed_union_var",
+        Union_not_fixed_union_var
+    },
+    {
+        "not_fixed_union_var_written",
+        Union_not_fixed_union_var_written
+    },
+    {
+        "not_this_written_union_any",
+        Union_not_this_written_union_any
+    },
+    {
+        "not_this_written_union_wildcard",
+        Union_not_this_written_union_wildcard
+    },
+    {
+        "not_this_written_union_tgt",
+        Union_not_this_written_union_tgt
+    },
+    {
+        "not_this_written_union_var",
+        Union_not_this_written_union_var
+    },
+    {
+        "not_this_written_union_var_written",
+        Union_not_this_written_union_var_written
+    }
+};
+
 bake_test_case OrderBy_testcases[] = {
     {
         "sort_by_component",
@@ -8973,20 +9199,24 @@ const char* Sparse_cache_kind_param[] = {"default", "auto"};
 bake_test_param Sparse_params[] = {
     {"cache_kind", (char**)Sparse_cache_kind_param, 2}
 };
+const char* Union_cache_kind_param[] = {"default", "auto"};
+bake_test_param Union_params[] = {
+    {"cache_kind", (char**)Union_cache_kind_param, 2}
+};
 
 static bake_test_suite suites[] = {
     {
         "Validator",
         NULL,
         NULL,
-        100,
+        106,
         Validator_testcases
     },
     {
         "Parser",
         NULL,
         NULL,
-        278,
+        281,
         Parser_testcases
     },
     {
@@ -9129,6 +9359,15 @@ static bake_test_suite suites[] = {
         Sparse_params
     },
     {
+        "Union",
+        Union_setup,
+        NULL,
+        35,
+        Union_testcases,
+        1,
+        Union_params
+    },
+    {
         "OrderBy",
         NULL,
         NULL,
@@ -9152,5 +9391,5 @@ static bake_test_suite suites[] = {
 };
 
 int main(int argc, char *argv[]) {
-    return bake_test_run("query", argc, argv, suites, 22);
+    return bake_test_run("query", argc, argv, suites, 23);
 }

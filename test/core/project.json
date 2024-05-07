@@ -486,7 +486,11 @@
                 "get_target_after_replace",
                 "get_target_after_remove",
                 "has_wildcard",
-                "has_any"
+                "has_any",
+                "add_remove_2_tgts",
+                "add_remove_2_tgts_join",
+                "add_remove_3_tgts",
+                "add_remove_3_tgts_join"
             ]
         }, {
             "id": "Hierarchies",
