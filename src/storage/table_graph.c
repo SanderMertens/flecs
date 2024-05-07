@@ -663,6 +663,8 @@ void flecs_compute_table_diff(
         ecs_id_record_t *idr = flecs_id_record_get(world, ecs_pair(
             ECS_PAIR_FIRST(id), EcsWildcard));
         if (idr->flags & EcsIdIsUnion) {
+            ecs_assert(ECS_PAIR_SECOND(id) != EcsUnion, ECS_INVALID_PARAMETER,
+                "cannot add/remove pair with Union as second element");
             if (node != next) {
                 id = ecs_pair(ECS_PAIR_FIRST(id), EcsUnion);
             } else {

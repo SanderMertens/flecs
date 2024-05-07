@@ -174,6 +174,22 @@ int flecs_term_ref_lookup(
 }
 
 static
+ecs_id_t flecs_wildcard_to_any(ecs_id_t id) {
+    ecs_id_t flags = id & EcsTermRefFlags;
+    
+    if (ECS_IS_PAIR(id)) {
+        ecs_entity_t first = ECS_PAIR_FIRST(id);
+        ecs_entity_t second = ECS_PAIR_SECOND(id);
+        if (first == EcsWildcard) id = ecs_pair(EcsAny, second);
+        if (second == EcsWildcard) id = ecs_pair(ECS_PAIR_FIRST(id), EcsAny);
+    } else if ((id & ~EcsTermRefFlags) == EcsWildcard) {
+        id = EcsAny;
+    }
+
+    return id | flags;
+}
+
+static
 int flecs_term_refs_finalize(
     const ecs_world_t *world,
     ecs_term_t *term,
@@ -268,6 +284,19 @@ int flecs_term_refs_finalize(
     /* If source is wildcard, term won't return any data */
     if ((src->id & EcsIsVariable) && ecs_id_is_wildcard(ECS_TERM_REF_ID(src))) {
         term->inout = EcsInOutNone;
+    }
+
+    /* If operator is Not, automatically convert wildcard queries to any */
+    if (term->oper == EcsNot) {
+        if (ECS_TERM_REF_ID(first) == EcsWildcard) {
+            first->id = EcsAny | ECS_TERM_REF_FLAGS(first);
+        }
+
+        if (ECS_TERM_REF_ID(second) == EcsWildcard) {
+            second->id = EcsAny | ECS_TERM_REF_FLAGS(second);
+        }
+
+        term->id = flecs_wildcard_to_any(term->id);
     }
 
     return 0;
@@ -752,6 +781,15 @@ int flecs_term_finalize(
             if (ecs_table_has_id(world, first_table, EcsReflexive)) {
                 term->flags_ |= EcsTermReflexive;
             }
+
+            /* Check if term is union */
+            if (ecs_table_has_id(world, first_table, EcsUnion)) {
+                /* Any wildcards don't need special handling as they just return
+                 * (Rel, *). */
+                if (ECS_IS_PAIR(term->id) && ECS_PAIR_SECOND(term->id) != EcsAny) {
+                    term->flags_ |= EcsTermIsUnion;
+                }
+            }
         }
 
         /* Check if term has toggleable component */
@@ -814,23 +852,29 @@ int flecs_term_finalize(
     if (!ecs_term_match_this(term)) {
         trivial_term = false;
     }
+
     if (term->flags_ & EcsTermTransitive) {
         trivial_term = false;
         cacheable_term = false;
     }
+
     if (term->flags_ & EcsTermIdInherited) {
         trivial_term = false;
         cacheable_term = false;
     }
+
     if (term->flags_ & EcsTermIsScope) {
         cacheable_term = false;
     }
+
     if (term->trav && term->trav != EcsIsA) {
         trivial_term = false;
     }
+
     if (!(src->id & EcsSelf)) {
         trivial_term = false;
     }
+
     if (((ECS_TERM_REF_ID(&term->first) == EcsPredEq) || 
          (ECS_TERM_REF_ID(&term->first) == EcsPredMatch) || 
          (ECS_TERM_REF_ID(&term->first) == EcsPredLookup)) && 
@@ -839,19 +883,27 @@ int flecs_term_finalize(
         trivial_term = false;
         cacheable_term = false;
     }
+
     if (ECS_TERM_REF_ID(src) != EcsThis) {
         cacheable_term = false;
     }
+
     if (term->id == ecs_childof(0)) {
         cacheable_term = false;
     }
+
     if (term->flags_ & EcsTermIsMember) {
         trivial_term = false;
         cacheable_term = false;
-
     }
+
     if (term->flags_ & EcsTermIsToggle) {
         trivial_term = false;
+    }
+
+    if (term->flags_ & EcsTermIsUnion) {
+        trivial_term = false;
+        cacheable_term = false;
     }
 
     ECS_BIT_COND16(term->flags_, EcsTermIsTrivial, trivial_term);

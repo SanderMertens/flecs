@@ -81,6 +81,9 @@ typedef enum {
     EcsQueryMemberNeq,      /* Compare member value */
     EcsQueryToggle,         /* Evaluate toggle bitset, if present */
     EcsQueryToggleOption,   /* Toggle for optional terms */
+    EcsQueryUnionEq,        /* Evaluate union relationship */
+    EcsQueryUnionEqWith,    /* Evaluate union relationship against fixed or variable source */
+    EcsQueryUnionNeq,       /* Evaluate union relationship */
     EcsQueryLookup,         /* Lookup relative to variable */
     EcsQuerySetVars,        /* Populate it.sources from variables */
     EcsQuerySetThis,        /* Populate This entity variable */
@@ -268,6 +271,16 @@ typedef struct {
     bool has_bitset;
 } ecs_query_toggle_ctx_t;
 
+/* Union context */
+typedef struct {
+    ecs_table_range_t range;
+    ecs_id_record_t *idr;
+    ecs_entity_t cur;
+    ecs_map_iter_t tgt_iter;
+    ecs_entity_t tgt;
+    int32_t row;
+} ecs_query_union_ctx_t;
+
 typedef struct ecs_query_op_ctx_t {
     union {
         ecs_query_and_ctx_t and;
@@ -282,6 +295,7 @@ typedef struct ecs_query_op_ctx_t {
         ecs_query_trivial_ctx_t trivial;
         ecs_query_membereq_ctx_t membereq;
         ecs_query_toggle_ctx_t toggle;
+        ecs_query_union_ctx_t union_;
     } is;
 } ecs_query_op_ctx_t;
 

@@ -1245,6 +1245,12 @@ extern "C" {
 /** The number of elements in a single page */
 #define FLECS_SPARSE_PAGE_SIZE (1 << FLECS_SPARSE_PAGE_BITS)
 
+/** Compute the page index from an id by stripping the first 12 bits */
+#define FLECS_SPARSE_PAGE(index) ((int32_t)((uint32_t)index >> FLECS_SPARSE_PAGE_BITS))
+
+/** This computes the offset of an index inside a page */
+#define FLECS_SPARSE_OFFSET(index) ((int32_t)index & (FLECS_SPARSE_PAGE_SIZE - 1))
+
 typedef struct ecs_sparse_t {
     ecs_vec_t dense;         /* Dense array with indices to sparse array. The
                               * dense array stores both alive and not alive
@@ -1833,115 +1839,67 @@ void ecs_map_copy(
 extern "C" {
 #endif
 
-typedef struct ecs_switch_header_t {
-    int32_t element;    /* First element for value */
-    int32_t count;      /* Number of elements for value */
-} ecs_switch_header_t;
-
 typedef struct ecs_switch_node_t {
-    int32_t next;       /* Next node in list */
-    int32_t prev;       /* Prev node in list */
+    uint32_t next;      /* Next node in list */
+    uint32_t prev;      /* Prev node in list */
 } ecs_switch_node_t;
 
-typedef struct ecs_switch_t {
-    ecs_map_t hdrs;     /* map<uint64_t, ecs_switch_header_t> */
+typedef struct ecs_switch_page_t {
     ecs_vec_t nodes;    /* vec<ecs_switch_node_t> */
     ecs_vec_t values;   /* vec<uint64_t> */
+} ecs_switch_page_t;
+
+typedef struct ecs_switch_t {
+    ecs_map_t hdrs;     /* map<uint64_t, uint32_t> */
+    ecs_vec_t pages;    /* vec<ecs_switch_page_t> */
 } ecs_switch_t;
 
 /** Init new switch. */
 FLECS_DBG_API
 void flecs_switch_init(
     ecs_switch_t* sw,
-    ecs_allocator_t *allocator,
-    int32_t elements);
+    ecs_allocator_t *allocator);
 
 /** Fini switch. */
 FLECS_DBG_API
 void flecs_switch_fini(
     ecs_switch_t *sw);
 
-/** Remove all values. */
-FLECS_DBG_API
-void flecs_switch_clear(
-    ecs_switch_t *sw);
-
-/** Add element to switch, initialize value to 0 */
-FLECS_DBG_API
-void flecs_switch_add(
-    ecs_switch_t *sw);
-
-/** Set number of elements in switch list */
-FLECS_DBG_API
-void flecs_switch_set_count(
-    ecs_switch_t *sw,
-    int32_t count);
-
-/** Get number of elements */
-FLECS_DBG_API
-int32_t flecs_switch_count(
-    ecs_switch_t *sw);
-
-/** Ensure that element exists. */
-FLECS_DBG_API
-void flecs_switch_ensure(
-    ecs_switch_t *sw,
-    int32_t count);
-
-/** Add n elements. */
-FLECS_DBG_API
-void flecs_switch_addn(
-    ecs_switch_t *sw,
-    int32_t count);    
-
 /** Set value of element. */
 FLECS_DBG_API
-void flecs_switch_set(
+bool flecs_switch_set(
     ecs_switch_t *sw,
-    int32_t element,
+    uint32_t element,
     uint64_t value);
 
-/** Remove element. */
+/** Reset value of element. */
 FLECS_DBG_API
-void flecs_switch_remove(
+bool flecs_switch_reset(
     ecs_switch_t *sw,
-    int32_t element);
+    uint32_t element);
 
 /** Get value for element. */
 FLECS_DBG_API
 uint64_t flecs_switch_get(
     const ecs_switch_t *sw,
-    int32_t element);
+    uint32_t element);
 
-/** Swap element. */
+/** Get first element for value. */
 FLECS_DBG_API
-void flecs_switch_swap(
-    ecs_switch_t *sw,
-    int32_t elem_1,
-    int32_t elem_2);
-
-/** Get vector with all values. Use together with count(). */
-FLECS_DBG_API
-ecs_vec_t* flecs_switch_values(
-    const ecs_switch_t *sw);    
-
-/** Return number of different values. */
-FLECS_DBG_API
-int32_t flecs_switch_case_count(
+uint32_t flecs_switch_first(
     const ecs_switch_t *sw,
     uint64_t value);
 
-/** Return first element for value. */
+/** Get next element. */
 FLECS_DBG_API
-int32_t flecs_switch_first(
+uint32_t flecs_switch_next(
     const ecs_switch_t *sw,
-    uint64_t value);
+    uint32_t previous);
 
-/** Return next element for value. Use with first(). */
+/** Get target iterator. */
 FLECS_DBG_API
-int32_t flecs_switch_next(
-    const ecs_switch_t *sw,
-    int32_t elem);
+ecs_map_iter_t flecs_switch_targets(
+    const ecs_switch_t *sw);
 
 #ifdef __cplusplus
 }
@@ -3209,6 +3167,7 @@ typedef enum ecs_query_cache_kind_t {
 #define EcsTermIsToggle               (1u << 10)
 #define EcsTermKeepAlive              (1u << 11)
 #define EcsTermIsSparse               (1u << 12)
+#define EcsTermIsUnion                (1u << 13)
 
 /** Type that describes a reference to an entity or variable in a term. */
 typedef struct ecs_term_ref_t {
