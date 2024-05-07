@@ -25315,9 +25315,6 @@ private:
         ecs_world_t *world = iter->world;
         size_t count = static_cast<size_t>(iter->count);
 
-        ecs_assert(count > 0, ECS_INVALID_OPERATION,
-            "no entities returned, use each() without flecs::entity argument");
-
         for (size_t i = 0; i < count; i ++) {
             func(flecs::entity(world, iter->entities[i]),
                 (ColumnType< remove_reference_t<Components> >(comps, i)
@@ -25336,7 +25333,7 @@ private:
         ecs_iter_t *iter, const Func& func, size_t, Terms&, Args... comps) 
     {
         size_t count = static_cast<size_t>(iter->count);
-        if (count == 0) {
+        if (count == 0 && !iter->table) {
             // If query has no This terms, count can be 0. Since each does not
             // have an entity parameter, just pass through components
             count = 1;
@@ -25362,7 +25359,7 @@ private:
         ecs_iter_t *iter, const Func& func, size_t, Terms&, Args... comps) 
     {
         size_t count = static_cast<size_t>(iter->count);
-        if (count == 0) {
+        if (count == 0 && !iter->table) {
             // If query has no This terms, count can be 0. Since each does not
             // have an entity parameter, just pass through components
             count = 1;

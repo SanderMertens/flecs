@@ -581,7 +581,6 @@ void Query_query_each_w_func_no_ptr(void);
 void Query_query_iter_w_func_no_ptr(void);
 void Query_query_each_w_iter(void);
 void Query_each_w_iter_no_this(void);
-void Query_invalid_each_w_no_this(void);
 void Query_invalid_field_from_each_w_iter(void);
 void Query_invalid_field_T_from_each_w_iter(void);
 void Query_invalid_field_const_T_from_each_w_iter(void);
@@ -610,6 +609,9 @@ void Query_find(void);
 void Query_find_not_found(void);
 void Query_find_w_entity(void);
 void Query_optional_pair_term(void);
+void Query_empty_tables_each(void);
+void Query_empty_tables_each_w_entity(void);
+void Query_empty_tables_each_w_iter(void);
 
 // Testsuite 'QueryBuilder'
 void QueryBuilder_builder_assign_same_type(void);
@@ -909,7 +911,6 @@ void Filter_get_is_true_direct(void);
 void Filter_get_first_direct(void);
 void Filter_each_w_no_this(void);
 void Filter_each_w_iter_no_this(void);
-void Filter_invalid_each_w_no_this(void);
 void Filter_named_filter(void);
 void Filter_named_scoped_filter(void);
 void Filter_set_this_var(void);
@@ -3610,10 +3611,6 @@ bake_test_case Query_testcases[] = {
         Query_each_w_iter_no_this
     },
     {
-        "invalid_each_w_no_this",
-        Query_invalid_each_w_no_this
-    },
-    {
         "invalid_field_from_each_w_iter",
         Query_invalid_field_from_each_w_iter
     },
@@ -3724,6 +3721,18 @@ bake_test_case Query_testcases[] = {
     {
         "optional_pair_term",
         Query_optional_pair_term
+    },
+    {
+        "empty_tables_each",
+        Query_empty_tables_each
+    },
+    {
+        "empty_tables_each_w_entity",
+        Query_empty_tables_each_w_entity
+    },
+    {
+        "empty_tables_each_w_iter",
+        Query_empty_tables_each_w_iter
     }
 };
 
@@ -4890,10 +4899,6 @@ bake_test_case Filter_testcases[] = {
     {
         "each_w_iter_no_this",
         Filter_each_w_iter_no_this
-    },
-    {
-        "invalid_each_w_no_this",
-        Filter_invalid_each_w_no_this
     },
     {
         "named_filter",
@@ -6718,7 +6723,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        92,
+        94,
         Query_testcases
     },
     {
@@ -6760,7 +6765,7 @@ static bake_test_suite suites[] = {
         "Filter",
         NULL,
         NULL,
-        27,
+        26,
         Filter_testcases
     },
     {

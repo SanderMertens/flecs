@@ -380,25 +380,6 @@ void Filter_each_w_iter_no_this(void) {
     test_int(count, 1);
 }
 
-void Filter_invalid_each_w_no_this(void) {
-    install_test_abort();
-
-    flecs::world ecs;
-
-    auto e = ecs.entity()
-        .set<Position>({10, 20})
-        .set<Velocity>({1, 2});
-
-    auto f = ecs.filter_builder<Position, Velocity>()
-        .arg(1).src(e)
-        .arg(2).src(e)
-        .build();
-
-    test_expect_abort();
-
-    f.each([&](flecs::entity e, Position& p, Velocity& v) { });
-}
-
 void Filter_named_filter(void) {
     flecs::world ecs;
 

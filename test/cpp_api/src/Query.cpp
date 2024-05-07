@@ -2244,25 +2244,6 @@ void Query_each_w_no_this(void) {
     test_int(count, 1);
 }
 
-void Query_invalid_each_w_no_this(void) {
-    install_test_abort();
-
-    flecs::world ecs;
-
-    auto e = ecs.entity()
-        .set<Position>({10, 20})
-        .set<Velocity>({1, 2});
-
-    auto q = ecs.query_builder<Position, Velocity>()
-        .arg(1).src(e)
-        .arg(2).src(e)
-        .build();
-
-    test_expect_abort();
-
-    q.each([&](flecs::entity e, Position& p, Velocity& v) { });
-}
-
 void Query_named_query(void) {
     flecs::world ecs;
 
@@ -2566,4 +2547,121 @@ void Query_optional_pair_term(void) {
 
     test_int(1, with_pair);
     test_int(1, without_pair);
+}
+
+void Query_empty_tables_each(void) {
+    flecs::world world;
+
+    world.component<Position>();
+    world.component<Velocity>();
+    world.component<Tag>();
+
+    auto e1 = flecs::entity(world)
+        .set<Position>({10, 20})
+        .set<Velocity>({1, 2});
+
+    auto e2 = flecs::entity(world)
+        .set<Position>({20, 30})
+        .set<Velocity>({2, 3});
+
+    e2.add<Tag>();
+    e2.remove<Tag>();
+
+    auto q = world.query_builder<Position, Velocity>()
+        .filter_flags(EcsFilterMatchEmptyTables)
+        .build();
+
+    q.each([](Position& p, Velocity& v) {
+        p.x += v.x;
+        p.y += v.y;
+    });
+
+    {
+        const Position *p = e1.get<Position>();
+        test_int(p->x, 11);
+        test_int(p->y, 22);
+    }
+    {
+        const Position *p = e2.get<Position>();
+        test_int(p->x, 22);
+        test_int(p->y, 33);
+    }
+}
+
+void Query_empty_tables_each_w_entity(void) {
+    flecs::world world;
+
+    world.component<Position>();
+    world.component<Velocity>();
+    world.component<Tag>();
+
+    auto e1 = flecs::entity(world)
+        .set<Position>({10, 20})
+        .set<Velocity>({1, 2});
+
+    auto e2 = flecs::entity(world)
+        .set<Position>({20, 30})
+        .set<Velocity>({2, 3});
+
+    e2.add<Tag>();
+    e2.remove<Tag>();
+
+    auto q = world.query_builder<Position, Velocity>()
+        .filter_flags(EcsFilterMatchEmptyTables)
+        .build();
+
+    q.each([](flecs::entity e, Position& p, Velocity& v) {
+        p.x += v.x;
+        p.y += v.y;
+    });
+
+    {
+        const Position *p = e1.get<Position>();
+        test_int(p->x, 11);
+        test_int(p->y, 22);
+    }
+    {
+        const Position *p = e2.get<Position>();
+        test_int(p->x, 22);
+        test_int(p->y, 33);
+    }
+}
+
+void Query_empty_tables_each_w_iter(void) {
+    flecs::world world;
+
+    world.component<Position>();
+    world.component<Velocity>();
+    world.component<Tag>();
+
+    auto e1 = flecs::entity(world)
+        .set<Position>({10, 20})
+        .set<Velocity>({1, 2});
+
+    auto e2 = flecs::entity(world)
+        .set<Position>({20, 30})
+        .set<Velocity>({2, 3});
+
+    e2.add<Tag>();
+    e2.remove<Tag>();
+
+    auto q = world.query_builder<Position, Velocity>()
+        .filter_flags(EcsFilterMatchEmptyTables)
+        .build();
+
+    q.each([](flecs::iter&, size_t, Position& p, Velocity& v) {
+        p.x += v.x;
+        p.y += v.y;
+    });
+
+    {
+        const Position *p = e1.get<Position>();
+        test_int(p->x, 11);
+        test_int(p->y, 22);
+    }
+    {
+        const Position *p = e2.get<Position>();
+        test_int(p->x, 22);
+        test_int(p->y, 33);
+    }
 }
