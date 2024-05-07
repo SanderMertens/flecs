@@ -1191,6 +1191,7 @@ void World_atfini(void);
 void World_atfini_w_ctx(void);
 void World_get_mut_T(void);
 void World_get_mut_R_T(void);
+void World_world_mini(void);
 
 // Testsuite 'Singleton'
 void Singleton_set_get_singleton(void);
@@ -5984,6 +5985,10 @@ bake_test_case World_testcases[] = {
     {
         "get_mut_R_T",
         World_get_mut_R_T
+    },
+    {
+        "world_mini",
+        World_world_mini
     }
 };
 
@@ -6814,7 +6819,7 @@ static bake_test_suite suites[] = {
         "World",
         NULL,
         NULL,
-        112,
+        113,
         World_testcases
     },
     {

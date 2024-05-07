@@ -1927,3 +1927,11 @@ void World_get_mut_R_T(void) {
     test_int(p->y, 20);
 }
 
+void World_world_mini(void) {
+    flecs::world world(ecs_mini(), true);
+
+    test_assert(world.lookup("flecs.system") == 0);
+    test_assert(world.lookup("flecs.pipeline") == 0);
+    test_assert(world.lookup("flecs.timer") == 0);
+    test_assert(world.lookup("flecs.meta") == 0);
+}

@@ -20110,9 +20110,9 @@ struct world {
 
     /** Create world from C world.
      */
-    explicit world(world_t *w)
+    explicit world(world_t *w, bool owned = false)
         : m_world( w )
-        , m_owned( false ) { }
+        , m_owned( owned ) { }
 
     /** Not allowed to copy a world. May only take a reference.
      */

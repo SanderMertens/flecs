@@ -1241,7 +1241,8 @@
                 "atfini",
                 "atfini_w_ctx",
                 "get_mut_T",
-                "get_mut_R_T"
+                "get_mut_R_T",
+                "world_mini"
             ]
         }, {
             "id": "Singleton",
