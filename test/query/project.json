@@ -113,7 +113,13 @@
                 "validate_src_0_name",
                 "validate_second_0_name",
                 "validate_singleton_src_w_first_name",
-                "validate_singleton_second_w_first_name"
+                "validate_singleton_second_w_first_name",
+                "not_wildcard",
+                "not_first_wildcard",
+                "not_second_wildcard",
+                "not_wildcard_id",
+                "not_wildcard_first_pair",
+                "not_wildcard_second_pair"
             ]
         }, {
             "id": "Parser",
@@ -395,7 +401,10 @@
                 "empty_term_w_newline",
                 "mixed_1_desc_and_1_expr",
                 "mixed_2_desc_and_1_expr",
-                "mixed_1_desc_and_2_expr"
+                "mixed_1_desc_and_2_expr",
+                "not_wildcard",
+                "not_first_wildcard",
+                "not_second_wildcard"
             ]
         }, {
             "id": "Basic",
@@ -1779,7 +1788,50 @@
                 "1_sparse_written_self",
                 "1_sparse_written_up",
                 "1_sparse_written_self_up"
-            ]            
+            ]
+        }, {
+            "id": "Union",
+            "setup": true,
+            "params": {
+                "cache_kind": ["default", "auto"]
+            },
+            "testcases": [
+                "1_fixed_union_any",
+                "1_fixed_union_wildcard",
+                "1_fixed_union_tgt",
+                "1_fixed_union_tgt_var",
+                "1_fixed_union_tgt_var_written",
+                "1_this_union_any",
+                "1_this_union_wildcard",
+                "1_this_union_tgt",
+                "1_this_union_tgt_var",
+                "1_this_union_tgt_var_written",
+                "1_var_union_any",
+                "1_var_union_wildcard",
+                "1_var_union_tgt",
+                "1_var_union_tgt_var",
+                "1_var_union_tgt_var_written",
+                "1_this_written_union_any",
+                "1_this_written_union_wildcard",
+                "1_this_written_union_tgt",
+                "1_this_written_union_tgt_var",
+                "1_this_written_union_tgt_var_written",
+                "1_var_written_union_any",
+                "1_var_written_union_wildcard",
+                "1_var_written_union_tgt",
+                "1_var_written_union_tgt_var",
+                "1_var_written_union_tgt_var_written",
+                "not_fixed_union_any",
+                "not_fixed_union_wildcard",
+                "not_fixed_union_tgt",
+                "not_fixed_union_var",
+                "not_fixed_union_var_written",
+                "not_this_written_union_any",
+                "not_this_written_union_wildcard",
+                "not_this_written_union_tgt",
+                "not_this_written_union_var",
+                "not_this_written_union_var_written"
+            ]
         }, {
             "id": "OrderBy",
             "testcases": [

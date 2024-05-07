@@ -143,11 +143,12 @@ void flecs_id_record_init_sparse(
         } else
         if (idr->flags & EcsIdIsUnion) {
             idr->sparse = flecs_walloc_t(world, ecs_switch_t);
-            flecs_switch_init(idr->sparse, &world->allocator, 0);
+            flecs_switch_init(idr->sparse, &world->allocator);
         }
     }
 }
 
+static
 void flecs_id_record_fini_sparse(
     ecs_world_t *world,
     ecs_id_record_t *idr)
@@ -160,8 +161,6 @@ void flecs_id_record_fini_sparse(
             flecs_wfree_t(world, ecs_sparse_t, idr->sparse);
         } else
         if (idr->flags & EcsIdIsUnion) {
-            ecs_assert(flecs_switch_count(idr->sparse) == 0,
-                ECS_INTERNAL_ERROR, NULL);
             flecs_switch_fini(idr->sparse);
             flecs_wfree_t(world, ecs_switch_t, idr->sparse);
         }
@@ -373,10 +372,11 @@ ecs_id_record_t* flecs_id_record_new(
     idr->flags |= flecs_observers_exist(o, id, EcsOnTableDelete) * EcsIdHasOnTableDelete;
 
     if (idr->flags & EcsIdIsSparse) {
-        ecs_check(idr->type_info != NULL, ECS_INVALID_OPERATION, 
-            "Sparse trait cannot be applied to tags");
-        idr->sparse = ecs_os_calloc_t(ecs_sparse_t);
-        flecs_sparse_init(idr->sparse, NULL, NULL, idr->type_info->size);
+        flecs_id_record_init_sparse(world, idr);
+    } else if (idr->flags & EcsIdIsUnion) {
+        if (ECS_IS_PAIR(id) && ECS_PAIR_SECOND(id) == EcsUnion) {
+            flecs_id_record_init_sparse(world, idr);
+        }
     }
 
     if (ecs_should_log_1()) {
@@ -391,7 +391,6 @@ ecs_id_record_t* flecs_id_record_new(
     world->info.tag_id_count += idr->type_info == NULL;
     world->info.pair_id_count += is_pair;
 
-error:
     return idr;
 }
 

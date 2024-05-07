@@ -2124,6 +2124,7 @@ ecs_bitset_t* flecs_table_get_toggle(
     return &table->_->bs_columns[toggle_column];
 }
 
+
 /* -- Public API -- */
 
 void ecs_table_lock(

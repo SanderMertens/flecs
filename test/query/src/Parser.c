@@ -4988,7 +4988,7 @@ void Parser_neq_wildcard(void) {
     test_first(terms[0], EcsPredEq, EcsSelf|EcsIsEntity);
     test_uint(terms[0].src.id, EcsThis|EcsSelf|EcsIsVariable);
     test_str(terms[0].src.name, NULL);
-    test_uint(terms[0].second.id, EcsWildcard|EcsSelf|EcsIsVariable);
+    test_uint(terms[0].second.id, EcsAny|EcsSelf|EcsIsVariable);
     test_str(terms[0].second.name, NULL);
     test_int(terms[0].oper, EcsNot);
 
@@ -6557,6 +6557,80 @@ void Parser_mixed_1_desc_and_2_expr(void) {
     test_src(terms[2], EcsThis, EcsSelf|EcsUp|EcsIsVariable);
     test_int(terms[2].oper, EcsAnd);
     test_int(terms[2].inout, EcsInOutDefault);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Parser_not_wildcard(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "!*"
+    });
+
+    test_int(q->term_count, 1);
+    test_int(q->field_count, 1);
+    test_uint(q->terms[0].id, EcsAny);
+    test_int(q->terms[0].oper, EcsNot);
+    test_int(q->terms[0].inout, EcsInOutNone);
+    test_int(q->terms[0].field_index, 0);
+    test_uint(q->terms[0].first.id, EcsAny|EcsSelf|EcsIsVariable);
+    test_uint(q->terms[0].src.id, EcsThis|EcsSelf|EcsUp|EcsIsVariable);
+    test_uint(q->terms[0].trav, EcsIsA);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Parser_not_first_wildcard(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "!(_, Position)"
+    });
+
+    test_int(q->term_count, 1);
+    test_int(q->field_count, 1);
+    test_uint(q->terms[0].id, ecs_pair(EcsAny, ecs_id(Position)));
+    test_int(q->terms[0].oper, EcsNot);
+    test_int(q->terms[0].inout, EcsInOutNone);
+    test_int(q->terms[0].field_index, 0);
+    test_uint(q->terms[0].first.id, EcsAny|EcsSelf|EcsIsVariable);
+    test_uint(q->terms[0].second.id, ecs_id(Position)|EcsSelf|EcsIsEntity);
+    test_uint(q->terms[0].src.id, EcsThis|EcsSelf|EcsUp|EcsIsVariable);
+    test_uint(q->terms[0].trav, EcsIsA);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Parser_not_second_wildcard(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "!(Position, _)"
+    });
+
+    test_int(q->term_count, 1);
+    test_int(q->field_count, 1);
+    test_uint(q->terms[0].id, ecs_pair(ecs_id(Position), EcsAny));
+    test_int(q->terms[0].oper, EcsNot);
+    test_int(q->terms[0].inout, EcsInOutNone);
+    test_int(q->terms[0].field_index, 0);
+    test_uint(q->terms[0].first.id, ecs_id(Position)|EcsSelf|EcsIsEntity);
+    test_uint(q->terms[0].second.id, EcsAny|EcsSelf|EcsIsVariable);
+    test_uint(q->terms[0].src.id, EcsThis|EcsSelf|EcsUp|EcsIsVariable);
+    test_uint(q->terms[0].trav, EcsIsA);
 
     ecs_query_fini(q);
 

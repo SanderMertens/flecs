@@ -549,12 +549,39 @@ void flecs_union_on_add(
     for (i = 0; i < added->count; i ++) {
         ecs_id_t id = added->array[i];
         if (ECS_IS_PAIR(id)) {
-            ecs_id_t wc = ecs_pair(ECS_PAIR_FIRST(id), EcsWildcard);
+            ecs_id_t wc = ecs_pair(ECS_PAIR_FIRST(id), EcsUnion);
             ecs_id_record_t *idr = flecs_id_record_get(world, wc);
             if (idr && idr->flags & EcsIdIsUnion) {
                 ecs_entity_t *entities = flecs_table_entities_array(table);
                 for (j = 0; j < count; j ++) {
                     ecs_entity_t e = entities[row + j];
+                    flecs_switch_set(
+                        idr->sparse, (uint32_t)e, ecs_pair_second(world, id));
+                }
+            }
+        }
+    }
+}
+
+static
+void flecs_union_on_remove(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    int32_t row,
+    int32_t count,
+    const ecs_type_t *removed)
+{
+    int32_t i, j;
+    for (i = 0; i < removed->count; i ++) {
+        ecs_id_t id = removed->array[i];
+        if (ECS_IS_PAIR(id)) {
+            ecs_id_t wc = ecs_pair(ECS_PAIR_FIRST(id), EcsUnion);
+            ecs_id_record_t *idr = flecs_id_record_get(world, wc);
+            if (idr && idr->flags & EcsIdIsUnion) {
+                ecs_entity_t *entities = flecs_table_entities_array(table);
+                for (j = 0; j < count; j ++) {
+                    ecs_entity_t e = entities[row + j];
+                    flecs_switch_reset(idr->sparse, (uint32_t)e);
                 }
             }
         }
@@ -618,6 +645,10 @@ void flecs_notify_on_remove(
             flecs_sparse_on_remove(world, table, row, count, removed);
         }
     
+        if (table_flags & EcsTableHasUnion) {
+            flecs_union_on_remove(world, table, row, count, removed);
+        }
+
         if (table_flags & (EcsTableHasOnRemove|EcsTableHasUnSet|EcsTableHasIsA|
             EcsTableHasTraversable))
         {
@@ -3491,8 +3522,17 @@ bool ecs_has_id(
         }
     }
 
-    if (!(table->flags & EcsTableHasIsA)) {
+    if (!(table->flags & (EcsTableHasUnion|EcsTableHasIsA))) {
         return false;
+    }
+
+    if (ECS_IS_PAIR(id) && (table->flags & EcsTableHasUnion)) {
+        ecs_id_record_t *u_idr = flecs_id_record_get(world, 
+            ecs_pair(ECS_PAIR_FIRST(id), EcsUnion));
+        if (u_idr->flags & EcsIdIsUnion) {
+            uint64_t cur = flecs_switch_get(u_idr->sparse, (uint32_t)entity);
+            return (uint32_t)cur == ECS_PAIR_SECOND(id);
+        }
     }
 
     ecs_table_record_t *tr;
@@ -3553,7 +3593,17 @@ ecs_entity_t ecs_get_target(
         goto look_in_base;
     }
 
-    return ecs_pair_second(world, table->type.array[tr->index + index]);
+    ecs_entity_t result = 
+        ecs_pair_second(world, table->type.array[tr->index + index]);
+
+    if (result == EcsUnion) {
+        wc = ecs_pair(rel, EcsUnion);
+        ecs_id_record_t *wc_idr = flecs_id_record_get(world, wc);
+        ecs_assert(wc_idr != NULL, ECS_INTERNAL_ERROR, NULL);
+        result = flecs_switch_get(wc_idr->sparse, (uint32_t)entity);
+    }
+
+    return result;
 look_in_base:
     if (table->flags & EcsTableHasIsA) {
         ecs_table_record_t *tr_isa = flecs_id_record_get_table(

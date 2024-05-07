@@ -862,7 +862,9 @@ int flecs_query_compile_begin_member_term(
         return -1;
     }
 
-    bool second_wildcard = ECS_TERM_REF_ID(&term->second) == EcsWildcard &&
+    bool second_wildcard = 
+        (ECS_TERM_REF_ID(&term->second) == EcsWildcard || 
+            ECS_TERM_REF_ID(&term->second) == EcsAny) &&
         (term->second.id & EcsIsVariable) && !term->second.name;
 
     term->first.id = component | ECS_TERM_REF_FLAGS(&term->first);
@@ -910,7 +912,10 @@ int flecs_query_compile_end_member_term(
     const char *var_name = flecs_term_ref_var_name(&term->src);
     ecs_var_id_t evar = flecs_query_find_var_id(
         impl, var_name, EcsVarEntity);
-    bool second_wildcard = ECS_TERM_REF_ID(&term->second) == EcsWildcard &&
+    
+    bool second_wildcard = 
+        (ECS_TERM_REF_ID(&term->second) == EcsWildcard || 
+            ECS_TERM_REF_ID(&term->second) == EcsAny) &&
         (term->second.id & EcsIsVariable) && !term->second.name;
 
     if (term->oper == EcsOptional) {
@@ -1054,6 +1059,21 @@ void flecs_query_set_op_kind(
     } else if (term->flags_ & EcsTermTransitive) {
         ecs_assert(ecs_term_ref_is_set(&term->second), ECS_INTERNAL_ERROR, NULL);
         op->kind = EcsQueryTrav;
+
+
+    /* If term queries for union pair, use union instruction */
+    } else if (term->flags_ & EcsTermIsUnion) {
+        if (op->kind == EcsQueryAnd) {
+            op->kind = EcsQueryUnionEq;
+            if (term->oper == EcsNot) {
+                if (!ecs_id_is_wildcard(ECS_TERM_REF_ID(&term->second))) {
+                    term->oper = EcsAnd;
+                    op->kind = EcsQueryUnionNeq;
+                }
+            }
+        } else {
+            op->kind = EcsQueryUnionEqWith;
+        }
     } else {
         /* Ignore cascade flag */
         ecs_entity_t trav_flags = EcsTraverseFlags & ~(EcsCascade|EcsDesc);
@@ -1106,7 +1126,6 @@ int flecs_query_compile_term(
             ECS_TERM_REF_ID(&term->src) == EcsAny);
     bool src_is_lookup = false;
     bool builtin_pred = flecs_term_is_builtin_pred(term);
-    bool is_not = (term->oper == EcsNot) && !builtin_pred;
     bool is_optional = (term->oper == EcsOptional);
     bool is_or = flecs_term_is_or(q, term);
     bool first_or = false, last_or = false;
@@ -1147,7 +1166,7 @@ int flecs_query_compile_term(
     }
 
     /* !_ (don't match anything) terms always return nothing. */
-    if (is_not && term->id == EcsAny) {
+    if (term->oper == EcsNot && term->id == EcsAny) {
         op.kind = EcsQueryNothing;
         flecs_query_op_insert(&op, ctx);
         return 0;
@@ -1179,6 +1198,8 @@ int flecs_query_compile_term(
     op.term_index = flecs_ito(int8_t, term - q->terms);
 
     flecs_query_set_op_kind(q, &op, term, src_is_var, member_term);
+
+    bool is_not = (term->oper == EcsNot) && !builtin_pred;
 
     /* Save write state at start of term so we can use it to reliably track
      * variables got written by this term. */
