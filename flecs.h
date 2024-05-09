@@ -15585,6 +15585,7 @@ static const flecs::entity_t Panic = EcsPanic;
 
 /* Storage */
 static const flecs::entity_t Sparse = EcsSparse;
+static const flecs::entity_t Union = EcsUnion;
 
 /* Builtin predicates for comparing entity ids in queries. Only supported by rules */
 static const flecs::entity_t PredEq = EcsPredEq;
@@ -28466,6 +28467,24 @@ namespace _ {
         void populate(const Builder& b) {
             size_t i = 0;
             for (auto id : ids) {
+               if (!(id & ECS_ID_FLAGS_MASK)) {
+                    const flecs::type_info_t *ti = ecs_get_type_info(world_, id);
+                    if (ti) {
+                        // Union relationships always return a value of type
+                        // flecs::entity_t which holds the target id of the 
+                        // union relationship.
+                        // If a union component with a non-zero size (like an 
+                        // enum) is added to the query signature, the each/iter
+                        // functions would accept a parameter of the component
+                        // type instead of flecs::entity_t, which would cause
+                        // an assert.
+                        ecs_assert(
+                            !ti->size || !ecs_has_id(world_, id, flecs::Union),
+                            ECS_INVALID_PARAMETER,
+                            "use withs() method to add union relationship");
+                    }
+                }
+
                 b->with(id).inout(inout[i]).oper(oper[i]);
                 i ++;
             }

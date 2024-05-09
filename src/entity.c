@@ -1109,7 +1109,7 @@ flecs_component_ptr_t flecs_ensure(
         ECS_HAS_ID_FLAG(id, PAIR), ECS_INVALID_PARAMETER,
             "invalid component id specified for ensure");
 
-    ecs_id_record_t *idr = flecs_id_record_ensure(world, id);
+    ecs_id_record_t *idr = flecs_id_record_get(world, id);
     if (r->table) {
         dst = flecs_get_component_ptr(r->table, ECS_RECORD_TO_ROW(r->row), idr);
         if (dst.ptr) {
@@ -1123,6 +1123,11 @@ flecs_component_ptr_t flecs_ensure(
     /* Flush commands so the pointer we're fetching is stable */
     flecs_defer_end(world, world->stages[0]);
     flecs_defer_begin(world, world->stages[0]);
+
+    if (!idr) {
+        idr = flecs_id_record_get(world, id);
+        ecs_assert(idr != NULL, ECS_INTERNAL_ERROR, NULL);
+    }
 
     ecs_assert(r->table != NULL, ECS_INTERNAL_ERROR, NULL);
     dst = flecs_get_component_ptr(r->table, ECS_RECORD_TO_ROW(r->row), idr);
@@ -3529,7 +3534,7 @@ bool ecs_has_id(
     if (ECS_IS_PAIR(id) && (table->flags & EcsTableHasUnion)) {
         ecs_id_record_t *u_idr = flecs_id_record_get(world, 
             ecs_pair(ECS_PAIR_FIRST(id), EcsUnion));
-        if (u_idr->flags & EcsIdIsUnion) {
+        if (u_idr && u_idr->flags & EcsIdIsUnion) {
             uint64_t cur = flecs_switch_get(u_idr->sparse, (uint32_t)entity);
             return (uint32_t)cur == ECS_PAIR_SECOND(id);
         }

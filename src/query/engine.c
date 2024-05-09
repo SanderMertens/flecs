@@ -2758,7 +2758,7 @@ bool flecs_query_union_with(
 {
     ecs_id_t id = flecs_query_op_get_id(op, ctx);
     ecs_entity_t rel = ECS_PAIR_FIRST(id);
-    ecs_entity_t tgt = ECS_PAIR_SECOND(id);
+    ecs_entity_t tgt = ecs_pair_second(ctx->world, id);
 
     if (tgt == EcsWildcard) {
         return flecs_query_union_with_wildcard(op, redo, ctx, rel, neq);
@@ -2863,7 +2863,7 @@ bool flecs_query_union_select(
 {
     ecs_id_t id = flecs_query_op_get_id(op, ctx);
     ecs_entity_t rel = ECS_PAIR_FIRST(id);
-    ecs_entity_t tgt = ECS_PAIR_SECOND(id);
+    ecs_entity_t tgt = ecs_pair_second(ctx->world, id);
 
     if (tgt == EcsWildcard) {
         return flecs_query_union_select_wildcard(op, redo, ctx, rel);

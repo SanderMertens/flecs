@@ -150,6 +150,7 @@ static const flecs::entity_t Panic = EcsPanic;
 
 /* Storage */
 static const flecs::entity_t Sparse = EcsSparse;
+static const flecs::entity_t Union = EcsUnion;
 
 /* Builtin predicates for comparing entity ids in queries. Only supported by rules */
 static const flecs::entity_t PredEq = EcsPredEq;
