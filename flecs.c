@@ -3123,7 +3123,15 @@ void flecs_assert_relation_unused(
     }
 
     bool in_use = ecs_id_in_use(world, ecs_pair(rel, EcsWildcard));
-    in_use |= ecs_id_in_use(world, rel);
+
+    /* Hack to make enum unions work. C++ enum reflection registers enum 
+     * constants right after creating the enum entity. The enum constant 
+     * entities have a component of the enum type with the constant value, which
+     * is why it shows up as in use. */
+    if (property != EcsUnion) {
+        in_use |= ecs_id_in_use(world, rel);
+    }
+
     if (in_use) {
         char *r_str = ecs_get_fullpath(world, rel);
         char *p_str = ecs_get_fullpath(world, property);
@@ -3236,7 +3244,7 @@ void flecs_register_final(ecs_iter_t *it) {
 
 static
 void flecs_register_tag(ecs_iter_t *it) {
-    flecs_register_id_flag_for_relation(it, EcsPairIsTag, EcsIdTag, ~EcsIdTag, 0);
+    flecs_register_id_flag_for_relation(it, EcsPairIsTag, EcsIdTag, EcsIdTag, 0);
 
     /* Ensure that all id records for tag have type info set to NULL */
     ecs_world_t *world = it->real_world;
@@ -3292,6 +3300,14 @@ void flecs_register_trait_pair(ecs_iter_t *it) {
     ecs_on_trait_ctx_t *ctx = it->ctx;
     flecs_register_id_flag_for_relation(
         it, ecs_pair_first(it->world, it->ids[0]), ctx->flag, ctx->not_flag, 0);
+}
+
+static
+void flecs_register_slot_of(ecs_iter_t *it) {
+    int i, count = it->count;
+    for (i = 0; i < count; i ++) {
+        ecs_add_id(it->world, it->entities[i], EcsUnion);
+    }
 }
 
 static
@@ -3910,6 +3926,17 @@ void flecs_bootstrap(
         .events = {EcsOnAdd},
         .callback = flecs_register_trait,
         .ctx = &union_trait
+    });
+
+    /* Entities used as slot are marked as exclusive to ensure a slot can always
+     * only point to a single entity. */
+    ecs_observer(world, {
+        .query.terms = {
+            { .id = ecs_pair(EcsSlotOf, EcsWildcard), .src.id = EcsSelf }
+        },
+        .query.flags = EcsQueryMatchPrefab,
+        .events = {EcsOnAdd},
+        .callback = flecs_register_slot_of
     });
 
     /* Define observer to make sure that adding a module to a child entity also
@@ -5725,7 +5752,7 @@ flecs_component_ptr_t flecs_ensure(
         ECS_HAS_ID_FLAG(id, PAIR), ECS_INVALID_PARAMETER,
             "invalid component id specified for ensure");
 
-    ecs_id_record_t *idr = flecs_id_record_ensure(world, id);
+    ecs_id_record_t *idr = flecs_id_record_get(world, id);
     if (r->table) {
         dst = flecs_get_component_ptr(r->table, ECS_RECORD_TO_ROW(r->row), idr);
         if (dst.ptr) {
@@ -5739,6 +5766,11 @@ flecs_component_ptr_t flecs_ensure(
     /* Flush commands so the pointer we're fetching is stable */
     flecs_defer_end(world, world->stages[0]);
     flecs_defer_begin(world, world->stages[0]);
+
+    if (!idr) {
+        idr = flecs_id_record_get(world, id);
+        ecs_assert(idr != NULL, ECS_INTERNAL_ERROR, NULL);
+    }
 
     ecs_assert(r->table != NULL, ECS_INTERNAL_ERROR, NULL);
     dst = flecs_get_component_ptr(r->table, ECS_RECORD_TO_ROW(r->row), idr);
@@ -8145,7 +8177,7 @@ bool ecs_has_id(
     if (ECS_IS_PAIR(id) && (table->flags & EcsTableHasUnion)) {
         ecs_id_record_t *u_idr = flecs_id_record_get(world, 
             ecs_pair(ECS_PAIR_FIRST(id), EcsUnion));
-        if (u_idr->flags & EcsIdIsUnion) {
+        if (u_idr && u_idr->flags & EcsIdIsUnion) {
             uint64_t cur = flecs_switch_get(u_idr->sparse, (uint32_t)entity);
             return (uint32_t)cur == ECS_PAIR_SECOND(id);
         }
@@ -13137,6 +13169,11 @@ repeat_event:
          * may have to forward ids from the pair's target. */
         if ((can_forward && is_pair) || can_override) {
             idr = flecs_id_record_get(world, id);
+            if (!idr) {
+                /* Possible for union ids */
+                continue;
+            }
+
             ecs_flags32_t idr_flags = idr->flags;
 
             if (is_pair && (idr_flags & EcsIdTraversable)) {
@@ -40918,7 +40955,7 @@ bool flecs_query_union_with(
 {
     ecs_id_t id = flecs_query_op_get_id(op, ctx);
     ecs_entity_t rel = ECS_PAIR_FIRST(id);
-    ecs_entity_t tgt = ECS_PAIR_SECOND(id);
+    ecs_entity_t tgt = ecs_pair_second(ctx->world, id);
 
     if (tgt == EcsWildcard) {
         return flecs_query_union_with_wildcard(op, redo, ctx, rel, neq);
@@ -41023,7 +41060,7 @@ bool flecs_query_union_select(
 {
     ecs_id_t id = flecs_query_op_get_id(op, ctx);
     ecs_entity_t rel = ECS_PAIR_FIRST(id);
-    ecs_entity_t tgt = ECS_PAIR_SECOND(id);
+    ecs_entity_t tgt = ecs_pair_second(ctx->world, id);
 
     if (tgt == EcsWildcard) {
         return flecs_query_union_select_wildcard(op, redo, ctx, rel);
@@ -46038,6 +46075,8 @@ void flecs_id_record_fini_sparse(
         if (idr->flags & EcsIdIsUnion) {
             flecs_switch_fini(idr->sparse);
             flecs_wfree_t(world, ecs_switch_t, idr->sparse);
+        } else {
+            ecs_abort(ECS_INTERNAL_ERROR, "unknown sparse storage");
         }
     }
 }
@@ -46114,7 +46153,7 @@ ecs_id_record_t* flecs_id_record_new(
             #endif
         }
 
-        if (tgt && !ecs_id_is_wildcard(tgt)) {
+        if (tgt && !ecs_id_is_wildcard(tgt) && tgt != EcsUnion) {
             /* Check if target of relationship satisfies OneOf property */
             ecs_entity_t oneof = flecs_get_oneof(world, rel);
             if (oneof) {
@@ -49901,8 +49940,6 @@ void flecs_compute_table_diff(
         ecs_id_record_t *idr = flecs_id_record_get(world, ecs_pair(
             ECS_PAIR_FIRST(id), EcsWildcard));
         if (idr->flags & EcsIdIsUnion) {
-            ecs_assert(ECS_PAIR_SECOND(id) != EcsUnion, ECS_INVALID_PARAMETER,
-                "cannot add/remove pair with Union as second element");
             if (node != next) {
                 id = ecs_pair(ECS_PAIR_FIRST(id), EcsUnion);
             } else {
@@ -50095,7 +50132,7 @@ ecs_table_t* flecs_find_table_with(
     ecs_world_t *world,
     ecs_table_t *node,
     ecs_id_t with)
-{    
+{
     ecs_make_alive_id(world, with);
 
     ecs_id_record_t *idr = NULL;
@@ -50157,6 +50194,16 @@ ecs_table_t* flecs_find_table_without(
     ecs_table_t *node,
     ecs_id_t without)
 {
+    if (ECS_IS_PAIR(without)) {
+        ecs_entity_t r = 0;
+        ecs_id_record_t *idr = NULL;
+        r = ECS_PAIR_FIRST(without);
+        idr = flecs_id_record_get(world, ecs_pair(r, EcsWildcard));
+        if (idr && idr->flags & EcsIdIsUnion) {
+            without = ecs_pair(r, EcsUnion);
+        }
+    }
+
     /* Create sequence with new id */
     ecs_type_t dst_type;
     int res = flecs_type_new_without(world, &dst_type, &node->type, without);

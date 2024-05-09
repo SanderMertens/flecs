@@ -663,8 +663,6 @@ void flecs_compute_table_diff(
         ecs_id_record_t *idr = flecs_id_record_get(world, ecs_pair(
             ECS_PAIR_FIRST(id), EcsWildcard));
         if (idr->flags & EcsIdIsUnion) {
-            ecs_assert(ECS_PAIR_SECOND(id) != EcsUnion, ECS_INVALID_PARAMETER,
-                "cannot add/remove pair with Union as second element");
             if (node != next) {
                 id = ecs_pair(ECS_PAIR_FIRST(id), EcsUnion);
             } else {
@@ -857,7 +855,7 @@ ecs_table_t* flecs_find_table_with(
     ecs_world_t *world,
     ecs_table_t *node,
     ecs_id_t with)
-{    
+{
     ecs_make_alive_id(world, with);
 
     ecs_id_record_t *idr = NULL;
@@ -919,6 +917,16 @@ ecs_table_t* flecs_find_table_without(
     ecs_table_t *node,
     ecs_id_t without)
 {
+    if (ECS_IS_PAIR(without)) {
+        ecs_entity_t r = 0;
+        ecs_id_record_t *idr = NULL;
+        r = ECS_PAIR_FIRST(without);
+        idr = flecs_id_record_get(world, ecs_pair(r, EcsWildcard));
+        if (idr && idr->flags & EcsIdIsUnion) {
+            without = ecs_pair(r, EcsUnion);
+        }
+    }
+
     /* Create sequence with new id */
     ecs_type_t dst_type;
     int res = flecs_type_new_without(world, &dst_type, &node->type, without);

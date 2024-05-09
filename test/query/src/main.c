@@ -1755,6 +1755,23 @@ void Union_not_this_written_union_wildcard(void);
 void Union_not_this_written_union_tgt(void);
 void Union_not_this_written_union_var(void);
 void Union_not_this_written_union_var_written(void);
+void Union_query_switch(void);
+void Union_query_1_case_1_type(void);
+void Union_query_1_case_2_types(void);
+void Union_query_2_cases_1_type(void);
+void Union_query_2_cases_2_types(void);
+void Union_query_after_remove(void);
+void Union_sort(void);
+void Union_query_recycled_tags(void);
+void Union_query_single_case(void);
+void Union_match_switch_on_base_instance(void);
+void Union_switch_w_bitset_query(void);
+void Union_switch_w_bitset_query_inv(void);
+void Union_switch_w_bitset_query_2_elems(void);
+void Union_switch_w_bitset_query_2_elems_skip(void);
+void Union_switch_w_bitset_query_elems_interleaved(void);
+void Union_switch_w_bitset_query_elems_interleaved_2_types(void);
+void Union_component_relation(void);
 
 // Testsuite 'OrderBy'
 void OrderBy_sort_by_component(void);
@@ -8715,6 +8732,74 @@ bake_test_case Union_testcases[] = {
     {
         "not_this_written_union_var_written",
         Union_not_this_written_union_var_written
+    },
+    {
+        "query_switch",
+        Union_query_switch
+    },
+    {
+        "query_1_case_1_type",
+        Union_query_1_case_1_type
+    },
+    {
+        "query_1_case_2_types",
+        Union_query_1_case_2_types
+    },
+    {
+        "query_2_cases_1_type",
+        Union_query_2_cases_1_type
+    },
+    {
+        "query_2_cases_2_types",
+        Union_query_2_cases_2_types
+    },
+    {
+        "query_after_remove",
+        Union_query_after_remove
+    },
+    {
+        "sort",
+        Union_sort
+    },
+    {
+        "query_recycled_tags",
+        Union_query_recycled_tags
+    },
+    {
+        "query_single_case",
+        Union_query_single_case
+    },
+    {
+        "match_switch_on_base_instance",
+        Union_match_switch_on_base_instance
+    },
+    {
+        "switch_w_bitset_query",
+        Union_switch_w_bitset_query
+    },
+    {
+        "switch_w_bitset_query_inv",
+        Union_switch_w_bitset_query_inv
+    },
+    {
+        "switch_w_bitset_query_2_elems",
+        Union_switch_w_bitset_query_2_elems
+    },
+    {
+        "switch_w_bitset_query_2_elems_skip",
+        Union_switch_w_bitset_query_2_elems_skip
+    },
+    {
+        "switch_w_bitset_query_elems_interleaved",
+        Union_switch_w_bitset_query_elems_interleaved
+    },
+    {
+        "switch_w_bitset_query_elems_interleaved_2_types",
+        Union_switch_w_bitset_query_elems_interleaved_2_types
+    },
+    {
+        "component_relation",
+        Union_component_relation
     }
 };
 
@@ -9362,7 +9447,7 @@ static bake_test_suite suites[] = {
         "Union",
         Union_setup,
         NULL,
-        35,
+        52,
         Union_testcases,
         1,
         Union_params

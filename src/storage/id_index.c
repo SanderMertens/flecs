@@ -163,6 +163,8 @@ void flecs_id_record_fini_sparse(
         if (idr->flags & EcsIdIsUnion) {
             flecs_switch_fini(idr->sparse);
             flecs_wfree_t(world, ecs_switch_t, idr->sparse);
+        } else {
+            ecs_abort(ECS_INTERNAL_ERROR, "unknown sparse storage");
         }
     }
 }
@@ -239,7 +241,7 @@ ecs_id_record_t* flecs_id_record_new(
             #endif
         }
 
-        if (tgt && !ecs_id_is_wildcard(tgt)) {
+        if (tgt && !ecs_id_is_wildcard(tgt) && tgt != EcsUnion) {
             /* Check if target of relationship satisfies OneOf property */
             ecs_entity_t oneof = flecs_get_oneof(world, rel);
             if (oneof) {

@@ -172,7 +172,15 @@ void flecs_assert_relation_unused(
     }
 
     bool in_use = ecs_id_in_use(world, ecs_pair(rel, EcsWildcard));
-    in_use |= ecs_id_in_use(world, rel);
+
+    /* Hack to make enum unions work. C++ enum reflection registers enum 
+     * constants right after creating the enum entity. The enum constant 
+     * entities have a component of the enum type with the constant value, which
+     * is why it shows up as in use. */
+    if (property != EcsUnion) {
+        in_use |= ecs_id_in_use(world, rel);
+    }
+
     if (in_use) {
         char *r_str = ecs_get_fullpath(world, rel);
         char *p_str = ecs_get_fullpath(world, property);
@@ -285,7 +293,7 @@ void flecs_register_final(ecs_iter_t *it) {
 
 static
 void flecs_register_tag(ecs_iter_t *it) {
-    flecs_register_id_flag_for_relation(it, EcsPairIsTag, EcsIdTag, ~EcsIdTag, 0);
+    flecs_register_id_flag_for_relation(it, EcsPairIsTag, EcsIdTag, EcsIdTag, 0);
 
     /* Ensure that all id records for tag have type info set to NULL */
     ecs_world_t *world = it->real_world;
@@ -341,6 +349,14 @@ void flecs_register_trait_pair(ecs_iter_t *it) {
     ecs_on_trait_ctx_t *ctx = it->ctx;
     flecs_register_id_flag_for_relation(
         it, ecs_pair_first(it->world, it->ids[0]), ctx->flag, ctx->not_flag, 0);
+}
+
+static
+void flecs_register_slot_of(ecs_iter_t *it) {
+    int i, count = it->count;
+    for (i = 0; i < count; i ++) {
+        ecs_add_id(it->world, it->entities[i], EcsUnion);
+    }
 }
 
 static
@@ -959,6 +975,17 @@ void flecs_bootstrap(
         .events = {EcsOnAdd},
         .callback = flecs_register_trait,
         .ctx = &union_trait
+    });
+
+    /* Entities used as slot are marked as exclusive to ensure a slot can always
+     * only point to a single entity. */
+    ecs_observer(world, {
+        .query.terms = {
+            { .id = ecs_pair(EcsSlotOf, EcsWildcard), .src.id = EcsSelf }
+        },
+        .query.flags = EcsQueryMatchPrefab,
+        .events = {EcsOnAdd},
+        .callback = flecs_register_slot_of
     });
 
     /* Define observer to make sure that adding a module to a child entity also
