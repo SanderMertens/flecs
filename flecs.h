@@ -21424,6 +21424,24 @@ public:
      */
     flecs::entity get_var(const char *name) const;
 
+    /** Progress iterator.
+     * This operation should only be called from a context where the iterator is
+     * not being progressed automatically. An example of a valid context is
+     * inside of a run() callback. An example of an invalid context is inside of
+     * an each() callback.
+     */
+    bool next() {
+        return iter_->next(iter_);
+    }
+
+    /** Forward to each.
+     * If a system has an each callback registered, this operation will forward
+     * the current iterator to the each callback.
+     */
+    void each() {
+        iter_->callback(iter_);
+    }
+
 private:
     /* Get field, check if correct type is used */
     template <typename T, typename A = actual_type_t<T>>
@@ -24726,81 +24744,28 @@ private:
 //// Utility class to invoke a system iterate action
 ////////////////////////////////////////////////////////////////////////////////
 
-template <typename Func, typename ... Components>
-struct iter_delegate : delegate {
-private:
-    static constexpr bool IterOnly = arity<Func>::value == 1;
-
-    using Terms = typename term_ptrs<Components ...>::array;
-
-public:
+template <typename Func>
+struct run_delegate : delegate {
     template < if_not_t< is_same< decay_t<Func>, decay_t<Func>& >::value > = 0>
-    explicit iter_delegate(Func&& func) noexcept 
+    explicit run_delegate(Func&& func) noexcept 
         : func_(FLECS_MOV(func)) { }
 
-    explicit iter_delegate(const Func& func) noexcept 
+    explicit run_delegate(const Func& func) noexcept 
         : func_(func) { }
 
     // Invoke object directly. This operation is useful when the calling
     // function has just constructed the delegate, such as what happens when
     // iterating a query.
     void invoke(ecs_iter_t *iter) const {
-        term_ptrs<Components...> terms;
-        terms.populate(iter);
-        invoke_callback(iter, func_, 0, terms.terms_);
+        flecs::iter it(iter);
+        func_(it);
     }
 
     // Static function that can be used as callback for systems/triggers
     static void run(ecs_iter_t *iter) {
-        auto self = static_cast<const iter_delegate*>(iter->callback_ctx);
+        auto self = static_cast<const run_delegate*>(iter->run_ctx);
         ecs_assert(self != nullptr, ECS_INTERNAL_ERROR, NULL);
         self->invoke(iter);
-    }
-
-    // Instancing needs to be enabled explicitly for iter delegates
-    static bool instanced() {
-        return false;
-    }
-
-private:
-    template <typename... Args, if_t<!sizeof...(Args) && IterOnly> = 0>
-    static void invoke_callback(ecs_iter_t *iter, const Func& func, 
-        size_t, Terms&, Args...) 
-    {
-        flecs::iter it(iter);
-
-        ECS_TABLE_LOCK(iter->world, iter->table);
-
-        func(it);
-
-        ECS_TABLE_UNLOCK(iter->world, iter->table);
-    }
-
-    template <typename... Targs, if_t<!IterOnly &&
-        (sizeof...(Targs) == sizeof...(Components))> = 0>
-    static void invoke_callback(ecs_iter_t *iter, const Func& func, size_t, 
-        Terms&, Targs... comps) 
-    {
-        flecs::iter it(iter);
-
-        ECS_TABLE_LOCK(iter->world, iter->table);
-
-        func(it, ( static_cast< 
-            remove_reference_t< 
-                remove_pointer_t< 
-                    actual_type_t<Components> > >* >
-                        (comps.ptr))...);
-
-        ECS_TABLE_UNLOCK(iter->world, iter->table);
-    }
-
-    template <typename... Targs, if_t<!IterOnly &&
-        (sizeof...(Targs) != sizeof...(Components)) > = 0>
-    static void invoke_callback(ecs_iter_t *iter, const Func& func, 
-        size_t index, Terms& columns, Targs... comps) 
-    {
-        invoke_callback(iter, func, index + 1, columns, comps..., 
-            columns[index]);
     }
 
     Func func_;
@@ -26429,41 +26394,6 @@ struct iterable {
     flecs::entity find(Func&& func) const {
         return iterate_find<_::find_delegate>(nullptr, FLECS_FWD(func), 
             this->next_each_action());
-    }
-
-    /** Iter iterator.
-     * The "iter" iterator accepts a function that is invoked for each matching
-     * table. The following function signatures are valid:
-     *  - func(flecs::iter& it, Components* ...)
-     *  - func(Components& ...)
-     * 
-     * Iter iterators are not automatically instanced. When a result contains
-     * shared components, entities of the result will be iterated one by one.
-     * This ensures that applications can't accidentally read out of bounds by
-     * accessing a shared component as an array.
-     */
-    template <typename Func>
-    void iter(Func&& func) const { 
-        iterate<_::iter_delegate>(nullptr, FLECS_FWD(func), 
-            this->next_action());
-    }
-
-    template <typename Func>
-    void iter(flecs::world_t *world, Func&& func) const {
-        iterate<_::iter_delegate>(world, FLECS_FWD(func), 
-            this->next_action());
-    }
-
-    template <typename Func>
-    void iter(flecs::iter& it, Func&& func) const {
-        iterate<_::iter_delegate>(it.world(), FLECS_FWD(func),
-            this->next_action());
-    }
-
-    template <typename Func>
-    void iter(flecs::entity e, Func&& func) const {
-        iterate<_::iter_delegate>(e.world(), FLECS_FWD(func), 
-            this->next_action());
     }
 
     /** Create iterator.
@@ -30346,24 +30276,44 @@ public:
         desc_.entity = ecs_entity_init(world_, &entity_desc);
     }
 
-    /* Iter (or each) is mandatory and always the last thing that 
-     * is added in the fluent method chain. Create system signature from both 
-     * template parameters and anything provided by the signature method. */
     template <typename Func>
-    T iter(Func&& func) {
-        using Delegate = typename _::iter_delegate<
-            typename std::decay<Func>::type, Components...>;
-        return build<Delegate>(FLECS_FWD(func));
+    T run(Func&& func) {
+        using Delegate = typename _::run_delegate<
+            typename std::decay<Func>::type>;
+
+        auto ctx = FLECS_NEW(Delegate)(FLECS_FWD(func));
+        desc_.run = Delegate::run;
+        desc_.run_ctx = ctx;
+        desc_.run_ctx_free = reinterpret_cast<
+            ecs_ctx_free_t>(_::free_obj<Delegate>);
+        return T(world_, &desc_, true);
     }
 
-    /* Each is similar to action, but accepts a function that operates on a
-     * single entity */
+    template <typename Func, typename EachFunc>
+    T run(Func&& func, EachFunc&& each_func) {
+        using Delegate = typename _::run_delegate<
+            typename std::decay<Func>::type>;
+
+        auto ctx = FLECS_NEW(Delegate)(FLECS_FWD(func));
+        desc_.run = Delegate::run;
+        desc_.run_ctx = ctx;
+        desc_.run_ctx_free = reinterpret_cast<
+            ecs_ctx_free_t>(_::free_obj<Delegate>);
+        return each(FLECS_FWD(each_func));
+    }
+
     template <typename Func>
     T each(Func&& func) {
         using Delegate = typename _::each_delegate<
             typename std::decay<Func>::type, Components...>;
         instanced_ = true;
-        return build<Delegate>(FLECS_FWD(func));
+
+        auto ctx = FLECS_NEW(Delegate)(FLECS_FWD(func));
+        desc_.callback = Delegate::run;
+        desc_.callback_ctx = ctx;
+        desc_.callback_ctx_free = reinterpret_cast<
+            ecs_ctx_free_t>(_::free_obj<Delegate>);
+        return T(world_, &desc_, true);
     }
 
 protected:
@@ -30371,18 +30321,6 @@ protected:
     TDesc desc_;
     flecs::world_t *world_;
     bool instanced_;
-
-private:
-    template <typename Delegate, typename Func>
-    T build(Func&& func) {
-        auto ctx = FLECS_NEW(Delegate)(FLECS_FWD(func));
-        desc_.callback = Delegate::run;
-        desc_.callback_ctx = ctx;
-        desc_.callback_ctx_free = reinterpret_cast<
-            ecs_ctx_free_t>(_::free_obj<Delegate>);
-        
-        return T(world_, &desc_, instanced_);
-    }
 };
 
 #undef FLECS_IBUILDER
