@@ -15,36 +15,6 @@
 
 extern ecs_mixins_t ecs_system_t_mixins;
 
-typedef struct ecs_system_t {
-    ecs_header_t hdr;
-
-    ecs_run_action_t run;           /* See ecs_system_desc_t */
-    ecs_iter_action_t action;       /* See ecs_system_desc_t */
-
-    ecs_query_t *query;             /* System query */
-    ecs_entity_t query_entity;      /* Entity associated with query */
-    ecs_entity_t tick_source;       /* Tick source associated with system */
-    
-    /* Schedule parameters */
-    bool multi_threaded;
-    bool immediate;
-
-    ecs_ftime_t time_spent;         /* Time spent on running system */
-    ecs_ftime_t time_passed;        /* Time passed since last invocation */
-    int64_t last_frame;             /* Last frame for which the system was considered */
-
-    void *ctx;                      /* Userdata for system */
-    void *binding_ctx;              /* Optional language binding context */
-
-    ecs_ctx_free_t ctx_free;
-    ecs_ctx_free_t binding_ctx_free;
-
-    /* Mixins */
-    ecs_world_t *world;
-    ecs_entity_t entity;
-    flecs_poly_dtor_t dtor;      
-} ecs_system_t;
-
 /* Invoked when system becomes active / inactive */
 void ecs_system_activate(
     ecs_world_t *world,

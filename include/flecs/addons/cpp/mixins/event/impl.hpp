@@ -27,16 +27,16 @@ namespace _ {
         flecs::entity_t event,
         flecs::entity_t entity,
         ecs_iter_action_t callback,
-        void *binding_ctx,
-        ecs_ctx_free_t binding_ctx_free) 
+        void *callback_ctx,
+        ecs_ctx_free_t callback_ctx_free) 
     {
         ecs_observer_desc_t desc = {};
         desc.events[0] = event;
         desc.query.terms[0].id = EcsAny;
         desc.query.terms[0].src.id = entity;
         desc.callback = callback;
-        desc.binding_ctx = binding_ctx;
-        desc.binding_ctx_free = binding_ctx_free;
+        desc.callback_ctx = callback_ctx;
+        desc.callback_ctx_free = callback_ctx_free;
 
         flecs::entity_t o = ecs_observer_init(world, &desc);
         ecs_add_pair(world, o, EcsChildOf, entity);

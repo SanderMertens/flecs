@@ -1165,7 +1165,7 @@ void flecs_invoke_hook(
     it.event = event;
     it.event_id = id;
     it.ctx = ti->hooks.ctx;
-    it.binding_ctx = ti->hooks.binding_ctx;
+    it.callback_ctx = ti->hooks.binding_ctx;
     it.count = count;
     it.offset = row;
     flecs_iter_validate(&it);

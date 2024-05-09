@@ -1263,13 +1263,13 @@ void Observer_delete_observer_w_ctx(void) {
         .callback = Observer,
         .ctx = &ctx_value,
         .ctx_free = ctx_free,
-        .binding_ctx = &binding_ctx_value,
-        .binding_ctx_free = binding_ctx_free
+        .callback_ctx = &binding_ctx_value,
+        .callback_ctx_free = binding_ctx_free
     });
     test_assert(o != 0);
 
-    test_assert(ecs_observer_get_ctx(world, o) == &ctx_value);
-    test_assert(ecs_observer_get_binding_ctx(world, o) == &binding_ctx_value);
+    test_assert(ecs_observer_get(world, o)->ctx == &ctx_value);
+    test_assert(ecs_observer_get(world, o)->callback_ctx == &binding_ctx_value);
 
     ecs_delete(world, o);
 
@@ -1290,21 +1290,21 @@ void Observer_update_ctx(void) {
         .events = {EcsOnAdd},
         .ctx = &ctx_value,
         .ctx_free = ctx_free,
-        .binding_ctx = &binding_ctx_value,
-        .binding_ctx_free = binding_ctx_free
+        .callback_ctx = &binding_ctx_value,
+        .callback_ctx_free = binding_ctx_free
     });
     test_assert(system != 0);
 
-    test_assert(ecs_observer_get_ctx(world, system) == &ctx_value);
-    test_assert(ecs_observer_get_binding_ctx(world, system) 
+    test_assert(ecs_observer_get(world, system)->ctx == &ctx_value);
+    test_assert(ecs_observer_get(world, system)->callback_ctx 
         == &binding_ctx_value);
 
     ecs_observer(world, {
         .entity = system,
         .ctx = &ctx_value,
         .ctx_free = ctx_free,
-        .binding_ctx = &binding_ctx_value,
-        .binding_ctx_free = binding_ctx_free
+        .callback_ctx = &binding_ctx_value,
+        .callback_ctx_free = binding_ctx_free
     });
 
     test_int(ctx_value, 0);
@@ -1316,8 +1316,8 @@ void Observer_update_ctx(void) {
         .entity = system,
         .ctx = &ctx_value_2,
         .ctx_free = ctx_free_2,
-        .binding_ctx = &binding_ctx_value_2,
-        .binding_ctx_free = binding_ctx_free_2
+        .callback_ctx = &binding_ctx_value_2,
+        .callback_ctx_free = binding_ctx_free_2
     });
 
     test_int(ctx_value, 1);
@@ -6472,7 +6472,7 @@ void Observer_get_filter(void) {
         .events = { EcsOnAdd },
     });
 
-    const ecs_query_t *f = ecs_observer_get_query(world, o);
+    const ecs_query_t *f = ecs_observer_get(world, o)->query;
     test_assert(f != NULL);
     test_int(f->term_count, 1);
     test_uint(ecs_id(Position), f->terms[0].id);
@@ -6493,7 +6493,7 @@ void Observer_uni_observer_eval_count(void) {
         .events = { EcsOnAdd },
     });
 
-    const ecs_query_t *q = ecs_observer_get_query(world, o);
+    const ecs_query_t *q = ecs_observer_get(world, o)->query;
     test_assert(q != NULL);
     test_int(q->eval_count, 0);
 
@@ -6519,7 +6519,7 @@ void Observer_multi_observer_eval_count(void) {
         .events = { EcsOnAdd },
     });
 
-    const ecs_query_t *q = ecs_observer_get_query(world, o);
+    const ecs_query_t *q = ecs_observer_get(world, o)->query;
     test_assert(q != NULL);
     test_int(q->eval_count, 0);
 
