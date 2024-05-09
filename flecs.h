@@ -24415,16 +24415,6 @@ struct each_ref_column : public each_column<T> {
 
 template <typename Func, typename ... Components>
 struct each_delegate : public delegate {
-    // If the number of arguments in the function signature is one more than the
-    // number of components in the query, an extra entity arg is required.
-    static constexpr bool PassEntity = 
-        (sizeof...(Components) + 1) == (arity<Func>::value);
-
-    // If the number of arguments in the function is two more than the number of
-    // components in the query, extra iter + index arguments are required.
-    static constexpr bool PassIter = 
-        (sizeof...(Components) + 2) == (arity<Func>::value);
-
     static_assert(arity<Func>::value > 0, 
         "each() must have at least one argument");
 
@@ -24446,9 +24436,9 @@ struct each_delegate : public delegate {
         iter->flags |= EcsIterCppEach;
 
         if (terms.populate(iter)) {
-            invoke_callback< each_ref_column >(iter, func_, 0, terms.terms_);
+            invoke_unpack< each_ref_column >(iter, func_, 0, terms.terms_);
         } else {
-            invoke_callback< each_column >(iter, func_, 0, terms.terms_);
+            invoke_unpack< each_column >(iter, func_, 0, terms.terms_);
         }
     }
 
@@ -24499,18 +24489,49 @@ struct each_delegate : public delegate {
     }
 
 private:
-    // Number of function arguments is one more than number of components, pass
-    // entity as argument.
+    // func(flecs::entity, Components...)
+    template <template<typename X, typename = int> class ColumnType, 
+        typename... Args, if_t<sizeof...(Args) + 1 == arity<Func>::value> = 0>
+    static void invoke_callback(
+        ecs_iter_t *iter, const Func& func, size_t i, Args... comps) 
+    {
+        func(flecs::entity(iter->world, iter->entities[i]),
+            (ColumnType< remove_reference_t<Components> >(comps, i)
+                .get_row())...);
+    }
+
+    // func(flecs::iter&, size_t row, Components...)
+    template <template<typename X, typename = int> class ColumnType, 
+        typename... Args, if_t<sizeof...(Args) + 2 == arity<Func>::value> = 0>
+    static void invoke_callback(
+        ecs_iter_t *iter, const Func& func, size_t i, Args... comps) 
+    {
+        flecs::iter it(iter);
+        func(it, i, (ColumnType< remove_reference_t<Components> >(comps, i)
+            .get_row())...);
+    }
+
+    // func(Components...)
+    template <template<typename X, typename = int> class ColumnType, 
+        typename... Args, if_t<sizeof...(Args) == arity<Func>::value> = 0>
+    static void invoke_callback(
+        ecs_iter_t*, const Func& func, size_t i, Args... comps) 
+    {
+        func((ColumnType< remove_reference_t<Components> >(comps, i)
+            .get_row())...);
+    }
+
+    // func(flecs::entity, Components...)
     template <template<typename X, typename = int> class ColumnType, 
         typename... Args, if_t< 
-            sizeof...(Components) == sizeof...(Args) && PassEntity> = 0>
-    static void invoke_callback(
+            sizeof...(Components) == sizeof...(Args)> = 0>
+    static void invoke_unpack(
         ecs_iter_t *iter, const Func& func, size_t, Terms&, Args... comps) 
     {
         ECS_TABLE_LOCK(iter->world, iter->table);
 
-        ecs_world_t *world = iter->world;
         size_t count = static_cast<size_t>(iter->count);
+<<<<<<< HEAD
 
         for (size_t i = 0; i < count; i ++) {
             func(flecs::entity(world, iter->entities[i]),
@@ -24569,6 +24590,13 @@ private:
         for (size_t i = 0; i < count; i ++) {
             func( (ColumnType< remove_reference_t<Components> >(comps, i)
                 .get_row())...);
+=======
+        ecs_assert(count > 0, ECS_INVALID_OPERATION,
+            "no entities returned, use each() without flecs::entity argument");
+
+        for (size_t i = 0; i < count; i ++) {
+            invoke_callback<ColumnType>(iter, func, i, comps...);
+>>>>>>> cb2aa21ab (Refactor each delegate)
         }
 
         ECS_TABLE_UNLOCK(iter->world, iter->table);
@@ -24576,13 +24604,14 @@ private:
 
     template <template<typename X, typename = int> class ColumnType, 
         typename... Args, if_t< sizeof...(Components) != sizeof...(Args) > = 0>
-    static void invoke_callback(ecs_iter_t *iter, const Func& func, 
+    static void invoke_unpack(ecs_iter_t *iter, const Func& func, 
         size_t index, Terms& columns, Args... comps) 
     {
-        invoke_callback<ColumnType>(
+        invoke_unpack<ColumnType>(
             iter, func, index + 1, columns, comps..., columns[index]);
     }    
 
+public:
     Func func_;
 };
 
