@@ -806,7 +806,7 @@ struct ecs_query_t {
 struct ecs_observer_t {
     ecs_header_t hdr;
     
-    ecs_query_t *query;        /**< Observer query */
+    ecs_query_t *query;         /**< Observer query */
 
     /** Observer events */
     ecs_entity_t events[FLECS_EVENT_DESC_MAX];
@@ -815,11 +815,13 @@ struct ecs_observer_t {
     ecs_iter_action_t callback; /**< See ecs_observer_desc_t::callback */
     ecs_run_action_t run;       /**< See ecs_observer_desc_t::run */
 
-    void *ctx;                  /**< Callback context */
-    void *binding_ctx;          /**< Binding context (for language bindings) */
+    void *ctx;                  /**< Observer context */
+    void *callback_ctx;         /**< Callback language binfding context */
+    void *run_ctx;              /**< Run language binfding context */
 
     ecs_ctx_free_t ctx_free;    /**< Callback to free ctx */
-    ecs_ctx_free_t binding_ctx_free; /**< Callback to free binding_ctx */
+    ecs_ctx_free_t callback_ctx_free; /**< Callback to free callback_ctx */
+    ecs_ctx_free_t run_ctx_free; /**< Callback to free run_ctx */
 
     ecs_observable_t *observable; /**< Observable for observer */
 
@@ -1056,7 +1058,8 @@ struct ecs_iter_t {
     /* Context */
     void *param;                  /**< Param passed to ecs_run */
     void *ctx;                    /**< System context */
-    void *binding_ctx;            /**< Binding context */
+    void *callback_ctx;           /**< Callback language binding context */
+    void *run_ctx;                /**< Run language binding context */
 
     /* Time */
     ecs_ftime_t delta_time;       /**< Time elapsed since last frame */
@@ -1231,14 +1234,20 @@ typedef struct ecs_observer_desc_t {
     /** User context to pass to callback */
     void *ctx;
 
-    /** Context to be used for language bindings */
-    void *binding_ctx;
-
     /** Callback to free ctx */
     ecs_ctx_free_t ctx_free;
 
-    /** Callback to free binding_ctx */
-    ecs_ctx_free_t binding_ctx_free;
+    /** Context associated with callback (for language bindings). */
+    void *callback_ctx;
+
+    /** Callback to free callback ctx. */
+    ecs_ctx_free_t callback_ctx_free;
+
+    /** Context associated with run (for language bindings). */
+    void *run_ctx;
+
+    /** Callback to free run ctx. */
+    ecs_ctx_free_t run_ctx_free;
 
     /** Observable with which to register the observer */
     flecs_poly_t *observable;
@@ -4520,39 +4529,16 @@ FLECS_API
 bool ecs_observer_default_run_action(
     ecs_iter_t *it);
 
-/** Get observer ctx.
- * Return the value set in ecs_observer_desc_t::ctx.
+/** Get observer object.
+ * Returns the observer object. Can be used to access various information about
+ * the observer, like the query and context.
  *
  * @param world The world.
  * @param observer The observer.
- * @return The context.
+ * @return The observer object.
  */
 FLECS_API
-void* ecs_observer_get_ctx(
-    const ecs_world_t *world,
-    ecs_entity_t observer);
-
-/** Get observer binding ctx.
- * Return the value set in ecs_observer_desc_t::binding_ctx.
- *
- * @param world The world.
- * @param observer The observer.
- * @return The context.
- */
-FLECS_API
-void* ecs_observer_get_binding_ctx(
-    const ecs_world_t *world,
-    ecs_entity_t observer);
-
-/** Get observer query.
- * Return the observer query.
- *
- * @param world The world.
- * @param observer The observer.
- * @return The observer query.
- */
-FLECS_API
-const ecs_query_t* ecs_observer_get_query(
+const ecs_observer_t* ecs_observer_get(
     const ecs_world_t *world,
     ecs_entity_t observer);
 

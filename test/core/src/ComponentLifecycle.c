@@ -2462,7 +2462,7 @@ void ComponentLifecycle_binding_ctx_free_after_delete_component(void) {
 
 static void test_lifecycle_ctx(ecs_iter_t *it) {
     test_assert(it->ctx == &component_lifecycle_ctx);
-    test_assert(it->binding_ctx == &component_lifecycle_binding_ctx);
+    test_assert(it->callback_ctx == &component_lifecycle_binding_ctx);
     component_lifecycle_ctx ++;
     component_lifecycle_binding_ctx ++;
 }

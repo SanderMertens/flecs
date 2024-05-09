@@ -34,7 +34,7 @@ typedef struct EcsTickSource {
     ecs_ftime_t time_elapsed;  /**< Time elapsed since last tick */
 } EcsTickSource;
 
-/** Use with ecs_system_init() */
+/** Use with ecs_system_init() to create or update a system. */
 typedef struct ecs_system_desc_t {
     int32_t _canary;
 
@@ -43,6 +43,11 @@ typedef struct ecs_system_desc_t {
 
     /** System query parameters */
     ecs_query_desc_t query;
+
+    /** Callback that is ran for each result returned by the system's query. This
+     * means that this callback can be invoked multiple times per system per
+     * frame, typically once for each matching table. */
+    ecs_iter_action_t callback;
 
     /** Callback that is invoked when a system is ran.
      * When left to NULL, the default system runner is used, which calls the
@@ -57,23 +62,24 @@ typedef struct ecs_system_desc_t {
      * testing whether the it->next value is equal to ecs_query_next(). */
     ecs_run_action_t run;
 
-    /** Callback that is ran for each result returned by the system's query. This
-     * means that this callback can be invoked multiple times per system per
-     * frame, typically once for each matching table. */
-    ecs_iter_action_t callback;
-
     /** Context to be passed to callback (as ecs_iter_t::param) */
     void *ctx;
 
-    /** Binding context, for when system is implemented in other language */
-    void *binding_ctx;
-
-    /** Functions that are invoked during system cleanup to free context data.
-     * When set, functions are called unconditionally, even when the ctx
-     * pointers are NULL. */
+    /** Callback to free ctx. */
     ecs_ctx_free_t ctx_free;
-    ecs_ctx_free_t binding_ctx_free;
 
+    /** Context associated with callback (for language bindings). */
+    void *callback_ctx;
+
+    /** Callback to free callback ctx. */
+    ecs_ctx_free_t callback_ctx_free;
+
+    /** Context associated with run (for language bindings). */
+    void *run_ctx;
+
+    /** Callback to free run ctx. */
+    ecs_ctx_free_t run_ctx_free;
+    
     /** Interval in seconds at which the system should run */
     ecs_ftime_t interval;
 
@@ -96,6 +102,77 @@ FLECS_API
 ecs_entity_t ecs_system_init(
     ecs_world_t *world,
     const ecs_system_desc_t *desc);
+
+/** System type, get with ecs_system_get() */
+typedef struct ecs_system_t {
+    ecs_header_t hdr;
+
+    /** See ecs_system_desc_t */
+    ecs_run_action_t run;
+
+    /** See ecs_system_desc_t */
+    ecs_iter_action_t action;
+
+    /** System query */
+    ecs_query_t *query;
+
+    /** Entity associated with query */
+    ecs_entity_t query_entity;
+
+    /** Tick source associated with system */
+    ecs_entity_t tick_source;
+
+    /** Is system multithreaded */
+    bool multi_threaded;
+
+    /** Is system ran in immediate mode */
+    bool immediate;
+
+    /** Userdata for system */
+    void *ctx;
+
+    /** Callback language binding context */
+    void *callback_ctx;
+
+    /** Run language binding context */
+    void *run_ctx;
+
+    /** Callback to free ctx. */
+    ecs_ctx_free_t ctx_free;
+
+    /** Callback to free callback ctx. */
+    ecs_ctx_free_t callback_ctx_free;
+
+    /** Callback to free run ctx. */
+    ecs_ctx_free_t run_ctx_free;
+
+    /** Time spent on running system */
+    ecs_ftime_t time_spent;
+
+    /** Time passed since last invocation */
+    ecs_ftime_t time_passed;
+
+    /** Last frame for which the system was considered */
+    int64_t last_frame;
+
+    /* Mixins */
+    ecs_world_t *world;
+    ecs_entity_t entity;
+    flecs_poly_dtor_t dtor;      
+} ecs_system_t;
+
+/** Get system object.
+ * Returns the system object. Can be used to access various information about
+ * the system, like the query and context.
+ *
+ * @param world The world.
+ * @param observer The system.
+ * @return The system object.
+ */
+FLECS_API
+const ecs_system_t* ecs_system_get(
+    const ecs_world_t *world,
+    ecs_entity_t system);
 
 #ifndef FLECS_LEGACY
 
@@ -218,47 +295,6 @@ ecs_entity_t ecs_run_worker(
     int32_t stage_count,
     ecs_ftime_t delta_time,
     void *param);
-
-/** Get the query object for a system.
- * Systems use queries under the hood. This enables an application to get access
- * to the underlying query object of a system. This can be useful when, for
- * example, an application needs to enable sorting for a system.
- *
- * @param world The world.
- * @param system The system from which to obtain the query.
- * @return The query.
- */
-FLECS_API
-ecs_query_t* ecs_system_get_query(
-    const ecs_world_t *world,
-    ecs_entity_t system);
-
-/** Get system context.
- * This operation returns the context pointer set for the system. If
- * the provided entity is not a system, the function will return NULL.
- *
- * @param world The world.
- * @param system The system from which to obtain the context.
- * @return The context.
- */
-FLECS_API
-void* ecs_system_get_ctx(
-    const ecs_world_t *world,
-    ecs_entity_t system);
-
-/** Get system binding context.
- * The binding context is a context typically used to attach any language
- * binding specific data that is needed when invoking a callback that is
- * implemented in another language.
- *
- * @param world The world.
- * @param system The system from which to obtain the context.
- * @return The context.
- */
-FLECS_API
-void* ecs_system_get_binding_ctx(
-    const ecs_world_t *world,
-    ecs_entity_t system);
 
 FLECS_API
 void FlecsSystemImport(

@@ -210,7 +210,7 @@ struct each_delegate : public delegate {
 
     // Static function that can be used as callback for systems/triggers
     static void run(ecs_iter_t *iter) {
-        auto self = static_cast<const each_delegate*>(iter->binding_ctx);
+        auto self = static_cast<const each_delegate*>(iter->callback_ctx);
         ecs_assert(self != nullptr, ECS_INTERNAL_ERROR, NULL);
         self->invoke(iter);
     }
@@ -228,24 +228,24 @@ struct each_delegate : public delegate {
     // Static function to call for component on_add hook
     static void run_add(ecs_iter_t *iter) {
         component_binding_ctx *ctx = reinterpret_cast<component_binding_ctx*>(
-            iter->binding_ctx);
-        iter->binding_ctx = ctx->on_add;
+            iter->callback_ctx);
+        iter->callback_ctx = ctx->on_add;
         run(iter);
     }
 
     // Static function to call for component on_remove hook
     static void run_remove(ecs_iter_t *iter) {
         component_binding_ctx *ctx = reinterpret_cast<component_binding_ctx*>(
-            iter->binding_ctx);
-        iter->binding_ctx = ctx->on_remove;
+            iter->callback_ctx);
+        iter->callback_ctx = ctx->on_remove;
         run(iter);
     }
 
     // Static function to call for component on_set hook
     static void run_set(ecs_iter_t *iter) {
         component_binding_ctx *ctx = reinterpret_cast<component_binding_ctx*>(
-            iter->binding_ctx);
-        iter->binding_ctx = ctx->on_set;
+            iter->callback_ctx);
+        iter->callback_ctx = ctx->on_set;
         run(iter);
     }
 
@@ -529,7 +529,7 @@ public:
 
     // Static function that can be used as callback for systems/triggers
     static void run(ecs_iter_t *iter) {
-        auto self = static_cast<const iter_delegate*>(iter->binding_ctx);
+        auto self = static_cast<const iter_delegate*>(iter->callback_ctx);
         ecs_assert(self != nullptr, ECS_INTERNAL_ERROR, NULL);
         self->invoke(iter);
     }
@@ -600,14 +600,14 @@ struct entity_observer_delegate : delegate {
 private:
     template <typename F, if_t<arity<F>::value == 1> = 0>
     static void invoke(ecs_iter_t *iter) {
-        auto self = static_cast<const entity_observer_delegate*>(iter->binding_ctx);
+        auto self = static_cast<const entity_observer_delegate*>(iter->callback_ctx);
         ecs_assert(self != nullptr, ECS_INTERNAL_ERROR, NULL);
         self->func_(flecs::entity(iter->world, ecs_field_src(iter, 0)));
     }
 
     template <typename F, if_t<arity<F>::value == 0> = 0>
     static void invoke(ecs_iter_t *iter) {
-        auto self = static_cast<const entity_observer_delegate*>(iter->binding_ctx);
+        auto self = static_cast<const entity_observer_delegate*>(iter->callback_ctx);
         ecs_assert(self != nullptr, ECS_INTERNAL_ERROR, NULL);
         self->func_();
     }
@@ -629,7 +629,7 @@ private:
     template <typename F, if_t<arity<F>::value == 1> = 0>
     static void invoke(ecs_iter_t *iter) {
         auto self = static_cast<const entity_payload_observer_delegate*>(
-            iter->binding_ctx);
+            iter->callback_ctx);
         ecs_assert(self != nullptr, ECS_INTERNAL_ERROR, NULL);
         ecs_assert(iter->param != nullptr, ECS_INVALID_OPERATION, 
             "entity observer invoked without payload");
@@ -641,7 +641,7 @@ private:
     template <typename F, if_t<arity<F>::value == 2> = 0>
     static void invoke(ecs_iter_t *iter) {
         auto self = static_cast<const entity_payload_observer_delegate*>(
-            iter->binding_ctx);
+            iter->callback_ctx);
         ecs_assert(self != nullptr, ECS_INTERNAL_ERROR, NULL);
         ecs_assert(iter->param != nullptr, ECS_INVALID_OPERATION, 
             "entity observer invoked without payload");

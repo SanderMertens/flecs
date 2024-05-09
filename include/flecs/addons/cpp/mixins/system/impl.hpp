@@ -88,11 +88,11 @@ struct system final : entity
     }
 
     void* ctx() const {
-        return ecs_system_get_ctx(world_, id_);
+        return ecs_system_get(world_, id_)->ctx;
     }
 
     flecs::query<> query() const {
-        return flecs::query<>(ecs_system_get_query(world_, id_));
+        return flecs::query<>(ecs_system_get(world_, id_)->query);
     }
 
     system_runner_fluent run(ecs_ftime_t delta_time = 0.0f, void *param = nullptr) const {

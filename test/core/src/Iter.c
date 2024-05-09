@@ -2659,10 +2659,10 @@ void Iter_page_iter_w_binding_ctx(void) {
     int ctx;
 
     ecs_iter_t it = ecs_query_iter(world, f);
-    it.binding_ctx = &ctx;
+    it.callback_ctx = &ctx;
 
     ecs_iter_t pit = ecs_page_iter(&it, 0, 1);
-    test_assert(pit.binding_ctx == &ctx);
+    test_assert(pit.callback_ctx == &ctx);
 
     test_assert(ecs_page_next(&pit));
     test_assert(!ecs_page_next(&pit));
@@ -2713,10 +2713,10 @@ void Iter_worker_iter_w_binding_ctx(void) {
     int ctx;
 
     ecs_iter_t it = ecs_query_iter(world, f);
-    it.binding_ctx = &ctx;
+    it.callback_ctx = &ctx;
 
     ecs_iter_t pit = ecs_worker_iter(&it, 0, 2);
-    test_assert(pit.binding_ctx == &ctx);
+    test_assert(pit.callback_ctx == &ctx);
 
     test_assert(ecs_worker_next(&pit));
     test_assert(!ecs_worker_next(&pit));
