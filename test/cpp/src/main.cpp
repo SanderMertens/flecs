@@ -381,6 +381,14 @@ void Enum_mixed_auto_manual_constants(void);
 void Enum_enum_class_mixed_auto_manual_constants(void);
 void Enum_enum_child_count(void);
 
+// Testsuite 'Union'
+void Union_add_case(void);
+void Union_get_case(void);
+void Union_add_case_w_type(void);
+void Union_add_switch_w_type(void);
+void Union_add_remove_switch_w_type(void);
+void Union_switch_enum_type(void);
+
 // Testsuite 'Paths'
 void Paths_name(void);
 void Paths_path_depth_1(void);
@@ -2750,6 +2758,33 @@ bake_test_case Enum_testcases[] = {
     {
         "enum_child_count",
         Enum_enum_child_count
+    }
+};
+
+bake_test_case Union_testcases[] = {
+    {
+        "add_case",
+        Union_add_case
+    },
+    {
+        "get_case",
+        Union_get_case
+    },
+    {
+        "add_case_w_type",
+        Union_add_case_w_type
+    },
+    {
+        "add_switch_w_type",
+        Union_add_switch_w_type
+    },
+    {
+        "add_remove_switch_w_type",
+        Union_add_remove_switch_w_type
+    },
+    {
+        "switch_enum_type",
+        Union_switch_enum_type
     }
 };
 
@@ -6285,6 +6320,13 @@ static bake_test_suite suites[] = {
         Enum_testcases
     },
     {
+        "Union",
+        NULL,
+        NULL,
+        6,
+        Union_testcases
+    },
+    {
         "Paths",
         NULL,
         NULL,
@@ -6422,5 +6464,5 @@ static bake_test_suite suites[] = {
 };
 
 int main(int argc, char *argv[]) {
-    return bake_test_run("cpp", argc, argv, suites, 23);
+    return bake_test_run("cpp", argc, argv, suites, 24);
 }

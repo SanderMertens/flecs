@@ -462,6 +462,36 @@ void Union_add_remove_2_tgts(void);
 void Union_add_remove_2_tgts_join(void);
 void Union_add_remove_3_tgts(void);
 void Union_add_remove_3_tgts_join(void);
+void Union_remove_w_union_tgt(void);
+void Union_get_non_union_tgt_from_table_w_union(void);
+void Union_has_non_union_from_table_w_union(void);
+void Union_get_case_no_switch(void);
+void Union_get_case_set(void);
+void Union_get_case_change(void);
+void Union_remove_case(void);
+void Union_remove_last(void);
+void Union_delete_first(void);
+void Union_delete_last(void);
+void Union_delete_first_last(void);
+void Union_3_entities_same_case(void);
+void Union_2_entities_1_change_case(void);
+void Union_3_entities_change_case(void);
+void Union_add_case_in_stage(void);
+void Union_change_case_in_stage(void);
+void Union_change_one_case_in_stage(void);
+void Union_remove_switch_in_stage(void);
+void Union_switch_no_match_for_case(void);
+void Union_empty_entity_has_case(void);
+void Union_zero_entity_has_case(void);
+void Union_add_to_entity_w_switch(void);
+void Union_add_pair_to_entity_w_switch(void);
+void Union_recycled_tags(void);
+void Union_same_table_after_change(void);
+void Union_add_2(void);
+void Union_add_2_reverse(void);
+void Union_add_switch_to_prefab_instance(void);
+void Union_get_case_w_generation(void);
+void Union_get_case_w_generation_not_alive(void);
 
 // Testsuite 'Hierarchies'
 void Hierarchies_setup(void);
@@ -3751,6 +3781,126 @@ bake_test_case Union_testcases[] = {
     {
         "add_remove_3_tgts_join",
         Union_add_remove_3_tgts_join
+    },
+    {
+        "remove_w_union_tgt",
+        Union_remove_w_union_tgt
+    },
+    {
+        "get_non_union_tgt_from_table_w_union",
+        Union_get_non_union_tgt_from_table_w_union
+    },
+    {
+        "has_non_union_from_table_w_union",
+        Union_has_non_union_from_table_w_union
+    },
+    {
+        "get_case_no_switch",
+        Union_get_case_no_switch
+    },
+    {
+        "get_case_set",
+        Union_get_case_set
+    },
+    {
+        "get_case_change",
+        Union_get_case_change
+    },
+    {
+        "remove_case",
+        Union_remove_case
+    },
+    {
+        "remove_last",
+        Union_remove_last
+    },
+    {
+        "delete_first",
+        Union_delete_first
+    },
+    {
+        "delete_last",
+        Union_delete_last
+    },
+    {
+        "delete_first_last",
+        Union_delete_first_last
+    },
+    {
+        "3_entities_same_case",
+        Union_3_entities_same_case
+    },
+    {
+        "2_entities_1_change_case",
+        Union_2_entities_1_change_case
+    },
+    {
+        "3_entities_change_case",
+        Union_3_entities_change_case
+    },
+    {
+        "add_case_in_stage",
+        Union_add_case_in_stage
+    },
+    {
+        "change_case_in_stage",
+        Union_change_case_in_stage
+    },
+    {
+        "change_one_case_in_stage",
+        Union_change_one_case_in_stage
+    },
+    {
+        "remove_switch_in_stage",
+        Union_remove_switch_in_stage
+    },
+    {
+        "switch_no_match_for_case",
+        Union_switch_no_match_for_case
+    },
+    {
+        "empty_entity_has_case",
+        Union_empty_entity_has_case
+    },
+    {
+        "zero_entity_has_case",
+        Union_zero_entity_has_case
+    },
+    {
+        "add_to_entity_w_switch",
+        Union_add_to_entity_w_switch
+    },
+    {
+        "add_pair_to_entity_w_switch",
+        Union_add_pair_to_entity_w_switch
+    },
+    {
+        "recycled_tags",
+        Union_recycled_tags
+    },
+    {
+        "same_table_after_change",
+        Union_same_table_after_change
+    },
+    {
+        "add_2",
+        Union_add_2
+    },
+    {
+        "add_2_reverse",
+        Union_add_2_reverse
+    },
+    {
+        "add_switch_to_prefab_instance",
+        Union_add_switch_to_prefab_instance
+    },
+    {
+        "get_case_w_generation",
+        Union_get_case_w_generation
+    },
+    {
+        "get_case_w_generation_not_alive",
+        Union_get_case_w_generation_not_alive
     }
 };
 
@@ -9783,7 +9933,7 @@ static bake_test_suite suites[] = {
         "Union",
         NULL,
         NULL,
-        17,
+        47,
         Union_testcases
     },
     {

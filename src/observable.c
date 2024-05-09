@@ -1247,6 +1247,11 @@ repeat_event:
          * may have to forward ids from the pair's target. */
         if ((can_forward && is_pair) || can_override) {
             idr = flecs_id_record_get(world, id);
+            if (!idr) {
+                /* Possible for union ids */
+                continue;
+            }
+
             ecs_flags32_t idr_flags = idr->flags;
 
             if (is_pair && (idr_flags & EcsIdTraversable)) {
