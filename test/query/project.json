@@ -1830,7 +1830,24 @@
                 "not_this_written_union_wildcard",
                 "not_this_written_union_tgt",
                 "not_this_written_union_var",
-                "not_this_written_union_var_written"
+                "not_this_written_union_var_written",
+                "query_switch",
+                "query_1_case_1_type",
+                "query_1_case_2_types",
+                "query_2_cases_1_type",
+                "query_2_cases_2_types",
+                "query_after_remove",
+                "sort",
+                "query_recycled_tags",
+                "query_single_case",
+                "match_switch_on_base_instance",
+                "switch_w_bitset_query",
+                "switch_w_bitset_query_inv",
+                "switch_w_bitset_query_2_elems",
+                "switch_w_bitset_query_2_elems_skip",
+                "switch_w_bitset_query_elems_interleaved",
+                "switch_w_bitset_query_elems_interleaved_2_types",
+                "component_relation"
             ]
         }, {
             "id": "OrderBy",

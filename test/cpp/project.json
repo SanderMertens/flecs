@@ -394,6 +394,16 @@
                 "enum_child_count"
             ]
         }, {
+            "id": "Union",
+            "testcases": [
+                "add_case",
+                "get_case",
+                "add_case_w_type",
+                "add_switch_w_type",
+                "add_remove_switch_w_type",
+                "switch_enum_type"
+            ]
+        }, {
             "id": "Paths",
             "testcases": [
                 "name",
