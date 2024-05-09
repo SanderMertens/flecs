@@ -20,10 +20,6 @@
 #ifndef FLECS_ALERTS_H
 #define FLECS_ALERTS_H
 
-#ifndef FLECS_RULES
-#define FLECS_RULES
-#endif
-
 #ifndef FLECS_PIPELINE
 #define FLECS_PIPELINE
 #endif
