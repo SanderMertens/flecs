@@ -55,41 +55,6 @@ struct iterable {
             this->next_each_action());
     }
 
-    /** Iter iterator.
-     * The "iter" iterator accepts a function that is invoked for each matching
-     * table. The following function signatures are valid:
-     *  - func(flecs::iter& it, Components* ...)
-     *  - func(Components& ...)
-     * 
-     * Iter iterators are not automatically instanced. When a result contains
-     * shared components, entities of the result will be iterated one by one.
-     * This ensures that applications can't accidentally read out of bounds by
-     * accessing a shared component as an array.
-     */
-    template <typename Func>
-    void iter(Func&& func) const { 
-        iterate<_::iter_delegate>(nullptr, FLECS_FWD(func), 
-            this->next_action());
-    }
-
-    template <typename Func>
-    void iter(flecs::world_t *world, Func&& func) const {
-        iterate<_::iter_delegate>(world, FLECS_FWD(func), 
-            this->next_action());
-    }
-
-    template <typename Func>
-    void iter(flecs::iter& it, Func&& func) const {
-        iterate<_::iter_delegate>(it.world(), FLECS_FWD(func),
-            this->next_action());
-    }
-
-    template <typename Func>
-    void iter(flecs::entity e, Func&& func) const {
-        iterate<_::iter_delegate>(e.world(), FLECS_FWD(func), 
-            this->next_action());
-    }
-
     /** Create iterator.
      * Create an iterator object that can be modified before iterating.
      */
