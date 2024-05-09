@@ -3226,7 +3226,7 @@ struct ecs_query_t {
 struct ecs_observer_t {
     ecs_header_t hdr;
     
-    ecs_query_t *query;        /**< Observer query */
+    ecs_query_t *query;         /**< Observer query */
 
     /** Observer events */
     ecs_entity_t events[FLECS_EVENT_DESC_MAX];
@@ -3235,11 +3235,13 @@ struct ecs_observer_t {
     ecs_iter_action_t callback; /**< See ecs_observer_desc_t::callback */
     ecs_run_action_t run;       /**< See ecs_observer_desc_t::run */
 
-    void *ctx;                  /**< Callback context */
-    void *binding_ctx;          /**< Binding context (for language bindings) */
+    void *ctx;                  /**< Observer context */
+    void *callback_ctx;         /**< Callback language binfding context */
+    void *run_ctx;              /**< Run language binfding context */
 
     ecs_ctx_free_t ctx_free;    /**< Callback to free ctx */
-    ecs_ctx_free_t binding_ctx_free; /**< Callback to free binding_ctx */
+    ecs_ctx_free_t callback_ctx_free; /**< Callback to free callback_ctx */
+    ecs_ctx_free_t run_ctx_free; /**< Callback to free run_ctx */
 
     ecs_observable_t *observable; /**< Observable for observer */
 
@@ -4035,7 +4037,8 @@ struct ecs_iter_t {
     /* Context */
     void *param;                  /**< Param passed to ecs_run */
     void *ctx;                    /**< System context */
-    void *binding_ctx;            /**< Binding context */
+    void *callback_ctx;           /**< Callback language binding context */
+    void *run_ctx;                /**< Run language binding context */
 
     /* Time */
     ecs_ftime_t delta_time;       /**< Time elapsed since last frame */
@@ -4210,14 +4213,20 @@ typedef struct ecs_observer_desc_t {
     /** User context to pass to callback */
     void *ctx;
 
-    /** Context to be used for language bindings */
-    void *binding_ctx;
-
     /** Callback to free ctx */
     ecs_ctx_free_t ctx_free;
 
-    /** Callback to free binding_ctx */
-    ecs_ctx_free_t binding_ctx_free;
+    /** Context associated with callback (for language bindings). */
+    void *callback_ctx;
+
+    /** Callback to free callback ctx. */
+    ecs_ctx_free_t callback_ctx_free;
+
+    /** Context associated with run (for language bindings). */
+    void *run_ctx;
+
+    /** Callback to free run ctx. */
+    ecs_ctx_free_t run_ctx_free;
 
     /** Observable with which to register the observer */
     flecs_poly_t *observable;
@@ -7520,39 +7529,16 @@ FLECS_API
 bool ecs_observer_default_run_action(
     ecs_iter_t *it);
 
-/** Get observer ctx.
- * Return the value set in ecs_observer_desc_t::ctx.
+/** Get observer object.
+ * Returns the observer object. Can be used to access various information about
+ * the observer, like the query and context.
  *
  * @param world The world.
  * @param observer The observer.
- * @return The context.
+ * @return The observer object.
  */
 FLECS_API
-void* ecs_observer_get_ctx(
-    const ecs_world_t *world,
-    ecs_entity_t observer);
-
-/** Get observer binding ctx.
- * Return the value set in ecs_observer_desc_t::binding_ctx.
- *
- * @param world The world.
- * @param observer The observer.
- * @return The context.
- */
-FLECS_API
-void* ecs_observer_get_binding_ctx(
-    const ecs_world_t *world,
-    ecs_entity_t observer);
-
-/** Get observer query.
- * Return the observer query.
- *
- * @param world The world.
- * @param observer The observer.
- * @return The observer query.
- */
-FLECS_API
-const ecs_query_t* ecs_observer_get_query(
+const ecs_observer_t* ecs_observer_get(
     const ecs_world_t *world,
     ecs_entity_t observer);
 
@@ -11251,7 +11237,7 @@ typedef struct EcsTickSource {
     ecs_ftime_t time_elapsed;  /**< Time elapsed since last tick */
 } EcsTickSource;
 
-/** Use with ecs_system_init() */
+/** Use with ecs_system_init() to create or update a system. */
 typedef struct ecs_system_desc_t {
     int32_t _canary;
 
@@ -11260,6 +11246,11 @@ typedef struct ecs_system_desc_t {
 
     /** System query parameters */
     ecs_query_desc_t query;
+
+    /** Callback that is ran for each result returned by the system's query. This
+     * means that this callback can be invoked multiple times per system per
+     * frame, typically once for each matching table. */
+    ecs_iter_action_t callback;
 
     /** Callback that is invoked when a system is ran.
      * When left to NULL, the default system runner is used, which calls the
@@ -11274,23 +11265,24 @@ typedef struct ecs_system_desc_t {
      * testing whether the it->next value is equal to ecs_query_next(). */
     ecs_run_action_t run;
 
-    /** Callback that is ran for each result returned by the system's query. This
-     * means that this callback can be invoked multiple times per system per
-     * frame, typically once for each matching table. */
-    ecs_iter_action_t callback;
-
     /** Context to be passed to callback (as ecs_iter_t::param) */
     void *ctx;
 
-    /** Binding context, for when system is implemented in other language */
-    void *binding_ctx;
-
-    /** Functions that are invoked during system cleanup to free context data.
-     * When set, functions are called unconditionally, even when the ctx
-     * pointers are NULL. */
+    /** Callback to free ctx. */
     ecs_ctx_free_t ctx_free;
-    ecs_ctx_free_t binding_ctx_free;
 
+    /** Context associated with callback (for language bindings). */
+    void *callback_ctx;
+
+    /** Callback to free callback ctx. */
+    ecs_ctx_free_t callback_ctx_free;
+
+    /** Context associated with run (for language bindings). */
+    void *run_ctx;
+
+    /** Callback to free run ctx. */
+    ecs_ctx_free_t run_ctx_free;
+    
     /** Interval in seconds at which the system should run */
     ecs_ftime_t interval;
 
@@ -11313,6 +11305,77 @@ FLECS_API
 ecs_entity_t ecs_system_init(
     ecs_world_t *world,
     const ecs_system_desc_t *desc);
+
+/** System type, get with ecs_system_get() */
+typedef struct ecs_system_t {
+    ecs_header_t hdr;
+
+    /** See ecs_system_desc_t */
+    ecs_run_action_t run;
+
+    /** See ecs_system_desc_t */
+    ecs_iter_action_t action;
+
+    /** System query */
+    ecs_query_t *query;
+
+    /** Entity associated with query */
+    ecs_entity_t query_entity;
+
+    /** Tick source associated with system */
+    ecs_entity_t tick_source;
+
+    /** Is system multithreaded */
+    bool multi_threaded;
+
+    /** Is system ran in immediate mode */
+    bool immediate;
+
+    /** Userdata for system */
+    void *ctx;
+
+    /** Callback language binding context */
+    void *callback_ctx;
+
+    /** Run language binding context */
+    void *run_ctx;
+
+    /** Callback to free ctx. */
+    ecs_ctx_free_t ctx_free;
+
+    /** Callback to free callback ctx. */
+    ecs_ctx_free_t callback_ctx_free;
+
+    /** Callback to free run ctx. */
+    ecs_ctx_free_t run_ctx_free;
+
+    /** Time spent on running system */
+    ecs_ftime_t time_spent;
+
+    /** Time passed since last invocation */
+    ecs_ftime_t time_passed;
+
+    /** Last frame for which the system was considered */
+    int64_t last_frame;
+
+    /* Mixins */
+    ecs_world_t *world;
+    ecs_entity_t entity;
+    flecs_poly_dtor_t dtor;      
+} ecs_system_t;
+
+/** Get system object.
+ * Returns the system object. Can be used to access various information about
+ * the system, like the query and context.
+ *
+ * @param world The world.
+ * @param observer The system.
+ * @return The system object.
+ */
+FLECS_API
+const ecs_system_t* ecs_system_get(
+    const ecs_world_t *world,
+    ecs_entity_t system);
 
 #ifndef FLECS_LEGACY
 
@@ -11435,47 +11498,6 @@ ecs_entity_t ecs_run_worker(
     int32_t stage_count,
     ecs_ftime_t delta_time,
     void *param);
-
-/** Get the query object for a system.
- * Systems use queries under the hood. This enables an application to get access
- * to the underlying query object of a system. This can be useful when, for
- * example, an application needs to enable sorting for a system.
- *
- * @param world The world.
- * @param system The system from which to obtain the query.
- * @return The query.
- */
-FLECS_API
-ecs_query_t* ecs_system_get_query(
-    const ecs_world_t *world,
-    ecs_entity_t system);
-
-/** Get system context.
- * This operation returns the context pointer set for the system. If
- * the provided entity is not a system, the function will return NULL.
- *
- * @param world The world.
- * @param system The system from which to obtain the context.
- * @return The context.
- */
-FLECS_API
-void* ecs_system_get_ctx(
-    const ecs_world_t *world,
-    ecs_entity_t system);
-
-/** Get system binding context.
- * The binding context is a context typically used to attach any language
- * binding specific data that is needed when invoking a callback that is
- * implemented in another language.
- *
- * @param world The world.
- * @param system The system from which to obtain the context.
- * @return The context.
- */
-FLECS_API
-void* ecs_system_get_binding_ctx(
-    const ecs_world_t *world,
-    ecs_entity_t system);
 
 FLECS_API
 void FlecsSystemImport(
@@ -24364,7 +24386,7 @@ struct each_delegate : public delegate {
 
     // Static function that can be used as callback for systems/triggers
     static void run(ecs_iter_t *iter) {
-        auto self = static_cast<const each_delegate*>(iter->binding_ctx);
+        auto self = static_cast<const each_delegate*>(iter->callback_ctx);
         ecs_assert(self != nullptr, ECS_INTERNAL_ERROR, NULL);
         self->invoke(iter);
     }
@@ -24382,24 +24404,24 @@ struct each_delegate : public delegate {
     // Static function to call for component on_add hook
     static void run_add(ecs_iter_t *iter) {
         component_binding_ctx *ctx = reinterpret_cast<component_binding_ctx*>(
-            iter->binding_ctx);
-        iter->binding_ctx = ctx->on_add;
+            iter->callback_ctx);
+        iter->callback_ctx = ctx->on_add;
         run(iter);
     }
 
     // Static function to call for component on_remove hook
     static void run_remove(ecs_iter_t *iter) {
         component_binding_ctx *ctx = reinterpret_cast<component_binding_ctx*>(
-            iter->binding_ctx);
-        iter->binding_ctx = ctx->on_remove;
+            iter->callback_ctx);
+        iter->callback_ctx = ctx->on_remove;
         run(iter);
     }
 
     // Static function to call for component on_set hook
     static void run_set(ecs_iter_t *iter) {
         component_binding_ctx *ctx = reinterpret_cast<component_binding_ctx*>(
-            iter->binding_ctx);
-        iter->binding_ctx = ctx->on_set;
+            iter->callback_ctx);
+        iter->callback_ctx = ctx->on_set;
         run(iter);
     }
 
@@ -24683,7 +24705,7 @@ public:
 
     // Static function that can be used as callback for systems/triggers
     static void run(ecs_iter_t *iter) {
-        auto self = static_cast<const iter_delegate*>(iter->binding_ctx);
+        auto self = static_cast<const iter_delegate*>(iter->callback_ctx);
         ecs_assert(self != nullptr, ECS_INTERNAL_ERROR, NULL);
         self->invoke(iter);
     }
@@ -24754,14 +24776,14 @@ struct entity_observer_delegate : delegate {
 private:
     template <typename F, if_t<arity<F>::value == 1> = 0>
     static void invoke(ecs_iter_t *iter) {
-        auto self = static_cast<const entity_observer_delegate*>(iter->binding_ctx);
+        auto self = static_cast<const entity_observer_delegate*>(iter->callback_ctx);
         ecs_assert(self != nullptr, ECS_INTERNAL_ERROR, NULL);
         self->func_(flecs::entity(iter->world, ecs_field_src(iter, 0)));
     }
 
     template <typename F, if_t<arity<F>::value == 0> = 0>
     static void invoke(ecs_iter_t *iter) {
-        auto self = static_cast<const entity_observer_delegate*>(iter->binding_ctx);
+        auto self = static_cast<const entity_observer_delegate*>(iter->callback_ctx);
         ecs_assert(self != nullptr, ECS_INTERNAL_ERROR, NULL);
         self->func_();
     }
@@ -24783,7 +24805,7 @@ private:
     template <typename F, if_t<arity<F>::value == 1> = 0>
     static void invoke(ecs_iter_t *iter) {
         auto self = static_cast<const entity_payload_observer_delegate*>(
-            iter->binding_ctx);
+            iter->callback_ctx);
         ecs_assert(self != nullptr, ECS_INTERNAL_ERROR, NULL);
         ecs_assert(iter->param != nullptr, ECS_INVALID_OPERATION, 
             "entity observer invoked without payload");
@@ -24795,7 +24817,7 @@ private:
     template <typename F, if_t<arity<F>::value == 2> = 0>
     static void invoke(ecs_iter_t *iter) {
         auto self = static_cast<const entity_payload_observer_delegate*>(
-            iter->binding_ctx);
+            iter->callback_ctx);
         ecs_assert(self != nullptr, ECS_INTERNAL_ERROR, NULL);
         ecs_assert(iter->param != nullptr, ECS_INVALID_OPERATION, 
             "entity observer invoked without payload");
@@ -28613,8 +28635,8 @@ private:
     T build(Func&& func) {
         auto ctx = FLECS_NEW(Delegate)(FLECS_FWD(func));
         desc_.callback = Delegate::run;
-        desc_.binding_ctx = ctx;
-        desc_.binding_ctx_free = reinterpret_cast<
+        desc_.callback_ctx = ctx;
+        desc_.callback_ctx_free = reinterpret_cast<
             ecs_ctx_free_t>(_::free_obj<Delegate>);
         
         return T(world_, &desc_, instanced_);
@@ -28754,11 +28776,11 @@ struct observer final : entity
     }
 
     void* ctx() const {
-        return ecs_observer_get_ctx(world_, id_);
+        return ecs_observer_get(world_, id_)->ctx;
     }
 
     flecs::query<> query() const {
-        return flecs::query<>(ecs_observer_get_query(world_, id_));
+        return flecs::query<>(ecs_observer_get(world_, id_)->query);
     }
 };
 
@@ -28802,16 +28824,16 @@ namespace _ {
         flecs::entity_t event,
         flecs::entity_t entity,
         ecs_iter_action_t callback,
-        void *binding_ctx,
-        ecs_ctx_free_t binding_ctx_free) 
+        void *callback_ctx,
+        ecs_ctx_free_t callback_ctx_free) 
     {
         ecs_observer_desc_t desc = {};
         desc.events[0] = event;
         desc.query.terms[0].id = EcsAny;
         desc.query.terms[0].src.id = entity;
         desc.callback = callback;
-        desc.binding_ctx = binding_ctx;
-        desc.binding_ctx_free = binding_ctx_free;
+        desc.callback_ctx = callback_ctx;
+        desc.callback_ctx_free = callback_ctx_free;
 
         flecs::entity_t o = ecs_observer_init(world, &desc);
         ecs_add_pair(world, o, EcsChildOf, entity);
@@ -29286,11 +29308,11 @@ struct system final : entity
     }
 
     void* ctx() const {
-        return ecs_system_get_ctx(world_, id_);
+        return ecs_system_get(world_, id_)->ctx;
     }
 
     flecs::query<> query() const {
-        return flecs::query<>(ecs_system_get_query(world_, id_));
+        return flecs::query<>(ecs_system_get(world_, id_)->query);
     }
 
     system_runner_fluent run(ecs_ftime_t delta_time = 0.0f, void *param = nullptr) const {

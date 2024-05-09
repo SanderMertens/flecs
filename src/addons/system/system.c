@@ -87,7 +87,8 @@ ecs_entity_t flecs_run_intern(
     qit.delta_system_time = time_elapsed;
     qit.param = param;
     qit.ctx = system_data->ctx;
-    qit.binding_ctx = system_data->binding_ctx;
+    qit.callback_ctx = system_data->callback_ctx;
+    qit.run_ctx = system_data->run_ctx;
 
     flecs_defer_begin(world, stage);
 
@@ -161,42 +162,6 @@ ecs_entity_t ecs_run(
         world, stage, system, system_data, 0, 0, delta_time, param);
 }
 
-ecs_query_t* ecs_system_get_query(
-    const ecs_world_t *world,
-    ecs_entity_t system)
-{
-    const ecs_system_t *s = flecs_poly_get(world, system, ecs_system_t);
-    if (s) {
-        return s->query;
-    } else {
-        return NULL;
-    }
-}
-
-void* ecs_system_get_ctx(
-    const ecs_world_t *world,
-    ecs_entity_t system)
-{
-    const ecs_system_t *s = flecs_poly_get(world, system, ecs_system_t);
-    if (s) {
-        return s->ctx;
-    } else {
-        return NULL;
-    }   
-}
-
-void* ecs_system_get_binding_ctx(
-    const ecs_world_t *world,
-    ecs_entity_t system)
-{
-    const ecs_system_t *s = flecs_poly_get(world, system, ecs_system_t);
-    if (s) {
-        return s->binding_ctx;
-    } else {
-        return NULL;
-    }   
-}
-
 /* System deinitialization */
 static
 void flecs_system_fini(ecs_system_t *sys) {
@@ -204,8 +169,12 @@ void flecs_system_fini(ecs_system_t *sys) {
         sys->ctx_free(sys->ctx);
     }
 
-    if (sys->binding_ctx_free) {
-        sys->binding_ctx_free(sys->binding_ctx);
+    if (sys->callback_ctx_free) {
+        sys->callback_ctx_free(sys->callback_ctx);
+    }
+
+    if (sys->run_ctx_free) {
+        sys->run_ctx_free(sys->run_ctx);
     }
 
     flecs_poly_free(sys, ecs_system_t);
@@ -287,10 +256,12 @@ ecs_entity_t ecs_system_init(
         system->action = desc->callback;
 
         system->ctx = desc->ctx;
-        system->binding_ctx = desc->binding_ctx;
+        system->callback_ctx = desc->callback_ctx;
+        system->run_ctx = desc->run_ctx;
 
         system->ctx_free = desc->ctx_free;
-        system->binding_ctx_free = desc->binding_ctx_free;
+        system->callback_ctx_free = desc->callback_ctx_free;
+        system->run_ctx_free = desc->run_ctx_free;
 
         system->tick_source = desc->tick_source;
 
@@ -312,6 +283,7 @@ ecs_entity_t ecs_system_init(
         if (desc->run) {
             system->run = desc->run;
         }
+
         if (desc->callback) {
             system->action = desc->callback;
         }
@@ -321,30 +293,51 @@ ecs_entity_t ecs_system_init(
                 system->ctx_free(system->ctx);
             }
         }
-        if (system->binding_ctx_free) {
-            if (system->binding_ctx && system->binding_ctx != desc->binding_ctx) {
-                system->binding_ctx_free(system->binding_ctx);
+
+        if (system->callback_ctx_free) {
+            if (system->callback_ctx && system->callback_ctx != desc->callback_ctx) {
+                system->callback_ctx_free(system->callback_ctx);
+            }
+        }
+
+        if (system->run_ctx_free) {
+            if (system->run_ctx && system->run_ctx != desc->run_ctx) {
+                system->run_ctx_free(system->run_ctx);
             }
         }
 
         if (desc->ctx) {
             system->ctx = desc->ctx;
         }
-        if (desc->binding_ctx) {
-            system->binding_ctx = desc->binding_ctx;
+
+        if (desc->callback_ctx) {
+            system->callback_ctx = desc->callback_ctx;
         }
+
+        if (desc->run_ctx) {
+            system->run_ctx = desc->run_ctx;
+        }
+
         if (desc->ctx_free) {
             system->ctx_free = desc->ctx_free;
         }
-        if (desc->binding_ctx_free) {
-            system->binding_ctx_free = desc->binding_ctx_free;
+
+        if (desc->callback_ctx_free) {
+            system->callback_ctx_free = desc->callback_ctx_free;
         }
+
+        if (desc->run_ctx_free) {
+            system->run_ctx_free = desc->run_ctx_free;
+        }
+
         if (desc->query.flags & EcsQueryIsInstanced) {
             ECS_BIT_SET(system->query->flags, EcsQueryIsInstanced);
         }
+
         if (desc->multi_threaded) {
             system->multi_threaded = desc->multi_threaded;
         }
+
         if (desc->immediate) {
             system->immediate = desc->immediate;
         }
@@ -357,6 +350,13 @@ ecs_entity_t ecs_system_init(
     return entity;
 error:
     return 0;
+}
+
+const ecs_system_t* ecs_system_get(
+    const ecs_world_t *world,
+    ecs_entity_t entity)
+{
+    return flecs_poly_get(world, entity, ecs_system_t);
 }
 
 void FlecsSystemImport(

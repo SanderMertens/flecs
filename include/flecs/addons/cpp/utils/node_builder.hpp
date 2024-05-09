@@ -61,8 +61,8 @@ private:
     T build(Func&& func) {
         auto ctx = FLECS_NEW(Delegate)(FLECS_FWD(func));
         desc_.callback = Delegate::run;
-        desc_.binding_ctx = ctx;
-        desc_.binding_ctx_free = reinterpret_cast<
+        desc_.callback_ctx = ctx;
+        desc_.callback_ctx_free = reinterpret_cast<
             ecs_ctx_free_t>(_::free_obj<Delegate>);
         
         return T(world_, &desc_, instanced_);

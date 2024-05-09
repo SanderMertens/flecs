@@ -2414,14 +2414,14 @@ void Trigger_set_get_context(void) {
     });
     test_assert(t != 0);
 
-    test_assert(ecs_observer_get_ctx(world, t) == &ctx_a);
+    test_assert(ecs_observer_get(world, t)->ctx == &ctx_a);
 
     test_assert(ecs_observer_init(world, &(ecs_observer_desc_t){
         .entity = t,
         .ctx = &ctx_b
     }) == t);
 
-    test_assert(ecs_observer_get_ctx(world, t) == &ctx_b);
+    test_assert(ecs_observer_get(world, t)->ctx == &ctx_b);
 
     ecs_fini(world);
 }
@@ -2437,18 +2437,18 @@ void Trigger_set_get_binding_context(void) {
         .query.terms[0].id = Tag,
         .events = {EcsOnAdd},
         .callback = Trigger,
-        .binding_ctx = &ctx_a
+        .callback_ctx = &ctx_a
     });
     test_assert(t != 0);
 
-    test_assert(ecs_observer_get_binding_ctx(world, t) == &ctx_a);
+    test_assert(ecs_observer_get(world, t)->callback_ctx == &ctx_a);
 
     test_assert(ecs_observer_init(world, &(ecs_observer_desc_t){
         .entity = t,
-        .binding_ctx = &ctx_b
+        .callback_ctx = &ctx_b
     }) == t);
 
-    test_assert(ecs_observer_get_binding_ctx(world, t) == &ctx_b);
+    test_assert(ecs_observer_get(world, t)->callback_ctx == &ctx_b);
 
     ecs_fini(world);
 }
@@ -2478,13 +2478,13 @@ void Trigger_delete_trigger_w_delete_ctx(void) {
         .callback = Trigger,
         .ctx = &ctx_value,
         .ctx_free = ctx_free,
-        .binding_ctx = &binding_ctx_value,
-        .binding_ctx_free = binding_ctx_free
+        .callback_ctx = &binding_ctx_value,
+        .callback_ctx_free = binding_ctx_free
     });
     test_assert(t != 0);
 
-    test_assert(ecs_observer_get_ctx(world, t) == &ctx_value);
-    test_assert(ecs_observer_get_binding_ctx(world, t) == &binding_ctx_value);
+    test_assert(ecs_observer_get(world, t)->ctx == &ctx_value);
+    test_assert(ecs_observer_get(world, t)->callback_ctx == &binding_ctx_value);
 
     ecs_delete(world, t);
 

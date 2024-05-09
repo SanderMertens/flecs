@@ -1156,7 +1156,7 @@ void System_w_ctx(ecs_iter_t *it) {
 
 static
 void System_w_binding_ctx(ecs_iter_t *it) {
-    test_assert(it->binding_ctx == &system_ctx);
+    test_assert(it->callback_ctx == &system_ctx);
     test_assert(it->system != 0);
     test_assert(it->delta_time != 0);
     system_ctx ++;
@@ -1202,7 +1202,7 @@ void MultiThread_get_binding_ctx(void) {
         .entity = ecs_entity(world, { .add = ecs_ids( ecs_dependson(EcsOnUpdate) ) }),
         .callback = System_w_binding_ctx,
         .multi_threaded = true,
-        .binding_ctx = &system_ctx
+        .callback_ctx = &system_ctx
     });
 
     ecs_progress(world, 0);
@@ -1240,7 +1240,7 @@ void MultiThread_get_binding_ctx_w_run(void) {
         .entity = ecs_entity(world, { .add = ecs_ids( ecs_dependson(EcsOnUpdate) ) }),
         .run = System_run_w_binding_ctx,
         .multi_threaded = true,
-        .binding_ctx = &system_ctx
+        .callback_ctx = &system_ctx
     });
 
     ecs_progress(world, 0);
