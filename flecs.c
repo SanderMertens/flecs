@@ -71383,7 +71383,7 @@ ecs_entity_t flecs_run_intern(
     ecs_entity_t old_system = flecs_stage_set_system(stage, system);
     ecs_iter_action_t action = system_data->action;
     it->callback = action;
-    
+
     ecs_run_action_t run = system_data->run;
     if (run) {
         run(it);

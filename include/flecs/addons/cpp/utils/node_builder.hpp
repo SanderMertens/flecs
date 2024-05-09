@@ -30,24 +30,44 @@ public:
         desc_.entity = ecs_entity_init(world_, &entity_desc);
     }
 
-    /* Iter (or each) is mandatory and always the last thing that 
-     * is added in the fluent method chain. Create system signature from both 
-     * template parameters and anything provided by the signature method. */
     template <typename Func>
-    T iter(Func&& func) {
-        using Delegate = typename _::iter_delegate<
-            typename std::decay<Func>::type, Components...>;
-        return build<Delegate>(FLECS_FWD(func));
+    T run(Func&& func) {
+        using Delegate = typename _::run_delegate<
+            typename std::decay<Func>::type>;
+
+        auto ctx = FLECS_NEW(Delegate)(FLECS_FWD(func));
+        desc_.run = Delegate::run;
+        desc_.run_ctx = ctx;
+        desc_.run_ctx_free = reinterpret_cast<
+            ecs_ctx_free_t>(_::free_obj<Delegate>);
+        return T(world_, &desc_, true);
     }
 
-    /* Each is similar to action, but accepts a function that operates on a
-     * single entity */
+    template <typename Func, typename EachFunc>
+    T run(Func&& func, EachFunc&& each_func) {
+        using Delegate = typename _::run_delegate<
+            typename std::decay<Func>::type>;
+
+        auto ctx = FLECS_NEW(Delegate)(FLECS_FWD(func));
+        desc_.run = Delegate::run;
+        desc_.run_ctx = ctx;
+        desc_.run_ctx_free = reinterpret_cast<
+            ecs_ctx_free_t>(_::free_obj<Delegate>);
+        return each(FLECS_FWD(each_func));
+    }
+
     template <typename Func>
     T each(Func&& func) {
         using Delegate = typename _::each_delegate<
             typename std::decay<Func>::type, Components...>;
         instanced_ = true;
-        return build<Delegate>(FLECS_FWD(func));
+
+        auto ctx = FLECS_NEW(Delegate)(FLECS_FWD(func));
+        desc_.callback = Delegate::run;
+        desc_.callback_ctx = ctx;
+        desc_.callback_ctx_free = reinterpret_cast<
+            ecs_ctx_free_t>(_::free_obj<Delegate>);
+        return T(world_, &desc_, true);
     }
 
 protected:
@@ -55,18 +75,6 @@ protected:
     TDesc desc_;
     flecs::world_t *world_;
     bool instanced_;
-
-private:
-    template <typename Delegate, typename Func>
-    T build(Func&& func) {
-        auto ctx = FLECS_NEW(Delegate)(FLECS_FWD(func));
-        desc_.callback = Delegate::run;
-        desc_.callback_ctx = ctx;
-        desc_.callback_ctx_free = reinterpret_cast<
-            ecs_ctx_free_t>(_::free_obj<Delegate>);
-        
-        return T(world_, &desc_, instanced_);
-    }
 };
 
 #undef FLECS_IBUILDER

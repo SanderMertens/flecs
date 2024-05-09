@@ -326,6 +326,24 @@ public:
      */
     flecs::entity get_var(const char *name) const;
 
+    /** Progress iterator.
+     * This operation should only be called from a context where the iterator is
+     * not being progressed automatically. An example of a valid context is
+     * inside of a run() callback. An example of an invalid context is inside of
+     * an each() callback.
+     */
+    bool next() {
+        return iter_->next(iter_);
+    }
+
+    /** Forward to each.
+     * If a system has an each callback registered, this operation will forward
+     * the current iterator to the each callback.
+     */
+    void each() {
+        iter_->callback(iter_);
+    }
+
 private:
     /* Get field, check if correct type is used */
     template <typename T, typename A = actual_type_t<T>>

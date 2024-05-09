@@ -503,81 +503,28 @@ private:
 //// Utility class to invoke a system iterate action
 ////////////////////////////////////////////////////////////////////////////////
 
-template <typename Func, typename ... Components>
-struct iter_delegate : delegate {
-private:
-    static constexpr bool IterOnly = arity<Func>::value == 1;
-
-    using Terms = typename term_ptrs<Components ...>::array;
-
-public:
+template <typename Func>
+struct run_delegate : delegate {
     template < if_not_t< is_same< decay_t<Func>, decay_t<Func>& >::value > = 0>
-    explicit iter_delegate(Func&& func) noexcept 
+    explicit run_delegate(Func&& func) noexcept 
         : func_(FLECS_MOV(func)) { }
 
-    explicit iter_delegate(const Func& func) noexcept 
+    explicit run_delegate(const Func& func) noexcept 
         : func_(func) { }
 
     // Invoke object directly. This operation is useful when the calling
     // function has just constructed the delegate, such as what happens when
     // iterating a query.
     void invoke(ecs_iter_t *iter) const {
-        term_ptrs<Components...> terms;
-        terms.populate(iter);
-        invoke_callback(iter, func_, 0, terms.terms_);
+        flecs::iter it(iter);
+        func_(it);
     }
 
     // Static function that can be used as callback for systems/triggers
     static void run(ecs_iter_t *iter) {
-        auto self = static_cast<const iter_delegate*>(iter->callback_ctx);
+        auto self = static_cast<const run_delegate*>(iter->run_ctx);
         ecs_assert(self != nullptr, ECS_INTERNAL_ERROR, NULL);
         self->invoke(iter);
-    }
-
-    // Instancing needs to be enabled explicitly for iter delegates
-    static bool instanced() {
-        return false;
-    }
-
-private:
-    template <typename... Args, if_t<!sizeof...(Args) && IterOnly> = 0>
-    static void invoke_callback(ecs_iter_t *iter, const Func& func, 
-        size_t, Terms&, Args...) 
-    {
-        flecs::iter it(iter);
-
-        ECS_TABLE_LOCK(iter->world, iter->table);
-
-        func(it);
-
-        ECS_TABLE_UNLOCK(iter->world, iter->table);
-    }
-
-    template <typename... Targs, if_t<!IterOnly &&
-        (sizeof...(Targs) == sizeof...(Components))> = 0>
-    static void invoke_callback(ecs_iter_t *iter, const Func& func, size_t, 
-        Terms&, Targs... comps) 
-    {
-        flecs::iter it(iter);
-
-        ECS_TABLE_LOCK(iter->world, iter->table);
-
-        func(it, ( static_cast< 
-            remove_reference_t< 
-                remove_pointer_t< 
-                    actual_type_t<Components> > >* >
-                        (comps.ptr))...);
-
-        ECS_TABLE_UNLOCK(iter->world, iter->table);
-    }
-
-    template <typename... Targs, if_t<!IterOnly &&
-        (sizeof...(Targs) != sizeof...(Components)) > = 0>
-    static void invoke_callback(ecs_iter_t *iter, const Func& func, 
-        size_t index, Terms& columns, Targs... comps) 
-    {
-        invoke_callback(iter, func, index + 1, columns, comps..., 
-            columns[index]);
     }
 
     Func func_;
