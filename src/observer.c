@@ -402,7 +402,8 @@ void flecs_uni_observer_invoke(
     ECS_BIT_COND(it->flags, EcsIterNoData, is_filter);
     it->system = o->entity;
     it->ctx = o->ctx;
-    it->binding_ctx = o->binding_ctx;
+    it->callback_ctx = o->callback_ctx;
+    it->run_ctx = o->run_ctx;
     it->term_index = impl->term_index;
     it->query = o->query;
 
@@ -531,7 +532,8 @@ bool flecs_multi_observer_invoke(
         user_it.term_index = pivot_term;
 
         user_it.ctx = o->ctx;
-        user_it.binding_ctx = o->binding_ctx;
+        user_it.callback_ctx = o->callback_ctx;
+        user_it.run_ctx = o->run_ctx;
         user_it.param = it->param;
         user_it.callback = o->callback;
         user_it.system = o->entity;
@@ -632,7 +634,8 @@ void flecs_observer_yield_existing(
         ecs_iter_t it = ecs_query_iter(world, o->query);
         it.system = o->entity;
         it.ctx = o;
-        it.binding_ctx = o->binding_ctx;
+        it.callback_ctx = o->callback_ctx;
+        it.run_ctx = o->run_ctx;
         it.event = o->events[i];;
         while (ecs_query_next(&it)) {
             it.event_id = it.ids[0];
@@ -744,8 +747,10 @@ int flecs_multi_observer_init(
     child_desc.ctx = o;
     child_desc.ctx_free = NULL;
     child_desc.query.expr = NULL;
-    child_desc.binding_ctx = NULL;
-    child_desc.binding_ctx_free = NULL;
+    child_desc.callback_ctx = NULL;
+    child_desc.callback_ctx_free = NULL;
+    child_desc.run_ctx = NULL;
+    child_desc.run_ctx_free = NULL;
     child_desc.yield_existing = false;
     ecs_os_zeromem(&child_desc.entity);
     ecs_os_zeromem(&child_desc.query.terms);
@@ -923,9 +928,11 @@ ecs_observer_t* flecs_observer_init(
     o->run = desc->run;
     o->callback = desc->callback;
     o->ctx = desc->ctx;
-    o->binding_ctx = desc->binding_ctx;
+    o->callback_ctx = desc->callback_ctx;
+    o->run_ctx = desc->run_ctx;
     o->ctx_free = desc->ctx_free;
-    o->binding_ctx_free = desc->binding_ctx_free;
+    o->callback_ctx_free = desc->callback_ctx_free;
+    o->run_ctx_free = desc->run_ctx_free;
     o->observable = observable;
     o->entity = entity;
     impl->term_index = desc->term_index;
@@ -1132,11 +1139,19 @@ ecs_entity_t ecs_observer_init(
             }
         }
 
-        if (o->binding_ctx_free) {
-            if (o->binding_ctx && 
-                o->binding_ctx != desc->binding_ctx) 
+        if (o->callback_ctx_free) {
+            if (o->callback_ctx && 
+                o->callback_ctx != desc->callback_ctx) 
             {
-                o->binding_ctx_free(o->binding_ctx);
+                o->callback_ctx_free(o->callback_ctx);
+            }
+        }
+
+        if (o->run_ctx_free) {
+            if (o->run_ctx && 
+                o->run_ctx != desc->run_ctx) 
+            {
+                o->run_ctx_free(o->run_ctx);
             }
         }
 
@@ -1144,16 +1159,24 @@ ecs_entity_t ecs_observer_init(
             o->ctx = desc->ctx;
         }
 
-        if (desc->binding_ctx) {
-            o->binding_ctx = desc->binding_ctx;
+        if (desc->callback_ctx) {
+            o->callback_ctx = desc->callback_ctx;
+        }
+
+        if (desc->run_ctx) {
+            o->run_ctx = desc->run_ctx;
         }
 
         if (desc->ctx_free) {
             o->ctx_free = desc->ctx_free;
         }
 
-        if (desc->binding_ctx_free) {
-            o->binding_ctx_free = desc->binding_ctx_free;
+        if (desc->callback_ctx_free) {
+            o->callback_ctx_free = desc->callback_ctx_free;
+        }
+
+        if (desc->run_ctx_free) {
+            o->run_ctx_free = desc->run_ctx_free;
         }
     }
 
@@ -1167,43 +1190,11 @@ error:
     return 0;
 }
 
-void* ecs_observer_get_ctx(
+const ecs_observer_t* ecs_observer_get(
     const ecs_world_t *world,
     ecs_entity_t observer)
 {
-    const EcsPoly *o = flecs_poly_bind_get(world, observer, ecs_observer_t);
-    if (o) {
-        flecs_poly_assert(o->poly, ecs_observer_t);
-        return ((ecs_observer_t*)o->poly)->ctx;
-    } else {
-        return NULL;
-    }     
-}
-
-void* ecs_observer_get_binding_ctx(
-    const ecs_world_t *world,
-    ecs_entity_t observer)
-{
-    const EcsPoly *o = flecs_poly_bind_get(world, observer, ecs_observer_t);
-    if (o) {
-        flecs_poly_assert(o->poly, ecs_observer_t);
-        return ((ecs_observer_t*)o->poly)->binding_ctx;
-    } else {
-        return NULL;
-    }      
-}
-
-const ecs_query_t* ecs_observer_get_query(
-    const ecs_world_t *world,
-    ecs_entity_t observer)
-{
-    const EcsPoly *o = flecs_poly_bind_get(world, observer, ecs_observer_t);
-    if (o) {
-        flecs_poly_assert(o->poly, ecs_observer_t);
-        return ((ecs_observer_t*)o->poly)->query;
-    } else {
-        return NULL;
-    }   
+    return flecs_poly_get(world, observer, ecs_observer_t);
 }
 
 void flecs_observer_fini(
@@ -1244,8 +1235,12 @@ void flecs_observer_fini(
         o->ctx_free(o->ctx);
     }
 
-    if (o->binding_ctx_free) {
-        o->binding_ctx_free(o->binding_ctx);
+    if (o->callback_ctx_free) {
+        o->callback_ctx_free(o->callback_ctx);
+    }
+
+    if (o->run_ctx_free) {
+        o->run_ctx_free(o->run_ctx);
     }
 
     flecs_poly_fini(o, ecs_observer_t);

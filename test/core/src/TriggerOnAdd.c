@@ -734,7 +734,7 @@ void TriggerOnAdd_sys_context(void) {
         .entity = ecs_entity(world, {.id = TestContext}), .ctx = &param
     });
 
-    test_assert(ecs_observer_get_ctx(world, TestContext) == &param);
+    test_assert(ecs_observer_get(world, TestContext)->ctx == &param);
 
     ecs_fini(world);
 }

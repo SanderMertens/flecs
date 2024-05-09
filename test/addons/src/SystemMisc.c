@@ -1018,7 +1018,7 @@ void SystemMisc_get_query(void) {
     ecs_insert(world, ecs_value(Position, {1, 0}));
     ecs_insert(world, ecs_value(Position, {2, 0}));
 
-    ecs_query_t *q = ecs_system_get_query(world, Dummy);
+    ecs_query_t *q = ecs_system_get(world, Dummy)->query;
     test_assert(q != NULL);
 
     int32_t count = 0;
@@ -1057,14 +1057,14 @@ void SystemMisc_set_get_context(void) {
     });
     test_assert(s != 0);
 
-    test_assert(ecs_system_get_ctx(world, s) == &ctx_a);
+    test_assert(ecs_system_get(world, s)->ctx == &ctx_a);
 
     test_assert(ecs_system_init(world, &(ecs_system_desc_t){
         .entity = s,
         .ctx = &ctx_b
     }) == s);
 
-    test_assert(ecs_system_get_ctx(world, s) == &ctx_b);
+    test_assert(ecs_system_get(world, s)->ctx == &ctx_b);
 
     ecs_fini(world);
 }
@@ -1080,18 +1080,18 @@ void SystemMisc_set_get_binding_context(void) {
         .entity = ecs_entity(world, {.name = "MySystem"}),
         .query.terms = {{Tag}},
         .callback = Dummy,
-        .binding_ctx = &ctx_a
+        .callback_ctx = &ctx_a
     });
     test_assert(s != 0);
 
-    test_assert(ecs_system_get_binding_ctx(world, s) == &ctx_a);
+    test_assert(ecs_system_get(world, s)->callback_ctx == &ctx_a);
 
     test_assert(ecs_system_init(world, &(ecs_system_desc_t){
         .entity = s,
-        .binding_ctx = &ctx_b
+        .callback_ctx = &ctx_b
     }) == s);
 
-    test_assert(ecs_system_get_binding_ctx(world, s) == &ctx_b);
+    test_assert(ecs_system_get(world, s)->callback_ctx == &ctx_b);
 
     ecs_fini(world);
 }
@@ -1204,7 +1204,7 @@ void ctx_free(void *ctx) {
 
 static int binding_ctx_value;
 static
-void binding_ctx_free(void *ctx) {
+void callback_ctx_free(void *ctx) {
     test_assert(&binding_ctx_value == ctx);
     binding_ctx_value ++;
 }
@@ -1234,13 +1234,13 @@ void SystemMisc_delete_system_w_ctx(void) {
         .callback = Dummy,
         .ctx = &ctx_value,
         .ctx_free = ctx_free,
-        .binding_ctx = &binding_ctx_value,
-        .binding_ctx_free = binding_ctx_free
+        .callback_ctx = &binding_ctx_value,
+        .callback_ctx_free = callback_ctx_free
     });
     test_assert(system != 0);
 
-    test_assert(ecs_system_get_ctx(world, system) == &ctx_value);
-    test_assert(ecs_system_get_binding_ctx(world, system) 
+    test_assert(ecs_system_get(world, system)->ctx == &ctx_value);
+    test_assert(ecs_system_get(world, system)->callback_ctx 
         == &binding_ctx_value);
 
     ecs_set_ctx(world, &ctx, NULL);
@@ -1268,21 +1268,21 @@ void SystemMisc_update_ctx(void) {
         .callback = Dummy,
         .ctx = &ctx_value,
         .ctx_free = ctx_free,
-        .binding_ctx = &binding_ctx_value,
-        .binding_ctx_free = binding_ctx_free
+        .callback_ctx = &binding_ctx_value,
+        .callback_ctx_free = callback_ctx_free
     });
     test_assert(system != 0);
 
-    test_assert(ecs_system_get_ctx(world, system) == &ctx_value);
-    test_assert(ecs_system_get_binding_ctx(world, system) 
+    test_assert(ecs_system_get(world, system)->ctx == &ctx_value);
+    test_assert(ecs_system_get(world, system)->callback_ctx 
         == &binding_ctx_value);
 
     ecs_system(world, {
         .entity = system,
         .ctx = &ctx_value,
         .ctx_free = ctx_free,
-        .binding_ctx = &binding_ctx_value,
-        .binding_ctx_free = binding_ctx_free
+        .callback_ctx = &binding_ctx_value,
+        .callback_ctx_free = callback_ctx_free
     });
 
     test_int(ctx_value, 0);
@@ -1294,8 +1294,8 @@ void SystemMisc_update_ctx(void) {
         .entity = system,
         .ctx = &ctx_value_2,
         .ctx_free = ctx_free_2,
-        .binding_ctx = &binding_ctx_value_2,
-        .binding_ctx_free = binding_ctx_free_2
+        .callback_ctx = &binding_ctx_value_2,
+        .callback_ctx_free = binding_ctx_free_2
     });
 
     test_int(ctx_value, 1);

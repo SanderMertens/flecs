@@ -34,11 +34,11 @@ struct observer final : entity
     }
 
     void* ctx() const {
-        return ecs_observer_get_ctx(world_, id_);
+        return ecs_observer_get(world_, id_)->ctx;
     }
 
     flecs::query<> query() const {
-        return flecs::query<>(ecs_observer_get_query(world_, id_));
+        return flecs::query<>(ecs_observer_get(world_, id_)->query);
     }
 };
 
