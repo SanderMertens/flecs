@@ -9,4 +9,6 @@ USTRUCT(BlueprintType)
 struct UNREALFLECS_API FFlecsNetworkTrait
 {
     GENERATED_BODY()
+
+public:
 }; // struct FFlecsNetworkTrait

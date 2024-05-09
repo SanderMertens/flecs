@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "flecs.h"
-#include "Macros.h"
+#include "SolidMacros/Macros.h"
 #include "FlecsQuery.generated.h"
 
 USTRUCT(BlueprintType)
@@ -33,16 +33,6 @@ public:
         return Query.changed();
     }
 
-    FORCEINLINE NO_DISCARD bool IsOrphaned() const
-    {
-        return Query.orphaned();
-    }
-
-    FORCEINLINE NO_DISCARD flecs::world GetWorld() const
-    {
-        return Query.world();
-    }
-
     FORCEINLINE NO_DISCARD flecs::query<> GetQuery() const
     {
         return Query;
@@ -53,7 +43,7 @@ public:
         return Query.count();
     }
 
-    FORCEINLINE NO_DISCARD int32 GetFieldCount() const
+    FORCEINLINE NO_DISCARD int32 GetFieldCount()
     {
         return Query.field_count();
     }
@@ -65,12 +55,12 @@ public:
 
     FORCEINLINE NO_DISCARD FString ToString() const
     {
-        return static_cast<FString>(Query.str());
+        return static_cast<FString>(const_cast<flecs::query<>*>(&Query)->str());
     }
 
     FORCEINLINE NO_DISCARD FFlecsEntityHandle GetEntity() const
     {
-        return FFlecsEntityHandle(Query.entity());
+        return FFlecsEntityHandle(const_cast<flecs::entity*>(Query.entity()));
     }
 
     FORCEINLINE NO_DISCARD bool operator==(const FFlecsQuery& Other) const

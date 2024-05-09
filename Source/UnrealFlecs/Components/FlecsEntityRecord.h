@@ -15,6 +15,29 @@ enum class EFlecsComponentNodeType : uint8
 	FGameplayTag = 2,
 }; // enum class EFlecsComponentNodeType
 
+
+USTRUCT(BlueprintType)
+struct UNREALFLECS_API FFlecsTraitTypeInfo final
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Component Tree")
+	EFlecsComponentNodeType NodeType = EFlecsComponentNodeType::ScriptStruct;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Component Tree",
+		meta = (EditCondition = "NodeType == EFlecsComponentTreeNodeType::ScriptStruct", EditConditionHides))
+	FInstancedStruct ScriptStruct;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Component Tree",
+		meta = (EditCondition = "NodeType == EFlecsComponentTreeNodeType::EntityHandle", EditConditionHides))
+	FFlecsEntityHandle EntityHandle;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Component Tree",
+		meta = (EditCondition = "NodeType == EFlecsComponentTreeNodeType::FGameplayTag", EditConditionHides))
+	FGameplayTag GameplayTag;
+	
+}; // struct FFlecsTraitTypeInfo
+
 USTRUCT(BlueprintType)
 struct UNREALFLECS_API FFlecsComponentTypeInfo final
 {
@@ -34,6 +57,9 @@ struct UNREALFLECS_API FFlecsComponentTypeInfo final
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Component Tree",
 		meta = (EditCondition = "NodeType == EFlecsComponentTreeNodeType::FGameplayTag", EditConditionHides))
 	FGameplayTag GameplayTag;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Component Tree")
+	TArray<FFlecsTraitTypeInfo> Traits;
 	
 }; // struct FFlecsComponentTypeInfo
 
@@ -55,7 +81,7 @@ struct UNREALFLECS_API FFlecsEntityRecord
 			EntityHandle.SetName(Name);
 		}
 
-		for (const auto& [NodeType, ScriptStruct, EntityHandle, GameplayTag] : Components)
+		for (const auto& [NodeType, ScriptStruct, EntityHandle, GameplayTag, Traits] : Components)
 		{
 			switch (NodeType)
 			{

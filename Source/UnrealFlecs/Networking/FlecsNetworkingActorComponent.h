@@ -65,9 +65,7 @@ public:
 
 			TArray<FNetworkedEntityInfo> Entities;
 			FlecsWorld->World.query_builder<FFlecsNetworkIdComponent>()
-			.term(flecs::Trait)
-				.and_()
-				.inout_none()
+			.with(flecs::Name)
 			.read<FFlecsNetworkIdComponent>()
 			.build()
 			.each([&](const FFlecsEntityHandle& Entity, const FFlecsNetworkIdComponent& NetworkId)
