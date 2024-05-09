@@ -28,11 +28,6 @@
 #define FLECS_JSON
 #endif
 
-/* Query engine used */
-#ifndef FLECS_RULES
-#define FLECS_RULES
-#endif
-
 /* For the REST system */
 #ifndef FLECS_PIPELINE
 #define FLECS_PIPELINE

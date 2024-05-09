@@ -2439,7 +2439,6 @@ PREDEFINED             = FLECS_APP \
                          FLECS_PIPELINE \
                          FLECS_SCRIPT \
                          FLECS_REST \
-                         FLECS_RULES \
                          FLECS_STATS \
                          FLECS_SYSTEM \
                          FLECS_TIMER \

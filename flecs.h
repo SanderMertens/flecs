@@ -10647,11 +10647,6 @@ const char* ecs_http_get_param(
 #define FLECS_JSON
 #endif
 
-/* Query engine used */
-#ifndef FLECS_RULES
-#define FLECS_RULES
-#endif
-
 /* For the REST system */
 #ifndef FLECS_PIPELINE
 #define FLECS_PIPELINE
@@ -12129,10 +12124,6 @@ void FlecsMetricsImport(
 
 #ifndef FLECS_ALERTS_H
 #define FLECS_ALERTS_H
-
-#ifndef FLECS_RULES
-#define FLECS_RULES
-#endif
 
 #ifndef FLECS_PIPELINE
 #define FLECS_PIPELINE
@@ -21351,7 +21342,6 @@ public:
         return iter_->group_id;
     }
 
-#ifdef FLECS_RULES
     /** Get value of variable by id.
      * Get value of a query variable for current result.
      */
@@ -21361,7 +21351,6 @@ public:
      * Get value of a query variable for current result.
      */
     flecs::entity get_var(const char *name) const;
-#endif
 
 private:
     /* Get field, check if correct type is used */
@@ -30753,7 +30742,6 @@ inline flecs::field<A> iter::field(int32_t index) const {
     return get_field<A>(index);
 }
 
-#ifdef FLECS_RULES
 inline flecs::entity iter::get_var(int var_id) const {
     ecs_assert(var_id != -1, ECS_INVALID_PARAMETER, 0);
     return flecs::entity(iter_->world, ecs_iter_get_var(iter_, var_id));
@@ -30769,7 +30757,6 @@ inline flecs::entity iter::get_var(const char *name) const {
     ecs_assert(var_id != -1, ECS_INVALID_PARAMETER, name);
     return flecs::entity(iter_->world, ecs_iter_get_var(iter_, var_id));
 }
-#endif
 
 } // namespace flecs
 

@@ -316,7 +316,6 @@ public:
         return iter_->group_id;
     }
 
-#ifdef FLECS_RULES
     /** Get value of variable by id.
      * Get value of a query variable for current result.
      */
@@ -326,7 +325,6 @@ public:
      * Get value of a query variable for current result.
      */
     flecs::entity get_var(const char *name) const;
-#endif
 
 private:
     /* Get field, check if correct type is used */
