@@ -34,32 +34,35 @@ int main(int, char *[]) {
         .set<Velocity>({4, 5})
         .set<Mass>({50});
 
-    // The iter function provides a flecs::iter object which contains all sorts
+    // The run() function provides a flecs::iter object which contains all sorts
     // of information on the entities currently being iterated.
-    // The function passed to iter is by default called for each table the query
-    // is matched with.
-    q.iter([&](flecs::iter& it, Position *p, const Velocity *v) {
-        // Print the table & number of entities matched in current callback
-        std::cout << "Table [" << it.type().str() << "]" << std::endl;
-        std::cout << " - number of entities: " << it.count() << std::endl;
+    q.run([&](flecs::iter& it) {
+        while (it.next()) {
+            auto p = it.field<Position>(0);
+            auto v = it.field<const Velocity>(1);
 
-        // Print information about the components being matched
-        for (int i = 1; i <= it.field_count(); i ++) {
-            std::cout << " - term " << i << ": " << std::endl;
-            std::cout << "   - component: " << it.id(i).str() << std::endl;
-            std::cout << "   - type size: " << it.size(i) << std::endl;
+            // Print the table & number of entities matched in current callback
+            std::cout << "Table [" << it.type().str() << "]" << std::endl;
+            std::cout << " - number of entities: " << it.count() << std::endl;
+
+            // Print information about the components being matched
+            for (int i = 1; i <= it.field_count(); i ++) {
+                std::cout << " - term " << i << ": " << std::endl;
+                std::cout << "   - component: " << it.id(i).str() << std::endl;
+                std::cout << "   - type size: " << it.size(i) << std::endl;
+            }
+
+            std::cout << std::endl;
+
+            // Iterate entities
+            for (auto i : it) {
+                p[i].x += v[i].x;
+                p[i].y += v[i].y;
+                std::cout << " - " << it.entity(i).name() << 
+                    ": {" << p[i].x << ", " << p[i].y << "}\n";
+            }
+
+            std::cout << std::endl;
         }
-
-        std::cout << std::endl;
-
-        // Iterate entities
-        for (auto i : it) {
-            p[i].x += v[i].x;
-            p[i].y += v[i].y;
-            std::cout << " - " << it.entity(i).name() << 
-                ": {" << p[i].x << ", " << p[i].y << "}\n";
-        }
-
-        std::cout << std::endl;
     });
 }

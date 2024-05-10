@@ -11407,7 +11407,7 @@ typedef struct ecs_system_t {
  * the system, like the query and context.
  *
  * @param world The world.
- * @param observer The system.
+ * @param system The system.
  * @return The system object.
  */
 FLECS_API
@@ -21174,7 +21174,7 @@ public:
     }
 
     row_iterator end() const {
-        return row_iterator(iter_->count);
+        return row_iterator(static_cast<size_t>(iter_->count));
     }
 
     flecs::entity system() const;
