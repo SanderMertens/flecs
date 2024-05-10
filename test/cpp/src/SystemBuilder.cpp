@@ -325,17 +325,20 @@ void SystemBuilder_singleton_term(void) {
 
     auto s = ecs.system<Entity>()
         .with<Singleton>().singleton().in()
-        .iter([&](flecs::iter& it, Entity *e) {
-            auto s = it.field<const Singleton>(1);
-            test_assert(!it.is_self(1));
-            test_int(s->value, 10);
-            
-            const Singleton& s_ref = *s;
-            test_int(s_ref.value, 10);
+        .run([&](flecs::iter& it) {
+            while (it.next()) {
+                auto e = it.field<Entity>(0);
+                auto s = it.field<const Singleton>(1);
+                test_assert(!it.is_self(1));
+                test_int(s->value, 10);
+                
+                const Singleton& s_ref = *s;
+                test_int(s_ref.value, 10);
 
-            for (auto i : it) {
-                test_assert(it.entity(i) == e[i].value);
-                count ++;
+                for (auto i : it) {
+                    test_assert(it.entity(i) == e[i].value);
+                    count ++;
+                }
             }
         });
 
@@ -377,11 +380,13 @@ void SystemBuilder_10_terms(void) {
         .with<TagH>()
         .with<TagI>()
         .with<TagJ>()
-        .iter([&](flecs::iter& it) {
-            test_int(it.count(), 1);
-            test_assert(it.entity(0) == e);
-            test_int(it.field_count(), 10);
-            count ++;
+        .run([&](flecs::iter& it) {
+            while (it.next()) {
+                test_int(it.count(), 1);
+                test_assert(it.entity(0) == e);
+                test_int(it.field_count(), 10);
+                count ++;
+            }
         });
 
     s.run();
@@ -429,11 +434,13 @@ void SystemBuilder_16_terms(void) {
         .with<TagN>()
         .with<TagO>()
         .with<TagP>()
-        .iter([&](flecs::iter& it) {
-            test_int(it.count(), 1);
-            test_assert(it.entity(0) == e);
-            test_int(it.field_count(), 16);
-            count ++;
+        .run([&](flecs::iter& it) {
+            while (it.next()) {
+                test_int(it.count(), 1);
+                test_assert(it.entity(0) == e);
+                test_int(it.field_count(), 16);
+                count ++;
+            }
         });
 
     s.run();
@@ -446,8 +453,9 @@ void SystemBuilder_name_arg(void) {
 
     auto s = ecs.system<const Position>("MySystem")
         .term_at(0).src().name("MySystem")
-        .iter([](flecs::iter& Iter, const Position* Config)
-        { });
+        .run([](flecs::iter& it) {
+            while (it.next()) {}
+        });
 
     test_assert(s.has<Position>());
 }

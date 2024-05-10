@@ -21167,17 +21167,14 @@ public:
      *
      * @param it Pointer to C iterator.
      */
-    iter(ecs_iter_t *it) : iter_(it) {
-        begin_ = 0;
-        end_ = static_cast<std::size_t>(it->count);
-    }
+    iter(ecs_iter_t *it) : iter_(it) { }
 
     row_iterator begin() const {
-        return row_iterator(begin_);
+        return row_iterator(0);
     }
 
     row_iterator end() const {
-        return row_iterator(end_);
+        return row_iterator(iter_->count);
     }
 
     flecs::entity system() const;
@@ -21193,7 +21190,11 @@ public:
     }
 
     size_t count() const {
+        ecs_check(iter_->flags & EcsIterIsValid, ECS_INVALID_PARAMETER,
+            "operation invalid before calling next()");
         return static_cast<size_t>(iter_->count);
+    error:
+        return 0;
     }
 
     ecs_ftime_t delta_time() const {
@@ -21389,7 +21390,8 @@ public:
      * @return The entity ids.
      */
     flecs::field<const flecs::entity_t> entities() const {
-        return flecs::field<const flecs::entity_t>(iter_->entities, static_cast<size_t>(iter_->count), false);
+        return flecs::field<const flecs::entity_t>(
+            iter_->entities, static_cast<size_t>(iter_->count), false);
     }
 
     /** Check if the current table has changed since the last iteration.
@@ -21431,7 +21433,15 @@ public:
      * an each() callback.
      */
     bool next() {
-        return iter_->next(iter_);
+        if (iter_->flags & EcsIterIsValid && iter_->table) {
+            ECS_TABLE_UNLOCK(iter_->world, iter_->table);
+        }
+        bool result = iter_->next(iter_);
+        iter_->flags |= EcsIterIsValid;
+        if (result && iter_->table) {
+            ECS_TABLE_LOCK(iter_->world, iter_->table);
+        }
+        return result;
     }
 
     /** Forward to each.
@@ -21494,8 +21504,6 @@ private:
     }
 
     flecs::iter_t *iter_;
-    std::size_t begin_;
-    std::size_t end_;
 };
 
 } // namespace flecs
@@ -24495,7 +24503,10 @@ private:
     static void invoke_callback(
         ecs_iter_t *iter, const Func& func, size_t i, Args... comps) 
     {
-        func(flecs::entity(iter->world, iter->entities[i]),
+        ecs_assert(iter->count > 0, ECS_INVALID_OPERATION,
+            "no entities returned, use each() without flecs::entity argument");
+
+        return func(flecs::entity(iter->world, iter->entities[i]),
             (ColumnType< remove_reference_t<Components> >(comps, i)
                 .get_row())...);
     }
@@ -24521,7 +24532,6 @@ private:
             .get_row())...);
     }
 
-    // func(flecs::entity, Components...)
     template <template<typename X, typename = int> class ColumnType, 
         typename... Args, if_t< 
             sizeof...(Components) == sizeof...(Args)> = 0>
@@ -24531,6 +24541,7 @@ private:
         ECS_TABLE_LOCK(iter->world, iter->table);
 
         size_t count = static_cast<size_t>(iter->count);
+<<<<<<< HEAD
 <<<<<<< HEAD
 
         for (size_t i = 0; i < count; i ++) {
@@ -24551,11 +24562,14 @@ private:
         ecs_iter_t *iter, const Func& func, size_t, Terms&, Args... comps) 
     {
         size_t count = static_cast<size_t>(iter->count);
+=======
+>>>>>>> 66e7c592c (Fix each/iter/run tests)
         if (count == 0 && !iter->table) {
             // If query has no This terms, count can be 0. Since each does not
             // have an entity parameter, just pass through components
             count = 1;
         }
+<<<<<<< HEAD
 
         flecs::iter it(iter);
 
@@ -24593,6 +24607,8 @@ private:
 =======
         ecs_assert(count > 0, ECS_INVALID_OPERATION,
             "no entities returned, use each() without flecs::entity argument");
+=======
+>>>>>>> 66e7c592c (Fix each/iter/run tests)
 
         for (size_t i = 0; i < count; i ++) {
             invoke_callback<ColumnType>(iter, func, i, comps...);
@@ -24787,6 +24803,7 @@ struct run_delegate : delegate {
     // iterating a query.
     void invoke(ecs_iter_t *iter) const {
         flecs::iter it(iter);
+        iter->flags &= ~EcsIterIsValid;
         func_(it);
     }
 
@@ -26398,37 +26415,57 @@ struct iterable {
      */
     template <typename Func>
     void each(Func&& func) const {
-        each(nullptr, FLECS_FWD(func));
+        ecs_iter_t it = this->get_iter(nullptr);
+        ECS_BIT_SET(it.flags, EcsIterIsInstanced);
+        ecs_iter_next_action_t next = this->next_each_action();
+        while (next(&it)) {
+            _::each_delegate<Func, Components...>(func).invoke(&it);
+        }
     }
 
+    /** Run iterator.
+     * The "each" iterator accepts a function that is invoked once for a query
+     * with a valid iterator. The following signature is valid:
+     *  - func(flecs::iter&)
+     */
     template <typename Func>
-    void each(flecs::world_t *world, Func&& func) const {
-        iterate<_::each_delegate>(world, FLECS_FWD(func), 
-            this->next_each_action());
-    }
-
-    template <typename Func>
-    void each(flecs::iter& it, Func&& func) const {
-        iterate<_::each_delegate>(it.world(), FLECS_FWD(func),
-            this->next_each_action());
-    }
-
-    template <typename Func>
-    void each(flecs::entity e, Func&& func) const {
-        iterate<_::each_delegate>(e.world(), FLECS_FWD(func), 
-            this->next_each_action());
+    void run(Func&& func) const {
+        ecs_iter_t it = this->get_iter(nullptr);
+        _::run_delegate<Func>(func).invoke(&it);
     }
 
     template <typename Func>
     flecs::entity find(Func&& func) const {
-        return iterate_find<_::find_delegate>(nullptr, FLECS_FWD(func), 
-            this->next_each_action());
+        ecs_iter_t it = this->get_iter(nullptr);
+        ECS_BIT_SET(it.flags, EcsIterIsInstanced);
+        ecs_iter_next_action_t next = this->next_each_action();
+
+        flecs::entity result;
+        while (!result && next(&it)) {
+            result = _::find_delegate<Func, Components...>(func).invoke(&it);
+        }
+
+        if (result) {
+            ecs_iter_fini(&it);
+        }
+
+        return result;
     }
 
     /** Create iterator.
      * Create an iterator object that can be modified before iterating.
      */
     iter_iterable<Components...> iter(flecs::world_t *world = nullptr) const;
+
+    /** Create iterator.
+     * Create an iterator object that can be modified before iterating.
+     */
+    iter_iterable<Components...> iter(flecs::iter& iter) const;
+
+    /** Create iterator.
+     * Create an iterator object that can be modified before iterating.
+     */
+    iter_iterable<Components...> iter(flecs::entity e) const;
 
     /** Page iterator.
      * Create an iterator that limits the returned entities with offset/limit.
@@ -26504,35 +26541,6 @@ protected:
     virtual ecs_iter_t get_iter(flecs::world_t *stage) const = 0;
     virtual ecs_iter_next_action_t next_action() const = 0;
     virtual ecs_iter_next_action_t next_each_action() const = 0;
-
-    template < template<typename Func, typename ... Comps> class Delegate, typename Func, typename NextFunc, typename ... Args>
-    void iterate(flecs::world_t *stage, Func&& func, NextFunc next, Args &&... args) const {
-        ecs_iter_t it = this->get_iter(stage);
-        if (Delegate<Func, Components...>::instanced()) {
-            ECS_BIT_SET(it.flags, EcsIterIsInstanced);
-        }
-
-        while (next(&it, FLECS_FWD(args)...)) {
-            Delegate<Func, Components...>(func).invoke(&it);
-        }
-    }
-
-    template < template<typename Func, typename ... Comps> class Delegate, typename Func, typename NextFunc, typename ... Args>
-    flecs::entity iterate_find(flecs::world_t *stage, Func&& func, NextFunc next, Args &&... args) const {
-        ecs_iter_t it = this->get_iter(stage);
-        if (Delegate<Func, Components...>::instanced()) {
-            ECS_BIT_SET(it.flags, EcsIterIsInstanced);
-        }
-
-        flecs::entity result;
-        while (!result && next(&it, FLECS_FWD(args)...)) {
-            result = Delegate<Func, Components...>(func).invoke(&it);
-        }
-        if (result) {
-            ecs_iter_fini(&it);
-        }
-        return result;
-    }
 };
 
 template <typename ... Components>
@@ -26681,6 +26689,18 @@ template <typename ... Components>
 iter_iterable<Components...> iterable<Components...>::iter(flecs::world_t *world) const
 {
     return iter_iterable<Components...>(this, world);
+}
+
+template <typename ... Components>
+iter_iterable<Components...> iterable<Components...>::iter(flecs::iter& it) const
+{
+    return iter_iterable<Components...>(this, it.world());
+}
+
+template <typename ... Components>
+iter_iterable<Components...> iterable<Components...>::iter(flecs::entity e) const
+{
+    return iter_iterable<Components...>(this, e.world());
 }
 
 template <typename ... Components>
@@ -30315,7 +30335,7 @@ public:
         desc_.run_ctx = ctx;
         desc_.run_ctx_free = reinterpret_cast<
             ecs_ctx_free_t>(_::free_obj<Delegate>);
-        return T(world_, &desc_, true);
+        return T(world_, &desc_, false);
     }
 
     template <typename Func, typename EachFunc>

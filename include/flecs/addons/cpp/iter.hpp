@@ -75,17 +75,14 @@ public:
      *
      * @param it Pointer to C iterator.
      */
-    iter(ecs_iter_t *it) : iter_(it) {
-        begin_ = 0;
-        end_ = static_cast<std::size_t>(it->count);
-    }
+    iter(ecs_iter_t *it) : iter_(it) { }
 
     row_iterator begin() const {
-        return row_iterator(begin_);
+        return row_iterator(0);
     }
 
     row_iterator end() const {
-        return row_iterator(end_);
+        return row_iterator(iter_->count);
     }
 
     flecs::entity system() const;
@@ -101,7 +98,11 @@ public:
     }
 
     size_t count() const {
+        ecs_check(iter_->flags & EcsIterIsValid, ECS_INVALID_PARAMETER,
+            "operation invalid before calling next()");
         return static_cast<size_t>(iter_->count);
+    error:
+        return 0;
     }
 
     ecs_ftime_t delta_time() const {
@@ -297,7 +298,8 @@ public:
      * @return The entity ids.
      */
     flecs::field<const flecs::entity_t> entities() const {
-        return flecs::field<const flecs::entity_t>(iter_->entities, static_cast<size_t>(iter_->count), false);
+        return flecs::field<const flecs::entity_t>(
+            iter_->entities, static_cast<size_t>(iter_->count), false);
     }
 
     /** Check if the current table has changed since the last iteration.
@@ -339,7 +341,15 @@ public:
      * an each() callback.
      */
     bool next() {
-        return iter_->next(iter_);
+        if (iter_->flags & EcsIterIsValid && iter_->table) {
+            ECS_TABLE_UNLOCK(iter_->world, iter_->table);
+        }
+        bool result = iter_->next(iter_);
+        iter_->flags |= EcsIterIsValid;
+        if (result && iter_->table) {
+            ECS_TABLE_LOCK(iter_->world, iter_->table);
+        }
+        return result;
     }
 
     /** Forward to each.
@@ -402,8 +412,6 @@ private:
     }
 
     flecs::iter_t *iter_;
-    std::size_t begin_;
-    std::size_t end_;
 };
 
 } // namespace flecs

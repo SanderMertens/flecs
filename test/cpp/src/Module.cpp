@@ -191,7 +191,7 @@ public:
         world.module<Module_w_dtor>();
         module_ctor_invoked ++;
 
-        world.system<>().iter([](flecs::iter& it) { });
+        world.system<>().run([](flecs::iter& it) { });
     }
 
     ~Module_w_dtor() {
