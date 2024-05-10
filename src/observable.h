@@ -92,7 +92,7 @@ void flecs_emit(
     ecs_world_t *stage,
     ecs_event_desc_t *desc);
 
-bool flecs_default_observer_next_callback(
+bool flecs_default_next_callback(
     ecs_iter_t *it);
 
 void flecs_observers_invoke(

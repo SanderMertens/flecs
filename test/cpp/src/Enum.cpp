@@ -997,24 +997,26 @@ void Enum_query_union_enum(void) {
         .build();
 
     int32_t count = 0;
-    q.iter([&](flecs::iter& it) {
-        test_int(it.count(), 1);
-        if (count == 0) {
-            test_assert(it.entity(0) == e2);
-            test_assert(it.id(0) == 
-                ecs.pair<StandardEnum>(ecs.to_entity(StandardEnum::Green)));
+    q.run([&](flecs::iter& it) {
+        while (it.next()) {
+            test_int(it.count(), 1);
+            if (count == 0) {
+                test_assert(it.entity(0) == e2);
+                test_assert(it.id(0) == 
+                    ecs.pair<StandardEnum>(ecs.to_entity(StandardEnum::Green)));
+            }
+            if (count == 1) {
+                test_assert(it.entity(0) == e1);
+                test_assert(it.id(0) == 
+                    ecs.pair<StandardEnum>(ecs.to_entity(StandardEnum::Red)));
+            }
+            if (count == 2) {
+                test_assert(it.entity(0) == e3);
+                test_assert(it.id(0) == 
+                    ecs.pair<StandardEnum>(ecs.to_entity(StandardEnum::Blue)));
+            }
+            count ++;
         }
-        if (count == 1) {
-            test_assert(it.entity(0) == e1);
-            test_assert(it.id(0) == 
-                ecs.pair<StandardEnum>(ecs.to_entity(StandardEnum::Red)));
-        }
-        if (count == 2) {
-            test_assert(it.entity(0) == e3);
-            test_assert(it.id(0) == 
-                ecs.pair<StandardEnum>(ecs.to_entity(StandardEnum::Blue)));
-        }
-        count ++;
     });
 
     test_int(count, 3);

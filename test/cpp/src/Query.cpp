@@ -566,10 +566,15 @@ void Query_action(void) {
 
     auto q = world.query<Position, Velocity>();
 
-    q.iter([](flecs::iter& it, Position *p, Velocity *v) {
-        for (auto i : it) {
-            p[i].x += v[i].x;
-            p[i].y += v[i].y;
+    q.run([](flecs::iter& it) {
+        while (it.next()) {
+            auto p = it.field<Position>(0);
+            auto v = it.field<Velocity>(1);
+
+            for (auto i : it) {
+                p[i].x += v[i].x;
+                p[i].y += v[i].y;
+            }
         }
     });
 
@@ -590,10 +595,15 @@ void Query_action_const(void) {
 
     auto q = world.query<Position, const Velocity>();
 
-    q.iter([](flecs::iter& it, Position *p, const Velocity *v) {
-        for (auto i : it) {
-            p[i].x += v[i].x;
-            p[i].y += v[i].y;
+    q.run([](flecs::iter& it) {
+        while (it.next()) {
+            auto p = it.field<Position>(0);
+            auto v = it.field<const Velocity>(1);
+
+            for (auto i : it) {
+                p[i].x += v[i].x;
+                p[i].y += v[i].y;
+            }
         }
     });
 
@@ -623,7 +633,9 @@ void Query_action_shared(void) {
         .expr("Velocity(self|up IsA)")
         .build();
 
-    q.iter([](flecs::iter&it, Position *p) {
+    q.run([](flecs::iter&it) {
+        while (it.next()) {
+            auto p = it.field<Position>(0);
             auto v = it.field<const Velocity>(1);
 
             if (!it.is_self(1)) {
@@ -637,7 +649,8 @@ void Query_action_shared(void) {
                     p[i].y += v[i].y;
                 }                
             }
-        });
+        }
+    });
 
     const Position *p = e1.get<Position>();
     test_int(p->x, 11);
@@ -673,16 +686,22 @@ void Query_action_optional(void) {
 
     auto q = world.query<Position, Velocity*, Mass*>();
 
-    q.iter([](flecs::iter& it, Position *p, Velocity *v, Mass *m) {
-        if (it.is_set(1) && it.is_set(2)) {
-            for (auto i : it) {
-                p[i].x += v[i].x * m[i].value;
-                p[i].y += v[i].y * m[i].value;
-            }
-        } else {
-            for (auto i : it) {
-                p[i].x ++;
-                p[i].y ++;
+    q.run([](flecs::iter& it) {
+        while (it.next()) {
+            auto p = it.field<Position>(0);
+            auto v = it.field<Velocity>(1);
+            auto m = it.field<Mass>(2);
+
+            if (it.is_set(1) && it.is_set(2)) {
+                for (auto i : it) {
+                    p[i].x += v[i].x * m[i].value;
+                    p[i].y += v[i].y * m[i].value;
+                }
+            } else {
+                for (auto i : it) {
+                    p[i].x ++;
+                    p[i].y ++;
+                }
             }
         }
     });
@@ -853,13 +872,15 @@ void Query_signature(void) {
 
     auto q = world.query_builder<>().expr("Position, Velocity").build();
 
-    q.iter([](flecs::iter& it) {
-        auto p = it.field<Position>(0);
-        auto v = it.field<Velocity>(1);
+    q.run([](flecs::iter& it) {
+        while (it.next()) {
+            auto p = it.field<Position>(0);
+            auto v = it.field<Velocity>(1);
 
-        for (auto i : it) {
-            p[i].x += v[i].x;
-            p[i].y += v[i].y;
+            for (auto i : it) {
+                p[i].x += v[i].x;
+                p[i].y += v[i].y;
+            }
         }
     });
 
@@ -880,13 +901,15 @@ void Query_signature_const(void) {
 
     auto q = world.query_builder<>().expr("Position, [in] Velocity").build();
 
-    q.iter([](flecs::iter& it) {
-        auto p = it.field<Position>(0);
-        auto v = it.field<const Velocity>(1);
-        
-        for (auto i : it) {
-            p[i].x += v[i].x;
-            p[i].y += v[i].y;
+    q.run([](flecs::iter& it) {        
+        while (it.next()) {
+            auto p = it.field<Position>(0);
+            auto v = it.field<const Velocity>(1);
+
+            for (auto i : it) {
+                p[i].x += v[i].x;
+                p[i].y += v[i].y;
+            }
         }
     });
 
@@ -916,20 +939,22 @@ void Query_signature_shared(void) {
         .expr("Position, [in] Velocity(self|up IsA)")
         .build();
     
-    q.iter([](flecs::iter&it) {
-        auto p = it.field<Position>(0);
-        auto v = it.field<const Velocity>(1);
+    q.run([](flecs::iter&it) {
+        while (it.next()) {
+            auto p = it.field<Position>(0);
+            auto v = it.field<const Velocity>(1);
 
-        if (!it.is_self(1)) {
-            for (auto i : it) {
-                p[i].x += v->x;
-                p[i].y += v->y;
+            if (!it.is_self(1)) {
+                for (auto i : it) {
+                    p[i].x += v->x;
+                    p[i].y += v->y;
+                }
+            } else {
+                for (auto i : it) {
+                    p[i].x += v[i].x;
+                    p[i].y += v[i].y;
+                }                
             }
-        } else {
-            for (auto i : it) {
-                p[i].x += v[i].x;
-                p[i].y += v[i].y;
-            }                
         }
     });
 
@@ -967,21 +992,23 @@ void Query_signature_optional(void) {
 
     auto q = world.query_builder<>().expr("Position, ?Velocity, ?Mass").build();
 
-    q.iter([](flecs::iter& it) {
-        auto p = it.field<Position>(0);
-        auto v = it.field<const Velocity>(1);
-        auto m = it.field<const Mass>(2);
+    q.run([](flecs::iter& it) {
+        while (it.next()) {
+            auto p = it.field<Position>(0);
+            auto v = it.field<const Velocity>(1);
+            auto m = it.field<const Mass>(2);
 
-        if (it.is_set(1) && it.is_set(2)) {
-            for (auto i : it) {
-                p[i].x += v[i].x * m[i].value;
-                p[i].y += v[i].y * m[i].value;
+            if (it.is_set(1) && it.is_set(2)) {
+                for (auto i : it) {
+                    p[i].x += v[i].x * m[i].value;
+                    p[i].y += v[i].y * m[i].value;
+                }
+            } else {
+                for (auto i : it) {
+                    p[i].x ++;
+                    p[i].y ++;
+                }            
             }
-        } else {
-            for (auto i : it) {
-                p[i].x ++;
-                p[i].y ++;
-            }            
         }
     });
 
@@ -1015,11 +1042,13 @@ void Query_query_single_pair(void) {
     int32_t table_count = 0;
     int32_t entity_count = 0;
 
-    q.iter([&](flecs::iter it) {
-        table_count ++;
-        for (auto i : it) {
-            test_assert(it.entity(i) == e2);
-            entity_count ++;
+    q.run([&](flecs::iter it) {
+        while (it.next()) {
+            table_count ++;
+            for (auto i : it) {
+                test_assert(it.entity(i) == e2);
+                entity_count ++;
+            }
         }
     });
 
@@ -1079,13 +1108,16 @@ void Query_sort_by(void) {
         .order_by(compare_position)
         .build();
 
-    q.iter([](flecs::iter it, Position *p) {
-        test_int(it.count(), 5);
-        test_int(p[0].x, 1);
-        test_int(p[1].x, 2);
-        test_int(p[2].x, 4);
-        test_int(p[3].x, 5);
-        test_int(p[4].x, 6);
+    q.run([](flecs::iter it) {
+        while (it.next()) {
+            auto p = it.field<Position>(0);
+            test_int(it.count(), 5);
+            test_int(p[0].x, 1);
+            test_int(p[1].x, 2);
+            test_int(p[2].x, 4);
+            test_int(p[3].x, 5);
+            test_int(p[4].x, 6);
+        }
     });
 }
 
@@ -1199,9 +1231,11 @@ void Query_compare_term_id(void) {
         .with<Tag>()
         .build();
     
-    q.iter([&](flecs::iter& it) {
-        test_assert(it.id(0) == it.world().id<Tag>());
-        test_assert(it.entity(0) == e);
+    q.run([&](flecs::iter& it) {
+        while (it.next()) {
+            test_assert(it.id(0) == it.world().id<Tag>());
+            test_assert(it.entity(0) == e);
+        }
         count ++;
     });
 
@@ -1242,10 +1276,12 @@ void Query_test_no_defer_iter(void) {
         .with<Tag>()
         .build();
 
-    q.iter([](flecs::iter& it, Value *v) {
-        for (auto i : it) {
-            test_expect_abort();
-            it.entity(i).remove<Tag>();
+    q.run([](flecs::iter& it) {
+        while (it.next()) {
+            for (auto i : it) {
+                test_expect_abort();
+                it.entity(i).remove<Tag>();
+            }
         }
     });
 
@@ -1407,14 +1443,17 @@ void Query_iter_pair_type(void) {
     auto q = ecs.query<EatsApples>();
 
     int count = 0;
-    q.iter([&](flecs::iter& it, Eats* a) {
-        test_int(it.count(), 1);
+    q.run([&](flecs::iter& it) {
+        while (it.next()) {
+            auto a = it.field<Eats>(0);
+            test_int(it.count(), 1);
 
-        test_int(a->amount, 10);
-        test_assert(it.entity(0) == e1);
+            test_int(a->amount, 10);
+            test_assert(it.entity(0) == e1);
 
-        a->amount ++;
-        count ++;
+            a->amount ++;
+            count ++;
+        }
     });
 
     test_int(count, 1);
@@ -1438,16 +1477,18 @@ void Query_term_pair_type(void) {
         .build();
 
     int count = 0;
-    q.iter([&](flecs::iter& it) {
-        test_int(it.count(), 1);
+    q.run([&](flecs::iter& it) {
+        while (it.next()) {
+            test_int(it.count(), 1);
 
-        auto a = it.field<EatsApples>(0);
+            auto a = it.field<EatsApples>(0);
 
-        test_int(a->amount, 10);
-        test_assert(it.entity(0) == e1);
+            test_int(a->amount, 10);
+            test_assert(it.entity(0) == e1);
 
-        a->amount ++;
-        count ++;
+            a->amount ++;
+            count ++;
+        }
     });
 
     test_int(count, 1);
@@ -1528,8 +1569,10 @@ void Query_iter_no_comps_1_comp(void) {
     auto q = ecs.query<Position>();
 
     int32_t count = 0;
-    q.iter([&](flecs::iter& it) {
-        count += it.count();
+    q.run([&](flecs::iter& it) {
+        while (it.next()) {
+            count += it.count();
+        }
     });
 
     test_int(count, 3);
@@ -1546,9 +1589,10 @@ void Query_iter_no_comps_2_comps(void) {
     auto q = ecs.query<Position, Velocity>();
 
     int32_t count = 0;
-    q.iter([&](flecs::iter& it) {
-
-        count += it.count();
+    q.run([&](flecs::iter& it) {
+        while (it.next()) {
+            count += it.count();
+        }
     });
 
     test_int(count, 2);
@@ -1567,8 +1611,10 @@ void Query_iter_no_comps_no_comps(void) {
         .build();
 
     int32_t count = 0;
-    q.iter([&](flecs::iter& it) {
-        count += it.count();
+    q.run([&](flecs::iter& it) {
+        while (it.next()) {
+            count += it.count();
+        }
     });
 
     test_int(count, 3);
@@ -1616,12 +1662,17 @@ void Query_iter_pair_object(void) {
     auto q = ecs.query<BeginEvent, EndEvent>();
 
     int32_t count = 0;
-    q.iter([&](flecs::iter it, Event *b_e, Event *e_e) {
-        for (auto i : it) {
-            test_assert(it.entity(i) == e1);
-            test_str(b_e[i].value, "Big Bang");
-            test_str(e_e[i].value, "Heat Death");
-            count ++;
+    q.run([&](flecs::iter it) {
+        while (it.next()) {
+            auto b_e = it.field<BeginEvent>(0);
+            auto e_e = it.field<EndEvent>(1);
+
+            for (auto i : it) {
+                test_assert(it.entity(i) == e1);
+                test_str(b_e[i].value, "Big Bang");
+                test_str(e_e[i].value, "Heat Death");
+                count ++;
+            }
         }
     });
 
@@ -1656,9 +1707,11 @@ void Query_iter_type(void) {
 
     auto q = ecs.query<Position>();
 
-    q.iter([&](flecs::iter it) {
-        test_assert(it.type().count() >= 1);
-        test_assert(it.table().has<Position>());
+    q.run([&](flecs::iter it) {
+        while (it.next()) {
+            test_assert(it.type().count() >= 1);
+            test_assert(it.table().has<Position>());
+        }
     });
 }
 
@@ -1916,14 +1969,20 @@ void Query_instanced_query_w_singleton_iter(void) {
         .build();
 
     int32_t count = 0;
-    q.iter([&](flecs::iter it, Self* s, Position* p, const Velocity* v) {
-        test_assert(it.count() > 1);
 
-        for (auto i : it) {
-            p[i].x += v->x;
-            p[i].y += v->y;
-            test_assert(it.entity(i) == s[i].value);
-            count ++;
+    q.run([&](flecs::iter it) {
+        while (it.next()) {
+            auto s = it.field<Self>(0);
+            auto p = it.field<Position>(1);
+            auto v = it.field<const Velocity>(2);
+
+            test_assert(it.count() > 1);
+            for (auto i : it) {
+                p[i].x += v->x;
+                p[i].y += v->y;
+                test_assert(it.entity(i) == s[i].value);
+                count ++;
+            }
         }
     });
 
@@ -1973,20 +2032,25 @@ void Query_instanced_query_w_base_iter(void) {
         .build();
 
     int32_t count = 0;
-    q.iter([&](flecs::iter it, Self* s, Position* p, const Velocity* v) {
-        test_assert(it.count() > 1);
+    q.run([&](flecs::iter it) {
+        while (it.next()) {
+            auto s = it.field<Self>(0);
+            auto p = it.field<Position>(1);
+            auto v = it.field<const Velocity>(2);
 
-        for (auto i : it) {
-            if (it.is_self(2)) {
-                p[i].x += v[i].x;
-                p[i].y += v[i].y;
-            } else {
-                p[i].x += v->x;
-                p[i].y += v->y;
+            test_assert(it.count() > 1);
+            for (auto i : it) {
+                if (it.is_self(2)) {
+                    p[i].x += v[i].x;
+                    p[i].y += v[i].y;
+                } else {
+                    p[i].x += v->x;
+                    p[i].y += v->y;
+                }
+
+                test_assert(it.entity(i) == s[i].value);
+                count ++;
             }
-
-            test_assert(it.entity(i) == s[i].value);
-            count ++;
         }
     });
 
@@ -2047,14 +2111,19 @@ void Query_un_instanced_query_w_singleton_iter(void) {
         .build();
 
     int32_t count = 0;
-    q.iter([&](flecs::iter it, Self* s, Position* p, const Velocity* v) {
-        test_assert(it.count() == 1);
+    q.run([&](flecs::iter it) {
+        while (it.next()) {
+            auto s = it.field<Self>(0);
+            auto p = it.field<Position>(1);
+            auto v = it.field<const Velocity>(2);
 
-        for (auto i : it) {
-            p[i].x += v[i].x;
-            p[i].y += v[i].y;
-            test_assert(it.entity(i) == s[i].value);
-            count ++;
+            test_assert(it.count() == 1);
+            for (auto i : it) {
+                p[i].x += v[i].x;
+                p[i].y += v[i].y;
+                test_assert(it.entity(i) == s[i].value);
+                count ++;
+            }
         }
     });
 
@@ -2103,12 +2172,18 @@ void Query_un_instanced_query_w_base_iter(void) {
         .build();
 
     int32_t count = 0;
-    q.iter([&](flecs::iter it, Self* s, Position* p, const Velocity* v) {
-        for (auto i : it) {
-            p[i].x += v[i].x;
-            p[i].y += v[i].y;
-            test_assert(it.entity(i) == s[i].value);
-            count ++;
+    q.run([&](flecs::iter it) {
+        while (it.next()) {
+            auto s = it.field<Self>(0);
+            auto p = it.field<Position>(1);
+            auto v = it.field<const Velocity>(2);
+
+            for (auto i : it) {
+                p[i].x += v[i].x;
+                p[i].y += v[i].y;
+                test_assert(it.entity(i) == s[i].value);
+                count ++;
+            }
         }
     });
 
@@ -2190,8 +2265,10 @@ void Query_query_iter_from_component(void) {
     test_assert(qc != nullptr);
 
     int count = 0;
-    qc->q.iter([&](flecs::iter& it) { // Ensure we can iterate const query
-        count += it.count();
+    qc->q.run([&](flecs::iter& it) { // Ensure we can iterate const query
+        while (it.next()) {
+            count += it.count();
+        }
     });
     test_int(count, 2);
 }
@@ -2204,11 +2281,14 @@ void EachFunc(flecs::entity e, Position& p) {
     p.y ++;
 }
 
-void IterFunc(flecs::iter& it, Position* p) {
+void RunFunc(flecs::iter& it) {
+    test_bool(true, it.next());
     test_int(it.count(), 1);
+    auto p = it.field<Position>(0);
     invoked_count ++;
     p->x ++;
     p->y ++;
+    test_bool(false, it.next());
 }
 
 void Query_query_each_w_func_ptr(void) {
@@ -2234,7 +2314,7 @@ void Query_query_iter_w_func_ptr(void) {
 
     auto q = w.query<Position>();
 
-    q.iter(&IterFunc);
+    q.run(&RunFunc);
 
     test_int(invoked_count, 1);
 
@@ -2266,7 +2346,7 @@ void Query_query_iter_w_func_no_ptr(void) {
 
     auto q = w.query<Position>();
 
-    q.iter(IterFunc);
+    q.run(RunFunc);
 
     test_int(invoked_count, 1);
 
@@ -2521,22 +2601,24 @@ void Query_change_tracking(void) {
     w.entity().set<Position>({20, 30});
 
     test_bool(qr.changed(), true);
-    qr.iter([](flecs::iter&) { });
+    qr.run([](flecs::iter &it) { while (it.next()) {} });
     test_bool(qr.changed(), false);
 
     int32_t count = 0, change_count = 0;
 
-    qw.iter([&](flecs::iter& it, Position* p) {
-        test_int(it.count(), 1);
+    qw.run([&](flecs::iter& it) {
+        while (it.next()) {
+            test_int(it.count(), 1);
 
-        count ++;
+            count ++;
 
-        if (it.entity(0) == e1) {
-            it.skip();
-            return;
+            if (it.entity(0) == e1) {
+                it.skip();
+                continue;
+            }
+
+            change_count ++;
         }
-
-        change_count ++;
     });
 
     test_int(count, 2);
@@ -2547,16 +2629,18 @@ void Query_change_tracking(void) {
 
     test_bool(qr.changed(), true);
 
-    qr.iter([&](flecs::iter& it, const Position* p) {
-        test_int(it.count(), 1);
+    qr.run([&](flecs::iter& it) {
+        while (it.next()) {
+            test_int(it.count(), 1);
 
-        count ++;
+            count ++;
 
-        if (it.entity(0) == e1) {
-            test_bool(it.changed(), false);
-        } else {
-            test_bool(it.changed(), true);
-            change_count ++;
+            if (it.entity(0) == e1) {
+                test_bool(it.changed(), false);
+            } else {
+                test_bool(it.changed(), true);
+                change_count ++;
+            }
         }
     });
 
@@ -2614,11 +2698,15 @@ void Query_instanced_nested_query_w_iter(void) {
 
     int32_t count = 0;
 
-    q2.iter([&](flecs::iter& it_2) {
-        q1.iter(it_2, [&](flecs::iter& it_1) {
-            test_int(it_1.count(), 1);
-            count += it_1.count();
-        });
+    q2.run([&](flecs::iter& it_2) {
+        while (it_2.next()) {
+            q1.iter(it_2).run([&](flecs::iter& it_1) {
+                while (it_1.next()) {
+                    test_int(it_1.count(), 1);
+                    count += it_1.count();
+                }
+            });
+        }
     });
 
     test_int(count, 2);
@@ -2644,9 +2732,11 @@ void Query_instanced_nested_query_w_entity(void) {
     int32_t count = 0;
 
     q2.each([&](flecs::entity e_2) {
-        q1.iter(e_2, [&](flecs::iter& it_1) {
-            test_int(it_1.count(), 1);
-            count += it_1.count();
+        q1.iter(e_2).run([&](flecs::iter& it_1) {
+            while (it_1.next()) {
+                test_int(it_1.count(), 1);
+                count += it_1.count();
+            }
         });
     });
 
@@ -2672,11 +2762,15 @@ void Query_instanced_nested_query_w_world(void) {
 
     int32_t count = 0;
 
-    q2.iter([&](flecs::iter& it_2) {
-        q1.iter(it_2.world(), [&](flecs::iter& it_1) {
-            test_int(it_1.count(), 1);
-            count += it_1.count();
-        });
+    q2.run([&](flecs::iter& it_2) {
+        while (it_2.next()) {
+            q1.iter(it_2.world()).run([&](flecs::iter& it_1) {
+                while (it_1.next()) {
+                    test_int(it_1.count(), 1);
+                    count += it_1.count();
+                }
+            });
+        }
     });
 
     test_int(count, 2);
@@ -2748,13 +2842,15 @@ void Query_iter_entities(void) {
     auto e3 = ecs.entity().set<Position>({10, 20});
 
     ecs.query<Position>()
-        .iter([&](flecs::iter& it) {
-            test_int(it.count(), 3);
+        .run([&](flecs::iter& it) {
+            while (it.next()) {
+                test_int(it.count(), 3);
 
-            auto entities = it.entities();
-            test_assert(entities[0] == e1);
-            test_assert(entities[1] == e2);
-            test_assert(entities[2] == e3);
+                auto entities = it.entities();
+                test_assert(entities[0] == e1);
+                test_assert(entities[1] == e2);
+                test_assert(entities[2] == e3);
+            }
         });
 }
 

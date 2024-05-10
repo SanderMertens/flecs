@@ -412,7 +412,7 @@ void flecs_uni_observer_invoke(
     it->event = flecs_get_observer_event(term, event);
 
     if (o->run) {
-        it->next = flecs_default_observer_next_callback;
+        it->next = flecs_default_next_callback;
         it->callback = flecs_default_uni_observer_run_callback;
         it->ctx = o;
         o->run(it);
@@ -586,7 +586,7 @@ void flecs_default_multi_observer_run_callback(
 
 /* For convenience, so applications can (in theory) use a single run callback 
  * that uses ecs_iter_next to iterate results */
-bool flecs_default_observer_next_callback(ecs_iter_t *it) {
+bool flecs_default_next_callback(ecs_iter_t *it) {
     if (it->interrupted_by) {
         return false;
     } else {
@@ -604,9 +604,10 @@ void flecs_multi_observer_builtin_run(ecs_iter_t *it) {
     ecs_run_action_t run = o->run;
 
     if (run) {
-        it->next = flecs_default_observer_next_callback;
+        it->next = flecs_default_next_callback;
         it->callback = flecs_default_multi_observer_run_callback;
         it->interrupted_by = 0;
+        it->run_ctx = o->run_ctx;
         run(it);
     } else {
         flecs_multi_observer_invoke(it);

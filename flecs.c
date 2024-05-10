@@ -2240,7 +2240,7 @@ void flecs_emit(
     ecs_world_t *stage,
     ecs_event_desc_t *desc);
 
-bool flecs_default_observer_next_callback(
+bool flecs_default_next_callback(
     ecs_iter_t *it);
 
 void flecs_observers_invoke(
@@ -13869,7 +13869,7 @@ void flecs_uni_observer_invoke(
     it->event = flecs_get_observer_event(term, event);
 
     if (o->run) {
-        it->next = flecs_default_observer_next_callback;
+        it->next = flecs_default_next_callback;
         it->callback = flecs_default_uni_observer_run_callback;
         it->ctx = o;
         o->run(it);
@@ -14043,7 +14043,7 @@ void flecs_default_multi_observer_run_callback(
 
 /* For convenience, so applications can (in theory) use a single run callback 
  * that uses ecs_iter_next to iterate results */
-bool flecs_default_observer_next_callback(ecs_iter_t *it) {
+bool flecs_default_next_callback(ecs_iter_t *it) {
     if (it->interrupted_by) {
         return false;
     } else {
@@ -14061,9 +14061,10 @@ void flecs_multi_observer_builtin_run(ecs_iter_t *it) {
     ecs_run_action_t run = o->run;
 
     if (run) {
-        it->next = flecs_default_observer_next_callback;
+        it->next = flecs_default_next_callback;
         it->callback = flecs_default_multi_observer_run_callback;
         it->interrupted_by = 0;
+        it->run_ctx = o->run_ctx;
         run(it);
     } else {
         flecs_multi_observer_invoke(it);
@@ -71386,20 +71387,28 @@ ecs_entity_t flecs_run_intern(
 
     ecs_run_action_t run = system_data->run;
     if (run) {
-        run(it);
-    } else if (system_data->query->term_count) {
-        if (it == &qit) {
-            while (ecs_query_next(&qit)) {
-                action(&qit);
-            }
+        if (!system_data->query->term_count) {
+            it->next = flecs_default_next_callback; /* Return once */
+            run(it);
+            ecs_iter_fini(&qit);
         } else {
-            while (ecs_iter_next(it)) {
-                action(it);
-            }
+            run(it);
         }
     } else {
-        action(&qit);
-        ecs_iter_fini(&qit);
+        if (system_data->query->term_count) {
+            if (it == &qit) {
+                while (ecs_query_next(&qit)) {
+                    action(&qit);
+                }
+            } else {
+                while (ecs_iter_next(it)) {
+                    action(it);
+                }
+            }
+        } else {
+            action(&qit);
+            ecs_iter_fini(&qit);
+        }
     }
 
     flecs_stage_set_system(stage, old_system);

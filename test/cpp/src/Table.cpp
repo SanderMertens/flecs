@@ -67,8 +67,10 @@ void Table_iter(void) {
     auto e2 = ecs.entity().add<Velocity>();
 
     ecs.query<Position>()
-        .iter([&](flecs::iter& it, Position* p) {
-            e2.add<Mass>();
+        .run([&](flecs::iter& it) {
+            while (it.next()) {
+                e2.add<Mass>();
+            }
         });
 
     test_assert(e2.has<Mass>());
@@ -82,9 +84,11 @@ void Table_iter_locked(void) {
     auto e1 = ecs.entity().add<Position>();
 
     ecs.query<Position>()
-        .iter([&](flecs::iter& it, Position* p) {
-            test_expect_abort();
-            e1.add<Mass>();
+        .run([&](flecs::iter& it) {
+            while (it.next()) {
+                test_expect_abort();
+                e1.add<Mass>();
+            }
         });
 
     test_assert(false);
@@ -97,8 +101,10 @@ void Table_iter_without_components(void) {
     auto e2 = ecs.entity().add<Velocity>();
 
     ecs.query<Position>()
-        .iter([&](flecs::iter& it) {
-            e2.add<Mass>();
+        .run([&](flecs::iter& it) {
+            while (it.next()) {
+                e2.add<Mass>();
+            }
         });
 
     test_assert(e2.has<Mass>());
@@ -112,9 +118,11 @@ void Table_iter_without_components_locked(void) {
     auto e1 = ecs.entity().add<Position>();
 
     ecs.query<Position>()
-        .iter([&](flecs::iter& it) {
-            test_expect_abort();
-            e1.add<Mass>();
+        .run([&](flecs::iter& it) {
+            while (it.next()) {
+                test_expect_abort();
+                e1.add<Mass>();
+            }
         });
 
     test_assert(false);
