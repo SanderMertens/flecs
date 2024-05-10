@@ -30,15 +30,15 @@ int main(int argc, char *argv[]) {
     // Create 3 dummy systems.
     ecs.system("CollisionSystem")
         .kind(Collisions)
-        .iter(Sys);
+        .run(Sys);
 
     ecs.system("PhysicsSystem")
         .kind(Physics)
-        .iter(Sys);
+        .run(Sys);
 
     ecs.system("GameSystem")
         .kind(Update)
-        .iter(Sys);
+        .run(Sys);
 
     // Run pipeline
     ecs.progress();

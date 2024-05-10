@@ -19,21 +19,19 @@ struct Velocity {
 int main(int, char *[]) {
     flecs::world ecs;
 
-    flecs::system s = ecs.system<Position, const Velocity>()
-        // The run function has a signature that accepts a C iterator. By 
-        // forwarding the iterator to it->callback, the each function of the
-        // system is invoked.
-        .run([](flecs::iter_t *it) {
+    flecs::system s = ecs.system<Position, const Velocity>() 
+        // Forward each result from the run callback to the each callback.
+        .run([](flecs::iter& it) {
             std::cout << "Move begin\n";
 
             // Walk over the iterator, forward to the system callback
-            while (ecs_iter_next(it)) {
-                it->callback(it);
+            while (it.next()) {
+                it.each();
             }
 
             std::cout << "Move end\n";
-        })
-        .each([](flecs::entity e, Position& p, const Velocity& v) {
+        },
+        [](flecs::entity e, Position& p, const Velocity& v) {
             p.x += v.x;
             p.y += v.y;
             std::cout << e.name() << ": {" << p.x << ", " << p.y << "}\n";

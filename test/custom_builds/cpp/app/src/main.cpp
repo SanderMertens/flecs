@@ -3,7 +3,7 @@
 int main(int, char *[]) {
     flecs::world ecs;
 
-    ecs.system().iter([](flecs::iter& it) {
+    ecs.system().run([](flecs::iter& it) {
         it.world().quit();
     });
     

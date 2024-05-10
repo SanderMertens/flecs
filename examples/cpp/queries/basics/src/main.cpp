@@ -57,14 +57,19 @@ int main(int, char *[]) {
         std::cout << it.entity(i).name() << ": {" << p.x << ", " << p.y << "}\n";
     });
 
-    // Iter is a bit more verbose, but allows for more control over how entities
+    // Run is a bit more verbose, but allows for more control over how entities
     // are iterated as it provides multiple entities in the same callback.
-    q.iter([](flecs::iter& it, Position *p, const Velocity *v) {
-        for (auto i : it) {
-            p[i].x += v[i].x;
-            p[i].y += v[i].y;
-            std::cout << it.entity(i).name() << 
-                ": {" << p[i].x << ", " << p[i].y << "}\n";
+    q.run([](flecs::iter& it) {
+        while (it.next()) {
+            auto p = it.field<Position>(0);
+            auto v = it.field<const Velocity>(1);
+
+            for (auto i : it) {
+                p[i].x += v[i].x;
+                p[i].y += v[i].y;
+                std::cout << it.entity(i).name() << 
+                    ": {" << p[i].x << ", " << p[i].y << "}\n";
+            }
         }
     });
 }

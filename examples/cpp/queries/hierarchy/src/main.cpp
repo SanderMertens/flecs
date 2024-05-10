@@ -38,9 +38,12 @@ int main(int, char *[]) {
                 .set<Position, Local>({0.1, 0.1});
 
     // Create a hierarchical query to compute the global position from the
-    // local position and the parent position.
-    flecs::query<const Position, const Position, Position> q = 
-        ecs.query_builder<const Position, const Position, Position>()
+    // local position and the parent position. The three template arguments are:
+    //  - Local position
+    //  - Local parent position (* = optional, so we match root entities)
+    //  - World position
+    flecs::query<const Position, const Position*, Position> q = 
+        ecs.query_builder<const Position, const Position*, Position>()
             // Modify terms from template to make sure the query selects the
             // local, world and parent position components.
             .term_at(0).second<Local>()
@@ -51,22 +54,16 @@ int main(int, char *[]) {
             .term_at(1)
                 // Get from the parent, in breadth-first order (cascade)
                 .parent().cascade()
-                // Make term component optional so we also match the root (sun)
-                .optional()
             // Finalize the query
             .build();
 
     // Do the transform
-    q.iter([](flecs::iter& it, 
-        const Position *p, const Position *p_parent, Position *p_out) 
-    {
-        for (auto i : it) {
-            p_out[i].x = p[i].x;
-            p_out[i].y = p[i].y;
-            if (p_parent) {
-                p_out[i].x += p_parent->x;
-                p_out[i].y += p_parent->y;
-            }
+    q.each([](const Position& p, const Position *p_parent, Position& p_out) {
+        p_out.x = p.x;
+        p_out.y = p.y;
+        if (p_parent) {
+            p_out.x += p_parent->x;
+            p_out.y += p_parent->y;
         }
     });
 
@@ -74,4 +71,11 @@ int main(int, char *[]) {
     ecs.each([](flecs::entity e, flecs::pair<Position, World> p) {
         std::cout << e.name() << ": {" << p->x << ", " << p->y << "}\n";
     });
+
+    // Output:
+    //   Sun: {1, 1}
+    //   Mercury: {2, 2}
+    //   Venus: {3, 3}
+    //   Earth: {4, 4}
+    //   Moon: {4.1, 4.1}
 }

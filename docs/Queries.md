@@ -367,68 +367,34 @@ f.each([](flecs::entity e) {
 });
 ```
 
-### Iter (C++)
-The `iter` function has an outer and inner loop (similar to C iterators) which provides more control over how to iterate entities in a table than `each`. The `iter` function makes it possible, for example, to run code only once per table, or iterate entities multiple times.
+### Run (C++)
+The `run` function provides an initialized iterator to a callback, and leaves iteration up to the callback implementation. Similar to C query iteration, the run callback has an outer and an inner loop.
 
 An example:
 
 ```cpp
 auto f = world.query<Position, const Velocity>();
 
-f.iter([](flecs::iter& it, Position *p, Velocity *v) {
-    // Inner loop
-    for (auto i : it) {
-        p[i].x += v[i].x;
-        p[i].y += v[i].y;
-        std::cout << it.entity(i).name() << ": " 
-            << p.x << ", " << p.y 
-            << std::endl;
+f.run([](flecs::iter& it) {
+    // Outer loop
+    while (it.next()) {
+      auto p = it.field<Position>(0);
+      auto v = it.field<const Velocity>(1);
+
+      // Inner loop
+      for (auto i : it) {
+          p[i].x += v[i].x;
+          p[i].y += v[i].y;
+          std::cout << it.entity(i).name() << ": " 
+              << p.x << ", " << p.y 
+              << std::endl;
+      }
     }
-});
-```
-
-Instead of using `flecs::iter` as iterator directly, an application can also use the `flecs::iter::count` method which provides more flexibility:
-
-```cpp
-f.iter([](flecs::iter& it, Position *p, Velocity *v) {
-    // Inner loop with manual iteration
-    for (size_t i = 0; i < it.count(); i ++) {
-      // ...
-    }
-});
-```
-
-The component arguments may be omitted, and can be obtained from the iterator object:
-
-```cpp
-auto f = world.query<Position, const Velocity>();
-
-f.iter([](flecs::iter& it) {
-    auto p = it.field<Position>(0);
-    auto v = it.field<const Velocity>(1);
-
-    for (auto i : it) {
-        p[i].x += v[i].x;
-        p[i].y += v[i].y;
-    }
-});
-```
-
-This can be combined with an untyped variant of the `field` method to access component data without having to know component types at compile time. This can be useful for generic code, like serializers:
-
-```cpp
-auto f = world.query<Position, const Velocity>();
-
-f.iter([](flecs::iter& it) {
-    void *ptr = it.field(0);
-    flecs::id type_id = it.id(0);
-
-    // ...
 });
 ```
 
 ### Iteration safety
-Entities can be moved between tables when components are added or removed. This can cause unwanted side effects while iterating a table, like iterating an entity twice, or missing an entity. To prevent this from happening, a table is locked by the C++ `each` and `iter` functions, meaning no entities can be moved from or to it.
+Entities can be moved between tables when components are added or removed. This can cause unwanted side effects while iterating a table, like iterating an entity twice, or missing an entity. To prevent this from happening, a table is locked by the C++ `each` and `run` functions, meaning no entities can be moved from or to it.
 
 When an application attempts to add or remove components to an entity in a table being iterated over, this can throw a runtime assert. An example:
 
@@ -840,19 +806,6 @@ f.each([](EatsApples v) {
 });
 ```
 
-When using the `iter` function to iterate a query with a pair template, the argument type assumes the type of the pair. This is required as the component array being passed directly to the `iter` function. An example:
-
-```cpp
-flecs::query<EatsApples> f = 
-    world.query<EatsApples>();
-
-f.iter([](flecs::iter& it, Eats *v) {
-    for (auto i : it) {
-        v[i].value ++;
-    }
-})
-```
-
 Pairs can also be added to queries using the builder API. This allows for the pair to be composed out of both types and regular entities. The three queries in the following example are equivalent:
 
 ```cpp
@@ -1010,11 +963,13 @@ flecs::query<> f = world.query_builder()
     .term<Velocity>().inout(flecs::In)
     .build();
 
-f.iter([](flecs::iter& it) {
-    auto p = it.field<Position>(0);       // OK
-    auto p = it.field<const Position>(0); // OK
-    auto v = it.field<const Velocity>(1); // OK
-    auto v = it.field<Velocity>(1);       // Throws assert
+f.run([](flecs::iter& it) {
+    while (it.next()) {
+      auto p = it.field<Position>(0);       // OK
+      auto p = it.field<const Position>(0); // OK
+      auto v = it.field<const Velocity>(1); // OK
+      auto v = it.field<Velocity>(1);       // Throws assert
+    }
 });
 ```
 
@@ -1168,19 +1123,21 @@ flecs::query<> f = world.query_builder()
     .term<Mass>()
     .build();
 
-f.iter([&](flecs::iter& it) {
-  auto p = it.field<Position>(0);
-  auto v = it.field<Mass>(2); // not 4, because of the Or expression
-  
-  flecs::id vs_id = it.id(1);
-  if (vs_id == world.id<Velocity>()) {
-    // We can only use ecs_field if the field type is the same for all results,
-    // but we can use range() to get the table column directly.
-    auto v = it.range().get<Velocity>();
-    // iterate as usual
-  } else if (vs_id == world.id<Speed>()) {
-    auto s = it.range().get<Speed>();
-    // iterate as usual
+f.run([&](flecs::iter& it) {
+  while (it.next()) {
+    auto p = it.field<Position>(0);
+    auto v = it.field<Mass>(2); // not 4, because of the Or expression
+    
+    flecs::id vs_id = it.id(1);
+    if (vs_id == world.id<Velocity>()) {
+      // We can only use ecs_field if the field type is the same for all results,
+      // but we can use range() to get the table column directly.
+      auto v = it.range().get<Velocity>();
+      // iterate as usual
+    } else if (vs_id == world.id<Speed>()) {
+      auto s = it.range().get<Speed>();
+      // iterate as usual
+    }
   }
 });
 ```
@@ -1299,14 +1256,16 @@ flecs::query<> f = world.query_builder()
     .term<Velocity>().oper(flecs::Optional)
     .build();
 
-f.iter([&](flecs::iter& it) {
-  auto p = it.field<Position>(0);
-  
-  if (it.is_set(1)) {
-    auto v = it.field<Velocity>(1);
-    // iterate as usual
-  } else if (vs_id == world.id<Speed>()) {
-    // iterate as usual
+f.run([&](flecs::iter& it) {
+  while (it.next()) {
+    auto p = it.field<Position>(0);
+    
+    if (it.is_set(1)) {
+      auto v = it.field<Velocity>(1);
+      // iterate as usual
+    } else if (vs_id == world.id<Speed>()) {
+      // iterate as usual
+    }
   }
 });
 ```
@@ -1624,14 +1583,16 @@ flecs::query<> f = world.query_builder()
   .term<SimTime>().src(Game) // fixed source, match SimTime on Game
   .build();
 
-f.iter([](flecs::iter& it) {
-  auto p = it.field<Position>(0);
-  auto v = it.field<Velocity>(1);
-  auto st = it.field<SimTime>(2);
-  
-  for (auto i : it) {
-    p[i].x += v[i].x * st[i].value;
-    p[i].y += v[i].y * st[i].value;
+f.run([](flecs::iter& it) {
+  while (it.next()) {
+    auto p = it.field<Position>(0);
+    auto v = it.field<Velocity>(1);
+    auto st = it.field<SimTime>(2);
+    
+    for (auto i : it) {
+      p[i].x += v[i].x * st[i].value;
+      p[i].y += v[i].y * st[i].value;
+    }
   }
 });
 ```
@@ -1640,7 +1601,7 @@ Note how in this example all components can be accessed as arrays. When a query 
 
 Returning entities one at a time can negatively affect performance, especially for large tables. To learn more about why this behavior exists and how to ensure that mixed results use table-based iteration, see [Instancing](#instancing). 
 
-The next example shows how queries with mixed `$this` and fixed sources can be iterated with `each`. The `each` function does not have the performance drawback of the last `iter` example, as it uses [instancing](#instancing) by default.
+The next example shows how queries with mixed `$this` and fixed sources can be iterated with `each`. The `each` function does not have the performance drawback of the last `run` example, as it uses [instancing](#instancing) by default.
 
 ```cpp
 flecs::query<Position, Velocity, SimTime> f = 
@@ -1655,7 +1616,7 @@ f.each([](flecs::entity e, Position& p, Velocity& v, SimTime& st) {
 });
 ```
 
-When a query has no terms for the `$this` source, it must be iterated with the `iter` function or with a variant of `each` that does not have a signature with `flecs::entity` as first argument:
+When a query has no terms for the `$this` source, it must be iterated with the `run` function or with a variant of `each` that does not have a signature with `flecs::entity` as first argument:
 
 ```cpp
 flecs::query<SimConfig, SimTime> f = 
@@ -1665,8 +1626,12 @@ flecs::query<SimConfig, SimTime> f =
     .build();
 
 // Ok (note that it.count() will be 0)
-f.iter([](flecs::iter& it, SimConfig *sc, SimTime *st) {
-  st->value += sc->sim_speed;
+f.run([](flecs::iter& it) {
+  while (it.next()) {
+    auto sc = it.field<SimConfig>(0);
+    auto st = it.field<SimTime>(1);
+    st->value += sc->sim_speed;
+  }
 });
 
 // Ok
@@ -2123,12 +2088,17 @@ flecs::query<Position, Mass> f = world.query<Position, Mass>();
 The filter in this example will match both `inst_1`, `inst_2` because they inherit `Mass`, and `ent_1` and `ent_2` because they own `Mass`. The following example shows an example of code that iterates the filter:
 
 ```cpp
-f.iter([](flecs::iter& it, Position *p, Mass *m) {
-  std::cout << "Result" << std::endl;
-  for (auto i : it) {
-    std::cout << " - " << it.entity(i).name() << ": " 
-      << m[i].value 
-      << std::endl;
+f.run([](flecs::iter& it) {
+  while (it.next()) {
+    auto p = it.field<Position>(0);
+    auto m = it.field<Mass>(1);
+
+    std::cout << "Result" << std::endl;
+    for (auto i : it) {
+      std::cout << " - " << it.entity(i).name() << ": " 
+        << m[i].value 
+        << std::endl;
+    }
   }
 });
 ```
@@ -2178,7 +2148,7 @@ While this provides a safe default to iterate results with shared components, it
 
 > **Note**: The implementation of the C++ `each` function always uses instancing.
 
-The following diagram shows the difference in how results are returned between instanced iteration and non-instanced iteration. Each result block corresponds with a call to the `iter` method in the above example:
+The following diagram shows the difference in how results are returned between instanced iteration and non-instanced iteration. Each result block corresponds with a call to the `run` method in the above example:
 
 ![filter diagram](img/query_instancing.png)
 
@@ -2242,18 +2212,23 @@ flecs::query<Position, Mass> f = world.query_builder<Position, Mass>()
   .instanced()
   .build();
 
-f.iter([](flecs::iter& it, Position *p, Mass *v) {
-  if (it.is_self(1)) {
-    // Mass is matched on self, access as array
-    for (auto i : it) {
-      p[i].x += 1.0 / m[i].value;
-      p[i].y += 1.0 / m[i].value;
-    }
-  } else {
-    // Mass is matched on other entity, access as single value
-    for (auto i : it) {
-      p[i].x += 1.0 / m->value;
-      p[i].y += 1.0 / m->value;
+f.run([](flecs::iter& it) {
+  while (it.next()) {
+    auto p = it.field<Position>(0);
+    auto m = it.field<Mass>(1);
+
+    if (it.is_self(1)) {
+      // Mass is matched on self, access as array
+      for (auto i : it) {
+        p[i].x += 1.0 / m[i].value;
+        p[i].y += 1.0 / m[i].value;
+      }
+    } else {
+      // Mass is matched on other entity, access as single value
+      for (auto i : it) {
+        p[i].x += 1.0 / m->value;
+        p[i].y += 1.0 / m->value;
+      }
     }
   }
 });
@@ -2507,23 +2482,27 @@ bool changed = q_read.changed();
 flecs::entity e = world.entity()
   .set<Position>({10, 20});
 
-q_write.iter([](flecs::iter& it, Position *p) {
-  if (dont_change) {
-    // If no changes are made to the iterated table, the skip function can be
-    // called to prevent marking the matched components as dirty.
-    it.skip();
-  } else {
-    // Iterate as usual. It does not matter whether the code actually writes the
-    // components or not: when a table is not skipped, components matched with
-    // inout or out terms will be marked dirty by the iterator.
+q_write.run([](flecs::iter& it) {
+  if (it.next()) {
+    if (dont_change) {
+      // If no changes are made to the iterated table, the skip function can be
+      // called to prevent marking the matched components as dirty.
+      it.skip();
+    } else {
+      // Iterate as usual. It does not matter whether the code actually writes the
+      // components or not: when a table is not skipped, components matched with
+      // inout or out terms will be marked dirty by the iterator.
+    }
   }
 });
 
-q_read.iter([](flecs::iter& it, Position *p) {
-  if (it.changed()) {
-    // Check if the current table has changed. The change state will be reset 
-    // after the table is iterated, so code can respond to changes in individual
-    // tables.
+q_read.run([](flecs::iter& it) {
+  if (it.next()) {
+    if (it.changed()) {
+      // Check if the current table has changed. The change state will be reset 
+      // after the table is iterated, so code can respond to changes in individual
+      // tables.
+    }
   }
 });
 ```

@@ -12,11 +12,11 @@ int main(int, char *[]) {
 
     ecs.system("Tick")
         .interval(1.0) // time in seconds
-        .iter(Tick);
+        .run(Tick);
 
     ecs.system("FastTick")
         .interval(0.5)
-        .iter(Tick);
+        .run(Tick);
 
     // Run the main loop at 60 FPS
     ecs.set_target_fps(60);

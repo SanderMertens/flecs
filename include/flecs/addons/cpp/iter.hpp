@@ -82,7 +82,7 @@ public:
     }
 
     row_iterator end() const {
-        return row_iterator(iter_->count);
+        return row_iterator(static_cast<size_t>(iter_->count));
     }
 
     flecs::entity system() const;

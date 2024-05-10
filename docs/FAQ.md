@@ -48,7 +48,7 @@ This is likely because queries (`flecs::query`) are created repeatedly in a loop
 flecs::query<Position> q = world.query<Position>();
 
 world.system()
-    .iter([=](flecs::iter& it) {
+    .run([=](flecs::iter& it) {
         q.each([&](Position& p) {
             // ...
         });
@@ -57,7 +57,7 @@ world.system()
 ```cpp
 // BAD
 world.system()
-    .iter([](flecs::iter& it) {
+    .run([](flecs::iter& it) {
         flecs::query<Position> q = world.query<Position>();
         q.each([&](Position& p) {
             // ...
