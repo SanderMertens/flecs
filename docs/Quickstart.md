@@ -1144,10 +1144,13 @@ f.each([](flecs::entity e, Position& p) {
 });
 
 // Option 2: iter() function that iterates each archetype
-f.iter([](flecs::iter& it, Position *p) {
-    for (auto i : it) {
-        std::cout << it.entity(i).name()
-            << ": {" << p[i].x << ", " << p[i].y << "}" << std::endl;
+f.run([](flecs::iter& it) {
+    while (it.next()) {
+        auto p = it.field<Position>(0);
+        for (auto i : it) {
+            std::cout << it.entity(i).name()
+                << ": {" << p[i].x << ", " << p[i].y << "}" << std::endl;
+        }
     }
 });
 ```
@@ -1318,14 +1321,12 @@ void Move(ecs_iter_t *it) {
 ```cpp
 // Use each() function that iterates each individual entity
 auto move_sys = world.system<Position, Velocity>()
-    .iter([](flecs::iter it, Position *p, Velocity *v) {
-        for (auto i : it) {
-            p[i].x += v[i].x * it.delta_time();
-            p[i].y += v[i].y * it.delta_time();
-        }
+    .each([](flecs::iter& it, size_t, Position& p, Velocity& v) {
+        p.x += v.x * it.delta_time();
+        p.y += v.y * it.delta_time();
     });
 
-    // Just like with filters & queries, systems have both the iter() and
+    // Just like with filters & queries, systems have both the run() and
     // each() methods to iterate entities.
 
 move_sys.run();

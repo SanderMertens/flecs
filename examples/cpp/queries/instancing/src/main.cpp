@@ -66,32 +66,35 @@ int main(int, char *[]) {
         .set<Position>({10, 20})
         .set<Velocity>({4, 5});
 
-
     // Iterate the instanced query. Note how when a query is instanced, it needs
     // to check whether a field is owned or not in order to know how to access
     // it. In the case of an owned field it is iterated as an array, whereas
     // in the case of a shared field, it is accessed as a pointer.
-    q.iter([](flecs::iter& it, Position *p, const Velocity *v) {
+    q.run([](flecs::iter& it) {
+        while (it.next()) {
+            auto p = it.field<Position>(0);
+            auto v = it.field<const Velocity>(1);
 
-        // Check if Velocity is owned, in which case it's accessed as array.
-        // Position will always be owned, since we set the term to Self.
-        if (it.is_self(1)) { // Velocity is term 2
-            std::cout << "Velocity is owned\n";
-            for (auto i : it) {
-                p[i].x += v[i].x;
-                p[i].y += v[i].y;
-                std::cout << it.entity(i).name() << 
-                    ": {" << p[i].x << ", " << p[i].y << "}\n";
-            }
+            // Check if Velocity is owned, in which case it's accessed as array.
+            // Position will always be owned, since we set the term to Self.
+            if (it.is_self(1)) { // Velocity is term 2
+                std::cout << "Velocity is owned\n";
+                for (auto i : it) {
+                    p[i].x += v[i].x;
+                    p[i].y += v[i].y;
+                    std::cout << it.entity(i).name() << 
+                        ": {" << p[i].x << ", " << p[i].y << "}\n";
+                }
 
-        // If Velocity is shared, access the field as a pointer.
-        } else {
-            std::cout << "Velocity is shared\n";
-            for (auto i : it) {
-                p[i].x += v->x;
-                p[i].y += v->y;
-                std::cout << it.entity(i).name() << 
-                    ": {" << p[i].x << ", " << p[i].y << "}\n";
+            // If Velocity is shared, access the field as a pointer.
+            } else {
+                std::cout << "Velocity is shared\n";
+                for (auto i : it) {
+                    p[i].x += v->x;
+                    p[i].y += v->y;
+                    std::cout << it.entity(i).name() << 
+                        ": {" << p[i].x << ", " << p[i].y << "}\n";
+                }
             }
         }
     });

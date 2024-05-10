@@ -31,17 +31,14 @@ enum Direction {
 int main(int argc, char *argv[]) {
     flecs::world ecs(argc, argv);
 
-    // TODO
-    // ecs.component<Movement>().add(flecs::Union);
-    // ecs.component<Direction>().add(flecs::Union);
+    ecs.component<Movement>().add(flecs::Union);
+    ecs.component<Direction>().add(flecs::Union);
 
     // Create a query that subscribes for all entities that have a Direction
     // and that are walking.
-    // with<T>() requests no data by default, so we must specify what we want. 
-    // in() requests Read-Only
     flecs::query<> q = ecs.query_builder()
         .with(Walking).in()
-        .with<Direction>(flecs::Wildcard).in()
+        .with<Direction>(flecs::Wildcard)
         .build();
 
     // Create a few entities with various state combinations
@@ -61,21 +58,16 @@ int main(int argc, char *argv[]) {
     e3.add(Walking);
 
     // Iterate the query
-    q.iter([&](const flecs::iter& it) {
-        // Get the column with direction states. This is stored as an array
-        // with identifiers to the individual states
-        auto movement = it.field<const flecs::entity_t>(0);
-        auto direction = it.field<const flecs::entity_t>(1);
+    q.each([&](const flecs::iter& it, size_t i) {
+        flecs::entity e = it.entity(i);
 
-        for (auto i : it) {
-            // Movement will always be Walking, Direction can be any state
-            std::cout << it.entity(i).name() 
-                << ": Movement: " 
-                << it.world().get_alive(movement[i]).name()
-                << ", Direction: "
-                << it.world().get_alive(direction[i]).name()
-                << std::endl;
-        }
+        // Movement will always be Walking, Direction can be any state
+        std::cout << e.name() 
+            << ": Movement: " 
+            << it.pair(0).second().name()
+            << ", Direction: "
+            << it.pair(1).second().name()
+            << std::endl;
     });
 
     // Output:

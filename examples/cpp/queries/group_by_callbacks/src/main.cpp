@@ -105,18 +105,23 @@ int main() {
 
     std::cout << "\n";
 
-    q.iter([&](flecs::iter& it, Position *p) {
-        flecs::entity group = ecs.entity(it.group_id());
-        group_ctx *ctx = static_cast<group_ctx*>(q.group_ctx(group));
-        std::cout << " - group " << group.path() << ": table ["
-            << it.table().str() << "]\n";
-        std::cout << "   counter: " << ctx->counter << "\n";
+    q.run([&](flecs::iter& it) {
+        while (it.next()) {
+            auto p = it.field<Position>(0);
 
-        for (auto i : it) {
-            std::cout << "     {" << p[i].x << ", " << p[i].y << "}\n";
+            flecs::entity group = ecs.entity(it.group_id());
+            group_ctx *ctx = static_cast<group_ctx*>(q.group_ctx(group));
+
+            std::cout << " - group " << group.path() << ": "
+                      << "table [" << it.table().str() << "]\n";
+            std::cout << "   counter: " << ctx->counter << "\n";
+
+            for (auto i : it) {
+                std::cout << "     {" << p[i].x << ", " << p[i].y << "}\n";
+            }
+
+            std::cout << "\n";
         }
-
-        std::cout << "\n";
     });
 
     // Deleting the query will call the on_group_deleted callback

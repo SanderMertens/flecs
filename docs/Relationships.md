@@ -807,14 +807,10 @@ auto q = world.query_builder()
   .term(Likes, flecs::Wildcard)
   .build();
 
-q.iter([](flecs::iter& it) {
-  auto id = it.pair(0);
-
-  for (auto i : it) {
-    cout << "entity " << it.entity(i) << " has relationship "
-      << id.first().name() << ", "
-      << id.second().name() << endl;
-  }
+q.each([](flecs::iter& it, size_t i) {
+  cout << "entity " << it.entity(i) << " has relationship "
+    << it.pair(0).first().name() << ", "
+    << it.pair(0).second().name() << endl;
 });
 ```
 

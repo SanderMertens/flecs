@@ -166,7 +166,7 @@ typedef struct ecs_system_t {
  * the system, like the query and context.
  *
  * @param world The world.
- * @param observer The system.
+ * @param system The system.
  * @return The system object.
  */
 FLECS_API

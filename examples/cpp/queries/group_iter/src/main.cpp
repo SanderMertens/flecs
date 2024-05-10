@@ -67,20 +67,24 @@ int main() {
 
     // Iterate all tables
     std::cout << "All tables:\n";
-    q.iter([&](flecs::iter& it) {
-        flecs::entity group = ecs.entity(it.group_id());
-        std::cout << " - group " << group.path() << ": table ["
-            << it.table().str() << "]\n";
+    q.run([&](flecs::iter& it) {
+        while (it.next()) {
+            flecs::entity group = ecs.entity(it.group_id());
+            std::cout << " - group " << group.path() << ": table ["
+                << it.table().str() << "]\n";
+        }
     });
     
     std::cout << "\n";
 
     // Only iterate entities in cell 1_0
     std::cout << "Tables for cell 1_0:\n";
-    q.set_group<Cell_1_0>().iter([&](flecs::iter& it) {
-        flecs::entity group = ecs.entity(it.group_id());
-        std::cout << " - group " << group.path() << ": table ["
-            << it.table().str() << "]\n";
+    q.set_group<Cell_1_0>().run([&](flecs::iter& it) {
+        while (it.next()) {
+            flecs::entity group = ecs.entity(it.group_id());
+            std::cout << " - group " << group.path() << ": table ["
+                << it.table().str() << "]\n";
+        }
     });
     
     // Output:

@@ -43,9 +43,7 @@ int main(int, char *[]) {
     int x_var = q.find_var("X");
     int y_var = q.find_var("Y");
 
-    // Because the query doesn't use the This variable we cannot use "each"
-    // which iterates the entities array. Instead we can use iter like this:
-    q.iter([&](flecs::iter& it) {
+    q.each([&](flecs::iter& it, size_t) {
         flecs::entity x = it.get_var(x_var);
         flecs::entity y = it.get_var(y_var);
         std::cout << x.name() << " likes " << y.name() << "\n";

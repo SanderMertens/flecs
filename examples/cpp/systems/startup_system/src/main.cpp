@@ -16,13 +16,13 @@ int main(int, char *[]) {
     // Startup system
     ecs.system("Startup")
         .kind(flecs::OnStart)
-        .iter([](flecs::iter& it) {
+        .run([](flecs::iter& it) {
             std::cout << it.system().name() << "\n";
         });
 
     // Regular system
     ecs.system("Update")
-        .iter([](flecs::iter& it) {
+        .run([](flecs::iter& it) {
             std::cout << it.system().name() << "\n";
         });
 
