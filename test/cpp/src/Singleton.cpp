@@ -42,7 +42,7 @@ void Singleton_modified_singleton(void) {
 
     world.observer<Position>()
         .event(flecs::OnSet)
-        .iter([&](flecs::iter it, Position *p) {
+        .each([&](Position&) {
             invoked ++;
         });
 
@@ -61,7 +61,7 @@ void Singleton_add_singleton(void) {
 
     world.observer<Position>()
         .event(flecs::OnAdd)
-        .iter([&](flecs::iter it, Position *p) {
+        .each([&](Position& p) {
             invoked ++;
         });
 
@@ -78,7 +78,7 @@ void Singleton_remove_singleton(void) {
 
     world.observer<Position>()
         .event(flecs::OnRemove)
-        .iter([&](flecs::iter it, Position *p) {
+        .each([&](Position& p) {
             invoked ++;
         });
 
@@ -106,13 +106,15 @@ void Singleton_singleton_system(void) {
 
     world.system<>()
         .expr("[inout] Position($)")
-        .iter([](flecs::iter it) {
-            auto p = it.field<Position>(0);
-            test_int(p->x, 10);
-            test_int(p->y, 20);
+        .run([](flecs::iter& it) {
+            while (it.next()) {
+                auto p = it.field<Position>(0);
+                test_int(p->x, 10);
+                test_int(p->y, 20);
 
-            p->x ++;
-            p->y ++;
+                p->x ++;
+                p->y ++;
+            }
         });
 
     world.progress();

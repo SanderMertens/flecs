@@ -103,20 +103,28 @@ ecs_entity_t flecs_run_intern(
 
     ecs_run_action_t run = system_data->run;
     if (run) {
-        run(it);
-    } else if (system_data->query->term_count) {
-        if (it == &qit) {
-            while (ecs_query_next(&qit)) {
-                action(&qit);
-            }
+        if (!system_data->query->term_count) {
+            it->next = flecs_default_next_callback; /* Return once */
+            run(it);
+            ecs_iter_fini(&qit);
         } else {
-            while (ecs_iter_next(it)) {
-                action(it);
-            }
+            run(it);
         }
     } else {
-        action(&qit);
-        ecs_iter_fini(&qit);
+        if (system_data->query->term_count) {
+            if (it == &qit) {
+                while (ecs_query_next(&qit)) {
+                    action(&qit);
+                }
+            } else {
+                while (ecs_iter_next(it)) {
+                    action(it);
+                }
+            }
+        } else {
+            action(&qit);
+            ecs_iter_fini(&qit);
+        }
     }
 
     flecs_stage_set_system(stage, old_system);

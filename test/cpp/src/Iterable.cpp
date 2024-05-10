@@ -34,15 +34,18 @@ void Iterable_page_iter(void) {
     auto q = ecs.query<Self>();
 
     int32_t count = 0;
-    q.page(1, 3).iter([&](flecs::iter it, Self* self) {
-        test_int(it.count(), 3);
-        test_assert(it.entity(0) == e2);
-        test_assert(it.entity(1) == e3);
-        test_assert(it.entity(2) == e4);
-        test_assert(it.entity(0) == self[0].value);
-        test_assert(it.entity(1) == self[1].value);
-        test_assert(it.entity(2) == self[2].value);
-        count += it.count();
+    q.page(1, 3).run([&](flecs::iter it) {
+        while (it.next()) {
+            auto self = it.field<Self>(0);
+            test_int(it.count(), 3);
+            test_assert(it.entity(0) == e2);
+            test_assert(it.entity(1) == e3);
+            test_assert(it.entity(2) == e4);
+            test_assert(it.entity(0) == self[0].value);
+            test_assert(it.entity(1) == self[1].value);
+            test_assert(it.entity(2) == self[2].value);
+            count += it.count();
+        }
     });
 
     test_int(count, 3);
@@ -93,27 +96,33 @@ void Iterable_worker_iter(void) {
     auto q = ecs.query<Self>();
 
     int32_t count = 0;
-    q.worker(0, 2).iter([&](flecs::iter it, Self* self) {
-        test_int(it.count(), 3);
-        test_assert(it.entity(0) == e1);
-        test_assert(it.entity(1) == e2);
-        test_assert(it.entity(2) == e3);
-        test_assert(it.entity(0) == self[0].value);
-        test_assert(it.entity(1) == self[1].value);
-        test_assert(it.entity(2) == self[2].value);
-        count += it.count();
+    q.worker(0, 2).run([&](flecs::iter it) {
+        while (it.next()) {
+            auto self = it.field<Self>(0);
+            test_int(it.count(), 3);
+            test_assert(it.entity(0) == e1);
+            test_assert(it.entity(1) == e2);
+            test_assert(it.entity(2) == e3);
+            test_assert(it.entity(0) == self[0].value);
+            test_assert(it.entity(1) == self[1].value);
+            test_assert(it.entity(2) == self[2].value);
+            count += it.count();
+        }
     });
 
     test_int(count, 3);
 
     count = 0;
-    q.worker(1, 2).iter([&](flecs::iter it, Self* self) {
-        test_int(it.count(), 2);
-        test_assert(it.entity(0) == e4);
-        test_assert(it.entity(1) == e5);
-        test_assert(it.entity(0) == self[0].value);
-        test_assert(it.entity(1) == self[1].value);
-        count += it.count();
+    q.worker(1, 2).run([&](flecs::iter it) {
+        while (it.next()) {
+            auto self = it.field<Self>(0);
+            test_int(it.count(), 2);
+            test_assert(it.entity(0) == e4);
+            test_assert(it.entity(1) == e5);
+            test_assert(it.entity(0) == self[0].value);
+            test_assert(it.entity(1) == self[1].value);
+            count += it.count();
+        }
     });
 
     test_int(count, 2);
