@@ -223,10 +223,12 @@ void Event_evt_void_ctx(void) {
     ecs.observer()
         .event(evt)
         .with(id)
-        .iter([&](flecs::iter& it) {
-            test_assert(it.entity(0) == e1);
-            test_int(it.param<EvtData>()->value, 10);
-            count ++;
+        .run([&](flecs::iter& it) {
+            while (it.next()) {
+                test_assert(it.entity(0) == e1);
+                test_int(it.param<EvtData>()->value, 10);
+                count ++;
+            }
         });
 
     EvtData data = {10};
@@ -251,10 +253,12 @@ void Event_evt_typed_ctx(void) {
     ecs.observer()
         .event<EvtData>()
         .with(id)
-        .iter([&](flecs::iter& it) {
-            test_assert(it.entity(0) == e1);
-            test_int(it.param<EvtData>()->value, 10);
-            count ++;
+        .run([&](flecs::iter& it) {
+            while (it.next()) {
+                test_assert(it.entity(0) == e1);
+                test_int(it.param<EvtData>()->value, 10);
+                count ++;
+            }
         });
 
     ecs.event<EvtData>()
@@ -277,10 +281,12 @@ void Event_evt_implicit_typed_ctx(void) {
     ecs.observer()
         .event<EvtData>()
         .with(id)
-        .iter([&](flecs::iter& it) {
-            test_assert(it.entity(0) == e1);
-            test_int(it.param<EvtData>()->value, 10);
-            count ++;
+        .run([&](flecs::iter& it) {
+            while (it.next()) {
+                test_assert(it.entity(0) == e1);
+                test_int(it.param<EvtData>()->value, 10);
+                count ++;
+            }
         });
 
     ecs.event<EvtData>()

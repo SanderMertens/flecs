@@ -1165,13 +1165,11 @@ void System_w_binding_ctx(ecs_iter_t *it) {
 static
 void System_run_w_ctx(ecs_iter_t *it) {
     System_w_ctx(it);
-    ecs_iter_fini(it);
 }
 
 static
 void System_run_w_binding_ctx(ecs_iter_t *it) {
     System_w_binding_ctx(it);
-    ecs_iter_fini(it);
 }
 
 void MultiThread_get_ctx(void) {
@@ -1237,7 +1235,7 @@ void MultiThread_get_binding_ctx_w_run(void) {
     set_worker_kind(world, 2);
 
     ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = ecs_entity(world, { .add = ecs_ids( ecs_dependson(EcsOnUpdate) ) }),
+        .entity = ecs_entity(world, { .add = ecs_ids( ecs_dependson(EcsOnUpdate)) }),
         .run = System_run_w_binding_ctx,
         .multi_threaded = true,
         .callback_ctx = &system_ctx

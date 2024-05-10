@@ -146,12 +146,14 @@ void Pairs_system_1_pair_instance(void) {
 
     ecs.system<>()
         .expr("(Pair, *)")
-        .iter([&](flecs::iter it) {
-            flecs::field<Pair> tr(it, 0);
-            invoke_count ++;            
-            for (auto i : it) {
-                entity_count ++;
-                trait_value = tr[i].value;
+        .run([&](flecs::iter& it) {
+            while (it.next()) {
+                flecs::field<Pair> tr(it, 0);
+                invoke_count ++;            
+                for (auto i : it) {
+                    entity_count ++;
+                    trait_value = tr[i].value;
+                }
             }
         });
 
@@ -175,12 +177,14 @@ void Pairs_system_2_pair_instances(void) {
 
     ecs.system<>()
         .expr("(Pair, *)")
-        .iter([&](flecs::iter it) {
-            flecs::field<Pair> tr(it, 0);
-            invoke_count ++;            
-            for (auto i : it) {
-                entity_count ++;
-                trait_value += tr[i].value;
+        .run([&](flecs::iter it) {
+            while (it.next()) {
+                flecs::field<Pair> tr(it, 0);
+                invoke_count ++;            
+                for (auto i : it) {
+                    entity_count ++;
+                    trait_value += tr[i].value;
+                }
             }
         });
 

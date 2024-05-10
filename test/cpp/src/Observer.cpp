@@ -127,7 +127,7 @@ void Observer_10_terms(void) {
         .with<TagH>()
         .with<TagI>()
         .with<TagJ>()
-        .iter([&](flecs::iter& it) {
+        .each([&](flecs::iter& it, size_t) {
             test_int(it.count(), 1);
             test_assert(it.entity(0) == e);
             test_int(it.field_count(), 10);
@@ -173,7 +173,7 @@ void Observer_16_terms(void) {
         .with<TagN>()
         .with<TagO>()
         .with<TagP>()
-        .iter([&](flecs::iter& it) {
+        .each([&](flecs::iter& it, size_t) {
             test_int(it.count(), 1);
             test_assert(it.entity(0) == e);
             test_int(it.field_count(), 16);
@@ -215,20 +215,24 @@ void Observer_2_entities_iter(void) {
 
     ecs.observer<const Position>()
         .event(flecs::OnSet)
-        .iter([&](flecs::iter& it, const Position *p) {
-            for (auto i : it) {
-                count ++;
-                if (it.entity(i) == e1) {
-                    test_int(p[i].x, 10);
-                    test_int(p[i].y, 20);
-                } else if (it.entity(i) == e2) {
-                    test_int(p[i].x, 30);
-                    test_int(p[i].y, 40);
-                } else {
-                    test_assert(false);
-                }
+        .run([&](flecs::iter& it) {
+            while (it.next()) {
+                auto p = it.field<const Position>(0);
 
-                last = it.entity(i);
+                for (auto i : it) {
+                    count ++;
+                    if (it.entity(i) == e1) {
+                        test_int(p[i].x, 10);
+                        test_int(p[i].y, 20);
+                    } else if (it.entity(i) == e2) {
+                        test_int(p[i].x, 30);
+                        test_int(p[i].y, 40);
+                    } else {
+                        test_assert(false);
+                    }
+
+                    last = it.entity(i);
+                }
             }
         });
 
@@ -252,22 +256,24 @@ void Observer_2_entities_table_column(void) {
 
     ecs.observer<const Position>()
         .event(flecs::OnSet)
-        .iter([&](flecs::iter& it) {
-            auto p = it.range().get<Position>();
+        .run([&](flecs::iter& it) {
+            while (it.next()) {
+                auto p = it.range().get<Position>();
 
-            for (auto i : it) {
-                count ++;
-                if (it.entity(i) == e1) {
-                    test_int(p[i].x, 10);
-                    test_int(p[i].y, 20);
-                } else if (it.entity(i) == e2) {
-                    test_int(p[i].x, 30);
-                    test_int(p[i].y, 40);
-                } else {
-                    test_assert(false);
+                for (auto i : it) {
+                    count ++;
+                    if (it.entity(i) == e1) {
+                        test_int(p[i].x, 10);
+                        test_int(p[i].y, 20);
+                    } else if (it.entity(i) == e2) {
+                        test_int(p[i].x, 30);
+                        test_int(p[i].y, 40);
+                    } else {
+                        test_assert(false);
+                    }
+
+                    last = it.entity(i);
                 }
-
-                last = it.entity(i);
             }
         });
 
@@ -466,8 +472,10 @@ void Observer_on_add_tag_action(void) {
 
     world.observer<MyTag>()
         .event(flecs::OnAdd)
-        .iter([&](flecs::iter it, MyTag*) {
-            invoked ++;
+        .run([&](flecs::iter it) {
+            while (it.next()) {
+                invoked ++;
+            }
         });
 
     world.entity()
@@ -483,8 +491,10 @@ void Observer_on_add_tag_iter(void) {
 
     world.observer<MyTag>()
         .event(flecs::OnAdd)
-        .iter([&](flecs::iter it, MyTag*) {
-            invoked ++;
+        .run([&](flecs::iter it) {
+            while (it.next()) {
+                invoked ++;
+            }
         });
 
     world.entity()
@@ -577,12 +587,12 @@ void Observer_run_callback(void) {
 
     ecs.observer<Position>()
         .event(flecs::OnAdd)
-        .run([](flecs::iter_t *it) {
-            while (ecs_iter_next(it)) {
-                it->callback(it);
+        .run([](flecs::iter& it) {
+            while (it.next()) {
+                it.each();
             }
-        })
-        .each([&](Position& p) {
+        },
+        [&](Position& p) {
             count ++;          
         });
 
@@ -610,11 +620,13 @@ void Observer_get_query(void) {
 
     auto q = sys.query();
 
-    q.iter([&](flecs::iter &it) {
-        auto pos = it.field<const Position>(0);
-        for (auto i : it) {
-            test_int(i, pos[i].x);
-            count ++;
+    q.run([&](flecs::iter& it) {
+        while (it.next()) {
+            auto pos = it.field<const Position>(0);
+            for (auto i : it) {
+                test_int(i, pos[i].x);
+                count ++;
+            }
         }
     });
 

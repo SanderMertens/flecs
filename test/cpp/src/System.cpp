@@ -8,10 +8,14 @@ void System_iter(void) {
         .set<Velocity>({1, 2});
 
     world.system<Position, Velocity>()
-        .iter([](flecs::iter&it, Position *p, Velocity *v) {
-            for (auto i : it) {
-                p[i].x += v[i].x;
-                p[i].y += v[i].y;
+        .run([](flecs::iter& it) {
+            while (it.next()) {
+                auto p = it.field<Position>(0);
+                auto v = it.field<Velocity>(1);
+                for (auto i : it) {
+                    p[i].x += v[i].x;
+                    p[i].y += v[i].y;
+                }
             }
         });
 
@@ -34,10 +38,14 @@ void System_iter_const(void) {
         .set<Velocity>({1, 2});
 
     world.system<Position, const Velocity>()
-        .iter([](flecs::iter&it, Position *p, const Velocity* v) {
-            for (auto i : it) {
-                p[i].x += v[i].x;
-                p[i].y += v[i].y;
+        .run([](flecs::iter& it) {
+            while (it.next()) {
+                auto p = it.field<Position>(0);
+                auto v = it.field<const Velocity>(1);
+                for (auto i : it) {
+                    p[i].x += v[i].x;
+                    p[i].y += v[i].y;
+                }
             }
         });
 
@@ -67,18 +75,21 @@ void System_iter_shared(void) {
         .set<Velocity>({3, 4});
 
     world.system<Position>().expr("Velocity(self|up IsA)")
-        .iter([](flecs::iter&it, Position *p) {
-            auto v = it.field<const Velocity>(1);
+        .run([](flecs::iter& it) {
+            while (it.next()) {
+                auto p = it.field<Position>(0);
+                auto v = it.field<const Velocity>(1);
 
-            if (!it.is_self(1)) {
-                for (auto i : it) {
-                    p[i].x += v->x;
-                    p[i].y += v->y;
-                }
-            } else {
-                for (auto i : it) {
-                    p[i].x += v[i].x;
-                    p[i].y += v[i].y;
+                if (!it.is_self(1)) {
+                    for (auto i : it) {
+                        p[i].x += v->x;
+                        p[i].y += v->y;
+                    }
+                } else {
+                    for (auto i : it) {
+                        p[i].x += v[i].x;
+                        p[i].y += v[i].y;
+                    }
                 }
             }
         });
@@ -115,18 +126,24 @@ void System_iter_optional(void) {
         .set<Position>({70, 80});
 
     world.system<Position, Velocity*, Mass*>()
-        .iter([](flecs::iter& it, Position *p, Velocity *v, Mass *m) {
-        if (it.is_set(1) && it.is_set(2)) {
-            for (auto i : it) {
-                p[i].x += v[i].x * m[i].value;
-                p[i].y += v[i].y * m[i].value;
+        .run([](flecs::iter& it) {
+            while (it.next()) {
+                auto p = it.field<Position>(0);
+                auto v = it.field<Velocity>(1);
+                auto m = it.field<Mass>(2);
+
+                if (it.is_set(1) && it.is_set(2)) {
+                    for (auto i : it) {
+                        p[i].x += v[i].x * m[i].value;
+                        p[i].y += v[i].y * m[i].value;
+                    }
+                } else {
+                    for (auto i : it) {
+                        p[i].x ++;
+                        p[i].y ++;
+                    }
+                }
             }
-        } else {
-            for (auto i : it) {
-                p[i].x ++;
-                p[i].y ++;
-            }
-        }
     });
 
     world.progress();
@@ -278,13 +295,15 @@ void System_signature(void) {
         .set<Velocity>({1, 2});
 
     world.system<>().expr("Position, Velocity")
-        .iter([](flecs::iter&it) {
-            flecs::field<Position> p(it, 0);
-            flecs::field<Velocity> v(it, 1);
+        .run([](flecs::iter& it) {
+            while (it.next()) {
+                flecs::field<Position> p(it, 0);
+                flecs::field<Velocity> v(it, 1);
 
-            for (auto i : it) {
-                p[i].x += v[i].x;
-                p[i].y += v[i].y;
+                for (auto i : it) {
+                    p[i].x += v[i].x;
+                    p[i].y += v[i].y;
+                }
             }
         });
 
@@ -307,13 +326,15 @@ void System_signature_const(void) {
         .set<Velocity>({1, 2});
 
     world.system<>().expr("Position, [in] Velocity")
-        .iter([](flecs::iter&it) {
-            flecs::field<Position> p(it, 0);
-            flecs::field<const Velocity> v(it, 1);
+        .run([](flecs::iter& it) {
+            while (it.next()) {
+                flecs::field<Position> p(it, 0);
+                flecs::field<const Velocity> v(it, 1);
 
-            for (auto i : it) {
-                p[i].x += v[i].x;
-                p[i].y += v[i].y;
+                for (auto i : it) {
+                    p[i].x += v[i].x;
+                    p[i].y += v[i].y;
+                }
             }
         });
 
@@ -343,19 +364,21 @@ void System_signature_shared(void) {
         .set<Velocity>({3, 4});
 
     world.system<>().expr("Position, [in] Velocity(self|up IsA)")
-        .iter([](flecs::iter&it) {
-            flecs::field<Position> p(it, 0);
-            flecs::field<const Velocity> v(it, 1);
+        .run([](flecs::iter& it) {
+            while (it.next()) {
+                flecs::field<Position> p(it, 0);
+                flecs::field<const Velocity> v(it, 1);
 
-            if (!it.is_self(1)) {
-                for (auto i : it) {
-                    p[i].x += v->x;
-                    p[i].y += v->y;
-                }
-            } else {
-                for (auto i : it) {
-                    p[i].x += v[i].x;
-                    p[i].y += v[i].y;
+                if (!it.is_self(1)) {
+                    for (auto i : it) {
+                        p[i].x += v->x;
+                        p[i].y += v->y;
+                    }
+                } else {
+                    for (auto i : it) {
+                        p[i].x += v[i].x;
+                        p[i].y += v[i].y;
+                    }
                 }
             }
         });
@@ -392,20 +415,22 @@ void System_signature_optional(void) {
         .set<Position>({70, 80});
 
     world.system<>().expr("Position, ?Velocity, ?Mass")
-        .iter([](flecs::iter& it) {
-            flecs::field<Position> p(it, 0);
-            flecs::field<Velocity> v(it, 1);
-            flecs::field<Mass> m(it, 2);
+        .run([](flecs::iter& it) {
+            while (it.next()) {
+                flecs::field<Position> p(it, 0);
+                flecs::field<Velocity> v(it, 1);
+                flecs::field<Mass> m(it, 2);
 
-            if (it.is_set(1) && it.is_set(2)) {
-                for (auto i : it) {
-                    p[i].x += v[i].x * m[i].value;
-                    p[i].y += v[i].y * m[i].value;
-                }
-            } else {
-                for (auto i : it) {
-                    p[i].x ++;
-                    p[i].y ++;
+                if (it.is_set(1) && it.is_set(2)) {
+                    for (auto i : it) {
+                        p[i].x += v[i].x * m[i].value;
+                        p[i].y += v[i].y * m[i].value;
+                    }
+                } else {
+                    for (auto i : it) {
+                        p[i].x ++;
+                        p[i].y ++;
+                    }
                 }
             }
         });
@@ -437,11 +462,11 @@ void System_copy_name_on_create(void) {
     strcpy(name, "Hello");
 
     auto system_1 = world.system<Position>(name)
-        .iter([](flecs::iter&it, Position *p) {});
+        .run([](flecs::iter& it) { while (it.next()) {} });
 
     strcpy(name, "World");
     auto system_2 = world.system<Position>(name)
-        .iter([](flecs::iter&it, Position *p) {});
+        .run([](flecs::iter& it) { while (it.next()) {} });
 
     test_assert(system_1.id() != system_2.id());
 }
@@ -450,7 +475,7 @@ void System_nested_system(void) {
     flecs::world world;
 
     auto system_1 = world.system<Position>("foo::bar")
-        .iter([](flecs::iter&it, Position *p) {});
+        .run([](flecs::iter& it) { while (it.next()) {} });
 
     test_str(system_1.name().c_str(), "bar");
 
@@ -469,8 +494,10 @@ void System_empty_signature(void) {
     int count = 0;
 
     world.system<>()
-        .iter([&](flecs::iter it) {
-            count ++;
+        .run([&](flecs::iter it) {
+            while (it.next()) {
+                count ++;
+            }
         });
 
     world.progress();
@@ -486,8 +513,10 @@ void System_iter_tag(void) {
     int invoked = 0;
 
     world.system<MyTag>()
-        .iter([&](flecs::iter it, MyTag*) {
-            invoked ++;
+        .run([&](flecs::iter it) {
+            while (it.next()) {
+                invoked ++;
+            }
         });
 
     world.entity()
@@ -522,7 +551,7 @@ void System_set_interval(void) {
     auto sys = world.system<>()
         .kind(0)
         .interval(1.0f)
-        .iter([&](flecs::iter& it) { });
+        .run([&](flecs::iter& it) { });
 
     float i = sys.interval();
     test_int(i, 1.0f);
@@ -670,11 +699,13 @@ void System_get_query(void) {
 
     auto q = sys.query();
 
-    q.iter([&](flecs::iter &it) {
-        auto pos = it.field<const Position>(0);
-        for (auto i : it) {
-            test_int(i, pos[i].x);
-            count ++;
+    q.run([&](flecs::iter &it) {
+        while (it.next()) {
+            auto pos = it.field<const Position>(0);
+            for (auto i : it) {
+                test_int(i, pos[i].x);
+                count ++;
+            }
         }
     });
 
@@ -779,10 +810,12 @@ void System_add_from_iter(void) {
     auto e3 = world.entity().set<Position>({2, 0});
 
     world.system<const Position>()
-        .iter([](flecs::iter& it, const Position* p) {
-            for (auto i : it) {
-                it.entity(i).add<Velocity>();
-                test_assert(!it.entity(i).has<Velocity>());
+        .run([](flecs::iter& it) {
+            while (it.next()) {
+                for (auto i : it) {
+                    it.entity(i).add<Velocity>();
+                    test_assert(!it.entity(i).has<Velocity>());
+                }
             }
         });
 
@@ -801,11 +834,13 @@ void System_delete_from_iter(void) {
     auto e3 = world.entity().set<Position>({2, 0});
 
     world.system<const Position>()
-        .iter([](const flecs::iter& it, const Position* p) {
-            for (auto i : it) {
-                it.entity(i).destruct();
-                // Delete is deferred
-                test_assert(it.entity(i).is_alive());
+        .run([](flecs::iter& it) {
+            while (it.next()) {
+                for (auto i : it) {
+                    it.entity(i).destruct();
+                    // Delete is deferred
+                    test_assert(it.entity(i).is_alive());
+                }
             }
         });
 
@@ -824,9 +859,12 @@ void System_add_from_iter_world_handle(void) {
     auto e3 = world.entity().set<Entity>({world.entity()});
 
     world.system<const Entity>()
-        .iter([](const flecs::iter& it, const Entity* c) {
-            for (auto i : it) {
-                c[i].e.mut(it).add<Position>();
+        .run([](flecs::iter& it) {
+            while (it.next()) {
+                auto c = it.field<const Entity>(0);
+                for (auto i : it) {
+                    c[i].e.mut(it).add<Position>();
+                }
             }
         });
 
@@ -845,11 +883,13 @@ void System_new_from_iter(void) {
     auto e3 = world.entity().set<Position>({0, 0});
 
     world.system<const Position>()
-        .iter([](const flecs::iter& it, const Position* p) {
-            for (auto i : it) {
-                it.entity(i).set<Entity>({
-                    it.world().entity().add<Velocity>()
-                });
+        .run([](flecs::iter& it) {
+            while (it.next()) {
+                for (auto i : it) {
+                    it.entity(i).set<Entity>({
+                        it.world().entity().add<Velocity>()
+                    });
+                }
             }
         });
 
@@ -875,12 +915,14 @@ void System_each_w_mut_children_it(void) {
     int32_t count = 0;
 
     world.system<const Position>()
-        .iter([&](const flecs::iter& it, const Position* p) {
-            for (auto i : it) {
-                it.entity(i).children([&](flecs::entity child) {
-                    child.add<Velocity>();
-                    count ++;
-                });
+        .run([&](flecs::iter& it) {
+            while (it.next()) {
+                for (auto i : it) {
+                    it.entity(i).children([&](flecs::entity child) {
+                        child.add<Velocity>();
+                        count ++;
+                    });
+                }
             }
         });
 
@@ -905,16 +947,19 @@ void System_readonly_children_iter(void) {
     int32_t count = 0;
 
     world.system<const Entity>()
-        .iter([&](const flecs::iter& it, const Entity* c) {
-            for (auto i : it) {
-                c[i].e.children([&](flecs::entity child) {
-                    // Dummy code to ensure we can access the entity
-                    const Position *p = child.get<Position>();
-                    test_int(p->x, 1);
-                    test_int(p->y, 0);
+        .run([&](flecs::iter& it) {
+            while (it.next()) {
+                auto c = it.field<const Entity>(0);
+                for (auto i : it) {
+                    c[i].e.children([&](flecs::entity child) {
+                        // Dummy code to ensure we can access the entity
+                        const Position *p = child.get<Position>();
+                        test_int(p->x, 1);
+                        test_int(p->y, 0);
 
-                    count ++;
-                });
+                        count ++;
+                    });
+                }
             }
         });
 
@@ -936,38 +981,50 @@ void System_rate_filter(void) {
     frame_count = 0;
 
     auto root = world.system<>("root")
-        .iter([&](flecs::iter& it) {
-            root_count ++;
+        .run([&](flecs::iter& it) {
+            while (it.next()) {
+                root_count ++;
+            }
         });
 
     auto l1_a = world.system<>("l1_a")
         .rate(root, 1)
-        .iter([&](flecs::iter& it) {
-            l1_a_count ++;
+        .run([&](flecs::iter& it) {
+            while (it.next()) {
+                l1_a_count ++;
+            }
         });
 
     auto l1_b = world.system<>("l1_b")
         .rate(root, 2)
-        .iter([&](flecs::iter& it) {
-            l1_b_count ++;
+        .run([&](flecs::iter& it) {
+            while (it.next()) {
+                l1_b_count ++;
+            }
         });
 
     world.system<>("l1_c")
         .rate(root, 3)
-        .iter([&](flecs::iter& it) {
-            l1_c_count ++;
+        .run([&](flecs::iter& it) {
+            while (it.next()) {
+                l1_c_count ++;
+            }
         });
 
     world.system<>("l2_a")
         .rate(l1_a, 2)
-        .iter([&](flecs::iter& it) {
-            l2_a_count ++;
+        .run([&](flecs::iter& it) {
+            while (it.next()) {
+                l2_a_count ++;
+            }
         });
 
     world.system<>("l2_b")
         .rate(l1_b, 2)
-        .iter([&](flecs::iter& it) {
-            l2_b_count ++;
+        .run([&](flecs::iter& it) {
+            while (it.next()) {
+                l2_b_count ++;
+            }
         });
 
     for (int i = 0; i < 30; i ++) {
@@ -991,20 +1048,26 @@ void System_update_rate_filter(void) {
     frame_count = 0;
 
     auto root = world.system<>("root")
-        .iter([&](flecs::iter& it) {
-            root_count ++;
+        .run([&](flecs::iter& it) {
+            while (it.next()) {
+                root_count ++;
+            }
         });
 
     auto l1 = world.system<>("l1")
         .rate(root, 2)
-        .iter([&](flecs::iter& it) {
-            l1_count ++;
+        .run([&](flecs::iter& it) {
+            while (it.next()) {
+                l1_count ++;
+            }
         });
 
     world.system<>("l2")
         .rate(l1, 3)
-        .iter([&](flecs::iter& it) {
-            l2_count ++;
+        .run([&](flecs::iter& it) {
+            while (it.next()) {
+                l2_count ++;
+            }
         });
 
     for (int i = 0; i < 12; i ++) {
@@ -1073,10 +1136,13 @@ void System_test_auto_defer_iter(void) {
 
     auto s = world.system<Value>()
         .with<Tag>()
-        .iter([](flecs::iter& it, Value *v) {
-            for (auto i : it) {
-                v[i].value ++;
-                it.entity(i).remove<Tag>();
+        .run([](flecs::iter& it) {
+            while (it.next()) {
+                auto v = it.field<Value>(0);
+                for (auto i : it) {
+                    v[i].value ++;
+                    it.entity(i).remove<Tag>();
+                }
             }
         });
 
@@ -1113,25 +1179,31 @@ void System_custom_pipeline(void) {
 
     world.system()
         .kind(PostFrame)
-        .iter([&](flecs::iter it) {
-            test_int(count, 2);
-            count ++;
+        .run([&](flecs::iter it) {
+            while (it.next()) {
+                test_int(count, 2);
+                count ++;
+            }
         })
         .add(Tag);
 
     world.system()
         .kind(OnFrame)
-        .iter([&](flecs::iter it) {
-            test_int(count, 1);
-            count ++;
+        .run([&](flecs::iter it) {
+            while (it.next()) {
+                test_int(count, 1);
+                count ++;
+            }
         })
         .add(Tag);
 
     world.system()
         .kind(PreFrame)
-        .iter([&](flecs::iter it) {
-            test_int(count, 0);
-            count ++;
+        .run([&](flecs::iter it) {
+            while (it.next()) {
+                test_int(count, 0);
+                count ++;
+            }
         })
         .add(Tag);
 
@@ -1158,23 +1230,29 @@ void System_custom_pipeline_w_kind(void) {
 
     world.system()
         .kind(Tag)
-        .iter([&](flecs::iter it) {
-            test_int(count, 0);
-            count ++;
+        .run([&](flecs::iter it) {
+            while (it.next()) {
+                test_int(count, 0);
+                count ++;
+            }
         });
 
     world.system()
         .kind(Tag)
-        .iter([&](flecs::iter it) {
-            test_int(count, 1);
-            count ++;
+        .run([&](flecs::iter it) {
+            while (it.next()) {
+                test_int(count, 1);
+                count ++;
+            }
         });
 
     world.system()
         .kind(Tag)
-        .iter([&](flecs::iter it) {
-            test_int(count, 2);
-            count ++;
+        .run([&](flecs::iter it) {
+            while (it.next()) {
+                test_int(count, 2);
+                count ++;
+            }
         });
 
     test_int(count, 0);
@@ -1442,14 +1520,20 @@ void System_instanced_query_w_singleton_iter(void) {
     auto s = ecs.system<Self, Position, const Velocity>()
         .term_at(2).singleton()
         .instanced()
-        .iter([&](flecs::iter it, Self* s, Position* p, const Velocity* v) {
-            test_assert(it.count() > 1);
+        .run([&](flecs::iter it) {
+            while (it.next()) {
+                auto s = it.field<Self>(0);
+                auto p = it.field<Position>(1);
+                auto v = it.field<const Velocity>(2);
 
-            for (auto i : it) {
-                p[i].x += v->x;
-                p[i].y += v->y;
-                test_assert(it.entity(i) == s[i].value);
-                count ++;
+                test_assert(it.count() > 1);
+
+                for (auto i : it) {
+                    p[i].x += v->x;
+                    p[i].y += v->y;
+                    test_assert(it.entity(i) == s[i].value);
+                    count ++;
+                }
             }
         });
 
@@ -1500,20 +1584,25 @@ void System_instanced_query_w_base_iter(void) {
 
     auto s = ecs.system<Self, Position, const Velocity>()
         .instanced()
-        .iter([&](flecs::iter it, Self* s, Position* p, const Velocity* v) {
-            test_assert(it.count() > 1);
+        .run([&](flecs::iter it) {
+            while (it.next()) {
+                auto s = it.field<Self>(0);
+                auto p = it.field<Position>(1);
+                auto v = it.field<const Velocity>(2);
+                test_assert(it.count() > 1);
 
-            for (auto i : it) {
-                if (it.is_self(2)) {
-                    p[i].x += v[i].x;
-                    p[i].y += v[i].y;
-                } else {
-                    p[i].x += v->x;
-                    p[i].y += v->y;
+                for (auto i : it) {
+                    if (it.is_self(2)) {
+                        p[i].x += v[i].x;
+                        p[i].y += v[i].y;
+                    } else {
+                        p[i].x += v->x;
+                        p[i].y += v->y;
+                    }
+
+                    test_assert(it.entity(i) == s[i].value);
+                    count ++;
                 }
-
-                test_assert(it.entity(i) == s[i].value);
-                count ++;
             }
         });
 
@@ -1575,14 +1664,20 @@ void System_un_instanced_query_w_singleton_iter(void) {
 
     auto s = ecs.system<Self, Position, const Velocity>()
         .term_at(2).singleton()
-        .iter([&](flecs::iter it, Self* s, Position* p, const Velocity* v) {
-            test_assert(it.count() == 1);
+        .run([&](flecs::iter it) {
+            while (it.next()) {
+                auto s = it.field<Self>(0);
+                auto p = it.field<Position>(1);
+                auto v = it.field<const Velocity>(2);
 
-            for (auto i : it) {
-                p[i].x += v[i].x;
-                p[i].y += v[i].y;
-                test_assert(it.entity(i) == s[i].value);
-                count ++;
+                test_assert(it.count() == 1);
+
+                for (auto i : it) {
+                    p[i].x += v[i].x;
+                    p[i].y += v[i].y;
+                    test_assert(it.entity(i) == s[i].value);
+                    count ++;
+                }
             }
         });
 
@@ -1632,12 +1727,18 @@ void System_un_instanced_query_w_base_iter(void) {
     int32_t count = 0;
 
     auto s = ecs.system<Self, Position, const Velocity>()
-        .iter([&](flecs::iter it, Self* s, Position* p, const Velocity* v) {
-            for (auto i : it) {
-                p[i].x += v[i].x;
-                p[i].y += v[i].y;
-                test_assert(it.entity(i) == s[i].value);
-                count ++;
+        .run([&](flecs::iter it) {
+            while (it.next()) {
+                auto s = it.field<Self>(0);
+                auto p = it.field<Position>(1);
+                auto v = it.field<const Velocity>(2);
+
+                for (auto i : it) {
+                    p[i].x += v[i].x;
+                    p[i].y += v[i].y;
+                    test_assert(it.entity(i) == s[i].value);
+                    count ++;
+                }
             }
         });
 
@@ -1778,8 +1879,10 @@ void System_entity_ctor(void) {
     uint32_t invoked = 0;
 
     flecs::entity sys = world.system<>()
-        .iter([&](flecs::iter& it) {
-            invoked ++;
+        .run([&](flecs::iter& it) {
+            while (it.next()) {
+                invoked ++;
+            }
         });
 
     auto sys_from_id = world.system(sys);
@@ -1824,7 +1927,7 @@ void System_multithread_system_w_query_each(void) {
     world.system<Position>()
         .multi_threaded()
         .each([&](flecs::entity e, Position& p) {
-            q.each(e, [&](Velocity& v) {
+            q.iter(e).each([&](Velocity& v) {
                 p.x += v.x;
                 p.y += v.y;
             });
@@ -1851,7 +1954,7 @@ void System_multithread_system_w_query_each_w_iter(void) {
     world.system<Position>()
         .multi_threaded()
         .each([&](flecs::iter& it, size_t, Position& p) {
-            q.each(it, [&](Velocity& v) {
+            q.iter(it).each([&](Velocity& v) {
                 p.x += v.x;
                 p.y += v.y;
             });
@@ -1878,7 +1981,7 @@ void System_multithread_system_w_query_each_w_world(void) {
     world.system<Position>()
         .multi_threaded()
         .each([&](flecs::iter& it, size_t, Position& p) {
-            q.each(it.world(), [&](Velocity& v) {
+            q.iter(it.world()).each([&](Velocity& v) {
                 p.x += v.x;
                 p.y += v.y;
             });
@@ -1905,10 +2008,14 @@ void System_multithread_system_w_query_iter(void) {
     world.system<Position>()
         .multi_threaded()
         .each([&](flecs::entity e, Position& p) {
-            q.iter(e, [&](flecs::iter& it, Velocity* v) {
-                for (auto i : it) {
-                    p.x += v[i].x;
-                    p.y += v[i].y;
+            q.iter(e).run([&](flecs::iter& it) {
+                while (it.next()) {
+                    auto v = it.field<Velocity>(0);
+
+                    for (auto i : it) {
+                        p.x += v[i].x;
+                        p.y += v[i].y;
+                    }
                 }
             });
         });
@@ -1934,10 +2041,13 @@ void System_multithread_system_w_query_iter_w_iter(void) {
     world.system<Position>()
         .multi_threaded()
         .each([&](flecs::iter& it, size_t, Position& p) {
-            q.iter(it, [&](flecs::iter& it, Velocity* v) {
-                for (auto i : it) {
-                    p.x += v[i].x;
-                    p.y += v[i].y;
+            q.iter(it).run([&](flecs::iter& it) {
+                while (it.next()) {
+                    auto v = it.field<Velocity>(0);
+                    for (auto i : it) {
+                        p.x += v[i].x;
+                        p.y += v[i].y;
+                    }
                 }
             });
         });
@@ -1963,10 +2073,13 @@ void System_multithread_system_w_query_iter_w_world(void) {
     world.system<Position>()
         .multi_threaded()
         .each([&](flecs::iter& it, size_t, Position& p) {
-            q.iter(it.world(), [&](flecs::iter& it, Velocity* v) {
-                for (auto i : it) {
-                    p.x += v[i].x;
-                    p.y += v[i].y;
+            q.iter(it.world()).run([&](flecs::iter& it) {
+                while (it.next()) {
+                    auto v = it.field<Velocity>(0);
+                    for (auto i : it) {
+                        p.x += v[i].x;
+                        p.y += v[i].y;
+                    }
                 }
             });
         });
@@ -1986,17 +2099,16 @@ void System_run_callback(void) {
         .set<Velocity>({1, 2});
 
     world.system<Position, const Velocity>()
-        .run([](flecs::iter_t *it) {
-            while (ecs_iter_next(it)) {
-                it->callback(it);
-            }
-        })
-        .iter([](flecs::iter&it, Position *p, const Velocity* v) {
-            for (auto i : it) {
-                p[i].x += v[i].x;
-                p[i].y += v[i].y;
-            }
-        });
+        .run(
+            [](flecs::iter& it) {
+                while (it.next()) {
+                    it.each();
+                }
+            },
+            [](Position& p, const Velocity& v) {
+                p.x += v.x;
+                p.y += v.y;
+            });
 
     world.progress();
 
@@ -2016,16 +2128,20 @@ void System_startup_system(void) {
 
     ecs.system()
         .kind(flecs::OnStart)
-        .iter([&](flecs::iter& it) {
-            test_assert(it.delta_time() == 0);
-            count_a ++;
+        .run([&](flecs::iter& it) {
+            while (it.next()) {
+                test_assert(it.delta_time() == 0);
+                count_a ++;
+            }
         });
 
     ecs.system()
         .kind(flecs::OnUpdate)
-        .iter([&](flecs::iter& it) {
-            test_assert(it.delta_time() != 0);
-            count_b ++;
+        .run([&](flecs::iter& it) {
+            while (it.next()) {
+                test_assert(it.delta_time() != 0);
+                count_b ++;
+            }
         });
 
     ecs.progress();
@@ -2049,14 +2165,18 @@ void System_interval_tick_source(void) {
 
     ecs.system()
         .tick_source(t)
-        .iter([&](flecs::iter& it) {
-            sys_a_invoked ++;
+        .run([&](flecs::iter& it) {
+            while (it.next()) {
+                sys_a_invoked ++;
+            }
         });
 
     ecs.system()
         .tick_source(t)
-        .iter([&](flecs::iter& it) {
-            sys_b_invoked ++;
+        .run([&](flecs::iter& it) {
+            while (it.next()) {
+                sys_b_invoked ++;
+            }
         });
 
     ecs.progress(1.0);
@@ -2081,14 +2201,18 @@ void System_rate_tick_source(void) {
 
     ecs.system()
         .tick_source(t)
-        .iter([&](flecs::iter& it) {
-            sys_a_invoked ++;
+        .run([&](flecs::iter& it) {
+            while (it.next()) {
+                sys_a_invoked ++;
+            }
         });
 
     ecs.system()
         .tick_source(t)
-        .iter([&](flecs::iter& it) {
-            sys_b_invoked ++;
+        .run([&](flecs::iter& it) {
+            while (it.next()) {
+                sys_b_invoked ++;
+            }
         });
 
     ecs.progress(1.0);
@@ -2114,14 +2238,18 @@ void System_nested_rate_tick_source(void) {
 
     ecs.system()
         .tick_source(t_3)
-        .iter([&](flecs::iter& it) {
-            sys_a_invoked ++;
+        .run([&](flecs::iter& it) {
+            while (it.next()) {
+                sys_a_invoked ++;
+            }
         });
 
     ecs.system()
         .tick_source(t_6)
-        .iter([&](flecs::iter& it) {
-            sys_b_invoked ++;
+        .run([&](flecs::iter& it) {
+            while (it.next()) {
+                sys_b_invoked ++;
+            }
         });
 
     ecs.progress(1.0);
@@ -2204,7 +2332,7 @@ void System_randomize_timers(void) {
 
     flecs::entity s1 = ecs.system()
         .interval(1.0)
-        .iter([](flecs::iter& it) { });
+        .run([](flecs::iter& it) { while (it.next()) {} });
 
     {
         const flecs::Timer *t = s1.get<flecs::Timer>();
@@ -2216,7 +2344,7 @@ void System_randomize_timers(void) {
 
     flecs::entity s2 = ecs.system()
         .interval(1.0)
-        .iter([](flecs::iter& it) { });
+        .run([](flecs::iter& it) { while (it.next()) {} });
 
     {
         const flecs::Timer *t = s1.get<flecs::Timer>();
@@ -2273,7 +2401,7 @@ void System_singleton_tick_source(void) {
 
     ecs.system()
         .tick_source<TagA>()
-        .iter([&](flecs::iter& it) {
+        .run([&](flecs::iter& it) {
             sys_invoked ++;
         });
 
@@ -2300,7 +2428,12 @@ void System_pipeline_step_with_kind_enum(void) {
 
     bool ran_test = false;
 
-    ecs.system().kind(PipelineStepEnum::CustomStep).iter([&ran_test](flecs::iter& it) { ran_test = true; });
+    ecs.system().kind(PipelineStepEnum::CustomStep)
+        .run([&ran_test](flecs::iter& it) {
+            while (it.next()) {
+                ran_test = true;
+            }
+        });
 
     ecs.progress();
     test_assert(ran_test);
@@ -2314,7 +2447,12 @@ void System_pipeline_step_depends_on_pipeline_step_with_enum(void) {
 
     bool ran_test = false;
 
-    ecs.system().kind(PipelineStepEnum::CustomStep2).iter([&ran_test](flecs::iter& it) { ran_test = true; });
+    ecs.system().kind(PipelineStepEnum::CustomStep2)
+        .run([&ran_test](flecs::iter& it) {
+            while (it.next()) {
+                ran_test = true;
+            }
+        });
 
     ecs.progress();
     test_assert(ran_test);

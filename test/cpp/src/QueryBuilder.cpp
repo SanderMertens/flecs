@@ -728,11 +728,13 @@ void QueryBuilder_set_table_var_chained(void) {
 
     int count = 0;
 
-    q1.iter([&](flecs::iter& it, Position*) {
-        q2.set_var("this", it.table()).each([&](flecs::entity e, Velocity&) {
-            test_assert(e == e3);
-            count ++;
-        });
+    q1.run([&](flecs::iter& it) {
+        while (it.next()) {
+            q2.set_var("this", it.table()).each([&](flecs::entity e, Velocity&) {
+                test_assert(e == e3);
+                count ++;
+            });
+        }
     });
 
     test_int(count, 1);
@@ -756,11 +758,13 @@ void QueryBuilder_set_range_var_chained(void) {
 
     int count = 0;
 
-    q1.iter([&](flecs::iter& it, Position*) {
-        q2.set_var("this", it.range()).each([&](flecs::entity e, Velocity&) {
-            test_assert(e == e3);
-            count ++;
-        });
+    q1.run([&](flecs::iter& it) {
+        while (it.next()) {
+            q2.set_var("this", it.range()).each([&](flecs::entity e, Velocity&) {
+                test_assert(e == e3);
+                count ++;
+            });
+        }
     });
 
     test_int(count, 1);
@@ -1040,17 +1044,20 @@ void QueryBuilder_singleton_term(void) {
 
     int32_t count = 0;
 
-    q.iter([&](flecs::iter& it, Self *s) {
-        auto o = it.field<const Other>(1);
-        test_assert(!it.is_self(1));
-        test_int(o->value, 10);
-        
-        const Other& o_ref = *o;
-        test_int(o_ref.value, 10);
+    q.run([&](flecs::iter& it) {
+        while (it.next()) {
+            auto s = it.field<Self>(0);
+            auto o = it.field<const Other>(1);
+            test_assert(!it.is_self(1));
+            test_int(o->value, 10);
+            
+            const Other& o_ref = *o;
+            test_int(o_ref.value, 10);
 
-        for (auto i : it) {
-            test_assert(it.entity(i) == s[i].value);
-            count ++;
+            for (auto i : it) {
+                test_assert(it.entity(i) == s[i].value);
+                count ++;
+            }
         }
     });
     
@@ -1074,14 +1081,17 @@ void QueryBuilder_isa_superset_term(void) {
 
     int32_t count = 0;
 
-    q.iter([&](flecs::iter& it, Self *s) {
-        auto o = it.field<const Other>(1);
-        test_assert(!it.is_self(1));
-        test_int(o->value, 10);
+    q.run([&](flecs::iter& it) {
+        while (it.next()) {
+            auto s = it.field<Self>(0);
+            auto o = it.field<const Other>(1);
+            test_assert(!it.is_self(1));
+            test_int(o->value, 10);
 
-        for (auto i : it) {
-            test_assert(it.entity(i) == s[i].value);
-            count ++;
+            for (auto i : it) {
+                test_assert(it.entity(i) == s[i].value);
+                count ++;
+            }
         }
     });
     
@@ -1108,21 +1118,24 @@ void QueryBuilder_isa_self_superset_term(void) {
     int32_t count = 0;
     int32_t owned_count = 0;
 
-    q.iter([&](flecs::iter& it, Self *s) {
-        auto o = it.field<const Other>(1);
+    q.run([&](flecs::iter& it) {
+        while (it.next()) {
+            auto s = it.field<Self>(0);
+            auto o = it.field<const Other>(1);
 
-        if (!it.is_self(1)) {
-            test_int(o->value, 10);
-        } else {
-            for (auto i : it) {
-                test_int(o[i].value, 20);
-                owned_count ++;
+            if (!it.is_self(1)) {
+                test_int(o->value, 10);
+            } else {
+                for (auto i : it) {
+                    test_int(o[i].value, 20);
+                    owned_count ++;
+                }
             }
-        }
 
-        for (auto i : it) {
-            test_assert(it.entity(i) == s[i].value);
-            count ++;
+            for (auto i : it) {
+                test_assert(it.entity(i) == s[i].value);
+                count ++;
+            }
         }
     });
     
@@ -1147,14 +1160,17 @@ void QueryBuilder_childof_superset_term(void) {
 
     int32_t count = 0;
 
-    q.iter([&](flecs::iter& it, Self *s) {
-        auto o = it.field<const Other>(1);
-        test_assert(!it.is_self(1));
-        test_int(o->value, 10);
+    q.run([&](flecs::iter& it) {
+        while (it.next()) {
+            auto s = it.field<Self>(0);
+            auto o = it.field<const Other>(1);
+            test_assert(!it.is_self(1));
+            test_int(o->value, 10);
 
-        for (auto i : it) {
-            test_assert(it.entity(i) == s[i].value);
-            count ++;
+            for (auto i : it) {
+                test_assert(it.entity(i) == s[i].value);
+                count ++;
+            }
         }
     });
     
@@ -1181,21 +1197,24 @@ void QueryBuilder_childof_self_superset_term(void) {
     int32_t count = 0;
     int32_t owned_count = 0;
 
-    q.iter([&](flecs::iter& it, Self *s) {
-        auto o = it.field<const Other>(1);
+    q.run([&](flecs::iter& it) {
+        while (it.next()) {
+            auto s = it.field<Self>(0);
+            auto o = it.field<const Other>(1);
 
-        if (!it.is_self(1)) {
-            test_int(o->value, 10);
-        } else {
-            for (auto i : it) {
-                test_int(o[i].value, 20);
-                owned_count ++;
+            if (!it.is_self(1)) {
+                test_int(o->value, 10);
+            } else {
+                for (auto i : it) {
+                    test_int(o[i].value, 20);
+                    owned_count ++;
+                }
             }
-        }
 
-        for (auto i : it) {
-            test_assert(it.entity(i) == s[i].value);
-            count ++;
+            for (auto i : it) {
+                test_assert(it.entity(i) == s[i].value);
+                count ++;
+            }
         }
     });
     
@@ -1790,8 +1809,10 @@ void QueryBuilder_2_subsequent_args(void) {
     auto s = ecs.system<Rel, const Velocity>()
         .term_at(0).second(flecs::Wildcard)
         .term_at(1).singleton()
-        .iter([&](flecs::iter it){
-            count += it.count();
+        .run([&](flecs::iter it){
+            while (it.next()) {
+                count += it.count();
+            }
         });
     
     ecs.entity().add<Rel, Tag>();
@@ -1819,18 +1840,20 @@ void QueryBuilder_optional_tag_is_set(void) {
 
     int count = 0;
 
-    q.iter([&](flecs::iter& it) {
-        test_int(it.count(), 1);
+    q.run([&](flecs::iter& it) {
+        while (it.next()) {
+            test_int(it.count(), 1);
 
-        count += it.count();
-        
-        if (it.entity(0) == e_1) {
-            test_bool(it.is_set(0), true);
-            test_bool(it.is_set(1), true);
-        } else {
-            test_assert(it.entity(0) == e_2);
-            test_bool(it.is_set(0), true);
-            test_bool(it.is_set(1), false);
+            count += it.count();
+            
+            if (it.entity(0) == e_1) {
+                test_bool(it.is_set(0), true);
+                test_bool(it.is_set(1), true);
+            } else {
+                test_assert(it.entity(0) == e_2);
+                test_bool(it.is_set(0), true);
+                test_bool(it.is_set(1), false);
+            }
         }
     });
 
@@ -1869,11 +1892,13 @@ void QueryBuilder_10_terms(void) {
         .add<TagJ>();
 
     int count = 0;
-    f.iter([&](flecs::iter& it) {
-        test_int(it.count(), 1);
-        test_assert(it.entity(0) == e);
-        test_int(it.field_count(), 10);
-        count ++;
+    f.run([&](flecs::iter& it) {
+        while (it.next()) {
+            test_int(it.count(), 1);
+            test_assert(it.entity(0) == e);
+            test_int(it.field_count(), 10);
+            count ++;
+        }
     });
 
     test_int(count, 1);
@@ -1927,11 +1952,13 @@ void QueryBuilder_16_terms(void) {
         .add<TagT>();
 
     int count = 0;
-    f.iter([&](flecs::iter& it) {
-        test_int(it.count(), 1);
-        test_assert(it.entity(0) == e);
-        test_int(it.field_count(), 16);
-        count ++;
+    f.run([&](flecs::iter& it) {
+        while (it.next()) {
+            test_int(it.count(), 1);
+            test_assert(it.entity(0) == e);
+            test_int(it.field_count(), 16);
+            count ++;
+        }
     });
 
     test_int(count, 1);
@@ -1985,34 +2012,38 @@ void QueryBuilder_group_by_raw(void) {
 
     int count = 0;
 
-    q.iter([&](flecs::iter& it){
-        test_int(it.count(), 1);
-        if(count == 0){
-            test_bool(it.entity(0) == e1, true);
-        }else if(count == 1){
-            test_bool(it.entity(0) == e2, true);
-        }else if(count == 2){
-            test_bool(it.entity(0) == e3, true);
-        }else{
-            test_assert(false);
+    q.run([&](flecs::iter& it){
+        while (it.next()) {
+            test_int(it.count(), 1);
+            if(count == 0){
+                test_bool(it.entity(0) == e1, true);
+            }else if(count == 1){
+                test_bool(it.entity(0) == e2, true);
+            }else if(count == 2){
+                test_bool(it.entity(0) == e3, true);
+            }else{
+                test_assert(false);
+            }
+            count++;
         }
-        count++;
     });
     test_int(count, 3);
     
     count = 0;
-    q_reverse.iter([&](flecs::iter& it){
-        test_int(it.count(), 1);
-        if(count == 0){
-            test_bool(it.entity(0) == e3, true);
-        }else if(count == 1){
-            test_bool(it.entity(0) == e2, true);
-        }else if(count == 2){
-            test_bool(it.entity(0) == e1, true);
-        }else{
-            test_assert(false);
+    q_reverse.run([&](flecs::iter& it){
+        while (it.next()) {
+            test_int(it.count(), 1);
+            if(count == 0){
+                test_bool(it.entity(0) == e3, true);
+            }else if(count == 1){
+                test_bool(it.entity(0) == e2, true);
+            }else if(count == 2){
+                test_bool(it.entity(0) == e1, true);
+            }else{
+                test_assert(false);
+            }
+            count++;
         }
-        count++;
     });
     test_int(count, 3);
 }
@@ -2046,34 +2077,38 @@ void QueryBuilder_group_by_template(void) {
 
     int count = 0;
 
-    q.iter([&](flecs::iter& it){
-        test_int(it.count(), 1);
-        if(count == 0){
-            test_bool(it.entity(0) == e1, true);
-        }else if(count == 1){
-            test_bool(it.entity(0) == e2, true);
-        }else if(count == 2){
-            test_bool(it.entity(0) == e3, true);
-        }else{
-            test_assert(false);
+    q.run([&](flecs::iter& it){
+        while (it.next()) {
+            test_int(it.count(), 1);
+            if(count == 0){
+                test_bool(it.entity(0) == e1, true);
+            }else if(count == 1){
+                test_bool(it.entity(0) == e2, true);
+            }else if(count == 2){
+                test_bool(it.entity(0) == e3, true);
+            }else{
+                test_assert(false);
+            }
+            count++;
         }
-        count++;
     });
     test_int(count, 3);
     
     count = 0;
-    q_reverse.iter([&](flecs::iter& it){
-        test_int(it.count(), 1);
-        if(count == 0){
-            test_bool(it.entity(0) == e3, true);
-        }else if(count == 1){
-            test_bool(it.entity(0) == e2, true);
-        }else if(count == 2){
-            test_bool(it.entity(0) == e1, true);
-        }else{
-            test_assert(false);
+    q_reverse.run([&](flecs::iter& it){
+        while (it.next()) {
+            test_int(it.count(), 1);
+            if(count == 0){
+                test_bool(it.entity(0) == e3, true);
+            }else if(count == 1){
+                test_bool(it.entity(0) == e2, true);
+            }else if(count == 2){
+                test_bool(it.entity(0) == e1, true);
+            }else{
+                test_assert(false);
+            }
+            count++;
         }
-        count++;
     });
     test_int(count, 3);
 }
@@ -2735,14 +2770,17 @@ void QueryBuilder_up_w_type(void) {
 
     int32_t count = 0;
 
-    q.iter([&](flecs::iter& it, Self *s) {
-        auto o = it.field<const Other>(1);
-        test_assert(!it.is_self(1));
-        test_int(o->value, 10);
+    q.run([&](flecs::iter& it) {
+        while (it.next()) {
+            auto s = it.field<Self>(0);
+            auto o = it.field<const Other>(1);
+            test_assert(!it.is_self(1));
+            test_int(o->value, 10);
 
-        for (auto i : it) {
-            test_assert(it.entity(i) == s[i].value);
-            count ++;
+            for (auto i : it) {
+                test_assert(it.entity(i) == s[i].value);
+                count ++;
+            }
         }
     });
     
@@ -2871,7 +2909,7 @@ void QueryBuilder_iter_w_stage(void) {
     auto q = ecs.query<Position>();
 
     int32_t count = 0;
-    q.each(stage, [&](flecs::iter& it, size_t i, Position&) {
+    q.iter(stage).each([&](flecs::iter& it, size_t i, Position&) {
         test_assert(it.world() == stage);
         test_assert(it.entity(i) == e1);
         count ++;
@@ -3170,11 +3208,14 @@ void QueryBuilder_name_arg(void) {
         .build();
 
     int32_t count = 0;
-    f.iter([&](flecs::iter& it, Position* p) {
-        count ++;
-        test_int(p->x, 10);
-        test_int(p->y, 20);
-        test_assert(it.src(0) == e);
+    f.run([&](flecs::iter& it) {
+        while (it.next()) {
+            auto p = it.field<const Position>(0);
+            count ++;
+            test_int(p->x, 10);
+            test_int(p->y, 20);
+            test_assert(it.src(0) == e);
+        }
     });
 
     test_int(count, 1);
@@ -3191,13 +3232,15 @@ void QueryBuilder_const_in_term(void) {
         .build();
 
     int32_t count = 0;
-    f.iter([&](flecs::iter& it) {
-        auto p = it.field<const Position>(0);
-        test_assert(it.is_readonly(0));
-        for (auto i : it) {
-            count ++;
-            test_int(p[i].x, 10);
-            test_int(p[i].y, 20);
+    f.run([&](flecs::iter& it) {
+        while (it.next()) {
+            auto p = it.field<const Position>(0);
+            test_assert(it.is_readonly(0));
+            for (auto i : it) {
+                count ++;
+                test_int(p[i].x, 10);
+                test_int(p[i].y, 20);
+            }
         }
     });
 
@@ -3215,16 +3258,18 @@ void QueryBuilder_const_optional(void) {
         .build();
 	
     int32_t count = 0, set_count = 0;
-    f.iter([&](flecs::iter& it) {
-        test_int(it.count(), 1);
-        if (it.is_set(1)) {
-            auto p = it.field<const Position>(1);
-            test_assert(it.is_readonly(1));
-            test_int(p->x, 10);
-            test_int(p->y, 20);
-            set_count ++;
+    f.run([&](flecs::iter& it) {
+        while (it.next()) {
+            test_int(it.count(), 1);
+            if (it.is_set(1)) {
+                auto p = it.field<const Position>(1);
+                test_assert(it.is_readonly(1));
+                test_int(p->x, 10);
+                test_int(p->y, 20);
+                set_count ++;
+            }
+            count++;
         }
-        count++;
 	});
 	
     test_int(count, 2);
@@ -3376,13 +3421,15 @@ void QueryBuilder_iter_column_w_const_as_array(void) {
     auto e2 = world.entity().set<Position>({20, 30});
 
     int32_t count = 0;
-    f.iter([&](flecs::iter& it) {
-        const auto p = it.field<Position>(0);
-        for (auto i : it) {
-            p[i].x += 1;
-            p[i].y += 2;
+    f.run([&](flecs::iter& it) {
+        while (it.next()) {
+            const auto p = it.field<Position>(0);
+            for (auto i : it) {
+                p[i].x += 1;
+                p[i].y += 2;
 
-            count ++;
+                count ++;
+            }
         }
     });
 
@@ -3409,12 +3456,14 @@ void QueryBuilder_iter_column_w_const_as_ptr(void) {
     world.entity().is_a(base);
 
     int32_t count = 0;
-    f.iter([&](flecs::iter& it) {
-        const auto p = it.field<Position>(0);
-        for (size_t i = 0; i < it.count(); i ++) {
-            test_int(p->x, 10);
-            test_int(p->y, 20);
-            count ++;
+    f.run([&](flecs::iter& it) {
+        while (it.next()) {
+            const auto p = it.field<Position>(0);
+            for (size_t i = 0; i < it.count(); i ++) {
+                test_int(p->x, 10);
+                test_int(p->y, 20);
+                count ++;
+            }
         }
     });
 
@@ -3433,13 +3482,15 @@ void QueryBuilder_iter_column_w_const_deref(void) {
     world.entity().is_a(base);
 
     int32_t count = 0;
-    f.iter([&](flecs::iter& it) {
-        const auto p = it.field<Position>(0);
-        Position pv = *p;
-        for (size_t i = 0; i < it.count(); i ++) {
-            test_int(pv.x, 10);
-            test_int(pv.y, 20);
-            count ++;
+    f.run([&](flecs::iter& it) {
+        while (it.next()) {
+            const auto p = it.field<Position>(0);
+            Position pv = *p;
+            for (size_t i = 0; i < it.count(); i ++) {
+                test_int(pv.x, 10);
+                test_int(pv.y, 20);
+                count ++;
+            }
         }
     });
 
@@ -4492,9 +4543,11 @@ void QueryBuilder_var_src_w_prefixed_name(void) {
     auto e = ecs.entity().add<Foo>();
 
     int32_t count = 0;
-    r.iter([&](flecs::iter& it) {
-        test_assert(it.get_var("Var") == e);
-        count ++;
+    r.run([&](flecs::iter& it) {
+        while (it.next()) {
+            test_assert(it.get_var("Var") == e);
+            count ++;
+        }
     });
 
     test_int(count, 1);
@@ -4515,11 +4568,13 @@ void QueryBuilder_var_first_w_prefixed_name(void) {
     auto e = ecs.entity().add<Foo>();
 
     int32_t count = 0;
-    r.iter([&](flecs::iter& it) {
-        test_int(it.count(), 1);
-        test_uint(it.entity(0), e);
-        test_assert(it.get_var("Var") == ecs.id<Foo>());
-        count ++;
+    r.run([&](flecs::iter& it) {
+        while (it.next()) {
+            test_int(it.count(), 1);
+            test_uint(it.entity(0), e);
+            test_assert(it.get_var("Var") == ecs.id<Foo>());
+            count ++;
+        }
     });
 
     test_int(count, 1);
@@ -4540,11 +4595,13 @@ void QueryBuilder_var_second_w_prefixed_name(void) {
     auto e = ecs.entity().add<Foo>(t);
 
     int32_t count = 0;
-    r.iter([&](flecs::iter& it) {
-        test_int(it.count(), 1);
-        test_uint(it.entity(0), e);
-        test_assert(it.get_var("Var") == t);
-        count ++;
+    r.run([&](flecs::iter& it) {
+        while (it.next()) {
+            test_int(it.count(), 1);
+            test_uint(it.entity(0), e);
+            test_assert(it.get_var("Var") == t);
+            count ++;
+        }
     });
 
     test_int(count, 1);
@@ -4565,11 +4622,13 @@ void QueryBuilder_term_w_second_var_string(void) {
     auto e = ecs.entity().add(Foo, t);
 
     int32_t count = 0;
-    r.iter([&](flecs::iter& it) {
-        test_int(it.count(), 1);
-        test_uint(it.entity(0), e);
-        test_assert(it.get_var("Var") == t);
-        count ++;
+    r.run([&](flecs::iter& it) {
+        while (it.next()) {
+            test_int(it.count(), 1);
+            test_uint(it.entity(0), e);
+            test_assert(it.get_var("Var") == t);
+            count ++;
+        }
     });
 
     test_int(count, 1);
@@ -4590,11 +4649,13 @@ void QueryBuilder_term_type_w_second_var_string(void) {
     auto e = ecs.entity().add<Foo>(t);
 
     int32_t count = 0;
-    r.iter([&](flecs::iter& it) {
-        test_int(it.count(), 1);
-        test_uint(it.entity(0), e);
-        test_assert(it.get_var("Var") == t);
-        count ++;
+    r.run([&](flecs::iter& it) {
+        while (it.next()) {
+            test_int(it.count(), 1);
+            test_uint(it.entity(0), e);
+            test_assert(it.get_var("Var") == t);
+            count ++;
+        }
     });
 
     test_int(count, 1);

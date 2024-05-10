@@ -40,7 +40,7 @@ public:
         desc_.run_ctx = ctx;
         desc_.run_ctx_free = reinterpret_cast<
             ecs_ctx_free_t>(_::free_obj<Delegate>);
-        return T(world_, &desc_, true);
+        return T(world_, &desc_, false);
     }
 
     template <typename Func, typename EachFunc>

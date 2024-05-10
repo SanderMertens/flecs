@@ -92,13 +92,15 @@ void WorldFactory_system_w_expr(void) {
 
     auto s = ecs.system<>("MySystem")
         .expr("Position, [in] Velocity")
-        .iter([](flecs::iter it) {
-            flecs::field<Position> p(it, 0);
-            flecs::field<const Velocity> v(it, 1);
+        .run([](flecs::iter it) {
+            while (it.next()) {
+                flecs::field<Position> p(it, 0);
+                flecs::field<const Velocity> v(it, 1);
 
-            for (auto i : it) {
-                p[i].x += v[i].x;
-                p[i].y += v[i].y;
+                for (auto i : it) {
+                    p[i].x += v[i].x;
+                    p[i].y += v[i].y;
+                }
             }
         });
 
@@ -147,13 +149,15 @@ void WorldFactory_query_w_expr(void) {
         .set<Position>({10, 20})
         .set<Velocity>({1, 2});
 
-    q.iter([](flecs::iter it) {
-        flecs::field<Position> p(it, 0);
-        flecs::field<const Velocity> v(it, 1);
+    q.run([](flecs::iter it) {
+        while (it.next()) {
+            flecs::field<Position> p(it, 0);
+            flecs::field<const Velocity> v(it, 1);
 
-        for (auto i : it) {
-            p[i].x += v[i].x;
-            p[i].y += v[i].y;
+            for (auto i : it) {
+                p[i].x += v[i].x;
+                p[i].y += v[i].y;
+            }
         }
     });
 
