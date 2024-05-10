@@ -11,30 +11,25 @@ struct Velocity {
 };
 
 int main(int argc, char *argv[]) {
-    flecs::world ecs(argc, argv);
+    flecs::world world(argc, argv);
 
-    ecs.system<Position, const Velocity>()
-        .iter([](const flecs::iter& it, 
-            Position *p, 
-            const Velocity *v) 
-        {    
-            for (auto row : it) {
-                p[row].x += v[row].x;
-                p[row].y += v[row].y;
+    world.system<Position, const Velocity>()
+        .each([](flecs::entity e, Position& p, const Velocity& v) {    
+            p.x += v.x;
+            p.y += v.y;
 
-                std::cout << "Moved " << it.entity(row).name() << " to {" <<
-                    p[row].x << ", " << p[row].y << "}" << std::endl;
-            }
+            std::cout << "Moved " << e.name() << " to {" <<
+                p.x << ", " << p.y << "}" << std::endl;
         });
 
-    ecs.entity("MyEntity")
+    world.entity("MyEntity")
         .set<Position>({0, 0})
         .set<Velocity>({1, 1});
 
-    ecs.set_target_fps(1);
+    world.set_target_fps(1);
 
     std::cout << "Application move_system is running, press CTRL-C to exit..." << std::endl;
 
     /* Run systems */
-    while (ecs.progress()) { }
+    while (world.progress()) { }
 }

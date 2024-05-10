@@ -196,27 +196,37 @@ world.system<Position, const Velocity>("Move")
   .each([](Position& p, const Velocity &v) { /* ... */ });
 ```
 ```cpp
-// Query iteration (iter)
-q.iter([](flecs::iter& it, Position *p, const Velocity *v) {
-    for (auto i : it) {
-        p[i].x += v[i].x;
-        p[i].y += v[i].y;
+// Query iteration (run)
+q.run([](flecs::iter& it) {
+    while (it.next()) {
+        auto p = it.field<Position>(0);
+        auto v = it.field<const Velocity>(1);
+
+        for (auto i : it) {
+            p[i].x += v[i].x;
+            p[i].y += v[i].y;
+        }
     }
 });
 
 // System iteration (iter)
 world.system<Position, const Velocity>("Move")
-  .iter([](flecs::iter& it, Position *p, const Velocity *v) {
-    for (auto i : it) {
-        p[i].x += v[i].x;
-        p[i].y += v[i].y;
-    }
-  });
+    .run([](flecs::iter& it) {
+        while (it.next()) {
+            auto p = it.field<Position>(0);
+            auto v = it.field<const Velocity>(1);
+
+            for (auto i : it) {
+                p[i].x += v[i].x;
+                p[i].y += v[i].y;
+            }
+        }
+    });
 ```
 
-The `iter` function can be invoked multiple times per frame, once for each matched table. The `each` function is called once per matched entity.
+The `run()` function can be invoked multiple times per frame, once for each matched table. The `each` function is called once per matched entity.
 
-Note that there is no significant performance difference between `iter` and `each`, which can both be vectorized by the compiler. By default `each` can actually end up being faster, as it is instanced (see [query manual](Queries.md#each-c)).
+Note that there is no significant performance difference between `iter()` and `each`, which can both be vectorized by the compiler. By default `each` can actually end up being faster, as it is instanced (see [query manual](Queries.md#each-c)).
 </li>
 <li><b class="tab-title">C#</b>
 
@@ -284,10 +294,15 @@ world.system<Position, const Velocity>("Move")
     });
 
 world.system<Position, const Velocity>("Move")
-    .iter([](flecs::iter& it, Position *p, const Velocity *v) {
-        for (auto i : it) {
-            p[i].x += v[i].x * it.delta_time();
-            p[i].y += v[i].y * it.delta_time();
+    .run([](flecs::iter& it) {
+        while (it.next()) {
+            auto p = it.field<Position>(0);
+            auto v = it.field<const Velocity>(1);
+
+            for (auto i : it) {
+                p[i].x += v[i].x * it.delta_time();
+                p[i].y += v[i].y * it.delta_time();
+            }
         }
     });
 ```
@@ -399,7 +414,7 @@ ecs_progress(world, 0);
 ```cpp
 world.system("PrintTime")
     .kind(flecs::OnUpdate)
-    .iter([](flecs::iter& it) {
+    .run([](flecs::iter& it) {
         printf("Time: %f\n", it.delta_time());
     });
 
@@ -460,8 +475,8 @@ ecs_system(world, {
 world.system<Game>("PrintTime")
     .term_at(0).singleton()
     .kind(flecs::OnUpdate)
-    .iter([](flecs::iter& it, Game *g) {
-        printf("Time: %f\n", g->time);
+    .each([](Game& g) {
+        printf("Time: %f\n", g.time);
     });
 ```
 </li>
@@ -479,8 +494,6 @@ world.Routine<Game>("PrintTime")
 </li>
 </ul>
 </div>
-
-Note that `it->count` is always 0 for tasks, as they don't match any entities. In C++ this means that the function passed to `each` is never invoked for tasks. Applications will have to use `iter` instead when using tasks in C++.
 
 ## Pipelines
 A pipeline is a list of systems that is executed when the `ecs_progress`/`world::progress` function is invoked. Which systems are part of the pipeline is determined by a pipeline query. A pipeline query is a regular ECS query, which matches system entities. Flecs has a builtin pipeline with a predefined query, in addition to offering the ability to specify a custom pipeline query.
@@ -983,7 +996,7 @@ ecs_system(ecs, {
     ecs.system("AssignPlate")
         .with<Plate>()
         .immediate() // disable readonly mode for this system
-        .iter([&](flecs::iter& it) { /* ... */ })
+        .run([&](flecs::iter& it) { /* ... */ })
 ```
 </li>
 <li><b class="tab-title">C#</b>
@@ -1018,13 +1031,15 @@ void AssignPlate(ecs_iter_t *it) {
 <li><b class="tab-title">C++</b>
 
 ```cpp
-.iter([](flecs::iter& it) {
-    for (auto i : it) {
-        // ECS operations ran here are visible after running the system
-        it.world().defer_suspend();
-        // ECS operations ran here are immediately visible
-        it.world().defer_resume();
-        // ECS operations ran here are visible after running the system
+.run([](flecs::iter& it) {
+    while (it.next()) {
+        for (auto i : it) {
+            // ECS operations ran here are visible after running the system
+            it.world().defer_suspend();
+            // ECS operations ran here are immediately visible
+            it.world().defer_resume();
+            // ECS operations ran here are visible after running the system
+        }
     }
 });
 ```
@@ -1445,19 +1460,19 @@ ecs_entity_t each_hour = ecs_system(world, {
 // Tick at 1Hz
 flecs::entity each_second = world.system("EachSecond")
     .interval(1.0)
-    .iter([](flecs::iter& it) { /* ... */ });
+    .run([](flecs::iter& it) { /* ... */ });
 
 // Tick each minute
 flecs::entity each_minute = world.system("EachMinute")
     .tick_source(each_second)
     .rate(60)
-    .iter([](flecs::iter& it) { /* ... */ });
+    .run([](flecs::iter& it) { /* ... */ });
 
 // Tick each hour
 flecs::entity each_hour = world.system("EachHour")
     .tick_source(each_minute)
     .rate(60)
-    .iter([](flecs::iter& it) { /* ... */ });
+    .run([](flecs::iter& it) { /* ... */ });
 ```
 </li>
 <li><b class="tab-title">C#</b>

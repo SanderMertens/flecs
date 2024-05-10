@@ -28,7 +28,7 @@ int main(int argc, char *argv[]) {
     // Create system with Physics tag
     ecs.system()
         .kind<Physics>()
-        .iter([](flecs::iter&) {
+        .run([](flecs::iter&) {
             std::cout << "System ran!\n";
         });
 

@@ -33,38 +33,36 @@ int main(int, char *[]) {
         .with<Plate>()
         .without<Waiter>(flecs::Wildcard)
         .immediate()
-        .iter([&](flecs::iter& it) {
-            for (auto i : it) {
-                flecs::entity plate = it.entity(i);
+        .each([&](flecs::iter& it, size_t i) {
+            flecs::entity plate = it.entity(i);
 
-                // Find an available waiter
-                flecs::entity waiter = q_waiter.first();
-                if (waiter) {
-                    // An available waiter was found, assign a plate to it so 
-                    // that the next plate will no longer find it.
-                    // The defer_suspend function temporarily suspends deferring 
-                    // operations, which ensures that our plate is assigned 
-                    // immediately. Even though this is a immediate system, 
-                    // defering is still enabled by default, as adding/removing 
-                    // components to the entities being iterated would intefere 
-                    // with the system iterator.
-                    it.world().defer_suspend();
-                    waiter.add<Plate>(plate);
-                    it.world().defer_resume();
+            // Find an available waiter
+            flecs::entity waiter = q_waiter.first();
+            if (waiter) {
+                // An available waiter was found, assign a plate to it so 
+                // that the next plate will no longer find it.
+                // The defer_suspend function temporarily suspends deferring 
+                // operations, which ensures that our plate is assigned 
+                // immediately. Even though this is a immediate system, 
+                // defering is still enabled by default, as adding/removing 
+                // components to the entities being iterated would intefere 
+                // with the system iterator.
+                it.world().defer_suspend();
+                waiter.add<Plate>(plate);
+                it.world().defer_resume();
 
-                    // Now that defering is resumed, we can safely also add the 
-                    // waiter to the plate. We can't do this while defering is 
-                    // suspended, because the plate is the entity we're 
-                    // currently iterating, and we don't want to move it to a 
-                    // different table while we're iterating it.
-                    plate.add<Waiter>(waiter);
+                // Now that defering is resumed, we can safely also add the 
+                // waiter to the plate. We can't do this while defering is 
+                // suspended, because the plate is the entity we're 
+                // currently iterating, and we don't want to move it to a 
+                // different table while we're iterating it.
+                plate.add<Waiter>(waiter);
 
-                    std::cout << "Assigned " 
-                        << waiter.name() << " to " 
-                        << plate.name() << "!\n";
-                } else {
-                    // No available waiters, can't assign the plate
-                }
+                std::cout << "Assigned " 
+                    << waiter.name() << " to " 
+                    << plate.name() << "!\n";
+            } else {
+                // No available waiters, can't assign the plate
             }
         });
 
