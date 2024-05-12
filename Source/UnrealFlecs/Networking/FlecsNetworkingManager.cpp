@@ -35,13 +35,16 @@ void UFlecsNetworkingManager::BeginPlay()
 		.term_at(1)
 			.event(flecs::OnAdd)
 			.yield_existing(true)
+			.read_write()
 		.with<FFlecsEntitySyncInfoComponent>()
 			.optional()
 		.with(flecs::Name)
 			.and_()
 			.inout_none()
-		.each([this](FFlecsEntityHandle Entity, FFlecsNetworkIdComponent& NetworkId)
+		.each([this](flecs::iter& Iterator, const uint64 Index, FFlecsNetworkIdComponent& NetworkId)
 		{
+			const FFlecsEntityHandle Entity = Iterator.entity(Index);
+			
 			if UNLIKELY_IF(NetworkId.IsValid())
 			{
 				return;
@@ -66,9 +69,9 @@ void UFlecsNetworkingManager::BeginPlay()
 			.with(flecs::Name)
 				.and_()
 				.inout_none()
-			.each([this](const FFlecsEntityHandle& Entity,
-				FFlecsNetworkIdComponent& NetworkId, FFlecsEntitySyncInfoComponent& EntitySyncInfo)
+			.each([this](FFlecsIterator It, size_t Index)
 			{
+				
 				if (EntitySyncInfo.bInitialized)
 				{
 					return;
