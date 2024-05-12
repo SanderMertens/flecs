@@ -32,15 +32,15 @@ void UFlecsNetworkingManager::BeginPlay()
 	{
 		NetworkIdObserver =
 			FlecsWorld->CreateObserver<FFlecsNetworkIdComponent>(TEXT("NetworkingIdObserver"))
-		.event(flecs::OnAdd)
-		.yield_existing(true)
-		.term<FFlecsEntitySyncInfoComponent>()
+		.term_at(1)
+			.event(flecs::OnAdd)
+			.yield_existing(true)
+		.with<FFlecsEntitySyncInfoComponent>()
 			.optional()
-		.term(flecs::Name)
+		.with(flecs::Name)
 			.and_()
 			.inout_none()
-		.each([this](const FFlecsEntityHandle& Entity, FFlecsNetworkIdComponent& NetworkId,
-			FFlecsEntitySyncInfoComponent* EntitySyncInfo)
+		.each([this](FFlecsEntityHandle Entity, FFlecsNetworkIdComponent& NetworkId)
 		{
 			if UNLIKELY_IF(NetworkId.IsValid())
 			{
@@ -54,21 +54,16 @@ void UFlecsNetworkingManager::BeginPlay()
 				NetworkId.GetNetworkId(),
 				*Entity.GetEntity().path().c_str());
 
-			if (EntitySyncInfo != nullptr)
-			{
-				EntitySyncInfo->bInitialized = true;
-
-				
-			}
+			
 			
 		});
 
-		NetworkInitializedObserver = FlecsWorld->CreateObserver<FFlecsNetworkIdComponent, FFlecsEntitySyncInfoComponent>
+		/*NetworkInitializedObserver = FlecsWorld->CreateObserver<FFlecsNetworkIdComponent, FFlecsEntitySyncInfoComponent>
 			(TEXT("NetworkInitializedObserver"))
 			.term_at(1)
 				.event(flecs::OnAdd)
 			.yield_existing(false)
-			.term(flecs::Name)
+			.with(flecs::Name)
 				.and_()
 				.inout_none()
 			.each([this](const FFlecsEntityHandle& Entity,
@@ -81,7 +76,7 @@ void UFlecsNetworkingManager::BeginPlay()
 
 				EntitySyncInfo.bInitialized = true;
 				
-			});
+			});*/
 	}
 
 	#endif // WITH_SERVER_CODE

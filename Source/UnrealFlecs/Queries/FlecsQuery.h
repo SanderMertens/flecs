@@ -40,7 +40,7 @@ public:
 
     FORCEINLINE NO_DISCARD int32 GetCount() const
     {
-        return Query.count();
+        return ecs_query_match_count(Query);
     }
 
     FORCEINLINE NO_DISCARD int32 GetFieldCount()
@@ -50,37 +50,32 @@ public:
 
     FORCEINLINE NO_DISCARD bool HasMatches() const
     {
-        return Query.is_true();
+        return ecs_query_is_true(Query);
     }
 
     FORCEINLINE NO_DISCARD FString ToString() const
     {
-        return static_cast<FString>(const_cast<flecs::query<>*>(&Query)->str());
+        return UTF8_TO_TCHAR(ecs_query_str(Query));
     }
 
     FORCEINLINE NO_DISCARD FFlecsEntityHandle GetEntity() const
     {
-        return FFlecsEntityHandle(const_cast<flecs::entity*>(Query.entity()));
+        return FFlecsEntityHandle(ecs_get_entity(Query));
     }
 
     FORCEINLINE NO_DISCARD bool operator==(const FFlecsQuery& Other) const
     {
-        return Query == Other.Query;
+        return GetEntity() == Other.GetEntity();
     }
 
     FORCEINLINE NO_DISCARD bool operator!=(const FFlecsQuery& Other) const
     {
-        return Query != Other.Query;
+        return !(*this == Other);
     }
 
     FORCEINLINE NO_DISCARD bool operator==(const flecs::query<>& Other) const
     {
-        return Query == Other;
-    }
-
-    FORCEINLINE NO_DISCARD bool operator!=(const flecs::query<>& Other) const
-    {
-        return Query != Other;
+        return GetEntity() == FFlecsEntityHandle(ecs_get_entity(Other));
     }
 
 private:

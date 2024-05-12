@@ -17,6 +17,9 @@
  */
 
 #include "flecs.h"
+#pragma warning(push)
+#pragma warning(disable : 4456)
+
 /**
  * @file private_api.h
  * @brief Private functions.
@@ -28916,7 +28919,7 @@ void flecs_bfree(
     flecs_bfree_w_dbg_info(ba, memory, NULL);
 }
 
-FLECS_API
+
 void flecs_bfree_w_dbg_info(
     ecs_block_allocator_t *ba, 
     void *memory,
@@ -71674,3 +71677,4 @@ void FlecsSystemImport(
 
 #endif
 
+#pragma warning(pop)

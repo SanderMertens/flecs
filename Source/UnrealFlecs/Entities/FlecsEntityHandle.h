@@ -318,7 +318,7 @@ public:
 			Ar << Json;
 		}
 		
-		NetSerializeOptionalValue(Ar.IsSaving(), Ar, WorldName, FName("DefaultFlecsWorld"), Map);
+		SerializeOptionalValue(Ar.IsSaving(), Ar, WorldName, FName("DefaultFlecsWorld"));
 			
 		bOutSuccess = true;
 		return true;

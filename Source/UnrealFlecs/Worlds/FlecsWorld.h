@@ -824,7 +824,7 @@ public:
 	FORCEINLINE FFlecsEntityHandle GetTagEntity(const FGameplayTag& Tag) const
 	{
 		solid_checkf(Tag.IsValid(), TEXT("Tag is not valid"));
-		return World.lookup(TCHAR_TO_ANSI(*Tag.ToString(), TEXT("."), TEXT(".")));
+		return World.lookup(TCHAR_TO_ANSI(*Tag.ToString()), ".", ".");
 	}
 	
 	flecs::world World;

@@ -10,6 +10,8 @@ public class FlecsLibrary : ModuleRules
         
         CStandard = CStandardVersion.C99;
         
+        bEnableUndefinedIdentifierWarnings = false;
+        
         PublicIncludePaths.AddRange(
             new string[] {
                 ModuleDirectory + "/ThirdParty/Public",

@@ -74,11 +74,11 @@ struct UNREALFLECS_API FFlecsEntityRecord
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Entity Record")
 	TArray<FFlecsComponentTypeInfo> Components;
 
-	FORCEINLINE void ApplyRecordToEntity(const FFlecsEntityHandle& EntityHandle) const
+	FORCEINLINE void ApplyRecordToEntity(const FFlecsEntityHandle& InEntityHandle) const
 	{
 		if (!Name.IsEmpty())
 		{
-			EntityHandle.SetName(Name);
+			InEntityHandle.SetName(Name);
 		}
 
 		for (const auto& [NodeType, ScriptStruct, EntityHandle, GameplayTag, Traits] : Components)
@@ -86,13 +86,13 @@ struct UNREALFLECS_API FFlecsEntityRecord
 			switch (NodeType)
 			{
 			case EFlecsComponentNodeType::ScriptStruct:
-				EntityHandle.Set(ScriptStruct);
+				InEntityHandle.Set(ScriptStruct);
 				break;
 			case EFlecsComponentNodeType::EntityHandle:
-				EntityHandle.Add(EntityHandle);
+				InEntityHandle.Add(EntityHandle);
 				break;
 			case EFlecsComponentNodeType::FGameplayTag:
-				EntityHandle.Add(GameplayTag);
+				InEntityHandle.Add(GameplayTag);
 				break;
 			default: UNLIKELY_ATTRIBUTE
 				checkNoEntry();
