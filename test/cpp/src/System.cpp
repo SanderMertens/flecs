@@ -63,6 +63,9 @@ void System_iter_const(void) {
 void System_iter_shared(void) {
     flecs::world world;
 
+    world.component<Position>().add(flecs::OnInstantiate, flecs::Inherit);
+    world.component<Velocity>().add(flecs::OnInstantiate, flecs::Inherit);
+
     auto base = world.entity()
         .set<Velocity>({1, 2});
 
@@ -351,6 +354,9 @@ void System_signature_const(void) {
 
 void System_signature_shared(void) {
     flecs::world world;
+
+    world.component<Position>().add(flecs::OnInstantiate, flecs::Inherit);
+    world.component<Velocity>().add(flecs::OnInstantiate, flecs::Inherit);
 
     auto base = world.entity()
         .set<Velocity>({1, 2});

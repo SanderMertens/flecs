@@ -1176,6 +1176,9 @@ void Entity_clear(void) {
 void Entity_foce_owned(void) {
     flecs::world world;
 
+    world.component<Position>().add(flecs::OnInstantiate, flecs::Inherit);
+    world.component<Velocity>().add(flecs::OnInstantiate, flecs::Inherit);
+
     auto prefab = world.prefab()
         .add<Position>()
         .add<Velocity>()
@@ -1192,6 +1195,9 @@ void Entity_foce_owned(void) {
 
 void Entity_force_owned_2(void) {
     flecs::world world;
+
+    world.component<Position>().add(flecs::OnInstantiate, flecs::Inherit);
+    world.component<Velocity>().add(flecs::OnInstantiate, flecs::Inherit);
 
     auto prefab = world.prefab()
         .add<Position>()
@@ -1210,6 +1216,9 @@ void Entity_force_owned_2(void) {
 
 void Entity_force_owned_nested(void) {
     flecs::world world;
+
+    world.component<Position>().add(flecs::OnInstantiate, flecs::Inherit);
+    world.component<Velocity>().add(flecs::OnInstantiate, flecs::Inherit);
 
     auto prefab = world.prefab()
         .add<Position>()
@@ -1537,6 +1546,8 @@ void Entity_set_deduced(void) {
 void Entity_override(void) {
     flecs::world world;
 
+    world.component<Position>().add(flecs::OnInstantiate, flecs::Inherit);
+
     auto base = world.entity()
         .override<Position>();
 
@@ -1550,8 +1561,8 @@ void Entity_override(void) {
 void Entity_override_id(void) {
     flecs::world world;
     
-    auto tag_a = world.entity();
-    auto tag_b = world.entity();
+    auto tag_a = world.entity().add(flecs::OnInstantiate, flecs::Inherit);
+    auto tag_b = world.entity().add(flecs::OnInstantiate, flecs::Inherit);
 
     auto base = world.entity()
         .override(tag_a)
@@ -1570,6 +1581,7 @@ void Entity_override_id(void) {
 void Entity_override_pair_w_tgt_id(void) {
     flecs::world world;
 
+    world.component<Position>().add(flecs::OnInstantiate, flecs::Inherit);
     auto tgt_a = world.entity();
     auto tgt_b = world.entity();
 
@@ -1590,7 +1602,7 @@ void Entity_override_pair_w_tgt_id(void) {
 void Entity_override_pair_w_ids(void) {
     flecs::world world;
 
-    auto rel = world.entity();
+    auto rel = world.entity().add(flecs::OnInstantiate, flecs::Inherit);
     auto tgt_a = world.entity();
     auto tgt_b = world.entity();
 
@@ -1614,6 +1626,8 @@ void Entity_override_pair(void) {
     struct TagA { };
     struct TagB { };
 
+    world.component<Position>().add(flecs::OnInstantiate, flecs::Inherit);
+
     auto base = world.entity()
         .override<Position, TagA>()
         .add<Position, TagB>();
@@ -1630,6 +1644,8 @@ void Entity_override_pair(void) {
 
 void Entity_set_override(void) {
     flecs::world world;
+
+    world.component<Position>().add(flecs::OnInstantiate, flecs::Inherit);
 
     auto base = world.entity()
         .set_override<Position>({10, 20});
@@ -1652,6 +1668,8 @@ void Entity_set_override(void) {
 
 void Entity_set_override_lvalue(void) {
     flecs::world world;
+
+    world.component<Position>().add(flecs::OnInstantiate, flecs::Inherit);
 
     Position plvalue = {10, 20};
 
@@ -1677,6 +1695,8 @@ void Entity_set_override_lvalue(void) {
 void Entity_set_override_pair(void) {
     flecs::world world;
 
+    world.component<Position>().add(flecs::OnInstantiate, flecs::Inherit);
+
     struct Tgt { };
 
     auto base = world.entity()
@@ -1700,6 +1720,8 @@ void Entity_set_override_pair(void) {
 
 void Entity_set_override_pair_w_tgt_id(void) {
     flecs::world world;
+
+    world.component<Position>().add(flecs::OnInstantiate, flecs::Inherit);
 
     auto tgt = world.entity();
 
@@ -1726,6 +1748,8 @@ void Entity_set_override_pair_w_rel_tag(void) {
     flecs::world world;
 
     struct Tgt { };
+
+    world.component<Tgt>().add(flecs::OnInstantiate, flecs::Inherit);
 
     auto base = world.entity()
         .set_override<Tgt, Position>({10, 20});

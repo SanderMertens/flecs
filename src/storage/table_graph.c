@@ -773,10 +773,11 @@ void flecs_add_overrides_for_base(
             } else {
                 ecs_table_record_t *tr = &base_table->_->records[i];
                 ecs_id_record_t *idr = (ecs_id_record_t*)tr->hdr.cache;
-                if (idr->flags & EcsIdAlwaysOverride) {
+                if (ECS_ID_ON_INSTANTIATE(idr->flags) == EcsOverride) {
                     to_add = id;
                 }
             }
+
             if (to_add) {
                 ecs_id_t wc = ecs_pair(ECS_PAIR_FIRST(to_add), EcsWildcard);
                 bool exclusive = false;

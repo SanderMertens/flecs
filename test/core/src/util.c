@@ -76,13 +76,13 @@ const ecs_entity_t* bulk_new_w_type(
 
     ecs_id_t *ids = type->array;
     int i = 0;
-    while ((ecs_id_get_flags(world, ids[i]) & EcsIdDontInherit)) {
+    while ((ecs_id_get_flags(world, ids[i]) & EcsIdOnInstantiateDontInherit)) {
         i ++;
     }
     const ecs_entity_t *result = ecs_bulk_new_w_id(world, ids[i], count);
     for (; i < type->count; i ++) {
         for (int e = 0; e < count; e ++) {
-            if (ecs_id_get_flags(world, ids[i]) & EcsIdDontInherit) {
+            if (ecs_id_get_flags(world, ids[i]) & EcsIdOnInstantiateDontInherit) {
                 continue;
             }
             ecs_add_id(world, result[e], ids[i]);

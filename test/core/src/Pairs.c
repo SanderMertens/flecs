@@ -483,6 +483,9 @@ void Pairs_override_pair(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Rel);
 
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+    ecs_add_pair(world, ecs_id(Rel), EcsOnInstantiate, EcsInherit);
+
     ecs_entity_t base = ecs_new(world);
     ecs_set_pair(world, base, Rel, ecs_id(Position), {.value = 10});
 
@@ -511,6 +514,9 @@ void Pairs_override_tag_pair(void) {
 
     ECS_COMPONENT(world, Position);
     ECS_TAG(world, Rel);
+
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+    ecs_add_pair(world, Rel, EcsOnInstantiate, EcsInherit);
 
     ecs_entity_t base = ecs_new(world);
     ecs_set_pair_second(world, base, Rel, Position, {.x = 10, .y = 20});
@@ -2023,6 +2029,9 @@ void Pairs_get_target_from_base(void) {
 
     ecs_entity_t rel = ecs_new(world);
     ecs_entity_t tgt = ecs_new(world);
+
+    ecs_add_pair(world, rel, EcsOnInstantiate, EcsInherit);
+
     ecs_entity_t base = ecs_new_w_pair(world, rel, tgt);
     ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
 
@@ -2037,6 +2046,9 @@ void Pairs_get_target_from_2nd_base(void) {
 
     ecs_entity_t rel = ecs_new(world);
     ecs_entity_t tgt = ecs_new(world);
+
+    ecs_add_pair(world, rel, EcsOnInstantiate, EcsInherit);
+
     ecs_entity_t base_1 = ecs_new(world);
     ecs_entity_t base_2 = ecs_new_w_pair(world, rel, tgt);
     ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base_1);
@@ -2055,6 +2067,9 @@ void Pairs_get_target_from_base_w_pair_on_instance(void) {
     ecs_entity_t rel = ecs_new(world);
     ecs_entity_t tgt_a = ecs_new(world);
     ecs_entity_t tgt_b = ecs_new(world);
+
+    ecs_add_pair(world, rel, EcsOnInstantiate, EcsInherit);
+
     ecs_entity_t base = ecs_new_w_pair(world, rel, tgt_b);
     ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
     ecs_add_pair(world, inst, rel, tgt_a);
@@ -2084,7 +2099,7 @@ void Pairs_get_childof_target_from_base(void) {
 void Pairs_get_dontinherit_target_from_base(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Rel, DontInherit);
+    ECS_ENTITY(world, Rel, (OnInstantiate, DontInherit));
 
     ecs_entity_t parent = ecs_new(world);
     ecs_entity_t base = ecs_new_w_pair(world, Rel, parent);
@@ -2125,6 +2140,8 @@ void Pairs_get_target_for_id_from_self(void) {
 
     ECS_TAG(world, Tag);
 
+    ecs_add_pair(world, Tag, EcsOnInstantiate, EcsInherit);
+
     ecs_entity_t base = ecs_new_w(world, Tag);
     ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, base);
     ecs_add_id(world, e, Tag);
@@ -2141,6 +2158,8 @@ void Pairs_get_target_for_id_from_base(void) {
 
     ECS_TAG(world, Tag);
 
+    ecs_add_pair(world, Tag, EcsOnInstantiate, EcsInherit);
+
     ecs_entity_t base = ecs_new_w(world, Tag);
     ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, base);
 
@@ -2155,6 +2174,8 @@ void Pairs_get_target_for_id_from_nested_base(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
+
+    ecs_add_pair(world, Tag, EcsOnInstantiate, EcsInherit);
 
     ecs_entity_t base = ecs_new_w(world, Tag);
     ecs_entity_t base_2 = ecs_new_w_pair(world, EcsIsA, base);
@@ -2172,6 +2193,8 @@ void Pairs_get_target_for_id_not_found(void) {
 
     ECS_TAG(world, Tag);
 
+    ecs_add_pair(world, Tag, EcsOnInstantiate, EcsInherit);
+
     ecs_entity_t base = ecs_new(world);
     ecs_entity_t base_2 = ecs_new_w_pair(world, EcsIsA, base);
     ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, base_2);
@@ -2187,6 +2210,8 @@ void Pairs_get_target_for_wildcard_from_self(void) {
 
     ECS_TAG(world, Rel);
     ECS_TAG(world, Obj);
+    
+    ecs_add_pair(world, Rel, EcsOnInstantiate, EcsInherit);
 
     ecs_id_t pair = ecs_pair(Rel, Obj);
     ecs_entity_t base = ecs_new_w_id(world, pair);
@@ -2207,6 +2232,8 @@ void Pairs_get_target_for_wildcard_from_base(void) {
     ECS_TAG(world, Rel);
     ECS_TAG(world, Obj);
 
+    ecs_add_pair(world, Rel, EcsOnInstantiate, EcsInherit);
+
     ecs_id_t pair = ecs_pair(Rel, Obj);
     ecs_entity_t base = ecs_new_w_id(world, pair);
     ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, base);
@@ -2224,6 +2251,8 @@ void Pairs_get_target_for_wildcard_from_nested_base(void) {
 
     ECS_TAG(world, Rel);
     ECS_TAG(world, Obj);
+
+    ecs_add_pair(world, Rel, EcsOnInstantiate, EcsInherit);
 
     ecs_id_t pair = ecs_pair(Rel, Obj);
     ecs_entity_t base = ecs_new_w_id(world, pair);
@@ -2244,6 +2273,8 @@ void Pairs_ignore_childof_from_base(void) {
 
     ECS_TAG(world, Rel);
     ECS_TAG(world, Obj);
+    
+    ecs_add_pair(world, Rel, EcsOnInstantiate, EcsInherit);
 
     ecs_entity_t parent = ecs_new(world);
     ecs_entity_t base = ecs_new_w_pair(world, EcsChildOf, parent);
@@ -2261,6 +2292,8 @@ void Pairs_get_target_for_id_from_empty(void) {
 
     ECS_TAG(world, Tag);
 
+    ecs_add_pair(world, Tag, EcsOnInstantiate, EcsInherit);
+
     ecs_entity_t e = ecs_new(world);
     ecs_entity_t result = ecs_get_target_for_id(world, e, EcsIsA, Tag);
     test_assert(result == 0);
@@ -2272,6 +2305,8 @@ void Pairs_get_target_for_id_from_empty_no_rel(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
+
+    ecs_add_pair(world, Tag, EcsOnInstantiate, EcsInherit);
 
     ecs_entity_t e = ecs_new(world);
     ecs_entity_t result = ecs_get_target_for_id(world, e, 0, Tag);
@@ -2285,6 +2320,9 @@ void Pairs_get_target_for_id_not_empty_not_found(void) {
 
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
+    
+    ecs_add_pair(world, TagA, EcsOnInstantiate, EcsInherit);
+    ecs_add_pair(world, TagB, EcsOnInstantiate, EcsInherit);
 
     ecs_entity_t e = ecs_new_w(world, TagA);
     ecs_entity_t result = ecs_get_target_for_id(world, e, 0, TagB);
@@ -2297,6 +2335,8 @@ void Pairs_get_target_for_id_from_stage(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
+
+    ecs_add_pair(world, Tag, EcsOnInstantiate, EcsInherit);
 
     ecs_entity_t base = ecs_new_w(world, Tag);
     ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, base);
@@ -2315,6 +2355,8 @@ void Pairs_get_target_for_id_no_id(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
+
+    ecs_add_pair(world, Tag, EcsOnInstantiate, EcsInherit);
 
     ecs_entity_t base = ecs_new_w(world, Tag);
     ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, base);
@@ -2869,6 +2911,8 @@ void Pairs_inherit_exclusive(void) {
     ECS_TAG(world, ObjA);
     ECS_TAG(world, ObjB);
 
+    ecs_add_pair(world, Rel, EcsOnInstantiate, EcsInherit);
+
     ecs_entity_t base = ecs_new_w_pair(world, Rel, ObjA);
     ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
 
@@ -2886,8 +2930,10 @@ void Pairs_dont_inherit(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
-    ecs_add_id(world, TagA, EcsDontInherit);
     ECS_TAG(world, TagB);
+
+    ecs_add_pair(world, TagA, EcsOnInstantiate, EcsDontInherit);
+    ecs_add_pair(world, TagB, EcsOnInstantiate, EcsInherit);
 
     ecs_entity_t base = ecs_new_w_id(world, TagA);
     ecs_add(world, base, TagB);

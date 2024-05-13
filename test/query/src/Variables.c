@@ -4666,6 +4666,9 @@ void Variables_2_set_src_this(void) {
     ECS_TAG(world, Foo);
     ECS_TAG(world, Bar);
 
+    ecs_add_pair(world, Foo, EcsOnInstantiate, EcsInherit);
+    ecs_add_pair(world, Bar, EcsOnInstantiate, EcsInherit);
+
     ecs_query_t *q = ecs_query(world, {
         .terms[0] = { .id = Foo },
         .terms[1] = { .id = Bar },
@@ -4733,6 +4736,9 @@ void Variables_2_set_src_this_self(void) {
     ECS_TAG(world, Foo);
     ECS_TAG(world, Bar);
 
+    ecs_add_pair(world, Foo, EcsOnInstantiate, EcsInherit);
+    ecs_add_pair(world, Bar, EcsOnInstantiate, EcsInherit);
+
     ecs_query_t *q = ecs_query(world, {
         .terms[0] = { .id = Foo, .src.id = EcsSelf },
         .terms[1] = { .id = Bar, .src.id = EcsSelf },
@@ -4792,6 +4798,9 @@ void Variables_2_set_src_this_component(void) {
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
+
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+    ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
 
     ecs_query_t *q = ecs_query(world, {
         .terms[0] = { .id = ecs_id(Position) },
@@ -4884,6 +4893,9 @@ void Variables_2_set_src_this_self_component(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+    ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
+
     ecs_query_t *q = ecs_query(world, {
         .terms[0] = { .id = ecs_id(Position), .src.id = EcsSelf },
         .terms[1] = { .id = ecs_id(Velocity), .src.id = EcsSelf },
@@ -4956,6 +4968,10 @@ void Variables_2_set_src_this_w_up(void) {
     ECS_TAG(world, Foo);
     ECS_TAG(world, Bar);
     ECS_TAG(world, Hello);
+
+    ecs_add_pair(world, Foo, EcsOnInstantiate, EcsInherit);
+    ecs_add_pair(world, Bar, EcsOnInstantiate, EcsInherit);
+    ecs_add_pair(world, Hello, EcsOnInstantiate, EcsInherit);
 
     ecs_query_t *q = ecs_query(world, {
         .terms[0] = { .id = Foo },
@@ -5036,6 +5052,10 @@ void Variables_2_set_src_this_self_w_up(void) {
     ECS_TAG(world, Bar);
     ECS_TAG(world, Hello);
 
+    ecs_add_pair(world, Foo, EcsOnInstantiate, EcsInherit);
+    ecs_add_pair(world, Bar, EcsOnInstantiate, EcsInherit);
+    ecs_add_pair(world, Hello, EcsOnInstantiate, EcsInherit);
+
     ecs_query_t *q = ecs_query(world, {
         .terms[0] = { .id = Foo, .src.id = EcsSelf },
         .terms[1] = { .id = Bar, .src.id = EcsSelf },
@@ -5105,6 +5125,10 @@ void Variables_2_set_src_this_component_w_up(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
     ECS_COMPONENT(world, Mass);
+
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+    ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
+    ecs_add_pair(world, ecs_id(Mass), EcsOnInstantiate, EcsInherit);
 
     ecs_query_t *q = ecs_query(world, {
         .terms[0] = { .id = ecs_id(Position) },
@@ -5218,6 +5242,10 @@ void Variables_2_set_src_this_self_component_w_up(void) {
     ECS_COMPONENT(world, Velocity);
     ECS_COMPONENT(world, Mass);
 
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+    ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
+    ecs_add_pair(world, ecs_id(Mass), EcsOnInstantiate, EcsInherit);
+
     ecs_query_t *q = ecs_query(world, {
         .terms[0] = { .id = ecs_id(Position), .src.id = EcsSelf },
         .terms[1] = { .id = ecs_id(Velocity), .src.id = EcsSelf },
@@ -5309,6 +5337,10 @@ void Variables_2_set_src_this_w_exclusive_wildcard(void) {
     ECS_TAG(world, Foo);
     ECS_TAG(world, Bar);
     ECS_TAG(world, Hello);
+
+    ecs_add_pair(world, Foo, EcsOnInstantiate, EcsInherit);
+    ecs_add_pair(world, Bar, EcsOnInstantiate, EcsInherit);
+    ecs_add_pair(world, Hello, EcsOnInstantiate, EcsInherit);
 
     ecs_query_t *q = ecs_query(world, {
         .terms[0] = { .id = Foo },
@@ -5449,6 +5481,10 @@ void Variables_2_set_src_this_self_w_exclusive_wildcard_w_up(void) {
     ECS_TAG(world, Foo);
     ECS_TAG(world, Bar);
     ECS_TAG(world, Hello);
+
+    ecs_add_pair(world, Foo, EcsOnInstantiate, EcsInherit);
+    ecs_add_pair(world, Bar, EcsOnInstantiate, EcsInherit);
+    ecs_add_pair(world, Hello, EcsOnInstantiate, EcsInherit);
 
     ecs_query_t *q = ecs_query(world, {
         .terms[0] = { .id = Foo, .src.id = EcsSelf },

@@ -444,6 +444,8 @@ void System_w_FromParent_2_column_1_from_container_w_not_prefab(void) {
     ECS_COMPONENT(world, Rotation);
     ECS_COMPONENT(world, Mass);
 
+    ecs_add_pair(world, ecs_id(Rotation), EcsOnInstantiate, EcsInherit);
+
     ECS_PREFAB(world, Prefab, Rotation);
 
     ECS_ENTITY(world, e1, Position);

@@ -228,6 +228,8 @@ void Event_emit_table_event(void) {
 
     ECS_TAG(world, TagA);
 
+    ecs_add_pair(world, TagA, EcsOnInstantiate, EcsInherit);
+
     ecs_entity_t base = ecs_new_w_id(world, TagA);
     ecs_table_t *base_table = ecs_get_table(world, base);
 

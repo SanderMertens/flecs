@@ -16,22 +16,44 @@ void flecs_query_validator_error(
     const char *fmt,
     ...)
 {
-    va_list args;
-    va_start(args, fmt);
-
-    int32_t term_start = 0;
-
-    char *expr = NULL;
+    ecs_strbuf_t buf = ECS_STRBUF_INIT;
     if (ctx->query) {
-        expr = flecs_query_str(ctx->world, ctx->query, ctx, &term_start);
+        ecs_query_t *query = ctx->query;
+        const ecs_term_t *terms = query->terms;
+        int32_t i, count = query->term_count;
+
+        for (i = 0; i < count; i ++) {
+            const ecs_term_t *term = &terms[i];
+            if (ctx->term_index == i) {
+                ecs_strbuf_appendlit(&buf, " > ");
+            } else {
+                ecs_strbuf_appendlit(&buf, "   ");
+            }
+            flecs_term_to_buf(ctx->world, term, &buf, i);
+            if (term->oper == EcsOr) {
+                ecs_strbuf_appendlit(&buf, " ||");
+            } else if (i != (count - 1)) {
+                ecs_strbuf_appendlit(&buf, ",");
+            }
+            ecs_strbuf_appendlit(&buf, "\n");
+        }
     } else {
-        expr = ecs_term_str(ctx->world, ctx->term);
+        ecs_strbuf_appendlit(&buf, " > ");
+        flecs_term_to_buf(ctx->world, ctx->term, &buf, 0);
+        ecs_strbuf_appendlit(&buf, "\n");
     }
+
+    char *expr = ecs_strbuf_get(&buf);
     const char *name = NULL;
     if (ctx->query && ctx->query->entity) {
         name = ecs_get_name(ctx->query->world, ctx->query->entity);
     }
-    ecs_parser_errorv(name, expr, term_start, fmt, args);
+
+    va_list args;
+    va_start(args, fmt);
+    char *msg = flecs_vasprintf(fmt, args);
+    ecs_parser_error(name, NULL, 0, "%s\n%s", msg, expr);
+    ecs_os_free(msg);
     ecs_os_free(expr);
 
     va_end(args);
@@ -198,24 +220,6 @@ int flecs_term_refs_finalize(
     ecs_term_ref_t *src = &term->src;
     ecs_term_ref_t *first = &term->first;
     ecs_term_ref_t *second = &term->second;
-
-    if ((term->src.id & EcsCascade) && !(term->src.id & EcsUp)) {
-        /* If cascade is specified without up/down, add up */
-        term->src.id |= EcsUp;
-    }
-
-    if (!(src->id & EcsTraverseFlags)) {
-        /* When no traversal flags are specified, the default traversal 
-         * relationship is IsA so inherited components are matched by default */
-        src->id |= EcsSelf | EcsUp;
-        if (!term->trav) {
-            term->trav = EcsIsA;
-        }
-    } else if ((src->id & EcsUp) && !term->trav) {
-        /* When traversal flags are specified but no traversal relationship,
-         * default to ChildOf, which is the most common kind of traversal. */
-        term->trav = EcsChildOf;
-    }
 
     /* Include subsets for component by default, to support inheritance */
     if (!(first->id & EcsTraverseFlags)) {
@@ -601,8 +605,7 @@ int flecs_term_verify(
                 {
                     char *pred_str = ecs_get_fullpath(world, term->first.id);
                     flecs_query_validator_error(ctx, "term with acyclic relationship"
-                        " '%s' cannot have same subject and object",
-                            pred_str);
+                        " '%s' cannot have same subject and object", pred_str);
                     ecs_os_free(pred_str);
                     return -1;
                 }
@@ -652,7 +655,6 @@ int flecs_term_finalize(
     ecs_term_ref_t *src = &term->src;
     ecs_term_ref_t *first = &term->first;
     ecs_term_ref_t *second = &term->second;
-    ecs_flags64_t src_flags = ECS_TERM_REF_FLAGS(src);
     ecs_flags64_t first_flags = ECS_TERM_REF_FLAGS(first);
     ecs_flags64_t second_flags = ECS_TERM_REF_FLAGS(second);
 
@@ -671,7 +673,6 @@ int flecs_term_finalize(
             "second.name and second.id have competing values");
         return -1;
     }
-
 
     if (term->id & ~ECS_ID_FLAGS_MASK) {
         if (flecs_term_populate_from_id(world, term, ctx)) {
@@ -740,7 +741,58 @@ int flecs_term_finalize(
     }
 
     ecs_id_record_t *idr = flecs_id_record_get(world, term->id);
-    ecs_flags32_t id_flags = idr ? idr->flags : 0;
+    ecs_flags32_t id_flags = 0;
+    if (idr) {
+        id_flags = idr->flags;
+    } else if (ECS_IS_PAIR(term->id)) {
+        ecs_id_record_t *wc_idr = flecs_id_record_get(
+            world, ecs_pair(ECS_PAIR_FIRST(term->id), EcsWildcard));
+        if (wc_idr) {
+            id_flags = wc_idr->flags;
+        }
+    }
+
+    if (src_id || src->name) {
+        if (!(term->src.id & EcsTraverseFlags)) {
+            if (id_flags & EcsIdOnInstantiateInherit) {
+                term->src.id |= EcsSelf|EcsUp;
+                if (!term->trav) {
+                    term->trav = EcsIsA;
+                }
+            } else {
+                term->src.id |= EcsSelf;
+
+                if (term->trav) {
+                    char *idstr = ecs_id_str(world, term->id);
+                    flecs_query_validator_error(ctx, ".trav specified for "
+                        "'%s' which can't be inherited", idstr);
+                    ecs_os_free(idstr);
+                    return -1;
+                }
+            }
+        }
+
+        if (term->src.id & EcsCascade) {
+            /* Cascade always implies up traversal */
+            term->src.id |= EcsUp;
+        }
+
+        if ((src->id & EcsUp) && !term->trav) {
+            /* When traversal flags are specified but no traversal relationship,
+            * default to ChildOf, which is the most common kind of traversal. */
+            term->trav = EcsChildOf;
+        }
+    }
+
+    if (!(id_flags & EcsIdOnInstantiateInherit) && (term->trav == EcsIsA)) {
+        if (src->id & EcsUp) {
+            char *idstr = ecs_id_str(world, term->id);
+            flecs_query_validator_error(ctx, "IsA traversal not allowed "
+                "for '%s', add the (OnInstantiate, Inherit) trait", idstr);
+            ecs_os_free(idstr);
+            return -1;
+        }
+    }
 
     if (first_entity) {
         /* Only enable inheritance for ids which are inherited from at the time
@@ -750,17 +802,6 @@ int flecs_term_finalize(
             if (!((first_flags & EcsTraverseFlags) == EcsSelf)) {
                 term->flags_ |= EcsTermIdInherited;
             }
-        }
-
-        /* Don't traverse ids that cannot be inherited */
-        if ((id_flags & EcsIdDontInherit) && (term->trav == EcsIsA)) {
-            if (src_flags & EcsUp) {
-                flecs_query_validator_error(ctx, 
-                    "traversing not allowed for id that can't be inherited");
-                return -1;
-            }
-            src->id &= ~EcsUp;
-            term->trav = 0;
         }
 
         /* If component id is final, don't attempt component inheritance */
@@ -825,7 +866,7 @@ int flecs_term_finalize(
     /* Is term trivial/cacheable */
     bool cacheable_term = true;
     bool trivial_term = true;
-    if (term->oper != EcsAnd) {
+    if (term->oper != EcsAnd || term->flags_ & EcsTermIsOr) {
         trivial_term = false;
     }
 
@@ -860,10 +901,6 @@ int flecs_term_finalize(
 
     if (term->flags_ & EcsTermIdInherited) {
         trivial_term = false;
-        cacheable_term = false;
-    }
-
-    if (term->flags_ & EcsTermIsScope) {
         cacheable_term = false;
     }
 
@@ -975,6 +1012,7 @@ ecs_term_t* flecs_query_or_other_type(
         ecs_world_t *world = q->world;
         const ecs_type_info_t *first_type = ecs_get_type_info(world, first->id);
         const ecs_type_info_t *term_type = ecs_get_type_info(world, term->id);
+
         if (first_type == term_type) {
             return NULL;
         }
@@ -1016,12 +1054,23 @@ int flecs_query_finalize_terms(
 
     q->flags |= EcsQueryMatchOnlyThis;
 
+    for (i = 0; i < term_count; i ++) {
+        ecs_term_t *term = &terms[i];
+        if (term->oper == EcsOr) {
+            term->flags_ |= EcsTermIsOr;
+            if (i != (term_count - 1)) {
+                term[1].flags_ |= EcsTermIsOr;
+            }
+        }
+    }
+
     bool cacheable = true;
     for (i = 0; i < term_count; i ++) {
         ecs_term_t *term = &terms[i];
         bool prev_is_or = i && term[-1].oper == EcsOr;
         bool nodata_term = false;
         ctx.term_index = i;
+
         if (flecs_term_finalize(world, term, &ctx)) {
             return -1;
         }
@@ -1152,7 +1201,7 @@ int flecs_query_finalize_terms(
         if (!nodata_term) {
             /* If terms in an OR chain do not all return the same type, the 
              * field will not provide any data */
-            if (term->oper == EcsOr || (i && term[-1].oper == EcsOr)) {
+            if (term->flags_ & EcsTermIsOr) {
                 ecs_term_t *first = flecs_query_or_other_type(q, i);
                 if (first) {
                     if (first == &term[-1]) {
@@ -1240,6 +1289,9 @@ int flecs_query_finalize_terms(
 
         if (scope_nesting) {
             term->flags_ |= EcsTermIsScope;
+            ECS_BIT_CLEAR16(term->flags_, EcsTermIsTrivial);
+            ECS_BIT_CLEAR16(term->flags_, EcsTermIsCacheable);
+            cacheable_terms --;
         }
 
         if (first_id == EcsScopeClose) {
@@ -1276,7 +1328,7 @@ int flecs_query_finalize_terms(
             int32_t field = term->field_index;
             q->ids[field] = term->id;
 
-            if (term->oper == EcsOr || (i && (term[-1].oper == EcsOr))) {
+            if (term->flags_ & EcsTermIsOr) {
                 if (flecs_query_or_other_type(q, i)) {
                     q->sizes[field] = 0;
                     q->ids[field] = 0;

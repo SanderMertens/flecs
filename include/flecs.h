@@ -732,6 +732,7 @@ typedef enum ecs_query_cache_kind_t {
 #define EcsTermKeepAlive              (1u << 11)
 #define EcsTermIsSparse               (1u << 12)
 #define EcsTermIsUnion                (1u << 13)
+#define EcsTermIsOr                   (1u << 14)
 
 /** Type that describes a reference to an entity or variable in a term. */
 typedef struct ecs_term_ref_t {
@@ -1534,19 +1535,24 @@ FLECS_API extern const ecs_entity_t EcsReflexive;
  */
 FLECS_API extern const ecs_entity_t EcsFinal;
 
-/** Ensures that component is never inherited from an IsA target.
- *
- * Behavior:
- *   if DontInherit(X) and X(B) and IsA(A, B) then X(A) is false.
- */
-FLECS_API extern const ecs_entity_t EcsDontInherit;
+/** Relationship that specifies component inheritance behavior. */
+FLECS_API extern const ecs_entity_t EcsOnInstantiate;
 
-/** Ensures a component is always overridden.
- *
- * Behavior:
- *   As if the component is added together with OVERRIDE | T
- */
-FLECS_API extern const ecs_entity_t EcsAlwaysOverride;
+/** Override component on instantiate. 
+ * This will copy the component from the base entity (IsA target) to the 
+ * instance. The base component will never be inherited from the prefab. */
+FLECS_API extern const ecs_entity_t EcsOverride;
+
+/** Inherit component on instantiate. 
+ * This will inherit (share) the component from the base entity (IsA target).
+ * The component can be manually overridden by adding it to the instance. */
+FLECS_API extern const ecs_entity_t EcsInherit;
+
+/** Never inherit component on instantiate. 
+ * This will not copy or share the component from the base entity (IsA target).
+ * When the component is added to an instance, its value will never be copied 
+ * from the base entity. */
+FLECS_API extern const ecs_entity_t EcsDontInherit;
 
 /** Marks relationship as commutative.
  * Behavior:

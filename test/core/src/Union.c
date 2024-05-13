@@ -1303,7 +1303,7 @@ void Union_add_2_reverse(void) {
 void Union_add_switch_to_prefab_instance(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Movement, Union);
+    ECS_ENTITY(world, Movement, Union, (OnInstantiate, Inherit));
     ECS_TAG(world, Walking);
     ECS_TAG(world, Running);
     ECS_TAG(world, Jumping);

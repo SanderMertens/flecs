@@ -540,7 +540,7 @@ void flecs_table_init(
         /* Initialize column index (will be overwritten by init_columns) */
         tr->column = -1;
 
-        if (idr->flags & EcsIdAlwaysOverride) {
+        if (ECS_ID_ON_INSTANTIATE(idr->flags) == EcsOverride) {
             table->flags |= EcsTableHasOverrides;
         }
 

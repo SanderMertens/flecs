@@ -31,6 +31,18 @@
                 "validate_1_term_non_acyclic_superset",
                 "validate_1_term_dont_inherit_default_set",
                 "validate_1_term_dont_inherit_pair_default_set",
+                "validate_1_term_inherit_default_set",
+                "validate_1_term_inherit_pair_default_set",
+                "validate_1_term_override_default_set",
+                "validate_1_term_override_pair_default_set",
+                "validate_1_term_up_no_inherit",
+                "validate_1_term_up_no_inherit_pair",
+                "validate_1_term_up_override",
+                "validate_1_term_up_override_pair",
+                "validate_1_term_up_isa_no_inherit",
+                "validate_1_term_up_isa_no_inherit_pair",
+                "validate_1_term_up_isa_override",
+                "validate_1_term_up_isa_override_pair",
                 "validate_1_term_cascade_implicit_trav",
                 "validate_1_term_cascade_isa",
                 "validate_1_term_cascade_childof",
@@ -119,7 +131,16 @@
                 "not_second_wildcard",
                 "not_wildcard_id",
                 "not_wildcard_first_pair",
-                "not_wildcard_second_pair"
+                "not_wildcard_second_pair",
+                "validate_or_same_type",
+                "validate_or_different_types",
+                "validate_or_different_types",
+                "validate_or_different_types_1_and_2_or",
+                "validate_trav_isa_w_wildcard",
+                "validate_trav_isa_w_any",
+                "validate_custom_trav_w_inherit_id",
+                "validate_custom_trav_w_inherit_id_w_self_up",
+                "validate_custom_trav_w_inherit_id_w_up"
             ]
         }, {
             "id": "Parser",
@@ -535,7 +556,9 @@
                 "match_optional_self_prefab",
                 "match_optional_self_disabled_prefab",
                 "inout_none_first_term",
+                "inout_none_first_term_self_up",
                 "inout_none_second_term",
+                "inout_none_second_term_self_up",
                 "inout_none_singleton",
                 "inout_none_singleton_w_or",
                 "inout_none_component_w_or",
@@ -934,6 +957,10 @@
                 "2_or",
                 "3_or",
                 "2_or_w_and",
+                "and_w_2_or_w_and",
+                "and_w_2_or_w_and_components",
+                "and_w_2_or_w_and_set_this",
+                "and_w_2_or_w_and_components_set_this",
                 "3_or_w_and",
                 "2_or_written",
                 "3_or_written",
@@ -1230,7 +1257,8 @@
             "id": "Scopes",
             "setup": true,
             "params": {
-                "cache_kind": ["default", "auto"]
+                "cache_kind": ["default", "auto"],
+                "on_instantiate": ["override", "inherit"]
             },
             "testcases": [
                 "term_w_not_scope_1_term",
@@ -1242,7 +1270,8 @@
                 "term_w_not_scope_1_term_w_not_w_var",
                 "term_w_not_scope_2_terms_w_not_w_var",
                 "term_w_not_scope_2_terms_w_or",
-                "term_w_not_scope_3_terms_w_or"
+                "term_w_not_scope_3_terms_w_or",
+                "term_w_not_scope_2_terms_w_before_after"
             ]
         }, {
             "id": "Traversal",
@@ -1564,6 +1593,7 @@
                 "this_member_eq_w_other_component",
                 "this_written_member_eq_w_other_tag",
                 "this_written_member_eq_w_other_component",
+                "this_written_member_eq_w_other_inherit_component",
                 "this_2_or",
                 "this_3_or",
                 "this_written_2_or",
@@ -1950,10 +1980,14 @@
                 "one_term_w_pair_entity_src",
                 "one_term_w_self",
                 "one_term_w_up",
+                "one_term_w_self_up",
+                "one_term_w_cascade",
                 "one_term_w_0",
                 "one_term_w_singleton",
                 "one_term_w_final_pair",
-                "one_term_w_final_dont_inherit_pair",
+                "one_term_w_final_dont_inherit",
+                "one_term_w_final_inherit",
+                "one_term_w_final_override",
                 "one_term_w_src_var",
                 "one_term_w_first_var",
                 "one_term_w_second_var",

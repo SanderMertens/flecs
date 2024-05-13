@@ -1732,7 +1732,9 @@
                 "child_of_prefab_w_prefab_is_prefab_w_component",
                 "override_exclusive",
                 "override_exclusive_2_lvls",
-                "hierarchy_w_recycled_id"
+                "hierarchy_w_recycled_id",
+                "disable_ids",
+                "disable_nested_ids"
             ]
         }, {
             "id": "World",

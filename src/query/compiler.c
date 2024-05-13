@@ -572,6 +572,18 @@ void flecs_query_insert_trivial_search(
     int32_t trivial_wildcard_terms = 0;
     int32_t trivial_data_terms = 0;
     int32_t trivial_terms = 0;
+    bool populate = true;
+
+    for (i = 0; i < term_count; i ++) {
+        ecs_term_t *term = &terms[i];
+        if (term->flags_ & (EcsTermIsToggle|EcsTermIsMember|EcsTermIsSparse)) {
+            /* If query returns individual entities, let dedicated populate
+             * instruction handle populating data fields */
+            populate = false;
+            break;
+        }
+    }
+
     for (i = 0; i < term_count; i ++) {
         /* Term is already compiled */
         if (*compiled & (1ull << i)) {
@@ -594,8 +606,10 @@ void flecs_query_insert_trivial_search(
             trivial_wildcard_terms ++;
         }
 
-        if (q->data_fields & (1llu << term->field_index)) {
-            trivial_data_terms ++;
+        if (populate) {
+            if (q->data_fields & (1llu << term->field_index)) {
+                trivial_data_terms ++;
+            }
         }
 
         trivial_terms ++;
@@ -606,7 +620,9 @@ void flecs_query_insert_trivial_search(
         for (i = 0; i < q->term_count; i ++) {
             if (trivial_set & (1llu << i)) {
                 *compiled |= (1ull << i);
-                *populated |= (1ull << terms[i].field_index);
+                if (populate) {
+                    *populated |= (1ull << terms[i].field_index);
+                }
             }
         }
 
@@ -626,6 +642,9 @@ void flecs_query_insert_trivial_search(
         /* Store the bitset with trivial terms on the instruction */
         trivial.src.entity = trivial_set;
         flecs_query_op_insert(&trivial, ctx);
+
+        /* Mark $this as written */
+        ctx->written |= (1llu << 0);
     }
 }
 
@@ -643,18 +662,16 @@ void flecs_query_insert_cache_search(
     ecs_query_t *q = &query->pub;
     bool populate = true;
 
-    /* If query has a sparse $this field, fields can't be populated by the cache
-     * instruction. The reason for this is that sparse $this fields have to be
-     * returned one at a time. This means that the same needs to happen for
-     * cached fields, and the cache instruction only returns entire arrays. */
-    bool has_sparse_this = query->pub.flags & EcsQueryHasSparseThis;
-
     int32_t populate_count = 0;
     if (q->cache_kind == EcsQueryCacheAll) {
         /* If all terms are cacheable, make sure no other terms are compiled */
         *compiled = 0xFFFFFFFFFFFFFFFF;
 
-        if (!has_sparse_this) {
+        /* If query has a sparse $this field, fields can't be populated by the cache
+        * instruction. The reason for this is that sparse $this fields have to be
+        * returned one at a time. This means that the same needs to happen for
+        * cached fields, and the cache instruction only returns entire arrays. */
+        if (!(query->pub.flags & EcsQueryHasSparseThis)) {
             *populated = 0xFFFFFFFFFFFFFFFF;
             populate_count = query->pub.field_count;
         }
@@ -665,7 +682,7 @@ void flecs_query_insert_cache_search(
 
         for (i = 0; i < count; i ++) {
             ecs_term_t *term = &terms[i];
-            if (term->flags_ & (EcsTermIsToggle | EcsTermIsMember)) {
+            if (term->flags_ & (EcsTermIsToggle|EcsTermIsMember|EcsTermIsSparse)) {
                 /* If query returns individual entities, let dedicated populate
                  * instruction handle populating data fields */
                 populate = false;
@@ -686,11 +703,9 @@ void flecs_query_insert_cache_search(
 
             *compiled |= (1ull << i);
 
-            if (!has_sparse_this) {
-                if (populate) {
-                    *populated |= (1ull << field);
-                    populate_count ++; 
-                }
+            if (populate) {
+                *populated |= (1ull << field);
+                populate_count ++; 
             }
         }
     }

@@ -385,7 +385,7 @@ void FlecsSystemImport(
     /* Make sure to never inherit system component. This makes sure that any
      * term created for the System component will default to 'self' traversal,
      * which improves efficiency of the query. */
-    ecs_add_id(world, EcsSystem, EcsDontInherit);
+    ecs_add_pair(world, EcsSystem, EcsOnInstantiate, EcsDontInherit);
 }
 
 #endif
