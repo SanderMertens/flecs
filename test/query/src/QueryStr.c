@@ -11,7 +11,7 @@ void QueryStr_one_term(void) {
     test_assert(q != NULL);
 
     char *str = ecs_query_str(q);
-    test_str(str, "TagA");
+    test_str(str, "TagA($this)");
     ecs_os_free(str);
 
     ecs_query_fini(q);
@@ -33,7 +33,7 @@ void QueryStr_one_term_w_inout(void) {
     test_assert(q != NULL);
 
     char *str = ecs_query_str(q);
-    test_str(str, "[in] TagA");
+    test_str(str, "[in] TagA($this)");
     ecs_os_free(str);
 
     ecs_query_fini(q);
@@ -56,7 +56,7 @@ void QueryStr_two_terms(void) {
     test_assert(q != NULL);
 
     char *str = ecs_query_str(q);
-    test_str(str, "TagA, TagB");
+    test_str(str, "TagA($this), TagB($this)");
     ecs_os_free(str);
 
     ecs_query_fini(q);
@@ -79,7 +79,7 @@ void QueryStr_two_terms_w_inout(void) {
     test_assert(q != NULL);
 
     char *str = ecs_query_str(q);
-    test_str(str, "TagA, [in] TagB");
+    test_str(str, "TagA($this), [in] TagB($this)");
     ecs_os_free(str);
 
     ecs_query_fini(q);
@@ -104,7 +104,7 @@ void QueryStr_three_terms_w_or(void) {
     test_assert(q != NULL);
 
     char *str = ecs_query_str(q);
-    test_str(str, "TagA, TagB || TagC");
+    test_str(str, "TagA($this), TagB($this) || TagC($this)");
     ecs_os_free(str);
 
     ecs_query_fini(q);
@@ -129,7 +129,7 @@ void QueryStr_three_terms_w_or_inout(void) {
     test_assert(q != NULL);
 
     char *str = ecs_query_str(q);
-    test_str(str, "TagA, [in] TagB || TagC");
+    test_str(str, "TagA($this), [in] TagB($this) || TagC($this)");
     ecs_os_free(str);
 
     ecs_query_fini(q);
@@ -156,7 +156,7 @@ void QueryStr_four_terms_three_w_or_inout(void) {
     test_assert(q != NULL);
 
     char *str = ecs_query_str(q);
-    test_str(str, "TagA, [in] TagB || TagC, [in] TagD");
+    test_str(str, "TagA($this), [in] TagB($this) || TagC($this), [in] TagD($this)");
     ecs_os_free(str);
 
     ecs_query_fini(q);
@@ -176,7 +176,7 @@ void QueryStr_one_term_w_pair(void) {
     test_assert(q != NULL);
 
     char *str = ecs_query_str(q);
-    test_str(str, "(Rel,Tgt)");
+    test_str(str, "Rel($this,Tgt)");
     ecs_os_free(str);
 
     ecs_query_fini(q);
@@ -216,7 +216,7 @@ void QueryStr_one_term_w_self(void) {
     test_assert(q != NULL);
 
     char *str = ecs_query_str(q);
-    test_str(str, "Foo(self)");
+    test_str(str, "Foo($this)");
     ecs_os_free(str);
 
     ecs_query_fini(q);
@@ -235,6 +235,45 @@ void QueryStr_one_term_w_up(void) {
     test_assert(q != NULL);
 
     char *str = ecs_query_str(q);
+    test_str(str, "Foo($this|up ChildOf)");
+    ecs_os_free(str);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void QueryStr_one_term_w_cascade(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ .id = Foo, .src.id = EcsCascade }}
+    });
+    test_assert(q != NULL);
+
+    char *str = ecs_query_str(q);
+    test_str(str, "Foo($this|cascade ChildOf)");
+    ecs_os_free(str);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void QueryStr_one_term_w_self_up(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ .id = Foo, .src.id = EcsSelf|EcsUp }}
+    });
+    test_assert(q != NULL);
+
+    char *str = ecs_query_str(q);
+    test_str(str, "Foo($this|self|up ChildOf)");
     ecs_os_free(str);
 
     ecs_query_fini(q);
@@ -291,7 +330,7 @@ void QueryStr_one_term_w_final_pair(void) {
     test_assert(q != NULL);
 
     char *str = ecs_query_str(q);
-    test_str(str, "Foo");
+    test_str(str, "Foo($this)");
     ecs_os_free(str);
 
     ecs_query_fini(q);
@@ -299,10 +338,10 @@ void QueryStr_one_term_w_final_pair(void) {
     ecs_fini(world);
 }
 
-void QueryStr_one_term_w_final_dont_inherit_pair(void) {
+void QueryStr_one_term_w_final_dont_inherit(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Foo, Final, DontInherit);
+    ECS_ENTITY(world, Foo, Final, (OnInstantiate, DontInherit));
 
     ecs_query_t *q = ecs_query(world, {
         .terms = {{ .first.id = Foo }}
@@ -310,7 +349,45 @@ void QueryStr_one_term_w_final_dont_inherit_pair(void) {
     test_assert(q != NULL);
 
     char *str = ecs_query_str(q);
-    test_str(str, "Foo");
+    test_str(str, "Foo($this)");
+    ecs_os_free(str);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void QueryStr_one_term_w_final_inherit(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, Foo, Final, (OnInstantiate, Inherit));
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ .first.id = Foo }}
+    });
+    test_assert(q != NULL);
+
+    char *str = ecs_query_str(q);
+    test_str(str, "Foo($this|self|up IsA)");
+    ecs_os_free(str);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void QueryStr_one_term_w_final_override(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, Foo, Final, (OnInstantiate, Override));
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ .first.id = Foo }}
+    });
+    test_assert(q != NULL);
+
+    char *str = ecs_query_str(q);
+    test_str(str, "Foo($this)");
     ecs_os_free(str);
 
     ecs_query_fini(q);
@@ -346,7 +423,7 @@ void QueryStr_one_term_w_first_var(void) {
     test_assert(q != NULL);
 
     char *str = ecs_query_str(q);
-    test_str(str, "[none] $Var");
+    test_str(str, "[none] $Var($this)");
     ecs_os_free(str);
 
     ecs_query_fini(q);
@@ -365,7 +442,7 @@ void QueryStr_one_term_w_second_var(void) {
     test_assert(q != NULL);
 
     char *str = ecs_query_str(q);
-    test_str(str, "(Rel,$Var)");
+    test_str(str, "Rel($this,$Var)");
     ecs_os_free(str);
 
     ecs_query_fini(q);
@@ -427,7 +504,7 @@ void QueryStr_not_term(void) {
     test_assert(q != NULL);
 
     char *str = ecs_query_str(q);
-    test_str(str, "!TagA");
+    test_str(str, "!TagA($this)");
     ecs_os_free(str);
 
     ecs_query_fini(q);
@@ -446,7 +523,7 @@ void QueryStr_wildcard_term(void) {
     test_assert(q != NULL);
 
     char *str = ecs_query_str(q);
-    test_str(str, "[none] *");
+    test_str(str, "[none] *($this)");
     ecs_os_free(str);
 
     ecs_query_fini(q);
@@ -467,7 +544,7 @@ void QueryStr_scopes(void) {
     test_assert(q != NULL);
 
     char *str = ecs_query_str(q);
-    test_str(str, "TagA, {TagB, {TagC}}");
+    test_str(str, "TagA($this), {TagB($this), {TagC($this)}}");
     ecs_os_free(str);
 
     ecs_query_fini(q);
@@ -595,4 +672,3 @@ void QueryStr_pred_neq_m(void) {
 
     ecs_fini(world);
 }
-

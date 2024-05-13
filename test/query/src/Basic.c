@@ -4520,6 +4520,9 @@ void Basic_not_instanced_inherited(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+    ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
+
     ecs_entity_t base = ecs_insert(world, ecs_value(Velocity, {1, 2}));
 
     ecs_entity_t e1 = ecs_insert(world, ecs_value(Position, {10, 20}));
@@ -6820,6 +6823,50 @@ void Basic_inout_none_first_term(void) {
     ecs_fini(world);
 }
 
+void Basic_inout_none_first_term_self_up(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_query_t *r = ecs_query(world, {
+        .terms = {
+            { .id = ecs_id(Position), .inout = EcsInOutNone, .src.id = EcsSelf|EcsUp },
+            { .id = ecs_id(Velocity), .src.id = EcsSelf|EcsUp }
+        },
+        .cache_kind = cache_kind
+    });
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_set(world, e1, Position, {10, 20});
+    ecs_set(world, e1, Velocity, {1, 2});
+
+    ecs_iter_t it = ecs_query_iter(world, r);
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(e1, it.entities[0]);
+    test_uint(ecs_id(Position), ecs_field_id(&it, 0));
+    test_uint(ecs_id(Velocity), ecs_field_id(&it, 1));
+    test_bool(true, ecs_field_is_set(&it, 0));
+    test_bool(true, ecs_field_is_set(&it, 1));
+    {
+        Position *p = ecs_field(&it, Position, 0);
+        test_assert(p == NULL);
+    }
+    {
+        Velocity *v = ecs_field(&it, Velocity, 1);
+        test_assert(v != NULL);
+        test_int(v->x, 1);
+        test_int(v->y, 2);
+    }
+
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(r);
+
+    ecs_fini(world);
+}
+
 void Basic_inout_none_second_term(void) {
     ecs_world_t *world = ecs_mini();
 
@@ -6830,6 +6877,50 @@ void Basic_inout_none_second_term(void) {
         .terms = {
             { .id = ecs_id(Position) },
             { .id = ecs_id(Velocity), .inout = EcsInOutNone }
+        },
+        .cache_kind = cache_kind
+    });
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_set(world, e1, Position, {10, 20});
+    ecs_set(world, e1, Velocity, {1, 2});
+
+    ecs_iter_t it = ecs_query_iter(world, r);
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(e1, it.entities[0]);
+    test_uint(ecs_id(Position), ecs_field_id(&it, 0));
+    test_uint(ecs_id(Velocity), ecs_field_id(&it, 1));
+    test_bool(true, ecs_field_is_set(&it, 0));
+    test_bool(true, ecs_field_is_set(&it, 1));
+    {
+        Position *p = ecs_field(&it, Position, 0);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+    }
+    {
+        Velocity *v = ecs_field(&it, Velocity, 1);
+        test_assert(v == NULL);
+    }
+
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(r);
+
+    ecs_fini(world);
+}
+
+void Basic_inout_none_second_term_self_up(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_query_t *r = ecs_query(world, {
+        .terms = {
+            { .id = ecs_id(Position), .src.id = EcsSelf|EcsUp },
+            { .id = ecs_id(Velocity), .inout = EcsInOutNone, .src.id = EcsSelf|EcsUp }
         },
         .cache_kind = cache_kind
     });
@@ -7671,6 +7762,9 @@ void Basic_instanced_w_base(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+    ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
+
     ecs_entity_t base_1 = ecs_insert(world, ecs_value(Velocity, {1, 2}));
     ecs_entity_t base_2 = ecs_insert(world, ecs_value(Position, {80, 90}));
 
@@ -7938,6 +8032,9 @@ void Basic_not_instanced_w_base(void) {
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
+
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+    ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
 
     ecs_entity_t base_1 = ecs_insert(world, ecs_value(Velocity, {1, 2}));
     ecs_entity_t base_2 = ecs_insert(world, ecs_value(Position, {80, 90}));

@@ -237,6 +237,10 @@ void ObserverOnSet_set_1_of_2_1_from_base(void) {
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
+
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+    ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
+
     ECS_ENTITY(world, Base, Position);
     ECS_OBSERVER(world, OnPosition, EcsOnSet, Position(self|up IsA), Velocity);
 
@@ -271,6 +275,11 @@ void ObserverOnSet_set_1_of_3_1_from_base(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
     ECS_COMPONENT(world, Mass);
+
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+    ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
+    ecs_add_pair(world, ecs_id(Mass), EcsOnInstantiate, EcsInherit);
+
     ECS_ENTITY(world, Base, Position);
     ECS_OBSERVER(world, OnPosition, EcsOnSet, Position(self|up IsA), Velocity, Mass);
 
@@ -326,6 +335,10 @@ void ObserverOnSet_add_base(void) {
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
+
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+    ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
+
     ECS_ENTITY(world, Base, Position);
     ECS_OBSERVER(world, OnPosition, EcsOnSet, Position(self|up IsA), Velocity);
 
@@ -355,6 +368,8 @@ void ObserverOnSet_add_base_to_1_overridden(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+
     ECS_ENTITY(world, Base, Position);
     ECS_OBSERVER(world, OnPosition, EcsOnSet, Position(self|up IsA));
 
@@ -375,6 +390,10 @@ void ObserverOnSet_add_base_to_2_overridden(void) {
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
+
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+    ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
+
     ECS_ENTITY(world, Base, Position, Velocity);
     ECS_OBSERVER(world, OnPosition, EcsOnSet, Position(self|up IsA), Velocity(self|up IsA));
 
@@ -396,6 +415,10 @@ void ObserverOnSet_add_base_to_1_of_2_overridden(void) {
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
+
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+    ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
+
     ECS_ENTITY(world, Base, Position, Velocity);
     ECS_OBSERVER(world, OnPosition, EcsOnSet, Position(self|up IsA));
 
@@ -432,6 +455,10 @@ void ObserverOnSet_on_set_after_remove_override(void) {
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
+
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+    ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
+
     ECS_ENTITY(world, Base, Position);
     ECS_OBSERVER(world, OnPosition, EcsOnSet, Position);
 
@@ -463,6 +490,10 @@ void ObserverOnSet_no_set_after_remove_base(void) {
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
+
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+    ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
+
     ECS_ENTITY(world, Base, Position);
     ECS_OBSERVER(world, OnPosition, EcsOnSet, Position(self|up IsA));
 
@@ -503,6 +534,9 @@ void ObserverOnSet_un_set_after_remove_base(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
+
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+
     ECS_ENTITY(world, Base, Position);
     ECS_OBSERVER(world, OnPosition, EcsUnSet, Position(self|up IsA));
 

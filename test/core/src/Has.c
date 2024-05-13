@@ -106,6 +106,8 @@ void Has_owns(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
+    ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
+
     ecs_entity_t e = ecs_new_w(world, Position);    
     test_assert(e != 0);
     test_assert( ecs_has(world, e, Position));
@@ -224,6 +226,9 @@ void Has_has_entity_owned(void) {
 
     ecs_entity_t base = ecs_new(world);
     test_assert(base != 0);
+
+    ecs_add_pair(world, f, EcsOnInstantiate, EcsInherit);
+    ecs_add_pair(world, g, EcsOnInstantiate, EcsInherit);
 
     ecs_add_id(world, e, f);
     ecs_add_id(world, base, g);

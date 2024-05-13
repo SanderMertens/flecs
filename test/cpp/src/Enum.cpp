@@ -1001,19 +1001,19 @@ void Enum_query_union_enum(void) {
         while (it.next()) {
             test_int(it.count(), 1);
             if (count == 0) {
-                test_assert(it.entity(0) == e2);
-                test_assert(it.id(0) == 
-                    ecs.pair<StandardEnum>(ecs.to_entity(StandardEnum::Green)));
-            }
-            if (count == 1) {
-                test_assert(it.entity(0) == e1);
+                test_int(it.entity(0), e1);
                 test_assert(it.id(0) == 
                     ecs.pair<StandardEnum>(ecs.to_entity(StandardEnum::Red)));
             }
-            if (count == 2) {
-                test_assert(it.entity(0) == e3);
+            if (count == 1) {
+                test_int(it.entity(0), e3);
                 test_assert(it.id(0) == 
                     ecs.pair<StandardEnum>(ecs.to_entity(StandardEnum::Blue)));
+            }
+            if (count == 2) {
+                test_int(it.entity(0), e2);
+                test_assert(it.id(0) == 
+                    ecs.pair<StandardEnum>(ecs.to_entity(StandardEnum::Green)));
             }
             count ++;
         }
@@ -1164,8 +1164,6 @@ void Enum_enum_class_mixed_auto_manual_constants(void) {
         test_assert(vi != nullptr);
         test_assert(*vi == static_cast<int32_t>(EnumClassWithLargeConstant::X));
     }
-
-
 }
 
 void Enum_enum_child_count(void) {

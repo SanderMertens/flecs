@@ -182,7 +182,6 @@ void flecs_doc_import_core_definitions(
     ecs_doc_set_brief(world, EcsExclusive, "Trait that ensures a relationship can only have one target");
     ecs_doc_set_brief(world, EcsSymmetric, "Trait that causes a relationship to be two-way");
     ecs_doc_set_brief(world, EcsWith, "Trait for adding additional components when a component is added");
-    ecs_doc_set_brief(world, EcsAlwaysOverride, "Trait that indicates a component should always be overridden");
     ecs_doc_set_brief(world, EcsOneOf, "Trait that enforces target of relationship is a child of <specified>");
     ecs_doc_set_brief(world, EcsOnDelete, "Cleanup trait for specifying what happens when component is deleted");
     ecs_doc_set_brief(world, EcsOnDeleteTarget, "Cleanup trait for specifying what happens when pair target is deleted");
@@ -255,7 +254,7 @@ void FlecsDocImport(
         .dtor = ecs_dtor(EcsDocDescription)
     });
 
-    ecs_add_id(world, ecs_id(EcsDocDescription), EcsDontInherit);
+    ecs_add_pair(world, ecs_id(EcsDocDescription), EcsOnInstantiate, EcsDontInherit);
     ecs_add_id(world, ecs_id(EcsDocDescription), EcsPrivate);
 
     flecs_doc_import_core_definitions(world);

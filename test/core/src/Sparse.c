@@ -358,6 +358,7 @@ void Sparse_has_inherited(void) {
     ECS_COMPONENT(world, Position);
 
     ecs_add_id(world, ecs_id(Position), EcsSparse);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
 
     ecs_entity_t b = ecs_new(world);
     ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, b);
@@ -375,6 +376,7 @@ void Sparse_owns_inherited(void) {
     ECS_COMPONENT(world, Position);
 
     ecs_add_id(world, ecs_id(Position), EcsSparse);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
 
     ecs_entity_t b = ecs_new(world);
     ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, b);
@@ -394,6 +396,7 @@ void Sparse_get_inherited(void) {
     ECS_COMPONENT(world, Position);
 
     ecs_add_id(world, ecs_id(Position), EcsSparse);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
 
     ecs_entity_t b = ecs_new(world);
     ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, b);
@@ -416,6 +419,7 @@ void Sparse_get_mut_inherited(void) {
     ECS_COMPONENT(world, Position);
 
     ecs_add_id(world, ecs_id(Position), EcsSparse);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
 
     ecs_entity_t b = ecs_new(world);
     ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, b);
@@ -433,6 +437,7 @@ void Sparse_ensure_inherited(void) {
     ECS_COMPONENT(world, Position);
 
     ecs_add_id(world, ecs_id(Position), EcsSparse);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
 
     ecs_entity_t b = ecs_new(world);
     ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, b);
@@ -455,6 +460,7 @@ void Sparse_emplace_inherited(void) {
     ECS_COMPONENT(world, Position);
 
     ecs_add_id(world, ecs_id(Position), EcsSparse);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
 
     ecs_entity_t b = ecs_new(world);
     ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, b);

@@ -812,7 +812,7 @@ int flecs_multi_observer_init(
             for (ti = 0; ti < ti_count; ti ++) {
                 ecs_id_t ti_id = ti_ids[ti];
                 ecs_id_record_t *idr = flecs_id_record_get(world, ti_id);
-                if (idr->flags & EcsIdDontInherit) {
+                if (idr->flags & EcsIdOnInstantiateDontInherit) {
                     continue;
                 }
 
@@ -836,7 +836,7 @@ int flecs_multi_observer_init(
         if (optional_only) {
             term->id = EcsAny;
             term->first.id = EcsAny;
-            term->src.id = EcsThis | EcsIsVariable;
+            term->src.id = EcsThis | EcsIsVariable | EcsSelf;
             term->second.id = 0;
         } else if (term->oper == EcsOptional) {
             continue;

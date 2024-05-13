@@ -1289,6 +1289,7 @@ void OrderByEntireTable_sort_shared_component(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
 
     ecs_entity_t base_1 = ecs_insert(world, ecs_value(Position, {0, 0}));
     ecs_entity_t base_2 = ecs_insert(world, ecs_value(Position, {3, 0}));
@@ -1588,6 +1589,7 @@ void OrderByEntireTable_sort_isa_marked(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
+    ecs_add_pair(world, Tag, EcsOnInstantiate, EcsInherit);
 
     ecs_query_t *q = ecs_query(world, {
         .terms = {{Tag}},
@@ -1910,6 +1912,7 @@ void SortingEntireTable_sort_shared_w_delete(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
 
     ecs_query_t *q = ecs_query(world, {
         .terms = {
@@ -1962,6 +1965,7 @@ void OrderByEntireTable_sort_shared_w_delete(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
 
     ecs_query_t *q = ecs_query(world, {
         .terms = {

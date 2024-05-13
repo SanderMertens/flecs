@@ -1243,7 +1243,7 @@ ecs_query_cache_t* flecs_query_cache_init(
     desc.order_by_callback = NULL;
     desc.order_by = 0;
     desc.entity = 0;
-    
+
     /* Don't pass ctx/binding_ctx to uncached query */
     desc.ctx = NULL;
     desc.binding_ctx = NULL;

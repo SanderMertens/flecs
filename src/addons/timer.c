@@ -316,8 +316,8 @@ void FlecsTimerImport(
     ecs_system(world, {
         .entity = ecs_entity(world, {.name = "AddTickSource", .add = ecs_ids( ecs_dependson(EcsPreFrame) )}),
         .query.terms = {
-            { .id = ecs_id(EcsTimer), .oper = EcsOr, .inout = EcsIn },
-            { .id = ecs_id(EcsRateFilter), .oper = EcsAnd, .inout = EcsIn },
+            { .id = ecs_id(EcsTimer), .oper = EcsOr },
+            { .id = ecs_id(EcsRateFilter), .oper = EcsAnd },
             { .id = ecs_id(EcsTickSource), .oper = EcsNot, .inout = EcsOut}
         },
         .callback = AddTickSource

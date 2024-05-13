@@ -55,11 +55,11 @@ ecs_event_record_t* flecs_event_record_get(
     ecs_assert(o != NULL, ECS_INTERNAL_ERROR, NULL);
     
     /* Builtin events*/
-    if      (event == EcsOnAdd)     return ECS_CONST_CAST(ecs_event_record_t*, &o->on_add);
-    else if (event == EcsOnRemove)  return ECS_CONST_CAST(ecs_event_record_t*, &o->on_remove);
-    else if (event == EcsOnSet)     return ECS_CONST_CAST(ecs_event_record_t*, &o->on_set);
-    else if (event == EcsUnSet)     return ECS_CONST_CAST(ecs_event_record_t*, &o->un_set);
-    else if (event == EcsWildcard)  return ECS_CONST_CAST(ecs_event_record_t*, &o->on_wildcard);
+    if      (event == EcsOnAdd)    return ECS_CONST_CAST(ecs_event_record_t*, &o->on_add);
+    else if (event == EcsOnRemove) return ECS_CONST_CAST(ecs_event_record_t*, &o->on_remove);
+    else if (event == EcsOnSet)    return ECS_CONST_CAST(ecs_event_record_t*, &o->on_set);
+    else if (event == EcsUnSet)    return ECS_CONST_CAST(ecs_event_record_t*, &o->un_set);
+    else if (event == EcsWildcard) return ECS_CONST_CAST(ecs_event_record_t*, &o->on_wildcard);
 
     /* User events */
     return flecs_sparse_try_t(&o->events, ecs_event_record_t, event);
@@ -336,6 +336,7 @@ void flecs_emit_propagate(
         ecs_dbg_3("propagate events/invalidate cache for %s", idstr);
         ecs_os_free(idstr);
     }
+
     ecs_log_push_3();
 
     /* Propagate to records of traversable relationships */
@@ -498,6 +499,7 @@ void flecs_override_copy(
     ecs_copy_t copy = ti->hooks.copy;
     ecs_size_t size = ti->size;
     int32_t i;
+
     if (copy) {
         for (i = 0; i < count; i ++) {
             copy(ptr, src, 1, ti);
@@ -844,7 +846,7 @@ void flecs_emit_forward_table_up(
         ecs_id_t id = ids[i];
         ecs_table_record_t *tgt_tr = &tgt_table->_->records[i];
         ecs_id_record_t *idr = (ecs_id_record_t*)tgt_tr->hdr.cache;
-        if (inherit && (idr->flags & EcsIdDontInherit)) {
+        if (inherit && !(idr->flags & EcsIdOnInstantiateInherit)) {
             continue;
         }
 
@@ -1287,7 +1289,7 @@ repeat_event:
                 ecs_assert(it.event_cur == evtx, ECS_INTERNAL_ERROR, NULL);
             }
 
-            if (can_override && (!(idr_flags & EcsIdDontInherit))) {
+            if (can_override && !(idr_flags & EcsIdOnInstantiateDontInherit)) {
                 /* Initialize overridden components with value from base */
                 ti = idr->type_info;
                 if (ti) {

@@ -344,7 +344,7 @@ int flecs_script_eval_assembly(
 
     assembly->type_info = ecs_get_type_info(v->world, assembly_entity);
 
-    ecs_add_id(v->world, assembly_entity, EcsAlwaysOverride);
+    ecs_add_pair(v->world, assembly_entity, EcsOnInstantiate, EcsOverride);
 
     EcsScript *script = ecs_ensure(v->world, assembly_entity, EcsScript);
     if (script->script) {

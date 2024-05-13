@@ -1476,7 +1476,7 @@ int32_t flecs_query_next_inheritable_id(
     int32_t i;
     for (i = index; i < type->count; i ++) {
         ecs_id_record_t *idr = flecs_id_record_get(world, type->array[i]);
-        if (!(idr->flags & EcsIdDontInherit)) {
+        if (!(idr->flags & EcsIdOnInstantiateDontInherit)) {
             return i;
         }
     }
@@ -1574,7 +1574,7 @@ bool flecs_query_x_from(
                         continue;
                     }
 
-                    if (idr->flags & EcsIdDontInherit) {
+                    if (idr->flags & EcsIdOnInstantiateDontInherit) {
                         continue;
                     }
                     
@@ -1601,7 +1601,7 @@ bool flecs_query_x_from(
                     }
                 }
 
-                if (idr->flags & EcsIdDontInherit) {
+                if (idr->flags & EcsIdOnInstantiateDontInherit) {
                     continue;
                 }
 
@@ -3844,9 +3844,7 @@ void flecs_query_iter_init(
     ecs_flags32_t flags = q->flags;
     ecs_query_cache_t *cache = query->cache;
     if (flags & EcsQueryIsTrivial && !cache) {
-        if ((flags & EcsQueryMatchOnlySelf) || 
-            !flecs_table_cache_all_count(&ctx->world->idr_isa_wildcard->cache)) 
-        {
+        if ((flags & EcsQueryMatchOnlySelf)) {
             if (it_written) {
                 flecs_query_set_iter_this(it, ctx);
 

@@ -3,7 +3,7 @@
 void SerializeQueryInfoToJson_1_tag(void) {
     ecs_world_t *world = ecs_init();
 
-    ECS_TAG(world, Foo);
+    ECS_ENTITY(world, Foo, (OnInstantiate, Inherit));
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "Foo"
@@ -35,6 +35,7 @@ void SerializeQueryInfoToJson_1_component(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "Position"
@@ -65,8 +66,8 @@ void SerializeQueryInfoToJson_1_component(void) {
 void SerializeQueryInfoToJson_1_pair(void) {
     ecs_world_t *world = ecs_init();
 
-    ECS_TAG(world, Rel);
-    ECS_TAG(world, Tgt);
+    ECS_ENTITY(world, Rel, (OnInstantiate, Inherit));
+    ECS_ENTITY(world, Tgt, (OnInstantiate, Inherit));
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "(Rel, Tgt)"
@@ -98,7 +99,7 @@ void SerializeQueryInfoToJson_1_pair(void) {
 void SerializeQueryInfoToJson_1_pair_w_wildcard(void) {
     ecs_world_t *world = ecs_init();
 
-    ECS_TAG(world, Rel);
+    ECS_ENTITY(world, Rel, (OnInstantiate, Inherit));
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "(Rel, *)"
@@ -130,7 +131,7 @@ void SerializeQueryInfoToJson_1_pair_w_wildcard(void) {
 void SerializeQueryInfoToJson_1_pair_w_any(void) {
     ecs_world_t *world = ecs_init();
 
-    ECS_TAG(world, Rel);
+    ECS_ENTITY(world, Rel, (OnInstantiate, Inherit));
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "(Rel, _)"
@@ -162,8 +163,8 @@ void SerializeQueryInfoToJson_1_pair_w_any(void) {
 void SerializeQueryInfoToJson_1_tag_fixed_src(void) {
     ecs_world_t *world = ecs_init();
 
-    ECS_TAG(world, Foo);
-    ECS_TAG(world, e);
+    ECS_ENTITY(world, Foo, (OnInstantiate, Inherit));
+    ECS_ENTITY(world, e, (OnInstantiate, Inherit));
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "Foo(e)"
@@ -194,7 +195,7 @@ void SerializeQueryInfoToJson_1_tag_fixed_src(void) {
 void SerializeQueryInfoToJson_1_tag_var_src(void) {
     ecs_world_t *world = ecs_init();
 
-    ECS_TAG(world, Foo);
+    ECS_ENTITY(world, Foo, (OnInstantiate, Inherit));
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "Foo($v)"
@@ -226,6 +227,7 @@ void SerializeQueryInfoToJson_1_component_in(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "[in] Position"
@@ -257,6 +259,7 @@ void SerializeQueryInfoToJson_1_component_inout(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "[inout] Position"
@@ -288,6 +291,7 @@ void SerializeQueryInfoToJson_1_component_out(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "[out] Position"
@@ -319,6 +323,7 @@ void SerializeQueryInfoToJson_1_component_none(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "[none] Position"
@@ -349,7 +354,7 @@ void SerializeQueryInfoToJson_1_component_none(void) {
 void SerializeQueryInfoToJson_1_tag_not(void) {
     ecs_world_t *world = ecs_init();
 
-    ECS_TAG(world, Foo);
+    ECS_ENTITY(world, Foo, (OnInstantiate, Inherit));
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "!Foo"
@@ -380,8 +385,8 @@ void SerializeQueryInfoToJson_1_tag_not(void) {
 void SerializeQueryInfoToJson_2_tags_or(void) {
     ecs_world_t *world = ecs_init();
 
-    ECS_TAG(world, Foo);
-    ECS_TAG(world, Bar);
+    ECS_ENTITY(world, Foo, (OnInstantiate, Inherit));
+    ECS_ENTITY(world, Bar, (OnInstantiate, Inherit));
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "Foo || Bar"
@@ -417,7 +422,7 @@ void SerializeQueryInfoToJson_2_tags_or(void) {
 void SerializeQueryInfoToJson_1_tag_optional(void) {
     ecs_world_t *world = ecs_init();
 
-    ECS_TAG(world, Foo);
+    ECS_ENTITY(world, Foo, (OnInstantiate, Inherit));
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "?Foo"
@@ -448,7 +453,7 @@ void SerializeQueryInfoToJson_1_tag_optional(void) {
 void SerializeQueryInfoToJson_1_tag_self(void) {
     ecs_world_t *world = ecs_init();
 
-    ECS_TAG(world, Foo);
+    ECS_ENTITY(world, Foo, (OnInstantiate, Inherit));
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "Foo(self)"
@@ -478,7 +483,7 @@ void SerializeQueryInfoToJson_1_tag_self(void) {
 void SerializeQueryInfoToJson_1_tag_self_dont_inherit(void) {
     ecs_world_t *world = ecs_init();
 
-    ECS_ENTITY(world, Foo, DontInherit);
+    ECS_ENTITY(world, Foo, (OnInstantiate, DontInherit));
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "Foo(self)"
@@ -494,7 +499,7 @@ void SerializeQueryInfoToJson_1_tag_self_dont_inherit(void) {
 
     char *json = ecs_iter_to_json(&it, &desc);
     test_str(json, "{\"query_info\":""{\"terms\":["
-        "{\"inout\":\"default\", \"has_data\":false, \"dont_inherit\":true, \"oper\":\"and\", "
+        "{\"inout\":\"default\", \"has_data\":false, \"oper\":\"and\", "
             "\"src\":{\"var\":\"this\"}, "
             "\"first\":{\"entity\":\"Foo\"}, "
             "\"flags\":[\"self\"]}]}}");
@@ -508,7 +513,7 @@ void SerializeQueryInfoToJson_1_tag_self_dont_inherit(void) {
 void SerializeQueryInfoToJson_1_tag_up(void) {
     ecs_world_t *world = ecs_init();
 
-    ECS_TAG(world, Foo);
+    ECS_ENTITY(world, Foo, (OnInstantiate, Inherit));
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "Foo(up)"
@@ -539,7 +544,7 @@ void SerializeQueryInfoToJson_1_tag_up(void) {
 void SerializeQueryInfoToJson_1_tag_cascade(void) {
     ecs_world_t *world = ecs_init();
 
-    ECS_TAG(world, Foo);
+    ECS_ENTITY(world, Foo, (OnInstantiate, Inherit));
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "Foo(cascade)"
@@ -570,7 +575,7 @@ void SerializeQueryInfoToJson_1_tag_cascade(void) {
 void SerializeQueryInfoToJson_0_term(void) {
     ecs_world_t *world = ecs_init();
 
-    ECS_TAG(world, Foo);
+    ECS_ENTITY(world, Foo, (OnInstantiate, Inherit));
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "Foo(0)"

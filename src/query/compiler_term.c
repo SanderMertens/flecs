@@ -731,6 +731,7 @@ int flecs_query_ensure_scope_vars(
                 goto error;
             }
         }
+
         if (op.flags & (EcsQueryIsVar << EcsQuerySecond)) {
             if (flecs_query_ensure_scope_var(
                 query, &op, &op.second, EcsQuerySecond, ctx))
@@ -1153,7 +1154,7 @@ int flecs_query_compile_term(
         for (i = 0; i < count; i ++) {
             ecs_id_t ti_id = ti_ids[i];
             ecs_id_record_t *idr = flecs_id_record_get(world, ti_id);
-            if (!(idr->flags & EcsIdDontInherit)) {
+            if (!(idr->flags & EcsIdOnInstantiateDontInherit)) {
                 break;
             }
         }

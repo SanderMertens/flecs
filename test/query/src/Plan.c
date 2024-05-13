@@ -3,8 +3,8 @@
 void Plan_reordered_plan_1(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_TAG(world, Foo);
-    ECS_TAG(world, Bar);
+    ECS_ENTITY(world, Foo, (OnInstantiate, Inherit));
+    ECS_ENTITY(world, Bar, (OnInstantiate, Inherit));
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "Foo, ChildOf($this, $p, $gp, $ggp), Bar($ggp)"
@@ -37,8 +37,8 @@ void Plan_reordered_plan_1(void) {
 void Plan_reordered_plan_2(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_TAG(world, Foo);
-    ECS_TAG(world, Bar);
+    ECS_ENTITY(world, Foo, (OnInstantiate, Inherit));
+    ECS_ENTITY(world, Bar, (OnInstantiate, Inherit));
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "Foo($ggp), ChildOf($this, $p, $gp, $ggp), Bar($this)"
@@ -74,8 +74,8 @@ void Plan_reordered_plan_2(void) {
 void Plan_1_trivial_plan(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_TAG(world, Foo);
-    ECS_TAG(world, Bar);
+    ECS_ENTITY(world, Foo, (OnInstantiate, Inherit));
+    ECS_ENTITY(world, Bar, (OnInstantiate, Inherit));
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "Foo(self)"
@@ -103,8 +103,8 @@ void Plan_1_trivial_plan(void) {
 void Plan_2_trivial_plan(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_TAG(world, Foo);
-    ECS_TAG(world, Bar);
+    ECS_ENTITY(world, Foo, (OnInstantiate, Inherit));
+    ECS_ENTITY(world, Bar, (OnInstantiate, Inherit));
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "Foo(self), Bar(self)"
@@ -133,6 +133,7 @@ void Plan_1_trivial_plan_component(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "Position(self)"
@@ -162,7 +163,9 @@ void Plan_2_trivial_plan_component(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
     ECS_COMPONENT(world, Velocity);
+    ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "Position(self), Velocity(self)"
@@ -190,8 +193,8 @@ void Plan_2_trivial_plan_component(void) {
 void Plan_3_trivial_plan_w_pair(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_TAG(world, Foo);
-    ECS_TAG(world, Bar);
+    ECS_ENTITY(world, Foo, (OnInstantiate, Inherit));
+    ECS_ENTITY(world, Bar, (OnInstantiate, Inherit));
 
     ecs_entity(world, { .name = "p" });
 
@@ -221,8 +224,8 @@ void Plan_3_trivial_plan_w_pair(void) {
 void Plan_3_trivial_plan_w_wildcard(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_TAG(world, Foo);
-    ECS_TAG(world, Bar);
+    ECS_ENTITY(world, Foo, (OnInstantiate, Inherit));
+    ECS_ENTITY(world, Bar, (OnInstantiate, Inherit));
 
     ecs_entity(world, { .name = "p" });
 
@@ -252,8 +255,8 @@ void Plan_3_trivial_plan_w_wildcard(void) {
 void Plan_3_trivial_plan_w_any(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_TAG(world, Foo);
-    ECS_TAG(world, Bar);
+    ECS_ENTITY(world, Foo, (OnInstantiate, Inherit));
+    ECS_ENTITY(world, Bar, (OnInstantiate, Inherit));
 
     ecs_entity(world, { .name = "p" });
 
@@ -285,7 +288,9 @@ void Plan_3_trivial_plan_w_pair_component(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
     ECS_COMPONENT(world, Velocity);
+    ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
 
     ecs_entity(world, { .name = "p" });
 
@@ -316,7 +321,9 @@ void Plan_3_trivial_plan_w_wildcard_component(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
     ECS_COMPONENT(world, Velocity);
+    ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
 
     ecs_entity(world, { .name = "p" });
 
@@ -347,7 +354,9 @@ void Plan_3_trivial_plan_w_any_component(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
     ECS_COMPONENT(world, Velocity);
+    ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
 
     ecs_entity(world, { .name = "p" });
 
@@ -379,7 +388,9 @@ void Plan_1_trivial_component_w_none(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
     ECS_COMPONENT(world, Velocity);
+    ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
 
     ecs_entity(world, { .name = "p" });
 
@@ -410,7 +421,9 @@ void Plan_2_trivial_component_w_none(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
     ECS_COMPONENT(world, Velocity);
+    ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
 
     ecs_entity(world, { .name = "p" });
 
@@ -440,7 +453,7 @@ void Plan_2_trivial_component_w_none(void) {
 void Plan_2_trivial_plan_w_wildcard(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_TAG(world, Foo);
+    ECS_ENTITY(world, Foo, (OnInstantiate, Inherit));
 
     ecs_query_t *r = ecs_query(world, {
         .expr = "Foo(self), ChildOf(self, *)"
@@ -468,8 +481,8 @@ void Plan_2_trivial_plan_w_wildcard(void) {
 void Plan_this_before_fixed_src(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_TAG(world, Foo);
-    ECS_TAG(world, Bar);
+    ECS_ENTITY(world, Foo, (OnInstantiate, Inherit));
+    ECS_ENTITY(world, Bar, (OnInstantiate, Inherit));
 
     ecs_entity(world, { .name = "e" });
 
@@ -501,8 +514,8 @@ void Plan_this_before_fixed_src(void) {
 void Plan_fixed_src_before_this(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_TAG(world, Foo);
-    ECS_TAG(world, Bar);
+    ECS_ENTITY(world, Foo, (OnInstantiate, Inherit));
+    ECS_ENTITY(world, Bar, (OnInstantiate, Inherit));
 
     ecs_entity(world, { .name = "e" });
 
@@ -534,8 +547,8 @@ void Plan_fixed_src_before_this(void) {
 void Plan_var_before_fixed_src(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_TAG(world, Foo);
-    ECS_TAG(world, Bar);
+    ECS_ENTITY(world, Foo, (OnInstantiate, Inherit));
+    ECS_ENTITY(world, Bar, (OnInstantiate, Inherit));
 
     ecs_entity(world, { .name = "e" });
 
@@ -569,8 +582,8 @@ void Plan_var_before_fixed_src(void) {
 void Plan_fixed_src_before_var(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_TAG(world, Foo);
-    ECS_TAG(world, Bar);
+    ECS_ENTITY(world, Foo, (OnInstantiate, Inherit));
+    ECS_ENTITY(world, Bar, (OnInstantiate, Inherit));
 
     ecs_entity(world, { .name = "e" });
 
@@ -604,8 +617,8 @@ void Plan_fixed_src_before_var(void) {
 void Plan_this_before_fixed_src_w_not(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_TAG(world, Foo);
-    ECS_TAG(world, Bar);
+    ECS_ENTITY(world, Foo, (OnInstantiate, Inherit));
+    ECS_ENTITY(world, Bar, (OnInstantiate, Inherit));
 
     ecs_entity(world, { .name = "e" });
 
@@ -639,8 +652,8 @@ void Plan_this_before_fixed_src_w_not(void) {
 void Plan_this_before_fixed_src_w_first_var(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_TAG(world, Foo);
-    ECS_TAG(world, Bar);
+    ECS_ENTITY(world, Foo, (OnInstantiate, Inherit));
+    ECS_ENTITY(world, Bar, (OnInstantiate, Inherit));
 
     ecs_entity(world, { .name = "e" });
 
@@ -655,7 +668,7 @@ void Plan_this_before_fixed_src_w_first_var(void) {
     const char *expect = 
     HEAD " 0. [-1,  1]  setfix      "
     LINE " 1. [ 0,  2]  setids      "
-    LINE " 2. [ 1,  3]  selfup      e                 ($this)"
+    LINE " 2. [ 1,  3]  with        e                 ($this)"
     LINE " 3. [ 2,  4]  selfupid    $this             (Foo)"
     LINE " 4. [ 3,  5]  setthis                       ($this)"
     LINE " 5. [ 4,  6]  yield       "
@@ -673,8 +686,8 @@ void Plan_this_before_fixed_src_w_first_var(void) {
 void Plan_this_before_fixed_src_w_first_var_w_not(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_TAG(world, Foo);
-    ECS_TAG(world, Bar);
+    ECS_ENTITY(world, Foo, (OnInstantiate, Inherit));
+    ECS_ENTITY(world, Bar, (OnInstantiate, Inherit));
 
     ecs_entity(world, { .name = "e" });
 
@@ -692,7 +705,7 @@ void Plan_this_before_fixed_src_w_first_var_w_not(void) {
     LINE " 2. [ 1,  3]  selfupid    $[this]           (Foo)"
     LINE " 3. [ 2,  4]  each        $this             ($[this])"
     LINE " 4. [ 3,  6]  not         "
-    LINE " 5. [ 4,  6]   selfup     e                 ($this)"
+    LINE " 5. [ 4,  6]   with       e                 ($this)"
     LINE " 6. [ 4,  7]  end         e                 ($this)"
     LINE " 7. [ 6,  8]  setthis                       ($this)"
     LINE " 8. [ 7,  9]  yield       "
@@ -710,8 +723,8 @@ void Plan_this_before_fixed_src_w_first_var_w_not(void) {
 void Plan_this_before_fixed_src_w_second_var(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_TAG(world, Foo);
-    ECS_TAG(world, Bar);
+    ECS_ENTITY(world, Foo, (OnInstantiate, Inherit));
+    ECS_ENTITY(world, Bar, (OnInstantiate, Inherit));
 
     ecs_entity(world, { .name = "e" });
 
@@ -744,8 +757,8 @@ void Plan_this_before_fixed_src_w_second_var(void) {
 void Plan_this_before_fixed_src_w_second_var_w_not(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_TAG(world, Foo);
-    ECS_TAG(world, Bar);
+    ECS_ENTITY(world, Foo, (OnInstantiate, Inherit));
+    ECS_ENTITY(world, Bar, (OnInstantiate, Inherit));
 
     ecs_entity(world, { .name = "e" });
 
@@ -782,7 +795,9 @@ void Plan_populate_1_fixed(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
     ECS_COMPONENT(world, Velocity);
+    ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
 
     ecs_entity(world, { .name = "e" });
 
@@ -815,7 +830,9 @@ void Plan_populate_2_fixed(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
     ECS_COMPONENT(world, Velocity);
+    ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
 
     ecs_entity(world, { .name = "e" });
 
@@ -849,7 +866,9 @@ void Plan_populate_1_fixed_1_this_self(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
     ECS_COMPONENT(world, Velocity);
+    ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
 
     ecs_entity(world, { .name = "e" });
 
@@ -884,9 +903,13 @@ void Plan_populate_2_fixed_2_this_self(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
     ECS_COMPONENT(world, Velocity);
+    ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
     ECS_COMPONENT(world, Mass);
+    ecs_add_pair(world, ecs_id(Mass), EcsOnInstantiate, EcsInherit);
     ECS_COMPONENT(world, Rotation);
+    ecs_add_pair(world, ecs_id(Rotation), EcsOnInstantiate, EcsInherit);
 
     ecs_entity(world, { .name = "e" });
 
@@ -921,9 +944,13 @@ void Plan_populate_2_fixed_2_this_self_interleaved(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
     ECS_COMPONENT(world, Velocity);
+    ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
     ECS_COMPONENT(world, Mass);
+    ecs_add_pair(world, ecs_id(Mass), EcsOnInstantiate, EcsInherit);
     ECS_COMPONENT(world, Rotation);
+    ecs_add_pair(world, ecs_id(Rotation), EcsOnInstantiate, EcsInherit);
 
     ecs_entity(world, { .name = "e" });
 
@@ -958,9 +985,13 @@ void Plan_populate_2_this_self_2_fixed(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
     ECS_COMPONENT(world, Velocity);
+    ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
     ECS_COMPONENT(world, Mass);
+    ecs_add_pair(world, ecs_id(Mass), EcsOnInstantiate, EcsInherit);
     ECS_COMPONENT(world, Rotation);
+    ecs_add_pair(world, ecs_id(Rotation), EcsOnInstantiate, EcsInherit);
 
     ecs_entity(world, { .name = "e" });
 
@@ -995,7 +1026,9 @@ void Plan_populate_1_fixed_1_this_up(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
     ECS_COMPONENT(world, Velocity);
+    ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
 
     ecs_entity(world, { .name = "e" });
 
@@ -1030,9 +1063,13 @@ void Plan_populate_2_fixed_2_this_up(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
     ECS_COMPONENT(world, Velocity);
+    ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
     ECS_COMPONENT(world, Mass);
+    ecs_add_pair(world, ecs_id(Mass), EcsOnInstantiate, EcsInherit);
     ECS_COMPONENT(world, Rotation);
+    ecs_add_pair(world, ecs_id(Rotation), EcsOnInstantiate, EcsInherit);
 
     ecs_entity(world, { .name = "e" });
 
@@ -1069,9 +1106,13 @@ void Plan_populate_2_fixed_2_this_up_interleaved(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
     ECS_COMPONENT(world, Velocity);
+    ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
     ECS_COMPONENT(world, Mass);
+    ecs_add_pair(world, ecs_id(Mass), EcsOnInstantiate, EcsInherit);
     ECS_COMPONENT(world, Rotation);
+    ecs_add_pair(world, ecs_id(Rotation), EcsOnInstantiate, EcsInherit);
 
     ecs_entity(world, { .name = "e" });
 
@@ -1108,9 +1149,13 @@ void Plan_populate_2_this_up_2_fixed(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
     ECS_COMPONENT(world, Velocity);
+    ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
     ECS_COMPONENT(world, Mass);
+    ecs_add_pair(world, ecs_id(Mass), EcsOnInstantiate, EcsInherit);
     ECS_COMPONENT(world, Rotation);
+    ecs_add_pair(world, ecs_id(Rotation), EcsOnInstantiate, EcsInherit);
 
     ecs_entity(world, { .name = "e" });
 
@@ -1147,9 +1192,9 @@ void Plan_populate_1_fixed_1_this_self_cached(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
     ECS_COMPONENT(world, Velocity);
-    ECS_COMPONENT(world, Mass);
-    ECS_COMPONENT(world, Rotation);
+    ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
 
     ecs_entity(world, { .name = "e" });
 
@@ -1184,9 +1229,13 @@ void Plan_populate_2_fixed_2_this_self_cached(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
     ECS_COMPONENT(world, Velocity);
+    ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
     ECS_COMPONENT(world, Mass);
+    ecs_add_pair(world, ecs_id(Mass), EcsOnInstantiate, EcsInherit);
     ECS_COMPONENT(world, Rotation);
+    ecs_add_pair(world, ecs_id(Rotation), EcsOnInstantiate, EcsInherit);
 
     ecs_entity(world, { .name = "e" });
 
@@ -1222,9 +1271,13 @@ void Plan_populate_2_fixed_2_this_self_interleaved_cached(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
     ECS_COMPONENT(world, Velocity);
+    ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
     ECS_COMPONENT(world, Mass);
+    ecs_add_pair(world, ecs_id(Mass), EcsOnInstantiate, EcsInherit);
     ECS_COMPONENT(world, Rotation);
+    ecs_add_pair(world, ecs_id(Rotation), EcsOnInstantiate, EcsInherit);
 
     ecs_entity(world, { .name = "e" });
 
@@ -1260,9 +1313,13 @@ void Plan_populate_2_this_self_2_fixed_cached(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
     ECS_COMPONENT(world, Velocity);
+    ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
     ECS_COMPONENT(world, Mass);
+    ecs_add_pair(world, ecs_id(Mass), EcsOnInstantiate, EcsInherit);
     ECS_COMPONENT(world, Rotation);
+    ecs_add_pair(world, ecs_id(Rotation), EcsOnInstantiate, EcsInherit);
 
     ecs_entity(world, { .name = "e" });
 
@@ -1298,9 +1355,9 @@ void Plan_populate_1_fixed_1_this_up_cached(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
     ECS_COMPONENT(world, Velocity);
-    ECS_COMPONENT(world, Mass);
-    ECS_COMPONENT(world, Rotation);
+    ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
 
     ecs_entity(world, { .name = "e" });
 
@@ -1335,9 +1392,13 @@ void Plan_populate_2_fixed_2_this_up_cached(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
     ECS_COMPONENT(world, Velocity);
+    ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
     ECS_COMPONENT(world, Mass);
+    ecs_add_pair(world, ecs_id(Mass), EcsOnInstantiate, EcsInherit);
     ECS_COMPONENT(world, Rotation);
+    ecs_add_pair(world, ecs_id(Rotation), EcsOnInstantiate, EcsInherit);
 
     ecs_entity(world, { .name = "e" });
 
@@ -1373,9 +1434,13 @@ void Plan_populate_2_fixed_2_this_up_interleaved_cached(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
     ECS_COMPONENT(world, Velocity);
+    ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
     ECS_COMPONENT(world, Mass);
+    ecs_add_pair(world, ecs_id(Mass), EcsOnInstantiate, EcsInherit);
     ECS_COMPONENT(world, Rotation);
+    ecs_add_pair(world, ecs_id(Rotation), EcsOnInstantiate, EcsInherit);
 
     ecs_entity(world, { .name = "e" });
 
@@ -1411,9 +1476,13 @@ void Plan_populate_2_this_up_2_fixed_cached(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
     ECS_COMPONENT(world, Velocity);
+    ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
     ECS_COMPONENT(world, Mass);
+    ecs_add_pair(world, ecs_id(Mass), EcsOnInstantiate, EcsInherit);
     ECS_COMPONENT(world, Rotation);
+    ecs_add_pair(world, ecs_id(Rotation), EcsOnInstantiate, EcsInherit);
 
     ecs_entity(world, { .name = "e" });
 
@@ -1449,9 +1518,9 @@ void Plan_populate_1_fixed_1_var_self(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
     ECS_COMPONENT(world, Velocity);
-    ECS_COMPONENT(world, Mass);
-    ECS_COMPONENT(world, Rotation);
+    ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
 
     ecs_entity(world, { .name = "e" });
 
@@ -1489,9 +1558,13 @@ void Plan_populate_2_fixed_2_var_self(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
     ECS_COMPONENT(world, Velocity);
+    ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
     ECS_COMPONENT(world, Mass);
+    ecs_add_pair(world, ecs_id(Mass), EcsOnInstantiate, EcsInherit);
     ECS_COMPONENT(world, Rotation);
+    ecs_add_pair(world, ecs_id(Rotation), EcsOnInstantiate, EcsInherit);
 
     ecs_entity(world, { .name = "e" });
 
@@ -1531,9 +1604,13 @@ void Plan_populate_2_fixed_2_var_self_interleaved(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
     ECS_COMPONENT(world, Velocity);
+    ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
     ECS_COMPONENT(world, Mass);
+    ecs_add_pair(world, ecs_id(Mass), EcsOnInstantiate, EcsInherit);
     ECS_COMPONENT(world, Rotation);
+    ecs_add_pair(world, ecs_id(Rotation), EcsOnInstantiate, EcsInherit);
 
     ecs_entity(world, { .name = "e" });
 
@@ -1573,9 +1650,13 @@ void Plan_populate_2_var_self_2_fixed(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
     ECS_COMPONENT(world, Velocity);
+    ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
     ECS_COMPONENT(world, Mass);
+    ecs_add_pair(world, ecs_id(Mass), EcsOnInstantiate, EcsInherit);
     ECS_COMPONENT(world, Rotation);
+    ecs_add_pair(world, ecs_id(Rotation), EcsOnInstantiate, EcsInherit);
 
     ecs_entity(world, { .name = "e" });
 
@@ -1615,9 +1696,9 @@ void Plan_populate_1_fixed_1_var_up(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
     ECS_COMPONENT(world, Velocity);
-    ECS_COMPONENT(world, Mass);
-    ECS_COMPONENT(world, Rotation);
+    ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
 
     ecs_entity(world, { .name = "e" });
 
@@ -1655,9 +1736,13 @@ void Plan_populate_2_fixed_2_var_up(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
     ECS_COMPONENT(world, Velocity);
+    ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
     ECS_COMPONENT(world, Mass);
+    ecs_add_pair(world, ecs_id(Mass), EcsOnInstantiate, EcsInherit);
     ECS_COMPONENT(world, Rotation);
+    ecs_add_pair(world, ecs_id(Rotation), EcsOnInstantiate, EcsInherit);
 
     ecs_entity(world, { .name = "e" });
 
@@ -1697,9 +1782,13 @@ void Plan_populate_2_fixed_2_var_up_interleaved(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
     ECS_COMPONENT(world, Velocity);
+    ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
     ECS_COMPONENT(world, Mass);
+    ecs_add_pair(world, ecs_id(Mass), EcsOnInstantiate, EcsInherit);
     ECS_COMPONENT(world, Rotation);
+    ecs_add_pair(world, ecs_id(Rotation), EcsOnInstantiate, EcsInherit);
 
     ecs_entity(world, { .name = "e" });
 
@@ -1739,9 +1828,13 @@ void Plan_populate_2_var_up_2_fixed(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
     ECS_COMPONENT(world, Velocity);
+    ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
     ECS_COMPONENT(world, Mass);
+    ecs_add_pair(world, ecs_id(Mass), EcsOnInstantiate, EcsInherit);
     ECS_COMPONENT(world, Rotation);
+    ecs_add_pair(world, ecs_id(Rotation), EcsOnInstantiate, EcsInherit);
 
     ecs_entity(world, { .name = "e" });
 
@@ -1781,9 +1874,9 @@ void Plan_cache_2_or(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
     ECS_COMPONENT(world, Velocity);
-    ECS_COMPONENT(world, Mass);
-    ECS_COMPONENT(world, Rotation);
+    ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
 
     ecs_entity(world, { .name = "e" });
 
@@ -1814,9 +1907,11 @@ void Plan_cache_2_or_w_not(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
     ECS_COMPONENT(world, Velocity);
+    ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
     ECS_COMPONENT(world, Mass);
-    ECS_COMPONENT(world, Rotation);
+    ecs_add_pair(world, ecs_id(Mass), EcsOnInstantiate, EcsInherit);
 
     ecs_entity(world, { .name = "e" });
 
@@ -1844,7 +1939,7 @@ void Plan_cache_2_or_w_not(void) {
 }
 
 void Plan_1_plan_any_src(void) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, RelA);
     ECS_TAG(world, Tag);
@@ -1871,7 +1966,7 @@ void Plan_1_plan_any_src(void) {
 }
 
 void Plan_1_plan_not_any_src(void) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, RelA);
     ECS_TAG(world, Tag);
@@ -1902,7 +1997,7 @@ void Plan_1_plan_not_any_src(void) {
 }
 
 void Plan_1_plan_optional_any_src(void) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, RelA);
     ECS_TAG(world, Tag);
@@ -1932,7 +2027,7 @@ void Plan_1_plan_optional_any_src(void) {
 }
 
 void Plan_pair_first_wildcard(void) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tgt);
 
@@ -1946,7 +2041,7 @@ void Plan_pair_first_wildcard(void) {
     ecs_log_enable_colors(false);
 
     const char *expect = 
-    HEAD " 0. [-1,  1]  selfup      $[this]           ($*'1, Tgt)"
+    HEAD " 0. [-1,  1]  and         $[this]           ($*'1, Tgt)"
     LINE " 1. [ 0,  2]  yield       "
     LINE "";
     char *plan = ecs_query_plan(r);
@@ -1959,7 +2054,7 @@ void Plan_pair_first_wildcard(void) {
 }
 
 void Plan_pair_first_wildcard_cached(void) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tgt);
 
@@ -1986,7 +2081,7 @@ void Plan_pair_first_wildcard_cached(void) {
 }
 
 void Plan_pair_second_wildcard(void) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Rel);
 
@@ -2000,7 +2095,7 @@ void Plan_pair_second_wildcard(void) {
     ecs_log_enable_colors(false);
 
     const char *expect = 
-    HEAD " 0. [-1,  1]  selfup      $[this]           (Rel, $*'1)"
+    HEAD " 0. [-1,  1]  and         $[this]           (Rel, $*'1)"
     LINE " 1. [ 0,  2]  yield       "
     LINE "";
     char *plan = ecs_query_plan(r);
@@ -2013,7 +2108,7 @@ void Plan_pair_second_wildcard(void) {
 }
 
 void Plan_pair_second_wildcard_cached(void) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Rel);
 

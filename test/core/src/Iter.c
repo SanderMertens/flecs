@@ -1644,7 +1644,7 @@ void Iter(ecs_world_t *world, ecs_query_t *q, int32_t offset, int32_t limit) {
 }
 
 void Iter_page_iter_w_offset_skip_1_archetype(void) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -1695,7 +1695,7 @@ void Iter_page_iter_w_offset_skip_1_archetype(void) {
 }
 
 void Iter_page_iter_w_offset_skip_1_archetype_plus_one(void) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -1745,7 +1745,7 @@ void Iter_page_iter_w_offset_skip_1_archetype_plus_one(void) {
 }
 
 void Iter_page_iter_w_offset_skip_2_archetypes(void) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -1789,7 +1789,7 @@ void Iter_page_iter_w_offset_skip_2_archetypes(void) {
 }
 
 void Iter_page_iter_w_limit_skip_1_archetype(void) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -1842,7 +1842,7 @@ void Iter_page_iter_w_limit_skip_1_archetype(void) {
 }
 
 void Iter_page_iter_w_limit_skip_1_archetype_minus_one(void) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -1894,7 +1894,7 @@ void Iter_page_iter_w_limit_skip_1_archetype_minus_one(void) {
 }
 
 void Iter_page_iter_w_limit_skip_2_archetypes(void) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -1945,7 +1945,7 @@ void Iter_page_iter_w_limit_skip_2_archetypes(void) {
 }
 
 void Iter_page_iter_w_offset_1_limit_max(void) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -1998,7 +1998,7 @@ void Iter_page_iter_w_offset_1_limit_max(void) {
 }
 
 void Iter_page_iter_w_offset_1_limit_minus_1(void) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -2050,7 +2050,7 @@ void Iter_page_iter_w_offset_1_limit_minus_1(void) {
 }
 
 void Iter_page_iter_w_offset_2_type_limit_max(void) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -2101,7 +2101,7 @@ void Iter_page_iter_w_offset_2_type_limit_max(void) {
 }
 
 void Iter_page_iter_w_offset_2_type_limit_minus_1(void) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -2151,7 +2151,7 @@ void Iter_page_iter_w_offset_2_type_limit_minus_1(void) {
 }
 
 void Iter_page_iter_w_limit_1_all_offsets(void) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -2210,7 +2210,7 @@ void Iter_page_iter_w_limit_1_all_offsets(void) {
 }
 
 void Iter_page_iter_w_offset_out_of_bounds(void) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -2238,7 +2238,7 @@ void Iter_page_iter_w_offset_out_of_bounds(void) {
 }
 
 void Iter_page_iter_w_limit_out_of_bounds(void) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -2287,7 +2287,7 @@ void Iter_page_iter_w_limit_out_of_bounds(void) {
 }
 
 void Iter_page_iter_no_match(void) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -2344,7 +2344,7 @@ void TestAll(ecs_world_t *world, ecs_query_t *query) {
 }
 
 void Iter_page_iter_comb_10_entities_1_type(void) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
 
@@ -2370,7 +2370,7 @@ void Iter_page_iter_comb_10_entities_1_type(void) {
 }
 
 void Iter_page_iter_comb_10_entities_2_types(void) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
@@ -2777,6 +2777,8 @@ void Iter_column_index_shared(void) {
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
     ECS_TAG(world, TagC);
+
+    ecs_add_pair(world, TagA, EcsOnInstantiate, EcsInherit);
 
     ecs_query_t *f = ecs_query(world, {
         .terms = {{ TagB }, { TagC }, { TagA }}

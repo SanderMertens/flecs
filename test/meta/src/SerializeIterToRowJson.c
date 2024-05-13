@@ -345,6 +345,9 @@ void SerializeIterToRowJson_serialize_this_w_2_component_1_shared(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Mass);
 
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+    ecs_add_pair(world, ecs_id(Mass), EcsOnInstantiate, EcsInherit);
+
     ecs_struct(world, {
         .entity = ecs_id(Position),
         .members = {
@@ -988,6 +991,9 @@ void SerializeIterToRowJson_serialize_var_w_2_component_1_shared(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Mass);
 
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+    ecs_add_pair(world, ecs_id(Mass), EcsOnInstantiate, EcsInherit);
+
     ecs_struct(world, {
         .entity = ecs_id(Position),
         .members = {
@@ -1330,6 +1336,9 @@ void SerializeIterToRowJson_serialize_fixed_w_2_component_1_shared(void) {
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Mass);
+
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+    ecs_add_pair(world, ecs_id(Mass), EcsOnInstantiate, EcsInherit);
 
     ecs_struct(world, {
         .entity = ecs_id(Position),

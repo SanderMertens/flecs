@@ -301,27 +301,15 @@ ecs_id_record_t* flecs_id_record_new(
         /* Can't use relationship outside of a pair */
 #ifdef FLECS_DEBUG
         rel = flecs_entities_get_alive(world, rel);
+        bool is_tgt = false;
         if (ecs_has_id(world, rel, EcsRelationship) ||
-            ecs_has_id(world, rel, EcsTarget)) 
+            (is_tgt = ecs_has_id(world, rel, EcsTarget)))
         {
             char *idstr = ecs_id_str(world, id);
             char *relstr = ecs_id_str(world, rel);
             ecs_err("constraint violated: "
-                "%s: relationship '%s' cannot be used as component",
-                    idstr, relstr);
-            ecs_os_free(relstr);
-            ecs_os_free(idstr);
-            #ifndef FLECS_SOFT_ASSERT
-            ecs_abort(ECS_CONSTRAINT_VIOLATED, NULL);
-            #endif
-        }
-
-        if (ecs_has_id(world, rel, EcsTarget)) {
-            char *idstr = ecs_id_str(world, id);
-            char *relstr = ecs_id_str(world, rel);
-            ecs_err("constraint violated: "
-                "%s: target '%s' cannot be used as component",
-                    idstr, relstr);
+                "%s: relationship%s '%s' cannot be used as component",
+                    idstr, is_tgt ? " target" : "", relstr);
             ecs_os_free(relstr);
             ecs_os_free(idstr);
             #ifndef FLECS_SOFT_ASSERT

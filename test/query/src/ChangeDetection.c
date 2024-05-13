@@ -541,6 +541,7 @@ void ChangeDetection_query_change_prefab_term(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
     
     ecs_entity_t base = ecs_new_w(world, Position);
     ecs_new_w_pair(world, EcsIsA, base);
@@ -614,7 +615,8 @@ void ChangeDetection_query_change_prefab_term_w_tag(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
-    
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+
     ecs_entity_t base = ecs_new_w(world, Position);
     ecs_add_id(world, base, EcsPrefab);
     ecs_new_w_pair(world, EcsIsA, base);
@@ -651,8 +653,10 @@ void ChangeDetection_query_change_skip_non_instanced(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
     ECS_COMPONENT(world, Velocity);
-    ECS_TAG(world, Tag);
+    ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
+    ECS_ENTITY(world, Tag, (OnInstantiate, Inherit));
     
     ecs_entity_t base = ecs_new_w(world, Position);
     ecs_entity_t e1 = ecs_new_w_pair(world, EcsIsA, base);
@@ -752,7 +756,7 @@ void ChangeDetection_query_changed_w_or(void) {
         .cache_kind = EcsQueryCacheAuto
     });
     test_assert(q != NULL);
-    
+
     test_bool(true, ecs_query_changed(q));
 
     ecs_iter_t it = ecs_query_iter(world, q);

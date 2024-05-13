@@ -365,6 +365,9 @@ void SystemMisc_dont_enable_after_rematch(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+    ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
+
     ECS_SYSTEM(world, Dummy, EcsOnUpdate, Position(self|up IsA), Velocity(self|up IsA));
 
     /* Create an entity that is watched. Whenever components are added/removed
@@ -824,6 +827,8 @@ void SystemMisc_rw_in_implicit_shared(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
+    ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
+
     ecs_query_t *q = ecs_query(world, { .expr = "Position, Velocity(up IsA)" });
 
     ecs_entity_t base = ecs_new_w(world, Velocity);
@@ -892,6 +897,8 @@ void SystemMisc_rw_out_explicit_any(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
+    ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
+
     ecs_query_t *q = ecs_query(world, { .expr = "Position, [out] Velocity(self|up IsA)" });
 
     ecs_entity_t e = ecs_new_w(world, Position);
@@ -913,6 +920,8 @@ void SystemMisc_rw_out_explicit_shared(void) {
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
+
+    ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
 
     ecs_query_t *q = ecs_query(world, { .expr = "Position, [out] Velocity(up IsA)" });
 
