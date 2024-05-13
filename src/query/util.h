@@ -68,13 +68,13 @@ bool flecs_ref_is_written(
 ecs_allocator_t* flecs_query_get_allocator(
     const ecs_iter_t *it);
 
-/* Convert query to string */
-char* flecs_query_str(
-    const ecs_world_t *world,
-    const ecs_query_t *query,
-    const ecs_query_validator_ctx_t *ctx,
-    int32_t *term_start_out);
-
 /* Convert instruction kind to string */
 const char* flecs_query_op_str(
     uint16_t kind);
+
+/* Convert term to string */
+void flecs_term_to_buf(
+    const ecs_world_t *world,
+    const ecs_term_t *term,
+    ecs_strbuf_t *buf,
+    int32_t t);

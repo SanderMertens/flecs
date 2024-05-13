@@ -1,7 +1,7 @@
 #include <core.h>
 
 void Each_each_tag(void) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Foo);
     ECS_TAG(world, Bar);
@@ -30,7 +30,7 @@ void Each_each_tag(void) {
 }
 
 void Each_each_component(void) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
     ECS_TAG(world, Bar);
@@ -70,7 +70,7 @@ void Each_each_component(void) {
 }
 
 void Each_each_pair(void) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Rel);
     ECS_TAG(world, TgtA);
@@ -102,7 +102,7 @@ void Each_each_pair(void) {
 }
 
 void Each_each_pair_rel_wildcard(void) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Rel);
     ECS_TAG(world, TgtA);
@@ -140,7 +140,7 @@ void Each_each_pair_rel_wildcard(void) {
 }
 
 void Each_each_pair_tgt_wildcard(void) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, RelA);
     ECS_TAG(world, RelB);

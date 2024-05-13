@@ -297,6 +297,9 @@ void SerializeIterToJson_serialize_2_comps_1_owned_2_ents(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Mass);
 
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+    ecs_add_pair(world, ecs_id(Mass), EcsOnInstantiate, EcsInherit);
+
     ecs_struct_init(world, &(ecs_struct_desc_t){
         .entity = ecs_id(Position),
         .members = {

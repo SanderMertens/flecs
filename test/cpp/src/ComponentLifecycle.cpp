@@ -134,7 +134,7 @@ void ComponentLifecycle_copy_on_set(void) {
 void ComponentLifecycle_copy_on_override(void) {
     flecs::world world;
 
-    world.component<Pod>();
+    world.component<Pod>().add(flecs::OnInstantiate, flecs::Inherit);
 
     auto base = world.entity();
     test_assert(base.id() != 0);

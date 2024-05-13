@@ -22,8 +22,8 @@ void probe_system_w_ctx(
         ctx->c[ctx->invoked][i] = it->ids[i];
         ctx->s[ctx->invoked][i] = ecs_field_src(it, i);
 
-        ecs_id_t e = ecs_field_id(it, i);
-        test_assert(e != 0);
+        ecs_id_t field_id = ecs_field_id(it, i);
+        test_assert(field_id != 0);
     }
 
     for (i = 0; i < it->count; i ++) {
@@ -62,7 +62,7 @@ void probe_has_entity(Probe *probe, ecs_entity_t e) {
 
 void install_test_abort(void) {
     ecs_os_set_api_defaults();
-    ecs_os_api_t os_api = ecs_os_api;
+    ecs_os_api_t os_api = ecs_os_get_api();
     os_api.abort_ = test_abort;
     ecs_os_set_api(&os_api);
     ecs_log_set_level(-5);
@@ -76,13 +76,13 @@ const ecs_entity_t* bulk_new_w_type(
 
     ecs_id_t *ids = type->array;
     int i = 0;
-    while ((ecs_id_get_flags(world, ids[i]) & EcsIdDontInherit)) {
+    while ((ecs_id_get_flags(world, ids[i]) & EcsIdOnInstantiateDontInherit)) {
         i ++;
     }
     const ecs_entity_t *result = ecs_bulk_new_w_id(world, ids[i], count);
     for (; i < type->count; i ++) {
         for (int e = 0; e < count; e ++) {
-            if (ecs_id_get_flags(world, ids[i]) & EcsIdDontInherit) {
+            if (ecs_id_get_flags(world, ids[i]) & EcsIdOnInstantiateDontInherit) {
                 continue;
             }
             ecs_add_id(world, result[e], ids[i]);

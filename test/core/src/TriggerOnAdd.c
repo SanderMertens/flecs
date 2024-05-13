@@ -500,6 +500,9 @@ void TriggerOnAdd_override_after_add_in_on_add(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+    ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
+
     ECS_PREFAB(world, Prefab, Position);
     ecs_set(world, Prefab, Position, {1, 2});
 

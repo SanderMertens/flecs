@@ -693,11 +693,12 @@ void Sparse_1_sparse_self(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
 
     ecs_add_id(world, ecs_id(Position), EcsSparse);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "Position(self IsA)",
+        .expr = "Position(self)",
         .cache_kind = cache_kind
     });
     test_assert(q != NULL);
@@ -739,6 +740,7 @@ void Sparse_1_sparse_up(void) {
 
     ECS_COMPONENT(world, Position);
 
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
     ecs_add_id(world, ecs_id(Position), EcsSparse);
 
     ecs_query_t *q = ecs_query(world, {
@@ -786,6 +788,7 @@ void Sparse_1_sparse_self_up(void) {
 
     ECS_COMPONENT(world, Position);
 
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
     ecs_add_id(world, ecs_id(Position), EcsSparse);
 
     ecs_query_t *q = ecs_query(world, {
@@ -850,10 +853,11 @@ void Sparse_1_sparse_written_self(void) {
     ECS_COMPONENT(world, Position);
     ECS_TAG(world, Foo);
 
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsDontInherit);
     ecs_add_id(world, ecs_id(Position), EcsSparse);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "Foo, Position(self IsA)",
+        .expr = "Foo, Position(self)",
         .cache_kind = cache_kind
     });
     test_assert(q != NULL);
@@ -896,6 +900,7 @@ void Sparse_1_sparse_written_up(void) {
     ECS_COMPONENT(world, Position);
     ECS_TAG(world, Foo);
 
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
     ecs_add_id(world, ecs_id(Position), EcsSparse);
 
     ecs_query_t *q = ecs_query(world, {
@@ -944,6 +949,7 @@ void Sparse_1_sparse_written_self_up(void) {
     ECS_COMPONENT(world, Position);
     ECS_TAG(world, Foo);
 
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
     ecs_add_id(world, ecs_id(Position), EcsSparse);
 
     ecs_query_t *q = ecs_query(world, {

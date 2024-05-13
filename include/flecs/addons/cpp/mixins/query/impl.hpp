@@ -203,6 +203,8 @@ public:
 
 private:
     ecs_iter_t get_iter(flecs::world_t *world) const override {
+        ecs_assert(query_ != nullptr, ECS_INVALID_PARAMETER, 
+            "cannot iterate invalid query");
         if (!world) {
             world = query_->world;
         }

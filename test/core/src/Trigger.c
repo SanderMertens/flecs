@@ -1603,6 +1603,7 @@ void Trigger_on_add_superset(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
+    ecs_add_pair(world, TagA, EcsOnInstantiate, EcsInherit);
 
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
@@ -1651,6 +1652,7 @@ void Trigger_on_add_superset_2_levels(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
+    ecs_add_pair(world, TagA, EcsOnInstantiate, EcsInherit);
 
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
@@ -1703,6 +1705,7 @@ void Trigger_on_remove_superset(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
+    ecs_add_pair(world, TagA, EcsOnInstantiate, EcsInherit);
 
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
@@ -1854,6 +1857,7 @@ void Trigger_on_add_self_superset(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
+    ecs_add_pair(world, TagA, EcsOnInstantiate, EcsInherit);
 
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
@@ -1928,6 +1932,7 @@ void Trigger_on_remove_self_superset(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
+    ecs_add_pair(world, TagA, EcsOnInstantiate, EcsInherit);
 
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
@@ -3023,6 +3028,9 @@ void Trigger_on_add_base(void) {
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
 
+    ecs_add_pair(world, TagA, EcsOnInstantiate, EcsInherit);
+    ecs_add_pair(world, TagB, EcsOnInstantiate, EcsInherit);
+
     /* Create trigger before table */
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
@@ -3062,6 +3070,9 @@ void Trigger_on_remove_base(void) {
 
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
+
+    ecs_add_pair(world, TagA, EcsOnInstantiate, EcsInherit);
+    ecs_add_pair(world, TagB, EcsOnInstantiate, EcsInherit);
 
     /* Create trigger before table */
     Probe ctx = {0};
@@ -3106,6 +3117,9 @@ void Trigger_on_set_base(void) {
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
+
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+    ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
 
     /* Create trigger before table */
     Probe ctx = {0};
@@ -3158,6 +3172,9 @@ void Trigger_on_unset_base(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+    ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
+
     /* Create trigger before table */
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
@@ -3202,6 +3219,9 @@ void Trigger_on_add_base_superset_trigger(void) {
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
 
+    ecs_add_pair(world, TagA, EcsOnInstantiate, EcsInherit);
+    ecs_add_pair(world, TagB, EcsOnInstantiate, EcsInherit);
+
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
         .query.terms[0].id = TagA,
@@ -3242,6 +3262,9 @@ void Trigger_on_add_base_superset_trigger_2_lvls(void) {
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
 
+    ecs_add_pair(world, TagA, EcsOnInstantiate, EcsInherit);
+    ecs_add_pair(world, TagB, EcsOnInstantiate, EcsInherit);
+
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
         .query.terms[0].id = TagA,
@@ -3255,6 +3278,7 @@ void Trigger_on_add_base_superset_trigger_2_lvls(void) {
     ecs_entity_t base_of_base = ecs_new_w_id(world, EcsPrefab);
     ecs_entity_t base = ecs_new_w_id(world, EcsPrefab);
     ecs_add_pair(world, base, EcsIsA, base_of_base);
+    test_int(ctx.invoked, 0);
 
     ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, base);
     test_int(ctx.invoked, 0);
@@ -3285,6 +3309,9 @@ void Trigger_on_add_base_2_entities(void) {
 
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
+
+    ecs_add_pair(world, TagA, EcsOnInstantiate, EcsInherit);
+    ecs_add_pair(world, TagB, EcsOnInstantiate, EcsInherit);
 
     /* Create trigger before table */
     Probe ctx = {0};
@@ -3328,6 +3355,9 @@ void Trigger_on_add_base_2_entities_filter(void) {
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
 
+    ecs_add_pair(world, TagA, EcsOnInstantiate, EcsInherit);
+    ecs_add_pair(world, TagB, EcsOnInstantiate, EcsInherit);
+
     /* Create trigger before table */
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
@@ -3370,6 +3400,9 @@ void Trigger_on_set_base_w_value_2_entities(void) {
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
+
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+    ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
 
     /* Create trigger before table */
     Probe ctx = {0};
@@ -3423,6 +3456,9 @@ void Trigger_on_set_base_w_value_2_entities_instanced(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+    ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
+
     /* Create trigger before table */
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
@@ -3475,6 +3511,9 @@ void Trigger_on_add_base_w_override(void) {
 
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
+
+    ecs_add_pair(world, TagA, EcsOnInstantiate, EcsInherit);
+    ecs_add_pair(world, TagB, EcsOnInstantiate, EcsInherit);
 
     /* Create trigger before table */
     Probe ctx = {0};
@@ -3530,6 +3569,9 @@ void Trigger_on_set_base_w_override(void) {
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
+
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+    ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
 
     /* Create trigger before table */
     Probe ctx = {0};
@@ -3678,6 +3720,8 @@ void Trigger_entity_source_base_set(void) {
 
     ECS_COMPONENT(world, Position);
 
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+
     ecs_entity_t base = ecs_new_w_id(world, EcsPrefab);
     ecs_entity_t subj = ecs_new_w_pair(world, EcsIsA, base);
     ecs_entity_t dummy = ecs_new_w_pair(world, EcsIsA, base);
@@ -3717,6 +3761,7 @@ void Trigger_not_from_superset(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
+    ecs_add_pair(world, Tag, EcsOnInstantiate, EcsInherit);
 
     Probe ctx = {0};
     ecs_observer_init(world, &(ecs_observer_desc_t){
@@ -3802,6 +3847,7 @@ void Trigger_on_add_self_trigger_with_add_isa(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
+    ecs_add_pair(world, Tag, EcsOnInstantiate, EcsInherit);
 
     Probe ctx = {0};
     ecs_entity_t t1 = ecs_observer_init(world, &(ecs_observer_desc_t){
@@ -3832,6 +3878,7 @@ void Trigger_on_set_self_trigger_with_add_isa(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
 
     Probe ctx = {0};
     ecs_entity_t t1 = ecs_observer_init(world, &(ecs_observer_desc_t){
@@ -3889,6 +3936,9 @@ void Trigger_notify_propagated_twice(void) {
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
 
+    ecs_add_pair(world, TagA, EcsOnInstantiate, EcsInherit);
+    ecs_add_pair(world, TagB, EcsOnInstantiate, EcsInherit);
+
     Probe ctx = {0};
     ecs_entity_t t1 = ecs_observer_init(world, &(ecs_observer_desc_t){
         .query.terms[0].id = TagA,
@@ -3919,6 +3969,8 @@ void Trigger_trigger_superset_wildcard(void) {
     ECS_TAG(world, Rel);
     ECS_TAG(world, ObjA);
     ECS_TAG(world, ObjB);
+
+    ecs_add_pair(world, Rel, EcsOnInstantiate, EcsInherit);
 
     ecs_entity_t base = ecs_new(world);
     ecs_entity_t inst = ecs_new(world);
@@ -4212,6 +4264,7 @@ void Trigger_on_add_superset_w_component(void) {
 	ecs_world_t *world = ecs_mini();
 
 	ECS_COMPONENT(world, Position);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
 
     Probe ctx = {0};
 	ecs_observer_init(world, &(ecs_observer_desc_t){
@@ -4243,6 +4296,7 @@ void Trigger_on_set_superset_w_component(void) {
 	ecs_world_t *world = ecs_mini();
 
 	ECS_COMPONENT(world, Position);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
 
     Probe ctx = {0};
 	ecs_observer_init(world, &(ecs_observer_desc_t){
@@ -4274,6 +4328,7 @@ void Trigger_on_add_base_superset_w_owned(void) {
 	ecs_world_t *world = ecs_mini();
 
 	ECS_TAG(world, Tag);
+    ecs_add_pair(world, Tag, EcsOnInstantiate, EcsInherit);
 
     Probe ctx = {0};
 	ecs_observer_init(world, &(ecs_observer_desc_t){
@@ -4307,6 +4362,7 @@ void Trigger_on_add_base_self_superset_w_owned(void) {
 	ecs_world_t *world = ecs_mini();
 
 	ECS_TAG(world, Tag);
+    ecs_add_pair(world, Tag, EcsOnInstantiate, EcsInherit);
 
     Probe ctx = {0};
 	ecs_observer_init(world, &(ecs_observer_desc_t){
@@ -4353,6 +4409,7 @@ void Trigger_on_set_self_from_child_of_prefab(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
 
     ecs_entity_t base = ecs_new_w_id(world, EcsPrefab);
     ecs_entity_t base_child = ecs_entity(world, { .name = "Child" });
@@ -4391,6 +4448,7 @@ void Trigger_on_set_self_superset_from_child_of_prefab(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
 
     ecs_entity_t base = ecs_new_w_id(world, EcsPrefab);
     ecs_entity_t base_child = ecs_entity(world, { .name = "Child" });
@@ -4428,6 +4486,7 @@ void Trigger_on_set_self_from_child_base_of_prefab(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
 
     ecs_entity_t base = ecs_new_w_id(world, EcsPrefab);
     ecs_entity_t base_child_base = ecs_new_w_id(world, EcsPrefab);
@@ -4464,6 +4523,7 @@ void Trigger_on_set_self_superset_from_child_base_of_prefab(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
 
     ecs_entity_t base = ecs_new_w_id(world, EcsPrefab);
     ecs_entity_t base_child_base = ecs_new_w_id(world, EcsPrefab);
@@ -4504,6 +4564,7 @@ void Trigger_on_set_self_auto_override(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
 
     ecs_entity_t base = ecs_insert(world, ecs_value(Position, {10, 20}));
     ecs_add_id(world, base, ECS_OVERRIDE | ecs_id(Position));
@@ -4535,6 +4596,7 @@ void Trigger_on_set_self_superset_auto_override(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
 
     ecs_entity_t base = ecs_insert(world, ecs_value(Position, {10, 20}));
     ecs_add_id(world, base, ECS_OVERRIDE | ecs_id(Position));
@@ -4567,6 +4629,7 @@ void Trigger_on_set_superset_auto_override(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
 
     ecs_entity_t base = ecs_insert(world, ecs_value(Position, {10, 20}));
     ecs_add_id(world, base, ECS_OVERRIDE | ecs_id(Position));
@@ -4626,6 +4689,7 @@ void Trigger_not_only_w_base(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
+    ecs_add_pair(world, TagA, EcsOnInstantiate, EcsInherit);
 
     Probe ctx = {0};
     ecs_observer(world, {
@@ -4657,6 +4721,9 @@ void Trigger_not_only_w_base_no_match(void) {
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
 
+    ecs_add_pair(world, TagA, EcsOnInstantiate, EcsInherit);
+    ecs_add_pair(world, TagB, EcsOnInstantiate, EcsInherit);
+
     Probe ctx = {0};
     ecs_observer(world, {
         .query.terms = {
@@ -4685,6 +4752,7 @@ void Trigger_on_set_superset_after_filter_observer(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
 
     Probe ctx_1 = {0};
     ecs_observer(world, {
@@ -4730,6 +4798,7 @@ void Trigger_on_set_superset_after_filter_observer_w_on_add(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
 
     Probe ctx_1 = {0};
     ecs_observer(world, {
@@ -4775,6 +4844,7 @@ void Trigger_on_set_superset_after_filter_observer_w_on_add_isa_after_set(void) 
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
 
     Probe ctx_1 = {0};
     ecs_observer(world, {
@@ -4824,6 +4894,9 @@ void Trigger_on_set_superset_after_filter_observer_w_on_add_2(void) {
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
+
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+    ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
 
     // first observer causes observer to be initialized with filter flag
     Probe ctx_1 = {0};

@@ -374,12 +374,17 @@ extern "C" {
     (EcsIdOnDeleteObjectPanic|EcsIdOnDeleteObjectRemove|\
         EcsIdOnDeleteObjectDelete)
 
-#define EcsIdExclusive                 (1u << 6)
-#define EcsIdDontInherit               (1u << 7)
-#define EcsIdTraversable               (1u << 8)
-#define EcsIdTag                       (1u << 9)
-#define EcsIdWith                      (1u << 10)
-#define EcsIdAlwaysOverride            (1u << 12)
+#define EcsIdOnInstantiateOverride     (1u << 6)
+#define EcsIdOnInstantiateInherit      (1u << 7)
+#define EcsIdOnInstantiateDontInherit  (1u << 8)
+#define EcsIdOnInstantiateMask\
+    (EcsIdOnInstantiateOverride|EcsIdOnInstantiateInherit|\
+        EcsIdOnInstantiateDontInherit)
+
+#define EcsIdExclusive                 (1u << 9)
+#define EcsIdTraversable               (1u << 10)
+#define EcsIdTag                       (1u << 11)
+#define EcsIdWith                      (1u << 12)
 #define EcsIdCanToggle                 (1u << 13)
 
 #define EcsIdHasOnAdd                  (1u << 16) /* Same values as table flags */
@@ -406,6 +411,12 @@ extern "C" {
 #define ECS_ID_ON_DELETE_TARGET(flags) ECS_ID_ON_DELETE(flags >> 3)
 #define ECS_ID_ON_DELETE_FLAG(id) (1u << ((id) - EcsRemove))
 #define ECS_ID_ON_DELETE_TARGET_FLAG(id) (1u << (3 + ((id) - EcsRemove)))
+
+/* Utilities for converting from flags to instantiate policies and vice versa */
+#define ECS_ID_ON_INSTANTIATE(flags) \
+    ((ecs_entity_t[]){EcsOverride, EcsOverride, EcsInherit, 0, EcsDontInherit}\
+        [(((flags) & EcsIdOnInstantiateMask) >> 6)])
+#define ECS_ID_ON_INSTANTIATE_FLAG(id) (1u << (6 + ((id) - EcsOverride)))
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3168,6 +3179,7 @@ typedef enum ecs_query_cache_kind_t {
 #define EcsTermKeepAlive              (1u << 11)
 #define EcsTermIsSparse               (1u << 12)
 #define EcsTermIsUnion                (1u << 13)
+#define EcsTermIsOr                   (1u << 14)
 
 /** Type that describes a reference to an entity or variable in a term. */
 typedef struct ecs_term_ref_t {
@@ -4550,19 +4562,24 @@ FLECS_API extern const ecs_entity_t EcsReflexive;
  */
 FLECS_API extern const ecs_entity_t EcsFinal;
 
-/** Ensures that component is never inherited from an IsA target.
- *
- * Behavior:
- *   if DontInherit(X) and X(B) and IsA(A, B) then X(A) is false.
- */
-FLECS_API extern const ecs_entity_t EcsDontInherit;
+/** Relationship that specifies component inheritance behavior. */
+FLECS_API extern const ecs_entity_t EcsOnInstantiate;
 
-/** Ensures a component is always overridden.
- *
- * Behavior:
- *   As if the component is added together with OVERRIDE | T
- */
-FLECS_API extern const ecs_entity_t EcsAlwaysOverride;
+/** Override component on instantiate. 
+ * This will copy the component from the base entity (IsA target) to the 
+ * instance. The base component will never be inherited from the prefab. */
+FLECS_API extern const ecs_entity_t EcsOverride;
+
+/** Inherit component on instantiate. 
+ * This will inherit (share) the component from the base entity (IsA target).
+ * The component can be manually overridden by adding it to the instance. */
+FLECS_API extern const ecs_entity_t EcsInherit;
+
+/** Never inherit component on instantiate. 
+ * This will not copy or share the component from the base entity (IsA target).
+ * When the component is added to an instance, its value will never be copied 
+ * from the base entity. */
+FLECS_API extern const ecs_entity_t EcsDontInherit;
 
 /** Marks relationship as commutative.
  * Behavior:
@@ -15565,8 +15582,9 @@ static const flecs::entity_t This = EcsThis;
 static const flecs::entity_t Transitive = EcsTransitive;
 static const flecs::entity_t Reflexive = EcsReflexive;
 static const flecs::entity_t Final = EcsFinal;
+static const flecs::entity_t OnInstantiate = EcsOnInstantiate;
+static const flecs::entity_t Inherit = EcsInherit;
 static const flecs::entity_t DontInherit = EcsDontInherit;
-static const flecs::entity_t AlwaysOverride = EcsAlwaysOverride;
 static const flecs::entity_t PairIsTag = EcsPairIsTag;
 static const flecs::entity_t Exclusive = EcsExclusive;
 static const flecs::entity_t Acyclic = EcsAcyclic;
@@ -30167,6 +30185,8 @@ public:
 
 private:
     ecs_iter_t get_iter(flecs::world_t *world) const override {
+        ecs_assert(query_ != nullptr, ECS_INVALID_PARAMETER, 
+            "cannot iterate invalid query");
         if (!world) {
             world = query_->world;
         }

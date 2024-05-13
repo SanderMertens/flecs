@@ -803,7 +803,7 @@ void Cascade_this_written_cascade_childof_w_parent_flag_uncached(void) {
 void Cascade_existing_isa_cascade(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_TAG(world, Tag);
+    ECS_ENTITY(world, Tag, (OnInstantiate, Inherit));
     ECS_TAG(world, Foo);
     ECS_TAG(world, Bar);
 
@@ -847,7 +847,7 @@ void Cascade_existing_isa_cascade(void) {
 void Cascade_new_isa_cascade(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_TAG(world, Tag);
+    ECS_ENTITY(world, Tag, (OnInstantiate, Inherit));
     ECS_TAG(world, Foo);
     ECS_TAG(world, Bar);
 

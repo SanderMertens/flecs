@@ -102,6 +102,10 @@ void* flecs_get_base_component(
         return NULL;
     }
 
+    if (!(idr->flags & EcsIdOnInstantiateInherit)) {
+        return NULL;
+    }
+
     /* Exclude Name */
     if (id == ecs_pair(ecs_id(EcsIdentifier), EcsName)) {
         return NULL;
@@ -337,7 +341,7 @@ void flecs_instantiate_children(
         {
             ecs_table_record_t *tr = &child_table->_->records[i];
             ecs_id_record_t *idr = (ecs_id_record_t*)tr->hdr.cache;
-            if (idr->flags & EcsIdDontInherit) {
+            if (idr->flags & EcsIdOnInstantiateDontInherit) {
                 continue;
             }
         }
@@ -3586,7 +3590,7 @@ ecs_entity_t ecs_get_target(
         tr = flecs_id_record_get_table(idr, table);
     }
     if (!tr) {
-        if (!idr || !(idr->flags & EcsIdDontInherit)) {
+        if (!idr || (idr->flags & EcsIdOnInstantiateInherit)) {
             goto look_in_base;
         } else {
             return 0;
@@ -4185,10 +4189,9 @@ void ecs_enable(
         int32_t i, count = type->count;
         for (i = 0; i < count; i ++) {
             ecs_id_t id = ids[i];
-            if (ecs_id_get_flags(world, id) & EcsIdDontInherit) {
-                continue;
+            if (!(ecs_id_get_flags(world, id) & EcsIdOnInstantiateDontInherit)){
+                ecs_enable(world, id, enabled);
             }
-            ecs_enable(world, id, enabled);
         }
     } else {
         if (enabled) {

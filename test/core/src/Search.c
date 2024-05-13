@@ -414,9 +414,9 @@ void Search_search_relation_at_offset(void) {
 void Search_search_relation_inherit_from_parent(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_TAG(world, TagA);
-    ECS_TAG(world, TagB);
-    ECS_TAG(world, TagC);
+    ECS_ENTITY(world, TagA, (OnInstantiate, Inherit));
+    ECS_ENTITY(world, TagB, (OnInstantiate, Inherit));
+    ECS_ENTITY(world, TagC, (OnInstantiate, Inherit));
 
     ecs_entity_t b = ecs_new(world);
     ecs_add(world, b, TagA);
@@ -456,11 +456,9 @@ void Search_search_relation_inherit_from_parent(void) {
 void Search_search_relation_dont_inherit(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_TAG(world, TagA);
-    ECS_TAG(world, TagB);
-    ECS_TAG(world, TagC);
-    
-    ecs_add_id(world, TagB, EcsDontInherit);
+    ECS_ENTITY(world, TagA, (OnInstantiate, Inherit));
+    ECS_ENTITY(world, TagB, (OnInstantiate, DontInherit));
+    ECS_ENTITY(world, TagC, (OnInstantiate, Inherit));
 
     ecs_entity_t b = ecs_new(world);
     ecs_add(world, b, TagA);
@@ -506,11 +504,9 @@ void Search_search_relation_dont_inherit(void) {
 void Search_search_relation_dont_inherit_from_parent(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_TAG(world, TagA);
-    ECS_TAG(world, TagB);
-    ECS_TAG(world, TagC);
-    
-    ecs_add_id(world, TagB, EcsDontInherit);
+    ECS_ENTITY(world, TagA, (OnInstantiate, Inherit));
+    ECS_ENTITY(world, TagB, (OnInstantiate, DontInherit));
+    ECS_ENTITY(world, TagC, (OnInstantiate, Inherit));
 
     ecs_entity_t b = ecs_new(world);
     ecs_add(world, b, TagA);
@@ -558,11 +554,9 @@ void Search_search_relation_dont_inherit_from_parent(void) {
 void Search_search_relation_exclusive(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_TAG(world, TagA);
-    ECS_TAG(world, TagB);
-    ECS_TAG(world, Rel);
-    
-    ecs_add_id(world, Rel, EcsExclusive);
+    ECS_ENTITY(world, TagA, (OnInstantiate, Inherit));
+    ECS_ENTITY(world, TagB, (OnInstantiate, Inherit));
+    ECS_ENTITY(world, Rel, Exclusive, (OnInstantiate, Inherit));
 
     ecs_entity_t b = ecs_new(world);
     ecs_add_pair(world, b, Rel, TagA);

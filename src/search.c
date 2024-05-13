@@ -63,9 +63,10 @@ bool flecs_type_can_inherit_id(
     ecs_id_t id)
 {
     ecs_assert(idr != NULL, ECS_INTERNAL_ERROR, NULL);
-    if (idr->flags & EcsIdDontInherit) {
+    if (idr->flags & EcsIdOnInstantiateDontInherit) {
         return false;
     }
+
     if (idr->flags & EcsIdExclusive) {
         if (ECS_HAS_ID_FLAG(id, PAIR)) {
             ecs_entity_t er = ECS_PAIR_FIRST(id);

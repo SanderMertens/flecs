@@ -134,13 +134,6 @@ void flecs_json_serialize_term(
     flecs_json_memberl(buf, "has_data");
     flecs_json_bool(buf, 0 == (term->flags_ & EcsTermNoData));
 
-    if (term->first.id & EcsIsEntity && term->first.id) {
-        if (ecs_has_id(world, ECS_TERM_REF_ID(&term->first), EcsDontInherit)) {
-            flecs_json_memberl(buf, "dont_inherit");
-            flecs_json_true(buf);
-        }
-    }
-
     flecs_json_memberl(buf, "oper");
     flecs_json_string(buf, flecs_json_oper_str(term->oper));
 

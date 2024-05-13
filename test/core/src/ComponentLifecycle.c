@@ -379,6 +379,8 @@ void ComponentLifecycle_copy_on_override(void) {
 
     ECS_COMPONENT(world, Position);
 
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+
     cl_ctx ctx = { { 0 } };
 
     ecs_set_hooks(world, Position, {
@@ -981,6 +983,8 @@ void ComponentLifecycle_copy_on_override_pair(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Pair);
 
+    ecs_add_pair(world, ecs_id(Pair), EcsOnInstantiate, EcsInherit);
+
     cl_ctx ctx = { { 0 } };
 
     ecs_set_hooks(world, Pair, {
@@ -1017,6 +1021,8 @@ void ComponentLifecycle_copy_on_override_pair_tag(void) {
 
     ECS_COMPONENT(world, Position);
     ECS_TAG(world, Pair);
+
+    ecs_add_pair(world, Pair, EcsOnInstantiate, EcsInherit);
 
     cl_ctx ctx = { { 0 } };
 
@@ -3134,6 +3140,8 @@ void ComponentLifecycle_on_set_hook_on_override(void) {
         .on_set = on_set_position
     });
 
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+
     ecs_entity_t p = ecs_insert(world, ecs_value(Position, {10, 20}));
     ecs_add_id(world, p, EcsPrefab);
     test_int(on_set_position_invoked, 1);
@@ -3158,6 +3166,8 @@ void ComponentLifecycle_on_set_hook_on_auto_override(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
+
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
 
     ecs_set_hooks(world, Position, {
         .on_set = on_set_position
@@ -3267,6 +3277,8 @@ void ComponentLifecycle_on_nested_prefab_copy_test_invokes_copy_count(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
+
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
 
     cl_ctx ctx = { { 0 } };
 

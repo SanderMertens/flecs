@@ -985,7 +985,11 @@ void Observer_3_terms_2_or_on_add(void) {
 
     Probe ctx = {0};
     ecs_entity_t o = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .query.terms = {{TagA}, {TagB, .oper = EcsOr}, {TagC }},
+        .query.terms = {
+            {TagA, .src.id = EcsSelf|EcsUp}, 
+            {TagB, .oper = EcsOr, .src.id = EcsSelf|EcsUp}, 
+            {TagC, .src.id = EcsSelf|EcsUp}
+        },
         .events = {EcsOnAdd},
         .callback = Observer,
         .ctx = &ctx
@@ -2440,6 +2444,8 @@ void Observer_notify_propagated_twice(void) {
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
 
+    ecs_add_pair(world, TagA, EcsOnInstantiate, EcsInherit);
+
     Probe ctx = {0};
     ecs_entity_t t1 = ecs_observer_init(world, &(ecs_observer_desc_t){
         .query.terms = {{ TagA }},
@@ -2737,6 +2743,8 @@ void Observer_observer_superset_wildcard(void) {
     ECS_TAG(world, ObjA);
     ECS_TAG(world, ObjB);
 
+    ecs_add_pair(world, Rel, EcsOnInstantiate, EcsInherit);
+
     ecs_entity_t base = ecs_new(world);
     ecs_entity_t inst = ecs_new(world);
     ecs_add_pair(world, inst, EcsIsA, base);
@@ -2790,6 +2798,8 @@ void Observer_observer_superset_wildcard_add_isa(void) {
     ECS_TAG(world, ObjA);
     ECS_TAG(world, ObjB);
 
+    ecs_add_pair(world, Rel, EcsOnInstantiate, EcsInherit);
+
     ecs_entity_t base = ecs_new(world);
     ecs_add_pair(world, base, Rel, ObjA);
     ecs_add_pair(world, base, Rel, ObjB);
@@ -2833,6 +2843,8 @@ void Observer_observer_superset_wildcard_add_isa_at_offset(void) {
     ECS_TAG(world, Rel);
     ECS_TAG(world, ObjA);
     ECS_TAG(world, ObjB);
+
+    ecs_add_pair(world, Rel, EcsOnInstantiate, EcsInherit);
 
     ecs_entity_t base = ecs_new(world);
     ecs_add(world, base, Tag);
@@ -2997,6 +3009,9 @@ void Observer_match_base_w_id_at_offset(void) {
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
+
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+    ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
 
     Probe ctx_1 = {0};
     ecs_entity_t t1 = ecs_observer_init(world, &(ecs_observer_desc_t){
@@ -3399,6 +3414,9 @@ void Observer_propagate_match_relationship_w_self_up(void) {
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
 
+    ecs_add_pair(world, TagA, EcsOnInstantiate, EcsInherit);
+    ecs_add_pair(world, TagB, EcsOnInstantiate, EcsInherit);
+
     Probe ctx = {0};
     ecs_observer(world, {
         .query.terms = {{ TagB, .src.id = EcsSelf|EcsUp, .trav = EcsIsA }},
@@ -3429,6 +3447,9 @@ void Observer_propagate_match_relationship_w_up(void) {
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
 
+    ecs_add_pair(world, TagA, EcsOnInstantiate, EcsInherit);
+    ecs_add_pair(world, TagB, EcsOnInstantiate, EcsInherit);
+
     Probe ctx = {0};
     ecs_observer(world, {
         .query.terms = {{ TagB, .src.id = EcsUp, .trav = EcsIsA }},
@@ -3452,6 +3473,8 @@ void Observer_propagate_isa_of_parent_add(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
+
+    ecs_add_pair(world, TagA, EcsOnInstantiate, EcsInherit);
 
     Probe ctx = {0};
     ecs_observer(world, {
@@ -3484,6 +3507,8 @@ void Observer_propagate_isa_of_parent_remove(void) {
 
     ECS_TAG(world, TagA);
 
+    ecs_add_pair(world, TagA, EcsOnInstantiate, EcsInherit);
+
     Probe ctx = {0};
     ecs_observer(world, {
         .query.terms = {{ TagA, .src.id = EcsUp, .trav = EcsChildOf }},
@@ -3515,6 +3540,8 @@ void Observer_propagate_isa_of_parent_set(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
+
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
 
     Probe ctx = {0};
     ecs_observer(world, {
@@ -3637,6 +3664,8 @@ void Observer_propagate_add_childof_w_parent_w_base(void) {
 
     ECS_TAG(world, TagA);
 
+    ecs_add_pair(world, TagA, EcsOnInstantiate, EcsInherit);
+
     Probe ctx = {0};
     ecs_observer(world, {
         .query.terms = {{ TagA, .src.id = EcsUp, .trav = EcsChildOf }},
@@ -3666,6 +3695,8 @@ void Observer_propagate_remove_childof_w_parent_w_base(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
+
+    ecs_add_pair(world, TagA, EcsOnInstantiate, EcsInherit);
 
     Probe ctx = {0};
     ecs_observer(world, {
@@ -3729,6 +3760,8 @@ void Observer_propagate_add_isa_of_parent(void) {
 
     ECS_TAG(world, TagA);
 
+    ecs_add_pair(world, TagA, EcsOnInstantiate, EcsInherit);
+
     Probe ctx = {0};
     ecs_observer(world, {
         .query.terms = {{ TagA, .src.id = EcsUp, .trav = EcsChildOf }},
@@ -3760,6 +3793,8 @@ void Observer_propagate_remove_isa_of_parent(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, TagA);
+
+    ecs_add_pair(world, TagA, EcsOnInstantiate, EcsInherit);
 
     Probe ctx = {0};
     ecs_observer(world, {
@@ -3793,6 +3828,8 @@ void Observer_propagate_add_childof_of_base(void) {
 
     ECS_TAG(world, TagA);
 
+    ecs_add_pair(world, TagA, EcsOnInstantiate, EcsInherit);
+
     Probe ctx = {0};
     ecs_observer(world, {
         .query.terms = {{ TagA, .src.id = EcsUp, .trav = EcsChildOf }},
@@ -3825,6 +3862,8 @@ void Observer_propagate_remove_childof_of_base(void) {
 
     ECS_TAG(world, TagA);
 
+    ecs_add_pair(world, TagA, EcsOnInstantiate, EcsInherit);
+
     Probe ctx = {0};
     ecs_observer(world, {
         .query.terms = {{ TagA, .src.id = EcsUp, .trav = EcsChildOf }},
@@ -3853,12 +3892,14 @@ void Observer_propagate_remove_childof_of_base(void) {
 }
 
 void Observer_emit_for_parent_w_prefab_child_and_instance(void) {
-    ecs_world_t* ecs = ecs_init();
+    ecs_world_t* world = ecs_init();
 
-    ECS_COMPONENT(ecs, Position);
+    ECS_COMPONENT(world, Position);
+
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
 
     Probe ctx = {0};
-    ecs_observer(ecs, {
+    ecs_observer(world, {
         .query.terms = {
             { .id = ecs_id(Position) }
         },
@@ -3867,14 +3908,14 @@ void Observer_emit_for_parent_w_prefab_child_and_instance(void) {
         .ctx = &ctx
     });
 
-    ecs_entity_t e = ecs_new(ecs);
-    ecs_entity_t p = ecs_new_w_pair(ecs, EcsChildOf, e);
-    ecs_entity_t child_1 = ecs_new_w_pair(ecs, EcsChildOf, e);
-    ecs_add_pair(ecs, child_1, EcsIsA, p);
+    ecs_entity_t e = ecs_new(world);
+    ecs_entity_t p = ecs_new_w_pair(world, EcsChildOf, e);
+    ecs_entity_t child_1 = ecs_new_w_pair(world, EcsChildOf, e);
+    ecs_add_pair(world, child_1, EcsIsA, p);
 
     test_int(ctx.invoked, 0);
 
-    ecs_set(ecs, e, Position, {10, 20});
+    ecs_set(world, e, Position, {10, 20});
 
     test_int(ctx.invoked, 1);
     test_int(ctx.count, 1);
@@ -3882,7 +3923,7 @@ void Observer_emit_for_parent_w_prefab_child_and_instance(void) {
     test_int(ctx.c[0][0], ecs_id(Position));
     test_int(ctx.event, EcsOnSet);
 
-    ecs_fini(ecs);
+    ecs_fini(world);
 }
 
 void Observer_observer_w_2_fixed_src(void) {
@@ -4368,6 +4409,9 @@ void Observer_on_remove_target_from_base_at_offset(void) {
     ecs_entity_t T2 = ecs_new(world);
     ecs_entity_t C = ecs_new(world);
 
+    ecs_add_pair(world, R, EcsOnInstantiate, EcsInherit);
+    ecs_add_pair(world, C, EcsOnInstantiate, EcsInherit);
+
     Probe ctx = { 0 };
     ecs_entity_t o = ecs_observer(world, {
         .query.terms = {
@@ -4412,9 +4456,14 @@ void Observer_on_remove_target_component_from_base_at_offset(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
+
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+
     ecs_entity_t T1 = ecs_new(world);
     ecs_entity_t T2 = ecs_new(world);
     ecs_entity_t C = ecs_new(world);
+
+    ecs_add_pair(world, C, EcsOnInstantiate, EcsInherit);
 
     Probe ctx = { 0 };
     ecs_entity_t o = ecs_observer(world, {
@@ -5910,6 +5959,8 @@ void Observer_cache_test_9(void) {
 
     ECS_COMPONENT(world, Position);
 
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+
     Probe ctx = {0};
     ecs_observer(world, {
         .query.terms = {{ ecs_id(Position), .src.id = EcsUp, .trav = EcsIsA }},
@@ -6168,23 +6219,25 @@ void Observer_w_run_aperiodic(ecs_iter_t *it) {
 }
 
 void Observer_cache_test_16(void) {
-    ecs_world_t* ecs = ecs_init();
+    ecs_world_t* world = ecs_init();
 
-    ECS_TAG(ecs, Foo);
+    ECS_TAG(world, Foo);
 
-    ECS_OBSERVER(ecs, Observer_w_run_aperiodic, EcsOnAdd, Foo);
+    ecs_add_pair(world, Foo, EcsOnInstantiate, EcsInherit);
 
-    ecs_entity_t p1 = ecs_new(ecs);
-    ecs_entity_t e1 = ecs_new_w_pair(ecs, EcsIsA, p1);
+    ECS_OBSERVER(world, Observer_w_run_aperiodic, EcsOnAdd, Foo);
 
-    ecs_run_aperiodic(ecs, 0);
+    ecs_entity_t p1 = ecs_new(world);
+    ecs_entity_t e1 = ecs_new_w_pair(world, EcsIsA, p1);
+
+    ecs_run_aperiodic(world, 0);
     
-    ecs_entity_t e2 = ecs_new(ecs);
-    ecs_add_pair(ecs, e2, EcsIsA, p1);
-    ecs_add_pair(ecs, e2, EcsChildOf, e1);
-    ecs_add(ecs, e1, Foo);
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_add_pair(world, e2, EcsIsA, p1);
+    ecs_add_pair(world, e2, EcsChildOf, e1);
+    ecs_add(world, e1, Foo);
 
-    ecs_fini(ecs);
+    ecs_fini(world);
 }
 
 static int Observer_a_invoked = 0;
