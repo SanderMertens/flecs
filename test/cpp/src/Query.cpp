@@ -615,8 +615,8 @@ void Query_action_const(void) {
 void Query_action_shared(void) {
     flecs::world world;
 
-    world.component<Position>();
-    world.component<Velocity>();
+    world.component<Position>().add(flecs::OnInstantiate, flecs::Inherit);
+    world.component<Velocity>().add(flecs::OnInstantiate, flecs::Inherit);
 
     auto base = flecs::entity(world)
         .set<Velocity>({1, 2});
@@ -921,8 +921,8 @@ void Query_signature_const(void) {
 void Query_signature_shared(void) {
     flecs::world world;
 
-    world.component<Position>();
-    world.component<Velocity>();
+    world.component<Position>().add(flecs::OnInstantiate, flecs::Inherit);
+    world.component<Velocity>().add(flecs::OnInstantiate, flecs::Inherit);
 
     auto base = flecs::entity(world)
         .set<Velocity>({1, 2});
@@ -1357,7 +1357,7 @@ void Query_comp_to_str(void) {
     auto q = ecs.query_builder<Position>()
         .with<Velocity>()
         .build();
-    test_str(q.str(), "Position, [none] Velocity");
+    test_str(q.str(), "Position($this), [none] Velocity($this)");
 }
 
 struct Eats { int amount; };
@@ -1371,7 +1371,7 @@ void Query_pair_to_str(void) {
         .with<Velocity>()
         .with<Eats, Apples>()
         .build();
-    test_str(q.str(), "Position, [none] Velocity, [none] (Eats,Apples)");
+    test_str(q.str(), "Position($this), [none] Velocity($this), [none] Eats($this,Apples)");
 }
 
 void Query_oper_not_to_str(void) {
@@ -1380,7 +1380,7 @@ void Query_oper_not_to_str(void) {
     auto q = ecs.query_builder<Position>()
         .with<Velocity>().oper(flecs::Not)
         .build();
-    test_str(q.str(), "Position, !Velocity");
+    test_str(q.str(), "Position($this), !Velocity($this)");
 }
 
 void Query_oper_optional_to_str(void) {
@@ -1389,7 +1389,7 @@ void Query_oper_optional_to_str(void) {
     auto q = ecs.query_builder<Position>()
         .with<Velocity>().oper(flecs::Optional)
         .build();
-    test_str(q.str(), "Position, [none] ?Velocity");
+    test_str(q.str(), "Position($this), [none] ?Velocity($this)");
 }
 
 void Query_oper_or_to_str(void) {
@@ -1399,7 +1399,7 @@ void Query_oper_or_to_str(void) {
         .with<Position>().oper(flecs::Or)
         .with<Velocity>()
         .build();
-    test_str(q.str(), "[none] Position || Velocity");
+    test_str(q.str(), "[none] Position($this) || Velocity($this)");
 }
 
 using EatsApples = flecs::pair<Eats, Apples>;

@@ -2245,10 +2245,14 @@ void SingleThreadStaging_merge_after_tasks(void) {
     ecs_fini(world);
 }
 
+static int override_after_remove_invoked = 0;
+
 static
 void OverrideAfterRemove(ecs_iter_t *it) {
     Position *p = ecs_field(it, Position, 0);
     ecs_id_t ecs_id(Position) = ecs_field_id(it, 0);
+    
+    override_after_remove_invoked ++;
 
     int i;
     for (i = 0; i < it->count; i ++) {
@@ -2263,19 +2267,18 @@ void SingleThreadStaging_override_after_remove_in_progress(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
-    ECS_COMPONENT(world, Velocity);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
 
-    ECS_ENTITY(world, base, Position, Disabled);
-
+    ECS_ENTITY(world, base, Position, Prefab);
     ECS_ENTITY(world, e, Position, (IsA, base));
 
     ECS_SYSTEM(world, OverrideAfterRemove, EcsOnUpdate, Position);
 
     ecs_set(world, base, Position, {10, 20});
-
     ecs_set(world, e, Position, {30, 40});
 
     ecs_progress(world, 1);
+    test_int(override_after_remove_invoked, 1);
 
     test_assert( ecs_has(world, e, Position));
     const Position *p_ptr = ecs_get(world, e, Position);

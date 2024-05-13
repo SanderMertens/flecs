@@ -61,12 +61,17 @@ extern "C" {
     (EcsIdOnDeleteObjectPanic|EcsIdOnDeleteObjectRemove|\
         EcsIdOnDeleteObjectDelete)
 
-#define EcsIdExclusive                 (1u << 6)
-#define EcsIdDontInherit               (1u << 7)
-#define EcsIdTraversable               (1u << 8)
-#define EcsIdTag                       (1u << 9)
-#define EcsIdWith                      (1u << 10)
-#define EcsIdAlwaysOverride            (1u << 12)
+#define EcsIdOnInstantiateOverride     (1u << 6)
+#define EcsIdOnInstantiateInherit      (1u << 7)
+#define EcsIdOnInstantiateDontInherit  (1u << 8)
+#define EcsIdOnInstantiateMask\
+    (EcsIdOnInstantiateOverride|EcsIdOnInstantiateInherit|\
+        EcsIdOnInstantiateDontInherit)
+
+#define EcsIdExclusive                 (1u << 9)
+#define EcsIdTraversable               (1u << 10)
+#define EcsIdTag                       (1u << 11)
+#define EcsIdWith                      (1u << 12)
 #define EcsIdCanToggle                 (1u << 13)
 
 #define EcsIdHasOnAdd                  (1u << 16) /* Same values as table flags */
@@ -93,6 +98,12 @@ extern "C" {
 #define ECS_ID_ON_DELETE_TARGET(flags) ECS_ID_ON_DELETE(flags >> 3)
 #define ECS_ID_ON_DELETE_FLAG(id) (1u << ((id) - EcsRemove))
 #define ECS_ID_ON_DELETE_TARGET_FLAG(id) (1u << (3 + ((id) - EcsRemove)))
+
+/* Utilities for converting from flags to instantiate policies and vice versa */
+#define ECS_ID_ON_INSTANTIATE(flags) \
+    ((ecs_entity_t[]){EcsOverride, EcsOverride, EcsInherit, 0, EcsDontInherit}\
+        [(((flags) & EcsIdOnInstantiateMask) >> 6)])
+#define ECS_ID_ON_INSTANTIATE_FLAG(id) (1u << (6 + ((id) - EcsOverride)))
 
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -424,6 +424,9 @@ void Monitor_monitor_w_superset(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
     ECS_COMPONENT(world, Mass);
+
+    ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
+
     ECS_OBSERVER(world, OnPosition, EcsMonitor, Position, Velocity(up IsA));
 
     Probe ctx = { 0 };
@@ -471,6 +474,9 @@ void Monitor_monitor_w_self_superset(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
     ECS_COMPONENT(world, Mass);
+
+    ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
+
     ECS_OBSERVER(world, OnPosition, EcsMonitor, Position, Velocity(self|up IsA));
 
     Probe ctx = { 0 };

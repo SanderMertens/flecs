@@ -1445,6 +1445,10 @@ void SystemPeriodic_owned_column(void) {
     ECS_COMPONENT(world, Velocity);
     ECS_COMPONENT(world, Mass);
 
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+    ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
+    ecs_add_pair(world, ecs_id(Mass), EcsOnInstantiate, EcsInherit);
+
     ECS_ENTITY(world, base, Velocity);
     ECS_ENTITY(world, e1, Position, Velocity);
     ECS_ENTITY(world, e2, Position, (IsA, base));
@@ -1473,6 +1477,9 @@ void SystemPeriodic_owned_not_column(void) {
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
+
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+    ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
 
     ECS_ENTITY(world, base, Velocity);
     ECS_ENTITY(world, e1, Position, Velocity);
@@ -1508,6 +1515,10 @@ void SystemPeriodic_owned_or_column(void) {
     ECS_COMPONENT(world, Velocity);
     ECS_COMPONENT(world, Mass);
 
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+    ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
+    ecs_add_pair(world, ecs_id(Mass), EcsOnInstantiate, EcsInherit);
+
     ECS_ENTITY(world, base, Velocity);
     ECS_ENTITY(world, e1, Position, Velocity);
     ECS_ENTITY(world, e2, Position, Mass);
@@ -1542,6 +1553,7 @@ void SystemPeriodic_shared_column(void) {
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
+    ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
 
     ECS_ENTITY(world, base, Velocity);
     ECS_ENTITY(world, e1, Position, Velocity);
@@ -1572,6 +1584,7 @@ void SystemPeriodic_shared_not_column(void) {
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
+    ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
 
     ECS_ENTITY(world, base, Velocity);
     ECS_ENTITY(world, e1, Position, Velocity);
@@ -1606,6 +1619,9 @@ void SystemPeriodic_shared_or_column(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
     ECS_COMPONENT(world, Mass);
+
+    ecs_add_pair(world, ecs_id(Mass), EcsOnInstantiate, EcsInherit);
+    ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
 
     ECS_ENTITY(world, base1, Velocity);
     ECS_ENTITY(world, base2, Mass);
@@ -1644,6 +1660,8 @@ void SystemPeriodic_container_dont_match_inheritance(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
+    ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
+
     ECS_ENTITY(world, base, Velocity);
     ECS_ENTITY(world, e1, Position, (IsA, base));
     ECS_ENTITY(world, e2, Position, (ChildOf, base));
@@ -1672,6 +1690,8 @@ void SystemPeriodic_cascade_dont_match_inheritance(void) {
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
+
+    ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
 
     ECS_ENTITY(world, base, Velocity);
     ECS_ENTITY(world, e1, Position, (IsA, base));
@@ -1812,6 +1832,8 @@ void SystemPeriodic_shared_only(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
+
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
 
     ECS_SYSTEM(world, AssertReadonly, EcsOnUpdate, Position(up IsA));
 

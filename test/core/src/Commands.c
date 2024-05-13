@@ -2301,6 +2301,8 @@ void Commands_defer_override_after_remove(void) {
 
     ECS_COMPONENT(world, Position);
 
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+
     ecs_entity_t base = ecs_insert(world, ecs_value(Position, {10, 20}));
     ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
     ecs_set(world, inst, Position, {20, 30});
@@ -2325,6 +2327,8 @@ void Commands_defer_override_after_remove_3_ops(void) {
 
     ECS_COMPONENT(world, Position);
     ECS_TAG(world, Tag);
+
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
 
     ecs_entity_t base = ecs_insert(world, ecs_value(Position, {10, 20}));
     ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
@@ -3138,6 +3142,8 @@ void Commands_ensure_override(void) {
 
     ECS_COMPONENT(world, Position);
 
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+
     ecs_entity_t base = ecs_insert(world, ecs_value(Position, {1, 2}));
     ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, base);
 
@@ -3173,6 +3179,8 @@ void Commands_set_override(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
+
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
 
     ecs_entity_t base = ecs_insert(world, ecs_value(Position, {1, 2}));
     ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, base);

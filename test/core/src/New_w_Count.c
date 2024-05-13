@@ -604,7 +604,7 @@ void New_w_Count_add_after_bulk_w_ctor(void) {
 }
 
 void New_w_Count_recycle_1_of_2(void) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ecs_entity_t tag = ecs_new(world);
 
@@ -622,7 +622,7 @@ void New_w_Count_recycle_1_of_2(void) {
 }
 
 void New_w_Count_recycle_1_of_3(void) {
-  ecs_world_t *world = ecs_init();
+  ecs_world_t *world = ecs_mini();
 
   ecs_entity_t tag = ecs_new(world);
 
@@ -641,7 +641,7 @@ void New_w_Count_recycle_1_of_3(void) {
 }
 
 void New_w_Count_recycle_2_of_3(void) {
-  ecs_world_t *world = ecs_init();
+  ecs_world_t *world = ecs_mini();
 
   ecs_entity_t tag = ecs_new(world);
 
@@ -663,7 +663,7 @@ void New_w_Count_recycle_2_of_3(void) {
 }
 
 void New_w_Count_bulk_init_w_table(void) {
-    ecs_world_t *world = ecs_init();
+    ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
 

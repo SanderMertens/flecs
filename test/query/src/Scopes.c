@@ -1,6 +1,7 @@
 #include <query.h>
 
 static ecs_query_cache_kind_t cache_kind = EcsQueryCacheDefault;
+static ecs_entity_t on_instantiate = 0;
 
 void Scopes_setup(void) {
     const char *cache_param = test_param("cache_kind");
@@ -10,7 +11,18 @@ void Scopes_setup(void) {
         } else if (!strcmp(cache_param, "auto")) {
             cache_kind = EcsQueryCacheAuto;
         } else {
-            printf("unexpected value for cache_param '%s'\n", cache_param);
+            printf("unexpected value for cache_kind '%s'\n", cache_param);
+        }
+    }
+
+    const char *on_instantiate_param = test_param("on_instantiate");
+    if (on_instantiate_param) {
+        if (!strcmp(on_instantiate_param, "override")) {
+            on_instantiate = EcsOverride;
+        } else if (!strcmp(on_instantiate_param, "inherit")) {
+            on_instantiate = EcsInherit;
+        } else {
+            printf("unexpected value for on_instantiate '%s'\n", cache_param);
         }
     }
 }
@@ -19,7 +31,9 @@ void Scopes_term_w_not_scope_1_term(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Root);
+    ecs_add_pair(world, Root, EcsOnInstantiate, on_instantiate);
     ECS_TAG(world, TagA);
+    ecs_add_pair(world, TagA, EcsOnInstantiate, on_instantiate);
 
     ecs_entity_t parent_1 = ecs_new_w(world, Root);
     ecs_add(world, parent_1, TagA);
@@ -52,8 +66,11 @@ void Scopes_term_w_not_scope_2_terms(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Root);
+    ecs_add_pair(world, Root, EcsOnInstantiate, on_instantiate);
     ECS_TAG(world, TagA);
+    ecs_add_pair(world, TagA, EcsOnInstantiate, on_instantiate);
     ECS_TAG(world, TagB);
+    ecs_add_pair(world, TagB, EcsOnInstantiate, on_instantiate);
 
     ecs_entity_t parent_1 = ecs_new_w(world, Root);
     ecs_add(world, parent_1, TagA);
@@ -99,7 +116,9 @@ void Scopes_term_w_not_scope_1_term_w_not(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Root);
+    ecs_add_pair(world, Root, EcsOnInstantiate, on_instantiate);
     ECS_TAG(world, TagA);
+    ecs_add_pair(world, TagA, EcsOnInstantiate, on_instantiate);
 
     ecs_entity_t parent_1 = ecs_new_w(world, Root);
     ecs_add(world, parent_1, TagA);
@@ -132,8 +151,11 @@ void Scopes_term_w_not_scope_2_terms_w_not(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Root);
+    ecs_add_pair(world, Root, EcsOnInstantiate, on_instantiate);
     ECS_TAG(world, TagA);
+    ecs_add_pair(world, TagA, EcsOnInstantiate, on_instantiate);
     ECS_TAG(world, TagB);
+    ecs_add_pair(world, TagB, EcsOnInstantiate, on_instantiate);
 
     ecs_entity_t parent_1 = ecs_new_w(world, Root);
     ecs_add(world, parent_1, TagA);
@@ -179,6 +201,7 @@ void Scopes_term_w_not_scope_1_term_w_var(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Root);
+    ecs_add_pair(world, Root, EcsOnInstantiate, on_instantiate);
 
     ecs_entity_t parent_1 = ecs_new_w(world, Root);
     ecs_new_w_pair(world, EcsChildOf, parent_1);
@@ -215,6 +238,7 @@ void Scopes_term_w_not_scope_2_terms_w_var(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Root);
+    ecs_add_pair(world, Root, EcsOnInstantiate, on_instantiate);
     ECS_COMPONENT(world, Position);
 
     ecs_entity_t parent_0 = ecs_new_w(world, Root);
@@ -264,6 +288,7 @@ void Scopes_term_w_not_scope_1_term_w_not_w_var(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Root);
+    ecs_add_pair(world, Root, EcsOnInstantiate, on_instantiate);
 
     ecs_entity_t parent_0 = ecs_new_w(world, Root);
     {
@@ -293,8 +318,10 @@ void Scopes_term_w_not_scope_2_terms_w_not_w_var(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Root);
+    ecs_add_pair(world, Root, EcsOnInstantiate, on_instantiate);
     ECS_COMPONENT(world, Position);
     ECS_TAG(world, Foo);
+    ecs_add_pair(world, Foo, EcsOnInstantiate, on_instantiate);
 
     ecs_entity_t parent_0 = ecs_new_w(world, Root);
     {
@@ -347,8 +374,11 @@ void Scopes_term_w_not_scope_2_terms_w_or(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Root);
+    ecs_add_pair(world, Root, EcsOnInstantiate, on_instantiate);
     ECS_TAG(world, TagA);
+    ecs_add_pair(world, TagA, EcsOnInstantiate, on_instantiate);
     ECS_TAG(world, TagB);
+    ecs_add_pair(world, TagB, EcsOnInstantiate, on_instantiate);
 
     ecs_entity_t e1 = ecs_new_w(world, Root);
     ecs_add(world, e1, TagA);
@@ -385,9 +415,13 @@ void Scopes_term_w_not_scope_3_terms_w_or(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Root);
+    ecs_add_pair(world, Root, EcsOnInstantiate, on_instantiate);
     ECS_TAG(world, TagA);
+    ecs_add_pair(world, TagA, EcsOnInstantiate, on_instantiate);
     ECS_TAG(world, TagB);
+    ecs_add_pair(world, TagB, EcsOnInstantiate, on_instantiate);
     ECS_TAG(world, TagC);
+    ecs_add_pair(world, TagC, EcsOnInstantiate, on_instantiate);
 
     ecs_entity_t e1 = ecs_new_w(world, Root);
     ecs_add(world, e1, TagA);
@@ -418,6 +452,57 @@ void Scopes_term_w_not_scope_3_terms_w_or(void) {
     }
 
     ecs_query_fini(r);
+
+    ecs_fini(world);
+}
+
+void Scopes_term_w_not_scope_2_terms_w_before_after(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, TagA);
+    ecs_add_pair(world, TagA, EcsOnInstantiate, on_instantiate);
+    ECS_TAG(world, TagB);
+    ecs_add_pair(world, TagB, EcsOnInstantiate, on_instantiate);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "TagA, !{ChildOf($child, $this), TagB($child)}, TagB"
+    });
+
+    test_assert(q != NULL);
+
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
+    ecs_entity_t e3 = ecs_entity(world, { .name = "e3" });
+
+    ecs_add(world, e1, TagA);
+    ecs_add(world, e2, TagA);
+    ecs_add(world, e3, TagA);
+
+    ecs_add(world, e1, TagB);
+    ecs_add(world, e2, TagB);
+    ecs_add(world, e3, TagB);
+
+    ecs_entity_t child_e1_1 = ecs_entity(world, { .name = "child_1" });
+    ecs_add_pair(world, child_e1_1, EcsChildOf, e1);
+
+    ecs_entity_t child_e2_1 = ecs_entity(world, { .name = "child_1" });
+    ecs_add_pair(world, child_e2_1, EcsChildOf, e2);
+
+    ecs_entity_t child_e2_2 = ecs_entity(world, { .name = "child_2" });
+    ecs_add_pair(world, child_e2_2, EcsChildOf, e2);
+    ecs_add(world, child_e2_2, TagB);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(e1, it.entities[0]);
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(e3, it.entities[0]);
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
 
     ecs_fini(world);
 }

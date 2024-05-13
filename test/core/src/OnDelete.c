@@ -2800,6 +2800,7 @@ void OnDelete_delete_with_inherited_tag(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Tag);
+    ecs_add_pair(world, Tag, EcsOnInstantiate, EcsInherit);
 
     ecs_entity_t base = ecs_new_w(world, Tag);
     ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
@@ -2820,6 +2821,7 @@ void OnDelete_delete_with_inherited_tag_w_query(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Tag);
+    ecs_add_pair(world, Tag, EcsOnInstantiate, EcsInherit);
 
     ecs_entity_t base = ecs_new_w(world, Tag);
     ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
@@ -2864,6 +2866,8 @@ void OnDelete_delete_with_inherited_tag_w_observer(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Tag);
+
+    ecs_add_pair(world, Tag, EcsOnInstantiate, EcsInherit);
 
     ecs_entity_t base = ecs_new_w(world, Tag);
     ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
@@ -3003,6 +3007,10 @@ void OnDelete_match_marked_for_deletion(void) {
     ecs_entity_t Foo = ecs_component(world, { .entity = ecs_new(world) });
     ecs_entity_t Bar = ecs_component(world, { .entity = ecs_new(world) });
     ecs_set_scope(world, 0);
+
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+    ecs_add_pair(world, Foo, EcsOnInstantiate, EcsInherit);
+    ecs_add_pair(world, Bar, EcsOnInstantiate, EcsInherit);
 
     /* During cleanup a new table will be created that matches the query */
     ecs_query_t *q = ecs_query(world, { .expr = "ns.Position" });

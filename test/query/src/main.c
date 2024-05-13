@@ -26,6 +26,18 @@ void Validator_validate_1_term_acyclic_reflexive_same_subj_obj_var(void);
 void Validator_validate_1_term_non_acyclic_superset(void);
 void Validator_validate_1_term_dont_inherit_default_set(void);
 void Validator_validate_1_term_dont_inherit_pair_default_set(void);
+void Validator_validate_1_term_inherit_default_set(void);
+void Validator_validate_1_term_inherit_pair_default_set(void);
+void Validator_validate_1_term_override_default_set(void);
+void Validator_validate_1_term_override_pair_default_set(void);
+void Validator_validate_1_term_up_no_inherit(void);
+void Validator_validate_1_term_up_no_inherit_pair(void);
+void Validator_validate_1_term_up_override(void);
+void Validator_validate_1_term_up_override_pair(void);
+void Validator_validate_1_term_up_isa_no_inherit(void);
+void Validator_validate_1_term_up_isa_no_inherit_pair(void);
+void Validator_validate_1_term_up_isa_override(void);
+void Validator_validate_1_term_up_isa_override_pair(void);
 void Validator_validate_1_term_cascade_implicit_trav(void);
 void Validator_validate_1_term_cascade_isa(void);
 void Validator_validate_1_term_cascade_childof(void);
@@ -115,6 +127,15 @@ void Validator_not_second_wildcard(void);
 void Validator_not_wildcard_id(void);
 void Validator_not_wildcard_first_pair(void);
 void Validator_not_wildcard_second_pair(void);
+void Validator_validate_or_same_type(void);
+void Validator_validate_or_different_types(void);
+void Validator_validate_or_different_types(void);
+void Validator_validate_or_different_types_1_and_2_or(void);
+void Validator_validate_trav_isa_w_wildcard(void);
+void Validator_validate_trav_isa_w_any(void);
+void Validator_validate_custom_trav_w_inherit_id(void);
+void Validator_validate_custom_trav_w_inherit_id_w_self_up(void);
+void Validator_validate_custom_trav_w_inherit_id_w_up(void);
 
 // Testsuite 'Parser'
 void Parser_resolve_this(void);
@@ -523,7 +544,9 @@ void Basic_match_optional_self_disabled(void);
 void Basic_match_optional_self_prefab(void);
 void Basic_match_optional_self_disabled_prefab(void);
 void Basic_inout_none_first_term(void);
+void Basic_inout_none_first_term_self_up(void);
 void Basic_inout_none_second_term(void);
+void Basic_inout_none_second_term_self_up(void);
 void Basic_inout_none_singleton(void);
 void Basic_inout_none_singleton_w_or(void);
 void Basic_inout_none_component_w_or(void);
@@ -910,6 +933,10 @@ void Operators_1_optional_any_src_any_isa_pair_any_tgt(void);
 void Operators_2_or(void);
 void Operators_3_or(void);
 void Operators_2_or_w_and(void);
+void Operators_and_w_2_or_w_and(void);
+void Operators_and_w_2_or_w_and_components(void);
+void Operators_and_w_2_or_w_and_set_this(void);
+void Operators_and_w_2_or_w_and_components_set_this(void);
 void Operators_3_or_w_and(void);
 void Operators_2_or_written(void);
 void Operators_3_or_written(void);
@@ -1200,6 +1227,7 @@ void Scopes_term_w_not_scope_1_term_w_not_w_var(void);
 void Scopes_term_w_not_scope_2_terms_w_not_w_var(void);
 void Scopes_term_w_not_scope_2_terms_w_or(void);
 void Scopes_term_w_not_scope_3_terms_w_or(void);
+void Scopes_term_w_not_scope_2_terms_w_before_after(void);
 
 // Testsuite 'Traversal'
 void Traversal_setup(void);
@@ -1503,6 +1531,7 @@ void MemberTarget_this_member_eq_w_other_tag(void);
 void MemberTarget_this_member_eq_w_other_component(void);
 void MemberTarget_this_written_member_eq_w_other_tag(void);
 void MemberTarget_this_written_member_eq_w_other_component(void);
+void MemberTarget_this_written_member_eq_w_other_inherit_component(void);
 void MemberTarget_this_2_or(void);
 void MemberTarget_this_3_or(void);
 void MemberTarget_this_written_2_or(void);
@@ -1868,10 +1897,14 @@ void QueryStr_one_term_w_pair(void);
 void QueryStr_one_term_w_pair_entity_src(void);
 void QueryStr_one_term_w_self(void);
 void QueryStr_one_term_w_up(void);
+void QueryStr_one_term_w_self_up(void);
+void QueryStr_one_term_w_cascade(void);
 void QueryStr_one_term_w_0(void);
 void QueryStr_one_term_w_singleton(void);
 void QueryStr_one_term_w_final_pair(void);
-void QueryStr_one_term_w_final_dont_inherit_pair(void);
+void QueryStr_one_term_w_final_dont_inherit(void);
+void QueryStr_one_term_w_final_inherit(void);
+void QueryStr_one_term_w_final_override(void);
 void QueryStr_one_term_w_src_var(void);
 void QueryStr_one_term_w_first_var(void);
 void QueryStr_one_term_w_second_var(void);
@@ -1955,6 +1988,54 @@ bake_test_case Validator_testcases[] = {
     {
         "validate_1_term_dont_inherit_pair_default_set",
         Validator_validate_1_term_dont_inherit_pair_default_set
+    },
+    {
+        "validate_1_term_inherit_default_set",
+        Validator_validate_1_term_inherit_default_set
+    },
+    {
+        "validate_1_term_inherit_pair_default_set",
+        Validator_validate_1_term_inherit_pair_default_set
+    },
+    {
+        "validate_1_term_override_default_set",
+        Validator_validate_1_term_override_default_set
+    },
+    {
+        "validate_1_term_override_pair_default_set",
+        Validator_validate_1_term_override_pair_default_set
+    },
+    {
+        "validate_1_term_up_no_inherit",
+        Validator_validate_1_term_up_no_inherit
+    },
+    {
+        "validate_1_term_up_no_inherit_pair",
+        Validator_validate_1_term_up_no_inherit_pair
+    },
+    {
+        "validate_1_term_up_override",
+        Validator_validate_1_term_up_override
+    },
+    {
+        "validate_1_term_up_override_pair",
+        Validator_validate_1_term_up_override_pair
+    },
+    {
+        "validate_1_term_up_isa_no_inherit",
+        Validator_validate_1_term_up_isa_no_inherit
+    },
+    {
+        "validate_1_term_up_isa_no_inherit_pair",
+        Validator_validate_1_term_up_isa_no_inherit_pair
+    },
+    {
+        "validate_1_term_up_isa_override",
+        Validator_validate_1_term_up_isa_override
+    },
+    {
+        "validate_1_term_up_isa_override_pair",
+        Validator_validate_1_term_up_isa_override_pair
     },
     {
         "validate_1_term_cascade_implicit_trav",
@@ -2311,6 +2392,42 @@ bake_test_case Validator_testcases[] = {
     {
         "not_wildcard_second_pair",
         Validator_not_wildcard_second_pair
+    },
+    {
+        "validate_or_same_type",
+        Validator_validate_or_same_type
+    },
+    {
+        "validate_or_different_types",
+        Validator_validate_or_different_types
+    },
+    {
+        "validate_or_different_types",
+        Validator_validate_or_different_types
+    },
+    {
+        "validate_or_different_types_1_and_2_or",
+        Validator_validate_or_different_types_1_and_2_or
+    },
+    {
+        "validate_trav_isa_w_wildcard",
+        Validator_validate_trav_isa_w_wildcard
+    },
+    {
+        "validate_trav_isa_w_any",
+        Validator_validate_trav_isa_w_any
+    },
+    {
+        "validate_custom_trav_w_inherit_id",
+        Validator_validate_custom_trav_w_inherit_id
+    },
+    {
+        "validate_custom_trav_w_inherit_id_w_self_up",
+        Validator_validate_custom_trav_w_inherit_id_w_self_up
+    },
+    {
+        "validate_custom_trav_w_inherit_id_w_up",
+        Validator_validate_custom_trav_w_inherit_id_w_up
     }
 };
 
@@ -3931,8 +4048,16 @@ bake_test_case Basic_testcases[] = {
         Basic_inout_none_first_term
     },
     {
+        "inout_none_first_term_self_up",
+        Basic_inout_none_first_term_self_up
+    },
+    {
         "inout_none_second_term",
         Basic_inout_none_second_term
+    },
+    {
+        "inout_none_second_term_self_up",
+        Basic_inout_none_second_term_self_up
     },
     {
         "inout_none_singleton",
@@ -5456,6 +5581,22 @@ bake_test_case Operators_testcases[] = {
         Operators_2_or_w_and
     },
     {
+        "and_w_2_or_w_and",
+        Operators_and_w_2_or_w_and
+    },
+    {
+        "and_w_2_or_w_and_components",
+        Operators_and_w_2_or_w_and_components
+    },
+    {
+        "and_w_2_or_w_and_set_this",
+        Operators_and_w_2_or_w_and_set_this
+    },
+    {
+        "and_w_2_or_w_and_components_set_this",
+        Operators_and_w_2_or_w_and_components_set_this
+    },
+    {
         "3_or_w_and",
         Operators_3_or_w_and
     },
@@ -6577,6 +6718,10 @@ bake_test_case Scopes_testcases[] = {
     {
         "term_w_not_scope_3_terms_w_or",
         Scopes_term_w_not_scope_3_terms_w_or
+    },
+    {
+        "term_w_not_scope_2_terms_w_before_after",
+        Scopes_term_w_not_scope_2_terms_w_before_after
     }
 };
 
@@ -7751,6 +7896,10 @@ bake_test_case MemberTarget_testcases[] = {
     {
         "this_written_member_eq_w_other_component",
         MemberTarget_this_written_member_eq_w_other_component
+    },
+    {
+        "this_written_member_eq_w_other_inherit_component",
+        MemberTarget_this_written_member_eq_w_other_inherit_component
     },
     {
         "this_2_or",
@@ -9171,6 +9320,14 @@ bake_test_case QueryStr_testcases[] = {
         QueryStr_one_term_w_up
     },
     {
+        "one_term_w_self_up",
+        QueryStr_one_term_w_self_up
+    },
+    {
+        "one_term_w_cascade",
+        QueryStr_one_term_w_cascade
+    },
+    {
         "one_term_w_0",
         QueryStr_one_term_w_0
     },
@@ -9183,8 +9340,16 @@ bake_test_case QueryStr_testcases[] = {
         QueryStr_one_term_w_final_pair
     },
     {
-        "one_term_w_final_dont_inherit_pair",
-        QueryStr_one_term_w_final_dont_inherit_pair
+        "one_term_w_final_dont_inherit",
+        QueryStr_one_term_w_final_dont_inherit
+    },
+    {
+        "one_term_w_final_inherit",
+        QueryStr_one_term_w_final_inherit
+    },
+    {
+        "one_term_w_final_override",
+        QueryStr_one_term_w_final_override
     },
     {
         "one_term_w_src_var",
@@ -9265,8 +9430,10 @@ bake_test_param BuiltinPredicates_params[] = {
     {"cache_kind", (char**)BuiltinPredicates_cache_kind_param, 2}
 };
 const char* Scopes_cache_kind_param[] = {"default", "auto"};
+const char* Scopes_on_instantiate_param[] = {"override", "inherit"};
 bake_test_param Scopes_params[] = {
-    {"cache_kind", (char**)Scopes_cache_kind_param, 2}
+    {"cache_kind", (char**)Scopes_cache_kind_param, 2},
+    {"on_instantiate", (char**)Scopes_on_instantiate_param, 2}
 };
 const char* Traversal_cache_kind_param[] = {"default", "auto"};
 bake_test_param Traversal_params[] = {
@@ -9294,7 +9461,7 @@ static bake_test_suite suites[] = {
         "Validator",
         NULL,
         NULL,
-        106,
+        127,
         Validator_testcases
     },
     {
@@ -9308,7 +9475,7 @@ static bake_test_suite suites[] = {
         "Basic",
         Basic_setup,
         NULL,
-        194,
+        196,
         Basic_testcases,
         1,
         Basic_params
@@ -9333,7 +9500,7 @@ static bake_test_suite suites[] = {
         "Operators",
         Operators_setup,
         NULL,
-        139,
+        143,
         Operators_testcases,
         1,
         Operators_params
@@ -9374,9 +9541,9 @@ static bake_test_suite suites[] = {
         "Scopes",
         Scopes_setup,
         NULL,
-        10,
+        11,
         Scopes_testcases,
-        1,
+        2,
         Scopes_params
     },
     {
@@ -9420,7 +9587,7 @@ static bake_test_suite suites[] = {
         "MemberTarget",
         MemberTarget_setup,
         NULL,
-        62,
+        63,
         MemberTarget_testcases,
         1,
         MemberTarget_params
@@ -9470,7 +9637,7 @@ static bake_test_suite suites[] = {
         "QueryStr",
         NULL,
         NULL,
-        29,
+        33,
         QueryStr_testcases
     }
 };

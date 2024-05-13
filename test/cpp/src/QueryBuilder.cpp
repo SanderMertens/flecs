@@ -1067,6 +1067,8 @@ void QueryBuilder_singleton_term(void) {
 void QueryBuilder_isa_superset_term(void) {
     flecs::world ecs;
 
+    ecs.component<Other>().add(flecs::OnInstantiate, flecs::Inherit);
+
     auto q = ecs.query_builder<Self>()
         .with<Other>().src().up(flecs::IsA).in()
         .cache_kind(cache_kind)
@@ -1100,6 +1102,8 @@ void QueryBuilder_isa_superset_term(void) {
 
 void QueryBuilder_isa_self_superset_term(void) {
     flecs::world ecs;
+
+    ecs.component<Other>().add(flecs::OnInstantiate, flecs::Inherit);
 
     auto q = ecs.query_builder<Self>()
         .with<Other>().src().self().up(flecs::IsA).in()
@@ -1225,6 +1229,8 @@ void QueryBuilder_childof_self_superset_term(void) {
 void QueryBuilder_isa_superset_term_w_each(void) {
     flecs::world ecs;
 
+    ecs.component<Other>().add(flecs::OnInstantiate, flecs::Inherit);
+
     auto q = ecs.query_builder<Self, Other>()
         .term_at(1).src().up(flecs::IsA)
         .cache_kind(cache_kind)
@@ -1250,6 +1256,8 @@ void QueryBuilder_isa_superset_term_w_each(void) {
 
 void QueryBuilder_isa_self_superset_term_w_each(void) {
     flecs::world ecs;
+
+    ecs.component<Other>().add(flecs::OnInstantiate, flecs::Inherit);
 
     auto q = ecs.query_builder<Self, Other>()
         .term_at(1).src().self().up(flecs::IsA)
@@ -1333,6 +1341,8 @@ void QueryBuilder_childof_self_superset_term_w_each(void) {
 void QueryBuilder_isa_superset_shortcut(void) {
     flecs::world ecs;
 
+    ecs.component<Other>().add(flecs::OnInstantiate, flecs::Inherit);
+
     auto q = ecs.query_builder<Self, Other>()
         .term_at(1).up(flecs::IsA)
         .cache_kind(cache_kind)
@@ -1358,6 +1368,8 @@ void QueryBuilder_isa_superset_shortcut(void) {
 
 void QueryBuilder_isa_superset_shortcut_w_self(void) {
     flecs::world ecs;
+
+    ecs.component<Other>().add(flecs::OnInstantiate, flecs::Inherit);
 
     auto q = ecs.query_builder<Self, Other>()
         .term_at(1).self().up(flecs::IsA)
@@ -2590,7 +2602,7 @@ void QueryBuilder_any_wildcard(void) {
 void QueryBuilder_cascade(void) {
     flecs::world ecs;
 
-    auto Tag = ecs.entity();
+    auto Tag = ecs.entity().add(flecs::OnInstantiate, flecs::Inherit);
     auto Foo = ecs.entity();
     auto Bar = ecs.entity();
 
@@ -2644,7 +2656,7 @@ void QueryBuilder_cascade(void) {
 void QueryBuilder_cascade_desc(void) {
     flecs::world ecs;
 
-    auto Tag = ecs.entity();
+    auto Tag = ecs.entity().add(flecs::OnInstantiate, flecs::Inherit);
     auto Foo = ecs.entity();
     auto Bar = ecs.entity();
 

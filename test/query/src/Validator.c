@@ -16,8 +16,7 @@ void Validator_validate_1_term(void) {
     test_int(q->terms[0].inout, EcsInOutDefault);
     test_int(q->terms[0].field_index, 0);
     test_uint(q->terms[0].first.id, TagA|EcsSelf|EcsIsEntity);
-    test_uint(q->terms[0].src.id, EcsThis|EcsSelf|EcsUp|EcsIsVariable);
-    test_uint(q->terms[0].trav, EcsIsA);
+    test_uint(q->terms[0].src.id, EcsThis|EcsSelf|EcsIsVariable);
 
     ecs_query_fini(q);
 
@@ -40,8 +39,7 @@ void Validator_validate_1_term_component(void) {
     test_int(q->terms[0].inout, EcsInOutDefault);
     test_int(q->terms[0].field_index, 0);
     test_uint(q->terms[0].first.id, ecs_id(Position)|EcsSelf|EcsIsEntity);
-    test_uint(q->terms[0].src.id, EcsThis|EcsSelf|EcsUp|EcsIsVariable);
-    test_uint(q->terms[0].trav, EcsIsA);
+    test_uint(q->terms[0].src.id, EcsThis|EcsSelf|EcsIsVariable);
 
     ecs_query_fini(q);
 
@@ -65,15 +63,13 @@ void Validator_validate_2_terms(void) {
     test_int(q->terms[0].oper, EcsAnd);
     test_int(q->terms[0].field_index, 0);
     test_uint(q->terms[0].first.id, TagA|EcsSelf|EcsIsEntity);
-    test_uint(q->terms[0].src.id, EcsThis|EcsSelf|EcsUp|EcsIsVariable);
-    test_uint(q->terms[0].trav, EcsIsA);
+    test_uint(q->terms[0].src.id, EcsThis|EcsSelf|EcsIsVariable);
 
     test_uint(q->terms[1].id, TagB);
     test_int(q->terms[1].oper, EcsAnd);
     test_int(q->terms[1].field_index, 1);
     test_uint(q->terms[1].first.id, TagB|EcsSelf|EcsIsEntity);
-    test_uint(q->terms[1].src.id, EcsThis|EcsSelf|EcsUp|EcsIsVariable);
-    test_uint(q->terms[1].trav, EcsIsA);
+    test_uint(q->terms[1].src.id, EcsThis|EcsSelf|EcsIsVariable);
 
     ecs_query_fini(q);
 
@@ -98,22 +94,19 @@ void Validator_validate_3_terms(void) {
     test_int(q->terms[0].oper, EcsAnd);
     test_int(q->terms[0].field_index, 0);
     test_uint(q->terms[0].first.id, TagA|EcsSelf|EcsIsEntity);
-    test_uint(q->terms[0].src.id, EcsThis|EcsSelf|EcsUp|EcsIsVariable);
-    test_uint(q->terms[0].trav, EcsIsA);
+    test_uint(q->terms[0].src.id, EcsThis|EcsSelf|EcsIsVariable);
 
     test_uint(q->terms[1].id, TagB);
     test_int(q->terms[1].oper, EcsAnd);
     test_int(q->terms[1].field_index, 1);
     test_uint(q->terms[1].first.id, TagB|EcsSelf|EcsIsEntity);
-    test_uint(q->terms[1].src.id, EcsThis|EcsSelf|EcsUp|EcsIsVariable);
-    test_uint(q->terms[1].trav, EcsIsA);
+    test_uint(q->terms[1].src.id, EcsThis|EcsSelf|EcsIsVariable);
 
     test_int(q->terms[2].id, TagC);
     test_int(q->terms[2].oper, EcsAnd);
     test_int(q->terms[2].field_index, 2);
     test_int(q->terms[2].first.id, TagC|EcsSelf|EcsIsEntity);
-    test_int(q->terms[2].src.id, EcsThis|EcsSelf|EcsUp|EcsIsVariable);
-    test_int(q->terms[2].trav, EcsIsA);
+    test_int(q->terms[2].src.id, EcsThis|EcsSelf|EcsIsVariable);
 
     ecs_query_fini(q);
 
@@ -138,22 +131,19 @@ void Validator_validate_3_terms_w_or(void) {
     test_int(q->terms[0].oper, EcsAnd);
     test_int(q->terms[0].field_index, 0);
     test_uint(q->terms[0].first.id, TagA|EcsSelf|EcsIsEntity);
-    test_uint(q->terms[0].src.id, EcsThis|EcsSelf|EcsUp|EcsIsVariable);
-    test_uint(q->terms[0].trav, EcsIsA);
+    test_uint(q->terms[0].src.id, EcsThis|EcsSelf|EcsIsVariable);
 
     test_uint(q->terms[1].id, TagB);
     test_int(q->terms[1].oper, EcsOr);
     test_int(q->terms[1].field_index, 1);
     test_uint(q->terms[1].first.id, TagB|EcsSelf|EcsIsEntity);
-    test_uint(q->terms[1].src.id, EcsThis|EcsSelf|EcsUp|EcsIsVariable);
-    test_uint(q->terms[1].trav, EcsIsA);
+    test_uint(q->terms[1].src.id, EcsThis|EcsSelf|EcsIsVariable);
 
     test_int(q->terms[2].id, TagC);
     test_int(q->terms[2].oper, EcsAnd);
     test_int(q->terms[2].field_index, 1);
     test_int(q->terms[2].first.id, TagC|EcsSelf|EcsIsEntity);
-    test_int(q->terms[2].src.id, EcsThis|EcsSelf|EcsUp|EcsIsVariable);
-    test_int(q->terms[2].trav, EcsIsA);
+    test_int(q->terms[2].src.id, EcsThis|EcsSelf|EcsIsVariable);
     
     ecs_query_fini(q);
 
@@ -179,29 +169,25 @@ void Validator_validate_4_terms_w_or_at_1(void) {
     test_int(q->terms[0].oper, EcsAnd);
     test_int(q->terms[0].field_index, 0);
     test_uint(q->terms[0].first.id, TagA|EcsSelf|EcsIsEntity);
-    test_uint(q->terms[0].src.id, EcsThis|EcsSelf|EcsUp|EcsIsVariable);
-    test_uint(q->terms[0].trav, EcsIsA);
+    test_uint(q->terms[0].src.id, EcsThis|EcsSelf|EcsIsVariable);
 
     test_uint(q->terms[1].id, TagB);
     test_int(q->terms[1].oper, EcsOr);
     test_int(q->terms[1].field_index, 1);
     test_uint(q->terms[1].first.id, TagB|EcsSelf|EcsIsEntity);
-    test_uint(q->terms[1].src.id, EcsThis|EcsSelf|EcsUp|EcsIsVariable);
-    test_uint(q->terms[1].trav, EcsIsA);
+    test_uint(q->terms[1].src.id, EcsThis|EcsSelf|EcsIsVariable);
 
     test_int(q->terms[2].id, TagC);
     test_int(q->terms[2].oper, EcsAnd);
     test_int(q->terms[2].field_index, 1);
     test_int(q->terms[2].first.id, TagC|EcsSelf|EcsIsEntity);
-    test_int(q->terms[2].src.id, EcsThis|EcsSelf|EcsUp|EcsIsVariable);
-    test_int(q->terms[2].trav, EcsIsA);
+    test_int(q->terms[2].src.id, EcsThis|EcsSelf|EcsIsVariable);
 
     test_int(q->terms[3].id, TagD);
     test_int(q->terms[3].oper, EcsAnd);
     test_int(q->terms[3].field_index, 2);
     test_int(q->terms[3].first.id, TagD|EcsSelf|EcsIsEntity);
-    test_int(q->terms[3].src.id, EcsThis|EcsSelf|EcsUp|EcsIsVariable);
-    test_int(q->terms[3].trav, EcsIsA);
+    test_int(q->terms[3].src.id, EcsThis|EcsSelf|EcsIsVariable);
 
     ecs_query_fini(q);
 
@@ -221,8 +207,7 @@ void Validator_validate_1_term_wildcard(void) {
     test_int(q->terms[0].oper, EcsAnd);
     test_int(q->terms[0].field_index, 0);
     test_uint(q->terms[0].first.id, EcsWildcard|EcsSelf|EcsIsVariable);
-    test_uint(q->terms[0].src.id, EcsThis|EcsSelf|EcsUp|EcsIsVariable);
-    test_uint(q->terms[0].trav, EcsIsA);
+    test_uint(q->terms[0].src.id, EcsThis|EcsSelf|EcsIsVariable);
     test_uint(q->terms[0].second.id, 0);
 
     ecs_query_fini(q);
@@ -243,8 +228,7 @@ void Validator_validate_1_term_any(void) {
     test_int(q->terms[0].oper, EcsAnd);
     test_int(q->terms[0].field_index, 0);
     test_uint(q->terms[0].first.id, EcsAny|EcsSelf|EcsIsVariable);
-    test_uint(q->terms[0].src.id, EcsThis|EcsSelf|EcsUp|EcsIsVariable);
-    test_uint(q->terms[0].trav, EcsIsA);
+    test_uint(q->terms[0].src.id, EcsThis|EcsSelf|EcsIsVariable);
     test_uint(q->terms[0].second.id, 0);
 
     ecs_query_fini(q);
@@ -269,8 +253,7 @@ void Validator_validate_1_term_same_subj_obj(void) {
     test_int(q->terms[0].oper, EcsAnd);
     test_int(q->terms[0].field_index, 0);
     test_uint(q->terms[0].first.id, Rel|EcsSelf|EcsIsEntity);
-    test_uint(q->terms[0].src.id, Foo|EcsSelf|EcsUp|EcsIsEntity);
-    test_uint(q->terms[0].trav, EcsIsA);
+    test_uint(q->terms[0].src.id, Foo|EcsSelf|EcsIsEntity);
     test_uint(q->terms[0].second.id, Foo|EcsSelf|EcsIsEntity);
 
     ecs_query_fini(q);
@@ -310,8 +293,7 @@ void Validator_validate_1_term_acyclic_reflexive_same_subj_obj(void) {
     test_int(q->terms[0].oper, EcsAnd);
     test_int(q->terms[0].field_index, 0);
     test_uint(q->terms[0].first.id, Rel|EcsSelf|EcsIsEntity);
-    test_uint(q->terms[0].src.id, Foo|EcsSelf|EcsUp|EcsIsEntity);
-    test_uint(q->terms[0].trav, EcsIsA);
+    test_uint(q->terms[0].src.id, Foo|EcsSelf|EcsIsEntity);
     test_uint(q->terms[0].second.id, Foo|EcsSelf|EcsIsEntity);
 
     ecs_query_fini(q);
@@ -340,8 +322,7 @@ void Validator_validate_1_term_same_subj_obj_var(void) {
     test_int(q->terms[0].field_index, 0);
     test_uint(q->terms[0].first.id, Rel|EcsSelf|EcsIsEntity);
     test_str(q->terms[0].src.name, "X");
-    test_uint(q->terms[0].src.id, EcsSelf|EcsUp|EcsIsVariable);
-    test_uint(q->terms[0].trav, EcsIsA);
+    test_uint(q->terms[0].src.id, EcsSelf|EcsIsVariable);
     test_str(q->terms[0].second.name, "X");
     test_uint(q->terms[0].second.id, EcsSelf|EcsIsVariable);
 
@@ -389,8 +370,7 @@ void Validator_validate_1_term_acyclic_reflexive_same_subj_obj_var(void) {
     test_int(q->terms[0].field_index, 0);
     test_uint(q->terms[0].first.id, Rel|EcsSelf|EcsIsEntity);
     test_str(q->terms[0].src.name, "X");
-    test_uint(q->terms[0].src.id, EcsSelf|EcsUp|EcsIsVariable);
-    test_uint(q->terms[0].trav, EcsIsA);
+    test_uint(q->terms[0].src.id, EcsSelf|EcsIsVariable);
     test_str(q->terms[0].second.name, "X");
     test_uint(q->terms[0].second.id, EcsSelf|EcsIsVariable);
 
@@ -421,7 +401,7 @@ void Validator_validate_1_term_non_acyclic_superset(void) {
 void Validator_validate_1_term_dont_inherit_default_set(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Tag, DontInherit);
+    ECS_ENTITY(world, Tag, (OnInstantiate, DontInherit));
 
     ecs_query_t *q = ecs_query(world, {
         .terms = {{ .id = Tag }}
@@ -445,7 +425,7 @@ void Validator_validate_1_term_dont_inherit_default_set(void) {
 void Validator_validate_1_term_dont_inherit_pair_default_set(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Rel, DontInherit);
+    ECS_ENTITY(world, Rel, (OnInstantiate, DontInherit));
 
     ecs_query_t *q = ecs_query(world, {
         .terms = {{ .id = ecs_pair(Rel, EcsWildcard) }}
@@ -462,6 +442,262 @@ void Validator_validate_1_term_dont_inherit_pair_default_set(void) {
     test_uint(q->terms[0].trav, 0);
 
     ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Validator_validate_1_term_inherit_default_set(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, Tag, (OnInstantiate, Inherit));
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ .id = Tag }}
+    });
+    test_assert(q != NULL);
+
+    test_int(q->term_count, 1);
+    test_int(q->field_count, 1);
+    test_uint(q->terms[0].id, Tag);
+    test_int(q->terms[0].oper, EcsAnd);
+    test_int(q->terms[0].field_index, 0);
+    test_uint(q->terms[0].first.id, Tag|EcsSelf|EcsIsEntity);
+    test_uint(q->terms[0].src.id, EcsThis|EcsSelf|EcsUp|EcsIsVariable);
+    test_uint(q->terms[0].trav, EcsIsA);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Validator_validate_1_term_inherit_pair_default_set(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, Rel, (OnInstantiate, Inherit));
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ .id = ecs_pair(Rel, EcsWildcard) }}
+    });
+    test_assert(q != NULL);
+
+    test_int(q->term_count, 1);
+    test_int(q->field_count, 1);
+    test_uint(q->terms[0].id, ecs_pair(Rel, EcsWildcard));
+    test_int(q->terms[0].oper, EcsAnd);
+    test_int(q->terms[0].field_index, 0);
+    test_uint(q->terms[0].first.id, Rel|EcsSelf|EcsIsEntity);
+    test_uint(q->terms[0].src.id, EcsThis|EcsSelf|EcsUp|EcsIsVariable);
+    test_uint(q->terms[0].trav, EcsIsA);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Validator_validate_1_term_override_default_set(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, Tag, (OnInstantiate, Override));
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ .id = Tag }}
+    });
+    test_assert(q != NULL);
+
+    test_int(q->term_count, 1);
+    test_int(q->field_count, 1);
+    test_uint(q->terms[0].id, Tag);
+    test_int(q->terms[0].oper, EcsAnd);
+    test_int(q->terms[0].field_index, 0);
+    test_uint(q->terms[0].first.id, Tag|EcsSelf|EcsIsEntity);
+    test_uint(q->terms[0].src.id, EcsThis|EcsSelf|EcsIsVariable);
+    test_uint(q->terms[0].trav, 0);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Validator_validate_1_term_override_pair_default_set(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, Rel, (OnInstantiate, Override));
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ .id = ecs_pair(Rel, EcsWildcard) }}
+    });
+    test_assert(q != NULL);
+
+    test_int(q->term_count, 1);
+    test_int(q->field_count, 1);
+    test_uint(q->terms[0].id, ecs_pair(Rel, EcsWildcard));
+    test_int(q->terms[0].oper, EcsAnd);
+    test_int(q->terms[0].field_index, 0);
+    test_uint(q->terms[0].first.id, Rel|EcsSelf|EcsIsEntity);
+    test_uint(q->terms[0].src.id, EcsThis|EcsSelf|EcsIsVariable);
+    test_uint(q->terms[0].trav, 0);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Validator_validate_1_term_up_no_inherit(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ .id = Tag, .src.id = EcsUp }}
+    });
+
+    test_assert(q != NULL);
+
+    test_int(q->term_count, 1);
+    test_int(q->field_count, 1);
+    test_uint(q->terms[0].id, Tag);
+    test_int(q->terms[0].oper, EcsAnd);
+    test_int(q->terms[0].field_index, 0);
+    test_uint(q->terms[0].first.id, Tag|EcsSelf|EcsIsEntity);
+    test_uint(q->terms[0].src.id, EcsThis|EcsUp|EcsIsVariable);
+    test_uint(q->terms[0].trav, EcsChildOf);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Validator_validate_1_term_up_no_inherit_pair(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ .id = ecs_pair(Rel, EcsWildcard), .src.id = EcsUp }}
+    });
+
+    test_assert(q != NULL);
+
+    test_int(q->term_count, 1);
+    test_int(q->field_count, 1);
+    test_uint(q->terms[0].id, ecs_pair(Rel, EcsWildcard));
+    test_int(q->terms[0].oper, EcsAnd);
+    test_int(q->terms[0].field_index, 0);
+    test_uint(q->terms[0].first.id, Rel|EcsSelf|EcsIsEntity);
+    test_uint(q->terms[0].src.id, EcsThis|EcsUp|EcsIsVariable);
+    test_uint(q->terms[0].trav, EcsChildOf);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Validator_validate_1_term_up_override(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, Tag, (OnInstantiate, Override));
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ .id = Tag, .src.id = EcsUp }}
+    });
+
+    test_assert(q != NULL);
+
+    test_int(q->term_count, 1);
+    test_int(q->field_count, 1);
+    test_uint(q->terms[0].id, Tag);
+    test_int(q->terms[0].oper, EcsAnd);
+    test_int(q->terms[0].field_index, 0);
+    test_uint(q->terms[0].first.id, Tag|EcsSelf|EcsIsEntity);
+    test_uint(q->terms[0].src.id, EcsThis|EcsUp|EcsIsVariable);
+    test_uint(q->terms[0].trav, EcsChildOf);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Validator_validate_1_term_up_override_pair(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, Rel, (OnInstantiate, Override));
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ .id = ecs_pair(Rel, EcsWildcard), .src.id = EcsUp }}
+    });
+
+    test_assert(q != NULL);
+
+    test_int(q->term_count, 1);
+    test_int(q->field_count, 1);
+    test_uint(q->terms[0].id, ecs_pair(Rel, EcsWildcard));
+    test_int(q->terms[0].oper, EcsAnd);
+    test_int(q->terms[0].field_index, 0);
+    test_uint(q->terms[0].first.id, Rel|EcsSelf|EcsIsEntity);
+    test_uint(q->terms[0].src.id, EcsThis|EcsUp|EcsIsVariable);
+    test_uint(q->terms[0].trav, EcsChildOf);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Validator_validate_1_term_up_isa_no_inherit(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+
+    ecs_log_set_level(-4);
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ .id = Tag, .src.id = EcsUp, .trav = EcsIsA }}
+    });
+
+    test_assert(q == NULL);
+
+    ecs_fini(world);
+}
+
+void Validator_validate_1_term_up_isa_no_inherit_pair(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+
+    ecs_log_set_level(-4);
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ .id = ecs_pair(Rel, EcsWildcard), .src.id = EcsUp, .trav = EcsIsA }}
+    });
+
+    test_assert(q == NULL);
+
+    ecs_fini(world);
+}
+
+void Validator_validate_1_term_up_isa_override(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, Tag, (OnInstantiate, Override));
+
+    ecs_log_set_level(-4);
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ .id = Tag, .src.id = EcsUp, .trav = EcsIsA }}
+    });
+
+    test_assert(q == NULL);
+
+    ecs_fini(world);
+}
+
+void Validator_validate_1_term_up_isa_override_pair(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, Rel, (OnInstantiate, Override));
+
+    ecs_log_set_level(-4);
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ .id = ecs_pair(Rel, EcsWildcard), .src.id = EcsUp, .trav = EcsIsA }}
+    });
+
+    test_assert(q == NULL);
 
     ecs_fini(world);
 }
@@ -494,6 +730,7 @@ void Validator_validate_1_term_cascade_isa(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
+    ecs_add_pair(world, Tag, EcsOnInstantiate, EcsInherit);
 
     ecs_query_t *q = ecs_query(world, {
         .terms = {{ 
@@ -510,7 +747,6 @@ void Validator_validate_1_term_cascade_isa(void) {
     test_int(q->terms[0].field_index, 0);
     test_uint(q->terms[0].first.id, Tag|EcsSelf|EcsIsEntity);
     test_uint(q->terms[0].src.id, EcsThis|EcsUp|EcsCascade|EcsIsVariable);
-    test_uint(q->terms[0].trav, EcsIsA);
 
     ecs_query_fini(q);
 
@@ -521,6 +757,7 @@ void Validator_validate_1_term_cascade_childof(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
+    ecs_add_pair(world, Tag, EcsOnInstantiate, EcsInherit);
 
     ecs_query_t *q = ecs_query(world, {
         .terms = {{ 
@@ -548,6 +785,7 @@ void Validator_validate_1_term_cascade_down(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
+    ecs_add_pair(world, Tag, EcsOnInstantiate, EcsInherit);
 
     ecs_query_t *q = ecs_query(world, {
         .terms = {{ 
@@ -590,8 +828,7 @@ void Validator_validate_1_term_optional_only(void) {
     test_int(q->terms[0].oper, EcsOptional);
     test_int(q->terms[0].field_index, 0);
     test_uint(q->terms[0].first.id, Tag|EcsSelf|EcsIsEntity);
-    test_uint(q->terms[0].src.id, EcsThis|EcsSelf|EcsUp|EcsIsVariable);
-    test_uint(q->terms[0].trav, EcsIsA);
+    test_uint(q->terms[0].src.id, EcsThis|EcsSelf|EcsIsVariable);
 
     ecs_query_fini(q);
 
@@ -617,8 +854,7 @@ void Validator_validate_1_term_transitive_pair(void) {
     test_int(q->terms[0].oper, EcsAnd);
     test_int(q->terms[0].field_index, 0);
     test_uint(q->terms[0].first.id, Rel|EcsSelf|EcsIsEntity);
-    test_uint(q->terms[0].src.id, EcsThis|EcsSelf|EcsUp|EcsIsVariable);
-    test_uint(q->terms[0].trav, EcsIsA);
+    test_uint(q->terms[0].src.id, EcsThis|EcsSelf|EcsIsVariable);
     test_uint(q->terms[0].second.id, Tgt|EcsSelf|EcsIsEntity);
     test_assert(q->terms[0].flags_ & EcsTermTransitive);
 
@@ -690,8 +926,7 @@ void Validator_validate_1_variable_as_subj(void) {
     test_int(q->terms[0].oper, EcsAnd);
     test_int(q->terms[0].field_index, 0);
     test_uint(q->terms[0].first.id, Foo|EcsSelf|EcsIsEntity);
-    test_uint(q->terms[0].src.id, Foo|EcsSelf|EcsUp|EcsIsEntity);
-    test_uint(q->terms[0].trav, EcsIsA);
+    test_uint(q->terms[0].src.id, Foo|EcsSelf|EcsIsEntity);
 
     ecs_query_fini(q);
 
@@ -718,8 +953,7 @@ void Validator_validate_w_src_var(void) {
     test_int(q->terms[0].field_index, 0);
     test_uint(q->terms[0].first.id, Foo|EcsSelf|EcsIsEntity);
     test_str(q->terms[0].src.name, "Var");
-    test_uint(q->terms[0].src.id, EcsSelf|EcsUp|EcsIsVariable);
-    test_uint(q->terms[0].trav, EcsIsA);
+    test_uint(q->terms[0].src.id, EcsSelf|EcsIsVariable);
 
     ecs_query_fini(q);
 
@@ -743,8 +977,7 @@ void Validator_validate_w_first_var(void) {
     test_int(q->terms[0].field_index, 0);
     test_str(q->terms[0].first.name, "Var");
     test_uint(q->terms[0].first.id, EcsSelf|EcsIsVariable);
-    test_uint(q->terms[0].src.id, EcsThis|EcsSelf|EcsUp|EcsIsVariable);
-    test_uint(q->terms[0].trav, EcsIsA);
+    test_uint(q->terms[0].src.id, EcsThis|EcsSelf|EcsIsVariable);
 
     ecs_query_fini(q);
 
@@ -770,8 +1003,7 @@ void Validator_validate_w_second_var(void) {
     test_int(q->terms[0].oper, EcsAnd);
     test_int(q->terms[0].field_index, 0);
     test_uint(q->terms[0].first.id, Foo|EcsSelf|EcsIsEntity);
-    test_uint(q->terms[0].src.id, EcsThis|EcsSelf|EcsUp|EcsIsVariable);
-    test_uint(q->terms[0].trav, EcsIsA);
+    test_uint(q->terms[0].src.id, EcsThis|EcsSelf|EcsIsVariable);
     test_str(q->terms[0].second.name, "Var");
     test_uint(q->terms[0].second.id, EcsSelf|EcsIsVariable);
 
@@ -802,8 +1034,7 @@ void Validator_validate_w_src_var_from_name(void) {
     test_int(q->terms[0].field_index, 0);
     test_int(q->terms[0].first.id, Foo|EcsSelf|EcsIsEntity);
     test_str(q->terms[0].src.name, "Var");
-    test_int(q->terms[0].src.id, EcsSelf|EcsUp|EcsIsVariable);
-    test_int(q->terms[0].trav, EcsIsA);
+    test_int(q->terms[0].src.id, EcsSelf|EcsIsVariable);
 
     ecs_query_fini(q);
 
@@ -829,8 +1060,7 @@ void Validator_validate_w_first_first_var(void) {
     test_int(q->terms[0].field_index, 0);
     test_str(q->terms[0].first.name, "Var");
     test_int(q->terms[0].first.id, EcsSelf|EcsIsVariable);
-    test_int(q->terms[0].src.id, EcsThis|EcsSelf|EcsUp|EcsIsVariable);
-    test_int(q->terms[0].trav, EcsIsA);
+    test_int(q->terms[0].src.id, EcsThis|EcsSelf|EcsIsVariable);
 
     ecs_query_fini(q);
 
@@ -858,8 +1088,7 @@ void Validator_validate_w_second_second_var(void) {
     test_int(q->terms[0].oper, EcsAnd);
     test_int(q->terms[0].field_index, 0);
     test_int(q->terms[0].first.id, Foo|EcsSelf|EcsIsEntity);
-    test_int(q->terms[0].src.id, EcsThis|EcsSelf|EcsUp|EcsIsVariable);
-    test_int(q->terms[0].trav, EcsIsA);
+    test_int(q->terms[0].src.id, EcsThis|EcsSelf|EcsIsVariable);
     test_str(q->terms[0].second.name, "Var");
     test_int(q->terms[0].second.id, EcsSelf|EcsIsVariable);
 
@@ -886,8 +1115,7 @@ void Validator_validate_1_variable_as_obj(void) {
     test_int(q->terms[0].oper, EcsAnd);
     test_int(q->terms[0].field_index, 0);
     test_uint(q->terms[0].first.id, Foo|EcsSelf|EcsIsEntity);
-    test_uint(q->terms[0].src.id, EcsThis|EcsSelf|EcsUp|EcsIsVariable);
-    test_uint(q->terms[0].trav, EcsIsA);
+    test_uint(q->terms[0].src.id, EcsThis|EcsSelf|EcsIsVariable);
     test_uint(q->terms[0].second.id, Foo|EcsSelf|EcsIsEntity);
 
     ecs_query_fini(q);
@@ -901,7 +1129,8 @@ void Validator_validate_2_terms_or_w_dontinherit(void) {
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
 
-    ecs_add_id(world, TagB, EcsDontInherit);
+    ecs_add_pair(world, TagA, EcsOnInstantiate, EcsInherit);
+    ecs_add_pair(world, TagB, EcsOnInstantiate, EcsDontInherit);
 
     ecs_query_t *q = ecs_query(world, {
         .terms = {{ TagA, .oper = EcsOr }, { TagB }}
@@ -915,7 +1144,6 @@ void Validator_validate_2_terms_or_w_dontinherit(void) {
     test_int(q->terms[0].field_index, 0);
     test_uint(q->terms[0].first.id, TagA|EcsSelf|EcsIsEntity);
     test_uint(q->terms[0].src.id, EcsThis|EcsSelf|EcsUp|EcsIsVariable);
-    test_uint(q->terms[0].trav, EcsIsA);
 
     test_uint(q->terms[1].id, TagB);
     test_int(q->terms[1].oper, EcsAnd);
@@ -935,8 +1163,8 @@ void Validator_validate_2_terms_or_w_both_dontinherit(void) {
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
 
-    ecs_add_id(world, TagA, EcsDontInherit);
-    ecs_add_id(world, TagB, EcsDontInherit);
+    ecs_add_pair(world, TagA, EcsOnInstantiate, EcsDontInherit);
+    ecs_add_pair(world, TagB, EcsOnInstantiate, EcsDontInherit);
 
     ecs_query_t *q = ecs_query(world, {
         .terms = {{ TagA, .oper = EcsOr }, { TagB }}
@@ -982,8 +1210,7 @@ void Validator_validate_w_pair_id(void) {
     test_int(q->terms[0].oper, EcsAnd);
     test_int(q->terms[0].field_index, 0);
     test_uint(q->terms[0].first.id, Rel|EcsSelf|EcsIsEntity);
-    test_uint(q->terms[0].src.id, EcsThis|EcsSelf|EcsUp|EcsIsVariable);
-    test_uint(q->terms[0].trav, EcsIsA);
+    test_uint(q->terms[0].src.id, EcsThis|EcsSelf|EcsIsVariable);
     test_uint(q->terms[0].second.id, Tgt|EcsSelf|EcsIsEntity);
 
     ecs_query_fini(q);
@@ -1009,7 +1236,7 @@ void Validator_validate_w_pred_obj(void) {
     test_int(q->terms[0].oper, EcsAnd);
     test_int(q->terms[0].field_index, 0);
     test_uint(q->terms[0].first.id, Rel|EcsSelf|EcsIsEntity);
-    test_uint(q->terms[0].src.id, EcsThis|EcsSelf|EcsUp|EcsIsVariable);
+    test_uint(q->terms[0].src.id, EcsThis|EcsSelf|EcsIsVariable);
     test_uint(q->terms[0].second.id, Tgt|EcsSelf|EcsIsEntity);
 
     ecs_query_fini(q);
@@ -1036,7 +1263,7 @@ void Validator_validate_w_pair_id_and_subj(void) {
     test_int(q->terms[0].oper, EcsAnd);
     test_int(q->terms[0].field_index, 0);
     test_uint(q->terms[0].first.id, Rel|EcsSelf|EcsIsEntity);
-    test_uint(q->terms[0].src.id, Src|EcsSelf|EcsUp|EcsIsEntity);
+    test_uint(q->terms[0].src.id, Src|EcsSelf|EcsIsEntity);
     test_uint(q->terms[0].second.id, Tgt|EcsSelf|EcsIsEntity);
 
     ecs_query_fini(q);
@@ -1056,8 +1283,7 @@ void Validator_validate_1_w_pred_name(void) {
     test_int(q->terms[0].id, Tag);
     test_assert(q->terms[0].first.name ==  NULL);
     test_uint(q->terms[0].first.id, Tag|EcsSelf|EcsIsEntity);
-    test_uint(q->terms[0].src.id, EcsThis|EcsSelf|EcsUp|EcsIsVariable);
-    test_uint(q->terms[0].trav, EcsIsA);
+    test_uint(q->terms[0].src.id, EcsThis|EcsSelf|EcsIsVariable);
 
     ecs_query_fini(q);
 
@@ -1076,8 +1302,7 @@ void Validator_validate_1_w_final_pred_name(void) {
     test_int(q->terms[0].id, Tag);
     test_assert(q->terms[0].first.name ==  NULL);
     test_uint(q->terms[0].first.id, Tag|EcsSelf|EcsIsEntity);
-    test_uint(q->terms[0].src.id, EcsThis|EcsSelf|EcsUp|EcsIsVariable);
-    test_uint(q->terms[0].trav, EcsIsA);
+    test_uint(q->terms[0].src.id, EcsThis|EcsSelf|EcsIsVariable);
 
     ecs_query_fini(q);
 
@@ -1098,8 +1323,7 @@ void Validator_validate_1_w_subj_name(void) {
     test_int(q->terms[0].id, Tag);
     test_uint(q->terms[0].first.id, Tag|EcsSelf|EcsIsEntity);
     test_assert(q->terms[0].src.name ==  NULL);
-    test_uint(q->terms[0].src.id, Src|EcsSelf|EcsUp|EcsIsEntity);
-    test_uint(q->terms[0].trav, EcsIsA);
+    test_uint(q->terms[0].src.id, Src|EcsSelf|EcsIsEntity);
 
     ecs_query_fini(q);
 
@@ -1119,8 +1343,7 @@ void Validator_validate_1_w_obj_name(void) {
 
     test_int(q->terms[0].id, ecs_pair(Tag, Tgt));
     test_uint(q->terms[0].first.id, Tag|EcsSelf|EcsIsEntity);
-    test_uint(q->terms[0].src.id, EcsThis|EcsSelf|EcsUp|EcsIsVariable);
-    test_uint(q->terms[0].trav, EcsIsA);
+    test_uint(q->terms[0].src.id, EcsThis|EcsSelf|EcsIsVariable);
     test_assert(q->terms[0].second.name ==  NULL);
     test_int(q->terms[0].second.id, Tgt|EcsSelf|EcsIsEntity);
 
@@ -1141,8 +1364,7 @@ void Validator_validate_w_this_implicit_variable(void) {
 
     test_int(q->terms[0].id, Tag);
     test_uint(q->terms[0].first.id, Tag|EcsSelf|EcsIsEntity);
-    test_uint(q->terms[0].src.id, EcsThis|EcsSelf|EcsUp|EcsIsVariable);
-    test_uint(q->terms[0].trav, EcsIsA);
+    test_uint(q->terms[0].src.id, EcsThis|EcsSelf|EcsIsVariable);
 
     ecs_query_fini(q);
 
@@ -1161,8 +1383,7 @@ void Validator_validate_w_this_explicit_entity(void) {
 
     test_int(q->terms[0].id, Tag);
     test_uint(q->terms[0].first.id, Tag|EcsSelf|EcsIsEntity);
-    test_uint(q->terms[0].src.id, EcsThis|EcsSelf|EcsUp|EcsIsEntity);
-    test_uint(q->terms[0].trav, EcsIsA);
+    test_uint(q->terms[0].src.id, EcsThis|EcsSelf|EcsIsEntity);
     
     ecs_query_fini(q);
 
@@ -1181,8 +1402,7 @@ void Validator_validate_w_first_this_implicit_variable(void) {
 
     test_int(q->terms[0].id, EcsWildcard);
     test_uint(q->terms[0].first.id, EcsThis|EcsSelf|EcsIsVariable);
-    test_uint(q->terms[0].src.id, Src|EcsSelf|EcsUp|EcsIsEntity);
-    test_uint(q->terms[0].trav, EcsIsA);
+    test_uint(q->terms[0].src.id, Src|EcsSelf|EcsIsEntity);
 
     ecs_query_fini(q);
 
@@ -1201,8 +1421,7 @@ void Validator_validate_w_first_this_explicit_entity(void) {
 
     test_int(q->terms[0].id, EcsThis);
     test_uint(q->terms[0].first.id, EcsThis|EcsSelf|EcsIsEntity);
-    test_uint(q->terms[0].src.id, Src|EcsSelf|EcsUp|EcsIsEntity);
-    test_uint(q->terms[0].trav, EcsIsA);
+    test_uint(q->terms[0].src.id, Src|EcsSelf|EcsIsEntity);
 
     ecs_query_fini(q);
 
@@ -1221,8 +1440,7 @@ void Validator_validate_w_second_this_implicit_variable(void) {
 
     test_int(q->terms[0].id, ecs_pair(Tag, EcsWildcard));
     test_uint(q->terms[0].first.id, Tag|EcsSelf|EcsIsEntity);
-    test_uint(q->terms[0].src.id, EcsThis|EcsSelf|EcsUp|EcsIsVariable);
-    test_uint(q->terms[0].trav, EcsIsA);
+    test_uint(q->terms[0].src.id, EcsThis|EcsSelf|EcsIsVariable);
     test_int(q->terms[0].second.id, EcsThis|EcsSelf|EcsIsVariable);
 
     ecs_query_fini(q);
@@ -1242,8 +1460,7 @@ void Validator_validate_w_second_this_explicit_entity(void) {
 
     test_int(q->terms[0].id, ecs_pair(Tag, EcsThis));
     test_uint(q->terms[0].first.id, Tag|EcsSelf|EcsIsEntity);
-    test_uint(q->terms[0].src.id, EcsThis|EcsSelf|EcsUp|EcsIsVariable);
-    test_uint(q->terms[0].trav, EcsIsA);
+    test_uint(q->terms[0].src.id, EcsThis|EcsSelf|EcsIsVariable);
     test_int(q->terms[0].second.id, EcsThis|EcsSelf|EcsIsEntity);
 
     ecs_query_fini(q);
@@ -1264,8 +1481,7 @@ void Validator_validate_w_this_variable_name(void) {
 
     test_int(q->terms[0].id, Tag);
     test_uint(q->terms[0].first.id, Tag|EcsSelf|EcsIsEntity);
-    test_uint(q->terms[0].src.id, EcsThis|EcsSelf|EcsUp|EcsIsVariable);
-    test_uint(q->terms[0].trav, EcsIsA);
+    test_uint(q->terms[0].src.id, EcsThis|EcsSelf|EcsIsVariable);
     test_assert(q->terms[0].src.name == NULL);
 
     ecs_query_fini(q);
@@ -1325,14 +1541,12 @@ void Validator_validate_2_terms_w_or(void) {
     test_int(q->terms[0].oper, EcsOr);
     test_uint(q->terms[0].id, TagA);
     test_uint(q->terms[0].first.id, TagA|EcsSelf|EcsIsEntity);
-    test_uint(q->terms[0].src.id, EcsThis|EcsSelf|EcsUp|EcsIsVariable);
-    test_uint(q->terms[0].trav, EcsIsA);
+    test_uint(q->terms[0].src.id, EcsThis|EcsSelf|EcsIsVariable);
 
     test_int(q->terms[1].oper, EcsAnd);
     test_uint(q->terms[1].id, TagB);
     test_uint(q->terms[1].first.id, TagB|EcsSelf|EcsIsEntity);
-    test_uint(q->terms[1].src.id, EcsThis|EcsSelf|EcsUp|EcsIsVariable);
-    test_uint(q->terms[1].trav, EcsIsA);
+    test_uint(q->terms[1].src.id, EcsThis|EcsSelf|EcsIsVariable);
     
     ecs_query_fini(q);
 
@@ -1344,6 +1558,8 @@ void Validator_validate_2_terms_w_or_mixed_src_flags(void) {
 
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
+
+    ecs_add_pair(world, TagB, EcsOnInstantiate, EcsInherit);
 
     ecs_query_t *q = ecs_query(world, {
         .terms = {
@@ -1436,14 +1652,12 @@ void Validator_validate_2_terms_w_or_same_src_w_id_and_name(void) {
     test_int(q->terms[0].oper, EcsOr);
     test_uint(q->terms[0].id, TagA);
     test_uint(q->terms[0].first.id, TagA|EcsSelf|EcsIsEntity);
-    test_uint(q->terms[0].src.id, SrcA|EcsSelf|EcsUp|EcsIsEntity);
-    test_uint(q->terms[0].trav, EcsIsA);
+    test_uint(q->terms[0].src.id, SrcA|EcsSelf|EcsIsEntity);
 
     test_int(q->terms[1].oper, EcsAnd);
     test_uint(q->terms[1].id, TagB);
     test_uint(q->terms[1].first.id, TagB|EcsSelf|EcsIsEntity);
-    test_uint(q->terms[1].src.id, SrcA|EcsSelf|EcsUp|EcsIsEntity);
-    test_uint(q->terms[1].trav, EcsIsA);
+    test_uint(q->terms[1].src.id, SrcA|EcsSelf|EcsIsEntity);
 
     ecs_query_fini(q);
 
@@ -1548,8 +1762,7 @@ void Validator_validate_double_init(void) {
     test_int(q_1->terms[0].oper, EcsAnd);
     test_int(q_1->terms[0].field_index, 0);
     test_int(q_1->terms[0].first.id, Foo|EcsSelf|EcsIsEntity);
-    test_int(q_1->terms[0].src.id, EcsThis|EcsSelf|EcsUp|EcsIsVariable);
-    test_int(q_1->terms[0].trav, EcsIsA);
+    test_int(q_1->terms[0].src.id, EcsThis|EcsSelf|EcsIsVariable);
 
     ecs_query_desc_t desc = {0};
     ecs_os_memcpy_n(desc.terms, q_1->terms, ecs_term_t, FLECS_TERM_COUNT_MAX);
@@ -1561,8 +1774,7 @@ void Validator_validate_double_init(void) {
     test_int(q_2->terms[0].oper, EcsAnd);
     test_int(q_2->terms[0].field_index, 0);
     test_int(q_2->terms[0].first.id, Foo|EcsSelf|EcsIsEntity);
-    test_int(q_2->terms[0].src.id, EcsThis|EcsSelf|EcsUp|EcsIsVariable);
-    test_int(q_2->terms[0].trav, EcsIsA);
+    test_int(q_2->terms[0].src.id, EcsThis|EcsSelf|EcsIsVariable);
 
     ecs_query_fini(q_1);
     ecs_query_fini(q_2);
@@ -1585,8 +1797,7 @@ void Validator_validate_double_init_w_expr(void) {
     test_int(q_1->terms[0].oper, EcsAnd);
     test_int(q_1->terms[0].field_index, 0);
     test_int(q_1->terms[0].first.id, Foo|EcsSelf|EcsIsEntity);
-    test_int(q_1->terms[0].src.id, EcsThis|EcsSelf|EcsUp|EcsIsVariable);
-    test_int(q_1->terms[0].trav, EcsIsA);
+    test_int(q_1->terms[0].src.id, EcsThis|EcsSelf|EcsIsVariable);
 
     ecs_query_desc_t desc = {0};
     ecs_os_memcpy_n(desc.terms, q_1->terms, ecs_term_t, FLECS_TERM_COUNT_MAX);
@@ -1598,8 +1809,7 @@ void Validator_validate_double_init_w_expr(void) {
     test_int(q_2->terms[0].oper, EcsAnd);
     test_int(q_2->terms[0].field_index, 0);
     test_int(q_2->terms[0].first.id, Foo|EcsSelf|EcsIsEntity);
-    test_int(q_2->terms[0].src.id, EcsThis|EcsSelf|EcsUp|EcsIsVariable);
-    test_int(q_2->terms[0].trav, EcsIsA);
+    test_int(q_2->terms[0].src.id, EcsThis|EcsSelf|EcsIsVariable);
 
     ecs_query_fini(q_1);
     ecs_query_fini(q_2);
@@ -1622,8 +1832,7 @@ void Validator_validate_double_init_w_expr_optional(void) {
     test_int(q_1->terms[0].oper, EcsOptional);
     test_int(q_1->terms[0].field_index, 0);
     test_int(q_1->terms[0].first.id, Foo|EcsSelf|EcsIsEntity);
-    test_int(q_1->terms[0].src.id, EcsThis|EcsSelf|EcsUp|EcsIsVariable);
-    test_int(q_1->terms[0].trav, EcsIsA);
+    test_int(q_1->terms[0].src.id, EcsThis|EcsSelf|EcsIsVariable);
 
     ecs_query_desc_t desc = {0};
     ecs_os_memcpy_n(desc.terms, q_1->terms, ecs_term_t, FLECS_TERM_COUNT_MAX);
@@ -1635,8 +1844,7 @@ void Validator_validate_double_init_w_expr_optional(void) {
     test_int(q_2->terms[0].oper, EcsOptional);
     test_int(q_2->terms[0].field_index, 0);
     test_int(q_2->terms[0].first.id, Foo|EcsSelf|EcsIsEntity);
-    test_int(q_2->terms[0].src.id, EcsThis|EcsSelf|EcsUp|EcsIsVariable);
-    test_int(q_2->terms[0].trav, EcsIsA);
+    test_int(q_2->terms[0].src.id, EcsThis|EcsSelf|EcsIsVariable);
 
     ecs_query_fini(q_1);
     ecs_query_fini(q_2);
@@ -1913,7 +2121,7 @@ void Validator_validate_w_pair_no_vars_not_same_vars(void) {
         }
     });
 
-    test_uint(q->terms[0].src.id, A|EcsIsEntity|EcsSelf|EcsUp);
+    test_uint(q->terms[0].src.id, A|EcsIsEntity|EcsSelf);
     test_uint(q->terms[0].second.id, A|EcsIsEntity|EcsSelf);
 
     ecs_query_fini(q);
@@ -1936,7 +2144,7 @@ void Validator_validate_w_pair_wildcard_not_same_vars(void) {
         }
     });
 
-    test_uint(q->terms[0].src.id, EcsWildcard|EcsIsVariable|EcsSelf|EcsUp);
+    test_uint(q->terms[0].src.id, EcsWildcard|EcsIsVariable|EcsSelf);
     test_uint(q->terms[0].second.id, EcsWildcard|EcsIsVariable|EcsSelf);
 
     ecs_query_fini(q);
@@ -1959,7 +2167,7 @@ void Validator_validate_w_pair_any_not_same_vars(void) {
         }
     });
 
-    test_uint(q->terms[0].src.id, EcsAny|EcsIsVariable|EcsSelf|EcsUp);
+    test_uint(q->terms[0].src.id, EcsAny|EcsIsVariable|EcsSelf);
     test_uint(q->terms[0].second.id, EcsAny|EcsIsVariable|EcsSelf);
 
     ecs_query_fini(q);
@@ -2313,7 +2521,7 @@ void Validator_validate_singleton_src_w_first_name(void) {
     test_int(q->term_count, 1);
     test_uint(q->terms[0].id, Tag);
     test_uint(q->terms[0].first.id, Tag|EcsIsEntity|EcsSelf);
-    test_uint(q->terms[0].src.id, Tag|EcsIsEntity|EcsSelf|EcsUp);
+    test_uint(q->terms[0].src.id, Tag|EcsIsEntity|EcsSelf);
 
     ecs_query_fini(q);
 
@@ -2334,7 +2542,7 @@ void Validator_validate_singleton_second_w_first_name(void) {
     test_int(q->term_count, 1);
     test_uint(q->terms[0].id, ecs_pair(Tag, Tag));
     test_uint(q->terms[0].first.id, Tag|EcsIsEntity|EcsSelf);
-    test_uint(q->terms[0].src.id, EcsThis|EcsIsVariable|EcsSelf|EcsUp);
+    test_uint(q->terms[0].src.id, EcsThis|EcsIsVariable|EcsSelf);
     test_uint(q->terms[0].second.id, Tag|EcsIsEntity|EcsSelf);
 
     ecs_query_fini(q);
@@ -2358,8 +2566,7 @@ void Validator_not_wildcard(void) {
     test_int(q->terms[0].inout, EcsInOutNone);
     test_int(q->terms[0].field_index, 0);
     test_uint(q->terms[0].first.id, EcsAny|EcsSelf|EcsIsVariable);
-    test_uint(q->terms[0].src.id, EcsThis|EcsSelf|EcsUp|EcsIsVariable);
-    test_uint(q->terms[0].trav, EcsIsA);
+    test_uint(q->terms[0].src.id, EcsThis|EcsSelf|EcsIsVariable);
 
     ecs_query_fini(q);
 
@@ -2383,8 +2590,7 @@ void Validator_not_first_wildcard(void) {
     test_int(q->terms[0].field_index, 0);
     test_uint(q->terms[0].first.id, EcsAny|EcsSelf|EcsIsVariable);
     test_uint(q->terms[0].second.id, ecs_id(Position)|EcsSelf|EcsIsEntity);
-    test_uint(q->terms[0].src.id, EcsThis|EcsSelf|EcsUp|EcsIsVariable);
-    test_uint(q->terms[0].trav, EcsIsA);
+    test_uint(q->terms[0].src.id, EcsThis|EcsSelf|EcsIsVariable);
 
     ecs_query_fini(q);
 
@@ -2408,8 +2614,7 @@ void Validator_not_second_wildcard(void) {
     test_int(q->terms[0].field_index, 0);
     test_uint(q->terms[0].first.id, ecs_id(Position)|EcsSelf|EcsIsEntity);
     test_uint(q->terms[0].second.id, EcsAny|EcsSelf|EcsIsVariable);
-    test_uint(q->terms[0].src.id, EcsThis|EcsSelf|EcsUp|EcsIsVariable);
-    test_uint(q->terms[0].trav, EcsIsA);
+    test_uint(q->terms[0].src.id, EcsThis|EcsSelf|EcsIsVariable);
 
     ecs_query_fini(q);
 
@@ -2432,8 +2637,7 @@ void Validator_not_wildcard_id(void) {
     test_int(q->terms[0].inout, EcsInOutNone);
     test_int(q->terms[0].field_index, 0);
     test_uint(q->terms[0].first.id, EcsAny|EcsSelf|EcsIsVariable);
-    test_uint(q->terms[0].src.id, EcsThis|EcsSelf|EcsUp|EcsIsVariable);
-    test_uint(q->terms[0].trav, EcsIsA);
+    test_uint(q->terms[0].src.id, EcsThis|EcsSelf|EcsIsVariable);
 
     ecs_query_fini(q);
 
@@ -2457,8 +2661,7 @@ void Validator_not_wildcard_first_pair(void) {
     test_int(q->terms[0].field_index, 0);
     test_uint(q->terms[0].first.id, EcsAny|EcsSelf|EcsIsVariable);
     test_uint(q->terms[0].second.id, ecs_id(Position)|EcsSelf|EcsIsEntity);
-    test_uint(q->terms[0].src.id, EcsThis|EcsSelf|EcsUp|EcsIsVariable);
-    test_uint(q->terms[0].trav, EcsIsA);
+    test_uint(q->terms[0].src.id, EcsThis|EcsSelf|EcsIsVariable);
 
     ecs_query_fini(q);
 
@@ -2482,9 +2685,251 @@ void Validator_not_wildcard_second_pair(void) {
     test_int(q->terms[0].field_index, 0);
     test_uint(q->terms[0].first.id, ecs_id(Position)|EcsSelf|EcsIsEntity);
     test_uint(q->terms[0].second.id, EcsAny|EcsSelf|EcsIsVariable);
-    test_uint(q->terms[0].src.id, EcsThis|EcsSelf|EcsUp|EcsIsVariable);
-    test_uint(q->terms[0].trav, EcsIsA);
+    test_uint(q->terms[0].src.id, EcsThis|EcsSelf|EcsIsVariable);
 
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Validator_validate_or_same_type(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, TgtA);
+    ECS_TAG(world, TgtB);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {
+            { ecs_pair_t(Position, TgtA), .oper = EcsOr }, 
+            { ecs_pair_t(Position, TgtB) }
+        }
+    });
+
+    test_int(q->term_count, 2);
+    test_int(q->field_count, 1);
+
+    test_uint(q->terms[0].id, ecs_pair_t(Position, TgtA));
+    test_int(q->terms[0].oper, EcsOr);
+    test_int(q->terms[0].field_index, 0);
+    test_uint(q->terms[0].first.id, ecs_id(Position)|EcsSelf|EcsIsEntity);
+    test_uint(q->terms[0].src.id, EcsThis|EcsSelf|EcsIsVariable);
+
+    test_uint(q->terms[1].id, ecs_pair_t(Position, TgtB));
+    test_int(q->terms[1].oper, EcsAnd);
+    test_int(q->terms[1].field_index, 0);
+    test_uint(q->terms[1].first.id, ecs_id(Position)|EcsSelf|EcsIsEntity);
+    test_uint(q->terms[1].src.id, EcsThis|EcsSelf|EcsIsVariable);
+    test_uint(q->terms[1].trav, 0);
+
+    test_assert(q->ids[0] != 0);
+    test_int(q->sizes[0], ECS_SIZEOF(Position));
+    test_assert(q->data_fields & 1);
+    
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Validator_validate_or_different_types(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ ecs_id(Position), .oper = EcsOr }, { ecs_id(Velocity) }}
+    });
+
+    test_int(q->term_count, 2);
+    test_int(q->field_count, 1);
+
+    test_uint(q->terms[0].id, ecs_id(Position));
+    test_int(q->terms[0].oper, EcsOr);
+    test_int(q->terms[0].field_index, 0);
+    test_uint(q->terms[0].first.id, ecs_id(Position)|EcsSelf|EcsIsEntity);
+    test_uint(q->terms[0].src.id, EcsThis|EcsSelf|EcsIsVariable);
+
+    test_uint(q->terms[1].id, ecs_id(Velocity));
+    test_int(q->terms[1].oper, EcsAnd);
+    test_int(q->terms[1].field_index, 0);
+    test_uint(q->terms[1].first.id, ecs_id(Velocity)|EcsSelf|EcsIsEntity);
+    test_uint(q->terms[1].src.id, EcsThis|EcsSelf|EcsIsVariable);
+    test_uint(q->terms[1].trav, 0);
+
+    test_assert(q->ids[0] == 0);
+    test_int(q->sizes[0], 0);
+    test_assert(!(q->data_fields & 1));
+    
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Validator_validate_or_different_types_1_and_2_or(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_TAG(world, TagA);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {
+            { TagA }, 
+            { ecs_id(Position), .oper = EcsOr }, 
+            { ecs_id(Velocity) }
+        }
+    });
+
+    test_int(q->term_count, 3);
+    test_int(q->field_count, 2);
+
+    test_uint(q->terms[0].id, TagA);
+    test_int(q->terms[0].oper, EcsAnd);
+    test_int(q->terms[0].field_index, 0);
+    test_uint(q->terms[0].first.id, TagA|EcsSelf|EcsIsEntity);
+    test_uint(q->terms[0].src.id, EcsThis|EcsSelf|EcsIsVariable);
+
+    test_uint(q->terms[1].id, ecs_id(Position));
+    test_int(q->terms[1].oper, EcsOr);
+    test_int(q->terms[1].field_index, 1);
+    test_uint(q->terms[1].first.id, ecs_id(Position)|EcsSelf|EcsIsEntity);
+    test_uint(q->terms[1].src.id, EcsThis|EcsSelf|EcsIsVariable);
+
+    test_uint(q->terms[2].id, ecs_id(Velocity));
+    test_int(q->terms[2].oper, EcsAnd);
+    test_int(q->terms[2].field_index, 1);
+    test_uint(q->terms[2].first.id, ecs_id(Velocity)|EcsSelf|EcsIsEntity);
+    test_uint(q->terms[2].src.id, EcsThis|EcsSelf|EcsIsVariable);
+    test_uint(q->terms[2].trav, 0);
+
+    test_assert(q->ids[1] == 0);
+    test_int(q->sizes[1], 0);
+    test_assert(!(q->data_fields & (1u << 1)));
+    
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Validator_validate_trav_isa_w_wildcard(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_log_set_level(-4);
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {
+            { EcsWildcard, .trav = EcsIsA }
+        }
+    });
+
+    test_assert(q == NULL);
+
+    ecs_fini(world);
+}
+
+void Validator_validate_trav_isa_w_any(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_log_set_level(-4);
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {
+            { EcsAny, .trav = EcsIsA }
+        }
+    });
+
+    test_assert(q == NULL);
+
+    ecs_fini(world);
+}
+
+void Validator_validate_custom_trav_w_inherit_id(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_ENTITY(world, Rel, Traversable);
+
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {
+            { ecs_id(Position), .trav = Rel },
+        }
+    });
+
+    test_int(q->term_count, 1);
+    test_int(q->field_count, 1);
+
+    test_uint(q->terms[0].id, ecs_id(Position));
+    test_int(q->terms[0].oper, EcsAnd);
+    test_int(q->terms[0].field_index, 0);
+    test_uint(q->terms[0].first.id, ecs_id(Position)|EcsSelf|EcsIsEntity);
+    test_uint(q->terms[0].src.id, EcsThis|EcsSelf|EcsUp|EcsIsVariable);
+    test_uint(q->terms[0].trav, Rel);
+    
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Validator_validate_custom_trav_w_inherit_id_w_self_up(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_ENTITY(world, Rel, Traversable);
+
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {
+            { ecs_id(Position), .trav = Rel, .src.id = EcsSelf|EcsUp },
+        }
+    });
+
+    test_int(q->term_count, 1);
+    test_int(q->field_count, 1);
+
+    test_uint(q->terms[0].id, ecs_id(Position));
+    test_int(q->terms[0].oper, EcsAnd);
+    test_int(q->terms[0].field_index, 0);
+    test_uint(q->terms[0].first.id, ecs_id(Position)|EcsSelf|EcsIsEntity);
+    test_uint(q->terms[0].src.id, EcsThis|EcsSelf|EcsUp|EcsIsVariable);
+    test_uint(q->terms[0].trav, Rel);
+    
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Validator_validate_custom_trav_w_inherit_id_w_up(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_ENTITY(world, Rel, Traversable);
+
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {
+            { ecs_id(Position), .trav = Rel, .src.id = EcsUp },
+        }
+    });
+
+    test_int(q->term_count, 1);
+    test_int(q->field_count, 1);
+
+    test_uint(q->terms[0].id, ecs_id(Position));
+    test_int(q->terms[0].oper, EcsAnd);
+    test_int(q->terms[0].field_index, 0);
+    test_uint(q->terms[0].first.id, ecs_id(Position)|EcsSelf|EcsIsEntity);
+    test_uint(q->terms[0].src.id, EcsThis|EcsUp|EcsIsVariable);
+    test_uint(q->terms[0].trav, Rel);
+    
     ecs_query_fini(q);
 
     ecs_fini(world);
