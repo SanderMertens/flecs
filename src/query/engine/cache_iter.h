@@ -1,9 +1,9 @@
 /**
- * @file query/cache_iter.h
+ * @file query/engine/cache_iter.h
  * @brief Cache iterator functions.
  */
 
-#include "types.h"
+#include "../types.h"
 
 /* Cache search without data */
 bool flecs_query_cache_search(

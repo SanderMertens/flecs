@@ -520,7 +520,11 @@
                 "add_2_reverse",
                 "add_switch_to_prefab_instance",
                 "get_case_w_generation",
-                "get_case_w_generation_not_alive"
+                "get_case_w_generation_not_alive",
+                "defer_add_union_relationship",
+                "defer_add_existing_union_relationship",
+                "defer_add_union_relationship_2_ops",
+                "defer_add_existing_union_relationship_2_ops"
             ]
         }, {
             "id": "Hierarchies",
