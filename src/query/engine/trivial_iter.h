@@ -1,9 +1,9 @@
 /**
- * @file query/trivial_iter.h
+ * @file query/engine/trivial_iter.h
  * @brief Trivial iterator functions.
  */
 
-#include "types.h"
+#include "../types.h"
 
 /* Iterator for trivial queries. */
 bool flecs_query_trivial_search(

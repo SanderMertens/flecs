@@ -1,9 +1,9 @@
 /**
- * @file addons/querys/compiler_term.c
+ * @file query/compiler/compiler_term.c
  * @brief Compile query term.
  */
 
-#include "../private_api.h"
+#include "../../private_api.h"
 
 #define FlecsRuleOrMarker ((int16_t)-2) /* Marks instruction in OR chain */
 
@@ -1048,6 +1048,9 @@ void flecs_query_set_op_kind(
      * just matches against a source (vs. finding a source). */
     op->kind = src_is_var ? EcsQueryAnd : EcsQueryWith;
 
+    /* Ignore cascade flag */
+    ecs_entity_t trav_flags = EcsTraverseFlags & ~(EcsCascade|EcsDesc);
+
     /* Handle *From operators */
     if (term->oper == EcsAndFrom) {
         op->kind = EcsQueryAndFrom;
@@ -1060,7 +1063,6 @@ void flecs_query_set_op_kind(
     } else if (term->flags_ & EcsTermTransitive) {
         ecs_assert(ecs_term_ref_is_set(&term->second), ECS_INTERNAL_ERROR, NULL);
         op->kind = EcsQueryTrav;
-
 
     /* If term queries for union pair, use union instruction */
     } else if (term->flags_ & EcsTermIsUnion) {
@@ -1075,9 +1077,17 @@ void flecs_query_set_op_kind(
         } else {
             op->kind = EcsQueryUnionEqWith;
         }
+
+        if ((term->src.id & trav_flags) == EcsUp) {
+            if (op->kind == EcsQueryUnionEq) {
+                op->kind = EcsQueryUnionEqUp;
+            }
+        } else if ((term->src.id & trav_flags) == (EcsSelf|EcsUp)) {
+            if (op->kind == EcsQueryUnionEq) {
+                op->kind = EcsQueryUnionEqSelfUp;
+            }
+        }
     } else {
-        /* Ignore cascade flag */
-        ecs_entity_t trav_flags = EcsTraverseFlags & ~(EcsCascade|EcsDesc);
         if (term->flags_ & (EcsTermMatchAny|EcsTermMatchAnySrc)) {
             op->kind = EcsQueryAndAny;
         } else if ((term->src.id & trav_flags) == EcsUp) {

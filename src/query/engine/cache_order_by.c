@@ -1,9 +1,9 @@
 /**
- * @file query/cache_order_by.c
+ * @file query/engine/cache_order_by.c
  * @brief Order by implementation
  */
 
-#include "../private_api.h"
+#include "../../private_api.h"
 
 ECS_SORT_TABLE_WITH_COMPARE(_, flecs_query_cache_sort_table_generic, order_by, static)
 

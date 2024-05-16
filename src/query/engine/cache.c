@@ -1,9 +1,9 @@
 /**
- * @file query/cache.c
+ * @file query/engine/cache.c
  * @brief Cached query implementation.
  */
 
-#include "../private_api.h"
+#include "../../private_api.h"
 
 int32_t flecs_query_cache_table_count(
     ecs_query_cache_t *cache)

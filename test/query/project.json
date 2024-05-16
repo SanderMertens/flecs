@@ -1877,7 +1877,27 @@
                 "switch_w_bitset_query_2_elems_skip",
                 "switch_w_bitset_query_elems_interleaved",
                 "switch_w_bitset_query_elems_interleaved_2_types",
-                "component_relation"
+                "component_relation",
+                "switch_term_filter",
+                "2_terms_switch_term_filter",
+                "match_switch_w_switch",
+                "match_switch_w_case",
+                "match_switch_w_case_2_terms",
+                "up",
+                "self_up",
+                "up_written",
+                "self_up_written",
+                "match_case_no_case",
+                "existing_switch_and_case",
+                "new_switch_and_case",
+                "for_case_existing",
+                "for_case_new",
+                "case_w_generation",
+                "case_w_not_alive",
+                "for_switch_filter_term",
+                "switch_from_nothing",
+                "case_from_nothing",
+                "case_inherited"
             ]
         }, {
             "id": "OrderBy",

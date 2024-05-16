@@ -1,4 +1,9 @@
-#include "../private_api.h"
+/**
+ * @file query/engine/change_detection.c
+ * @brief Compile query term.
+ */
+
+#include "../../private_api.h"
 
 typedef struct {
     ecs_table_t *table;

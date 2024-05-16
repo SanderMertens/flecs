@@ -1,9 +1,9 @@
 /**
- * @file addons/querys/engine.c
+ * @file query/engine/trivial_iter.c
  * @brief Iterator for trivial queries.
  */
 
-#include "../private_api.h"
+#include "../../private_api.h"
 
 static
 bool flecs_query_trivial_search_init(

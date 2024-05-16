@@ -1801,6 +1801,26 @@ void Union_switch_w_bitset_query_2_elems_skip(void);
 void Union_switch_w_bitset_query_elems_interleaved(void);
 void Union_switch_w_bitset_query_elems_interleaved_2_types(void);
 void Union_component_relation(void);
+void Union_switch_term_filter(void);
+void Union_2_terms_switch_term_filter(void);
+void Union_match_switch_w_switch(void);
+void Union_match_switch_w_case(void);
+void Union_match_switch_w_case_2_terms(void);
+void Union_up(void);
+void Union_self_up(void);
+void Union_up_written(void);
+void Union_self_up_written(void);
+void Union_match_case_no_case(void);
+void Union_existing_switch_and_case(void);
+void Union_new_switch_and_case(void);
+void Union_for_case_existing(void);
+void Union_for_case_new(void);
+void Union_case_w_generation(void);
+void Union_case_w_not_alive(void);
+void Union_for_switch_filter_term(void);
+void Union_switch_from_nothing(void);
+void Union_case_from_nothing(void);
+void Union_case_inherited(void);
 
 // Testsuite 'OrderBy'
 void OrderBy_sort_by_component(void);
@@ -8949,6 +8969,86 @@ bake_test_case Union_testcases[] = {
     {
         "component_relation",
         Union_component_relation
+    },
+    {
+        "switch_term_filter",
+        Union_switch_term_filter
+    },
+    {
+        "2_terms_switch_term_filter",
+        Union_2_terms_switch_term_filter
+    },
+    {
+        "match_switch_w_switch",
+        Union_match_switch_w_switch
+    },
+    {
+        "match_switch_w_case",
+        Union_match_switch_w_case
+    },
+    {
+        "match_switch_w_case_2_terms",
+        Union_match_switch_w_case_2_terms
+    },
+    {
+        "up",
+        Union_up
+    },
+    {
+        "self_up",
+        Union_self_up
+    },
+    {
+        "up_written",
+        Union_up_written
+    },
+    {
+        "self_up_written",
+        Union_self_up_written
+    },
+    {
+        "match_case_no_case",
+        Union_match_case_no_case
+    },
+    {
+        "existing_switch_and_case",
+        Union_existing_switch_and_case
+    },
+    {
+        "new_switch_and_case",
+        Union_new_switch_and_case
+    },
+    {
+        "for_case_existing",
+        Union_for_case_existing
+    },
+    {
+        "for_case_new",
+        Union_for_case_new
+    },
+    {
+        "case_w_generation",
+        Union_case_w_generation
+    },
+    {
+        "case_w_not_alive",
+        Union_case_w_not_alive
+    },
+    {
+        "for_switch_filter_term",
+        Union_for_switch_filter_term
+    },
+    {
+        "switch_from_nothing",
+        Union_switch_from_nothing
+    },
+    {
+        "case_from_nothing",
+        Union_case_from_nothing
+    },
+    {
+        "case_inherited",
+        Union_case_inherited
     }
 };
 
@@ -9614,7 +9714,7 @@ static bake_test_suite suites[] = {
         "Union",
         Union_setup,
         NULL,
-        52,
+        72,
         Union_testcases,
         1,
         Union_params

@@ -1,4 +1,9 @@
-#include "../private_api.h"
+/**
+ * @file query/engine/cache_iter.c
+ * @brief Compile query term.
+ */
+
+#include "../../private_api.h"
 
 static
 ecs_query_cache_table_match_t* flecs_query_next(
