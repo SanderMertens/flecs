@@ -84,6 +84,8 @@ typedef enum {
     EcsQueryUnionEq,        /* Evaluate union relationship */
     EcsQueryUnionEqWith,    /* Evaluate union relationship against fixed or variable source */
     EcsQueryUnionNeq,       /* Evaluate union relationship */
+    EcsQueryUnionEqUp,      /* Evaluate union relationship w/up traversal */
+    EcsQueryUnionEqSelfUp,  /* Evaluate union relationship w/self|up traversal */
     EcsQueryLookup,         /* Lookup relative to variable */
     EcsQuerySetVars,        /* Populate it.sources from variables */
     EcsQuerySetThis,        /* Populate This entity variable */

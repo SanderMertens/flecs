@@ -1,9 +1,9 @@
 /**
- * @file addons/querys/compile.c
+ * @file query/compiler/compile.c
  * @brief Compile query program from query.
  */
 
-#include "../private_api.h"
+#include "../../private_api.h"
 
 static
 bool flecs_query_var_is_anonymous(

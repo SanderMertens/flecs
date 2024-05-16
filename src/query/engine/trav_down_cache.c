@@ -1,4 +1,9 @@
-#include "../private_api.h"
+/**
+ * @file query/engine/trav_down_cache.c
+ * @brief Compile query term.
+ */
+
+#include "../../private_api.h"
 
 static
 void flecs_trav_entity_down_isa(
