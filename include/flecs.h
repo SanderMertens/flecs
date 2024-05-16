@@ -1006,7 +1006,7 @@ typedef struct ecs_component_desc_t {
  * @endcode
  * 
  * When this code is called from a system, it is important to use the world
- * provided by its iterator object. For example:
+ * provided by its iterator object to ensure thread safety. For example:
  * 
  * @code
  * void Collide(ecs_iter_t *it) {
@@ -1014,8 +1014,20 @@ typedef struct ecs_component_desc_t {
  * }
  * @endcode
  * 
- * This ensures thread safe allocation and cleanup of any resources required by 
- * the iterator.
+ * An iterator contains resources that need to be released. By default this 
+ * is handled by the last call to next() that returns false. When iteration is
+ * ended before iteration has completed, an application has to manually call
+ * ecs_iter_fini to release the iterator resources:
+ * 
+ * @code
+ * ecs_iter_t it = ecs_query_iter(world, q);
+ * while (ecs_query_next(&it)) {
+ *   if (cond) {
+ *     ecs_iter_fini(&it);
+ *     break;
+ *   }
+ * }
+ * @endcode
  *
  * @ingroup queries
  */
@@ -1034,7 +1046,6 @@ struct ecs_iter_t {
     ecs_var_t *variables;         /**< Values of variables (if any) */
     int32_t *columns;             /**< Query term to table column mapping */
     ecs_entity_t *sources;        /**< Entity on which the id was matched (0 if same as entities) */
-    ecs_ref_t *references;        /**< Cached refs to components (if iterating a cache) */
     ecs_flags64_t constrained_vars; /**< Bitset that marks constrained variables */
     uint64_t group_id;            /**< Group id for table, if group_by is used */
     int32_t field_count;          /**< Number of fields in iterator */

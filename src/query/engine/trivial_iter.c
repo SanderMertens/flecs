@@ -81,7 +81,8 @@ bool flecs_query_trivial_search(
             continue;
         }
 
-        for (t = op_ctx->first_to_eval; t < term_count; t ++) {
+        int32_t first_term = op_ctx->first_to_eval;
+        for (t = first_term; t < term_count; t ++) {
             ecs_flags64_t term_bit = (1llu << t);
             if (!(term_set & term_bit)) {
                 continue;
@@ -112,10 +113,10 @@ bool flecs_query_trivial_search(
             ctx->vars[0].range.table = table;
             ctx->vars[0].range.count = 0;
             ctx->vars[0].range.offset = 0;
-            it->columns[0] = tr->index;
-            if (!(terms[0].flags_ & EcsTermNoData)) {
+            it->columns[first_term] = tr->index;
+            if (!(terms[first_term].flags_ & EcsTermNoData)) {
                 if (tr->column != -1) {
-                    it->ptrs[0] = ecs_vec_first(
+                    it->ptrs[first_term] = ecs_vec_first(
                         &table->data.columns[tr->column].data);
                 }
             }
