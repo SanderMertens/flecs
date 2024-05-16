@@ -1,9 +1,9 @@
 /**
- * @file query/change_detection.h
+ * @file query/engine/change_detection.h
  * @brief Query change detection functions.
  */
 
-#include "types.h"
+#include "../types.h"
 
 /* Sychronize cache monitor with table dirty state */
 void flecs_query_sync_match_monitor(

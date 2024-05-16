@@ -1,9 +1,9 @@
 /**
- * @file addons/rules/trav_cache.c
+ * @file query/engine/trav_cache.c
  * @brief Cache that stores the result of graph traversal.
  */
 
-#include "../private_api.h"
+#include "../../private_api.h"
 
 static
 void flecs_query_build_down_cache(

@@ -492,6 +492,10 @@ void Union_add_2_reverse(void);
 void Union_add_switch_to_prefab_instance(void);
 void Union_get_case_w_generation(void);
 void Union_get_case_w_generation_not_alive(void);
+void Union_defer_add_union_relationship(void);
+void Union_defer_add_existing_union_relationship(void);
+void Union_defer_add_union_relationship_2_ops(void);
+void Union_defer_add_existing_union_relationship_2_ops(void);
 
 // Testsuite 'Hierarchies'
 void Hierarchies_setup(void);
@@ -4627,6 +4631,22 @@ bake_test_case Union_testcases[] = {
     {
         "get_case_w_generation_not_alive",
         Union_get_case_w_generation_not_alive
+    },
+    {
+        "defer_add_union_relationship",
+        Union_defer_add_union_relationship
+    },
+    {
+        "defer_add_existing_union_relationship",
+        Union_defer_add_existing_union_relationship
+    },
+    {
+        "defer_add_union_relationship_2_ops",
+        Union_defer_add_union_relationship_2_ops
+    },
+    {
+        "defer_add_existing_union_relationship_2_ops",
+        Union_defer_add_existing_union_relationship_2_ops
     }
 };
 
@@ -13524,7 +13544,7 @@ static bake_test_suite suites[] = {
         "Union",
         NULL,
         NULL,
-        47,
+        51,
         Union_testcases
     },
     {

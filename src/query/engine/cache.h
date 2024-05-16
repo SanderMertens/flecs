@@ -1,7 +1,9 @@
  /**
- * @file query/cache.h
+ * @file query/engine/cache.h
  * @brief Query cache functions.
  */
+
+#include "../types.h"
 
 /* Create query cache */
 ecs_query_cache_t* flecs_query_cache_init(

@@ -1360,3 +1360,87 @@ void Union_get_case_w_generation_not_alive(void) {
 
     ecs_fini(world);
 }
+
+void Union_defer_add_union_relationship(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, Rel, Union);
+    ECS_TAG(world, Tgt);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_defer_begin(world);
+    ecs_add_pair(world, e, Rel, Tgt);
+    test_assert(!ecs_has_pair(world, e, Rel, Tgt));
+    ecs_defer_end(world);
+    test_assert(ecs_has_pair(world, e, Rel, Tgt));
+
+    ecs_fini(world);
+}
+
+void Union_defer_add_existing_union_relationship(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, Rel, Union);
+    ECS_TAG(world, TgtA);
+    ECS_TAG(world, TgtB);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_add_pair(world, e, Rel, TgtA);
+    test_assert(ecs_has_pair(world, e, Rel, TgtA));
+
+    ecs_defer_begin(world);
+    ecs_add_pair(world, e, Rel, TgtB);
+    test_assert(ecs_has_pair(world, e, Rel, TgtA));
+    test_assert(!ecs_has_pair(world, e, Rel, TgtB));
+    ecs_defer_end(world);
+    test_assert(!ecs_has_pair(world, e, Rel, TgtA));
+    test_assert(ecs_has_pair(world, e, Rel, TgtB));
+
+    ecs_fini(world);
+}
+
+void Union_defer_add_union_relationship_2_ops(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, Rel, Union);
+    ECS_TAG(world, Tgt);
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_defer_begin(world);
+    ecs_add_pair(world, e, Rel, Tgt);
+    ecs_add(world, e, Tag);
+    test_assert(!ecs_has_pair(world, e, Rel, Tgt));
+    test_assert(!ecs_has(world, e, Tag));
+    ecs_defer_end(world);
+    test_assert(ecs_has_pair(world, e, Rel, Tgt));
+    test_assert(ecs_has(world, e, Tag));
+
+    ecs_fini(world);
+}
+
+void Union_defer_add_existing_union_relationship_2_ops(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, Rel, Union);
+    ECS_TAG(world, TgtA);
+    ECS_TAG(world, TgtB);
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_add_pair(world, e, Rel, TgtA);
+    test_assert(ecs_has_pair(world, e, Rel, TgtA));
+
+    ecs_defer_begin(world);
+    ecs_add_pair(world, e, Rel, TgtB);
+    ecs_add(world, e, Tag);
+    test_assert(ecs_has_pair(world, e, Rel, TgtA));
+    test_assert(!ecs_has_pair(world, e, Rel, TgtB));
+    test_assert(!ecs_has(world, e, Tag));
+    ecs_defer_end(world);
+    test_assert(!ecs_has_pair(world, e, Rel, TgtA));
+    test_assert(ecs_has_pair(world, e, Rel, TgtB));
+    test_assert(ecs_has(world, e, Tag));
+
+    ecs_fini(world);
+}

@@ -1,4 +1,9 @@
-#include "../private_api.h"
+/**
+ * @file query/engine/trav_up_cache.c
+ * @brief Compile query term.
+ */
+
+#include "../../private_api.h"
 
 static
 ecs_trav_up_t* flecs_trav_up_ensure(

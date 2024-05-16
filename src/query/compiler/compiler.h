@@ -1,9 +1,9 @@
 /**
- * @file query/compiler.h
+ * @file query/compiler/compiler.h
  * @brief Query compiler functions.
  */
 
-#include "types.h"
+#include "../types.h"
 
 /* Compile query to list of operations */
 int flecs_query_compile(

@@ -1,9 +1,9 @@
 /**
- * @file query/trav_cache.h
+ * @file query/engine/trav_cache.h
  * @brief Traversal cache functions
  */
 
-#include "types.h"
+#include "../types.h"
 
 /* Traversal cache for transitive queries. Finds all reachable entities by
  * following a relationship */
