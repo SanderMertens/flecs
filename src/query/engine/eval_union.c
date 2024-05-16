@@ -302,6 +302,28 @@ bool flecs_query_union_neq(
     }
 }
 
+static
+void flecs_query_union_set_shared(
+    const ecs_query_op_t *op,
+    const ecs_query_run_ctx_t *ctx)
+{
+    ecs_query_up_ctx_t *op_ctx = flecs_op_ctx(ctx, up);
+    ecs_id_record_t *idr = op_ctx->idr_with;
+    ecs_assert(idr != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_entity_t rel = ECS_PAIR_FIRST(idr->id);
+    idr = flecs_id_record_get(ctx->world, ecs_pair(rel, EcsUnion));
+    ecs_assert(idr != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(idr->sparse != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    int8_t field_index = op->field_index;
+    ecs_iter_t *it = ctx->it;
+    ecs_entity_t src = it->sources[field_index];
+    ecs_entity_t tgt = flecs_switch_get(idr->sparse, (uint32_t)src);
+    
+    it->ids[field_index] = ecs_pair(rel, tgt);
+}
+
 bool flecs_query_union_up(
     const ecs_query_op_t *op,
     bool redo,
@@ -309,7 +331,16 @@ bool flecs_query_union_up(
 {
     uint64_t written = ctx->written[ctx->op_index];
     if (flecs_ref_is_written(op, &op->src, EcsQuerySrc, written)) {
-        // return flecs_query_self_up_with(op, redo, ctx, false);
+        if (!redo) {
+            if (!flecs_query_up_with(op, redo, ctx)) {
+                return false;
+            }
+
+            flecs_query_union_set_shared(op, ctx);
+            return true;
+        } else {
+            return false;
+        }
     } else {
         return flecs_query_up_select(op, redo, ctx, 
             FlecsQueryUpSelectUp, FlecsQueryUpSelectUnion);
@@ -323,7 +354,28 @@ bool flecs_query_union_self_up(
 {
     uint64_t written = ctx->written[ctx->op_index];
     if (flecs_ref_is_written(op, &op->src, EcsQuerySrc, written)) {
-        // return flecs_query_self_up_with(op, redo, ctx, false);
+        if (redo) {
+            goto next_for_union;
+        }
+
+next_for_self_up_with:
+        if (!flecs_query_self_up_with(op, redo, ctx, false)) {
+            return false;
+        }
+
+        int8_t field_index = op->field_index;
+        ecs_iter_t *it = ctx->it;
+        if (it->sources[field_index]) {
+            flecs_query_union_set_shared(op, ctx);
+            return true;
+        }
+
+next_for_union:
+        if (!flecs_query_union_with(op, redo, ctx, false)) {
+            goto next_for_self_up_with;
+        }
+
+        return true;
     } else {
         return flecs_query_up_select(op, redo, ctx, 
             FlecsQueryUpSelectSelfUp, FlecsQueryUpSelectUnion);

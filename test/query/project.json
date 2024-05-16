@@ -1887,17 +1887,16 @@
                 "self_up",
                 "up_written",
                 "self_up_written",
-                "match_case_no_case",
-                "existing_switch_and_case",
-                "new_switch_and_case",
-                "for_case_existing",
-                "for_case_new",
-                "case_w_generation",
-                "case_w_not_alive",
+                "existing_union_table",
+                "new_union_table",
+                "existing_union_table_w_tgt",
+                "new_union_table_w_tgt",
+                "tgt_w_generation",
+                "tgt_w_not_alive",
                 "for_switch_filter_term",
-                "switch_from_nothing",
-                "case_from_nothing",
-                "case_inherited"
+                "union_from_nothing",
+                "union_tgt_from_nothing",
+                "tgt_inherited"
             ]
         }, {
             "id": "OrderBy",
