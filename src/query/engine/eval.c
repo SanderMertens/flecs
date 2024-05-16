@@ -316,10 +316,11 @@ bool flecs_query_up_select(
                         result = flecs_query_select_w_id(op, redo_select, ctx, 
                             op_ctx->with, 0);
                     } else if (kind == FlecsQueryUpSelectUnion) {
-                        result = flecs_query_union_select(op, redo, ctx);
+                        result = flecs_query_union_select(op, redo_select, ctx);
                     } else {
                         ecs_abort(ECS_INTERNAL_ERROR, NULL);
                     }
+
                     if (!result) {
                         return false;
                     }
@@ -411,7 +412,6 @@ next_elem:
     return true;
 }
 
-static
 bool flecs_query_up_with(
     const ecs_query_op_t *op,
     bool redo,
@@ -427,6 +427,7 @@ bool flecs_query_up_with(
         op_ctx->idr_trav = flecs_id_record_get(ctx->world, 
             ecs_pair(op_ctx->trav, EcsWildcard));
     }
+
     if (!op_ctx->idr_trav || !flecs_table_cache_all_count(&op_ctx->idr_trav->cache)){
         return false;
     }
@@ -466,7 +467,6 @@ bool flecs_query_up_with(
     }
 }
 
-static
 bool flecs_query_self_up_with(
     const ecs_query_op_t *op,
     bool redo,

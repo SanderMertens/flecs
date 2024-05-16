@@ -141,6 +141,16 @@ typedef struct {
     int16_t remaining;
 } ecs_query_and_ctx_t;
 
+/* Union context */
+typedef struct {
+    ecs_id_record_t *idr;
+    ecs_table_range_t range;
+    ecs_map_iter_t tgt_iter;
+    ecs_entity_t cur;
+    ecs_entity_t tgt;
+    int32_t row;
+} ecs_query_union_ctx_t;
+
 /* Down traversal cache (for resolving up queries w/unknown source) */
 typedef struct {
     ecs_table_t *table;
@@ -172,7 +182,10 @@ typedef struct {
 
 /* And up context */
 typedef struct {
-    ecs_query_and_ctx_t and;
+    union {
+        ecs_query_and_ctx_t and;
+        ecs_query_union_ctx_t union_;
+    } is;
     ecs_table_t *table;
     int32_t row;
     int32_t end;
@@ -272,16 +285,6 @@ typedef struct {
     bool optional_not;
     bool has_bitset;
 } ecs_query_toggle_ctx_t;
-
-/* Union context */
-typedef struct {
-    ecs_table_range_t range;
-    ecs_id_record_t *idr;
-    ecs_entity_t cur;
-    ecs_map_iter_t tgt_iter;
-    ecs_entity_t tgt;
-    int32_t row;
-} ecs_query_union_ctx_t;
 
 typedef struct ecs_query_op_ctx_t {
     union {
