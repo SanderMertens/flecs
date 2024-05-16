@@ -1393,6 +1393,16 @@ typedef struct {
     int16_t remaining;
 } ecs_query_and_ctx_t;
 
+/* Union context */
+typedef struct {
+    ecs_id_record_t *idr;
+    ecs_table_range_t range;
+    ecs_map_iter_t tgt_iter;
+    ecs_entity_t cur;
+    ecs_entity_t tgt;
+    int32_t row;
+} ecs_query_union_ctx_t;
+
 /* Down traversal cache (for resolving up queries w/unknown source) */
 typedef struct {
     ecs_table_t *table;
@@ -1424,7 +1434,10 @@ typedef struct {
 
 /* And up context */
 typedef struct {
-    ecs_query_and_ctx_t and;
+    union {
+        ecs_query_and_ctx_t and;
+        ecs_query_union_ctx_t union_;
+    } is;
     ecs_table_t *table;
     int32_t row;
     int32_t end;
@@ -1524,16 +1537,6 @@ typedef struct {
     bool optional_not;
     bool has_bitset;
 } ecs_query_toggle_ctx_t;
-
-/* Union context */
-typedef struct {
-    ecs_table_range_t range;
-    ecs_id_record_t *idr;
-    ecs_entity_t cur;
-    ecs_map_iter_t tgt_iter;
-    ecs_entity_t tgt;
-    int32_t row;
-} ecs_query_union_ctx_t;
 
 typedef struct ecs_query_op_ctx_t {
     union {
@@ -2247,6 +2250,17 @@ bool flecs_query_up_select(
     const ecs_query_run_ctx_t *ctx,
     ecs_query_up_select_trav_kind_t trav_kind,
     ecs_query_up_select_kind_t kind);
+
+bool flecs_query_up_with(
+    const ecs_query_op_t *op,
+    bool redo,
+    const ecs_query_run_ctx_t *ctx);
+
+bool flecs_query_self_up_with(
+    const ecs_query_op_t *op,
+    bool redo,
+    const ecs_query_run_ctx_t *ctx,
+    bool id_only);
 
 
 /* Populate data fields */
@@ -73907,10 +73921,11 @@ bool flecs_query_up_select(
                         result = flecs_query_select_w_id(op, redo_select, ctx, 
                             op_ctx->with, 0);
                     } else if (kind == FlecsQueryUpSelectUnion) {
-                        result = flecs_query_union_select(op, redo, ctx);
+                        result = flecs_query_union_select(op, redo_select, ctx);
                     } else {
                         ecs_abort(ECS_INTERNAL_ERROR, NULL);
                     }
+
                     if (!result) {
                         return false;
                     }
@@ -74002,7 +74017,6 @@ next_elem:
     return true;
 }
 
-static
 bool flecs_query_up_with(
     const ecs_query_op_t *op,
     bool redo,
@@ -74018,6 +74032,7 @@ bool flecs_query_up_with(
         op_ctx->idr_trav = flecs_id_record_get(ctx->world, 
             ecs_pair(op_ctx->trav, EcsWildcard));
     }
+
     if (!op_ctx->idr_trav || !flecs_table_cache_all_count(&op_ctx->idr_trav->cache)){
         return false;
     }
@@ -74057,7 +74072,6 @@ bool flecs_query_up_with(
     }
 }
 
-static
 bool flecs_query_self_up_with(
     const ecs_query_op_t *op,
     bool redo,
@@ -77335,6 +77349,28 @@ bool flecs_query_union_neq(
     }
 }
 
+static
+void flecs_query_union_set_shared(
+    const ecs_query_op_t *op,
+    const ecs_query_run_ctx_t *ctx)
+{
+    ecs_query_up_ctx_t *op_ctx = flecs_op_ctx(ctx, up);
+    ecs_id_record_t *idr = op_ctx->idr_with;
+    ecs_assert(idr != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_entity_t rel = ECS_PAIR_FIRST(idr->id);
+    idr = flecs_id_record_get(ctx->world, ecs_pair(rel, EcsUnion));
+    ecs_assert(idr != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(idr->sparse != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    int8_t field_index = op->field_index;
+    ecs_iter_t *it = ctx->it;
+    ecs_entity_t src = it->sources[field_index];
+    ecs_entity_t tgt = flecs_switch_get(idr->sparse, (uint32_t)src);
+    
+    it->ids[field_index] = ecs_pair(rel, tgt);
+}
+
 bool flecs_query_union_up(
     const ecs_query_op_t *op,
     bool redo,
@@ -77342,7 +77378,16 @@ bool flecs_query_union_up(
 {
     uint64_t written = ctx->written[ctx->op_index];
     if (flecs_ref_is_written(op, &op->src, EcsQuerySrc, written)) {
-        // return flecs_query_self_up_with(op, redo, ctx, false);
+        if (!redo) {
+            if (!flecs_query_up_with(op, redo, ctx)) {
+                return false;
+            }
+
+            flecs_query_union_set_shared(op, ctx);
+            return true;
+        } else {
+            return false;
+        }
     } else {
         return flecs_query_up_select(op, redo, ctx, 
             FlecsQueryUpSelectUp, FlecsQueryUpSelectUnion);
@@ -77356,7 +77401,28 @@ bool flecs_query_union_self_up(
 {
     uint64_t written = ctx->written[ctx->op_index];
     if (flecs_ref_is_written(op, &op->src, EcsQuerySrc, written)) {
-        // return flecs_query_self_up_with(op, redo, ctx, false);
+        if (redo) {
+            goto next_for_union;
+        }
+
+next_for_self_up_with:
+        if (!flecs_query_self_up_with(op, redo, ctx, false)) {
+            return false;
+        }
+
+        int8_t field_index = op->field_index;
+        ecs_iter_t *it = ctx->it;
+        if (it->sources[field_index]) {
+            flecs_query_union_set_shared(op, ctx);
+            return true;
+        }
+
+next_for_union:
+        if (!flecs_query_union_with(op, redo, ctx, false)) {
+            goto next_for_self_up_with;
+        }
+
+        return true;
     } else {
         return flecs_query_up_select(op, redo, ctx, 
             FlecsQueryUpSelectSelfUp, FlecsQueryUpSelectUnion);
