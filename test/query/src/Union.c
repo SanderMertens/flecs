@@ -4058,35 +4058,46 @@ void Union_match_switch_w_case_2_terms(void) {
 void Union_up(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, SwX, Union, (OnInstantiate, Inherit));
+    ECS_ENTITY(world, SwX, Union);
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
     ECS_TAG(world, TagC);
 
     ecs_entity_t b1 = ecs_new_w_pair(world, SwX, TagA);
     ecs_entity_t b2 = ecs_new_w_pair(world, SwX, TagB);
-    ecs_entity_t e1 = ecs_new_w_pair(world, EcsIsA, b1);
-    ecs_entity_t e2 = ecs_new_w_pair(world, EcsIsA, b1);
-    ecs_entity_t e3 = ecs_new_w_pair(world, EcsIsA, b2);
-    ecs_entity_t e4 = ecs_new_w_pair(world, EcsIsA, b2);
+    ecs_entity_t e1 = ecs_new_w_pair(world, EcsChildOf, b1);
+    ecs_entity_t e2 = ecs_new_w_pair(world, EcsChildOf, b1);
+    ecs_entity_t e3 = ecs_new_w_pair(world, EcsChildOf, b2);
+    ecs_entity_t e4 = ecs_new_w_pair(world, EcsChildOf, b2);
     ecs_add_pair(world, e4, SwX, TagC);
 
     ecs_query_t *q = ecs_query(world, {
         .terms = {
             { ecs_pair(SwX, EcsWildcard), .src.id = EcsUp }
-        }
+        },
+        .cache_kind = cache_kind
     });
 
     test_assert(q != NULL);
 
-    printf("%s\n", ecs_query_plan(q));
-
     ecs_iter_t it = ecs_query_iter(world, q);
     
     test_bool(ecs_query_next(&it), true);
-    test_int(it.count, 1);
+    test_int(it.count, 2);
     test_int(it.entities[0], e1);
+    test_int(it.entities[1], e2);
     test_uint(it.ids[0], ecs_pair(SwX, TagA));
+
+    test_bool(ecs_query_next(&it), true);
+    test_int(it.count, 1);
+    test_int(it.entities[0], e3);
+    test_uint(it.ids[0], ecs_pair(SwX, TagB));
+
+    test_bool(ecs_query_next(&it), true);
+    test_int(it.count, 1);
+    test_int(it.entities[0], e4);
+    test_uint(it.ids[0], ecs_pair(SwX, TagB));
+
     test_bool(ecs_query_next(&it), false);
 
     ecs_query_fini(q);
@@ -4095,40 +4106,57 @@ void Union_up(void) {
 }
 
 void Union_self_up(void) {
-    // Implement testcase
-}
-
-void Union_up_written(void) {
-    // Implement testcase
-}
-
-void Union_self_up_written(void) {
-    // Implement testcase
-}
-
-void Union_match_case_no_case(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_ENTITY(world, Sw, Union);
+    ECS_ENTITY(world, SwX, Union);
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
+    ECS_TAG(world, TagC);
 
-    ecs_entity_t e = ecs_new_w_pair(world, Sw, TagA);
-    ecs_table_t *table = ecs_get_table(world, e);
-    
+    ecs_entity_t b1 = ecs_new_w_pair(world, SwX, TagA);
+    ecs_entity_t b2 = ecs_new_w_pair(world, SwX, TagB);
+    ecs_entity_t e1 = ecs_new_w_pair(world, EcsChildOf, b1);
+    ecs_entity_t e2 = ecs_new_w_pair(world, EcsChildOf, b1);
+    ecs_entity_t e3 = ecs_new_w_pair(world, EcsChildOf, b2);
+    ecs_entity_t e4 = ecs_new_w_pair(world, EcsChildOf, b2);
+    ecs_add_pair(world, e4, SwX, TagC);
+
     ecs_query_t *q = ecs_query(world, {
-        .terms = {{ ecs_pair(Sw, TagA) }}
+        .terms = {
+            { ecs_pair(SwX, EcsWildcard), .src.id = EcsSelf|EcsUp }
+        },
+        .cache_kind = cache_kind
     });
 
     test_assert(q != NULL);
 
     ecs_iter_t it = ecs_query_iter(world, q);
-    
+
     test_bool(ecs_query_next(&it), true);
     test_int(it.count, 1);
-    test_int(it.entities[0], e);
-    test_assert(it.table == table);
-    test_uint(it.ids[0], ecs_pair(Sw, EcsWildcard));
+    test_int(it.entities[0], b1);
+    test_uint(it.ids[0], ecs_pair(SwX, TagA));
+
+    test_bool(ecs_query_next(&it), true);
+    test_int(it.count, 2);
+    test_int(it.entities[0], e1);
+    test_int(it.entities[1], e2);
+    test_uint(it.ids[0], ecs_pair(SwX, TagA));
+
+    test_bool(ecs_query_next(&it), true);
+    test_int(it.count, 1);
+    test_int(it.entities[0], e4);
+    test_uint(it.ids[0], ecs_pair(SwX, TagC));
+
+    test_bool(ecs_query_next(&it), true);
+    test_int(it.count, 1);
+    test_int(it.entities[0], b2);
+    test_uint(it.ids[0], ecs_pair(SwX, TagB));
+
+    test_bool(ecs_query_next(&it), true);
+    test_int(it.count, 1);
+    test_int(it.entities[0], e3);
+    test_uint(it.ids[0], ecs_pair(SwX, TagB));
 
     test_bool(ecs_query_next(&it), false);
 
@@ -4137,7 +4165,142 @@ void Union_match_case_no_case(void) {
     ecs_fini(world);
 }
 
-void Union_existing_switch_and_case(void) {
+void Union_up_written(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, SwX, Union);
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+    ECS_TAG(world, TagC);
+    ECS_TAG(world, Foo);
+
+    ecs_entity_t b1 = ecs_new_w_pair(world, SwX, TagA);
+    ecs_entity_t b2 = ecs_new_w_pair(world, SwX, TagB);
+    ecs_entity_t e1 = ecs_new_w_pair(world, EcsChildOf, b1);
+    ecs_entity_t e2 = ecs_new_w_pair(world, EcsChildOf, b1);
+    ecs_entity_t e3 = ecs_new_w_pair(world, EcsChildOf, b2);
+    ecs_entity_t e4 = ecs_new_w_pair(world, EcsChildOf, b2);
+    ecs_add_pair(world, e4, SwX, TagC);
+
+    ecs_add(world, b1, Foo);
+    ecs_add(world, b2, Foo);
+    ecs_add(world, e1, Foo);
+    ecs_add(world, e2, Foo);
+    ecs_add(world, e3, Foo);
+    ecs_add(world, e4, Foo);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {
+            { Foo },
+            { ecs_pair(SwX, EcsWildcard), .src.id = EcsUp }
+        },
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);    
+    test_bool(ecs_query_next(&it), true);
+    test_int(it.count, 2);
+    test_int(it.entities[0], e1);
+    test_int(it.entities[1], e2);
+    test_uint(it.ids[0], Foo);
+    test_uint(it.ids[1], ecs_pair(SwX, TagA));
+
+    test_bool(ecs_query_next(&it), true);
+    test_int(it.count, 1);
+    test_int(it.entities[0], e3);
+    test_uint(it.ids[0], Foo);
+    test_uint(it.ids[1], ecs_pair(SwX, TagB));
+
+    test_bool(ecs_query_next(&it), true);
+    test_int(it.count, 1);
+    test_int(it.entities[0], e4);
+    test_uint(it.ids[0], Foo);
+    test_uint(it.ids[1], ecs_pair(SwX, TagB));
+
+    test_bool(ecs_query_next(&it), false);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Union_self_up_written(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, SwX, Union);
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+    ECS_TAG(world, TagC);
+    ECS_TAG(world, Foo);
+
+    ecs_entity_t b1 = ecs_new_w_pair(world, SwX, TagA);
+    ecs_entity_t b2 = ecs_new_w_pair(world, SwX, TagB);
+    ecs_entity_t e1 = ecs_new_w_pair(world, EcsChildOf, b1);
+    ecs_entity_t e2 = ecs_new_w_pair(world, EcsChildOf, b1);
+    ecs_entity_t e3 = ecs_new_w_pair(world, EcsChildOf, b2);
+    ecs_entity_t e4 = ecs_new_w_pair(world, EcsChildOf, b2);
+    ecs_add_pair(world, e4, SwX, TagC);
+
+    ecs_add(world, b1, Foo);
+    ecs_add(world, b2, Foo);
+    ecs_add(world, e1, Foo);
+    ecs_add(world, e2, Foo);
+    ecs_add(world, e3, Foo);
+    ecs_add(world, e4, Foo);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {
+            { Foo },
+            { ecs_pair(SwX, EcsWildcard), .src.id = EcsSelf|EcsUp }
+        },
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+
+    test_bool(ecs_query_next(&it), true);
+    test_int(it.count, 1);
+    test_int(it.entities[0], b1);
+    test_uint(it.ids[0], Foo);
+    test_uint(it.ids[1], ecs_pair(SwX, TagA));
+
+    test_bool(ecs_query_next(&it), true);
+    test_int(it.count, 1);
+    test_int(it.entities[0], b2);
+    test_uint(it.ids[0], Foo);
+    test_uint(it.ids[1], ecs_pair(SwX, TagB));
+
+    test_bool(ecs_query_next(&it), true);
+    test_int(it.count, 2);
+    test_int(it.entities[0], e1);
+    test_int(it.entities[1], e2);
+    test_uint(it.ids[0], Foo);
+    test_uint(it.ids[1], ecs_pair(SwX, TagA));
+
+    test_bool(ecs_query_next(&it), true);
+    test_int(it.count, 1);
+    test_int(it.entities[0], e3);
+    test_uint(it.ids[0], Foo);
+    test_uint(it.ids[1], ecs_pair(SwX, TagB));
+
+    test_bool(ecs_query_next(&it), true);
+    test_int(it.count, 1);
+    test_int(it.entities[0], e4);
+    test_uint(it.ids[0], Foo);
+    test_uint(it.ids[1], ecs_pair(SwX, TagC));
+
+    test_bool(ecs_query_next(&it), false);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Union_existing_union_table(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, Movement, Union);
@@ -4147,7 +4310,8 @@ void Union_existing_switch_and_case(void) {
     ecs_entity_t e1 = ecs_new_w_pair(world, Movement, Walking);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "(Movement, *)"
+        .expr = "(Movement, *)",
+        .cache_kind = EcsQueryCacheAuto
     });
     test_assert(q != NULL);
 
@@ -4156,7 +4320,7 @@ void Union_existing_switch_and_case(void) {
     test_int(it.count, 1);
     test_uint(it.entities[0], e1);
 
-    test_uint(ecs_field_id(&it, 1), ecs_pair(Movement, EcsWildcard));
+    test_uint(ecs_field_id(&it, 0), ecs_pair(Movement, Walking));
     test_bool(false, ecs_query_next(&it));
 
     ecs_query_fini(q);
@@ -4164,7 +4328,7 @@ void Union_existing_switch_and_case(void) {
     ecs_fini(world);
 }
 
-void Union_new_switch_and_case(void) {
+void Union_new_union_table(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, Movement, Union);
@@ -4172,7 +4336,8 @@ void Union_new_switch_and_case(void) {
     ECS_TAG(world, Running);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "(Movement, *)"
+        .expr = "(Movement, *)",
+        .cache_kind = EcsQueryCacheAuto
     });
     test_assert(q != NULL);
 
@@ -4182,18 +4347,19 @@ void Union_new_switch_and_case(void) {
 
     ecs_iter_t it = ecs_query_iter(world, q);
     test_bool(true, ecs_query_next(&it));
-    test_int(it.count, 3);
+    test_int(it.count, 1);
+    test_uint(it.entities[0], e3);
+    test_uint(ecs_field_id(&it, 0), ecs_pair(Movement, Walking));
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(it.count, 1);
     test_uint(it.entities[0], e1);
-    test_uint(it.entities[1], e2);
-    test_uint(it.entities[2], e3);
-    test_uint(ecs_field_id(&it, 1), ecs_pair(Movement, EcsWildcard));
-    test_assert(it.sizes != NULL);
-    test_int(it.sizes[0], ECS_SIZEOF(ecs_entity_t));
-    test_assert(it.ptrs != NULL);
-    ecs_entity_t *cases = ecs_field(&it, ecs_entity_t, 1);
-    test_uint(cases[0], Walking);
-    test_uint(cases[1], Running);
-    test_uint(cases[2], Walking);
+    test_uint(ecs_field_id(&it, 0), ecs_pair(Movement, Walking));
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], e2);
+    test_uint(ecs_field_id(&it, 0), ecs_pair(Movement, Running));
 
     test_bool(false, ecs_query_next(&it));
 
@@ -4202,7 +4368,7 @@ void Union_new_switch_and_case(void) {
     ecs_fini(world);
 }
 
-void Union_for_case_existing(void) {
+void Union_existing_union_table_w_tgt(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, Movement, Union);
@@ -4214,7 +4380,8 @@ void Union_for_case_existing(void) {
     ecs_entity_t e3 = ecs_new_w_pair(world, Movement, Walking);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "(Movement, Walking)"
+        .expr = "(Movement, Walking)",
+        .cache_kind = cache_kind
     });
     test_assert(q != NULL);
 
@@ -4222,12 +4389,12 @@ void Union_for_case_existing(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(it.count, 1);
     test_uint(it.entities[0], e3);
-    test_uint(ecs_field_id(&it, 1), ecs_pair(Movement, Walking));
+    test_uint(ecs_field_id(&it, 0), ecs_pair(Movement, Walking));
 
     test_bool(true, ecs_query_next(&it));
     test_int(it.count, 1);
     test_uint(it.entities[0], e1);
-    test_uint(ecs_field_id(&it, 1), ecs_pair(Movement, Walking));
+    test_uint(ecs_field_id(&it, 0), ecs_pair(Movement, Walking));
     test_bool(false, ecs_query_next(&it));
 
     ecs_query_fini(q);
@@ -4235,7 +4402,7 @@ void Union_for_case_existing(void) {
     ecs_fini(world);
 }
 
-void Union_for_case_new(void) {
+void Union_new_union_table_w_tgt(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, Movement, Union);
@@ -4243,7 +4410,8 @@ void Union_for_case_new(void) {
     ECS_TAG(world, Running);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "(Movement, Walking)"
+        .expr = "(Movement, Walking)",
+        .cache_kind = cache_kind
     });
     test_assert(q != NULL);
 
@@ -4255,12 +4423,12 @@ void Union_for_case_new(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(it.count, 1);
     test_uint(it.entities[0], e3);
-    test_uint(ecs_field_id(&it, 1), ecs_pair(Movement, Walking));
+    test_uint(ecs_field_id(&it, 0), ecs_pair(Movement, Walking));
 
     test_bool(true, ecs_query_next(&it));
     test_int(it.count, 1);
     test_uint(it.entities[0], e1);
-    test_uint(ecs_field_id(&it, 1), ecs_pair(Movement, Walking));
+    test_uint(ecs_field_id(&it, 0), ecs_pair(Movement, Walking));
     test_bool(false, ecs_query_next(&it));
 
     ecs_query_fini(q);
@@ -4268,7 +4436,7 @@ void Union_for_case_new(void) {
     ecs_fini(world);
 }
 
-void Union_case_w_generation(void) {
+void Union_tgt_w_generation(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, Rel, Union);
@@ -4284,7 +4452,8 @@ void Union_case_w_generation(void) {
     test_assert(tgt_2 != (uint32_t)tgt_2);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "(Rel, *)"
+        .expr = "(Rel, *)",
+        .cache_kind = cache_kind
     });
     test_assert(q != NULL);
 
@@ -4292,17 +4461,15 @@ void Union_case_w_generation(void) {
     ecs_entity_t e2 = ecs_new_w_pair(world, Rel, tgt_2);
 
     ecs_iter_t it = ecs_query_iter(world, q);
-    {
-        test_bool(true, ecs_query_next(&it));
-        test_int(it.count, 2);
-        test_uint(it.entities[0], e1);
-        test_uint(it.entities[1], e2);
-        test_uint(ecs_field_id(&it, 1), ecs_pair(Rel, EcsWildcard));
-        ecs_entity_t *cases = ecs_field(&it, ecs_entity_t, 1);
-        test_assert(cases != NULL);
-        test_uint(cases[0], tgt_1);
-        test_uint(cases[1], tgt_2);
-    }
+    test_bool(true, ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], e2);
+    test_uint(ecs_field_id(&it, 0), ecs_pair(Rel, tgt_2));
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], e1);
+    test_uint(ecs_field_id(&it, 0), ecs_pair(Rel, tgt_1));
 
     test_bool(false, ecs_query_next(&it));
 
@@ -4311,7 +4478,7 @@ void Union_case_w_generation(void) {
     ecs_fini(world);
 }
 
-void Union_case_w_not_alive(void) {
+void Union_tgt_w_not_alive(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, Rel, Union);
@@ -4327,7 +4494,8 @@ void Union_case_w_not_alive(void) {
     test_assert(tgt_2 != (uint32_t)tgt_2);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "(Rel, *)"
+        .expr = "(Rel, *)",
+        .cache_kind = cache_kind
     });
     test_assert(q != NULL);
 
@@ -4338,17 +4506,15 @@ void Union_case_w_not_alive(void) {
     ecs_delete(world, tgt_2);
 
     ecs_iter_t it = ecs_query_iter(world, q);
-    {
-        test_bool(true, ecs_query_next(&it));
-        test_int(it.count, 2);
-        test_uint(it.entities[0], e1);
-        test_uint(it.entities[1], e2);
-        test_uint(ecs_field_id(&it, 1), ecs_pair(Rel, EcsWildcard));
-        ecs_entity_t *cases = ecs_field(&it, ecs_entity_t, 1);
-        test_assert(cases != NULL);
-        test_uint(cases[0], tgt_1);
-        test_uint(cases[1], tgt_2);
-    }
+    test_bool(true, ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], e2);
+    test_uint(ecs_field_id(&it, 0), ecs_pair(Rel, tgt_2));
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], e1);
+    test_uint(ecs_field_id(&it, 0), ecs_pair(Rel, tgt_1));
 
     test_bool(false, ecs_query_next(&it));
 
@@ -4365,7 +4531,8 @@ void Union_for_switch_filter_term(void) {
     ECS_TAG(world, Running);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "[none] (Movement, *)"
+        .expr = "[none] (Movement, *)",
+        .cache_kind = cache_kind
     });
     test_assert(q != NULL);
 
@@ -4375,8 +4542,7 @@ void Union_for_switch_filter_term(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(it.count, 1);
     test_uint(it.entities[0], e1);
-    test_uint(ecs_field_id(&it, 1), ecs_pair(Movement, EcsWildcard));
-    test_int(it.sizes[0], ECS_SIZEOF(ecs_entity_t));
+    test_uint(ecs_field_id(&it, 0), ecs_pair(Movement, Walking));
     test_bool(false, ecs_query_next(&it));
 
     ecs_query_fini(q);
@@ -4384,7 +4550,7 @@ void Union_for_switch_filter_term(void) {
     ecs_fini(world);
 }
 
-void Union_switch_from_nothing(void) {
+void Union_union_from_nothing(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
@@ -4394,9 +4560,10 @@ void Union_switch_from_nothing(void) {
 
     ecs_query_t *q = ecs_query(world, {
         .terms = {
-            {Tag},
+            { Tag },
             { ecs_pair(Movement, EcsWildcard), .src.id = EcsIsEntity }
-        }
+        },
+        .cache_kind = cache_kind
     });
     test_assert(q != NULL);
 
@@ -4406,10 +4573,10 @@ void Union_switch_from_nothing(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(it.count, 1);
     test_uint(it.entities[0], e1);
-    test_uint(ecs_field_id(&it, 1), Tag);
-    test_uint(ecs_field_id(&it, 2), ecs_pair(Movement, EcsWildcard));
-    test_bool(true, ecs_field_is_set(&it, 1));
-    test_bool(false, ecs_field_is_set(&it, 2));
+    test_uint(ecs_field_id(&it, 0), Tag);
+    test_uint(ecs_field_id(&it, 1), ecs_pair(Movement, EcsWildcard));
+    test_bool(true, ecs_field_is_set(&it, 0));
+    test_bool(false, ecs_field_is_set(&it, 1));
     test_bool(false, ecs_query_next(&it));
 
     ecs_query_fini(q);
@@ -4417,7 +4584,7 @@ void Union_switch_from_nothing(void) {
     ecs_fini(world);
 }
 
-void Union_case_from_nothing(void) {
+void Union_union_tgt_from_nothing(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
@@ -4429,7 +4596,8 @@ void Union_case_from_nothing(void) {
         .terms = {
             {Tag},
             {ecs_pair(Movement, Walking), .src.id = EcsIsEntity }
-        }
+        },
+        .cache_kind = cache_kind
     });
     test_assert(q != NULL);
 
@@ -4439,10 +4607,10 @@ void Union_case_from_nothing(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(it.count, 1);
     test_uint(it.entities[0], e1);
-    test_uint(ecs_field_id(&it, 1), Tag);
-    test_uint(ecs_field_id(&it, 2), ecs_pair(Movement, Walking));
-    test_bool(true, ecs_field_is_set(&it, 1));
-    test_bool(false, ecs_field_is_set(&it, 2));
+    test_uint(ecs_field_id(&it, 0), Tag);
+    test_uint(ecs_field_id(&it, 1), ecs_pair(Movement, Walking));
+    test_bool(true, ecs_field_is_set(&it, 0));
+    test_bool(false, ecs_field_is_set(&it, 1));
     test_bool(false, ecs_query_next(&it));
 
     ecs_query_fini(q);
@@ -4450,7 +4618,7 @@ void Union_case_from_nothing(void) {
     ecs_fini(world);
 }
 
-void Union_case_inherited(void) {
+void Union_tgt_inherited(void) {
     test_quarantine("Aug 1st 2022");
 
     ecs_world_t *world = ecs_mini();
@@ -4468,7 +4636,8 @@ void Union_case_inherited(void) {
     ecs_query_t *q = ecs_query(world, {
         .terms = {
             { ecs_pair(Movement, Walking) }
-        }
+        },
+        .cache_kind = cache_kind
     });
     test_assert(q != NULL);
 
@@ -4476,12 +4645,12 @@ void Union_case_inherited(void) {
     test_bool(true, ecs_query_next(&it));
     test_int(it.count, 1);
     test_uint(it.entities[0], base_1);
-    test_uint(ecs_field_id(&it, 1), ecs_pair(Movement, Walking));
+    test_uint(ecs_field_id(&it, 0), ecs_pair(Movement, Walking));
 
     test_bool(true, ecs_query_next(&it));
     test_int(it.count, 1);
     test_uint(it.entities[0], inst_1);
-    test_uint(ecs_field_id(&it, 1), ecs_pair(Movement, Walking));
+    test_uint(ecs_field_id(&it, 0), ecs_pair(Movement, Walking));
     test_bool(false, ecs_query_next(&it));
 
     ecs_query_fini(q);

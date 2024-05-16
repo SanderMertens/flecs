@@ -191,6 +191,17 @@ bool flecs_query_up_select(
     ecs_query_up_select_trav_kind_t trav_kind,
     ecs_query_up_select_kind_t kind);
 
+bool flecs_query_up_with(
+    const ecs_query_op_t *op,
+    bool redo,
+    const ecs_query_run_ctx_t *ctx);
+
+bool flecs_query_self_up_with(
+    const ecs_query_op_t *op,
+    bool redo,
+    const ecs_query_run_ctx_t *ctx,
+    bool id_only);
+
 
 /* Populate data fields */
 

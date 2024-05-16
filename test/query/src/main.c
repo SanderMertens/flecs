@@ -1810,17 +1810,16 @@ void Union_up(void);
 void Union_self_up(void);
 void Union_up_written(void);
 void Union_self_up_written(void);
-void Union_match_case_no_case(void);
-void Union_existing_switch_and_case(void);
-void Union_new_switch_and_case(void);
-void Union_for_case_existing(void);
-void Union_for_case_new(void);
-void Union_case_w_generation(void);
-void Union_case_w_not_alive(void);
+void Union_existing_union_table(void);
+void Union_new_union_table(void);
+void Union_existing_union_table_w_tgt(void);
+void Union_new_union_table_w_tgt(void);
+void Union_tgt_w_generation(void);
+void Union_tgt_w_not_alive(void);
 void Union_for_switch_filter_term(void);
-void Union_switch_from_nothing(void);
-void Union_case_from_nothing(void);
-void Union_case_inherited(void);
+void Union_union_from_nothing(void);
+void Union_union_tgt_from_nothing(void);
+void Union_tgt_inherited(void);
 
 // Testsuite 'OrderBy'
 void OrderBy_sort_by_component(void);
@@ -9007,48 +9006,44 @@ bake_test_case Union_testcases[] = {
         Union_self_up_written
     },
     {
-        "match_case_no_case",
-        Union_match_case_no_case
+        "existing_union_table",
+        Union_existing_union_table
     },
     {
-        "existing_switch_and_case",
-        Union_existing_switch_and_case
+        "new_union_table",
+        Union_new_union_table
     },
     {
-        "new_switch_and_case",
-        Union_new_switch_and_case
+        "existing_union_table_w_tgt",
+        Union_existing_union_table_w_tgt
     },
     {
-        "for_case_existing",
-        Union_for_case_existing
+        "new_union_table_w_tgt",
+        Union_new_union_table_w_tgt
     },
     {
-        "for_case_new",
-        Union_for_case_new
+        "tgt_w_generation",
+        Union_tgt_w_generation
     },
     {
-        "case_w_generation",
-        Union_case_w_generation
-    },
-    {
-        "case_w_not_alive",
-        Union_case_w_not_alive
+        "tgt_w_not_alive",
+        Union_tgt_w_not_alive
     },
     {
         "for_switch_filter_term",
         Union_for_switch_filter_term
     },
     {
-        "switch_from_nothing",
-        Union_switch_from_nothing
+        "union_from_nothing",
+        Union_union_from_nothing
     },
     {
-        "case_from_nothing",
-        Union_case_from_nothing
+        "union_tgt_from_nothing",
+        Union_union_tgt_from_nothing
     },
     {
-        "case_inherited",
-        Union_case_inherited
+        "tgt_inherited",
+        Union_tgt_inherited
     }
 };
 
@@ -9714,7 +9709,7 @@ static bake_test_suite suites[] = {
         "Union",
         Union_setup,
         NULL,
-        72,
+        71,
         Union_testcases,
         1,
         Union_params
