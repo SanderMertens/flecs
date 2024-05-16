@@ -632,6 +632,24 @@
                 "pair_sweep_wildcard_second"
             ]
         }, {
+            "id": "Combinations",
+            "setup": true,
+            "params": {
+                "cache_kind": ["default", "auto"]
+            },
+            "testcases": [
+                "singleton_and_self_and_self",
+                "self_and_singleton_and_self",
+                "self_and_self_and_singleton",
+
+                "singleton_and_trav_and_self",
+                "trav_and_singleton_and_self",
+                "self_and_singleton_and_trav",
+                "self_and_trav_and_singleton",
+                "singleton_and_self_and_trav",
+                "trav_and_self_and_singleton"
+            ]
+        }, {
             "id": "Plan",
             "testcases": [
                 "reordered_plan_1",

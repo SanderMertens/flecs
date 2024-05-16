@@ -72,7 +72,7 @@ struct ecs_id_record_t {
      * queried for. */
     int32_t keep_alive;
 
-    /* Cache invalidation counter */
+    /* Cache for finding components that are reachable through a relationship */
     ecs_reachable_cache_t reachable;
 };
 

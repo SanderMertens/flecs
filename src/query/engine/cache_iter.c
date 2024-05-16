@@ -19,7 +19,6 @@ ecs_query_cache_table_match_t* flecs_query_next(
         ctx->vars[0].range.table = node->table;
         it->group_id = node->group_id;
         it->instance_count = 0;
-        it->references = ecs_vec_first(&node->refs);
         qit->node = node->next;
         qit->prev = node;
         return node;
@@ -116,8 +115,8 @@ void flecs_query_populate_ptrs_w_shared(
     int8_t *field_map,
     int8_t field_count)
 {
+    ecs_ref_t *refs = ecs_vec_first(&node->refs);
     int8_t i;
-
     for (i = 0; i < field_count; i ++) {
         int32_t column = node->columns[i];
         int8_t field_index = i;
@@ -132,9 +131,9 @@ void flecs_query_populate_ptrs_w_shared(
             continue;
         }
 
-        ecs_entity_t src = it->sources[i];
+        ecs_entity_t src = node->sources[i];
         if (src != 0) {
-            ecs_ref_t *ref = &it->references[column];
+            ecs_ref_t *ref = &refs[column];
             if (ref->id) {
                 it->ptrs[field_index] = (void*)ecs_ref_get_id(
                     it->real_world, ref, ref->id);
@@ -179,7 +178,7 @@ void flecs_query_cache_data_populate(
     }
 
     ecs_query_t *cache_query = impl->cache->query;
-    if (!it->references) {
+    if (!ecs_vec_count(&node->refs)) {
         flecs_query_populate_ptrs_w_field_map(
             it, table, offset, node, impl->field_map, cache_query->field_count);
     } else {
@@ -209,7 +208,7 @@ void flecs_query_is_cache_data_populate(
         return;
     }
 
-    if (!it->references) {
+    if (!ecs_vec_count(&node->refs)) {
         flecs_query_populate_ptrs(it, table, offset, node);
     } else {
         flecs_query_populate_ptrs_w_shared(it, table, offset, node, NULL, 
