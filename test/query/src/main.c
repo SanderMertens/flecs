@@ -619,6 +619,18 @@ void Basic_pair_sweep_tag(void);
 void Basic_pair_sweep_wildcard_first(void);
 void Basic_pair_sweep_wildcard_second(void);
 
+// Testsuite 'Combinations'
+void Combinations_setup(void);
+void Combinations_singleton_and_self_and_self(void);
+void Combinations_self_and_singleton_and_self(void);
+void Combinations_self_and_self_and_singleton(void);
+void Combinations_singleton_and_trav_and_self(void);
+void Combinations_trav_and_singleton_and_self(void);
+void Combinations_self_and_singleton_and_trav(void);
+void Combinations_self_and_trav_and_singleton(void);
+void Combinations_singleton_and_self_and_trav(void);
+void Combinations_trav_and_self_and_singleton(void);
+
 // Testsuite 'Plan'
 void Plan_reordered_plan_1(void);
 void Plan_reordered_plan_2(void);
@@ -4361,6 +4373,45 @@ bake_test_case Basic_testcases[] = {
     {
         "pair_sweep_wildcard_second",
         Basic_pair_sweep_wildcard_second
+    }
+};
+
+bake_test_case Combinations_testcases[] = {
+    {
+        "singleton_and_self_and_self",
+        Combinations_singleton_and_self_and_self
+    },
+    {
+        "self_and_singleton_and_self",
+        Combinations_self_and_singleton_and_self
+    },
+    {
+        "self_and_self_and_singleton",
+        Combinations_self_and_self_and_singleton
+    },
+    {
+        "singleton_and_trav_and_self",
+        Combinations_singleton_and_trav_and_self
+    },
+    {
+        "trav_and_singleton_and_self",
+        Combinations_trav_and_singleton_and_self
+    },
+    {
+        "self_and_singleton_and_trav",
+        Combinations_self_and_singleton_and_trav
+    },
+    {
+        "self_and_trav_and_singleton",
+        Combinations_self_and_trav_and_singleton
+    },
+    {
+        "singleton_and_self_and_trav",
+        Combinations_singleton_and_self_and_trav
+    },
+    {
+        "trav_and_self_and_singleton",
+        Combinations_trav_and_self_and_singleton
     }
 };
 
@@ -9508,6 +9559,10 @@ const char* Basic_cache_kind_param[] = {"default", "auto"};
 bake_test_param Basic_params[] = {
     {"cache_kind", (char**)Basic_cache_kind_param, 2}
 };
+const char* Combinations_cache_kind_param[] = {"default", "auto"};
+bake_test_param Combinations_params[] = {
+    {"cache_kind", (char**)Combinations_cache_kind_param, 2}
+};
 const char* Variables_cache_kind_param[] = {"default", "auto"};
 bake_test_param Variables_params[] = {
     {"cache_kind", (char**)Variables_cache_kind_param, 2}
@@ -9574,6 +9629,15 @@ static bake_test_suite suites[] = {
         Basic_testcases,
         1,
         Basic_params
+    },
+    {
+        "Combinations",
+        Combinations_setup,
+        NULL,
+        9,
+        Combinations_testcases,
+        1,
+        Combinations_params
     },
     {
         "Plan",
@@ -9738,5 +9802,5 @@ static bake_test_suite suites[] = {
 };
 
 int main(int argc, char *argv[]) {
-    return bake_test_run("query", argc, argv, suites, 23);
+    return bake_test_run("query", argc, argv, suites, 24);
 }
