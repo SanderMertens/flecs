@@ -347,7 +347,7 @@ const char* flecs_query_parse_term_flags(
     if      (!ecs_os_strcmp(token_0, "AND"))      oper = EcsAndFrom;
     else if (!ecs_os_strcmp(token_0, "OR"))       oper = EcsOrFrom;
     else if (!ecs_os_strcmp(token_0, "NOT"))      oper = EcsNotFrom;
-    else if (!ecs_os_strcmp(token_0, "OVERRIDE")) flag = ECS_OVERRIDE;
+    else if (!ecs_os_strcmp(token_0, "OVERRIDE")) flag = ECS_AUTO_OVERRIDE;
     else if (!ecs_os_strcmp(token_0, "TOGGLE"))   flag = ECS_TOGGLE;
     else {
         // Position

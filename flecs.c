@@ -7788,13 +7788,13 @@ error:
     return;
 }
 
-void ecs_override_id(
+void ecs_auto_override_id(
     ecs_world_t *world,
     ecs_entity_t entity,
     ecs_id_t id)
 {
     ecs_check(ecs_id_is_valid(world, id), ECS_INVALID_PARAMETER, NULL);
-    ecs_add_id(world, entity, ECS_OVERRIDE | id);
+    ecs_add_id(world, entity, ECS_AUTO_OVERRIDE | id);
 error:
     return;
 }
@@ -9254,8 +9254,8 @@ const char* ecs_id_flag_str(
     if (ECS_HAS_ID_FLAG(entity, TOGGLE)) {
         return "TOGGLE";
     } else
-    if (ECS_HAS_ID_FLAG(entity, OVERRIDE)) {
-        return "OVERRIDE";
+    if (ECS_HAS_ID_FLAG(entity, AUTO_OVERRIDE)) {
+        return "AUTO_OVERRIDE";
     } else {
         return "UNKNOWN";
     }
@@ -9275,8 +9275,8 @@ void ecs_id_str_buf(
         ecs_strbuf_appendch(buf, '|');
     }
 
-    if (ECS_HAS_ID_FLAG(id, OVERRIDE)) {
-        ecs_strbuf_appendstr(buf, ecs_id_flag_str(ECS_OVERRIDE));
+    if (ECS_HAS_ID_FLAG(id, AUTO_OVERRIDE)) {
+        ecs_strbuf_appendstr(buf, ecs_id_flag_str(ECS_AUTO_OVERRIDE));
         ecs_strbuf_appendch(buf, '|');
     }
 
@@ -22533,7 +22533,7 @@ error:
 
 /* Id flags */
 const ecs_id_t ECS_PAIR =                                          (1ull << 63);
-const ecs_id_t ECS_OVERRIDE =                                      (1ull << 62);
+const ecs_id_t ECS_AUTO_OVERRIDE =                                 (1ull << 62);
 const ecs_id_t ECS_TOGGLE =                                        (1ull << 61);
 
 /** Builtin component ids */
@@ -41940,7 +41940,7 @@ void flecs_table_init_flags(
                     }
                     meta->bs_count ++;
                 }
-                if (ECS_HAS_ID_FLAG(id, OVERRIDE)) {
+                if (ECS_HAS_ID_FLAG(id, AUTO_OVERRIDE)) {
                     table->flags |= EcsTableHasOverrides;
                 }
             }
@@ -45132,15 +45132,14 @@ void flecs_add_overrides_for_base(
     }
 
     ecs_id_t *ids = base_table->type.array;
-
     ecs_flags32_t flags = base_table->flags;
     if (flags & EcsTableHasOverrides) {
         int32_t i, count = base_table->type.count;
         for (i = 0; i < count; i ++) {
             ecs_id_t id = ids[i];
             ecs_id_t to_add = 0;
-            if (ECS_HAS_ID_FLAG(id, OVERRIDE)) {
-                to_add = id & ~ECS_OVERRIDE;
+            if (ECS_HAS_ID_FLAG(id, AUTO_OVERRIDE)) {
+                to_add = id & ~ECS_AUTO_OVERRIDE;
             } else {
                 ecs_table_record_t *tr = &base_table->_->records[i];
                 ecs_id_record_t *idr = (ecs_id_record_t*)tr->hdr.cache;
@@ -62697,7 +62696,7 @@ const char* flecs_query_parse_term_flags(
     if      (!ecs_os_strcmp(token_0, "AND"))      oper = EcsAndFrom;
     else if (!ecs_os_strcmp(token_0, "OR"))       oper = EcsOrFrom;
     else if (!ecs_os_strcmp(token_0, "NOT"))      oper = EcsNotFrom;
-    else if (!ecs_os_strcmp(token_0, "OVERRIDE")) flag = ECS_OVERRIDE;
+    else if (!ecs_os_strcmp(token_0, "OVERRIDE")) flag = ECS_AUTO_OVERRIDE;
     else if (!ecs_os_strcmp(token_0, "TOGGLE"))   flag = ECS_TOGGLE;
     else {
         // Position

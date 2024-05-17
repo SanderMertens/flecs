@@ -57,10 +57,10 @@ enum query_cache_kind_t {
     QueryCacheNone = EcsQueryCacheNone
 };
 
-/** Id flags */
-static const flecs::entity_t Pair = ECS_PAIR;
-static const flecs::entity_t Override = ECS_OVERRIDE;
-static const flecs::entity_t Toggle = ECS_TOGGLE;
+/** Id bit flags */
+static const flecs::entity_t PAIR = ECS_PAIR;
+static const flecs::entity_t AUTO_OVERRIDE = ECS_AUTO_OVERRIDE;
+static const flecs::entity_t TOGGLE = ECS_TOGGLE;
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Builtin components and tags
@@ -110,16 +110,13 @@ static const flecs::entity_t Flecs = EcsFlecs;
 static const flecs::entity_t FlecsCore = EcsFlecsCore;
 static const flecs::entity_t World = EcsWorld;
 
-/* Relationship properties */
+/* Component traits */
 static const flecs::entity_t Wildcard = EcsWildcard;
 static const flecs::entity_t Any = EcsAny;
 static const flecs::entity_t This = EcsThis;
 static const flecs::entity_t Transitive = EcsTransitive;
 static const flecs::entity_t Reflexive = EcsReflexive;
 static const flecs::entity_t Final = EcsFinal;
-static const flecs::entity_t OnInstantiate = EcsOnInstantiate;
-static const flecs::entity_t Inherit = EcsInherit;
-static const flecs::entity_t DontInherit = EcsDontInherit;
 static const flecs::entity_t PairIsTag = EcsPairIsTag;
 static const flecs::entity_t Exclusive = EcsExclusive;
 static const flecs::entity_t Acyclic = EcsAcyclic;
@@ -132,6 +129,19 @@ static const flecs::entity_t Relationship = EcsRelationship;
 static const flecs::entity_t Target = EcsTarget;
 static const flecs::entity_t CanToggle = EcsCanToggle;
 
+/* OnInstantiate trait */
+static const flecs::entity_t OnInstantiate = EcsOnInstantiate;
+static const flecs::entity_t Override = EcsOverride;
+static const flecs::entity_t Inherit = EcsInherit;
+static const flecs::entity_t DontInherit = EcsDontInherit;
+
+/* OnDelete/OnDeleteTarget traits */
+static const flecs::entity_t OnDelete = EcsOnDelete;
+static const flecs::entity_t OnDeleteTarget = EcsOnDeleteTarget;
+static const flecs::entity_t Remove = EcsRemove;
+static const flecs::entity_t Delete = EcsDelete;
+static const flecs::entity_t Panic = EcsPanic;
+
 /* Builtin relationships */
 static const flecs::entity_t IsA = EcsIsA;
 static const flecs::entity_t ChildOf = EcsChildOf;
@@ -141,13 +151,6 @@ static const flecs::entity_t SlotOf = EcsSlotOf;
 /* Builtin identifiers */
 static const flecs::entity_t Name = EcsName;
 static const flecs::entity_t Symbol = EcsSymbol;
-
-/* Cleanup policies */
-static const flecs::entity_t OnDelete = EcsOnDelete;
-static const flecs::entity_t OnDeleteTarget = EcsOnDeleteTarget;
-static const flecs::entity_t Remove = EcsRemove;
-static const flecs::entity_t Delete = EcsDelete;
-static const flecs::entity_t Panic = EcsPanic;
 
 /* Storage */
 static const flecs::entity_t Sparse = EcsSparse;

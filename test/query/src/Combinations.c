@@ -1,6 +1,7 @@
 #include <query.h>
 
 static ecs_query_cache_kind_t cache_kind = EcsQueryCacheDefault;
+static ecs_entity_t on_instantiate = 0;
 
 void Combinations_setup(void) {
     const char *cache_param = test_param("cache_kind");
@@ -13,14 +14,30 @@ void Combinations_setup(void) {
             printf("unexpected value for cache_param '%s'\n", cache_param);
         }
     }
+
+    const char *on_instantiate_param = test_param("on_instantiate");
+    if (on_instantiate_param) {
+        if (!strcmp(on_instantiate_param, "override")) {
+            on_instantiate = EcsOverride;
+        } else if (!strcmp(on_instantiate_param, "inherit")) {
+            on_instantiate = EcsInherit;
+        } else if (!strcmp(on_instantiate_param, "dont_inherit")) {
+            on_instantiate = EcsDontInherit;
+        } else {
+            printf("unexpected value for on_instantiate '%s'\n", cache_param);
+        }
+    }
 }
 
 void Combinations_trav_and_singleton_and_self(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, on_instantiate);
     ECS_COMPONENT(world, Velocity);
+    ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, on_instantiate);
     ECS_COMPONENT(world, Mass);
+    ecs_add_pair(world, ecs_id(Mass), EcsOnInstantiate, on_instantiate);
 
     ecs_singleton_set(world, Velocity, {1, 2});
 
@@ -72,8 +89,11 @@ void Combinations_self_and_singleton_and_trav(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, on_instantiate);
     ECS_COMPONENT(world, Velocity);
+    ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, on_instantiate);
     ECS_COMPONENT(world, Mass);
+    ecs_add_pair(world, ecs_id(Mass), EcsOnInstantiate, on_instantiate);
 
     ecs_singleton_set(world, Velocity, {1, 2});
 
@@ -125,8 +145,11 @@ void Combinations_self_and_trav_and_singleton(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, on_instantiate);
     ECS_COMPONENT(world, Velocity);
+    ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, on_instantiate);
     ECS_COMPONENT(world, Mass);
+    ecs_add_pair(world, ecs_id(Mass), EcsOnInstantiate, on_instantiate);
 
     ecs_singleton_set(world, Mass, {100});
 
@@ -178,8 +201,11 @@ void Combinations_singleton_and_self_and_trav(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, on_instantiate);
     ECS_COMPONENT(world, Velocity);
+    ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, on_instantiate);
     ECS_COMPONENT(world, Mass);
+    ecs_add_pair(world, ecs_id(Mass), EcsOnInstantiate, on_instantiate);
 
     ecs_singleton_set(world, Position, {10, 20});
 
@@ -231,8 +257,11 @@ void Combinations_trav_and_self_and_singleton(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, on_instantiate);
     ECS_COMPONENT(world, Velocity);
+    ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, on_instantiate);
     ECS_COMPONENT(world, Mass);
+    ecs_add_pair(world, ecs_id(Mass), EcsOnInstantiate, on_instantiate);
 
     ecs_singleton_set(world, Mass, {100});
 
@@ -284,8 +313,11 @@ void Combinations_singleton_and_trav_and_self(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, on_instantiate);
     ECS_COMPONENT(world, Velocity);
+    ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, on_instantiate);
     ECS_COMPONENT(world, Mass);
+    ecs_add_pair(world, ecs_id(Mass), EcsOnInstantiate, on_instantiate);
 
     ecs_singleton_set(world, Position, {10, 20});
 
@@ -337,8 +369,11 @@ void Combinations_singleton_and_self_and_self(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, on_instantiate);
     ECS_COMPONENT(world, Velocity);
+    ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, on_instantiate);
     ECS_COMPONENT(world, Mass);
+    ecs_add_pair(world, ecs_id(Mass), EcsOnInstantiate, on_instantiate);
 
     ecs_singleton_set(world, Position, {10, 20});
 
@@ -389,8 +424,11 @@ void Combinations_self_and_singleton_and_self(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, on_instantiate);
     ECS_COMPONENT(world, Velocity);
+    ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, on_instantiate);
     ECS_COMPONENT(world, Mass);
+    ecs_add_pair(world, ecs_id(Mass), EcsOnInstantiate, on_instantiate);
 
     ecs_singleton_set(world, Velocity, {1, 2});
 
@@ -441,8 +479,11 @@ void Combinations_self_and_self_and_singleton(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, on_instantiate);
     ECS_COMPONENT(world, Velocity);
+    ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, on_instantiate);
     ECS_COMPONENT(world, Mass);
+    ecs_add_pair(world, ecs_id(Mass), EcsOnInstantiate, on_instantiate);
 
     ecs_singleton_set(world, Mass, {100});
 

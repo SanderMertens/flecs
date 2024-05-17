@@ -249,7 +249,7 @@ void flecs_table_init_flags(
                     }
                     meta->bs_count ++;
                 }
-                if (ECS_HAS_ID_FLAG(id, OVERRIDE)) {
+                if (ECS_HAS_ID_FLAG(id, AUTO_OVERRIDE)) {
                     table->flags |= EcsTableHasOverrides;
                 }
             }

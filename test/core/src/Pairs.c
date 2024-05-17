@@ -1804,7 +1804,7 @@ void Pairs_typeid_from_pair_w_override(void) {
     ecs_entity_t obj_id = ecs_new(world);
     test_assert(obj_id != 0);
 
-    ecs_id_t pair_id = ECS_OVERRIDE | ecs_pair(rel_id, obj_id);
+    ecs_id_t pair_id = ECS_AUTO_OVERRIDE | ecs_pair(rel_id, obj_id);
 
     ecs_entity_t id = ecs_get_typeid(world, pair_id);
     test_assert(id == 0);
