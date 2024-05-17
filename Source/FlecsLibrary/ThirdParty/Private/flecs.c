@@ -17,6 +17,10 @@
  */
 
 #include "flecs.h"
+
+#pragma warning(push)
+#pragma warning(disable : 4456)
+
 /**
  * @file private_api.h
  * @brief Private functions.
@@ -29268,7 +29272,7 @@ void flecs_bfree(
     flecs_bfree_w_dbg_info(ba, memory, NULL);
 }
 
-FLECS_API
+
 void flecs_bfree_w_dbg_info(
     ecs_block_allocator_t *ba, 
     void *memory,
@@ -72138,3 +72142,4 @@ bool flecs_query_trivial_test_w_wildcards(
     return result;
 }
 
+#pragma warning(pop)

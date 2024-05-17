@@ -136,6 +136,12 @@ public:
 	FORCEINLINE NO_DISCARD const T& GetRef() const { return *GetEntity().get_ref<T>().get(); }
 
 	template <typename T>
+	FORCEINLINE NO_DISCARD flecs::ref<T> GetFlecsRef() const { return GetEntity().get_ref<T>(); }
+
+	template <typename T>
+	FORCEINLINE NO_DISCARD flecs::ref<T> GetFlecsRef() { return GetEntity().get_ref<T>(); }
+
+	template <typename T>
 	FORCEINLINE NO_DISCARD bool Has() { return GetEntity().has<T>(); }
 
 	FORCEINLINE void Clear() const { GetEntity().clear(); }

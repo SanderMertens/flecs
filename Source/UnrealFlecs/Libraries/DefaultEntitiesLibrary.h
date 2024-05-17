@@ -19,7 +19,7 @@ public:
 	static FORCEINLINE FFlecsEntityHandle GetPairEntity(const UObject* WorldContextObject)
 	{
 		const UFlecsWorld* World = UFlecsWorldSubsystem::GetDefaultWorld(WorldContextObject);
-		return FFlecsEntityHandle(flecs::entity(World->World, flecs::Pair));
+		return FFlecsEntityHandle(flecs::entity(World->World, flecs::PAIR));
 	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Flecs | Default Entities", meta = (WorldContext = "WorldContextObject"))
@@ -33,7 +33,7 @@ public:
 	static FORCEINLINE FFlecsEntityHandle GetToggleEntity(const UObject* WorldContextObject)
 	{
 		const UFlecsWorld* World = UFlecsWorldSubsystem::GetDefaultWorld(WorldContextObject);
-		return FFlecsEntityHandle(flecs::entity(World->World, flecs::Toggle));
+		return FFlecsEntityHandle(flecs::entity(World->World, flecs::TOGGLE));
 	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Flecs | Default Entities", meta = (WorldContext = "WorldContextObject"))
@@ -223,13 +223,6 @@ public:
 	{
 		const UFlecsWorld* World = UFlecsWorldSubsystem::GetDefaultWorld(WorldContextObject);
 		return flecs::entity(World->World, flecs::DontInherit);
-	}
-	
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Flecs | Default Entities", meta = (WorldContext = "WorldContextObject"))
-	static FORCEINLINE FFlecsEntityHandle GetAlwaysOverrideEntity(const UObject* WorldContextObject)
-	{
-		const UFlecsWorld* World = UFlecsWorldSubsystem::GetDefaultWorld(WorldContextObject);
-		return flecs::entity(World->World, flecs::AlwaysOverride);
 	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Flecs | Default Entities", meta = (WorldContext = "WorldContextObject"))

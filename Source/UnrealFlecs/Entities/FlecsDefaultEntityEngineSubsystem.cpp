@@ -11,9 +11,9 @@ void UFlecsDefaultEntityEngineSubsystem::Initialize(FSubsystemCollectionBase& Co
 	Super::Initialize(Collection);
 
 	REGISTER_FLECS_ENTITY_OPTION("Empty", flecs::Empty);
-	REGISTER_FLECS_ENTITY_OPTION("Pair", flecs::Pair);
+	REGISTER_FLECS_ENTITY_OPTION("Pair", flecs::PAIR);
 	REGISTER_FLECS_ENTITY_OPTION("Override", flecs::Override);
-	REGISTER_FLECS_ENTITY_OPTION("Toggle", flecs::Toggle);
+	REGISTER_FLECS_ENTITY_OPTION("Toggle", flecs::TOGGLE);
 	REGISTER_FLECS_ENTITY_OPTION("Query", flecs::Query);
 	REGISTER_FLECS_ENTITY_OPTION("Observer", flecs::Observer);
 	REGISTER_FLECS_ENTITY_OPTION("Private", flecs::Private);
@@ -40,7 +40,6 @@ void UFlecsDefaultEntityEngineSubsystem::Initialize(FSubsystemCollectionBase& Co
 	REGISTER_FLECS_ENTITY_OPTION("Reflexive", flecs::Reflexive);
 	REGISTER_FLECS_ENTITY_OPTION("Final", flecs::Final);
 	REGISTER_FLECS_ENTITY_OPTION("DontInherit", flecs::DontInherit);
-	REGISTER_FLECS_ENTITY_OPTION("AlwaysOverride", flecs::AlwaysOverride);
 	REGISTER_FLECS_ENTITY_OPTION("Exclusive", flecs::Exclusive);
 	REGISTER_FLECS_ENTITY_OPTION("Acyclic", flecs::Acyclic);
 	REGISTER_FLECS_ENTITY_OPTION("Traversable", flecs::Traversable);
