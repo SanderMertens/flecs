@@ -1,15 +1,21 @@
 #include <override.h>
 #include <iostream>
 
-// Overriding makes it possible for a prefab instance to obtain a private copy
-// of an inherited component. To override a component the regular add operation
-// is used. The overridden component will be initialized with the value of the
-// inherited component.
+// When an entity is instantiated from a prefab, components are by default 
+// copied from the prefab to the instance. This behavior can be customized with
+// the OnInstantiate trait, which has three options:
+// 
+// - Override (copy to instance)
+// - Inherit (inherit from prefab)
+// - DontInherit (don't copy or inherit)
 //
-// In some cases a prefab instance should always have a private copy of an 
-// inherited component. This can be achieved with an auto override which can be
-// added to a prefab. Components with an auto override are automatically 
-// overridden when the prefab is instantiated.
+// When a component is inheritable, it can be overridden manually by adding the
+// component to the instance, which also copies the value from the prefab 
+// component. Additionally, when creating a prefab it is possible to flag a 
+// component as "auto override", which can change the behavior for a specific 
+// prefab from "inherit" to "override".
+//
+// This example shows how these different features can be used.
 
 struct Attack {
     double value;
@@ -26,17 +32,17 @@ struct Damage {
 int main() {
     flecs::world ecs;
 
+    // Change the instantiation behavior for Attack and Defense to inherit.
+    ecs.component<Attack>().add(flecs::OnInstantiate, flecs::Inherit);
+    ecs.component<Defense>().add(flecs::OnInstantiate, flecs::Inherit);
+
     // Attack and Damage are properties that can be shared across many 
     // spaceships. This saves memory, and speeds up prefab creation as we don't
     // have to copy the values of Attack and Defense to private components.
     flecs::entity SpaceShip = ecs.prefab("SpaceShip")
         .set<Attack>({ 75 })
-        .set<Defense>({ 100 });
-
-    // Damage is a property that is private to a spaceship, so add an auto
-    // override for it. This ensures that each prefab instance will have a
-    // private copy of the component.
-    SpaceShip.set_auto_override<Damage>({ 0 });
+        .set<Defense>({ 100 })
+        .set<Damage>({ 50 });
 
     // Create a prefab instance.
     flecs::entity inst = ecs.entity("my_spaceship").is_a(SpaceShip);
@@ -69,5 +75,5 @@ int main() {
     //  Attack, Damage, (Identifier,Name), (IsA,SpaceShip)
     //  attack: 75
     //  defense: 100
-    //  damage: 0
+    //  damage: 50
 }

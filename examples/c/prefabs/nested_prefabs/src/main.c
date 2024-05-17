@@ -14,10 +14,6 @@
 // prefab. The reason for this is that an instantiated child is an exact copy
 // of the prefab child, and the prefab child only has an IsA relationship to the
 // nested prefab.
-//
-// This example shows how auto overriding (see the auto override example) can be
-// used to give instantiated children from a nested prefab a private copy of an
-// inherited component.
 
 typedef struct {
     double value;
@@ -28,11 +24,9 @@ int main(int argc, char *argv[]) {
 
     ECS_COMPONENT(ecs, TirePressure);
 
-    // Create a Wheel prefab, make sure each instantiated wheel has a private
-    // copy of the TirePressure component.
+    // Create a Wheel prefab.
     ecs_entity_t Wheel = ecs_entity(ecs, { .name = "Wheel", .add = ecs_ids( EcsPrefab ) });
     ecs_set(ecs, Wheel, TirePressure, { 32 });
-    ecs_auto_override(ecs, Wheel, TirePressure);
 
     // Create a Car prefab with four wheels. Note how the wheel names are
     // prefixed with 'Car.', this is has the same effect as adding the

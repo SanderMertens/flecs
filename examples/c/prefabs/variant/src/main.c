@@ -87,9 +87,6 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    // Note that when matching tables with shared components, entities are
-    // returned one by one. See the queries/instancing example for more details.
-
     // Output:
     //  my_freighter:
     //   - position: 10.000000, 20.000000
