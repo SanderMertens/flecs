@@ -1,6 +1,6 @@
 #include <script.h>
 
-void Assembly_assembly_no_scope(void) {
+void Template_template_no_scope(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -14,7 +14,7 @@ void Assembly_assembly_no_scope(void) {
     });
 
     const char *expr =
-    LINE "assembly Tree";
+    LINE "template Tree";
 
     test_assert(ecs_script_run(world, NULL, expr) == 0);
 
@@ -24,7 +24,7 @@ void Assembly_assembly_no_scope(void) {
     ecs_fini(world);
 }
 
-void Assembly_assembly_empty(void) {
+void Template_template_empty(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -38,7 +38,7 @@ void Assembly_assembly_empty(void) {
     });
 
     const char *expr =
-    LINE "assembly Tree {"
+    LINE "template Tree {"
     LINE "}";
 
     ecs_log_set_level(-4);
@@ -50,11 +50,11 @@ void Assembly_assembly_empty(void) {
     ecs_fini(world);
 }
 
-void Assembly_assembly_unresolved_tag(void) {
+void Template_template_unresolved_tag(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
-    LINE "assembly Tree {"
+    LINE "template Tree {"
     LINE "  Foo"
     LINE "}"
     LINE "Tree ent()";
@@ -65,12 +65,12 @@ void Assembly_assembly_unresolved_tag(void) {
     ecs_fini(world);
 }
 
-void Assembly_assembly_unresolved_component(void) {
+void Template_template_unresolved_component(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
     HEAD "using flecs.meta"
-    LINE "assembly Tree {"
+    LINE "template Tree {"
     LINE "  struct Position {"
     LINE "    x = f32"
     LINE "  }"
@@ -84,12 +84,12 @@ void Assembly_assembly_unresolved_component(void) {
     ecs_fini(world);
 }
 
-void Assembly_assembly_unresolved_pair_relationship(void) {
+void Template_template_unresolved_pair_relationship(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
     HEAD "Bar {}"
-    LINE "assembly Tree {"
+    LINE "template Tree {"
     LINE "  (Foo, Bar)"
     LINE "}"
     LINE "Tree ent()";
@@ -100,12 +100,12 @@ void Assembly_assembly_unresolved_pair_relationship(void) {
     ecs_fini(world);
 }
 
-void Assembly_assembly_unresolved_pair_target(void) {
+void Template_template_unresolved_pair_target(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
     HEAD "Foo {}"
-    LINE "assembly Tree {"
+    LINE "template Tree {"
     LINE "  (Foo, Bar)"
     LINE "}"
     LINE "Tree ent()";
@@ -116,11 +116,11 @@ void Assembly_assembly_unresolved_pair_target(void) {
     ecs_fini(world);
 }
 
-void Assembly_assembly_unresolved_with_tag(void) {
+void Template_template_unresolved_with_tag(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
-    LINE "assembly Tree {"
+    LINE "template Tree {"
     LINE "  with Foo {"
     LINE "  }"
     LINE "}"
@@ -132,12 +132,12 @@ void Assembly_assembly_unresolved_with_tag(void) {
     ecs_fini(world);
 }
 
-void Assembly_assembly_unresolved_with_component(void) {
+void Template_template_unresolved_with_component(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
     HEAD "using flecs.meta"
-    LINE "assembly Tree {"
+    LINE "template Tree {"
     LINE "  struct Position {"
     LINE "    x = f32"
     LINE "  }"
@@ -152,12 +152,12 @@ void Assembly_assembly_unresolved_with_component(void) {
     ecs_fini(world);
 }
 
-void Assembly_assembly_unresolved_with_pair_relationship(void) {
+void Template_template_unresolved_with_pair_relationship(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
     HEAD "Bar {}"
-    LINE "assembly Tree {"
+    LINE "template Tree {"
     LINE "  with (Foo, Bar) {"
     LINE "  }"
     LINE "}"
@@ -169,12 +169,12 @@ void Assembly_assembly_unresolved_with_pair_relationship(void) {
     ecs_fini(world);
 }
 
-void Assembly_assembly_unresolved_with_pair_target(void) {
+void Template_template_unresolved_with_pair_target(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
     HEAD "Foo {}"
-    LINE "assembly Tree {"
+    LINE "template Tree {"
     LINE "  with (Foo, Bar) {"
     LINE "  }"
     LINE "}"
@@ -186,14 +186,14 @@ void Assembly_assembly_unresolved_with_pair_target(void) {
     ecs_fini(world);
 }
 
-void Assembly_assembly_no_props(void) {
+void Template_template_no_props(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
 
     const char *expr =
     HEAD "Foo {}"
-    LINE "assembly Tree {"
+    LINE "template Tree {"
     LINE "  Foo"
     LINE "}"
     LINE "Tree ent()";
@@ -213,7 +213,7 @@ void Assembly_assembly_no_props(void) {
     ecs_fini(world);
 }
 
-void Assembly_assembly_prop_no_type(void) {
+void Template_template_prop_no_type(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -227,7 +227,7 @@ void Assembly_assembly_prop_no_type(void) {
     });
 
     const char *expr =
-    LINE "assembly Tree {"
+    LINE "template Tree {"
     LINE "  prop height"
     LINE "}";
 
@@ -237,7 +237,7 @@ void Assembly_assembly_prop_no_type(void) {
     ecs_fini(world);
 }
 
-void Assembly_assembly_prop_no_default(void) {
+void Template_template_prop_no_default(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -251,7 +251,7 @@ void Assembly_assembly_prop_no_default(void) {
     });
 
     const char *expr =
-    LINE "assembly Tree {"
+    LINE "template Tree {"
     LINE "  prop height: flecs.meta.f32"
     LINE "}";
 
@@ -261,7 +261,7 @@ void Assembly_assembly_prop_no_default(void) {
     ecs_fini(world);
 }
 
-void Assembly_assembly_prop(void) {
+void Template_template_prop(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -275,7 +275,7 @@ void Assembly_assembly_prop(void) {
     });
 
     const char *expr =
-    LINE "assembly Tree {"
+    LINE "template Tree {"
     LINE "  prop height = flecs.meta.f32: 0"
     LINE "}";
 
@@ -293,7 +293,7 @@ void Assembly_assembly_prop(void) {
     ecs_fini(world);
 }
 
-void Assembly_assembly_prop_space_colon(void) {
+void Template_template_prop_space_colon(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -307,7 +307,7 @@ void Assembly_assembly_prop_space_colon(void) {
     });
 
     const char *expr =
-    LINE "assembly Tree {"
+    LINE "template Tree {"
     LINE "  prop height = flecs.meta.f32: 0"
     LINE "}";
 
@@ -325,7 +325,7 @@ void Assembly_assembly_prop_space_colon(void) {
     ecs_fini(world);
 }
 
-void Assembly_assembly_2_props(void) {
+void Template_template_2_props(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -339,7 +339,7 @@ void Assembly_assembly_2_props(void) {
     });
 
     const char *expr =
-    LINE "assembly Tree {"
+    LINE "template Tree {"
     LINE "  prop width = flecs.meta.i32: 0"
     LINE "  prop height = flecs.meta.f32: 0"
     LINE "}";
@@ -360,7 +360,7 @@ void Assembly_assembly_2_props(void) {
     ecs_fini(world);
 }
 
-void Assembly_assembly_w_using(void) {
+void Template_template_w_using(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -376,7 +376,7 @@ void Assembly_assembly_w_using(void) {
     const char *expr =
     HEAD "using flecs.meta"
     LINE "Foo {}"
-    LINE "assembly Tree {"
+    LINE "template Tree {"
     LINE "  prop width = i32: 10"
     LINE "  prop height = f32: 20"
     LINE "  Foo"
@@ -415,7 +415,7 @@ void Assembly_assembly_w_using(void) {
     ecs_fini(world);
 }
 
-void Assembly_assembly_instance_w_default_values(void) {
+void Template_template_instance_w_default_values(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -429,7 +429,7 @@ void Assembly_assembly_instance_w_default_values(void) {
     });
 
     const char *expr =
-    LINE "assembly Tree {"
+    LINE "template Tree {"
     LINE "  prop width = flecs.meta.f32: 10"
     LINE "  prop height = flecs.meta.f32: 20"
     LINE "}"
@@ -464,7 +464,7 @@ void Assembly_assembly_instance_w_default_values(void) {
     ecs_fini(world);
 }
 
-void Assembly_assembly_instance_w_assign_default_values(void) {
+void Template_template_instance_w_assign_default_values(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -478,7 +478,7 @@ void Assembly_assembly_instance_w_assign_default_values(void) {
     });
 
     const char *expr =
-    LINE "assembly Tree {"
+    LINE "template Tree {"
     LINE "  prop width = flecs.meta.f32: 10"
     LINE "  prop height = flecs.meta.f32: 20"
     LINE "}"
@@ -513,7 +513,7 @@ void Assembly_assembly_instance_w_assign_default_values(void) {
     ecs_fini(world);
 }
 
-void Assembly_assembly_instance_w_overridden_values(void) {
+void Template_template_instance_w_overridden_values(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -527,7 +527,7 @@ void Assembly_assembly_instance_w_overridden_values(void) {
     });
 
     const char *expr =
-    LINE "assembly Tree {"
+    LINE "template Tree {"
     LINE "  prop width = flecs.meta.f32: 10"
     LINE "  prop height = flecs.meta.f32: 20"
     LINE "}"
@@ -562,7 +562,7 @@ void Assembly_assembly_instance_w_overridden_values(void) {
     ecs_fini(world);
 }
 
-void Assembly_assembly_w_child(void) {
+void Template_template_w_child(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -576,7 +576,7 @@ void Assembly_assembly_w_child(void) {
     });
 
     const char *expr =
-    LINE "assembly Tree {"
+    LINE "template Tree {"
     LINE "  prop width = flecs.meta.f32: 0"
     LINE "  prop height = flecs.meta.f32: 0"
     LINE "  child { Position: {$width * 10 + 1, $height * 20 + 2} }"
@@ -623,7 +623,7 @@ void Assembly_assembly_w_child(void) {
     ecs_fini(world);
 }
 
-void Assembly_assembly_w_child_parse_script(void) {
+void Template_template_w_child_parse_script(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -637,7 +637,7 @@ void Assembly_assembly_w_child_parse_script(void) {
     });
 
     const char *expr =
-    LINE "assembly Tree {"
+    LINE "template Tree {"
     LINE "  prop width = flecs.meta.f32: 0"
     LINE "  prop height = flecs.meta.f32: 0"
     LINE "  child { Position: {$width * 10 + 1, $height * 20 + 2} }"
@@ -684,7 +684,7 @@ void Assembly_assembly_w_child_parse_script(void) {
     ecs_fini(world);
 }
 
-void Assembly_assembly_w_child_parse_script_twice(void) {
+void Template_template_w_child_parse_script_twice(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -698,7 +698,7 @@ void Assembly_assembly_w_child_parse_script_twice(void) {
     });
 
     const char *expr =
-    LINE "assembly Tree {"
+    LINE "template Tree {"
     LINE "  prop width = flecs.meta.f32: 0"
     LINE "  prop height = flecs.meta.f32: 0"
     LINE "  child { Position: {$width * 10 + 1, $height * 20 + 2} }"
@@ -750,7 +750,7 @@ void Assembly_assembly_w_child_parse_script_twice(void) {
     ecs_fini(world);
 }
 
-void Assembly_assembly_w_child_update_after_parse(void) {
+void Template_template_w_child_update_after_parse(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -764,7 +764,7 @@ void Assembly_assembly_w_child_update_after_parse(void) {
     });
 
     const char *expr =
-    LINE "assembly Tree {"
+    LINE "template Tree {"
     LINE "  prop width = flecs.meta.f32: 0"
     LINE "  prop height = flecs.meta.f32: 0"
     LINE "  child { Position: {$width * 10 + 1, $height * 20 + 2} }"
@@ -830,7 +830,7 @@ void Assembly_assembly_w_child_update_after_parse(void) {
     ecs_fini(world);
 }
 
-void Assembly_assembly_w_nested_child(void) {
+void Template_template_w_nested_child(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -844,7 +844,7 @@ void Assembly_assembly_w_nested_child(void) {
     });
 
     const char *expr =
-    LINE "assembly Tree {"
+    LINE "template Tree {"
     LINE "  prop width = flecs.meta.f32: 0"
     LINE "  prop height = flecs.meta.f32: 0"
     LINE "  child {"
@@ -903,7 +903,7 @@ void Assembly_assembly_w_nested_child(void) {
     ecs_fini(world);
 }
 
-void Assembly_assembly_w_prefab(void) {
+void Template_template_w_prefab(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -926,7 +926,7 @@ void Assembly_assembly_w_prefab(void) {
     });
 
     const char *expr =
-    LINE "assembly Tree {"
+    LINE "template Tree {"
     LINE "  prop width = flecs.meta.f32: 0"
     LINE "  prop height = flecs.meta.f32: 0"
     LINE "  Prefab base {"
@@ -996,7 +996,7 @@ void Assembly_assembly_w_prefab(void) {
     ecs_fini(world);
 }
 
-void Assembly_assembly_w_prefab_tree(void) {
+void Template_template_w_prefab_tree(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1019,7 +1019,7 @@ void Assembly_assembly_w_prefab_tree(void) {
     });
 
     const char *expr =
-    LINE "assembly Tree {"
+    LINE "template Tree {"
     LINE "  prop width = flecs.meta.f32: 0"
     LINE "  prop height = flecs.meta.f32: 0"
     LINE "  Prefab base {"
@@ -1102,7 +1102,7 @@ void Assembly_assembly_w_prefab_tree(void) {
     ecs_fini(world);
 }
 
-void Assembly_assembly_w_nested_assembly(void) {
+void Template_template_w_nested_template(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1117,7 +1117,7 @@ void Assembly_assembly_w_nested_assembly(void) {
     });
 
     const char *expr =
-    LINE "assembly Tree {"
+    LINE "template Tree {"
     LINE "  prop width = flecs.meta.f32: 0"
     LINE "  prop height = flecs.meta.f32: 0"
     LINE "  child {"
@@ -1125,7 +1125,7 @@ void Assembly_assembly_w_nested_assembly(void) {
     LINE "  }"
     LINE "}"
     LINE ""
-    LINE "assembly Forest {"
+    LINE "template Forest {"
     LINE "  prop width = flecs.meta.f32: 0"
     LINE "  prop height = flecs.meta.f32: 0"
     LINE "  tree_1 { Tree: {-$width, -$height} }"
@@ -1221,7 +1221,7 @@ void Assembly_assembly_w_nested_assembly(void) {
     ecs_fini(world);
 }
 
-void Assembly_instantiate_prefab_w_assembly(void) {
+void Template_instantiate_prefab_w_template(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1235,7 +1235,7 @@ void Assembly_instantiate_prefab_w_assembly(void) {
     });
 
     const char *expr =
-    LINE "assembly Tree {"
+    LINE "template Tree {"
     LINE "  prop width = flecs.meta.f32: 0"
     LINE "  prop height = flecs.meta.f32: 0"
     LINE "  child { Position: {$width, $height} }"
@@ -1293,15 +1293,15 @@ void Assembly_instantiate_prefab_w_assembly(void) {
     ecs_fini(world);
 }
 
-void Assembly_assembly_w_prefab_w_assembly(void) {
+void Template_template_w_prefab_w_template(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
-    LINE "assembly Tree {"
+    LINE "template Tree {"
     LINE "  prop count = flecs.meta.f32: 0"
     LINE "}"
     LINE ""
-    LINE "assembly Forest {"
+    LINE "template Forest {"
     LINE "  prop count = flecs.meta.f32: 0"
     LINE ""
     LINE "  Prefab TreePrefab {"
@@ -1351,19 +1351,19 @@ void Assembly_assembly_w_prefab_w_assembly(void) {
     ecs_fini(world);
 }
 
-void Assembly_3_assemblies(void) {
+void Template_3_assemblies(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
-    LINE "assembly Tree {"
+    LINE "template Tree {"
     LINE "  prop t = flecs.meta.f32: 10"
     LINE "}"
     LINE ""
-    LINE "assembly Forest {"
+    LINE "template Forest {"
     LINE "  prop f = flecs.meta.f32: 20"
     LINE "}"
     LINE ""
-    LINE "assembly Park {"
+    LINE "template Park {"
     LINE "  prop p = flecs.meta.f32: 30"
     LINE "}"
     LINE ""
@@ -1435,7 +1435,7 @@ void Assembly_3_assemblies(void) {
     ecs_fini(world);
 }
 
-void Assembly_assembly_nested_w_default_var(void) {
+void Template_template_nested_w_default_var(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1449,12 +1449,12 @@ void Assembly_assembly_nested_w_default_var(void) {
     });
 
     const char *expr =
-    LINE "assembly Tree {"
+    LINE "template Tree {"
     LINE "  prop count = flecs.meta.f32: 0"
     LINE "  trunk { Position: {$count, $count * 2} }"
     LINE "}"
     LINE ""
-    LINE "assembly Forest {"
+    LINE "template Forest {"
     LINE "  prop count = flecs.meta.f32: 0"
     LINE "  child { Tree: {count:$} }"
     LINE "}"
@@ -1515,7 +1515,7 @@ void Assembly_assembly_nested_w_default_var(void) {
     ecs_fini(world);
 }
 
-void Assembly_assembly_w_anonymous(void) {
+void Template_template_w_anonymous(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1529,7 +1529,7 @@ void Assembly_assembly_w_anonymous(void) {
     });
 
     const char *expr =
-    LINE "assembly Tree {"
+    LINE "template Tree {"
     LINE "  prop count = flecs.meta.i32: 0"
     LINE "  _ { Position: {$count, $count * 2} }"
     LINE "  _ { Position: {$count, $count * 2} }"
@@ -1560,7 +1560,7 @@ void Assembly_assembly_w_anonymous(void) {
     ecs_fini(world);
 }
 
-void Assembly_assembly_w_anonymous_parse_again(void) {
+void Template_template_w_anonymous_parse_again(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1574,7 +1574,7 @@ void Assembly_assembly_w_anonymous_parse_again(void) {
     });
 
     const char *expr =
-    LINE "assembly Tree {"
+    LINE "template Tree {"
     LINE "  prop count = flecs.meta.i32: 0"
     LINE "  _ { Position: {$count, $count * 2} }"
     LINE "  _ { Position: {$count, $count * 2} }"
@@ -1643,7 +1643,7 @@ void Assembly_assembly_w_anonymous_parse_again(void) {
 }
 
 
-void Assembly_assembly_w_composite_prop_invalid_assignment(void) {
+void Template_template_w_composite_prop_invalid_assignment(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1657,7 +1657,7 @@ void Assembly_assembly_w_composite_prop_invalid_assignment(void) {
     });
 
     const char *expr =
-    LINE "assembly Tree {"
+    LINE "template Tree {"
     LINE "  prop pos = Position: Position{10, 20}"
     LINE "  child { $pos }"
     LINE "}"
@@ -1670,7 +1670,7 @@ void Assembly_assembly_w_composite_prop_invalid_assignment(void) {
     ecs_fini(world);
 }
 
-void Assembly_assembly_w_composite_prop(void) {
+void Template_template_w_composite_prop(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1684,7 +1684,7 @@ void Assembly_assembly_w_composite_prop(void) {
     });
 
     const char *expr =
-    LINE "assembly Tree {"
+    LINE "template Tree {"
     LINE "  prop pos = Position: {10, 20}"
     LINE "  child { $pos }"
     LINE "}"
@@ -1717,7 +1717,7 @@ void Assembly_assembly_w_composite_prop(void) {
     ecs_fini(world);
 }
 
-void Assembly_assembly_with_with(void) {
+void Template_template_with_with(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1732,7 +1732,7 @@ void Assembly_assembly_with_with(void) {
 
     const char *expr =
     HEAD "Foo {}"
-    LINE "assembly Tree {"
+    LINE "template Tree {"
     LINE "  prop count = flecs.meta.i32: 0"
     LINE "  with Foo {"
     LINE "    child { Position: {$count, $count * 2} }"
@@ -1769,7 +1769,7 @@ void Assembly_assembly_with_with(void) {
     ecs_fini(world);
 }
 
-void Assembly_module_w_assembly(void) {
+void Template_module_w_template(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1784,7 +1784,7 @@ void Assembly_module_w_assembly(void) {
 
     const char *expr =
     LINE "module hello.world\n"
-    LINE "assembly Tree {\n"
+    LINE "template Tree {\n"
     LINE "  prop count = flecs.meta.i32: 0\n"
     LINE "  child { Position: {$count, $count * 2} }\n"
     LINE "}\n"
@@ -1822,7 +1822,7 @@ void Assembly_module_w_assembly(void) {
     ecs_fini(world);
 }
 
-void Assembly_module_w_nested_assembly(void) {
+void Template_module_w_nested_template(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -1837,11 +1837,11 @@ void Assembly_module_w_nested_assembly(void) {
 
     const char *expr =
     LINE "module hello.world"
-    LINE "assembly Tree {"
+    LINE "template Tree {"
     LINE "  prop count = flecs.meta.i32: 0"
     LINE "  child { Position: {$count, $count * 2} }"
     LINE "}"
-    LINE "assembly Forest {"
+    LINE "template Forest {"
     LINE "  prop count = flecs.meta.i32: 0"
     LINE "  t { Tree: {count:$} }"
     LINE "}"
@@ -1890,11 +1890,11 @@ void Assembly_module_w_nested_assembly(void) {
     ecs_fini(world);
 }
 
-void Assembly_assembly_redeclare_prop_as_const(void) {
+void Template_template_redeclare_prop_as_const(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
-    LINE "assembly Foo {\n"
+    LINE "template Foo {\n"
     LINE "  prop x = flecs.meta.f32: 10\n"
     LINE "  prop y = flecs.meta.f32: 10\n"
     LINE "  const y = flecs.meta.f32: 20\n"
@@ -1908,11 +1908,11 @@ void Assembly_assembly_redeclare_prop_as_const(void) {
     ecs_fini(world);
 }
 
-void Assembly_assembly_redeclare_prop_as_prop(void) {
+void Template_template_redeclare_prop_as_prop(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
-    LINE "assembly Foo {\n"
+    LINE "template Foo {\n"
     LINE "  prop x = flecs.meta.f32: 10\n"
     LINE "  prop y = flecs.meta.f32: 10\n"
     LINE "  prop y = flecs.meta.f32: 20\n"
@@ -1926,11 +1926,11 @@ void Assembly_assembly_redeclare_prop_as_prop(void) {
     ecs_fini(world);
 }
 
-void Assembly_assembly_redeclare_const_as_const(void) {
+void Template_template_redeclare_const_as_const(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
-    LINE "assembly Foo {\n"
+    LINE "template Foo {\n"
     LINE "  prop x = flecs.meta.f32: 10\n"
     LINE "  const y = flecs.meta.f32: 10\n"
     LINE "  const y = flecs.meta.f32: 20\n"
@@ -1944,13 +1944,13 @@ void Assembly_assembly_redeclare_const_as_const(void) {
     ecs_fini(world);
 }
 
-void Assembly_assembly_w_pair_w_this_var(void) {
+void Template_template_w_pair_w_this_var(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Rel);
 
     const char *expr =
-    LINE "assembly Foo {\n"
+    LINE "template Foo {\n"
     LINE "  prop x = flecs.meta.f32: 10\n" // dummy prop
     LINE "  (Rel, $this)\n"
     LINE "}\n"
@@ -1968,18 +1968,18 @@ void Assembly_assembly_w_pair_w_this_var(void) {
     ecs_fini(world);
 }
 
-void Assembly_run_assembly_after_error(void) {
+void Template_run_template_after_error(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
     HEAD "Foo {}"
-    LINE "assembly Tree {"
+    LINE "template Tree {"
     LINE "  Foo"
     LINE "}";
 
     const char *expr_err =
     HEAD "Foo {}"
-    LINE "assembly Tree {"
+    LINE "template Tree {"
     LINE "  Fo"
     LINE "}";
 
@@ -2020,18 +2020,18 @@ void Assembly_run_assembly_after_error(void) {
     ecs_fini(world);
 }
 
-void Assembly_update_assembly_after_error(void) {
+void Template_update_template_after_error(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
     HEAD "Foo {}"
-    LINE "assembly Tree {"
+    LINE "template Tree {"
     LINE "  Foo"
     LINE "}";
 
     const char *expr_err =
     HEAD "Foo {}"
-    LINE "assembly Tree {"
+    LINE "template Tree {"
     LINE "  Fo"
     LINE "}";
 

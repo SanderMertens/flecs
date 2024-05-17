@@ -541,16 +541,16 @@ enum Color {
 ```
 
 ## Assemblies
-Assemblies are parametrizable scripts that can be used to create procedural assets. Assemblies can be created with the `assembly` keyword. Example:
+Assemblies are parametrizable scripts that can be used to create procedural assets. Assemblies can be created with the `template` keyword. Example:
 
 ```c
-assembly Square {
+template Square {
   Color: {255, 0, 0}
   Rectangle: {width: 100, height: 100}
 }
 ```
 
-The script contents of an assembly are not ran immediately. Instead they are ran whenever an assembly is _instantiated_. To instantiate an assembly, add it as a regular component to an entity:
+The script contents of an template are not ran immediately. Instead they are ran whenever an template is _instantiated_. To instantiate an template, add it as a regular component to an entity:
 
 ```c
 my_entity {
@@ -574,7 +574,7 @@ Square my_entity
 Assemblies can be parametrized with properties. Properties are variables that are exposed as component members. To create a property, use the `prop` keyword. Example:
 
 ```c
-assembly Square {
+template Square {
   prop size = i32: 10
   prop color = Color: {255, 0, 0}
 
@@ -585,10 +585,10 @@ assembly Square {
 Square my_entity(size: 20, color: {38, 25, 13})
 ```
 
-Assembly scripts can do anything a regular script can do, including creating child entities. The following example shows how to create an assembly that uses a nested assembly to create children:
+Template scripts can do anything a regular script can do, including creating child entities. The following example shows how to create an template that uses a nested template to create children:
 
 ```c
-assembly Tree {
+template Tree {
   prop height = f32: 10
 
   const wood_color = Color: {38, 25, 13}
@@ -613,7 +613,7 @@ assembly Tree {
   }
 }
 
-assembly Forest {
+template Forest {
   Tree(height: 5) {
     Position: {x: -10}
   }

@@ -220,8 +220,8 @@ int flecs_script_eval_id(
         return -1;
     }
 
-    if (v->assembly) {
-        /* Can't resolve variables while preprocessing assembly scope */
+    if (v->template) {
+        /* Can't resolve variables while preprocessing template scope */
         if (id->first[0] == '$') {
             return 0;
         }
@@ -239,9 +239,9 @@ int flecs_script_eval_id(
         }
 
         /* Tags/components must be created in advance for assemblies */
-        if (v->assembly) {
+        if (v->template) {
             flecs_script_eval_error(v, node, 
-                "'%s' must be defined outside of assembly scope", id->first);
+                "'%s' must be defined outside of template scope", id->first);
             return -1;
         }
 
@@ -268,9 +268,9 @@ int flecs_script_eval_id(
             }
 
             /* Tags/components must be created in advance for assemblies */
-            if (v->assembly) {
+            if (v->template) {
                 flecs_script_eval_error(v, node, 
-                    "'%s' must be defined outside of assembly scope", 
+                    "'%s' must be defined outside of template scope", 
                         id->second);
                 return -1;
             }
@@ -409,7 +409,7 @@ int flecs_script_eval_entity(
         }
     }
 
-    if (v->assembly) {
+    if (v->template) {
         return 0;
     }
 
@@ -488,7 +488,7 @@ int flecs_script_eval_tag(
         return -1;
     }
 
-    if (v->assembly) {
+    if (v->template) {
         return 0;
     }
 
@@ -520,7 +520,7 @@ int flecs_script_eval_component(
         return -1;
     }
 
-    if (v->assembly) {
+    if (v->template) {
         return 0;
     }
 
@@ -1056,9 +1056,9 @@ int flecs_script_eval_node(
     case EcsAstAnnotation:
         return flecs_script_eval_annot(
             v, (ecs_script_annot_t*)node);
-    case EcsAstAssembly:
-        return flecs_script_eval_assembly(
-            v, (ecs_script_assembly_node_t*)node);
+    case EcsAstTemplate:
+        return flecs_script_eval_template(
+            v, (ecs_script_template_node_t*)node);
     case EcsAstProp:
         return 0;
     case EcsAstConst:

@@ -28,9 +28,9 @@ void flecs_script_with_free(
 }
 
 static
-void flecs_script_assembly_free(
+void flecs_script_template_free(
     ecs_script_visit_t *v,
-    ecs_script_assembly_node_t *node)
+    ecs_script_template_node_t *node)
 {
     flecs_script_scope_free(v, node->scope);
 }
@@ -74,9 +74,9 @@ int flecs_script_stmt_free(
         flecs_script_with_free(v, (ecs_script_with_t*)node);
         flecs_free_t(a, ecs_script_with_t, node);
         break;
-    case EcsAstAssembly:
-        flecs_script_assembly_free(v, (ecs_script_assembly_node_t*)node);
-        flecs_free_t(a, ecs_script_assembly_node_t, node);
+    case EcsAstTemplate:
+        flecs_script_template_free(v, (ecs_script_template_node_t*)node);
+        flecs_free_t(a, ecs_script_template_node_t, node);
         break;
     case EcsAstEntity:
         flecs_script_entity_free(v, (ecs_script_entity_t*)node);
