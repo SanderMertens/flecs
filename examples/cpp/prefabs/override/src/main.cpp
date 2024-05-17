@@ -36,7 +36,7 @@ int main() {
     // Damage is a property that is private to a spaceship, so add an auto
     // override for it. This ensures that each prefab instance will have a
     // private copy of the component.
-    SpaceShip.set_override<Damage>({ 0 });
+    SpaceShip.set_auto_override<Damage>({ 0 });
 
     // Create a prefab instance.
     flecs::entity inst = ecs.entity("my_spaceship").is_a(SpaceShip);

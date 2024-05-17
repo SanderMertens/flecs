@@ -635,13 +635,13 @@
             "id": "Combinations",
             "setup": true,
             "params": {
-                "cache_kind": ["default", "auto"]
+                "cache_kind": ["default", "auto"],
+                "on_instantiate": ["override", "inherit", "dont_inherit"]
             },
             "testcases": [
                 "singleton_and_self_and_self",
                 "self_and_singleton_and_self",
                 "self_and_self_and_singleton",
-
                 "singleton_and_trav_and_self",
                 "trav_and_singleton_and_self",
                 "self_and_singleton_and_trav",

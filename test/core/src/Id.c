@@ -66,7 +66,7 @@ void Id_pair_w_any_any_is_wildcard(void) {
 void Id_pair_w_override_is_wildcard(void) {
     ecs_world_t *world = ecs_mini();
     ecs_entity_t r = ecs_new(world);
-    test_assert( !ecs_id_is_wildcard(ECS_OVERRIDE | ecs_pair(r, EcsWildcard)));
+    test_assert( !ecs_id_is_wildcard(ECS_AUTO_OVERRIDE | ecs_pair(r, EcsWildcard)));
     ecs_fini(world);
 }
 
@@ -204,7 +204,7 @@ void Id_pair_w_any_any_is_tag(void) {
 void Id_id_w_override_is_tag(void) {
     ecs_world_t *world = ecs_mini();
     ECS_COMPONENT(world, Position);
-    test_assert( ecs_id_is_tag(world, ECS_OVERRIDE | ecs_id(Position)));
+    test_assert( ecs_id_is_tag(world, ECS_AUTO_OVERRIDE | ecs_id(Position)));
     ecs_fini(world);
 }
 
@@ -219,7 +219,7 @@ void Id_pair_id_override_is_tag(void) {
     ecs_world_t *world = ecs_mini();
     ECS_COMPONENT(world, Position);
     ecs_entity_t o = ecs_new(world);
-    test_assert( ecs_id_is_tag(world, ECS_OVERRIDE | ecs_pair(ecs_id(Position), o)));
+    test_assert( ecs_id_is_tag(world, ECS_AUTO_OVERRIDE | ecs_pair(ecs_id(Position), o)));
     ecs_fini(world);
 }
 

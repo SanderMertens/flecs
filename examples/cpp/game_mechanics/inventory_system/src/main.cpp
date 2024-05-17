@@ -288,17 +288,17 @@ int main(int, char *[]) {
     // Register item prefabs
     ecs.prefab<WoodenSword>().add<Sword>()
         .set<Attack>({ 1 })
-        .set_override<Health>({ 5 }); // copy to instance, don't share
+        .set_auto_override<Health>({ 5 }); // copy to instance, don't share
 
     ecs.prefab<IronSword>().add<Sword>()
         .set<Attack>({ 2 })
-        .set_override<Health>({ 10 });
+        .set_auto_override<Health>({ 10 });
 
     ecs.prefab<WoodenArmor>().add<Armor>()
-        .set_override<Health>({ 10 });
+        .set_auto_override<Health>({ 10 });
 
     ecs.prefab<IronArmor>().add<Armor>()
-        .set_override<Health>({ 20 });
+        .set_auto_override<Health>({ 20 });
 
     // Create a loot box with items
     flecs::entity loot_box = ecs.entity("Chest").add<Container>().with<ContainedBy>([&]{

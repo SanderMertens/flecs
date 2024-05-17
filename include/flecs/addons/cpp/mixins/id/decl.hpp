@@ -22,7 +22,7 @@ struct entity;
  * A flecs id is an identifier that can be added to entities. Ids can be:
  * - entities (including components, tags)
  * - pair ids
- * - entities with id flags set (like flecs::Override, flecs::Toggle)
+ * - entities with id flags set (like flecs::AUTO_OVERRIDE, flecs::TOGGLE)
  */
 struct id {
     id()
@@ -51,7 +51,7 @@ struct id {
 
     /** Test if id is pair (has first, second) */
     bool is_pair() const {
-        return (id_ & ECS_ID_FLAGS_MASK) == flecs::Pair;
+        return (id_ & ECS_ID_FLAGS_MASK) == flecs::PAIR;
     }
 
     /** Test if id is a wildcard */

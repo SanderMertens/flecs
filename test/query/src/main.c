@@ -9560,8 +9560,10 @@ bake_test_param Basic_params[] = {
     {"cache_kind", (char**)Basic_cache_kind_param, 2}
 };
 const char* Combinations_cache_kind_param[] = {"default", "auto"};
+const char* Combinations_on_instantiate_param[] = {"override", "inherit", "dont_inherit"};
 bake_test_param Combinations_params[] = {
-    {"cache_kind", (char**)Combinations_cache_kind_param, 2}
+    {"cache_kind", (char**)Combinations_cache_kind_param, 2},
+    {"on_instantiate", (char**)Combinations_on_instantiate_param, 3}
 };
 const char* Variables_cache_kind_param[] = {"default", "auto"};
 bake_test_param Variables_params[] = {
@@ -9636,7 +9638,7 @@ static bake_test_suite suites[] = {
         NULL,
         9,
         Combinations_testcases,
-        1,
+        2,
         Combinations_params
     },
     {

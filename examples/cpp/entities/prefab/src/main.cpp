@@ -25,7 +25,7 @@ int main(int, char *[]) {
         // By default components in an inheritance hierarchy are shared between
         // entities. The override function ensures that instances have a private
         // copy of the component.
-        .override<Position>();
+        .auto_override<Position>();
 
         flecs::entity freighter = ecs.prefab("Freighter")
             // Short for .add(flecs::IsA, spaceship). This ensures the entity

@@ -390,60 +390,60 @@ struct entity_builder : entity_view {
      *
      * @param id The id to mark for overriding.
      */    
-    Self& override(flecs::id_t id) {
-        return this->add(ECS_OVERRIDE | id);
+    Self& auto_override(flecs::id_t id) {
+        return this->add(ECS_AUTO_OVERRIDE | id);
     }
 
     /** Mark pair for auto-overriding.
-     * @see override(flecs::id_t id)
+     * @see auto_override(flecs::id_t id)
      *
      * @param first The first element of the pair.
      * @param second The second element of the pair.
      */     
-    Self& override(flecs::entity_t first, flecs::entity_t second) {
-        return this->override(ecs_pair(first, second));
+    Self& auto_override(flecs::entity_t first, flecs::entity_t second) {
+        return this->auto_override(ecs_pair(first, second));
     }
 
     /** Mark component for auto-overriding.
-     * @see override(flecs::id_t id)
+     * @see auto_override(flecs::id_t id)
      *
      * @tparam T The component to mark for overriding.
      */     
     template <typename T>
-    Self& override() {
-        return this->override(_::type<T>::id(this->world_));
+    Self& auto_override() {
+        return this->auto_override(_::type<T>::id(this->world_));
     }
 
     /** Mark pair for auto-overriding.
-     * @see override(flecs::id_t id)
+     * @see auto_override(flecs::id_t id)
      *
      * @tparam First The first element of the pair.
      * @param second The second element of the pair.
      */     
     template <typename First>
-    Self& override(flecs::entity_t second) {
-        return this->override(_::type<First>::id(this->world_), second);
+    Self& auto_override(flecs::entity_t second) {
+        return this->auto_override(_::type<First>::id(this->world_), second);
     }
 
     /** Mark pair for auto-overriding.
-     * @see override(flecs::id_t id)
+     * @see auto_override(flecs::id_t id)
      *
      * @tparam First The first element of the pair.
      * @tparam Second The second element of the pair.
      */     
     template <typename First, typename Second>
-    Self& override() {
-        return this->override<First>(_::type<Second>::id(this->world_));
+    Self& auto_override() {
+        return this->auto_override<First>(_::type<Second>::id(this->world_));
     }
 
     /** Set component, mark component for auto-overriding.
-     * @see override(flecs::id_t id)
+     * @see auto_override(flecs::id_t id)
      *
      * @tparam T The component to set and for which to add the OVERRIDE flag
      */    
     template <typename T>
-    Self& set_override(const T& val) {
-        this->override<T>();
+    Self& set_auto_override(const T& val) {
+        this->auto_override<T>();
         return this->set<T>(val);
     }
 
@@ -453,69 +453,69 @@ struct entity_builder : entity_view {
      * @tparam T The component to set and for which to add the OVERRIDE flag
      */    
     template <typename T>
-    Self& set_override(T&& val) {
-        this->override<T>();
+    Self& set_auto_override(T&& val) {
+        this->auto_override<T>();
         return this->set<T>(FLECS_FWD(val));
     }
 
     /** Set pair, mark component for auto-overriding.
-     * @see override(flecs::id_t id)
+     * @see auto_override(flecs::id_t id)
      *
      * @tparam First The first element of the pair.
      * @param second The second element of the pair.
      */    
     template <typename First>
-    Self& set_override(flecs::entity_t second, const First& val) {
-        this->override<First>(second);
+    Self& set_auto_override(flecs::entity_t second, const First& val) {
+        this->auto_override<First>(second);
         return this->set<First>(second, val);
     }
 
     /** Set pair, mark component for auto-overriding.
-     * @see override(flecs::id_t id)
+     * @see auto_override(flecs::id_t id)
      *
      * @tparam First The first element of the pair.
      * @param second The second element of the pair.
      */    
     template <typename First>
-    Self& set_override(flecs::entity_t second, First&& val) {
-        this->override<First>(second);
+    Self& set_auto_override(flecs::entity_t second, First&& val) {
+        this->auto_override<First>(second);
         return this->set<First>(second, FLECS_FWD(val));
     }
 
     /** Set component, mark component for auto-overriding.
-     * @see override(flecs::id_t id)
+     * @see auto_override(flecs::id_t id)
      *
      * @tparam First The first element of the pair.
      * @tparam Second The second element of the pair.
      */    
     template <typename First, typename Second, typename P = pair<First, Second>, 
         typename A = actual_type_t<P>, if_not_t< flecs::is_pair<First>::value> = 0>    
-    Self& set_override(const A& val) {
-        this->override<First, Second>();
+    Self& set_auto_override(const A& val) {
+        this->auto_override<First, Second>();
         return this->set<First, Second>(val);
     }
 
     /** Set component, mark component for auto-overriding.
-     * @see override(flecs::id_t id)
+     * @see auto_override(flecs::id_t id)
      *
      * @tparam First The first element of the pair.
      * @tparam Second The second element of the pair.
      */    
     template <typename First, typename Second, typename P = pair<First, Second>, 
         typename A = actual_type_t<P>, if_not_t< flecs::is_pair<First>::value> = 0>    
-    Self& set_override(A&& val) {
-        this->override<First, Second>();
+    Self& set_auto_override(A&& val) {
+        this->auto_override<First, Second>();
         return this->set<First, Second>(FLECS_FWD(val));
     }
 
     /** Emplace component, mark component for auto-overriding.
-     * @see override(flecs::id_t id)
+     * @see auto_override(flecs::id_t id)
      *
      * @tparam T The component to emplace and override.
      */    
     template <typename T, typename ... Args>
-    Self& emplace_override(Args&&... args) {
-        this->override<T>();
+    Self& emplace_auto_override(Args&&... args) {
+        this->auto_override<T>();
 
         flecs::emplace<T>(this->world_, this->id_, 
             _::type<T>::id(this->world_), FLECS_FWD(args)...);
@@ -524,7 +524,7 @@ struct entity_builder : entity_view {
     }
 
     /** Emplace pair, mark pair for auto-overriding.
-     * @see override(flecs::id_t id)
+     * @see auto_override(flecs::id_t id)
      *
      * @tparam First The first element of the pair to emplace and override.
      * @tparam Second The second element of the pair to emplace and override.
@@ -532,8 +532,8 @@ struct entity_builder : entity_view {
     template <typename First, typename Second, typename P = pair<First, Second>, 
         typename A = actual_type_t<P>, if_not_t< flecs::is_pair<First>::value> = 0,
             typename ... Args>
-    Self& emplace_override(Args&&... args) {
-        this->override<First, Second>();
+    Self& emplace_auto_override(Args&&... args) {
+        this->auto_override<First, Second>();
 
         flecs::emplace<A>(this->world_, this->id_, 
             ecs_pair(_::type<First>::id(this->world_),

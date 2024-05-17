@@ -192,12 +192,12 @@ void Type_type_to_expr_pair_w_override(void) {
     ECS_COMPONENT(world, Velocity);
 
     ecs_type_t t = { .array = (ecs_id_t[]){ 
-        ECS_OVERRIDE | ecs_pair(ecs_id(Position), ecs_id(Velocity)) 
+        ECS_AUTO_OVERRIDE | ecs_pair(ecs_id(Position), ecs_id(Velocity)) 
     }, .count = 1 };
     
     char *str = ecs_type_str(world, &t);
 
-    test_str(str, "OVERRIDE|(Position,Velocity)");
+    test_str(str, "AUTO_OVERRIDE|(Position,Velocity)");
 
     ecs_os_free(str);
 
@@ -292,8 +292,8 @@ void Type_role_pair_str(void) {
 }
 
 void Type_role_owned_str(void) {
-    ecs_entity_t e = ECS_OVERRIDE;
-    test_str(ecs_id_flag_str(e), "OVERRIDE");
+    ecs_entity_t e = ECS_AUTO_OVERRIDE;
+    test_str(ecs_id_flag_str(e), "AUTO_OVERRIDE");
 }
 
 void Type_role_disabled_str(void) {

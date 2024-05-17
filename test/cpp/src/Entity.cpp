@@ -818,7 +818,7 @@ void Entity_add_role(void) {
 
     auto entity = world.entity();
 
-    entity = entity.add_flags(flecs::Pair);
+    entity = entity.add_flags(flecs::PAIR);
 
     test_assert(entity & ECS_PAIR);
 }
@@ -830,7 +830,7 @@ void Entity_remove_role(void) {
 
     flecs::entity_t id = entity;
 
-    entity = entity.add_flags(flecs::Pair);
+    entity = entity.add_flags(flecs::PAIR);
 
     test_assert(entity & ECS_PAIR);
 
@@ -844,13 +844,13 @@ void Entity_has_role(void) {
 
     auto entity = world.entity();
 
-    entity = entity.add_flags(flecs::Pair);
+    entity = entity.add_flags(flecs::PAIR);
 
-    test_assert(entity.has_flags(flecs::Pair));
+    test_assert(entity.has_flags(flecs::PAIR));
 
     entity = entity.remove_flags();
 
-    test_assert(!entity.has_flags(flecs::Pair));
+    test_assert(!entity.has_flags(flecs::PAIR));
 }
 
 void Entity_pair_role(void) {
@@ -860,9 +860,9 @@ void Entity_pair_role(void) {
     auto b = world.entity();
 
     auto pair = flecs::id(a, b);
-    pair = pair.add_flags(flecs::Pair);
+    pair = pair.add_flags(flecs::PAIR);
     
-    test_assert(pair.has_flags(flecs::Pair));
+    test_assert(pair.has_flags(flecs::PAIR));
 
     auto rel = pair.first();
     auto obj = pair.second();
@@ -1182,7 +1182,7 @@ void Entity_foce_owned(void) {
     auto prefab = world.prefab()
         .add<Position>()
         .add<Velocity>()
-        .override<Position>();
+        .auto_override<Position>();
 
     auto e = world.entity()
         .add(flecs::IsA, prefab);
@@ -1202,8 +1202,8 @@ void Entity_force_owned_2(void) {
     auto prefab = world.prefab()
         .add<Position>()
         .add<Velocity>()
-        .override<Position>()
-        .override<Velocity>();
+        .auto_override<Position>()
+        .auto_override<Velocity>();
 
     auto e = world.entity()
         .add(flecs::IsA, prefab);
@@ -1223,7 +1223,7 @@ void Entity_force_owned_nested(void) {
     auto prefab = world.prefab()
         .add<Position>()
         .add<Velocity>()
-        .override<Position>();
+        .auto_override<Position>();
 
     auto prefab_2 = world.prefab()
         .add(flecs::IsA, prefab);
@@ -1549,7 +1549,7 @@ void Entity_override(void) {
     world.component<Position>().add(flecs::OnInstantiate, flecs::Inherit);
 
     auto base = world.entity()
-        .override<Position>();
+        .auto_override<Position>();
 
     auto e = world.entity()
         .add(flecs::IsA, base);
@@ -1565,7 +1565,7 @@ void Entity_override_id(void) {
     auto tag_b = world.entity().add(flecs::OnInstantiate, flecs::Inherit);
 
     auto base = world.entity()
-        .override(tag_a)
+        .auto_override(tag_a)
         .add(tag_b);
 
     auto e = world.entity()
@@ -1586,7 +1586,7 @@ void Entity_override_pair_w_tgt_id(void) {
     auto tgt_b = world.entity();
 
     auto base = world.entity()
-        .override<Position>(tgt_a)
+        .auto_override<Position>(tgt_a)
         .add<Position>(tgt_b);
 
     auto e = world.entity()
@@ -1607,7 +1607,7 @@ void Entity_override_pair_w_ids(void) {
     auto tgt_b = world.entity();
 
     auto base = world.entity()
-        .override(rel, tgt_a)
+        .auto_override(rel, tgt_a)
         .add(rel, tgt_b);
 
     auto e = world.entity()
@@ -1629,7 +1629,7 @@ void Entity_override_pair(void) {
     world.component<Position>().add(flecs::OnInstantiate, flecs::Inherit);
 
     auto base = world.entity()
-        .override<Position, TagA>()
+        .auto_override<Position, TagA>()
         .add<Position, TagB>();
 
     auto e = world.entity()
@@ -1648,7 +1648,7 @@ void Entity_set_override(void) {
     world.component<Position>().add(flecs::OnInstantiate, flecs::Inherit);
 
     auto base = world.entity()
-        .set_override<Position>({10, 20});
+        .set_auto_override<Position>({10, 20});
 
     auto e = world.entity()
         .add(flecs::IsA, base);
@@ -1674,7 +1674,7 @@ void Entity_set_override_lvalue(void) {
     Position plvalue = {10, 20};
 
     auto base = world.entity()
-        .set_override<Position>(plvalue);
+        .set_auto_override<Position>(plvalue);
 
     auto e = world.entity()
         .add(flecs::IsA, base);
@@ -1700,7 +1700,7 @@ void Entity_set_override_pair(void) {
     struct Tgt { };
 
     auto base = world.entity()
-        .set_override<Position, Tgt>({10, 20});
+        .set_auto_override<Position, Tgt>({10, 20});
 
     auto e = world.entity()
         .add(flecs::IsA, base);
@@ -1726,7 +1726,7 @@ void Entity_set_override_pair_w_tgt_id(void) {
     auto tgt = world.entity();
 
     auto base = world.entity()
-        .set_override<Position>(tgt, {10, 20});
+        .set_auto_override<Position>(tgt, {10, 20});
 
     auto e = world.entity()
         .add(flecs::IsA, base);
@@ -1752,7 +1752,7 @@ void Entity_set_override_pair_w_rel_tag(void) {
     world.component<Tgt>().add(flecs::OnInstantiate, flecs::Inherit);
 
     auto base = world.entity()
-        .set_override<Tgt, Position>({10, 20});
+        .set_auto_override<Tgt, Position>({10, 20});
 
     auto e = world.entity()
         .add(flecs::IsA, base);
@@ -1773,7 +1773,7 @@ void Entity_set_override_pair_w_rel_tag(void) {
 void Entity_emplace_override(void) {
     flecs::world world;
 
-    auto e = world.entity().emplace_override<NoDefaultCtor>(10);
+    auto e = world.entity().emplace_auto_override<NoDefaultCtor>(10);
     test_assert(e.has<NoDefaultCtor>());
 
     const NoDefaultCtor *ptr = e.get<NoDefaultCtor>();
@@ -1784,7 +1784,7 @@ void Entity_emplace_override(void) {
 void Entity_emplace_override_pair(void) {
     flecs::world world;
 
-    auto e = world.entity().emplace_override<NoDefaultCtor, Tag>(10);
+    auto e = world.entity().emplace_auto_override<NoDefaultCtor, Tag>(10);
     test_assert((e.has<NoDefaultCtor, Tag>()));
 
     const NoDefaultCtor *ptr = e.get<NoDefaultCtor, Tag>();
@@ -3122,7 +3122,7 @@ void Entity_pair_id_str(void) {
 void Entity_role_id_str(void) {
     flecs::world ecs;
 
-    flecs::id id = flecs::id(ecs, ECS_OVERRIDE | ecs.entity("Foo"));
+    flecs::id id = flecs::id(ecs, ECS_AUTO_OVERRIDE | ecs.entity("Foo"));
 
     test_str("OVERRIDE|Foo", id.str());
 }
