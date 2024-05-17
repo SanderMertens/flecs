@@ -54,7 +54,7 @@ const char* flecs_script_token_kind_str(
         return "";
     case EcsTokKeywordWith:
     case EcsTokKeywordUsing:
-    case EcsTokKeywordAssembly:
+    case EcsTokKeywordTemplate:
     case EcsTokKeywordProp:
     case EcsTokKeywordConst:
     case EcsTokKeywordIf:
@@ -498,7 +498,7 @@ const char* flecs_script_token(
 
     Keyword           ("with",     EcsTokKeywordWith)
     Keyword           ("using",    EcsTokKeywordUsing)
-    Keyword           ("assembly", EcsTokKeywordAssembly)
+    Keyword           ("template", EcsTokKeywordTemplate)
     Keyword           ("prop",     EcsTokKeywordProp)
     Keyword           ("const",    EcsTokKeywordConst)
     Keyword           ("if",       EcsTokKeywordIf)

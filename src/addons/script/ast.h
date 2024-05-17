@@ -19,7 +19,7 @@ typedef enum ecs_script_node_kind_t {
     EcsAstUsing,
     EcsAstModule,
     EcsAstAnnotation,
-    EcsAstAssembly,
+    EcsAstTemplate,
     EcsAstProp,
     EcsAstConst,
     EcsAstEntity,
@@ -116,11 +116,11 @@ typedef struct ecs_script_annot_t {
     const char *expr;
 } ecs_script_annot_t;
 
-typedef struct ecs_script_assembly_node_t {
+typedef struct ecs_script_template_node_t {
     ecs_script_node_t node;
     const char *name;
     ecs_script_scope_t* scope;
-} ecs_script_assembly_node_t;
+} ecs_script_template_node_t;
 
 typedef struct ecs_script_var_node_t {
     ecs_script_node_t node;
@@ -165,7 +165,7 @@ ecs_script_module_t* flecs_script_insert_module(
     ecs_script_parser_t *parser,
     const char *name);
 
-ecs_script_assembly_node_t* flecs_script_insert_assembly(
+ecs_script_template_node_t* flecs_script_insert_template(
     ecs_script_parser_t *parser,
     const char *name);
 

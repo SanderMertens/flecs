@@ -45,7 +45,7 @@ flecs_src = files(
     'src/addons/pipeline/pipeline.c',
     'src/addons/pipeline/worker.c',
     'src/addons/rest.c',
-    'src/addons/script/assembly.c',
+    'src/addons/script/template.c',
     'src/addons/script/ast.c',
     'src/addons/script/expr.c',
     'src/addons/script/interpolate.c',

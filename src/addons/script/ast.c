@@ -252,19 +252,19 @@ ecs_script_annot_t* flecs_script_insert_annot(
     return result;
 }
 
-ecs_script_assembly_node_t* flecs_script_insert_assembly(
+ecs_script_template_node_t* flecs_script_insert_template(
     ecs_script_parser_t *parser,
     const char *name)
 {
     ecs_script_scope_t *scope = parser->scope;
     ecs_assert(scope != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_script_assembly_node_t *result = flecs_ast_new(
-        parser, ecs_script_assembly_node_t, EcsAstAssembly);
+    ecs_script_template_node_t *result = flecs_ast_new(
+        parser, ecs_script_template_node_t, EcsAstTemplate);
     result->name = name;
     result->scope = flecs_script_scope_new(parser);
 
-    flecs_ast_append(parser, scope->stmts, ecs_script_assembly_node_t, result);
+    flecs_ast_append(parser, scope->stmts, ecs_script_template_node_t, result);
     return result;
 }
 

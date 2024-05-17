@@ -13,21 +13,21 @@ ECS_COMPONENT_DECLARE(EcsScript);
 static
 ECS_MOVE(EcsScript, dst, src, {
     if (dst->script && (dst->script != src->script)) {
-        if (dst->assembly && (dst->assembly != src->assembly)) {
-            flecs_script_assembly_fini(dst->script, dst->assembly);
+        if (dst->template_ && (dst->template_ != src->template_)) {
+            flecs_script_template_fini(dst->script, dst->template_);
         }
         ecs_script_free(dst->script);
     }
     dst->script = src->script;
-    dst->assembly = src->assembly;
+    dst->template_ = src->template_;
     src->script = NULL;
-    src->assembly = NULL;
+    src->template_ = NULL;
 })
 
 static
 ECS_DTOR(EcsScript, ptr, {
-    if (ptr->assembly) {
-        flecs_script_assembly_fini(ptr->script, ptr->assembly);
+    if (ptr->template_) {
+        flecs_script_template_fini(ptr->script, ptr->template_);
     }
     if (ptr->script) {
         ecs_script_free(ptr->script);
@@ -132,12 +132,12 @@ int ecs_script_update(
 
     const char *name = ecs_get_name(world, e);
     EcsScript *s = ecs_ensure(world, e, EcsScript);
-    if (s->assembly) {
-        char *assembly_name = ecs_get_fullpath(world, s->assembly->entity);
+    if (s->template_) {
+        char *template_name = ecs_get_fullpath(world, s->template_->entity);
         ecs_err("cannot update scripts for individual assemblies, "
             "update parent script instead (tried to update '%s')",
-                assembly_name);
-        ecs_os_free(assembly_name);
+                template_name);
+        ecs_os_free(template_name);
         return -1;
     }
 

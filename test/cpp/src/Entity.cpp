@@ -3124,7 +3124,7 @@ void Entity_role_id_str(void) {
 
     flecs::id id = flecs::id(ecs, ECS_AUTO_OVERRIDE | ecs.entity("Foo"));
 
-    test_str("OVERRIDE|Foo", id.str());
+    test_str("AUTO_OVERRIDE|Foo", id.str());
 }
 
 void Entity_id_str_from_entity_view(void) {

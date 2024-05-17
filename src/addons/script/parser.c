@@ -212,7 +212,7 @@ const char* flecs_script_stmt(
         case EcsTokKeywordWith:       goto with_stmt;
         case EcsTokKeywordModule:     goto module_stmt;
         case EcsTokKeywordUsing:      goto using_stmt;
-        case EcsTokKeywordAssembly:   goto assembly_stmt;
+        case EcsTokKeywordTemplate:   goto template_stmt;
         case EcsTokKeywordProp:       goto prop_var;
         case EcsTokKeywordConst:      goto const_var;
         case EcsTokKeywordIf:         goto if_stmt;
@@ -330,19 +330,19 @@ module_stmt: {
     )
 }
 
-// assembly
-assembly_stmt: {
-    // assembly SpaceShip
+// template
+template_stmt: {
+    // template SpaceShip
     Parse_1(EcsTokIdentifier, 
-        ecs_script_assembly_node_t *assembly = flecs_script_insert_assembly(
+        ecs_script_template_node_t *template = flecs_script_insert_template(
             parser, Token(1));
 
         Parse(
-            // assembly SpaceShip {
+            // template SpaceShip {
             case '{':
-                return flecs_script_scope(parser, assembly->scope, pos);
+                return flecs_script_scope(parser, template->scope, pos);
 
-            // assembly SpaceShip\n
+            // template SpaceShip\n
             EcsTokEndOfStatement:
                 EndOfRule;
         )

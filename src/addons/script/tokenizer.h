@@ -38,7 +38,7 @@ typedef enum ecs_script_token_kind_t {
     EcsTokKeywordWith,
     EcsTokKeywordIf,
     EcsTokKeywordElse,
-    EcsTokKeywordAssembly,
+    EcsTokKeywordTemplate,
     EcsTokKeywordProp,
     EcsTokKeywordConst,
 } ecs_script_token_kind_t;

@@ -13275,7 +13275,7 @@ FLECS_API
 extern ECS_COMPONENT_DECLARE(EcsScript);
 
 typedef struct ecs_script_t ecs_script_t;
-typedef struct ecs_script_assembly_t ecs_script_assembly_t;
+typedef struct ecs_script_template_t ecs_script_template_t;
 
 /** Script variable. */
 typedef struct ecs_script_var_t {
@@ -13301,7 +13301,7 @@ typedef struct ecs_script_vars_t {
  */
 typedef struct EcsScript {
     ecs_script_t *script;
-    ecs_script_assembly_t *assembly; /* Only set for assembly scripts */
+    ecs_script_template_t *template_; /* Only set for template scripts */
 } EcsScript;
 
 
@@ -13436,7 +13436,7 @@ ecs_entity_t ecs_script_init(
  *
  * @param world The world.
  * @param script The script entity.
- * @param instance An assembly instance (optional).
+ * @param instance An template instance (optional).
  * @param code The script code.
  */
 FLECS_API
