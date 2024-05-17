@@ -1,15 +1,21 @@
 #include <override.h>
 #include <stdio.h>
 
-// Overriding makes it possible for a prefab instance to obtain a private copy
-// of an inherited component. To override a component the regular add operation
-// is used. The overridden component will be initialized with the value of the
-// inherited component.
+// When an entity is instantiated from a prefab, components are by default 
+// copied from the prefab to the instance. This behavior can be customized with
+// the OnInstantiate trait, which has three options:
+// 
+// - Override (copy to instance)
+// - Inherit (inherit from prefab)
+// - DontInherit (don't copy or inherit)
 //
-// In some cases a prefab instance should always have a private copy of an 
-// inherited component. This can be achieved with an auto override which can be
-// added to a prefab. Components with an auto override are automatically 
-// overridden when the prefab is instantiated.
+// When a component is inheritable, it can be overridden manually by adding the
+// component to the instance, which also copies the value from the prefab 
+// component. Additionally, when creating a prefab it is possible to flag a 
+// component as "auto override", which can change the behavior for a specific 
+// prefab from "inherit" to "override".
+//
+// This example shows how these different features can be used.
 
 typedef struct {
     double value;
@@ -22,19 +28,16 @@ int main(int argc, char *argv[]) {
     ECS_COMPONENT(ecs, Defense);
     ECS_COMPONENT(ecs, Damage);
 
-    ecs_entity_t SpaceShip = ecs_entity(ecs, { .name = "SpaceShip", .add = ecs_ids( EcsPrefab ) });
+    // Change the instantiation behavior for Attack and Defense to inherit.
+    ecs_add_pair(ecs, ecs_id(Attack),  EcsOnInstantiate, EcsInherit);
+    ecs_add_pair(ecs, ecs_id(Defense), EcsOnInstantiate, EcsInherit);
 
-    // Attack and Defense are properties that can be shared across many 
-    // spaceships. This saves memory, and speeds up prefab creation as we don't
-    // have to copy the values of Attack and Defense to private components.
-    ecs_set(ecs, SpaceShip, Attack, { 75 });
+    ecs_entity_t SpaceShip = ecs_entity(ecs, { 
+        .name = "SpaceShip", .add = ecs_ids( EcsPrefab ) });
+
+    ecs_set(ecs, SpaceShip, Attack,  { 75 });
     ecs_set(ecs, SpaceShip, Defense, { 100 });
-
-    // Damage is a property that is private to a spaceship, so add an auto
-    // override for it. This ensures that each prefab instance will have a
-    // private copy of the component.
-    ecs_set(ecs, SpaceShip, Damage, { 0 });
-    ecs_auto_override(ecs, SpaceShip, Damage);
+    ecs_set(ecs, SpaceShip, Damage,  { 50 });
 
     // Create a prefab instance.
     ecs_entity_t inst = ecs_entity(ecs, { .name = "my_instance" });
@@ -47,11 +50,11 @@ int main(int argc, char *argv[]) {
     printf("instance type = [%s]\n", type);
     ecs_os_free(type);
 
-    // Even though Attack was not automatically overridden, we can always 
-    // override it manually afterwards by adding it:
+    // Even though Attack was not copied to the instance when instantiated, we 
+    // can still override it manually afterwards by adding it to the instance:
     ecs_add(ecs, inst, Attack);
 
-    // The Attack component now shows up in the entity type:
+    // The Attack component is now owned and shows up in the entity type:
     type = ecs_type_str(ecs, ecs_get_type(ecs, inst));
     printf("instance type = [%s]\n", type);
     ecs_os_free(type);
@@ -72,7 +75,7 @@ int main(int argc, char *argv[]) {
     //  instance type = [Attack, Damage, (Identifier,Name), (IsA,SpaceShip)]
     //  attack: 75.000000
     //  defense: 100.000000
-    //  damage: 0.000000
+    //  damage: 50.000000
 
     return ecs_fini(ecs);
 }
