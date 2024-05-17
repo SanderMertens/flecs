@@ -27,6 +27,11 @@ int main(int argc, char *argv[]) {
 
     ECS_COMPONENT(ecs, Defense);
 
+    // Make Defense component inheritable. By default components are copied from
+    // the instance to the prefab. An inhereted component is only stored on the
+    // prefab, and is shared across all instances.
+    ecs_add_pair(ecs, ecs_id(Defense), EcsOnInstantiate, EcsInherit);
+
     // Create a SpaceShip prefab with a Defense component.
     ecs_entity_t SpaceShip = ecs_entity(ecs, { .name = "SpaceShip", .add = ecs_ids( EcsPrefab ) });
     ecs_set(ecs, SpaceShip, Defense, {50});

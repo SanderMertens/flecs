@@ -27,6 +27,11 @@ struct Defense {
 int main() {
     flecs::world ecs;
 
+    // Make Defense component inheritable. By default components are copied from
+    // the instance to the prefab. An inhereted component is only stored on the
+    // prefab, and is shared across all instances.
+    ecs.component<Defense>().add(flecs::OnInstantiate, flecs::Inherit);
+
     // Create a SpaceShip prefab with a Defense component.
     flecs::entity SpaceShip = ecs.prefab("SpaceShip")
         .set<Defense>({ 50 });
