@@ -47,12 +47,12 @@ struct ecs_script_parser_t {
 #include "visit.h"
 #include "visit_eval.h"
 
-struct ecs_script_assembly_t {
-    /* Assembly handle */
+struct ecs_script_template_t {
+    /* Template handle */
     ecs_entity_t entity;
 
-    /* Assembly AST node */
-    ecs_script_assembly_node_t *node;
+    /* Template AST node */
+    ecs_script_template_node_t *node;
 
     /* Hoisted using statements */
     ecs_vec_t using_;
@@ -63,7 +63,7 @@ struct ecs_script_assembly_t {
     /* Default values for props */
     ecs_vec_t prop_defaults;
 
-    /* Type info for assembly component */
+    /* Type info for template component */
     const ecs_type_info_t *type_info;
 };
 

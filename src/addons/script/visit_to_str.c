@@ -100,7 +100,7 @@ const char* flecs_script_node_to_str(
     case EcsAstUsing:              return "using";
     case EcsAstModule:             return "module";
     case EcsAstAnnotation:         return "annot";
-    case EcsAstAssembly:           return "assembly";
+    case EcsAstTemplate:           return "template";
     case EcsAstProp:               return "prop";
     case EcsAstConst:              return "const";
     case EcsAstEntity:             return "entity";
@@ -212,9 +212,9 @@ void flecs_script_annot_to_str(
 }
 
 static
-void flecs_script_assembly_to_str(
+void flecs_script_template_to_str(
     ecs_script_str_visitor_t *v,
-    ecs_script_assembly_node_t *node)
+    ecs_script_template_node_t *node)
 {
     flecs_scriptbuf_node(v, &node->node);
     flecs_scriptbuf_append(v, "%s ", node->name);
@@ -355,8 +355,8 @@ int flecs_script_stmt_to_str(
     case EcsAstAnnotation:
         flecs_script_annot_to_str(v, (ecs_script_annot_t*)node);
         break;
-    case EcsAstAssembly:
-        flecs_script_assembly_to_str(v, (ecs_script_assembly_node_t*)node);
+    case EcsAstTemplate:
+        flecs_script_template_to_str(v, (ecs_script_template_node_t*)node);
         break;
     case EcsAstConst:
     case EcsAstProp:

@@ -1,6 +1,6 @@
 /**
- * @file addons/script/assembly.c
- * @brief Script assembly implementation.
+ * @file addons/script/template.c
+ * @brief Script template implementation.
  */
 
 #include "flecs.h"
@@ -8,40 +8,40 @@
 #ifdef FLECS_SCRIPT
 #include "script.h"
 
-/* Assembly ctor to initialize with default property values */
+/* Template ctor to initialize with default property values */
 static
-void flecs_script_assembly_ctor(
+void flecs_script_template_ctor(
     void *ptr,
     int32_t count,
     const ecs_type_info_t *ti)
 {
     ecs_world_t *world = ti->hooks.ctx;
-    ecs_entity_t assembly_entity = ti->component;
+    ecs_entity_t template_entity = ti->component;
     
-    const EcsStruct *st = ecs_get(world, assembly_entity, EcsStruct);
+    const EcsStruct *st = ecs_get(world, template_entity, EcsStruct);
     if (!st) {
         ecs_os_memset(ptr, 0, count * ti->size);
         return;
     }
 
-    const EcsScript *script = ecs_get(world, assembly_entity, EcsScript);
+    const EcsScript *script = ecs_get(world, template_entity, EcsScript);
     if (!script) {
-        ecs_err("assembly '%s' is not a script, cannot construct", ti->name);
+        ecs_err("template '%s' is not a script, cannot construct", ti->name);
         return;
     }
 
-    ecs_script_assembly_t *assembly = script->assembly;
-    ecs_assert(assembly != NULL, ECS_INTERNAL_ERROR, NULL);
-    if (st->members.count != assembly->prop_defaults.count) {
-        ecs_err("number of props (%d) of assembly '%s' does not match members"
-            " (%d), cannot construct", assembly->prop_defaults.count, 
+    ecs_script_template_t *template = script->template_;
+    ecs_assert(template != NULL, ECS_INTERNAL_ERROR, NULL);
+    if (st->members.count != template->prop_defaults.count) {
+        ecs_err("number of props (%d) of template '%s' does not match members"
+            " (%d), cannot construct", template->prop_defaults.count, 
                 ti->name, st->members.count);
         return;
     }
 
     const ecs_member_t *members = st->members.array;
     int32_t i, m, member_count = st->members.count;
-    ecs_script_var_t *values = assembly->prop_defaults.array;
+    ecs_script_var_t *values = template->prop_defaults.array;
     for (m = 0; m < member_count; m ++) {
         const ecs_member_t *member = &members[m];
         ecs_script_var_t *value = &values[m];
@@ -56,9 +56,9 @@ void flecs_script_assembly_ctor(
     }
 }
 
-/* Assembly on_set handler to update contents for new property values */
+/* Template on_set handler to update contents for new property values */
 static
-void flecs_script_assembly_on_set(
+void flecs_script_template_on_set(
     ecs_iter_t *it)
 {
     if (it->table->flags & EcsTableIsPrefab) {
@@ -67,22 +67,22 @@ void flecs_script_assembly_on_set(
     }
 
     ecs_world_t *world = it->world;
-    ecs_entity_t assembly_entity = ecs_field_id(it, 0);
-    ecs_record_t *r = ecs_record_find(world, assembly_entity);
+    ecs_entity_t template_entity = ecs_field_id(it, 0);
+    ecs_record_t *r = ecs_record_find(world, template_entity);
     if (!r) {
-        ecs_err("assembly entity is empty (should never happen)");
+        ecs_err("template entity is empty (should never happen)");
         return;
     }
 
     const EcsScript *script = ecs_record_get(world, r, EcsScript);
     if (!script) {
-        ecs_err("assembly is missing script component");
+        ecs_err("template is missing script component");
         return;
     }
 
-    ecs_script_assembly_t *assembly = script->assembly;
-    ecs_assert(assembly != NULL, ECS_INTERNAL_ERROR, NULL);
-    const ecs_type_info_t *ti = assembly->type_info;
+    ecs_script_template_t *template = script->template_;
+    ecs_assert(template != NULL, ECS_INTERNAL_ERROR, NULL);
+    const ecs_type_info_t *ti = template->type_info;
     ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
     const EcsStruct *st = ecs_record_get(world, r, EcsStruct);
 
@@ -91,15 +91,15 @@ void flecs_script_assembly_on_set(
     ecs_script_eval_visitor_t v;
     flecs_script_eval_visit_init(script->script, &v);
     ecs_vec_t prev_using = v.using;
-    v.using = assembly->using_;
+    v.using = template->using_;
 
-    ecs_script_scope_t *scope = assembly->node->scope;
+    ecs_script_scope_t *scope = template->node->scope;
 
     /* Dummy entity node for instance */
     ecs_script_entity_t instance_node = {
         .node = {
             .kind = EcsAstEntity,
-            .pos = assembly->node->node.pos
+            .pos = template->node->node.pos
         },
         .scope = scope
     };
@@ -111,17 +111,17 @@ void flecs_script_assembly_on_set(
         v.parent = it->entities[i];
         instance_node.eval = it->entities[i];
 
-        /* Create variables to hold assembly properties */
+        /* Create variables to hold template properties */
         ecs_script_vars_t *vars = flecs_script_vars_push(
             NULL, &v.stack, v.allocator);
 
-        /* Populate properties from assembly members */
+        /* Populate properties from template members */
         if (st) {
             const ecs_member_t *members = st->members.array;
             for (m = 0; m < st->members.count; m ++) {
                 const ecs_member_t *member = &members[m];
 
-                /* Assign assembly property from assembly instance */
+                /* Assign template property from template instance */
                 ecs_script_var_t *var = ecs_script_vars_declare(vars, member->name);
                 var->value.type = member->type;
                 var->value.ptr = ECS_OFFSET(data, member->offset);
@@ -143,9 +143,9 @@ void flecs_script_assembly_on_set(
             ecs_assert(real_world != NULL, ECS_INTERNAL_ERROR, NULL);
         }
 
-        ecs_script_clear(world, assembly_entity, instance);
+        ecs_script_clear(world, template_entity, instance);
 
-        /* Run assembly code */
+        /* Run template code */
         v.vars = vars;
         ecs_script_visit_scope(&v, scope);
 
@@ -168,7 +168,7 @@ int flecs_script_eval_prop(
     ecs_script_eval_visitor_t *v,
     ecs_script_var_node_t *node)
 {
-    ecs_script_assembly_t *assembly = v->assembly;
+    ecs_script_template_t *template = v->template;
     ecs_script_var_t *var = ecs_script_vars_declare(v->vars, node->name);
     if (!var) {
         flecs_script_eval_error(v, node, 
@@ -199,7 +199,7 @@ int flecs_script_eval_prop(
         }
 
         ecs_script_var_t *value = ecs_vec_append_t(&v->base.script->allocator, 
-            &assembly->prop_defaults, ecs_script_var_t);
+            &template->prop_defaults, ecs_script_var_t);
         value->value.ptr = flecs_calloc(&v->base.script->allocator, ti->size);
         value->value.type = type;
         value->type_info = ti;
@@ -208,7 +208,7 @@ int flecs_script_eval_prop(
 
         ecs_entity_t mbr = ecs_entity(v->world, {
             .name = node->name,
-            .parent = assembly->entity
+            .parent = template->entity
         });
 
         ecs_set(v->world, mbr, EcsMember, { .type = var->value.type });
@@ -218,7 +218,7 @@ int flecs_script_eval_prop(
 }
 
 static
-int flecs_script_assembly_eval(
+int flecs_script_template_eval(
     ecs_script_eval_visitor_t *v,
     ecs_script_node_t *node)
 {
@@ -237,7 +237,7 @@ int flecs_script_assembly_eval(
     case EcsAstUsing:
     case EcsAstModule:
     case EcsAstAnnotation:
-    case EcsAstAssembly:
+    case EcsAstTemplate:
     case EcsAstConst:
     case EcsAstEntity:
     case EcsAstPairScope:
@@ -249,57 +249,57 @@ int flecs_script_assembly_eval(
 }
 
 static
-int flecs_script_assembly_preprocess(
+int flecs_script_template_preprocess(
     ecs_script_eval_visitor_t *v,
-    ecs_script_assembly_t *assembly)
+    ecs_script_template_t *template)
 {
-    v->assembly = assembly;
-    v->base.visit = (ecs_visit_action_t)flecs_script_assembly_eval;
+    v->template = template;
+    v->base.visit = (ecs_visit_action_t)flecs_script_template_eval;
     v->vars = flecs_script_vars_push(v->vars, &v->stack, v->allocator);
-    int result = ecs_script_visit_scope(v, assembly->node->scope);
+    int result = ecs_script_visit_scope(v, template->node->scope);
     v->vars = ecs_script_vars_pop(v->vars);
-    v->assembly = NULL;
+    v->template = NULL;
     return result;
 }
 
 static
-int flecs_script_assembly_hoist_using(
+int flecs_script_template_hoist_using(
     ecs_script_eval_visitor_t *v,
-    ecs_script_assembly_t *assembly)
+    ecs_script_template_t *template)
 {
     if (v->module) {
         ecs_vec_append_t(
-            v->allocator, &assembly->using_, ecs_entity_t)[0] = v->module;
+            v->allocator, &template->using_, ecs_entity_t)[0] = v->module;
     }
 
     int i, count = ecs_vec_count(&v->using);
     for (i = 0; i < count; i ++) {
-        ecs_vec_append_t(v->allocator, &assembly->using_, ecs_entity_t)[0] = 
+        ecs_vec_append_t(v->allocator, &template->using_, ecs_entity_t)[0] = 
             ecs_vec_get_t(&v->using, ecs_entity_t, i)[0];
     }
 
     return 0;
 }
 
-ecs_script_assembly_t* flecs_script_assembly_init(
+ecs_script_template_t* flecs_script_template_init(
     ecs_script_t *script)
 {
     ecs_allocator_t *a = &script->allocator;
-    ecs_script_assembly_t *result = flecs_alloc_t(a, ecs_script_assembly_t);
+    ecs_script_template_t *result = flecs_alloc_t(a, ecs_script_template_t);
     ecs_vec_init_t(NULL, &result->prop_defaults, ecs_script_var_t, 0);
     ecs_vec_init_t(NULL, &result->using_, ecs_entity_t, 0);
     return result;
 }
 
-void flecs_script_assembly_fini(
+void flecs_script_template_fini(
     ecs_script_t *script,
-    ecs_script_assembly_t *assembly)
+    ecs_script_template_t *template)
 {
     ecs_assert(script != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_allocator_t *a = &script->allocator;
 
-    int32_t i, count = ecs_vec_count(&assembly->prop_defaults);
-    ecs_script_var_t *values = ecs_vec_first(&assembly->prop_defaults);
+    int32_t i, count = ecs_vec_count(&template->prop_defaults);
+    ecs_script_var_t *values = ecs_vec_first(&template->prop_defaults);
     for (i = 0; i < count; i ++) {
         ecs_script_var_t *value = &values[i];
         const ecs_type_info_t *ti = value->type_info;
@@ -309,67 +309,67 @@ void flecs_script_assembly_fini(
         flecs_free(a, ti->size, value->value.ptr);
     }
 
-    ecs_vec_fini_t(a, &assembly->prop_defaults, ecs_script_var_t);
-    ecs_vec_fini_t(a, &assembly->using_, ecs_entity_t);
-    flecs_free_t(a, ecs_script_assembly_t, assembly);
+    ecs_vec_fini_t(a, &template->prop_defaults, ecs_script_var_t);
+    ecs_vec_fini_t(a, &template->using_, ecs_entity_t);
+    flecs_free_t(a, ecs_script_template_t, template);
 }
 
-/* Create new assembly */
-int flecs_script_eval_assembly(
+/* Create new template */
+int flecs_script_eval_template(
     ecs_script_eval_visitor_t *v,
-    ecs_script_assembly_node_t *node)
+    ecs_script_template_node_t *node)
 {
-    ecs_entity_t assembly_entity = flecs_script_create_entity(v, node->name);
-    if (!assembly_entity) {
+    ecs_entity_t template_entity = flecs_script_create_entity(v, node->name);
+    if (!template_entity) {
         return -1;
     }
 
-    ecs_script_assembly_t *assembly = flecs_script_assembly_init(v->base.script);
-    assembly->entity = assembly_entity;
-    assembly->node = node;
+    ecs_script_template_t *template = flecs_script_template_init(v->base.script);
+    template->entity = template_entity;
+    template->node = node;
 
-    if (flecs_script_assembly_preprocess(v, assembly)) {
+    if (flecs_script_template_preprocess(v, template)) {
         goto error;
     }
 
-    if (flecs_script_assembly_hoist_using(v, assembly)) {
+    if (flecs_script_template_hoist_using(v, template)) {
         goto error;
     }
 
-    /* If assembly has no props, give assembly dummy size so we can register
+    /* If template has no props, give template dummy size so we can register
      * hooks for it. */
-    if (!ecs_has(v->world, assembly_entity, EcsComponent)) {
-        ecs_set(v->world, assembly_entity, EcsComponent, {1, 1});
+    if (!ecs_has(v->world, template_entity, EcsComponent)) {
+        ecs_set(v->world, template_entity, EcsComponent, {1, 1});
     }
 
-    assembly->type_info = ecs_get_type_info(v->world, assembly_entity);
+    template->type_info = ecs_get_type_info(v->world, template_entity);
 
-    ecs_add_pair(v->world, assembly_entity, EcsOnInstantiate, EcsOverride);
+    ecs_add_pair(v->world, template_entity, EcsOnInstantiate, EcsOverride);
 
-    EcsScript *script = ecs_ensure(v->world, assembly_entity, EcsScript);
+    EcsScript *script = ecs_ensure(v->world, template_entity, EcsScript);
     if (script->script) {
-        if (script->assembly) {
-            flecs_script_assembly_fini(script->script, script->assembly);
+        if (script->template_) {
+            flecs_script_template_fini(script->script, script->template_);
         }
         ecs_script_free(script->script);
     }
 
     script->script = v->base.script;
-    script->assembly = assembly;
-    ecs_modified(v->world, assembly_entity, EcsScript);
+    script->template_ = template;
+    ecs_modified(v->world, template_entity, EcsScript);
 
-    ecs_set_hooks_id(v->world, assembly_entity, &(ecs_type_hooks_t) {
-        .ctor = flecs_script_assembly_ctor,
-        .on_set = flecs_script_assembly_on_set,
+    ecs_set_hooks_id(v->world, template_entity, &(ecs_type_hooks_t) {
+        .ctor = flecs_script_template_ctor,
+        .on_set = flecs_script_template_on_set,
         .ctx = v->world
     });
 
-    /* Keep script alive for as long as assembly is alive */
+    /* Keep script alive for as long as template is alive */
     v->base.script->refcount ++;
 
     return 0;
 error:
-    flecs_script_assembly_fini(v->base.script, assembly);
+    flecs_script_template_fini(v->base.script, template);
     return -1;
 }
 

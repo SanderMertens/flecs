@@ -241,52 +241,52 @@ void Eval_if_0(void);
 void Eval_if_true_in_scope(void);
 void Eval_if_false_in_scope(void);
 
-// Testsuite 'Assembly'
-void Assembly_assembly_no_scope(void);
-void Assembly_assembly_empty(void);
-void Assembly_assembly_unresolved_tag(void);
-void Assembly_assembly_unresolved_component(void);
-void Assembly_assembly_unresolved_pair_relationship(void);
-void Assembly_assembly_unresolved_pair_target(void);
-void Assembly_assembly_unresolved_with_tag(void);
-void Assembly_assembly_unresolved_with_component(void);
-void Assembly_assembly_unresolved_with_pair_relationship(void);
-void Assembly_assembly_unresolved_with_pair_target(void);
-void Assembly_assembly_no_props(void);
-void Assembly_assembly_prop_no_type(void);
-void Assembly_assembly_prop_no_default(void);
-void Assembly_assembly_prop(void);
-void Assembly_assembly_prop_space_colon(void);
-void Assembly_assembly_2_props(void);
-void Assembly_assembly_w_using(void);
-void Assembly_assembly_instance_w_default_values(void);
-void Assembly_assembly_instance_w_assign_default_values(void);
-void Assembly_assembly_instance_w_overridden_values(void);
-void Assembly_assembly_w_child(void);
-void Assembly_assembly_w_child_parse_script(void);
-void Assembly_assembly_w_child_parse_script_twice(void);
-void Assembly_assembly_w_child_update_after_parse(void);
-void Assembly_assembly_w_nested_child(void);
-void Assembly_assembly_w_prefab(void);
-void Assembly_assembly_w_prefab_tree(void);
-void Assembly_assembly_w_nested_assembly(void);
-void Assembly_instantiate_prefab_w_assembly(void);
-void Assembly_assembly_w_prefab_w_assembly(void);
-void Assembly_3_assemblies(void);
-void Assembly_assembly_nested_w_default_var(void);
-void Assembly_assembly_w_anonymous(void);
-void Assembly_assembly_w_anonymous_parse_again(void);
-void Assembly_assembly_redeclare_prop_as_const(void);
-void Assembly_assembly_redeclare_prop_as_prop(void);
-void Assembly_assembly_redeclare_const_as_const(void);
-void Assembly_assembly_w_composite_prop_invalid_assignment(void);
-void Assembly_assembly_w_composite_prop(void);
-void Assembly_assembly_with_with(void);
-void Assembly_module_w_assembly(void);
-void Assembly_module_w_nested_assembly(void);
-void Assembly_assembly_w_pair_w_this_var(void);
-void Assembly_run_assembly_after_error(void);
-void Assembly_update_assembly_after_error(void);
+// Testsuite 'Template'
+void Template_template_no_scope(void);
+void Template_template_empty(void);
+void Template_template_unresolved_tag(void);
+void Template_template_unresolved_component(void);
+void Template_template_unresolved_pair_relationship(void);
+void Template_template_unresolved_pair_target(void);
+void Template_template_unresolved_with_tag(void);
+void Template_template_unresolved_with_component(void);
+void Template_template_unresolved_with_pair_relationship(void);
+void Template_template_unresolved_with_pair_target(void);
+void Template_template_no_props(void);
+void Template_template_prop_no_type(void);
+void Template_template_prop_no_default(void);
+void Template_template_prop(void);
+void Template_template_prop_space_colon(void);
+void Template_template_2_props(void);
+void Template_template_w_using(void);
+void Template_template_instance_w_default_values(void);
+void Template_template_instance_w_assign_default_values(void);
+void Template_template_instance_w_overridden_values(void);
+void Template_template_w_child(void);
+void Template_template_w_child_parse_script(void);
+void Template_template_w_child_parse_script_twice(void);
+void Template_template_w_child_update_after_parse(void);
+void Template_template_w_nested_child(void);
+void Template_template_w_prefab(void);
+void Template_template_w_prefab_tree(void);
+void Template_template_w_nested_template(void);
+void Template_instantiate_prefab_w_template(void);
+void Template_template_w_prefab_w_template(void);
+void Template_3_assemblies(void);
+void Template_template_nested_w_default_var(void);
+void Template_template_w_anonymous(void);
+void Template_template_w_anonymous_parse_again(void);
+void Template_template_redeclare_prop_as_const(void);
+void Template_template_redeclare_prop_as_prop(void);
+void Template_template_redeclare_const_as_const(void);
+void Template_template_w_composite_prop_invalid_assignment(void);
+void Template_template_w_composite_prop(void);
+void Template_template_with_with(void);
+void Template_module_w_template(void);
+void Template_module_w_nested_template(void);
+void Template_template_w_pair_w_this_var(void);
+void Template_run_template_after_error(void);
+void Template_update_template_after_error(void);
 
 // Testsuite 'Expr'
 void Expr_add_2_int_literals(void);
@@ -1487,186 +1487,186 @@ bake_test_case Eval_testcases[] = {
     }
 };
 
-bake_test_case Assembly_testcases[] = {
+bake_test_case Template_testcases[] = {
     {
-        "assembly_no_scope",
-        Assembly_assembly_no_scope
+        "template_no_scope",
+        Template_template_no_scope
     },
     {
-        "assembly_empty",
-        Assembly_assembly_empty
+        "template_empty",
+        Template_template_empty
     },
     {
-        "assembly_unresolved_tag",
-        Assembly_assembly_unresolved_tag
+        "template_unresolved_tag",
+        Template_template_unresolved_tag
     },
     {
-        "assembly_unresolved_component",
-        Assembly_assembly_unresolved_component
+        "template_unresolved_component",
+        Template_template_unresolved_component
     },
     {
-        "assembly_unresolved_pair_relationship",
-        Assembly_assembly_unresolved_pair_relationship
+        "template_unresolved_pair_relationship",
+        Template_template_unresolved_pair_relationship
     },
     {
-        "assembly_unresolved_pair_target",
-        Assembly_assembly_unresolved_pair_target
+        "template_unresolved_pair_target",
+        Template_template_unresolved_pair_target
     },
     {
-        "assembly_unresolved_with_tag",
-        Assembly_assembly_unresolved_with_tag
+        "template_unresolved_with_tag",
+        Template_template_unresolved_with_tag
     },
     {
-        "assembly_unresolved_with_component",
-        Assembly_assembly_unresolved_with_component
+        "template_unresolved_with_component",
+        Template_template_unresolved_with_component
     },
     {
-        "assembly_unresolved_with_pair_relationship",
-        Assembly_assembly_unresolved_with_pair_relationship
+        "template_unresolved_with_pair_relationship",
+        Template_template_unresolved_with_pair_relationship
     },
     {
-        "assembly_unresolved_with_pair_target",
-        Assembly_assembly_unresolved_with_pair_target
+        "template_unresolved_with_pair_target",
+        Template_template_unresolved_with_pair_target
     },
     {
-        "assembly_no_props",
-        Assembly_assembly_no_props
+        "template_no_props",
+        Template_template_no_props
     },
     {
-        "assembly_prop_no_type",
-        Assembly_assembly_prop_no_type
+        "template_prop_no_type",
+        Template_template_prop_no_type
     },
     {
-        "assembly_prop_no_default",
-        Assembly_assembly_prop_no_default
+        "template_prop_no_default",
+        Template_template_prop_no_default
     },
     {
-        "assembly_prop",
-        Assembly_assembly_prop
+        "template_prop",
+        Template_template_prop
     },
     {
-        "assembly_prop_space_colon",
-        Assembly_assembly_prop_space_colon
+        "template_prop_space_colon",
+        Template_template_prop_space_colon
     },
     {
-        "assembly_2_props",
-        Assembly_assembly_2_props
+        "template_2_props",
+        Template_template_2_props
     },
     {
-        "assembly_w_using",
-        Assembly_assembly_w_using
+        "template_w_using",
+        Template_template_w_using
     },
     {
-        "assembly_instance_w_default_values",
-        Assembly_assembly_instance_w_default_values
+        "template_instance_w_default_values",
+        Template_template_instance_w_default_values
     },
     {
-        "assembly_instance_w_assign_default_values",
-        Assembly_assembly_instance_w_assign_default_values
+        "template_instance_w_assign_default_values",
+        Template_template_instance_w_assign_default_values
     },
     {
-        "assembly_instance_w_overridden_values",
-        Assembly_assembly_instance_w_overridden_values
+        "template_instance_w_overridden_values",
+        Template_template_instance_w_overridden_values
     },
     {
-        "assembly_w_child",
-        Assembly_assembly_w_child
+        "template_w_child",
+        Template_template_w_child
     },
     {
-        "assembly_w_child_parse_script",
-        Assembly_assembly_w_child_parse_script
+        "template_w_child_parse_script",
+        Template_template_w_child_parse_script
     },
     {
-        "assembly_w_child_parse_script_twice",
-        Assembly_assembly_w_child_parse_script_twice
+        "template_w_child_parse_script_twice",
+        Template_template_w_child_parse_script_twice
     },
     {
-        "assembly_w_child_update_after_parse",
-        Assembly_assembly_w_child_update_after_parse
+        "template_w_child_update_after_parse",
+        Template_template_w_child_update_after_parse
     },
     {
-        "assembly_w_nested_child",
-        Assembly_assembly_w_nested_child
+        "template_w_nested_child",
+        Template_template_w_nested_child
     },
     {
-        "assembly_w_prefab",
-        Assembly_assembly_w_prefab
+        "template_w_prefab",
+        Template_template_w_prefab
     },
     {
-        "assembly_w_prefab_tree",
-        Assembly_assembly_w_prefab_tree
+        "template_w_prefab_tree",
+        Template_template_w_prefab_tree
     },
     {
-        "assembly_w_nested_assembly",
-        Assembly_assembly_w_nested_assembly
+        "template_w_nested_template",
+        Template_template_w_nested_template
     },
     {
-        "instantiate_prefab_w_assembly",
-        Assembly_instantiate_prefab_w_assembly
+        "instantiate_prefab_w_template",
+        Template_instantiate_prefab_w_template
     },
     {
-        "assembly_w_prefab_w_assembly",
-        Assembly_assembly_w_prefab_w_assembly
+        "template_w_prefab_w_template",
+        Template_template_w_prefab_w_template
     },
     {
         "3_assemblies",
-        Assembly_3_assemblies
+        Template_3_assemblies
     },
     {
-        "assembly_nested_w_default_var",
-        Assembly_assembly_nested_w_default_var
+        "template_nested_w_default_var",
+        Template_template_nested_w_default_var
     },
     {
-        "assembly_w_anonymous",
-        Assembly_assembly_w_anonymous
+        "template_w_anonymous",
+        Template_template_w_anonymous
     },
     {
-        "assembly_w_anonymous_parse_again",
-        Assembly_assembly_w_anonymous_parse_again
+        "template_w_anonymous_parse_again",
+        Template_template_w_anonymous_parse_again
     },
     {
-        "assembly_redeclare_prop_as_const",
-        Assembly_assembly_redeclare_prop_as_const
+        "template_redeclare_prop_as_const",
+        Template_template_redeclare_prop_as_const
     },
     {
-        "assembly_redeclare_prop_as_prop",
-        Assembly_assembly_redeclare_prop_as_prop
+        "template_redeclare_prop_as_prop",
+        Template_template_redeclare_prop_as_prop
     },
     {
-        "assembly_redeclare_const_as_const",
-        Assembly_assembly_redeclare_const_as_const
+        "template_redeclare_const_as_const",
+        Template_template_redeclare_const_as_const
     },
     {
-        "assembly_w_composite_prop_invalid_assignment",
-        Assembly_assembly_w_composite_prop_invalid_assignment
+        "template_w_composite_prop_invalid_assignment",
+        Template_template_w_composite_prop_invalid_assignment
     },
     {
-        "assembly_w_composite_prop",
-        Assembly_assembly_w_composite_prop
+        "template_w_composite_prop",
+        Template_template_w_composite_prop
     },
     {
-        "assembly_with_with",
-        Assembly_assembly_with_with
+        "template_with_with",
+        Template_template_with_with
     },
     {
-        "module_w_assembly",
-        Assembly_module_w_assembly
+        "module_w_template",
+        Template_module_w_template
     },
     {
-        "module_w_nested_assembly",
-        Assembly_module_w_nested_assembly
+        "module_w_nested_template",
+        Template_module_w_nested_template
     },
     {
-        "assembly_w_pair_w_this_var",
-        Assembly_assembly_w_pair_w_this_var
+        "template_w_pair_w_this_var",
+        Template_template_w_pair_w_this_var
     },
     {
-        "run_assembly_after_error",
-        Assembly_run_assembly_after_error
+        "run_template_after_error",
+        Template_run_template_after_error
     },
     {
-        "update_assembly_after_error",
-        Assembly_update_assembly_after_error
+        "update_template_after_error",
+        Template_update_template_after_error
     }
 };
 
@@ -2748,11 +2748,11 @@ static bake_test_suite suites[] = {
         Eval_testcases
     },
     {
-        "Assembly",
+        "Template",
         NULL,
         NULL,
         45,
-        Assembly_testcases
+        Template_testcases
     },
     {
         "Expr",
