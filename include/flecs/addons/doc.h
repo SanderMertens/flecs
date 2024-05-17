@@ -29,12 +29,36 @@ extern "C" {
  * @{
  */
 
-FLECS_API extern const ecs_entity_t ecs_id(EcsDocDescription);
+FLECS_API extern const ecs_entity_t ecs_id(EcsDocDescription); /**< Component id for EcsDocDescription. */
+
+/** Tag for adding brief descriptions to entities. 
+ * Added to an entity as (EcsDocDescription, EcsBrief) by ecs_doc_set_brief().
+ */
 FLECS_API extern const ecs_entity_t EcsDocBrief;
+
+/** Tag for adding detailed descriptions to entities. 
+ * Added to an entity as (EcsDocDescription, EcsDocDetail) by ecs_doc_set_detail().
+ */
 FLECS_API extern const ecs_entity_t EcsDocDetail;
+
+/** Tag for adding a link to entities. 
+ * Added to an entity as (EcsDocDescription, EcsDocLink) by ecs_doc_set_link().
+ */
 FLECS_API extern const ecs_entity_t EcsDocLink;
+
+/** Tag for adding a color to entities. 
+ * Added to an entity as (EcsDocDescription, EcsDocColor) by ecs_doc_set_link().
+ */
 FLECS_API extern const ecs_entity_t EcsDocColor;
 
+/** Component that stores description.
+ * Used as pair together with the following tags to store entity documentation:
+ * - EcsName
+ * - EcsDocBrief
+ * - EcsDocDetail
+ * - EcsDocLink
+ * - EcsDocColor
+ */
 typedef struct EcsDocDescription {
     char *value;
 } EcsDocDescription;
@@ -211,7 +235,14 @@ const char* ecs_doc_get_color(
     const ecs_world_t *world,
     ecs_entity_t entity);
 
-/* Module import */
+/** Doc module import function.
+ * Usage:
+ * @code
+ * ECS_IMPORT(world, FlecsDoc)
+ * @endcode
+ * 
+ * @param world The world.
+ */
 FLECS_API
 void FlecsDocImport(
     ecs_world_t *world);

@@ -9,7 +9,7 @@ Some of the features of Flecs Script are:
 - Assign component values
 - Expressions and variables (`$var + 10`)
 - Conditionals (`if $var > 10`)
-- Native integration with assemblies (procedural assets)
+- Native integration with templates (procedural assets)
 
 To learn Flecs Script, check out the [Tutorial](FlecsScriptTutorial.md)!
 
@@ -540,8 +540,8 @@ enum Color {
 }
 ```
 
-## Assemblies
-Assemblies are parametrizable scripts that can be used to create procedural assets. Assemblies can be created with the `template` keyword. Example:
+## Templates
+Templates are parametrizable scripts that can be used to create procedural assets. Templates can be created with the `template` keyword. Example:
 
 ```c
 template Square {
@@ -565,13 +565,13 @@ my_entity {
 }
 ```
 
-Assemblies are commonly used in combination with the kind syntax:
+Templates are commonly used in combination with the kind syntax:
 
 ```c
 Square my_entity
 ```
 
-Assemblies can be parametrized with properties. Properties are variables that are exposed as component members. To create a property, use the `prop` keyword. Example:
+Templates can be parametrized with properties. Properties are variables that are exposed as component members. To create a property, use the `prop` keyword. Example:
 
 ```c
 template Square {
@@ -652,7 +652,7 @@ if (ecs_script_run_file(world, "my_script.flecs")) {
 }
 ```
 
-If a script fails, the entities created by the script will not be automatically deleted. When a script contains assemblies, script resources will not get cleaned up until the entities associated with the assemblies are deleted.
+If a script fails, the entities created by the script will not be automatically deleted. When a script contains templates, script resources will not get cleaned up until the entities associated with the templates are deleted.
 
 ### Run multiple times
 A script can be ran multiple times by using the `ecs_script_parse` and `ecs_script_eval` functions. Example:
@@ -678,7 +678,7 @@ if (ecs_script_eval(script)) {
 ecs_script_free(script);
 ```
 
-If a script fails, the entities created by the script will not be automatically deleted. When a script contains assemblies, script resources will not get cleaned up until the entities associated with the assemblies are deleted.
+If a script fails, the entities created by the script will not be automatically deleted. When a script contains templates, script resources will not get cleaned up until the entities associated with the templates are deleted.
 
 ### Managed script
 Managed scripts are scripts that are associated with an entity, and can be ran multiple times. Entities created by a managed script are tagged with the script. When script execution fails, the entities associated with the script will be deleted. Additionally, if after executing the script again an entity is no longer created by the script, it will also be deleted.
@@ -705,4 +705,4 @@ if (ecs_script_update(world, s, 0, new_code)) {
 }
 ```
 
-When a script contains assemblies, script resources will not get cleaned up until the entities associated with the assemblies are deleted.
+When a script contains templates, script resources will not get cleaned up until the entities associated with the templates are deleted.

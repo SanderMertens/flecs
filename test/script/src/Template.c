@@ -1351,7 +1351,7 @@ void Template_template_w_prefab_w_template(void) {
     ecs_fini(world);
 }
 
-void Template_3_assemblies(void) {
+void Template_3_templates(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =

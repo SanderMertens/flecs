@@ -2351,7 +2351,7 @@ int32_t flecs_table_observed_count(
     return table->_->traversable_count;
 }
 
-void* ecs_record_get_column(
+void* ecs_record_get_by_column(
     const ecs_record_t *r,
     int32_t index,
     size_t c_size)

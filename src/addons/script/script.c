@@ -134,7 +134,7 @@ int ecs_script_update(
     EcsScript *s = ecs_ensure(world, e, EcsScript);
     if (s->template_) {
         char *template_name = ecs_get_fullpath(world, s->template_->entity);
-        ecs_err("cannot update scripts for individual assemblies, "
+        ecs_err("cannot update scripts for individual templates, "
             "update parent script instead (tried to update '%s')",
                 template_name);
         ecs_os_free(template_name);

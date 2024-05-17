@@ -35,40 +35,44 @@
 extern "C" {
 #endif
 
+/** Flecs metrics module. */
 FLECS_API extern ECS_COMPONENT_DECLARE(FlecsMetrics);
 
-/** Tag added to metrics, and used as first element of metric kind pair */
+/** Tag added to metrics, and used as first element of metric kind pair. */
 FLECS_API extern ECS_TAG_DECLARE(EcsMetric);
 
-/** Metric that has monotonically increasing value */
+/** Metric that has monotonically increasing value. */
 FLECS_API extern ECS_TAG_DECLARE(EcsCounter);
 
-/** Counter metric that is auto-incremented by source value */
+/** Counter metric that is auto-incremented by source value. */
 FLECS_API extern ECS_TAG_DECLARE(EcsCounterIncrement);
 
-/** Counter metric that counts the number of entities with an id */
+/** Counter metric that counts the number of entities with an id. */
 FLECS_API extern ECS_TAG_DECLARE(EcsCounterId);
 
-/** Metric that represents current value */
+/** Metric that represents current value. */
 FLECS_API extern ECS_TAG_DECLARE(EcsGauge);
 
-/** Tag added to metric instances */
+/** Tag added to metric instances. */
 FLECS_API extern ECS_TAG_DECLARE(EcsMetricInstance);
 
-/** Component with metric instance value */
+/** Component with metric instance value. */
 FLECS_API extern ECS_COMPONENT_DECLARE(EcsMetricValue);
 
-/** Component with entity source of metric instance */
+/** Component with entity source of metric instance. */
 FLECS_API extern ECS_COMPONENT_DECLARE(EcsMetricSource);
 
+/** Component that stores metric value. */
 typedef struct EcsMetricValue {
     double value;
 } EcsMetricValue;
 
+/** Component that stores metric source. */
 typedef struct EcsMetricSource {
     ecs_entity_t entity;
 } EcsMetricSource;
 
+/** Used with ecs_metric_init to create metric. */
 typedef struct ecs_metric_desc_t {
     int32_t _canary;
 
@@ -159,7 +163,14 @@ ecs_entity_t ecs_metric_init(
 #define ecs_metric(world, ...)\
     ecs_metric_init(world, &(ecs_metric_desc_t) __VA_ARGS__ )
 
-/* Module import */
+/** Metrics module import function.
+ * Usage:
+ * @code
+ * ECS_IMPORT(world, FlecsMetrics)
+ * @endcode
+ * 
+ * @param world The world.
+ */
 FLECS_API
 void FlecsMetricsImport(
     ecs_world_t *world);
