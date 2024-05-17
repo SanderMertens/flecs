@@ -34,20 +34,20 @@
 #ifndef FLECS_HTTP_H
 #define FLECS_HTTP_H
 
-/* Maximum number of headers in request */
+/** Maximum number of headers in request. */
 #define ECS_HTTP_HEADER_COUNT_MAX (32)
 
-/* Maximum number of query parameters in request */
+/** Maximum number of query parameters in request. */
 #define ECS_HTTP_QUERY_PARAM_COUNT_MAX (32)
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/** HTTP server */
+/** HTTP server. */
 typedef struct ecs_http_server_t ecs_http_server_t;
 
-/** A connection manages communication with the remote host */
+/** A connection manages communication with the remote host. */
 typedef struct {
     uint64_t id;
     ecs_http_server_t *server;
@@ -56,13 +56,13 @@ typedef struct {
     char port[16];
 } ecs_http_connection_t;
 
-/** Helper type used for headers & URL query parameters */
+/** Helper type used for headers & URL query parameters. */
 typedef struct {
     const char *key;
     const char *value;
 } ecs_http_key_value_t;
 
-/** Supported request methods */
+/** Supported request methods. */
 typedef enum {
     EcsHttpGet,
     EcsHttpPost,
@@ -72,7 +72,7 @@ typedef enum {
     EcsHttpMethodUnsupported
 } ecs_http_method_t;
 
-/** A request */
+/** An HTTP request. */
 typedef struct {
     uint64_t id;
 
@@ -87,7 +87,7 @@ typedef struct {
     ecs_http_connection_t *conn;
 } ecs_http_request_t;
 
-/** A reply */
+/** An HTTP reply. */
 typedef struct {
     int code;                   /**< default = 200 */
     ecs_strbuf_t body;          /**< default = "" */
@@ -99,16 +99,16 @@ typedef struct {
 #define ECS_HTTP_REPLY_INIT \
     (ecs_http_reply_t){200, ECS_STRBUF_INIT, "OK", "application/json", ECS_STRBUF_INIT}
 
-/* Global statistics. */
-extern int64_t ecs_http_request_received_count;
-extern int64_t ecs_http_request_invalid_count;
-extern int64_t ecs_http_request_handled_ok_count;
-extern int64_t ecs_http_request_handled_error_count;
-extern int64_t ecs_http_request_not_handled_count;
-extern int64_t ecs_http_request_preflight_count;
-extern int64_t ecs_http_send_ok_count;
-extern int64_t ecs_http_send_error_count;
-extern int64_t ecs_http_busy_count;
+/* Global HTTP statistics. */
+extern int64_t ecs_http_request_received_count;       /**< Total number of HTTP requests received. */
+extern int64_t ecs_http_request_invalid_count;        /**< Total number of invalid HTTP requests. */
+extern int64_t ecs_http_request_handled_ok_count;     /**< Total number of successful HTTP requests. */
+extern int64_t ecs_http_request_handled_error_count;  /**< Total number of HTTP requests with errors. */
+extern int64_t ecs_http_request_not_handled_count;    /**< Total number of HTTP requests with an unknown endpoint. */
+extern int64_t ecs_http_request_preflight_count;      /**< Total number of preflight HTTP requests received. */
+extern int64_t ecs_http_send_ok_count;                /**< Total number of HTTP replies successfully sent. */
+extern int64_t ecs_http_send_error_count;             /**< Total number of HTTP replies that failed to send. */
+extern int64_t ecs_http_busy_count;                   /**< Total number of HTTP busy replies. */
 
 /** Request callback.
  * Invoked for each valid request. The function should populate the reply and

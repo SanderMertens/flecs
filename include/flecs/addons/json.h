@@ -292,6 +292,7 @@ typedef struct ecs_iter_to_json_desc_t {
     flecs_poly_t *query;              /**< Query object (required for serialize_query_[plan|profile]). */
 } ecs_iter_to_json_desc_t;
 
+/** Utility used to initialize JSON iterator serializer. */
 #define ECS_ITER_TO_JSON_INIT (ecs_iter_to_json_desc_t){\
     .serialize_term_ids =        true,  \
     .serialize_term_labels =     false, \

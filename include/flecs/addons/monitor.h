@@ -31,32 +31,36 @@
 extern "C" {
 #endif
 
-FLECS_API extern ECS_COMPONENT_DECLARE(FlecsMonitor);
-FLECS_API extern ECS_COMPONENT_DECLARE(EcsWorldStats);
-FLECS_API extern ECS_COMPONENT_DECLARE(EcsWorldSummary);
-FLECS_API extern ECS_COMPONENT_DECLARE(EcsPipelineStats);
+FLECS_API extern ECS_COMPONENT_DECLARE(FlecsMonitor);      /**< Flecs monitor module. */
+FLECS_API extern ECS_COMPONENT_DECLARE(EcsWorldStats);     /**< Component id for EcsWorldStats. */
+FLECS_API extern ECS_COMPONENT_DECLARE(EcsWorldSummary);   /**< Component id for EcsWorldSummary. */
+FLECS_API extern ECS_COMPONENT_DECLARE(EcsPipelineStats);  /**< Component id for EcsPipelineStats. */
 
-FLECS_API extern ecs_entity_t EcsPeriod1s;
-FLECS_API extern ecs_entity_t EcsPeriod1m;
-FLECS_API extern ecs_entity_t EcsPeriod1h;
-FLECS_API extern ecs_entity_t EcsPeriod1d;
-FLECS_API extern ecs_entity_t EcsPeriod1w;
+FLECS_API extern ecs_entity_t EcsPeriod1s;                 /**< Tag used for metrics collected in last second. */
+FLECS_API extern ecs_entity_t EcsPeriod1m;                 /**< Tag used for metrics collected in last minute. */
+FLECS_API extern ecs_entity_t EcsPeriod1h;                 /**< Tag used for metrics collected in last hour. */
+FLECS_API extern ecs_entity_t EcsPeriod1d;                 /**< Tag used for metrics collected in last day. */
+FLECS_API extern ecs_entity_t EcsPeriod1w;                 /**< Tag used for metrics collected in last week. */
 
+/** Common data for statistics. */
 typedef struct {
     ecs_ftime_t elapsed;
     int32_t reduce_count;
 } EcsStatsHeader;
 
+/** Component that stores world statistics. */
 typedef struct {
     EcsStatsHeader hdr;
     ecs_world_stats_t stats;
 } EcsWorldStats;
 
+/** Component that stores pipeline statistics. */
 typedef struct {
     EcsStatsHeader hdr;
     ecs_pipeline_stats_t stats;
 } EcsPipelineStats;
 
+/** Component that stores a summary of world statistics. */
 typedef struct {
     /* Target FPS */
     double target_fps;          /**< Target FPS */
@@ -78,7 +82,14 @@ typedef struct {
     ecs_build_info_t build_info; /**< Build info */
 } EcsWorldSummary;
 
-/* Module import */
+/** Monitor module import function.
+ * Usage:
+ * @code
+ * ECS_IMPORT(world, FlecsMonitor)
+ * @endcode
+ * 
+ * @param world The world.
+ */
 FLECS_API
 void FlecsMonitorImport(
     ecs_world_t *world);

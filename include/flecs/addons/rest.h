@@ -42,9 +42,10 @@ extern "C" {
 
 #define ECS_REST_DEFAULT_PORT (27750)
 
-/** Component that instantiates the REST API */
+/** Component that instantiates the REST API. */
 FLECS_API extern const ecs_entity_t ecs_id(EcsRest);
 
+/** Component that creates a REST API server when instantiated. */
 typedef struct {
     uint16_t port;      /**< Port of server (optional, default = 27750) */
     char *ipaddr;       /**< Interface address (optional, default = 0.0.0.0) */
@@ -71,7 +72,14 @@ FLECS_API
 void ecs_rest_server_fini(
     ecs_http_server_t *srv);
 
-/* Module import */
+/** Rest module import function.
+ * Usage:
+ * @code
+ * ECS_IMPORT(world, FlecsRest)
+ * @endcode
+ * 
+ * @param world The world.
+ */
 FLECS_API
 void FlecsRestImport(
     ecs_world_t *world);

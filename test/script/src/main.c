@@ -272,7 +272,7 @@ void Template_template_w_prefab_tree(void);
 void Template_template_w_nested_template(void);
 void Template_instantiate_prefab_w_template(void);
 void Template_template_w_prefab_w_template(void);
-void Template_3_assemblies(void);
+void Template_3_templates(void);
 void Template_template_nested_w_default_var(void);
 void Template_template_w_anonymous(void);
 void Template_template_w_anonymous_parse_again(void);
@@ -1609,8 +1609,8 @@ bake_test_case Template_testcases[] = {
         Template_template_w_prefab_w_template
     },
     {
-        "3_assemblies",
-        Template_3_assemblies
+        "3_templates",
+        Template_3_templates
     },
     {
         "template_nested_w_default_var",

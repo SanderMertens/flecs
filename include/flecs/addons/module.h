@@ -103,6 +103,7 @@ ecs_entity_t ecs_module_init(
         ecs_set_scope(world, ecs_id(id));\
     }
 
+/** Create a module. */
 #define ECS_MODULE(world, id)\
     ecs_entity_t ecs_id(id) = 0; ECS_MODULE_DEFINE(world, id)\
     (void)ecs_id(id)

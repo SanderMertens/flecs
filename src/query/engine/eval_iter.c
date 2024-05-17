@@ -74,7 +74,7 @@ void flecs_query_iter_init(
     flecs_iter_validate(it);
 }
 
-bool ecs_query_next_instanced(
+bool flecs_query_next_instanced(
     ecs_iter_t *it)
 {
     ecs_assert(it != NULL, ECS_INVALID_PARAMETER, NULL);
@@ -194,7 +194,7 @@ bool ecs_query_next(
         return true;
     }
 
-    return flecs_iter_next_instanced(it, ecs_query_next_instanced(it));
+    return flecs_iter_next_instanced(it, flecs_query_next_instanced(it));
 error:
     return false;
 }
@@ -246,7 +246,7 @@ void flecs_query_iter_fini(
 
 #ifdef FLECS_DEBUG
     if (it->flags & EcsIterProfile) {
-        char *str = ecs_query_str_w_profile(qit->query, it);
+        char *str = ecs_query_plan_w_profile(qit->query, it);
         printf("%s\n", str);
         ecs_os_free(str);
     }

@@ -1527,11 +1527,11 @@ void ecs_enqueue(
     ecs_world_t *world,
     ecs_event_desc_t *desc)
 {
-    ecs_check(ecs_is_deferred(world), ECS_INVALID_PARAMETER, 
-        "can't enqueue if not in deferred mode");
-    ecs_stage_t *stage = flecs_stage_from_world(&world);
+    if (!ecs_is_deferred(world)) {
+        ecs_emit(world, desc);
+        return;
+    }
 
+    ecs_stage_t *stage = flecs_stage_from_world(&world);
     flecs_enqueue(world, stage, desc);
-error:
-    return;
 }

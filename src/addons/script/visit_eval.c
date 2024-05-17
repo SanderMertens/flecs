@@ -238,7 +238,7 @@ int flecs_script_eval_id(
             return -1;
         }
 
-        /* Tags/components must be created in advance for assemblies */
+        /* Tags/components must be created in advance for templates */
         if (v->template) {
             flecs_script_eval_error(v, node, 
                 "'%s' must be defined outside of template scope", id->first);
@@ -267,7 +267,7 @@ int flecs_script_eval_id(
                 return -1;
             }
 
-            /* Tags/components must be created in advance for assemblies */
+            /* Tags/components must be created in advance for templates */
             if (v->template) {
                 flecs_script_eval_error(v, node, 
                     "'%s' must be defined outside of template scope", 
