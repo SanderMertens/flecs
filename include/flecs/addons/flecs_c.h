@@ -341,11 +341,11 @@
     ecs_remove_id(world, subject, ecs_pair(first, second))
 
 
-#define ecs_override(world, entity, T)\
-    ecs_override_id(world, entity, ecs_id(T))
+#define ecs_auto_override(world, entity, T)\
+    ecs_auto_override_id(world, entity, ecs_id(T))
 
-#define ecs_override_pair(world, subject, first, second)\
-    ecs_override_id(world, subject, ecs_pair(first, second))
+#define ecs_auto_override_pair(world, subject, first, second)\
+    ecs_auto_override_id(world, subject, ecs_pair(first, second))
 
 /** @} */
 
@@ -377,7 +377,7 @@
         sizeof(Second), &(Second)__VA_ARGS__)
 
 #define ecs_set_override(world, entity, T, ...)\
-    ecs_add_id(world, entity, ECS_OVERRIDE | ecs_id(T));\
+    ecs_add_id(world, entity, ECS_AUTO_OVERRIDE | ecs_id(T));\
     ecs_set(world, entity, T, __VA_ARGS__)
 
 /* emplace */

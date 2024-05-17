@@ -32,7 +32,7 @@ int main(int argc, char *argv[]) {
     // copy of the TirePressure component.
     ecs_entity_t Wheel = ecs_entity(ecs, { .name = "Wheel", .add = ecs_ids( EcsPrefab ) });
     ecs_set(ecs, Wheel, TirePressure, { 32 });
-    ecs_override(ecs, Wheel, TirePressure);
+    ecs_auto_override(ecs, Wheel, TirePressure);
 
     // Create a Car prefab with four wheels. Note how the wheel names are
     // prefixed with 'Car.', this is has the same effect as adding the

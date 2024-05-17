@@ -1472,7 +1472,7 @@ typedef struct EcsDefaultChildComponent {
 FLECS_API extern const ecs_id_t ECS_PAIR;
 
 /** Automatically override component when it is inherited */
-FLECS_API extern const ecs_id_t ECS_OVERRIDE;
+FLECS_API extern const ecs_id_t ECS_AUTO_OVERRIDE;
 
 /** Adds bitset to storage which allows component to be enabled/disabled */
 FLECS_API extern const ecs_id_t ECS_TOGGLE;
@@ -2686,33 +2686,59 @@ void ecs_remove_id(
     ecs_entity_t entity,
     ecs_id_t id);
 
-/** Add override for (component) id.
- * Adding an override to an entity ensures that when the entity is instantiated
- * (by adding an IsA relationship to it) the component with the override is
- * copied to a component that is private to the instance. By default components
- * reachable through an IsA relationship are shared.
- *
- * Adding an override does not add the component. If an override is added to an
- * entity that does not have the component, it will still be added to the
- * instance, but with an uninitialized value (unless the component has a ctor).
- * When the entity does have the entity, the component of the instance will be
- * initialized with the value of the component on the entity.
- *
- * This is the same as what happens when calling ecs_add_id() for an id that is
- * inherited (reachable through an IsA relationship).
- *
- * This operation is equivalent to doing:
+/** Add auto override for (component) id.
+ * An auto override is a component that is automatically added to an entity when
+ * it is instantiated from a prefab. Auto overrides are added to the entity that
+ * is inherited from (usually a prefab). For example:
+ * 
+ * @code
+ * ecs_entity_t prefab = ecs_insert(world, 
+ *   ecs_value(Position, {10, 20}),
+ *   ecs_value(Mass, {100}));
+ * 
+ * ecs_auto_override(world, prefab, Position);
+ * 
+ * ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, prefab);
+ * assert(ecs_owns(world, inst, Position)); // true
+ * assert(ecs_owns(world, inst, Mass)); // false
+ * @endcode
+ * 
+ * An auto override is equivalent to a manual override:
+ * 
+ * @code
+  * ecs_entity_t prefab = ecs_insert(world, 
+ *   ecs_value(Position, {10, 20}),
+ *   ecs_value(Mass, {100}));
+ * 
+ * ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, prefab);
+ * assert(ecs_owns(world, inst, Position)); // false
+ * ecs_add(world, inst, Position); // manual override
+ * assert(ecs_owns(world, inst, Position)); // true
+ * assert(ecs_owns(world, inst, Mass)); // false
+ * @endcode
+ * 
+ * This operation is equivalent to manually adding the id with the AUTO_OVERRIDE
+ * bit applied:
  *
  * @code
- * ecs_add_id(world, entity, ECS_OVERRIDE | id);
+ * ecs_add_id(world, entity, ECS_AUTO_OVERRIDE | id);
  * @endcode
+ * 
+ * When a component is overridden and inherited from a prefab, the value from 
+ * the prefab component is copied to the instance. When the component is not
+ * inherited from a prefab, it is added to the instance as if using ecs_add_id.
+ * 
+ * Overriding is the default behavior on prefab instantiation. Auto overriding
+ * is only useful for components with the (OnInstantiate, Inherit) trait.
+ * When a component has the (OnInstantiate, DontInherit) trait and is overridden
+ * the component is added, but the value from the prefab will not be copied.
  *
  * @param world The world.
  * @param entity The entity.
- * @param id The id to override.
+ * @param id The (component) id to auto override.
  */
 FLECS_API
-void ecs_override_id(
+void ecs_auto_override_id(
     ecs_world_t *world,
     ecs_entity_t entity,
     ecs_id_t id);

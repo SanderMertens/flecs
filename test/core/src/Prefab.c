@@ -2622,17 +2622,17 @@ void Prefab_auto_override_pair(void) {
     ecs_add_pair(world, Rel, EcsOnInstantiate, EcsInherit);
 
     ecs_entity_t base = ecs_new(world);
-    ecs_add_id(world, base, ECS_OVERRIDE | ecs_pair(Rel, TgtA));
+    ecs_add_id(world, base, ECS_AUTO_OVERRIDE | ecs_pair(Rel, TgtA));
     test_assert(!ecs_has_pair(world, base, Rel, TgtA));
     test_assert(!ecs_has_pair(world, base, Rel, TgtB));
-    test_assert(ecs_has_id(world, base, ECS_OVERRIDE | ecs_pair(Rel, TgtA)));
+    test_assert(ecs_has_id(world, base, ECS_AUTO_OVERRIDE | ecs_pair(Rel, TgtA)));
 
     ecs_add_pair(world, base, Rel, TgtA);
     ecs_add_pair(world, base, Rel, TgtB);
 
     test_assert(ecs_has_pair(world, base, Rel, TgtA));
     test_assert(ecs_has_pair(world, base, Rel, TgtB));
-    test_assert(ecs_has_id(world, base, ECS_OVERRIDE | ecs_pair(Rel, TgtA)));
+    test_assert(ecs_has_id(world, base, ECS_AUTO_OVERRIDE | ecs_pair(Rel, TgtA)));
 
     ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
     test_assert(ecs_has_pair(world, inst, Rel, TgtA));
@@ -2656,7 +2656,7 @@ void Prefab_auto_override_pair_w_component(void) {
     ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
 
     ecs_entity_t base = ecs_new(world);
-    ecs_add_id(world, base, ECS_OVERRIDE | ecs_pair(ecs_id(Position), TgtA));
+    ecs_add_id(world, base, ECS_AUTO_OVERRIDE | ecs_pair(ecs_id(Position), TgtA));
     test_assert(ecs_get_pair(world, base, Position, TgtA) == NULL);
 
     ecs_set_pair(world, base, Position, TgtA, {10, 20});
@@ -2697,20 +2697,20 @@ void Prefab_auto_override_2_pairs(void) {
     ecs_add_pair(world, Rel, EcsOnInstantiate, EcsInherit);
 
     ecs_entity_t base = ecs_new(world);
-    ecs_add_id(world, base, ECS_OVERRIDE | ecs_pair(Rel, TgtA));
-    ecs_add_id(world, base, ECS_OVERRIDE | ecs_pair(Rel, TgtB));
+    ecs_add_id(world, base, ECS_AUTO_OVERRIDE | ecs_pair(Rel, TgtA));
+    ecs_add_id(world, base, ECS_AUTO_OVERRIDE | ecs_pair(Rel, TgtB));
     test_assert(!ecs_has_pair(world, base, Rel, TgtA));
     test_assert(!ecs_has_pair(world, base, Rel, TgtB));
-    test_assert(ecs_has_id(world, base, ECS_OVERRIDE | ecs_pair(Rel, TgtA)));
-    test_assert(ecs_has_id(world, base, ECS_OVERRIDE | ecs_pair(Rel, TgtB)));
+    test_assert(ecs_has_id(world, base, ECS_AUTO_OVERRIDE | ecs_pair(Rel, TgtA)));
+    test_assert(ecs_has_id(world, base, ECS_AUTO_OVERRIDE | ecs_pair(Rel, TgtB)));
 
     ecs_add_pair(world, base, Rel, TgtA);
     ecs_add_pair(world, base, Rel, TgtB);
 
     test_assert(ecs_has_pair(world, base, Rel, TgtA));
     test_assert(ecs_has_pair(world, base, Rel, TgtB));
-    test_assert(ecs_has_id(world, base, ECS_OVERRIDE | ecs_pair(Rel, TgtA)));
-    test_assert(ecs_has_id(world, base, ECS_OVERRIDE | ecs_pair(Rel, TgtB)));
+    test_assert(ecs_has_id(world, base, ECS_AUTO_OVERRIDE | ecs_pair(Rel, TgtA)));
+    test_assert(ecs_has_id(world, base, ECS_AUTO_OVERRIDE | ecs_pair(Rel, TgtB)));
 
     ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
     test_assert(ecs_has_pair(world, inst, Rel, TgtA));
@@ -2734,8 +2734,8 @@ void Prefab_auto_override_2_pairs_w_component(void) {
     ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
 
     ecs_entity_t base = ecs_new(world);
-    ecs_add_id(world, base, ECS_OVERRIDE | ecs_pair(ecs_id(Position), TgtA));
-    ecs_add_id(world, base, ECS_OVERRIDE | ecs_pair(ecs_id(Position), TgtB));
+    ecs_add_id(world, base, ECS_AUTO_OVERRIDE | ecs_pair(ecs_id(Position), TgtA));
+    ecs_add_id(world, base, ECS_AUTO_OVERRIDE | ecs_pair(ecs_id(Position), TgtB));
     test_assert(ecs_get_pair(world, base, Position, TgtA) == NULL);
     test_assert(ecs_get_pair(world, base, Position, TgtB) == NULL);
 
@@ -2779,20 +2779,20 @@ void Prefab_auto_override_2_pairs_same_obj(void) {
     ecs_add_pair(world, RelB, EcsOnInstantiate, EcsInherit);
 
     ecs_entity_t base = ecs_new(world);
-    ecs_add_id(world, base, ECS_OVERRIDE | ecs_pair(RelA, Tgt));
-    ecs_add_id(world, base, ECS_OVERRIDE | ecs_pair(RelB, Tgt));
+    ecs_add_id(world, base, ECS_AUTO_OVERRIDE | ecs_pair(RelA, Tgt));
+    ecs_add_id(world, base, ECS_AUTO_OVERRIDE | ecs_pair(RelB, Tgt));
     test_assert(!ecs_has_pair(world, base, RelA, Tgt));
     test_assert(!ecs_has_pair(world, base, RelB, Tgt));
-    test_assert(ecs_has_id(world, base, ECS_OVERRIDE | ecs_pair(RelA, Tgt)));
-    test_assert(ecs_has_id(world, base, ECS_OVERRIDE | ecs_pair(RelB, Tgt)));
+    test_assert(ecs_has_id(world, base, ECS_AUTO_OVERRIDE | ecs_pair(RelA, Tgt)));
+    test_assert(ecs_has_id(world, base, ECS_AUTO_OVERRIDE | ecs_pair(RelB, Tgt)));
 
     ecs_add_pair(world, base, RelA, Tgt);
     ecs_add_pair(world, base, RelB, Tgt);
 
     test_assert(ecs_has_pair(world, base, RelA, Tgt));
     test_assert(ecs_has_pair(world, base, RelB, Tgt));
-    test_assert(ecs_has_id(world, base, ECS_OVERRIDE | ecs_pair(RelA, Tgt)));
-    test_assert(ecs_has_id(world, base, ECS_OVERRIDE | ecs_pair(RelB, Tgt)));
+    test_assert(ecs_has_id(world, base, ECS_AUTO_OVERRIDE | ecs_pair(RelA, Tgt)));
+    test_assert(ecs_has_id(world, base, ECS_AUTO_OVERRIDE | ecs_pair(RelB, Tgt)));
 
     ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
     test_assert(ecs_has_pair(world, inst, RelA, Tgt));
@@ -4219,7 +4219,7 @@ void Prefab_override_twice_w_add(void) {
 
     ecs_entity_t base = ecs_new(world);
     ecs_set(world, base, Position, {10});
-    ecs_override(world, base, Position);
+    ecs_auto_override(world, base, Position);
 
     ecs_entity_t e1 = ecs_new_w_pair(world, EcsIsA, base);
     ecs_set(world, e1, Position, { 20 });
@@ -4246,7 +4246,7 @@ void Prefab_override_twice_w_set(void) {
 
     ecs_entity_t base = ecs_new(world);
     ecs_set(world, base, Position, {10});
-    ecs_override(world, base, Position);
+    ecs_auto_override(world, base, Position);
 
     ecs_entity_t e1 = ecs_new_w_pair(world, EcsIsA, base);
     ecs_set(world, e1, Position, { 20 });
@@ -4285,7 +4285,7 @@ void Prefab_auto_override_copy_once(void) {
 
     ecs_entity_t base = ecs_new(world);
     ecs_set(world, base, Position, {10, 20});
-    ecs_override(world, base, Position);
+    ecs_auto_override(world, base, Position);
 
     test_int(position_copy_invoked, 1);
     position_copy_invoked = 0;
@@ -4432,7 +4432,7 @@ void Prefab_override_exclusive(void) {
     ecs_add_pair(ecs, e, Rel, t1);
 
     ecs_entity_t p = ecs_new(ecs);
-    ecs_override_pair(ecs, p, Rel, t2);
+    ecs_auto_override_pair(ecs, p, Rel, t2);
 
     ecs_add_pair(ecs, e, EcsIsA, p);
 
@@ -4455,10 +4455,10 @@ void Prefab_override_exclusive_2_lvls(void) {
     ecs_add_pair(ecs, e, Rel, t1);
 
     ecs_entity_t p = ecs_new(ecs);
-    ecs_override_pair(ecs, p, Rel, t2);
+    ecs_auto_override_pair(ecs, p, Rel, t2);
 
     ecs_entity_t p2 = ecs_new(ecs);
-    ecs_override_pair(ecs, p2, Rel, t3);
+    ecs_auto_override_pair(ecs, p2, Rel, t3);
     ecs_add_pair(ecs, p2, EcsIsA, p);
 
     ecs_add_pair(ecs, e, EcsIsA, p2);

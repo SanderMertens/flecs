@@ -1089,7 +1089,7 @@ In some scenarios it is desirable that an entity is initialized with a specific 
 ecs_entity_t Base = ecs_insert(world, ecs_value(Position, {10, 20}));
 
 // Mark as OVERRIDE. This ensures that when base is derived from, Position is overridden
-ecs_add_id(world, world, Base, ECS_OVERRIDE | ecs_id(Position));
+ecs_add_id(world, world, Base, ECS_AUTO_OVERRIDE | ecs_id(Position));
 
 // Create entity from BaseType. This adds the IsA relationship in addition
 // to overriding Position, effectively initializing the Position component for the entity.

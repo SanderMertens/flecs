@@ -761,15 +761,14 @@ void flecs_add_overrides_for_base(
     }
 
     ecs_id_t *ids = base_table->type.array;
-
     ecs_flags32_t flags = base_table->flags;
     if (flags & EcsTableHasOverrides) {
         int32_t i, count = base_table->type.count;
         for (i = 0; i < count; i ++) {
             ecs_id_t id = ids[i];
             ecs_id_t to_add = 0;
-            if (ECS_HAS_ID_FLAG(id, OVERRIDE)) {
-                to_add = id & ~ECS_OVERRIDE;
+            if (ECS_HAS_ID_FLAG(id, AUTO_OVERRIDE)) {
+                to_add = id & ~ECS_AUTO_OVERRIDE;
             } else {
                 ecs_table_record_t *tr = &base_table->_->records[i];
                 ecs_id_record_t *idr = (ecs_id_record_t*)tr->hdr.cache;

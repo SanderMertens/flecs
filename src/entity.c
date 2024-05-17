@@ -2791,13 +2791,13 @@ error:
     return;
 }
 
-void ecs_override_id(
+void ecs_auto_override_id(
     ecs_world_t *world,
     ecs_entity_t entity,
     ecs_id_t id)
 {
     ecs_check(ecs_id_is_valid(world, id), ECS_INVALID_PARAMETER, NULL);
-    ecs_add_id(world, entity, ECS_OVERRIDE | id);
+    ecs_add_id(world, entity, ECS_AUTO_OVERRIDE | id);
 error:
     return;
 }
@@ -4257,8 +4257,8 @@ const char* ecs_id_flag_str(
     if (ECS_HAS_ID_FLAG(entity, TOGGLE)) {
         return "TOGGLE";
     } else
-    if (ECS_HAS_ID_FLAG(entity, OVERRIDE)) {
-        return "OVERRIDE";
+    if (ECS_HAS_ID_FLAG(entity, AUTO_OVERRIDE)) {
+        return "AUTO_OVERRIDE";
     } else {
         return "UNKNOWN";
     }
@@ -4278,8 +4278,8 @@ void ecs_id_str_buf(
         ecs_strbuf_appendch(buf, '|');
     }
 
-    if (ECS_HAS_ID_FLAG(id, OVERRIDE)) {
-        ecs_strbuf_appendstr(buf, ecs_id_flag_str(ECS_OVERRIDE));
+    if (ECS_HAS_ID_FLAG(id, AUTO_OVERRIDE)) {
+        ecs_strbuf_appendstr(buf, ecs_id_flag_str(ECS_AUTO_OVERRIDE));
         ecs_strbuf_appendch(buf, '|');
     }
 

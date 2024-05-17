@@ -7,7 +7,7 @@
 
 /* Id flags */
 const ecs_id_t ECS_PAIR =                                          (1ull << 63);
-const ecs_id_t ECS_OVERRIDE =                                      (1ull << 62);
+const ecs_id_t ECS_AUTO_OVERRIDE =                                 (1ull << 62);
 const ecs_id_t ECS_TOGGLE =                                        (1ull << 61);
 
 /** Builtin component ids */

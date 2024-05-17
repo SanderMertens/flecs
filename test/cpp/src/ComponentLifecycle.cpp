@@ -1709,26 +1709,26 @@ void ComponentLifecycle_set_override_no_copy(void) {
     flecs::world ecs;
 
     flecs::entity e = ecs.entity()
-        .set_override<NoCopy>({ 10 });
+        .set_auto_override<NoCopy>({ 10 });
 
     const NoCopy *ptr = e.get<NoCopy>();
     test_assert(ptr != NULL);
     test_int(ptr->x_, 10);
 
-    test_assert(e.has(flecs::Override | ecs.id<NoCopy>()));
+    test_assert(e.has(flecs::AUTO_OVERRIDE | ecs.id<NoCopy>()));
 }
 
 void ComponentLifecycle_set_override_pair_no_copy(void) {
     flecs::world ecs;
 
     flecs::entity e = ecs.entity()
-        .set_override<NoCopy, Tag>({ 10 });
+        .set_auto_override<NoCopy, Tag>({ 10 });
 
     const NoCopy *ptr = e.get<NoCopy, Tag>();
     test_assert(ptr != NULL);
     test_int(ptr->x_, 10);
 
-    test_assert(e.has(flecs::Override | ecs.pair<NoCopy, Tag>()));
+    test_assert(e.has(flecs::AUTO_OVERRIDE | ecs.pair<NoCopy, Tag>()));
 }
 
 void ComponentLifecycle_set_override_pair_w_entity_no_copy(void) {
@@ -1737,13 +1737,13 @@ void ComponentLifecycle_set_override_pair_w_entity_no_copy(void) {
     flecs::entity tag = ecs.entity();
 
     flecs::entity e = ecs.entity()
-        .set_override<NoCopy>(tag, { 10 });
+        .set_auto_override<NoCopy>(tag, { 10 });
 
     const NoCopy *ptr = e.get<NoCopy>(tag);
     test_assert(ptr != NULL);
     test_int(ptr->x_, 10);
 
-    test_assert(e.has(flecs::Override | ecs.pair<NoCopy>(tag)));
+    test_assert(e.has(flecs::AUTO_OVERRIDE | ecs.pair<NoCopy>(tag)));
 }
 
 void ComponentLifecycle_dtor_after_defer_set(void) {

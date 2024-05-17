@@ -34,7 +34,7 @@ int main(int argc, char *argv[]) {
     // override for it. This ensures that each prefab instance will have a
     // private copy of the component.
     ecs_set(ecs, SpaceShip, Damage, { 0 });
-    ecs_override(ecs, SpaceShip, Damage);
+    ecs_auto_override(ecs, SpaceShip, Damage);
 
     // Create a prefab instance.
     ecs_entity_t inst = ecs_entity(ecs, { .name = "my_instance" });

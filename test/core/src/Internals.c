@@ -299,7 +299,7 @@ void Internals_records_resize_on_override(void) {
     ecs_add_pair(world, e, RelD, TgtA);
     ecs_add_pair(world, e, RelE, TgtA);
     ecs_add_pair(world, e, RelF, TgtA);
-    ecs_override_pair(world, e, RelG, TgtB);
+    ecs_auto_override_pair(world, e, RelG, TgtB);
 
     test_assert(ecs_has_id(world, e, TagA));
     test_assert(ecs_has_id(world, e, TagB));
