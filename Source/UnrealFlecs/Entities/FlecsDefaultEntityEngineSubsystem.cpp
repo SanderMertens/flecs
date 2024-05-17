@@ -108,10 +108,6 @@ void UFlecsDefaultEntityEngineSubsystem::UpdateDefaultEntities()
 	for (size_t Index = 0; Index < Settings->DefaultEntities.Num(); ++Index)
 	{
 		DefaultEntityMap.Emplace(Settings->DefaultEntities[Index], StartingDefaultEntityId + Index + 1);
-	}
-
-	for (const TTuple<FName, flecs::entity_t>& Entity : DefaultEntityMap)
-	{
-		EntityOptionMap.Emplace(Entity.Key, Entity.Value);
+		EntityOptionMap.Emplace(Settings->DefaultEntities[Index], StartingDefaultEntityId + Index + 1);
 	}
 }

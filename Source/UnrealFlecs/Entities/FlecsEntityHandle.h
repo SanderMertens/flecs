@@ -8,6 +8,7 @@
 #include "GameplayTagContainer.h"
 #include "InstancedStruct.h"
 #include "SolidMacros/Macros.h"
+#include "SolidMacros/Concepts/SolidConcepts.h"
 #include "FlecsEntityHandle.generated.h"
 
 class UFlecsWorld;
@@ -74,13 +75,13 @@ public:
 	template <typename TSecond>
 	FORCEINLINE NO_DISCARD bool Has(const FFlecsEntityHandle& InFirst) const { return GetEntity().has<TSecond>(InFirst); }
 
-	FORCEINLINE NO_DISCARD bool Has(UScriptStruct* StructType) const;
+	FORCEINLINE NO_DISCARD bool Has(const UScriptStruct* StructType) const;
 
 	FORCEINLINE NO_DISCARD bool Has(const FGameplayTag& InTag) const;
 
 	FORCEINLINE void Add(const FFlecsEntityHandle& InEntity) const { GetEntity().add(InEntity); }
 
-	FORCEINLINE void Add(UScriptStruct* StructType) const;
+	FORCEINLINE void Add(const UScriptStruct* StructType) const;
 
 	FORCEINLINE void Add(const FGameplayTag& InTag) const;
 	
@@ -94,7 +95,7 @@ public:
 		GetEntity().remove(InFirst, InSecond);
 	}
 
-	FORCEINLINE void Remove(UScriptStruct* StructType) const;
+	FORCEINLINE void Remove(const UScriptStruct* StructType) const;
 
 	FORCEINLINE void Remove(const FGameplayTag& InTag) const;
 
@@ -111,20 +112,22 @@ public:
 		GetEntity().set_ptr(InEntity, InValue);
 	}
 
-	FORCEINLINE void Set(UScriptStruct* StructType, const void* InValue) const;
+	FORCEINLINE void Set(const UScriptStruct* StructType, const void* InValue) const;
 
 	FORCEINLINE void Set(const FInstancedStruct& InValue) const;
 	
 	template <typename T>
 	FORCEINLINE NO_DISCARD T Get() const { return GetEntity().get<T>(); }
 
-	FORCEINLINE NO_DISCARD const void* Get(const FFlecsEntityHandle& InEntity) const { return GetEntity().get(InEntity); }
+	FORCEINLINE NO_DISCARD const void* GetPtr(const FFlecsEntityHandle& InEntity) const { return GetEntity().get(InEntity); }
 
 	template <typename T>
 	FORCEINLINE NO_DISCARD T* GetPtr() { return GetEntity().get_mut<T>(); }
-
+	
 	template <typename T>
 	FORCEINLINE NO_DISCARD const T* GetPtr() const { return GetEntity().get<T>(); }
+
+	FORCEINLINE NO_DISCARD const void* GetPtr(const UScriptStruct* StructType) const;
 
 	template <typename T>
 	FORCEINLINE NO_DISCARD T& GetRef() { return *GetEntity().get_ref<T>().get(); }
@@ -143,12 +146,24 @@ public:
 	template <typename T>
 	FORCEINLINE void Enable() const { GetEntity().enable<T>(); }
 
+	FORCEINLINE void Enable(const FFlecsEntityHandle& InEntity) const { GetEntity().enable(InEntity); }
+	FORCEINLINE void Enable(const UScriptStruct* StructType) const;
+
+	FORCEINLINE void Disable(const FFlecsEntityHandle& InEntity) const { GetEntity().disable(InEntity); }
+	FORCEINLINE void Disable(const UScriptStruct* StructType) const;
+
 	template <typename T>
 	FORCEINLINE void Disable() const { GetEntity().disable<T>(); }
 
 	FORCEINLINE void Toggle() const { GetEntity().enable(!IsEnabled()); }
 
 	FORCEINLINE NO_DISCARD bool IsEnabled() const { return GetEntity().enabled(); }
+
+	template <typename T>
+	FORCEINLINE NO_DISCARD bool IsEnabled() const { return GetEntity().enabled<T>(); }
+
+	FORCEINLINE NO_DISCARD bool IsEnabled(const FFlecsEntityHandle& InEntity) const { return GetEntity().enabled(InEntity); }
+	FORCEINLINE NO_DISCARD bool IsEnabled(const UScriptStruct* StructType) const;
 
 	FORCEINLINE void Destroy() const { GetEntity().destruct(); }
 
@@ -336,6 +351,60 @@ public:
 		GetEntity().each<TFirst, FunctionType>(InFunction);
 	}
 
+	template <typename TComponent, typename TTrait>
+	FORCEINLINE void AddTrait() const
+	{
+		GetEntity().add<TComponent, TTrait>();
+	}
+
+	template <typename TComponent>
+	FORCEINLINE void AddTrait(const UScriptStruct* StructType) const
+	{
+		GetEntity().add<TComponent>(StructType);
+	}
+
+	template <typename TComponent, typename TTrait>
+	FORCEINLINE void RemoveTrait() const
+	{
+		GetEntity().remove<TComponent, TTrait>();
+	}
+
+	template <typename TComponent, typename TTrait>
+	FORCEINLINE bool HasTrait() const
+	{
+		return GetEntity().has<TComponent, TTrait>();
+	}
+
+	template <typename TComponent, typename TTrait>
+	FORCEINLINE void SetTrait(const TTrait& InValue) const
+	{
+		GetEntity().set<TComponent, TTrait>(InValue);
+	}
+
+	template <typename TComponent, typename TTrait>
+	FORCEINLINE TTrait GetTrait() const
+	{
+		return GetEntity().get<TComponent, TTrait>();
+	}
+
+	template <typename TComponent, typename TTrait>
+	FORCEINLINE TTrait* GetTraitPtr() const
+	{
+		return GetEntity().get_mut<TComponent, TTrait>();
+	}
+
+	template <typename TComponent, typename TTrait>
+	FORCEINLINE TTrait& GetTraitRef() const
+	{
+		return *GetEntity().get_ref<TComponent, TTrait>().get();
+	}
+
+	template <typename TComponent, typename TTrait>
+	FORCEINLINE void EmitTrait() const
+	{
+		GetEntity().emit<TComponent, TTrait>();
+	}
+
 	#if WITH_EDITORONLY_DATA
 
 	UPROPERTY()
@@ -348,6 +417,10 @@ public:
 	
 private:
 	flecs::entity Entity;
+
+	FORCEINLINE NO_DISCARD FFlecsEntityHandle ObtainComponentTypeStruct(const UScriptStruct* StructType) const;
+	FORCEINLINE NO_DISCARD FFlecsEntityHandle GetTagEntity(const FGameplayTag& InTag) const;
+	
 }; // struct FFlecsEntityHandle
 
 template <>

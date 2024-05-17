@@ -32,9 +32,6 @@ struct FFlecsNetworkEntityInitData
 	FFlecsNetworkIdComponent NetworkId;
 
 	UPROPERTY()
-	TArray<FFlecsComponentReplicationInfo> ComponentReplicationInfo;
-
-	UPROPERTY()
 	TArray<FInstancedStruct> ComponentData;
 	
 }; // struct FFlecsNetworkEntityInitData

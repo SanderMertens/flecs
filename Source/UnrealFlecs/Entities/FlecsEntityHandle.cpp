@@ -57,52 +57,74 @@ FName FFlecsEntityHandle::GetWorldName() const
     return GetFlecsWorld()->GetWorldName();
 }
 
-bool FFlecsEntityHandle::Has(UScriptStruct* StructType) const
+bool FFlecsEntityHandle::Has(const UScriptStruct* StructType) const
 {
-    const FFlecsEntityHandle TypeHandle = GetFlecsWorld()->ObtainComponentTypeStruct(StructType);
-    return Has(TypeHandle);
+    return Has(ObtainComponentTypeStruct(StructType));
 }
 
 bool FFlecsEntityHandle::Has(const FGameplayTag& InTag) const
 {
-    const FFlecsEntityHandle TypeHandle = GetFlecsWorld()->GetTagEntity(InTag);
-    return Has(TypeHandle);
+    return Has(GetTagEntity(InTag));
 }
 
-void FFlecsEntityHandle::Add(UScriptStruct* StructType) const
+void FFlecsEntityHandle::Add(const UScriptStruct* StructType) const
 {
-    const FFlecsEntityHandle TypeHandle = GetFlecsWorld()->ObtainComponentTypeStruct(StructType);
-    Add(TypeHandle);
+    Add(ObtainComponentTypeStruct(StructType));
 }
 
 void FFlecsEntityHandle::Add(const FGameplayTag& InTag) const
 {
-    const FFlecsEntityHandle TypeHandle = GetFlecsWorld()->GetTagEntity(InTag);
-    Add(TypeHandle);
+    Add(GetTagEntity(InTag));
 }
 
-void FFlecsEntityHandle::Remove(UScriptStruct* StructType) const
+void FFlecsEntityHandle::Remove(const UScriptStruct* StructType) const
 {
-    const FFlecsEntityHandle TypeHandle = GetFlecsWorld()->ObtainComponentTypeStruct(StructType);
-    Remove(TypeHandle);
+    Remove(ObtainComponentTypeStruct(StructType));
 }
 
 void FFlecsEntityHandle::Remove(const FGameplayTag& InTag) const
 {
-    const FFlecsEntityHandle TypeHandle = GetFlecsWorld()->GetTagEntity(InTag);
-    Remove(TypeHandle);
+    Remove(GetTagEntity(InTag));
 }
 
-void FFlecsEntityHandle::Set(UScriptStruct* StructType, const void* InValue) const
+void FFlecsEntityHandle::Set(const UScriptStruct* StructType, const void* InValue) const
 {
-    const FFlecsEntityHandle TypeHandle = GetFlecsWorld()->ObtainComponentTypeStruct(StructType);
-    Set(TypeHandle, InValue);
+    Set(ObtainComponentTypeStruct(StructType), InValue);
 }
 
 void FFlecsEntityHandle::Set(const FInstancedStruct& InValue) const
 {
-    const FFlecsEntityHandle TypeHandle = GetFlecsWorld()
-        ->ObtainComponentTypeStruct(const_cast<UScriptStruct*>(InValue.GetScriptStruct()));
-
-    Set(TypeHandle, InValue.GetMemory());
+    Set(ObtainComponentTypeStruct(InValue.GetScriptStruct()), InValue.GetMemory());
 }
+
+const void* FFlecsEntityHandle::GetPtr(const UScriptStruct* StructType) const
+{
+    return GetPtr(ObtainComponentTypeStruct(StructType));
+}
+
+void FFlecsEntityHandle::Enable(const UScriptStruct* StructType) const
+{
+    Enable(ObtainComponentTypeStruct(StructType));
+}
+
+void FFlecsEntityHandle::Disable(const UScriptStruct* StructType) const
+{
+    Disable(ObtainComponentTypeStruct(StructType));
+}
+
+bool FFlecsEntityHandle::IsEnabled(const UScriptStruct* StructType) const
+{
+    return IsEnabled(ObtainComponentTypeStruct(StructType));
+}
+
+FFlecsEntityHandle FFlecsEntityHandle::ObtainComponentTypeStruct(const UScriptStruct* StructType) const
+{
+    return GetFlecsWorld()
+        ->ObtainComponentTypeStruct(const_cast<UScriptStruct*>(StructType));
+}
+
+FFlecsEntityHandle FFlecsEntityHandle::GetTagEntity(const FGameplayTag& InTag) const
+{
+    return GetFlecsWorld()->GetTagEntity(InTag);
+}
+

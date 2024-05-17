@@ -23,6 +23,10 @@ class UNREALFLECS_API UFlecsWorld final : public UObject
 
 public:
 
+	FORCEINLINE void WorldBeginPlay()
+	{
+	}
+
 	FORCEINLINE void SetWorld(flecs::world&& InWorld)
 	{
 		World = std::move(InWorld);
@@ -55,6 +59,12 @@ public:
 	FORCEINLINE FFlecsEntityHandle CreateEntity(const FString& Name = "None") const
 	{
 		return World.entity(TCHAR_TO_ANSI(*Name));
+	}
+
+	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
+	FORCEINLINE FFlecsEntityHandle CreateEntityWithId(const FFlecsId& InId) const
+	{
+		return World.entity(InId.GetFlecsId());
 	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
@@ -475,21 +485,9 @@ public:
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
-	FORCEINLINE bool HasScriptClass(const TSubclassOf<UObject> ScriptClass) const
-	{
-		return GetSingletonRef<FFlecsTypeMapComponent>()->ScriptClassMap.contains(ScriptClass);
-	}
-
-	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
 	FORCEINLINE FFlecsEntityHandle GetScriptStructEntity(UScriptStruct* ScriptStruct) const
 	{
 		return GetSingletonRef<FFlecsTypeMapComponent>()->ScriptStructMap.at(ScriptStruct);
-	}
-
-	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
-	FORCEINLINE FFlecsEntityHandle GetScriptClassEntity(const TSubclassOf<UObject> ScriptClass) const
-	{
-		return GetSingletonRef<FFlecsTypeMapComponent>()->ScriptClassMap.at(ScriptClass);
 	}
 
 	template <Solid::TStaticStructConcept T>
@@ -497,25 +495,13 @@ public:
 	{
 		return GetScriptStructEntity(T::StaticStruct());
 	}
-	
-	template <Solid::TStaticClassConcept T>
-	FORCEINLINE NO_DISCARD FFlecsEntityHandle GetScriptClassEntity() const
-	{
-		return GetScriptClassEntity(T::StaticClass());
-	}
 
 	template <Solid::TStaticStructConcept T>
 	FORCEINLINE NO_DISCARD bool HasScriptStruct() const
 	{
 		return HasScriptStruct(T::StaticStruct());
 	}
-
-	template <Solid::TStaticClassConcept T>
-	FORCEINLINE NO_DISCARD bool HasScriptClass() const
-	{
-		return HasScriptClass(T::StaticClass());
-	}
-
+	
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs")
 	FORCEINLINE FFlecsEntityHandle RegisterScriptStruct(UScriptStruct* ScriptStruct) const
 	{
@@ -523,9 +509,15 @@ public:
 		{
 			return FFlecsEntityHandle();
 		}
+
+		if (const FFlecsEntityHandle Handle = World.lookup(TCHAR_TO_ANSI(*ScriptStruct->GetStructCPPName())))
+		{
+			RegisterScriptStruct(ScriptStruct, Handle);
+			return Handle;
+		}
 		
 		const FFlecsEntityHandle ScriptStructComponent
-			= World.entity(TCHAR_TO_ANSI(*ScriptStruct->GetFName().ToString()))
+			= World.entity(TCHAR_TO_ANSI(*ScriptStruct->GetStructCPPName()))
 			                                         .set<flecs::Component>(
 			                                         {
 				                                         ScriptStruct->GetStructureSize(),
@@ -604,41 +596,16 @@ public:
 		return Handle;
 	}
 
-	template <Solid::TStaticStructConcept T>
-	FORCEINLINE FFlecsEntityHandle RegisterScriptStruct() const
+	FORCEINLINE void RegisterScriptStruct(const UScriptStruct* ScriptStruct, const FFlecsEntityHandle& InEntity) const
 	{
-		return RegisterScriptStruct(T::StaticStruct());
-	}
-
-	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs")
-	FORCEINLINE FFlecsEntityHandle RegisterScriptClass(TSubclassOf<UObject> ScriptClass) const
-	{
-		if UNLIKELY_IF(ScriptClass == nullptr)
-		{
-			return FFlecsEntityHandle();
-		}
-		
-		const FFlecsEntityHandle ScriptClassComponent
-			= World.entity(TCHAR_TO_ANSI(*ScriptClass->GetFName().ToString()))
-			                                        .set<flecs::Component>(
-			                                        {
-				                                        ScriptClass->GetStructureSize(),
-				                                        ScriptClass->GetMinAlignment()
-			                                        })
-			                                        .set<FFlecsScriptClassComponent>(
-			                                        {
-				                                        ScriptClass
-			                                        });
-
-		const FFlecsEntityHandle Handle(ScriptClassComponent);
-		GetSingletonRef<FFlecsTypeMapComponent>()->ScriptClassMap.emplace(ScriptClass, Handle);
+		GetSingletonRef<FFlecsTypeMapComponent>()->ScriptStructMap.emplace(const_cast<UScriptStruct*>(ScriptStruct), InEntity);
 
 		#if WITH_EDITOR
 
 		flecs::untyped_component* UntypedComponent
-			= const_cast<flecs::untyped_component*>(ScriptClassComponent.GetUntypedComponent());
-
-		for (TFieldIterator<FProperty> PropertyIt(ScriptClass); PropertyIt; ++PropertyIt)
+			= const_cast<flecs::untyped_component*>(InEntity.GetUntypedComponent());
+		
+		for (TFieldIterator<FProperty> PropertyIt(ScriptStruct); PropertyIt; ++PropertyIt)
 		{
 			const FProperty* Property = *PropertyIt;
 			solid_checkf(Property != nullptr, TEXT("Property is nullptr"));
@@ -678,30 +645,6 @@ public:
 		}
 
 		#endif // WITH_EDITOR
-
-		if (ScriptClass->GetSuperClass())
-		{
-			FFlecsEntityHandle ParentEntity;
-			
-			if (!HasScriptClass(ScriptClass->GetSuperClass()))
-			{
-				ParentEntity = RegisterScriptClass(ScriptClass->GetSuperClass());
-			}
-			else
-			{
-				ParentEntity = GetScriptClassEntity(ScriptClass->GetSuperClass());
-			}
-
-			ScriptClassComponent.SetParent(ParentEntity, true);
-		}
-		
-		return Handle;
-	}
-
-	template <Solid::TStaticClassConcept T>
-	FORCEINLINE FFlecsEntityHandle RegisterScriptClass() const
-	{
-		return RegisterScriptClass(T::StaticClass());
 	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs")
@@ -722,17 +665,6 @@ public:
 		}
 
 		return RegisterScriptStruct(ScriptStruct);
-	}
-
-	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs")
-	FORCEINLINE FFlecsEntityHandle ObtainComponentTypeClass(const TSubclassOf<UObject> ScriptClass) const
-	{
-		if (HasScriptClass(ScriptClass))
-		{
-			return GetScriptClassEntity(ScriptClass);
-		}
-
-		return RegisterScriptClass(ScriptClass);
 	}
 
 	template <typename T>
@@ -826,6 +758,6 @@ public:
 		solid_checkf(Tag.IsValid(), TEXT("Tag is not valid"));
 		return World.lookup(TCHAR_TO_ANSI(*Tag.ToString()), ".", ".");
 	}
-	
+
 	flecs::world World;
 }; // class UFlecsWorld

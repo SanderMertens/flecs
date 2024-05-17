@@ -43,7 +43,9 @@ void UFlecsNetworkingManager::BeginPlay()
 			.inout_none()
 		.each([this](flecs::iter& Iterator, const uint64 Index, FFlecsNetworkIdComponent& NetworkId)
 		{
-			const FFlecsEntityHandle Entity = Iterator.entity(Index);
+			FFlecsEntityHandle Entity = Iterator.entity(Index);
+
+			FFlecsEntitySyncInfoComponent* EntitySyncInfo = Entity.GetPtr<FFlecsEntitySyncInfoComponent>();
 			
 			if UNLIKELY_IF(NetworkId.IsValid())
 			{
@@ -58,28 +60,7 @@ void UFlecsNetworkingManager::BeginPlay()
 				*Entity.GetEntity().path().c_str());
 
 			
-			
 		});
-
-		/*NetworkInitializedObserver = FlecsWorld->CreateObserver<FFlecsNetworkIdComponent, FFlecsEntitySyncInfoComponent>
-			(TEXT("NetworkInitializedObserver"))
-			.term_at(1)
-				.event(flecs::OnAdd)
-			.yield_existing(false)
-			.with(flecs::Name)
-				.and_()
-				.inout_none()
-			.each([this](FFlecsIterator It, size_t Index)
-			{
-				
-				if (EntitySyncInfo.bInitialized)
-				{
-					return;
-				}
-
-				EntitySyncInfo.bInitialized = true;
-				
-			});*/
 	}
 
 	#endif // WITH_SERVER_CODE

@@ -69,7 +69,7 @@
  * allocation counters in the OS API) are accurate in multithreaded
  * applications, at the cost of increased overhead.
  */
-// #define FLECS_ACCURATE_COUNTERS
+ #define FLECS_ACCURATE_COUNTERS
 
 /* Make sure provided configuration is valid */
 #if defined(FLECS_DEBUG) && defined(FLECS_NDEBUG)
@@ -135,7 +135,7 @@
  * slightly improves performance.
  * The C API is not affected by this feature.
  */
-// #define FLECS_CPP_NO_AUTO_REGISTRATION
+ //#define FLECS_CPP_NO_AUTO_REGISTRATION
 
 /** \def FLECS_CUSTOM_BUILD
  * This macro lets you customize which addons to build flecs with.
@@ -25309,13 +25309,23 @@ struct cpp_type_impl {
         if (s_reset_count != ecs_cpp_reset_count_get()) {
             reset();
         }
-        if (s_id == 0) {
+
+        if (!world) {
             return false;
         }
-        if (world && !ecs_exists(world, s_id)) {
-            return false;
+
+        if (s_id != 0 && ecs_exists(world, s_id)) {
+            return true;
         }
-        return true;
+        
+        const char* typeName = type_name<T>();
+        entity_t current = ecs_lookup(world, typeName);
+        if (current) {
+            s_id = current;
+            return true;
+        }
+        
+        return false;
     }
 
     // This function is only used to test cross-translation unit features. No

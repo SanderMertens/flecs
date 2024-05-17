@@ -31,8 +31,7 @@ struct FFlecsRestSettings
 {
 	GENERATED_BODY()
 
-	/* Defaults Set according to flecs's defaults */
-	/* no this isn't bad grammar, it's a name */
+	/* Defaults Set, according to flecs's defaults */
 	
 	UPROPERTY(EditAnywhere, Category = "Flecs | REST API",
 		meta = (ClampMin = "0", ClampMax = "65535", UIMin = "0", UIMax = "65535"))
@@ -127,7 +126,7 @@ public:
 		
 		WorldNameMap.emplace(Name, NewFlecsWorld);
 
-		#if WITH_EDITOR
+		#if WITH_EDITOR || UE_BUILD_DEBUG
 		
 		if (DeveloperSettings->bAutoImportExplorer)
 		{
@@ -144,11 +143,13 @@ public:
 				= GEngine->GetEngineSubsystem<UFlecsDefaultEntityEngineSubsystem>();
 			 const TTuple<FName, flecs::entity_t>& Entity : DefaultEntityEngineSubsystem->DefaultEntityMap)
 		{
-			flecs::entity SpawnedEntity = NewFlecsWorld->CreateEntity(Entity.Value);
-			SpawnedEntity.set_name(TCHAR_TO_ANSI(*Entity.Key.ToString()));
+			FFlecsEntityHandle SpawnedEntity = NewFlecsWorld->CreateEntity(Entity.Value);
+			SpawnedEntity.SetName(TCHAR_TO_ANSI(*Entity.Key.ToString()));
 		}
 
 		RegisterAllGameplayTags(NewFlecsWorld);
+		
+		NewFlecsWorld->WorldBeginPlay();
 		
 		OnWorldCreated.Broadcast(Name, NewFlecsWorld);
 		
