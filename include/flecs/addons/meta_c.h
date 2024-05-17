@@ -36,28 +36,28 @@ extern "C" {
  * variable for the component identifier. */
 /* #define ECS_META_IMPL EXTERN */
 
-/** Declare component with descriptor */
+/** Declare component with descriptor. */
 #define ECS_META_COMPONENT(world, name)\
     ECS_COMPONENT_DEFINE(world, name);\
     ecs_meta_from_desc(world, ecs_id(name),\
         FLECS__##name##_kind, FLECS__##name##_desc)
 
-/** ECS_STRUCT(name, body) */
+/** ECS_STRUCT(name, body). */
 #define ECS_STRUCT(name, ...)\
     ECS_META_IMPL_CALL(ECS_STRUCT_, ECS_META_IMPL, name, #__VA_ARGS__);\
     ECS_STRUCT_TYPE(name, __VA_ARGS__)
 
-/** ECS_ENUM(name, body) */
+/** ECS_ENUM(name, body). */
 #define ECS_ENUM(name, ...)\
     ECS_META_IMPL_CALL(ECS_ENUM_, ECS_META_IMPL, name, #__VA_ARGS__);\
     ECS_ENUM_TYPE(name, __VA_ARGS__)
 
-/** ECS_BITMASK(name, body) */
+/** ECS_BITMASK(name, body). */
 #define ECS_BITMASK(name, ...)\
     ECS_META_IMPL_CALL(ECS_BITMASK_, ECS_META_IMPL, name, #__VA_ARGS__);\
     ECS_ENUM_TYPE(name, __VA_ARGS__)
 
-/** Macro used to mark part of type for which no reflection data is created */
+/** Macro used to mark part of type for which no reflection data is created. */
 #define ECS_PRIVATE
 
 /** Populate meta information from type descriptor. */
@@ -69,9 +69,10 @@ int ecs_meta_from_desc(
     const char *desc);
 
 
-/* Private API */
+/** \cond
+ * Private utilities to switch between meta IMPL, DECLARE and EXTERN variants.
+ */
 
-/* Utilities to switch between IMPL, DECLARE and EXTERN variants */
 #define ECS_META_IMPL_CALL_INNER(base, impl, name, type_desc)\
     base ## impl(name, type_desc)
 
@@ -136,6 +137,8 @@ int ecs_meta_from_desc(
 
 #define ECS_BITMASK_EXTERN(name, type_desc)\
     extern ECS_COMPONENT_DECLARE(name)
+
+/** \endcond */
 
 #ifdef __cplusplus
 }

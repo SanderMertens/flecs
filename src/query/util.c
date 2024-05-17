@@ -301,7 +301,7 @@ void flecs_query_str_append_bitset(
 }
 
 static
-void flecs_query_str_w_profile(
+void flecs_query_plan_w_profile(
     const ecs_query_t *q,
     const ecs_iter_t *it,
     ecs_strbuf_t *buf)
@@ -439,18 +439,18 @@ void flecs_query_str_w_profile(
     }
 }
 
-char* ecs_query_str_w_profile(
+char* ecs_query_plan_w_profile(
     const ecs_query_t *q,
     const ecs_iter_t *it)
 {
     flecs_poly_assert(q, ecs_query_t);
     ecs_strbuf_t buf = ECS_STRBUF_INIT;
 
-    flecs_query_str_w_profile(q, it, &buf);
+    flecs_query_plan_w_profile(q, it, &buf);
     // ecs_query_impl_t *impl = flecs_query_impl(q);
     // if (impl->cache) {
     //     ecs_strbuf_appendch(&buf, '\n');
-    //     flecs_query_str_w_profile(impl->cache->query, it, &buf);
+    //     flecs_query_plan_w_profile(impl->cache->query, it, &buf);
     // }
 
 #ifdef FLECS_LOG
@@ -465,7 +465,7 @@ char* ecs_query_str_w_profile(
 char* ecs_query_plan(
     const ecs_query_t *q)
 {
-    return ecs_query_str_w_profile(q, NULL);
+    return ecs_query_plan_w_profile(q, NULL);
 }
 
 static

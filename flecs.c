@@ -13797,13 +13797,13 @@ void ecs_enqueue(
     ecs_world_t *world,
     ecs_event_desc_t *desc)
 {
-    ecs_check(ecs_is_deferred(world), ECS_INVALID_PARAMETER, 
-        "can't enqueue if not in deferred mode");
-    ecs_stage_t *stage = flecs_stage_from_world(&world);
+    if (!ecs_is_deferred(world)) {
+        ecs_emit(world, desc);
+        return;
+    }
 
+    ecs_stage_t *stage = flecs_stage_from_world(&world);
     flecs_enqueue(world, stage, desc);
-error:
-    return;
 }
 
 /**
@@ -33028,7 +33028,7 @@ ecs_query_count_t ecs_query_count(
         it.flags |= EcsIterIsInstanced;
         it.flags |= EcsIterNoData;
 
-        while (ecs_query_next_instanced(&it)) {
+        while (flecs_query_next_instanced(&it)) {
             result.results ++;
             result.entities += it.count;
         }
@@ -33368,7 +33368,7 @@ void flecs_query_str_append_bitset(
 }
 
 static
-void flecs_query_str_w_profile(
+void flecs_query_plan_w_profile(
     const ecs_query_t *q,
     const ecs_iter_t *it,
     ecs_strbuf_t *buf)
@@ -33506,18 +33506,18 @@ void flecs_query_str_w_profile(
     }
 }
 
-char* ecs_query_str_w_profile(
+char* ecs_query_plan_w_profile(
     const ecs_query_t *q,
     const ecs_iter_t *it)
 {
     flecs_poly_assert(q, ecs_query_t);
     ecs_strbuf_t buf = ECS_STRBUF_INIT;
 
-    flecs_query_str_w_profile(q, it, &buf);
+    flecs_query_plan_w_profile(q, it, &buf);
     // ecs_query_impl_t *impl = flecs_query_impl(q);
     // if (impl->cache) {
     //     ecs_strbuf_appendch(&buf, '\n');
-    //     flecs_query_str_w_profile(impl->cache->query, it, &buf);
+    //     flecs_query_plan_w_profile(impl->cache->query, it, &buf);
     // }
 
 #ifdef FLECS_LOG
@@ -33532,7 +33532,7 @@ char* ecs_query_str_w_profile(
 char* ecs_query_plan(
     const ecs_query_t *q)
 {
-    return ecs_query_str_w_profile(q, NULL);
+    return ecs_query_plan_w_profile(q, NULL);
 }
 
 static
@@ -38763,7 +38763,7 @@ int32_t flecs_table_observed_count(
     return table->_->traversable_count;
 }
 
-void* ecs_record_get_column(
+void* ecs_record_get_by_column(
     const ecs_record_t *r,
     int32_t index,
     size_t c_size)
@@ -57556,7 +57556,7 @@ int ecs_script_update(
     EcsScript *s = ecs_ensure(world, e, EcsScript);
     if (s->template_) {
         char *template_name = ecs_get_fullpath(world, s->template_->entity);
-        ecs_err("cannot update scripts for individual assemblies, "
+        ecs_err("cannot update scripts for individual templates, "
             "update parent script instead (tried to update '%s')",
                 template_name);
         ecs_os_free(template_name);
@@ -58191,7 +58191,7 @@ void flecs_script_template_on_set(
     ecs_iter_t *it)
 {
     if (it->table->flags & EcsTableIsPrefab) {
-        /* Don't instantiate assemblies for prefabs */
+        /* Don't instantiate templates for prefabs */
         return;
     }
 
@@ -59684,7 +59684,7 @@ int flecs_script_eval_id(
             return -1;
         }
 
-        /* Tags/components must be created in advance for assemblies */
+        /* Tags/components must be created in advance for templates */
         if (v->template) {
             flecs_script_eval_error(v, node, 
                 "'%s' must be defined outside of template scope", id->first);
@@ -59713,7 +59713,7 @@ int flecs_script_eval_id(
                 return -1;
             }
 
-            /* Tags/components must be created in advance for assemblies */
+            /* Tags/components must be created in advance for templates */
             if (v->template) {
                 flecs_script_eval_error(v, node, 
                     "'%s' must be defined outside of template scope", 
@@ -68885,7 +68885,7 @@ void flecs_query_iter_init(
     flecs_iter_validate(it);
 }
 
-bool ecs_query_next_instanced(
+bool flecs_query_next_instanced(
     ecs_iter_t *it)
 {
     ecs_assert(it != NULL, ECS_INVALID_PARAMETER, NULL);
@@ -69005,7 +69005,7 @@ bool ecs_query_next(
         return true;
     }
 
-    return flecs_iter_next_instanced(it, ecs_query_next_instanced(it));
+    return flecs_iter_next_instanced(it, flecs_query_next_instanced(it));
 error:
     return false;
 }
@@ -69057,7 +69057,7 @@ void flecs_query_iter_fini(
 
 #ifdef FLECS_DEBUG
     if (it->flags & EcsIterProfile) {
-        char *str = ecs_query_str_w_profile(qit->query, it);
+        char *str = ecs_query_plan_w_profile(qit->query, it);
         printf("%s\n", str);
         ecs_os_free(str);
     }

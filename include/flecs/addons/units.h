@@ -55,37 +55,37 @@ extern "C" {
  * @{
  */
 
-FLECS_API extern ECS_DECLARE(EcsUnitPrefixes); /* Parent scope for prefixes */
+FLECS_API extern ECS_DECLARE(EcsUnitPrefixes); /**< Parent scope for prefixes. */
 
-FLECS_API extern ECS_DECLARE(EcsYocto);
-FLECS_API extern ECS_DECLARE(EcsZepto);
-FLECS_API extern ECS_DECLARE(EcsAtto);
-FLECS_API extern ECS_DECLARE(EcsFemto);
-FLECS_API extern ECS_DECLARE(EcsPico);
-FLECS_API extern ECS_DECLARE(EcsNano);
-FLECS_API extern ECS_DECLARE(EcsMicro);
-FLECS_API extern ECS_DECLARE(EcsMilli);
-FLECS_API extern ECS_DECLARE(EcsCenti);
-FLECS_API extern ECS_DECLARE(EcsDeci);
-FLECS_API extern ECS_DECLARE(EcsDeca);
-FLECS_API extern ECS_DECLARE(EcsHecto);
-FLECS_API extern ECS_DECLARE(EcsKilo);
-FLECS_API extern ECS_DECLARE(EcsMega);
-FLECS_API extern ECS_DECLARE(EcsGiga);
-FLECS_API extern ECS_DECLARE(EcsTera);
-FLECS_API extern ECS_DECLARE(EcsPeta);
-FLECS_API extern ECS_DECLARE(EcsExa);
-FLECS_API extern ECS_DECLARE(EcsZetta);
-FLECS_API extern ECS_DECLARE(EcsYotta);
+FLECS_API extern ECS_DECLARE(EcsYocto);  /**< Yocto unit prefix. */
+FLECS_API extern ECS_DECLARE(EcsZepto);  /**< Zepto unit prefix. */
+FLECS_API extern ECS_DECLARE(EcsAtto);   /**< Atto unit prefix. */
+FLECS_API extern ECS_DECLARE(EcsFemto);  /**< Femto unit prefix. */
+FLECS_API extern ECS_DECLARE(EcsPico);   /**< Pico unit prefix. */
+FLECS_API extern ECS_DECLARE(EcsNano);   /**< Nano unit prefix. */
+FLECS_API extern ECS_DECLARE(EcsMicro);  /**< Micro unit prefix. */
+FLECS_API extern ECS_DECLARE(EcsMilli);  /**< Milli unit prefix. */
+FLECS_API extern ECS_DECLARE(EcsCenti);  /**< Centi unit prefix. */
+FLECS_API extern ECS_DECLARE(EcsDeci);   /**< Deci unit prefix. */
+FLECS_API extern ECS_DECLARE(EcsDeca);   /**< Deca unit prefix. */
+FLECS_API extern ECS_DECLARE(EcsHecto);  /**< Hecto unit prefix. */
+FLECS_API extern ECS_DECLARE(EcsKilo);   /**< Kilo unit prefix. */
+FLECS_API extern ECS_DECLARE(EcsMega);   /**< Mega unit prefix. */
+FLECS_API extern ECS_DECLARE(EcsGiga);   /**< Giga unit prefix. */
+FLECS_API extern ECS_DECLARE(EcsTera);   /**< Tera unit prefix. */
+FLECS_API extern ECS_DECLARE(EcsPeta);   /**< Peta unit prefix. */
+FLECS_API extern ECS_DECLARE(EcsExa);    /**< Exa unit prefix. */
+FLECS_API extern ECS_DECLARE(EcsZetta);  /**< Zetta unit prefix. */
+FLECS_API extern ECS_DECLARE(EcsYotta);  /**< Yotta unit prefix. */
 
-FLECS_API extern ECS_DECLARE(EcsKibi);
-FLECS_API extern ECS_DECLARE(EcsMebi);
-FLECS_API extern ECS_DECLARE(EcsGibi);
-FLECS_API extern ECS_DECLARE(EcsTebi);
-FLECS_API extern ECS_DECLARE(EcsPebi);
-FLECS_API extern ECS_DECLARE(EcsExbi);
-FLECS_API extern ECS_DECLARE(EcsZebi);
-FLECS_API extern ECS_DECLARE(EcsYobi);
+FLECS_API extern ECS_DECLARE(EcsKibi);   /**< Kibi unit prefix. */
+FLECS_API extern ECS_DECLARE(EcsMebi);   /**< Mebi unit prefix. */
+FLECS_API extern ECS_DECLARE(EcsGibi);   /**< Gibi unit prefix. */
+FLECS_API extern ECS_DECLARE(EcsTebi);   /**< Tebi unit prefix. */
+FLECS_API extern ECS_DECLARE(EcsPebi);   /**< Pebi unit prefix. */
+FLECS_API extern ECS_DECLARE(EcsExbi);   /**< Exbi unit prefix. */
+FLECS_API extern ECS_DECLARE(EcsZebi);   /**< Zebi unit prefix. */
+FLECS_API extern ECS_DECLARE(EcsYobi);   /**< Yobi unit prefix. */
 
 /** @} */
 
@@ -95,15 +95,15 @@ FLECS_API extern ECS_DECLARE(EcsYobi);
  * @{
  */
 
-FLECS_API extern ECS_DECLARE(EcsDuration);
-FLECS_API extern     ECS_DECLARE(EcsPicoSeconds);
-FLECS_API extern     ECS_DECLARE(EcsNanoSeconds);
-FLECS_API extern     ECS_DECLARE(EcsMicroSeconds);
-FLECS_API extern     ECS_DECLARE(EcsMilliSeconds);
-FLECS_API extern     ECS_DECLARE(EcsSeconds);
-FLECS_API extern     ECS_DECLARE(EcsMinutes);
-FLECS_API extern     ECS_DECLARE(EcsHours);
-FLECS_API extern     ECS_DECLARE(EcsDays);
+FLECS_API extern ECS_DECLARE(EcsDuration);         /**< Duration quantity. */
+FLECS_API extern     ECS_DECLARE(EcsPicoSeconds);  /**< PicoSeconds duration unit. */
+FLECS_API extern     ECS_DECLARE(EcsNanoSeconds);  /**< NanoSeconds duration unit. */
+FLECS_API extern     ECS_DECLARE(EcsMicroSeconds); /**< MicroSeconds duration unit. */
+FLECS_API extern     ECS_DECLARE(EcsMilliSeconds); /**< MilliSeconds duration unit. */
+FLECS_API extern     ECS_DECLARE(EcsSeconds);      /**< Seconds duration unit. */
+FLECS_API extern     ECS_DECLARE(EcsMinutes);      /**< Minutes duration unit. */
+FLECS_API extern     ECS_DECLARE(EcsHours);        /**< Hours duration unit. */
+FLECS_API extern     ECS_DECLARE(EcsDays);         /**< Days duration unit. */
 
 /** @} */
 
@@ -113,8 +113,8 @@ FLECS_API extern     ECS_DECLARE(EcsDays);
  * @{
  */
 
-FLECS_API extern ECS_DECLARE(EcsTime);
-FLECS_API extern     ECS_DECLARE(EcsDate);
+FLECS_API extern ECS_DECLARE(EcsTime);             /**< Time quantity. */
+FLECS_API extern     ECS_DECLARE(EcsDate);         /**< Date unit. */
 
 /** @} */
 
@@ -124,9 +124,9 @@ FLECS_API extern     ECS_DECLARE(EcsDate);
  * @{
  */
 
-FLECS_API extern ECS_DECLARE(EcsMass);
-FLECS_API extern     ECS_DECLARE(EcsGrams);
-FLECS_API extern     ECS_DECLARE(EcsKiloGrams);
+FLECS_API extern ECS_DECLARE(EcsMass);             /**< Mass quantity. */
+FLECS_API extern     ECS_DECLARE(EcsGrams);        /**< Grams unit. */
+FLECS_API extern     ECS_DECLARE(EcsKiloGrams);    /**< KiloGrams unit. */
 
 /** @} */
 
@@ -136,8 +136,8 @@ FLECS_API extern     ECS_DECLARE(EcsKiloGrams);
  * @{
  */
 
-FLECS_API extern ECS_DECLARE(EcsElectricCurrent);
-FLECS_API extern     ECS_DECLARE(EcsAmpere);
+FLECS_API extern ECS_DECLARE(EcsElectricCurrent);  /**< ElectricCurrent quantity. */
+FLECS_API extern     ECS_DECLARE(EcsAmpere);       /**< Ampere unit. */
 
 /** @} */
 
@@ -147,8 +147,8 @@ FLECS_API extern     ECS_DECLARE(EcsAmpere);
  * @{
  */
 
-FLECS_API extern ECS_DECLARE(EcsAmount);
-FLECS_API extern     ECS_DECLARE(EcsMole);
+FLECS_API extern ECS_DECLARE(EcsAmount);           /**< Amount quantity. */
+FLECS_API extern     ECS_DECLARE(EcsMole);         /**< Mole unit. */
 
 /** @} */
 
@@ -158,8 +158,8 @@ FLECS_API extern     ECS_DECLARE(EcsMole);
  * @{
  */
 
-FLECS_API extern ECS_DECLARE(EcsLuminousIntensity);
-FLECS_API extern     ECS_DECLARE(EcsCandela);
+FLECS_API extern ECS_DECLARE(EcsLuminousIntensity); /**< LuminousIntensity quantity. */
+FLECS_API extern     ECS_DECLARE(EcsCandela);       /**< Candela unit. */
 
 /** @} */
 
@@ -169,8 +169,8 @@ FLECS_API extern     ECS_DECLARE(EcsCandela);
  * @{
  */
 
-FLECS_API extern ECS_DECLARE(EcsForce);
-FLECS_API extern     ECS_DECLARE(EcsNewton);
+FLECS_API extern ECS_DECLARE(EcsForce);            /**< Force quantity. */
+FLECS_API extern     ECS_DECLARE(EcsNewton);       /**< Newton unit. */
 
 /** @} */
 
@@ -180,16 +180,16 @@ FLECS_API extern     ECS_DECLARE(EcsNewton);
  * @{
  */
 
-FLECS_API extern ECS_DECLARE(EcsLength);
-FLECS_API extern     ECS_DECLARE(EcsMeters);
-FLECS_API extern         ECS_DECLARE(EcsPicoMeters);
-FLECS_API extern         ECS_DECLARE(EcsNanoMeters);
-FLECS_API extern         ECS_DECLARE(EcsMicroMeters);
-FLECS_API extern         ECS_DECLARE(EcsMilliMeters);
-FLECS_API extern         ECS_DECLARE(EcsCentiMeters);
-FLECS_API extern         ECS_DECLARE(EcsKiloMeters);
-FLECS_API extern     ECS_DECLARE(EcsMiles);
-FLECS_API extern     ECS_DECLARE(EcsPixels);
+FLECS_API extern ECS_DECLARE(EcsLength);              /**< Length quantity. */
+FLECS_API extern     ECS_DECLARE(EcsMeters);          /**< Meters unit. */
+FLECS_API extern         ECS_DECLARE(EcsPicoMeters);  /**< PicoMeters unit. */
+FLECS_API extern         ECS_DECLARE(EcsNanoMeters);  /**< NanoMeters unit. */
+FLECS_API extern         ECS_DECLARE(EcsMicroMeters); /**< MicroMeters unit. */
+FLECS_API extern         ECS_DECLARE(EcsMilliMeters); /**< MilliMeters unit. */
+FLECS_API extern         ECS_DECLARE(EcsCentiMeters); /**< CentiMeters unit. */
+FLECS_API extern         ECS_DECLARE(EcsKiloMeters);  /**< KiloMeters unit. */
+FLECS_API extern     ECS_DECLARE(EcsMiles);           /**< Miles unit. */
+FLECS_API extern     ECS_DECLARE(EcsPixels);          /**< Pixels unit. */
 
 /** @} */
 
@@ -199,9 +199,9 @@ FLECS_API extern     ECS_DECLARE(EcsPixels);
  * @{
  */
 
-FLECS_API extern ECS_DECLARE(EcsPressure);
-FLECS_API extern     ECS_DECLARE(EcsPascal);
-FLECS_API extern     ECS_DECLARE(EcsBar);
+FLECS_API extern ECS_DECLARE(EcsPressure);          /**< Pressure quantity. */
+FLECS_API extern     ECS_DECLARE(EcsPascal);        /**< Pascal unit. */
+FLECS_API extern     ECS_DECLARE(EcsBar);           /**< Bar unit. */
 
 /** @} */
 
@@ -211,11 +211,11 @@ FLECS_API extern     ECS_DECLARE(EcsBar);
  * @{
  */
 
-FLECS_API extern ECS_DECLARE(EcsSpeed);
-FLECS_API extern     ECS_DECLARE(EcsMetersPerSecond);
-FLECS_API extern     ECS_DECLARE(EcsKiloMetersPerSecond);
-FLECS_API extern     ECS_DECLARE(EcsKiloMetersPerHour);
-FLECS_API extern     ECS_DECLARE(EcsMilesPerHour);
+FLECS_API extern ECS_DECLARE(EcsSpeed);                   /**< Speed quantity. */
+FLECS_API extern     ECS_DECLARE(EcsMetersPerSecond);     /**< MetersPerSecond unit. */
+FLECS_API extern     ECS_DECLARE(EcsKiloMetersPerSecond); /**< KiloMetersPerSecond unit. */
+FLECS_API extern     ECS_DECLARE(EcsKiloMetersPerHour);   /**< KiloMetersPerHour unit. */
+FLECS_API extern     ECS_DECLARE(EcsMilesPerHour);        /**< MilesPerHour unit. */
 
 /** @} */
 
@@ -225,10 +225,10 @@ FLECS_API extern     ECS_DECLARE(EcsMilesPerHour);
  * @{
  */
 
-FLECS_API extern ECS_DECLARE(EcsTemperature);
-FLECS_API extern     ECS_DECLARE(EcsKelvin);
-FLECS_API extern     ECS_DECLARE(EcsCelsius);
-FLECS_API extern     ECS_DECLARE(EcsFahrenheit);
+FLECS_API extern ECS_DECLARE(EcsTemperature);       /**< Temperature quantity. */
+FLECS_API extern     ECS_DECLARE(EcsKelvin);        /**< Kelvin unit. */
+FLECS_API extern     ECS_DECLARE(EcsCelsius);       /**< Celsius unit. */
+FLECS_API extern     ECS_DECLARE(EcsFahrenheit);    /**< Fahrenheit unit. */
 
 /** @} */
 
@@ -238,18 +238,18 @@ FLECS_API extern     ECS_DECLARE(EcsFahrenheit);
  * @{
  */
 
-FLECS_API extern ECS_DECLARE(EcsData);
-FLECS_API extern     ECS_DECLARE(EcsBits);
-FLECS_API extern         ECS_DECLARE(EcsKiloBits);
-FLECS_API extern         ECS_DECLARE(EcsMegaBits);
-FLECS_API extern         ECS_DECLARE(EcsGigaBits);
-FLECS_API extern     ECS_DECLARE(EcsBytes);
-FLECS_API extern         ECS_DECLARE(EcsKiloBytes);
-FLECS_API extern         ECS_DECLARE(EcsMegaBytes);
-FLECS_API extern         ECS_DECLARE(EcsGigaBytes);
-FLECS_API extern         ECS_DECLARE(EcsKibiBytes);
-FLECS_API extern         ECS_DECLARE(EcsMebiBytes);
-FLECS_API extern         ECS_DECLARE(EcsGibiBytes);
+FLECS_API extern ECS_DECLARE(EcsData);               /**< Data quantity. */
+FLECS_API extern     ECS_DECLARE(EcsBits);           /**< Bits unit. */
+FLECS_API extern         ECS_DECLARE(EcsKiloBits);   /**< KiloBits unit. */
+FLECS_API extern         ECS_DECLARE(EcsMegaBits);   /**< MegaBits unit. */
+FLECS_API extern         ECS_DECLARE(EcsGigaBits);   /**< GigaBits unit. */
+FLECS_API extern     ECS_DECLARE(EcsBytes);          /**< Bytes unit. */
+FLECS_API extern         ECS_DECLARE(EcsKiloBytes);  /**< KiloBytes unit. */
+FLECS_API extern         ECS_DECLARE(EcsMegaBytes);  /**< MegaBytes unit. */
+FLECS_API extern         ECS_DECLARE(EcsGigaBytes);  /**< GigaBytes unit. */
+FLECS_API extern         ECS_DECLARE(EcsKibiBytes);  /**< KibiBytes unit. */
+FLECS_API extern         ECS_DECLARE(EcsMebiBytes);  /**< MebiBytes unit. */
+FLECS_API extern         ECS_DECLARE(EcsGibiBytes);  /**< GibiBytes unit. */
 
 /** @} */
 
@@ -259,15 +259,15 @@ FLECS_API extern         ECS_DECLARE(EcsGibiBytes);
  * @{
  */
 
-FLECS_API extern ECS_DECLARE(EcsDataRate);
-FLECS_API extern     ECS_DECLARE(EcsBitsPerSecond);
-FLECS_API extern     ECS_DECLARE(EcsKiloBitsPerSecond);
-FLECS_API extern     ECS_DECLARE(EcsMegaBitsPerSecond);
-FLECS_API extern     ECS_DECLARE(EcsGigaBitsPerSecond);
-FLECS_API extern     ECS_DECLARE(EcsBytesPerSecond);
-FLECS_API extern     ECS_DECLARE(EcsKiloBytesPerSecond);
-FLECS_API extern     ECS_DECLARE(EcsMegaBytesPerSecond);
-FLECS_API extern     ECS_DECLARE(EcsGigaBytesPerSecond);
+FLECS_API extern ECS_DECLARE(EcsDataRate);               /**< DataRate quantity. */
+FLECS_API extern     ECS_DECLARE(EcsBitsPerSecond);      /**< BitsPerSecond unit. */
+FLECS_API extern     ECS_DECLARE(EcsKiloBitsPerSecond);  /**< KiloBitsPerSecond unit. */
+FLECS_API extern     ECS_DECLARE(EcsMegaBitsPerSecond);  /**< MegaBitsPerSecond unit. */
+FLECS_API extern     ECS_DECLARE(EcsGigaBitsPerSecond);  /**< GigaBitsPerSecond unit. */
+FLECS_API extern     ECS_DECLARE(EcsBytesPerSecond);     /**< BytesPerSecond unit. */
+FLECS_API extern     ECS_DECLARE(EcsKiloBytesPerSecond); /**< KiloBytesPerSecond unit. */
+FLECS_API extern     ECS_DECLARE(EcsMegaBytesPerSecond); /**< MegaBytesPerSecond unit. */
+FLECS_API extern     ECS_DECLARE(EcsGigaBytesPerSecond); /**< GigaBytesPerSecond unit. */
 
 /** @} */
 
@@ -277,9 +277,9 @@ FLECS_API extern     ECS_DECLARE(EcsGigaBytesPerSecond);
  * @{
  */
 
-FLECS_API extern ECS_DECLARE(EcsAngle);
-FLECS_API extern     ECS_DECLARE(EcsRadians);
-FLECS_API extern     ECS_DECLARE(EcsDegrees);
+FLECS_API extern ECS_DECLARE(EcsAngle);            /**< Angle quantity. */
+FLECS_API extern     ECS_DECLARE(EcsRadians);      /**< Radians unit. */
+FLECS_API extern     ECS_DECLARE(EcsDegrees);      /**< Degrees unit. */
 
 /** @} */
 
@@ -289,11 +289,11 @@ FLECS_API extern     ECS_DECLARE(EcsDegrees);
  * @{
  */
 
-FLECS_API extern ECS_DECLARE(EcsFrequency);
-FLECS_API extern     ECS_DECLARE(EcsHertz);
-FLECS_API extern     ECS_DECLARE(EcsKiloHertz);
-FLECS_API extern     ECS_DECLARE(EcsMegaHertz);
-FLECS_API extern     ECS_DECLARE(EcsGigaHertz);
+FLECS_API extern ECS_DECLARE(EcsFrequency);        /**< Frequency quantity. */
+FLECS_API extern     ECS_DECLARE(EcsHertz);        /**< Hertz unit. */
+FLECS_API extern     ECS_DECLARE(EcsKiloHertz);    /**< KiloHertz unit. */
+FLECS_API extern     ECS_DECLARE(EcsMegaHertz);    /**< MegaHertz unit. */
+FLECS_API extern     ECS_DECLARE(EcsGigaHertz);    /**< GigaHertz unit. */
 
 /** @} */
 
@@ -303,22 +303,30 @@ FLECS_API extern     ECS_DECLARE(EcsGigaHertz);
  * @{
  */
 
-FLECS_API extern ECS_DECLARE(EcsUri);
-FLECS_API extern     ECS_DECLARE(EcsUriHyperlink);
-FLECS_API extern     ECS_DECLARE(EcsUriImage);
-FLECS_API extern     ECS_DECLARE(EcsUriFile);
+FLECS_API extern ECS_DECLARE(EcsUri);              /**< URI quantity. */
+FLECS_API extern     ECS_DECLARE(EcsUriHyperlink); /**< UriHyperlink unit. */
+FLECS_API extern     ECS_DECLARE(EcsUriImage);     /**< UriImage unit. */
+FLECS_API extern     ECS_DECLARE(EcsUriFile);      /**< UriFile unit. */
 
 /** @} */
 
-FLECS_API extern ECS_DECLARE(EcsAcceleration);
-FLECS_API extern ECS_DECLARE(EcsPercentage);
-FLECS_API extern ECS_DECLARE(EcsBel);
-FLECS_API extern ECS_DECLARE(EcsDeciBel);
+FLECS_API extern ECS_DECLARE(EcsAcceleration);     /**< Acceleration unit. */
+FLECS_API extern ECS_DECLARE(EcsPercentage);       /**< Percentage unit. */
+FLECS_API extern ECS_DECLARE(EcsBel);              /**< Bel unit. */
+FLECS_API extern ECS_DECLARE(EcsDeciBel);          /**< DeciBel unit. */
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Module
 ////////////////////////////////////////////////////////////////////////////////
 
+/** Units module import function.
+ * Usage:
+ * @code
+ * ECS_IMPORT(world, FlecsUnits)
+ * @endcode
+ * 
+ * @param world The world.
+ */
 FLECS_API
 void FlecsUnitsImport(
     ecs_world_t *world);

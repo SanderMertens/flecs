@@ -438,8 +438,8 @@ We still have some problems, which we'll address in the next section:
 - Our prefab is static, we cannot change the parameters of the fence
 - The pillars and bars don't increase when the fence size increases
 
-## Assemblies
-Prefabs are static collections of entities and components that we can instantiate multiple times. Assemblies are _prefab compositions_ that can be parameterized. In other words, assemblies let us to create our Fence, while also specifying the width and height.
+## Templates
+Prefabs are static collections of entities and components that we can instantiate multiple times. Templates are _prefab compositions_ that can be parameterized. In other words, templates let us to create our Fence, while also specifying the width and height.
 
 Changing the above code into an template is easy. Just change this line:
 
@@ -465,7 +465,7 @@ template 'Fence' has no properties
 
 [![a fence template](img/script_tutorial/tut_playground_template_error.png)](https://www.flecs.dev/explorer/?local=true&wasm=https://www.flecs.dev/explorer/playground.js&script=using%20flecs.components.*%0A%0Aconst%20PI%20%3D%203.1415926%0A%0Aplane%20%7B%0A%20%20-%20Position3%7B%7D%0A%20%20-%20Rotation3%7B%24PI%20%2F%202%7D%0A%20%20-%20Rectangle%7B10000%2C%2010000%7D%0A%20%20-%20Rgb%7B0.9%2C%200.9%2C%200.9%7D%0A%7D%0A%0Atemplate%20Fence%20%7B%0A%20%20const%20width%20%3D%2020%0A%20%20const%20height%20%3D%2010%0A%20%20const%20color%20%3A%20Rgb%20%3D%20%7B0.15%2C%200.1%2C%200.05%7D%0A%20%20%0A%20%20const%20pillar_width%20%3D%202%0A%20%20const%20pillar_box%20%3A%20Box%20%3D%20%7B%0A%20%20%20%20%24pillar_width%2C%20%0A%20%20%20%20%24height%2C%20%0A%20%20%20%20%24pillar_width%0A%20%20%7D%0A%20%20%0A%20%20with%20%24color%2C%20%24pillar_box%20%7B%0A%20%20%20%20left_pillar%20%7B%0A%20%20%20%20%20%20-%20Position3%7Bx%3A%20-%24width%2F2%2C%20y%3A%20%24height%2F2%7D%0A%20%20%20%20%7D%0A%20%20%20%20right_pillar%20%7B%0A%20%20%20%20%20%20-%20Position3%7Bx%3A%20%24width%2F2%2C%20y%3A%20%24height%2F2%7D%0A%20%20%20%20%7D%0A%20%20%7D%0A%20%20%0A%20%20const%20bar_sep%20%3D%204%0A%20%20const%20bar_height%20%3D%202%0A%20%20const%20bar_depth%20%3D%20%24pillar_width%2F2%0A%20%20const%20bar_box%20%3A%20Box%20%3D%20%7B%0A%20%20%20%20%24width%2C%20%0A%20%20%20%20%24bar_height%2C%20%0A%20%20%20%20%24bar_depth%0A%20%20%7D%0A%20%20%0A%20%20with%20%24color%2C%20%24bar_box%20%7B%0A%20%20%20%20top_bar%20%7B%0A%20%20%20%20%20%20-%20Position3%7By%3A%20%24height%2F2%20%2B%20%24bar_sep%2F2%7D%0A%20%20%20%20%7D%0A%20%20%20%20bottom_bar%20%7B%0A%20%20%20%20%20%20-%20Position3%7By%3A%20%24height%2F2%20-%20%24bar_sep%2F2%7D%0A%20%20%20%20%7D%0A%20%20%7D%0A%7D%20%2F%2F%20Prefab%20Fence%0A%0Afence_a%20%3A%20Fence%20%7B%0A%20%20-%20Position3%7B-10%7D%0A%7D%0Afence_b%20%3A%20Fence%20%7B%0A%20%20-%20Position3%7B10%7D%0A%7D%0A)
 
-What does this mean? Assemblies, unlike prefabs, need _properties_, which are like the inputs to the template. For our fence, these could be `width` and `height` values.
+What does this mean? Templates, unlike prefabs, need _properties_, which are like the inputs to the template. For our fence, these could be `width` and `height` values.
 
 To add properties to the template, we can take some of our existing `const` variables, and change `const` to `prop`. This will make the variables visible to the outside. Another thing we must do for properties is explicitly specify their type.
 
@@ -525,11 +525,11 @@ fence_b {
 }
 ```
 
-[![two instantiated fence assemblies](img/script_tutorial/tut_playground_template.png)](https://www.flecs.dev/explorer/?local=true&wasm=https://www.flecs.dev/explorer/playground.js&script=using%20flecs.components.*%0Ausing%20flecs.meta%0A%0Aconst%20PI%20%3D%203.1415926%0A%0Aplane%20%7B%0A%20%20-%20Position3%7B%7D%0A%20%20-%20Rotation3%7B%24PI%20%2F%202%7D%0A%20%20-%20Rectangle%7B10000%2C%2010000%7D%0A%20%20-%20Rgb%7B0.9%2C%200.9%2C%200.9%7D%0A%7D%0A%0Atemplate%20Fence%20%7B%0A%20%20prop%20width%20%3A%20f32%20%3D%2020%0A%20%20prop%20height%20%3A%20f32%20%3D%2010%0A%20%20prop%20color%20%3A%20Rgb%20%3D%20%7B0.15%2C%200.1%2C%200.05%7D%0A%20%20%0A%20%20const%20pillar_width%20%3D%202%0A%20%20const%20pillar_box%20%3A%20Box%20%3D%20%7B%0A%20%20%20%20%24pillar_width%2C%20%0A%20%20%20%20%24height%2C%20%0A%20%20%20%20%24pillar_width%0A%20%20%7D%0A%20%20%0A%20%20with%20%24color%2C%20%24pillar_box%20%7B%0A%20%20%20%20left_pillar%20%7B%0A%20%20%20%20%20%20-%20Position3%7Bx%3A%20-%24width%2F2%2C%20y%3A%20%24height%2F2%7D%0A%20%20%20%20%7D%0A%20%20%20%20right_pillar%20%7B%0A%20%20%20%20%20%20-%20Position3%7Bx%3A%20%24width%2F2%2C%20y%3A%20%24height%2F2%7D%0A%20%20%20%20%7D%0A%20%20%7D%0A%20%20%0A%20%20const%20bar_sep%20%3D%204%0A%20%20const%20bar_height%20%3D%202%0A%20%20const%20bar_depth%20%3D%20%24pillar_width%2F2%0A%20%20const%20bar_box%20%3A%20Box%20%3D%20%7B%0A%20%20%20%20%24width%2C%20%0A%20%20%20%20%24bar_height%2C%20%0A%20%20%20%20%24bar_depth%0A%20%20%7D%0A%20%20%0A%20%20with%20%24color%2C%20%24bar_box%20%7B%0A%20%20%20%20top_bar%20%7B%0A%20%20%20%20%20%20-%20Position3%7By%3A%20%24height%2F2%20%2B%20%24bar_sep%2F2%7D%0A%20%20%20%20%7D%0A%20%20%20%20bottom_bar%20%7B%0A%20%20%20%20%20%20-%20Position3%7By%3A%20%24height%2F2%20-%20%24bar_sep%2F2%7D%0A%20%20%20%20%7D%0A%20%20%7D%0A%7D%20%2F%2F%20Prefab%20Fence%0A%0Afence_a%20%7B%0A%20%20-%20Fence%7Bwidth%3A%2010%2C%20height%3A%2020%7D%0A%20%20-%20Position3%7B-10%7D%0A%7D%0Afence_b%20%7B%0A%20%20-%20Fence%7Bwidth%3A%2025%2C%20height%3A%2010%7D%0A%20%20-%20Position3%7B10%7D%0A%7D%0A)
+[![two instantiated fence templates](img/script_tutorial/tut_playground_template.png)](https://www.flecs.dev/explorer/?local=true&wasm=https://www.flecs.dev/explorer/playground.js&script=using%20flecs.components.*%0Ausing%20flecs.meta%0A%0Aconst%20PI%20%3D%203.1415926%0A%0Aplane%20%7B%0A%20%20-%20Position3%7B%7D%0A%20%20-%20Rotation3%7B%24PI%20%2F%202%7D%0A%20%20-%20Rectangle%7B10000%2C%2010000%7D%0A%20%20-%20Rgb%7B0.9%2C%200.9%2C%200.9%7D%0A%7D%0A%0Atemplate%20Fence%20%7B%0A%20%20prop%20width%20%3A%20f32%20%3D%2020%0A%20%20prop%20height%20%3A%20f32%20%3D%2010%0A%20%20prop%20color%20%3A%20Rgb%20%3D%20%7B0.15%2C%200.1%2C%200.05%7D%0A%20%20%0A%20%20const%20pillar_width%20%3D%202%0A%20%20const%20pillar_box%20%3A%20Box%20%3D%20%7B%0A%20%20%20%20%24pillar_width%2C%20%0A%20%20%20%20%24height%2C%20%0A%20%20%20%20%24pillar_width%0A%20%20%7D%0A%20%20%0A%20%20with%20%24color%2C%20%24pillar_box%20%7B%0A%20%20%20%20left_pillar%20%7B%0A%20%20%20%20%20%20-%20Position3%7Bx%3A%20-%24width%2F2%2C%20y%3A%20%24height%2F2%7D%0A%20%20%20%20%7D%0A%20%20%20%20right_pillar%20%7B%0A%20%20%20%20%20%20-%20Position3%7Bx%3A%20%24width%2F2%2C%20y%3A%20%24height%2F2%7D%0A%20%20%20%20%7D%0A%20%20%7D%0A%20%20%0A%20%20const%20bar_sep%20%3D%204%0A%20%20const%20bar_height%20%3D%202%0A%20%20const%20bar_depth%20%3D%20%24pillar_width%2F2%0A%20%20const%20bar_box%20%3A%20Box%20%3D%20%7B%0A%20%20%20%20%24width%2C%20%0A%20%20%20%20%24bar_height%2C%20%0A%20%20%20%20%24bar_depth%0A%20%20%7D%0A%20%20%0A%20%20with%20%24color%2C%20%24bar_box%20%7B%0A%20%20%20%20top_bar%20%7B%0A%20%20%20%20%20%20-%20Position3%7By%3A%20%24height%2F2%20%2B%20%24bar_sep%2F2%7D%0A%20%20%20%20%7D%0A%20%20%20%20bottom_bar%20%7B%0A%20%20%20%20%20%20-%20Position3%7By%3A%20%24height%2F2%20-%20%24bar_sep%2F2%7D%0A%20%20%20%20%7D%0A%20%20%7D%0A%7D%20%2F%2F%20Prefab%20Fence%0A%0Afence_a%20%7B%0A%20%20-%20Fence%7Bwidth%3A%2010%2C%20height%3A%2020%7D%0A%20%20-%20Position3%7B-10%7D%0A%7D%0Afence_b%20%7B%0A%20%20-%20Fence%7Bwidth%3A%2025%2C%20height%3A%2010%7D%0A%20%20-%20Position3%7B10%7D%0A%7D%0A)
 
 We are now well on our way to define a procedural fence. Note how similar assigning an template looks to assigning a component. This is no coincidence: an template is translated to a component, where each property becomes a member of that component.
 
-This is something we can exploit in C/C++ code to make assigning assemblies to entities as easy as assigning a component:
+This is something we can exploit in C/C++ code to make assigning templates to entities as easy as assigning a component:
 
 ```c
 // In C
@@ -669,8 +669,8 @@ The values got tweaked a bit to get a more aesthetically pleasing result when sc
 
 We're almost done! There is only one thing left, which is to combine the fence template in a nested template so we can create an enclosing.
 
-## Nested Assemblies
-Now that we have our Fence template ready to go, we can build a higher level assemblies which reuses existing the `Fence` template. One typical thing we could do is instantiate a `Fence` four times, so that it creates an enclosed space.
+## Nested Templates
+Now that we have our Fence template ready to go, we can build a higher level templates which reuses existing the `Fence` template. One typical thing we could do is instantiate a `Fence` four times, so that it creates an enclosed space.
 
 The code for this doesn't introduce anything beyond what we've already learned. Let's first setup a new template at the bottom of our script.
 Inside the template, lets create `width` and `depth` properties, so we can define a rectangular area. Let's also add a `color` and `height` property that we can passthrough to our `Fence` template.
@@ -716,7 +716,7 @@ up writing the same divisions multiple times.
   }
 ```
 
-Note how the passthrough parameters are specified as `height:$`. This is a shorthand notation for `height: $height`, and can save a lot of typing when working with nested assemblies.
+Note how the passthrough parameters are specified as `height:$`. This is a shorthand notation for `height: $height`, and can save a lot of typing when working with nested templates.
 
 Let's now use our new `Enclosing` template by changing
 
@@ -742,7 +742,7 @@ enclosing { Enclosing: {width: 100, height: 30} }
 
 [![a tall enclosing](img/script_tutorial/tut_playground_pasture_2.png)](https://www.flecs.dev/explorer/?local=true&wasm=https://www.flecs.dev/explorer/playground.js&script=using%20flecs.components.*%0Ausing%20flecs.meta%0Ausing%20flecs.game%0A%0Aconst%20PI%20%3D%203.1415926%0A%0A%2F%2F%20The%20ground%20plane%0Aplane%20%7B%0A%20%20-%20Position3%7B%7D%0A%20%20-%20Rotation3%7B%24PI%2F2%7D%0A%20%20-%20Rectangle%7B10000%2C%2010000%7D%0A%20%20-%20Rgb%7B0.9%2C%200.9%2C%200.9%7D%0A%7D%0A%0Atemplate%20Fence%20%7B%0A%20%20%2F%2F%20Fence%20parameters%0A%20%20prop%20width%20%3A%20f32%20%3D%2040%0A%20%20prop%20height%20%3A%20f32%20%3D%2020%0A%20%20const%20color%20%3A%20Rgb%20%3D%20%7B0.15%2C%200.1%2C%200.05%7D%0A%0A%20%20%2F%2F%20Pillar%20parameters%0A%20%20const%20pillar_width%20%3D%202%0A%20%20const%20pillar_spacing%20%3D%2010%0A%20%20const%20pillar_count%20%3D%20%24width%20%2F%20%24pillar_spacing%0A%20%20const%20p_grid_spacing%20%3D%20%24width%20%2F%20(%24pillar_count%20-%201)%0A%20%0A%20%20%2F%2F%20Bar%20parameters%0A%20%20const%20bar_spacing%20%3D%203%0A%20%20const%20bar_height%20%3D%202%0A%20%20const%20bar_depth%20%3D%20%24pillar_width%20%2F%202%0A%20%20const%20bar_count%20%3D%20%24height%20%2F%20%24bar_spacing%0A%20%20const%20b_grid_spacing%20%3D%20%24height%20%2F%20%24bar_count%0A%20%20%20%0A%20%20with%20Prefab%2C%20%24color%20%7B%0A%20%20%20%20Pillar%20%3A-%20Box%20%7B%0A%20%20%20%20%20%20%24pillar_width%2C%20%24height%2C%20%24pillar_width%0A%20%20%20%20%7D%0A%20%20%20%20Bar%20%3A-%20Box%20%7B%24width%2C%20%24bar_height%2C%20%24bar_depth%7D%0A%20%20%7D%20%20%20%20%0A%20%20%0A%20%20%2F%2F%20Pillars%0A%20%20pillars%20%7B%0A%20%20%20%20-%20Position3%7By%3A%20%24height%2F2%7D%0A%20%20%20%20-%20Grid%7B%0A%20%20%20%20%20%20x.count%3A%20%24pillar_count%2C%0A%20%20%20%20%20%20x.spacing%3A%20%24p_grid_spacing%0A%20%20%20%20%20%20prefab%3A%20Pillar%20%20%20%20%0A%20%20%20%20%7D%0A%20%20%7D%0A%0A%20%20%2F%2F%20Bars%0A%20%20bars%20%7B%0A%20%20%20%20-%20Position3%7By%3A%20%24height%2F2%7D%0A%20%20%20%20-%20Grid%7B%0A%20%20%20%20%20%20y.count%3A%20%24bar_count%2C%0A%20%20%20%20%20%20y.spacing%3A%20%24b_grid_spacing%0A%20%20%20%20%20%20prefab%3A%20Bar%20%20%20%20%0A%20%20%20%20%7D%0A%20%20%7D%0A%7D%20%2F%2F%20Prefab%20Fence%0A%0Atemplate%20Enclosing%20%7B%0A%20%20prop%20width%3A%20f32%20%3D%2040%0A%20%20prop%20height%3A%20f32%20%3D%2010%0A%20%20prop%20depth%3A%20f32%20%3D%2040%0A%20%20prop%20color%3A%20Rgb%20%3D%20%7B0.15%2C%200.1%2C%200.05%7D%0A%20%20%0A%20%20const%20width_half%20%3D%20%24width%20%2F%202%0A%20%20const%20depth_half%20%3D%20%24depth%20%2F%202%0A%20%20const%20PI%20%3D%203.1415926%0A%0A%20%20left%20%7B%0A%20%20%20%20-%20Position3%7Bx%3A%20-%24width_half%7D%0A%20%20%20%20-%20Rotation3%7By%3A%20%24PI%20%2F%202%7D%0A%20%20%20%20-%20Fence%7Bwidth%3A%20%24depth%2C%20height%3A%24%7D%0A%20%20%7D%0A%20%20right%20%7B%0A%20%20%20%20-%20Position3%7Bx%3A%20%24width_half%7D%0A%20%20%20%20-%20Rotation3%7By%3A%20%24PI%20%2F%202%7D%0A%20%20%20%20-%20Fence%7Bwidth%3A%20%24depth%2C%20height%3A%24%7D%0A%20%20%7D%0A%20%20back%20%7B%0A%20%20%20%20-%20Position3%7Bz%3A%20-%24depth_half%7D%0A%20%20%20%20-%20Fence%7Bwidth%3A%20%24width%2C%20height%3A%24%7D%0A%20%20%7D%0A%20%20front%20%7B%0A%20%20%20%20-%20Position3%7Bz%3A%20%24depth_half%7D%0A%20%20%20%20-%20Fence%7Bwidth%3A%20%24width%2C%20height%3A%24%7D%0A%20%20%7D%0A%7D%0A%0Apasture%20%3A-%20Enclosing%7B%0A%20%20width%3A%20100%2C%20%0A%20%20depth%3A%20100%0A%20%20height%3A%2030%0A%7D%0A%0Acamera%20%7B%0A%20%20-%20Position3%7B52%2C%2041%2C%20-82%7D%0A%20%20-%20Rotation3%7B-0.45%2C%20-0.54%7D%0A%7D%0A)
 
-Congratulations! You now know how to create assets in Flecs Script! If you'd like to see more examples of how assemblies can be used to create complex compositions of assets, take a look at the assemblies in the Flecs playground project:
+Congratulations! You now know how to create assets in Flecs Script! If you'd like to see more examples of how templates can be used to create complex compositions of assets, take a look at the templates in the Flecs playground project:
 
 https://github.com/flecs-hub/playground/tree/main/etc/assets
 
@@ -750,7 +750,7 @@ Additionally you can also try instantiating one of the assets that come preloade
 
 ```js
 using flecs.components.*
-using assemblies
+using templates
 
 const PI = 3.1415926
 
@@ -764,6 +764,6 @@ plane {
 town :- Town{}
 ```
 
-[![a town](img/script_tutorial/tut_playground_town.png)](https://www.flecs.dev/explorer/?show=plecs,explorer_canvas&local=true&wasm=https://www.flecs.dev/explorer/playground.js&script=using%20flecs.components.*%0Ausing%20assemblies%0A%0Aconst%20PI%20%3D%203.1415926%0A%0Aplane%20%7B%0A%20%20-%20Position3%7B%7D%0A%20%20-%20Rotation3%7B%24PI%20%2F%202%7D%0A%20%20-%20Rectangle%7B10000%2C%2010000%7D%0A%20%20-%20Rgb%7B0.9%2C%200.9%2C%200.9%7D%0A%7D%0A%0Atown%20%3A-%20Town%7B%7D)
+[![a town](img/script_tutorial/tut_playground_town.png)](https://www.flecs.dev/explorer/?show=plecs,explorer_canvas&local=true&wasm=https://www.flecs.dev/explorer/playground.js&script=using%20flecs.components.*%0Ausing%20templates%0A%0Aconst%20PI%20%3D%203.1415926%0A%0Aplane%20%7B%0A%20%20-%20Position3%7B%7D%0A%20%20-%20Rotation3%7B%24PI%20%2F%202%7D%0A%20%20-%20Rectangle%7B10000%2C%2010000%7D%0A%20%20-%20Rgb%7B0.9%2C%200.9%2C%200.9%7D%0A%7D%0A%0Atown%20%3A-%20Town%7B%7D)
 
 That's all for this tutorial. Have fun creating, and don't hesitate to share the results in the `#showcase` channel on Discord! (link: https://discord.gg/caR2WmY)

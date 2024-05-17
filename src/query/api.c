@@ -501,7 +501,7 @@ ecs_query_count_t ecs_query_count(
         it.flags |= EcsIterIsInstanced;
         it.flags |= EcsIterNoData;
 
-        while (ecs_query_next_instanced(&it)) {
+        while (flecs_query_next_instanced(&it)) {
             result.results ++;
             result.entities += it.count;
         }

@@ -278,7 +278,7 @@
                 "template_w_nested_template",
                 "instantiate_prefab_w_template",
                 "template_w_prefab_w_template",
-                "3_assemblies",
+                "3_templates",
                 "template_nested_w_default_var",
                 "template_w_anonymous",
                 "template_w_anonymous_parse_again",

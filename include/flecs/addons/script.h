@@ -57,7 +57,7 @@ typedef struct ecs_script_vars_t {
 } ecs_script_vars_t;
 
 /** Script component. 
- * This component is added to the entities of managed scripts and assemblies.
+ * This component is added to the entities of managed scripts and templates.
  */
 typedef struct EcsScript {
     ecs_script_t *script;
@@ -95,8 +95,8 @@ int ecs_script_eval(
 /** Free script.
  * This operation frees a script object.
  * 
- * Assemblies created by the script rely upon resources in the script object,
- * and for that reason keep the script alive until all assemblies created by the
+ * Templates created by the script rely upon resources in the script object,
+ * and for that reason keep the script alive until all templates created by the
  * script are deleted.
  *
  * @param script The script.
@@ -492,7 +492,14 @@ int ecs_ptr_to_str_buf(
     const void *data,
     ecs_strbuf_t *buf);
 
-/* Module import */
+/** Script module import function.
+ * Usage:
+ * @code
+ * ECS_IMPORT(world, FlecsScript)
+ * @endcode
+ * 
+ * @param world The world.
+ */
 FLECS_API
 void FlecsScriptImport(
     ecs_world_t *world);

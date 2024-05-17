@@ -46,6 +46,7 @@ extern "C" {
 //// Tracing
 ////////////////////////////////////////////////////////////////////////////////
 
+/** Log message indicating an operation is deprecated. */
 FLECS_API
 void ecs_deprecated_(
     const char *file,

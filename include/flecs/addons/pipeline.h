@@ -44,6 +44,13 @@ extern "C" {
 
 #ifndef FLECS_LEGACY
 
+/** Convenience macro to create a predeclared pipeline. 
+ * Usage:
+ * @code
+ * ECS_ENTITY_DECLARE(MyPipeline);
+ * ECS_PIPELINE_DEFINE(world, MyPipeline, Update || Physics || Render)
+ * @endcode
+ */
 #define ECS_PIPELINE_DEFINE(world, id_, ...) \
     { \
         ecs_pipeline_desc_t desc = {0}; \
@@ -57,27 +64,62 @@ extern "C" {
     } \
     ecs_assert(id_ != 0, ECS_INVALID_PARAMETER, "failed to create pipeline");
 
+/** Convenience macro to create a pipeline. 
+ * Usage:
+ * @code
+ * ECS_PIPELINE(world, MyPipeline, Update || Physics || Render)
+ * @endcode
+ * 
+ */
 #define ECS_PIPELINE(world, id, ...) \
     ecs_entity_t id = 0, ecs_id(id) = 0; ECS_PIPELINE_DEFINE(world, id, __VA_ARGS__);\
     (void)id;\
     (void)ecs_id(id);
 
+/** Convenience macro to create a pipeline. 
+ * See ecs_pipeline_init().
+ */
 #define ecs_pipeline(world, ...)\
     ecs_pipeline_init(world, &(ecs_pipeline_desc_t) __VA_ARGS__ )
 
 #endif
 
-/* Pipeline descriptor (used with ecs_pipeline_init()) */
+/** Pipeline descriptor, used with ecs_pipeline_init(). */
 typedef struct ecs_pipeline_desc_t {
-    /* Existing entity to associate with pipeline (optional) */
+    /** Existing entity to associate with pipeline (optional). */
     ecs_entity_t entity;
 
-    /* Query descriptor. The first term of the query must match the EcsSystem
-     * component. */
+    /** The pipeline query. 
+     * Pipelines are queries that are matched with system entities. Pipeline
+     * queries are the same as regular queries, which means the same query rules
+     * apply. A common mistake is to try a pipeline that matches systems in a
+     * list of phases by specifying all the phases, like:
+     *   OnUpdate, OnPhysics, OnRender
+     * 
+     * That however creates a query that matches entities with OnUpdate _and_
+     * OnPhysics _and_ OnRender tags, which is likely undesired. Instead, a
+     * query could use the or operator match a system that has one of the
+     * specified phases:
+     *   OnUpdate || OnPhysics || OnRender
+     * 
+     * This will return the correct set of systems, but they likely won't be in
+     * the correct order. To make sure systems are returned in the correct order
+     * two query ordering features can be used:
+     * - group_by
+     * - order_by
+     * 
+     * Take a look at the system manual for a more detailed explanation of
+     * how query features can be applied to pipelines, and how the builtin
+     * pipeline query works.
+    */
     ecs_query_desc_t query;
 } ecs_pipeline_desc_t;
 
 /** Create a custom pipeline.
+ * 
+ * @param world The world.
+ * @param desc The pipeline descriptor.
+ * @return The pipeline, 0 if failed.
  */
 FLECS_API
 ecs_entity_t ecs_pipeline_init(
@@ -162,6 +204,7 @@ void ecs_reset_clock(
  *
  * @param world The world.
  * @param pipeline The pipeline to run.
+ * @param delta_time The delta_time to pass to systems.
  */
 FLECS_API
 void ecs_run_pipeline(
@@ -180,7 +223,11 @@ void ecs_run_pipeline(
  * operation may be called multiple times to reconfigure the number of threads
  * used, but never while running a system / pipeline.
  * Calling ecs_set_threads() will also end the use of task threads setup with
- * ecs_set_task_threads() and vice-versa */
+ * ecs_set_task_threads() and vice-versa.
+ * 
+ * @param world The world.
+ * @param threads The number of threads to create. 
+ */
 FLECS_API
 void ecs_set_threads(
     ecs_world_t *world,
@@ -197,14 +244,21 @@ void ecs_set_threads(
  * The operation may be called multiple times to reconfigure the number of task threads
  * used, but never while running a system / pipeline.
  * Calling ecs_set_task_threads() will also end the use of threads setup with
- * ecs_set_threads() and vice-versa */
-
+ * ecs_set_threads() and vice-versa 
+ * 
+ * @param world The world.
+ * @param task_threads The number of task threads to create. 
+ */
 FLECS_API
 void ecs_set_task_threads(
     ecs_world_t *world,
     int32_t task_threads);
 
-/** Returns true if task thread use have been requested. */
+/** Returns true if task thread use have been requested. 
+ * 
+ * @param world The world.
+ * @result Whether the world is using task threads.
+ */
 FLECS_API
 bool ecs_using_task_threads(
     ecs_world_t *world);
@@ -213,6 +267,14 @@ bool ecs_using_task_threads(
 //// Module
 ////////////////////////////////////////////////////////////////////////////////
 
+/** Pipeline module import function.
+ * Usage:
+ * @code
+ * ECS_IMPORT(world, FlecsPipeline)
+ * @endcode
+ * 
+ * @param world The world.
+ */
 FLECS_API
 void FlecsPipelineImport(
     ecs_world_t *world);

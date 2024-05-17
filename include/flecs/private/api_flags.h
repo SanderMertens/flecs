@@ -164,6 +164,27 @@ extern "C" {
 
 
 ////////////////////////////////////////////////////////////////////////////////
+//// Term flags (used by ecs_term_t::flags_)
+////////////////////////////////////////////////////////////////////////////////
+
+#define EcsTermMatchAny               (1u << 0)
+#define EcsTermMatchAnySrc            (1u << 1)
+#define EcsTermTransitive             (1u << 2)
+#define EcsTermReflexive              (1u << 3)
+#define EcsTermIdInherited            (1u << 4)
+#define EcsTermIsTrivial              (1u << 5)
+#define EcsTermNoData                 (1u << 6)
+#define EcsTermIsCacheable            (1u << 7)
+#define EcsTermIsScope                (1u << 8)
+#define EcsTermIsMember               (1u << 9)
+#define EcsTermIsToggle               (1u << 10)
+#define EcsTermKeepAlive              (1u << 11)
+#define EcsTermIsSparse               (1u << 12)
+#define EcsTermIsUnion                (1u << 13)
+#define EcsTermIsOr                   (1u << 14)
+
+
+////////////////////////////////////////////////////////////////////////////////
 //// Observer flags (used by ecs_observer_t::flags)
 ////////////////////////////////////////////////////////////////////////////////
 

@@ -624,7 +624,7 @@ struct entity_with_delegate_impl<arg_list<Args ...>> {
                 return false;
             }
 
-            ptrs[i ++] = ecs_record_get_column(r, column, 0);
+            ptrs[i ++] = ecs_record_get_by_column(r, column, 0);
         }
 
         return true;

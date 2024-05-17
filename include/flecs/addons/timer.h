@@ -247,6 +247,14 @@ void ecs_set_tick_source(
 //// Module
 ////////////////////////////////////////////////////////////////////////////////
 
+/** Timer module import function.
+ * Usage:
+ * @code
+ * ECS_IMPORT(world, FlecsTimer)
+ * @endcode
+ * 
+ * @param world The world.
+ */
 FLECS_API
 void FlecsTimerImport(
     ecs_world_t *world);

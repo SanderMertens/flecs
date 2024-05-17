@@ -296,6 +296,14 @@ ecs_entity_t ecs_run_worker(
     ecs_ftime_t delta_time,
     void *param);
 
+/** System module import function.
+ * Usage:
+ * @code
+ * ECS_IMPORT(world, FlecsSystem)
+ * @endcode
+ * 
+ * @param world The world.
+ */
 FLECS_API
 void FlecsSystemImport(
     ecs_world_t *world);

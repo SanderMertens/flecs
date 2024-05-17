@@ -62,7 +62,7 @@ void flecs_script_template_on_set(
     ecs_iter_t *it)
 {
     if (it->table->flags & EcsTableIsPrefab) {
-        /* Don't instantiate assemblies for prefabs */
+        /* Don't instantiate templates for prefabs */
         return;
     }
 
