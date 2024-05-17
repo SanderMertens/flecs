@@ -135,9 +135,9 @@ jobs:
           - { os: ubuntu-20.04, cc: gcc-8,  cxx: g++-8 }
           - { os: ubuntu-20.04, cc: gcc-9,  cxx: g++-9 }
           - { os: ubuntu-20.04, cc: gcc-10, cxx: g++-10 }
-          - { os: ubuntu-20.04, cc: gcc-11, cxx: g++-11 }
+          - { os: ubuntu-latest, cc: gcc-11, cxx: g++-11 }
           - { os: ubuntu-latest, cc: gcc-12, cxx: g++-12 }
-          - { os: ubuntu-latest, cc: gcc-13, cxx: g++-13 }
+          - { os: ubuntu-24.04, cc: gcc-13, cxx: g++-13 }
           - { os: ubuntu-20.04, cc: clang-8, cxx: clang++-8 }
           - { os: ubuntu-20.04, cc: clang-9, cxx: clang++-9 }
           - { os: ubuntu-20.04, cc: clang-10, cxx: clang++-10 }
@@ -229,10 +229,8 @@ jobs:
 
     strategy:
       matrix:
-        toolset: [default, v141, v142, clang-cl]
+        toolset: [default, v142, clang-cl]
         include:
-          - toolset: v141
-            toolset_option: -T"v141"
           - toolset: v142
             toolset_option: -T"v142"
           - toolset: clang-cl
@@ -496,9 +494,9 @@ jobs:
         target:
           - { os: ubuntu-20.04, cc: gcc-9,  cxx: g++-9 }
           - { os: ubuntu-20.04, cc: gcc-10, cxx: g++-10 }
-          - { os: ubuntu-20.04, cc: gcc-11, cxx: g++-11 }
+          - { os: ubuntu-22.04, cc: gcc-11, cxx: g++-11 }
           - { os: ubuntu-latest, cc: gcc-12, cxx: g++-12 }
-          - { os: ubuntu-latest, cc: gcc-13, cxx: g++-13 }
+          - { os: ubuntu-24.04, cc: gcc-13, cxx: g++-13 }
           - { os: ubuntu-20.04, cc: clang-8, cxx: clang++-8 }
           - { os: ubuntu-20.04, cc: clang-9, cxx: clang++-9 }
           - { os: ubuntu-20.04, cc: clang-10, cxx: clang++-10 }
