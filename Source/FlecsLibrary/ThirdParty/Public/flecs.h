@@ -10032,7 +10032,7 @@ void ecs_parser_errorv_(
 /** Assert.
  * Aborts if condition is false, disabled in debug mode. */
 #if defined(FLECS_NDEBUG) && !defined(FLECS_KEEP_ASSERT)
-#define ecs_assert(condition, error_code, ...)
+#define ecs_assert(condition, error_code, ...) __assume(condition)
 #else
 #define ecs_assert(condition, error_code, ...)\
     if (!(condition)) {\
@@ -10072,7 +10072,7 @@ void ecs_parser_errorv_(
 /** Check.
  * goto error if condition is false. */
 #if defined(FLECS_NDEBUG) && !defined(FLECS_KEEP_ASSERT)
-#define ecs_check(condition, error_code, ...) ecs_dummy_check
+#define ecs_check(condition, error_code, ...) __assume(condition)
 #else
 #ifdef FLECS_SOFT_ASSERT
 #define ecs_check(condition, error_code, ...)\
@@ -10090,7 +10090,7 @@ void ecs_parser_errorv_(
 /** Panic.
  * goto error when FLECS_SOFT_ASSERT is defined, otherwise abort */
 #if defined(FLECS_NDEBUG) && !defined(FLECS_KEEP_ASSERT)
-#define ecs_throw(error_code, ...) ecs_dummy_check
+#define ecs_throw(error_code, ...) __assume(false)
 #else
 #ifdef FLECS_SOFT_ASSERT
 #define ecs_throw(error_code, ...)\

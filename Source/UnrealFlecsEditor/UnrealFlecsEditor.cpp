@@ -41,8 +41,9 @@ void FUnrealFlecsEditorModule::RegisterExplorerMenuExtension()
 	Section.AddEntry(FToolMenuEntry::InitToolBarButton(
 		"OpenFlecsExplorer",
 		FUIAction(
-			FExecuteAction::CreateLambda([]() {
-				FPlatformProcess::LaunchURL(TEXT("https://flecs.dev/explorer?remote=true"), nullptr, nullptr);
+			FExecuteAction::CreateLambda([]()
+			{
+				FPlatformProcess::LaunchURL(TEXT("https://flecs.dev/explorer/v4/?remote=true"), nullptr, nullptr);
 			})
 		),
 		INVTEXT("Open Flecs Explorer"),

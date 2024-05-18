@@ -12,9 +12,6 @@ class UNREALFLECS_API UFlecsModuleDefinition : public UPrimaryDataAsset
 
 public:
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Module")
-	TArray<TObjectPtr<UScriptStruct>> Structs;
-
 	virtual FPrimaryAssetId GetPrimaryAssetId() const final override
 	{
 		return FPrimaryAssetId("FlecsModule", GetFName());

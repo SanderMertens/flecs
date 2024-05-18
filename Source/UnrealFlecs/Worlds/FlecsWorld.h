@@ -26,7 +26,7 @@ public:
 	FORCEINLINE void WorldBeginPlay()
 	{
 	}
-
+	
 	FORCEINLINE void SetWorld(flecs::world&& InWorld)
 	{
 		World = std::move(InWorld);
@@ -308,8 +308,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
 	FORCEINLINE void DestroyWorld()
 	{
+		World.~world();
 		MarkAsGarbage();
-		Quit();
 	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
@@ -527,9 +527,8 @@ public:
 			                                         {
 				                                         ScriptStruct
 			                                         });
-
-		const FFlecsEntityHandle Handle(ScriptStructComponent);
-		GetSingletonRef<FFlecsTypeMapComponent>()->ScriptStructMap.emplace(ScriptStruct, Handle);
+		
+		GetSingletonRef<FFlecsTypeMapComponent>()->ScriptStructMap.emplace(ScriptStruct, ScriptStructComponent);
 
 		#if WITH_EDITOR
 
@@ -593,7 +592,7 @@ public:
 			ScriptStructComponent.SetParent(ParentEntity, true);
 		}
 		
-		return Handle;
+		return ScriptStructComponent;
 	}
 
 	FORCEINLINE void RegisterScriptStruct(const UScriptStruct* ScriptStruct, const FFlecsEntityHandle& InEntity) const

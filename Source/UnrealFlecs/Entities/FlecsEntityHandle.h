@@ -228,7 +228,7 @@ public:
 
 	FORCEINLINE NO_DISCARD bool IsComponent() const
 	{
-		return Has<flecs::Component>() || Has(flecs::IsA);
+		return Has<flecs::Component>();
 	}
 
 	FORCEINLINE NO_DISCARD flecs::untyped_component& GetUntypedComponent()
@@ -236,7 +236,7 @@ public:
 		solid_checkf(IsComponent(), TEXT("Entity is not a component"));
 		return GetRef<flecs::untyped_component>();
 	}
-
+	
 	FORCEINLINE NO_DISCARD const flecs::untyped_component* GetUntypedComponent() const
 	{
 		solid_checkf(IsComponent(), TEXT("Entity is not a component"));
@@ -406,9 +406,27 @@ public:
 	}
 
 	template <typename TComponent, typename TTrait>
-	FORCEINLINE void EmitTrait() const
+	FORCEINLINE flecs::ref<TTrait> GetTraitFlecsRef() const
 	{
-		GetEntity().emit<TComponent, TTrait>();
+		return GetEntity().get_ref<TComponent, TTrait>();
+	}
+
+	template <typename TComponent, typename TTrait>
+	FORCEINLINE void EnableTrait() const
+	{
+		GetEntity().enable<TComponent, TTrait>();
+	}
+
+	template <typename TComponent, typename TTrait>
+	FORCEINLINE void DisableTrait() const
+	{
+		GetEntity().disable<TComponent, TTrait>();
+	}
+
+	template <typename TComponent, typename TTrait>
+	FORCEINLINE bool IsTraitEnabled() const
+	{
+		return GetEntity().enabled<TComponent, TTrait>();
 	}
 
 	#if WITH_EDITORONLY_DATA
