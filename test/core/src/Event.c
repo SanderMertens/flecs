@@ -1385,21 +1385,37 @@ void Event_enqueue_event_not_alive_w_data_copy_after_delete_during_merge(void) {
 }
 
 void Event_enqueue_event_not_deferred(void) {
-    install_test_abort();
-
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t evt = ecs_new(world);
     ecs_entity_t id = ecs_new(world);
     ecs_entity_t e = ecs_new_w_id(world, id);
+    ecs_table_t *table = ecs_get_table(world, e);
 
-    test_expect_abort();
+    Probe ctx = {0};
+
+    ecs_entity_t s = ecs_observer_init(world, &(ecs_observer_desc_t){
+        .query.terms[0].id = id,
+        .events = {evt},
+        .callback = system_callback,
+        .ctx = &ctx
+    });
 
     ecs_enqueue(world, &(ecs_event_desc_t){
         .event = evt,
         .ids = &(ecs_type_t){.count = 1, .array = (ecs_id_t[]){ id }},
-        .entity = e
+        .table = table,
+        .observable = world
     });
+
+    test_int(ctx.invoked, 1);
+    test_assert(ctx.system == s);
+    test_assert(ctx.event == evt);
+    test_assert(ctx.event_id == id);
+    test_int(ctx.count, 1);
+    test_assert(ctx.e[0] == e);
+
+    ecs_fini(world);
 }
 
 void Event_enqueue_event_not_deferred_to_async(void) {

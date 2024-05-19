@@ -20,12 +20,17 @@ struct Position {
 int main(int, char *[]) {
     flecs::world ecs;
 
+    // Make Dirty inheritable so that queries can match it on prefabs
+    ecs.component<Dirty>().add(flecs::OnInstantiate, flecs::Inherit);
+
     // Create a query that just reads a component. We'll use this query for
     // change tracking. Change tracking for a query is automatically enabled
     // when query::changed() is called.
     // Each query has its own private dirty state which is reset only when the
     // query is iterated.
-    flecs::query<const Position> q_read = ecs.query<const Position>();
+    flecs::query<const Position> q_read = ecs.query_builder<const Position>()
+        .cached()
+        .build();
 
     // Create a query that writes the component based on a Dirty state.
     flecs::query<const Dirty, Position> q_write = 
