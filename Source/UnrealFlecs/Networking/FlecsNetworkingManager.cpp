@@ -30,7 +30,7 @@ void UFlecsNetworkingManager::BeginPlay()
 
 	if (GetOwner()->HasAuthority())
 	{
-		/*NetworkIdObserver =
+		NetworkIdObserver =
 			FlecsWorld->CreateObserver<FFlecsNetworkIdComponent>(TEXT("NetworkingIdObserver"))
 		.term_at(1)
 			.event(flecs::OnAdd)
@@ -60,7 +60,7 @@ void UFlecsNetworkingManager::BeginPlay()
 				*Entity.GetEntity().path().c_str());
 
 			
-		});*/
+		});
 	}
 
 	#endif // WITH_SERVER_CODE
