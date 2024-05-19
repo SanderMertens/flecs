@@ -57,14 +57,16 @@ int main(int argc, char *argv[]) {
     // Iterate query as usual
     ecs_iter_t it = ecs_query_iter(world, q);
     while (ecs_iter_next(&it)) {
-        ecs_entity_t *movement = ecs_field(&it, ecs_entity_t, 0);
-        ecs_entity_t *direction = ecs_field(&it, ecs_entity_t, 1);
+        ecs_id_t movement_pair = ecs_field_id(&it, 0);
+        ecs_id_t direction_pair = ecs_field_id(&it, 1);
+        ecs_entity_t movement = ecs_pair_second(world, movement_pair);
+        ecs_entity_t direction = ecs_pair_second(world, direction_pair);
 
         for (int i = 0; i < it.count; i ++) {
             printf("%s: Movement: %s, Direction: %s\n",
                 ecs_get_name(world, it.entities[i]),
-                ecs_get_name(world, movement[i]),
-                ecs_get_name(world, direction[i]));
+                ecs_get_name(world, movement),
+                ecs_get_name(world, direction));
         }
     }
 

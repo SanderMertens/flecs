@@ -2,7 +2,7 @@
 #define ITER_H
 
 /* This generated file contains includes for project dependencies */
-#include "iter/bake_config.h"
+#include "run/bake_config.h"
 
 #ifdef __cplusplus
 extern "C" {

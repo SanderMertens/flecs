@@ -72,7 +72,7 @@ int main(int argc, char *argv[]) {
     print_query(ecs, q);
 
     // Create new entity to show that data is also sorted for system
-    ecs_set(ecs, 0, Position, {3, 0});
+    ecs_insert(ecs, ecs_value(Position, {3, 0}));
 
     printf("\n-- System iteration\n");
     ecs_run(ecs, sys, 0, NULL);

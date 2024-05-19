@@ -7,7 +7,7 @@ typedef struct {
 
 void Move(ecs_iter_t *it) {
     Position *p = ecs_field(it, Position, 0);
-    const Velocity *v = ecs_field(it, const Velocity, 2);
+    const Velocity *v = ecs_field(it, const Velocity, 1);
 
     for (int i = 0; i < it->count; i ++) {
         p[i].x += v[i].x;
@@ -28,7 +28,7 @@ void DeleteEntity(ecs_iter_t *it) {
 }
 
 void PrintPosition(ecs_iter_t *it) {
-    const Position *p = ecs_field(it, const Position, 1);
+    const Position *p = ecs_field(it, const Position, 0);
 
     for (int i = 0; i < it->count; i ++) {
         printf("%s: {%f, %f}\n", ecs_get_name(it->world, it->entities[i]), 

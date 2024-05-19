@@ -4,74 +4,74 @@ using resources
 // Resource depots
 depot {
   iron {
-    - (Stores, Iron){amount: 5000}
+    (Stores, Iron): {amount: 5000}
   }
 
   copper {
-    - (Stores, Copper){amount: 5000}
+    (Stores, Copper): {amount: 5000}
   }
 
   aluminium {
-    - (Stores, Aluminium){amount: 5000}
+    (Stores, Aluminium): {amount: 5000}
   }
 
   gear {
-    - (Stores, Gear){amount: 0}
+    (Stores, Gear): {amount: 0}
   }
 
   steel {
-    - (Stores, Steel){amount: 0}
+    (Stores, Steel): {amount: 0}
   }
 
   circuit {
-    - (Stores, Circuit){amount: 0}
+    (Stores, Circuit): {amount: 0}
   }
 }
 
 // Factories
 factory {
-  with Factory{ recipe: Gear, inputs: [depot.iron], output: depot.gear } {
-    gear_1
+  with Factory(recipe: Gear, inputs: [depot.iron], output: depot.gear) {
+    gear_1,
     gear_2
   }
 
-  with Factory{recipe: Steel, inputs: [depot.iron], output: depot.steel} {
-    steel_1
-    steel_2
-    steel_3
-    steel_4
-    steel_5
+  with Factory(recipe: Steel, inputs: [depot.iron], output: depot.steel) {
+    steel_1,
+    steel_2,
+    steel_3,
+    steel_4,
+    steel_5,
     steel_6
   }
 
-  with Factory{recipe: Circuit, inputs: [depot.iron, depot.copper], output: depot.circuit } {
-    circuit_1
+  with Factory(recipe: Circuit, inputs: [depot.iron, depot.copper], output: depot.circuit) {
+    circuit_1,
     circuit_2
   }
 
   radar {
-    - Factory{
+    Factory: {
       recipe: Radar, 
       inputs: [depot.gear, depot.circuit, depot.iron]
     }
   }
 
   solar_panel {
-    - Factory{
+    Factory: {
       recipe: SolarPanel, 
       inputs: [depot.copper, depot.circuit, depot.steel]
     }
   }
 
   hull {
-    - Factory{
+    Factory: {
       recipe: HullMaterial,
       inputs: [depot.aluminium, depot.copper, depot.steel]
     }
   }
 
   satellite {
-    - Factory{
+    Factory: {
       recipe: Satellite,
       inputs: [hull, solar_panel, radar]
     }

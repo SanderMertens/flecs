@@ -80,8 +80,8 @@ int main(int, char *[]) {
     // platoon or a single player setting a variable beforehand. In this example
     // we'll just find all platoons & ranged units for a single player.
 
-    int player_var = q.find_var("Player");
-    int platoon_var = q.find_var("Platoon");
+    int player_var = q.find_var("player");
+    int platoon_var = q.find_var("platoon");
 
     // Iterate query, limit the results to units of MyPlayer
     q.set_var(player_var, ecs.lookup("MyPlayer")) 

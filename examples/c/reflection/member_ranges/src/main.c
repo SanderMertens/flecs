@@ -32,7 +32,9 @@ int main(int argc, char *argv[]) {
     ecs_entity_t m3 = ecs_entity(ecs, { .name = "MachineC" });
     ecs_set(ecs, m3, CpuUtilization, {90});
 
-    // Open https://www.flecs.dev/explorer?show=query&query=CpuUtilization to 
-    // see how ranges affect visualization.
-    return ecs_app_run(ecs, &(ecs_app_desc_t){ .enable_rest = true });
+    // Uncomment this line and open 
+    //   https://www.flecs.dev/explorer?show=query&query=CpuUtilization 
+    // to see how ranges affect visualization:
+    // return ecs_app_run(ecs, &(ecs_app_desc_t){ .enable_rest = true });
+    return ecs_fini(ecs);
 }
