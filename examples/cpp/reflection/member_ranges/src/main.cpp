@@ -18,7 +18,8 @@ int main() {
     ecs.entity("MachineB").set<CpuUtilization>({ 75.0 });
     ecs.entity("MachineC").set<CpuUtilization>({ 90.0 });
 
-    // Open https://www.flecs.dev/explorer?show=query&query=CpuUtilization to 
-    // see how ranges affect visualization.
-    ecs.app().enable_rest().run();
+    // Uncomment this line and open 
+    //   https://www.flecs.dev/explorer?show=query&query=CpuUtilization 
+    // to see how ranges affect visualization:
+    // ecs.app().enable_rest().run();
 }

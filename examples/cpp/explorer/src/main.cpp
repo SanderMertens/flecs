@@ -33,5 +33,5 @@ int main(int argc, char *argv[]) {
     // navigate to https://flecs.dev/explorer to inspect it!
     //
     // See docs/RestApi.md#explorer for more information.
-    return world.app().enable_rest().run();
+    // return world.app().enable_rest().run();
 }
