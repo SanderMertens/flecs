@@ -75,15 +75,27 @@ public:
 	template <typename TSecond>
 	FORCEINLINE NO_DISCARD bool Has(const FFlecsEntityHandle& InFirst) const { return GetEntity().has<TSecond>(InFirst); }
 
-	FORCEINLINE NO_DISCARD bool Has(const UScriptStruct* StructType) const;
+	FORCEINLINE NO_DISCARD bool Has(const UScriptStruct* StructType) const
+	{
+		return Has(ObtainComponentTypeStruct(StructType));
+	}
 
-	FORCEINLINE NO_DISCARD bool Has(const FGameplayTag& InTag) const;
+	FORCEINLINE NO_DISCARD bool Has(const FGameplayTag& InTag) const
+	{
+		return Has(GetTagEntity(InTag));
+	}
 
 	FORCEINLINE void Add(const FFlecsEntityHandle& InEntity) const { GetEntity().add(InEntity); }
 
-	FORCEINLINE void Add(const UScriptStruct* StructType) const;
+	FORCEINLINE void Add(const UScriptStruct* StructType) const
+	{
+		Add(ObtainComponentTypeStruct(StructType));
+	}
 
-	FORCEINLINE void Add(const FGameplayTag& InTag) const;
+	FORCEINLINE void Add(const FGameplayTag& InTag) const
+	{
+		Add(GetTagEntity(InTag));
+	}
 	
 	template <typename T>
 	FORCEINLINE void Add() const { GetEntity().add<T>(); }
@@ -95,9 +107,15 @@ public:
 		GetEntity().remove(InFirst, InSecond);
 	}
 
-	FORCEINLINE void Remove(const UScriptStruct* StructType) const;
+	FORCEINLINE void Remove(const UScriptStruct* StructType) const
+	{
+		Remove(ObtainComponentTypeStruct(StructType));
+	}
 
-	FORCEINLINE void Remove(const FGameplayTag& InTag) const;
+	FORCEINLINE void Remove(const FGameplayTag& InTag) const
+	{
+		Remove(GetTagEntity(InTag));
+	}
 
 	template <typename T>
 	FORCEINLINE void Remove() const { GetEntity().remove<T>(); }
@@ -112,9 +130,15 @@ public:
 		GetEntity().set_ptr(InEntity, InValue);
 	}
 
-	FORCEINLINE void Set(const UScriptStruct* StructType, const void* InValue) const;
+	FORCEINLINE void Set(const UScriptStruct* StructType, const void* InValue) const
+	{
+		Set(ObtainComponentTypeStruct(StructType), InValue);
+	}
 
-	FORCEINLINE void Set(const FInstancedStruct& InValue) const;
+	FORCEINLINE void Set(const FInstancedStruct& InValue) const
+	{
+		Set(ObtainComponentTypeStruct(InValue.GetScriptStruct()), InValue.GetMemory());
+	}
 	
 	template <typename T>
 	FORCEINLINE NO_DISCARD T Get() const { return GetEntity().get<T>(); }
@@ -127,7 +151,10 @@ public:
 	template <typename T>
 	FORCEINLINE NO_DISCARD const T* GetPtr() const { return GetEntity().get<T>(); }
 
-	FORCEINLINE NO_DISCARD const void* GetPtr(const UScriptStruct* StructType) const;
+	FORCEINLINE NO_DISCARD const void* GetPtr(const UScriptStruct* StructType) const
+	{
+		return GetPtr(ObtainComponentTypeStruct(StructType));
+	}
 
 	template <typename T>
 	FORCEINLINE NO_DISCARD T& GetRef() { return *GetEntity().get_ref<T>().get(); }
@@ -153,10 +180,18 @@ public:
 	FORCEINLINE void Enable() const { GetEntity().enable<T>(); }
 
 	FORCEINLINE void Enable(const FFlecsEntityHandle& InEntity) const { GetEntity().enable(InEntity); }
-	FORCEINLINE void Enable(const UScriptStruct* StructType) const;
+	
+	FORCEINLINE void Enable(const UScriptStruct* StructType) const
+	{
+		Enable(ObtainComponentTypeStruct(StructType));
+	}
 
 	FORCEINLINE void Disable(const FFlecsEntityHandle& InEntity) const { GetEntity().disable(InEntity); }
-	FORCEINLINE void Disable(const UScriptStruct* StructType) const;
+	
+	FORCEINLINE void Disable(const UScriptStruct* StructType) const
+	{
+		Disable(ObtainComponentTypeStruct(StructType));
+	}
 
 	template <typename T>
 	FORCEINLINE void Disable() const { GetEntity().disable<T>(); }
@@ -169,7 +204,10 @@ public:
 	FORCEINLINE NO_DISCARD bool IsEnabled() const { return GetEntity().enabled<T>(); }
 
 	FORCEINLINE NO_DISCARD bool IsEnabled(const FFlecsEntityHandle& InEntity) const { return GetEntity().enabled(InEntity); }
-	FORCEINLINE NO_DISCARD bool IsEnabled(const UScriptStruct* StructType) const;
+	FORCEINLINE NO_DISCARD bool IsEnabled(const UScriptStruct* StructType) const
+	{
+		return IsEnabled(ObtainComponentTypeStruct(StructType));
+	}
 
 	FORCEINLINE void Destroy() const { GetEntity().destruct(); }
 
@@ -366,7 +404,23 @@ public:
 	template <typename TComponent>
 	FORCEINLINE void AddTrait(const UScriptStruct* StructType) const
 	{
-		GetEntity().add<TComponent>(StructType);
+		GetEntity().add<TComponent>(ObtainComponentTypeStruct(StructType));
+	}
+
+	FORCEINLINE void AddTrait(const UScriptStruct* StructType, const UScriptStruct* TraitType) const
+	{
+		GetEntity().add(ObtainComponentTypeStruct(StructType),
+			ObtainComponentTypeStruct(TraitType));
+	}
+
+	FORCEINLINE void AddTrait(const UScriptStruct* StructType, const FGameplayTag& InTag) const
+	{
+		GetEntity().add(ObtainComponentTypeStruct(StructType), GetTagEntity(InTag));
+	}
+
+	FORCEINLINE void AddTrait(const UScriptStruct* StructType, const FFlecsEntityHandle& InTrait) const
+	{
+		GetEntity().add(ObtainComponentTypeStruct(StructType), InTrait);
 	}
 
 	template <typename TComponent, typename TTrait>
@@ -375,40 +429,90 @@ public:
 		GetEntity().remove<TComponent, TTrait>();
 	}
 
+	template <typename TComponent>
+	FORCEINLINE void RemoveTrait(const UScriptStruct* StructType) const
+	{
+		GetEntity().remove<TComponent>(ObtainComponentTypeStruct(StructType));
+	}
+
+	FORCEINLINE void RemoveTrait(const UScriptStruct* StructType, const UScriptStruct* TraitType) const
+	{
+		GetEntity().remove(ObtainComponentTypeStruct(StructType),
+			ObtainComponentTypeStruct(TraitType));
+	}
+
+	FORCEINLINE void RemoveTrait(const UScriptStruct* StructType, const FGameplayTag& InTag) const
+	{
+		GetEntity().remove(ObtainComponentTypeStruct(StructType), GetTagEntity(InTag));
+	}
+
+	FORCEINLINE void RemoveTrait(const UScriptStruct* StructType, const FFlecsEntityHandle& InTrait) const
+	{
+		GetEntity().remove(ObtainComponentTypeStruct(StructType), InTrait);
+	}
+
 	template <typename TComponent, typename TTrait>
 	FORCEINLINE bool HasTrait() const
 	{
 		return GetEntity().has<TComponent, TTrait>();
 	}
 
+	template <typename TComponent>
+	FORCEINLINE bool HasTrait(const UScriptStruct* StructType) const
+	{
+		return GetEntity().has<TComponent>(ObtainComponentTypeStruct(StructType));
+	}
+
+	FORCEINLINE bool HasTrait(const UScriptStruct* StructType, const UScriptStruct* TraitType) const
+	{
+		return GetEntity().has(ObtainComponentTypeStruct(StructType),
+			ObtainComponentTypeStruct(TraitType));
+	}
+
+	FORCEINLINE bool HasTrait(const UScriptStruct* StructType, const FGameplayTag& InTag) const
+	{
+		return GetEntity().has(ObtainComponentTypeStruct(StructType), GetTagEntity(InTag));
+	}
+
+	FORCEINLINE bool HasTrait(const UScriptStruct* StructType, const FFlecsEntityHandle& InTrait) const
+	{
+		return GetEntity().has(ObtainComponentTypeStruct(StructType), InTrait);
+	}
+
 	template <typename TComponent, typename TTrait>
 	FORCEINLINE void SetTrait(const TTrait& InValue) const
 	{
-		GetEntity().set<TComponent, TTrait>(InValue);
+		GetEntity().set_second<TComponent, TTrait>(InValue);
+	}
+
+	template <typename TComponent>
+	FORCEINLINE void SetTrait(const UScriptStruct* StructType, const void* InValue) const
+	{
+		GetEntity().set_second<TComponent>(ObtainComponentTypeStruct(StructType), InValue);
 	}
 
 	template <typename TComponent, typename TTrait>
 	FORCEINLINE TTrait GetTrait() const
 	{
-		return GetEntity().get<TComponent, TTrait>();
+		return GetEntity().get_second<TComponent, TTrait>();
 	}
 
 	template <typename TComponent, typename TTrait>
 	FORCEINLINE TTrait* GetTraitPtr() const
 	{
-		return GetEntity().get_mut<TComponent, TTrait>();
+		return GetEntity().get_mut_second<TComponent, TTrait>();
 	}
 
 	template <typename TComponent, typename TTrait>
 	FORCEINLINE TTrait& GetTraitRef() const
 	{
-		return *GetEntity().get_ref<TComponent, TTrait>().get();
+		return *GetEntity().get_ref_second<TComponent, TTrait>().get();
 	}
 
 	template <typename TComponent, typename TTrait>
 	FORCEINLINE flecs::ref<TTrait> GetTraitFlecsRef() const
 	{
-		return GetEntity().get_ref<TComponent, TTrait>();
+		return GetEntity().get_ref_second<TComponent, TTrait>();
 	}
 
 	template <typename TComponent, typename TTrait>

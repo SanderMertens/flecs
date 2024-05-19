@@ -45,7 +45,7 @@ public:
 	{
 		Super::BeginPlay();
 
-		solid_checkf(GetOwner()->IsA<APlayerController>(),
+		/*solid_checkf(GetOwner()->IsA<APlayerController>(),
 			TEXT("Owner of UFlecsNetworkingActorComponent must be a APlayerController"));
 
 		const AGameStateBase* GameState = GetWorld()->GetGameState();
@@ -77,7 +77,7 @@ public:
 			Client_UpdateCreatedNetworkedEntities(Entities);
 		}
 
-		#endif // WITH_SERVER_CODE
+		#endif // WITH_SERVER_CODE*/
 	}
 
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override

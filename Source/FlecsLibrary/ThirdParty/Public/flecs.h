@@ -39,6 +39,9 @@
 #define FLECS_VERSION FLECS_VERSION_IMPL(\
     FLECS_VERSION_MAJOR, FLECS_VERSION_MINOR, FLECS_VERSION_PATCH)
 
+#pragma warning(push)
+#pragma warning(disable: 4102)
+
 /** @def FLECS_CONFIG_HEADER
  * Allows for including a user-customizable header that specifies compile-time 
  * features. */
@@ -31124,6 +31127,7 @@ inline flecs::scoped_world world::scope(const char* name) const {
 
 #endif
 
+#pragma warning(pop)
 
 #endif
 
