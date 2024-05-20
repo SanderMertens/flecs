@@ -1099,7 +1099,7 @@ ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, Base);
 The combination of instancing, overriding and OVERRIDE is one of the fastest and easiest ways to create an entity with a set of initialized components. The OVERRIDE relationship can also be specified inside type expressions. The following example is equivalent to the previous one:
 
 ```c
-ECS_ENTITY(world, Base, Position, OVERRIDE | Position);
+ECS_ENTITY(world, Base, Position, auto_override | Position);
 
 ecs_set(world, Base, Position, {10, 20});
 

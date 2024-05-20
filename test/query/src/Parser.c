@@ -1837,7 +1837,7 @@ void Parser_from_and(void) {
     ECS_TAG(world, Pred);
 
     ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
-        .expr = "AND | Pred"
+        .expr = "and | Pred"
     });
     test_assert(q != NULL);
     test_int(term_count(q), 1);
@@ -1859,7 +1859,7 @@ void Parser_from_or(void) {
     ECS_TAG(world, Pred);
 
     ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
-        .expr = "OR | Pred"
+        .expr = "or | Pred"
     });
     test_assert(q != NULL);
     test_int(term_count(q), 1);
@@ -1881,7 +1881,7 @@ void Parser_from_not(void) {
     ECS_TAG(world, Pred);
 
     ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
-        .expr = "NOT | Pred"
+        .expr = "not | Pred"
     });
     test_assert(q != NULL);
     test_int(term_count(q), 1);
@@ -1952,7 +1952,7 @@ void Parser_pred_implicit_subject_w_role(void) {
     ECS_TAG(world, Pred);
 
     ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
-        .expr = "TOGGLE | Pred"
+        .expr = "toggle | Pred"
     });
     test_assert(q != NULL);
     test_int(term_count(q), 1);
@@ -1974,7 +1974,7 @@ void Parser_pred_explicit_subject_w_role(void) {
     ECS_TAG(world, Pred);
 
     ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
-        .expr = "TOGGLE | Pred($this)"
+        .expr = "toggle | Pred($this)"
     });
     test_assert(q != NULL);
     test_int(term_count(q), 1);
@@ -1996,7 +1996,7 @@ void Parser_pred_no_subject_w_role(void) {
     ECS_TAG(world, Pred);
 
     ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
-        .expr = "TOGGLE | Pred()"
+        .expr = "toggle | Pred()"
     });
     test_assert(q != NULL);
     test_int(term_count(q), 1);
@@ -2066,7 +2066,7 @@ void Parser_inout_role_pred_implicit_subject(void) {
     ECS_TAG(world, Pred);
 
     ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
-        .expr = "[inout] TOGGLE | Pred"
+        .expr = "[inout] toggle | Pred"
     });
     test_assert(q != NULL);
     test_int(term_count(q), 1);
@@ -2088,7 +2088,7 @@ void Parser_inout_role_pred_no_subject(void) {
     ECS_TAG(world, Pred);
 
     ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
-        .expr = "[inout] TOGGLE | Pred()"
+        .expr = "[inout] toggle | Pred()"
     });
     test_assert(q != NULL);
     test_int(term_count(q), 1);
@@ -2110,7 +2110,7 @@ void Parser_inout_role_pred_explicit_subject(void) {
     ECS_TAG(world, Pred);
 
     ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
-        .expr = "[inout] TOGGLE | Pred($this)"
+        .expr = "[inout] toggle | Pred($this)"
     });
     test_assert(q != NULL);
     test_int(term_count(q), 1);
@@ -2334,7 +2334,7 @@ void Parser_2_pred_role(void) {
     ECS_TAG(world, Pred_2);
 
     ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
-        .expr = "TOGGLE | Pred_1, TOGGLE | Pred_2"
+        .expr = "toggle | Pred_1, toggle | Pred_2"
     });
     test_assert(q != NULL);
     test_int(term_count(q), 2);
@@ -5449,7 +5449,7 @@ void Parser_override_tag(void) {
     ECS_TAG(world, Tag);
 
     ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
-        .expr = "OVERRIDE|Tag"
+        .expr = "auto_override|Tag"
     });
     test_assert(q != NULL);
 
@@ -5473,7 +5473,7 @@ void Parser_override_pair(void) {
     ECS_TAG(world, Tgt);
 
     ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
-        .expr = "OVERRIDE|(Rel, Tgt)"
+        .expr = "auto_override|(Rel, Tgt)"
     });
     test_assert(q != NULL);
 

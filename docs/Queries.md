@@ -1411,10 +1411,10 @@ flecs::query<> f = world.query_builder()
 ```
 
 #### Query DSL
-To create a query with the `AndFrom`, `OrFrom` and `NotFrom` operators in the C API, use `AND`, `OR` and `NOT` in combination with the bitwise OR operator (`|`):
+To create a query with the `AndFrom`, `OrFrom` and `NotFrom` operators in the C API, use `and`, `or` and `not` in combination with the bitwise OR operator (`|`):
 
 ```
-AND | type_list, OR | type_list, NOT | type_list
+and | type_list, or | type_list, not | type_list
 ```
 
 ### Query scopes

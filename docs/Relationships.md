@@ -2192,7 +2192,7 @@ inst.Has<TagB>(); // false
 The builtin `Prefab`, `Disabled`, `Identifier` and `ChildOf` tags/relationships are marked as `DontInherit`.
 
 ### AlwaysOverride property
-The `AlwaysOverride` property ensures that a component is always automatically overridden when an inheritance (`IsA`) relationship is added. The behavior of this property is as if `OVERRIDE | Component` is always added together with `Component`.
+The `AlwaysOverride` property ensures that a component is always automatically overridden when an inheritance (`IsA`) relationship is added. The behavior of this property is as if `auto_override | Component` is always added together with `Component`.
 
 <div class="flecs-snippet-tabs">
 <ul>

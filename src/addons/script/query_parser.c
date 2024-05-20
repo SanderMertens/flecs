@@ -344,11 +344,11 @@ const char* flecs_query_parse_term_flags(
     ecs_term_t *term = parser->term;
 
     // AND
-    if      (!ecs_os_strcmp(token_0, "AND"))      oper = EcsAndFrom;
-    else if (!ecs_os_strcmp(token_0, "OR"))       oper = EcsOrFrom;
-    else if (!ecs_os_strcmp(token_0, "NOT"))      oper = EcsNotFrom;
-    else if (!ecs_os_strcmp(token_0, "OVERRIDE")) flag = ECS_AUTO_OVERRIDE;
-    else if (!ecs_os_strcmp(token_0, "TOGGLE"))   flag = ECS_TOGGLE;
+    if      (!ecs_os_strcmp(token_0, "and"))      oper = EcsAndFrom;
+    else if (!ecs_os_strcmp(token_0, "or"))       oper = EcsOrFrom;
+    else if (!ecs_os_strcmp(token_0, "not"))      oper = EcsNotFrom;
+    else if (!ecs_os_strcmp(token_0, "auto_override")) flag = ECS_AUTO_OVERRIDE;
+    else if (!ecs_os_strcmp(token_0, "toggle"))   flag = ECS_TOGGLE;
     else {
         // Position
         term->first.name = token_0;
@@ -356,11 +356,11 @@ const char* flecs_query_parse_term_flags(
     }
 
     if (oper || flag) {
-        // AND |
+        // and |
         //     ^
         Parse_1('|', 
             Parse(
-                // AND | Position
+                // and | Position
                 //     ^
                 case EcsTokTermIdentifier: { 
                     if (oper) {
@@ -374,7 +374,7 @@ const char* flecs_query_parse_term_flags(
                     return flecs_query_parse_term_id(parser, pos);
                 }
 
-                // AND | (
+                // and | (
                 //     ^
                 case '(': {
                     return flecs_query_parse_term_pair(parser, pos);
