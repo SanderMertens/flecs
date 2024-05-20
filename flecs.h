@@ -3258,7 +3258,7 @@ typedef enum ecs_oper_kind_t {
 typedef enum ecs_query_cache_kind_t {
     EcsQueryCacheDefault,   /**< Behavior determined by query creation context */
     EcsQueryCacheAuto,      /**< Cache query terms that are cacheable */
-    EcsQueryCacheAll,       /**< Require that all query terms can be cached */
+    EcsQueryCacheAll,       /**< Require that all query terms are cached */
     EcsQueryCacheNone,      /**< No caching */
 } ecs_query_cache_kind_t;
 

@@ -182,7 +182,7 @@ The `any` (`_`) wildcard returns at most one result per wildcard. The following 
 (Likes, _)
 ```
 
-If an entity has both `(Likes, Dogs)` and `(Likes, Cats)`, the query will only return one result. The location of the `any` wildcard in the matched id will be replaced with `*`, indicating that no specific pair was matched. The above query would return the following id:
+If an entity has both `(Likes, Dogs)` and `(Likes, Cats)`, the query will return only one result. The location of the `any` wildcard in the matched id will be replaced with `*`, indicating that no specific pair was matched. The above query would return the following id:
 
 - `(Likes, *)`
 
@@ -239,7 +239,7 @@ Position($this), Velocity($this)
 
 Note how both terms have the same `$this` source. Using the same variable ensures that both components are matched on the same entity.
 
-The following expressions show to use pair queries without and with explicit source:
+The following expressions show how to use pair queries without and with explicit source:
 
 ```swift
 // Implicit source
