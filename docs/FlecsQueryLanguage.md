@@ -90,7 +90,7 @@ Position, Velocity, Mass
 ### NotFrom
 the `notfrom` operator allows a query to not match a list of components that another entity has. The entities used for the component list are typically prefabs, as they are not matched with queries themselves.
 
-The following expression is an example of a query with an `andfrom` operator:
+The following expression is an example of a query with an `notfrom` operator:
 
 ```swift
 // Match entities with Position and not any of the components that MyType has
@@ -114,7 +114,7 @@ Position, !Velocity, !Mass
 ### OrFrom
 the `orfrom` operator allows a query to match at least one of a list of components that another entity has. The entities used for the component list are typically prefabs, as they are not matched with queries themselves.
 
-The following expression is an example of a query with an `andfrom` operator:
+The following expression is an example of a query with an `orfrom` operator:
 
 ```swift
 // Match entities with Position and at least one of the components that MyType has
