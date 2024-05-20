@@ -143,7 +143,7 @@ void Prefab_new_w_type_w_prefab(void) {
     ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
     ECS_COMPONENT(world, Velocity);
     ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
-    ECS_PREFAB(world, Prefab, Position, OVERRIDE | Velocity);
+    ECS_PREFAB(world, Prefab, Position, auto_override | Velocity);
 
     ecs_set(world, Prefab, Position, {10, 20});
 
@@ -460,7 +460,7 @@ void Prefab_new_type_w_1_override(void) {
     ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
     ECS_COMPONENT(world, Velocity);
     ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
-    ECS_PREFAB(world, Prefab, Position, Velocity, OVERRIDE | Position);
+    ECS_PREFAB(world, Prefab, Position, Velocity, auto_override | Position);
 
     ecs_set(world, Prefab, Position, {10, 20});
     ecs_set(world, Prefab, Velocity, {30, 40});
@@ -508,7 +508,7 @@ void Prefab_new_type_w_2_overrides(void) {
     ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
     ECS_COMPONENT(world, Velocity);
     ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
-    ECS_PREFAB(world, Prefab, Position, Velocity, OVERRIDE | Position, OVERRIDE | Velocity);
+    ECS_PREFAB(world, Prefab, Position, Velocity, auto_override | Position, auto_override | Velocity);
 
     ecs_set(world, Prefab, Position, {10, 20});
     ecs_set(world, Prefab, Velocity, {30, 40});
@@ -794,7 +794,7 @@ void Prefab_new_w_count_w_override(void) {
     ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
     ECS_COMPONENT(world, Velocity);
     ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
-    ECS_PREFAB(world, Prefab, Position, Velocity, OVERRIDE | Velocity);
+    ECS_PREFAB(world, Prefab, Position, Velocity, auto_override | Velocity);
 
     ecs_set(world, Prefab, Position, {10, 20});
     ecs_set(world, Prefab, Velocity, {30, 40});
@@ -838,7 +838,7 @@ void Prefab_override_2_components_different_size(void) {
     ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
     ECS_COMPONENT(world, Color);
     ecs_add_pair(world, ecs_id(Color), EcsOnInstantiate, EcsInherit);
-    ECS_PREFAB(world, Prefab, Position, Velocity, Color, OVERRIDE | Velocity, OVERRIDE | Color);
+    ECS_PREFAB(world, Prefab, Position, Velocity, Color, auto_override | Velocity, auto_override | Color);
 
     ecs_set(world, Prefab, Position, {10, 20});
     ecs_set(world, Prefab, Velocity, {30, 40});
@@ -1595,7 +1595,7 @@ void Prefab_copy_from_prefab_in_progress(void) {
     ECS_COMPONENT(world, Velocity);
     ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
 
-    ECS_PREFAB(world, Prefab, Velocity, OVERRIDE | Velocity);
+    ECS_PREFAB(world, Prefab, Velocity, auto_override | Velocity);
     ecs_set(world, Prefab, Velocity, {1, 2});
 
     ECS_SYSTEM(world, NewInProgress, EcsOnUpdate, Position, Prefab());
@@ -1633,7 +1633,7 @@ void Prefab_copy_from_prefab_first_instance_in_progress(void) {
     ECS_COMPONENT(world, Velocity);
     ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
 
-    ECS_PREFAB(world, Prefab, Velocity, OVERRIDE | Velocity);
+    ECS_PREFAB(world, Prefab, Velocity, auto_override | Velocity);
     ecs_set(world, Prefab, Velocity, {1, 2});
 
     ECS_SYSTEM(world, NewInProgress, EcsOnUpdate, Position, Prefab());
@@ -2324,7 +2324,7 @@ void Prefab_override_from_nested(void) {
     ECS_PREFAB(world, BasePrefab, Position);
     ecs_set(world, BasePrefab, Position, {10, 20});
 
-    ECS_PREFAB(world, SubPrefab, (IsA, BasePrefab), Velocity, OVERRIDE | Position, OVERRIDE | Velocity);
+    ECS_PREFAB(world, SubPrefab, (IsA, BasePrefab), Velocity, auto_override | Position, auto_override | Velocity);
     ecs_set(world, SubPrefab, Velocity, {30, 40});
 
     ecs_entity_t e1 = ecs_new_w_pair(world, EcsIsA, SubPrefab);
@@ -2561,7 +2561,7 @@ void Prefab_auto_override(void) {
     ECS_COMPONENT(world, Velocity);
     ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
 
-    ECS_PREFAB(world, Prefab, Position, Velocity, OVERRIDE | Position);
+    ECS_PREFAB(world, Prefab, Position, Velocity, auto_override | Position);
 
     ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, Prefab);
     test_assert(ecs_has(world, e, Position));
@@ -2580,7 +2580,7 @@ void Prefab_auto_override_2(void) {
     ECS_COMPONENT(world, Velocity);
     ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
 
-    ECS_PREFAB(world, Prefab, Position, Velocity, OVERRIDE | Position, OVERRIDE | Velocity);
+    ECS_PREFAB(world, Prefab, Position, Velocity, auto_override | Position, auto_override | Velocity);
 
     ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, Prefab);
     test_assert(ecs_has(world, e, Position));
@@ -2599,7 +2599,7 @@ void Prefab_auto_override_nested(void) {
     ECS_COMPONENT(world, Velocity);
     ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
 
-    ECS_PREFAB(world, Prefab, Position, Velocity, OVERRIDE | Position);
+    ECS_PREFAB(world, Prefab, Position, Velocity, auto_override | Position);
     ECS_PREFAB(world, Prefab_2, (IsA, Prefab));
 
     ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, Prefab_2);

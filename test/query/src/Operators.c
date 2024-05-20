@@ -8214,7 +8214,7 @@ void Operators_and_from_fixed_src(void) {
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "AND | Type(e)",
+        .expr = "and | Type(e)",
         .cache_kind = cache_kind
     });
 
@@ -8257,7 +8257,7 @@ void Operators_not_from_fixed_src(void) {
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "NOT | Type(e)",
+        .expr = "not | Type(e)",
         .cache_kind = cache_kind
     });
 
@@ -8317,7 +8317,7 @@ void Operators_or_from_fixed_src(void) {
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "OR | Type(e)",
+        .expr = "or | Type(e)",
         .cache_kind = cache_kind
     });
 
@@ -8383,7 +8383,7 @@ void Operators_and_from_this(void) {
     ecs_add(world, e2, TagC);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "AND | Type",
+        .expr = "and | Type",
         .cache_kind = cache_kind
     });
 
@@ -8445,7 +8445,7 @@ void Operators_not_from_this(void) {
     ecs_add(world, e2, TagC);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "NOT | Type",
+        .expr = "not | Type",
         .cache_kind = cache_kind
     });
 
@@ -8557,7 +8557,7 @@ void Operators_or_from_this(void) {
     ecs_add(world, e2, TagC);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "OR | Type",
+        .expr = "or | Type",
         .cache_kind = cache_kind
     });
 
@@ -8664,7 +8664,7 @@ void Operators_and_from_this_written(void) {
     ecs_add(world, e2, TagD);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "TagD, AND | Type",
+        .expr = "TagD, and | Type",
         .cache_kind = cache_kind
     });
 
@@ -8731,7 +8731,7 @@ void Operators_not_from_this_written(void) {
     ecs_add(world, e2, TagD);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "TagD, NOT | Type",
+        .expr = "TagD, not | Type",
         .cache_kind = cache_kind
     });
 
@@ -8861,7 +8861,7 @@ void Operators_or_from_this_written(void) {
     ecs_add(world, e2, TagD);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "TagD, OR | Type",
+        .expr = "TagD, or | Type",
         .cache_kind = cache_kind
     });
 
@@ -8966,7 +8966,7 @@ void Operators_and_from_empty(void) {
     ecs_entity(world, { .name = "Type" });
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "AND | Type",
+        .expr = "and | Type",
         .cache_kind = cache_kind
     });
 
@@ -8986,7 +8986,7 @@ void Operators_not_from_empty(void) {
     ecs_entity(world, { .name = "Type" });
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "NOT | Type",
+        .expr = "not | Type",
         .cache_kind = cache_kind
     });
 
@@ -9006,7 +9006,7 @@ void Operators_or_from_empty(void) {
     ecs_entity(world, { .name = "Type" });
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "OR | Type",
+        .expr = "or | Type",
         .cache_kind = cache_kind
     });
 
@@ -9030,7 +9030,7 @@ void Operators_and_from_empty_w_tag(void) {
     ecs_entity_t e = ecs_new_w(world, TagA);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "AND | Type, TagA",
+        .expr = "and | Type, TagA",
         .cache_kind = cache_kind
     });
 
@@ -9060,7 +9060,7 @@ void Operators_not_from_empty_w_tag(void) {
     ecs_entity_t e = ecs_new_w(world, TagA);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "NOT | Type, TagA",
+        .expr = "not | Type, TagA",
         .cache_kind = cache_kind
     });
 
@@ -9090,7 +9090,7 @@ void Operators_or_from_empty_w_tag(void) {
     ecs_entity_t e = ecs_new_w(world, TagA);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "OR | Type, TagA",
+        .expr = "or | Type, TagA",
         .cache_kind = cache_kind
     });
 
