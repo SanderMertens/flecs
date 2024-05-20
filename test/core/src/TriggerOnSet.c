@@ -400,7 +400,7 @@ void TriggerOnSet_on_set_after_override_w_new(void) {
     ECS_COMPONENT(world, Position);
     ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
 
-    ECS_PREFAB(world, Prefab, Position, OVERRIDE | Position);
+    ECS_PREFAB(world, Prefab, Position, auto_override | Position);
     ecs_set(world, Prefab, Position, {1, 3});
 
     Probe ctx = {0};
@@ -437,7 +437,7 @@ void TriggerOnSet_on_set_after_override_w_new_w_count(void) {
     ECS_COMPONENT(world, Position);
     ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
 
-    ECS_PREFAB(world, Prefab, Position, OVERRIDE | Position);
+    ECS_PREFAB(world, Prefab, Position, auto_override | Position);
     ecs_set(world, Prefab, Position, {1, 3});
 
     ECS_OBSERVER(world, OnSet, EcsOnSet, Position);
@@ -475,7 +475,7 @@ void TriggerOnSet_on_set_after_override_1_of_2_overridden(void) {
     ECS_COMPONENT(world, Position);
     ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
 
-    ECS_PREFAB(world, Prefab, Position, OVERRIDE | Position);
+    ECS_PREFAB(world, Prefab, Position, auto_override | Position);
     ecs_set(world, Prefab, Position, {1, 3});
 
     ECS_OBSERVER(world, OnSet, EcsOnSet, Position);

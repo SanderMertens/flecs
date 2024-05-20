@@ -1888,7 +1888,7 @@ void SystemPeriodic_and_type(void) {
     ECS_COMPONENT(world, Velocity);
     ECS_PREFAB(world, MyType, Position, Velocity);
 
-    ECS_SYSTEM(world, TypeSystem, EcsOnUpdate, AND | MyType);
+    ECS_SYSTEM(world, TypeSystem, EcsOnUpdate, and | MyType);
 
     ecs_new_w(world, Position);
     ecs_new_w(world, Velocity);
@@ -1919,7 +1919,7 @@ void SystemPeriodic_or_type(void) {
     ECS_COMPONENT(world, Velocity);
     ECS_PREFAB(world, MyType, Position, Velocity);
 
-    ECS_SYSTEM(world, TypeSystem, EcsOnUpdate, OR | MyType);
+    ECS_SYSTEM(world, TypeSystem, EcsOnUpdate, or | MyType);
 
     ecs_entity_t e1 = ecs_new_w(world, Position);
     ecs_entity_t e2 = ecs_new_w(world, Velocity);
