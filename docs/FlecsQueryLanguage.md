@@ -15,7 +15,7 @@ SpaceShip, (DockedTo, $planet), Planet($planet)
 An expression in the Flecs Query Language consists of a list of comma separated "terms", where each term in the query is a condition that entities matching the query must satisfy. 
 
 ### Components
-The most basic kind of condition is "the entity must have this component". The following query expression is an example of a query that matches all entities that have both `Position` and `Velocity`:
+The most basic kind of condition is "the entity must have this component". The following expression is an example of a query that matches all entities that have both `Position` and `Velocity`:
 
 ```swift
 // Match entities that have Position and Velocity
@@ -35,7 +35,7 @@ The following expression is an example of a query that matches two pairs:
 Query operators change how a term is matched against entities. Only a single operator can be applied to a term at a time. The following sections go over the different operators in the query language.
 
 ### Not
-The `not` operator, specified with the `!` character, reverses the result of a term and makes it possible to match entities that _do not_ satisfy a condition. The following expression is an example of a query with a `not` operator:
+The `not` operator, specified with the `!` character, inverts the result of a term and makes it possible to match entities that _do not_ satisfy a condition. The following expression is an example of a query with a `not` operator:
 
 ```swift
 // Match entities that have Position but not Velocity
@@ -54,7 +54,7 @@ Position, Velocity || Mass
 The `optional` operator, specified with the `?` character, optionally matches a component. Optional terms do not change which entities are matched by a query, but can be useful for various reasons:
 
 - Fetching a component in a query is more efficient than `get`
-- It allows for a single query to do what would otherwise have to be split up across severael queries
+- It allows for a single query to do what would otherwise have to be split up across several queries
 
 The following expression is an example of a query with an `optional` operator:
 
@@ -420,7 +420,7 @@ When a string is used as operand, the operation will test if the name of the ent
 SpaceShip($this), $this == "UssEnterprise"
 ```
 
-The `~=` operator can be used to do a fuzzy comparison, equilavent to the behavior of the `substr` function:
+The `~=` operator can be used to do a fuzzy comparison, equivalent to the behavior of the `substr` function:
 
 ```swift
 SpaceShip($this), $this ~= "Uss"
