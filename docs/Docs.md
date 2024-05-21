@@ -10,7 +10,10 @@
 ## Manuals
 - [Manual](Manual.md)
 - [Query Manual](Queries.md)
+- [Query Language Manual](FlecsQueryLanguage.md)
+- [Flecs Script Manual](FlecsScriptManual.md)
 - [Systems Manual](Systems.md)
+- [Component Traits Manual](ComponentTraits.md)
 - [Relationships Manual](Relationships.md)
 - [JSON Format Manual](JsonFormat.md)
 - [REST API Manual](RestApi.md)

@@ -948,9 +948,12 @@ INPUT                  = include/flecs.h \
                          docs/FAQ.md \
                          docs/DesignWithFlecs.md \
                          docs/FlecsScriptTutorial.md \
+                         docs/FlecsScriptManual.md \
                          docs/Manual.md \
                          docs/Queries.md \
+                         docs/FlecsQueryLanguage.md \
                          docs/Systems.md \
+                         docs/ComponentTraits.md \
                          docs/Relationships.md \
                          docs/RestApi.md \
                          docs/JsonFormat.md
