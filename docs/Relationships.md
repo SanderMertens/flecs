@@ -1431,6 +1431,7 @@ Entity parent = world.Entity().Scope(() =>
 
 Scopes are the mechanism that ensure contents of a module are created as children of the module, without having to explicitly add the module as a parent.
 
+<<<<<<< HEAD
 ## Cleanup properties
 When entities that are used as tags, components, relationships or relationship targets are deleted, cleanup policies ensure that the store does not contain any dangling references. Any cleanup policy provides this guarantee, so while they are configurable, applications cannot configure policies that allows for dangling references.
 
@@ -2781,6 +2782,8 @@ Entity b = world.Entity().Add(Eats, Fork);
 </ul>
 </div>
 
+=======
+>>>>>>> e8a4646ae (Add component traits manual)
 ## Relationship performance
 This section goes over the performance implications of using relationships.
 
