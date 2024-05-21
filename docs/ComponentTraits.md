@@ -1091,6 +1091,66 @@ Entity MarriedTo = world.Entity()
 </ul>
 </div>
 
+## CanToggle trait
+The `CanToggle` trait allows a component to be toggled. Component toggling can (temporarily) disable a component, which excludes it from queries. Component toggling can be used as a cheaper alternative to adding/removing as toggling relies on setting a bitset, and doesn't require the entity to be moved between tables. Component toggling can also be used to restore a component with its old value.
+
+Queries treat a disabled component as if the entity doesn't have it. `CanToggle` components add a small amount of overhead to query evaluation, even for entities that did not toggle their component.
+
+The following example shows how to use the `CanToggle` trait:
+
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">C</b>
+
+```c
+ECS_COMPONENT(world, Position);
+ecs_add_id(world, ecs_id(Position), EcsCanToggle);
+
+ecs_entity_t e = ecs_insert(world, ecs_value(Position, {10, 20}));
+
+ecs_enable_component(world, e, Position, false); // Disable component
+assert(!ecs_is_enabled(world, e, Position));
+
+ecs_enable_component(world, e, Position, true); // Enable component
+assert(ecs_is_enabled(world, e, Position));
+```
+
+</li>
+<li><b class="tab-title">C++</b>
+
+```cpp
+world.component<Position>().add(flecs::CanToggle);
+
+flecs::entity e = world.entity().set(Position{10, 20});
+
+e.disable<Position>(); // Disable component
+assert(!e.is_enabled<Position>());
+
+e.enable<Position>(); // Enable component
+assert(e.is_enabled<Position>());
+```
+
+</li>
+<li><b class="tab-title">C#</b>
+
+```cs
+ecs.Component<Position>().Entity
+    .add<Ecs.CanToggle>();
+
+Entity e = world.Entity()
+    .Set<Position>(new {10, 20});
+
+e.Disable<Position>(); // Disable component
+assert(!e.IsEnabled<Position>());
+
+e.Enable<Position>(); // Enable component
+assert(e.IsEnabled<Position>());
+```
+
+</li>
+</ul>
+</div>
+
 ## Union trait
 The `Union` is similar to `Exclusive` in that it enforces that an entity can have only a single instance of a relationship. The difference between `Exclusive` and `Union` is that `Union` combines different relationship targets in a single table. This reduces table fragmentation, and as a result speeds up add/remove operations. This increase in add/remove speed does come at a cost: iterating a query with union terms is more expensive than iterating a regular relationship.
 
@@ -1147,6 +1207,43 @@ When compared to regular relationships, union relationships have some difference
 - Union relationships cannot have data
 - Union relationship query terms can use only the `And` operator
 - Queries with a `(R, *)` term will return `(R, *)` as term id for each entity
+
+## Sparse trait
+The `Sparse` trait configures a component to use sparse storage. Sparse components are stored outside of tables, which means they do not have to be moved. Sparse components are also guaranteed to have stable pointers, which means that a component pointer is not invalidated when an entity moves to a new table. ECS operations and queries work as expected with sparse components.
+
+Sparse components trade in query speed for component add/remove speed. Adding and removing sparse components still requires an archetype change.
+
+They also enable storage of non-movable components. Non-movable components in the C++ API are automatically marked as sparse.
+
+The following code example shows how to mark a component as sparse:
+
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">C</b>
+
+```c
+ECS_COMPONENT(world, Position);
+ecs_add_id(world, ecs_id(Position), EcsSparse);
+```
+
+</li>
+<li><b class="tab-title">C++</b>
+
+```cpp
+world.component<Position>().add(flecs::Sparse);
+```
+
+</li>
+<li><b class="tab-title">C#</b>
+
+```cs
+ecs.Component<Position>().Entity
+    .add<Ecs.Sparse>();
+```
+
+</li>
+</ul>
+</div>
 
 ## Symmetric trait
 The `Symmetric` trait enforces that when a relationship `(R, Y)` is added to entity `X`, the relationship `(R, X)` will be added to entity `Y`. The reverse is also true, if relationship `(R, Y)` is removed from `X`, relationship `(R, X)` will be removed from `Y`.
