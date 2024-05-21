@@ -8,7 +8,6 @@
 #include "GameplayTagContainer.h"
 #include "InstancedStruct.h"
 #include "SolidMacros/Macros.h"
-#include "SolidMacros/Concepts/SolidConcepts.h"
 #include "FlecsEntityHandle.generated.h"
 
 class UFlecsWorld;
@@ -143,13 +142,26 @@ public:
 	template <typename T>
 	FORCEINLINE NO_DISCARD T Get() const { return GetEntity().get<T>(); }
 
-	FORCEINLINE NO_DISCARD const void* GetPtr(const FFlecsEntityHandle& InEntity) const { return GetEntity().get(InEntity); }
+	FORCEINLINE NO_DISCARD void* GetPtr(const FFlecsEntityHandle& InEntity)
+	{
+		return GetEntity().get_mut(InEntity);
+	}
 
+	FORCEINLINE NO_DISCARD const void* GetPtr(const FFlecsEntityHandle& InEntity) const
+	{
+		return GetEntity().get(InEntity);
+	}
+	
 	template <typename T>
 	FORCEINLINE NO_DISCARD T* GetPtr() { return GetEntity().get_mut<T>(); }
 	
 	template <typename T>
 	FORCEINLINE NO_DISCARD const T* GetPtr() const { return GetEntity().get<T>(); }
+
+	FORCEINLINE NO_DISCARD void* GetPtr(const UScriptStruct* StructType)
+	{
+		return GetPtr(ObtainComponentTypeStruct(StructType));
+	}
 
 	FORCEINLINE NO_DISCARD const void* GetPtr(const UScriptStruct* StructType) const
 	{
@@ -186,11 +198,21 @@ public:
 		Enable(ObtainComponentTypeStruct(StructType));
 	}
 
+	FORCEINLINE void Enable(const FGameplayTag& InTag) const
+	{
+		Enable(GetTagEntity(InTag));
+	}
+
 	FORCEINLINE void Disable(const FFlecsEntityHandle& InEntity) const { GetEntity().disable(InEntity); }
 	
 	FORCEINLINE void Disable(const UScriptStruct* StructType) const
 	{
 		Disable(ObtainComponentTypeStruct(StructType));
+	}
+
+	FORCEINLINE void Disable(const FGameplayTag& InTag) const
+	{
+		Disable(GetTagEntity(InTag));
 	}
 
 	template <typename T>
@@ -203,10 +225,19 @@ public:
 	template <typename T>
 	FORCEINLINE NO_DISCARD bool IsEnabled() const { return GetEntity().enabled<T>(); }
 
-	FORCEINLINE NO_DISCARD bool IsEnabled(const FFlecsEntityHandle& InEntity) const { return GetEntity().enabled(InEntity); }
+	FORCEINLINE NO_DISCARD bool IsEnabled(const FFlecsEntityHandle& InEntity) const
+	{
+		return GetEntity().enabled(InEntity);
+	}
+	
 	FORCEINLINE NO_DISCARD bool IsEnabled(const UScriptStruct* StructType) const
 	{
 		return IsEnabled(ObtainComponentTypeStruct(StructType));
+	}
+
+	FORCEINLINE NO_DISCARD bool IsEnabled(const FGameplayTag& InTag) const
+	{
+		return IsEnabled(GetTagEntity(InTag));
 	}
 
 	FORCEINLINE void Destroy() const { GetEntity().destruct(); }
@@ -249,7 +280,12 @@ public:
 		return GetEntity().parent();
 	}
 
-	FORCEINLINE void SetParent(const FFlecsEntityHandle& InParent, const bool bIsA = false) const
+	FORCEINLINE void SetParent(const FFlecsEntityHandle& InParent) const
+	{
+		GetEntity().child_of(InParent);
+	}
+
+	FORCEINLINE void SetParent(const FFlecsEntityHandle& InParent, const bool bIsA) const
 	{
 		GetEntity().child_of(InParent);
 
@@ -398,141 +434,311 @@ public:
 	template <typename TComponent, typename TTrait>
 	FORCEINLINE void AddTrait() const
 	{
-		GetEntity().add<TComponent, TTrait>();
+		ObtainTraitHolderEntity<TComponent>().template Add<TTrait>();
 	}
 
 	template <typename TComponent>
 	FORCEINLINE void AddTrait(const UScriptStruct* StructType) const
 	{
-		GetEntity().add<TComponent>(ObtainComponentTypeStruct(StructType));
+		ObtainTraitHolderEntity<TComponent>().Add(StructType);
+	}
+
+	template <typename TComponent>
+	FORCEINLINE void AddTrait(const FGameplayTag& InTag) const
+	{
+		ObtainTraitHolderEntity<TComponent>().Add(InTag);
+	}
+
+	template <typename TComponent>
+	FORCEINLINE void AddTrait(const FFlecsEntityHandle& InTrait) const
+	{
+		ObtainTraitHolderEntity<TComponent>().Add(InTrait);
 	}
 
 	FORCEINLINE void AddTrait(const UScriptStruct* StructType, const UScriptStruct* TraitType) const
 	{
-		GetEntity().add(ObtainComponentTypeStruct(StructType),
-			ObtainComponentTypeStruct(TraitType));
+		ObtainTraitHolderEntity(StructType).Add(TraitType);
 	}
 
 	FORCEINLINE void AddTrait(const UScriptStruct* StructType, const FGameplayTag& InTag) const
 	{
-		GetEntity().add(ObtainComponentTypeStruct(StructType), GetTagEntity(InTag));
+		ObtainTraitHolderEntity(StructType).Add(InTag);
 	}
 
 	FORCEINLINE void AddTrait(const UScriptStruct* StructType, const FFlecsEntityHandle& InTrait) const
 	{
-		GetEntity().add(ObtainComponentTypeStruct(StructType), InTrait);
+		ObtainTraitHolderEntity(StructType).Add(InTrait);
 	}
 
 	template <typename TComponent, typename TTrait>
 	FORCEINLINE void RemoveTrait() const
 	{
-		GetEntity().remove<TComponent, TTrait>();
+		ObtainTraitHolderEntity<TComponent>().template Remove<TTrait>();
 	}
 
 	template <typename TComponent>
-	FORCEINLINE void RemoveTrait(const UScriptStruct* StructType) const
+	FORCEINLINE void RemoveTrait(const UScriptStruct* TraitStructType) const
 	{
-		GetEntity().remove<TComponent>(ObtainComponentTypeStruct(StructType));
+		ObtainTraitHolderEntity<TComponent>().Remove(TraitStructType);
 	}
 
-	FORCEINLINE void RemoveTrait(const UScriptStruct* StructType, const UScriptStruct* TraitType) const
+	template <typename TComponent>
+	FORCEINLINE void RemoveTrait(const FGameplayTag& InTag) const
 	{
-		GetEntity().remove(ObtainComponentTypeStruct(StructType),
-			ObtainComponentTypeStruct(TraitType));
+		ObtainTraitHolderEntity<TComponent>().Remove(InTag);
 	}
 
-	FORCEINLINE void RemoveTrait(const UScriptStruct* StructType, const FGameplayTag& InTag) const
+	template <typename TComponent>
+	FORCEINLINE void RemoveTrait(const FFlecsEntityHandle& InTrait) const
 	{
-		GetEntity().remove(ObtainComponentTypeStruct(StructType), GetTagEntity(InTag));
+		ObtainTraitHolderEntity<TComponent>().Remove(InTrait);
 	}
 
-	FORCEINLINE void RemoveTrait(const UScriptStruct* StructType, const FFlecsEntityHandle& InTrait) const
+	FORCEINLINE void RemoveTrait(const UScriptStruct* ComponentStructType, const UScriptStruct* TraitType) const
 	{
-		GetEntity().remove(ObtainComponentTypeStruct(StructType), InTrait);
+		ObtainTraitHolderEntity(ComponentStructType).Remove(TraitType);
+	}
+
+	FORCEINLINE void RemoveTrait(const UScriptStruct* ComponentStructType, const FGameplayTag& InTag) const
+	{
+		ObtainTraitHolderEntity(ComponentStructType).Remove(InTag);
+	}
+
+	FORCEINLINE void RemoveTrait(const UScriptStruct* ComponentStructType, const FFlecsEntityHandle& InTrait) const
+	{
+		ObtainTraitHolderEntity(ComponentStructType).Remove(InTrait);
 	}
 
 	template <typename TComponent, typename TTrait>
 	FORCEINLINE bool HasTrait() const
 	{
-		return GetEntity().has<TComponent, TTrait>();
+		return ObtainTraitHolderEntity<TComponent>().template Has<TTrait>();
 	}
 
 	template <typename TComponent>
-	FORCEINLINE bool HasTrait(const UScriptStruct* StructType) const
+	FORCEINLINE bool HasTrait(const UScriptStruct* TraitStructType) const
 	{
-		return GetEntity().has<TComponent>(ObtainComponentTypeStruct(StructType));
+		return ObtainTraitHolderEntity<TComponent>().Has(TraitStructType);
 	}
 
-	FORCEINLINE bool HasTrait(const UScriptStruct* StructType, const UScriptStruct* TraitType) const
+	template <typename TComponent>
+	FORCEINLINE bool HasTrait(const FGameplayTag& InTag) const
 	{
-		return GetEntity().has(ObtainComponentTypeStruct(StructType),
-			ObtainComponentTypeStruct(TraitType));
+		return ObtainTraitHolderEntity<TComponent>().Has(InTag);
 	}
 
-	FORCEINLINE bool HasTrait(const UScriptStruct* StructType, const FGameplayTag& InTag) const
+	template <typename TComponent>
+	FORCEINLINE bool HasTrait(const FFlecsEntityHandle& InTrait) const
 	{
-		return GetEntity().has(ObtainComponentTypeStruct(StructType), GetTagEntity(InTag));
+		return ObtainTraitHolderEntity<TComponent>().Has(InTrait);
 	}
 
-	FORCEINLINE bool HasTrait(const UScriptStruct* StructType, const FFlecsEntityHandle& InTrait) const
+	FORCEINLINE bool HasTrait(const UScriptStruct* ComponentStructType, const UScriptStruct* TraitType) const
 	{
-		return GetEntity().has(ObtainComponentTypeStruct(StructType), InTrait);
+		return ObtainTraitHolderEntity(ComponentStructType).Has(TraitType);
+	}
+
+	FORCEINLINE bool HasTrait(const UScriptStruct* ComponentStructType, const FGameplayTag& InTag) const
+	{
+		return ObtainTraitHolderEntity(ComponentStructType).Has(InTag);
+	}
+
+	FORCEINLINE bool HasTrait(const UScriptStruct* ComponentStructType, const FFlecsEntityHandle& InTrait) const
+	{
+		return ObtainTraitHolderEntity(ComponentStructType).Has(InTrait);
 	}
 
 	template <typename TComponent, typename TTrait>
 	FORCEINLINE void SetTrait(const TTrait& InValue) const
 	{
-		GetEntity().set_second<TComponent, TTrait>(InValue);
+		ObtainTraitHolderEntity<TComponent>().template Set<TTrait>(InValue);
 	}
 
 	template <typename TComponent>
-	FORCEINLINE void SetTrait(const UScriptStruct* StructType, const void* InValue) const
+	FORCEINLINE void SetTrait(const UScriptStruct* TraitStructType, const void* InValue) const
 	{
-		GetEntity().set_second<TComponent>(ObtainComponentTypeStruct(StructType), InValue);
+		ObtainTraitHolderEntity<TComponent>().Set(TraitStructType, InValue);
+	}
+
+	FORCEINLINE void SetTrait(const UScriptStruct* ComponentStructType, const UScriptStruct* TraitType, const void* InValue) const
+	{
+		ObtainTraitHolderEntity(ComponentStructType).Set(TraitType, InValue);
+	}
+
+	FORCEINLINE void SetTrait(const UScriptStruct* ComponentStructType, const FInstancedStruct& InValue) const
+	{
+		ObtainTraitHolderEntity(ComponentStructType).Set(InValue);
 	}
 
 	template <typename TComponent, typename TTrait>
 	FORCEINLINE TTrait GetTrait() const
 	{
-		return GetEntity().get_second<TComponent, TTrait>();
+		return ObtainTraitHolderEntity<TComponent>().template Get<TTrait>();
 	}
 
 	template <typename TComponent, typename TTrait>
-	FORCEINLINE TTrait* GetTraitPtr() const
+	FORCEINLINE TTrait* GetTraitPtr()
 	{
-		return GetEntity().get_mut_second<TComponent, TTrait>();
+		return ObtainTraitHolderEntity<TComponent>().template GetPtr<TTrait>();
+	}
+
+	template <typename TComponent, typename TTrait>
+	FORCEINLINE const TTrait* GetTraitPtr() const
+	{
+		return ObtainTraitHolderEntity<TComponent>().template GetPtr<TTrait>();
+	}
+
+	template <typename TComponent>
+	FORCEINLINE void* GetTraitPtr(const UScriptStruct* TraitStructType)
+	{
+		return ObtainTraitHolderEntity<TComponent>().GetPtr(TraitStructType);
+	}
+
+	template <typename TComponent>
+	FORCEINLINE const void* GetTraitPtr(const UScriptStruct* TraitStructType) const
+	{
+		return ObtainTraitHolderEntity<TComponent>().GetPtr(TraitStructType);
+	}
+
+	FORCEINLINE void* GetTraitPtr(const UScriptStruct* ComponentStructType, const UScriptStruct* TraitType)
+	{
+		return ObtainTraitHolderEntity(ComponentStructType).GetPtr(TraitType);
+	}
+
+	FORCEINLINE const void* GetTraitPtr(const UScriptStruct* ComponentStructType, const UScriptStruct* TraitType) const
+	{
+		return ObtainTraitHolderEntity(ComponentStructType).GetPtr(TraitType);
 	}
 
 	template <typename TComponent, typename TTrait>
 	FORCEINLINE TTrait& GetTraitRef() const
 	{
-		return *GetEntity().get_ref_second<TComponent, TTrait>().get();
+		return ObtainTraitHolderEntity<TComponent>().template GetRef<TTrait>();
 	}
 
 	template <typename TComponent, typename TTrait>
 	FORCEINLINE flecs::ref<TTrait> GetTraitFlecsRef() const
 	{
-		return GetEntity().get_ref_second<TComponent, TTrait>();
+		return ObtainTraitHolderEntity<TComponent>().template GetFlecsRef<TTrait>();
 	}
 
 	template <typename TComponent, typename TTrait>
 	FORCEINLINE void EnableTrait() const
 	{
-		GetEntity().enable<TComponent, TTrait>();
+		ObtainTraitHolderEntity<TComponent>().template Enable<TTrait>();
+	}
+
+	template <typename TComponent>
+	FORCEINLINE void EnableTrait(const UScriptStruct* TraitStructType) const
+	{
+		ObtainTraitHolderEntity<TComponent>().Enable(TraitStructType);
+	}
+
+	template <typename TComponent>
+	FORCEINLINE void EnableTrait(const FGameplayTag& InTag) const
+	{
+		ObtainTraitHolderEntity<TComponent>().Enable(InTag);
+	}
+
+	template <typename TComponent>
+	FORCEINLINE void EnableTrait(const FFlecsEntityHandle& InTrait) const
+	{
+		ObtainTraitHolderEntity<TComponent>().Enable(InTrait);
+	}
+
+	FORCEINLINE void EnableTrait(const UScriptStruct* ComponentStructType, const UScriptStruct* TraitType) const
+	{
+		ObtainTraitHolderEntity(ComponentStructType).Enable(TraitType);
+	}
+
+	FORCEINLINE void EnableTrait(const UScriptStruct* ComponentStructType, const FGameplayTag& InTag) const
+	{
+		ObtainTraitHolderEntity(ComponentStructType).Enable(InTag);
+	}
+
+	FORCEINLINE void EnableTrait(const UScriptStruct* ComponentStructType, const FFlecsEntityHandle& InTrait) const
+	{
+		ObtainTraitHolderEntity(ComponentStructType).Enable(InTrait);
 	}
 
 	template <typename TComponent, typename TTrait>
 	FORCEINLINE void DisableTrait() const
 	{
-		GetEntity().disable<TComponent, TTrait>();
+		ObtainTraitHolderEntity<TComponent>().template Disable<TTrait>();
+	}
+
+	template <typename TComponent>
+	FORCEINLINE void DisableTrait(const UScriptStruct* TraitStructType) const
+	{
+		ObtainTraitHolderEntity<TComponent>().Disable(TraitStructType);
+	}
+
+	template <typename TComponent>
+	FORCEINLINE void DisableTrait(const FGameplayTag& InTag) const
+	{
+		ObtainTraitHolderEntity<TComponent>().Disable(InTag);
+	}
+
+	template <typename TComponent>
+	FORCEINLINE void DisableTrait(const FFlecsEntityHandle& InTrait) const
+	{
+		ObtainTraitHolderEntity<TComponent>().Disable(InTrait);
+	}
+
+	FORCEINLINE void DisableTrait(const UScriptStruct* ComponentStructType, const UScriptStruct* TraitType) const
+	{
+		ObtainTraitHolderEntity(ComponentStructType).Disable(TraitType);
+	}
+
+	FORCEINLINE void DisableTrait(const UScriptStruct* ComponentStructType, const FGameplayTag& InTag) const
+	{
+		ObtainTraitHolderEntity(ComponentStructType).Disable(InTag);
+	}
+
+	FORCEINLINE void DisableTrait(const UScriptStruct* ComponentStructType, const FFlecsEntityHandle& InTrait) const
+	{
+		ObtainTraitHolderEntity(ComponentStructType).Disable(InTrait);
 	}
 
 	template <typename TComponent, typename TTrait>
-	FORCEINLINE bool IsTraitEnabled() const
+	FORCEINLINE NO_DISCARD bool IsTraitEnabled() const
 	{
-		return GetEntity().enabled<TComponent, TTrait>();
+		return ObtainTraitHolderEntity<TComponent>().template IsEnabled<TTrait>();
 	}
 
+	template <typename TComponent>
+	FORCEINLINE bool IsTraitEnabled(const UScriptStruct* TraitStructType) const
+	{
+		return ObtainTraitHolderEntity<TComponent>().IsEnabled(TraitStructType);
+	}
+
+	template <typename TComponent>
+	FORCEINLINE NO_DISCARD bool IsTraitEnabled(const FGameplayTag& InTag) const
+	{
+		return ObtainTraitHolderEntity<TComponent>().IsEnabled(InTag);
+	}
+
+	template <typename TComponent>
+	FORCEINLINE NO_DISCARD bool IsTraitEnabled(const FFlecsEntityHandle& InTrait) const
+	{
+		return ObtainTraitHolderEntity<TComponent>().IsEnabled(InTrait);
+	}
+
+	FORCEINLINE NO_DISCARD bool IsTraitEnabled(const UScriptStruct* ComponentStructType, const UScriptStruct* TraitType) const
+	{
+		return ObtainTraitHolderEntity(ComponentStructType).IsEnabled(TraitType);
+	}
+
+	FORCEINLINE NO_DISCARD bool IsTraitEnabled(const UScriptStruct* ComponentStructType, const FGameplayTag& InTag) const
+	{
+		return ObtainTraitHolderEntity(ComponentStructType).IsEnabled(InTag);
+	}
+
+	FORCEINLINE NO_DISCARD bool IsTraitEnabled(const UScriptStruct* ComponentStructType, const FFlecsEntityHandle& InTrait) const
+	{
+		return ObtainTraitHolderEntity(ComponentStructType).IsEnabled(InTrait);
+	}
+	
 	#if WITH_EDITORONLY_DATA
 
 	UPROPERTY()
@@ -548,6 +754,74 @@ private:
 
 	FORCEINLINE NO_DISCARD FFlecsEntityHandle ObtainComponentTypeStruct(const UScriptStruct* StructType) const;
 	FORCEINLINE NO_DISCARD FFlecsEntityHandle GetTagEntity(const FGameplayTag& InTag) const;
+
+	FORCEINLINE NO_DISCARD flecs::world GetFlecsWorld_Internal() const { return GetEntity().world(); }
+
+	template <typename TComponent>
+	FORCEINLINE NO_DISCARD FFlecsEntityHandle ObtainTraitHolderEntity()
+	{
+		solid_checkf(Has<TComponent>(), TEXT("Entity does not have component"));
+
+		FFlecsEntityHandle TraitHolder;
+
+		GetEntity().each<TComponent>([&](const FFlecsEntityHandle& InEntity)
+		{
+			if (InEntity.Has(flecs::Trait))
+			{
+				TraitHolder = InEntity;
+				return true;
+			}
+
+			return false;
+		});
+
+		if (TraitHolder)
+		{
+			return TraitHolder;
+		}
+
+		const flecs::world World = GetFlecsWorld_Internal();
+		TraitHolder = World.entity();
+		TraitHolder.Add(flecs::Trait);
+		TraitHolder.SetParent(GetEntity());
+
+		GetEntity().add<TComponent>(TraitHolder);
+		
+		return TraitHolder;
+	}
+
+	FORCEINLINE NO_DISCARD FFlecsEntityHandle ObtainTraitHolderEntity(const UScriptStruct* StructType) const
+	{
+		solid_checkf(Has(StructType), TEXT("Entity does not have component"));
+
+		FFlecsEntityHandle TraitHolder;
+
+		GetEntity().each(ObtainComponentTypeStruct(StructType).GetEntity().view(),
+			[&](const FFlecsEntityHandle& InEntity)
+		{
+			if (InEntity.Has(flecs::Trait))
+			{
+				TraitHolder = InEntity;
+				return true;
+			}
+
+			return false;
+		});
+
+		if (TraitHolder)
+		{
+			return TraitHolder;
+		}
+		
+		const flecs::world World = GetFlecsWorld_Internal();
+		TraitHolder = World.entity();
+		TraitHolder.Add(flecs::Trait);
+		TraitHolder.SetParent(GetEntity());
+
+		GetEntity().add(ObtainComponentTypeStruct(StructType), TraitHolder);
+		
+		return TraitHolder;
+	}
 	
 }; // struct FFlecsEntityHandle
 

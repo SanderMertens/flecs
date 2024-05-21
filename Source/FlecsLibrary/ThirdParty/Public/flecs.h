@@ -23455,8 +23455,8 @@ struct entity_builder : entity_view {
     Self& set_second(const Second& value) {
         flecs::set<pair_object<First, Second>>(this->world_, this->id_, value);
         return to_base();
-    }    
-
+    }
+    
     /** Set 1..N components.
      * This operation accepts a callback with as arguments the components to
      * set. If the entity does not have all of the provided components, they

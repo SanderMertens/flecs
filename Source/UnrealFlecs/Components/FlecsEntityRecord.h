@@ -58,7 +58,8 @@ struct UNREALFLECS_API FFlecsComponentTypeInfo final
 		meta = (EditCondition = "NodeType == EFlecsComponentTreeNodeType::FGameplayTag", EditConditionHides))
 	FGameplayTag GameplayTag;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Component Tree")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Component Tree",
+		meta = (EditCondition = "NodeType == EFlecsComponentTreeNodeType::ScriptStruct", EditConditionHides))
 	TArray<FFlecsTraitTypeInfo> Traits;
 	
 }; // struct FFlecsComponentTypeInfo
@@ -86,7 +87,28 @@ struct UNREALFLECS_API FFlecsEntityRecord
 			switch (NodeType)
 			{
 			case EFlecsComponentNodeType::ScriptStruct:
+				
 				InEntityHandle.Set(ScriptStruct);
+
+				for (const auto& [TraitNodeType, TraitScriptStruct, TraitEntityHandle, TraitGameplayTag] : Traits)
+				{
+					switch (TraitNodeType)
+					{
+					case EFlecsComponentNodeType::ScriptStruct:
+						InEntityHandle.SetTrait(ScriptStruct.GetScriptStruct(), TraitScriptStruct);
+						break;
+					case EFlecsComponentNodeType::EntityHandle:
+						InEntityHandle.AddTrait(ScriptStruct.GetScriptStruct(), TraitEntityHandle);
+						break;
+					case EFlecsComponentNodeType::FGameplayTag:
+						InEntityHandle.AddTrait(ScriptStruct.GetScriptStruct(), TraitGameplayTag);
+						break;
+					default: UNLIKELY_ATTRIBUTE
+						solid_checkf(false, TEXT("Invalid TraitNodeType"));
+						break;
+					}
+				}
+				
 				break;
 			case EFlecsComponentNodeType::EntityHandle:
 				InEntityHandle.Add(EntityHandle);
@@ -95,7 +117,7 @@ struct UNREALFLECS_API FFlecsEntityRecord
 				InEntityHandle.Add(GameplayTag);
 				break;
 			default: UNLIKELY_ATTRIBUTE
-				checkNoEntry();
+				solid_checkf(false, TEXT("Invalid NodeType"));
 				break;
 			}
 		}
