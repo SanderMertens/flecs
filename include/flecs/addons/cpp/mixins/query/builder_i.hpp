@@ -26,7 +26,7 @@ struct query_builder_i : term_builder_i<Base> {
         return *this;
     }
 
-    Base& flags(ecs_flags32_t flags) {
+    Base& query_flags(ecs_flags32_t flags) {
         desc_->flags |= flags;
         return *this;
     }
