@@ -4739,7 +4739,7 @@ void QueryBuilder_unresolved_by_name(void) {
     flecs::world ecs;
 
     auto q = ecs.query_builder()
-        .flags(EcsQueryAllowUnresolvedByName)
+        .query_flags(EcsQueryAllowUnresolvedByName)
         .expr("$this == Foo")
         .cache_kind(cache_kind)
         .build();
