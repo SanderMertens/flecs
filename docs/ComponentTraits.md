@@ -8,14 +8,25 @@ When entities that are used as tags, components, relationships or relationship t
 
 <div class="flecs-snippet-tabs">
 <ul>
+<li><b class="tab-title">C</b>
+
+```cpp
+struct MyComponent {
+  ecs_entity_t e; // Not covered by cleanup traits
+}
+
+ecs_add_pair(world, e, CcsChildOf, parent); // covered by cleanup traits
+```
+
+</li>
 <li><b class="tab-title">C++</b>
 
 ```cpp
 struct MyComponent {
-  entity e; // not covered by cleanup traits
+  flecs::entity e; // Not covered by cleanup traits
 }
 
-e.add(ChildOf, parent); // covered by cleanup traits
+e.add(ChildOf, parent); // Covered by cleanup traits
 ```
 
 </li>
@@ -24,10 +35,10 @@ e.add(ChildOf, parent); // covered by cleanup traits
 ```cs
 public struct MyComponent
 {
-    public entity e; // not covered by cleanup traits
+    public entity e; // Not covered by cleanup traits
 }
 
-e.Add(ChildOf, parent); // covered by cleanup traits
+e.Add(ChildOf, parent); // Covered by cleanup traits
 ```
 
 </li>
@@ -279,6 +290,20 @@ Take an example with a parent and a child that both have the `Node` tag:
 
 <div class="flecs-snippet-tabs">
 <ul>
+<li><b class="tab-title">C</b>
+
+```c
+ecs_observer(world, {
+  .query.terms = {{ Node }},
+  .events = { EcsOnRemve },
+  .callback = ...
+});
+
+ecs_entity_t p = ecs_new_w(world, Node);
+ecs_entity_t c = ecs_new_w_pair(world, EcsChildOf, p);
+```
+
+</li>
 <li><b class="tab-title">C++</b>
 
 ```cpp
@@ -339,7 +364,11 @@ The root entities that were not filtered out will be deleted.
 The last step will delete all remaining entities. At this point cleanup traits are no longer considered and cleanup order is undefined.
 
 ## Trait trait
-The trait trait marks an entity as a trait, which is any tag that is added to another tag/component/relationship to modify its behavior. All properties in this section are marked as trait. It is not required to mark a trait as a trait before adding it to another tag/component/relationship. The main reason for the trait trait is to ease some of the constraints on relationships (see the Relationship trait).
+The trait trait marks an entity as a trait, which is any tag that is added to another tag/component/relationship to modify its behavior. All traits in this manual are marked as trait. It is not required to mark a trait as a trait before adding it to another tag/component/relationship. The main reason for the trait trait is to ease some of the constraints on relationships (see the Relationship trait).
+
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">C</b>
 
 ```c
 ECS_TAG(world, Serializable);
@@ -371,6 +400,10 @@ world.Component<Serializable>().Entity.Add(Ecs.Trait);
 
 ## Relationship trait
 The relationship trait enforces that an entity can only be used as relationship. Consider the following example:
+
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">C</b>
 
 ```c
 ECS_TAG(world, Likes);
@@ -420,6 +453,10 @@ Entity e = ecs.Entity()
 
 Entities marked with `Relationship` may still be used as target if the relationship part of the pair has the `Trait` trait. This ensures the relationship can still be used to configure the behavior of other entities. Consider the following code example:
 
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">C</b>
+
 ```c
 ECS_TAG(world, Likes);
 ECS_TAG(world, Loves);
@@ -463,6 +500,10 @@ world.Component<Loves>().Entity.Add(Ecs.With, world.Component<Likes>().Entity);
 
 ## Target trait
 The target trait enforces that an entity can only be used as relationship target. Consider the following example:
+
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">C</b>
 
 ```c
 ECS_TAG(world, Likes);
