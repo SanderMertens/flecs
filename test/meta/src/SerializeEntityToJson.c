@@ -9,8 +9,9 @@ void SerializeEntityToJson_serialize_empty(void) {
     ecs_entity_t e = ecs_new(world);
 
     char *str = ecs_os_strdup("{\"path\":\"446\", \"ids\":[]}");
-    ecs_os_sprintf(
-        str, "{\"path\":\"%u\", \"ids\":[]}", (uint32_t)e);
+    ecs_os_snprintf(
+        str, ecs_os_strlen(str) + 1, 
+        "{\"path\":\"%u\", \"ids\":[]}", (uint32_t)e);
 
     char *json = ecs_entity_to_json(world, e, NULL);
     test_assert(json != NULL);
@@ -663,18 +664,17 @@ void SerializeEntityToJson_serialize_w_label_no_name(void) {
     ecs_entity_t e = ecs_new(world);
     ecs_add(world, e, Tag);
 
-    char *str = ecs_os_malloc(
-        ecs_os_strlen(
-            "{"
-                "\"path\":\"000\", "
-                "\"label\":\"000\", "
-                "\"ids\":["
-                    "[\"Tag\"]"
-            "]}"
-        ) + 1
-    );
+    ecs_size_t len = ecs_os_strlen(
+        "{"
+            "\"path\":\"000\", "
+            "\"label\":\"000\", "
+            "\"ids\":["
+                "[\"Tag\"]"
+        "]}") + 1;
 
-    ecs_os_sprintf(str, 
+    char *str = ecs_os_malloc(len);
+
+    ecs_os_snprintf(str, len,
         "{"
             "\"path\":\"%u\", "
             "\"label\":\"%u\", "
