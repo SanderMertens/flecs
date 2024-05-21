@@ -6619,3 +6619,172 @@ void Parser_not_second_wildcard(void) {
 
     ecs_fini(world);
 }
+
+void Parser_unterminated_paren(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_log_set_level(-4);
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "("
+    });
+
+    test_assert(q == NULL);
+
+    ecs_fini(world);
+}
+
+void Parser_unterminated_after_first_paren(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_log_set_level(-4);
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "Position("
+    });
+
+    test_assert(q == NULL);
+
+    ecs_fini(world);
+}
+
+void Parser_unterminated_after_src_var(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_log_set_level(-4);
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "Position($"
+    });
+
+    test_assert(q == NULL);
+
+    ecs_fini(world);
+}
+
+void Parser_eq_name_existing_entity(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "$this == \"Foo\""
+    });
+
+    test_assert(q != NULL);
+
+    test_int(term_count(q), 1);
+
+    ecs_term_t *terms = query_terms(q);
+    test_first(terms[0], EcsPredEq, EcsSelf|EcsIsEntity);
+    test_src(terms[0], EcsThis, EcsSelf|EcsIsVariable);
+    test_assert((terms[0].second.id & ~EcsTermRefFlags) == 0);
+    test_assert((terms[0].second.id & EcsTermRefFlags) == (EcsSelf|EcsIsName));
+    test_int(terms[0].oper, EcsAnd);
+    test_int(terms[0].inout, EcsInOutNone);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Parser_match_existing_entity(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "$this ~= \"Foo\""
+    });
+
+    test_assert(q != NULL);
+
+    test_int(term_count(q), 1);
+
+    ecs_term_t *terms = query_terms(q);
+    test_first(terms[0], EcsPredMatch, EcsSelf|EcsIsEntity);
+    test_src(terms[0], EcsThis, EcsSelf|EcsIsVariable);
+    test_assert((terms[0].second.id & ~EcsTermRefFlags) == 0);
+    test_assert((terms[0].second.id & EcsTermRefFlags) == (EcsSelf|EcsIsName));
+    test_int(terms[0].oper, EcsAnd);
+    test_int(terms[0].inout, EcsInOutNone);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Parser_match_wildcard(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "$this ~= \"*\""
+    });
+
+    test_assert(q != NULL);
+
+    test_int(term_count(q), 1);
+
+    ecs_term_t *terms = query_terms(q);
+    test_first(terms[0], EcsPredMatch, EcsSelf|EcsIsEntity);
+    test_src(terms[0], EcsThis, EcsSelf|EcsIsVariable);
+    test_assert((terms[0].second.id & ~EcsTermRefFlags) == 0);
+    test_assert((terms[0].second.id & EcsTermRefFlags) == (EcsSelf|EcsIsName));
+    test_int(terms[0].oper, EcsAnd);
+    test_int(terms[0].inout, EcsInOutNone);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Parser_match_any(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "$this ~= \"_\""
+    });
+
+    test_assert(q != NULL);
+
+    test_int(term_count(q), 1);
+
+    ecs_term_t *terms = query_terms(q);
+    test_first(terms[0], EcsPredMatch, EcsSelf|EcsIsEntity);
+    test_src(terms[0], EcsThis, EcsSelf|EcsIsVariable);
+    test_assert((terms[0].second.id & ~EcsTermRefFlags) == 0);
+    test_assert((terms[0].second.id & EcsTermRefFlags) == (EcsSelf|EcsIsName));
+    test_int(terms[0].oper, EcsAnd);
+    test_int(terms[0].inout, EcsInOutNone);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Parser_match_variable_oper(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "$this ~= \"$\""
+    });
+
+    test_assert(q != NULL);
+
+    test_int(term_count(q), 1);
+
+    ecs_term_t *terms = query_terms(q);
+    test_first(terms[0], EcsPredMatch, EcsSelf|EcsIsEntity);
+    test_src(terms[0], EcsThis, EcsSelf|EcsIsVariable);
+    test_assert((terms[0].second.id & ~EcsTermRefFlags) == 0);
+    test_assert((terms[0].second.id & EcsTermRefFlags) == (EcsSelf|EcsIsName));
+    test_int(terms[0].oper, EcsAnd);
+    test_int(terms[0].inout, EcsInOutNone);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}

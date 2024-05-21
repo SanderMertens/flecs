@@ -425,7 +425,15 @@
                 "mixed_1_desc_and_2_expr",
                 "not_wildcard",
                 "not_first_wildcard",
-                "not_second_wildcard"
+                "not_second_wildcard",
+                "unterminated_paren",
+                "unterminated_after_first_paren",
+                "unterminated_after_src_var",
+                "eq_name_existing_entity",
+                "match_existing_entity",
+                "match_wildcard",
+                "match_any",
+                "match_variable_oper"
             ]
         }, {
             "id": "Basic",
@@ -1269,7 +1277,16 @@
                 "var_eq_after_var_0_src",
                 "2_or_w_eq_this",
                 "2_or_w_eq_lookup_var",
-                "3_or_w_eq_lookup_var"
+                "3_or_w_eq_lookup_var",
+                "eq_variable",
+                "eq_wildcard",
+                "eq_any",
+                "neq_variable",
+                "neq_wildcard",
+                "neq_any",
+                "match_variable",
+                "match_wildcard",
+                "match_any"
             ]
         }, {
             "id": "Scopes",
