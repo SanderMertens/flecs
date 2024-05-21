@@ -3544,3 +3544,156 @@ void BuiltinPredicates_2_or_w_eq_this(void) {
 
     ecs_fini(world);
 }
+
+void BuiltinPredicates_eq_variable(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_log_set_level(-4);
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "$this == $",
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q == NULL);
+
+    ecs_fini(world);
+}
+
+void BuiltinPredicates_eq_wildcard(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "$this == *",
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void BuiltinPredicates_eq_any(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "$this == _",
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void BuiltinPredicates_neq_variable(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_log_set_level(-4);
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "$this != $",
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q == NULL);
+
+    ecs_fini(world);
+}
+
+void BuiltinPredicates_neq_wildcard(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "$this != *",
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    ecs_fini(world);
+}
+
+void BuiltinPredicates_neq_any(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "$this != _",
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    ecs_fini(world);
+}
+
+void BuiltinPredicates_match_variable(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "$this ~= \"$\"",
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_uint(1, it.count);
+    test_uint(EcsVariable, it.entities[0]);
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void BuiltinPredicates_match_wildcard(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "$this ~= \"*\"",
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_uint(1, it.count);
+    test_uint(EcsWildcard, it.entities[0]);
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void BuiltinPredicates_match_any(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "$this ~= \"_\"",
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_uint(1, it.count);
+    test_uint(EcsAny, it.entities[0]);
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}

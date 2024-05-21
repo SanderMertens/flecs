@@ -39179,18 +39179,20 @@ int flecs_term_ref_finalize_flags(
 
     if (ref->name && ref->name[0] == '$') {
         if (!ref->name[1]) {
-            if (ref->id & ~EcsTermRefFlags) {
-                flecs_query_validator_error(ctx, 
-                    "conflicting values for .name and .id");
-                return -1;
-            }
+            if (!(ref->id & EcsIsName)) {
+                if (ref->id & ~EcsTermRefFlags) {
+                    flecs_query_validator_error(ctx, 
+                        "conflicting values for .name and .id");
+                    return -1;
+                }
 
-            ref->id |= EcsVariable;
+                ref->id |= EcsVariable;
+                ref->id |= EcsIsVariable;
+            }
         } else {
             ref->name = &ref->name[1];
+            ref->id |= EcsIsVariable;
         }
-
-        ref->id |= EcsIsVariable;
     } 
 
     if (!(ref->id & (EcsIsEntity|EcsIsVariable|EcsIsName))) {
@@ -39572,6 +39574,14 @@ int flecs_term_verify_eq_pred(
         }
         if (src->name && second->name && !ecs_os_strcmp(src->name, second->name)) {
             flecs_query_validator_error(ctx, "both sides of operator are equal");
+            goto error;
+        }
+    }
+
+    if (first_id == EcsPredEq) {
+        if (second_id == EcsPredEq || second_id == EcsPredMatch) {
+            flecs_query_validator_error(ctx, 
+                "invalid right-hand side for equality operator");
             goto error;
         }
     }

@@ -419,6 +419,14 @@ void Parser_mixed_1_desc_and_2_expr(void);
 void Parser_not_wildcard(void);
 void Parser_not_first_wildcard(void);
 void Parser_not_second_wildcard(void);
+void Parser_unterminated_paren(void);
+void Parser_unterminated_after_first_paren(void);
+void Parser_unterminated_after_src_var(void);
+void Parser_eq_name_existing_entity(void);
+void Parser_match_existing_entity(void);
+void Parser_match_wildcard(void);
+void Parser_match_any(void);
+void Parser_match_variable_oper(void);
 
 // Testsuite 'Basic'
 void Basic_setup(void);
@@ -1226,6 +1234,15 @@ void BuiltinPredicates_var_eq_after_var_0_src(void);
 void BuiltinPredicates_2_or_w_eq_this(void);
 void BuiltinPredicates_2_or_w_eq_lookup_var(void);
 void BuiltinPredicates_3_or_w_eq_lookup_var(void);
+void BuiltinPredicates_eq_variable(void);
+void BuiltinPredicates_eq_wildcard(void);
+void BuiltinPredicates_eq_any(void);
+void BuiltinPredicates_neq_variable(void);
+void BuiltinPredicates_neq_wildcard(void);
+void BuiltinPredicates_neq_any(void);
+void BuiltinPredicates_match_variable(void);
+void BuiltinPredicates_match_wildcard(void);
+void BuiltinPredicates_match_any(void);
 
 // Testsuite 'Scopes'
 void Scopes_setup(void);
@@ -3586,6 +3603,38 @@ bake_test_case Parser_testcases[] = {
     {
         "not_second_wildcard",
         Parser_not_second_wildcard
+    },
+    {
+        "unterminated_paren",
+        Parser_unterminated_paren
+    },
+    {
+        "unterminated_after_first_paren",
+        Parser_unterminated_after_first_paren
+    },
+    {
+        "unterminated_after_src_var",
+        Parser_unterminated_after_src_var
+    },
+    {
+        "eq_name_existing_entity",
+        Parser_eq_name_existing_entity
+    },
+    {
+        "match_existing_entity",
+        Parser_match_existing_entity
+    },
+    {
+        "match_wildcard",
+        Parser_match_wildcard
+    },
+    {
+        "match_any",
+        Parser_match_any
+    },
+    {
+        "match_variable_oper",
+        Parser_match_variable_oper
     }
 };
 
@@ -6745,6 +6794,42 @@ bake_test_case BuiltinPredicates_testcases[] = {
     {
         "3_or_w_eq_lookup_var",
         BuiltinPredicates_3_or_w_eq_lookup_var
+    },
+    {
+        "eq_variable",
+        BuiltinPredicates_eq_variable
+    },
+    {
+        "eq_wildcard",
+        BuiltinPredicates_eq_wildcard
+    },
+    {
+        "eq_any",
+        BuiltinPredicates_eq_any
+    },
+    {
+        "neq_variable",
+        BuiltinPredicates_neq_variable
+    },
+    {
+        "neq_wildcard",
+        BuiltinPredicates_neq_wildcard
+    },
+    {
+        "neq_any",
+        BuiltinPredicates_neq_any
+    },
+    {
+        "match_variable",
+        BuiltinPredicates_match_variable
+    },
+    {
+        "match_wildcard",
+        BuiltinPredicates_match_wildcard
+    },
+    {
+        "match_any",
+        BuiltinPredicates_match_any
     }
 };
 
@@ -9620,7 +9705,7 @@ static bake_test_suite suites[] = {
         "Parser",
         NULL,
         NULL,
-        281,
+        289,
         Parser_testcases
     },
     {
@@ -9693,7 +9778,7 @@ static bake_test_suite suites[] = {
         "BuiltinPredicates",
         BuiltinPredicates_setup,
         NULL,
-        81,
+        90,
         BuiltinPredicates_testcases,
         1,
         BuiltinPredicates_params
