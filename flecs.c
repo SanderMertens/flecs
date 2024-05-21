@@ -14284,7 +14284,7 @@ char* flecs_vasprintf(
         return NULL; 
     }
 
-    ecs_os_vsprintf(result, fmt, args);
+    ecs_os_vsnprintf(result, size + 1, fmt, args);
 
     return result;
 }
@@ -17538,7 +17538,7 @@ void flecs_log_msg(
                 fputs(" ", stream);
             }
             char time_buf[20];
-            ecs_os_sprintf(time_buf, "%u", (uint32_t)delta);
+            ecs_os_snprintf(time_buf, 20, "%u", (uint32_t)delta);
             fputs("+", stream);
             fputs(time_buf, stream);
             fputs(" ", stream);
@@ -17552,7 +17552,7 @@ void flecs_log_msg(
             now = time(NULL);
         }
         char time_buf[20];
-        ecs_os_sprintf(time_buf, "%u", (uint32_t)now);
+        ecs_os_snprintf(time_buf, 20, "%u", (uint32_t)now);
         fputs(time_buf, stream);
         fputs(" ", stream);
     }
@@ -36971,11 +36971,11 @@ void flecs_strbuf_vappend(
     va_copy(arg_cpy, args);
 
     if (b->content) {
-        mem_required = vsnprintf(
+        mem_required = ecs_os_vsnprintf(
             flecs_strbuf_ptr(b), 
                 flecs_itosize(mem_left), str, args);
     } else {
-        mem_required = vsnprintf(NULL, 0, str, args);
+        mem_required = ecs_os_vsnprintf(NULL, 0, str, args);
         mem_left = 0;
     }
 
@@ -36986,7 +36986,7 @@ void flecs_strbuf_vappend(
             flecs_strbuf_grow(b);
             mem_left = b->size - b->length;
         }
-        vsnprintf(flecs_strbuf_ptr(b), 
+        ecs_os_vsnprintf(flecs_strbuf_ptr(b), 
             flecs_itosize(mem_required + 1), str, arg_cpy);
     }
 
@@ -48889,7 +48889,7 @@ int ecs_entity_to_json_buf(
             flecs_json_string_escape(buf, doc_name);
         } else {
             char num_buf[20];
-            ecs_os_sprintf(num_buf, "%u", (uint32_t)entity);
+            ecs_os_snprintf(num_buf, 20, "%u", (uint32_t)entity);
             flecs_json_string(buf, num_buf);
         }
     }

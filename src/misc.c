@@ -165,7 +165,7 @@ char* flecs_vasprintf(
         return NULL; 
     }
 
-    ecs_os_vsprintf(result, fmt, args);
+    ecs_os_vsnprintf(result, size + 1, fmt, args);
 
     return result;
 }

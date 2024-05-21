@@ -280,11 +280,11 @@ void flecs_strbuf_vappend(
     va_copy(arg_cpy, args);
 
     if (b->content) {
-        mem_required = vsnprintf(
+        mem_required = ecs_os_vsnprintf(
             flecs_strbuf_ptr(b), 
                 flecs_itosize(mem_left), str, args);
     } else {
-        mem_required = vsnprintf(NULL, 0, str, args);
+        mem_required = ecs_os_vsnprintf(NULL, 0, str, args);
         mem_left = 0;
     }
 
@@ -295,7 +295,7 @@ void flecs_strbuf_vappend(
             flecs_strbuf_grow(b);
             mem_left = b->size - b->length;
         }
-        vsnprintf(flecs_strbuf_ptr(b), 
+        ecs_os_vsnprintf(flecs_strbuf_ptr(b), 
             flecs_itosize(mem_required + 1), str, arg_cpy);
     }
 

@@ -1201,7 +1201,7 @@ int ecs_entity_to_json_buf(
             flecs_json_string_escape(buf, doc_name);
         } else {
             char num_buf[20];
-            ecs_os_sprintf(num_buf, "%u", (uint32_t)entity);
+            ecs_os_snprintf(num_buf, 20, "%u", (uint32_t)entity);
             flecs_json_string(buf, num_buf);
         }
     }
