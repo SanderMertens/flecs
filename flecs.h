@@ -3258,7 +3258,7 @@ typedef enum ecs_oper_kind_t {
 typedef enum ecs_query_cache_kind_t {
     EcsQueryCacheDefault,   /**< Behavior determined by query creation context */
     EcsQueryCacheAuto,      /**< Cache query terms that are cacheable */
-    EcsQueryCacheAll,       /**< Require that all query terms are cached */
+    EcsQueryCacheAll,       /**< Require that all query terms can be cached */
     EcsQueryCacheNone,      /**< No caching */
 } ecs_query_cache_kind_t;
 
@@ -28046,14 +28046,14 @@ struct term_ref_builder_i {
 
     /* The self flag indicates the term identifier itself is used */
     Base& self() {
-        this->assert_term_id();
+        this->assert_term_ref();
         term_ref_->id |= flecs::Self;
         return *this;
     }
 
     /* Specify value of identifier by id */
     Base& id(flecs::entity_t id) {
-        this->assert_term_id();
+        this->assert_term_ref();
         term_ref_->id = id;
         return *this;
     }
@@ -28067,14 +28067,14 @@ struct term_ref_builder_i {
      * both id(entity_t) and id(const char*).
      */
     Base& entity(flecs::entity_t entity) {
-        this->assert_term_id();
+        this->assert_term_ref();
         term_ref_->id = entity | flecs::IsEntity;
         return *this;
     }
 
     /* Specify value of identifier by name */
     Base& name(const char *name) {
-        this->assert_term_id();
+        this->assert_term_ref();
         term_ref_->id |= flecs::IsEntity;
         term_ref_->name = const_cast<char*>(name);
         return *this;
@@ -28082,7 +28082,7 @@ struct term_ref_builder_i {
 
     /* Specify identifier is a variable (resolved at query evaluation time) */
     Base& var(const char *var_name) {
-        this->assert_term_id();
+        this->assert_term_ref();
         term_ref_->id |= flecs::IsVariable;
         term_ref_->name = const_cast<char*>(var_name);
         return *this;
@@ -28090,7 +28090,7 @@ struct term_ref_builder_i {
 
     /* Override term id flags */
     Base& flags(flecs::flags32_t flags) {
-        this->assert_term_id();
+        this->assert_term_ref();
         term_ref_->id = flags;
         return *this;
     }
@@ -28100,7 +28100,7 @@ struct term_ref_builder_i {
 protected:
     virtual flecs::world_t* world_v() = 0;
 
-    void assert_term_id() {
+    void assert_term_ref() {
         ecs_assert(term_ref_ != NULL, ECS_INVALID_PARAMETER, 
             "no active term (call .term() first)");
     }
@@ -28237,7 +28237,7 @@ struct term_builder_i : term_ref_builder_i<Base> {
      * traversing a relationship upwards. For example: substitute the identifier
      * with its parent by traversing the ChildOf relationship. */
     Base& up(flecs::entity_t trav = 0) {
-        this->assert_term_id();
+        this->assert_term_ref();
         ecs_check(this->term_ref_ != &term_->first, ECS_INVALID_PARAMETER,
             "up traversal can only be applied to term source");
         ecs_check(this->term_ref_ != &term_->second, ECS_INVALID_PARAMETER,
@@ -28258,7 +28258,7 @@ struct term_builder_i : term_ref_builder_i<Base> {
     /* The cascade flag is like up, but returns results in breadth-first order.
      * Only supported for flecs::query */
     Base& cascade(flecs::entity_t trav = 0) {
-        this->assert_term_id();
+        this->assert_term_ref();
         this->up();
         this->term_ref_->id |= flecs::Cascade;
         if (trav) {
@@ -28274,7 +28274,7 @@ struct term_builder_i : term_ref_builder_i<Base> {
 
     /* Use with cascade to iterate results in descending (bottom -> top) order */
     Base& desc() {
-        this->assert_term_id();
+        this->assert_term_ref();
         this->term_ref_->id |= flecs::Desc;
         return *this;
     }
@@ -28286,7 +28286,7 @@ struct term_builder_i : term_ref_builder_i<Base> {
 
     /* Specify relationship to traverse, and flags to indicate direction */
     Base& trav(flecs::entity_t trav, flecs::flags32_t flags = 0) {
-        this->assert_term_id();
+        this->assert_term_ref();
         term_->trav = trav;
         this->term_ref_->id |= flags;
         return *this;
@@ -28688,7 +28688,7 @@ struct query_builder_i : term_builder_i<Base> {
         return *this;
     }
 
-    Base& flags(ecs_flags32_t flags) {
+    Base& query_flags(ecs_flags32_t flags) {
         desc_->flags |= flags;
         return *this;
     }
