@@ -2638,24 +2638,16 @@ void ecs_os_set_api_defaults(void);
 
 #if !defined(ECS_TARGET_POSIX) && !defined(ECS_TARGET_MINGW)
 #define ecs_os_strcat(str1, str2) strcat_s(str1, INT_MAX, str2)
-#define ecs_os_snprintf(ptr, len, ...) sprintf_s(ptr, len, __VA_ARGS__)
-#define ecs_os_vsnprintf(ptr, len, fmt, args) vsprintf_s(ptr, len, fmt, args)
+#define ecs_os_snprintf(ptr, len, ...) sprintf_s(ptr, ECS_CAST(size_t, len), __VA_ARGS__)
+#define ecs_os_vsnprintf(ptr, len, fmt, args) vsprintf_s(ptr, ECS_CAST(size_t, len), fmt, args)
 #define ecs_os_strcpy(str1, str2) strcpy_s(str1, INT_MAX, str2)
-#ifdef __cplusplus
-#define ecs_os_strncpy(str1, str2, num) strncpy_s(str1, INT_MAX, str2, static_cast<size_t>(num))
-#else
-#define ecs_os_strncpy(str1, str2, num) strncpy_s(str1, INT_MAX, str2, (size_t)(num))
-#endif
+#define ecs_os_strncpy(str1, str2, len) strncpy_s(str1, INT_MAX, str2, ECS_CAST(size_t, len))
 #else
 #define ecs_os_strcat(str1, str2) strcat(str1, str2)
-#define ecs_os_snprintf(ptr, len, ...) snprintf(ptr, len, __VA_ARGS__)
-#define ecs_os_vsnprintf(ptr, len, fmt, args) vsnprintf(ptr, len, fmt, args)
+#define ecs_os_snprintf(ptr, len, ...) snprintf(ptr, ECS_CAST(size_t, len), __VA_ARGS__)
+#define ecs_os_vsnprintf(ptr, len, fmt, args) vsnprintf(ptr, ECS_CAST(size_t, len), fmt, args)
 #define ecs_os_strcpy(str1, str2) strcpy(str1, str2)
-#ifdef __cplusplus
-#define ecs_os_strncpy(str1, str2, num) strncpy(str1, str2, static_cast<size_t>(num))
-#else
-#define ecs_os_strncpy(str1, str2, num) strncpy(str1, str2, (size_t)(num))
-#endif
+#define ecs_os_strncpy(str1, str2, len) strncpy(str1, str2, ECS_CAST(size_t, len))
 #endif
 
 /* Files */
