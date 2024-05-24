@@ -220,6 +220,24 @@ public:
 
 	FORCEINLINE void Toggle() const { GetEntity().enable(!IsEnabled()); }
 
+	template <typename T>
+	FORCEINLINE void Toggle() const { GetEntity().enable<T>(!IsEnabled<T>()); }
+
+	FORCEINLINE void Toggle(const FFlecsEntityHandle& InEntity) const
+	{
+		GetEntity().enable(InEntity, !IsEnabled(InEntity));
+	}
+
+	FORCEINLINE void Toggle(const UScriptStruct* StructType) const
+	{
+		Toggle(ObtainComponentTypeStruct(StructType));
+	}
+
+	FORCEINLINE void Toggle(const FGameplayTag& InTag) const
+	{
+		Toggle(GetTagEntity(InTag));
+	}
+
 	FORCEINLINE NO_DISCARD bool IsEnabled() const { return GetEntity().enabled(); }
 
 	template <typename T>
@@ -737,6 +755,45 @@ public:
 	FORCEINLINE NO_DISCARD bool IsTraitEnabled(const UScriptStruct* ComponentStructType, const FFlecsEntityHandle& InTrait) const
 	{
 		return ObtainTraitHolderEntity(ComponentStructType).IsEnabled(InTrait);
+	}
+
+	template <typename TComponent, typename TTrait>
+	FORCEINLINE void ToggleTrait() const
+	{
+		ObtainTraitHolderEntity<TComponent>().template Toggle<TTrait>();
+	}
+
+	template <typename TComponent>
+	FORCEINLINE void ToggleTrait(const UScriptStruct* TraitStructType) const
+	{
+		ObtainTraitHolderEntity<TComponent>().Toggle(TraitStructType);
+	}
+
+	template <typename TComponent>
+	FORCEINLINE void ToggleTrait(const FGameplayTag& InTag) const
+	{
+		ObtainTraitHolderEntity<TComponent>().Toggle(InTag);
+	}
+
+	template <typename TComponent>
+	FORCEINLINE void ToggleTrait(const FFlecsEntityHandle& InTrait) const
+	{
+		ObtainTraitHolderEntity<TComponent>().Toggle(InTrait);
+	}
+
+	FORCEINLINE void ToggleTrait(const UScriptStruct* ComponentStructType, const UScriptStruct* TraitType) const
+	{
+		ObtainTraitHolderEntity(ComponentStructType).Toggle(TraitType);
+	}
+
+	FORCEINLINE void ToggleTrait(const UScriptStruct* ComponentStructType, const FGameplayTag& InTag) const
+	{
+		ObtainTraitHolderEntity(ComponentStructType).Toggle(InTag);
+	}
+
+	FORCEINLINE void ToggleTrait(const UScriptStruct* ComponentStructType, const FFlecsEntityHandle& InTrait) const
+	{
+		ObtainTraitHolderEntity(ComponentStructType).Toggle(InTrait);
 	}
 	
 	#if WITH_EDITORONLY_DATA

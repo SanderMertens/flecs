@@ -206,7 +206,19 @@ public:
 	}
 
 	template <typename T>
-	FORCEINLINE NO_DISCARD flecs::ref<T> GetSingletonRef() const
+	FORCEINLINE NO_DISCARD T& GetSingletonRef()
+	{
+		return *GetSingletonPtr<T>();
+	}
+
+	template <typename T>
+	FORCEINLINE NO_DISCARD const T& GetSingletonRef() const
+	{
+		return *GetSingletonPtr<T>();
+	}
+
+	template <typename T>
+	FORCEINLINE NO_DISCARD flecs::ref<T> GetSingletonFlecsRef() const
 	{
 		return World.get_ref<T>();
 	}
@@ -481,13 +493,13 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
 	FORCEINLINE bool HasScriptStruct(UScriptStruct* ScriptStruct) const
 	{
-		return GetSingletonRef<FFlecsTypeMapComponent>()->ScriptStructMap.contains(ScriptStruct);
+		return GetSingletonRef<FFlecsTypeMapComponent>().ScriptStructMap.contains(ScriptStruct);
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
 	FORCEINLINE FFlecsEntityHandle GetScriptStructEntity(UScriptStruct* ScriptStruct) const
 	{
-		return GetSingletonRef<FFlecsTypeMapComponent>()->ScriptStructMap.at(ScriptStruct);
+		return GetSingletonRef<FFlecsTypeMapComponent>().ScriptStructMap.at(ScriptStruct);
 	}
 
 	template <Solid::TStaticStructConcept T>
@@ -528,7 +540,7 @@ public:
 				                                         ScriptStruct
 			                                         });
 		
-		GetSingletonRef<FFlecsTypeMapComponent>()->ScriptStructMap.emplace(ScriptStruct, ScriptStructComponent);
+		GetSingletonRef<FFlecsTypeMapComponent>().ScriptStructMap.emplace(ScriptStruct, ScriptStructComponent);
 
 		#if WITH_EDITOR
 
@@ -597,7 +609,7 @@ public:
 
 	FORCEINLINE void RegisterScriptStruct(const UScriptStruct* ScriptStruct, const FFlecsEntityHandle& InEntity) const
 	{
-		GetSingletonRef<FFlecsTypeMapComponent>()->ScriptStructMap.emplace(const_cast<UScriptStruct*>(ScriptStruct), InEntity);
+		GetSingletonRef<FFlecsTypeMapComponent>().ScriptStructMap.emplace(const_cast<UScriptStruct*>(ScriptStruct), InEntity);
 
 		#if WITH_EDITOR
 
