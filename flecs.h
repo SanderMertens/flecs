@@ -9647,6 +9647,9 @@ int ecs_value_move_ctor(
 #define ecs_shares(world, entity, T)\
     (ecs_shares_id(world, entity, ecs_id(T)))
 
+#define ecs_get_target_for(world, entity, rel, T)\
+    ecs_get_target_for_id(world, entity, rel, ecs_id(T))
+
 /** @} */
 
 /**
@@ -13287,7 +13290,8 @@ typedef struct ecs_entity_to_json_desc_t {
     bool serialize_color;      /**< Serialize doc color */
     bool serialize_ids;        /**< Serialize (component) ids */
     bool serialize_id_labels;  /**< Serialize labels of (component) ids */
-    bool serialize_base;       /**< Serialize base components */
+    bool serialize_full_paths; /**< Serialize full paths for tags, components and pairs */
+    bool serialize_inherited;  /**< Serialize base components */
     bool serialize_private;    /**< Serialize private components */
     bool serialize_hidden;     /**< Serialize ids hidden by override */
     bool serialize_values;     /**< Serialize component values */
@@ -13298,8 +13302,8 @@ typedef struct ecs_entity_to_json_desc_t {
 } ecs_entity_to_json_desc_t;
 
 #define ECS_ENTITY_TO_JSON_INIT (ecs_entity_to_json_desc_t){true, false,\
-    false, false, false, true, false, true, false, false, false, false, false,\
-    false, false }
+    false, false, false, true, false, false, true, false, false, false, false, \
+    false, false, false }
 
 /** Serialize entity into JSON string.
  * This creates a JSON object with the entity's (path) name, which components
@@ -13350,6 +13354,8 @@ typedef struct ecs_iter_to_json_desc_t {
     bool serialize_variable_labels; /**< Serialize doc name for variables */
     bool serialize_variable_ids;    /**< Serialize numerical ids for variables */
     bool serialize_colors;          /**< Serialize doc color for entities */
+    bool serialize_full_paths;      /**< Serialize full paths for tags, components and pairs */
+    bool serialize_inherited;       /**< Serialize inherited components */
     bool measure_eval_duration;     /**< Serialize evaluation duration */
     bool serialize_type_info;       /**< Serialize type information */
     bool serialize_table;           /**< Serialize entire table vs. matched components */
@@ -13379,6 +13385,8 @@ typedef struct ecs_iter_to_json_desc_t {
     .serialize_variable_labels = false, \
     .serialize_variable_ids =    false, \
     .serialize_colors =          false, \
+    .serialize_full_paths =      false, \
+    .serialize_inherited =       false, \
     .measure_eval_duration =     false, \
     .serialize_type_info =       false, \
     .serialize_table =           false, \
@@ -13784,10 +13792,25 @@ FLECS_API extern     ECS_DECLARE(EcsUriFile);      /**< UriFile unit. */
 
 /** @} */
 
+/**
+ * @defgroup c_addons_units_color Color
+ * @ingroup c_addons_units
+ * @{
+ */
+
+FLECS_API extern ECS_DECLARE(EcsColor);            /**< Color quantity. */
+FLECS_API extern     ECS_DECLARE(EcsColorRgb);     /**< ColorRgb unit. */
+FLECS_API extern     ECS_DECLARE(EcsColorHsl);     /**< ColorHsl unit. */
+FLECS_API extern     ECS_DECLARE(EcsColorCss);     /**< ColorCss unit. */
+
+/** @} */
+
+
 FLECS_API extern ECS_DECLARE(EcsAcceleration);     /**< Acceleration unit. */
 FLECS_API extern ECS_DECLARE(EcsPercentage);       /**< Percentage unit. */
 FLECS_API extern ECS_DECLARE(EcsBel);              /**< Bel unit. */
 FLECS_API extern ECS_DECLARE(EcsDeciBel);          /**< DeciBel unit. */
+FLECS_API extern ECS_DECLARE(EcsColor);            /**< Color unit. */
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Module
@@ -18781,6 +18804,7 @@ struct DataRate { };
 struct Angle { };
 struct Frequency { };
 struct Uri { };
+struct Color { };
 
 /** @} */
 
@@ -19034,6 +19058,20 @@ struct File { };
 /** @} */
 };
 
+
+struct color {
+/**
+ * @defgroup cpp_addons_units_color Color
+ * @ingroup cpp_addons_units
+ * @{
+ */
+
+struct Rgb { };
+struct Hsl { };
+struct Css { };
+
+/** @} */
+};
 
 struct Percentage { };
 struct Bel { };
@@ -32707,6 +32745,7 @@ inline units::units(flecs::world& world) {
     world.entity<Angle>("::flecs::units::Angle");
     world.entity<Frequency>("::flecs::units::Frequency");
     world.entity<Uri>("::flecs::units::Uri");
+    world.entity<Color>("::flecs::units::Color");
 
     // Initialize duration units
     world.entity<duration::PicoSeconds>(
@@ -32845,6 +32884,11 @@ inline units::units(flecs::world& world) {
         "::flecs::units::Angle::Radians");
     world.entity<angle::Degrees>(
         "::flecs::units::Angle::Degrees");
+
+    // Initialize color
+    world.entity<color::Rgb>("::flecs::units::Color::Rgb");
+    world.entity<color::Hsl>("::flecs::units::Color::Hsl");
+    world.entity<color::Css>("::flecs::units::Color::Css");
 
     // Initialize percentage
     world.entity<Percentage>("::flecs::units::Percentage");

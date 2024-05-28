@@ -849,7 +849,6 @@ int flecs_json_append_type_hidden(
     return 0;
 }
 
-static
 int flecs_json_append_type(
     const ecs_world_t *world, 
     ecs_strbuf_t *buf, 
@@ -1176,138 +1175,138 @@ int flecs_json_serialize_matches(
     return 0;
 }
 
-int ecs_entity_to_json_buf(
-    const ecs_world_t *world,
-    ecs_entity_t entity,
-    ecs_strbuf_t *buf,
-    const ecs_entity_to_json_desc_t *desc)
-{
-    if (!entity || !ecs_is_valid(world, entity)) {
-        return -1;
-    }
+// int ecs_entity_to_json_buf(
+//     const ecs_world_t *world,
+//     ecs_entity_t entity,
+//     ecs_strbuf_t *buf,
+//     const ecs_entity_to_json_desc_t *desc)
+// {
+//     if (!entity || !ecs_is_valid(world, entity)) {
+//         return -1;
+//     }
 
-    flecs_json_object_push(buf);
+//     flecs_json_object_push(buf);
 
-    if (!desc || desc->serialize_path) {
-        flecs_json_memberl(buf, "path");
-        flecs_json_path(buf, world, entity);
-    }
+//     if (!desc || desc->serialize_path) {
+//         flecs_json_memberl(buf, "path");
+//         flecs_json_path(buf, world, entity);
+//     }
 
-#ifdef FLECS_DOC
-    if (desc && desc->serialize_label) {
-        flecs_json_memberl(buf, "label");
-        const char *doc_name = ecs_doc_get_name(world, entity);
-        if (doc_name) {
-            flecs_json_string_escape(buf, doc_name);
-        } else {
-            char num_buf[20];
-            ecs_os_snprintf(num_buf, 20, "%u", (uint32_t)entity);
-            flecs_json_string(buf, num_buf);
-        }
-    }
+// #ifdef FLECS_DOC
+//     if (desc && desc->serialize_label) {
+//         flecs_json_memberl(buf, "label");
+//         const char *doc_name = ecs_doc_get_name(world, entity);
+//         if (doc_name) {
+//             flecs_json_string_escape(buf, doc_name);
+//         } else {
+//             char num_buf[20];
+//             ecs_os_snprintf(num_buf, 20, "%u", (uint32_t)entity);
+//             flecs_json_string(buf, num_buf);
+//         }
+//     }
 
-    if (desc && desc->serialize_brief) {
-        const char *doc_brief = ecs_doc_get_brief(world, entity);
-        if (doc_brief) {
-            flecs_json_memberl(buf, "brief");
-            flecs_json_string_escape(buf, doc_brief);
-        }
-    }
+//     if (desc && desc->serialize_brief) {
+//         const char *doc_brief = ecs_doc_get_brief(world, entity);
+//         if (doc_brief) {
+//             flecs_json_memberl(buf, "brief");
+//             flecs_json_string_escape(buf, doc_brief);
+//         }
+//     }
 
-    if (desc && desc->serialize_link) {
-        const char *doc_link = ecs_doc_get_link(world, entity);
-        if (doc_link) {
-            flecs_json_memberl(buf, "link");
-            flecs_json_string_escape(buf, doc_link);
-        }
-    }
+//     if (desc && desc->serialize_link) {
+//         const char *doc_link = ecs_doc_get_link(world, entity);
+//         if (doc_link) {
+//             flecs_json_memberl(buf, "link");
+//             flecs_json_string_escape(buf, doc_link);
+//         }
+//     }
 
-    if (desc && desc->serialize_color) {
-        const char *doc_color = ecs_doc_get_color(world, entity);
-        if (doc_color) {
-            flecs_json_memberl(buf, "color");
-            flecs_json_string_escape(buf, doc_color);
-        }
-    }
-#endif
+//     if (desc && desc->serialize_color) {
+//         const char *doc_color = ecs_doc_get_color(world, entity);
+//         if (doc_color) {
+//             flecs_json_memberl(buf, "color");
+//             flecs_json_string_escape(buf, doc_color);
+//         }
+//     }
+// #endif
 
-    const ecs_type_t *type = ecs_get_type(world, entity);
-    ecs_id_t *ids = NULL;
-    int32_t i, count = 0;
-    if (type) {
-        ids = type->array;
-        count = type->count;
-    }
+//     const ecs_type_t *type = ecs_get_type(world, entity);
+//     ecs_id_t *ids = NULL;
+//     int32_t i, count = 0;
+//     if (type) {
+//         ids = type->array;
+//         count = type->count;
+//     }
 
-    if (!desc || desc->serialize_base) {
-        if (ecs_has_pair(world, entity, EcsIsA, EcsWildcard)) {
-            flecs_json_memberl(buf, "is_a");
-            flecs_json_array_push(buf);
+//     if (!desc || desc->serialize_base) {
+//         if (ecs_has_pair(world, entity, EcsIsA, EcsWildcard)) {
+//             flecs_json_memberl(buf, "is_a");
+//             flecs_json_array_push(buf);
 
-            for (i = 0; i < count; i ++) {
-                ecs_id_t id = ids[i];
-                if (ECS_HAS_RELATION(id, EcsIsA)) {
-                    if (flecs_json_append_base(
-                        world, buf, ecs_pair_second(world, id), entity, desc)) 
-                    {
-                        return -1;
-                    }
-                }
-            }
+//             for (i = 0; i < count; i ++) {
+//                 ecs_id_t id = ids[i];
+//                 if (ECS_HAS_RELATION(id, EcsIsA)) {
+//                     if (flecs_json_append_base(
+//                         world, buf, ecs_pair_second(world, id), entity, desc)) 
+//                     {
+//                         return -1;
+//                     }
+//                 }
+//             }
 
-            flecs_json_array_pop(buf);
-        }
-    }
+//             flecs_json_array_pop(buf);
+//         }
+//     }
 
-    if (flecs_json_append_type(world, buf, entity, entity, desc)) {
-        goto error;
-    }
+//     if (flecs_json_append_type(world, buf, entity, entity, desc)) {
+//         goto error;
+//     }
 
-    if (desc && desc->serialize_alerts) {
-        if (flecs_json_serialize_alerts(world, buf, entity)) {
-            goto error;
-        }
-    }
+//     if (desc && desc->serialize_alerts) {
+//         if (flecs_json_serialize_alerts(world, buf, entity)) {
+//             goto error;
+//         }
+//     }
 
-    if (desc && desc->serialize_refs) {
-        flecs_json_memberl(buf, "refs");
-        flecs_json_object_push(buf);
-        if (flecs_json_serialize_refs(world, buf, entity, desc->serialize_refs)) {
-            goto error;
-        }
-        flecs_json_object_pop(buf);
-    }
+//     if (desc && desc->serialize_refs) {
+//         flecs_json_memberl(buf, "refs");
+//         flecs_json_object_push(buf);
+//         if (flecs_json_serialize_refs(world, buf, entity, desc->serialize_refs)) {
+//             goto error;
+//         }
+//         flecs_json_object_pop(buf);
+//     }
 
-    if (desc && desc->serialize_matches) {
-        flecs_json_memberl(buf, "matches");
-        flecs_json_array_push(buf);
-        if (flecs_json_serialize_matches(world, buf, entity)) {
-            goto error;
-        }
-        flecs_json_array_pop(buf);
-    }
+//     if (desc && desc->serialize_matches) {
+//         flecs_json_memberl(buf, "matches");
+//         flecs_json_array_push(buf);
+//         if (flecs_json_serialize_matches(world, buf, entity)) {
+//             goto error;
+//         }
+//         flecs_json_array_pop(buf);
+//     }
 
-    flecs_json_object_pop(buf);
+//     flecs_json_object_pop(buf);
 
-    return 0;
-error:
-    return -1;
-}
+//     return 0;
+// error:
+//     return -1;
+// }
 
-char* ecs_entity_to_json(
-    const ecs_world_t *world,
-    ecs_entity_t entity,
-    const ecs_entity_to_json_desc_t *desc)
-{
-    ecs_strbuf_t buf = ECS_STRBUF_INIT;
+// char* ecs_entity_to_json(
+//     const ecs_world_t *world,
+//     ecs_entity_t entity,
+//     const ecs_entity_to_json_desc_t *desc)
+// {
+//     ecs_strbuf_t buf = ECS_STRBUF_INIT;
 
-    if (ecs_entity_to_json_buf(world, entity, &buf, desc) != 0) {
-        ecs_strbuf_reset(&buf);
-        return NULL;
-    }
+//     if (ecs_entity_to_json_buf(world, entity, &buf, desc) != 0) {
+//         ecs_strbuf_reset(&buf);
+//         return NULL;
+//     }
 
-    return ecs_strbuf_get(&buf);
-}
+//     return ecs_strbuf_get(&buf);
+// }
 
 bool flecs_json_skip_variable(
     const char *name)

@@ -217,7 +217,8 @@ typedef struct ecs_entity_to_json_desc_t {
     bool serialize_color;      /**< Serialize doc color */
     bool serialize_ids;        /**< Serialize (component) ids */
     bool serialize_id_labels;  /**< Serialize labels of (component) ids */
-    bool serialize_base;       /**< Serialize base components */
+    bool serialize_full_paths; /**< Serialize full paths for tags, components and pairs */
+    bool serialize_inherited;  /**< Serialize base components */
     bool serialize_private;    /**< Serialize private components */
     bool serialize_hidden;     /**< Serialize ids hidden by override */
     bool serialize_values;     /**< Serialize component values */
@@ -228,8 +229,8 @@ typedef struct ecs_entity_to_json_desc_t {
 } ecs_entity_to_json_desc_t;
 
 #define ECS_ENTITY_TO_JSON_INIT (ecs_entity_to_json_desc_t){true, false,\
-    false, false, false, true, false, true, false, false, false, false, false,\
-    false, false }
+    false, false, false, true, false, false, false, true, false, false, false, false, \
+    false, false, false }
 
 /** Serialize entity into JSON string.
  * This creates a JSON object with the entity's (path) name, which components
@@ -280,6 +281,8 @@ typedef struct ecs_iter_to_json_desc_t {
     bool serialize_variable_labels; /**< Serialize doc name for variables */
     bool serialize_variable_ids;    /**< Serialize numerical ids for variables */
     bool serialize_colors;          /**< Serialize doc color for entities */
+    bool serialize_full_paths;      /**< Serialize full paths for tags, components and pairs */
+    bool serialize_inherited;       /**< Serialize inherited components */
     bool measure_eval_duration;     /**< Serialize evaluation duration */
     bool serialize_type_info;       /**< Serialize type information */
     bool serialize_table;           /**< Serialize entire table vs. matched components */
@@ -309,6 +312,8 @@ typedef struct ecs_iter_to_json_desc_t {
     .serialize_variable_labels = false, \
     .serialize_variable_ids =    false, \
     .serialize_colors =          false, \
+    .serialize_full_paths =      false, \
+    .serialize_inherited =       false, \
     .measure_eval_duration =     false, \
     .serialize_type_info =       false, \
     .serialize_table =           false, \

@@ -5,6 +5,8 @@
 
 #include "../private_api.h"
 
+#include "script/script.h"
+
 #ifdef FLECS_REST
 
 /* Retain captured commands for one minute at 60 FPS */
@@ -168,7 +170,8 @@ void flecs_rest_parse_json_ser_entity_params(
     flecs_rest_bool_param(req, "color", &desc->serialize_color);
     flecs_rest_bool_param(req, "ids", &desc->serialize_ids);
     flecs_rest_bool_param(req, "id_labels", &desc->serialize_id_labels);
-    flecs_rest_bool_param(req, "base", &desc->serialize_base);
+    flecs_rest_bool_param(req, "full_paths", &desc->serialize_full_paths);
+    flecs_rest_bool_param(req, "inherited", &desc->serialize_inherited);
     flecs_rest_bool_param(req, "values", &desc->serialize_values);
     flecs_rest_bool_param(req, "private", &desc->serialize_private);
     flecs_rest_bool_param(req, "type_info", &desc->serialize_type_info);
@@ -200,6 +203,8 @@ void flecs_rest_parse_json_ser_iter_params(
     flecs_rest_bool_param(req, "entity_labels", &desc->serialize_entity_labels);
     flecs_rest_bool_param(req, "variable_labels", &desc->serialize_variable_labels);
     flecs_rest_bool_param(req, "variable_ids", &desc->serialize_variable_ids);
+    flecs_rest_bool_param(req, "full_paths", &desc->serialize_full_paths);
+    flecs_rest_bool_param(req, "inherited", &desc->serialize_inherited);
     flecs_rest_bool_param(req, "colors", &desc->serialize_colors);
     flecs_rest_bool_param(req, "duration", &desc->measure_eval_duration);
     flecs_rest_bool_param(req, "type_info", &desc->serialize_type_info);
@@ -286,16 +291,83 @@ bool flecs_rest_set(
         return true;
     }
 
-    const char *data = ecs_http_get_param(req, "data");
-    ecs_from_json_desc_t desc = {0};
-    desc.expr = data;
-    desc.name = path;
-    if (ecs_entity_from_json(world, e, data, &desc) == NULL) {
-        flecs_reply_error(reply, "invalid request");
+    const char *component = ecs_http_get_param(req, "component");
+    if (!component) {
+        flecs_reply_error(reply, "missing component for remove endpoint");
         reply->code = 400;
         return true;
     }
-    
+
+    ecs_entity_t id;
+    if (!flecs_id_parse(world, path, component, &id)) {
+        flecs_reply_error(reply, "unresolved component '%s'", component);
+        reply->code = 400;
+        return true;
+    }
+
+    ecs_entity_t type = ecs_get_typeid(world, id);
+    if (!type) {
+        flecs_reply_error(reply, "component '%s' is not a type", component);
+        reply->code = 400;
+        return true;
+    }
+
+    const char *data = ecs_http_get_param(req, "data");
+    if (!data) {
+        flecs_reply_error(reply, "missing data for component '%s'", component);
+        reply->code = 400;
+        return true;
+    }
+
+    void *ptr = ecs_ensure_id(world, e, id);
+    if (!ptr) {
+        flecs_reply_error(reply, "failed to create component '%s'", component);
+        reply->code = 500;
+        return true;
+    }
+
+    if (!ecs_ptr_from_json(world, type, ptr, data, NULL)) {
+        flecs_reply_error(reply, "invalid value for component '%s'", component);
+        reply->code = 400;
+        return true;
+    }
+
+    return true;
+}
+
+static
+bool flecs_rest_add_remove(
+    ecs_world_t *world,
+    const ecs_http_request_t* req,
+    ecs_http_reply_t *reply,
+    const char *path,
+    bool is_add)
+{
+    ecs_entity_t e;
+    if (!(e = flecs_rest_entity_from_path(world, reply, path))) {
+        return true;
+    }
+
+    const char *component = ecs_http_get_param(req, "component");
+    if (!component) {
+        flecs_reply_error(reply, "missing component for remove endpoint");
+        reply->code = 400;
+        return true;
+    }
+
+    ecs_entity_t id;
+    if (!flecs_id_parse(world, path, component, &id)) {
+        flecs_reply_error(reply, "unresolved component '%s'", component);
+        reply->code = 400;
+        return true;
+    }
+
+    if (is_add) {
+        ecs_add_id(world, e, id);
+    } else {
+        ecs_remove_id(world, e, id);
+    }
+
     return true;
 }
 
@@ -1233,7 +1305,17 @@ bool flecs_rest_reply(
         /* Set endpoint */
         if (!ecs_os_strncmp(req->path, "set/", 4)) {
             return flecs_rest_set(world, req, reply, &req->path[4]);
-        
+
+        /* Add endpoint */
+        } else if (!ecs_os_strncmp(req->path, "add/", 4)) {
+            return flecs_rest_add_remove(
+                world, req, reply, &req->path[4], true);
+
+        /* Remove endpoint */
+        } else if (!ecs_os_strncmp(req->path, "remove/", 7)) {
+            return flecs_rest_add_remove(
+                world, req, reply, &req->path[7], false);
+
         /* Delete endpoint */
         } else if (!ecs_os_strncmp(req->path, "delete/", 7)) {
             return flecs_rest_delete(world, reply, &req->path[7]);

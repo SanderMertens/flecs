@@ -18,7 +18,7 @@ void flecs_json_serialize_field(
     flecs_json_object_push(buf);
     flecs_json_memberl(buf, "id");
 
-    flecs_json_serialize_get_field_ctx(world, it, field, ctx);
+    flecs_json_serialize_get_field_ctx(world, it, field, ctx, NULL);
     ecs_json_value_ser_ctx_t *value_ctx = &ctx->value_ctx[field];
 
     if (value_ctx->id_label) {

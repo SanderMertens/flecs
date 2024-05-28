@@ -338,10 +338,21 @@ int json_typeinfo_ser_type_ops(
             ecs_assert(sp < 63, ECS_INVALID_OPERATION, "type nesting too deep");
             stack[sp ++] = ecs_get(world, op->type, EcsStruct);
             break;
-        case EcsOpPop:
+        case EcsOpPop: {
+            ecs_entity_t unit = ecs_get_target_for(world, op->type, EcsIsA, EcsUnit);
+            if (unit) {
+                flecs_json_member(str, "@self");
+                flecs_json_array_push(str);
+                flecs_json_object_push(str);
+                json_typeinfo_ser_unit(world, str, unit);
+                flecs_json_object_pop(str);
+                flecs_json_array_pop(str);
+            }
+
             flecs_json_object_pop(str);
             sp --;
             break;
+        }
         case EcsOpArray:
         case EcsOpVector:
         case EcsOpEnum:
@@ -404,7 +415,11 @@ int json_typeinfo_ser_type(
     ecs_meta_type_op_t *ops = ecs_vec_first_t(&ser->ops, ecs_meta_type_op_t);
     int32_t count = ecs_vec_count(&ser->ops);
 
-    return json_typeinfo_ser_type_ops(world, ops, count, buf, st);
+    if (json_typeinfo_ser_type_ops(world, ops, count, buf, st)) {
+        return -1;
+    }
+
+    return 0;
 }
 
 int ecs_type_info_to_json_buf(
