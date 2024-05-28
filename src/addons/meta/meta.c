@@ -400,7 +400,8 @@ int flecs_add_member_to_struct(
         }
     } else {
         if (ecs_has(world, m->type, EcsUnit)) {
-            unit = m->type;
+            ecs_entity_t unit = ecs_get_target_for(
+                world, m->type, EcsIsA, EcsUnit);
             m->unit = unit;
         }
     }
@@ -1235,7 +1236,8 @@ void FlecsMetaImport(
 
     ecs_component(world, {
         .entity = ecs_entity(world, { .id = ecs_id(EcsUnit),
-            .name = "unit", .symbol = "EcsUnit"
+            .name = "unit", .symbol = "EcsUnit",
+            .add = ecs_ids(ecs_pair(EcsOnInstantiate, EcsInherit))
         }),
         .type.size = sizeof(EcsUnit),
         .type.alignment = ECS_ALIGNOF(EcsUnit)
@@ -1243,7 +1245,8 @@ void FlecsMetaImport(
 
     ecs_component(world, {
         .entity = ecs_entity(world, { .id = ecs_id(EcsUnitPrefix),
-            .name = "unit_prefix", .symbol = "EcsUnitPrefix"
+            .name = "unit_prefix", .symbol = "EcsUnitPrefix",
+            .add = ecs_ids(ecs_pair(EcsOnInstantiate, EcsInherit))
         }),
         .type.size = sizeof(EcsUnitPrefix),
         .type.alignment = ECS_ALIGNOF(EcsUnitPrefix)
@@ -1251,7 +1254,8 @@ void FlecsMetaImport(
 
     ecs_component(world, {
         .entity = ecs_entity(world, { .id = EcsQuantity,
-            .name = "quantity", .symbol = "EcsQuantity"
+            .name = "quantity", .symbol = "EcsQuantity",
+            .add = ecs_ids(ecs_pair(EcsOnInstantiate, EcsInherit))
         })
     });
 

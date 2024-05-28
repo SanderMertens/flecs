@@ -1057,8 +1057,6 @@ void flecs_bootstrap(
     /* Private properties */
     ecs_add_id(world, ecs_id(EcsPoly), EcsPrivate);
     ecs_add_id(world, ecs_id(EcsIdentifier), EcsPrivate);
-    ecs_add_id(world, EcsChildOf, EcsPrivate);
-    ecs_add_id(world, EcsIsA, EcsPrivate);
 
     /* Inherited components */
     ecs_add_pair(world, EcsIsA, EcsOnInstantiate, EcsInherit);

@@ -506,6 +506,19 @@ void flecs_json_label(
     }
 }
 
+void flecs_json_path_or_label(
+    ecs_strbuf_t *buf,
+    const ecs_world_t *world,
+    ecs_entity_t e,
+    bool path)
+{
+    if (!path) {
+        flecs_json_label(buf, world, e);
+    } else {
+        flecs_json_path(buf, world, e);
+    }
+}
+
 void flecs_json_color(
     ecs_strbuf_t *buf,
     const ecs_world_t *world,
@@ -554,11 +567,36 @@ void flecs_json_id(
     ecs_strbuf_appendch(buf, ']');
 }
 
-void flecs_json_id_member(
+static
+void flecs_json_id_member_fullpath(
     ecs_strbuf_t *buf,
     const ecs_world_t *world,
     ecs_id_t id)
 {
+    if (ECS_IS_PAIR(id)) {
+        ecs_strbuf_appendch(buf, '(');
+        ecs_entity_t first = ecs_pair_first(world, id);
+        ecs_entity_t second = ecs_pair_second(world, id);
+        ecs_get_path_w_sep_buf(world, 0, first, ".", "", buf);
+        ecs_strbuf_appendch(buf, ',');
+        ecs_get_path_w_sep_buf(world, 0, second, ".", "", buf);
+        ecs_strbuf_appendch(buf, ')');
+    } else {
+        ecs_get_path_w_sep_buf(world, 0, id & ECS_COMPONENT_MASK, ".", "", buf);
+    }
+}
+
+void flecs_json_id_member(
+    ecs_strbuf_t *buf,
+    const ecs_world_t *world,
+    ecs_id_t id,
+    bool fullpath)
+{
+    if (fullpath) {
+        flecs_json_id_member_fullpath(buf, world, id);
+        return;
+    }
+
     if (ECS_IS_PAIR(id)) {
         ecs_strbuf_appendch(buf, '(');
         ecs_entity_t first = ecs_pair_first(world, id);

@@ -539,6 +539,9 @@
 #define ecs_shares(world, entity, T)\
     (ecs_shares_id(world, entity, ecs_id(T)))
 
+#define ecs_get_target_for(world, entity, rel, T)\
+    ecs_get_target_for_id(world, entity, rel, ecs_id(T))
+
 /** @} */
 
 /**

@@ -8267,3 +8267,15 @@ void Traversal_match_empty_table_up_written_isa(void) {
 
     ecs_fini(world);
 }
+
+void Traversal_self_up_2_levels_childof(void) {
+    // Implement testcase
+}
+
+void Traversal_up_2_levels(void) {
+    // Implement testcase
+}
+
+void Traversal_up_2_levels_childof(void) {
+    // Implement testcase
+}

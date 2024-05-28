@@ -310,10 +310,25 @@ FLECS_API extern     ECS_DECLARE(EcsUriFile);      /**< UriFile unit. */
 
 /** @} */
 
+/**
+ * @defgroup c_addons_units_color Color
+ * @ingroup c_addons_units
+ * @{
+ */
+
+FLECS_API extern ECS_DECLARE(EcsColor);            /**< Color quantity. */
+FLECS_API extern     ECS_DECLARE(EcsColorRgb);     /**< ColorRgb unit. */
+FLECS_API extern     ECS_DECLARE(EcsColorHsl);     /**< ColorHsl unit. */
+FLECS_API extern     ECS_DECLARE(EcsColorCss);     /**< ColorCss unit. */
+
+/** @} */
+
+
 FLECS_API extern ECS_DECLARE(EcsAcceleration);     /**< Acceleration unit. */
 FLECS_API extern ECS_DECLARE(EcsPercentage);       /**< Percentage unit. */
 FLECS_API extern ECS_DECLARE(EcsBel);              /**< Bel unit. */
 FLECS_API extern ECS_DECLARE(EcsDeciBel);          /**< DeciBel unit. */
+FLECS_API extern ECS_DECLARE(EcsColor);            /**< Color unit. */
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Module
