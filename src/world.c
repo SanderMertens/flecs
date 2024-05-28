@@ -311,6 +311,11 @@ ECS_DECLARE(EcsAngle);
     ECS_DECLARE(EcsRadians);
     ECS_DECLARE(EcsDegrees);
 
+ECS_DECLARE(EcsColor);
+    ECS_DECLARE(EcsColorRgb);
+    ECS_DECLARE(EcsColorHsl);
+    ECS_DECLARE(EcsColorCss);
+
 ECS_DECLARE(EcsBel);
 ECS_DECLARE(EcsDeciBel);
 

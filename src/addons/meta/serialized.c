@@ -219,7 +219,8 @@ int flecs_meta_serialize_struct(
                 member_name, 0, 0);
     }
 
-    flecs_meta_ops_add(ops, EcsOpPop);
+    ecs_meta_type_op_t *pop = flecs_meta_ops_add(ops, EcsOpPop);
+    pop->type = type;
     flecs_meta_ops_get(ops, first)->op_count = ecs_vec_count(ops) - first;
     return 0;
 }

@@ -64,6 +64,7 @@ inline units::units(flecs::world& world) {
     world.entity<Angle>("::flecs::units::Angle");
     world.entity<Frequency>("::flecs::units::Frequency");
     world.entity<Uri>("::flecs::units::Uri");
+    world.entity<Color>("::flecs::units::Color");
 
     // Initialize duration units
     world.entity<duration::PicoSeconds>(
@@ -202,6 +203,11 @@ inline units::units(flecs::world& world) {
         "::flecs::units::Angle::Radians");
     world.entity<angle::Degrees>(
         "::flecs::units::Angle::Degrees");
+
+    // Initialize color
+    world.entity<color::Rgb>("::flecs::units::Color::Rgb");
+    world.entity<color::Hsl>("::flecs::units::Color::Hsl");
+    world.entity<color::Css>("::flecs::units::Color::Css");
 
     // Initialize percentage
     world.entity<Percentage>("::flecs::units::Percentage");
