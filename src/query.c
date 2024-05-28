@@ -2034,6 +2034,13 @@ void flecs_query_fini(
     ecs_poly_free(query, ecs_query_t);
 }
 
+/* ecs_poly_dtor_t-compatible wrapper */
+static
+void flecs_query_fini_poly(void *query)
+{
+    flecs_query_fini(query);
+}
+
 /* -- Public API -- */
 
 ecs_query_t* ecs_query_init(
@@ -2098,7 +2105,7 @@ ecs_query_t* ecs_query_init(
     }
 
     result->iterable.init = flecs_query_iter_init;
-    result->dtor = (ecs_poly_dtor_t)flecs_query_fini;
+    result->dtor = flecs_query_fini_poly;
     result->prev_match_count = -1;
 
     result->ctx = desc->ctx;

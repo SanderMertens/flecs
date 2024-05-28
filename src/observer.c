@@ -874,6 +874,13 @@ error:
     return -1;
 }
 
+/* ecs_poly_dtor_t-compatible wrapper */
+static
+void flecs_observer_fini_poly(void *observer)
+{
+    flecs_observer_fini(observer);
+}
+
 ecs_entity_t ecs_observer_init(
     ecs_world_t *world,
     const ecs_observer_desc_t *desc)
@@ -895,7 +902,7 @@ ecs_entity_t ecs_observer_init(
 
         ecs_observer_t *observer = ecs_poly_new(ecs_observer_t);
         ecs_assert(observer != NULL, ECS_INTERNAL_ERROR, NULL);
-        observer->dtor = (ecs_poly_dtor_t)flecs_observer_fini;
+        observer->dtor = flecs_observer_fini_poly;
 
         /* Make writeable copy of filter desc so that we can set name. This will
          * make debugging easier, as any error messages related to creating the
