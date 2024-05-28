@@ -1484,6 +1484,13 @@ void flecs_filter_fini(
     }
 }
 
+/* ecs_poly_dtor_t-compatible wrapper */
+static
+void flecs_filter_fini_poly(void *filter)
+{
+    flecs_filter_fini(filter);
+}
+
 void ecs_filter_fini(
     ecs_filter_t *filter) 
 {
@@ -1672,7 +1679,7 @@ ecs_filter_t* ecs_filter_init(
 
     f->variable_names[0] = NULL;
     f->iterable.init = flecs_filter_iter_init;
-    f->dtor = (ecs_poly_dtor_t)flecs_filter_fini;
+    f->dtor = flecs_filter_fini_poly;
     f->entity = entity;
 
     if (entity && (f->flags & EcsFilterOwnsStorage)) {
