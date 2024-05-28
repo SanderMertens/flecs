@@ -135,8 +135,10 @@ void flecs_trav_entity_down_isa(
                 if (flags & EcsEntityIsTraversable) {
                     ecs_id_record_t *idr_trav = flecs_id_record_get(world, 
                         ecs_pair(trav, e));
-                    flecs_trav_entity_down(world, a, cache, dst, trav, e,
-                        idr_trav, idr_with, self, empty);
+                    if (idr_trav) {
+                        flecs_trav_entity_down(world, a, cache, dst, trav, e,
+                            idr_trav, idr_with, self, empty);
+                    }
                 }
             }
         }

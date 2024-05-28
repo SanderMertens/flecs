@@ -13302,7 +13302,7 @@ typedef struct ecs_entity_to_json_desc_t {
 } ecs_entity_to_json_desc_t;
 
 #define ECS_ENTITY_TO_JSON_INIT (ecs_entity_to_json_desc_t){true, false,\
-    false, false, false, true, false, false, true, false, false, false, false, \
+    false, false, false, true, false, false, false, true, false, false, false, false, \
     false, false, false }
 
 /** Serialize entity into JSON string.

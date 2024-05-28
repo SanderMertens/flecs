@@ -1339,10 +1339,14 @@ void Traversal_this_up_childof_pair_for_var_written(void);
 void Traversal_this_written_self_up_childof_pair_for_var_written(void);
 void Traversal_this_self_up_childof_pair_for_var_written_n_targets(void);
 void Traversal_this_written_self_up_childof_pair_for_var_written_n_targets(void);
+void Traversal_self_up_2_levels_w_prefab(void);
+void Traversal_self_up_2_levels_other_trav_rel_w_prefab(void);
+void Traversal_up_2_levels_w_prefab(void);
+void Traversal_up_2_levels_other_trav_rel_w_prefab(void);
 void Traversal_self_up_2_levels(void);
-void Traversal_self_up_2_levels_childof(void);
+void Traversal_self_up_2_levels_other_trav_rel(void);
 void Traversal_up_2_levels(void);
-void Traversal_up_2_levels_childof(void);
+void Traversal_up_2_levels_other_trav_rel(void);
 void Traversal_self_up_mixed_traversable(void);
 void Traversal_not_up_disabled(void);
 void Traversal_up_2_rel_instances(void);
@@ -7201,20 +7205,36 @@ bake_test_case Traversal_testcases[] = {
         Traversal_this_written_self_up_childof_pair_for_var_written_n_targets
     },
     {
+        "self_up_2_levels_w_prefab",
+        Traversal_self_up_2_levels_w_prefab
+    },
+    {
+        "self_up_2_levels_other_trav_rel_w_prefab",
+        Traversal_self_up_2_levels_other_trav_rel_w_prefab
+    },
+    {
+        "up_2_levels_w_prefab",
+        Traversal_up_2_levels_w_prefab
+    },
+    {
+        "up_2_levels_other_trav_rel_w_prefab",
+        Traversal_up_2_levels_other_trav_rel_w_prefab
+    },
+    {
         "self_up_2_levels",
         Traversal_self_up_2_levels
     },
     {
-        "self_up_2_levels_childof",
-        Traversal_self_up_2_levels_childof
+        "self_up_2_levels_other_trav_rel",
+        Traversal_self_up_2_levels_other_trav_rel
     },
     {
         "up_2_levels",
         Traversal_up_2_levels
     },
     {
-        "up_2_levels_childof",
-        Traversal_up_2_levels_childof
+        "up_2_levels_other_trav_rel",
+        Traversal_up_2_levels_other_trav_rel
     },
     {
         "self_up_mixed_traversable",
@@ -9811,7 +9831,7 @@ static bake_test_suite suites[] = {
         "Traversal",
         Traversal_setup,
         NULL,
-        102,
+        106,
         Traversal_testcases,
         1,
         Traversal_params
