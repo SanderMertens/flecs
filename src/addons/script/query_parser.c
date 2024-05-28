@@ -617,6 +617,10 @@ const char* flecs_id_parse(
     const char *expr,
     ecs_id_t *id)
 {
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(expr != NULL, ECS_INVALID_PARAMETER, name);
+    ecs_assert(id != NULL, ECS_INVALID_PARAMETER, NULL);
+
     char token_buffer[256];
     ecs_term_t term = {0};
     EcsParserFixedBuffer(world, name, expr, token_buffer, 256);

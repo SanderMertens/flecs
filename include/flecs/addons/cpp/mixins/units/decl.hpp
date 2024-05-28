@@ -81,6 +81,7 @@ struct DataRate { };
 struct Angle { };
 struct Frequency { };
 struct Uri { };
+struct Color { };
 
 /** @} */
 
@@ -334,6 +335,20 @@ struct File { };
 /** @} */
 };
 
+
+struct color {
+/**
+ * @defgroup cpp_addons_units_color Color
+ * @ingroup cpp_addons_units
+ * @{
+ */
+
+struct Rgb { };
+struct Hsl { };
+struct Css { };
+
+/** @} */
+};
 
 struct Percentage { };
 struct Bel { };

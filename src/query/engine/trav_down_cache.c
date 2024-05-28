@@ -158,6 +158,7 @@ ecs_trav_down_t* flecs_trav_entity_down(
 {
     ecs_assert(dst != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(idr_with != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(idr_trav != NULL, ECS_INTERNAL_ERROR, NULL);
 
     flecs_trav_entity_down_isa(
         world, a, cache, dst, trav, entity, idr_with, self, empty);
