@@ -230,6 +230,13 @@ void flecs_system_fini(ecs_system_t *sys) {
     ecs_poly_free(sys, ecs_system_t);
 }
 
+/* ecs_poly_dtor_t-compatible wrapper */
+static
+void flecs_system_fini_poly(void *sys)
+{
+    flecs_system_fini(sys);
+}
+
 static
 void flecs_system_init_timer(
     ecs_world_t *world,
@@ -282,7 +289,7 @@ ecs_entity_t ecs_system_init(
         
         poly->poly = system;
         system->world = world;
-        system->dtor = (ecs_poly_dtor_t)flecs_system_fini;
+        system->dtor = flecs_system_fini_poly;
         system->entity = entity;
 
         ecs_query_desc_t query_desc = desc->query;

@@ -103,6 +103,13 @@ void flecs_rule_fini(
     ecs_poly_free(rule, ecs_rule_t);
 }
 
+/* ecs_poly_dtor_t-compatible wrapper */
+static
+void flecs_rule_fini_poly(void *rule)
+{
+    flecs_rule_fini(rule);
+}
+
 void ecs_rule_fini(
     ecs_rule_t *rule)
 {
@@ -137,7 +144,7 @@ ecs_rule_t* ecs_rule_init(
     }
 
     ecs_entity_t entity = const_desc->entity;
-    result->dtor = (ecs_poly_dtor_t)flecs_rule_fini;
+    result->dtor = flecs_rule_fini_poly;
 
     if (entity) {
         EcsPoly *poly = ecs_poly_bind(world, entity, ecs_rule_t);
