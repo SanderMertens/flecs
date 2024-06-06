@@ -26,12 +26,17 @@ void UFlecsNetworkingActorComponent::Client_UpdateCreatedNetworkedEntities_Imple
 		
 		if UNLIKELY_IF(!Entity.IsValid())
 		{
-			UN_LOG(LogFlecsNetworkingActorComponent, Error,
+			UN_LOG(LogFlecsNetworkingActorComponent, Warning,
 				"Entity %s not found in world %s",
 				*EntityName,
 				*WorldName.ToString());
 			
-			continue;
+			Entity = FlecsWorld->CreateEntity(EntityName);
+
+			UN_LOG(LogFlecsNetworkingActorComponent, Log,
+				"Created entity %s in world %s, sent from server",
+				*EntityName,
+				*WorldName.ToString());
 		}
 
 		Entity.Set<FFlecsNetworkIdComponent>(NetworkId);

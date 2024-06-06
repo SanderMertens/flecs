@@ -15,7 +15,6 @@ DECLARE_STATS_GROUP(TEXT("FlecsWorld"), STATGROUP_FlecsWorld, STATCAT_Advanced);
 
 DECLARE_CYCLE_STAT(TEXT("FlecsWorld Progress"), STAT_FlecsWorldProgress, STATGROUP_FlecsWorld);
 
-
 UCLASS(BlueprintType)
 class UNREALFLECS_API UFlecsWorld final : public UObject
 {
@@ -255,6 +254,11 @@ public:
 	FORCEINLINE void ImportModule()
 	{
 		World.import<T>();
+	}
+
+	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
+	FORCEINLINE void ImportModule(const FString& ModuleName) const
+	{
 	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
@@ -770,5 +774,53 @@ public:
 		return World.lookup(TCHAR_TO_ANSI(*Tag.ToString()), ".", ".");
 	}
 
+	template <typename T>
+	FORCEINLINE void EnableType() const
+	{
+		World.component<T>().enable();
+	}
+
+	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs")
+	FORCEINLINE void EnableType(UScriptStruct* ScriptStruct) const
+	{
+		ObtainComponentTypeStruct(ScriptStruct).Enable();
+	}
+
+	template <typename T>
+	FORCEINLINE void DisableType() const
+	{
+		World.component<T>().disable();
+	}
+
+	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs")
+	FORCEINLINE void DisableType(UScriptStruct* ScriptStruct) const
+	{
+		ObtainComponentTypeStruct(ScriptStruct).Disable();
+	}
+
+	template <typename T>
+	FORCEINLINE NO_DISCARD bool IsTypeEnabled() const
+	{
+		return World.component<T>().enabled();
+	}
+
+	UFUNCTION(BlueprintCallable, Category = "Flecs")
+	FORCEINLINE bool IsTypeEnabled(UScriptStruct* ScriptStruct) const
+	{
+		return ObtainComponentTypeStruct(ScriptStruct).IsEnabled();
+	}
+
+	template <typename T>
+	FORCEINLINE void ToggleType() const
+	{
+		World.component<T>().enabled() ? World.component<T>().disable() : World.component<T>().enable();
+	}
+
+	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs")
+	FORCEINLINE void ToggleType(UScriptStruct* ScriptStruct) const
+	{
+		ObtainComponentTypeStruct(ScriptStruct).Toggle();
+	}
+	
 	flecs::world World;
 }; // class UFlecsWorld

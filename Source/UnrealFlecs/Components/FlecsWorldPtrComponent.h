@@ -70,3 +70,9 @@ struct UNREALFLECS_API FFlecsWorldPtrComponent
 	TWeakObjectPtr<UWorld> OwningWorld;
 	
 }; // struct FFlecsWorldPtrComponent
+
+FORCEINLINE NO_DISCARD UFlecsWorld* ToFlecsWorld(const flecs::world& InWorld)
+{
+	solid_checkf(InWorld.get<FFlecsWorldPtrComponent>()->IsValid(), TEXT("World is not valid!"));
+	return InWorld.get<FFlecsWorldPtrComponent>()->World.Get();
+}

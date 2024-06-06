@@ -49,5 +49,29 @@ public:
 	
 	UPROPERTY()
 	TOptional<uint64> NetworkId;
+
+	FORCEINLINE NO_DISCARD FString ToString() const
+	{
+		return FString::Printf(TEXT("NetworkId: %llu"), NetworkId.Get(std::numeric_limits<uint64>::max()));
+	}
+
+	FORCEINLINE bool NetSerialize(FArchive& Ar, class UPackageMap* Map, bool& bOutSuccess)
+	{
+		const TOptional InvalidNetworkId = std::numeric_limits<uint64>::max();
+		
+		SerializeOptionalValue<TOptional<uint64>>(Ar.IsSaving(), Ar, NetworkId, InvalidNetworkId);
+		
+		return true;
+	}
 	
 }; // struct FNetworkIdComponent
+
+template<>
+struct TStructOpsTypeTraits<FFlecsNetworkIdComponent> : public TStructOpsTypeTraitsBase2<FFlecsNetworkIdComponent>
+{
+	enum
+	{
+		WithNetSerializer = true,
+	}; // enum
+	
+}; // struct TStructOpsTypeTraits<FFlecsNetworkIdComponent>

@@ -218,10 +218,10 @@ public:
 	template <typename T>
 	FORCEINLINE void Disable() const { GetEntity().disable<T>(); }
 
-	FORCEINLINE void Toggle() const { GetEntity().enable(!IsEnabled()); }
+	FORCEINLINE void Toggle() const { IsEnabled() ? Disable() : Enable(); }
 
 	template <typename T>
-	FORCEINLINE void Toggle() const { GetEntity().enable<T>(!IsEnabled<T>()); }
+	FORCEINLINE void Toggle() const { IsEnabled<T>() ? Disable<T>() : Enable<T>(); }
 
 	FORCEINLINE void Toggle(const FFlecsEntityHandle& InEntity) const
 	{
@@ -417,25 +417,7 @@ public:
 		GetEntity().from_json(TCHAR_TO_ANSI(*InJson));
 	}
 
-	FORCEINLINE bool NetSerialize(FArchive& Ar, UPackageMap* Map, bool& bOutSuccess)
-	{
-		if (Ar.IsLoading())
-		{
-			FString Json;
-			Ar << Json;
-			FromJson(Json);
-		}
-		else
-		{
-			FString Json = ToJson();
-			Ar << Json;
-		}
-		
-		SerializeOptionalValue(Ar.IsSaving(), Ar, WorldName, FName("DefaultFlecsWorld"));
-			
-		bOutSuccess = true;
-		return true;
-	}
+	FORCEINLINE bool NetSerialize(FArchive& Ar, UPackageMap* Map, bool& bOutSuccess);
 
 	template <typename FunctionType>
 	FORCEINLINE void Iterate(const FunctionType& InFunction) const
@@ -597,7 +579,7 @@ public:
 	template <typename TComponent, typename TTrait>
 	FORCEINLINE TTrait* GetTraitPtr()
 	{
-		return ObtainTraitHolderEntity<TComponent>().template GetPtr<TTrait>();
+		return ObtainTraitHolderEntity<TComponent>().GetPtr<TTrait>();
 	}
 
 	template <typename TComponent, typename TTrait>
@@ -887,7 +869,13 @@ struct TStructOpsTypeTraits<FFlecsEntityHandle> : public TStructOpsTypeTraitsBas
 {
 	enum
 	{
+		WithSerializer = true,
 		WithNetSerializer = true,
 	}; // enum
 	
 }; // struct TStructOpsTypeTraits<FFlecsEntityHandle>
+
+FORCEINLINE bool IsValid(const FFlecsEntityHandle& Test)
+{
+	return Test.IsValid();
+}

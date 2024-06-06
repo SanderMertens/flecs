@@ -2,6 +2,7 @@
 
 #include "FlecsEntityHandle.h"
 #include "Components/FlecsWorldPtrComponent.h"
+#include "Networking/FlecsNetworkingActorComponent.h"
 #include "Worlds/FlecsWorld.h"
 #include "Worlds/FlecsWorldSubsystem.h"
 
@@ -55,6 +56,55 @@ UWorld* FFlecsEntityHandle::GetOuterWorld() const
 FName FFlecsEntityHandle::GetWorldName() const
 {
     return GetFlecsWorld()->GetWorldName();
+}
+
+bool FFlecsEntityHandle::NetSerialize(FArchive& Ar, UPackageMap* Map, bool& bOutSuccess)
+{
+    if (Ar.IsLoading())
+    {
+        FNetworkedEntityInfo Info;
+        Info.NetSerialize(Ar, Map, bOutSuccess);
+
+        WorldName = Info.WorldName;
+
+        const UFlecsWorldSubsystem* FlecsWorldSubsystem = GWorld->GetSubsystem<UFlecsWorldSubsystem>();
+        solid_checkf(FlecsWorldSubsystem, TEXT("Flecs World Subsystem not found"));
+        solid_checkf(FlecsWorldSubsystem->HasWorld(WorldName), TEXT("Flecs World not found"))
+
+        const flecs::query<const FFlecsNetworkIdComponent> Query = FlecsWorldSubsystem->GetFlecsWorld(WorldName)->World
+            .query<const FFlecsNetworkIdComponent>();
+
+        const FFlecsEntityHandle EntityHandle = Query.find([&Info](const FFlecsNetworkIdComponent& InNetworkId)
+        {
+            return InNetworkId.GetNetworkId() == Info.NetworkId;
+        });
+
+        if (EntityHandle.IsValid())
+        {
+            SetEntity(EntityHandle.GetEntity());
+        }
+        else
+        {
+            SetEntity(flecs::entity(FlecsWorldSubsystem->GetFlecsWorld(WorldName)->LookupEntity(Info.EntityName)));
+        }
+        
+        bOutSuccess = true;
+        return true;
+    }
+    else
+    {
+        solid_checkf(Has<FFlecsNetworkIdComponent>(), TEXT("Entity does not have a network ID component"));
+        solid_checkf(Get<FFlecsNetworkIdComponent>().IsValid(), TEXT("Network ID component is not valid"));
+
+        FNetworkedEntityInfo Info;
+        Info.NetworkId = Get<FFlecsNetworkIdComponent>();
+        Info.EntityName = GetName();
+        Info.WorldName = GetWorldName();
+
+        Info.NetSerialize(Ar, Map, bOutSuccess);
+        bOutSuccess = true;
+        return true;
+    }
 }
 
 FFlecsEntityHandle FFlecsEntityHandle::ObtainComponentTypeStruct(const UScriptStruct* StructType) const

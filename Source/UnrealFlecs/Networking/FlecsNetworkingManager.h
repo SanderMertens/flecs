@@ -3,8 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "FlecsEntitySyncInfoComponent.h"
 #include "FlecsNetworkIdComponent.h"
+#include "Entities/FlecsEntityHandle.h"
 #include "Entities/FlecsEntityHandle.h"
 #include "GameFramework/Actor.h"
 #include "FlecsNetworkingManager.generated.h"

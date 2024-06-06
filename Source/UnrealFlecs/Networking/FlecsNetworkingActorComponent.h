@@ -27,7 +27,28 @@ struct FNetworkedEntityInfo
 
 	UPROPERTY()
 	FString EntityName;
+
+	FORCEINLINE bool NetSerialize(FArchive& Ar, class UPackageMap* Map, bool& bOutSuccess)
+	{
+		NetworkId.NetSerialize(Ar, Map, bOutSuccess);
+		SerializeOptionalValue<FName>(Ar.IsSaving(), Ar, WorldName, FName("DefaultFlecsWorld"));
+		Ar << EntityName;
+
+		bOutSuccess = true;
+		return true;
+	}
+	
 }; // struct FNetworkedEntityInfo
+
+template<>
+struct TStructOpsTypeTraits<FNetworkedEntityInfo> : public TStructOpsTypeTraitsBase2<FNetworkedEntityInfo>
+{
+	enum
+	{
+		WithNetSerializer = true,
+	}; // enum
+	
+}; // struct TStructOpsTypeTraits<FNetworkedEntityInfo>
 
 UCLASS(BlueprintType, ClassGroup=(Flecs), meta=(BlueprintSpawnableComponent))
 class UNREALFLECS_API UFlecsNetworkingActorComponent final : public UActorComponent

@@ -28,6 +28,12 @@ public:
         Query = InQueryBuilder.build();
     }
 
+    template<typename ...TArgs>
+    FORCEINLINE FFlecsQuery(const flecs::world& InWorld, const char* InName)
+    {
+        Query = InWorld.query<TArgs...>(InName);
+    }
+
     FORCEINLINE NO_DISCARD bool HasChanged() const
     {
         return Query.changed();
@@ -81,3 +87,4 @@ public:
 private:
     flecs::query<> Query;
 }; // struct FFlecsQuery
+

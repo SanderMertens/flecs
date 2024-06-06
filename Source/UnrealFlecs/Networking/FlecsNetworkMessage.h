@@ -3,10 +3,11 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "FlecsPushModelEvent.generated.h"
+#include "FlecsNetworkMessage.generated.h"
 
 USTRUCT(BlueprintType)
-struct UNREALFLECS_API FFlecsPushModelEvent
+struct UNREALFLECS_API FFlecsNetworkMessage
 {
 	GENERATED_BODY()
-}; // struct FFlecsPushModelEvent
+	
+}; // struct FFlecsNetworkMessage

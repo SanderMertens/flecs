@@ -1,7 +1,6 @@
 ﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 #include "FlecsNetworkingManager.h"
-#include "FlecsEntitySyncInfoComponent.h"
 #include "FlecsNetworkIdComponent.h"
 #include "FlecsNetworkingActorComponent.h"
 #include "Unlog/Unlog.h"
@@ -36,16 +35,12 @@ void UFlecsNetworkingManager::BeginPlay()
 			.event(flecs::OnAdd)
 			.yield_existing(true)
 			.read_write()
-		.with<FFlecsEntitySyncInfoComponent>()
-			.optional()
 		.with(flecs::Name)
 			.and_()
 			.inout_none()
-		.each([this](flecs::iter& Iterator, const uint64 Index, FFlecsNetworkIdComponent& NetworkId)
+		.each([this](const flecs::iter& Iterator, const uint64 Index, FFlecsNetworkIdComponent& NetworkId)
 		{
-			FFlecsEntityHandle Entity = Iterator.entity(Index);
-
-			FFlecsEntitySyncInfoComponent* EntitySyncInfo = Entity.GetPtr<FFlecsEntitySyncInfoComponent>();
+			const FFlecsEntityHandle Entity = Iterator.entity(Index);
 			
 			if UNLIKELY_IF(NetworkId.IsValid())
 			{
