@@ -7,6 +7,7 @@
 #include "Components/FlecsTypeMapComponent.h"
 #include "SolidMacros/Concepts/SolidConcepts.h"
 #include "Entities/FlecsId.h"
+#include "Modules/FlecsModuleInterface.h"
 #include "Systems/FlecsSystem.h"
 #include "Timers/FlecsTimer.h"
 #include "FlecsWorld.generated.h"
@@ -257,8 +258,10 @@ public:
 	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
-	FORCEINLINE void ImportModule(const FString& ModuleName) const
+	FORCEINLINE void ImportModule(TScriptInterface<IFlecsModuleInterface> InModule) const
 	{
+		solid_checkf(InModule != nullptr, TEXT("Module is nullptr"));
+		InModule->ImportModule(World);
 	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
@@ -346,7 +349,7 @@ public:
 		return World.get_pipeline();
 	}
 
-	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
+	/*UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
 	FORCEINLINE FFlecsEntityHandle SetScope(const FFlecsEntityHandle& InScope) const
 	{
 		return World.set_scope(InScope);
@@ -362,7 +365,7 @@ public:
 	FORCEINLINE FFlecsEntityHandle GetScope() const
 	{
 		return World.get_scope();
-	}
+	}*/
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
 	FORCEINLINE float GetDeltaTime() const
@@ -823,4 +826,7 @@ public:
 	}
 	
 	flecs::world World;
+
+	UPROPERTY()
+	TArray<TObjectPtr<UFlecsWorld>> Stages;
 }; // class UFlecsWorld

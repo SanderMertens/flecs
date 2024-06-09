@@ -39,6 +39,7 @@ struct FFlecsRestSettings
 
 	UPROPERTY(EditAnywhere, Category = "Flecs | REST API")
 	FString IPAddress = "0.0.0.0";
+	
 }; // struct FFlecsRestSettings
 
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnWorldCreated, FName, UFlecsWorld*);

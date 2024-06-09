@@ -1,20 +1,22 @@
 ﻿// Fill out your copyright notice in the Description page of Project Settings.
 
+// ReSharper disable IdentifierTypo
 #pragma once
 
 #include "CoreMinimal.h"
 #include "flecs.h"
-#include "Components/FlecsWorldPtrComponent.h"
+#include "Entities/FlecsEntityHandle.h"
+#include "SolidMacros/Macros.h"
 #include "UObject/Interface.h"
-#include "Worlds/FlecsWorld.h"
 #include "FlecsModuleInterface.generated.h"
+
+class UFlecsWorld;
 
 /**
  * This flecs module impl, doesn't take advantage of scoping in flecs as
  * that creates a lot of problems with the Reflection system.
  * for type impl for modules, you can disable, enable, and toggle the types directly(types will be registered)
  */
-
 // This class does not need to be modified.
 UINTERFACE()
 class UFlecsModuleInterface : public UInterface
@@ -22,83 +24,74 @@ class UFlecsModuleInterface : public UInterface
 	GENERATED_BODY()
 }; // class UFlecsModuleInterface
 
+/**
+ * This flecs module impl, doesn't take advantage of scoping in flecs as
+ * that creates a lot of problems with the Reflection system.
+ * for type impl for modules, you can disable, enable, and toggle the types directly(types will be registered)
+ */
 class UNREALFLECS_API IFlecsModuleInterface
 {
 	GENERATED_BODY()
 
 public:
 
-	FORCEINLINE void ImportModule(const flecs::world& InWorld)
-	{
-		World = ToFlecsWorld(InWorld);
+	FORCEINLINE void ImportModule(const flecs::world& InWorld);
 
-		const FFlecsEntityHandle ModuleEntity = InWorld.entity(TCHAR_TO_ANSI(*GetModuleName()));
-		solid_checkf(ModuleEntity.IsValid(), TEXT("Module entity is not valid!"));
+	FORCEINLINE void DeinitModule_Internal();
 
-		ModuleEntity.Add(flecs::Module);
-		
-		InitializeModule(World.Get(), ModuleEntity);
-		BP_InitializeModule(World.Get());
-	}
-
-	virtual void InitializeModule(UFlecsWorld* InWorld, const FFlecsEntityHandle& InModuleEntity)
-	{
-		
-	}
+	virtual void InitializeModule(UFlecsWorld* InWorld, const FFlecsEntityHandle& InModuleEntity);
 	
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Flecs | Modules", meta = (DisplayName = "Initialize Module"))
 	void BP_InitializeModule(UFlecsWorld* InWorld);
 
-	virtual void DeinitializeModule(UFlecsWorld* InWorld)
-	{
-	}
+	virtual void DeinitializeModule(UFlecsWorld* InWorld);
 
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Flecs | Modules", meta = (DisplayName = "Deinitialize Module"))
 	void BP_DeinitializeModule(UFlecsWorld* InWorld);
 
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Flecs | Modules")
 	FString GetModuleName() const;
-	FString GetModuleName_Implementation() const PURE_VIRTUAL(IFlecsModuleInterface::GetModuleName, return FString(););
+	virtual FString GetModuleName_Implementation() const;
 
-	FORCEINLINE NO_DISCARD UFlecsWorld* GetWorld() const
+	FORCEINLINE NO_DISCARD UFlecsWorld* GetFlecsWorld() const
 	{
 		return World.Get();
 	}
 
-	FORCEINLINE NO_DISCARD flecs::world GetFlecsWorld() const
+	FORCEINLINE NO_DISCARD FFlecsEntityHandle GetModuleEntity() const
 	{
-		return World->World;
+		return ModuleEntity;
 	}
 	
 	TWeakObjectPtr<UFlecsWorld> World;
+
+	FFlecsEntityHandle ModuleEntity;
 	
 }; // class IFlecsModuleInterface
 
+/**
+ * This flecs module impl, doesn't take advantage of scoping in flecs as
+ * that creates a lot of problems with the Reflection system.
+ * for type impl for modules, you can disable, enable, and toggle the types directly(types will be registered)
+ */
 USTRUCT(BlueprintType)
 struct UNREALFLECS_API FFlecsModuleStructInterface
 {
 	GENERATED_BODY()
 
 public:
-	virtual ~FFlecsModuleStructInterface() = default;
+	virtual ~FFlecsModuleStructInterface();
 
 	virtual void InitializeModule(UFlecsWorld* InWorld, const FFlecsEntityHandle& InModuleEntity)
 		PURE_VIRTUAL(FFlecsModuleStructInterface::InitializeModule, );
+	
 	virtual void DeinitializeModule(UFlecsWorld* InWorld)
 		PURE_VIRTUAL(FFlecsModuleStructInterface::DeinitializeModule, );
 
 	virtual NO_DISCARD FString GetModuleName() const
 		PURE_VIRTUAL(FFlecsModuleStructInterface::GetModuleName, return FString(););
 
-	FORCEINLINE NO_DISCARD UFlecsWorld* GetWorld() const
-	{
-		return World.Get();
-	}
-
-	FORCEINLINE NO_DISCARD flecs::world GetFlecsWorld() const
-	{
-		return World->World;
-	}
+	FORCEINLINE NO_DISCARD UFlecsWorld* GetFlecsWorld() const;
 
 	UPROPERTY()
 	TWeakObjectPtr<UFlecsWorld> World;
@@ -110,5 +103,6 @@ struct TStructOpsTypeTraits<FFlecsModuleStructInterface> : public TStructOpsType
 	enum
 	{
 		WithPureVirtual = true
-	};
+	}; // enum
+	
 }; // struct TStructOpsTypeTraits<FFlecsModuleStructInterface>

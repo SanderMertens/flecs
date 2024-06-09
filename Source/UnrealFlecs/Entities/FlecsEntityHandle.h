@@ -140,7 +140,7 @@ public:
 	}
 	
 	template <typename T>
-	FORCEINLINE NO_DISCARD T Get() const { return GetEntity().get<T>(); }
+	FORCEINLINE NO_DISCARD T Get() const { return *GetEntity().get<T>(); }
 
 	FORCEINLINE NO_DISCARD void* GetPtr(const FFlecsEntityHandle& InEntity)
 	{
@@ -869,7 +869,6 @@ struct TStructOpsTypeTraits<FFlecsEntityHandle> : public TStructOpsTypeTraitsBas
 {
 	enum
 	{
-		WithSerializer = true,
 		WithNetSerializer = true,
 	}; // enum
 	

@@ -76,7 +76,7 @@ bool FFlecsEntityHandle::NetSerialize(FArchive& Ar, UPackageMap* Map, bool& bOut
 
         const FFlecsEntityHandle EntityHandle = Query.find([&Info](const FFlecsNetworkIdComponent& InNetworkId)
         {
-            return InNetworkId.GetNetworkId() == Info.NetworkId;
+            return InNetworkId == Info.NetworkId;
         });
 
         if (EntityHandle.IsValid())
@@ -85,7 +85,7 @@ bool FFlecsEntityHandle::NetSerialize(FArchive& Ar, UPackageMap* Map, bool& bOut
         }
         else
         {
-            SetEntity(flecs::entity(FlecsWorldSubsystem->GetFlecsWorld(WorldName)->LookupEntity(Info.EntityName)));
+            SetEntity(FlecsWorldSubsystem->GetFlecsWorld(WorldName)->LookupEntity(Info.EntityName).GetEntity());
         }
         
         bOutSuccess = true;
