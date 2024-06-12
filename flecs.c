@@ -26590,6 +26590,10 @@ const ecs_member_t* ecs_cpp_last_member(
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
 #endif
+#if !defined(_WIN32_WINNT) | _WIN32_WINNT <= 0x502
+    #define WINVER 0x600
+    #define _WIN32_WINNT WINVER
+#endif
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #include <windows.h>
