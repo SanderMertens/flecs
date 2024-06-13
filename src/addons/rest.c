@@ -6,6 +6,7 @@
 #include "../private_api.h"
 
 #include "script/script.h"
+#include "pipeline/pipeline.h"
 
 #ifdef FLECS_REST
 
@@ -609,7 +610,7 @@ bool flecs_rest_reply_query(
     return true;
 }
 
-#ifdef FLECS_MONITOR
+#ifdef FLECS_STATS
 
 static
 void flecs_rest_array_append_(
@@ -779,6 +780,10 @@ void flecs_system_stats_to_json(
     ecs_get_path_w_sep_buf(world, 0, system, ".", NULL, reply);
     ecs_strbuf_appendch(reply, '"');
 
+    bool disabled = ecs_has_id(world, system, EcsDisabled);
+    ecs_strbuf_list_appendlit(reply, "\"disabled\":");
+    ecs_strbuf_appendstr(reply, disabled ? "true" : "false");
+
     if (!stats->task) {
         ECS_GAUGE_APPEND(reply, &stats->query, matched_table_count, "");
         ECS_GAUGE_APPEND(reply, &stats->query, matched_entity_count, "");
@@ -789,50 +794,114 @@ void flecs_system_stats_to_json(
 }
 
 static
-void flecs_pipeline_stats_to_json(
+void flecs_sync_stats_to_json(
     ecs_world_t *world,
-    ecs_strbuf_t *reply,
-    const EcsPipelineStats *stats)
+    ecs_http_reply_t *reply,
+    const ecs_pipeline_stats_t *pstats,
+    const ecs_sync_stats_t *stats)
 {
-    ecs_strbuf_list_push(reply, "[", ",");
+    ecs_strbuf_list_push(&reply->body, "{", ",");
 
-    int32_t i, count = ecs_vec_count(&stats->stats.systems), sync_cur = 0;
-    ecs_entity_t *ids = ecs_vec_first_t(&stats->stats.systems, ecs_entity_t);
-    for (i = 0; i < count; i ++) {
-        ecs_entity_t id = ids[i];
-        
-        ecs_strbuf_list_next(reply);
+    ecs_strbuf_list_appendlit(&reply->body, "\"multi_threaded\":");
+    ecs_strbuf_appendbool(&reply->body, stats->multi_threaded);
 
-        if (id) {
-            ecs_system_stats_t *sys_stats = ecs_map_get_deref(
-                &stats->stats.system_stats, ecs_system_stats_t, id);
-            flecs_system_stats_to_json(world, reply, id, sys_stats);
-        } else {
-            /* Sync point */
-            ecs_strbuf_list_push(reply, "{", ",");
-            ecs_sync_stats_t *sync_stats = ecs_vec_get_t(
-                &stats->stats.sync_points, ecs_sync_stats_t, sync_cur);
+    ecs_strbuf_list_appendlit(&reply->body, "\"immediate\":");
+    ecs_strbuf_appendbool(&reply->body, stats->immediate);
 
-            ecs_strbuf_list_appendlit(reply, "\"system_count\":");
-            ecs_strbuf_appendint(reply, sync_stats->system_count);
+    ECS_GAUGE_APPEND_T(&reply->body, stats, time_spent, pstats->t, "");
+    ECS_GAUGE_APPEND_T(&reply->body, stats, commands_enqueued, pstats->t, "");
 
-            ecs_strbuf_list_appendlit(reply, "\"multi_threaded\":");
-            ecs_strbuf_appendbool(reply, sync_stats->multi_threaded);
+    ecs_strbuf_list_pop(&reply->body, "}");
+}
 
-            ecs_strbuf_list_appendlit(reply, "\"immediate\":");
-            ecs_strbuf_appendbool(reply, sync_stats->immediate);
+static
+void flecs_all_systems_stats_to_json(
+    ecs_world_t *world,
+    const ecs_http_request_t* req,
+    ecs_http_reply_t *reply,
+    ecs_entity_t period)
+{
+    const EcsSystemStats *stats = ecs_get_pair(world, EcsWorld, 
+        EcsSystemStats, period);
 
-            ECS_GAUGE_APPEND_T(reply, sync_stats, 
-                time_spent, stats->stats.t, "");
-            ECS_GAUGE_APPEND_T(reply, sync_stats, 
-                commands_enqueued, stats->stats.t, "");
+    ecs_strbuf_list_push(&reply->body, "[", ",");
+    
+    ecs_map_iter_t it = ecs_map_iter(&stats->stats);
+    while (ecs_map_next(&it)) {
+        ecs_entity_t id = ecs_map_key(&it);
+        ecs_system_stats_t *stats = ecs_map_ptr(&it);
 
-            ecs_strbuf_list_pop(reply, "}");
-            sync_cur ++;
-        }
+        ecs_strbuf_list_next(&reply->body);
+        flecs_system_stats_to_json(world, &reply->body, id, stats);
     }
 
-    ecs_strbuf_list_pop(reply, "]");
+    ecs_strbuf_list_pop(&reply->body, "]");
+}
+
+static
+void flecs_pipeline_stats_to_json(
+    ecs_world_t *world,
+    const ecs_http_request_t* req,
+    ecs_http_reply_t *reply,
+    ecs_entity_t period)
+{
+    char *pipeline_name = NULL;
+    flecs_rest_string_param(req, "name", &pipeline_name);
+
+    if (!pipeline_name || !ecs_os_strcmp(pipeline_name, "all")) {
+        flecs_all_systems_stats_to_json(world, req, reply, period);
+        return;
+    }
+
+    ecs_entity_t e = ecs_lookup(world, pipeline_name);
+    if (!e) {
+        flecs_reply_error(reply, "pipeline '%s' not found", pipeline_name);
+        reply->code = 404;
+        return;
+    }
+
+    const EcsPipelineStats *stats = ecs_get_pair(world, EcsWorld, 
+        EcsPipelineStats, period);
+    const EcsSystemStats *system_stats = ecs_get_pair(world, EcsWorld, 
+        EcsSystemStats, period);
+    if (!stats || !system_stats) {
+        goto noresults;
+    }
+
+    ecs_pipeline_stats_t *pstats = ecs_map_get_deref(
+        &stats->stats, ecs_pipeline_stats_t, e);
+    if (!pstats) {
+        goto noresults;
+    }
+
+    const EcsPipeline *p = ecs_get(world, e, EcsPipeline);
+
+    ecs_strbuf_list_push(&reply->body, "[", ",");
+
+    ecs_pipeline_op_t *ops = ecs_vec_first_t(&p->state->ops, ecs_pipeline_op_t);
+    ecs_entity_t *systems = ecs_vec_first_t(&p->state->systems, ecs_entity_t);
+    ecs_sync_stats_t *syncs = ecs_vec_first_t(
+        &pstats->sync_points, ecs_sync_stats_t);
+
+    int32_t s, o, op_count = ecs_vec_count(&p->state->ops);
+    for (o = 0; o < op_count; o ++) {
+        ecs_pipeline_op_t *op = &ops[o];
+        for (s = op->offset; s < (op->offset + op->count); s ++) {
+            ecs_entity_t system = systems[s];
+            ecs_system_stats_t *stats = ecs_map_get_deref(
+                &system_stats->stats, ecs_system_stats_t, system);
+            ecs_strbuf_list_next(&reply->body);
+            flecs_system_stats_to_json(world, &reply->body, system, stats);
+        }
+
+        ecs_strbuf_list_next(&reply->body);
+        flecs_sync_stats_to_json(world, reply, pstats, &syncs[o]);
+    }
+
+    ecs_strbuf_list_pop(&reply->body, "]");
+    return;
+noresults:
+    ecs_strbuf_appendlit(&reply->body, "[]");
 }
 
 static
@@ -848,7 +917,7 @@ bool flecs_rest_reply_stats(
     ecs_entity_t period = EcsPeriod1s;
     if (period_str) {
         char *period_name = flecs_asprintf("Period%s", period_str);
-        period = ecs_lookup_child(world, ecs_id(FlecsMonitor), period_name);
+        period = ecs_lookup_child(world, ecs_id(FlecsStats), period_name);
         ecs_os_free(period_name);
         if (!period) {
             flecs_reply_error(reply, "bad request (invalid period string)");
@@ -864,9 +933,7 @@ bool flecs_rest_reply_stats(
         return true;
 
     } else if (!ecs_os_strcmp(category, "pipeline")) {
-        const EcsPipelineStats *stats = ecs_get_pair(world, EcsWorld, 
-            EcsPipelineStats, period);
-        flecs_pipeline_stats_to_json(world, &reply->body, stats);
+        flecs_pipeline_stats_to_json(world, req, reply, period);
         return true;
 
     } else {

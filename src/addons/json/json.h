@@ -107,6 +107,9 @@ void flecs_json_bool(
     ecs_strbuf_t *buf,
     bool value);
 
+void flecs_json_null(
+    ecs_strbuf_t *buf);
+
 void flecs_json_array_push(
     ecs_strbuf_t *buf);
 
@@ -220,6 +223,20 @@ int flecs_json_append_type(
     ecs_entity_t ent, 
     ecs_entity_t inst,
     const ecs_entity_to_json_desc_t *desc);
+
+int flecs_json_serialize_iter_result_fields(
+    const ecs_world_t *world, 
+    const ecs_iter_t *it,
+    int32_t i,
+    ecs_strbuf_t *buf,
+    const ecs_iter_to_json_desc_t *desc,
+    ecs_json_ser_ctx_t *ser_ctx);
+
+bool flecs_json_serialize_get_value_ctx(
+    const ecs_world_t *world,
+    ecs_id_t id,
+    ecs_json_value_ser_ctx_t *ctx,
+    const ecs_iter_to_json_desc_t *desc);
 
 #endif
 

@@ -73,8 +73,8 @@ struct each_delegate;
 #ifdef FLECS_UNITS
 #include "mixins/units/decl.hpp"
 #endif
-#ifdef FLECS_MONITOR
-#include "mixins/monitor/decl.hpp"
+#ifdef FLECS_STATS
+#include "mixins/stats/decl.hpp"
 #endif
 #ifdef FLECS_METRICS
 #include "mixins/metrics/decl.hpp"
@@ -139,8 +139,8 @@ struct each_delegate;
 #ifdef FLECS_UNITS
 #include "mixins/units/impl.hpp"
 #endif
-#ifdef FLECS_MONITOR
-#include "mixins/monitor/impl.hpp"
+#ifdef FLECS_STATS
+#include "mixins/stats/impl.hpp"
 #endif
 #ifdef FLECS_METRICS
 #include "mixins/metrics/impl.hpp"

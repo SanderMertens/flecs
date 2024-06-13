@@ -9115,7 +9115,7 @@ void Variables_var_count(void) {
     });
     test_assert(q != NULL);
 
-    test_int(ecs_query_var_count(q), 3);
+    test_int(q->var_count, 3);
 
     ecs_query_fini(q);
 
@@ -10742,7 +10742,7 @@ void Variables_check_vars_this(void) {
     });
 
     test_assert(q != NULL);
-    test_int(1, ecs_query_var_count(q));
+    test_int(1, q->var_count);
     test_str("this", ecs_query_var_name(q, 0));
 
     ecs_query_fini(q);
@@ -10761,7 +10761,7 @@ void Variables_check_vars_var(void) {
     });
 
     test_assert(q != NULL);
-    test_int(2, ecs_query_var_count(q));
+    test_int(2, q->var_count);
     test_str("this", ecs_query_var_name(q, 0));
     test_str("x", ecs_query_var_name(q, 1));
 
@@ -10781,7 +10781,7 @@ void Variables_check_vars_wildcard(void) {
     });
 
     test_assert(q != NULL);
-    test_int(1, ecs_query_var_count(q));
+    test_int(1, q->var_count);
     test_str("this", ecs_query_var_name(q, 0));
 
     ecs_query_fini(q);
@@ -10800,7 +10800,7 @@ void Variables_check_vars_any(void) {
     });
 
     test_assert(q != NULL);
-    test_int(1, ecs_query_var_count(q));
+    test_int(1, q->var_count);
     test_str("this", ecs_query_var_name(q, 0));
 
     ecs_query_fini(q);
@@ -10819,7 +10819,7 @@ void Variables_check_vars_var_as_tgt(void) {
     });
 
     test_assert(q != NULL);
-    test_int(2, ecs_query_var_count(q));
+    test_int(2, q->var_count);
     test_str("this", ecs_query_var_name(q, 0));
     test_str("x", ecs_query_var_name(q, 1));
 
@@ -10839,7 +10839,7 @@ void Variables_check_vars_this_as_tgt(void) {
     });
 
     test_assert(q != NULL);
-    test_int(3, ecs_query_var_count(q));
+    test_int(3, q->var_count);
     test_str("this", ecs_query_var_name(q, 0)); // table
     test_str("x", ecs_query_var_name(q, 1));
     test_str("this", ecs_query_var_name(q, 2)); // entity
@@ -10860,7 +10860,7 @@ void Variables_check_vars_this_w_lookup_var(void) {
     });
 
     test_assert(q != NULL);
-    test_int(4, ecs_query_var_count(q));
+    test_int(4, q->var_count);
     test_str("this", ecs_query_var_name(q, 0));
     test_str("x", ecs_query_var_name(q, 1));
     test_str("this.var", ecs_query_var_name(q, 2));
@@ -10882,7 +10882,7 @@ void Variables_check_vars_var_w_lookup_var(void) {
     });
 
     test_assert(q != NULL);
-    test_int(4, ecs_query_var_count(q));
+    test_int(4, q->var_count);
     test_str("this", ecs_query_var_name(q, 0));
     test_str("y", ecs_query_var_name(q, 1));
     test_str("x", ecs_query_var_name(q, 2));
@@ -10904,7 +10904,7 @@ void Variables_check_vars_anonymous_var_as_tgt(void) {
     });
 
     test_assert(q != NULL);
-    test_int(2, ecs_query_var_count(q));
+    test_int(2, q->var_count);
     test_str("this", ecs_query_var_name(q, 0));
     test_str("_x", ecs_query_var_name(q, 1));
 
@@ -10924,7 +10924,7 @@ void Variables_check_vars_wildcard_as_tgt(void) {
     });
 
     test_assert(q != NULL);
-    test_int(1, ecs_query_var_count(q));
+    test_int(1, q->var_count);
     test_str("this", ecs_query_var_name(q, 0));
 
     ecs_query_fini(q);
@@ -10943,7 +10943,7 @@ void Variables_check_vars_any_as_tgt(void) {
     });
 
     test_assert(q != NULL);
-    test_int(1, ecs_query_var_count(q));
+    test_int(1, q->var_count);
     test_str("this", ecs_query_var_name(q, 0));
 
     ecs_query_fini(q);

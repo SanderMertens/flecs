@@ -329,8 +329,8 @@ ecs_iter_t flecs_query_iter(
     }
 
     it.variables = qit->vars;
-    it.variable_count = impl->var_pub_count;
-    it.variable_names = impl->var_names;
+    it.variable_count = impl->pub.var_count;
+    it.variable_names = impl->pub.vars;
 
 error:
     return it;

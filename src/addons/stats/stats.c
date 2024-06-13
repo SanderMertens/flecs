@@ -3,15 +3,10 @@
  * @brief Stats addon.
  */
 
-#include "../private_api.h"
+#include "stats.h"
 
-#ifdef FLECS_SYSTEM
-#include "../addons/system/system.h"
-#endif
-
-#ifdef FLECS_PIPELINE
-#include "../addons/pipeline/pipeline.h"
-#endif
+#include "../system/system.h"
+#include "../pipeline/pipeline.h"
 
 #ifdef FLECS_STATS
 
@@ -385,11 +380,9 @@ void ecs_query_stats_get(
 
     int32_t t = s->t = t_next(s->t);    
     ecs_query_count_t counts = ecs_query_count(query);
-    ECS_COUNTER_RECORD(&s->result_count, t, counts.results);
-    ECS_COUNTER_RECORD(&s->matched_table_count, t, counts.tables);
-    ECS_COUNTER_RECORD(&s->matched_empty_table_count, t, counts.empty_tables);
-    ECS_COUNTER_RECORD(&s->matched_entity_count, t, counts.entities);
-    ECS_COUNTER_RECORD(&s->eval_count, t, query->eval_count);
+    ECS_GAUGE_RECORD(&s->result_count, t, counts.results);
+    ECS_GAUGE_RECORD(&s->matched_table_count, t, counts.tables);
+    ECS_GAUGE_RECORD(&s->matched_entity_count, t, counts.entities);
 
 error:
     return;
@@ -544,11 +537,6 @@ bool ecs_pipeline_stats_get(
         return false;
     }
 
-    if (ecs_map_is_init(&s->system_stats) && !sys_count) {
-        ecs_map_fini(&s->system_stats);
-    }
-    ecs_map_init_if(&s->system_stats, NULL);
-
     if (op) {
         ecs_entity_t *systems = NULL;
         if (pip_count) {
@@ -605,20 +593,6 @@ bool ecs_pipeline_stats_get(
         }
     }
 
-    /* Separately populate system stats map from build query, which includes
-     * systems that aren't currently active */
-    it = ecs_query_iter(stage, pq->query);
-    while (ecs_query_next(&it)) {
-        int32_t i;
-        for (i = 0; i < it.count; i ++) {
-            ecs_system_stats_t *stats = ecs_map_ensure_alloc_t(&s->system_stats, 
-                ecs_system_stats_t, it.entities[i]);
-            stats->query.t = s->t;
-
-            ecs_system_stats_get(world, it.entities[i], stats);
-        }
-    }
-
     s->t = t_next(s->t);
 
     return true;
@@ -629,12 +603,6 @@ error:
 void ecs_pipeline_stats_fini(
     ecs_pipeline_stats_t *stats)
 {
-    ecs_map_iter_t it = ecs_map_iter(&stats->system_stats);
-    while (ecs_map_next(&it)) {
-        ecs_system_stats_t *elem = ecs_map_ptr(&it);
-        ecs_os_free(elem);
-    }
-    ecs_map_fini(&stats->system_stats);
     ecs_vec_fini_t(NULL, &stats->systems, ecs_entity_t);
     ecs_vec_fini_t(NULL, &stats->sync_points, ecs_sync_stats_t);
 }
@@ -665,16 +633,6 @@ void ecs_pipeline_stats_reduce(
         dst_el->immediate = src_el->immediate;
     }
 
-    ecs_map_init_if(&dst->system_stats, NULL);
-    ecs_map_iter_t it = ecs_map_iter(&src->system_stats);
-    
-    while (ecs_map_next(&it)) {
-        ecs_system_stats_t *sys_src = ecs_map_ptr(&it);
-        ecs_system_stats_t *sys_dst = ecs_map_ensure_alloc_t(&dst->system_stats, 
-            ecs_system_stats_t, ecs_map_key(&it));
-        sys_dst->query.t = dst->t;
-        ecs_system_stats_reduce(sys_dst, sys_src);
-    }
     dst->t = t_next(dst->t);
 }
 
@@ -697,15 +655,6 @@ void ecs_pipeline_stats_reduce_last(
         dst_el->immediate = src_el->immediate;
     }
 
-    ecs_map_init_if(&dst->system_stats, NULL);
-    ecs_map_iter_t it = ecs_map_iter(&src->system_stats);
-    while (ecs_map_next(&it)) {
-        ecs_system_stats_t *sys_src = ecs_map_ptr(&it);
-        ecs_system_stats_t *sys_dst = ecs_map_ensure_alloc_t(&dst->system_stats, 
-            ecs_system_stats_t, ecs_map_key(&it));
-        sys_dst->query.t = dst->t;
-        ecs_system_stats_reduce_last(sys_dst, sys_src, count);
-    }
     dst->t = t_prev(dst->t);
 }
 
@@ -721,12 +670,6 @@ void ecs_pipeline_stats_repeat_last(
             (stats->t));
     }
 
-    ecs_map_iter_t it = ecs_map_iter(&stats->system_stats);
-    while (ecs_map_next(&it)) {
-        ecs_system_stats_t *sys = ecs_map_ptr(&it);
-        sys->query.t = stats->t;
-        ecs_system_stats_repeat_last(sys);
-    }
     stats->t = t_next(stats->t);
 }
 
@@ -748,17 +691,6 @@ void ecs_pipeline_stats_copy_last(
         dst_el->system_count = src_el->system_count;
         dst_el->multi_threaded = src_el->multi_threaded;
         dst_el->immediate = src_el->immediate;
-    }
-
-    ecs_map_init_if(&dst->system_stats, NULL);
-
-    ecs_map_iter_t it = ecs_map_iter(&src->system_stats);
-    while (ecs_map_next(&it)) {
-        ecs_system_stats_t *sys_src = ecs_map_ptr(&it);
-        ecs_system_stats_t *sys_dst = ecs_map_ensure_alloc_t(&dst->system_stats, 
-            ecs_system_stats_t, ecs_map_key(&it));
-        sys_dst->query.t = dst->t;
-        ecs_system_stats_copy_last(sys_dst, sys_src);
     }
 }
 

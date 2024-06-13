@@ -1,6 +1,6 @@
 /**
- * @file addons/cpp/mixins/monitor/decl.hpp
- * @brief Monitor module declarations.
+ * @file addons/cpp/mixins/stats/decl.hpp
+ * @brief Stats module declarations.
  */
 
 #pragma once
@@ -8,9 +8,9 @@
 namespace flecs {
 
 /**
- * @defgroup cpp_addons_monitor Monitor
+ * @defgroup cpp_addons_stats Stats
  * @ingroup cpp_addons
- * The monitor addon periodically tracks statistics for the world and systems.
+ * The stats addon tracks statistics for the world and systems.
  *
  * @{
  */
@@ -24,8 +24,8 @@ using PipelineStats = EcsPipelineStats;
 /** Component with world summary stats */
 using WorldSummary = EcsWorldSummary;
 
-struct monitor {
-    monitor(flecs::world& world);
+struct stats {
+    stats(flecs::world& world);
 };
 
 /** @} */
