@@ -119,9 +119,8 @@ Addon         | Description                                      | Define       
 [Doc](/flecs/group__c__addons__doc.html)                   | Add documentation to components, systems & more  | FLECS_DOC           |
 [Http](/flecs/group__c__addons__http.html)                 | Tiny HTTP server for processing simple requests  | FLECS_HTTP          |
 [Rest](/flecs/group__c__addons__rest.html)                 | REST API for showing entities in the browser     | FLECS_REST          |
-[Script](/flecs/group__c__addons__script.html)             | DSL for assets, scenes and configuration         | FLECS_SCRIPT         |
+[Script](/flecs/group__c__addons__script.html)             | DSL for assets, scenes and configuration         | FLECS_SCRIPT        |
 [Stats](/flecs/group__c__addons__stats.html)               | Functions for collecting statistics              | FLECS_STATS         |
-[Monitor](/flecs/group__c__addons__monitor.html)           | Periodically collect & store flecs statistics    | FLECS_MONITOR       |
 [Metrics](/flecs/group__c__addons__metrics.html)           | Create metrics from user-defined components      | FLECS_METRICS       |
 [Alerts](/flecs/group__c__addons__alerts.html)             | Create alerts from user-defined queries          | FLECS_ALERTS        |
 [Log](/flecs/group__c__addons__log.html)                   | Extended tracing and error logging               | FLECS_LOG           |

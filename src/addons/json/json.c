@@ -396,6 +396,12 @@ void flecs_json_bool(
     }
 }
 
+void flecs_json_null(
+    ecs_strbuf_t *buf)
+{
+    ecs_strbuf_appendlit(buf, "null");
+}
+
 void flecs_json_array_push(
     ecs_strbuf_t *buf)
 {

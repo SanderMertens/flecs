@@ -167,6 +167,27 @@ void flecs_json_serialize_query(
     ecs_strbuf_t *buf)
 {
     flecs_json_object_push(buf);
+
+    if (q->var_count) {
+        flecs_json_memberl(buf, "vars");
+        flecs_json_array_push(buf);
+        int32_t v, first = 0;
+
+        if (!(q->flags & EcsQueryMatchThis)) {
+            first = 1;
+        }
+
+        for (v = first; v < q->var_count; v ++) {
+            flecs_json_next(buf);
+            if (q->vars[v]) {
+                flecs_json_string_escape(buf, q->vars[v]);
+            } else {
+                flecs_json_string(buf, "this");
+            }
+        }
+        flecs_json_array_pop(buf);
+    }
+
     flecs_json_memberl(buf, "terms");
     flecs_json_array_push(buf);
     int t;
@@ -175,6 +196,8 @@ void flecs_json_serialize_query(
         flecs_json_serialize_term(world, q, t, buf);
     }
     flecs_json_array_pop(buf);
+
+
     flecs_json_object_pop(buf);
 }
 

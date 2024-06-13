@@ -402,14 +402,14 @@ int flecs_query_discover_vars(
 
     query->vars = query_vars;
     query->var_count = var_count;
-    query->var_pub_count = var_count;
+    query->pub.var_count = var_count;
     ECS_BIT_COND(query->pub.flags, EcsQueryHasTableThisVar, 
         !entity_before_table_this);
     query->var_size = var_count + anonymous_count;
 
     char **var_names = ECS_ELEM(query_vars, ECS_SIZEOF(ecs_query_var_t), 
         var_count + anonymous_count);
-    query->var_names = (char**)var_names;
+    query->pub.vars = (char**)var_names;
 
     query_vars[0].kind = EcsVarTable;
     query_vars[0].name = NULL;
@@ -431,12 +431,12 @@ int flecs_query_discover_vars(
     }
 
     /* Hide anonymous table variables from application */
-    query->var_pub_count -= anonymous_table_count;
+    query->pub.var_count -= anonymous_table_count;
 
     /* Sanity check to make sure that the public part of the variable array only
      * contains entity variables. */
 #ifdef FLECS_DEBUG
-    for (i = 1 /* first element = $this */; i < query->var_pub_count; i ++) {
+    for (i = 1 /* first element = $this */; i < query->pub.var_count; i ++) {
         ecs_assert(query->vars[i].kind == EcsVarEntity, ECS_INTERNAL_ERROR, NULL);
     }
 #endif

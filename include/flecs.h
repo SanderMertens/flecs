@@ -180,9 +180,8 @@
 // #define FLECS_C          /**< C API convenience macros, always enabled */
 #define FLECS_CPP           /**< C++ API */
 #define FLECS_MODULE        /**< Module support */
-#define FLECS_SCRIPT         /**< ECS data definition format */
-#define FLECS_STATS         /**< Access runtime statistics */
-#define FLECS_MONITOR       /**< Track runtime statistics periodically */
+#define FLECS_SCRIPT        /**< ECS data definition format */
+#define FLECS_STATS         /**< Track runtime statistics */
 #define FLECS_METRICS       /**< Expose component data as statistics */
 #define FLECS_ALERTS        /**< Monitor conditions for errors */
 #define FLECS_SYSTEM        /**< System support */
@@ -255,7 +254,7 @@
  * When enabled, Flecs will use the OS allocator provided in the OS API directly
  * instead of the builtin block allocator. This can decrease memory utilization
  * as memory will be freed more often, at the cost of decreased performance. */
-// #define FLECS_USE_OS_ALLOC
+#define FLECS_USE_OS_ALLOC
 
 /** @def FLECS_ID_DESC_MAX
  * Maximum number of ids to add ecs_entity_desc_t / ecs_bulk_desc_t */
@@ -766,6 +765,7 @@ struct ecs_query_t {
     ecs_id_t ids[FLECS_TERM_COUNT_MAX]; /**< Component ids. Indexed by field */
 
     ecs_flags32_t flags;        /**< Query flags */
+    int16_t var_count;          /**< Number of query variables */
     int8_t term_count;          /**< Number of query terms */
     int8_t field_count;         /**< Number of fields returned by query */
 
@@ -778,6 +778,8 @@ struct ecs_query_t {
     ecs_termset_t set_fields;   /**< Fields that will be set */
 
     ecs_query_cache_kind_t cache_kind;  /**< Caching policy of query */
+    
+    char **vars;                /**< Array with variable names for iterator */
 
     void *ctx;                  /**< User context to pass to callback */
     void *binding_ctx;          /**< Context to be used for language bindings */
@@ -4364,15 +4366,6 @@ ecs_query_t* ecs_query_init(
 FLECS_API
 void ecs_query_fini(
     ecs_query_t *query);
-
-/** Return number of variables in query.
- *
- * @param query The query.
- * @return The number of variables/
- */
-FLECS_API
-int32_t ecs_query_var_count(
-    const ecs_query_t *query);
 
 /** Find variable index.
  * This operation looks up the index of a variable in the query. This index can

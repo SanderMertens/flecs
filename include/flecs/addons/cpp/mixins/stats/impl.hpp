@@ -7,9 +7,9 @@
 
 namespace flecs {
 
-inline monitor::monitor(flecs::world& world) {
+inline stats::stats(flecs::world& world) {
     /* Import C module  */
-    FlecsMonitorImport(world);
+    FlecsStatsImport(world);
 
     world.component<WorldSummary>();
     world.component<WorldStats>();

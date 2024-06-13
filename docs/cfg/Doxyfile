@@ -2437,7 +2437,6 @@ PREDEFINED             = FLECS_APP \
                          FLECS_LOG \
                          FLECS_META \
                          FLECS_MODULE \
-                         FLECS_MONITOR \
                          FLECS_OS_API_IMPL \
                          FLECS_PIPELINE \
                          FLECS_SCRIPT \
