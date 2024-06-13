@@ -422,12 +422,15 @@ void flecs_query_mark_fields_dirty(
 {
     ecs_query_t *q = &impl->pub;
 
-    /* Evaluate all writeable non-fixed fields, settable fields */
+    /* Evaluate all writeable non-fixed fields, set fields */
     ecs_termset_t write_fields = 
-        (ecs_termset_t)(q->write_fields & ~q->fixed_fields & q->set_fields);
+        (ecs_termset_t)(q->write_fields & ~q->fixed_fields & it->set_fields);
     if (!write_fields) {
         return;
     }
+
+    // printf("%s\n", ecs_query_str(q));
+    // printf("[%s]\n", ecs_table_str(it->world, it->table));
 
     ecs_world_t *world = q->world;
     int32_t i, field_count = q->field_count;
@@ -462,6 +465,7 @@ void flecs_query_mark_fields_dirty(
             continue;
         }
 
+        ecs_assert(type_index < table->type.count, ECS_INTERNAL_ERROR, NULL);
         int32_t column = table->column_map[type_index];
         dirty_state[column + 1] ++;
     }

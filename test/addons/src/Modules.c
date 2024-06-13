@@ -391,11 +391,11 @@ void Modules_import_monitor_2_worlds(void) {
     ecs_world_t *world_1 = ecs_init();
     ecs_world_t *world_2 = ecs_init();
 
-    ECS_IMPORT(world_1, FlecsMonitor);
-    ECS_IMPORT(world_2, FlecsMonitor);
+    ECS_IMPORT(world_1, FlecsStats);
+    ECS_IMPORT(world_2, FlecsStats);
     
-    test_assert(ecs_exists(world_1, ecs_id(FlecsMonitor)));
-    test_assert(ecs_exists(world_2, ecs_id(FlecsMonitor)));
+    test_assert(ecs_exists(world_1, ecs_id(FlecsStats)));
+    test_assert(ecs_exists(world_2, ecs_id(FlecsStats)));
 
     ecs_fini(world_1);
     ecs_fini(world_2);
@@ -404,9 +404,9 @@ void Modules_import_monitor_2_worlds(void) {
 void Modules_import_monitor_after_mini(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_IMPORT(world, FlecsMonitor);
+    ECS_IMPORT(world, FlecsStats);
 
-    test_assert(ecs_exists(world, ecs_id(FlecsMonitor)));
+    test_assert(ecs_exists(world, ecs_id(FlecsStats)));
 
     ecs_fini(world);
 }

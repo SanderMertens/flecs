@@ -1472,3 +1472,49 @@ void ChangeDetection_query_changed_w_only_parent_after_parent_out_term(void) {
 
     ecs_fini(world);
 }
+
+void ChangeDetection_query_change_w_optional(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Mass);
+
+    ecs_query_t *q_read = ecs_query(world, {
+        .expr = "[in] Position, [in] Velocity",
+        .cache_kind = EcsQueryCacheAuto
+    });
+    test_assert(q_read != NULL);
+
+    ecs_query_t *q_write = ecs_query(world, {
+        .expr = "[in] Position, [in] Velocity, [out] ?Mass",
+        .cache_kind = EcsQueryCacheAuto
+    });
+    test_assert(q_write != NULL);
+
+    ecs_insert(world, 
+        ecs_value(Position, {10, 20}),
+        ecs_value(Velocity, {1, 2}));
+
+    test_bool(true, ecs_query_changed(q_read));
+    test_bool(true, ecs_query_changed(q_read));
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q_read);
+        test_bool(true, ecs_query_changed(q_read));
+        while (ecs_query_next(&it)) { }
+        test_bool(false, ecs_query_changed(q_read));
+    }
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q_write);
+        while (ecs_query_next(&it)) { }
+    }
+
+    test_bool(false, ecs_query_changed(q_read));
+
+    ecs_query_fini(q_read);
+    ecs_query_fini(q_write);
+
+    ecs_fini(world);
+}

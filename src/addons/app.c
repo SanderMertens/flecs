@@ -71,7 +71,7 @@ char* flecs_explorer_request(const char *method, char *request) {
             return body;
         } else {
             return flecs_asprintf(
-                "{\"error\": \"bad request (code %d)\"}", reply.code);
+                "{\"error\": \"bad request\", \"status\": %d}", reply.code);
         }
     }
 }
@@ -109,8 +109,8 @@ int ecs_app_run(
 
     /* Monitoring periodically collects statistics */
     if (desc->enable_monitor) {
-#ifdef FLECS_MONITOR
-        ECS_IMPORT(world, FlecsMonitor);
+#ifdef FLECS_STATS
+        ECS_IMPORT(world, FlecsStats);
 #else
         ecs_warn("cannot enable monitoring, MONITOR addon not available");
 #endif

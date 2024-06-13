@@ -284,9 +284,9 @@ typedef struct ecs_iter_to_json_desc_t {
     bool serialize_full_paths;      /**< Serialize full paths for tags, components and pairs */
     bool serialize_inherited;       /**< Serialize inherited components */
     bool measure_eval_duration;     /**< Serialize evaluation duration */
-    bool serialize_type_info;       /**< Serialize type information */
     bool serialize_table;           /**< Serialize entire table vs. matched components */
-    bool serialize_rows;            /**< Use row-based serialization, with entities in separate elements */
+    bool serialize_rows;
+    bool serialize_type_info;       /**< Serialize type information */
     bool serialize_field_info;      /**< Serialize metadata for fields returned by query */
     bool serialize_query_info;      /**< Serialize query terms */
     bool serialize_query_plan;      /**< Serialize query plan */
