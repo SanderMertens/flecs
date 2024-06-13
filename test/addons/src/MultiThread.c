@@ -1135,7 +1135,7 @@ void MultiThread_no_staging_w_multithread(void) {
 
 void MultiThread_multithread_w_monitor_addon(void) {
     ecs_world_t *world = ecs_init();
-    ECS_IMPORT(world, FlecsMonitor);
+    ECS_IMPORT(world, FlecsStats);
     set_worker_kind(world, 4);
     ecs_progress(world, 0);
     ecs_fini(world);

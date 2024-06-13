@@ -74,7 +74,7 @@ When the monitor module is imported, the REST API provides a `stats` endpoint wi
 
 ```c
 // Import monitor addon
-ECS_IMPORT(world, FlecsMonitor);
+ECS_IMPORT(world, FlecsStats);
 ```
 </li>
 <li><b class="tab-title">C++</b>

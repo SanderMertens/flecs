@@ -1516,6 +1516,7 @@ void ChangeDetection_query_changed_tag(void);
 void ChangeDetection_query_changed_no_source(void);
 void ChangeDetection_query_changed_no_source_component(void);
 void ChangeDetection_query_changed_w_not_out(void);
+void ChangeDetection_query_change_w_optional(void);
 
 // Testsuite 'GroupBy'
 void GroupBy_group_by(void);
@@ -7896,6 +7897,10 @@ bake_test_case ChangeDetection_testcases[] = {
     {
         "query_changed_w_not_out",
         ChangeDetection_query_changed_w_not_out
+    },
+    {
+        "query_change_w_optional",
+        ChangeDetection_query_change_w_optional
     }
 };
 
@@ -9854,7 +9859,7 @@ static bake_test_suite suites[] = {
         "ChangeDetection",
         NULL,
         NULL,
-        32,
+        33,
         ChangeDetection_testcases
     },
     {

@@ -18,9 +18,6 @@
 #ifdef FLECS_NO_SCRIPT
 #undef FLECS_SCRIPT
 #endif
-#ifdef FLECS_NO_MONITOR
-#undef FLECS_MONITOR
-#endif
 #ifdef FLECS_NO_STATS
 #undef FLECS_STATS
 #endif
@@ -69,12 +66,9 @@
 #include "flecs/addons/log.h"
 
 /* Handle addon dependencies that need declarations to be visible in header */
-#ifdef FLECS_MONITOR
-#ifndef FLECS_STATS
-#define FLECS_STATS
-#endif
-#ifndef FLECS_SYSTEM
-#define FLECS_SYSTEM
+#ifdef FLECS_STATS
+#ifndef FLECS_PIPELINE
+#define FLECS_PIPELINE
 #endif
 #ifndef FLECS_TIMER
 #define FLECS_TIMER
@@ -148,13 +142,6 @@
 #error "FLECS_NO_ALERTS failed: ALERTS is required by other addons"
 #endif
 #include "../addons/alerts.h"
-#endif
-
-#ifdef FLECS_MONITOR
-#ifdef FLECS_NO_MONITOR
-#error "FLECS_NO_MONITOR failed: MONITOR is required by other addons"
-#endif
-#include "../addons/monitor.h"
 #endif
 
 #ifdef FLECS_JSON

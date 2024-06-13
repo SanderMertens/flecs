@@ -371,6 +371,7 @@ bool flecs_json_serialize_table_inherited_type_components(
             flecs_json_object_push(buf);
         }
 
+        ecs_strbuf_list_next(buf);
         ecs_strbuf_appendlit(buf, "\"");
         flecs_json_id_member(buf, world, column->id,
             desc ? desc->serialize_full_paths : false);
@@ -490,7 +491,6 @@ bool flecs_json_serialize_table_tags_pairs_vars(
     return result;
 }
 
-static
 bool flecs_json_serialize_get_value_ctx(
     const ecs_world_t *world,
     ecs_id_t id,
@@ -658,6 +658,8 @@ void flecs_json_serialize_iter_this_row(
     ecs_strbuf_t *buf,
     const ecs_iter_to_json_desc_t *desc)
 {
+    ecs_assert(row < it->count, ECS_INTERNAL_ERROR, NULL);
+
     if (parent_path) {
         flecs_json_memberl(buf, "parent");
         flecs_json_string(buf, parent_path);
@@ -736,6 +738,12 @@ int flecs_json_serialize_iter_result_query_rows(
             return -1;
         }
 
+        if (flecs_json_serialize_iter_result_fields(
+            world, it, i, buf, desc, ser_ctx))
+        {
+            return -1;
+        }
+
         flecs_json_object_pop(buf);
     }
 
@@ -800,7 +808,7 @@ int flecs_json_serialize_iter_result_table_rows(
 #endif
 
             flecs_json_serialize_iter_this_row(
-                it, parent_path, &this_data_cpy, i, buf, desc);
+                it, parent_path, &this_data_cpy, i - it->offset, buf, desc);
         }
 
         if (tags_pairs_vars) {

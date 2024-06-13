@@ -356,12 +356,10 @@ struct ecs_query_impl_t {
     /* Variables */
     ecs_query_var_t *vars;        /* Variables */
     int32_t var_count;            /* Number of variables */
-    int32_t var_pub_count;        /* Number of public variables */
     int32_t var_size;             /* Size of variable array */
     ecs_hashmap_t tvar_index;     /* Name index for table variables */
     ecs_hashmap_t evar_index;     /* Name index for entity variables */
     ecs_query_var_cache_t vars_cache; /* For trivial queries with only This variables */
-    char **var_names;             /* Array with variable names for iterator */
     ecs_var_id_t *src_vars;       /* Array with ids to source variables for fields */
 
     /* Query plan */

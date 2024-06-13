@@ -15,13 +15,6 @@ ecs_mixins_t ecs_query_t_mixins = {
     }
 };
 
-int32_t ecs_query_var_count(
-    const ecs_query_t *q)
-{
-    flecs_poly_assert(q, ecs_query_t);
-    return flecs_query_impl(q)->var_pub_count;
-}
-
 int32_t ecs_query_find_var(
     const ecs_query_t *q,
     const char *name)

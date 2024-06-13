@@ -1576,7 +1576,8 @@
                 "query_changed_tag",
                 "query_changed_no_source",
                 "query_changed_no_source_component",
-                "query_changed_w_not_out"
+                "query_changed_w_not_out",
+                "query_change_w_optional"
             ]
         }, {
             "id": "GroupBy",
