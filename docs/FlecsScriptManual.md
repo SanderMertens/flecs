@@ -222,10 +222,10 @@ By default entity hierarchies are created with the `ChildOf` relationship. Other
 (IsA, Thing) {
   (IsA, Organism) {
     (IsA, Plant) {
-      Tree
+      Tree {}
     }
     (IsA, Animal) {
-      Human
+      Human {}
     }
   }
 }

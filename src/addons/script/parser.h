@@ -21,13 +21,13 @@
 
 /* Create script & parser structs with static token buffer */
 #define EcsParserFixedBuffer(w, script_name, expr, tokens, tokens_len)\
-    ecs_script_t script = {\
-        .world = ECS_CONST_CAST(ecs_world_t*, w),\
-        .name = script_name,\
-        .code = expr\
+    ecs_script_impl_t script = {\
+        .pub.world = ECS_CONST_CAST(ecs_world_t*, w),\
+        .pub.name = script_name,\
+        .pub.code = expr\
     };\
     ecs_script_parser_t parser = {\
-        .script = &script,\
+        .script = flecs_script_impl(&script),\
         .pos = expr,\
         .token_cur = tokens\
     }
@@ -48,8 +48,8 @@
 
 /* Error */
 #define Error(...)\
-    ecs_parser_error(parser->script->name, parser->script->code,\
-        (pos - parser->script->code) - 1, __VA_ARGS__);\
+    ecs_parser_error(parser->script->pub.name, parser->script->pub.code,\
+        (pos - parser->script->pub.code) - 1, __VA_ARGS__);\
     goto error
 
 /* Parse expression */

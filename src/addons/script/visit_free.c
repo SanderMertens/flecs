@@ -134,10 +134,12 @@ int flecs_script_visit_free(
 {
     ecs_check(script != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_script_visit_t v = {
-        .script = script
+        .script = flecs_script_impl(script)
     };
 
-    if (ecs_script_visit(script, &v, flecs_script_stmt_free)) {
+    if (ecs_script_visit(
+        flecs_script_impl(script), &v, flecs_script_stmt_free)) 
+    {
         goto error;
     }
 

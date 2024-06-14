@@ -48,12 +48,12 @@ ecs_script_node_t* ecs_script_parent_(
 }
 
 int32_t ecs_script_node_line_number_(
-    ecs_script_t *script,
+    ecs_script_impl_t *script,
     ecs_script_node_t *node)
 {
     const char *ptr;
     int32_t line_count = 1;
-    for (ptr = script->code; ptr < node->pos; ptr ++) {
+    for (ptr = script->pub.code; ptr < node->pos; ptr ++) {
         ecs_assert(ptr[0] != 0, ECS_INTERNAL_ERROR, NULL);
         if (ptr[0] == '\n') {
             line_count ++;
@@ -118,7 +118,7 @@ int ecs_script_visit_node_(
 int ecs_script_visit_(
     ecs_script_visit_t *visitor,
     ecs_visit_action_t visit,
-    ecs_script_t *script)
+    ecs_script_impl_t *script)
 {
     visitor->script = script;
     visitor->visit = visit;
@@ -129,7 +129,7 @@ int ecs_script_visit_(
     }
 
     if (visitor->depth) {
-        ecs_parser_error(script->name, NULL, 0, "unexpected end of script");
+        ecs_parser_error(script->pub.name, NULL, 0, "unexpected end of script");
         return -1;
     }
 

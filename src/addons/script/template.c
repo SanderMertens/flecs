@@ -89,7 +89,7 @@ void flecs_script_template_on_set(
     void *data = ecs_field_w_size(it, flecs_ito(size_t, ti->size), 0);
 
     ecs_script_eval_visitor_t v;
-    flecs_script_eval_visit_init(script->script, &v);
+    flecs_script_eval_visit_init(flecs_script_impl(script->script), &v);
     ecs_vec_t prev_using = v.using;
     v.using = template->using_;
 
@@ -282,7 +282,7 @@ int flecs_script_template_hoist_using(
 }
 
 ecs_script_template_t* flecs_script_template_init(
-    ecs_script_t *script)
+    ecs_script_impl_t *script)
 {
     ecs_allocator_t *a = &script->allocator;
     ecs_script_template_t *result = flecs_alloc_t(a, ecs_script_template_t);
@@ -292,7 +292,7 @@ ecs_script_template_t* flecs_script_template_init(
 }
 
 void flecs_script_template_fini(
-    ecs_script_t *script,
+    ecs_script_impl_t *script,
     ecs_script_template_t *template)
 {
     ecs_assert(script != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -349,12 +349,13 @@ int flecs_script_eval_template(
     EcsScript *script = ecs_ensure(v->world, template_entity, EcsScript);
     if (script->script) {
         if (script->template_) {
-            flecs_script_template_fini(script->script, script->template_);
+            flecs_script_template_fini(
+                flecs_script_impl(script->script), script->template_);
         }
         ecs_script_free(script->script);
     }
 
-    script->script = v->base.script;
+    script->script = &v->base.script->pub;
     script->template_ = template;
     ecs_modified(v->world, template_entity, EcsScript);
 

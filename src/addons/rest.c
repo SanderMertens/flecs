@@ -337,6 +337,51 @@ bool flecs_rest_set(
 }
 
 static
+bool flecs_rest_reply_get(
+    ecs_world_t *world,
+    const ecs_http_request_t* req,
+    ecs_http_reply_t *reply,
+    const char *path)
+{
+    ecs_entity_t e;
+    if (!(e = flecs_rest_entity_from_path(world, reply, path))) {
+        return true;
+    }
+
+    const char *component = ecs_http_get_param(req, "component");
+    if (!component) {
+        flecs_reply_error(reply, "missing component for remove endpoint");
+        reply->code = 400;
+        return true;
+    }
+
+    ecs_entity_t id;
+    if (!flecs_id_parse(world, path, component, &id)) {
+        flecs_reply_error(reply, "unresolved component '%s'", component);
+        reply->code = 400;
+        return true;
+    }
+
+    ecs_entity_t type = ecs_get_typeid(world, id);
+    if (!type) {
+        flecs_reply_error(reply, "component '%s' is not a type", component);
+        reply->code = 400;
+        return true;
+    }
+
+    const void *ptr = ecs_get_id(world, e, id);
+    if (!ptr) {
+        flecs_reply_error(reply, "failed to get component '%s'", component);
+        reply->code = 500;
+        return true;
+    }
+
+    ecs_ptr_to_json_buf(world, type, ptr, &reply->body);
+
+    return true;
+}
+
+static
 bool flecs_rest_add_remove(
     ecs_world_t *world,
     const ecs_http_request_t* req,
@@ -409,25 +454,34 @@ static
 bool flecs_rest_script(
     ecs_world_t *world,
     const ecs_http_request_t* req,
-    ecs_http_reply_t *reply)
+    ecs_http_reply_t *reply,
+    const char *path)
 {
     (void)world;
     (void)req;
     (void)reply;
 #ifdef FLECS_SCRIPT
-    const char *data = ecs_http_get_param(req, "data");
-    if (!data) {
+    ecs_entity_t script = flecs_rest_entity_from_path(world, reply, path);
+    if (!script) {
+        script = ecs_entity(world, { .name = path });
+    }
+
+    const char *code = ecs_http_get_param(req, "code");
+    if (!code) {
         flecs_reply_error(reply, "missing data parameter");
         return true;
     }
+
+    bool try = false;
+    flecs_rest_bool_param(req, "try", &try);
 
     bool prev_color = ecs_log_enable_colors(false);
     rest_prev_log = ecs_os_api.log_;
     ecs_os_api.log_ = flecs_rest_capture_log;
 
-    ecs_entity_t script = ecs_script(world, {
-        .entity = ecs_entity(world, { .name = "scripts.main" }),
-        .code = data
+    script = ecs_script(world, {
+        .entity = script,
+        .code = code
     });
 
     if (!script) {
@@ -438,7 +492,9 @@ bool flecs_rest_script(
         } else {
             flecs_reply_error(reply, "error parsing script");
         }
-        reply->code = 400; /* bad request */
+        if (!try) {
+            reply->code = 400; /* bad request */
+        }
         ecs_os_free(escaped_err);
         ecs_os_free(err);
     }
@@ -826,13 +882,15 @@ void flecs_all_systems_stats_to_json(
 
     ecs_strbuf_list_push(&reply->body, "[", ",");
     
-    ecs_map_iter_t it = ecs_map_iter(&stats->stats);
-    while (ecs_map_next(&it)) {
-        ecs_entity_t id = ecs_map_key(&it);
-        ecs_system_stats_t *stats = ecs_map_ptr(&it);
+    if (stats) {
+        ecs_map_iter_t it = ecs_map_iter(&stats->stats);
+        while (ecs_map_next(&it)) {
+            ecs_entity_t id = ecs_map_key(&it);
+            ecs_system_stats_t *stats = ecs_map_ptr(&it);
 
-        ecs_strbuf_list_next(&reply->body);
-        flecs_system_stats_to_json(world, &reply->body, id, stats);
+            ecs_strbuf_list_next(&reply->body);
+            flecs_system_stats_to_json(world, &reply->body, id, stats);
+        }
     }
 
     ecs_strbuf_list_pop(&reply->body, "]");
@@ -1343,6 +1401,10 @@ bool flecs_rest_reply(
         if (!ecs_os_strncmp(req->path, "entity/", 7)) {
             return flecs_rest_reply_entity(world, req, reply);
 
+        /* Component GET endpoint */
+        } else if (!ecs_os_strncmp(req->path, "component/", 10)) {
+            return flecs_rest_reply_get(world, req, reply, &req->path[10]);
+
         /* Query endpoint */
         } else if (!ecs_os_strcmp(req->path, "query")) {
             return flecs_rest_reply_query(world, req, reply);
@@ -1369,9 +1431,9 @@ bool flecs_rest_reply(
         }
 
     } else if (req->method == EcsHttpPut) {
-        /* Set endpoint */
-        if (!ecs_os_strncmp(req->path, "set/", 4)) {
-            return flecs_rest_set(world, req, reply, &req->path[4]);
+        /* Component PUT endpoint */
+        if (!ecs_os_strncmp(req->path, "component/", 10)) {
+            return flecs_rest_set(world, req, reply, &req->path[10]);
 
         /* Add endpoint */
         } else if (!ecs_os_strncmp(req->path, "add/", 4)) {
@@ -1396,8 +1458,8 @@ bool flecs_rest_reply(
             return flecs_rest_enable(world, reply, &req->path[8], false);
 
         /* Script endpoint */
-        } else if (!ecs_os_strncmp(req->path, "script", 6)) {
-            return flecs_rest_script(world, req, reply);
+        } else if (!ecs_os_strncmp(req->path, "script/", 7)) {
+            return flecs_rest_script(world, req, reply, &req->path[7]);
         }
     }
 
