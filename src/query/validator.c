@@ -1455,10 +1455,10 @@ int flecs_query_query_populate_terms(
     const char *expr = desc->expr;
     if (expr && expr[0]) {
     #ifdef FLECS_SCRIPT
-        ecs_script_t script = {
-            .world = world,
-            .name = desc->entity ? ecs_get_name(world, desc->entity) : NULL,
-            .code = expr
+        ecs_script_impl_t script = {
+            .pub.world = world,
+            .pub.name = desc->entity ? ecs_get_name(world, desc->entity) : NULL,
+            .pub.code = expr
         };
 
         /* Allocate buffer that's large enough to tokenize the query string */
@@ -1466,7 +1466,7 @@ int flecs_query_query_populate_terms(
         script.token_buffer = flecs_alloc(
             &stage->allocator, script.token_buffer_size);
 
-        if (flecs_terms_parse(&script, &q->terms[term_count], 
+        if (flecs_terms_parse(&script.pub, &q->terms[term_count], 
             &term_count))
         {
             flecs_free(&stage->allocator, 

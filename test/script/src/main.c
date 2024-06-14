@@ -240,6 +240,7 @@ void Eval_if_10(void);
 void Eval_if_0(void);
 void Eval_if_true_in_scope(void);
 void Eval_if_false_in_scope(void);
+void Eval_relationship_hierarchy_w_empty_newline(void);
 
 // Testsuite 'Template'
 void Template_template_no_scope(void);
@@ -1484,6 +1485,10 @@ bake_test_case Eval_testcases[] = {
     {
         "if_false_in_scope",
         Eval_if_false_in_scope
+    },
+    {
+        "relationship_hierarchy_w_empty_newline",
+        Eval_relationship_hierarchy_w_empty_newline
     }
 };
 
@@ -2744,7 +2749,7 @@ static bake_test_suite suites[] = {
         "Eval",
         NULL,
         NULL,
-        231,
+        232,
         Eval_testcases
     },
     {

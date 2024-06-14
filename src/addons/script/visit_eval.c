@@ -21,9 +21,9 @@ void flecs_script_eval_error_(
 
     if (node) {
         int32_t line = ecs_script_node_line_number(v->base.script, node);
-        ecs_parser_error(v->base.script->name, NULL, 0, "%d: %s", line, msg);
+        ecs_parser_error(v->base.script->pub.name, NULL, 0, "%d: %s", line, msg);
     } else {
-        ecs_parser_error(v->base.script->name, NULL, 0, "%s", msg);
+        ecs_parser_error(v->base.script->pub.name, NULL, 0, "%s", msg);
     }
 
     ecs_os_free(msg);
@@ -311,7 +311,7 @@ int flecs_script_eval_expr(
     }
 
     ecs_script_expr_run_desc_t desc = {
-        .name = v->base.script->name,
+        .name = v->base.script->pub.name,
         .expr = expr,
         .lookup_action = flecs_script_find_entity_action,
         .lookup_ctx = v,
@@ -1079,7 +1079,7 @@ int flecs_script_eval_node(
 }
 
 void flecs_script_eval_visit_init(
-    ecs_script_t *script,
+    ecs_script_impl_t *script,
     ecs_script_eval_visitor_t *v)
 {
     *v = (ecs_script_eval_visitor_t){
@@ -1087,7 +1087,7 @@ void flecs_script_eval_visit_init(
             .script = script,
             .visit = (ecs_visit_action_t)flecs_script_eval_node
         },  
-        .world = script->world,
+        .world = script->pub.world,
         .allocator = &script->allocator
     };
 
@@ -1110,8 +1110,9 @@ int ecs_script_eval(
     ecs_script_t *script)
 {
     ecs_script_eval_visitor_t v;
-    flecs_script_eval_visit_init(script, &v);
-    int result = ecs_script_visit(script, &v, flecs_script_eval_node);
+    ecs_script_impl_t *impl = flecs_script_impl(script);
+    flecs_script_eval_visit_init(impl, &v);
+    int result = ecs_script_visit(impl, &v, flecs_script_eval_node);
     flecs_script_eval_visit_fini(&v);
     return result;
 }
