@@ -400,9 +400,9 @@ int flecs_add_member_to_struct(
         }
     } else {
         if (ecs_has(world, m->type, EcsUnit)) {
-            ecs_entity_t unit = ecs_get_target_for(
+            ecs_entity_t unit_base = ecs_get_target_for(
                 world, m->type, EcsIsA, EcsUnit);
-            m->unit = unit;
+            m->unit = unit_base;
         }
     }
 

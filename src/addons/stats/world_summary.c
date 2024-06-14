@@ -4,7 +4,7 @@
  */
 
 #include "flecs.h"
-#include "monitor.h"
+#include "stats.h"
 
 #ifdef FLECS_STATS
 

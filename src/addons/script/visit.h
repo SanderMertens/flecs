@@ -13,7 +13,7 @@ typedef int (*ecs_visit_action_t)(
     ecs_script_node_t *node);
 
 struct ecs_script_visit_t {
-    ecs_script_t *script;
+    ecs_script_impl_t *script;
     ecs_visit_action_t visit;
     ecs_script_node_t* nodes[256];
     ecs_script_node_t *prev, *next;
@@ -23,7 +23,7 @@ struct ecs_script_visit_t {
 int ecs_script_visit_(
     ecs_script_visit_t *visitor,
     ecs_visit_action_t visit,
-    ecs_script_t *script);
+    ecs_script_impl_t *script);
 
 #define ecs_script_visit(script, visitor, visit) \
     ecs_script_visit_((ecs_script_visit_t*)visitor,\
@@ -71,7 +71,7 @@ ecs_script_node_t* ecs_script_next_node_(
     ecs_script_next_node_((ecs_script_visit_t*)visitor)
 
 int32_t ecs_script_node_line_number_(
-    ecs_script_t *script,
+    ecs_script_impl_t *script,
     ecs_script_node_t *node);
 
 #define ecs_script_node_line_number(script, node) \

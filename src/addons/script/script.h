@@ -15,23 +15,23 @@
 typedef struct ecs_script_scope_t ecs_script_scope_t;
 typedef struct ecs_script_entity_t ecs_script_entity_t;
 
-struct ecs_script_t {
-    ecs_world_t *world;
-    const char *name;
-    const char *code;
+typedef struct ecs_script_impl_t {
+    ecs_script_t pub;
     ecs_allocator_t allocator;
     ecs_script_scope_t *root;
     char *token_buffer;
     int32_t token_buffer_size;
     int32_t refcount;
-};
+} ecs_script_impl_t;
 
 typedef struct ecs_script_parser_t ecs_script_parser_t;
+
+#define flecs_script_impl(script) ((ecs_script_impl_t*)script)
 
 #include "tokenizer.h"
 
 struct ecs_script_parser_t {
-    ecs_script_t *script;
+    ecs_script_impl_t *script;
     ecs_script_scope_t *scope;
     const char *pos;
     char *token_cur;
