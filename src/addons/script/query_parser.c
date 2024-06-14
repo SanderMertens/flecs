@@ -113,7 +113,7 @@ const char* flecs_query_parse_term_trav(
                 case EcsTokIdentifier:
                     pos = lookahead;
                     parser->term->trav = ecs_lookup(
-                        parser->script->world, Token(1));
+                        parser->script->pub.world, Token(1));
                     if (!parser->term->trav) {
                         Error(
                             "unresolved traversal relationship '%s'", Token(1));
@@ -188,7 +188,7 @@ const char* flecs_query_parse_term_arg(
                     LookAhead_1(EcsTokIdentifier,
                         pos = lookahead;
                         parser->term->trav = ecs_lookup(
-                            parser->script->world, Token(1));
+                            parser->script->pub.world, Token(1));
                         if (!parser->term->trav) {
                             Error(
                                 "unresolved trav identifier '%s'", Token(1));
@@ -518,11 +518,11 @@ int flecs_terms_parse(
     }
 
     ecs_script_parser_t parser = {
-        .script = script,
+        .script = flecs_script_impl(script),
         .pos = script->code
     };
 
-    parser.token_cur = script->token_buffer;
+    parser.token_cur = flecs_script_impl(script)->token_buffer;
 
     int32_t term_count = 0;
     const char *ptr = script->code;

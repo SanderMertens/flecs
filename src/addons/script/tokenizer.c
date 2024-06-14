@@ -117,8 +117,8 @@ repeat_skip_whitespace_comment:
                 }
             }
 
-            ecs_parser_error(parser->script->name, parser->script->code, 
-                pos - parser->script->code, "missing */ for multiline comment");
+            ecs_parser_error(parser->script->pub.name, parser->script->pub.code, 
+                pos - parser->script->pub.code, "missing */ for multiline comment");
         }
     }
 
@@ -162,8 +162,8 @@ const char* flecs_script_identifier(
                     } else if (c == '>') {
                         indent --;
                     } else if (!c) {
-                        ecs_parser_error(parser->script->name, 
-                            parser->script->code, pos - parser->script->code, 
+                        ecs_parser_error(parser->script->pub.name, 
+                            parser->script->pub.code, pos - parser->script->pub.code, 
                                 "< without > in identifier");
                         return NULL;
                     }
@@ -181,8 +181,8 @@ const char* flecs_script_identifier(
                 parser->token_cur = outpos + 1;
                 return pos;
             } else if (c == '>') {
-                ecs_parser_error(parser->script->name, parser->script->code,
-                    pos - parser->script->code, "> without < in identifier");
+                ecs_parser_error(parser->script->pub.name, parser->script->pub.code,
+                    pos - parser->script->pub.code, "> without < in identifier");
                 return NULL;
             } else {
                 *outpos = '\0';
@@ -246,8 +246,8 @@ const char* flecs_script_skip_string(
     }
 
     if (!pos[0]) {
-        ecs_parser_error(parser->script->name, parser->script->code,
-            pos - parser->script->code, "unterminated string");
+        ecs_parser_error(parser->script->pub.name, parser->script->pub.code,
+            pos - parser->script->pub.code, "unterminated string");
         return NULL;
     }
 
@@ -305,8 +305,8 @@ const char* flecs_script_expr(
                 break;
             }
             if (scope_depth < 0) {
-                ecs_parser_error(parser->script->name, parser->script->code,
-                    pos - parser->script->code, "mismatching { }");
+                ecs_parser_error(parser->script->pub.name, parser->script->pub.code,
+                    pos - parser->script->pub.code, "mismatching { }");
                 return NULL;
             }
         } else
@@ -319,8 +319,8 @@ const char* flecs_script_expr(
                 break;
             }
             if (paren_depth < 0) {
-                ecs_parser_error(parser->script->name, parser->script->code,
-                    pos - parser->script->code, "mismatching ( )");
+                ecs_parser_error(parser->script->pub.name, parser->script->pub.code,
+                    pos - parser->script->pub.code, "mismatching ( )");
                 return NULL;
             }
         } else
@@ -343,29 +343,29 @@ const char* flecs_script_expr(
 
     if (!pos[0]) {
         if (until == '\0') {
-            ecs_parser_error(parser->script->name, parser->script->code,
-                pos - parser->script->code, "expected end of script");
+            ecs_parser_error(parser->script->pub.name, parser->script->pub.code,
+                pos - parser->script->pub.code, "expected end of script");
             return NULL;
         } else
         if (until == '\n') {
-            ecs_parser_error(parser->script->name, parser->script->code,
-                pos - parser->script->code, "expected newline");
+            ecs_parser_error(parser->script->pub.name, parser->script->pub.code,
+                pos - parser->script->pub.code, "expected newline");
             return NULL;
         } else {
-            ecs_parser_error(parser->script->name, parser->script->code,
-                pos - parser->script->code, "expected '%c'", until);
+            ecs_parser_error(parser->script->pub.name, parser->script->pub.code,
+                pos - parser->script->pub.code, "expected '%c'", until);
             return NULL;
         }
     }
 
     if (scope_depth) {
-        ecs_parser_error(parser->script->name, parser->script->code,
-            pos - parser->script->code, "mismatching { }");
+        ecs_parser_error(parser->script->pub.name, parser->script->pub.code,
+            pos - parser->script->pub.code, "mismatching { }");
         return NULL;
     }
     if (paren_depth) {
-        ecs_parser_error(parser->script->name, parser->script->code,
-            pos - parser->script->code, "mismatching ( )");
+        ecs_parser_error(parser->script->pub.name, parser->script->pub.code,
+            pos - parser->script->pub.code, "mismatching ( )");
         return NULL;
     }
 
@@ -417,17 +417,17 @@ const char* flecs_script_until(
 
     if (!pos[0]) {
         if (until == '\0') {
-            ecs_parser_error(parser->script->name, parser->script->code,
-                pos - parser->script->code, "expected end of script");
+            ecs_parser_error(parser->script->pub.name, parser->script->pub.code,
+                pos - parser->script->pub.code, "expected end of script");
             return NULL;
         } else
         if (until == '\n') {
-            ecs_parser_error(parser->script->name, parser->script->code,
-                pos - parser->script->code, "expected newline");
+            ecs_parser_error(parser->script->pub.name, parser->script->pub.code,
+                pos - parser->script->pub.code, "expected newline");
             return NULL;
         } else {
-            ecs_parser_error(parser->script->name, parser->script->code,
-                pos - parser->script->code, "expected '%c'", until);
+            ecs_parser_error(parser->script->pub.name, parser->script->pub.code,
+                pos - parser->script->pub.code, "expected '%c'", until);
             return NULL;
         }
     }
@@ -516,8 +516,8 @@ const char* flecs_script_token(
     }
 
     if (!is_lookahead) {
-        ecs_parser_error(parser->script->name, parser->script->code,
-            pos - parser->script->code, "unknown token '%c'", pos[0]);
+        ecs_parser_error(parser->script->pub.name, parser->script->pub.code,
+            pos - parser->script->pub.code, "unknown token '%c'", pos[0]);
     }
 
     return NULL;

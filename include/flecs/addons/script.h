@@ -34,7 +34,6 @@ extern "C" {
 FLECS_API
 extern ECS_COMPONENT_DECLARE(EcsScript);
 
-typedef struct ecs_script_t ecs_script_t;
 typedef struct ecs_script_template_t ecs_script_template_t;
 
 /** Script variable. */
@@ -55,6 +54,13 @@ typedef struct ecs_script_vars_t {
     ecs_stack_cursor_t *cursor;
     ecs_allocator_t *allocator;
 } ecs_script_vars_t;
+
+/** Script object. */
+typedef struct ecs_script_t {
+    ecs_world_t *world;
+    const char *name;
+    const char *code;
+} ecs_script_t;
 
 /** Script component. 
  * This component is added to the entities of managed scripts and templates.

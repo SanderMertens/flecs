@@ -14,7 +14,8 @@ static
 ECS_MOVE(EcsScript, dst, src, {
     if (dst->script && (dst->script != src->script)) {
         if (dst->template_ && (dst->template_ != src->template_)) {
-            flecs_script_template_fini(dst->script, dst->template_);
+            flecs_script_template_fini(
+                flecs_script_impl(dst->script), dst->template_);
         }
         ecs_script_free(dst->script);
     }
@@ -27,7 +28,8 @@ ECS_MOVE(EcsScript, dst, src, {
 static
 ECS_DTOR(EcsScript, ptr, {
     if (ptr->template_) {
-        flecs_script_template_fini(ptr->script, ptr->template_);
+        flecs_script_template_fini(
+            flecs_script_impl(ptr->script), ptr->template_);
     }
     if (ptr->script) {
         ecs_script_free(ptr->script);
@@ -49,13 +51,13 @@ ecs_id_t flecs_script_tag(
 ecs_script_t* flecs_script_new(
     ecs_world_t *world) 
 {
-    ecs_script_t *result = ecs_os_calloc_t(ecs_script_t);
+    ecs_script_impl_t *result = ecs_os_calloc_t(ecs_script_impl_t);
     flecs_allocator_init(&result->allocator);
     ecs_script_parser_t parser = { .script = result };
     result->root = flecs_script_scope_new(&parser);
-    result->world = world;
+    result->pub.world = world;
     result->refcount = 1;
-    return result;
+    return &result->pub;
 }
 
 void ecs_script_clear(
@@ -109,13 +111,16 @@ int ecs_script_run_file(
 void ecs_script_free(
     ecs_script_t *script)
 {
-    ecs_check(script->refcount > 0, ECS_INVALID_OPERATION, NULL);
-    if (!--script->refcount) {
+    ecs_script_impl_t *impl = flecs_script_impl(script);
+    ecs_check(impl->refcount > 0, ECS_INVALID_OPERATION, NULL);
+    if (!--impl->refcount) {
         flecs_script_visit_free(script);
-        flecs_free(&script->allocator, 
-            script->token_buffer_size, script->token_buffer);
-        flecs_allocator_fini(&script->allocator);
-        ecs_os_free(script);
+        flecs_free(&impl->allocator, 
+            impl->token_buffer_size, impl->token_buffer);
+        flecs_allocator_fini(&impl->allocator);
+        ecs_os_free(ECS_CONST_CAST(char*, impl->pub.name)); /* safe, owned value */
+        ecs_os_free(ECS_CONST_CAST(char*, impl->pub.code)); /* safe, owned value */
+        ecs_os_free(impl);
     }
 error:
     return;
@@ -225,6 +230,24 @@ error:
     return 0;
 }
 
+static
+int EcsScript_serialize(const ecs_serializer_t *ser, const void *ptr) {
+    const EcsScript *data = ptr;
+    if (data->script) {
+        ser->member(ser, "name");
+        ser->value(ser, ecs_id(ecs_string_t), &data->script->name);
+        ser->member(ser, "code");
+        ser->value(ser, ecs_id(ecs_string_t), &data->script->code);
+    } else {
+        char *nullString = NULL;
+        ser->member(ser, "name");
+        ser->value(ser, ecs_id(ecs_string_t), &nullString);
+        ser->member(ser, "code");
+        ser->value(ser, ecs_id(ecs_string_t), &nullString);
+    }
+    return 0;
+}
+
 void FlecsScriptImport(
     ecs_world_t *world)
 {
@@ -243,6 +266,22 @@ void FlecsScriptImport(
         .ctor = flecs_default_ctor,
         .move = ecs_move(EcsScript),
         .dtor = ecs_dtor(EcsScript)
+    });
+
+    ECS_COMPONENT(world, ecs_script_t);
+
+    ecs_struct(world, {
+        .entity = ecs_id(ecs_script_t),
+        .members = {
+            { .name = "name", .type = ecs_id(ecs_string_t) },
+            { .name = "code", .type = ecs_id(ecs_string_t) }
+        }
+    });
+
+    ecs_opaque(world, {
+        .entity = ecs_id(EcsScript),
+        .type.as_type = ecs_id(ecs_script_t),
+        .type.serialize = EcsScript_serialize
     });
 
     ecs_add_id(world, ecs_id(EcsScript), EcsPairIsTag);
