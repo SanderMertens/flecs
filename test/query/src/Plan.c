@@ -71,6 +71,189 @@ void Plan_reordered_plan_2(void) {
     ecs_fini(world);
 }
 
+void Plan_reordered_plan_3(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    ecs_query_t *r = ecs_query(world, {
+        .expr = "?Foo, Bar"
+    });
+
+    test_assert(r != NULL);
+
+    ecs_log_enable_colors(false);
+
+    const char *expect = 
+    HEAD " 0. [-1,  1]  setids      "
+    LINE " 1. [ 0,  2]  andid       $[this]           (Bar)"
+    LINE " 2. [ 1,  4]  option      "
+    LINE " 3. [ 2,  4]   and        $[this]           (Foo)"
+    LINE " 4. [ 2,  5]  end         $[this]           (Foo)"
+    LINE " 5. [ 4,  6]  yield       "
+    LINE "";
+    char *plan = ecs_query_plan(r);
+
+    test_str(expect, plan);
+    ecs_os_free(plan);
+
+    ecs_query_fini(r);
+
+    ecs_fini(world);
+}
+
+void Plan_reordered_plan_4(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+    ECS_TAG(world, Hello);
+    ECS_TAG(world, World);
+
+    ecs_query_t *r = ecs_query(world, {
+        .expr = "?Foo, ?Bar, Hello"
+    });
+
+    test_assert(r != NULL);
+
+    ecs_log_enable_colors(false);
+
+    const char *expect = 
+    HEAD " 0. [-1,  1]  setids      "
+    LINE " 1. [ 0,  2]  andid       $[this]           (Hello)"
+    LINE " 2. [ 1,  4]  option      "
+    LINE " 3. [ 2,  4]   and        $[this]           (Foo)"
+    LINE " 4. [ 2,  5]  end         $[this]           (Foo)"
+    LINE " 5. [ 4,  7]  option      "
+    LINE " 6. [ 5,  7]   andid      $[this]           (Bar)"
+    LINE " 7. [ 5,  8]  end         $[this]           (Bar)"
+    LINE " 8. [ 7,  9]  yield       "
+    LINE "";
+    char *plan = ecs_query_plan(r);
+
+    test_str(expect, plan);
+    ecs_os_free(plan);
+
+    ecs_query_fini(r);
+
+    ecs_fini(world);
+}
+
+void Plan_reordered_plan_5(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+    ECS_TAG(world, Hello);
+
+    ecs_query_t *r = ecs_query(world, {
+        .expr = "?Foo, Hello, ?Bar"
+    });
+
+    test_assert(r != NULL);
+
+    ecs_log_enable_colors(false);
+
+    const char *expect = 
+    HEAD " 0. [-1,  1]  setids      "
+    LINE " 1. [ 0,  2]  andid       $[this]           (Hello)"
+    LINE " 2. [ 1,  4]  option      "
+    LINE " 3. [ 2,  4]   and        $[this]           (Foo)"
+    LINE " 4. [ 2,  5]  end         $[this]           (Foo)"
+    LINE " 5. [ 4,  7]  option      "
+    LINE " 6. [ 5,  7]   andid      $[this]           (Bar)"
+    LINE " 7. [ 5,  8]  end         $[this]           (Bar)"
+    LINE " 8. [ 7,  9]  yield       "
+    LINE "";
+    char *plan = ecs_query_plan(r);
+
+    test_str(expect, plan);
+    ecs_os_free(plan);
+
+    ecs_query_fini(r);
+
+    ecs_fini(world);
+}
+
+void Plan_reordered_plan_6(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+    ECS_TAG(world, Hello);
+    ECS_TAG(world, World);
+
+    ecs_query_t *r = ecs_query(world, {
+        .expr = "?Foo, Hello, ?Bar, World"
+    });
+
+    test_assert(r != NULL);
+
+    ecs_log_enable_colors(false);
+
+    const char *expect = 
+    HEAD " 0. [-1,  1]  setids      "
+    LINE " 1. [ 0,  2]  triv        {1,3}"
+    LINE " 2. [ 1,  4]  option      "
+    LINE " 3. [ 2,  4]   and        $[this]           (Foo)"
+    LINE " 4. [ 2,  5]  end         $[this]           (Foo)"
+    LINE " 5. [ 4,  7]  option      "
+    LINE " 6. [ 5,  7]   andid      $[this]           (Bar)"
+    LINE " 7. [ 5,  8]  end         $[this]           (Bar)"
+    LINE " 8. [ 7,  9]  yield       "
+    LINE "";
+    char *plan = ecs_query_plan(r);
+
+    test_str(expect, plan);
+    ecs_os_free(plan);
+
+    ecs_query_fini(r);
+
+    ecs_fini(world);
+}
+
+void Plan_reordered_plan_7(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+    ECS_TAG(world, Hello);
+    ECS_TAG(world, World);
+
+    ecs_query_t *r = ecs_query(world, {
+        .expr = "?Foo, Hello, ?Bar($this, $foo), World($foo)"
+    });
+
+    test_assert(r != NULL);
+
+    ecs_log_enable_colors(false);
+
+    const char *expect = 
+    HEAD " 0. [-1,  1]  setids      "
+    LINE " 1. [ 0,  2]  andid       $[this]           (Hello)"
+    LINE " 2. [ 1,  4]  option      "
+    LINE " 3. [ 2,  4]   and        $[this]           (Foo)"
+    LINE " 4. [ 2,  5]  end         $[this]           (Foo)"
+    LINE " 5. [ 4,  7]  option      "
+    LINE " 6. [ 5,  7]   and        $[this]           (Bar, $foo)"
+    LINE " 7. [ 5,  8]  end         $[this]           (Bar, $foo)"
+    LINE " 8. [ 7, 10]  ifvar       $foo"
+    LINE " 9. [ 8, 10]   andid      $foo              (World)"
+    LINE "10. [ 8, 11]  end         $foo              (World)"
+    LINE "11. [10, 12]  setvars     "
+    LINE "12. [11, 13]  yield       "
+    LINE "";
+    char *plan = ecs_query_plan(r);
+
+    test_str(expect, plan);
+    ecs_os_free(plan);
+
+    ecs_query_fini(r);
+
+    ecs_fini(world);
+}
+
 void Plan_1_trivial_plan(void) {
     ecs_world_t *world = ecs_mini();
 

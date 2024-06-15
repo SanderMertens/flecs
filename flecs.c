@@ -10175,18 +10175,30 @@ static
 const char* flecs_path_elem(
     const char *path,
     const char *sep,
-    int32_t *len)
+    char **buffer_out,
+    ecs_size_t *size_out)
 {
+    char *buffer = NULL;
+    if (buffer_out) {
+        buffer = *buffer_out;
+    }
+
     const char *ptr;
     char ch;
     int32_t template_nesting = 0;
-    int32_t count = 0;
+    int32_t pos = 0;
+    ecs_size_t size = size_out ? *size_out : 0;
 
     for (ptr = path; (ch = *ptr); ptr ++) {
         if (ch == '<') {
             template_nesting ++;
         } else if (ch == '>') {
             template_nesting --;
+        } else if (ch == '\\') {
+            ptr ++;
+            buffer[pos] = ptr[0];
+            pos ++;
+            continue;
         }
 
         ecs_check(template_nesting >= 0, ECS_INVALID_PARAMETER, path);
@@ -10195,14 +10207,30 @@ const char* flecs_path_elem(
             break;
         }
 
-        count ++;
+        if (buffer) {
+            if (pos == size) {
+                if (size == ECS_NAME_BUFFER_LENGTH) { /* stack buffer */
+                    char *new_buffer = ecs_os_malloc(size * 2);
+                    ecs_os_memcpy(new_buffer, buffer, size);
+                    buffer = new_buffer;
+                } else { /* heap buffer */
+                    buffer = ecs_os_realloc(buffer, size * 2);
+                }
+                size *= 2;
+            }
+
+            buffer[pos] = ch;
+        }
+
+        pos ++;
     }
 
-    if (len) {
-        *len = count;
+    if (buffer) {
+        buffer[pos] = '\0';
+        *buffer_out = buffer;
     }
 
-    if (count) {
+    if (pos) {
         return ptr;
     } else {
         return NULL;
@@ -10415,10 +10443,9 @@ ecs_entity_t ecs_lookup_path_w_sep(
         return e;
     }
 
-    char buff[ECS_NAME_BUFFER_LENGTH];
-    const char *ptr, *ptr_start;
-    char *elem = buff;
-    int32_t len, size = ECS_NAME_BUFFER_LENGTH;
+    char buff[ECS_NAME_BUFFER_LENGTH], *elem = buff;
+    const char *ptr;
+    int32_t size = ECS_NAME_BUFFER_LENGTH;
     ecs_entity_t cur;
     bool lookup_path_search = false;
 
@@ -10440,24 +10467,9 @@ ecs_entity_t ecs_lookup_path_w_sep(
 
 retry:
     cur = parent;
-    ptr_start = ptr = path;
+    ptr = path;
 
-    while ((ptr = flecs_path_elem(ptr, sep, &len))) {
-        if (len < size) {
-            ecs_os_memcpy(elem, ptr_start, len);
-        } else {
-            if (size == ECS_NAME_BUFFER_LENGTH) {
-                elem = NULL;
-            }
-
-            elem = ecs_os_realloc(elem, len + 1);
-            ecs_os_memcpy(elem, ptr_start, len);
-            size = len + 1;
-        }
-
-        elem[len] = '\0';
-        ptr_start = ptr;
-
+    while ((ptr = flecs_path_elem(ptr, sep, &elem, &size))) {
         cur = ecs_lookup_child(world, cur, elem);
         if (!cur) {
             goto tail;
@@ -10614,9 +10626,8 @@ ecs_entity_t ecs_add_path_w_sep(
 
     char buff[ECS_NAME_BUFFER_LENGTH];
     const char *ptr = path;
-    const char *ptr_start = path;
     char *elem = buff;
-    int32_t len, size = ECS_NAME_BUFFER_LENGTH;
+    int32_t size = ECS_NAME_BUFFER_LENGTH;
     
     /* If we're in deferred/readonly mode suspend it, so that the name index is
      * immediately updated. Without this, we could create multiple entities for
@@ -10628,22 +10639,7 @@ ecs_entity_t ecs_add_path_w_sep(
     char *name = NULL;
 
     if (sep[0]) {
-        while ((ptr = flecs_path_elem(ptr, sep, &len))) {
-            if (len < size) {
-                ecs_os_memcpy(elem, ptr_start, len);
-            } else {
-                if (size == ECS_NAME_BUFFER_LENGTH) {
-                    elem = NULL;
-                }
-
-                elem = ecs_os_realloc(elem, len + 1);
-                ecs_os_memcpy(elem, ptr_start, len);
-                size = len + 1;          
-            }
-
-            elem[len] = '\0';
-            ptr_start = ptr;
-
+        while ((ptr = flecs_path_elem(ptr, sep, &elem, &size))) {
             ecs_entity_t e = ecs_lookup_child(world, cur, elem);
             if (!e) {
                 if (name) {
@@ -10654,7 +10650,7 @@ ecs_entity_t ecs_add_path_w_sep(
 
                 /* If this is the last entity in the path, use the provided id */
                 bool last_elem = false;
-                if (!flecs_path_elem(ptr, sep, NULL)) {
+                if (!flecs_path_elem(ptr, sep, NULL, NULL)) {
                     e = entity;
                     last_elem = true;
                 }
@@ -63568,6 +63564,11 @@ const char* flecs_script_identifier(
         bool is_ident = flecs_script_is_identifier(c) || 
             isdigit(c) || (c == '.') || (c == '*');
 
+        /* Retain \. for name lookup operation */
+        if (!is_ident && c == '\\' && pos[1] == '.') {
+            is_ident = true;
+        }
+
         if (!is_ident) {
             if (c == '\\') {
                 pos ++;
@@ -63614,6 +63615,8 @@ const char* flecs_script_identifier(
         outpos ++;
         pos ++;
     } while (true);
+
+    printf("TOKEN %s\n", out->value);
 }
 
 // Number token
@@ -70276,43 +70279,74 @@ int flecs_query_compile(
     flecs_query_insert_trivial_search(
         query, &compiled, &populated, &ctx);
 
-    /* Compile remaining query terms to instructions */
-    for (i = 0; i < term_count; i ++) {
-        ecs_term_t *term = &terms[i];
-        int32_t compile = i;
-
-        if (compiled & (1ull << i)) {
-            continue; /* Already compiled */
+    /* If a query starts with one or more optional terms, first compile the non
+     * optional terms. This prevents having to insert an instruction that 
+     * matches the query against every entity in the storage. 
+     * Only skip optional terms at the start of the query so that any 
+     * short-circuiting behavior isn't affected (a non-optional term can become
+     * optional if it uses a variable set in an optional term). */
+    int32_t start_term = 0;
+    for (; start_term < term_count; start_term ++) {
+        if (terms[start_term].oper != EcsOptional) {
+            break;
         }
-
-        bool can_reorder = true;
-        if (term->oper != EcsAnd || flecs_term_is_or(q, term)){
-            can_reorder = false;
-        }
-
-        /* If variables have been written, but this term has no known variables,
-         * first try to resolve terms that have known variables. This can 
-         * significantly reduce the search space. 
-         * Only perform this optimization after at least one variable has been
-         * written to, as all terms are unknown otherwise. */
-        if (can_reorder && ctx.written && 
-            flecs_query_term_is_unknown(query, term, &ctx)) 
-        {
-            int32_t term_index = flecs_query_term_next_known(
-                query, &ctx, i + 1, compiled);
-            if (term_index != -1) {
-                term = &q->terms[term_index];
-                compile = term_index;
-                i --; /* Repeat current term */
-            }
-        }
-
-        if (flecs_query_compile_term(world, query, term, &populated, &ctx)) {
-            return -1;
-        }
-
-        compiled |= (1ull << compile);
     }
+
+    do {
+        /* Compile remaining query terms to instructions */
+        for (i = start_term; i < term_count; i ++) {
+            ecs_term_t *term = &terms[i];
+            int32_t compile = i;
+
+            if (compiled & (1ull << i)) {
+                continue; /* Already compiled */
+            }
+
+            if (term->oper == EcsOptional && start_term) {
+                /* Don't reorder past the first optional term that's not in the
+                 * initial list of optional terms. This protects short
+                 * circuiting branching in the query. 
+                 * A future algorithm could look at which variables are 
+                 * accessed by optional terms, and continue reordering terms 
+                 * that don't access those variables. */
+                break;
+            }
+
+            bool can_reorder = true;
+            if (term->oper != EcsAnd || flecs_term_is_or(q, term)){
+                can_reorder = false;
+            }
+
+            /* If variables have been written, but this term has no known variables,
+            * first try to resolve terms that have known variables. This can 
+            * significantly reduce the search space. 
+            * Only perform this optimization after at least one variable has been
+            * written to, as all terms are unknown otherwise. */
+            if (can_reorder && ctx.written && 
+                flecs_query_term_is_unknown(query, term, &ctx)) 
+            {
+                int32_t term_index = flecs_query_term_next_known(
+                    query, &ctx, i + 1, compiled);
+                if (term_index != -1) {
+                    term = &q->terms[term_index];
+                    compile = term_index;
+                    i --; /* Repeat current term */
+                }
+            }
+
+            if (flecs_query_compile_term(world, query, term, &populated, &ctx)) {
+                return -1;
+            }
+
+            compiled |= (1ull << compile);
+        }
+
+        if (start_term) {
+            start_term = 0; /* Repeat, now also insert optional terms */
+        } else {
+            break;
+        }
+    } while (true);
 
     ecs_var_id_t this_id = flecs_query_find_var_id(query, "this", EcsVarEntity);
     if (this_id != EcsVarNone) {
