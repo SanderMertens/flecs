@@ -19,6 +19,9 @@ public:
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 	
 	void RegisterEntityOption(const FName& EntityName, const flecs::entity_t& EntityHandle);
+
+	UFUNCTION(BlueprintCallable, Category = "Flecs | Default Entities")
+	void RegisterDefaultEntity(const FName& EntityName);
 	
 	NO_DISCARD const TMap<FName, flecs::entity_t>& GetEntityOptions() const;
 

@@ -146,6 +146,21 @@ public:
 	{
 		System.set_tick_source(InSource);
 	}
+
+	FORCEINLINE NO_DISCARD bool IsValid() const
+	{
+		return System.is_valid();
+	}
+
+	FORCEINLINE operator bool() const
+	{
+		return IsValid();
+	}
 	
 	flecs::system System;
 }; // struct FFlecsSystem
+
+FORCEINLINE NO_DISCARD bool IsValid(const FFlecsSystem& InSystem)
+{
+	return InSystem.IsValid();
+}

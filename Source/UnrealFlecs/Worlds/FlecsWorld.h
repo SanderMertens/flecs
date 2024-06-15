@@ -14,7 +14,7 @@
 
 DECLARE_STATS_GROUP(TEXT("FlecsWorld"), STATGROUP_FlecsWorld, STATCAT_Advanced);
 
-DECLARE_CYCLE_STAT(TEXT("FlecsWorld Progress"), STAT_FlecsWorldProgress, STATGROUP_FlecsWorld);
+DECLARE_CYCLE_STAT(TEXT("FlecsWorld::Progress"), STAT_FlecsWorldProgress, STATGROUP_FlecsWorld);
 
 UCLASS(BlueprintType)
 class UNREALFLECS_API UFlecsWorld final : public UObject
@@ -317,14 +317,12 @@ public:
 	{
 		World.set_target_fps(InTargetFps);
 	}
-
-	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
+	
 	FORCEINLINE void Quit() const
 	{
 		World.quit();
 	}
-
-	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
+	
 	FORCEINLINE void DestroyWorld()
 	{
 		World.~world();
@@ -385,14 +383,21 @@ public:
 		return World.make_alive(InId.GetFlecsId());
 	}
 
-	template <typename ...TComponents>
-	FORCEINLINE NO_DISCARD FFlecsSystem CreateSystem(const FString& InName) const
+	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
+	FFlecsSystem CreateSystem(const FString& InName) const
 	{
-		return FFlecsSystem(World.system<TComponents...>(TCHAR_TO_ANSI(*InName)));
+		return CreateSystem<>(InName);
 	}
 
 	template <typename ...TComponents>
-	FORCEINLINE NO_DISCARD flecs::system_builder<TComponents...> CreateSystem(const FString& InName) const
+	FORCEINLINE NO_DISCARD FFlecsSystem CreateSystem(const FString& InName) const
+	{
+		const FFlecsEntityHandle SystemEntity = CreateEntity(InName);
+		return World.system(SystemEntity.GetEntity());
+	}
+
+	template <typename ...TComponents>
+	FORCEINLINE NO_DISCARD flecs::system_builder<TComponents...> CreateSystemWithBuilder(const FString& InName) const
 	{
 		return World.system<TComponents...>(TCHAR_TO_ANSI(*InName));
 	}
@@ -829,4 +834,5 @@ public:
 
 	UPROPERTY()
 	TArray<TObjectPtr<UFlecsWorld>> Stages;
+	
 }; // class UFlecsWorld

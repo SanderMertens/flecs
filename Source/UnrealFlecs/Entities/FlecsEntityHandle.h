@@ -407,7 +407,7 @@ public:
 	FORCEINLINE NO_DISCARD FString ToJson(const bool bSerializePath = true,
 		const bool bSerializeLabel = false, const bool bSerializeBrief = false, const bool bSerializeLink = false,
 		const bool bSerializeColor = false, const bool bSerializeIds = true, const bool bSerializeIdLabels = false,
-		const bool bSerializeBaseComponents = true, const bool bSerializeComponents = true)
+		const bool bSerializeBaseComponents = true, const bool bSerializeComponents = true) const
 	{
 		return FString(GetEntity().to_json().c_str());
 	}
@@ -776,6 +776,60 @@ public:
 	FORCEINLINE void ToggleTrait(const UScriptStruct* ComponentStructType, const FFlecsEntityHandle& InTrait) const
 	{
 		ObtainTraitHolderEntity(ComponentStructType).Toggle(InTrait);
+	}
+
+	template <typename TComponent>
+	FORCEINLINE void Modified() const
+	{
+		GetEntity().modified<TComponent>();
+	}
+
+	template <typename TComponent>
+	FORCEINLINE void Modified(const UScriptStruct* StructType) const
+	{
+		GetEntity().modified(ObtainComponentTypeStruct(StructType));
+	}
+
+	template <typename TComponent>
+	FORCEINLINE void Modified(const FGameplayTag& InTag) const
+	{
+		GetEntity().modified(GetTagEntity(InTag));
+	}
+
+	template <typename TComponent>
+	FORCEINLINE void Modified(const FFlecsEntityHandle& InEntity) const
+	{
+		GetEntity().modified(InEntity);
+	}
+
+	FORCEINLINE void Modified(const UScriptStruct* StructType) const
+	{
+		GetEntity().modified(ObtainTraitHolderEntity(StructType));
+	}
+
+	FORCEINLINE void Modified(const FGameplayTag& InTag) const
+	{
+		GetEntity().modified(GetTagEntity(InTag));
+	}
+
+	FORCEINLINE void Modified(const FFlecsEntityHandle& InEntity) const
+	{
+		GetEntity().modified(InEntity);
+	}
+
+	FORCEINLINE void Modified(const UScriptStruct* StructType, const UScriptStruct* TraitType) const
+	{
+		GetEntity().modified(ObtainTraitHolderEntity(StructType).GetEntity());
+	}
+
+	FORCEINLINE void Modified(const UScriptStruct* StructType, const FGameplayTag& InTag) const
+	{
+		GetEntity().modified(GetTagEntity(InTag));
+	}
+
+	FORCEINLINE void Modified(const UScriptStruct* StructType, const FFlecsEntityHandle& InTrait) const
+	{
+		GetEntity().modified(InTrait);
 	}
 	
 	#if WITH_EDITORONLY_DATA

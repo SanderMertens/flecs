@@ -92,6 +92,11 @@ void UFlecsDefaultEntityEngineSubsystem::RegisterEntityOption(const FName& Entit
 	EntityOptionMap.Emplace(EntityName, EntityHandle);
 }
 
+void UFlecsDefaultEntityEngineSubsystem::RegisterDefaultEntity(const FName& EntityName)
+{
+	
+}
+
 const TMap<FName, flecs::entity_t>& UFlecsDefaultEntityEngineSubsystem::GetEntityOptions() const
 {
 	return EntityOptionMap;

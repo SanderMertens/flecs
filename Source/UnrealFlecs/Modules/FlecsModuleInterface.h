@@ -82,6 +82,14 @@ struct UNREALFLECS_API FFlecsModuleStructInterface
 public:
 	virtual ~FFlecsModuleStructInterface();
 
+	FORCEINLINE void ImportModule(const flecs::world& InWorld)
+	{
+	}
+
+	FORCEINLINE void DeinitModule_Internal()
+	{
+	}
+
 	virtual void InitializeModule(UFlecsWorld* InWorld, const FFlecsEntityHandle& InModuleEntity)
 		PURE_VIRTUAL(FFlecsModuleStructInterface::InitializeModule, );
 	
@@ -95,6 +103,8 @@ public:
 
 	UPROPERTY()
 	TWeakObjectPtr<UFlecsWorld> World;
+
+	FFlecsEntityHandle ModuleEntity;
 }; // struct FFlecsModuleInterface
 
 template <>
