@@ -6788,3 +6788,90 @@ void Parser_match_variable_oper(void) {
 
     ecs_fini(world);
 }
+
+void Parser_escaped_identifier(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t e = ecs_entity(world, { 
+        .name = "foo.bar",
+        .sep = ""
+    });
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "foo\\.bar"
+    });
+
+    test_assert(q != NULL);
+
+    test_int(term_count(q), 1);
+
+    ecs_term_t *terms = query_terms(q);
+    test_first(terms[0], e, EcsSelf|EcsIsEntity);
+    test_src(terms[0], EcsThis, EcsSelf|EcsIsVariable);
+    test_int(terms[0].oper, EcsAnd);
+    test_int(terms[0].inout, EcsInOutDefault);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Parser_escaped_identifier_first(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tgt);
+
+    ecs_entity_t e = ecs_entity(world, { 
+        .name = "foo.bar",
+        .sep = ""
+    });
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "(foo\\.bar, Tgt)"
+    });
+
+    test_assert(q != NULL);
+
+    test_int(term_count(q), 1);
+
+    ecs_term_t *terms = query_terms(q);
+    test_first(terms[0], e, EcsSelf|EcsIsEntity);
+    test_src(terms[0], EcsThis, EcsSelf|EcsIsVariable);
+    test_second(terms[0], Tgt, EcsSelf|EcsIsEntity);
+    test_int(terms[0].oper, EcsAnd);
+    test_int(terms[0].inout, EcsInOutDefault);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Parser_escaped_identifier_second(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+
+    ecs_entity_t e = ecs_entity(world, { 
+        .name = "foo.bar",
+        .sep = ""
+    });
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "(Rel, foo\\.bar)"
+    });
+
+    test_assert(q != NULL);
+
+    test_int(term_count(q), 1);
+
+    ecs_term_t *terms = query_terms(q);
+    test_first(terms[0], Rel, EcsSelf|EcsIsEntity);
+    test_src(terms[0], EcsThis, EcsSelf|EcsIsVariable);
+    test_second(terms[0], e, EcsSelf|EcsIsEntity);
+    test_int(terms[0].oper, EcsAnd);
+    test_int(terms[0].inout, EcsInOutDefault);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
