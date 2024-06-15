@@ -67425,14 +67425,12 @@ void MonitorStats(ecs_iter_t *it) {
 
     int32_t t_last = (int32_t)(elapsed * 60);
     int32_t t_next = (int32_t)(hdr->elapsed * 60);
-    int32_t i, dif = t_last - t_next;
+    int32_t i, dif = t_next - t_last;
     void *stats_storage = ecs_os_alloca(ctx->api.stats_size);
     void *last = NULL;
 
     if (!dif) {
         hdr->reduce_count ++;
-    } else {
-        hdr->reduce_count = 0;
     }
 
     ecs_iter_t qit;
@@ -67496,6 +67494,10 @@ void MonitorStats(ecs_iter_t *it) {
             break;
         }
     } while (true);
+
+     if (dif > 1) {
+        hdr->reduce_count = 0;
+    }
 }
 
 static
@@ -67773,8 +67775,8 @@ void FlecsStatsImport(
 
     FlecsWorldSummaryImport(world);
     FlecsWorldMonitorImport(world);
-    // FlecsSystemMonitorImport(world);
-    // FlecsPipelineMonitorImport(world);
+    FlecsSystemMonitorImport(world);
+    FlecsPipelineMonitorImport(world);
     
     if (ecs_os_has_time()) {
         ecs_measure_frame_time(world, true);
