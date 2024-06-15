@@ -716,3 +716,36 @@ void Lookup_lookup_symbol_path(void) {
 
     ecs_fini(world);
 }
+
+void Lookup_lookup_name_escaped_sep(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t e = ecs_entity(world, {
+        .name = "foo.bar",
+        .sep = ""
+    });
+    test_assert(e != 0);
+
+    test_assert(ecs_lookup(world, "foo.bar") == 0);
+    test_assert(ecs_lookup(world, "foo\\.bar") == e);
+
+    ecs_fini(world);
+}
+
+void Lookup_lookup_path_escaped_sep(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t p = ecs_entity(world, { .name = "parent" });
+
+    ecs_entity_t e = ecs_entity(world, {
+        .name = "foo.bar",
+        .parent = p,
+        .sep = ""
+    });
+    test_assert(e != 0);
+
+    test_assert(ecs_lookup(world, "parent.foo.bar") == 0);
+    test_assert(ecs_lookup(world, "parent.foo\\.bar") == e);
+
+    ecs_fini(world);
+}

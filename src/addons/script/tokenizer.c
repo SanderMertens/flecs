@@ -149,6 +149,11 @@ const char* flecs_script_identifier(
         bool is_ident = flecs_script_is_identifier(c) || 
             isdigit(c) || (c == '.') || (c == '*');
 
+        /* Retain \. for name lookup operation */
+        if (!is_ident && c == '\\' && pos[1] == '.') {
+            is_ident = true;
+        }
+
         if (!is_ident) {
             if (c == '\\') {
                 pos ++;
@@ -195,6 +200,8 @@ const char* flecs_script_identifier(
         outpos ++;
         pos ++;
     } while (true);
+
+    printf("TOKEN %s\n", out->value);
 }
 
 // Number token

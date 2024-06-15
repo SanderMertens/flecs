@@ -136,18 +136,30 @@ static
 const char* flecs_path_elem(
     const char *path,
     const char *sep,
-    int32_t *len)
+    char **buffer_out,
+    ecs_size_t *size_out)
 {
+    char *buffer = NULL;
+    if (buffer_out) {
+        buffer = *buffer_out;
+    }
+
     const char *ptr;
     char ch;
     int32_t template_nesting = 0;
-    int32_t count = 0;
+    int32_t pos = 0;
+    ecs_size_t size = size_out ? *size_out : 0;
 
     for (ptr = path; (ch = *ptr); ptr ++) {
         if (ch == '<') {
             template_nesting ++;
         } else if (ch == '>') {
             template_nesting --;
+        } else if (ch == '\\') {
+            ptr ++;
+            buffer[pos] = ptr[0];
+            pos ++;
+            continue;
         }
 
         ecs_check(template_nesting >= 0, ECS_INVALID_PARAMETER, path);
@@ -156,14 +168,30 @@ const char* flecs_path_elem(
             break;
         }
 
-        count ++;
+        if (buffer) {
+            if (pos == size) {
+                if (size == ECS_NAME_BUFFER_LENGTH) { /* stack buffer */
+                    char *new_buffer = ecs_os_malloc(size * 2);
+                    ecs_os_memcpy(new_buffer, buffer, size);
+                    buffer = new_buffer;
+                } else { /* heap buffer */
+                    buffer = ecs_os_realloc(buffer, size * 2);
+                }
+                size *= 2;
+            }
+
+            buffer[pos] = ch;
+        }
+
+        pos ++;
     }
 
-    if (len) {
-        *len = count;
+    if (buffer) {
+        buffer[pos] = '\0';
+        *buffer_out = buffer;
     }
 
-    if (count) {
+    if (pos) {
         return ptr;
     } else {
         return NULL;
@@ -376,10 +404,9 @@ ecs_entity_t ecs_lookup_path_w_sep(
         return e;
     }
 
-    char buff[ECS_NAME_BUFFER_LENGTH];
-    const char *ptr, *ptr_start;
-    char *elem = buff;
-    int32_t len, size = ECS_NAME_BUFFER_LENGTH;
+    char buff[ECS_NAME_BUFFER_LENGTH], *elem = buff;
+    const char *ptr;
+    int32_t size = ECS_NAME_BUFFER_LENGTH;
     ecs_entity_t cur;
     bool lookup_path_search = false;
 
@@ -401,24 +428,9 @@ ecs_entity_t ecs_lookup_path_w_sep(
 
 retry:
     cur = parent;
-    ptr_start = ptr = path;
+    ptr = path;
 
-    while ((ptr = flecs_path_elem(ptr, sep, &len))) {
-        if (len < size) {
-            ecs_os_memcpy(elem, ptr_start, len);
-        } else {
-            if (size == ECS_NAME_BUFFER_LENGTH) {
-                elem = NULL;
-            }
-
-            elem = ecs_os_realloc(elem, len + 1);
-            ecs_os_memcpy(elem, ptr_start, len);
-            size = len + 1;
-        }
-
-        elem[len] = '\0';
-        ptr_start = ptr;
-
+    while ((ptr = flecs_path_elem(ptr, sep, &elem, &size))) {
         cur = ecs_lookup_child(world, cur, elem);
         if (!cur) {
             goto tail;
@@ -575,9 +587,8 @@ ecs_entity_t ecs_add_path_w_sep(
 
     char buff[ECS_NAME_BUFFER_LENGTH];
     const char *ptr = path;
-    const char *ptr_start = path;
     char *elem = buff;
-    int32_t len, size = ECS_NAME_BUFFER_LENGTH;
+    int32_t size = ECS_NAME_BUFFER_LENGTH;
     
     /* If we're in deferred/readonly mode suspend it, so that the name index is
      * immediately updated. Without this, we could create multiple entities for
@@ -589,22 +600,7 @@ ecs_entity_t ecs_add_path_w_sep(
     char *name = NULL;
 
     if (sep[0]) {
-        while ((ptr = flecs_path_elem(ptr, sep, &len))) {
-            if (len < size) {
-                ecs_os_memcpy(elem, ptr_start, len);
-            } else {
-                if (size == ECS_NAME_BUFFER_LENGTH) {
-                    elem = NULL;
-                }
-
-                elem = ecs_os_realloc(elem, len + 1);
-                ecs_os_memcpy(elem, ptr_start, len);
-                size = len + 1;          
-            }
-
-            elem[len] = '\0';
-            ptr_start = ptr;
-
+        while ((ptr = flecs_path_elem(ptr, sep, &elem, &size))) {
             ecs_entity_t e = ecs_lookup_child(world, cur, elem);
             if (!e) {
                 if (name) {
@@ -615,7 +611,7 @@ ecs_entity_t ecs_add_path_w_sep(
 
                 /* If this is the last entity in the path, use the provided id */
                 bool last_elem = false;
-                if (!flecs_path_elem(ptr, sep, NULL)) {
+                if (!flecs_path_elem(ptr, sep, NULL, NULL)) {
                     e = entity;
                     last_elem = true;
                 }

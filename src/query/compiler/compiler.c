@@ -1050,43 +1050,74 @@ int flecs_query_compile(
     flecs_query_insert_trivial_search(
         query, &compiled, &populated, &ctx);
 
-    /* Compile remaining query terms to instructions */
-    for (i = 0; i < term_count; i ++) {
-        ecs_term_t *term = &terms[i];
-        int32_t compile = i;
-
-        if (compiled & (1ull << i)) {
-            continue; /* Already compiled */
+    /* If a query starts with one or more optional terms, first compile the non
+     * optional terms. This prevents having to insert an instruction that 
+     * matches the query against every entity in the storage. 
+     * Only skip optional terms at the start of the query so that any 
+     * short-circuiting behavior isn't affected (a non-optional term can become
+     * optional if it uses a variable set in an optional term). */
+    int32_t start_term = 0;
+    for (; start_term < term_count; start_term ++) {
+        if (terms[start_term].oper != EcsOptional) {
+            break;
         }
-
-        bool can_reorder = true;
-        if (term->oper != EcsAnd || flecs_term_is_or(q, term)){
-            can_reorder = false;
-        }
-
-        /* If variables have been written, but this term has no known variables,
-         * first try to resolve terms that have known variables. This can 
-         * significantly reduce the search space. 
-         * Only perform this optimization after at least one variable has been
-         * written to, as all terms are unknown otherwise. */
-        if (can_reorder && ctx.written && 
-            flecs_query_term_is_unknown(query, term, &ctx)) 
-        {
-            int32_t term_index = flecs_query_term_next_known(
-                query, &ctx, i + 1, compiled);
-            if (term_index != -1) {
-                term = &q->terms[term_index];
-                compile = term_index;
-                i --; /* Repeat current term */
-            }
-        }
-
-        if (flecs_query_compile_term(world, query, term, &populated, &ctx)) {
-            return -1;
-        }
-
-        compiled |= (1ull << compile);
     }
+
+    do {
+        /* Compile remaining query terms to instructions */
+        for (i = start_term; i < term_count; i ++) {
+            ecs_term_t *term = &terms[i];
+            int32_t compile = i;
+
+            if (compiled & (1ull << i)) {
+                continue; /* Already compiled */
+            }
+
+            if (term->oper == EcsOptional && start_term) {
+                /* Don't reorder past the first optional term that's not in the
+                 * initial list of optional terms. This protects short
+                 * circuiting branching in the query. 
+                 * A future algorithm could look at which variables are 
+                 * accessed by optional terms, and continue reordering terms 
+                 * that don't access those variables. */
+                break;
+            }
+
+            bool can_reorder = true;
+            if (term->oper != EcsAnd || flecs_term_is_or(q, term)){
+                can_reorder = false;
+            }
+
+            /* If variables have been written, but this term has no known variables,
+            * first try to resolve terms that have known variables. This can 
+            * significantly reduce the search space. 
+            * Only perform this optimization after at least one variable has been
+            * written to, as all terms are unknown otherwise. */
+            if (can_reorder && ctx.written && 
+                flecs_query_term_is_unknown(query, term, &ctx)) 
+            {
+                int32_t term_index = flecs_query_term_next_known(
+                    query, &ctx, i + 1, compiled);
+                if (term_index != -1) {
+                    term = &q->terms[term_index];
+                    compile = term_index;
+                    i --; /* Repeat current term */
+                }
+            }
+
+            if (flecs_query_compile_term(world, query, term, &populated, &ctx)) {
+                return -1;
+            }
+
+            compiled |= (1ull << compile);
+        }
+
+        if (start_term) {
+            start_term = 0; /* Repeat, now also insert optional terms */
+        } else {
+            break;
+        }
+    } while (true);
 
     ecs_var_id_t this_id = flecs_query_find_var_id(query, "this", EcsVarEntity);
     if (this_id != EcsVarNone) {

@@ -904,6 +904,8 @@ void Lookup_lookup_digit_from_wrong_scope(void);
 void Lookup_lookup_core_entity_from_wrong_scope(void);
 void Lookup_lookup_alias_w_number(void);
 void Lookup_lookup_symbol_path(void);
+void Lookup_lookup_name_escaped_sep(void);
+void Lookup_lookup_path_escaped_sep(void);
 
 // Testsuite 'Singleton'
 void Singleton_add_singleton(void);
@@ -5485,6 +5487,14 @@ bake_test_case Lookup_testcases[] = {
     {
         "lookup_symbol_path",
         Lookup_lookup_symbol_path
+    },
+    {
+        "lookup_name_escaped_sep",
+        Lookup_lookup_name_escaped_sep
+    },
+    {
+        "lookup_path_escaped_sep",
+        Lookup_lookup_path_escaped_sep
     }
 };
 
@@ -10033,7 +10043,7 @@ static bake_test_suite suites[] = {
         "Lookup",
         Lookup_setup,
         NULL,
-        49,
+        51,
         Lookup_testcases
     },
     {

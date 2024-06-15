@@ -433,7 +433,10 @@
                 "match_existing_entity",
                 "match_wildcard",
                 "match_any",
-                "match_variable_oper"
+                "match_variable_oper",
+                "escaped_identifier",
+                "escaped_identifier_first",
+                "escaped_identifier_second"
             ]
         }, {
             "id": "Basic",
@@ -662,6 +665,11 @@
             "testcases": [
                 "reordered_plan_1",
                 "reordered_plan_2",
+                "reordered_plan_3",
+                "reordered_plan_4",
+                "reordered_plan_5",
+                "reordered_plan_6",
+                "reordered_plan_7",
                 "1_trivial_plan",
                 "2_trivial_plan",
                 "1_trivial_plan_component",

@@ -427,6 +427,9 @@ void Parser_match_existing_entity(void);
 void Parser_match_wildcard(void);
 void Parser_match_any(void);
 void Parser_match_variable_oper(void);
+void Parser_escaped_identifier(void);
+void Parser_escaped_identifier_first(void);
+void Parser_escaped_identifier_second(void);
 
 // Testsuite 'Basic'
 void Basic_setup(void);
@@ -642,6 +645,11 @@ void Combinations_trav_and_self_and_singleton(void);
 // Testsuite 'Plan'
 void Plan_reordered_plan_1(void);
 void Plan_reordered_plan_2(void);
+void Plan_reordered_plan_3(void);
+void Plan_reordered_plan_4(void);
+void Plan_reordered_plan_5(void);
+void Plan_reordered_plan_6(void);
+void Plan_reordered_plan_7(void);
 void Plan_1_trivial_plan(void);
 void Plan_2_trivial_plan(void);
 void Plan_1_trivial_plan_component(void);
@@ -3643,6 +3651,18 @@ bake_test_case Parser_testcases[] = {
     {
         "match_variable_oper",
         Parser_match_variable_oper
+    },
+    {
+        "escaped_identifier",
+        Parser_escaped_identifier
+    },
+    {
+        "escaped_identifier_first",
+        Parser_escaped_identifier_first
+    },
+    {
+        "escaped_identifier_second",
+        Parser_escaped_identifier_second
     }
 };
 
@@ -4480,6 +4500,26 @@ bake_test_case Plan_testcases[] = {
     {
         "reordered_plan_2",
         Plan_reordered_plan_2
+    },
+    {
+        "reordered_plan_3",
+        Plan_reordered_plan_3
+    },
+    {
+        "reordered_plan_4",
+        Plan_reordered_plan_4
+    },
+    {
+        "reordered_plan_5",
+        Plan_reordered_plan_5
+    },
+    {
+        "reordered_plan_6",
+        Plan_reordered_plan_6
+    },
+    {
+        "reordered_plan_7",
+        Plan_reordered_plan_7
     },
     {
         "1_trivial_plan",
@@ -9745,7 +9785,7 @@ static bake_test_suite suites[] = {
         "Parser",
         NULL,
         NULL,
-        289,
+        292,
         Parser_testcases
     },
     {
@@ -9770,7 +9810,7 @@ static bake_test_suite suites[] = {
         "Plan",
         NULL,
         NULL,
-        59,
+        64,
         Plan_testcases
     },
     {
