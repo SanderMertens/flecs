@@ -952,7 +952,10 @@
                 "lookup_digit_from_wrong_scope",
                 "lookup_core_entity_from_wrong_scope",
                 "lookup_alias_w_number",
-                "lookup_symbol_path"
+                "lookup_symbol_path",
+                "lookup_name_escaped_sep",
+                "lookup_path_escaped_sep"
+
             ]
         }, {
             "id": "Singleton",
