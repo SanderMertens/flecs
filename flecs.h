@@ -256,7 +256,7 @@
  * When enabled, Flecs will use the OS allocator provided in the OS API directly
  * instead of the builtin block allocator. This can decrease memory utilization
  * as memory will be freed more often, at the cost of decreased performance. */
-// #define FLECS_USE_OS_ALLOC
+#define FLECS_USE_OS_ALLOC
 
 /** @def FLECS_ID_DESC_MAX
  * Maximum number of ids to add ecs_entity_desc_t / ecs_bulk_desc_t */
@@ -13233,7 +13233,7 @@ int ecs_type_info_to_json_buf(
 typedef struct ecs_entity_to_json_desc_t {
     bool serialize_entity_id;  /**< Serialize entity id */
     bool serialize_path;       /**< Serialize full pathname */
-    bool serialize_labels;     /**< Serialize doc name */
+    bool serialize_labels;     /**< Serialize doc names */
     bool serialize_brief;      /**< Serialize brief doc description */
     bool serialize_link;       /**< Serialize doc link (URL) */
     bool serialize_color;      /**< Serialize doc color */

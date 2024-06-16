@@ -216,7 +216,9 @@ void flecs_monitor_ctx_free(
     void *ptr)
 {
     ecs_monitor_stats_ctx_t *ctx = ptr;
-    ecs_query_fini(ctx->query);
+    if (ctx->query) {
+        ecs_query_fini(ctx->query);
+    }
     ecs_os_free(ctx);
 }
 
@@ -245,7 +247,7 @@ void flecs_stats_api_import(
     if (api->query_component_id) {
         q = ecs_query(world, {
             .terms = {{ .id = api->query_component_id }},
-            .cache_kind = EcsQueryCacheAll,
+            .cache_kind = EcsQueryCacheNone,
             .flags = EcsQueryMatchDisabled
         });
     }

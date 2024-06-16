@@ -212,7 +212,7 @@ int ecs_type_info_to_json_buf(
 typedef struct ecs_entity_to_json_desc_t {
     bool serialize_entity_id;  /**< Serialize entity id */
     bool serialize_path;       /**< Serialize full pathname */
-    bool serialize_labels;     /**< Serialize doc name */
+    bool serialize_labels;     /**< Serialize doc names */
     bool serialize_brief;      /**< Serialize brief doc description */
     bool serialize_link;       /**< Serialize doc link (URL) */
     bool serialize_color;      /**< Serialize doc color */

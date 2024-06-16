@@ -24,7 +24,9 @@ void Rest_get(void) {
     char *reply_str = ecs_strbuf_get(&reply.body);
     test_assert(reply_str != NULL);
     test_str(reply_str,
-        "{\"path\":\"flecs.core.World\", \"label\":\"World\", \"ids\":[]}");
+            "{\"parent\":\"flecs.core\", \"name\":\"World\", "
+                "\"pairs\":{\"ChildOf\":\"core\"}, "
+                "\"components\":{\"(Identifier,Name)\":null, \"(Identifier,Symbol)\":null, \"(Description,Brief)\":{\"value\":\"Entity associated with world\"}}}");
     ecs_os_free(reply_str);
 
     ecs_rest_server_fini(srv);
@@ -44,26 +46,30 @@ void Rest_get_cached(void) {
     {
         ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
         test_int(0, ecs_http_server_request(srv, "GET",
-            "/entity/flecs/core/World?label=true", &reply));
+            "/entity/flecs/core/World", &reply));
         test_int(reply.code, 200);
         
         char *reply_str = ecs_strbuf_get(&reply.body);
         test_assert(reply_str != NULL);
         test_str(reply_str,
-            "{\"path\":\"flecs.core.World\", \"label\":\"World\", \"ids\":[]}");
+            "{\"parent\":\"flecs.core\", \"name\":\"World\", "
+                "\"pairs\":{\"ChildOf\":\"core\"}, "
+                "\"components\":{\"(Identifier,Name)\":null, \"(Identifier,Symbol)\":null, \"(Description,Brief)\":{\"value\":\"Entity associated with world\"}}}");
         ecs_os_free(reply_str);
     }
 
     {
         ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
         test_int(0, ecs_http_server_request(srv, "GET",
-            "/entity/flecs/core/World?label=true", &reply));
+            "/entity/flecs/core/World", &reply));
         test_int(reply.code, 200);
         
         char *reply_str = ecs_strbuf_get(&reply.body);
         test_assert(reply_str != NULL);
         test_str(reply_str,
-            "{\"path\":\"flecs.core.World\", \"label\":\"World\", \"ids\":[]}");
+            "{\"parent\":\"flecs.core\", \"name\":\"World\", "
+                "\"pairs\":{\"ChildOf\":\"core\"}, "
+                "\"components\":{\"(Identifier,Name)\":null, \"(Identifier,Symbol)\":null, \"(Description,Brief)\":{\"value\":\"Entity associated with world\"}}}");
         ecs_os_free(reply_str);
     }
 
@@ -160,7 +166,7 @@ void Rest_query(void) {
     char *reply_str = ecs_strbuf_get(&reply.body);
     test_assert(reply_str != NULL);
     test_str(reply_str,
-        "{\"results\":[{\"entities\":[\"e\"]}]}");
+        "{\"results\":[{\"name\":\"e\", \"fields\":[{}]}]}");
     ecs_os_free(reply_str);
 
     ecs_rest_server_fini(srv);
@@ -194,7 +200,7 @@ void Rest_named_query(void) {
     char *reply_str = ecs_strbuf_get(&reply.body);
     test_assert(reply_str != NULL);
     test_str(reply_str,
-        "{\"results\":[{\"entities\":[\"e\"]}]}");
+        "{\"results\":[{\"name\":\"e\", \"fields\":[{}]}]}");
     ecs_os_free(reply_str);
 
     ecs_rest_server_fini(srv);
@@ -469,6 +475,11 @@ void Rest_script_error(void) {
 
     ECS_COMPONENT(world, Position);
 
+    ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main.flecs" }),
+        .code = ""
+    });
+
     ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
     test_assert(srv != NULL);
 
@@ -476,7 +487,7 @@ void Rest_script_error(void) {
         ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
         ecs_log_set_level(-4);
         test_int(-1, ecs_http_server_request(srv, "PUT",
-            "/script/?data=struct%20Position%20%7B%0A%20%20x%20%3A%0A%7D",
+            "/script/main.flecs?code=struct%20Position%20%7B%0A%20%20x%20%3A%0A%7D",
             &reply));
         test_int(reply.code, 400);
         char *reply_str = ecs_strbuf_get(&reply.body);
