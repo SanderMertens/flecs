@@ -3367,6 +3367,7 @@ struct ecs_query_t {
 
     /* Bitmasks for quick field information lookups */
     ecs_termset_t fixed_fields; /**< Fields with a fixed source */
+    ecs_termset_t static_id_fields; /**< Fields with a static (component) id */
     ecs_termset_t data_fields;  /**< Fields that have data */
     ecs_termset_t write_fields; /**< Fields that write data */
     ecs_termset_t read_fields;  /**< Fields that read data */
@@ -13195,10 +13196,7 @@ int ecs_type_info_to_json_buf(
 typedef struct ecs_entity_to_json_desc_t {
     bool serialize_entity_id;  /**< Serialize entity id */
     bool serialize_path;       /**< Serialize full pathname */
-    bool serialize_labels;     /**< Serialize doc names */
-    bool serialize_brief;      /**< Serialize brief doc description */
-    bool serialize_link;       /**< Serialize doc link (URL) */
-    bool serialize_color;      /**< Serialize doc color */
+    bool serialize_doc;        /**< Serialize doc attributes */
     bool serialize_full_paths; /**< Serialize full paths for tags, components and pairs */
     bool serialize_inherited;  /**< Serialize base components */
     bool serialize_values;     /**< Serialize component values */
@@ -13211,10 +13209,7 @@ typedef struct ecs_entity_to_json_desc_t {
 /** Utility used to initialize JSON entity serializer. */
 #define ECS_ENTITY_TO_JSON_INIT (ecs_entity_to_json_desc_t){\
     .serialize_path = true, \
-    .serialize_labels = false, \
-    .serialize_brief = false, \
-    .serialize_link = false, \
-    .serialize_color = false, \
+    .serialize_doc = false, \
     .serialize_full_paths = false, \
     .serialize_inherited = false, \
     .serialize_values = false, \
@@ -13259,7 +13254,8 @@ int ecs_entity_to_json_buf(
 typedef struct ecs_iter_to_json_desc_t {
     bool serialize_entity_ids;      /**< Serialize entity ids */
     bool serialize_values;          /**< Serialize component values */
-    bool serialize_labels;          /**< Serialize doc names */
+    bool serialize_doc;             /**< Serialize doc attributes */
+    bool serialize_var_labels;      /**< Serialize doc names of matched variables */
     bool serialize_full_paths;      /**< Serialize full paths for tags, components and pairs */
     bool serialize_inherited;       /**< Serialize inherited components */
     bool serialize_table;           /**< Serialize entire table vs. matched components */
@@ -13279,6 +13275,7 @@ typedef struct ecs_iter_to_json_desc_t {
 #define ECS_ITER_TO_JSON_INIT (ecs_iter_to_json_desc_t){\
     .serialize_entity_ids =      false, \
     .serialize_values =          true, \
+    .serialize_doc =             false, \
     .serialize_full_paths =      false, \
     .serialize_inherited =       false, \
     .serialize_table =           false, \

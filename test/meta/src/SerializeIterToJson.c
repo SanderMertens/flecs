@@ -1061,7 +1061,7 @@ void SerializeIterToJson_serialize_w_entity_label(void) {
     ecs_iter_t it = ecs_query_iter(world, q);
 
     ecs_iter_to_json_desc_t desc = ECS_ITER_TO_JSON_INIT;
-    desc.serialize_entity_labels = true;
+    desc.serialize_doc = true;
     char *json = ecs_iter_to_json(&it, &desc);
 
     test_str(json, 
@@ -1108,7 +1108,7 @@ void SerializeIterToJson_serialize_w_entity_label_w_str(void) {
     ecs_iter_t it = ecs_query_iter(world, q);
 
     ecs_iter_to_json_desc_t desc = ECS_ITER_TO_JSON_INIT;
-    desc.serialize_entity_labels = true;
+    desc.serialize_doc = true;
     char *json = ecs_iter_to_json(&it, &desc);
 
     test_str(json, 
@@ -1161,7 +1161,7 @@ void SerializeIterToJson_serialize_w_var_labels(void) {
     ecs_iter_t it = ecs_query_iter(world, r);
 
     ecs_iter_to_json_desc_t desc = ECS_ITER_TO_JSON_INIT;
-    desc.serialize_variable_labels = true;
+    desc.serialize_doc = true;
     char *json = ecs_iter_to_json(&it, &desc);
 
     test_str(json, 
@@ -1210,7 +1210,7 @@ void SerializeIterToJson_serialize_color(void) {
     ecs_iter_t it = ecs_query_iter(world, q);
 
     ecs_iter_to_json_desc_t desc = ECS_ITER_TO_JSON_INIT;
-    desc.serialize_colors = true;
+    desc.serialize_doc = true;
     char *json = ecs_iter_to_json(&it, &desc);
 
     test_str(json, 
@@ -1756,11 +1756,8 @@ void SerializeIterToJson_serialize_ids(void) {
 
     ecs_iter_t it = ecs_query_iter(world, q);
     ecs_iter_to_json_desc_t desc = ECS_ITER_TO_JSON_INIT;
-    desc.serialize_ids = false;
     desc.serialize_entity_ids = true;
     desc.serialize_values = false;
-    desc.serialize_is_set = false;
-    desc.serialize_sources = false;
     char *json = ecs_iter_to_json(&it, &desc);
     test_assert(json != NULL);
 
@@ -1792,11 +1789,7 @@ void SerializeIterToJson_serialize_ids_2_entities(void) {
 
     ecs_iter_t it = ecs_query_iter(world, q);
     ecs_iter_to_json_desc_t desc = ECS_ITER_TO_JSON_INIT;
-    desc.serialize_ids = false;
     desc.serialize_entity_ids = true;
-    desc.serialize_values = false;
-    desc.serialize_is_set = false;
-    desc.serialize_sources = false;
     char *json = ecs_iter_to_json(&it, &desc);
     test_assert(json != NULL);
 
@@ -1835,7 +1828,6 @@ void SerializeIterToJson_serialize_anonymous(void) {
 
     ecs_iter_t it = ecs_query_iter(world, q);
     ecs_iter_to_json_desc_t desc = {0};
-    desc.serialize_entities = true;
     char *json = ecs_iter_to_json(&it, &desc);
     test_assert(json != NULL);
 
@@ -1889,75 +1881,6 @@ void SerializeIterToJson_serialize_anonymous_ids(void) {
     ecs_fini(world);
 }
 
-void SerializeIterToJson_serialize_variable_ids(void) {
-    ecs_world_t *world = ecs_init();
-
-    ECS_TAG(world, Tag);
-
-    ecs_query_t *q = ecs_query(world, { .expr = "Tag($Entity)" });
-
-    ecs_entity_t e = ecs_entity(world, { .name = "e" });
-    ecs_add(world, e, Tag);
-
-    ecs_iter_t it = ecs_query_iter(world, q);
-    ecs_iter_to_json_desc_t desc = ECS_ITER_TO_JSON_INIT;
-    desc.serialize_ids = false;
-    desc.serialize_variable_ids = true;
-    desc.serialize_values = false;
-    desc.serialize_is_set = false;
-    desc.serialize_sources = false;
-    char *json = ecs_iter_to_json(&it, &desc);
-    test_assert(json != NULL);
-
-    char *expect = flecs_asprintf(
-        "{\"ids\":[[\"Tag\"]], \"vars\":[\"Entity\"], \"results\":[{\"vars\":[\"e\"], \"var_ids\":[%u]}]}",
-        (uint32_t)e);
-    test_str(json, expect);
-
-    ecs_os_free(json);
-    ecs_os_free(expect);
-
-    ecs_query_fini(q);
-
-    ecs_fini(world);
-}
-
-void SerializeIterToJson_serialize_variable_ids_2_entities(void) {
-    ecs_world_t *world = ecs_init();
-
-    ECS_TAG(world, Tag);
-
-    ecs_query_t *q = ecs_query(world, { .expr = "Tag($Entity)" });
-
-    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
-    ecs_add(world, e1, Tag);
-
-    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
-    ecs_add(world, e2, Tag);
-
-    ecs_iter_t it = ecs_query_iter(world, q);
-    ecs_iter_to_json_desc_t desc = ECS_ITER_TO_JSON_INIT;
-    desc.serialize_ids = false;
-    desc.serialize_variable_ids = true;
-    desc.serialize_values = false;
-    desc.serialize_is_set = false;
-    desc.serialize_sources = false;
-    char *json = ecs_iter_to_json(&it, &desc);
-    test_assert(json != NULL);
-
-    char *expect = flecs_asprintf(
-        "{\"ids\":[[\"Tag\"]], \"vars\":[\"Entity\"], \"results\":[{\"vars\":[\"e1\"], \"var_ids\":[%u]}, {\"vars\":[\"e2\"], \"var_ids\":[%u]}]}",
-        (uint32_t)e1, (uint32_t)e2);
-    test_str(json, expect);
-
-    ecs_os_free(json);
-    ecs_os_free(expect);
-
-    ecs_query_fini(q);
-
-    ecs_fini(world);
-}
-
 void SerializeIterToJson_serialize_variable_anonymous(void) {
     ecs_world_t *world = ecs_init();
 
@@ -1971,50 +1894,12 @@ void SerializeIterToJson_serialize_variable_anonymous(void) {
 
     ecs_iter_t it = ecs_query_iter(world, q);
     ecs_iter_to_json_desc_t desc = ECS_ITER_TO_JSON_INIT;
-    desc.serialize_ids = false;
     desc.serialize_values = false;
-    desc.serialize_is_set = false;
-    desc.serialize_sources = false;
     char *json = ecs_iter_to_json(&it, &desc);
     test_assert(json != NULL);
 
     char *expect = flecs_asprintf(
         "{\"ids\":[[\"Tag\"]], \"vars\":[\"Entity\"], \"results\":[{\"vars\":[\"10000\"]}]}",
-        (uint32_t)e);
-    test_str(json, expect);
-
-    ecs_os_free(json);
-    ecs_os_free(expect);
-
-    ecs_query_fini(q);
-
-    ecs_fini(world);
-}
-
-void SerializeIterToJson_serialize_variable_anonymous_ids(void) {
-    ecs_world_t *world = ecs_init();
-
-    ECS_TAG(world, Tag);
-
-    ecs_query_t *q = ecs_query(world, { .expr = "Tag($Entity)" });
-
-    ecs_entity_t e = 10000;
-    ecs_make_alive(world, 10000);
-    ecs_add(world, e, Tag);
-
-    ecs_iter_t it = ecs_query_iter(world, q);
-    ecs_iter_to_json_desc_t desc = ECS_ITER_TO_JSON_INIT;
-    desc.serialize_ids = false;
-    desc.serialize_variables = false;
-    desc.serialize_variable_ids = true;
-    desc.serialize_values = false;
-    desc.serialize_is_set = false;
-    desc.serialize_sources = false;
-    char *json = ecs_iter_to_json(&it, &desc);
-    test_assert(json != NULL);
-
-    char *expect = flecs_asprintf(
-        "{\"ids\":[[\"Tag\"]], \"vars\":[\"Entity\"], \"results\":[{\"var_ids\":[10000]}]}",
         (uint32_t)e);
     test_str(json, expect);
 
@@ -2038,9 +1923,6 @@ void SerializeIterToJson_serialize_anonymous_tag(void) {
 
     ecs_iter_t it = ecs_query_iter(world, q);
     ecs_iter_to_json_desc_t desc = {0};
-    desc.serialize_term_ids = true;
-    desc.serialize_ids = true;
-    desc.serialize_entities = true;
     char *json = ecs_iter_to_json(&it, &desc);
     test_assert(json != NULL);
 
@@ -2076,9 +1958,6 @@ void SerializeIterToJson_serialize_anonymous_component(void) {
 
     ecs_iter_t it = ecs_query_iter(world, q);
     ecs_iter_to_json_desc_t desc = {0};
-    desc.serialize_term_ids = true;
-    desc.serialize_ids = true;
-    desc.serialize_entities = true;
     desc.serialize_values = true;
     desc.serialize_type_info = true;
     char *json = ecs_iter_to_json(&it, &desc);
@@ -2111,9 +1990,6 @@ void SerializeIterToJson_serialize_anonymous_pair(void) {
 
     ecs_iter_t it = ecs_query_iter(world, q);
     ecs_iter_to_json_desc_t desc = {0};
-    desc.serialize_term_ids = true;
-    desc.serialize_ids = true;
-    desc.serialize_entities = true;
     char *json = ecs_iter_to_json(&it, &desc);
     test_assert(json != NULL);
 
@@ -2231,10 +2107,7 @@ void SerializeIterToJson_serialize_w_alert(void) {
     ecs_iter_t it = ecs_query_iter(world, q);
 
     ecs_iter_to_json_desc_t desc = ECS_ITER_TO_JSON_INIT;
-    desc.serialize_ids = false;
     desc.serialize_values = false;
-    desc.serialize_is_set = false;
-    desc.serialize_sources = false;
     char *json = ecs_iter_to_json(&it, &desc);
     test_assert(json != NULL);
     test_str(json, "{\"ids\":[[\"Position\"]], \"results\":["
@@ -2545,8 +2418,6 @@ void SerializeIterToJson_serialize_table(void) {
 
     ecs_iter_to_json_desc_t desc = {0};
     desc.serialize_table = true;
-    desc.serialize_ids = true;
-    desc.serialize_entities = true;
     char *json = ecs_iter_to_json(&it, &desc);
     test_assert(json != NULL);
 
@@ -2633,8 +2504,6 @@ void SerializeIterToJson_serialize_table_w_id_labels(void) {
 
     ecs_iter_to_json_desc_t desc = {0};
     desc.serialize_table = true;
-    desc.serialize_entities = true;
-    desc.serialize_id_labels = true;
     char *json = ecs_iter_to_json(&it, &desc);
     test_assert(json != NULL);
 
@@ -2725,9 +2594,7 @@ void SerializeIterToJson_serialize_table_w_var_labels(void) {
 
     ecs_iter_to_json_desc_t desc = {0};
     desc.serialize_table = true;
-    desc.serialize_entities = true;
-    desc.serialize_variable_labels = true;
-    desc.serialize_ids = true;
+    desc.serialize_var_labels = true;
     char *json = ecs_iter_to_json(&it, &desc);
     test_assert(json != NULL);
 
@@ -2750,106 +2617,6 @@ void SerializeIterToJson_serialize_table_w_var_labels(void) {
             "\"parent\":\"Parent\", "
             "\"entities\":[\"e3\"], "
             "\"values\":[[{\"x\":30, \"y\":40}], [{\"value\":100}]]}]"
-        "}");
-
-    ecs_os_free(json);
-
-    ecs_query_fini(f);
-
-    ecs_fini(world);
-}
-
-void SerializeIterToJson_serialize_table_w_private(void) {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-    ECS_COMPONENT(world, Velocity);
-    ECS_COMPONENT(world, Mass);
-    ECS_TAG(world, Foo);
-    ECS_TAG(world, Bar);
-
-    ecs_struct_init(world, &(ecs_struct_desc_t){
-        .entity = ecs_id(Position),
-        .members = {
-            {"x", ecs_id(ecs_i32_t)},
-            {"y", ecs_id(ecs_i32_t)}
-        }
-    });
-
-    ecs_struct_init(world, &(ecs_struct_desc_t){
-        .entity = ecs_id(Velocity),
-        .members = {
-            {"x", ecs_id(ecs_i32_t)},
-            {"y", ecs_id(ecs_i32_t)}
-        }
-    });
-
-    ecs_struct_init(world, &(ecs_struct_desc_t){
-        .entity = ecs_id(Mass),
-        .members = {
-            {"value", ecs_id(ecs_i32_t)}
-        }
-    });
-
-    ecs_entity_t parent = ecs_entity(world, { .name = "Parent" });
-    ecs_doc_set_name(world, parent, "parent");
-
-    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
-    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
-    ecs_entity_t e3 = ecs_entity(world, { .name = "e3" });
-
-    ecs_add_pair(world, e1, EcsChildOf, parent);
-    ecs_add_pair(world, e2, EcsChildOf, parent);
-    ecs_add_pair(world, e3, EcsChildOf, parent);
-
-    ecs_set(world, e1, Position, {10, 20});
-    ecs_set(world, e2, Position, {20, 30});
-    ecs_set(world, e3, Position, {30, 40});
-
-    ecs_add(world, e1, Foo);
-    ecs_add(world, e2, Foo);
-    ecs_add(world, e2, Bar);
-
-    ecs_set(world, e2, Velocity, {1, 1});
-    ecs_set(world, e3, Mass, {100});
-
-    ecs_query_t *f = ecs_query(world, {
-        .terms = {
-            { .id = ecs_id(Position) },
-            { .first.id = EcsChildOf, .second.name = "p", .second.id = EcsIsVariable }
-        }
-    });
-
-    ecs_iter_t it = ecs_query_iter(world, f);
-
-    ecs_iter_to_json_desc_t desc = {0};
-    desc.serialize_table = true;
-    desc.serialize_entities = true;
-    desc.serialize_variable_labels = true;
-    desc.serialize_ids = true;
-    desc.serialize_private = true;
-    char *json = ecs_iter_to_json(&it, &desc);
-    test_assert(json != NULL);
-
-    test_str(json, "{\"vars\":[\"p\"], \"results\":["
-        "{"
-            "\"ids\":[[\"Position\"], [\"Foo\"], [\"flecs.core.Identifier\",\"flecs.core.Name\"], [\"flecs.core.ChildOf\",\"Parent\"]], "
-            "\"var_labels\":[\"parent\"], "
-            "\"parent\":\"Parent\", "
-            "\"entities\":[\"e1\"], "
-            "\"values\":[[{\"x\":10, \"y\":20}], 0, 0, 0]"
-        "}, {"
-            "\"ids\":[[\"Position\"], [\"Velocity\"], [\"Foo\"], [\"Bar\"], [\"flecs.core.Identifier\",\"flecs.core.Name\"], [\"flecs.core.ChildOf\",\"Parent\"]], "
-            "\"var_labels\":[\"parent\"], "
-            "\"parent\":\"Parent\", "
-            "\"entities\":[\"e2\"], "
-            "\"values\":[[{\"x\":20, \"y\":30}], [{\"x\":1, \"y\":1}], 0, 0, 0, 0]"
-        "}, {"
-            "\"ids\":[[\"Position\"], [\"Mass\"], [\"flecs.core.Identifier\",\"flecs.core.Name\"], [\"flecs.core.ChildOf\",\"Parent\"]], "
-            "\"var_labels\":[\"parent\"], "
-            "\"parent\":\"Parent\", "
-            "\"entities\":[\"e3\"], "
-            "\"values\":[[{\"x\":30, \"y\":40}], [{\"value\":100}], 0, 0]}]"
         "}");
 
     ecs_os_free(json);
@@ -2895,7 +2662,6 @@ void SerializeIterToJson_serialize_w_offset(void) {
     ecs_iter_t it = ecs_query_iter(world, r);
 
     ecs_iter_to_json_desc_t desc = {0};
-    desc.serialize_entities = true;
     char *json = ecs_iter_to_json(&it, &desc);
 
     test_str(json, 
@@ -2908,7 +2674,7 @@ void SerializeIterToJson_serialize_w_offset(void) {
     ecs_fini(world);
 }
 
-void SerializeIterToJson_serialize_labels_w_offset(void) {
+void SerializeIterToJson_serialize_label_w_offset(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Tag);
@@ -2925,7 +2691,7 @@ void SerializeIterToJson_serialize_labels_w_offset(void) {
     ecs_iter_t it = ecs_query_iter(world, r);
 
     ecs_iter_to_json_desc_t desc = {0};
-    desc.serialize_entity_labels = true;
+    desc.serialize_doc = true;
     char *json = ecs_iter_to_json(&it, &desc);
 
     test_str(json, 
@@ -2938,7 +2704,7 @@ void SerializeIterToJson_serialize_labels_w_offset(void) {
     ecs_fini(world);
 }
 
-void SerializeIterToJson_serialize_colors_w_offset(void) {
+void SerializeIterToJson_serialize_color_w_offset(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_TAG(world, Tag);
@@ -2955,7 +2721,7 @@ void SerializeIterToJson_serialize_colors_w_offset(void) {
     ecs_iter_t it = ecs_query_iter(world, r);
 
     ecs_iter_to_json_desc_t desc = {0};
-    desc.serialize_colors = true;
+    desc.serialize_doc = true;
     char *json = ecs_iter_to_json(&it, &desc);
 
     test_str(json, 
@@ -2983,7 +2749,6 @@ void SerializeIterToJson_serialize_anonymous_entities_w_offset(void) {
     ecs_iter_t it = ecs_query_iter(world, r);
 
     ecs_iter_to_json_desc_t desc = {0};
-    desc.serialize_entities = true;
     char *json = ecs_iter_to_json(&it, &desc);
 
     char *expect = flecs_asprintf(
@@ -2996,105 +2761,6 @@ void SerializeIterToJson_serialize_anonymous_entities_w_offset(void) {
     ecs_os_free(expect);
 
     ecs_query_fini(r);
-
-    ecs_fini(world);
-}
-
-void SerializeIterToJson_serialize_term_labels(void) {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-
-    ecs_doc_set_name(world, ecs_id(Position), "position");
-
-    ecs_struct_init(world, &(ecs_struct_desc_t){
-        .entity = ecs_id(Position),
-        .members = {
-            {"x", ecs_id(ecs_f32_t)},
-            {"y", ecs_id(ecs_f32_t)}
-        }
-    });
-
-    ecs_query_t *q = ecs_query(world, { .expr = "Position" });
-    ecs_iter_t it = ecs_query_iter(world, q);
-
-    ecs_iter_to_json_desc_t desc = {0};
-    desc.serialize_term_labels = true;
-    char *json = ecs_iter_to_json(&it, &desc);
-    test_assert(json != NULL);
-    test_str(json, "{\"id_labels\":[[\"position\"]], \"results\":[]}");
-
-    ecs_os_free(json);
-
-    ecs_query_fini(q);
-
-    ecs_fini(world);
-}
-
-void SerializeIterToJson_serialize_id_labels(void) {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-
-    ecs_doc_set_name(world, ecs_id(Position), "position");
-
-    ecs_struct_init(world, &(ecs_struct_desc_t){
-        .entity = ecs_id(Position),
-        .members = {
-            {"x", ecs_id(ecs_f32_t)},
-            {"y", ecs_id(ecs_f32_t)}
-        }
-    });
-
-    ecs_entity_t e = ecs_entity(world, { .name = "ent" });
-    ecs_set(world, e, Position, {1, 2});
-
-    ecs_query_t *q = ecs_query(world, { .expr = "Position" });
-    ecs_iter_t it = ecs_query_iter(world, q);
-
-    ecs_iter_to_json_desc_t desc = {0};
-    desc.serialize_id_labels = true;
-    char *json = ecs_iter_to_json(&it, &desc);
-    test_assert(json != NULL);
-    test_str(json, "{\"results\":[{\"id_labels\":[[\"position\"]]}]}");
-
-    ecs_os_free(json);
-
-    ecs_query_fini(q);
-
-    ecs_fini(world);
-}
-
-void SerializeIterToJson_serialize_id_labels_w_str(void) {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-
-    ecs_doc_set_name(world, ecs_id(Position), "\"position\"");
-
-    ecs_struct_init(world, &(ecs_struct_desc_t){
-        .entity = ecs_id(Position),
-        .members = {
-            {"x", ecs_id(ecs_f32_t)},
-            {"y", ecs_id(ecs_f32_t)}
-        }
-    });
-
-    ecs_entity_t e = ecs_entity(world, { .name = "ent" });
-    ecs_set(world, e, Position, {1, 2});
-
-    ecs_query_t *q = ecs_query(world, { .expr = "Position" });
-    ecs_iter_t it = ecs_query_iter(world, q);
-
-    ecs_iter_to_json_desc_t desc = {0};
-    desc.serialize_id_labels = true;
-    char *json = ecs_iter_to_json(&it, &desc);
-    test_assert(json != NULL);
-    test_str(json, "{\"results\":[{\"id_labels\":[[\"\\\"position\\\"\"]]}]}");
-
-    ecs_os_free(json);
-
-    ecs_query_fini(q);
 
     ecs_fini(world);
 }
@@ -3116,8 +2782,6 @@ void SerializeIterToJson_serialize_vars_for_query(void) {
     ecs_set(world, e2, Position, {3, 4});
 
     ecs_iter_to_json_desc_t desc = {0};
-    desc.serialize_entities = true;
-    desc.serialize_variables = true;
     ecs_iter_t it = ecs_query_iter(world, q);
     char *json = ecs_iter_to_json(&it, &desc);
     test_assert(json != NULL);
@@ -3147,39 +2811,7 @@ void SerializeIterToJson_serialize_var_labels_for_query(void) {
     ecs_set(world, e2, Position, {3, 4});
 
     ecs_iter_to_json_desc_t desc = {0};
-    desc.serialize_entities = true;
-    desc.serialize_variable_labels = true;
-    ecs_iter_t it = ecs_query_iter(world, q);
-    char *json = ecs_iter_to_json(&it, &desc);
-    test_assert(json != NULL);
-    test_str(json, "{\"results\":[{\"entities\":[\"e1\", \"e2\"]}]}");
-
-    ecs_os_free(json);
-
-    ecs_query_fini(q);
-
-    ecs_fini(world);
-}
-
-void SerializeIterToJson_serialize_var_ids_for_query(void) {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-
-    ecs_query_t *q = ecs_query(world, {
-        .terms[0] = {
-            .id = ecs_id(Position)
-        }
-    });
-
-    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
-    ecs_set(world, e1, Position, {1, 2});
-    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
-    ecs_set(world, e2, Position, {3, 4});
-
-    ecs_iter_to_json_desc_t desc = {0};
-    desc.serialize_entities = true;
-    desc.serialize_variable_ids = true;
+    desc.serialize_var_labels = true;
     ecs_iter_t it = ecs_query_iter(world, q);
     char *json = ecs_iter_to_json(&it, &desc);
     test_assert(json != NULL);
@@ -3210,8 +2842,7 @@ void SerializeIterToJson_serialize_null_doc_name(void) {
     test_assert(q != NULL);
 
     ecs_iter_to_json_desc_t desc = {0};
-    desc.serialize_entities = true;
-    desc.serialize_entity_labels = true;
+    desc.serialize_doc = true;
 
     ecs_iter_t it = ecs_query_iter(world, q);
     char *json = ecs_iter_to_json(&it, &desc);
@@ -3387,4 +3018,44 @@ void SerializeIterToJson_serialize_entity_w_flecs_core_parent(void) {
     ecs_query_fini(q);
 
     ecs_fini(world);
+}
+
+void SerializeIterToJson_serialize_labels_w_offset(void) {
+    // Implement testcase
+}
+
+void SerializeIterToJson_serialize_colors_w_offset(void) {
+    // Implement testcase
+}
+
+void SerializeIterToJson_serialize_variable_ids(void) {
+    // Implement testcase
+}
+
+void SerializeIterToJson_serialize_variable_ids_2_entities(void) {
+    // Implement testcase
+}
+
+void SerializeIterToJson_serialize_variable_anonymous_ids(void) {
+    // Implement testcase
+}
+
+void SerializeIterToJson_serialize_table_w_private(void) {
+    // Implement testcase
+}
+
+void SerializeIterToJson_serialize_var_ids_for_query(void) {
+    // Implement testcase
+}
+
+void SerializeIterToJson_serialize_term_labels(void) {
+    // Implement testcase
+}
+
+void SerializeIterToJson_serialize_id_labels(void) {
+    // Implement testcase
+}
+
+void SerializeIterToJson_serialize_id_labels_w_str(void) {
+    // Implement testcase
 }
