@@ -1142,6 +1142,8 @@ int flecs_query_finalize_terms(
 
         if (ecs_id_is_wildcard(term->id)) {
             q->flags |= EcsQueryMatchWildcards;
+        } else if (!(term->flags_ & EcsTermIsOr)) {
+            ECS_TERMSET_SET(q->static_id_fields, 1u << term->field_index);
         }
 
         if (ecs_term_match_this(term)) {

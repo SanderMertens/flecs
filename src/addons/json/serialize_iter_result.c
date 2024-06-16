@@ -302,11 +302,18 @@ void flecs_json_serialize_iter_this(
         ecs_strbuf_appendlit(buf, "\"");
     }
 
+    if (desc && desc->serialize_entity_ids) {
+        flecs_json_memberl(buf, "id");
+        flecs_json_u32(buf, this_data->ids[row]);
+    }
+
 #ifdef FLECS_DOC
-    if (desc->serialize_labels) {
-        flecs_json_memberl(buf, "label");
-        if (this_data->labels) {
-            flecs_json_string(buf, this_data->labels[row].value);
+    if (desc && desc->serialize_doc) {
+        flecs_json_memberl(buf, "doc");
+        flecs_json_object_push(buf);
+        if (this_data->label) {
+            flecs_json_memberl(buf, "label");
+            flecs_json_string(buf, this_data->label[row].value);
         } else {
             if (this_data->names) {
                 flecs_json_string(buf, this_data->names[row].value);
@@ -317,6 +324,28 @@ void flecs_json_serialize_iter_this(
                 ecs_strbuf_appendlit(buf, "\"");
             }
         }
+
+        if (this_data->brief) {
+            flecs_json_memberl(buf, "brief");
+            flecs_json_string(buf, this_data->brief[row].value);
+        }
+
+        if (this_data->detail) {
+            flecs_json_memberl(buf, "detail");
+            flecs_json_string(buf, this_data->detail[row].value);
+        }
+
+        if (this_data->color) {
+            flecs_json_memberl(buf, "color");
+            flecs_json_string(buf, this_data->color[row].value);
+        }
+
+        if (this_data->link) {
+            flecs_json_memberl(buf, "link");
+            flecs_json_string(buf, this_data->link[row].value);
+        }
+
+        flecs_json_object_pop(buf);
     }
 #endif
 }
@@ -339,6 +368,8 @@ int flecs_json_serialize_iter_result(
     } else {
         ecs_table_t *table = it->table;
         if (table) {
+            this_data.ids = &flecs_table_entities_array(table)[it->offset];
+
             /* Get path to parent once for entire table */
             if (table->flags & EcsTableHasChildOf) {
                 const ecs_table_record_t *tr = flecs_table_record_get(
@@ -357,9 +388,17 @@ int flecs_json_serialize_iter_result(
 
             /* Get entity labels */
 #ifdef FLECS_DOC
-            if (desc->serialize_labels) {
-                this_data.labels = ecs_table_get_id(it->world, it->table, 
+            if (desc && desc->serialize_doc) {
+                this_data.label = ecs_table_get_id(it->world, it->table, 
                     ecs_pair_t(EcsDocDescription, EcsName), it->offset);
+                this_data.brief = ecs_table_get_id(it->world, it->table, 
+                    ecs_pair_t(EcsDocDescription, EcsDocBrief), it->offset);
+                this_data.detail = ecs_table_get_id(it->world, it->table, 
+                    ecs_pair_t(EcsDocDescription, EcsDocDetail), it->offset);
+                this_data.color = ecs_table_get_id(it->world, it->table, 
+                    ecs_pair_t(EcsDocDescription, EcsDocColor), it->offset);
+                this_data.link = ecs_table_get_id(it->world, it->table, 
+                    ecs_pair_t(EcsDocDescription, EcsDocLink), it->offset);
             }
 #endif
         } else {
@@ -368,11 +407,11 @@ int flecs_json_serialize_iter_result(
         }
     }
 
-    if (!desc->serialize_table) {
-        flecs_json_serialize_iter_result_query(world, it, buf, ser_ctx, 
+    if (desc && desc->serialize_table) {
+        flecs_json_serialize_iter_result_table(world, it, buf, 
             desc, count, has_this, parent_path, &this_data);
     } else {
-        flecs_json_serialize_iter_result_table(world, it, buf, 
+        flecs_json_serialize_iter_result_query(world, it, buf, ser_ctx, 
             desc, count, has_this, parent_path, &this_data);
     }
 
