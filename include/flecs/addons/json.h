@@ -292,6 +292,11 @@ typedef struct ecs_iter_to_json_desc_t {
     bool serialize_query_plan;      /**< Serialize query plan */
     bool serialize_query_profile;   /**< Profile query performance */
     bool dont_serialize_results;    /**< If true, query won't be evaluated */
+
+    bool serialize_alerts;     /**< Serialize active alerts for entity */
+    ecs_entity_t serialize_refs; /**< Serialize references (incoming edges) for relationship */
+    bool serialize_matches;    /**< Serialize which queries entity matches with */
+
     flecs_poly_t *query;              /**< Query object (required for serialize_query_[plan|profile]). */
 } ecs_iter_to_json_desc_t;
 
@@ -323,6 +328,9 @@ typedef struct ecs_iter_to_json_desc_t {
     .serialize_query_plan =      false, \
     .serialize_query_profile =   false, \
     .dont_serialize_results =    false, \
+    .serialize_alerts =          false, \
+    .serialize_refs =            false, \
+    .serialize_matches =         false, \
 }
 
 /** Serialize iterator into JSON string.

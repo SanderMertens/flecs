@@ -383,7 +383,7 @@ int ecs_script_ast_to_buf(
     ecs_check(script != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(buf != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_script_str_visitor_t v = { .buf = buf };
-    if (ecs_script_visit(script, &v, flecs_script_stmt_to_str)) {
+    if (ecs_script_visit(flecs_script_impl(script), &v, flecs_script_stmt_to_str)) {
         goto error;
     }
 
