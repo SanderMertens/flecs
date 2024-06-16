@@ -7,6 +7,27 @@
 
 #ifdef FLECS_JSON
 
+static
+bool flecs_json_serialize_get_field_ctx(
+    const ecs_world_t *world,
+    const ecs_iter_t *it,
+    int32_t f,
+    ecs_json_ser_ctx_t *ser_ctx,
+    const ecs_iter_to_json_desc_t *desc)
+{
+    ecs_json_value_ser_ctx_t *value_ctx = &ser_ctx->value_ctx[f];
+    if (it->query) {
+        return flecs_json_serialize_get_value_ctx(
+            world, it->query->ids[f], value_ctx, desc);
+    } else if (it->ids[f]) {
+        return flecs_json_serialize_get_value_ctx(
+            world, it->ids[f], value_ctx, desc);
+    } else {
+        return false;
+    }
+}
+
+
 void flecs_json_serialize_field(
     const ecs_world_t *world,
     const ecs_iter_t *it,

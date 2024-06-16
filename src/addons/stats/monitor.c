@@ -55,7 +55,7 @@ void MonitorStats(ecs_iter_t *it) {
 
     ecs_iter_t qit;
     int32_t cur = -1, count = 0;
-    void *stats;
+    void *stats = NULL;
     ecs_map_t *stats_map = NULL;
 
     if (ctx->query) {
@@ -133,11 +133,11 @@ void ReduceStats(ecs_iter_t *it) {
     if (!ctx->api.query_component_id) {
         ctx->api.reduce(dst, src);
     } else {
-        ecs_map_iter_t it = ecs_map_iter(src);
-        while (ecs_map_next(&it)) {
-            void *src_el = ecs_map_ptr(&it);
+        ecs_map_iter_t mit = ecs_map_iter(src);
+        while (ecs_map_next(&mit)) {
+            void *src_el = ecs_map_ptr(&mit);
             void *dst_el = ecs_map_ensure_alloc(
-                dst, ctx->api.stats_size, ecs_map_key(&it));
+                dst, ctx->api.stats_size, ecs_map_key(&mit));
             ctx->api.reduce(dst_el, src_el);
         }
     }
@@ -244,7 +244,7 @@ void flecs_stats_api_import(
     ecs_query_t *q = NULL;
     if (api->query_component_id) {
         q = ecs_query(world, {
-            .terms = {{ api->query_component_id }},
+            .terms = {{ .id = api->query_component_id }},
             .cache_kind = EcsQueryCacheAll,
             .flags = EcsQueryMatchDisabled
         });

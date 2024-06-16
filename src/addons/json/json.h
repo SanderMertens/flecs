@@ -43,6 +43,11 @@ typedef struct ecs_json_ser_ctx_t {
     ecs_json_value_ser_ctx_t value_ctx[64];
 } ecs_json_ser_ctx_t;
 
+typedef struct ecs_json_this_data_t {
+    const EcsIdentifier *names;
+    const EcsDocDescription *labels;
+} ecs_json_this_data_t;
+
 const char* flecs_json_parse(
     const char *json,
     ecs_json_token_t *token_kind,
@@ -177,26 +182,12 @@ void flecs_json_id_member(
 ecs_primitive_kind_t flecs_json_op_to_primitive_kind(
     ecs_meta_type_op_kind_t kind);
 
-bool flecs_json_serialize_get_field_ctx(
-    const ecs_world_t *world,
-    const ecs_iter_t *it,
-    int32_t f,
-    ecs_json_ser_ctx_t *ser_ctx,
-    const ecs_iter_to_json_desc_t *desc);
-
-int flecs_json_serialize_iter_result_rows(
+int flecs_json_serialize_iter_result(
     const ecs_world_t *world,
     const ecs_iter_t *it,
     ecs_strbuf_t *buf,
     const ecs_iter_to_json_desc_t *desc,
     ecs_json_ser_ctx_t *ser_ctx);
-
-bool flecs_json_serialize_iter_result_is_set(
-    const ecs_iter_t *it,
-    ecs_strbuf_t *buf);
-
-bool flecs_json_skip_variable(
-    const char *name);
 
 void flecs_json_serialize_field(
     const ecs_world_t *world,
@@ -217,13 +208,6 @@ int flecs_json_ser_type(
     const void *base,
     ecs_strbuf_t *str);
 
-int flecs_json_append_type(
-    const ecs_world_t *world, 
-    ecs_strbuf_t *buf, 
-    ecs_entity_t ent, 
-    ecs_entity_t inst,
-    const ecs_entity_to_json_desc_t *desc);
-
 int flecs_json_serialize_iter_result_fields(
     const ecs_world_t *world, 
     const ecs_iter_t *it,
@@ -237,6 +221,51 @@ bool flecs_json_serialize_get_value_ctx(
     ecs_id_t id,
     ecs_json_value_ser_ctx_t *ctx,
     const ecs_iter_to_json_desc_t *desc);
+
+int flecs_json_serialize_iter_result_table(
+    const ecs_world_t *world, 
+    const ecs_iter_t *it, 
+    ecs_strbuf_t *buf,
+    const ecs_iter_to_json_desc_t *desc,
+    int32_t count,
+    bool has_this,
+    const char *parent_path,
+    const ecs_json_this_data_t *this_data);
+
+int flecs_json_serialize_iter_result_query(
+    const ecs_world_t *world, 
+    const ecs_iter_t *it, 
+    ecs_strbuf_t *buf,
+    ecs_json_ser_ctx_t *ser_ctx,
+    const ecs_iter_to_json_desc_t *desc,
+    int32_t count,
+    bool has_this,
+    const char *parent_path,
+    const ecs_json_this_data_t *this_data);
+
+void flecs_json_serialize_iter_this(
+    const ecs_iter_t *it,
+    const char *parent_path,
+    const ecs_json_this_data_t *this_data,
+    int32_t row,
+    ecs_strbuf_t *buf,
+    const ecs_iter_to_json_desc_t *desc);
+
+int flecs_json_serialize_matches(
+    const ecs_world_t *world,
+    ecs_strbuf_t *buf,
+    ecs_entity_t entity);
+
+int flecs_json_serialize_refs(
+    const ecs_world_t *world,
+    ecs_strbuf_t *buf,
+    ecs_entity_t entity,
+    ecs_entity_t relationship);
+
+int flecs_json_serialize_alerts(
+    const ecs_world_t *world,
+    ecs_strbuf_t *buf,
+    ecs_entity_t entity);
 
 #endif
 
