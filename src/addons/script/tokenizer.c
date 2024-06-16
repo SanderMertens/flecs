@@ -200,8 +200,6 @@ const char* flecs_script_identifier(
         outpos ++;
         pos ++;
     } while (true);
-
-    printf("TOKEN %s\n", out->value);
 }
 
 // Number token

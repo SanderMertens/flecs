@@ -26,7 +26,7 @@ int flecs_json_serialize_iter_result_fields(
     for (f = 0; f < field_count; f ++) {
         flecs_json_next(buf);
 
-        ecs_flags16_t field_bit = (1u << f);
+        ecs_flags16_t field_bit = flecs_ito(uint16_t, 1 << f);;
         if (!(it->set_fields & field_bit)) {
             flecs_json_null(buf);
             continue;

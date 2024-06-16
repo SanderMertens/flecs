@@ -164,17 +164,15 @@ void flecs_rest_parse_json_ser_entity_params(
     ecs_entity_to_json_desc_t *desc,
     const ecs_http_request_t *req)
 {
+    flecs_rest_bool_param(req, "entity_id", &desc->serialize_entity_id);
     flecs_rest_bool_param(req, "path", &desc->serialize_path);
-    flecs_rest_bool_param(req, "label", &desc->serialize_label);
+    flecs_rest_bool_param(req, "labels", &desc->serialize_labels);
     flecs_rest_bool_param(req, "brief", &desc->serialize_brief);
     flecs_rest_bool_param(req, "link", &desc->serialize_link);
     flecs_rest_bool_param(req, "color", &desc->serialize_color);
-    flecs_rest_bool_param(req, "ids", &desc->serialize_ids);
-    flecs_rest_bool_param(req, "id_labels", &desc->serialize_id_labels);
     flecs_rest_bool_param(req, "full_paths", &desc->serialize_full_paths);
     flecs_rest_bool_param(req, "inherited", &desc->serialize_inherited);
     flecs_rest_bool_param(req, "values", &desc->serialize_values);
-    flecs_rest_bool_param(req, "private", &desc->serialize_private);
     flecs_rest_bool_param(req, "type_info", &desc->serialize_type_info);
     flecs_rest_bool_param(req, "matches", &desc->serialize_matches);
     flecs_rest_bool_param(req, "alerts", &desc->serialize_alerts);
@@ -191,30 +189,16 @@ void flecs_rest_parse_json_ser_iter_params(
     ecs_iter_to_json_desc_t *desc,
     const ecs_http_request_t *req)
 {
-    flecs_rest_bool_param(req, "term_ids", &desc->serialize_term_ids);
-    flecs_rest_bool_param(req, "term_labels", &desc->serialize_term_labels);
-    flecs_rest_bool_param(req, "ids", &desc->serialize_ids);
-    flecs_rest_bool_param(req, "id_labels", &desc->serialize_id_labels);
-    flecs_rest_bool_param(req, "sources", &desc->serialize_sources);
-    flecs_rest_bool_param(req, "variables", &desc->serialize_variables);
-    flecs_rest_bool_param(req, "is_set", &desc->serialize_is_set);
-    flecs_rest_bool_param(req, "values", &desc->serialize_values);
-    flecs_rest_bool_param(req, "private", &desc->serialize_private);
-    flecs_rest_bool_param(req, "entities", &desc->serialize_entities);
-    flecs_rest_bool_param(req, "entity_labels", &desc->serialize_entity_labels);
-    flecs_rest_bool_param(req, "variable_labels", &desc->serialize_variable_labels);
-    flecs_rest_bool_param(req, "variable_ids", &desc->serialize_variable_ids);
+    flecs_rest_bool_param(req, "entity_ids", &desc->serialize_entity_ids);
+    flecs_rest_bool_param(req, "labels", &desc->serialize_labels);
     flecs_rest_bool_param(req, "full_paths", &desc->serialize_full_paths);
     flecs_rest_bool_param(req, "inherited", &desc->serialize_inherited);
-    flecs_rest_bool_param(req, "colors", &desc->serialize_colors);
-    flecs_rest_bool_param(req, "duration", &desc->measure_eval_duration);
     flecs_rest_bool_param(req, "type_info", &desc->serialize_type_info);
     flecs_rest_bool_param(req, "field_info", &desc->serialize_field_info);
     flecs_rest_bool_param(req, "query_info", &desc->serialize_query_info);
     flecs_rest_bool_param(req, "query_plan", &desc->serialize_query_plan);
     flecs_rest_bool_param(req, "query_profile", &desc->serialize_query_profile);
     flecs_rest_bool_param(req, "table", &desc->serialize_table);
-    flecs_rest_bool_param(req, "rows", &desc->serialize_rows);
     bool results = true;
     flecs_rest_bool_param(req, "results", &results);
     desc->dont_serialize_results = !results;
@@ -531,8 +515,6 @@ void flecs_rest_iter_to_reply(
     ecs_iter_t *it)
 {
     ecs_iter_to_json_desc_t desc = {0};
-    desc.serialize_entities = true;
-    desc.serialize_variables = true;
     flecs_rest_parse_json_ser_iter_params(&desc, req);
     desc.query = query;
 
@@ -851,7 +833,6 @@ void flecs_system_stats_to_json(
 
 static
 void flecs_sync_stats_to_json(
-    ecs_world_t *world,
     ecs_http_reply_t *reply,
     const ecs_pipeline_stats_t *pstats,
     const ecs_sync_stats_t *stats)
@@ -873,7 +854,6 @@ void flecs_sync_stats_to_json(
 static
 void flecs_all_systems_stats_to_json(
     ecs_world_t *world,
-    const ecs_http_request_t* req,
     ecs_http_reply_t *reply,
     ecs_entity_t period)
 {
@@ -886,10 +866,10 @@ void flecs_all_systems_stats_to_json(
         ecs_map_iter_t it = ecs_map_iter(&stats->stats);
         while (ecs_map_next(&it)) {
             ecs_entity_t id = ecs_map_key(&it);
-            ecs_system_stats_t *stats = ecs_map_ptr(&it);
+            ecs_system_stats_t *sys_stats = ecs_map_ptr(&it);
 
             ecs_strbuf_list_next(&reply->body);
-            flecs_system_stats_to_json(world, &reply->body, id, stats);
+            flecs_system_stats_to_json(world, &reply->body, id, sys_stats);
         }
     }
 
@@ -907,7 +887,7 @@ void flecs_pipeline_stats_to_json(
     flecs_rest_string_param(req, "name", &pipeline_name);
 
     if (!pipeline_name || !ecs_os_strcmp(pipeline_name, "all")) {
-        flecs_all_systems_stats_to_json(world, req, reply, period);
+        flecs_all_systems_stats_to_json(world, reply, period);
         return;
     }
 
@@ -946,14 +926,14 @@ void flecs_pipeline_stats_to_json(
         ecs_pipeline_op_t *op = &ops[o];
         for (s = op->offset; s < (op->offset + op->count); s ++) {
             ecs_entity_t system = systems[s];
-            ecs_system_stats_t *stats = ecs_map_get_deref(
+            ecs_system_stats_t *sys_stats = ecs_map_get_deref(
                 &system_stats->stats, ecs_system_stats_t, system);
             ecs_strbuf_list_next(&reply->body);
-            flecs_system_stats_to_json(world, &reply->body, system, stats);
+            flecs_system_stats_to_json(world, &reply->body, system, sys_stats);
         }
 
         ecs_strbuf_list_next(&reply->body);
-        flecs_sync_stats_to_json(world, reply, pstats, &syncs[o]);
+        flecs_sync_stats_to_json(reply, pstats, &syncs[o]);
     }
 
     ecs_strbuf_list_pop(&reply->body, "]");
