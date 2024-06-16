@@ -18,10 +18,9 @@ int ecs_entity_to_json_buf(
 
     /* Initialize iterator parameters */
     ecs_iter_to_json_desc_t iter_desc = {
-        .serialize_rows = true,
         .serialize_table = true,
         .serialize_values = desc->serialize_values,
-        .serialize_entity_labels = desc->serialize_label,
+        .serialize_labels = desc->serialize_labels,
         .serialize_matches = desc->serialize_matches,
         .serialize_refs = desc->serialize_refs,
         .serialize_alerts = desc->serialize_alerts,
@@ -59,7 +58,7 @@ int ecs_entity_to_json_buf(
         .field_count = 0
     };
 
-    if (flecs_json_serialize_iter_result_rows(
+    if (flecs_json_serialize_iter_result(
         world, &it, buf, &iter_desc, &ser_ctx))
     {
         return -1;
