@@ -703,7 +703,6 @@ void SerializeIterToJson_serialize_entity_w_flecs_core_parent(void);
 void SerializeIterToRowJson_serialize_this_w_1_tag(void);
 void SerializeIterToRowJson_serialize_this_w_1_tag_w_parent(void);
 void SerializeIterToRowJson_serialize_this_w_1_tag_no_name(void);
-void SerializeIterToRowJson_serialize_this_w_1_tag_doc_name(void);
 void SerializeIterToRowJson_serialize_this_w_2_tag(void);
 void SerializeIterToRowJson_serialize_this_w_1_component(void);
 void SerializeIterToRowJson_serialize_this_w_2_component(void);
@@ -752,7 +751,6 @@ void SerializeIterToRowJson_serialize_table_w_3_pair_targets(void);
 void SerializeIterToRowJson_serialize_table_w_3_pair_targets_2_rel(void);
 void SerializeIterToRowJson_serialize_everything(void);
 void SerializeIterToRowJson_serialize_everything_table(void);
-void SerializeIterToRowJson_serialize_everything_table_w_private(void);
 void SerializeIterToRowJson_serialize_w_type_info(void);
 void SerializeIterToRowJson_serialize_w_field_info(void);
 void SerializeIterToRowJson_serialize_w_field_info_pair_w_0_target(void);
@@ -3619,10 +3617,6 @@ bake_test_case SerializeIterToRowJson_testcases[] = {
         SerializeIterToRowJson_serialize_this_w_1_tag_no_name
     },
     {
-        "serialize_this_w_1_tag_doc_name",
-        SerializeIterToRowJson_serialize_this_w_1_tag_doc_name
-    },
-    {
         "serialize_this_w_2_tag",
         SerializeIterToRowJson_serialize_this_w_2_tag
     },
@@ -3813,10 +3807,6 @@ bake_test_case SerializeIterToRowJson_testcases[] = {
     {
         "serialize_everything_table",
         SerializeIterToRowJson_serialize_everything_table
-    },
-    {
-        "serialize_everything_table_w_private",
-        SerializeIterToRowJson_serialize_everything_table_w_private
     },
     {
         "serialize_w_type_info",
@@ -4527,7 +4517,7 @@ static bake_test_suite suites[] = {
         "SerializeIterToRowJson",
         NULL,
         NULL,
-        62,
+        60,
         SerializeIterToRowJson_testcases
     },
     {

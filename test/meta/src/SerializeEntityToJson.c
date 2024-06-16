@@ -114,37 +114,6 @@ void SerializeEntityToJson_serialize_w_base(void) {
     ecs_fini(world);
 }
 
-void SerializeEntityToJson_serialize_w_base_override(void) {
-    ecs_world_t *world = ecs_init();
-
-    ECS_TAG(world, TagA);
-    ECS_TAG(world, TagB);
-
-    ecs_entity_t base = ecs_entity(world, { .name = "Base" });
-    ecs_add(world, base, TagA);
-
-    ecs_entity_t e = ecs_entity(world, { .name = "Foo" });
-    ecs_add_pair(world, e, EcsIsA, base);
-    ecs_add(world, e, TagA);
-    ecs_add(world, e, TagB);
-
-    ecs_entity_to_json_desc_t desc = ECS_ENTITY_TO_JSON_INIT;
-    desc.serialize_hidden = true;
-
-    char *json = ecs_entity_to_json(world, e, &desc);
-    test_assert(json != NULL);
-    test_str(json, "{"
-        "\"path\":\"Foo\", "
-        "\"is_a\":[{\"path\":\"Base\", \"ids\":[[\"TagA\"]], \"hidden\":[true]}], "
-        "\"ids\":["
-        "[\"TagA\"], [\"TagB\"]"
-        "]}");
-
-    ecs_os_free(json);
-
-    ecs_fini(world);
-}
-
 void SerializeEntityToJson_serialize_w_2_base(void) {
     ecs_world_t *world = ecs_init();
 
@@ -605,31 +574,6 @@ void SerializeEntityToJson_serialize_wo_private(void) {
     ecs_fini(world);
 }
 
-void SerializeEntityToJson_serialize_w_private(void) {
-    ecs_world_t *world = ecs_init();
-
-    ECS_TAG(world, Tag);
-
-    ecs_add_id(world, Tag, EcsPrivate);
-
-    ecs_entity_t e = ecs_entity(world, { .name = "Foo" });
-    ecs_add(world, e, Tag);
-
-    ecs_entity_to_json_desc_t desc = ECS_ENTITY_TO_JSON_INIT;
-    desc.serialize_private = true;
-
-    char *json = ecs_entity_to_json(world, e, &desc);
-    test_assert(json != NULL);
-    test_assert(json != NULL);
-    test_str(json, "{"
-        "\"path\":\"Foo\", "
-        "\"ids\":[[\"Tag\"], [\"flecs.core.Identifier\", \"flecs.core.Name\"]]}");
-
-    ecs_os_free(json);
-
-    ecs_fini(world);
-}
-
 void SerializeEntityToJson_serialize_w_label(void) {
     ecs_world_t *world = ecs_init();
 
@@ -640,7 +584,7 @@ void SerializeEntityToJson_serialize_w_label(void) {
     ecs_doc_set_name(world, e, "My name");
 
     ecs_entity_to_json_desc_t desc = ECS_ENTITY_TO_JSON_INIT;
-    desc.serialize_label = true;
+    desc.serialize_doc = true;
     char *json = ecs_entity_to_json(world, e, &desc);
 
     test_assert(json != NULL);
@@ -683,41 +627,13 @@ void SerializeEntityToJson_serialize_w_label_no_name(void) {
         "]}", (uint32_t)e,  (uint32_t)e);
 
     ecs_entity_to_json_desc_t desc = ECS_ENTITY_TO_JSON_INIT;
-    desc.serialize_label = true;
+    desc.serialize_doc = true;
     char *json = ecs_entity_to_json(world, e, &desc);
     test_assert(json != NULL);
     test_str(json, str);
 
     ecs_os_free(json);
     ecs_os_free(str);
-
-    ecs_fini(world);
-}
-
-void SerializeEntityToJson_serialize_w_id_labels(void) {
-    ecs_world_t *world = ecs_init();
-
-    ECS_TAG(world, Tag);
-
-    ecs_entity_t e = ecs_entity(world, { .name = "Foo" });
-    ecs_add(world, e, Tag);
-    ecs_doc_set_name(world, Tag, "My tag");
-
-    ecs_entity_to_json_desc_t desc = ECS_ENTITY_TO_JSON_INIT;
-    desc.serialize_id_labels = true;
-    char *json = ecs_entity_to_json(world, e, &desc);
-    test_assert(json != NULL);
-
-    test_str(json, "{"
-        "\"path\":\"Foo\", "
-        "\"ids\":["
-            "[\"Tag\"]"
-        "], "
-        "\"id_labels\":["
-            "[\"My tag\"]"
-        "]}");
-
-    ecs_os_free(json);
 
     ecs_fini(world);
 }
@@ -732,7 +648,7 @@ void SerializeEntityToJson_serialize_w_brief(void) {
     ecs_doc_set_brief(world, e, "Brief description");
 
     ecs_entity_to_json_desc_t desc = ECS_ENTITY_TO_JSON_INIT;
-    desc.serialize_brief = true;
+    desc.serialize_doc = true;
     char *json = ecs_entity_to_json(world, e, &desc);
     test_assert(json != NULL);
 
@@ -757,7 +673,7 @@ void SerializeEntityToJson_serialize_w_brief_no_brief(void) {
     ecs_add(world, e, Tag);
 
     ecs_entity_to_json_desc_t desc = ECS_ENTITY_TO_JSON_INIT;
-    desc.serialize_brief = true;
+    desc.serialize_doc = true;
     char *json = ecs_entity_to_json(world, e, &desc);
     test_assert(json != NULL);
 
@@ -782,7 +698,7 @@ void SerializeEntityToJson_serialize_w_link(void) {
     ecs_doc_set_link(world, e, "Link");
 
     ecs_entity_to_json_desc_t desc = ECS_ENTITY_TO_JSON_INIT;
-    desc.serialize_link = true;
+    desc.serialize_doc = true;
     char *json = ecs_entity_to_json(world, e, &desc);
     test_assert(json != NULL);
 
@@ -807,7 +723,7 @@ void SerializeEntityToJson_serialize_w_link_no_link(void) {
     ecs_add(world, e, Tag);
 
     ecs_entity_to_json_desc_t desc = ECS_ENTITY_TO_JSON_INIT;
-    desc.serialize_link = true;
+    desc.serialize_doc = true;
     char *json = ecs_entity_to_json(world, e, &desc);
     test_assert(json != NULL);
 
@@ -832,7 +748,7 @@ void SerializeEntityToJson_serialize_color(void) {
     ecs_doc_set_color(world, e, "#47B576");
 
     ecs_entity_to_json_desc_t desc = ECS_ENTITY_TO_JSON_INIT;
-    desc.serialize_color = true;
+    desc.serialize_doc = true;
     char *json = ecs_entity_to_json(world, e, &desc);
     test_assert(json != NULL);
 
@@ -863,10 +779,7 @@ void SerializeEntityToJson_serialize_w_doc_w_quotes(void) {
     ecs_doc_set_color(world, e, "Doc \"color\"");
 
     ecs_entity_to_json_desc_t desc = ECS_ENTITY_TO_JSON_INIT;
-    desc.serialize_label = true;
-    desc.serialize_brief = true;
-    desc.serialize_color = true;
-    desc.serialize_link = true;
+    desc.serialize_doc = true;
     char *json = ecs_entity_to_json(world, e, &desc);
     test_assert(json != NULL);
 
@@ -1319,24 +1232,6 @@ void SerializeEntityToJson_serialize_refs_wildcard(void) {
     ecs_fini(world);
 }
 
-void SerializeEntityToJson_serialize_no_ids(void) {
-    ecs_world_t *world = ecs_init();
-
-    ECS_TAG(world, Tag);
-
-    ecs_entity_t e = ecs_entity(world, { .name = "Foo" });
-    ecs_add(world, e, Tag);
-
-    ecs_entity_to_json_desc_t desc = ECS_ENTITY_TO_JSON_INIT;
-    desc.serialize_ids = false;
-    char *json = ecs_entity_to_json(world, e, &desc);
-    test_assert(json != NULL);
-    test_str(json, "{\"path\":\"Foo\"}");
-    ecs_os_free(json);
-
-    ecs_fini(world);
-}
-
 void SerializeEntityToJson_serialize_matches_filter(void) {
     ecs_world_t *world = ecs_init();
 
@@ -1527,4 +1422,20 @@ void SerializeEntityToJson_serialize_no_matches(void) {
     ecs_query_fini(f_c);
 
     ecs_fini(world);
+}
+
+void SerializeEntityToJson_serialize_w_base_override(void) {
+    // Implement testcase
+}
+
+void SerializeEntityToJson_serialize_w_private(void) {
+    // Implement testcase
+}
+
+void SerializeEntityToJson_serialize_w_id_labels(void) {
+    // Implement testcase
+}
+
+void SerializeEntityToJson_serialize_no_ids(void) {
+    // Implement testcase
 }

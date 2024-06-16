@@ -115,7 +115,7 @@ bool flecs_json_serialize_table_row_pairs(
             continue;
         }
 
-        if (column_map[f] != -1) {
+        if (column_map && column_map[f] != -1) {
             continue; /* Ignore components */
         }
 

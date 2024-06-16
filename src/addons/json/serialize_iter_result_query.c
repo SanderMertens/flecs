@@ -46,7 +46,8 @@ bool flecs_json_serialize_vars(
         }
 
         flecs_json_member(buf, var_name);
-        flecs_json_path_or_label(buf, world, var, desc->serialize_full_paths);
+        flecs_json_path_or_label(buf, world, var, 
+            desc ? desc->serialize_full_paths : false);
     }
 
     if (actual_count) {
@@ -120,15 +121,14 @@ int flecs_json_serialize_iter_result_fields(
         flecs_json_next(buf);
 
         ecs_flags16_t field_bit = flecs_ito(uint16_t, 1 << f);;
-        if (!(it->set_fields & field_bit)) {
-            flecs_json_null(buf);
-            continue;
-        }
-
         flecs_json_object_push(buf);
 
+        if (!(it->set_fields & field_bit)) {
+            goto next;
+        }
+
         if (it->query) {
-            if (ecs_id_is_wildcard(it->query->ids[f])) {
+            if (!(it->query->static_id_fields & field_bit)) {
                 flecs_json_memberl(buf, "id");
                 flecs_json_id(buf, world, it->ids[f]);
             }
