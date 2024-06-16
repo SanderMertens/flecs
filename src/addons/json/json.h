@@ -44,8 +44,13 @@ typedef struct ecs_json_ser_ctx_t {
 } ecs_json_ser_ctx_t;
 
 typedef struct ecs_json_this_data_t {
+    ecs_entity_t *ids;
     const EcsIdentifier *names;
-    const EcsDocDescription *labels;
+    const EcsDocDescription *label;
+    const EcsDocDescription *brief;
+    const EcsDocDescription *detail;
+    const EcsDocDescription *color;
+    const EcsDocDescription *link;
 } ecs_json_this_data_t;
 
 const char* flecs_json_parse(

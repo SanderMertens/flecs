@@ -19,8 +19,9 @@ int ecs_entity_to_json_buf(
     /* Initialize iterator parameters */
     ecs_iter_to_json_desc_t iter_desc = {
         .serialize_table = true,
+        .serialize_entity_ids = desc->serialize_entity_id,
         .serialize_values = desc->serialize_values,
-        .serialize_labels = desc->serialize_labels,
+        .serialize_doc = desc->serialize_doc,
         .serialize_matches = desc->serialize_matches,
         .serialize_refs = desc->serialize_refs,
         .serialize_alerts = desc->serialize_alerts,
