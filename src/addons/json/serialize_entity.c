@@ -22,6 +22,9 @@ int ecs_entity_to_json_buf(
         .serialize_table = true,
         .serialize_values = desc->serialize_values,
         .serialize_entity_labels = desc->serialize_label,
+        .serialize_matches = desc->serialize_matches,
+        .serialize_refs = desc->serialize_refs,
+        .serialize_alerts = desc->serialize_alerts,
         .serialize_full_paths = desc->serialize_full_paths,
         .serialize_inherited = desc->serialize_inherited,
         .serialize_type_info = desc->serialize_type_info
