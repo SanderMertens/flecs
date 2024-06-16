@@ -31,7 +31,6 @@ static ECS_DTOR(EcsSystemStats, ptr, {
     ecs_map_iter_t it = ecs_map_iter(&ptr->stats);
     while (ecs_map_next(&it)) {
         ecs_system_stats_t *stats = ecs_map_ptr(&it);
-        ecs_pipeline_stats_fini(stats);
         ecs_os_free(stats);
     }
     ecs_map_fini(&ptr->stats);
