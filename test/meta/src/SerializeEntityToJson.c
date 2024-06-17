@@ -492,6 +492,48 @@ void SerializeEntityToJson_serialize_w_type_info_unit_over(void) {
     ecs_fini(world);
 }
 
+void SerializeEntityToJson_serialize_w_type_info_no_types(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e = ecs_entity(world, { .name = "Foo" });
+    ecs_set(world, e, Position, {10, 20});
+
+    ecs_entity_to_json_desc_t desc = ECS_ENTITY_TO_JSON_INIT;
+    desc.serialize_values = true;
+    desc.serialize_type_info = true;
+
+    char *json = ecs_entity_to_json(world, e, &desc);
+    test_assert(json != NULL);
+    test_str(json, "{\"name\":\"Foo\", \"type_info\":{\"Position\":0, \"(Identifier,Name)\":0}, \"components\":{\"Position\":null, \"(Identifier,Name)\":null}}");
+
+    ecs_os_free(json);
+
+    ecs_fini(world);
+}
+
+void SerializeEntityToJson_serialize_w_type_info_no_components(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Foo);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_add(world, e, Foo);
+
+    ecs_entity_to_json_desc_t desc = ECS_ENTITY_TO_JSON_INIT;
+    desc.serialize_values = true;
+    desc.serialize_type_info = true;
+
+    char *json = ecs_entity_to_json(world, e, &desc);
+    test_assert(json != NULL);
+    test_str(json, "{\"name\":\"#511\", \"tags\":[\"Foo\"],\"type_info\":{}}");
+
+    ecs_os_free(json);
+
+    ecs_fini(world);
+}
+
 void SerializeEntityToJson_serialize_w_label(void) {
     ecs_world_t *world = ecs_init();
 
@@ -658,7 +700,7 @@ void SerializeEntityToJson_serialize_w_doc_w_quotes(void) {
     char *json = ecs_entity_to_json(world, e, &desc);
     test_assert(json != NULL);
 
-    test_str(json, "{\"parent\":\"Parent\", \"name\":\"Child\", \"doc\":{\"label\":\"Doc \"name\"\", \"brief\":\"Doc \"brief\"\", \"color\":\"Doc \"color\"\", \"link\":\"Doc \"link\"\"}, \"tags\":[\"Tag\"],\"pairs\":{\"ChildOf\":\"Parent\"}, \"components\":{\"(Identifier,Name)\":null, \"(Description,Name)\":{\"value\":\"Doc \\\"name\\\"\"}, \"(Description,Brief)\":{\"value\":\"Doc \\\"brief\\\"\"}, \"(Description,Link)\":{\"value\":\"Doc \\\"link\\\"\"}, \"(Description,Color)\":{\"value\":\"Doc \\\"color\\\"\"}}}");
+    test_str(json, "{\"parent\":\"Parent\", \"name\":\"Child\", \"doc\":{\"label\":\"Doc \\\"name\\\"\", \"brief\":\"Doc \\\"brief\\\"\", \"color\":\"Doc \\\"color\\\"\", \"link\":\"Doc \\\"link\\\"\"}, \"tags\":[\"Tag\"],\"pairs\":{\"ChildOf\":\"Parent\"}, \"components\":{\"(Identifier,Name)\":null, \"(Description,Name)\":{\"value\":\"Doc \\\"name\\\"\"}, \"(Description,Brief)\":{\"value\":\"Doc \\\"brief\\\"\"}, \"(Description,Link)\":{\"value\":\"Doc \\\"link\\\"\"}, \"(Description,Color)\":{\"value\":\"Doc \\\"color\\\"\"}}}");
 
     ecs_os_free(json);
 
@@ -1162,24 +1204,4 @@ void SerializeEntityToJson_serialize_no_matches(void) {
     ecs_query_fini(f_c);
 
     ecs_fini(world);
-}
-
-void SerializeEntityToJson_serialize_w_base_override(void) {
-    // Implement testcase
-}
-
-void SerializeEntityToJson_serialize_w_private(void) {
-    // Implement testcase
-}
-
-void SerializeEntityToJson_serialize_w_id_labels(void) {
-    // Implement testcase
-}
-
-void SerializeEntityToJson_serialize_no_ids(void) {
-    // Implement testcase
-}
-
-void SerializeEntityToJson_serialize_wo_private(void) {
-    // Implement testcase
 }

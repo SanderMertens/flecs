@@ -36,17 +36,17 @@ void flecs_json_serialize_type_info(
     const ecs_iter_t *it, 
     ecs_strbuf_t *buf) 
 {
+    flecs_json_memberl(buf, "type_info");
+    flecs_json_object_push(buf);
+
     int32_t field_count = it->field_count;
     if (!field_count) {
-        return;
+        goto done;
     }
 
     if (it->flags & EcsIterNoData) {
-        return;
+        goto done;
     }
-
-    flecs_json_memberl(buf, "type_info");
-    flecs_json_object_push(buf);
 
     for (int i = 0; i < field_count; i ++) {
         flecs_json_next(buf);
@@ -64,6 +64,7 @@ void flecs_json_serialize_type_info(
         }
     }
 
+done:
     flecs_json_object_pop(buf);
 }
 
