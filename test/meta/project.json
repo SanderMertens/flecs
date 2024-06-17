@@ -695,10 +695,7 @@
                 "serialize_ids_2_entities",
                 "serialize_anonymous",
                 "serialize_anonymous_ids",
-                "serialize_variable_ids",
-                "serialize_variable_ids_2_entities",
                 "serialize_variable_anonymous",
-                "serialize_variable_anonymous_ids",
                 "serialize_anonymous_tag",
                 "serialize_anonymous_component",
                 "serialize_anonymous_pair",
@@ -717,14 +714,9 @@
                 "serialize_table",
                 "serialize_table_w_id_labels",
                 "serialize_table_w_var_labels",
-                "serialize_table_w_private",
                 "serialize_world",
-                "serialize_term_labels",
-                "serialize_id_labels",
-                "serialize_id_labels_w_str",
                 "serialize_vars_for_query",
                 "serialize_var_labels_for_query",
-                "serialize_var_ids_for_query",
                 "serialize_null_doc_name",
                 "serialize_rule_w_optional",
                 "serialize_rule_w_optional_component",
@@ -836,7 +828,9 @@
                 "struct_nested",
                 "struct_nested_2_lvls",
                 "struct_nested_2_members",
-                "struct_nested_3_members"
+                "struct_nested_3_members",
+                "anonymous_type",
+                "anonymous_type_recycled"
             ]
         }, {
             "id": "SerializeQueryInfoToJson",
@@ -859,7 +853,13 @@
                 "1_tag_self_dont_inherit",
                 "1_tag_up",
                 "1_tag_cascade",
-                "0_term"
+                "0_term",
+                "anonymous_tag",
+                "anonymous_pair",
+                "anonymous_component",
+                "anonymous_tag_recycled",
+                "anonymous_pair_recycled",
+                "anonymous_component_recycled"
             ]
         }, {
             "id": "MetaUtils",
