@@ -5221,7 +5221,7 @@ void Basic_iter_empty_source_pair(void) {
     ECS_TAG(world, Tgt);
 
     ecs_query_t *r = ecs_query(world, {
-        .expr = "Foo(0, Tgt)",
+        .expr = "Foo(#0, Tgt)",
         .cache_kind = cache_kind
     });
 
@@ -5248,7 +5248,7 @@ void Basic_iter_empty_source_pair_wildcard(void) {
     ECS_TAG(world, Tgt);
 
     ecs_query_t *r = ecs_query(world, {
-        .expr = "*(0, Tgt)",
+        .expr = "*(#0, Tgt)",
         .cache_kind = cache_kind
     });
 
@@ -5276,7 +5276,7 @@ void Basic_iter_empty_source_2_terms_pair(void) {
     ECS_TAG(world, Tgt);
 
     ecs_query_t *r = ecs_query(world, {
-        .expr = "Foo(0, Tgt), Bar(0, Tgt)",
+        .expr = "Foo(#0, Tgt), Bar(#0, Tgt)",
         .cache_kind = cache_kind
     });
 
@@ -5339,7 +5339,7 @@ void Basic_iter_empty_source_2_terms_mixed_pair(void) {
     ECS_TAG(world, Tgt);
 
     ecs_query_t *r = ecs_query(world, {
-        .expr = "(Foo, Tgt), Bar(0, Tgt)",
+        .expr = "(Foo, Tgt), Bar(#0, Tgt)",
         .cache_kind = cache_kind
     });
 
@@ -5373,7 +5373,7 @@ void Basic_iter_empty_source_2_terms_mixed_pair_wildcard(void) {
     ECS_TAG(world, Tgt);
 
     ecs_query_t *r = ecs_query(world, {
-        .expr = "(Foo, Tgt), *(0, Tgt)",
+        .expr = "(Foo, Tgt), *(#0, Tgt)",
         .cache_kind = cache_kind
     });
 

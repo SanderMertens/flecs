@@ -1060,7 +1060,7 @@ typedef struct ecs_vec_t {
 } ecs_vec_t;
 
 FLECS_API
-ecs_vec_t* ecs_vec_init(
+void ecs_vec_init(
     struct ecs_allocator_t *allocator,
     ecs_vec_t *vec,
     ecs_size_t size,
