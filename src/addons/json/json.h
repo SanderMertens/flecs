@@ -51,6 +51,7 @@ typedef struct ecs_json_this_data_t {
     const EcsDocDescription *detail;
     const EcsDocDescription *color;
     const EcsDocDescription *link;
+    bool has_alerts;
 } ecs_json_this_data_t;
 
 const char* flecs_json_parse(
@@ -253,6 +254,12 @@ void flecs_json_serialize_iter_this(
     const char *parent_path,
     const ecs_json_this_data_t *this_data,
     int32_t row,
+    ecs_strbuf_t *buf,
+    const ecs_iter_to_json_desc_t *desc);
+
+bool flecs_json_serialize_vars(
+    const ecs_world_t *world,
+    const ecs_iter_t *it,
     ecs_strbuf_t *buf,
     const ecs_iter_to_json_desc_t *desc);
 

@@ -508,7 +508,7 @@ void flecs_json_label(
     if (lbl) {
         flecs_json_string_escape(buf, lbl);
     } else {
-        ecs_strbuf_appendch(buf, '0');
+        ecs_strbuf_appendint(buf, (uint32_t)e);
     }
 }
 

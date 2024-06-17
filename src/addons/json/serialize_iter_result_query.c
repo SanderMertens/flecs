@@ -8,56 +8,6 @@
 #ifdef FLECS_JSON
 
 static
-bool flecs_json_skip_variable(
-    const char *name)
-{
-    if (!name || name[0] == '_' || !ecs_os_strcmp(name, "this")) {
-        return true;
-    } else {
-        return false;
-    }
-}
-
-static
-bool flecs_json_serialize_vars(
-    const ecs_world_t *world,
-    const ecs_iter_t *it,
-    ecs_strbuf_t *buf,
-    const ecs_iter_to_json_desc_t *desc)
-{
-    char **variable_names = it->variable_names;
-    int32_t var_count = it->variable_count;
-    int32_t actual_count = 0;
-
-    for (int i = 1; i < var_count; i ++) {
-        const char *var_name = variable_names[i];
-        if (flecs_json_skip_variable(var_name)) continue;
-
-        ecs_entity_t var = it->variables[i].entity;
-        if (!var) {
-            /* Can't happen, but not the place of the serializer to complain */
-            continue;
-        }
-
-        if (!actual_count) {
-            flecs_json_memberl(buf, "vars");
-            flecs_json_object_push(buf);
-            actual_count ++;
-        }
-
-        flecs_json_member(buf, var_name);
-        flecs_json_path_or_label(buf, world, var, 
-            desc ? desc->serialize_full_paths : false);
-    }
-
-    if (actual_count) {
-        flecs_json_object_pop(buf);
-    }
-
-    return actual_count != 0;
-}
-
-static
 bool flecs_json_serialize_iter_result_is_set(
     const ecs_iter_t *it,
     ecs_strbuf_t *buf)
