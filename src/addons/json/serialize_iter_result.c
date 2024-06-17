@@ -362,7 +362,7 @@ void flecs_json_serialize_iter_this(
         flecs_json_object_push(buf);
         if (this_data->label) {
             flecs_json_memberl(buf, "label");
-            flecs_json_string(buf, this_data->label[row].value);
+            flecs_json_string_escape(buf, this_data->label[row].value);
         } else {
             flecs_json_memberl(buf, "label");
             if (this_data->names) {
@@ -377,22 +377,22 @@ void flecs_json_serialize_iter_this(
 
         if (this_data->brief) {
             flecs_json_memberl(buf, "brief");
-            flecs_json_string(buf, this_data->brief[row].value);
+            flecs_json_string_escape(buf, this_data->brief[row].value);
         }
 
         if (this_data->detail) {
             flecs_json_memberl(buf, "detail");
-            flecs_json_string(buf, this_data->detail[row].value);
+            flecs_json_string_escape(buf, this_data->detail[row].value);
         }
 
         if (this_data->color) {
             flecs_json_memberl(buf, "color");
-            flecs_json_string(buf, this_data->color[row].value);
+            flecs_json_string_escape(buf, this_data->color[row].value);
         }
 
         if (this_data->link) {
             flecs_json_memberl(buf, "link");
-            flecs_json_string(buf, this_data->link[row].value);
+            flecs_json_string_escape(buf, this_data->link[row].value);
         }
 
         flecs_json_object_pop(buf);

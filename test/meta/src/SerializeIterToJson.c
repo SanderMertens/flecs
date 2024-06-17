@@ -787,11 +787,38 @@ void SerializeIterToJson_serialize_w_entity_label_w_str(void) {
     desc.serialize_doc = true;
     char *json = ecs_iter_to_json(&it, &desc);
 
-    test_str(json, "{\"results\":[{\"name\":\"foo_bar\", \"doc\":{\"label\":\"foo_bar\"}, \"fields\":[{}]}, {\"name\":\"hello_world\", \"doc\":{\"label\":\"Hello \"World\"\"}, \"fields\":[{}]}]}");
+    test_str(json, "{\"results\":[{\"name\":\"foo_bar\", \"doc\":{\"label\":\"foo_bar\"}, \"fields\":[{}]}, {\"name\":\"hello_world\", \"doc\":{\"label\":\"Hello \\\"World\\\"\"}, \"fields\":[{}]}]}");
 
     ecs_os_free(json);
 
     ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void SerializeIterToJson_serialize_entity_label_w_newline(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Foo);
+
+    ecs_entity_t e = ecs_set_name(world, 0, "e");
+    ecs_doc_set_name(world, e, "foo\nbar");
+    ecs_add(world, e, Foo);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "Foo"
+    });
+
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+
+    ecs_iter_to_json_desc_t desc = {0};
+    desc.serialize_doc = true;
+    char *json = ecs_iter_to_json(&it, &desc);
+    test_str(json, "{\"results\":[{\"name\":\"e\", \"doc\":{\"label\":\"foo\\nbar\"}, \"fields\":[{}]}]}");
+
+    ecs_os_free(json);
 
     ecs_fini(world);
 }
