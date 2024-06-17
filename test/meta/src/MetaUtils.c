@@ -290,7 +290,7 @@ void MetaUtils_struct_w_3_entities(void) {
     Struct_3_entities v = {0, EcsFlecs, EcsFlecsCore};
     char *expr = ecs_ptr_to_expr(world, ecs_id(Struct_3_entities), &v);
     test_assert(expr != NULL);
-    test_str(expr, "{one: 0, two: flecs, three: flecs.core}");
+    test_str(expr, "{one: #0, two: flecs, three: flecs.core}");
     ecs_os_free(expr);
 
     ecs_fini(world);

@@ -628,9 +628,9 @@ void OpaqueTypes_ser_deser_0_entity(void) {
     Entity v = { 0 };
     char *json = ecs_ptr_to_json(world, ecs_id(Entity), &v);
     test_assert(json != NULL);
-    test_str(json, "0");
+    test_str(json, "#0");
 
-    const char *r = ecs_ptr_from_json(world, ecs_id(Entity), &v, json, NULL);
+    const char *r = ecs_ptr_from_json(world, ecs_id(Entity), &v, &json[1], NULL);
     test_str(r, "");
     test_assert(v.entity == 0);
     ecs_os_free(json);
