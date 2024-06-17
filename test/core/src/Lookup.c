@@ -134,12 +134,12 @@ void Lookup_get_name_from_empty(void) {
 void Lookup_lookup_by_id(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t e = ecs_lookup(world, "1000");
+    ecs_entity_t e = ecs_lookup(world, "#1000");
     test_int(e, 0);
 
     ecs_make_alive(world, 1000);
 
-    e = ecs_lookup(world, "1000");
+    e = ecs_lookup(world, "#1000");
     test_int(e, 1000);
 
     ecs_fini(world);
@@ -152,7 +152,7 @@ void Lookup_lookup_recycled_by_id(void) {
     test_assert(e != 0);
 
     char buf[20];
-    sprintf(buf, "%u", (uint32_t)e);
+    sprintf(buf, "#%u", (uint32_t)e);
     
     ecs_entity_t l = ecs_lookup(world, buf);
     test_assert(l != 0);
@@ -183,7 +183,7 @@ void Lookup_lookup_symbol_by_id(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_make_alive(world, 1000);
-    ecs_entity_t e = ecs_lookup_symbol(world, "1000", true, true);
+    ecs_entity_t e = ecs_lookup_symbol(world, "#1000", true, true);
     test_int(e, 1000);
 
     ecs_fini(world);
@@ -236,6 +236,47 @@ void Lookup_lookup_path_w_spaces(void) {
 
     test_assert(e2 == ecs_lookup(world, "hello world.hello mars"));
     
+    ecs_fini(world);
+}
+
+void Lookup_lookup_number(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t e = ecs_set_name(world, 0, "10");
+    test_assert(e != 0);
+    test_str(ecs_get_name(world, e), "10");
+
+    test_uint(ecs_lookup(world, "10"), e);
+
+    ecs_fini(world);
+}
+
+void Lookup_lookup_number_path(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t p = ecs_set_name(world, 0, "10");
+    ecs_entity_t e = ecs_set_name(world, 0, "20");
+    ecs_add_pair(world, e, EcsChildOf, p);
+    
+    test_str(ecs_get_name(world, p), "10");
+    test_str(ecs_get_name(world, e), "20");
+
+    test_uint(ecs_lookup(world, "20"), 0);
+    test_uint(ecs_lookup(world, "10"), p);
+    test_uint(ecs_lookup(world, "10.20"), e);
+
+    ecs_fini(world);
+}
+
+void Lookup_lookup_number_0(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t e = ecs_set_name(world, 0, "0");
+    test_assert(e != 0);
+    test_str(ecs_get_name(world, e), "0");
+
+    test_uint(ecs_lookup(world, "0"), e);
+
     ecs_fini(world);
 }
 

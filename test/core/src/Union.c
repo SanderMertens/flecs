@@ -972,7 +972,7 @@ void Union_add_case_in_stage(void) {
     ECS_TAG(world, Running);
     ECS_TAG(world, Jumping);
 
-    ECS_SYSTEM(world, SetCase, EcsOnUpdate, Position, Movement(0, Walking));
+    ECS_SYSTEM(world, SetCase, EcsOnUpdate, Position, Movement(#0, Walking));
 
     ECS_ENTITY(world, e1, Position);
     ECS_ENTITY(world, e2, Position);
@@ -997,7 +997,7 @@ void Union_change_case_in_stage(void) {
     ECS_TAG(world, Running);
     ECS_TAG(world, Jumping);
 
-    ECS_SYSTEM(world, SetCase, EcsOnUpdate, Position, Movement(0, Walking));
+    ECS_SYSTEM(world, SetCase, EcsOnUpdate, Position, Movement(#0, Walking));
 
     ECS_ENTITY(world, e1, Position, (Movement, Running));
     ECS_ENTITY(world, e2, Position, (Movement, Running));
@@ -1026,7 +1026,7 @@ void Union_change_one_case_in_stage(void) {
     ECS_TAG(world, Running);
     ECS_TAG(world, Jumping);
 
-    ECS_SYSTEM(world, SetCase, EcsOnUpdate, Position, Movement(0, Jumping), (Movement, Walking));
+    ECS_SYSTEM(world, SetCase, EcsOnUpdate, Position, Movement(#0, Jumping), (Movement, Walking));
 
     ECS_ENTITY(world, e0, Position, (Movement, Jumping));
     ECS_ENTITY(world, e1, Position, (Movement, Walking));

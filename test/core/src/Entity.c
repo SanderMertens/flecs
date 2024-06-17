@@ -2015,7 +2015,7 @@ void Entity_entity_w_digit_name(void) {
     });
 
     test_assert(e != 0);
-    test_uint(e, 10000);
+    test_str(ecs_get_name(world, e), "10000");
     test_assert(ecs_is_alive(world, e));
 
     ecs_fini(world);
@@ -2029,20 +2029,48 @@ void Entity_entity_w_existing_digit_name(void) {
     });
 
     test_assert(e != 0);
-    test_uint(e, 7);
+    test_str(ecs_get_name(world, e), "7");
     test_assert(ecs_is_alive(world, e));
 
     ecs_fini(world);
 }
 
-void Entity_entity_w_conflicting_digit_name(void) {
+void Entity_entity_from_digit(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t e = ecs_entity(world, {
+        .name = "#10000"
+    });
+
+    test_assert(e != 0);
+    test_uint(e, 10000);
+    test_assert(ecs_is_alive(world, e));
+
+    ecs_fini(world);
+}
+
+void Entity_entity_from_existing_digit(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t e = ecs_entity(world, {
+        .name = "#10000"
+    });
+
+    test_assert(e != 0);
+    test_uint(e, 10000);
+    test_assert(ecs_is_alive(world, e));
+
+    ecs_fini(world);
+}
+
+void Entity_entity_from_conflicting_digit(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_log_set_level(-4);
 
     ecs_entity_t e = ecs_entity(world, {
         .id = 6,
-        .name = "7"
+        .name = "#7"
     });
 
     test_assert(e == 0);
@@ -2932,3 +2960,4 @@ void Entity_entity_w_parent_w_set_w_parent(void) {
 
     ecs_fini(world);
 }
+

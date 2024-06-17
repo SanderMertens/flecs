@@ -141,7 +141,7 @@ int flecs_expr_ser_primitive(
     case EcsEntity: {
         ecs_entity_t e = *(const ecs_entity_t*)base;
         if (!e) {
-            ecs_strbuf_appendch(str, '0');
+            ecs_strbuf_appendlit(str, "#0");
         } else {
             ecs_get_path_w_sep_buf(world, 0, e, ".", NULL, str);
         }
@@ -150,7 +150,7 @@ int flecs_expr_ser_primitive(
     case EcsId: {
         ecs_id_t id = *(const ecs_id_t*)base;
         if (!id) {
-            ecs_strbuf_appendch(str, '0');
+            ecs_strbuf_appendlit(str, "#0");
         } else {
             ecs_id_str_buf(world, id, str);
         }

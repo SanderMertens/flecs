@@ -292,7 +292,7 @@ void Parser_component_explicit_subject_0(void) {
     ECS_TAG(world, Pred);
 
     ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
-        .expr = "Pred(0)"
+        .expr = "Pred(#0)"
     });
     test_assert(q != NULL);
 
@@ -934,11 +934,47 @@ void Parser_pair_explicit_subject_wildcard_obj(void) {
     ecs_fini(world);
 }
 
-void Parser_pair_implicit_subject_0_object(void) {
+void Parser_pair_implicit_subject_0_name_object(void) {
     ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t e = ecs_set_name(world, 0, "0");
 
     ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
         .expr = "(ChildOf, 0)"
+    });
+    test_assert(q != NULL);
+    test_int(term_count(q), 1);
+
+    ecs_term_t *terms = query_terms(q);
+    test_first(terms[0], EcsChildOf, EcsSelf|EcsIsEntity);
+    test_src(terms[0], EcsThis, EcsSelf|EcsIsVariable);
+    test_second(terms[0], e, EcsIsEntity|EcsSelf);
+    test_int(terms[0].oper, EcsAnd);
+    test_int(terms[0].inout, EcsInOutDefault);
+    test_int(terms[0].id, ecs_pair(EcsChildOf, e));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Parser_pair_implicit_subject_0_name_not_found_object(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_log_set_level(-4);
+    ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
+        .expr = "(ChildOf, 0)"
+    });
+    test_assert(q == NULL);
+
+    ecs_fini(world);
+}
+
+void Parser_pair_implicit_subject_0_digit_object(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
+        .expr = "(ChildOf, #0)"
     });
     test_assert(q != NULL);
     test_int(term_count(q), 1);
@@ -960,7 +996,7 @@ void Parser_pair_explicit_subject_0_object(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
-        .expr = "ChildOf($this, 0)"
+        .expr = "ChildOf($this, #0)"
     });
     test_assert(q != NULL);
     test_int(term_count(q), 1);
@@ -985,7 +1021,7 @@ void Parser_pair_explicit_subject_0(void) {
     ECS_TAG(world, Obj);
 
     ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
-        .expr = "Pred(0, Obj)"
+        .expr = "Pred(#0, Obj)"
     });
     test_assert(q != NULL);
     test_int(term_count(q), 1);
@@ -1424,7 +1460,7 @@ void Parser_component_explicit_no_subject(void) {
     ECS_TAG(world, Pred);
 
     ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
-        .expr = "Pred(0)"
+        .expr = "Pred(#0)"
     });
     test_assert(q != NULL);
     test_int(term_count(q), 1);
@@ -1447,7 +1483,7 @@ void Parser_pair_no_subject(void) {
     ECS_TAG(world, Obj);
 
     ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
-        .expr = "Pred(0, Obj)"
+        .expr = "Pred(#0, Obj)"
     });
     test_assert(q != NULL);
     test_int(term_count(q), 1);
@@ -2662,13 +2698,13 @@ void Parser_2_or_w_optional_2nd_arg(void) {
     ecs_fini(world); 
 }
 
-void Parser_1_digit_pred_implicit_subj(void) {
+void Parser_1_entity_id_pred_implicit_subj(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_make_alive(world, 100);
 
     ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
-        .expr = "100"
+        .expr = "#100"
     });
     test_assert(q != NULL);
     test_int(term_count(q), 1);
@@ -2681,16 +2717,16 @@ void Parser_1_digit_pred_implicit_subj(void) {
 
     ecs_query_fini(q);
 
-    ecs_fini(world); 
+    ecs_fini(world);
 }
 
-void Parser_1_digit_pred_no_subj(void) {
+void Parser_1_entity_id_pred_no_subj(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_make_alive(world, 100);
 
     ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
-        .expr = "100()"
+        .expr = "#100()"
     });
     test_assert(q != NULL);
     test_int(term_count(q), 1);
@@ -2707,14 +2743,14 @@ void Parser_1_digit_pred_no_subj(void) {
     ecs_fini(world); 
 }
 
-void Parser_1_digit_pred_explicit_subj(void) {
+void Parser_1_entity_id_pred_explicit_subj(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_make_alive(world, 100);
     ecs_make_alive(world, 200);
 
     ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
-        .expr = "100(200)"
+        .expr = "#100(#200)"
     });
     test_assert(q != NULL);
     test_int(term_count(q), 1);
@@ -2731,7 +2767,7 @@ void Parser_1_digit_pred_explicit_subj(void) {
     ecs_fini(world); 
 }
 
-void Parser_1_digit_pair_implicit_subj(void) {
+void Parser_1_entity_id_pair_implicit_subj(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred_1);
@@ -2741,7 +2777,7 @@ void Parser_1_digit_pair_implicit_subj(void) {
     ecs_make_alive(world, 300);
 
     ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
-        .expr = "(100, 300)"
+        .expr = "(#100, #300)"
     });
     test_assert(q != NULL);
     test_int(term_count(q), 1);
@@ -2759,7 +2795,7 @@ void Parser_1_digit_pair_implicit_subj(void) {
     ecs_fini(world); 
 }
 
-void Parser_1_digit_pair_explicit_subj(void) {
+void Parser_1_entity_id_pair_explicit_subj(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Pred_1);
@@ -2770,7 +2806,7 @@ void Parser_1_digit_pair_explicit_subj(void) {
     ecs_make_alive(world, 300);
 
     ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
-        .expr = "100(200, 300)"
+        .expr = "#100(#200, #300)"
     });
     test_assert(q != NULL);
     test_int(term_count(q), 1);
@@ -2782,6 +2818,130 @@ void Parser_1_digit_pair_explicit_subj(void) {
     test_int(terms[0].oper, EcsAnd);
     test_int(terms[0].inout, EcsInOutDefault);  
 
+
+    ecs_query_fini(q);
+
+    ecs_fini(world); 
+}
+
+void Parser_1_digit_pred_implicit_subj(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t e = ecs_set_name(world, 0, "100");
+
+    ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
+        .expr = "100"
+    });
+    test_assert(q != NULL);
+    test_int(term_count(q), 1);
+
+    ecs_term_t *terms = query_terms(q);
+    test_first(terms[0], e, EcsSelf|EcsIsEntity);
+    test_src(terms[0], EcsThis, EcsSelf|EcsIsVariable);
+    test_int(terms[0].oper, EcsAnd);
+    test_int(terms[0].inout, EcsInOutDefault);  
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Parser_1_digit_pred_no_subj(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t e = ecs_set_name(world, 0, "100");
+
+    ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
+        .expr = "100()"
+    });
+    test_assert(q != NULL);
+    test_int(term_count(q), 1);
+
+    ecs_term_t *terms = query_terms(q);
+    test_first(terms[0], e, EcsSelf|EcsIsEntity);
+    test_src(terms[0], 0, EcsIsEntity);
+    test_int(terms[0].oper, EcsAnd);
+    test_int(terms[0].inout, EcsInOutDefault);  
+
+
+    ecs_query_fini(q);
+
+    ecs_fini(world); 
+}
+
+void Parser_1_digit_pred_explicit_subj(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t e1 = ecs_set_name(world, 0, "100");
+    ecs_entity_t e2 = ecs_set_name(world, 0, "200");
+
+    ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
+        .expr = "100(200)"
+    });
+    test_assert(q != NULL);
+    test_int(term_count(q), 1);
+
+    ecs_term_t *terms = query_terms(q);
+    test_first(terms[0], e1, EcsSelf|EcsIsEntity);
+    test_src(terms[0], e2, EcsSelf|EcsIsEntity);
+    test_int(terms[0].oper, EcsAnd);
+    test_int(terms[0].inout, EcsInOutDefault);  
+
+
+    ecs_query_fini(q);
+
+    ecs_fini(world); 
+}
+
+void Parser_1_digit_pair_implicit_subj(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Pred_1);
+    ECS_TAG(world, Pred_2);
+
+    ecs_entity_t e1 = ecs_set_name(world, 0, "100");
+    ecs_entity_t e2 = ecs_set_name(world, 0, "300");
+
+    ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
+        .expr = "(100, 300)"
+    });
+    test_assert(q != NULL);
+    test_int(term_count(q), 1);
+
+    ecs_term_t *terms = query_terms(q);
+    test_first(terms[0], e1, EcsSelf|EcsIsEntity);
+    test_src(terms[0], EcsThis, EcsSelf|EcsIsVariable);
+    test_second(terms[0], e2, EcsSelf|EcsIsEntity);
+    test_int(terms[0].oper, EcsAnd);
+    test_int(terms[0].inout, EcsInOutDefault);  
+
+    ecs_query_fini(q);
+
+    ecs_fini(world); 
+}
+
+void Parser_1_digit_pair_explicit_subj(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Pred_1);
+    ECS_TAG(world, Pred_2);
+
+    ecs_entity_t e1 = ecs_set_name(world, 0, "100");
+    ecs_entity_t e2 = ecs_set_name(world, 0, "200");
+    ecs_entity_t e3 = ecs_set_name(world, 0, "300");
+
+    ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
+        .expr = "100(200, 300)"
+    });
+    test_assert(q != NULL);
+    test_int(term_count(q), 1);
+
+    ecs_term_t *terms = query_terms(q);
+    test_first(terms[0], e1, EcsSelf|EcsIsEntity);
+    test_src(terms[0], e2, EcsSelf|EcsIsEntity);
+    test_second(terms[0], e3, EcsSelf|EcsIsEntity);
+    test_int(terms[0].oper, EcsAnd);
+    test_int(terms[0].inout, EcsInOutDefault);  
 
     ecs_query_fini(q);
 
@@ -4888,7 +5048,7 @@ void Parser_eq_0(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "$this == 0"
+        .expr = "$this == #0"
     });
 
     test_assert(q != NULL);
@@ -4912,7 +5072,7 @@ void Parser_neq_0(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "$this != 0"
+        .expr = "$this != #0"
     });
 
     test_assert(q != NULL);
