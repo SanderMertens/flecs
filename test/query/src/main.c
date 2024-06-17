@@ -437,6 +437,7 @@ void Parser_match_variable_oper(void);
 void Parser_escaped_identifier(void);
 void Parser_escaped_identifier_first(void);
 void Parser_escaped_identifier_second(void);
+void Parser_n_tokens_test(void);
 
 // Testsuite 'Basic'
 void Basic_setup(void);
@@ -3698,6 +3699,10 @@ bake_test_case Parser_testcases[] = {
     {
         "escaped_identifier_second",
         Parser_escaped_identifier_second
+    },
+    {
+        "n_tokens_test",
+        Parser_n_tokens_test
     }
 };
 
@@ -9820,7 +9825,7 @@ static bake_test_suite suites[] = {
         "Parser",
         NULL,
         NULL,
-        299,
+        300,
         Parser_testcases
     },
     {

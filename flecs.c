@@ -34262,7 +34262,7 @@ int flecs_query_query_populate_terms(
         /* Allocate buffer that's large enough to tokenize the query string */
         script.token_buffer_size = ecs_os_strlen(expr) * 2 + 1;
         script.token_buffer = flecs_alloc(
-            &stage->allocator, script.token_buffer_size);
+            &stage->allocator, script.token_buffer_size * 2);
 
         if (flecs_terms_parse(&script.pub, &q->terms[term_count], 
             &term_count))

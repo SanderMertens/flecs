@@ -7035,3 +7035,30 @@ void Parser_escaped_identifier_second(void) {
 
     ecs_fini(world);
 }
+
+void Parser_n_tokens_test(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t c1 = ecs_entity(world, { 
+        .name = "e_foo.e_bar.e_foobar.e_hello" 
+    });
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "ChildOf(e_foo.e_bar.e_foobar.e_hello,$variable)"
+    });
+
+    test_assert(q != NULL);
+
+    test_int(term_count(q), 1);
+
+    ecs_term_t *terms = query_terms(q);
+    test_first(terms[0], EcsChildOf, EcsSelf|EcsIsEntity);
+    test_src(terms[0], c1, EcsSelf|EcsIsEntity);
+    test_second_var(terms[0], 0, EcsSelf|EcsIsVariable, "variable");
+    test_int(terms[0].oper, EcsAnd);
+    test_int(terms[0].inout, EcsInOutDefault);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
