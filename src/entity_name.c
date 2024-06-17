@@ -158,13 +158,13 @@ const char* flecs_path_elem(
         }
 
         if (buffer) {
-            if (pos == size) {
+            if (pos == (size - 1)) {
                 if (size == ECS_NAME_BUFFER_LENGTH) { /* stack buffer */
-                    char *new_buffer = ecs_os_malloc(size * 2);
+                    char *new_buffer = ecs_os_malloc(size * 2 + 1);
                     ecs_os_memcpy(new_buffer, buffer, size);
                     buffer = new_buffer;
                 } else { /* heap buffer */
-                    buffer = ecs_os_realloc(buffer, size * 2);
+                    buffer = ecs_os_realloc(buffer, size * 2 + 1);
                 }
                 size *= 2;
             }
