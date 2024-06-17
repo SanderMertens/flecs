@@ -482,7 +482,7 @@ void SerializeQueryInfoToJson_0_term(void) {
     ECS_ENTITY(world, Foo, (OnInstantiate, Inherit));
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "Foo(0)"
+        .expr = "Foo(#0)"
     });
 
     test_assert(q != NULL);
@@ -494,7 +494,7 @@ void SerializeQueryInfoToJson_0_term(void) {
     };
 
     char *json = ecs_iter_to_json(&it, &desc);
-    test_str(json, "{\"query_info\":{\"vars\":[], \"terms\":[{\"inout\":\"default\", \"has_data\":false, \"can_inherit\":true, \"oper\":\"and\", \"src\":{\"entity\":\"0\"}, \"first\":{\"entity\":\"Foo\"}, \"flags\":[]}]}}");
+    test_str(json, "{\"query_info\":{\"vars\":[], \"terms\":[{\"inout\":\"default\", \"has_data\":false, \"can_inherit\":true, \"oper\":\"and\", \"src\":{\"entity\":\"#0\"}, \"first\":{\"entity\":\"Foo\"}, \"flags\":[]}]}}");
     ecs_os_free(json);
     
     ecs_query_fini(q);
@@ -503,25 +503,191 @@ void SerializeQueryInfoToJson_0_term(void) {
 }
 
 void SerializeQueryInfoToJson_anonymous_tag(void) {
-    // Implement testcase
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t foo = ecs_new(world);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ foo }}
+    });
+
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    ecs_iter_to_json_desc_t desc = {
+        .serialize_query_info = true,
+        .dont_serialize_results = true
+    };
+
+    char *json = ecs_iter_to_json(&it, &desc);
+    char *expect = flecs_asprintf("{\"query_info\":{\"vars\":[\"this\"], \"terms\":[{\"inout\":\"default\", \"has_data\":false, \"oper\":\"and\", \"src\":{\"var\":\"this\"}, \"first\":{\"entity\":\"#%u\"}, \"flags\":[\"self\"]}]}}",
+        foo);
+    test_str(json, expect);
+    ecs_os_free(json);
+    ecs_os_free(expect);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
 }
 
 void SerializeQueryInfoToJson_anonymous_pair(void) {
-    // Implement testcase
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t rel = ecs_new(world);
+    ecs_entity_t tgt = ecs_new(world);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ ecs_pair(rel, tgt) }}
+    });
+
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    ecs_iter_to_json_desc_t desc = {
+        .serialize_query_info = true,
+        .dont_serialize_results = true
+    };
+
+    char *json = ecs_iter_to_json(&it, &desc);
+    char *expect = flecs_asprintf("{\"query_info\":{\"vars\":[\"this\"], \"terms\":[{\"inout\":\"default\", \"has_data\":false, \"oper\":\"and\", \"src\":{\"var\":\"this\"}, \"first\":{\"entity\":\"#%u\"}, \"second\":{\"entity\":\"#%u\"}, \"flags\":[\"self\"]}]}}",
+        rel, tgt);
+    test_str(json, expect);
+    ecs_os_free(json);
+    ecs_os_free(expect);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
 }
 
 void SerializeQueryInfoToJson_anonymous_component(void) {
-    // Implement testcase
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t comp = ecs_component(world, {
+        .type.size = 4,
+        .type.alignment = 4
+    });
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ comp }}
+    });
+
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    ecs_iter_to_json_desc_t desc = {
+        .serialize_query_info = true,
+        .dont_serialize_results = true
+    };
+
+    char *json = ecs_iter_to_json(&it, &desc);
+    char *expect = flecs_asprintf("{\"query_info\":{\"vars\":[\"this\"], \"terms\":[{\"inout\":\"default\", \"has_data\":true, \"oper\":\"and\", \"src\":{\"var\":\"this\"}, \"first\":{\"entity\":\"#%u\", \"type\":true}, \"flags\":[\"self\"]}]}}",
+        comp);
+    test_str(json, expect);
+    ecs_os_free(json);
+    ecs_os_free(expect);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
 }
 
 void SerializeQueryInfoToJson_anonymous_tag_recycled(void) {
-    // Implement testcase
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t foo = ecs_new(world);
+    ecs_delete(world, foo);
+    foo = ecs_new(world);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ foo }}
+    });
+
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    ecs_iter_to_json_desc_t desc = {
+        .serialize_query_info = true,
+        .dont_serialize_results = true
+    };
+
+    char *json = ecs_iter_to_json(&it, &desc);
+    char *expect = flecs_asprintf("{\"query_info\":{\"vars\":[\"this\"], \"terms\":[{\"inout\":\"default\", \"has_data\":false, \"oper\":\"and\", \"src\":{\"var\":\"this\"}, \"first\":{\"entity\":\"#%u\"}, \"flags\":[\"self\"]}]}}",
+        foo);
+    test_str(json, expect);
+    ecs_os_free(json);
+    ecs_os_free(expect);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
 }
 
 void SerializeQueryInfoToJson_anonymous_pair_recycled(void) {
-    // Implement testcase
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t rel = ecs_new(world);
+    ecs_entity_t tgt = ecs_new(world);
+    ecs_delete(world, rel);
+    ecs_delete(world, tgt);
+    rel = ecs_new(world);
+    tgt = ecs_new(world);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ ecs_pair(rel, tgt) }}
+    });
+
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    ecs_iter_to_json_desc_t desc = {
+        .serialize_query_info = true,
+        .dont_serialize_results = true
+    };
+
+    char *json = ecs_iter_to_json(&it, &desc);
+    char *expect = flecs_asprintf("{\"query_info\":{\"vars\":[\"this\"], \"terms\":[{\"inout\":\"default\", \"has_data\":false, \"oper\":\"and\", \"src\":{\"var\":\"this\"}, \"first\":{\"entity\":\"#%u\"}, \"second\":{\"entity\":\"#%u\"}, \"flags\":[\"self\"]}]}}",
+        rel, tgt);
+    test_str(json, expect);
+    ecs_os_free(json);
+    ecs_os_free(expect);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
 }
 
 void SerializeQueryInfoToJson_anonymous_component_recycled(void) {
-    // Implement testcase
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t comp = ecs_new(world);
+    ecs_delete(world, comp);
+    comp = ecs_component(world, {
+        .type.size = 4,
+        .type.alignment = 4
+    });
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ comp }}
+    });
+
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    ecs_iter_to_json_desc_t desc = {
+        .serialize_query_info = true,
+        .dont_serialize_results = true
+    };
+
+    char *json = ecs_iter_to_json(&it, &desc);
+    char *expect = flecs_asprintf("{\"query_info\":{\"vars\":[\"this\"], \"terms\":[{\"inout\":\"default\", \"has_data\":true, \"oper\":\"and\", \"src\":{\"var\":\"this\"}, \"first\":{\"entity\":\"#%u\", \"type\":true}, \"flags\":[\"self\"]}]}}",
+        comp);
+    test_str(json, expect);
+    ecs_os_free(json);
+    ecs_os_free(expect);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
 }

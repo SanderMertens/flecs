@@ -402,7 +402,11 @@ int flecs_add_member_to_struct(
         if (ecs_has(world, m->type, EcsUnit)) {
             ecs_entity_t unit_base = ecs_get_target_for(
                 world, m->type, EcsIsA, EcsUnit);
-            m->unit = unit_base;
+            if (unit_base) {
+                unit = m->unit = unit_base;
+            } else {
+                unit = m->unit = m->type;
+            }
         }
     }
 

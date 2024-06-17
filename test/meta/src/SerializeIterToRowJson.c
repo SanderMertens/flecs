@@ -2809,7 +2809,7 @@ void SerializeIterToRowJson_serialize_recycled_id(void) {
     char *json = ecs_iter_to_json(&it, NULL);
     test_assert(json != NULL);
 
-    char* expect = flecs_asprintf("{\"results\":[{\"name\":\"%u\", \"fields\":[{}]}]}", (uint32_t)e1);
+    char* expect = flecs_asprintf("{\"results\":[{\"name\":\"#%u\", \"fields\":[{}]}]}", (uint32_t)e1);
     test_str(json, expect);
 
     ecs_os_free(json);

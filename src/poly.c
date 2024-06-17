@@ -48,7 +48,7 @@ ecs_mixins_t ecs_observer_t_mixins = {
 
 static
 void* assert_mixin(
-    const flecs_poly_t *poly,
+    const ecs_poly_t *poly,
     ecs_mixin_kind_t kind)
 {
     ecs_assert(poly != NULL, ECS_INVALID_PARAMETER, NULL);
@@ -73,7 +73,7 @@ void* assert_mixin(
 }
 
 void* flecs_poly_init_(
-    flecs_poly_t *poly,
+    ecs_poly_t *poly,
     int32_t type,
     ecs_size_t size,
     ecs_mixins_t *mixins)
@@ -92,7 +92,7 @@ void* flecs_poly_init_(
 }
 
 void flecs_poly_fini_(
-    flecs_poly_t *poly,
+    ecs_poly_t *poly,
     int32_t type)
 {
     ecs_assert(poly != NULL, ECS_INVALID_PARAMETER, NULL);
@@ -109,7 +109,7 @@ void flecs_poly_fini_(
 }
 
 int32_t flecs_poly_claim_(
-    flecs_poly_t *poly)
+    ecs_poly_t *poly)
 {
     ecs_assert(poly != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_header_t *hdr = poly;
@@ -123,7 +123,7 @@ int32_t flecs_poly_claim_(
 }
 
 int32_t flecs_poly_release_(
-    flecs_poly_t *poly)
+    ecs_poly_t *poly)
 {
     ecs_assert(poly != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_header_t *hdr = poly;
@@ -137,7 +137,7 @@ int32_t flecs_poly_release_(
 }
 
 int32_t flecs_poly_refcount(
-    flecs_poly_t *poly)
+    ecs_poly_t *poly)
 {
     ecs_assert(poly != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_header_t *hdr = poly;
@@ -191,7 +191,7 @@ const EcsPoly* flecs_poly_bind_get_(
     return ecs_get_pair(world, entity, EcsPoly, tag);
 }
 
-flecs_poly_t* flecs_poly_get_(
+ecs_poly_t* flecs_poly_get_(
     const ecs_world_t *world,
     ecs_entity_t entity,
     ecs_entity_t tag)
@@ -204,7 +204,7 @@ flecs_poly_t* flecs_poly_get_(
 }
 
 bool flecs_poly_is_(
-    const flecs_poly_t *poly,
+    const ecs_poly_t *poly,
     int32_t type)
 {
     ecs_assert(poly != NULL, ECS_INVALID_PARAMETER, NULL);
@@ -216,13 +216,13 @@ bool flecs_poly_is_(
 }
 
 ecs_observable_t* ecs_get_observable(
-    const flecs_poly_t *poly)
+    const ecs_poly_t *poly)
 {
     return (ecs_observable_t*)assert_mixin(poly, EcsMixinObservable);
 }
 
 const ecs_world_t* ecs_get_world(
-    const flecs_poly_t *poly)
+    const ecs_poly_t *poly)
 {
     if (((const ecs_header_t*)poly)->type == ecs_world_t_magic) {
         return poly;
@@ -231,13 +231,13 @@ const ecs_world_t* ecs_get_world(
 }
 
 ecs_entity_t ecs_get_entity(
-    const flecs_poly_t *poly)
+    const ecs_poly_t *poly)
 {
     return *(ecs_entity_t*)assert_mixin(poly, EcsMixinEntity);
 }
 
 flecs_poly_dtor_t* ecs_get_dtor(
-    const flecs_poly_t *poly)
+    const ecs_poly_t *poly)
 {
     return (flecs_poly_dtor_t*)assert_mixin(poly, EcsMixinDtor);
 }

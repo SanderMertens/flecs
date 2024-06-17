@@ -62,7 +62,7 @@ bool flecs_json_serialize_table_tags(
             continue;
         }
 
-        if (column_map[f] != -1) {
+        if (column_map && column_map[f] != -1) {
             continue; /* Ignore components */
         }
 
@@ -303,7 +303,7 @@ bool flecs_json_serialize_table_inherited(
         return false;
     }
 
-    flecs_json_memberl(buf, "inherited");
+    flecs_json_memberl(buf, "is_a");
     flecs_json_object_push(buf);
     flecs_json_serialize_table_inherited_type(world, table, buf, desc);
     flecs_json_object_pop(buf);

@@ -10,7 +10,7 @@
 
 /* Initialize poly */
 void* flecs_poly_init_(
-    flecs_poly_t *object,
+    ecs_poly_t *object,
     int32_t kind,
     ecs_size_t size,
     ecs_mixins_t *mixins);
@@ -20,7 +20,7 @@ void* flecs_poly_init_(
 
 /* Deinitialize object for specified type */
 void flecs_poly_fini_(
-    flecs_poly_t *object,
+    ecs_poly_t *object,
     int32_t kind);
 
 #define flecs_poly_fini(object, type)\
@@ -60,7 +60,7 @@ const EcsPoly* flecs_poly_bind_get_(
 #define flecs_poly_bind_get(world, entity, T) \
     flecs_poly_bind_get_(world, entity, T##_tag)
 
-flecs_poly_t* flecs_poly_get_(
+ecs_poly_t* flecs_poly_get_(
     const ecs_world_t *world,
     ecs_entity_t entity,
     ecs_entity_t tag);
@@ -83,9 +83,9 @@ flecs_poly_t* flecs_poly_get_(
 #endif
 
 ecs_observable_t* ecs_get_observable(
-    const flecs_poly_t *object);
+    const ecs_poly_t *object);
 
 flecs_poly_dtor_t* ecs_get_dtor(
-    const flecs_poly_t *poly);
+    const ecs_poly_t *poly);
 
 #endif

@@ -3068,13 +3068,13 @@ typedef struct ecs_table_record_t ecs_table_record_t;
 /** A poly object.
  * A poly (short for polymorph) object is an object that has a variable list of
  * capabilities, determined by a mixin table. This is the current list of types
- * in the flecs API that can be used as an flecs_poly_t:
+ * in the flecs API that can be used as an ecs_poly_t:
  *
  * - ecs_world_t
  * - ecs_stage_t
  * - ecs_query_t
  *
- * Functions that accept an flecs_poly_t argument can accept objects of these
+ * Functions that accept an ecs_poly_t argument can accept objects of these
  * types. If the object does not have the requested mixin the API will throw an
  * assert.
  *
@@ -3084,12 +3084,12 @@ typedef struct ecs_table_record_t ecs_table_record_t;
  * (in some ways it's like a mini-ECS). Additionally, each poly object has a
  * header that enables the API to do sanity checking on the input arguments.
  */
-typedef void flecs_poly_t;
+typedef void ecs_poly_t;
 
 /** Type that stores poly mixins */
 typedef struct ecs_mixins_t ecs_mixins_t;
 
-/** Header for flecs_poly_t objects. */
+/** Header for ecs_poly_t objects. */
 typedef struct ecs_header_t {
     int32_t magic;        /**< Magic number verifying it's a flecs object */
     int32_t type;         /**< Magic number indicating which type of flecs object */
@@ -3227,7 +3227,7 @@ typedef void (*ecs_move_t)(
 
 /** Destructor function for poly objects. */
 typedef void (*flecs_poly_dtor_t)(
-    flecs_poly_t *poly);
+    ecs_poly_t *poly);
 
 /** @} */
 
@@ -3860,15 +3860,15 @@ void flecs_resume_readonly(
 
 FLECS_API
 int32_t flecs_poly_claim_(
-    flecs_poly_t *poly);
+    ecs_poly_t *poly);
 
 FLECS_API
 int32_t flecs_poly_release_(
-    flecs_poly_t *poly);
+    ecs_poly_t *poly);
 
 FLECS_API
 int32_t flecs_poly_refcount(
-    flecs_poly_t *poly);
+    ecs_poly_t *poly);
 
 #define flecs_poly_claim(poly) \
     flecs_poly_claim_(ECS_CONST_CAST(void*, reinterpret_cast<const void*>(poly)))
@@ -4430,7 +4430,7 @@ typedef struct ecs_observer_desc_t {
     ecs_ctx_free_t run_ctx_free;
 
     /** Observable with which to register the observer */
-    flecs_poly_t *observable;
+    ecs_poly_t *observable;
 
     /** Optional shared last event id for multiple observers. Ensures only one
      * of the observers with the shared id gets triggered for an event */
@@ -4483,7 +4483,7 @@ typedef struct ecs_event_desc_t {
     const void *const_param;
 
     /** Observable (usually the world) */
-    flecs_poly_t *observable;
+    ecs_poly_t *observable;
 
     /** Event flags */
     ecs_flags32_t flags;
@@ -4602,7 +4602,7 @@ typedef struct EcsComponent {
 
 /** Component for storing a poly object */
 typedef struct EcsPoly {
-    flecs_poly_t *poly;          /**< Pointer to poly object */
+    ecs_poly_t *poly;          /**< Pointer to poly object */
 } EcsPoly;
 
 /** When added to an entity this informs serialization formats which component 
@@ -5653,7 +5653,7 @@ int32_t ecs_delete_empty_tables(
  */
 FLECS_API
 const ecs_world_t* ecs_get_world(
-    const flecs_poly_t *poly);
+    const ecs_poly_t *poly);
 
 /** Get entity from poly.
  *
@@ -5662,7 +5662,7 @@ const ecs_world_t* ecs_get_world(
  */
 FLECS_API
 ecs_entity_t ecs_get_entity(
-    const flecs_poly_t *poly);
+    const ecs_poly_t *poly);
 
 /** Test if pointer is of specified type.
  * Usage:
@@ -5679,7 +5679,7 @@ ecs_entity_t ecs_get_entity(
  */
 FLECS_API
 bool flecs_poly_is_(
-    const flecs_poly_t *object,
+    const ecs_poly_t *object,
     int32_t type);
 
 /** Test if pointer is of specified type.
@@ -13306,7 +13306,7 @@ typedef struct ecs_iter_to_json_desc_t {
     bool serialize_alerts;          /**< Serialize active alerts for entity */
     ecs_entity_t serialize_refs;    /**< Serialize references (incoming edges) for relationship */
     bool serialize_matches;         /**< Serialize which queries entity matches with */
-    flecs_poly_t *query;            /**< Query object (required for serialize_query_[plan|profile]). */
+    ecs_poly_t *query;            /**< Query object (required for serialize_query_[plan|profile]). */
 } ecs_iter_to_json_desc_t;
 
 /** Utility used to initialize JSON iterator serializer. */
