@@ -606,7 +606,7 @@ void SerializeToJson_struct_entity_10k(void) {
     T value = {10000};
     char *expr = ecs_ptr_to_json(world, t, &value);
     test_assert(expr != NULL);
-    test_str(expr, "{\"x\":\"10000\"}");
+    test_str(expr, "{\"x\":\"#10000\"}");
     ecs_os_free(expr);
 
     ecs_fini(world);
