@@ -345,7 +345,7 @@ void flecs_json_serialize_iter_this(
     if (this_data->names) {
         flecs_json_string(buf, this_data->names[row].value);
     } else {
-        ecs_strbuf_appendlit(buf, "\"");
+        ecs_strbuf_appendlit(buf, "\"#");
         ecs_strbuf_appendint(buf, flecs_uto(int64_t, 
             (uint32_t)it->entities[row]));
         ecs_strbuf_appendlit(buf, "\"");
@@ -368,7 +368,7 @@ void flecs_json_serialize_iter_this(
             if (this_data->names) {
                 flecs_json_string(buf, this_data->names[row].value);
             } else {
-                ecs_strbuf_appendlit(buf, "\"");
+                ecs_strbuf_appendlit(buf, "\"#");
                 ecs_strbuf_appendint(buf, flecs_uto(int64_t, 
                     (uint32_t)it->entities[row]));
                 ecs_strbuf_appendlit(buf, "\"");

@@ -3000,7 +3000,7 @@ void Iter_to_str(void) {
     test_assert(str != NULL);
     test_str(str, 
         "id:  Tag\n"
-        "src: 0\n"
+        "src: #0\n"
         "set: true\n"
         "this:\n"
         "    - foo\n"

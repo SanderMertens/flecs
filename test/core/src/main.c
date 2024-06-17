@@ -147,7 +147,9 @@ void Entity_make_alive_after_deleted_2_entities(void);
 void Entity_defer_entity_init_w_set_name_w_add_childof(void);
 void Entity_entity_w_digit_name(void);
 void Entity_entity_w_existing_digit_name(void);
-void Entity_entity_w_conflicting_digit_name(void);
+void Entity_entity_from_digit(void);
+void Entity_entity_from_existing_digit(void);
+void Entity_entity_from_conflicting_digit(void);
 void Entity_set_generation_on_nonempty_entity(void);
 void Entity_set_generation_while_deferred(void);
 void Entity_commit_w_on_add(void);
@@ -527,6 +529,7 @@ void Hierarchies_path_prefix_rel_match(void);
 void Hierarchies_path_prefix_rel_no_match(void);
 void Hierarchies_fullpath_for_core(void);
 void Hierarchies_path_w_number(void);
+void Hierarchies_path_w_entity_id(void);
 void Hierarchies_lookup_depth_0(void);
 void Hierarchies_lookup_depth_1(void);
 void Hierarchies_lookup_depth_2(void);
@@ -540,6 +543,7 @@ void Hierarchies_lookup_self(void);
 void Hierarchies_lookup_in_parent_from_scope(void);
 void Hierarchies_lookup_in_root_from_scope(void);
 void Hierarchies_lookup_number(void);
+void Hierarchies_lookup_entity_id(void);
 void Hierarchies_delete_children(void);
 void Hierarchies_scope_set(void);
 void Hierarchies_scope_set_again(void);
@@ -872,6 +876,9 @@ void Lookup_lookup_symbol_w_digit(void);
 void Lookup_lookup_path_w_digit(void);
 void Lookup_lookup_name_w_spaces(void);
 void Lookup_lookup_path_w_spaces(void);
+void Lookup_lookup_number(void);
+void Lookup_lookup_number_path(void);
+void Lookup_lookup_number_0(void);
 void Lookup_set_name_of_existing(void);
 void Lookup_change_name_of_existing(void);
 void Lookup_lookup_alias(void);
@@ -3314,8 +3321,16 @@ bake_test_case Entity_testcases[] = {
         Entity_entity_w_existing_digit_name
     },
     {
-        "entity_w_conflicting_digit_name",
-        Entity_entity_w_conflicting_digit_name
+        "entity_from_digit",
+        Entity_entity_from_digit
+    },
+    {
+        "entity_from_existing_digit",
+        Entity_entity_from_existing_digit
+    },
+    {
+        "entity_from_conflicting_digit",
+        Entity_entity_from_conflicting_digit
     },
     {
         "set_generation_on_nonempty_entity",
@@ -4766,6 +4781,10 @@ bake_test_case Hierarchies_testcases[] = {
         Hierarchies_path_w_number
     },
     {
+        "path_w_entity_id",
+        Hierarchies_path_w_entity_id
+    },
+    {
         "lookup_depth_0",
         Hierarchies_lookup_depth_0
     },
@@ -4816,6 +4835,10 @@ bake_test_case Hierarchies_testcases[] = {
     {
         "lookup_number",
         Hierarchies_lookup_number
+    },
+    {
+        "lookup_entity_id",
+        Hierarchies_lookup_entity_id
     },
     {
         "delete_children",
@@ -6083,6 +6106,18 @@ bake_test_case Lookup_testcases[] = {
     {
         "lookup_path_w_spaces",
         Lookup_lookup_path_w_spaces
+    },
+    {
+        "lookup_number",
+        Lookup_lookup_number
+    },
+    {
+        "lookup_number_path",
+        Lookup_lookup_number_path
+    },
+    {
+        "lookup_number_0",
+        Lookup_lookup_number_0
     },
     {
         "set_name_of_existing",
@@ -13477,7 +13512,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        133,
+        135,
         Entity_testcases
     },
     {
@@ -13561,7 +13596,7 @@ static bake_test_suite suites[] = {
         "Hierarchies",
         Hierarchies_setup,
         NULL,
-        93,
+        95,
         Hierarchies_testcases
     },
     {
@@ -13624,7 +13659,7 @@ static bake_test_suite suites[] = {
         "Lookup",
         Lookup_setup,
         NULL,
-        51,
+        54,
         Lookup_testcases
     },
     {

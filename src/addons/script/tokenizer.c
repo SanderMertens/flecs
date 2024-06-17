@@ -130,7 +130,7 @@ static
 bool flecs_script_is_identifier(
     char c)
 {
-    return isalpha(c) || (c == '_') || (c == '$');
+    return isalpha(c) || (c == '_') || (c == '$') || (c == '#');
 }
 
 static
