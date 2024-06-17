@@ -369,7 +369,7 @@ void SerializeIterToJson_serialize_type_info_1_tags(void) {
     desc.serialize_type_info = true;
     char *json = ecs_iter_to_json(&it, &desc);
 
-    test_str(json, "{\"results\":[{\"name\":\"Foo\", \"fields\":[{}]}, {\"name\":\"Bar\", \"fields\":[{}]}]}");
+    test_str(json, "{\"type_info\":{}, \"results\":[{\"name\":\"Foo\", \"fields\":[{}]}, {\"name\":\"Bar\", \"fields\":[{}]}]}");
 
     ecs_os_free(json);
 
@@ -399,7 +399,7 @@ void SerializeIterToJson_serialize_type_info_2_tags(void) {
     desc.serialize_type_info = true;
     char *json = ecs_iter_to_json(&it, &desc);
 
-    test_str(json, "{\"results\":[{\"name\":\"Foo\", \"fields\":[{}, {}]}, {\"name\":\"Bar\", \"fields\":[{}, {}]}]}");
+    test_str(json, "{\"type_info\":{}, \"results\":[{\"name\":\"Foo\", \"fields\":[{}, {}]}, {\"name\":\"Bar\", \"fields\":[{}, {}]}]}");
     ecs_os_free(json);
 
     ecs_query_fini(q);
