@@ -2464,7 +2464,7 @@ void Validator_validate_first_0_name(void) {
 
     ecs_log_set_level(-4);
     ecs_query_t *q = ecs_query(world, {
-        .terms = {{ .first.name = "0" }}
+        .terms = {{ .first.name = "#0" }}
     });
 
     test_assert(q == NULL);
@@ -2478,7 +2478,7 @@ void Validator_validate_src_0_name(void) {
     ECS_TAG(world, Tag);
 
     ecs_query_t *q = ecs_query(world, {
-        .terms = {{ .first.id = Tag, .src.name = "0" }}
+        .terms = {{ .first.id = Tag, .src.name = "#0" }}
     });
 
     test_assert(q != NULL);
@@ -2499,7 +2499,7 @@ void Validator_validate_second_0_name(void) {
 
     ecs_log_set_level(-4);
     ecs_query_t *q = ecs_query(world, {
-        .terms = {{ .first.id = Tag, .second.name = "0" }}
+        .terms = {{ .first.id = Tag, .second.name = "#0" }}
     });
 
     test_assert(q == NULL);

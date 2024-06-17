@@ -129,8 +129,10 @@ flecs_hashmap_result_t flecs_hashmap_ensure_(
     ecs_vec_t *keys = &bucket->keys;
     ecs_vec_t *values = &bucket->values;
     if (!keys->array) {
-        keys = ecs_vec_init(a, &bucket->keys, key_size, 1);
-        values = ecs_vec_init(a, &bucket->values, value_size, 1);
+        ecs_vec_init(a, &bucket->keys, key_size, 1);
+        ecs_vec_init(a, &bucket->values, value_size, 1);
+        keys = &bucket->keys;
+        values = &bucket->values;
         key_ptr = ecs_vec_append(a, keys, key_size);        
         value_ptr = ecs_vec_append(a, values, value_size);
         ecs_os_memcpy(key_ptr, key, key_size);

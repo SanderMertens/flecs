@@ -156,6 +156,7 @@ const char* flecs_query_parse_term_arg(
     }
 
     bool is_trav_flag = false;
+
     LookAhead_1(EcsTokIdentifier, 
         is_trav_flag = flecs_query_parse_trav_flags(Token(0)) != 0;
     )

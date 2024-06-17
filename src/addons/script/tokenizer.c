@@ -202,8 +202,7 @@ const char* flecs_script_identifier(
     } while (true);
 }
 
-// Number token
-static
+// Number toke static
 bool flecs_script_is_number(
     char c)
 {
