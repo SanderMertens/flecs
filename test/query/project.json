@@ -443,7 +443,8 @@
                 "match_variable_oper",
                 "escaped_identifier",
                 "escaped_identifier_first",
-                "escaped_identifier_second"
+                "escaped_identifier_second",
+                "n_tokens_test"
             ]
         }, {
             "id": "Basic",
