@@ -17,12 +17,13 @@ bool flecs_json_serialize_table_type_info(
     ecs_column_t *columns = table->data.columns;
     int32_t i, column_count = table->column_count;
     
-    if (!column_count) {
-        return false;
-    }
-
     flecs_json_memberl(buf, "type_info");
     flecs_json_object_push(buf);
+
+    if (!column_count) {
+        flecs_json_object_pop(buf);
+        return false;
+    }
 
     for (i = 0; i < column_count; i ++) {
         ecs_column_t *column = &columns[i];

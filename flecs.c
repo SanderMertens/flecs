@@ -39543,8 +39543,6 @@ int flecs_query_query_populate_terms(
         script.token_buffer_size = ecs_os_strlen(expr) * 2 + 1;
         script.token_buffer = flecs_alloc(
             &stage->allocator, script.token_buffer_size);
-        printf("buffer = %llu, len = %d\n", (uint64_t)script.token_buffer,
-            script.token_buffer_size);
 
         if (flecs_terms_parse(&script.pub, &q->terms[term_count], 
             &term_count))
@@ -47000,17 +46998,17 @@ void flecs_json_serialize_type_info(
     const ecs_iter_t *it, 
     ecs_strbuf_t *buf) 
 {
+    flecs_json_memberl(buf, "type_info");
+    flecs_json_object_push(buf);
+
     int32_t field_count = it->field_count;
     if (!field_count) {
-        return;
+        goto done;
     }
 
     if (it->flags & EcsIterNoData) {
-        return;
+        goto done;
     }
-
-    flecs_json_memberl(buf, "type_info");
-    flecs_json_object_push(buf);
 
     for (int i = 0; i < field_count; i ++) {
         flecs_json_next(buf);
@@ -47028,6 +47026,7 @@ void flecs_json_serialize_type_info(
         }
     }
 
+done:
     flecs_json_object_pop(buf);
 }
 
@@ -47977,12 +47976,13 @@ bool flecs_json_serialize_table_type_info(
     ecs_column_t *columns = table->data.columns;
     int32_t i, column_count = table->column_count;
     
-    if (!column_count) {
-        return false;
-    }
-
     flecs_json_memberl(buf, "type_info");
     flecs_json_object_push(buf);
+
+    if (!column_count) {
+        flecs_json_object_pop(buf);
+        return false;
+    }
 
     for (i = 0; i < column_count; i ++) {
         ecs_column_t *column = &columns[i];
@@ -59449,7 +59449,7 @@ error:
             token_stack.count --;\
             break;\
         }\
-        parser->token_cur = old_lh_token_cur;\
+        parser->token_cur = (char*)old_lh_token_cur;\
     }
 
 /* Lookahead N consecutive tokens */
@@ -60451,8 +60451,6 @@ const char* flecs_query_parse_term_arg(
         )
     }
 
-    printf("====>\n");
-
     Parse(
         // Position(src,
         //          ^
@@ -60481,8 +60479,6 @@ const char* flecs_query_parse_term_arg(
             )
     )
 
-    printf("<<< \n");
-
     ParserEnd;
 }
 
@@ -60493,8 +60489,6 @@ const char* flecs_query_parse_term_id(
     const char *pos) 
 {
     ParserBegin;
-
-    printf("PARSE TERM ID '%s'\n", pos);
 
     Parse(
         case EcsTokEq:
@@ -60796,8 +60790,6 @@ int flecs_terms_parse(
                 FLECS_TERM_COUNT_MAX);
             goto error;
         }
-
-        printf(">>> TERM\n");
 
         /* Parse next term */
         ecs_term_t *term = &terms[term_count];
