@@ -10197,13 +10197,13 @@ const char* flecs_path_elem(
         }
 
         if (buffer) {
-            if (pos == size) {
+            if (pos == (size - 1)) {
                 if (size == ECS_NAME_BUFFER_LENGTH) { /* stack buffer */
-                    char *new_buffer = ecs_os_malloc(size * 2);
+                    char *new_buffer = ecs_os_malloc(size * 2 + 1);
                     ecs_os_memcpy(new_buffer, buffer, size);
                     buffer = new_buffer;
                 } else { /* heap buffer */
-                    buffer = ecs_os_realloc(buffer, size * 2);
+                    buffer = ecs_os_realloc(buffer, size * 2 + 1);
                 }
                 size *= 2;
             }
@@ -48260,7 +48260,7 @@ bool flecs_json_serialize_table_inherited(
         return false;
     }
 
-    flecs_json_memberl(buf, "is_a");
+    flecs_json_memberl(buf, "inherited");
     flecs_json_object_push(buf);
     flecs_json_serialize_table_inherited_type(world, table, buf, desc);
     flecs_json_object_pop(buf);

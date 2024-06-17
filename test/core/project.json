@@ -961,8 +961,13 @@
                 "lookup_alias_w_number",
                 "lookup_symbol_path",
                 "lookup_name_escaped_sep",
-                "lookup_path_escaped_sep"
-
+                "lookup_path_escaped_sep",
+                "lookup_name_63_chars",
+                "lookup_name_64_chars",
+                "lookup_name_65_chars",
+                "lookup_path_63_chars",
+                "lookup_path_64_chars",
+                "lookup_path_65_chars"
             ]
         }, {
             "id": "Singleton",

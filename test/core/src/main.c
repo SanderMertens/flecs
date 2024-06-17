@@ -913,6 +913,12 @@ void Lookup_lookup_alias_w_number(void);
 void Lookup_lookup_symbol_path(void);
 void Lookup_lookup_name_escaped_sep(void);
 void Lookup_lookup_path_escaped_sep(void);
+void Lookup_lookup_name_63_chars(void);
+void Lookup_lookup_name_64_chars(void);
+void Lookup_lookup_name_65_chars(void);
+void Lookup_lookup_path_63_chars(void);
+void Lookup_lookup_path_64_chars(void);
+void Lookup_lookup_path_65_chars(void);
 
 // Testsuite 'Singleton'
 void Singleton_add_singleton(void);
@@ -6254,6 +6260,30 @@ bake_test_case Lookup_testcases[] = {
     {
         "lookup_path_escaped_sep",
         Lookup_lookup_path_escaped_sep
+    },
+    {
+        "lookup_name_63_chars",
+        Lookup_lookup_name_63_chars
+    },
+    {
+        "lookup_name_64_chars",
+        Lookup_lookup_name_64_chars
+    },
+    {
+        "lookup_name_65_chars",
+        Lookup_lookup_name_65_chars
+    },
+    {
+        "lookup_path_63_chars",
+        Lookup_lookup_path_63_chars
+    },
+    {
+        "lookup_path_64_chars",
+        Lookup_lookup_path_64_chars
+    },
+    {
+        "lookup_path_65_chars",
+        Lookup_lookup_path_65_chars
     }
 };
 
@@ -13659,7 +13689,7 @@ static bake_test_suite suites[] = {
         "Lookup",
         Lookup_setup,
         NULL,
-        54,
+        60,
         Lookup_testcases
     },
     {

@@ -102,7 +102,7 @@ void SerializeEntityToJson_serialize_w_base(void) {
     };
     char *json = ecs_entity_to_json(world, e, &desc);
     test_assert(json != NULL);
-    test_str(json, "{\"name\":\"Foo\", \"tags\":[\"TagB\"],\"pairs\":{\"IsA\":\"Base\"},\"is_a\":{\"Base\":{\"tags\":[\"TagA\"]}}, \"components\":{\"(Identifier,Name)\":null}}");
+    test_str(json, "{\"name\":\"Foo\", \"tags\":[\"TagB\"],\"pairs\":{\"IsA\":\"Base\"},\"inherited\":{\"Base\":{\"tags\":[\"TagA\"]}}, \"components\":{\"(Identifier,Name)\":null}}");
 
     ecs_os_free(json);
 

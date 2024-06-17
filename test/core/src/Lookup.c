@@ -790,3 +790,96 @@ void Lookup_lookup_path_escaped_sep(void) {
 
     ecs_fini(world);
 }
+
+void Lookup_lookup_name_63_chars(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t e = ecs_entity(world, { 
+        .name = "abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghij" });
+
+    test_assert(e != 0);
+
+    test_assert(ecs_lookup(world, "abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghij") == e);
+
+    ecs_fini(world);
+}
+
+void Lookup_lookup_name_64_chars(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t e = ecs_entity(world, { 
+        .name = "abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijk" });
+
+    test_assert(e != 0);
+
+    test_assert(ecs_lookup(world, "abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijk") == e);
+
+    ecs_fini(world);
+}
+
+void Lookup_lookup_name_65_chars(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t e = ecs_entity(world, { 
+        .name = "abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijkl" });
+
+    test_assert(e != 0);
+
+    test_assert(ecs_lookup(world, "abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijkl") == e);
+
+    ecs_fini(world);
+}
+
+void Lookup_lookup_path_63_chars(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t p = ecs_entity(world, { 
+        .name = "Abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghij" });
+
+    ecs_entity_t e = ecs_entity(world, { 
+        .name = "abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghij" });
+    ecs_add_pair(world, e, EcsChildOf, p);
+
+    test_assert(e != 0);
+
+    test_assert(ecs_lookup(world, "Abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghij."
+        "abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghij") == e);
+
+    ecs_fini(world);
+}
+
+void Lookup_lookup_path_64_chars(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t p = ecs_entity(world, { 
+        .name = "Abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijk" });
+
+    ecs_entity_t e = ecs_entity(world, { 
+        .name = "abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijk" });
+    ecs_add_pair(world, e, EcsChildOf, p);
+
+    test_assert(e != 0);
+
+    test_assert(ecs_lookup(world, "Abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijk."
+        "abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijk") == e);
+
+    ecs_fini(world);
+}
+
+void Lookup_lookup_path_65_chars(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t p = ecs_entity(world, { 
+        .name = "Abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijkl" });
+
+    ecs_entity_t e = ecs_entity(world, { 
+        .name = "abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijkl" });
+    ecs_add_pair(world, e, EcsChildOf, p);
+
+    test_assert(e != 0);
+
+    test_assert(ecs_lookup(world, "Abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijkl."
+        "abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijkl") == e);
+
+    ecs_fini(world);
+}
