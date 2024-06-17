@@ -340,6 +340,8 @@ ecs_iter_t ecs_query_iter(
     const ecs_world_t *world,
     const ecs_query_t *q)
 {
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(q != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_run_aperiodic(q->world, EcsAperiodicEmptyTables);
 
     /* Ok, only for stats */

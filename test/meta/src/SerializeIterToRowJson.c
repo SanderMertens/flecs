@@ -109,7 +109,7 @@ void SerializeIterToRowJson_serialize_this_w_1_tag_no_name(void) {
     char *json = ecs_iter_to_json(&it, NULL);
     test_assert(json != NULL);
 
-    char* expect_fmt = "{\"results\":[{\"parent\":\"p1\", \"name\":\"%u\", \"fields\":[{}]}, {\"parent\":\"p1\", \"name\":\"%u\", \"fields\":[{}]}, {\"parent\":\"p1\", \"name\":\"%u\", \"fields\":[{}]}]}";
+    char* expect_fmt = "{\"results\":[{\"parent\":\"p1\", \"name\":\"#%u\", \"fields\":[{}]}, {\"parent\":\"p1\", \"name\":\"#%u\", \"fields\":[{}]}, {\"parent\":\"p1\", \"name\":\"#%u\", \"fields\":[{}]}]}";
     char *expect = flecs_asprintf(expect_fmt, 
         (uint32_t)e1, 
         (uint32_t)e2, 
@@ -2558,7 +2558,7 @@ void SerializeIterToRowJson_serialize_w_field_info_pair_w_0_target(void) {
     });
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "Position, ?Mass, (ChildOf, 0)"
+        .expr = "Position, ?Mass, (ChildOf, #0)"
     });
 
     test_assert(q != NULL);
@@ -2579,7 +2579,7 @@ void SerializeIterToRowJson_serialize_w_field_info_pair_w_0_target(void) {
     });
     test_assert(json != NULL);
 
-    char* expect = "{\"field_info\":[{\"id\":\"Position\", \"type\":\"Position\", \"symbol\":\"Position\", \"schema\":{\"x\":[\"int\"], \"y\":[\"int\"]}}, {\"id\":\"Mass\", \"optional\":true, \"type\":\"Mass\", \"symbol\":\"Mass\", \"schema\":{\"value\":[\"int\"]}}, {\"id\":\"(ChildOf,0)\", \"exclusive\":true}], \"results\":[{\"name\":\"e1\", \"is_set\":[true, false, true], \"fields\":[{\"data\":{\"x\":10, \"y\":20}}, {}, {}]}, {\"name\":\"e2\", \"is_set\":[true, false, true], \"fields\":[{\"data\":{\"x\":20, \"y\":30}}, {}, {}]}, {\"name\":\"e3\", \"is_set\":[true, true, true], \"fields\":[{\"data\":{\"x\":30, \"y\":40}}, {\"data\":{\"value\":100}}, {}]}]}";
+    char* expect = "{\"field_info\":[{\"id\":\"Position\", \"type\":\"Position\", \"symbol\":\"Position\", \"schema\":{\"x\":[\"int\"], \"y\":[\"int\"]}}, {\"id\":\"Mass\", \"optional\":true, \"type\":\"Mass\", \"symbol\":\"Mass\", \"schema\":{\"value\":[\"int\"]}}, {\"id\":\"(ChildOf,#0)\", \"exclusive\":true}], \"results\":[{\"name\":\"e1\", \"is_set\":[true, false, true], \"fields\":[{\"data\":{\"x\":10, \"y\":20}}, {}, {}]}, {\"name\":\"e2\", \"is_set\":[true, false, true], \"fields\":[{\"data\":{\"x\":20, \"y\":30}}, {}, {}]}, {\"name\":\"e3\", \"is_set\":[true, true, true], \"fields\":[{\"data\":{\"x\":30, \"y\":40}}, {\"data\":{\"value\":100}}, {}]}]}";
     test_str(json, expect);
 
     ecs_os_free(json);

@@ -55,6 +55,7 @@ bool flecs_path_append(
     if (name) {
         ecs_strbuf_appendstrn(buf, name, name_len);
     } else {
+        ecs_strbuf_appendch(buf, '#');
         ecs_strbuf_appendint(buf, flecs_uto(int64_t, (uint32_t)child));
     }
 
@@ -65,28 +66,16 @@ bool flecs_name_is_id(
     const char *name)
 {
     ecs_assert(name != NULL, ECS_INTERNAL_ERROR, NULL);
-    
-    if (!isdigit(name[0])) {
-        return false;
-    }
-
-    ecs_size_t i, length = ecs_os_strlen(name);
-    for (i = 1; i < length; i ++) {
-        char ch = name[i];
-
-        if (!isdigit(ch)) {
-            break;
-        }
-    }
-
-    return i >= length;
+    return name[0] == '#';
 }
 
 ecs_entity_t flecs_name_to_id(
     const ecs_world_t *world,
     const char *name)
 {
-    int64_t result = atoll(name);
+    ecs_assert(name != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(name[0] == '#', ECS_INVALID_PARAMETER, NULL);
+    int64_t result = atoll(name + 1);
     ecs_assert(result >= 0, ECS_INTERNAL_ERROR, NULL);
     ecs_entity_t alive = ecs_get_alive(world, (ecs_entity_t)result);
     if (alive) {

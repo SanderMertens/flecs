@@ -2126,7 +2126,7 @@ void Expr_interpolate_string_w_entity_var_0(void) {
 
     char *result = ecs_script_string_interpolate(world, "$foo", vars);
     test_assert(result != NULL);
-    test_str(result, "0");
+    test_str(result, "#0");
     ecs_os_free(result);
 
     ecs_script_vars_fini(vars);

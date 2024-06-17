@@ -633,7 +633,7 @@ void flecs_term_to_buf(
         if (!second_set) {
             ecs_strbuf_appendlit(buf, "()");
         } else {
-            ecs_strbuf_appendlit(buf, "(0,");
+            ecs_strbuf_appendlit(buf, "(#0,");
             flecs_query_str_add_id(world, buf, term, &term->second, false);
             ecs_strbuf_appendlit(buf, ")");
         }

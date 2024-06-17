@@ -489,7 +489,7 @@ const char* flecs_json_entity_label(
 {
     const char *lbl = NULL;
     if (!e) {
-        return "0";
+        return "#0";
     }
 #ifdef FLECS_DOC
     lbl = ecs_doc_get_name(world, e);
@@ -508,6 +508,7 @@ void flecs_json_label(
     if (lbl) {
         flecs_json_string_escape(buf, lbl);
     } else {
+        ecs_strbuf_appendch(buf, '#');
         ecs_strbuf_appendint(buf, (uint32_t)e);
     }
 }

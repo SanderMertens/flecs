@@ -178,7 +178,9 @@ void Parser_pair_explicit_subject_this_by_var_name(void);
 void Parser_pair_explicit_subject_wildcard_pred(void);
 void Parser_pair_explicit_subject_wildcard_subj(void);
 void Parser_pair_explicit_subject_wildcard_obj(void);
-void Parser_pair_implicit_subject_0_object(void);
+void Parser_pair_implicit_subject_0_name_object(void);
+void Parser_pair_implicit_subject_0_name_not_found_object(void);
+void Parser_pair_implicit_subject_0_digit_object(void);
 void Parser_pair_explicit_subject_0_object(void);
 void Parser_pair_explicit_subject_0(void);
 void Parser_in_component_implicit_subject(void);
@@ -249,6 +251,11 @@ void Parser_2_or_w_not_1st_arg(void);
 void Parser_2_or_w_not_2nd_arg(void);
 void Parser_2_or_w_optional_1st_arg(void);
 void Parser_2_or_w_optional_2nd_arg(void);
+void Parser_1_entity_id_pred_implicit_subj(void);
+void Parser_1_entity_id_pred_no_subj(void);
+void Parser_1_entity_id_pred_explicit_subj(void);
+void Parser_1_entity_id_pair_implicit_subj(void);
+void Parser_1_entity_id_pair_explicit_subj(void);
 void Parser_1_digit_pred_implicit_subj(void);
 void Parser_1_digit_pred_no_subj(void);
 void Parser_1_digit_pred_explicit_subj(void);
@@ -2657,8 +2664,16 @@ bake_test_case Parser_testcases[] = {
         Parser_pair_explicit_subject_wildcard_obj
     },
     {
-        "pair_implicit_subject_0_object",
-        Parser_pair_implicit_subject_0_object
+        "pair_implicit_subject_0_name_object",
+        Parser_pair_implicit_subject_0_name_object
+    },
+    {
+        "pair_implicit_subject_0_name_not_found_object",
+        Parser_pair_implicit_subject_0_name_not_found_object
+    },
+    {
+        "pair_implicit_subject_0_digit_object",
+        Parser_pair_implicit_subject_0_digit_object
     },
     {
         "pair_explicit_subject_0_object",
@@ -2939,6 +2954,26 @@ bake_test_case Parser_testcases[] = {
     {
         "2_or_w_optional_2nd_arg",
         Parser_2_or_w_optional_2nd_arg
+    },
+    {
+        "1_entity_id_pred_implicit_subj",
+        Parser_1_entity_id_pred_implicit_subj
+    },
+    {
+        "1_entity_id_pred_no_subj",
+        Parser_1_entity_id_pred_no_subj
+    },
+    {
+        "1_entity_id_pred_explicit_subj",
+        Parser_1_entity_id_pred_explicit_subj
+    },
+    {
+        "1_entity_id_pair_implicit_subj",
+        Parser_1_entity_id_pair_implicit_subj
+    },
+    {
+        "1_entity_id_pair_explicit_subj",
+        Parser_1_entity_id_pair_explicit_subj
     },
     {
         "1_digit_pred_implicit_subj",
@@ -9785,7 +9820,7 @@ static bake_test_suite suites[] = {
         "Parser",
         NULL,
         NULL,
-        292,
+        299,
         Parser_testcases
     },
     {
