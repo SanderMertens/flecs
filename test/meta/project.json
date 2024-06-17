@@ -625,6 +625,8 @@
                 "serialize_w_type_info_unit",
                 "serialize_w_type_info_unit_quantity",
                 "serialize_w_type_info_unit_over",
+                "serialize_w_type_info_no_types",
+                "serialize_w_type_info_no_components",
                 "serialize_w_label",
                 "serialize_w_label_no_name",
                 "serialize_w_brief",
