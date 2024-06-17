@@ -354,7 +354,7 @@ int flecs_json_ser_type_op(
     case EcsOpEntity: {
         ecs_entity_t e = *(const ecs_entity_t*)vptr;
         if (!e) {
-            ecs_strbuf_appendch(str, '0');
+            ecs_strbuf_appendlit(str, "#0");
         } else {
             flecs_json_path(str, world, e);
         }
@@ -363,7 +363,7 @@ int flecs_json_ser_type_op(
     case EcsOpId: {
         ecs_id_t id = *(const ecs_id_t*)vptr;
         if (!id) {
-            ecs_strbuf_appendch(str, '0');
+            ecs_strbuf_appendlit(str, "#0");
         } else {
             flecs_json_id(str, world, id);
         }

@@ -49,7 +49,7 @@ void Type_type_of_2_tostr_no_id(void) {
     
     char *str = ecs_type_str(world, &t);
     
-    test_str(str, "100, 200");
+    test_str(str, "#100, #200");
 
     ecs_os_free(str);
 
@@ -136,7 +136,7 @@ void Type_type_to_expr_pair(void) {
     
     char *str = ecs_type_str(world, &t);
 
-    test_str(str, "(100,200)");
+    test_str(str, "(#100,#200)");
 
     ecs_os_free(str);
 

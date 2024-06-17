@@ -16,20 +16,6 @@ int ecs_entity_to_json_buf(
         return -1;
     }
 
-    /* Initialize iterator parameters */
-    ecs_iter_to_json_desc_t iter_desc = {
-        .serialize_table = true,
-        .serialize_entity_ids = desc->serialize_entity_id,
-        .serialize_values = desc->serialize_values,
-        .serialize_doc = desc->serialize_doc,
-        .serialize_matches = desc->serialize_matches,
-        .serialize_refs = desc->serialize_refs,
-        .serialize_alerts = desc->serialize_alerts,
-        .serialize_full_paths = desc->serialize_full_paths,
-        .serialize_inherited = desc->serialize_inherited,
-        .serialize_type_info = desc->serialize_type_info
-    };
-
     /* Cache id record for flecs.doc ids */
     ecs_json_ser_ctx_t ser_ctx;
     ecs_os_zeromem(&ser_ctx);
@@ -40,14 +26,19 @@ int ecs_entity_to_json_buf(
         ecs_pair_t(EcsDocDescription, EcsDocColor));
 #endif
 
-    /* Create iterator that's populated just with entity */
     ecs_record_t *r = ecs_record_find(world, entity);
     if (!r || !r->table) {
         flecs_json_object_push(buf);
+        flecs_json_member(buf, "name");
+        ecs_strbuf_appendch(buf, '"');
+        ecs_strbuf_appendch(buf, '#');
+        ecs_strbuf_appendint(buf, (uint32_t)entity);
+        ecs_strbuf_appendch(buf, '"');
         flecs_json_object_pop(buf);
         return 0;
     }
 
+    /* Create iterator that's populated just with entity */
     int32_t row = ECS_RECORD_TO_ROW(r->row);
     ecs_iter_t it = {
         .world = ECS_CONST_CAST(ecs_world_t*, world),
@@ -57,6 +48,20 @@ int ecs_entity_to_json_buf(
         .count = 1,
         .entities = &flecs_table_entities_array(r->table)[row],
         .field_count = 0
+    };
+
+    /* Initialize iterator parameters */
+    ecs_iter_to_json_desc_t iter_desc = {
+        .serialize_table = true,
+        .serialize_entity_ids =   desc ? desc->serialize_entity_id : false,
+        .serialize_values =       desc ? desc->serialize_values : false,
+        .serialize_doc =          desc ? desc->serialize_doc : false,
+        .serialize_matches =      desc ? desc->serialize_matches : false,
+        .serialize_refs =         desc ? desc->serialize_refs : 0,
+        .serialize_alerts =       desc ? desc->serialize_alerts : false,
+        .serialize_full_paths =   desc ? desc->serialize_full_paths : false,
+        .serialize_inherited =    desc ? desc->serialize_inherited : false,
+        .serialize_type_info =    desc ? desc->serialize_type_info : false
     };
 
     if (flecs_json_serialize_iter_result(

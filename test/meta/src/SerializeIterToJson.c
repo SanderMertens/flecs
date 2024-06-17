@@ -1304,7 +1304,7 @@ void SerializeIterToJson_serialize_anonymous(void) {
     test_assert(json != NULL);
 
     char *expect = flecs_asprintf(
-        "{\"results\":[{\"name\":\"5000\", \"fields\":[{}]}, {\"name\":\"10000\", \"fields\":[{}]}, {\"name\":\"100000\", \"fields\":[{}]}, {\"name\":\"1000000\", \"fields\":[{}]}]}");
+        "{\"results\":[{\"name\":\"#5000\", \"fields\":[{}]}, {\"name\":\"#10000\", \"fields\":[{}]}, {\"name\":\"#100000\", \"fields\":[{}]}, {\"name\":\"#1000000\", \"fields\":[{}]}]}");
     test_str(json, expect);
 
     ecs_os_free(json);
@@ -1342,7 +1342,7 @@ void SerializeIterToJson_serialize_anonymous_ids(void) {
     test_assert(json != NULL);
 
     char *expect = flecs_asprintf(
-        "{\"results\":[{\"name\":\"5000\", \"id\":5000, \"fields\":[{}]}, {\"name\":\"10000\", \"id\":10000, \"fields\":[{}]}, {\"name\":\"100000\", \"id\":100000, \"fields\":[{}]}, {\"name\":\"1000000\", \"id\":1000000, \"fields\":[{}]}]}");
+        "{\"results\":[{\"name\":\"#5000\", \"id\":5000, \"fields\":[{}]}, {\"name\":\"#10000\", \"id\":10000, \"fields\":[{}]}, {\"name\":\"#100000\", \"id\":100000, \"fields\":[{}]}, {\"name\":\"#1000000\", \"id\":1000000, \"fields\":[{}]}]}");
     test_str(json, expect);
 
     ecs_os_free(json);
@@ -1371,7 +1371,7 @@ void SerializeIterToJson_serialize_variable_anonymous(void) {
     test_assert(json != NULL);
 
     char *expect = flecs_asprintf(
-        "{\"results\":[{\"vars\":{\"Entity\":10000}, \"fields\":[{\"source\":\"10000\"}]}]}",
+        "{\"results\":[{\"vars\":{\"Entity\":#10000}, \"fields\":[{\"source\":\"#10000\"}]}]}",
         (uint32_t)e);
     test_str(json, expect);
 
@@ -1388,7 +1388,7 @@ void SerializeIterToJson_serialize_anonymous_tag(void) {
 
     ecs_entity_t tag = 10000;
     ecs_make_alive(world, tag);
-    ecs_query_t *q = ecs_query(world, { .expr = "10000" });
+    ecs_query_t *q = ecs_query(world, { .expr = "#10000" });
 
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
     ecs_add_id(world, e, tag);
@@ -1422,7 +1422,7 @@ void SerializeIterToJson_serialize_anonymous_component(void) {
         }
     });
 
-    ecs_query_t *q = ecs_query(world, { .expr = "10000" });
+    ecs_query_t *q = ecs_query(world, { .expr = "#10000" });
 
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
     int32_t *ptr = ecs_ensure_id(world, e, tag);
@@ -1436,7 +1436,7 @@ void SerializeIterToJson_serialize_anonymous_component(void) {
     test_assert(json != NULL);
 
     char *expect = flecs_asprintf(
-        "{\"type_info\":{\"10000\":{\"value\":[\"int\"]}}, \"results\":[{\"name\":\"e\", \"fields\":[{\"data\":{\"value\":10}}]}]}");
+        "{\"type_info\":{\"#10000\":{\"value\":[\"int\"]}}, \"results\":[{\"name\":\"e\", \"fields\":[{\"data\":{\"value\":10}}]}]}");
     test_str(json, expect);
 
     ecs_os_free(json);
@@ -1454,7 +1454,7 @@ void SerializeIterToJson_serialize_anonymous_pair(void) {
     ecs_make_alive(world, rel);
     ecs_entity_t tgt = 20000;
     ecs_make_alive(world, tgt);
-    ecs_query_t *q = ecs_query(world, { .expr = "(10000, *)" });
+    ecs_query_t *q = ecs_query(world, { .expr = "(#10000, *)" });
 
     ecs_entity_t e = ecs_entity(world, { .name = "e" });
     ecs_add_id(world, e, ecs_pair(rel, tgt));
@@ -1465,7 +1465,7 @@ void SerializeIterToJson_serialize_anonymous_pair(void) {
     test_assert(json != NULL);
 
     char *expect = flecs_asprintf(
-        "{\"results\":[{\"name\":\"e\", \"fields\":[{\"id\":[\"10000\",\"20000\"]}]}]}");
+        "{\"results\":[{\"name\":\"e\", \"fields\":[{\"id\":[\"#10000\",\"#20000\"]}]}]}");
     test_str(json, expect);
 
     ecs_os_free(json);
@@ -2105,7 +2105,7 @@ void SerializeIterToJson_serialize_labels_w_offset(void) {
     char *json = ecs_iter_to_json(&it, &desc);
 
     char *expect = flecs_asprintf(
-        "{\"results\":[{\"name\":\"%u\", \"doc\":{\"label\":\"e1\"}, \"is_set\":[true, false], \"fields\":[{}, {}]}, {\"name\":\"%u\", \"doc\":{\"label\":\"e2\"}, \"is_set\":[true, false], \"fields\":[{}, {}]}]}",
+        "{\"results\":[{\"name\":\"#%u\", \"doc\":{\"label\":\"e1\"}, \"is_set\":[true, false], \"fields\":[{}, {}]}, {\"name\":\"#%u\", \"doc\":{\"label\":\"e2\"}, \"is_set\":[true, false], \"fields\":[{}, {}]}]}",
         (uint32_t)e1, (uint32_t)e2);
 
     test_str(json, expect);
@@ -2139,9 +2139,8 @@ void SerializeIterToJson_serialize_colors_w_offset(void) {
     char *json = ecs_iter_to_json(&it, &desc);
 
     char *expect = flecs_asprintf(
-        "{\"results\":[{\"name\":\"511\", \"doc\":{\"label\":\"511\", \"color\":\"e1\"}, \"is_set\":[true, false], \"fields\":[{}, {}]}, {\"name\":\"512\", \"doc\":{\"label\":\"512\", \"color\":\"e2\"}, \"is_set\":[true, false], \"fields\":[{}, {}]}]}",
-        (uint32_t)e1, (uint32_t)e2);
-
+        "{\"results\":[{\"name\":\"#%u\", \"doc\":{\"label\":\"#%u\", \"color\":\"e1\"}, \"is_set\":[true, false], \"fields\":[{}, {}]}, {\"name\":\"#%u\", \"doc\":{\"label\":\"#%u\", \"color\":\"e2\"}, \"is_set\":[true, false], \"fields\":[{}, {}]}]}",
+        (uint32_t)e1, (uint32_t)e1, (uint32_t)e2, (uint32_t)e2);
 
     test_str(json, expect);
 
@@ -2171,7 +2170,7 @@ void SerializeIterToJson_serialize_anonymous_entities_w_offset(void) {
     char *json = ecs_iter_to_json(&it, &desc);
 
     char *expect = flecs_asprintf(
-        "{\"results\":[{\"name\":\"511\", \"is_set\":[true, false], \"fields\":[{}, {}]}, {\"name\":\"512\", \"is_set\":[true, false], \"fields\":[{}, {}]}]}",
+        "{\"results\":[{\"name\":\"#%u\", \"is_set\":[true, false], \"fields\":[{}, {}]}, {\"name\":\"#%u\", \"is_set\":[true, false], \"fields\":[{}, {}]}]}",
             (uint32_t)e1, (uint32_t)e2);
 
     test_str(json, expect);

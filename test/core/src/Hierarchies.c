@@ -357,7 +357,8 @@ void Hierarchies_path_prefix_rel_no_match(void) {
 void Hierarchies_path_w_number(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t e = ecs_new_w_pair(world, EcsChildOf, 1000);
+    ecs_entity_t p = ecs_set_name(world, 0, "1000");;
+    ecs_entity_t e = ecs_new_w_pair(world, EcsChildOf, p);
     ecs_set_name(world, e, "Foo");
 
     char *path = ecs_get_fullpath(world, e);
@@ -367,6 +368,18 @@ void Hierarchies_path_w_number(void) {
     ecs_fini(world);
 }
 
+void Hierarchies_path_w_entity_id(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t e = ecs_new_w_pair(world, EcsChildOf, 1000);
+    ecs_set_name(world, e, "Foo");
+
+    char *path = ecs_get_fullpath(world, e);
+    test_str(path, "#1000.Foo");
+    ecs_os_free(path);
+
+    ecs_fini(world);
+}
 
 void Hierarchies_lookup_depth_0(void) {
     ecs_world_t *world = ecs_mini();
@@ -498,10 +511,28 @@ void Hierarchies_lookup_number(void) {
     ECS_ENTITY(world, Child, (ChildOf, Parent));
     ECS_ENTITY(world, GrandChild, (ChildOf, Parent.Child));
 
-    ecs_entity_t e = ecs_new_w_pair(world, EcsChildOf, 1000);
+    ecs_entity_t p = ecs_set_name(world, 0, "1000");
+    ecs_entity_t e = ecs_new_w_pair(world, EcsChildOf, p);
     ecs_set_name(world, e, "Foo");
 
     ecs_entity_t c = ecs_lookup_path(world, 0, "1000.Foo");
+    test_assert(e == c);
+
+    ecs_fini(world);
+}
+
+void Hierarchies_lookup_entity_id(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, Parent, 0);
+    ECS_ENTITY(world, Parent2, 0);
+    ECS_ENTITY(world, Child, (ChildOf, Parent));
+    ECS_ENTITY(world, GrandChild, (ChildOf, Parent.Child));
+
+    ecs_entity_t e = ecs_new_w_pair(world, EcsChildOf, 1000);
+    ecs_set_name(world, e, "Foo");
+
+    ecs_entity_t c = ecs_lookup_path(world, 0, "#1000.Foo");
     test_assert(e == c);
 
     ecs_fini(world);

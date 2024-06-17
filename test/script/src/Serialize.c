@@ -536,7 +536,7 @@ void Serialize_entity(void) {
     ecs_entity_t value = 0;
     char *expr = ecs_ptr_to_expr(world, ecs_id(ecs_entity_t), &value);
     test_assert(expr != NULL);
-    test_str(expr, "0");
+    test_str(expr, "#0");
     ecs_os_free(expr);
     }
 
@@ -558,7 +558,7 @@ void Serialize_entity_10k(void) {
     ecs_entity_t value = 10000;
     char *expr = ecs_ptr_to_expr(world, ecs_id(ecs_entity_t), &value);
     test_assert(expr != NULL);
-    test_str(expr, "10000");
+    test_str(expr, "#10000");
     ecs_os_free(expr);
     }
 
@@ -572,7 +572,7 @@ void Serialize_id(void) {
     ecs_id_t value = 0;
     char *expr = ecs_ptr_to_expr(world, ecs_id(ecs_id_t), &value);
     test_assert(expr != NULL);
-    test_str(expr, "0");
+    test_str(expr, "#0");
     ecs_os_free(expr);
     }
 

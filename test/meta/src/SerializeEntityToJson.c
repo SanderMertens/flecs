@@ -8,11 +8,7 @@ void SerializeEntityToJson_serialize_empty(void) {
 
     ecs_entity_t e = ecs_new(world);
 
-    char *str = ecs_os_strdup("{\"path\":\"446\", \"ids\":[]}");
-    ecs_os_snprintf(
-        str, ecs_os_strlen(str) + 1, 
-        "{\"path\":\"%u\", \"ids\":[]}", (uint32_t)e);
-
+    char *str = flecs_asprintf("{\"name\":\"510\"}", (uint32_t)e);
     char *json = ecs_entity_to_json(world, e, NULL);
     test_assert(json != NULL);
     test_str(json, str);

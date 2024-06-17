@@ -966,7 +966,7 @@ int flecs_term_finalize(
 bool flecs_identifier_is_0(
     const char *id)
 {
-    return id[0] == '0' && !id[1];
+    return id[0] == '#' && id[1] == '0' && !id[2];
 }
 
 bool ecs_term_ref_is_set(
