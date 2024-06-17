@@ -147,6 +147,7 @@
 #define LookAhead(...)\
     const char *lookahead;\
     ecs_script_token_t lookahead_token;\
+    const char *old_lh_token_cur = parser->token_cur;\
     if ((lookahead = flecs_script_token(parser, pos, &lookahead_token, true))) {\
         token_stack.tokens[token_stack.count ++] = lookahead_token;\
         switch(lookahead_token.kind) {\
@@ -155,6 +156,7 @@
             token_stack.count --;\
             break;\
         }\
+        parser->token_cur = (char*)old_lh_token_cur;\
     }
 
 /* Lookahead N consecutive tokens */

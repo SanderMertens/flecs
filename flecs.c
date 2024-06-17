@@ -33907,8 +33907,10 @@ flecs_hashmap_result_t flecs_hashmap_ensure_(
     ecs_vec_t *keys = &bucket->keys;
     ecs_vec_t *values = &bucket->values;
     if (!keys->array) {
-        keys = ecs_vec_init(a, &bucket->keys, key_size, 1);
-        values = ecs_vec_init(a, &bucket->values, value_size, 1);
+        ecs_vec_init(a, &bucket->keys, key_size, 1);
+        ecs_vec_init(a, &bucket->values, value_size, 1);
+        keys = &bucket->keys;
+        values = &bucket->values;
         key_ptr = ecs_vec_append(a, keys, key_size);        
         value_ptr = ecs_vec_append(a, values, value_size);
         ecs_os_memcpy(key_ptr, key, key_size);
@@ -36463,7 +36465,7 @@ ecs_map_iter_t flecs_switch_targets(
  */
 
 
-ecs_vec_t* ecs_vec_init(
+void ecs_vec_init(
     ecs_allocator_t *allocator,
     ecs_vec_t *v,
     ecs_size_t size,
@@ -36483,7 +36485,6 @@ ecs_vec_t* ecs_vec_init(
 #ifdef FLECS_SANITIZE
     v->elem_size = size;
 #endif
-    return v;
 }
 
 void ecs_vec_init_if(
@@ -39541,7 +39542,9 @@ int flecs_query_query_populate_terms(
         /* Allocate buffer that's large enough to tokenize the query string */
         script.token_buffer_size = ecs_os_strlen(expr) * 2 + 1;
         script.token_buffer = flecs_alloc(
-            &stage->allocator, script.token_buffer_size * 2);
+            &stage->allocator, script.token_buffer_size);
+        printf("buffer = %llu, len = %d\n", (uint64_t)script.token_buffer,
+            script.token_buffer_size);
 
         if (flecs_terms_parse(&script.pub, &q->terms[term_count], 
             &term_count))
@@ -59437,6 +59440,7 @@ error:
 #define LookAhead(...)\
     const char *lookahead;\
     ecs_script_token_t lookahead_token;\
+    const char *old_lh_token_cur = parser->token_cur;\
     if ((lookahead = flecs_script_token(parser, pos, &lookahead_token, true))) {\
         token_stack.tokens[token_stack.count ++] = lookahead_token;\
         switch(lookahead_token.kind) {\
@@ -59445,6 +59449,7 @@ error:
             token_stack.count --;\
             break;\
         }\
+        parser->token_cur = old_lh_token_cur;\
     }
 
 /* Lookahead N consecutive tokens */
@@ -60400,6 +60405,7 @@ const char* flecs_query_parse_term_arg(
     }
 
     bool is_trav_flag = false;
+
     LookAhead_1(EcsTokIdentifier, 
         is_trav_flag = flecs_query_parse_trav_flags(Token(0)) != 0;
     )
@@ -60445,6 +60451,8 @@ const char* flecs_query_parse_term_arg(
         )
     }
 
+    printf("====>\n");
+
     Parse(
         // Position(src,
         //          ^
@@ -60473,6 +60481,8 @@ const char* flecs_query_parse_term_arg(
             )
     )
 
+    printf("<<< \n");
+
     ParserEnd;
 }
 
@@ -60483,6 +60493,8 @@ const char* flecs_query_parse_term_id(
     const char *pos) 
 {
     ParserBegin;
+
+    printf("PARSE TERM ID '%s'\n", pos);
 
     Parse(
         case EcsTokEq:
@@ -60784,6 +60796,8 @@ int flecs_terms_parse(
                 FLECS_TERM_COUNT_MAX);
             goto error;
         }
+
+        printf(">>> TERM\n");
 
         /* Parse next term */
         ecs_term_t *term = &terms[term_count];
@@ -62330,8 +62344,7 @@ const char* flecs_script_identifier(
     } while (true);
 }
 
-// Number token
-static
+// Number toke static
 bool flecs_script_is_number(
     char c)
 {
