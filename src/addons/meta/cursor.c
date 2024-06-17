@@ -1268,7 +1268,7 @@ int flecs_meta_cursor_lookup(
     const char *value,
     ecs_entity_t *out)
 {
-    if (ecs_os_strcmp(value, "0")) {
+    if (ecs_os_strcmp(value, "#0")) {
         if (cursor->lookup_action) {
             *out = cursor->lookup_action(
                 cursor->world, value,

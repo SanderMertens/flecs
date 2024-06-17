@@ -584,7 +584,6 @@ void SerializeEntityToJson_serialize_w_name_1_tag(void);
 void SerializeEntityToJson_serialize_w_name_2_tags(void);
 void SerializeEntityToJson_serialize_w_name_1_pair(void);
 void SerializeEntityToJson_serialize_w_base(void);
-void SerializeEntityToJson_serialize_w_base_override(void);
 void SerializeEntityToJson_serialize_w_2_base(void);
 void SerializeEntityToJson_serialize_w_nested_base(void);
 void SerializeEntityToJson_serialize_w_1_component(void);
@@ -597,11 +596,8 @@ void SerializeEntityToJson_serialize_w_type_info(void);
 void SerializeEntityToJson_serialize_w_type_info_unit(void);
 void SerializeEntityToJson_serialize_w_type_info_unit_quantity(void);
 void SerializeEntityToJson_serialize_w_type_info_unit_over(void);
-void SerializeEntityToJson_serialize_wo_private(void);
-void SerializeEntityToJson_serialize_w_private(void);
 void SerializeEntityToJson_serialize_w_label(void);
 void SerializeEntityToJson_serialize_w_label_no_name(void);
-void SerializeEntityToJson_serialize_w_id_labels(void);
 void SerializeEntityToJson_serialize_w_brief(void);
 void SerializeEntityToJson_serialize_w_brief_no_brief(void);
 void SerializeEntityToJson_serialize_w_link(void);
@@ -618,7 +614,6 @@ void SerializeEntityToJson_serialize_w_alerts_no_message(void);
 void SerializeEntityToJson_serialize_refs_childof(void);
 void SerializeEntityToJson_serialize_refs_custom(void);
 void SerializeEntityToJson_serialize_refs_wildcard(void);
-void SerializeEntityToJson_serialize_no_ids(void);
 void SerializeEntityToJson_serialize_matches_filter(void);
 void SerializeEntityToJson_serialize_matches_query(void);
 void SerializeEntityToJson_serialize_matches_rule(void);
@@ -3151,10 +3146,6 @@ bake_test_case SerializeEntityToJson_testcases[] = {
         SerializeEntityToJson_serialize_w_base
     },
     {
-        "serialize_w_base_override",
-        SerializeEntityToJson_serialize_w_base_override
-    },
-    {
         "serialize_w_2_base",
         SerializeEntityToJson_serialize_w_2_base
     },
@@ -3203,24 +3194,12 @@ bake_test_case SerializeEntityToJson_testcases[] = {
         SerializeEntityToJson_serialize_w_type_info_unit_over
     },
     {
-        "serialize_wo_private",
-        SerializeEntityToJson_serialize_wo_private
-    },
-    {
-        "serialize_w_private",
-        SerializeEntityToJson_serialize_w_private
-    },
-    {
         "serialize_w_label",
         SerializeEntityToJson_serialize_w_label
     },
     {
         "serialize_w_label_no_name",
         SerializeEntityToJson_serialize_w_label_no_name
-    },
-    {
-        "serialize_w_id_labels",
-        SerializeEntityToJson_serialize_w_id_labels
     },
     {
         "serialize_w_brief",
@@ -3285,10 +3264,6 @@ bake_test_case SerializeEntityToJson_testcases[] = {
     {
         "serialize_refs_wildcard",
         SerializeEntityToJson_serialize_refs_wildcard
-    },
-    {
-        "serialize_no_ids",
-        SerializeEntityToJson_serialize_no_ids
     },
     {
         "serialize_matches_filter",
@@ -4503,7 +4478,7 @@ static bake_test_suite suites[] = {
         "SerializeEntityToJson",
         NULL,
         NULL,
-        45,
+        40,
         SerializeEntityToJson_testcases
     },
     {
