@@ -7,6 +7,55 @@
 
 #ifdef FLECS_JSON
 
+static
+bool flecs_json_skip_variable(
+    const char *name)
+{
+    if (!name || name[0] == '_' || !ecs_os_strcmp(name, "this")) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
+bool flecs_json_serialize_vars(
+    const ecs_world_t *world,
+    const ecs_iter_t *it,
+    ecs_strbuf_t *buf,
+    const ecs_iter_to_json_desc_t *desc)
+{
+    char **variable_names = it->variable_names;
+    int32_t var_count = it->variable_count;
+    int32_t actual_count = 0;
+
+    for (int i = 1; i < var_count; i ++) {
+        const char *var_name = variable_names[i];
+        if (flecs_json_skip_variable(var_name)) continue;
+
+        ecs_entity_t var = it->variables[i].entity;
+        if (!var) {
+            /* Can't happen, but not the place of the serializer to complain */
+            continue;
+        }
+
+        if (!actual_count) {
+            flecs_json_memberl(buf, "vars");
+            flecs_json_object_push(buf);
+            actual_count ++;
+        }
+
+        flecs_json_member(buf, var_name);
+        flecs_json_path_or_label(buf, world, var, 
+            desc ? desc->serialize_full_paths : false);
+    }
+
+    if (actual_count) {
+        flecs_json_object_pop(buf);
+    }
+
+    return actual_count != 0;
+}
+
 int flecs_json_serialize_matches(
     const ecs_world_t *world,
     ecs_strbuf_t *buf,
@@ -315,6 +364,7 @@ void flecs_json_serialize_iter_this(
             flecs_json_memberl(buf, "label");
             flecs_json_string(buf, this_data->label[row].value);
         } else {
+            flecs_json_memberl(buf, "label");
             if (this_data->names) {
                 flecs_json_string(buf, this_data->names[row].value);
             } else {
@@ -348,6 +398,11 @@ void flecs_json_serialize_iter_this(
         flecs_json_object_pop(buf);
     }
 #endif
+
+    if (this_data->has_alerts) {
+        flecs_json_memberl(buf, "alerts");
+        flecs_json_true(buf);
+    }
 }
 
 int flecs_json_serialize_iter_result(
@@ -401,6 +456,15 @@ int flecs_json_serialize_iter_result(
                     ecs_pair_t(EcsDocDescription, EcsDocLink), it->offset);
             }
 #endif
+
+#ifdef FLECS_ALERTS
+        if (it->table && (ecs_id(EcsAlertsActive) != 0)) {
+            /* Only add field if alerts addon is imported */
+            if (ecs_table_has_id(world, table, ecs_id(EcsAlertsActive))) {
+                this_data.has_alerts = true;
+            }
+        }
+#endif
         } else {
             /* Very rare case, but could happen if someone's using an iterator
              * to return empty entities. */
@@ -408,11 +472,17 @@ int flecs_json_serialize_iter_result(
     }
 
     if (desc && desc->serialize_table) {
-        flecs_json_serialize_iter_result_table(world, it, buf, 
-            desc, count, has_this, parent_path, &this_data);
+        if (flecs_json_serialize_iter_result_table(world, it, buf, 
+            desc, count, has_this, parent_path, &this_data))
+        {
+            return -1;
+        }
     } else {
-        flecs_json_serialize_iter_result_query(world, it, buf, ser_ctx, 
-            desc, count, has_this, parent_path, &this_data);
+        if (flecs_json_serialize_iter_result_query(world, it, buf, ser_ctx, 
+            desc, count, has_this, parent_path, &this_data))
+        {
+            return -1;
+        }
     }
 
     ecs_os_free(parent_path);

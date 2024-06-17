@@ -501,3 +501,27 @@ void SerializeQueryInfoToJson_0_term(void) {
 
     ecs_fini(world);
 }
+
+void SerializeQueryInfoToJson_anonymous_tag(void) {
+    // Implement testcase
+}
+
+void SerializeQueryInfoToJson_anonymous_pair(void) {
+    // Implement testcase
+}
+
+void SerializeQueryInfoToJson_anonymous_component(void) {
+    // Implement testcase
+}
+
+void SerializeQueryInfoToJson_anonymous_tag_recycled(void) {
+    // Implement testcase
+}
+
+void SerializeQueryInfoToJson_anonymous_pair_recycled(void) {
+    // Implement testcase
+}
+
+void SerializeQueryInfoToJson_anonymous_component_recycled(void) {
+    // Implement testcase
+}
