@@ -664,10 +664,7 @@ void SerializeIterToJson_serialize_ids(void);
 void SerializeIterToJson_serialize_ids_2_entities(void);
 void SerializeIterToJson_serialize_anonymous(void);
 void SerializeIterToJson_serialize_anonymous_ids(void);
-void SerializeIterToJson_serialize_variable_ids(void);
-void SerializeIterToJson_serialize_variable_ids_2_entities(void);
 void SerializeIterToJson_serialize_variable_anonymous(void);
-void SerializeIterToJson_serialize_variable_anonymous_ids(void);
 void SerializeIterToJson_serialize_anonymous_tag(void);
 void SerializeIterToJson_serialize_anonymous_component(void);
 void SerializeIterToJson_serialize_anonymous_pair(void);
@@ -686,14 +683,9 @@ void SerializeIterToJson_serialize_anonymous_entities_w_offset(void);
 void SerializeIterToJson_serialize_table(void);
 void SerializeIterToJson_serialize_table_w_id_labels(void);
 void SerializeIterToJson_serialize_table_w_var_labels(void);
-void SerializeIterToJson_serialize_table_w_private(void);
 void SerializeIterToJson_serialize_world(void);
-void SerializeIterToJson_serialize_term_labels(void);
-void SerializeIterToJson_serialize_id_labels(void);
-void SerializeIterToJson_serialize_id_labels_w_str(void);
 void SerializeIterToJson_serialize_vars_for_query(void);
 void SerializeIterToJson_serialize_var_labels_for_query(void);
-void SerializeIterToJson_serialize_var_ids_for_query(void);
 void SerializeIterToJson_serialize_null_doc_name(void);
 void SerializeIterToJson_serialize_rule_w_optional(void);
 void SerializeIterToJson_serialize_rule_w_optional_component(void);
@@ -802,6 +794,8 @@ void SerializeTypeInfoToJson_struct_nested(void);
 void SerializeTypeInfoToJson_struct_nested_2_lvls(void);
 void SerializeTypeInfoToJson_struct_nested_2_members(void);
 void SerializeTypeInfoToJson_struct_nested_3_members(void);
+void SerializeTypeInfoToJson_anonymous_type(void);
+void SerializeTypeInfoToJson_anonymous_type_recycled(void);
 
 // Testsuite 'SerializeQueryInfoToJson'
 void SerializeQueryInfoToJson_1_tag(void);
@@ -823,6 +817,12 @@ void SerializeQueryInfoToJson_1_tag_self_dont_inherit(void);
 void SerializeQueryInfoToJson_1_tag_up(void);
 void SerializeQueryInfoToJson_1_tag_cascade(void);
 void SerializeQueryInfoToJson_0_term(void);
+void SerializeQueryInfoToJson_anonymous_tag(void);
+void SerializeQueryInfoToJson_anonymous_pair(void);
+void SerializeQueryInfoToJson_anonymous_component(void);
+void SerializeQueryInfoToJson_anonymous_tag_recycled(void);
+void SerializeQueryInfoToJson_anonymous_pair_recycled(void);
+void SerializeQueryInfoToJson_anonymous_component_recycled(void);
 
 // Testsuite 'MetaUtils'
 void MetaUtils_struct_w_2_i32(void);
@@ -3466,20 +3466,8 @@ bake_test_case SerializeIterToJson_testcases[] = {
         SerializeIterToJson_serialize_anonymous_ids
     },
     {
-        "serialize_variable_ids",
-        SerializeIterToJson_serialize_variable_ids
-    },
-    {
-        "serialize_variable_ids_2_entities",
-        SerializeIterToJson_serialize_variable_ids_2_entities
-    },
-    {
         "serialize_variable_anonymous",
         SerializeIterToJson_serialize_variable_anonymous
-    },
-    {
-        "serialize_variable_anonymous_ids",
-        SerializeIterToJson_serialize_variable_anonymous_ids
     },
     {
         "serialize_anonymous_tag",
@@ -3554,24 +3542,8 @@ bake_test_case SerializeIterToJson_testcases[] = {
         SerializeIterToJson_serialize_table_w_var_labels
     },
     {
-        "serialize_table_w_private",
-        SerializeIterToJson_serialize_table_w_private
-    },
-    {
         "serialize_world",
         SerializeIterToJson_serialize_world
-    },
-    {
-        "serialize_term_labels",
-        SerializeIterToJson_serialize_term_labels
-    },
-    {
-        "serialize_id_labels",
-        SerializeIterToJson_serialize_id_labels
-    },
-    {
-        "serialize_id_labels_w_str",
-        SerializeIterToJson_serialize_id_labels_w_str
     },
     {
         "serialize_vars_for_query",
@@ -3580,10 +3552,6 @@ bake_test_case SerializeIterToJson_testcases[] = {
     {
         "serialize_var_labels_for_query",
         SerializeIterToJson_serialize_var_labels_for_query
-    },
-    {
-        "serialize_var_ids_for_query",
-        SerializeIterToJson_serialize_var_ids_for_query
     },
     {
         "serialize_null_doc_name",
@@ -4006,6 +3974,14 @@ bake_test_case SerializeTypeInfoToJson_testcases[] = {
     {
         "struct_nested_3_members",
         SerializeTypeInfoToJson_struct_nested_3_members
+    },
+    {
+        "anonymous_type",
+        SerializeTypeInfoToJson_anonymous_type
+    },
+    {
+        "anonymous_type_recycled",
+        SerializeTypeInfoToJson_anonymous_type_recycled
     }
 };
 
@@ -4085,6 +4061,30 @@ bake_test_case SerializeQueryInfoToJson_testcases[] = {
     {
         "0_term",
         SerializeQueryInfoToJson_0_term
+    },
+    {
+        "anonymous_tag",
+        SerializeQueryInfoToJson_anonymous_tag
+    },
+    {
+        "anonymous_pair",
+        SerializeQueryInfoToJson_anonymous_pair
+    },
+    {
+        "anonymous_component",
+        SerializeQueryInfoToJson_anonymous_component
+    },
+    {
+        "anonymous_tag_recycled",
+        SerializeQueryInfoToJson_anonymous_tag_recycled
+    },
+    {
+        "anonymous_pair_recycled",
+        SerializeQueryInfoToJson_anonymous_pair_recycled
+    },
+    {
+        "anonymous_component_recycled",
+        SerializeQueryInfoToJson_anonymous_component_recycled
     }
 };
 
@@ -4510,7 +4510,7 @@ static bake_test_suite suites[] = {
         "SerializeIterToJson",
         NULL,
         NULL,
-        73,
+        65,
         SerializeIterToJson_testcases
     },
     {
@@ -4524,14 +4524,14 @@ static bake_test_suite suites[] = {
         "SerializeTypeInfoToJson",
         NULL,
         NULL,
-        40,
+        42,
         SerializeTypeInfoToJson_testcases
     },
     {
         "SerializeQueryInfoToJson",
         NULL,
         NULL,
-        19,
+        25,
         SerializeQueryInfoToJson_testcases
     },
     {
