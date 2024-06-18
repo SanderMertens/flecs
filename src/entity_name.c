@@ -85,9 +85,7 @@ ecs_entity_t flecs_name_to_id(
 {
     ecs_assert(name != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(name[0] == '#', ECS_INVALID_PARAMETER, NULL);
-    uint64_t result = flecs_ito(uint64_t, atoll(name + 1));
-    ecs_assert(result >= 0, ECS_INTERNAL_ERROR, NULL);
-    return result;
+    return flecs_ito(uint64_t, atoll(name + 1));
 }
 
 static

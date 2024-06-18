@@ -46,6 +46,55 @@ void flecs_pipeline_stats_set_t(
     ((ecs_pipeline_stats_t*)stats)->t = t;
 }
 
+
+static
+void flecs_pipeline_stats_copy_last(
+    void *stats, 
+    void *src) 
+{
+    ecs_pipeline_stats_copy_last(stats, src);
+}
+
+static
+void flecs_pipeline_stats_get(
+    ecs_world_t *world, 
+    ecs_entity_t res, 
+    void *stats) 
+{
+    ecs_pipeline_stats_get(world, res, stats);
+}
+
+static
+void flecs_pipeline_stats_reduce(
+    void *stats, 
+    void *src) 
+{
+    ecs_pipeline_stats_reduce(stats, src);
+}
+
+static
+void flecs_pipeline_stats_reduce_last(
+    void *stats, 
+    void *last, 
+    int32_t reduce_count) 
+{
+    ecs_pipeline_stats_reduce_last(stats, last, reduce_count);
+}
+
+static
+void flecs_pipeline_stats_repeat_last(
+    void* stats) 
+{
+    ecs_pipeline_stats_repeat_last(stats);;
+}
+
+static
+void flecs_pipeline_stats_fini(
+    void *stats) 
+{
+    ecs_pipeline_stats_fini(stats);
+}
+
 void FlecsPipelineMonitorImport(
     ecs_world_t *world)
 {
@@ -59,13 +108,13 @@ void FlecsPipelineMonitorImport(
     });
 
     ecs_stats_api_t api = {
-        .copy_last = (void(*)(void*,void*))ecs_pipeline_stats_copy_last,
-        .get = (void(*)(ecs_world_t*,ecs_entity_t,void*))ecs_pipeline_stats_get,
-        .reduce = (void(*)(void*,void*))ecs_pipeline_stats_reduce,
-        .reduce_last = (void(*)(void*,void*,int32_t))ecs_pipeline_stats_reduce_last,
-        .repeat_last = (void(*)(void*))ecs_pipeline_stats_repeat_last,
+        .copy_last = flecs_pipeline_stats_copy_last,
+        .get = flecs_pipeline_stats_get,
+        .reduce = flecs_pipeline_stats_reduce,
+        .reduce_last = flecs_pipeline_stats_reduce_last,
+        .repeat_last = flecs_pipeline_stats_repeat_last,
         .set_t = flecs_pipeline_stats_set_t,
-        .fini = (void(*)(void*))ecs_pipeline_stats_fini,
+        .fini = flecs_pipeline_stats_fini,
         .stats_size = ECS_SIZEOF(ecs_pipeline_stats_t),
         .monitor_component_id = ecs_id(EcsPipelineStats),
         .query_component_id = ecs_id(EcsPipeline)

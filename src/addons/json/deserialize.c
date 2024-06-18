@@ -161,6 +161,7 @@ ecs_entity_t flecs_json_ensure_entity(
     return e;
 }
 
+static
 const char* flecs_json_deser_tags(
     ecs_world_t *world,
     ecs_entity_t e,
@@ -218,6 +219,7 @@ error:
     return NULL;
 }
 
+static
 const char* flecs_json_deser_pairs(
     ecs_world_t *world,
     ecs_entity_t e,
@@ -293,6 +295,7 @@ error:
     return NULL;
 }
 
+static
 const char* flecs_json_deser_components(
     ecs_world_t *world,
     ecs_entity_t e,
@@ -401,6 +404,7 @@ error:
     return NULL;
 }
 
+static
 const char* flecs_entity_from_json(
     ecs_world_t *world,
     ecs_entity_t e,
