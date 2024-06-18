@@ -45,6 +45,47 @@ void flecs_system_stats_set_t(
     ((ecs_system_stats_t*)stats)->query.t = t;
 }
 
+static
+void flecs_system_stats_copy_last(
+    void *stats, 
+    void *src) 
+{
+    ecs_system_stats_copy_last(stats, src);
+}
+
+static
+void flecs_system_stats_get(
+    ecs_world_t *world, 
+    ecs_entity_t res, 
+    void *stats) 
+{
+    ecs_system_stats_get(world, res, stats);
+}
+
+static
+void flecs_system_stats_reduce(
+    void *stats, 
+    void *src) 
+{
+    ecs_system_stats_reduce(stats, src);
+}
+
+static
+void flecs_system_stats_reduce_last(
+    void *stats, 
+    void *last, 
+    int32_t reduce_count) 
+{
+    ecs_system_stats_reduce_last(stats, last, reduce_count);
+}
+
+static
+void flecs_system_stats_repeat_last(
+    void* stats) 
+{
+    ecs_system_stats_repeat_last(stats);;
+}
+
 void FlecsSystemMonitorImport(
     ecs_world_t *world)
 {
@@ -58,11 +99,11 @@ void FlecsSystemMonitorImport(
     });
 
     ecs_stats_api_t api = {
-        .copy_last = (void(*)(void*,void*))ecs_system_stats_copy_last,
-        .get = (void(*)(ecs_world_t*,ecs_entity_t,void*))ecs_system_stats_get,
-        .reduce = (void(*)(void*,void*))ecs_system_stats_reduce,
-        .reduce_last = (void(*)(void*,void*,int32_t))ecs_system_stats_reduce_last,
-        .repeat_last = (void(*)(void*))ecs_system_stats_repeat_last,
+        .copy_last = flecs_system_stats_copy_last,
+        .get = flecs_system_stats_get,
+        .reduce = flecs_system_stats_reduce,
+        .reduce_last = flecs_system_stats_reduce_last,
+        .repeat_last = flecs_system_stats_repeat_last,
         .set_t = flecs_system_stats_set_t,
         .stats_size = ECS_SIZEOF(ecs_system_stats_t),
         .monitor_component_id = ecs_id(EcsSystemStats),

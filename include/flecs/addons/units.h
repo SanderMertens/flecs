@@ -328,7 +328,6 @@ FLECS_API extern ECS_DECLARE(EcsAcceleration);     /**< Acceleration unit. */
 FLECS_API extern ECS_DECLARE(EcsPercentage);       /**< Percentage unit. */
 FLECS_API extern ECS_DECLARE(EcsBel);              /**< Bel unit. */
 FLECS_API extern ECS_DECLARE(EcsDeciBel);          /**< DeciBel unit. */
-FLECS_API extern ECS_DECLARE(EcsColor);            /**< Color unit. */
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Module
