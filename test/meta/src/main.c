@@ -441,6 +441,7 @@ void DeserializeFromJson_deser_entity_1_component_1_member(void);
 void DeserializeFromJson_deser_entity_1_component_1_member_w_spaces(void);
 void DeserializeFromJson_deser_entity_1_component_2_members(void);
 void DeserializeFromJson_deser_entity_2_components(void);
+void DeserializeFromJson_deser_entity_2_components_missing_object_close(void);
 void DeserializeFromJson_deser_entity_1_component_composite_member(void);
 void DeserializeFromJson_deser_entity_1_component_nested_member(void);
 void DeserializeFromJson_deser_entity_1_pair(void);
@@ -549,6 +550,7 @@ void SerializeToJson_struct_float(void);
 void SerializeToJson_struct_double(void);
 void SerializeToJson_struct_string(void);
 void SerializeToJson_struct_entity(void);
+void SerializeToJson_struct_entity_0(void);
 void SerializeToJson_struct_entity_10k(void);
 void SerializeToJson_struct_entity_after_float(void);
 void SerializeToJson_struct_id(void);
@@ -792,8 +794,6 @@ void SerializeTypeInfoToJson_struct_nested(void);
 void SerializeTypeInfoToJson_struct_nested_2_lvls(void);
 void SerializeTypeInfoToJson_struct_nested_2_members(void);
 void SerializeTypeInfoToJson_struct_nested_3_members(void);
-void SerializeTypeInfoToJson_anonymous_type(void);
-void SerializeTypeInfoToJson_anonymous_type_recycled(void);
 
 // Testsuite 'SerializeQueryInfoToJson'
 void SerializeQueryInfoToJson_1_tag(void);
@@ -2587,6 +2587,10 @@ bake_test_case DeserializeFromJson_testcases[] = {
         DeserializeFromJson_deser_entity_2_components
     },
     {
+        "deser_entity_2_components_missing_object_close",
+        DeserializeFromJson_deser_entity_2_components_missing_object_close
+    },
+    {
         "deser_entity_1_component_composite_member",
         DeserializeFromJson_deser_entity_1_component_composite_member
     },
@@ -3012,6 +3016,10 @@ bake_test_case SerializeToJson_testcases[] = {
     {
         "struct_entity",
         SerializeToJson_struct_entity
+    },
+    {
+        "struct_entity_0",
+        SerializeToJson_struct_entity_0
     },
     {
         "struct_entity_10k",
@@ -3964,14 +3972,6 @@ bake_test_case SerializeTypeInfoToJson_testcases[] = {
     {
         "struct_nested_3_members",
         SerializeTypeInfoToJson_struct_nested_3_members
-    },
-    {
-        "anonymous_type",
-        SerializeTypeInfoToJson_anonymous_type
-    },
-    {
-        "anonymous_type_recycled",
-        SerializeTypeInfoToJson_anonymous_type_recycled
     }
 };
 
@@ -4479,14 +4479,14 @@ static bake_test_suite suites[] = {
         "DeserializeFromJson",
         NULL,
         NULL,
-        129,
+        130,
         DeserializeFromJson_testcases
     },
     {
         "SerializeToJson",
         NULL,
         NULL,
-        44,
+        45,
         SerializeToJson_testcases
     },
     {
@@ -4514,7 +4514,7 @@ static bake_test_suite suites[] = {
         "SerializeTypeInfoToJson",
         NULL,
         NULL,
-        42,
+        40,
         SerializeTypeInfoToJson_testcases
     },
     {

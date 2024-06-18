@@ -2897,7 +2897,7 @@ void Prefab_instanceof_0(void) {
 void Prefab_instantiate_empty_child_table(void) {
     ecs_world_t *world = ecs_init();
 
-    ECS_PREFAB(world, Prefab, 0);
+    ECS_PREFAB(world, Prefab, #0);
 
     /* Forces creation of child table without children */
     ecs_table_t *table = ecs_table_add_id(world, 0, ecs_childof(Prefab));
@@ -2918,7 +2918,7 @@ void Prefab_instantiate_empty_child_table(void) {
 void Prefab_instantiate_emptied_child_table(void) {
     ecs_world_t *world = ecs_init();
 
-    ECS_PREFAB(world, Prefab, 0);
+    ECS_PREFAB(world, Prefab, #0);
 
     /* Create & remove prefab child */
     ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, Prefab);
@@ -3502,7 +3502,7 @@ void Prefab_get_component_from_2nd_base_prefab_base(void) {
     ECS_COMPONENT(world, Position);
     ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
 
-    ECS_PREFAB(world, base_1, 0);
+    ECS_PREFAB(world, base_1, #0);
     ECS_PREFAB(world, base_2, Position);
 
     ecs_entity_t e = ecs_new(world);
@@ -3552,7 +3552,7 @@ void Prefab_get_component_from_2nd_base_of_base_prefab_base(void) {
     ECS_COMPONENT(world, Position);
     ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
 
-    ECS_PREFAB(world, base_1, 0);
+    ECS_PREFAB(world, base_1, #0);
     ECS_PREFAB(world, base_2, Position);
     ECS_PREFAB(world, base_3, (IsA, base_1), (IsA, base_2));
 
@@ -3620,12 +3620,12 @@ int child_count(ecs_world_t *world, ecs_entity_t e) {
 void Prefab_instantiate_tree_once(void) {
     ecs_world_t *world = ecs_init();
 
-    ECS_PREFAB(world, Cannon, 0);
-    ECS_PREFAB(world, Turret, 0);
+    ECS_PREFAB(world, Cannon, #0);
+    ECS_PREFAB(world, Turret, #0);
     ECS_PREFAB(world, CannonA, (IsA, Cannon), (ChildOf, Turret));
     ECS_PREFAB(world, CannonB, (IsA, Cannon), (ChildOf, Turret));
 
-    ECS_PREFAB(world, SpaceShip, 0);
+    ECS_PREFAB(world, SpaceShip, #0);
     ECS_PREFAB(world, TurretA, (IsA, Turret), (ChildOf, SpaceShip));
 
     ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, SpaceShip);
@@ -3642,14 +3642,14 @@ void Prefab_instantiate_tree_once(void) {
 void Prefab_nested_prefab_w_named_children(void) {
     ecs_world_t *world = ecs_init();
 
-    ECS_PREFAB(world, Cannon, 0);
+    ECS_PREFAB(world, Cannon, #0);
     
-    ECS_PREFAB(world, Turret, 0);
+    ECS_PREFAB(world, Turret, #0);
     ecs_set_scope(world, Turret);
         ECS_ENTITY(world, CannonA, (IsA, Cannon));
     ecs_set_scope(world, 0);
 
-    ECS_PREFAB(world, SpaceShip, 0);
+    ECS_PREFAB(world, SpaceShip, #0);
     ecs_set_scope(world, SpaceShip);
         ECS_PREFAB(world, TurretA, (IsA, Turret));
     ecs_set_scope(world, 0);
