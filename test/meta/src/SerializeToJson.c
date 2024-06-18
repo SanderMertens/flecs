@@ -587,6 +587,29 @@ void SerializeToJson_struct_entity(void) {
     ecs_fini(world);
 }
 
+void SerializeToJson_struct_entity_0(void) {
+    typedef struct {
+        ecs_entity_t x;
+    } T;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "T"}),
+        .members = {
+            {"x", ecs_id(ecs_entity_t)}
+        }
+    });
+
+    T value = {0};
+    char *expr = ecs_ptr_to_json(world, t, &value);
+    test_assert(expr != NULL);
+    test_str(expr, "{\"x\":\"#0\"}");
+    ecs_os_free(expr);
+
+    ecs_fini(world);
+}
+
 void SerializeToJson_struct_entity_10k(void) {
     typedef struct {
         ecs_entity_t x;

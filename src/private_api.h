@@ -231,7 +231,6 @@ bool flecs_name_is_id(
     const char *name);
 
 ecs_entity_t flecs_name_to_id(
-    const ecs_world_t *world,
     const char *name);
 
 /* Convert floating point to string */
