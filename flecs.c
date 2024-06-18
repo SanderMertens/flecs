@@ -10130,9 +10130,7 @@ ecs_entity_t flecs_name_to_id(
 {
     ecs_assert(name != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(name[0] == '#', ECS_INVALID_PARAMETER, NULL);
-    uint64_t result = flecs_ito(uint64_t, atoll(name + 1));
-    ecs_assert(result >= 0, ECS_INTERNAL_ERROR, NULL);
-    return result;
+    return flecs_ito(uint64_t, atoll(name + 1));
 }
 
 static
@@ -45083,6 +45081,7 @@ ecs_entity_t flecs_json_ensure_entity(
     return e;
 }
 
+static
 const char* flecs_json_deser_tags(
     ecs_world_t *world,
     ecs_entity_t e,
@@ -45140,6 +45139,7 @@ error:
     return NULL;
 }
 
+static
 const char* flecs_json_deser_pairs(
     ecs_world_t *world,
     ecs_entity_t e,
@@ -45215,6 +45215,7 @@ error:
     return NULL;
 }
 
+static
 const char* flecs_json_deser_components(
     ecs_world_t *world,
     ecs_entity_t e,
@@ -45323,6 +45324,7 @@ error:
     return NULL;
 }
 
+static
 const char* flecs_entity_from_json(
     ecs_world_t *world,
     ecs_entity_t e,
@@ -45682,850 +45684,6 @@ const char* ecs_world_from_json_file(
     const char *result = ecs_world_from_json(world, json, desc);
     ecs_os_free(json);
     return result;
-}
-
-#endif
-
-/**
- * @file json/deserialize.c
- * @brief Deserialize JSON strings into (component) values.
- */
-
-#include <ctype.h>
-
-#ifdef FLECS_JSON
-
-const char* ecs_ptr_from_json(
-    const ecs_world_t *world,
-    ecs_entity_t type,
-    void *ptr,
-    const char *json,
-    const ecs_from_json_desc_t *desc)
-{
-    ecs_json_token_t token_kind = 0;
-    char token_buffer[ECS_MAX_TOKEN_SIZE], t_lah[ECS_MAX_TOKEN_SIZE];
-    char *token = token_buffer;
-    int depth = 0;
-
-    const char *name = NULL;
-    const char *expr = NULL;
-
-    ecs_meta_cursor_t cur = ecs_meta_cursor(world, type, ptr);
-    if (cur.valid == false) {
-        return NULL;
-    }
-
-    if (desc) {
-        name = desc->name;
-        expr = desc->expr;
-        cur.lookup_action = desc->lookup_action;
-        cur.lookup_ctx = desc->lookup_ctx;
-    }
-
-    while ((json = flecs_json_parse(json, &token_kind, token))) {
-        if (token_kind == JsonLargeString) {
-            ecs_strbuf_t large_token = ECS_STRBUF_INIT;
-            json = flecs_json_parse_large_string(json, &large_token);
-            if (!json) {
-                break;
-            }
-
-            token = ecs_strbuf_get(&large_token);
-            token_kind = JsonString;
-        }
-
-        if (token_kind == JsonObjectOpen) {
-            depth ++;
-            if (ecs_meta_push(&cur) != 0) {
-                goto error;
-            }
-
-            if (ecs_meta_is_collection(&cur)) {
-                ecs_parser_error(name, expr, json - expr, "expected '['");
-                return NULL;
-            }
-        } else if (token_kind == JsonObjectClose) {
-            depth --;
-
-            if (ecs_meta_is_collection(&cur)) {
-                ecs_parser_error(name, expr, json - expr, "expected ']'");
-                return NULL;
-            }
-
-            if (ecs_meta_pop(&cur) != 0) {
-                goto error;
-            }
-        } else if (token_kind == JsonArrayOpen) {
-            depth ++;
-            if (ecs_meta_push(&cur) != 0) {
-                goto error;
-            }
-
-            if (!ecs_meta_is_collection(&cur)) {
-                ecs_parser_error(name, expr, json - expr, "expected '{'");
-                return NULL;
-            }
-        } else if (token_kind == JsonArrayClose) {
-            depth --;
-
-            if (!ecs_meta_is_collection(&cur)) {
-                ecs_parser_error(name, expr, json - expr, "expected '}'");
-                return NULL;
-            }
-
-            if (ecs_meta_pop(&cur) != 0) {
-                goto error;
-            }
-        } else if (token_kind == JsonComma) {
-            if (ecs_meta_next(&cur) != 0) {
-                goto error;
-            }
-        } else if (token_kind == JsonNull) {
-            if (ecs_meta_set_null(&cur) != 0) {
-                goto error;
-            }
-        } else if (token_kind == JsonString) {
-            const char *lah = flecs_json_parse(
-                json, &token_kind, t_lah);
-            if (token_kind == JsonColon) {
-                /* Member assignment */
-                json = lah;
-                if (ecs_meta_dotmember(&cur, token) != 0) {
-                    goto error;
-                }
-            } else {
-                if (ecs_meta_set_string(&cur, token) != 0) {
-                    goto error;
-                }
-            }
-        } else if (token_kind == JsonNumber) {
-            double number = atof(token);
-            if (ecs_meta_set_float(&cur, number) != 0) {
-                goto error;
-            }
-        } else if (token_kind == JsonLargeInt) {
-            int64_t number = flecs_ito(int64_t, atoll(token));
-            if (ecs_meta_set_int(&cur, number) != 0) {
-                goto error;
-            }
-        } else if (token_kind == JsonNull) {
-            if (ecs_meta_set_null(&cur) != 0) {
-                goto error;
-            }
-        } else if (token_kind == JsonTrue) {
-            if (ecs_meta_set_bool(&cur, true) != 0) {
-                goto error;
-            }
-        } else if (token_kind == JsonFalse) {
-            if (ecs_meta_set_bool(&cur, false) != 0) {
-                goto error;
-            }
-        } else {
-            goto error;
-        }
-
-        if (token != token_buffer) {
-            ecs_os_free(token);
-            token = token_buffer;
-        }
-
-        if (!depth) {
-            break;
-        }
-    }
-
-    return json;
-error:
-    return NULL;
-}
-
-#endif
-
-/**
- * @file json/json.c
- * @brief JSON serializer utilities.
- */
-
-#include <ctype.h>
-
-#ifdef FLECS_JSON
-
-static
-const char* flecs_json_token_str(
-    ecs_json_token_t token_kind)
-{
-    switch(token_kind) {
-    case JsonObjectOpen: return "{";
-    case JsonObjectClose: return "}";
-    case JsonArrayOpen: return "[";
-    case JsonArrayClose: return "]";
-    case JsonColon: return ":";
-    case JsonComma: return ",";
-    case JsonNumber: return "number";
-    case JsonLargeInt: return "large integer";
-    case JsonLargeString:
-    case JsonString: return "string";
-    case JsonBoolean: return "bool";
-    case JsonTrue: return "true";
-    case JsonFalse: return "false";
-    case JsonNull: return "null";
-    case JsonInvalid: return "invalid";
-    default:
-        ecs_throw(ECS_INTERNAL_ERROR, NULL);
-    }
-error:
-    return "<<invalid token kind>>";
-}
-
-const char* flecs_json_parse(
-    const char *json,
-    ecs_json_token_t *token_kind,
-    char *token)
-{
-    ecs_assert(json != NULL, ECS_INTERNAL_ERROR, NULL);
-    json = flecs_parse_ws_eol(json);
-
-    char ch = json[0];
-
-    if (ch == '{') {
-        token_kind[0] = JsonObjectOpen;
-        return json + 1;
-    } else if (ch == '}') {
-        token_kind[0] = JsonObjectClose;
-        return json + 1;
-    } else if (ch == '[') {
-        token_kind[0] = JsonArrayOpen;
-        return json + 1;
-    } else if (ch == ']') {
-        token_kind[0] = JsonArrayClose;
-        return json + 1;
-    } else if (ch == ':') {
-        token_kind[0] = JsonColon;
-        return json + 1;
-    } else if (ch == ',') {
-        token_kind[0] = JsonComma;
-        return json + 1;
-    } else if (ch == '"') {
-        const char *start = json;
-        char *token_ptr = token;
-        json ++;
-        for (; (ch = json[0]); ) {
-            if (token_ptr - token >= ECS_MAX_TOKEN_SIZE) {
-                /* Token doesn't fit in buffer, signal to app to try again with
-                 * dynamic buffer. */
-                token_kind[0] = JsonLargeString;
-                return start;
-            }
-
-            if (ch == '"') {
-                json ++;
-                token_ptr[0] = '\0';
-                break;
-            }
-
-            json = flecs_chrparse(json, token_ptr ++);
-        }
-
-        if (!ch) {
-            token_kind[0] = JsonInvalid;
-            return NULL;
-        } else {
-            token_kind[0] = JsonString;
-            return json;
-        }
-    } else if (isdigit(ch) || (ch == '-')) {
-        token_kind[0] = JsonNumber;
-        const char *result = flecs_parse_digit(json, token);
-        
-        /* Cheap initial check if parsed token could represent large int */
-        if (result - json > 15) {
-            /* Less cheap secondary check to see if number is integer */
-            if (!strchr(token, '.')) {
-                token_kind[0] = JsonLargeInt;
-            }
-        }
-
-        return result;
-    } else if (isalpha(ch)) {
-        if (!ecs_os_strncmp(json, "null", 4)) {
-            token_kind[0] = JsonNull;
-            json += 4;
-        } else
-        if (!ecs_os_strncmp(json, "true", 4)) {
-            token_kind[0] = JsonTrue;
-            json += 4;
-        } else
-        if (!ecs_os_strncmp(json, "false", 5)) {
-            token_kind[0] = JsonFalse;
-            json += 5;
-        }
-
-        if (isalpha(json[0]) || isdigit(json[0])) {
-            token_kind[0] = JsonInvalid;
-            return NULL;
-        }
-
-        return json;
-    } else {
-        token_kind[0] = JsonInvalid;
-        return NULL;
-    }
-}
-
-const char* flecs_json_parse_large_string(
-    const char *json,
-    ecs_strbuf_t *buf)
-{
-    if (json[0] != '"') {
-        return NULL; /* can only parse strings */
-    }
-
-    char ch, ch_out;
-    json ++;
-    for (; (ch = json[0]); ) {
-        if (ch == '"') {
-            json ++;
-            break;
-        }
-
-        json = flecs_chrparse(json, &ch_out);
-        ecs_strbuf_appendch(buf, ch_out);
-    }
-
-    if (!ch) {
-        return NULL;
-    } else {
-        return json;
-    }
-}
-
-const char* flecs_json_parse_next_member(
-    const char *json,
-    char *token,
-    ecs_json_token_t *token_kind,
-    const ecs_from_json_desc_t *desc)
-{
-    json = flecs_json_parse(json, token_kind, token);
-    if (*token_kind == JsonObjectClose) {
-        return json;
-    }
-
-    if (*token_kind != JsonComma) {
-        ecs_parser_error(desc->name, desc->expr, json - desc->expr, 
-            "expecteded } or ,");
-        return NULL;
-    }
-
-    json = flecs_json_parse(json, token_kind, token);
-    if (*token_kind != JsonString) {
-        ecs_parser_error(desc->name, desc->expr, json - desc->expr, 
-            "expecteded member name");
-        return NULL;
-    }
-
-    char temp_token[ECS_MAX_TOKEN_SIZE];
-    ecs_json_token_t temp_token_kind;
-
-    json = flecs_json_parse(json, &temp_token_kind, temp_token);
-    if (temp_token_kind != JsonColon) {
-        ecs_parser_error(desc->name, desc->expr, json - desc->expr, 
-            "expecteded :");
-        return NULL;
-    }
-
-    return json;
-}
-
-const char* flecs_json_expect(
-    const char *json,
-    ecs_json_token_t token_kind,
-    char *token,
-    const ecs_from_json_desc_t *desc)
-{
-    /* Strings must be handled by flecs_json_expect_string for LargeString */
-    ecs_assert(token_kind != JsonString, ECS_INTERNAL_ERROR, NULL);
-
-    ecs_json_token_t kind = 0;
-    const char *lah = flecs_json_parse(json, &kind, token);
-
-    if (kind == JsonInvalid) {
-        ecs_parser_error(desc->name, desc->expr, json - desc->expr, 
-            "invalid json");
-        return NULL;
-    } else if (kind != token_kind) {
-        if (token_kind == JsonBoolean && 
-            (kind == JsonTrue || kind == JsonFalse)) 
-        {
-            /* ok */
-        } else {
-            ecs_parser_error(desc->name, desc->expr, json - desc->expr, 
-                "expected %s, got %s",
-                flecs_json_token_str(token_kind), flecs_json_token_str(kind));
-            return NULL;
-        }
-    }
-
-    return lah;
-}
-
-const char* flecs_json_expect_string(
-    const char *json,
-    char *token,
-    char **out,
-    const ecs_from_json_desc_t *desc)
-{
-    ecs_json_token_t token_kind = 0;
-    json = flecs_json_parse(json, &token_kind, token);
-    if (token_kind == JsonInvalid) {
-        ecs_parser_error(
-            desc->name, desc->expr, json - desc->expr, "invalid json");
-        return NULL;
-    } else if (token_kind != JsonString && token_kind != JsonLargeString) {
-        ecs_parser_error(desc->name, desc->expr, json - desc->expr, 
-            "expected string");
-        return NULL;
-    }
-
-    if (token_kind == JsonLargeString) {
-        ecs_strbuf_t large_token = ECS_STRBUF_INIT;
-        json = flecs_json_parse_large_string(json, &large_token);
-        if (!json) {
-            return NULL;
-        }
-
-        if (out) {
-            *out = ecs_strbuf_get(&large_token);
-        } else {
-            ecs_strbuf_reset(&large_token);
-        }
-    } else if (out) {
-        *out = token;
-    }
-
-    return json;
-}
-
-const char* flecs_json_expect_member(
-    const char *json,
-    char *token,
-    const ecs_from_json_desc_t *desc)
-{
-    char *out = NULL;
-    json = flecs_json_expect_string(json, token, &out, desc);
-    if (!json) {
-        return NULL;
-    }
-
-    if (out != token) {
-        ecs_os_free(out);
-    }
-
-    json = flecs_json_expect(json, JsonColon, token, desc);
-    if (!json) {
-        return NULL;
-    }
-    return json;
-}
-
-const char* flecs_json_expect_next_member(
-    const char *json,
-    char *token,
-    const ecs_from_json_desc_t *desc)
-{
-    json = flecs_json_expect(json, JsonComma, token, desc);
-    if (!json) {
-        return NULL;
-    }
-
-    return flecs_json_expect_member(json, token, desc);
-}
-
-const char* flecs_json_expect_member_name(
-    const char *json,
-    char *token,
-    const char *member_name,
-    const ecs_from_json_desc_t *desc)
-{
-    json = flecs_json_expect_member(json, token, desc);
-    if (!json) {
-        return NULL;
-    }
-    if (ecs_os_strcmp(token, member_name)) {
-        ecs_parser_error(desc->name, desc->expr, json - desc->expr, 
-            "expected member '%s'", member_name);
-        return NULL;
-    }
-    return json;
-}
-
-static
-const char* flecs_json_skip_string(
-    const char *json)
-{
-    if (json[0] != '"') {
-        return NULL; /* can only skip strings */
-    }
-
-    char ch, ch_out;
-    json ++;
-    for (; (ch = json[0]); ) {
-        if (ch == '"') {
-            json ++;
-            break;
-        }
-
-        json = flecs_chrparse(json, &ch_out);
-    }
-
-    if (!ch) {
-        return NULL;
-    } else {
-        return json;
-    }
-}
-
-const char* flecs_json_skip_object(
-    const char *json,
-    char *token,
-    const ecs_from_json_desc_t *desc)
-{
-    ecs_assert(json != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_json_token_t token_kind = 0;
-
-    while ((json = flecs_json_parse(json, &token_kind, token))) {
-        if (token_kind == JsonObjectOpen) {
-            json = flecs_json_skip_object(json, token, desc);
-        } else if (token_kind == JsonArrayOpen) {
-            json = flecs_json_skip_array(json, token, desc);
-        } else if (token_kind == JsonLargeString) {
-            json = flecs_json_skip_string(json);
-        } else if (token_kind == JsonObjectClose) {
-            return json;
-        } else if (token_kind == JsonArrayClose) {
-            ecs_parser_error(desc->name, desc->expr, json - desc->expr, 
-                "expected }, got ]");
-            return NULL;
-        }
-
-        ecs_assert(json != NULL, ECS_INTERNAL_ERROR, NULL);
-    }
-
-    ecs_parser_error(desc->name, desc->expr, json - desc->expr, 
-        "expected }, got end of string");
-    return NULL;
-}
-
-const char* flecs_json_skip_array(
-    const char *json,
-    char *token,
-    const ecs_from_json_desc_t *desc)
-{
-    ecs_assert(json != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_json_token_t token_kind = 0;
-
-    while ((json = flecs_json_parse(json, &token_kind, token))) {
-        if (token_kind == JsonObjectOpen) {
-            json = flecs_json_skip_object(json, token, desc);
-        } else if (token_kind == JsonArrayOpen) {
-            json = flecs_json_skip_array(json, token, desc);
-        } else if (token_kind == JsonLargeString) {
-            json = flecs_json_skip_string(json);
-        } else if (token_kind == JsonObjectClose) {
-            ecs_parser_error(desc->name, desc->expr, json - desc->expr, 
-                "expected ]");
-            return NULL;
-        } else if (token_kind == JsonArrayClose) {
-            return json;
-        }
-
-        ecs_assert(json != NULL, ECS_INTERNAL_ERROR, NULL);
-    }
-
-    ecs_parser_error(desc->name, desc->expr, json - desc->expr, "expected ]");
-    return NULL;
-}
-
-void flecs_json_next(
-    ecs_strbuf_t *buf)
-{
-    ecs_strbuf_list_next(buf);
-}
-
-void flecs_json_number(
-    ecs_strbuf_t *buf,
-    double value)
-{
-    ecs_strbuf_appendflt(buf, value, '"');
-}
-
-void flecs_json_u32(
-    ecs_strbuf_t *buf,
-    uint32_t value)
-{
-    ecs_strbuf_appendint(buf, flecs_uto(int64_t, value));
-}
-
-void flecs_json_true(
-    ecs_strbuf_t *buf)
-{
-    ecs_strbuf_appendlit(buf, "true");
-}
-
-void flecs_json_false(
-    ecs_strbuf_t *buf)
-{
-    ecs_strbuf_appendlit(buf, "false");
-}
-
-void flecs_json_bool(
-    ecs_strbuf_t *buf,
-    bool value)
-{
-    if (value) {
-        flecs_json_true(buf);
-    } else {
-        flecs_json_false(buf);
-    }
-}
-
-void flecs_json_null(
-    ecs_strbuf_t *buf)
-{
-    ecs_strbuf_appendlit(buf, "null");
-}
-
-void flecs_json_array_push(
-    ecs_strbuf_t *buf)
-{
-    ecs_strbuf_list_push(buf, "[", ", ");
-}
-
-void flecs_json_array_pop(
-    ecs_strbuf_t *buf)
-{
-    ecs_strbuf_list_pop(buf, "]");
-}
-
-void flecs_json_object_push(
-    ecs_strbuf_t *buf)
-{
-    ecs_strbuf_list_push(buf, "{", ", ");
-}
-
-void flecs_json_object_pop(
-    ecs_strbuf_t *buf)
-{
-    ecs_strbuf_list_pop(buf, "}");
-}
-
-void flecs_json_string(
-    ecs_strbuf_t *buf,
-    const char *value)
-{
-    ecs_strbuf_appendch(buf, '"');
-    ecs_strbuf_appendstr(buf, value);
-    ecs_strbuf_appendch(buf, '"');
-}
-
-void flecs_json_string_escape(
-    ecs_strbuf_t *buf,
-    const char *value)
-{
-    ecs_size_t length = flecs_stresc(NULL, 0, '"', value);
-    if (length == ecs_os_strlen(value)) {
-        ecs_strbuf_appendch(buf, '"');
-        ecs_strbuf_appendstrn(buf, value, length);
-        ecs_strbuf_appendch(buf, '"');
-    } else {
-        char *out = ecs_os_malloc(length + 3);
-        flecs_stresc(out + 1, length, '"', value);
-        out[0] = '"';
-        out[length + 1] = '"';
-        out[length + 2] = '\0';
-        ecs_strbuf_appendstr(buf, out);
-        ecs_os_free(out);
-    }
-}
-
-void flecs_json_member(
-    ecs_strbuf_t *buf,
-    const char *name)
-{
-    flecs_json_membern(buf, name, ecs_os_strlen(name));
-}
-
-void flecs_json_membern(
-    ecs_strbuf_t *buf,
-    const char *name,
-    int32_t name_len)
-{
-    ecs_strbuf_list_appendch(buf, '"');
-    ecs_strbuf_appendstrn(buf, name, name_len);
-    ecs_strbuf_appendlit(buf, "\":");
-}
-
-void flecs_json_path(
-    ecs_strbuf_t *buf,
-    const ecs_world_t *world,
-    ecs_entity_t e)
-{
-    ecs_strbuf_appendch(buf, '"');
-    ecs_get_path_w_sep_buf(world, 0, e, ".", "", buf);
-    ecs_strbuf_appendch(buf, '"');
-}
-
-static
-const char* flecs_json_entity_label(
-    const ecs_world_t *world,
-    ecs_entity_t e)
-{
-    const char *lbl = NULL;
-    if (!e) {
-        return "#0";
-    }
-#ifdef FLECS_DOC
-    lbl = ecs_doc_get_name(world, e);
-#else
-    lbl = ecs_get_name(world, e);
-#endif
-    return lbl;
-}
-
-void flecs_json_label(
-    ecs_strbuf_t *buf,
-    const ecs_world_t *world,
-    ecs_entity_t e)
-{
-    const char *lbl = flecs_json_entity_label(world, e);
-    if (lbl) {
-        flecs_json_string_escape(buf, lbl);
-    } else {
-        ecs_strbuf_appendch(buf, '#');
-        ecs_strbuf_appendint(buf, (uint32_t)e);
-    }
-}
-
-void flecs_json_path_or_label(
-    ecs_strbuf_t *buf,
-    const ecs_world_t *world,
-    ecs_entity_t e,
-    bool path)
-{
-    if (!path) {
-        flecs_json_label(buf, world, e);
-    } else {
-        flecs_json_path(buf, world, e);
-    }
-}
-
-void flecs_json_color(
-    ecs_strbuf_t *buf,
-    const ecs_world_t *world,
-    ecs_entity_t e)
-{
-    (void)world;
-    (void)e;
-
-    const char *color = NULL;
-#ifdef FLECS_DOC
-    color = ecs_doc_get_color(world, e);
-#endif
-
-    if (color) {
-        ecs_strbuf_appendch(buf, '"');
-        ecs_strbuf_appendstr(buf, color);
-        ecs_strbuf_appendch(buf, '"');
-    } else {
-        ecs_strbuf_appendch(buf, '0');
-    }
-}
-
-void flecs_json_id(
-    ecs_strbuf_t *buf,
-    const ecs_world_t *world,
-    ecs_id_t id)
-{
-    ecs_strbuf_appendch(buf, '[');
-
-    if (ECS_IS_PAIR(id)) {
-        ecs_entity_t first = ecs_pair_first(world, id);
-        ecs_entity_t second = ecs_pair_second(world, id);
-        ecs_strbuf_appendch(buf, '"');
-        ecs_get_path_w_sep_buf(world, 0, first, ".", "", buf);
-        ecs_strbuf_appendch(buf, '"');
-        ecs_strbuf_appendch(buf, ',');
-        ecs_strbuf_appendch(buf, '"');
-        ecs_get_path_w_sep_buf(world, 0, second, ".", "", buf);
-        ecs_strbuf_appendch(buf, '"');
-    } else {
-        ecs_strbuf_appendch(buf, '"');
-        ecs_get_path_w_sep_buf(world, 0, id & ECS_COMPONENT_MASK, ".", "", buf);
-        ecs_strbuf_appendch(buf, '"');
-    }
-
-    ecs_strbuf_appendch(buf, ']');
-}
-
-static
-void flecs_json_id_member_fullpath(
-    ecs_strbuf_t *buf,
-    const ecs_world_t *world,
-    ecs_id_t id)
-{
-    if (ECS_IS_PAIR(id)) {
-        ecs_strbuf_appendch(buf, '(');
-        ecs_entity_t first = ecs_pair_first(world, id);
-        ecs_entity_t second = ecs_pair_second(world, id);
-        ecs_get_path_w_sep_buf(world, 0, first, ".", "", buf);
-        ecs_strbuf_appendch(buf, ',');
-        ecs_get_path_w_sep_buf(world, 0, second, ".", "", buf);
-        ecs_strbuf_appendch(buf, ')');
-    } else {
-        ecs_get_path_w_sep_buf(world, 0, id & ECS_COMPONENT_MASK, ".", "", buf);
-    }
-}
-
-void flecs_json_id_member(
-    ecs_strbuf_t *buf,
-    const ecs_world_t *world,
-    ecs_id_t id,
-    bool fullpath)
-{
-    if (fullpath) {
-        flecs_json_id_member_fullpath(buf, world, id);
-        return;
-    }
-
-    if (ECS_IS_PAIR(id)) {
-        ecs_strbuf_appendch(buf, '(');
-        ecs_entity_t first = ecs_pair_first(world, id);
-        ecs_entity_t second = ecs_pair_second(world, id);
-        {
-            const char *lbl = flecs_json_entity_label(world, first);
-            if (lbl) {
-                ecs_strbuf_appendstr(buf, lbl);
-            }
-        }
-        ecs_strbuf_appendch(buf, ',');
-        {
-            const char *lbl = flecs_json_entity_label(world, second);
-            if (lbl) {
-                ecs_strbuf_appendstr(buf, lbl);
-            }
-        }
-        ecs_strbuf_appendch(buf, ')');
-    } else {
-        const char *lbl = flecs_json_entity_label(world, id & ECS_COMPONENT_MASK);
-        if (lbl) {
-            ecs_strbuf_appendstr(buf, lbl);
-        }
-    }
-}
-
-ecs_primitive_kind_t flecs_json_op_to_primitive_kind(
-    ecs_meta_type_op_kind_t kind) 
-{
-    return kind - EcsOpPrimitive;
 }
 
 #endif
@@ -47604,6 +46762,850 @@ const char* ecs_world_from_json_file_legacy(
     const char *result = ecs_world_from_json_legacy(world, json, desc);
     ecs_os_free(json);
     return result;
+}
+
+#endif
+
+/**
+ * @file json/deserialize.c
+ * @brief Deserialize JSON strings into (component) values.
+ */
+
+#include <ctype.h>
+
+#ifdef FLECS_JSON
+
+const char* ecs_ptr_from_json(
+    const ecs_world_t *world,
+    ecs_entity_t type,
+    void *ptr,
+    const char *json,
+    const ecs_from_json_desc_t *desc)
+{
+    ecs_json_token_t token_kind = 0;
+    char token_buffer[ECS_MAX_TOKEN_SIZE], t_lah[ECS_MAX_TOKEN_SIZE];
+    char *token = token_buffer;
+    int depth = 0;
+
+    const char *name = NULL;
+    const char *expr = NULL;
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, type, ptr);
+    if (cur.valid == false) {
+        return NULL;
+    }
+
+    if (desc) {
+        name = desc->name;
+        expr = desc->expr;
+        cur.lookup_action = desc->lookup_action;
+        cur.lookup_ctx = desc->lookup_ctx;
+    }
+
+    while ((json = flecs_json_parse(json, &token_kind, token))) {
+        if (token_kind == JsonLargeString) {
+            ecs_strbuf_t large_token = ECS_STRBUF_INIT;
+            json = flecs_json_parse_large_string(json, &large_token);
+            if (!json) {
+                break;
+            }
+
+            token = ecs_strbuf_get(&large_token);
+            token_kind = JsonString;
+        }
+
+        if (token_kind == JsonObjectOpen) {
+            depth ++;
+            if (ecs_meta_push(&cur) != 0) {
+                goto error;
+            }
+
+            if (ecs_meta_is_collection(&cur)) {
+                ecs_parser_error(name, expr, json - expr, "expected '['");
+                return NULL;
+            }
+        } else if (token_kind == JsonObjectClose) {
+            depth --;
+
+            if (ecs_meta_is_collection(&cur)) {
+                ecs_parser_error(name, expr, json - expr, "expected ']'");
+                return NULL;
+            }
+
+            if (ecs_meta_pop(&cur) != 0) {
+                goto error;
+            }
+        } else if (token_kind == JsonArrayOpen) {
+            depth ++;
+            if (ecs_meta_push(&cur) != 0) {
+                goto error;
+            }
+
+            if (!ecs_meta_is_collection(&cur)) {
+                ecs_parser_error(name, expr, json - expr, "expected '{'");
+                return NULL;
+            }
+        } else if (token_kind == JsonArrayClose) {
+            depth --;
+
+            if (!ecs_meta_is_collection(&cur)) {
+                ecs_parser_error(name, expr, json - expr, "expected '}'");
+                return NULL;
+            }
+
+            if (ecs_meta_pop(&cur) != 0) {
+                goto error;
+            }
+        } else if (token_kind == JsonComma) {
+            if (ecs_meta_next(&cur) != 0) {
+                goto error;
+            }
+        } else if (token_kind == JsonNull) {
+            if (ecs_meta_set_null(&cur) != 0) {
+                goto error;
+            }
+        } else if (token_kind == JsonString) {
+            const char *lah = flecs_json_parse(
+                json, &token_kind, t_lah);
+            if (token_kind == JsonColon) {
+                /* Member assignment */
+                json = lah;
+                if (ecs_meta_dotmember(&cur, token) != 0) {
+                    goto error;
+                }
+            } else {
+                if (ecs_meta_set_string(&cur, token) != 0) {
+                    goto error;
+                }
+            }
+        } else if (token_kind == JsonNumber) {
+            double number = atof(token);
+            if (ecs_meta_set_float(&cur, number) != 0) {
+                goto error;
+            }
+        } else if (token_kind == JsonLargeInt) {
+            int64_t number = flecs_ito(int64_t, atoll(token));
+            if (ecs_meta_set_int(&cur, number) != 0) {
+                goto error;
+            }
+        } else if (token_kind == JsonNull) {
+            if (ecs_meta_set_null(&cur) != 0) {
+                goto error;
+            }
+        } else if (token_kind == JsonTrue) {
+            if (ecs_meta_set_bool(&cur, true) != 0) {
+                goto error;
+            }
+        } else if (token_kind == JsonFalse) {
+            if (ecs_meta_set_bool(&cur, false) != 0) {
+                goto error;
+            }
+        } else {
+            goto error;
+        }
+
+        if (token != token_buffer) {
+            ecs_os_free(token);
+            token = token_buffer;
+        }
+
+        if (!depth) {
+            break;
+        }
+    }
+
+    return json;
+error:
+    return NULL;
+}
+
+#endif
+
+/**
+ * @file json/json.c
+ * @brief JSON serializer utilities.
+ */
+
+#include <ctype.h>
+
+#ifdef FLECS_JSON
+
+static
+const char* flecs_json_token_str(
+    ecs_json_token_t token_kind)
+{
+    switch(token_kind) {
+    case JsonObjectOpen: return "{";
+    case JsonObjectClose: return "}";
+    case JsonArrayOpen: return "[";
+    case JsonArrayClose: return "]";
+    case JsonColon: return ":";
+    case JsonComma: return ",";
+    case JsonNumber: return "number";
+    case JsonLargeInt: return "large integer";
+    case JsonLargeString:
+    case JsonString: return "string";
+    case JsonBoolean: return "bool";
+    case JsonTrue: return "true";
+    case JsonFalse: return "false";
+    case JsonNull: return "null";
+    case JsonInvalid: return "invalid";
+    default:
+        ecs_throw(ECS_INTERNAL_ERROR, NULL);
+    }
+error:
+    return "<<invalid token kind>>";
+}
+
+const char* flecs_json_parse(
+    const char *json,
+    ecs_json_token_t *token_kind,
+    char *token)
+{
+    ecs_assert(json != NULL, ECS_INTERNAL_ERROR, NULL);
+    json = flecs_parse_ws_eol(json);
+
+    char ch = json[0];
+
+    if (ch == '{') {
+        token_kind[0] = JsonObjectOpen;
+        return json + 1;
+    } else if (ch == '}') {
+        token_kind[0] = JsonObjectClose;
+        return json + 1;
+    } else if (ch == '[') {
+        token_kind[0] = JsonArrayOpen;
+        return json + 1;
+    } else if (ch == ']') {
+        token_kind[0] = JsonArrayClose;
+        return json + 1;
+    } else if (ch == ':') {
+        token_kind[0] = JsonColon;
+        return json + 1;
+    } else if (ch == ',') {
+        token_kind[0] = JsonComma;
+        return json + 1;
+    } else if (ch == '"') {
+        const char *start = json;
+        char *token_ptr = token;
+        json ++;
+        for (; (ch = json[0]); ) {
+            if (token_ptr - token >= ECS_MAX_TOKEN_SIZE) {
+                /* Token doesn't fit in buffer, signal to app to try again with
+                 * dynamic buffer. */
+                token_kind[0] = JsonLargeString;
+                return start;
+            }
+
+            if (ch == '"') {
+                json ++;
+                token_ptr[0] = '\0';
+                break;
+            }
+
+            json = flecs_chrparse(json, token_ptr ++);
+        }
+
+        if (!ch) {
+            token_kind[0] = JsonInvalid;
+            return NULL;
+        } else {
+            token_kind[0] = JsonString;
+            return json;
+        }
+    } else if (isdigit(ch) || (ch == '-')) {
+        token_kind[0] = JsonNumber;
+        const char *result = flecs_parse_digit(json, token);
+        
+        /* Cheap initial check if parsed token could represent large int */
+        if (result - json > 15) {
+            /* Less cheap secondary check to see if number is integer */
+            if (!strchr(token, '.')) {
+                token_kind[0] = JsonLargeInt;
+            }
+        }
+
+        return result;
+    } else if (isalpha(ch)) {
+        if (!ecs_os_strncmp(json, "null", 4)) {
+            token_kind[0] = JsonNull;
+            json += 4;
+        } else
+        if (!ecs_os_strncmp(json, "true", 4)) {
+            token_kind[0] = JsonTrue;
+            json += 4;
+        } else
+        if (!ecs_os_strncmp(json, "false", 5)) {
+            token_kind[0] = JsonFalse;
+            json += 5;
+        }
+
+        if (isalpha(json[0]) || isdigit(json[0])) {
+            token_kind[0] = JsonInvalid;
+            return NULL;
+        }
+
+        return json;
+    } else {
+        token_kind[0] = JsonInvalid;
+        return NULL;
+    }
+}
+
+const char* flecs_json_parse_large_string(
+    const char *json,
+    ecs_strbuf_t *buf)
+{
+    if (json[0] != '"') {
+        return NULL; /* can only parse strings */
+    }
+
+    char ch, ch_out;
+    json ++;
+    for (; (ch = json[0]); ) {
+        if (ch == '"') {
+            json ++;
+            break;
+        }
+
+        json = flecs_chrparse(json, &ch_out);
+        ecs_strbuf_appendch(buf, ch_out);
+    }
+
+    if (!ch) {
+        return NULL;
+    } else {
+        return json;
+    }
+}
+
+const char* flecs_json_parse_next_member(
+    const char *json,
+    char *token,
+    ecs_json_token_t *token_kind,
+    const ecs_from_json_desc_t *desc)
+{
+    json = flecs_json_parse(json, token_kind, token);
+    if (*token_kind == JsonObjectClose) {
+        return json;
+    }
+
+    if (*token_kind != JsonComma) {
+        ecs_parser_error(desc->name, desc->expr, json - desc->expr, 
+            "expecteded } or ,");
+        return NULL;
+    }
+
+    json = flecs_json_parse(json, token_kind, token);
+    if (*token_kind != JsonString) {
+        ecs_parser_error(desc->name, desc->expr, json - desc->expr, 
+            "expecteded member name");
+        return NULL;
+    }
+
+    char temp_token[ECS_MAX_TOKEN_SIZE];
+    ecs_json_token_t temp_token_kind;
+
+    json = flecs_json_parse(json, &temp_token_kind, temp_token);
+    if (temp_token_kind != JsonColon) {
+        ecs_parser_error(desc->name, desc->expr, json - desc->expr, 
+            "expecteded :");
+        return NULL;
+    }
+
+    return json;
+}
+
+const char* flecs_json_expect(
+    const char *json,
+    ecs_json_token_t token_kind,
+    char *token,
+    const ecs_from_json_desc_t *desc)
+{
+    /* Strings must be handled by flecs_json_expect_string for LargeString */
+    ecs_assert(token_kind != JsonString, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_json_token_t kind = 0;
+    const char *lah = flecs_json_parse(json, &kind, token);
+
+    if (kind == JsonInvalid) {
+        ecs_parser_error(desc->name, desc->expr, json - desc->expr, 
+            "invalid json");
+        return NULL;
+    } else if (kind != token_kind) {
+        if (token_kind == JsonBoolean && 
+            (kind == JsonTrue || kind == JsonFalse)) 
+        {
+            /* ok */
+        } else {
+            ecs_parser_error(desc->name, desc->expr, json - desc->expr, 
+                "expected %s, got %s",
+                flecs_json_token_str(token_kind), flecs_json_token_str(kind));
+            return NULL;
+        }
+    }
+
+    return lah;
+}
+
+const char* flecs_json_expect_string(
+    const char *json,
+    char *token,
+    char **out,
+    const ecs_from_json_desc_t *desc)
+{
+    ecs_json_token_t token_kind = 0;
+    json = flecs_json_parse(json, &token_kind, token);
+    if (token_kind == JsonInvalid) {
+        ecs_parser_error(
+            desc->name, desc->expr, json - desc->expr, "invalid json");
+        return NULL;
+    } else if (token_kind != JsonString && token_kind != JsonLargeString) {
+        ecs_parser_error(desc->name, desc->expr, json - desc->expr, 
+            "expected string");
+        return NULL;
+    }
+
+    if (token_kind == JsonLargeString) {
+        ecs_strbuf_t large_token = ECS_STRBUF_INIT;
+        json = flecs_json_parse_large_string(json, &large_token);
+        if (!json) {
+            return NULL;
+        }
+
+        if (out) {
+            *out = ecs_strbuf_get(&large_token);
+        } else {
+            ecs_strbuf_reset(&large_token);
+        }
+    } else if (out) {
+        *out = token;
+    }
+
+    return json;
+}
+
+const char* flecs_json_expect_member(
+    const char *json,
+    char *token,
+    const ecs_from_json_desc_t *desc)
+{
+    char *out = NULL;
+    json = flecs_json_expect_string(json, token, &out, desc);
+    if (!json) {
+        return NULL;
+    }
+
+    if (out != token) {
+        ecs_os_free(out);
+    }
+
+    json = flecs_json_expect(json, JsonColon, token, desc);
+    if (!json) {
+        return NULL;
+    }
+    return json;
+}
+
+const char* flecs_json_expect_next_member(
+    const char *json,
+    char *token,
+    const ecs_from_json_desc_t *desc)
+{
+    json = flecs_json_expect(json, JsonComma, token, desc);
+    if (!json) {
+        return NULL;
+    }
+
+    return flecs_json_expect_member(json, token, desc);
+}
+
+const char* flecs_json_expect_member_name(
+    const char *json,
+    char *token,
+    const char *member_name,
+    const ecs_from_json_desc_t *desc)
+{
+    json = flecs_json_expect_member(json, token, desc);
+    if (!json) {
+        return NULL;
+    }
+    if (ecs_os_strcmp(token, member_name)) {
+        ecs_parser_error(desc->name, desc->expr, json - desc->expr, 
+            "expected member '%s'", member_name);
+        return NULL;
+    }
+    return json;
+}
+
+static
+const char* flecs_json_skip_string(
+    const char *json)
+{
+    if (json[0] != '"') {
+        return NULL; /* can only skip strings */
+    }
+
+    char ch, ch_out;
+    json ++;
+    for (; (ch = json[0]); ) {
+        if (ch == '"') {
+            json ++;
+            break;
+        }
+
+        json = flecs_chrparse(json, &ch_out);
+    }
+
+    if (!ch) {
+        return NULL;
+    } else {
+        return json;
+    }
+}
+
+const char* flecs_json_skip_object(
+    const char *json,
+    char *token,
+    const ecs_from_json_desc_t *desc)
+{
+    ecs_assert(json != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_json_token_t token_kind = 0;
+
+    while ((json = flecs_json_parse(json, &token_kind, token))) {
+        if (token_kind == JsonObjectOpen) {
+            json = flecs_json_skip_object(json, token, desc);
+        } else if (token_kind == JsonArrayOpen) {
+            json = flecs_json_skip_array(json, token, desc);
+        } else if (token_kind == JsonLargeString) {
+            json = flecs_json_skip_string(json);
+        } else if (token_kind == JsonObjectClose) {
+            return json;
+        } else if (token_kind == JsonArrayClose) {
+            ecs_parser_error(desc->name, desc->expr, json - desc->expr, 
+                "expected }, got ]");
+            return NULL;
+        }
+
+        ecs_assert(json != NULL, ECS_INTERNAL_ERROR, NULL);
+    }
+
+    ecs_parser_error(desc->name, desc->expr, json - desc->expr, 
+        "expected }, got end of string");
+    return NULL;
+}
+
+const char* flecs_json_skip_array(
+    const char *json,
+    char *token,
+    const ecs_from_json_desc_t *desc)
+{
+    ecs_assert(json != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_json_token_t token_kind = 0;
+
+    while ((json = flecs_json_parse(json, &token_kind, token))) {
+        if (token_kind == JsonObjectOpen) {
+            json = flecs_json_skip_object(json, token, desc);
+        } else if (token_kind == JsonArrayOpen) {
+            json = flecs_json_skip_array(json, token, desc);
+        } else if (token_kind == JsonLargeString) {
+            json = flecs_json_skip_string(json);
+        } else if (token_kind == JsonObjectClose) {
+            ecs_parser_error(desc->name, desc->expr, json - desc->expr, 
+                "expected ]");
+            return NULL;
+        } else if (token_kind == JsonArrayClose) {
+            return json;
+        }
+
+        ecs_assert(json != NULL, ECS_INTERNAL_ERROR, NULL);
+    }
+
+    ecs_parser_error(desc->name, desc->expr, json - desc->expr, "expected ]");
+    return NULL;
+}
+
+void flecs_json_next(
+    ecs_strbuf_t *buf)
+{
+    ecs_strbuf_list_next(buf);
+}
+
+void flecs_json_number(
+    ecs_strbuf_t *buf,
+    double value)
+{
+    ecs_strbuf_appendflt(buf, value, '"');
+}
+
+void flecs_json_u32(
+    ecs_strbuf_t *buf,
+    uint32_t value)
+{
+    ecs_strbuf_appendint(buf, flecs_uto(int64_t, value));
+}
+
+void flecs_json_true(
+    ecs_strbuf_t *buf)
+{
+    ecs_strbuf_appendlit(buf, "true");
+}
+
+void flecs_json_false(
+    ecs_strbuf_t *buf)
+{
+    ecs_strbuf_appendlit(buf, "false");
+}
+
+void flecs_json_bool(
+    ecs_strbuf_t *buf,
+    bool value)
+{
+    if (value) {
+        flecs_json_true(buf);
+    } else {
+        flecs_json_false(buf);
+    }
+}
+
+void flecs_json_null(
+    ecs_strbuf_t *buf)
+{
+    ecs_strbuf_appendlit(buf, "null");
+}
+
+void flecs_json_array_push(
+    ecs_strbuf_t *buf)
+{
+    ecs_strbuf_list_push(buf, "[", ", ");
+}
+
+void flecs_json_array_pop(
+    ecs_strbuf_t *buf)
+{
+    ecs_strbuf_list_pop(buf, "]");
+}
+
+void flecs_json_object_push(
+    ecs_strbuf_t *buf)
+{
+    ecs_strbuf_list_push(buf, "{", ", ");
+}
+
+void flecs_json_object_pop(
+    ecs_strbuf_t *buf)
+{
+    ecs_strbuf_list_pop(buf, "}");
+}
+
+void flecs_json_string(
+    ecs_strbuf_t *buf,
+    const char *value)
+{
+    ecs_strbuf_appendch(buf, '"');
+    ecs_strbuf_appendstr(buf, value);
+    ecs_strbuf_appendch(buf, '"');
+}
+
+void flecs_json_string_escape(
+    ecs_strbuf_t *buf,
+    const char *value)
+{
+    ecs_size_t length = flecs_stresc(NULL, 0, '"', value);
+    if (length == ecs_os_strlen(value)) {
+        ecs_strbuf_appendch(buf, '"');
+        ecs_strbuf_appendstrn(buf, value, length);
+        ecs_strbuf_appendch(buf, '"');
+    } else {
+        char *out = ecs_os_malloc(length + 3);
+        flecs_stresc(out + 1, length, '"', value);
+        out[0] = '"';
+        out[length + 1] = '"';
+        out[length + 2] = '\0';
+        ecs_strbuf_appendstr(buf, out);
+        ecs_os_free(out);
+    }
+}
+
+void flecs_json_member(
+    ecs_strbuf_t *buf,
+    const char *name)
+{
+    flecs_json_membern(buf, name, ecs_os_strlen(name));
+}
+
+void flecs_json_membern(
+    ecs_strbuf_t *buf,
+    const char *name,
+    int32_t name_len)
+{
+    ecs_strbuf_list_appendch(buf, '"');
+    ecs_strbuf_appendstrn(buf, name, name_len);
+    ecs_strbuf_appendlit(buf, "\":");
+}
+
+void flecs_json_path(
+    ecs_strbuf_t *buf,
+    const ecs_world_t *world,
+    ecs_entity_t e)
+{
+    ecs_strbuf_appendch(buf, '"');
+    ecs_get_path_w_sep_buf(world, 0, e, ".", "", buf);
+    ecs_strbuf_appendch(buf, '"');
+}
+
+static
+const char* flecs_json_entity_label(
+    const ecs_world_t *world,
+    ecs_entity_t e)
+{
+    const char *lbl = NULL;
+    if (!e) {
+        return "#0";
+    }
+#ifdef FLECS_DOC
+    lbl = ecs_doc_get_name(world, e);
+#else
+    lbl = ecs_get_name(world, e);
+#endif
+    return lbl;
+}
+
+void flecs_json_label(
+    ecs_strbuf_t *buf,
+    const ecs_world_t *world,
+    ecs_entity_t e)
+{
+    const char *lbl = flecs_json_entity_label(world, e);
+    if (lbl) {
+        flecs_json_string_escape(buf, lbl);
+    } else {
+        ecs_strbuf_appendch(buf, '#');
+        ecs_strbuf_appendint(buf, (uint32_t)e);
+    }
+}
+
+void flecs_json_path_or_label(
+    ecs_strbuf_t *buf,
+    const ecs_world_t *world,
+    ecs_entity_t e,
+    bool path)
+{
+    if (!path) {
+        flecs_json_label(buf, world, e);
+    } else {
+        flecs_json_path(buf, world, e);
+    }
+}
+
+void flecs_json_color(
+    ecs_strbuf_t *buf,
+    const ecs_world_t *world,
+    ecs_entity_t e)
+{
+    (void)world;
+    (void)e;
+
+    const char *color = NULL;
+#ifdef FLECS_DOC
+    color = ecs_doc_get_color(world, e);
+#endif
+
+    if (color) {
+        ecs_strbuf_appendch(buf, '"');
+        ecs_strbuf_appendstr(buf, color);
+        ecs_strbuf_appendch(buf, '"');
+    } else {
+        ecs_strbuf_appendch(buf, '0');
+    }
+}
+
+void flecs_json_id(
+    ecs_strbuf_t *buf,
+    const ecs_world_t *world,
+    ecs_id_t id)
+{
+    ecs_strbuf_appendch(buf, '[');
+
+    if (ECS_IS_PAIR(id)) {
+        ecs_entity_t first = ecs_pair_first(world, id);
+        ecs_entity_t second = ecs_pair_second(world, id);
+        ecs_strbuf_appendch(buf, '"');
+        ecs_get_path_w_sep_buf(world, 0, first, ".", "", buf);
+        ecs_strbuf_appendch(buf, '"');
+        ecs_strbuf_appendch(buf, ',');
+        ecs_strbuf_appendch(buf, '"');
+        ecs_get_path_w_sep_buf(world, 0, second, ".", "", buf);
+        ecs_strbuf_appendch(buf, '"');
+    } else {
+        ecs_strbuf_appendch(buf, '"');
+        ecs_get_path_w_sep_buf(world, 0, id & ECS_COMPONENT_MASK, ".", "", buf);
+        ecs_strbuf_appendch(buf, '"');
+    }
+
+    ecs_strbuf_appendch(buf, ']');
+}
+
+static
+void flecs_json_id_member_fullpath(
+    ecs_strbuf_t *buf,
+    const ecs_world_t *world,
+    ecs_id_t id)
+{
+    if (ECS_IS_PAIR(id)) {
+        ecs_strbuf_appendch(buf, '(');
+        ecs_entity_t first = ecs_pair_first(world, id);
+        ecs_entity_t second = ecs_pair_second(world, id);
+        ecs_get_path_w_sep_buf(world, 0, first, ".", "", buf);
+        ecs_strbuf_appendch(buf, ',');
+        ecs_get_path_w_sep_buf(world, 0, second, ".", "", buf);
+        ecs_strbuf_appendch(buf, ')');
+    } else {
+        ecs_get_path_w_sep_buf(world, 0, id & ECS_COMPONENT_MASK, ".", "", buf);
+    }
+}
+
+void flecs_json_id_member(
+    ecs_strbuf_t *buf,
+    const ecs_world_t *world,
+    ecs_id_t id,
+    bool fullpath)
+{
+    if (fullpath) {
+        flecs_json_id_member_fullpath(buf, world, id);
+        return;
+    }
+
+    if (ECS_IS_PAIR(id)) {
+        ecs_strbuf_appendch(buf, '(');
+        ecs_entity_t first = ecs_pair_first(world, id);
+        ecs_entity_t second = ecs_pair_second(world, id);
+        {
+            const char *lbl = flecs_json_entity_label(world, first);
+            if (lbl) {
+                ecs_strbuf_appendstr(buf, lbl);
+            }
+        }
+        ecs_strbuf_appendch(buf, ',');
+        {
+            const char *lbl = flecs_json_entity_label(world, second);
+            if (lbl) {
+                ecs_strbuf_appendstr(buf, lbl);
+            }
+        }
+        ecs_strbuf_appendch(buf, ')');
+    } else {
+        const char *lbl = flecs_json_entity_label(world, id & ECS_COMPONENT_MASK);
+        if (lbl) {
+            ecs_strbuf_appendstr(buf, lbl);
+        }
+    }
+}
+
+ecs_primitive_kind_t flecs_json_op_to_primitive_kind(
+    ecs_meta_type_op_kind_t kind) 
+{
+    return kind - EcsOpPrimitive;
 }
 
 #endif
@@ -61587,6 +61589,7 @@ const char* flecs_term_parse_inout(
     ParserEnd;
 }
 
+static
 const char* flecs_query_term_parse(
     ecs_script_parser_t *parser,
     const char *pos) 
@@ -63230,7 +63233,8 @@ const char* flecs_script_identifier(
     } while (true);
 }
 
-// Number toke static
+// Number token static
+static
 bool flecs_script_is_number(
     char c)
 {
@@ -67443,6 +67447,55 @@ void flecs_pipeline_stats_set_t(
     ((ecs_pipeline_stats_t*)stats)->t = t;
 }
 
+
+static
+void flecs_pipeline_stats_copy_last(
+    void *stats, 
+    void *src) 
+{
+    ecs_pipeline_stats_copy_last(stats, src);
+}
+
+static
+void flecs_pipeline_stats_get(
+    ecs_world_t *world, 
+    ecs_entity_t res, 
+    void *stats) 
+{
+    ecs_pipeline_stats_get(world, res, stats);
+}
+
+static
+void flecs_pipeline_stats_reduce(
+    void *stats, 
+    void *src) 
+{
+    ecs_pipeline_stats_reduce(stats, src);
+}
+
+static
+void flecs_pipeline_stats_reduce_last(
+    void *stats, 
+    void *last, 
+    int32_t reduce_count) 
+{
+    ecs_pipeline_stats_reduce_last(stats, last, reduce_count);
+}
+
+static
+void flecs_pipeline_stats_repeat_last(
+    void* stats) 
+{
+    ecs_pipeline_stats_repeat_last(stats);;
+}
+
+static
+void flecs_pipeline_stats_fini(
+    void *stats) 
+{
+    ecs_pipeline_stats_fini(stats);
+}
+
 void FlecsPipelineMonitorImport(
     ecs_world_t *world)
 {
@@ -67456,13 +67509,13 @@ void FlecsPipelineMonitorImport(
     });
 
     ecs_stats_api_t api = {
-        .copy_last = (void(*)(void*,void*))ecs_pipeline_stats_copy_last,
-        .get = (void(*)(ecs_world_t*,ecs_entity_t,void*))ecs_pipeline_stats_get,
-        .reduce = (void(*)(void*,void*))ecs_pipeline_stats_reduce,
-        .reduce_last = (void(*)(void*,void*,int32_t))ecs_pipeline_stats_reduce_last,
-        .repeat_last = (void(*)(void*))ecs_pipeline_stats_repeat_last,
+        .copy_last = flecs_pipeline_stats_copy_last,
+        .get = flecs_pipeline_stats_get,
+        .reduce = flecs_pipeline_stats_reduce,
+        .reduce_last = flecs_pipeline_stats_reduce_last,
+        .repeat_last = flecs_pipeline_stats_repeat_last,
         .set_t = flecs_pipeline_stats_set_t,
-        .fini = (void(*)(void*))ecs_pipeline_stats_fini,
+        .fini = flecs_pipeline_stats_fini,
         .stats_size = ECS_SIZEOF(ecs_pipeline_stats_t),
         .monitor_component_id = ecs_id(EcsPipelineStats),
         .query_component_id = ecs_id(EcsPipeline)
@@ -68275,6 +68328,47 @@ void flecs_system_stats_set_t(
     ((ecs_system_stats_t*)stats)->query.t = t;
 }
 
+static
+void flecs_system_stats_copy_last(
+    void *stats, 
+    void *src) 
+{
+    ecs_system_stats_copy_last(stats, src);
+}
+
+static
+void flecs_system_stats_get(
+    ecs_world_t *world, 
+    ecs_entity_t res, 
+    void *stats) 
+{
+    ecs_system_stats_get(world, res, stats);
+}
+
+static
+void flecs_system_stats_reduce(
+    void *stats, 
+    void *src) 
+{
+    ecs_system_stats_reduce(stats, src);
+}
+
+static
+void flecs_system_stats_reduce_last(
+    void *stats, 
+    void *last, 
+    int32_t reduce_count) 
+{
+    ecs_system_stats_reduce_last(stats, last, reduce_count);
+}
+
+static
+void flecs_system_stats_repeat_last(
+    void* stats) 
+{
+    ecs_system_stats_repeat_last(stats);;
+}
+
 void FlecsSystemMonitorImport(
     ecs_world_t *world)
 {
@@ -68288,11 +68382,11 @@ void FlecsSystemMonitorImport(
     });
 
     ecs_stats_api_t api = {
-        .copy_last = (void(*)(void*,void*))ecs_system_stats_copy_last,
-        .get = (void(*)(ecs_world_t*,ecs_entity_t,void*))ecs_system_stats_get,
-        .reduce = (void(*)(void*,void*))ecs_system_stats_reduce,
-        .reduce_last = (void(*)(void*,void*,int32_t))ecs_system_stats_reduce_last,
-        .repeat_last = (void(*)(void*))ecs_system_stats_repeat_last,
+        .copy_last = flecs_system_stats_copy_last,
+        .get = flecs_system_stats_get,
+        .reduce = flecs_system_stats_reduce,
+        .reduce_last = flecs_system_stats_reduce_last,
+        .repeat_last = flecs_system_stats_repeat_last,
         .set_t = flecs_system_stats_set_t,
         .stats_size = ECS_SIZEOF(ecs_system_stats_t),
         .monitor_component_id = ecs_id(EcsSystemStats),
@@ -68315,7 +68409,7 @@ void FlecsSystemMonitorImport(
 ECS_COMPONENT_DECLARE(EcsWorldStats);
 
 static
-void flecs_world_stats_get_wrapper(
+void flecs_world_stats_get(
     ecs_world_t *world, ecs_entity_t res, void *stats)
 {
     (void)res;
@@ -68331,6 +68425,38 @@ void flecs_world_stats_set_t(
     ((ecs_world_stats_t*)stats)->t = t;
 }
 
+static
+void flecs_world_stats_copy_last(
+    void *stats, 
+    void *src) 
+{
+    ecs_world_stats_copy_last(stats, src);
+}
+
+static
+void flecs_world_stats_reduce(
+    void *stats, 
+    void *src) 
+{
+    ecs_world_stats_reduce(stats, src);
+}
+
+static
+void flecs_world_stats_reduce_last(
+    void *stats, 
+    void *last, 
+    int32_t reduce_count) 
+{
+    ecs_world_stats_reduce_last(stats, last, reduce_count);
+}
+
+static
+void flecs_world_stats_repeat_last(
+    void* stats) 
+{
+    ecs_world_stats_repeat_last(stats);;
+}
+
 void FlecsWorldMonitorImport(
     ecs_world_t *world) 
 {
@@ -68341,11 +68467,11 @@ void FlecsWorldMonitorImport(
     });
 
     ecs_stats_api_t api = {
-        .copy_last = (void(*)(void*,void*))ecs_world_stats_copy_last,
-        .get = (void(*)(ecs_world_t*,ecs_entity_t,void*))flecs_world_stats_get_wrapper,
-        .reduce = (void(*)(void*,void*))ecs_world_stats_reduce,
-        .reduce_last = (void(*)(void*,void*,int32_t))ecs_world_stats_reduce_last,
-        .repeat_last = (void(*)(void*))ecs_world_stats_repeat_last,
+        .copy_last = flecs_world_stats_copy_last,
+        .get = flecs_world_stats_get,
+        .reduce = flecs_world_stats_reduce,
+        .reduce_last = flecs_world_stats_reduce_last,
+        .repeat_last = flecs_world_stats_repeat_last,
         .set_t = flecs_world_stats_set_t,
         .fini = NULL,
         .stats_size = ECS_SIZEOF(ecs_world_stats_t),
@@ -69273,7 +69399,7 @@ int flecs_query_discover_vars(
     }
 
     /* Hide anonymous table variables from application */
-    query->pub.var_count -= anonymous_table_count;
+    query->pub.var_count -= flecs_ito(int16_t, anonymous_table_count);
 
     /* Sanity check to make sure that the public part of the variable array only
      * contains entity variables. */

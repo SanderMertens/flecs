@@ -467,6 +467,7 @@ const char* flecs_term_parse_inout(
     ParserEnd;
 }
 
+static
 const char* flecs_query_term_parse(
     ecs_script_parser_t *parser,
     const char *pos) 
