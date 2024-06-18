@@ -6,6 +6,8 @@
 #include "json.h"
 #include "../meta/meta.h"
 
+#ifdef FLECS_JSON
+
 int ecs_entity_to_json_buf(
     const ecs_world_t *world,
     ecs_entity_t entity,
@@ -87,3 +89,5 @@ char* ecs_entity_to_json(
 
     return ecs_strbuf_get(&buf);
 }
+
+#endif

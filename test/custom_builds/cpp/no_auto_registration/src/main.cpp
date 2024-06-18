@@ -6,7 +6,7 @@ int main(int, char *[]) {
 
     world.import<flecs::units>();
     world.import<flecs::alerts>();
-    world.import<flecs::monitor>();
+    world.import<flecs::stats>();
 
     // check if builtin components are registered
 

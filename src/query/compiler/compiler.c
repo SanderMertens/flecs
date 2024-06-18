@@ -431,7 +431,8 @@ int flecs_query_discover_vars(
     }
 
     /* Hide anonymous table variables from application */
-    query->pub.var_count -= flecs_ito(int16_t, anonymous_table_count);
+    query->pub.var_count = 
+        flecs_ito(int16_t, query->pub.var_count - anonymous_table_count);
 
     /* Sanity check to make sure that the public part of the variable array only
      * contains entity variables. */
