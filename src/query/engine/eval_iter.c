@@ -219,7 +219,9 @@ void flecs_query_iter_fini_ctx(
         case EcsQueryUp:
         case EcsQuerySelfUp:
         case EcsQueryUpId:
-        case EcsQuerySelfUpId: {
+        case EcsQuerySelfUpId: 
+        case EcsQueryUnionEqUp:
+        case EcsQueryUnionEqSelfUp: {
             ecs_trav_up_cache_t *cache = &ctx[i].is.up.cache;
             if (cache->dir == EcsTravDown) {
                 flecs_query_down_cache_fini(a, cache);
