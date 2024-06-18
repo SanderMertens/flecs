@@ -1261,7 +1261,7 @@ void DeserializeFromJson_deser_entity_1_component_1_member(void) {
 
     ecs_entity_t e = ecs_new(world);
     const char *ptr = ecs_entity_from_json(world, e, 
-        "{\"ids\":[[\"Position\"]],\"values\":[{\"x\":10}]}", NULL);
+        "{\"components\": {\"Position\": {\"x\": 10}}}", NULL);
     test_assert(ptr != NULL);
     test_assert(ptr[0] == '\0');
 
@@ -1287,7 +1287,7 @@ void DeserializeFromJson_deser_entity_1_component_1_member_w_spaces(void) {
 
     ecs_entity_t e = ecs_new(world);
     const char *ptr = ecs_entity_from_json(world, e, 
-        " { \"ids\" : [ [ \"Position\" ] ] , \"values\" : [ { \"x\" : 10 } ] }", NULL);
+        "{ \"components\" : { \"Position\" : { \"x\" : 10 } } }", NULL);
     test_assert(ptr != NULL);
     test_assert(ptr[0] == '\0');
 
@@ -1313,7 +1313,7 @@ void DeserializeFromJson_deser_entity_1_component_2_members(void) {
 
     ecs_entity_t e = ecs_new(world);
     const char *ptr = ecs_entity_from_json(world, e, 
-        "{\"ids\":[[\"Position\"]],\"values\":[{\"x\":10, \"y\":20}]}", NULL);
+        "{\"components\": {\"Position\": {\"x\": 10, \"y\": 20}}}", NULL);
     test_assert(ptr != NULL);
     test_assert(ptr[0] == '\0');
 
@@ -1321,6 +1321,39 @@ void DeserializeFromJson_deser_entity_1_component_2_members(void) {
     test_assert(pos != NULL);
     test_int(pos->x, 10);
     test_int(pos->y, 20);
+
+    ecs_fini(world);
+}
+
+void DeserializeFromJson_deser_entity_2_components_missing_object_close(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "Position"}),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    test_assert(ecs_id(Position) != 0);
+
+    ecs_entity_t ecs_id(Velocity) = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "Velocity"}),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    test_assert(ecs_id(Velocity) != 0);
+
+    ecs_entity_t e = ecs_new(world);
+
+    ecs_log_set_level(-4);
+    const char *ptr = ecs_entity_from_json(world, e, 
+        "{\"components\": {\"Position\": {\"x\": 10, \"y\": 20}, \"Velocity\": {\"x\": 1, \"y\": 2}}", NULL);
+    test_assert(ptr == NULL);
 
     ecs_fini(world);
 }
@@ -1350,12 +1383,7 @@ void DeserializeFromJson_deser_entity_2_components(void) {
 
     ecs_entity_t e = ecs_new(world);
     const char *ptr = ecs_entity_from_json(world, e, 
-        "{"
-            "\"ids\":[[\"Position\"], [\"Velocity\"]],"
-            "\"values\":["
-                "{\"x\":10, \"y\":20}, "
-                "{\"x\":1, \"y\":2}"
-            "]}", NULL);
+        "{\"components\": {\"Position\": {\"x\": 10, \"y\": 20}, \"Velocity\": {\"x\": 1, \"y\": 2}}}", NULL);
     test_assert(ptr != NULL);
     test_assert(ptr[0] == '\0');
 
@@ -1397,7 +1425,7 @@ void DeserializeFromJson_deser_entity_1_component_composite_member(void) {
 
     ecs_entity_t e = ecs_new(world);
     const char *ptr = ecs_entity_from_json(world, e, 
-        "{\"ids\":[[\"Line\"]],\"values\":[{\"start\": {\"x\":10, \"y\":20}, \"stop\": {\"x\":30, \"y\":40}}]}", NULL);
+        "{\"components\": {\"Line\": {\"start\": {\"x\": 10, \"y\": 20}, \"stop\": {\"x\": 30, \"y\": 40}}}}", NULL);
     test_assert(ptr != NULL);
     test_assert(ptr[0] == '\0');
 
@@ -1436,7 +1464,7 @@ void DeserializeFromJson_deser_entity_1_component_nested_member(void) {
 
     ecs_entity_t e = ecs_new(world);
     const char *ptr = ecs_entity_from_json(world, e, 
-        "{\"ids\":[[\"Line\"]],\"values\":[{\"start.x\": 10, \"start.y\": 20, \"stop.x\": 30, \"stop.y\": 40}]}", NULL);
+        "{\"components\": {\"Line\": {\"start.x\": 10, \"start.y\": 20, \"stop.x\": 30, \"stop.y\": 40}}}", NULL);
     test_assert(ptr != NULL);
     test_assert(ptr[0] == '\0');
 
@@ -1467,7 +1495,7 @@ void DeserializeFromJson_deser_entity_1_pair(void) {
 
     ecs_entity_t e = ecs_new(world);
     const char *ptr = ecs_entity_from_json(world, e, 
-        "{\"ids\":[[\"Position\", \"Tgt\"]],\"values\":[{\"x\":10, \"y\":20}]}", NULL);
+        "{\"components\": {\"(Position,Tgt)\": {\"x\": 10, \"y\": 20}}}", NULL);
     test_assert(ptr != NULL);
     test_assert(ptr[0] == '\0');
 
@@ -1506,12 +1534,7 @@ void DeserializeFromJson_deser_entity_2_pairs(void) {
 
     ecs_entity_t e = ecs_new(world);
     const char *ptr = ecs_entity_from_json(world, e, 
-        "{"
-            "\"ids\":[[\"Position\", \"Tgt\"], [\"Velocity\", \"Tgt\"]],"
-            "\"values\":["
-                "{\"x\":10, \"y\":20}, "
-                "{\"x\":1, \"y\":2}"
-            "]}", NULL);
+        "{\"components\": {\"(Position,Tgt)\": {\"x\": 10, \"y\": 20}, \"(Velocity,Tgt)\": {\"x\": 1, \"y\": 2}}}", NULL);
     test_assert(ptr != NULL);
     test_assert(ptr[0] == '\0');
 
@@ -1542,7 +1565,7 @@ void DeserializeFromJson_deser_entity_w_path(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t e = ecs_new(world);
-    const char *r = ecs_entity_from_json(world, e, "{\"path\":\"ent\"}", NULL);
+    const char *r = ecs_entity_from_json(world, e, "{\"name\":\"ent\"}", NULL);
     test_str(r, "");
     test_str(ecs_get_name(world, e), "ent");
 
@@ -1556,7 +1579,7 @@ void DeserializeFromJson_deser_entity_w_path_and_ids(void) {
 
     ecs_entity_t e = ecs_new(world);
     const char *r = ecs_entity_from_json(world, e, 
-        "{\"path\":\"ent\", \"ids\":[[\"Position\"]]}", NULL);
+        "{\"name\": \"ent\", \"components\": {\"Position\": null}}", NULL);
     test_str(r, "");
     test_str(ecs_get_name(world, e), "ent");
     test_assert(ecs_has(world, e, Position));
@@ -1579,7 +1602,7 @@ void DeserializeFromJson_deser_entity_w_path_and_ids_and_values(void) {
 
     ecs_entity_t e = ecs_new(world);
     const char *r = ecs_entity_from_json(world, e, 
-        "{\"path\":\"ent\", \"ids\":[[\"Position\"]], \"values\":[{\"x\":10, \"y\":20}]}", NULL);
+        "{\"name\": \"ent\", \"components\": {\"Position\":{\"x\": 10, \"y\": 20}}}", NULL);
     test_str(r, "");
     test_str(ecs_get_name(world, e), "ent");
     test_assert(ecs_has(world, e, Position));
@@ -1598,7 +1621,7 @@ void DeserializeFromJson_deser_entity_w_ids(void) {
 
     ecs_entity_t e = ecs_new(world);
     const char *r = ecs_entity_from_json(world, e, 
-        "{\"ids\":[[\"Position\"]]}", NULL);
+        "{\"tags\": [\"Position\"]}", NULL);
     test_str(r, "");
     test_str(ecs_get_name(world, e), NULL);
     test_assert(ecs_has(world, e, Position));
@@ -4973,6 +4996,13 @@ void DeserializeFromJson_ser_deser_value_for_tag(void) {
         ecs_entity_t e5 = ecs_lookup(world, "e5");
         ecs_entity_t e6 = ecs_lookup(world, "e6");
 
+        test_assert(e1 != 0);
+        test_assert(e2 != 0);
+        test_assert(e3 != 0);
+        test_assert(e4 != 0);
+        test_assert(e5 != 0);
+        test_assert(e6 != 0);
+
         test_assert(ecs_is_alive(world, e1));
         test_assert(ecs_is_alive(world, e2));
         test_assert(ecs_is_alive(world, e3));
@@ -5968,11 +5998,7 @@ void DeserializeFromJson_ser_deser_with_child_tgt(void) {
 void DeserializeFromJson_ser_deser_with_child_tgt_no_child(void) {
     ecs_world_t *world = ecs_init();
 
-    char *json = "{ \"results\": [ "
-        "{ \"ids\": [ [ \"Foo\" ], [ \"flecs.core.Identifier\", \"flecs.core.Name\" ], [ \"flecs.core.ChildOf\", \"p\" ], [ \"Rel\", \"p.e.c\" ] ], "
-        "\"parent\": \"p\", "
-        "\"entities\": [ \"e\" ], "
-        "\"values\": [ 0, 0, 0, 0 ] } ] }";
+    char *json = "{\"results\": [{\"parent\": \"p\", \"name\": \"e\", \"id\": 1000, \"tags\": [\"Foo\"], \"pairs\": {\"flecs.core.ChildOf\": \"p\", \"Rel\": \"p.e.c\"}, \"components\": {\"(flecs.core.Identifier,flecs.core.Name)\": null } } ] }";
 
     ecs_fini(world);
     world = ecs_init();

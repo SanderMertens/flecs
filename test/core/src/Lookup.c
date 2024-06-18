@@ -145,6 +145,72 @@ void Lookup_lookup_by_id(void) {
     ecs_fini(world);
 }
 
+void Lookup_lookup_path_anonymous_parent(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_make_alive(world, 1000);
+
+    ecs_entity_t e = ecs_entity(world, {
+        .name = "foo",
+        .parent = 1000
+    });
+    test_assert(e != 0);
+
+    test_assert(ecs_has_pair(world, e, EcsChildOf, 1000));
+    test_assert(ecs_lookup(world, "#1000") == 1000);
+    test_assert(ecs_lookup(world, "#1000.foo") == e);
+
+    ecs_fini(world);
+}
+
+void Lookup_lookup_path_0_parent(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t e = ecs_entity(world, {
+        .name = "foo",
+    });
+    test_assert(e != 0);
+
+    test_assert(ecs_lookup(world, "#0.foo") == e);
+
+    ecs_fini(world);
+}
+
+void Lookup_lookup_path_0_parent_w_scope(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t p = ecs_entity(world, {
+        .name = "parent",
+    });
+    test_assert(p != 0);
+
+    ecs_entity_t e = ecs_entity(world, {
+        .name = "foo",
+    });
+    test_assert(e != 0);
+
+    ecs_entity_t c = ecs_entity(world, {
+        .name = "foo",
+        .parent = p
+    });
+    test_assert(c != 0);
+    test_assert(e != c);
+
+    test_assert(ecs_lookup(world, "foo") == e);
+    test_assert(ecs_lookup(world, "#0.foo") == e);
+    test_assert(ecs_lookup(world, "parent.foo") == c);
+
+    ecs_set_scope(world, p);
+
+    test_assert(ecs_lookup(world, "foo") == c);
+    test_assert(ecs_lookup(world, "#0.foo") == e);
+    test_assert(ecs_lookup(world, "parent.foo") == c);
+
+    ecs_set_scope(world, 0);
+
+    ecs_fini(world);
+}
+
 void Lookup_lookup_recycled_by_id(void) {
     ecs_world_t *world = ecs_mini();
 

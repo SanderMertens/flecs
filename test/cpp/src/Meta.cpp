@@ -1041,7 +1041,7 @@ void Meta_new_world_ser_deser_empty_flecs_entity(void) {
     {
         const CppEntity *ptr = e1.get<CppEntity>();
         test_assert(ptr != nullptr);
-        test_str(world.to_json(ptr).c_str(), "{\"entity\":#0}");
+        test_str(world.to_json(ptr).c_str(), "{\"entity\":\"#0\"}");
     }
 
     auto json = world.to_json();
@@ -1061,7 +1061,7 @@ void Meta_new_world_ser_deser_empty_flecs_entity(void) {
     {
         const CppEntity *ptr = e1.get<CppEntity>();
         test_assert(ptr != nullptr);
-        test_str(world2.to_json(ptr).c_str(), "{\"entity\":#0}");
+        test_str(world2.to_json(ptr).c_str(), "{\"entity\":\"#0\"}");
     }
 }
 

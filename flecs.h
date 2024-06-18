@@ -256,7 +256,7 @@
  * When enabled, Flecs will use the OS allocator provided in the OS API directly
  * instead of the builtin block allocator. This can decrease memory utilization
  * as memory will be freed more often, at the cost of decreased performance. */
-#define FLECS_USE_OS_ALLOC
+// #define FLECS_USE_OS_ALLOC
 
 /** @def FLECS_ID_DESC_MAX
  * Maximum number of ids to add ecs_entity_desc_t / ecs_bulk_desc_t */
@@ -13393,6 +13393,39 @@ int ecs_world_to_json_buf(
     ecs_world_t *world,
     ecs_strbuf_t *buf_out,
     const ecs_world_to_json_desc_t *desc);
+
+
+
+/* Legacy deserializer functions. These can be used to load a v3 JSON string and
+ * save it to the new format. These functions will be removed in the next 
+ * release. */
+
+FLECS_API
+const char* ecs_ptr_from_json_legacy(
+    const ecs_world_t *world,
+    ecs_entity_t type,
+    void *ptr,
+    const char *json,
+    const ecs_from_json_desc_t *desc);
+
+FLECS_API
+const char* ecs_entity_from_json_legacy(
+    ecs_world_t *world,
+    ecs_entity_t entity,
+    const char *json,
+    const ecs_from_json_desc_t *desc);
+
+FLECS_API
+const char* ecs_world_from_json_legacy(
+    ecs_world_t *world,
+    const char *json,
+    const ecs_from_json_desc_t *desc);
+
+FLECS_API
+const char* ecs_world_from_json_file_legacy(
+    ecs_world_t *world,
+    const char *filename,
+    const ecs_from_json_desc_t *desc);
 
 #ifdef __cplusplus
 }

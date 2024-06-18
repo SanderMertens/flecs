@@ -466,6 +466,7 @@
                 "deser_entity_1_component_1_member_w_spaces",
                 "deser_entity_1_component_2_members",
                 "deser_entity_2_components",
+                "deser_entity_2_components_missing_object_close",
                 "deser_entity_1_component_composite_member",
                 "deser_entity_1_component_nested_member",
                 "deser_entity_1_pair",
@@ -576,6 +577,7 @@
                 "struct_double",
                 "struct_string",
                 "struct_entity",
+                "struct_entity_0",
                 "struct_entity_10k",
                 "struct_entity_after_float",
                 "struct_id",
@@ -826,9 +828,7 @@
                 "struct_nested",
                 "struct_nested_2_lvls",
                 "struct_nested_2_members",
-                "struct_nested_3_members",
-                "anonymous_type",
-                "anonymous_type_recycled"
+                "struct_nested_3_members"
             ]
         }, {
             "id": "SerializeQueryInfoToJson",

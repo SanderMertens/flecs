@@ -92,5 +92,12 @@ const char* flecs_id_parse(
     const char *expr,
     ecs_id_t *id);
 
+const char* flecs_term_parse(
+    ecs_world_t *world,
+    const char *name,
+    const char *expr,
+    ecs_term_t *term,
+    char *token_buffer);
+
 #endif // FLECS_SCRIPT
 #endif // FLECS_SCRIPT_PRIVATE_H

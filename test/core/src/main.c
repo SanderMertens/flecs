@@ -149,6 +149,9 @@ void Entity_entity_w_digit_name(void);
 void Entity_entity_w_existing_digit_name(void);
 void Entity_entity_from_digit(void);
 void Entity_entity_from_existing_digit(void);
+void Entity_entity_from_digit_path(void);
+void Entity_entity_from_existing_digit_path(void);
+void Entity_entity_from_digit_0_path(void);
 void Entity_entity_from_conflicting_digit(void);
 void Entity_set_generation_on_nonempty_entity(void);
 void Entity_set_generation_while_deferred(void);
@@ -869,6 +872,9 @@ void Lookup_get_name(void);
 void Lookup_get_name_no_name(void);
 void Lookup_get_name_from_empty(void);
 void Lookup_lookup_by_id(void);
+void Lookup_lookup_path_anonymous_parent(void);
+void Lookup_lookup_path_0_parent(void);
+void Lookup_lookup_path_0_parent_w_scope(void);
 void Lookup_lookup_recycled_by_id(void);
 void Lookup_lookup_symbol_by_id(void);
 void Lookup_lookup_name_w_digit(void);
@@ -3333,6 +3339,18 @@ bake_test_case Entity_testcases[] = {
     {
         "entity_from_existing_digit",
         Entity_entity_from_existing_digit
+    },
+    {
+        "entity_from_digit_path",
+        Entity_entity_from_digit_path
+    },
+    {
+        "entity_from_existing_digit_path",
+        Entity_entity_from_existing_digit_path
+    },
+    {
+        "entity_from_digit_0_path",
+        Entity_entity_from_digit_0_path
     },
     {
         "entity_from_conflicting_digit",
@@ -6084,6 +6102,18 @@ bake_test_case Lookup_testcases[] = {
     {
         "lookup_by_id",
         Lookup_lookup_by_id
+    },
+    {
+        "lookup_path_anonymous_parent",
+        Lookup_lookup_path_anonymous_parent
+    },
+    {
+        "lookup_path_0_parent",
+        Lookup_lookup_path_0_parent
+    },
+    {
+        "lookup_path_0_parent_w_scope",
+        Lookup_lookup_path_0_parent_w_scope
     },
     {
         "lookup_recycled_by_id",
@@ -13542,7 +13572,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        135,
+        138,
         Entity_testcases
     },
     {
@@ -13689,7 +13719,7 @@ static bake_test_suite suites[] = {
         "Lookup",
         Lookup_setup,
         NULL,
-        60,
+        63,
         Lookup_testcases
     },
     {
