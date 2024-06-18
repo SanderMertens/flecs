@@ -30,7 +30,7 @@
 
 // $this ==
 static
-const char* flecs_query_parse_term_equality_pred(
+const char* flecs_term_parse_equality_pred(
     ecs_script_parser_t *parser,
     const char *pos,
     ecs_entity_t pred) 
@@ -91,7 +91,7 @@ ecs_entity_t flecs_query_parse_trav_flags(
 }
 
 static
-const char* flecs_query_parse_term_trav(
+const char* flecs_term_parse_trav(
     ecs_script_parser_t *parser,
     ecs_term_ref_t *ref,
     const char *pos) 
@@ -132,7 +132,7 @@ const char* flecs_query_parse_term_trav(
 
 // Position(
 static
-const char* flecs_query_parse_term_arg(
+const char* flecs_term_parse_arg(
     ecs_script_parser_t *parser,
     const char *pos,
     int32_t arg)
@@ -164,7 +164,7 @@ const char* flecs_query_parse_term_arg(
     if (is_trav_flag) {
         // Position(self|up
         //          ^
-        pos = flecs_query_parse_term_trav(parser, ref, pos);
+        pos = flecs_term_parse_trav(parser, ref, pos);
         if (!pos) {
             goto error;
         }
@@ -179,7 +179,7 @@ const char* flecs_query_parse_term_arg(
                 //          ^
                 LookAhead_1('|',
                     pos = lookahead;
-                    pos = flecs_query_parse_term_trav(parser, ref, pos);
+                    pos = flecs_term_parse_trav(parser, ref, pos);
                     if (!pos) {
                         goto error;
                     }
@@ -210,7 +210,7 @@ const char* flecs_query_parse_term_arg(
                 Error("cannot mix operators in extra term arguments");
             }
             parser->extra_oper = EcsAnd;
-            return flecs_query_parse_term_arg(parser, pos, arg + 1);
+            return flecs_term_parse_arg(parser, pos, arg + 1);
 
         // Position(src, second ||
         //          ^
@@ -219,7 +219,7 @@ const char* flecs_query_parse_term_arg(
                 Error("cannot mix operators in extra term arguments");
             }
             parser->extra_oper = EcsOr;
-            return flecs_query_parse_term_arg(parser, pos, arg + 1);
+            return flecs_term_parse_arg(parser, pos, arg + 1);
 
         // Position(src)
         //          ^
@@ -235,7 +235,7 @@ const char* flecs_query_parse_term_arg(
 
 // Position
 static
-const char* flecs_query_parse_term_id(
+const char* flecs_term_parse_id(
     ecs_script_parser_t *parser,
     const char *pos) 
 {
@@ -243,10 +243,10 @@ const char* flecs_query_parse_term_id(
 
     Parse(
         case EcsTokEq:
-            return flecs_query_parse_term_equality_pred(
+            return flecs_term_parse_equality_pred(
                 parser, pos, EcsPredEq);
         case EcsTokNeq: {
-            const char *ret = flecs_query_parse_term_equality_pred(
+            const char *ret = flecs_term_parse_equality_pred(
                 parser, pos, EcsPredEq);
             if (ret) {
                 parser->term->oper = EcsNot;
@@ -254,12 +254,12 @@ const char* flecs_query_parse_term_id(
             return ret;
         }
         case EcsTokMatch:
-            return flecs_query_parse_term_equality_pred(
+            return flecs_term_parse_equality_pred(
                 parser, pos, EcsPredMatch);
 
         // Position|
         case '|': {
-            pos = flecs_query_parse_term_trav(parser, &parser->term->first, pos);
+            pos = flecs_term_parse_trav(parser, &parser->term->first, pos);
             if (!pos) {
                 goto error;
             }
@@ -267,7 +267,7 @@ const char* flecs_query_parse_term_id(
             // Position|self(
             Parse(
                 case '(':
-                    return flecs_query_parse_term_arg(parser, pos, 0);
+                    return flecs_term_parse_arg(parser, pos, 0);
                 case EcsTokEndOfTerm:
                     EndOfRule;
             )
@@ -286,7 +286,7 @@ const char* flecs_query_parse_term_id(
                 )
             )
 
-            return flecs_query_parse_term_arg(parser, pos, 0);
+            return flecs_term_parse_arg(parser, pos, 0);
         }
 
         case EcsTokEndOfTerm: 
@@ -297,7 +297,7 @@ const char* flecs_query_parse_term_id(
 }
 
 // (
-static const char* flecs_query_parse_term_pair(
+static const char* flecs_term_parse_pair(
     ecs_script_parser_t *parser,
     const char *pos)
 {
@@ -312,7 +312,7 @@ static const char* flecs_query_parse_term_pair(
             LookAhead_1('|',
                 // (Position|self
                 pos = lookahead;
-                pos = flecs_query_parse_term_trav(
+                pos = flecs_term_parse_trav(
                     parser, &parser->term->first, pos);
                 if (!pos) {
                     goto error;
@@ -321,7 +321,7 @@ static const char* flecs_query_parse_term_pair(
 
             // (Position,
             Parse_1(',',
-                return flecs_query_parse_term_arg(parser, pos, 1);
+                return flecs_term_parse_arg(parser, pos, 1);
             )
         }
     )
@@ -331,7 +331,7 @@ static const char* flecs_query_parse_term_pair(
 
 // AND
 static
-const char* flecs_query_parse_term_flags(
+const char* flecs_term_parse_flags(
     ecs_script_parser_t *parser,
     const char *token_0,
     const char *pos) 
@@ -353,7 +353,7 @@ const char* flecs_query_parse_term_flags(
     else {
         // Position
         term->first.name = token_0;
-        return flecs_query_parse_term_id(parser, pos);
+        return flecs_term_parse_id(parser, pos);
     }
 
     if (oper || flag) {
@@ -372,13 +372,13 @@ const char* flecs_query_parse_term_flags(
 
                     term->first.name = Token(1);
 
-                    return flecs_query_parse_term_id(parser, pos);
+                    return flecs_term_parse_id(parser, pos);
                 }
 
                 // and | (
                 //     ^
                 case '(': {
-                    return flecs_query_parse_term_pair(parser, pos);
+                    return flecs_term_parse_pair(parser, pos);
                 }
             )
         )
@@ -389,7 +389,7 @@ const char* flecs_query_parse_term_flags(
 
 // !
 static
-const char* flecs_query_parse_term_unary(
+const char* flecs_term_parse_unary(
     ecs_script_parser_t *parser,
     const char *pos)
 {
@@ -398,7 +398,7 @@ const char* flecs_query_parse_term_unary(
     Parse(
         // !(
         case '(': {
-            return flecs_query_parse_term_pair(parser, pos);
+            return flecs_term_parse_pair(parser, pos);
         }
 
         // !{
@@ -413,7 +413,7 @@ const char* flecs_query_parse_term_unary(
         //  ^
         case EcsTokTermIdentifier: {
             parser->term->first.name = Token(0);
-            return flecs_query_parse_term_id(parser, pos);
+            return flecs_term_parse_id(parser, pos);
         }
     )
 
@@ -422,7 +422,7 @@ const char* flecs_query_parse_term_unary(
 
 // [
 static
-const char* flecs_query_parse_term_inout(
+const char* flecs_term_parse_inout(
     ecs_script_parser_t *parser,
     const char *pos)
 {
@@ -444,22 +444,22 @@ const char* flecs_query_parse_term_inout(
             // [inout] Position
             //  ^
             case EcsTokTermIdentifier: { 
-                return flecs_query_parse_term_flags(parser, Token(2), pos);
+                return flecs_term_parse_flags(parser, Token(2), pos);
             }
 
             // [inout] !Position
             //  ^
             case '!':
                 term->oper = EcsNot;
-                return flecs_query_parse_term_unary(parser, pos);
+                return flecs_term_parse_unary(parser, pos);
             case '?':
                 term->oper = EcsOptional;
-                return flecs_query_parse_term_unary(parser, pos);
+                return flecs_term_parse_unary(parser, pos);
 
             // [inout] (
             //  ^
             case '(': {
-                return flecs_query_parse_term_pair(parser, pos);
+                return flecs_term_parse_pair(parser, pos);
             }
         )
     )
@@ -467,8 +467,7 @@ const char* flecs_query_parse_term_inout(
     ParserEnd;
 }
 
-static
-const char* flecs_query_parse_term(
+const char* flecs_query_term_parse(
     ecs_script_parser_t *parser,
     const char *pos) 
 {
@@ -476,17 +475,17 @@ const char* flecs_query_parse_term(
 
     Parse(
         case '[':
-            return flecs_query_parse_term_inout(parser, pos);
+            return flecs_term_parse_inout(parser, pos);
         case EcsTokTermIdentifier:   
-            return flecs_query_parse_term_flags(parser, Token(0), pos);
+            return flecs_term_parse_flags(parser, Token(0), pos);
         case '(':
-            return flecs_query_parse_term_pair(parser, pos);
+            return flecs_term_parse_pair(parser, pos);
         case '!':
             parser->term->oper = EcsNot;
-            return flecs_query_parse_term_unary(parser, pos);
+            return flecs_term_parse_unary(parser, pos);
         case '?':
             parser->term->oper = EcsOptional;
-            return flecs_query_parse_term_unary(parser, pos);
+            return flecs_term_parse_unary(parser, pos);
         case '{':
             parser->term->first.id = EcsScopeOpen;
             parser->term->src.id = EcsIsEntity;
@@ -549,7 +548,7 @@ int flecs_terms_parse(
         ecs_os_memset_n(extra_args, 0, ecs_term_ref_t, FLECS_TERM_ARG_COUNT_MAX);
         parser.extra_oper = 0;
 
-        ptr = flecs_query_parse_term(&parser, ptr);
+        ptr = flecs_query_term_parse(&parser, ptr);
         if (!ptr) {
             /* Parser error */
             goto error;
@@ -612,6 +611,30 @@ error:
     return -1;
 }
 
+const char* flecs_term_parse(
+    ecs_world_t *world,
+    const char *name,
+    const char *expr,
+    ecs_term_t *term,
+    char *token_buffer)
+{
+    ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(expr != NULL, ECS_INVALID_PARAMETER, name);
+    ecs_assert(term != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    EcsParserFixedBuffer(world, name, expr, token_buffer, 256);
+    parser.term = term;
+
+    const char *result = flecs_query_term_parse(&parser, expr);
+    if (!result) {
+        return NULL;
+    }
+
+    ecs_os_memset_t(term, 0, ecs_term_t);
+
+    return flecs_query_term_parse(&parser, expr);
+}
+
 const char* flecs_id_parse(
     const ecs_world_t *world,
     const char *name,
@@ -628,12 +651,12 @@ const char* flecs_id_parse(
     parser.term = &term;
 
     expr = flecs_scan_whitespace(&parser, expr);
-    if (!ecs_os_strcmp(expr, "0")) {
+    if (!ecs_os_strcmp(expr, "#0")) {
         *id = 0;
         return &expr[1];
     }
 
-    const char *result = flecs_query_parse_term(&parser, expr);
+    const char *result = flecs_query_term_parse(&parser, expr);
     if (!result) {
         return NULL;
     }

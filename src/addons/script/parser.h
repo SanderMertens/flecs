@@ -156,7 +156,7 @@
             token_stack.count --;\
             break;\
         }\
-        parser->token_cur = (char*)old_lh_token_cur;\
+        parser->token_cur = ECS_CONST_CAST(char*, old_lh_token_cur);\
     }
 
 /* Lookahead N consecutive tokens */

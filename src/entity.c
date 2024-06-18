@@ -1827,7 +1827,7 @@ ecs_entity_t ecs_entity_init(
         if (!name[0]) {
             name = NULL;
         } else if (flecs_name_is_id(name)){
-            ecs_entity_t id = flecs_name_to_id(world, name);
+            ecs_entity_t id = flecs_name_to_id(name);
             if (!id) {
                 return 0;
             }

@@ -677,11 +677,3 @@ void SerializeTypeInfoToJson_struct_nested_3_members(void) {
 
     ecs_fini(world);
 }
-
-void SerializeTypeInfoToJson_anonymous_type(void) {
-    // Implement testcase
-}
-
-void SerializeTypeInfoToJson_anonymous_type_recycled(void) {
-    // Implement testcase
-}

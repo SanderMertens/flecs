@@ -157,6 +157,43 @@ const char* flecs_json_parse_large_string(
     }
 }
 
+const char* flecs_json_parse_next_member(
+    const char *json,
+    char *token,
+    ecs_json_token_t *token_kind,
+    const ecs_from_json_desc_t *desc)
+{
+    json = flecs_json_parse(json, token_kind, token);
+    if (*token_kind == JsonObjectClose) {
+        return json;
+    }
+
+    if (*token_kind != JsonComma) {
+        ecs_parser_error(desc->name, desc->expr, json - desc->expr, 
+            "expecteded } or ,");
+        return NULL;
+    }
+
+    json = flecs_json_parse(json, token_kind, token);
+    if (*token_kind != JsonString) {
+        ecs_parser_error(desc->name, desc->expr, json - desc->expr, 
+            "expecteded member name");
+        return NULL;
+    }
+
+    char temp_token[ECS_MAX_TOKEN_SIZE];
+    ecs_json_token_t temp_token_kind;
+
+    json = flecs_json_parse(json, &temp_token_kind, temp_token);
+    if (temp_token_kind != JsonColon) {
+        ecs_parser_error(desc->name, desc->expr, json - desc->expr, 
+            "expecteded :");
+        return NULL;
+    }
+
+    return json;
+}
+
 const char* flecs_json_expect(
     const char *json,
     ecs_json_token_t token_kind,
@@ -167,7 +204,7 @@ const char* flecs_json_expect(
     ecs_assert(token_kind != JsonString, ECS_INTERNAL_ERROR, NULL);
 
     ecs_json_token_t kind = 0;
-    json = flecs_json_parse(json, &kind, token);
+    const char *lah = flecs_json_parse(json, &kind, token);
 
     if (kind == JsonInvalid) {
         ecs_parser_error(desc->name, desc->expr, json - desc->expr, 
@@ -186,7 +223,7 @@ const char* flecs_json_expect(
         }
     }
 
-    return json;
+    return lah;
 }
 
 const char* flecs_json_expect_string(
@@ -246,6 +283,19 @@ const char* flecs_json_expect_member(
         return NULL;
     }
     return json;
+}
+
+const char* flecs_json_expect_next_member(
+    const char *json,
+    char *token,
+    const ecs_from_json_desc_t *desc)
+{
+    json = flecs_json_expect(json, JsonComma, token, desc);
+    if (!json) {
+        return NULL;
+    }
+
+    return flecs_json_expect_member(json, token, desc);
 }
 
 const char* flecs_json_expect_member_name(

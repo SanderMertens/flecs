@@ -2056,9 +2056,64 @@ void Entity_entity_from_existing_digit(void) {
         .name = "#10000"
     });
 
+    ecs_entity_t f = ecs_entity(world, {
+        .name = "#10000"
+    });
+
     test_assert(e != 0);
+    test_assert(e == f);
     test_uint(e, 10000);
     test_assert(ecs_is_alive(world, e));
+
+    ecs_fini(world);
+}
+
+void Entity_entity_from_digit_path(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t e = ecs_entity(world, {
+        .name = "#10000.foo"
+    });
+
+    test_assert(e != 0);
+    test_assert(ecs_is_alive(world, e));
+    test_assert(ecs_has_pair(world, e, EcsChildOf, 10000));
+    test_str(ecs_get_name(world, e), "foo");
+
+    ecs_fini(world);
+}
+
+void Entity_entity_from_existing_digit_path(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t e = ecs_entity(world, {
+        .name = "#10000.foo"
+    });
+
+    ecs_entity_t f = ecs_entity(world, {
+        .name = "#10000.foo"
+    });
+
+    test_assert(e != 0);
+    test_assert(e == f);
+    test_assert(ecs_is_alive(world, e));
+    test_assert(ecs_has_pair(world, e, EcsChildOf, 10000));
+    test_str(ecs_get_name(world, e), "foo");
+
+    ecs_fini(world);
+}
+
+void Entity_entity_from_digit_0_path(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t e = ecs_entity(world, {
+        .name = "#0.foo"
+    });
+
+    test_assert(e != 0);
+    test_assert(ecs_is_alive(world, e));
+    test_assert(!ecs_has_pair(world, e, EcsChildOf, EcsWildcard));
+    test_str(ecs_get_name(world, e), "foo");
 
     ecs_fini(world);
 }
@@ -2960,4 +3015,3 @@ void Entity_entity_w_parent_w_set_w_parent(void) {
 
     ecs_fini(world);
 }
-

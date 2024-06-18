@@ -63,15 +63,15 @@ void SimpleModuleImport(
     ECS_COMPONENT_DEFINE(world, SimpleFooComponent);
 
     ECS_TAG_DEFINE(world, Tag);
-    ECS_ENTITY_DEFINE(world, Entity, 0);
+    ECS_ENTITY_DEFINE(world, Entity, #0);
     
     ECS_SYSTEM_DEFINE(world, Move, EcsOnUpdate, Position, Velocity);
     ECS_SYSTEM_DEFINE(world, SimpleFooSystem, EcsOnUpdate, Position);
     ECS_OBSERVER_DEFINE(world, SimpleFooTrigger, EcsOnAdd, Position);
 
     ECS_TAG_DEFINE(world, SimpleFooTag);
-    ECS_ENTITY_DEFINE(world, SimpleFooEntity, 0);
-    ECS_PREFAB_DEFINE(world, SimpleFooPrefab, 0);
+    ECS_ENTITY_DEFINE(world, SimpleFooEntity, #0);
+    ECS_PREFAB_DEFINE(world, SimpleFooPrefab, #0);
     ECS_PIPELINE_DEFINE(world, SimpleFooPipeline, flecs.system.System, Tag);
     ECS_TAG_DEFINE(world, Simple_underscore);
 }
