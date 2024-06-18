@@ -12998,6 +12998,10 @@ void FlecsAlertsImport(
 #define FLECS_META
 #endif
 
+#ifndef FLECS_SCRIPT
+#define FLECS_SCRIPT
+#endif
+
 #ifndef FLECS_JSON_H
 #define FLECS_JSON_H
 

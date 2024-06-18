@@ -3619,6 +3619,8 @@ void BuiltinPredicates_neq_wildcard(void) {
 
     test_assert(q != NULL);
 
+    ecs_query_fini(q);
+
     ecs_fini(world);
 }
 
@@ -3631,6 +3633,8 @@ void BuiltinPredicates_neq_any(void) {
     });
 
     test_assert(q != NULL);
+
+    ecs_query_fini(q);
 
     ecs_fini(world);
 }

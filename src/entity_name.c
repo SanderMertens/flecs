@@ -145,7 +145,9 @@ const char* flecs_path_elem(
             template_nesting --;
         } else if (ch == '\\') {
             ptr ++;
-            buffer[pos] = ptr[0];
+            if (buffer) {
+                buffer[pos] = ptr[0];
+            }
             pos ++;
             continue;
         }
