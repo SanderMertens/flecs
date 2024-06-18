@@ -820,6 +820,8 @@ void SerializeIterToJson_serialize_entity_label_w_newline(void) {
 
     ecs_os_free(json);
 
+    ecs_query_fini(q);
+
     ecs_fini(world);
 }
 

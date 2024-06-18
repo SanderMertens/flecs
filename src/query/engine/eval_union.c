@@ -272,8 +272,6 @@ bool flecs_query_union_select(
     } else {
         return flecs_query_union_select_tgt(op, redo, ctx, rel, tgt);
     }
-
-    return false;
 }
 
 bool flecs_query_union(

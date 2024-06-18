@@ -730,7 +730,7 @@ void Meta_entity_from_json_w_path(void) {
 
     flecs::entity e = ecs.entity();
 
-    const char *r = e.from_json("{\"path\":\"ent\"}");
+    const char *r = e.from_json("{\"name\":\"ent\"}");
     test_str(r, "");
 
     test_assert(e != 0);
@@ -746,7 +746,7 @@ void Meta_entity_from_json_w_ids(void) {
 
     flecs::entity e = ecs.entity();
 
-    const char *r = e.from_json("{\"path\":\"ent\", \"ids\":[[\"Position\"]]}");
+    const char *r = e.from_json("{\"name\":\"ent\", \"tags\":[\"Position\"]}");
     test_str(r, "");
 
     test_assert(e != 0);
@@ -763,7 +763,7 @@ void Meta_entity_from_json_w_values(void) {
 
     flecs::entity e = ecs.entity();
 
-    const char *r = e.from_json("{\"path\":\"ent\", \"ids\":[[\"Position\"]], \"values\":[{\"x\":10, \"y\":20}]}");
+    const char *r = e.from_json("{\"name\":\"ent\", \"components\":{\"Position\": {\"x\":10, \"y\":20}}}");
     test_str(r, "");
 
     test_assert(e != 0);

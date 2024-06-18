@@ -44,49 +44,81 @@ int main(int, char *[]) {
     // Serialize query to JSON. Customize serializer to only serialize entity
     // names and component values.
     flecs::iter_to_json_desc_t desc = {};
-    desc.serialize_entities = true;
     desc.serialize_values = true;
     std::cout << q.iter().to_json(&desc).c_str() << "\n";
 
     // Iterator returns 2 sets of results, one for each table.
 
     // {
-    //   "results": [{
-    //     "entities": ["a", "b"],
-    //     "values": [
-    //       [{
-    //         "x": 10.00,
-    //         "y": 20.00
-    //       }, {
-    //         "x": 20.00,
-    //         "y": 30.00
-    //       }],
-    //       [{
-    //         "x": 1.00,
-    //         "y": 2.00
-    //       }, {
-    //         "x": 2.00,
-    //         "y": 3.00
-    //       }]
-    //     ]
-    //   }, {
-    //     "entities": ["c", "d"],
-    //     "values": [
-    //       [{
-    //         "x": 30.00,
-    //         "y": 40.00
-    //       }, {
-    //         "x": 30.00,
-    //         "y": 40.00
-    //       }],
-    //       [{
-    //         "x": 3.00,
-    //         "y": 4.00
-    //       }, {
-    //         "x": 4.00,
-    //         "y": 5.00
-    //       }]
-    //     ]
-    //   }]
+    //   "results": [
+    //     {
+    //       "name": "a",
+    //       "fields": [
+    //         {
+    //           "data": {
+    //             "x": 10,
+    //             "y": 20
+    //           }
+    //         },
+    //         {
+    //           "data": {
+    //             "x": 1,
+    //             "y": 2
+    //           }
+    //         }
+    //       ]
+    //     },
+    //     {
+    //       "name": "b",
+    //       "fields": [
+    //         {
+    //           "data": {
+    //             "x": 20,
+    //             "y": 30
+    //           }
+    //         },
+    //         {
+    //           "data": {
+    //             "x": 2,
+    //             "y": 3
+    //           }
+    //         }
+    //       ]
+    //     },
+    //     {
+    //       "name": "c",
+    //       "fields": [
+    //         {
+    //           "data": {
+    //             "x": 30,
+    //             "y": 40
+    //           }
+    //         },
+    //         {
+    //           "data": {
+    //             "x": 3,
+    //             "y": 4
+    //           }
+    //         }
+    //       ]
+    //     },
+    //     {
+    //       "name": "d",
+    //       "fields": [
+    //         {
+    //           "data": {
+    //             "x": 30,
+    //             "y": 40
+    //           }
+    //         },
+    //         {
+    //           "data": {
+    //             "x": 4,
+    //             "y": 5
+    //           }
+    //         }
+    //       ]
+    //     }
+    //   ]
     // }
 }

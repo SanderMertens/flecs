@@ -10190,7 +10190,9 @@ const char* flecs_path_elem(
             template_nesting --;
         } else if (ch == '\\') {
             ptr ++;
-            buffer[pos] = ptr[0];
+            if (buffer) {
+                buffer[pos] = ptr[0];
+            }
             pos ++;
             continue;
         }
@@ -45704,12 +45706,12 @@ typedef struct {
     ecs_vec_t columns_set;
     ecs_map_t anonymous_ids;
     ecs_map_t missing_reflection;
-} ecs_from_json_ctx_t;
+} ecs_from_json_ctx_legacy_t;
 
 static
 void flecs_from_json_ctx_init_legacy(
     ecs_allocator_t *a,
-    ecs_from_json_ctx_t *ctx)
+    ecs_from_json_ctx_legacy_t *ctx)
 {
     ctx->a = a;
     ecs_vec_init_t(a, &ctx->records, ecs_record_t*, 0);
@@ -45721,7 +45723,7 @@ void flecs_from_json_ctx_init_legacy(
 
 static
 void flecs_from_json_ctx_fini_legacy(
-    ecs_from_json_ctx_t *ctx)
+    ecs_from_json_ctx_legacy_t *ctx)
 {
     ecs_vec_fini_t(ctx->a, &ctx->records, ecs_record_t*);
     ecs_vec_fini_t(ctx->a, &ctx->result_ids, ecs_record_t*);
@@ -46111,7 +46113,7 @@ ecs_table_t* flecs_json_parse_table_legacy(
     ecs_world_t *world,
     const char *json,
     char *token,
-    ecs_from_json_ctx_t *ctx,
+    ecs_from_json_ctx_legacy_t *ctx,
     const ecs_from_json_desc_t *desc)
 {
     ecs_json_token_t token_kind = 0;
@@ -46232,7 +46234,7 @@ int flecs_json_parse_entities_legacy(
     ecs_entity_t parent,
     const char *json,
     char *token,
-    ecs_from_json_ctx_t *ctx,
+    ecs_from_json_ctx_legacy_t *ctx,
     const ecs_from_json_desc_t *desc)
 {
     char name_token[ECS_MAX_TOKEN_SIZE];
@@ -46326,7 +46328,7 @@ const char* flecs_json_missing_reflection_legacy(
     ecs_id_t id,
     const char *json,
     char *token,
-    ecs_from_json_ctx_t *ctx,
+    ecs_from_json_ctx_legacy_t *ctx,
     const ecs_from_json_desc_t *desc)
 {
     if (!desc->strict && ecs_map_get(&ctx->missing_reflection, id)) {
@@ -46357,7 +46359,7 @@ const char* flecs_json_parse_column_legacy(
     ecs_id_t id,
     const char *json,
     char *token,
-    ecs_from_json_ctx_t *ctx,
+    ecs_from_json_ctx_legacy_t *ctx,
     const ecs_from_json_desc_t *desc)
 {
     /* If deserializing id caused trouble before, don't bother trying again */
@@ -46431,7 +46433,7 @@ const char* flecs_json_parse_values_legacy(
     ecs_table_t *table,
     const char *json,
     char *token,
-    ecs_from_json_ctx_t *ctx,
+    ecs_from_json_ctx_legacy_t *ctx,
     const ecs_from_json_desc_t *desc)
 {
     ecs_json_token_t token_kind = 0;
@@ -46519,7 +46521,7 @@ const char* flecs_json_parse_result_legacy(
     ecs_world_t *world,
     const char *json,
     char *token,
-    ecs_from_json_ctx_t *ctx,
+    ecs_from_json_ctx_legacy_t *ctx,
     const ecs_from_json_desc_t *desc)
 {
     ecs_json_token_t token_kind = 0;
@@ -46683,7 +46685,7 @@ const char* ecs_world_from_json_legacy(
 
     ecs_from_json_desc_t desc = {0};
     ecs_allocator_t *a = &world->allocator;
-    ecs_from_json_ctx_t ctx;
+    ecs_from_json_ctx_legacy_t ctx;
     flecs_from_json_ctx_init_legacy(a, &ctx);
 
     const char *name = NULL, *expr = json, *lah;
@@ -47655,6 +47657,8 @@ int flecs_expr_ser_primitive(
 #endif
 
 
+#ifdef FLECS_JSON
+
 int ecs_entity_to_json_buf(
     const ecs_world_t *world,
     ecs_entity_t entity,
@@ -47736,6 +47740,8 @@ char* ecs_entity_to_json(
 
     return ecs_strbuf_get(&buf);
 }
+
+#endif
 
 /**
  * @file json/serialize_type_info.c
@@ -69399,7 +69405,8 @@ int flecs_query_discover_vars(
     }
 
     /* Hide anonymous table variables from application */
-    query->pub.var_count -= flecs_ito(int16_t, anonymous_table_count);
+    query->pub.var_count = 
+        flecs_ito(int16_t, query->pub.var_count - anonymous_table_count);
 
     /* Sanity check to make sure that the public part of the variable array only
      * contains entity variables. */
@@ -76522,7 +76529,9 @@ void flecs_query_iter_fini_ctx(
         case EcsQueryUp:
         case EcsQuerySelfUp:
         case EcsQueryUpId:
-        case EcsQuerySelfUpId: {
+        case EcsQuerySelfUpId: 
+        case EcsQueryUnionEqUp:
+        case EcsQueryUnionEqSelfUp: {
             ecs_trav_up_cache_t *cache = &ctx[i].is.up.cache;
             if (cache->dir == EcsTravDown) {
                 flecs_query_down_cache_fini(a, cache);
@@ -78199,8 +78208,6 @@ bool flecs_query_union_select(
     } else {
         return flecs_query_union_select_tgt(op, redo, ctx, rel, tgt);
     }
-
-    return false;
 }
 
 bool flecs_query_union(

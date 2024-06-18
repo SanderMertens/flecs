@@ -9,6 +9,6 @@
         "standalone": true
     },
     "lang.c": {
-        "defines": ["FLECS_CUSTOM_BUILD", "FLECS_MONITOR", "FLECS_LOG"]
+        "defines": ["FLECS_CUSTOM_BUILD", "FLECS_STATS", "FLECS_LOG"]
     }
 }
