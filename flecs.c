@@ -10215,6 +10215,7 @@ const char* flecs_path_elem(
     if (buffer) {
         buffer[pos] = '\0';
         *buffer_out = buffer;
+        *size_out = size;
     }
 
     if (pos) {
@@ -42782,6 +42783,17 @@ void flecs_json_serialize_query_profile(
     flecs_json_object_pop(buf);
 }
 
+static
+void flecs_iter_free_ser_ctx(
+    ecs_iter_t *it,
+    ecs_json_ser_ctx_t *ser_ctx)
+{
+    int32_t f, field_count = it->field_count;
+    for (f = 0; f < field_count; f ++) {
+        ecs_os_free(ser_ctx->value_ctx[f].id_label);
+    }
+}
+
 int ecs_iter_to_json_buf(
     ecs_iter_t *it,
     ecs_strbuf_t *buf,
@@ -42844,6 +42856,7 @@ int ecs_iter_to_json_buf(
         while (next(it)) {
             if (flecs_json_serialize_iter_result(world, it, buf, desc, &ser_ctx)) {
                 ecs_strbuf_reset(buf);
+                flecs_iter_free_ser_ctx(it, &ser_ctx);
                 ecs_iter_fini(it);
                 return -1;
             }
@@ -42854,12 +42867,7 @@ int ecs_iter_to_json_buf(
         ecs_iter_fini(it);
     }
 
-    int32_t f, field_count = it->field_count;
-    if (desc && desc->serialize_values) {
-        for (f = 0; f < field_count; f ++) {
-            ecs_os_free(ser_ctx.value_ctx[f].id_label);
-        }
-    }
+    flecs_iter_free_ser_ctx(it, &ser_ctx);
 
     flecs_json_object_pop(buf);
 
@@ -43358,19 +43366,21 @@ int flecs_json_serialize_iter_result(
         if (flecs_json_serialize_iter_result_table(world, it, buf, 
             desc, count, has_this, parent_path, &this_data))
         {
-            return -1;
+            goto error;
         }
     } else {
         if (flecs_json_serialize_iter_result_query(world, it, buf, ser_ctx, 
             desc, count, has_this, parent_path, &this_data))
         {
-            return -1;
+            goto error;
         }
     }
 
     ecs_os_free(parent_path);
-
     return 0;
+error:
+    ecs_os_free(parent_path);
+    return -1;
 }
 
 #endif
@@ -60817,6 +60827,17 @@ void FlecsStatsImport(
 
 ECS_COMPONENT_DECLARE(EcsPipelineStats);
 
+static
+void flecs_pipeline_monitor_dtor(EcsPipelineStats *ptr) {
+    ecs_map_iter_t it = ecs_map_iter(&ptr->stats);
+    while (ecs_map_next(&it)) {
+        ecs_pipeline_stats_t *stats = ecs_map_ptr(&it);
+        ecs_pipeline_stats_fini(stats);
+        ecs_os_free(stats);
+    }
+    ecs_map_fini(&ptr->stats);
+}
+
 static ECS_CTOR(EcsPipelineStats, ptr, {
     ecs_os_zeromem(ptr);
     ecs_map_init(&ptr->stats, NULL);
@@ -60829,18 +60850,13 @@ static ECS_COPY(EcsPipelineStats, dst, src, {
 })
 
 static ECS_MOVE(EcsPipelineStats, dst, src, {
+    flecs_pipeline_monitor_dtor(dst);
     ecs_os_memcpy_t(dst, src, EcsPipelineStats);
     ecs_os_zeromem(src);
 })
 
 static ECS_DTOR(EcsPipelineStats, ptr, {
-    ecs_map_iter_t it = ecs_map_iter(&ptr->stats);
-    while (ecs_map_next(&it)) {
-        ecs_pipeline_stats_t *stats = ecs_map_ptr(&it);
-        ecs_pipeline_stats_fini(stats);
-        ecs_os_free(stats);
-    }
-    ecs_map_fini(&ptr->stats);
+    flecs_pipeline_monitor_dtor(ptr);
 })
 
 static 
@@ -61699,6 +61715,16 @@ error:
 
 ECS_COMPONENT_DECLARE(EcsSystemStats);
 
+static
+void flecs_system_monitor_dtor(EcsSystemStats *ptr) {
+    ecs_map_iter_t it = ecs_map_iter(&ptr->stats);
+    while (ecs_map_next(&it)) {
+        ecs_system_stats_t *stats = ecs_map_ptr(&it);
+        ecs_os_free(stats);
+    }
+    ecs_map_fini(&ptr->stats);
+}
+
 static ECS_CTOR(EcsSystemStats, ptr, {
     ecs_os_zeromem(ptr);
     ecs_map_init(&ptr->stats, NULL);
@@ -61711,17 +61737,13 @@ static ECS_COPY(EcsSystemStats, dst, src, {
 })
 
 static ECS_MOVE(EcsSystemStats, dst, src, {
+    flecs_system_monitor_dtor(dst);
     ecs_os_memcpy_t(dst, src, EcsSystemStats);
     ecs_os_zeromem(src);
 })
 
 static ECS_DTOR(EcsSystemStats, ptr, {
-    ecs_map_iter_t it = ecs_map_iter(&ptr->stats);
-    while (ecs_map_next(&it)) {
-        ecs_system_stats_t *stats = ecs_map_ptr(&it);
-        ecs_os_free(stats);
-    }
-    ecs_map_fini(&ptr->stats);
+    flecs_system_monitor_dtor(ptr);
 })
 
 static 

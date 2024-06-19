@@ -179,6 +179,7 @@ const char* flecs_path_elem(
     if (buffer) {
         buffer[pos] = '\0';
         *buffer_out = buffer;
+        *size_out = size;
     }
 
     if (pos) {
