@@ -6574,6 +6574,17 @@ int flecs_traverse_add(
         }
     }
 
+    /* Set symbol */
+    if (desc->symbol && desc->symbol[0]) {
+        const char *sym = ecs_get_symbol(world, result);
+        if (sym) {
+            ecs_assert(!ecs_os_strcmp(desc->symbol, sym),
+                ECS_INCONSISTENT_NAME, desc->symbol);
+        } else {
+            ecs_set_symbol(world, result, desc->symbol);
+        }
+    }
+
     /* If a name is provided but not yet assigned, add the Name component */
     if (name && !name_assigned) {
         ecs_add_path_w_sep(world, result, scope, name, sep, root_sep);
@@ -6636,17 +6647,6 @@ int flecs_traverse_add(
         flecs_commit(world, result, r, table, &table_diff, true, 0);
         flecs_table_diff_builder_fini(world, &diff);
         flecs_defer_end(world, world->stages[0]);
-    }
-
-    /* Set symbol */
-    if (desc->symbol && desc->symbol[0]) {
-        const char *sym = ecs_get_symbol(world, result);
-        if (sym) {
-            ecs_assert(!ecs_os_strcmp(desc->symbol, sym),
-                ECS_INCONSISTENT_NAME, desc->symbol);
-        } else {
-            ecs_set_symbol(world, result, desc->symbol);
-        }
     }
 
     /* Set component values */
@@ -6751,11 +6751,6 @@ void flecs_deferred_add_remove(
 
     int32_t thread_count = ecs_get_stage_count(world);
 
-    /* Set name */
-    if (name && !name_assigned) {
-        ecs_add_path_w_sep(world, entity, scope, name, sep, root_sep);
-    }
-
     /* Set symbol */
     if (desc->symbol) {
         const char *sym = ecs_get_symbol(world, entity);
@@ -6769,6 +6764,11 @@ void flecs_deferred_add_remove(
                 ecs_set_symbol(world, entity, desc->symbol);
             }
         }
+    }
+
+    /* Set name */
+    if (name && !name_assigned) {
+        ecs_add_path_w_sep(world, entity, scope, name, sep, root_sep);
     }
 }
 
@@ -7065,10 +7065,6 @@ ecs_entity_t ecs_component_init(
         new_component = ecs_has(world, result, EcsComponent);
     }
 
-    if (desc->type.name && new_component) {
-        ecs_add_path(world, result, 0, desc->type.name);
-    }
-
     EcsComponent *ptr = ecs_ensure(world, result, EcsComponent);
     if (!ptr->size) {
         ecs_assert(ptr->alignment == 0, ECS_INTERNAL_ERROR, NULL);
@@ -7086,6 +7082,10 @@ ecs_entity_t ecs_component_init(
     } else {
         flecs_check_component(world, result, ptr,
             desc->type.size, desc->type.alignment);
+    }
+
+    if (desc->type.name && new_component) {
+        ecs_entity(world, { .id = result, .name = desc->type.name });
     }
 
     ecs_modified(world, result, EcsComponent);
@@ -13795,7 +13795,9 @@ void ecs_emit(
         desc->const_param = NULL;
     }
 
+    ecs_defer_begin(world);
     flecs_emit(world, stage, desc);
+    ecs_defer_end(world);
 
     if (desc->ids == &default_ids) {
         desc->ids = NULL;

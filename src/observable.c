@@ -1514,7 +1514,9 @@ void ecs_emit(
         desc->const_param = NULL;
     }
 
+    ecs_defer_begin(world);
     flecs_emit(world, stage, desc);
+    ecs_defer_end(world);
 
     if (desc->ids == &default_ids) {
         desc->ids = NULL;

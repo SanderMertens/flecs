@@ -876,7 +876,11 @@
                 "on_add_with_pair_singleton",
                 "add_in_yield_existing",
                 "add_in_yield_existing_multi",
-                "name_from_root"
+                "name_from_root",
+                "implicit_register_in_emit_for_named_entity",
+                "add_to_named_in_emit_for_named_entity",
+                "implicit_register_in_emit_for_named_entity_w_defer",
+                "add_to_named_in_emit_for_named_entity_w_defer"
             ]
         }, {
             "id": "ComponentLifecycle",
