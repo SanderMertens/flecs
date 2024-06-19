@@ -253,3 +253,17 @@ void Stats_get_not_alive_entity_count(void) {
 
     ecs_fini(world);
 }
+
+void Stats_progress_stats_systems(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_IMPORT(world, FlecsStats);
+
+    // for (int i = 0; i < 60 * 60; i ++) {
+    //     ecs_progress(world, 0.016);
+    // }
+
+    test_assert(true); // used to catch memory leaks
+
+    ecs_fini(world);
+}

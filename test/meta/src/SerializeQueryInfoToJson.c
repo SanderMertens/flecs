@@ -551,7 +551,7 @@ void SerializeQueryInfoToJson_anonymous_pair(void) {
 
     char *json = ecs_iter_to_json(&it, &desc);
     char *expect = flecs_asprintf("{\"query_info\":{\"vars\":[\"this\"], \"terms\":[{\"inout\":\"default\", \"has_data\":false, \"oper\":\"and\", \"src\":{\"var\":\"this\"}, \"first\":{\"entity\":\"#%u\"}, \"second\":{\"entity\":\"#%u\"}, \"flags\":[\"self\"]}]}}",
-        rel, tgt);
+        (uint32_t)rel, (uint32_t)tgt);
     test_str(json, expect);
     ecs_os_free(json);
     ecs_os_free(expect);
@@ -648,7 +648,7 @@ void SerializeQueryInfoToJson_anonymous_pair_recycled(void) {
 
     char *json = ecs_iter_to_json(&it, &desc);
     char *expect = flecs_asprintf("{\"query_info\":{\"vars\":[\"this\"], \"terms\":[{\"inout\":\"default\", \"has_data\":false, \"oper\":\"and\", \"src\":{\"var\":\"this\"}, \"first\":{\"entity\":\"#%u\"}, \"second\":{\"entity\":\"#%u\"}, \"flags\":[\"self\"]}]}}",
-        rel, tgt);
+        (uint32_t)rel, (uint32_t)tgt);
     test_str(json, expect);
     ecs_os_free(json);
     ecs_os_free(expect);
