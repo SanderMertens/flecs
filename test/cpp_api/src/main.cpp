@@ -891,6 +891,7 @@ void Observer_on_add_with_pair_singleton(void);
 void Observer_add_in_yield_existing(void);
 void Observer_add_in_yield_existing_multi(void);
 void Observer_name_from_root(void);
+void Observer_term_index(void);
 
 // Testsuite 'Filter'
 void Filter_term_each_component(void);
@@ -4825,6 +4826,10 @@ bake_test_case Observer_testcases[] = {
     {
         "name_from_root",
         Observer_name_from_root
+    },
+    {
+        "term_index",
+        Observer_term_index
     }
 };
 
@@ -6763,7 +6768,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        32,
+        33,
         Observer_testcases
     },
     {
