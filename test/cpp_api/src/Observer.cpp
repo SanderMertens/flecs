@@ -816,3 +816,23 @@ void Observer_name_from_root(void) {
     flecs::entity ns = ecs.entity("::ns");
     test_assert(ns == sys.parent());
 }
+
+void Observer_term_index(void) {
+    flecs::world ecs;
+
+    auto e1 = ecs.entity().add<Position>().add<Velocity>();
+
+    int32_t last_term = -1;
+
+    ecs.observer<const Position, const Velocity>()
+        .event(flecs::OnSet)
+        .each([&](flecs::iter& it, size_t row, const Position &p, const Velocity &v) {
+            last_term = it.term_index();
+        });
+
+    e1.set<Position>({ 10, 20 });
+    test_int(last_term, 1);
+
+    e1.set<Velocity>({ 30, 40 }); 
+    test_int(last_term, 2);
+}
