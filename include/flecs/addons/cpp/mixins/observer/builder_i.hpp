@@ -62,7 +62,7 @@ struct observer_builder_i : filter_builder_i<Base, Components ...> {
     }
 
 protected:
-    virtual flecs::world_t* world_v() = 0;
+    virtual flecs::world_t* world_v() override = 0;
 
 private:
     operator Base&() {
