@@ -412,7 +412,7 @@ struct term_builder_i : term_id_builder_i<Base> {
     ecs_term_t *m_term;
 
 protected:
-    virtual flecs::world_t* world_v() = 0;
+    virtual flecs::world_t* world_v() override = 0;
 
     void set_term(ecs_term_t *term) {
         m_term = term;

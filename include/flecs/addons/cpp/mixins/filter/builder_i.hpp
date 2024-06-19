@@ -248,7 +248,7 @@ struct filter_builder_i : term_builder_i<Base> {
     }
 
 protected:
-    virtual flecs::world_t* world_v() = 0;
+    virtual flecs::world_t* world_v() override = 0;
     int32_t m_term_index;
     int32_t m_expr_count;
 

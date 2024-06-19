@@ -234,7 +234,7 @@ struct iter_iterable final : iterable<Components...> {
     }
 
 protected:
-    ecs_iter_t get_iter(flecs::world_t *world) const {
+    ecs_iter_t get_iter(flecs::world_t *world) const override {
         if (world) {
             ecs_iter_t result = m_it;
             result.world = world;
@@ -243,11 +243,11 @@ protected:
         return m_it;
     }
 
-    ecs_iter_next_action_t next_action() const {
+    ecs_iter_next_action_t next_action() const override {
         return m_next;
     }
 
-    ecs_iter_next_action_t next_each_action() const {
+    ecs_iter_next_action_t next_each_action() const override {
         return m_next_each;
     }
 

@@ -149,7 +149,7 @@ public:
     }
 
 protected:
-    virtual flecs::world_t* world_v() = 0;
+    virtual flecs::world_t* world_v() override = 0;
 
 private:
     operator Base&() {
