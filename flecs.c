@@ -8860,13 +8860,6 @@ bool ecs_is_valid(
         return false;
     }
 
-    /* If entity doesn't exist in the world, the id is valid as long as the
-     * generation is 0. Using a non-existing id with a non-zero generation
-     * requires calling ecs_ensure first. */
-    if (!ecs_exists(world, entity)) {
-        return ECS_GENERATION(entity) == 0;
-    }
-
     /* If id exists, it must be alive (the generation count must match) */
     return ecs_is_alive(world, entity);
 error:

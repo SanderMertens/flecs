@@ -897,12 +897,15 @@ void Entity_is_0_valid(void) {
 void Entity_is_junk_valid(void) {
     ecs_world_t *world = ecs_mini();
 
-    test_bool(ecs_is_valid(world, 1000), true);
-    test_bool(ecs_is_valid(world, 0xFFFFFFFF), true);
+    test_bool(ecs_is_valid(world, 1000), false);
+    test_bool(ecs_is_valid(world, 0xFFFFFFFF), false);
     test_bool(ecs_is_valid(world, 0x4DCDCDCDCDCD), false);
+
+    ecs_make_alive(world, 1000);
+    ecs_make_alive(world, 0xFFFFFFFF);
     
-    test_bool(ecs_is_alive(world, 1000), false);
-    test_bool(ecs_is_alive(world, 0xFFFFFFFF), false);
+    test_bool(ecs_is_alive(world, 1000), true);
+    test_bool(ecs_is_alive(world, 0xFFFFFFFF), true);
     test_bool(ecs_is_alive(world, 0x4DCDCDCDCDCD), false);
 
     test_bool(ecs_is_valid(world, 0xFFFFFFFFFFFFFFFF), false);
@@ -1177,7 +1180,7 @@ void Entity_make_alive_zero_gen(void) {
 
     ecs_entity_t id = 1000;
     test_bool(ecs_is_alive(world, id), false);
-    test_bool(ecs_is_valid(world, id), true);
+    test_bool(ecs_is_valid(world, id), false);
     test_bool(ecs_exists(world, id), false);
 
     ecs_make_alive(world, id);
