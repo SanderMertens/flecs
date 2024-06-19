@@ -18,11 +18,30 @@ public:
 	
 	FORCEINLINE FFlecsSystem(const flecs::system& InSystem) : System(InSystem) {}
 	FORCEINLINE FFlecsSystem(const flecs::system* InSystem) : System(*InSystem) {}
+
+	template <typename ...TComponents>
+	FORCEINLINE FFlecsSystem(flecs::system_builder<TComponents...>& InBuilder)
+	{
+		const flecs::world World(InBuilder.world_v());
+		System = World.system(InBuilder.entity());
+	}
+
+	FORCEINLINE FFlecsSystem(const FFlecsEntityHandle& InEntity, const flecs::world& InWorld)
+	{
+		solid_checkf(InEntity.IsValid(), TEXT("Entity is invalid!"));
+		System = InWorld.system(InEntity.GetEntity());
+	}
+
+	template <typename ...TComponents>
+	FORCEINLINE flecs::system_builder<TComponents...> ToBuilder() const
+	{
+		return flecs::system_builder<TComponents...>(GetEntity().GetEntity().world(), System.name().c_str());
+	}
 	
 	template <typename ...TComponents>
 	FORCEINLINE NO_DISCARD static flecs::system_builder<TComponents...> CreateSystem(flecs::world& InWorld, const TCHAR* InName)
 	{
-		return InWorld.system<TComponents...>(TCHAR_TO_ANSI(InName));
+		return InWorld.system<TComponents...>(StringCast<char>(InName).Get());
 	}
 
 	FORCEINLINE void Enable()

@@ -145,7 +145,7 @@ public:
 			 const TTuple<FName, flecs::entity_t>& Entity : DefaultEntityEngineSubsystem->DefaultEntityMap)
 		{
 			FFlecsEntityHandle SpawnedEntity = NewFlecsWorld->CreateEntity(Entity.Value);
-			SpawnedEntity.SetName(TCHAR_TO_ANSI(*Entity.Key.ToString()));
+			SpawnedEntity.SetName(StringCast<char>(*Entity.Key.ToString()).Get());
 		}
 
 		RegisterAllGameplayTags(NewFlecsWorld);
@@ -166,8 +166,9 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | REST API")
 	FORCEINLINE void ImportRestModule(const FName& WorldName, const bool bUseMonitoring, const FFlecsRestSettings& Settings) const
 	{
+		//TCHAR_TO_ANSI(*Settings.IPAddress);
 		GetFlecsWorld(WorldName)->SetSingleton<flecs::Rest>(
-				flecs::Rest { static_cast<uint16>(Settings.Port), TCHAR_TO_ANSI(*Settings.IPAddress) });
+				flecs::Rest { static_cast<uint16>(Settings.Port), const_cast<ANSICHAR*>(StringCast<ANSICHAR>(*Settings.IPAddress).Get()) });
 
 		if (bUseMonitoring)
 		{

@@ -20,25 +20,32 @@ class UNREALFLECS_API IFlecsSystemInterface
 
 public:
 
-	FORCEINLINE void InitializeSystem_Internal(const FFlecsSystem& InSystem)
+	FORCEINLINE void InitializeSystem_Internal(const flecs::world& InWorld)
 	{
-		System = InSystem;
-		solid_checkf(System.IsValid(), TEXT("Invalid system"));
+		flecs::system_builder<> Builder(InWorld, StringCast<ANSICHAR>(*GetName()).Get());
+		BuildSystem(Builder);
 		
 		InitializeSystem();
 		BP_InitializeSystem();
 	}
 
-	FORCEINLINE virtual void InitializeSystem()
+	FORCEINLINE virtual void InitializeSystem() 
 	{
 	}
+
+	FORCEINLINE virtual void BuildSystem(flecs::system_builder<>& Builder)
+		PURE_VIRTUAL(IFlecsSystemInterface::BuildSystem, return;);
 
 	UFUNCTION(BlueprintImplementableEvent, Meta = (DisplayName = "Initialize System"))
 	void BP_InitializeSystem();
 
-private:
+	FORCEINLINE NO_DISCARD FFlecsSystem GetSystem() const
+	{
+		return System;
+	}
+
+	FORCEINLINE NO_DISCARD FString GetName() const;
 	
 	FFlecsSystem System;
-
 	
 }; // class IFlecsSystemInterface

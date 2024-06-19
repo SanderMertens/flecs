@@ -45,7 +45,7 @@ FFlecsEntityHandle::FFlecsEntityHandle()
 
 UFlecsWorld* FFlecsEntityHandle::GetFlecsWorld() const
 {
-    return GetEntity().world().get<FFlecsWorldPtrComponent>()->World.Get();
+    return ToFlecsWorld(GetEntity().world());
 }
 
 UWorld* FFlecsEntityHandle::GetOuterWorld() const

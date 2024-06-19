@@ -58,7 +58,7 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
 	FORCEINLINE FFlecsEntityHandle CreateEntity(const FString& Name = "None") const
 	{
-		return World.entity(TCHAR_TO_ANSI(*Name));
+		return World.entity(StringCast<char>(*Name).Get());
 	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
@@ -76,13 +76,13 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
 	FORCEINLINE FFlecsEntityHandle LookupEntity(const FString& Name) const
 	{
-		return World.lookup(TCHAR_TO_ANSI(*Name));
+		return World.lookup(StringCast<char>(*Name).Get());
 	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
 	FORCEINLINE void DestroyEntityByName(const FString& Name, const bool bSearchPath = true) const
 	{
-		World.delete_with(*TCHAR_TO_ANSI(*Name), bSearchPath);
+		World.delete_with(reinterpret_cast<flecs::entity_t>(StringCast<char>(*Name).Get()), bSearchPath);
 	}
 
 	template <typename FunctionType>
@@ -242,7 +242,7 @@ public:
 
 		#if WITH_EDITOR
 
-		const char* Name = TCHAR_TO_ANSI(*InName.ToString());
+		const char* Name = StringCast<char>(*InName.ToString()).Get();
 
 		GetWorldEntity().SetDocName(Name);
 		
@@ -254,11 +254,12 @@ public:
 	template <typename T>
 	FORCEINLINE void ImportModule()
 	{
+		static_assert(!TIsDerivedFrom<T, IFlecsModuleInterface>::Value, "T must not be derived from IFlecsModuleInterface");
 		World.import<T>();
 	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
-	FORCEINLINE void ImportModule(TScriptInterface<IFlecsModuleInterface> InModule) const
+	FORCEINLINE void ImportModule(const TScriptInterface<IFlecsModuleInterface> InModule) const
 	{
 		solid_checkf(InModule != nullptr, TEXT("Module is nullptr"));
 		InModule->ImportModule(World);
@@ -393,13 +394,15 @@ public:
 	FORCEINLINE NO_DISCARD FFlecsSystem CreateSystem(const FString& InName) const
 	{
 		const FFlecsEntityHandle SystemEntity = CreateEntity(InName);
-		return World.system(SystemEntity.GetEntity());
+		const FFlecsSystem System = World.system(SystemEntity.GetEntity());
+		System.ToBuilder<TComponents...>();
+		return System;
 	}
 
 	template <typename ...TComponents>
 	FORCEINLINE NO_DISCARD flecs::system_builder<TComponents...> CreateSystemWithBuilder(const FString& InName) const
 	{
-		return World.system<TComponents...>(TCHAR_TO_ANSI(*InName));
+		return World.system<TComponents...>(StringCast<char>(*InName).Get());
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
@@ -534,23 +537,15 @@ public:
 			return FFlecsEntityHandle();
 		}
 
-		if (const FFlecsEntityHandle Handle = World.lookup(TCHAR_TO_ANSI(*ScriptStruct->GetStructCPPName())))
+		if (const FFlecsEntityHandle Handle = World.lookup(StringCast<char>(*ScriptStruct->GetStructCPPName()).Get()))
 		{
 			RegisterScriptStruct(ScriptStruct, Handle);
 			return Handle;
 		}
 		
-		const FFlecsEntityHandle ScriptStructComponent
-			= World.entity(TCHAR_TO_ANSI(*ScriptStruct->GetStructCPPName()))
-			                                         .set<flecs::Component>(
-			                                         {
-				                                         ScriptStruct->GetStructureSize(),
-				                                         ScriptStruct->GetMinAlignment()
-			                                         })
-			                                         .set<FFlecsScriptStructComponent>(
-			                                         {
-				                                         ScriptStruct
-			                                         });
+		const FFlecsEntityHandle ScriptStructComponent = World.entity(StringCast<char>(*ScriptStruct->GetStructCPPName()).Get())
+			.set<flecs::Component>({ ScriptStruct->GetStructureSize(), ScriptStruct->GetMinAlignment() })
+			.set<FFlecsScriptStructComponent>({ ScriptStruct });
 		
 		GetSingletonRef<FFlecsTypeMapComponent>().ScriptStructMap.emplace(ScriptStruct, ScriptStructComponent);
 
@@ -566,35 +561,35 @@ public:
 			
 			if (Property->IsA<FBoolProperty>())
 			{
-				UntypedComponent->member<bool>(TCHAR_TO_ANSI(*Property->GetName()));
+				UntypedComponent->member<bool>(StringCast<char>(*Property->GetName()).Get());
 			}
 			else if (Property->IsA<FByteProperty>())
 			{
-				UntypedComponent->member<uint8>(TCHAR_TO_ANSI(*Property->GetName()));
+				UntypedComponent->member<uint8>(StringCast<char>(*Property->GetName()).Get());
 			}
 			else if (Property->IsA<FIntProperty>())
 			{
-				UntypedComponent->member<int32>(TCHAR_TO_ANSI(*Property->GetName()));
+				UntypedComponent->member<int32>(StringCast<char>(*Property->GetName()).Get());
 			}
 			else if (Property->IsA<FFloatProperty>())
 			{
-				UntypedComponent->member<float>(TCHAR_TO_ANSI(*Property->GetName()));
+				UntypedComponent->member<float>(StringCast<char>(*Property->GetName()).Get());
 			}
 			else if (Property->IsA<FDoubleProperty>())
 			{
-				UntypedComponent->member<double>(TCHAR_TO_ANSI(*Property->GetName()));
+				UntypedComponent->member<double>(StringCast<char>(*Property->GetName()).Get());
 			}
 			else if (Property->IsA<FStrProperty>())
 			{
-				UntypedComponent->member<FString>(TCHAR_TO_ANSI(*Property->GetName()));
+				UntypedComponent->member<FString>(StringCast<char>(*Property->GetName()).Get());
 			}
 			else if (Property->IsA<FNameProperty>())
 			{
-				UntypedComponent->member<FName>(TCHAR_TO_ANSI(*Property->GetName()));
+				UntypedComponent->member<FName>(StringCast<char>(*Property->GetName()).Get());
 			}
 			else if (Property->IsA<FTextProperty>())
 			{
-				UntypedComponent->member<FText>(TCHAR_TO_ANSI(*Property->GetName()));
+				UntypedComponent->member<FText>(StringCast<char>(*Property->GetName()).Get());
 			}
 		}
 
@@ -635,35 +630,35 @@ public:
 			
 			if (Property->IsA<FBoolProperty>())
 			{
-				UntypedComponent->member<bool>(TCHAR_TO_ANSI(*Property->GetName()));
+				UntypedComponent->member<bool>(StringCast<char>(*Property->GetName()).Get());
 			}
 			else if (Property->IsA<FByteProperty>())
 			{
-				UntypedComponent->member<uint8>(TCHAR_TO_ANSI(*Property->GetName()));
+				UntypedComponent->member<uint8>(StringCast<char>(*Property->GetName()).Get());
 			}
 			else if (Property->IsA<FIntProperty>())
 			{
-				UntypedComponent->member<int32>(TCHAR_TO_ANSI(*Property->GetName()));
+				UntypedComponent->member<int32>(StringCast<char>(*Property->GetName()).Get());
 			}
 			else if (Property->IsA<FFloatProperty>())
 			{
-				UntypedComponent->member<float>(TCHAR_TO_ANSI(*Property->GetName()));
+				UntypedComponent->member<float>(StringCast<char>(*Property->GetName()).Get());
 			}
 			else if (Property->IsA<FDoubleProperty>())
 			{
-				UntypedComponent->member<double>(TCHAR_TO_ANSI(*Property->GetName()));
+				UntypedComponent->member<double>(StringCast<char>(*Property->GetName()).Get());
 			}
 			else if (Property->IsA<FStrProperty>())
 			{
-				UntypedComponent->member<FString>(TCHAR_TO_ANSI(*Property->GetName()));
+				UntypedComponent->member<FString>(StringCast<char>(*Property->GetName()).Get());
 			}
 			else if (Property->IsA<FNameProperty>())
 			{
-				UntypedComponent->member<FName>(TCHAR_TO_ANSI(*Property->GetName()));
+				UntypedComponent->member<FName>(StringCast<char>(*Property->GetName()).Get());
 			}
 			else if (Property->IsA<FTextProperty>())
 			{
-				UntypedComponent->member<FText>(TCHAR_TO_ANSI(*Property->GetName()));
+				UntypedComponent->member<FText>(StringCast<char>(*Property->GetName()).Get());
 			}
 		}
 
@@ -673,7 +668,7 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs")
 	FORCEINLINE FFlecsEntityHandle RegisterComponentType(const FString& Name, const int32 Size, const int32 Alignment) const
 	{
-		const flecs::entity Component = World.entity(TCHAR_TO_ANSI(*Name))
+		const flecs::entity Component = World.entity(StringCast<char>(*Name).Get())
 			.set<flecs::Component>({ Size, Alignment });
 
 		return FFlecsEntityHandle(Component);
@@ -693,13 +688,13 @@ public:
 	template <typename T>
 	FORCEINLINE FFlecsEntityHandle CreatePrefab(const FString& Name) const
 	{
-		return World.prefab<T>(TCHAR_TO_ANSI(*Name));
+		return World.prefab<T>(StringCast<char>(*Name).Get());
 	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs")
 	FORCEINLINE FFlecsEntityHandle CreatePrefab(const FString& Name) const
 	{
-		return World.prefab(TCHAR_TO_ANSI(*Name));
+		return World.prefab(StringCast<char>(*Name).Get());
 	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs")
@@ -711,12 +706,12 @@ public:
 	template <typename ...TComponents>
 	FORCEINLINE flecs::observer_builder<TComponents...> CreateObserver(const FString& Name) const
 	{
-		return World.observer<TComponents...>(TCHAR_TO_ANSI(*Name));
+		return World.observer<TComponents...>(StringCast<char>(*Name).Get());
 	}
 
 	FORCEINLINE flecs::observer_builder<> CreateObserver(const FString& Name) const
 	{
-		return World.observer<>(TCHAR_TO_ANSI(*Name));
+		return World.observer<>(StringCast<char>(*Name).Get());
 	}
 
 	template <typename ...TComponents, typename ...TArgs>
@@ -772,14 +767,14 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs")
 	FORCEINLINE bool HasEntityWithName(const FString& Name) const
 	{
-		return World.lookup(TCHAR_TO_ANSI(*Name)).is_valid();
+		return World.lookup(StringCast<char>(*Name).Get()).is_valid();
 	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs")
 	FORCEINLINE FFlecsEntityHandle GetTagEntity(const FGameplayTag& Tag) const
 	{
 		solid_checkf(Tag.IsValid(), TEXT("Tag is not valid"));
-		return World.lookup(TCHAR_TO_ANSI(*Tag.ToString()), ".", ".");
+		return World.lookup(StringCast<char>(*Tag.GetTagName().ToString()).Get(), ".", ".");
 	}
 
 	template <typename T>

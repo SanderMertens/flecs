@@ -2,6 +2,16 @@
 
 #include "FlecsSystemInterface.h"
 
+#include "Unlog/Unlog.h"
+
 #include UE_INLINE_GENERATED_CPP_BY_NAME(FlecsSystemInterface)
 
-// Add default functionality here for any IFlecsSystemInterface functions that are not pure virtual.
+UNLOG_CATEGORY(LogFlecsSystemInterface);
+
+FString IFlecsSystemInterface::GetName() const
+{
+	UN_LOG(LogFlecsSystemInterface, Error,
+		"IFlecsSystemInterface::GetName() not implemented for %s",
+		*_getUObject()->GetClass()->GetName());
+	return _getUObject()->GetClass()->GetName();
+}

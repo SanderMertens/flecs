@@ -19,7 +19,7 @@ void IFlecsModuleInterface::ImportModule(const flecs::world& InWorld)
 	}
 	else
 	{
-		ModuleEntity = InWorld.entity(TCHAR_TO_ANSI(*GetModuleName()));
+		ModuleEntity = InWorld.entity(StringCast<char>(*GetModuleName()).Get());
 		solid_checkf(ModuleEntity.IsValid(), TEXT("Module entity is not valid!"));
 	}
 
@@ -46,8 +46,7 @@ void IFlecsModuleInterface::DeinitializeModule(UFlecsWorld* InWorld)
 
 FString IFlecsModuleInterface::GetModuleName_Implementation() const
 {
-	UN_LOG(LogFlecsModuleInterface, Warning,
-		"IFlecsModuleInterface::GetModuleName_Implementation(): "
+	UN_LOG(LogFlecsModuleInterface, Error,
 		"Module name not implemented! It is recommended to implement this function in the module interface. "
 		"Will return the inherited class name instead.");
 	
@@ -56,6 +55,32 @@ FString IFlecsModuleInterface::GetModuleName_Implementation() const
 
 FFlecsModuleStructInterface::~FFlecsModuleStructInterface()
 {
+}
+
+void FFlecsModuleStructInterface::ImportModule(const flecs::world& InWorld)
+{
+	World = ToFlecsWorld(InWorld);
+	solid_checkf(World.IsValid(), TEXT("World is not valid!"));
+
+	if (ModuleEntity.IsValid())
+	{
+		ModuleEntity.Enable();
+	}
+	else
+	{
+		ModuleEntity = InWorld.entity(StringCast<char>(*GetModuleName()).Get());
+		solid_checkf(ModuleEntity.IsValid(), TEXT("Module entity is not valid!"));
+	}
+
+	ModuleEntity.Add(flecs::Module);
+		
+	InitializeModule(World.Get(), ModuleEntity);
+}
+
+void FFlecsModuleStructInterface::DeinitModule_Internal()
+{
+	ModuleEntity.Disable();
+	DeinitializeModule(World.Get());
 }
 
 UFlecsWorld* FFlecsModuleStructInterface::GetFlecsWorld() const

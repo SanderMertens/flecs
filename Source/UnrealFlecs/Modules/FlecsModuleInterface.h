@@ -82,13 +82,9 @@ struct UNREALFLECS_API FFlecsModuleStructInterface
 public:
 	virtual ~FFlecsModuleStructInterface();
 
-	FORCEINLINE void ImportModule(const flecs::world& InWorld)
-	{
-	}
+	FORCEINLINE void ImportModule(const flecs::world& InWorld);
 
-	FORCEINLINE void DeinitModule_Internal()
-	{
-	}
+	FORCEINLINE void DeinitModule_Internal();
 
 	virtual void InitializeModule(UFlecsWorld* InWorld, const FFlecsEntityHandle& InModuleEntity)
 		PURE_VIRTUAL(FFlecsModuleStructInterface::InitializeModule, );
@@ -101,10 +97,17 @@ public:
 
 	FORCEINLINE NO_DISCARD UFlecsWorld* GetFlecsWorld() const;
 
+	FORCEINLINE NO_DISCARD bool IsEnabled() const
+	{
+		return ModuleEntity.IsEnabled();
+	}
+
 	UPROPERTY()
 	TWeakObjectPtr<UFlecsWorld> World;
 
+	UPROPERTY()
 	FFlecsEntityHandle ModuleEntity;
+	
 }; // struct FFlecsModuleInterface
 
 template <>
