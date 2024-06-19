@@ -1094,7 +1094,8 @@
                 "get_pipeline_stats_after_progress_2_systems_one_merge",
                 "get_entity_count",
                 "get_pipeline_stats_w_task_system",
-                "get_not_alive_entity_count"
+                "get_not_alive_entity_count",
+                "progress_stats_systems"
             ]
         }, {
             "id": "Run",

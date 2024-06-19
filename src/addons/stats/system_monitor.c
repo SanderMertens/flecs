@@ -11,6 +11,16 @@
 
 ECS_COMPONENT_DECLARE(EcsSystemStats);
 
+static
+void flecs_system_monitor_dtor(EcsSystemStats *ptr) {
+    ecs_map_iter_t it = ecs_map_iter(&ptr->stats);
+    while (ecs_map_next(&it)) {
+        ecs_system_stats_t *stats = ecs_map_ptr(&it);
+        ecs_os_free(stats);
+    }
+    ecs_map_fini(&ptr->stats);
+}
+
 static ECS_CTOR(EcsSystemStats, ptr, {
     ecs_os_zeromem(ptr);
     ecs_map_init(&ptr->stats, NULL);
@@ -23,17 +33,13 @@ static ECS_COPY(EcsSystemStats, dst, src, {
 })
 
 static ECS_MOVE(EcsSystemStats, dst, src, {
+    flecs_system_monitor_dtor(dst);
     ecs_os_memcpy_t(dst, src, EcsSystemStats);
     ecs_os_zeromem(src);
 })
 
 static ECS_DTOR(EcsSystemStats, ptr, {
-    ecs_map_iter_t it = ecs_map_iter(&ptr->stats);
-    while (ecs_map_next(&it)) {
-        ecs_system_stats_t *stats = ecs_map_ptr(&it);
-        ecs_os_free(stats);
-    }
-    ecs_map_fini(&ptr->stats);
+    flecs_system_monitor_dtor(ptr);
 })
 
 static 
