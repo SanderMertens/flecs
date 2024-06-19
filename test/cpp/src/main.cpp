@@ -839,6 +839,10 @@ void Observer_on_add_tag_each(void);
 void Observer_on_add_expr(void);
 void Observer_observer_w_filter_term(void);
 void Observer_run_callback(void);
+void Observer_run_callback_w_1_field(void);
+void Observer_run_callback_w_2_fields(void);
+void Observer_run_callback_w_yield_existing_1_field(void);
+void Observer_run_callback_w_yield_existing_2_fields(void);
 void Observer_get_query(void);
 void Observer_on_set_w_set(void);
 void Observer_on_set_w_defer_set(void);
@@ -4584,6 +4588,22 @@ bake_test_case Observer_testcases[] = {
         Observer_run_callback
     },
     {
+        "run_callback_w_1_field",
+        Observer_run_callback_w_1_field
+    },
+    {
+        "run_callback_w_2_fields",
+        Observer_run_callback_w_2_fields
+    },
+    {
+        "run_callback_w_yield_existing_1_field",
+        Observer_run_callback_w_yield_existing_1_field
+    },
+    {
+        "run_callback_w_yield_existing_2_fields",
+        Observer_run_callback_w_yield_existing_2_fields
+    },
+    {
         "get_query",
         Observer_get_query
     },
@@ -6579,10 +6599,14 @@ static bake_test_suite suites[] = {
         NULL,
         NULL,
 <<<<<<< HEAD
+<<<<<<< HEAD
         33,
 =======
         36,
 >>>>>>> 575f9d23f (Fix LOCKED_STORAGE issues when emitting events)
+=======
+        40,
+>>>>>>> ab0ba86cd (Fix issues with observer run callback)
         Observer_testcases
     },
     {
