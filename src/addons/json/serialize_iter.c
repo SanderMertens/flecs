@@ -229,6 +229,17 @@ void flecs_json_serialize_query_profile(
     flecs_json_object_pop(buf);
 }
 
+static
+void flecs_iter_free_ser_ctx(
+    ecs_iter_t *it,
+    ecs_json_ser_ctx_t *ser_ctx)
+{
+    int32_t f, field_count = it->field_count;
+    for (f = 0; f < field_count; f ++) {
+        ecs_os_free(ser_ctx->value_ctx[f].id_label);
+    }
+}
+
 int ecs_iter_to_json_buf(
     ecs_iter_t *it,
     ecs_strbuf_t *buf,
@@ -291,6 +302,7 @@ int ecs_iter_to_json_buf(
         while (next(it)) {
             if (flecs_json_serialize_iter_result(world, it, buf, desc, &ser_ctx)) {
                 ecs_strbuf_reset(buf);
+                flecs_iter_free_ser_ctx(it, &ser_ctx);
                 ecs_iter_fini(it);
                 return -1;
             }
@@ -301,12 +313,7 @@ int ecs_iter_to_json_buf(
         ecs_iter_fini(it);
     }
 
-    int32_t f, field_count = it->field_count;
-    if (desc && desc->serialize_values) {
-        for (f = 0; f < field_count; f ++) {
-            ecs_os_free(ser_ctx.value_ctx[f].id_label);
-        }
-    }
+    flecs_iter_free_ser_ctx(it, &ser_ctx);
 
     flecs_json_object_pop(buf);
 

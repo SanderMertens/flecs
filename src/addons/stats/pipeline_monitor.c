@@ -11,6 +11,17 @@
 
 ECS_COMPONENT_DECLARE(EcsPipelineStats);
 
+static
+void flecs_pipeline_monitor_dtor(EcsPipelineStats *ptr) {
+    ecs_map_iter_t it = ecs_map_iter(&ptr->stats);
+    while (ecs_map_next(&it)) {
+        ecs_pipeline_stats_t *stats = ecs_map_ptr(&it);
+        ecs_pipeline_stats_fini(stats);
+        ecs_os_free(stats);
+    }
+    ecs_map_fini(&ptr->stats);
+}
+
 static ECS_CTOR(EcsPipelineStats, ptr, {
     ecs_os_zeromem(ptr);
     ecs_map_init(&ptr->stats, NULL);
@@ -23,18 +34,13 @@ static ECS_COPY(EcsPipelineStats, dst, src, {
 })
 
 static ECS_MOVE(EcsPipelineStats, dst, src, {
+    flecs_pipeline_monitor_dtor(dst);
     ecs_os_memcpy_t(dst, src, EcsPipelineStats);
     ecs_os_zeromem(src);
 })
 
 static ECS_DTOR(EcsPipelineStats, ptr, {
-    ecs_map_iter_t it = ecs_map_iter(&ptr->stats);
-    while (ecs_map_next(&it)) {
-        ecs_pipeline_stats_t *stats = ecs_map_ptr(&it);
-        ecs_pipeline_stats_fini(stats);
-        ecs_os_free(stats);
-    }
-    ecs_map_fini(&ptr->stats);
+    flecs_pipeline_monitor_dtor(ptr);
 })
 
 static 

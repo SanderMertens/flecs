@@ -475,19 +475,21 @@ int flecs_json_serialize_iter_result(
         if (flecs_json_serialize_iter_result_table(world, it, buf, 
             desc, count, has_this, parent_path, &this_data))
         {
-            return -1;
+            goto error;
         }
     } else {
         if (flecs_json_serialize_iter_result_query(world, it, buf, ser_ctx, 
             desc, count, has_this, parent_path, &this_data))
         {
-            return -1;
+            goto error;
         }
     }
 
     ecs_os_free(parent_path);
-
     return 0;
+error:
+    ecs_os_free(parent_path);
+    return -1;
 }
 
 #endif
