@@ -825,6 +825,7 @@ void Observer_name_from_root(void) {
     test_assert(ns == sys.parent());
 }
 
+<<<<<<< HEAD
 void Observer_term_index(void) {
     flecs::world ecs;
 
@@ -844,3 +845,76 @@ void Observer_term_index(void) {
     e1.set<Velocity>({ 30, 40 }); 
     test_int(last_term, 2);
 }
+=======
+void Observer_implicit_register_in_emit_for_named_entity(void) {
+    flecs::world world;
+
+    struct MyEvent { float value; };
+
+    flecs::entity e1 = world.entity("e1");
+    flecs::entity e2 = world.entity();
+
+    e1.observe<MyEvent>([&](MyEvent& evt) {
+        test_int(evt.value, 10);
+        e2.set<Position>({10, 20});
+    });
+
+    e1.emit<MyEvent>({ 10 });
+}
+
+void Observer_add_to_named_in_emit_for_named_entity(void) {
+    flecs::world world;
+
+    world.component<Position>();
+
+    struct MyEvent { float value; };
+
+    flecs::entity e1 = world.entity("e1");
+    flecs::entity e2 = world.entity("e2");
+
+    e1.observe<MyEvent>([&](MyEvent& evt) {
+        test_int(evt.value, 10);
+        e2.set<Position>({10, 20});
+    });
+
+    e1.emit<MyEvent>({ 10 });
+}
+
+void Observer_implicit_register_in_emit_for_named_entity_w_defer(void) {
+    flecs::world world;
+
+    struct MyEvent { float value; };
+
+    flecs::entity e1 = world.entity("e1");
+    flecs::entity e2 = world.entity();
+
+    e1.observe<MyEvent>([&](MyEvent& evt) {
+        test_int(evt.value, 10);
+        e2.set<Position>({10, 20});
+    });
+
+    world.defer_begin();
+    e1.emit<MyEvent>({ 10 });
+    world.defer_end();
+}
+
+void Observer_add_to_named_in_emit_for_named_entity_w_defer(void) {
+    flecs::world world;
+
+    world.component<Position>();
+
+    struct MyEvent { float value; };
+
+    flecs::entity e1 = world.entity("e1");
+    flecs::entity e2 = world.entity("e2");
+
+    e1.observe<MyEvent>([&](MyEvent& evt) {
+        test_int(evt.value, 10);
+        e2.set<Position>({10, 20});
+    });
+
+    world.defer_begin();
+    e1.emit<MyEvent>({ 10 });
+    world.defer_end();
+}
+>>>>>>> 575f9d23f (Fix LOCKED_STORAGE issues when emitting events)

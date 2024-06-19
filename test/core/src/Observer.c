@@ -5450,6 +5450,136 @@ void Observer_observer_no_id_in_scope(void) {
     ecs_fini(world);
 }
 
+static
+void ObserverRegisterComp(ecs_iter_t *it) {
+    probe_system_w_ctx(it, it->ctx);
+
+    ecs_component(it->world, {
+        .entity = ecs_entity(it->world, { .name = "Position", .symbol = "Position" }),
+        .type.size = 8,
+        .type.alignment = 4,
+    });
+}
+
+void Observer_register_comp_in_emit_named_entity(void) {
+    ecs_world_t* world = ecs_mini();
+    
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, Event);
+
+    Probe ctx;
+
+    ecs_observer(world, {
+        .query.terms = {
+            { .id = EcsAny },
+        },
+        .callback = ObserverRegisterComp,
+        .events = { Event },
+        .ctx = &ctx,
+    });
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e1" });
+
+    ecs_emit(world, &(ecs_event_desc_t){
+        .event = Event,
+        .entity = e
+    });
+
+    test_int(ctx.invoked, 1);
+
+    ecs_entity_t pos = ecs_lookup(world, "Position");
+    test_assert(pos != 0);
+    const EcsComponent *ptr = ecs_get(world, pos, EcsComponent);
+    test_assert(ptr != NULL);
+    test_int(ptr->size, 8);
+    test_int(ptr->alignment, 4);
+
+    ecs_fini(world);
+}
+
+static
+void ObserverRegisterCompMacro(ecs_iter_t *it) {
+    probe_system_w_ctx(it, it->ctx);
+
+    ECS_COMPONENT(it->world, Position);
+}
+
+void Observer_register_comp_w_macro_in_emit_named_entity(void) {
+    ecs_world_t* world = ecs_mini();
+    
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, Event);
+
+    Probe ctx;
+
+    ecs_observer(world, {
+        .query.terms = {
+            { .id = EcsAny },
+        },
+        .callback = ObserverRegisterCompMacro,
+        .events = { Event },
+        .ctx = &ctx,
+    });
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e1" });
+
+    ecs_emit(world, &(ecs_event_desc_t){
+        .event = Event,
+        .entity = e
+    });
+
+    test_int(ctx.invoked, 1);
+
+    ecs_entity_t pos = ecs_lookup(world, "Position");
+    test_assert(pos != 0);
+    const EcsComponent *ptr = ecs_get(world, pos, EcsComponent);
+    test_assert(ptr != NULL);
+    test_int(ptr->size, 8);
+    test_int(ptr->alignment, 4);
+
+    ecs_fini(world);
+}
+
+static ECS_TAG_DECLARE(Foo);
+
+static
+void ObserverAddToSelf(ecs_iter_t *it) {
+    probe_system_w_ctx(it, it->ctx);
+
+    test_int(it->count, 1);
+    ecs_add(it->world, it->entities[0], Foo);
+}
+
+void Observer_add_to_self_in_emit_entity(void) {
+    ecs_world_t* world = ecs_mini();
+
+    ECS_TAG(world, Event);
+    ECS_TAG_DEFINE(world, Foo);
+
+    Probe ctx;
+
+    ecs_observer(world, {
+        .query.terms = {
+            { .id = EcsAny },
+        },
+        .callback = ObserverAddToSelf,
+        .events = { Event },
+        .ctx = &ctx,
+    });
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e1" });
+
+    ecs_emit(world, &(ecs_event_desc_t){
+        .event = Event,
+        .entity = e
+    });
+
+    test_int(ctx.invoked, 1);
+    test_assert(ecs_has(world, e, Foo));
+
+    ecs_fini(world);
+}
+
 void Observer_cache_test_1(void) {
     ecs_world_t *world = ecs_mini();
     

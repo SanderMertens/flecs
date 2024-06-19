@@ -849,7 +849,14 @@ void Observer_on_add_with_pair_singleton(void);
 void Observer_add_in_yield_existing(void);
 void Observer_add_in_yield_existing_multi(void);
 void Observer_name_from_root(void);
+<<<<<<< HEAD
 void Observer_term_index(void);
+=======
+void Observer_implicit_register_in_emit_for_named_entity(void);
+void Observer_add_to_named_in_emit_for_named_entity(void);
+void Observer_implicit_register_in_emit_for_named_entity_w_defer(void);
+void Observer_add_to_named_in_emit_for_named_entity_w_defer(void);
+>>>>>>> 575f9d23f (Fix LOCKED_STORAGE issues when emitting events)
 
 <<<<<<< HEAD:test/cpp_api/src/main.cpp
 // Testsuite 'Filter'
@@ -4617,8 +4624,25 @@ bake_test_case Observer_testcases[] = {
         Observer_name_from_root
     },
     {
+<<<<<<< HEAD
         "term_index",
         Observer_term_index
+=======
+        "implicit_register_in_emit_for_named_entity",
+        Observer_implicit_register_in_emit_for_named_entity
+    },
+    {
+        "add_to_named_in_emit_for_named_entity",
+        Observer_add_to_named_in_emit_for_named_entity
+    },
+    {
+        "implicit_register_in_emit_for_named_entity_w_defer",
+        Observer_implicit_register_in_emit_for_named_entity_w_defer
+    },
+    {
+        "add_to_named_in_emit_for_named_entity_w_defer",
+        Observer_add_to_named_in_emit_for_named_entity_w_defer
+>>>>>>> 575f9d23f (Fix LOCKED_STORAGE issues when emitting events)
     }
 };
 
@@ -6554,7 +6578,11 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
+<<<<<<< HEAD
         33,
+=======
+        36,
+>>>>>>> 575f9d23f (Fix LOCKED_STORAGE issues when emitting events)
         Observer_testcases
     },
     {
