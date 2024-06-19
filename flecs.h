@@ -26175,7 +26175,7 @@ void register_lifecycle_actions(
 // registered with the world using the same id. If the id does exist, the class
 // will register it as a component, and verify whether the input is consistent.
 template <typename T>
-struct cpp_type_impl {
+struct type_impl {
     static_assert(is_pointer<T>::value == false,
         "pointer types are not allowed for components");
 
@@ -26359,11 +26359,11 @@ struct cpp_type_impl {
 };
 
 // Global templated variables that hold component identifier and other info
-template <typename T> entity_t      cpp_type_impl<T>::s_id;
-template <typename T> size_t        cpp_type_impl<T>::s_size;
-template <typename T> size_t        cpp_type_impl<T>::s_alignment;
-template <typename T> bool          cpp_type_impl<T>::s_allow_tag( true );
-template <typename T> int32_t       cpp_type_impl<T>::s_reset_count;
+template <typename T> entity_t      type_impl<T>::s_id;
+template <typename T> size_t        type_impl<T>::s_size;
+template <typename T> size_t        type_impl<T>::s_alignment;
+template <typename T> bool          type_impl<T>::s_allow_tag( true );
+template <typename T> int32_t       type_impl<T>::s_reset_count;
 
 // Front facing class for implicitly registering a component & obtaining
 // static component data
@@ -26371,7 +26371,7 @@ template <typename T> int32_t       cpp_type_impl<T>::s_reset_count;
 // Regular type
 template <typename T>
 struct type<T, if_not_t< is_pair<T>::value >>
-    : cpp_type_impl<base_type_t<T>> { };
+    : type_impl<base_type_t<T>> { };
 
 // Pair type
 template <typename T>

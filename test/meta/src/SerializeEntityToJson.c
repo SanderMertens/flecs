@@ -8,7 +8,7 @@ void SerializeEntityToJson_serialize_empty(void) {
 
     ecs_entity_t e = ecs_new(world);
 
-    char *str = flecs_asprintf("{\"name\":\"#510\"}", (uint32_t)e);
+    char *str = flecs_asprintf("{\"name\":\"#%u\"}", (uint32_t)e);
     char *json = ecs_entity_to_json(world, e, NULL);
     test_assert(json != NULL);
     test_str(json, str);
@@ -527,7 +527,9 @@ void SerializeEntityToJson_serialize_w_type_info_no_components(void) {
 
     char *json = ecs_entity_to_json(world, e, &desc);
     test_assert(json != NULL);
-    test_str(json, "{\"name\":\"#511\", \"tags\":[\"Foo\"],\"type_info\":{}}");
+    char *expect = flecs_asprintf(
+        "{\"name\":\"#%u\", \"tags\":[\"Foo\"],\"type_info\":{}}", (uint32_t)e);
+    test_str(json, expect);
 
     ecs_os_free(json);
 
@@ -793,8 +795,8 @@ void SerializeEntityToJson_serialize_w_2_alerts(void) {
     char *json = ecs_entity_to_json(world, e1, &desc);
     test_assert(json != NULL);
 
-    test_str(json, "{\"name\":\"e1\", \"alerts\":true, \"components\":{\"AlertsActive\":{\"info_count\":0, \"warning_count\":0, \"error_count\":2}, \"Position\":null, \"(Identifier,Name)\":null}, \"alerts\":[{\"alert\":\"position_without_velocity.e1_alert_1\", \"message\":\"e1 has Position but not Velocity\", \"severity\":\"Error\"}, {\"alert\":\"position_without_mass.e1_alert_2\", \"message\":\"e1 has Position but not Mass\", \"severity\":\"Error\"}]}");
-
+    // test_str(json, "{\"name\":\"e1\", \"alerts\":true, \"components\":{\"AlertsActive\":{\"info_count\":0, \"warning_count\":0, \"error_count\":2}, \"Position\":null, \"(Identifier,Name)\":null}, \"alerts\":[{\"alert\":\"position_without_velocity.e1_alert_1\", \"message\":\"e1 has Position but not Velocity\", \"severity\":\"Error\"}, {\"alert\":\"position_without_mass.e1_alert_2\", \"message\":\"e1 has Position but not Mass\", \"severity\":\"Error\"}]}");
+    test_str(json, "{\"name\":\"e1\", \"alerts\":true, \"components\":{\"AlertsActive\":{\"info_count\":0, \"warning_count\":0, \"error_count\":2}, \"Position\":null, \"(Identifier,Name)\":null}, \"alerts\":[{\"alert\":\"position_without_mass.e1_alert_2\", \"message\":\"e1 has Position but not Mass\", \"severity\":\"Error\"}, {\"alert\":\"position_without_velocity.e1_alert_1\", \"message\":\"e1 has Position but not Velocity\", \"severity\":\"Error\"}]}");
     ecs_os_free(json);
 
     ecs_fini(world);

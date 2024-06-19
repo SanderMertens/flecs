@@ -1464,6 +1464,42 @@ void World_no_name_prefix_after_init(void) {
     ecs_fini(world);
 }
 
+void World_component_init_w_name_prefix(void) {
+    ecs_world_t *world = ecs_mini();
+    
+    ecs_set_name_prefix(world, "Nested");
+
+    ecs_entity_t pos = ecs_component(world, {
+        .type = {
+            .name = "NestedPosition",
+            .size = 8,
+            .alignment = 4
+        }
+    });
+
+    test_assert(pos != 0);
+    test_str(ecs_get_name(world, pos), "Position");
+
+    ecs_fini(world);
+}
+
+typedef struct NestedPosition {
+    float x, y;
+} NestedPosition;
+
+void World_component_macro_w_name_prefix(void) {
+    ecs_world_t *world = ecs_mini();
+    
+    ecs_set_name_prefix(world, "Nested");
+
+    ECS_COMPONENT(world, NestedPosition);
+
+    test_assert(ecs_id(NestedPosition) != 0);
+    test_str(ecs_get_name(world, ecs_id(NestedPosition)), "Position");
+
+    ecs_fini(world);
+}
+
 void World_set_get_context(void) {
     ecs_world_t *world = ecs_mini();
 

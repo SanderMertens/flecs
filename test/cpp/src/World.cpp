@@ -1479,12 +1479,16 @@ void World_is_valid(void) {
     auto e = ecs.entity();
 
     test_bool(ecs.is_valid(e), true);
-    test_bool(ecs.is_valid(1000), true);
+    test_bool(ecs.is_valid(1000), false);
     test_bool(ecs.is_valid(0), false);
 
     e.destruct();
 
     test_bool(ecs.is_valid(e), false);
+
+    ecs.make_alive(1000);
+
+    test_bool(ecs.is_valid(1000), true);
 }
 
 void World_exists(void) {

@@ -2157,6 +2157,9 @@ void Observer_multi_observer_eval_count(void);
 void Observer_yield_existing_uni_no_this(void);
 void Observer_yield_existing_multi_no_this(void);
 void Observer_observer_no_id_in_scope(void);
+void Observer_register_comp_in_emit_named_entity(void);
+void Observer_register_comp_w_macro_in_emit_named_entity(void);
+void Observer_add_to_self_in_emit_entity(void);
 void Observer_cache_test_1(void);
 void Observer_cache_test_2(void);
 void Observer_cache_test_3(void);
@@ -2465,6 +2468,8 @@ void World_get_type_info(void);
 void World_get_type_info_after_delete_with(void);
 void World_get_type_info_after_reuse(void);
 void World_no_name_prefix_after_init(void);
+void World_component_init_w_name_prefix(void);
+void World_component_macro_w_name_prefix(void);
 void World_set_get_context(void);
 void World_set_get_binding_context(void);
 void World_set_get_context_w_free(void);
@@ -11171,6 +11176,18 @@ bake_test_case Observer_testcases[] = {
         Observer_observer_no_id_in_scope
     },
     {
+        "register_comp_in_emit_named_entity",
+        Observer_register_comp_in_emit_named_entity
+    },
+    {
+        "register_comp_w_macro_in_emit_named_entity",
+        Observer_register_comp_w_macro_in_emit_named_entity
+    },
+    {
+        "add_to_self_in_emit_entity",
+        Observer_add_to_self_in_emit_entity
+    },
+    {
         "cache_test_1",
         Observer_cache_test_1
     },
@@ -12354,6 +12371,14 @@ bake_test_case World_testcases[] = {
     {
         "no_name_prefix_after_init",
         World_no_name_prefix_after_init
+    },
+    {
+        "component_init_w_name_prefix",
+        World_component_init_w_name_prefix
+    },
+    {
+        "component_macro_w_name_prefix",
+        World_component_macro_w_name_prefix
     },
     {
         "set_get_context",
@@ -13806,7 +13831,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        158,
+        161,
         Observer_testcases
     },
     {
@@ -13855,7 +13880,7 @@ static bake_test_suite suites[] = {
         "World",
         World_setup,
         NULL,
-        55,
+        57,
         World_testcases
     },
     {
