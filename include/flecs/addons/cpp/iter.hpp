@@ -220,6 +220,12 @@ public:
         return ecs_field_column_index(m_iter, index);
     }
 
+    /** Obtain term that triggered an observer
+     */
+    int32_t term_index() const {
+        return m_iter->term_index + 1; // in iter_t, the term index is zero-based, so add 1.
+    }
+
     /** Convert current iterator result to string.
      */
     flecs::string str() const {
