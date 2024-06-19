@@ -3057,13 +3057,6 @@ static int run_invoked = 0;
 static int run_invoked_matched = 0;
 
 static void Run(ecs_iter_t *it) {
-    if (ecs_observer_default_run_action(it)) {
-        run_invoked_matched ++;
-    }
-    run_invoked ++;
-}
-
-static void Run_w_iter_next(ecs_iter_t *it) {
     run_invoked ++;
     
     test_assert(it != NULL);
@@ -3072,6 +3065,83 @@ static void Run_w_iter_next(ecs_iter_t *it) {
 
     while (ecs_iter_next(it)) {
         it->callback(it);
+        run_invoked_matched ++;
+    }
+}
+
+static void Run_w_1_field(ecs_iter_t *it) {    
+    run_invoked ++;
+    
+    test_assert(it != NULL);
+    test_assert(it->next != NULL);
+
+    while (ecs_iter_next(it)) {
+        test_int(it->count, 1);
+        Position *p = ecs_field(it, Position, 0);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+        
+        run_invoked_matched ++;
+    }
+}
+
+static void Run_w_1_field_w_callback(ecs_iter_t *it) {    
+    run_invoked ++;
+    
+    test_assert(it != NULL);
+    test_assert(it->next != NULL);
+
+    while (ecs_iter_next(it)) {
+        test_int(it->count, 1);
+        Position *p = ecs_field(it, Position, 0);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+
+        it->callback(it);
+        
+        run_invoked_matched ++;
+    }
+}
+
+static void Run_w_2_fields(ecs_iter_t *it) {
+    run_invoked ++;
+
+    test_assert(it != NULL);
+    test_assert(it->next != NULL);
+
+    while (ecs_iter_next(it)) {
+        test_int(it->count, 1);
+        Position *p = ecs_field(it, Position, 0);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+
+        Velocity *v = ecs_field(it, Velocity, 1);
+        test_int(v->x, 1);
+        test_int(v->y, 2);
+
+        run_invoked_matched ++;
+    }
+}
+
+static void Run_w_2_fields_w_callback(ecs_iter_t *it) {
+    run_invoked ++;
+
+    test_assert(it != NULL);
+    test_assert(it->next != NULL);
+
+    while (ecs_iter_next(it)) {
+        test_int(it->count, 1);
+        Position *p = ecs_field(it, Position, 0);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+
+        Velocity *v = ecs_field(it, Velocity, 1);
+        test_int(v->x, 1);
+        test_int(v->y, 2);
+
+        it->callback(it);
+
+        run_invoked_matched ++;
     }
 }
 
@@ -3093,7 +3163,6 @@ void Observer_custom_run_action(void) {
     ecs_entity_t e = ecs_new_w(world, TagA);
 
     test_int(run_invoked, 1);
-    test_int(run_invoked_matched, 1);
     test_int(ctx.invoked, 1);
     test_int(ctx.count, 1);
     test_int(ctx.e[0], e);
@@ -3102,29 +3171,241 @@ void Observer_custom_run_action(void) {
     ecs_fini(world);
 }
 
-void Observer_custom_run_action_w_iter_next(void) {
+void Observer_custom_run_action_w_field(void) {
     ecs_world_t *world = ecs_mini();
 
-    ECS_TAG(world, TagA);
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t t1 = ecs_observer_init(world, &(ecs_observer_desc_t){
+        .query.terms = {{ ecs_id(Position) }},
+        .events = {EcsOnSet},
+        .run = Run_w_1_field,
+    });
+    test_assert(t1 != 0);
+
+    ecs_insert(world, ecs_value(Position, {10, 20}));
+
+    test_int(run_invoked, 1);
+    test_int(run_invoked_matched, 1);
+    
+    ecs_fini(world);
+}
+
+void Observer_custom_run_action_w_2_fields(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_entity_t t1 = ecs_observer_init(world, &(ecs_observer_desc_t){
+        .query.terms = {{ ecs_id(Position) }, { ecs_id(Velocity) }},
+        .events = {EcsOnSet},
+        .run = Run_w_2_fields,
+    });
+    test_assert(t1 != 0);
+
+    ecs_entity_t e = ecs_insert(world, ecs_value(Position, {10, 20}));
+    test_int(run_invoked, 0);
+
+    ecs_set(world, e, Velocity, {1, 2});
+
+    test_int(run_invoked, 1);
+    test_int(run_invoked_matched, 1);
+    
+    ecs_fini(world);
+}
+
+void Observer_custom_run_w_yield_existing(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Position, {10, 20}));
 
     Probe ctx = {0};
     ecs_entity_t t1 = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .query.terms = {{ TagA }},
-        .events = {EcsOnAdd},
-        .run = Run_w_iter_next,
+        .query.terms = {{ ecs_id(Position) }},
+        .events = {EcsOnSet},
+        .run = Run,
         .callback = Observer,
+        .yield_existing = true,
         .ctx = &ctx
     });
     test_assert(t1 != 0);
 
-    ecs_entity_t e = ecs_new_w(world, TagA);
-
     test_int(run_invoked, 1);
+    test_int(run_invoked_matched, 1);
     test_int(ctx.invoked, 1);
     test_int(ctx.count, 1);
-    test_int(ctx.e[0], e);
-    test_int(ctx.event, EcsOnAdd);
-    
+    test_int(ctx.e[0], e1);
+    test_int(ctx.event, EcsOnSet);
+
+    run_invoked = 0;
+    run_invoked_matched = 0;
+    ecs_os_memset(&ctx, 0, sizeof(Probe));
+
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Position, {10, 20}));
+    test_int(run_invoked, 1);
+    test_int(run_invoked_matched, 1);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.e[0], e2);
+    test_int(ctx.event, EcsOnSet);
+
+    ecs_fini(world);
+}
+
+void Observer_custom_run_w_yield_existing_1_field(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_insert(world, ecs_value(Position, {10, 20}));
+
+    ecs_entity_t t1 = ecs_observer_init(world, &(ecs_observer_desc_t){
+        .query.terms = {{ ecs_id(Position) }},
+        .events = {EcsOnSet},
+        .run = Run_w_1_field,
+        .yield_existing = true
+    });
+    test_assert(t1 != 0);
+
+    test_int(run_invoked, 1);
+    test_int(run_invoked_matched, 1);
+
+    run_invoked = 0;
+    run_invoked_matched = 0;
+
+    ecs_insert(world, ecs_value(Position, {10, 20}));
+    test_int(run_invoked, 1);
+    test_int(run_invoked_matched, 1);
+
+    ecs_fini(world);
+}
+
+void Observer_custom_run_w_yield_existing_1_field_w_callback(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Position, {10, 20}));
+
+    Probe ctx = {0};
+    ecs_entity_t t1 = ecs_observer_init(world, &(ecs_observer_desc_t){
+        .query.terms = {{ ecs_id(Position) }},
+        .events = {EcsOnSet},
+        .run = Run_w_1_field_w_callback,
+        .callback = Observer_w_value,
+        .yield_existing = true,
+        .ctx = &ctx
+    });
+    test_assert(t1 != 0);
+
+    test_int(run_invoked, 1);
+    test_int(run_invoked_matched, 1);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.e[0], e1);
+    test_int(ctx.event, EcsOnSet);
+
+    run_invoked = 0;
+    run_invoked_matched = 0;
+    ecs_os_memset(&ctx, 0, sizeof(Probe));
+
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Position, {10, 20}));
+    test_int(run_invoked, 1);
+    test_int(run_invoked_matched, 1);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.e[0], e2);
+    test_int(ctx.event, EcsOnSet);
+
+    ecs_fini(world);
+}
+
+void Observer_custom_run_w_yield_existing_2_fields(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_insert(world, 
+        ecs_value(Position, {10, 20}),
+        ecs_value(Velocity, {1, 2}));
+
+    ecs_entity_t t1 = ecs_observer_init(world, &(ecs_observer_desc_t){
+        .query.terms = {{ ecs_id(Position) }, { ecs_id(Velocity) }},
+        .events = {EcsOnSet},
+        .run = Run_w_2_fields,
+        .callback = Observer,
+        .yield_existing = true,
+    });
+    test_assert(t1 != 0);
+
+    test_int(run_invoked, 1);
+    test_int(run_invoked_matched, 1);
+
+    run_invoked = 0;
+    run_invoked_matched = 0;
+
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Position, {10, 20}));
+    test_int(run_invoked, 0);
+
+    ecs_set(world, e2, Velocity, {1, 2});
+
+    test_int(run_invoked, 1);
+    test_int(run_invoked_matched, 1);
+
+    ecs_fini(world);
+}
+
+void Observer_custom_run_w_yield_existing_2_fields_w_callback(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_entity_t e1 = ecs_insert(world, 
+        ecs_value(Position, {10, 20}),
+        ecs_value(Velocity, {1, 2}));
+
+    Probe ctx = {0};
+    ecs_entity_t t1 = ecs_observer_init(world, &(ecs_observer_desc_t){
+        .query.terms = {{ ecs_id(Position) }, { ecs_id(Velocity) }},
+        .events = {EcsOnSet},
+        .run = Run_w_2_fields_w_callback,
+        .callback = Observer_w_value,
+        .yield_existing = true,
+        .ctx = &ctx
+    });
+    test_assert(t1 != 0);
+
+    test_int(run_invoked, 1);
+    test_int(run_invoked_matched, 1);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.e[0], e1);
+    test_int(ctx.event, EcsOnSet);
+
+    run_invoked = 0;
+    run_invoked_matched = 0;
+    ecs_os_memset(&ctx, 0, sizeof(Probe));
+
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Position, {10, 20}));
+    test_int(run_invoked, 0);
+
+    ecs_set(world, e2, Velocity, {1, 2});
+
+    test_int(run_invoked, 1);
+    test_int(run_invoked_matched, 1);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.e[0], e2);
+    test_int(ctx.event, EcsOnSet);
+
     ecs_fini(world);
 }
 
@@ -3145,10 +3426,10 @@ void Observer_custom_run_action_2_terms(void) {
     test_assert(t1 != 0);
 
     ecs_entity_t e = ecs_new_w(world, TagA);
-    test_int(run_invoked, 1);
-    run_invoked = 0;
+    test_int(run_invoked, 0);
 
     ecs_add(world, e, TagB);
+
     test_int(run_invoked, 1);
     test_int(run_invoked_matched, 1);
     test_int(ctx.invoked, 1);
@@ -3169,15 +3450,14 @@ void Observer_custom_run_action_w_iter_next_2_terms(void) {
     ecs_entity_t t1 = ecs_observer_init(world, &(ecs_observer_desc_t){
         .query.terms = {{ TagA }, { TagB }},
         .events = {EcsOnAdd},
-        .run = Run_w_iter_next,
+        .run = Run,
         .callback = Observer,
         .ctx = &ctx
     });
     test_assert(t1 != 0);
 
     ecs_entity_t e = ecs_new_w(world, TagA);
-    test_int(run_invoked, 1);
-    run_invoked = 0;
+    test_int(run_invoked, 0);
 
     ecs_add(world, e, TagB);
     test_int(run_invoked, 1);

@@ -2507,7 +2507,7 @@ void Trigger_trigger_w_index(void) {
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
         .query.terms[0].id = Tag,
-        .term_index = 50,
+        .term_index_ = 50,
         .events = {EcsOnAdd},
         .callback = Trigger,
         .ctx = &ctx

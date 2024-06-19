@@ -2085,9 +2085,15 @@ void Observer_mixed_on_set_w_tag(void);
 void Observer_mixed_un_set_w_tag(void);
 void Observer_match_base_w_id_at_offset(void);
 void Observer_custom_run_action(void);
-void Observer_custom_run_action_w_iter_next(void);
 void Observer_custom_run_action_2_terms(void);
 void Observer_custom_run_action_w_iter_next_2_terms(void);
+void Observer_custom_run_action_w_field(void);
+void Observer_custom_run_action_w_2_fields(void);
+void Observer_custom_run_w_yield_existing(void);
+void Observer_custom_run_w_yield_existing_1_field(void);
+void Observer_custom_run_w_yield_existing_1_field_w_callback(void);
+void Observer_custom_run_w_yield_existing_2_fields(void);
+void Observer_custom_run_w_yield_existing_2_fields_w_callback(void);
 void Observer_read_in_on_remove_after_add_other_w_not(void);
 void Observer_observer_w_short_notation(void);
 void Observer_observer_w_filter_term(void);
@@ -10888,16 +10894,40 @@ bake_test_case Observer_testcases[] = {
         Observer_custom_run_action
     },
     {
-        "custom_run_action_w_iter_next",
-        Observer_custom_run_action_w_iter_next
-    },
-    {
         "custom_run_action_2_terms",
         Observer_custom_run_action_2_terms
     },
     {
         "custom_run_action_w_iter_next_2_terms",
         Observer_custom_run_action_w_iter_next_2_terms
+    },
+    {
+        "custom_run_action_w_field",
+        Observer_custom_run_action_w_field
+    },
+    {
+        "custom_run_action_w_2_fields",
+        Observer_custom_run_action_w_2_fields
+    },
+    {
+        "custom_run_w_yield_existing",
+        Observer_custom_run_w_yield_existing
+    },
+    {
+        "custom_run_w_yield_existing_1_field",
+        Observer_custom_run_w_yield_existing_1_field
+    },
+    {
+        "custom_run_w_yield_existing_1_field_w_callback",
+        Observer_custom_run_w_yield_existing_1_field_w_callback
+    },
+    {
+        "custom_run_w_yield_existing_2_fields",
+        Observer_custom_run_w_yield_existing_2_fields
+    },
+    {
+        "custom_run_w_yield_existing_2_fields_w_callback",
+        Observer_custom_run_w_yield_existing_2_fields_w_callback
     },
     {
         "read_in_on_remove_after_add_other_w_not",
@@ -13831,7 +13861,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        161,
+        167,
         Observer_testcases
     },
     {

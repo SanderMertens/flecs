@@ -1272,6 +1272,7 @@ ecs_query_cache_t* flecs_query_cache_init(
         observer_desc.events[2] = EcsOnTableCreate;
         observer_desc.events[3] = EcsOnTableDelete;
         observer_desc.query.flags |= EcsQueryNoData|EcsQueryIsInstanced;
+        observer_desc.flags_ = EcsObserverBypassQuery;
 
         /* ecs_query_init could have moved away resources from the terms array
          * in the descriptor, so use the terms array from the query. */
