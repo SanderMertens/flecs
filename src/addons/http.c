@@ -1692,14 +1692,13 @@ int ecs_http_server_request(
     int32_t method_len = ecs_os_strlen(method);
     int32_t req_len = ecs_os_strlen(req);
     int32_t http_ver_len = ecs_os_strlen(http_ver);
+    char reqbuf[1024], *reqstr = reqbuf;
 
     int32_t len = method_len + req_len + http_ver_len + 1;
     if (method_len + req_len + http_ver_len >= 1024) {
-        ecs_err("HTTP request too long");
-        return -1;
+        reqstr = ecs_os_malloc(len + 1);
     }
 
-    char reqstr[1024];
     char *ptr = reqstr;
     ecs_os_memcpy(ptr, method, method_len); ptr += method_len;
     ptr[0] = ' '; ptr ++;
@@ -1707,7 +1706,12 @@ int ecs_http_server_request(
     ecs_os_memcpy(ptr, http_ver, http_ver_len); ptr += http_ver_len;
     ptr[0] = '\n';
 
-    return ecs_http_server_http_request(srv, reqstr, len, reply_out);
+    int result = ecs_http_server_http_request(srv, reqstr, len, reply_out);
+    if (reqbuf != reqstr) {
+        ecs_os_free(reqstr);
+    }
+
+    return result;
 }
 
 void* ecs_http_server_ctx(
