@@ -834,6 +834,10 @@ void Observer_on_add_tag_each(void);
 void Observer_on_add_expr(void);
 void Observer_observer_w_filter_term(void);
 void Observer_run_callback(void);
+void Observer_run_callback_w_1_field(void);
+void Observer_run_callback_w_2_fields(void);
+void Observer_run_callback_w_yield_existing_1_field(void);
+void Observer_run_callback_w_yield_existing_2_fields(void);
 void Observer_get_query(void);
 void Observer_on_set_w_set(void);
 void Observer_on_set_w_defer_set(void);
@@ -4531,6 +4535,22 @@ bake_test_case Observer_testcases[] = {
         Observer_run_callback
     },
     {
+        "run_callback_w_1_field",
+        Observer_run_callback_w_1_field
+    },
+    {
+        "run_callback_w_2_fields",
+        Observer_run_callback_w_2_fields
+    },
+    {
+        "run_callback_w_yield_existing_1_field",
+        Observer_run_callback_w_yield_existing_1_field
+    },
+    {
+        "run_callback_w_yield_existing_2_fields",
+        Observer_run_callback_w_yield_existing_2_fields
+    },
+    {
         "get_query",
         Observer_get_query
     },
@@ -6401,7 +6421,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        36,
+        40,
         Observer_testcases
     },
     {

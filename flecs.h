@@ -506,6 +506,7 @@ extern "C" {
 #define EcsObserverIsMonitor           (1u << 2u)  /* Is observer a monitor */
 #define EcsObserverIsDisabled          (1u << 3u)  /* Is observer entity disabled */
 #define EcsObserverIsParentDisabled    (1u << 4u)  /* Is module parent of observer disabled  */
+#define EcsObserverBypassQuery         (1u << 5u)
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Table flags (used by ecs_table_t::flags)
@@ -4421,7 +4422,8 @@ typedef struct ecs_observer_desc_t {
     int32_t *last_event_id;
 
     /** Used for internal purposes */
-    int32_t term_index;
+    int32_t term_index_;
+    ecs_flags32_t flags_;
 } ecs_observer_desc_t;
 
 /** Used with ecs_emit().
@@ -7973,19 +7975,6 @@ FLECS_API
 ecs_entity_t ecs_observer_init(
     ecs_world_t *world,
     const ecs_observer_desc_t *desc);
-
-/** Default run action for observer.
- * This function can be called from a custom observer run action (see
- * ecs_observer_desc_t::run for more details). This function ensures that the
- * observer's query is applied to the iterator's table, filters out duplicate
- * events and implements EcsMonitor logic.
- *
- * @param it The iterator.
- * @return True if the observer was invoked.
- */
-FLECS_API
-bool ecs_observer_default_run_action(
-    ecs_iter_t *it);
 
 /** Get observer object.
  * Returns the observer object. Can be used to access various information about

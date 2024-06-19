@@ -603,6 +603,110 @@ void Observer_run_callback(void) {
     test_int(count, 1);
 }
 
+void Observer_run_callback_w_1_field(void) {
+    flecs::world ecs;
+
+    int32_t count = 0;
+
+    ecs.observer<Position>()
+        .event(flecs::OnSet)
+        .run([&](flecs::iter& it) {
+            while (it.next()) {
+                auto p = it.field<Position>(0);
+                test_int(p->x, 10);
+                test_int(p->y, 20);
+                
+                count ++;
+            }
+        });
+
+    auto e = ecs.entity();
+    test_int(count, 0);
+
+    e.set<Position>({10, 20});
+    test_int(count, 1);
+}
+
+void Observer_run_callback_w_2_fields(void) {
+    flecs::world ecs;
+
+    int32_t count = 0;
+
+    ecs.observer<Position, Velocity>()
+        .event(flecs::OnSet)
+        .run([&](flecs::iter& it) {
+            while (it.next()) {
+                auto p = it.field<Position>(0);
+                auto v = it.field<Velocity>(1);
+
+                test_int(p->x, 10);
+                test_int(p->y, 20);
+                test_int(v->x, 1);
+                test_int(v->y, 2);
+
+                count ++;
+            }
+        });
+
+    auto e = ecs.entity();
+    test_int(count, 0);
+
+    e.set<Position>({10, 20});
+    test_int(count, 0);
+
+    e.set<Velocity>({1, 2});
+    test_int(count, 1);
+}
+
+void Observer_run_callback_w_yield_existing_1_field(void) {
+    flecs::world ecs;
+
+    int32_t count = 0;
+    ecs.entity().set<Position>({10, 20});
+
+    ecs.observer<Position>()
+        .event(flecs::OnSet)
+        .yield_existing()
+        .run([&](flecs::iter& it) {
+            while (it.next()) {
+                auto p = it.field<Position>(0);
+
+                test_int(p->x, 10);
+                test_int(p->y, 20);
+
+                count ++;
+            }
+        });
+    
+    test_int(count, 1);
+}
+
+void Observer_run_callback_w_yield_existing_2_fields(void) {
+    flecs::world ecs;
+
+    int32_t count = 0;
+    ecs.entity().set<Position>({10, 20}).set<Velocity>({1, 2});
+
+    ecs.observer<Position, Velocity>()
+        .event(flecs::OnSet)
+        .yield_existing()
+        .run([&](flecs::iter& it) {
+            while (it.next()) {
+                auto p = it.field<Position>(0);
+                auto v = it.field<Velocity>(1);
+
+                test_int(p->x, 10);
+                test_int(p->y, 20);
+                test_int(v->x, 1);
+                test_int(v->y, 2);
+
+                count ++;
+            }
+        });
+    
+    test_int(count, 1);
+}
+
 void Observer_get_query(void) {
     flecs::world world;
 
