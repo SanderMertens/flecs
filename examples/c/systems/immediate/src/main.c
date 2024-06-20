@@ -36,15 +36,15 @@ void AssignPlate(ecs_iter_t *it) {
             // next plate will no longer find it.
             // The defer_suspend function temporarily suspends deferring 
             // operations, which ensures that our plate is assigned immediately.
-            // Even though this is a immediate system, defering is still 
+            // Even though this is a immediate system, deferring is still
             // enabled by default, as adding/removing components to the entities
-            // being iterated would intefere with the system iterator.
+            // being iterated would interfere with the system iterator.
             ecs_defer_suspend(ecs);
             ecs_add_pair(ecs, waiter, Plate, plate);
             ecs_defer_resume(ecs);
 
-            // Now that defering is resumed, we can safely also add the waiter
-            // to the plate. We can't do this while defering is suspended, 
+            // Now that deferring is resumed, we can safely also add the waiter
+            // to the plate. We can't do this while deferring is suspended,
             // because the plate is the entity we're currently iterating, and
             // we don't want to move it to a different table while we're 
             // iterating it.

@@ -1045,8 +1045,8 @@
                 "import_addons_two_worlds",
                 "lookup_module_after_reparent",
                 "reparent_module_in_ctor",
-                "implicitely_add_module_to_scopes_component",
-                "implicitely_add_module_to_scopes_entity"
+                "implicitly_add_module_to_scopes_component",
+                "implicitly_add_module_to_scopes_entity"
             ]
         }, {
             "id": "ImplicitComponents",

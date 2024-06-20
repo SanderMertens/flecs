@@ -348,7 +348,7 @@ namespace NamespaceLvl1 {
         };
     }
 }
-void Module_implicitely_add_module_to_scopes_component(void) {
+void Module_implicitly_add_module_to_scopes_component(void) {
     flecs::world ecs;
 
     using StructLvl2_1 = NamespaceLvl1::NamespaceLvl2::StructLvl1::StructLvl2_1;
@@ -378,7 +378,7 @@ void Module_implicitely_add_module_to_scopes_component(void) {
     test_assert(current.id() == 0);
 }
 
-void Module_implicitely_add_module_to_scopes_entity(void) {
+void Module_implicitly_add_module_to_scopes_entity(void) {
     flecs::world ecs;
 
     using StructLvl2_2 = NamespaceLvl1::NamespaceLvl2::StructLvl1::StructLvl2_2;

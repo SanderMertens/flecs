@@ -1007,7 +1007,7 @@ void System_w_FromParent_2_column_1_from_container(void);
 void System_w_FromParent_3_column_2_from_container(void);
 void System_w_FromParent_2_column_1_from_container_w_not(void);
 void System_w_FromParent_2_column_1_from_container_w_not_prefab(void);
-void System_w_FromParent_3_column_1_from_comtainer_1_from_container_w_not(void);
+void System_w_FromParent_3_column_1_from_container_1_from_container_w_not(void);
 void System_w_FromParent_2_column_1_from_container_w_or(void);
 void System_w_FromParent_select_same_from_container(void);
 void System_w_FromParent_add_component_after_match(void);
@@ -5149,8 +5149,8 @@ bake_test_case System_w_FromParent_testcases[] = {
         System_w_FromParent_2_column_1_from_container_w_not_prefab
     },
     {
-        "3_column_1_from_comtainer_1_from_container_w_not",
-        System_w_FromParent_3_column_1_from_comtainer_1_from_container_w_not
+        "3_column_1_from_container_1_from_container_w_not",
+        System_w_FromParent_3_column_1_from_container_1_from_container_w_not
     },
     {
         "2_column_1_from_container_w_or",

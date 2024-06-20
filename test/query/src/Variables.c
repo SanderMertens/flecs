@@ -4572,7 +4572,7 @@ void Variables_1_set_src_this_to_empty_table_w_component_self(void) {
     ecs_fini(world);
 }
 
-void Variables_1_set_src_this_to_entiy_in_table(void) {
+void Variables_1_set_src_this_to_entity_in_table(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -4616,7 +4616,7 @@ void Variables_1_set_src_this_to_entiy_in_table(void) {
     ecs_fini(world);
 }
 
-void Variables_1_set_src_this_to_entiy_in_table_self(void) {
+void Variables_1_set_src_this_to_entity_in_table_self(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);

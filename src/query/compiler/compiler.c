@@ -245,7 +245,7 @@ int flecs_query_discover_vars(
                 flecs_query_add_var(query, EcsThisName, vars, EcsVarEntity);
 
                 /* Track if query contains $this sparse terms. Queries with 
-                 * sparse $this fields need to return results ony by one. */
+                 * sparse $this fields need to return results one by one. */
                 if ((ECS_TERM_REF_ID(&term->src) == EcsThis) && 
                     ((term->src.id & (EcsSelf|EcsIsVariable)) == (EcsSelf|EcsIsVariable)))
                 {
@@ -465,7 +465,7 @@ bool flecs_query_var_is_unknown(
     return true;
 }
 
-/* Returns whether term is unkown. A term is unknown when it has variable 
+/* Returns whether term is unknown. A term is unknown when it has variable
  * elements (first, second, src) that are all unknown. */
 static
 bool flecs_query_term_is_unknown(
