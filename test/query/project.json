@@ -648,7 +648,8 @@
                 "delete_id_after_delete_query",
                 "pair_sweep_tag",
                 "pair_sweep_wildcard_first",
-                "pair_sweep_wildcard_second"
+                "pair_sweep_wildcard_second",
+                "create_w_entity_deferred"
             ]
         }, {
             "id": "Combinations",

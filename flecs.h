@@ -29123,6 +29123,10 @@ struct query_base {
         return flecs::entity(query_->world, query_->entity);
     }
 
+    const flecs::query_t* c_ptr() const {
+        return query_;
+    }
+
     operator const flecs::query_t*() const {
         return query_;
     }

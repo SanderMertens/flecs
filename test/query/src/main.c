@@ -637,6 +637,7 @@ void Basic_delete_id_after_delete_query(void);
 void Basic_pair_sweep_tag(void);
 void Basic_pair_sweep_wildcard_first(void);
 void Basic_pair_sweep_wildcard_second(void);
+void Basic_create_w_entity_deferred(void);
 
 // Testsuite 'Combinations'
 void Combinations_setup(void);
@@ -4490,6 +4491,10 @@ bake_test_case Basic_testcases[] = {
     {
         "pair_sweep_wildcard_second",
         Basic_pair_sweep_wildcard_second
+    },
+    {
+        "create_w_entity_deferred",
+        Basic_create_w_entity_deferred
     }
 };
 
@@ -9832,7 +9837,7 @@ static bake_test_suite suites[] = {
         "Basic",
         Basic_setup,
         NULL,
-        196,
+        197,
         Basic_testcases,
         1,
         Basic_params
