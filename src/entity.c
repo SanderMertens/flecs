@@ -2532,8 +2532,8 @@ bool flecs_on_delete_clear_tables(
                             flecs_remove_from_table(world, table);
                         } else {
                             ecs_dbg_3(
-                                "#[red]delete#[reset] entities from table %u [%s]", 
-                                (uint32_t)table->id, ecs_table_str(world, table));
+                                "#[red]delete#[reset] entities from table %u", 
+                                (uint32_t)table->id);
                             flecs_table_delete_entities(world, table);
                         }
                     }
@@ -3433,9 +3433,6 @@ void ecs_enable_id(
 
     if (flecs_defer_enable(stage, entity, id, enable)) {
         return;
-    } else {
-        /* Operations invoked by enable/disable should not be deferred */
-        stage->defer --;
     }
 
     ecs_record_t *r = flecs_entities_get(world, entity);
@@ -3449,6 +3446,7 @@ void ecs_enable_id(
 
     if (index == -1) {
         ecs_add_id(world, entity, bs_id);
+        flecs_defer_end(world, stage);
         ecs_enable_id(world, entity, id, enable);
         return;
     }
@@ -3462,6 +3460,8 @@ void ecs_enable_id(
     ecs_assert(bs != NULL, ECS_INTERNAL_ERROR, NULL);
 
     flecs_bitset_set(bs, ECS_RECORD_TO_ROW(r->row), enable);
+
+    flecs_defer_end(world, stage);
 error:
     return;
 }

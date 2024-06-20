@@ -103,6 +103,7 @@ void Pipeline_run_pipeline_multithreaded(void);
 void Pipeline_run_pipeline_multithreaded_tasks(void);
 void Pipeline_pipeline_init_no_terms(void);
 void Pipeline_pipeline_init_no_system_term(void);
+void Pipeline_disable_component_from_immediate_system(void);
 
 // Testsuite 'SystemMisc'
 void SystemMisc_invalid_not_without_id(void);
@@ -894,6 +895,10 @@ bake_test_case Pipeline_testcases[] = {
     {
         "pipeline_init_no_system_term",
         Pipeline_pipeline_init_no_system_term
+    },
+    {
+        "disable_component_from_immediate_system",
+        Pipeline_disable_component_from_immediate_system
     }
 };
 
@@ -2470,7 +2475,7 @@ static bake_test_suite suites[] = {
         "Pipeline",
         NULL,
         NULL,
-        82,
+        83,
         Pipeline_testcases
     },
     {
