@@ -31,10 +31,7 @@ int main(int argc, char *argv[]) {
     ecs_os_free(str);
 
     // Convert entity & all its components to json
-    str = ecs_entity_to_json(ecs, ent, &(ecs_entity_to_json_desc_t) {
-        .serialize_path = true,
-        .serialize_values = true
-    });
+    str = ecs_entity_to_json(ecs, ent, NULL);
     printf("ent = %s\n", str);
     ecs_os_free(str);
 

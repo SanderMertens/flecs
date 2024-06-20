@@ -46,7 +46,8 @@ int ecs_world_to_json_buf(
     ecs_iter_to_json_desc_t json_desc = { 
         .serialize_table = true,
         .serialize_full_paths = true,
-        .serialize_entity_ids = true
+        .serialize_entity_ids = true,
+        .serialize_values = true
     };
 
     int ret = ecs_iter_to_json_buf(&it, buf_out, &json_desc);

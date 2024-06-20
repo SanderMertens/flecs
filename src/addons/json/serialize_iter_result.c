@@ -353,7 +353,7 @@ void flecs_json_serialize_iter_this(
 
     if (desc && desc->serialize_entity_ids) {
         flecs_json_memberl(buf, "id");
-        flecs_json_u32(buf, flecs_uto(uint32_t, this_data->ids[row]));
+        flecs_json_u32(buf, (uint32_t)this_data->ids[row]);
     }
 
 #ifdef FLECS_DOC

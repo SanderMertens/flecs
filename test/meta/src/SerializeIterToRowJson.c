@@ -1921,9 +1921,9 @@ void SerializeIterToRowJson_serialize_table(void) {
     ecs_set(world, e3, Mass, {3});
 
     ecs_iter_t it = ecs_query_iter(world, q);
-    char *json = ecs_iter_to_json(&it, &(ecs_iter_to_json_desc_t) {
-        .serialize_table = true
-    });
+    ecs_iter_to_json_desc_t desc = ECS_ITER_TO_JSON_INIT;
+    desc.serialize_table = true;
+    char *json = ecs_iter_to_json(&it, &desc);
     test_assert(json != NULL);
 
     char* expect = "{\"results\":[{\"name\":\"e1\", \"tags\":[\"TagA\", \"TagB\"],\"pairs\":{\"RelA\":\"TgtA\", \"RelB\":\"TgtA\"}, \"components\":{\"Position\":{\"x\":10, \"y\":20}, \"Mass\":{\"value\":1}, \"(Identifier,Name)\":null}}, {\"name\":\"e2\", \"tags\":[\"TagA\", \"TagB\"],\"pairs\":{\"RelA\":\"TgtA\", \"RelB\":\"TgtA\"}, \"components\":{\"Position\":{\"x\":20, \"y\":30}, \"Mass\":{\"value\":2}, \"(Identifier,Name)\":null}}, {\"name\":\"e3\", \"tags\":[\"TagA\", \"TagB\"],\"pairs\":{\"RelA\":\"TgtA\", \"RelB\":\"TgtB\"}, \"components\":{\"Position\":{\"x\":30, \"y\":40}, \"Mass\":{\"value\":3}, \"(Identifier,Name)\":null}}]}";
@@ -1999,9 +1999,9 @@ void SerializeIterToRowJson_serialize_table_w_eq(void) {
     ecs_set(world, e3, Mass, {3});
 
     ecs_iter_t it = ecs_query_iter(world, q);
-    char *json = ecs_iter_to_json(&it, &(ecs_iter_to_json_desc_t) {
-        .serialize_table = true,
-    });
+    ecs_iter_to_json_desc_t desc = ECS_ITER_TO_JSON_INIT;
+    desc.serialize_table = true;
+    char *json = ecs_iter_to_json(&it, &desc);
     test_assert(json != NULL);
 
     char* expect = "{\"results\":[{\"name\":\"e2\", \"tags\":[\"TagA\", \"TagB\"],\"pairs\":{\"RelA\":\"TgtA\", \"RelB\":\"TgtA\"}, \"components\":{\"Position\":{\"x\":20, \"y\":30}, \"Mass\":{\"value\":2}, \"(Identifier,Name)\":null}}]}";
@@ -2076,9 +2076,9 @@ void SerializeIterToRowJson_serialize_table_w_neq(void) {
     ecs_set(world, e3, Mass, {3});
 
     ecs_iter_t it = ecs_query_iter(world, q);
-    char *json = ecs_iter_to_json(&it, &(ecs_iter_to_json_desc_t) {
-        .serialize_table = true,
-    });
+    ecs_iter_to_json_desc_t desc = ECS_ITER_TO_JSON_INIT;
+    desc.serialize_table = true;
+    char *json = ecs_iter_to_json(&it, &desc);
     test_assert(json != NULL);
 
     char* expect = "{\"results\":[{\"name\":\"e1\", \"tags\":[\"TagA\", \"TagB\"],\"pairs\":{\"RelA\":\"TgtA\", \"RelB\":\"TgtA\"}, \"components\":{\"Position\":{\"x\":10, \"y\":20}, \"Mass\":{\"value\":1}, \"(Identifier,Name)\":null}}, {\"name\":\"e3\", \"tags\":[\"TagA\", \"TagB\"],\"pairs\":{\"RelA\":\"TgtA\", \"RelB\":\"TgtB\"}, \"components\":{\"Position\":{\"x\":30, \"y\":40}, \"Mass\":{\"value\":3}, \"(Identifier,Name)\":null}}]}";

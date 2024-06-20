@@ -40,7 +40,7 @@ typedef struct ecs_app_desc_t {
     int32_t threads;          /**< Number of threads. */
     int32_t frames;           /**< Number of frames to run (0 for infinite) */
     bool enable_rest;         /**< Enables ECS access over HTTP, necessary for explorer */
-    bool enable_monitor;      /**< Periodically collect statistics */
+    bool enable_stats;      /**< Periodically collect statistics */
     uint16_t port;            /**< HTTP port used by REST API */
 
     ecs_app_init_action_t init; /**< If set, function is ran before starting the
