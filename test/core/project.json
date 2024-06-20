@@ -1933,6 +1933,7 @@
                 "delete_entity_w_symmetric_relation",
                 "add_symmetric_exclusive_relation",
                 "add_symmetric_recycled_relation",
+                "symmetric_w_childof",
                 "with",
                 "2_with",
                 "nested_with",

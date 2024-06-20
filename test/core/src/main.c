@@ -1864,6 +1864,7 @@ void Pairs_remove_symmetric_relation(void);
 void Pairs_delete_entity_w_symmetric_relation(void);
 void Pairs_add_symmetric_exclusive_relation(void);
 void Pairs_add_symmetric_recycled_relation(void);
+void Pairs_symmetric_w_childof(void);
 void Pairs_with(void);
 void Pairs_2_with(void);
 void Pairs_nested_with(void);
@@ -10020,6 +10021,10 @@ bake_test_case Pairs_testcases[] = {
         Pairs_add_symmetric_recycled_relation
     },
     {
+        "symmetric_w_childof",
+        Pairs_symmetric_w_childof
+    },
+    {
         "with",
         Pairs_with
     },
@@ -13847,7 +13852,7 @@ static bake_test_suite suites[] = {
         "Pairs",
         NULL,
         NULL,
-        124,
+        125,
         Pairs_testcases
     },
     {

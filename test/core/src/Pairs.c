@@ -2687,6 +2687,26 @@ void Pairs_add_symmetric_recycled_relation(void) {
     ecs_fini(world);
 }
 
+void Pairs_symmetric_w_childof(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t buddies = ecs_entity(world, { .name = "buddies" });
+    ecs_add_id(world, buddies, EcsSymmetric);
+
+    ecs_entity_t parent = ecs_entity(world, { .name = "parent" });
+    ecs_entity_t bob = ecs_entity(world, { .name = "bob", .parent = parent });
+    ecs_entity_t alice = ecs_entity(world, { .name = "alice" });
+    ecs_add_pair(world, alice, buddies, bob);
+
+    test_assert(ecs_has_pair(world, bob, buddies, alice));
+    
+    // ecs_log_set_level(4);
+
+    ecs_fini(world);
+
+    test_assert(true);
+}
+
 void Pairs_with(void) {
     ecs_world_t *world = ecs_mini();
 
@@ -3199,3 +3219,4 @@ void Pairs_force_target_on_target(void) {
 
     ecs_fini(world);
 }
+
