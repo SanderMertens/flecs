@@ -37180,7 +37180,16 @@ ecs_query_t* ecs_query_init(
 
     if (entity) {
         /* Remove existing query if entity has one */
+        bool deferred = false;
+        if (ecs_is_deferred(world)) {
+            deferred = true;
+            /* Ensures that remove operation doesn't get applied after bind */
+            ecs_defer_suspend(world);
+        }
         ecs_remove_pair(world, entity, ecs_id(EcsPoly), EcsQuery);
+        if (deferred) {
+            ecs_defer_resume(world);
+        }
     }
 
     /* Initialize the query */
