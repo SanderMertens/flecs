@@ -28,12 +28,12 @@ struct Position {
 // scope. The Struct component has Member as default type. This means we can
 // also create a type like this, which is a bit shorter:
 struct Mass {
-  value : f32 // 'type' can be ommitted since it's the first member
+  value : f32 // 'type' can be omitted since it's the first member
 }
 
 // Similarly we can also define an enumeration type. The default scope type for
 // Enum is Constant, which ensures amongst others that the child entities will
-// be assigned with an incremenenting constant value automatically.
+// be assigned with an incrementing constant value automatically.
 enum Color {
   Red
   Green

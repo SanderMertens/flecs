@@ -783,8 +783,8 @@ void Variables_1_set_src_this_w_pair_set_rel_tgt(void);
 void Variables_1_set_src_this_to_empty_table(void);
 void Variables_1_set_src_this_to_empty_table_w_component(void);
 void Variables_1_set_src_this_to_empty_table_w_component_self(void);
-void Variables_1_set_src_this_to_entiy_in_table(void);
-void Variables_1_set_src_this_to_entiy_in_table_self(void);
+void Variables_1_set_src_this_to_entity_in_table(void);
+void Variables_1_set_src_this_to_entity_in_table_self(void);
 void Variables_2_set_src_this(void);
 void Variables_2_set_src_this_self(void);
 void Variables_2_set_src_this_component(void);
@@ -5054,12 +5054,12 @@ bake_test_case Variables_testcases[] = {
         Variables_1_set_src_this_to_empty_table_w_component_self
     },
     {
-        "1_set_src_this_to_entiy_in_table",
-        Variables_1_set_src_this_to_entiy_in_table
+        "1_set_src_this_to_entity_in_table",
+        Variables_1_set_src_this_to_entity_in_table
     },
     {
-        "1_set_src_this_to_entiy_in_table_self",
-        Variables_1_set_src_this_to_entiy_in_table_self
+        "1_set_src_this_to_entity_in_table_self",
+        Variables_1_set_src_this_to_entity_in_table_self
     },
     {
         "2_set_src_this",

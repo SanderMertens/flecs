@@ -179,7 +179,7 @@ ecs_delete_empty_tables(world, 0, 0, 10, 0, 0);
 </ul>
 </div>
 
-This will cause queries to return empty archeypes (iterators with count set to 0) which is something the application code will have to handle correctly.
+This will cause queries to return empty archetypes (iterators with count set to 0) which is something the application code will have to handle correctly.
 
 ## Creating queries
 This section explains how to create queries in the different language bindings and the flecs Flecs Query Language.
@@ -2716,13 +2716,13 @@ Movement.direction($this, Left)
 Member value queries can be used in combination with wildcards:
 
 ```
-Movement.value($htis, *)
+Movement.value($this, *)
 ```
 
 Member value queries can be used in combination with variables:
 
 ```
-Movement.value($htis, $direction), $direction != Left
+Movement.value($this, $direction), $direction != Left
 ```
 
 ### Change Detection

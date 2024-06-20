@@ -5,7 +5,7 @@
 
 #include "../types.h"
 
-/* Sychronize cache monitor with table dirty state */
+/* Synchronize cache monitor with table dirty state */
 void flecs_query_sync_match_monitor(
     ecs_query_impl_t *impl,
     ecs_query_cache_table_match_t *match);

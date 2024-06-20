@@ -11,8 +11,8 @@ int main() {
     ecs.component<CpuUtilization>()
         .member<double>("value")
             .range(0.0, 100.0)        // Specifics values that the member can assume
-            .warning_range(0.0, 60.0) // Values outside this range are considerd a warning
-            .error_range(0.0, 80.0);  // Values outside this range are considerd an error
+            .warning_range(0.0, 60.0) // Values outside this range are considered a warning
+            .error_range(0.0, 80.0);  // Values outside this range are considered an error
 
     ecs.entity("MachineA").set<CpuUtilization>({ 50.0 });
     ecs.entity("MachineB").set<CpuUtilization>({ 75.0 });

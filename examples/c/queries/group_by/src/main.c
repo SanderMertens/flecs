@@ -74,15 +74,15 @@ int main(int argc, char *argv[]) {
     // The query cache now looks like this:
     //  - group First:
     //     - table [Position, (Group, First)]
-    //     - table [Postion, Tag, (Group, First)]
+    //     - table [Position, Tag, (Group, First)]
     //
     //  - group Second:
     //     - table [Position, (Group, Second)]
-    //     - table [Postion, Tag, (Group, Second)]
+    //     - table [Position, Tag, (Group, Second)]
     //  
     //  - group Third:
     //     - table [Position, (Group, Third)]
-    //     - table [Postion, Tag, (Group, Third)]
+    //     - table [Position, Tag, (Group, Third)]
     //
 
     // Iterate query, print position & table components
