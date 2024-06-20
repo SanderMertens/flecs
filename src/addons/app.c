@@ -108,7 +108,7 @@ int ecs_app_run(
     }
 
     /* Monitoring periodically collects statistics */
-    if (desc->enable_monitor) {
+    if (desc->enable_stats) {
 #ifdef FLECS_STATS
         ECS_IMPORT(world, FlecsStats);
 #else

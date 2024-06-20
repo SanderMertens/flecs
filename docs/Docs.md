@@ -11,12 +11,11 @@
 - [Manual](Manual.md)
 - [Query Manual](Queries.md)
 - [Query Language Manual](FlecsQueryLanguage.md)
-- [Flecs Script Manual](FlecsScriptManual.md)
+- [Flecs Script Manual](FlecsScript.md)
+- [Flecs Remote API Manual](FlecsRemoteApi.md)
 - [Systems Manual](Systems.md)
 - [Component Traits Manual](ComponentTraits.md)
 - [Relationships Manual](Relationships.md)
-- [JSON Format Manual](JsonFormat.md)
-- [REST API Manual](RestApi.md)
 
 ## API reference
  - [C API](@ref c)

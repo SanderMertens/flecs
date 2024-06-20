@@ -23,10 +23,7 @@ int main(int, char *[]) {
     std::cout << ecs.to_json(ptr) << "\n"; // {"x":10, "y":20}
 
     // Convert entity to JSON
-    flecs::entity_to_json_desc_t desc;
-    desc.serialize_path = true;
-    desc.serialize_values = true;
-    std::cout << e.to_json(&desc) << "\n";
+    std::cout << e.to_json() << "\n";
 
     // {
     //     "path":"ent", 
