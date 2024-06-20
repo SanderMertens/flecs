@@ -1208,3 +1208,24 @@ void SerializeEntityToJson_serialize_no_matches(void) {
 
     ecs_fini(world);
 }
+
+void SerializeEntityToJson_serialize_id_recycled(void) {
+    ecs_world_t *world = ecs_init();
+
+
+    ecs_entity_t e = ecs_entity(world, { .name = "Foo" });
+    ecs_delete(world, e);
+    e = ecs_entity(world, { .name = "Foo" });
+
+    ecs_entity_to_json_desc_t desc = ECS_ENTITY_TO_JSON_INIT;
+    desc.serialize_entity_id = true;
+    char *expect = flecs_asprintf("{\"name\":\"Foo\", \"id\":%u, \"components\":{\"(Identifier,Name)\":null}}",
+        (uint32_t)e);
+    char *json = ecs_entity_to_json(world, e, &desc);
+    test_assert(json != NULL);
+    test_str(json, expect);
+    ecs_os_free(json);
+    ecs_os_free(expect);
+
+    ecs_fini(world);
+}

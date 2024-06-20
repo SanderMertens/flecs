@@ -215,7 +215,6 @@ int ecs_type_info_to_json_buf(
 /** Used with ecs_iter_to_json(). */
 typedef struct ecs_entity_to_json_desc_t {
     bool serialize_entity_id;  /**< Serialize entity id */
-    bool serialize_path;       /**< Serialize full pathname */
     bool serialize_doc;        /**< Serialize doc attributes */
     bool serialize_full_paths; /**< Serialize full paths for tags, components and pairs */
     bool serialize_inherited;  /**< Serialize base components */
@@ -228,11 +227,10 @@ typedef struct ecs_entity_to_json_desc_t {
 
 /** Utility used to initialize JSON entity serializer. */
 #define ECS_ENTITY_TO_JSON_INIT (ecs_entity_to_json_desc_t){\
-    .serialize_path = true, \
     .serialize_doc = false, \
     .serialize_full_paths = false, \
     .serialize_inherited = false, \
-    .serialize_values = false, \
+    .serialize_values = true, \
     .serialize_type_info = false, \
     .serialize_alerts = false, \
     .serialize_refs = 0, \

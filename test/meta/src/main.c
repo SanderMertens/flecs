@@ -622,6 +622,7 @@ void SerializeEntityToJson_serialize_matches_filter(void);
 void SerializeEntityToJson_serialize_matches_query(void);
 void SerializeEntityToJson_serialize_matches_rule(void);
 void SerializeEntityToJson_serialize_no_matches(void);
+void SerializeEntityToJson_serialize_id_recycled(void);
 
 // Testsuite 'SerializeIterToJson'
 void SerializeIterToJson_serialize_1_comps_empty(void);
@@ -3299,6 +3300,10 @@ bake_test_case SerializeEntityToJson_testcases[] = {
     {
         "serialize_no_matches",
         SerializeEntityToJson_serialize_no_matches
+    },
+    {
+        "serialize_id_recycled",
+        SerializeEntityToJson_serialize_id_recycled
     }
 };
 
@@ -4493,7 +4498,7 @@ static bake_test_suite suites[] = {
         "SerializeEntityToJson",
         NULL,
         NULL,
-        42,
+        43,
         SerializeEntityToJson_testcases
     },
     {

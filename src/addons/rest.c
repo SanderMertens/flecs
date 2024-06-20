@@ -165,7 +165,6 @@ void flecs_rest_parse_json_ser_entity_params(
     const ecs_http_request_t *req)
 {
     flecs_rest_bool_param(req, "entity_id", &desc->serialize_entity_id);
-    flecs_rest_bool_param(req, "path", &desc->serialize_path);
     flecs_rest_bool_param(req, "doc", &desc->serialize_doc);
     flecs_rest_bool_param(req, "full_paths", &desc->serialize_full_paths);
     flecs_rest_bool_param(req, "inherited", &desc->serialize_inherited);

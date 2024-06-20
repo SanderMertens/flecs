@@ -25628,7 +25628,7 @@ int ecs_app_run(
     }
 
     /* Monitoring periodically collects statistics */
-    if (desc->enable_monitor) {
+    if (desc->enable_stats) {
 #ifdef FLECS_STATS
         ECS_IMPORT(world, FlecsStats);
 #else
@@ -30338,7 +30338,6 @@ void flecs_rest_parse_json_ser_entity_params(
     const ecs_http_request_t *req)
 {
     flecs_rest_bool_param(req, "entity_id", &desc->serialize_entity_id);
-    flecs_rest_bool_param(req, "path", &desc->serialize_path);
     flecs_rest_bool_param(req, "doc", &desc->serialize_doc);
     flecs_rest_bool_param(req, "full_paths", &desc->serialize_full_paths);
     flecs_rest_bool_param(req, "inherited", &desc->serialize_inherited);
@@ -47712,7 +47711,7 @@ int ecs_entity_to_json_buf(
     ecs_iter_to_json_desc_t iter_desc = {
         .serialize_table = true,
         .serialize_entity_ids =   desc ? desc->serialize_entity_id : false,
-        .serialize_values =       desc ? desc->serialize_values : false,
+        .serialize_values =       desc ? desc->serialize_values : true,
         .serialize_doc =          desc ? desc->serialize_doc : false,
         .serialize_matches =      desc ? desc->serialize_matches : false,
         .serialize_refs =         desc ? desc->serialize_refs : 0,
@@ -48536,7 +48535,7 @@ void flecs_json_serialize_iter_this(
 
     if (desc && desc->serialize_entity_ids) {
         flecs_json_memberl(buf, "id");
-        flecs_json_u32(buf, flecs_uto(uint32_t, this_data->ids[row]));
+        flecs_json_u32(buf, (uint32_t)this_data->ids[row]);
     }
 
 #ifdef FLECS_DOC
@@ -49061,8 +49060,10 @@ bool flecs_json_serialize_table_inherited_type_components(
         const ecs_type_info_t *ti = column->ti;
         ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
 
-        const EcsTypeSerializer *ts = ecs_get(
-            world, ti->component, EcsTypeSerializer);
+        const EcsTypeSerializer *ts = NULL;
+        if (!desc || desc->serialize_values) {
+            ts = ecs_get(world, ti->component, EcsTypeSerializer);
+        }
 
         if (!component_count) {
             flecs_json_memberl(buf, "components");
@@ -49215,12 +49216,12 @@ int flecs_json_serialize_table_components(
             flecs_json_object_push(buf);
         }
 
-        void *ptr = ecs_vec_get(&column->data, column->size, row);
-        ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
-        ecs_assert(value_ctx->id_label != NULL, ECS_INTERNAL_ERROR, NULL);
         flecs_json_member(buf, value_ctx->id_label);
 
-        if (has_reflection) {
+        if (has_reflection && (!desc || desc->serialize_values)) {
+            void *ptr = ecs_vec_get(&column->data, column->size, row);
+            ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
+            ecs_assert(value_ctx->id_label != NULL, ECS_INTERNAL_ERROR, NULL);
             if (flecs_json_ser_type(world, &value_ctx->ser->ops, ptr, buf) != 0) {
                 return -1;
             }
@@ -50615,7 +50616,8 @@ int ecs_world_to_json_buf(
     ecs_iter_to_json_desc_t json_desc = { 
         .serialize_table = true,
         .serialize_full_paths = true,
-        .serialize_entity_ids = true
+        .serialize_entity_ids = true,
+        .serialize_values = true
     };
 
     int ret = ecs_iter_to_json_buf(&it, buf_out, &json_desc);

@@ -56,7 +56,7 @@ int ecs_entity_to_json_buf(
     ecs_iter_to_json_desc_t iter_desc = {
         .serialize_table = true,
         .serialize_entity_ids =   desc ? desc->serialize_entity_id : false,
-        .serialize_values =       desc ? desc->serialize_values : false,
+        .serialize_values =       desc ? desc->serialize_values : true,
         .serialize_doc =          desc ? desc->serialize_doc : false,
         .serialize_matches =      desc ? desc->serialize_matches : false,
         .serialize_refs =         desc ? desc->serialize_refs : 0,

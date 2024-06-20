@@ -209,8 +209,10 @@ bool flecs_json_serialize_table_inherited_type_components(
         const ecs_type_info_t *ti = column->ti;
         ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
 
-        const EcsTypeSerializer *ts = ecs_get(
-            world, ti->component, EcsTypeSerializer);
+        const EcsTypeSerializer *ts = NULL;
+        if (!desc || desc->serialize_values) {
+            ts = ecs_get(world, ti->component, EcsTypeSerializer);
+        }
 
         if (!component_count) {
             flecs_json_memberl(buf, "components");
@@ -363,12 +365,12 @@ int flecs_json_serialize_table_components(
             flecs_json_object_push(buf);
         }
 
-        void *ptr = ecs_vec_get(&column->data, column->size, row);
-        ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
-        ecs_assert(value_ctx->id_label != NULL, ECS_INTERNAL_ERROR, NULL);
         flecs_json_member(buf, value_ctx->id_label);
 
-        if (has_reflection) {
+        if (has_reflection && (!desc || desc->serialize_values)) {
+            void *ptr = ecs_vec_get(&column->data, column->size, row);
+            ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
+            ecs_assert(value_ctx->id_label != NULL, ECS_INTERNAL_ERROR, NULL);
             if (flecs_json_ser_type(world, &value_ctx->ser->ops, ptr, buf) != 0) {
                 return -1;
             }

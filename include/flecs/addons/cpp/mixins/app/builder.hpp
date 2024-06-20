@@ -55,8 +55,8 @@ struct app_builder {
         return *this;
     }
 
-    app_builder& enable_monitor(bool value = true) {
-        desc_.enable_monitor = value;
+    app_builder& enable_stats(bool value = true) {
+        desc_.enable_stats = value;
         return *this;
     }
 
