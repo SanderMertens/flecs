@@ -44,15 +44,15 @@ int main(int, char *[]) {
                 // The defer_suspend function temporarily suspends deferring 
                 // operations, which ensures that our plate is assigned 
                 // immediately. Even though this is a immediate system, 
-                // defering is still enabled by default, as adding/removing 
-                // components to the entities being iterated would intefere 
+                // deferring is still enabled by default, as adding/removing
+                // components to the entities being iterated would interfere
                 // with the system iterator.
                 it.world().defer_suspend();
                 waiter.add<Plate>(plate);
                 it.world().defer_resume();
 
-                // Now that defering is resumed, we can safely also add the 
-                // waiter to the plate. We can't do this while defering is 
+                // Now that deferring is resumed, we can safely also add the
+                // waiter to the plate. We can't do this while deferring is
                 // suspended, because the plate is the entity we're 
                 // currently iterating, and we don't want to move it to a 
                 // different table while we're iterating it.

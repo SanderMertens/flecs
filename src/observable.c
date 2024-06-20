@@ -541,7 +541,7 @@ void* flecs_override(
              * (like what happens during an auto override), we need to copy the
              * value of the inherited component to the new component.
              * Also flag to the callee that this component was overridden, so
-             * that an OnSet event can be emmitted for it.
+             * that an OnSet event can be emitted for it.
              * Note that this is different from a component that was overridden
              * after it was inherited, as this does not change the actual value
              * of the component for the entity (it is copied from the existing
