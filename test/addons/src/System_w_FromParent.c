@@ -367,7 +367,7 @@ void System_w_FromParent_2_column_1_from_container_w_not(void) {
     ecs_fini(world);
 }
 
-void System_w_FromParent_3_column_1_from_comtainer_1_from_container_w_not(void) {
+void System_w_FromParent_3_column_1_from_container_1_from_container_w_not(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);

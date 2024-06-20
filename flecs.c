@@ -1933,7 +1933,7 @@ bool flecs_query_is_cache_data_test(
  */
 
 
-/* Sychronize cache monitor with table dirty state */
+/* Synchronize cache monitor with table dirty state */
 void flecs_query_sync_match_monitor(
     ecs_query_impl_t *impl,
     ecs_query_cache_table_match_t *match);
@@ -15138,7 +15138,7 @@ void* flecs_override(
              * (like what happens during an auto override), we need to copy the
              * value of the inherited component to the new component.
              * Also flag to the callee that this component was overridden, so
-             * that an OnSet event can be emmitted for it.
+             * that an OnSet event can be emitted for it.
              * Note that this is different from a component that was overridden
              * after it was inherited, as this does not change the actual value
              * of the component for the entity (it is copied from the existing
@@ -51599,7 +51599,7 @@ const char* meta_parse_member(
             /* If [ was found after name, continue parsing after ] */
             ptr = array_end + 1;
         } else {
-            /* If [ was fonud in name, replace it with 0 terminator */
+            /* If [ was found in name, replace it with 0 terminator */
             array_start[0] = '\0';
         }
     }
@@ -69247,7 +69247,7 @@ int flecs_query_discover_vars(
                 flecs_query_add_var(query, EcsThisName, vars, EcsVarEntity);
 
                 /* Track if query contains $this sparse terms. Queries with 
-                 * sparse $this fields need to return results ony by one. */
+                 * sparse $this fields need to return results one by one. */
                 if ((ECS_TERM_REF_ID(&term->src) == EcsThis) && 
                     ((term->src.id & (EcsSelf|EcsIsVariable)) == (EcsSelf|EcsIsVariable)))
                 {
@@ -69467,7 +69467,7 @@ bool flecs_query_var_is_unknown(
     return true;
 }
 
-/* Returns whether term is unkown. A term is unknown when it has variable 
+/* Returns whether term is unknown. A term is unknown when it has variable
  * elements (first, second, src) that are all unknown. */
 static
 bool flecs_query_term_is_unknown(

@@ -48,7 +48,7 @@ int main(int, char *[]) {
         std::cout << "{" << p.x << ", " << p.y << "}\n";
     });
 
-    // Each also accepts flecs::iter + index (for the iterated entity) arguemnts
+    // Each also accepts flecs::iter + index (for the iterated entity) arguments
     // currently being iterated. A flecs::iter has lots of information on what
     // is being iterated, which is demonstrated in the "iter" example.
     q.each([](flecs::iter& it, size_t i, Position& p, const Velocity& v) {

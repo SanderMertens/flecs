@@ -361,7 +361,7 @@ const char* meta_parse_member(
             /* If [ was found after name, continue parsing after ] */
             ptr = array_end + 1;
         } else {
-            /* If [ was fonud in name, replace it with 0 terminator */
+            /* If [ was found in name, replace it with 0 terminator */
             array_start[0] = '\0';
         }
     }

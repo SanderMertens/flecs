@@ -295,7 +295,7 @@ Take an example with a parent and a child that both have the `Node` tag:
 ```c
 ecs_observer(world, {
   .query.terms = {{ Node }},
-  .events = { EcsOnRemve },
+  .events = { EcsOnRemove },
   .callback = ...
 });
 

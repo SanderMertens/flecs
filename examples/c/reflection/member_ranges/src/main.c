@@ -18,8 +18,8 @@ int main(int argc, char *argv[]) {
             .name = "value", 
             .type = ecs_id(ecs_f64_t),
             .range =         {0, 100}, // Specifics values that the member can assume
-            .warning_range = {0, 60},  // Values outside this range are considerd a warning
-            .error_range =   {0, 80}   // Values outside this range are considerd an error
+            .warning_range = {0, 60},  // Values outside this range are considered a warning
+            .error_range =   {0, 80}   // Values outside this range are considered an error
         }}
     });
 

@@ -49,7 +49,7 @@ void MoveModuleImport(ecs_world_t *world) {
 
 int main(int argc, char *argv[]) {
     ecs_world_t *world_a = ecs_init_w_args(argc, argv); {
-        ECS_IMPORT(world_a, MoveModule); // put in a scope so variable doens't overlap
+        ECS_IMPORT(world_a, MoveModule); // put in a scope so variable doesn't overlap
     }
 
     ecs_entity_t ent_1 = ecs_entity(world_a, { .name = "ent_1" });
