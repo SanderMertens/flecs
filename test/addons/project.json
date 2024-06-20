@@ -108,7 +108,8 @@
                 "run_pipeline_multithreaded",
                 "run_pipeline_multithreaded_tasks",
                 "pipeline_init_no_terms",
-                "pipeline_init_no_system_term"
+                "pipeline_init_no_system_term",
+                "disable_component_from_immediate_system"
             ]
         }, {
             "id": "SystemMisc",

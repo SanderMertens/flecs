@@ -3213,3 +3213,36 @@ void Pipeline_pipeline_init_no_system_term(void) {
         .query.terms = {{ ecs_id(Position) }}
     });
 }
+
+static ECS_DECLARE(ToggleTag);
+static ecs_entity_t toggle_entity = 0;
+static int toggle_immediate_system_invoked = 0;
+
+static void ToggleImmediateSystem(ecs_iter_t *it) {
+    ecs_defer_suspend(it->world);
+    ecs_enable_id(it->world, toggle_entity, ToggleTag, false);
+    ecs_defer_resume(it->world);
+    toggle_immediate_system_invoked ++;
+}
+
+void Pipeline_disable_component_from_immediate_system(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_ENTITY_DEFINE(world, ToggleTag, CanToggle);
+
+    toggle_entity = ecs_new_w(world, ToggleTag);
+
+    ecs_system(world, {
+        .entity = ecs_entity(world, { 
+            .add = ecs_ids(ecs_pair(EcsDependsOn, EcsOnUpdate)) 
+        }),
+        .callback = ToggleImmediateSystem,
+        .immediate = true
+    });
+
+    ecs_progress(world, 0);
+    test_int(toggle_immediate_system_invoked, 1);
+    test_bool(ecs_is_deferred(world), false);
+
+    ecs_fini(world);
+}
