@@ -2411,7 +2411,7 @@ void Trigger_set_get_context(void) {
 
     int32_t ctx_a, ctx_b;
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .entity = ecs_entity(world, {.name = "MyTrigger"}),
+        .entity = ecs_entity(world, { .name = "MyTrigger" }),
         .query.terms[0].id = Tag,
         .events = {EcsOnAdd},
         .callback = Trigger,

@@ -10306,3 +10306,36 @@ void Basic_pair_sweep_wildcard_second(void) {
 
     ecs_fini(world);
 }
+
+void Basic_create_w_entity_deferred(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_entity_t qe = ecs_new(world);
+
+    ecs_defer_begin(world);
+    ecs_query_t *q = ecs_query(world, {
+        .entity = qe,
+        .terms = {{ Foo }}
+    });
+    test_assert(q != NULL);
+    ecs_defer_end(world);
+
+    test_assert(ecs_has_pair(world, qe, ecs_id(EcsPoly), EcsQuery));
+
+    const EcsPoly *p = ecs_get_pair(world, qe, EcsPoly, EcsQuery);
+    test_assert(p != NULL);
+    test_assert(p->poly == q);
+
+    ecs_entity_t e = ecs_new_w(world, Foo);
+    
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(e, it.entities[0]);
+    test_uint(Foo, ecs_field_id(&it, 0));
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_fini(world);
+}
