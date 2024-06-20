@@ -7522,8 +7522,8 @@ bool flecs_on_delete_clear_tables(
                             flecs_remove_from_table(world, table);
                         } else {
                             ecs_dbg_3(
-                                "#[red]delete#[reset] entities from table %u", 
-                                (uint32_t)table->id);
+                                "#[red]delete#[reset] entities from table %u [%s]", 
+                                (uint32_t)table->id, ecs_table_str(world, table));
                             flecs_table_delete_entities(world, table);
                         }
                     }
@@ -35293,12 +35293,8 @@ void flecs_id_record_release_tables(
     ecs_world_t *world,
     ecs_id_record_t *idr)
 {
-    /* Cache should not contain tables that aren't empty */
-    ecs_assert(flecs_table_cache_count(&idr->cache) == 0, 
-        ECS_INTERNAL_ERROR, NULL);
-
     ecs_table_cache_iter_t it;
-    if (flecs_table_cache_empty_iter(&idr->cache, &it)) {
+    if (flecs_table_cache_all_iter(&idr->cache, &it)) {
         ecs_table_record_t *tr;
         while ((tr = flecs_table_cache_next(&it, ecs_table_record_t))) {
             /* Release current table */

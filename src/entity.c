@@ -2532,8 +2532,8 @@ bool flecs_on_delete_clear_tables(
                             flecs_remove_from_table(world, table);
                         } else {
                             ecs_dbg_3(
-                                "#[red]delete#[reset] entities from table %u", 
-                                (uint32_t)table->id);
+                                "#[red]delete#[reset] entities from table %u [%s]", 
+                                (uint32_t)table->id, ecs_table_str(world, table));
                             flecs_table_delete_entities(world, table);
                         }
                     }
