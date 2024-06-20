@@ -532,6 +532,7 @@ void SerializeEntityToJson_serialize_w_type_info_no_components(void) {
     test_str(json, expect);
 
     ecs_os_free(json);
+    ecs_os_free(expect);
 
     ecs_fini(world);
 }
