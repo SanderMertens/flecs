@@ -506,7 +506,8 @@ bool flecs_rest_script(
     flecs_rest_bool_param(req, "try", &try);
 
     bool prev_color = ecs_log_enable_colors(false);
-    rest_prev_log = ecs_os_api.log_;
+    ecs_os_api_log_t prev_log = ecs_os_api.log_;
+    rest_prev_log = try ? NULL : prev_log;
     ecs_os_api.log_ = flecs_rest_capture_log;
 
     script = ecs_script(world, {
@@ -529,7 +530,7 @@ bool flecs_rest_script(
         ecs_os_free(err);
     }
 
-    ecs_os_api.log_ = rest_prev_log;
+    ecs_os_api.log_ = prev_log;
     ecs_log_enable_colors(prev_color);
 
     return true;
@@ -662,7 +663,7 @@ bool flecs_rest_get_query(
 
     const char *expr = ecs_http_get_param(req, "expr");
     if (!expr) {
-        ecs_strbuf_appendlit(&reply->body, "Missing parameter 'q'");
+        ecs_strbuf_appendlit(&reply->body, "Missing parameter 'expr'");
         reply->code = 400; /* bad request */
         return true;
     }
@@ -672,7 +673,8 @@ bool flecs_rest_get_query(
 
     ecs_dbg_2("rest: request query '%s'", expr);
     bool prev_color = ecs_log_enable_colors(false);
-    rest_prev_log = ecs_os_api.log_;
+    ecs_os_api_log_t prev_log = ecs_os_api.log_;
+    rest_prev_log = try ? NULL : prev_log;
     ecs_os_api.log_ = flecs_rest_capture_log;
 
     ecs_query_t *q = ecs_query(world, { .expr = expr });
@@ -688,7 +690,7 @@ bool flecs_rest_get_query(
         ecs_query_fini(q);
     }
 
-    ecs_os_api.log_ = rest_prev_log;
+    ecs_os_api.log_ = prev_log;
     ecs_log_enable_colors(prev_color);
 
     return true;
