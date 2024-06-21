@@ -3890,3 +3890,79 @@ void Commands_defer_emplace_existing_w_arg(void) {
 
     ecs_fini(world);
 }
+
+static int mixed_observer_invoked = 0;
+static int mixed_observer_on_add_invoked = 0;
+static int mixed_observer_on_set_invoked = 0;
+
+static void MixedObserver(ecs_iter_t *it) {
+    test_int(it->count, 1);
+
+    Position *p = ecs_field(it, Position, 0);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    mixed_observer_invoked ++;
+
+    if (it->event == EcsOnAdd) {
+        mixed_observer_on_add_invoked ++;
+    } else if (it->event == EcsOnSet) {
+        mixed_observer_on_set_invoked ++;
+    }
+}
+
+void Commands_mixed_on_add_on_set_w_set_w_batching(void) {
+    ecs_world_t *world = ecs_mini();
+    
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Foo);
+
+    ecs_observer(world, {
+        .query.terms = {{ ecs_id(Position) }, { Foo }},
+        .callback = MixedObserver,
+        .events = { EcsOnSet }
+    });
+
+    ecs_entity_t e = ecs_new(world);
+
+    ecs_defer_begin(world);
+    ecs_add(world, e, Foo);
+    ecs_set(world, e, Position, {10, 20});
+    ecs_defer_end(world);
+
+    test_int(mixed_observer_invoked, 2);
+    test_int(mixed_observer_on_add_invoked, 1);
+    test_int(mixed_observer_on_set_invoked, 1);
+
+    ecs_fini(world);
+}
+
+void Commands_mixed_on_add_on_set_w_emplace(void) {
+    ecs_world_t *world = ecs_mini();
+    
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Foo);
+
+    ecs_observer(world, {
+        .query.terms = {{ ecs_id(Position) }, { Foo }},
+        .callback = MixedObserver,
+        .events = { EcsOnSet }
+    });
+
+    ecs_entity_t e = ecs_new(world);
+
+    ecs_defer_begin(world);
+    ecs_add(world, e, Foo);
+    Position *p = ecs_emplace(world, e, Position, NULL);
+    p->x = 10;
+    p->y = 20;
+    ecs_modified(world, e, Position);
+    ecs_defer_end(world);
+
+    test_int(mixed_observer_invoked, 1);
+    test_int(mixed_observer_on_add_invoked, 0); /* Entity didn't have component yet */
+    test_int(mixed_observer_on_set_invoked, 1);
+
+    ecs_fini(world);
+}

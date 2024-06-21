@@ -2647,6 +2647,8 @@ void Commands_add_path_nested_to_deleted_parent_w_stage(void);
 void Commands_add_path_nested_to_created_deleted_parent_w_stage(void);
 void Commands_defer_emplace_w_arg(void);
 void Commands_defer_emplace_existing_w_arg(void);
+void Commands_mixed_on_add_on_set_w_set_w_batching(void);
+void Commands_mixed_on_add_on_set_w_emplace(void);
 
 // Testsuite 'SingleThreadStaging'
 void SingleThreadStaging_setup(void);
@@ -13075,6 +13077,14 @@ bake_test_case Commands_testcases[] = {
     {
         "defer_emplace_existing_w_arg",
         Commands_defer_emplace_existing_w_arg
+    },
+    {
+        "mixed_on_add_on_set_w_set_w_batching",
+        Commands_mixed_on_add_on_set_w_set_w_batching
+    },
+    {
+        "mixed_on_add_on_set_w_emplace",
+        Commands_mixed_on_add_on_set_w_emplace
     }
 };
 
@@ -13936,7 +13946,7 @@ static bake_test_suite suites[] = {
         "Commands",
         NULL,
         NULL,
-        129,
+        131,
         Commands_testcases
     },
     {
