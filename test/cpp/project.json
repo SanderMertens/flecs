@@ -277,7 +277,13 @@
                 "world_lookup_custom_sep",
                 "world_lookup_custom_root_sep",
                 "depends_on",
-                "depends_on_type"
+                "depends_on_type",
+                "const_entity_add_remove",
+                "const_entity_set",
+                "const_entity_get_mut",
+                "const_entity_ensure",
+                "const_entity_destruct",
+                "const_entity_emit_after_build"
             ]
         }, {
             "id": "Pairs",

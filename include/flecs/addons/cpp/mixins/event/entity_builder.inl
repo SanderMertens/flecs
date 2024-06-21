@@ -12,7 +12,7 @@
  * @return Event builder.
  */
 template <typename Func>
-Self& observe(flecs::entity_t evt, Func&& callback);
+const Self& observe(flecs::entity_t evt, Func&& callback) const;
 
 /** Observe event on entity
  * 
@@ -23,7 +23,7 @@ Self& observe(flecs::entity_t evt, Func&& callback);
  * @return Event builder.
  */
 template <typename Evt, typename Func>
-Self& observe(Func&& callback);
+const Self& observe(Func&& callback) const;
 
 /** Observe event on entity
  * 
@@ -33,6 +33,6 @@ Self& observe(Func&& callback);
  * @return Event builder.
  */
 template <typename Func>
-Self& observe(Func&& callback);
+const Self& observe(Func&& callback) const;
 
 

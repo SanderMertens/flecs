@@ -240,6 +240,11 @@ void Eval_if_10(void);
 void Eval_if_0(void);
 void Eval_if_true_in_scope(void);
 void Eval_if_false_in_scope(void);
+void Eval_isa_in_module(void);
+void Eval_isa_hierarchy(void);
+void Eval_isa_hierarchy_in_module(void);
+void Eval_custom_isa_hierarchy_in_module(void);
+void Eval_custom_isa_hierarchy_in_subtree(void);
 
 // Testsuite 'Template'
 void Template_template_no_scope(void);
@@ -1484,6 +1489,26 @@ bake_test_case Eval_testcases[] = {
     {
         "if_false_in_scope",
         Eval_if_false_in_scope
+    },
+    {
+        "isa_in_module",
+        Eval_isa_in_module
+    },
+    {
+        "isa_hierarchy",
+        Eval_isa_hierarchy
+    },
+    {
+        "isa_hierarchy_in_module",
+        Eval_isa_hierarchy_in_module
+    },
+    {
+        "custom_isa_hierarchy_in_module",
+        Eval_custom_isa_hierarchy_in_module
+    },
+    {
+        "custom_isa_hierarchy_in_subtree",
+        Eval_custom_isa_hierarchy_in_subtree
     }
 };
 
@@ -2744,7 +2769,7 @@ static bake_test_suite suites[] = {
         "Eval",
         NULL,
         NULL,
-        231,
+        236,
         Eval_testcases
     },
     {

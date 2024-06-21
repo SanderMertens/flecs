@@ -8,10 +8,10 @@
  * @memberof flecs::entity_builder
  * @ingroup cpp_addons_json
  */
-Self& set_json(
+const Self& set_json(
     flecs::id_t e, 
     const char *json, 
-    flecs::from_json_desc_t *desc = nullptr) 
+    flecs::from_json_desc_t *desc = nullptr) const
 {
     flecs::entity_t type = ecs_get_typeid(world_, e);
     if (!type) {
@@ -32,11 +32,11 @@ Self& set_json(
  * @memberof flecs::entity_builder
  * @ingroup cpp_addons_json
  */
-Self& set_json(
+const Self& set_json(
     flecs::entity_t r, 
     flecs::entity_t t,
     const char *json, 
-    flecs::from_json_desc_t *desc = nullptr) 
+    flecs::from_json_desc_t *desc = nullptr) const
 {
     return set_json(ecs_pair(r, t), json, desc);
 }
@@ -47,9 +47,9 @@ Self& set_json(
  * @ingroup cpp_addons_json
  */
 template <typename T>
-Self& set_json(
+const Self& set_json(
     const char *json, 
-    flecs::from_json_desc_t *desc = nullptr) 
+    flecs::from_json_desc_t *desc = nullptr) const
 {
     return set_json(_::type<T>::id(world_), json, desc);
 }
@@ -60,9 +60,9 @@ Self& set_json(
  * @ingroup cpp_addons_json
  */
 template <typename R, typename T>
-Self& set_json(
+const Self& set_json(
     const char *json, 
-    flecs::from_json_desc_t *desc = nullptr) 
+    flecs::from_json_desc_t *desc = nullptr) const
 {
     return set_json(
         _::type<R>::id(world_), 
@@ -76,10 +76,10 @@ Self& set_json(
  * @ingroup cpp_addons_json
  */
 template <typename R>
-Self& set_json(
+const Self& set_json(
     flecs::entity_t t,
     const char *json, 
-    flecs::from_json_desc_t *desc = nullptr) 
+    flecs::from_json_desc_t *desc = nullptr) const
 {
     return set_json(
         _::type<R>::id(world_), t,
@@ -92,10 +92,10 @@ Self& set_json(
  * @ingroup cpp_addons_json
  */
 template <typename T>
-Self& set_json_second(
+const Self& set_json_second(
     flecs::entity_t r,
     const char *json, 
-    flecs::from_json_desc_t *desc = nullptr) 
+    flecs::from_json_desc_t *desc = nullptr) const
 {
     return set_json(
         r, _::type<T>::id(world_),

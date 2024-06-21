@@ -6885,3 +6885,239 @@ void Eval_if_false_in_scope(void) {
 
     ecs_fini(world);
 }
+
+void Eval_isa_in_module(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "module things"
+    LINE "Dog {"
+    LINE "  (IsA, Animal)"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+
+    test_assert(ecs_lookup_child(world, 0, "IsA") == 0);
+    test_assert(ecs_lookup(world, "things.IsA") == 0);
+
+    ecs_entity_t animal = ecs_lookup(world, "things.Animal");
+    ecs_entity_t dog = ecs_lookup(world, "things.Dog");
+
+    test_assert(animal != 0);
+    test_assert(dog != 0);
+
+    test_assert(ecs_has_pair(world, dog, EcsIsA, animal));
+
+    ecs_fini(world);
+}
+
+void Eval_isa_hierarchy(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "(IsA, Thing) {"
+    LINE "  (IsA, Organism) {"
+    LINE "    (IsA, Animal) {"
+    LINE "      Dog {}"
+    LINE "      Cat {}"
+    LINE "    }"
+    LINE "    (IsA, Tree) {"
+    LINE "      Oak {}"
+    LINE "      Maple {}"
+    LINE "    }"
+    LINE "  }"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+
+    test_assert(ecs_lookup_child(world, 0, "IsA") == 0);
+
+    ecs_entity_t thing = ecs_lookup(world, "Thing");
+    ecs_entity_t organism = ecs_lookup(world, "Organism");
+    ecs_entity_t animal = ecs_lookup(world, "Animal");
+    ecs_entity_t dog = ecs_lookup(world, "Dog");
+    ecs_entity_t cat = ecs_lookup(world, "Cat");
+    ecs_entity_t tree = ecs_lookup(world, "Tree");
+    ecs_entity_t oak = ecs_lookup(world, "Oak");
+    ecs_entity_t maple = ecs_lookup(world, "Maple");
+
+    test_assert(thing != 0);
+    test_assert(organism != 0);
+    test_assert(animal != 0);
+    test_assert(dog != 0);
+    test_assert(cat != 0);
+    test_assert(tree != 0);
+    test_assert(oak != 0);
+    test_assert(maple != 0);
+
+    test_assert(ecs_has_pair(world, organism, EcsIsA, thing));
+    test_assert(ecs_has_pair(world, animal, EcsIsA, organism));
+    test_assert(ecs_has_pair(world, dog, EcsIsA, animal));
+    test_assert(ecs_has_pair(world, cat, EcsIsA, animal));
+    test_assert(ecs_has_pair(world, tree, EcsIsA, organism));
+    test_assert(ecs_has_pair(world, oak, EcsIsA, tree));
+    test_assert(ecs_has_pair(world, maple, EcsIsA, tree));
+
+    ecs_fini(world);
+}
+
+void Eval_isa_hierarchy_in_module(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "module things"
+    LINE "(IsA, Thing) {"
+    LINE "  (IsA, Organism) {"
+    LINE "    (IsA, Animal) {"
+    LINE "      Dog {}"
+    LINE "      Cat {}"
+    LINE "    }"
+    LINE "    (IsA, Tree) {"
+    LINE "      Oak {}"
+    LINE "      Maple {}"
+    LINE "    }"
+    LINE "  }"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+
+    test_assert(ecs_lookup_child(world, 0, "IsA") == 0);
+    test_assert(ecs_lookup(world, "things.IsA") == 0);
+
+    ecs_entity_t thing = ecs_lookup(world, "things.Thing");
+    ecs_entity_t organism = ecs_lookup(world, "things.Organism");
+    ecs_entity_t animal = ecs_lookup(world, "things.Animal");
+    ecs_entity_t dog = ecs_lookup(world, "things.Dog");
+    ecs_entity_t cat = ecs_lookup(world, "things.Cat");
+    ecs_entity_t tree = ecs_lookup(world, "things.Tree");
+    ecs_entity_t oak = ecs_lookup(world, "things.Oak");
+    ecs_entity_t maple = ecs_lookup(world, "things.Maple");
+
+    test_assert(thing != 0);
+    test_assert(organism != 0);
+    test_assert(animal != 0);
+    test_assert(dog != 0);
+    test_assert(cat != 0);
+    test_assert(tree != 0);
+    test_assert(oak != 0);
+    test_assert(maple != 0);
+
+    test_assert(ecs_has_pair(world, organism, EcsIsA, thing));
+    test_assert(ecs_has_pair(world, animal, EcsIsA, organism));
+    test_assert(ecs_has_pair(world, dog, EcsIsA, animal));
+    test_assert(ecs_has_pair(world, cat, EcsIsA, animal));
+    test_assert(ecs_has_pair(world, tree, EcsIsA, organism));
+    test_assert(ecs_has_pair(world, oak, EcsIsA, tree));
+    test_assert(ecs_has_pair(world, maple, EcsIsA, tree));
+
+    ecs_fini(world);
+}
+
+void Eval_custom_isa_hierarchy_in_module(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "module things"
+    LINE "IsA {}"
+    LINE "(IsA, Thing) {"
+    LINE "  (IsA, Organism) {"
+    LINE "    (IsA, Animal) {"
+    LINE "      Dog {}"
+    LINE "      Cat {}"
+    LINE "    }"
+    LINE "    (IsA, Tree) {"
+    LINE "      Oak {}"
+    LINE "      Maple {}"
+    LINE "    }"
+    LINE "  }"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+
+    test_assert(ecs_lookup_child(world, 0, "IsA") == 0);
+
+    ecs_entity_t isa = ecs_lookup(world, "things.IsA");
+    ecs_entity_t thing = ecs_lookup(world, "things.Thing");
+    ecs_entity_t organism = ecs_lookup(world, "things.Organism");
+    ecs_entity_t animal = ecs_lookup(world, "things.Animal");
+    ecs_entity_t dog = ecs_lookup(world, "things.Dog");
+    ecs_entity_t cat = ecs_lookup(world, "things.Cat");
+    ecs_entity_t tree = ecs_lookup(world, "things.Tree");
+    ecs_entity_t oak = ecs_lookup(world, "things.Oak");
+    ecs_entity_t maple = ecs_lookup(world, "things.Maple");
+
+    test_assert(isa != 0);
+    test_assert(thing != 0);
+    test_assert(organism != 0);
+    test_assert(animal != 0);
+    test_assert(dog != 0);
+    test_assert(cat != 0);
+    test_assert(tree != 0);
+    test_assert(oak != 0);
+    test_assert(maple != 0);
+
+    test_assert(ecs_has_pair(world, organism, isa, thing));
+    test_assert(ecs_has_pair(world, animal, isa, organism));
+    test_assert(ecs_has_pair(world, dog, isa, animal));
+    test_assert(ecs_has_pair(world, cat, isa, animal));
+    test_assert(ecs_has_pair(world, tree, isa, organism));
+    test_assert(ecs_has_pair(world, oak, isa, tree));
+    test_assert(ecs_has_pair(world, maple, isa, tree));
+
+    ecs_fini(world);
+}
+
+void Eval_custom_isa_hierarchy_in_subtree(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "module things"
+    LINE "(IsA, Thing) {"
+    LINE "  IsA {}"
+    LINE "  (IsA, Organism) {"
+    LINE "    (IsA, Animal) {"
+    LINE "      Dog {}"
+    LINE "      Cat {}"
+    LINE "    }"
+    LINE "    (IsA, Tree) {"
+    LINE "      Oak {}"
+    LINE "      Maple {}"
+    LINE "    }"
+    LINE "  }"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+
+    test_assert(ecs_lookup_child(world, 0, "IsA") == 0);
+
+    ecs_entity_t isa = ecs_lookup(world, "things.IsA");
+    ecs_entity_t thing = ecs_lookup(world, "things.Thing");
+    ecs_entity_t organism = ecs_lookup(world, "things.Organism");
+    ecs_entity_t animal = ecs_lookup(world, "things.Animal");
+    ecs_entity_t dog = ecs_lookup(world, "things.Dog");
+    ecs_entity_t cat = ecs_lookup(world, "things.Cat");
+    ecs_entity_t tree = ecs_lookup(world, "things.Tree");
+    ecs_entity_t oak = ecs_lookup(world, "things.Oak");
+    ecs_entity_t maple = ecs_lookup(world, "things.Maple");
+
+    test_assert(isa != 0);
+    test_assert(thing != 0);
+    test_assert(organism != 0);
+    test_assert(animal != 0);
+    test_assert(dog != 0);
+    test_assert(cat != 0);
+    test_assert(tree != 0);
+    test_assert(oak != 0);
+    test_assert(maple != 0);
+
+    test_assert(ecs_has_pair(world, isa, EcsIsA, thing));
+    test_assert(ecs_has_pair(world, organism, EcsIsA, thing));
+    test_assert(ecs_has_pair(world, animal, isa, organism));
+    test_assert(ecs_has_pair(world, dog, isa, animal));
+    test_assert(ecs_has_pair(world, cat, isa, animal));
+    test_assert(ecs_has_pair(world, tree, isa, organism));
+    test_assert(ecs_has_pair(world, oak, isa, tree));
+    test_assert(ecs_has_pair(world, maple, isa, tree));
+
+    ecs_fini(world);
+}

@@ -13,7 +13,7 @@
  * @memberof flecs::entity_builder
  * @ingroup cpp_addons_doc
  */
-Self& set_doc_name(const char *name) {
+const Self& set_doc_name(const char *name) {
     ecs_doc_set_name(world_, id_, name);
     return to_base();
 }
@@ -28,7 +28,7 @@ Self& set_doc_name(const char *name) {
  * @memberof flecs::entity_builder
  * @ingroup cpp_addons_doc
  */
-Self& set_doc_brief(const char *brief) {
+const Self& set_doc_brief(const char *brief) {
     ecs_doc_set_brief(world_, id_, brief);
     return to_base();
 }
@@ -43,7 +43,7 @@ Self& set_doc_brief(const char *brief) {
  * @memberof flecs::entity_builder
  * @ingroup cpp_addons_doc
  */
-Self& set_doc_detail(const char *detail) {
+const Self& set_doc_detail(const char *detail) {
     ecs_doc_set_detail(world_, id_, detail);
     return to_base();
 }
@@ -58,7 +58,7 @@ Self& set_doc_detail(const char *detail) {
  * @memberof flecs::entity_builder
  * @ingroup cpp_addons_doc
  */
-Self& set_doc_link(const char *link) {
+const Self& set_doc_link(const char *link) {
     ecs_doc_set_link(world_, id_, link);
     return to_base();
 }
@@ -73,7 +73,7 @@ Self& set_doc_link(const char *link) {
  * @memberof flecs::entity_builder
  * @ingroup cpp_addons_doc
  */
-Self& set_doc_color(const char *link) {
+const Self& set_doc_color(const char *link) {
     ecs_doc_set_color(world_, id_, link);
     return to_base();
 }
