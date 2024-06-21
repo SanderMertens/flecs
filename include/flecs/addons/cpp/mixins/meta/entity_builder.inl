@@ -11,13 +11,13 @@
  */
 
 /** Make entity a unit */
-Self& unit(
+const Self& unit(
     const char *symbol, 
     flecs::entity_t prefix = 0,
     flecs::entity_t base = 0,
     flecs::entity_t over = 0,
     int32_t factor = 0,
-    int32_t power = 0) 
+    int32_t power = 0) const
 {
     ecs_unit_desc_t desc = {};
     desc.entity = this->id_;
@@ -33,12 +33,12 @@ Self& unit(
 }
 
 /** Make entity a derived unit */
-Self& unit( 
+const Self& unit( 
     flecs::entity_t prefix = 0,
     flecs::entity_t base = 0,
     flecs::entity_t over = 0,
     int32_t factor = 0,
-    int32_t power = 0) 
+    int32_t power = 0) const
 {
     ecs_unit_desc_t desc = {};
     desc.entity = this->id_;
@@ -53,10 +53,10 @@ Self& unit(
 }
 
 /** Make entity a derived unit */
-Self& unit_prefix( 
+const Self& unit_prefix( 
     const char *symbol,
     int32_t factor = 0,
-    int32_t power = 0) 
+    int32_t power = 0) const
 {
     ecs_unit_prefix_desc_t desc = {};
     desc.entity = this->id_;
@@ -69,19 +69,19 @@ Self& unit_prefix(
 }
 
 /** Add quantity to unit */
-Self& quantity(flecs::entity_t quantity) {
+const Self& quantity(flecs::entity_t quantity) const {
     ecs_add_pair(this->world(), this->id(), flecs::Quantity, quantity);
     return to_base();
 }
 
 /** Make entity a unity prefix */
 template <typename Quantity>
-Self& quantity() {
+const Self& quantity() const {
     return this->quantity(_::type<Quantity>::id(this->world()));
 }
 
 /** Make entity a quantity */
-Self& quantity() {
+const Self& quantity() const {
     ecs_add_id(this->world(), this->id(), flecs::Quantity);
     return to_base();
 }

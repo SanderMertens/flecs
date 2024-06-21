@@ -22,7 +22,7 @@ struct entity_builder : entity_view {
      * @tparam T the component type to add.
      */
     template <typename T>
-    Self& add() {
+    const Self& add() const  {
         flecs_static_assert(is_flecs_constructible<T>::value,
             "cannot default construct type: add T::T() or use emplace<T>()");
         ecs_add_id(this->world_, this->id_, _::type<T>::id(this->world_));
@@ -39,7 +39,7 @@ struct entity_builder : entity_view {
      * @param value The enumeration value.
      */
     template <typename E, if_t< is_enum<E>::value > = 0>
-    Self& add(E value) {
+    const Self& add(E value) const  {
         flecs::entity_t first = _::type<E>::id(this->world_);
         const auto& et = enum_type<E>(this->world_);
         flecs::entity_t second = et.entity(value);
@@ -53,7 +53,7 @@ struct entity_builder : entity_view {
      *
      * @param component The component to add.
      */
-    Self& add(id_t component) {
+    const Self& add(id_t component) const  {
         ecs_add_id(this->world_, this->id_, component);
         return to_base();
     }
@@ -64,7 +64,7 @@ struct entity_builder : entity_view {
      * @param first The first element of the pair.
      * @param second The second element of the pair.
      */
-    Self& add(entity_t first, entity_t second) {
+    const Self& add(entity_t first, entity_t second) const  {
         ecs_add_pair(this->world_, this->id_, first, second);
         return to_base();
     }
@@ -76,7 +76,7 @@ struct entity_builder : entity_view {
      * @tparam Second The second element of the pair
      */
     template<typename First, typename Second>
-    Self& add() {
+    const Self& add() const  {
         return this->add<First>(_::type<Second>::id(this->world_));
     }
 
@@ -87,7 +87,7 @@ struct entity_builder : entity_view {
      * @param second The second element of the pair.
      */
     template<typename First, typename Second, if_not_t< is_enum<Second>::value > = 0>
-    Self& add(Second second) {
+    const Self& add(Second second) const  {
         flecs_static_assert(is_flecs_constructible<First>::value,
             "cannot default construct type: add T::T() or use emplace<T>()");
         return this->add(_::type<First>::id(this->world_), second);
@@ -101,7 +101,7 @@ struct entity_builder : entity_view {
      * @param constant the enum constant.
      */
     template<typename First, typename Second, if_t< is_enum<Second>::value > = 0>
-    Self& add(Second constant) {
+    const Self& add(Second constant) const  {
         flecs_static_assert(is_flecs_constructible<First>::value,
             "cannot default construct type: add T::T() or use emplace<T>()");
         const auto& et = enum_type<Second>(this->world_);
@@ -115,7 +115,7 @@ struct entity_builder : entity_view {
      * @tparam Second The second element of the pair
      */
     template<typename Second>
-    Self& add_second(flecs::entity_t first) {
+    const Self& add_second(flecs::entity_t first) const  {
         return this->add(first, _::type<Second>::id(this->world_));
     }
 
@@ -125,7 +125,7 @@ struct entity_builder : entity_view {
      * @param cond The condition to evaluate.
      * @param component The component to add.
      */
-    Self& add_if(bool cond, flecs::id_t component) {
+    const Self& add_if(bool cond, flecs::id_t component) const  {
         if (cond) {
             return this->add(component);
         } else {
@@ -140,7 +140,7 @@ struct entity_builder : entity_view {
      * @param cond The condition to evaluate.
      */
     template <typename T>
-    Self& add_if(bool cond) {
+    const Self& add_if(bool cond) const  {
         if (cond) {
             return this->add<T>();
         } else {
@@ -155,7 +155,7 @@ struct entity_builder : entity_view {
      * @param first The first element of the pair.
      * @param second The second element of the pair.
      */
-    Self& add_if(bool cond, flecs::entity_t first, flecs::entity_t second) {
+    const Self& add_if(bool cond, flecs::entity_t first, flecs::entity_t second) const  {
         if (cond) {
             return this->add(first, second);
         } else {
@@ -178,7 +178,7 @@ struct entity_builder : entity_view {
      * @param second The second element of the pair.
      */
     template <typename First>
-    Self& add_if(bool cond, flecs::entity_t second) {
+    const Self& add_if(bool cond, flecs::entity_t second) const  {
         return this->add_if(cond, _::type<First>::id(this->world_), second);
     }
 
@@ -190,7 +190,7 @@ struct entity_builder : entity_view {
      * @param cond The condition to evaluate.
      */
     template <typename First, typename Second>
-    Self& add_if(bool cond) {
+    const Self& add_if(bool cond) const  {
         return this->add_if<First>(cond, _::type<Second>::id(this->world_));
     }
 
@@ -201,7 +201,7 @@ struct entity_builder : entity_view {
      * @param constant The enumeration constant.
      */
     template <typename E, if_t< is_enum<E>::value > = 0>
-    Self& add_if(bool cond, E constant) {
+    const Self& add_if(bool cond, E constant) const  {
         const auto& et = enum_type<E>(this->world_);
         return this->add_if<E>(cond, et.entity(constant));
     }
@@ -210,7 +210,7 @@ struct entity_builder : entity_view {
      *
      * @param second The second element of the pair.
      */
-    Self& is_a(entity_t second) {
+    const Self& is_a(entity_t second) const  {
         return this->add(flecs::IsA, second);
     }
 
@@ -219,7 +219,7 @@ struct entity_builder : entity_view {
      * @tparam T the type associated with the entity.
      */
     template <typename T>
-    Self& is_a() {
+    const Self& is_a() const  {
         return this->add(flecs::IsA, _::type<T>::id(this->world_));
     }
 
@@ -227,7 +227,7 @@ struct entity_builder : entity_view {
      *
      * @param second The second element of the pair.
      */
-    Self& child_of(entity_t second) {
+    const Self& child_of(entity_t second) const  {
         return this->add(flecs::ChildOf, second);
     }
 
@@ -235,7 +235,7 @@ struct entity_builder : entity_view {
      *
      * @param second The second element of the pair.
      */
-    Self& depends_on(entity_t second) {
+    const Self& depends_on(entity_t second) const  {
         return this->add(flecs::DependsOn, second);
     }
 
@@ -244,8 +244,7 @@ struct entity_builder : entity_view {
      * @param second The second element of the pair.
      */
     template <typename E, if_t<is_enum<E>::value> = 0>
-    Self& depends_on(E second)
-    {
+    const Self& depends_on(E second) const {
         const auto& et = enum_type<E>(this->world_);
         flecs::entity_t target = et.entity(second);
         return depends_on(target);
@@ -255,13 +254,13 @@ struct entity_builder : entity_view {
      *
      * @param second The second element of the pair.
      */
-    Self& slot_of(entity_t second) {
+    const Self& slot_of(entity_t second) const  {
         return this->add(flecs::SlotOf, second);
     }
 
     /** Shortcut for add(SlotOf, target(ChildOf)).
      */
-    Self& slot() {
+    const Self& slot() const  {
         ecs_check(ecs_get_target(world_, id_, flecs::ChildOf, 0), 
             ECS_INVALID_PARAMETER, "add ChildOf pair before using slot()");
         return this->slot_of(this->target(flecs::ChildOf));
@@ -274,7 +273,7 @@ struct entity_builder : entity_view {
      * @tparam T the type associated with the entity.
      */
     template <typename T>
-    Self& child_of() {
+    const Self& child_of() const  {
         return this->child_of(_::type<T>::id(this->world_));
     }
  
@@ -283,7 +282,7 @@ struct entity_builder : entity_view {
      * @tparam T the type associated with the entity.
      */
     template <typename T>
-    Self& depends_on() {
+    const Self& depends_on() const  {
         return this->depends_on(_::type<T>::id(this->world_));
     }
 
@@ -292,7 +291,7 @@ struct entity_builder : entity_view {
      * @tparam T the type associated with the entity.
      */
     template <typename T>
-    Self& slot_of() {
+    const Self& slot_of() const  {
         return this->slot_of(_::type<T>::id(this->world_));
     }
 
@@ -301,7 +300,7 @@ struct entity_builder : entity_view {
      * @tparam T the type of the component to remove.
      */
     template <typename T, if_not_t< is_enum<T>::value > = 0>
-    Self& remove() {
+    const Self& remove() const {
         ecs_remove_id(this->world_, this->id_, _::type<T>::id(this->world_));
         return to_base();
     }
@@ -312,7 +311,7 @@ struct entity_builder : entity_view {
      * @tparam E The enumeration type.
      */
     template <typename E, if_t< is_enum<E>::value > = 0>
-    Self& remove() {
+    const Self& remove() const  {
         flecs::entity_t first = _::type<E>::id(this->world_);
         return this->remove(first, flecs::Wildcard);
     }
@@ -321,7 +320,7 @@ struct entity_builder : entity_view {
      *
      * @param entity The entity to remove.
      */
-    Self& remove(entity_t entity) {
+    const Self& remove(entity_t entity) const  {
         ecs_remove_id(this->world_, this->id_, entity);
         return to_base();
     }
@@ -332,7 +331,7 @@ struct entity_builder : entity_view {
      * @param first The first element of the pair.
      * @param second The second element of the pair.
      */
-    Self& remove(entity_t first, entity_t second) {
+    const Self& remove(entity_t first, entity_t second) const  {
         ecs_remove_pair(this->world_, this->id_, first, second);
         return to_base();
     }
@@ -344,7 +343,7 @@ struct entity_builder : entity_view {
      * @tparam Second The second element of the pair
      */
     template<typename First, typename Second>
-    Self& remove() {
+    const Self& remove() const  {
         return this->remove<First>(_::type<Second>::id(this->world_));
     }
 
@@ -355,7 +354,7 @@ struct entity_builder : entity_view {
      * @param second The second element of the pair.
      */
     template<typename First, typename Second, if_not_t< is_enum<Second>::value > = 0>
-    Self& remove(Second second) {
+    const Self& remove(Second second) const  {
         return this->remove(_::type<First>::id(this->world_), second);
     }
 
@@ -366,7 +365,7 @@ struct entity_builder : entity_view {
      * @param first The first element of the pair
      */
     template<typename Second>
-    Self& remove_second(flecs::entity_t first) {
+    const Self& remove_second(flecs::entity_t first) const  {
         return this->remove(first, _::type<Second>::id(this->world_));
     }
 
@@ -377,7 +376,7 @@ struct entity_builder : entity_view {
      * @param constant the enum constant.
      */
     template<typename First, typename Second, if_t< is_enum<Second>::value > = 0>
-    Self& remove(Second constant) {
+    const Self& remove(Second constant) const  {
         const auto& et = enum_type<Second>(this->world_);
         flecs::entity_t second = et.entity(constant);
         return this->remove<First>(second);
@@ -390,7 +389,7 @@ struct entity_builder : entity_view {
      *
      * @param id The id to mark for overriding.
      */    
-    Self& auto_override(flecs::id_t id) {
+    const Self& auto_override(flecs::id_t id) const  {
         return this->add(ECS_AUTO_OVERRIDE | id);
     }
 
@@ -400,7 +399,7 @@ struct entity_builder : entity_view {
      * @param first The first element of the pair.
      * @param second The second element of the pair.
      */     
-    Self& auto_override(flecs::entity_t first, flecs::entity_t second) {
+    const Self& auto_override(flecs::entity_t first, flecs::entity_t second) const  {
         return this->auto_override(ecs_pair(first, second));
     }
 
@@ -410,7 +409,7 @@ struct entity_builder : entity_view {
      * @tparam T The component to mark for overriding.
      */     
     template <typename T>
-    Self& auto_override() {
+    const Self& auto_override() const  {
         return this->auto_override(_::type<T>::id(this->world_));
     }
 
@@ -421,7 +420,7 @@ struct entity_builder : entity_view {
      * @param second The second element of the pair.
      */     
     template <typename First>
-    Self& auto_override(flecs::entity_t second) {
+    const Self& auto_override(flecs::entity_t second) const  {
         return this->auto_override(_::type<First>::id(this->world_), second);
     }
 
@@ -432,7 +431,7 @@ struct entity_builder : entity_view {
      * @tparam Second The second element of the pair.
      */     
     template <typename First, typename Second>
-    Self& auto_override() {
+    const Self& auto_override() const  {
         return this->auto_override<First>(_::type<Second>::id(this->world_));
     }
 
@@ -442,7 +441,7 @@ struct entity_builder : entity_view {
      * @tparam T The component to set and for which to add the OVERRIDE flag
      */    
     template <typename T>
-    Self& set_auto_override(const T& val) {
+    const Self& set_auto_override(const T& val) const  {
         this->auto_override<T>();
         return this->set<T>(val);
     }
@@ -453,7 +452,7 @@ struct entity_builder : entity_view {
      * @tparam T The component to set and for which to add the OVERRIDE flag
      */    
     template <typename T>
-    Self& set_auto_override(T&& val) {
+    const Self& set_auto_override(T&& val) const  {
         this->auto_override<T>();
         return this->set<T>(FLECS_FWD(val));
     }
@@ -465,7 +464,7 @@ struct entity_builder : entity_view {
      * @param second The second element of the pair.
      */    
     template <typename First>
-    Self& set_auto_override(flecs::entity_t second, const First& val) {
+    const Self& set_auto_override(flecs::entity_t second, const First& val) const  {
         this->auto_override<First>(second);
         return this->set<First>(second, val);
     }
@@ -477,7 +476,7 @@ struct entity_builder : entity_view {
      * @param second The second element of the pair.
      */    
     template <typename First>
-    Self& set_auto_override(flecs::entity_t second, First&& val) {
+    const Self& set_auto_override(flecs::entity_t second, First&& val) const  {
         this->auto_override<First>(second);
         return this->set<First>(second, FLECS_FWD(val));
     }
@@ -490,7 +489,7 @@ struct entity_builder : entity_view {
      */    
     template <typename First, typename Second, typename P = pair<First, Second>, 
         typename A = actual_type_t<P>, if_not_t< flecs::is_pair<First>::value> = 0>    
-    Self& set_auto_override(const A& val) {
+    const Self& set_auto_override(const A& val) const  {
         this->auto_override<First, Second>();
         return this->set<First, Second>(val);
     }
@@ -503,7 +502,7 @@ struct entity_builder : entity_view {
      */    
     template <typename First, typename Second, typename P = pair<First, Second>, 
         typename A = actual_type_t<P>, if_not_t< flecs::is_pair<First>::value> = 0>    
-    Self& set_auto_override(A&& val) {
+    const Self& set_auto_override(A&& val) const  {
         this->auto_override<First, Second>();
         return this->set<First, Second>(FLECS_FWD(val));
     }
@@ -514,7 +513,7 @@ struct entity_builder : entity_view {
      * @tparam T The component to emplace and override.
      */    
     template <typename T, typename ... Args>
-    Self& emplace_auto_override(Args&&... args) {
+    const Self& emplace_auto_override(Args&&... args) const  {
         this->auto_override<T>();
 
         flecs::emplace<T>(this->world_, this->id_, 
@@ -532,7 +531,7 @@ struct entity_builder : entity_view {
     template <typename First, typename Second, typename P = pair<First, Second>, 
         typename A = actual_type_t<P>, if_not_t< flecs::is_pair<First>::value> = 0,
             typename ... Args>
-    Self& emplace_auto_override(Args&&... args) {
+    const Self& emplace_auto_override(Args&&... args) const  {
         this->auto_override<First, Second>();
 
         flecs::emplace<A>(this->world_, this->id_, 
@@ -547,7 +546,7 @@ struct entity_builder : entity_view {
      * Enabled entities are matched with systems and can be searched with
      * queries.
      */
-    Self& enable() {
+    const Self& enable() const  {
         ecs_enable(this->world_, this->id_, true);
         return to_base();
     }
@@ -556,7 +555,7 @@ struct entity_builder : entity_view {
      * Disabled entities are not matched with systems and cannot be searched 
      * with queries, unless explicitly specified in the query expression.
      */
-    Self& disable() {
+    const Self& disable() const  {
         ecs_enable(this->world_, this->id_, false);
         return to_base();
     }
@@ -568,7 +567,7 @@ struct entity_builder : entity_view {
      * @param id The id to enable.
      * @param toggle True to enable, false to disable (default = true).
      */   
-    Self& enable(flecs::id_t id, bool toggle = true) {
+    const Self& enable(flecs::id_t id, bool toggle = true) const  {
         ecs_enable_id(this->world_, this->id_, id, toggle);
         return to_base();       
     }
@@ -579,7 +578,7 @@ struct entity_builder : entity_view {
      * @tparam T The component to enable.
      */   
     template<typename T>
-    Self& enable() {
+    const Self& enable() const  {
         return this->enable(_::type<T>::id(this->world_));
     }
 
@@ -589,7 +588,7 @@ struct entity_builder : entity_view {
      * @param first The first element of the pair.
      * @param second The second element of the pair.
      */   
-    Self& enable(flecs::id_t first, flecs::id_t second) {
+    const Self& enable(flecs::id_t first, flecs::id_t second) const  {
         return this->enable(ecs_pair(first, second));
     }
 
@@ -600,7 +599,7 @@ struct entity_builder : entity_view {
      * @param second The second element of the pair.
      */   
     template<typename First>
-    Self& enable(flecs::id_t second) {
+    const Self& enable(flecs::id_t second) const  {
         return this->enable(_::type<First>::id(), second);
     }
 
@@ -611,7 +610,7 @@ struct entity_builder : entity_view {
      * @tparam Second The second element of the pair.
      */   
     template<typename First, typename Second>
-    Self& enable() {
+    const Self& enable() const  {
         return this->enable<First>(_::type<Second>::id());
     }
 
@@ -621,7 +620,7 @@ struct entity_builder : entity_view {
      *
      * @param id The id to disable.
      */   
-    Self& disable(flecs::id_t id) {
+    const Self& disable(flecs::id_t id) const  {
         return this->enable(id, false);
     }
 
@@ -631,7 +630,7 @@ struct entity_builder : entity_view {
      * @tparam T The component to enable.
      */   
     template<typename T>
-    Self& disable() {
+    const Self& disable() const  {
         return this->disable(_::type<T>::id());
     }
 
@@ -641,7 +640,7 @@ struct entity_builder : entity_view {
      * @param first The first element of the pair.
      * @param second The second element of the pair.
      */   
-    Self& disable(flecs::id_t first, flecs::id_t second) {
+    const Self& disable(flecs::id_t first, flecs::id_t second) const  {
         return this->disable(ecs_pair(first, second));
     }
 
@@ -652,7 +651,7 @@ struct entity_builder : entity_view {
      * @param second The second element of the pair.
      */   
     template<typename First>
-    Self& disable(flecs::id_t second) {
+    const Self& disable(flecs::id_t second) const  {
         return this->disable(_::type<First>::id(), second);
     }
 
@@ -663,16 +662,16 @@ struct entity_builder : entity_view {
      * @tparam Second The second element of the pair.
      */   
     template<typename First, typename Second>
-    Self& disable() {
+    const Self& disable() const  {
         return this->disable<First>(_::type<Second>::id());
     }
 
-    Self& set_ptr(entity_t comp, size_t size, const void *ptr) {
+    const Self& set_ptr(entity_t comp, size_t size, const void *ptr) const  {
         ecs_set_id(this->world_, this->id_, comp, size, ptr);
         return to_base();
     }
 
-    Self& set_ptr(entity_t comp, const void *ptr) {
+    const Self& set_ptr(entity_t comp, const void *ptr) const  {
         const flecs::Component *cptr = ecs_get(
             this->world_, comp, EcsComponent);
 
@@ -683,27 +682,27 @@ struct entity_builder : entity_view {
     }
 
     template<typename T, if_t<is_actual<T>::value> = 0 >
-    Self& set(T&& value) {
+    const Self& set(T&& value) const  {
         flecs::set<T>(this->world_, this->id_, FLECS_FWD(value));
         return to_base();
     }
 
     template<typename T, if_t<is_actual<T>::value > = 0>
-    Self& set(const T& value) {
+    const Self& set(const T& value) const  {
         flecs::set<T>(this->world_, this->id_, value);
         return to_base();
     }
 
     template<typename T, typename A = actual_type_t<T>, if_not_t< 
         is_actual<T>::value > = 0>
-    Self& set(A&& value) {
+    const Self& set(A&& value) const  {
         flecs::set<T>(this->world_, this->id_, FLECS_FWD(value));
         return to_base();
     }
 
     template<typename T, typename A = actual_type_t<T>, if_not_t<
         is_actual<T>::value > = 0>
-    Self& set(const A& value) {
+    const Self& set(const A& value) const  {
         flecs::set<T>(this->world_, this->id_, value);
         return to_base();
     }
@@ -718,7 +717,7 @@ struct entity_builder : entity_view {
      */
     template <typename First, typename Second, typename P = pair<First, Second>, 
         typename A = actual_type_t<P>, if_not_t< flecs::is_pair<First>::value> = 0>
-    Self& set(A&& value) {
+    const Self& set(A&& value) const  {
         flecs::set<P>(this->world_, this->id_, FLECS_FWD(value));
         return to_base();
     }
@@ -733,7 +732,7 @@ struct entity_builder : entity_view {
      */
     template <typename First, typename Second, typename P = pair<First, Second>, 
         typename A = actual_type_t<P>, if_not_t< flecs::is_pair<First>::value> = 0>
-    Self& set(const A& value) {
+    const Self& set(const A& value) const  {
         flecs::set<P>(this->world_, this->id_, value);
         return to_base();
     }
@@ -747,7 +746,7 @@ struct entity_builder : entity_view {
      * @param value The value to set.
      */
     template <typename First, typename Second, if_not_t< is_enum<Second>::value > = 0>
-    Self& set(Second second, const First& value) {
+    const Self& set(Second second, const First& value) const  {
         auto first = _::type<First>::id(this->world_);
         flecs::set(this->world_, this->id_, value, 
             ecs_pair(first, second));
@@ -763,7 +762,7 @@ struct entity_builder : entity_view {
      * @param value The value to set.
      */
     template <typename First, typename Second, if_not_t< is_enum<Second>::value > = 0>
-    Self& set(Second second, First&& value) {
+    const Self& set(Second second, First&& value) const  {
         auto first = _::type<First>::id(this->world_);
         flecs::set(this->world_, this->id_, FLECS_FWD(value), 
             ecs_pair(first, second));
@@ -779,7 +778,7 @@ struct entity_builder : entity_view {
      * @param value The value to set.
      */
     template <typename First, typename Second, if_t< is_enum<Second>::value > = 0>
-    Self& set(Second constant, const First& value) {
+    const Self& set(Second constant, const First& value) const  {
         const auto& et = enum_type<Second>(this->world_);
         flecs::entity_t second = et.entity(constant);
         return set<First>(second, value);
@@ -794,7 +793,7 @@ struct entity_builder : entity_view {
      * @param value The value to set.
      */
     template <typename Second>
-    Self& set_second(entity_t first, const Second& value) {
+    const Self& set_second(entity_t first, const Second& value) const  {
         auto second = _::type<Second>::id(this->world_);
         flecs::set(this->world_, this->id_, value, 
             ecs_pair(first, second));
@@ -810,7 +809,7 @@ struct entity_builder : entity_view {
      * @param value The value to set.
      */
     template <typename Second>
-    Self& set_second(entity_t first, Second&& value) {
+    const Self& set_second(entity_t first, Second&& value) const  {
         auto second = _::type<Second>::id(this->world_);
         flecs::set(this->world_, this->id_, FLECS_FWD(value), 
             ecs_pair(first, second));
@@ -818,7 +817,7 @@ struct entity_builder : entity_view {
     }
 
     template <typename First, typename Second>
-    Self& set_second(const Second& value) {
+    const Self& set_second(const Second& value) const  {
         flecs::set<pair_object<First, Second>>(this->world_, this->id_, value);
         return to_base();
     }    
@@ -839,7 +838,7 @@ struct entity_builder : entity_view {
      * @param func The callback to invoke.
      */
     template <typename Func>
-    Self& insert(const Func& func);
+    const Self& insert(const Func& func) const;
 
     /** Emplace component.
      * Emplace constructs a component in the storage, which prevents calling the
@@ -863,7 +862,7 @@ struct entity_builder : entity_view {
      * @param args The arguments to pass to the constructor of T
      */
     template<typename T, typename ... Args, typename A = actual_type_t<T>>
-    Self& emplace(Args&&... args) {
+    const Self& emplace(Args&&... args) const  {
         flecs::emplace<A>(this->world_, this->id_, 
             _::type<T>::id(this->world_), FLECS_FWD(args)...);
         return to_base();
@@ -871,7 +870,7 @@ struct entity_builder : entity_view {
 
     template <typename First, typename Second, typename ... Args, typename P = pair<First, Second>, 
         typename A = actual_type_t<P>, if_not_t< flecs::is_pair<First>::value> = 0>
-    Self& emplace(Args&&... args) {
+    const Self& emplace(Args&&... args) const  {
         flecs::emplace<A>(this->world_, this->id_, 
             ecs_pair(_::type<First>::id(this->world_),
                 _::type<Second>::id(this->world_)),
@@ -880,7 +879,7 @@ struct entity_builder : entity_view {
     }
 
     template <typename First, typename ... Args>
-    Self& emplace_first(flecs::entity_t second, Args&&... args) {
+    const Self& emplace_first(flecs::entity_t second, Args&&... args) const  {
         flecs::emplace<First>(this->world_, this->id_, 
             ecs_pair(_::type<First>::id(this->world_), second),
             FLECS_FWD(args)...);
@@ -888,7 +887,7 @@ struct entity_builder : entity_view {
     }
 
     template <typename Second, typename ... Args>
-    Self& emplace_second(flecs::entity_t first, Args&&... args) {
+    const Self& emplace_second(flecs::entity_t first, Args&&... args) const  {
         flecs::emplace<Second>(this->world_, this->id_, 
             ecs_pair(first, _::type<Second>::id(this->world_)),
             FLECS_FWD(args)...);
@@ -901,7 +900,7 @@ struct entity_builder : entity_view {
      * @param func The function to call.
      */
     template <typename Func>
-    Self& with(const Func& func) {
+    const Self& with(const Func& func) const  {
         ecs_id_t prev = ecs_set_with(this->world_, this->id_);
         func();
         ecs_set_with(this->world_, prev);
@@ -915,7 +914,7 @@ struct entity_builder : entity_view {
      * @param func The function to call.
      */
     template <typename First, typename Func>
-    Self& with(const Func& func) {
+    const Self& with(const Func& func) const  {
         with(_::type<First>::id(this->world_), func);
         return to_base();
     }
@@ -927,7 +926,7 @@ struct entity_builder : entity_view {
      * @param func The function to call.
      */
     template <typename Func>
-    Self& with(entity_t first, const Func& func) {
+    const Self& with(entity_t first, const Func& func) const  {
         ecs_id_t prev = ecs_set_with(this->world_, 
             ecs_pair(first, this->id_));
         func();
@@ -937,7 +936,7 @@ struct entity_builder : entity_view {
 
     /** The function will be ran with the scope set to the current entity. */
     template <typename Func>
-    Self& scope(const Func& func) {
+    const Self& scope(const Func& func) const  {
         ecs_entity_t prev = ecs_set_scope(this->world_, this->id_);
         func();
         ecs_set_scope(this->world_, prev);
@@ -951,14 +950,14 @@ struct entity_builder : entity_view {
 
     /* Set the entity name.
      */
-    Self& set_name(const char *name) {
+    const Self& set_name(const char *name) const  {
         ecs_set_name(this->world_, this->id_, name);
         return to_base();
     }
 
     /* Set entity alias.
      */
-    Self& set_alias(const char *name) {
+    const Self& set_alias(const char *name) const  {
         ecs_set_alias(this->world_, this->id_, name);
         return to_base();
     }
@@ -978,8 +977,8 @@ struct entity_builder : entity_view {
 #   include "../event/entity_builder.inl"
 
 protected:
-    Self& to_base() {
-        return *static_cast<Self*>(this);
+    const Self& to_base() const  {
+        return *static_cast<const Self*>(this);
     }
 };
 

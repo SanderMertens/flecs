@@ -72,7 +72,7 @@ namespace _ {
 
 template <typename Self>
 template <typename Func>
-inline Self& entity_builder<Self>::observe(flecs::entity_t evt, Func&& f) {
+inline const Self& entity_builder<Self>::observe(flecs::entity_t evt, Func&& f) const {
     using Delegate = _::entity_observer_delegate<Func>;
     auto ctx = FLECS_NEW(Delegate)(FLECS_FWD(f));
 
@@ -84,7 +84,7 @@ inline Self& entity_builder<Self>::observe(flecs::entity_t evt, Func&& f) {
 
 template <typename Self>
 template <typename Evt, typename Func>
-inline Self& entity_builder<Self>::observe(Func&& f) {
+inline const Self& entity_builder<Self>::observe(Func&& f) const {
     _::entity_observer_factory<Func>::template create<Evt>(
         world_, id_, FLECS_FWD(f));
     return to_base();
@@ -92,15 +92,15 @@ inline Self& entity_builder<Self>::observe(Func&& f) {
 
 template <typename Self>
 template <typename Func>
-inline Self& entity_builder<Self>::observe(Func&& f) {
+inline const Self& entity_builder<Self>::observe(Func&& f) const {
     return this->observe<_::event_from_func_t<Func>>(FLECS_FWD(f));
 }
 
-inline void entity_view::emit(flecs::entity evt) {
+inline void entity_view::emit(flecs::entity evt) const {
     this->emit(evt.id());
 }
 
-inline void entity_view::enqueue(flecs::entity evt) {
+inline void entity_view::enqueue(flecs::entity evt) const {
     this->enqueue(evt.id());
 }
 

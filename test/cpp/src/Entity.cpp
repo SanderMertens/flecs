@@ -4585,3 +4585,83 @@ void Entity_depends_on_type(void) {
     flecs::entity b = world.entity().depends_on<Position>();
     test_assert(b.has(flecs::DependsOn, world.id<Position>()));
 }
+
+void Entity_const_entity_add_remove(void) {
+    flecs::world world;
+
+    const flecs::entity e = world.entity();
+
+    e.add<Tag>();
+    test_assert(e.has<Tag>());
+
+    e.remove<Tag>();
+    test_assert(!e.has<Tag>());
+}
+
+void Entity_const_entity_set(void) {
+    flecs::world world;
+
+    const flecs::entity e = world.entity();
+
+    e.set<Position>({10, 20});
+    test_assert(e.get<Position>() != nullptr);
+    test_int(e.get<Position>()->x, 10);
+    test_int(e.get<Position>()->y, 20);
+}
+
+void Entity_const_entity_get_mut(void) {
+    flecs::world world;
+
+    const flecs::entity e = world.entity();
+
+    Position *p = e.get_mut<Position>();
+    test_assert(p == nullptr);
+    test_assert(!e.has<Position>());
+
+    e.add<Position>();
+    p = e.get_mut<Position>();
+    test_assert(p != nullptr);
+    test_assert(e.has<Position>());
+
+    e.modified<Position>();
+}
+
+void Entity_const_entity_ensure(void) {
+    flecs::world world;
+
+    const flecs::entity e = world.entity();
+
+    e.ensure<Position>();
+    test_assert(e.has<Position>());
+    e.modified<Position>();
+}
+
+void Entity_const_entity_destruct(void) {
+    flecs::world world;
+
+    const flecs::entity e = world.entity();
+
+    e.destruct();
+    test_assert(!e.is_alive());
+}
+
+void Entity_const_entity_emit_after_build(void) {
+    flecs::world world;
+
+    const flecs::entity e = world.entity();
+
+    int32_t count = 0;
+    e.observe([&](Velocity& v) {
+        test_int(v.x, 1);
+        test_int(v.y, 2);
+        count ++;
+    });
+
+    e.set<Position>({10, 20}).emit<Velocity>({1, 2});
+
+    test_assert(e.get<Position>() != nullptr);
+    test_int(e.get<Position>()->x, 10);
+    test_int(e.get<Position>()->y, 20);
+
+    test_int(count, 1);
+}
