@@ -654,8 +654,13 @@
                 "empty_tables_each_w_iter"
 =======
                 "query_from_entity",
+<<<<<<< HEAD
                 "query_from_entity_name"
 >>>>>>> cf1a8ef63 (v4):test/cpp/project.json
+=======
+                "query_from_entity_name",
+                "run_w_iter_fini"
+>>>>>>> 3f87a122d (Add flecs::iter::fini)
             ]
         }, {
             "id": "QueryBuilder",

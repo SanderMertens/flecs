@@ -631,7 +631,11 @@ void Query_empty_tables_each_w_iter(void);
 =======
 void Query_query_from_entity(void);
 void Query_query_from_entity_name(void);
+<<<<<<< HEAD
 >>>>>>> cf1a8ef63 (v4):test/cpp/src/main.cpp
+=======
+void Query_run_w_iter_fini(void);
+>>>>>>> 3f87a122d (Add flecs::iter::fini)
 
 // Testsuite 'QueryBuilder'
 void QueryBuilder_setup(void);
@@ -3782,7 +3786,14 @@ bake_test_case Query_testcases[] = {
     {
         "query_from_entity_name",
         Query_query_from_entity_name
+<<<<<<< HEAD
 >>>>>>> cf1a8ef63 (v4):test/cpp/src/main.cpp
+=======
+    },
+    {
+        "run_w_iter_fini",
+        Query_run_w_iter_fini
+>>>>>>> 3f87a122d (Add flecs::iter::fini)
     }
 };
 
@@ -6601,11 +6612,15 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
+<<<<<<< HEAD
 <<<<<<< HEAD:test/cpp_api/src/main.cpp
         94,
 =======
         103,
 >>>>>>> cf1a8ef63 (v4):test/cpp/src/main.cpp
+=======
+        104,
+>>>>>>> 3f87a122d (Add flecs::iter::fini)
         Query_testcases
     },
     {
