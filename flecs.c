@@ -30424,7 +30424,9 @@ bool flecs_rest_put_entity(
         return true;
     }
 
-    ecs_strbuf_append(&reply->body, "{\"id\":\"%u\"}", (uint32_t)result);
+    ecs_strbuf_appendlit(&reply->body, "{\"id\":\"");
+    ecs_strbuf_appendint(&reply->body, (uint32_t)result);
+    ecs_strbuf_appendlit(&reply->body, "\"}");
 
     return true;
 }
@@ -31252,8 +31254,10 @@ void flecs_rest_reply_table_append_memory(
     }
 
     ecs_strbuf_list_push(reply, "{", ",");
-    ecs_strbuf_list_append(reply, "\"used\":%d", used);
-    ecs_strbuf_list_append(reply, "\"allocated\":%d", allocated);
+    ecs_strbuf_list_appendlit(reply, "\"used\":");
+    ecs_strbuf_appendint(reply, used);
+    ecs_strbuf_list_appendlit(reply, "\"allocated\":");
+    ecs_strbuf_appendint(reply, allocated);
     ecs_strbuf_list_pop(reply, "}");
 }
 
@@ -31265,11 +31269,13 @@ void flecs_rest_reply_table_append(
 {
     ecs_strbuf_list_next(reply);
     ecs_strbuf_list_push(reply, "{", ",");
-    ecs_strbuf_list_append(reply, "\"id\":%u", (uint32_t)table->id);
-    ecs_strbuf_list_appendstr(reply, "\"type\":");
+    ecs_strbuf_list_appendlit(reply, "\"id\":");
+    ecs_strbuf_appendint(reply, (uint32_t)table->id);
+    ecs_strbuf_list_appendlit(reply, "\"type\":");
     flecs_rest_reply_table_append_type(world, reply, table);
-    ecs_strbuf_list_append(reply, "\"count\":%d", ecs_table_count(table));
-    ecs_strbuf_list_append(reply, "\"memory\":");
+    ecs_strbuf_list_appendlit(reply, "\"count\":");
+    ecs_strbuf_appendint(reply, ecs_table_count(table));
+    ecs_strbuf_list_appendlit(reply, "\"memory\":");
     flecs_rest_reply_table_append_memory(reply, table);
     ecs_strbuf_list_pop(reply, "}");
 }
@@ -31521,7 +31527,8 @@ bool flecs_rest_get_commands_capture(
     (void)req;
     const ecs_world_info_t *wi = ecs_get_world_info(world);
     ecs_strbuf_appendstr(&reply->body, "{");
-    ecs_strbuf_append(&reply->body, "\"frame\":%u", wi->frame_count_total);
+    ecs_strbuf_appendlit(&reply->body, "\"frame\":");
+    ecs_strbuf_appendint(&reply->body, wi->frame_count_total);
     ecs_strbuf_appendstr(&reply->body, "}");
     
     ecs_map_init_if(&impl->cmd_captures, &world->allocator);
