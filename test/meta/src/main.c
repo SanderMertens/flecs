@@ -691,6 +691,8 @@ void SerializeIterToJson_serialize_null_doc_name(void);
 void SerializeIterToJson_serialize_rule_w_optional(void);
 void SerializeIterToJson_serialize_rule_w_optional_component(void);
 void SerializeIterToJson_serialize_entity_w_flecs_core_parent(void);
+void SerializeIterToJson_no_fields(void);
+void SerializeIterToJson_no_fields_w_vars(void);
 
 // Testsuite 'SerializeIterToRowJson'
 void SerializeIterToRowJson_serialize_this_w_1_tag(void);
@@ -3571,6 +3573,14 @@ bake_test_case SerializeIterToJson_testcases[] = {
     {
         "serialize_entity_w_flecs_core_parent",
         SerializeIterToJson_serialize_entity_w_flecs_core_parent
+    },
+    {
+        "no_fields",
+        SerializeIterToJson_no_fields
+    },
+    {
+        "no_fields_w_vars",
+        SerializeIterToJson_no_fields_w_vars
     }
 };
 
@@ -4505,7 +4515,7 @@ static bake_test_suite suites[] = {
         "SerializeIterToJson",
         NULL,
         NULL,
-        66,
+        68,
         SerializeIterToJson_testcases
     },
     {

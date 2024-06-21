@@ -18,7 +18,7 @@ void SerializeQueryInfoToJson_1_tag(void) {
     };
 
     char *json = ecs_iter_to_json(&it, &desc);
-    test_str(json, "{\"query_info\":{\"vars\":[\"this\"], \"terms\":[{\"inout\":\"default\", \"has_data\":false, \"can_inherit\":true, \"oper\":\"and\", \"src\":{\"var\":\"this\"}, \"first\":{\"entity\":\"Foo\"}, \"trav\":{\"entity\":\"flecs.core.IsA\", \"symbol\":\"EcsIsA\"}, \"flags\":[\"self\", \"up\"]}]}}");
+    test_str(json, "{\"query_info\":{\"vars\":[\"this\"], \"terms\":[{\"inout\":\"default\", \"has_value\":false, \"can_inherit\":true, \"oper\":\"and\", \"src\":{\"var\":\"this\"}, \"first\":{\"entity\":\"Foo\"}, \"trav\":{\"entity\":\"flecs.core.IsA\", \"symbol\":\"EcsIsA\"}, \"flags\":[\"self\", \"up\"]}]}}");
     ecs_os_free(json);
 
     ecs_query_fini(q);
@@ -45,7 +45,7 @@ void SerializeQueryInfoToJson_1_component(void) {
     };
 
     char *json = ecs_iter_to_json(&it, &desc);
-    test_str(json, "{\"query_info\":{\"vars\":[\"this\"], \"terms\":[{\"inout\":\"default\", \"has_data\":true, \"can_inherit\":true, \"oper\":\"and\", \"src\":{\"var\":\"this\"}, \"first\":{\"entity\":\"Position\", \"symbol\":\"Position\", \"type\":true}, \"trav\":{\"entity\":\"flecs.core.IsA\", \"symbol\":\"EcsIsA\"}, \"flags\":[\"self\", \"up\"]}]}}");
+    test_str(json, "{\"query_info\":{\"vars\":[\"this\"], \"terms\":[{\"inout\":\"default\", \"has_value\":true, \"can_inherit\":true, \"oper\":\"and\", \"src\":{\"var\":\"this\"}, \"first\":{\"entity\":\"Position\", \"symbol\":\"Position\", \"type\":true}, \"trav\":{\"entity\":\"flecs.core.IsA\", \"symbol\":\"EcsIsA\"}, \"flags\":[\"self\", \"up\"]}]}}");
     ecs_os_free(json);
 
     ecs_query_fini(q);
@@ -72,7 +72,7 @@ void SerializeQueryInfoToJson_1_pair(void) {
     };
 
     char *json = ecs_iter_to_json(&it, &desc);
-    test_str(json, "{\"query_info\":{\"vars\":[\"this\"], \"terms\":[{\"inout\":\"default\", \"has_data\":false, \"can_inherit\":true, \"oper\":\"and\", \"src\":{\"var\":\"this\"}, \"first\":{\"entity\":\"Rel\"}, \"second\":{\"entity\":\"Tgt\"}, \"trav\":{\"entity\":\"flecs.core.IsA\", \"symbol\":\"EcsIsA\"}, \"flags\":[\"self\", \"up\"]}]}}");
+    test_str(json, "{\"query_info\":{\"vars\":[\"this\"], \"terms\":[{\"inout\":\"default\", \"has_value\":false, \"can_inherit\":true, \"oper\":\"and\", \"src\":{\"var\":\"this\"}, \"first\":{\"entity\":\"Rel\"}, \"second\":{\"entity\":\"Tgt\"}, \"trav\":{\"entity\":\"flecs.core.IsA\", \"symbol\":\"EcsIsA\"}, \"flags\":[\"self\", \"up\"]}]}}");
     ecs_os_free(json);
 
     ecs_query_fini(q);
@@ -98,7 +98,7 @@ void SerializeQueryInfoToJson_1_pair_w_wildcard(void) {
     };
 
     char *json = ecs_iter_to_json(&it, &desc);
-    test_str(json, "{\"query_info\":{\"vars\":[\"this\"], \"terms\":[{\"inout\":\"default\", \"has_data\":false, \"can_inherit\":true, \"oper\":\"and\", \"src\":{\"var\":\"this\"}, \"first\":{\"entity\":\"Rel\"}, \"second\":{\"var\":\"*\"}, \"trav\":{\"entity\":\"flecs.core.IsA\", \"symbol\":\"EcsIsA\"}, \"flags\":[\"self\", \"up\"]}]}}");
+    test_str(json, "{\"query_info\":{\"vars\":[\"this\"], \"terms\":[{\"inout\":\"default\", \"has_value\":false, \"can_inherit\":true, \"oper\":\"and\", \"src\":{\"var\":\"this\"}, \"first\":{\"entity\":\"Rel\"}, \"second\":{\"var\":\"*\"}, \"trav\":{\"entity\":\"flecs.core.IsA\", \"symbol\":\"EcsIsA\"}, \"flags\":[\"self\", \"up\"]}]}}");
     ecs_os_free(json);
 
     ecs_query_fini(q);
@@ -124,7 +124,7 @@ void SerializeQueryInfoToJson_1_pair_w_any(void) {
     };
 
     char *json = ecs_iter_to_json(&it, &desc);
-    test_str(json, "{\"query_info\":{\"vars\":[\"this\"], \"terms\":[{\"inout\":\"default\", \"has_data\":false, \"can_inherit\":true, \"oper\":\"and\", \"src\":{\"var\":\"this\"}, \"first\":{\"entity\":\"Rel\"}, \"second\":{\"var\":\"_\"}, \"trav\":{\"entity\":\"flecs.core.IsA\", \"symbol\":\"EcsIsA\"}, \"flags\":[\"self\", \"up\"]}]}}");
+    test_str(json, "{\"query_info\":{\"vars\":[\"this\"], \"terms\":[{\"inout\":\"default\", \"has_value\":false, \"can_inherit\":true, \"oper\":\"and\", \"src\":{\"var\":\"this\"}, \"first\":{\"entity\":\"Rel\"}, \"second\":{\"var\":\"_\"}, \"trav\":{\"entity\":\"flecs.core.IsA\", \"symbol\":\"EcsIsA\"}, \"flags\":[\"self\", \"up\"]}]}}");
     ecs_os_free(json);
     
     ecs_query_fini(q);
@@ -151,7 +151,7 @@ void SerializeQueryInfoToJson_1_tag_fixed_src(void) {
     };
 
     char *json = ecs_iter_to_json(&it, &desc);
-    test_str(json, "{\"query_info\":{\"vars\":[], \"terms\":[{\"inout\":\"default\", \"has_data\":false, \"can_inherit\":true, \"oper\":\"and\", \"src\":{\"entity\":\"e\"}, \"first\":{\"entity\":\"Foo\"}, \"trav\":{\"entity\":\"flecs.core.IsA\", \"symbol\":\"EcsIsA\"}, \"flags\":[\"self\", \"up\"]}]}}");
+    test_str(json, "{\"query_info\":{\"vars\":[], \"terms\":[{\"inout\":\"default\", \"has_value\":false, \"can_inherit\":true, \"oper\":\"and\", \"src\":{\"entity\":\"e\"}, \"first\":{\"entity\":\"Foo\"}, \"trav\":{\"entity\":\"flecs.core.IsA\", \"symbol\":\"EcsIsA\"}, \"flags\":[\"self\", \"up\"]}]}}");
     ecs_os_free(json);
 
     ecs_query_fini(q);
@@ -177,7 +177,7 @@ void SerializeQueryInfoToJson_1_tag_var_src(void) {
     };
 
     char *json = ecs_iter_to_json(&it, &desc);
-    test_str(json, "{\"query_info\":{\"vars\":[\"v\"], \"terms\":[{\"inout\":\"default\", \"has_data\":false, \"can_inherit\":true, \"oper\":\"and\", \"src\":{\"var\":\"v\"}, \"first\":{\"entity\":\"Foo\"}, \"trav\":{\"entity\":\"flecs.core.IsA\", \"symbol\":\"EcsIsA\"}, \"flags\":[\"self\", \"up\"]}]}}");
+    test_str(json, "{\"query_info\":{\"vars\":[\"v\"], \"terms\":[{\"inout\":\"default\", \"has_value\":false, \"can_inherit\":true, \"oper\":\"and\", \"src\":{\"var\":\"v\"}, \"first\":{\"entity\":\"Foo\"}, \"trav\":{\"entity\":\"flecs.core.IsA\", \"symbol\":\"EcsIsA\"}, \"flags\":[\"self\", \"up\"]}]}}");
     ecs_os_free(json);
 
     ecs_query_fini(q);
@@ -204,7 +204,7 @@ void SerializeQueryInfoToJson_1_component_in(void) {
     };
 
     char *json = ecs_iter_to_json(&it, &desc);
-    test_str(json, "{\"query_info\":{\"vars\":[\"this\"], \"terms\":[{\"inout\":\"in\", \"has_data\":true, \"can_inherit\":true, \"oper\":\"and\", \"src\":{\"var\":\"this\"}, \"first\":{\"entity\":\"Position\", \"symbol\":\"Position\", \"type\":true}, \"trav\":{\"entity\":\"flecs.core.IsA\", \"symbol\":\"EcsIsA\"}, \"flags\":[\"self\", \"up\"]}]}}");
+    test_str(json, "{\"query_info\":{\"vars\":[\"this\"], \"terms\":[{\"inout\":\"in\", \"has_value\":true, \"can_inherit\":true, \"oper\":\"and\", \"src\":{\"var\":\"this\"}, \"first\":{\"entity\":\"Position\", \"symbol\":\"Position\", \"type\":true}, \"trav\":{\"entity\":\"flecs.core.IsA\", \"symbol\":\"EcsIsA\"}, \"flags\":[\"self\", \"up\"]}]}}");
     ecs_os_free(json);
 
     ecs_query_fini(q);
@@ -231,7 +231,7 @@ void SerializeQueryInfoToJson_1_component_inout(void) {
     };
 
     char *json = ecs_iter_to_json(&it, &desc);
-    test_str(json, "{\"query_info\":{\"vars\":[\"this\"], \"terms\":[{\"inout\":\"inout\", \"has_data\":true, \"can_inherit\":true, \"oper\":\"and\", \"src\":{\"var\":\"this\"}, \"first\":{\"entity\":\"Position\", \"symbol\":\"Position\", \"type\":true}, \"trav\":{\"entity\":\"flecs.core.IsA\", \"symbol\":\"EcsIsA\"}, \"flags\":[\"self\", \"up\"]}]}}");
+    test_str(json, "{\"query_info\":{\"vars\":[\"this\"], \"terms\":[{\"inout\":\"inout\", \"has_value\":true, \"can_inherit\":true, \"oper\":\"and\", \"src\":{\"var\":\"this\"}, \"first\":{\"entity\":\"Position\", \"symbol\":\"Position\", \"type\":true}, \"trav\":{\"entity\":\"flecs.core.IsA\", \"symbol\":\"EcsIsA\"}, \"flags\":[\"self\", \"up\"]}]}}");
     ecs_os_free(json);
 
     ecs_query_fini(q);
@@ -258,7 +258,7 @@ void SerializeQueryInfoToJson_1_component_out(void) {
     };
 
     char *json = ecs_iter_to_json(&it, &desc);
-    test_str(json, "{\"query_info\":{\"vars\":[\"this\"], \"terms\":[{\"inout\":\"out\", \"has_data\":true, \"can_inherit\":true, \"oper\":\"and\", \"src\":{\"var\":\"this\"}, \"first\":{\"entity\":\"Position\", \"symbol\":\"Position\", \"type\":true}, \"trav\":{\"entity\":\"flecs.core.IsA\", \"symbol\":\"EcsIsA\"}, \"flags\":[\"self\", \"up\"]}]}}");
+    test_str(json, "{\"query_info\":{\"vars\":[\"this\"], \"terms\":[{\"inout\":\"out\", \"has_value\":true, \"can_inherit\":true, \"oper\":\"and\", \"src\":{\"var\":\"this\"}, \"first\":{\"entity\":\"Position\", \"symbol\":\"Position\", \"type\":true}, \"trav\":{\"entity\":\"flecs.core.IsA\", \"symbol\":\"EcsIsA\"}, \"flags\":[\"self\", \"up\"]}]}}");
     ecs_os_free(json);
 
     ecs_query_fini(q);
@@ -285,7 +285,7 @@ void SerializeQueryInfoToJson_1_component_none(void) {
     };
 
     char *json = ecs_iter_to_json(&it, &desc);
-    test_str(json, "{\"query_info\":{\"vars\":[\"this\"], \"terms\":[{\"inout\":\"none\", \"has_data\":false, \"can_inherit\":true, \"oper\":\"and\", \"src\":{\"var\":\"this\"}, \"first\":{\"entity\":\"Position\", \"symbol\":\"Position\", \"type\":true}, \"trav\":{\"entity\":\"flecs.core.IsA\", \"symbol\":\"EcsIsA\"}, \"flags\":[\"self\", \"up\"]}]}}");
+    test_str(json, "{\"query_info\":{\"vars\":[\"this\"], \"terms\":[{\"inout\":\"none\", \"has_value\":false, \"can_inherit\":true, \"oper\":\"and\", \"src\":{\"var\":\"this\"}, \"first\":{\"entity\":\"Position\", \"symbol\":\"Position\", \"type\":true}, \"trav\":{\"entity\":\"flecs.core.IsA\", \"symbol\":\"EcsIsA\"}, \"flags\":[\"self\", \"up\"]}]}}");
     ecs_os_free(json);
 
     ecs_query_fini(q);
@@ -311,7 +311,7 @@ void SerializeQueryInfoToJson_1_tag_not(void) {
     };
 
     char *json = ecs_iter_to_json(&it, &desc);
-    test_str(json, "{\"query_info\":{\"vars\":[\"this\"], \"terms\":[{\"inout\":\"none\", \"has_data\":false, \"can_inherit\":true, \"oper\":\"not\", \"src\":{\"var\":\"this\"}, \"first\":{\"entity\":\"Foo\"}, \"trav\":{\"entity\":\"flecs.core.IsA\", \"symbol\":\"EcsIsA\"}, \"flags\":[\"self\", \"up\"]}]}}");
+    test_str(json, "{\"query_info\":{\"vars\":[\"this\"], \"terms\":[{\"inout\":\"none\", \"has_value\":false, \"can_inherit\":true, \"oper\":\"not\", \"src\":{\"var\":\"this\"}, \"first\":{\"entity\":\"Foo\"}, \"trav\":{\"entity\":\"flecs.core.IsA\", \"symbol\":\"EcsIsA\"}, \"flags\":[\"self\", \"up\"]}]}}");
     ecs_os_free(json);
 
     ecs_query_fini(q);
@@ -338,7 +338,7 @@ void SerializeQueryInfoToJson_2_tags_or(void) {
     };
 
     char *json = ecs_iter_to_json(&it, &desc);
-    test_str(json, "{\"query_info\":{\"vars\":[\"this\"], \"terms\":[{\"inout\":\"default\", \"has_data\":false, \"can_inherit\":true, \"oper\":\"or\", \"src\":{\"var\":\"this\"}, \"first\":{\"entity\":\"Foo\"}, \"trav\":{\"entity\":\"flecs.core.IsA\", \"symbol\":\"EcsIsA\"}, \"flags\":[\"self\", \"up\"]}, {\"inout\":\"default\", \"has_data\":false, \"can_inherit\":true, \"oper\":\"and\", \"src\":{\"var\":\"this\"}, \"first\":{\"entity\":\"Bar\"}, \"trav\":{\"entity\":\"flecs.core.IsA\", \"symbol\":\"EcsIsA\"}, \"flags\":[\"self\", \"up\"]}]}}");
+    test_str(json, "{\"query_info\":{\"vars\":[\"this\"], \"terms\":[{\"inout\":\"default\", \"has_value\":false, \"can_inherit\":true, \"oper\":\"or\", \"src\":{\"var\":\"this\"}, \"first\":{\"entity\":\"Foo\"}, \"trav\":{\"entity\":\"flecs.core.IsA\", \"symbol\":\"EcsIsA\"}, \"flags\":[\"self\", \"up\"]}, {\"inout\":\"default\", \"has_value\":false, \"can_inherit\":true, \"oper\":\"and\", \"src\":{\"var\":\"this\"}, \"first\":{\"entity\":\"Bar\"}, \"trav\":{\"entity\":\"flecs.core.IsA\", \"symbol\":\"EcsIsA\"}, \"flags\":[\"self\", \"up\"]}]}}");
     ecs_os_free(json);
 
     ecs_query_fini(q);
@@ -364,7 +364,7 @@ void SerializeQueryInfoToJson_1_tag_optional(void) {
     };
 
     char *json = ecs_iter_to_json(&it, &desc);
-    test_str(json, "{\"query_info\":{\"vars\":[\"this\"], \"terms\":[{\"inout\":\"default\", \"has_data\":false, \"can_inherit\":true, \"oper\":\"optional\", \"src\":{\"var\":\"this\"}, \"first\":{\"entity\":\"Foo\"}, \"trav\":{\"entity\":\"flecs.core.IsA\", \"symbol\":\"EcsIsA\"}, \"flags\":[\"self\", \"up\"]}]}}");
+    test_str(json, "{\"query_info\":{\"vars\":[\"this\"], \"terms\":[{\"inout\":\"default\", \"has_value\":false, \"can_inherit\":true, \"oper\":\"optional\", \"src\":{\"var\":\"this\"}, \"first\":{\"entity\":\"Foo\"}, \"trav\":{\"entity\":\"flecs.core.IsA\", \"symbol\":\"EcsIsA\"}, \"flags\":[\"self\", \"up\"]}]}}");
     ecs_os_free(json);
 
     ecs_query_fini(q);
@@ -390,7 +390,7 @@ void SerializeQueryInfoToJson_1_tag_self(void) {
     };
 
     char *json = ecs_iter_to_json(&it, &desc);
-    test_str(json, "{\"query_info\":{\"vars\":[\"this\"], \"terms\":[{\"inout\":\"default\", \"has_data\":false, \"can_inherit\":true, \"oper\":\"and\", \"src\":{\"var\":\"this\"}, \"first\":{\"entity\":\"Foo\"}, \"flags\":[\"self\"]}]}}");
+    test_str(json, "{\"query_info\":{\"vars\":[\"this\"], \"terms\":[{\"inout\":\"default\", \"has_value\":false, \"can_inherit\":true, \"oper\":\"and\", \"src\":{\"var\":\"this\"}, \"first\":{\"entity\":\"Foo\"}, \"flags\":[\"self\"]}]}}");
     ecs_os_free(json);
 
     ecs_query_fini(q);
@@ -416,7 +416,7 @@ void SerializeQueryInfoToJson_1_tag_self_dont_inherit(void) {
     };
 
     char *json = ecs_iter_to_json(&it, &desc);
-    test_str(json, "{\"query_info\":{\"vars\":[\"this\"], \"terms\":[{\"inout\":\"default\", \"has_data\":false, \"oper\":\"and\", \"src\":{\"var\":\"this\"}, \"first\":{\"entity\":\"Foo\"}, \"flags\":[\"self\"]}]}}");
+    test_str(json, "{\"query_info\":{\"vars\":[\"this\"], \"terms\":[{\"inout\":\"default\", \"has_value\":false, \"oper\":\"and\", \"src\":{\"var\":\"this\"}, \"first\":{\"entity\":\"Foo\"}, \"flags\":[\"self\"]}]}}");
     ecs_os_free(json);
 
     ecs_query_fini(q);
@@ -442,7 +442,7 @@ void SerializeQueryInfoToJson_1_tag_up(void) {
     };
 
     char *json = ecs_iter_to_json(&it, &desc);
-    test_str(json, "{\"query_info\":{\"vars\":[\"this\"], \"terms\":[{\"inout\":\"default\", \"has_data\":false, \"can_inherit\":true, \"oper\":\"and\", \"src\":{\"var\":\"this\"}, \"first\":{\"entity\":\"Foo\"}, \"trav\":{\"entity\":\"flecs.core.ChildOf\", \"symbol\":\"EcsChildOf\"}, \"flags\":[\"up\"]}]}}");
+    test_str(json, "{\"query_info\":{\"vars\":[\"this\"], \"terms\":[{\"inout\":\"default\", \"has_value\":false, \"can_inherit\":true, \"oper\":\"and\", \"src\":{\"var\":\"this\"}, \"first\":{\"entity\":\"Foo\"}, \"trav\":{\"entity\":\"flecs.core.ChildOf\", \"symbol\":\"EcsChildOf\"}, \"flags\":[\"up\"]}]}}");
     ecs_os_free(json);
 
     ecs_query_fini(q);
@@ -468,7 +468,7 @@ void SerializeQueryInfoToJson_1_tag_cascade(void) {
     };
 
     char *json = ecs_iter_to_json(&it, &desc);
-    test_str(json, "{\"query_info\":{\"vars\":[\"this\"], \"terms\":[{\"inout\":\"default\", \"has_data\":false, \"can_inherit\":true, \"oper\":\"and\", \"src\":{\"var\":\"this\"}, \"first\":{\"entity\":\"Foo\"}, \"trav\":{\"entity\":\"flecs.core.ChildOf\", \"symbol\":\"EcsChildOf\"}, \"flags\":[\"cascade\"]}]}}");
+    test_str(json, "{\"query_info\":{\"vars\":[\"this\"], \"terms\":[{\"inout\":\"default\", \"has_value\":false, \"can_inherit\":true, \"oper\":\"and\", \"src\":{\"var\":\"this\"}, \"first\":{\"entity\":\"Foo\"}, \"trav\":{\"entity\":\"flecs.core.ChildOf\", \"symbol\":\"EcsChildOf\"}, \"flags\":[\"cascade\"]}]}}");
     ecs_os_free(json);
     
     ecs_query_fini(q);
@@ -494,7 +494,7 @@ void SerializeQueryInfoToJson_0_term(void) {
     };
 
     char *json = ecs_iter_to_json(&it, &desc);
-    test_str(json, "{\"query_info\":{\"vars\":[], \"terms\":[{\"inout\":\"default\", \"has_data\":false, \"can_inherit\":true, \"oper\":\"and\", \"src\":{\"entity\":\"#0\"}, \"first\":{\"entity\":\"Foo\"}, \"flags\":[]}]}}");
+    test_str(json, "{\"query_info\":{\"vars\":[], \"terms\":[{\"inout\":\"default\", \"has_value\":false, \"can_inherit\":true, \"oper\":\"and\", \"src\":{\"entity\":\"#0\"}, \"first\":{\"entity\":\"Foo\"}, \"flags\":[]}]}}");
     ecs_os_free(json);
     
     ecs_query_fini(q);
@@ -520,7 +520,7 @@ void SerializeQueryInfoToJson_anonymous_tag(void) {
     };
 
     char *json = ecs_iter_to_json(&it, &desc);
-    char *expect = flecs_asprintf("{\"query_info\":{\"vars\":[\"this\"], \"terms\":[{\"inout\":\"default\", \"has_data\":false, \"oper\":\"and\", \"src\":{\"var\":\"this\"}, \"first\":{\"entity\":\"#%u\"}, \"flags\":[\"self\"]}]}}",
+    char *expect = flecs_asprintf("{\"query_info\":{\"vars\":[\"this\"], \"terms\":[{\"inout\":\"default\", \"has_value\":false, \"oper\":\"and\", \"src\":{\"var\":\"this\"}, \"first\":{\"entity\":\"#%u\"}, \"flags\":[\"self\"]}]}}",
         foo);
     test_str(json, expect);
     ecs_os_free(json);
@@ -550,7 +550,7 @@ void SerializeQueryInfoToJson_anonymous_pair(void) {
     };
 
     char *json = ecs_iter_to_json(&it, &desc);
-    char *expect = flecs_asprintf("{\"query_info\":{\"vars\":[\"this\"], \"terms\":[{\"inout\":\"default\", \"has_data\":false, \"oper\":\"and\", \"src\":{\"var\":\"this\"}, \"first\":{\"entity\":\"#%u\"}, \"second\":{\"entity\":\"#%u\"}, \"flags\":[\"self\"]}]}}",
+    char *expect = flecs_asprintf("{\"query_info\":{\"vars\":[\"this\"], \"terms\":[{\"inout\":\"default\", \"has_value\":false, \"oper\":\"and\", \"src\":{\"var\":\"this\"}, \"first\":{\"entity\":\"#%u\"}, \"second\":{\"entity\":\"#%u\"}, \"flags\":[\"self\"]}]}}",
         (uint32_t)rel, (uint32_t)tgt);
     test_str(json, expect);
     ecs_os_free(json);
@@ -582,7 +582,7 @@ void SerializeQueryInfoToJson_anonymous_component(void) {
     };
 
     char *json = ecs_iter_to_json(&it, &desc);
-    char *expect = flecs_asprintf("{\"query_info\":{\"vars\":[\"this\"], \"terms\":[{\"inout\":\"default\", \"has_data\":true, \"oper\":\"and\", \"src\":{\"var\":\"this\"}, \"first\":{\"entity\":\"#%u\", \"type\":true}, \"flags\":[\"self\"]}]}}",
+    char *expect = flecs_asprintf("{\"query_info\":{\"vars\":[\"this\"], \"terms\":[{\"inout\":\"default\", \"has_value\":true, \"oper\":\"and\", \"src\":{\"var\":\"this\"}, \"first\":{\"entity\":\"#%u\", \"type\":true}, \"flags\":[\"self\"]}]}}",
         comp);
     test_str(json, expect);
     ecs_os_free(json);
@@ -613,7 +613,7 @@ void SerializeQueryInfoToJson_anonymous_tag_recycled(void) {
     };
 
     char *json = ecs_iter_to_json(&it, &desc);
-    char *expect = flecs_asprintf("{\"query_info\":{\"vars\":[\"this\"], \"terms\":[{\"inout\":\"default\", \"has_data\":false, \"oper\":\"and\", \"src\":{\"var\":\"this\"}, \"first\":{\"entity\":\"#%u\"}, \"flags\":[\"self\"]}]}}",
+    char *expect = flecs_asprintf("{\"query_info\":{\"vars\":[\"this\"], \"terms\":[{\"inout\":\"default\", \"has_value\":false, \"oper\":\"and\", \"src\":{\"var\":\"this\"}, \"first\":{\"entity\":\"#%u\"}, \"flags\":[\"self\"]}]}}",
         foo);
     test_str(json, expect);
     ecs_os_free(json);
@@ -647,7 +647,7 @@ void SerializeQueryInfoToJson_anonymous_pair_recycled(void) {
     };
 
     char *json = ecs_iter_to_json(&it, &desc);
-    char *expect = flecs_asprintf("{\"query_info\":{\"vars\":[\"this\"], \"terms\":[{\"inout\":\"default\", \"has_data\":false, \"oper\":\"and\", \"src\":{\"var\":\"this\"}, \"first\":{\"entity\":\"#%u\"}, \"second\":{\"entity\":\"#%u\"}, \"flags\":[\"self\"]}]}}",
+    char *expect = flecs_asprintf("{\"query_info\":{\"vars\":[\"this\"], \"terms\":[{\"inout\":\"default\", \"has_value\":false, \"oper\":\"and\", \"src\":{\"var\":\"this\"}, \"first\":{\"entity\":\"#%u\"}, \"second\":{\"entity\":\"#%u\"}, \"flags\":[\"self\"]}]}}",
         (uint32_t)rel, (uint32_t)tgt);
     test_str(json, expect);
     ecs_os_free(json);
@@ -681,7 +681,7 @@ void SerializeQueryInfoToJson_anonymous_component_recycled(void) {
     };
 
     char *json = ecs_iter_to_json(&it, &desc);
-    char *expect = flecs_asprintf("{\"query_info\":{\"vars\":[\"this\"], \"terms\":[{\"inout\":\"default\", \"has_data\":true, \"oper\":\"and\", \"src\":{\"var\":\"this\"}, \"first\":{\"entity\":\"#%u\", \"type\":true}, \"flags\":[\"self\"]}]}}",
+    char *expect = flecs_asprintf("{\"query_info\":{\"vars\":[\"this\"], \"terms\":[{\"inout\":\"default\", \"has_value\":true, \"oper\":\"and\", \"src\":{\"var\":\"this\"}, \"first\":{\"entity\":\"#%u\", \"type\":true}, \"flags\":[\"self\"]}]}}",
         comp);
     test_str(json, expect);
     ecs_os_free(json);

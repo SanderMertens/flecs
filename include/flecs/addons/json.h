@@ -275,6 +275,7 @@ typedef struct ecs_iter_to_json_desc_t {
     bool serialize_doc;             /**< Serialize doc attributes */
     bool serialize_var_labels;      /**< Serialize doc names of matched variables */
     bool serialize_full_paths;      /**< Serialize full paths for tags, components and pairs */
+    bool serialize_fields;          /**< Serialize field data */
     bool serialize_inherited;       /**< Serialize inherited components */
     bool serialize_table;           /**< Serialize entire table vs. matched components */
     bool serialize_type_info;       /**< Serialize type information */
@@ -295,6 +296,7 @@ typedef struct ecs_iter_to_json_desc_t {
     .serialize_values =          true, \
     .serialize_doc =             false, \
     .serialize_full_paths =      false, \
+    .serialize_fields =          true, \
     .serialize_inherited =       false, \
     .serialize_table =           false, \
     .serialize_type_info =       false, \

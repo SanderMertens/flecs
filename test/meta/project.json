@@ -721,7 +721,9 @@
                 "serialize_null_doc_name",
                 "serialize_rule_w_optional",
                 "serialize_rule_w_optional_component",
-                "serialize_entity_w_flecs_core_parent"
+                "serialize_entity_w_flecs_core_parent",
+                "no_fields",
+                "no_fields_w_vars"
             ]
         }, {
             "id": "SerializeIterToRowJson",

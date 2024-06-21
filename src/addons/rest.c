@@ -195,13 +195,15 @@ void flecs_rest_parse_json_ser_iter_params(
     flecs_rest_bool_param(req, "query_plan", &desc->serialize_query_plan);
     flecs_rest_bool_param(req, "query_profile", &desc->serialize_query_profile);
     flecs_rest_bool_param(req, "table", &desc->serialize_table);
+    flecs_rest_bool_param(req, "fields", &desc->serialize_fields);
+
     bool results = true;
     flecs_rest_bool_param(req, "results", &results);
     desc->dont_serialize_results = !results;
 }
 
 static
-bool flecs_rest_reply_entity(
+bool flecs_rest_get_entity(
     ecs_world_t *world,
     const ecs_http_request_t* req,
     ecs_http_reply_t *reply)
@@ -230,7 +232,32 @@ bool flecs_rest_reply_entity(
 }
 
 static
-bool flecs_rest_reply_world(
+bool flecs_rest_put_entity(
+    ecs_world_t *world,
+    ecs_http_reply_t *reply,
+    const char *path)
+{
+    ecs_dbg_2("rest: create entity '%s'", path);
+
+    ecs_entity_t result = ecs_entity(world, {
+        .name = path,
+        .sep = "/"
+    });
+
+    if (!result) {
+        ecs_dbg_2("rest: failed to create entity '%s'", path);
+        flecs_reply_error(reply, "failed to create entity '%s'", path);
+        reply->code = 500;
+        return true;
+    }
+
+    ecs_strbuf_append(&reply->body, "{\"id\":\"%u\"}", (uint32_t)result);
+
+    return true;
+}
+
+static
+bool flecs_rest_get_world(
     ecs_world_t *world,
     const ecs_http_request_t* req,
     ecs_http_reply_t *reply)
@@ -261,63 +288,7 @@ ecs_entity_t flecs_rest_entity_from_path(
 }
 
 static
-bool flecs_rest_set(
-    ecs_world_t *world,
-    const ecs_http_request_t* req,
-    ecs_http_reply_t *reply,
-    const char *path)
-{
-    ecs_entity_t e;
-    if (!(e = flecs_rest_entity_from_path(world, reply, path))) {
-        return true;
-    }
-
-    const char *component = ecs_http_get_param(req, "component");
-    if (!component) {
-        flecs_reply_error(reply, "missing component for remove endpoint");
-        reply->code = 400;
-        return true;
-    }
-
-    ecs_entity_t id;
-    if (!flecs_id_parse(world, path, component, &id)) {
-        flecs_reply_error(reply, "unresolved component '%s'", component);
-        reply->code = 400;
-        return true;
-    }
-
-    ecs_entity_t type = ecs_get_typeid(world, id);
-    if (!type) {
-        flecs_reply_error(reply, "component '%s' is not a type", component);
-        reply->code = 400;
-        return true;
-    }
-
-    const char *data = ecs_http_get_param(req, "data");
-    if (!data) {
-        flecs_reply_error(reply, "missing data for component '%s'", component);
-        reply->code = 400;
-        return true;
-    }
-
-    void *ptr = ecs_ensure_id(world, e, id);
-    if (!ptr) {
-        flecs_reply_error(reply, "failed to create component '%s'", component);
-        reply->code = 500;
-        return true;
-    }
-
-    if (!ecs_ptr_from_json(world, type, ptr, data, NULL)) {
-        flecs_reply_error(reply, "invalid value for component '%s'", component);
-        reply->code = 400;
-        return true;
-    }
-
-    return true;
-}
-
-static
-bool flecs_rest_reply_get(
+bool flecs_rest_get_component(
     ecs_world_t *world,
     const ecs_http_request_t* req,
     ecs_http_reply_t *reply,
@@ -362,12 +333,11 @@ bool flecs_rest_reply_get(
 }
 
 static
-bool flecs_rest_add_remove(
+bool flecs_rest_put_component(
     ecs_world_t *world,
     const ecs_http_request_t* req,
     ecs_http_reply_t *reply,
-    const char *path,
-    bool is_add)
+    const char *path)
 {
     ecs_entity_t e;
     if (!(e = flecs_rest_entity_from_path(world, reply, path))) {
@@ -388,17 +358,68 @@ bool flecs_rest_add_remove(
         return true;
     }
 
-    if (is_add) {
+    const char *data = ecs_http_get_param(req, "value");
+    if (!data) {
         ecs_add_id(world, e, id);
-    } else {
-        ecs_remove_id(world, e, id);
+        return true;
+    }
+
+    ecs_entity_t type = ecs_get_typeid(world, id);
+    if (!type) {
+        flecs_reply_error(reply, "component '%s' is not a type", component);
+        reply->code = 400;
+        return true;
+    }
+
+    void *ptr = ecs_ensure_id(world, e, id);
+    if (!ptr) {
+        flecs_reply_error(reply, "failed to create component '%s'", component);
+        reply->code = 500;
+        return true;
+    }
+
+    if (!ecs_ptr_from_json(world, type, ptr, data, NULL)) {
+        flecs_reply_error(reply, "invalid value for component '%s'", component);
+        reply->code = 400;
+        return true;
     }
 
     return true;
 }
 
 static
-bool flecs_rest_delete(
+bool flecs_rest_delete_component(
+    ecs_world_t *world,
+    const ecs_http_request_t* req,
+    ecs_http_reply_t *reply,
+    const char *path)
+{
+    ecs_entity_t e;
+    if (!(e = flecs_rest_entity_from_path(world, reply, path))) {
+        return true;
+    }
+
+    const char *component = ecs_http_get_param(req, "component");
+    if (!component) {
+        flecs_reply_error(reply, "missing component for remove endpoint");
+        reply->code = 400;
+        return true;
+    }
+
+    ecs_entity_t id;
+    if (!flecs_id_parse(world, path, component, &id)) {
+        flecs_reply_error(reply, "unresolved component '%s'", component);
+        reply->code = 400;
+        return true;
+    }
+
+    ecs_remove_id(world, e, id);
+
+    return true;
+}
+
+static
+bool flecs_rest_delete_entity(
     ecs_world_t *world,
     ecs_http_reply_t *reply,
     const char *path)
@@ -414,18 +435,47 @@ bool flecs_rest_delete(
 }
 
 static
-bool flecs_rest_enable(
+bool flecs_rest_toggle(
     ecs_world_t *world,
+    const ecs_http_request_t* req,
     ecs_http_reply_t *reply,
-    const char *path,
-    bool enable)
+    const char *path)
 {
     ecs_entity_t e;
     if (!(e = flecs_rest_entity_from_path(world, reply, path))) {
         return true;
     }
 
-    ecs_enable(world, e, enable);
+    bool enable = true;
+    flecs_rest_bool_param(req, "enable", &enable);
+
+    const char *component = ecs_http_get_param(req, "component");
+    if (!component) {
+        ecs_enable(world, e, enable);
+        return true;
+    }
+
+    ecs_entity_t id;
+    if (!flecs_id_parse(world, path, component, &id)) {
+        flecs_reply_error(reply, "unresolved component '%s'", component);
+        reply->code = 400;
+        return true;
+    }
+
+    ecs_entity_t rel = 0;
+    if (ECS_IS_PAIR(id)) {
+        rel = ecs_pair_first(world, id);
+    } else {
+        rel = id & ECS_COMPONENT_MASK;
+    }
+
+    if (!ecs_has_id(world, rel, EcsCanToggle)) {
+        flecs_reply_error(reply, "cannot toggle component '%s'", component);
+        reply->code = 400;
+        return true;
+    }
+
+    ecs_enable_id(world, e, id, enable);
     
     return true;
 }
@@ -510,7 +560,7 @@ void flecs_rest_iter_to_reply(
     ecs_poly_t *query,
     ecs_iter_t *it)
 {
-    ecs_iter_to_json_desc_t desc = {0};
+    ecs_iter_to_json_desc_t desc = ECS_ITER_TO_JSON_INIT;
     flecs_rest_parse_json_ser_iter_params(&desc, req);
     desc.query = query;
 
@@ -600,7 +650,7 @@ bool flecs_rest_reply_existing_query(
 }
 
 static
-bool flecs_rest_reply_query(
+bool flecs_rest_get_query(
     ecs_world_t *world,
     const ecs_http_request_t* req,
     ecs_http_reply_t *reply)
@@ -610,7 +660,7 @@ bool flecs_rest_reply_query(
         return flecs_rest_reply_existing_query(world, req, reply, q_name);
     }
 
-    const char *expr = ecs_http_get_param(req, "q");
+    const char *expr = ecs_http_get_param(req, "expr");
     if (!expr) {
         ecs_strbuf_appendlit(&reply->body, "Missing parameter 'q'");
         reply->code = 400; /* bad request */
@@ -939,7 +989,7 @@ noresults:
 }
 
 static
-bool flecs_rest_reply_stats(
+bool flecs_rest_get_stats(
     ecs_world_t *world,
     const ecs_http_request_t* req,
     ecs_http_reply_t *reply)
@@ -978,7 +1028,7 @@ bool flecs_rest_reply_stats(
 }
 #else
 static
-bool flecs_rest_reply_stats(
+bool flecs_rest_get_stats(
     ecs_world_t *world,
     const ecs_http_request_t* req,
     ecs_http_reply_t *reply)
@@ -1050,7 +1100,7 @@ void flecs_rest_reply_table_append(
 }
 
 static
-bool flecs_rest_reply_tables(
+bool flecs_rest_get_tables(
     ecs_world_t *world,
     const ecs_http_request_t* req,
     ecs_http_reply_t *reply)
@@ -1287,7 +1337,7 @@ void flecs_rest_on_commands(
 }
 
 static
-bool flecs_rest_reply_commands_capture(
+bool flecs_rest_get_commands_capture(
     ecs_world_t *world,
     ecs_rest_ctx_t *impl,
     const ecs_http_request_t* req,
@@ -1314,7 +1364,7 @@ bool flecs_rest_reply_commands_capture(
 }
 
 static
-bool flecs_rest_reply_commands_request(
+bool flecs_rest_get_commands_request(
     ecs_world_t *world,
     ecs_rest_ctx_t *impl,
     const ecs_http_request_t* req,
@@ -1375,67 +1425,62 @@ bool flecs_rest_reply(
     if (req->method == EcsHttpGet) {
         /* Entity endpoint */
         if (!ecs_os_strncmp(req->path, "entity/", 7)) {
-            return flecs_rest_reply_entity(world, req, reply);
+            return flecs_rest_get_entity(world, req, reply);
 
         /* Component GET endpoint */
         } else if (!ecs_os_strncmp(req->path, "component/", 10)) {
-            return flecs_rest_reply_get(world, req, reply, &req->path[10]);
+            return flecs_rest_get_component(world, req, reply, &req->path[10]);
 
         /* Query endpoint */
         } else if (!ecs_os_strcmp(req->path, "query")) {
-            return flecs_rest_reply_query(world, req, reply);
+            return flecs_rest_get_query(world, req, reply);
 
         /* World endpoint */
         } else if (!ecs_os_strcmp(req->path, "world")) {
-            return flecs_rest_reply_world(world, req, reply);
+            return flecs_rest_get_world(world, req, reply);
 
         /* Stats endpoint */
         } else if (!ecs_os_strncmp(req->path, "stats/", 6)) {
-            return flecs_rest_reply_stats(world, req, reply);
+            return flecs_rest_get_stats(world, req, reply);
 
         /* Tables endpoint */
         } else if (!ecs_os_strncmp(req->path, "tables", 6)) {
-            return flecs_rest_reply_tables(world, req, reply);
+            return flecs_rest_get_tables(world, req, reply);
 
         /* Commands capture endpoint */
         } else if (!ecs_os_strncmp(req->path, "commands/capture", 16)) {
-            return flecs_rest_reply_commands_capture(world, impl, req, reply);
+            return flecs_rest_get_commands_capture(world, impl, req, reply);
 
         /* Commands request endpoint (request commands from specific frame) */
         } else if (!ecs_os_strncmp(req->path, "commands/frame/", 15)) {
-            return flecs_rest_reply_commands_request(world, impl, req, reply);
+            return flecs_rest_get_commands_request(world, impl, req, reply);
         }
 
     } else if (req->method == EcsHttpPut) {
         /* Component PUT endpoint */
-        if (!ecs_os_strncmp(req->path, "component/", 10)) {
-            return flecs_rest_set(world, req, reply, &req->path[10]);
+        if (!ecs_os_strncmp(req->path, "entity/", 7)) {
+            return flecs_rest_put_entity(world, reply, &req->path[7]);
 
-        /* Add endpoint */
-        } else if (!ecs_os_strncmp(req->path, "add/", 4)) {
-            return flecs_rest_add_remove(
-                world, req, reply, &req->path[4], true);
-
-        /* Remove endpoint */
-        } else if (!ecs_os_strncmp(req->path, "remove/", 7)) {
-            return flecs_rest_add_remove(
-                world, req, reply, &req->path[7], false);
-
-        /* Delete endpoint */
-        } else if (!ecs_os_strncmp(req->path, "delete/", 7)) {
-            return flecs_rest_delete(world, reply, &req->path[7]);
+        /* Component PUT endpoint */
+        } else if (!ecs_os_strncmp(req->path, "component/", 10)) {
+            return flecs_rest_put_component(world, req, reply, &req->path[10]);
 
         /* Enable endpoint */
-        } else if (!ecs_os_strncmp(req->path, "enable/", 7)) {
-            return flecs_rest_enable(world, reply, &req->path[7], true);
-
-        /* Disable endpoint */
-        } else if (!ecs_os_strncmp(req->path, "disable/", 8)) {
-            return flecs_rest_enable(world, reply, &req->path[8], false);
+        } else if (!ecs_os_strncmp(req->path, "toggle/", 7)) {
+            return flecs_rest_toggle(world, req, reply, &req->path[7]);
 
         /* Script endpoint */
         } else if (!ecs_os_strncmp(req->path, "script/", 7)) {
             return flecs_rest_script(world, req, reply, &req->path[7]);
+        }
+    } else if (req->method == EcsHttpDelete) {
+        /* Entity DELETE endpoint */
+        if (!ecs_os_strncmp(req->path, "entity/", 7)) {
+            return flecs_rest_delete_entity(world, reply, &req->path[7]);
+
+        /* Component DELETE endpoint */
+        } else if (!ecs_os_strncmp(req->path, "component/", 10)) {
+            return flecs_rest_delete_component(world, req, reply, &req->path[10]);
         }
     }
 
