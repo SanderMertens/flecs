@@ -4,6 +4,9 @@
 #include <condition_variable>
 
 #ifdef _MSC_VER
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
 #include <WinSock2.h>
 #include "windows.h"
 #endif
