@@ -1631,3 +1631,155 @@ void Deserialize_discover_type_invalid(void) {
 
     ecs_fini(world);
 }
+
+typedef struct {
+    int32_t _dummy_1;
+    int32_t x;
+    int32_t _dummy_2;
+    int32_t y;
+} OpaqueStruct;
+
+static void* OpaqueStruct_member(void *ptr, const char *member) {
+    OpaqueStruct *data = ptr;
+    if (!strcmp(member, "x")) {
+        return &data->x;
+    } else if (!strcmp(member, "y")) {
+        return &data->y;
+    } else {
+        return NULL;
+    }
+}
+
+void Deserialize_opaque_struct(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, OpaqueStruct);
+
+    ecs_entity_t s = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)},
+        }
+    });
+
+    ecs_opaque(world, {
+        .entity = ecs_id(OpaqueStruct),
+        .type.as_type = s,
+        .type.ensure_member = OpaqueStruct_member
+    });
+
+    OpaqueStruct v;
+
+    const char *ptr = ecs_script_expr_run(world, "{10, 20}", &ecs_value_ptr(OpaqueStruct, &v), NULL);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');        
+
+    test_int(v.x, 10);
+    test_int(v.y, 20);
+
+    ecs_fini(world);
+}
+
+void Deserialize_opaque_struct_w_member(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, OpaqueStruct);
+
+    ecs_entity_t s = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)},
+        }
+    });
+
+    ecs_opaque(world, {
+        .entity = ecs_id(OpaqueStruct),
+        .type.as_type = s,
+        .type.ensure_member = OpaqueStruct_member
+    });
+
+    OpaqueStruct v;
+
+    const char *ptr = ecs_script_expr_run(world, "{x: 10, y: 20}", &ecs_value_ptr(OpaqueStruct, &v), NULL);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');        
+
+    test_int(v.x, 10);
+    test_int(v.y, 20);
+
+    ecs_fini(world);
+}
+
+void Deserialize_opaque_struct_w_member_reverse(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, OpaqueStruct);
+
+    ecs_entity_t s = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)},
+        }
+    });
+
+    ecs_opaque(world, {
+        .entity = ecs_id(OpaqueStruct),
+        .type.as_type = s,
+        .type.ensure_member = OpaqueStruct_member
+    });
+
+    OpaqueStruct v;
+
+    const char *ptr = ecs_script_expr_run(world, "{y: 10, x: 20}", &ecs_value_ptr(OpaqueStruct, &v), NULL);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');        
+
+    test_int(v.x, 20);
+    test_int(v.y, 10);
+
+    ecs_fini(world);
+}
+
+typedef struct Opaque_string {
+    int32_t len;
+    char *value;
+} Opaque_string;
+
+typedef struct Struct_w_opaque {
+    Opaque_string str;
+} Struct_w_opaque;
+
+static void Opaque_string_set(void *ptr, const char *value) {
+    ((Opaque_string*)ptr)->value = ecs_os_strdup(value);
+}
+
+void Deserialize_struct_w_opaque_member(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Opaque_string);
+    ECS_COMPONENT(world, Struct_w_opaque);
+
+    ecs_opaque(world, {
+        .entity = ecs_id(Opaque_string),
+        .type.as_type = ecs_id(ecs_string_t),
+        .type.assign_string = Opaque_string_set
+    });
+
+    ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_id(Struct_w_opaque),
+        .members = {
+            {"str", ecs_id(Opaque_string)},
+        }
+    });
+
+    Struct_w_opaque v = {{0, NULL}};
+
+    const char *ptr = ecs_script_expr_run(world, "{str: \"foobar\"}", &ecs_value_ptr(Struct_w_opaque, &v), NULL);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');        
+
+    test_str(v.str.value, "foobar");
+    ecs_os_free(v.str.value);
+
+    ecs_fini(world);
+}
