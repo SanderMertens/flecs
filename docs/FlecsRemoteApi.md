@@ -373,7 +373,7 @@ conn.query("Position, Velocity, (ChildOf, scene)",
 ## Reference
 The following sections describe the different REST endpoints of the Flecs Remote API. Where applicable the corresponding JSON serialization code will be mentioned. The endpoind options map one to one to JSON (de)serializer options, prefixed by `serialize_`. For example, REST API option `values` maps to JSON serializer option `serialize_values`.
 
-### GET entity/
+### GET entity
 Retrieve an entity and its tags, pairs and components.
 
 ```
@@ -393,6 +393,7 @@ GET entity/<path>
 | matches       | bool     | Serialize matched with queries                  |
 | alerts        | bool     | Serialize active alerts for entity & children   |
 | refs          | entity   | Serialize relationship backrefs                 |
+| try           | bool     | Don't throw HTTP error on failure (REST only)   |
 
 #### Examples
 
@@ -550,7 +551,35 @@ GET /entity/Sun/Earth?values=false
 }
 ```
 
-### GET component/
+### PUT entity
+Create an entity.
+
+```
+PUT /entity/<path>
+```
+
+#### Examples
+The following example creates entity Sun.Earth.
+
+```
+PUT /entity/Sun/Earth
+```
+
+### DELETE entity
+Delete an entity.
+
+```
+DELETE /entity/<path>
+```
+
+#### Examples
+The following example deletes entity Sun.Earth.
+
+```
+DELETE /entity/Sun/Earth
+```
+
+### GET component
 Retrieve a single component from an entity.
 
 ```
@@ -565,22 +594,83 @@ GET /component/Sun/Earth?component=planets.Mass
 { "value": "5.9722e24" }
 ```
 
-### GET query/
+### PUT component
+Add or set a component.
+
+```
+PUT /component/<path>?component=<component>[&value=<value>]
+```
+
+#### Examples
+The following example adds the component `Position` to `Sun.Earth`:
+
+```
+PUT /component/Sun/Earth?component=Position
+```
+
+---
+The following example writes the value `{"x":10}` to the `Position` component of entity `Sun.Earth`:
+
+```
+PUT /component/Sun/Earth?component=Position&value=%7B%22x%22%3A%2210%22%7D
+```
+
+### DELETE component
+Remove a component from an entity.
+
+```
+DELETE /component/<path>?component=<component>
+```
+
+#### Examples
+The following example removes the component `Position` from `Sun.Earth`:
+
+```
+DELETE /component/Sun/Earth?component=Position
+```
+
+### PUT toggle
+Toggle an entity or component.
+
+```
+PUT /toggle/<path>?enable=[true|false][&component=<component>]
+```
+
+When an entity is toggled, the `Disabled` tag is added or removed. When a component is toggled, the `ecs_enable_id` operation is invoked. A component toggle request will fail if the component does not have the `CanToggle` trait.
+
+#### Examples
+The following example disables entity `Sun.Earth`:
+
+```
+PUT /toggle/Sun/Earth?enable=false
+```
+
+---
+The following example disables component `Position` for entity `Sun.Earth`:
+
+```
+PUT /toggle/Sun/Earth?enable=false&component=Position
+```
+
+### GET query
 Retrieve matching results for a query.
 
 ```
-GET /query/?q=<query expression>
+GET /query/?expr=<query expression>
 ```
 
 #### Options
 
 | Option        | Type     | Description                                     |
 |---------------|----------|-------------------------------------------------|
+| name          | string   | Evaluate existing named query.                  |
+| expr          | string   | Evaluate query expression.                      |
 | entity_id     | bool     | Serialize numeric entity id.                    |
 | doc           | bool     | Serialize flecs doc components                  |
 | full_paths    | bool     | Serialize full tag/pair/component paths         |
 | inherited     | bool     | Serialize inherited components                  |
 | values        | bool     | Serialize component values                      |
+| fields        | bool     | Serialize query fields                          |
 | table         | bool     | Serialize table (all components for match)      |
 | result        | bool     | Serialize results (disable for metadata-only request) |
 | type_info     | bool     | Serialize type info for components              |
@@ -588,12 +678,13 @@ GET /query/?q=<query expression>
 | query_info    | bool     | Serialize query info                            |
 | query_plan    | bool     | Serialize query plan                            |
 | query_profile | bool     | Serialize query profiling information           |
+| try           | bool     | Don't throw HTTP error on failure (REST only)   |
 
 #### Examples
 The following example returns the results for query Position, Velocity. Note how each of the query terms results in a field in the reply. The mapping between query terms and fields is the same as in the regular flecs API.
 
 ```
-GET /query?q=Position%2CVelocity
+GET /query?expr=Position%2CVelocity
 ```
 ```json
 {
@@ -601,38 +692,34 @@ GET /query?q=Position%2CVelocity
     {
       "parent": "Earth.shipyard",
       "name": "USS Enterprise",
-      "fields": [
-        {
-          "data": {
+      "fields": {
+        "values": [
+          {
             "x": 10,
             "y": 20
-          }
-        },
-        {
-          "data": {
+          },
+          {
             "x": 1,
-            "y": 1
+            "y": 2
           }
-        }
-      ]
+        ]
+      }
     },
     {
       "parent": "Earth.shipyard",
       "name": "USS Voyager",
-      "fields": [
-        {
-          "data": {
+      "fields": {
+        "values": [
+          {
             "x": 30,
             "y": 40
+          },
+          {
+            "x": 3,
+            "y": 4
           }
-        },
-        {
-          "data": {
-            "x": 2,
-            "y": 2
-          }
-        }
-      ]
+        ]
+      }
     }
   ]
 }
@@ -640,7 +727,7 @@ GET /query?q=Position%2CVelocity
 ---
 The following example shows the result of setting `table` to `true`, which serializes all components (the table) of each matched entity. The format of the individually returned results is the same as the `/entity` endpoint.
 ```
-GET /query?q=Position%2CVelocity?table=true
+GET /query?expr=Position%2CVelocity?table=true
 ```
 ```json
 {
@@ -680,12 +767,12 @@ GET /query?q=Position%2CVelocity?table=true
       },
       "components": {
         "Position": {
-          "x": 10,
-          "y": 20
+          "x": 30,
+          "y": 40
         },
         "Velocity": {
-          "x": 1,
-          "y": 1
+          "x": 3,
+          "y": 4
         },
         "(Identifier,Name)": null
       }
@@ -695,85 +782,159 @@ GET /query?q=Position%2CVelocity?table=true
 ```
 ---
 The following example shows the result for query `Position, ?Position(up)`. This shows the information that gets added to the query result to describe what the source of a field is, and whether a field is set or not.
+
+The `is_set` member is only added to the result if one of the fields in the result is not set. The `sources` member is only added to the result if one of the fields in the result is not matched on the `$this` query variable.
 ```
-GET /query?q=Position%2C%3FPosition(up)
+GET /query?expr=Position%2C%3FPosition(up)
 ```
+```json
+{
+  "results": [
+    {
+      "name": "Earth.shipyard",
+      "fields": {
+        "is_set": [true, false],
+        "sources": [0, 0],
+        "values": [
+          {
+            "x": 100,
+            "y": 200
+          },
+          {}
+        ]
+      }
+    },
+    {
+      "parent": "Earth.shipyard",
+      "name": "USS Voyager",
+      "fields": {
+        "sources": [0, "Earth.shipyard"],
+        "values": [
+          {
+            "x": 30,
+            "y": 40
+          },
+          {
+            "x": 3,
+            "y": 4
+          }
+        ]
+      }
+    },
+    {
+      "parent": "Earth.shipyard",
+      "name": "USS Voyager",
+      "fields": {
+        "sources": [0, "Earth.shipyard"],
+        "values": [
+          {
+            "x": 30,
+            "y": 40
+          },
+          {
+            "x": 3,
+            "y": 4
+          }
+        ]
+      }
+    }
+  ]
+}
+```
+---
+The following example shows the same query (`Position, ?Position(up)`) with `fields` set to `false` and `entity_ids` set to `true`.
+
+```
+GET /query?expr=Position%2C%3FPosition(up)&fields=false&entity_ids=true
+```
+```json
+{
+  "results": [
+    {
+      "name": "Earth.shipyard",
+      "id": 700
+    },
+    {
+      "parent": "Earth.shipyard",
+      "name": "USS Voyager",
+      "id": 701
+    },
+    {
+      "parent": "Earth.shipyard",
+      "name": "USS Voyager",
+      "id": 702
+    }
+  ]
+}
+```
+
+---
+The following example shows how variables are serialized with the query `Position, (ChildOf, $p)`. The `ids` member is added to the serialized data, as the second term of this query has a variable (pair) id. Only fields with variable component ids are serialized to the `ids` array.
+
+```
+GET /query?expr=Position%2C(ChildOf%2C%24p)
+```
+
 ```json
 {
   "results": [
     {
       "parent": "Earth",
       "name": "shipyard",
-      "is_set": [
-        true,
-        false
-      ],
-      "fields": [
-        {
-          "data": {
+      "vars": {
+        "p": "Earth"
+      },
+      "fields": {
+        "ids": [0, ["flecs.core.ChildOf", "Earth"]],
+        "values": [
+          {
             "x": 100,
             "y": 200
-          }
-        },
-        {}
-      ]
+          },
+          0]
+      }
     },
     {
       "parent": "Earth.shipyard",
       "name": "USS Enterprise",
-      "alerts": true,
-      "is_set": [
-        true,
-        true
-      ],
-      "fields": [
-        {
-          "data": {
+      "vars": {
+        "p": "shipyard"
+      },
+      "fields": {
+        "ids": [0, ["flecs.core.ChildOf", "Earth.shipyard"]],
+        "values": [
+          {
             "x": 10,
             "y": 20
-          }
-        },
-        {
-          "source": "Earth.shipyard",
-          "data": {
-            "x": 100,
-            "y": 200
-          }
-        }
-      ]
+          },
+          0]
+      }
     },
     {
       "parent": "Earth.shipyard",
       "name": "USS Voyager",
-      "alerts": true,
-      "is_set": [
-          true,
-          true
-      ],
-      "fields": [
-        {
-          "data": {
-            "x": 20,
-            "y": 40
-          }
-        },
-        {
-          "source": "Earth.shipyard",
-          "data": {
-            "x": 100,
-            "y": 200
-          }
-        }
-      ]
+      "vars": {
+        "p": "shipyard"
+      },
+      "fields": {
+        "ids": [0, ["flecs.core.ChildOf", "Earth.shipyard"]],
+        "values": [
+          {
+            "x": 10,
+            "y": 20
+          },
+          0]
+      }
     }
   ]
 }
 ```
+
 ---
 The following example shows the result of setting `query_info` and `field_info` to true, and setting `results` to false. This can be used to obtain meta information about a query. `query_info` returns a result per term, whereas `field_info` returns a result per field.
 
 ```
-GET /query?q=Position%2C%3FMass(up)?query_info=true&field_info=true&results=false
+GET /query?expr=Position%2C%3FMass(up)?query_info=true&field_info=true&results=false
 ```
 ```json
 {
@@ -810,7 +971,7 @@ GET /query?q=Position%2C%3FMass(up)?query_info=true&field_info=true&results=fals
     "terms": [
       {
         "inout": "default",
-        "has_data": true,
+        "has_value": true,
         "oper": "and",
         "src": {
           "var": "this"
@@ -826,7 +987,7 @@ GET /query?q=Position%2C%3FMass(up)?query_info=true&field_info=true&results=fals
       },
       {
         "inout": "default",
-        "has_data": true,
+        "has_value": true,
         "oper": "optional",
         "src": {
           "var": "this"
@@ -846,5 +1007,38 @@ GET /query?q=Position%2C%3FMass(up)?query_info=true&field_info=true&results=fals
       }
     ]
   }
+}
+```
+
+### GET world
+Retrieve all serializable data in the world.
+
+```
+GET /world
+```
+
+The output of this endpoint is equivalent to requesting the following query on the query endpoint with `table=true`:
+
+```
+!ChildOf(self|up, flecs), 
+!Module(self|up), 
+?Prefab, 
+?Disabled
+```
+
+This excludes modules and builtin entities from the result, effectively just returning entities that are active in a scene.
+
+### PUT script
+Update code for Flecs script.
+
+```
+PUT /script/<path>?code=<code>
+```
+
+When the code failed to parse a response is sent back with the error:
+
+```json
+{
+  "error": "58: unexpected end of script\n}\n ^"
 }
 ```

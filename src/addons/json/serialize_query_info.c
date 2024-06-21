@@ -131,7 +131,7 @@ void flecs_json_serialize_term(
     flecs_json_memberl(buf, "inout");
     flecs_json_string(buf, flecs_json_inout_str(term->inout));
 
-    flecs_json_memberl(buf, "has_data");
+    flecs_json_memberl(buf, "has_value");
     flecs_json_bool(buf, 0 == (term->flags_ & EcsTermNoData));
 
     ecs_entity_t first_id = ECS_TERM_REF_ID(&term->first);

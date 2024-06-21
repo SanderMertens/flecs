@@ -21,7 +21,7 @@ void SerializeIterToJson_serialize_1_comps_empty(void) {
 
     char *json = ecs_iter_to_json(&it, NULL);
     test_assert(json != NULL);
-    test_str(json, "{\"results\":[]}");
+    test_json(json, "{\"results\":[]}");
 
     ecs_os_free(json);
 
@@ -53,7 +53,7 @@ void SerializeIterToJson_serialize_1_comps_2_ents_same_table(void) {
     ecs_iter_t it = ecs_query_iter(world, q);
 
     char *json = ecs_iter_to_json(&it, NULL);
-    test_str(json, "{\"results\":[{\"name\":\"Foo\", \"fields\":[{\"data\":{\"x\":10, \"y\":20}}]}, {\"name\":\"Bar\", \"fields\":[{\"data\":{\"x\":30, \"y\":40}}]}]}");
+    test_json(json, "{\"results\":[{\"name\":\"Foo\", \"fields\":{\"values\":[{\"x\":10, \"y\":20}]}}, {\"name\":\"Bar\", \"fields\":{\"values\":[{\"x\":30, \"y\":40}]}}]}");
 
     ecs_os_free(json);
 
@@ -96,7 +96,7 @@ void SerializeIterToJson_serialize_2_comps_2_ents_same_table(void) {
     ecs_iter_t it = ecs_query_iter(world, q);
 
     char *json = ecs_iter_to_json(&it, NULL);
-    test_str(json, "{\"results\":[{\"name\":\"Foo\", \"fields\":[{\"data\":{\"x\":10, \"y\":20}}, {\"data\":{\"value\":1}}]}, {\"name\":\"Bar\", \"fields\":[{\"data\":{\"x\":30, \"y\":40}}, {\"data\":{\"value\":2}}]}]}");
+    test_json(json, "{\"results\":[{\"name\":\"Foo\", \"fields\":{\"values\":[{\"x\":10, \"y\":20}, {\"value\":1}]}}, {\"name\":\"Bar\", \"fields\":{\"values\":[{\"x\":30, \"y\":40}, {\"value\":2}]}}]}");
 
     ecs_os_free(json);
 
@@ -120,7 +120,7 @@ void SerializeIterToJson_serialize_1_tag_2_ents_same_table(void) {
     ecs_iter_t it = ecs_query_iter(world, q);
 
     char *json = ecs_iter_to_json(&it, NULL);
-    test_str(json, "{\"results\":[{\"name\":\"Foo\", \"fields\":[{}]}, {\"name\":\"Bar\", \"fields\":[{}]}]}");
+    test_json(json, "{\"results\":[{\"name\":\"Foo\", \"fields\":{}}, {\"name\":\"Bar\", \"fields\":{}}]}");
 
     ecs_os_free(json);
 
@@ -156,7 +156,7 @@ void SerializeIterToJson_serialize_1_tag_1_comp_2_ents_same_table(void) {
     ecs_iter_t it = ecs_query_iter(world, q);
 
     char *json = ecs_iter_to_json(&it, NULL);
-    test_str(json, "{\"results\":[{\"name\":\"Foo\", \"fields\":[{\"data\":{\"x\":10, \"y\":20}}, {}]}, {\"name\":\"Bar\", \"fields\":[{\"data\":{\"x\":30, \"y\":40}}, {}]}]}");
+    test_json(json, "{\"results\":[{\"name\":\"Foo\", \"fields\":{\"values\":[{\"x\":10, \"y\":20}, 0]}}, {\"name\":\"Bar\", \"fields\":{\"values\":[{\"x\":30, \"y\":40}, 0]}}]}");
 
     ecs_os_free(json);
 
@@ -203,7 +203,7 @@ void SerializeIterToJson_serialize_1_tag_1_comp_4_ents_two_tables(void) {
     ecs_iter_t it = ecs_query_iter(world, q);
 
     char *json = ecs_iter_to_json(&it, NULL);
-    test_str(json, "{\"results\":[{\"name\":\"Foo\", \"fields\":[{\"data\":{\"x\":10, \"y\":20}}, {}]}, {\"name\":\"Bar\", \"fields\":[{\"data\":{\"x\":30, \"y\":40}}, {}]}, {\"name\":\"Hello\", \"fields\":[{\"data\":{\"x\":50, \"y\":60}}, {}]}, {\"name\":\"World\", \"fields\":[{\"data\":{\"x\":70, \"y\":80}}, {}]}]}");
+    test_json(json, "{\"results\":[{\"name\":\"Foo\", \"fields\":{\"values\":[{\"x\":10, \"y\":20}, 0]}}, {\"name\":\"Bar\", \"fields\":{\"values\":[{\"x\":30, \"y\":40}, 0]}}, {\"name\":\"Hello\", \"fields\":{\"values\":[{\"x\":50, \"y\":60}, 0]}}, {\"name\":\"World\", \"fields\":{\"values\":[{\"x\":70, \"y\":80}, 0]}}]}");
 
     ecs_os_free(json);
 
@@ -251,7 +251,7 @@ void SerializeIterToJson_serialize_2_comps_1_owned_2_ents(void) {
     ecs_iter_t it = ecs_query_iter(world, q);
 
     char *json = ecs_iter_to_json(&it, NULL);
-    test_str(json, "{\"results\":[{\"name\":\"Foo\", \"fields\":[{\"data\":{\"x\":10, \"y\":20}}, {\"source\":\"Base\", \"data\":{\"value\":100}}]}, {\"name\":\"Bar\", \"fields\":[{\"data\":{\"x\":30, \"y\":40}}, {\"source\":\"Base\", \"data\":{\"value\":100}}]}]}");
+    test_json(json, "{\"results\":[{\"name\":\"Foo\", \"fields\":{\"sources\":[0, \"Base\"], \"values\":[{\"x\":10, \"y\":20}, {\"value\":100}]}}, {\"name\":\"Bar\", \"fields\":{\"sources\":[0, \"Base\"], \"values\":[{\"x\":30, \"y\":40}, {\"value\":100}]}}]}");
 
     ecs_os_free(json);
 
@@ -277,7 +277,7 @@ void SerializeIterToJson_serialize_w_pair_wildcard(void) {
     ecs_iter_t it = ecs_query_iter(world, q);
 
     char *json = ecs_iter_to_json(&it, NULL);
-    test_str(json, "{\"results\":[{\"name\":\"Foo\", \"fields\":[{\"id\":[\"Rel\",\"ObjA\"]}]}, {\"name\":\"Bar\", \"fields\":[{\"id\":[\"Rel\",\"ObjB\"]}]}]}");
+    test_json(json, "{\"results\":[{\"name\":\"Foo\", \"fields\":{\"ids\":[[\"Rel\",\"ObjA\"]]}}, {\"name\":\"Bar\", \"fields\":{\"ids\":[[\"Rel\",\"ObjB\"]]}}]}");
 
     ecs_os_free(json);
 
@@ -306,7 +306,7 @@ void SerializeIterToJson_serialize_w_var(void) {
     ecs_iter_t it = ecs_query_iter(world, r);
 
     char *json = ecs_iter_to_json(&it, NULL);
-    test_str(json, "{\"results\":[{\"name\":\"Foo\", \"vars\":{\"X\":\"ObjA\"}, \"fields\":[{\"id\":[\"Rel\",\"ObjA\"]}]}, {\"name\":\"Bar\", \"vars\":{\"X\":\"ObjB\"}, \"fields\":[{\"id\":[\"Rel\",\"ObjB\"]}]}]}");
+    test_json(json, "{\"results\":[{\"name\":\"Foo\", \"vars\":{\"X\":\"ObjA\"},\"fields\":{\"ids\":[[\"Rel\",\"ObjA\"]]}}, {\"name\":\"Bar\", \"vars\":{\"X\":\"ObjB\"},\"fields\":{\"ids\":[[\"Rel\",\"ObjB\"]]}}]}");
 
     ecs_os_free(json);
 
@@ -342,7 +342,7 @@ void SerializeIterToJson_serialize_w_2_vars(void) {
     ecs_iter_t it = ecs_query_iter(world, r);
 
     char *json = ecs_iter_to_json(&it, NULL);
-    test_str(json, "{\"results\":[{\"name\":\"Foo\", \"vars\":{\"X\":\"ObjA\", \"Y\":\"ObjC\"}, \"fields\":[{\"id\":[\"RelX\",\"ObjA\"]}, {\"id\":[\"RelY\",\"ObjC\"]}]}, {\"name\":\"Bar\", \"vars\":{\"X\":\"ObjB\", \"Y\":\"ObjD\"}, \"fields\":[{\"id\":[\"RelX\",\"ObjB\"]}, {\"id\":[\"RelY\",\"ObjD\"]}]}]}");
+    test_json(json, "{\"results\":[{\"name\":\"Foo\", \"vars\":{\"X\":\"ObjA\", \"Y\":\"ObjC\"},\"fields\":{\"ids\":[[\"RelX\",\"ObjA\"], [\"RelY\",\"ObjC\"]]}}, {\"name\":\"Bar\", \"vars\":{\"X\":\"ObjB\", \"Y\":\"ObjD\"},\"fields\":{\"ids\":[[\"RelX\",\"ObjB\"], [\"RelY\",\"ObjD\"]]}}]}");
 
     ecs_os_free(json);
 
@@ -369,7 +369,7 @@ void SerializeIterToJson_serialize_type_info_1_tags(void) {
     desc.serialize_type_info = true;
     char *json = ecs_iter_to_json(&it, &desc);
 
-    test_str(json, "{\"type_info\":{}, \"results\":[{\"name\":\"Foo\", \"fields\":[{}]}, {\"name\":\"Bar\", \"fields\":[{}]}]}");
+    test_json(json, "{\"type_info\":{}, \"results\":[{\"name\":\"Foo\", \"fields\":{}}, {\"name\":\"Bar\", \"fields\":{}}]}");
 
     ecs_os_free(json);
 
@@ -399,7 +399,7 @@ void SerializeIterToJson_serialize_type_info_2_tags(void) {
     desc.serialize_type_info = true;
     char *json = ecs_iter_to_json(&it, &desc);
 
-    test_str(json, "{\"type_info\":{}, \"results\":[{\"name\":\"Foo\", \"fields\":[{}, {}]}, {\"name\":\"Bar\", \"fields\":[{}, {}]}]}");
+    test_json(json, "{\"type_info\":{}, \"results\":[{\"name\":\"Foo\", \"fields\":{}}, {\"name\":\"Bar\", \"fields\":{}}]}");
     ecs_os_free(json);
 
     ecs_query_fini(q);
@@ -425,7 +425,7 @@ void SerializeIterToJson_serialize_type_info_1_component(void) {
     desc.serialize_type_info = true;
     char *json = ecs_iter_to_json(&it, &desc);
 
-    test_str(json, "{\"type_info\":{\"Position\":0}, \"results\":[{\"name\":\"Foo\", \"fields\":[{}]}, {\"name\":\"Bar\", \"fields\":[{}]}]}");
+    test_json(json, "{\"type_info\":{\"Position\":0}, \"results\":[{\"name\":\"Foo\", \"fields\":{\"values\":[0]}}, {\"name\":\"Bar\", \"fields\":{\"values\":[0]}}]}");
 
     ecs_os_free(json);
 
@@ -456,7 +456,7 @@ void SerializeIterToJson_serialize_type_info_2_components(void) {
     desc.serialize_type_info = true;
     char *json = ecs_iter_to_json(&it, &desc);
 
-    test_str(json, "{\"type_info\":{\"Position\":0, \"Velocity\":0}, \"results\":[{\"name\":\"Foo\", \"fields\":[{}, {}]}, {\"name\":\"Bar\", \"fields\":[{}, {}]}]}");
+    test_json(json, "{\"type_info\":{\"Position\":0, \"Velocity\":0}, \"results\":[{\"name\":\"Foo\", \"fields\":{\"values\":[0, 0]}}, {\"name\":\"Bar\", \"fields\":{\"values\":[0, 0]}}]}");
 
     ecs_os_free(json);
 
@@ -493,7 +493,7 @@ void SerializeIterToJson_serialize_type_info_1_struct(void) {
     desc.serialize_type_info = true;
     char *json = ecs_iter_to_json(&it, &desc);
 
-    test_str(json, "{\"type_info\":{\"Position\":{\"x\":[\"int\"], \"y\":[\"int\"]}}, \"results\":[{\"name\":\"Foo\", \"fields\":[{\"data\":{\"x\":0, \"y\":0}}]}, {\"name\":\"Bar\", \"fields\":[{\"data\":{\"x\":0, \"y\":0}}]}]}");
+    test_json(json, "{\"type_info\":{\"Position\":{\"x\":[\"int\"], \"y\":[\"int\"]}}, \"results\":[{\"name\":\"Foo\", \"fields\":{\"values\":[{\"x\":0, \"y\":0}]}}, {\"name\":\"Bar\", \"fields\":{\"values\":[{\"x\":0, \"y\":0}]}}]}");
 
     ecs_os_free(json);
 
@@ -534,7 +534,7 @@ void SerializeIterToJson_serialize_type_info_1_component_1_struct(void) {
     desc.serialize_type_info = true;
     char *json = ecs_iter_to_json(&it, &desc);
 
-    test_str(json, "{\"type_info\":{\"Position\":{\"x\":[\"int\"], \"y\":[\"int\"]}, \"Velocity\":0}, \"results\":[{\"name\":\"Foo\", \"fields\":[{\"data\":{\"x\":0, \"y\":0}}, {}]}, {\"name\":\"Bar\", \"fields\":[{\"data\":{\"x\":0, \"y\":0}}, {}]}]}");
+    test_json(json, "{\"type_info\":{\"Position\":{\"x\":[\"int\"], \"y\":[\"int\"]}, \"Velocity\":0}, \"results\":[{\"name\":\"Foo\", \"fields\":{\"values\":[{\"x\":0, \"y\":0}, 0]}}, {\"name\":\"Bar\", \"fields\":{\"values\":[{\"x\":0, \"y\":0}, 0]}}]}");
 
     ecs_os_free(json);
 
@@ -583,7 +583,7 @@ void SerializeIterToJson_serialize_type_info_2_structs(void) {
     desc.serialize_type_info = true;
     char *json = ecs_iter_to_json(&it, &desc);
 
-    test_str(json, "{\"type_info\":{\"Position\":{\"x\":[\"int\"], \"y\":[\"int\"]}, \"Velocity\":{\"x\":[\"int\"], \"y\":[\"int\"]}}, \"results\":[{\"name\":\"Foo\", \"fields\":[{\"data\":{\"x\":0, \"y\":0}}, {\"data\":{\"x\":0, \"y\":0}}]}, {\"name\":\"Bar\", \"fields\":[{\"data\":{\"x\":0, \"y\":0}}, {\"data\":{\"x\":0, \"y\":0}}]}]}");
+    test_json(json, "{\"type_info\":{\"Position\":{\"x\":[\"int\"], \"y\":[\"int\"]}, \"Velocity\":{\"x\":[\"int\"], \"y\":[\"int\"]}}, \"results\":[{\"name\":\"Foo\", \"fields\":{\"values\":[{\"x\":0, \"y\":0}, {\"x\":0, \"y\":0}]}}, {\"name\":\"Bar\", \"fields\":{\"values\":[{\"x\":0, \"y\":0}, {\"x\":0, \"y\":0}]}}]}");
 
     ecs_os_free(json);
 
@@ -626,7 +626,7 @@ void SerializeIterToJson_serialize_type_info_w_unit(void) {
     desc.serialize_type_info = true;
     char *json = ecs_iter_to_json(&it, &desc);
 
-    test_str(json, "{\"type_info\":{\"T\":{\"value\":[\"int\", {\"unit\":\"celsius\", \"symbol\":\"°\"}]}}, \"results\":[{\"name\":\"Foo\", \"fields\":[{\"data\":{\"value\":24}}]}, {\"name\":\"Bar\", \"fields\":[{\"data\":{\"value\":16}}]}]}");
+    test_json(json, "{\"type_info\":{\"T\":{\"value\":[\"int\", {\"unit\":\"celsius\", \"symbol\":\"°\"}]}}, \"results\":[{\"name\":\"Foo\", \"fields\":{\"values\":[{\"value\":24}]}}, {\"name\":\"Bar\", \"fields\":{\"values\":[{\"value\":16}]}}]}");
 
     ecs_os_free(json);
 
@@ -675,7 +675,7 @@ void SerializeIterToJson_serialize_type_info_w_unit_quantity(void) {
     desc.serialize_type_info = true;
     char *json = ecs_iter_to_json(&it, &desc);
 
-    test_str(json, "{\"type_info\":{\"T\":{\"value\":[\"int\", {\"unit\":\"celsius\", \"symbol\":\"°\", \"quantity\":\"temperature\"}]}}, \"results\":[{\"name\":\"Foo\", \"fields\":[{\"data\":{\"value\":24}}]}, {\"name\":\"Bar\", \"fields\":[{\"data\":{\"value\":16}}]}]}");
+    test_json(json, "{\"type_info\":{\"T\":{\"value\":[\"int\", {\"unit\":\"celsius\", \"symbol\":\"°\", \"quantity\":\"temperature\"}]}}, \"results\":[{\"name\":\"Foo\", \"fields\":{\"values\":[{\"value\":24}]}}, {\"name\":\"Bar\", \"fields\":{\"values\":[{\"value\":16}]}}]}");
 
     ecs_os_free(json);
 
@@ -731,7 +731,7 @@ void SerializeIterToJson_serialize_type_info_w_unit_over(void) {
     desc.serialize_type_info = true;
     char *json = ecs_iter_to_json(&it, &desc);
 
-    test_str(json, "{\"type_info\":{\"T\":{\"value\":[\"int\", {\"unit\":\"meters_per_second\", \"symbol\":\"m/s\"}]}}, \"results\":[{\"name\":\"Foo\", \"fields\":[{\"data\":{\"value\":24}}]}, {\"name\":\"Bar\", \"fields\":[{\"data\":{\"value\":16}}]}]}");
+    test_json(json, "{\"type_info\":{\"T\":{\"value\":[\"int\", {\"unit\":\"meters_per_second\", \"symbol\":\"m/s\"}]}}, \"results\":[{\"name\":\"Foo\", \"fields\":{\"values\":[{\"value\":24}]}}, {\"name\":\"Bar\", \"fields\":{\"values\":[{\"value\":16}]}}]}");
 
     ecs_os_free(json);
 
@@ -759,7 +759,7 @@ void SerializeIterToJson_serialize_w_entity_label(void) {
     desc.serialize_doc = true;
     char *json = ecs_iter_to_json(&it, &desc);
 
-    test_str(json, "{\"results\":[{\"name\":\"foo_bar\", \"doc\":{\"label\":\"foo_bar\"}, \"fields\":[{}]}, {\"name\":\"hello_world\", \"doc\":{\"label\":\"Hello World\"}, \"fields\":[{}]}]}");
+    test_json(json, "{\"results\":[{\"name\":\"foo_bar\", \"doc\":{\"label\":\"foo_bar\"}, \"fields\":{}}, {\"name\":\"hello_world\", \"doc\":{\"label\":\"Hello World\"}, \"fields\":{}}]}");
 
     ecs_os_free(json);
 
@@ -787,7 +787,7 @@ void SerializeIterToJson_serialize_w_entity_label_w_str(void) {
     desc.serialize_doc = true;
     char *json = ecs_iter_to_json(&it, &desc);
 
-    test_str(json, "{\"results\":[{\"name\":\"foo_bar\", \"doc\":{\"label\":\"foo_bar\"}, \"fields\":[{}]}, {\"name\":\"hello_world\", \"doc\":{\"label\":\"Hello \\\"World\\\"\"}, \"fields\":[{}]}]}");
+    test_json(json, "{\"results\":[{\"name\":\"foo_bar\", \"doc\":{\"label\":\"foo_bar\"}, \"fields\":{}}, {\"name\":\"hello_world\", \"doc\":{\"label\":\"Hello \\\"World\\\"\"}, \"fields\":{}}]}");
 
     ecs_os_free(json);
 
@@ -816,7 +816,7 @@ void SerializeIterToJson_serialize_entity_label_w_newline(void) {
     ecs_iter_to_json_desc_t desc = ECS_ITER_TO_JSON_INIT;
     desc.serialize_doc = true;
     char *json = ecs_iter_to_json(&it, &desc);
-    test_str(json, "{\"results\":[{\"name\":\"e\", \"doc\":{\"label\":\"foo\\nbar\"}, \"fields\":[{}]}]}");
+    test_json(json, "{\"results\":[{\"name\":\"e\", \"doc\":{\"label\":\"foo\\nbar\"}, \"fields\":{}}]}");
 
     ecs_os_free(json);
 
@@ -850,7 +850,7 @@ void SerializeIterToJson_serialize_w_var_labels(void) {
     desc.serialize_doc = true;
     char *json = ecs_iter_to_json(&it, &desc);
 
-    test_str(json, "{\"results\":[{\"name\":\"Foo\", \"doc\":{\"label\":\"Foo\"}, \"vars\":{\"X\":\"Object A\"}, \"fields\":[{\"id\":[\"Rel\",\"ObjA\"]}]}, {\"name\":\"Bar\", \"doc\":{\"label\":\"Bar\"}, \"vars\":{\"X\":\"ObjB\"}, \"fields\":[{\"id\":[\"Rel\",\"ObjB\"]}]}]}");
+    test_json(json, "{\"results\":[{\"name\":\"Foo\", \"doc\":{\"label\":\"Foo\"}, \"vars\":{\"X\":\"Object A\"},\"fields\":{\"ids\":[[\"Rel\",\"ObjA\"]]}}, {\"name\":\"Bar\", \"doc\":{\"label\":\"Bar\"}, \"vars\":{\"X\":\"ObjB\"},\"fields\":{\"ids\":[[\"Rel\",\"ObjB\"]]}}]}");
 
     ecs_os_free(json);
 
@@ -878,7 +878,7 @@ void SerializeIterToJson_serialize_color(void) {
     desc.serialize_doc = true;
     char *json = ecs_iter_to_json(&it, &desc);
 
-    test_str(json, "{\"results\":[{\"name\":\"foo_bar\", \"doc\":{\"label\":\"foo_bar\"}, \"fields\":[{}]}, {\"name\":\"hello_world\", \"doc\":{\"label\":\"hello_world\", \"color\":\"#47B576\"}, \"fields\":[{}]}]}");
+    test_json(json, "{\"results\":[{\"name\":\"foo_bar\", \"doc\":{\"label\":\"foo_bar\"}, \"fields\":{}}, {\"name\":\"hello_world\", \"doc\":{\"label\":\"hello_world\", \"color\":\"#47B576\"}, \"fields\":{}}]}");
 
     ecs_os_free(json);
 
@@ -916,7 +916,7 @@ void SerializeIterToJson_serialize_w_var_component(void) {
 
     char *json = ecs_iter_to_json(&it, NULL);
 
-    test_str(json, "{\"results\":[{\"name\":\"Foo\", \"vars\":{\"X\":\"Obj\"}, \"fields\":[{\"id\":[\"Rel\",\"Obj\"]}, {\"source\":\"Obj\", \"data\":{\"x\":10}}]}]}");
+    test_json(json, "{\"results\":[{\"name\":\"Foo\", \"vars\":{\"X\":\"Obj\"},\"fields\":{\"ids\":[[\"Rel\",\"Obj\"], 0], \"sources\":[0, \"Obj\"], \"values\":[0, {\"x\":10}]}}]}");
 
     ecs_os_free(json);
 
@@ -943,7 +943,7 @@ void SerializeIterToJson_serialize_w_optional_tag(void) {
 
     char *json = ecs_iter_to_json(&it, NULL);
 
-    test_str(json, "{\"results\":[{\"name\":\"e1\", \"is_set\":[true, true], \"fields\":[{}, {}]}, {\"name\":\"e2\", \"is_set\":[true, false], \"fields\":[{}, {}]}]}");
+    test_json(json, "{\"results\":[{\"name\":\"e1\", \"fields\":{\"is_set\":[true, true]}}, {\"name\":\"e2\", \"fields\":{\"is_set\":[true, false]}}]}");
 
     ecs_os_free(json);
 
@@ -970,7 +970,7 @@ void SerializeIterToJson_serialize_w_optional_component(void) {
 
     char *json = ecs_iter_to_json(&it, NULL);
 
-    test_str(json, "{\"results\":[{\"name\":\"e1\", \"is_set\":[true, true], \"fields\":[{}, {}]}, {\"name\":\"e2\", \"is_set\":[true, false], \"fields\":[{}, {}]}]}");
+    test_json(json, "{\"results\":[{\"name\":\"e1\", \"fields\":{\"is_set\":[true, true], \"values\":[0, 0]}}, {\"name\":\"e2\", \"fields\":{\"is_set\":[true, false], \"values\":[0, 0]}}]}");
 
     ecs_os_free(json);
 
@@ -1010,7 +1010,7 @@ void SerializeIterToJson_serialize_w_optional_reflected_component(void) {
 
     char *json = ecs_iter_to_json(&it, NULL);
 
-    test_str(json, "{\"results\":[{\"name\":\"e1\", \"is_set\":[true, true], \"fields\":[{\"data\":{\"x\":10, \"y\":20}}, {\"data\":{\"x\":1, \"y\":2}}]}, {\"name\":\"e2\", \"is_set\":[true, false], \"fields\":[{\"data\":{\"x\":10, \"y\":20}}, {}]}]}");
+    test_json(json, "{\"results\":[{\"name\":\"e1\", \"fields\":{\"is_set\":[true, true], \"values\":[{\"x\":10, \"y\":20}, {\"x\":1, \"y\":2}]}}, {\"name\":\"e2\", \"fields\":{\"is_set\":[true, false], \"values\":[{\"x\":10, \"y\":20}, 0]}}]}");
 
     ecs_os_free(json);
 
@@ -1033,7 +1033,7 @@ void SerializeIterToJson_serialize_w_inout_filter_tag(void) {
 
     char *json = ecs_iter_to_json(&it, NULL);
 
-    test_str(json, "{\"results\":[{\"name\":\"e1\", \"fields\":[{}]}]}");
+    test_json(json, "{\"results\":[{\"name\":\"e1\", \"fields\":{}}]}");
 
     ecs_os_free(json);
 
@@ -1066,7 +1066,7 @@ void SerializeIterToJson_serialize_w_inout_filter_component(void) {
 
     char *json = ecs_iter_to_json(&it, NULL);
 
-    test_str(json, "{\"results\":[{\"name\":\"e1\", \"fields\":[{}, {\"data\":{\"x\":1, \"y\":2}}]}]}");
+    test_json(json, "{\"results\":[{\"name\":\"e1\", \"fields\":{\"values\":[0, {\"x\":1, \"y\":2}]}}]}");
 
     ecs_os_free(json);
 
@@ -1107,7 +1107,7 @@ void SerializeIterToJson_serialize_w_inout_filter_reflected_component(void) {
 
     char *json = ecs_iter_to_json(&it, NULL);
 
-    test_str(json, "{\"results\":[{\"name\":\"e1\", \"fields\":[{}, {\"data\":{\"x\":1, \"y\":2}}]}]}");
+    test_json(json, "{\"results\":[{\"name\":\"e1\", \"fields\":{\"values\":[0, {\"x\":1, \"y\":2}]}}]}");
 
     ecs_os_free(json);
 
@@ -1130,7 +1130,7 @@ void SerializeIterToJson_serialize_w_inout_out_tag(void) {
 
     char *json = ecs_iter_to_json(&it, NULL);
 
-    test_str(json, "{\"results\":[{\"name\":\"e1\", \"fields\":[{}]}]}");
+    test_json(json, "{\"results\":[{\"name\":\"e1\", \"fields\":{}}]}");
 
     ecs_os_free(json);
 
@@ -1163,7 +1163,7 @@ void SerializeIterToJson_serialize_w_inout_out_component(void) {
 
     char *json = ecs_iter_to_json(&it, NULL);
 
-    test_str(json, "{\"results\":[{\"name\":\"e1\", \"fields\":[{}, {\"data\":{\"x\":1, \"y\":2}}]}]}");
+    test_json(json, "{\"results\":[{\"name\":\"e1\", \"fields\":{\"values\":[0, {\"x\":1, \"y\":2}]}}]}");
 
     ecs_os_free(json);
 
@@ -1204,7 +1204,7 @@ void SerializeIterToJson_serialize_w_inout_out_reflected_component(void) {
 
     char *json = ecs_iter_to_json(&it, NULL);
 
-    test_str(json, "{\"results\":[{\"name\":\"e1\", \"fields\":[{\"data\":{\"x\":10, \"y\":20}}, {\"data\":{\"x\":1, \"y\":2}}]}]}");
+    test_json(json, "{\"results\":[{\"name\":\"e1\", \"fields\":{\"values\":[{\"x\":10, \"y\":20}, {\"x\":1, \"y\":2}]}}]}");
 
     ecs_os_free(json);
 
@@ -1236,7 +1236,7 @@ void SerializeIterToJson_serialize_component_from_var(void) {
 
     char *json = ecs_iter_to_json(&it, NULL);
 
-    test_str(json, "{\"results\":[{\"vars\":{\"E\":\"e1\"}, \"fields\":[{\"source\":\"e1\", \"data\":{\"x\":10, \"y\":20}}]}]}");
+    test_json(json, "{\"results\":[{\"vars\":{\"E\":\"e1\"},\"fields\":{\"sources\":[\"e1\"], \"values\":[{\"x\":10, \"y\":20}]}}]}");
 
     ecs_os_free(json);
 
@@ -1263,9 +1263,9 @@ void SerializeIterToJson_serialize_ids(void) {
     test_assert(json != NULL);
 
     char *expect = flecs_asprintf(
-        "{\"results\":[{\"name\":\"e\", \"id\":%u, \"fields\":[{}]}]}",
+        "{\"results\":[{\"name\":\"e\", \"id\":513, \"fields\":{}}]}",
         (uint32_t)e);
-    test_str(json, expect);
+    test_json(json, expect);
 
     ecs_os_free(json);
     ecs_os_free(expect);
@@ -1295,9 +1295,9 @@ void SerializeIterToJson_serialize_ids_2_entities(void) {
     test_assert(json != NULL);
 
     char *expect = flecs_asprintf(
-        "{\"results\":[{\"name\":\"e1\", \"id\":%u, \"fields\":[{}]}, {\"name\":\"e2\", \"id\":%u, \"fields\":[{}]}]}",
+        "{\"results\":[{\"name\":\"e1\", \"id\":513, \"fields\":{}}, {\"name\":\"e2\", \"id\":514, \"fields\":{}}]}",
         (uint32_t)e1, (uint32_t)e2);
-    test_str(json, expect);
+    test_json(json, expect);
 
     ecs_os_free(json);
     ecs_os_free(expect);
@@ -1333,8 +1333,8 @@ void SerializeIterToJson_serialize_anonymous(void) {
     test_assert(json != NULL);
 
     char *expect = flecs_asprintf(
-        "{\"results\":[{\"name\":\"#5000\", \"fields\":[{}]}, {\"name\":\"#10000\", \"fields\":[{}]}, {\"name\":\"#100000\", \"fields\":[{}]}, {\"name\":\"#1000000\", \"fields\":[{}]}]}");
-    test_str(json, expect);
+        "{\"results\":[{\"name\":\"#5000\", \"fields\":{}}, {\"name\":\"#10000\", \"fields\":{}}, {\"name\":\"#100000\", \"fields\":{}}, {\"name\":\"#1000000\", \"fields\":{}}]}");
+    test_json(json, expect);
 
     ecs_os_free(json);
     ecs_os_free(expect);
@@ -1371,8 +1371,8 @@ void SerializeIterToJson_serialize_anonymous_ids(void) {
     test_assert(json != NULL);
 
     char *expect = flecs_asprintf(
-        "{\"results\":[{\"name\":\"#5000\", \"id\":5000, \"fields\":[{}]}, {\"name\":\"#10000\", \"id\":10000, \"fields\":[{}]}, {\"name\":\"#100000\", \"id\":100000, \"fields\":[{}]}, {\"name\":\"#1000000\", \"id\":1000000, \"fields\":[{}]}]}");
-    test_str(json, expect);
+        "{\"results\":[{\"name\":\"#5000\", \"id\":5000, \"fields\":{}}, {\"name\":\"#10000\", \"id\":10000, \"fields\":{}}, {\"name\":\"#100000\", \"id\":100000, \"fields\":{}}, {\"name\":\"#1000000\", \"id\":1000000, \"fields\":{}}]}");
+    test_json(json, expect);
 
     ecs_os_free(json);
     ecs_os_free(expect);
@@ -1400,9 +1400,8 @@ void SerializeIterToJson_serialize_variable_anonymous(void) {
     test_assert(json != NULL);
 
     char *expect = flecs_asprintf(
-        "{\"results\":[{\"vars\":{\"Entity\":#10000}, \"fields\":[{\"source\":\"#10000\"}]}]}",
-        (uint32_t)e);
-    test_str(json, expect);
+        "{\"results\":[{\"vars\":{\"Entity\":#10000},\"fields\":{\"sources\":[\"#10000\"]}}]}");
+    test_json(json, expect);
 
     ecs_os_free(json);
     ecs_os_free(expect);
@@ -1428,8 +1427,8 @@ void SerializeIterToJson_serialize_anonymous_tag(void) {
     test_assert(json != NULL);
 
     char *expect = flecs_asprintf(
-        "{\"results\":[{\"name\":\"e\", \"fields\":[{}]}]}");
-    test_str(json, expect);
+        "{\"results\":[{\"name\":\"e\", \"fields\":{}}]}");
+    test_json(json, expect);
 
     ecs_os_free(json);
     ecs_os_free(expect);
@@ -1465,8 +1464,8 @@ void SerializeIterToJson_serialize_anonymous_component(void) {
     test_assert(json != NULL);
 
     char *expect = flecs_asprintf(
-        "{\"type_info\":{\"#10000\":{\"value\":[\"int\"]}}, \"results\":[{\"name\":\"e\", \"fields\":[{\"data\":{\"value\":10}}]}]}");
-    test_str(json, expect);
+        "{\"type_info\":{\"#10000\":{\"value\":[\"int\"]}}, \"results\":[{\"name\":\"e\", \"fields\":{\"values\":[{\"value\":10}]}}]}");
+    test_json(json, expect);
 
     ecs_os_free(json);
     ecs_os_free(expect);
@@ -1494,8 +1493,8 @@ void SerializeIterToJson_serialize_anonymous_pair(void) {
     test_assert(json != NULL);
 
     char *expect = flecs_asprintf(
-        "{\"results\":[{\"name\":\"e\", \"fields\":[{\"id\":[\"#10000\",\"#20000\"]}]}]}");
-    test_str(json, expect);
+        "{\"results\":[{\"name\":\"e\", \"fields\":{\"ids\":[[\"#10000\",\"#20000\"]]}}]}");
+    test_json(json, expect);
 
     ecs_os_free(json);
     ecs_os_free(expect);
@@ -1568,7 +1567,7 @@ void SerializeIterToJson_serialize_recycled_pair_id(void) {
     ecs_iter_t it = ecs_query_iter(world, q);
     char *json = ecs_iter_to_json(&it, NULL);
     test_assert(json != NULL);
-    test_str(json, "{\"results\":[{\"name\":\"ent\", \"fields\":[{\"id\":[\"Rel\",\"Tgt\"]}]}]}");
+    test_json(json, "{\"results\":[{\"name\":\"ent\", \"fields\":{\"ids\":[[\"Rel\",\"Tgt\"]]}}]}");
 
     ecs_os_free(json);
 
@@ -1608,7 +1607,7 @@ void SerializeIterToJson_serialize_w_alert(void) {
     desc.serialize_values = false;
     char *json = ecs_iter_to_json(&it, &desc);
     test_assert(json != NULL);
-    test_str(json, "{\"results\":[{\"name\":\"e1\", \"fields\":[{}]}, {\"name\":\"e2\", \"alerts\":true, \"fields\":[{}]}]}");
+    test_json(json, "{\"results\":[{\"name\":\"e1\", \"fields\":{}}, {\"name\":\"e2\", \"alerts\":true, \"fields\":{}}]}");
 
     ecs_os_free(json);
 
@@ -1641,7 +1640,7 @@ void SerializeIterToJson_serialize_no_this_alert_imported(void) {
     ecs_iter_t it = ecs_query_iter(world, q);
 
     char *json = ecs_iter_to_json(&it, NULL);
-    test_str(json, "{\"results\":[{\"vars\":{\"x\":\"Foo\"}, \"fields\":[{\"source\":\"Foo\", \"data\":{\"x\":10, \"y\":20}}]}]}");
+    test_json(json, "{\"results\":[{\"vars\":{\"x\":\"Foo\"},\"fields\":{\"sources\":[\"Foo\"], \"values\":[{\"x\":10, \"y\":20}]}}]}");
     ecs_os_free(json);
 
     ecs_query_fini(q);
@@ -1825,7 +1824,7 @@ void SerializeIterToJson_serialize_paged_iterator_w_vars(void) {
     ecs_iter_t pit = ecs_page_iter(&it, 1, 3);
 
     test_assert(var < pit.variable_count);
-    test_str("Var", pit.variable_names[var]);
+    test_json("Var", pit.variable_names[var]);
 
     test_bool(true, ecs_page_next(&pit));
     test_int(2, pit.count);
@@ -1905,7 +1904,7 @@ void SerializeIterToJson_serialize_table(void) {
     char *json = ecs_iter_to_json(&it, &desc);
     test_assert(json != NULL);
 
-    test_str(json, "{\"results\":[{\"name\":\"e1\", \"tags\":[\"Foo\"], \"components\":{\"Position\":{\"x\":10, \"y\":20}, \"(Identifier,Name)\":null}}, {\"name\":\"e2\", \"tags\":[\"Foo\", \"Bar\"], \"components\":{\"Position\":{\"x\":20, \"y\":30}, \"Velocity\":{\"x\":1, \"y\":1}, \"(Identifier,Name)\":null}}, {\"name\":\"e3\", \"components\":{\"Position\":{\"x\":30, \"y\":40}, \"Mass\":{\"value\":100}, \"(Identifier,Name)\":null}}]}");
+    test_json(json, "{\"results\":[{\"name\":\"e1\", \"tags\":[\"Foo\"], \"components\":{\"Position\":{\"x\":10, \"y\":20}, \"(Identifier,Name)\":null}}, {\"name\":\"e2\", \"tags\":[\"Foo\", \"Bar\"], \"components\":{\"Position\":{\"x\":20, \"y\":30}, \"Velocity\":{\"x\":1, \"y\":1}, \"(Identifier,Name)\":null}}, {\"name\":\"e3\", \"components\":{\"Position\":{\"x\":30, \"y\":40}, \"Mass\":{\"value\":100}, \"(Identifier,Name)\":null}}]}");
     
     ecs_os_free(json);
 
@@ -1978,7 +1977,7 @@ void SerializeIterToJson_serialize_table_w_id_labels(void) {
     char *json = ecs_iter_to_json(&it, &desc);
     test_assert(json != NULL);
 
-    test_str(json, "{\"results\":[{\"name\":\"e1\", \"tags\":[\"Foo\"], \"components\":{\"position\":{\"x\":10, \"y\":20}, \"(Identifier,Name)\":null}}, {\"name\":\"e2\", \"tags\":[\"Foo\", \"Bar\"], \"components\":{\"position\":{\"x\":20, \"y\":30}, \"velocity\":{\"x\":1, \"y\":1}, \"(Identifier,Name)\":null}}, {\"name\":\"e3\", \"components\":{\"position\":{\"x\":30, \"y\":40}, \"mass\":{\"value\":100}, \"(Identifier,Name)\":null}}]}");
+    test_json(json, "{\"results\":[{\"name\":\"e1\", \"tags\":[\"Foo\"], \"components\":{\"position\":{\"x\":10, \"y\":20}, \"(Identifier,Name)\":null}}, {\"name\":\"e2\", \"tags\":[\"Foo\", \"Bar\"], \"components\":{\"position\":{\"x\":20, \"y\":30}, \"velocity\":{\"x\":1, \"y\":1}, \"(Identifier,Name)\":null}}, {\"name\":\"e3\", \"components\":{\"position\":{\"x\":30, \"y\":40}, \"mass\":{\"value\":100}, \"(Identifier,Name)\":null}}]}");
     
     ecs_os_free(json);
 
@@ -2056,7 +2055,7 @@ void SerializeIterToJson_serialize_table_w_var_labels(void) {
     char *json = ecs_iter_to_json(&it, &desc);
     test_assert(json != NULL);
 
-    test_str(json, "{\"results\":[{\"parent\":\"Parent\", \"name\":\"e1\", \"tags\":[\"Foo\"],\"pairs\":{\"ChildOf\":\"parent\"},\"vars\":{\"p\":\"parent\"}, \"components\":{\"Position\":{\"x\":10, \"y\":20}, \"(Identifier,Name)\":null}}, {\"parent\":\"Parent\", \"name\":\"e2\", \"tags\":[\"Foo\", \"Bar\"],\"pairs\":{\"ChildOf\":\"parent\"},\"vars\":{\"p\":\"parent\"}, \"components\":{\"Position\":{\"x\":20, \"y\":30}, \"Velocity\":{\"x\":1, \"y\":1}, \"(Identifier,Name)\":null}}, {\"parent\":\"Parent\", \"name\":\"e3\", \"pairs\":{\"ChildOf\":\"parent\"},\"vars\":{\"p\":\"parent\"}, \"components\":{\"Position\":{\"x\":30, \"y\":40}, \"Mass\":{\"value\":100}, \"(Identifier,Name)\":null}}]}");
+    test_json(json, "{\"results\":[{\"parent\":\"Parent\", \"name\":\"e1\", \"tags\":[\"Foo\"],\"pairs\":{\"ChildOf\":\"parent\"},\"vars\":{\"p\":\"parent\"}, \"components\":{\"Position\":{\"x\":10, \"y\":20}, \"(Identifier,Name)\":null}}, {\"parent\":\"Parent\", \"name\":\"e2\", \"tags\":[\"Foo\", \"Bar\"],\"pairs\":{\"ChildOf\":\"parent\"},\"vars\":{\"p\":\"parent\"}, \"components\":{\"Position\":{\"x\":20, \"y\":30}, \"Velocity\":{\"x\":1, \"y\":1}, \"(Identifier,Name)\":null}}, {\"parent\":\"Parent\", \"name\":\"e3\", \"pairs\":{\"ChildOf\":\"parent\"},\"vars\":{\"p\":\"parent\"}, \"components\":{\"Position\":{\"x\":30, \"y\":40}, \"Mass\":{\"value\":100}, \"(Identifier,Name)\":null}}]}");
 
     ecs_os_free(json);
 
@@ -2078,7 +2077,7 @@ void SerializeIterToJson_serialize_world(void) {
     test_assert(json_2 != NULL);
 
     test_assert(json_1 != json_2);
-    test_str(json_1, json_2);
+    test_json(json_1, json_2);
 
     ecs_os_free(json_1);
     ecs_os_free(json_2);
@@ -2103,8 +2102,8 @@ void SerializeIterToJson_serialize_w_offset(void) {
     ecs_iter_to_json_desc_t desc = ECS_ITER_TO_JSON_INIT;
     char *json = ecs_iter_to_json(&it, &desc);
 
-    test_str(json, 
-        "{\"results\":[{\"name\":\"e1\", \"is_set\":[true, false], \"fields\":[{}, {}]}, {\"name\":\"e2\", \"is_set\":[true, false], \"fields\":[{}, {}]}]}");
+    test_json(json, 
+        "{\"results\":[{\"name\":\"e1\", \"fields\":{\"is_set\":[true, false], \"ids\":[0, 0]}}, {\"name\":\"e2\", \"fields\":{\"is_set\":[true, false], \"ids\":[0, 0]}}]}");
 
     ecs_os_free(json);
 
@@ -2134,10 +2133,10 @@ void SerializeIterToJson_serialize_labels_w_offset(void) {
     char *json = ecs_iter_to_json(&it, &desc);
 
     char *expect = flecs_asprintf(
-        "{\"results\":[{\"name\":\"#%u\", \"doc\":{\"label\":\"e1\"}, \"is_set\":[true, false], \"fields\":[{}, {}]}, {\"name\":\"#%u\", \"doc\":{\"label\":\"e2\"}, \"is_set\":[true, false], \"fields\":[{}, {}]}]}",
+        "{\"results\":[{\"name\":\"#513\", \"doc\":{\"label\":\"e1\"}, \"fields\":{\"is_set\":[true, false], \"ids\":[0, 0]}}, {\"name\":\"#514\", \"doc\":{\"label\":\"e2\"}, \"fields\":{\"is_set\":[true, false], \"ids\":[0, 0]}}]}",
         (uint32_t)e1, (uint32_t)e2);
 
-    test_str(json, expect);
+    test_json(json, expect);
 
     ecs_os_free(json);
     ecs_os_free(expect);
@@ -2168,10 +2167,10 @@ void SerializeIterToJson_serialize_colors_w_offset(void) {
     char *json = ecs_iter_to_json(&it, &desc);
 
     char *expect = flecs_asprintf(
-        "{\"results\":[{\"name\":\"#%u\", \"doc\":{\"label\":\"#%u\", \"color\":\"e1\"}, \"is_set\":[true, false], \"fields\":[{}, {}]}, {\"name\":\"#%u\", \"doc\":{\"label\":\"#%u\", \"color\":\"e2\"}, \"is_set\":[true, false], \"fields\":[{}, {}]}]}",
+        "{\"results\":[{\"name\":\"#%u\", \"doc\":{\"label\":\"#%u\", \"color\":\"e1\"}, \"fields\":{\"is_set\":[true, false], \"ids\":[0, 0]}}, {\"name\":\"#%u\", \"doc\":{\"label\":\"#%u\", \"color\":\"e2\"}, \"fields\":{\"is_set\":[true, false], \"ids\":[0, 0]}}]}",
         (uint32_t)e1, (uint32_t)e1, (uint32_t)e2, (uint32_t)e2);
 
-    test_str(json, expect);
+    test_json(json, expect);
 
     ecs_os_free(json);
     ecs_os_free(expect);
@@ -2199,10 +2198,10 @@ void SerializeIterToJson_serialize_anonymous_entities_w_offset(void) {
     char *json = ecs_iter_to_json(&it, &desc);
 
     char *expect = flecs_asprintf(
-        "{\"results\":[{\"name\":\"#%u\", \"is_set\":[true, false], \"fields\":[{}, {}]}, {\"name\":\"#%u\", \"is_set\":[true, false], \"fields\":[{}, {}]}]}",
+        "{\"results\":[{\"name\":\"#%u\", \"fields\":{\"is_set\":[true, false], \"ids\":[0, 0]}}, {\"name\":\"#%u\", \"fields\":{\"is_set\":[true, false], \"ids\":[0, 0]}}]}",
             (uint32_t)e1, (uint32_t)e2);
 
-    test_str(json, expect);
+    test_json(json, expect);
 
     ecs_os_free(json);
     ecs_os_free(expect);
@@ -2231,7 +2230,7 @@ void SerializeIterToJson_serialize_vars_for_query(void) {
     ecs_iter_t it = ecs_query_iter(world, q);
     char *json = ecs_iter_to_json(&it, &desc);
     test_assert(json != NULL);
-    test_str(json, "{\"results\":[{\"parent\":\"Parent\", \"name\":\"e1\", \"vars\":{\"p\":\"Parent\"}, \"fields\":[{}, {\"id\":[\"flecs.core.ChildOf\",\"Parent\"]}]}, {\"parent\":\"Parent\", \"name\":\"e2\", \"vars\":{\"p\":\"Parent\"}, \"fields\":[{}, {\"id\":[\"flecs.core.ChildOf\",\"Parent\"]}]}]}");
+    test_json(json, "{\"results\":[{\"parent\":\"Parent\", \"name\":\"e1\", \"vars\":{\"p\":\"Parent\"},\"fields\":{\"ids\":[0, [\"flecs.core.ChildOf\",\"Parent\"]]}}, {\"parent\":\"Parent\", \"name\":\"e2\", \"vars\":{\"p\":\"Parent\"},\"fields\":{\"ids\":[0, [\"flecs.core.ChildOf\",\"Parent\"]]}}]}");
 
     ecs_os_free(json);
 
@@ -2260,7 +2259,7 @@ void SerializeIterToJson_serialize_var_labels_for_query(void) {
     ecs_iter_t it = ecs_query_iter(world, q);
     char *json = ecs_iter_to_json(&it, &desc);
     test_assert(json != NULL);
-    test_str(json, "{\"results\":[{\"parent\":\"Parent\", \"name\":\"e1\", \"vars\":{\"p\":\"parent\"}, \"fields\":[{}, {\"id\":[\"flecs.core.ChildOf\",\"Parent\"]}]}, {\"parent\":\"Parent\", \"name\":\"e2\", \"vars\":{\"p\":\"parent\"}, \"fields\":[{}, {\"id\":[\"flecs.core.ChildOf\",\"Parent\"]}]}]}");
+    test_json(json, "{\"results\":[{\"parent\":\"Parent\", \"name\":\"e1\", \"vars\":{\"p\":\"parent\"},\"fields\":{\"ids\":[0, [\"flecs.core.ChildOf\",\"Parent\"]]}}, {\"parent\":\"Parent\", \"name\":\"e2\", \"vars\":{\"p\":\"parent\"},\"fields\":{\"ids\":[0, [\"flecs.core.ChildOf\",\"Parent\"]]}}]}");
 
     ecs_os_free(json);
 
@@ -2292,7 +2291,7 @@ void SerializeIterToJson_serialize_null_doc_name(void) {
     ecs_iter_t it = ecs_query_iter(world, q);
     char *json = ecs_iter_to_json(&it, &desc);
     test_assert(json != NULL);
-    test_str(json, "{\"results\":[{\"name\":\"foo\", \"doc\":{\"label\":\"foo\"}, \"fields\":[{}]}]}");
+    test_json(json, "{\"results\":[{\"name\":\"foo\", \"doc\":{\"label\":\"foo\"}, \"fields\":{}}]}");
     ecs_os_free(json);
 
     ecs_query_fini(q);
@@ -2319,7 +2318,7 @@ void SerializeIterToJson_serialize_rule_w_optional(void) {
     ecs_iter_t it = ecs_query_iter(world, r);
 
     char *json = ecs_iter_to_json(&it, NULL);
-    test_str(json, "{\"results\":[{\"name\":\"e1\", \"is_set\":[true, false], \"fields\":[{}, {}]}, {\"name\":\"e2\", \"is_set\":[true, true], \"fields\":[{}, {}]}]}");
+    test_json(json, "{\"results\":[{\"name\":\"e1\", \"fields\":{\"is_set\":[true, false]}}, {\"name\":\"e2\", \"fields\":{\"is_set\":[true, true]}}]}");
 
     ecs_os_free(json);
 
@@ -2369,7 +2368,7 @@ void SerializeIterToJson_serialize_rule_w_optional_component(void) {
     ecs_iter_t it = ecs_query_iter(world, r);
 
     char *json = ecs_iter_to_json(&it, NULL);
-    test_str(json, "{\"results\":[{\"name\":\"e1\", \"is_set\":[true, false], \"fields\":[{\"data\":{\"x\":10, \"y\":20}}, {}]}, {\"name\":\"e2\", \"is_set\":[true, true], \"fields\":[{\"data\":{\"x\":30, \"y\":40}}, {\"data\":{\"x\":1, \"y\":2}}]}, {\"name\":\"e3\", \"is_set\":[true, false], \"fields\":[{\"data\":{\"x\":50, \"y\":60}}, {}]}]}");
+    test_json(json, "{\"results\":[{\"name\":\"e1\", \"fields\":{\"is_set\":[true, false], \"values\":[{\"x\":10, \"y\":20}, 0]}}, {\"name\":\"e2\", \"fields\":{\"is_set\":[true, true], \"values\":[{\"x\":30, \"y\":40}, {\"x\":1, \"y\":2}]}}, {\"name\":\"e3\", \"fields\":{\"is_set\":[true, false], \"values\":[{\"x\":50, \"y\":60}, 0]}}]}");
 
     ecs_os_free(json);
 
@@ -2399,7 +2398,56 @@ void SerializeIterToJson_serialize_entity_w_flecs_core_parent(void) {
     ecs_iter_t it = ecs_query_iter(world, q);
 
     char *json = ecs_iter_to_json(&it, NULL);
-    test_str(json, "{\"results\":[{\"parent\":\"flecs.core.bob\", \"name\":\"e1\", \"fields\":[{}]}]}");
+    test_json(json, "{\"results\":[{\"parent\":\"flecs.core.bob\", \"name\":\"e1\", \"fields\":{}}]}");
+
+    ecs_os_free(json);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void SerializeIterToJson_no_fields(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e1" });
+    ecs_set(world, e, Position, {10, 20});
+
+    ecs_query_t *q = ecs_query(world, { .expr = "Position" });
+    ecs_iter_t it = ecs_query_iter(world, q);
+
+    ecs_iter_to_json_desc_t desc = ECS_ITER_TO_JSON_INIT;
+    desc.serialize_fields = false;
+    char *json = ecs_iter_to_json(&it, &desc);
+    test_assert(json != NULL);
+    test_json(json, "{\"results\":[{\"name\":\"e1\"}]}");
+
+    ecs_os_free(json);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void SerializeIterToJson_no_fields_w_vars(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t p = ecs_entity(world, { .name = "parent" });
+    ecs_entity_t e = ecs_entity(world, { .name = "e1", .parent = p });
+    ecs_set(world, e, Position, {10, 20});
+
+    ecs_query_t *q = ecs_query(world, { .expr = "Position, (ChildOf, $p)" });
+    ecs_iter_t it = ecs_query_iter(world, q);
+
+    ecs_iter_to_json_desc_t desc = ECS_ITER_TO_JSON_INIT;
+    desc.serialize_fields = false;
+    char *json = ecs_iter_to_json(&it, &desc);
+    test_assert(json != NULL);
+    test_json(json, "{\"results\":[{\"parent\":\"parent\", \"name\":\"e1\", \"vars\":{\"p\":\"parent\"}}]}");
 
     ecs_os_free(json);
 
