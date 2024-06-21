@@ -27447,7 +27447,7 @@ void http_append_send_headers(
     ecs_strbuf_appendlit(hdrs, "Access-Control-Allow-Origin: *\r\n");
     if (preflight) {
         ecs_strbuf_appendlit(hdrs, "Access-Control-Allow-Private-Network: true\r\n");
-        ecs_strbuf_appendlit(hdrs, "Access-Control-Allow-Methods: GET, PUT, OPTIONS\r\n");
+        ecs_strbuf_appendlit(hdrs, "Access-Control-Allow-Methods: GET, PUT, DELETE, OPTIONS\r\n");
         ecs_strbuf_appendlit(hdrs, "Access-Control-Max-Age: 600\r\n");
     }
 
@@ -30368,13 +30368,15 @@ void flecs_rest_parse_json_ser_iter_params(
     flecs_rest_bool_param(req, "query_plan", &desc->serialize_query_plan);
     flecs_rest_bool_param(req, "query_profile", &desc->serialize_query_profile);
     flecs_rest_bool_param(req, "table", &desc->serialize_table);
+    flecs_rest_bool_param(req, "fields", &desc->serialize_fields);
+
     bool results = true;
     flecs_rest_bool_param(req, "results", &results);
     desc->dont_serialize_results = !results;
 }
 
 static
-bool flecs_rest_reply_entity(
+bool flecs_rest_get_entity(
     ecs_world_t *world,
     const ecs_http_request_t* req,
     ecs_http_reply_t *reply)
@@ -30403,7 +30405,32 @@ bool flecs_rest_reply_entity(
 }
 
 static
-bool flecs_rest_reply_world(
+bool flecs_rest_put_entity(
+    ecs_world_t *world,
+    ecs_http_reply_t *reply,
+    const char *path)
+{
+    ecs_dbg_2("rest: create entity '%s'", path);
+
+    ecs_entity_t result = ecs_entity(world, {
+        .name = path,
+        .sep = "/"
+    });
+
+    if (!result) {
+        ecs_dbg_2("rest: failed to create entity '%s'", path);
+        flecs_reply_error(reply, "failed to create entity '%s'", path);
+        reply->code = 500;
+        return true;
+    }
+
+    ecs_strbuf_append(&reply->body, "{\"id\":\"%u\"}", (uint32_t)result);
+
+    return true;
+}
+
+static
+bool flecs_rest_get_world(
     ecs_world_t *world,
     const ecs_http_request_t* req,
     ecs_http_reply_t *reply)
@@ -30434,63 +30461,7 @@ ecs_entity_t flecs_rest_entity_from_path(
 }
 
 static
-bool flecs_rest_set(
-    ecs_world_t *world,
-    const ecs_http_request_t* req,
-    ecs_http_reply_t *reply,
-    const char *path)
-{
-    ecs_entity_t e;
-    if (!(e = flecs_rest_entity_from_path(world, reply, path))) {
-        return true;
-    }
-
-    const char *component = ecs_http_get_param(req, "component");
-    if (!component) {
-        flecs_reply_error(reply, "missing component for remove endpoint");
-        reply->code = 400;
-        return true;
-    }
-
-    ecs_entity_t id;
-    if (!flecs_id_parse(world, path, component, &id)) {
-        flecs_reply_error(reply, "unresolved component '%s'", component);
-        reply->code = 400;
-        return true;
-    }
-
-    ecs_entity_t type = ecs_get_typeid(world, id);
-    if (!type) {
-        flecs_reply_error(reply, "component '%s' is not a type", component);
-        reply->code = 400;
-        return true;
-    }
-
-    const char *data = ecs_http_get_param(req, "data");
-    if (!data) {
-        flecs_reply_error(reply, "missing data for component '%s'", component);
-        reply->code = 400;
-        return true;
-    }
-
-    void *ptr = ecs_ensure_id(world, e, id);
-    if (!ptr) {
-        flecs_reply_error(reply, "failed to create component '%s'", component);
-        reply->code = 500;
-        return true;
-    }
-
-    if (!ecs_ptr_from_json(world, type, ptr, data, NULL)) {
-        flecs_reply_error(reply, "invalid value for component '%s'", component);
-        reply->code = 400;
-        return true;
-    }
-
-    return true;
-}
-
-static
-bool flecs_rest_reply_get(
+bool flecs_rest_get_component(
     ecs_world_t *world,
     const ecs_http_request_t* req,
     ecs_http_reply_t *reply,
@@ -30535,12 +30506,11 @@ bool flecs_rest_reply_get(
 }
 
 static
-bool flecs_rest_add_remove(
+bool flecs_rest_put_component(
     ecs_world_t *world,
     const ecs_http_request_t* req,
     ecs_http_reply_t *reply,
-    const char *path,
-    bool is_add)
+    const char *path)
 {
     ecs_entity_t e;
     if (!(e = flecs_rest_entity_from_path(world, reply, path))) {
@@ -30561,17 +30531,68 @@ bool flecs_rest_add_remove(
         return true;
     }
 
-    if (is_add) {
+    const char *data = ecs_http_get_param(req, "value");
+    if (!data) {
         ecs_add_id(world, e, id);
-    } else {
-        ecs_remove_id(world, e, id);
+        return true;
+    }
+
+    ecs_entity_t type = ecs_get_typeid(world, id);
+    if (!type) {
+        flecs_reply_error(reply, "component '%s' is not a type", component);
+        reply->code = 400;
+        return true;
+    }
+
+    void *ptr = ecs_ensure_id(world, e, id);
+    if (!ptr) {
+        flecs_reply_error(reply, "failed to create component '%s'", component);
+        reply->code = 500;
+        return true;
+    }
+
+    if (!ecs_ptr_from_json(world, type, ptr, data, NULL)) {
+        flecs_reply_error(reply, "invalid value for component '%s'", component);
+        reply->code = 400;
+        return true;
     }
 
     return true;
 }
 
 static
-bool flecs_rest_delete(
+bool flecs_rest_delete_component(
+    ecs_world_t *world,
+    const ecs_http_request_t* req,
+    ecs_http_reply_t *reply,
+    const char *path)
+{
+    ecs_entity_t e;
+    if (!(e = flecs_rest_entity_from_path(world, reply, path))) {
+        return true;
+    }
+
+    const char *component = ecs_http_get_param(req, "component");
+    if (!component) {
+        flecs_reply_error(reply, "missing component for remove endpoint");
+        reply->code = 400;
+        return true;
+    }
+
+    ecs_entity_t id;
+    if (!flecs_id_parse(world, path, component, &id)) {
+        flecs_reply_error(reply, "unresolved component '%s'", component);
+        reply->code = 400;
+        return true;
+    }
+
+    ecs_remove_id(world, e, id);
+
+    return true;
+}
+
+static
+bool flecs_rest_delete_entity(
     ecs_world_t *world,
     ecs_http_reply_t *reply,
     const char *path)
@@ -30587,18 +30608,47 @@ bool flecs_rest_delete(
 }
 
 static
-bool flecs_rest_enable(
+bool flecs_rest_toggle(
     ecs_world_t *world,
+    const ecs_http_request_t* req,
     ecs_http_reply_t *reply,
-    const char *path,
-    bool enable)
+    const char *path)
 {
     ecs_entity_t e;
     if (!(e = flecs_rest_entity_from_path(world, reply, path))) {
         return true;
     }
 
-    ecs_enable(world, e, enable);
+    bool enable = true;
+    flecs_rest_bool_param(req, "enable", &enable);
+
+    const char *component = ecs_http_get_param(req, "component");
+    if (!component) {
+        ecs_enable(world, e, enable);
+        return true;
+    }
+
+    ecs_entity_t id;
+    if (!flecs_id_parse(world, path, component, &id)) {
+        flecs_reply_error(reply, "unresolved component '%s'", component);
+        reply->code = 400;
+        return true;
+    }
+
+    ecs_entity_t rel = 0;
+    if (ECS_IS_PAIR(id)) {
+        rel = ecs_pair_first(world, id);
+    } else {
+        rel = id & ECS_COMPONENT_MASK;
+    }
+
+    if (!ecs_has_id(world, rel, EcsCanToggle)) {
+        flecs_reply_error(reply, "cannot toggle component '%s'", component);
+        reply->code = 400;
+        return true;
+    }
+
+    ecs_enable_id(world, e, id, enable);
     
     return true;
 }
@@ -30683,7 +30733,7 @@ void flecs_rest_iter_to_reply(
     ecs_poly_t *query,
     ecs_iter_t *it)
 {
-    ecs_iter_to_json_desc_t desc = {0};
+    ecs_iter_to_json_desc_t desc = ECS_ITER_TO_JSON_INIT;
     flecs_rest_parse_json_ser_iter_params(&desc, req);
     desc.query = query;
 
@@ -30773,7 +30823,7 @@ bool flecs_rest_reply_existing_query(
 }
 
 static
-bool flecs_rest_reply_query(
+bool flecs_rest_get_query(
     ecs_world_t *world,
     const ecs_http_request_t* req,
     ecs_http_reply_t *reply)
@@ -30783,7 +30833,7 @@ bool flecs_rest_reply_query(
         return flecs_rest_reply_existing_query(world, req, reply, q_name);
     }
 
-    const char *expr = ecs_http_get_param(req, "q");
+    const char *expr = ecs_http_get_param(req, "expr");
     if (!expr) {
         ecs_strbuf_appendlit(&reply->body, "Missing parameter 'q'");
         reply->code = 400; /* bad request */
@@ -31112,7 +31162,7 @@ noresults:
 }
 
 static
-bool flecs_rest_reply_stats(
+bool flecs_rest_get_stats(
     ecs_world_t *world,
     const ecs_http_request_t* req,
     ecs_http_reply_t *reply)
@@ -31151,7 +31201,7 @@ bool flecs_rest_reply_stats(
 }
 #else
 static
-bool flecs_rest_reply_stats(
+bool flecs_rest_get_stats(
     ecs_world_t *world,
     const ecs_http_request_t* req,
     ecs_http_reply_t *reply)
@@ -31223,7 +31273,7 @@ void flecs_rest_reply_table_append(
 }
 
 static
-bool flecs_rest_reply_tables(
+bool flecs_rest_get_tables(
     ecs_world_t *world,
     const ecs_http_request_t* req,
     ecs_http_reply_t *reply)
@@ -31460,7 +31510,7 @@ void flecs_rest_on_commands(
 }
 
 static
-bool flecs_rest_reply_commands_capture(
+bool flecs_rest_get_commands_capture(
     ecs_world_t *world,
     ecs_rest_ctx_t *impl,
     const ecs_http_request_t* req,
@@ -31487,7 +31537,7 @@ bool flecs_rest_reply_commands_capture(
 }
 
 static
-bool flecs_rest_reply_commands_request(
+bool flecs_rest_get_commands_request(
     ecs_world_t *world,
     ecs_rest_ctx_t *impl,
     const ecs_http_request_t* req,
@@ -31548,67 +31598,62 @@ bool flecs_rest_reply(
     if (req->method == EcsHttpGet) {
         /* Entity endpoint */
         if (!ecs_os_strncmp(req->path, "entity/", 7)) {
-            return flecs_rest_reply_entity(world, req, reply);
+            return flecs_rest_get_entity(world, req, reply);
 
         /* Component GET endpoint */
         } else if (!ecs_os_strncmp(req->path, "component/", 10)) {
-            return flecs_rest_reply_get(world, req, reply, &req->path[10]);
+            return flecs_rest_get_component(world, req, reply, &req->path[10]);
 
         /* Query endpoint */
         } else if (!ecs_os_strcmp(req->path, "query")) {
-            return flecs_rest_reply_query(world, req, reply);
+            return flecs_rest_get_query(world, req, reply);
 
         /* World endpoint */
         } else if (!ecs_os_strcmp(req->path, "world")) {
-            return flecs_rest_reply_world(world, req, reply);
+            return flecs_rest_get_world(world, req, reply);
 
         /* Stats endpoint */
         } else if (!ecs_os_strncmp(req->path, "stats/", 6)) {
-            return flecs_rest_reply_stats(world, req, reply);
+            return flecs_rest_get_stats(world, req, reply);
 
         /* Tables endpoint */
         } else if (!ecs_os_strncmp(req->path, "tables", 6)) {
-            return flecs_rest_reply_tables(world, req, reply);
+            return flecs_rest_get_tables(world, req, reply);
 
         /* Commands capture endpoint */
         } else if (!ecs_os_strncmp(req->path, "commands/capture", 16)) {
-            return flecs_rest_reply_commands_capture(world, impl, req, reply);
+            return flecs_rest_get_commands_capture(world, impl, req, reply);
 
         /* Commands request endpoint (request commands from specific frame) */
         } else if (!ecs_os_strncmp(req->path, "commands/frame/", 15)) {
-            return flecs_rest_reply_commands_request(world, impl, req, reply);
+            return flecs_rest_get_commands_request(world, impl, req, reply);
         }
 
     } else if (req->method == EcsHttpPut) {
         /* Component PUT endpoint */
-        if (!ecs_os_strncmp(req->path, "component/", 10)) {
-            return flecs_rest_set(world, req, reply, &req->path[10]);
+        if (!ecs_os_strncmp(req->path, "entity/", 7)) {
+            return flecs_rest_put_entity(world, reply, &req->path[7]);
 
-        /* Add endpoint */
-        } else if (!ecs_os_strncmp(req->path, "add/", 4)) {
-            return flecs_rest_add_remove(
-                world, req, reply, &req->path[4], true);
-
-        /* Remove endpoint */
-        } else if (!ecs_os_strncmp(req->path, "remove/", 7)) {
-            return flecs_rest_add_remove(
-                world, req, reply, &req->path[7], false);
-
-        /* Delete endpoint */
-        } else if (!ecs_os_strncmp(req->path, "delete/", 7)) {
-            return flecs_rest_delete(world, reply, &req->path[7]);
+        /* Component PUT endpoint */
+        } else if (!ecs_os_strncmp(req->path, "component/", 10)) {
+            return flecs_rest_put_component(world, req, reply, &req->path[10]);
 
         /* Enable endpoint */
-        } else if (!ecs_os_strncmp(req->path, "enable/", 7)) {
-            return flecs_rest_enable(world, reply, &req->path[7], true);
-
-        /* Disable endpoint */
-        } else if (!ecs_os_strncmp(req->path, "disable/", 8)) {
-            return flecs_rest_enable(world, reply, &req->path[8], false);
+        } else if (!ecs_os_strncmp(req->path, "toggle/", 7)) {
+            return flecs_rest_toggle(world, req, reply, &req->path[7]);
 
         /* Script endpoint */
         } else if (!ecs_os_strncmp(req->path, "script/", 7)) {
             return flecs_rest_script(world, req, reply, &req->path[7]);
+        }
+    } else if (req->method == EcsHttpDelete) {
+        /* Entity DELETE endpoint */
+        if (!ecs_os_strncmp(req->path, "entity/", 7)) {
+            return flecs_rest_delete_entity(world, reply, &req->path[7]);
+
+        /* Component DELETE endpoint */
+        } else if (!ecs_os_strncmp(req->path, "component/", 10)) {
+            return flecs_rest_delete_component(world, req, reply, &req->path[10]);
         }
     }
 
@@ -48696,7 +48741,8 @@ bool flecs_json_serialize_iter_result_is_set(
     flecs_json_memberl(buf, "is_set");
     flecs_json_array_push(buf);
 
-    for (int i = 0; i < it->field_count; i ++) {
+    int32_t i, count = it->field_count;
+    for (i = 0; i < count; i ++) {
         ecs_strbuf_list_next(buf);
         if (ecs_field_is_set(it, i)) {
             flecs_json_true(buf);
@@ -48711,24 +48757,125 @@ bool flecs_json_serialize_iter_result_is_set(
 }
 
 static
+bool flecs_json_serialize_iter_result_ids(
+    const ecs_iter_t *it,
+    ecs_strbuf_t *buf)
+{
+    const ecs_query_t *q = it->query;
+    if (!q) {
+        return false;
+    }
+
+    ecs_world_t *world = it->world;
+    int16_t f, field_count = flecs_ito(int16_t, it->field_count);
+    int16_t field_mask = flecs_ito(int16_t, (1u << field_count) - 1);    
+    if (q->static_id_fields == field_mask) {
+        /* All matched ids are static, nothing to serialize */
+        return false;
+    }
+
+    flecs_json_memberl(buf, "ids");
+    flecs_json_array_push(buf);
+
+    for (f = 0; f < field_count; f ++) {
+        ecs_flags16_t field_bit = flecs_ito(uint16_t, 1 << f);;
+
+        if (!(it->set_fields & field_bit)) {
+            /* Don't serialize ids for fields that aren't set */
+            ecs_strbuf_list_appendlit(buf, "0");
+            continue;
+        }
+
+        if (q->static_id_fields & field_bit) {
+            /* Only add non-static ids to save bandwidth/performance */
+            ecs_strbuf_list_appendlit(buf, "0");
+            continue;
+        }
+
+        flecs_json_next(buf);
+        flecs_json_id(buf, world, it->ids[f]);
+    }
+
+    flecs_json_array_pop(buf);
+
+    return true;
+}
+
+static
+bool flecs_json_serialize_iter_result_sources(
+    const ecs_iter_t *it,
+    ecs_strbuf_t *buf)
+{
+    const ecs_query_t *q = it->query;
+    if (!q) {
+        return false;
+    }
+
+    ecs_world_t *world = it->world;
+    int32_t f, field_count = it->field_count;
+
+    for (f = 0; f < field_count; f ++) {
+        if (it->sources[f]) {
+            break;
+        }
+    }
+
+    if (f == field_count) {
+        /* All fields are mathced on $this */
+        return false;
+    }
+
+    flecs_json_memberl(buf, "sources");
+    flecs_json_array_push(buf);
+
+    for (f = 0; f < field_count; f ++) {
+        ecs_flags16_t field_bit = flecs_ito(uint16_t, 1 << f);;
+
+        if (!(it->set_fields & field_bit)) {
+            /* Don't serialize source for fields that aren't set */
+            ecs_strbuf_list_appendlit(buf, "0");
+            continue;
+        }
+
+        if (!it->sources[f]) {
+            /* Don't serialize source for fields that have $this source */
+            ecs_strbuf_list_appendlit(buf, "0");
+            continue;
+        }
+
+        flecs_json_next(buf);
+        flecs_json_path(buf, world, it->sources[f]);
+    }
+
+    flecs_json_array_pop(buf);
+
+    return true;
+}
+
+static
 bool flecs_json_serialize_common_for_table(
     const ecs_world_t *world,
     const ecs_iter_t *it,
     ecs_strbuf_t *buf,
     const ecs_iter_to_json_desc_t *desc)
 {
-    bool result = false;
     ecs_strbuf_list_push(buf, "", ",");
-    result |= flecs_json_serialize_vars(world, it, buf, desc);
-    result |= flecs_json_serialize_iter_result_is_set(it, buf);
-    ecs_strbuf_list_pop(buf, "");
-    if (!result) {
-        ecs_strbuf_reset(buf);
+    flecs_json_serialize_vars(world, it, buf, desc);
+
+    bool result = false;
+    if (!desc || desc->serialize_fields) {
+        ecs_strbuf_list_appendlit(buf, "\"fields\":");
+        flecs_json_object_push(buf);
+        result |= flecs_json_serialize_iter_result_is_set(it, buf);
+        result |= flecs_json_serialize_iter_result_ids(it, buf);
+        result |= flecs_json_serialize_iter_result_sources(it, buf);
     }
+
+    ecs_strbuf_list_pop(buf, "");
     return result;
 }
 
-int flecs_json_serialize_iter_result_fields(
+int flecs_json_serialize_iter_result_field_values(
     const ecs_world_t *world, 
     const ecs_iter_t *it, 
     int32_t i,
@@ -48741,55 +48888,38 @@ int flecs_json_serialize_iter_result_fields(
         return 0;
     }
 
-    flecs_json_memberl(buf, "fields");
+    ecs_strbuf_appendlit(buf, "\"values\":");
     flecs_json_array_push(buf);
 
     for (f = 0; f < field_count; f ++) {
-        flecs_json_next(buf);
-
         ecs_flags16_t field_bit = flecs_ito(uint16_t, 1 << f);;
-        flecs_json_object_push(buf);
-
         if (!(it->set_fields & field_bit)) {
-            goto next;
+            ecs_strbuf_list_appendlit(buf, "0");
+            continue;
         }
-
-        if (it->query) {
-            if (!(it->query->static_id_fields & field_bit)) {
-                flecs_json_memberl(buf, "id");
-                flecs_json_id(buf, world, it->ids[f]);
-            }
-        }
-
-        if (it->sources[f]) {
-            flecs_json_memberl(buf, "source");
-            flecs_json_path(buf, world, it->sources[f]);
-        }
-
 
         ecs_json_value_ser_ctx_t *value_ctx = &ser_ctx->value_ctx[f];
         if (!flecs_json_serialize_get_value_ctx(
             world, it->ids[f], value_ctx, desc)) 
         {
-            goto next;
+            ecs_strbuf_list_appendlit(buf, "0");
+            continue;
         }
 
         if (!it->ptrs[f]) {
-            goto next; /* Should not happen, but don't panic on it */
+            ecs_strbuf_list_appendlit(buf, "0");
+            continue;
         }
-
-        flecs_json_memberl(buf, "data");
 
         void *ptr = it->ptrs[f];
         if (!it->sources[f]) {
             ptr = ECS_ELEM(ptr, it->sizes[f], i);
         }
+
+        flecs_json_next(buf);
         if (flecs_json_ser_type(world, &value_ctx->ser->ops, ptr, buf) != 0) {
             return -1;
         }
-
-    next:
-        flecs_json_object_pop(buf);
     }
 
     flecs_json_array_pop(buf);
@@ -48809,14 +48939,15 @@ int flecs_json_serialize_iter_result_query(
     const ecs_json_this_data_t *this_data)
 {
     /* Serialize tags, pairs, vars once, since they're the same for each row */
-    ecs_strbuf_t tags_pairs_vars_buf = ECS_STRBUF_INIT;
-    int32_t tags_pairs_vars_len = 0;
-    char *tags_pairs_vars = NULL;
-    if (flecs_json_serialize_common_for_table(
-        world, it, &tags_pairs_vars_buf, desc)) 
-    {
-        tags_pairs_vars_len = ecs_strbuf_written(&tags_pairs_vars_buf);
-        tags_pairs_vars = ecs_strbuf_get(&tags_pairs_vars_buf);
+    ecs_strbuf_t common_data_buf = ECS_STRBUF_INIT;
+    bool common_field_data = flecs_json_serialize_common_for_table(
+        world, it, &common_data_buf, desc);
+    int32_t common_data_len = ecs_strbuf_written(&common_data_buf);
+    char *common_data = NULL;
+    if (!common_data_len) {
+        ecs_strbuf_reset(&common_data_buf);
+    } else {
+        common_data = ecs_strbuf_get(&common_data_buf);
     }
 
     int32_t i;
@@ -48829,21 +48960,41 @@ int flecs_json_serialize_iter_result_query(
                 it, parent_path, this_data, i, buf, desc);
         }
 
-        if (tags_pairs_vars) {
+        if (common_data) {
             ecs_strbuf_list_appendstrn(buf, 
-                tags_pairs_vars, tags_pairs_vars_len);
+                common_data, common_data_len);
         }
 
-        if (flecs_json_serialize_iter_result_fields(
-            world, it, i, buf, desc, ser_ctx))
-        {
-            return -1;
+        if (!desc || desc->serialize_fields) {
+            bool has_values = !desc || desc->serialize_values;
+            if (it->flags & EcsIterNoData || !it->field_count) {
+                has_values = false;
+            }
+
+            const ecs_query_t *q = it->query;
+            if (q && !q->data_fields) {
+                has_values = false;
+            }
+
+            if (has_values) {
+                if (common_field_data) {
+                    flecs_json_next(buf);
+                }
+
+                if (flecs_json_serialize_iter_result_field_values(
+                    world, it, i, buf, desc, ser_ctx))
+                {
+                    return -1;
+                }
+            }
+
+            ecs_strbuf_appendstr(buf, "}"); // "fields": {
         }
 
         flecs_json_object_pop(buf);
     }
 
-    ecs_os_free(tags_pairs_vars);
+    ecs_os_free(common_data);
 
     return 0;
 }
@@ -49457,7 +49608,7 @@ void flecs_json_serialize_term(
     flecs_json_memberl(buf, "inout");
     flecs_json_string(buf, flecs_json_inout_str(term->inout));
 
-    flecs_json_memberl(buf, "has_data");
+    flecs_json_memberl(buf, "has_value");
     flecs_json_bool(buf, 0 == (term->flags_ & EcsTermNoData));
 
     ecs_entity_t first_id = ECS_TERM_REF_ID(&term->first);
