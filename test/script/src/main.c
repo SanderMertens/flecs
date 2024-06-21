@@ -564,6 +564,10 @@ void Deserialize_discover_type_entity(void);
 void Deserialize_discover_type_bool(void);
 void Deserialize_discover_type_unknown(void);
 void Deserialize_discover_type_invalid(void);
+void Deserialize_opaque_struct(void);
+void Deserialize_opaque_struct_w_member(void);
+void Deserialize_opaque_struct_w_member_reverse(void);
+void Deserialize_struct_w_opaque_member(void);
 
 bake_test_case Eval_testcases[] = {
     {
@@ -2760,6 +2764,22 @@ bake_test_case Deserialize_testcases[] = {
     {
         "discover_type_invalid",
         Deserialize_discover_type_invalid
+    },
+    {
+        "opaque_struct",
+        Deserialize_opaque_struct
+    },
+    {
+        "opaque_struct_w_member",
+        Deserialize_opaque_struct_w_member
+    },
+    {
+        "opaque_struct_w_member_reverse",
+        Deserialize_opaque_struct_w_member_reverse
+    },
+    {
+        "struct_w_opaque_member",
+        Deserialize_struct_w_opaque_member
     }
 };
 
@@ -2804,7 +2824,7 @@ static bake_test_suite suites[] = {
         "Deserialize",
         NULL,
         NULL,
-        69,
+        73,
         Deserialize_testcases
     }
 };
