@@ -2926,3 +2926,19 @@ void Query_query_from_entity_name(void) {
     });
     test_int(count, 2);
 }
+
+void Query_run_w_iter_fini(void) {
+    flecs::world ecs;
+
+    flecs::query<Position> q = ecs.query<Position>();
+
+    int32_t count = 0;
+    q.run([&](flecs::iter& it) {
+        it.fini();
+        count ++;
+    });
+
+    test_int(count, 1);
+
+    // should be no leakage assert
+}

@@ -3687,10 +3687,6 @@ extern "C" {
 /** Maximum length of a parser token (used by parser-related addons) */
 #define ECS_MAX_TOKEN_SIZE (256)
 
-////////////////////////////////////////////////////////////////////////////////
-//// Global type handles
-////////////////////////////////////////////////////////////////////////////////
-
 FLECS_API
 char* flecs_module_path_from_c(
     const char *c_name);
@@ -22299,6 +22295,19 @@ public:
      */
     void each() {
         iter_->callback(iter_);
+    }
+
+    /** Free iterator resources.
+     * This operation only needs to be called when the iterator is not iterated
+     * until completion (e.g. the last call to next() did not return false).
+     * 
+     * Failing to call this operation on an unfinished iterator will throw a
+     * fatal LEAK_DETECTED error.
+     * 
+     * @see ecs_iter_fini()
+     */
+    void fini() {
+        ecs_iter_fini(iter_);
     }
 
 private:

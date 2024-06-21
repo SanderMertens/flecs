@@ -627,6 +627,7 @@ void Query_find_w_entity(void);
 void Query_optional_pair_term(void);
 void Query_query_from_entity(void);
 void Query_query_from_entity_name(void);
+void Query_run_w_iter_fini(void);
 
 // Testsuite 'QueryBuilder'
 void QueryBuilder_setup(void);
@@ -3730,6 +3731,10 @@ bake_test_case Query_testcases[] = {
     {
         "query_from_entity_name",
         Query_query_from_entity_name
+    },
+    {
+        "run_w_iter_fini",
+        Query_run_w_iter_fini
     }
 };
 
@@ -6428,7 +6433,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        103,
+        104,
         Query_testcases
     },
     {

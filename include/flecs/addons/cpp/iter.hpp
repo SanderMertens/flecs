@@ -354,6 +354,19 @@ public:
         iter_->callback(iter_);
     }
 
+    /** Free iterator resources.
+     * This operation only needs to be called when the iterator is not iterated
+     * until completion (e.g. the last call to next() did not return false).
+     * 
+     * Failing to call this operation on an unfinished iterator will throw a
+     * fatal LEAK_DETECTED error.
+     * 
+     * @see ecs_iter_fini()
+     */
+    void fini() {
+        ecs_iter_fini(iter_);
+    }
+
 private:
     /* Get field, check if correct type is used */
     template <typename T, typename A = actual_type_t<T>>

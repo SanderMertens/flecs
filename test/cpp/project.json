@@ -650,7 +650,8 @@
                 "find_w_entity",
                 "optional_pair_term",
                 "query_from_entity",
-                "query_from_entity_name"
+                "query_from_entity_name",
+                "run_w_iter_fini"
             ]
         }, {
             "id": "QueryBuilder",
