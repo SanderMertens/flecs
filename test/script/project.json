@@ -243,7 +243,12 @@
                 "if_10",
                 "if_0",
                 "if_true_in_scope",
-                "if_false_in_scope"
+                "if_false_in_scope",
+                "isa_in_module",
+                "isa_hierarchy",
+                "isa_hierarchy_in_module",
+                "custom_isa_hierarchy_in_module",
+                "custom_isa_hierarchy_in_subtree"
             ]
         }, {
             "id": "Template",

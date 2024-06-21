@@ -270,6 +270,12 @@ void Entity_world_lookup_custom_sep(void);
 void Entity_world_lookup_custom_root_sep(void);
 void Entity_depends_on(void);
 void Entity_depends_on_type(void);
+void Entity_const_entity_add_remove(void);
+void Entity_const_entity_set(void);
+void Entity_const_entity_get_mut(void);
+void Entity_const_entity_ensure(void);
+void Entity_const_entity_destruct(void);
+void Entity_const_entity_emit_after_build(void);
 
 // Testsuite 'Pairs'
 void Pairs_add_component_pair(void);
@@ -2380,6 +2386,30 @@ bake_test_case Entity_testcases[] = {
     {
         "depends_on_type",
         Entity_depends_on_type
+    },
+    {
+        "const_entity_add_remove",
+        Entity_const_entity_add_remove
+    },
+    {
+        "const_entity_set",
+        Entity_const_entity_set
+    },
+    {
+        "const_entity_get_mut",
+        Entity_const_entity_get_mut
+    },
+    {
+        "const_entity_ensure",
+        Entity_const_entity_ensure
+    },
+    {
+        "const_entity_destruct",
+        Entity_const_entity_destruct
+    },
+    {
+        "const_entity_emit_after_build",
+        Entity_const_entity_emit_after_build
     }
 };
 
@@ -6515,7 +6545,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        257,
+        263,
         Entity_testcases
     },
     {

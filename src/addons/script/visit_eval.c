@@ -920,9 +920,12 @@ int flecs_script_eval_pair_scope(
     ecs_script_eval_visitor_t *v,
     ecs_script_pair_scope_t *node)
 {
-    ecs_entity_t first = flecs_script_create_entity(v, node->id.first);
+    ecs_entity_t first = flecs_script_find_entity(v, 0, node->id.first);
     if (!first) {
-        return -1;
+        first = flecs_script_create_entity(v, node->id.first);
+        if (!first) {
+            return -1;
+        }
     }
 
     ecs_entity_t second = flecs_script_create_entity(v, node->id.second);

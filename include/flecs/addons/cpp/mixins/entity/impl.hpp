@@ -14,7 +14,7 @@ flecs::entity ref<T>::entity() const {
 
 template <typename Self>
 template <typename Func>
-inline Self& entity_builder<Self>::insert(const Func& func) {
+inline const Self& entity_builder<Self>::insert(const Func& func) const  {
     _::entity_with_delegate<Func>::invoke_ensure(
         this->world_, this->id_, func);
     return to_base();
