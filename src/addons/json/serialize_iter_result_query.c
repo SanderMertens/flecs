@@ -46,7 +46,7 @@ bool flecs_json_serialize_iter_result_ids(
 
     ecs_world_t *world = it->world;
     int16_t f, field_count = flecs_ito(int16_t, it->field_count);
-    int16_t field_mask = flecs_ito(int16_t, (1u << field_count) - 1);    
+    int16_t field_mask = flecs_ito(int16_t, (1 << field_count) - 1);    
     if (q->static_id_fields == field_mask) {
         /* All matched ids are static, nothing to serialize */
         return false;
@@ -153,6 +153,7 @@ bool flecs_json_serialize_common_for_table(
     return result;
 }
 
+static
 int flecs_json_serialize_iter_result_field_values(
     const ecs_world_t *world, 
     const ecs_iter_t *it, 
@@ -262,6 +263,7 @@ int flecs_json_serialize_iter_result_query(
                 if (flecs_json_serialize_iter_result_field_values(
                     world, it, i, buf, desc, ser_ctx))
                 {
+                    ecs_os_free(common_data);
                     return -1;
                 }
             }

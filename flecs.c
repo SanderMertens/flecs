@@ -30679,7 +30679,8 @@ bool flecs_rest_script(
     flecs_rest_bool_param(req, "try", &try);
 
     bool prev_color = ecs_log_enable_colors(false);
-    rest_prev_log = ecs_os_api.log_;
+    ecs_os_api_log_t prev_log = ecs_os_api.log_;
+    rest_prev_log = try ? NULL : prev_log;
     ecs_os_api.log_ = flecs_rest_capture_log;
 
     script = ecs_script(world, {
@@ -30702,7 +30703,7 @@ bool flecs_rest_script(
         ecs_os_free(err);
     }
 
-    ecs_os_api.log_ = rest_prev_log;
+    ecs_os_api.log_ = prev_log;
     ecs_log_enable_colors(prev_color);
 
     return true;
@@ -30835,7 +30836,7 @@ bool flecs_rest_get_query(
 
     const char *expr = ecs_http_get_param(req, "expr");
     if (!expr) {
-        ecs_strbuf_appendlit(&reply->body, "Missing parameter 'q'");
+        ecs_strbuf_appendlit(&reply->body, "Missing parameter 'expr'");
         reply->code = 400; /* bad request */
         return true;
     }
@@ -30845,7 +30846,8 @@ bool flecs_rest_get_query(
 
     ecs_dbg_2("rest: request query '%s'", expr);
     bool prev_color = ecs_log_enable_colors(false);
-    rest_prev_log = ecs_os_api.log_;
+    ecs_os_api_log_t prev_log = ecs_os_api.log_;
+    rest_prev_log = try ? NULL : prev_log;
     ecs_os_api.log_ = flecs_rest_capture_log;
 
     ecs_query_t *q = ecs_query(world, { .expr = expr });
@@ -30861,7 +30863,7 @@ bool flecs_rest_get_query(
         ecs_query_fini(q);
     }
 
-    ecs_os_api.log_ = rest_prev_log;
+    ecs_os_api.log_ = prev_log;
     ecs_log_enable_colors(prev_color);
 
     return true;
@@ -48768,7 +48770,7 @@ bool flecs_json_serialize_iter_result_ids(
 
     ecs_world_t *world = it->world;
     int16_t f, field_count = flecs_ito(int16_t, it->field_count);
-    int16_t field_mask = flecs_ito(int16_t, (1u << field_count) - 1);    
+    int16_t field_mask = flecs_ito(int16_t, (1 << field_count) - 1);    
     if (q->static_id_fields == field_mask) {
         /* All matched ids are static, nothing to serialize */
         return false;
@@ -48875,6 +48877,7 @@ bool flecs_json_serialize_common_for_table(
     return result;
 }
 
+static
 int flecs_json_serialize_iter_result_field_values(
     const ecs_world_t *world, 
     const ecs_iter_t *it, 
@@ -48984,6 +48987,7 @@ int flecs_json_serialize_iter_result_query(
                 if (flecs_json_serialize_iter_result_field_values(
                     world, it, i, buf, desc, ser_ctx))
                 {
+                    ecs_os_free(common_data);
                     return -1;
                 }
             }

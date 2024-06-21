@@ -129,7 +129,7 @@ void Rest_try_query(void) {
     {
         ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
         test_int(-1, ecs_http_server_request(srv, "GET",
-            "/query?q=Foo", &reply));
+            "/query?expr=Foo", &reply));
         test_int(reply.code, 400); // No try, should error
         ecs_strbuf_reset(&reply.body);
     }
@@ -137,7 +137,7 @@ void Rest_try_query(void) {
     {
         ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
         test_int(0, ecs_http_server_request(srv, "GET",
-            "/query?q=Foo&try=true", &reply));
+            "/query?expr=Foo&try=true", &reply));
         test_int(reply.code, 200); // With try, should not error
         ecs_strbuf_reset(&reply.body);
     }
@@ -160,13 +160,13 @@ void Rest_query(void) {
 
     ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
     test_int(0, ecs_http_server_request(srv, "GET",
-        "/query?q=Position", &reply));
+        "/query?expr=Position", &reply));
     test_int(reply.code, 200);
     
     char *reply_str = ecs_strbuf_get(&reply.body);
     test_assert(reply_str != NULL);
     test_str(reply_str,
-        "{\"results\":[{\"name\":\"e\", \"fields\":[{}]}]}");
+        "{\"results\":[{\"name\":\"e\", \"fields\":{\"values\":[0]}}]}");
     ecs_os_free(reply_str);
 
     ecs_rest_server_fini(srv);
@@ -200,7 +200,7 @@ void Rest_named_query(void) {
     char *reply_str = ecs_strbuf_get(&reply.body);
     test_assert(reply_str != NULL);
     test_str(reply_str,
-        "{\"results\":[{\"name\":\"e\", \"fields\":[{}]}]}");
+        "{\"results\":[{\"name\":\"e\", \"fields\":{\"values\":[0]}}]}");
     ecs_os_free(reply_str);
 
     ecs_rest_server_fini(srv);
