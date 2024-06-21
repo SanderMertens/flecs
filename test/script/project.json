@@ -577,7 +577,11 @@
                 "discover_type_entity",
                 "discover_type_bool",
                 "discover_type_unknown",
-                "discover_type_invalid"
+                "discover_type_invalid",
+                "opaque_struct",
+                "opaque_struct_w_member",
+                "opaque_struct_w_member_reverse",
+                "struct_w_opaque_member"
             ]
         }]
     }
