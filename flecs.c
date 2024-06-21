@@ -9699,12 +9699,18 @@ void flecs_cmd_batch_for_entity(
         }
     } while ((cur = next_for_entity));
 
+    /* Invoke OnAdd handlers after commit. This ensures that observers with 
+     * mixed OnAdd/OnSet events won't get called with uninitialized values for
+     * an OnSet field. */
+    ecs_type_t added = { diff->added.array, diff->added.count };
+    diff->added.array = NULL;
+    diff->added.count = 0;
+
     /* Move entity to destination table in single operation */
     flecs_table_diff_build_noalloc(diff, &table_diff);
     flecs_defer_begin(world, world->stages[0]);
     flecs_commit(world, entity, r, table, &table_diff, true, 0);
     flecs_defer_end(world, world->stages[0]);
-    flecs_table_diff_builder_clear(diff);
 
     /* If the batch contains set commands, copy the component value from the 
      * temporary command storage to the actual component storage before OnSet
@@ -9786,6 +9792,18 @@ void flecs_cmd_batch_for_entity(
             }
         } while ((cur = next_for_entity));
     }
+
+    if (added.count) {
+        flecs_defer_begin(world, world->stages[0]);
+        flecs_notify_on_add(world, table, start_table, 
+            ECS_RECORD_TO_ROW(r->row), 1, &added, 0, true);
+        flecs_defer_end(world, world->stages[0]);
+    }
+
+    diff->added.array = added.array;
+    diff->added.count = added.count;
+
+    flecs_table_diff_builder_clear(diff);
 }
 
 /* Leave safe section. Run all deferred commands. */

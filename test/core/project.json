@@ -2739,7 +2739,9 @@
                 "add_path_nested_to_deleted_parent_w_stage",
                 "add_path_nested_to_created_deleted_parent_w_stage",
                 "defer_emplace_w_arg",
-                "defer_emplace_existing_w_arg"
+                "defer_emplace_existing_w_arg",
+                "mixed_on_add_on_set_w_set_w_batching",
+                "mixed_on_add_on_set_w_emplace"
             ]
         }, {
             "id": "SingleThreadStaging",
