@@ -1876,32 +1876,32 @@ void QueryBuilder_10_terms(void) {
     flecs::world ecs;
 
     auto f = ecs.query_builder<>()
-        .with<TagA>()
-        .with<TagB>()
-        .with<TagC>()
-        .with<TagD>()
-        .with<TagE>()
-        .with<TagF>()
-        .with<TagG>()
-        .with<TagH>()
-        .with<TagI>()
-        .with<TagJ>()
+        .with<Tag0>()
+        .with<Tag1>()
+        .with<Tag2>()
+        .with<Tag3>()
+        .with<Tag4>()
+        .with<Tag5>()
+        .with<Tag6>()
+        .with<Tag7>()
+        .with<Tag8>()
+        .with<Tag9>()
         .cache_kind(cache_kind)
         .build();
 
     test_int(f.field_count(), 10);
 
     auto e = ecs.entity()
-        .add<TagA>()
-        .add<TagB>()
-        .add<TagC>()
-        .add<TagD>()
-        .add<TagE>()
-        .add<TagF>()
-        .add<TagG>()
-        .add<TagH>()
-        .add<TagI>()
-        .add<TagJ>();
+        .add<Tag0>()
+        .add<Tag1>()
+        .add<Tag2>()
+        .add<Tag3>()
+        .add<Tag4>()
+        .add<Tag5>()
+        .add<Tag6>()
+        .add<Tag7>()
+        .add<Tag8>()
+        .add<Tag9>();
 
     int count = 0;
     f.run([&](flecs::iter& it) {
@@ -1920,48 +1920,44 @@ void QueryBuilder_16_terms(void) {
     flecs::world ecs;
 
     auto f = ecs.query_builder<>()
-        .with<TagA>()
-        .with<TagB>()
-        .with<TagC>()
-        .with<TagD>()
-        .with<TagE>()
-        .with<TagF>()
-        .with<TagG>()
-        .with<TagH>()
-        .with<TagI>()
-        .with<TagJ>()
-        .with<TagK>()
-        .with<TagL>()
-        .with<TagM>()
-        .with<TagN>()
-        .with<TagO>()
-        .with<TagP>()
+        .with<Tag0>()
+        .with<Tag1>()
+        .with<Tag2>()
+        .with<Tag3>()
+        .with<Tag4>()
+        .with<Tag5>()
+        .with<Tag6>()
+        .with<Tag7>()
+        .with<Tag8>()
+        .with<Tag9>()
+        .with<Tag10>()
+        .with<Tag11>()
+        .with<Tag12>()
+        .with<Tag13>()
+        .with<Tag14>()
+        .with<Tag15>()
         .cache_kind(cache_kind)
         .build();
 
     test_int(f.field_count(), 16);
 
     auto e = ecs.entity()
-        .add<TagA>()
-        .add<TagB>()
-        .add<TagC>()
-        .add<TagD>()
-        .add<TagE>()
-        .add<TagF>()
-        .add<TagG>()
-        .add<TagH>()
-        .add<TagI>()
-        .add<TagJ>()
-        .add<TagK>()
-        .add<TagL>()
-        .add<TagM>()
-        .add<TagN>()
-        .add<TagO>()
-        .add<TagP>()
-        .add<TagQ>()
-        .add<TagR>()
-        .add<TagS>()
-        .add<TagT>();
+        .add<Tag0>()
+        .add<Tag1>()
+        .add<Tag2>()
+        .add<Tag3>()
+        .add<Tag4>()
+        .add<Tag5>()
+        .add<Tag6>()
+        .add<Tag7>()
+        .add<Tag8>()
+        .add<Tag9>()
+        .add<Tag10>()
+        .add<Tag11>()
+        .add<Tag12>()
+        .add<Tag13>()
+        .add<Tag14>()
+        .add<Tag15>();
 
     int count = 0;
     f.run([&](flecs::iter& it) {
@@ -1974,6 +1970,138 @@ void QueryBuilder_16_terms(void) {
     });
 
     test_int(count, 1);
+}
+
+void QueryBuilder_32_terms(void) {
+    flecs::world ecs;
+
+    auto f = ecs.query_builder<>()
+        .with<Tag0>()
+        .with<Tag1>()
+        .with<Tag2>()
+        .with<Tag3>()
+        .with<Tag4>()
+        .with<Tag5>()
+        .with<Tag6>()
+        .with<Tag7>()
+        .with<Tag8>()
+        .with<Tag9>()
+        .with<Tag10>()
+        .with<Tag11>()
+        .with<Tag12>()
+        .with<Tag13>()
+        .with<Tag14>()
+        .with<Tag15>()
+        .with<Tag16>()
+        .with<Tag17>()
+        .with<Tag18>()
+        .with<Tag19>()
+        .with<Tag20>()
+        .with<Tag21>()
+        .with<Tag22>()
+        .with<Tag23>()
+        .with<Tag24>()
+        .with<Tag25>()
+        .with<Tag26>()
+        .with<Tag27>()
+        .with<Tag28>()
+        .with<Tag29>()
+        .with<Tag30>()
+        .with<Tag31>()
+        .cache_kind(cache_kind)
+        .build();
+
+    test_int(f.field_count(), 32);
+
+    auto e = ecs.entity()
+        .add<Tag0>()
+        .add<Tag1>()
+        .add<Tag2>()
+        .add<Tag3>()
+        .add<Tag4>()
+        .add<Tag5>()
+        .add<Tag6>()
+        .add<Tag7>()
+        .add<Tag8>()
+        .add<Tag9>()
+        .add<Tag10>()
+        .add<Tag11>()
+        .add<Tag12>()
+        .add<Tag13>()
+        .add<Tag14>()
+        .add<Tag15>()
+        .add<Tag16>()
+        .add<Tag17>()
+        .add<Tag18>()
+        .add<Tag19>()
+        .add<Tag20>()
+        .add<Tag21>()
+        .add<Tag22>()
+        .add<Tag23>()
+        .add<Tag24>()
+        .add<Tag25>()
+        .add<Tag26>()
+        .add<Tag27>()
+        .add<Tag28>()
+        .add<Tag29>()
+        .add<Tag30>()
+        .add<Tag31>();
+
+    int count = 0;
+    f.run([&](flecs::iter& it) {
+        while (it.next()) {
+            test_int(it.count(), 1);
+            test_assert(it.entity(0) == e);
+            test_int(it.field_count(), 32);
+            count ++;
+        }
+    });
+
+    test_int(count, 1);
+}
+
+void QueryBuilder_33_terms(void) {
+    install_test_abort();
+
+    flecs::world ecs;
+
+    test_expect_abort();
+    auto f = ecs.query_builder<>()
+        .with<Tag0>()
+        .with<Tag1>()
+        .with<Tag2>()
+        .with<Tag3>()
+        .with<Tag4>()
+        .with<Tag5>()
+        .with<Tag6>()
+        .with<Tag7>()
+        .with<Tag8>()
+        .with<Tag9>()
+        .with<Tag10>()
+        .with<Tag11>()
+        .with<Tag12>()
+        .with<Tag13>()
+        .with<Tag14>()
+        .with<Tag15>()
+        .with<Tag16>()
+        .with<Tag17>()
+        .with<Tag18>()
+        .with<Tag19>()
+        .with<Tag20>()
+        .with<Tag21>()
+        .with<Tag22>()
+        .with<Tag23>()
+        .with<Tag24>()
+        .with<Tag25>()
+        .with<Tag26>()
+        .with<Tag27>()
+        .with<Tag28>()
+        .with<Tag29>()
+        .with<Tag30>()
+        .with<Tag31>()
+        .with<Tag32>()
+        .cache_kind(cache_kind)
+        .build();
 }
 
 uint64_t group_by_first_id(
@@ -3184,24 +3312,24 @@ void QueryBuilder_term_after_arg(void) {
     flecs::world ecs;
 
     auto e_1 = ecs.entity()
-        .add<TagA>()
-        .add<TagB>()
-        .add<TagC>();
+        .add<Tag0>()
+        .add<Tag1>()
+        .add<Tag2>();
 
     ecs.entity()
-        .add<TagA>()
-        .add<TagB>();
+        .add<Tag0>()
+        .add<Tag1>();
 
-    auto f = ecs.query_builder<TagA, TagB>()
+    auto f = ecs.query_builder<Tag0, Tag1>()
         .term_at(0).src(flecs::This) // dummy
-        .with<TagC>()
+        .with<Tag2>()
         .cache_kind(cache_kind)
         .build();
 
     test_int(f.field_count(), 3);
 
     int count = 0;
-    f.each([&](flecs::entity e, TagA, TagB) {
+    f.each([&](flecs::entity e, Tag0, Tag1) {
         test_assert(e == e_1);
         count ++;
     });
@@ -3262,10 +3390,10 @@ void QueryBuilder_const_in_term(void) {
 void QueryBuilder_const_optional(void) {
     flecs::world ecs;
 	
-	ecs.entity().set<Position>({10, 20}).add<TagA>();
-    ecs.entity().add<TagA>();
+	ecs.entity().set<Position>({10, 20}).add<Tag0>();
+    ecs.entity().add<Tag0>();
 
-    auto f = ecs.query_builder<TagA, const Position*>()
+    auto f = ecs.query_builder<Tag0, const Position*>()
         .cache_kind(cache_kind)
         .build();
 	

@@ -132,9 +132,9 @@ bool flecs_query_get_fixed_monitor(
 
     for (i = 0; i < term_count; i ++) {
         ecs_term_t *term = &terms[i];
-        int32_t field_index = term->field_index;
+        int16_t field_index = term->field_index;
 
-        if (!(q->read_fields & (1 << field_index))) {
+        if (!(q->read_fields & flecs_ito(uint32_t, 1 << field_index))) {
             continue; /* If term doesn't read data there's nothing to track */
         }
 
@@ -429,13 +429,10 @@ void flecs_query_mark_fields_dirty(
         return;
     }
 
-    // printf("%s\n", ecs_query_str(q));
-    // printf("[%s]\n", ecs_table_str(it->world, it->table));
-
     ecs_world_t *world = q->world;
-    int32_t i, field_count = q->field_count;
+    int16_t i, field_count = q->field_count;
     for (i = 0; i < field_count; i ++) {
-        if (!(write_fields & (1 << i))) {
+        if (!(write_fields & flecs_ito(uint32_t, 1 << i))) {
             continue; /* If term doesn't write data there's nothing to track */
         }
 
@@ -449,7 +446,7 @@ void flecs_query_mark_fields_dirty(
                 continue;
             }
 
-            if (q->shared_readonly_fields & (1 << i)) {
+            if (q->shared_readonly_fields & flecs_ito(uint32_t, 1 << i)) {
                 /* Shared fields that aren't marked explicitly as out/inout 
                  * default to readonly */
                 continue;
@@ -485,7 +482,7 @@ void flecs_query_mark_fixed_fields_dirty(
     ecs_world_t *world = q->world;
     int32_t i, field_count = q->field_count;
     for (i = 0; i < field_count; i ++) {
-        if (!(fixed_write_fields & (1 << i))) {
+        if (!(fixed_write_fields & flecs_ito(uint32_t, 1 << i))) {
             continue; /* If term doesn't write data there's nothing to track */
         }
 

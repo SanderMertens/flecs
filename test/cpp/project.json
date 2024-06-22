@@ -745,6 +745,8 @@
                 "world_each_filter_2_components_no_entity",
                 "10_terms",
                 "16_terms",
+                "32_terms",
+                "33_terms",
                 "term_after_arg",
                 "name_arg",
                 "const_in_term",
