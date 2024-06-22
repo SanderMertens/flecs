@@ -4665,3 +4665,21 @@ void Entity_const_entity_emit_after_build(void) {
 
     test_int(count, 1);
 }
+
+void Entity_const_entity_set_doc(void) {
+    flecs::world world;
+
+    const flecs::entity e = world.entity();
+
+    e.set_doc_name("name");
+    e.set_doc_color("color");
+    e.set_doc_detail("detail");
+    e.set_doc_brief("brief");
+    e.set_doc_link("link");
+
+    test_str(e.doc_name(), "name");
+    test_str(e.doc_color(), "color");
+    test_str(e.doc_detail(), "detail");
+    test_str(e.doc_brief(), "brief");
+    test_str(e.doc_link(), "link");
+}
