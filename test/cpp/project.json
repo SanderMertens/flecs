@@ -1180,6 +1180,7 @@
             "testcases": [
                 "set_get_singleton",
                 "ensure_singleton",
+                "get_mut_singleton",
                 "emplace_singleton",
                 "modified_singleton",
                 "add_singleton",

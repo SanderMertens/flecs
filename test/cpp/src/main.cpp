@@ -1133,6 +1133,7 @@ void World_copy_world(void);
 // Testsuite 'Singleton'
 void Singleton_set_get_singleton(void);
 void Singleton_ensure_singleton(void);
+void Singleton_get_mut_singleton(void);
 void Singleton_emplace_singleton(void);
 void Singleton_modified_singleton(void);
 void Singleton_add_singleton(void);
@@ -5703,6 +5704,10 @@ bake_test_case Singleton_testcases[] = {
         Singleton_ensure_singleton
     },
     {
+        "get_mut_singleton",
+        Singleton_get_mut_singleton
+    },
+    {
         "emplace_singleton",
         Singleton_emplace_singleton
     },
@@ -6505,7 +6510,7 @@ static bake_test_suite suites[] = {
         "Singleton",
         NULL,
         NULL,
-        19,
+        20,
         Singleton_testcases
     },
     {

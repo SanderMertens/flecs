@@ -24,6 +24,19 @@ void Singleton_ensure_singleton(void) {
     test_int(p->y, 20);
 }
 
+void Singleton_get_mut_singleton(void) {
+    flecs::world world;
+
+    Position *p = world.get_mut<Position>();
+    test_assert(p == nullptr);
+
+    world.set<Position>({10, 20});
+    p = world.get_mut<Position>();
+    test_assert(p != nullptr);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+}
+
 void Singleton_emplace_singleton(void) {
     flecs::world world;
 
