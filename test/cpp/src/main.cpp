@@ -715,6 +715,8 @@ void QueryBuilder_world_each_filter_1_component_no_entity(void);
 void QueryBuilder_world_each_filter_2_components_no_entity(void);
 void QueryBuilder_10_terms(void);
 void QueryBuilder_16_terms(void);
+void QueryBuilder_32_terms(void);
+void QueryBuilder_33_terms(void);
 void QueryBuilder_term_after_arg(void);
 void QueryBuilder_name_arg(void);
 void QueryBuilder_const_in_term(void);
@@ -4104,6 +4106,14 @@ bake_test_case QueryBuilder_testcases[] = {
         QueryBuilder_16_terms
     },
     {
+        "32_terms",
+        QueryBuilder_32_terms
+    },
+    {
+        "33_terms",
+        QueryBuilder_33_terms
+    },
+    {
         "term_after_arg",
         QueryBuilder_term_after_arg
     },
@@ -6632,7 +6642,7 @@ static bake_test_suite suites[] = {
         "QueryBuilder",
         QueryBuilder_setup,
         NULL,
-        162,
+        164,
         QueryBuilder_testcases,
         1,
         QueryBuilder_params

@@ -649,7 +649,9 @@
                 "pair_sweep_tag",
                 "pair_sweep_wildcard_first",
                 "pair_sweep_wildcard_second",
-                "create_w_entity_deferred"
+                "create_w_entity_deferred",
+                "32_terms",
+                "33_terms_expr"
             ]
         }, {
             "id": "Combinations",

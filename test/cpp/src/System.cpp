@@ -2369,15 +2369,15 @@ void System_optional_pair_term(void) {
     flecs::world ecs;
 
     ecs.entity()
-        .add<TagA>()
+        .add<Tag0>()
         .emplace<Position, Tag>(1.0f, 2.0f);
     ecs.entity()
-        .add<TagA>();
+        .add<Tag0>();
 
     int32_t with_pair = 0, without_pair = 0;
 
     ecs.system<flecs::pair<Position, Tag>*>()
-        .with<TagA>()
+        .with<Tag0>()
         .each([&](flecs::entity e, Position* p)
         {
             if (p)
@@ -2401,12 +2401,12 @@ void System_optional_pair_term(void) {
 void System_singleton_tick_source(void) {
     flecs::world ecs;
 
-    ecs.timer<TagA>().timeout(1.5);
+    ecs.timer<Tag0>().timeout(1.5);
 
     int32_t sys_invoked = 0;
 
     ecs.system()
-        .tick_source<TagA>()
+        .tick_source<Tag0>()
         .run([&](flecs::iter& it) {
             sys_invoked ++;
         });

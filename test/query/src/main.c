@@ -638,6 +638,8 @@ void Basic_pair_sweep_tag(void);
 void Basic_pair_sweep_wildcard_first(void);
 void Basic_pair_sweep_wildcard_second(void);
 void Basic_create_w_entity_deferred(void);
+void Basic_32_terms(void);
+void Basic_33_terms_expr(void);
 
 // Testsuite 'Combinations'
 void Combinations_setup(void);
@@ -4498,6 +4500,14 @@ bake_test_case Basic_testcases[] = {
     {
         "create_w_entity_deferred",
         Basic_create_w_entity_deferred
+    },
+    {
+        "32_terms",
+        Basic_32_terms
+    },
+    {
+        "33_terms_expr",
+        Basic_33_terms_expr
     }
 };
 
@@ -9852,7 +9862,7 @@ static bake_test_suite suites[] = {
         "Basic",
         Basic_setup,
         NULL,
-        197,
+        199,
         Basic_testcases,
         1,
         Basic_params

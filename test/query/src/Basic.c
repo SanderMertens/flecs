@@ -10339,3 +10339,139 @@ void Basic_create_w_entity_deferred(void) {
 
     ecs_fini(world);
 }
+
+void Basic_32_terms(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag0);
+    ECS_TAG(world, Tag1);
+    ECS_TAG(world, Tag2);
+    ECS_TAG(world, Tag3);
+    ECS_TAG(world, Tag4);
+    ECS_TAG(world, Tag5);
+    ECS_TAG(world, Tag6);
+    ECS_TAG(world, Tag7);
+    ECS_TAG(world, Tag8);
+    ECS_TAG(world, Tag9);
+    ECS_TAG(world, Tag10);
+    ECS_TAG(world, Tag11);
+    ECS_TAG(world, Tag12);
+    ECS_TAG(world, Tag13);
+    ECS_TAG(world, Tag14);
+    ECS_TAG(world, Tag15);
+    ECS_TAG(world, Tag16);
+    ECS_TAG(world, Tag17);
+    ECS_TAG(world, Tag18);
+    ECS_TAG(world, Tag19);
+    ECS_TAG(world, Tag20);
+    ECS_TAG(world, Tag21);
+    ECS_TAG(world, Tag22);
+    ECS_TAG(world, Tag23);
+    ECS_TAG(world, Tag24);
+    ECS_TAG(world, Tag25);
+    ECS_TAG(world, Tag26);
+    ECS_TAG(world, Tag27);
+    ECS_TAG(world, Tag28);
+    ECS_TAG(world, Tag29);
+    ECS_TAG(world, Tag30);
+    ECS_TAG(world, Tag31);
+    ECS_TAG(world, Tag32);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_add(world, e, Tag0);
+    ecs_add(world, e, Tag1);
+    ecs_add(world, e, Tag2);
+    ecs_add(world, e, Tag3);
+    ecs_add(world, e, Tag4);
+    ecs_add(world, e, Tag5);
+    ecs_add(world, e, Tag6);
+    ecs_add(world, e, Tag7);
+    ecs_add(world, e, Tag8);
+    ecs_add(world, e, Tag9);
+    ecs_add(world, e, Tag10);
+    ecs_add(world, e, Tag11);
+    ecs_add(world, e, Tag12);
+    ecs_add(world, e, Tag13);
+    ecs_add(world, e, Tag14);
+    ecs_add(world, e, Tag15);
+    ecs_add(world, e, Tag16);
+    ecs_add(world, e, Tag17);
+    ecs_add(world, e, Tag18);
+    ecs_add(world, e, Tag19);
+    ecs_add(world, e, Tag20);
+    ecs_add(world, e, Tag21);
+    ecs_add(world, e, Tag22);
+    ecs_add(world, e, Tag23);
+    ecs_add(world, e, Tag24);
+    ecs_add(world, e, Tag25);
+    ecs_add(world, e, Tag26);
+    ecs_add(world, e, Tag27);
+    ecs_add(world, e, Tag28);
+    ecs_add(world, e, Tag29);
+    ecs_add(world, e, Tag30);
+    ecs_add(world, e, Tag31);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "Tag0, Tag1, Tag2, Tag3, Tag4, Tag5, Tag6, Tag7, Tag8, Tag9, Tag10, Tag11, Tag12, Tag13, Tag14, Tag15, Tag16, Tag17, Tag18, Tag19, Tag20, Tag21, Tag22, Tag23, Tag24, Tag25, Tag26, Tag27, Tag28, Tag29, Tag30, Tag31"
+    });
+
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_iter_next(&it));
+    test_int(1, it.count);
+    test_int(32, it.field_count);
+    test_uint(e, it.entities[0]);
+    test_bool(false, ecs_iter_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Basic_33_terms_expr(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag0);
+    ECS_TAG(world, Tag1);
+    ECS_TAG(world, Tag2);
+    ECS_TAG(world, Tag3);
+    ECS_TAG(world, Tag4);
+    ECS_TAG(world, Tag5);
+    ECS_TAG(world, Tag6);
+    ECS_TAG(world, Tag7);
+    ECS_TAG(world, Tag8);
+    ECS_TAG(world, Tag9);
+    ECS_TAG(world, Tag10);
+    ECS_TAG(world, Tag11);
+    ECS_TAG(world, Tag12);
+    ECS_TAG(world, Tag13);
+    ECS_TAG(world, Tag14);
+    ECS_TAG(world, Tag15);
+    ECS_TAG(world, Tag16);
+    ECS_TAG(world, Tag17);
+    ECS_TAG(world, Tag18);
+    ECS_TAG(world, Tag19);
+    ECS_TAG(world, Tag20);
+    ECS_TAG(world, Tag21);
+    ECS_TAG(world, Tag22);
+    ECS_TAG(world, Tag23);
+    ECS_TAG(world, Tag24);
+    ECS_TAG(world, Tag25);
+    ECS_TAG(world, Tag26);
+    ECS_TAG(world, Tag27);
+    ECS_TAG(world, Tag28);
+    ECS_TAG(world, Tag29);
+    ECS_TAG(world, Tag30);
+    ECS_TAG(world, Tag31);
+    ECS_TAG(world, Tag32);
+
+    ecs_log_set_level(-4);
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "Tag0, Tag1, Tag2, Tag3, Tag4, Tag5, Tag6, Tag7, Tag8, Tag9, Tag10, Tag11, Tag12, Tag13, Tag14, Tag15, Tag16, Tag17, Tag18, Tag19, Tag20, Tag21, Tag22, Tag23, Tag24, Tag25, Tag26, Tag27, Tag28, Tag29, Tag30, Tag31, Tag32"
+    });
+
+    test_assert(q == NULL);
+
+    ecs_fini(world);
+}

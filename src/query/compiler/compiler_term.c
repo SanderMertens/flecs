@@ -849,7 +849,7 @@ int flecs_query_compile_begin_member_term(
     first_id = ECS_TERM_REF_ID(&term->first);
 
     /* First compile as if it's a regular term, to match the component */
-    term->flags_ &= (ecs_termset_t)~EcsTermIsMember;
+    term->flags_ &= (uint16_t)~EcsTermIsMember;
 
     /* Replace term id with member parent (the component) */
     ecs_entity_t component = ecs_get_parent(world, first_id);
