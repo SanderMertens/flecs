@@ -276,6 +276,7 @@ void Entity_const_entity_get_mut(void);
 void Entity_const_entity_ensure(void);
 void Entity_const_entity_destruct(void);
 void Entity_const_entity_emit_after_build(void);
+void Entity_const_entity_set_doc(void);
 
 // Testsuite 'Pairs'
 void Pairs_add_component_pair(void);
@@ -2370,6 +2371,10 @@ bake_test_case Entity_testcases[] = {
     {
         "const_entity_emit_after_build",
         Entity_const_entity_emit_after_build
+    },
+    {
+        "const_entity_set_doc",
+        Entity_const_entity_set_doc
     }
 };
 
@@ -6392,7 +6397,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        263,
+        264,
         Entity_testcases
     },
     {

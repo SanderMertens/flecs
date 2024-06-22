@@ -283,7 +283,8 @@
                 "const_entity_get_mut",
                 "const_entity_ensure",
                 "const_entity_destruct",
-                "const_entity_emit_after_build"
+                "const_entity_emit_after_build",
+                "const_entity_set_doc"
             ]
         }, {
             "id": "Pairs",
