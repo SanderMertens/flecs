@@ -1308,7 +1308,7 @@ int flecs_query_compile_term(
     } else if (!src_written && term->id == EcsAny && op.kind == EcsQueryAndAny) {
         /* Lookup variables ($var.child_name) are always written */
         if (!src_is_lookup) {
-            op.kind = EcsQuerySelectAny; /* Uses Any (_) id record */
+            op.kind = EcsQueryOnlyAny; /* Uses Any (_) id record */
         }
     }
 

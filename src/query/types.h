@@ -42,7 +42,7 @@ typedef enum {
     EcsQueryAnd,            /* And operator: find or match id against variable source */
     EcsQueryAndId,          /* And operator for fixed id (no wildcards/variables) */
     EcsQueryAndAny,         /* And operator with support for matching Any src/id */
-    EcsQuerySelectAny,      /* Dedicated instruction for _ queries where the src is unknown */
+    EcsQueryOnlyAny,        /* Dedicated instruction for _ queries where the src is unknown */
     EcsQueryTriv,           /* Trivial search (batches multiple terms) */
     EcsQueryTrivData,       /* Trivial search with setting data fields */
     EcsQueryTrivWildcard,   /* Trivial search with (exclusive) wildcard ids */
