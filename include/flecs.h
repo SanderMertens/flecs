@@ -275,7 +275,7 @@
 /** \def FLECS_TERM_COUNT_MAX 
  * Maximum number of terms in queries. Should not be set higher than 64. */
 #ifndef FLECS_TERM_COUNT_MAX
-#define FLECS_TERM_COUNT_MAX 16
+#define FLECS_TERM_COUNT_MAX 32
 #endif
 
 /** \def FLECS_TERM_ARG_COUNT_MAX 

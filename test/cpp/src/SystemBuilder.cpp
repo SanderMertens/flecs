@@ -358,28 +358,28 @@ void SystemBuilder_10_terms(void) {
     int count = 0;
 
     auto e = ecs.entity()
-        .add<TagA>()
-        .add<TagB>()
-        .add<TagC>()
-        .add<TagD>()
-        .add<TagE>()
-        .add<TagF>()
-        .add<TagG>()
-        .add<TagH>()
-        .add<TagI>()
-        .add<TagJ>();
+        .add<Tag0>()
+        .add<Tag1>()
+        .add<Tag2>()
+        .add<Tag3>()
+        .add<Tag4>()
+        .add<Tag5>()
+        .add<Tag6>()
+        .add<Tag7>()
+        .add<Tag8>()
+        .add<Tag9>();
 
     auto s = ecs.system<>()
-        .with<TagA>()
-        .with<TagB>()
-        .with<TagC>()
-        .with<TagD>()
-        .with<TagE>()
-        .with<TagF>()
-        .with<TagG>()
-        .with<TagH>()
-        .with<TagI>()
-        .with<TagJ>()
+        .with<Tag0>()
+        .with<Tag1>()
+        .with<Tag2>()
+        .with<Tag3>()
+        .with<Tag4>()
+        .with<Tag5>()
+        .with<Tag6>()
+        .with<Tag7>()
+        .with<Tag8>()
+        .with<Tag9>()
         .run([&](flecs::iter& it) {
             while (it.next()) {
                 test_int(it.count(), 1);
@@ -400,40 +400,40 @@ void SystemBuilder_16_terms(void) {
     int count = 0;
 
     auto e = ecs.entity()
-        .add<TagA>()
-        .add<TagB>()
-        .add<TagC>()
-        .add<TagD>()
-        .add<TagE>()
-        .add<TagF>()
-        .add<TagG>()
-        .add<TagH>()
-        .add<TagI>()
-        .add<TagJ>()
-        .add<TagK>()
-        .add<TagL>()
-        .add<TagM>()
-        .add<TagN>()
-        .add<TagO>()
-        .add<TagP>();
+        .add<Tag0>()
+        .add<Tag1>()
+        .add<Tag2>()
+        .add<Tag3>()
+        .add<Tag4>()
+        .add<Tag5>()
+        .add<Tag6>()
+        .add<Tag7>()
+        .add<Tag8>()
+        .add<Tag9>()
+        .add<Tag10>()
+        .add<Tag11>()
+        .add<Tag12>()
+        .add<Tag13>()
+        .add<Tag14>()
+        .add<Tag15>();
 
     auto s = ecs.system<>()
-        .with<TagA>()
-        .with<TagB>()
-        .with<TagC>()
-        .with<TagD>()
-        .with<TagE>()
-        .with<TagF>()
-        .with<TagG>()
-        .with<TagH>()
-        .with<TagI>()
-        .with<TagJ>()
-        .with<TagK>()
-        .with<TagL>()
-        .with<TagM>()
-        .with<TagN>()
-        .with<TagO>()
-        .with<TagP>()
+        .with<Tag0>()
+        .with<Tag1>()
+        .with<Tag2>()
+        .with<Tag3>()
+        .with<Tag4>()
+        .with<Tag5>()
+        .with<Tag6>()
+        .with<Tag7>()
+        .with<Tag8>()
+        .with<Tag9>()
+        .with<Tag10>()
+        .with<Tag11>()
+        .with<Tag12>()
+        .with<Tag13>()
+        .with<Tag14>()
+        .with<Tag15>()
         .run([&](flecs::iter& it) {
             while (it.next()) {
                 test_int(it.count(), 1);
@@ -482,26 +482,26 @@ void SystemBuilder_create_w_no_template_args(void) {
 void SystemBuilder_write_annotation(void) {
     flecs::world ecs;
 
-    struct TagA { };
-    struct TagB { };
+    struct Tag0 { };
+    struct Tag1 { };
 
-    auto e1 = ecs.entity().add<TagA>();
+    auto e1 = ecs.entity().add<Tag0>();
 
     int32_t a_count = 0, b_count = 0;
 
-    ecs.system<TagA>()
-        .with<TagB>().write()
-        .each([&](flecs::entity e, TagA) {
+    ecs.system<Tag0>()
+        .with<Tag1>().write()
+        .each([&](flecs::entity e, Tag0) {
             a_count ++;
             test_assert(e == e1);
-            e.add<TagB>();
+            e.add<Tag1>();
         });
     
-    ecs.system<TagB>()
-        .each([&](flecs::entity e, TagB) {
+    ecs.system<Tag1>()
+        .each([&](flecs::entity e, Tag1) {
             b_count ++;
             test_assert(e == e1);
-            test_assert(e.has<TagB>());
+            test_assert(e.has<Tag1>());
         });
 
     test_int(a_count, 0);
@@ -512,7 +512,7 @@ void SystemBuilder_write_annotation(void) {
     test_int(a_count, 1);
     test_int(b_count, 1);
 
-    test_assert(e1.has<TagB>());
+    test_assert(e1.has<Tag1>());
 }
 
 void SystemBuilder_name_from_root(void) {

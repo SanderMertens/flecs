@@ -527,15 +527,15 @@ void Query_optional_pair_term(void) {
     flecs::world ecs;
 
     ecs.entity()
-        .add<TagA>()
+        .add<Tag0>()
         .emplace<Position, Tag>(1.0f, 2.0f);
     ecs.entity()
-        .add<TagA>();
+        .add<Tag0>();
 
     int32_t with_pair = 0, without_pair = 0;
 
     auto f = ecs.query_builder<flecs::pair<Position, Tag>*>()
-        .with<TagA>()
+        .with<Tag0>()
         .build();
         
     f.each([&](flecs::entity e, Position* p) {

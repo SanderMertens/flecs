@@ -117,16 +117,16 @@ void Observer_10_terms(void) {
 
     ecs.observer<>()
         .event(flecs::OnAdd)
-        .with<TagA>()
-        .with<TagB>()
-        .with<TagC>()
-        .with<TagD>()
-        .with<TagE>()
-        .with<TagF>()
-        .with<TagG>()
-        .with<TagH>()
-        .with<TagI>()
-        .with<TagJ>()
+        .with<Tag0>()
+        .with<Tag1>()
+        .with<Tag2>()
+        .with<Tag3>()
+        .with<Tag4>()
+        .with<Tag5>()
+        .with<Tag6>()
+        .with<Tag7>()
+        .with<Tag8>()
+        .with<Tag9>()
         .each([&](flecs::iter& it, size_t) {
             test_int(it.count(), 1);
             test_assert(it.entity(0) == e);
@@ -134,16 +134,16 @@ void Observer_10_terms(void) {
             count ++;
         });
 
-    e.add<TagA>()
-        .add<TagB>()
-        .add<TagC>()
-        .add<TagD>()
-        .add<TagE>()
-        .add<TagF>()
-        .add<TagG>()
-        .add<TagH>()
-        .add<TagI>()
-        .add<TagJ>();
+    e.add<Tag0>()
+        .add<Tag1>()
+        .add<Tag2>()
+        .add<Tag3>()
+        .add<Tag4>()
+        .add<Tag5>()
+        .add<Tag6>()
+        .add<Tag7>()
+        .add<Tag8>()
+        .add<Tag9>();
 
     test_int(count, 1);
 }
@@ -157,22 +157,22 @@ void Observer_16_terms(void) {
 
     ecs.observer<>()
         .event(flecs::OnAdd)
-        .with<TagA>()
-        .with<TagB>()
-        .with<TagC>()
-        .with<TagD>()
-        .with<TagE>()
-        .with<TagF>()
-        .with<TagG>()
-        .with<TagH>()
-        .with<TagI>()
-        .with<TagJ>()
-        .with<TagK>()
-        .with<TagL>()
-        .with<TagM>()
-        .with<TagN>()
-        .with<TagO>()
-        .with<TagP>()
+        .with<Tag0>()
+        .with<Tag1>()
+        .with<Tag2>()
+        .with<Tag3>()
+        .with<Tag4>()
+        .with<Tag5>()
+        .with<Tag6>()
+        .with<Tag7>()
+        .with<Tag8>()
+        .with<Tag9>()
+        .with<Tag10>()
+        .with<Tag11>()
+        .with<Tag12>()
+        .with<Tag13>()
+        .with<Tag14>()
+        .with<Tag15>()
         .each([&](flecs::iter& it, size_t) {
             test_int(it.count(), 1);
             test_assert(it.entity(0) == e);
@@ -180,26 +180,26 @@ void Observer_16_terms(void) {
             count ++;
         });
 
-    e.add<TagA>()
-        .add<TagB>()
-        .add<TagC>()
-        .add<TagD>()
-        .add<TagE>()
-        .add<TagF>()
-        .add<TagG>()
-        .add<TagH>()
-        .add<TagI>()
-        .add<TagJ>()
-        .add<TagK>()
-        .add<TagL>()
-        .add<TagM>()
-        .add<TagN>()
-        .add<TagO>()
-        .add<TagP>()
-        .add<TagQ>()
-        .add<TagR>()
-        .add<TagS>()
-        .add<TagT>();
+    e.add<Tag0>()
+        .add<Tag1>()
+        .add<Tag2>()
+        .add<Tag3>()
+        .add<Tag4>()
+        .add<Tag5>()
+        .add<Tag6>()
+        .add<Tag7>()
+        .add<Tag8>()
+        .add<Tag9>()
+        .add<Tag10>()
+        .add<Tag11>()
+        .add<Tag12>()
+        .add<Tag13>()
+        .add<Tag14>()
+        .add<Tag15>()
+        .add<Tag16>()
+        .add<Tag17>()
+        .add<Tag18>()
+        .add<Tag19>();
 
     test_int(count, 1);
 }
@@ -343,19 +343,19 @@ void Observer_create_w_no_template_args(void) {
 void Observer_yield_existing(void) {
     flecs::world world;
 
-    struct TagA { };
-    struct TagB { };
+    struct Tag0 { };
+    struct Tag1 { };
 
-    auto e1 = world.entity().add<TagA>();
-    auto e2 = world.entity().add<TagA>();
-    auto e3 = world.entity().add<TagA>().add<TagB>();
+    auto e1 = world.entity().add<Tag0>();
+    auto e2 = world.entity().add<Tag0>();
+    auto e3 = world.entity().add<Tag0>().add<Tag1>();
 
     int32_t count = 0;
 
-    world.observer<TagA>()
+    world.observer<Tag0>()
         .event(flecs::OnAdd)
         .yield_existing()
-        .each([&](flecs::entity e, TagA) {
+        .each([&](flecs::entity e, Tag0) {
             if (e == e1) count ++;
             if (e == e2) count += 2;
             if (e == e3) count += 3;
@@ -367,21 +367,21 @@ void Observer_yield_existing(void) {
 void Observer_yield_existing_2_terms(void) {
     flecs::world world;
 
-    struct TagA { };
-    struct TagB { };
+    struct Tag0 { };
+    struct Tag1 { };
 
-    auto e1 = world.entity().add<TagA>().add<TagB>();
-    auto e2 = world.entity().add<TagA>().add<TagB>();
-    auto e3 = world.entity().add<TagA>().add<TagB>().add<TagC>();
-    world.entity().add<TagA>();
-    world.entity().add<TagB>();
+    auto e1 = world.entity().add<Tag0>().add<Tag1>();
+    auto e2 = world.entity().add<Tag0>().add<Tag1>();
+    auto e3 = world.entity().add<Tag0>().add<Tag1>().add<Tag2>();
+    world.entity().add<Tag0>();
+    world.entity().add<Tag1>();
 
     int32_t count = 0;
 
-    world.observer<TagA, TagB>()
+    world.observer<Tag0, Tag1>()
         .event(flecs::OnAdd)
         .yield_existing()
-        .each([&](flecs::entity e, TagA, TagB) {
+        .each([&](flecs::entity e, Tag0, Tag1) {
             if (e == e1) count ++;
             if (e == e2) count += 2;
             if (e == e3) count += 3;
@@ -393,19 +393,19 @@ void Observer_yield_existing_2_terms(void) {
 void Observer_default_ctor(void) {
     flecs::world world;
 
-    struct TagA { };
+    struct Tag0 { };
 
     flecs::observer o;
     test_assert(o == 0);
 
     int32_t count = 0;
-    o = world.observer<TagA>()
+    o = world.observer<Tag0>()
         .event(flecs::OnAdd)
-        .each([&](flecs::entity e, TagA) {
+        .each([&](flecs::entity e, Tag0) {
             count ++;
         });
     
-    world.entity().add<TagA>();
+    world.entity().add<Tag0>();
     
     test_int(count, 1);
 }
@@ -413,11 +413,11 @@ void Observer_default_ctor(void) {
 void Observer_entity_ctor(void) {
     flecs::world world;
 
-    struct TagA { };
+    struct Tag0 { };
 
-    flecs::observer o = world.observer<TagA>()
+    flecs::observer o = world.observer<Tag0>()
         .event(flecs::OnAdd)
-        .each([&](flecs::entity e, TagA) { });
+        .each([&](flecs::entity e, Tag0) { });
     
     flecs::entity oe = o;
 
@@ -545,14 +545,14 @@ void Observer_on_add_expr(void) {
 void Observer_observer_w_filter_term(void) {
     flecs::world world;
 
-    flecs::entity TagA = world.entity();
-    flecs::entity TagB = world.entity();
+    flecs::entity Tag0 = world.entity();
+    flecs::entity Tag1 = world.entity();
 
     int invoked = 0;
 
     world.observer()
-        .with(TagA)
-        .with(TagB).filter()
+        .with(Tag0)
+        .with(Tag1).filter()
         .event(flecs::OnAdd)
         .each([&](flecs::entity e) {
             invoked ++;
@@ -561,22 +561,22 @@ void Observer_observer_w_filter_term(void) {
     flecs::entity e = world.entity();
     test_int(invoked, 0);
 
-    e.add(TagB);
+    e.add(Tag1);
     test_int(invoked, 0);
 
-    e.add(TagA);
+    e.add(Tag0);
     test_int(invoked, 1);
 
-    e.remove(TagB);
+    e.remove(Tag1);
     test_int(invoked, 1);
 
-    e.add(TagB);
+    e.add(Tag1);
     test_int(invoked, 1);
 
     e.clear();
     test_int(invoked, 1);
 
-    e.add(TagA);
+    e.add(Tag0);
     test_int(invoked, 1);
 }
 
