@@ -819,6 +819,9 @@ void Variables_2_set_src_this_w_wildcard(void);
 void Variables_1_src_this_var_as_entity(void);
 void Variables_1_src_this_var_as_table(void);
 void Variables_1_src_this_var_as_table_range(void);
+void Variables_1_set_src_this_w_any(void);
+void Variables_1_set_src_this_w_any_fixed(void);
+void Variables_1_set_src_this_w_fixed_any(void);
 void Variables_2_join_by_rel_var(void);
 void Variables_2_join_by_pair_rel_var(void);
 void Variables_2_join_by_pair_tgt_var(void);
@@ -5196,6 +5199,18 @@ bake_test_case Variables_testcases[] = {
     {
         "1_src_this_var_as_table_range",
         Variables_1_src_this_var_as_table_range
+    },
+    {
+        "1_set_src_this_w_any",
+        Variables_1_set_src_this_w_any
+    },
+    {
+        "1_set_src_this_w_any_fixed",
+        Variables_1_set_src_this_w_any_fixed
+    },
+    {
+        "1_set_src_this_w_fixed_any",
+        Variables_1_set_src_this_w_fixed_any
     },
     {
         "2_join_by_rel_var",
@@ -9862,7 +9877,7 @@ static bake_test_suite suites[] = {
         "Variables",
         Variables_setup,
         NULL,
-        186,
+        189,
         Variables_testcases,
         1,
         Variables_params

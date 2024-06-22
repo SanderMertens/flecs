@@ -615,6 +615,20 @@ bool flecs_query_and_any(
 }
 
 static
+bool flecs_query_only_any(
+    const ecs_query_op_t *op,
+    bool redo,
+    const ecs_query_run_ctx_t *ctx)
+{
+    uint64_t written = ctx->written[ctx->op_index];
+    if (flecs_ref_is_written(op, &op->src, EcsQuerySrc, written)) {
+        return flecs_query_and_any(op, redo, ctx);
+    } else {
+        return flecs_query_select_any(op, redo, ctx);
+    }
+}
+
+static
 bool flecs_query_triv(
     const ecs_query_op_t *op,
     bool redo,
@@ -1705,7 +1719,7 @@ bool flecs_query_dispatch(
     case EcsQueryIsCache: return flecs_query_is_cache(op, redo, ctx);
     case EcsQueryCacheData: return flecs_query_cache_data(op, redo, ctx);
     case EcsQueryIsCacheData: return flecs_query_is_cache_data(op, redo, ctx);
-    case EcsQuerySelectAny: return flecs_query_select_any(op, redo, ctx);
+    case EcsQueryOnlyAny: return flecs_query_only_any(op, redo, ctx);
     case EcsQueryUp: return flecs_query_up(op, redo, ctx);
     case EcsQueryUpId: return flecs_query_up_id(op, redo, ctx);
     case EcsQuerySelfUp: return flecs_query_self_up(op, redo, ctx);
