@@ -7667,6 +7667,125 @@ void Variables_1_src_this_var_as_table_range(void) {
     ecs_fini(world);
 }
 
+void Variables_1_set_src_this_w_any(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_add(world, e, Foo);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ EcsAny }}
+    });
+
+    test_assert(q != NULL);
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        ecs_iter_set_var(&it, 0, e);
+        test_bool(true, ecs_query_next(&it));
+        test_int(1, it.count);
+        test_uint(e, it.entities[0]);
+        test_uint(EcsWildcard, ecs_field_id(&it, 0));
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Variables_1_set_src_this_w_any_fixed(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_add(world, e, Foo);
+
+    ecs_entity_t f = ecs_new(world);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {
+            { EcsAny },
+            { Bar, .src.id = f }
+        }
+    });
+
+    test_assert(q != NULL);
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_add(world, f, Bar);
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        ecs_iter_set_var(&it, 0, e);
+        test_bool(true, ecs_query_next(&it));
+        test_int(1, it.count);
+        test_uint(e, it.entities[0]);
+        test_uint(0, ecs_field_src(&it, 0));
+        test_uint(f, ecs_field_src(&it, 1));
+        test_uint(EcsWildcard, ecs_field_id(&it, 0));
+        test_uint(Bar, ecs_field_id(&it, 1));
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Variables_1_set_src_this_w_fixed_any(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_add(world, e, Foo);
+
+    ecs_entity_t f = ecs_new(world);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {
+            { Bar, .src.id = f },
+            { EcsAny }
+        }
+    });
+
+    test_assert(q != NULL);
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_add(world, f, Bar);
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        ecs_iter_set_var(&it, 0, e);
+        test_bool(true, ecs_query_next(&it));
+        test_int(1, it.count);
+        test_uint(e, it.entities[0]);
+        test_uint(f, ecs_field_src(&it, 0));
+        test_uint(0, ecs_field_src(&it, 1));
+        test_uint(Bar, ecs_field_id(&it, 0));
+        test_uint(EcsWildcard, ecs_field_id(&it, 1));
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
 void Variables_2_join_by_rel_var(void) {
     ecs_world_t *world = ecs_mini();
 
@@ -11443,3 +11562,4 @@ void Variables_second_invalid_var_name_and_id(void) {
 
     ecs_fini(world);
 }
+

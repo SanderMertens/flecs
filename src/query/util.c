@@ -184,7 +184,7 @@ const char* flecs_query_op_str(
     case EcsQueryCacheData:      return "cachepop  ";
     case EcsQueryIsCache:        return "xcache    ";
     case EcsQueryIsCacheData:    return "xcachepop ";
-    case EcsQuerySelectAny:      return "any       ";
+    case EcsQueryOnlyAny:        return "any       ";
     case EcsQueryUp:             return "up        ";
     case EcsQueryUpId:           return "upid      ";
     case EcsQuerySelfUp:         return "selfup    ";
