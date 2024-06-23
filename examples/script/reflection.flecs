@@ -3,13 +3,13 @@
 //
 // To load this file yourself, call ecs_script_run_file("reflection.flecs");
 
-// It is possible to set component values in a plecs file as long as the 
+// It is possible to set component values in a Flecs script file as long as the 
 // component is described with reflection data. Since we don't have a component
 // yet, we'll first have to create one.
 
-// Plecs does not have dedicated syntax for describing types, but since the
+// Flecs script does not have dedicated syntax for describing types, but since the
 // reflection addon (flecs.meta) uses regular entities and components to store
-// reflection data, we can use existing plecs syntax to create a type.
+// reflection data, we can use existing Flecs script syntax to create a type.
 
 // First we'll add flecs.meta to the list of namespaces to search. This is not
 // strictly necessary, but lets us write Struct instead of flecs.meta.Struct
@@ -24,25 +24,25 @@ struct Position {
   y { member: {type: f32} }
 }
 
-// Plecs has a feature which makes it possible to specify a default type for a
+// Flecs script has a feature which makes it possible to specify a default type for a
 // scope. The Struct component has Member as default type. This means we can
 // also create a type like this, which is a bit shorter:
 struct Mass {
-  value : f32 // 'type' can be omitted since it's the first member
+  value = f32 // 'type' can be omitted since it's the first member
 }
 
 // Similarly we can also define an enumeration type. The default scope type for
 // Enum is Constant, which ensures amongst others that the child entities will
 // be assigned with an incrementing constant value automatically.
 enum Color {
-  Red
-  Green
+  Red,
+  Green,
   Blue
 }
 
 // We can now create an entity that uses the types
 my_entity {
-  - Position {x: 10, y: 20}
-  - Mass {100} // Member names are optional
-  - Color {Green} // Green will be automatically looked up in the Color scope
+  Position: {x: 10, y: 20}
+  Mass: {100} // Member names are optional
+  Color: {Green} // Green will be automatically looked up in the Color scope
 }

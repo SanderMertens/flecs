@@ -291,6 +291,11 @@ identifier: {
             goto insert_tag;
         }
 
+        // auto_override |
+        case '|': {
+            goto identifier_flag;
+        }
+
         // Position:
         case ':': {
             goto identifier_colon;
@@ -526,6 +531,75 @@ pair: {
             ecs_script_pair_scope_t *ps = flecs_script_insert_pair_scope(
                 parser, Token(1), Token(3));
             return flecs_script_scope(parser, ps->scope, pos);
+        }
+    )
+}
+
+// auto_override |
+identifier_flag: {
+    ecs_id_t flag;
+    if (!ecs_os_strcmp(Token(0), "auto_override")) {
+        flag = ECS_AUTO_OVERRIDE;
+    } else {
+        Error("invalid flag '%s'", Token(0));
+    }
+
+    Parse(
+        // auto_override | (
+        case '(':
+            // auto_override | (Rel, Tgt)
+            Parse_4(EcsTokIdentifier, ',', EcsTokIdentifier, ')',
+                ecs_script_tag_t *tag = flecs_script_insert_pair_tag(
+                    parser, Token(3), Token(5));
+                tag->id.flag = flag;
+
+                Parse(
+                    // auto_override | (Rel, Tgt)\n
+                    EcsTokEndOfStatement: {
+                        EndOfRule;
+                    }
+
+                    // auto_override | (Rel, Tgt):
+                    case ':': {
+                        Parse_1('{',
+                            // auto_override | (Rel, Tgt): {expr}
+                            Expr('}', {
+                                ecs_script_component_t *comp = 
+                                    flecs_script_insert_pair_component(
+                                        parser, Token(3), Token(5));
+                                comp->expr = Token(9);
+                                EndOfRule; 
+                            })
+                        )
+                    }
+                )
+            )
+
+        // auto_override | Position
+        case EcsTokIdentifier: {
+            ecs_script_tag_t *tag = flecs_script_insert_tag(
+                parser, Token(2));
+            tag->id.flag = flag;
+
+            Parse(
+                // auto_override | Position\n
+                EcsTokEndOfStatement: {
+                    EndOfRule;
+                }
+
+                // auto_override | Position:
+                case ':': {
+                    Parse_1('{',
+                        // auto_override | Position: {expr}
+                        Expr('}', {
+                            ecs_script_component_t *comp = flecs_script_insert_component(
+                                parser, Token(2));
+                            comp->expr = Token(5);
+                            EndOfRule; 
+                        })
+                    )
+                }
+            )
         }
     )
 }

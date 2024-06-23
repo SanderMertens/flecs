@@ -4628,6 +4628,7 @@ struct ecs_script_scope_t {
 typedef struct ecs_script_id_t {
     const char *first;
     const char *second;
+    ecs_id_t flag;
     ecs_id_t eval;
 } ecs_script_id_t;
 
@@ -55621,6 +55622,11 @@ identifier: {
             goto insert_tag;
         }
 
+        // auto_override |
+        case '|': {
+            goto identifier_flag;
+        }
+
         // Position:
         case ':': {
             goto identifier_colon;
@@ -55856,6 +55862,75 @@ pair: {
             ecs_script_pair_scope_t *ps = flecs_script_insert_pair_scope(
                 parser, Token(1), Token(3));
             return flecs_script_scope(parser, ps->scope, pos);
+        }
+    )
+}
+
+// auto_override |
+identifier_flag: {
+    ecs_id_t flag;
+    if (!ecs_os_strcmp(Token(0), "auto_override")) {
+        flag = ECS_AUTO_OVERRIDE;
+    } else {
+        Error("invalid flag '%s'", Token(0));
+    }
+
+    Parse(
+        // auto_override | (
+        case '(':
+            // auto_override | (Rel, Tgt)
+            Parse_4(EcsTokIdentifier, ',', EcsTokIdentifier, ')',
+                ecs_script_tag_t *tag = flecs_script_insert_pair_tag(
+                    parser, Token(3), Token(5));
+                tag->id.flag = flag;
+
+                Parse(
+                    // auto_override | (Rel, Tgt)\n
+                    EcsTokEndOfStatement: {
+                        EndOfRule;
+                    }
+
+                    // auto_override | (Rel, Tgt):
+                    case ':': {
+                        Parse_1('{',
+                            // auto_override | (Rel, Tgt): {expr}
+                            Expr('}', {
+                                ecs_script_component_t *comp = 
+                                    flecs_script_insert_pair_component(
+                                        parser, Token(3), Token(5));
+                                comp->expr = Token(9);
+                                EndOfRule; 
+                            })
+                        )
+                    }
+                )
+            )
+
+        // auto_override | Position
+        case EcsTokIdentifier: {
+            ecs_script_tag_t *tag = flecs_script_insert_tag(
+                parser, Token(2));
+            tag->id.flag = flag;
+
+            Parse(
+                // auto_override | Position\n
+                EcsTokEndOfStatement: {
+                    EndOfRule;
+                }
+
+                // auto_override | Position:
+                case ':': {
+                    Parse_1('{',
+                        // auto_override | Position: {expr}
+                        Expr('}', {
+                            ecs_script_component_t *comp = flecs_script_insert_component(
+                                parser, Token(2));
+                            comp->expr = Token(5);
+                            EndOfRule; 
+                        })
+                    )
+                }
+            )
         }
     )
 }
@@ -56984,6 +57059,8 @@ int ecs_script_run(
     if (!script) {
         goto error;
     }
+
+    // printf("%s\n", ecs_script_ast_to_str(script));
 
     ecs_entity_t prev_scope = ecs_set_scope(world, 0);
 
@@ -59269,9 +59346,9 @@ int flecs_script_eval_id(
             }
         }
 
-        id->eval = ecs_pair(first, second);
+        id->eval = id->flag | ecs_pair(first, second);
     } else {
-        id->eval = first;
+        id->eval = id->flag | first;
     }
 
     return 0;
@@ -59373,7 +59450,9 @@ int flecs_script_eval_entity(
             .first = node->kind
         };
 
-        if (flecs_script_eval_id(v, node, &id)) {
+        if (!ecs_os_strcmp(node->kind, "prefab")) {
+            id.eval = EcsPrefab;
+        } else if (flecs_script_eval_id(v, node, &id)) {
             return -1;
         }
 
@@ -60311,6 +60390,12 @@ void flecs_script_id_to_str(
     ecs_script_str_visitor_t *v,
     ecs_script_id_t *id)
 {
+    if (id->flag && id->flag == ECS_AUTO_OVERRIDE) {
+        flecs_scriptbuf_appendstr(v, "auto_override | ");
+    } else {
+        flecs_scriptbuf_appendstr(v, "??? | ");
+    }
+
     if (id->second) {
         flecs_scriptbuf_append(v, "(%s, %s)", 
             id->first, id->second);

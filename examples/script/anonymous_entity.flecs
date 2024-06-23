@@ -4,9 +4,11 @@
 // To load this file yourself, call ecs_script_run_file("anonymous_entity.flecs");
 
 // To create an entity without a name, use the _ character
-_ :- SpaceShip
+_ {
+  SpaceShip
+}
 
 // Anonymous entities can be used as parents and children
 SpaceShip _ {
-    _ :- Engine
+  _ { Engine }
 }

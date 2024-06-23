@@ -3,13 +3,13 @@
 //
 // To load this file yourself, call ecs_script_run_file("docs.flecs");
 
-// Plecs files can be used to annotate entities and components with 
+// Flecs script files can be used to annotate entities and components with 
 // documentation. These annotations use the flecs.doc addon.
 
 @brief A brief description of planet Earth
 @name The Earth
 Earth {
-  - Planet
+  Planet
 }
 
 // Annotations can be created for entities definfed elsewhere. This makes it
