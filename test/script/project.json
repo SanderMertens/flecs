@@ -248,7 +248,13 @@
                 "isa_hierarchy",
                 "isa_hierarchy_in_module",
                 "custom_isa_hierarchy_in_module",
-                "custom_isa_hierarchy_in_subtree"
+                "custom_isa_hierarchy_in_subtree",
+                "inherit_w_kind",
+                "inherit_w_kind_scope",
+                "inherit_w_kind_value",
+                "inherit_w_kind_value_scope",
+                "multiple_inherit_w_kind",
+                "multiple_inherit_w_kind_scope"
             ]
         }, {
             "id": "Template",

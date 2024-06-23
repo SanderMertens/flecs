@@ -103,6 +103,10 @@ void Strbuf_append_inf(void);
 void Strbuf_append_nan_delim(void);
 void Strbuf_append_inf_delim(void);
 
+// Testsuite 'Allocator'
+void Allocator_setup(void);
+void Allocator_init_fini_empty(void);
+
 bake_test_case Map_testcases[] = {
     {
         "count",
@@ -456,6 +460,13 @@ bake_test_case Strbuf_testcases[] = {
     }
 };
 
+bake_test_case Allocator_testcases[] = {
+    {
+        "init_fini_empty",
+        Allocator_init_fini_empty
+    }
+};
+
 
 static bake_test_suite suites[] = {
     {
@@ -478,9 +489,16 @@ static bake_test_suite suites[] = {
         NULL,
         35,
         Strbuf_testcases
+    },
+    {
+        "Allocator",
+        Allocator_setup,
+        NULL,
+        1,
+        Allocator_testcases
     }
 };
 
 int main(int argc, char *argv[]) {
-    return bake_test_run("collections", argc, argv, suites, 3);
+    return bake_test_run("collections", argc, argv, suites, 4);
 }

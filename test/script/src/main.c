@@ -245,6 +245,12 @@ void Eval_isa_hierarchy(void);
 void Eval_isa_hierarchy_in_module(void);
 void Eval_custom_isa_hierarchy_in_module(void);
 void Eval_custom_isa_hierarchy_in_subtree(void);
+void Eval_inherit_w_kind(void);
+void Eval_inherit_w_kind_scope(void);
+void Eval_inherit_w_kind_value(void);
+void Eval_inherit_w_kind_value_scope(void);
+void Eval_multiple_inherit_w_kind(void);
+void Eval_multiple_inherit_w_kind_scope(void);
 
 // Testsuite 'Template'
 void Template_template_no_scope(void);
@@ -1513,6 +1519,30 @@ bake_test_case Eval_testcases[] = {
     {
         "custom_isa_hierarchy_in_subtree",
         Eval_custom_isa_hierarchy_in_subtree
+    },
+    {
+        "inherit_w_kind",
+        Eval_inherit_w_kind
+    },
+    {
+        "inherit_w_kind_scope",
+        Eval_inherit_w_kind_scope
+    },
+    {
+        "inherit_w_kind_value",
+        Eval_inherit_w_kind_value
+    },
+    {
+        "inherit_w_kind_value_scope",
+        Eval_inherit_w_kind_value_scope
+    },
+    {
+        "multiple_inherit_w_kind",
+        Eval_multiple_inherit_w_kind
+    },
+    {
+        "multiple_inherit_w_kind_scope",
+        Eval_multiple_inherit_w_kind_scope
     }
 };
 
@@ -2789,7 +2819,7 @@ static bake_test_suite suites[] = {
         "Eval",
         NULL,
         NULL,
-        236,
+        242,
         Eval_testcases
     },
     {

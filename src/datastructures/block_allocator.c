@@ -66,6 +66,7 @@ void flecs_ballocator_init(
     ecs_assert(size != 0, ECS_INTERNAL_ERROR, NULL);
     ba->data_size = size;
 #ifdef FLECS_SANITIZE
+    ba->alloc_count = 0;
     size += ECS_SIZEOF(int64_t);
 #endif
     ba->chunk_size = ECS_ALIGN(size, 16);
@@ -124,6 +125,7 @@ void* flecs_balloc(
 
     if (!ba->head) {
         ba->head = flecs_balloc_block(ba);
+        ecs_assert(ba->head != NULL, ECS_INTERNAL_ERROR, NULL);
     }
 
     result = ba->head;

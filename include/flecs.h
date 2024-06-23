@@ -1061,6 +1061,7 @@ struct ecs_iter_t {
     /* Context */
     void *param;                  /**< Param passed to ecs_run */
     void *ctx;                    /**< System context */
+    void *binding_ctx;            /**< System binding context */
     void *callback_ctx;           /**< Callback language binding context */
     void *run_ctx;                /**< Run language binding context */
 
@@ -1350,9 +1351,9 @@ typedef struct ecs_world_info_t {
     ecs_ftime_t system_time_total;    /**< Total time spent in systems */
     ecs_ftime_t emit_time_total;      /**< Total time spent notifying observers */
     ecs_ftime_t merge_time_total;     /**< Total time spent in merges */
-    ecs_ftime_t world_time_total;     /**< Time elapsed in simulation */
-    ecs_ftime_t world_time_total_raw; /**< Time elapsed in simulation (no scaling) */
     ecs_ftime_t rematch_time_total;   /**< Time spent on query rematching */
+    double world_time_total;          /**< Time elapsed in simulation */
+    double world_time_total_raw;      /**< Time elapsed in simulation (no scaling) */
 
     int64_t frame_count_total;        /**< Total number of frames */
     int64_t merge_count_total;        /**< Total number of merges */

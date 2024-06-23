@@ -25,6 +25,13 @@ int script_run_file(const char *filename) const {
     return ecs_script_run_file(world_, filename);
 }
 
+/** Build script.
+ * @see ecs_script_init
+ */
+script_builder script(const char *name = nullptr) const {
+    return script_builder(world_, name);
+}
+
 /** Convert value to string */
 flecs::string to_expr(flecs::entity_t tid, const void* value) {
     char *expr = ecs_ptr_to_expr(world_, tid, value);

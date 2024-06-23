@@ -7121,3 +7121,171 @@ void Eval_custom_isa_hierarchy_in_subtree(void) {
 
     ecs_fini(world);
 }
+
+void Eval_inherit_w_kind(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "Prefab Foo"
+    LINE "Prefab Bar : Foo";
+
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    ecs_entity_t bar = ecs_lookup(world, "Bar");
+    test_assert(foo != 0);
+    test_assert(bar != 0);
+    ecs_has_id(world, foo, EcsPrefab);
+    ecs_has_id(world, bar, EcsPrefab);
+    test_assert(ecs_has_pair(world, bar, EcsIsA, foo));
+
+    ecs_fini(world);
+}
+
+void Eval_inherit_w_kind_scope(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "Prefab Foo"
+    LINE "Prefab Bar : Foo {"
+    LINE "  Child {}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    ecs_entity_t bar = ecs_lookup(world, "Bar");
+    ecs_entity_t child = ecs_lookup(world, "Bar.Child");
+    test_assert(foo != 0);
+    test_assert(bar != 0);
+    test_assert(child != 0);
+    ecs_has_id(world, foo, EcsPrefab);
+    ecs_has_id(world, bar, EcsPrefab);
+    test_assert(ecs_has_pair(world, bar, EcsIsA, foo));
+
+    ecs_fini(world);
+}
+
+void Eval_inherit_w_kind_value(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "Position"}),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "Prefab Foo"
+    LINE "Position Bar : Foo (10, 20)";
+
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    ecs_entity_t bar = ecs_lookup(world, "Bar");
+    test_assert(foo != 0);
+    test_assert(bar != 0);
+    ecs_has_id(world, foo, EcsPrefab);
+    ecs_has(world, bar, Position);
+    test_assert(ecs_has_pair(world, bar, EcsIsA, foo));
+
+    const Position *p = ecs_get(world, bar, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+void Eval_inherit_w_kind_value_scope(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "Position"}),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "Prefab Foo"
+    LINE "Position Bar : Foo (10, 20) {"
+    LINE "  Child {}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    ecs_entity_t bar = ecs_lookup(world, "Bar");
+    ecs_entity_t child = ecs_lookup(world, "Bar.Child");
+    test_assert(foo != 0);
+    test_assert(bar != 0);
+    test_assert(child != 0);
+    ecs_has_id(world, foo, EcsPrefab);
+    ecs_has(world, bar, Position);
+    test_assert(ecs_has_pair(world, bar, EcsIsA, foo));
+
+    const Position *p = ecs_get(world, bar, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+void Eval_multiple_inherit_w_kind(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "Prefab Hello"
+    LINE "Prefab World"
+    LINE "Prefab Foo : Hello, World";
+
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    ecs_entity_t hello = ecs_lookup(world, "Hello");
+    ecs_entity_t world_ = ecs_lookup(world, "World");
+    test_assert(foo != 0);
+    test_assert(hello != 0);
+    test_assert(world_ != 0);
+    test_assert(world_ != EcsWorld);
+    ecs_has_id(world, hello, EcsPrefab);
+    ecs_has_id(world, world_, EcsPrefab);
+    test_assert(ecs_has_pair(world, foo, EcsIsA, hello));
+    test_assert(ecs_has_pair(world, foo, EcsIsA, world_));
+
+    ecs_fini(world);
+}
+
+void Eval_multiple_inherit_w_kind_scope(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "Prefab Hello"
+    LINE "Prefab World"
+    LINE "Prefab Foo : Hello, World {"
+    LINE "  Child {}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    ecs_entity_t hello = ecs_lookup(world, "Hello");
+    ecs_entity_t world_ = ecs_lookup(world, "World");
+    ecs_entity_t child = ecs_lookup(world, "Foo.Child");
+    test_assert(foo != 0);
+    test_assert(child != 0);
+    test_assert(hello != 0);
+    test_assert(world_ != 0);
+    test_assert(world_ != EcsWorld);
+    ecs_has_id(world, hello, EcsPrefab);
+    ecs_has_id(world, world_, EcsPrefab);
+    test_assert(ecs_has_pair(world, foo, EcsIsA, hello));
+    test_assert(ecs_has_pair(world, foo, EcsIsA, world_));
+
+    ecs_fini(world);
+}

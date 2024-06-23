@@ -88,6 +88,9 @@ struct each_delegate;
 #ifdef FLECS_APP
 #include "mixins/app/decl.hpp"
 #endif
+#ifdef FLECS_SCRIPT
+#include "mixins/script/decl.hpp"
+#endif
 
 #include "log.hpp"
 #include "pair.hpp"
@@ -147,6 +150,9 @@ struct each_delegate;
 #endif
 #ifdef FLECS_ALERTS
 #include "mixins/alerts/impl.hpp"
+#endif
+#ifdef FLECS_SCRIPT
+#include "mixins/script/impl.hpp"
 #endif
 
 #include "impl/field.hpp"

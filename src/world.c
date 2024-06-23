@@ -1840,7 +1840,7 @@ ecs_ftime_t flecs_start_measure_frame(
         world->frame_start_time = t;
 
         /* Keep track of total time passed in world */
-        world->info.world_time_total_raw += (ecs_ftime_t)delta_time;
+        world->info.world_time_total_raw += (double)delta_time;
     }
 
     return (ecs_ftime_t)delta_time;
@@ -1878,7 +1878,7 @@ ecs_ftime_t ecs_frame_begin(
     world->info.delta_time = user_delta_time * world->info.time_scale;
 
     /* Keep track of total scaled time passed in world */
-    world->info.world_time_total += world->info.delta_time;
+    world->info.world_time_total += (double)world->info.delta_time;
 
     /* Command buffer capturing */
     world->on_commands_active = world->on_commands;
