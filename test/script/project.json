@@ -254,7 +254,12 @@
                 "inherit_w_kind_value",
                 "inherit_w_kind_value_scope",
                 "multiple_inherit_w_kind",
-                "multiple_inherit_w_kind_scope"
+                "multiple_inherit_w_kind_scope",
+                "auto_override_tag",
+                "auto_override_component",
+                "auto_override_pair",
+                "auto_override_pair_component",
+                "lowercase_prefab_kind"
             ]
         }, {
             "id": "Template",

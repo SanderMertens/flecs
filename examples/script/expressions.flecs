@@ -7,16 +7,16 @@ using flecs.meta
 
 // Create component types, see reflection example
 struct Position {
-  x : f32
-  y : f32
+  x = f32
+  y = f32
 }
 
 struct Rectangle {
-  width : f32
-  height : f32
+  width = f32
+  height = f32
 }
 
-// Plecs files can contain variables that can be referenced later on when 
+// Flecs script files can contain variables that can be referenced later on when 
 // assigning values to components
 const width = 5
 
@@ -25,6 +25,6 @@ const width = 5
 const height = $width * 2
 
 e {
-  - Position{0, -($height / 2)}
+  Position: {0, -($height / 2)}
   Rectangle: {$width, $height}
 }

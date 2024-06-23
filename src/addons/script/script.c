@@ -78,6 +78,8 @@ int ecs_script_run(
         goto error;
     }
 
+    // printf("%s\n", ecs_script_ast_to_str(script));
+
     ecs_entity_t prev_scope = ecs_set_scope(world, 0);
 
     if (ecs_script_eval(script)) {

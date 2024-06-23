@@ -8,29 +8,29 @@
 with Planet {
   // With statements can be nested, which adds to the list of components to add
   with InnerPlanet {
-    Mercury
-    Venus
+    Mercury {}
+    Venus {}
     Earth {
       // A with scope contains regular statements so we can do anything we can
       // do normally, like assign components and open scopes.
-      - SupportsLife
+      SupportsLife
     }
-    Mars
+    Mars {}
   }
   with OuterPlanet {
-    Jupiter
-    Saturn
-    Neptune
-    Uranus
+    Jupiter {}
+    Saturn {}
+    Neptune {}
+    Uranus {}
   }
 }
 
 // A with statement may be placed inside of a scope
 Jupiter {
   with Moon {
-    Io
-    Europa
-    Ganymede
-    Callisto
+    Io {}
+    Europa {}
+    Ganymede {}
+    Callisto {}
   }
 }

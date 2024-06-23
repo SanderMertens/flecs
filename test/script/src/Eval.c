@@ -7289,3 +7289,134 @@ void Eval_multiple_inherit_w_kind_scope(void) {
 
     ecs_fini(world);
 }
+
+void Eval_auto_override_tag(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    const char *expr =
+    LINE "Prefab Foo {"
+    LINE "  auto_override | Tag"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    test_assert(foo != 0);
+    ecs_has_id(world, foo, EcsPrefab);
+    test_assert(ecs_has_id(world, foo, ECS_AUTO_OVERRIDE | Tag));
+    test_assert(!ecs_has(world, foo, Tag));
+
+    ecs_fini(world);
+}
+
+void Eval_auto_override_component(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "Position"}),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    LINE "Prefab Foo {"
+    LINE "  auto_override | Position: {10, 20}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    test_assert(foo != 0);
+    ecs_has_id(world, foo, EcsPrefab);
+    test_assert(ecs_has_id(world, foo, ECS_AUTO_OVERRIDE | ecs_id(Position)));
+    test_assert(ecs_has(world, foo, Position));
+
+    const Position *p = ecs_get(world, foo, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+void Eval_auto_override_pair(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, Tgt);
+
+    const char *expr =
+    LINE "Prefab Foo {"
+    LINE "  auto_override | (Rel, Tgt)"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    test_assert(foo != 0);
+    ecs_has_id(world, foo, EcsPrefab);
+    test_assert(ecs_has_id(world, foo, ECS_AUTO_OVERRIDE | ecs_pair(Rel, Tgt)));
+    test_assert(!ecs_has_pair(world, foo, Rel, Tgt));
+
+    ecs_fini(world);
+}
+
+void Eval_auto_override_pair_component(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "Position"}),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ECS_TAG(world, Tgt);
+
+    const char *expr =
+    LINE "Prefab Foo {"
+    LINE "  auto_override | (Position, Tgt): {10, 20}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    test_assert(foo != 0);
+    ecs_has_id(world, foo, EcsPrefab);
+    test_assert(ecs_has_id(world, foo, ECS_AUTO_OVERRIDE | ecs_pair_t(Position, Tgt)));
+    test_assert(ecs_has_pair(world, foo, ecs_id(Position), Tgt));
+
+    const Position *p = ecs_get_pair(world, foo, Position, Tgt);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+void Eval_lowercase_prefab_kind(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    const char *expr =
+    LINE "prefab Foo {"
+    LINE "  Tag"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    
+    test_assert(ecs_lookup(world, "prefab") == 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    test_assert(foo != 0);
+    test_assert(ecs_has_id(world, foo, EcsPrefab));
+    test_assert(ecs_has_id(world, foo, Tag));
+
+    ecs_fini(world);
+}

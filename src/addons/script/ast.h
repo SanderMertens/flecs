@@ -42,6 +42,7 @@ struct ecs_script_scope_t {
 typedef struct ecs_script_id_t {
     const char *first;
     const char *second;
+    ecs_id_t flag;
     ecs_id_t eval;
 } ecs_script_id_t;
 
