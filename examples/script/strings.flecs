@@ -3,18 +3,18 @@
 //
 // To load this file yourself, call ecs_script_run_file("strings.flecs");
 
-// Plecs component values can be populated with strings. To see how this works,
+// Flecs script component values can be populated with strings. To see how this works,
 // we first need to create a component type (see reflection example).
 using flecs.meta
 
 struct Shader {
-  filename : string
-  code : string
+  filename = string
+  code = string
 }
 
 // Create component values with strings
 my_pipeline {
-  - (Shader, Vertex) {
+  (Shader, Vertex): {
     // Normal string
     filename: "vert.glsl",
 
@@ -25,7 +25,7 @@ my_pipeline {
       }`
     }
 
-  - (Shader, Fragment) {
+  (Shader, Fragment): {
     filename: "frag.glsl",
     code: `
       void main() {

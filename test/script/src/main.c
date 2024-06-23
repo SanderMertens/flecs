@@ -251,6 +251,11 @@ void Eval_inherit_w_kind_value(void);
 void Eval_inherit_w_kind_value_scope(void);
 void Eval_multiple_inherit_w_kind(void);
 void Eval_multiple_inherit_w_kind_scope(void);
+void Eval_auto_override_tag(void);
+void Eval_auto_override_component(void);
+void Eval_auto_override_pair(void);
+void Eval_auto_override_pair_component(void);
+void Eval_lowercase_prefab_kind(void);
 
 // Testsuite 'Template'
 void Template_template_no_scope(void);
@@ -1543,6 +1548,26 @@ bake_test_case Eval_testcases[] = {
     {
         "multiple_inherit_w_kind_scope",
         Eval_multiple_inherit_w_kind_scope
+    },
+    {
+        "auto_override_tag",
+        Eval_auto_override_tag
+    },
+    {
+        "auto_override_component",
+        Eval_auto_override_component
+    },
+    {
+        "auto_override_pair",
+        Eval_auto_override_pair
+    },
+    {
+        "auto_override_pair_component",
+        Eval_auto_override_pair_component
+    },
+    {
+        "lowercase_prefab_kind",
+        Eval_lowercase_prefab_kind
     }
 };
 
@@ -2819,7 +2844,7 @@ static bake_test_suite suites[] = {
         "Eval",
         NULL,
         NULL,
-        242,
+        247,
         Eval_testcases
     },
     {

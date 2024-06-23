@@ -764,6 +764,6 @@ plane {
 town :- Town{}
 ```
 
-[![a town](img/script_tutorial/tut_playground_town.png)](https://www.flecs.dev/explorer/?show=plecs,explorer_canvas&local=true&wasm=https://www.flecs.dev/explorer/playground.js&script=using%20flecs.components.*%0Ausing%20templates%0A%0Aconst%20PI%20%3D%203.1415926%0A%0Aplane%20%7B%0A%20%20-%20Position3%7B%7D%0A%20%20-%20Rotation3%7B%24PI%20%2F%202%7D%0A%20%20-%20Rectangle%7B10000%2C%2010000%7D%0A%20%20-%20Rgb%7B0.9%2C%200.9%2C%200.9%7D%0A%7D%0A%0Atown%20%3A-%20Town%7B%7D)
+[![a town](img/script_tutorial/tut_playground_town.png)](https://www.flecs.dev/explorer/?show=flecs script,explorer_canvas&local=true&wasm=https://www.flecs.dev/explorer/playground.js&script=using%20flecs.components.*%0Ausing%20templates%0A%0Aconst%20PI%20%3D%203.1415926%0A%0Aplane%20%7B%0A%20%20-%20Position3%7B%7D%0A%20%20-%20Rotation3%7B%24PI%20%2F%202%7D%0A%20%20-%20Rectangle%7B10000%2C%2010000%7D%0A%20%20-%20Rgb%7B0.9%2C%200.9%2C%200.9%7D%0A%7D%0A%0Atown%20%3A-%20Town%7B%7D)
 
 That's all for this tutorial. Have fun creating, and don't hesitate to share the results in the `#showcase` channel on Discord! (link: https://discord.gg/caR2WmY)

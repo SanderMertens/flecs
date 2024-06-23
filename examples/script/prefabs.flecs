@@ -15,17 +15,19 @@ struct Defense {
 }
 
 // To create a prefab, you can create an entity with the Prefab tag:
-SpaceShip :- Prefab
+SpaceShip {
+  prefab
+}
 
 // Alternatively you can use the shorthand declaration syntax which has the same
 // result, and allows you to open a scope after the statement:
-Prefab SpaceShip {
+prefab SpaceShip {
   Attack: {50}
   Defense: {50}
 }
 
 // To create a prefab that inherits from SpaceShip, we can use the : operator
-Prefab Freighter : SpaceShip {
+prefab Freighter : SpaceShip {
   Defense: {100}
 }
 

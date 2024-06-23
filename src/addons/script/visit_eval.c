@@ -293,9 +293,9 @@ int flecs_script_eval_id(
             }
         }
 
-        id->eval = ecs_pair(first, second);
+        id->eval = id->flag | ecs_pair(first, second);
     } else {
-        id->eval = first;
+        id->eval = id->flag | first;
     }
 
     return 0;
@@ -397,7 +397,9 @@ int flecs_script_eval_entity(
             .first = node->kind
         };
 
-        if (flecs_script_eval_id(v, node, &id)) {
+        if (!ecs_os_strcmp(node->kind, "prefab")) {
+            id.eval = EcsPrefab;
+        } else if (flecs_script_eval_id(v, node, &id)) {
             return -1;
         }
 
