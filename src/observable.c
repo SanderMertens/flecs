@@ -1097,6 +1097,7 @@ void flecs_emit_forward(
 void flecs_emit(
     ecs_world_t *world,
     ecs_world_t *stage,
+    ecs_flags64_t set_mask,
     ecs_event_desc_t *desc)
 {
     flecs_poly_assert(world, ecs_world_t);
@@ -1244,10 +1245,16 @@ repeat_event:
         bool is_pair = ECS_IS_PAIR(id);
         void *override_ptr = NULL;
         ecs_entity_t base = 0;
+        bool id_can_override = can_override;
+        ecs_flags64_t id_bit = 1llu << i;
+        if (id_bit & set_mask) {
+            /* Component is already set, so don't override with prefab value */
+            id_can_override = false;
+        }
 
         /* Check if this id is a pair of an traversable relationship. If so, we 
          * may have to forward ids from the pair's target. */
-        if ((can_forward && is_pair) || can_override) {
+        if ((can_forward && is_pair) || id_can_override) {
             idr = flecs_id_record_get(world, id);
             if (!idr) {
                 /* Possible for union ids */
@@ -1289,7 +1296,7 @@ repeat_event:
                 ecs_assert(it.event_cur == evtx, ECS_INTERNAL_ERROR, NULL);
             }
 
-            if (can_override && !(idr_flags & EcsIdOnInstantiateDontInherit)) {
+            if (id_can_override && !(idr_flags & EcsIdOnInstantiateDontInherit)) {
                 /* Initialize overridden components with value from base */
                 ti = idr->type_info;
                 if (ti) {
@@ -1515,7 +1522,7 @@ void ecs_emit(
     }
 
     ecs_defer_begin(world);
-    flecs_emit(world, stage, desc);
+    flecs_emit(world, stage, 0, desc);
     ecs_defer_end(world);
 
     if (desc->ids == &default_ids) {

@@ -20,6 +20,7 @@ typedef struct {
     ecs_http_server_t *srv;
     int32_t rc;
     ecs_map_t cmd_captures;
+    double last_time;
 } ecs_rest_ctx_t;
 
 typedef struct {
@@ -385,6 +386,8 @@ bool flecs_rest_put_component(
         reply->code = 400;
         return true;
     }
+
+    ecs_modified_id(world, e, id);
 
     return true;
 }
@@ -1570,12 +1573,16 @@ void DequeueRest(ecs_iter_t *it) {
             (double)it->delta_system_time);
     }
 
+    const ecs_world_info_t *wi = ecs_get_world_info(it->world);
+
     int32_t i;
     for(i = 0; i < it->count; i ++) {
         ecs_rest_ctx_t *ctx = rest[i].impl;
         if (ctx) {
-            ecs_http_server_dequeue(ctx->srv, it->delta_time);
+            double elapsed = wi->world_time_total_raw - ctx->last_time;
+            ecs_http_server_dequeue(ctx->srv, (float)elapsed);
             flecs_rest_server_garbage_collect(it->world, ctx);
+            ctx->last_time = wi->world_time_total_raw;
         }
     } 
 }

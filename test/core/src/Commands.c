@@ -3966,3 +3966,53 @@ void Commands_mixed_on_add_on_set_w_emplace(void) {
 
     ecs_fini(world);
 }
+
+void Commands_add_isa_set_w_override_batched(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t p = ecs_insert(world, ecs_value(Position, {10, 20}));
+
+    ecs_defer_begin(world);
+    ecs_entity_t i = ecs_new(world);
+    ecs_add_pair(world, i, EcsIsA, p);
+    ecs_set(world, i, Position, {20, 30});
+    test_assert(!ecs_has_pair(world, i, EcsIsA, p));
+    test_assert(!ecs_has(world, i, Position));
+    ecs_defer_end(world);
+    test_assert(ecs_has_pair(world, i, EcsIsA, p));
+    test_assert(ecs_has(world, i, Position));
+    
+    const Position *ptr = ecs_get(world, i, Position);
+    test_assert(ptr != NULL);
+    test_int(ptr->x, 20);
+    test_int(ptr->y, 30);
+
+    ecs_fini(world);
+}
+
+void Commands_add_set_isa_w_override_batched(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t p = ecs_insert(world, ecs_value(Position, {10, 20}));
+
+    ecs_defer_begin(world);
+    ecs_entity_t i = ecs_new(world);
+    ecs_set(world, i, Position, {20, 30});
+    ecs_add_pair(world, i, EcsIsA, p);
+    test_assert(!ecs_has_pair(world, i, EcsIsA, p));
+    test_assert(!ecs_has(world, i, Position));
+    ecs_defer_end(world);
+    test_assert(ecs_has_pair(world, i, EcsIsA, p));
+    test_assert(ecs_has(world, i, Position));
+    
+    const Position *ptr = ecs_get(world, i, Position);
+    test_assert(ptr != NULL);
+    test_int(ptr->x, 20);
+    test_int(ptr->y, 30);
+
+    ecs_fini(world);
+}

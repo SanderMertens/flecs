@@ -143,6 +143,10 @@
         )\
     )
 
+#define LookAhead_Keep() \
+    pos = lookahead;\
+    parser->token_keep = parser->token_cur
+
 /* Same as Parse, but doesn't error out if token is not in handled cases */
 #define LookAhead(...)\
     const char *lookahead;\
@@ -156,7 +160,11 @@
             token_stack.count --;\
             break;\
         }\
-        parser->token_cur = ECS_CONST_CAST(char*, old_lh_token_cur);\
+        if (old_lh_token_cur > parser->token_keep) {\
+            parser->token_cur = ECS_CONST_CAST(char*, old_lh_token_cur);\
+        } else {\
+            parser->token_cur = parser->token_keep;\
+        }\
     }
 
 /* Lookahead N consecutive tokens */

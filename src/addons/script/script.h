@@ -35,6 +35,7 @@ struct ecs_script_parser_t {
     ecs_script_scope_t *scope;
     const char *pos;
     char *token_cur;
+    char *token_keep;
     bool significant_newline;
 
     /* For term parser */

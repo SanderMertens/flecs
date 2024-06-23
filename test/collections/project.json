@@ -112,6 +112,12 @@
                 "append_nan_delim",
                 "append_inf_delim"
             ]
+        }, {
+            "id": "Allocator",
+            "setup": true,
+            "testcases": [
+                "init_fini_empty"
+            ]
         }]
     }
 }
