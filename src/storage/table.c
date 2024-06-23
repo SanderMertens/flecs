@@ -289,7 +289,7 @@ void flecs_table_emit(
     ecs_table_t *table,
     ecs_entity_t event)
 {
-    flecs_emit(world, world, &(ecs_event_desc_t) {
+    flecs_emit(world, world, 0, &(ecs_event_desc_t) {
         .ids = &table->type,
         .event = event,
         .table = table,

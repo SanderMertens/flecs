@@ -19,6 +19,7 @@ void UpdateWorldSummary(ecs_iter_t *it) {
     int32_t i, count = it->count;
     for (i = 0; i < count; i ++) {
         summary[i].target_fps = (double)info->target_fps;
+        summary[i].time_scale = (double)info->time_scale;
 
         summary[i].frame_time_last = (double)info->frame_time_total - summary[i].frame_time_total;
         summary[i].system_time_last = (double)info->system_time_total - summary[i].system_time_total;
@@ -45,6 +46,17 @@ void UpdateWorldSummary(ecs_iter_t *it) {
     }
 }
 
+static
+void OnSetWorldSummary(ecs_iter_t *it) {
+    EcsWorldSummary *summary = ecs_field(it, EcsWorldSummary, 0);
+
+    int32_t i, count = it->count;
+    for (i = 0; i < count; i ++) {
+        ecs_set_target_fps(it->world, (float)summary[i].target_fps);
+        ecs_set_time_scale(it->world, (float)summary[i].time_scale);
+    }
+}
+
 void FlecsWorldSummaryImport(
     ecs_world_t *world) 
 {
@@ -56,6 +68,7 @@ void FlecsWorldSummaryImport(
         .entity = ecs_id(EcsWorldSummary),
         .members = {
             { .name = "target_fps", .type = ecs_id(ecs_f64_t), .unit = EcsHertz },
+            { .name = "time_scale", .type = ecs_id(ecs_f64_t) },
             { .name = "frame_time_total", .type = ecs_id(ecs_f64_t), .unit = EcsSeconds },
             { .name = "system_time_total", .type = ecs_id(ecs_f64_t), .unit = EcsSeconds  },
             { .name = "merge_time_total", .type = ecs_id(ecs_f64_t), .unit = EcsSeconds  },
@@ -68,18 +81,14 @@ void FlecsWorldSummaryImport(
         }
     });
 #endif
-
-    ecs_system(world, {
-        .entity = ecs_entity(world, { 
-            .name = "UpdateWorldSummary", 
-            .add = ecs_ids(ecs_dependson(EcsPreFrame)) 
-        }),
-        .query.terms[0] = { .id = ecs_id(EcsWorldSummary) },
-        .callback = UpdateWorldSummary
-    });
+    const ecs_world_info_t *info = ecs_get_world_info(world);
 
     ECS_SYSTEM(world, UpdateWorldSummary, EcsPreFrame, WorldSummary);
-    ecs_set(world, EcsWorld, EcsWorldSummary, {0});
+    ECS_OBSERVER(world, OnSetWorldSummary, EcsOnSet, WorldSummary);
+    ecs_set(world, EcsWorld, EcsWorldSummary, {
+        .target_fps = (double)info->target_fps,
+        .time_scale = (double)info->time_scale
+    });
 }
 
 #endif

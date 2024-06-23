@@ -8,6 +8,7 @@
 /* Helper type for passing around context required for error messages */
 typedef struct {
     const ecs_world_t *world;
+    const ecs_query_desc_t *desc;
     ecs_query_t *query;
     ecs_term_t *term;
     int32_t term_index;

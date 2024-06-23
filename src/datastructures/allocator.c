@@ -32,6 +32,8 @@ void flecs_allocator_init(
 void flecs_allocator_fini(
     ecs_allocator_t *a)
 {
+    ecs_assert(a != NULL, ECS_INVALID_PARAMETER, NULL);
+
     int32_t i = 0, count = flecs_sparse_count(&a->sizes);
     for (i = 0; i < count; i ++) {
         ecs_block_allocator_t *ba = flecs_sparse_get_dense_t(
@@ -39,6 +41,7 @@ void flecs_allocator_fini(
         flecs_ballocator_fini(ba);
     }
     flecs_sparse_fini(&a->sizes);
+
     flecs_ballocator_fini(&a->chunks);
 }
 

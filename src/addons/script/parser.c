@@ -75,7 +75,7 @@ const char* flecs_script_comma_expr(
                 continue;
 
             case EcsTokIdentifier:
-                pos = lookahead;
+                LookAhead_Keep();
 
                 if (is_base_list) {
                     flecs_script_insert_pair_tag(parser, "IsA", Token(0));
@@ -191,6 +191,44 @@ const char* flecs_script_with(
             }
         )
     } while (has_next);
+
+    ParserEnd;
+}
+
+/* Parenthesis expression */
+static
+const char* flecs_script_paren_expr(
+    ecs_script_parser_t *parser,
+    const char *kind,
+    const char *entity_name,
+    const char *pos)
+{
+    ParserBegin;
+
+    Expr(')',
+        ecs_script_entity_t *entity = flecs_script_insert_entity(
+            parser, entity_name);
+        entity->kind = kind;
+        entity->kind_w_expr = true;
+
+        Scope(entity->scope, 
+            ecs_script_component_t *component = 
+                flecs_script_insert_component(parser, kind);
+            component->expr = Token(0);
+        )
+
+        Parse(
+            // Position spaceship (expr)\n
+            EcsTokEndOfStatement: {
+                EndOfRule;
+            }
+
+            // Position spaceship (expr) {
+            case '{': {
+                return flecs_script_scope(parser, entity->scope, pos);
+            }
+        )
+    )
 
     ParserEnd;
 }
@@ -577,6 +615,28 @@ identifier_assign: {
 
 // Spaceship enterprise
 identifier_identifier: {
+    // Spaceship enterprise :
+    LookAhead_1(':', 
+        pos = lookahead;
+
+        Parse_1(EcsTokIdentifier, {
+            ecs_script_entity_t *entity = flecs_script_insert_entity(
+                parser, Token(1));
+
+            Scope(entity->scope, 
+                flecs_script_insert_pair_tag(parser, "IsA", Token(3));
+
+                LookAhead_1(',', {
+                    pos = lookahead;
+                    pos = flecs_script_comma_expr(parser, pos, true);
+                })
+            )
+
+            goto identifier_identifier_x;
+        })
+    )
+
+identifier_identifier_x:
     Parse(
         // Spaceship enterprise\n
         EcsTokEndOfStatement: {
@@ -667,30 +727,7 @@ component_expr_collection: {
 // Position spaceship (
 component_expr_paren: {
     // Position spaceship (expr)
-    Expr(')',
-        ecs_script_entity_t *entity = flecs_script_insert_entity(
-            parser, Token(1));
-        entity->kind = Token(0);
-        entity->kind_w_expr = true;
-
-        Scope(entity->scope, 
-            ecs_script_component_t *component = 
-                flecs_script_insert_component(parser, Token(0));
-            component->expr = Token(3);
-        )
-
-        Parse(
-            // Position spaceship (expr)\n
-            EcsTokEndOfStatement: {
-                EndOfRule;
-            }
-
-            // Position spaceship (expr) {
-            case '{': {
-                return flecs_script_scope(parser, entity->scope, pos);
-            }
-        )
-    )
+    return flecs_script_paren_expr(parser, Token(0), Token(1), pos);
 
     ParserEnd;
 }

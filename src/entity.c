@@ -601,6 +601,7 @@ void flecs_notify_on_add(
     int32_t count,
     const ecs_type_t *added,
     ecs_flags32_t flags,
+    ecs_flags64_t set_mask,
     bool construct)
 {
     ecs_assert(added != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -617,7 +618,7 @@ void flecs_notify_on_add(
         }
 
         if (table_flags & (EcsTableHasOnAdd|EcsTableHasIsA|EcsTableHasTraversable)) {
-            flecs_emit(world, world, &(ecs_event_desc_t){
+            flecs_emit(world, world, set_mask, &(ecs_event_desc_t){
                 .event = EcsOnAdd,
                 .ids = added,
                 .table = table,
@@ -656,7 +657,7 @@ void flecs_notify_on_remove(
         if (table_flags & (EcsTableHasOnRemove|EcsTableHasUnSet|EcsTableHasIsA|
             EcsTableHasTraversable))
         {
-            flecs_emit(world, world, &(ecs_event_desc_t) {
+            flecs_emit(world, world, 0, &(ecs_event_desc_t) {
                 .event = EcsOnRemove,
                 .ids = removed,
                 .table = table,
@@ -738,7 +739,7 @@ ecs_record_t* flecs_new_entity(
     ecs_assert(ecs_vec_count(&table->data.entities) > row, 
         ECS_INTERNAL_ERROR, NULL);
     flecs_notify_on_add(
-        world, table, NULL, row, 1, &diff->added, evt_flags, ctor);
+        world, table, NULL, row, 1, &diff->added, evt_flags, 0, ctor);
 
     return record;
 }
@@ -785,7 +786,7 @@ void flecs_move_entity(
     
     flecs_table_delete(world, src_table, src_row, false);
     flecs_notify_on_add(
-        world, dst_table, src_table, dst_row, 1, &diff->added, evt_flags, ctor);
+        world, dst_table, src_table, dst_row, 1, &diff->added, evt_flags, 0, ctor);
 
     flecs_update_name_index(world, src_table, dst_table, dst_row, 1);
 
@@ -871,7 +872,7 @@ void flecs_commit(
          * table, this suggests that a union relationship could have changed. */
         if (src_table) {
             flecs_notify_on_add(world, src_table, src_table, 
-                ECS_RECORD_TO_ROW(record->row), 1, &diff->added, evt_flags, 
+                ECS_RECORD_TO_ROW(record->row), 1, &diff->added, evt_flags, 0, 
                     construct);
         }
         flecs_journal_end();
@@ -968,7 +969,7 @@ const ecs_entity_t* flecs_bulk_new(
     flecs_defer_begin(world, world->stages[0]);
 
     flecs_notify_on_add(world, table, NULL, row, count, &diff->added, 
-        (component_data == NULL) ? 0 : EcsEventNoOnSet, true);
+        (component_data == NULL) ? 0 : EcsEventNoOnSet, 0, true);
 
     if (component_data) {
         int32_t c_i;
@@ -1234,7 +1235,7 @@ void flecs_notify_on_set(
 
     /* Run OnSet notifications */
     if (table->flags & EcsTableHasOnSet && ids->count) {
-        flecs_emit(world, world, &(ecs_event_desc_t) {
+        flecs_emit(world, world, 0, &(ecs_event_desc_t) {
             .event = EcsOnSet,
             .ids = ids,
             .table = table,
@@ -4577,7 +4578,7 @@ void flecs_cmd_batch_for_entity(
     ecs_table_diff_t table_diff; /* Keep track of diff for observers/hooks */
     int32_t cur = start;
     ecs_id_t id;
-    bool has_set = false;
+    ecs_flags64_t set_mask = 0;
 
     do {
         cmd = &cmds[cur];
@@ -4657,11 +4658,32 @@ void flecs_cmd_batch_for_entity(
             }
             break;
         case EcsCmdSet:
-        case EcsCmdEnsure:
+        case EcsCmdEnsure: {
+            ecs_id_t *ids = diff->added.array;
+            uint8_t added_index = flecs_ito(uint8_t, diff->added.count);
+
             table = flecs_find_table_add(world, table, id, diff);
+            if (diff->added.count == added_index) {
+                /* Nothing was added to the array, which means the id was added 
+                 * as result of another id (a With relationship or auto 
+                 * override). */
+                int32_t i;
+                for (i = 0; i < added_index; i ++) {
+                    if (ids[i] == id) {
+                        break;
+                    }
+                }
+                ecs_assert(i != added_index, ECS_INTERNAL_ERROR, NULL);
+                set_mask |= (1llu << i);
+            } else {
+                /* Id was added, index must be at the end of the array */
+                ecs_assert(ids[added_index] == id, ECS_INTERNAL_ERROR, NULL);
+                set_mask |= (1llu << added_index);
+            }
+
             world->info.cmd.batched_command_count ++;
-            has_set = true;
             break;
+        }
         case EcsCmdEmplace:
             /* Don't add for emplace, as this requires a special call to ensure
              * the constructor is not invoked for the component */
@@ -4721,7 +4743,7 @@ void flecs_cmd_batch_for_entity(
      * This only happens for entities that didn't have the assigned component
      * yet, as for entities that did have the component already the value will
      * have been assigned directly to the component storage. */
-    if (has_set) {
+    if (set_mask) {
         cur = start;
         do {
             cmd = &cmds[cur];
@@ -4729,6 +4751,7 @@ void flecs_cmd_batch_for_entity(
             if (next_for_entity < 0) {
                 next_for_entity *= -1;
             }
+
             switch(cmd->kind) {
             case EcsCmdSet:
             case EcsCmdEnsure: {
@@ -4755,6 +4778,7 @@ void flecs_cmd_batch_for_entity(
                     } else {
                         ecs_os_memcpy(ptr.ptr, cmd->is._1.value, ti->size);
                     }
+
                     if (cmd->kind == EcsCmdSet) {
                         /* A set operation is add + copy + modified. We just did
                          * the add the copy, so the only thing that's left is a 
@@ -4797,7 +4821,7 @@ void flecs_cmd_batch_for_entity(
     if (added.count) {
         flecs_defer_begin(world, world->stages[0]);
         flecs_notify_on_add(world, table, start_table, 
-            ECS_RECORD_TO_ROW(r->row), 1, &added, 0, true);
+            ECS_RECORD_TO_ROW(r->row), 1, &added, 0, set_mask, true);
         flecs_defer_end(world, world->stages[0]);
     }
 

@@ -17,6 +17,13 @@ void flecs_query_validator_error(
     ...)
 {
     ecs_strbuf_t buf = ECS_STRBUF_INIT;
+
+    if (ctx->desc && ctx->desc->expr) {
+        ecs_strbuf_appendlit(&buf, "expr: ");
+        ecs_strbuf_appendstr(&buf, ctx->desc->expr);
+        ecs_strbuf_appendlit(&buf, "\n");
+    }
+
     if (ctx->query) {
         ecs_query_t *query = ctx->query;
         const ecs_term_t *terms = query->terms;
@@ -1051,7 +1058,8 @@ void flecs_normalize_term_name(
 static
 int flecs_query_finalize_terms(
     const ecs_world_t *world,
-    ecs_query_t *q)
+    ecs_query_t *q,
+    const ecs_query_desc_t *desc)
 {
     int32_t i, term_count = q->term_count, field_count = 0;
     ecs_term_t *terms = q->terms;
@@ -1061,6 +1069,7 @@ int flecs_query_finalize_terms(
     ecs_query_validator_ctx_t ctx = {0};
     ctx.world = world;
     ctx.query = q;
+    ctx.desc = desc;
 
     q->flags |= EcsQueryMatchOnlyThis;
 
@@ -1514,7 +1523,7 @@ int flecs_query_finalize_query(
     }
 
     /* Ensure all fields are consistent and properly filled out */
-    if (flecs_query_finalize_terms(world, q)) {
+    if (flecs_query_finalize_terms(world, q, desc)) {
         goto error;
     }
 

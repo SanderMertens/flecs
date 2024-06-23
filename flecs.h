@@ -4233,6 +4233,7 @@ struct ecs_iter_t {
     /* Context */
     void *param;                  /**< Param passed to ecs_run */
     void *ctx;                    /**< System context */
+    void *binding_ctx;            /**< System binding context */
     void *callback_ctx;           /**< Callback language binding context */
     void *run_ctx;                /**< Run language binding context */
 
@@ -4522,9 +4523,9 @@ typedef struct ecs_world_info_t {
     ecs_ftime_t system_time_total;    /**< Total time spent in systems */
     ecs_ftime_t emit_time_total;      /**< Total time spent notifying observers */
     ecs_ftime_t merge_time_total;     /**< Total time spent in merges */
-    ecs_ftime_t world_time_total;     /**< Time elapsed in simulation */
-    ecs_ftime_t world_time_total_raw; /**< Time elapsed in simulation (no scaling) */
     ecs_ftime_t rematch_time_total;   /**< Time spent on query rematching */
+    double world_time_total;          /**< Time elapsed in simulation */
+    double world_time_total_raw;      /**< Time elapsed in simulation (no scaling) */
 
     int64_t frame_count_total;        /**< Total number of frames */
     int64_t merge_count_total;        /**< Total number of merges */
@@ -12534,8 +12535,9 @@ typedef struct {
 
 /** Component that stores a summary of world statistics. */
 typedef struct {
-    /* Target FPS */
+    /* Time */
     double target_fps;          /**< Target FPS */
+    double time_scale;          /**< Simulation time scale */
 
     /* Total time */
     double frame_time_total;    /**< Total time spent processing a frame */
@@ -19395,6 +19397,79 @@ private:
 
 
 #endif
+#ifdef FLECS_SCRIPT
+/**
+ * @file addons/cpp/mixins/script/decl.hpp
+ * @brief Script declarations.
+ */
+
+#pragma once
+
+/**
+ * @file addons/cpp/mixins/script/builder.hpp
+ * @brief Script builder.
+ */
+
+#pragma once
+
+namespace flecs {
+
+/**
+ * @ingroup cpp_addons_script
+ * @{
+ */
+
+/** Script builder interface */
+struct script_builder {
+    script_builder(flecs::world_t *world, const char *name = nullptr)
+        : world_(world)
+        , desc_{}
+    {
+        if (name != nullptr) {
+            ecs_entity_desc_t entity_desc = {};
+            entity_desc.name = name;
+            entity_desc.sep = "::";
+            entity_desc.root_sep = "::";
+            this->desc_.entity = ecs_entity_init(world, &entity_desc);
+        }
+    }
+
+    script_builder& code(const char *str) {
+        desc_.code = str;
+        return *this;
+    }
+
+    script_builder& filename(const char *str) {
+        desc_.filename = str;
+        return *this;
+    }
+
+    flecs::entity run() const;
+
+protected:
+    flecs::world_t *world_;
+    ecs_script_desc_t desc_;
+};
+
+}
+
+
+namespace flecs {
+
+/**
+ * @defgroup cpp_addons_script Script
+ * @ingroup cpp_addons
+ *
+ * @{
+ */
+
+struct script_builder;
+
+/** @} */
+
+}
+
+#endif
 
 /**
  * @file addons/cpp/log.hpp
@@ -21649,6 +21724,13 @@ int script_run(const char *name, const char *str) const {
  */
 int script_run_file(const char *filename) const {
     return ecs_script_run_file(world_, filename);
+}
+
+/** Build script.
+ * @see ecs_script_init
+ */
+script_builder script(const char *name = nullptr) const {
+    return script_builder(world_, name);
 }
 
 /** Convert value to string */
@@ -33269,6 +33351,26 @@ inline alerts::alerts(flecs::world& world) {
 template <typename... Comps, typename... Args>
 inline flecs::alert_builder<Comps...> world::alert(Args &&... args) const {
     return flecs::alert_builder<Comps...>(world_, FLECS_FWD(args)...);
+}
+
+}
+
+#endif
+#ifdef FLECS_SCRIPT
+/**
+ * @file addons/cpp/mixins/script/impl.hpp
+ * @brief Script implementation.
+ */
+
+#pragma once
+
+
+namespace flecs 
+{
+
+inline flecs::entity script_builder::run() const {
+    ecs_entity_t e = ecs_script_init(world_, &desc_);
+    return flecs::entity(world_, e);
 }
 
 }

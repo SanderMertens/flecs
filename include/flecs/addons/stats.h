@@ -447,8 +447,9 @@ typedef struct {
 
 /** Component that stores a summary of world statistics. */
 typedef struct {
-    /* Target FPS */
+    /* Time */
     double target_fps;          /**< Target FPS */
+    double time_scale;          /**< Simulation time scale */
 
     /* Total time */
     double frame_time_total;    /**< Total time spent processing a frame */
