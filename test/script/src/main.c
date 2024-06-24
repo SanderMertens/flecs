@@ -256,6 +256,8 @@ void Eval_auto_override_component(void);
 void Eval_auto_override_pair(void);
 void Eval_auto_override_pair_component(void);
 void Eval_lowercase_prefab_kind(void);
+void Eval_assing_component_to_const(void);
+void Eval_assing_component_member_to_const(void);
 
 // Testsuite 'Template'
 void Template_template_no_scope(void);
@@ -431,6 +433,8 @@ void Expr_iter_to_vars_2_comps(void);
 void Expr_iter_to_vars_1_comp_1_tag(void);
 void Expr_iter_to_vars_w_1_query_var(void);
 void Expr_iter_to_vars_w_2_query_vars(void);
+void Expr_component_expr(void);
+void Expr_component_member_expr(void);
 
 // Testsuite 'Vars'
 void Vars_declare_1_var(void);
@@ -1568,6 +1572,14 @@ bake_test_case Eval_testcases[] = {
     {
         "lowercase_prefab_kind",
         Eval_lowercase_prefab_kind
+    },
+    {
+        "assing_component_to_const",
+        Eval_assing_component_to_const
+    },
+    {
+        "assing_component_member_to_const",
+        Eval_assing_component_member_to_const
     }
 };
 
@@ -2258,6 +2270,14 @@ bake_test_case Expr_testcases[] = {
     {
         "iter_to_vars_w_2_query_vars",
         Expr_iter_to_vars_w_2_query_vars
+    },
+    {
+        "component_expr",
+        Expr_component_expr
+    },
+    {
+        "component_member_expr",
+        Expr_component_member_expr
     }
 };
 
@@ -2844,7 +2864,7 @@ static bake_test_suite suites[] = {
         "Eval",
         NULL,
         NULL,
-        247,
+        249,
         Eval_testcases
     },
     {
@@ -2858,7 +2878,7 @@ static bake_test_suite suites[] = {
         "Expr",
         NULL,
         NULL,
-        126,
+        128,
         Expr_testcases
     },
     {

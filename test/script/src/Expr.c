@@ -2743,3 +2743,66 @@ void Expr_iter_to_vars_w_2_query_vars(void) {
 
     ecs_fini(world);
 }
+
+void Expr_component_expr(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "Position"}),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_set(world, e, Position, {10, 20});
+
+    ecs_value_t v = {0};
+    test_assert(ecs_script_expr_run(world, "e[Position]", &v, NULL) != NULL);
+    test_assert(v.type == ecs_id(Position));
+    test_assert(v.ptr != NULL);
+
+    Position *p = v.ptr;
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+    ecs_value_free(world, v.type, v.ptr);
+
+    ecs_fini(world);
+}
+
+void Expr_component_member_expr(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "Position"}),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_set(world, e, Position, {10, 20});
+
+    ecs_value_t v = {0};
+    test_assert(ecs_script_expr_run(world, "e[Position].x", &v, NULL) != NULL);
+    test_assert(v.type == ecs_id(ecs_f32_t));
+    test_assert(v.ptr != NULL);
+    {
+        float *ptr = v.ptr;
+        test_int(*ptr, 10);
+        ecs_value_free(world, v.type, v.ptr);
+    }
+
+    test_assert(ecs_script_expr_run(world, "e[Position].y", &v, NULL) != NULL);
+    test_assert(v.type == ecs_id(ecs_f32_t));
+    test_assert(v.ptr != NULL);
+    {
+        float *ptr = v.ptr;
+        test_int(*ptr, 20);
+        ecs_value_free(world, v.type, v.ptr);
+    }
+
+    ecs_fini(world);
+}

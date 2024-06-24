@@ -7405,7 +7405,7 @@ void Eval_lowercase_prefab_kind(void) {
     ECS_TAG(world, Tag);
 
     const char *expr =
-    LINE "prefab Foo {"
+    HEAD "prefab Foo {"
     LINE "  Tag"
     LINE "}";
 
@@ -7417,6 +7417,74 @@ void Eval_lowercase_prefab_kind(void) {
     test_assert(foo != 0);
     test_assert(ecs_has_id(world, foo, EcsPrefab));
     test_assert(ecs_has_id(world, foo, Tag));
+
+    ecs_fini(world);
+}
+
+void Eval_assing_component_to_const(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "Position"}),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_set(world, e, Position, {10, 20});
+
+    const char *expr =
+    HEAD "const pos = e[Position]"
+    LINE "foo {"
+    LINE "  Position: {$pos.y, $pos.x}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "foo");
+    test_assert(foo != 0);
+
+    const Position *ptr = ecs_get(world, foo, Position);
+    test_assert(ptr != NULL);
+    test_int(ptr->x, 20);
+    test_int(ptr->y, 10);
+
+    ecs_fini(world);
+}
+
+void Eval_assing_component_member_to_const(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "Position"}),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_set(world, e, Position, {10, 20});
+
+    const char *expr =
+    HEAD "const px = e[Position].x"
+    LINE "const py = e[Position].y"
+    LINE ""
+    LINE "foo {"
+    LINE "  Position: {$py, $px}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "foo");
+    test_assert(foo != 0);
+
+    const Position *ptr = ecs_get(world, foo, Position);
+    test_assert(ptr != NULL);
+    test_int(ptr->x, 20);
+    test_int(ptr->y, 10);
 
     ecs_fini(world);
 }
