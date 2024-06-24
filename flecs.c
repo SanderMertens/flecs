@@ -59217,6 +59217,7 @@ ecs_entity_t flecs_parse_discover_type(
                 "unresolved variable (no variable scope)");
             return 0;
         }
+
         char token[ECS_MAX_TOKEN_SIZE];
         if (flecs_script_expr_parse_token(name, expr, &ptr[1], token) == NULL) {
             return 0;
@@ -59252,6 +59253,7 @@ ecs_entity_t flecs_parse_discover_type(
             return ecs_id(ecs_bool_t);
         }
     }
+
     if (ptr[0] == 'f' && !ecs_os_strncmp(ptr, "false", 5)) {
         if (!isalpha(ptr[5]) && ptr[5] != '_') {
             return ecs_id(ecs_bool_t);
@@ -59261,7 +59263,50 @@ ecs_entity_t flecs_parse_discover_type(
     /* Entity identifier */
     if (isalpha(ptr[0])) {
         if (!input_type) { /* Identifier could also be enum/bitmask constant */
-            return ecs_id(ecs_entity_t);
+            char token[ECS_MAX_TOKEN_SIZE];
+            const char *tptr = flecs_script_expr_parse_token(
+                name, expr, ptr, token);
+            if (!tptr) {
+                return 0;
+            }
+
+            if (tptr[0] != '[') {
+                return ecs_id(ecs_entity_t);
+            }
+
+            tptr = flecs_script_expr_parse_token(
+                name, expr, tptr + 1, token);
+            if (!tptr) {
+                return 0;
+            }
+
+            ecs_entity_t type = ecs_lookup(world, token);
+            if (!type) {
+                return 0;
+            }
+
+            if (tptr[0] != ']') {
+                return 0;
+            }
+
+            if (tptr[1] != '.') {
+                return type;
+            }
+
+            ecs_meta_cursor_t cur = ecs_meta_cursor(world, type, NULL);
+            ecs_meta_push(&cur);
+
+            tptr = flecs_script_expr_parse_token(
+                name, expr, tptr + 2, token);
+            if (!tptr) {
+                return 0;
+            }
+
+            if (ecs_meta_dotmember(&cur, token) != 0) {
+                return 0;
+            }
+
+            return ecs_meta_get_type(&cur);
         }
     }
 
@@ -60082,6 +60127,7 @@ const char* flecs_script_expr_run(
             } else {
                 ecs_meta_set_value(&cur, &var->value);
             }
+
             is_lvalue = true;
         } else {
             const char *tptr = flecs_parse_ws(ptr);
@@ -60105,8 +60151,77 @@ const char* flecs_script_expr_run(
                     goto error;
                 }
             } else {
-                if (ecs_meta_set_string(&cur, token) != 0) {
-                    goto error;
+                if (ptr[0] != '[') {
+                    if (ecs_meta_set_string(&cur, token) != 0) {
+                        goto error;
+                    }
+                } else {
+                    ecs_entity_t e = ecs_lookup(world, token);
+                    if (!e) {
+                        ecs_parser_error(name, expr, ptr - expr, 
+                            "entity '%s' not found", token);
+                        goto error;
+                    }
+
+                    ptr = flecs_script_expr_parse_token(
+                        name, expr, ptr + 1, token);
+                    if (!ptr) {
+                        goto error;
+                    }
+
+                    ecs_entity_t component = ecs_lookup(world, token);
+                    if (!component) {
+                        ecs_parser_error(name, expr, ptr - expr, 
+                            "unresolved component '%s'", token);
+                        goto error;
+                    }
+
+                    ecs_entity_t type = ecs_get_typeid(world, component);
+                    if (!type) {
+                        ecs_parser_error(name, expr, ptr - expr, 
+                            "entity '%s' is not a component", token);
+                        goto error;
+                    }
+
+                    result.type = type;
+                    result.ptr = (void*)ecs_get_id(world, e, component);
+                    if (!result.ptr) {
+                        char *entitystr = ecs_id_str(world, e);
+                        char *idstr = ecs_id_str(world, component);
+                        ecs_parser_error(name, expr, ptr - expr, 
+                            "entity '%s' does not have component '%s'", 
+                            entitystr, idstr);
+                        ecs_os_free(idstr);
+                        ecs_os_free(entitystr);
+                        goto error;
+                    }
+
+                    if (ptr[0] != ']') {
+                        ecs_parser_error(name, expr, ptr - expr, 
+                            "missing ] for component operator");
+                        goto error;
+                    }
+
+                    ptr ++;
+
+                    if (ptr[0] == '.') {
+                        ecs_meta_cursor_t member_cur = ecs_meta_cursor(
+                            world, result.type, result.ptr);
+
+                        ptr = flecs_script_expr_parse_token(
+                            name, expr, ptr + 1, token);
+                        if (!ptr) {
+                            goto error;
+                        }
+
+                        ecs_meta_push(&member_cur);
+                        if (ecs_meta_dotmember(&member_cur, token) != 0) {
+                            goto error;
+                        }
+
+                        result.type = ecs_meta_get_type(&member_cur);
+                        result.ptr = ecs_meta_get_ptr(&member_cur);
+                    }
                 }
             }
 
