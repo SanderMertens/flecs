@@ -59,7 +59,7 @@ public:
 	FORCEINLINE NO_DISCARD UFlecsWorld* GetFlecsWorld() const;
 	FORCEINLINE NO_DISCARD UWorld* GetOuterWorld() const;
 	
-	FORCEINLINE NO_DISCARD FName GetWorldName() const;
+	FORCEINLINE NO_DISCARD FString GetWorldName() const;
 	
 	FORCEINLINE NO_DISCARD FFlecsType GetType() const { return FFlecsType(GetEntity().type()); }
 
@@ -835,12 +835,12 @@ public:
 	#if WITH_EDITORONLY_DATA
 
 	UPROPERTY()
-	FName DisplayName;
+	FString DisplayName;
 
 	#endif // WITH_EDITORONLY_DATA
 
 	UPROPERTY(EditAnywhere, Category = "Flecs")
-	FName WorldName = FName("DefaultFlecsWorld");
+	FString WorldName = TEXT("DefaultFlecsWorld");
 	
 private:
 	flecs::entity Entity;

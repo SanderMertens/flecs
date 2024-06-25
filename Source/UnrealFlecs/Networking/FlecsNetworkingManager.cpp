@@ -35,7 +35,7 @@ void UFlecsNetworkingManager::BeginPlay()
 			.event(flecs::OnAdd)
 			.yield_existing(true)
 			.read_write()
-		.with(flecs::Name)
+		.with_name_component()
 			.and_()
 			.inout_none()
 		.each([this](const flecs::iter& Iterator, const uint64 Index, FFlecsNetworkIdComponent& NetworkId)
@@ -50,9 +50,9 @@ void UFlecsNetworkingManager::BeginPlay()
 			NetworkId.SetNetworkId(GetNextNetworkId());
 
 			UN_LOG(LogFlecsNetworkingManager, Log,
-				"Assigned network ID %llu to entity %s",
+				"Assigned network ID %llu to entity %hc",
 				NetworkId.GetNetworkId(),
-				*Entity.GetEntity().path().c_str());
+				*Entity.GetEntity().path());
 
 			
 		});

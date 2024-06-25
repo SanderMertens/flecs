@@ -23,7 +23,7 @@ struct FNetworkedEntityInfo
 	FFlecsNetworkIdComponent NetworkId;
 
 	UPROPERTY()
-	FName WorldName = FName("DefaultFlecsWorld");
+	FString WorldName = TEXT("DefaultFlecsWorld");
 
 	UPROPERTY()
 	FString EntityName;
@@ -31,7 +31,7 @@ struct FNetworkedEntityInfo
 	FORCEINLINE bool NetSerialize(FArchive& Ar, class UPackageMap* Map, bool& bOutSuccess)
 	{
 		NetworkId.NetSerialize(Ar, Map, bOutSuccess);
-		SerializeOptionalValue<FName>(Ar.IsSaving(), Ar, WorldName, FName("DefaultFlecsWorld"));
+		SerializeOptionalValue<FString>(Ar.IsSaving(), Ar, WorldName, TEXT("DefaultFlecsWorld"));
 		Ar << EntityName;
 
 		bOutSuccess = true;

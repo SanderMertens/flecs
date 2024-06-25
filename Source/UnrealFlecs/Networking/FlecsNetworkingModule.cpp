@@ -3,8 +3,3 @@
 #include "FlecsNetworkingModule.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(FlecsNetworkingModule)
-
-void UFlecsNetworkingModule::InitializeModule(UFlecsWorld* InWorld, const FFlecsEntityHandle& InModuleEntity)
-{
-	
-}

@@ -3,7 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "flecs.h"
+#include "FlecsDefaultEntitiesDeveloperSettings.h"
+#include "FlecsEntityRecord.h"
 #include "SolidMacros/Macros.h"
 #include "Subsystems/EngineSubsystem.h"
 #include "FlecsDefaultEntityEngineSubsystem.generated.h"
@@ -13,23 +14,28 @@ class UNREALFLECS_API UFlecsDefaultEntityEngineSubsystem : public UEngineSubsyst
 {
 	GENERATED_BODY()
 
-	static constexpr flecs::entity_t StartingDefaultEntityId = FLECS_HI_COMPONENT_ID * 2;
-
 public:
+	UFlecsDefaultEntityEngineSubsystem();
+	
+	struct FFlecsEntityOption
+	{
+	}; // struct FFlecsEntityOption
+
+	struct FFlecsAddedDefaultEntity
+	{
+		FFlecsEntityRecord EntityRecord;
+	}; // struct FFlecsAddedDefaultEntity
+	
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
-	
-	void RegisterEntityOption(const FName& EntityName, const flecs::entity_t& EntityHandle);
 
-	UFUNCTION(BlueprintCallable, Category = "Flecs | Default Entities")
-	void RegisterDefaultEntity(const FName& EntityName);
+	virtual void Deinitialize() override;
 	
-	NO_DISCARD const TMap<FName, flecs::entity_t>& GetEntityOptions() const;
+	void RefreshDefaultEntities();
 
-	UFUNCTION()
-	void UpdateDefaultEntities();
+
+	TMap<FName, flecs::entity_t> DefaultEntityOptions;
+	TArray<FFlecsDefaultMetaEntity> AddedDefaultEntities;
 	
-	TMap<FName, flecs::entity_t> EntityOptionMap;
-	TMap<FName, flecs::entity_t> DefaultEntityMap;
 }; // class UFlecsDefaultEntityEngineSubsystem
 
 #define REGISTER_FLECS_ENTITY_OPTION(EntityName, EntityHandle) \

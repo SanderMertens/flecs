@@ -22,8 +22,7 @@ public:
 	template <typename ...TComponents>
 	FORCEINLINE FFlecsSystem(flecs::system_builder<TComponents...>& InBuilder)
 	{
-		const flecs::world World(InBuilder.world_v());
-		System = World.system(InBuilder.entity());
+		System = InBuilder.build();
 	}
 
 	FORCEINLINE FFlecsSystem(const FFlecsEntityHandle& InEntity, const flecs::world& InWorld)

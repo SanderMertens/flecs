@@ -10,6 +10,7 @@
 #include "CoreMinimal.h"
 #include "flecs.h"
 #include "FlecsWorld.h"
+#include "FlecsWorldDeveloperSettings.h"
 #include "FlecsWorldSettings.h"
 #include "GameplayTagContainer.h"
 #include "GameplayTagsManager.h"
@@ -24,7 +25,9 @@
 #include "FlecsWorldSubsystem.generated.h"
 
 // ReSharper disable once CppUE4CodingStandardNamingViolationWarning
-const FName DEFAULT_FLECS_WORLD_NAME = "DefaultFlecsWorld";
+constexpr std::string_view DEFAULT_FLECS_WORLD_NAME = "DefaultFlecsWorld";
+
+DEFINE_STD_HASH(FString);
 
 USTRUCT(BlueprintType)
 struct FFlecsRestSettings
@@ -42,7 +45,7 @@ struct FFlecsRestSettings
 	
 }; // struct FFlecsRestSettings
 
-DECLARE_MULTICAST_DELEGATE_TwoParams(FOnWorldCreated, FName, UFlecsWorld*);
+DECLARE_MULTICAST_DELEGATE_TwoParams(FOnWorldCreated, FString, UFlecsWorld*);
 
 UCLASS(BlueprintType)
 class UNREALFLECS_API UFlecsWorldSubsystem final : public UTickableWorldSubsystem
@@ -68,14 +71,10 @@ public:
 
 	virtual void OnWorldBeginPlay(UWorld& InWorld) override
 	{
-		DeveloperSettings = GetDefault<UFlecsDeveloperSettings>();
-
-		solid_checkf(DeveloperSettings->bEnableFlecs, TEXT("Flecs is not enabled in the Flecs Developer Settings"));
-		
-		if (DeveloperSettings->bAutoCreateWorld)
+		UFlecsWorldDeveloperSettings* WorldDeveloperSettings = GetMutableDefault<UFlecsWorldDeveloperSettings>();
+		for (const FFlecsWorldSettings& Settings : WorldDeveloperSettings->Worlds)
 		{
-			CreateWorld(DEFAULT_FLECS_WORLD_NAME,
-				FFlecsWorldSettings{ static_cast<bool>(DeveloperSettings->bDefaultAutoMerge) });
+			CreateWorld(Settings.WorldName, Settings);
 		}
 	}
 
@@ -106,12 +105,14 @@ public:
 	}
 	
 	UFUNCTION(BlueprintCallable, Category = "Flecs")
-	FORCEINLINE UFlecsWorld* CreateWorld(const FName& Name, const FFlecsWorldSettings& Settings)
+	FORCEINLINE UFlecsWorld* CreateWorld(const FString& Name, const FFlecsWorldSettings& Settings)
 	{
-		solid_checkf(!HasWorld(Name), TEXT("World with name %s already exists"), *Name.ToString());
-		solid_checkf(Name != NAME_None, TEXT("World name cannot be NAME_None"));
+		solid_checkf(!HasWorld(Name), TEXT("World with name %s already exists"), *Name);
+		solid_checkf(!Name.IsEmpty(), TEXT("World name cannot be NAME_None"));
 
 		flecs::world NewWorld = flecs::world();
+
+		TArray<FFlecsDefaultMetaEntity> DefaultEntities = GetDefault<UFlecsDefaultEntityEngineSubsystem>()->AddedDefaultEntities;
 
 		UFlecsWorld* NewFlecsWorld = NewObject<UFlecsWorld>(this);
 		NewFlecsWorld->SetWorld(std::move(NewWorld));
@@ -127,6 +128,11 @@ public:
 		
 		WorldNameMap.emplace(Name, NewFlecsWorld);
 
+		for (const FFlecsDefaultMetaEntity& DefaultEntity : DefaultEntities)
+		{
+			NewFlecsWorld->CreateEntityWithRecord(DefaultEntity.EntityRecord);
+		}
+
 		#if WITH_EDITOR || UE_BUILD_DEBUG
 		
 		if (DeveloperSettings->bAutoImportExplorer)
@@ -140,15 +146,15 @@ public:
 
 		NewFlecsWorld->SetThreads(DeveloperSettings->DefaultWorkerThreads);
 
-		for (UFlecsDefaultEntityEngineSubsystem* DefaultEntityEngineSubsystem
-				= GEngine->GetEngineSubsystem<UFlecsDefaultEntityEngineSubsystem>();
-			 const TTuple<FName, flecs::entity_t>& Entity : DefaultEntityEngineSubsystem->DefaultEntityMap)
-		{
-			FFlecsEntityHandle SpawnedEntity = NewFlecsWorld->CreateEntity(Entity.Value);
-			SpawnedEntity.SetName(StringCast<char>(*Entity.Key.ToString()).Get());
-		}
-
 		RegisterAllGameplayTags(NewFlecsWorld);
+
+		for (UObject* Module : Settings.Modules)
+		{
+			solid_checkf(Module->GetClass()->ImplementsInterface(UFlecsModuleInterface::StaticClass()),
+				TEXT("Module %s does not implement UFlecsModuleInterface"), *Module->GetName());
+			
+			NewFlecsWorld->ImportModule(Module);
+		}
 		
 		NewFlecsWorld->WorldBeginPlay();
 		
@@ -158,15 +164,14 @@ public:
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs")
-	FORCEINLINE bool HasWorld(const FName& Name) const
+	FORCEINLINE bool HasWorld(const FString& Name) const
 	{
 		return WorldNameMap.contains(Name);
 	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | REST API")
-	FORCEINLINE void ImportRestModule(const FName& WorldName, const bool bUseMonitoring, const FFlecsRestSettings& Settings) const
+	FORCEINLINE void ImportRestModule(const FString& WorldName, const bool bUseMonitoring, const FFlecsRestSettings& Settings) const
 	{
-		//TCHAR_TO_ANSI(*Settings.IPAddress);
 		GetFlecsWorld(WorldName)->SetSingleton<flecs::Rest>(
 				flecs::Rest { static_cast<uint16>(Settings.Port), const_cast<ANSICHAR*>(StringCast<ANSICHAR>(*Settings.IPAddress).Get()) });
 
@@ -177,13 +182,13 @@ public:
 	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs")
-	FORCEINLINE void ImportMonitoringModule(const FName& WorldName) const
+	FORCEINLINE void ImportMonitoringModule(const FString& WorldName) const
 	{
 		GetFlecsWorld(WorldName)->ImportModule<flecs::monitor>();
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs")
-	FORCEINLINE void DestroyWorldByName(const FName& Name)
+	FORCEINLINE void DestroyWorldByName(const FString& Name)
 	{
 		DestroyWorld(GetFlecsWorld(Name));
 	}
@@ -206,14 +211,14 @@ public:
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs")
-	FORCEINLINE UFlecsWorld* GetFlecsWorld(const FName& Name) const
+	FORCEINLINE UFlecsWorld* GetFlecsWorld(const FString& Name) const
 	{
-		solid_checkf(HasWorld(Name), TEXT("World with name %s does not exist"), *Name.ToString());
+		solid_checkf(HasWorld(Name), TEXT("World with name %s does not exist"), *Name);
 		return WorldNameMap.at(Name);
 	}
 	
 	UFUNCTION(BlueprintCallable, Category = "Flecs", Meta = (WorldContext = "WorldContextObject"))
-	static FORCEINLINE UFlecsWorld* GetWorldStatic(UObject* WorldContextObject, const FName& Name)
+	static FORCEINLINE UFlecsWorld* GetWorldStatic(UObject* WorldContextObject, const FString& Name)
 	{
 		return GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::Assert)
 		              ->GetSubsystem<UFlecsWorldSubsystem>()->GetFlecsWorld(Name);
@@ -223,7 +228,7 @@ public:
 	static FORCEINLINE UFlecsWorld* GetDefaultWorld(const UObject* WorldContextObject)
 	{
 		return GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::Assert)
-		              ->GetSubsystem<UFlecsWorldSubsystem>()->GetFlecsWorld(DEFAULT_FLECS_WORLD_NAME);
+		              ->GetSubsystem<UFlecsWorldSubsystem>()->GetFlecsWorld(DEFAULT_FLECS_WORLD_NAME.data());
 	}
 	
 	virtual bool DoesSupportWorldType(const EWorldType::Type WorldType) const override
@@ -238,7 +243,7 @@ protected:
 	UPROPERTY()
 	TArray<TObjectPtr<UFlecsWorld>> Worlds;
 
-	robin_hood::unordered_flat_map<FName, UFlecsWorld*> WorldNameMap;
+	robin_hood::unordered_flat_map<FString, UFlecsWorld*> WorldNameMap;
 
 	UPROPERTY()
 	TWeakObjectPtr<const UFlecsDeveloperSettings> DeveloperSettings;

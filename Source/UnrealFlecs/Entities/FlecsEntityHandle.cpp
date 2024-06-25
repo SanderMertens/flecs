@@ -15,7 +15,7 @@ FFlecsEntityHandle::FFlecsEntityHandle()
         return;
     }
 
-    if (WorldName == NAME_None || GetEntity().id() == 0)
+    if (WorldName.IsEmpty() || GetEntity().id() == 0)
     {
         return;
     }
@@ -30,7 +30,7 @@ FFlecsEntityHandle::FFlecsEntityHandle()
         else
         {
             FDelegateHandle OnWorldCreatedHandle = FlecsWorldSubsystem
-                ->OnWorldCreated.AddLambda([&](const FName& Name, const UFlecsWorld* InFlecsWorld)
+                ->OnWorldCreated.AddLambda([&](const FString& Name, const UFlecsWorld* InFlecsWorld)
             {
                 if (Name == WorldName)
                 {
@@ -53,7 +53,7 @@ UWorld* FFlecsEntityHandle::GetOuterWorld() const
     return GetFlecsWorld()->GetSingleton<FFlecsWorldPtrComponent>().OwningWorld.Get();
 }
 
-FName FFlecsEntityHandle::GetWorldName() const
+FString FFlecsEntityHandle::GetWorldName() const
 {
     return GetFlecsWorld()->GetWorldName();
 }

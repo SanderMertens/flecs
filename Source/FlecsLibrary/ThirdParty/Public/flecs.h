@@ -27890,6 +27890,12 @@ struct query_builder_i : term_builder_i<Base> {
         return *this;
     }
 
+    Base& with_name_component() {
+        this->term();
+        *this->term_ = flecs::term(flecs::Name);
+        return *this;
+    }
+
     Base& with(const char *name) {
         this->term();
         *this->term_ = flecs::term().first(name);
@@ -28629,7 +28635,10 @@ public:
         return T(world_, &desc_, true);
     }
 
-protected:
+    T build() {
+        return T(world_, &desc_, instanced_);
+    }
+    
     flecs::world_t* world_v() override { return world_; }
     TDesc desc_;
     flecs::world_t *world_;

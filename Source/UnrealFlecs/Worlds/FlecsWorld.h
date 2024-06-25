@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "flecs.h"
 #include "Components/FlecsTypeMapComponent.h"
+#include "Entities/FlecsEntityRecord.h"
 #include "SolidMacros/Concepts/SolidConcepts.h"
 #include "Entities/FlecsId.h"
 #include "Modules/FlecsModuleInterface.h"
@@ -67,10 +68,23 @@ public:
 		return World.entity(InId.GetFlecsId());
 	}
 
+	FORCEINLINE FFlecsEntityHandle CreateEntityWithId(const flecs::entity_t InId) const
+	{
+		return World.entity(InId);
+	}
+
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
 	FORCEINLINE FFlecsEntityHandle CreateEntityWithPrefab(const FFlecsEntityHandle& InPrefab) const
 	{
 		return World.entity(InPrefab.GetEntity());
+	}
+
+	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
+	FORCEINLINE FFlecsEntityHandle CreateEntityWithRecord(const FFlecsEntityRecord& InRecord) const
+	{
+		FFlecsEntityHandle Entity = CreateEntity(InRecord.Name);
+		InRecord.ApplyRecordToEntity(Entity);
+		return Entity;
 	}
 	
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
@@ -230,23 +244,23 @@ public:
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
-	FORCEINLINE FName GetWorldName() const
+	FORCEINLINE FString GetWorldName() const
 	{
-		return GetSingleton<FName>();
+		return GetSingleton<FString>();
 	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
-	FORCEINLINE void SetName(const FName& InName) const
+	FORCEINLINE void SetName(const FString& InName) const
 	{
-		SetSingleton<FName>(InName);
+		SetSingleton<FString>(InName);
 
 		#if WITH_EDITOR
 
-		const char* Name = StringCast<char>(*InName.ToString()).Get();
+		const char* Name = StringCast<char>(*InName).Get();
 
 		GetWorldEntity().SetDocName(Name);
 		
-		World.entity<FName>().set_doc_name(Name);
+		World.entity<FString>().set_doc_name(Name);
 
 		#endif // WITH_EDITOR
 	}
@@ -263,6 +277,14 @@ public:
 	{
 		solid_checkf(InModule != nullptr, TEXT("Module is nullptr"));
 		InModule->ImportModule(World);
+	}
+	
+	FORCEINLINE void ImportModule(UObject* InModule) const
+	{
+		solid_checkf(InModule->GetClass()->ImplementsInterface(UFlecsModuleInterface::StaticClass()),
+			TEXT("Module %s does not implement UFlecsModuleInterface"), *InModule->GetName());
+		
+		CastChecked<IFlecsModuleInterface>(InModule)->ImportModule(World);
 	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")

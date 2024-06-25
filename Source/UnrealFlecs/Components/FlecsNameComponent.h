@@ -13,12 +13,12 @@ struct UNREALFLECS_API FFlecsNameComponent
 
 public:
 	FORCEINLINE FFlecsNameComponent() = default;
-	FORCEINLINE FFlecsNameComponent(const FName& InName) : Name(InName) {}
+	FORCEINLINE FFlecsNameComponent(const FString& InName) : Name(InName) {}
 
-	FORCEINLINE void SetName(const FName& InName) { Name = InName; }
-	FORCEINLINE NO_DISCARD FName GetName() const { return Name; }
+	FORCEINLINE void SetName(const FString& InName) { Name = InName; }
+	FORCEINLINE NO_DISCARD FString GetName() const { return Name; }
 
-	FORCEINLINE operator FName() const { return GetName(); }
+	FORCEINLINE operator FString() const { return GetName(); }
 
 	FORCEINLINE NO_DISCARD bool operator==(const FFlecsNameComponent& Other) const
 	{
@@ -31,6 +31,6 @@ public:
 	}
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Components")
-	FName Name;
+	FString Name;
 	
 }; // struct FFlecsNameComponent

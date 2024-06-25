@@ -35,6 +35,17 @@ struct UNREALFLECS_API FFlecsTraitTypeInfo final
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Component Tree",
 		meta = (EditCondition = "NodeType == EFlecsComponentNodeType::FGameplayTag", EditConditionHides))
 	FGameplayTag GameplayTag;
+
+	FORCEINLINE NO_DISCARD bool operator==(const FFlecsTraitTypeInfo& Other) const
+	{
+		return NodeType == Other.NodeType && ScriptStruct == Other.ScriptStruct
+			&& EntityHandle == Other.EntityHandle && GameplayTag == Other.GameplayTag;
+	}
+
+	FORCEINLINE NO_DISCARD bool operator!=(const FFlecsTraitTypeInfo& Other) const
+	{
+		return !(*this == Other);
+	}
 	
 }; // struct FFlecsTraitTypeInfo
 
@@ -61,6 +72,18 @@ struct UNREALFLECS_API FFlecsComponentTypeInfo final
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Component Tree",
 		meta = (EditCondition = "NodeType == EFlecsComponentNodeType::ScriptStruct", EditConditionHides))
 	TArray<FFlecsTraitTypeInfo> Traits;
+
+	FORCEINLINE NO_DISCARD bool operator==(const FFlecsComponentTypeInfo& Other) const
+	{
+		return NodeType == Other.NodeType && ScriptStruct == Other.ScriptStruct
+			&& EntityHandle == Other.EntityHandle && GameplayTag == Other.GameplayTag
+			&& Traits == Other.Traits;
+	}
+
+	FORCEINLINE NO_DISCARD bool operator!=(const FFlecsComponentTypeInfo& Other) const
+	{
+		return !(*this == Other);
+	}
 	
 }; // struct FFlecsComponentTypeInfo
 
@@ -74,6 +97,16 @@ struct UNREALFLECS_API FFlecsEntityRecord
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Entity Record")
 	TArray<FFlecsComponentTypeInfo> Components;
+
+	FORCEINLINE NO_DISCARD bool operator==(const FFlecsEntityRecord& Other) const
+	{
+		return Name == Other.Name && Components == Other.Components;
+	}
+
+	FORCEINLINE NO_DISCARD bool operator!=(const FFlecsEntityRecord& Other) const
+	{
+		return !(*this == Other);
+	}
 
 	FORCEINLINE void ApplyRecordToEntity(const FFlecsEntityHandle& InEntityHandle) const
 	{

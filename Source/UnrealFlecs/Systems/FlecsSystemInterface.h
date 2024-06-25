@@ -22,14 +22,16 @@ public:
 
 	FORCEINLINE void InitializeSystem_Internal(const flecs::world& InWorld)
 	{
-		flecs::system_builder<> Builder(InWorld, StringCast<ANSICHAR>(*GetName()).Get());
+		flecs::system_builder<> Builder(InWorld, StringCast<char>(*GetName()).Get());
 		BuildSystem(Builder);
+
+		System = Builder;
 		
 		InitializeSystem();
 		BP_InitializeSystem();
 	}
 
-	FORCEINLINE virtual void InitializeSystem() 
+	FORCEINLINE virtual void InitializeSystem()
 	{
 	}
 

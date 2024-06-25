@@ -1,6 +1,7 @@
 ﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 // ReSharper disable CppMemberFunctionMayBeStatic
+// ReSharper disable CppExpressionWithoutSideEffects
 #pragma once
 
 #include "CoreMinimal.h"
@@ -9,8 +10,11 @@
 #include "IDetailChildrenBuilder.h"
 #include "DetailWidgetRow.h"
 #include "Entities/FlecsDefaultEntityEngineSubsystem.h"
+#include "Unlog/Unlog.h"
 #include "Widgets/Input/SComboBox.h"
 #include "Worlds/FlecsWorldSubsystem.h"
+
+UNLOG_CATEGORY(LogFlecsEntityHandleCustomization);
 
 class FFlecsEntityHandleCustomization : public IPropertyTypeCustomization
 {
@@ -26,12 +30,26 @@ public:
 		
 	}
 
-	virtual void CustomizeChildren(TSharedRef<IPropertyHandle> InPropertyHandle, IDetailChildrenBuilder& ChildBuilder,
+	NO_INLINE virtual void CustomizeChildren(TSharedRef<IPropertyHandle> InPropertyHandle, IDetailChildrenBuilder& ChildBuilder,
 	                               IPropertyTypeCustomizationUtils& CustomizationUtils) override
 	{
 		PropertyHandle = InPropertyHandle;
-		
-		GEngine->GetEngineSubsystem<UFlecsDefaultEntityEngineSubsystem>()->GetEntityOptions().GenerateKeyArray(Options);
+
+		for (const auto& [EntityName, EntityId] :
+			GEngine->GetEngineSubsystem<UFlecsDefaultEntityEngineSubsystem>()->DefaultEntityOptions)
+		{
+			UN_LOG(LogFlecsEntityHandleCustomization, Verbose,
+				"Adding entity %s to entity handle options.", *EntityName.ToString());
+			Options.Add(EntityName);
+		}
+
+		for (const auto& [EntityRecord, bIsOptionEntity] :
+			GEngine->GetEngineSubsystem<UFlecsDefaultEntityEngineSubsystem>()->AddedDefaultEntities)
+		{
+			UN_LOG(LogFlecsEntityHandleCustomization, Verbose,
+				"Adding added entity %s to entity handle options.", *EntityRecord.Name);
+			Options.Add(FName(*EntityRecord.Name));
+		}
 
 		ApplyMetadataFilters();
 
@@ -64,7 +82,7 @@ public:
 			]
 		];
 
-		if UNLIKELY_IF(Options.Num() == 0)
+		if UNLIKELY_IF(Options.IsEmpty())
 		{
 			ChildBuilder.AddCustomRow(NSLOCTEXT("Flecs", "NoEntitiesFound",
 				"No entities found."))
@@ -78,7 +96,7 @@ public:
 	}
 
 private:
-	TOptional<FName> SelectedItem;
+	TOptional<FString> SelectedItem;
 	TArray<FName> Options;
 
 	TSharedPtr<IPropertyHandle> PropertyHandle;
@@ -88,6 +106,9 @@ private:
 	{
 		if LIKELY_IF(PropertyHandle && PropertyHandle->IsValidHandle())
 		{
+			UFlecsDefaultEntityEngineSubsystem* DefaultEntitySubsystem
+				= GEngine->GetEngineSubsystem<UFlecsDefaultEntityEngineSubsystem>();
+			
 			FScopedTransaction Transaction(NSLOCTEXT("Flecs", "ChangeEntity", "Change Entity"));
 			PropertyHandle->NotifyPreChange();
 
@@ -100,9 +121,8 @@ private:
 					}
 
 					FFlecsEntityHandle* EntityId = static_cast<FFlecsEntityHandle*>(RawData);
-					EntityId->SetEntity(GEngine->GetEngineSubsystem<UFlecsDefaultEntityEngineSubsystem>()
-						->GetEntityOptions()[NewValue]);
-					EntityId->DisplayName = NewValue;
+					EntityId->DisplayName = NewValue.ToString();
+					EntityId->SetEntity(DefaultEntitySubsystem->DefaultEntityOptions[NewValue]);
 					return true;
 				});
 
@@ -111,7 +131,7 @@ private:
 		}
 	}
 
-	void OnEntitySubmitted(const FName NewValue, ETextCommit::Type)
+	void OnEntitySubmitted(const FString NewValue, ETextCommit::Type)
 	{
 		SelectedItem = NewValue;
 	}
@@ -125,10 +145,10 @@ private:
 	{
 		if (SelectedItem.IsSet())
 		{
-			return FText::FromName(SelectedItem.GetValue());
+			return FText::FromString(SelectedItem.GetValue());
 		}
 
-		TOptional<FName> CommonValue;
+		TOptional<FString> CommonValue;
 
 		if (PropertyHandle && PropertyHandle->IsValidHandle())
 		{
@@ -142,7 +162,7 @@ private:
 					}
 
 					const FFlecsEntityHandle EntityId = *static_cast<FFlecsEntityHandle*>(RawData);
-					const FName CurrentValue = EntityId.DisplayName;
+					const FString CurrentValue = EntityId.DisplayName;
 
 					if (DataIndex > 0)
 					{
@@ -161,7 +181,7 @@ private:
 
 		if (CommonValue.IsSet())
 		{
-			return FText::FromName(CommonValue.GetValue());
+			return FText::FromString(CommonValue.GetValue());
 		}
 
 		return NSLOCTEXT("Flecs", "SelectAnEntity", "Select an entity...");
@@ -178,7 +198,7 @@ private:
 		TArray<FString> IncludedItems;
 		IncludedList.ParseIntoArray(IncludedItems, TEXT(","), true);
 		
-		if (IncludedItems.Num() > 0)
+		if (!IncludedItems.IsEmpty())
 		{
 			TArray<FName> FilteredOptions;
 			
@@ -189,10 +209,13 @@ private:
 			
 			Options = FilteredOptions;
 		}
-		
-		for (const FString& ExcludedItem : ExcludedItems)
+
+		if (!ExcludedItems.IsEmpty())
 		{
-			Options.Remove(FName(*ExcludedItem));
+			for (const FString& ExcludedItem : ExcludedItems)
+			{
+				Options.Remove(FName(*ExcludedItem));
+			}
 		}
 	}
 	

@@ -17,9 +17,6 @@ public:
 	uint32 bEnableFlecs : 1 = true;
 
 	UPROPERTY(EditAnywhere, Config, Category = "Flecs")
-	uint32 bAutoCreateWorld : 1 = true;
-
-	UPROPERTY(EditAnywhere, Config, Category = "Flecs")
 	uint32 bAutoTickWorld : 1 = true;
 
 	UPROPERTY(EditAnywhere, Config, Category = "Flecs")

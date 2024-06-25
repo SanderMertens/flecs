@@ -48,7 +48,7 @@ FString IFlecsModuleInterface::GetModuleName_Implementation() const
 {
 	UN_LOG(LogFlecsModuleInterface, Error,
 		"Module name not implemented! It is recommended to implement this function in the module interface. "
-		"Will return the inherited class name instead.");
+		"Will return the inherited class name instead. For Class: %s", *_getUObject()->GetClass()->GetName());
 	
 	return _getUObject()->GetClass()->GetName();
 }
