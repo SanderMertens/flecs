@@ -83,16 +83,15 @@ int ecs_app_run(
 {
     ecs_app_desc = *desc;
 
-    /* Don't set FPS & threads if custom run action is set, as the platform on
-     * which the app is running may not support it. */
-    if (run_action == flecs_default_run_action) {
-        if (ECS_NEQZERO(ecs_app_desc.target_fps)) {
-            ecs_set_target_fps(world, ecs_app_desc.target_fps);
-        }
-        if (ecs_app_desc.threads) {
-            ecs_set_threads(world, ecs_app_desc.threads);
-        }
+    /* Don't set FPS & threads if using emscripten */
+#ifndef ECS_TARGET_EM
+    if (ECS_NEQZERO(ecs_app_desc.target_fps)) {
+        ecs_set_target_fps(world, ecs_app_desc.target_fps);
     }
+    if (ecs_app_desc.threads) {
+        ecs_set_threads(world, ecs_app_desc.threads);
+    }
+#endif
 
     /* REST server enables connecting to app with explorer */
     if (desc->enable_rest) {

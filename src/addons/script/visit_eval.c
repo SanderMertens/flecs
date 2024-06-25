@@ -391,7 +391,7 @@ int flecs_script_eval_entity(
     ecs_script_eval_visitor_t *v,
     ecs_script_entity_t *node)
 {
-    /* Inherit kind from parent kind's DefaultChildComponent, if it existst */
+    bool is_slot = false;
     if (node->kind) {
         ecs_script_id_t id = {
             .first = node->kind
@@ -399,12 +399,15 @@ int flecs_script_eval_entity(
 
         if (!ecs_os_strcmp(node->kind, "prefab")) {
             id.eval = EcsPrefab;
+        } else if (!ecs_os_strcmp(node->kind, "slot")) {
+            is_slot = true;
         } else if (flecs_script_eval_id(v, node, &id)) {
             return -1;
         }
 
         node->eval_kind = id.eval;
     } else {
+        /* Inherit kind from parent kind's DefaultChildComponent, if it existst */
         ecs_script_scope_t *scope = ecs_script_current_scope(v);
         if (scope && scope->default_component_eval) {
             node->eval_kind = scope->default_component_eval;
@@ -417,6 +420,18 @@ int flecs_script_eval_entity(
 
     node->eval = flecs_script_create_entity(v, node->name);
     node->parent = v->entity;
+
+    if (is_slot) {
+        ecs_entity_t parent = ecs_get_target(
+            v->world, node->eval, EcsChildOf, 0);
+        if (!parent) {
+            flecs_script_eval_error(v, node, 
+                "slot entity must have a parent");
+            return -1;
+        }
+
+        ecs_add_pair(v->world, node->eval, EcsSlotOf, parent);
+    }
 
     const EcsDefaultChildComponent *default_comp = NULL;
     ecs_script_entity_t *old_entity = v->entity;

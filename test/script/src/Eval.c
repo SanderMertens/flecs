@@ -7488,3 +7488,99 @@ void Eval_assing_component_member_to_const(void) {
 
     ecs_fini(world);
 }
+
+void Eval_prefab_w_slot(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "Position"}),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_set(world, e, Position, {10, 20});
+
+    const char *expr =
+    HEAD "prefab Turret {"
+    LINE "  slot Base {}"
+    LINE "  slot Cannon {}"
+    LINE "}"
+    LINE ""
+    LINE "inst : Turret";
+
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+
+    ecs_entity_t turret = ecs_lookup(world, "Turret");
+    test_assert(turret != 0);
+    test_assert(ecs_has_id(world, turret, EcsPrefab));
+    
+    ecs_entity_t base = ecs_lookup(world, "Turret.Base");
+    test_assert(base != 0);
+    test_assert(ecs_has_id(world, base, EcsPrefab));
+    test_assert(ecs_has_pair(world, base, EcsSlotOf, turret));
+
+    ecs_entity_t cannon = ecs_lookup(world, "Turret.Cannon");
+    test_assert(cannon != 0);
+    test_assert(ecs_has_id(world, cannon, EcsPrefab));
+    test_assert(ecs_has_pair(world, cannon, EcsSlotOf, turret));
+
+    ecs_entity_t inst = ecs_lookup(world, "inst");
+    test_assert(inst != 0);
+    test_assert(ecs_has_pair(world, inst, EcsIsA, turret));
+
+    ecs_entity_t inst_base = ecs_lookup(world, "inst.Base");
+    ecs_entity_t inst_cannon = ecs_lookup(world, "inst.Cannon");
+    test_assert(inst_base != 0);
+    test_assert(inst_cannon != 0);
+
+    test_assert(ecs_has_pair(world, inst, base, inst_base));
+    test_assert(ecs_has_pair(world, inst, cannon, inst_cannon));
+
+    ecs_fini(world);
+}
+
+void Eval_prefab_w_slot_no_parent(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "slot Base {}";
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr) != 0);
+
+    ecs_fini(world);
+}
+
+void Eval_prefab_w_slot_variant(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "prefab Turret {"
+    LINE "  slot Head {}"
+    LINE "}"
+    LINE "prefab Variant : Turret {"
+    LINE "  prefab Head {"
+    LINE "    Foo"
+    LINE "  }"
+    LINE "}";
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+
+    ecs_entity_t head = ecs_lookup(world, "Turret.Head");
+    ecs_entity_t variant = ecs_lookup(world, "Variant");
+    test_assert(head != 0);
+    test_assert(variant != 0);
+
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, variant);
+    ecs_entity_t inst_head = ecs_get_target(world, inst, head, 0);
+    ecs_entity_t inst_head_lookup = ecs_lookup_child(world, inst, "Head");
+    test_assert(inst_head != 0);
+    test_assert(inst_head_lookup != 0);
+    test_assert(inst_head == inst_head_lookup);
+
+    ecs_fini(world);
+}

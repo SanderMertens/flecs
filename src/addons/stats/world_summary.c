@@ -52,8 +52,8 @@ void OnSetWorldSummary(ecs_iter_t *it) {
 
     int32_t i, count = it->count;
     for (i = 0; i < count; i ++) {
-        ecs_set_target_fps(it->world, (float)summary[i].target_fps);
-        ecs_set_time_scale(it->world, (float)summary[i].time_scale);
+        ecs_set_target_fps(it->world, (ecs_ftime_t)summary[i].target_fps);
+        ecs_set_time_scale(it->world, (ecs_ftime_t)summary[i].time_scale);
     }
 }
 
