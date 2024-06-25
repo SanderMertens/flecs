@@ -244,6 +244,8 @@
                 "if_0",
                 "if_true_in_scope",
                 "if_false_in_scope",
+                "if_lt",
+                "if_lt_const",
                 "isa_in_module",
                 "isa_hierarchy",
                 "isa_hierarchy_in_module",

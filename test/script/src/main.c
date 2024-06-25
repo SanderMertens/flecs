@@ -240,6 +240,8 @@ void Eval_if_10(void);
 void Eval_if_0(void);
 void Eval_if_true_in_scope(void);
 void Eval_if_false_in_scope(void);
+void Eval_if_lt(void);
+void Eval_if_lt_const(void);
 void Eval_isa_in_module(void);
 void Eval_isa_hierarchy(void);
 void Eval_isa_hierarchy_in_module(void);
@@ -1511,6 +1513,14 @@ bake_test_case Eval_testcases[] = {
     {
         "if_false_in_scope",
         Eval_if_false_in_scope
+    },
+    {
+        "if_lt",
+        Eval_if_lt
+    },
+    {
+        "if_lt_const",
+        Eval_if_lt_const
     },
     {
         "isa_in_module",
@@ -2879,7 +2889,7 @@ static bake_test_suite suites[] = {
         "Eval",
         NULL,
         NULL,
-        252,
+        254,
         Eval_testcases
     },
     {
