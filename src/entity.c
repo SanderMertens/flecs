@@ -4578,6 +4578,10 @@ void flecs_cmd_batch_for_entity(
     ecs_table_diff_t table_diff; /* Keep track of diff for observers/hooks */
     int32_t cur = start;
     ecs_id_t id;
+
+    /* Mask to let observable implementation know which components were set.
+     * This prevents the code from overwriting components with an override if
+     * the batch also contains an IsA pair. */
     ecs_flags64_t set_mask = 0;
 
     do {
@@ -4663,22 +4667,23 @@ void flecs_cmd_batch_for_entity(
             uint8_t added_index = flecs_ito(uint8_t, diff->added.count);
 
             table = flecs_find_table_add(world, table, id, diff);
-            if (diff->added.count == added_index) {
-                /* Nothing was added to the array, which means the id was added 
-                 * as result of another id (a With relationship or auto 
-                 * override). */
+
+            if (diff->added.count == (added_index + 1)) {
+                /* Single id was added, must be at the end of the array */
+                ecs_assert(ids[added_index] == id, ECS_INTERNAL_ERROR, NULL);
+                set_mask |= (1llu << added_index);
+            } else {
+                /* Id was already added or multiple ids got added. Do a linear
+                 * search to find the index we need to set the set_mask. */
                 int32_t i;
-                for (i = 0; i < added_index; i ++) {
+                for (i = 0; i < diff->added.count; i ++) {
                     if (ids[i] == id) {
                         break;
                     }
                 }
-                ecs_assert(i != added_index, ECS_INTERNAL_ERROR, NULL);
+
+                ecs_assert(i != diff->added.count, ECS_INTERNAL_ERROR, NULL);
                 set_mask |= (1llu << i);
-            } else {
-                /* Id was added, index must be at the end of the array */
-                ecs_assert(ids[added_index] == id, ECS_INTERNAL_ERROR, NULL);
-                set_mask |= (1llu << added_index);
             }
 
             world->info.cmd.batched_command_count ++;
