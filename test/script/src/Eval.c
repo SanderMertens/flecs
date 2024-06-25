@@ -6886,6 +6886,72 @@ void Eval_if_false_in_scope(void) {
     ecs_fini(world);
 }
 
+void Eval_if_lt(void) {
+    ecs_world_t *world = ecs_init();
+
+    {
+        const char *expr =
+        HEAD "if 2.0 > 3.0 {"
+        LINE "  a{}"
+        LINE "} else {"
+        LINE "  b{}"
+        LINE "}";
+
+        test_assert(ecs_script_run(world, NULL, expr) == 0);
+        test_assert(ecs_lookup(world, "a") == 0);
+        test_assert(ecs_lookup(world, "b") != 0);
+    }
+
+    {
+        const char *expr =
+        HEAD "if 3.0 > 2.0 {"
+        LINE "  c{}"
+        LINE "} else {"
+        LINE "  d{}"
+        LINE "}";
+
+        test_assert(ecs_script_run(world, NULL, expr) == 0);
+        test_assert(ecs_lookup(world, "c") != 0);
+        test_assert(ecs_lookup(world, "d") == 0);
+    }
+
+    ecs_fini(world);
+}
+
+void Eval_if_lt_const(void) {
+    ecs_world_t *world = ecs_init();
+
+    {
+        const char *expr =
+        HEAD "const v = 2.0"
+        LINE "if $v > 3.0 {"
+        LINE "  a{}"
+        LINE "} else {"
+        LINE "  b{}"
+        LINE "}";
+
+        test_assert(ecs_script_run(world, NULL, expr) == 0);
+        test_assert(ecs_lookup(world, "a") == 0);
+        test_assert(ecs_lookup(world, "b") != 0);
+    }
+
+    {
+        const char *expr =
+        HEAD "const v = 3.0"
+        LINE "if $v > 2.0 {"
+        LINE "  c{}"
+        LINE "} else {"
+        LINE "  d{}"
+        LINE "}";
+
+        test_assert(ecs_script_run(world, NULL, expr) == 0);
+        test_assert(ecs_lookup(world, "c") != 0);
+        test_assert(ecs_lookup(world, "d") == 0);
+    }
+
+    ecs_fini(world);
+}
+
 void Eval_isa_in_module(void) {
     ecs_world_t *world = ecs_init();
 
