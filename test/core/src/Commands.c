@@ -4016,3 +4016,31 @@ void Commands_add_set_isa_w_override_batched(void) {
 
     ecs_fini(world);
 }
+
+void Commands_add_batched_set_with(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Foo);
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Position);
+
+    ecs_add_pair(world, ecs_id(Position), EcsWith, ecs_id(Velocity));
+
+    ecs_entity_t e = ecs_new(world);
+
+    ecs_defer_begin(world);
+    ecs_add(world, e, Foo);
+    ecs_set(world, e, Position, {10, 20});
+    ecs_defer_end(world);
+
+    test_assert(ecs_has(world, e, Foo));
+    test_assert(ecs_has(world, e, Position));
+    test_assert(ecs_has(world, e, Velocity));
+
+    const Position *p = ecs_get(world, e, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}

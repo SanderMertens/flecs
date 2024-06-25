@@ -2007,7 +2007,8 @@
                 "mixed_on_add_on_set_w_set_w_batching",
                 "mixed_on_add_on_set_w_emplace",
                 "add_isa_set_w_override_batched",
-                "add_set_isa_w_override_batched"
+                "add_set_isa_w_override_batched",
+                "add_batched_set_with"
             ]
         }, {
             "id": "SingleThreadStaging",
