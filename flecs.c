@@ -69138,8 +69138,24 @@ void FlecsWorldSummaryImport(
 #endif
     const ecs_world_info_t *info = ecs_get_world_info(world);
 
-    ECS_SYSTEM(world, UpdateWorldSummary, EcsPreFrame, WorldSummary);
-    ECS_OBSERVER(world, OnSetWorldSummary, EcsOnSet, WorldSummary);
+    ecs_system(world, {
+        .entity = ecs_entity(world, { 
+            .name = "UpdateWorldSummary",
+            .add = ecs_ids(ecs_pair(EcsDependsOn, EcsPreFrame))
+        }),
+        .query.terms = {{ .id = ecs_id(EcsWorldSummary) }},
+        .callback = UpdateWorldSummary
+    });
+
+    ecs_observer(world, {
+        .entity = ecs_entity(world, { 
+            .name = "OnSetWorldSummary"
+        }),
+        .events = { EcsOnSet },
+        .query.terms = {{ .id = ecs_id(EcsWorldSummary) }},
+        .callback = OnSetWorldSummary
+    });
+
     ecs_set(world, EcsWorld, EcsWorldSummary, {
         .target_fps = (double)info->target_fps,
         .time_scale = (double)info->time_scale
