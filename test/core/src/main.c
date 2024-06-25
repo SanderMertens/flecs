@@ -2651,6 +2651,7 @@ void Commands_mixed_on_add_on_set_w_set_w_batching(void);
 void Commands_mixed_on_add_on_set_w_emplace(void);
 void Commands_add_isa_set_w_override_batched(void);
 void Commands_add_set_isa_w_override_batched(void);
+void Commands_add_batched_set_with(void);
 
 // Testsuite 'SingleThreadStaging'
 void SingleThreadStaging_setup(void);
@@ -13095,6 +13096,10 @@ bake_test_case Commands_testcases[] = {
     {
         "add_set_isa_w_override_batched",
         Commands_add_set_isa_w_override_batched
+    },
+    {
+        "add_batched_set_with",
+        Commands_add_batched_set_with
     }
 };
 
@@ -13956,7 +13961,7 @@ static bake_test_suite suites[] = {
         "Commands",
         NULL,
         NULL,
-        133,
+        134,
         Commands_testcases
     },
     {
