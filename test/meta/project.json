@@ -651,7 +651,9 @@
                 "serialize_matches_query",
                 "serialize_matches_rule",
                 "serialize_no_matches",
-                "serialize_id_recycled"
+                "serialize_id_recycled",
+                "serialize_union_target",
+                "serialize_union_target_recycled"
             ]
         }, {
             "id": "SerializeIterToJson",

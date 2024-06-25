@@ -200,15 +200,12 @@ static
 const char* flecs_script_paren_expr(
     ecs_script_parser_t *parser,
     const char *kind,
-    const char *entity_name,
+    ecs_script_entity_t *entity,
     const char *pos)
 {
     ParserBegin;
 
     Expr(')',
-        ecs_script_entity_t *entity = flecs_script_insert_entity(
-            parser, entity_name);
-        entity->kind = kind;
         entity->kind_w_expr = true;
 
         Scope(entity->scope, 
@@ -689,14 +686,15 @@ identifier_assign: {
 
 // Spaceship enterprise
 identifier_identifier: {
+    ecs_script_entity_t *entity = flecs_script_insert_entity(
+        parser, Token(1));
+    entity->kind = Token(0);
+
     // Spaceship enterprise :
     LookAhead_1(':', 
         pos = lookahead;
 
         Parse_1(EcsTokIdentifier, {
-            ecs_script_entity_t *entity = flecs_script_insert_entity(
-                parser, Token(1));
-
             Scope(entity->scope, 
                 flecs_script_insert_pair_tag(parser, "IsA", Token(3));
 
@@ -714,23 +712,17 @@ identifier_identifier_x:
     Parse(
         // Spaceship enterprise\n
         EcsTokEndOfStatement: {
-            ecs_script_entity_t *entity = flecs_script_insert_entity(
-                parser, Token(1));
-            entity->kind = Token(0);
             EndOfRule;
         }
 
         // Spaceship enterprise {
         case '{': {
-            ecs_script_entity_t *entity = flecs_script_insert_entity(
-                parser, Token(1));
-            entity->kind = Token(0);
             return flecs_script_scope(parser, entity->scope, pos);
         }
 
         // Spaceship enterprise(
         case '(': {
-            goto component_expr_paren;
+            return flecs_script_paren_expr(parser, Token(0), entity, pos);
         }
     )
 }
@@ -798,14 +790,7 @@ component_expr_collection: {
     })
 }
 
-// Position spaceship (
-component_expr_paren: {
-    // Position spaceship (expr)
-    return flecs_script_paren_expr(parser, Token(0), Token(1), pos);
-
     ParserEnd;
-}
-
 }
 
 /* Parse script */
