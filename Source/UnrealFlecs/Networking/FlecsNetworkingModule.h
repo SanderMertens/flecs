@@ -6,7 +6,7 @@
 #include "Modules/FlecsModuleInterface.h"
 #include "FlecsNetworkingModule.generated.h"
 
-UCLASS(BlueprintType)
+UCLASS(BlueprintType, EditInlineNew, DefaultToInstanced, meta = (DisplayName = "Flecs Networking Module"))
 class UNREALFLECS_API UFlecsNetworkingModule final : public UObject, public IFlecsModuleInterface
 {
 	GENERATED_BODY()

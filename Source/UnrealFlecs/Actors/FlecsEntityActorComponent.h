@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
 #include "Entities/FlecsEntityHandle.h"
+#include "Entities/FlecsEntityRecord.h"
 #include "FlecsEntityActorComponent.generated.h"
 
 UCLASS(BlueprintType, Blueprintable, ClassGroup=(Flecs), meta=(BlueprintSpawnableComponent))
@@ -23,5 +24,8 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = "Flecs | Entity")
 	FFlecsEntityHandle EntityHandle;
+
+	UPROPERTY(EditAnywhere, Category = "Flecs | Entity")
+	FFlecsEntityRecord EntityRecord;
 	
 }; // class UFlecsEntityActorComponent

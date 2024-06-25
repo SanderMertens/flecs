@@ -13,6 +13,8 @@ void UFlecsWorldDeveloperSettings::PostInitProperties()
 {
 	Super::PostInitProperties();
 
+	#if WITH_EDITOR
+
 	if (Worlds.IsEmpty())
 	{
 		FFlecsWorldSettings FlecsWorldSettings;
@@ -20,4 +22,6 @@ void UFlecsWorldDeveloperSettings::PostInitProperties()
 		
 		Worlds.Add(FlecsWorldSettings);
 	}
+
+	#endif // WITH_EDITOR
 }

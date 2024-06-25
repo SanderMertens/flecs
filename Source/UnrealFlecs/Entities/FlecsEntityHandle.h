@@ -819,7 +819,8 @@ public:
 
 	FORCEINLINE void Modified(const UScriptStruct* StructType, const UScriptStruct* TraitType) const
 	{
-		GetEntity().modified(ObtainTraitHolderEntity(StructType).GetEntity());
+		GetEntity().modified(ObtainTraitHolderEntity(StructType),
+			ObtainTraitHolderEntity(TraitType));
 	}
 
 	FORCEINLINE void Modified(const UScriptStruct* StructType, const FGameplayTag& InTag) const
@@ -829,13 +830,13 @@ public:
 
 	FORCEINLINE void Modified(const UScriptStruct* StructType, const FFlecsEntityHandle& InTrait) const
 	{
-		GetEntity().modified(InTrait);
+		GetEntity().modified(ObtainTraitHolderEntity(StructType), InTrait);
 	}
 	
 	#if WITH_EDITORONLY_DATA
 
 	UPROPERTY()
-	FString DisplayName;
+	FName DisplayName;
 
 	#endif // WITH_EDITORONLY_DATA
 

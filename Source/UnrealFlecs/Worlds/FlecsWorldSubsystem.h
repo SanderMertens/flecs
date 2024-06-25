@@ -1,9 +1,9 @@
 ﻿// Solstice Games © 2024. All Rights Reserved.
 
 // ReSharper disable CppMemberFunctionMayBeStatic
-#pragma once
-
+// ReSharper disable CppExpressionWithoutSideEffects
 // ReSharper disable CppUnusedIncludeDirective
+#pragma once
 
 #include <unordered_map>
 

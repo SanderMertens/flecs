@@ -30,15 +30,17 @@ public:
 		
 	}
 
-	NO_INLINE virtual void CustomizeChildren(TSharedRef<IPropertyHandle> InPropertyHandle, IDetailChildrenBuilder& ChildBuilder,
+	virtual void CustomizeChildren(TSharedRef<IPropertyHandle> InPropertyHandle, IDetailChildrenBuilder& ChildBuilder,
 	                               IPropertyTypeCustomizationUtils& CustomizationUtils) override
 	{
 		PropertyHandle = InPropertyHandle;
 
+		Options.Empty();
+
 		for (const auto& [EntityName, EntityId] :
 			GEngine->GetEngineSubsystem<UFlecsDefaultEntityEngineSubsystem>()->DefaultEntityOptions)
 		{
-			UN_LOG(LogFlecsEntityHandleCustomization, Verbose,
+			UN_LOGF(LogFlecsEntityHandleCustomization, Verbose,
 				"Adding entity %s to entity handle options.", *EntityName.ToString());
 			Options.Add(EntityName);
 		}
@@ -46,15 +48,15 @@ public:
 		for (const auto& [EntityRecord, bIsOptionEntity] :
 			GEngine->GetEngineSubsystem<UFlecsDefaultEntityEngineSubsystem>()->AddedDefaultEntities)
 		{
-			UN_LOG(LogFlecsEntityHandleCustomization, Verbose,
+			UN_LOGF(LogFlecsEntityHandleCustomization, Verbose,
 				"Adding added entity %s to entity handle options.", *EntityRecord.Name);
 			Options.Add(FName(*EntityRecord.Name));
 		}
 
 		ApplyMetadataFilters();
-
+		
 		const TSharedPtr<IPropertyHandle> WorldNameHandle
-			= PropertyHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FFlecsEntityHandle,WorldName));
+			= PropertyHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FFlecsEntityHandle, WorldName));
 		if (WorldNameHandle && WorldNameHandle->IsValidHandle())
 		{
 			ChildBuilder.AddProperty(WorldNameHandle.ToSharedRef());
@@ -96,7 +98,7 @@ public:
 	}
 
 private:
-	TOptional<FString> SelectedItem;
+	mutable TOptional<FName> SelectedItem;
 	TArray<FName> Options;
 
 	TSharedPtr<IPropertyHandle> PropertyHandle;
@@ -106,9 +108,6 @@ private:
 	{
 		if LIKELY_IF(PropertyHandle && PropertyHandle->IsValidHandle())
 		{
-			UFlecsDefaultEntityEngineSubsystem* DefaultEntitySubsystem
-				= GEngine->GetEngineSubsystem<UFlecsDefaultEntityEngineSubsystem>();
-			
 			FScopedTransaction Transaction(NSLOCTEXT("Flecs", "ChangeEntity", "Change Entity"));
 			PropertyHandle->NotifyPreChange();
 
@@ -121,19 +120,15 @@ private:
 					}
 
 					FFlecsEntityHandle* EntityId = static_cast<FFlecsEntityHandle*>(RawData);
-					EntityId->DisplayName = NewValue.ToString();
-					EntityId->SetEntity(DefaultEntitySubsystem->DefaultEntityOptions[NewValue]);
+					EntityId->SetEntity(GEngine->GetEngineSubsystem<UFlecsDefaultEntityEngineSubsystem>()
+						->DefaultEntityOptions[NewValue]);
+					EntityId->DisplayName = NewValue;
 					return true;
 				});
 
 			PropertyHandle->NotifyPostChange(EPropertyChangeType::ValueSet);
 			PropertyHandle->NotifyFinishedChangingProperties();
 		}
-	}
-
-	void OnEntitySubmitted(const FString NewValue, ETextCommit::Type)
-	{
-		SelectedItem = NewValue;
 	}
 
 	TSharedRef<SWidget> GenerateEntityWidget(const FName InOption)
@@ -145,10 +140,10 @@ private:
 	{
 		if (SelectedItem.IsSet())
 		{
-			return FText::FromString(SelectedItem.GetValue());
+			return FText::FromName(SelectedItem.GetValue());
 		}
 
-		TOptional<FString> CommonValue;
+		TOptional<FName> CommonValue;
 
 		if (PropertyHandle && PropertyHandle->IsValidHandle())
 		{
@@ -162,7 +157,7 @@ private:
 					}
 
 					const FFlecsEntityHandle EntityId = *static_cast<FFlecsEntityHandle*>(RawData);
-					const FString CurrentValue = EntityId.DisplayName;
+					const FName CurrentValue = EntityId.DisplayName;
 
 					if (DataIndex > 0)
 					{
@@ -181,7 +176,7 @@ private:
 
 		if (CommonValue.IsSet())
 		{
-			return FText::FromString(CommonValue.GetValue());
+			return FText::FromName(CommonValue.GetValue());
 		}
 
 		return NSLOCTEXT("Flecs", "SelectAnEntity", "Select an entity...");
