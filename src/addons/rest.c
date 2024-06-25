@@ -1579,8 +1579,8 @@ void DequeueRest(ecs_iter_t *it) {
     for(i = 0; i < it->count; i ++) {
         ecs_rest_ctx_t *ctx = rest[i].impl;
         if (ctx) {
-            double elapsed = wi->world_time_total_raw - ctx->last_time;
-            ecs_http_server_dequeue(ctx->srv, (float)elapsed);
+            float elapsed = (float)(wi->world_time_total_raw - ctx->last_time);
+            ecs_http_server_dequeue(ctx->srv, (ecs_ftime_t)elapsed);
             flecs_rest_server_garbage_collect(it->world, ctx);
             ctx->last_time = wi->world_time_total_raw;
         }

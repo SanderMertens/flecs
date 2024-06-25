@@ -99,6 +99,7 @@ bool flecs_json_serialize_table_pairs(
     const ecs_world_t *world,
     const ecs_table_t *table,
     const ecs_table_t *src_table,
+    int32_t row,
     ecs_strbuf_t *buf,
     const ecs_iter_to_json_desc_t *desc)
 {
@@ -164,6 +165,12 @@ bool flecs_json_serialize_table_pairs(
         } 
         if (same_first) {
             flecs_json_next(buf);
+        }
+        
+        if (second == EcsUnion) {
+            ecs_assert(row < ecs_table_count(table), ECS_INTERNAL_ERROR, NULL);
+            ecs_entity_t e = flecs_table_entities_array(table)[row];
+            second = ecs_get_target(world, e, first, 0);
         }
 
         flecs_json_path_or_label(buf, world, second, desc->serialize_full_paths);
@@ -279,7 +286,8 @@ bool flecs_json_serialize_table_inherited_type(
             world, base_table, table, buf, desc);
 
         flecs_json_serialize_table_pairs(
-            world, base_table, table, buf, desc);
+            world, base_table, table, ECS_RECORD_TO_ROW(base_record->row), 
+            buf, desc);
 
         flecs_json_serialize_table_inherited_type_components(
             world, base_record, buf, desc);
@@ -318,13 +326,14 @@ bool flecs_json_serialize_table_tags_pairs_vars(
     const ecs_world_t *world,
     const ecs_iter_t *it,
     ecs_table_t *table,
+    int32_t row,
     ecs_strbuf_t *buf,
     const ecs_iter_to_json_desc_t *desc)
 {
     bool result = false;
     ecs_strbuf_list_push(buf, "", ",");
     result |= flecs_json_serialize_table_tags(world, table, NULL, buf, desc);
-    result |= flecs_json_serialize_table_pairs(world, table, NULL, buf, desc);
+    result |= flecs_json_serialize_table_pairs(world, table, NULL, row, buf, desc);
     result |= flecs_json_serialize_vars(world, it, buf, desc);
     if (desc->serialize_inherited) {
         result |= flecs_json_serialize_table_inherited(world, table, buf, desc);
@@ -403,15 +412,21 @@ int flecs_json_serialize_iter_result_table(
         return 0;
     }
 
-    /* Serialize tags, pairs, vars once, since they're the same for each row */
+    /* Serialize tags, pairs, vars once, since they're the same for each row, 
+     * except when table has union pairs, which can be different for each 
+     * entity. */
     ecs_strbuf_t tags_pairs_vars_buf = ECS_STRBUF_INIT;
     int32_t tags_pairs_vars_len = 0;
     char *tags_pairs_vars = NULL;
-    if (flecs_json_serialize_table_tags_pairs_vars(
-        world, it, table, &tags_pairs_vars_buf, desc)) 
-    {
-        tags_pairs_vars_len = ecs_strbuf_written(&tags_pairs_vars_buf);
-        tags_pairs_vars = ecs_strbuf_get(&tags_pairs_vars_buf);
+    bool has_union = table->flags & EcsTableHasUnion;
+
+    if (!has_union) {
+        if (flecs_json_serialize_table_tags_pairs_vars(
+            world, it, table, 0, &tags_pairs_vars_buf, desc)) 
+        {
+            tags_pairs_vars_len = ecs_strbuf_written(&tags_pairs_vars_buf);
+            tags_pairs_vars = ecs_strbuf_get(&tags_pairs_vars_buf);
+        }
     }
 
     /* If one entity has more than 256 components (oof), bad luck */
@@ -433,9 +448,23 @@ int flecs_json_serialize_iter_result_table(
                 it, parent_path, &this_data_cpy, i - it->offset, buf, desc);
         }
 
+        if (has_union) {
+            if (flecs_json_serialize_table_tags_pairs_vars(
+                world, it, table, i, &tags_pairs_vars_buf, desc)) 
+            {
+                tags_pairs_vars_len = ecs_strbuf_written(&tags_pairs_vars_buf);
+                tags_pairs_vars = ecs_strbuf_get(&tags_pairs_vars_buf);
+            }
+        }
+
         if (tags_pairs_vars) {
             ecs_strbuf_list_appendstrn(buf, 
                 tags_pairs_vars, tags_pairs_vars_len);
+        }
+
+        if (has_union) {
+            ecs_os_free(tags_pairs_vars);
+            tags_pairs_vars = NULL;
         }
 
         if (flecs_json_serialize_table_components(

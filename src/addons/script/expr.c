@@ -1501,7 +1501,8 @@ const char* flecs_script_expr_run(
                     }
 
                     result.type = type;
-                    result.ptr = (void*)ecs_get_id(world, e, component);
+                    result.ptr = ECS_CONST_CAST(void*, 
+                        ecs_get_id(world, e, component));
                     if (!result.ptr) {
                         char *entitystr = ecs_id_str(world, e);
                         char *idstr = ecs_id_str(world, component);

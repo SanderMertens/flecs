@@ -63,10 +63,12 @@ void flecs_script_id_to_str(
     ecs_script_str_visitor_t *v,
     ecs_script_id_t *id)
 {
-    if (id->flag && id->flag == ECS_AUTO_OVERRIDE) {
-        flecs_scriptbuf_appendstr(v, "auto_override | ");
-    } else {
-        flecs_scriptbuf_appendstr(v, "??? | ");
+    if (id->flag) {
+        if (id->flag == ECS_AUTO_OVERRIDE) {
+            flecs_scriptbuf_appendstr(v, "auto_override | ");
+        } else {
+            flecs_scriptbuf_appendstr(v, "??? | ");
+        }
     }
 
     if (id->second) {

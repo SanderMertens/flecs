@@ -261,7 +261,10 @@
                 "auto_override_pair_component",
                 "lowercase_prefab_kind",
                 "assing_component_to_const",
-                "assing_component_member_to_const"
+                "assing_component_member_to_const",
+                "prefab_w_slot",
+                "prefab_w_slot_no_parent",
+                "prefab_w_slot_variant"
             ]
         }, {
             "id": "Template",
