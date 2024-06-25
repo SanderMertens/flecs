@@ -2795,6 +2795,7 @@ void Expr_component_member_expr(void) {
         ecs_value_free(world, v.type, v.ptr);
     }
 
+    v = (ecs_value_t){0};
     test_assert(ecs_script_expr_run(world, "e[Position].y", &v, NULL) != NULL);
     test_assert(v.type == ecs_id(ecs_f32_t));
     test_assert(v.ptr != NULL);
