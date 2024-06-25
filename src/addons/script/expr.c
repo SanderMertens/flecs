@@ -883,8 +883,13 @@ ecs_entity_t flecs_binary_expr_type(
     }
 
     if (flecs_expr_op_is_equality(op)) {
+        char *lstr = ecs_id_str(world, ltype);
+        char *rstr = ecs_id_str(world, rtype);
         ecs_parser_error(name, expr, ptr - expr, 
-            "mismatching types in equality expression");
+            "mismatching types in equality expression (%s vs %s)",
+                lstr, rstr);
+        ecs_os_free(rstr);
+        ecs_os_free(lstr);
         return 0;
     }
 
@@ -1096,6 +1101,7 @@ const char* flecs_binary_expr_parse(
     ecs_entity_t result_type = result->type;
     do {
         ecs_expr_oper_t op;
+
         ptr = flecs_str_to_expr_oper(ptr, &op);
         if (!ptr) {
             ecs_parser_error(name, expr, ptr - expr, "invalid operator");

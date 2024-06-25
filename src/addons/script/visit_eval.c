@@ -997,12 +997,21 @@ int flecs_script_eval_if(
     ecs_script_eval_visitor_t *v,
     ecs_script_if_t *node)
 {
-    bool cond = false;
-    ecs_value_t condval = { .type = ecs_id(ecs_bool_t), .ptr = &cond };
-
+    ecs_value_t condval = { .type = 0, .ptr = NULL };
     if (flecs_script_eval_expr(v, node->expr, &condval)) {
         return -1;
     }
+
+    bool cond;
+    if (condval.type == ecs_id(ecs_bool_t)) {
+        cond = *(bool*)(condval.ptr);
+    } else {
+        ecs_meta_cursor_t cur = ecs_meta_cursor(
+            v->world, condval.type, condval.ptr);
+        cond = ecs_meta_get_bool(&cur);
+    }
+
+    ecs_value_free(v->world, condval.type, condval.ptr);
 
     if (flecs_script_eval_scope(v, cond ? node->if_true : node->if_false)) {
         return -1;
