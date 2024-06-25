@@ -59594,8 +59594,13 @@ ecs_entity_t flecs_binary_expr_type(
     }
 
     if (flecs_expr_op_is_equality(op)) {
+        char *lstr = ecs_id_str(world, ltype);
+        char *rstr = ecs_id_str(world, rtype);
         ecs_parser_error(name, expr, ptr - expr, 
-            "mismatching types in equality expression");
+            "mismatching types in equality expression (%s vs %s)",
+                lstr, rstr);
+        ecs_os_free(rstr);
+        ecs_os_free(lstr);
         return 0;
     }
 
@@ -59807,6 +59812,7 @@ const char* flecs_binary_expr_parse(
     ecs_entity_t result_type = result->type;
     do {
         ecs_expr_oper_t op;
+
         ptr = flecs_str_to_expr_oper(ptr, &op);
         if (!ptr) {
             ecs_parser_error(name, expr, ptr - expr, "invalid operator");
@@ -66778,12 +66784,21 @@ int flecs_script_eval_if(
     ecs_script_eval_visitor_t *v,
     ecs_script_if_t *node)
 {
-    bool cond = false;
-    ecs_value_t condval = { .type = ecs_id(ecs_bool_t), .ptr = &cond };
-
+    ecs_value_t condval = { .type = 0, .ptr = NULL };
     if (flecs_script_eval_expr(v, node->expr, &condval)) {
         return -1;
     }
+
+    bool cond;
+    if (condval.type == ecs_id(ecs_bool_t)) {
+        cond = *(bool*)(condval.ptr);
+    } else {
+        ecs_meta_cursor_t cur = ecs_meta_cursor(
+            v->world, condval.type, condval.ptr);
+        cond = ecs_meta_get_bool(&cur);
+    }
+
+    ecs_value_free(v->world, condval.type, condval.ptr);
 
     if (flecs_script_eval_scope(v, cond ? node->if_true : node->if_false)) {
         return -1;
