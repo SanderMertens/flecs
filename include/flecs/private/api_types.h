@@ -130,9 +130,7 @@ typedef struct ecs_query_iter_t {
     uint64_t *written;
     int32_t skip_count;
 
-#ifdef FLECS_DEBUG
     ecs_query_op_profile_t *profile;
-#endif
 
     int16_t op;
     int16_t sp;
