@@ -60,7 +60,7 @@ my_parent {
 
 Note how a scope is also added to the child entity.
 
-So far these examples show how to create named entities. To create anonymous entities, use the `_` identifier:
+To create anonymous entities, use the `_` identifier:
 
 ```c
 _ {
@@ -141,6 +141,36 @@ my_entity {
 }
 ```
 
+### Namespacing
+When referring to child entities or components, identifiers need to include the parent path as well as the entity name. Paths are provided as lists of identifiers separated by a dot (`.`):
+
+```c
+Sun.Earth {
+  solarsystem.Planet
+}
+```
+
+To avoid having to repeatedly type the same paths, use the `using` statement (see below).
+
+### Singletons
+To create a singleton component, use `$` as the entity identifier:
+
+```c
+$ {
+  TimeOfDay: { t: 0.5 }
+}
+```
+
+Multiple singleton components can be specified in the same scope:
+
+```c
+$ {
+  TimeOfDay: { t: 0.5 }
+  Player: { name: "bob" }
+}
+
+```
+
 ### Entity kinds
 An entity can be created with a "kind", which is a component specified before the entity name. This is similar to adding a tag or component in a scope, but can provide a more natural way to describe things. For example:
 
@@ -187,6 +217,31 @@ CheckBox my_checkbox
 
 my_checkbox {
   CheckBox: {}
+}
+```
+
+#### Builtin kinds
+Applications can specify the following builtin kinds which provide convenience shortcuts to commonly used features:
+
+```c
+prefab SpaceShip
+
+// is equivalent to
+
+Prefab spaceship
+```
+
+```c
+prefab SpaceShip {
+  slot CockPit
+}
+
+// is equivalent to
+
+prefab SpaceShip {
+  CockPit {
+    (SlotOf, SpaceShip)
+  }
 }
 ```
 
@@ -405,6 +460,27 @@ with $color {
 }
 ```
 
+### Component values
+A script can use the value of a component that is looked up on a specific entity. The following example fetches the `width` and `depth` members from the `Level` component, that is fetched from the `Game` entity:
+
+```c
+grid {
+  Grid: { Game[Level].width, Game[Level].depth }
+}
+```
+
+To reduce the number of component lookups in a script, the component value can be stored in a variable:
+
+```c
+const level = Game[Level]
+
+tiles {
+  Grid: { width: $level.width, $level.depth, prefab: Tile }
+}
+```
+
+The requested component is stored by value, not by reference. Adding or removing components to the entity will not invalidate the component data. If the requested component does not exist on the entity, script execution will fail.
+
 ### If statement
 Parts of a script can be conditionally executed with an if statement. Example:
 
@@ -415,9 +491,9 @@ lantern {
   Color: {210, 255, 200}
 
   if $daytime {
-    Emissive: {value: 0}
+    Emissive: { value: 0 }
   } else {
-    Emissive: {value: 1}
+    Emissive: { value: 1 }
   }
 }
 ```
