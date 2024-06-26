@@ -364,6 +364,9 @@ public:
      * @see ecs_iter_fini()
      */
     void fini() {
+        if (iter_->flags & EcsIterIsValid && iter_->table) {
+            ECS_TABLE_UNLOCK(iter_->world, iter_->table);
+        }
         ecs_iter_fini(iter_);
     }
 

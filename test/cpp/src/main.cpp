@@ -629,6 +629,8 @@ void Query_optional_pair_term(void);
 void Query_query_from_entity(void);
 void Query_query_from_entity_name(void);
 void Query_run_w_iter_fini(void);
+void Query_run_w_iter_fini_interrupt(void);
+void Query_run_w_iter_fini_empty(void);
 
 // Testsuite 'QueryBuilder'
 void QueryBuilder_setup(void);
@@ -3743,6 +3745,14 @@ bake_test_case Query_testcases[] = {
     {
         "run_w_iter_fini",
         Query_run_w_iter_fini
+    },
+    {
+        "run_w_iter_fini_interrupt",
+        Query_run_w_iter_fini_interrupt
+    },
+    {
+        "run_w_iter_fini_empty",
+        Query_run_w_iter_fini_empty
     }
 };
 
@@ -6453,7 +6463,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        104,
+        106,
         Query_testcases
     },
     {

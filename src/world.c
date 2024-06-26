@@ -2178,3 +2178,13 @@ done:
 
     return delete_count;
 }
+
+ecs_entities_t ecs_get_entities(
+    const ecs_world_t *world)
+{
+    ecs_entities_t result;
+    result.ids = flecs_entities_ids(world);
+    result.count = flecs_entities_size(world);
+    result.alive_count = flecs_entities_count(world);
+    return result;
+}

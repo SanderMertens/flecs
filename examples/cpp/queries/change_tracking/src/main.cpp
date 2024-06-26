@@ -35,8 +35,8 @@ int main(int, char *[]) {
     // Create a query that writes the component based on a Dirty state.
     flecs::query<const Dirty, Position> q_write = 
         ecs.query_builder<const Dirty, Position>()
-            .term_at(0).up()     // Only match Dirty from prefab
-            .instanced()         // Instanced iteration is faster (see example)
+            .term_at(0).up(flecs::IsA) // Only match Dirty from prefab
+            .instanced()               // Instanced iteration is faster (see example)
             .build();
 
     // Create two prefabs with a Dirty component. We can use this to share a
@@ -94,8 +94,11 @@ int main(int, char *[]) {
                 // If the dirty flag is false, skip the table. This way the table's
                 // dirty state is not updated by the query.
                 it.skip();
+
+                // Cleanup iterator resources since iterator wasn't done yet
+                it.fini();
                 std::cout << "it.skip() for table [" << it.type().str() << "]\n";
-                return;
+                break;
             }
 
             // For all other tables the dirty state will be set.
@@ -115,7 +118,7 @@ int main(int, char *[]) {
             std::cout << "it.changed() for table [" << it.type().str() << "]: "
                 << it.changed() << "\n";
         }
-    }); 
+    });
 
     // Output:
     //  q_read.changed(): 1

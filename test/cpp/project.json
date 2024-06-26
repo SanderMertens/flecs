@@ -652,7 +652,9 @@
                 "optional_pair_term",
                 "query_from_entity",
                 "query_from_entity_name",
-                "run_w_iter_fini"
+                "run_w_iter_fini",
+                "run_w_iter_fini_interrupt",
+                "run_w_iter_fini_empty"
             ]
         }, {
             "id": "QueryBuilder",
