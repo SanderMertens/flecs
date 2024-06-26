@@ -636,7 +636,12 @@ void Query_query_from_entity_name(void);
 >>>>>>> cf1a8ef63 (v4):test/cpp/src/main.cpp
 =======
 void Query_run_w_iter_fini(void);
+<<<<<<< HEAD
 >>>>>>> 3f87a122d (Add flecs::iter::fini)
+=======
+void Query_run_w_iter_fini_interrupt(void);
+void Query_run_w_iter_fini_empty(void);
+>>>>>>> bdcdd0010 (Add ecs_get_entities function)
 
 // Testsuite 'QueryBuilder'
 void QueryBuilder_setup(void);
@@ -3801,7 +3806,18 @@ bake_test_case Query_testcases[] = {
     {
         "run_w_iter_fini",
         Query_run_w_iter_fini
+<<<<<<< HEAD
 >>>>>>> 3f87a122d (Add flecs::iter::fini)
+=======
+    },
+    {
+        "run_w_iter_fini_interrupt",
+        Query_run_w_iter_fini_interrupt
+    },
+    {
+        "run_w_iter_fini_empty",
+        Query_run_w_iter_fini_empty
+>>>>>>> bdcdd0010 (Add ecs_get_entities function)
     }
 };
 
@@ -6633,6 +6649,7 @@ static bake_test_suite suites[] = {
         NULL,
         NULL,
 <<<<<<< HEAD
+<<<<<<< HEAD
 <<<<<<< HEAD:test/cpp_api/src/main.cpp
         94,
 =======
@@ -6641,6 +6658,9 @@ static bake_test_suite suites[] = {
 =======
         104,
 >>>>>>> 3f87a122d (Add flecs::iter::fini)
+=======
+        106,
+>>>>>>> bdcdd0010 (Add ecs_get_entities function)
         Query_testcases
     },
     {

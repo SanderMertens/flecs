@@ -170,8 +170,8 @@ const uint64_t* flecs_sparse_ids(
     const ecs_sparse_t *sparse);
 
 /* Publicly exposed APIs 
- * The flecs_ functions aren't exposed directly as this can cause some
- * optimizers to not consider them for link time optimization. */
+ * These APIs are not part of the public API and as a result may change without
+ * notice (though they haven't changed in a long time). */
 
 FLECS_API
 void ecs_sparse_init(

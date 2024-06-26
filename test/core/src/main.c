@@ -2481,6 +2481,7 @@ void World_set_get_context(void);
 void World_set_get_binding_context(void);
 void World_set_get_context_w_free(void);
 void World_set_get_binding_context_w_free(void);
+void World_get_entities(void);
 
 // Testsuite 'WorldInfo'
 void WorldInfo_get_tick(void);
@@ -12435,6 +12436,10 @@ bake_test_case World_testcases[] = {
     {
         "set_get_binding_context_w_free",
         World_set_get_binding_context_w_free
+    },
+    {
+        "get_entities",
+        World_get_entities
     }
 };
 
@@ -13940,7 +13945,7 @@ static bake_test_suite suites[] = {
         "World",
         World_setup,
         NULL,
-        57,
+        58,
         World_testcases
     },
     {

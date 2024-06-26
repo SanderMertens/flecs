@@ -1553,3 +1553,58 @@ void World_set_get_binding_context_w_free(void) {
 
     test_int(ctx, 10);
 }
+
+void World_get_entities(void) {
+    ecs_world_t *world = ecs_mini();
+
+    int32_t count;
+    int32_t alive_count;
+
+    {
+        ecs_entities_t entities = ecs_get_entities(world);
+        test_assert(entities.alive_count != 0);
+        test_assert(entities.count != 0);
+        test_assert(entities.count == entities.alive_count);
+        test_assert(entities.ids != NULL);
+        test_assert(entities.ids[0] != 0);
+
+        count = entities.count;
+        alive_count = entities.alive_count;
+    }
+
+    ecs_entity_t e = ecs_new(world);
+
+    {
+        ecs_entities_t entities = ecs_get_entities(world);
+        test_assert(entities.alive_count != 0);
+        test_assert(entities.count != 0);
+        test_assert(entities.count == entities.alive_count);
+        test_assert(entities.count == count + 1);
+        test_assert(entities.ids != NULL);
+        test_assert(entities.ids[0] != 0);
+        test_assert(entities.ids[entities.count - 1] == e);
+
+        count = entities.count;
+        alive_count = entities.alive_count;
+    }
+
+    ecs_delete(world, e);
+
+    {
+        ecs_entities_t entities = ecs_get_entities(world);
+        test_assert(entities.alive_count != 0);
+        test_assert(entities.count != 0);
+        test_assert(entities.count == (entities.alive_count + 1));
+        test_assert(entities.count == count);
+        test_assert(entities.alive_count == (alive_count - 1));
+        test_assert(entities.ids != NULL);
+        test_assert(entities.ids[0] != 0);
+        test_assert((uint32_t)entities.ids[entities.count - 1] == (uint32_t)e);
+        test_assert(entities.ids[entities.count - 1] != e);
+
+        count = entities.count;
+        alive_count = entities.alive_count;
+    }
+
+    ecs_fini(world);
+}

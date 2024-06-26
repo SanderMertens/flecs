@@ -122,14 +122,6 @@ void flecs_entity_index_clear(
 const uint64_t* flecs_entity_index_ids(
     const ecs_entity_index_t *index);
 
-void flecs_entity_index_copy(
-    ecs_entity_index_t *dst,
-    const ecs_entity_index_t *src);
-
-void flecs_entity_index_restore(
-    ecs_entity_index_t *dst,
-    const ecs_entity_index_t *src);
-
 #define ecs_eis(world) (&((world)->store.entity_index))
 #define flecs_entities_init(world) flecs_entity_index_init(&world->allocator, ecs_eis(world))
 #define flecs_entities_fini(world) flecs_entity_index_fini(ecs_eis(world))
@@ -152,7 +144,5 @@ void flecs_entity_index_restore(
 #define flecs_entities_not_alive_count(world) flecs_entity_index_not_alive_count(ecs_eis(world))
 #define flecs_entities_clear(world) flecs_entity_index_clear(ecs_eis(world))
 #define flecs_entities_ids(world) flecs_entity_index_ids(ecs_eis(world))
-#define flecs_entities_copy(dst, src) flecs_entity_index_copy(dst, src)
-#define flecs_entities_restore(dst, src) flecs_entity_index_restore(dst, src)
 
 #endif

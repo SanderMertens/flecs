@@ -3192,3 +3192,50 @@ void Query_run_w_iter_fini(void) {
     // should be no leakage assert
 >>>>>>> 3f87a122d (Add flecs::iter::fini)
 }
+
+void Query_run_w_iter_fini_interrupt(void) {
+    flecs::world ecs;
+
+    struct Foo {};
+    struct Bar {};
+    struct Hello {};
+
+    flecs::entity e1 = ecs.entity()
+        .set<Position>({10, 20})
+        .add<Foo>();
+    flecs::entity e2 = ecs.entity()
+        .set<Position>({10, 20})
+        .add<Bar>();
+    flecs::entity e3 = ecs.entity()
+        .set<Position>({10, 20})
+        .add<Hello>();
+
+    flecs::query<Position> q = ecs.query<Position>();
+
+    int32_t count = 0;
+    q.run([&](flecs::iter& it) {
+        test_bool(true, it.next());
+        test_int(1, it.count());
+        test_uint(e1, it.entity(0));
+
+        test_bool(true, it.next());
+        count ++;
+        it.fini();
+    });
+
+    test_int(count, 1);
+}
+
+void Query_run_w_iter_fini_empty(void) {
+    flecs::world ecs;
+
+    flecs::query<Position> q = ecs.query<Position>();
+
+    int32_t count = 0;
+    q.run([&](flecs::iter& it) {
+        count ++;
+        it.fini();
+    });
+
+    test_int(count, 1);
+}
