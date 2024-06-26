@@ -40,7 +40,7 @@ void UFlecsDefaultEntityEngineSubsystem::Initialize(FSubsystemCollectionBase& Co
 					return;
 				}
 				
-				UN_LOG(LogFlecsDefaultEntityEngineSubsystem, Log, "Entity: %s", Entity.name().c_str());
+				UN_LOGF(LogFlecsDefaultEntityEngineSubsystem, Log, "Entity: %s", Entity.name().c_str());
 				DefaultEntityOptions.Add(Entity.name().c_str(), Entity.id());
 			});
 	}

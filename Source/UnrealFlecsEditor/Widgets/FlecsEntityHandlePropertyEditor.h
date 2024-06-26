@@ -12,12 +12,15 @@
 #include "Entities/FlecsDefaultEntityEngineSubsystem.h"
 #include "Unlog/Unlog.h"
 #include "Widgets/Input/SComboBox.h"
+#include "Widgets/Input/SSearchBox.h"
 #include "Worlds/FlecsWorldSubsystem.h"
 
 UNLOG_CATEGORY(LogFlecsEntityHandleCustomization);
 
 class FFlecsEntityHandleCustomization : public IPropertyTypeCustomization
 {
+	const FText NoneEntityText = NSLOCTEXT("Flecs", "NoneEntity", "None");
+	
 public:
 	static TSharedRef<IPropertyTypeCustomization> MakeInstance()
 	{
@@ -31,75 +34,91 @@ public:
 	}
 
 	virtual void CustomizeChildren(TSharedRef<IPropertyHandle> InPropertyHandle, IDetailChildrenBuilder& ChildBuilder,
-	                               IPropertyTypeCustomizationUtils& CustomizationUtils) override
-	{
-		PropertyHandle = InPropertyHandle;
+    IPropertyTypeCustomizationUtils& CustomizationUtils) override
+{
+    PropertyHandle = InPropertyHandle;
 
-		Options.Empty();
+    Options.Empty();
+    FilteredOptions.Empty();
 
-		for (const auto& [EntityName, EntityId] :
-			GEngine->GetEngineSubsystem<UFlecsDefaultEntityEngineSubsystem>()->DefaultEntityOptions)
-		{
-			UN_LOGF(LogFlecsEntityHandleCustomization, Verbose,
-				"Adding entity %s to entity handle options.", *EntityName.ToString());
-			Options.Add(EntityName);
-		}
+    for (const auto& [EntityName, EntityId] :
+        GEngine->GetEngineSubsystem<UFlecsDefaultEntityEngineSubsystem>()->DefaultEntityOptions)
+    {
+        UN_LOGF(LogFlecsEntityHandleCustomization, Verbose,
+            "Adding entity %s to entity handle options.", *EntityName.ToString());
+        Options.Add(EntityName);
+    }
 
-		for (const auto& [EntityRecord, bIsOptionEntity] :
-			GEngine->GetEngineSubsystem<UFlecsDefaultEntityEngineSubsystem>()->AddedDefaultEntities)
-		{
-			UN_LOGF(LogFlecsEntityHandleCustomization, Verbose,
-				"Adding added entity %s to entity handle options.", *EntityRecord.Name);
-			Options.Add(FName(*EntityRecord.Name));
-		}
+    for (const auto& [EntityRecord, bIsOptionEntity] :
+        GEngine->GetEngineSubsystem<UFlecsDefaultEntityEngineSubsystem>()->AddedDefaultEntities)
+    {
+        UN_LOGF(LogFlecsEntityHandleCustomization, Verbose,
+            "Adding added entity %s to entity handle options.", *EntityRecord.Name);
+        Options.Add(FName(*EntityRecord.Name));
+    }
 
-		ApplyMetadataFilters();
-		
-		const TSharedPtr<IPropertyHandle> WorldNameHandle
-			= PropertyHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FFlecsEntityHandle, WorldName));
-		if (WorldNameHandle && WorldNameHandle->IsValidHandle())
-		{
-			ChildBuilder.AddProperty(WorldNameHandle.ToSharedRef());
-		}
+    ApplyMetadataFilters();
+    FilteredOptions = Options; // Initialize FilteredOptions to Options
 
-		ChildBuilder.AddCustomRow(NSLOCTEXT("Flecs", "FlecsEntityHandle",
-			"Flecs Entity Handle"))
-		.NameContent()
-		[
-			SNew(STextBlock)
-			.Text(NSLOCTEXT("Flecs", "SelectedEntity", "Selected Entity"))
-			.Font(IDetailLayoutBuilder::GetDetailFont())
-		]
-		.ValueContent()
-		.MaxDesiredWidth(250.f)
-		[
-			SNew(SComboBox<FName>)
-			.OptionsSource(&Options)
-			.OnSelectionChanged(this, &FFlecsEntityHandleCustomization::OnEntitySelected)
-			.OnGenerateWidget(this, &FFlecsEntityHandleCustomization::GenerateEntityWidget)
-			.ContentPadding(2)
-			[
-				SNew(STextBlock)
-				.Text(this, &FFlecsEntityHandleCustomization::GetCurrentItemLabel)
-			]
-		];
+    const TSharedPtr<IPropertyHandle> WorldNameHandle
+        = PropertyHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FFlecsEntityHandle, WorldName));
+    if (WorldNameHandle && WorldNameHandle->IsValidHandle())
+    {
+        ChildBuilder.AddProperty(WorldNameHandle.ToSharedRef());
+    }
 
-		if UNLIKELY_IF(Options.IsEmpty())
-		{
-			ChildBuilder.AddCustomRow(NSLOCTEXT("Flecs", "NoEntitiesFound",
-				"No entities found."))
-			.NameContent()
-			[
-				SNew(STextBlock)
-				.Text(NSLOCTEXT("Flecs", "NoEntitiesFound", "No entities found."))
-				.Font(IDetailLayoutBuilder::GetDetailFont())
-			];
-		}
-	}
+    ChildBuilder.AddCustomRow(NSLOCTEXT("Flecs", "FlecsEntityHandle",
+        "Flecs Entity Handle"))
+    .NameContent()
+    [
+        SNew(STextBlock)
+        .Text(NSLOCTEXT("Flecs", "SelectedEntity", "Selected Entity"))
+        .Font(IDetailLayoutBuilder::GetDetailFont())
+    ]
+    .ValueContent()
+    .MaxDesiredWidth(250.f)
+    [
+        SNew(SVerticalBox)
+        + SVerticalBox::Slot()
+        .AutoHeight()
+        [
+            SNew(SComboButton)
+            .OnGetMenuContent(this, &FFlecsEntityHandleCustomization::OnGenerateWidgetWithSearch)
+            .ContentPadding(2)
+            .ButtonContent()
+            [
+                SNew(STextBlock)
+                .Text(this, &FFlecsEntityHandleCustomization::GetCurrentItemLabel)
+            ]
+        ]
+        + SVerticalBox::Slot()
+        .AutoHeight()
+        [
+            SNew(SButton)
+            .Text(NSLOCTEXT("Flecs", "ClearSelection", "Clear"))
+            .OnClicked(this, &FFlecsEntityHandleCustomization::OnClearClicked)
+            .ContentPadding(2)
+        ]
+    ];
+
+    if (Options.IsEmpty())
+    {
+        ChildBuilder.AddCustomRow(NSLOCTEXT("Flecs", "NoEntitiesFound",
+            "No entities found."))
+        .NameContent()
+        [
+            SNew(STextBlock)
+            .Text(NSLOCTEXT("Flecs", "NoEntitiesFound", "No entities found."))
+            .Font(IDetailLayoutBuilder::GetDetailFont())
+        ];
+    }
+}
+
 
 private:
 	mutable TOptional<FName> SelectedItem;
 	TArray<FName> Options;
+	TArray<FName> FilteredOptions;
 
 	TSharedPtr<IPropertyHandle> PropertyHandle;
 
@@ -129,6 +148,28 @@ private:
 			PropertyHandle->NotifyPostChange(EPropertyChangeType::ValueSet);
 			PropertyHandle->NotifyFinishedChangingProperties();
 		}
+	}
+
+	void OnFilterTextChanged(const FText& InFilterText)
+	{
+		const FString FilterString = InFilterText.ToString();
+
+		if (FilterString.IsEmpty())
+		{
+			FilteredOptions = Options;
+		}
+		else
+		{
+			FilteredOptions = Options.FilterByPredicate([&FilterString](const FName& Option)
+			{
+				return Option.ToString().Contains(FilterString);
+			});
+		}
+	}
+
+	void OnComboBoxOpening()
+	{
+		FilteredOptions = Options;
 	}
 
 	TSharedRef<SWidget> GenerateEntityWidget(const FName InOption)
@@ -179,7 +220,7 @@ private:
 			return FText::FromName(CommonValue.GetValue());
 		}
 
-		return NSLOCTEXT("Flecs", "SelectAnEntity", "Select an entity...");
+		return NoneEntityText;
 	}
 
 	void ApplyMetadataFilters()
@@ -195,14 +236,14 @@ private:
 		
 		if (!IncludedItems.IsEmpty())
 		{
-			TArray<FName> FilteredOptions;
+			TArray<FName> MetaFilteredOptions;
 			
 			for (const FString& Item : IncludedItems)
 			{
-				FilteredOptions.Add(FName(*Item));
+				MetaFilteredOptions.Add(FName(*Item));
 			}
 			
-			Options = FilteredOptions;
+			Options = MetaFilteredOptions;
 		}
 
 		if (!ExcludedItems.IsEmpty())
@@ -212,6 +253,67 @@ private:
 				Options.Remove(FName(*ExcludedItem));
 			}
 		}
+	}
+	
+	FReply OnClearClicked()
+	{
+		SelectedItem.Reset();
+
+		if (PropertyHandle && PropertyHandle->IsValidHandle())
+		{
+			FScopedTransaction Transaction(NSLOCTEXT("Flecs", "ResetEntity", "Reset Entity"));
+			PropertyHandle->NotifyPreChange();
+
+			PropertyHandle->EnumerateRawData(
+				[&](void* RawData, MAYBE_UNUSED const int32 DataIndex, MAYBE_UNUSED const int32 NumDatas)
+				{
+					if (RawData == nullptr)
+					{
+						return false;
+					}
+
+					FFlecsEntityHandle* EntityId = static_cast<FFlecsEntityHandle*>(RawData);
+					EntityId->SetEntity(flecs::entity());
+					EntityId->DisplayName = FName();
+					return true;
+				});
+
+			PropertyHandle->NotifyPostChange(EPropertyChangeType::ValueSet);
+			PropertyHandle->NotifyFinishedChangingProperties();
+		}
+
+		FilteredOptions = Options;
+
+		return FReply::Handled();
+	}
+
+	TSharedRef<SWidget> OnGenerateWidgetWithSearch()
+	{
+		return
+			SNew(SVerticalBox)
+			+ SVerticalBox::Slot()
+			.AutoHeight()
+			.Padding(2)
+			[
+				SNew(SSearchBox)
+				.OnTextChanged(this, &FFlecsEntityHandleCustomization::OnFilterTextChanged)
+			]
+			+ SVerticalBox::Slot()
+			.FillHeight(1.0f)
+			[
+				SNew(SListView<FName>)
+				.ListItemsSource(&FilteredOptions)
+				.OnGenerateRow(this, &FFlecsEntityHandleCustomization::OnGenerateRow)
+				.OnSelectionChanged(this, &FFlecsEntityHandleCustomization::OnEntitySelected)
+			];
+	}
+
+	TSharedRef<ITableRow> OnGenerateRow(FName InItem, const TSharedRef<STableViewBase>& OwnerTable)
+	{
+		return SNew(STableRow<FName>, OwnerTable)
+			[
+				SNew(STextBlock).Text(FText::FromName(InItem))
+			];
 	}
 	
 }; // class FFlecsEntityHandleCustomization
