@@ -17,7 +17,7 @@
 
 UNLOG_CATEGORY(LogFlecsEntityHandleCustomization);
 
-class FFlecsEntityHandleCustomization : public IPropertyTypeCustomization
+class FFlecsEntityHandleCustomization final : public IPropertyTypeCustomization
 {
 	const FText NoneEntityText = NSLOCTEXT("Flecs", "NoneEntity", "None");
 	

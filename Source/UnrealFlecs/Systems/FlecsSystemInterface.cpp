@@ -9,7 +9,7 @@ UNLOG_CATEGORY(LogFlecsSystemInterface);
 
 FString IFlecsSystemInterface::GetName() const
 {
-	UN_LOG(LogFlecsSystemInterface, Error,
+	UN_LOGF(LogFlecsSystemInterface, Error,
 		"not implemented for %s",
 		*_getUObject()->GetClass()->GetName());
 	return _getUObject()->GetClass()->GetName();

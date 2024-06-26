@@ -49,7 +49,7 @@ void UFlecsNetworkingManager::BeginPlay()
 			
 			NetworkId.SetNetworkId(GetNextNetworkId());
 
-			UN_LOG(LogFlecsNetworkingManager, Log,
+			UN_LOGF(LogFlecsNetworkingManager, Log,
 				"Assigned network ID %llu to entity %hc",
 				NetworkId.GetNetworkId(),
 				*Entity.GetEntity().path());

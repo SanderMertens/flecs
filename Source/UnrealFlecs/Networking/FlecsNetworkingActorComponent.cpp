@@ -26,14 +26,14 @@ void UFlecsNetworkingActorComponent::Client_UpdateCreatedNetworkedEntities_Imple
 		
 		if UNLIKELY_IF(!Entity.IsValid())
 		{
-			UN_LOG(LogFlecsNetworkingActorComponent, Warning,
+			UN_LOGF(LogFlecsNetworkingActorComponent, Warning,
 				"Entity %s not found in world %s",
 				*EntityName,
 				*WorldName);
 			
 			Entity = FlecsWorld->CreateEntity(EntityName);
 
-			UN_LOG(LogFlecsNetworkingActorComponent, Log,
+			UN_LOGF(LogFlecsNetworkingActorComponent, Log,
 				"Created entity %s in world %s, sent from server",
 				*EntityName,
 				*WorldName);
@@ -41,7 +41,7 @@ void UFlecsNetworkingActorComponent::Client_UpdateCreatedNetworkedEntities_Imple
 
 		Entity.Set<FFlecsNetworkIdComponent>(NetworkId);
 
-		UN_LOG(LogFlecsNetworkingActorComponent, Log,
+		UN_LOGF(LogFlecsNetworkingActorComponent, Log,
 			"Added network ID %llu to entity %s in world %s",
 			NetworkId.GetNetworkId(),
 			*EntityName,
