@@ -660,8 +660,14 @@
 >>>>>>> cf1a8ef63 (v4):test/cpp/project.json
 =======
                 "query_from_entity_name",
+<<<<<<< HEAD
                 "run_w_iter_fini"
 >>>>>>> 3f87a122d (Add flecs::iter::fini)
+=======
+                "run_w_iter_fini",
+                "run_w_iter_fini_interrupt",
+                "run_w_iter_fini_empty"
+>>>>>>> bdcdd0010 (Add ecs_get_entities function)
             ]
         }, {
             "id": "QueryBuilder",

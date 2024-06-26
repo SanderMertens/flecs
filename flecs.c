@@ -167,14 +167,6 @@ void flecs_entity_index_clear(
 const uint64_t* flecs_entity_index_ids(
     const ecs_entity_index_t *index);
 
-void flecs_entity_index_copy(
-    ecs_entity_index_t *dst,
-    const ecs_entity_index_t *src);
-
-void flecs_entity_index_restore(
-    ecs_entity_index_t *dst,
-    const ecs_entity_index_t *src);
-
 #define ecs_eis(world) (&((world)->store.entity_index))
 #define flecs_entities_init(world) flecs_entity_index_init(&world->allocator, ecs_eis(world))
 #define flecs_entities_fini(world) flecs_entity_index_fini(ecs_eis(world))
@@ -197,8 +189,6 @@ void flecs_entity_index_restore(
 #define flecs_entities_not_alive_count(world) flecs_entity_index_not_alive_count(ecs_eis(world))
 #define flecs_entities_clear(world) flecs_entity_index_clear(ecs_eis(world))
 #define flecs_entities_ids(world) flecs_entity_index_ids(ecs_eis(world))
-#define flecs_entities_copy(dst, src) flecs_entity_index_copy(dst, src)
-#define flecs_entities_restore(dst, src) flecs_entity_index_restore(dst, src)
 
 #endif
 
@@ -24782,6 +24772,16 @@ done:
     return delete_count;
 }
 
+ecs_entities_t ecs_get_entities(
+    const ecs_world_t *world)
+{
+    ecs_entities_t result;
+    result.ids = flecs_entities_ids(world);
+    result.count = flecs_entities_size(world);
+    result.alive_count = flecs_entities_count(world);
+    return result;
+}
+
 /**
  * @file addons/alerts.c
  * @brief Alerts addon.
@@ -40116,52 +40116,6 @@ const uint64_t* flecs_entity_index_ids(
     const ecs_entity_index_t *index)
 {
     return ecs_vec_get_t(&index->dense, uint64_t, 1);
-}
-
-static
-void flecs_entity_index_copy_intern(
-    ecs_entity_index_t * dst,
-    const ecs_entity_index_t * src)
-{
-    flecs_entity_index_set_size(dst, flecs_entity_index_size(src));
-    const uint64_t *ids = flecs_entity_index_ids(src);
-    
-    int32_t i, count = src->alive_count;
-    for (i = 0; i < count - 1; i ++) {
-        uint64_t id = ids[i];
-        ecs_record_t *src_ptr = flecs_entity_index_get(src, id);
-        ecs_record_t *dst_ptr = flecs_entity_index_ensure(dst, id);
-        flecs_entity_index_make_alive(dst, id);
-        ecs_os_memcpy_t(dst_ptr, src_ptr, ecs_record_t);
-    }
-
-    dst->max_id = src->max_id;
-
-    ecs_assert(src->alive_count == dst->alive_count, ECS_INTERNAL_ERROR, NULL);
-}
-
-void flecs_entity_index_copy(
-    ecs_entity_index_t *dst,
-    const ecs_entity_index_t *src)
-{
-    if (!src) {
-        return;
-    }
-
-    flecs_entity_index_init(src->allocator, dst);
-    flecs_entity_index_copy_intern(dst, src);
-}
-
-void flecs_entity_index_restore(
-    ecs_entity_index_t *dst,
-    const ecs_entity_index_t *src)
-{
-    if (!src) {
-        return;
-    }
-
-    flecs_entity_index_clear(dst);
-    flecs_entity_index_copy_intern(dst, src);
 }
 
 /**

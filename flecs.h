@@ -1434,8 +1434,8 @@ const uint64_t* flecs_sparse_ids(
     const ecs_sparse_t *sparse);
 
 /* Publicly exposed APIs 
- * The flecs_ functions aren't exposed directly as this can cause some
- * optimizers to not consider them for link time optimization. */
+ * These APIs are not part of the public API and as a result may change without
+ * notice (though they haven't changed in a long time). */
 
 FLECS_API
 void ecs_sparse_init(
@@ -5054,6 +5054,43 @@ void ecs_atfini(
     ecs_world_t *world,
     ecs_fini_action_t action,
     void *ctx);
+
+/** Type returned by ecs_get_entities. */
+typedef struct ecs_entities_t {
+    const ecs_entity_t *ids; /**< Array with all entity ids in the world. */
+    int32_t count;           /**< Total number of entity ids. */
+    int32_t alive_count;     /**< Number of alive entity ids. */
+} ecs_entities_t;
+
+/** Return entity identifiers in world.
+ * This operation returns an array with all entity ids that exist in the world.
+ * Note that the returned array will change and may get invalidated as a result
+ * of entity creation & deletion.
+ * 
+ * To iterate all alive entity ids, do:
+ * @code
+ * ecs_entities_t entities = ecs_get_entities(world);
+ * for (int i = 0; i < entities.alive_count; i ++) {
+ *   ecs_entity_t id = entities.ids[i];
+ * }
+ * @endcode
+ * 
+ * To iterate not-alive ids, do:
+ * @code
+ * for (int i = entities.alive_count + 1; i < entities.count; i ++) {
+ *   ecs_entity_t id = entities.ids[i];
+ * }
+ * @endcode
+ * 
+ * The returned array does not need to be freed. Mutating the returned array
+ * will return in undefined behavior (and likely crashes).
+ * 
+ * @param world The world.
+ * @return Struct with entity id array.
+ */
+FLECS_API
+ecs_entities_t ecs_get_entities(
+    const ecs_world_t *world);
 
 /** @} */
 
@@ -22437,6 +22474,9 @@ public:
      * @see ecs_iter_fini()
      */
     void fini() {
+        if (iter_->flags & EcsIterIsValid && iter_->table) {
+            ECS_TABLE_UNLOCK(iter_->world, iter_->table);
+        }
         ecs_iter_fini(iter_);
     }
 

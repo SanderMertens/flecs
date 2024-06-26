@@ -2567,7 +2567,8 @@
                 "set_get_context",
                 "set_get_binding_context",
                 "set_get_context_w_free",
-                "set_get_binding_context_w_free"
+                "set_get_binding_context_w_free",
+                "get_entities"
             ]
         }, {
             "id": "WorldInfo",
