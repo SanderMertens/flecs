@@ -59267,12 +59267,17 @@ ecs_entity_t flecs_parse_discover_type(
                 return 0;
             }
 
-            ecs_entity_t type = ecs_lookup(world, token);
+            ecs_entity_t type = desc->lookup_action(
+                world, token, desc->lookup_ctx);
             if (!type) {
+                ecs_parser_error(name, expr, ptr - expr, 
+                    "unresolved type '%s'", token);
                 return 0;
             }
 
             if (tptr[0] != ']') {
+                ecs_parser_error(name, expr, ptr - expr, 
+                    "missing ']' after '%s'", token);
                 return 0;
             }
 
@@ -59290,6 +59295,8 @@ ecs_entity_t flecs_parse_discover_type(
             }
 
             if (ecs_meta_dotmember(&cur, token) != 0) {
+                ecs_parser_error(name, expr, ptr - expr, 
+                    "failed to assign member '%s'", token);
                 return 0;
             }
 
@@ -59897,6 +59904,16 @@ error:
 }
 
 static
+ecs_entity_t flecs_script_default_lookup(
+    const ecs_world_t *world,
+    const char *name,
+    void *ctx)
+{
+    (void)ctx;
+    return ecs_lookup(world, name);
+}
+
+static
 const char* flecs_script_expr_run(
     ecs_world_t *world,
     ecs_value_stack_t *stack,
@@ -59972,7 +59989,8 @@ const char* flecs_script_expr_run(
             }
 
             /* Parenthesis, parse nested expression */
-            ptr = flecs_script_expr_run(world, stack, ptr, out, EcsLeftParen, desc);
+            ptr = flecs_script_expr_run(
+                world, stack, ptr, out, EcsLeftParen, desc);
             if (ptr[0] != ')') {
                 ecs_parser_error(name, expr, ptr - expr, 
                     "missing closing parenthesis");
@@ -60145,11 +60163,14 @@ const char* flecs_script_expr_run(
                 }
             } else {
                 if (ptr[0] != '[') {
+                    /* Entity id expression */
                     if (ecs_meta_set_string(&cur, token) != 0) {
                         goto error;
                     }
                 } else {
-                    ecs_entity_t e = ecs_lookup(world, token);
+                    /* Component expression */
+                    ecs_entity_t e = desc->lookup_action(
+                        world, token, desc->lookup_ctx);
                     if (!e) {
                         ecs_parser_error(name, expr, ptr - expr, 
                             "entity '%s' not found", token);
@@ -60162,7 +60183,8 @@ const char* flecs_script_expr_run(
                         goto error;
                     }
 
-                    ecs_entity_t component = ecs_lookup(world, token);
+                    ecs_entity_t component = desc->lookup_action(
+                        world, token, desc->lookup_ctx);
                     if (!component) {
                         ecs_parser_error(name, expr, ptr - expr, 
                             "unresolved component '%s'", token);
@@ -60210,6 +60232,8 @@ const char* flecs_script_expr_run(
 
                         ecs_meta_push(&member_cur);
                         if (ecs_meta_dotmember(&member_cur, token) != 0) {
+                            ecs_parser_error(name, expr, ptr - expr, 
+                                "failed to assign member '%s'", token);
                             goto error;
                         }
 
@@ -60320,6 +60344,15 @@ const char* ecs_script_expr_run(
     ecs_value_t *value,
     const ecs_script_expr_run_desc_t *desc)
 {
+    ecs_script_expr_run_desc_t priv_desc = {0};
+    if (desc) {
+        priv_desc = *desc;
+    }
+
+    if (!priv_desc.lookup_action) {
+        priv_desc.lookup_action = flecs_script_default_lookup;
+    }
+
     /* Prepare storage for temporary values */
     ecs_stage_t *stage = flecs_stage_from_world(&world);
     ecs_value_stack_t stack;
@@ -60330,7 +60363,8 @@ const char* ecs_script_expr_run(
 
     /* Parse expression */
     bool storage_provided = value->ptr != NULL;
-    ptr = flecs_script_expr_run(world, &stack, ptr, value, EcsExprOperUnknown, desc);
+    ptr = flecs_script_expr_run(
+        world, &stack, ptr, value, EcsExprOperUnknown, &priv_desc);
 
     /* If no result value was provided, allocate one as we can't return a 
      * pointer to a temporary storage */
@@ -66644,6 +66678,9 @@ int flecs_script_eval_const(
 
         const ecs_type_info_t *ti = flecs_script_get_type_info(v, node, type);
         if (!ti) {
+            flecs_script_eval_error(v, node,
+                "failed to retrieve type info for '%s' for const variable '%s'", 
+                    node->type, node->name);
             return -1;
         }
 
@@ -66652,6 +66689,9 @@ int flecs_script_eval_const(
         var->type_info = ti;
 
         if (flecs_script_eval_expr(v, node->expr, &var->value)) {
+            flecs_script_eval_error(v, node,
+                "failed to evaluate expression for const variable '%s'", 
+                    node->name);
             return -1;
         }
     } else {
@@ -66659,6 +66699,9 @@ int flecs_script_eval_const(
          * Run the expression first to deduce the type. */
         ecs_value_t value = {0};
         if (flecs_script_eval_expr(v, node->expr, &value)) {
+            flecs_script_eval_error(v, node,
+                "failed to evaluate expression for const variable '%s'", 
+                    node->name);
             return -1;
         }
 

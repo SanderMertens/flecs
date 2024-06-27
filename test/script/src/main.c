@@ -263,6 +263,13 @@ void Eval_assing_component_member_to_const(void);
 void Eval_prefab_w_slot(void);
 void Eval_prefab_w_slot_no_parent(void);
 void Eval_prefab_w_slot_variant(void);
+void Eval_const_w_component_expr(void);
+void Eval_const_w_component_expr_in_scope(void);
+void Eval_const_w_component_expr_in_module(void);
+void Eval_const_w_component_in_scope_expr_in_scope(void);
+void Eval_const_w_component_in_scope_expr_in_module(void);
+void Eval_const_w_component_and_entity_in_scope_expr_in_scope(void);
+void Eval_const_w_component_and_entity_in_scope_expr_in_module(void);
 
 // Testsuite 'Template'
 void Template_template_no_scope(void);
@@ -1605,6 +1612,34 @@ bake_test_case Eval_testcases[] = {
     {
         "prefab_w_slot_variant",
         Eval_prefab_w_slot_variant
+    },
+    {
+        "const_w_component_expr",
+        Eval_const_w_component_expr
+    },
+    {
+        "const_w_component_expr_in_scope",
+        Eval_const_w_component_expr_in_scope
+    },
+    {
+        "const_w_component_expr_in_module",
+        Eval_const_w_component_expr_in_module
+    },
+    {
+        "const_w_component_in_scope_expr_in_scope",
+        Eval_const_w_component_in_scope_expr_in_scope
+    },
+    {
+        "const_w_component_in_scope_expr_in_module",
+        Eval_const_w_component_in_scope_expr_in_module
+    },
+    {
+        "const_w_component_and_entity_in_scope_expr_in_scope",
+        Eval_const_w_component_and_entity_in_scope_expr_in_scope
+    },
+    {
+        "const_w_component_and_entity_in_scope_expr_in_module",
+        Eval_const_w_component_and_entity_in_scope_expr_in_module
     }
 };
 
@@ -2889,7 +2924,7 @@ static bake_test_suite suites[] = {
         "Eval",
         NULL,
         NULL,
-        254,
+        261,
         Eval_testcases
     },
     {
