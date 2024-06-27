@@ -7633,7 +7633,6 @@ void Eval_prefab_w_slot_variant(void) {
     LINE "  }"
     LINE "}";
 
-    ecs_log_set_level(-4);
     test_assert(ecs_script_run(world, NULL, expr) == 0);
 
     ecs_entity_t head = ecs_lookup(world, "Turret.Head");
@@ -7647,6 +7646,271 @@ void Eval_prefab_w_slot_variant(void) {
     test_assert(inst_head != 0);
     test_assert(inst_head_lookup != 0);
     test_assert(inst_head == inst_head_lookup);
+
+    ecs_fini(world);
+}
+
+void Eval_const_w_component_expr(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "Position"}),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_set(world, e, Position, {10, 20});
+
+    const char *expr =
+    HEAD "const pos = e[Position]"
+    LINE "foo {"
+    LINE "  $pos"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "foo");
+    test_assert(foo != 0);
+
+    test_assert(ecs_has(world, foo, Position));
+    const Position *p = ecs_get(world, foo, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+void Eval_const_w_component_expr_in_scope(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "Position"}),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_set(world, e, Position, {10, 20});
+
+    const char *expr =
+    HEAD "parent {"
+    LINE "  const pos = e[Position]"
+    LINE "  foo {"
+    LINE "    $pos"
+    LINE "  }"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+
+    ecs_entity_t parent = ecs_lookup(world, "parent");
+    test_assert(parent != 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "parent.foo");
+    test_assert(foo != 0);
+
+    test_assert(ecs_has(world, foo, Position));
+    const Position *p = ecs_get(world, foo, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+void Eval_const_w_component_expr_in_module(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "Position"}),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_set(world, e, Position, {10, 20});
+
+    const char *expr =
+    HEAD "module parent"
+    LINE "const pos = e[Position]"
+    LINE "foo {"
+    LINE "  $pos"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+
+    ecs_entity_t parent = ecs_lookup(world, "parent");
+    test_assert(parent != 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "parent.foo");
+    test_assert(foo != 0);
+
+    test_assert(ecs_has(world, foo, Position));
+    const Position *p = ecs_get(world, foo, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+void Eval_const_w_component_in_scope_expr_in_scope(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t parent = ecs_entity(world, { .name = "parent" });
+    test_assert(parent != 0);
+
+    ecs_entity_t ecs_id(Position) = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "Position", .parent = parent }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_set(world, e, Position, {10, 20});
+
+    const char *expr =
+    HEAD "parent {"
+    LINE "  const pos = e[Position]"
+    LINE "  foo {"
+    LINE "    $pos"
+    LINE "  }"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "parent.foo");
+    test_assert(foo != 0);
+
+    test_assert(ecs_has(world, foo, Position));
+    const Position *p = ecs_get(world, foo, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+void Eval_const_w_component_in_scope_expr_in_module(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t parent = ecs_entity(world, { .name = "parent" });
+    test_assert(parent != 0);
+
+    ecs_entity_t ecs_id(Position) = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "Position", .parent = parent }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_set(world, e, Position, {10, 20});
+
+    const char *expr =
+    HEAD "module parent"
+    LINE "const pos = e[Position]"
+    LINE "foo {"
+    LINE "  $pos"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "parent.foo");
+    test_assert(foo != 0);
+
+    test_assert(ecs_has(world, foo, Position));
+    const Position *p = ecs_get(world, foo, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+void Eval_const_w_component_and_entity_in_scope_expr_in_scope(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t parent = ecs_entity(world, { .name = "parent" });
+    test_assert(parent != 0);
+
+    ecs_entity_t ecs_id(Position) = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "Position", .parent = parent }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e", .parent = parent });
+    ecs_set(world, e, Position, {10, 20});
+
+    const char *expr =
+    HEAD "parent {"
+    LINE "  const pos = e[Position]"
+    LINE "  foo {"
+    LINE "    $pos"
+    LINE "  }"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "parent.foo");
+    test_assert(foo != 0);
+
+    test_assert(ecs_has(world, foo, Position));
+    const Position *p = ecs_get(world, foo, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+void Eval_const_w_component_and_entity_in_scope_expr_in_module(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t parent = ecs_entity(world, { .name = "parent" });
+    test_assert(parent != 0);
+
+    ecs_entity_t ecs_id(Position) = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "Position", .parent = parent }),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e", .parent = parent });
+    ecs_set(world, e, Position, {10, 20});
+
+    const char *expr =
+    HEAD "module parent"
+    LINE "const pos = e[Position]"
+    LINE "foo {"
+    LINE "  $pos"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "parent.foo");
+    test_assert(foo != 0);
+
+    test_assert(ecs_has(world, foo, Position));
+    const Position *p = ecs_get(world, foo, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
 
     ecs_fini(world);
 }

@@ -266,7 +266,14 @@
                 "assing_component_member_to_const",
                 "prefab_w_slot",
                 "prefab_w_slot_no_parent",
-                "prefab_w_slot_variant"
+                "prefab_w_slot_variant",
+                "const_w_component_expr",
+                "const_w_component_expr_in_scope",
+                "const_w_component_expr_in_module",
+                "const_w_component_in_scope_expr_in_scope",
+                "const_w_component_in_scope_expr_in_module",
+                "const_w_component_and_entity_in_scope_expr_in_scope",
+                "const_w_component_and_entity_in_scope_expr_in_module"
             ]
         }, {
             "id": "Template",
