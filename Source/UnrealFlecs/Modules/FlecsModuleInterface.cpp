@@ -2,11 +2,10 @@
 
 #include "FlecsModuleInterface.h"
 #include "Components/FlecsWorldPtrComponent.h"
+#include "Logs/FlecsCategories.h"
 #include "Unlog/Unlog.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(FlecsModuleInterface)
-
-UNLOG_CATEGORY(LogFlecsModuleInterface);
 
 void IFlecsModuleInterface::ImportModule(const flecs::world& InWorld)
 {
@@ -46,7 +45,7 @@ void IFlecsModuleInterface::DeinitializeModule(UFlecsWorld* InWorld)
 
 FString IFlecsModuleInterface::GetModuleName_Implementation() const
 {
-	UN_LOGF(LogFlecsModuleInterface, Error,
+	UN_LOGF(LogFlecsCore, Error,
 		"Module name not implemented! It is recommended to implement this function in the module interface. "
 		"Will return the inherited class name instead. For Class: %s", *_getUObject()->GetClass()->GetName());
 	

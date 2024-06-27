@@ -41,12 +41,12 @@ public:
 
 	virtual void InitializeModule(UFlecsWorld* InWorld, const FFlecsEntityHandle& InModuleEntity);
 	
-	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Flecs | Modules", meta = (DisplayName = "Initialize Module"))
+	UFUNCTION(BlueprintNativeEvent, Category = "Flecs | Modules", meta = (DisplayName = "Initialize Module"))
 	void BP_InitializeModule(UFlecsWorld* InWorld);
 
 	virtual void DeinitializeModule(UFlecsWorld* InWorld);
 
-	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Flecs | Modules", meta = (DisplayName = "Deinitialize Module"))
+	UFUNCTION(BlueprintNativeEvent, Category = "Flecs | Modules", meta = (DisplayName = "Deinitialize Module"))
 	void BP_DeinitializeModule(UFlecsWorld* InWorld);
 
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Flecs | Modules")

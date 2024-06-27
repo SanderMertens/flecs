@@ -108,8 +108,15 @@ struct UNREALFLECS_API FFlecsEntityRecord
 		return !(*this == Other);
 	}
 
+	FORCEINLINE NO_DISCARD bool IsValid() const
+	{
+		return !Name.IsEmpty() || !Components.IsEmpty();
+	}
+
 	FORCEINLINE void ApplyRecordToEntity(const FFlecsEntityHandle& InEntityHandle) const
 	{
+		solid_checkf(IsValid(), TEXT("Entity Record is not valid"));
+		
 		if (!Name.IsEmpty())
 		{
 			InEntityHandle.SetName(Name);

@@ -10,12 +10,10 @@
 #include "IDetailChildrenBuilder.h"
 #include "DetailWidgetRow.h"
 #include "Entities/FlecsDefaultEntityEngineSubsystem.h"
-#include "Unlog/Unlog.h"
+#include "Logs/FlecsCategories.h"
 #include "Widgets/Input/SComboBox.h"
 #include "Widgets/Input/SSearchBox.h"
 #include "Worlds/FlecsWorldSubsystem.h"
-
-UNLOG_CATEGORY(LogFlecsEntityHandleCustomization);
 
 class FFlecsEntityHandleCustomization final : public IPropertyTypeCustomization
 {
@@ -41,10 +39,12 @@ public:
     Options.Empty();
     FilteredOptions.Empty();
 
+	FMessageLog("Flecs").Info(FText::FromString("Customizing Flecs Entity Handle"));
+
     for (const auto& [EntityName, EntityId] :
         GEngine->GetEngineSubsystem<UFlecsDefaultEntityEngineSubsystem>()->DefaultEntityOptions)
     {
-        UN_LOGF(LogFlecsEntityHandleCustomization, Verbose,
+        UN_LOGF(LogFlecsEditor, Verbose,
             "Adding entity %s to entity handle options.", *EntityName.ToString());
         Options.Add(EntityName);
     }
@@ -52,7 +52,7 @@ public:
     for (const auto& [EntityRecord, bIsOptionEntity] :
         GEngine->GetEngineSubsystem<UFlecsDefaultEntityEngineSubsystem>()->AddedDefaultEntities)
     {
-        UN_LOGF(LogFlecsEntityHandleCustomization, Verbose,
+        UN_LOGF(LogFlecsEditor, Verbose,
             "Adding added entity %s to entity handle options.", *EntityRecord.Name);
         Options.Add(FName(*EntityRecord.Name));
     }

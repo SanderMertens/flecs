@@ -3,12 +3,10 @@
 #include "FlecsNetworkingManager.h"
 #include "FlecsNetworkIdComponent.h"
 #include "FlecsNetworkingActorComponent.h"
-#include "Unlog/Unlog.h"
 #include "Worlds/FlecsWorldSubsystem.h"
+#include "Logs/FlecsCategories.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(FlecsNetworkingManager)
-
-UNLOG_CATEGORY(LogFlecsNetworkingManager);
 
 UFlecsNetworkingManager::UFlecsNetworkingManager(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer)
@@ -49,7 +47,7 @@ void UFlecsNetworkingManager::BeginPlay()
 			
 			NetworkId.SetNetworkId(GetNextNetworkId());
 
-			UN_LOGF(LogFlecsNetworkingManager, Log,
+			UN_LOGF(LogFlecsNetworking, Log,
 				"Assigned network ID %llu to entity %hc",
 				NetworkId.GetNetworkId(),
 				*Entity.GetEntity().path());

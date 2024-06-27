@@ -1,12 +1,10 @@
 ﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 #include "FlecsNetworkingActorComponent.h"
-#include "Unlog/Unlog.h"
+#include "Logs/FlecsCategories.h"
 #include "Worlds/FlecsWorldSubsystem.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(FlecsNetworkingActorComponent)
-
-UNLOG_CATEGORY(LogFlecsNetworkingActorComponent);
 
 void UFlecsNetworkingActorComponent::Client_UpdateCreatedNetworkedEntities_Implementation(
 	const TArray<FNetworkedEntityInfo>& Entities)
@@ -26,14 +24,14 @@ void UFlecsNetworkingActorComponent::Client_UpdateCreatedNetworkedEntities_Imple
 		
 		if UNLIKELY_IF(!Entity.IsValid())
 		{
-			UN_LOGF(LogFlecsNetworkingActorComponent, Warning,
+			UN_LOGF(LogFlecsNetworking, Warning,
 				"Entity %s not found in world %s",
 				*EntityName,
 				*WorldName);
 			
 			Entity = FlecsWorld->CreateEntity(EntityName);
 
-			UN_LOGF(LogFlecsNetworkingActorComponent, Log,
+			UN_LOGF(LogFlecsNetworking, Log,
 				"Created entity %s in world %s, sent from server",
 				*EntityName,
 				*WorldName);
@@ -41,7 +39,7 @@ void UFlecsNetworkingActorComponent::Client_UpdateCreatedNetworkedEntities_Imple
 
 		Entity.Set<FFlecsNetworkIdComponent>(NetworkId);
 
-		UN_LOGF(LogFlecsNetworkingActorComponent, Log,
+		UN_LOGF(LogFlecsNetworking, Log,
 			"Added network ID %llu to entity %s in world %s",
 			NetworkId.GetNetworkId(),
 			*EntityName,

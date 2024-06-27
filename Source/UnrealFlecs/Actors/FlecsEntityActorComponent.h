@@ -8,13 +8,18 @@
 #include "Entities/FlecsEntityRecord.h"
 #include "FlecsEntityActorComponent.generated.h"
 
-UCLASS(BlueprintType, Blueprintable, ClassGroup=(Flecs), meta=(BlueprintSpawnableComponent))
+UCLASS(BlueprintType, Blueprintable, ClassGroup=(Flecs), meta=(BlueprintSpawnableComponent,
+	DisplayName = "Flecs Entity Actor Component"))
 class UNREALFLECS_API UFlecsEntityActorComponent : public UActorComponent
 {
 	GENERATED_BODY()
 
 public:
 	UFlecsEntityActorComponent(const FObjectInitializer& ObjectInitializer);
+
+	virtual void BeginPlay() override;
+
+	virtual void InitializeEntity();
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | Entity")
 	FORCEINLINE FFlecsEntityHandle GetEntityHandle() const
@@ -27,5 +32,14 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = "Flecs | Entity")
 	FFlecsEntityRecord EntityRecord;
+
+	UPROPERTY(EditAnywhere, Category = "Flecs | Entity")
+	FString WorldName = TEXT("DefaultFlecsWorld");
+
+	#if WITH_EDITORONLY_DATA
+
+	virtual bool CanEditChange(const FProperty* InProperty) const override;
+
+	#endif // WITH_EDITORONLY_DATA
 	
 }; // class UFlecsEntityActorComponent
