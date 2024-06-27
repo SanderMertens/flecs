@@ -898,6 +898,9 @@ int flecs_script_eval_const(
 
         const ecs_type_info_t *ti = flecs_script_get_type_info(v, node, type);
         if (!ti) {
+            flecs_script_eval_error(v, node,
+                "failed to retrieve type info for '%s' for const variable '%s'", 
+                    node->type, node->name);
             return -1;
         }
 
@@ -906,6 +909,9 @@ int flecs_script_eval_const(
         var->type_info = ti;
 
         if (flecs_script_eval_expr(v, node->expr, &var->value)) {
+            flecs_script_eval_error(v, node,
+                "failed to evaluate expression for const variable '%s'", 
+                    node->name);
             return -1;
         }
     } else {
@@ -913,6 +919,9 @@ int flecs_script_eval_const(
          * Run the expression first to deduce the type. */
         ecs_value_t value = {0};
         if (flecs_script_eval_expr(v, node->expr, &value)) {
+            flecs_script_eval_error(v, node,
+                "failed to evaluate expression for const variable '%s'", 
+                    node->name);
             return -1;
         }
 
