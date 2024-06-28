@@ -59417,21 +59417,9 @@ int flecs_script_eval_id(
             return -1;
         }
 
-        /* Tags/components must be created in advance for templates */
-        if (v->template) {
-            flecs_script_eval_error(v, node, 
-                "'%s' must be defined outside of template scope", id->first);
-            return -1;
-        }
-
-        first = ecs_entity(v->world, {
-            .name = id->first,
-            .parent = v->module,
-        });
-        
-        if (!first) {
-            return -1;
-        }
+        flecs_script_eval_error(v, node,
+            "unresolved identifier '%s'", id->first);
+        return -1;
     } else if (id->second) {
         second_from = flecs_get_oneof(v->world, first);
     }
@@ -59462,14 +59450,9 @@ int flecs_script_eval_id(
                 return -1;
             }
 
-            second = ecs_entity(v->world, {
-                .name = id->second,
-                .parent = v->module,
-            });
-
-            if (!second) {
-                return -1;
-            }
+            flecs_script_eval_error(v, node,
+                "unresolved identifier '%s'", id->second);
+            return -1;
         }
 
         id->eval = id->flag | ecs_pair(first, second);
