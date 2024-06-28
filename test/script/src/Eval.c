@@ -834,6 +834,8 @@ void Eval_create_in_scope(void) {
 void Eval_hierarchy_w_pred_subj(void) {
     ecs_world_t *world = ecs_init();
 
+    ECS_TAG(world, Foo);
+
     const char *expr =
     HEAD "Foo Bar {"
     LINE " Child{}"
@@ -1109,6 +1111,8 @@ void Eval_hierarchy_custom_relation_apply_to_object_2_levels(void) {
 void Eval_with_tag(void) {
     ecs_world_t *world = ecs_init();
 
+    ECS_TAG(world, Tag);
+
     const char *expr =
     HEAD "with Tag {"
     LINE "  Foo{}"
@@ -1129,6 +1133,8 @@ void Eval_with_tag(void) {
 
 void Eval_with_tag_2_entities(void) {
     ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
 
     const char *expr =
     HEAD "with Tag {"
@@ -1155,6 +1161,8 @@ void Eval_with_tag_2_entities(void) {
 void Eval_with_tag_same_line(void) {
     ecs_world_t *world = ecs_init();
 
+    ECS_TAG(world, Tag);
+
     const char *expr =
     HEAD "with Tag { Foo{} }";
 
@@ -1173,6 +1181,8 @@ void Eval_with_tag_same_line(void) {
 
 void Eval_with_tag_2_entities_same_line(void) {
     ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
 
     const char *expr =
     HEAD "with Tag { Foo, Bar, }";
@@ -1196,6 +1206,8 @@ void Eval_with_tag_2_entities_same_line(void) {
 void Eval_with_tag_2_entities_same_line_no_trailing_comma(void) {
     ecs_world_t *world = ecs_init();
 
+    ECS_TAG(world, Tag);
+
     const char *expr =
     HEAD "with Tag { Foo, Bar }";
 
@@ -1217,6 +1229,9 @@ void Eval_with_tag_2_entities_same_line_no_trailing_comma(void) {
 
 void Eval_with_tag_2_levels(void) {
     ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
 
     const char *expr =
     HEAD "with TagA {"
@@ -1243,6 +1258,10 @@ void Eval_with_tag_2_levels(void) {
 
 void Eval_with_tag_2_levels_2_subtrees(void) {
     ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+    ECS_TAG(world, TagC);
 
     const char *expr =
     HEAD "with TagA {"
@@ -1290,6 +1309,9 @@ void Eval_with_tag_2_levels_2_subtrees(void) {
 void Eval_with_n_tags(void) {
     ecs_world_t *world = ecs_init();
 
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+
     const char *expr =
     HEAD "with TagA, TagB {"
     LINE " Foo {}"
@@ -1319,6 +1341,15 @@ void Eval_with_n_tags(void) {
 
 void Eval_with_n_tags_2_levels(void) {
     ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+    ECS_TAG(world, TagC);
+    ECS_TAG(world, TagD);
+    ECS_TAG(world, TagE);
+    ECS_TAG(world, TagF);
+    ECS_TAG(world, TagG);
+    ECS_TAG(world, TagH);
 
     const char *expr =
     HEAD "with TagA, TagB {"
@@ -1416,6 +1447,12 @@ void Eval_with_n_tags_2_levels(void) {
 void Eval_with_n_tags_2_levels_invalid_tag(void) {
     ecs_world_t *world = ecs_init();
 
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+    ECS_TAG(world, TagC);
+    ECS_TAG(world, TagD);
+    ECS_TAG(world, TagE);
+
     const char *expr =
     HEAD "with TagA, TagB {"
     LINE " with TagC, TagD, TagE {"
@@ -1437,6 +1474,9 @@ void Eval_with_n_tags_2_levels_invalid_tag(void) {
 
 void Eval_with_after_scope(void) {
     ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, E2);
+    ECS_TAG(world, E3);
 
     const char *expr =
     HEAD "E1 { }"
@@ -1470,6 +1510,10 @@ void Eval_with_after_scope(void) {
 void Eval_with_after_with(void) {
     ecs_world_t *world = ecs_init();
 
+    ECS_TAG(world, E1);
+    ECS_TAG(world, E2);
+    ECS_TAG(world, E3);
+
     const char *expr =
     HEAD "with E1 { }"
     HEAD "with E2 {"
@@ -1501,6 +1545,8 @@ void Eval_with_after_with(void) {
 
 void Eval_scope_inside_with_inside_scope(void) {
     ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Planet);
     
     const char *expr =
     HEAD "Sun {"
@@ -1562,6 +1608,8 @@ void Eval_with_tag_core_name(void) {
 
 void Eval_with_inside_scope(void) {
     ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Continent);
     
     const char *expr =
     HEAD "Earth {"
@@ -1591,6 +1639,8 @@ void Eval_with_inside_scope(void) {
 
 void Eval_inherit(void) {    
     ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Bar);
     
     const char *expr =
     HEAD "Foo : Bar";
@@ -1610,6 +1660,8 @@ void Eval_inherit(void) {
 
 void Eval_inherit_newline(void) {    
     ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Bar);
     
     const char *expr =
     HEAD "Foo : Bar\n";
@@ -1629,6 +1681,8 @@ void Eval_inherit_newline(void) {
 
 void Eval_inherit_w_colon(void) {    
     ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Bar);
     
     const char *expr =
     HEAD "Foo : Bar {}";
@@ -1648,6 +1702,8 @@ void Eval_inherit_w_colon(void) {
 
 void Eval_inherit_w_colon_w_scope(void) {
     ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Bar);
     
     const char *expr =
     HEAD "Foo : Bar { Child{} }";
@@ -1700,6 +1756,8 @@ void Eval_assign_component_w_value(void) {
 
 void Eval_assign_tag_in_assign_scope(void) {
     ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Bar);
     
     const char *expr =
     HEAD "Foo {"
@@ -1719,6 +1777,8 @@ void Eval_assign_tag_in_assign_scope(void) {
 
 void Eval_assign_tag_in_assign_scope_same_line(void) {
     ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Bar);
     
     const char *expr =
     HEAD "Foo { Bar }";
@@ -2364,6 +2424,8 @@ void Eval_create_subject_in_scope_w_resolvable_id(void) {
 void Eval_create_subject_in_scope_w_resolvable_id_using(void) {
     ecs_world_t *world = ecs_init();
 
+    ECS_TAG(world, Hello);
+
     const char *expr =
     HEAD "Foo {"
     LINE "  Bar {}"
@@ -2467,6 +2529,8 @@ void Eval_using_nested_scope(void) {
 
 void Eval_using_nested_in_scope(void) {
     ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Zoo);
 
     const char *expr =
     HEAD "Foo {"
@@ -2665,6 +2729,9 @@ void Eval_2_using_scope(void) {
 void Eval_2_using_in_different_scope(void) {
     ecs_world_t *world = ecs_init();
 
+    ECS_TAG(world, TheWorld);
+    ECS_TAG(world, Hello);
+
     const char *expr =
     LINE "Foo {"
     LINE "  Hello {}"
@@ -2851,6 +2918,9 @@ void Eval_assign_after_inherit(void) {
 void Eval_multiple_tags_single_line(void) {
     ecs_world_t *world = ecs_init();
 
+    ECS_TAG(world, Hello);
+    ECS_TAG(world, Bar);
+
     const char *expr =
     HEAD "Foo { Hello; Bar }";
 
@@ -2873,6 +2943,10 @@ void Eval_multiple_tags_single_line(void) {
 
 void Eval_multiple_pairs_single_line(void) {
     ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, Hello);
+    ECS_TAG(world, Bar);
 
     const char *expr =
     HEAD "Foo { (Rel, Hello); (Rel, Bar) }";
@@ -3083,6 +3157,8 @@ void Eval_empty_assignment_before_end_of_scope(void) {
 void Eval_assign_tag_to_parent(void) {
     ecs_world_t *world = ecs_init();
 
+    ECS_TAG(world, Bar);
+
     const char *expr =
     HEAD "Foo {"
     LINE "  Bar"
@@ -3147,6 +3223,9 @@ void Eval_assign_component_to_parent(void) {
 
 void Eval_assign_to_parent_pair_w_new_entities_in_scope(void) {
     ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, Obj);
 
     const char *expr =
     HEAD "Foo {"
@@ -3655,6 +3734,12 @@ void Eval_default_type_from_entity_scope_in_with(void) {
 void Eval_scope_w_1_subj_and_2_pairs(void) {
     ecs_world_t *world = ecs_init();
 
+    ECS_TAG(world, RelA);
+    ECS_TAG(world, RelB);
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
     const char *expr =
     HEAD "Parent {"
     LINE " Foo { (RelA, Bar) }"
@@ -3684,6 +3769,9 @@ void Eval_scope_w_1_subj_and_2_pairs(void) {
 void Eval_inherit_from_multiple(void) {
     ecs_world_t *world = ecs_init();
 
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
     const char *expr =
     HEAD "Inst : Foo, Bar {}";
 
@@ -3705,6 +3793,8 @@ void Eval_inherit_from_multiple(void) {
 
 void Eval_assign_pair_component(void) {
     ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Bar);
 
     const char *expr =
     HEAD "using flecs.meta"
@@ -3738,6 +3828,9 @@ void Eval_assign_pair_component(void) {
 
 void Eval_assign_pair_component_in_scope(void) {
     ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
 
     const char *expr =
     HEAD "using flecs.meta"
@@ -3784,6 +3877,8 @@ void Eval_assign_pair_component_in_scope(void) {
 void Eval_assign_pair_component_in_script(void) {
     ecs_world_t *world = ecs_init();
 
+    ECS_TAG(world, Bar);
+
     const char *expr =
     HEAD "using flecs.meta"
     LINE
@@ -3820,6 +3915,8 @@ void Eval_assign_pair_component_in_script(void) {
 
 void Eval_assign_pair_component_in_script_update(void) {
     ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Bar);
 
     const char *expr =
     HEAD "using flecs.meta"
@@ -3860,6 +3957,8 @@ void Eval_assign_pair_component_in_script_update(void) {
 void Eval_set_entity_names(void) {
     ecs_world_t *world = ecs_init();
 
+    ECS_TAG(world, foo);
+
     const char *expr =
     HEAD "foo self {}"
     LINE "foo parent {}"
@@ -3869,7 +3968,6 @@ void Eval_set_entity_names(void) {
 
     test_assert(ecs_script_run(world, NULL, expr) == 0);
 
-    ecs_entity_t foo = ecs_lookup(world, "foo");
     ecs_entity_t self = ecs_lookup(world, "self");
     ecs_entity_t down = ecs_lookup(world, "down");
     ecs_entity_t up = ecs_lookup(world, "up");
@@ -4182,6 +4280,8 @@ void Eval_unterminated_multiline_string(void) {
 void Eval_annotate_declaration(void) {
     ecs_world_t *world = ecs_init();
 
+    ECS_TAG(world, Foo);
+
     const char *expr =
     HEAD "@brief A brief description"
     LINE "Foo Bar";
@@ -4206,6 +4306,8 @@ void Eval_annotate_declaration(void) {
 void Eval_declaration_w_underscore_name(void) {
     ecs_world_t *world = ecs_init();
 
+    ECS_TAG(world, Foo);
+
     const char *expr =
     HEAD "Foo _Bar";
 
@@ -4225,6 +4327,8 @@ void Eval_declaration_w_underscore_name(void) {
 
 void Eval_anonymous_entity(void) {
     ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Foo);
 
     const char *expr =
     HEAD "_ { Foo }";
@@ -4247,6 +4351,8 @@ void Eval_anonymous_entity(void) {
 
 void Eval_anonymous_entity_in_scope(void) {
     ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Foo);
 
     const char *expr =
     HEAD "Parent {"
@@ -4274,6 +4380,8 @@ void Eval_anonymous_entity_in_scope(void) {
 
 void Eval_anonymous_declaration(void) {
     ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Foo);
 
     const char *expr =
     HEAD "Foo _";
@@ -4860,6 +4968,7 @@ void Eval_parse_with_w_tag(void) {
 
     ECS_TAG(world, TagA);
     ECS_TAG(world, TagB);
+    ECS_TAG(world, Hello);
 
     const char *expr =
     HEAD "Foo {}"
@@ -4883,7 +4992,7 @@ void Eval_parse_with_w_tag(void) {
     
     test_assert(ecs_has(world, foo, TagA));
     test_assert(ecs_has(world, bar, TagA));
-    test_assert(ecs_has(world, hello, TagA));
+    test_assert(!ecs_has(world, hello, TagA));
     test_assert(ecs_has_id(world, bar, hello));
 
     test_assert(!ecs_has(world, TagB, TagA));
@@ -5687,6 +5796,7 @@ void Eval_module_stmt(void) {
 
     const char *expr =
     LINE "module hello\n"
+    LINE "Foo {}\n"
     LINE "e { Position: {10, 20} }\n"
     LINE "e { Foo }\n";
     test_assert(ecs_script_run(world, NULL, expr) == 0);
@@ -5729,6 +5839,7 @@ void Eval_nested_module_stmt(void) {
 
     const char *expr =
     LINE "module hello.world\n"
+    LINE "Foo {}\n"
     LINE "e { Position: {10, 20} }\n"
     LINE "e { Foo }\n";
     test_assert(ecs_script_run(world, NULL, expr) == 0);
@@ -5773,6 +5884,7 @@ void Eval_module_stmt_w_scope(void) {
 
     const char *expr =
     LINE "module hello.world\n"
+    LINE "Foo {}\n"
     LINE "parent {\n"
     LINE "  e { Position: {10, 20} }\n"
     LINE "  e { Foo }\n"
@@ -5834,6 +5946,7 @@ void Eval_module_stmt_w_nested_scope(void) {
 
     const char *expr =
     LINE "module hello.world\n"
+    LINE "Foo {}\n"
     LINE "parent {\n"
     LINE "  child {\n"
     LINE "    e { Position: {10, 20} }\n"
@@ -5887,6 +6000,8 @@ void Eval_module_stmt_w_nested_scope(void) {
 void Eval_assign_singleton_tag(void) {
     ecs_world_t *world = ecs_init();
 
+    ECS_TAG(world, Foo);
+
     const char *expr =
     LINE "$ { Foo }\n";
     test_assert(ecs_script_run(world, NULL, expr) == 0);
@@ -5929,6 +6044,8 @@ void Eval_assign_singleton_component(void) {
 void Eval_assign_singleton_tag_w_scope(void) {
     ecs_world_t *world = ecs_init();
 
+    ECS_TAG(world, Foo);
+
     const char *expr =
     LINE "$ {\n"
     LINE "  Foo\n"
@@ -5945,6 +6062,9 @@ void Eval_assign_singleton_tag_w_scope(void) {
 
 void Eval_assign_singleton_2_tags_w_scope(void) {
     ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
 
     const char *expr =
     LINE "$ {\n"
@@ -6273,6 +6393,7 @@ void Eval_component_in_with_scope_in_scope(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Bar);
 
     ecs_struct(world, {
         .entity = ecs_id(Position),
@@ -6290,7 +6411,6 @@ void Eval_component_in_with_scope_in_scope(void) {
     LINE "  }\n"
     LINE "}\n";
 
-    ecs_log_set_level(-4);
     test_assert(ecs_script_run(world, NULL, expr) == 0);
 
     ecs_entity_t foo = ecs_lookup(world, "foo");
@@ -6839,6 +6959,9 @@ void Eval_if_false_var(void) {
 void Eval_if_true_in_scope(void) {
     ecs_world_t *world = ecs_init();
 
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
     const char *expr =
     HEAD "e {"
     LINE "  if true {"
@@ -6851,18 +6974,17 @@ void Eval_if_true_in_scope(void) {
     test_assert(ecs_script_run(world, NULL, expr) == 0);
 
     ecs_entity_t e = ecs_lookup(world, "e");
-    ecs_entity_t foo = ecs_lookup(world, "Foo");
-    ecs_entity_t bar = ecs_lookup(world, "Bar");
     test_assert(e != 0);
-    test_assert(foo != 0);
-    test_assert(bar == 0);
-    test_assert(ecs_has_id(world, e, foo));
+    test_assert(ecs_has_id(world, e, Foo));
 
     ecs_fini(world);
 }
 
 void Eval_if_false_in_scope(void) {
     ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
 
     const char *expr =
     HEAD "e {"
@@ -6876,12 +6998,8 @@ void Eval_if_false_in_scope(void) {
     test_assert(ecs_script_run(world, NULL, expr) == 0);
 
     ecs_entity_t e = ecs_lookup(world, "e");
-    ecs_entity_t foo = ecs_lookup(world, "Foo");
-    ecs_entity_t bar = ecs_lookup(world, "Bar");
     test_assert(e != 0);
-    test_assert(foo == 0);
-    test_assert(bar != 0);
-    test_assert(ecs_has_id(world, e, bar));
+    test_assert(ecs_has_id(world, e, Bar));
 
     ecs_fini(world);
 }
@@ -6957,6 +7075,7 @@ void Eval_isa_in_module(void) {
 
     const char *expr =
     HEAD "module things"
+    LINE "Animal {}"
     LINE "Dog {"
     LINE "  (IsA, Animal)"
     LINE "}";
@@ -7623,6 +7742,8 @@ void Eval_prefab_w_slot_no_parent(void) {
 void Eval_prefab_w_slot_variant(void) {
     ecs_world_t *world = ecs_init();
 
+    ECS_TAG(world, Foo);
+
     const char *expr =
     HEAD "prefab Turret {"
     LINE "  slot Head {}"
@@ -7911,6 +8032,193 @@ void Eval_const_w_component_and_entity_in_scope_expr_in_module(void) {
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+void Eval_path_tag_in_scope(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t tag = ecs_entity(world, { .name = "Hello.World" });
+    test_assert(tag != 0);
+
+    const char *expr =
+    HEAD "parent {"
+    LINE "  foo {"
+    LINE "    Hello.World"
+    LINE "  }"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+
+    test_assert(ecs_lookup(world, "parent.Hello.World") == 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "parent.foo");
+    test_assert(foo != 0);
+
+    test_assert(ecs_has_id(world, foo, tag));
+
+    ecs_fini(world);
+}
+
+void Eval_path_tag_in_module(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t tag = ecs_entity(world, { .name = "Hello.World" });
+    test_assert(tag != 0);
+
+    const char *expr =
+    HEAD "module parent"
+    LINE "foo {"
+    LINE "  Hello.World"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+
+    test_assert(ecs_lookup(world, "parent.Hello.World") == 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "parent.foo");
+    test_assert(foo != 0);
+
+    test_assert(ecs_has_id(world, foo, tag));
+
+    ecs_fini(world);
+}
+
+void Eval_path_tag_in_nested_scope(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t tag = ecs_entity(world, { .name = "Hello.World" });
+    test_assert(tag != 0);
+
+    const char *expr =
+    HEAD "Hello.parent {"
+    LINE "  foo {"
+    LINE "    Hello.World"
+    LINE "  }"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+
+    test_assert(ecs_lookup(world, "parent.Hello.World") == 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "Hello.parent.foo");
+    test_assert(foo != 0);
+
+    test_assert(ecs_has_id(world, foo, tag));
+
+    ecs_fini(world);
+}
+
+void Eval_path_tag_in_nested_module(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t tag = ecs_entity(world, { .name = "Hello.World" });
+    test_assert(tag != 0);
+
+    const char *expr =
+    HEAD "module Hello.parent"
+    LINE "foo {"
+    LINE "  Hello.World"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+
+    test_assert(ecs_lookup(world, "Hello.parent.Hello") == 0);
+    test_assert(ecs_lookup(world, "Hello.parent.Hello.World") == 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "Hello.parent.foo");
+    test_assert(foo != 0);
+
+    test_assert(ecs_has_id(world, foo, tag));
+
+    ecs_fini(world);
+}
+
+void Eval_tag_not_found(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "Foo {"
+    LINE " Bar"
+    LINE "}";
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr) != 0);
+
+    ecs_fini(world);
+}
+
+void Eval_component_not_found(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "Foo {"
+    LINE " Position: {10, 20}"
+    LINE "}";
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr) != 0);
+
+    ecs_fini(world);
+}
+
+void Eval_pair_first_not_found(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tgt);
+
+    const char *expr =
+    HEAD "Foo {"
+    LINE " (Rel, Tgt)"
+    LINE "}";
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr) != 0);
+
+    ecs_fini(world);
+}
+
+void Eval_pair_second_not_found(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Rel);
+
+    const char *expr =
+    HEAD "Foo {"
+    LINE " (Rel, Tgt)"
+    LINE "}";
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr) != 0);
+
+    ecs_fini(world);
+}
+
+void Eval_kind_not_found(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Rel);
+
+    const char *expr =
+    HEAD "Foo Bar";
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr) != 0);
+
+    ecs_fini(world);
+}
+
+void Eval_base_not_found(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Rel);
+
+    const char *expr =
+    HEAD "Foo : Bar";
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr) != 0);
 
     ecs_fini(world);
 }

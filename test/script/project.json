@@ -273,7 +273,17 @@
                 "const_w_component_in_scope_expr_in_scope",
                 "const_w_component_in_scope_expr_in_module",
                 "const_w_component_and_entity_in_scope_expr_in_scope",
-                "const_w_component_and_entity_in_scope_expr_in_module"
+                "const_w_component_and_entity_in_scope_expr_in_module",
+                "path_tag_in_scope",
+                "path_tag_in_module",
+                "path_tag_in_nested_scope",
+                "path_tag_in_nested_module",
+                "tag_not_found",
+                "component_not_found",
+                "pair_first_not_found",
+                "pair_second_not_found",
+                "kind_not_found",
+                "base_not_found"
             ]
         }, {
             "id": "Template",

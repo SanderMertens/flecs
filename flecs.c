@@ -64727,6 +64727,7 @@ int flecs_script_eval_id(
             return -1;
         }
 
+<<<<<<< HEAD
         /* Tags/components must be created in advance for templates */
         if (v->template) {
             flecs_script_eval_error(v, node, 
@@ -65999,6 +66000,11 @@ bool flecs_rule_trav_unknown_src_up_fixed_second(
         if (!first) {
             return -1;
         }
+=======
+        flecs_script_eval_error(v, node,
+            "unresolved identifier '%s'", id->first);
+        return -1;
+>>>>>>> ae1309ec9 (Throw error on unresolved component identifiers in flecs script)
     } else if (id->second) {
         second_from = flecs_get_oneof(v->world, first);
     }
@@ -66029,14 +66035,9 @@ bool flecs_rule_trav_unknown_src_up_fixed_second(
                 return -1;
             }
 
-            second = ecs_entity(v->world, {
-                .name = id->second,
-                .parent = v->module,
-            });
-
-            if (!second) {
-                return -1;
-            }
+            flecs_script_eval_error(v, node,
+                "unresolved identifier '%s'", id->second);
+            return -1;
         }
 
         id->eval = id->flag | ecs_pair(first, second);

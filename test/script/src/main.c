@@ -270,6 +270,16 @@ void Eval_const_w_component_in_scope_expr_in_scope(void);
 void Eval_const_w_component_in_scope_expr_in_module(void);
 void Eval_const_w_component_and_entity_in_scope_expr_in_scope(void);
 void Eval_const_w_component_and_entity_in_scope_expr_in_module(void);
+void Eval_path_tag_in_scope(void);
+void Eval_path_tag_in_module(void);
+void Eval_path_tag_in_nested_scope(void);
+void Eval_path_tag_in_nested_module(void);
+void Eval_tag_not_found(void);
+void Eval_component_not_found(void);
+void Eval_pair_first_not_found(void);
+void Eval_pair_second_not_found(void);
+void Eval_kind_not_found(void);
+void Eval_base_not_found(void);
 
 // Testsuite 'Template'
 void Template_template_no_scope(void);
@@ -1640,6 +1650,46 @@ bake_test_case Eval_testcases[] = {
     {
         "const_w_component_and_entity_in_scope_expr_in_module",
         Eval_const_w_component_and_entity_in_scope_expr_in_module
+    },
+    {
+        "path_tag_in_scope",
+        Eval_path_tag_in_scope
+    },
+    {
+        "path_tag_in_module",
+        Eval_path_tag_in_module
+    },
+    {
+        "path_tag_in_nested_scope",
+        Eval_path_tag_in_nested_scope
+    },
+    {
+        "path_tag_in_nested_module",
+        Eval_path_tag_in_nested_module
+    },
+    {
+        "tag_not_found",
+        Eval_tag_not_found
+    },
+    {
+        "component_not_found",
+        Eval_component_not_found
+    },
+    {
+        "pair_first_not_found",
+        Eval_pair_first_not_found
+    },
+    {
+        "pair_second_not_found",
+        Eval_pair_second_not_found
+    },
+    {
+        "kind_not_found",
+        Eval_kind_not_found
+    },
+    {
+        "base_not_found",
+        Eval_base_not_found
     }
 };
 
@@ -2924,7 +2974,7 @@ static bake_test_suite suites[] = {
         "Eval",
         NULL,
         NULL,
-        261,
+        271,
         Eval_testcases
     },
     {
