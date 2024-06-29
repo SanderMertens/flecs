@@ -28,7 +28,7 @@ struct FNetworkedEntityInfo
 	UPROPERTY()
 	FString EntityName;
 
-	FORCEINLINE bool NetSerialize(FArchive& Ar, class UPackageMap* Map, bool& bOutSuccess)
+	FORCEINLINE bool NetSerialize(FArchive& Ar, UPackageMap* Map, bool& bOutSuccess)
 	{
 		NetworkId.NetSerialize(Ar, Map, bOutSuccess);
 		SerializeOptionalValue<FString>(Ar.IsSaving(), Ar, WorldName, TEXT("DefaultFlecsWorld"));
@@ -86,7 +86,7 @@ public:
 
 			TArray<FNetworkedEntityInfo> Entities;
 			FlecsWorld->World.query_builder<FFlecsNetworkIdComponent>()
-			.with(flecs::Name)
+			.with_name_component()
 			.read<FFlecsNetworkIdComponent>()
 			.build()
 			.each([&](const FFlecsEntityHandle& Entity, const FFlecsNetworkIdComponent& NetworkId)

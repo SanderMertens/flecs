@@ -67,6 +67,8 @@ public:
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override
 	{
 		Super::Initialize(Collection);
+		
+		DeveloperSettings = GetDefault<UFlecsDeveloperSettings>();
 	}
 
 	virtual void OnWorldBeginPlay(UWorld& InWorld) override
@@ -98,9 +100,7 @@ public:
 	{
 		for (const UFlecsWorld* World : Worlds)
 		{
-			if (World->Progress())
-			{
-			}
+			World->Progress();
 		}
 	}
 	
@@ -137,7 +137,7 @@ public:
 		
 		if (DeveloperSettings->bAutoImportExplorer)
 		{
-			ImportRestModule(Name, true, FFlecsRestSettings());
+			ImportMonitoringModule(Name);
 		}
 		
 		#endif // WITH_EDITOR
@@ -173,7 +173,8 @@ public:
 	FORCEINLINE void ImportRestModule(const FString& WorldName, const bool bUseMonitoring, const FFlecsRestSettings& Settings) const
 	{
 		GetFlecsWorld(WorldName)->SetSingleton<flecs::Rest>(
-				flecs::Rest { static_cast<uint16>(Settings.Port), const_cast<ANSICHAR*>(StringCast<ANSICHAR>(*Settings.IPAddress).Get()) });
+				flecs::Rest { static_cast<uint16>(Settings.Port),
+			const_cast<ANSICHAR*>(StringCast<ANSICHAR>(*Settings.IPAddress).Get()) });
 
 		if (bUseMonitoring)
 		{
@@ -198,11 +199,11 @@ public:
 	{
 		WorldNameMap.erase(World->GetWorldName());
 
-		for (int32 i = 0; i < Worlds.Num(); ++i)
+		for (int32 Index = 0; Index < Worlds.Num(); ++Index)
 		{
-			if (Worlds[i] == World)
+			if (Worlds[Index] == World)
 			{
-				Worlds.RemoveAt(i);
+				Worlds.RemoveAt(Index);
 				break;
 			}
 		}
@@ -273,9 +274,7 @@ protected:
 
 		for (const FGameplayTag& Tag : AllTags)
 		{
-			FGameplayTag ParentTag = Tag.RequestDirectParent();
-			
-			if (ParentTag.IsValid())
+			if (FGameplayTag ParentTag = Tag.RequestDirectParent(); ParentTag.IsValid())
 			{
 				InTagHierarchy.FindOrAdd(ParentTag).Add(Tag);
 			}

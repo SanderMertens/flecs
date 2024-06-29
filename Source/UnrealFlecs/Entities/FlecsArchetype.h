@@ -38,7 +38,6 @@ public:
     {
         return Type != Other.Type;
     }
-
-private:
+    
     flecs::type Type;
 }; // struct FFlecsArchetype

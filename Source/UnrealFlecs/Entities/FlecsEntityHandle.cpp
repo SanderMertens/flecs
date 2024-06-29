@@ -1,5 +1,6 @@
 ﻿// Solstice Games © 2023. All Rights Reserved.
 
+// ReSharper disable CppTooWideScopeInitStatement
 #include "FlecsEntityHandle.h"
 #include "Components/FlecsWorldPtrComponent.h"
 #include "Networking/FlecsNetworkingActorComponent.h"

@@ -51,7 +51,8 @@ void UFlecsEntityActorComponent::InitializeEntity()
 	}
 	else
 	{
-		GetWorld()->GetSubsystem<UFlecsWorldSubsystem>()->OnWorldCreated.AddUObject(this, &UFlecsEntityActorComponent::OnWorldCreated);
+		GetWorld()->GetSubsystem<UFlecsWorldSubsystem>()->OnWorldCreated
+			.AddUObject(this, &UFlecsEntityActorComponent::OnWorldCreated);
 	}
 }
 
@@ -79,6 +80,8 @@ bool UFlecsEntityActorComponent::CanEditChange(const FProperty* InProperty) cons
 	return bIsEditable;
 }
 
+#endif // WITH_EDITORONLY_DATA
+
 void UFlecsEntityActorComponent::OnWorldCreated(const FString& InWorldName, UFlecsWorld* InWorld)
 {
 	if (InWorldName == WorldName)
@@ -87,5 +90,3 @@ void UFlecsEntityActorComponent::OnWorldCreated(const FString& InWorldName, UFle
 		GetWorld()->GetSubsystem<UFlecsWorldSubsystem>()->OnWorldCreated.RemoveAll(this);
 	}
 }
-
-#endif // WITH_EDITORONLY_DATA

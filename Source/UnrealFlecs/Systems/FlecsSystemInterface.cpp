@@ -7,8 +7,7 @@
 
 FString IFlecsSystemInterface::GetName() const
 {
-	UN_LOGF(LogFlecsSystem, Error,
-		"not implemented for %s",
+	UN_LOGF(LogFlecsSystem, Error, "not implemented for %s",
 		*_getUObject()->GetClass()->GetName());
 	return _getUObject()->GetClass()->GetName();
 }

@@ -902,7 +902,7 @@ private:
 			return false;
 		});
 
-		if (TraitHolder)
+		if LIKELY_IF(TraitHolder)
 		{
 			return TraitHolder;
 		}

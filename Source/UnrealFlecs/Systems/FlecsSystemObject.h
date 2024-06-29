@@ -15,6 +15,10 @@ class UNREALFLECS_API UFlecsSystemObject : public UObject, public IFlecsSystemIn
 public:
 
 private:
+	FORCEINLINE virtual void BuildSystem(flecs::system_builder<>& Builder) override final
+	{
+		
+	}
 
 
 }; // class UFlecsSystemObject
