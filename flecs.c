@@ -62658,11 +62658,18 @@ int EcsScript_serialize(const ecs_serializer_t *ser, const void *ptr) {
         ser->value(ser, ecs_id(ecs_string_t), &data->script->name);
         ser->member(ser, "code");
         ser->value(ser, ecs_id(ecs_string_t), &data->script->code);
+
+        char *ast = ecs_script_ast_to_str(data->script);
+        ser->member(ser, "ast");
+        ser->value(ser, ecs_id(ecs_string_t), &ast);
+        ecs_os_free(ast);
     } else {
         char *nullString = NULL;
         ser->member(ser, "name");
         ser->value(ser, ecs_id(ecs_string_t), &nullString);
         ser->member(ser, "code");
+        ser->value(ser, ecs_id(ecs_string_t), &nullString);
+        ser->member(ser, "ast");
         ser->value(ser, ecs_id(ecs_string_t), &nullString);
     }
     return 0;
@@ -62694,7 +62701,8 @@ void FlecsScriptImport(
         .entity = ecs_id(ecs_script_t),
         .members = {
             { .name = "name", .type = ecs_id(ecs_string_t) },
-            { .name = "code", .type = ecs_id(ecs_string_t) }
+            { .name = "code", .type = ecs_id(ecs_string_t) },
+            { .name = "ast", .type = ecs_id(ecs_string_t) }
         }
     });
 
@@ -62706,6 +62714,7 @@ void FlecsScriptImport(
 
     ecs_add_id(world, ecs_id(EcsScript), EcsPairIsTag);
     ecs_add_id(world, ecs_id(EcsScript), EcsPrivate);
+    ecs_add_pair(world, ecs_id(EcsScript), EcsOnInstantiate, EcsDontInherit);
 }
 
 #endif
