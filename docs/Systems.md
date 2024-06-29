@@ -14,7 +14,7 @@ void Move(ecs_iter_t *it) {
     Velocity *v = ecs_field(it, Velocity, 1);
 
     // Iterate matched entities
-    for (int i = 0; i < it->count, i++) {
+    for (int i = 0; i < it->count; i++) {
         p[i].x += v[i].x;
         p[i].y += v[i].y;
     }
@@ -165,7 +165,7 @@ while (ecs_query_next(&it)) {
     Velocity *v = ecs_field(it, Velocity, 1);
 
     // Iterate matched entities
-    for (int i = 0; i < it->count, i++) {
+    for (int i = 0; i < it->count; i++) {
         p[i].x += v[i].x;
         p[i].y += v[i].y;
     }
@@ -178,7 +178,7 @@ void Move(ecs_iter_t *it) {
     Velocity *v = ecs_field(it, Velocity, 1);
 
     // Iterate matched entities
-    for (int i = 0; i < it->count, i++) {
+    for (int i = 0; i < it->count; i++) {
         p[i].x += v[i].x;
         p[i].y += v[i].y;
     }
@@ -278,7 +278,7 @@ A system provides a `delta_time` which contains the time passed since the last f
 Position *p = ecs_field(it, Position, 0);
 Velocity *v = ecs_field(it, Velocity, 1);
 
-for (int i = 0; i < it->count, i++) {
+for (int i = 0; i < it->count; i++) {
     p[i].x += v[i].x * it->delta_time;
     p[i].y += v[i].y * it->delta_time;
 }
