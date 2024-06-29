@@ -114,7 +114,6 @@ public:
     }
 }
 
-
 private:
 	mutable TOptional<FName> SelectedItem;
 	TArray<FName> Options;

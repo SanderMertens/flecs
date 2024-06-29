@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "flecs.h"
-#include "FlecsType.h"
+#include "FlecsArchetype.h"
 #include "GameplayTagContainer.h"
 #include "InstancedStruct.h"
 #include "SolidMacros/Macros.h"
@@ -61,7 +61,7 @@ public:
 	
 	FORCEINLINE NO_DISCARD FString GetWorldName() const;
 	
-	FORCEINLINE NO_DISCARD FFlecsType GetType() const { return FFlecsType(GetEntity().type()); }
+	FORCEINLINE NO_DISCARD FFlecsArchetype GetType() const { return FFlecsArchetype(GetEntity().type()); }
 
 	FORCEINLINE NO_DISCARD bool Has(const FFlecsEntityHandle& InEntity) const { return GetEntity().has(InEntity); }
 

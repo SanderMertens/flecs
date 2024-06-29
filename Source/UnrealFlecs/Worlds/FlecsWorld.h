@@ -45,12 +45,6 @@ public:
 		World.reset_clock();
 	}
 
-	template <typename ...TArgs>
-	FORCEINLINE FFlecsEntityHandle CreateEntity(const TArgs&... Args) const
-	{
-		return World.entity(Args...);
-	}
-
 	FORCEINLINE FFlecsEntityHandle CreateEntity(const flecs::entity_t InEntity) const
 	{
 		return World.make_alive(InEntity);
@@ -370,24 +364,6 @@ public:
 		return World.get_pipeline();
 	}
 
-	/*UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
-	FORCEINLINE FFlecsEntityHandle SetScope(const FFlecsEntityHandle& InScope) const
-	{
-		return World.set_scope(InScope);
-	}
-
-	template <typename T>
-	FORCEINLINE FFlecsEntityHandle SetScope() const
-	{
-		return World.set_scope<T>();
-	}
-
-	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
-	FORCEINLINE FFlecsEntityHandle GetScope() const
-	{
-		return World.get_scope();
-	}*/
-
 	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
 	FORCEINLINE float GetDeltaTime() const
 	{
@@ -432,13 +408,7 @@ public:
 	{
 		return World.entity(EcsWorld);
 	}
-
-	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
-	FORCEINLINE void SetStageCount(const int32 InStageCount) const
-	{
-		World.set_stage_count(InStageCount);
-	}
-
+	
 	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
 	FORCEINLINE int32 GetStageCount() const
 	{
@@ -455,22 +425,6 @@ public:
 	FORCEINLINE bool IsStage() const
 	{
 		return World.is_stage();
-	}
-
-	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
-	FORCEINLINE UFlecsWorld* GetStage(const int32 InStageId) const
-	{
-		UFlecsWorld* Stage = NewObject<UFlecsWorld>();
-		Stage->SetWorld(World.get_stage(InStageId));
-		return Stage;
-	}
-
-	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
-	FORCEINLINE UFlecsWorld* ObtainAsyncStage() const
-	{
-		UFlecsWorld* Stage = NewObject<UFlecsWorld>();
-		Stage->SetWorld(World.async_stage());
-		return Stage;
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
@@ -714,9 +668,11 @@ public:
 	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs")
-	FORCEINLINE FFlecsEntityHandle CreatePrefab(const FString& Name) const
+	FORCEINLINE FFlecsEntityHandle CreatePrefab(const FFlecsEntityRecord& InRecord) const
 	{
-		return World.prefab(StringCast<char>(*Name).Get());
+		FFlecsEntityHandle Prefab = CreateEntityWithRecord(InRecord);
+		Prefab.Add(flecs::Prefab);
+		return Prefab;
 	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs")
@@ -845,6 +801,13 @@ public:
 	FORCEINLINE void ToggleType(UScriptStruct* ScriptStruct) const
 	{
 		ObtainComponentTypeStruct(ScriptStruct).Toggle();
+	}
+	
+	UFUNCTION(BlueprintCallable, Category = "Flecs")
+	FORCEINLINE UFlecsWorld* GetParentWorld() const
+	{
+		solid_checkf(IsStage(), TEXT("World is not a stage"));
+		return GetTypedOuter<UFlecsWorld>();
 	}
 	
 	flecs::world World;

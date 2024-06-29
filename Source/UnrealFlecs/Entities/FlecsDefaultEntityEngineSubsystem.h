@@ -17,26 +17,13 @@ class UNREALFLECS_API UFlecsDefaultEntityEngineSubsystem : public UEngineSubsyst
 public:
 	UFlecsDefaultEntityEngineSubsystem();
 	
-	struct FFlecsEntityOption
-	{
-	}; // struct FFlecsEntityOption
-
-	struct FFlecsAddedDefaultEntity
-	{
-		FFlecsEntityRecord EntityRecord;
-	}; // struct FFlecsAddedDefaultEntity
-	
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 
 	virtual void Deinitialize() override;
 	
 	void RefreshDefaultEntities();
 
-
 	TMap<FName, flecs::entity_t> DefaultEntityOptions;
 	TArray<FFlecsDefaultMetaEntity> AddedDefaultEntities;
 	
 }; // class UFlecsDefaultEntityEngineSubsystem
-
-#define REGISTER_FLECS_ENTITY_OPTION(EntityName, EntityHandle) \
-	GEngine->GetEngineSubsystem<UFlecsDefaultEntityEngineSubsystem>()->RegisterEntityOption(EntityName, EntityHandle);

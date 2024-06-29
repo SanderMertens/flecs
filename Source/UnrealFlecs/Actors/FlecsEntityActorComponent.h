@@ -41,5 +41,8 @@ public:
 	virtual bool CanEditChange(const FProperty* InProperty) const override;
 
 	#endif // WITH_EDITORONLY_DATA
+
+	UFUNCTION()
+	void OnWorldCreated(const FString& InWorldName, UFlecsWorld* InWorld);
 	
 }; // class UFlecsEntityActorComponent

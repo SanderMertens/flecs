@@ -47,11 +47,15 @@ void UFlecsDefaultEntityEngineSubsystem::Initialize(FSubsystemCollectionBase& Co
 
 	UFlecsDefaultEntitiesDeveloperSettings* Settings = GetMutableDefault<UFlecsDefaultEntitiesDeveloperSettings>();
 	solid_checkf(Settings, TEXT("Default Entities Developer Settings not found"));
+
+	#if WITH_EDITOR
 	
 	Settings->OnSettingChanged().AddLambda([&](UObject*, FPropertyChangedEvent&)
 	{
 		RefreshDefaultEntities();
 	});
+
+	#endif // WITH_EDITOR
 	
 	RefreshDefaultEntities();
 }

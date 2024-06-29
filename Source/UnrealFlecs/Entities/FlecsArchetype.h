@@ -5,17 +5,17 @@
 #include "CoreMinimal.h"
 #include "flecs.h"
 #include "SolidMacros/Macros.h"
-#include "FlecsType.generated.h"
+#include "FlecsArchetype.generated.h"
 
 USTRUCT(BlueprintType)
-struct FFlecsType
+struct FFlecsArchetype
 {
     GENERATED_BODY()
 
 public:
-    FORCEINLINE FFlecsType() = default;
-    FORCEINLINE FFlecsType(const flecs::type& InType) : Type(InType) {}
-    FORCEINLINE FFlecsType(const flecs::type* InType) : Type(*InType) {}
+    FORCEINLINE FFlecsArchetype() = default;
+    FORCEINLINE FFlecsArchetype(const flecs::type& InType) : Type(InType) {}
+    FORCEINLINE FFlecsArchetype(const flecs::type* InType) : Type(*InType) {}
 
     FORCEINLINE void SetType(const flecs::type& InType) { Type = InType; }
     FORCEINLINE void SetType(const flecs::type* InType) { Type = *InType; }
@@ -29,16 +29,16 @@ public:
     FORCEINLINE flecs::type* operator->() { return &Type; }
     FORCEINLINE const flecs::type* operator->() const { return &Type; }
 
-    FORCEINLINE NO_DISCARD bool operator==(const FFlecsType& Other) const
+    FORCEINLINE NO_DISCARD bool operator==(const FFlecsArchetype& Other) const
     {
         return Type == Other.Type;
     }
 
-    FORCEINLINE NO_DISCARD bool operator!=(const FFlecsType& Other) const
+    FORCEINLINE NO_DISCARD bool operator!=(const FFlecsArchetype& Other) const
     {
         return Type != Other.Type;
     }
 
 private:
     flecs::type Type;
-}; // struct FFlecsType
+}; // struct FFlecsArchetype

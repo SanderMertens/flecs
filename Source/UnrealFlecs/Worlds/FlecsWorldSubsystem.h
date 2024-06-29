@@ -45,7 +45,7 @@ struct FFlecsRestSettings
 	
 }; // struct FFlecsRestSettings
 
-DECLARE_MULTICAST_DELEGATE_TwoParams(FOnWorldCreated, FString, UFlecsWorld*);
+DECLARE_MULTICAST_DELEGATE_TwoParams(FOnWorldCreated, const FString&, UFlecsWorld*);
 
 UCLASS(BlueprintType)
 class UNREALFLECS_API UFlecsWorldSubsystem final : public UTickableWorldSubsystem
@@ -72,6 +72,7 @@ public:
 	virtual void OnWorldBeginPlay(UWorld& InWorld) override
 	{
 		UFlecsWorldDeveloperSettings* WorldDeveloperSettings = GetMutableDefault<UFlecsWorldDeveloperSettings>();
+		
 		for (const FFlecsWorldSettings& Settings : WorldDeveloperSettings->Worlds)
 		{
 			CreateWorld(Settings.WorldName, Settings);
@@ -99,7 +100,6 @@ public:
 		{
 			if (World->Progress())
 			{
-				World->Merge();
 			}
 		}
 	}
@@ -128,9 +128,9 @@ public:
 		
 		WorldNameMap.emplace(Name, NewFlecsWorld);
 
-		for (const FFlecsDefaultMetaEntity& DefaultEntity : DefaultEntities)
+		for (const auto& [EntityRecord, bIsOptionEntity] : DefaultEntities)
 		{
-			NewFlecsWorld->CreateEntityWithRecord(DefaultEntity.EntityRecord);
+			NewFlecsWorld->CreateEntityWithRecord(EntityRecord);
 		}
 
 		#if WITH_EDITOR || UE_BUILD_DEBUG

@@ -2,6 +2,7 @@
 
 #include "FlecsEntityActorComponent.h"
 #include "Logs/FlecsCategories.h"
+#include "Worlds/FlecsWorldSubsystem.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(FlecsEntityActorComponent)
 
@@ -41,8 +42,17 @@ void UFlecsEntityActorComponent::InitializeEntity()
 		UN_LOG(LogFlecsEntity, Error, "World Name is empty!");
 		return;
 	}
-
 	
+
+	if (GetWorld()->GetSubsystem<UFlecsWorldSubsystem>()->HasWorld(WorldName))
+	{
+		EntityHandle = GetWorld()->GetSubsystem<UFlecsWorldSubsystem>()->GetFlecsWorld(WorldName)
+			->CreateEntityWithRecord(EntityRecord);
+	}
+	else
+	{
+		GetWorld()->GetSubsystem<UFlecsWorldSubsystem>()->OnWorldCreated.AddUObject(this, &UFlecsEntityActorComponent::OnWorldCreated);
+	}
 }
 
 #if WITH_EDITORONLY_DATA
@@ -67,6 +77,15 @@ bool UFlecsEntityActorComponent::CanEditChange(const FProperty* InProperty) cons
 	}
 	
 	return bIsEditable;
+}
+
+void UFlecsEntityActorComponent::OnWorldCreated(const FString& InWorldName, UFlecsWorld* InWorld)
+{
+	if (InWorldName == WorldName)
+	{
+		EntityHandle = InWorld->CreateEntityWithRecord(EntityRecord);
+		GetWorld()->GetSubsystem<UFlecsWorldSubsystem>()->OnWorldCreated.RemoveAll(this);
+	}
 }
 
 #endif // WITH_EDITORONLY_DATA
