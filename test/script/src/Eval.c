@@ -8222,3 +8222,35 @@ void Eval_base_not_found(void) {
 
     ecs_fini(world);
 }
+
+void Eval_dont_inherit_script_pair(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "using flecs.meta"
+    LINE "Bar {}"
+    LINE "prefab Foo {"
+    LINE "  Bar"
+    LINE "}";
+
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code = expr
+    });
+    test_assert(s != 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    ecs_entity_t bar = ecs_lookup(world, "Bar");
+    test_assert(foo != 0);
+    test_assert(bar != 0);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_add_pair(world, e, EcsIsA, foo);
+
+    test_assert(ecs_has_pair(world, foo, ecs_id(EcsScript), s));
+    test_assert(ecs_has_pair(world, bar, ecs_id(EcsScript), s));
+    test_assert(!ecs_has_pair(world, e, ecs_id(EcsScript), s));
+    test_assert(ecs_has_id(world, e, bar));
+
+    ecs_fini(world);
+}

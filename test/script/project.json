@@ -283,7 +283,8 @@
                 "pair_first_not_found",
                 "pair_second_not_found",
                 "kind_not_found",
-                "base_not_found"
+                "base_not_found",
+                "dont_inherit_script_pair"
             ]
         }, {
             "id": "Template",
