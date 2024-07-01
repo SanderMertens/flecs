@@ -1300,7 +1300,7 @@ void Trigger_un_set_component(void) {
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
         .query.terms[0].id = ecs_id(Position),
-        .events = {EcsUnSet},
+        .events = {EcsOnRemove},
         .callback = Trigger,
         .ctx = &ctx
     });
@@ -1315,7 +1315,7 @@ void Trigger_un_set_component(void) {
     test_int(ctx.invoked, 1);
     test_int(ctx.count, 1);
     test_int(ctx.system, t);
-    test_int(ctx.event, EcsUnSet);
+    test_int(ctx.event, EcsOnRemove);
     test_int(ctx.event_id, ecs_id(Position));
     test_int(ctx.term_count, 1);
     test_null(ctx.param);
@@ -1334,7 +1334,7 @@ void Trigger_un_set_wildcard(void) {
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
         .query.terms[0].id = EcsWildcard,
-        .events = {EcsUnSet},
+        .events = {EcsOnRemove},
         .callback = Trigger,
         .ctx = &ctx
     });
@@ -1349,7 +1349,7 @@ void Trigger_un_set_wildcard(void) {
     test_int(ctx.invoked, 1);
     test_int(ctx.count, 1);
     test_int(ctx.system, t);
-    test_int(ctx.event, EcsUnSet);
+    test_int(ctx.event, EcsOnRemove);
     test_int(ctx.event_id, ecs_id(Position));
     test_int(ctx.term_count, 1);
     test_null(ctx.param);
@@ -1372,7 +1372,7 @@ void Trigger_un_set_pair(void) {
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
         .query.terms[0].id = ecs_pair(Rel, Obj),
-        .events = {EcsUnSet},
+        .events = {EcsOnRemove},
         .callback = Trigger,
         .ctx = &ctx
     });
@@ -1389,7 +1389,7 @@ void Trigger_un_set_pair(void) {
     test_int(ctx.invoked, 1);
     test_int(ctx.count, 1);
     test_int(ctx.system, t);
-    test_int(ctx.event, EcsUnSet);
+    test_int(ctx.event, EcsOnRemove);
     test_int(ctx.event_id, ecs_pair(Rel, Obj));
     test_int(ctx.term_count, 1);
     test_null(ctx.param);
@@ -1412,7 +1412,7 @@ void Trigger_un_set_pair_w_obj_wildcard(void) {
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
         .query.terms[0].id = ecs_pair(Rel, EcsWildcard),
-        .events = {EcsUnSet},
+        .events = {EcsOnRemove},
         .callback = Trigger,
         .ctx = &ctx
     });
@@ -1429,7 +1429,7 @@ void Trigger_un_set_pair_w_obj_wildcard(void) {
     test_int(ctx.invoked, 1);
     test_int(ctx.count, 1);
     test_int(ctx.system, t);
-    test_int(ctx.event, EcsUnSet);
+    test_int(ctx.event, EcsOnRemove);
     test_int(ctx.event_id, ecs_pair(Rel, Obj));
     test_int(ctx.term_count, 1);
     test_null(ctx.param);
@@ -1452,7 +1452,7 @@ void Trigger_un_set_pair_pred_wildcard(void) {
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
         .query.terms[0].id = ecs_pair(EcsWildcard, Obj),
-        .events = {EcsUnSet},
+        .events = {EcsOnRemove},
         .callback = Trigger,
         .ctx = &ctx
     });
@@ -1469,7 +1469,7 @@ void Trigger_un_set_pair_pred_wildcard(void) {
     test_int(ctx.invoked, 1);
     test_int(ctx.count, 1);
     test_int(ctx.system, t);
-    test_int(ctx.event, EcsUnSet);
+    test_int(ctx.event, EcsOnRemove);
     test_int(ctx.event_id, ecs_pair(Rel, Obj));
     test_int(ctx.term_count, 1);
     test_null(ctx.param);
@@ -1492,7 +1492,7 @@ void Trigger_un_set_pair_wildcard(void) {
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
         .query.terms[0].id = ecs_pair(EcsWildcard, EcsWildcard),
-        .events = {EcsUnSet},
+        .events = {EcsOnRemove},
         .callback = Trigger,
         .ctx = &ctx
     });
@@ -1509,7 +1509,7 @@ void Trigger_un_set_pair_wildcard(void) {
     test_int(ctx.invoked, 1);
     test_int(ctx.count, 1);
     test_int(ctx.system, t);
-    test_int(ctx.event, EcsUnSet);
+    test_int(ctx.event, EcsOnRemove);
     test_int(ctx.event_id, ecs_pair(Rel, Obj));
     test_int(ctx.term_count, 1);
     test_null(ctx.param);
@@ -3179,7 +3179,7 @@ void Trigger_on_unset_base(void) {
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
         .query.terms[0].id = ecs_id(Position), /* Implicitly also listens to IsA */
-        .events = {EcsUnSet},
+        .events = {EcsOnRemove},
         .callback = Trigger_w_value,
         .ctx = &ctx
     });
@@ -3196,7 +3196,7 @@ void Trigger_on_unset_base(void) {
     test_int(ctx.invoked, 1);
     test_int(ctx.count, 1);
     test_int(ctx.system, t);
-    test_int(ctx.event, EcsUnSet);
+    test_int(ctx.event, EcsOnRemove);
     test_int(ctx.event_id, ecs_id(Position));
     test_int(ctx.term_count, 1);
     test_null(ctx.param);

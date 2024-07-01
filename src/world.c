@@ -75,7 +75,6 @@ const ecs_entity_t EcsAlias =                       FLECS_HI_COMPONENT_ID + 38;
 const ecs_entity_t EcsOnAdd =                       FLECS_HI_COMPONENT_ID + 39;
 const ecs_entity_t EcsOnRemove =                    FLECS_HI_COMPONENT_ID + 40;
 const ecs_entity_t EcsOnSet =                       FLECS_HI_COMPONENT_ID + 41;
-const ecs_entity_t EcsUnSet =                       FLECS_HI_COMPONENT_ID + 42;
 const ecs_entity_t EcsOnDelete =                    FLECS_HI_COMPONENT_ID + 43;
 const ecs_entity_t EcsOnDeleteTarget =              FLECS_HI_COMPONENT_ID + 44;
 const ecs_entity_t EcsOnTableCreate =               FLECS_HI_COMPONENT_ID + 45;
@@ -1415,11 +1414,11 @@ int ecs_fini(
     ecs_dbg_1("#[bold]cleanup remaining entities");
     ecs_log_push_1();
 
-    /* Operations invoked during UnSet/OnRemove/destructors are deferred and
+    /* Operations invoked during OnRemove/destructors are deferred and
      * will be discarded after world cleanup */
     flecs_defer_begin(world, world->stages[0]);
 
-    /* Run UnSet/OnRemove actions for components while the store is still
+    /* Run OnRemove actions for components while the store is still
      * unmodified by cleanup. */
     flecs_fini_unset_tables(world);
 
