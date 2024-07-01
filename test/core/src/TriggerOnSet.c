@@ -534,7 +534,7 @@ void TriggerOnSet_un_set_tag_w_remove(void) {
 
     ecs_observer_init(world, &(ecs_observer_desc_t){
         .query.terms[0].id = Tag,
-        .events = {EcsUnSet},
+        .events = {EcsOnRemove},
         .callback = Dummy
     });
 
@@ -558,7 +558,7 @@ void TriggerOnSet_un_set_tag_w_clear(void) {
 
     ecs_observer_init(world, &(ecs_observer_desc_t){
         .query.terms[0].id = Tag,
-        .events = {EcsUnSet},
+        .events = {EcsOnRemove},
         .callback = Dummy
     });
 
@@ -582,7 +582,7 @@ void TriggerOnSet_un_set_tag_w_delete(void) {
 
     ecs_observer_init(world, &(ecs_observer_desc_t){
         .query.terms[0].id = Tag,
-        .events = {EcsUnSet},
+        .events = {EcsOnRemove},
         .callback = Dummy
     });
 

@@ -43,7 +43,6 @@ struct ecs_observable_t {
     ecs_event_record_t on_add;
     ecs_event_record_t on_remove;
     ecs_event_record_t on_set;
-    ecs_event_record_t un_set;
     ecs_event_record_t on_wildcard;
     ecs_sparse_t events;  /* sparse<event, ecs_event_record_t> */
 };

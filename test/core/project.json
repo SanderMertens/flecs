@@ -2221,8 +2221,6 @@
                 "disable_multi_observer_and_module",
                 "tag_w_on_set_and_on_add",
                 "tag_w_on_set_and_on_add_reverse",
-                "tag_w_un_set_and_on_remove",
-                "tag_w_un_set_and_on_remove_reverse",
                 "on_add_pair_w_rel_any",
                 "on_remove_pair_w_rel_any",
                 "on_add_pair_w_tgt_any",

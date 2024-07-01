@@ -391,7 +391,6 @@ extern "C" {
 #define EcsIdHasOnAdd                  (1u << 16) /* Same values as table flags */
 #define EcsIdHasOnRemove               (1u << 17) 
 #define EcsIdHasOnSet                  (1u << 18)
-#define EcsIdHasUnSet                  (1u << 19)
 #define EcsIdHasOnTableFill            (1u << 20)
 #define EcsIdHasOnTableEmpty           (1u << 21)
 #define EcsIdHasOnTableCreate          (1u << 22)
@@ -399,7 +398,7 @@ extern "C" {
 #define EcsIdIsSparse                  (1u << 24)
 #define EcsIdIsUnion                   (1u << 25)
 #define EcsIdEventMask\
-    (EcsIdHasOnAdd|EcsIdHasOnRemove|EcsIdHasOnSet|EcsIdHasUnSet|\
+    (EcsIdHasOnAdd|EcsIdHasOnRemove|EcsIdHasOnSet|\
         EcsIdHasOnTableFill|EcsIdHasOnTableEmpty|EcsIdHasOnTableCreate|\
             EcsIdHasOnTableDelete|EcsIdIsSparse|EcsIdIsUnion)
 
@@ -451,7 +450,7 @@ extern "C" {
 ////////////////////////////////////////////////////////////////////////////////
 
 #define EcsEventTableOnly              (1u << 18u) /* Table event (no data, same as iter flags) */
-#define EcsEventNoOnSet                (1u << 16u) /* Don't emit OnSet/UnSet for inherited ids */
+#define EcsEventNoOnSet                (1u << 16u) /* Don't emit OnSet for inherited ids */
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -531,7 +530,6 @@ extern "C" {
 #define EcsTableHasOnAdd               (1u << 16u) /* Same values as id flags */
 #define EcsTableHasOnRemove            (1u << 17u)
 #define EcsTableHasOnSet               (1u << 18u)
-#define EcsTableHasUnSet               (1u << 19u)
 #define EcsTableHasOnTableFill         (1u << 20u)
 #define EcsTableHasOnTableEmpty        (1u << 21u)
 #define EcsTableHasOnTableCreate       (1u << 22u)
@@ -546,7 +544,7 @@ extern "C" {
 #define EcsTableHasLifecycle        (EcsTableHasCtors | EcsTableHasDtors)
 #define EcsTableIsComplex           (EcsTableHasLifecycle | EcsTableHasToggle | EcsTableHasSparse)
 #define EcsTableHasAddActions       (EcsTableHasIsA | EcsTableHasCtors | EcsTableHasOnAdd | EcsTableHasOnSet)
-#define EcsTableHasRemoveActions    (EcsTableHasIsA | EcsTableHasDtors | EcsTableHasOnRemove | EcsTableHasUnSet)
+#define EcsTableHasRemoveActions    (EcsTableHasIsA | EcsTableHasDtors | EcsTableHasOnRemove)
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3541,7 +3539,6 @@ struct ecs_observable_t {
     ecs_event_record_t on_add;
     ecs_event_record_t on_remove;
     ecs_event_record_t on_set;
-    ecs_event_record_t un_set;
     ecs_event_record_t on_wildcard;
     ecs_sparse_t events;  /* sparse<event, ecs_event_record_t> */
 };
@@ -4389,7 +4386,7 @@ typedef struct ecs_observer_desc_t {
     /** Query for observer */
     ecs_query_desc_t query;
 
-    /** Events to observe (OnAdd, OnRemove, OnSet, UnSet) */
+    /** Events to observe (OnAdd, OnRemove, OnSet) */
     ecs_entity_t events[FLECS_EVENT_DESC_MAX];
 
     /** When observer is created, generate events from existing data. For example,
@@ -4879,9 +4876,6 @@ FLECS_API extern const ecs_entity_t EcsOnRemove;
 
 /** Event that triggers when a component is set for an entity */
 FLECS_API extern const ecs_entity_t EcsOnSet;
-
-/** Event that triggers when a component is unset for an entity */
-FLECS_API extern const ecs_entity_t EcsUnSet;
 
 /** Event that triggers observer when an entity starts/stops matching a query */
 FLECS_API extern const ecs_entity_t EcsMonitor;
@@ -16450,7 +16444,6 @@ static const flecs::entity_t Phase = EcsPhase;
 static const flecs::entity_t OnAdd = EcsOnAdd;
 static const flecs::entity_t OnRemove = EcsOnRemove;
 static const flecs::entity_t OnSet = EcsOnSet;
-static const flecs::entity_t UnSet = EcsUnSet;
 static const flecs::entity_t OnTableCreate = EcsOnTableCreate;
 static const flecs::entity_t OnTableDelete = EcsOnTableDelete;
 

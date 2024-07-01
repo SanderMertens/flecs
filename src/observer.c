@@ -41,9 +41,6 @@ ecs_flags32_t flecs_id_flag_for_event(
     if (e == EcsOnSet) {
         return EcsIdHasOnSet;
     }
-    if (e == EcsUnSet) {
-        return EcsIdHasUnSet;
-    }
     if (e == EcsOnTableFill) {
         return EcsIdHasOnTableFill;
     }
@@ -660,16 +657,12 @@ int flecs_uni_observer_init(
     term->field_index = flecs_ito(int16_t, desc->term_index_);
 
     if (ecs_id_is_tag(world, term->id)) {
-        /* If id is a tag, downgrade OnSet/UnSet to OnAdd/OnRemove. */
+        /* If id is a tag, downgrade OnSet to OnAdd. */
         int32_t e, count = o->event_count;
         bool has_on_add = false;
-        bool has_on_remove = false;
         for (e = 0; e < count; e ++) {
             if (o->events[e] == EcsOnAdd) {
                 has_on_add = true;
-            }
-            if (o->events[e] == EcsOnRemove) {
-                has_on_remove = true;
             }
         }
 
@@ -680,14 +673,6 @@ int flecs_uni_observer_init(
                     o->events[e] = 0;
                 } else {
                     o->events[e] = EcsOnAdd;
-                }
-            } else
-            if (o->events[e] == EcsUnSet) {
-                if (has_on_remove) {
-                    /* Already registered */
-                    o->events[e] = 0;
-                } else {
-                    o->events[e] = EcsOnRemove;
                 }
             }
         }
