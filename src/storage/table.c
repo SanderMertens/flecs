@@ -614,8 +614,6 @@ void flecs_table_add_trigger_flags(
         table->flags |= EcsTableHasOnRemove;
     } else if (event == EcsOnSet) {
         table->flags |= EcsTableHasOnSet;
-    } else if (event == EcsUnSet) {
-        table->flags |= EcsTableHasUnSet;
     } else if (event == EcsOnTableFill) {
         table->flags |= EcsTableHasOnTableFill;
     } else if (event == EcsOnTableEmpty) {
@@ -922,7 +920,7 @@ void flecs_table_delete_entities(
 }
 
 /* Unset all components in table. This function is called before a table is 
- * deleted, and invokes all UnSet handlers, if any */
+ * deleted, and invokes all OnRemove handlers, if any */
 void flecs_table_remove_actions(
     ecs_world_t *world,
     ecs_table_t *table)

@@ -516,7 +516,7 @@ void ObserverOnSet_un_set_after_remove(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
-    ECS_OBSERVER(world, OnPosition, EcsUnSet, Position);
+    ECS_OBSERVER(world, OnPosition, EcsOnRemove, Position);
 
     Probe ctx = { 0 };
     ecs_set_ctx(world, &ctx, NULL);
@@ -538,7 +538,7 @@ void ObserverOnSet_un_set_after_remove_base(void) {
     ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
 
     ECS_ENTITY(world, Base, Position);
-    ECS_OBSERVER(world, OnPosition, EcsUnSet, Position(self|up IsA));
+    ECS_OBSERVER(world, OnPosition, EcsOnRemove, Position(self|up IsA));
 
     Probe ctx = { 0 };
     ecs_set_ctx(world, &ctx, NULL);

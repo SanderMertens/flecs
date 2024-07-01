@@ -654,7 +654,7 @@ void flecs_notify_on_remove(
             flecs_union_on_remove(world, table, row, count, removed);
         }
 
-        if (table_flags & (EcsTableHasOnRemove|EcsTableHasUnSet|EcsTableHasIsA|
+        if (table_flags & (EcsTableHasOnRemove|EcsTableHasIsA|
             EcsTableHasTraversable))
         {
             flecs_emit(world, world, 0, &(ecs_event_desc_t) {

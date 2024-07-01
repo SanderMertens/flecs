@@ -17,7 +17,6 @@ void flecs_observable_init(
     observable->on_add.event = EcsOnAdd;
     observable->on_remove.event = EcsOnRemove;
     observable->on_set.event = EcsOnSet;
-    observable->un_set.event = EcsUnSet;
 }
 
 void flecs_observable_fini(
@@ -28,8 +27,6 @@ void flecs_observable_fini(
     ecs_assert(!ecs_map_is_init(&observable->on_remove.event_ids), 
         ECS_INTERNAL_ERROR, NULL);
     ecs_assert(!ecs_map_is_init(&observable->on_set.event_ids), 
-        ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(!ecs_map_is_init(&observable->un_set.event_ids), 
         ECS_INTERNAL_ERROR, NULL);
 
     ecs_sparse_t *events = &observable->events;
@@ -58,7 +55,6 @@ ecs_event_record_t* flecs_event_record_get(
     if      (event == EcsOnAdd)    return ECS_CONST_CAST(ecs_event_record_t*, &o->on_add);
     else if (event == EcsOnRemove) return ECS_CONST_CAST(ecs_event_record_t*, &o->on_remove);
     else if (event == EcsOnSet)    return ECS_CONST_CAST(ecs_event_record_t*, &o->on_set);
-    else if (event == EcsUnSet)    return ECS_CONST_CAST(ecs_event_record_t*, &o->un_set);
     else if (event == EcsWildcard) return ECS_CONST_CAST(ecs_event_record_t*, &o->on_wildcard);
 
     /* User events */
@@ -1136,10 +1132,6 @@ void flecs_emit(
         count = ecs_table_count(table) - offset;
     }
 
-    /* When the NoOnSet flag is provided, no OnSet/UnSet events should be 
-     * generated when new components are inherited. */
-    bool no_on_set = desc->flags & EcsEventNoOnSet;
-
     /* The world event id is used to determine if an observer has already been
      * triggered for an event. Observers for multiple components are split up
      * into multiple observers for a single component, and this counter is used
@@ -1177,15 +1169,14 @@ void flecs_emit(
 
     /* Event records contain all observers for a specific event. In addition to
      * the emitted event, also request data for the Wildcard event (for 
-     * observers subscribing to the wildcard event), OnSet and UnSet events. The
-     * latter to are used for automatically emitting OnSet/UnSet events for 
+     * observers subscribing to the wildcard event), OnSet events. The
+     * latter to are used for automatically emitting OnSet events for 
      * inherited components, for example when an IsA relationship is added to an
      * entity. This doesn't add much overhead, as fetching records is cheap for
      * builtin event types. */
     const ecs_event_record_t *er = flecs_event_record_get_if(observable, event);
     const ecs_event_record_t *wcer = flecs_event_record_get_if(observable, EcsWildcard);
     const ecs_event_record_t *er_onset = flecs_event_record_get_if(observable, EcsOnSet);
-    const ecs_event_record_t *er_unset = flecs_event_record_get_if(observable, EcsUnSet);
 
     ecs_data_t *storage = NULL;
     ecs_column_t *columns = NULL;
@@ -1213,13 +1204,7 @@ void flecs_emit(
     /* Does table has observed entities */
     bool has_observed = table_flags & EcsTableHasTraversable;
 
-    /* When a relationship is removed, the events reachable through that 
-     * relationship should emit UnSet events. This is part of the behavior that
-     * allows observers to be agnostic of whether a component is inherited. */
-    bool can_unset = count && (event == EcsOnRemove) && !no_on_set;
-
     ecs_event_id_record_t *iders[5] = {0};
-    int32_t unset_count = 0;
 
     if (count && can_forward && has_observed) {
         flecs_emit_propagate_invalidate(world, table, offset, count);
@@ -1285,9 +1270,6 @@ repeat_event:
                         /* Adding an IsA relationship will emit OnSet events for
                          * any new reachable components. */
                         er_fwd = er_onset;
-                    } else if (event == EcsOnRemove) {
-                        /* Vice versa for removing an IsA relationship. */
-                        er_fwd = er_unset;
                     }
                 }
 
@@ -1331,14 +1313,6 @@ repeat_event:
             ider_count = flecs_event_observers_get(er, id, iders);
             idr = idr ? idr : flecs_id_record_get(world, id);
             ecs_assert(idr != NULL, ECS_INTERNAL_ERROR, NULL);
-        }
-
-        if (can_unset) {
-            /* Increase UnSet count in case this is a component (has data). This
-             * will cause the event loop to be ran again as UnSet event. */
-            idr = idr ? idr : flecs_id_record_get(world, id);
-            ecs_assert(idr != NULL, ECS_INTERNAL_ERROR, NULL);
-            unset_count += (idr->type_info != NULL);
         }
 
         if (!ider_count && !override_ptr) {
@@ -1422,11 +1396,6 @@ repeat_event:
                 }
 
                 it.ptrs[0] = ptr;
-            } else {
-                if (it.event == EcsUnSet) {
-                    /* Only valid for components, not tags */
-                    continue;
-                }
             }
         }
 
@@ -1452,16 +1421,7 @@ repeat_event:
     }
 
     can_override = false; /* Don't override twice */
-    can_unset = false; /* Don't unset twice */
     can_forward = false; /* Don't forward twice */
-
-    if (unset_count && er_unset && (er != er_unset)) {
-        /* Repeat event loop for UnSet event */
-        unset_count = 0;
-        er = er_unset;
-        it.event = EcsUnSet;
-        goto repeat_event;
-    }
 
     if (wcer && er != wcer) {
         /* Repeat event loop for Wildcard event */

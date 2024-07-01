@@ -944,7 +944,7 @@ void Observer_2_terms_w_un_set(void) {
     Probe ctx = {0};
     ecs_entity_t o = ecs_observer_init(world, &(ecs_observer_desc_t){
         .query.terms = {{ecs_id(Position)}, {TagB}},
-        .events = {EcsUnSet},
+        .events = {EcsOnRemove},
         .callback = Observer,
         .ctx = &ctx
     });
@@ -965,7 +965,7 @@ void Observer_2_terms_w_un_set(void) {
     test_int(ctx.invoked, 1);
     test_int(ctx.count, 1);
     test_int(ctx.system, o);
-    test_int(ctx.event, EcsUnSet);
+    test_int(ctx.event, EcsOnRemove);
     test_int(ctx.term_count, 2);
     test_null(ctx.param);
 
@@ -1550,7 +1550,7 @@ void Observer_unset_1_of_1(void) {
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
-    ECS_OBSERVER(world, UnSet, EcsUnSet, Position);
+    ECS_OBSERVER(world, UnSet, EcsOnRemove, Position);
 
     Probe ctx = { 0 };
     ecs_set_ctx(world, &ctx, NULL);
@@ -1593,7 +1593,7 @@ void Observer_unset_1_of_2(void) {
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
-    ECS_OBSERVER(world, UnSet, EcsUnSet, Position, Velocity);
+    ECS_OBSERVER(world, UnSet, EcsOnRemove, Position, Velocity);
 
     Probe ctx = { 0 };
     ecs_set_ctx(world, &ctx, NULL);
@@ -1643,7 +1643,7 @@ void Observer_unset_1_of_3(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
     ECS_COMPONENT(world, Mass);
-    ECS_OBSERVER(world, UnSet, EcsUnSet, Position, Velocity, Mass);
+    ECS_OBSERVER(world, UnSet, EcsOnRemove, Position, Velocity, Mass);
 
     Probe ctx = { 0 };
     ecs_set_ctx(world, &ctx, NULL);
@@ -1701,7 +1701,7 @@ void Observer_unset_on_delete_1(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
-    ECS_OBSERVER(world, UnSet, EcsUnSet, Position);
+    ECS_OBSERVER(world, UnSet, EcsOnRemove, Position);
 
     Probe ctx = { 0 };
     ecs_set_ctx(world, &ctx, NULL);    
@@ -1736,7 +1736,7 @@ void Observer_unset_on_delete_2(void) {
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
-    ECS_OBSERVER(world, UnSet, EcsUnSet, Position, Velocity);
+    ECS_OBSERVER(world, UnSet, EcsOnRemove, Position, Velocity);
 
     Probe ctx = { 0 };
     ecs_set_ctx(world, &ctx, NULL);    
@@ -1777,7 +1777,7 @@ void Observer_unset_on_delete_3(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
     ECS_COMPONENT(world, Mass);
-    ECS_OBSERVER(world, UnSet, EcsUnSet, Position, Velocity, Mass);
+    ECS_OBSERVER(world, UnSet, EcsOnRemove, Position, Velocity, Mass);
 
     Probe ctx = { 0 };
     ecs_set_ctx(world, &ctx, NULL);    
@@ -1822,7 +1822,7 @@ void Observer_unset_on_fini_1(void) {
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
-    ECS_OBSERVER(world, UnSet, EcsUnSet, Position);
+    ECS_OBSERVER(world, UnSet, EcsOnRemove, Position);
 
     Probe ctx = { 0 };
     ecs_set_ctx(world, &ctx, NULL);    
@@ -1859,7 +1859,7 @@ void Observer_unset_on_fini_2(void) {
 
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
-    ECS_OBSERVER(world, UnSet, EcsUnSet, Position, Velocity);
+    ECS_OBSERVER(world, UnSet, EcsOnRemove, Position, Velocity);
 
     Probe ctx = { 0 };
     ecs_set_ctx(world, &ctx, NULL);    
@@ -1905,7 +1905,7 @@ void Observer_unset_on_fini_3(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
     ECS_COMPONENT(world, Mass);
-    ECS_OBSERVER(world, UnSet, EcsUnSet, Position, Velocity, Mass);
+    ECS_OBSERVER(world, UnSet, EcsOnRemove, Position, Velocity, Mass);
 
     Probe ctx = { 0 };
     ecs_set_ctx(world, &ctx, NULL);    
@@ -1960,9 +1960,9 @@ void Observer_overlapping_unset_systems(void) {
     ECS_COMPONENT(world, Velocity);
     ECS_COMPONENT(world, Mass);
 
-    ECS_OBSERVER(world, UnSetA, EcsUnSet, Position);
-    ECS_OBSERVER(world, UnSetB, EcsUnSet, Position, Velocity);
-    ECS_OBSERVER(world, UnSet, EcsUnSet, Position, Velocity);
+    ECS_OBSERVER(world, UnSetA, EcsOnRemove, Position);
+    ECS_OBSERVER(world, UnSetB, EcsOnRemove, Position, Velocity);
+    ECS_OBSERVER(world, UnSet, EcsOnRemove, Position, Velocity);
 
     Probe ctx = { 0 };
     ecs_set_ctx(world, &ctx, NULL);  
@@ -2011,7 +2011,7 @@ void Observer_unset_move_to_nonempty_table(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ECS_OBSERVER(world, UnSet_TestComp, EcsUnSet, Position);
+    ECS_OBSERVER(world, UnSet_TestComp, EcsOnRemove, Position);
 
     Probe ctx = { 0 };
     ecs_set_ctx(world, &ctx, NULL);  
@@ -2081,7 +2081,7 @@ void Observer_write_in_unset(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    ECS_OBSERVER(world, UnSet_WriteComp, EcsUnSet, Position, Velocity);
+    ECS_OBSERVER(world, UnSet_WriteComp, EcsOnRemove, Position, Velocity);
 
     ecs_entity_t e = ecs_insert(world, ecs_value(Position, {10, 20}));
     ecs_set(world, e, Velocity, {1, 2});
@@ -2967,7 +2967,7 @@ void Observer_mixed_un_set_w_tag(void) {
     Probe ctx = {0};
     ecs_entity_t t1 = ecs_observer_init(world, &(ecs_observer_desc_t){
         .query.terms = {{ TagA }, { ecs_id(Position) }},
-        .events = {EcsUnSet},
+        .events = {EcsOnRemove},
         .callback = Observer,
         .ctx = &ctx
     });
@@ -2998,7 +2998,7 @@ void Observer_mixed_un_set_w_tag(void) {
     test_int(ctx.invoked, 1);
     test_int(ctx.count, 1);
     test_int(ctx.e[0], e2);
-    test_int(ctx.event, EcsUnSet);
+    test_int(ctx.event, EcsOnRemove);
     test_int(ctx.event_id, ecs_id(Position));
 
     ecs_fini(world);
@@ -5308,82 +5308,6 @@ void Observer_tag_w_on_set_and_on_add_reverse(void) {
 
     ecs_entity_t e2 = ecs_new(world);
     ecs_add_id(world, e2, tag);
-    test_int(ctx.invoked, 0);
-
-    ecs_fini(world);
-}
-
-void Observer_tag_w_un_set_and_on_remove(void) {
-    ecs_world_t *world = ecs_mini();
-    
-    ecs_entity_t tag = ecs_new(world);
-    ecs_entity_t e1 = ecs_new(world);
-
-    Probe ctx = {0};
-
-    ecs_entity_t o = ecs_observer(world, {
-        .query.terms = {{ tag }},
-        .events = {EcsOnRemove, EcsUnSet},
-        .callback = Observer,
-        .ctx = &ctx
-    });
-
-    ecs_add_id(world, e1, tag);
-    test_int(ctx.invoked, 0);
-
-    ecs_remove_id(world, e1, tag);
-
-    test_int(ctx.invoked, 1);
-    test_int(ctx.count, 1);
-    test_int(ctx.e[0], e1);
-    test_int(ctx.s[0][0], 0);
-    test_int(ctx.c[0][0], tag);
-    test_int(ctx.event, EcsOnRemove);
-
-    ecs_delete(world, o);
-    ecs_os_zeromem(&ctx);
-
-    ecs_entity_t e2 = ecs_new(world);
-    ecs_add_id(world, e2, tag);
-    ecs_remove_id(world, e1, tag);
-    test_int(ctx.invoked, 0);
-
-    ecs_fini(world);
-}
-
-void Observer_tag_w_un_set_and_on_remove_reverse(void) {
-    ecs_world_t *world = ecs_mini();
-    
-    ecs_entity_t tag = ecs_new(world);
-    ecs_entity_t e1 = ecs_new(world);
-
-    Probe ctx = {0};
-
-    ecs_entity_t o = ecs_observer(world, {
-        .query.terms = {{ tag }},
-        .events = {EcsUnSet, EcsOnRemove},
-        .callback = Observer,
-        .ctx = &ctx
-    });
-
-    ecs_add_id(world, e1, tag);
-    test_int(ctx.invoked, 0);
-
-    ecs_remove_id(world, e1, tag);
-
-    test_int(ctx.invoked, 1);
-    test_int(ctx.count, 1);
-    test_int(ctx.e[0], e1);
-    test_int(ctx.s[0][0], 0);
-    test_int(ctx.c[0][0], tag);
-    test_int(ctx.event, EcsOnRemove);
-
-    ecs_delete(world, o);
-    ecs_os_zeromem(&ctx);
-
-    ecs_entity_t e2 = ecs_new(world);
-    ecs_add_id(world, e2, tag);
-    ecs_remove_id(world, e1, tag);
     test_int(ctx.invoked, 0);
 
     ecs_fini(world);

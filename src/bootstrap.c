@@ -670,7 +670,6 @@ void flecs_bootstrap(
     ecs_make_alive(world, EcsOnAdd);
     ecs_make_alive(world, EcsOnRemove);
     ecs_make_alive(world, EcsOnSet);
-    ecs_make_alive(world, EcsUnSet);
     ecs_make_alive(world, EcsOnDelete);
     ecs_make_alive(world, EcsPanic);
     ecs_make_alive(world, EcsFlag);
@@ -833,7 +832,6 @@ void flecs_bootstrap(
     flecs_bootstrap_entity(world, EcsOnAdd, "OnAdd", EcsFlecsCore);
     flecs_bootstrap_entity(world, EcsOnRemove, "OnRemove", EcsFlecsCore);
     flecs_bootstrap_entity(world, EcsOnSet, "OnSet", EcsFlecsCore);
-    flecs_bootstrap_entity(world, EcsUnSet, "UnSet", EcsFlecsCore);
     flecs_bootstrap_entity(world, EcsMonitor, "EcsMonitor", EcsFlecsCore);
     flecs_bootstrap_entity(world, EcsOnTableCreate, "OnTableCreate", EcsFlecsCore);
     flecs_bootstrap_entity(world, EcsOnTableDelete, "OnTableDelete", EcsFlecsCore);

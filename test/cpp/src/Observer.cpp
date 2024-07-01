@@ -83,7 +83,7 @@ void Observer_2_terms_un_set(void) {
     int32_t count = 0;
 
     ecs.observer<Position, Velocity>()
-        .event(flecs::UnSet)
+        .event(flecs::OnRemove)
         .each([&](Position& p, Velocity& v) {
             count ++;
             test_int(p.x, 10);
