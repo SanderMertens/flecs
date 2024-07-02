@@ -651,7 +651,11 @@
                 "pair_sweep_wildcard_second",
                 "create_w_entity_deferred",
                 "32_terms",
-                "33_terms_expr"
+                "33_terms_expr",
+                "stage_query",
+                "world_query_w_stage_iter",
+                "stage_query_w_nth_stage",
+                "world_query_w_nth_stage_iter"
             ]
         }, {
             "id": "Combinations",

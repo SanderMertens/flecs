@@ -1178,7 +1178,7 @@ void flecs_query_cache_fini(
     ecs_query_impl_t *impl)
 {
     ecs_world_t *world = impl->pub.world;
-    ecs_stage_t *stage = impl->pub.stage;
+    ecs_stage_t *stage = impl->stage;
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
 
     ecs_query_cache_t *cache = impl->cache;
@@ -1224,8 +1224,8 @@ ecs_query_cache_t* flecs_query_cache_init(
     ecs_query_impl_t *impl,
     const ecs_query_desc_t *const_desc)
 {
-    ecs_world_t *world = impl->pub.world;
-    ecs_stage_t *stage = impl->pub.stage;
+    ecs_world_t *world = impl->pub.real_world;
+    ecs_stage_t *stage = impl->stage;
     ecs_check(world != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_check(const_desc != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(const_desc->_canary == 0, ECS_INVALID_PARAMETER,

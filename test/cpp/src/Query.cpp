@@ -3203,10 +3203,10 @@ void Query_run_w_iter_fini_interrupt(void) {
     flecs::entity e1 = ecs.entity()
         .set<Position>({10, 20})
         .add<Foo>();
-    flecs::entity e2 = ecs.entity()
+    /* flecs::entity e2 = */ ecs.entity()
         .set<Position>({10, 20})
         .add<Bar>();
-    flecs::entity e3 = ecs.entity()
+    /* flecs::entity e3 = */ ecs.entity()
         .set<Position>({10, 20})
         .add<Hello>();
 
@@ -3238,4 +3238,52 @@ void Query_run_w_iter_fini_empty(void) {
     });
 
     test_int(count, 1);
+}
+
+void Query_add_to_match_from_staged_query(void) {
+    flecs::world ecs;
+
+    ecs.component<Position>();
+    ecs.component<Velocity>();
+
+    flecs::entity e = ecs.entity().add<Position>();
+
+    flecs::world stage = ecs.get_stage(0);
+
+    ecs.readonly_begin(false);
+
+    stage.query<Position>()
+        .each([](flecs::entity e, Position&) {
+            e.add<Velocity>();
+            test_assert(!e.has<Velocity>());
+        });
+
+    ecs.readonly_end();
+
+    test_assert(e.has<Position>());
+    test_assert(e.has<Velocity>());
+}
+
+void Query_add_to_match_from_staged_query_readonly_threaded(void) {
+    flecs::world ecs;
+
+    ecs.component<Position>();
+    ecs.component<Velocity>();
+
+    flecs::entity e = ecs.entity().add<Position>();
+
+    flecs::world stage = ecs.get_stage(0);
+
+    ecs.readonly_begin(true);
+
+    stage.query<Position>()
+        .each([](flecs::entity e, Position&) {
+            e.add<Velocity>();
+            test_assert(!e.has<Velocity>());
+        });
+
+    ecs.readonly_end();
+
+    test_assert(e.has<Position>());
+    test_assert(e.has<Velocity>());
 }

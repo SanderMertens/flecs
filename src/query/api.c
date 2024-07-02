@@ -9,7 +9,7 @@
 ecs_mixins_t ecs_query_t_mixins = {
     .type_name = "ecs_query_t",
     .elems = {
-        [EcsMixinWorld] = offsetof(ecs_query_impl_t, pub.world),
+        [EcsMixinWorld] = offsetof(ecs_query_impl_t, pub.real_world),
         [EcsMixinEntity] = offsetof(ecs_query_impl_t, pub.entity),
         [EcsMixinDtor] = offsetof(ecs_query_impl_t, dtor)
     }
@@ -179,7 +179,7 @@ int flecs_query_create_cache(
                 goto error;
             }
 
-            impl->field_map = flecs_alloc_n(&impl->pub.stage->allocator,
+            impl->field_map = flecs_alloc_n(&impl->stage->allocator,
                 int8_t, FLECS_TERM_COUNT_MAX);
 
             ecs_os_memcpy_n(impl->field_map, field_map, int8_t, dst_count);
@@ -195,7 +195,7 @@ static
 void flecs_query_fini(
     ecs_query_impl_t *impl)
 {
-    ecs_stage_t *stage = impl->pub.stage;
+    ecs_stage_t *stage = impl->stage;
     ecs_assert(stage != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_allocator_t *a = &stage->allocator;
 
@@ -227,7 +227,7 @@ void flecs_query_fini(
             continue;
         }
 
-        ecs_id_record_t *idr = flecs_id_record_get(q->world, term->id);
+        ecs_id_record_t *idr = flecs_id_record_get(q->real_world, term->id);
         if (idr) {
             if (!(q->world->flags & EcsWorldQuit)) {
                 if (ecs_os_has_threading()) {
@@ -243,7 +243,7 @@ void flecs_query_fini(
     }
 
     if (impl->tokens) {
-        flecs_free(&q->stage->allocator, impl->tokens_len, impl->tokens);
+        flecs_free(&impl->stage->allocator, impl->tokens_len, impl->tokens);
     }
 
     if (impl->cache) {
@@ -294,7 +294,7 @@ void flecs_query_populate_tokens(
 
     /* Step 2: reassign term tokens to buffer */
     if (len) {
-        impl->tokens = flecs_alloc(&q->stage->allocator, len);
+        impl->tokens = flecs_alloc(&impl->stage->allocator, len);
         impl->tokens_len = flecs_ito(int16_t, len);
         char *token = impl->tokens, *next;
 
@@ -319,7 +319,7 @@ void flecs_query_populate_tokens(
     }
 
     if (old_tokens) {
-        flecs_free(&q->stage->allocator, old_tokens_len, old_tokens);
+        flecs_free(&impl->stage->allocator, old_tokens_len, old_tokens);
     }
 }
 
@@ -357,6 +357,7 @@ ecs_query_t* ecs_query_init(
     ecs_world_t *world, 
     const ecs_query_desc_t *const_desc)
 {
+    ecs_world_t *world_arg = world;
     ecs_stage_t *stage = flecs_stage_from_world(&world);
     ecs_query_impl_t *result = flecs_bcalloc(&stage->allocators.query_impl);
     flecs_poly_init(result, ecs_query_t);
@@ -380,8 +381,15 @@ ecs_query_t* ecs_query_init(
 
     /* Initialize the query */
     result->pub.entity = entity;
-    result->pub.world = world;
-    result->pub.stage = stage;
+    result->pub.real_world = world;
+    result->pub.world = world_arg;
+    result->stage = stage;
+
+    ecs_assert(flecs_poly_is(result->pub.real_world, ecs_world_t),
+        ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(flecs_poly_is(result->stage, ecs_stage_t),
+        ECS_INTERNAL_ERROR, NULL);
+
     if (flecs_query_finalize_query(world, &result->pub, &desc)) {
         goto error;
     }
@@ -393,8 +401,7 @@ ecs_query_t* ecs_query_init(
      * token buffer which simplifies memory management & reduces allocations. */
     flecs_query_populate_tokens(result);
 
-    /* Initialize static context & mixins */
-    result->pub.stage = stage;
+    /* Initialize static context */
     result->pub.ctx = const_desc->ctx;
     result->pub.binding_ctx = const_desc->binding_ctx;
     result->ctx_free = const_desc->ctx_free;
