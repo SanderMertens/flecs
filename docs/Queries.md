@@ -64,7 +64,7 @@ e2.set(Mass{100});        // create archetype [Position, Velocity, Mass]
 
 Archetypes are important for queries. Since all entities in an archetype have the same components, and a query matches entities with specific components, a query can often match entire archetypes instead of individual entities. This is one of the main reasons why queries in an archetype ECS are fast.
 
-The second reason that queries in an archetype ECS are fast is that they are cheap to cache. While an archetype is created for each unique component combinations, games typically only use a finite set of component combinations which are created quickly after game assets are loaded.
+The second reason that queries in an archetype ECS are fast is that they are cheap to cache. While an archetype is created for each unique component combination, games typically only use a finite set of component combinations which are created quickly after game assets are loaded.
 
 This means that instead of searching for archetypes each time a query is evaluated, a query can instead cache the list of matching archetypes. This is a cheap cache to maintain: even though entities can move in and out of archetypes, the archetypes themselves are often stable.
 
@@ -83,7 +83,7 @@ Flecs has both cached and uncached queries. If cached queries are so fast, why e
 
 As a rule of thumb, if you have a query that is evaluated each frame (as is typically the case with systems), they will benefit from being cached. If you need to create a query ad-hoc, an uncached query makes more sense.
 
-Ad-hoc queries are often necessary when a game needs to find entities that match a condition that is only known at runtime, for example to find all entities for a specific parent.
+Ad-hoc queries are often necessary when a game needs to find entities that match a condition that is only known at runtime, for example to find all child entities for a specific parent.
 
 ### Cache kinds
 Queries can be created with a "cache kind", which specifies the caching behavior for a query. Flecs has four different caching kinds:
