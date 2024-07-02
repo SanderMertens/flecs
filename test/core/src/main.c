@@ -1445,6 +1445,8 @@ void Observer_observer_no_id_in_scope(void);
 void Observer_register_comp_in_emit_named_entity(void);
 void Observer_register_comp_w_macro_in_emit_named_entity(void);
 void Observer_add_to_self_in_emit_entity(void);
+void Observer_on_set_w_not_tag(void);
+void Observer_on_set_w_not_component(void);
 void Observer_cache_test_1(void);
 void Observer_cache_test_2(void);
 void Observer_cache_test_3(void);
@@ -7658,6 +7660,14 @@ bake_test_case Observer_testcases[] = {
         Observer_add_to_self_in_emit_entity
     },
     {
+        "on_set_w_not_tag",
+        Observer_on_set_w_not_tag
+    },
+    {
+        "on_set_w_not_component",
+        Observer_on_set_w_not_component
+    },
+    {
         "cache_test_1",
         Observer_cache_test_1
     },
@@ -10280,7 +10290,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        165,
+        167,
         Observer_testcases
     },
     {

@@ -900,6 +900,8 @@ e.Remove<Velocity>();
 
 Inversion also works the other way around: a `not` term will be inverted to use an `OnAdd` event for an `OnRemove` observer. Note that in either case, the observer will be invoked with the observer event, e.g. `OnAdd` for an `OnAdd` observer, and `OnRemove` for an `OnRemove` observer.
 
+Inversion also applies to `OnSet` events: an `OnSet` event will be inverted to `OnRemove` when it is used in combination with a `not` term.
+
 ## Monitors
 A monitor is an observer that fires when an entity starts and stops matching a query. Whether an entity starts or stops matching is communicated with an `OnAdd` or `OnRemove` event. Monitors can only specify a single `Monitor` event. An example:
 

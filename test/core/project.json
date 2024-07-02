@@ -1506,6 +1506,8 @@
                 "register_comp_in_emit_named_entity",
                 "register_comp_w_macro_in_emit_named_entity",
                 "add_to_self_in_emit_entity",
+                "on_set_w_not_tag",
+                "on_set_w_not_component",
                 "cache_test_1",
                 "cache_test_2",
                 "cache_test_3",
