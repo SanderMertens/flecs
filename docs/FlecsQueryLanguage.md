@@ -482,7 +482,7 @@ Dependent variables can also be created from optional terms:
 ```c
 // Planet($object) is only evaluated if (DockedTo, $object)
 // returned a result.
-SpaceShip, ?(Dockedto, $object), Planet($object)
+SpaceShip, ?(DockedTo, $object), Planet($object)
 ```
 
 ### Query scopes

@@ -107,7 +107,7 @@ my_entity {
 }
 ```
 
-A component must exist before it can be used. Furthermore, for it to be assigneable with a value, it also needs to be described in the reflection framework.
+A component must exist before it can be used. Furthermore, for it to be assignable with a value, it also needs to be described in the reflection framework.
 
 A component can also be added without a value. This will create a default constructed component. Example:
 
@@ -352,11 +352,11 @@ struct Position {
 ```
 
 ### With statement
-When you're buildin a scene or asset you may find yourself often repeating the same components for multiple entities. To avoid this, a `with` statement can be used. For example:
+When you're building a scene or asset you may find yourself often repeating the same components for multiple entities. To avoid this, a `with` statement can be used. For example:
 
 ```c
 with SpaceShip {
-  MilleniumFalcon {}
+  MillenniumFalcon {}
   UssEnterprise {}
   UssVoyager {}
   Rocinante {}
@@ -366,7 +366,7 @@ with SpaceShip {
 This is equivalent to doing:
 
 ```c
-MilleniumFalcon {
+MillenniumFalcon {
   SpaceShip
 }
 
@@ -387,7 +387,7 @@ With statements can contain multiple tags:
 
 ```c
 with SpaceShip, HasWeapons {
-  MilleniumFalcon {}
+  MillenniumFalcon {}
   UssEnterprise {}
   UssVoyager {}
   Rocinante {}
@@ -405,7 +405,7 @@ with Color(38, 25, 13) {
 ```
 
 ### Variables
-Scripts can contain variables, which are useful for often repeated values. Variables are created with the `const` keyworld. Example:
+Scripts can contain variables, which are useful for often repeated values. Variables are created with the `const` keyword. Example:
 
 ```c
 const pi = 3.1415926
@@ -617,7 +617,7 @@ enum Color {
 ```
 
 ## Templates
-Templates are parametrizable scripts that can be used to create procedural assets. Templates can be created with the `template` keyword. Example:
+Templates are parametrized scripts that can be used to create procedural assets. Templates can be created with the `template` keyword. Example:
 
 ```c
 template Square {
