@@ -695,31 +695,6 @@ int main() {
 
 Anyone who paid careful attention to this example will notice that the `ecs_add_id` operation accepts two regular entities.
 
-## Observers
-Observers are callbacks that are invoked when one or more events matches the query of an observer. Events can be either user defined or builtin. Examples of builtin events are `OnAdd`, `OnRemove` and `OnSet`.
-
-When an observer has a query with more than one component, the observer will not match until the entity for which the event is emitted satisfies the entire query.
-
-An example of an observer with a single component:
-
-```c
-ECS_OBSERVER(world, AddPosition, EcsOnAdd, Position);
-```
-
-The implementation of the observer looks similar to a system:
-
-```c
-void AddPosition(ecs_iter_t *it) {
-    Position *p = ecs_field(it, Position, 0);
-
-    for (int i = 0; i < it->count; i++) {
-        p[i].x = 10;
-        p[i].y = 20;
-        printf("Position added\n");
-    }
-}
-```
-
 ## Modules
 Modules allow an application to split up systems and components into separate decoupled units. The purpose of modules is to make it easier to organize systems and components for large projects. Additionally, modules also make it easier to split off functionality into separate compilation units.
 

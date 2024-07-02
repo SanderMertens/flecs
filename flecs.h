@@ -3225,7 +3225,7 @@ typedef void (*flecs_poly_dtor_t)(
 typedef enum ecs_inout_kind_t {
     EcsInOutDefault,  /**< InOut for regular terms, In for shared terms */
     EcsInOutNone,     /**< Term is neither read nor written */
-    EcsInOutFilter,   /**< Same as InOutNOne + prevents term from triggering observers */
+    EcsInOutFilter,   /**< Same as InOutNone + prevents term from triggering observers */
     EcsInOut,         /**< Term is both read and written */
     EcsIn,            /**< Term is only read */
     EcsOut,           /**< Term is only written */
