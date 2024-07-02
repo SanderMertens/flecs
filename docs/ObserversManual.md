@@ -973,7 +973,7 @@ e.remove<Position>();
 <li><b class="tab-title">C#</b>
 
 ```cs
-// Observer with a Not term
+// Monitor observer
 world.Observer<Position, Velocity>()
     .Event(flecs::Monitor)
     .Each((Iter it, int i, ref Position p, ref Velocity v) =>
@@ -1177,7 +1177,7 @@ ecs_singleton_set(world, TimeOfDay, {0});
 // Observer with singleton source
 ecs_observer(world, {
     .query.terms = {
-        { ecs_id(TimeOfDay), .src.id = TimeOfDay }
+        { ecs_id(TimeOfDay), .src.id = ecs_id(TimeOfDay) }
     },
     .events = { EcsOnSet },
     .callback = MyObserver
@@ -1218,10 +1218,10 @@ flecs::entity e = world.entity().set(TimeOfDay{0});
 world.Set(new TimeOfDay(0));
 
 // Observer with singleton source
-world.Observer<Game>()
-    .TermAt(0).Singleton() // Match TimeOfDay on Game
+world.Observer<TimeOfDay>()
+    .TermAt(0).Singleton()
     .Event(flecs::OnSet)
-    .Each((Iter it, int i, ref Position p, ref Velocity v) =>
+    .Each((Iter it, int i, ref TimeOfDay t) =>
     {
         // ...
     });
@@ -1704,8 +1704,6 @@ world.DeferEnd();
 </ul>
 </div>
 
-The following sections describe things to keep in mind about the order in which observers are invoked.
-
 ### Observer disabling
 Just like systems, observers can be disabled which prevents them from being invoked. Additionally, when the module in which an observer is stored is disabled, all observers are disabled as well. The same happens for systems (when using the default pipeline). This makes it easy to disable all logic in a module with a single operation.
 
@@ -1713,7 +1711,7 @@ Just like systems, observers can be disabled which prevents them from being invo
 When observers are invoked, there are a few things to keep in mind when considering the order in which things happen:
 
 #### Observer order is undefined
-When two observers match the same event, the order in which they are executed is undefined. Applications should never rely on observer order, not even if the observed order is apparently correct. The order in which observers, while deterministic, depends on many different things, and it is easy to break the order.
+When two observers match the same event, the order in which they are executed is undefined. Applications should never rely on observer order, not even if the observed order is apparently "correct" for the application logic. The order in which observers, while deterministic, depends on many different things, and it is easy to break the order.
 
 #### Event order is undefined between entities
 No assumptions should be made about the order in which events are emitted for different entities. This allows the implementation to batch commands for a single entity together, which can greatly improve efficiency.
