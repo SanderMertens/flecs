@@ -16162,7 +16162,7 @@ ecs_entity_t flecs_get_observer_event(
 {
     /* If operator is Not, reverse the event */
     if (term->oper == EcsNot) {
-        if (event == EcsOnAdd) {
+        if (event == EcsOnAdd || event == EcsOnSet) {
             event = EcsOnRemove;
         } else if (event == EcsOnRemove) {
             event = EcsOnAdd;
