@@ -5784,6 +5784,74 @@ void Observer_add_to_self_in_emit_entity(void) {
     ecs_fini(world);
 }
 
+void Observer_on_set_w_not_tag(void) {
+    ecs_world_t* world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Foo);
+
+    Probe ctx;
+
+    ecs_observer(world, {
+        .query.terms = {
+            { .id = ecs_id(Position) },
+            { .id = Foo, .oper = EcsNot },
+        },
+        .callback = Observer_w_1_value,
+        .events = { EcsOnSet },
+        .ctx = &ctx,
+    });
+
+    ecs_entity_t e = ecs_new(world);
+
+    ecs_set(world, e, Position, {10, 20});
+    test_int(ctx.invoked, 1);
+
+    ecs_os_zeromem(&ctx);
+
+    ecs_add(world, e, Foo);
+    test_int(ctx.invoked, 0);
+
+    ecs_remove(world, e, Foo);
+    test_int(ctx.invoked, 1);
+
+    ecs_fini(world);
+}
+
+void Observer_on_set_w_not_component(void) {
+    ecs_world_t* world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    Probe ctx;
+
+    ecs_observer(world, {
+        .query.terms = {
+            { .id = ecs_id(Position) },
+            { .id = ecs_id(Velocity), .oper = EcsNot },
+        },
+        .callback = Observer_w_1_value,
+        .events = { EcsOnSet },
+        .ctx = &ctx,
+    });
+
+    ecs_entity_t e = ecs_new(world);
+
+    ecs_set(world, e, Position, {10, 20});
+    test_int(ctx.invoked, 1);
+
+    ecs_os_zeromem(&ctx);
+
+    ecs_set(world, e, Velocity, {1, 2});
+    test_int(ctx.invoked, 0);
+
+    ecs_remove(world, e, Velocity);
+    test_int(ctx.invoked, 1);
+
+    ecs_fini(world);
+}
+
 void Observer_cache_test_1(void) {
     ecs_world_t *world = ecs_mini();
     
