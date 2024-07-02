@@ -597,6 +597,8 @@ ecs_entity_t flecs_parse_discover_type(
                 return 0;
             }
 
+            ecs_assert(desc != NULL, ECS_INTERNAL_ERROR, NULL);
+            ecs_assert(desc->lookup_action != NULL, ECS_INTERNAL_ERROR, NULL);
             ecs_entity_t type = desc->lookup_action(
                 world, token, desc->lookup_ctx);
             if (!type) {
@@ -1499,6 +1501,8 @@ const char* flecs_script_expr_run(
                     }
                 } else {
                     /* Component expression */
+                    ecs_assert(desc != NULL, ECS_INTERNAL_ERROR, NULL);
+                    ecs_assert(desc->lookup_action != NULL, ECS_INTERNAL_ERROR, NULL);
                     ecs_entity_t e = desc->lookup_action(
                         world, token, desc->lookup_ctx);
                     if (!e) {

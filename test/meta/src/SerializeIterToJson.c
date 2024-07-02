@@ -1263,7 +1263,7 @@ void SerializeIterToJson_serialize_ids(void) {
     test_assert(json != NULL);
 
     char *expect = flecs_asprintf(
-        "{\"results\":[{\"name\":\"e\", \"id\":513, \"fields\":{}}]}",
+        "{\"results\":[{\"name\":\"e\", \"id\":%u, \"fields\":{}}]}",
         (uint32_t)e);
     test_json(json, expect);
 
@@ -1295,7 +1295,7 @@ void SerializeIterToJson_serialize_ids_2_entities(void) {
     test_assert(json != NULL);
 
     char *expect = flecs_asprintf(
-        "{\"results\":[{\"name\":\"e1\", \"id\":513, \"fields\":{}}, {\"name\":\"e2\", \"id\":514, \"fields\":{}}]}",
+        "{\"results\":[{\"name\":\"e1\", \"id\":%u, \"fields\":{}}, {\"name\":\"e2\", \"id\":%u, \"fields\":{}}]}",
         (uint32_t)e1, (uint32_t)e2);
     test_json(json, expect);
 
@@ -2133,7 +2133,7 @@ void SerializeIterToJson_serialize_labels_w_offset(void) {
     char *json = ecs_iter_to_json(&it, &desc);
 
     char *expect = flecs_asprintf(
-        "{\"results\":[{\"name\":\"#513\", \"doc\":{\"label\":\"e1\"}, \"fields\":{\"is_set\":[true, false], \"ids\":[0, 0]}}, {\"name\":\"#514\", \"doc\":{\"label\":\"e2\"}, \"fields\":{\"is_set\":[true, false], \"ids\":[0, 0]}}]}",
+        "{\"results\":[{\"name\":\"#%u\", \"doc\":{\"label\":\"e1\"}, \"fields\":{\"is_set\":[true, false], \"ids\":[0, 0]}}, {\"name\":\"#%u\", \"doc\":{\"label\":\"e2\"}, \"fields\":{\"is_set\":[true, false], \"ids\":[0, 0]}}]}",
         (uint32_t)e1, (uint32_t)e2);
 
     test_json(json, expect);
