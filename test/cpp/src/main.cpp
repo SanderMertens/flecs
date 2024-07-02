@@ -641,7 +641,12 @@ void Query_run_w_iter_fini(void);
 =======
 void Query_run_w_iter_fini_interrupt(void);
 void Query_run_w_iter_fini_empty(void);
+<<<<<<< HEAD
 >>>>>>> bdcdd0010 (Add ecs_get_entities function)
+=======
+void Query_add_to_match_from_staged_query(void);
+void Query_add_to_match_from_staged_query_readonly_threaded(void);
+>>>>>>> c5e9d2e49 (Create staged iterators from queries created with stage)
 
 // Testsuite 'QueryBuilder'
 void QueryBuilder_setup(void);
@@ -3817,7 +3822,18 @@ bake_test_case Query_testcases[] = {
     {
         "run_w_iter_fini_empty",
         Query_run_w_iter_fini_empty
+<<<<<<< HEAD
 >>>>>>> bdcdd0010 (Add ecs_get_entities function)
+=======
+    },
+    {
+        "add_to_match_from_staged_query",
+        Query_add_to_match_from_staged_query
+    },
+    {
+        "add_to_match_from_staged_query_readonly_threaded",
+        Query_add_to_match_from_staged_query_readonly_threaded
+>>>>>>> c5e9d2e49 (Create staged iterators from queries created with stage)
     }
 };
 
@@ -6650,6 +6666,7 @@ static bake_test_suite suites[] = {
         NULL,
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 <<<<<<< HEAD:test/cpp_api/src/main.cpp
         94,
 =======
@@ -6661,6 +6678,9 @@ static bake_test_suite suites[] = {
 =======
         106,
 >>>>>>> bdcdd0010 (Add ecs_get_entities function)
+=======
+        108,
+>>>>>>> c5e9d2e49 (Create staged iterators from queries created with stage)
         Query_testcases
     },
     {

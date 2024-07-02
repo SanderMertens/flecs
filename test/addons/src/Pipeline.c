@@ -3031,13 +3031,13 @@ void Pipeline_switch_from_threads_to_tasks(void) {
         .entity = ecs_entity(world, {.add = ecs_ids( ecs_dependson(EcsOnUpdate) )}),
         .query = {.terms = {{ ecs_id(Position) }}},
         .callback = SysA
-        });
+    });
 
     ecs_system(world, {
         .entity = ecs_entity(world, {.add = ecs_ids( ecs_dependson(EcsOnUpdate) )}),
         .callback = NoReadonlyAddPosition,
         .immediate = true
-        });
+    });
 
     ecs_set_threads(world, 2);
 

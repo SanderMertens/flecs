@@ -353,6 +353,8 @@ typedef struct {
 struct ecs_query_impl_t {
     ecs_query_t pub;              /* Public query data */
 
+    ecs_stage_t *stage;           /* Stage used for allocations */
+
     /* Variables */
     ecs_query_var_t *vars;        /* Variables */
     int32_t var_count;            /* Number of variables */

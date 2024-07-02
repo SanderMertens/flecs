@@ -279,7 +279,18 @@ ecs_iter_t flecs_query_iter(
 
     int32_t i, var_count = impl->var_count, op_count = impl->op_count;
     it.world = ECS_CONST_CAST(ecs_world_t*, world);
-    it.real_world = q->world;
+
+    /* If world passed to iterator is the real world, but query was created from
+     * a stage, stage takes precedence. */
+    if (flecs_poly_is(it.world, ecs_world_t) && 
+        flecs_poly_is(q->world, ecs_stage_t)) 
+    {
+        it.world = ECS_CONST_CAST(ecs_world_t*, q->world);
+    }
+
+    it.real_world = q->real_world;
+    ecs_assert(flecs_poly_is(it.real_world, ecs_world_t),
+        ECS_INTERNAL_ERROR, NULL);
     it.query = q;
     it.system = q->entity;
     it.next = ecs_query_next;
@@ -290,7 +301,7 @@ ecs_iter_t flecs_query_iter(
     it.up_fields = 0;
     flecs_query_apply_iter_flags(&it, q);
 
-    flecs_iter_init(world, &it, 
+    flecs_iter_init(it.world, &it, 
         flecs_iter_cache_ids |
         flecs_iter_cache_columns |
         flecs_iter_cache_sources |
@@ -344,7 +355,7 @@ ecs_iter_t ecs_query_iter(
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(q != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_run_aperiodic(q->world, EcsAperiodicEmptyTables);
+    ecs_run_aperiodic(q->real_world, EcsAperiodicEmptyTables);
 
     /* Ok, only for stats */
     ECS_CONST_CAST(ecs_query_t*, q)->eval_count ++;

@@ -666,8 +666,14 @@
 =======
                 "run_w_iter_fini",
                 "run_w_iter_fini_interrupt",
+<<<<<<< HEAD
                 "run_w_iter_fini_empty"
 >>>>>>> bdcdd0010 (Add ecs_get_entities function)
+=======
+                "run_w_iter_fini_empty",
+                "add_to_match_from_staged_query",
+                "add_to_match_from_staged_query_readonly_threaded"
+>>>>>>> c5e9d2e49 (Create staged iterators from queries created with stage)
             ]
         }, {
             "id": "QueryBuilder",

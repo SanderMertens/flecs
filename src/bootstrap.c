@@ -515,7 +515,7 @@ void flecs_disable_module(ecs_iter_t *it) {
     int32_t i;
     for (i = 0; i < it->count; i ++) {
         flecs_disable_module_observers(
-            it->world, it->entities[i], it->event == EcsOnAdd);
+            it->real_world, it->entities[i], it->event == EcsOnAdd);
     }
 }
 

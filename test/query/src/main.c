@@ -640,6 +640,10 @@ void Basic_pair_sweep_wildcard_second(void);
 void Basic_create_w_entity_deferred(void);
 void Basic_32_terms(void);
 void Basic_33_terms_expr(void);
+void Basic_stage_query(void);
+void Basic_world_query_w_stage_iter(void);
+void Basic_stage_query_w_nth_stage(void);
+void Basic_world_query_w_nth_stage_iter(void);
 
 // Testsuite 'Combinations'
 void Combinations_setup(void);
@@ -4508,6 +4512,22 @@ bake_test_case Basic_testcases[] = {
     {
         "33_terms_expr",
         Basic_33_terms_expr
+    },
+    {
+        "stage_query",
+        Basic_stage_query
+    },
+    {
+        "world_query_w_stage_iter",
+        Basic_world_query_w_stage_iter
+    },
+    {
+        "stage_query_w_nth_stage",
+        Basic_stage_query_w_nth_stage
+    },
+    {
+        "world_query_w_nth_stage_iter",
+        Basic_world_query_w_nth_stage_iter
     }
 };
 
@@ -9862,7 +9882,7 @@ static bake_test_suite suites[] = {
         "Basic",
         Basic_setup,
         NULL,
-        199,
+        203,
         Basic_testcases,
         1,
         Basic_params
