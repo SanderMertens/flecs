@@ -9,7 +9,7 @@ This manual contains a full overview of the query features available in Flecs. S
 
 - Queries can be cached, uncached or a mix of both, which lets games pick the ideal balance between iteration performance, query creation performance and administration overhead.
 
-- Queries have advanced features for matching patterns against entity graphs which can be used to build immersive gameplay without having to build and maintain complex custom data structures ([blog](https://ajmmertens.medium.com/building-games-in-ecs-with-entity-relationships-657275ba2c6c)).
+- Queries have advanced features for matching patterns against entity graphs which can be used to build immersive game play without having to build and maintain complex custom data structures ([blog](https://ajmmertens.medium.com/building-games-in-ecs-with-entity-relationships-657275ba2c6c)).
 
 - Queries support `and`, `or`, `not` and `optional` [operators](#operator-overview).
 
@@ -1954,7 +1954,7 @@ Any relationship used for traversal must have the [Traversable](Relationships.md
 Relationship traversal works for both variable and fixed [sources](#source).
 
 #### Traversal Flags
-Traversal behavior can be customized with the following bitflags, in addition to the relationship being traversed:
+Traversal behavior can be customized with the following bit flags, in addition to the relationship being traversed:
 
 | Name     | DSL identifier | C identifier  | C++ identifier    | Description |
 |----------|----------------|---------------|-------------------|-------------|

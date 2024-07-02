@@ -83,7 +83,7 @@ The ordering information consists out of a phase (see phases and pipelines) and 
 
 On the other hand, if you are working with an existing framework or engine, you may not have the luxury of scheduling everything yourself. The engine may for example provide you with callbacks in which you need to do certain logic. Maybe you want to build your own threading system. In those situations it can make sense to take control of running systems yourself. 
 
-Sometimes you may even not use systems at all, and just run queries. In this case you may want to disable the system addon (see the addsons section in the README). Note that some Flecs features depend on systems, like the REST API and timers.
+Sometimes you may even not use systems at all, and just run queries. In this case you may want to disable the system addon (see the addons section in the README). Note that some Flecs features depend on systems, like the REST API and timers.
 
 ## Phases and Pipelines
 Phases and pipelines are the primitives that Flecs uses to order systems. A pipeline is a set of ordered phases. Systems can be assigned to those phases. When using phases and pipelines correctly, it allows you to write plug & play systems that are easy to reuse in different projects.
@@ -108,16 +108,16 @@ There are some conventions around the builtin phases, and following them helps t
 This phase contains all the systems that load data into your ECS. This would be a good place to load keyboard and mouse inputs.
 
 ### PostLoad
-Often the imported data needs to be processed. Maybe you want to associate your keypresses with high level actions rather than comparing explicitly in your game code if the user pressed the 'K' key. The `PostLoad` phase is a good place for this.
+Often the imported data needs to be processed. Maybe you want to associate your key presses with high level actions rather than comparing explicitly in your game code if the user pressed the 'K' key. The `PostLoad` phase is a good place for this.
 
 ### PreUpdate
 Now that the input is loaded and processed, it's time to get ready to start processing our game logic. Anything that needs to happen after input processing but before processing the game logic can happen here. This can be a good place to prepare the frame, maybe clean up some things from the previous frame, etcetera.
 
 ### OnUpdate
-This is usually where the magic happens! This is where you put all of your gameplay systems. By default systems are added to this phase.
+This is usually where the magic happens! This is where you put all of your game play systems. By default systems are added to this phase.
 
 ### OnValidate
-This phase was introduced to deal with validating the state of the game after processing the gameplay systems. Sometimes you moved entities too close to each other, or the speed of an entity is increased too much. This phase is for righting that wrong. A typical feature to implement in this phase would be collision detection.
+This phase was introduced to deal with validating the state of the game after processing the game play systems. Sometimes you moved entities too close to each other, or the speed of an entity is increased too much. This phase is for righting that wrong. A typical feature to implement in this phase would be collision detection.
 
 ### PostUpdate
 When your game logic has been updated, and your validation pass has ran, you may want to apply some corrections. For example, if your collision detection system detected collisions in the `OnValidate` phase, you may want to move the entities so that they no longer overlap.

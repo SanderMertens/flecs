@@ -371,7 +371,7 @@ conn.query("Position, Velocity, (ChildOf, scene)",
 ```
 
 ## Reference
-The following sections describe the different REST endpoints of the Flecs Remote API. Where applicable the corresponding JSON serialization code will be mentioned. The endpoind options map one to one to JSON (de)serializer options, prefixed by `serialize_`. For example, REST API option `values` maps to JSON serializer option `serialize_values`.
+The following sections describe the different REST endpoints of the Flecs Remote API. Where applicable the corresponding JSON serialization code will be mentioned. The endpoint options map one to one to JSON (de)serializer options, prefixed by `serialize_`. For example, REST API option `values` maps to JSON serializer option `serialize_values`.
 
 ### GET entity
 Retrieve an entity and its tags, pairs and components.
@@ -392,7 +392,7 @@ GET entity/<path>
 | type_info     | bool     | Serialize type info for components              |
 | matches       | bool     | Serialize matched with queries                  |
 | alerts        | bool     | Serialize active alerts for entity & children   |
-| refs          | entity   | Serialize relationship backrefs                 |
+| refs          | entity   | Serialize relationship back references          |
 | try           | bool     | Don't throw HTTP error on failure (REST only)   |
 
 #### Examples
