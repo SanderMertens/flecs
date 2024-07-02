@@ -810,6 +810,10 @@ void OnDelete_delete_w_low_rel_mixed_cleanup_interleaved_ids(void);
 void OnDelete_fini_query_w_singleton_in_scope_no_module(void);
 void OnDelete_fini_query_w_singleton_in_module(void);
 void OnDelete_fini_observer_w_relationship_in_scope(void);
+void OnDelete_add_on_delete_from_prefab(void);
+void OnDelete_add_on_delete_from_disabled(void);
+void OnDelete_delete_on_delete_from_prefab(void);
+void OnDelete_delete_on_delete_from_disabled(void);
 
 // Testsuite 'Set'
 void Set_set_empty(void);
@@ -5889,6 +5893,22 @@ bake_test_case OnDelete_testcases[] = {
     {
         "fini_observer_w_relationship_in_scope",
         OnDelete_fini_observer_w_relationship_in_scope
+    },
+    {
+        "add_on_delete_from_prefab",
+        OnDelete_add_on_delete_from_prefab
+    },
+    {
+        "add_on_delete_from_disabled",
+        OnDelete_add_on_delete_from_disabled
+    },
+    {
+        "delete_on_delete_from_prefab",
+        OnDelete_delete_on_delete_from_prefab
+    },
+    {
+        "delete_on_delete_from_disabled",
+        OnDelete_delete_on_delete_from_disabled
     }
 };
 
@@ -13778,7 +13798,7 @@ static bake_test_suite suites[] = {
         "OnDelete",
         NULL,
         NULL,
-        114,
+        118,
         OnDelete_testcases
     },
     {
