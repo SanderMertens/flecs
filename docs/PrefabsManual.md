@@ -9,7 +9,7 @@ Prefabs are entities that can be used as templates for other entities. They can 
 - Prefab inheritance makes creating variations easy
 - Prefabs can have children that are instantiated for instances
 - Prefab children can be easily identified with prefab slots
-- Prefabs are runtime accessible and modifyable
+- Prefabs are runtime accessible and modifiable
 - Prefabs can be mapped to types for easy access in the C++ API
 - Natively supported by Flecs Script & the JSON serializer
 
@@ -237,7 +237,7 @@ TODO
 ### Component Inheritance
 Entities can inherit components from prefabs. Inherited components are only stored once in memory, and shared across instances. This can be useful for static data that's shared across instances, such as material data, textures or meshes.
 
-For a component to be inheritable, it needs to have the `(OnInstantiate, Inherit)` trait (for more details see the ComponentTraits manual). The following example shows what happens when a prefab with one inheritable and one non-inheritabl component is instantiated:
+For a component to be inheritable, it needs to have the `(OnInstantiate, Inherit)` trait (for more details see the ComponentTraits manual). The following example shows what happens when a prefab with one inheritable and one non-inheritable component is instantiated:
 
 <div class="flecs-snippet-tabs">
 <ul>

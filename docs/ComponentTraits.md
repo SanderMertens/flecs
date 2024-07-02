@@ -1065,7 +1065,7 @@ A relationship can be marked with the `Acyclic` trait to indicate that it cannot
 Note that because cycle detection requires expensive algorithms, adding `Acyclic` to a relationship does not guarantee that an error will be thrown when a cycle is accidentally introduced. While detection may improve over time, an application that runs without errors is no guarantee that it does not contain acyclic relationships with cycles.
 
 ## Traversable trait
-Traversable relationships are allowed to be traversed automatically by queries, for example using the `up` bitflag (upwards traversal, see [query traversal flags](Queries.md#traversal-flags)). Traversable relationships are also marked as `Acyclic`, which ensures a query won't accidentally attempt to traverse a relationship that contains cycles.
+Traversable relationships are allowed to be traversed automatically by queries, for example using the `up` bit flag (upwards traversal, see [query traversal flags](Queries.md#traversal-flags)). Traversable relationships are also marked as `Acyclic`, which ensures a query won't accidentally attempt to traverse a relationship that contains cycles.
 
 Events are propagated along the edges of traversable relationships. A typical example of this is when a component value is changed on a prefab. The event of this change will be propagated by traversing the `IsA` relationship downwards, for all instances of the prefab. Event propagation does not happen for relationships that are not marked with `Traversable`.
 
@@ -1244,7 +1244,7 @@ e.Add(Movement, Walking); // replaces (Movement, Running)
 When compared to regular relationships, union relationships have some differences and limitations:
 - Relationship cleanup does not work yet for union relationships
 - Removing a union relationship removes any target, even if the specified target is different
-- Querys and rules do not support union relationships
+- Queries and rules do not support union relationships
 - Union relationships cannot have data
 - Union relationship query terms can use only the `And` operator
 - Queries with a `(R, *)` term will return `(R, *)` as term id for each entity
