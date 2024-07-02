@@ -10475,3 +10475,117 @@ void Basic_33_terms_expr(void) {
 
     ecs_fini(world);
 }
+
+void Basic_stage_query(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e = ecs_new_w(world, Position);
+
+    ecs_world_t *stage = ecs_get_stage(world, 0);
+
+    ecs_query_t *q = ecs_query(stage, {
+        .expr = "Position",
+        .cache_kind = cache_kind
+    });
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_assert(it.world == stage);
+    test_assert(it.real_world == world);
+    test_int(it.count, 1);
+    test_uint(it.entities[0], e);
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Basic_world_query_w_stage_iter(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e = ecs_new_w(world, Position);
+
+    ecs_world_t *stage = ecs_get_stage(world, 0);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "Position",
+        .cache_kind = cache_kind
+    });
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(stage, q);
+    test_bool(true, ecs_query_next(&it));
+    test_assert(it.world == stage);
+    test_assert(it.real_world == world);
+    test_int(it.count, 1);
+    test_uint(it.entities[0], e);
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Basic_stage_query_w_nth_stage(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e = ecs_new_w(world, Position);
+
+    ecs_set_stage_count(world, 2);
+    ecs_world_t *stage = ecs_get_stage(world, 1);
+
+    ecs_query_t *q = ecs_query(stage, {
+        .expr = "Position",
+        .cache_kind = cache_kind
+    });
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_assert(it.world == stage);
+    test_assert(it.real_world == world);
+    test_int(it.count, 1);
+    test_uint(it.entities[0], e);
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Basic_world_query_w_nth_stage_iter(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e = ecs_new_w(world, Position);
+
+    ecs_set_stage_count(world, 2);
+    ecs_world_t *stage = ecs_get_stage(world, 1);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "Position",
+        .cache_kind = cache_kind
+    });
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(stage, q);
+    test_bool(true, ecs_query_next(&it));
+    test_assert(it.world == stage);
+    test_assert(it.real_world == world);
+    test_int(it.count, 1);
+    test_uint(it.entities[0], e);
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}

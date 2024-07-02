@@ -654,7 +654,9 @@
                 "query_from_entity_name",
                 "run_w_iter_fini",
                 "run_w_iter_fini_interrupt",
-                "run_w_iter_fini_empty"
+                "run_w_iter_fini_empty",
+                "add_to_match_from_staged_query",
+                "add_to_match_from_staged_query_readonly_threaded"
             ]
         }, {
             "id": "QueryBuilder",

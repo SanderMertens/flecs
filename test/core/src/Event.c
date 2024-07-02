@@ -718,7 +718,7 @@ static void Nested1(ecs_iter_t *it) {
             .event = it->event,
             .ids = &(ecs_type_t){ .count = 1, .array = &it->event_id },
             .entity = other,
-            .observable = it->world
+            .observable = it->real_world
         });
     }
 }

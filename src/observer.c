@@ -863,6 +863,8 @@ ecs_observer_t* flecs_observer_init(
     ecs_entity_t entity,
     const ecs_observer_desc_t *desc)
 {
+    ecs_assert(flecs_poly_is(world, ecs_world_t),
+        ECS_INTERNAL_ERROR, NULL);
     ecs_check(desc->callback != NULL || desc->run != NULL, 
         ECS_INVALID_OPERATION,
             "cannot create observer: must at least specify callback or run");
