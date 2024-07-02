@@ -3144,3 +3144,55 @@ void OnDelete_fini_observer_w_relationship_in_scope(void) {
     // Tests edge case where above code would cause a crash
     test_assert(true);
 }
+
+void OnDelete_add_on_delete_from_prefab(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t e = ecs_insert(world, {EcsPrefab});
+    ecs_add_pair(world, e, EcsOnDelete, EcsPanic);
+
+    test_expect_abort();
+    ecs_delete(world, e);
+}
+
+void OnDelete_add_on_delete_from_disabled(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t e = ecs_insert(world, {EcsDisabled});
+    ecs_add_pair(world, e, EcsOnDelete, EcsPanic);
+
+    test_expect_abort();
+    ecs_delete(world, e);
+}
+
+void OnDelete_delete_on_delete_from_prefab(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_add_pair(world, e, EcsOnDelete, EcsPanic);
+    ecs_add_id(world, e, EcsPrefab);
+    ecs_remove_pair(world, e, EcsOnDelete, EcsPanic);
+    ecs_delete(world, e);
+    
+    test_assert(true); // shouldn't panic
+
+    ecs_fini(world);
+}
+
+void OnDelete_delete_on_delete_from_disabled(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_add_pair(world, e, EcsOnDelete, EcsPanic);
+    ecs_add_id(world, e, EcsDisabled);
+    ecs_remove_pair(world, e, EcsOnDelete, EcsPanic);
+    ecs_delete(world, e);
+    
+    test_assert(true); // shouldn't panic
+
+    ecs_fini(world);
+}

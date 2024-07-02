@@ -4004,7 +4004,7 @@ void flecs_bootstrap(
     flecs_entities_max_id(world) = EcsFirstUserEntityId;
     world->info.min_id = 0;
     world->info.max_id = 0;
-    
+
     /* Register observer for tag property before adding EcsPairIsTag */
     ecs_observer(world, {
         .entity = ecs_entity(world, { .parent = EcsFlecsInternals }),
@@ -4162,7 +4162,7 @@ void flecs_bootstrap(
      * allows for quick property testing in various operations. */
     ecs_observer(world, {
         .query.terms = {{ .id = EcsFinal, .src.id = EcsSelf }},
-        .query.flags = EcsQueryMatchPrefab,
+        .query.flags = EcsQueryMatchPrefab|EcsQueryMatchDisabled,
         .events = {EcsOnAdd},
         .callback = flecs_register_final
     });
@@ -4171,7 +4171,7 @@ void flecs_bootstrap(
         .query.terms = {
             { .id = ecs_pair(EcsOnDelete, EcsWildcard), .src.id = EcsSelf }
         },
-        .query.flags = EcsQueryMatchPrefab,
+        .query.flags = EcsQueryMatchPrefab|EcsQueryMatchDisabled,
         .events = {EcsOnAdd, EcsOnRemove},
         .callback = flecs_register_on_delete
     });
@@ -4180,7 +4180,7 @@ void flecs_bootstrap(
         .query.terms = {
             { .id = ecs_pair(EcsOnDeleteTarget, EcsWildcard), .src.id = EcsSelf }
         },
-        .query.flags = EcsQueryMatchPrefab,
+        .query.flags = EcsQueryMatchPrefab|EcsQueryMatchDisabled,
         .events = {EcsOnAdd, EcsOnRemove},
         .callback = flecs_register_on_delete_object
     });
@@ -4189,14 +4189,14 @@ void flecs_bootstrap(
         .query.terms = {
             { .id = ecs_pair(EcsOnInstantiate, EcsWildcard), .src.id = EcsSelf }
         },
-        .query.flags = EcsQueryMatchPrefab,
+        .query.flags = EcsQueryMatchPrefab|EcsQueryMatchDisabled,
         .events = {EcsOnAdd},
         .callback = flecs_register_on_instantiate
     });
 
     ecs_observer(world, {
         .query.terms = {{ .id = EcsSymmetric, .src.id = EcsSelf }},
-        .query.flags = EcsQueryMatchPrefab,
+        .query.flags = EcsQueryMatchPrefab|EcsQueryMatchDisabled,
         .events = {EcsOnAdd},
         .callback = flecs_register_symmetric
     });
@@ -4204,7 +4204,7 @@ void flecs_bootstrap(
     static ecs_on_trait_ctx_t traversable_trait = { EcsIdTraversable, EcsIdTraversable };
     ecs_observer(world, {
         .query.terms = {{ .id = EcsTraversable, .src.id = EcsSelf }},
-        .query.flags = EcsQueryMatchPrefab,
+        .query.flags = EcsQueryMatchPrefab|EcsQueryMatchDisabled,
         .events = {EcsOnAdd, EcsOnRemove},
         .callback = flecs_register_trait,
         .ctx = &traversable_trait
@@ -4213,7 +4213,7 @@ void flecs_bootstrap(
     static ecs_on_trait_ctx_t exclusive_trait = { EcsIdExclusive, EcsIdExclusive };
     ecs_observer(world, {
         .query.terms = {{ .id = EcsExclusive, .src.id = EcsSelf  }},
-        .query.flags = EcsQueryMatchPrefab,
+        .query.flags = EcsQueryMatchPrefab|EcsQueryMatchDisabled,
         .events = {EcsOnAdd, EcsOnRemove},
         .callback = flecs_register_trait,
         .ctx = &exclusive_trait
@@ -4222,7 +4222,7 @@ void flecs_bootstrap(
     static ecs_on_trait_ctx_t toggle_trait = { EcsIdCanToggle, 0 };
     ecs_observer(world, {
         .query.terms = {{ .id = EcsCanToggle, .src.id = EcsSelf }},
-        .query.flags = EcsQueryMatchPrefab,
+        .query.flags = EcsQueryMatchPrefab|EcsQueryMatchDisabled,
         .events = {EcsOnAdd},
         .callback = flecs_register_trait,
         .ctx = &toggle_trait
@@ -4233,7 +4233,7 @@ void flecs_bootstrap(
         .query.terms = {
             { .id = ecs_pair(EcsWith, EcsWildcard), .src.id = EcsSelf },
         },
-        .query.flags = EcsQueryMatchPrefab,
+        .query.flags = EcsQueryMatchPrefab|EcsQueryMatchDisabled,
         .events = {EcsOnAdd},
         .callback = flecs_register_trait_pair,
         .ctx = &with_trait
@@ -4242,7 +4242,7 @@ void flecs_bootstrap(
     static ecs_on_trait_ctx_t sparse_trait = { EcsIdIsSparse, 0 };
     ecs_observer(world, {
         .query.terms = {{ .id = EcsSparse, .src.id = EcsSelf }},
-        .query.flags = EcsQueryMatchPrefab,
+        .query.flags = EcsQueryMatchPrefab|EcsQueryMatchDisabled,
         .events = {EcsOnAdd},
         .callback = flecs_register_trait,
         .ctx = &sparse_trait
@@ -4251,7 +4251,7 @@ void flecs_bootstrap(
     static ecs_on_trait_ctx_t union_trait = { EcsIdIsUnion, 0 };
     ecs_observer(world, {
         .query.terms = {{ .id = EcsUnion, .src.id = EcsSelf }},
-        .query.flags = EcsQueryMatchPrefab,
+        .query.flags = EcsQueryMatchPrefab|EcsQueryMatchDisabled,
         .events = {EcsOnAdd},
         .callback = flecs_register_trait,
         .ctx = &union_trait
@@ -4263,7 +4263,7 @@ void flecs_bootstrap(
         .query.terms = {
             { .id = ecs_pair(EcsSlotOf, EcsWildcard), .src.id = EcsSelf }
         },
-        .query.flags = EcsQueryMatchPrefab,
+        .query.flags = EcsQueryMatchPrefab|EcsQueryMatchDisabled,
         .events = {EcsOnAdd},
         .callback = flecs_register_slot_of
     });
@@ -4272,7 +4272,7 @@ void flecs_bootstrap(
      * adds it to the parent. */
     ecs_observer(world, {
         .query.terms = {{ .id = EcsModule, .src.id = EcsSelf } },
-        .query.flags = EcsQueryMatchPrefab,
+        .query.flags = EcsQueryMatchPrefab|EcsQueryMatchDisabled,
         .events = {EcsOnAdd},
         .callback = flecs_ensure_module_tag
     });
