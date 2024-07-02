@@ -62,7 +62,18 @@ const Defense *d = inst_1.get<Defense>();
 <li><b class="tab-title">C#</b>
 
 ```cs
-TODO
+file record struct Defense(double Value);
+
+// Create a SpaceShip prefab with a Defense component.
+Entity SpaceShip = world.Entity("SpaceShip")
+    .Set(new Defense(50));
+
+// Create two prefab instances
+Entity Inst1 = world.Entity().IsA(SpaceShip);
+Entity Inst2 = world.Entity().IsA(SpaceShip);
+
+// Get instantiated component
+ref readonly Attack attack = ref inst_1.Get<Defense>();
 ```
 
 </li>
