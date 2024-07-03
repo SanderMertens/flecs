@@ -2699,8 +2699,6 @@ void Pairs_symmetric_w_childof(void) {
     ecs_add_pair(world, alice, buddies, bob);
 
     test_assert(ecs_has_pair(world, bob, buddies, alice));
-    
-    // ecs_log_set_level(4);
 
     ecs_fini(world);
 

@@ -12,9 +12,12 @@ struct Velocity {
 int main(int, char *[]) {
     flecs::world ecs;
 
-    // Create a query for Position, Velocity. Queries are the fastest way to
-    // iterate entities as they cache results.
-    flecs::query<Position, const Velocity> q = ecs.query<Position, const Velocity>();
+    // Create a cached query for Position, Velocity. Cached queries are the 
+    // fastest way to iterate entities as they cache results.
+    flecs::query<Position, const Velocity> q = 
+        ecs.query_builder<Position, const Velocity>()
+            .cached()
+            .build();
 
     // Create a few test entities for a Position, Velocity query
     ecs.entity("e1")

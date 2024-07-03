@@ -12,13 +12,16 @@ int main(int argc, char *argv[]) {
     ECS_COMPONENT(ecs, Position);
     ECS_COMPONENT(ecs, Velocity);
 
-    // Create a query for Position, Velocity. Queries are the fastest way to
-    // iterate entities as they cache results.
+    // Create a cached query for Position, Velocity. Cached queries are the 
+    // fastest way to iterate entities as they cache results.
     ecs_query_t *q = ecs_query(ecs, {
         .terms = {
             { .id = ecs_id(Position) }, 
             { .id = ecs_id(Velocity), .inout = EcsIn}
-        }
+        },
+
+        // QueryCache Auto automatically caches all terms that can be cached.
+        .cache_kind = EcsQueryCacheAuto
     });
 
     // Create a few test entities for a Position, Velocity query
@@ -51,35 +54,8 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    // Querys are uncached queries. They are a bit slower to iterate but faster
-    // to create & have lower overhead as they don't have to maintain a cache.
-    ecs_query_t *f = ecs_query(ecs, {
-        .terms = {
-            { .id = ecs_id(Position) }, 
-            { .id = ecs_id(Velocity), .inout = EcsIn}
-        }
-    });
-
-    // Query iteration looks the same as query iteration
-    it = ecs_query_iter(ecs, f);
-
-    while (ecs_query_next(&it)) {
-        Position *p = ecs_field(&it, Position, 0);
-        const Velocity *v = ecs_field(&it, Velocity, 1);
-
-        for (int i = 0; i < it.count; i ++) {
-            p[i].x += v[i].x;
-            p[i].y += v[i].y;
-            printf("%s: {%f, %f}\n", ecs_get_name(ecs, it.entities[i]), 
-                p[i].x, p[i].y);
-        }
-    }
-
-    // Cleanup filter. Querys can allocate memory if the number of terms 
-    // exceeds their internal buffer, or when terms have names. In this case the
-    // filter didn't allocate, so while fini isn't strictly necessary here, it's
-    // still good practice to add it.
-    ecs_query_fini(f);
+    // Cleanup query resources.
+    ecs_query_fini(q);
 
     return ecs_fini(ecs);
 }
