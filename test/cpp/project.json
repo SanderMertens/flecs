@@ -355,7 +355,8 @@
                 "deref_const_pair",
                 "deref_pair_obj",
                 "deref_const_pair_obj",
-                "set_R_existing_value"
+                "set_R_existing_value",
+                "symmetric_w_childof"
             ]
         }, {
             "id": "Enum",
