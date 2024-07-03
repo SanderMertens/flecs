@@ -346,6 +346,7 @@ void Pairs_deref_const_pair(void);
 void Pairs_deref_pair_obj(void);
 void Pairs_deref_const_pair_obj(void);
 void Pairs_set_R_existing_value(void);
+void Pairs_symmetric_w_childof(void);
 
 // Testsuite 'Enum'
 void Enum_standard_enum_reflection(void);
@@ -2650,6 +2651,10 @@ bake_test_case Pairs_testcases[] = {
     {
         "set_R_existing_value",
         Pairs_set_R_existing_value
+    },
+    {
+        "symmetric_w_childof",
+        Pairs_symmetric_w_childof
     }
 };
 
@@ -6424,7 +6429,7 @@ static bake_test_suite suites[] = {
         "Pairs",
         NULL,
         NULL,
-        67,
+        68,
         Pairs_testcases
     },
     {
