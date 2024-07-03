@@ -380,17 +380,20 @@ void flecs_on_symmetric_add_remove(ecs_iter_t *it) {
     ecs_entity_t rel = ECS_PAIR_FIRST(pair);
     ecs_entity_t obj = ecs_pair_second(world, pair);
     ecs_entity_t event = it->event;
-    
-    int i, count = it->count;
-    for (i = 0; i < count; i ++) {
-        ecs_entity_t subj = it->entities[i];
-        if (event == EcsOnAdd) {
-            if (!ecs_has_id(it->real_world, obj, ecs_pair(rel, subj))) {
-                ecs_add_pair(it->world, obj, rel, subj);   
-            }
-        } else {
-            if (ecs_has_id(it->real_world, obj, ecs_pair(rel, subj))) {
-                ecs_remove_pair(it->world, obj, rel, subj);   
+
+
+    if (obj) {
+        int i, count = it->count;
+        for (i = 0; i < count; i ++) {
+            ecs_entity_t subj = it->entities[i];
+            if (event == EcsOnAdd) {
+                if (!ecs_has_id(it->real_world, obj, ecs_pair(rel, subj))) {
+                    ecs_add_pair(it->world, obj, rel, subj);   
+                }
+            } else {
+                if (ecs_has_id(it->real_world, obj, ecs_pair(rel, subj))) {
+                    ecs_remove_pair(it->world, obj, rel, subj);   
+                }
             }
         }
     }

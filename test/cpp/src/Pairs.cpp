@@ -1234,3 +1234,22 @@ void Pairs_set_R_existing_value(void) {
     test_int(ptr->x, 10);
     test_int(ptr->y, 20);
 }
+
+void Pairs_symmetric_w_childof(void) {
+    flecs::world ecs;
+
+    struct Likes { };
+
+    ecs.component<Likes>().add(flecs::Symmetric);
+
+    flecs::entity idk = ecs.entity("Idk");
+
+    flecs::entity bob = ecs.entity("Bob")
+        .child_of(idk);
+        
+    flecs::entity alice = ecs.entity("Alice")
+        .child_of(idk)
+        .add<Likes>(bob);
+
+    test_assert(bob.has<Likes>(alice));
+}
