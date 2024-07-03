@@ -792,3 +792,103 @@ void Event_enqueue_entity_w_payload_from_readonly_world(void) {
 
     test_int(count, 1);
 }
+
+enum Type { A, B = 42, C };
+void Event_enum_event(void) {
+	struct Event {};
+ 
+ 
+    struct Data {
+        Type type;
+        int value;
+    };
+
+
+    struct {
+        size_t _any = 0u;
+        size_t type_a = 0u;
+        size_t type_b = 0u;
+        size_t data = 0u;
+        size_t data_type_a = 0u;
+        size_t data_type_b = 0u;
+    } observered;
+
+    flecs::world ecs;
+
+    ecs.component<Event>();
+    ecs.component<Type>();
+    ecs.component<Data>();
+
+    ecs.observer()
+        .with(flecs::Wildcard)
+        .event<Event>()
+        .each([&](flecs::entity) {
+            ++observered._any;
+        });
+
+    ecs.observer()
+        .with(Type::A)
+        .event<Event>()
+        .each([&](flecs::entity) {
+            ++observered.type_a;
+        });
+
+    ecs.observer()
+        .with(Type::B)
+        .event<Event>()
+        .each([&](flecs::entity) {
+            ++observered.type_b;
+        });
+
+    ecs.observer<Data>()
+        .event<Event>()
+        .each([&](flecs::entity, Data data) {
+            ++observered.data;
+            test_assert(data.value >= 1 && data.value <= 2);
+        });
+ 
+ 
+    ecs.observer<Data>()
+        .with(Type::A)
+        .event<Event>()
+        .each([&](flecs::entity, Data data) {
+            ++observered.data_type_a;
+            test_int(data.value, 1);
+        });
+
+    ecs.observer<Data>()
+        .with(Type::B)
+        .event<Event>()
+        .each([&](flecs::entity, Data data) {
+            ++observered.data_type_b;
+            test_int(data.value, 2);
+        });
+
+    {
+        auto event1 = ecs.entity()
+            .add(Type::A)
+            .emplace<Data>(Type::A, 1);
+
+        ecs.event<Event>()
+            .id(Type::A)
+            .id<Data>()
+            .entity(event1).emit();
+    }
+
+    {
+        auto event2 = ecs.entity()
+            .add(Type::B)
+            .emplace<Data>(Type::B, 2);
+
+        ecs.event<Event>()
+            .id(Type::B)
+            .id<Data>()
+            .entity(event2).emit();
+    }
+
+    test_int(observered._any, 2u);
+    test_int(observered.type_a, 1u);
+    test_int(observered.type_b, 1u);
+    test_int(observered.data_type_a, 1u);
+    test_int(observered.data_type_b, 1u);
+}
