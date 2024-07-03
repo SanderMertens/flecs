@@ -517,6 +517,7 @@ void Event_enqueue_event_w_payload(void);
 void Event_enqueue_entity_event_w_payload(void);
 void Event_enqueue_entity_from_readonly_world(void);
 void Event_enqueue_entity_w_payload_from_readonly_world(void);
+void Event_enum_event(void);
 
 // Testsuite 'Iterable'
 void Iterable_page_each(void);
@@ -3307,6 +3308,10 @@ bake_test_case Event_testcases[] = {
     {
         "enqueue_entity_w_payload_from_readonly_world",
         Event_enqueue_entity_w_payload_from_readonly_world
+    },
+    {
+        "enum_event",
+        Event_enum_event
     }
 };
 
@@ -6390,11 +6395,6 @@ bake_test_case Doc_testcases[] = {
     }
 };
 
-const char* QueryBuilder_cache_kind_param[] = {"default", "auto"};
-bake_test_param QueryBuilder_params[] = {
-    {"cache_kind", (char**)QueryBuilder_cache_kind_param, 2}
-};
-
 static bake_test_suite suites[] = {
     {
         "PrettyFunction",
@@ -6449,7 +6449,7 @@ static bake_test_suite suites[] = {
         "Event",
         NULL,
         NULL,
-        30,
+        31,
         Event_testcases
     },
     {
@@ -6471,9 +6471,7 @@ static bake_test_suite suites[] = {
         QueryBuilder_setup,
         NULL,
         164,
-        QueryBuilder_testcases,
-        1,
-        QueryBuilder_params
+        QueryBuilder_testcases
     },
     {
         "SystemBuilder",

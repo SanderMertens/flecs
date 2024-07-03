@@ -536,7 +536,8 @@
                 "enqueue_event_w_payload",
                 "enqueue_entity_event_w_payload",
                 "enqueue_entity_from_readonly_world",
-                "enqueue_entity_w_payload_from_readonly_world"
+                "enqueue_entity_w_payload_from_readonly_world",
+                "enum_event"
             ]
         }, {
             "id": "Iterable",

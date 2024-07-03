@@ -66,6 +66,14 @@ struct event_builder_base {
         return id(ecs_pair(first, second));
     }
 
+
+    template <typename Enum, if_t<is_enum<Enum>::value> = 0>
+    Base& id(Enum value) {
+        const auto& et = enum_type<Enum>(this->m_world);
+        flecs::entity_t target = et.entity(value);
+        return id(et.entity(), target);
+    }
+
     /** Add (component) id to emit for */
     Base& id(flecs::id_t id) {
         ids_.array = ids_array_;
