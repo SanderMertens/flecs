@@ -91,7 +91,7 @@ static
 void flecs_pipeline_stats_repeat_last(
     void* stats) 
 {
-    ecs_pipeline_stats_repeat_last(stats);;
+    ecs_pipeline_stats_repeat_last(stats);
 }
 
 static

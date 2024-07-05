@@ -89,7 +89,7 @@ static
 void flecs_system_stats_repeat_last(
     void* stats) 
 {
-    ecs_system_stats_repeat_last(stats);;
+    ecs_system_stats_repeat_last(stats);
 }
 
 void FlecsSystemMonitorImport(
