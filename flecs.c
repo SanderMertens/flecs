@@ -14456,7 +14456,7 @@ void flecs_observer_yield_existing(
         it.callback = flecs_default_uni_observer_run_callback;
         it.callback_ctx = o->callback_ctx;
         it.run_ctx = o->run_ctx;
-        it.event = o->events[i];;
+        it.event = o->events[i];
         while (ecs_query_next(&it)) {
             it.event_id = it.ids[0];
             it.event_cur = ++ world->event_id;
@@ -43486,7 +43486,7 @@ bool flecs_json_serialize_iter_result_ids(
     flecs_json_array_push(buf);
 
     for (f = 0; f < field_count; f ++) {
-        ecs_flags16_t field_bit = flecs_ito(uint16_t, 1 << f);;
+        ecs_flags16_t field_bit = flecs_ito(uint16_t, 1 << f);
 
         if (!(it->set_fields & field_bit)) {
             /* Don't serialize ids for fields that aren't set */
@@ -43537,7 +43537,7 @@ bool flecs_json_serialize_iter_result_sources(
     flecs_json_array_push(buf);
 
     for (f = 0; f < field_count; f ++) {
-        ecs_flags16_t field_bit = flecs_ito(uint16_t, 1 << f);;
+        ecs_flags16_t field_bit = flecs_ito(uint16_t, 1 << f);
 
         if (!(it->set_fields & field_bit)) {
             /* Don't serialize source for fields that aren't set */
@@ -43601,7 +43601,7 @@ int flecs_json_serialize_iter_result_field_values(
     flecs_json_array_push(buf);
 
     for (f = 0; f < field_count; f ++) {
-        ecs_flags16_t field_bit = flecs_ito(uint16_t, 1 << f);;
+        ecs_flags16_t field_bit = flecs_ito(uint16_t, 1 << f);
         if (!(it->set_fields & field_bit)) {
             ecs_strbuf_list_appendlit(buf, "0");
             continue;
@@ -61396,7 +61396,7 @@ static
 void flecs_pipeline_stats_repeat_last(
     void* stats) 
 {
-    ecs_pipeline_stats_repeat_last(stats);;
+    ecs_pipeline_stats_repeat_last(stats);
 }
 
 static
@@ -62282,7 +62282,7 @@ static
 void flecs_system_stats_repeat_last(
     void* stats) 
 {
-    ecs_system_stats_repeat_last(stats);;
+    ecs_system_stats_repeat_last(stats);
 }
 
 void FlecsSystemMonitorImport(
@@ -62370,7 +62370,7 @@ static
 void flecs_world_stats_repeat_last(
     void* stats) 
 {
-    ecs_world_stats_repeat_last(stats);;
+    ecs_world_stats_repeat_last(stats);
 }
 
 void FlecsWorldMonitorImport(

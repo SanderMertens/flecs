@@ -357,7 +357,7 @@ void Hierarchies_path_prefix_rel_no_match(void) {
 void Hierarchies_path_w_number(void) {
     ecs_world_t *world = ecs_mini();
 
-    ecs_entity_t p = ecs_set_name(world, 0, "1000");;
+    ecs_entity_t p = ecs_set_name(world, 0, "1000");
     ecs_entity_t e = ecs_new_w_pair(world, EcsChildOf, p);
     ecs_set_name(world, e, "Foo");
 
