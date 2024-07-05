@@ -99,7 +99,7 @@ bool flecs_json_serialize_iter_result_sources(
     }
 
     if (f == field_count) {
-        /* All fields are mathced on $this */
+        /* All fields are matched on $this */
         return false;
     }
 
