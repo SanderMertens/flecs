@@ -56,7 +56,7 @@ bool flecs_json_serialize_iter_result_ids(
     flecs_json_array_push(buf);
 
     for (f = 0; f < field_count; f ++) {
-        ecs_flags16_t field_bit = flecs_ito(uint16_t, 1 << f);;
+        ecs_flags16_t field_bit = flecs_ito(uint16_t, 1 << f);
 
         if (!(it->set_fields & field_bit)) {
             /* Don't serialize ids for fields that aren't set */
@@ -107,7 +107,7 @@ bool flecs_json_serialize_iter_result_sources(
     flecs_json_array_push(buf);
 
     for (f = 0; f < field_count; f ++) {
-        ecs_flags16_t field_bit = flecs_ito(uint16_t, 1 << f);;
+        ecs_flags16_t field_bit = flecs_ito(uint16_t, 1 << f);
 
         if (!(it->set_fields & field_bit)) {
             /* Don't serialize source for fields that aren't set */
@@ -171,7 +171,7 @@ int flecs_json_serialize_iter_result_field_values(
     flecs_json_array_push(buf);
 
     for (f = 0; f < field_count; f ++) {
-        ecs_flags16_t field_bit = flecs_ito(uint16_t, 1 << f);;
+        ecs_flags16_t field_bit = flecs_ito(uint16_t, 1 << f);
         if (!(it->set_fields & field_bit)) {
             ecs_strbuf_list_appendlit(buf, "0");
             continue;
