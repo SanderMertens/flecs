@@ -258,8 +258,8 @@ void Eval_auto_override_component(void);
 void Eval_auto_override_pair(void);
 void Eval_auto_override_pair_component(void);
 void Eval_lowercase_prefab_kind(void);
-void Eval_assing_component_to_const(void);
-void Eval_assing_component_member_to_const(void);
+void Eval_assign_component_to_const(void);
+void Eval_assign_component_member_to_const(void);
 void Eval_prefab_w_slot(void);
 void Eval_prefab_w_slot_no_parent(void);
 void Eval_prefab_w_slot_variant(void);
@@ -1605,12 +1605,12 @@ bake_test_case Eval_testcases[] = {
         Eval_lowercase_prefab_kind
     },
     {
-        "assing_component_to_const",
-        Eval_assing_component_to_const
+        "assign_component_to_const",
+        Eval_assign_component_to_const
     },
     {
-        "assing_component_member_to_const",
-        Eval_assing_component_member_to_const
+        "assign_component_member_to_const",
+        Eval_assign_component_member_to_const
     },
     {
         "prefab_w_slot",
