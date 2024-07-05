@@ -625,7 +625,7 @@ void flecs_observer_yield_existing(
         it.callback = flecs_default_uni_observer_run_callback;
         it.callback_ctx = o->callback_ctx;
         it.run_ctx = o->run_ctx;
-        it.event = o->events[i];;
+        it.event = o->events[i];
         while (ecs_query_next(&it)) {
             it.event_id = it.ids[0];
             it.event_cur = ++ world->event_id;

@@ -56,7 +56,7 @@ static
 void flecs_world_stats_repeat_last(
     void* stats) 
 {
-    ecs_world_stats_repeat_last(stats);;
+    ecs_world_stats_repeat_last(stats);
 }
 
 void FlecsWorldMonitorImport(

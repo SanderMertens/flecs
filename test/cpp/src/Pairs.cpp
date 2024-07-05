@@ -227,7 +227,7 @@ void Pairs_override_pair(void) {
 void Pairs_override_tag_pair(void) {
     flecs::world ecs;
 
-    auto Pair = ecs.entity().add(flecs::OnInstantiate, flecs::Inherit);;
+    auto Pair = ecs.entity().add(flecs::OnInstantiate, flecs::Inherit);
 
     auto base = ecs.entity()
         .set_second<Position>(Pair, {10, 20});
@@ -1135,7 +1135,7 @@ void Pairs_get_object_for_type_base(void) {
 void Pairs_get_object_for_id_self(void) {
     flecs::world ecs;
 
-    auto tag = ecs.entity().add(flecs::OnInstantiate, flecs::Inherit);;
+    auto tag = ecs.entity().add(flecs::OnInstantiate, flecs::Inherit);
     auto base = ecs.entity().add(tag);
     auto self = ecs.entity().is_a(base).add(tag);
 
@@ -1147,7 +1147,7 @@ void Pairs_get_object_for_id_self(void) {
 void Pairs_get_object_for_id_base(void) {
     flecs::world ecs;
 
-    auto tag = ecs.entity().add(flecs::OnInstantiate, flecs::Inherit);;;
+    auto tag = ecs.entity().add(flecs::OnInstantiate, flecs::Inherit);
     auto base = ecs.entity().add(tag);
     auto self = ecs.entity().is_a(base);
 
@@ -1159,7 +1159,7 @@ void Pairs_get_object_for_id_base(void) {
 void Pairs_get_object_for_id_not_found(void) {
     flecs::world ecs;
 
-    auto tag = ecs.entity().add(flecs::OnInstantiate, flecs::Inherit);;;
+    auto tag = ecs.entity().add(flecs::OnInstantiate, flecs::Inherit);
     auto base = ecs.entity();
     auto self = ecs.entity().is_a(base);
 
