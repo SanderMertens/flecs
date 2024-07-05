@@ -144,7 +144,7 @@ An application can add phases to the existing list, or define a pipeline from sc
 Large applications can often contain many components and systems. Some large commercial projects have reported up to 800 components! Managing all those components and systems becomes important on that scale, and that is what modules are for. Modules are one of those features that you usually don't think about when selecting an ECS, but they can make your life a lot easier.
 
 ### Defining Modules
-The purpose of modules is really to enable reusability. A well written module can be imported into any project, and will do its thing without any tweaking or tinkering. To achieve this, make sure to define your modules around features. Features seldomly consist out of a single system or component, but can have many. Examples are rendering, collision detection, input management, and so on.
+The purpose of modules is really to enable reusability. A well written module can be imported into any project, and will do its thing without any tweaking or tinkering. To achieve this, make sure to define your modules around features. Features seldom consist out of a single system or component, but can have many. Examples are rendering, collision detection, input management, and so on.
 
 ### Module Dependencies and Ordering
 Modules can depend on each other. In fact, often do! Importing a module twice has no penalties in Flecs, it will not define your systems and components twice. This enables your application code to import the modules it needs, without having to worry about whether they were already loaded.

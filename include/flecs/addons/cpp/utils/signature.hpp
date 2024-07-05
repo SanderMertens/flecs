@@ -73,7 +73,7 @@ namespace _ {
                         ecs_assert(
                             !ti->size || !ecs_has_id(world_, id, flecs::Union),
                             ECS_INVALID_PARAMETER,
-                            "use withs() method to add union relationship");
+                            "use with() method to add union relationship");
                     }
                 }
 

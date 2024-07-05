@@ -7606,7 +7606,7 @@ void Eval_lowercase_prefab_kind(void) {
     ecs_fini(world);
 }
 
-void Eval_assing_component_to_const(void) {
+void Eval_assign_component_to_const(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct_init(world, &(ecs_struct_desc_t){
@@ -7639,7 +7639,7 @@ void Eval_assing_component_to_const(void) {
     ecs_fini(world);
 }
 
-void Eval_assing_component_member_to_const(void) {
+void Eval_assign_component_member_to_const(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t ecs_id(Position) = ecs_struct(world, {
