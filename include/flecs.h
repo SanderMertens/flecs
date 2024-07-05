@@ -4021,7 +4021,7 @@ void ecs_set_hooks_id(
  */
 FLECS_API
 const ecs_type_hooks_t* ecs_get_hooks_id(
-    ecs_world_t *world,
+    const ecs_world_t *world,
     ecs_entity_t id);
 
 /** @} */
