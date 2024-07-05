@@ -808,8 +808,8 @@ struct ecs_observer_t {
     ecs_run_action_t run;       /**< See ecs_observer_desc_t::run */
 
     void *ctx;                  /**< Observer context */
-    void *callback_ctx;         /**< Callback language binfding context */
-    void *run_ctx;              /**< Run language binfding context */
+    void *callback_ctx;         /**< Callback language binding context */
+    void *run_ctx;              /**< Run language binding context */
 
     ecs_ctx_free_t ctx_free;    /**< Callback to free ctx */
     ecs_ctx_free_t callback_ctx_free; /**< Callback to free callback_ctx */
@@ -4096,7 +4096,7 @@ bool ecs_id_in_use(
  * EcsComponent value with size 0, the operation will return 0.
  *
  * For a pair id the operation will return the type associated with the pair, by
- * applying the following querys in order:
+ * applying the following queries in order:
  * - The first pair element is returned if it is a component
  * - 0 is returned if the relationship entity has the Tag property
  * - The second pair element is returned if it is a component
@@ -4921,8 +4921,8 @@ int32_t ecs_iter_count(
 
 /** Test if iterator is true.
  * This operation will return true if the iterator returns at least one result.
- * This is especially useful in combination with fact-checking querys (see the
- * querys addon).
+ * This is especially useful in combination with fact-checking queries (see the
+ * queries addon).
  *
  * The operation requires a valid iterator. After the operation is invoked, the
  * application should no longer invoke next on the iterator and should treat it
