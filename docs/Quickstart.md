@@ -1508,7 +1508,7 @@ An example of an observer with two components:
 ```c
 ecs_observer(world, {
     .filter.terms = { { ecs_id(Position) }, { ecs_id(Velocity) }},
-    .event = EcsOnSet,
+    .events = { EcsOnSet },
     .callback = OnSetPosition
 });
 
