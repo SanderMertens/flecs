@@ -277,6 +277,10 @@ void Entity_const_entity_ensure(void);
 void Entity_const_entity_destruct(void);
 void Entity_const_entity_emit_after_build(void);
 void Entity_const_entity_set_doc(void);
+void Entity_set_sparse(void);
+void Entity_insert_1_sparse(void);
+void Entity_insert_2_w_1_sparse(void);
+void Entity_emplace_sparse(void);
 
 // Testsuite 'Pairs'
 void Pairs_add_component_pair(void);
@@ -2433,6 +2437,22 @@ bake_test_case Entity_testcases[] = {
     {
         "const_entity_set_doc",
         Entity_const_entity_set_doc
+    },
+    {
+        "set_sparse",
+        Entity_set_sparse
+    },
+    {
+        "insert_1_sparse",
+        Entity_insert_1_sparse
+    },
+    {
+        "insert_2_w_1_sparse",
+        Entity_insert_2_w_1_sparse
+    },
+    {
+        "emplace_sparse",
+        Entity_emplace_sparse
     }
 };
 
@@ -6613,7 +6633,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        264,
+        268,
         Entity_testcases
     },
     {

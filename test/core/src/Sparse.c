@@ -125,6 +125,25 @@ void Sparse_set(void) {
     ecs_fini(world);
 }
 
+void Sparse_modified_no_on_set(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Foo);
+
+    ecs_add_id(world, ecs_id(Position), EcsSparse);
+
+    ecs_entity_t e = ecs_new(world);
+    Position *p = ecs_ensure(world, e, Position);
+    test_assert(NULL != p);
+
+    ecs_modified(world, e, Position);
+
+    test_assert(true); // no crash
+
+    ecs_fini(world);
+}
+
 void Sparse_insert_1(void) {
     ecs_world_t *world = ecs_mini();
 
@@ -226,6 +245,167 @@ void Sparse_update_ref(void) {
 
     ecs_add(world, e, Foo);
     ecs_ref_update(world, &ref);
+
+    {
+        const Position *p = ecs_ref_get(world, &ref, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+    }
+
+    ecs_fini(world);
+}
+
+void Sparse_get_recycled(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_add_id(world, ecs_id(Position), EcsSparse);
+
+    ecs_entity_t e0 = ecs_new_w(world, Position);
+    ecs_delete(world, e0);
+
+    ecs_entity_t e = ecs_new(world);
+    test_assert(e != e0);
+    test_assert(e0 == (uint32_t)e);
+
+    test_assert(NULL == ecs_get(world, e, Position));
+
+    ecs_add(world, e, Position);
+    test_assert(NULL != ecs_get(world, e, Position));
+
+    ecs_fini(world);
+}
+
+void Sparse_get_mut_recycled(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_add_id(world, ecs_id(Position), EcsSparse);
+
+    ecs_entity_t e0 = ecs_new_w(world, Position);
+    ecs_delete(world, e0);
+
+    ecs_entity_t e = ecs_new(world);
+    test_assert(e != e0);
+    test_assert(e0 == (uint32_t)e);
+
+    test_assert(NULL == ecs_get_mut(world, e, Position));
+
+    ecs_add(world, e, Position);
+    test_assert(NULL != ecs_get_mut(world, e, Position));
+
+    ecs_fini(world);
+}
+
+void Sparse_ensure_recycled(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_add_id(world, ecs_id(Position), EcsSparse);
+
+    ecs_entity_t e0 = ecs_new_w(world, Position);
+    ecs_delete(world, e0);
+
+    ecs_entity_t e = ecs_new(world);
+    test_assert(e != e0);
+    test_assert(e0 == (uint32_t)e);
+
+    Position *p = ecs_ensure(world, e, Position);
+    test_assert(NULL != p);
+
+    ecs_add(world, e, Position);
+    test_assert(p == ecs_get_mut(world, e, Position));
+
+    ecs_fini(world);
+}
+
+void Sparse_emplace_recycled(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Foo);
+
+    ecs_add_id(world, ecs_id(Position), EcsSparse);
+
+    ecs_entity_t e0 = ecs_new_w(world, Position);
+    ecs_delete(world, e0);
+
+    ecs_entity_t e = ecs_new(world);
+    test_assert(e != e0);
+    test_assert(e0 == (uint32_t)e);
+
+    bool is_new;
+    Position *p = ecs_emplace(world, e, Position, &is_new);
+    test_assert(NULL != p);
+    test_bool(true, is_new);
+
+    test_assert(p == ecs_emplace(world, e, Position, &is_new));
+    test_bool(false, is_new);
+
+    ecs_add(world, e, Foo);
+
+    test_assert(p == ecs_emplace(world, e, Position, &is_new));
+    test_bool(false, is_new);
+
+    ecs_fini(world);
+}
+
+void Sparse_set_recycled(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_add_id(world, ecs_id(Position), EcsSparse);
+
+    ecs_entity_t e0 = ecs_new_w(world, Position);
+    ecs_delete(world, e0);
+
+    ecs_entity_t e = ecs_new(world);
+    test_assert(e != e0);
+    test_assert(e0 == (uint32_t)e);
+
+    ecs_set(world, e, Position, {10, 20});
+    test_assert(ecs_has(world, e, Position));
+    
+    const Position *p = ecs_get(world, e, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+void Sparse_get_ref_recycled(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Foo);
+
+    ecs_add_id(world, ecs_id(Position), EcsSparse);
+
+    ecs_entity_t e0 = ecs_new_w(world, Position);
+    ecs_delete(world, e0);
+
+    ecs_entity_t e = ecs_new(world);
+    test_assert(e != e0);
+    test_assert(e0 == (uint32_t)e);
+
+    ecs_set(world, e, Position, {10, 20});
+    
+    ecs_ref_t ref = ecs_ref_init(world, e, Position);
+
+    {
+        const Position *p = ecs_ref_get(world, &ref, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+    }
+
+    ecs_add(world, e, Foo);
 
     {
         const Position *p = ecs_ref_get(world, &ref, Position);
@@ -925,4 +1105,3 @@ void Sparse_sparse_relationship(void) {
 
     ecs_fini(world);
 }
-
