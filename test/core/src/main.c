@@ -421,10 +421,17 @@ void Sparse_get_mut(void);
 void Sparse_ensure(void);
 void Sparse_emplace(void);
 void Sparse_set(void);
+void Sparse_modified_no_on_set(void);
 void Sparse_insert_1(void);
 void Sparse_insert_2(void);
 void Sparse_get_ref(void);
 void Sparse_update_ref(void);
+void Sparse_get_recycled(void);
+void Sparse_get_mut_recycled(void);
+void Sparse_ensure_recycled(void);
+void Sparse_emplace_recycled(void);
+void Sparse_set_recycled(void);
+void Sparse_get_ref_recycled(void);
 void Sparse_test_stable_ptr(void);
 void Sparse_has_after_remove(void);
 void Sparse_get_after_remove(void);
@@ -3673,6 +3680,10 @@ bake_test_case Sparse_testcases[] = {
         Sparse_set
     },
     {
+        "modified_no_on_set",
+        Sparse_modified_no_on_set
+    },
+    {
         "insert_1",
         Sparse_insert_1
     },
@@ -3687,6 +3698,30 @@ bake_test_case Sparse_testcases[] = {
     {
         "update_ref",
         Sparse_update_ref
+    },
+    {
+        "get_recycled",
+        Sparse_get_recycled
+    },
+    {
+        "get_mut_recycled",
+        Sparse_get_mut_recycled
+    },
+    {
+        "ensure_recycled",
+        Sparse_ensure_recycled
+    },
+    {
+        "emplace_recycled",
+        Sparse_emplace_recycled
+    },
+    {
+        "set_recycled",
+        Sparse_set_recycled
+    },
+    {
+        "get_ref_recycled",
+        Sparse_get_ref_recycled
     },
     {
         "test_stable_ptr",
@@ -10171,7 +10206,7 @@ static bake_test_suite suites[] = {
         "Sparse",
         NULL,
         NULL,
-        34,
+        41,
         Sparse_testcases
     },
     {

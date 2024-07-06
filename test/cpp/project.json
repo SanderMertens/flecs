@@ -284,7 +284,11 @@
                 "const_entity_ensure",
                 "const_entity_destruct",
                 "const_entity_emit_after_build",
-                "const_entity_set_doc"
+                "const_entity_set_doc",
+                "set_sparse",
+                "insert_1_sparse",
+                "insert_2_w_1_sparse",
+                "emplace_sparse"
             ]
         }, {
             "id": "Pairs",
