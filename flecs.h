@@ -25936,16 +25936,22 @@ struct entity_with_delegate_impl<arg_list<Args ...>> {
     }
 
     static 
-    bool get_ptrs(world_t *world, const ecs_record_t *r, ecs_table_t *table,
+    bool get_ptrs(world_t *world, flecs::entity_t e, const ecs_record_t *r, ecs_table_t *table,
         ArrayType& ptrs) 
     {
         ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
-        if (!ecs_table_column_count(table)) {
+        if (!ecs_table_column_count(table) && 
+            !ecs_table_has_flags(table, EcsTableHasSparse)) 
+        {
             return false;
         }
 
         /* table_index_of needs real world */
         const flecs::world_t *real_world = ecs_get_world(world);
+
+        IdArray ids ({
+            _::type<Args>().id(world)...
+        });
 
         /* Get column indices for components */
         ColumnArray columns ({
@@ -25957,7 +25963,14 @@ struct entity_with_delegate_impl<arg_list<Args ...>> {
         size_t i = 0;
         for (int32_t column : columns) {
             if (column == -1) {
-                return false;
+                /* Component could be sparse */
+                void *ptr = ecs_get_mut_id(world, e, ids[i]);
+                if (!ptr) {
+                    return false;
+                }
+
+                ptrs[i ++] = ptr;
+                continue;
             }
 
             ptrs[i ++] = ecs_record_get_by_column(r, column, 0);
@@ -25990,7 +26003,7 @@ struct entity_with_delegate_impl<arg_list<Args ...>> {
         }
 
         ArrayType ptrs;
-        bool has_components = get_ptrs(world, r, table, ptrs);
+        bool has_components = get_ptrs(world, e, r, table, ptrs);
         if (has_components) {
             invoke_callback(func, 0, ptrs);
         }
@@ -26013,7 +26026,7 @@ struct entity_with_delegate_impl<arg_list<Args ...>> {
         }
 
         ArrayType ptrs;
-        bool has_components = get_ptrs(world, r, table, ptrs);
+        bool has_components = get_ptrs(world, e, r, table, ptrs);
         if (has_components) {
             invoke_callback(func, 0, ptrs);
         }
@@ -26090,7 +26103,7 @@ struct entity_with_delegate_impl<arg_list<Args ...>> {
                 table = next;
             }
 
-            if (!get_ptrs(w, r, table, ptrs)) {
+            if (!get_ptrs(w, id, r, table, ptrs)) {
                 ecs_abort(ECS_INTERNAL_ERROR, NULL);
             }
 

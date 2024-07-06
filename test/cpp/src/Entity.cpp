@@ -4683,3 +4683,73 @@ void Entity_const_entity_set_doc(void) {
     test_str(e.doc_brief(), "brief");
     test_str(e.doc_link(), "link");
 }
+
+void Entity_set_sparse(void) {
+    flecs::world world;
+
+    world.component<Velocity>().add(flecs::Sparse);
+
+    flecs::entity e = world.entity().set(Velocity{1, 2});
+
+    test_assert(e.has<Velocity>());
+
+    const Velocity *v = e.get<Velocity>();
+    test_int(v->x, 1);
+    test_int(v->y, 2);
+}
+
+void Entity_insert_1_sparse(void) {
+    flecs::world world;
+
+    world.component<Velocity>().add(flecs::Sparse);
+
+    flecs::entity e = world.entity().insert([](Velocity& v) {
+        v.x = 1;
+        v.y = 2;
+    });
+
+    test_assert(e.has<Velocity>());
+
+    const Velocity *v = e.get<Velocity>();
+    test_int(v->x, 1);
+    test_int(v->y, 2);
+}
+
+void Entity_insert_2_w_1_sparse(void) {
+    flecs::world world;
+
+    world.component<Position>();
+    world.component<Velocity>().add(flecs::Sparse);
+
+    flecs::entity e = world.entity().insert([](Position& p, Velocity& v) {
+        p.x = 10;
+        p.y = 20;
+        v.x = 1;
+        v.y = 2;
+    });
+
+    test_assert(e.has<Position>());
+    test_assert(e.has<Velocity>());
+
+    const Position *p = e.get<Position>();
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    const Velocity *v = e.get<Velocity>();
+    test_int(v->x, 1);
+    test_int(v->y, 2);
+}
+
+void Entity_emplace_sparse(void) {
+    flecs::world world;
+
+    world.component<Velocity>().add(flecs::Sparse);
+
+    flecs::entity e = world.entity().emplace<Velocity>(1.0f, 2.0f);
+
+    test_assert(e.has<Velocity>());
+
+    const Velocity *v = e.get<Velocity>();
+    test_int(v->x, 1);
+    test_int(v->y, 2);
+}

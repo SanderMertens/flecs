@@ -499,6 +499,7 @@ void flecs_sparse_on_add(
                 if (construct && ctor) {
                     ctor(ptr, 1, ti);
                 }
+
                 if (on_add) {
                     flecs_invoke_hook(world, table, count, row, &entities[row],
                         ptr, id, ti, EcsOnAdd, on_add);
@@ -1205,6 +1206,9 @@ void flecs_notify_on_set(
             ecs_assert(idr != NULL, ECS_INTERNAL_ERROR, NULL);
             const ecs_type_info_t *ti = idr->type_info;
             ecs_iter_action_t on_set = ti->hooks.on_set;
+            if (!on_set) {
+                continue;
+            }
 
             if (idr->flags & EcsIdIsSparse) {
                 int32_t j;
