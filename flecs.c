@@ -5490,7 +5490,7 @@ void flecs_sparse_on_add(
             ecs_entity_t *entities = flecs_table_entities_array(table);
             for (j = 0; j < count; j ++) {
                 ecs_entity_t e = entities[row + j];
-                void *ptr = flecs_sparse_ensure_fast(idr->sparse, 0, e);
+                void *ptr = flecs_sparse_ensure(idr->sparse, 0, e);
                 ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
                 if (construct && ctor) {
                     ctor(ptr, 1, ti);
@@ -35287,8 +35287,6 @@ void* flecs_sparse_ensure_fast(
 
         uint64_t *dense_array = ecs_vec_first_t(&sparse->dense, uint64_t);
         flecs_sparse_assign_index(page, dense_array, index, count);
-    } else {
-        sparse->count = dense >= sparse->count ? (dense + 1): sparse->count;
     }
 
     return DATA(page->data, sparse->size, offset);
