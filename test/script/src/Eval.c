@@ -8254,3 +8254,21 @@ void Eval_dont_inherit_script_pair(void) {
 
     ecs_fini(world);
 }
+
+void Eval_entity_w_anon_tag(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    LINE "MyEntity {"
+    LINE "  _"
+    LINE "}";
+
+    ecs_log_set_level(-4);
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code = expr
+    });
+    test_assert(s == 0);
+
+    ecs_fini(world);
+}

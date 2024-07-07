@@ -281,6 +281,7 @@ void Eval_pair_second_not_found(void);
 void Eval_kind_not_found(void);
 void Eval_base_not_found(void);
 void Eval_dont_inherit_script_pair(void);
+void Eval_entity_w_anon_tag(void);
 
 // Testsuite 'Template'
 void Template_template_no_scope(void);
@@ -1695,6 +1696,10 @@ bake_test_case Eval_testcases[] = {
     {
         "dont_inherit_script_pair",
         Eval_dont_inherit_script_pair
+    },
+    {
+        "entity_w_anon_tag",
+        Eval_entity_w_anon_tag
     }
 };
 
@@ -2979,7 +2984,7 @@ static bake_test_suite suites[] = {
         "Eval",
         NULL,
         NULL,
-        272,
+        273,
         Eval_testcases
     },
     {
