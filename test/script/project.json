@@ -284,7 +284,8 @@
                 "pair_second_not_found",
                 "kind_not_found",
                 "base_not_found",
-                "dont_inherit_script_pair"
+                "dont_inherit_script_pair",
+                "entity_w_anon_tag"
             ]
         }, {
             "id": "Template",

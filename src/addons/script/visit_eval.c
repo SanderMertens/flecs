@@ -276,8 +276,20 @@ int flecs_script_eval_id(
             return -1;
         }
 
+        if (first == EcsAny || second == EcsAny) {
+            flecs_script_eval_error(v, node,
+                "cannot use anonymous entity as element of pair");
+            return -1;
+        }
+
         id->eval = id->flag | ecs_pair(first, second);
     } else {
+        if (first == EcsAny) {
+            flecs_script_eval_error(v, node,
+                "cannot use anonymous entity as component or tag");
+            return -1;
+        }
+
         id->eval = id->flag | first;
     }
 
