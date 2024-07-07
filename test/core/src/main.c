@@ -436,6 +436,7 @@ void Sparse_test_stable_ptr(void);
 void Sparse_has_after_remove(void);
 void Sparse_get_after_remove(void);
 void Sparse_get_mut_after_remove(void);
+void Sparse_sparse_w_hole(void);
 void Sparse_record_get(void);
 void Sparse_has_inherited(void);
 void Sparse_owns_inherited(void);
@@ -4462,6 +4463,10 @@ bake_test_case Sparse_testcases[] = {
     {
         "get_mut_after_remove",
         Sparse_get_mut_after_remove
+    },
+    {
+        "sparse_w_hole",
+        Sparse_sparse_w_hole
     },
     {
         "record_get",
@@ -13787,7 +13792,7 @@ static bake_test_suite suites[] = {
         "Sparse",
         NULL,
         NULL,
-        41,
+        42,
         Sparse_testcases
     },
     {

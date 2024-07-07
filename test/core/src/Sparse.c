@@ -501,6 +501,35 @@ void Sparse_get_mut_after_remove(void) {
     ecs_fini(world);
 }
 
+void Sparse_sparse_w_hole(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ecs_add_id(world, ecs_id(Velocity), EcsSparse);
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_add(world, e1, Velocity);
+    ecs_add(world, e1, Position);
+
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_add(world, e2, Velocity);
+    ecs_add(world, e2, Position);
+
+    ecs_delete(world, e1);
+    ecs_delete(world, e2);
+
+    e1 = ecs_new(world); // create hole in sparse set
+
+    e2 = ecs_new(world);
+    ecs_add(world, e2, Velocity);
+
+    test_assert(!ecs_has(world, e1, Velocity));
+    test_assert(ecs_has(world, e2, Velocity));
+
+    ecs_fini(world);
+}
+
 void Sparse_record_get(void) {
     ecs_world_t *world = ecs_mini();
 
