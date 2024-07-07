@@ -463,6 +463,7 @@
                 "has_after_remove",
                 "get_after_remove",
                 "get_mut_after_remove",
+                "sparse_w_hole",
                 "record_get",
                 "has_inherited",
                 "owns_inherited",

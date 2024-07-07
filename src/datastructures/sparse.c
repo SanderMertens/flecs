@@ -428,8 +428,6 @@ void* flecs_sparse_ensure_fast(
 
         uint64_t *dense_array = ecs_vec_first_t(&sparse->dense, uint64_t);
         flecs_sparse_assign_index(page, dense_array, index, count);
-    } else {
-        sparse->count = dense >= sparse->count ? (dense + 1): sparse->count;
     }
 
     return DATA(page->data, sparse->size, offset);
