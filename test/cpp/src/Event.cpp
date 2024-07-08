@@ -811,7 +811,7 @@ void Event_enum_event(void) {
         size_t data = 0u;
         size_t data_type_a = 0u;
         size_t data_type_b = 0u;
-    } observered;
+    } observed;
 
     flecs::world ecs;
 
@@ -823,27 +823,27 @@ void Event_enum_event(void) {
         .with(flecs::Wildcard)
         .event<Event>()
         .each([&](flecs::entity) {
-            ++observered._any;
+            ++observed._any;
         });
 
     ecs.observer()
         .with(Type::A)
         .event<Event>()
         .each([&](flecs::entity) {
-            ++observered.type_a;
+            ++observed.type_a;
         });
 
     ecs.observer()
         .with(Type::B)
         .event<Event>()
         .each([&](flecs::entity) {
-            ++observered.type_b;
+            ++observed.type_b;
         });
 
     ecs.observer<Data>()
         .event<Event>()
         .each([&](flecs::entity, Data data) {
-            ++observered.data;
+            ++observed.data;
             test_assert(data.value >= 1 && data.value <= 2);
         });
  
@@ -852,7 +852,7 @@ void Event_enum_event(void) {
         .with(Type::A)
         .event<Event>()
         .each([&](flecs::entity, Data data) {
-            ++observered.data_type_a;
+            ++observed.data_type_a;
             test_int(data.value, 1);
         });
 
@@ -860,7 +860,7 @@ void Event_enum_event(void) {
         .with(Type::B)
         .event<Event>()
         .each([&](flecs::entity, Data data) {
-            ++observered.data_type_b;
+            ++observed.data_type_b;
             test_int(data.value, 2);
         });
 
@@ -886,9 +886,9 @@ void Event_enum_event(void) {
             .entity(event2).emit();
     }
 
-    test_int(observered._any, 2u);
-    test_int(observered.type_a, 1u);
-    test_int(observered.type_b, 1u);
-    test_int(observered.data_type_a, 1u);
-    test_int(observered.data_type_b, 1u);
+    test_int(observed._any, 2u);
+    test_int(observed.type_a, 1u);
+    test_int(observed.type_b, 1u);
+    test_int(observed.data_type_a, 1u);
+    test_int(observed.data_type_b, 1u);
 }

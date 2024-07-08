@@ -644,7 +644,7 @@ int ecs_meta_pop(
                     opaque->as_type, EcsType);
                 ecs_assert(mtype != NULL, ECS_INTERNAL_ERROR, NULL);
 
-                /* When popping a opaque collection type, call resize to make 
+                /* When popping an opaque collection type, call resize to make
                  * sure the vector isn't larger than the number of elements we
                  * deserialized. 
                  * If the opaque type represents an array, don't call resize. */
