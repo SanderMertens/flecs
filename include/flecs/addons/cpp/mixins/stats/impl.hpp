@@ -1,5 +1,5 @@
 /**
- * @file addons/cpp/mixins/monitor/impl.hpp
+ * @file addons/cpp/mixins/stats/impl.hpp
  * @brief Monitor module implementation.
  */
 

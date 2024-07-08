@@ -349,9 +349,15 @@ if (inst.Owns<Defense>()) {
     // not inherited
 }
 ```
+</li>
+</ul>
+</div>
 
 The `target_for` operation can be used to determine from which prefab (or regular entity) a component is inherited:
 
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">C</b>
 ```c
 ecs_entity_t inherited_from = 
     ecs_target_for(world, inst, Defense);
