@@ -25485,7 +25485,7 @@ private:
         ecs_assert(iter->count > 0, ECS_INVALID_OPERATION,
             "no entities returned, use each() without flecs::entity argument");
 
-        return func(flecs::entity(iter->world, iter->entities[i]),
+        func(flecs::entity(iter->world, iter->entities[i]),
             (ColumnType< remove_reference_t<Components> >(comps, i)
                 .get_row())...);
     }
