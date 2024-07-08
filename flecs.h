@@ -22100,7 +22100,9 @@ protected:
     bool is_shared_;
 };
 
-}
+} // namespace flecs
+
+/** @} */
 
 /**
  * @file addons/cpp/iter.hpp
@@ -33009,7 +33011,7 @@ inline units::units(flecs::world& world) {
 #endif
 #ifdef FLECS_STATS
 /**
- * @file addons/cpp/mixins/monitor/impl.hpp
+ * @file addons/cpp/mixins/stats/impl.hpp
  * @brief Monitor module implementation.
  */
 
