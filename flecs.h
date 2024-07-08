@@ -7324,7 +7324,7 @@ ecs_flags32_t ecs_id_get_flags(
     ecs_id_t id);
 
 /** Convert id flag to string.
- * This operation converts a id flag to a string.
+ * This operation converts an id flag to a string.
  *
  * @param id_flags The id flag.
  * @return The id flag string, or NULL if no valid id is provided.
@@ -7826,7 +7826,7 @@ const char* ecs_query_args_parse(
  * (EcsInOutNone) term has changed, when a term is not matched with the
  * current table (This subject) or for tag terms.
  *
- * The changed state of a table is reset after it is iterated. If a iterator was
+ * The changed state of a table is reset after it is iterated. If an iterator was
  * not iterated until completion, tables may still be marked as changed.
  *
  * If no iterator is provided the operation will return the changed state of the
@@ -14122,7 +14122,7 @@ ecs_script_var_t* ecs_script_vars_define_id(
  * 
  * @param vars The variable scope.
  * @param name The variable name.
- * @return The variable, or NULL if a one with the provided name does not exist.
+ * @return The variable, or NULL if one with the provided name does not exist.
  */
 FLECS_API
 ecs_script_var_t* ecs_script_vars_lookup(
