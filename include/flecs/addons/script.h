@@ -332,7 +332,7 @@ ecs_script_var_t* ecs_script_vars_define_id(
  * 
  * @param vars The variable scope.
  * @param name The variable name.
- * @return The variable, or NULL if a one with the provided name does not exist.
+ * @return The variable, or NULL if one with the provided name does not exist.
  */
 FLECS_API
 ecs_script_var_t* ecs_script_vars_lookup(

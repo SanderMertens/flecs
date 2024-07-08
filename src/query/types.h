@@ -391,7 +391,7 @@ struct ecs_query_impl_t {
 /* Query cache types */
 
 /** Table match data.
- * Each table matched by the query is represented by a ecs_query_cache_table_match_t
+ * Each table matched by the query is represented by an ecs_query_cache_table_match_t
  * instance, which are linked together in a list. A table may match a query
  * multiple times (due to wildcard queries) with different columns being matched
  * by the query. */
