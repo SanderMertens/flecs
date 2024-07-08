@@ -16,6 +16,8 @@
 - [Systems Manual](Systems.md)
 - [Component Traits Manual](ComponentTraits.md)
 - [Relationships Manual](Relationships.md)
+- [Observers Manual](ObserversManual.md)
+- [Prefabs Manual](PrefabsManual.md)
 
 ## API reference
  - [C API](@ref c)
