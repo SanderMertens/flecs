@@ -42,7 +42,6 @@ void UFlecsEntityActorComponent::InitializeEntity()
 		UN_LOG(LogFlecsEntity, Error, "World Name is empty!");
 		return;
 	}
-	
 
 	if (GetWorld()->GetSubsystem<UFlecsWorldSubsystem>()->HasWorld(WorldName))
 	{

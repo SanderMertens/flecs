@@ -45,16 +45,29 @@ public:
         GEngine->GetEngineSubsystem<UFlecsDefaultEntityEngineSubsystem>()->DefaultEntityOptions)
     {
         UN_LOGF(LogFlecsEditor, Verbose,
-            "Adding entity %s to entity handle options.", *EntityName.ToString());
-        Options.Add(EntityName);
-    }
+            "Adding entity %s to entity handle options.", *EntityName);
 
-    for (const auto& [EntityRecord, bIsOptionEntity] :
-        GEngine->GetEngineSubsystem<UFlecsDefaultEntityEngineSubsystem>()->AddedDefaultEntities)
-    {
-        UN_LOGF(LogFlecsEditor, Verbose,
-            "Adding added entity %s to entity handle options.", *EntityRecord.Name);
-        Options.Add(FName(*EntityRecord.Name));
+    	bool bIsAddedEntity = false;
+
+    	for (auto [EntityRecord, bIsOptionEntity]
+    		: GEngine->GetEngineSubsystem<UFlecsDefaultEntityEngineSubsystem>()->AddedDefaultEntities)
+    	{
+    		if (EntityRecord.Name == EntityName)
+			{
+    			if (bIsOptionEntity)
+    			{
+    				Options.Add(FName(*EntityName));
+    			}
+    			
+    			bIsAddedEntity = true;
+				break;
+			}
+    	}
+
+    	if (!bIsAddedEntity)
+		{
+			Options.Add(FName(*EntityName));
+		}
     }
 
     ApplyMetadataFilters();
@@ -139,7 +152,7 @@ private:
 
 					FFlecsEntityHandle* EntityId = static_cast<FFlecsEntityHandle*>(RawData);
 					EntityId->SetEntity(GEngine->GetEngineSubsystem<UFlecsDefaultEntityEngineSubsystem>()
-						->DefaultEntityOptions[NewValue]);
+						->DefaultEntityOptions[NewValue.ToString()]);
 					EntityId->DisplayName = NewValue;
 					return true;
 				});

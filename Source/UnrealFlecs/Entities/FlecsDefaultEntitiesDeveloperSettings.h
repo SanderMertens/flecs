@@ -39,7 +39,8 @@ struct FFlecsDefaultMetaEntity
 
 }; // struct FFlecsEntityRecord
 
-UCLASS(BlueprintType, Config = Engine, DefaultConfig, meta = (DisplayName = "Flecs Default Entities Developer Settings"))
+UCLASS(BlueprintType, Config = Flecs, DefaultConfig, Category = "Flecs",
+	meta = (DisplayName = "Flecs Default Entities Developer Settings"))
 class UNREALFLECS_API UFlecsDefaultEntitiesDeveloperSettings final : public UDeveloperSettings
 {
 	GENERATED_BODY()
@@ -47,6 +48,5 @@ class UNREALFLECS_API UFlecsDefaultEntitiesDeveloperSettings final : public UDev
 public:
 	UPROPERTY(EditAnywhere, Config, Category = "Flecs | Default Entities")
 	TArray<FFlecsDefaultMetaEntity> DefaultEntities;
-	
 
 }; // class UFlecsDefaultEntitiesDeveloperSettings

@@ -6,7 +6,8 @@
 #include "Engine/DeveloperSettings.h"
 #include "FlecsNetworkDeveloperSettings.generated.h"
 
-UCLASS(BlueprintType, Config = "FlecsNetwork", DefaultConfig, meta = (DisplayName = "Flecs Network Settings"))
+UCLASS(BlueprintType, Config = Flecs, DefaultConfig, Category = "Flecs",
+	meta = (DisplayName = "Flecs Network Settings"))
 class UNREALFLECS_API UFlecsNetworkDeveloperSettings : public UDeveloperSettings
 {
 	GENERATED_BODY()

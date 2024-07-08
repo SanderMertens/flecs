@@ -67,7 +67,6 @@ public:
     }
 
     FORCEINLINE NO_DISCARD FFlecsEntityHandle GetTypeId() const { return FFlecsEntityHandle(Id.type_id()); }
-
-private:
+    
     flecs::id Id;
 }; // struct FFlecsId

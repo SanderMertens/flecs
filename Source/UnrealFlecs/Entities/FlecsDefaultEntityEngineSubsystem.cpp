@@ -19,34 +19,12 @@ void UFlecsDefaultEntityEngineSubsystem::Initialize(FSubsystemCollectionBase& Co
 {
 	Super::Initialize(Collection);
 
-	const flecs::world DefaultEntityWorld = flecs::world();
-
-	while (DefaultEntityOptions.IsEmpty())
-	{
-		flecs::entity TestEntity = DefaultEntityWorld.entity("TestEntity");
-		DefaultEntityWorld.progress();
-		
-		DefaultEntityWorld.query_builder<>()
-			.without(TestEntity)
-			.with(flecs::Trait)
-			.or_()
-			.with(flecs::PairIsTag)
-			.or_()
-			.with_name_component()
-			.each([&](flecs::entity Entity)
-			{
-				if (Entity.name().length() <= 0)
-				{
-					return;
-				}
-				
-				UN_LOGF(LogFlecsDefaultEntityEngineSubsystem, Log, "Entity: %s", Entity.name().c_str());
-				DefaultEntityOptions.Add(Entity.name().c_str(), Entity.id());
-			});
-	}
+	DefaultEntityWorld = flecs::world();
 
 	UFlecsDefaultEntitiesDeveloperSettings* Settings = GetMutableDefault<UFlecsDefaultEntitiesDeveloperSettings>();
 	solid_checkf(Settings, TEXT("Default Entities Developer Settings not found"));
+
+	DEFINE_DEFAULT_ENTITY_OPTION(NotNetworked);
 
 	#if WITH_EDITOR
 	
@@ -67,14 +45,63 @@ void UFlecsDefaultEntityEngineSubsystem::Deinitialize()
 
 void UFlecsDefaultEntityEngineSubsystem::RefreshDefaultEntities()
 {
+	while (DefaultEntityOptions.IsEmpty())
+	{
+		TestEntity = DefaultEntityWorld.entity("TestEntity");
+		DefaultEntityWorld.progress();
+		
+		DefaultEntityWorld.query_builder<>()
+			.without(TestEntity)
+			.with(flecs::Trait)
+			.or_()
+			.with(flecs::PairIsTag)
+			.or_()
+			.with_name_component()
+			.each([&](flecs::entity Entity)
+			{
+				if UNLIKELY_IF(Entity.name().length() <= 0)
+				{
+					return;
+				}
+				
+				UN_LOGF(LogFlecsDefaultEntityEngineSubsystem, Log, "Entity: %s",
+					*FString(Entity.name().c_str()));
+				DefaultEntityOptions.Add(Entity.name().c_str(), Entity.id());
+			});
+	}
+	
+	AddedDefaultEntities.Empty();
+	
 	for (const FFlecsDefaultMetaEntity& EntityRecord
 		: GetDefault<UFlecsDefaultEntitiesDeveloperSettings>()->DefaultEntities)
 	{
 		if UNLIKELY_IF(EntityRecord.EntityRecord.Name.IsEmpty())
 		{
+			UN_LOG(LogFlecsDefaultEntityEngineSubsystem, Warning,
+				"One of the default entities has an empty name");
 			continue;
 		}
 
 		AddedDefaultEntities.Add(EntityRecord);
 	}
+
+	for (const FFlecsDefaultMetaEntity& EntityRecord : CodeAddedDefaultEntities)
+	{
+		AddedDefaultEntities.Add(EntityRecord);
+	}
+
+	for (const auto& [EntityRecord, bIsOptionEntity] : AddedDefaultEntities)
+	{
+		UN_LOGF(LogFlecsDefaultEntityEngineSubsystem, Log,
+			"Added default entity: %s", *EntityRecord.Name);
+
+		flecs::entity Entity = DefaultEntityWorld.entity(StringCast<ANSICHAR>(*EntityRecord.Name).Get());
+		DefaultEntityOptions.Add(*EntityRecord.Name, Entity);
+	}
+}
+
+void UFlecsDefaultEntityEngineSubsystem::AddDefaultEntity(const FFlecsDefaultMetaEntity& DefaultEntity)
+{
+	CodeAddedDefaultEntities.Add(DefaultEntity);
+	RefreshDefaultEntities();
 }

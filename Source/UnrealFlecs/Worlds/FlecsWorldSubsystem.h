@@ -27,8 +27,6 @@
 // ReSharper disable once CppUE4CodingStandardNamingViolationWarning
 constexpr std::string_view DEFAULT_FLECS_WORLD_NAME = "DefaultFlecsWorld";
 
-DEFINE_STD_HASH(FString);
-
 USTRUCT(BlueprintType)
 struct FFlecsRestSettings
 {
@@ -113,11 +111,21 @@ public:
 		flecs::world NewWorld = flecs::world();
 
 		TArray<FFlecsDefaultMetaEntity> DefaultEntities = GetDefault<UFlecsDefaultEntityEngineSubsystem>()->AddedDefaultEntities;
+		TMap<FString, flecs::entity_t> DefaultEntityIds
+			= GetDefault<UFlecsDefaultEntityEngineSubsystem>()->DefaultEntityOptions;
 
 		UFlecsWorld* NewFlecsWorld = NewObject<UFlecsWorld>(this);
 		NewFlecsWorld->SetWorld(std::move(NewWorld));
 		
 		Worlds.Add(NewFlecsWorld);
+
+		for (int32 Index = 0; Index < DefaultEntities.Num(); ++Index)
+		{
+			FString EntityName = DefaultEntities[Index].EntityRecord.Name;
+			const flecs::entity_t EntityId = DefaultEntityIds[EntityName];
+			
+			NewFlecsWorld->CreateEntityWithRecordWithId(DefaultEntities[Index].EntityRecord, EntityId);
+		}
 
 		NewFlecsWorld->SetName(Name);
 		
@@ -128,16 +136,11 @@ public:
 		
 		WorldNameMap.emplace(Name, NewFlecsWorld);
 
-		for (const auto& [EntityRecord, bIsOptionEntity] : DefaultEntities)
-		{
-			NewFlecsWorld->CreateEntityWithRecord(EntityRecord);
-		}
-
 		#if WITH_EDITOR || UE_BUILD_DEBUG
 		
 		if (DeveloperSettings->bAutoImportExplorer)
 		{
-			ImportMonitoringModule(Name);
+			ImportRestModule(Name, true, FFlecsRestSettings());
 		}
 		
 		#endif // WITH_EDITOR

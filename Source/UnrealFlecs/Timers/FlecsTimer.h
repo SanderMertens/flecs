@@ -94,4 +94,5 @@ public:
 	}
 
 	flecs::timer Timer;
+	
 }; // struct FFlecsTimer

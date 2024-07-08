@@ -1,14 +1,17 @@
 ﻿// Solstice Games © 2024. All Rights Reserved.
 
+// ReSharper disable CppUE4CodingStandardNamingViolationWarning
 #pragma once
 
 #include "CoreMinimal.h"
 #include "flecs.h"
 #include "Components/FlecsTypeMapComponent.h"
+#include "Components/FlecsUObjectComponent.h"
 #include "Entities/FlecsEntityRecord.h"
 #include "SolidMacros/Concepts/SolidConcepts.h"
 #include "Entities/FlecsId.h"
 #include "Modules/FlecsModuleInterface.h"
+#include "Prefabs/FlecsPrefabComponent.h"
 #include "Systems/FlecsSystem.h"
 #include "Timers/FlecsTimer.h"
 #include "FlecsWorld.generated.h"
@@ -26,6 +29,49 @@ public:
 
 	FORCEINLINE void WorldBeginPlay()
 	{
+		InitializeComponentObservers();
+		InitializeSystems();
+	}
+
+	FORCEINLINE void InitializeComponentObservers()
+	{
+		for (const auto& ComponentProperties : FFlecsComponentPropertiesRegistry::Get().ComponentProperties)
+		{
+			flecs::observer_builder<> ObserverBuilder = CreateObserver(TEXT("ComponentObserver"))
+				.name(ComponentProperties.first.data())
+				.with<flecs::Component>()
+				.event(flecs::OnAdd)
+				.yield_existing();
+
+			const flecs::observer NewObserver = ObserverBuilder
+				.each([&](flecs::entity InEntity)
+			{
+				for (const flecs::entity_t Entity : ComponentProperties.second.Entities)
+				{
+					InEntity.add(Entity);
+				}
+
+				NewObserver.destruct();
+			});
+		}
+	}
+
+	FORCEINLINE void InitializeSystems()
+	{
+		static constexpr int32 UOBJECT_VALID_CHECK_FRAME_RATE = 60;
+		
+		CreateSystemWithBuilder<const FFlecsUObjectComponent&>(TEXT("FlecsUObjectComponentSystem"))
+			.term_at(1)
+			.read()
+			.rate(UOBJECT_VALID_CHECK_FRAME_RATE)
+			.multi_threaded()
+			.each([](flecs::entity InEntity, const FFlecsUObjectComponent& InComponent)
+			{
+				if (!InComponent.IsValid())
+				{
+					InEntity.destruct();
+				}
+			});
 	}
 	
 	FORCEINLINE void SetWorld(flecs::world&& InWorld)
@@ -64,7 +110,8 @@ public:
 
 	FORCEINLINE FFlecsEntityHandle CreateEntityWithId(const flecs::entity_t InId) const
 	{
-		return World.entity(InId);
+		const ecs_entity_t NewCEntity = ecs_new_w_id(World.c_ptr(), InId);
+		return FFlecsEntityHandle(NewCEntity);
 	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
@@ -77,6 +124,14 @@ public:
 	FORCEINLINE FFlecsEntityHandle CreateEntityWithRecord(const FFlecsEntityRecord& InRecord) const
 	{
 		FFlecsEntityHandle Entity = CreateEntity(InRecord.Name);
+		InRecord.ApplyRecordToEntity(Entity);
+		return Entity;
+	}
+
+	FORCEINLINE FFlecsEntityHandle CreateEntityWithRecordWithId(const FFlecsEntityRecord& InRecord,
+		const flecs::entity_t InId) const
+	{
+		FFlecsEntityHandle Entity = CreateEntityWithId(InId);
 		InRecord.ApplyRecordToEntity(Entity);
 		return Entity;
 	}
@@ -660,27 +715,7 @@ public:
 
 		return RegisterScriptStruct(ScriptStruct);
 	}
-
-	template <typename T>
-	FORCEINLINE FFlecsEntityHandle CreatePrefab(const FString& Name) const
-	{
-		return World.prefab<T>(StringCast<char>(*Name).Get());
-	}
-
-	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs")
-	FORCEINLINE FFlecsEntityHandle CreatePrefab(const FFlecsEntityRecord& InRecord) const
-	{
-		FFlecsEntityHandle Prefab = CreateEntityWithRecord(InRecord);
-		Prefab.Add(flecs::Prefab);
-		return Prefab;
-	}
-
-	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs")
-	FORCEINLINE FFlecsEntityHandle CreateEmptyPrefab() const
-	{
-		return World.prefab();
-	}
-
+	
 	template <typename ...TComponents>
 	FORCEINLINE flecs::observer_builder<TComponents...> CreateObserver(const FString& Name) const
 	{
@@ -809,10 +844,26 @@ public:
 		solid_checkf(IsStage(), TEXT("World is not a stage"));
 		return GetTypedOuter<UFlecsWorld>();
 	}
+
+	UFUNCTION(BlueprintCallable, Category = "Flecs")
+	FORCEINLINE FFlecsEntityHandle CreatePrefab(const FString& Name) const
+	{
+		FFlecsEntityHandle Prefab = World.prefab(StringCast<char>(*Name).Get());
+		solid_checkf(Prefab.IsPrefab(), TEXT("Entity is not a prefab"));
+
+		const FFlecsPrefabComponent PrefabComponent;
+
+		#if WITH_EDITOR
+		
+		Prefab.SetDocName(Name);
+
+		#endif // WITH_EDITOR
+
+		Prefab.Set<FFlecsPrefabComponent>(PrefabComponent);
+		
+		return Prefab;
+	}
 	
 	flecs::world World;
-
-	UPROPERTY()
-	TArray<TObjectPtr<UFlecsWorld>> Stages;
 	
 }; // class UFlecsWorld
