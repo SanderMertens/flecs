@@ -1025,6 +1025,9 @@ world.QueryBuilder<Velocity, Gravity>()
 ### Query
 Queries are the main mechanism for finding and iterating through entities. Queries are used in many parts of the API, such as for systems and observers. The following example shows a simple query:
 
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">C</b>
 ```c
 ecs_query_t *q = ecs_query(world, {
     .terms = {

@@ -108,4 +108,6 @@ protected:
     bool is_shared_;
 };
 
-}
+} // namespace flecs
+
+/** @} */
