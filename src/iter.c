@@ -1039,7 +1039,7 @@ bool ecs_worker_next_instanced(
 
     ecs_iter_t *chain_it = it->chain_it;
     ecs_worker_iter_t *iter = &it->priv.iter.worker;
-    int32_t res_count = iter->count, res_index = iter->index;
+    int32_t res_count = iter->count;
     int32_t per_worker, instances_per_worker, first;
 
     do {
@@ -1052,6 +1052,9 @@ bool ecs_worker_next_instanced(
 
         /* Keep instancing setting from original iterator */
         ECS_BIT_COND(it->flags, EcsIterIsInstanced, instanced);
+        
+        uint64_t table_id = it->table ? it->table->id : 0;
+        int32_t res_index = (int32_t)((UINT64_C(11400714819323198485) * table_id + (uint64_t)iter->index) % (uint64_t)res_count);
 
         int32_t count = it->count;
         int32_t instance_count = it->instance_count;
