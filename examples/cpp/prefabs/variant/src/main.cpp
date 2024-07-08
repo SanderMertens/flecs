@@ -40,7 +40,7 @@ int main() {
             .set<FreightCapacity>({ 100 })
             .set<Defense>({ 50 });
 
-            // Create a MammotFreighter variant which inherits from Freighter
+            // Create a MammothFreighter variant which inherits from Freighter
             flecs::entity MammothFreighter = ecs.prefab("MammothFreighter")
                 .is_a(Freighter)
                 .set<FreightCapacity>({ 500 });

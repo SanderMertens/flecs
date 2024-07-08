@@ -3915,7 +3915,7 @@ ecs_entity_t ecs_get_alive(
     }
 
     /* Make sure id does not have generation. This guards against accidentally
-     * "upcasting" a not alive identifier to a alive one. */
+     * "upcasting" a not alive identifier to an alive one. */
     if ((uint32_t)entity != entity) {
         return 0;
     }
@@ -4795,7 +4795,7 @@ void flecs_cmd_batch_for_entity(
                          * observers. */
                         cmd->kind = EcsCmdModified;
                     } else {
-                        /* If this was a ensure, nothing's left to be done */
+                        /* If this was an ensure, nothing's left to be done */
                         cmd->kind = EcsCmdSkip;
                     }
                 } else {

@@ -1633,7 +1633,7 @@ struct ecs_query_impl_t {
 /* Query cache types */
 
 /** Table match data.
- * Each table matched by the query is represented by a ecs_query_cache_table_match_t
+ * Each table matched by the query is represented by an ecs_query_cache_table_match_t
  * instance, which are linked together in a list. A table may match a query
  * multiple times (due to wildcard queries) with different columns being matched
  * by the query. */
@@ -8911,7 +8911,7 @@ ecs_entity_t ecs_get_alive(
     }
 
     /* Make sure id does not have generation. This guards against accidentally
-     * "upcasting" a not alive identifier to a alive one. */
+     * "upcasting" a not alive identifier to an alive one. */
     if ((uint32_t)entity != entity) {
         return 0;
     }
@@ -9791,7 +9791,7 @@ void flecs_cmd_batch_for_entity(
                          * observers. */
                         cmd->kind = EcsCmdModified;
                     } else {
-                        /* If this was a ensure, nothing's left to be done */
+                        /* If this was an ensure, nothing's left to be done */
                         cmd->kind = EcsCmdSkip;
                     }
                 } else {
@@ -52916,7 +52916,7 @@ int ecs_meta_pop(
                     opaque->as_type, EcsType);
                 ecs_assert(mtype != NULL, ECS_INTERNAL_ERROR, NULL);
 
-                /* When popping a opaque collection type, call resize to make 
+                /* When popping an opaque collection type, call resize to make
                  * sure the vector isn't larger than the number of elements we
                  * deserialized. 
                  * If the opaque type represents an array, don't call resize. */

@@ -8,7 +8,7 @@
 // or removing components) are not visible until the end of the frame (see the
 // sync_point example for more details).
 // Sometimes this is not what you want, and you need a change to be visible
-// immediately. For these use cases, applications can use a immediate system.
+// immediately. For these use cases, applications can use an immediate system.
 // This temporarily takes the world out of readonly mode, so a system can make
 // changes that are directly visible.
 // Because they mutate the world directly, immediate systems are never ran on
@@ -36,7 +36,7 @@ void AssignPlate(ecs_iter_t *it) {
             // next plate will no longer find it.
             // The defer_suspend function temporarily suspends deferring 
             // operations, which ensures that our plate is assigned immediately.
-            // Even though this is a immediate system, deferring is still
+            // Even though this is an immediate system, deferring is still
             // enabled by default, as adding/removing components to the entities
             // being iterated would interfere with the system iterator.
             ecs_defer_suspend(ecs);
