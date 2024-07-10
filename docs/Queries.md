@@ -41,6 +41,7 @@ Make sure to check out the query code examples in the repository:
 
  - [queries (C)](https://github.com/SanderMertens/flecs/tree/master/examples/c/queries)
  - [queries (C++)](https://github.com/SanderMertens/flecs/tree/master/examples/cpp/queries)
+ - [queries (Rust)](https://github.com/Indra-db/flecs-ecs-rs/tree/main/flecs_ecs/examples/flecs/queries)
 
 ## Performance and Caching
 Understanding the basic architecture of queries helps to make the right tradeoffs when using queries in games. The biggest impact on query performance is whether a query is cached or not. This section goes over what caching is, how it can be used and when it makes sense to use it.
@@ -132,7 +133,7 @@ Queries that use traversal (either `up` or `cascade`) can trigger query "rematch
 
 A typical example of this is a query that matched a `Transform` component on a parent entity. If the `Transform` component is removed from the parent it invalidates the cache, and rematching will happen.
 
-Rematching can be an expensive process, especially in games with lots of archetypes. To learn if an application is slowed down by rematching, connect the explorer to it with the `flecs::monitor` module imported (see the REST API manual), and inspect the world statistics page.
+Rematching can be an expensive process, especially in games with lots of archetypes. To learn if an application is slowed down by rematching, connect the explorer to it with the `flecs::stats` module imported (see the REST API manual), and inspect the world statistics page.
 
 If rematching is taking up a significant amount of time, consider changing cached queries with traversal to uncached. This will increase query evaluation time, but should get rid of the query rematching cost.
 
@@ -173,6 +174,21 @@ flecs::query<Position, Velocity> q = world.query_builder<Position, Velocity>()
 
 // Delete empty archetypes that have been empty for 10 calls to this function.
 ecs_delete_empty_tables(world, 0, 0, 10, 0, 0);
+```
+
+</li>
+<li><b class="tab-title">Rust</b>
+
+```rust
+// Create Position, Velocity query that matches empty archetypes.
+let q = world
+    .query::<(&mut Position, &Velocity)>()
+    .set_cached()
+    .query_flags(QueryFlags::MatchEmptyTables)
+    .build();
+
+// Delete empty archetypes that have been empty for 10 calls to this function.
+world.delete_empty_tables(0, 0, 10, 0, 0.0);
 ```
 
 </li>
@@ -268,6 +284,38 @@ q.with<const Velocity>();
 
 if (add_npc) {
     q.with<Npc>(); // Conditionally add
+}
+
+q.build(); // Create query
+```
+
+</li>
+<li><b class="tab-title">Rust</b>
+
+The query builder API is built on top of the term builder API, and adds a layer of convenience and type safety that matches modern idiomatic Rust. An example of a simple query:
+
+```rust
+// new_query is a convenience function that creates a query with the default builder
+let q = world.new_query::<(&mut Position, &Velocity)>();
+```
+
+Queries created with generic arguments provide a type safe way to iterate components:
+
+```rust
+q.each(|(p, v)| {
+    p.x += v.x;
+    p.y += v.y;
+});
+```
+
+The builder API allows for incrementally constructing queries, but also gives you access to more advanced features (see later sections):
+
+```rust
+let mut q = world.query::<(&mut Position, &Velocity)>();
+q.with::<&Velocity>();
+
+if add_npc {
+    q.with::<&Foo>(); // Conditionally add
 }
 
 q.build(); // Create query
@@ -479,6 +527,129 @@ world.defer_end(); // operations are executed here
 Code ran by a system is deferred by default.
 
 </li>
+<li><b class="tab-title">Rust</b>
+
+Rust has two main iteration functions, `each` and `run`. The `each` function is the default and often fastest approach for iterating a query in Rust. Both `each` and `run` have some variances that offer slightly different functionality.
+These variances are `each_entity`, `each_iter` and `run_each` and `run_iter`.
+
+An example:
+
+```rust
+let q = world.new_query::<(&mut Position, &Velocity)>();
+q.each(|(p, v)| {
+    p.x += v.x;
+    p.y += v.y;
+});
+```
+
+A `EntityView` can be added as by using `each_entity`:
+
+```rust
+let q = world.new_query::<(&mut Position, &Velocity)>();
+q.each_entity(|e, (p, v)| {
+    println!("Entity: {}", e.name());
+    p.x += v.x;
+    p.y += v.y;
+});
+```
+
+Using `each_iter` a `TableIter` and `usize` argument are added as first arguments. This variant of `each` provides access to the `TableIter` object, which contains more information about the object being iterated. The `usize` argument contains the index of the entity being iterated, which can be used to obtain entity-specific data from the `TableIter` object. An example:
+
+```rust
+let q = world
+    .query::<&Position>()
+    .with::<(&Likes, &flecs::Wildcard)>()
+    .build();
+
+q.each_iter(|it, index, p| {
+    println!("Entity: {}: {}", it.entity(index).name(), it.id(1).to_str());
+});
+```
+
+A query can also contain generic arguments that is an empty type (a struct without any members).
+
+```rust
+#[derive(Component)]
+struct Tag;
+
+world.new_query::<&Tag>().each_entity(|e, tag| {
+    /* */
+});
+```
+
+Alternatively an empty type can be specified outside of the query type, which removes it from the signature of `each`:
+
+```rust
+#[derive(Component)]
+struct Tag;
+
+world
+    .query::<()>()
+    .with::<&Tag>()
+    .build()
+    .each_entity(|e, _| { /* */ });
+```
+ 
+The `run` function provides an initialized iterator to a callback, and leaves iteration up to the callback implementation. The run callback has an outer and an inner loop.
+
+An example:
+
+```rust
+let q = world.new_query::<(&Position, &Velocity)>();
+
+q.run(|mut it| {
+    while it.next() {
+        let mut p = it.field::<Position>(0).unwrap();
+        let v = it.field::<Velocity>(1).unwrap();
+        for i in it.iter() {
+            p[i].x += v[i].x;
+            p[i].y += v[i].y;
+            println!("Entity: {}", it.entity(i).name());
+        }
+    }
+});
+```
+
+Entities can be moved between tables when components are added or removed. This can cause unwanted side effects while iterating a table, like iterating an entity twice, or missing an entity. To prevent this from happening, a table is locked in the Rust `each` and `run` functions, meaning no entities can be moved from or to it.
+
+When an application attempts to add or remove components to an entity in a table being iterated over in not deferred context, this can throw a runtime assert. An example:
+
+```rust
+let q = world.new_query::<&Position>();
+q.each_entity(|e, p| {
+    e.add::<Velocity>(); // throws locked table assert
+});
+```
+
+This can be addressed by deferring operations while the query is being iterated:
+
+```rust
+let q = world.new_query::<&Position>();
+    
+world.defer(|| {
+    q.each_entity(|e, p| {
+        e.add::<Velocity>(); // OK
+    });
+}); // operations are executed here
+```
+
+An application can also use the `defer_begin` and `defer_end` functions which achieve the same goal:
+
+```rust
+let q = world.new_query::<&Position>();
+
+world.defer_begin();
+
+q.each_entity(|e, p| {
+    e.add::<Velocity>(); // OK
+});
+
+world.defer_end(); // operations are executed here
+```
+
+Code ran by a system is deferred by default.
+
+</li>
 </ul>
 </div>
 
@@ -620,6 +791,53 @@ flecs::query<> q = world.query_builder()
 ```
 
 </li>
+<li><b class="tab-title">Rust</b>
+
+An easy way to query for components in Rust is to pass them as generic arguments to the query `new` function:
+
+```rust
+let q = world.new_query::<(&mut Position, &Velocity)>();
+```
+
+This changes the returned query type, which determines the type of the function used to iterate the query:
+
+```rust
+q.each(|(p, v)| { /* */ });
+```
+
+The builder API makes it possible to add components to a query without modifying the query type:
+
+```rust
+let q = world.query::<&mut Position>().with::<&Velocity>().build();
+```
+
+When generic arguments are mixed with the builder API, the components added by the `term` function will be placed after the components provided as generic arguments.
+
+The builder API makes it possible to query for regular entity ids created at runtime:
+
+```rust
+let npc = world.entity();
+let platoon_01 = world.entity();
+let q = world
+    .query::<(&mut Position, &Velocity)>()
+    .with_id(npc)
+    .with_id(platoon_01)
+    .build();
+```
+
+Components can also be queried for by name. To query for component types by name, they have to be used or registered first.
+
+```rust
+// Create entity with name so we can look it up
+let npc = world.entity_named("npc");
+let q = world
+    .query::<(&Position, &Npc)>()
+    .with_name("npc")
+    .with_name("Position")
+    .build();
+```
+
+</li>
 <li><b class="tab-title">Flecs Query Language</b>
 
 To query for a components in the Flecs Query Language they can be specified in a comma separated list of identifiers. The rules for resolving identifiers are the same as the `ecs_lookup` / `world.lookup` functions. An example:
@@ -703,6 +921,20 @@ flecs::query<> q = world.query_builder()
     .build();
 ```
 </li>
+<li><b class="tab-title">Rust</b>
+
+```rust
+let e = world
+.entity()
+.add::<Position>()
+.add::<Velocity>();
+
+let q = world
+.query::<()>()
+.with::<flecs::Wildcard>()
+.build();
+```
+</li>
 </ul>
 </div>
 
@@ -738,6 +970,20 @@ flecs::entity e = world.entity()
 flecs::query<> q = world.query_builder()
     .with(flecs::Any)
     .build();
+```
+
+</li>
+<li><b class="tab-title">Rust</b>
+
+```rust
+let e = world
+.entity()
+.add::<Position>().add::<Velocity>();
+
+let q = world
+.query::<()>()
+.with::<flecs::Any>()
+.build();
 ```
 
 </li>
@@ -943,6 +1189,82 @@ q.each([](flecs::iter& it, size_t index) {
 ```
 
 </li>
+<li><b class="tab-title">Rust</b>
+
+When both parts of a pair are types, a tuple can be used. tuple pairs can be made part of the query type, which makes them part of the argument list of the iterator functions. An example:
+
+```rust
+ #[derive(Component)]
+ struct Eats {
+     value: f32,
+ }
+ #[derive(Component)]
+ struct Apples;
+
+ let q = world.new_query::<&mut (Eats, Apples)>();
+
+ q.each(|eats| {
+     eats.value += 1.0;
+ });
+```
+
+Tuple pairs can also be added to queries using the builder API. This allows for the pair to be composed out of both types and regular entities. The three queries in the following example are equivalent:
+
+```rust
+#[derive(Component)]
+struct Eats {
+    value: f32,
+}
+
+#[derive(Component)]
+struct Apples;
+
+let eats = world.component::<Eats>();
+let apples = world.component::<Apples>();
+let q1 = world.query::<()>().with::<(Eats, Apples)>().build(); // tuple types
+let q2 = world.query::<()>().with_first::<Eats>(apples).build();
+let q3 = world.query::<()>().with_id((eats, apples)).build(); // tuple ids
+```
+
+Individual elements of a tuple pair can be specified with the `first` and `second` methods. The methods apply to the last added term. An example:
+
+```rust
+let q = world
+    .query::<()>()
+    .term()
+    .set_first::<Eats>()
+    .set_second_id(apples)
+    .build();
+```
+
+Individual elements of a pair can be resolved by name by using the `first` and `second` methods:
+
+```rust
+let q = world
+    .query::<()>()
+    .term()
+    .set_first_name("Eats")
+    .set_second_name("Apples")
+    .build();
+```
+
+When a query pair contains a wildcard, the `TableIter::pair` method can be used to determine the id of the pair element that matched the query:
+
+```rust
+let q = world
+    .query::<()>()
+    .with::<(Eats, flecs::Wildcard)>()
+    .build();
+
+q.each_iter(|it, index, _| {
+    let pair = it.pair(0).unwrap();
+    let second = pair.second_id();
+    let e = it.entity(index);
+    println!("Entity {} likes {}", e.name(), second.name());
+});
+```
+
+</li>
 <li><b class="tab-title">Flecs Query Language</b>
 
 To query for a pair in the Flecs Query Language, the elements of a pair are a comma separated list surrounded by parentheses. An example:
@@ -1079,6 +1401,72 @@ flecs::query<> q = world.query_builder()
 ```
 
 </li>
+<li><b class="tab-title">Rust</b>
+
+Access modifiers can be set using the `set_inout_kind` method:
+
+```rust
+// The following two queries are the same:
+let q = world
+    .query::<()>()
+    .with::<Position>()
+    .with::<Velocity>()
+    .set_inout_kind(InOutKind::In)
+    .build();
+
+let q = world
+    .query::<()>()
+    .with::<Position>()
+    .with::<Velocity>()
+    .set_in() // shorthand for .set_inout_kind(InOutKind::In)
+    .build();
+```
+
+When the `const` / `immutable reference` modifier is added to a type, the `InOutKind::In` modifier is automatically set:
+
+```rust
+// Velocity term will be added with InOutKind::In modifier due to `&`
+let q = world.new_query::<(&mut Position, &Velocity)>();
+```
+
+This also applies to types added with `term` / `with`:
+
+```rust
+let q = world
+    .query::<()>()
+    .with::<&mut Position>()
+    .with::<&Velocity>() // uses InOutKind::In modifier
+    .build();
+```
+
+When a component is added by the `term` method or generic terms with the `run` method, you can retrieve it from a `TableIter` object during iteration with the `field` method.
+
+```rust
+let q = world
+    .query::<()>()
+    .with::<&mut Position>()
+    .with::<&Velocity>()
+    .build();
+
+q.run(|mut it| {
+    while it.next() {
+        let p = it.field::<Position>(0).unwrap();
+        let v = it.field::<Velocity>(1).unwrap();
+    }
+});
+```
+
+The builder API has `set_in()`, `set_inout()`, `set_out()` and `set_inout_none()` convenience methods:
+
+```rust
+let q = world
+    .query::<()>()
+    .with::<Position>().set_inout()
+    .with::<Velocity>().set_in()
+    .build();
+```
+
+</li>
 <li><b class="tab-title">Flecs Query Language</b>
 
 Access modifiers in the Flecs Query Language can be specified inside of angular brackets before the component identifier:
@@ -1156,6 +1544,41 @@ The builder API has a `and_` convenience method:
 flecs::query<> q = world.query_builder()
     .with<Position>().and_(); // note escaping, 'and' is a C++ keyword
     .with<Velocity>().and_();
+    .build();
+```
+
+</li>
+<li><b class="tab-title">Rust</b>
+
+When no operator is specified, `And` is assumed. The following two queries are equivalent:
+
+```rust
+let q = world.new_query::<(&mut Position, &Velocity)>();
+
+let q2 = world
+    .query::<()>()
+    .with::<Position>()
+    .with::<Velocity>()
+    .build();
+
+let q3 = world
+    .query::<()>()
+    .with::<Position>()
+    .set_oper(OperKind::And)
+    .with::<Velocity>()
+    .set_oper(OperKind::And)
+    .build();
+```
+
+The builder API has a `and` convenience method:
+
+```rust
+let q = world
+    .query::<()>()
+    .with::<Position>()
+    .and()
+    .with::<Velocity>()
+    .and()
     .build();
 ```
 
@@ -1266,6 +1689,53 @@ flecs::query<> q = world.query_builder()
 
 
 </li>
+<li><b class="tab-title">Rust</b>
+
+To create a query with `Or` terms, use the `oper` method with enum `OperKind::Or`:
+
+```rust
+// Position, Velocity || Speed, Mass
+let q = world
+    .query::<()>()
+    .with::<Position>()
+    .with::<Velocity>()
+    .set_oper(OperKind::Or)
+    .with::<Speed>()
+    .with::<Mass>()
+    .build();
+q.run(|mut it| {
+    while it.next() {
+        let p = it.field::<Position>(0).unwrap();
+        let v = it.field::<Mass>(2).unwrap(); // not 4, because of the Or expression
+        let vs_id = it.id(1);
+        if vs_id == world.component_id::<Velocity>() {
+            // We can only use ecs_field if the field type is the same for all results,
+            // but we can use range() to get the table column directly.
+            let v = it.range().unwrap().get_mut::<Velocity>();
+            // iterate as usual
+        } else if vs_id == world.component_id::<Speed>() {
+            let s = it.range().unwrap().get_mut::<Speed>();
+            // iterate as usual
+        }
+    }
+});
+```
+
+The builder API has a `or` convenience method:
+
+```rust
+let q = world
+    .query::<()>()
+    .with::<Position>()
+    .with::<Velocity>()
+    .or()
+    .with::<Speed>()
+    .with::<Mass>()
+    .build();
+```
+
+
+</li>
 <li><b class="tab-title">Flecs Query Language</b>
 
 To create a query with `Or` terms, use the `||` symbol:
@@ -1327,6 +1797,41 @@ An application can also use the `without` method:
 flecs::query<> q = world.query_builder()
     .with<Position>() 
     .without<Velocity>();
+    .build();
+```
+
+</li>
+<li><b class="tab-title">Rust</b>
+
+To create a query with `Not` terms, use the `oper` method with enum `OperKind::Not`:
+
+```rust
+let q = world
+    .query::<()>()
+    .with::<Position>()
+    .with::<Velocity>()
+    .set_oper(OperKind::Not)
+    .build();
+```
+
+The builder API has a `not_` convenience method:
+
+```rust
+let q = world
+    .query::<()>()
+    .with::<Position>()
+    .with::<Velocity>()
+    .not()
+    .build();
+```
+
+An application can also use the `without` method:
+
+```rust
+let q = world
+    .query::<()>()
+    .with::<Position>()
+    .without::<Velocity>()
     .build();
 ```
 
@@ -1430,6 +1935,51 @@ flecs::query<> q = world.query_builder()
 ```
 
 </li>
+<li><b class="tab-title">Rust</b>
+
+To create a query with `Optional` terms, a component can be specified as an Option type:
+
+```rust
+let q = world.new_query::<(&Position, Option<&Velocity>)>();
+
+q.each(|(p, v)| {
+    if let Some(v) = v {
+        // ...
+    }
+});
+```
+
+Alternatively, an application can call the `oper` method with enum `OperKind::Optional`:
+
+```rust
+let q = world
+    .query::<()>()
+    .with::<Position>()
+    .with::<Velocity>()
+    .set_oper(OperKind::Optional)
+    .build();
+q.run(|mut it| {
+    while it.next() {
+        let p = it.field::<Position>(0).unwrap();
+        if let Some(v) = it.field::<Velocity>(1) {
+            // iterate as usual
+        }
+    }
+});
+```
+
+The builder API has an `optional` convenience method:
+
+```rust
+let q = world
+    .query::<()>()
+    .with::<Position>()
+    .with::<Velocity>()
+    .optional()
+    .build();
+```
+
+</li>
 <li><b class="tab-title">Flecs Query Language</b>
 
 To create a query with `Optional` terms, use the `?` symbol:
@@ -1507,6 +2057,27 @@ world.query_builder()
 ```
 
 </li>
+<li><b class="tab-title">Rust</b>
+
+```rust
+world
+    .query::<()>()
+    // $this == Foo
+    .with::<(flecs::PredEq, Foo)>()
+    // $this != Foo
+    .without::<(flecs::PredEq, Bar)>()
+    // $this == "Foo"
+    .with::<flecs::PredEq>()
+    .set_second_name("Foo")
+    .flags(sys::EcsIsName)
+    // $this ~= "Fo"
+    .with::<flecs::PredMatch>()
+    .set_second_name("Fo")
+    .flags(sys::EcsIsName)
+    .build();
+```
+
+</li>
 <li><b class="tab-title">Flecs Query Language</b>
 
 ```js
@@ -1575,6 +2146,37 @@ flecs::query<> q = world.query_builder()
     .with(type_list).and_from()
     .with(type_list).or_from()
     .with(type_list).not_from()
+    .build();
+```
+
+</li>
+<li><b class="tab-title">Rust</b>
+
+To use the `AndFrom`, `OrFrom` and `NotFrom` operators, call the `oper` method with enum `OperKind::AndFrom`, `OperKind::OrFrom` or `flecs::NotFrom`.
+
+```cpp
+let q = world
+    .query::<()>()
+    .with_id(type_list)
+    .set_oper(OperKind::AndFrom) // match Position, Velocity
+    .with_id(type_list)
+    .set_oper(OperKind::OrFrom) // match Position || Velocity
+    .with_id(type_list)
+    .set_oper(OperKind::NotFrom) // match !Position, !Velocity
+    .build();
+```
+
+The builder API has the `and_from`, `or_from` and `not_from` convenience methods:
+
+```cpp
+let q = world
+    .query::<()>()
+    .with_id(type_list)
+    .and_from()
+    .with_id(type_list)
+    .or_from()
+    .with_id(type_list)
+    .not_from()
     .build();
 ```
 
@@ -1660,6 +2262,23 @@ world.query_builder()
     .with<Speed>()
   .scope_close()
   .build();
+```
+
+</li>
+<li><b class="tab-title">Rust</b>
+
+```rust
+world
+    .query::<()>()
+    // Position, !{ Velocity || Speed }
+    .with::<Position>()
+    .scope_open()
+    .not()
+    .with::<Velocity>()
+    .or()
+    .with::<Speed>()
+    .scope_close()
+    .build();
 ```
 
 </li>
@@ -1847,6 +2466,100 @@ flecs::query<SimConfig, SimTime> q =
 ```
 
 </li>
+<li><b class="tab-title">Rust</b>
+
+To specify a fixed source, call the `set_src_id` method to the entity to match. The following example shows how to set a source, and how to access the value provided by a term with a fixed source:
+
+```rust
+let q = world
+    .query::<()>()
+    .with::<Position>() // normal term, uses $this source
+    .with::<Velocity>() // normal term, uses $this source
+    .with::<SimTime>()
+    .set_src_id(game) // fixed source, match SimTime on Game
+    .build();
+q.run(|mut it| {
+    while it.next() {
+        let mut p = it.field::<Position>(0).unwrap();
+        let v = it.field::<Velocity>(1).unwrap();
+        let st = it.field::<SimTime>(2).unwrap();
+        for i in it.iter() {
+            p[i].x += v[i].x * st[i].value;
+            p[i].y += v[i].y * st[i].value;
+        }
+    }
+});
+```
+
+Note how in this example all components can be accessed as arrays. When a query has mixed fields (fields with both arrays and single values), behavior defaults to entity-based iteration where entities are returned one at a time. As a result, `i` in the previous example will never be larger than `0`, which is why this code works even though there is only a single instance of the `SimTime` component.
+
+Returning entities one at a time can negatively affect performance, especially for large tables. To learn more about why this behavior exists and how to ensure that mixed results use table-based iteration, see [Instancing](#instancing). 
+
+The next example shows how queries with mixed `$this` and fixed sources can be iterated with `each`. The `each` function does not have the performance drawback of the last `run` example, as it uses [instancing](#instancing) by default.
+
+```rust
+let q = world
+    .query::<(&mut Position, &Velocity, &SimTime)>()
+    .term_at(2)
+    .set_src_id(game) // fixed source for 3rd template argument (SimTime)
+    .build();
+
+// Because all components are now part of the query type, we can use each
+q.each_entity(|e, (p, v, st)| {
+    p.x += v.x * st.value;
+    p.y += v.y * st.value;
+});
+```
+
+When a query has no terms for the `$this` source, it must be iterated with the `run` function or with a variant of `each` that does not have a signature with `flecs::entity` as first argument:
+
+```rust
+let q = world
+    .query::<(&SimConfig, &mut SimTime)>()
+    .term_at(0)
+    .set_src_id(cfg)
+    .term_at(1)
+    .set_src_id(game)
+    .build();
+
+// Ok (note that it.count() will be 0)
+q.run(|mut it| {
+    while it.next() {
+        let sc = it.field::<SimConfig>(0).unwrap();
+        let mut st = it.field::<SimTime>(1).unwrap();
+        st[0].value += sc[0].sim_speed; // 0 because it's a single source element
+    }
+});
+
+// Ok
+q.each(|(sc, st)| {
+    st.value += sc.sim_speed;
+});
+
+// Ok
+q.each_iter(|it, index, (sc, st)| {
+    st.value += sc.sim_speed;
+});
+
+// Not ok: there is no entity to pass to first argument
+q.each_entity(|e, (sc, st)| {
+    st.value += sc.sim_speed;
+});
+```
+
+A source may also be specified by name:
+
+```rust
+let q = world
+    .query::<(&SimConfig, &SimTime)>()
+    .term_at(0)
+    .set_src_name("Cfg")
+    .term_at(1)
+    .set_src_name("Game")
+    .build();
+```
+
+</li>
 <li><b class="tab-title">Flecs Query Language</b>
 
 To specify a source in the DSL, use parenthesis after the component identifier. The following example uses the default `$this` source for `Position` and `Velocity`, and `Game` as source for `SimTime`.
@@ -1920,6 +2633,41 @@ flecs::query<Player, Position> q = world.query_builder<Player, Position>()
 ```
 
 The singleton component data is accessed in the same way a component from a static [source](#source) is accessed.
+
+</li>
+<li><b class="tab-title">Rust</b>
+
+A singleton query can be created by specifying the same id as component and source:
+
+```rust
+let q = world
+    .query::<(&Player, &Position)>()
+    .with::<Input>()
+    .set_src::<Input>() // match Input on itself
+    .build();
+```
+
+The builder API provides a `singleton` convenience function:
+
+```rust
+let q = world
+    .query::<(&Player, &Position)>()
+    .with::<Input>()
+    .singleton() // match Input on itself
+    .build();
+```
+
+The singleton component data is accessed in the same way a component from a static [source](#source) is accessed.
+
+The builder API provides a `term_at` function which allows specifying characteristics of a term at a specific index in the generic terms.
+
+```rust
+let q = world
+    .query::<(&Player, &Position, &Input)>()
+    .term_at(2)
+    .singleton() // match Input on itself
+    .build();
+```
 
 </li>
 <li><b class="tab-title">Flecs Query Language</b>
@@ -2001,6 +2749,30 @@ flecs::query<> q3 = world.query_builder()
 ```
 
 </li>
+<li><b class="tab-title">Rust</b>
+
+```rust
+// These three queries are the same:
+let q1 = world
+    .query::<()>()
+    .with::<Mass>()
+    .up_type::<flecs::ChildOf>()
+    .build();
+
+let q2 = world
+    .query::<()>()
+    .with::<Mass>()
+    .up() // defaults to .up(flecs::ChildOf)
+    .build();
+
+let q3 = world
+    .query::<()>()
+    .with::<Mass>()
+    .parent() // shortcut for .up(flecs::ChildOf)
+    .build();
+```
+
+</li>
 </ul>
 </div>
 
@@ -2040,6 +2812,29 @@ flecs::query<> q1 = world.query_builder()
 flecs::query<> q2 = world.query_builder()
   .with<Mass>() // defaults to .self().up(flecs::IsA)
   .build();
+```
+
+</li>
+<li><b class="tab-title">Rust</b>
+
+```rust
+ // Register an inheritable component 'Mass'
+ world
+     .component::<Mass>()
+     .add_trait::<(flecs::OnInstantiate, flecs::Inherit)>();
+
+ // These two queries are the same:
+ let q1 = world
+     .query::<()>()
+     .with::<Mass>()
+     .self_()
+     .up_type::<flecs::IsA>()
+     .build();
+
+ let q2 = world
+     .query::<()>()
+     .with::<Mass>() // defaults to .self().up(flecs::IsA)
+     .build();
 ```
 
 </li>
@@ -2088,6 +2883,29 @@ flecs::entity child = world.entity()
 flecs::query<> q = world.query_builder()
   .with<Mass>().up() // traverses ChildOf upwards
   .build();
+```
+
+</li>
+<li><b class="tab-title">Rust</b>
+
+```rust
+// Register an inheritable component 'Mass'
+world
+    .component::<Mass>()
+    .add_trait::<(flecs::OnInstantiate, flecs::Inherit)>();
+
+let base = world.entity().add::<Mass>();
+
+let parent = world.entity().is_a_id(base); // inherits Mass
+
+let child = world.entity().child_of_id(parent);
+
+// Matches 'child', because parent inherits Mass from prefab
+let q = world
+    .query::<()>()
+    .with::<Mass>()
+    .up() // traverses ChildOf upwards
+    .build();
 ```
 
 </li>
@@ -2223,6 +3041,60 @@ flecs::entity child = world.entity()
 flecs::query<> q = world.query_builder<Position>()
   .term_at(0).up(ContainedBy)
   .build();
+```
+
+</li>
+<li><b class="tab-title">Rust</b>
+
+The following example shows a query that matches an inherited component:
+
+```rust
+ // Register inheritable 'Position' component
+ world
+     .component::<Position>()
+     .add_trait::<(flecs::OnInstantiate, flecs::Inherit)>();
+
+ let base = world.entity().add::<Position>();
+ let inst = world.entity().is_a_id(base); // short for .add_id((flecs::IsA::ID, base));
+
+ // The following two queries are the same:
+ let q1 = world.new_query::<&Position>();
+
+ let q2 = world
+     .query::<&Position>()
+     .term_at(0)
+     .self_()
+     .up_id(flecs::IsA::ID)
+     .build();
+```
+
+The following example shows a query that matches a component from a parent:
+
+```rust
+let parent = world.entity().add::<Position>();
+let child = world.entity().child_of_id(parent); // short for .add_id((flecs::ChildOf::ID, base));
+
+let q = world
+.query::<&Position>()
+.term_at(0).up()
+.build();
+```
+
+The following example shows a query that traverses a custom relationship:
+
+```rust
+// Create a new traversable relationship
+let contained_by = world.entity().add::<flecs::Traversable>();
+
+let parent = world.entity().add::<Position>();
+
+let child = world.entity().add_id((contained_by, parent));
+
+let q = world
+    .query::<&Position>()
+    .term_at(0)
+    .up_id(contained_by)
+    .build();
 ```
 
 </li>
@@ -2447,6 +3319,44 @@ q.run([](flecs::iter& it) {
 Note how the `it.is_self()` test is moved outside of the for loops. This keeps conditional statements outside of the core loop, which enables optimizations like auto-vectorization.
 
 </li>
+<li><b class="tab-title">Rust</b>
+
+Queries can be instanced by calling the `instanced` method:
+
+```rust
+let q = world
+    .query::<(&Position, &Mass)>()
+    .term_at(0)
+    // Never inherit Position
+    .self_()
+    // Instancing is a property of the iterator, but by setting it on the query
+    // all iterators created for the query will be instanced.
+    .instanced()
+    .build();
+q.run(|mut it| {
+    while it.next() {
+        let mut p = it.field::<Position>(0).unwrap();
+        let m = it.field::<Mass>(1).unwrap();
+        if it.is_self(1) {
+            // Mass is matched on self, access as array
+            for i in it.iter() {
+                p[i].x += 1.0 / m[i].value;
+                p[i].y += 1.0 / m[i].value;
+            }
+        } else {
+            // Mass is matched on other entity, access as single value
+            for i in it.iter() {
+                p[i].x += 1.0 / m[0].value; // [0] because it is a single value
+                p[i].y += 1.0 / m[0].value;
+            }
+        }
+    }
+});
+```
+
+Note how the `it.is_self()` test is moved outside of the for loops. This keeps conditional statements outside of the core loop, which enables optimizations like auto-vectorization.
+
+</li>
 </ul>
 </div>
 
@@ -2635,6 +3545,58 @@ q.iter().set_var("Location", earth).each([]{
 ```
 
 </li>
+<li><b class="tab-title">Rust</b>
+
+Query variables can be specified by specifying a name with a `$` prefix:
+
+```rust
+let q = world
+    .query::<()>()
+    .with::<SpaceShip>()
+    .with::<DockedTo>()
+    .set_second_name("$Location")
+    .with::<Planet>()
+    .set_src_name("$Location")
+    .build();
+```
+
+Alternatively, variables can also be specified using the `var` method:
+
+```rust
+let q = world
+    .query::<()>()
+    .with::<SpaceShip>()
+    .with::<DockedTo>()
+    .second()
+    .set_var("$Location")
+    .with::<Planet>()
+    .src()
+    .set_var("$Location")
+    .build();
+```
+
+An application can constrain the results of the query by setting the variable before starting iteration:
+
+```rust
+let earth = world.entity();
+let location_var = q.find_var("$Location").unwrap();
+
+q.iterable().set_var(location_var, earth).each(|it| {
+    // iterate as usual
+});
+```
+
+Alternatively the variable name can be provided to `set_var` directly:
+
+```rust
+let earth = world.entity();
+
+q.iterable().set_var_expr("$Location", earth).each(|it| {
+    // iterate as usual
+});
+```
+
+</li>
 </ul>
 </div>
 
@@ -2700,6 +3662,13 @@ flecs::entity e2 = world.entity().set(Movement{ Right });
 flecs::query<> q = world.query()
   .with("Movement.value", Left)
   .build();
+```
+
+</li>
+<li><b class="tab-title">Rust</b>
+
+```rust
+// Rust API does not support member value queries until reflection is implemented. This is the Meta addon.
 ```
 
 </li>
@@ -2830,7 +3799,7 @@ flecs::entity e = world.entity()
 
 q_write.run([](flecs::iter& it) {
   if (it.next()) {
-    if (dont_change) {
+    if !changed {
       // If no changes are made to the iterated table, the skip function can be
       // called to prevent marking the matched components as dirty.
       it.skip();
@@ -2850,6 +3819,51 @@ q_read.run([](flecs::iter& it) {
       // tables.
     }
   }
+});
+```
+
+</li>
+<li><b class="tab-title">Rust</b>
+
+The following example shows how the change detection API is used in C++:
+
+```rust
+// Query used for change detection. Note that change detection is not enabled on
+// the query itself, but by calling change detection functions for the query.
+let q_read = world.new_query::<&Position>();
+
+// Query used to create changes
+let q_write = world.new_query::<&mut Position>(); // defaults to inout
+
+// Test if changes have occurred for anything matching the query. If this is the
+// first call to the function, it will enable change detection for the query.
+let changed = q_read.is_changed();
+
+// Setting a component will update the changed state
+let e = world.entity().set(Position { x: 10.0, y: 20.0 });
+
+q_write.run(|mut it| {
+    while it.next() {
+        if !changed {
+            // If no changes are made to the iterated table, the skip function can be
+            // called to prevent marking the matched components as dirty.
+            it.skip();
+        } else {
+            // Iterate as usual. It does not matter whether the code actually writes the
+            // components or not: when a table is not skipped, components matched with
+            // inout or out terms will be marked dirty by the iterator.
+        }
+    }
+});
+
+q_read.run(|mut it| {
+    while it.next() {
+        if it.is_changed() {
+            // Check if the current table has changed. The change state will be reset
+            // after the table is iterated, so code can respond to changes in individual
+            // tables.
+        }
+    }
 });
 ```
 
@@ -2978,6 +3992,49 @@ auto q = world.query_builder<Position>()
     return (e1 > e2) - (e1 < e2);
   })
   .build();
+```
+
+</li>
+<li><b class="tab-title">Rust</b>
+
+The following example shows how to use sorted queries in Rust:
+
+```rust
+// Use readonly term for component used for sorting
+let q = world
+    .query::<(&Depth, &Position)>()
+    .order_by::<Depth>(|e1, d1: &Depth, e2, d2: &Depth| {
+        (d1.value > d2.value) as i32 - (d1.value < d2.value) as i32
+    })
+    .build();
+```
+
+Queries may specify a component id if the component is not known at compile time:
+
+```rust
+let depth_id = world.component::<Depth>();
+
+let q = world
+    .query::<&Position>()
+    .with_id(depth_id)
+    .set_in()
+    .order_by_id(depth_id, |e1, d1: *const c_void, e2, d2: *const c_void| {
+        let d1 = unsafe { &*(d1 as *const Depth) };
+        let d2 = unsafe { &*(d2 as *const Depth) };
+        (d1.value > d2.value) as i32 - (d1.value < d2.value) as i32
+    })
+    .build();
+```
+
+Queries may specify zero for component id to sort on entity ids:
+
+```rust
+let q = world
+    .query::<&Position>()
+    .order_by_id(0, |e1, _d1: *const c_void, e2, _d2: *const c_void| {
+        (e1 > e2) as i32 - (e1 < e2) as i32
+    })
+    .build();
 ```
 
 </li>
@@ -3116,7 +4173,7 @@ flecs::query<> q = world.query_builder()
 
 When no `group_by` functions, it will default to an internal function with the same behavior as the previous example. An example:
 
-```c
+```cpp
 // Create query that groups entities that are in the same region
 flecs::query<> q = world.query_builder()
   .with<Unit>()
@@ -3126,10 +4183,33 @@ flecs::query<> q = world.query_builder()
 
 To iterate entities in a single group, use the `set_group` function:
 
-```c
+```cpp
 q.set_group(Region_01).each([](flecs::entity e) {
   // iterate as usual
 });
+```
+
+</li>
+<li><b class="tab-title">Rust</b>
+
+// This section for Rust is unfinished for group_by, for code examples see group_by example is examples folder under query from Rust. Note, this still partically uses the C API. Until the Rust API is updated, this section will remain unfinished.
+
+The following example shows how grouping can be used to group entities that are in the same game region.
+
+```rust
+// see example in examples folder under query/group_by
+```
+
+When no `group_by` functions, it will default to an internal function with the same behavior as the previous example. An example:
+
+```rust
+// see example in examples folder under query/group_by
+```
+
+To iterate entities in a single group, use the `set_group` function:
+
+```rust
+// see example in examples folder under query/group_by
 ```
 
 </li>
@@ -3182,6 +4262,29 @@ flecs::entity unit_02 = world.entity().add(RangedUnit);
 
 // Matches entities with Unit, MeleeUnit and RangedUnit
 flecs::query<Unit> q = world.query<Unit>();
+
+// Iterate as usual
+```
+
+</li>
+<li><b class="tab-title">Rust</b>
+
+The following example shows a query that uses component inheritance to match entities:
+
+```rust
+#[derive(Component)]
+struct Unit;
+
+let unit = world.component::<Unit>();
+
+let melee_unit = world.entity().is_a::<Unit>();
+let ranged_unit = world.entity().is_a::<Unit>();
+
+let unit_01 = world.entity().add_id(melee_unit);
+let unit_02 = world.entity().add_id(ranged_unit);
+
+// Matches entities with Unit, MeleeUnit and RangedUnit
+let q = world.query::<&Unit>();
 
 // Iterate as usual
 ```
@@ -3314,6 +4417,70 @@ flecs::query<> q = world.query_builder()
 ```
 
 </li>
+
+<li><b class="tab-title">Rust</b>
+
+The following example shows a query that uses transitivity to match entities that are located in New York:
+
+```rust
+// Create LocatedIn relationship with transitive property
+#[derive(Component)]
+struct LocatedIn;
+
+world.component::<LocatedIn>().add::<flecs::Transitive>();
+
+let new_york = world.entity();
+let manhattan = world.entity().add_first::<LocatedIn>(new_york);
+let central_park = world.entity().add_first::<LocatedIn>(manhattan);
+let bob = world.entity().add_first::<LocatedIn>(central_park);
+
+// Matches ManHattan, CentralPark, Bob
+let q = world
+    .query::<()>()
+    .with_first::<LocatedIn>(new_york)
+    .build();
+
+// Iterate as usual
+```
+
+Queries for transitive relationships can be compared with variables. This query returns all locations an entity is in:
+
+```rust
+// Matches:
+//  - ManHattan (Place = NewYork)
+//  - CentralPark (Place = ManHattan, NewYork)
+//  - Bob (Place = CentralPark, ManHattan, NewYork)
+let q = world
+    .query::<()>()
+    .with::<LocatedIn>()
+    .set_second_name("$Place")
+    .build();
+```
+
+Variables can be used to constrain the results of a transitive query. The following query returns locations an entity is in that are a city:
+
+```rust
+#[derive(Component)]
+struct City;
+
+// Add City property to NewYork
+new_york.add::<City>();
+
+// Matches:
+//  - ManHattan (Place = NewYork)
+//  - CentralPark (Place = NewYork)
+//  - Bob (Place = NewYork)
+
+let q = world
+    .query::<()>()
+    .with::<LocatedIn>()
+    .set_second_name("$Place")
+    .with::<City>()
+    .set_src_name("$Place")
+    .build();
+```
+
+</li>
 <li><b class="tab-title">Flecs Query Language</b>
 
 Transitivity in a query is enabled by adding the `Transitive` property to a relationship. As a result, a query for a transitive relationship looks the same as a query for a non-transitive relationship. The following examples show the queries used in the C/C++ examples:
@@ -3378,6 +4545,24 @@ flecs::entity Oak = world.entity().is_a(Tree);
 flecs::query<> q = world.query_builder()
   .with(flecs::IsA, Tree)
   .build();
+```
+
+</li>
+<li><b class="tab-title">Rust</b>
+
+The following example shows a query that uses the `IsA` reflexive relationship:
+
+```rust
+let tree = world.entity();
+let oak = world.entity().is_a_id(tree);
+
+// Matches Tree, Oak
+let q = world
+.query::<()>()
+.with_first::<flecs::IsA>(tree)
+.build();
+
+// Iterate as usual
 ```
 
 </li>
