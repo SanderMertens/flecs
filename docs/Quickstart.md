@@ -35,9 +35,9 @@ target_link_libraries(${PROJECT_NAME} flecs::flecs_static)
 
 Download or `git clone` the [flecs repository](https://github.com/SanderMertens/flecs) and run `bake` from inside the directory. After that, add the following to your `project.json` file's value property:
 
-```json
+<pre><code class="language-json">
 "use": ["flecs"]
-```
+</code></pre>
 
 ### Running tests (bake)
 First make sure you have [bake](https://github.com/SanderMertens/bake) installed (see the bake repository for instructions). 

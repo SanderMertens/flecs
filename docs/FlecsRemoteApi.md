@@ -401,7 +401,7 @@ In this example, `Mass` is a component with reflection data, `(Identifier, Name)
 ```
 GET /entity/Sun/Earth
 ```
-```json
+<pre><code class="language-json">
 {
   "parent": "Sun",
   "name": "Earth",
@@ -421,13 +421,13 @@ GET /entity/Sun/Earth
     }
   }
 }
-```
+</code></pre>
 ---
 This example shows how `type_info` can be used to obtain the component schema's. If no schema is available a `null` placeholder is sent. The example also shows the `entity_id` option, which adds the `id` member.
 ```
 GET /entity/Sun/Earth?id=true&type_info=true
 ```
-```json
+<pre><code class="language-json">
 {
   "parent": "Sun",
   "name": "Earth",
@@ -466,13 +466,13 @@ GET /entity/Sun/Earth?id=true&type_info=true
     }
   }
 }
-```
+</code></pre>
 ---
 This example shows the effect of setting `full_paths`. This can be useful when tag, pair or component names are used in follow up requests, which often require full paths. It can also be used to disambiguate between names in different namespaces.
 ```
 GET /entity/Sun/Earth?full_paths=true
 ```
-```json
+<pre><code class="language-json">
 {
   "parent": "Sun",
   "name": "Earth",
@@ -492,13 +492,13 @@ GET /entity/Sun/Earth?full_paths=true
     }
   }
 }
-```
+</code></pre>
 ---
 This example demonstrates serializing inherited tags, pairs and components. Prefabs are added in the order they are encountered when traversing the `IsA` relationship. If multiple prefabs have the same component, the component will show up multiple times in the reply. A client must only consider the first occurrence of the component.
 ```
 GET /entity/Sun/Earth?inherited=true
 ```
-```json
+<pre><code class="language-json">
 {
   "parent": "Sun",
   "name": "Earth",
@@ -527,13 +527,13 @@ GET /entity/Sun/Earth?inherited=true
     }
   }
 }
-```
+</code></pre>
 ---
 The following example shows the effect of disabling serialization of component values.
 ```
 GET /entity/Sun/Earth?values=false
 ```
-```json
+<pre><code class="language-json">
 {
   "parent": "Sun",
   "name": "Earth",
@@ -549,7 +549,7 @@ GET /entity/Sun/Earth?values=false
     "(Description,Color)": null
   }
 }
-```
+</code></pre>
 
 ### PUT entity
 Create an entity.
@@ -590,9 +590,9 @@ GET /component/<path>?component=<component>
 ```
 GET /component/Sun/Earth?component=planets.Mass
 ```
-```json
+<pre><code class="language-json">
 { "value": "5.9722e24" }
-```
+</code></pre>
 
 ### PUT component
 Add or set a component.
@@ -686,7 +686,7 @@ The following example returns the results for query Position, Velocity. Note how
 ```
 GET /query?expr=Position%2CVelocity
 ```
-```json
+<pre><code class="language-json">
 {
   "results": [
     {
@@ -723,13 +723,13 @@ GET /query?expr=Position%2CVelocity
     }
   ]
 }
-```
+</code></pre>
 ---
 The following example shows the result of setting `table` to `true`, which serializes all components (the table) of each matched entity. The format of the individually returned results is the same as the `/entity` endpoint.
 ```
 GET /query?expr=Position%2CVelocity?table=true
 ```
-```json
+<pre><code class="language-json">
 {
   "results": [
     {
@@ -779,7 +779,7 @@ GET /query?expr=Position%2CVelocity?table=true
     }
   ]
 }
-```
+</code></pre>
 ---
 The following example shows the result for query `Position, ?Position(up)`. This shows the information that gets added to the query result to describe what the source of a field is, and whether a field is set or not.
 
@@ -787,7 +787,7 @@ The `is_set` member is only added to the result if one of the fields in the resu
 ```
 GET /query?expr=Position%2C%3FPosition(up)
 ```
-```json
+<pre><code class="language-json">
 {
   "results": [
     {
@@ -840,14 +840,14 @@ GET /query?expr=Position%2C%3FPosition(up)
     }
   ]
 }
-```
+</code></pre>
 ---
 The following example shows the same query (`Position, ?Position(up)`) with `fields` set to `false` and `entity_ids` set to `true`.
 
 ```
 GET /query?expr=Position%2C%3FPosition(up)&fields=false&entity_ids=true
 ```
-```json
+<pre><code class="language-json">
 {
   "results": [
     {
@@ -866,7 +866,7 @@ GET /query?expr=Position%2C%3FPosition(up)&fields=false&entity_ids=true
     }
   ]
 }
-```
+</code></pre>
 
 ---
 The following example shows how variables are serialized with the query `Position, (ChildOf, $p)`. The `ids` member is added to the serialized data, as the second term of this query has a variable (pair) id. Only fields with variable component ids are serialized to the `ids` array.
@@ -875,7 +875,7 @@ The following example shows how variables are serialized with the query `Positio
 GET /query?expr=Position%2C(ChildOf%2C%24p)
 ```
 
-```json
+<pre><code class="language-json">
 {
   "results": [
     {
@@ -928,7 +928,7 @@ GET /query?expr=Position%2C(ChildOf%2C%24p)
     }
   ]
 }
-```
+</code></pre>
 
 ---
 The following example shows the result of setting `query_info` and `field_info` to true, and setting `results` to false. This can be used to obtain meta information about a query. `query_info` returns a result per term, whereas `field_info` returns a result per field.
@@ -936,7 +936,7 @@ The following example shows the result of setting `query_info` and `field_info` 
 ```
 GET /query?expr=Position%2C%3FMass(up)?query_info=true&field_info=true&results=false
 ```
-```json
+<pre><code class="language-json">
 {
   "field_info": [
     {
@@ -1008,7 +1008,7 @@ GET /query?expr=Position%2C%3FMass(up)?query_info=true&field_info=true&results=f
     ]
   }
 }
-```
+</code></pre>
 
 ### GET world
 Retrieve all serializable data in the world.
@@ -1037,8 +1037,8 @@ PUT /script/<path>?code=<code>
 
 When the code failed to parse a response is sent back with the error:
 
-```json
+<pre><code class="language-json">
 {
   "error": "58: unexpected end of script\n}\n ^"
 }
-```
+</code></pre>
