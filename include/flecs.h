@@ -3442,7 +3442,7 @@ bool ecs_exists(
  * @param entity Entity for which to set the generation with the new generation.
  */
 FLECS_API
-void ecs_set_generation(
+void ecs_set_version(
     ecs_world_t *world,
     ecs_entity_t entity);
 

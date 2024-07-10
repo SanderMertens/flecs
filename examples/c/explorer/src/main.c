@@ -40,7 +40,7 @@ int main(int argc, char *argv[]) {
     // Run application with REST interface. When the application is running,
     // navigate to https://flecs.dev/explorer to inspect it!
     //
-    // See docs/RestApi.md#explorer for more information.
+    // See docs/FlecsRemoteApi.md#explorer for more information.
     return ecs_app_run(world, &(ecs_app_desc_t){
         .enable_rest = true
     });

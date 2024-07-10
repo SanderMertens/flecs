@@ -5,7 +5,7 @@
  * Parse expression strings into component values. Entity identifiers,
  * enumerations and bitmasks are encoded as strings.
  *
- * See docs/JsonFormat.md for a description of the JSON format.
+ * See docs/FlecsRemoteApi.md for a description of the JSON format.
  */
 
 #ifdef FLECS_JSON

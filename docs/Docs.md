@@ -3,21 +3,21 @@
 ## Getting Started
 - [FAQ](FAQ.md)
 - [Quickstart](Quickstart.md)
-- [Flecs Script Tutorial](FlecsScriptTutorial.md)
 - [Designing with Flecs](DesignWithFlecs.md)
 - [Getting Started with Unreal Engine](https://github.com/PreyK/Unreal-Minimum-Viable-Flecs)
 
 ## Manuals
 - [Manual](Manual.md)
+- [Entities and Components Manual](EntitiesComponents.md)
 - [Query Manual](Queries.md)
 - [Query Language Manual](FlecsQueryLanguage.md)
-- [Flecs Script Manual](FlecsScript.md)
-- [Flecs Remote API Manual](FlecsRemoteApi.md)
 - [Systems Manual](Systems.md)
-- [Component Traits Manual](ComponentTraits.md)
-- [Relationships Manual](Relationships.md)
 - [Observers Manual](ObserversManual.md)
 - [Prefabs Manual](PrefabsManual.md)
+- [Component Traits Manual](ComponentTraits.md)
+- [Relationships Manual](Relationships.md)
+- [Flecs Script Manual](FlecsScript.md)
+- [Flecs Remote API Manual](FlecsRemoteApi.md)
 
 ## API reference
  - [C API](@ref c)

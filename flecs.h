@@ -6630,7 +6630,7 @@ bool ecs_exists(
  * @param entity Entity for which to set the generation with the new generation.
  */
 FLECS_API
-void ecs_set_generation(
+void ecs_set_version(
     ecs_world_t *world,
     ecs_entity_t entity);
 
@@ -9685,7 +9685,7 @@ int ecs_value_move_ctor(
  * @{
  */
 
-#define ecs_lookup_path(world, parent, path)\
+#define ecs_lookup_from(world, parent, path)\
     ecs_lookup_path_w_sep(world, parent, path, ".", NULL, true)
 
 #define ecs_get_path(world, parent, child)\
@@ -11120,7 +11120,7 @@ const char* ecs_http_get_param(
  * A small REST API that uses the HTTP server and JSON serializer to provide
  * access to application data for remote applications.
  *
- * A description of the API can be found in docs/RestApi.md
+ * A description of the API can be found in docs/FlecsRemoteApi.md
  */
 
 #ifdef FLECS_REST
@@ -13043,7 +13043,7 @@ void FlecsAlertsImport(
  * Parse expression strings into component values. Entity identifiers,
  * enumerations and bitmasks are encoded as strings.
  *
- * See docs/JsonFormat.md for a description of the JSON format.
+ * See docs/FlecsRemoteApi.md for a description of the JSON format.
  */
 
 #ifdef FLECS_JSON

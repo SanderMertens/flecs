@@ -500,7 +500,7 @@ struct world {
      *
      * @param enabled True if range check should be enabled, false if not.
      */
-    void enable_range_check(bool enabled) const {
+    void enable_range_check(bool enabled = true) const {
         ecs_enable_range_check(world_, enabled);
     }
 

@@ -46,9 +46,9 @@ html.dark-mode .bordered_image object[type="image/svg+xml"] /* doxygen 1.9.3 */ 
 }
 
 html {
-  --primary-color: #42b983;
-  --fragment-link: #42b983;
-  --fragment-keywordflow: #ff7b72;
+  --primary-color: rgb(66, 185, 131);
+  --fragment-link: rgb(66, 185, 131);
+  --fragment-keywordflow: rgb(188, 137, 189);
   --spacing-small: 8px;
   --content-maxwidth: 800px;
   --font-family: 'Source Sans Pro', 'Helvetica Neue', Arial, sans-serif;
@@ -58,14 +58,15 @@ html {
 
 html.dark-mode {
   --primary-color: #42b983;
-  --page-background-color: #0f1116;
-  --side-nav-background: #1a1d23;
+  --page-background-color: hsl(210, 12%, 16%);
+  --page-foreground-color: hsl(195, 15%, 85%);
+  --side-nav-background: hsl(214, 10%, 13%);
   --separator-color: rgba(255,255,255,0.07);
-  --tablehead-background: #1a1d23;
-  --code-background: #1a1d23;
-  --fragment-background: #1a1d23;
-  --fragment-link: #42b983;
-  --fragment-keywordflow: #ff7b72;
+  --tablehead-background: hsl(214, 10%, 13%);
+  --code-background: hsl(214, 10%, 13%);
+  --fragment-background: hsl(214, 10%, 13%);
+  --fragment-link: rgb(66, 185, 131);
+  --fragment-keywordflow: rgb(188, 137, 189);
 }
 
 div.fragment {
