@@ -127,36 +127,36 @@ If you have a project you'd like to share, let me know on [Discord](https://disc
 
 -- Dann Webster, Hypixel studios
 
-### [Tempest Rising](https://store.steampowered.com/app/1486920/Tempest_Rising/)
+### Tempest Rising
 [![Tempest Rising](docs/img/projects/tempest_rising.png)](https://store.steampowered.com/app/1486920/Tempest_Rising/)
 
-### [Territory Control](https://store.steampowered.com/app/690290/Territory_Control_2/)
-[![image](docs/img/projects/territory_control.jpeg)](https://store.steampowered.com/app/690290/Territory_Control_2/)
+### Territory Control 2
+[![image](docs/img/projects/territory_control.jpg)](https://store.steampowered.com/app/690290/Territory_Control_2/)
 
-### [The Forge](https://github.com/ConfettiFX/The-Forge)
+### The Forge
 [![image](docs/img/projects/the_forge.jpg)](https://github.com/ConfettiFX/The-Forge)
 
-### [Extermination Shock](https://store.steampowered.com/app/2510820/Extermination_Shock/)
-[![image](docs/img/projects/extermination_shock.jpeg)](https://store.steampowered.com/app/2510820/Extermination_Shock/)
+### Extermination Shock
+[![image](docs/img/projects/extermination_shock.png)](https://store.steampowered.com/app/2510820/Extermination_Shock/)
 
-### [Sol Survivor](https://nicok.itch.io/sol-survivor-demo)
+### Sol Survivor
 [![image](docs/img/projects/sol_survivor.png)](https://nicok.itch.io/sol-survivor-demo)
 
-### [Equilibrium Engine](https://github.com/clibequilibrium/EquilibriumEngine)
+### Equilibrium Engine
 [![image](docs/img/projects/equilibrium_engine.png)](https://github.com/clibequilibrium/EquilibriumEngine)
 
-### [Gravitas](https://thepunkcollective.itch.io/gravitas)
+### Gravitas
 [![image](docs/img/projects/gravitas.png)](https://thepunkcollective.itch.io/gravitas)
 
-### [After Sun](https://github.com/foxnne/aftersun)
+### After Sun
 [![image](docs/img/projects/after_sun.png)](https://github.com/foxnne/aftersun)
 
 ### Flecs Demo's
-https://www.flecs.dev/tower_defense/etc ([repository](https://github.com/SanderMertens/tower_defense))
-![image](docs/img/projects/tower_defense.png)
+https://github.com/SanderMertens/tower_defense
+[![Tower Defense](docs/img/projects/tower_defense.png)](https://www.flecs.dev/tower_defense/etc)
 
-https://www.flecs.dev/city ([repository](https://github.com/flecs-hub/city))
-![image](docs/img/projects/city.png)
+https://github.com/flecs-hub/city
+[![City](docs/img/projects/city.png)](https://www.flecs.dev/city)
 
 ## Resources
 
@@ -197,11 +197,11 @@ Module      | Description
 ## Language bindings
 The following language bindings have been developed with Flecs! Note that these are projects built and maintained by helpful community members, and may not always be up to date with the latest commit from master!
 - C#:
-  - [flecs-hub/flecs-cs](https://github.com/flecs-hub/flecs-cs)
   - [BeanCheeseBurrito/Flecs.NET](https://github.com/BeanCheeseBurrito/Flecs.NET)
 - Rust:
-  - [flecs-rs](https://github.com/jazzay/flecs-rs)
+  - [flecs-ecs-rs](https://github.com/Indra-db/flecs-ecs-rs)
   - [flecs-polyglot](https://github.com/flecs-hub/flecs-polyglot)
+  - [flecs-rs](https://github.com/jazzay/flecs-rs)
 - Zig:
   - [michal-z/zig-gamedev](https://github.com/michal-z/zig-gamedev/tree/main/libs/zflecs)
   - [foxnne/zig-flecs](https://github.com/foxnne/zig-flecs)
