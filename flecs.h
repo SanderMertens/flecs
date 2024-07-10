@@ -25439,6 +25439,8 @@ const char* from_json(const char *json) {
 
 #pragma once
 
+#include <utility> // std::declval
+
 namespace flecs
 {
 
@@ -25605,9 +25607,6 @@ struct each_ref_column : public each_column<T> {
 
 template <typename Func, typename ... Components>
 struct each_delegate : public delegate {
-    static_assert(arity<Func>::value > 0, 
-        "each() must have at least one argument");
-
     using Terms = typename term_ptrs<Components ...>::array;
 
     template < if_not_t< is_same< decay_t<Func>, decay_t<Func>& >::value > = 0>
@@ -25681,7 +25680,11 @@ struct each_delegate : public delegate {
 private:
     // func(flecs::entity, Components...)
     template <template<typename X, typename = int> class ColumnType, 
-        typename... Args, if_t<sizeof...(Args) + 1 == arity<Func>::value> = 0>
+        typename... Args,
+        typename Fn = Func,
+        decltype(std::declval<const Fn&>()(
+            std::declval<flecs::entity>(),
+            std::declval<ColumnType< remove_reference_t<Components> > >().get_row()...), 0) = 0>
     static void invoke_callback(
         ecs_iter_t *iter, const Func& func, size_t i, Args... comps) 
     {
@@ -25695,7 +25698,12 @@ private:
 
     // func(flecs::iter&, size_t row, Components...)
     template <template<typename X, typename = int> class ColumnType, 
-        typename... Args, if_t<sizeof...(Args) + 2 == arity<Func>::value> = 0>
+        typename... Args,
+        typename Fn = Func,
+        decltype(std::declval<const Fn&>()(
+            std::declval<flecs::iter&>(),
+            size_t{},
+            std::declval<ColumnType< remove_reference_t<Components> > >().get_row()...), 0) = 0>
     static void invoke_callback(
         ecs_iter_t *iter, const Func& func, size_t i, Args... comps) 
     {
@@ -25706,7 +25714,10 @@ private:
 
     // func(Components...)
     template <template<typename X, typename = int> class ColumnType, 
-        typename... Args, if_t<sizeof...(Args) == arity<Func>::value> = 0>
+        typename... Args,
+        typename Fn = Func,
+        decltype(std::declval<const Fn&>()(
+            std::declval<ColumnType< remove_reference_t<Components> > >().get_row()...), 0) = 0>
     static void invoke_callback(
         ecs_iter_t*, const Func& func, size_t i, Args... comps) 
     {
