@@ -321,7 +321,7 @@ ecs_entity_t ecs_cpp_component_register(
                  * The latter ensures that it was the intent of the application
                  * to alias the type, vs. accidentally registering an unrelated
                  * type with the same size/alignment. */
-                char *type_path = ecs_get_fullpath(world, ent);
+                char *type_path = ecs_get_path(world, ent);
                 if (ecs_os_strcmp(type_path, symbol) || 
                     component->size != size || 
                     component->alignment != alignment) 
@@ -508,7 +508,7 @@ const ecs_member_t* ecs_cpp_last_member(
 {
     const EcsStruct *st = ecs_get(world, type, EcsStruct);
     if (!st) {
-        char *type_str = ecs_get_fullpath(world, type);
+        char *type_str = ecs_get_path(world, type);
         ecs_err("entity '%s' is not a struct", type_str);
         ecs_os_free(type_str);
         return 0;

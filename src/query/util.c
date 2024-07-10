@@ -275,7 +275,7 @@ int32_t flecs_query_op_ref_str(
         }
         color_chars = ecs_os_strlen("#[green]#[reset]#[green]#[reset]");
     } else if (flags & EcsQueryIsEntity) {
-        char *path = ecs_get_fullpath(query->pub.world, ref->entity);
+        char *path = ecs_get_path(query->pub.world, ref->entity);
         ecs_strbuf_appendlit(buf, "#[blue]");
         ecs_strbuf_appendstr(buf, path);
         ecs_strbuf_appendlit(buf, "#[reset]");
@@ -483,7 +483,7 @@ void flecs_query_str_add_id(
     }
 
     if (ref_id) {
-        char *path = ecs_get_fullpath(world, ref_id);
+        char *path = ecs_get_path(world, ref_id);
         ecs_strbuf_appendstr(buf, path);
         ecs_os_free(path);
     } else if (ref->name) {
@@ -522,7 +522,7 @@ void flecs_query_str_add_id(
             }
 
             if (term->trav) {
-                char *rel_path = ecs_get_fullpath(world, term->trav);
+                char *rel_path = ecs_get_path(world, term->trav);
                 ecs_strbuf_appendlit(buf, " ");
                 ecs_strbuf_appendstr(buf, rel_path);
                 ecs_os_free(rel_path);

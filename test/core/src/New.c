@@ -241,11 +241,11 @@ void New_create_w_explicit_id_2_worlds(void) {
     ECS_ENTITY_DEFINE(world_1, Foo, 0);
     ECS_ENTITY_DEFINE(world_2, Foo, 0);
 
-    char *path = ecs_get_fullpath(world_1, Foo);
+    char *path = ecs_get_path(world_1, Foo);
     test_str(path, "Parent.Foo");
     ecs_os_free(path);
 
-    path = ecs_get_fullpath(world_2, Foo);
+    path = ecs_get_path(world_2, Foo);
     test_str(path, "Parent.Foo");
     ecs_os_free(path);
 

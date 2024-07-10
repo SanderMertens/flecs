@@ -139,7 +139,7 @@ ecs_meta_type_op_t* flecs_meta_cursor_get_ptr(
     } else if (opaque) {
         if (scope->is_collection) {
             if (!opaque->ensure_element) {
-                char *str = ecs_get_fullpath(world, scope->type);
+                char *str = ecs_get_path(world, scope->type);
                 ecs_err("missing ensure_element for opaque type %s", str);
                 ecs_os_free(str);
                 return NULL;
@@ -153,7 +153,7 @@ ecs_meta_type_op_t* flecs_meta_cursor_get_ptr(
             return opaque_ptr;
         } else if (op->name) {
             if (!opaque->ensure_member) {
-                char *str = ecs_get_fullpath(world, scope->type);
+                char *str = ecs_get_path(world, scope->type);
                 ecs_err("missing ensure_member for opaque type %s", str);
                 ecs_os_free(str);
                 return NULL;
@@ -299,7 +299,7 @@ int ecs_meta_member(
 
     const uint64_t *cur_ptr = flecs_name_index_find_ptr(members, name, 0, 0);
     if (!cur_ptr) {
-        char *path = ecs_get_fullpath(world, scope->type);
+        char *path = ecs_get_path(world, scope->type);
         ecs_err("unknown member '%s' for type '%s'", name, path);
         ecs_os_free(path);
         return -1;
@@ -310,7 +310,7 @@ int ecs_meta_member(
     const EcsOpaque *opaque = scope->opaque;
     if (opaque) {
         if (!opaque->ensure_member) {
-            char *str = ecs_get_fullpath(world, scope->type);
+            char *str = ecs_get_path(world, scope->type);
             ecs_err("missing ensure_member for opaque type %s", str);
             ecs_os_free(str);
         }
@@ -590,7 +590,7 @@ int ecs_meta_push(
     case EcsOpString:
     case EcsOpEntity:
     case EcsOpId: {
-        char *path = ecs_get_fullpath(world, scope->type);
+        char *path = ecs_get_path(world, scope->type);
         ecs_err("invalid push for type '%s'", path);
         ecs_os_free(path);
         goto error;
@@ -651,7 +651,7 @@ int ecs_meta_pop(
                 if (mtype->kind != EcsArrayType) {
                     ecs_assert(opaque != NULL, ECS_INTERNAL_ERROR, NULL);
                     if (!opaque->resize) {
-                        char *str = ecs_get_fullpath(cursor->world, scope->type);
+                        char *str = ecs_get_path(cursor->world, scope->type);
                         ecs_err("missing resize for opaque type %s", str);
                         ecs_os_free(str);
                         return -1;
@@ -867,7 +867,7 @@ void flecs_meta_conversion_error(
     if (op->kind == EcsOpPop) {
         ecs_err("cursor: out of bounds");
     } else {
-        char *path = ecs_get_fullpath(cursor->world, op->type);
+        char *path = ecs_get_path(cursor->world, op->type);
         ecs_err("unsupported conversion from %s to '%s'", from, path);
         ecs_os_free(path);
     }
@@ -1184,7 +1184,7 @@ int ecs_meta_set_value(
         ecs_meta_type_op_t *op = flecs_meta_cursor_get_op(scope);
         void *ptr = flecs_meta_cursor_get_ptr(cursor->world, scope);
         if (op->type != value->type) {
-            char *type_str = ecs_get_fullpath(cursor->world, value->type);
+            char *type_str = ecs_get_path(cursor->world, value->type);
             flecs_meta_conversion_error(cursor, op, type_str);
             ecs_os_free(type_str);
             goto error;
@@ -1211,7 +1211,7 @@ int flecs_meta_add_bitmask_constant(
 
     ecs_entity_t c = ecs_lookup_child(cursor->world, op->type, value);
     if (!c) {
-        char *path = ecs_get_fullpath(cursor->world, op->type);
+        char *path = ecs_get_path(cursor->world, op->type);
         ecs_err("unresolved bitmask constant '%s' for type '%s'", value, path);
         ecs_os_free(path);
         return -1;
@@ -1220,7 +1220,7 @@ int flecs_meta_add_bitmask_constant(
     const ecs_u32_t *v = ecs_get_pair_second(
         cursor->world, c, EcsConstant, ecs_u32_t);
     if (v == NULL) {
-        char *path = ecs_get_fullpath(cursor->world, op->type);
+        char *path = ecs_get_path(cursor->world, op->type);
         ecs_err("'%s' is not an bitmask constant for type '%s'", value, path);
         ecs_os_free(path);
         return -1;
@@ -1392,7 +1392,7 @@ int ecs_meta_set_string(
         ecs_assert(op->type != 0, ECS_INTERNAL_ERROR, NULL);
         ecs_entity_t c = ecs_lookup_child(cursor->world, op->type, value);
         if (!c) {
-            char *path = ecs_get_fullpath(cursor->world, op->type);
+            char *path = ecs_get_path(cursor->world, op->type);
             ecs_err("unresolved enum constant '%s' for type '%s'", value, path);
             ecs_os_free(path);
             goto error;
@@ -1401,7 +1401,7 @@ int ecs_meta_set_string(
         const ecs_i32_t *v = ecs_get_pair_second(
             cursor->world, c, EcsConstant, ecs_i32_t);
         if (v == NULL) {
-            char *path = ecs_get_fullpath(cursor->world, op->type);
+            char *path = ecs_get_path(cursor->world, op->type);
             ecs_err("'%s' is not an enum constant for type '%s'", value, path);
             ecs_os_free(path);
             goto error;

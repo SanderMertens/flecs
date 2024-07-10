@@ -55,15 +55,15 @@ int main(int argc, char *argv[]) {
     ecs_entity_t inst_cockpit = ecs_get_target(ecs, inst, Cockpit, 0);
     ecs_entity_t inst_seat = ecs_get_target(ecs, inst, PilotSeat, 0);
 
-    char *path = ecs_get_fullpath(ecs, inst_engine);
+    char *path = ecs_get_path(ecs, inst_engine);
     printf("instance engine:  %s\n", path);
     ecs_os_free(path);
 
-    path = ecs_get_fullpath(ecs, inst_cockpit);
+    path = ecs_get_path(ecs, inst_cockpit);
     printf("instance cockpit: %s\n", path);
     ecs_os_free(path);
 
-    path = ecs_get_fullpath(ecs, inst_seat);
+    path = ecs_get_path(ecs, inst_seat);
     printf("instance seat:    %s\n", path);
     ecs_os_free(path);
 

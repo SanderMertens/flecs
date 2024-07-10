@@ -22,11 +22,11 @@ int main(int argc, char *argv[]) {
     ecs_entity_t inst_engine = ecs_lookup_child(ecs, inst, "Engine");
     ecs_entity_t inst_cockpit = ecs_lookup_child(ecs, inst, "Cockpit");
 
-    char *path = ecs_get_fullpath(ecs, inst_engine);
+    char *path = ecs_get_path(ecs, inst_engine);
     printf("instance engine:  %s\n", path);
     ecs_os_free(path);
 
-    path = ecs_get_fullpath(ecs, inst_cockpit);
+    path = ecs_get_path(ecs, inst_cockpit);
     printf("instance cockpit: %s\n", path);
     ecs_os_free(path);
 

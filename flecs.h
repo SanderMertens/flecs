@@ -6692,7 +6692,7 @@ char* ecs_table_str(
 
 /** Convert entity to string.
  * Same as combining:
- * - ecs_get_fullpath(world, entity)
+ * - ecs_get_path(world, entity)
  * - ecs_type_str(world, ecs_get_type(world, entity))
  *
  * The result of this operation must be freed with ecs_os_free().
@@ -9688,10 +9688,10 @@ int ecs_value_move_ctor(
 #define ecs_lookup_from(world, parent, path)\
     ecs_lookup_path_w_sep(world, parent, path, ".", NULL, true)
 
-#define ecs_get_path(world, parent, child)\
+#define ecs_get_path_from(world, parent, child)\
     ecs_get_path_w_sep(world, parent, child, ".", NULL)
 
-#define ecs_get_fullpath(world, child)\
+#define ecs_get_path(world, child)\
     ecs_get_path_w_sep(world, 0, child, ".", NULL)
 
 #define ecs_get_fullpath_buf(world, child, buf)\

@@ -3464,8 +3464,8 @@ void flecs_assert_relation_unused(
     }
 
     if (in_use) {
-        char *r_str = ecs_get_fullpath(world, rel);
-        char *p_str = ecs_get_fullpath(world, property);
+        char *r_str = ecs_get_path(world, rel);
+        char *p_str = ecs_get_path(world, property);
 
         ecs_throw(ECS_ID_IN_USE, 
             "cannot change property '%s' for relationship '%s': already in use",
@@ -3562,7 +3562,7 @@ void flecs_register_final(ecs_iter_t *it) {
     for (i = 0; i < count; i ++) {
         ecs_entity_t e = it->entities[i];
         if (flecs_id_record_get(world, ecs_pair(EcsIsA, e)) != NULL) {
-            char *e_str = ecs_get_fullpath(world, e);
+            char *e_str = ecs_get_path(world, e);
             ecs_throw(ECS_ID_IN_USE,
                 "cannot change property 'Final' for '%s': already inherited from",
                     e_str);
@@ -5170,7 +5170,7 @@ void flecs_instantiate_slot(
             if (ecs_has_pair(world, parent, EcsIsA, slot_of)) {
                 const char *name = ecs_get_name(world, slot);
                 if (name == NULL) {
-                    char *slot_of_str = ecs_get_fullpath(world, slot_of);
+                    char *slot_of_str = ecs_get_path(world, slot_of);
                     ecs_throw(ECS_INVALID_OPERATION, "prefab '%s' has unnamed "
                         "slot (slots must be named)", slot_of_str);
                     ecs_os_free(slot_of_str);
@@ -5196,8 +5196,8 @@ void flecs_instantiate_slot(
                 }
 
                 if (slot == 0) {
-                    char *slot_of_str = ecs_get_fullpath(world, slot_of);
-                    char *slot_str = ecs_get_fullpath(world, slot);
+                    char *slot_of_str = ecs_get_path(world, slot_of);
+                    char *slot_str = ecs_get_path(world, slot);
                     ecs_throw(ECS_INVALID_OPERATION,
                         "'%s' is not in hierarchy for slot '%s'",
                             slot_of_str, slot_str);
@@ -5213,8 +5213,8 @@ void flecs_instantiate_slot(
         } while ((parent = ecs_get_target(world, parent, EcsChildOf, 0)));
         
         if (parent == 0) {
-            char *slot_of_str = ecs_get_fullpath(world, slot_of);
-            char *slot_str = ecs_get_fullpath(world, slot);
+            char *slot_of_str = ecs_get_path(world, slot_of);
+            char *slot_str = ecs_get_path(world, slot);
             ecs_throw(ECS_INVALID_OPERATION,
                 "'%s' is not in hierarchy for slot '%s'",
                     slot_of_str, slot_str);
@@ -7031,12 +7031,12 @@ void flecs_check_component(
     ecs_size_t alignment)
 {
     if (ptr->size != size) {
-        char *path = ecs_get_fullpath(world, result);
+        char *path = ecs_get_path(world, result);
         ecs_abort(ECS_INVALID_COMPONENT_SIZE, path);
         ecs_os_free(path);
     }
     if (ptr->alignment != alignment) {
-        char *path = ecs_get_fullpath(world, result);
+        char *path = ecs_get_path(world, result);
         ecs_abort(ECS_INVALID_COMPONENT_ALIGNMENT, path);
         ecs_os_free(path);
     }
@@ -13560,7 +13560,7 @@ char* ecs_iter_str(
         ecs_strbuf_list_push(&buf, "src: ", ",");
         for (i = 0; i < it->field_count; i ++) {
             ecs_entity_t subj = ecs_field_src(it, i);
-            char *str = ecs_get_fullpath(world, subj);
+            char *str = ecs_get_path(world, subj);
             ecs_strbuf_list_appendstr(&buf, str);
             ecs_os_free(str);
         }
@@ -13596,7 +13596,7 @@ char* ecs_iter_str(
                 ecs_strbuf_list_push(&buf, "var: ", ",");
             }
 
-            char *str = ecs_get_fullpath(world, var.entity);
+            char *str = ecs_get_path(world, var.entity);
             ecs_strbuf_list_append(&buf, "%s=%s", var_name, str);
             ecs_os_free(str);
 
@@ -13611,7 +13611,7 @@ char* ecs_iter_str(
         ecs_strbuf_appendlit(&buf, "this:\n");
         for (i = 0; i < it->count; i ++) {
             ecs_entity_t e = it->entities[i];
-            char *str = ecs_get_fullpath(world, e);
+            char *str = ecs_get_path(world, e);
             ecs_strbuf_appendlit(&buf, "    - ");
             ecs_strbuf_appendstr(&buf, str);
             ecs_strbuf_appendch(&buf, '\n');
@@ -16443,7 +16443,7 @@ void flecs_observer_invoke(
     ecs_assert(it->callback != NULL, ECS_INVALID_PARAMETER, NULL);
 
     if (ecs_should_log_3()) {
-        char *path = ecs_get_fullpath(world, it->system);
+        char *path = ecs_get_path(world, it->system);
         ecs_dbg_3("observer: invoke %s", path);
         ecs_os_free(path);
     }
@@ -16514,7 +16514,7 @@ void flecs_default_uni_observer_run_callback(ecs_iter_t *it) {
     it->callback = o->callback;
 
     if (ecs_should_log_3()) {
-        char *path = ecs_get_fullpath(it->world, it->system);
+        char *path = ecs_get_path(it->world, it->system);
         ecs_dbg_3("observer %s", path);
         ecs_os_free(path);
     }
@@ -25312,7 +25312,7 @@ ecs_entity_t ecs_alert_init(
 
         ecs_entity_t type = idr->type_info->component;
         if (type != ecs_get_parent(world, desc->member)) {
-            char *type_name = ecs_get_fullpath(world, type);
+            char *type_name = ecs_get_path(world, type);
             ecs_err("member '%s' is not a member of '%s'", 
                 ecs_get_name(world, desc->member), type_name);
             ecs_os_free(type_name);
@@ -26269,7 +26269,7 @@ ecs_entity_t ecs_cpp_component_register(
                  * The latter ensures that it was the intent of the application
                  * to alias the type, vs. accidentally registering an unrelated
                  * type with the same size/alignment. */
-                char *type_path = ecs_get_fullpath(world, ent);
+                char *type_path = ecs_get_path(world, ent);
                 if (ecs_os_strcmp(type_path, symbol) || 
                     component->size != size || 
                     component->alignment != alignment) 
@@ -26456,7 +26456,7 @@ const ecs_member_t* ecs_cpp_last_member(
 {
     const EcsStruct *st = ecs_get(world, type, EcsStruct);
     if (!st) {
-        char *type_str = ecs_get_fullpath(world, type);
+        char *type_str = ecs_get_path(world, type);
         ecs_err("entity '%s' is not a struct", type_str);
         ecs_os_free(type_str);
         return 0;
@@ -28267,7 +28267,7 @@ void flecs_journal_begin(
     char *var_id = NULL; 
     if (entity) {
         if (kind != EcsJournalDeleteWith && kind != EcsJournalRemoveAll) {
-            path = ecs_get_fullpath(world, entity);
+            path = ecs_get_path(world, entity);
             var_id = flecs_journal_entitystr(world, entity);
         } else {
             path = ecs_id_str(world, entity);
@@ -29347,7 +29347,7 @@ int flecs_member_metric_init(
 
     if (desc->dotmember) {
         if (!desc->id) {
-            char *metric_name = ecs_get_fullpath(world, metric);
+            char *metric_name = ecs_get_path(world, metric);
             ecs_err("missing id for metric '%s' with member '%s",
                 metric_name, desc->dotmember);
             ecs_os_free(metric_name);
@@ -29355,7 +29355,7 @@ int flecs_member_metric_init(
         }
 
         if (desc->member) {
-            char *metric_name = ecs_get_fullpath(world, metric);
+            char *metric_name = ecs_get_path(world, metric);
             ecs_err("cannot set both member and dotmember for metric '%s'",
                 metric_name);
             ecs_os_free(metric_name);
@@ -29366,13 +29366,13 @@ int flecs_member_metric_init(
 
         ecs_meta_cursor_t cur = ecs_meta_cursor(world, type, NULL);
         if (ecs_meta_push(&cur)) {
-            char *metric_name = ecs_get_fullpath(world, metric);
+            char *metric_name = ecs_get_path(world, metric);
             ecs_err("invalid type for metric '%s'", metric_name);
             ecs_os_free(metric_name);
             goto error;
         }
         if (ecs_meta_dotmember(&cur, desc->dotmember)) {
-            char *metric_name = ecs_get_fullpath(world, metric);
+            char *metric_name = ecs_get_path(world, metric);
             ecs_err("invalid dotmember '%s' for metric '%s'",
                 desc->dotmember, metric_name);
             ecs_os_free(metric_name);
@@ -29386,8 +29386,8 @@ int flecs_member_metric_init(
     } else {    
         const EcsMember *m = ecs_get(world, desc->member, EcsMember);
         if (!m) {
-            char *metric_name = ecs_get_fullpath(world, metric);
-            char *member_name = ecs_get_fullpath(world, desc->member);
+            char *metric_name = ecs_get_path(world, metric);
+            char *member_name = ecs_get_path(world, desc->member);
             ecs_err("entity '%s' provided for metric '%s' is not a member",
                 member_name, metric_name);
             ecs_os_free(member_name);
@@ -29397,8 +29397,8 @@ int flecs_member_metric_init(
 
         type = ecs_get_parent(world, desc->member);
         if (!type) {
-            char *metric_name = ecs_get_fullpath(world, metric);
-            char *member_name = ecs_get_fullpath(world, desc->member);
+            char *metric_name = ecs_get_path(world, metric);
+            char *member_name = ecs_get_path(world, desc->member);
             ecs_err("member '%s' provided for metric '%s' is not part of a type",
                 member_name, metric_name);
             ecs_os_free(member_name);
@@ -29409,9 +29409,9 @@ int flecs_member_metric_init(
         id = type;
         if (desc->id) {
             if (type != ecs_get_typeid(world, desc->id)) {
-                char *metric_name = ecs_get_fullpath(world, metric);
-                char *member_name = ecs_get_fullpath(world, desc->member);
-                char *id_name = ecs_get_fullpath(world, desc->id);
+                char *metric_name = ecs_get_path(world, metric);
+                char *member_name = ecs_get_path(world, desc->member);
+                char *id_name = ecs_get_path(world, desc->id);
                 ecs_err("member '%s' for metric '%s' is not of type '%s'",
                     member_name, metric_name, id_name);
                 ecs_os_free(id_name);
@@ -29429,8 +29429,8 @@ int flecs_member_metric_init(
 
     const EcsPrimitive *p = ecs_get(world, member_type, EcsPrimitive);
     if (!p) {
-        char *metric_name = ecs_get_fullpath(world, metric);
-        char *member_name = ecs_get_fullpath(world, desc->member);
+        char *metric_name = ecs_get_path(world, metric);
+        char *member_name = ecs_get_path(world, desc->member);
         ecs_err("member '%s' provided for metric '%s' must have primitive type",
             member_name, metric_name);
         ecs_os_free(member_name);
@@ -29440,8 +29440,8 @@ int flecs_member_metric_init(
 
     const EcsType *mt = ecs_get(world, type, EcsType);
     if (!mt) {
-        char *metric_name = ecs_get_fullpath(world, metric);
-        char *member_name = ecs_get_fullpath(world, desc->member);
+        char *metric_name = ecs_get_path(world, metric);
+        char *member_name = ecs_get_path(world, desc->member);
         ecs_err("parent of member '%s' for metric '%s' is not a type",
             member_name, metric_name);
         ecs_os_free(member_name);
@@ -29450,8 +29450,8 @@ int flecs_member_metric_init(
     }
 
     if (mt->kind != EcsStructType) {
-        char *metric_name = ecs_get_fullpath(world, metric);
-        char *member_name = ecs_get_fullpath(world, desc->member);
+        char *metric_name = ecs_get_path(world, metric);
+        char *member_name = ecs_get_path(world, desc->member);
         ecs_err("parent of member '%s' for metric '%s' is not a struct",
             member_name, metric_name);
         ecs_os_free(member_name);
@@ -29655,7 +29655,7 @@ ecs_entity_t ecs_metric_init(
         kind != EcsCounterId &&
         kind != EcsCounterIncrement) 
     {
-        ecs_err("invalid metric kind %s", ecs_get_fullpath(world, kind));
+        ecs_err("invalid metric kind %s", ecs_get_path(world, kind));
         goto error;
     }
 
@@ -31454,7 +31454,7 @@ void flecs_rest_cmd_to_json(
 
     if (cmd->system) {
         ecs_strbuf_list_appendlit(buf, "\"system\":\"");
-            char *sysstr = ecs_get_fullpath(world, cmd->system);
+            char *sysstr = ecs_get_path(world, cmd->system);
             ecs_strbuf_appendstr(buf, sysstr);
             ecs_strbuf_appendlit(buf, "\"");
             ecs_os_free(sysstr); 
@@ -37715,7 +37715,7 @@ int32_t flecs_query_op_ref_str(
         }
         color_chars = ecs_os_strlen("#[green]#[reset]#[green]#[reset]");
     } else if (flags & EcsQueryIsEntity) {
-        char *path = ecs_get_fullpath(query->pub.world, ref->entity);
+        char *path = ecs_get_path(query->pub.world, ref->entity);
         ecs_strbuf_appendlit(buf, "#[blue]");
         ecs_strbuf_appendstr(buf, path);
         ecs_strbuf_appendlit(buf, "#[reset]");
@@ -37923,7 +37923,7 @@ void flecs_query_str_add_id(
     }
 
     if (ref_id) {
-        char *path = ecs_get_fullpath(world, ref_id);
+        char *path = ecs_get_path(world, ref_id);
         ecs_strbuf_appendstr(buf, path);
         ecs_os_free(path);
     } else if (ref->name) {
@@ -37962,7 +37962,7 @@ void flecs_query_str_add_id(
             }
 
             if (term->trav) {
-                char *rel_path = ecs_get_fullpath(world, term->trav);
+                char *rel_path = ecs_get_path(world, term->trav);
                 ecs_strbuf_appendlit(buf, " ");
                 ecs_strbuf_appendstr(buf, rel_path);
                 ecs_os_free(rel_path);
@@ -38375,7 +38375,7 @@ int flecs_term_ref_lookup(
 
     ecs_entity_t ref_id = ECS_TERM_REF_ID(ref);
     if (ref_id && ref_id != e) {
-        char *e_str = ecs_get_fullpath(world, ref_id);
+        char *e_str = ecs_get_path(world, ref_id);
         flecs_query_validator_error(ctx, "name '%s' does not match term.id '%s'", 
             name, e_str);
         ecs_os_free(e_str);
@@ -38822,7 +38822,7 @@ int flecs_term_verify(
                 if (is_same && ecs_has_id(world, first_id, EcsAcyclic)
                     && !(term->flags_ & EcsTermReflexive)) 
                 {
-                    char *pred_str = ecs_get_fullpath(world, term->first.id);
+                    char *pred_str = ecs_get_path(world, term->first.id);
                     flecs_query_validator_error(ctx, "term with acyclic relationship"
                         " '%s' cannot have same subject and object", pred_str);
                     ecs_os_free(pred_str);
@@ -38835,8 +38835,8 @@ int flecs_term_verify(
             ecs_entity_t oneof = flecs_get_oneof(world, first_id);
             if (oneof) {
                 if (!ecs_has_pair(world, second_id, EcsChildOf, oneof)) {
-                    char *second_str = ecs_get_fullpath(world, second_id);
-                    char *oneof_str = ecs_get_fullpath(world, oneof);
+                    char *second_str = ecs_get_path(world, second_id);
+                    char *oneof_str = ecs_get_path(world, oneof);
                     char *id_str = ecs_id_str(world, term->id);
                     flecs_query_validator_error(ctx, 
                         "invalid target '%s' for %s: must be child of '%s'",
@@ -38852,7 +38852,7 @@ int flecs_term_verify(
 
     if (term->trav) {
         if (!ecs_has_id(world, term->trav, EcsTraversable)) {
-            char *r_str = ecs_get_fullpath(world, term->trav);
+            char *r_str = ecs_get_path(world, term->trav);
             flecs_query_validator_error(ctx, 
                 "cannot traverse non-traversable relationship '%s'", r_str);
             ecs_os_free(r_str);
@@ -40325,8 +40325,8 @@ ecs_id_record_t* flecs_id_record_new(
             if (oneof) {
                 if (!ecs_has_pair(world, tgt, EcsChildOf, oneof)) {
                     char *idstr = ecs_id_str(world, id);
-                    char *tgtstr = ecs_get_fullpath(world, tgt);
-                    char *oneofstr = ecs_get_fullpath(world, oneof);
+                    char *tgtstr = ecs_get_path(world, tgt);
+                    char *oneofstr = ecs_get_path(world, oneof);
                     ecs_err("OneOf constraint violated: "
                         "%s: '%s' is not a child of '%s'",
                         idstr, tgtstr, oneofstr);
@@ -40343,7 +40343,7 @@ ecs_id_record_t* flecs_id_record_new(
             if (rel == EcsIsA) {
                 if (ecs_has_id(world, tgt, EcsFinal)) {
                     char *idstr = ecs_id_str(world, id);
-                    char *tgtstr = ecs_get_fullpath(world, tgt);
+                    char *tgtstr = ecs_get_path(world, tgt);
                     ecs_err("Final constraint violated: "
                             "%s: cannot inherit from final entity '%s'",
                         idstr, tgtstr);
@@ -48415,7 +48415,7 @@ int flecs_json_serialize_entity_alerts(
         flecs_json_next(buf);
         flecs_json_object_push(buf);
         ecs_entity_t ai = ecs_map_value(&it);
-        char *alert_name = ecs_get_fullpath(world, ai);
+        char *alert_name = ecs_get_path(world, ai);
         flecs_json_memberl(buf, "alert");
         flecs_json_string(buf, alert_name);
         ecs_os_free(alert_name);
@@ -48435,7 +48435,7 @@ int flecs_json_serialize_entity_alerts(
             flecs_json_string(buf, severity);
             
             if (!self) {
-                char *path = ecs_get_fullpath(world, entity);
+                char *path = ecs_get_path(world, entity);
                 flecs_json_memberl(buf, "path");
                 flecs_json_string(buf, path);
                 ecs_os_free(path);
@@ -49281,7 +49281,7 @@ bool flecs_json_serialize_table_inherited_type(
         ecs_table_t *base_table = base_record->table;
         flecs_json_serialize_table_inherited_type(world, base_table, buf, desc);
 
-        char *base_name = ecs_get_fullpath(world, base);
+        char *base_name = ecs_get_path(world, base);
         flecs_json_member(buf, base_name);
         flecs_json_object_push(buf);
         ecs_os_free(base_name);
@@ -50201,7 +50201,7 @@ int flecs_json_ser_enum(
         ecs_enum_constant_t, (ecs_map_key_t)value);
     if (!constant) {
         /* If the value is not found, it is not a valid enumeration constant */
-        char *name = ecs_get_fullpath(world, op->type);
+        char *name = ecs_get_path(world, op->type);
         ecs_err("enumeration value '%d' of type '%s' is not a valid constant", 
             value, name);
         ecs_os_free(name);
@@ -50251,7 +50251,7 @@ int flecs_json_ser_bitmask(
 
     if (value != 0) {
         /* All bits must have been matched by a constant */
-        char *name = ecs_get_fullpath(world, op->type);
+        char *name = ecs_get_path(world, op->type);
         ecs_err("bitmask value '%u' of type '%s' contains invalid/unknown bits", 
             value, name);
         ecs_os_free(name);
@@ -50699,7 +50699,7 @@ int ecs_array_to_json_buf(
 {
     const EcsComponent *comp = ecs_get(world, type, EcsComponent);
     if (!comp) {
-        char *path = ecs_get_fullpath(world, type);
+        char *path = ecs_get_path(world, type);
         ecs_err("cannot serialize to JSON, '%s' is not a component", path);
         ecs_os_free(path);
         return -1;
@@ -50708,7 +50708,7 @@ int ecs_array_to_json_buf(
     const EcsTypeSerializer *ser = ecs_get(
         world, type, EcsTypeSerializer);
     if (!ser) {
-        char *path = ecs_get_fullpath(world, type);
+        char *path = ecs_get_path(world, type);
         ecs_err("cannot serialize to JSON, '%s' has no reflection data", path);
         ecs_os_free(path);
         return -1;
@@ -51211,7 +51211,7 @@ ecs_entity_t ecs_struct_init(
         if (ECS_NEQ(range->min, range->max)) {
             ranges = ecs_ensure(world, m, EcsMemberRanges);
             if (range->min > range->max) {
-                char *member_name = ecs_get_fullpath(world, m);
+                char *member_name = ecs_get_path(world, m);
                 ecs_err("member '%s' has an invalid value range [%f..%f]",
                     member_name, range->min, range->max);
                 ecs_os_free(member_name);
@@ -51222,14 +51222,14 @@ ecs_entity_t ecs_struct_init(
         }
         if (ECS_NEQ(error->min, error->max)) {
             if (error->min > error->max) {
-                char *member_name = ecs_get_fullpath(world, m);
+                char *member_name = ecs_get_path(world, m);
                 ecs_err("member '%s' has an invalid error range [%f..%f]",
                     member_name, error->min, error->max);
                 ecs_os_free(member_name);
                 goto error;
             }
             if (flecs_member_range_overlaps(error, range)) {
-                char *member_name = ecs_get_fullpath(world, m);
+                char *member_name = ecs_get_path(world, m);
                 ecs_err("error range of member '%s' overlaps with value range",
                     member_name);
                 ecs_os_free(member_name);
@@ -51244,21 +51244,21 @@ ecs_entity_t ecs_struct_init(
 
         if (ECS_NEQ(warning->min, warning->max)) {
             if (warning->min > warning->max) {
-                char *member_name = ecs_get_fullpath(world, m);
+                char *member_name = ecs_get_path(world, m);
                 ecs_err("member '%s' has an invalid warning range [%f..%f]",
                     member_name, warning->min, warning->max);
                 ecs_os_free(member_name);
                 goto error;
             }
             if (flecs_member_range_overlaps(warning, range)) {
-                char *member_name = ecs_get_fullpath(world, m);
+                char *member_name = ecs_get_path(world, m);
                 ecs_err("warning range of member '%s' overlaps with value "
                     "range", member_name);
                 ecs_os_free(member_name);
                 goto error;
             }
             if (flecs_member_range_overlaps(warning, error)) {
-                char *member_name = ecs_get_fullpath(world, m);
+                char *member_name = ecs_get_path(world, m);
                 ecs_err("warning range of member '%s' overlaps with error "
                     "range", member_name);
                 ecs_os_free(member_name);
@@ -51273,7 +51273,7 @@ ecs_entity_t ecs_struct_init(
         }
 
         if (ranges && !flecs_type_is_number(world, m_desc->type)) {
-            char *member_name = ecs_get_fullpath(world, m);
+            char *member_name = ecs_get_path(world, m);
             ecs_err("member '%s' has an value/error/warning range, but is not a "
                     "number", member_name);
             ecs_os_free(member_name);
@@ -52411,7 +52411,7 @@ ecs_meta_type_op_t* flecs_meta_cursor_get_ptr(
     } else if (opaque) {
         if (scope->is_collection) {
             if (!opaque->ensure_element) {
-                char *str = ecs_get_fullpath(world, scope->type);
+                char *str = ecs_get_path(world, scope->type);
                 ecs_err("missing ensure_element for opaque type %s", str);
                 ecs_os_free(str);
                 return NULL;
@@ -52425,7 +52425,7 @@ ecs_meta_type_op_t* flecs_meta_cursor_get_ptr(
             return opaque_ptr;
         } else if (op->name) {
             if (!opaque->ensure_member) {
-                char *str = ecs_get_fullpath(world, scope->type);
+                char *str = ecs_get_path(world, scope->type);
                 ecs_err("missing ensure_member for opaque type %s", str);
                 ecs_os_free(str);
                 return NULL;
@@ -52571,7 +52571,7 @@ int ecs_meta_member(
 
     const uint64_t *cur_ptr = flecs_name_index_find_ptr(members, name, 0, 0);
     if (!cur_ptr) {
-        char *path = ecs_get_fullpath(world, scope->type);
+        char *path = ecs_get_path(world, scope->type);
         ecs_err("unknown member '%s' for type '%s'", name, path);
         ecs_os_free(path);
         return -1;
@@ -52582,7 +52582,7 @@ int ecs_meta_member(
     const EcsOpaque *opaque = scope->opaque;
     if (opaque) {
         if (!opaque->ensure_member) {
-            char *str = ecs_get_fullpath(world, scope->type);
+            char *str = ecs_get_path(world, scope->type);
             ecs_err("missing ensure_member for opaque type %s", str);
             ecs_os_free(str);
         }
@@ -52862,7 +52862,7 @@ int ecs_meta_push(
     case EcsOpString:
     case EcsOpEntity:
     case EcsOpId: {
-        char *path = ecs_get_fullpath(world, scope->type);
+        char *path = ecs_get_path(world, scope->type);
         ecs_err("invalid push for type '%s'", path);
         ecs_os_free(path);
         goto error;
@@ -52923,7 +52923,7 @@ int ecs_meta_pop(
                 if (mtype->kind != EcsArrayType) {
                     ecs_assert(opaque != NULL, ECS_INTERNAL_ERROR, NULL);
                     if (!opaque->resize) {
-                        char *str = ecs_get_fullpath(cursor->world, scope->type);
+                        char *str = ecs_get_path(cursor->world, scope->type);
                         ecs_err("missing resize for opaque type %s", str);
                         ecs_os_free(str);
                         return -1;
@@ -53139,7 +53139,7 @@ void flecs_meta_conversion_error(
     if (op->kind == EcsOpPop) {
         ecs_err("cursor: out of bounds");
     } else {
-        char *path = ecs_get_fullpath(cursor->world, op->type);
+        char *path = ecs_get_path(cursor->world, op->type);
         ecs_err("unsupported conversion from %s to '%s'", from, path);
         ecs_os_free(path);
     }
@@ -53456,7 +53456,7 @@ int ecs_meta_set_value(
         ecs_meta_type_op_t *op = flecs_meta_cursor_get_op(scope);
         void *ptr = flecs_meta_cursor_get_ptr(cursor->world, scope);
         if (op->type != value->type) {
-            char *type_str = ecs_get_fullpath(cursor->world, value->type);
+            char *type_str = ecs_get_path(cursor->world, value->type);
             flecs_meta_conversion_error(cursor, op, type_str);
             ecs_os_free(type_str);
             goto error;
@@ -53483,7 +53483,7 @@ int flecs_meta_add_bitmask_constant(
 
     ecs_entity_t c = ecs_lookup_child(cursor->world, op->type, value);
     if (!c) {
-        char *path = ecs_get_fullpath(cursor->world, op->type);
+        char *path = ecs_get_path(cursor->world, op->type);
         ecs_err("unresolved bitmask constant '%s' for type '%s'", value, path);
         ecs_os_free(path);
         return -1;
@@ -53492,7 +53492,7 @@ int flecs_meta_add_bitmask_constant(
     const ecs_u32_t *v = ecs_get_pair_second(
         cursor->world, c, EcsConstant, ecs_u32_t);
     if (v == NULL) {
-        char *path = ecs_get_fullpath(cursor->world, op->type);
+        char *path = ecs_get_path(cursor->world, op->type);
         ecs_err("'%s' is not an bitmask constant for type '%s'", value, path);
         ecs_os_free(path);
         return -1;
@@ -53664,7 +53664,7 @@ int ecs_meta_set_string(
         ecs_assert(op->type != 0, ECS_INTERNAL_ERROR, NULL);
         ecs_entity_t c = ecs_lookup_child(cursor->world, op->type, value);
         if (!c) {
-            char *path = ecs_get_fullpath(cursor->world, op->type);
+            char *path = ecs_get_path(cursor->world, op->type);
             ecs_err("unresolved enum constant '%s' for type '%s'", value, path);
             ecs_os_free(path);
             goto error;
@@ -53673,7 +53673,7 @@ int ecs_meta_set_string(
         const ecs_i32_t *v = ecs_get_pair_second(
             cursor->world, c, EcsConstant, ecs_i32_t);
         if (v == NULL) {
-            char *path = ecs_get_fullpath(cursor->world, op->type);
+            char *path = ecs_get_path(cursor->world, op->type);
             ecs_err("'%s' is not an enum constant for type '%s'", value, path);
             ecs_os_free(path);
             goto error;
@@ -55017,22 +55017,22 @@ int flecs_add_member_to_struct(
 
     const char *name = ecs_get_name(world, member);
     if (!name) {
-        char *path = ecs_get_fullpath(world, type);
+        char *path = ecs_get_path(world, type);
         ecs_err("member for struct '%s' does not have a name", path);
         ecs_os_free(path);
         return -1;
     }
 
     if (!m->type) {
-        char *path = ecs_get_fullpath(world, member);
+        char *path = ecs_get_path(world, member);
         ecs_err("member '%s' does not have a type", path);
         ecs_os_free(path);
         return -1;
     }
 
     if (ecs_get_typeid(world, m->type) == 0) {
-        char *path = ecs_get_fullpath(world, member);
-        char *ent_path = ecs_get_fullpath(world, m->type);
+        char *path = ecs_get_path(world, member);
+        char *ent_path = ecs_get_path(world, m->type);
         ecs_err("member '%s.type' is '%s' which is not a type", path, ent_path);
         ecs_os_free(path);
         ecs_os_free(ent_path);
@@ -55110,7 +55110,7 @@ int flecs_add_member_to_struct(
             /* Get component of member type to get its size & alignment */
             const EcsComponent *mbr_comp = ecs_get(world, elem->type, EcsComponent);
             if (!mbr_comp) {
-                char *path = ecs_get_fullpath(world, elem->type);
+                char *path = ecs_get_path(world, elem->type);
                 ecs_err("member '%s' is not a type", path);
                 ecs_os_free(path);
                 return -1;
@@ -55120,7 +55120,7 @@ int flecs_add_member_to_struct(
             ecs_size_t member_alignment = mbr_comp->alignment;
 
             if (!member_size || !member_alignment) {
-                char *path = ecs_get_fullpath(world, elem->type);
+                char *path = ecs_get_path(world, elem->type);
                 ecs_err("member '%s' has 0 size/alignment", path);
                 ecs_os_free(path);
                 return -1;
@@ -55160,7 +55160,7 @@ int flecs_add_member_to_struct(
         /* Get component of member type to get its size & alignment */
         const EcsComponent *mbr_comp = ecs_get(world, elem->type, EcsComponent);
         if (!mbr_comp) {
-            char *path = ecs_get_fullpath(world, elem->type);
+            char *path = ecs_get_path(world, elem->type);
             ecs_err("member '%s' is not a type", path);
             ecs_os_free(path);
             return -1;
@@ -55170,7 +55170,7 @@ int flecs_add_member_to_struct(
         ecs_size_t member_alignment = mbr_comp->alignment;
 
         if (!member_size || !member_alignment) {
-            char *path = ecs_get_fullpath(world, elem->type);
+            char *path = ecs_get_path(world, elem->type);
             ecs_err("member '%s' has 0 size/alignment", path);
             ecs_os_free(path);
             return -1;
@@ -55246,7 +55246,7 @@ int flecs_add_constant_to_enum(
     bool value_set = false;
     if (ecs_id_is_pair(constant_id)) {
         if (ecs_pair_second(world, constant_id) != ecs_id(ecs_i32_t)) {
-            char *path = ecs_get_fullpath(world, e);
+            char *path = ecs_get_path(world, e);
             ecs_err("expected i32 type for enum constant '%s'", path);
             ecs_os_free(path);
             return -1;
@@ -55265,7 +55265,7 @@ int flecs_add_constant_to_enum(
         ecs_enum_constant_t *c = ecs_map_ptr(&it);
         if (value_set) {
             if (c->value == value) {
-                char *path = ecs_get_fullpath(world, e);
+                char *path = ecs_get_path(world, e);
                 ecs_err("conflicting constant value %d for '%s' (other is '%s')",
                     value, path, c->name);
                 ecs_os_free(path);
@@ -55319,7 +55319,7 @@ int flecs_add_constant_to_bitmask(
     uint32_t value = 1;
     if (ecs_id_is_pair(constant_id)) {
         if (ecs_pair_second(world, constant_id) != ecs_id(ecs_u32_t)) {
-            char *path = ecs_get_fullpath(world, e);
+            char *path = ecs_get_path(world, e);
             ecs_err("expected u32 type for bitmask constant '%s'", path);
             ecs_os_free(path);
             return -1;
@@ -55338,7 +55338,7 @@ int flecs_add_constant_to_bitmask(
     while  (ecs_map_next(&it)) {
         ecs_bitmask_constant_t *c = ecs_map_ptr(&it);
         if (c->value == value) {
-            char *path = ecs_get_fullpath(world, e);
+            char *path = ecs_get_path(world, e);
             ecs_err("conflicting constant value for '%s' (other is '%s')",
                 path, c->name);
             ecs_os_free(path);
@@ -56172,7 +56172,7 @@ int flecs_meta_serialize_primitive(
 {
     const EcsPrimitive *ptr = ecs_get(world, type, EcsPrimitive);
     if (!ptr) {
-        char *name = ecs_get_fullpath(world, type);
+        char *name = ecs_get_path(world, type);
         ecs_err("entity '%s' is not a primitive type", name);
         ecs_os_free(name);
         return -1;
@@ -56350,7 +56350,7 @@ int flecs_meta_serialize_type(
 {
     const EcsType *ptr = ecs_get(world, type, EcsType);
     if (!ptr) {
-        char *path = ecs_get_fullpath(world, type);
+        char *path = ecs_get_path(world, type);
         ecs_err("missing EcsType for type %s'", path);
         ecs_os_free(path);
         return -1;
@@ -56377,7 +56377,7 @@ int flecs_meta_serialize_component(
 {
     const EcsType *ptr = ecs_get(world, type, EcsType);
     if (!ptr) {
-        char *path = ecs_get_fullpath(world, type);
+        char *path = ecs_get_path(world, type);
         ecs_err("missing EcsType for type %s'", path);
         ecs_os_free(path);
         return -1;
@@ -57450,7 +57450,7 @@ bool flecs_pipeline_build(
             ecs_system_t *sys = (ecs_system_t*)poly->poly;
 
 #ifdef FLECS_LOG_1
-            char *path = ecs_get_fullpath(world, system);
+            char *path = ecs_get_path(world, system);
             const char *doc_name = NULL;
 #ifdef FLECS_DOC
             const EcsDocDescription *doc_name_id = ecs_get_pair(world, system, 
@@ -59500,8 +59500,8 @@ ecs_entity_t flecs_binary_expr_type(
     const EcsPrimitive *ltype_ptr = ecs_get(world, lvalue->type, EcsPrimitive);
     const EcsPrimitive *rtype_ptr = ecs_get(world, rvalue->type, EcsPrimitive);
     if (!ltype_ptr || !rtype_ptr) {
-        char *lname = ecs_get_fullpath(world, lvalue->type);
-        char *rname = ecs_get_fullpath(world, rvalue->type);
+        char *lname = ecs_get_path(world, lvalue->type);
+        char *rname = ecs_get_path(world, rvalue->type);
         ecs_parser_error(name, expr, ptr - expr, 
             "invalid non-primitive type in binary expression (%s, %s)",
                 lname, rname);
@@ -59967,7 +59967,7 @@ const char* flecs_script_expr_run(
             }
 
             if (ecs_meta_is_collection(&cur)) {
-                char *path = ecs_get_fullpath(world, scope_type);
+                char *path = ecs_get_path(world, scope_type);
                 ecs_parser_error(name, expr, ptr - expr, 
                     "expected '[' for collection type '%s'", path);
                 ecs_os_free(path);
@@ -62519,7 +62519,7 @@ int ecs_script_update(
     const char *name = ecs_get_name(world, e);
     EcsScript *s = ecs_ensure(world, e, EcsScript);
     if (s->template_) {
-        char *template_name = ecs_get_fullpath(world, s->template_->entity);
+        char *template_name = ecs_get_path(world, s->template_->entity);
         ecs_err("cannot update scripts for individual templates, "
             "update parent script instead (tried to update '%s')",
                 template_name);
@@ -62737,7 +62737,7 @@ int flecs_expr_ser_enum(
     ecs_enum_constant_t *c = ecs_map_get_deref(&enum_type->constants, 
         ecs_enum_constant_t, (ecs_map_key_t)val);
     if (!c) {
-        char *path = ecs_get_fullpath(world, op->type);
+        char *path = ecs_get_path(world, op->type);
         ecs_err("value %d is not valid for enum type '%s'", val, path);
         ecs_os_free(path);
         goto error;
@@ -62780,7 +62780,7 @@ int flecs_expr_ser_bitmask(
 
     if (value != 0) {
         /* All bits must have been matched by a constant */
-        char *path = ecs_get_fullpath(world, op->type);
+        char *path = ecs_get_path(world, op->type);
         ecs_err(
             "value for bitmask %s contains bits (%u) that cannot be mapped to constant", 
             path, value);
@@ -63065,7 +63065,7 @@ int ecs_ptr_to_expr_buf(
     const EcsTypeSerializer *ser = ecs_get(
         world, type, EcsTypeSerializer);
     if (ser == NULL) {
-        char *path = ecs_get_fullpath(world, type);
+        char *path = ecs_get_path(world, type);
         ecs_err("cannot serialize value for type '%s'", path);
         ecs_os_free(path);
         goto error;
@@ -63104,7 +63104,7 @@ int ecs_ptr_to_str_buf(
     const EcsTypeSerializer *ser = ecs_get(
         world, type, EcsTypeSerializer);
     if (ser == NULL) {
-        char *path = ecs_get_fullpath(world, type);
+        char *path = ecs_get_path(world, type);
         ecs_err("cannot serialize value for type '%s'", path);
         ecs_os_free(path);
         goto error;
@@ -69203,7 +69203,7 @@ ecs_entity_t flecs_run_intern(
     }
 
     if (ecs_should_log_3()) {
-        char *path = ecs_get_fullpath(world, system);
+        char *path = ecs_get_path(world, system);
         ecs_dbg_3("worker %d: %s", stage_index, path);
         ecs_os_free(path);
     }

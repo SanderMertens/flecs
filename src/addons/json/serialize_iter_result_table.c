@@ -277,7 +277,7 @@ bool flecs_json_serialize_table_inherited_type(
         ecs_table_t *base_table = base_record->table;
         flecs_json_serialize_table_inherited_type(world, base_table, buf, desc);
 
-        char *base_name = ecs_get_fullpath(world, base);
+        char *base_name = ecs_get_path(world, base);
         flecs_json_member(buf, base_name);
         flecs_json_object_push(buf);
         ecs_os_free(base_name);

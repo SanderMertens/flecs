@@ -451,7 +451,7 @@ int flecs_member_metric_init(
 
     if (desc->dotmember) {
         if (!desc->id) {
-            char *metric_name = ecs_get_fullpath(world, metric);
+            char *metric_name = ecs_get_path(world, metric);
             ecs_err("missing id for metric '%s' with member '%s",
                 metric_name, desc->dotmember);
             ecs_os_free(metric_name);
@@ -459,7 +459,7 @@ int flecs_member_metric_init(
         }
 
         if (desc->member) {
-            char *metric_name = ecs_get_fullpath(world, metric);
+            char *metric_name = ecs_get_path(world, metric);
             ecs_err("cannot set both member and dotmember for metric '%s'",
                 metric_name);
             ecs_os_free(metric_name);
@@ -470,13 +470,13 @@ int flecs_member_metric_init(
 
         ecs_meta_cursor_t cur = ecs_meta_cursor(world, type, NULL);
         if (ecs_meta_push(&cur)) {
-            char *metric_name = ecs_get_fullpath(world, metric);
+            char *metric_name = ecs_get_path(world, metric);
             ecs_err("invalid type for metric '%s'", metric_name);
             ecs_os_free(metric_name);
             goto error;
         }
         if (ecs_meta_dotmember(&cur, desc->dotmember)) {
-            char *metric_name = ecs_get_fullpath(world, metric);
+            char *metric_name = ecs_get_path(world, metric);
             ecs_err("invalid dotmember '%s' for metric '%s'",
                 desc->dotmember, metric_name);
             ecs_os_free(metric_name);
@@ -490,8 +490,8 @@ int flecs_member_metric_init(
     } else {    
         const EcsMember *m = ecs_get(world, desc->member, EcsMember);
         if (!m) {
-            char *metric_name = ecs_get_fullpath(world, metric);
-            char *member_name = ecs_get_fullpath(world, desc->member);
+            char *metric_name = ecs_get_path(world, metric);
+            char *member_name = ecs_get_path(world, desc->member);
             ecs_err("entity '%s' provided for metric '%s' is not a member",
                 member_name, metric_name);
             ecs_os_free(member_name);
@@ -501,8 +501,8 @@ int flecs_member_metric_init(
 
         type = ecs_get_parent(world, desc->member);
         if (!type) {
-            char *metric_name = ecs_get_fullpath(world, metric);
-            char *member_name = ecs_get_fullpath(world, desc->member);
+            char *metric_name = ecs_get_path(world, metric);
+            char *member_name = ecs_get_path(world, desc->member);
             ecs_err("member '%s' provided for metric '%s' is not part of a type",
                 member_name, metric_name);
             ecs_os_free(member_name);
@@ -513,9 +513,9 @@ int flecs_member_metric_init(
         id = type;
         if (desc->id) {
             if (type != ecs_get_typeid(world, desc->id)) {
-                char *metric_name = ecs_get_fullpath(world, metric);
-                char *member_name = ecs_get_fullpath(world, desc->member);
-                char *id_name = ecs_get_fullpath(world, desc->id);
+                char *metric_name = ecs_get_path(world, metric);
+                char *member_name = ecs_get_path(world, desc->member);
+                char *id_name = ecs_get_path(world, desc->id);
                 ecs_err("member '%s' for metric '%s' is not of type '%s'",
                     member_name, metric_name, id_name);
                 ecs_os_free(id_name);
@@ -533,8 +533,8 @@ int flecs_member_metric_init(
 
     const EcsPrimitive *p = ecs_get(world, member_type, EcsPrimitive);
     if (!p) {
-        char *metric_name = ecs_get_fullpath(world, metric);
-        char *member_name = ecs_get_fullpath(world, desc->member);
+        char *metric_name = ecs_get_path(world, metric);
+        char *member_name = ecs_get_path(world, desc->member);
         ecs_err("member '%s' provided for metric '%s' must have primitive type",
             member_name, metric_name);
         ecs_os_free(member_name);
@@ -544,8 +544,8 @@ int flecs_member_metric_init(
 
     const EcsType *mt = ecs_get(world, type, EcsType);
     if (!mt) {
-        char *metric_name = ecs_get_fullpath(world, metric);
-        char *member_name = ecs_get_fullpath(world, desc->member);
+        char *metric_name = ecs_get_path(world, metric);
+        char *member_name = ecs_get_path(world, desc->member);
         ecs_err("parent of member '%s' for metric '%s' is not a type",
             member_name, metric_name);
         ecs_os_free(member_name);
@@ -554,8 +554,8 @@ int flecs_member_metric_init(
     }
 
     if (mt->kind != EcsStructType) {
-        char *metric_name = ecs_get_fullpath(world, metric);
-        char *member_name = ecs_get_fullpath(world, desc->member);
+        char *metric_name = ecs_get_path(world, metric);
+        char *member_name = ecs_get_path(world, desc->member);
         ecs_err("parent of member '%s' for metric '%s' is not a struct",
             member_name, metric_name);
         ecs_os_free(member_name);
@@ -759,7 +759,7 @@ ecs_entity_t ecs_metric_init(
         kind != EcsCounterId &&
         kind != EcsCounterIncrement) 
     {
-        ecs_err("invalid metric kind %s", ecs_get_fullpath(world, kind));
+        ecs_err("invalid metric kind %s", ecs_get_path(world, kind));
         goto error;
     }
 

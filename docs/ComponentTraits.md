@@ -794,7 +794,7 @@ ecs.Component<Mass>().Entity
     .add<Ecs.OnInstantiate, Ecs.Override>();
 
 ecs_entity_t base = ecs.Entity()
-    .Set<Mass>(new { 100 });
+    .Set<Mass>(new ( 100 ));
 
 ecs_entity_t inst = ecs.Entity()
     .IsA(base); // Mass is copied to inst
@@ -855,7 +855,7 @@ ecs.Component<Mass>().Entity
     .add<Ecs.OnInstantiate, Ecs.Inherit>();
 
 ecs_entity_t base = ecs.Entity()
-    .Set<Mass>(new { 100 });
+    .Set<Mass>(new ( 100 ));
 
 ecs_entity_t inst = ecs.Entity()
     .IsA(base);
@@ -917,7 +917,7 @@ ecs.Component<Mass>().Entity
     .add<Ecs.OnInstantiate, Ecs.DontInherit>();
 
 ecs_entity_t base = ecs.Entity()
-    .Set<Mass>(new { 100 });
+    .Set<Mass>(new ( 100 ));
 
 ecs_entity_t inst = ecs.Entity()
     .IsA(base);
@@ -1179,7 +1179,7 @@ ecs.Component<Position>().Entity
     .add<Ecs.CanToggle>();
 
 Entity e = world.Entity()
-    .Set<Position>(new {10, 20});
+    .Set<Position>(new (10, 20));
 
 e.Disable<Position>(); // Disable component
 assert(!e.IsEnabled<Position>());

@@ -138,7 +138,7 @@ int ecs_script_update(
     const char *name = ecs_get_name(world, e);
     EcsScript *s = ecs_ensure(world, e, EcsScript);
     if (s->template_) {
-        char *template_name = ecs_get_fullpath(world, s->template_->entity);
+        char *template_name = ecs_get_path(world, s->template_->entity);
         ecs_err("cannot update scripts for individual templates, "
             "update parent script instead (tried to update '%s')",
                 template_name);

@@ -174,7 +174,7 @@ void flecs_instantiate_slot(
             if (ecs_has_pair(world, parent, EcsIsA, slot_of)) {
                 const char *name = ecs_get_name(world, slot);
                 if (name == NULL) {
-                    char *slot_of_str = ecs_get_fullpath(world, slot_of);
+                    char *slot_of_str = ecs_get_path(world, slot_of);
                     ecs_throw(ECS_INVALID_OPERATION, "prefab '%s' has unnamed "
                         "slot (slots must be named)", slot_of_str);
                     ecs_os_free(slot_of_str);
@@ -200,8 +200,8 @@ void flecs_instantiate_slot(
                 }
 
                 if (slot == 0) {
-                    char *slot_of_str = ecs_get_fullpath(world, slot_of);
-                    char *slot_str = ecs_get_fullpath(world, slot);
+                    char *slot_of_str = ecs_get_path(world, slot_of);
+                    char *slot_str = ecs_get_path(world, slot);
                     ecs_throw(ECS_INVALID_OPERATION,
                         "'%s' is not in hierarchy for slot '%s'",
                             slot_of_str, slot_str);
@@ -217,8 +217,8 @@ void flecs_instantiate_slot(
         } while ((parent = ecs_get_target(world, parent, EcsChildOf, 0)));
         
         if (parent == 0) {
-            char *slot_of_str = ecs_get_fullpath(world, slot_of);
-            char *slot_str = ecs_get_fullpath(world, slot);
+            char *slot_of_str = ecs_get_path(world, slot_of);
+            char *slot_str = ecs_get_path(world, slot);
             ecs_throw(ECS_INVALID_OPERATION,
                 "'%s' is not in hierarchy for slot '%s'",
                     slot_of_str, slot_str);
@@ -2035,12 +2035,12 @@ void flecs_check_component(
     ecs_size_t alignment)
 {
     if (ptr->size != size) {
-        char *path = ecs_get_fullpath(world, result);
+        char *path = ecs_get_path(world, result);
         ecs_abort(ECS_INVALID_COMPONENT_SIZE, path);
         ecs_os_free(path);
     }
     if (ptr->alignment != alignment) {
-        char *path = ecs_get_fullpath(world, result);
+        char *path = ecs_get_path(world, result);
         ecs_abort(ECS_INVALID_COMPONENT_ALIGNMENT, path);
         ecs_os_free(path);
     }

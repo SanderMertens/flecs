@@ -140,7 +140,7 @@ void Hierarchies_path_depth_0(void) {
 
     ECS_ENTITY(world, Parent, 0);
 
-    char *path = ecs_get_fullpath(world, Parent);
+    char *path = ecs_get_path(world, Parent);
     test_str(path, "Parent");
     ecs_os_free(path);
 
@@ -153,7 +153,7 @@ void Hierarchies_path_depth_1(void) {
     ECS_ENTITY(world, Parent, 0);
     ECS_ENTITY(world, Child, (ChildOf, Parent));
 
-    char *path = ecs_get_fullpath(world, Child);
+    char *path = ecs_get_path(world, Child);
     test_str(path, "Parent.Child");
     ecs_os_free(path);
 
@@ -167,7 +167,7 @@ void Hierarchies_path_depth_2(void) {
     ECS_ENTITY(world, Child, (ChildOf, Parent));
     ECS_ENTITY(world, GrandChild, (ChildOf, Parent.Child));
 
-    char *path = ecs_get_fullpath(world, GrandChild);
+    char *path = ecs_get_path(world, GrandChild);
     test_str(path, "Parent.Child.GrandChild");
     ecs_os_free(path);
 
@@ -239,7 +239,7 @@ void Hierarchies_rel_path_from_root(void) {
 
     ECS_ENTITY(world, Parent, 0);
 
-    char *path = ecs_get_path(world, 0, Parent);
+    char *path = ecs_get_path_from(world, 0, Parent);
     test_str(path, "Parent");
     ecs_os_free(path);
 
@@ -251,7 +251,7 @@ void Hierarchies_rel_path_from_self(void) {
 
     ECS_ENTITY(world, Parent, 0);
 
-    char *path = ecs_get_path(world, Parent, Parent);
+    char *path = ecs_get_path_from(world, Parent, Parent);
     test_str(path, "");
     ecs_os_free(path);
 
@@ -264,7 +264,7 @@ void Hierarchies_rel_path_depth_1(void) {
     ECS_ENTITY(world, Parent, 0);
     ECS_ENTITY(world, Child, (ChildOf, Parent));
 
-    char *path = ecs_get_path(world, Parent, Child);
+    char *path = ecs_get_path_from(world, Parent, Child);
     test_str(path, "Child");
     ecs_os_free(path);
 
@@ -278,7 +278,7 @@ void Hierarchies_rel_path_depth_2(void) {
     ECS_ENTITY(world, Child, (ChildOf, Parent));
     ECS_ENTITY(world, GrandChild, (ChildOf, Parent.Child));
 
-    char *path = ecs_get_path(world, Parent, GrandChild);
+    char *path = ecs_get_path_from(world, Parent, GrandChild);
     test_str(path, "Child.GrandChild");
     ecs_os_free(path);
 
@@ -292,7 +292,7 @@ void Hierarchies_rel_path_no_match(void) {
     ECS_ENTITY(world, Parent2, 0);
     ECS_ENTITY(world, Child, (ChildOf, Parent));
 
-    char *path = ecs_get_path(world, Parent2, Child);
+    char *path = ecs_get_path_from(world, Parent2, Child);
     test_str(path, "Parent.Child");
     ecs_os_free(path);
 
@@ -361,7 +361,7 @@ void Hierarchies_path_w_number(void) {
     ecs_entity_t e = ecs_new_w_pair(world, EcsChildOf, p);
     ecs_set_name(world, e, "Foo");
 
-    char *path = ecs_get_fullpath(world, e);
+    char *path = ecs_get_path(world, e);
     test_str(path, "1000.Foo");
     ecs_os_free(path);
 
@@ -374,7 +374,7 @@ void Hierarchies_path_w_entity_id(void) {
     ecs_entity_t e = ecs_new_w_pair(world, EcsChildOf, 1000);
     ecs_set_name(world, e, "Foo");
 
-    char *path = ecs_get_fullpath(world, e);
+    char *path = ecs_get_path(world, e);
     test_str(path, "#1000.Foo");
     ecs_os_free(path);
 
@@ -688,7 +688,7 @@ void Hierarchies_fullpath_for_core(void) {
     ECS_ENTITY(world, Parent, 0);
     ECS_ENTITY(world, Child, (ChildOf, Parent));
 
-    char *path = ecs_get_fullpath(world, ecs_id(EcsComponent));
+    char *path = ecs_get_path(world, ecs_id(EcsComponent));
     test_str(path, "Component");
     ecs_os_free(path);
 
@@ -706,7 +706,7 @@ void Hierarchies_new_from_path_depth_0(void) {
     test_assert(type != NULL);
     test_int(type->count, 1);
 
-    char *path = ecs_get_fullpath(world, e);
+    char *path = ecs_get_path(world, e);
     test_str(path, "foo");
     ecs_os_free(path);
 
@@ -724,7 +724,7 @@ void Hierarchies_new_from_path_depth_1(void) {
     test_assert(type != NULL);
     test_int(type->count, 2);
 
-    char *path = ecs_get_fullpath(world, e);
+    char *path = ecs_get_path(world, e);
     test_str(path, "foo.bar");
     ecs_os_free(path);
 
@@ -742,7 +742,7 @@ void Hierarchies_new_from_path_depth_2(void) {
     test_assert(type != NULL);
     test_int(type->count, 2);
 
-    char *path = ecs_get_fullpath(world, e);
+    char *path = ecs_get_path(world, e);
     test_str(path, "foo.bar.hello");
     ecs_os_free(path);
 
@@ -810,7 +810,7 @@ void Hierarchies_add_path_depth_0(void) {
     test_assert(type != NULL);
     test_int(type->count, 1);
 
-    char *path = ecs_get_fullpath(world, e);
+    char *path = ecs_get_path(world, e);
     test_str(path, "foo");
     ecs_os_free(path);
 
@@ -832,7 +832,7 @@ void Hierarchies_add_path_depth_1(void) {
     test_assert(type != NULL);
     test_int(type->count, 2);
 
-    char *path = ecs_get_fullpath(world, e);
+    char *path = ecs_get_path(world, e);
     test_str(path, "foo.bar");
     ecs_os_free(path);
 
@@ -854,7 +854,7 @@ void Hierarchies_add_path_depth_2(void) {
     test_assert(type != NULL);
     test_int(type->count, 2);
 
-    char *path = ecs_get_fullpath(world, e);
+    char *path = ecs_get_path(world, e);
     test_str(path, "foo.bar.hello");
     ecs_os_free(path);
 
@@ -923,7 +923,7 @@ void Hierarchies_add_path_from_scope(void) {
     test_assert(f != 0);
     test_str(ecs_get_name(world, f), "world");
 
-    char *path = ecs_get_fullpath(world, f);
+    char *path = ecs_get_path(world, f);
     test_str(path, "hello.world");
     ecs_os_free(path);
 
@@ -945,7 +945,7 @@ void Hierarchies_add_path_from_scope_new_entity(void) {
     test_assert(id != 0);
     test_str(ecs_get_name(world, id), "world");
 
-    char *path = ecs_get_fullpath(world, id);
+    char *path = ecs_get_path(world, id);
     test_str(path, "foo.bar.hello.world");
     ecs_os_free(path);
 
@@ -1374,7 +1374,7 @@ void Hierarchies_long_name_depth_0(void) {
     ecs_entity_t e = ecs_lookup(world, parent_name);
     test_assert(e == parent);
 
-    char *path = ecs_get_fullpath(world, e);
+    char *path = ecs_get_path(world, e);
     test_str(path, parent_name);
     ecs_os_free(path);
 
@@ -1408,7 +1408,7 @@ void Hierarchies_long_name_depth_1(void) {
     ecs_entity_t e = ecs_lookup(world, search_path);
     test_assert(e == child);
 
-    char *path = ecs_get_fullpath(world, e);
+    char *path = ecs_get_path(world, e);
     test_str(path, search_path);
     ecs_os_free(path);
 
@@ -1452,7 +1452,7 @@ void Hierarchies_long_name_depth_2(void) {
     ecs_entity_t e = ecs_lookup(world, search_path);
     test_assert(e == grand_child);
 
-    char *path = ecs_get_fullpath(world, e);
+    char *path = ecs_get_path(world, e);
     test_str(path, search_path);
     ecs_os_free(path);
 
@@ -1515,11 +1515,11 @@ void Hierarchies_lookup_after_root_to_parent_move(void) {
     test_uint(p, ecs_lookup(world, "Parent"));
     test_uint(c, ecs_lookup(world, "Child"));
 
-    char *path = ecs_get_fullpath(world, p);
+    char *path = ecs_get_path(world, p);
     test_str(path, "Parent");
     ecs_os_free(path);
 
-    path = ecs_get_fullpath(world, c);
+    path = ecs_get_path(world, c);
     test_str(path, "Child");
     ecs_os_free(path);
 
@@ -1529,7 +1529,7 @@ void Hierarchies_lookup_after_root_to_parent_move(void) {
     test_uint(0, ecs_lookup(world, "Child"));
     test_uint(c, ecs_lookup(world, "Parent.Child"));
 
-    path = ecs_get_fullpath(world, c);
+    path = ecs_get_path(world, c);
     test_str(path, "Parent.Child");
     ecs_os_free(path);
 
@@ -1549,11 +1549,11 @@ void Hierarchies_lookup_after_parent_to_root_move(void) {
     test_uint(0, ecs_lookup(world, "Child"));
     test_uint(c, ecs_lookup(world, "Parent.Child"));
 
-    char *path = ecs_get_fullpath(world, p);
+    char *path = ecs_get_path(world, p);
     test_str(path, "Parent");
     ecs_os_free(path);
 
-    path = ecs_get_fullpath(world, c);
+    path = ecs_get_path(world, c);
     test_str(path, "Parent.Child");
     ecs_os_free(path);
 
@@ -1563,7 +1563,7 @@ void Hierarchies_lookup_after_parent_to_root_move(void) {
     test_uint(c, ecs_lookup(world, "Child"));
     test_uint(0, ecs_lookup(world, "Parent.Child"));
 
-    path = ecs_get_fullpath(world, c);
+    path = ecs_get_path(world, c);
     test_str(path, "Child");
     ecs_os_free(path);
 
@@ -1586,11 +1586,11 @@ void Hierarchies_lookup_after_parent_to_parent_move(void) {
     test_uint(c, ecs_lookup(world, "Parent.Child"));
     test_uint(0, ecs_lookup(world, "Parent2.Child"));
 
-    char *path = ecs_get_fullpath(world, p);
+    char *path = ecs_get_path(world, p);
     test_str(path, "Parent");
     ecs_os_free(path);
 
-    path = ecs_get_fullpath(world, c);
+    path = ecs_get_path(world, c);
     test_str(path, "Parent.Child");
     ecs_os_free(path);
 
@@ -1601,7 +1601,7 @@ void Hierarchies_lookup_after_parent_to_parent_move(void) {
     test_uint(0, ecs_lookup(world, "Parent.Child"));
     test_uint(c, ecs_lookup(world, "Parent2.Child"));
 
-    path = ecs_get_fullpath(world, c);
+    path = ecs_get_path(world, c);
     test_str(path, "Parent2.Child");
     ecs_os_free(path);
 
@@ -1617,7 +1617,7 @@ void Hierarchies_lookup_after_clear_from_root(void) {
 
     test_uint(c, ecs_lookup(world, "Child"));
 
-    char *path = ecs_get_fullpath(world, c);
+    char *path = ecs_get_path(world, c);
     test_str(path, "Child");
     ecs_os_free(path);
 
@@ -1642,11 +1642,11 @@ void Hierarchies_lookup_after_clear_from_parent(void) {
     test_uint(0, ecs_lookup(world, "Child"));
     test_uint(c, ecs_lookup(world, "Parent.Child"));
 
-    char *path = ecs_get_fullpath(world, p);
+    char *path = ecs_get_path(world, p);
     test_str(path, "Parent");
     ecs_os_free(path);
 
-    path = ecs_get_fullpath(world, c);
+    path = ecs_get_path(world, c);
     test_str(path, "Parent.Child");
     ecs_os_free(path);
 
@@ -1668,7 +1668,7 @@ void Hierarchies_lookup_after_delete_from_root(void) {
 
     test_uint(c, ecs_lookup(world, "Child"));
 
-    char *path = ecs_get_fullpath(world, c);
+    char *path = ecs_get_path(world, c);
     test_str(path, "Child");
     ecs_os_free(path);
 
@@ -1692,11 +1692,11 @@ void Hierarchies_lookup_after_delete_from_parent(void) {
     test_uint(0, ecs_lookup(world, "Child"));
     test_uint(c, ecs_lookup(world, "Parent.Child"));
 
-    char *path = ecs_get_fullpath(world, p);
+    char *path = ecs_get_path(world, p);
     test_str(path, "Parent");
     ecs_os_free(path);
 
-    path = ecs_get_fullpath(world, c);
+    path = ecs_get_path(world, c);
     test_str(path, "Parent.Child");
     ecs_os_free(path);
 

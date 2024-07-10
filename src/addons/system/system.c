@@ -60,7 +60,7 @@ ecs_entity_t flecs_run_intern(
     }
 
     if (ecs_should_log_3()) {
-        char *path = ecs_get_fullpath(world, system);
+        char *path = ecs_get_path(world, system);
         ecs_dbg_3("worker %d: %s", stage_index, path);
         ecs_os_free(path);
     }

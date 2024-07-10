@@ -3628,7 +3628,7 @@ void Commands_add_path(void) {
     ecs_entity_t foo = ecs_lookup(world, "p.foo");
     test_assert(foo == e);
 
-    char *path = ecs_get_fullpath(world, e);
+    char *path = ecs_get_path(world, e);
     test_assert(path != NULL);
     test_str(path, "p.foo");
     ecs_os_free(path);
@@ -3669,7 +3669,7 @@ void Commands_add_path_nested(void) {
     ecs_entity_t foo = ecs_lookup(world, "p.foo");
     test_assert(foo != 0);
 
-    char *path = ecs_get_fullpath(world, e);
+    char *path = ecs_get_path(world, e);
     test_assert(path != NULL);
     test_str(path, "p.foo.bar");
     ecs_os_free(path);
@@ -3731,7 +3731,7 @@ void Commands_add_path_w_stage(void) {
     ecs_entity_t foo = ecs_lookup(world, "p.foo");
     test_assert(foo == e);
 
-    char *path = ecs_get_fullpath(world, e);
+    char *path = ecs_get_path(world, e);
     test_assert(path != NULL);
     test_str(path, "p.foo");
     ecs_os_free(path);
@@ -3776,7 +3776,7 @@ void Commands_add_path_nested_w_stage(void) {
     ecs_entity_t foo = ecs_lookup(world, "p.foo");
     test_assert(foo != 0);
 
-    char *path = ecs_get_fullpath(world, e);
+    char *path = ecs_get_path(world, e);
     test_assert(path != NULL);
     test_str(path, "p.foo.bar");
     ecs_os_free(path);

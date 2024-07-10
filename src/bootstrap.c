@@ -182,8 +182,8 @@ void flecs_assert_relation_unused(
     }
 
     if (in_use) {
-        char *r_str = ecs_get_fullpath(world, rel);
-        char *p_str = ecs_get_fullpath(world, property);
+        char *r_str = ecs_get_path(world, rel);
+        char *p_str = ecs_get_path(world, property);
 
         ecs_throw(ECS_ID_IN_USE, 
             "cannot change property '%s' for relationship '%s': already in use",
@@ -280,7 +280,7 @@ void flecs_register_final(ecs_iter_t *it) {
     for (i = 0; i < count; i ++) {
         ecs_entity_t e = it->entities[i];
         if (flecs_id_record_get(world, ecs_pair(EcsIsA, e)) != NULL) {
-            char *e_str = ecs_get_fullpath(world, e);
+            char *e_str = ecs_get_path(world, e);
             ecs_throw(ECS_ID_IN_USE,
                 "cannot change property 'Final' for '%s': already inherited from",
                     e_str);
