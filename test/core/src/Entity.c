@@ -2136,7 +2136,7 @@ void Entity_entity_from_conflicting_digit(void) {
     ecs_fini(world);
 }
 
-void Entity_set_generation_on_nonempty_entity(void) {
+void Entity_set_version_on_nonempty_entity(void) {
     ecs_world_t* world = ecs_mini();
 
     ECS_TAG(world, Tag);
@@ -2148,7 +2148,7 @@ void Entity_set_generation_on_nonempty_entity(void) {
     ecs_add(world, e1, Tag);
 
     e1 |= 0x200000000ul;
-    ecs_set_generation(world, e1);
+    ecs_set_version(world, e1);
 
     ecs_iter_t it = ecs_each(world, Tag);
     ecs_entity_t first = ecs_iter_first(&it);
@@ -2157,7 +2157,7 @@ void Entity_set_generation_on_nonempty_entity(void) {
     ecs_fini(world);
 }
 
-void Entity_set_generation_while_deferred(void) {
+void Entity_set_version_while_deferred(void) {
     install_test_abort();
 
     ecs_world_t* world = ecs_mini();
@@ -2165,7 +2165,7 @@ void Entity_set_generation_while_deferred(void) {
 
     ecs_defer_begin(world);    
     test_expect_abort();
-    ecs_set_generation(world, e1 |= 0x200000000ul);
+    ecs_set_version(world, e1 |= 0x200000000ul);
 }
 
 static

@@ -423,7 +423,7 @@ void Hierarchies_lookup_rel_0(void) {
     ECS_ENTITY(world, Parent, 0);
     ECS_ENTITY(world, Child, (ChildOf, Parent));
 
-    ecs_entity_t e = ecs_lookup_path(world, Parent, "Child");
+    ecs_entity_t e = ecs_lookup_from(world, Parent, "Child");
     test_assert(e == Child);
 
     ecs_fini(world);
@@ -436,7 +436,7 @@ void Hierarchies_lookup_rel_1(void) {
     ECS_ENTITY(world, Child, (ChildOf, Parent));
     ECS_ENTITY(world, GrandChild, (ChildOf, Parent.Child));
 
-    ecs_entity_t e = ecs_lookup_path(world, Parent, "Child.GrandChild");
+    ecs_entity_t e = ecs_lookup_from(world, Parent, "Child.GrandChild");
     test_assert(e == GrandChild);
 
     ecs_fini(world);
@@ -450,7 +450,7 @@ void Hierarchies_lookup_rel_2(void) {
     ECS_ENTITY(world, GrandChild, (ChildOf, Parent.Child));
     ECS_ENTITY(world, GrandGrandChild, (ChildOf, Parent.Child.GrandChild));
 
-    ecs_entity_t e = ecs_lookup_path(world, Parent, "Child.GrandChild.GrandGrandChild");
+    ecs_entity_t e = ecs_lookup_from(world, Parent, "Child.GrandChild.GrandGrandChild");
     test_assert(e == GrandGrandChild);
 
     ecs_fini(world);
@@ -497,7 +497,7 @@ void Hierarchies_lookup_self(void) {
 
     ECS_ENTITY(world, Parent, 0);
 
-    ecs_entity_t e = ecs_lookup_path(world, Parent, "");
+    ecs_entity_t e = ecs_lookup_from(world, Parent, "");
     test_assert(e == Parent);
 
     ecs_fini(world);
@@ -515,7 +515,7 @@ void Hierarchies_lookup_number(void) {
     ecs_entity_t e = ecs_new_w_pair(world, EcsChildOf, p);
     ecs_set_name(world, e, "Foo");
 
-    ecs_entity_t c = ecs_lookup_path(world, 0, "1000.Foo");
+    ecs_entity_t c = ecs_lookup_from(world, 0, "1000.Foo");
     test_assert(e == c);
 
     ecs_fini(world);
@@ -532,7 +532,7 @@ void Hierarchies_lookup_entity_id(void) {
     ecs_entity_t e = ecs_new_w_pair(world, EcsChildOf, 1000);
     ecs_set_name(world, e, "Foo");
 
-    ecs_entity_t c = ecs_lookup_path(world, 0, "#1000.Foo");
+    ecs_entity_t c = ecs_lookup_from(world, 0, "#1000.Foo");
     test_assert(e == c);
 
     ecs_fini(world);

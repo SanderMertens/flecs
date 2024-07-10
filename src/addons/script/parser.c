@@ -612,7 +612,7 @@ identifier_colon: {
     }
 
     {
-        // Position: {
+        // Position: [
         LookAhead_1('[',
             pos = lookahead;
             goto component_expr_collection;
@@ -650,10 +650,11 @@ identifier_assign: {
     ecs_script_entity_t *entity = flecs_script_insert_entity(
         parser, Token(0));
 
-    // x = Position: {
+    // x = Position:
     LookAhead_2(EcsTokIdentifier, ':',
         pos = lookahead;
 
+        // x = Position: {
         Parse_1('{', {
             // x = Position: {expr}
             Expr('}', 

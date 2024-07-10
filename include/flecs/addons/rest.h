@@ -5,7 +5,7 @@
  * A small REST API that uses the HTTP server and JSON serializer to provide
  * access to application data for remote applications.
  *
- * A description of the API can be found in docs/RestApi.md
+ * A description of the API can be found in docs/FlecsRemoteApi.md
  */
 
 #ifdef FLECS_REST

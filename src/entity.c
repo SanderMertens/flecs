@@ -4017,7 +4017,7 @@ error:
     return false;
 }
 
-void ecs_set_generation(
+void ecs_set_version(
     ecs_world_t *world,
     ecs_entity_t entity_with_generation)
 {

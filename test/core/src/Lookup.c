@@ -548,10 +548,10 @@ void Lookup_lookup_from_scope_staged(void) {
     ecs_world_t *stage = ecs_get_stage(world, 0);
     test_assert(ecs_set_scope(stage, parent) == 0);
 
-    test_assert(ecs_lookup_path(stage, 0, "Child") == child);
+    test_assert(ecs_lookup_from(stage, 0, "Child") == child);
     test_assert(ecs_lookup(stage, "Child") == child);
 
-    test_assert(ecs_lookup_path(stage, parent, "Child") == child);
+    test_assert(ecs_lookup_from(stage, parent, "Child") == child);
     test_assert(ecs_lookup(stage, "Child") == child);
 
     test_assert(ecs_set_scope(stage, 0) == parent);

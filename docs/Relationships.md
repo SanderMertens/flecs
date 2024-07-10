@@ -1303,7 +1303,7 @@ ecs_entity_t child = ecs_entity(world, {
 ecs_add_pair(world, child, EcsChildOf, parent);
 
 child = ecs_lookup(world, "Parent::Child"); // true
-child = ecs_lookup_path(world, parent, "Child"); // true
+child = ecs_lookup_from(world, parent, "Child"); // true
 ```
 
 </li>
