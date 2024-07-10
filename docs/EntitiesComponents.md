@@ -39,9 +39,9 @@ flecs::entity my_entity = world.entity();
 </li>
 <li><b class="tab-title">C#</b>
 
-<pre><code class="language-cpp">
+@cs
 Entity my_entity world.Entity();
-</code></pre>
+@endcs
 
 </li>
 </ul>
@@ -72,9 +72,9 @@ my_entity.destruct();
 </li>
 <li><b class="tab-title">C#</b>
 
-<pre><code class="language-cpp">
+@cs
 my_entity.Destruct();
-</code></pre>
+@endcs
 
 </li>
 </ul>
@@ -116,7 +116,7 @@ e2.add<Npc>(); // OK, 500v1 is alive
 </li>
 <li><b class="tab-title">C#</b>
 
-<pre><code class="language-cpp">
+@cs
 Entity e1 = world.Entity(); // Returns 500v0
 e1.Destruct(); // Recycles 500
 
@@ -124,7 +124,7 @@ Entity e2 = world.Entity(); // Returns 500v1
 
 e1.Add<Npc>(); // Fails, 500v0 is not alive
 e2.Add<Npc>(); // OK, 500v1 is alive
-</code></pre>
+@endcs
 
 </li>
 </ul>
@@ -154,11 +154,11 @@ e1.destruct(); // OK: post condition is satisfied
 </li>
 <li><b class="tab-title">C#</b>
 
-<pre><code class="language-cpp">
+@cs
 Entity e1 = world.Entity();
 e1.Destruct();
 e1.Destruct(); // OK: post condition is satisfied
-</code></pre>
+@endcs
 
 </li>
 </ul>
@@ -185,9 +185,9 @@ my_entity.clear();
 </li>
 <li><b class="tab-title">C#</b>
 
-<pre><code class="language-cpp">
+@cs
 my_entity.Clear();
-</code></pre>
+@endcs
 
 </li>
 </ul>
@@ -224,14 +224,14 @@ e2.is_alive(); // True
 </li>
 <li><b class="tab-title">C#</b>
 
-<pre><code class="language-cpp">
+@cs
 Entity e1 = world.Entity();
 Entity e2 = world.Entity();
 e1.Destruct();
 
 e1.IsAlive(); // False
 e2.IsAlive(); // True
-</code></pre>
+@endcs
 
 </li>
 </ul>
@@ -268,7 +268,7 @@ world.entity(0).is_valid(); // False
 </li>
 <li><b class="tab-title">C#</b>
 
-<pre><code class="language-cpp">
+@cs
 Entity e1 = world.Entity();
 Entity e2 = world.Entity();
 e1.Destruct();
@@ -276,7 +276,7 @@ e1.Destruct();
 e1.IsValid(); // False
 e2.IsValid(); // True
 world.Entity(0).IsValid(); // False
-</code></pre>
+@endcs
 
 </li>
 </ul>
@@ -303,9 +303,9 @@ flecs::entity e = world.make_alive(1000);
 </li>
 <li><b class="tab-title">C#</b>
 
-<pre><code class="language-cpp">
+@cs
 Entity e = world.MakeAlive(1000);
-</code></pre>
+@endcs
 
 </li>
 </ul>
@@ -334,9 +334,9 @@ world.set_version(versioned_id);
 </li>
 <li><b class="tab-title">C#</b>
 
-<pre><code class="language-cpp">
+@cs
 world.SetVersion(versioned_id);
-</code></pre>
+@endcs
 
 </li>
 </ul>
@@ -363,9 +363,9 @@ world.set_entity_range(5000, 0);
 </li>
 <li><b class="tab-title">C#</b>
 
-<pre><code class="language-cpp">
+@cs
 world.SetEntityRange(5000, 0);
-</code></pre>
+@endcs
 
 </li>
 </ul>
@@ -391,9 +391,9 @@ world.set_entity_range(5000, 10000);
 </li>
 <li><b class="tab-title">C#</b>
 
-<pre><code class="language-cpp">
+@cs
 world.SetEntityRange(5000, 10000);
-</code></pre>
+@endcs
 
 </li>
 </ul>
@@ -423,9 +423,9 @@ world.enable_range_check();
 </li>
 <li><b class="tab-title">C#</b>
 
-<pre><code class="language-cpp">
+@cs
 world.EnableRangeCheck(true);
-</code></pre>
+@endcs
 
 </li>
 </ul>
@@ -466,7 +466,7 @@ std::cout << e.name() << std::endl;
 </li>
 <li><b class="tab-title">C#</b>
 
-<pre><code class="language-cpp">
+@cs
 Entity e = world.Entity("MyEntity");
 
 if (e == world.Lookup("MyEntity")) {
@@ -474,7 +474,7 @@ if (e == world.Lookup("MyEntity")) {
 }
 
 Console.WriteLine(e.Name());
-</code></pre>
+@endcs
 
 </li>
 </ul>
@@ -510,14 +510,14 @@ if (e == world.lookup("Parent::Child")) {
 </li>
 <li><b class="tab-title">C#</b>
 
-<pre><code class="language-cpp">
+@cs
 Entity p = world.Entity("Parent");
 Entity e = world.Entity("Child").ChildOf(p);
 
 if (e == world.Lookup("Parent.Child")) {
     // true
 }
-</code></pre>
+@endcs
 
 </li>
 </ul>
@@ -553,14 +553,14 @@ if (e == p.lookup("Child")) {
 </li>
 <li><b class="tab-title">C#</b>
 
-<pre><code class="language-cpp">
+@cs
 Entity p = world.Entity("Parent");
 Entity e = world.Entity("Child").ChildOf(p);
 
 if (e == p.Lookup("Child")) {
     // true
 }
-</code></pre>
+@endcs
 
 </li>
 </ul>
@@ -603,7 +603,7 @@ std::cout << e.path() << std::endl; // Parent.Child
 </li>
 <li><b class="tab-title">C#</b>
 
-<pre><code class="language-cpp">
+@cs
 Entity p = world.Entity("Parent");
 Entity e = world.Entity("Child").ChildOf(p);
 
@@ -612,7 +612,7 @@ Console.WriteLine(e.Name()); // Child
 
 // Returns entity path
 Console.WriteLine(e.Path()); // Parent.Child
-</code></pre>
+@endcs
 
 </li>
 </ul>
@@ -650,14 +650,14 @@ if (e1 == e2) {
 </li>
 <li><b class="tab-title">C#</b>
 
-<pre><code class="language-cpp">
+@cs
 Entity e1 = world.Entity("Parent.Child");
 Entity e2 = world.Entity("Parent.Child");
 
 if (e1 == e2) {
     // true
 }
-</code></pre>
+@endcs
 
 </li>
 </ul>
@@ -689,11 +689,11 @@ e.set_name("Bar");
 </li>
 <li><b class="tab-title">C#</b>
 
-<pre><code class="language-cpp">
+@cs
 Entity e = world.Entity("Foo");
 
 e.SetName("Bar");
-</code></pre>
+@endcs
 
 </li>
 </ul>
@@ -721,10 +721,10 @@ flecs::entity twenty = world.entity("20");
 </li>
 <li><b class="tab-title">C#</b>
 
-<pre><code class="language-cpp">
+@cs
 Entity ten = world.Entity("10");
 Entity twenty = world.Entity("20");
-</code></pre>
+@endcs
 
 </li>
 </ul>
@@ -765,7 +765,7 @@ e.disable();
 </li>
 <li><b class="tab-title">C#</b>
 
-<pre><code class="language-cpp">
+@cs
 Entity e = world.Entity();
 
 // Enable entity
@@ -773,7 +773,7 @@ e.Enable();
 
 // Disable entity
 e.Disable();
-</code></pre>
+@endcs
 
 </li>
 </ul>
@@ -829,7 +829,7 @@ p.enable();
 </li>
 <li><b class="tab-title">C#</b>
 
-<pre><code class="language-cpp">
+@cs
 // Three entities to disable
 Entity e1 = world.Entity();
 Entity e2 = world.Entity();
@@ -846,7 +846,7 @@ p.Disable();
 
 // Enable entities
 p.Enable();
-</code></pre>
+@endcs
 
 </li>
 </ul>
@@ -908,7 +908,7 @@ p1.enable();
 </li>
 <li><b class="tab-title">C#</b>
 
-<pre><code class="language-cpp">
+@cs
 // Three entities to disable
 Entity e1 = world.Entity();
 Entity e2 = world.Entity();
@@ -928,7 +928,7 @@ p2.disable();
 
 // Enable e1
 p1.enable();
-</code></pre>
+@endcs
 
 </li>
 </ul>
@@ -954,9 +954,9 @@ e.add(flecs::Disabled);
 </li>
 <li><b class="tab-title">C#</b>
 
-<pre><code class="language-cpp">
+@cs
 e.Add(Ecs.Disabled);
-</code></pre>
+@endcs
 
 </li>
 </ul>
@@ -1037,7 +1037,7 @@ std::cout << "{size: " << comp_data->size << ", "
 </li>
 <li><b class="tab-title">C#</b>
 
-<pre><code class="language-cpp">
+@cs
 // Get the entity for the Position component
 Entity = world.Component<Position>().Entity;
 
@@ -1045,7 +1045,7 @@ Entity = world.Component<Position>().Entity;
 ref readonly Ecs.Component comp_data = ref e.Get<Ecs.Component>();
 
 Console.WriteLine(comp_data.ToString());
-</code></pre>
+@endcs
 
 </li>
 </ul>
@@ -1075,10 +1075,10 @@ world.component<Position>().add(flecs::Sparse);
 </li>
 <li><b class="tab-title">C#</b>
 
-<pre><code class="language-cpp">
+@cs
 // Register a sparse component
 world.Component<Position>().Entity.add(Ecs.Sparse);
-</code></pre>
+@endcs
 
 </li>
 </ul>
@@ -1286,9 +1286,9 @@ const void *ptr = e.get(comp);
 </li>
 <li><b class="tab-title">C#</b>
 
-<pre><code class="language-cpp">
+@cs
 TODO
-</code></pre>
+@endcs
 
 </li>
 </ul>
@@ -1343,9 +1343,9 @@ const void *ptr = e.get(comp);
 </li>
 <li><b class="tab-title">C#</b>
 
-<pre><code class="language-cpp">
+@cs
 TODO
-</code></pre>
+@endcs
 
 </li>
 </ul>
@@ -1392,7 +1392,7 @@ pos.destruct();
 </li>
 <li><b class="tab-title">C#</b>
 
-<pre><code class="language-cpp">
+@cs
 Entity pos = world.Component<Position>().Entity;
 
 // Create entity with Position
@@ -1402,7 +1402,7 @@ Entity e = world.Entity().Add<Position>();
 pos.Destruct();
 
 // Position is removed from e
-</code></pre>
+@endcs
 
 </li>
 </ul>
@@ -1439,13 +1439,13 @@ const TimeOfDay *t = world.get<TimeOfDay>();
 </li>
 <li><b class="tab-title">C#</b>
 
-<pre><code class="language-cpp">
+@cs
 // Set singleton
 world.Set(new TimeOfDay( 0.5 ));
 
 // Get singleton
 ref readonly TimeOfDay t = ref world.Get<TimeOfDay>();
-</code></pre>
+@endcs
 
 </li>
 </ul>
@@ -1481,13 +1481,13 @@ world.component<TimeOfDay>().set(TimeOfDay{ 0.5 })
 </li>
 <li><b class="tab-title">C#</b>
 
-<pre><code class="language-cpp">
+@cs
 // Set singleton
 world.Set(new TimeOfDay( 0.5 ));
 
 // Equivalent to:
 world.Component<TimeOfDay>().Entity.Set(new TimeOfDay( 0.5 ));
-</code></pre>
+@endcs
 
 </li>
 </ul>
@@ -1537,7 +1537,7 @@ e.is_enabled<Position>()  // True
 </li>
 <li><b class="tab-title">C#</b>
 
-<pre><code class="language-cpp">
+@cs
 ecs.Component<Position>().Entity
     .add<Ecs.CanToggle>();
 
@@ -1551,7 +1551,7 @@ e.IsEnabled<Position>(); // False
 // Enable component
 e.Enable<Position>();
 e.IsEnabled<Position>(); // True
-</code></pre>
+@endcs
 
 </li>
 </ul>

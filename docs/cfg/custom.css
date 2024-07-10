@@ -118,4 +118,5 @@ pre code {
 pre code.hljs {
   background: none;
   color: #f2ecec;
+  margin-top: calc(-1 * var(--fragment-lineheight));
 }

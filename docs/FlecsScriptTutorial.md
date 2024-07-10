@@ -28,44 +28,44 @@ Currently the explorer is showing the default scene. Let's clear it by removing 
 
 Lets create an entity by typing its name into the editor:
 
-<pre><code class="language-javascript">
+@js
 my_entity
-</code></pre>
+@endjs
 
 Notice that as we are typing the entity shows up in the treeview:
 [![explorer with a single entity](img/script_tutorial/tut_playground_entity.png)](https://www.flecs.dev/explorer/?wasm=https://www.flecs.dev/explorer/playground.js&script=%0Amy_entity%0A)
 
 Entities are automatically created if they did not exist yet. Try entering the same entity twice:
 
-<pre><code class="language-javascript">
+@js
 my_entity
 my_entity
-</code></pre>
+@endjs
 
 Only one entity shows up in the treeview. The second time `my_entity` was parsed it already existed, so nothing needed to be done.
 
 ## Adding Components
 Now that we have an entity, let's add a few components and tags to it. Change the text in the editor to this, to create an entity with a tag called `SpaceShip`:
 
-<pre><code class="language-javascript">
+@js
 my_entity :- SpaceShip
-</code></pre>
+@endjs
 
 Note that we didn't have to explicitly declare `SpaceShip` in advance, and that it also shows up as entity in the treeview. We can add multiple things to an entity this way:
 
-<pre><code class="language-javascript">
+@js
 my_entity :- SpaceShip
 my_entity :- FasterThanLight
-</code></pre>
+@endjs
 
 To avoid repeating the entity name many times, we can use the `{}` operators to open a scope for the entity. Inside the scope we can list components for the entity by prefixing them with a dash (`-`):
 
-<pre><code class="language-javascript">
+@js
 my_entity {
   - SpaceShip
   - FasterThanLight
 }
-</code></pre>
+@endjs
 
 We can inspect the entity and its contents by opening it in the entity inspector. To do this, click on the entity in the treeview. You should now see this:
 
@@ -75,29 +75,29 @@ Note how the `SpaceShip` and `FasterThanLight` tags show up in the editor. There
 
 Adding a component is similar to adding tag with a value. Let's add the `Position3` component from the `flecs.components.transform` module which comes preloaded with the playground. Note how it also shows up in the inspector when we add this code:
 
-<pre><code class="language-javascript">
+@js
 my_entity {
   - SpaceShip
   - FasterThanLight
   - flecs.components.transform.Position3{1, 2, 3}
 }
-</code></pre>
+@endjs
 
 Having to type the full module name each time we want to use the `Position3` component would be annoying. Add this line to the top of the script:
 
-<pre><code class="language-javascript">
+@js
 using flecs.components.*
-</code></pre>
+@endjs
 
 We can now use the component without the module name, which looks much cleaner:
 
-<pre><code class="language-javascript">
+@js
 my_entity {
   - SpaceShip
   - FasterThanLight
   - Position3{1, 2, 3}
 }
-</code></pre>
+@endjs
 
 If all went well, the playground should now look like this:
 
@@ -107,17 +107,17 @@ Note how after we added the `Position3` component, the inspector also shows the 
 
 In addition to components and tags we can also add relationship pairs to entities. To add a pair, add this line to the scope of the entity, and note how it shows up in the inspector:
 
-<pre><code class="language-javascript">
+@js
   - (OwnedBy, Player)
-</code></pre>
+@endjs
 
 Entities can be created in hierarchies. A child entity is created in the scope of an entity just like the components and tags, but without the preceding `-`. Add this to the scope of the entity:
 
-<pre><code class="language-javascript">
+@js
   cockpit {
     pilot :- (Faction, Earth)
   }
-</code></pre>
+@endjs
 
 You can see the hierarchy this created in the treeview by expanding `my_entity`:
 
@@ -136,19 +136,19 @@ The renderer uses regular ECS queries to find the entities to render. For our en
 
 Let's start by drawing a plane. First remove all code from the editor except for this line:
 
-<pre><code class="language-javascript">
+@js
 using flecs.components.*
-</code></pre>
+@endjs
 
 Now add these lines into the editor to create our ground `plane`:
 
-<pre><code class="language-javascript">
+@js
 plane {
   - Position3{}
   Rectangle: {100, 100}
   - Rgb{0.9, 0.9, 0.9}
 }
-</code></pre>
+@endjs
 
 Something happened! But it doesn't look quite right:
 
@@ -156,15 +156,15 @@ Something happened! But it doesn't look quite right:
 
 The rectangle is rotated the wrong way for our plane. To fix this we need to rotate it 90 degrees or `π/2` radians on the x axis. First lets define `π` as a constant value in our script:
 
-<pre><code class="language-javascript">
+@js
 const PI = 3.1415926
-</code></pre>
+@endjs
 
 Now add this line to the scope of `plane`:
 
-<pre><code class="language-javascript">
+@js
   - Rotation3{$PI / 2}
-</code></pre>
+@endjs
 
 That looks better:
 
@@ -178,13 +178,13 @@ Note that the `PI` variable does not show up in the treeview. Variables do not c
 
 Let's now add a cube to the scene. The code for this looks similar to the plane:
 
-<pre><code class="language-javascript">
+@js
 box {
   - Position3{}
   Box: {10, 10, 10}
   Rgb: {1, 0, 0}
 }
-</code></pre>
+@endjs
 
 The box is showing up, but it's intersecting with our plane:
 
@@ -192,13 +192,13 @@ The box is showing up, but it's intersecting with our plane:
 
 To fix this, we can move it up by setting the `y` member of `Position3` to half its size:
 
-<pre><code class="language-javascript">
+@js
 box {
   - Position3{y: 5}
   Box: {10, 10, 10}
   Rgb: {1, 0, 0}
 }
-</code></pre>
+@endjs
 
 Now the entire cube is visible, and should look like this:
 
@@ -211,15 +211,15 @@ To draw a fence we just need to combine differently sized boxes together. First 
 
 Before drawing the boxes, lets first make sure they're all created with the same color. We could add a color component with the same values to each entity, but that gets tedious if we want to change the color. Instead, we can use the `with` statement:
 
-<pre><code class="language-javascript">
+@js
 with Rgb{0.15, 0.1, 0.05} {
   // Boxes go here
 }
-</code></pre>
+@endjs
 
 Inside the `with` statement we can now create two box entities for the left and right pillar of the fence:
 
-<pre><code class="language-javascript">
+@js
 with Rgb{0.15, 0.1, 0.05} {
   left_pillar {
     - Position3{x: -10, y: 5}
@@ -230,7 +230,7 @@ with Rgb{0.15, 0.1, 0.05} {
     Box: {2, 10, 2}
   }
 }
-</code></pre>
+@endjs
 
 The playground should now look like this:
 
@@ -240,14 +240,14 @@ That works, but the code is starting to look a bit unwieldy. There are lots of m
 
 First lets define two variables for the color and box shape of the pillars. We already saw an example of a variable when we defined `PI`. These looks similar, except that because they are composite values, we also define their type:
 
-<pre><code class="language-javascript">
+@js
 const color = Rgb: {0.15, 0.1, 0.05}
 const pillar_box : Box = {2, 10, 2}
-</code></pre>
+@endjs
 
 This is better, but `pillar_box` still contains values that we have to update each time we want to change the shape of our fence. Instead we can do this, which is a bit more typing now but will be easier to maintain later:
 
-<pre><code class="language-javascript">
+@js
 const height = 10
 const color = Rgb: {0.15, 0.1, 0.05}
 
@@ -257,17 +257,17 @@ const pillar_box : Box = {
   $height, 
   $pillar_width
 }
-</code></pre>
+@endjs
 
 Let's also add an additional `width` variable which stores the width of the fence (or the distance between two pillars):
 
-<pre><code class="language-javascript">
+@js
 const width = 20
-</code></pre>
+@endjs
 
 We can now update the code that creates the pillars to this:
 
-<pre><code class="language-javascript">
+@js
 with $color, $pillar_box {
   left_pillar {
     - Position3{x: -$width/2, y: $height/2}
@@ -276,7 +276,7 @@ with $color, $pillar_box {
     - Position3{x: $width/2, y: $height/2}
   }
 }
-</code></pre>
+@endjs
 
 This will reproduce the exact same scene, but we can now tweak the variables to change the shape of our fence. Try playing around with the values of the different variables to see their effect!
 
@@ -284,19 +284,19 @@ This will reproduce the exact same scene, but we can now tweak the variables to 
 
 This is no fence yet. We're still missing the crossbars. Let's add another entity to see what it looks like:
 
-<pre><code class="language-javascript">
+@js
 bar {
   - Position3{y: $height / 2}
   Box: {$width, 2, 1}
   - $color  
 }
-</code></pre>
+@endjs
 
 [![two pillars and a bar](img/script_tutorial/tut_playground_bar.png)](https://www.flecs.dev/explorer/?local=true&wasm=https://www.flecs.dev/explorer/playground.js&script=using%20flecs.components.*%0A%0Aconst%20PI%20%3D%203.1415926%0A%0Aplane%20%7B%0A%20%20-%20Position3%7B%7D%0A%20%20-%20Rotation3%7B%24PI%20%2F%202%7D%0A%20%20-%20Rectangle%7B10000%2C%2010000%7D%0A%20%20-%20Rgb%7B0.9%2C%200.9%2C%200.9%7D%0A%7D%0A%0Aconst%20width%20%3D%2020%0Aconst%20height%20%3D%2010%0Aconst%20color%20%3A%20Rgb%20%3D%20%7B0.15%2C%200.1%2C%200.05%7D%0A%0Aconst%20pillar_width%20%3D%202%0Aconst%20pillar_box%20%3A%20Box%20%3D%20%7B%0A%20%20%24pillar_width%2C%20%0A%20%20%24height%2C%20%0A%20%20%24pillar_width%0A%7D%0A%0Awith%20%24color%2C%20%24pillar_box%20%7B%0A%20%20left_pillar%20%7B%0A%20%20%20%20-%20Position3%7Bx%3A%20-%24width%2F2%2C%20y%3A%20%24height%2F2%7D%0A%20%20%7D%0A%20%20right_pillar%20%7B%0A%20%20%20%20-%20Position3%7Bx%3A%20%24width%2F2%2C%20y%3A%20%24height%2F2%7D%0A%20%20%7D%0A%7D%0A%0Abar%20%7B%0A%20%20-%20Position3%7By%3A%20%24height%20%2F%202%7D%0A%20%20-%20Box%7B%24width%2C%202%2C%201%7D%0A%20%20-%20%24color%20%20%0A%7D%0A)
 
 Let's add a second entity and space the two entities out a bit so they don't overlap. Also make sure to give both entities a different name, or else we'll end up overwriting the previous values:
 
-<pre><code class="language-javascript">
+@js
 top_bar {
   - Position3{y: $height/2 + 2}
   Box: {$width, 2, 1}
@@ -307,27 +307,27 @@ bottom_bar {
   Box: {$width, 2, 1}
   - $color  
 }
-</code></pre>
+@endjs
 
 [![a simple fence](img/script_tutorial/tut_playground_fence.png)](https://www.flecs.dev/explorer/?local=true&wasm=https://www.flecs.dev/explorer/playground.js&script=using%20flecs.components.*%0A%0Aconst%20PI%20%3D%203.1415926%0A%0Aplane%20%7B%0A%20%20-%20Position3%7B%7D%0A%20%20-%20Rotation3%7B%24PI%20%2F%202%7D%0A%20%20-%20Rectangle%7B10000%2C%2010000%7D%0A%20%20-%20Rgb%7B0.9%2C%200.9%2C%200.9%7D%0A%7D%0A%0Aconst%20width%20%3D%2020%0Aconst%20height%20%3D%2010%0Aconst%20color%20%3A%20Rgb%20%3D%20%7B0.15%2C%200.1%2C%200.05%7D%0A%0Aconst%20pillar_width%20%3D%202%0Aconst%20pillar_box%20%3A%20Box%20%3D%20%7B%0A%20%20%24pillar_width%2C%20%0A%20%20%24height%2C%20%0A%20%20%24pillar_width%0A%7D%0A%0Awith%20%24color%2C%20%24pillar_box%20%7B%0A%20%20left_pillar%20%7B%0A%20%20%20%20-%20Position3%7Bx%3A%20-%24width%2F2%2C%20y%3A%20%24height%2F2%7D%0A%20%20%7D%0A%20%20right_pillar%20%7B%0A%20%20%20%20-%20Position3%7Bx%3A%20%24width%2F2%2C%20y%3A%20%24height%2F2%7D%0A%20%20%7D%0A%7D%0A%0Atop_bar%20%7B%0A%20%20-%20Position3%7By%3A%20%24height%2F2%20%2B%202%7D%0A%20%20-%20Box%7B%24width%2C%202%2C%201%7D%0A%20%20-%20%24color%20%20%0A%7D%0Abottom_bar%20%7B%0A%20%20-%20Position3%7By%3A%20%24height%2F2%20-%202%7D%0A%20%20-%20Box%7B%24width%2C%202%2C%201%7D%0A%20%20-%20%24color%20%20%0A%7D%0A)
 
 That starts to look more like a fence! Just like before however, we have a bunch of magic values and redundancies, but we now know how to fix that. First, let's define a `bar_sep` variable to specify how far apart the bars should be separated:
 
-<pre><code class="language-javascript">
+@js
 const bar_sep = 4
-</code></pre>
+@endjs
 
 Let's also create a variable for the bar shape and bar height, similar to what we did before. Let's make the bar thickness scale with the width of a pillar:
 
-<pre><code class="language-javascript">
+@js
 const bar_height = 2
 const bar_depth = $pillar_width/2
 const bar_box : Box = {$width, $bar_height, $bar_depth}
-</code></pre>
+@endjs
 
 With that in place, we can cleanup the entity code for the bars:
 
-<pre><code class="language-javascript">
+@js
 with $color, $bar_box {
   top_bar {
     - Position3{y: $height/2 + $bar_sep/2}
@@ -336,7 +336,7 @@ with $color, $bar_box {
     - Position3{y: $height/2 - $bar_sep/2}
   }
 }
-</code></pre>
+@endjs
 
 We now have our fence, which we can fully tweak with by changing the values of the variables! There are a few problems with the current code however:
 
@@ -345,7 +345,7 @@ We now have our fence, which we can fully tweak with by changing the values of t
 
 The code is also growing. To make sure you don't lose track of what you're doing you can add comments:
 
-<pre><code class="language-javascript">
+@js
 // Create two bar entities
 with $color, $bar_box {
   top_bar {
@@ -355,28 +355,28 @@ with $color, $bar_box {
     - Position3{y: $height/2 - $bar_sep/2}
   }
 }
-</code></pre>
+@endjs
 
 ## Prefabs
 We have the basic structure of a fence, but what if we wanted two fences? We could of course duplicate all of the code, but that would be impractical. Instead we can package up what we have in a _prefab_.
 
 Turning the existing code into a prefab is easy. Simply add these lines around the fence code:
 
-<pre><code class="language-javascript">
+@js
 Prefab Fence {
   // fence code goes here
 }
-</code></pre>
+@endjs
 
 This creates an entity `Fence` with the tag `Prefab`, and stores all entities we created so far as children of the `Fence` entity. This is the same as running the following code, but a bit more convenient:
 
-<pre><code class="language-javascript">
+@js
 Fence {
   - Prefab
 
   // fence code goes here
 }
-</code></pre>
+@endjs
 
 Once you put the fence entities inside the prefab scope, you'll notice a few things:
 - The fence disappears from the canvas
@@ -396,14 +396,14 @@ my_fence : Fence
 
 Great, the fence is back! Even better, we can now create two fences simply by instantiating the prefab twice. Just make sure to give both instances different positions:
 
-<pre><code class="language-javascript">
+@js
 fence_a : Fence {
   - Position3{-10}
 }
 fence_b : Fence {
   - Position3{10}
 }
-</code></pre>
+@endjs
 
 [![two fence prefab instances](img/script_tutorial/tut_playground_two_instances.png)](https://www.flecs.dev/explorer/?local=true&wasm=https://www.flecs.dev/explorer/playground.js&script=using%20flecs.components.*%0A%0Aconst%20PI%20%3D%203.1415926%0A%0Aplane%20%7B%0A%20%20-%20Position3%7B%7D%0A%20%20-%20Rotation3%7B%24PI%20%2F%202%7D%0A%20%20-%20Rectangle%7B10000%2C%2010000%7D%0A%20%20-%20Rgb%7B0.9%2C%200.9%2C%200.9%7D%0A%7D%0A%0APrefab%20Fence%20%7B%0A%20%20const%20width%20%3D%2020%0A%20%20const%20height%20%3D%2010%0A%20%20const%20color%20%3A%20Rgb%20%3D%20%7B0.15%2C%200.1%2C%200.05%7D%0A%20%20%0A%20%20const%20pillar_width%20%3D%202%0A%20%20const%20pillar_box%20%3A%20Box%20%3D%20%7B%0A%20%20%20%20%24pillar_width%2C%20%0A%20%20%20%20%24height%2C%20%0A%20%20%20%20%24pillar_width%0A%20%20%7D%0A%20%20%0A%20%20with%20%24color%2C%20%24pillar_box%20%7B%0A%20%20%20%20left_pillar%20%7B%0A%20%20%20%20%20%20-%20Position3%7Bx%3A%20-%24width%2F2%2C%20y%3A%20%24height%2F2%7D%0A%20%20%20%20%7D%0A%20%20%20%20right_pillar%20%7B%0A%20%20%20%20%20%20-%20Position3%7Bx%3A%20%24width%2F2%2C%20y%3A%20%24height%2F2%7D%0A%20%20%20%20%7D%0A%20%20%7D%0A%20%20%0A%20%20const%20bar_sep%20%3D%204%0A%20%20const%20bar_height%20%3D%202%0A%20%20const%20bar_depth%20%3D%20%24pillar_width%2F2%0A%20%20const%20bar_box%20%3A%20Box%20%3D%20%7B%0A%20%20%20%20%24width%2C%20%0A%20%20%20%20%24bar_height%2C%20%0A%20%20%20%20%24bar_depth%0A%20%20%7D%0A%20%20%0A%20%20with%20%24color%2C%20%24bar_box%20%7B%0A%20%20%20%20top_bar%20%7B%0A%20%20%20%20%20%20-%20Position3%7By%3A%20%24height%2F2%20%2B%20%24bar_sep%2F2%7D%0A%20%20%20%20%7D%0A%20%20%20%20bottom_bar%20%7B%0A%20%20%20%20%20%20-%20Position3%7By%3A%20%24height%2F2%20-%20%24bar_sep%2F2%7D%0A%20%20%20%20%7D%0A%20%20%7D%0A%7D%20%2F%2F%20Prefab%20Fence%0A%0Afence_a%20%3A%20Fence%20%7B%0A%20%20-%20Position3%7B-10%7D%0A%7D%0Afence_b%20%3A%20Fence%20%7B%0A%20%20-%20Position3%7B10%7D%0A%7D%0A)
 
@@ -443,19 +443,19 @@ Prefabs are static collections of entities and components that we can instantiat
 
 Changing the above code into an template is easy. Just change this line:
 
-<pre><code class="language-javascript">
+@js
 Prefab Fence {
   // fence code
 }
-</code></pre>
+@endjs
 
 into this:
 
-<pre><code class="language-javascript">
+@js
 template Fence {
   // fence code
 }
-</code></pre>
+@endjs
 
 The editor will throw the following error:
 
@@ -471,7 +471,7 @@ To add properties to the template, we can take some of our existing `const` vari
 
 Let's take the existing `width`, `height` and `color` variables, and change them to properties. It is also good practice to put the props at the top of the template code, so it's easy to see which inputs it has:
 
-<pre><code class="language-javascript">
+@js
 template Fence {
   prop width = flecs.meta.f32: 20
   prop height = flecs.meta.f32: 10
@@ -479,17 +479,17 @@ template Fence {
 
   // fence code
 }
-</code></pre>
+@endjs
 
 We can get rid of the `flecs.meta.` prefix by adding this to the top of our script:
 
-<pre><code class="language-javascript">
+@js
 using flecs.meta
-</code></pre>
+@endjs
 
 The code can now be changed to this:
 
-<pre><code class="language-javascript">
+@js
 template Fence {
   prop width = f32: 20
   prop height = f32: 10
@@ -497,11 +497,11 @@ template Fence {
 
   // fence code
 }
-</code></pre>
+@endjs
 
 Note that while we were doing this, the fence disappeared again from the canvas. This happened because while we _inherit_ a prefab, we _assign_ an template. To make the fences visible again, change the code that creates the fences to this:
 
-<pre><code class="language-javascript">
+@js
 fence_a {
   - Fence{}
   - Position3{-10}
@@ -510,11 +510,11 @@ fence_b {
   - Fence{}
   - Position3{10}
 }
-</code></pre>
+@endjs
 
 The fences are back, with the default values we provided to our props. But we now have a new power! Try changing it to this:
 
-<pre><code class="language-javascript">
+@js
 fence_a {
   Fence: {width: 10, height: 20}
   - Position3{-10}
@@ -523,7 +523,7 @@ fence_b {
   Fence: {width: 25, height: 10}
   - Position3{10}
 }
-</code></pre>
+@endjs
 
 [![two instantiated fence templates](img/script_tutorial/tut_playground_template.png)](https://www.flecs.dev/explorer/?local=true&wasm=https://www.flecs.dev/explorer/playground.js&script=using%20flecs.components.*%0Ausing%20flecs.meta%0A%0Aconst%20PI%20%3D%203.1415926%0A%0Aplane%20%7B%0A%20%20-%20Position3%7B%7D%0A%20%20-%20Rotation3%7B%24PI%20%2F%202%7D%0A%20%20-%20Rectangle%7B10000%2C%2010000%7D%0A%20%20-%20Rgb%7B0.9%2C%200.9%2C%200.9%7D%0A%7D%0A%0Atemplate%20Fence%20%7B%0A%20%20prop%20width%20%3A%20f32%20%3D%2020%0A%20%20prop%20height%20%3A%20f32%20%3D%2010%0A%20%20prop%20color%20%3A%20Rgb%20%3D%20%7B0.15%2C%200.1%2C%200.05%7D%0A%20%20%0A%20%20const%20pillar_width%20%3D%202%0A%20%20const%20pillar_box%20%3A%20Box%20%3D%20%7B%0A%20%20%20%20%24pillar_width%2C%20%0A%20%20%20%20%24height%2C%20%0A%20%20%20%20%24pillar_width%0A%20%20%7D%0A%20%20%0A%20%20with%20%24color%2C%20%24pillar_box%20%7B%0A%20%20%20%20left_pillar%20%7B%0A%20%20%20%20%20%20-%20Position3%7Bx%3A%20-%24width%2F2%2C%20y%3A%20%24height%2F2%7D%0A%20%20%20%20%7D%0A%20%20%20%20right_pillar%20%7B%0A%20%20%20%20%20%20-%20Position3%7Bx%3A%20%24width%2F2%2C%20y%3A%20%24height%2F2%7D%0A%20%20%20%20%7D%0A%20%20%7D%0A%20%20%0A%20%20const%20bar_sep%20%3D%204%0A%20%20const%20bar_height%20%3D%202%0A%20%20const%20bar_depth%20%3D%20%24pillar_width%2F2%0A%20%20const%20bar_box%20%3A%20Box%20%3D%20%7B%0A%20%20%20%20%24width%2C%20%0A%20%20%20%20%24bar_height%2C%20%0A%20%20%20%20%24bar_depth%0A%20%20%7D%0A%20%20%0A%20%20with%20%24color%2C%20%24bar_box%20%7B%0A%20%20%20%20top_bar%20%7B%0A%20%20%20%20%20%20-%20Position3%7By%3A%20%24height%2F2%20%2B%20%24bar_sep%2F2%7D%0A%20%20%20%20%7D%0A%20%20%20%20bottom_bar%20%7B%0A%20%20%20%20%20%20-%20Position3%7By%3A%20%24height%2F2%20-%20%24bar_sep%2F2%7D%0A%20%20%20%20%7D%0A%20%20%7D%0A%7D%20%2F%2F%20Prefab%20Fence%0A%0Afence_a%20%7B%0A%20%20-%20Fence%7Bwidth%3A%2010%2C%20height%3A%2020%7D%0A%20%20-%20Position3%7B-10%7D%0A%7D%0Afence_b%20%7B%0A%20%20-%20Fence%7Bwidth%3A%2025%2C%20height%3A%2010%7D%0A%20%20-%20Position3%7B10%7D%0A%7D%0A)
 
@@ -583,9 +583,9 @@ At first glance this sounds like something that would require loops, and those a
 
 The `Grid` component is provided by the `flecs.game` module, so before using it lets add this to the top of the script:
 
-<pre><code class="language-javascript">
+@js
 using flecs.game
-</code></pre>
+@endjs
 
 The implementation for the `Grid` component can be found [here](https://github.com/flecs-hub/flecs-game/blob/main/src/main.c). We only use it in the tutorial for demonstration purposes. In practice we could create many different components that handle layout for us.
 
@@ -596,28 +596,28 @@ The grid component lets us create multiple instances of an entity that are laid 
 
 We already have the fence width. Let's create another variable for the spacing:
 
-<pre><code class="language-javascript">
+@js
 const pillar_spacing = 10
-</code></pre>
+@endjs
 
 We can now calculate the number of pillars we want:
 
-<pre><code class="language-javascript">
+@js
 const pillar_count = $width / $pillar_spacing
-</code></pre>
+@endjs
 
 The `Grid` component can't consume the pillar code directly. Instead it accepts a prefab, so lets turn the existing pillars code into a prefab:
 
-<pre><code class="language-javascript">
+@js
 Prefab Pillar {
   - $color
   - $pillar_box
 }
-</code></pre>
+@endjs
 
 Note how we left out `Position3`, as this will be set by the `Grid` component. Without further ado, let's create a row of pillars:
 
-<pre><code class="language-javascript">
+@js
   pillars {
     - Position3{y: $height/2}
     - Grid{
@@ -626,7 +626,7 @@ Note how we left out `Position3`, as this will be set by the `Grid` component. W
       prefab: Pillar    
     }
   }
-</code></pre>
+@endjs
 
 Let's dissect what this code does:
 - Create a `pillars` entity
@@ -643,9 +643,9 @@ fence :- Fence{}
 
 And increase the `width` of the fence to `60`:
 
-<pre><code class="language-javascript">
+@js
   prop width = f32: 60
-</code></pre>
+@endjs
 
 We now get a number of pillars that matches the fence length:
 
@@ -653,9 +653,9 @@ We now get a number of pillars that matches the fence length:
 
 There's still something off though, which is that the pillars don't exactly line up with the ends up of the fence. We can fix this with a simple calculation that takes the number of pillars, and uses that to recompute the grid spacing.
 
-<pre><code class="language-javascript">
+@js
   const grid_spacing = $width / ($pillar_count - 1)
-</code></pre>
+@endjs
 
 Note that this takes into account that there is one more pillar than there are spaces between pillars. When we replace `pillar_spacing` in the grid with `grid_spacing`, we get the correct pillar alignment:
 
@@ -677,7 +677,7 @@ Inside the template, lets create `width` and `depth` properties, so we can defin
 
 When put together, this is what it looks like:
 
-<pre><code class="language-javascript">
+@js
 template Enclosing {
   prop width = f32: 40
   prop height = f32: 10
@@ -686,12 +686,12 @@ template Enclosing {
   
   // enclosing code goes here
 }
-</code></pre>
+@endjs
 
 Now we need to instantiate `Fence` four times, for each side of the rectangle. We'll also add a few convenience variables so we don't end
 up writing the same divisions multiple times.
 
-<pre><code class="language-javascript">
+@js
   const width_half = $width / 2
   const depth_half = $depth / 2
   const PI = 3.1415926
@@ -714,15 +714,15 @@ up writing the same divisions multiple times.
     - Position3{z: $depth_half}
     Fence: {width: $width, height:$, color:$}
   }
-</code></pre>
+@endjs
 
 Note how the passthrough parameters are specified as `height:$`. This is a shorthand notation for `height: $height`, and can save a lot of typing when working with nested templates.
 
 Let's now use our new `Enclosing` template by changing
 
-<pre><code class="language-javascript">
+@js
 fence :- Fence{}
-</code></pre>
+@endjs
 
 to
 
@@ -748,7 +748,7 @@ https://github.com/flecs-hub/playground/tree/main/etc/assets
 
 Additionally you can also try instantiating one of the assets that come preloaded in the playground. Try replacing the editor content with:
 
-<pre><code class="language-javascript">
+@js
 using flecs.components.*
 using templates
 
@@ -762,7 +762,7 @@ plane {
 }
 
 town :- Town{}
-</code></pre>
+@endjs
 
 [![a town](img/script_tutorial/tut_playground_town.png)](https://www.flecs.dev/explorer/?show=flecs script,explorer_canvas&local=true&wasm=https://www.flecs.dev/explorer/playground.js&script=using%20flecs.components.*%0Ausing%20templates%0A%0Aconst%20PI%20%3D%203.1415926%0A%0Aplane%20%7B%0A%20%20-%20Position3%7B%7D%0A%20%20-%20Rotation3%7B%24PI%20%2F%202%7D%0A%20%20-%20Rectangle%7B10000%2C%2010000%7D%0A%20%20-%20Rgb%7B0.9%2C%200.9%2C%200.9%7D%0A%7D%0A%0Atown%20%3A-%20Town%7B%7D)
 

@@ -61,7 +61,7 @@ Bob.remove(Likes, Alice);
 </li>
 <li><b class="tab-title">C#</b>
 
-<pre><code class="language-cpp">
+@cs
 Entity Likes = world.Entity();
 Entity Bob = world.Entity();
 Entity Alice = world.Entity();
@@ -71,7 +71,7 @@ Bob.Add(Likes, Alice);
 
 // Bob Likes Alice no more
 Bob.Remove(Likes, Alice);
-</code></pre>
+@endcs
 
 </li>
 </ul>
@@ -117,7 +117,7 @@ Bob.has(Eats, Pears); // true
 </li>
 <li><b class="tab-title">C#</b>
 
-<pre><code class="language-cpp">
+@cs
 Entity Bob = world.Entity();
 Entity Eats = world.Entity();
 Entity Apples = world.Entity();
@@ -128,7 +128,7 @@ Bob.Add(Eats, Pears);
 
 Bob.Has(Eats, Apples); // true
 Bob.Has(Eats, Pears); // true
-</code></pre>
+@endcs
 
 </li>
 </ul>
@@ -179,7 +179,7 @@ auto q = world.query<flecs::pair<Eats, Apples>>();
 </li>
 <li><b class="tab-title">C#</b>
 
-<pre><code class="language-cpp">
+@cs
 // Find all entities that eat apples
 Query q = world.QueryBuilder()
     .Expr("(Eats, Apples)")
@@ -194,7 +194,7 @@ Query q = world.QueryBuilder()
 Query q = world.QueryBuilder()
     .Expr(Eats, Apples)
     .Build();
-</code></pre>
+@endcs
 
 </li>
 </ul>
@@ -225,9 +225,9 @@ Bob.has(Eats, Apples);
 </li>
 <li><b class="tab-title">C#</b>
 
-<pre><code class="language-cpp">
+@cs
 Bob.Has(Eats, Apples);
-</code></pre>
+@endcs
 
 </li>
 </ul>
@@ -253,9 +253,9 @@ Bob.has(Eats, flecs::Wildcard);
 </li>
 <li><b class="tab-title">C#</b>
 
-<pre><code class="language-cpp">
+@cs
 Bob.Has(Eats, Ecs.Wildcard);
-</code></pre>
+@endcs
 
 </li>
 </ul>
@@ -281,9 +281,9 @@ flecs::entity parent = Bob.parent();
 </li>
 <li><b class="tab-title">C#</b>
 
-<pre><code class="language-cpp">
+@cs
 Entity parent = Bob.Parent();
-</code></pre>
+@endcs
 
 </li>
 </ul>
@@ -309,9 +309,9 @@ flecs::entity food = Bob.target(Eats);
 </li>
 <li><b class="tab-title">C#</b>
 
-<pre><code class="language-cpp">
+@cs
 Entity food = Bob.Target(Eats);
-</code></pre>
+@endcs
 
 </li>
 </ul>
@@ -343,13 +343,13 @@ while ((food = Bob.target(Eats, index ++))) {
 </li>
 <li><b class="tab-title">C#</b>
 
-<pre><code class="language-cpp">
+@cs
 int index = 0;
 while ((food = Bob.Target(Eats, index++)) != 0)
 {
   // ...
 }
-</code></pre>
+@endcs
 
 </li>
 </ul>
@@ -375,9 +375,9 @@ flecs::entity parent = Bob.target_for<Position>(flecs::ChildOf);
 </li>
 <li><b class="tab-title">C#</b>
 
-<pre><code class="language-cpp">
+@cs
 Entity parent = Bob.TargetFor<Position>(Ecs.ChildOf);
-</code></pre>
+@endcs
 
 </li>
 </ul>
@@ -415,7 +415,7 @@ Bob.each([](flecs::id id) {
 </li>
 <li><b class="tab-title">C#</b>
 
-<pre><code class="language-cpp">
+@cs
 Bob.Each((Id id) =>
 {
     if (id.IsPair())
@@ -424,7 +424,7 @@ Bob.Each((Id id) =>
         Entity second = id.Second();
     }
 });
-</code></pre>
+@endcs
 
 </li>
 </ul>
@@ -466,7 +466,7 @@ world.query_builder()
 </li>
 <li><b class="tab-title">C#</b>
 
-<pre><code class="language-cpp">
+@cs
 world.FilterBuilder()
     .Term(Eats, Apples)
     .Build()
@@ -474,7 +474,7 @@ world.FilterBuilder()
     {
         // Iterate as usual
     });
-</code></pre>
+@endcs
 
 </li>
 </ul>
@@ -519,7 +519,7 @@ world.query_builder()
 </li>
 <li><b class="tab-title">C#</b>
 
-<pre><code class="language-cpp">
+@cs
 world.FilterBuilder()
     .Term(Eats, Ecs.Wildcard)
     .Build()
@@ -529,7 +529,7 @@ world.FilterBuilder()
         Entity e = it.Entity(i);
         // Iterate as usual
     });
-</code></pre>
+@endcs
 
 </li>
 </ul>
@@ -563,12 +563,12 @@ parent.children([](flecs::entity child) {
 </li>
 <li><b class="tab-title">C#</b>
 
-<pre><code class="language-cpp">
+@cs
 parent.Children((Entity child) =>
 {
     // ...
 });
-</code></pre>
+@endcs
 
 </li>
 </ul>
@@ -666,7 +666,7 @@ e.add(flecs::ChildOf, world.id<Position>());
 </li>
 <li><b class="tab-title">C#</b>
 
-<pre><code class="language-cpp">
+@cs
 public record struct Position(float X, float Y);
 public record struct Eats(float Amount);
 
@@ -693,7 +693,7 @@ e.Set<End, Position>(new Position(10, 20)); // Same for End
 // ChildOf has the Tag property, so even though Position is a type, the pair
 // does not assume the Position type
 e.Add(Ecs.ChildOf, world.Id<Position>());
-</code></pre>
+@endcs
 
 </li>
 </ul>
@@ -748,7 +748,7 @@ e.set<Position>(third, {5, 6});
 </li>
 <li><b class="tab-title">C#</b>
 
-<pre><code class="language-cpp">
+@cs
 public record struct Position(float X, float Y);
 
 Entity e = world.Entity();
@@ -761,7 +761,7 @@ Entity third = world.Entity();
 e.Set<Position>(first, new(1, 2));
 e.Set<Position>(second, new(3, 4));
 e.Set<Position>(third, new(5, 6));
-</code></pre>
+@endcs
 
 </li>
 </ul>
@@ -817,7 +817,7 @@ q.each([](flecs::iter& it, size_t i) {
 </li>
 <li><b class="tab-title">C#</b>
 
-<pre><code class="language-cpp">
+@cs
 Query q = world.QueryBuilder()
     .Term(Likes, Ecs.Wildcard)
     .Build();
@@ -829,7 +829,7 @@ q.Iter((Iter it) =>
     foreach (int i in it)
         Console.WriteLine($"entity {it.Entity(i)} has relationship {id.First()}, {id.Second()}");
 });
-</code></pre>
+@endcs
 
 </li>
 </ul>
@@ -857,9 +857,9 @@ auto q = world.query_builder<>().expr("(Likes, *)").build();
 </li>
 <li><b class="tab-title">C#</b>
 
-<pre><code class="language-cpp">
+@cs
 Query q = world.QueryBuilder().Expr("(Likes, *)").Build();
-</code></pre>
+@endcs
 
 </li>
 </ul>
@@ -930,7 +930,7 @@ bob.each(Eats, [](flecs::entity obj) {
 </li>
 <li><b class="tab-title">C#</b>
 
-<pre><code class="language-cpp">
+@cs
 // Bob eats apples and pears
 Entity Bob = world.Entity();
 Entity Eats = world.Entity();
@@ -945,7 +945,7 @@ bob.Each(Eats, (Entity obj) =>
 {
     Console.WriteLine($"Bob eats {obj}");
 })
-</code></pre>
+@endcs
 
 </li>
 </ul>
@@ -979,11 +979,11 @@ Apple.add(flecs::IsA, Fruit);
 </li>
 <li><b class="tab-title">C#</b>
 
-<pre><code class="language-cpp">
+@cs
 Entity Apple = world.Entity();
 Entity Fruit = world.Entity();
 Apple.Add(Ecs.IsA, Fruit);
-</code></pre>
+@endcs
 
 </li>
 </ul>
@@ -1002,9 +1002,9 @@ Apple.is_a(Fruit);
 </li>
 <li><b class="tab-title">C#</b>
 
-<pre><code class="language-cpp">
+@cs
 Apple.IsA(Fruit);
-</code></pre>
+@endcs
 
 </li>
 </ul>
@@ -1034,10 +1034,10 @@ GrannySmith.add(flecs::IsA, Apple);
 </li>
 <li><b class="tab-title">C#</b>
 
-<pre><code class="language-cpp">
+@cs
 Entity GrannySmith = world.Entity();
 GrannySmith.Add(Ecs.IsA, Apple);
-</code></pre>
+@endcs
 
 </li>
 </ul>
@@ -1078,7 +1078,7 @@ auto Frigate = world.entity()
 </li>
 <li><b class="tab-title">C#</b>
 
-<pre><code class="language-cpp">
+@cs
 Entity Spaceship = world.Entity()
     .Set<MaxSpeed>(new(100))
     .Set<Defense>(new(50));
@@ -1086,7 +1086,7 @@ Entity Spaceship = world.Entity()
 Entity Frigate = world.Entity()
     .IsA(SpaceShip) // shorthand for .Add(Ecs.IsA, Spaceship)
     .Set<Defense>(new(75));
-</code></pre>
+@endcs
 
 </li>
 </ul>
@@ -1116,11 +1116,11 @@ v->value == 100; // true
 </li>
 <li><b class="tab-title">C#</b>
 
-<pre><code class="language-cpp">
+@cs
 // Obtain the inherited component from Spaceship
 ref readonly MaxSpeed v = ref Frigate.Get<MaxSpeed>();
 v.Value == 100; // true
-</code></pre>
+@endcs
 
 </li>
 </ul>
@@ -1150,10 +1150,10 @@ v->value == 75; // true
 </li>
 <li><b class="tab-title">C#</b>
 
-<pre><code class="language-cpp">
+@cs
 ref readonly Defense v = ref Frigate.get<Defense>();
 v.Value == 75; // true
-</code></pre>
+@endcs
 
 </li>
 </ul>
@@ -1199,7 +1199,7 @@ d->value == 75; // true
 </li>
 <li><b class="tab-title">C#</b>
 
-<pre><code class="language-cpp">
+@cs
 Entity FastFrigate = world.Entity()
     .IsA(Frigate)
     .Set<MaxSpeed>(new(200));
@@ -1211,7 +1211,7 @@ s.Value == 200; // true
 // Obtain the inherited component from Frigate
 ref readonly Defense d = ref Frigate.Get<Defense>();
 d.Value == 75; // true
-</code></pre>
+@endcs
 
 </li>
 </ul>
@@ -1246,12 +1246,12 @@ Cockpit.add(flecs::ChildOf, Spaceship);
 </li>
 <li><b class="tab-title">C#</b>
 
-<pre><code class="language-cpp">
+@cs
 Entity Spaceship = world.Entity();
 Entity Cockpit = world.Entity();
 
 Cockpit.Add(Ecs.ChildOf, Spaceship);
-</code></pre>
+@endcs
 
 </li>
 </ul>
@@ -1270,9 +1270,9 @@ Cockpit.child_of(Spaceship);
 </li>
 <li><b class="tab-title">C#</b>
 
-<pre><code class="language-cpp">
+@cs
 Cockpit.ChildOf(Spaceship);
-</code></pre>
+@endcs
 
 </li>
 </ul>
@@ -1321,14 +1321,14 @@ child == parent.lookup("Child"); // true
 </li>
 <li><b class="tab-title">C#</b>
 
-<pre><code class="language-cpp">
+@cs
 Entity parent = world.Entity("Parent");
 Entity child = world.Entity("Child")
     .ChildOf(parent);
 
 child == world.Lookup("Parent.Child"); // true
 child == parent.Lookup("Child"); // true
-</code></pre>
+@endcs
 
 </li>
 </ul>
@@ -1377,7 +1377,7 @@ child_b.has(flecs::ChildOf, parent); // true
 </li>
 <li><b class="tab-title">C#</b>
 
-<pre><code class="language-cpp">
+@cs
 Entity parent = world.Entity();
 Entity prev = world.SetScope(parent);
 
@@ -1389,7 +1389,7 @@ world.SetScope(prev);
 
 childA.Has(Ecs.ChildOf, parent); // true
 childB.Has(Ecs.ChildOf, parent); // true
-</code></pre>
+@endcs
 
 </li>
 </ul>
@@ -1414,7 +1414,7 @@ auto parent = world.entity().scope([&]{
 </li>
 <li><b class="tab-title">C#</b>
 
-<pre><code class="language-cpp">
+@cs
 Entity parent = world.Entity().Scope(() =>
 {
     Entity childA = world.Entity();
@@ -1423,7 +1423,7 @@ Entity parent = world.Entity().Scope(() =>
     childA.Has(Ecs.ChildOf, parent); // true
     childB.Has(Ecs.ChildOf, parent); // true
 });
-</code></pre>
+@endcs
 
 </li>
 </ul>
