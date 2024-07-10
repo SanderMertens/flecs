@@ -44,6 +44,11 @@ Entity my_entity world.Entity();
 @endcs
 
 </li>
+<li><b class="tab-title">Rust</b>
+@rust
+let my_entity = world.entity();
+@endrust
+</li>
 </ul>
 </div>
 
@@ -76,6 +81,11 @@ my_entity.destruct();
 my_entity.Destruct();
 @endcs
 
+</li>
+<li><b class="tab-title">Rust</b>
+@rust
+my_entity.destruct();
+@endrust
 </li>
 </ul>
 </div>
@@ -127,6 +137,17 @@ e2.Add<Npc>(); // OK, 500v1 is alive
 @endcs
 
 </li>
+<li><b class="tab-title">Rust</b>
+@rust
+let e1 = world.entity(); // Returns 500v0
+e1.destruct(); // Recycles 500
+let e2 = world.entity(); // Returns 500v1
+// Fails, 500v0 is not alive
+e1.add::<Npc>();
+// OK, 500v1 is alive
+e2.add::<Npc>();
+@endrust
+</li>
 </ul>
 </div>
 
@@ -161,6 +182,13 @@ e1.Destruct(); // OK: post condition is satisfied
 @endcs
 
 </li>
+<li><b class="tab-title">Rust</b>
+@rust
+let e1 = world.entity();
+e1.destruct();
+e1.destruct(); // OK: post condition is satisfied
+@endrust
+</li>
 </ul>
 </div>
 
@@ -189,6 +217,11 @@ my_entity.clear();
 my_entity.Clear();
 @endcs
 
+</li>
+<li><b class="tab-title">Rust</b>
+@rust
+my_entity.clear();
+@endrust
 </li>
 </ul>
 </div>
@@ -233,6 +266,15 @@ e1.IsAlive(); // False
 e2.IsAlive(); // True
 @endcs
 
+</li>
+<li><b class="tab-title">Rust</b>
+@rust
+let e1 = world.entity();
+let e2 = world.entity();
+e1.destruct();
+e1.is_alive(); // False
+e2.is_alive(); // True
+@endrust
 </li>
 </ul>
 </div>
@@ -279,6 +321,15 @@ world.Entity(0).IsValid(); // False
 @endcs
 
 </li>
+<li><b class="tab-title">Rust</b>
+@rust
+let e1 = world.entity();
+let e2 = world.entity();
+e1.destruct();
+e1.is_valid(); // False
+world.entity_from_id(0).is_valid(); // False
+@endrust
+</li>
 </ul>
 </div>
 
@@ -307,6 +358,11 @@ flecs::entity e = world.make_alive(1000);
 Entity e = world.MakeAlive(1000);
 @endcs
 
+</li>
+<li><b class="tab-title">Rust</b>
+@rust
+let e = world.make_alive(1000);
+@endrust
 </li>
 </ul>
 </div>
@@ -339,6 +395,12 @@ world.SetVersion(versioned_id);
 @endcs
 
 </li>
+<li><b class="tab-title">Rust</b>
+@rust
+//TODO does not exist yet
+//world.set_version(versioned_id);
+@endrust
+</li>
 </ul>
 </div>
 
@@ -368,6 +430,11 @@ world.SetEntityRange(5000, 0);
 @endcs
 
 </li>
+<li><b class="tab-title">Rust</b>
+@rust
+world.set_entity_range(5000, 0);
+@endrust
+</li>
 </ul>
 </div>
 
@@ -395,6 +462,11 @@ world.set_entity_range(5000, 10000);
 world.SetEntityRange(5000, 10000);
 @endcs
 
+</li>
+<li><b class="tab-title">Rust</b>
+@rust
+world.set_entity_range(5000, 10000);
+@endrust
 </li>
 </ul>
 </div>
@@ -427,6 +499,11 @@ world.enable_range_check();
 world.EnableRangeCheck(true);
 @endcs
 
+</li>
+<li><b class="tab-title">Rust</b>
+@rust
+world.enable_range_check(true);
+@endrust
 </li>
 </ul>
 </div>
@@ -477,6 +554,15 @@ Console.WriteLine(e.Name());
 @endcs
 
 </li>
+<li><b class="tab-title">Rust</b>
+@rust
+let e = world.entity_named("MyEntity");
+if e == world.lookup("MyEntity") {
+    // true
+}
+println!("{}", e.name());
+@endrust
+</li>
 </ul>
 </div>
 
@@ -520,6 +606,15 @@ if (e == world.Lookup("Parent.Child")) {
 @endcs
 
 </li>
+<li><b class="tab-title">Rust</b>
+@rust
+let p = world.entity_named("Parent");
+let e = world.entity_named("Child").child_of_id(p);
+if e == world.lookup("Parent::Child") {
+    // true
+}
+@endrust
+</li>
 </ul>
 </div>
 
@@ -562,6 +657,15 @@ if (e == p.Lookup("Child")) {
 }
 @endcs
 
+</li>
+<li><b class="tab-title">Rust</b>
+@rust
+let p = world.entity_named("Parent");
+let e = world.entity_named("Child").child_of_id(p);
+if e == p.lookup("Child") {
+    // true
+}
+@endrust
 </li>
 </ul>
 </div>
@@ -615,6 +719,16 @@ Console.WriteLine(e.Path()); // Parent.Child
 @endcs
 
 </li>
+<li><b class="tab-title">Rust</b>
+@rust
+let p = world.entity_named("Parent");
+let e = world.entity_named("Child").child_of_id(p);
+// Returns entity name, does not allocate
+println!("{}", e.name()); // Child
+// Returns entity path, does allocate
+println!("{}", e.path().unwrap()); // Parent.Child
+@endrust
+</li>
 </ul>
 </div>
 
@@ -660,6 +774,15 @@ if (e1 == e2) {
 @endcs
 
 </li>
+<li><b class="tab-title">Rust</b>
+@rust
+let e1 = world.entity_named("Parent::Child");
+let e2 = world.entity_named("Parent::Child");
+if e1 == e2 {
+    // true
+}
+@endrust
+</li>
 </ul>
 </div>
 
@@ -696,6 +819,13 @@ e.SetName("Bar");
 @endcs
 
 </li>
+<li><b class="tab-title">Rust</b>
+@rust
+let e = world.entity_named("Foo");
+// Change name
+e.set_name("Bar");
+@endrust
+</li>
 </ul>
 </div>
 
@@ -726,6 +856,12 @@ Entity ten = world.Entity("10");
 Entity twenty = world.Entity("20");
 @endcs
 
+</li>
+<li><b class="tab-title">Rust</b>
+@rust
+let ten = world.entity_named("10");
+let twenty = world.entity_named("20");
+@endrust
 </li>
 </ul>
 </div>
@@ -775,6 +911,15 @@ e.Enable();
 e.Disable();
 @endcs
 
+</li>
+<li><b class="tab-title">Rust</b>
+@rust
+let e = world.entity();
+// Enable entity
+e.enable_self();
+// Disable entity
+e.disable_self();
+@endrust
 </li>
 </ul>
 </div>
@@ -848,6 +993,26 @@ p.Disable();
 p.Enable();
 @endcs
 
+</li>
+<li><b class="tab-title">Rust</b>
+@rust
+// Three entities to disable
+let e1 = world.entity();
+let e2 = world.entity();
+let e3 = world.entity();
+
+// Create prefab that has the three entities
+let p = world.prefab();
+p.add_id(e1);
+p.add_id(e2);
+p.add_id(e3);
+
+// Disable entities
+p.disable_self();
+
+// Enable entities
+p.enable_self();
+@endrust
 </li>
 </ul>
 </div>
@@ -931,6 +1096,24 @@ p1.enable();
 @endcs
 
 </li>
+<li><b class="tab-title">Rust</b>
+@rust
+// Three entities to disable
+let e1 = world.entity();
+let e2 = world.entity();
+let e3 = world.entity();
+
+// Create prefab hierarchy with the three entities
+let p1 = world.prefab().add_id(e1);
+let p2 = world.prefab().is_a_id(p1).add_id(e2).add_id(e3);
+
+// Disable e1, e2, e3
+p2.disable_self();
+
+// Enable e1
+p1.enable_self();
+@endrust
+</li>
 </ul>
 </div>
 
@@ -958,6 +1141,11 @@ e.add(flecs::Disabled);
 e.Add(Ecs.Disabled);
 @endcs
 
+</li>
+<li><b class="tab-title">Rust</b>
+@rust
+e.add::<flecs::Disabled>();
+@endrust
 </li>
 </ul>
 </div>
@@ -1048,6 +1236,19 @@ Console.WriteLine(comp_data.ToString());
 @endcs
 
 </li>
+<li><b class="tab-title">Rust</b>
+@rust
+// Get the entity for the Position component
+let pos = world.component::<Position>();
+// Component entities have the Component component
+pos.get::<&flecs::Component>(|comp_data| {
+    println!(
+        "size: {}, alignment: {}",
+        comp_data.size, comp_data.alignment
+    );
+});
+@endrust
+</li>
 </ul>
 </div>
 
@@ -1080,6 +1281,12 @@ world.component<Position>().add(flecs::Sparse);
 world.Component<Position>().Entity.add(Ecs.Sparse);
 @endcs
 
+</li>
+<li><b class="tab-title">Rust</b>
+@rust
+// Register a sparse component
+world.component::<Position>().add_trait::<flecs::Sparse>();
+@endrust
 </li>
 </ul>
 </div>
@@ -1237,6 +1444,61 @@ int main(int argc, char *argv[]) {
 <li><b class="tab-title">C#</b>
 TODO
 </li>
+<li><b class="tab-title">Rust</b>
+
+In Rust components are automatically registered upon first usage. The following example shows how:
+
+@rust
+fn main() {
+    let world = World::new();
+    let e1 = world
+        .entity()
+        .set(Position { x: 10.0, y: 20.0 }) // Position registered here
+        .set(Velocity { x: 1.0, y: 2.0 }); // Velocity registered here
+
+    let e2 = world
+        .entity()
+        .set(Position { x: 10.0, y: 20.0 }) // Position already registered
+        .set(Velocity { x: 1.0, y: 2.0 }); // Velocity already registered
+}
+@endrust
+
+Components can be registered in advance, which can be done for several reasons:
+
+- Makes it easier to see which components are used by an application
+- No unexpected registration code that suddenly runs in the middle of a frame
+- Component needs to be setup with traits, reflection data, hooks etc.
+
+To register a component in advance, do:
+
+@rust
+world.component::<Position>();
+@endrust
+
+In general it is recommended to register components in advance, and to only use automatic registration during prototyping. Applications can enforce manual registration by activating the rust feature `flecs_manual_registration`. This will cause a panic whenever a component is used that was not yet registered. Disabling auto registration also improves performance of the Rust API.
+
+A convenient way to organize component registration code is to use Flecs modules. An example:
+
+@rust
+
+use flecs_ecs::prelude::*;
+
+#[derive(Component)]
+struct Movement;
+
+impl Module for Movement {
+    fn module(world: &World) {
+        world.module::<Movement>("Movement");
+        // Define components, systems, triggers, ... as usual. They will be
+        // automatically created inside the scope of the module.
+    }
+}
+
+let world = World::new();
+world.import::<Movement>();
+@endrust
+
+</li>
 </ul>
 </div>
 
@@ -1289,6 +1551,13 @@ const void *ptr = e.get(comp);
 @cs
 TODO
 @endcs
+
+</li>
+<li><b class="tab-title">Rust</b>
+
+@rust
+TODO
+@endrust
 
 </li>
 </ul>
@@ -1348,6 +1617,13 @@ TODO
 @endcs
 
 </li>
+<li><b class="tab-title">Rust</b>
+
+@rust
+TODO
+@endrust
+
+</li>
 </ul>
 </div>
 
@@ -1405,6 +1681,21 @@ pos.Destruct();
 @endcs
 
 </li>
+<li><b class="tab-title">Rust</b>
+
+@rust
+let pos = world.component::<Position>();
+
+// Create entity with Position
+let e = world.entity().add::<Position>();
+
+// Unregister the component
+pos.destruct();
+
+// Position is removed from e
+@endrust
+
+</li>
 </ul>
 </div>
 
@@ -1448,6 +1739,17 @@ ref readonly TimeOfDay t = ref world.Get<TimeOfDay>();
 @endcs
 
 </li>
+<li><b class="tab-title">Rust</b>
+
+@rust
+// Set singleton
+world.set(TimeOfDay { value: 0.5 });
+
+// Get singleton
+world.get::<&TimeOfDay>(|time| println!("{}", time.value));
+@endrust
+
+</li>
 </ul>
 </div>
 
@@ -1488,6 +1790,17 @@ world.Set(new TimeOfDay( 0.5 ));
 // Equivalent to:
 world.Component<TimeOfDay>().Entity.Set(new TimeOfDay( 0.5 ));
 @endcs
+
+</li>
+<li><b class="tab-title">Rust</b>
+
+@rust
+// Set singleton
+world.set(TimeOfDay { value: 0.5 });
+
+// Equivalent to:
+world.component::<TimeOfDay>().set(TimeOfDay { value: 0.5 });
+@endrust
 
 </li>
 </ul>
@@ -1553,6 +1866,26 @@ e.Enable<Position>();
 e.IsEnabled<Position>(); // True
 @endcs
 
+</li>
+<li><b class="tab-title">Rust</b>
+@rust
+// Register toggle-able component
+world
+    .component::<Position>()
+    .add_trait::<flecs::CanToggle>();
+
+let e = world.entity().set(Position { x: 10.0, y: 20.0 });
+
+// Disable component
+e.disable::<Position>();
+
+e.is_enabled::<Position>(); // False
+
+// Enable component
+e.enable::<Position>();
+
+e.is_enabled::<Position>(); // True
+@endrust
 </li>
 </ul>
 </div>
