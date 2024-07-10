@@ -5345,6 +5345,11 @@ void ecs_merge(
  *
  * @param world The world.
  * @return true if world changed from non-deferred mode to deferred mode.
+ *
+ * @see ecs_defer_end()
+ * @see ecs_is_deferred()
+ * @see ecs_defer_resume()
+ * @see ecs_defer_suspend()
  */
 FLECS_API
 bool ecs_defer_begin(
@@ -5354,6 +5359,11 @@ bool ecs_defer_begin(
  *
  * @param world The world.
  * @return True if deferred, false if not.
+ *
+ * @see ecs_defer_begin()
+ * @see ecs_defer_end()
+ * @see ecs_defer_resume()
+ * @see ecs_defer_suspend()
  */
 FLECS_API
 bool ecs_is_deferred(
@@ -5366,6 +5376,11 @@ bool ecs_is_deferred(
  *
  * @param world The world.
  * @return true if world changed from deferred mode to non-deferred mode.
+ *
+ * @see ecs_defer_begin()
+ * @see ecs_defer_is_deferred()
+ * @see ecs_defer_resume()
+ * @see ecs_defer_suspend()
  */
 FLECS_API
 bool ecs_defer_end(
@@ -5379,6 +5394,11 @@ bool ecs_defer_end(
  * The operation may only be called when deferring is enabled.
  *
  * @param world The world.
+ *
+ * @see ecs_defer_begin()
+ * @see ecs_defer_end()
+ * @see ecs_defer_is_deferred()
+ * @see ecs_defer_resume()
  */
 FLECS_API
 void ecs_defer_suspend(
@@ -5388,6 +5408,11 @@ void ecs_defer_suspend(
  * See ecs_defer_suspend().
  *
  * @param world The world.
+ *
+ * @see ecs_defer_begin()
+ * @see ecs_defer_end()
+ * @see ecs_defer_is_deferred()
+ * @see ecs_defer_suspend()
  */
 FLECS_API
 void ecs_defer_resume(
@@ -20309,7 +20334,7 @@ inline void set(world_t *world, entity_t entity, const A& value) {
 
 /** Return id without generation.
  *
- * @see ecs_strip_generation
+ * @see ecs_strip_generation()
  */
 inline flecs::id_t strip_generation(flecs::entity_t e) {
     return ecs_strip_generation(e);
@@ -20446,7 +20471,7 @@ struct world {
      * This operation needs to be invoked whenever a new frame is about to get
      * processed.
      *
-     * Calls to frame_begin must always be followed by frame_end.
+     * Calls to frame_begin() must always be followed by frame_end().
      *
      * The function accepts a delta_time parameter, which will get passed to
      * systems. This value is also used to compute the amount of time the
@@ -20457,6 +20482,9 @@ struct world {
      *
      * @param delta_time Time elapsed since the last frame.
      * @return The provided delta_time, or measured time if 0 was provided.
+     *
+     * @see ecs_frame_begin()
+     * @see flecs::world::frame_end()
      */
     ecs_ftime_t frame_begin(float delta_time = 0) const {
         return ecs_frame_begin(world_, delta_time);
@@ -20464,19 +20492,26 @@ struct world {
 
     /** End frame.
      * This operation must be called at the end of the frame, and always after
-     * ecs_frame_begin.
+     * frame_begin().
      *
      * This function should only be ran from the main thread.
+     *
+     * @see ecs_frame_end()
+     * @see flecs::world::frame_begin()
      */
     void frame_end() const {
         ecs_frame_end(world_);
     }
 
     /** Begin readonly mode.
-     * 
-     * @see ecs_readonly_begin
      *
-     * @return Whether world is currently staged.
+     * @param multi_threaded Whether to enable readonly/multi threaded mode.
+     * 
+     * @return Whether world is currently readonly.
+     *
+     * @see ecs_readonly_begin()
+     * @see flecs::world::is_readonly()
+     * @see flecs::world::readonly_end()
      */
     bool readonly_begin(bool multi_threaded = false) const {
         return ecs_readonly_begin(world_, multi_threaded);
@@ -20484,7 +20519,9 @@ struct world {
 
     /** End readonly mode.
      * 
-     * @see ecs_readonly_end
+     * @see ecs_readonly_end()
+     * @see flecs::world::is_readonly()
+     * @see flecs::world::readonly_begin()
      */
     void readonly_end() const {
         ecs_readonly_end(world_);
@@ -20492,24 +20529,51 @@ struct world {
 
     /** Defer operations until end of frame.
      * When this operation is invoked while iterating, operations inbetween the
-     * defer_begin and defer_end operations are executed at the end of the frame.
+     * defer_begin() and defer_end() operations are executed at the end of the frame.
      *
      * This operation is thread safe.
+     *
+     * @return true if world changed from non-deferred mode to deferred mode.
+     *
+     * @see ecs_defer_begin()
+     * @see flecs::world::defer()
+     * @see flecs::world::defer_end()
+     * @see flecs::world::is_deferred()
+     * @see flecs::world::defer_resume()
+     * @see flecs::world::defer_suspend()
      */
     bool defer_begin() const {
         return ecs_defer_begin(world_);
     }
 
     /** End block of operations to defer.
-     * See defer_begin.
+     * See defer_begin().
      *
      * This operation is thread safe.
+     *
+     * @return true if world changed from deferred mode to non-deferred mode.
+     *
+     * @see ecs_defer_end()
+     * @see flecs::world::defer()
+     * @see flecs::world::defer_begin()
+     * @see flecs::world::is_deferred()
+     * @see flecs::world::defer_resume()
+     * @see flecs::world::defer_suspend()
      */
     bool defer_end() const {
         return ecs_defer_end(world_);
     }
 
     /** Test whether deferring is enabled.
+     *
+     * @return True if deferred, false if not.
+     *
+     * @see ecs_is_deferred()
+     * @see flecs::world::defer()
+     * @see flecs::world::defer_begin()
+     * @see flecs::world::defer_end()
+     * @see flecs::world::defer_resume()
+     * @see flecs::world::defer_suspend()
      */
     bool is_deferred() const {
         return ecs_is_deferred(world_);
@@ -20526,15 +20590,21 @@ struct world {
      * their own stages and/or threads.
      *
      * @param stages The number of stages.
+     *
+     * @see ecs_set_stage_count()
+     * @see flecs::world::get_stage_count()
      */
     void set_stage_count(int32_t stages) const {
         ecs_set_stage_count(world_, stages);
     }
 
     /** Get number of configured stages.
-     * Return number of stages set by set_stage_count.
+     * Return number of stages set by set_stage_count().
      *
      * @return The number of stages used for threading.
+     *
+     * @see ecs_get_stage_count()
+     * @see flecs::world::set_stage_count()
      */
     int32_t get_stage_count() const {
         return ecs_get_stage_count(world_);
@@ -20572,6 +20642,8 @@ struct world {
      * (either after progress() or after readonly_end()).
      *
      * This operation may be called on an already merged stage or world.
+     *
+     * @see ecs_merge()
      */
     void merge() const {
         ecs_merge(world_);
@@ -20633,6 +20705,10 @@ struct world {
      * object is readonly or whether it allows for writing.
      *
      * @return True if the world or stage is readonly.
+     *
+     * @see ecs_stage_is_readonly()
+     * @see flecs::world::readonly_begin()
+     * @see flecs::world::readonly_end()
      */
     bool is_readonly() const {
         return ecs_stage_is_readonly(world_);
@@ -20642,33 +20718,53 @@ struct world {
      * Set a context value that can be accessed by anyone that has a reference
      * to the world.
      *
-     * @param ctx The world context.
+     * @param ctx A pointer to a user defined structure.
+     * @param ctx_free A function that is invoked with ctx when the world is freed.
+     *
+     *
+     * @see ecs_set_ctx()
+     * @see flecs::world::get_ctx()
      */
     void set_ctx(void* ctx, ecs_ctx_free_t ctx_free = nullptr) const {
         ecs_set_ctx(world_, ctx, ctx_free);
     }
 
     /** Get world context.
+     * This operation retrieves a previously set world context.
      *
-     * @return The configured world context.
+     * @return The context set with set_binding_ctx(). If no context was set, the
+     *         function returns NULL.
+     *
+     * @see ecs_get_ctx()
+     * @see flecs::world::set_ctx()
      */
     void* get_ctx() const {
         return ecs_get_ctx(world_);
     }
 
     /** Set world binding context.
-     * Set a context value that can be accessed by anyone that has a reference
-     * to the world.
      *
-     * @param ctx The world context.
+     * Same as set_ctx() but for binding context. A binding context is intended
+     * specifically for language bindings to store binding specific data.
+     *
+     * @param ctx A pointer to a user defined structure.
+     * @param ctx_free A function that is invoked with ctx when the world is freed.
+     *
+     * @see ecs_set_binding_ctx()
+     * @see flecs::world::get_binding_ctx()
      */
     void set_binding_ctx(void* ctx, ecs_ctx_free_t ctx_free = nullptr) const {
         ecs_set_binding_ctx(world_, ctx, ctx_free);
     }
 
     /** Get world binding context.
+     * This operation retrieves a previously set world binding context.
      *
-     * @return The configured world context.
+     * @return The context set with set_binding_ctx(). If no context was set, the
+     *         function returns NULL.
+     *
+     * @see ecs_get_binding_ctx()
+     * @see flecs::world::set_binding_ctx()
      */
     void* get_binding_ctx() const {
         return ecs_get_binding_ctx(world_);
@@ -20678,6 +20774,8 @@ struct world {
      * This function preallocates memory for the entity index.
      *
      * @param entity_count Number of entities to preallocate memory for.
+     *
+     * @see ecs_dim()
      */
     void dim(int32_t entity_count) const {
         ecs_dim(world_, entity_count);
@@ -20688,6 +20786,8 @@ struct world {
      *
      * @param min Minimum entity id issued.
      * @param max Maximum entity id issued.
+     *
+     * @see ecs_set_entity_range()
      */
     void set_entity_range(entity_t min, entity_t max) const {
         ecs_set_entity_range(world_, min, max);
@@ -20700,6 +20800,8 @@ struct world {
      * networked applications.
      *
      * @param enabled True if range check should be enabled, false if not.
+     *
+     * @see ecs_enable_range_check()
      */
     void enable_range_check(bool enabled = true) const {
         ecs_enable_range_check(world_, enabled);
@@ -20709,25 +20811,33 @@ struct world {
      *
      * @param scope The scope to set.
      * @return The current scope;
-     * @see ecs_set_scope
+     *
+     * @see ecs_set_scope()
+     * @see flecs::world::get_scope()
      */
     flecs::entity set_scope(const flecs::entity_t scope) const;
 
     /** Get current scope.
      *
      * @return The current scope.
-     * * @see ecs_get_scope
+     *
+     * @see ecs_get_scope()
+     * @see flecs::world::set_scope()
      */
     flecs::entity get_scope() const;
 
     /** Same as set_scope but with type.
-     * * @see ecs_set_scope
+     *
+     * @see ecs_set_scope()
+     * @see flecs::world::get_scope()
      */
     template <typename T>
     flecs::entity set_scope() const;
 
     /** Set search path.
-     *  @see ecs_set_lookup_path
+     *
+     * @see ecs_set_lookup_path()
+     * @see flecs::world::lookup()
      */
     flecs::entity_t* set_lookup_path(const flecs::entity_t *search_path) const {
         return ecs_set_lookup_path(world_, search_path);
@@ -21172,6 +21282,12 @@ struct world {
 
     /** Defer all operations called in function. If the world is already in
      * deferred mode, do nothing.
+     *
+     * @see flecs::world::defer_begin()
+     * @see flecs::world::defer_end()
+     * @see flecs::world::defer_is_deferred()
+     * @see flecs::world::defer_resume()
+     * @see flecs::world::defer_suspend()
      */
     template <typename Func>
     void defer(const Func& func) const {
@@ -21182,7 +21298,12 @@ struct world {
 
     /** Suspend deferring operations.
      *
-     * @see ecs_defer_suspend
+     * @see ecs_defer_suspend()
+     * @see flecs::world::defer()
+     * @see flecs::world::defer_begin()
+     * @see flecs::world::defer_end()
+     * @see flecs::world::defer_is_deferred()
+     * @see flecs::world::defer_resume()
      */
     void defer_suspend() const {
         ecs_defer_suspend(world_);
@@ -21190,7 +21311,12 @@ struct world {
 
     /** Resume deferring operations.
      *
-     * @see ecs_defer_suspend
+     * @see ecs_defer_resume()
+     * @see flecs::world::defer()
+     * @see flecs::world::defer_begin()
+     * @see flecs::world::defer_end()
+     * @see flecs::world::defer_is_deferred()
+     * @see flecs::world::defer_suspend()
      */
     void defer_resume() const {
         ecs_defer_resume(world_);
@@ -21198,7 +21324,9 @@ struct world {
 
     /** Check if entity id exists in the world.
      *
-     * @see ecs_exists
+     * @see ecs_exists()
+     * @see flecs::world::is_alive()
+     * @see flecs::world::is_valid()
      */
     bool exists(flecs::entity_t e) const {
         return ecs_exists(world_, e);
@@ -21206,7 +21334,9 @@ struct world {
 
     /** Check if entity id exists in the world.
      *
-     * @see ecs_is_alive
+     * @see ecs_is_alive()
+     * @see flecs::world::exists()
+     * @see flecs::world::is_valid()
      */
     bool is_alive(flecs::entity_t e) const {
         return ecs_is_alive(world_, e);
@@ -21215,7 +21345,9 @@ struct world {
     /** Check if entity id is valid.
      * Invalid entities cannot be used with API functions.
      *
-     * @see ecs_is_valid
+     * @see ecs_is_valid()
+     * @see flecs::world::exists()
+     * @see flecs::world::is_alive()
      */
     bool is_valid(flecs::entity_t e) const {
         return ecs_is_valid(world_, e);
@@ -21224,10 +21356,13 @@ struct world {
     /** Get alive entity for id.
      * Returns the entity with the current generation.
      *
-     * @see ecs_get_alive
+     * @see ecs_get_alive()
      */
     flecs::entity get_alive(flecs::entity_t e) const;
 
+    /**
+     * @see ecs_make_alive()
+     */
     flecs::entity make_alive(flecs::entity_t e) const;
 
     /* Run callback after completing frame */
@@ -21236,7 +21371,8 @@ struct world {
     }
 
     /** Get the world info.
-     * @see ecs_get_world_info
+     *
+     * @see ecs_get_world_info()
      */
     const flecs::world_info_t* get_info() const{
         return ecs_get_world_info(world_);
@@ -25217,6 +25353,8 @@ struct entity : entity_builder<entity>
     /** Clear an entity.
      * This operation removes all components from an entity without recycling
      * the entity id.
+     *
+     * @see ecs_clear()
      */
     void clear() const {
         ecs_clear(world_, id_);
@@ -25225,6 +25363,8 @@ struct entity : entity_builder<entity>
     /** Delete an entity.
      * Entities have to be deleted explicitly, and are not deleted when the
      * entity object goes out of scope.
+     *
+     * @see ecs_delete()
      */
     void destruct() const {
         ecs_delete(world_, id_);
