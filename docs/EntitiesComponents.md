@@ -980,6 +980,24 @@ Here, "has data" indicates whether a component attaches data to the entity. This
 
 A pair is a component that's composed out of two elements, such as "Likes, alice" or "Eats, apples". See the [Relationship manual](Relationships.md) for more details.
 
+### Operations
+The following table provides the base set of operations that Flecs offers for components:
+
+| Operation | Description |
+|-----------|-------------|
+| `add`       | Adds component to entity. If entity already has the component, `add` does nothing. Requires that the component is default constructible. |
+| `remove`    | Removes component from entity. If entity doesn't have the component, `remove` does nothing. |
+| `get`       | Returns a immutable reference to the component. If the entity doesn't have the component, `get` returns `nullptr`. |
+| `get_mut`   | Returns a mutable reference to the component. If the entity doesn't have the component, `get_mut` returns `nullptr`. |
+| `ensure`    | Returns a mutable reference to the component. `ensure` behaves as a combination of `add` and `get_mut`. |
+| `emplace`   | Returns a mutable reference to the component. If the entity doesn't have the component, `emplace` returns a reference to unconstructed memory. This enables adding components that are not default constructible. |
+| `modified`  | Emits a modified event for a component. This ensures that `OnSet` observers and `on_set` hooks are invoked, and updates change detection administration. |
+| `set`       | Sets the value of a component. `set` behaves as a combination of `ensure` and `modified`. `set` does not take ownership of the provided value. |
+
+The following component lifecycle diagram shows how the different operations mutate the storage and cause hooks and observers to be invoked:
+
+![Component Lifecycle](img/component_lifecycle_flow.png)
+
 ### Components are Entities
 In an ECS framework, components need to be uniquely identified. In Flecs this is done by making each component is its own unique entity. If an application has a component `Position` and `Velocity`, there  will be two entities, one for each component. Component entities can be distinguished from "regular" entities as they have a `Component` component. An example:
 
@@ -1222,7 +1240,7 @@ TODO
 </ul>
 </div>
 
-### Runtime Type Registration
+#### Runtime Type Registration
 In some cases, typically when using scripting, components must be registered for types that do not exist at compile time. In Flecs this is possible by calling the `ecs_component_init` function. This function returns a component entity, which can then be used with regular ECS operations. An example:
 
 <div class="flecs-snippet-tabs">
@@ -1389,20 +1407,6 @@ pos.Destruct();
 </li>
 </ul>
 </div>
-
-### Operations
-The following table provides the base set of operations that Flecs offers for components:
-
-| Operation | Description |
-|-----------|-------------|
-| `add`       | Adds component to entity. If entity already has the component, `add` does nothing. Requires that the component is default constructible. |
-| `remove`    | Removes component from entity. If entity doesn't have the component, `remove` does nothing. |
-| `get`       | Returns a immutable reference to the component. If the entity doesn't have the component, `get` returns `nullptr`. |
-| `get_mut`   | Returns a mutable reference to the component. If the entity doesn't have the component, `get_mut` returns `nullptr`. |
-| `ensure`    | Returns a mutable reference to the component. `ensure` behaves as a combination of `add` and `get_mut`. |
-| `emplace`   | Returns a mutable reference to the component. If the entity doesn't have the component, `emplace` returns a reference to unconstructed memory. This enables adding components that are not default constructible. |
-| `modified`  | Emits a modified event for a component. This ensures that `OnSet` observers and `on_set` hooks are invoked, and updates change detection administration. |
-| `set`       | Sets the value of a component. `set` behaves as a combination of `ensure` and `modified`. `set` does not take ownership of the provided value. |
 
 ### Singletons
 Singletons are components for which only a single instance exists on the world. They can be accessed on the world directly and do not require providing an entity. Singletons are useful for global game resources, such as game state, a handle to a physics engine or a network socket. An example:
