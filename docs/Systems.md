@@ -54,7 +54,7 @@ flecs::system sys = world.system<Position, const Velocity>("Move")
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 // System declaration
 Routine sys = world.Routine<Position, Velocity>("Move")
     .Each((ref Position p, ref Velocity v) =>
@@ -63,7 +63,7 @@ Routine sys = world.Routine<Position, Velocity>("Move")
         p.X += v.X;
         p.Y += v.Y;
     });
-```
+</code></pre>
 </li>
 </ul>
 </div>
@@ -86,10 +86,10 @@ sys.run();
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 Routine sys = ...;
 sys.Run();
-```
+</code></pre>
 </li>
 </ul>
 </div>
@@ -112,10 +112,10 @@ world.progress();
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 using World world = World.Create();
 world.Progress();
-```
+</code></pre>
 </li>
 </ul>
 </div>
@@ -139,11 +139,11 @@ flecs::system sys = world.system<Position, const Velocity>("Move")
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 Routine sys = world.Routine<Position, Velocity>("Move")
     .Kind(0)
     .Each((ref Position p, ref Velocity v) => { /* ... */ });
-```
+</code></pre>
 </li>
 </ul>
 </div>
@@ -230,15 +230,15 @@ Note that there is no significant performance difference between `iter()` and `e
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 // Query iteration (Each)
 q.Each((ref Position p, ref Velocity v) => { /* ... */ });
 
 // System iteration (Each)
 world.Routine<Position, Velocity>("Move")
     .Each((ref Position p, ref Velocity v) => { /* ... */ });
-```
-```cs
+</code></pre>
+<pre><code class="language-cpp">
 // Query iteration (Iter)
 q.Iter((Iter it, Field<Position> p, Field<Velocity> v) =>
 {
@@ -259,7 +259,7 @@ world.Routine<Position, Velocity>("Move")
             p[i].Y += v[i].Y;
         }
     });
-```
+</code></pre>
 
 The `Iter` function can be invoked multiple times per frame, once for each matched table. The `Each` function is called once per matched entity.
 </li>
@@ -309,7 +309,7 @@ world.system<Position, const Velocity>("Move")
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 world.Routine<Position, Velocity>("Move")
     .Each((Iter it, int i, ref Position p, ref Velocity v) =>
     {
@@ -326,7 +326,7 @@ world.Routine<Position, Velocity>("Move")
             p[i].Y += v[i].Y * it.DeltaTime();
         }
     });
-```
+</code></pre>
 </li>
 </ul>
 </div>
@@ -348,9 +348,9 @@ world.progress(delta_time);
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 world.Progress(deltaTime);
-```
+</code></pre>
 </li>
 </ul>
 </div>
@@ -372,9 +372,9 @@ world.progress();
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 world.Progress();
-```
+</code></pre>
 </li>
 </ul>
 </div>
@@ -424,7 +424,7 @@ world.progress();
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 world.Routine("PrintTime")
     .Kind(Ecs.OnUpdate)
     .Iter((Iter it) =>
@@ -434,7 +434,7 @@ world.Routine("PrintTime")
 
 // Runs PrintTime
 world.progress();
-```
+</code></pre>
 </li>
 </ul>
 </div>
@@ -482,7 +482,7 @@ world.system<Game>("PrintTime")
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 world.Routine<Game>("PrintTime")
     .TermAt(1).Singleton()
     .Kind(Ecs.OnUpdate)
@@ -490,7 +490,7 @@ world.Routine<Game>("PrintTime")
     {
         Console.WriteLine($"Time: {g.Time}");
     });
-```
+</code></pre>
 </li>
 </ul>
 </div>
@@ -528,7 +528,7 @@ world.system<Position, Velocity>("Move")
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 // System is created with (DependsOn, OnUpdate)
 world.Routine<Position, Velocity>("Move")
     .Kind(Ecs.OnUpdate)
@@ -536,7 +536,7 @@ world.Routine<Position, Velocity>("Move")
     {
         // ...
     });
-```
+</code></pre>
 </li>
 </ul>
 </div>
@@ -649,14 +649,14 @@ flecs.system.System, Phase(cascade(DependsOn)), !Disabled(up(DependsOn)), !Disab
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 world.Pipeline()
     .With(Ecs.System)
     .With(Ecs.Phase).Cascade(Ecs.DependsOn)
     .Without(Ecs.Disabled).Up(Ecs.DependsOn)
     .Without(Ecs.Disabled).Up(Ecs.ChildOf)
     .Build();
-```
+</code></pre>
 </li>
 </ul>
 </div>
@@ -711,7 +711,7 @@ world.progress();
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 // Create custom pipeline
 Pipeline pipeline = world.Pipeline()
     .With(Ecs.System)
@@ -728,7 +728,7 @@ Routine move = world.Routine<Position, Velocity>("Move")
 
 // Runs the pipeline & system
 world.Progress();
-```
+</code></pre>
 </li>
 </ul>
 </div>
@@ -755,9 +755,9 @@ move.add(Foo);
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 move.Entity.Add(foo);
-```
+</code></pre>
 </li>
 </ul>
 </div>
@@ -794,12 +794,12 @@ s.enable();
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 // Disable system in C#
 s.Entity.Disable();
 // Enable system in C#
 s.Entity.Enable();
-```
+</code></pre>
 </li>
 </ul>
 </div>
@@ -821,9 +821,9 @@ s.add(flecs::Disabled);
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 s.Entity.Add(Ecs.Disabled);
-```
+</code></pre>
 </li>
 </ul>
 </div>
@@ -905,12 +905,12 @@ world.system<Position>()
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 // In the C# API, use the write method to indicate commands could be inserted.
 world.Routine<Position>()
     .Write<Transform>()
     .Each( /* ... */);
-```
+</code></pre>
 </li>
 </ul>
 </div>
@@ -949,12 +949,12 @@ world.system<Position>()
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 // In the C# API, use the read method to indicate a component is read using .Get
 world.Routine<Position>()
     .Read<Transform>()
     .Each( /* ... */);
-```
+</code></pre>
 </li>
 </ul>
 </div>
@@ -1001,12 +1001,12 @@ ecs_system(ecs, {
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 ecs.Routine("AssignPlate")
     .With<Plate>()
     .NoReadonly() // disable readonly mode for this system
     .Iter((Iter it) => { /* ... */ })
-```
+</code></pre>
 </li>
 </ul>
 </div>
@@ -1047,7 +1047,7 @@ void AssignPlate(ecs_iter_t *it) {
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 .Iter((Iter it) =>
 {
     foreach (int i in it)
@@ -1059,7 +1059,7 @@ void AssignPlate(ecs_iter_t *it) {
         // ECS operations ran here are visible after running the system
     }
 });
-```
+</code></pre>
 </li>
 </ul>
 </div>
@@ -1084,9 +1084,9 @@ world.set_threads(4);
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 world.SetThreads(4);
-```
+</code></pre>
 </li>
 </ul>
 </div>
@@ -1119,11 +1119,11 @@ world.system<Position>()
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 world.Routine<Position>()
   .MultiThreaded()
   .Each( /* ... */ );
-```
+</code></pre>
 </li>
 </ul>
 </div>
@@ -1151,9 +1151,9 @@ world.set_task_threads(4);
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 world.SetTaskThreads(4);
-```
+</code></pre>
 </li>
 </ul>
 </div>
@@ -1205,11 +1205,11 @@ world.system<Position, const Velocity>()
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 world.Routine<Position, Velocity>()
     .Interval(1.0f) // Run at 1Hz
     .Each(...);
-```
+</code></pre>
 </li>
 </ul>
 </div>
@@ -1251,11 +1251,11 @@ world.system<Position, const Velocity>()
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 world.Routine<Position, Velocity>()
     .Rate(2) // Run every other frame
     .Each(...);
-```
+</code></pre>
 </li>
 </ul>
 </div>
@@ -1311,7 +1311,7 @@ world.system<Position, const Velocity>()
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 // A rate filter can be created with .Rate(2)
 TimerEntity tickSource = world.Timer()
     .Interval(1.0f);
@@ -1319,7 +1319,7 @@ TimerEntity tickSource = world.Timer()
 world.Routine<Position, Velocity>()
     .TickSource(tickSource) // Set tick source for system
     .Each(...);
-```
+</code></pre>
 </li>
 </ul>
 </div>
@@ -1349,13 +1349,13 @@ tick_source.start();
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 // Pause timer
 tickSource.Stop();
 
 // Resume timer
 tickSource.Start();
-```
+</code></pre>
 </li>
 </ul>
 </div>
@@ -1399,7 +1399,7 @@ flecs::entity each_hour = world.timer()
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 // Tick at 1Hz
 TimerEntity eachSecond = world.Timer()
     .Interval(1.0f);
@@ -1411,7 +1411,7 @@ TimerEntity eachMinute = world.Timer()
 // Tick each hour
 TimerEntity eachHour = world.Timer()
     .Rate(60, eachMinute);
-```
+</code></pre>
 </li>
 </ul>
 </div>
@@ -1478,7 +1478,7 @@ flecs::entity each_hour = world.system("EachHour")
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 // Tick at 1Hz
 Routine eachSecond = world.Routine("EachSecond")
     .Interval(1.0f)
@@ -1495,7 +1495,7 @@ Routine eachHour = world.Routine("EachHour")
     .TickSource(eachMinute)
     .Rate(60)
     .Iter((Iter it) => { /* ... */ });
-```
+</code></pre>
 </li>
 </ul>
 </div>

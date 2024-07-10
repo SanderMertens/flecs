@@ -32,14 +32,14 @@ e.add(ChildOf, parent); // Covered by cleanup traits
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 public struct MyComponent
 {
     public entity e; // Not covered by cleanup traits
 }
 
 e.Add(ChildOf, parent); // Covered by cleanup traits
-```
+</code></pre>
 
 </li>
 </ul>
@@ -65,9 +65,9 @@ world.remove_all(Archer);
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 world.RemoveAll(Archer);
-```
+</code></pre>
 
 </li>
 </ul>
@@ -97,11 +97,11 @@ world.remove_all(flecs::Wildcard, Archer);
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 world.RemoveAll(Archer);
 world.RemoveAll(Archer, Ecs.Wildcard);
 world.RemoveAll(Ecs.Wildcard, Archer);
-```
+</code></pre>
 
 </li>
 </ul>
@@ -165,7 +165,7 @@ world.component<Archer>().destruct();
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 // Remove Archer from entities when Archer is deleted
 world.Component<Archer>().Entity
     .Add(Ecs.OnDelete, Ecs.Remove);
@@ -174,7 +174,7 @@ Entity e = world.Entity().Add<Archer>();
 
 // This will remove Archer from e
 world.Component<Archer>().Entity.Destruct();
-```
+</code></pre>
 
 </li>
 </ul>
@@ -214,7 +214,7 @@ world.component<Archer>().destruct();
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 // Delete entities with Archer when Archer is deleted
 world.Component<Archer>()
     .Add(Ecs.OnDelete, Ecs.Delete);
@@ -223,7 +223,7 @@ Entity e = world.Entity().Add<Archer>();
 
 // This will delete e
 world.Component<Archer>().Entity.Destruct();
-```
+</code></pre>
 
 </li>
 </ul>
@@ -265,7 +265,7 @@ p.destruct();
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 // Delete children when deleting parent
 world.Component<ChildOf>().Entity
     .Add(Ecs.OnDeleteTarget, Ecs.Delete);
@@ -275,7 +275,7 @@ Entity e = world.Entity().Add<ChildOf>(p);
 
 // This will delete both p and e
 p.Destruct();
-```
+</code></pre>
 
 </li>
 </ul>
@@ -318,14 +318,14 @@ flecs::entity c = world.entity().add<Node>().child_of(p);
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 world.Observer<Node>()
     .Event(Ecs.OnRemove)
     .Each((Entity e) => { });
 
 Entity p = world.Entity().Add<Node>();
 Entity c = world.Entity().Add<Node>().ChildOf(p);
-```
+</code></pre>
 
 </li>
 </ul>
@@ -388,11 +388,11 @@ world.component<Serializable>().add(flecs::Trait);
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 public struct Serializable { }
 
 world.Component<Serializable>().Entity.Add(Ecs.Trait);
-```
+</code></pre>
 
 </li>
 </ul>
@@ -435,7 +435,7 @@ flecs::entity e = world.entity()
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 public struct Likes { }
 public struct Apples { }
 
@@ -445,7 +445,7 @@ Entity e = ecs.Entity()
     .Add<Likes>()          // Panic, 'Likes' is not used as relationship
     .Add<Apples, Likes>()  // Panic, 'Likes' is not used as relationship
     .add<Likes, Apples>(); // OK
-```
+</code></pre>
 
 </li>
 </ul>
@@ -485,14 +485,14 @@ world.component<Loves>().add(flecs::With, world.component<Likes>());
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 public struct Likes { }
 public struct Loves { }
 
 world.Component<Likes>().Entity.Add(Ecs.Relationship);
 
 world.Component<Loves>().Entity.Add(Ecs.With, world.Component<Likes>().Entity);
-```
+</code></pre>
 
 </li>
 </ul>
@@ -535,7 +535,7 @@ flecs::entity e = world.entity()
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 public struct Likes { }
 public struct Apples { }
 
@@ -545,7 +545,7 @@ Entity e = ecs.Entity()
     .Add<Apples>()         // Panic, 'Apples' is not used as target
     .Add<Apples, Likes>()  // Panic, 'Apples' is not used as target
     .add<Likes, Apples>(); // OK
-```
+</code></pre>
 
 </li>
 </ul>
@@ -603,7 +603,7 @@ const Position *p = e.get<Serializable, Position>();
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 public struct Serializable { } // Tag, contains no data
 
 public record struct Position(float X, float Y);
@@ -618,7 +618,7 @@ ref readonly Position p = ref e.Get<Position>();
 
 // Gets (unintended) value from (Serializable, Position) pair
 ref readonly Position p = ref e.GetSecond<Serializable, Position>();
-```
+</code></pre>
 
 </li>
 </ul>
@@ -669,7 +669,7 @@ const Position *p = e.get<Serializable, Position>();
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 // Ensure that Serializable never contains data
 ecs.Component<Serializable>().Entity
     .Add<Ecs.Tag>();
@@ -685,7 +685,7 @@ ref readonly Position p = ref e.Get<Position>();
 
 // This no longer works, the pair has no data
 ref readonly Position p = ref e.GetSecond<Serializable, Position>();
-```
+</code></pre>
 
 </li>
 </ul>
@@ -722,13 +722,13 @@ auto i = ecs.entity()
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 Entity e = ecs.Entity()
     .Add(Ecs.Final);
 
 Entity i = ecs.Entity()
     .IsA(e); // not allowed
-```
+</code></pre>
 
 </li>
 </ul>
@@ -788,7 +788,7 @@ assert(base.get<Mass>() != inst.get<Mass>());
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 // Register component with trait. Optional, since this is the default behavior.
 ecs.Component<Mass>().Entity
     .add<Ecs.OnInstantiate, Ecs.Override>();
@@ -800,7 +800,7 @@ ecs_entity_t inst = ecs.Entity()
     .IsA(base); // Mass is copied to inst
 
 assert(inst.Owns<Mass>());
-```
+</code></pre>
 
 </li>
 </ul>
@@ -849,7 +849,7 @@ assert(base.get<Mass>() != inst.get<Mass>());
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 // Register component with trait
 ecs.Component<Mass>().Entity
     .add<Ecs.OnInstantiate, Ecs.Inherit>();
@@ -862,7 +862,7 @@ ecs_entity_t inst = ecs.Entity()
 
 assert(inst.has<Mass>());
 assert(!inst.Owns<Mass>());
-```
+</code></pre>
 
 </li>
 </ul>
@@ -911,7 +911,7 @@ assert(inst.get<Mass>() == nullptr);
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 // Register component with trait
 ecs.Component<Mass>().Entity
     .add<Ecs.OnInstantiate, Ecs.DontInherit>();
@@ -924,7 +924,7 @@ ecs_entity_t inst = ecs.Entity()
 
 assert(!inst.has<Mass>());
 assert(!inst.Owns<Mass>());
-```
+</code></pre>
 
 </li>
 </ul>
@@ -981,7 +981,7 @@ NewYork.add(LocatedIn, USA);
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 Entity LocatedIn = world.Entity();
 Entity Manhattan = world.Entity();
 Entity NewYork = world.Entity();
@@ -989,7 +989,7 @@ Entity USA = world.Entity();
 
 Manhattan.Add(LocatedIn, NewYork);
 NewYork.Add(LocatedIn, USA);
-```
+</code></pre>
 
 </li>
 </ul>
@@ -1015,9 +1015,9 @@ LocatedIn.add(flecs::Transitive);
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 LocatedIn.Add(Ecs.Transitive);
-```
+</code></pre>
 
 </li>
 </ul>
@@ -1092,10 +1092,10 @@ e.child_of(parent_b); // replaces (ChildOf, parent_a)
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 e.ChildOf(parentA);
 e.ChildOf(parentB); // replaces (ChildOf, parentA)
-```
+</code></pre>
 
 </li>
 </ul>
@@ -1123,10 +1123,10 @@ flecs::entity MarriedTo = world.entity()
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 Entity MarriedTo = world.Entity()
     .Add(Ecs.Exclusive);
-```
+</code></pre>
 
 </li>
 </ul>
@@ -1174,7 +1174,7 @@ assert(e.is_enabled<Position>());
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 ecs.Component<Position>().Entity
     .add<Ecs.CanToggle>();
 
@@ -1186,7 +1186,7 @@ assert(!e.IsEnabled<Position>());
 
 e.Enable<Position>(); // Enable component
 assert(e.IsEnabled<Position>());
-```
+</code></pre>
 
 </li>
 </ul>
@@ -1228,14 +1228,14 @@ e.add(Movement, Walking); // replaces (Movement, Running)
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 Entity Movement = world.Entity().Add(Ecs.Union);
 Entity Walking = world.Entity();
 Entity Running = world.Entity();
 
 Entity e = world.Entity().Add(Movement, Running);
 e.Add(Movement, Walking); // replaces (Movement, Running)
-```
+</code></pre>
 
 </li>
 </ul>
@@ -1277,10 +1277,10 @@ world.component<Position>().add(flecs::Sparse);
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 ecs.Component<Position>().Entity
     .add<Ecs.Sparse>();
-```
+</code></pre>
 
 </li>
 </ul>
@@ -1315,12 +1315,12 @@ Bob.add(MarriedTo, Alice); // Also adds (MarriedTo, Bob) to Alice
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 Entity MarriedTo = world.Entity().Add(Ecs.Symmetric);
 Entity Bob = ecs.Entity();
 Entity Alice = ecs.Entity();
 Bob.Add(MarriedTo, Alice); // Also adds (MarriedTo, Bob) to Alice
-```
+</code></pre>
 
 </li>
 </ul>
@@ -1355,13 +1355,13 @@ auto e = world.entity().add(Power);
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 Entity Responsibility = world.Entity();
 Entity Power = world.Entity().Add(Ecs.With, Responsibility);
 
 // Create new entity that has both Power and Responsibility
 Entity e = world.Entity().Add(Power);
-```
+</code></pre>
 
 </li>
 </ul>
@@ -1397,14 +1397,14 @@ auto e = world.entity().add(Loves, Pears);
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 Entity Likes = world.Entity();
 Entity Loves = world.Entity().Add(Ecs.With, Likes);
 Entity Pears = world.Entity();
 
 // Create new entity with both (Loves, Pears) and (Likes, Pears)
 Entity e = world.Entity().Add(Loves, Pears);
-```
+</code></pre>
 
 </li>
 </ul>
@@ -1454,7 +1454,7 @@ auto b = world.entity().add(Food, Fork);
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 // Enforce that target of relationship is child of Food
 Entity Food = world.Entity().Add(Ecs.OneOf);
 Entity Apples = world.Entity().ChildOf(Food);
@@ -1465,7 +1465,7 @@ Entity a = world.Entity().Add(Food, Apples);
 
 // This is not ok, Fork is not a child of Food
 Entity b = world.Entity().Add(Food, Fork);
-```
+</code></pre>
 
 </li>
 </ul>
@@ -1514,7 +1514,7 @@ auto b = world.entity().add(Eats, Fork);
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 // Enforce that target of relationship is child of Food
 Entity Food = world.Entity();
 Entity Eats = world.Entity().Add(Ecs.OneOf, Food);
@@ -1526,7 +1526,7 @@ Entity a = world.Entity().Add(Eats, Apples);
 
 // This is not ok, Fork is not a child of Food
 Entity b = world.Entity().Add(Eats, Fork);
-```
+</code></pre>
 
 </li>
 </ul>
