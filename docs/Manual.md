@@ -236,7 +236,7 @@ ecs_entity_t e = ecs_lookup(world, "Parent.Child.GrandChild");
 Path lookups may be relative:
 
 ```c
-ecs_entity_t e = ecs_lookup_path(world, parent, "Child.GrandChild");
+ecs_entity_t e = ecs_lookup_from(world, parent, "Child.GrandChild");
 ```
 
 ### Macros
@@ -892,7 +892,7 @@ ecs_entity_t e = ecs_lookup(world, "parent.child");
 Applications can also lookup entities using a relative path expression:
 
 ```c
-ecs_entity_t e = ecs_lookup_path(world, parent, "child.grand_child");
+ecs_entity_t e = ecs_lookup_from(world, parent, "child.grand_child");
 ```
 
 Additionally, applications can specify a custom path separator when looking up or requesting paths:

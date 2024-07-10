@@ -1012,6 +1012,7 @@ ecs.Routine("AssignPlate")
 </div>
 
 This ensures the world is not in readonly mode when the system is ran. Operations are however still enqueued as commands, which ensures that the system can enqueue commands for the entity that is being iterated over. To prevent commands from being enqueued, a system needs to suspend and resume command enqueueing. This is an extra step, but makes it possible for a system to both enqueue commands for the iterated over entity, as well as do operations that are immediately visible. An example:
+
 <div class="flecs-snippet-tabs">
 <ul>
 <li><b class="tab-title">C</b>

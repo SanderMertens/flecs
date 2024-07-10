@@ -153,8 +153,8 @@ void Entity_entity_from_digit_path(void);
 void Entity_entity_from_existing_digit_path(void);
 void Entity_entity_from_digit_0_path(void);
 void Entity_entity_from_conflicting_digit(void);
-void Entity_set_generation_on_nonempty_entity(void);
-void Entity_set_generation_while_deferred(void);
+void Entity_set_version_on_nonempty_entity(void);
+void Entity_set_version_while_deferred(void);
 void Entity_commit_w_on_add(void);
 void Entity_commit_w_on_remove(void);
 void Entity_commit_w_cmd_in_observer(void);
@@ -2663,12 +2663,12 @@ bake_test_case Entity_testcases[] = {
         Entity_entity_from_conflicting_digit
     },
     {
-        "set_generation_on_nonempty_entity",
-        Entity_set_generation_on_nonempty_entity
+        "set_version_on_nonempty_entity",
+        Entity_set_version_on_nonempty_entity
     },
     {
-        "set_generation_while_deferred",
-        Entity_set_generation_while_deferred
+        "set_version_while_deferred",
+        Entity_set_version_while_deferred
     },
     {
         "commit_w_on_add",

@@ -1274,7 +1274,7 @@ int flecs_meta_cursor_lookup(
                 cursor->world, value,
                 cursor->lookup_ctx);
         } else {
-            *out = ecs_lookup_path(cursor->world, 0, value);
+            *out = ecs_lookup_from(cursor->world, 0, value);
         }
         if (!*out) {
             ecs_err("unresolved entity identifier '%s'", value);

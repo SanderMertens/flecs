@@ -32,6 +32,6 @@ int main(int argc, char *argv[]) {
     // Run application with REST interface. When the application is running,
     // navigate to https://flecs.dev/explorer to inspect it!
     //
-    // See docs/RestApi.md#explorer for more information.
+    // See docs/FlecsRemoteApi.md#explorer for more information.
     // return world.app().enable_rest().run();
 }

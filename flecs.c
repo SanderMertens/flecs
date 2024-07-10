@@ -9004,7 +9004,7 @@ error:
     return false;
 }
 
-void ecs_set_generation(
+void ecs_set_version(
     ecs_world_t *world,
     ecs_entity_t entity_with_generation)
 {
@@ -48258,7 +48258,7 @@ int flecs_meta_cursor_lookup(
                 cursor->world, value,
                 cursor->lookup_ctx);
         } else {
-            *out = ecs_lookup_path(cursor->world, 0, value);
+            *out = ecs_lookup_from(cursor->world, 0, value);
         }
         if (!*out) {
             ecs_err("unresolved entity identifier '%s'", value);
@@ -56046,7 +56046,7 @@ identifier_colon: {
     }
 
     {
-        // Position: {
+        // Position: [
         LookAhead_1('[',
             pos = lookahead;
             goto component_expr_collection;
@@ -56084,10 +56084,11 @@ identifier_assign: {
     ecs_script_entity_t *entity = flecs_script_insert_entity(
         parser, Token(0));
 
-    // x = Position: {
+    // x = Position:
     LookAhead_2(EcsTokIdentifier, ':',
         pos = lookahead;
 
+        // x = Position: {
         Parse_1('{', {
             // x = Position: {expr}
             Expr('}', 

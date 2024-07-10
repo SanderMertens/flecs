@@ -745,7 +745,7 @@ printf("%s\n", path); // output: 'parent.child'
 ecs_os_free(path);
 
 ecs_lookup(world, "parent.child");         // returns child
-ecs_lookup_path(world, parent, "child");   // returns child
+ecs_lookup_from(world, parent, "child");   // returns child
 ```
 </li>
 <li><b class="tab-title">C++</b>

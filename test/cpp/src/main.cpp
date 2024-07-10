@@ -6430,6 +6430,11 @@ bake_test_case Doc_testcases[] = {
     }
 };
 
+const char* QueryBuilder_cache_kind_param[] = {"default", "auto"};
+bake_test_param QueryBuilder_params[] = {
+    {"cache_kind", (char**)QueryBuilder_cache_kind_param, 2}
+};
+
 static bake_test_suite suites[] = {
     {
         "PrettyFunction",
@@ -6506,7 +6511,9 @@ static bake_test_suite suites[] = {
         QueryBuilder_setup,
         NULL,
         164,
-        QueryBuilder_testcases
+        QueryBuilder_testcases,
+        1,
+        QueryBuilder_params
     },
     {
         "SystemBuilder",
