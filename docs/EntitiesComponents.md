@@ -573,11 +573,16 @@ An application can request the name and path of an entity. The name is the direc
 <li><b class="tab-title">C</b>
 
 ```c
+ecs_entity_t p = ecs_entity(world, { .name = "Parent" });
+ecs_entity_t e = ecs_entity(world, { .name = "Child", .parent = p });
+
 // Returns name, result does not need to be freed
 const char *name = ecs_get_name(world, e);
+printf("%s\n", name); // Child
 
 // Returns path, result must be freed
 char *path = ecs_get_path(world, e);
+printf("%s\n", path) // Parent.Child
 ecs_os_free(path);
 ```
 
@@ -585,22 +590,28 @@ ecs_os_free(path);
 <li><b class="tab-title">C++</b>
 
 ```cpp
+flecs::entity p = world.entity("Parent");
+flecs::entity e = world.entity("Child").child_of(p);
+
 // Returns entity name, does not allocate
-std::cout << e.name() << std::endl;
+std::cout << e.name() << std::endl; // Child
 
 // Returns entity path, does allocate
-std::cout << e.path() << std::endl;
+std::cout << e.path() << std::endl; // Parent.Child
 ```
 
 </li>
 <li><b class="tab-title">C#</b>
 
 ```cs
+Entity p = world.Entity("Parent");
+Entity e = world.Entity("Child").ChildOf(p);
+
 // Returns entity name
-e.Name();
+Console.WriteLine(e.Name()); // Child
 
 // Returns entity path
-e.Path();
+Console.WriteLine(e.Path()); // Parent.Child
 ```
 
 </li>
@@ -721,7 +732,7 @@ Entity twenty = world.Entity("20");
 
 Entity names can be used to refer directly to an entity id by prefixing them with a `#`. For example, looking up `#1` will return the entity with id 1. This allows applications that work with names to treat anonymous entities the same as named entities.
 
-## Disabling
+### Disabling
 Entities can be disabled which prevents them from being matched with queries. This can be used to temporarily turn off a feature in a scene during game play. It is also used for Flecs systems, which can be disabled to temporarily remove them from a schedule. The following example shows how to disable and reenable an entity:
 
 <div class="flecs-snippet-tabs">
@@ -1024,6 +1035,10 @@ Console.WriteLine(comp_data.ToString());
 
 All of the APIs that apply to regular entities also apply to component entities. Many Flecs features leverage this. It is for example possible to customize component behavior by adding tags to components. The following example shows how a component can be customized to use sparse storage by adding a `Sparse` tag to the component entity:
 
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">C</b>
+
 ```c
 // Register a sparse component
 ECS_COMPONENT(world, Position);
@@ -1046,6 +1061,10 @@ world.component<Position>().add(flecs::Sparse);
 // Register a sparse component
 world.Component<Position>().Entity.add(Ecs.Sparse);
 ```
+
+</li>
+</ul>
+</div>
 
 These kinds of tags are called "traits". To see which kinds of traits you can add to components to customize their behavior, see the [component traits manual](ComponentTraits.md).
 
