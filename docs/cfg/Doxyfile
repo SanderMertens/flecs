@@ -1388,7 +1388,13 @@ HTML_EXTRA_FILES       = docs/cfg/doxygen-awesome-darkmode-toggle.js \
                          docs/cfg/doxygen-awesome-interactive-toc.js \
                          docs/cfg/doxygen-awesome-tabs.js \
                          docs/cfg/flecs-snippet-tabs.js \
-                         docs/img/logo_small_dark.png
+                         docs/img/logo_small_dark.png \
+                         docs/cfg/highlight.min.js \
+                         docs/cfg/github-dark.css \
+                         docs/cfg/languages/rust.min.js \ 
+                         docs/cfg/languages/highlight/cpp.min.js \
+                         docs/cfg/languages/highlight/swift.min.js \
+                         docs/cfg/languages/highlight/lua.min.js
 
 # The HTML_COLORSTYLE tag can be used to specify if the generated HTML output
 # should be rendered with a dark or light theme.

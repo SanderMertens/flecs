@@ -53,6 +53,21 @@
       DoxygenAwesomeTabs.init()
       FlecsSnippetTabs.init()
   </script>
+  <!--BEGIN STYLESHEET SYNTAX HIGHLIGHTING -->
+  <link rel="stylesheet" href="$relpath^github-dark.css">
+  <script src="$relpath^highlight.min.js"></script>
+  <script src="$relpath^languages/rust.min.js"></script>
+  <script src="$relpath^languages/cpp.min.js"></script>
+  <script src="$relpath^languages/lua.min.js"></script>
+  <script src="$relpath^languages/swift.min.js"></script>
+  <script>
+      $(document).ready(function() {
+          document.querySelectorAll('pre code').forEach((block) => {
+              hljs.highlightBlock(block);
+          });
+      });
+  </script>
+  <!--END STYLESHEET SYNTAX HIGHLIGHTING -->
 </head>
 <body>
 
