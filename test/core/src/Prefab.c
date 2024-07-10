@@ -4151,15 +4151,15 @@ void Prefab_slot_override(void) {
     test_assert(base != 0);
     test_assert(beam != 0);
 
-    char *path = ecs_get_fullpath(world, head_r);
+    char *path = ecs_get_path(world, head_r);
     test_str(path, "inst.Head");
     ecs_os_free(path);
 
-    path = ecs_get_fullpath(world, base);
+    path = ecs_get_path(world, base);
     test_str(path, "inst.Base");
     ecs_os_free(path);
 
-    path = ecs_get_fullpath(world, beam);
+    path = ecs_get_path(world, beam);
     test_str(path, "inst.Beam");
     ecs_os_free(path);
 
@@ -4196,15 +4196,15 @@ void Prefab_base_slot_override(void) {
     test_assert(base != 0);
     test_assert(beam != 0);
 
-    char *path = ecs_get_fullpath(world, head);
+    char *path = ecs_get_path(world, head);
     test_str(path, "inst.Head");
     ecs_os_free(path);
 
-    path = ecs_get_fullpath(world, base);
+    path = ecs_get_path(world, base);
     test_str(path, "inst.Base");
     ecs_os_free(path);
 
-    path = ecs_get_fullpath(world, beam);
+    path = ecs_get_path(world, beam);
     test_str(path, "inst.Beam");
     ecs_os_free(path);
 

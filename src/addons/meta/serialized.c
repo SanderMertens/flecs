@@ -56,7 +56,7 @@ int flecs_meta_serialize_primitive(
 {
     const EcsPrimitive *ptr = ecs_get(world, type, EcsPrimitive);
     if (!ptr) {
-        char *name = ecs_get_fullpath(world, type);
+        char *name = ecs_get_path(world, type);
         ecs_err("entity '%s' is not a primitive type", name);
         ecs_os_free(name);
         return -1;
@@ -234,7 +234,7 @@ int flecs_meta_serialize_type(
 {
     const EcsType *ptr = ecs_get(world, type, EcsType);
     if (!ptr) {
-        char *path = ecs_get_fullpath(world, type);
+        char *path = ecs_get_path(world, type);
         ecs_err("missing EcsType for type %s'", path);
         ecs_os_free(path);
         return -1;
@@ -261,7 +261,7 @@ int flecs_meta_serialize_component(
 {
     const EcsType *ptr = ecs_get(world, type, EcsType);
     if (!ptr) {
-        char *path = ecs_get_fullpath(world, type);
+        char *path = ecs_get_path(world, type);
         ecs_err("missing EcsType for type %s'", path);
         ecs_os_free(path);
         return -1;

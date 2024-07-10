@@ -68,7 +68,7 @@ void flecs_journal_begin(
     char *var_id = NULL; 
     if (entity) {
         if (kind != EcsJournalDeleteWith && kind != EcsJournalRemoveAll) {
-            path = ecs_get_fullpath(world, entity);
+            path = ecs_get_path(world, entity);
             var_id = flecs_journal_entitystr(world, entity);
         } else {
             path = ecs_id_str(world, entity);

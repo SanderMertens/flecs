@@ -292,7 +292,7 @@ void flecs_observer_invoke(
     ecs_assert(it->callback != NULL, ECS_INVALID_PARAMETER, NULL);
 
     if (ecs_should_log_3()) {
-        char *path = ecs_get_fullpath(world, it->system);
+        char *path = ecs_get_path(world, it->system);
         ecs_dbg_3("observer: invoke %s", path);
         ecs_os_free(path);
     }
@@ -363,7 +363,7 @@ void flecs_default_uni_observer_run_callback(ecs_iter_t *it) {
     it->callback = o->callback;
 
     if (ecs_should_log_3()) {
-        char *path = ecs_get_fullpath(it->world, it->system);
+        char *path = ecs_get_path(it->world, it->system);
         ecs_dbg_3("observer %s", path);
         ecs_os_free(path);
     }

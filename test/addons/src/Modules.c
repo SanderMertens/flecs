@@ -299,7 +299,7 @@ void Modules_nested_module(void) {
     ecs_entity_t e = ecs_lookup(world, "nested.module.Component");
     test_assert(e != 0);
 
-    char *path = ecs_get_fullpath(world, e);
+    char *path = ecs_get_path(world, e);
     test_str(path, "nested.module.Component");
     ecs_os_free(path);
 

@@ -566,6 +566,47 @@ if (e == p.Lookup("Child")) {
 </ul>
 </div>
 
+An application can request the name and path of an entity. The name is the direct name given to an entity, without the names of the parent. The path is the name and names of the entity's parent, separated by a separator. If an entity has no parents, the name and the path are the same. An example:
+
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">C</b>
+
+```c
+// Returns name, result does not need to be freed
+const char *name = ecs_get_name(world, e);
+
+// Returns path, result must be freed
+char *path = ecs_get_path(world, e);
+ecs_os_free(path);
+```
+
+</li>
+<li><b class="tab-title">C++</b>
+
+```cpp
+// Returns entity name, does not allocate
+std::cout << e.name() << std::endl;
+
+// Returns entity path, does allocate
+std::cout << e.path() << std::endl;
+```
+
+</li>
+<li><b class="tab-title">C#</b>
+
+```cs
+// Returns entity name
+e.Name();
+
+// Returns entity path
+e.Path();
+```
+
+</li>
+</ul>
+</div>
+
 Names must be unique. There can only be one entity with a specific name in the scope of a parent. Entities can be annotated with a doc name, which does not need to be unique. See the doc addon for more details.
 
 When the name for an existing entity is used during the creation of a named entity, the existing entity is returned. An example:
@@ -647,8 +688,6 @@ e.SetName("Bar");
 </ul>
 </div>
 
-
-
 Entity names can be plain numbers:
 
 <div class="flecs-snippet-tabs">
@@ -681,6 +720,238 @@ Entity twenty = world.Entity("20");
 </div>
 
 Entity names can be used to refer directly to an entity id by prefixing them with a `#`. For example, looking up `#1` will return the entity with id 1. This allows applications that work with names to treat anonymous entities the same as named entities.
+
+## Disabling
+Entities can be disabled which prevents them from being matched with queries. This can be used to temporarily turn off a feature in a scene during game play. It is also used for Flecs systems, which can be disabled to temporarily remove them from a schedule. The following example shows how to disable and reenable an entity:
+
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">C</b>
+
+```c
+ecs_entity_t e = ecs_new(world);
+
+// Enable entity
+ecs_enable(world, e, true);
+
+// Disable entity
+ecs_disable(world, e, false);
+```
+
+</li>
+<li><b class="tab-title">C++</b>
+
+```cpp
+flecs::entity e = world.entity();
+
+// Enable entity
+e.enable();
+
+// Disable entity
+e.disable();
+```
+
+</li>
+<li><b class="tab-title">C#</b>
+
+```cs
+Entity e = world.Entity();
+
+// Enable entity
+e.Enable();
+
+// Disable entity
+e.Disable();
+```
+
+</li>
+</ul>
+</div>
+
+Entity disabling can be combined with prefabs to create lists of entities that can be disabled with a single operation. The following example shows how to disable three entities with a single operation:
+
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">C</b>
+
+```c
+// Three entities to disable
+ecs_entity_t e1 = ecs_new(world);
+ecs_entity_t e2 = ecs_new(world);
+ecs_entity_t e3 = ecs_new(world);
+
+// Create prefab that has the three entities
+ecs_entity_t p = ecs_new_w_id(world, EcsPrefab);
+ecs_add_id(world, p, e1);
+ecs_add_id(world, p, e2);
+ecs_add_id(world, p, e3);
+
+// Disable entities
+ecs_enable(world, p, false);
+
+// Enable entities
+ecs_enable(world, p, true);
+```
+
+</li>
+<li><b class="tab-title">C++</b>
+
+```cpp
+// Three entities to disable
+flecs::entity e1 = world.entity();
+flecs::entity e2 = world.entity();
+flecs::entity e3 = world.entity();
+
+// Create prefab that has the three entities
+flecs::entity p = world.prefab();
+p.add(e1);
+p.add(e2);
+p.add(e3);
+
+// Disable entities
+p.disable();
+
+// Enable entities
+p.enable();
+```
+
+</li>
+<li><b class="tab-title">C#</b>
+
+```cs
+// Three entities to disable
+Entity e1 = world.Entity();
+Entity e2 = world.Entity();
+Entity e3 = world.Entity();
+
+// Create prefab that has the three entities
+Entity p = world.Prefab();
+p.Add(e1);
+p.Add(e2);
+p.Add(e3);
+
+// Disable entities
+p.Disable();
+
+// Enable entities
+p.Enable();
+```
+
+</li>
+</ul>
+</div>
+
+This also works with prefab hierarchies, as shown in the following example:
+
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">C</b>
+
+```c
+// Three entities to disable
+ecs_entity_t e1 = ecs_new(world);
+ecs_entity_t e2 = ecs_new(world);
+ecs_entity_t e3 = ecs_new(world);
+
+// Create prefab hierarchy with the three entities
+ecs_entity_t p1 = ecs_new_w_id(world, EcsPrefab);
+ecs_add_id(world, p1, e1);
+
+ecs_entity_t p2 = ecs_new_w_id(world, EcsPrefab);
+ecs_add_pair(world, p2, EcsIsA, p1);
+ecs_add_id(world, p2, e2);
+ecs_add_id(world, p2, e3);
+
+// Disable e1, e2, e3
+ecs_enable(world, p2, false);
+
+// Enable e1
+ecs_enable(world, p1, true);
+```
+
+</li>
+<li><b class="tab-title">C++</b>
+
+```cpp
+// Three entities to disable
+flecs::entity e1 = world.entity();
+flecs::entity e2 = world.entity();
+flecs::entity e3 = world.entity();
+
+// Create prefab hierarchy with the three entities
+flecs::entity p1 = world.prefab()
+    .add(e1);
+
+flecs::entity p2 = world.prefab()
+    .is_a(p1)
+    .add(e2)
+    .add(e3);
+
+// Disable e1, e2, e3
+p2.disable();
+
+// Enable e1
+p1.enable();
+```
+
+</li>
+<li><b class="tab-title">C#</b>
+
+```cs
+// Three entities to disable
+Entity e1 = world.Entity();
+Entity e2 = world.Entity();
+Entity e3 = world.Entity();
+
+// Create prefab hierarchy with the three entities
+Entity p1 = world.Prefab()
+    .Add(e1);
+
+Entity p2 = world.Prefab()
+    .IsA(p1)
+    .Add(e2)
+    .Add(e3);
+
+// Disable e1, e2, e3
+p2.disable();
+
+// Enable e1
+p1.enable();
+```
+
+</li>
+</ul>
+</div>
+
+Entity disabling works by adding a `Disabled` tag to the entity, which can also be added manually with regular add/remove operations. An example:
+
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">C</b>
+
+```c
+ecs_add_id(world, e, EcsDisabled);
+```
+
+</li>
+<li><b class="tab-title">C++</b>
+
+```cpp
+e.add(flecs::Disabled);
+```
+
+</li>
+<li><b class="tab-title">C#</b>
+
+```cs
+e.Add(Ecs.Disabled);
+```
+
+</li>
+</ul>
+</div>
+
+
 
 ## Components
 A component is something that is added to an entity. Components can simply tag an entity ("this entity is an `Npc`"), attach data to an entity ("this entity is at `Position` `{10, 20}`") and create relationships between entities ("bob `Likes` alice") that may also contain data ("bob `Eats` `{10}` apples").
@@ -1198,3 +1469,69 @@ world.Component<TimeOfDay>().Entity.Set(new TimeOfDay( 0.5 ));
 </li>
 </ul>
 </div>
+
+### Disabling
+Components can be disabled, which prevents them from being matched by queries. When a component is disabled, it behaves as if the entity doesn't have it. Only components that have the `CanToggle` trait can be disabled (see the [component traits manual](ComponentTraits.md) for more details). The following example shows how to disable a component:
+
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">C</b>
+
+```c
+// Register toggle-able component
+ECS_COMPONENT(world, Position);
+ecs_add_id(world, ecs_id(Position), EcsCanToggle);
+
+ecs_entity_t e = ecs_insert(world, ecs_value(Position, {10, 20}));
+
+// Disable component
+ecs_enable_component(world, e, Position, false);
+ecs_is_enabled(world, e, Position); // False
+
+// Enable component
+ecs_enable_component(world, e, Position, true);
+ecs_is_enabled(world, e, Position); // True
+```
+
+</li>
+<li><b class="tab-title">C++</b>
+
+```cpp
+// Register toggle-able component
+world.component<Position>().add(flecs::CanToggle);
+
+flecs::entity e = world.entity().set(Position{10, 20});
+
+// Disable component
+e.disable<Position>();
+e.is_enabled<Position>(); // False
+
+// Enable component
+e.enable<Position>();
+e.is_enabled<Position>()  // True
+```
+
+</li>
+<li><b class="tab-title">C#</b>
+
+```cs
+ecs.Component<Position>().Entity
+    .add<Ecs.CanToggle>();
+
+Entity e = world.Entity()
+    .Set<Position>(new (10, 20));
+
+// Disable component
+e.Disable<Position>();
+e.IsEnabled<Position>(); // False
+
+// Enable component
+e.Enable<Position>();
+e.IsEnabled<Position>(); // True
+```
+
+</li>
+</ul>
+</div>
+
+Disabling a component is a cheaper alternative to removing it from an entity, as it relies on setting a bit vs. moving an entity to another table. Component toggling can also be used to restore a component with its old value.

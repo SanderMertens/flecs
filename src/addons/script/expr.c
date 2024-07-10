@@ -874,8 +874,8 @@ ecs_entity_t flecs_binary_expr_type(
     const EcsPrimitive *ltype_ptr = ecs_get(world, lvalue->type, EcsPrimitive);
     const EcsPrimitive *rtype_ptr = ecs_get(world, rvalue->type, EcsPrimitive);
     if (!ltype_ptr || !rtype_ptr) {
-        char *lname = ecs_get_fullpath(world, lvalue->type);
-        char *rname = ecs_get_fullpath(world, rvalue->type);
+        char *lname = ecs_get_path(world, lvalue->type);
+        char *rname = ecs_get_path(world, rvalue->type);
         ecs_parser_error(name, expr, ptr - expr, 
             "invalid non-primitive type in binary expression (%s, %s)",
                 lname, rname);
@@ -1341,7 +1341,7 @@ const char* flecs_script_expr_run(
             }
 
             if (ecs_meta_is_collection(&cur)) {
-                char *path = ecs_get_fullpath(world, scope_type);
+                char *path = ecs_get_path(world, scope_type);
                 ecs_parser_error(name, expr, ptr - expr, 
                     "expected '[' for collection type '%s'", path);
                 ecs_os_free(path);

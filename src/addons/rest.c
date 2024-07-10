@@ -1269,7 +1269,7 @@ void flecs_rest_cmd_to_json(
 
     if (cmd->system) {
         ecs_strbuf_list_appendlit(buf, "\"system\":\"");
-            char *sysstr = ecs_get_fullpath(world, cmd->system);
+            char *sysstr = ecs_get_path(world, cmd->system);
             ecs_strbuf_appendstr(buf, sysstr);
             ecs_strbuf_appendlit(buf, "\"");
             ecs_os_free(sysstr); 

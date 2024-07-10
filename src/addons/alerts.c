@@ -576,7 +576,7 @@ ecs_entity_t ecs_alert_init(
 
         ecs_entity_t type = idr->type_info->component;
         if (type != ecs_get_parent(world, desc->member)) {
-            char *type_name = ecs_get_fullpath(world, type);
+            char *type_name = ecs_get_path(world, type);
             ecs_err("member '%s' is not a member of '%s'", 
                 ecs_get_name(world, desc->member), type_name);
             ecs_os_free(type_name);

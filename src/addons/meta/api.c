@@ -386,7 +386,7 @@ ecs_entity_t ecs_struct_init(
         if (ECS_NEQ(range->min, range->max)) {
             ranges = ecs_ensure(world, m, EcsMemberRanges);
             if (range->min > range->max) {
-                char *member_name = ecs_get_fullpath(world, m);
+                char *member_name = ecs_get_path(world, m);
                 ecs_err("member '%s' has an invalid value range [%f..%f]",
                     member_name, range->min, range->max);
                 ecs_os_free(member_name);
@@ -397,14 +397,14 @@ ecs_entity_t ecs_struct_init(
         }
         if (ECS_NEQ(error->min, error->max)) {
             if (error->min > error->max) {
-                char *member_name = ecs_get_fullpath(world, m);
+                char *member_name = ecs_get_path(world, m);
                 ecs_err("member '%s' has an invalid error range [%f..%f]",
                     member_name, error->min, error->max);
                 ecs_os_free(member_name);
                 goto error;
             }
             if (flecs_member_range_overlaps(error, range)) {
-                char *member_name = ecs_get_fullpath(world, m);
+                char *member_name = ecs_get_path(world, m);
                 ecs_err("error range of member '%s' overlaps with value range",
                     member_name);
                 ecs_os_free(member_name);
@@ -419,21 +419,21 @@ ecs_entity_t ecs_struct_init(
 
         if (ECS_NEQ(warning->min, warning->max)) {
             if (warning->min > warning->max) {
-                char *member_name = ecs_get_fullpath(world, m);
+                char *member_name = ecs_get_path(world, m);
                 ecs_err("member '%s' has an invalid warning range [%f..%f]",
                     member_name, warning->min, warning->max);
                 ecs_os_free(member_name);
                 goto error;
             }
             if (flecs_member_range_overlaps(warning, range)) {
-                char *member_name = ecs_get_fullpath(world, m);
+                char *member_name = ecs_get_path(world, m);
                 ecs_err("warning range of member '%s' overlaps with value "
                     "range", member_name);
                 ecs_os_free(member_name);
                 goto error;
             }
             if (flecs_member_range_overlaps(warning, error)) {
-                char *member_name = ecs_get_fullpath(world, m);
+                char *member_name = ecs_get_path(world, m);
                 ecs_err("warning range of member '%s' overlaps with error "
                     "range", member_name);
                 ecs_os_free(member_name);
@@ -448,7 +448,7 @@ ecs_entity_t ecs_struct_init(
         }
 
         if (ranges && !flecs_type_is_number(world, m_desc->type)) {
-            char *member_name = ecs_get_fullpath(world, m);
+            char *member_name = ecs_get_path(world, m);
             ecs_err("member '%s' has an value/error/warning range, but is not a "
                     "number", member_name);
             ecs_os_free(member_name);

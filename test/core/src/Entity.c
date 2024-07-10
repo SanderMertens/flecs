@@ -19,7 +19,7 @@ void Entity_init_id_name(void) {
     test_assert(e != 0);
     test_str(ecs_get_name(world, e), "foo");
 
-    char *path = ecs_get_fullpath(world, e);
+    char *path = ecs_get_path(world, e);
     test_assert(path != NULL);
     test_str(path, "foo");
     ecs_os_free(path);
@@ -36,7 +36,7 @@ void Entity_init_id_path(void) {
     test_assert(e != 0);
     test_str(ecs_get_name(world, e), "child");
 
-    char *path = ecs_get_fullpath(world, e);
+    char *path = ecs_get_path(world, e);
     test_assert(path != NULL);
     test_str(path, "parent.child");
     ecs_os_free(path);
@@ -111,7 +111,7 @@ void Entity_init_id_name_w_scope(void) {
     test_assert(ecs_has_pair(world, e, EcsChildOf, scope));
     test_str(ecs_get_name(world, e), "child");
 
-    char *path = ecs_get_fullpath(world, e);
+    char *path = ecs_get_path(world, e);
     test_assert(path != NULL);
     test_str(path, "parent.child");
     ecs_os_free(path);
@@ -138,7 +138,7 @@ void Entity_init_id_path_w_scope(void) {
 
     test_str(ecs_get_name(world, e), "grandchild");
 
-    char *path = ecs_get_fullpath(world, e);
+    char *path = ecs_get_path(world, e);
     test_assert(path != NULL);
     test_str(path, "parent.child.grandchild");
     ecs_os_free(path);
@@ -166,7 +166,7 @@ void Entity_init_id_fullpath_w_scope(void) {
 
     test_str(ecs_get_name(world, e), "grandchild");
 
-    char *path = ecs_get_fullpath(world, e);
+    char *path = ecs_get_path(world, e);
     test_assert(path != NULL);
     test_str(path, "parent.child.grandchild");
     ecs_os_free(path);
@@ -202,7 +202,7 @@ void Entity_init_id_fullpath_w_scope_existing(void) {
 
     test_str(ecs_get_name(world, e), "grandchild");
 
-    char *path = ecs_get_fullpath(world, e);
+    char *path = ecs_get_path(world, e);
     test_assert(path != NULL);
     test_str(path, "parent.child.grandchild");
     ecs_os_free(path);
@@ -223,7 +223,7 @@ void Entity_init_id_name_1_comp(void) {
     test_assert(ecs_has_id(world, e, TagA));
     test_str(ecs_get_name(world, e), "foo");
 
-    char *path = ecs_get_fullpath(world, e);
+    char *path = ecs_get_path(world, e);
     test_assert(path != NULL);
     test_str(path, "foo");
     ecs_os_free(path);
@@ -245,7 +245,7 @@ void Entity_init_id_name_2_comp(void) {
     test_assert(ecs_has_id(world, e, TagA));
     test_str(ecs_get_name(world, e), "foo");
 
-    char *path = ecs_get_fullpath(world, e);
+    char *path = ecs_get_path(world, e);
     test_assert(path != NULL);
     test_str(path, "foo");
     ecs_os_free(path);
@@ -276,7 +276,7 @@ void Entity_init_id_name_2_comp_w_scope(void) {
     test_assert(ecs_has_id(world, e, TagA));
     test_str(ecs_get_name(world, e), "child");
 
-    char *path = ecs_get_fullpath(world, e);
+    char *path = ecs_get_path(world, e);
     test_assert(path != NULL);
     test_str(path, "parent.child");
     ecs_os_free(path);
@@ -334,7 +334,7 @@ void Entity_init_id_path_w_sep(void) {
     test_assert(e != 0);
     test_str(ecs_get_name(world, e), "child");
 
-    char *path = ecs_get_fullpath(world, e);
+    char *path = ecs_get_path(world, e);
     test_assert(path != NULL);
     test_str(path, "parent.child");
     ecs_os_free(path);
@@ -400,7 +400,7 @@ void Entity_find_id_name_w_scope(void) {
     test_assert(e != 0);
     test_str(ecs_get_name(world, e), "child");
 
-    char *path = ecs_get_fullpath(world, e);
+    char *path = ecs_get_path(world, e);
     test_assert(path != NULL);
     test_str(path, "parent.child");
     ecs_os_free(path);   
@@ -423,7 +423,7 @@ void Entity_find_id_path(void) {
     test_assert(e != 0);
     test_str(ecs_get_name(world, e), "child");
 
-    char *path = ecs_get_fullpath(world, e);
+    char *path = ecs_get_path(world, e);
     test_assert(path != NULL);
     test_str(path, "parent.child");
     ecs_os_free(path);    
@@ -455,7 +455,7 @@ void Entity_find_id_path_w_scope(void) {
     test_assert(e != 0);
     test_str(ecs_get_name(world, e), "grandchild");
 
-    char *path = ecs_get_fullpath(world, e);
+    char *path = ecs_get_path(world, e);
     test_assert(path != NULL);
     test_str(path, "parent.child.grandchild");
     ecs_os_free(path);    
@@ -506,7 +506,7 @@ void Entity_find_id_name_match_w_scope(void) {
     test_assert(e != 0);
     test_str(ecs_get_name(world, e), "child");
 
-    char *path = ecs_get_fullpath(world, e);
+    char *path = ecs_get_path(world, e);
     test_assert(path != NULL);
     test_str(path, "parent.child");
     ecs_os_free(path);  
@@ -755,7 +755,7 @@ void Entity_init_w_scope_name(void) {
     test_assert(child != 0);
     test_str(ecs_get_name(world, child), "foo");
 
-    char *path = ecs_get_fullpath(world, child);
+    char *path = ecs_get_path(world, child);
     test_assert(path != NULL);
     test_str(path, "parent.foo.foo");
     ecs_os_free(path);
@@ -1093,7 +1093,7 @@ void Entity_init_w_childof_nested_name_twice_deferred(void) {
 
     test_str(ecs_get_name(world, e1), "Hello");
 
-    char *path = ecs_get_fullpath(world, e1);
+    char *path = ecs_get_path(world, e1);
     test_str(path, "Foo.Bar.Hello");
     ecs_os_free(path);
 
@@ -1333,7 +1333,7 @@ void Entity_entity_init_w_scope_twice(void) {
     test_assert( ecs_has_pair(world, e1, EcsChildOf, parent) );
     test_str(ecs_get_name(world, e1), "Child");
 
-    char *path = ecs_get_fullpath(world, e1);
+    char *path = ecs_get_path(world, e1);
     test_str(path, "Parent.Child");
     ecs_os_free(path);
 
@@ -1359,7 +1359,7 @@ void Entity_entity_init_w_childof_twice(void) {
     test_assert( ecs_has_pair(world, e1, EcsChildOf, parent) );
     test_str(ecs_get_name(world, e1), "Child");
 
-    char *path = ecs_get_fullpath(world, e1);
+    char *path = ecs_get_path(world, e1);
     test_str(path, "Parent.Child");
     ecs_os_free(path);
 
@@ -1388,7 +1388,7 @@ void Entity_entity_init_w_childof_nested_name_twice(void) {
     test_assert( ecs_has_pair(world, e1, EcsChildOf, foo) );
     test_str(ecs_get_name(world, e1), "Child");
 
-    char *path = ecs_get_fullpath(world, e1);
+    char *path = ecs_get_path(world, e1);
     test_str(path, "Parent.Foo.Child");
     ecs_os_free(path);
 
@@ -1414,7 +1414,7 @@ void Entity_entity_init_w_childof_and_scope(void) {
     test_assert( ecs_has_pair(world, child, EcsChildOf, parent_b) );
     test_str(ecs_get_name(world, child), "Child");
 
-    char *path = ecs_get_fullpath(world, child);
+    char *path = ecs_get_path(world, child);
     test_str(path, "ParentB.Child");
     ecs_os_free(path);
 
@@ -1442,7 +1442,7 @@ void Entity_entity_init_w_childof_and_scope_and_scoped_name(void) {
     test_assert(child != 0);
     test_assert( ecs_has_pair(world, grand_child, EcsChildOf, child));
 
-    char *path = ecs_get_fullpath(world, grand_child);
+    char *path = ecs_get_path(world, grand_child);
     test_str(path, "ParentB.Child.GrandChild");
     ecs_os_free(path);
 
@@ -1485,7 +1485,7 @@ void Entity_deferred_entity_init_w_childof_and_scope(void) {
     test_assert( ecs_has_pair(world, child, EcsChildOf, parent_b) );
     test_str(ecs_get_name(world, child), "Child");
 
-    char *path = ecs_get_fullpath(world, child);
+    char *path = ecs_get_path(world, child);
     test_str(path, "ParentB.Child");
     ecs_os_free(path);
 
@@ -1517,7 +1517,7 @@ void Entity_deferred_entity_init_w_childof_and_scope_and_scoped_name(void) {
     test_assert(child != 0);
     test_assert( ecs_has_pair(world, grand_child, EcsChildOf, child));
 
-    char *path = ecs_get_fullpath(world, grand_child);
+    char *path = ecs_get_path(world, grand_child);
     test_str(path, "ParentB.Child.GrandChild");
     ecs_os_free(path);
 

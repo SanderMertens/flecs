@@ -173,7 +173,7 @@ int flecs_term_ref_lookup(
 
     ecs_entity_t ref_id = ECS_TERM_REF_ID(ref);
     if (ref_id && ref_id != e) {
-        char *e_str = ecs_get_fullpath(world, ref_id);
+        char *e_str = ecs_get_path(world, ref_id);
         flecs_query_validator_error(ctx, "name '%s' does not match term.id '%s'", 
             name, e_str);
         ecs_os_free(e_str);
@@ -620,7 +620,7 @@ int flecs_term_verify(
                 if (is_same && ecs_has_id(world, first_id, EcsAcyclic)
                     && !(term->flags_ & EcsTermReflexive)) 
                 {
-                    char *pred_str = ecs_get_fullpath(world, term->first.id);
+                    char *pred_str = ecs_get_path(world, term->first.id);
                     flecs_query_validator_error(ctx, "term with acyclic relationship"
                         " '%s' cannot have same subject and object", pred_str);
                     ecs_os_free(pred_str);
@@ -633,8 +633,8 @@ int flecs_term_verify(
             ecs_entity_t oneof = flecs_get_oneof(world, first_id);
             if (oneof) {
                 if (!ecs_has_pair(world, second_id, EcsChildOf, oneof)) {
-                    char *second_str = ecs_get_fullpath(world, second_id);
-                    char *oneof_str = ecs_get_fullpath(world, oneof);
+                    char *second_str = ecs_get_path(world, second_id);
+                    char *oneof_str = ecs_get_path(world, oneof);
                     char *id_str = ecs_id_str(world, term->id);
                     flecs_query_validator_error(ctx, 
                         "invalid target '%s' for %s: must be child of '%s'",
@@ -650,7 +650,7 @@ int flecs_term_verify(
 
     if (term->trav) {
         if (!ecs_has_id(world, term->trav, EcsTraversable)) {
-            char *r_str = ecs_get_fullpath(world, term->trav);
+            char *r_str = ecs_get_path(world, term->trav);
             flecs_query_validator_error(ctx, 
                 "cannot traverse non-traversable relationship '%s'", r_str);
             ecs_os_free(r_str);

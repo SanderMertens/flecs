@@ -43,7 +43,7 @@ int flecs_json_ser_enum(
         ecs_enum_constant_t, (ecs_map_key_t)value);
     if (!constant) {
         /* If the value is not found, it is not a valid enumeration constant */
-        char *name = ecs_get_fullpath(world, op->type);
+        char *name = ecs_get_path(world, op->type);
         ecs_err("enumeration value '%d' of type '%s' is not a valid constant", 
             value, name);
         ecs_os_free(name);
@@ -93,7 +93,7 @@ int flecs_json_ser_bitmask(
 
     if (value != 0) {
         /* All bits must have been matched by a constant */
-        char *name = ecs_get_fullpath(world, op->type);
+        char *name = ecs_get_path(world, op->type);
         ecs_err("bitmask value '%u' of type '%s' contains invalid/unknown bits", 
             value, name);
         ecs_os_free(name);
@@ -541,7 +541,7 @@ int ecs_array_to_json_buf(
 {
     const EcsComponent *comp = ecs_get(world, type, EcsComponent);
     if (!comp) {
-        char *path = ecs_get_fullpath(world, type);
+        char *path = ecs_get_path(world, type);
         ecs_err("cannot serialize to JSON, '%s' is not a component", path);
         ecs_os_free(path);
         return -1;
@@ -550,7 +550,7 @@ int ecs_array_to_json_buf(
     const EcsTypeSerializer *ser = ecs_get(
         world, type, EcsTypeSerializer);
     if (!ser) {
-        char *path = ecs_get_fullpath(world, type);
+        char *path = ecs_get_path(world, type);
         ecs_err("cannot serialize to JSON, '%s' has no reflection data", path);
         ecs_os_free(path);
         return -1;

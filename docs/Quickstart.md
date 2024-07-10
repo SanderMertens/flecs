@@ -740,7 +740,7 @@ ecs_entity_t child = ecs_entity(world, {
 
 ecs_add_pair(world, child, EcsChildOf, parent);
 
-char *path = ecs_get_fullpath(world, child);
+char *path = ecs_get_path(world, child);
 printf("%s\n", path); // output: 'parent.child'
 ecs_os_free(path);
 

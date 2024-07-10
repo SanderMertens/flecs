@@ -363,22 +363,22 @@ int flecs_add_member_to_struct(
 
     const char *name = ecs_get_name(world, member);
     if (!name) {
-        char *path = ecs_get_fullpath(world, type);
+        char *path = ecs_get_path(world, type);
         ecs_err("member for struct '%s' does not have a name", path);
         ecs_os_free(path);
         return -1;
     }
 
     if (!m->type) {
-        char *path = ecs_get_fullpath(world, member);
+        char *path = ecs_get_path(world, member);
         ecs_err("member '%s' does not have a type", path);
         ecs_os_free(path);
         return -1;
     }
 
     if (ecs_get_typeid(world, m->type) == 0) {
-        char *path = ecs_get_fullpath(world, member);
-        char *ent_path = ecs_get_fullpath(world, m->type);
+        char *path = ecs_get_path(world, member);
+        char *ent_path = ecs_get_path(world, m->type);
         ecs_err("member '%s.type' is '%s' which is not a type", path, ent_path);
         ecs_os_free(path);
         ecs_os_free(ent_path);
@@ -456,7 +456,7 @@ int flecs_add_member_to_struct(
             /* Get component of member type to get its size & alignment */
             const EcsComponent *mbr_comp = ecs_get(world, elem->type, EcsComponent);
             if (!mbr_comp) {
-                char *path = ecs_get_fullpath(world, elem->type);
+                char *path = ecs_get_path(world, elem->type);
                 ecs_err("member '%s' is not a type", path);
                 ecs_os_free(path);
                 return -1;
@@ -466,7 +466,7 @@ int flecs_add_member_to_struct(
             ecs_size_t member_alignment = mbr_comp->alignment;
 
             if (!member_size || !member_alignment) {
-                char *path = ecs_get_fullpath(world, elem->type);
+                char *path = ecs_get_path(world, elem->type);
                 ecs_err("member '%s' has 0 size/alignment", path);
                 ecs_os_free(path);
                 return -1;
@@ -506,7 +506,7 @@ int flecs_add_member_to_struct(
         /* Get component of member type to get its size & alignment */
         const EcsComponent *mbr_comp = ecs_get(world, elem->type, EcsComponent);
         if (!mbr_comp) {
-            char *path = ecs_get_fullpath(world, elem->type);
+            char *path = ecs_get_path(world, elem->type);
             ecs_err("member '%s' is not a type", path);
             ecs_os_free(path);
             return -1;
@@ -516,7 +516,7 @@ int flecs_add_member_to_struct(
         ecs_size_t member_alignment = mbr_comp->alignment;
 
         if (!member_size || !member_alignment) {
-            char *path = ecs_get_fullpath(world, elem->type);
+            char *path = ecs_get_path(world, elem->type);
             ecs_err("member '%s' has 0 size/alignment", path);
             ecs_os_free(path);
             return -1;
@@ -592,7 +592,7 @@ int flecs_add_constant_to_enum(
     bool value_set = false;
     if (ecs_id_is_pair(constant_id)) {
         if (ecs_pair_second(world, constant_id) != ecs_id(ecs_i32_t)) {
-            char *path = ecs_get_fullpath(world, e);
+            char *path = ecs_get_path(world, e);
             ecs_err("expected i32 type for enum constant '%s'", path);
             ecs_os_free(path);
             return -1;
@@ -611,7 +611,7 @@ int flecs_add_constant_to_enum(
         ecs_enum_constant_t *c = ecs_map_ptr(&it);
         if (value_set) {
             if (c->value == value) {
-                char *path = ecs_get_fullpath(world, e);
+                char *path = ecs_get_path(world, e);
                 ecs_err("conflicting constant value %d for '%s' (other is '%s')",
                     value, path, c->name);
                 ecs_os_free(path);
@@ -665,7 +665,7 @@ int flecs_add_constant_to_bitmask(
     uint32_t value = 1;
     if (ecs_id_is_pair(constant_id)) {
         if (ecs_pair_second(world, constant_id) != ecs_id(ecs_u32_t)) {
-            char *path = ecs_get_fullpath(world, e);
+            char *path = ecs_get_path(world, e);
             ecs_err("expected u32 type for bitmask constant '%s'", path);
             ecs_os_free(path);
             return -1;
@@ -684,7 +684,7 @@ int flecs_add_constant_to_bitmask(
     while  (ecs_map_next(&it)) {
         ecs_bitmask_constant_t *c = ecs_map_ptr(&it);
         if (c->value == value) {
-            char *path = ecs_get_fullpath(world, e);
+            char *path = ecs_get_path(world, e);
             ecs_err("conflicting constant value for '%s' (other is '%s')",
                 path, c->name);
             ecs_os_free(path);

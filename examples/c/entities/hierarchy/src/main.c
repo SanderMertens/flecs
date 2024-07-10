@@ -10,7 +10,7 @@ ECS_COMPONENT_DECLARE(Position);
 
 void iterate_tree(ecs_world_t *ecs, ecs_entity_t e, Position p_parent) {
     // Print hierarchical name of entity & the entity type
-    char *path_str = ecs_get_fullpath(ecs, e);
+    char *path_str = ecs_get_path(ecs, e);
     char *type_str = ecs_type_str(ecs, ecs_get_type(ecs, e));
     printf("%s [%s]\n", path_str, type_str);
     ecs_os_free(type_str);
