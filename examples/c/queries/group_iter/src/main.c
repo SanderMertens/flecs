@@ -89,7 +89,7 @@ int main(int argc, char *argv[]) {
     ecs_iter_t it = ecs_query_iter(ecs, q);
     while (ecs_query_next(&it)) {
         char *table_str = ecs_table_str(ecs, it.table);
-        char *group_str = ecs_get_fullpath(ecs, it.group_id);
+        char *group_str = ecs_get_path(ecs, it.group_id);
 
         printf(" - group %s: table [%s]\n", group_str, table_str);
 
@@ -107,7 +107,7 @@ int main(int argc, char *argv[]) {
     ecs_iter_set_group(&it, Cell_1_0);
     while (ecs_query_next(&it)) {
         char *table_str = ecs_table_str(ecs, it.table);
-        char *group_str = ecs_get_fullpath(ecs, it.group_id);
+        char *group_str = ecs_get_path(ecs, it.group_id);
 
         printf(" - group %s: table [%s]\n", group_str, table_str);
 

@@ -348,7 +348,7 @@ char* ecs_iter_str(
         ecs_strbuf_list_push(&buf, "src: ", ",");
         for (i = 0; i < it->field_count; i ++) {
             ecs_entity_t subj = ecs_field_src(it, i);
-            char *str = ecs_get_fullpath(world, subj);
+            char *str = ecs_get_path(world, subj);
             ecs_strbuf_list_appendstr(&buf, str);
             ecs_os_free(str);
         }
@@ -384,7 +384,7 @@ char* ecs_iter_str(
                 ecs_strbuf_list_push(&buf, "var: ", ",");
             }
 
-            char *str = ecs_get_fullpath(world, var.entity);
+            char *str = ecs_get_path(world, var.entity);
             ecs_strbuf_list_append(&buf, "%s=%s", var_name, str);
             ecs_os_free(str);
 
@@ -399,7 +399,7 @@ char* ecs_iter_str(
         ecs_strbuf_appendlit(&buf, "this:\n");
         for (i = 0; i < it->count; i ++) {
             ecs_entity_t e = it->entities[i];
-            char *str = ecs_get_fullpath(world, e);
+            char *str = ecs_get_path(world, e);
             ecs_strbuf_appendlit(&buf, "    - ");
             ecs_strbuf_appendstr(&buf, str);
             ecs_strbuf_appendch(&buf, '\n');

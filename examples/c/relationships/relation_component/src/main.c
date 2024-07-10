@@ -65,22 +65,22 @@ int main(int argc, char *argv[]) {
     char *type_str;
     
     type_id = ecs_get_typeid(ecs, ecs_pair(ecs_id(Requires), Gigawatts));
-    type_str = ecs_get_fullpath(ecs, type_id);
+    type_str = ecs_get_path(ecs, type_id);
     printf("%s\n", type_str);
     ecs_os_free(type_str);
 
     type_id = ecs_get_typeid(ecs, ecs_pair(Gigawatts, ecs_id(Requires)));
-    type_str = ecs_get_fullpath(ecs, type_id);
+    type_str = ecs_get_path(ecs, type_id);
     printf("%s\n", type_str);
     ecs_os_free(type_str);
 
     type_id = ecs_get_typeid(ecs, ecs_pair(ecs_id(Expires), ecs_id(Position)));
-    type_str = ecs_get_fullpath(ecs, type_id);
+    type_str = ecs_get_path(ecs, type_id);
     printf("%s\n", type_str);
     ecs_os_free(type_str);
 
     type_id = ecs_get_typeid(ecs, ecs_pair(MustHave, ecs_id(Position)));
-    type_str = ecs_get_fullpath(ecs, type_id);
+    type_str = ecs_get_path(ecs, type_id);
     printf("%s\n", type_str);
     ecs_os_free(type_str);
 

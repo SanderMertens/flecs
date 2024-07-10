@@ -3504,7 +3504,7 @@ char* ecs_table_str(
 
 /** Convert entity to string.
  * Same as combining:
- * - ecs_get_fullpath(world, entity)
+ * - ecs_get_path(world, entity)
  * - ecs_type_str(world, ecs_get_type(world, entity))
  *
  * The result of this operation must be freed with ecs_os_free().

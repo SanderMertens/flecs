@@ -58,7 +58,7 @@ int flecs_expr_ser_enum(
     ecs_enum_constant_t *c = ecs_map_get_deref(&enum_type->constants, 
         ecs_enum_constant_t, (ecs_map_key_t)val);
     if (!c) {
-        char *path = ecs_get_fullpath(world, op->type);
+        char *path = ecs_get_path(world, op->type);
         ecs_err("value %d is not valid for enum type '%s'", val, path);
         ecs_os_free(path);
         goto error;
@@ -101,7 +101,7 @@ int flecs_expr_ser_bitmask(
 
     if (value != 0) {
         /* All bits must have been matched by a constant */
-        char *path = ecs_get_fullpath(world, op->type);
+        char *path = ecs_get_path(world, op->type);
         ecs_err(
             "value for bitmask %s contains bits (%u) that cannot be mapped to constant", 
             path, value);
@@ -386,7 +386,7 @@ int ecs_ptr_to_expr_buf(
     const EcsTypeSerializer *ser = ecs_get(
         world, type, EcsTypeSerializer);
     if (ser == NULL) {
-        char *path = ecs_get_fullpath(world, type);
+        char *path = ecs_get_path(world, type);
         ecs_err("cannot serialize value for type '%s'", path);
         ecs_os_free(path);
         goto error;
@@ -425,7 +425,7 @@ int ecs_ptr_to_str_buf(
     const EcsTypeSerializer *ser = ecs_get(
         world, type, EcsTypeSerializer);
     if (ser == NULL) {
-        char *path = ecs_get_fullpath(world, type);
+        char *path = ecs_get_path(world, type);
         ecs_err("cannot serialize value for type '%s'", path);
         ecs_os_free(path);
         goto error;

@@ -247,8 +247,8 @@ ecs_id_record_t* flecs_id_record_new(
             if (oneof) {
                 if (!ecs_has_pair(world, tgt, EcsChildOf, oneof)) {
                     char *idstr = ecs_id_str(world, id);
-                    char *tgtstr = ecs_get_fullpath(world, tgt);
-                    char *oneofstr = ecs_get_fullpath(world, oneof);
+                    char *tgtstr = ecs_get_path(world, tgt);
+                    char *oneofstr = ecs_get_path(world, oneof);
                     ecs_err("OneOf constraint violated: "
                         "%s: '%s' is not a child of '%s'",
                         idstr, tgtstr, oneofstr);
@@ -265,7 +265,7 @@ ecs_id_record_t* flecs_id_record_new(
             if (rel == EcsIsA) {
                 if (ecs_has_id(world, tgt, EcsFinal)) {
                     char *idstr = ecs_id_str(world, id);
-                    char *tgtstr = ecs_get_fullpath(world, tgt);
+                    char *tgtstr = ecs_get_path(world, tgt);
                     ecs_err("Final constraint violated: "
                             "%s: cannot inherit from final entity '%s'",
                         idstr, tgtstr);

@@ -400,7 +400,7 @@ bool flecs_pipeline_build(
             ecs_system_t *sys = (ecs_system_t*)poly->poly;
 
 #ifdef FLECS_LOG_1
-            char *path = ecs_get_fullpath(world, system);
+            char *path = ecs_get_path(world, system);
             const char *doc_name = NULL;
 #ifdef FLECS_DOC
             const EcsDocDescription *doc_name_id = ecs_get_pair(world, system, 

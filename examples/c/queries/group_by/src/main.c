@@ -90,7 +90,7 @@ int main(int argc, char *argv[]) {
     while (ecs_query_next(&it)) {
         Position *p = ecs_field(&it, Position, 0);
         char *table_str = ecs_table_str(ecs, it.table);
-        char *group_str = ecs_get_fullpath(ecs, it.group_id);
+        char *group_str = ecs_get_path(ecs, it.group_id);
 
         printf(" - group %s: table [%s]\n", group_str, table_str);
 

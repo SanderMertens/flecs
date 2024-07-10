@@ -188,7 +188,7 @@ int flecs_json_serialize_entity_alerts(
         flecs_json_next(buf);
         flecs_json_object_push(buf);
         ecs_entity_t ai = ecs_map_value(&it);
-        char *alert_name = ecs_get_fullpath(world, ai);
+        char *alert_name = ecs_get_path(world, ai);
         flecs_json_memberl(buf, "alert");
         flecs_json_string(buf, alert_name);
         ecs_os_free(alert_name);
@@ -208,7 +208,7 @@ int flecs_json_serialize_entity_alerts(
             flecs_json_string(buf, severity);
             
             if (!self) {
-                char *path = ecs_get_fullpath(world, entity);
+                char *path = ecs_get_path(world, entity);
                 flecs_json_memberl(buf, "path");
                 flecs_json_string(buf, path);
                 ecs_os_free(path);
