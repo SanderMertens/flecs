@@ -74,6 +74,21 @@ Bob.Remove(Likes, Alice);
 ```
 
 </li>
+<li><b class="tab-title">Rust</b>
+
+@rust
+let likes = world.entity();
+let bob = world.entity();
+let alice = world.entity();
+
+// bob likes alice
+bob.add_id((likes, alice));
+
+// bob likes alice no more
+bob.remove_id((likes, alice));
+@endrust
+
+</li>
 </ul>
 </div>
 
@@ -130,6 +145,21 @@ Bob.Has(Eats, Apples); // true
 Bob.Has(Eats, Pears); // true
 ```
 
+</li>
+<li><b class="tab-title">Rust</b>
+@rust
+let bob = world.entity();
+
+let eats = world.entity();
+let apples = world.entity();
+let pears = world.entity();
+
+bob.add_id((eats, apples));
+bob.add_id((eats, pears));
+
+bob.has_id((eats, apples)); // true
+bob.has_id((eats, pears)); // true
+@endrust
 </li>
 </ul>
 </div>
@@ -197,6 +227,22 @@ Query q = world.QueryBuilder()
 ```
 
 </li>
+<li><b class="tab-title">Rust</b>
+@rust
+// Find all entities that eat apples
+let q = world.query::<()>().expr("(Eats, Apples)").build();
+
+// Find all entities that eat anything
+let q = world.query::<()>().expr("(Eats, *)").build();
+
+// With the query builder API:
+let q = world.query::<()>().with_id((eats, apples)).build();
+
+// Or when using pair types, when both relationship & target are compile time types, they can be represented as a tuple:
+
+let q = world.new_query::<&(Eats, Apples)>();
+@endrust
+</li>
 </ul>
 </div>
 
@@ -230,6 +276,11 @@ Bob.Has(Eats, Apples);
 ```
 
 </li>
+<li><b class="tab-title">Rust</b>
+@rust
+bob.has_id((eats, apples));
+@endrust
+</li>
 </ul>
 </div>
 
@@ -257,6 +308,11 @@ Bob.has(Eats, flecs::Wildcard);
 Bob.Has(Eats, Ecs.Wildcard);
 ```
 
+</li>
+<li><b class="tab-title">Rust</b>
+@rust
+bob.has_id((eats, flecs::Wildcard::ID));
+@endrust
 </li>
 </ul>
 </div>
@@ -286,6 +342,16 @@ Entity parent = Bob.Parent();
 ```
 
 </li>
+<li><b class="tab-title">Rust</b>
+@rust
+let parent = bob.parent();
+@endrust
+</li>
+<li><b class="tab-title">Rust</b>
+@rust
+let parent = bob.parent();
+@endrust
+</li>
 </ul>
 </div>
 
@@ -313,6 +379,11 @@ flecs::entity food = Bob.target(Eats);
 Entity food = Bob.Target(Eats);
 ```
 
+</li>
+<li><b class="tab-title">Rust</b>
+@rust
+let food = bob.target_id(eats, 0); // first target
+@endrust
 </li>
 </ul>
 </div>
@@ -352,6 +423,14 @@ while ((food = Bob.Target(Eats, index++)) != 0)
 ```
 
 </li>
+<li><b class="tab-title">Rust</b>
+@rust
+let mut index = 0;
+while bob.target_id(eats, index).is_some() {
+    index += 1;
+}
+@endrust
+</li>
 </ul>
 </div>
 
@@ -379,6 +458,11 @@ flecs::entity parent = Bob.target_for<Position>(flecs::ChildOf);
 Entity parent = Bob.TargetFor<Position>(Ecs.ChildOf);
 ```
 
+</li>
+<li><b class="tab-title">Rust</b>
+@rust
+let parent = bob.target_for::<Position>(flecs::ChildOf::ID);
+@endrust
 </li>
 </ul>
 </div>
@@ -426,6 +510,16 @@ Bob.Each((Id id) =>
 });
 ```
 
+</li>
+<li><b class="tab-title">Rust</b>
+@rust
+bob.each_component(|id| {
+    if id.is_pair() {
+        let first = id.first_id();
+        let second = id.second_id();
+    }
+});
+@endrust
 </li>
 </ul>
 </div>
@@ -476,6 +570,17 @@ world.FilterBuilder()
     });
 ```
 
+</li>
+<li><b class="tab-title">Rust</b>
+@rust
+world
+    .query::<()>()
+    .with_id((eats, apples))
+    .build()
+    .each_entity(|e, _| {
+        // Iterate as usual
+    });
+@endrust
 </li>
 </ul>
 </div>
@@ -532,6 +637,20 @@ world.FilterBuilder()
 ```
 
 </li>
+<li><b class="tab-title">Rust</b>
+@rust
+world
+    .query::<()>()
+    .with_id((eats, flecs::Wildcard::ID))
+    .build()
+    .each_iter(|it, i, _| {
+        let food = it.pair(0).unwrap().second_id(); // Apples, ...
+        let e = it.entity(i);
+        // Iterate as usual
+    });
+@endrust
+</li>
+
 </ul>
 </div>
 
@@ -570,6 +689,13 @@ parent.Children((Entity child) =>
 });
 ```
 
+</li>
+<li><b class="tab-title">Rust</b>
+@rust
+parent.each_child(|child| {
+    // ...
+});
+@endrust
 </li>
 </ul>
 </div>
@@ -696,6 +822,38 @@ e.Add(Ecs.ChildOf, world.Id<Position>());
 ```
 
 </li>
+<li><b class="tab-title">Rust</b>
+@rust
+// Empty types (types without members) are letmatically interpreted as tags
+
+#[derive(Component)]
+struct Begin;
+
+#[derive(Component)]
+struct End;
+
+// Tags
+let likes = world.entity();
+let apples = world.entity();
+
+let e = world.entity();
+
+// Both likes and Apples are tags, so (likes, Apples) is a tag
+e.add_id((likes, apples));
+
+// Eats is a type and Apples is a tag, so (Eats, Apples) has type Eats
+e.set_pair::<Eats, Apples>(Eats { amount: 1 });
+
+// Begin is a tags and Position is a type, so (Begin, Position) has type Position
+e.set_pair::<Begin, Position>(Position { x: 10.0, y: 20.0 });
+e.set_pair::<End, Position>(Position { x: 100.0, y: 20.0 }); // Same for End
+
+// ChildOf has the Tag property, so even though Position is a type, the pair
+// does not assume the Position type
+e.add_id((flecs::ChildOf::ID, world.component_id::<Position>()));
+e.add::<(flecs::ChildOf, Position)>();
+@endrust
+</li>
 </ul>
 </div>
 
@@ -763,6 +921,20 @@ e.Set<Position>(second, new(3, 4));
 e.Set<Position>(third, new(5, 6));
 ```
 
+</li>
+<li><b class="tab-title">Rust</b>
+@rust
+let e = world.entity();
+
+let first = world.entity();
+let second = world.entity();
+let third = world.entity();
+
+// Add component position 3 times, for 3 different objects
+e.set_first::<Position>(Position { x: 1.0, y: 2.0 }, first);
+e.set_first::<Position>(Position { x: 3.0, y: 4.0 }, second);
+e.set_first::<Position>(Position { x: 5.0, y: 6.0 }, third);
+@endrust
 </li>
 </ul>
 </div>
@@ -832,6 +1004,22 @@ q.Iter((Iter it) =>
 ```
 
 </li>
+<li><b class="tab-title">Rust</b>
+@rust
+let q = world
+    .query::<()>()
+    .with_id((likes, flecs::Wildcard::ID))
+    .build();
+q.each_iter(|it, i, _| {
+    println!(
+        "entity {} has relationship {} {}",
+        it.entity(i),
+        it.pair(0).unwrap().first_id().name(),
+        it.pair(0).unwrap().second_id().name()
+    );
+});
+@endrust
+</li>
 </ul>
 </div>
 
@@ -861,6 +1049,11 @@ auto q = world.query_builder<>().expr("(Likes, *)").build();
 Query q = world.QueryBuilder().Expr("(Likes, *)").Build();
 ```
 
+</li>
+<li><b class="tab-title">Rust</b>
+@rust
+let q = world.query::<()>().expr("(likes, *)").build();
+@endrust
 </li>
 </ul>
 </div>
@@ -948,6 +1141,29 @@ bob.Each(Eats, (Entity obj) =>
 ```
 
 </li>
+<li><b class="tab-title">Rust</b>
+@rust
+// bob eats apples and pears
+let bob = world.entity();
+
+let eats = world.entity();
+let apples = world.entity();
+let pears = world.entity();
+
+bob.add_id((eats, apples));
+bob.add_id((eats, pears));
+
+// Find all (Eats, *) relationships in bob's type
+bob.each_pair(eats, flecs::Wildcard::ID, |id| {
+    println!("bob eats {}", id.second_id().name());
+});
+
+// For target wildcard pairs, each_target_id() can be used:
+bob.each_target_id(eats, |entity| {
+    println!("bob eats {}", entity.name());
+});
+@endrust
+</li>
 </ul>
 </div>
 
@@ -986,6 +1202,13 @@ Apple.Add(Ecs.IsA, Fruit);
 ```
 
 </li>
+<li><b class="tab-title">Rust</b>
+@rust
+let apple = world.entity();
+let fruit = world.entity();
+apple.add_id((flecs::IsA::ID, fruit));
+@endrust
+</li>
 </ul>
 </div>
 
@@ -1006,6 +1229,11 @@ Apple.is_a(Fruit);
 Apple.IsA(Fruit);
 ```
 
+</li>
+<li><b class="tab-title">Rust</b>
+@rust
+apple.is_a_id(fruit);
+@endrust
 </li>
 </ul>
 </div>
@@ -1039,6 +1267,12 @@ Entity GrannySmith = world.Entity();
 GrannySmith.Add(Ecs.IsA, Apple);
 ```
 
+</li>
+<li><b class="tab-title">Rust</b>
+@rust
+let granny_smith = world.entity();
+granny_smith.add_id((flecs::IsA::ID, apple));
+@endrust
 </li>
 </ul>
 </div>
@@ -1089,6 +1323,19 @@ Entity Frigate = world.Entity()
 ```
 
 </li>
+<li><b class="tab-title">Rust</b>
+@rust
+let spaceship = world
+    .entity()
+    .set(MaxSpeed { value: 100 })
+    .set(Defense { value: 50 });
+
+let frigate = world
+    .entity()
+    .is_a_id(spaceship) // shorthand for .add(flecs::IsA, Spaceship)
+    .set(Defense { value: 75 });
+@endrust
+</li>
 </ul>
 </div>
 
@@ -1123,6 +1370,14 @@ v.Value == 100; // true
 ```
 
 </li>
+<li><b class="tab-title">Rust</b>
+@rust
+// Obtain the inherited component from Spaceship
+let is_100 = frigate.map::<&mut MaxSpeed, _>(|v| {
+    v.value == 100 // True
+});
+@endrust
+</li>
 </ul>
 </div>
 
@@ -1155,6 +1410,14 @@ ref readonly Defense v = ref Frigate.get<Defense>();
 v.Value == 75; // true
 ```
 
+</li>
+<li><b class="tab-title">Rust</b>
+@rust
+// Obtain the overridden component from Frigate
+let is_75 = frigate.map::<&mut Defense, _>(|v| {
+    v.value == 75 // True
+});
+@endrust
 </li>
 </ul>
 </div>
@@ -1214,6 +1477,21 @@ d.Value == 75; // true
 ```
 
 </li>
+<li><b class="tab-title">Rust</b>
+@rust
+let fast_frigate = world.entity().is_a_id(frigate).set(MaxSpeed { value: 200 });
+
+// Obtain the overridden component from FastFrigate
+let is_200 = fast_frigate.map::<&mut MaxSpeed, _>(|v| {
+    v.value == 200 // True
+});
+
+// Obtain the inherited component from Frigate
+let is_75 = fast_frigate.map::<&mut Defense, _>(|v| {
+    v.value == 75 // True
+});
+@endrust
+</li>
 </ul>
 </div>
 
@@ -1254,10 +1532,17 @@ Cockpit.Add(Ecs.ChildOf, Spaceship);
 ```
 
 </li>
+<li><b class="tab-title">Rust</b>
+@rust
+let spaceship = world.entity();
+let cockpit = world.entity();
+cockpit.add_id((flecs::ChildOf::ID, spaceship));
+@endrust
+</li>
 </ul>
 </div>
 
-In C++ and C#, adding a `ChildOf` relationship has a shortcut:
+In C++, C# and Rust, adding a `ChildOf` relationship has a shortcut:
 
 <div class="flecs-snippet-tabs">
 <ul>
@@ -1274,6 +1559,11 @@ Cockpit.child_of(Spaceship);
 Cockpit.ChildOf(Spaceship);
 ```
 
+</li>
+<li><b class="tab-title">Rust</b>
+@rust
+cockpit.child_of_id(spaceship);
+@endrust
 </li>
 </ul>
 </div>
@@ -1330,6 +1620,15 @@ child == world.Lookup("Parent.Child"); // true
 child == parent.Lookup("Child"); // true
 ```
 
+</li>
+<li><b class="tab-title">Rust</b>
+@rust
+let parent = world.entity_named("Parent");
+let child = world.entity_named("Child").child_of_id(parent);
+
+child == world.lookup("Parent::Child"); // true
+child == parent.lookup("Child"); // true
+@endrust
 </li>
 </ul>
 </div>
@@ -1391,6 +1690,22 @@ childA.Has(Ecs.ChildOf, parent); // true
 childB.Has(Ecs.ChildOf, parent); // true
 ```
 
+</li>
+<li><b class="tab-title">Rust</b>
+@rust
+let parent = world.entity();
+
+let prev = world.set_scope_id(parent);
+
+let child_a = world.entity();
+let child_b = world.entity();
+
+// Restore the previous scope
+world.set_scope_id(prev);
+
+child_a.has_id((flecs::ChildOf::ID, parent)); // true
+child_b.has_id((flecs::ChildOf::ID, parent)); // true
+@endrust
 </li>
 </ul>
 </div>
