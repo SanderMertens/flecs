@@ -65,6 +65,18 @@ Routine sys = world.Routine<Position, Velocity>("Move")
     });
 @endcs
 </li>
+<li><b class="tab-title">Rust</b>
+
+@rust
+// System declaration
+world
+    .system_named::<(&mut Position, &Velocity)>("Move")
+    .each(|(p, v)| {
+        p.x += v.x;
+        p.y += v.y;
+    });
+@endrust
+</li>
 </ul>
 </div>
 
@@ -91,6 +103,13 @@ Routine sys = ...;
 sys.Run();
 @endcs
 </li>
+<li><b class="tab-title">Rust</b>
+
+@rust
+let sys = ...;
+sys.run();
+@endrust
+</li>
 </ul>
 </div>
 
@@ -116,6 +135,13 @@ world.progress();
 using World world = World.Create();
 world.Progress();
 @endcs
+</li>
+<li><b class="tab-title">Rust</b>
+
+@rust
+let world = World::new();
+world.progress();
+@endrust
 </li>
 </ul>
 </div>
@@ -144,6 +170,15 @@ Routine sys = world.Routine<Position, Velocity>("Move")
     .Kind(0)
     .Each((ref Position p, ref Velocity v) => { /* ... */ });
 @endcs
+</li>
+<li><b class="tab-title">Rust</b>
+
+@rust
+world
+    .system_named::<(&mut Position, &Velocity)>("Move")
+    .kind_id(0)
+    .each(|(p, v)| { /* ... */ });
+@endrust
 </li>
 </ul>
 </div>
@@ -263,6 +298,78 @@ world.Routine<Position, Velocity>("Move")
 
 The `Iter` function can be invoked multiple times per frame, once for each matched table. The `Each` function is called once per matched entity.
 </li>
+<li><b class="tab-title">Rust</b>
+
+@rust
+    // `.each_entity` if you need the associated entity.
+
+    // Query iteration (each)
+    q.each(|(p, v)| { /* ... */ });
+
+    // System iteration (each)
+    world
+        .system_named::<(&mut Position, &Velocity)>("Move")
+        .each(|(p, v)| { /* ... */ });
+@endrust
+@rust
+    // Query iteration (run)
+    q.run(|mut it| {
+        while it.next() {
+            let mut p = it
+                .field::<Position>(0)
+                .expect("query term changed and not at the same index anymore");
+            let v = it
+                .field::<Velocity>(1)
+                .expect("query term changed and not at the same index anymore");
+            for i in it.iter() {
+                p[i].x += v[i].x;
+                p[i].y += v[i].y;
+            }
+        }
+    });
+
+    // System iteration (run)
+    world
+        .system_named::<(&mut Position, &Velocity)>("Move")
+        .run(|mut it| {
+            while it.next() {
+                let mut p = it
+                    .field::<Position>(0)
+                    .expect("query term changed and not at the same index anymore");
+                let v = it
+                    .field::<Velocity>(1)
+                    .expect("query term changed and not at the same index anymore");
+                for i in it.iter() {
+                    p[i].x += v[i].x;
+                    p[i].y += v[i].y;
+                }
+            }
+        });
+@endrust
+@rust
+    // Query iteration (run_iter)
+    q.run_iter(|it, (p, v)| {
+        for i in it.iter() {
+            p[i].x += v[i].x;
+            p[i].y += v[i].y;
+        }
+    });
+
+    // System iteration (run_iter)
+    world
+        .system_named::<(&mut Position, &Velocity)>("Move")
+        .run_iter(|it, (p, v)| {
+            for i in it.iter() {
+                p[i].x += v[i].x;
+                p[i].y += v[i].y;
+            }
+        });
+@endrust
+
+The `run` function can be invoked multiple times per frame, once for each matched table. The `each` function is called once per matched entity.
+
+Note that there is no significant performance difference between `run` and `each`, which can both be vectorized by the compiler. By default `each` can actually end up being faster, as it is instanced (see [query manual](Queries.md#each-rust)).
+</li>
 </ul>
 </div>
 
@@ -328,6 +435,25 @@ world.Routine<Position, Velocity>("Move")
     });
 @endcs
 </li>
+<li><b class="tab-title">Rust</b>
+
+@rust
+world
+    .system_named::<(&mut Position, &Velocity)>("Move")
+    .each_iter(|it, i, (p, v)| {
+        p.x += v.x * it.delta_time();
+        p.y += v.y * it.delta_time();
+    });
+world
+    .system_named::<(&mut Position, &Velocity)>("Move")
+    .run_iter(|it, (p, v)| {
+        for i in it.iter() {
+            p[i].x += v[i].x * it.delta_time();
+            p[i].y += v[i].y * it.delta_time();
+        }
+    });
+@endrust
+</li>
 </ul>
 </div>
 
@@ -352,6 +478,12 @@ world.progress(delta_time);
 world.Progress(deltaTime);
 @endcs
 </li>
+<li><b class="tab-title">Rust</b>
+
+@rust
+world.progress_time(delta_time);
+@endrust
+</li>
 </ul>
 </div>
 
@@ -375,6 +507,12 @@ world.progress();
 @cs
 world.Progress();
 @endcs
+</li>
+<li><b class="tab-title">Rust</b>
+
+@rust
+world.Progress();
+@endrust
 </li>
 </ul>
 </div>
@@ -436,6 +574,19 @@ world.Routine("PrintTime")
 world.progress();
 @endcs
 </li>
+<li><b class="tab-title">Rust</b>
+
+@rust
+world.system_named::<()>("PrintTime").run(|mut it| {
+    while it.next() {
+        println!("Time: {}", it.delta_time());
+    }
+});
+
+// Runs PrintTime
+world.progress();
+@endrust
+</li>
 </ul>
 </div>
 
@@ -492,6 +643,19 @@ world.Routine<Game>("PrintTime")
     });
 @endcs
 </li>
+<li><b class="tab-title">Rust</b>
+
+@rust
+world
+    .system_named::<&Game>("PrintTime")
+    .term_at(0)
+    .singleton()
+    .kind::<flecs::pipeline::OnUpdate>()
+    .run_iter(|it, game| {
+        println!("Time: {}", game[0].time);
+    });
+@endrust
+</li>
 </ul>
 </div>
 
@@ -537,6 +701,18 @@ world.Routine<Position, Velocity>("Move")
         // ...
     });
 @endcs
+</li>
+<li><b class="tab-title">Rust</b>
+
+@rust
+ // System is created with (DependsOn, OnUpdate)
+ world
+     .system_named::<(&mut Position, &Velocity)>("Move")
+     .kind::<flecs::pipeline::OnUpdate>()
+     .each(|(p, v)| {
+         // ...
+     });
+@endrust
 </li>
 </ul>
 </div>
@@ -591,6 +767,18 @@ Flecs has the following builtin phases, listed in topology order:
 - `Ecs.PostUpdate`
 - `Ecs.PreStore`
 - `Ecs.OnStore`
+</li>
+<li><b class="tab-title">Rust</b>
+
+- `flecs::pipeline::OnStart`
+- `flecs::pipeline::OnLoad`
+- `flecs::pipeline::PostLoad`
+- `flecs::pipeline::PreUpdate`
+- `flecs::pipeline::OnUpdate`
+- `flecs::pipeline::OnValidate`
+- `flecs::pipeline::PostUpdate`
+- `flecs::pipeline::PreStore`
+- `flecs::pipeline::OnStore`
 </li>
 </ul>
 </div>
@@ -657,6 +845,22 @@ world.Pipeline()
     .Without(Ecs.Disabled).Up(Ecs.ChildOf)
     .Build();
 @endcs
+</li>
+<li><b class="tab-title">Rust</b>
+
+@rust
+world
+    .pipeline()
+    .with::<flecs::system::System>()
+    .with::<flecs::pipeline::Phase>()
+    .cascade_type::<flecs::DependsOn>()
+    .without::<flecs::Disabled>()
+    .up_type::<flecs::DependsOn>()
+    .without::<flecs::Disabled>()
+    .up_type::<flecs::ChildOf>()
+    .build();
+@endrust
+
 </li>
 </ul>
 </div>
@@ -730,6 +934,31 @@ Routine move = world.Routine<Position, Velocity>("Move")
 world.Progress();
 @endcs
 </li>
+<li><b class="tab-title">Rust</b>
+
+@rust
+// Create custom pipeline
+let pipeline = world
+    .pipeline()
+    .with::<flecs::system::System>()
+    .with::<Foo>() // or `.with_id(foo) if an id`
+    .build();
+
+// Configure the world to use the custom pipeline
+world.set_pipeline_id(pipeline);
+
+// Create system
+world
+    .system_named::<(&mut Position, &Velocity)>("Move")
+    .kind::<Foo>() // or `.kind_id(foo) if an id`
+    .each(|(p, v)| {
+        p.x += v.x;
+        p.y += v.y;
+    });
+// Runs the pipeline & system
+world.progress();
+@endrust
+</li>
 </ul>
 </div>
 
@@ -759,6 +988,11 @@ move.add(Foo);
 move.Entity.Add(foo);
 @endcs
 </li>
+<li><b class="tab-title">Rust</b>
+
+@rust
+move_sys.add::<Foo>();
+@endrust
 </ul>
 </div>
 
@@ -801,6 +1035,15 @@ s.Entity.Disable();
 s.Entity.Enable();
 @endcs
 </li>
+<li><b class="tab-title">Rust</b>
+
+@rust
+// Disable system
+s.disable_self();
+// Enable system
+s.enable_self();
+@endrust
+</li>
 </ul>
 </div>
 
@@ -824,6 +1067,12 @@ s.add(flecs::Disabled);
 @cs
 s.Entity.Add(Ecs.Disabled);
 @endcs
+</li>
+<li><b class="tab-title">Rust</b>
+
+@rust
+sys.add::<flecs::Disabled>();
+@endrust
 </li>
 </ul>
 </div>
@@ -912,6 +1161,15 @@ world.Routine<Position>()
     .Each( /* ... */);
 @endcs
 </li>
+<li><b class="tab-title">Rust</b>
+
+@rust
+// In the Rust API, use the write method to indicate commands could be inserted.
+world.system::<&Position>().write::<Position>().each(|p| {
+    // ...
+});
+@endrust
+</li>
 </ul>
 </div>
 
@@ -955,6 +1213,15 @@ world.Routine<Position>()
     .Read<Transform>()
     .Each( /* ... */);
 @endcs
+</li>
+<li><b class="tab-title">Rust</b>
+
+@rust
+// In the Rust API, use the read method to indicate a component is read using .get
+world.system::<&Position>().read::<Position>().each(|p| {
+    // ...
+});
+@endrust
 </li>
 </ul>
 </div>
@@ -1007,6 +1274,19 @@ ecs.Routine("AssignPlate")
     .NoReadonly() // disable readonly mode for this system
     .Iter((Iter it) => { /* ... */ })
 @endcs
+</li>
+<li><b class="tab-title">Rust</b>
+
+@rust
+world
+    .system_named::<&Plate>("AssignPlate")
+    .immediate(true) // disable readonly mode for this system
+    .run(|mut it| {
+        while it.next() {
+            // ...
+        }
+    });
+@endrust
 </li>
 </ul>
 </div>
@@ -1061,6 +1341,20 @@ void AssignPlate(ecs_iter_t *it) {
 });
 @endcs
 </li>
+<li><b class="tab-title">Rust</b>
+
+@rust
+.run(|mut it| {
+    while it.next() {
+        // ECS operations ran here are visible after running the system
+        it.world().defer_suspend();
+        // ECS operations ran here are immediately visible
+        it.world().defer_resume();
+        // ECS operations ran here are visible after running the system
+    }
+});
+@endrust
+</li>
 </ul>
 </div>
 
@@ -1087,6 +1381,12 @@ world.set_threads(4);
 @cs
 world.SetThreads(4);
 @endcs
+</li>
+<li><b class="tab-title">Rust</b>
+
+@rust
+world.set_threads(4);
+@endrust
 </li>
 </ul>
 </div>
@@ -1125,6 +1425,14 @@ world.Routine<Position>()
   .Each( /* ... */ );
 @endcs
 </li>
+<li><b class="tab-title">Rust</b>
+
+@rust
+world.system::<&Position>().multi_threaded().each(|p| {
+    // ...
+});
+@endrust
+</li>
 </ul>
 </div>
 
@@ -1154,6 +1462,12 @@ world.set_task_threads(4);
 @cs
 world.SetTaskThreads(4);
 @endcs
+</li>
+<li><b class="tab-title">Rust</b>
+
+@rust
+world.set_task_threads(4);
+@endrust
 </li>
 </ul>
 </div>
@@ -1211,6 +1525,16 @@ world.Routine<Position, Velocity>()
     .Each(...);
 @endcs
 </li>
+<li><b class="tab-title">Rust</b>
+
+@rust
+world.system::<&Position>()
+    .interval(1.0) // Run at 1Hz
+    .each(|p| {
+    // ...
+});
+@endrust
+</li>
 </ul>
 </div>
 
@@ -1256,6 +1580,17 @@ world.Routine<Position, Velocity>()
     .Rate(2) // Run every other frame
     .Each(...);
 @endcs
+</li>
+<li><b class="tab-title">Rust</b>
+
+@rust
+world
+    .system::<&Position>()
+    .rate(2) // Run every other frame
+    .each(|p| {
+        // ...
+    });
+@endrust
 </li>
 </ul>
 </div>
@@ -1321,6 +1656,12 @@ world.Routine<Position, Velocity>()
     .Each(...);
 @endcs
 </li>
+<li><b class="tab-title">Rust</b>
+
+@rust
+// Timer not yet implemented in Rust
+@endrust
+</li>
 </ul>
 </div>
 
@@ -1356,6 +1697,12 @@ tickSource.Stop();
 // Resume timer
 tickSource.Start();
 @endcs
+</li>
+<li><b class="tab-title">Rust</b>
+
+@rust
+// Timer addon yet to be implemented in rust
+@endrust
 </li>
 </ul>
 </div>
@@ -1412,6 +1759,12 @@ TimerEntity eachMinute = world.Timer()
 TimerEntity eachHour = world.Timer()
     .Rate(60, eachMinute);
 @endcs
+</li>
+<li><b class="tab-title">Rust</b>
+
+@rust
+// Timer not yet implemented in Rust
+@endrust
 </li>
 </ul>
 </div>
@@ -1496,6 +1849,12 @@ Routine eachHour = world.Routine("EachHour")
     .Rate(60)
     .Iter((Iter it) => { /* ... */ });
 @endcs
+</li>
+<li><b class="tab-title">Rust</b>
+
+@rust
+// Timer not yet implemented in Rust
+@endrust
 </li>
 </ul>
 </div>
