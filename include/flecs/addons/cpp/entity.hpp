@@ -280,6 +280,8 @@ struct entity : entity_builder<entity>
     /** Clear an entity.
      * This operation removes all components from an entity without recycling
      * the entity id.
+     *
+     * @see ecs_clear()
      */
     void clear() const {
         ecs_clear(world_, id_);
@@ -288,6 +290,8 @@ struct entity : entity_builder<entity>
     /** Delete an entity.
      * Entities have to be deleted explicitly, and are not deleted when the
      * entity object goes out of scope.
+     *
+     * @see ecs_delete()
      */
     void destruct() const {
         ecs_delete(world_, id_);
