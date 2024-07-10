@@ -342,33 +342,33 @@ https://www.flecs.dev/explorer/flecs.js
 
 The client can then create a connection to a running application like this:
 
-```js
+<pre><code class="language-javascript">
 // Connect to localhost on the default port (27750)
 let conn = flecs.connect("localhost");
-```
+</code></pre>
 
 Clients can also connect to a remote host:
 
-```js
+<pre><code class="language-javascript">
 let conn = flecs.connect("https://my-game.com/api:9000");
-```
+</code></pre>
 
 Clients can also connect directly to a wasm image:
 
-```js
+<pre><code class="language-javascript">
 let conn = flecs.connect("my-game.wasm");
-```
+</code></pre>
 
 Once the connection is created, the client can make requests:
 
-```js
+<pre><code class="language-javascript">
 conn.query("Position, Velocity, (ChildOf, scene)", 
     {}, (reply) => {
         for (let entity of reply.results) {
             console.log(`entity ${entity.name} matched!`);
         }
     });
-```
+</code></pre>
 
 ## Reference
 The following sections describe the different REST endpoints of the Flecs Remote API. Where applicable the corresponding JSON serialization code will be mentioned. The endpoint options map one to one to JSON (de)serializer options, prefixed by `serialize_`. For example, REST API option `values` maps to JSON serializer option `serialize_values`.
