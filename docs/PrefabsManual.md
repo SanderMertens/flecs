@@ -61,7 +61,7 @@ const Defense *d = inst_1.get<Defense>();
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 file record struct Defense(double Value);
 
 // Create a SpaceShip prefab with a Defense component.
@@ -74,7 +74,7 @@ Entity Inst2 = world.Entity().IsA(SpaceShip);
 
 // Get instantiated component
 ref readonly Attack attack = ref inst_1.Get<Defense>();
-```
+</code></pre>
 
 </li>
 </ul>
@@ -109,9 +109,9 @@ flecs::entity myPrefab = world.prefab();
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 Entity myPrefab = world.Prefab();
-```
+</code></pre>
 
 </li>
 </ul>
@@ -146,12 +146,12 @@ world.query_builder<Position>()
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 // Only match prefab entities
 world.QueryBuilder<Position>()
     .With(Ecs.Prefab)
     .Build();
-```
+</code></pre>
 
 </li>
 </ul>
@@ -186,12 +186,12 @@ world.query_builder<Position>()
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 // Only match prefab entities
 world.QueryBuilder<Position>()
     .With(Ecs.Prefab).Optional()
     .Build();
-```
+</code></pre>
 
 </li>
 </ul>
@@ -226,9 +226,9 @@ world.query_builder<Position>()
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 TODO
-```
+</code></pre>
 
 </li>
 </ul>
@@ -296,7 +296,7 @@ const Defense *defense = inst.get<Defense>();
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 // Make Defense component inheritable
 world.Component<Defense>()
     .Add(Ecs.OnInstantiate, Ecs.Inherit);
@@ -314,7 +314,7 @@ ref readonly Attack attack = ref inst.Get<Attack>();
 
 // Component is retrieved from prefab
 ref readonly Defense defense = ref inst.Get<Defense>();
-```
+</code></pre>
 
 </li>
 </ul>
@@ -344,11 +344,11 @@ if (inst.owns<Defense>()) {
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 if (inst.Owns<Defense>()) {
     // not inherited
 }
-```
+</code></pre>
 </li>
 </ul>
 </div>
@@ -380,12 +380,12 @@ if (!inherited_from) {
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 Entity inheritedFrom = inst.TargetFor<Defense>();
 if (!inheritedFrom) {
     // not inherited
 }
-```
+</code></pre>
 
 </li>
 </ul>
@@ -444,7 +444,7 @@ inst_a.set(Defense{75});
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 // Make Defense component inheritable
 world.Component<Defense>()
     .Add(Ecs.OnInstantiate, Ecs.Inherit);
@@ -459,7 +459,7 @@ Entity inst_b = world.Entity().IsA(SpaceShip);
 
 // Override Defense only for inst_a
 inst_a.Set(new Defense(75));
-```
+</code></pre>
 
 </li>
 </ul>
@@ -517,7 +517,7 @@ inst_a.add<Defense>(); // Initialized with value 50
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 // Make Defense component inheritable
 world.Component<Defense>()
     .Add(Ecs.OnInstantiate, Ecs.Inherit);
@@ -533,7 +533,7 @@ Entity inst_b = world.Entity().IsA(SpaceShip);
 
 // Override Defense only for inst_a
 inst_a.Add<Defense>(); // Initialized with value 50
-```
+</code></pre>
 
 </li>
 </ul>
@@ -590,7 +590,7 @@ inst.owns<Defense>(); // true
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 // Make Defense component inheritable
 world.Component<Defense>()
     .Add(Ecs.OnInstantiate, Ecs.Inherit);
@@ -602,7 +602,7 @@ Entity SpaceShip = world.Prefab()
 // Create prefab instance
 Entity inst = world.Entity().IsA(SpaceShip);
 inst.Owns<Defense>(); // true
-```
+</code></pre>
 
 </li>
 </ul>
@@ -670,7 +670,7 @@ const Defense *defense = inst.get<Defense>(); // 50
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 // Create prefab
 Entity SpaceShip = world.Prefab("SpaceShip")
     .set<Defense>(new (50))
@@ -685,7 +685,7 @@ Entity Freighter = world.Prefab("Freighter")
 Entity inst = world.Entity().IsA(Freighter);
 ref readonly Attack attack = ref inst.get<Health>(); // 150
 ref readonly Defense defense = ref inst.get<Defense>(); // 50
-```
+</code></pre>
 
 </li>
 </ul>
@@ -736,7 +736,7 @@ flecs::entity inst_cockpit = inst.lookup("Cockpit");
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 Entity SpaceShip = world.Prefab("SpaceShip");
 Entity Cockpit = world.Prefab("Cockpit")
     .ChildOf(SpaceShip);
@@ -746,7 +746,7 @@ Entity inst = ecs.Entity().IsA(SpaceShip);
 
 // Lookup instantiated child
 Entity inst_cockpit = inst.Lookup("Cockpit");
-```
+</code></pre>
 
 </li>
 </ul>
@@ -807,7 +807,7 @@ flecs::entity inst_cockpit = inst.target(CockPit);
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 Entity SpaceShip = world.Prefab("SpaceShip");
 Entity Cockpit = world.Prefab("Cockpit")
     .ChildOf(SpaceShip)
@@ -818,7 +818,7 @@ Entity inst = ecs.Entity().IsA(SpaceShip);
 
 // Lookup instantiated child
 Entity inst_cockpit = inst.Target(CockPit);
-```
+</code></pre>
 
 </li>
 </ul>
@@ -850,7 +850,7 @@ flecs::entity prefab = world.lookup("SpaceShip");
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 file struct SpaceShip { }
 
 // Create prefab associated with the SpaceShip type
@@ -864,7 +864,7 @@ Entity inst = world.Entity()
 
 // Lookup prefab handle
 Entity prefab = world.Lookup("SpaceShip");
-```
+</code></pre>
 
 </li>
 </ul>

@@ -50,7 +50,7 @@ world.entity().set(Position{10, 20}); // Invokes observer
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 // Create observer that is invoked whenever Position is set
 world.Observer<Position>()
     .Event(Ecs.OnSet)
@@ -60,7 +60,7 @@ world.Observer<Position>()
     });
 
 world.Entity().Set(new Position(10, 20)); // Invokes observer
-```
+</code></pre>
 
 </li>
 </ul>
@@ -149,7 +149,7 @@ e.add<Position>();
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 Entity e = world.Entity();
 
 // OnAdd observer fires
@@ -157,7 +157,7 @@ e.Add<Position>();
 
 // OnAdd observer doesn't fire, entity already has component
 e.Add<Position>();
-```
+</code></pre>
 
 </li>
 </ul>
@@ -198,7 +198,7 @@ e.set(Position{10, 20});
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 Entity e = world.Entity();
 
 // OnAdd observer fires first, then OnSet observer fires
@@ -206,7 +206,7 @@ e.Set(new Position(10, 20));
 
 // OnAdd observer doesn't fire, OnSet observer fires
 e.Set(new Position(10, 20));
-```
+</code></pre>
 
 </li>
 </ul>
@@ -243,12 +243,12 @@ flecs::entity i = world.entity().is_a(p);
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 Entity p = world.Prefab().Set(new Position(10, 20));
 
 // Produces OnSet event for Position
 Entity i = world.Entity().IsA(p);
-```
+</code></pre>
 
 </li>
 </ul>
@@ -298,7 +298,7 @@ i.remove<Position>();
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 Entity p = world.Prefab().Set(new Position(10, 20));
 
 // Produces OnSet event for inherited Position component
@@ -309,7 +309,7 @@ i.Set(new Position(20, 30));
 
 // Reexposes inherited component, produces OnSet event
 i.Remove<Position>();
-```
+</code></pre>
 
 </li>
 </ul>
@@ -345,12 +345,12 @@ flecs::entity i = world.entity().is_a(p);
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 Entity p = world.Prefab().Set(new Position(10, 20));
 
 // Produces OnSet event for Position
 Entity i = world.Entity().IsA(p);
-```
+</code></pre>
 
 </li>
 </ul>
@@ -389,7 +389,7 @@ e.remove<Position>();
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 Entity e = world.Entity().Set(new Position(10, 20));
 
 // OnRemove observer fires
@@ -397,7 +397,7 @@ e.Remove<Position>();
 
 // OnRemove observer doesn't fire, entity doesn't have the component
 e.Remove<Position>();
-```
+</code></pre>
 
 </li>
 </ul>
@@ -435,7 +435,7 @@ world.observer<Position>()
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 // Observer that listens for both OnAdd and OnRemove events
 world.Observer<Position>()
     .Event(Ecs.OnAdd)
@@ -444,7 +444,7 @@ world.Observer<Position>()
     {
         // ...
     });
-```
+</code></pre>
 
 </li>
 </ul>
@@ -485,7 +485,7 @@ world.observer<Position>()
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 world.Observer<Position>()
     .Event(Ecs.OnAdd)
     .Event(Ecs.OnRemove)
@@ -497,7 +497,7 @@ world.Observer<Position>()
             // ...
         }
     });
-```
+</code></pre>
 
 </li>
 </ul>
@@ -533,7 +533,7 @@ world.observer<Position>()
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 // Observer that listens for all events for Position
 world.Observer<Position>()
     .Event(Ecs.Wildcard)
@@ -541,7 +541,7 @@ world.Observer<Position>()
     {
         // ...
     });
-```
+</code></pre>
 
 </li>
 </ul>
@@ -587,7 +587,7 @@ world.observer<Position, Velocity>()
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 // Observer that listens for entities with both Position and Velocity
 world.Observer<Position, Velocity>()
     .Event(Ecs.OnAdd)
@@ -595,7 +595,7 @@ world.Observer<Position, Velocity>()
     {
         // ...
     });
-```
+</code></pre>
 
 </li>
 </ul>
@@ -633,7 +633,7 @@ e.add<Velocity>();
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 Entity e = world.Entity();
 
 // Does not trigger "Position, Velocity" observer
@@ -641,7 +641,7 @@ e.Add<Position>();
 
 // Entity now matches "Position, Velocity" query, triggers observer
 e.Add<Velocity>();
-```
+</code></pre>
 
 </li>
 </ul>
@@ -706,7 +706,7 @@ e.set(Position{20, 30});
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 // Observer that only triggers on Position, not on Velocity
 world.Observer<Position>()
     .With<Velocity>().Filter()
@@ -726,7 +726,7 @@ e.Set(new Velocity(1, 2));
 
 // Triggers, entity now matches observer query
 e.Set(new Velocity(20, 30));
-```
+</code></pre>
 
 </li>
 </ul>
@@ -789,7 +789,7 @@ e.set(Position{20, 30});
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 // OnSet observer with both component and tag
 world.Observer<Position>()
     .with<Npc>() // Tag
@@ -809,7 +809,7 @@ e.Add<Npc>();
 
 // Produces an OnSet event & triggers observer
 e.Set(new Position(20, 30));
-```
+</code></pre>
 
 </li>
 </ul>
@@ -872,7 +872,7 @@ e.remove<Velocity>();
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 // Observer with a Not term
 world.Observer<Position>()
     .Without<Velocity>()
@@ -892,7 +892,7 @@ e.Set(new Velocity(1, 2));
 
 // Triggers the observer, as the Velocity term was inverted to OnRemove
 e.Remove<Velocity>();
-```
+</code></pre>
 
 </li>
 </ul>
@@ -974,7 +974,7 @@ e.remove<Position>();
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 // Monitor observer
 world.Observer<Position, Velocity>()
     .Event(flecs::Monitor)
@@ -997,7 +997,7 @@ e.Set(new Velocity(1, 2));
 
 // Entity no longer matches, triggers monitor with OnRemove event
 e.Remove<Velocity>();
-```
+</code></pre>
 
 </li>
 </ul>
@@ -1065,7 +1065,7 @@ flecs::entity e2 = world.entity().set(Position{10, 20});
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 // Entity created before the observer
 Entity e1 = world.Entity().Set(new Position(10, 20));
 
@@ -1082,7 +1082,7 @@ world.Observer<Position, Velocity>()
 
 // Fires observer as usual
 Entity e2 = world.Entity().Set(new Position(10, 20));
-```
+</code></pre>
 
 </li>
 </ul>
@@ -1140,7 +1140,7 @@ flecs::entity e = world.entity().set(TimeOfDay{0});
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 // Entity used for fixed source
 Entity Game = world.Entity().Set(new TimeOfDay(0));
 
@@ -1158,7 +1158,7 @@ Game.Set(new TimeOfDay(1));
 
 // Does not trigger observer
 Entity e = world.Entity().Set(new TimeOfDay(0));
-```
+</code></pre>
 
 </li>
 </ul>
@@ -1216,7 +1216,7 @@ flecs::entity e = world.entity().set(TimeOfDay{0});
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 world.Set(new TimeOfDay(0));
 
 // Observer with singleton source
@@ -1233,7 +1233,7 @@ world.Set(new TimeOfDay(1));
 
 // Does not trigger observer
 Entity e = world.Entity().Set(new TimeOfDay(0));
-```
+</code></pre>
 
 </li>
 </ul>
@@ -1285,7 +1285,7 @@ parent.set(Position{10, 20});
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 // Create an observer that matches OnSet(Position) events on self and a parent
 world.Observer<Position>()
     .TermAt(0).Self().Up()  // .Trav(Ecs.ChildOf) (default)
@@ -1300,7 +1300,7 @@ Entity child = world.Entity().ChildOf(parent);
 
 // Invokes observer twice: once for the parent and once for the child
 parent.Set(new Position(10, 20));
-```
+</code></pre>
 
 </li>
 </ul>
@@ -1356,7 +1356,7 @@ flecs::entity child = world.entity().child_of(parent);
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 // Create an observer that matches OnAdd(Position) events on a parent
 world.Observer<Position>()
     .TermAt(0).Up() // .Trav(Ecs.ChildOf) (default)
@@ -1370,7 +1370,7 @@ Entity parent = world.Entity().Set(new Position(10, 20));
 
 // Forwards OnAdd event for Position to child
 Entity child = world.Entity().ChildOf(parent);
-```
+</code></pre>
 
 </li>
 </ul>
@@ -1456,7 +1456,7 @@ world.emit<Synchronized>()
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 // Create a custom event
 file struct Synchronized;
 
@@ -1478,7 +1478,7 @@ world.Emit<Synchronized>()
     .Id<Position>()
     .Entity(e)
     .Emit();
-```
+</code></pre>
 
 </li>
 </ul>
@@ -1537,7 +1537,7 @@ widget.emit<Clicked>();
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 // Create a custom event
 file struct Clicked;
 
@@ -1551,7 +1551,7 @@ widget.Observe<Click>(() =>
 });
 
 widget.Emit<Clicked>();
-```
+</code></pre>
 
 </li>
 </ul>
@@ -1613,7 +1613,7 @@ widget.emit<Resize>({100, 200});
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 // Create a custom event
 file record struct Resize(double Width, double Height);
 
@@ -1627,7 +1627,7 @@ widget.Observe<Resize>((ref Resize r) =>
 });
 
 widget.Emit<Resize>(new(100, 200));
-```
+</code></pre>
 
 </li>
 </ul>
@@ -1685,7 +1685,7 @@ world.defer_end();
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 world.Observer<Position>()
     .Event(flecs::OnSet)
     .Each((Iter it, int i, ref Position p) =>
@@ -1700,7 +1700,7 @@ world.DeferBegin();
 e.Set(new Position(20, 30));
 // Operation is delayed until here, observer is also invoked here
 world.DeferEnd();
-```
+</code></pre>
 
 </li>
 </ul>

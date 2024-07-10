@@ -1278,7 +1278,7 @@ A query may contain multiple pairs:
 ```
 (Likes, Apples), (Likes, Pairs)
 ```
-
+ 
 Queries for pairs that contain wildcards should use the symbols for either the `Wildcard` or `Any` wildcards:
 
 ```

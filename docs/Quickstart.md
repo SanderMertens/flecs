@@ -158,11 +158,11 @@ flecs::world world;
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 using World world = World.Create();
 
 // Do the ECS stuff
-```
+</code></pre>
 </li>
 </ul>
 </div>
@@ -193,13 +193,13 @@ e.is_alive(); // false!
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 Entity e = world.Entity();
 e.IsAlive(); // true!
 
 e.Destruct();
 e.IsAlive(); // false!
-```
+</code></pre>
 </li>
 </ul>
 </div>
@@ -226,11 +226,11 @@ std::cout << "Entity name: " << e.name() << std::endl;
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 Entity e = world.Entity("Bob");
 
 Console.WriteLine($"Entity name: {e.Name()}");
-```
+</code></pre>
 </li>
 </ul>
 </div>
@@ -252,9 +252,9 @@ auto e = world.lookup("Bob");
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 Entity e = world.Lookup("Bob");
-```
+</code></pre>
 </li>
 </ul>
 </div>
@@ -315,7 +315,7 @@ e.remove<Position>();
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 Entity e = world.Entity();
 
 // Add a component. This creates the component in the ECS storage, but does not
@@ -332,7 +332,7 @@ ref readonly Position p = ref e.Get<Position>();
 
 // Remove component
 e.Remove<Position>();
-```
+</code></pre>
 </li>
 </ul>
 </div>
@@ -367,13 +367,13 @@ pos_e.add<Serializable>();
 <li><b class="tab-title">C#</b>
 
 C# applications can use the `World.Entity()` function.
-```cs
+<pre><code class="language-cpp">
 Entity posE = world.Entity<Position>();
 Console.WriteLine($"Name: {posE.Name()}"); // outputs 'Name: Position'
 
 // It's possible to add components like you would for any entity
 posE.Add<Serializable>();
-```
+</code></pre>
 </li>
 </ul>
 </div>
@@ -403,12 +403,12 @@ std::cout << "Component size: " << c->size << std::endl;
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 Entity posE = world.Entity<Position>();
 
 ref readonly EcsComponent c = ref posE.Get<EcsComponent>();
 Console.WriteLine($"Component size: {c.size}");
-```
+</code></pre>
 </li>
 </ul>
 </div>
@@ -462,7 +462,7 @@ e.has(Enemy); // false!
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 // Option 1: create Tag as empty struct
 public struct Enemy { }
 
@@ -483,7 +483,7 @@ e.Has(Enemy); // true!
 
 e.Remove(Enemy);
 e.Has(Enemy); // false!
-```
+</code></pre>
 </li>
 </ul>
 </div>
@@ -534,7 +534,7 @@ Bob.has<Likes>(Alice); // false!
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 // Create Likes relationship as empty type (tag)
 public struct Likes { }
 
@@ -548,7 +548,7 @@ Bob.Has<Likes>(Alice); // true!
 
 Bob.Remove<Likes>(Alice);
 Bob.Has<Likes>(Alice); // false!
-```
+</code></pre>
 </li>
 </ul>
 </div>
@@ -570,9 +570,9 @@ flecs::id id = world.pair<Likes>(Bob);
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 Id id = world.Pair<Likes>(bob);
-```
+</code></pre>
 </li>
 </ul>
 </div>
@@ -601,14 +601,14 @@ if (id.is_pair()) {
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 Id id = ...;
 if (id.IsPair())
 {
     Entity relationship = id.First();
     Entity target = id.Second();
 }
-```
+</code></pre>
 </li>
 </ul>
 </div>
@@ -643,7 +643,7 @@ bob.has(Grows, Pears); // true!
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 Entity Bob = ...;
 Bob.Add(Eats, Apples);
 Bob.Add(Eats, Pears);
@@ -652,7 +652,7 @@ Bob.Add(Grows, Pears);
 Bob.Has(Eats, Apples); // true!
 Bob.Has(Eats, Pears);  // true!
 Bob.Has(Grows, Pears); // true!
-```
+</code></pre>
 </li>
 </ul>
 </div>
@@ -675,10 +675,10 @@ auto o = alice.target<Likes>(); // Returns Bob
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 Entity Alice = ...;
 Entity o = Alice.Target<Likes>(); // Returns Bob
-```
+</code></pre>
 </li>
 </ul>
 </div>
@@ -713,13 +713,13 @@ parent.destruct();
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 Entity parent = world.Entity();
 Entity child = world.Entity().ChildOf(parent);
 
 // Deleting the parent also deletes its children
 parent.Destruct();
-```
+</code></pre>
 </li>
 </ul>
 </div>
@@ -761,14 +761,14 @@ parent.lookup("child"); // returns child
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 Entity parent = world.Entity("parent");
 Entity child = world.Entity("child").ChildOf(parent);
 Console.WriteLine(child.Path()); // output: 'parent.child'
 
 world.Lookup("parent.child"); // returns child
 parent.Lookup("child"); // returns child
-```
+</code></pre>
 </li>
 </ul>
 </div>
@@ -813,7 +813,7 @@ q.each([](Position& p, Position& p_parent) {
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 Query q = world.QueryBuilder<Position, Position>()
     .TermAt(1).Parent().Cascade()
     .Build();
@@ -822,7 +822,7 @@ q.Each((ref Position p, ref Position pParent) =>
 {
     // Do the thing
 });
-```
+</code></pre>
 </li>
 </ul>
 </div>
@@ -860,13 +860,13 @@ std::cout << e.type().str() << std::endl; // output: 'Position,Velocity'
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 Entity e = ecs.Entity()
     .Add<Position>()
     .Add<Velocity>();
 
 Console.WriteLine(e.Type().Str()); // output: 'Position,Velocity'
-```
+</code></pre>
 </li>
 </ul>
 </div>
@@ -897,7 +897,7 @@ e.each([&](flecs::id id) {
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 e.Each((Id id) =>
 {
     if (id == world.Id<Position>()) 
@@ -905,7 +905,7 @@ e.Each((Id id) =>
         // Found Position component!
     }
 });
-```
+</code></pre>
 </li>
 </ul>
 </div>
@@ -937,13 +937,13 @@ const Gravity *g = world.get<Gravity>();
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 // Set singleton component
 world.Set<Gravity>(new(9.81));
 
 // Get singleton component
 ref readonly Gravity g = ref world.Get<Gravity>();
-```
+</code></pre>
 </li>
 </ul>
 </div>
@@ -972,13 +972,13 @@ const Gravity *g = grav_e.get<Gravity>();
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 Entity gravE = world.Entity<Gravity>();
 
 gravE.Set<Gravity>(new(10, 20));
 
 ref readonly Gravity g = ref gravE.Get<Gravity>();
-```
+</code></pre>
 </li>
 </ul>
 </div>
@@ -1013,11 +1013,11 @@ world.query_builder<Velocity, Gravity>()
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 world.QueryBuilder<Velocity, Gravity>()
     .TermAt(2).Singleton()
     .Build();
-```
+</code></pre>
 </li>
 </ul>
 </div>
@@ -1088,7 +1088,7 @@ q.run([](flecs::iter& it) {
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 // For simple queries the each function can be used
 world.Each((ref Position p, ref Velocity v) => // Entity argument is optional
 {
@@ -1113,7 +1113,7 @@ q.Iter((Iter it, Field<Position> p) =>
     foreach (int i in it)
         Console.WriteLine($"{it.Entity(i).Name()}: ({p[i].X}, {p[i].Y})")
 });
-```
+</code></pre>
 </li>
 </ul>
 </div>
@@ -1150,14 +1150,14 @@ flecs::query<> q = world.query_builder()
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 using Query q = world.QueryBuilder()
     .With(Ecs.ChildOf, Ecs.Wildcard)
     .With<Position>().Oper(Ecs.Not)
     .Build();
 
 // Iteration code is the same
-```
+</code></pre>
 </li>
 </ul>
 </div>
@@ -1217,7 +1217,7 @@ move_sys.run();
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 // Use Each() function that iterates each individual entity
 Routine moveSys = world.Routine<Position, Velocity>()
     .Each((Entity e, ref Position p, ref Velocity v) =>
@@ -1230,7 +1230,7 @@ Routine moveSys = world.Routine<Position, Velocity>()
     // Each() methods to iterate entities.
 
 moveSys.Run();
-```
+</code></pre>
 </li>
 </ul>
 </div>
@@ -1257,11 +1257,11 @@ move_sys.destruct();
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 Console.WriteLine($"System: {moveSys.Name()}");
 moveSys.Entity.Add(Ecs.OnUpdate);
 moveSys.Entity.Destruct();
-```
+</code></pre>
 </li>
 </ul>
 </div>
@@ -1299,7 +1299,7 @@ flecs::OnStore
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 Ecs.OnLoad
 Ecs.PostLoad
 Ecs.PreUpdate
@@ -1308,7 +1308,7 @@ Ecs.OnValidate
 Ecs.PostUpdate
 Ecs.PreStore
 Ecs.OnStore
-```
+</code></pre>
 </li>
 </ul>
 </div>
@@ -1339,13 +1339,13 @@ world.progress();
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 world.Routine<Position, Velocity>("Move").Kind(Ecs.OnUpdate).Each( ... );
 world.Routine<Position, Transform>("Transform").Kind(Ecs.PostUpdate).Each( ... );
 world.Routine<Transform, Mesh>("Render").Kind(Ecs.OnStore).Each( ... );
 
 world.Progress();
-```
+</code></pre>
 </li>
 </ul>
 </div>
@@ -1370,10 +1370,10 @@ move_sys.remove(flecs::PostUpdate);
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 moveSys.Add(Ecs.OnUpdate);
 moveSys.Remove(Ecs.PostUpdate);
-```
+</code></pre>
 </li>
 </ul>
 </div>
@@ -1420,7 +1420,7 @@ e.set<Position>({20, 30}); // Invokes the observer
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 world.Observer<Position, Velocity>("OnSetPosition")
     .Event(Ecs.OnSet)
     .Each( ... ); // Callback code is same as system
@@ -1429,7 +1429,7 @@ Entity e = ecs.Entity();      // Doesn't invoke the observer
 e.Set<Position>(new(10, 20)); // Doesn't invoke the observer
 e.Set<Velocity>(new(1, 2));   // Invokes the observer
 e.Set<Position>(new(20, 30)); // Invokes the observer
-```
+</code></pre>
 </li>
 </ul>
 </div>
@@ -1483,7 +1483,7 @@ world.import<my_module>();
 </li>
 <li><b class="tab-title">C#</b>
 
-```cs
+<pre><code class="language-cpp">
 public struct MyModule : IFlecsModule
 {
     public void InitModule(ref World world)
@@ -1497,7 +1497,7 @@ public struct MyModule : IFlecsModule
 
 // Import code
 world.Import<MyModule>();
-```
+</code></pre>
 </li>
 </ul>
 </div>
