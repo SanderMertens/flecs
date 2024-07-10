@@ -96,3 +96,26 @@ html.light-mode #projectlogo img {
 #nav-tree a:hover > span.arrow {
     background: none !important;
 }
+
+/* Custom styles for code blocks for the custom highlighting */
+pre {
+  background: hsl(214, 10%, 13%);
+  border-radius: 5px;
+  padding: 10px;
+  position: relative;
+  overflow: auto;
+}
+
+pre code {
+  background: none;
+  padding: 0;
+  border: none;
+  color: #abb2bf;
+  display: block;
+  white-space: pre;
+}
+
+pre code.hljs {
+  background: none;
+  color: #f2ecec;
+}
