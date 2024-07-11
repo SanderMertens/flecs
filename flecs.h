@@ -25826,19 +25826,6 @@ public:
 
 template <typename Func, typename ... Components>
 struct find_delegate : public delegate {
-    // If the number of arguments in the function signature is one more than the
-    // number of components in the query, an extra entity arg is required.
-    static constexpr bool PassEntity = 
-        (sizeof...(Components) + 1) == (arity<Func>::value);
-
-    // If the number of arguments in the function is two more than the number of
-    // components in the query, extra iter + index arguments are required.
-    static constexpr bool PassIter = 
-        (sizeof...(Components) + 2) == (arity<Func>::value);
-
-    static_assert(arity<Func>::value > 0, 
-        "each() must have at least one argument");
-
     using Terms = typename term_ptrs<Components ...>::array;
 
     template < if_not_t< is_same< decay_t<Func>, decay_t<Func>& >::value > = 0>
@@ -25869,9 +25856,13 @@ struct find_delegate : public delegate {
 private:
     // Number of function arguments is one more than number of components, pass
     // entity as argument.
-    template <template<typename X, typename = int> class ColumnType, 
-        typename... Args, if_t< 
-            sizeof...(Components) == sizeof...(Args) && PassEntity> = 0>
+    template <template<typename X, typename = int> class ColumnType,
+        typename... Args,
+        typename Fn = Func,
+        if_t<sizeof...(Components) == sizeof...(Args)> = 0,
+        decltype(std::declval<const Fn&>()(
+            std::declval<flecs::entity>(),
+            std::declval<ColumnType< remove_reference_t<Components> > >().get_row()...), 0) = 0>
     static flecs::entity invoke_callback(
         ecs_iter_t *iter, const Func& func, size_t, Terms&, Args... comps) 
     {
@@ -25901,9 +25892,14 @@ private:
 
     // Number of function arguments is two more than number of components, pass
     // iter + index as argument.
-    template <template<typename X, typename = int> class ColumnType, 
-        typename... Args, int Enabled = PassIter, if_t< 
-            sizeof...(Components) == sizeof...(Args) && Enabled> = 0>
+    template <template<typename X, typename = int> class ColumnType,
+        typename... Args,
+        typename Fn = Func,
+        if_t<sizeof...(Components) == sizeof...(Args)> = 0,
+        decltype(std::declval<const Fn&>()(
+            std::declval<flecs::iter&>(),
+            size_t{},
+            std::declval<ColumnType< remove_reference_t<Components> > >().get_row()...), 0) = 0>
     static flecs::entity invoke_callback(
         ecs_iter_t *iter, const Func& func, size_t, Terms&, Args... comps) 
     {
@@ -25934,9 +25930,12 @@ private:
     }
 
     // Number of function arguments is equal to number of components, no entity
-    template <template<typename X, typename = int> class ColumnType, 
-        typename... Args, if_t< 
-            sizeof...(Components) == sizeof...(Args) && !PassEntity && !PassIter> = 0>
+    template <template<typename X, typename = int> class ColumnType,
+        typename... Args,
+        typename Fn = Func,
+        if_t<sizeof...(Components) == sizeof...(Args)> = 0,
+        decltype(std::declval<const Fn&>()(
+            std::declval<ColumnType< remove_reference_t<Components> > >().get_row()...), 0) = 0>
     static flecs::entity invoke_callback(
         ecs_iter_t *iter, const Func& func, size_t, Terms&, Args... comps) 
     {
