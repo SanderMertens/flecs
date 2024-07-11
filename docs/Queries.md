@@ -616,6 +616,7 @@ When an application attempts to add or remove components to an entity in a table
 
 ```rust
 let q = world.new_query::<&Position>();
+
 q.each_entity(|e, p| {
     e.add::<Velocity>(); // throws locked table assert
 });
@@ -818,6 +819,7 @@ The builder API makes it possible to query for regular entity ids created at run
 ```rust
 let npc = world.entity();
 let platoon_01 = world.entity();
+
 let q = world
     .query::<(&mut Position, &Velocity)>()
     .with_id(npc)
@@ -830,6 +832,7 @@ Components can also be queried for by name. To query for component types by name
 ```rust
 // Create entity with name so we can look it up
 let npc = world.entity_named("npc");
+
 let q = world
     .query::<(&Position, &Npc)>()
     .with_name("npc")
@@ -925,14 +928,14 @@ flecs::query<> q = world.query_builder()
 
 ```rust
 let e = world
-.entity()
-.add::<Position>()
-.add::<Velocity>();
+    .entity()
+    .add::<Position>()
+    .add::<Velocity>();
 
 let q = world
-.query::<()>()
-.with::<flecs::Wildcard>()
-.build();
+    .query::<()>()
+    .with::<flecs::Wildcard>()
+    .build();
 ```
 </li>
 </ul>
@@ -977,13 +980,13 @@ flecs::query<> q = world.query_builder()
 
 ```rust
 let e = world
-.entity()
-.add::<Position>().add::<Velocity>();
+    .entity()
+    .add::<Position>().add::<Velocity>();
 
 let q = world
-.query::<()>()
-.with::<flecs::Any>()
-.build();
+    .query::<()>()
+    .with::<flecs::Any>()
+    .build();
 ```
 
 </li>
@@ -1198,6 +1201,7 @@ When both parts of a pair are types, a tuple can be used. tuple pairs can be mad
  struct Eats {
      value: f32,
  }
+
  #[derive(Component)]
  struct Apples;
 
@@ -1703,6 +1707,7 @@ let q = world
     .with::<Speed>()
     .with::<Mass>()
     .build();
+
 q.run(|mut it| {
     while it.next() {
         let p = it.field::<Position>(0).unwrap();
@@ -1958,6 +1963,7 @@ let q = world
     .with::<Velocity>()
     .set_oper(OperKind::Optional)
     .build();
+
 q.run(|mut it| {
     while it.next() {
         let p = it.field::<Position>(0).unwrap();
@@ -2478,6 +2484,7 @@ let q = world
     .with::<SimTime>()
     .set_src_id(game) // fixed source, match SimTime on Game
     .build();
+
 q.run(|mut it| {
     while it.next() {
         let mut p = it.field::<Position>(0).unwrap();
@@ -3333,6 +3340,7 @@ let q = world
     // all iterators created for the query will be instanced.
     .instanced()
     .build();
+    
 q.run(|mut it| {
     while it.next() {
         let mut p = it.field::<Position>(0).unwrap();
