@@ -77,6 +77,28 @@ ref readonly Attack attack = ref inst_1.Get<Defense>();
 ```
 
 </li>
+<li><b class="tab-title">Rust</b>
+
+@rust
+#[derive(Component)]
+struct Defense {
+value: u32,
+}
+
+// Create a spaceship prefab with a Defense component.
+let spaceship = world.prefab_named("spaceship").set(Defense { value: 50 });
+
+// Create two prefab instances
+let inst_1 = world.entity().is_a_id(spaceship);
+let inst_2 = world.entity().is_a_id(spaceship);
+
+// Get instantiated component
+inst_1.get::<&Defense>(|defense| {
+println!("Defense value: {}", defense.value);
+});
+@endrust
+
+</li>
 </ul>
 </div>
 
@@ -112,6 +134,17 @@ flecs::entity myPrefab = world.prefab();
 ```cs
 Entity myPrefab = world.Prefab();
 ```
+
+</li>
+<li><b class="tab-title">Rust</b>
+
+@rust
+let myprefab = world.entity().add::<flecs::Prefab>();
+
+// or the shortcut
+
+let myprefab = world.prefab();
+@endrust
 
 </li>
 </ul>
@@ -154,6 +187,14 @@ world.QueryBuilder<Position>()
 ```
 
 </li>
+<li><b class="tab-title">Rust</b>
+
+@rust
+// Only match prefab entities
+world.query::<&Position>().with::<flecs::Prefab>().build();
+@endrust
+
+</li>
 </ul>
 </div>
 
@@ -194,6 +235,18 @@ world.QueryBuilder<Position>()
 ```
 
 </li>
+<li><b class="tab-title">Rust</b>
+
+@rust
+// Only match prefab entities
+world
+.query::<&Position>()
+.with::<flecs::Prefab>()
+.optional()
+.build();
+@endrust
+
+</li>
 </ul>
 </div>
 
@@ -229,6 +282,17 @@ world.query_builder<Position>()
 ```cs
 TODO
 ```
+
+</li>
+<li><b class="tab-title">Rust</b>
+
+@rust
+// Only match prefab entities
+world
+.query::<&Position>()
+.query_flags(QueryFlags::MatchPrefab)
+.build();
+@endrust
 
 </li>
 </ul>
@@ -317,6 +381,35 @@ ref readonly Defense defense = ref inst.Get<Defense>();
 ```
 
 </li>
+<li><b class="tab-title">Rust</b>
+
+@rust
+// Make Defense component inheritable
+world
+.component::<Defense>()
+.add_trait::<(flecs::OnInstantiate, flecs::Inherit)>();
+
+// Create prefab
+let spaceship = world
+.prefab()
+.set(Health { value: 100 })
+.set(Defense { value: 50 });
+
+// Create prefab instance
+let inst = world.entity().is_a_id(spaceship);
+
+// Component is retrieved from instance
+inst.get::<&Health>(|health| {
+println!("Health value: {}", health.value);
+});
+
+// Component is retrieved from prefab
+inst.get::<&Defense>(|defense| {
+println!("Defense value: {}", defense.value);
+});
+@endrust
+
+</li>
 </ul>
 </div>
 
@@ -349,6 +442,15 @@ if (inst.Owns<Defense>()) {
     // not inherited
 }
 ```
+</li>
+<li><b class="tab-title">Rust</b>
+
+@rust
+if inst.owns::<Defense>() {
+// not inherited
+}
+@endrust
+
 </li>
 </ul>
 </div>
@@ -386,6 +488,16 @@ if (!inheritedFrom) {
     // not inherited
 }
 ```
+
+</li>
+<li><b class="tab-title">Rust</b>
+
+@rust
+let inherited_from = inst.target::<Defense>(0);
+if inherited_from.is_none() {
+// not inherited
+}
+@endrust
 
 </li>
 </ul>
@@ -462,6 +574,26 @@ inst_a.Set(new Defense(75));
 ```
 
 </li>
+<li><b class="tab-title">Rust</b>
+
+@rust
+// Make Defense component inheritable
+world
+.component::<Defense>()
+.add_trait::<(flecs::OnInstantiate, flecs::Inherit)>();
+
+// Create prefab
+let spaceship = world.prefab().set(Defense { value: 50 });
+
+// Create prefab instance
+let inst_a = world.entity().is_a_id(spaceship);
+let inst_b = world.entity().is_a_id(spaceship);
+
+// Override Defense only for inst_a
+inst_a.set(Defense { value: 75 });
+@endrust
+
+</li>
 </ul>
 </div>
 
@@ -536,6 +668,26 @@ inst_a.Add<Defense>(); // Initialized with value 50
 ```
 
 </li>
+<li><b class="tab-title">Rust</b>
+
+@rust
+// Make Defense component inheritable
+world
+.component::<Defense>()
+.add_trait::<(flecs::OnInstantiate, flecs::Inherit)>();
+
+// Create prefab
+let spaceship = world.prefab().set(Defense { value: 50 });
+
+// Create prefab instance
+let inst_a = world.entity().is_a_id(spaceship);
+let inst_b = world.entity().is_a_id(spaceship);
+
+// Override Defense only for inst_a
+inst_a.add::<Defense>(); // Initialized with value 50
+@endrust
+
+</li>
 </ul>
 </div>
 
@@ -603,6 +755,23 @@ Entity SpaceShip = world.Prefab()
 Entity inst = world.Entity().IsA(SpaceShip);
 inst.Owns<Defense>(); // true
 ```
+
+</li>
+<li><b class="tab-title">Rust</b>
+
+@rust
+// Make Defense component inheritable
+world
+.component::<Defense>()
+.add_trait::<(flecs::OnInstantiate, flecs::Inherit)>();
+
+// Create prefab
+let spaceship = world.prefab().set_auto_override(Defense { value: 50 }); // Set & auto override Defense
+
+// Create prefab instance
+let inst = world.entity().is_a_id(spaceship);
+inst.owns::<Defense>(); // true
+@endrust
 
 </li>
 </ul>
@@ -688,6 +857,33 @@ ref readonly Defense defense = ref inst.get<Defense>(); // 50
 ```
 
 </li>
+<li><b class="tab-title">Rust</b>
+
+@rust
+// Create prefab
+let spaceship = world
+.prefab_named("spaceship")
+.set(Defense { value: 50 })
+.set(Health { value: 100 });
+
+// Create prefab variant
+let freighter = world
+.prefab_named("Freighter")
+.is_a_id(spaceship)
+.set(Health { value: 150 }); // Override the Health component of the freighter
+
+// Create prefab instance
+let inst = world.entity().is_a_id(freighter);
+inst.get::<&Health>(|health| {
+println!("Health value: {}", health.value); // 150
+});
+inst.get::<&Defense>(|defense| {
+println!("Defense value: {}", defense.value); // 50
+});
+
+@endrust
+
+</li>
 </ul>
 </div>
 
@@ -747,6 +943,20 @@ Entity inst = ecs.Entity().IsA(SpaceShip);
 // Lookup instantiated child
 Entity inst_cockpit = inst.Lookup("Cockpit");
 ```
+
+</li>
+<li><b class="tab-title">Rust</b>
+
+@rust
+let spaceship = world.prefab_named("spaceship");
+let cockpit = world.prefab_named("Cockpit").child_of_id(spaceship);
+
+// Instantiate the prefab hierarchy
+let inst = world.entity().is_a_id(spaceship);
+
+// Lookup instantiated child
+let inst_cockpit = inst.lookup("Cockpit");
+@endrust
 
 </li>
 </ul>
@@ -821,6 +1031,20 @@ Entity inst_cockpit = inst.Target(CockPit);
 ```
 
 </li>
+<li><b class="tab-title">Rust</b>
+
+@rust
+let spaceship = world.prefab_named("Spaceship");
+let cockpit = world.prefab_named("Cockpit").child_of_id(spaceship).slot(); // Defaults to (SlotOf, spaceship)
+
+// Instantiate the prefab hierarchy
+let inst = world.entity().is_a_id(spaceship);
+
+// Lookup instantiated child
+let inst_cockpit = inst.target_id(cockpit, 0);
+@endrust
+
+</li>
 </ul>
 </div>
 
@@ -865,6 +1089,26 @@ Entity inst = world.Entity()
 // Lookup prefab handle
 Entity prefab = world.Lookup("SpaceShip");
 ```
+
+</li>
+<li><b class="tab-title">Rust</b>
+
+@rust
+#[derive(Component)]
+struct Spaceship;
+
+// Create prefab associated with the spaceship type
+world
+.prefab_type::<Spaceship>()
+.set(Defense { value: 50 })
+.set(Health { value: 100 });
+
+// Instantiate prefab with type
+let inst = world.entity().is_a::<Spaceship>();
+
+// Lookup prefab handle
+let prefab = world.lookup("spaceship");
+@endrust
 
 </li>
 </ul>
