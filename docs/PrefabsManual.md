@@ -79,7 +79,7 @@ ref readonly Attack attack = ref inst_1.Get<Defense>();
 </li>
 <li><b class="tab-title">Rust</b>
 
-@rust
+```rust
 #[derive(Component)]
 struct Defense {
 value: u32,
@@ -96,7 +96,7 @@ let inst_2 = world.entity().is_a_id(spaceship);
 inst_1.get::<&Defense>(|defense| {
 println!("Defense value: {}", defense.value);
 });
-@endrust
+```
 
 </li>
 </ul>
@@ -138,13 +138,13 @@ Entity myPrefab = world.Prefab();
 </li>
 <li><b class="tab-title">Rust</b>
 
-@rust
+```rust
 let myprefab = world.entity().add::<flecs::Prefab>();
 
 // or the shortcut
 
 let myprefab = world.prefab();
-@endrust
+```
 
 </li>
 </ul>
@@ -189,10 +189,10 @@ world.QueryBuilder<Position>()
 </li>
 <li><b class="tab-title">Rust</b>
 
-@rust
+```rust
 // Only match prefab entities
 world.query::<&Position>().with::<flecs::Prefab>().build();
-@endrust
+```
 
 </li>
 </ul>
@@ -237,14 +237,14 @@ world.QueryBuilder<Position>()
 </li>
 <li><b class="tab-title">Rust</b>
 
-@rust
+```rust
 // Only match prefab entities
 world
 .query::<&Position>()
 .with::<flecs::Prefab>()
 .optional()
 .build();
-@endrust
+```
 
 </li>
 </ul>
@@ -286,13 +286,13 @@ TODO
 </li>
 <li><b class="tab-title">Rust</b>
 
-@rust
+```rust
 // Only match prefab entities
 world
 .query::<&Position>()
 .query_flags(QueryFlags::MatchPrefab)
 .build();
-@endrust
+```
 
 </li>
 </ul>
@@ -383,7 +383,7 @@ ref readonly Defense defense = ref inst.Get<Defense>();
 </li>
 <li><b class="tab-title">Rust</b>
 
-@rust
+```rust
 // Make Defense component inheritable
 world
 .component::<Defense>()
@@ -407,7 +407,7 @@ println!("Health value: {}", health.value);
 inst.get::<&Defense>(|defense| {
 println!("Defense value: {}", defense.value);
 });
-@endrust
+```
 
 </li>
 </ul>
@@ -445,11 +445,11 @@ if (inst.Owns<Defense>()) {
 </li>
 <li><b class="tab-title">Rust</b>
 
-@rust
+```rust
 if inst.owns::<Defense>() {
 // not inherited
 }
-@endrust
+```
 
 </li>
 </ul>
@@ -492,12 +492,12 @@ if (!inheritedFrom) {
 </li>
 <li><b class="tab-title">Rust</b>
 
-@rust
+```rust
 let inherited_from = inst.target::<Defense>(0);
 if inherited_from.is_none() {
 // not inherited
 }
-@endrust
+```
 
 </li>
 </ul>
@@ -576,7 +576,7 @@ inst_a.Set(new Defense(75));
 </li>
 <li><b class="tab-title">Rust</b>
 
-@rust
+```rust
 // Make Defense component inheritable
 world
 .component::<Defense>()
@@ -591,7 +591,7 @@ let inst_b = world.entity().is_a_id(spaceship);
 
 // Override Defense only for inst_a
 inst_a.set(Defense { value: 75 });
-@endrust
+```
 
 </li>
 </ul>
@@ -670,7 +670,7 @@ inst_a.Add<Defense>(); // Initialized with value 50
 </li>
 <li><b class="tab-title">Rust</b>
 
-@rust
+```rust
 // Make Defense component inheritable
 world
 .component::<Defense>()
@@ -685,7 +685,7 @@ let inst_b = world.entity().is_a_id(spaceship);
 
 // Override Defense only for inst_a
 inst_a.add::<Defense>(); // Initialized with value 50
-@endrust
+```
 
 </li>
 </ul>
@@ -759,7 +759,7 @@ inst.Owns<Defense>(); // true
 </li>
 <li><b class="tab-title">Rust</b>
 
-@rust
+```rust
 // Make Defense component inheritable
 world
 .component::<Defense>()
@@ -771,7 +771,7 @@ let spaceship = world.prefab().set_auto_override(Defense { value: 50 }); // Set 
 // Create prefab instance
 let inst = world.entity().is_a_id(spaceship);
 inst.owns::<Defense>(); // true
-@endrust
+```
 
 </li>
 </ul>
@@ -859,7 +859,7 @@ ref readonly Defense defense = ref inst.get<Defense>(); // 50
 </li>
 <li><b class="tab-title">Rust</b>
 
-@rust
+```rust
 // Create prefab
 let spaceship = world
 .prefab_named("spaceship")
@@ -881,7 +881,7 @@ inst.get::<&Defense>(|defense| {
 println!("Defense value: {}", defense.value); // 50
 });
 
-@endrust
+```
 
 </li>
 </ul>
@@ -947,7 +947,7 @@ Entity inst_cockpit = inst.Lookup("Cockpit");
 </li>
 <li><b class="tab-title">Rust</b>
 
-@rust
+```rust
 let spaceship = world.prefab_named("spaceship");
 let cockpit = world.prefab_named("Cockpit").child_of_id(spaceship);
 
@@ -956,7 +956,7 @@ let inst = world.entity().is_a_id(spaceship);
 
 // Lookup instantiated child
 let inst_cockpit = inst.lookup("Cockpit");
-@endrust
+```
 
 </li>
 </ul>
@@ -1033,7 +1033,7 @@ Entity inst_cockpit = inst.Target(CockPit);
 </li>
 <li><b class="tab-title">Rust</b>
 
-@rust
+```rust
 let spaceship = world.prefab_named("Spaceship");
 let cockpit = world.prefab_named("Cockpit").child_of_id(spaceship).slot(); // Defaults to (SlotOf, spaceship)
 
@@ -1042,7 +1042,7 @@ let inst = world.entity().is_a_id(spaceship);
 
 // Lookup instantiated child
 let inst_cockpit = inst.target_id(cockpit, 0);
-@endrust
+```
 
 </li>
 </ul>
@@ -1093,7 +1093,7 @@ Entity prefab = world.Lookup("SpaceShip");
 </li>
 <li><b class="tab-title">Rust</b>
 
-@rust
+```rust
 #[derive(Component)]
 struct Spaceship;
 
@@ -1108,7 +1108,7 @@ let inst = world.entity().is_a::<Spaceship>();
 
 // Lookup prefab handle
 let prefab = world.lookup("spaceship");
-@endrust
+```
 
 </li>
 </ul>
