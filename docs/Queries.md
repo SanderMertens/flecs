@@ -2160,7 +2160,7 @@ flecs::query<> q = world.query_builder()
 
 To use the `AndFrom`, `OrFrom` and `NotFrom` operators, call the `oper` method with enum `OperKind::AndFrom`, `OperKind::OrFrom` or `flecs::NotFrom`.
 
-```cpp
+```rust
 let q = world
     .query::<()>()
     .with_id(type_list)
@@ -2174,7 +2174,7 @@ let q = world
 
 The builder API has the `and_from`, `or_from` and `not_from` convenience methods:
 
-```cpp
+```rust
 let q = world
     .query::<()>()
     .with_id(type_list)
