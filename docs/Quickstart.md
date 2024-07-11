@@ -164,6 +164,14 @@ using World world = World.Create();
 // Do the ECS stuff
 ```
 </li>
+<li><b class="tab-title">Rust</b>
+
+```rust
+let world = World::new();
+
+// Do the ECS stuff
+```
+</li>
 </ul>
 </div>
 
@@ -201,6 +209,16 @@ e.Destruct();
 e.IsAlive(); // false!
 ```
 </li>
+<li><b class="tab-title">Rust</b>
+
+```rust
+let e = world.entity();
+e.is_alive(); // true!
+
+e.destruct();
+e.is_alive(); // false!
+```
+</li>
 </ul>
 </div>
 
@@ -232,6 +250,14 @@ Entity e = world.Entity("Bob");
 Console.WriteLine($"Entity name: {e.Name()}");
 ```
 </li>
+<li><b class="tab-title">Rust</b>
+
+```rust
+let e = world.entity_named("bob");
+
+println!("Entity name: {}", e.name());
+```
+</li>
 </ul>
 </div>
 
@@ -254,6 +280,12 @@ auto e = world.lookup("Bob");
 
 ```cs
 Entity e = world.Lookup("Bob");
+```
+</li>
+<li><b class="tab-title">Rust</b>
+
+```rust
+let e = world.lookup("bob");
 ```
 </li>
 </ul>
@@ -334,6 +366,29 @@ ref readonly Position p = ref e.Get<Position>();
 e.Remove<Position>();
 ```
 </li>
+<li><b class="tab-title">Rust</b>
+
+```rust
+let e = world.entity();
+
+// Add a component. This creates the component in the ECS storage, but does not
+// assign it with a value.
+e.add::<Velocity>();
+
+// Set the value for the Position & Velocity components. A component will be
+// added if the entity doesn't have it yet.
+e.set(Position { x: 10.0, y: 20.0 })
+ .set(Velocity { x: 1.0, y: 2.0 });
+
+// Get a component
+e.get::<&Position>(|p| {
+    println!("Position: ({}, {})", p.x, p.y);
+});
+
+// Remove component
+e.remove::<Position>();
+```
+</li>
 </ul>
 </div>
 
@@ -375,6 +430,18 @@ Console.WriteLine($"Name: {posE.Name()}"); // outputs 'Name: Position'
 posE.Add<Serializable>();
 ```
 </li>
+<li><b class="tab-title">Rust</b>
+
+//Rust applications can use the `world::entity_from` function.
+```rust
+let pos_e = world.entity_from::<Position>();
+
+println!("Name: {}", pos_e.name()); // outputs 'Name: Position'
+
+// It's possible to add components like you would for any entity
+pos_e.add::<Serializable>();
+```
+</li>
 </ul>
 </div>
 
@@ -408,6 +475,16 @@ Entity posE = world.Entity<Position>();
 
 ref readonly EcsComponent c = ref posE.Get<EcsComponent>();
 Console.WriteLine($"Component size: {c.size}");
+```
+</li>
+<li><b class="tab-title">Rust</b>
+
+```rust
+let pos_e = world.entity_from::<Position>();
+
+pos_e.get::<&flecs::Component>(|c| {
+    println!("Component size: {}", c.size);
+});
 ```
 </li>
 </ul>
@@ -485,6 +562,31 @@ e.Remove(Enemy);
 e.Has(Enemy); // false!
 ```
 </li>
+<li><b class="tab-title">Rust</b>
+
+```rust
+// Option 1: create Tag as empty struct
+#[derive(Component)]
+struct Enemy;
+
+// Create entity, add Enemy tag
+let e = world.entity().add::<Enemy>();
+e.has::<Enemy>(); // true!
+
+e.remove::<Enemy>();
+e.has::<Enemy>(); // false!
+
+// Option 2: create Tag as entity
+let enemy = world.entity();
+
+// Create entity, add Enemy tag
+let e = world.entity().add_id(enemy);
+e.has_id(enemy); // true!
+
+e.remove_id(enemy);
+e.has_id(enemy); // false!
+```
+</li>
 </ul>
 </div>
 
@@ -550,6 +652,25 @@ Bob.Remove<Likes>(Alice);
 Bob.Has<Likes>(Alice); // false!
 ```
 </li>
+<li><b class="tab-title">Rust</b>
+
+```rust
+// Create Likes relationship as empty type (tag)
+#[derive(Component)]
+struct Likes;
+
+// Create a small graph with two entities that like each other
+let bob = world.entity();
+let alice = world.entity();
+
+bob.add_first::<Likes>(alice); // bob likes alice
+alice.add_first::<Likes>(bob); // alice likes bob
+bob.has_first::<Likes>(alice); // true!
+
+bob.remove_first::<Likes>(alice);
+bob.has_first::<Likes>(alice); // false!
+```
+</li>
 </ul>
 </div>
 
@@ -572,6 +693,12 @@ flecs::id id = world.pair<Likes>(Bob);
 
 ```cs
 Id id = world.Pair<Likes>(bob);
+```
+</li>
+<li><b class="tab-title">Rust</b>
+
+```rust
+let id = world.id_first::<Likes>(bob);
 ```
 </li>
 </ul>
@@ -607,6 +734,16 @@ if (id.IsPair())
 {
     Entity relationship = id.First();
     Entity target = id.Second();
+}
+```
+</li>
+<li><b class="tab-title">Rust</b>
+
+```rust
+let id = world.id_from::<(Likes, Apples)>();
+if id.is_pair() {
+    let relationship = id.first_id();
+    let target = id.second_id();
 }
 ```
 </li>
@@ -654,6 +791,19 @@ Bob.Has(Eats, Pears);  // true!
 Bob.Has(Grows, Pears); // true!
 ```
 </li>
+<li><b class="tab-title">Rust</b>
+
+```rust
+let bob = world.entity();
+bob.add_id((eats, apples));
+bob.add_id((eats, pears));
+bob.add_id((grows, pears));
+
+bob.has_id((eats, apples)); // true!
+bob.has_id((eats, pears)); // true!
+bob.has_id((grows, pears)); // true!
+```
+</li>
 </ul>
 </div>
 
@@ -678,6 +828,13 @@ auto o = alice.target<Likes>(); // Returns Bob
 ```cs
 Entity Alice = ...;
 Entity o = Alice.Target<Likes>(); // Returns Bob
+```
+</li>
+<li><b class="tab-title">Rust</b>
+
+```rust
+let alice = world.entity().add_first::<Likes>(bob);
+let o = alice.target::<Likes>(0); // Returns bob
 ```
 </li>
 </ul>
@@ -719,6 +876,16 @@ Entity child = world.Entity().ChildOf(parent);
 
 // Deleting the parent also deletes its children
 parent.Destruct();
+```
+</li>
+<li><b class="tab-title">Rust</b>
+
+```rust
+let parent = world.entity();
+let child = world.entity().child_of_id(parent);
+
+// Deleting the parent also deletes its children
+parent.destruct();
 ```
 </li>
 </ul>
@@ -768,6 +935,18 @@ Console.WriteLine(child.Path()); // output: 'parent.child'
 
 world.Lookup("parent.child"); // returns child
 parent.Lookup("child"); // returns child
+```
+</li>
+<li><b class="tab-title">Rust</b>
+
+```rust
+let parent = world.entity_named("parent");
+let child = world.entity_named("child").child_of_id(parent);
+
+println!("Child path: {}", child.path().unwrap()); // output: 'parent::child'
+
+world.lookup("parent::child"); // returns child
+parent.lookup("child"); // returns child
 ```
 </li>
 </ul>
@@ -824,6 +1003,21 @@ q.Each((ref Position p, ref Position pParent) =>
 });
 ```
 </li>
+<li><b class="tab-title">Rust</b>
+
+```rust
+let q = world
+    .query::<(&Position, &mut Position)>()
+    .term_at(1)
+    .parent()
+    .cascade()
+    .build();
+
+q.each(|(p, p_parent)| {
+    // Do the thing
+});
+```
+</li>
 </ul>
 </div>
 
@@ -868,6 +1062,14 @@ Entity e = ecs.Entity()
 Console.WriteLine(e.Type().Str()); // output: 'Position,Velocity'
 ```
 </li>
+<li><b class="tab-title">Rust</b>
+
+```rust
+let e = world.entity().add::<Position>().add::<Velocity>();
+
+println!("Components: {}", e.archetype().to_string().unwrap()); // output: 'Position,Velocity'
+```
+</li>
 </ul>
 </div>
 
@@ -904,6 +1106,16 @@ e.Each((Id id) =>
     {
         // Found Position component!
     }
+});
+```
+</li>
+<li><b class="tab-title">Rust</b>
+
+```rust
+e.each_component(|id| {
+if id == world.component_id::<Position>() {
+    // Found Position component!
+}
 });
 ```
 </li>
@@ -945,6 +1157,18 @@ world.Set<Gravity>(new(9.81));
 ref readonly Gravity g = ref world.Get<Gravity>();
 ```
 </li>
+<li><b class="tab-title">Rust</b>
+
+```rust
+// Set singleton component
+world.set(Gravity { x: 10, y: 20 });
+
+// Get singleton component
+world.get::<&Gravity>(|g| {
+    println!("Gravity: {}, {}", g.x, g.y);
+});
+```
+</li>
 </ul>
 </div>
 
@@ -978,6 +1202,18 @@ Entity gravE = world.Entity<Gravity>();
 gravE.Set<Gravity>(new(10, 20));
 
 ref readonly Gravity g = ref gravE.Get<Gravity>();
+```
+</li>
+<li><b class="tab-title">Rust</b>
+
+```rust
+let grav_e = world.entity_from::<Gravity>();
+
+grav_e.set(Gravity { x: 10, y: 20 });
+
+grav_e.get::<&Gravity>(|g| {
+    println!("Gravity: {}, {}", g.x, g.y);
+});
 ```
 </li>
 </ul>
@@ -1015,8 +1251,18 @@ world.query_builder<Velocity, Gravity>()
 
 ```cs
 world.QueryBuilder<Velocity, Gravity>()
-    .TermAt(2).Singleton()
+    .TermAt(1).Singleton()
     .Build();
+```
+</li>
+<li><b class="tab-title">Rust</b>
+
+```rust
+world
+    .query::<(&Velocity, &Gravity)>()
+    .term_at(1)
+    .singleton()
+    .build();
 ```
 </li>
 </ul>
@@ -1115,6 +1361,39 @@ q.Iter((Iter it, Field<Position> p) =>
 });
 ```
 </li>
+<li><b class="tab-title">Rust</b>
+
+```rust
+// For simple queries the world::each function can be used
+world.each::<(&mut Position, &Velocity)>(|(p, v)| {
+    // EntityView argument is optional, use each_entity to get it
+    p.x += v.x;
+    p.y += v.y;
+});
+
+// More complex queries can first be created, then iterated
+let q = world
+.query::<&Position>()
+.with_id((flecs::ChildOf::ID, parent))
+.build();
+
+// Option 1: the each() callback iterates over each entity
+q.each_entity(|e, p| {
+println!("{}: ({}, {})", e.name(), p.x, p.y);
+});
+
+// Option 2: the run() callback offers more control over the iteration
+q.run(|mut it| {
+while it.next() {
+let p = it.field::<Position>(0).unwrap();
+
+for i in it.iter() {
+println!("{}: ({}, {})", it.entity(i).name(), p[i].x, p[i].y);
+}
+}
+});
+```
+</li>
 </ul>
 </div>
 
@@ -1155,6 +1434,19 @@ using Query q = world.QueryBuilder()
     .With(Ecs.ChildOf, Ecs.Wildcard)
     .With<Position>().Oper(Ecs.Not)
     .Build();
+
+// Iteration code is the same
+```
+</li>
+<li><b class="tab-title">Rust</b>
+
+```rust
+let q = world
+    .query::<()>()
+    .with::<(flecs::ChildOf, flecs::Wildcard)>()
+    .with::<Position>()
+    .set_oper(OperKind::Not)
+    .build();
 
 // Iteration code is the same
 ```
@@ -1232,6 +1524,23 @@ Routine moveSys = world.Routine<Position, Velocity>()
 moveSys.Run();
 ```
 </li>
+<li><b class="tab-title">Rust</b>
+
+```rust
+// Use each_entity() function that iterates each individual entity
+let move_sys = world
+    .system::<(&mut Position, &Velocity)>()
+    .each_iter(|it, i, (p, v)| {
+        p.x += v.x * it.delta_time();
+        p.y += v.y * it.delta_time();
+    });
+
+// Just like with queries, systems have both the run() and
+// each() methods to iterate entities.
+
+move_sys.run();
+```
+</li>
 </ul>
 </div>
 
@@ -1261,6 +1570,14 @@ move_sys.destruct();
 Console.WriteLine($"System: {moveSys.Name()}");
 moveSys.Entity.Add(Ecs.OnUpdate);
 moveSys.Entity.Destruct();
+```
+</li>
+<li><b class="tab-title">Rust</b>
+
+```rust
+println!("System: {}", move_sys.name());
+move_sys.add::<flecs::pipeline::OnUpdate>();
+move_sys.destruct();
 ```
 </li>
 </ul>
@@ -1310,6 +1627,19 @@ Ecs.PreStore
 Ecs.OnStore
 ```
 </li>
+<li><b class="tab-title">Rust</b>
+
+```rust
+flecs::pipeline::OnLoad;
+flecs::pipeline::PostLoad;
+flecs::pipeline::PreUpdate;
+flecs::pipeline::OnUpdate;
+flecs::pipeline::OnValidate;
+flecs::pipeline::PostUpdate;
+flecs::pipeline::PreStore;
+flecs::pipeline::OnStore;
+```
+</li>
 </ul>
 </div>
 
@@ -1347,6 +1677,27 @@ world.Routine<Transform, Mesh>("Render").Kind(Ecs.OnStore).Each( ... );
 world.Progress();
 ```
 </li>
+<li><b class="tab-title">Rust</b>
+
+```rust
+world
+    .system_named::<(&mut Position, &Velocity)>("Move")
+    .kind::<flecs::pipeline::OnUpdate>()
+    .each(|(p, v)| {});
+
+world
+    .system_named::<(&mut Position, &Transform)>("Transform")
+    .kind::<flecs::pipeline::PostUpdate>()
+    .each(|(p, t)| {});
+    
+world
+    .system_named::<(&Transform, &mut Mesh)>("Render")
+    .kind::<flecs::pipeline::OnStore>()
+    .each(|(t, m)| {});
+
+world.progress();
+```
+</li>
 </ul>
 </div>
 
@@ -1373,6 +1724,13 @@ move_sys.remove(flecs::PostUpdate);
 ```cs
 moveSys.Add(Ecs.OnUpdate);
 moveSys.Remove(Ecs.PostUpdate);
+```
+</li>
+<li><b class="tab-title">Rust</b>
+
+```rust
+move_sys.add::<flecs::pipeline::OnUpdate>();
+move_sys.remove::<flecs::pipeline::PostUpdate>();
 ```
 </li>
 </ul>
@@ -1438,6 +1796,19 @@ Entity e = ecs.Entity();      // Doesn't invoke the observer
 e.Set<Position>(new(10, 20)); // Doesn't invoke the observer
 e.Set<Velocity>(new(1, 2));   // Invokes the observer
 e.Set<Position>(new(20, 30)); // Invokes the observer
+```
+</li>
+<li><b class="tab-title">Rust</b>
+
+```rust
+world
+.observer_named::<flecs::OnSet, (&Position, &Velocity)>("OnSetPosition")
+.each(|(p, v)| {}); // Callback code is same as system
+
+let e = world.entity(); // Doesn't invoke the observer
+e.set(Position { x: 10.0, y: 20.0 }); // Doesn't invoke the observer
+e.set(Velocity { x: 1.0, y: 2.0 }); // Invokes the observer
+e.set(Position { x: 30.0, y: 40.0 }); // Invokes the observer
 ```
 </li>
 </ul>
@@ -1507,6 +1878,25 @@ public struct MyModule : IFlecsModule
 // Import code
 world.Import<MyModule>();
 ```
+</li>
+<li><b class="tab-title">Rust</b>
+
+```rust
+#[derive(Component)]
+struct MyModule;
+
+impl Module for MyModule {
+fn module(world: &World) {
+world.module::<MyModule>("MyModule");
+// Define components, systems, triggers, ... as usual. They will be
+// automatically created inside the scope of the module.
+}
+}
+
+// Import code
+world.import::<MyModule>();
+```
+
 </li>
 </ul>
 </div>
