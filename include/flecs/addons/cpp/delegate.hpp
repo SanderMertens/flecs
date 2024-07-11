@@ -554,7 +554,9 @@ struct entity_payload_observer_delegate : delegate {
     }
 
 private:
-    template <typename F, if_t<arity<F>::value == 1> = 0>
+    template <typename F,
+        decltype(std::declval<const F&>()(
+            std::declval<Event&>()), 0) = 0>
     static void invoke(ecs_iter_t *iter) {
         auto self = static_cast<const entity_payload_observer_delegate*>(
             iter->callback_ctx);
@@ -566,7 +568,10 @@ private:
         self->func_(*data);
     }
 
-    template <typename F, if_t<arity<F>::value == 2> = 0>
+    template <typename F,
+        decltype(std::declval<const F&>()(
+            std::declval<flecs::entity>(),
+            std::declval<Event&>()), 0) = 0>
     static void invoke(ecs_iter_t *iter) {
         auto self = static_cast<const entity_payload_observer_delegate*>(
             iter->callback_ctx);
