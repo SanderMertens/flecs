@@ -198,6 +198,7 @@ void Units_builtin_units(void);
 void Units_unit_w_short_notation(void);
 void Units_unit_prefix_w_short_notation(void);
 void Units_quantity_w_short_notation(void);
+void Units_import_units_after_mini(void);
 
 // Testsuite 'Serialized'
 void Serialized_primitive_constants(void);
@@ -1633,6 +1634,10 @@ bake_test_case Units_testcases[] = {
     {
         "quantity_w_short_notation",
         Units_quantity_w_short_notation
+    },
+    {
+        "import_units_after_mini",
+        Units_import_units_after_mini
     }
 };
 
@@ -4483,7 +4488,7 @@ static bake_test_suite suites[] = {
         "Units",
         NULL,
         NULL,
-        28,
+        29,
         Units_testcases
     },
     {

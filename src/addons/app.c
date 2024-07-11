@@ -99,6 +99,7 @@ int ecs_app_run(
 #ifdef ECS_TARGET_EM
         flecs_wasm_rest_server = ecs_rest_server_init(world, NULL);
 #else
+        ECS_IMPORT(world, FlecsRest);
         ecs_set(world, EcsWorld, EcsRest, {.port = desc->port });
 #endif
 #else

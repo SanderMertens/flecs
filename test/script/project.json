@@ -334,7 +334,9 @@
                 "module_w_nested_template",
                 "template_w_pair_w_this_var",
                 "run_template_after_error",
-                "update_template_after_error"
+                "update_template_after_error",
+                "prop_without_using_meta",
+                "hoist_var"
             ]
         }, {
             "id": "Expr",
