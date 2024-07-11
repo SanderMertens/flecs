@@ -201,9 +201,9 @@ auto q = world.query_builder<>()
 
 // With the query builder API:
 auto q = world.query_builder<>()
-  .term(Eats, Apples)
+  .with(Eats, Apples)
   .build();
-
+ 
 // Or when using pair types, when both relationship & target are compile time types:
 auto q = world.query<flecs::pair<Eats, Apples>>();
 ```
@@ -570,7 +570,7 @@ ecs_query_fini(f);
 
 ```cpp
 world.query_builder()
-  .term(Eats, Apples)
+  .with(Eats, Apples)
   .build()
   .each([](flecs::entity e) {
     // Iterate as usual
@@ -582,7 +582,7 @@ world.query_builder()
 
 ```cs
 world.FilterBuilder()
-    .Term(Eats, Apples)
+    .with(Eats, Apples)
     .Build()
     .Each((Entity e) =>
     {
@@ -634,7 +634,7 @@ ecs_query_fini(f);
 
 ```cpp
 world.query_builder()
-  .term(Eats, flecs::Wildcard)
+  .with(Eats, flecs::Wildcard)
   .build()
   .each([](flecs::iter& it, size_t i) {
     flecs::entity food = it.pair(0).second(); // Apples, ...
@@ -648,7 +648,7 @@ world.query_builder()
 
 ```cs
 world.FilterBuilder()
-    .Term(Eats, Ecs.Wildcard)
+    .with(Eats, Ecs.Wildcard)
     .Build()
     .Each((Iter it, int i) =>
     {
@@ -1006,7 +1006,7 @@ while (ecs_query_next(&it)) {
 
 ```cpp
 auto q = world.query_builder()
-  .term(Likes, flecs::Wildcard)
+  .with(Likes, flecs::Wildcard)
   .build();
 
 q.each([](flecs::iter& it, size_t i) {
@@ -1021,7 +1021,7 @@ q.each([](flecs::iter& it, size_t i) {
 
 ```cs
 Query q = world.QueryBuilder()
-    .Term(Likes, Ecs.Wildcard)
+    .with(Likes, Ecs.Wildcard)
     .Build();
 
 q.Iter((Iter it) =>
