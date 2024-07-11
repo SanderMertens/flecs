@@ -104,7 +104,7 @@ println!("Defense value: {}", defense.value);
 
 The following sections go over the different aspects of the prefab feature.
 
-### The Prefab tag
+## The Prefab tag
 Prefabs are regular entities with as only difference that prefabs by default are not matched by queries. This allows prefab entities to coexist with regular entities in the same world without impacting game logic. The mechanism used to exclude prefabs from queries is a builtin `Prefab` tag. The following example shows how to create a prefab:
 
 <div class="flecs-snippet-tabs">
@@ -298,7 +298,7 @@ world
 </ul>
 </div>
 
-### Component Inheritance
+## Component Inheritance
 Entities can inherit components from prefabs. Inherited components are only stored once in memory, and shared across instances. This can be useful for static data that's shared across instances, such as material data, textures or meshes.
 
 For a component to be inheritable, it needs to have the `(OnInstantiate, Inherit)` trait (for more details see the ComponentTraits manual). The following example shows what happens when a prefab with one inheritable and one non-inheritable component is instantiated:
@@ -503,7 +503,7 @@ if inherited_from.is_none() {
 </ul>
 </div>
 
-### Component Overriding
+## Component Overriding
 When an instance inherits a component from a prefab, it can be overridden with a value that's specific to the instance. To override a component, simply add or set it on the instance. The following example shows how:
 
 <div class="flecs-snippet-tabs">
@@ -693,7 +693,7 @@ inst_a.add::<Defense>(); // Initialized with value 50
 
 When an override is removed, the original value of the prefab is reexposed.
 
-### Auto Overriding
+## Auto Overriding
 When a component is configured to be inheritable, sometimes it can still be useful for a specific prefab to have the instances always own the component. This can be achieved with an auto override, which flags a component on the prefab to be always overridden on instantiation:
 
 <div class="flecs-snippet-tabs">
@@ -781,7 +781,7 @@ Auto overrides can also be added to prefabs that don't have the actual component
 
 This also works for prefab children. Adding an auto override to a child entity without adding the component will add & default construct the component on the instance child.
 
-### Prefab Variants
+## Prefab Variants
 Prefabs can inherit from each other to create prefab variations without duplicating the prefab data. The following example shows a prefab and a prefab variant.
 
 <div class="flecs-snippet-tabs">
@@ -887,7 +887,7 @@ println!("Defense value: {}", defense.value); // 50
 </ul>
 </div>
 
-### Prefab Hierarchies
+## Prefab Hierarchies
 When a prefab has children, the entire subtree of a prefab is copied to the instance. Other than with the instance itself where components can be inherited from a prefab, child entities never inherit components from prefab children. Prefab hierarchies are created in the same way as entity hierarchies:
 
 <div class="flecs-snippet-tabs">
@@ -962,7 +962,7 @@ let inst_cockpit = inst.lookup("Cockpit");
 </ul>
 </div>
 
-### Prefab Slots
+## Prefab Slots
 When a prefab hierarchy is instantiated often code will want to refer to a specific instantiated child. A typical example is a turret prefab with a turret head that needs to rotate.
 
 While it is possible to lookup a child by name and store it on a component, this adds boilerplate and reduces efficiency. Prefab slots make this easier.
@@ -1048,7 +1048,7 @@ let inst_cockpit = inst.target_id(cockpit, 0);
 </ul>
 </div>
 
-### Prefab Types (C++, C#)
+## Prefab Types (C++, C#)
 Like entities and components, prefabs can be associated with a C++ type. This makes it easier to instantiate prefabs as it is not necessary to pass prefab handles around in the application. The following example shows how to associate types with prefabs:
 
 <div class="flecs-snippet-tabs">
@@ -1113,4 +1113,3 @@ let prefab = world.lookup("spaceship");
 </li>
 </ul>
 </div>
-
