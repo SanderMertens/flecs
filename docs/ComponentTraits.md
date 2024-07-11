@@ -42,6 +42,18 @@ e.Add(ChildOf, parent); // Covered by cleanup traits
 ```
 
 </li>
+<li><b class="tab-title">Rust</b>
+
+```rust
+#[derive(Component)]
+struct MyComponent {
+    e: Entity, // Not covered by cleanup traits
+}
+
+e.child_of_id(parent); // Covered by cleanup traits
+```
+
+</li>
 </ul>
 </div>
 
@@ -67,6 +79,13 @@ world.remove_all(Archer);
 
 ```cs
 world.RemoveAll(Archer);
+```
+
+</li>
+<li><b class="tab-title">Rust</b>
+
+```rust
+world.remove_all_id(archer);
 ```
 
 </li>
@@ -101,6 +120,15 @@ world.remove_all(flecs::Wildcard, Archer);
 world.RemoveAll(Archer);
 world.RemoveAll(Archer, Ecs.Wildcard);
 world.RemoveAll(Ecs.Wildcard, Archer);
+```
+
+</li>
+<li><b class="tab-title">Rust</b>
+
+```rust
+world.remove_all_id(archer);
+world.remove_all_id((archer, flecs::Wildcard::ID));
+world.remove_all_id((flecs::Wildcard::ID, archer));
 ```
 
 </li>
@@ -177,6 +205,15 @@ world.Component<Archer>().Entity.Destruct();
 ```
 
 </li>
+<li><b class="tab-title">Rust</b>
+
+```rust
+// Remove Archer from entities when Archer is deleted
+world
+    .component::<Archer>()
+    .add_trait::<(flecs::OnDelete, flecs::Remove)>();
+
+let e = world.entity().add::<Archer>();
 </ul>
 </div>
 
@@ -223,6 +260,21 @@ Entity e = world.Entity().Add<Archer>();
 
 // This will delete e
 world.Component<Archer>().Entity.Destruct();
+```
+
+</li>
+<li><b class="tab-title">Rust</b>
+
+```rust
+// Remove Archer from entities when Archer is deleted
+world
+    .component::<Archer>()
+    .add_trait::<(flecs::OnDelete, flecs::Remove)>();
+
+let e = world.entity().add::<Archer>();
+
+// This will remove Archer from e
+world.component::<Archer>().destruct();
 ```
 
 </li>
@@ -278,6 +330,22 @@ p.Destruct();
 ```
 
 </li>
+<li><b class="tab-title">Rust</b>
+
+```rust
+// Delete children when deleting parent
+world
+    .component::<flecs::ChildOf>()
+    .add_trait::<(flecs::OnDeleteTarget, flecs::Delete)>();
+
+let p = world.entity();
+let e = world.entity().add_first::<flecs::ChildOf>(p);
+
+// This will delete both p and e
+p.destruct();
+```
+
+</li>
 </ul>
 </div>
 
@@ -325,6 +393,20 @@ world.Observer<Node>()
 
 Entity p = world.Entity().Add<Node>();
 Entity c = world.Entity().Add<Node>().ChildOf(p);
+```
+
+</li>
+<li><b class="tab-title">Rust</b>
+
+```rust
+world
+    .observer::<flecs::OnRemove, &Node>()
+    .each_entity(|e, node| {
+// This observer will be invoked when a Node is removed
+});
+
+let p = world.entity().add::<Node>();
+let c = world.entity().add::<Node>().child_of_id(p);
 ```
 
 </li>
@@ -395,6 +477,18 @@ world.Component<Serializable>().Entity.Add(Ecs.Trait);
 ```
 
 </li>
+<li><b class="tab-title">Rust</b>
+
+```rust
+#[derive(Component)]
+struct Serializable;
+
+world
+    .component::<Serializable>()
+    .add_trait::<flecs::Trait>();
+```
+}
+</li>
 </ul>
 </div>
 
@@ -448,6 +542,27 @@ Entity e = ecs.Entity()
 ```
 
 </li>
+<li><b class="tab-title">Rust</b>
+
+```rust
+#[derive(Component)]
+struct Likes;
+
+#[derive(Component)]
+struct Apples;
+
+world
+    .component::<Likes>()
+    .add_trait::<flecs::Relationship>();
+
+let e = world
+    .entity()
+    .add::<Likes>() // Panic, 'Likes' is not used as relationship
+    .add::<(Apples, Likes)>() // Panic, 'Likes' is not used as relationship, but as target
+    .add::<(Likes, Apples)>(); // OK
+```
+
+</li>
 </ul>
 </div>
 
@@ -492,6 +607,27 @@ public struct Loves { }
 world.Component<Likes>().Entity.Add(Ecs.Relationship);
 
 world.Component<Loves>().Entity.Add(Ecs.With, world.Component<Likes>().Entity);
+```
+
+</li>
+<li><b class="tab-title">Rust</b>
+
+```rust
+#[derive(Component)]
+struct Likes;
+
+#[derive(Component)]
+struct Loves;
+
+world
+    .component::<Likes>()
+    .add_trait::<flecs::Relationship>();
+
+// Even though Likes is marked as relationship and used as target here, this
+// won't panic as With is marked as trait.
+world
+    .component::<Loves>()
+    .add_trait::<(flecs::With, Likes)>();
 ```
 
 </li>
@@ -545,6 +681,25 @@ Entity e = ecs.Entity()
     .Add<Apples>()         // Panic, 'Apples' is not used as target
     .Add<Apples, Likes>()  // Panic, 'Apples' is not used as target
     .add<Likes, Apples>(); // OK
+```
+
+</li>
+<li><b class="tab-title">Rust</b>
+
+```rust
+#[derive(Component)]
+struct Likes;
+
+#[derive(Component)]
+struct Apples;
+
+world.component::<Apples>().add_trait::<flecs::Target>();
+
+let e = world
+    .entity()
+    .add::<Apples>() // Panic, 'Apples' is not used as target
+    .add::<(Apples, Likes)>() // Panic, 'Apples' is not used as target, but as relationship
+    .add::<(Likes, Apples)>(); // OK
 ```
 
 </li>
@@ -621,6 +776,37 @@ ref readonly Position p = ref e.GetSecond<Serializable, Position>();
 ```
 
 </li>
+<li><b class="tab-title">Rust</b>
+
+```rust
+#[derive(Component)]
+struct Serializable; // Tag, contains no data
+
+impl flecs::FlecsTrait for Serializable {}
+
+#[derive(Component)]
+struct Position {
+    x: f32,
+    y: f32,
+}
+
+let e = world
+    .entity()
+    .set(Position { x: 10.0, y: 20.9 })
+    .add_trait::<(Serializable, Position)>(); // Because Serializable is a tag, the pair
+// has a value of type Position
+
+// Gets value from Position component
+e.get::<&Position>(|pos| {
+    println!("Position: ({}, {})", pos.x, pos.y);
+});
+// Gets (unintended) value from (Serializable, Position) pair
+e.get::<&(Serializable, Position)>(|pos| {
+    println!("Serializable Position: ({}, {})", pos.x, pos.y);
+});
+```
+
+</li>
 </ul>
 </div>
 
@@ -688,6 +874,13 @@ ref readonly Position p = ref e.GetSecond<Serializable, Position>();
 ```
 
 </li>
+<li><b class="tab-title">Rust</b>
+
+```rust
+// This is currently not supported in Rust due to safety concerns.
+```
+
+</li>
 </ul>
 </div>
 
@@ -728,6 +921,15 @@ Entity e = ecs.Entity()
 
 Entity i = ecs.Entity()
     .IsA(e); // not allowed
+```
+
+</li>
+<li><b class="tab-title">Rust</b>
+
+```rust
+let e = world.entity().add_trait::<flecs::Final>();
+
+let i = world.entity().is_a_id(e); // not allowed
 ```
 
 </li>
@@ -803,6 +1005,22 @@ assert(inst.Owns<Mass>());
 ```
 
 </li>
+<li><b class="tab-title">Rust</b>
+
+```rust
+// Register component with trait. Optional, since this is the default behavior.
+world
+.component::<Mass>()
+.add_trait::<(flecs::OnInstantiate, flecs::Override)>();
+
+let base = world.entity().set(Mass { value: 100.0 });
+let inst = world.entity().is_a_id(base); // Mass is copied to inst
+
+assert!(inst.owns::<Mass>());
+assert!(base.cloned::<&Mass>() != inst.cloned::<&Mass>());
+```
+
+</li>
 </ul>
 </div>
 
@@ -865,6 +1083,23 @@ assert(!inst.Owns<Mass>());
 ```
 
 </li>
+<li><b class="tab-title">Rust</b>
+
+```rust
+// Register component with trait
+world
+.component::<Mass>()
+.add_trait::<(flecs::OnInstantiate, flecs::Inherit)>();
+
+let base = world.entity().set(Mass { value: 100.0 });
+let inst = world.entity().is_a_id(base);
+
+assert!(inst.has::<Mass>());
+assert!(!inst.owns::<Mass>());
+assert!(base.cloned::<&Mass>() != inst.cloned::<&Mass>());
+```
+
+</li>
 </ul>
 </div>
 
@@ -924,6 +1159,23 @@ ecs_entity_t inst = ecs.Entity()
 
 assert(!inst.has<Mass>());
 assert(!inst.Owns<Mass>());
+```
+
+</li>
+<li><b class="tab-title">Rust</b>
+
+```rust
+// Register component with trait
+world
+.component::<Mass>()
+.add_trait::<(flecs::OnInstantiate, flecs::DontInherit)>();
+
+let base = world.entity().set(Mass { value: 100.0 });
+let inst = world.entity().is_a_id(base);
+
+assert!(!inst.has::<Mass>());
+assert!(!inst.owns::<Mass>());
+assert!(!inst.try_get::<&Mass>(|mass| {}));
 ```
 
 </li>
@@ -992,6 +1244,19 @@ NewYork.Add(LocatedIn, USA);
 ```
 
 </li>
+<li><b class="tab-title">Rust</b>
+
+```rust
+let locatedin = world.entity();
+let manhattan = world.entity();
+let newyork = world.entity();
+let usa = world.entity();
+
+manhattan.add_id((locatedin, newyork));
+newyork.add_id((locatedin, usa));
+```
+
+</li>
 </ul>
 </div>
 
@@ -1017,6 +1282,13 @@ LocatedIn.add(flecs::Transitive);
 
 ```cs
 LocatedIn.Add(Ecs.Transitive);
+```
+
+</li>
+<li><b class="tab-title">Rust</b>
+
+```rust
+locatedin.add_trait::<flecs::Transitive>();
 ```
 
 </li>
@@ -1098,6 +1370,16 @@ e.ChildOf(parentB); // replaces (ChildOf, parentA)
 ```
 
 </li>
+<li><b class="tab-title">Rust</b>
+
+```rust
+let parent_a = world.entity();
+let parent_b = world.entity();
+e.child_of_id(parent_a);
+e.child_of_id(parent_b); // replaces (ChildOf, parent_a)
+```
+
+</li>
 </ul>
 </div>
 
@@ -1126,6 +1408,13 @@ flecs::entity MarriedTo = world.entity()
 ```cs
 Entity MarriedTo = world.Entity()
     .Add(Ecs.Exclusive);
+```
+
+</li>
+<li><b class="tab-title">Rust</b>
+
+```rust
+let married_to = world.entity().add_trait::<flecs::Exclusive>();
 ```
 
 </li>
@@ -1189,6 +1478,23 @@ assert(e.IsEnabled<Position>());
 ```
 
 </li>
+<li><b class="tab-title">Rust</b>
+
+```rust
+world
+.component::<Position>()
+.add_trait::<flecs::CanToggle>();
+
+let e = world.entity().set(Position { x: 10.0, y: 20.0 });
+
+e.disable::<Position>(); // Disable component
+assert!(!e.is_enabled::<Position>());
+
+e.enable::<Position>(); // Enable component
+assert!(e.is_enabled::<Position>());
+```
+
+</li>
 </ul>
 </div>
 
@@ -1238,6 +1544,18 @@ e.Add(Movement, Walking); // replaces (Movement, Running)
 ```
 
 </li>
+<li><b class="tab-title">Rust</b>
+
+```rust
+let movement = world.entity().add_trait::<flecs::Union>();
+let walking = world.entity();
+let running = world.entity();
+
+let e = world.entity().add_id((movement, running));
+e.add_id((movement, walking)); // replaces (Movement, Running)
+```
+
+</li>
 </ul>
 </div>
 
@@ -1283,6 +1601,13 @@ ecs.Component<Position>().Entity
 ```
 
 </li>
+<li><b class="tab-title">Rust</b>
+
+```rust
+world.component::<Position>().add_trait::<flecs::Sparse>();
+```
+
+</li>
 </ul>
 </div>
 
@@ -1320,6 +1645,16 @@ Entity MarriedTo = world.Entity().Add(Ecs.Symmetric);
 Entity Bob = ecs.Entity();
 Entity Alice = ecs.Entity();
 Bob.Add(MarriedTo, Alice); // Also adds (MarriedTo, Bob) to Alice
+```
+
+</li>
+<li><b class="tab-title">Rust</b>
+
+```rust
+let married_to = world.entity().add_trait::<flecs::Symmetric>();
+let bob = world.entity();
+let alice = world.entity();
+bob.add_id((married_to, alice)); // Also adds (MarriedTo, Bob) to Alice
 ```
 
 </li>
@@ -1364,6 +1699,17 @@ Entity e = world.Entity().Add(Power);
 ```
 
 </li>
+<li><b class="tab-title">Rust</b>
+
+```rust
+let responsibility = world.entity();
+let power = world.entity().add_first::<flecs::With>(responsibility);
+
+// Create new entity that has both Power and Responsibility
+let e = world.entity().add_id(power);
+```
+
+</li>
 </ul>
 </div>
 
@@ -1404,6 +1750,18 @@ Entity Pears = world.Entity();
 
 // Create new entity with both (Loves, Pears) and (Likes, Pears)
 Entity e = world.Entity().Add(Loves, Pears);
+```
+
+</li>
+<li><b class="tab-title">Rust</b>
+
+```rust
+let likes = world.entity();
+let loves = world.entity().add_trait::<(flecs::With, Likes)>();
+let pears = world.entity();
+
+// Create new entity with both (Loves, Pears) and (Likes, Pears)
+let e = world.entity().add_id((loves, pears));
 ```
 
 </li>
@@ -1468,6 +1826,22 @@ Entity b = world.Entity().Add(Food, Fork);
 ```
 
 </li>
+<li><b class="tab-title">Rust</b>
+
+```rust
+// Enforce that target of relationship is child of Food
+let food = world.entity().add_trait::<flecs::OneOf>();
+let apples = world.entity().child_of_id(food);
+let fork = world.entity();
+
+// This is ok, Apples is a child of Food
+let a = world.entity().add_id((food, apples));
+
+// This is not ok, Fork is not a child of Food
+let b = world.entity().add_id((food, fork));
+```
+
+</li>
 </ul>
 </div>
 
@@ -1526,6 +1900,23 @@ Entity a = world.Entity().Add(Eats, Apples);
 
 // This is not ok, Fork is not a child of Food
 Entity b = world.Entity().Add(Eats, Fork);
+```
+
+</li>
+<li><b class="tab-title">Rust</b>
+
+```rust
+// Enforce that target of relationship is child of Food
+let food = world.entity();
+let eats = world.entity().add_first::<flecs::OneOf>(food);
+let apples = world.entity().child_of_id(food);
+let fork = world.entity();
+
+// This is ok, Apples is a child of Food
+let a = world.entity().add_id((eats, apples));
+
+// This is not ok, Fork is not a child of Food
+let b = world.entity().add_id((eats, fork));
 ```
 
 </li>
