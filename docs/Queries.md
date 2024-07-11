@@ -1999,21 +1999,21 @@ The left hand side of an equality operator must be a variable. The right hand si
 
 Test if variable `$this` equals `Foo` (`Foo` must exist at query creation time):
 
-<pre><code class="language-javascript">
+```js
 $this == Foo
-</code></pre>
+```
 
 Test if variable `$this` equals entity with name `Foo` (`Foo` does not need to exist at query creation time):
 
-<pre><code class="language-javascript">
+```js
 $this == "Foo"
-</code></pre>
+```
 
 Test if variable `$this` stores an entity with a name that has substring `Fo`:
 
-<pre><code class="language-javascript">
+```js
 $this ~= "Fo"
-</code></pre>
+```
 
 When the equals operator (`==`) is used with a variable that has not yet been initialized, the right-hand side of the operator will be assigned to the variable. If the right hand side is a string, it will be used to lookup an entity by name. If the lookup fails, the term will not match.
 
@@ -2080,12 +2080,12 @@ world
 </li>
 <li><b class="tab-title">Flecs Query Language</b>
 
-<pre><code class="language-javascript">
+```js
 $this == Foo
 $this != Foo
 $this == "Foo"
 $this != "Fo"
-</code></pre>
+```
 
 </li>
 </ul>
