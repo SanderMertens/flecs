@@ -45,6 +45,7 @@ Entity my_entity world.Entity();
 
 </li>
 <li><b class="tab-title">Rust</b>
+
 ```rust
 let my_entity = world.entity();
 ```
@@ -83,6 +84,7 @@ my_entity.Destruct();
 
 </li>
 <li><b class="tab-title">Rust</b>
+
 ```rust
 my_entity.destruct();
 ```
@@ -138,6 +140,7 @@ e2.Add<Npc>(); // OK, 500v1 is alive
 
 </li>
 <li><b class="tab-title">Rust</b>
+
 ```rust
 let e1 = world.entity(); // Returns 500v0
 e1.destruct(); // Recycles 500
@@ -183,6 +186,7 @@ e1.Destruct(); // OK: post condition is satisfied
 
 </li>
 <li><b class="tab-title">Rust</b>
+
 ```rust
 let e1 = world.entity();
 e1.destruct();
@@ -219,6 +223,7 @@ my_entity.Clear();
 
 </li>
 <li><b class="tab-title">Rust</b>
+
 ```rust
 my_entity.clear();
 ```
@@ -268,6 +273,7 @@ e2.IsAlive(); // True
 
 </li>
 <li><b class="tab-title">Rust</b>
+
 ```rust
 let e1 = world.entity();
 let e2 = world.entity();
@@ -322,6 +328,7 @@ world.Entity(0).IsValid(); // False
 
 </li>
 <li><b class="tab-title">Rust</b>
+
 ```rust
 let e1 = world.entity();
 let e2 = world.entity();
@@ -360,6 +367,7 @@ Entity e = world.MakeAlive(1000);
 
 </li>
 <li><b class="tab-title">Rust</b>
+
 ```rust
 let e = world.make_alive(1000);
 ```
@@ -396,6 +404,7 @@ world.SetVersion(versioned_id);
 
 </li>
 <li><b class="tab-title">Rust</b>
+
 ```rust
 //TODO does not exist yet
 //world.set_version(versioned_id);
@@ -431,6 +440,7 @@ world.SetEntityRange(5000, 0);
 
 </li>
 <li><b class="tab-title">Rust</b>
+
 ```rust
 world.set_entity_range(5000, 0);
 ```
@@ -464,6 +474,7 @@ world.SetEntityRange(5000, 10000);
 
 </li>
 <li><b class="tab-title">Rust</b>
+
 ```rust
 world.set_entity_range(5000, 10000);
 ```
@@ -501,6 +512,7 @@ world.EnableRangeCheck(true);
 
 </li>
 <li><b class="tab-title">Rust</b>
+
 ```rust
 world.enable_range_check(true);
 ```
@@ -555,6 +567,7 @@ Console.WriteLine(e.Name());
 
 </li>
 <li><b class="tab-title">Rust</b>
+
 ```rust
 let e = world.entity_named("MyEntity");
 if e == world.lookup("MyEntity") {
@@ -607,6 +620,7 @@ if (e == world.Lookup("Parent.Child")) {
 
 </li>
 <li><b class="tab-title">Rust</b>
+
 ```rust
 let p = world.entity_named("Parent");
 let e = world.entity_named("Child").child_of_id(p);
@@ -659,6 +673,7 @@ if (e == p.Lookup("Child")) {
 
 </li>
 <li><b class="tab-title">Rust</b>
+
 ```rust
 let p = world.entity_named("Parent");
 let e = world.entity_named("Child").child_of_id(p);
@@ -720,6 +735,7 @@ Console.WriteLine(e.Path()); // Parent.Child
 
 </li>
 <li><b class="tab-title">Rust</b>
+
 ```rust
 let p = world.entity_named("Parent");
 let e = world.entity_named("Child").child_of_id(p);
@@ -775,6 +791,7 @@ if (e1 == e2) {
 
 </li>
 <li><b class="tab-title">Rust</b>
+
 ```rust
 let e1 = world.entity_named("Parent::Child");
 let e2 = world.entity_named("Parent::Child");
@@ -820,6 +837,7 @@ e.SetName("Bar");
 
 </li>
 <li><b class="tab-title">Rust</b>
+
 ```rust
 let e = world.entity_named("Foo");
 // Change name
@@ -858,6 +876,7 @@ Entity twenty = world.Entity("20");
 
 </li>
 <li><b class="tab-title">Rust</b>
+
 ```rust
 let ten = world.entity_named("10");
 let twenty = world.entity_named("20");
@@ -913,6 +932,7 @@ e.Disable();
 
 </li>
 <li><b class="tab-title">Rust</b>
+
 ```rust
 let e = world.entity();
 // Enable entity
@@ -995,6 +1015,7 @@ p.Enable();
 
 </li>
 <li><b class="tab-title">Rust</b>
+
 ```rust
 // Three entities to disable
 let e1 = world.entity();
@@ -1097,6 +1118,7 @@ p1.enable();
 
 </li>
 <li><b class="tab-title">Rust</b>
+
 ```rust
 // Three entities to disable
 let e1 = world.entity();
@@ -1143,6 +1165,7 @@ e.Add(Ecs.Disabled);
 
 </li>
 <li><b class="tab-title">Rust</b>
+
 ```rust
 e.add::<flecs::Disabled>();
 ```
@@ -1237,6 +1260,7 @@ Console.WriteLine(comp_data.ToString());
 
 </li>
 <li><b class="tab-title">Rust</b>
+
 ```rust
 // Get the entity for the Position component
 let pos = world.component::<Position>();
@@ -1283,6 +1307,7 @@ world.Component<Position>().Entity.add(Ecs.Sparse);
 
 </li>
 <li><b class="tab-title">Rust</b>
+
 ```rust
 // Register a sparse component
 world.component::<Position>().add_trait::<flecs::Sparse>();
@@ -1868,6 +1893,7 @@ e.IsEnabled<Position>(); // True
 
 </li>
 <li><b class="tab-title">Rust</b>
+
 ```rust
 // Register toggle-able component
 world
