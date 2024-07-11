@@ -1128,6 +1128,10 @@ void flecs_script_eval_visit_init(
     ecs_vec_init_t(v->allocator, &v->using, ecs_entity_t, 0);
     ecs_vec_init_t(v->allocator, &v->with, ecs_value_t, 0);
     ecs_vec_init_t(v->allocator, &v->annot, ecs_script_annot_t*, 0);
+
+    /* Always include flecs.meta */
+    ecs_vec_append_t(v->allocator, &v->using, ecs_entity_t)[0] = 
+        ecs_lookup(v->world, "flecs.meta");
 }
 
 void flecs_script_eval_visit_fini(

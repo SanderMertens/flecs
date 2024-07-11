@@ -114,6 +114,7 @@ void flecs_script_template_on_set(
         /* Create variables to hold template properties */
         ecs_script_vars_t *vars = flecs_script_vars_push(
             NULL, &v.stack, v.allocator);
+        vars->parent = template->vars; /* Include hoisted variables */
 
         /* Populate properties from template members */
         if (st) {
@@ -281,6 +282,29 @@ int flecs_script_template_hoist_using(
     return 0;
 }
 
+static
+int flecs_script_template_hoist_vars(
+    ecs_script_eval_visitor_t *v,
+    ecs_script_template_t *template,
+    ecs_script_vars_t *vars)
+{
+    if (vars->parent) {
+        flecs_script_template_hoist_vars(v, template, vars);
+    }
+
+    int32_t i, count = ecs_vec_count(&vars->vars);
+    ecs_script_var_t *src_vars = ecs_vec_first(&vars->vars);
+    for (i = 0; i < count; i ++) {
+        ecs_script_var_t *src = &src_vars[i];
+        ecs_script_var_t *dst = ecs_script_vars_define_id(
+            template->vars, src->name, src->value.type);
+        ecs_value_copy(v->world, 
+            src->value.type, dst->value.ptr, src->value.ptr);
+    }
+
+    return 0;
+}
+
 ecs_script_template_t* flecs_script_template_init(
     ecs_script_impl_t *script)
 {
@@ -288,6 +312,7 @@ ecs_script_template_t* flecs_script_template_init(
     ecs_script_template_t *result = flecs_alloc_t(a, ecs_script_template_t);
     ecs_vec_init_t(NULL, &result->prop_defaults, ecs_script_var_t, 0);
     ecs_vec_init_t(NULL, &result->using_, ecs_entity_t, 0);
+    result->vars = ecs_script_vars_init(script->pub.world);
     return result;
 }
 
@@ -311,6 +336,7 @@ void flecs_script_template_fini(
 
     ecs_vec_fini_t(a, &template->prop_defaults, ecs_script_var_t);
     ecs_vec_fini_t(a, &template->using_, ecs_entity_t);
+    ecs_script_vars_fini(template->vars);
     flecs_free_t(a, ecs_script_template_t, template);
 }
 
@@ -333,6 +359,10 @@ int flecs_script_eval_template(
     }
 
     if (flecs_script_template_hoist_using(v, template)) {
+        goto error;
+    }
+
+    if (flecs_script_template_hoist_vars(v, template, v->vars)) {
         goto error;
     }
 

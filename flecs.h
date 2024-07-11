@@ -20701,7 +20701,7 @@ struct world {
      *
      * @param enabled True if range check should be enabled, false if not.
      */
-    void enable_range_check(bool enabled) const {
+    void enable_range_check(bool enabled = true) const {
         ecs_enable_range_check(world_, enabled);
     }
 
@@ -29601,7 +29601,7 @@ protected:
 
     void assert_term_ref() {
         ecs_assert(term_ref_ != NULL, ECS_INVALID_PARAMETER, 
-            "no active term (call .term() first)");
+            "no active term (call .with() first)");
     }
 
 private:
@@ -29949,7 +29949,7 @@ protected:
 private:
     void assert_term() {
         ecs_assert(term_ != NULL, ECS_INVALID_PARAMETER, 
-            "no active term (call .term() first)");
+            "no active term (call .with() first)");
     }
 
     operator Base&() {
