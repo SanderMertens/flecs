@@ -47,6 +47,19 @@ while (world.progress()) { }
 ```
 
 </li>
+<li><b class="tab-title">Rust</b>
+
+```rust
+// Optional, gather statistics for explorer
+world.import::<stats::Stats>();
+
+// Creates REST server on default port (27750)
+world.set(flecs::rest::Rest::default());
+
+// Runs the system serving up REST requests
+while world.progress() {}
+```
+</li>
 </ul>
 </div>
 
@@ -77,6 +90,17 @@ world.app()
   .run();
 ```
 
+</li>
+<li><b class="tab-title">Rust</b>
+
+```rust
+world
+    .app()
+    // Optional, gather statistics for explorer
+    .enable_stats(true)
+    .enable_rest(0)
+    .run();
+```
 </li>
 </ul>
 </div>
@@ -268,6 +292,19 @@ world.set<flecs::Rest>({});
 while (world.progress()) { }
 ```
 
+</li>
+<li><b class="tab-title">Rust</b>
+
+```rust
+// Optional, gather statistics for explorer
+world.import::<stats::Stats>();
+
+// Creates REST server on default port (27750)
+world.set(flecs::rest::Rest::default());
+
+// Runs the system serving up REST requests
+while world.progress() {}
+```
 </li>
 </ul>
 </div>
