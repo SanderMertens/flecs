@@ -26244,7 +26244,7 @@ flecs::string to_json(flecs::iter_to_json_desc_t *desc = nullptr) {
     }
 
 protected:
-    ecs_iter_t get_iter(flecs::world_t *world) const {
+    ecs_iter_t get_iter(flecs::world_t *world) const override {
         if (world) {
             ecs_iter_t result = m_it;
             result.world = world;
@@ -26253,11 +26253,11 @@ protected:
         return m_it;
     }
 
-    ecs_iter_next_action_t next_action() const {
+    ecs_iter_next_action_t next_action() const override {
         return m_next;
     }
 
-    ecs_iter_next_action_t next_each_action() const {
+    ecs_iter_next_action_t next_each_action() const override {
         return m_next_each;
     }
 
@@ -28457,7 +28457,7 @@ struct term_builder_i : term_id_builder_i<Base> {
     ecs_term_t *m_term;
 
 protected:
-    virtual flecs::world_t* world_v() = 0;
+    virtual flecs::world_t* world_v() override = 0;
 
     void set_term(ecs_term_t *term) {
         m_term = term;
@@ -28974,7 +28974,7 @@ struct filter_builder_i : term_builder_i<Base> {
     }
 
 protected:
-    virtual flecs::world_t* world_v() = 0;
+    virtual flecs::world_t* world_v() override = 0;
     int32_t m_term_index;
     int32_t m_expr_count;
 
@@ -29450,7 +29450,7 @@ public:
     Base& observable(const query_base& parent);
     
 protected:
-    virtual flecs::world_t* world_v() = 0;
+    virtual flecs::world_t* world_v() override = 0;
 
 private:
     operator Base&() {
@@ -29827,7 +29827,7 @@ struct observer_builder_i : filter_builder_i<Base, Components ...> {
     }
 
 protected:
-    virtual flecs::world_t* world_v() = 0;
+    virtual flecs::world_t* world_v() override = 0;
 
 private:
     operator Base&() {
@@ -30307,7 +30307,7 @@ public:
     }
 
 protected:
-    virtual flecs::world_t* world_v() = 0;
+    virtual flecs::world_t* world_v() override = 0;
 
 private:
     operator Base&() {

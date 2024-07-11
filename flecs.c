@@ -11561,6 +11561,13 @@ void flecs_filter_fini(
     }
 }
 
+/* ecs_poly_dtor_t-compatible wrapper */
+static
+void flecs_filter_fini_poly(void *filter)
+{
+    flecs_filter_fini(filter);
+}
+
 void ecs_filter_fini(
     ecs_filter_t *filter) 
 {
@@ -11766,7 +11773,7 @@ ecs_filter_t* ecs_filter_init(
 
     f->variable_names[0] = NULL;
     f->iterable.init = flecs_filter_iter_init;
-    f->dtor = (ecs_poly_dtor_t)flecs_filter_fini;
+    f->dtor = flecs_filter_fini_poly;
     f->entity = entity;
     f->eval_count = 0;
 
@@ -17176,6 +17183,13 @@ error:
     return -1;
 }
 
+/* ecs_poly_dtor_t-compatible wrapper */
+static
+void flecs_observer_fini_poly(void *observer)
+{
+    flecs_observer_fini(observer);
+}
+
 ecs_entity_t ecs_observer_init(
     ecs_world_t *world,
     const ecs_observer_desc_t *desc)
@@ -17197,7 +17211,7 @@ ecs_entity_t ecs_observer_init(
 
         ecs_observer_t *observer = ecs_poly_new(ecs_observer_t);
         ecs_assert(observer != NULL, ECS_INTERNAL_ERROR, NULL);
-        observer->dtor = (ecs_poly_dtor_t)flecs_observer_fini;
+        observer->dtor = flecs_observer_fini_poly;
 
         /* Make writeable copy of filter desc so that we can set name. This will
          * make debugging easier, as any error messages related to creating the
@@ -20197,6 +20211,13 @@ void flecs_query_fini(
     ecs_poly_free(query, ecs_query_t);
 }
 
+/* ecs_poly_dtor_t-compatible wrapper */
+static
+void flecs_query_fini_poly(void *query)
+{
+    flecs_query_fini(query);
+}
+
 /* -- Public API -- */
 
 ecs_query_t* ecs_query_init(
@@ -20261,7 +20282,7 @@ ecs_query_t* ecs_query_init(
     }
 
     result->iterable.init = flecs_query_iter_init;
-    result->dtor = (ecs_poly_dtor_t)flecs_query_fini;
+    result->dtor = flecs_query_fini_poly;
     result->prev_match_count = -1;
 
     result->ctx = desc->ctx;
@@ -26589,10 +26610,6 @@ const ecs_member_t* ecs_cpp_last_member(
 #if defined(ECS_TARGET_WINDOWS)
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
-#endif
-#if !defined(_WIN32_WINNT) || _WIN32_WINNT <= 0x502
-    #define WINVER 0x600
-    #define _WIN32_WINNT WINVER
 #endif
 #include <winsock2.h>
 #include <ws2tcpip.h>
@@ -63372,6 +63389,13 @@ void flecs_rule_fini(
     ecs_poly_free(rule, ecs_rule_t);
 }
 
+/* ecs_poly_dtor_t-compatible wrapper */
+static
+void flecs_rule_fini_poly(void *rule)
+{
+    flecs_rule_fini(rule);
+}
+
 void ecs_rule_fini(
     ecs_rule_t *rule)
 {
@@ -63406,7 +63430,7 @@ ecs_rule_t* ecs_rule_init(
     }
 
     ecs_entity_t entity = const_desc->entity;
-    result->dtor = (ecs_poly_dtor_t)flecs_rule_fini;
+    result->dtor = flecs_rule_fini_poly;
 
     if (entity) {
         EcsPoly *poly = ecs_poly_bind(world, entity, ecs_rule_t);
@@ -69799,6 +69823,13 @@ void flecs_system_fini(ecs_system_t *sys) {
     ecs_poly_free(sys, ecs_system_t);
 }
 
+/* ecs_poly_dtor_t-compatible wrapper */
+static
+void flecs_system_fini_poly(void *sys)
+{
+    flecs_system_fini(sys);
+}
+
 static
 void flecs_system_init_timer(
     ecs_world_t *world,
@@ -69851,7 +69882,7 @@ ecs_entity_t ecs_system_init(
         
         poly->poly = system;
         system->world = world;
-        system->dtor = (ecs_poly_dtor_t)flecs_system_fini;
+        system->dtor = flecs_system_fini_poly;
         system->entity = entity;
 
         ecs_query_desc_t query_desc = desc->query;
