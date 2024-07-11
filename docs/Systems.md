@@ -512,7 +512,7 @@ world.Progress();
 <li><b class="tab-title">Rust</b>
 
 ```rust
-world.Progress();
+world.progress();
 ```
 </li>
 </ul>
