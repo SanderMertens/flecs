@@ -203,7 +203,7 @@ auto q = world.query_builder<>()
 auto q = world.query_builder<>()
   .with(Eats, Apples)
   .build();
- 
+
 // Or when using pair types, when both relationship & target are compile time types:
 auto q = world.query<flecs::pair<Eats, Apples>>();
 ```
@@ -582,7 +582,7 @@ world.query_builder()
 
 ```cs
 world.FilterBuilder()
-    .with(Eats, Apples)
+    .With(Eats, Apples)
     .Build()
     .Each((Entity e) =>
     {
@@ -648,7 +648,7 @@ world.query_builder()
 
 ```cs
 world.FilterBuilder()
-    .with(Eats, Ecs.Wildcard)
+    .With(Eats, Ecs.Wildcard)
     .Build()
     .Each((Iter it, int i) =>
     {
@@ -1021,7 +1021,7 @@ q.each([](flecs::iter& it, size_t i) {
 
 ```cs
 Query q = world.QueryBuilder()
-    .with(Likes, Ecs.Wildcard)
+    .With(Likes, Ecs.Wildcard)
     .Build();
 
 q.Iter((Iter it) =>
