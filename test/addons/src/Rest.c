@@ -499,3 +499,13 @@ void Rest_script_error(void) {
 
     ecs_fini(world);
 }
+
+void Rest_import_rest_after_mini(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_IMPORT(world, FlecsRest);
+
+    test_assert(ecs_id(EcsRest) != 0);
+
+    ecs_fini(world);
+}

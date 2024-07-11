@@ -11,6 +11,7 @@ void FlecsUnitsImport(
     ecs_world_t *world)
 {
     ECS_MODULE(world, FlecsUnits);
+    ECS_IMPORT(world, FlecsMeta);
 
 #ifdef FLECS_DOC
     ECS_IMPORT(world, FlecsDoc);

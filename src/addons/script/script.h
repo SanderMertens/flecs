@@ -59,7 +59,7 @@ struct ecs_script_template_t {
     ecs_vec_t using_;
 
     /* Hoisted variables */
-    ecs_vec_t vars;
+    ecs_script_vars_t *vars;
 
     /* Default values for props */
     ecs_vec_t prop_defaults;

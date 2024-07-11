@@ -3,16 +3,6 @@
 void Template_template_no_scope(void) {
     ecs_world_t *world = ecs_init();
 
-    ECS_COMPONENT(world, Position);
-
-    ecs_struct(world, {
-        .entity = ecs_id(Position),
-        .members = {
-            {"x", ecs_id(ecs_f32_t)},
-            {"y", ecs_id(ecs_f32_t)}
-        }
-    });
-
     const char *expr =
     LINE "template Tree";
 
@@ -26,16 +16,6 @@ void Template_template_no_scope(void) {
 
 void Template_template_empty(void) {
     ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-
-    ecs_struct(world, {
-        .entity = ecs_id(Position),
-        .members = {
-            {"x", ecs_id(ecs_f32_t)},
-            {"y", ecs_id(ecs_f32_t)}
-        }
-    });
 
     const char *expr =
     LINE "template Tree {"
@@ -2067,6 +2047,66 @@ void Template_update_template_after_error(void) {
         ecs_entity_t foo = ecs_lookup(world, "Foo");
         test_assert(foo != 0);
     }
+
+    ecs_fini(world);
+}
+
+void Template_prop_without_using_meta(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    LINE "template Tree {"
+    LINE "  prop height = f32: 0"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+
+    ecs_entity_t tree = ecs_lookup(world, "Tree");
+    test_assert(tree != 0);
+
+    const EcsStruct *st = ecs_get(world, tree, EcsStruct);
+    test_assert(st != NULL);
+    test_int(st->members.count, 1);
+    test_str(ecs_vec_get_t(&st->members, ecs_member_t, 0)->name, "height");
+    test_uint(ecs_vec_get_t(&st->members, ecs_member_t, 0)->type, ecs_id(ecs_f32_t));
+
+    ecs_fini(world);
+}
+
+void Template_hoist_var(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "using flecs.meta"
+    LINE "const v = 10"
+    LINE "template Tree {"
+    LINE "  prop height = f32: 0"
+    LINE "  Position: {$v, $height}"
+    LINE "}"
+    LINE "Tree foo(height: 20)";
+
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+
+    ecs_entity_t tree = ecs_lookup(world, "Tree");
+    test_assert(tree != 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "foo");
+    test_assert(foo != 0);
+
+    const Position *p = ecs_get(world, foo, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
 
     ecs_fini(world);
 }

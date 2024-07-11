@@ -7,6 +7,7 @@
 
 #ifdef FLECS_SCRIPT
 #include <ctype.h>
+#include <math.h>
 #include "script.h"
 
 /* String deserializer for script expressions */
@@ -477,6 +478,24 @@ int flecs_meta_call(
             "doc_name() is not available without FLECS_DOC addon");
         return -1;
 #endif
+    } else if (!ecs_os_strcmp(function, "sqrt")) {
+        if (type != ecs_id(ecs_f32_t) && type != ecs_id(ecs_f64_t)) {
+            char *typestr = ecs_id_str(world, type);
+            ecs_parser_error(name, expr, ptr - expr, 
+                "sqrt() can only be called on floating point value (called on %s)",
+                    typestr);
+            ecs_os_free(typestr);
+            return -1;
+        }
+
+        double *result = flecs_expr_value_new(stack, ecs_id(ecs_f64_t));
+        if (type == ecs_id(ecs_f32_t)) {
+            *result = sqrt((double)*(float*)value_ptr);
+        } else if (type == ecs_id(ecs_f64_t)) {
+            *result = sqrt(*(double*)value_ptr);
+        }
+
+        *cur = ecs_meta_cursor(world, ecs_id(ecs_f64_t), result);
     } else {
         ecs_parser_error(name, expr, ptr - expr, 
             "unknown function '%s'", function);
@@ -549,6 +568,11 @@ ecs_entity_t flecs_parse_discover_type(
                 }
                 if (token[len] == '.') {
                     token[len] = '\0';
+                }
+                if (!ecs_os_strcmp(&token[len + 1], "sqrt")) {
+                    return ecs_id(ecs_f64_t);
+                } else {
+                    return ecs_id(ecs_entity_t);
                 }
             }
 

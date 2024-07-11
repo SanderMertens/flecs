@@ -329,6 +329,8 @@ void Template_module_w_nested_template(void);
 void Template_template_w_pair_w_this_var(void);
 void Template_run_template_after_error(void);
 void Template_update_template_after_error(void);
+void Template_prop_without_using_meta(void);
+void Template_hoist_var(void);
 
 // Testsuite 'Expr'
 void Expr_add_2_int_literals(void);
@@ -1883,6 +1885,14 @@ bake_test_case Template_testcases[] = {
     {
         "update_template_after_error",
         Template_update_template_after_error
+    },
+    {
+        "prop_without_using_meta",
+        Template_prop_without_using_meta
+    },
+    {
+        "hoist_var",
+        Template_hoist_var
     }
 };
 
@@ -2991,7 +3001,7 @@ static bake_test_suite suites[] = {
         "Template",
         NULL,
         NULL,
-        45,
+        47,
         Template_testcases
     },
     {

@@ -912,3 +912,13 @@ void Units_quantity_w_short_notation(void) {
 
     ecs_fini(world);
 }
+
+void Units_import_units_after_mini(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_IMPORT(world, FlecsUnits);
+    
+    test_assert(EcsMeters != 0);
+
+    ecs_fini(world);
+}
