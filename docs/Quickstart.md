@@ -432,7 +432,7 @@ posE.Add<Serializable>();
 </li>
 <li><b class="tab-title">Rust</b>
 
-//Rust applications can use the `world::entity_from` function.
+Rust applications can use the `world::entity_from` function.
 ```rust
 let pos_e = world.entity_from::<Position>();
 
@@ -1113,9 +1113,9 @@ e.Each((Id id) =>
 
 ```rust
 e.each_component(|id| {
-if id == world.component_id::<Position>() {
-    // Found Position component!
-}
+    if id == world.component_id::<Position>() {
+        // Found Position component!
+    }
 });
 ```
 </li>
@@ -1373,24 +1373,24 @@ world.each::<(&mut Position, &Velocity)>(|(p, v)| {
 
 // More complex queries can first be created, then iterated
 let q = world
-.query::<&Position>()
-.with_id((flecs::ChildOf::ID, parent))
-.build();
+    .query::<&Position>()
+    .with_id((flecs::ChildOf::ID, parent))
+    .build();
 
 // Option 1: the each() callback iterates over each entity
 q.each_entity(|e, p| {
-println!("{}: ({}, {})", e.name(), p.x, p.y);
-});
+    println!("{}: ({}, {})", e.name(), p.x, p.y);
+}); 
 
 // Option 2: the run() callback offers more control over the iteration
 q.run(|mut it| {
-while it.next() {
-let p = it.field::<Position>(0).unwrap();
+    while it.next() {
+        let p = it.field::<Position>(0).unwrap();
 
-for i in it.iter() {
-println!("{}: ({}, {})", it.entity(i).name(), p[i].x, p[i].y);
-}
-}
+        for i in it.iter() {
+            println!("{}: ({}, {})", it.entity(i).name(), p[i].x, p[i].y);
+        }
+    }
 });
 ```
 </li>
@@ -1793,8 +1793,8 @@ e.Set<Position>(new(20, 30)); // Invokes the observer
 
 ```rust
 world
-.observer_named::<flecs::OnSet, (&Position, &Velocity)>("OnSetPosition")
-.each(|(p, v)| {}); // Callback code is same as system
+    .observer_named::<flecs::OnSet, (&Position, &Velocity)>("OnSetPosition")
+    .each(|(p, v)| {}); // Callback code is same as system
 
 let e = world.entity(); // Doesn't invoke the observer
 e.set(Position { x: 10.0, y: 20.0 }); // Doesn't invoke the observer
@@ -1877,11 +1877,11 @@ world.Import<MyModule>();
 struct MyModule;
 
 impl Module for MyModule {
-fn module(world: &World) {
-world.module::<MyModule>("MyModule");
-// Define components, systems, triggers, ... as usual. They will be
-// automatically created inside the scope of the module.
-}
+    fn module(world: &World) {
+        world.module::<MyModule>("MyModule");
+        // Define components, systems, triggers, ... as usual. They will be
+        // automatically created inside the scope of the module.
+    }
 }
 
 // Import code
