@@ -68,10 +68,10 @@ world.Entity().Set(new Position(10, 20)); // Invokes observer
 ```rust
 // Create observer that is invoked whenever Position is set
 world
-.observer::<flecs::OnSet, &Position>()
-.each_entity(|e, p| {
-println!("Position set: {{ {}, {} }}", p.x, p.y);
-});
+    .observer::<flecs::OnSet, &Position>()
+    .each_entity(|e, p| {
+        println!("Position set: {{ {}, {} }}", p.x, p.y);
+    });
 
 world.entity().set(Position { x: 10.0, y: 20.0 }); // Invokes observer
 ```
@@ -541,9 +541,9 @@ world.Observer<Position>()
 ```rust
 // Observer that listens for both OnAdd and OnRemove events
 world
-.observer::<flecs::OnAdd, &Position>()
-.add_event::<flecs::OnRemove>()
-.each_entity(|e, p| {
+    .observer::<flecs::OnAdd, &Position>()
+    .add_event::<flecs::OnRemove>()
+    .each_entity(|e, p| {
 // ...
 });
 ```
@@ -606,15 +606,15 @@ world.Observer<Position>()
 
 ```rust
 world
-.observer::<flecs::OnAdd, &Position>()
-.add_event::<flecs::OnRemove>()
-.each_iter(|it, i, p| {
-if it.event() == flecs::OnAdd::ID {
-// ...
-} else if it.event() == flecs::OnRemove::ID {
-// ...
-}
-});
+    .observer::<flecs::OnAdd, &Position>()
+    .add_event::<flecs::OnRemove>()
+    .each_iter(|it, i, p| {
+        if it.event() == flecs::OnAdd::ID {
+        // ...
+        } else if it.event() == flecs::OnRemove::ID {
+        // ...
+        }
+    });
 ```
 
 </li>
@@ -667,10 +667,10 @@ world.Observer<Position>()
 ```rust
 // Observer that listens for all events for Position
 world
-.observer::<flecs::Wildcard, &Position>()
-.each_entity(|e, p| {
-// ...
-});
+    .observer::<flecs::Wildcard, &Position>()
+    .each_entity(|e, p| {
+        // ...
+    });
 ```
 
 </li>
@@ -733,10 +733,10 @@ world.Observer<Position, Velocity>()
 ```rust
 // Observer that listens for entities with both Position and Velocity
 world
-.observer::<flecs::OnAdd, (&Position, &Velocity)>()
-.each_entity(|e, (p, v)| {
-// ...
-});
+    .observer::<flecs::OnAdd, (&Position, &Velocity)>()
+    .each_entity(|e, (p, v)| {
+        // ...
+    });
 ```
 
 </li>
@@ -889,12 +889,12 @@ e.Set(new Velocity(20, 30));
 ```rust
 // Observer that only triggers on Position, not on Velocity
 world
-.observer::<flecs::OnAdd, &Position>()
-.with::<Velocity>()
-.filter()
-.each_entity(|e, p| {
-// ...
-});
+    .observer::<flecs::OnAdd, &Position>()
+    .with::<Velocity>()
+    .filter()
+    .each_entity(|e, p| {
+        // ...
+    });
 
 let e = world.entity();
 
@@ -997,11 +997,11 @@ e.Set(new Position(20, 30));
 ```rust
 // OnSet observer with both component and tag
 world
-.observer::<flecs::OnSet, &Position>()
-.with::<Npc>() // Tag
-.each_entity(|e, p| {
-// ...
-});
+    .observer::<flecs::OnSet, &Position>()
+    .with::<Npc>() // Tag
+    .each_entity(|e, p| {
+        // ...
+    });
 
 let e = world.entity();
 
@@ -1104,11 +1104,11 @@ e.Remove<Velocity>();
 ```rust
 // Observer with a Not term
 world
-.observer::<flecs::OnAdd, &Position>()
-.without::<Velocity>()
-.each_entity(|e, p| {
-// ...
-});
+    .observer::<flecs::OnAdd, &Position>()
+    .without::<Velocity>()
+    .each_entity(|e, p| {
+        // ...
+    });
 
 let e = world.entity();
 
@@ -1233,14 +1233,14 @@ e.Remove<Velocity>();
 ```rust
 // Monitor observer
 world
-.observer::<flecs::Monitor, (&Position, &Velocity)>()
-.each_iter(|it, i, (p, v)| {
-if it.event() == flecs::OnAdd::ID {
-// Entity started matching query
-} else if it.event() == flecs::OnRemove::ID {
-// Entity stopped matching query
-}
-});
+    .observer::<flecs::Monitor, (&Position, &Velocity)>()
+    .each_iter(|it, i, (p, v)| {
+        if it.event() == flecs::OnAdd::ID {
+            // Entity started matching query
+        } else if it.event() == flecs::OnRemove::ID {
+            // Entity stopped matching query
+        }
+    });
 
 let e = world.entity();
 
@@ -1348,11 +1348,11 @@ let e1 = world.entity().set(Position { x: 10.0, y: 20.0 });
 
 // Yield existing observer
 world
-.observer::<flecs::OnAdd, (&Position, &Velocity)>()
-.yield_existing()
-.each_iter(|it, i, (p, v)| {
-// ...
-});
+    .observer::<flecs::OnAdd, (&Position, &Velocity)>()
+    .yield_existing()
+    .each_iter(|it, i, (p, v)| {
+        // ...
+    });
 
 // Observer is invoked for e1
 
@@ -1445,12 +1445,12 @@ let game = world.entity().set(TimeOfDay { value: 0.0 });
 
 // Observer with fixed source
 world
-.observer::<flecs::OnSet, &TimeOfDay>()
-.term_at(0)
-.set_src_id(game) // Match TimeOfDay on game
-.each_iter(|it, i, time| {
-// ...
-});
+    .observer::<flecs::OnSet, &TimeOfDay>()
+    .term_at(0)
+    .set_src_id(game) // Match TimeOfDay on game
+    .each_iter(|it, i, time| {
+        // ...
+    });
 
 // Triggers observer
 game.set(TimeOfDay { value: 1.0 });
@@ -1542,12 +1542,12 @@ world.set(TimeOfDay { value: 0.0 });
 
 // Observer with singleton source
 world
-.observer::<flecs::OnSet, &TimeOfDay>()
-.term_at(0)
-.singleton()
-.each_iter(|it, i, time| {
-// ...
-});
+    .observer::<flecs::OnSet, &TimeOfDay>()
+    .term_at(0)
+    .singleton()
+    .each_iter(|it, i, time| {
+        // ...
+    });
 
 // Triggers observer
 world.set(TimeOfDay { value: 1.0 });
@@ -1629,13 +1629,13 @@ parent.Set(new Position(10, 20));
 ```rust
 // Create an observer that matches OnSet(Position) events on self and a parent
 world
-.observer::<flecs::OnSet, &Position>()
-.term_at(0)
-.self_()
-.up() // .trav(flecs::ChildOf) (default)
-.each_entity(|e, p| {
-// ...
-});
+    .observer::<flecs::OnSet, &Position>()
+    .term_at(0)
+    .self_()
+    .up() // .trav(flecs::ChildOf) (default)
+    .each_entity(|e, p| {
+        // ...
+    });
 
 let parent = world.entity();
 let child = world.entity().child_of_id(parent);
@@ -1720,12 +1720,12 @@ Entity child = world.Entity().ChildOf(parent);
 ```rust
 // Create an observer that matches OnAdd(Position) events on a parent
 world
-.observer::<flecs::OnAdd, &Position>()
-.term_at(0)
-.up() // .trav(flecs::ChildOf) (default)
-.each_entity(|e, p| {
-// ...
-});
+    .observer::<flecs::OnAdd, &Position>()
+    .term_at(0)
+    .up() // .trav(flecs::ChildOf) (default)
+    .each_entity(|e, p| {
+        // ...
+    });
 
 let parent = world.entity().set(Position { x: 10.0, y: 20.0 });
 
@@ -1854,8 +1854,8 @@ struct Synchronized;
 
 // Create an observer that matches a custom event
 world
-.observer::<Synchronized, &Position>()
-.each_entity(|e, p| {
+    .observer::<Synchronized, &Position>()
+    .each_entity(|e, p| {
 // ...
 });
 
@@ -1863,10 +1863,10 @@ let e = world.entity().set(Position { x: 10.0, y: 20.0 });
 
 // Emit custom event
 world
-.event()
-.add::<Position>()
-.entity(e)
-.emit(&Synchronized);
+    .event()
+    .add::<Position>()
+    .entity(e)
+    .emit(&Synchronized);
 ```
 
 </li>
@@ -1955,7 +1955,7 @@ let widget = world.entity_named("widget");
 
 // Create an entity observer
 widget.observe::<Clicked>(|| {
-// ...
+    // ...
 });
 
 // Emit entity event
@@ -2045,8 +2045,8 @@ widget.Emit<Resize>(new(100, 200));
 // Create a custom event
 #[derive(Component)]
 struct Resize {
-width: u32,
-height: u32,
+    width: u32,
+    height: u32,
 }
 
 // Create entity
@@ -2142,10 +2142,10 @@ world.DeferEnd();
 
 ```rust
 world
-.observer::<flecs::OnSet, &Position>()
-.each_entity(|e, p| {
-// ...
-});
+    .observer::<flecs::OnSet, &Position>()
+    .each_entity(|e, p| {
+        // ...
+    });
 
 // Observer is invoked as part of operation
 e.set(Position { x: 10.0, y: 20.0 });
