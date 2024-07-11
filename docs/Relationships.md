@@ -169,7 +169,7 @@ auto q = world.query_builder<>()
 
 // With the query builder API:
 auto q = world.query_builder<>()
-  .term(Eats, Apples)
+  .with(Eats, Apples)
   .build();
 
 // Or when using pair types, when both relationship & target are compile time types:
@@ -456,7 +456,7 @@ ecs_query_fini(f);
 
 ```cpp
 world.query_builder()
-  .term(Eats, Apples)
+  .with(Eats, Apples)
   .build()
   .each([](flecs::entity e) {
     // Iterate as usual
@@ -507,7 +507,7 @@ ecs_query_fini(f);
 
 ```cpp
 world.query_builder()
-  .term(Eats, flecs::Wildcard)
+  .with(Eats, flecs::Wildcard)
   .build()
   .each([](flecs::iter& it, size_t i) {
     flecs::entity food = it.pair(0).second(); // Apples, ...
@@ -804,7 +804,7 @@ while (ecs_query_next(&it)) {
 
 ```cpp
 auto q = world.query_builder()
-  .term(Likes, flecs::Wildcard)
+  .with(Likes, flecs::Wildcard)
   .build();
 
 q.each([](flecs::iter& it, size_t i) {
@@ -917,7 +917,7 @@ Bob.add(Eats, Apples);
 Bob.add(Eats, Pears);
 
 // Find all (Eats, *) relationships in Bob's type
-bob.match(world.pair(Eats, flecs::Wildcard), [](flecs::id id) {
+bob.each(world.pair(Eats, flecs::Wildcard), [](flecs::id id) {
   cout << "Bob eats " << id.second().name() << endl;
 });
 

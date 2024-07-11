@@ -446,6 +446,7 @@ void Rest_request_commands_no_frames(void);
 void Rest_request_commands_no_commands(void);
 void Rest_request_commands_garbage_collect(void);
 void Rest_script_error(void);
+void Rest_import_rest_after_mini(void);
 
 // Testsuite 'Metrics'
 void Metrics_member_gauge_1_entity(void);
@@ -2153,6 +2154,10 @@ bake_test_case Rest_testcases[] = {
     {
         "script_error",
         Rest_script_error
+    },
+    {
+        "import_rest_after_mini",
+        Rest_import_rest_after_mini
     }
 };
 
@@ -2605,7 +2610,7 @@ static bake_test_suite suites[] = {
         "Rest",
         NULL,
         NULL,
-        14,
+        15,
         Rest_testcases
     },
     {

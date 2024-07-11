@@ -7,6 +7,7 @@
 
 #ifdef FLECS_SCRIPT
 #include <ctype.h>
+#include <math.h>
 #include "script.h"
 
 /* String deserializer for script expressions */
@@ -550,6 +551,8 @@ ecs_entity_t flecs_parse_discover_type(
                 if (token[len] == '.') {
                     token[len] = '\0';
                 }
+
+                return ecs_id(ecs_entity_t);
             }
 
             ecs_value_t v = flecs_dotresolve_var(world, desc->vars, token);

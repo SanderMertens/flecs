@@ -216,7 +216,8 @@
                 "builtin_units",
                 "unit_w_short_notation",
                 "unit_prefix_w_short_notation",
-                "quantity_w_short_notation"
+                "quantity_w_short_notation",
+                "import_units_after_mini"
             ]
         }, {
             "id": "Serialized",
