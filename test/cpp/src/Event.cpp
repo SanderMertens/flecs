@@ -532,32 +532,6 @@ void Event_entity_emit_event_w_payload(void) {
     test_int(count, 1);
 }
 
-// Generic lambdas are a C++14 feature.
-
-struct GenericLambdaObserveEntity {
-    template <typename E, typename P>
-    void operator()(E&&, P&&) const {
-        static_assert(flecs::is_same<E, flecs::entity>(), "");
-        static_assert(flecs::is_same<P, Position&>(), "");
-    }
-};
-
-struct GenericLambdaObservePayload {
-    template <typename P>
-    void operator()(P&&) const {
-        static_assert(flecs::is_same<P, Position&>(), "");
-    }
-};
-
-void Event_entity_emit_event_w_payload_generic(void) {
-    flecs::world ecs;
-
-    flecs::entity e = ecs.entity();
-
-    e.observe<Position>(GenericLambdaObserveEntity{});
-    e.observe<Position>(GenericLambdaObservePayload{});
-}
-
 void Event_entity_emit_event_id_no_src(void) {
     flecs::world ecs;
 
@@ -655,6 +629,40 @@ void Event_entity_emit_event_w_payload_derived_event_type_no_src(void) {
     e.emit<Position>({10, 20});
 
     test_int(count, 1);
+}
+
+// Generic lambdas are a C++14 feature.
+
+struct GenericLambdaObserveEntityPayload {
+    template <typename E, typename P>
+    void operator()(E&&, P&&) const {
+        static_assert(flecs::is_same<E, flecs::entity>(), "");
+        static_assert(flecs::is_same<P, Position&>(), "");
+    }
+};
+
+struct GenericLambdaObservePayload {
+    template <typename P>
+    void operator()(P&&) const {
+        static_assert(flecs::is_same<P, Position&>(), "");
+    }
+};
+
+struct GenericLambdaObserveEntity {
+    template <typename E>
+    void operator()(E&&) const {
+        static_assert(flecs::is_same<E, flecs::entity>(), "");
+    }
+};
+
+void Event_entity_observe_generic(void) {
+    flecs::world ecs;
+
+    flecs::entity e = ecs.entity();
+
+    e.observe<Position>(GenericLambdaObserveEntityPayload{});
+    e.observe<Position>(GenericLambdaObservePayload{});
+    e.observe<Evt>(GenericLambdaObserveEntity{});
 }
 
 void Event_enqueue_event(void) {
