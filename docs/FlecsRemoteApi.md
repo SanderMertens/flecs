@@ -435,9 +435,51 @@ GET entity/<path>
 #### Examples
 
 In this example, `Mass` is a component with reflection data, `(Identifier, Name)` is a pair component without reflection data, and `(Description, Color)` is a pair component with reflection data.
+
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">HTTP</b>
+
 ```
 GET /entity/Sun/Earth
 ```
+
+</li>
+<li><b class="tab-title">JavaScript</b>
+
+```js
+const conn = flecs.connect("localhost");
+
+conn.entity("Sun.Earth", {}, (reply) => {
+  // ...
+});
+```
+
+</li>
+<li><b class="tab-title">C</b>
+
+```c
+ecs_entity_t e = ecs_lookup(world, "Sun.Earth");
+
+char *json = ecs_entity_to_json(world, e, NULL);
+// ...
+ecs_os_free(json);
+```
+
+</li>
+<li><b class="tab-title">C++</b>
+
+```cpp
+flecs::entity e = world.lookup("Sun::Earth");
+
+auto json = e.to_json();
+// ...
+```
+
+</li>
+</ul>
+</div>
+
 ```json
 {
   "parent": "Sun",
@@ -461,9 +503,56 @@ GET /entity/Sun/Earth
 ```
 ---
 This example shows how `type_info` can be used to obtain the component schema's. If no schema is available a `null` placeholder is sent. The example also shows the `entity_id` option, which adds the `id` member.
+
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">HTTP</b>
+
 ```
 GET /entity/Sun/Earth?id=true&type_info=true
 ```
+
+</li>
+<li><b class="tab-title">JavaScript</b>
+
+```js
+const conn = flecs.connect("localhost");
+
+conn.entity("Sun.Earth", {id: true, type_info: true}, (reply) => {
+  // ...
+});
+```
+
+</li>
+<li><b class="tab-title">C</b>
+
+```c
+ecs_entity_t e = ecs_lookup(world, "Sun.Earth");
+
+ecs_entity_to_json_desc_t desc = ECS_ENTITY_TO_JSON_INIT;
+desc.serialize_entity_id = true;
+desc.serialize_type_info = true;
+char *json = ecs_entity_to_json(world, e, &desc);
+// ...
+ecs_os_free(json);
+```
+
+</li>
+<li><b class="tab-title">C++</b>
+
+```cpp
+flecs::entity e = world.lookup("Sun::Earth");
+
+ecs_entity_to_json_desc_t desc = ECS_ENTITY_TO_JSON_INIT;
+desc.serialize_entity_id = true;
+desc.serialize_type_info = true;
+auto json = e.to_json(&desc);
+```
+
+</li>
+</ul>
+</div>
+
 ```json
 {
   "parent": "Sun",
@@ -506,9 +595,54 @@ GET /entity/Sun/Earth?id=true&type_info=true
 ```
 ---
 This example shows the effect of setting `full_paths`. This can be useful when tag, pair or component names are used in follow up requests, which often require full paths. It can also be used to disambiguate between names in different namespaces.
+
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">HTTP</b>
+
 ```
 GET /entity/Sun/Earth?full_paths=true
 ```
+
+</li>
+<li><b class="tab-title">JavaScript</b>
+
+```js
+const conn = flecs.connect("localhost");
+
+conn.entity("Sun.Earth", {full_paths: true}, (reply) => {
+  // ...
+});
+```
+
+</li>
+<li><b class="tab-title">C</b>
+
+```c
+ecs_entity_t e = ecs_lookup(world, "Sun.Earth");
+
+ecs_entity_to_json_desc_t desc = ECS_ENTITY_TO_JSON_INIT;
+desc.serialize_full_paths = true;
+char *json = ecs_entity_to_json(world, e, &desc);
+// ...
+ecs_os_free(json);
+```
+
+</li>
+<li><b class="tab-title">C++</b>
+
+```cpp
+flecs::entity e = world.lookup("Sun::Earth");
+
+ecs_entity_to_json_desc_t desc = ECS_ENTITY_TO_JSON_INIT;
+desc.serialize_full_paths = true;
+auto json = e.to_json(&desc);
+```
+
+</li>
+</ul>
+</div>
+
 ```json
 {
   "parent": "Sun",
@@ -532,9 +666,54 @@ GET /entity/Sun/Earth?full_paths=true
 ```
 ---
 This example demonstrates serializing inherited tags, pairs and components. Prefabs are added in the order they are encountered when traversing the `IsA` relationship. If multiple prefabs have the same component, the component will show up multiple times in the reply. A client must only consider the first occurrence of the component.
+
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">HTTP</b>
+
 ```
 GET /entity/Sun/Earth?inherited=true
 ```
+
+</li>
+<li><b class="tab-title">JavaScript</b>
+
+```js
+const conn = flecs.connect("localhost");
+
+conn.entity("Sun.Earth", {inherited: true}, (reply) => {
+  // ...
+});
+```
+
+</li>
+<li><b class="tab-title">C</b>
+
+```c
+ecs_entity_t e = ecs_lookup(world, "Sun.Earth");
+
+ecs_entity_to_json_desc_t desc = ECS_ENTITY_TO_JSON_INIT;
+desc.serialize_inherited = true;
+char *json = ecs_entity_to_json(world, e, &desc);
+// ...
+ecs_os_free(json);
+```
+
+</li>
+<li><b class="tab-title">C++</b>
+
+```cpp
+flecs::entity e = world.lookup("Sun::Earth");
+
+ecs_entity_to_json_desc_t desc = ECS_ENTITY_TO_JSON_INIT;
+desc.serialize_inherited = true;
+auto json = e.to_json(&desc);
+```
+
+</li>
+</ul>
+</div>
+
 ```json
 {
   "parent": "Sun",
@@ -567,9 +746,54 @@ GET /entity/Sun/Earth?inherited=true
 ```
 ---
 The following example shows the effect of disabling serialization of component values.
+
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">HTTP</b>
+
 ```
 GET /entity/Sun/Earth?values=false
 ```
+
+</li>
+<li><b class="tab-title">JavaScript</b>
+
+```js
+const conn = flecs.connect("localhost");
+
+conn.entity("Sun.Earth", {values: false}, (reply) => {
+  // ...
+});
+```
+
+</li>
+<li><b class="tab-title">C</b>
+
+```c
+ecs_entity_t e = ecs_lookup(world, "Sun.Earth");
+
+ecs_entity_to_json_desc_t desc = ECS_ENTITY_TO_JSON_INIT;
+desc.serialize_values = false;
+char *json = ecs_entity_to_json(world, e, &desc);
+// ...
+ecs_os_free(json);
+```
+
+</li>
+<li><b class="tab-title">C++</b>
+
+```cpp
+flecs::entity e = world.lookup("Sun::Earth");
+
+ecs_entity_to_json_desc_t desc = ECS_ENTITY_TO_JSON_INIT;
+desc.serialize_values = false;
+auto json = e.to_json(&desc);
+```
+
+</li>
+</ul>
+</div>
+
 ```json
 {
   "parent": "Sun",
@@ -598,9 +822,40 @@ PUT /entity/<path>
 #### Examples
 The following example creates entity Sun.Earth.
 
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">HTTP</b>
+
 ```
 PUT /entity/Sun/Earth
 ```
+
+</li>
+<li><b class="tab-title">JavaScript</b>
+
+```js
+const conn = flecs.connect("localhost");
+
+conn.create("Sun.Earth");
+```
+
+</li>
+<li><b class="tab-title">C</b>
+
+```c
+ecs_entity_t e = ecs_entity(world, { .name = "Sun.Earth" });
+```
+
+</li>
+<li><b class="tab-title">C++</b>
+
+```cpp
+flecs::entity e = world.entity("Sun.Earth");
+```
+
+</li>
+</ul>
+</div>
 
 ### DELETE entity
 Delete an entity.
@@ -612,9 +867,43 @@ DELETE /entity/<path>
 #### Examples
 The following example deletes entity Sun.Earth.
 
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">HTTP</b>
+
 ```
 DELETE /entity/Sun/Earth
 ```
+
+</li>
+<li><b class="tab-title">JavaScript</b>
+
+```js
+const conn = flecs.connect("localhost");
+
+conn.delete("Sun.Earth");
+```
+
+</li>
+<li><b class="tab-title">C</b>
+
+```c
+ecs_entity_t e = ecs_lookup(world, "Sun.Earth");
+ecs_delete(world, e);
+```
+
+</li>
+<li><b class="tab-title">C++</b>
+
+```cpp
+flecs::entity e = world.lookup("Sun::Earth");
+e.destruct();
+```
+
+</li>
+</ul>
+</div>
+
 
 ### GET component
 Retrieve a single component from an entity.
@@ -624,9 +913,52 @@ GET /component/<path>?component=<component>
 ```
 
 #### Examples
+
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">HTTP</b>
+
 ```
 GET /component/Sun/Earth?component=planets.Mass
 ```
+
+</li>
+<li><b class="tab-title">JavaScript</b>
+
+```js
+const conn = flecs.connect("localhost");
+
+conn.get("Sun.Earth", {component: "planets.Mass"}, (reply) => {
+  // ...
+});
+```
+
+</li>
+<li><b class="tab-title">C</b>
+
+```c
+ecs_entity_t e = ecs_lookup(world, "Sun.Earth");
+ecs_entity_t c = ecs_lookup(world, "planets.Mass");
+const void *ptr = ecs_get_id(world, e, c);
+char *json = ecs_ptr_to_json(world, c, ptr);
+// ...
+ecs_os_free(json);
+```
+
+</li>
+<li><b class="tab-title">C++</b>
+
+```cpp
+flecs::entity e = world.lookup("Sun::Earth");
+flecs::entity c = world.lookup("planets::Mass");
+const void *ptr = e.get(c);
+auto json = world.to_json(c, ptr);
+```
+
+</li>
+</ul>
+</div>
+
 ```json
 { "value": "5.9722e24" }
 ```
@@ -641,16 +973,89 @@ PUT /component/<path>?component=<component>[&value=<value>]
 #### Examples
 The following example adds the component `Position` to `Sun.Earth`:
 
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">HTTP</b>
+
 ```
 PUT /component/Sun/Earth?component=Position
 ```
 
+</li>
+<li><b class="tab-title">JavaScript</b>
+
+```js
+const conn = flecs.connect("localhost");
+
+conn.add("Sun.Earth", "Position");
+```
+
+</li>
+<li><b class="tab-title">C</b>
+
+```c
+ecs_entity_t e = ecs_lookup(world, "Sun.Earth");
+ecs_entity_t c = ecs_lookup(world, "Position");
+ecs_add_id(world, e, c);
+```
+
+</li>
+<li><b class="tab-title">C++</b>
+
+```cpp
+flecs::entity e = world.lookup("Sun::Earth");
+flecs::entity c = world.lookup("planets::Mass");
+e.add(c);
+```
+
+</li>
+</ul>
+</div>
+
 ---
 The following example writes the value `{"x":10}` to the `Position` component of entity `Sun.Earth`:
+
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">HTTP</b>
 
 ```
 PUT /component/Sun/Earth?component=Position&value=%7B%22x%22%3A%2210%22%7D
 ```
+
+</li>
+<li><b class="tab-title">JavaScript</b>
+
+```js
+const conn = flecs.connect("localhost");
+
+conn.set("Sun.Earth", "Position", {x: 10});
+```
+
+</li>
+<li><b class="tab-title">C</b>
+
+```c
+ecs_entity_t e = ecs_lookup(world, "Sun.Earth");
+ecs_entity_t c = ecs_lookup(world, "Position");
+void *ptr = ecs_get_mut_id(world, e, c);
+ecs_ptr_from_json(world, c, ptr, "{\"x\": 10}", NULL);
+```
+
+</li>
+<li><b class="tab-title">C++</b>
+
+```cpp
+flecs::entity e = world.lookup("Sun::Earth");
+flecs::entity c = world.lookup("planets::Mass");
+void *ptr = e.get_mut(c);
+world.from_json(c, ptr, "{\"x\": 10}");
+```
+
+</li>
+</ul>
+</div>
+
 
 ### DELETE component
 Remove a component from an entity.
@@ -662,9 +1067,44 @@ DELETE /component/<path>?component=<component>
 #### Examples
 The following example removes the component `Position` from `Sun.Earth`:
 
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">HTTP</b>
+
 ```
 DELETE /component/Sun/Earth?component=Position
 ```
+
+</li>
+<li><b class="tab-title">JavaScript</b>
+
+```js
+const conn = flecs.connect("localhost");
+
+conn.remove("Sun.Earth", "Position");
+```
+
+</li>
+<li><b class="tab-title">C</b>
+
+```c
+ecs_entity_t e = ecs_lookup(world, "Sun.Earth");
+ecs_entity_t c = ecs_lookup(world, "Position");
+ecs_remove_id(world, e, c);
+```
+
+</li>
+<li><b class="tab-title">C++</b>
+
+```cpp
+flecs::entity e = world.lookup("Sun::Earth");
+flecs::entity c = world.lookup("planets::Mass");
+e.remove(c);
+```
+
+</li>
+</ul>
+</div>
 
 ### PUT toggle
 Toggle an entity or component.
@@ -678,16 +1118,84 @@ When an entity is toggled, the `Disabled` tag is added or removed. When a compon
 #### Examples
 The following example disables entity `Sun.Earth`:
 
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">HTTP</b>
+
 ```
 PUT /toggle/Sun/Earth?enable=false
 ```
 
+</li>
+<li><b class="tab-title">JavaScript</b>
+
+```js
+const conn = flecs.connect("localhost");
+
+conn.disable("Sun.Earth");
+```
+
+</li>
+<li><b class="tab-title">C</b>
+
+```c
+ecs_entity_t e = ecs_lookup(world, "Sun.Earth");
+ecs_enable(world, e, false);
+```
+
+</li>
+<li><b class="tab-title">C++</b>
+
+```cpp
+flecs::entity e = world.lookup("Sun::Earth");
+e.disable();
+```
+
+</li>
+</ul>
+</div>
+
 ---
 The following example disables component `Position` for entity `Sun.Earth`:
+
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">HTTP</b>
 
 ```
 PUT /toggle/Sun/Earth?enable=false&component=Position
 ```
+
+</li>
+<li><b class="tab-title">JavaScript</b>
+
+```js
+const conn = flecs.connect("localhost");
+
+conn.disable("Sun.Earth", "Position");
+```
+
+</li>
+<li><b class="tab-title">C</b>
+
+```c
+ecs_entity_t e = ecs_lookup(world, "Sun.Earth");
+ecs_entity_t c = ecs_lookup(world, "Position");
+ecs_enable_id(world, e, c, false);
+```
+
+</li>
+<li><b class="tab-title">C++</b>
+
+```cpp
+flecs::entity e = world.lookup("Sun::Earth");
+flecs::entity c = world.lookup("Position");
+e.disable(c);
+```
+
+</li>
+</ul>
+</div>
 
 ### GET query
 Retrieve matching results for a query.
@@ -720,9 +1228,54 @@ GET /query/?expr=<query expression>
 #### Examples
 The following example returns the results for query Position, Velocity. Note how each of the query terms results in a field in the reply. The mapping between query terms and fields is the same as in the regular flecs API.
 
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">HTTP</b>
+
 ```
 GET /query?expr=Position%2CVelocity
 ```
+
+</li>
+<li><b class="tab-title">JavaScript</b>
+
+```js
+const conn = flecs.connect("localhost");
+
+conn.query("Position, Velocity", {}, (reply) => {
+  // ...
+});
+```
+
+</li>
+<li><b class="tab-title">C</b>
+
+```c
+ecs_query_t *q = ecs_query(world, {
+  .expr = "Position, Velocity"
+});
+
+ecs_iter_t it = ecs_query_iter(world, q);
+char *json = ecs_iter_to_json(&it, NULL);
+// ...
+ecs_os_free(json);
+```
+
+</li>
+<li><b class="tab-title">C++</b>
+
+```cpp
+flecs::query<> q = world.query_builder()
+  .expr("Position, Velocity")
+  .build();
+
+auto json = q.iter().to_json();
+```
+
+</li>
+</ul>
+</div>
+
 ```json
 {
   "results": [
@@ -763,9 +1316,59 @@ GET /query?expr=Position%2CVelocity
 ```
 ---
 The following example shows the result of setting `table` to `true`, which serializes all components (the table) of each matched entity. The format of the individually returned results is the same as the `/entity` endpoint.
+
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">HTTP</b>
+
 ```
 GET /query?expr=Position%2CVelocity?table=true
 ```
+
+</li>
+<li><b class="tab-title">JavaScript</b>
+
+```js
+const conn = flecs.connect("localhost");
+
+conn.query("Position, Velocity", {table: true}, (reply) => {
+  // ...
+});
+```
+
+</li>
+<li><b class="tab-title">C</b>
+
+```c
+ecs_query_t *q = ecs_query(world, {
+  .expr = "Position, Velocity"
+});
+
+ecs_iter_t it = ecs_query_iter(world, q);
+ecs_iter_to_json_t desc = ECS_ITER_TO_JSON_INIT;
+desc.serialize_table = true;
+char *json = ecs_iter_to_json(&it, &desc);
+// ...
+ecs_os_free(json);
+```
+
+</li>
+<li><b class="tab-title">C++</b>
+
+```cpp
+flecs::query<> q = world.query_builder()
+  .expr("Position, Velocity")
+  .build();
+
+ecs_iter_to_json_t desc = ECS_ITER_TO_JSON_INIT;
+desc.serialize_table = true;
+auto json = q.iter().to_json(&desc);
+```
+
+</li>
+</ul>
+</div>
+
 ```json
 {
   "results": [
@@ -817,13 +1420,60 @@ GET /query?expr=Position%2CVelocity?table=true
   ]
 }
 ```
+
 ---
 The following example shows the result for query `Position, ?Position(up)`. This shows the information that gets added to the query result to describe what the source of a field is, and whether a field is set or not.
 
 The `is_set` member is only added to the result if one of the fields in the result is not set. The `sources` member is only added to the result if one of the fields in the result is not matched on the `$this` query variable.
+
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">HTTP</b>
+
 ```
 GET /query?expr=Position%2C%3FPosition(up)
 ```
+
+</li>
+<li><b class="tab-title">JavaScript</b>
+
+```js
+const conn = flecs.connect("localhost");
+
+conn.query("Position, ?Position(up)", {}, (reply) => {
+  // ...
+});
+```
+
+</li>
+<li><b class="tab-title">C</b>
+
+```c
+ecs_query_t *q = ecs_query(world, {
+  .expr = "Position, ?Position(up)"
+});
+
+ecs_iter_t it = ecs_query_iter(world, q);
+char *json = ecs_iter_to_json(&it, NULL);
+// ...
+ecs_os_free(json);
+```
+
+</li>
+<li><b class="tab-title">C++</b>
+
+```cpp
+flecs::query<> q = world.query_builder()
+  .expr("Position, ?Position(up)")
+  .build();
+
+auto json = q.iter().to_json();
+```
+
+</li>
+</ul>
+</div>
+
 ```json
 {
   "results": [
@@ -881,9 +1531,60 @@ GET /query?expr=Position%2C%3FPosition(up)
 ---
 The following example shows the same query (`Position, ?Position(up)`) with `fields` set to `false` and `entity_ids` set to `true`.
 
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">HTTP</b>
+
 ```
 GET /query?expr=Position%2C%3FPosition(up)&fields=false&entity_ids=true
 ```
+
+</li>
+<li><b class="tab-title">JavaScript</b>
+
+```js
+const conn = flecs.connect("localhost");
+
+conn.query("Position, ?Position(up)", {fields: false, entity_ids: true}, (reply) => {
+  // ...
+});
+```
+
+</li>
+<li><b class="tab-title">C</b>
+
+```c
+ecs_query_t *q = ecs_query(world, {
+  .expr = "Position, ?Position(up)"
+});
+
+ecs_iter_t it = ecs_query_iter(world, q);
+ecs_iter_to_json_t desc = ECS_ITER_TO_JSON_INIT;
+desc.serialize_fields = true;
+desc.serialize_entity_ids = true;
+char *json = ecs_iter_to_json(&it, &desc);
+// ...
+ecs_os_free(json);
+```
+
+</li>
+<li><b class="tab-title">C++</b>
+
+```cpp
+flecs::query<> q = world.query_builder()
+  .expr("Position, ?Position(up)")
+  .build();
+
+ecs_iter_to_json_t desc = ECS_ITER_TO_JSON_INIT;
+desc.serialize_fields = true;
+desc.serialize_entity_ids = true;
+auto json = q.iter().to_json(&desc);
+```
+
+</li>
+</ul>
+</div>
+
 ```json
 {
   "results": [
@@ -908,9 +1609,53 @@ GET /query?expr=Position%2C%3FPosition(up)&fields=false&entity_ids=true
 ---
 The following example shows how variables are serialized with the query `Position, (ChildOf, $p)`. The `ids` member is added to the serialized data, as the second term of this query has a variable (pair) id. Only fields with variable component ids are serialized to the `ids` array.
 
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">HTTP</b>
+
 ```
 GET /query?expr=Position%2C(ChildOf%2C%24p)
 ```
+
+</li>
+<li><b class="tab-title">JavaScript</b>
+
+```js
+const conn = flecs.connect("localhost");
+
+conn.query("Position, (ChildOf, $p)", {}, (reply) => {
+  // ...
+});
+```
+
+</li>
+<li><b class="tab-title">C</b>
+
+```c
+ecs_query_t *q = ecs_query(world, {
+  .expr = "Position, (ChildOf, $p)"
+});
+
+ecs_iter_t it = ecs_query_iter(world, q);
+char *json = ecs_iter_to_json(&it, NULL);
+// ...
+ecs_os_free(json);
+```
+
+</li>
+<li><b class="tab-title">C++</b>
+
+```cpp
+flecs::query<> q = world.query_builder()
+  .expr("Position, (ChildOf, $p)")
+  .build();
+
+auto json = q.iter().to_json();
+```
+
+</li>
+</ul>
+</div>
 
 ```json
 {
@@ -968,11 +1713,68 @@ GET /query?expr=Position%2C(ChildOf%2C%24p)
 ```
 
 ---
-The following example shows the result of setting `query_info` and `field_info` to true, and setting `results` to false. This can be used to obtain meta information about a query. `query_info` returns a result per term, whereas `field_info` returns a result per field.
+The following example shows the result of setting `query_info` and `field_info` to true, and setting `results` to false. This can be used to obtain meta information about a query. `query_info` returns a result per term, whereas `field_info` returns a result per field. The query is `Position, ?Mass(up)`.
+
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">HTTP</b>
 
 ```
 GET /query?expr=Position%2C%3FMass(up)?query_info=true&field_info=true&results=false
 ```
+
+</li>
+<li><b class="tab-title">JavaScript</b>
+
+```js
+const conn = flecs.connect("localhost");
+
+conn.query("Position, ?Mass(up)", {
+    query_info: true,
+    field_info: true,
+    results: false
+  }, (reply) => {
+    // ...
+  });
+```
+
+</li>
+<li><b class="tab-title">C</b>
+
+```c
+ecs_query_t *q = ecs_query(world, {
+  .expr = "Position, ?Mass(up)"
+});
+
+ecs_iter_t it = ecs_query_iter(world, q);
+ecs_iter_to_json_t desc = ECS_ITER_TO_JSON_INIT;
+desc.serialize_query_info = true;
+desc.serialize_field_info = true;
+desc.serialize_results = true;
+char *json = ecs_iter_to_json(&it, &desc);
+// ...
+ecs_os_free(json);
+```
+
+</li>
+<li><b class="tab-title">C++</b>
+
+```cpp
+flecs::query<> q = world.query_builder()
+  .expr("Position, ?Mass(up)")
+  .build();
+
+ecs_iter_to_json_t desc = ECS_ITER_TO_JSON_INIT;
+desc.serialize_query_info = true;
+desc.serialize_field_info = true;
+desc.serialize_results = true;
+auto json = q.iter().to_json(&desc);
+```
+
+</li>
+</ul>
+</div>
+
 ```json
 {
   "field_info": [
@@ -1054,6 +1856,47 @@ Retrieve all serializable data in the world.
 GET /world
 ```
 
+#### Example
+
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">HTTP</b>
+
+```
+GET /world
+```
+
+</li>
+<li><b class="tab-title">JavaScript</b>
+
+```js
+const conn = flecs.connect("localhost");
+
+conn.world((reply) => {
+  // ...
+});
+```
+
+</li>
+<li><b class="tab-title">C</b>
+
+```c
+char *json = ecs_world_to_json(NULL);
+// ...
+ecs_os_free(json);
+```
+
+</li>
+<li><b class="tab-title">C++</b>
+
+```cpp
+auto json = world.to_json();
+```
+
+</li>
+</ul>
+</div>
+
 The output of this endpoint is equivalent to requesting the following query on the query endpoint with `table=true`:
 
 ```
@@ -1079,3 +1922,42 @@ When the code failed to parse a response is sent back with the error:
   "error": "58: unexpected end of script\n}\n ^"
 }
 ```
+
+#### Example
+
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">HTTP</b>
+
+```
+PUT /script/main.flecs?code=SpaceShip{}
+```
+
+</li>
+<li><b class="tab-title">JavaScript</b>
+
+```js
+const conn = flecs.connect("localhost");
+
+conn.scriptUpdate("main\\.flecs", "SpaceShip{}");
+```
+
+</li>
+<li><b class="tab-title">C</b>
+
+```c
+ecs_entity_t s = ecs_lookup(world, "main\\.flecs");
+ecs_script_update(world, s, 0, "SpaceShip{}");
+```
+
+</li>
+<li><b class="tab-title">C++</b>
+
+```cpp
+flecs::entity s = world.lookup("main.flecs");
+ecs_script_update(world, s, 0, "SpaceShip{}");
+```
+
+</li>
+</ul>
+</div>
