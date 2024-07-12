@@ -511,6 +511,7 @@ void Event_emit_custom_for_any(void);
 void Event_entity_emit_event_id(void);
 void Event_entity_emit_event_type(void);
 void Event_entity_emit_event_w_payload(void);
+void Event_entity_emit_event_w_payload_generic(void);
 void Event_entity_emit_event_id_no_src(void);
 void Event_entity_emit_event_type_no_src(void);
 void Event_entity_emit_event_w_payload_no_src(void);
@@ -551,6 +552,7 @@ void Query_each(void);
 void Query_each_const(void);
 void Query_each_shared(void);
 void Query_each_optional(void);
+void Query_each_generic(void);
 void Query_signature(void);
 void Query_signature_const(void);
 void Query_signature_shared(void);
@@ -631,6 +633,7 @@ void Query_iter_get_pair_w_id(void);
 void Query_find(void);
 void Query_find_not_found(void);
 void Query_find_w_entity(void);
+void Query_find_generic(void);
 void Query_optional_pair_term(void);
 void Query_query_from_entity(void);
 void Query_query_from_entity_name(void);
@@ -3293,6 +3296,10 @@ bake_test_case Event_testcases[] = {
         Event_entity_emit_event_w_payload
     },
     {
+        "entity_emit_event_w_payload_generic",
+        Event_entity_emit_event_w_payload_generic
+    },
+    {
         "entity_emit_event_id_no_src",
         Event_entity_emit_event_id_no_src
     },
@@ -3441,6 +3448,10 @@ bake_test_case Query_testcases[] = {
     {
         "each_optional",
         Query_each_optional
+    },
+    {
+        "each_generic",
+        Query_each_generic
     },
     {
         "signature",
@@ -3761,6 +3772,10 @@ bake_test_case Query_testcases[] = {
     {
         "find_w_entity",
         Query_find_w_entity
+    },
+    {
+        "find_generic",
+        Query_find_generic
     },
     {
         "optional_pair_term",

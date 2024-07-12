@@ -523,6 +523,51 @@ void Query_find_w_entity(void) {
     test_assert(r == e2);
 }
 
+// Generic lambdas are a C++14 feature.
+
+struct GenericLambdaFindEntity {
+    template <typename E, typename P, typename V, typename M>
+    bool operator()(E&&, P&&, V&&, M&&) const {
+        static_assert(flecs::is_same<E, flecs::entity>::value, "");
+        static_assert(flecs::is_same<P, Position&>::value, "");
+        static_assert(flecs::is_same<V, const Velocity&>::value, "");
+        static_assert(flecs::is_same<M, Mass*>::value, "");
+        return true;
+    }
+};
+
+struct GenericLambdaFindIter {
+    template <typename T, typename I, typename P, typename V, typename M>
+    bool operator()(T&&, I&&, P&&, V&&, M&&) const {
+        static_assert(flecs::is_same<T, flecs::iter&>::value, "");
+        static_assert(flecs::is_same<I, size_t&>::value, "");
+        static_assert(flecs::is_same<P, Position&>::value, "");
+        static_assert(flecs::is_same<V, const Velocity&>::value, "");
+        static_assert(flecs::is_same<M, Mass*>::value, "");
+        return true;
+    }
+};
+
+struct GenericLambdaFindComps {
+    template <typename P, typename V, typename M>
+    bool operator()(P&&, V&&, M&&) const {
+        static_assert(flecs::is_same<P, Position&>::value, "");
+        static_assert(flecs::is_same<V, const Velocity&>::value, "");
+        static_assert(flecs::is_same<M, Mass*>::value, "");
+        return true;
+    }
+};
+
+void Query_find_generic(void) {
+    flecs::world world;
+
+    auto q = world.query<Position, const Velocity, Mass*>();
+
+    q.find(GenericLambdaFindEntity{});
+    q.find(GenericLambdaFindIter{});
+    q.find(GenericLambdaFindComps{});
+}
+
 void Query_optional_pair_term(void) {
     flecs::world ecs;
 
@@ -858,6 +903,48 @@ void Query_each_optional(void) {
     p = e4.get<Position>();
     test_int(p->x, 71);
     test_int(p->y, 81);  
+}
+
+// Generic lambdas are a C++14 feature.
+
+struct GenericLambdaEachEntity {
+    template <typename E, typename P, typename V, typename M>
+    void operator()(E&&, P&&, V&&, M&&) const {
+        static_assert(flecs::is_same<E, flecs::entity>::value, "");
+        static_assert(flecs::is_same<P, Position&>::value, "");
+        static_assert(flecs::is_same<V, const Velocity&>::value, "");
+        static_assert(flecs::is_same<M, Mass*>::value, "");
+    }
+};
+
+struct GenericLambdaEachIter {
+    template <typename T, typename I, typename P, typename V, typename M>
+    void operator()(T&&, I&&, P&&, V&&, M&&) const {
+        static_assert(flecs::is_same<T, flecs::iter&>::value, "");
+        static_assert(flecs::is_same<I, size_t&>::value, "");
+        static_assert(flecs::is_same<P, Position&>::value, "");
+        static_assert(flecs::is_same<V, const Velocity&>::value, "");
+        static_assert(flecs::is_same<M, Mass*>::value, "");
+    }
+};
+
+struct GenericLambdaEachComps {
+    template <typename P, typename V, typename M>
+    void operator()(P&&, V&&, M&&) const {
+        static_assert(flecs::is_same<P, Position&>::value, "");
+        static_assert(flecs::is_same<V, const Velocity&>::value, "");
+        static_assert(flecs::is_same<M, Mass*>::value, "");
+    }
+};
+
+void Query_each_generic(void) {
+    flecs::world world;
+
+    auto q = world.query<Position, const Velocity, Mass*>();
+
+    q.each(GenericLambdaEachEntity{});
+    q.each(GenericLambdaEachIter{});
+    q.each(GenericLambdaEachComps{});
 }
 
 void Query_signature(void) {
