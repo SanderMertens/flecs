@@ -25702,7 +25702,7 @@ private:
         typename Fn = Func,
         decltype(std::declval<const Fn&>()(
             std::declval<flecs::iter&>(),
-            size_t{},
+            std::declval<size_t&>(),
             std::declval<ColumnType< remove_reference_t<Components> > >().get_row()...), 0) = 0>
     static void invoke_callback(
         ecs_iter_t *iter, const Func& func, size_t i, Args... comps) 
@@ -25860,9 +25860,9 @@ private:
         typename... Args,
         typename Fn = Func,
         if_t<sizeof...(Components) == sizeof...(Args)> = 0,
-        decltype(std::declval<const Fn&>()(
+        decltype(bool(std::declval<const Fn&>()(
             std::declval<flecs::entity>(),
-            std::declval<ColumnType< remove_reference_t<Components> > >().get_row()...), 0) = 0>
+            std::declval<ColumnType< remove_reference_t<Components> > >().get_row()...)), 0) = 0>
     static flecs::entity invoke_callback(
         ecs_iter_t *iter, const Func& func, size_t, Terms&, Args... comps) 
     {
@@ -25896,10 +25896,10 @@ private:
         typename... Args,
         typename Fn = Func,
         if_t<sizeof...(Components) == sizeof...(Args)> = 0,
-        decltype(std::declval<const Fn&>()(
+        decltype(bool(std::declval<const Fn&>()(
             std::declval<flecs::iter&>(),
-            size_t{},
-            std::declval<ColumnType< remove_reference_t<Components> > >().get_row()...), 0) = 0>
+            std::declval<size_t&>(),
+            std::declval<ColumnType< remove_reference_t<Components> > >().get_row()...)), 0) = 0>
     static flecs::entity invoke_callback(
         ecs_iter_t *iter, const Func& func, size_t, Terms&, Args... comps) 
     {
@@ -25934,8 +25934,8 @@ private:
         typename... Args,
         typename Fn = Func,
         if_t<sizeof...(Components) == sizeof...(Args)> = 0,
-        decltype(std::declval<const Fn&>()(
-            std::declval<ColumnType< remove_reference_t<Components> > >().get_row()...), 0) = 0>
+        decltype(bool(std::declval<const Fn&>()(
+            std::declval<ColumnType< remove_reference_t<Components> > >().get_row()...)), 0) = 0>
     static flecs::entity invoke_callback(
         ecs_iter_t *iter, const Func& func, size_t, Terms&, Args... comps) 
     {
