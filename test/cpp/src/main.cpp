@@ -511,12 +511,12 @@ void Event_emit_custom_for_any(void);
 void Event_entity_emit_event_id(void);
 void Event_entity_emit_event_type(void);
 void Event_entity_emit_event_w_payload(void);
-void Event_entity_emit_event_w_payload_generic(void);
 void Event_entity_emit_event_id_no_src(void);
 void Event_entity_emit_event_type_no_src(void);
 void Event_entity_emit_event_w_payload_no_src(void);
 void Event_entity_emit_event_w_payload_derived_event_type(void);
 void Event_entity_emit_event_w_payload_derived_event_type_no_src(void);
+void Event_entity_observe_generic(void);
 void Event_enqueue_event(void);
 void Event_enqueue_entity_event(void);
 void Event_enqueue_event_w_payload(void);
@@ -3349,10 +3349,6 @@ bake_test_case Event_testcases[] = {
         Event_entity_emit_event_w_payload
     },
     {
-        "entity_emit_event_w_payload_generic",
-        Event_entity_emit_event_w_payload_generic
-    },
-    {
         "entity_emit_event_id_no_src",
         Event_entity_emit_event_id_no_src
     },
@@ -3371,6 +3367,10 @@ bake_test_case Event_testcases[] = {
     {
         "entity_emit_event_w_payload_derived_event_type_no_src",
         Event_entity_emit_event_w_payload_derived_event_type_no_src
+    },
+    {
+        "entity_observe_generic",
+        Event_entity_observe_generic
     },
     {
         "enqueue_event",
