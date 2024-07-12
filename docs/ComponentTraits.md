@@ -15,7 +15,7 @@ struct MyComponent {
   ecs_entity_t e; // Not covered by cleanup traits
 }
 
-ecs_add_pair(world, e, CcsChildOf, parent); // covered by cleanup traits
+ecs_add_pair(world, e, EcsChildOf, parent); // covered by cleanup traits
 ```
 
 </li>
@@ -214,6 +214,7 @@ world
     .add_trait::<(flecs::OnDelete, flecs::Remove)>();
 
 let e = world.entity().add::<Archer>();
+```
 </ul>
 </div>
 
