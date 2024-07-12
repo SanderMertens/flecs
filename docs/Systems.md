@@ -1166,7 +1166,7 @@ world.Routine<Position>()
 
 ```rust
 // In the Rust API, use the write method to indicate commands could be inserted.
-world.system::<&Position>().write::<Position>().each(|p| {
+world.system::<&Position>().write::<Transform>().each(|p| {
     // ...
 });
 ```
@@ -1219,7 +1219,7 @@ world.Routine<Position>()
 
 ```rust
 // In the Rust API, use the read method to indicate a component is read using .get
-world.system::<&Position>().read::<Position>().each(|p| {
+world.system::<&Position>().read::<Transform>().each(|p| {
     // ...
 });
 ```
