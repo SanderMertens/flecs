@@ -23995,7 +23995,7 @@ struct entity_builder : entity_view {
         return this->add_if<E>(cond, et.entity(constant));
     }
 
-    /** Shortcut for add(IsA, entity).
+    /** Shortcut for `add(IsA, entity)`.
      *
      * @param second The second element of the pair.
      */
@@ -24003,7 +24003,7 @@ struct entity_builder : entity_view {
         return this->add(flecs::IsA, second);
     }
 
-    /** Shortcut for add(IsA, entity).
+    /** Shortcut for `add(IsA, entity)`.
      *
      * @tparam T the type associated with the entity.
      */
@@ -24012,7 +24012,7 @@ struct entity_builder : entity_view {
         return this->add(flecs::IsA, _::type<T>::id(this->world_));
     }
 
-    /** Shortcut for add(ChildOf, entity).
+    /** Shortcut for `add(ChildOf, entity)`.
      *
      * @param second The second element of the pair.
      */
@@ -24020,7 +24020,7 @@ struct entity_builder : entity_view {
         return this->add(flecs::ChildOf, second);
     }
 
-    /** Shortcut for add(DependsOn, entity).
+    /** Shortcut for `add(DependsOn, entity)`.
      *
      * @param second The second element of the pair.
      */
@@ -24028,7 +24028,7 @@ struct entity_builder : entity_view {
         return this->add(flecs::DependsOn, second);
     }
 
-     /** Shortcut for add(DependsOn, entity).
+     /** Shortcut for `add(DependsOn, entity)`.
      *
      * @param second The second element of the pair.
      */
@@ -24039,7 +24039,7 @@ struct entity_builder : entity_view {
         return depends_on(target);
     }
 
-    /** Shortcut for add(SlotOf, entity).
+    /** Shortcut for `add(SlotOf, entity)`.
      *
      * @param second The second element of the pair.
      */
@@ -24047,7 +24047,7 @@ struct entity_builder : entity_view {
         return this->add(flecs::SlotOf, second);
     }
 
-    /** Shortcut for add(SlotOf, target(ChildOf)).
+    /** Shortcut for `add(SlotOf, target(ChildOf))`.
      */
     const Self& slot() const  {
         ecs_check(ecs_get_target(world_, id_, flecs::ChildOf, 0), 
@@ -24057,7 +24057,7 @@ struct entity_builder : entity_view {
         return to_base();
     }
 
-    /** Shortcut for add(ChildOf, entity).
+    /** Shortcut for `add(ChildOf, entity)`.
      *
      * @tparam T the type associated with the entity.
      */
@@ -24066,7 +24066,7 @@ struct entity_builder : entity_view {
         return this->child_of(_::type<T>::id(this->world_));
     }
  
-    /** Shortcut for add(DependsOn, entity).
+    /** Shortcut for `add(DependsOn, entity)`.
      *
      * @tparam T the type associated with the entity.
      */
@@ -24075,7 +24075,7 @@ struct entity_builder : entity_view {
         return this->depends_on(_::type<T>::id(this->world_));
     }
 
-    /** Shortcut for add(SlotOf, entity).
+    /** Shortcut for `add(SlotOf, entity)`.
      *
      * @tparam T the type associated with the entity.
      */
@@ -24095,7 +24095,7 @@ struct entity_builder : entity_view {
     }
 
      /** Remove pair for enum.
-     * This operation will remove any (Enum, *) pair from the entity.
+     * This operation will remove any `(Enum, *)` pair from the entity.
      * 
      * @tparam E The enumeration type.
      */
@@ -24172,63 +24172,64 @@ struct entity_builder : entity_view {
     }  
 
     /** Mark id for auto-overriding.
-     * When an entity inherits from a base entity (using the IsA relationship)
+     * When an entity inherits from a base entity (using the `IsA` relationship)
      * any ids marked for auto-overriding on the base will be overridden
      * automatically by the entity.
      *
      * @param id The id to mark for overriding.
-     */    
+     */
     const Self& auto_override(flecs::id_t id) const  {
         return this->add(ECS_AUTO_OVERRIDE | id);
     }
 
     /** Mark pair for auto-overriding.
-     * @see auto_override(flecs::id_t id)
+     * @see auto_override(flecs::id_t) const
      *
      * @param first The first element of the pair.
      * @param second The second element of the pair.
-     */     
+     */
     const Self& auto_override(flecs::entity_t first, flecs::entity_t second) const  {
         return this->auto_override(ecs_pair(first, second));
     }
 
     /** Mark component for auto-overriding.
-     * @see auto_override(flecs::id_t id)
+     * @see auto_override(flecs::id_t) const
      *
      * @tparam T The component to mark for overriding.
-     */     
+     */
     template <typename T>
     const Self& auto_override() const  {
         return this->auto_override(_::type<T>::id(this->world_));
     }
 
     /** Mark pair for auto-overriding.
-     * @see auto_override(flecs::id_t id)
+     * @see auto_override(flecs::id_t) const
      *
      * @tparam First The first element of the pair.
      * @param second The second element of the pair.
-     */     
+     */
     template <typename First>
     const Self& auto_override(flecs::entity_t second) const  {
         return this->auto_override(_::type<First>::id(this->world_), second);
     }
 
     /** Mark pair for auto-overriding.
-     * @see auto_override(flecs::id_t id)
+     * @see auto_override(flecs::id_t) const
      *
      * @tparam First The first element of the pair.
      * @tparam Second The second element of the pair.
-     */     
+     */
     template <typename First, typename Second>
     const Self& auto_override() const  {
         return this->auto_override<First>(_::type<Second>::id(this->world_));
     }
 
     /** Set component, mark component for auto-overriding.
-     * @see auto_override(flecs::id_t id)
+     * @see auto_override(flecs::id_t) const
      *
      * @tparam T The component to set and for which to add the OVERRIDE flag
-     */    
+     * @param val The value to set.
+     */
     template <typename T>
     const Self& set_auto_override(const T& val) const  {
         this->auto_override<T>();
@@ -24236,10 +24237,11 @@ struct entity_builder : entity_view {
     }
 
     /** Set component, mark component for auto-overriding.
-     * @see override(flecs::id_t id)
+     * @see auto_override(flecs::id_t) const
      *
      * @tparam T The component to set and for which to add the OVERRIDE flag
-     */    
+     * @param val The value to set.
+     */
     template <typename T>
     const Self& set_auto_override(T&& val) const  {
         this->auto_override<T>();
@@ -24247,11 +24249,12 @@ struct entity_builder : entity_view {
     }
 
     /** Set pair, mark component for auto-overriding.
-     * @see auto_override(flecs::id_t id)
+     * @see auto_override(flecs::id_t) const
      *
      * @tparam First The first element of the pair.
      * @param second The second element of the pair.
-     */    
+     * @param val The value to set.
+     */
     template <typename First>
     const Self& set_auto_override(flecs::entity_t second, const First& val) const  {
         this->auto_override<First>(second);
@@ -24259,11 +24262,12 @@ struct entity_builder : entity_view {
     }
 
     /** Set pair, mark component for auto-overriding.
-     * @see auto_override(flecs::id_t id)
+     * @see auto_override(flecs::id_t) const
      *
      * @tparam First The first element of the pair.
      * @param second The second element of the pair.
-     */    
+     * @param val The value to set.
+     */
     template <typename First>
     const Self& set_auto_override(flecs::entity_t second, First&& val) const  {
         this->auto_override<First>(second);
@@ -24271,11 +24275,12 @@ struct entity_builder : entity_view {
     }
 
     /** Set component, mark component for auto-overriding.
-     * @see auto_override(flecs::id_t id)
+     * @see auto_override(flecs::id_t) const
      *
      * @tparam First The first element of the pair.
      * @tparam Second The second element of the pair.
-     */    
+     * @param val The value to set.
+     */
     template <typename First, typename Second, typename P = pair<First, Second>, 
         typename A = actual_type_t<P>, if_not_t< flecs::is_pair<First>::value> = 0>    
     const Self& set_auto_override(const A& val) const  {
@@ -24284,11 +24289,12 @@ struct entity_builder : entity_view {
     }
 
     /** Set component, mark component for auto-overriding.
-     * @see auto_override(flecs::id_t id)
+     * @see auto_override(flecs::id_t) const
      *
      * @tparam First The first element of the pair.
      * @tparam Second The second element of the pair.
-     */    
+     * @param val The value to set.
+     */
     template <typename First, typename Second, typename P = pair<First, Second>, 
         typename A = actual_type_t<P>, if_not_t< flecs::is_pair<First>::value> = 0>    
     const Self& set_auto_override(A&& val) const  {
@@ -24297,10 +24303,11 @@ struct entity_builder : entity_view {
     }
 
     /** Emplace component, mark component for auto-overriding.
-     * @see auto_override(flecs::id_t id)
+     * @see auto_override(flecs::id_t) const
      *
      * @tparam T The component to emplace and override.
-     */    
+     * @param args The arguments to pass to the constructor of `T`.
+     */
     template <typename T, typename ... Args>
     const Self& emplace_auto_override(Args&&... args) const  {
         this->auto_override<T>();
@@ -24312,11 +24319,12 @@ struct entity_builder : entity_view {
     }
 
     /** Emplace pair, mark pair for auto-overriding.
-     * @see auto_override(flecs::id_t id)
+     * @see auto_override(flecs::id_t) const
      *
      * @tparam First The first element of the pair to emplace and override.
      * @tparam Second The second element of the pair to emplace and override.
-     */    
+     * @param args The arguments to pass to the constructor of `Second`.
+     */
     template <typename First, typename Second, typename P = pair<First, Second>, 
         typename A = actual_type_t<P>, if_not_t< flecs::is_pair<First>::value> = 0,
             typename ... Args>
@@ -24326,7 +24334,7 @@ struct entity_builder : entity_view {
         flecs::emplace<A>(this->world_, this->id_, 
             ecs_pair(_::type<First>::id(this->world_),
                 _::type<Second>::id(this->world_)),
-                    FLECS_FWD(args)...);
+            FLECS_FWD(args)...);
 
         return to_base();  
     }
@@ -24355,49 +24363,51 @@ struct entity_builder : entity_view {
      * 
      * @param id The id to enable.
      * @param toggle True to enable, false to disable (default = true).
-     */   
+     *
+     * @see ecs_enable_id()
+     */
     const Self& enable(flecs::id_t id, bool toggle = true) const  {
         ecs_enable_id(this->world_, this->id_, id, toggle);
         return to_base();       
     }
 
     /** Enable a component.
-     * @see enable(flecs::id_t id)
+     * @see enable(flecs::id_t) const
      *
      * @tparam T The component to enable.
-     */   
+     */
     template<typename T>
     const Self& enable() const  {
         return this->enable(_::type<T>::id(this->world_));
     }
 
     /** Enable a pair.
-     * @see enable(flecs::id_t id)
+     * @see enable(flecs::id_t) const
      *
      * @param first The first element of the pair.
      * @param second The second element of the pair.
-     */   
+     */
     const Self& enable(flecs::id_t first, flecs::id_t second) const  {
         return this->enable(ecs_pair(first, second));
     }
 
     /** Enable a pair.
-     * @see enable(flecs::id_t id)
+     * @see enable(flecs::id_t) const
      *
      * @tparam First The first element of the pair.
      * @param second The second element of the pair.
-     */   
+     */
     template<typename First>
     const Self& enable(flecs::id_t second) const  {
         return this->enable(_::type<First>::id(), second);
     }
 
     /** Enable a pair.
-     * @see enable(flecs::id_t id)
+     * @see enable(flecs::id_t) const
      *
      * @tparam First The first element of the pair.
      * @tparam Second The second element of the pair.
-     */   
+     */
     template<typename First, typename Second>
     const Self& enable() const  {
         return this->enable<First>(_::type<Second>::id());
@@ -24408,48 +24418,51 @@ struct entity_builder : entity_view {
      * the id is enabled or disabled, the bitset is added.
      *
      * @param id The id to disable.
-     */   
+     *
+     * @see ecs_enable_id()
+     * @see enable(flecs::id_t) const
+     */
     const Self& disable(flecs::id_t id) const  {
         return this->enable(id, false);
     }
 
     /** Disable a component.
-     * @see disable(flecs::id_t id)
+     * @see disable(flecs::id_t) const
      *
      * @tparam T The component to enable.
-     */   
+     */
     template<typename T>
     const Self& disable() const  {
         return this->disable(_::type<T>::id());
     }
 
     /** Disable a pair.
-     * @see disable(flecs::id_t id)
+     * @see disable(flecs::id_t) const
      *
      * @param first The first element of the pair.
      * @param second The second element of the pair.
-     */   
+     */
     const Self& disable(flecs::id_t first, flecs::id_t second) const  {
         return this->disable(ecs_pair(first, second));
     }
 
     /** Disable a pair.
-     * @see disable(flecs::id_t id)
+     * @see disable(flecs::id_t) const
      *
      * @tparam First The first element of the pair.
      * @param second The second element of the pair.
-     */   
+     */
     template<typename First>
     const Self& disable(flecs::id_t second) const  {
         return this->disable(_::type<First>::id(), second);
     }
 
     /** Disable a pair.
-     * @see disable(flecs::id_t id)
+     * @see disable(flecs::id_t) const
      *
      * @tparam First The first element of the pair.
      * @tparam Second The second element of the pair.
-     */   
+     */
     template<typename First, typename Second>
     const Self& disable() const  {
         return this->disable<First>(_::type<Second>::id());
@@ -24696,7 +24709,7 @@ struct entity_builder : entity_view {
         return to_base();
     }
 
-    /** Entities created in function will have (First, this).
+    /** Entities created in function will have `(First, this)`.
      * This operation is thread safe.
      *
      * @tparam First The first element of the pair
@@ -24708,7 +24721,7 @@ struct entity_builder : entity_view {
         return to_base();
     }
 
-    /** Entities created in function will have (first, this).
+    /** Entities created in function will have `(first, this)`.
      * This operation is thread safe.
      *
      * @param first The first element of the pair.
