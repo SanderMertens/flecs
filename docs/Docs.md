@@ -5,6 +5,7 @@
 - [Quickstart](Quickstart.md)
 - [Designing with Flecs](DesignWithFlecs.md)
 - [Getting Started with Unreal Engine](https://github.com/PreyK/Unreal-Minimum-Viable-Flecs)
+- [Getting Started with Godot](https://github.com/paulfigiel/godot-flecs-sample)
 
 ## Manuals
 - [Manual](Manual.md)
@@ -30,6 +31,7 @@
 - [Rust examples](https://github.com/Indra-db/flecs-ecs-rs/tree/main/flecs_ecs/examples/flecs)
  
 ## Demos
+- [Playground](https://www.flecs.dev/explorer/?host=flecs_explorer.wasm)
 - [Tower Defense (C++)](https://github.com/SanderMertens/tower_defense)
 - [City (C)](https://github.com/flecs-hub/city)
 
@@ -38,6 +40,8 @@
 - [Archetypes and vectorization](https://ajmmertens.medium.com/building-an-ecs-2-archetypes-and-vectorization-fe21690805f9)
 - [Making the most of entity identifiers](https://ajmmertens.medium.com/doing-a-lot-with-a-little-ecs-identifiers-25a72bd2647)
 - [Building games in ECS with entity relationships](https://ajmmertens.medium.com/building-games-in-ecs-with-entity-relationships-657275ba2c6c)
+- [Why it is time to start thinking of games as databases](https://ajmmertens.medium.com/why-it-is-time-to-start-thinking-of-games-as-databases-e7971da33ac3)
+- [A Roadmap to ECS relationships](https://ajmmertens.medium.com/a-roadmap-to-entity-relationships-5b1d11ebb4eb)
 - [Why storing state machines in ECS is a bad idea](https://ajmmertens.medium.com/why-storing-state-machines-in-ecs-is-a-bad-idea-742de7a18e59)
 - [Why vanilla ECS is not enough](https://ajmmertens.medium.com/why-vanilla-ecs-is-not-enough-d7ed4e3bebe5)
 - [ECS: From tool to paradigm](https://ajmmertens.medium.com/ecs-from-tool-to-paradigm-350587cdf216)

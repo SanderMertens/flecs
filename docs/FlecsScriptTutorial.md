@@ -1,3 +1,5 @@
+This tutorial hasn't been updated for v4 yet! Use the [Script Manual](FlecsScript.md) for now.
+
 # Flecs Script Tutorial
 This tutorial shows you how to use Flecs script, which is a declarative language for creating entities without having to write and compile code. Flecs script can be used for different things, such as building scenes, assets, or as a language for configuration files.
 
