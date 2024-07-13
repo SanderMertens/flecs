@@ -199,6 +199,17 @@ struct world {
     /* Implicit conversion to world_t* */
     operator world_t*() const { return world_; }
 
+    /** Make current world object owner of the world. This may only be called on
+     * one flecs::world object, an may only be called  once. Failing to do so
+     * will result in undefined behavior.
+     * 
+     * This operation allows a custom (C) world to be wrapped by a C++ object,
+     * and transfer ownership so that the world is automatically cleaned up.
+     */
+    void make_owner() {
+        flecs_poly_release(world_);
+    }
+
     /** Deletes and recreates the world. */
     void reset() {
         /* Make sure there's only one reference to the world */
