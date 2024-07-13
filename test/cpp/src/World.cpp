@@ -1933,12 +1933,22 @@ void World_get_mut_R_T(void) {
 }
 
 void World_world_mini(void) {
-    flecs::world world(ecs_mini());
+    int32_t count = 0;
+    {
+        flecs::world world(ecs_mini());
+        world.make_owner();
 
-    test_assert(world.lookup("flecs.system") == 0);
-    test_assert(world.lookup("flecs.pipeline") == 0);
-    test_assert(world.lookup("flecs.timer") == 0);
-    test_assert(world.lookup("flecs.meta") == 0);
+        world.atfini([](flecs::world_t* world, void *ctx) {
+            int32_t *data = static_cast<int32_t*>(ctx);
+            data[0] ++;
+        }, &count);
+
+        test_assert(world.lookup("flecs.system") == 0);
+        test_assert(world.lookup("flecs.pipeline") == 0);
+        test_assert(world.lookup("flecs.timer") == 0);
+        test_assert(world.lookup("flecs.meta") == 0);
+    }
+    test_int(count, 1);
 }
 
 void World_copy_world(void) {
