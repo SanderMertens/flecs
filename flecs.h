@@ -13148,8 +13148,8 @@ const char* ecs_world_from_json(
     const char *json,
     const ecs_from_json_desc_t *desc);
 
-/** Same as ecs_world_from_json(), but loads JSON from file. 
- * 
+/** Same as ecs_world_from_json(), but loads JSON from file.
+ *
  * @param world The world.
  * @param filename The file from which to load the JSON.
  * @param desc Deserialization parameters.
@@ -13391,12 +13391,12 @@ typedef struct ecs_world_to_json_desc_t {
 /** Serialize world into JSON string.
  * This operation iterates the contents of the world to JSON. The operation is
  * equivalent to the following code:
- * 
+ *
  * @code
  * ecs_query_t *f = ecs_query(world, {
  *   .terms = {{ .id = EcsAny }}
  * });
- * 
+ *
  * ecs_iter_t it = ecs_query_init(world, &f);
  * ecs_iter_to_json_desc_t desc = { .serialize_table = true };
  * ecs_iter_to_json(iter, &desc);
@@ -13426,16 +13426,8 @@ int ecs_world_to_json_buf(
 
 
 /* Legacy deserializer functions. These can be used to load a v3 JSON string and
- * save it to the new format. These functions will be removed in the next 
+ * save it to the new format. These functions will be removed in the next
  * release. */
-
-FLECS_API
-const char* ecs_ptr_from_json_legacy(
-    const ecs_world_t *world,
-    ecs_entity_t type,
-    void *ptr,
-    const char *json,
-    const ecs_from_json_desc_t *desc);
 
 FLECS_API
 const char* ecs_entity_from_json_legacy(
