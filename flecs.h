@@ -3253,7 +3253,7 @@ typedef enum ecs_query_cache_kind_t {
 /* Term id flags  */
 
 /** Match on self.
- * Can be combined with other term flags on the ecs_term_t::flags field.
+ * Can be combined with other term flags on the ecs_term_t::flags_ field.
  * \ingroup queries
  */
 #define EcsSelf                       (1llu << 63)
@@ -3316,12 +3316,12 @@ typedef enum ecs_query_cache_kind_t {
 typedef struct ecs_term_ref_t {
     ecs_entity_t id;            /**< Entity id. If left to 0 and flags does not 
                                  * specify whether id is an entity or a variable
-                                 * the id will be initialized to EcsThis.
+                                 * the id will be initialized to #EcsThis.
                                  * To explicitly set the id to 0, leave the id
-                                 * member to 0 and set EcsIsEntity in flags. */
+                                 * member to 0 and set #EcsIsEntity in flags. */
 
     const char *name;           /**< Name. This can be either the variable name
-                                 * (when the EcsIsVariable flag is set) or an
+                                 * (when the #EcsIsVariable flag is set) or an
                                  * entity name. When ecs_term_t::move is true,
                                  * the API assumes ownership over the string and
                                  * will free it when the term is destroyed. */
@@ -3340,13 +3340,13 @@ struct ecs_term_t {
 
     ecs_entity_t trav;          /**< Relationship to traverse when looking for the
                                  * component. The relationship must have
-                                 * the Traversable property. Default is IsA. */
+                                 * the `Traversable` property. Default is `IsA`. */
 
     int16_t inout;              /**< Access to contents matched by term */
     int16_t oper;               /**< Operator of term */
 
     int16_t field_index;        /**< Index of field for term in iterator */
-    ecs_flags16_t flags_;       /**< Flags that help eval, set by ecs_query_init */
+    ecs_flags16_t flags_;       /**< Flags that help eval, set by ecs_query_init() */
 };
 
 /** Queries are lists of constraints (terms) that match entities. 
@@ -4159,7 +4159,7 @@ typedef struct ecs_component_desc_t {
  * An iterator contains resources that need to be released. By default this 
  * is handled by the last call to next() that returns false. When iteration is
  * ended before iteration has completed, an application has to manually call
- * ecs_iter_fini to release the iterator resources:
+ * ecs_iter_fini() to release the iterator resources:
  * 
  * @code
  * ecs_iter_t it = ecs_query_iter(world, q);
@@ -4282,7 +4282,7 @@ struct ecs_iter_t {
 #define EcsQueryTableOnly             (1u << 7u)
 
 
-/** Used with ecs_query_init. 
+/** Used with ecs_query_init().
  * 
  * \ingroup queries
  */
@@ -4374,7 +4374,7 @@ typedef struct ecs_observer_desc_t {
     ecs_entity_t events[FLECS_EVENT_DESC_MAX];
 
     /** When observer is created, generate events from existing data. For example,
-     * EcsOnAdd Position would match all existing instances of Position. */
+     * #EcsOnAdd `Position` would match all existing instances of `Position`. */
     bool yield_existing;
 
     /** Callback to invoke on an event, invoked when the observer matches. */
@@ -4443,7 +4443,7 @@ typedef struct ecs_event_desc_t {
 
     /** Limit number of notified entities to count. offset+count must be less
      * than the total number of entities in the table. If left to 0, it will be
-     * automatically determined by doing ecs_table_count(table) - offset. */
+     * automatically determined by doing `ecs_table_count(table) - offset`. */
     int32_t count;
 
     /** Single-entity alternative to setting table / offset / count */
@@ -4495,7 +4495,7 @@ typedef struct ecs_world_info_t {
     ecs_entity_t max_id;              /**< Last allowed entity id */
 
     ecs_ftime_t delta_time_raw;       /**< Raw delta time (no time scaling) */
-    ecs_ftime_t delta_time;           /**< Time passed to or computed by ecs_progress */
+    ecs_ftime_t delta_time;           /**< Time passed to or computed by ecs_progress() */
     ecs_ftime_t time_scale;           /**< Time scale applied to delta_time */
     ecs_ftime_t target_fps;           /**< Target fps */
     ecs_ftime_t frame_time_total;     /**< Total time spent processing a frame */
@@ -4563,7 +4563,7 @@ typedef struct ecs_query_group_info_t {
  * @{
  */
 
-/** A (string) identifier. Used as pair with EcsName and EcsSymbol tags */
+/** A (string) identifier. Used as pair with #EcsName and #EcsSymbol tags */
 typedef struct EcsIdentifier {
     char *value;          /**< Identifier string */
     ecs_size_t length;    /**< Length of identifier */
@@ -4709,22 +4709,31 @@ FLECS_API extern const ecs_entity_t EcsVariable;
 
 /** Marks a relationship as transitive.
  * Behavior:
+ *
+ * @code
  *   if R(X, Y) and R(Y, Z) then R(X, Z)
+ * @endcode
  */
 FLECS_API extern const ecs_entity_t EcsTransitive;
 
 /** Marks a relationship as reflexive.
  * Behavior:
+ *
+ * @code
  *   R(X, X) == true
+ * @endcode
  */
 FLECS_API extern const ecs_entity_t EcsReflexive;
 
-/** Ensures that entity/component cannot be used as target in IsA relationship.
+/** Ensures that entity/component cannot be used as target in `IsA` relationship.
  * Final can improve the performance of queries as they will not attempt to 
  * substitute a final component with its subsets.
  *
  * Behavior:
+ *
+ * @code
  *   if IsA(X, Y) and Final(Y) throw error
+ * @endcode
  */
 FLECS_API extern const ecs_entity_t EcsFinal;
 
@@ -4732,24 +4741,27 @@ FLECS_API extern const ecs_entity_t EcsFinal;
 FLECS_API extern const ecs_entity_t EcsOnInstantiate;
 
 /** Override component on instantiate. 
- * This will copy the component from the base entity (IsA target) to the 
+ * This will copy the component from the base entity `(IsA target)` to the
  * instance. The base component will never be inherited from the prefab. */
 FLECS_API extern const ecs_entity_t EcsOverride;
 
 /** Inherit component on instantiate. 
- * This will inherit (share) the component from the base entity (IsA target).
+ * This will inherit (share) the component from the base entity `(IsA target)`.
  * The component can be manually overridden by adding it to the instance. */
 FLECS_API extern const ecs_entity_t EcsInherit;
 
 /** Never inherit component on instantiate. 
- * This will not copy or share the component from the base entity (IsA target).
+ * This will not copy or share the component from the base entity `(IsA target)`.
  * When the component is added to an instance, its value will never be copied 
  * from the base entity. */
 FLECS_API extern const ecs_entity_t EcsDontInherit;
 
 /** Marks relationship as commutative.
  * Behavior:
+ *
+ * @code
  *   if R(X, Y) then R(Y, X)
+ * @endcode
  */
 FLECS_API extern const ecs_entity_t EcsSymmetric;
 
@@ -4757,7 +4769,10 @@ FLECS_API extern const ecs_entity_t EcsSymmetric;
  * once on an entity. Adding a 2nd instance will replace the 1st.
  *
  * Behavior:
+ *
+ * @code
  *   R(X, Y) + R(X, Z) = R(X, Z)
+ * @endcode
  */
 FLECS_API extern const ecs_entity_t EcsExclusive;
 
@@ -4771,20 +4786,26 @@ FLECS_API extern const ecs_entity_t EcsTraversable;
 /** Ensure that a component always is added together with another component.
  *
  * Behavior:
+ *
+ * @code
  *   If With(R, O) and R(X) then O(X)
  *   If With(R, O) and R(X, Y) then O(X, Y)
+ * @endcode
  */
 FLECS_API extern const ecs_entity_t EcsWith;
 
 /** Ensure that relationship target is child of specified entity.
  *
  * Behavior:
+ *
+ * @code
  *   If OneOf(R, O) and R(X, Y), Y must be a child of O
  *   If OneOf(R) and R(X, Y), Y must be a child of R
+ * @endcode
  */
 FLECS_API extern const ecs_entity_t EcsOneOf;
 
-/** Mark a component as toggleable with enable_id/disable_id. */
+/** Mark a component as toggleable with ecs_enable_id(). */
 FLECS_API extern const ecs_entity_t EcsCanToggle;
 
 /** Can be added to components to indicate it is a trait. Traits are components
@@ -4795,16 +4816,22 @@ FLECS_API extern const ecs_entity_t EcsTrait;
 /** Ensure that an entity is always used in pair as relationship.
  *
  * Behavior:
+ *
+ * @code
  *   e.add(R) panics
  *   e.add(X, R) panics, unless X has the "Trait" trait
+ * @endcode
  */
 FLECS_API extern const ecs_entity_t EcsRelationship;
 
 /** Ensure that an entity is always used in pair as target.
  *
  * Behavior:
+ *
+ * @code
  *   e.add(T) panics
  *   e.add(T, X) panics
+ * @endcode
  */
 FLECS_API extern const ecs_entity_t EcsTarget;
 
@@ -4840,16 +4867,16 @@ FLECS_API extern const ecs_entity_t EcsModule;
 FLECS_API extern const ecs_entity_t EcsPrivate;
 
 /** Tag added to prefab entities. Any entity with this tag is automatically
- * ignored by queries, unless EcsPrefab is explicitly queried for. */
+ * ignored by queries, unless #EcsPrefab is explicitly queried for. */
 FLECS_API extern const ecs_entity_t EcsPrefab;
 
 /** When this tag is added to an entity it is skipped by queries, unless
- * EcsDisabled is explicitly queried for. */
+ * #EcsDisabled is explicitly queried for. */
 FLECS_API extern const ecs_entity_t EcsDisabled;
 
 /** Trait added to entities that should never be returned by queries. Reserved
  * for internal entities that have special meaning to the query engine, such as
- * EcsThis, EcsWildcard, EcsAny. */
+ * #EcsThis, #EcsWildcard, #EcsAny. */
 FLECS_API extern const ecs_entity_t EcsNotQueryable;
 
 /** Event that triggers when an id is added to an entity */
@@ -4883,16 +4910,16 @@ FLECS_API extern const ecs_entity_t EcsOnDelete;
  * element of a pair) is deleted. */
 FLECS_API extern const ecs_entity_t EcsOnDeleteTarget;
 
-/** Remove cleanup policy. Must be used as target in pair with EcsOnDelete or
- * EcsOnDeleteTarget. */
+/** Remove cleanup policy. Must be used as target in pair with #EcsOnDelete or
+ * #EcsOnDeleteTarget. */
 FLECS_API extern const ecs_entity_t EcsRemove;
 
-/** Delete cleanup policy. Must be used as target in pair with EcsOnDelete or
- * EcsOnDeleteTarget. */
+/** Delete cleanup policy. Must be used as target in pair with #EcsOnDelete or
+ * #EcsOnDeleteTarget. */
 FLECS_API extern const ecs_entity_t EcsDelete;
 
-/** Panic cleanup policy. Must be used as target in pair with EcsOnDelete or
- * EcsOnDeleteTarget. */
+/** Panic cleanup policy. Must be used as target in pair with #EcsOnDelete or
+ * #EcsOnDeleteTarget. */
 FLECS_API extern const ecs_entity_t EcsPanic;
 
 /** Mark component as sparse */
@@ -4901,24 +4928,24 @@ FLECS_API extern const ecs_entity_t EcsSparse;
 /** Mark relationship as union */
 FLECS_API extern const ecs_entity_t EcsUnion;
 
-/** Marker used to indicate $var == ... matching in queries. */
+/** Marker used to indicate `$var == ...` matching in queries. */
 FLECS_API extern const ecs_entity_t EcsPredEq;
 
-/** Marker used to indicate $var == "name" matching in queries. */
+/** Marker used to indicate `$var == "name"` matching in queries. */
 FLECS_API extern const ecs_entity_t EcsPredMatch;
 
-/** Marker used to indicate $var ~= "pattern" matching in queries. */
+/** Marker used to indicate `$var ~= "pattern"` matching in queries. */
 FLECS_API extern const ecs_entity_t EcsPredLookup;
 
-/** Marker used to indicate the start of a scope ({) in queries. */
+/** Marker used to indicate the start of a scope (`{`) in queries. */
 FLECS_API extern const ecs_entity_t EcsScopeOpen;
 
-/** Marker used to indicate the end of a scope (}) in queries. */
+/** Marker used to indicate the end of a scope (`}`) in queries. */
 FLECS_API extern const ecs_entity_t EcsScopeClose;
 
 /** Tag used to indicate query is empty.
  * This tag is removed automatically when a query becomes non-empty, and is not
- * automatically readded when it becomes empty.
+ * automatically re-added when it becomes empty.
  */
 FLECS_API extern const ecs_entity_t EcsEmpty;
 
@@ -4949,9 +4976,9 @@ FLECS_API extern const ecs_entity_t EcsPhase;       /**< Phase pipeline phase. *
 #define EcsFirstUserEntityId (FLECS_HI_COMPONENT_ID + 128)
 
 /* When visualized the reserved id ranges look like this:
- * [1..8]: Builtin components
- * [9..FLECS_HI_COMPONENT_ID]: Low ids reserved for application components
- * [FLECS_HI_COMPONENT_ID + 1..EcsFirstUserEntityId]: Builtin entities
+ * - [1..8]: Builtin components
+ * - [9..FLECS_HI_COMPONENT_ID]: Low ids reserved for application components
+ * - [FLECS_HI_COMPONENT_ID + 1..EcsFirstUserEntityId]: Builtin entities
  */
 
 /** @} */
@@ -5033,7 +5060,7 @@ void ecs_atfini(
     ecs_fini_action_t action,
     void *ctx);
 
-/** Type returned by ecs_get_entities. */
+/** Type returned by ecs_get_entities(). */
 typedef struct ecs_entities_t {
     const ecs_entity_t *ids; /**< Array with all entity ids in the world. */
     int32_t count;           /**< Total number of entity ids. */
@@ -5198,12 +5225,12 @@ void ecs_set_target_fps(
  * list of available flags, see include/flecs/private/api_flags.h. Typical flags
  * to use are:
  * 
- *  - EcsFilterMatchInstanced
- *  - EcsFilterMatchEmptyTables
- *  - EcsFilterMatchDisabled
- *  - EcsFilterMatchPrefab
+ *  - `EcsFilterMatchInstanced`
+ *  - `EcsFilterMatchEmptyTables`
+ *  - `EcsFilterMatchDisabled`
+ *  - `EcsFilterMatchPrefab`
  * 
- * Only use flags that start with EcsFilter. Do not use EcsQuery* flags. This
+ * Only use flags that start with `EcsFilter`. Do not use `EcsQuery*` flags. This
  * function may only be called when no queries are created.
  * 
  * @param world The world.
@@ -5462,8 +5489,8 @@ bool ecs_stage_is_readonly(
     const ecs_world_t *world);
 
 /** Create unmanaged stage.
- * Create a stage who's lifecycle is not managed by the world. Must be freed
- * with ecs_stage_free.
+ * Create a stage whose lifecycle is not managed by the world. Must be freed
+ * with ecs_stage_free().
  *
  * @param world The world.
  * @return The stage.
@@ -5584,9 +5611,9 @@ void ecs_dim(
  * can run in the same simulation without requiring a central service that
  * coordinates issuing identifiers.
  *
- * If id_end is set to 0, the range is infinite. If id_end is set to a non-zero
- * value, it has to be larger than id_start. If id_end is set and ecs_new is
- * invoked after an id is issued that is equal to id_end, the application will
+ * If `id_end` is set to 0, the range is infinite. If `id_end` is set to a non-zero
+ * value, it has to be larger than `id_start`. If `id_end` is set and ecs_new() is
+ * invoked after an id is issued that is equal to `id_end`, the application will
  * abort.
  *
  * @param world The world.
@@ -5973,7 +6000,7 @@ void ecs_remove_id(
  * is inherited from (usually a prefab). For example:
  * 
  * @code
- * ecs_entity_t prefab = ecs_insert(world, 
+ * ecs_entity_t prefab = ecs_insert(world,
  *   ecs_value(Position, {10, 20}),
  *   ecs_value(Mass, {100}));
  * 
@@ -5987,7 +6014,7 @@ void ecs_remove_id(
  * An auto override is equivalent to a manual override:
  * 
  * @code
-  * ecs_entity_t prefab = ecs_insert(world, 
+ * ecs_entity_t prefab = ecs_insert(world,
  *   ecs_value(Position, {10, 20}),
  *   ecs_value(Mass, {100}));
  * 
@@ -6007,11 +6034,11 @@ void ecs_remove_id(
  * 
  * When a component is overridden and inherited from a prefab, the value from 
  * the prefab component is copied to the instance. When the component is not
- * inherited from a prefab, it is added to the instance as if using ecs_add_id.
+ * inherited from a prefab, it is added to the instance as if using ecs_add_id().
  * 
  * Overriding is the default behavior on prefab instantiation. Auto overriding
- * is only useful for components with the (OnInstantiate, Inherit) trait.
- * When a component has the (OnInstantiate, DontInherit) trait and is overridden
+ * is only useful for components with the `(OnInstantiate, Inherit)` trait.
+ * When a component has the `(OnInstantiate, DontInherit)` trait and is overridden
  * the component is added, but the value from the prefab will not be copied.
  *
  * @param world The world.
@@ -6080,8 +6107,8 @@ ecs_id_t ecs_get_with(
 
 /** Enable or disable entity.
  * This operation enables or disables an entity by adding or removing the
- * EcsDisabled tag. A disabled entity will not be matched with any systems,
- * unless the system explicitly specifies the EcsDisabled tag.
+ * #EcsDisabled tag. A disabled entity will not be matched with any systems,
+ * unless the system explicitly specifies the #EcsDisabled tag.
  *
  * @param world The world.
  * @param entity The entity to enable or disable.
@@ -6142,13 +6169,15 @@ bool ecs_is_enabled_id(
  * This operation obtains a const pointer to the requested component. The
  * operation accepts the component entity id.
  * 
- * This operation can return inherited components reachable through an IsA
+ * This operation can return inherited components reachable through an `IsA`
  * relationship.
  *
  * @param world The world.
  * @param entity The entity.
  * @param id The id of the component to get.
  * @return The component pointer, NULL if the entity does not have the component.
+ *
+ * @see ecs_get_mut_id()
  */
 FLECS_API
 const void* ecs_get_id(
@@ -6160,7 +6189,7 @@ const void* ecs_get_id(
  * This operation obtains a mutable pointer to the requested component. The
  * operation accepts the component entity id.
  * 
- * Unlike ecs_get_id, this operation does not return inherited components. 
+ * Unlike ecs_get_id(), this operation does not return inherited components.
  *
  * @param world The world.
  * @param entity The entity.
@@ -6186,6 +6215,9 @@ void* ecs_get_mut_id(
  * @param entity The entity.
  * @param id The entity id of the component to obtain.
  * @return The component pointer.
+ *
+ * @see ecs_ensure_modified_id()
+ * @see ecs_emplace_id()
  */
 FLECS_API
 void* ecs_ensure_id(
@@ -6352,6 +6384,8 @@ ecs_entity_t ecs_record_get_entity(
  * @param record Record to the entity.
  * @param id The (component) id.
  * @return Pointer to component, or NULL if entity does not have the component.
+ *
+ * @see ecs_record_ensure_id()
  */
 FLECS_API
 const void* ecs_record_get_id(
@@ -6413,11 +6447,11 @@ void* ecs_record_get_by_column(
  * is not invoked for the returned pointer, allowing the component to be 
  * constructed directly in the storage.
  * 
- * When the is_new parameter is not provided, the operation will assert when the
- * component already exists. When the is_new parameter is provided, it will
+ * When the `is_new` parameter is not provided, the operation will assert when the
+ * component already exists. When the `is_new` parameter is provided, it will
  * indicate whether the returned storage has been constructed.
  * 
- * When is_new indicates that the storage has not yet been constructed, it must
+ * When `is_new` indicates that the storage has not yet been constructed, it must
  * be constructed by the code invoking this operation. Not constructing the
  * component will result in undefined behavior.
  *
@@ -6520,7 +6554,7 @@ bool ecs_is_valid(
  * ecs_delete(world, e1);
  * ecs_is_alive(world, e1);             // false
  *
- * ecs_entity_t e2 = ecs_new(world); // recycles e1
+ * ecs_entity_t e2 = ecs_new(world);    // recycles e1
  * ecs_is_alive(world, e2);             // true
  * ecs_is_alive(world, e1);             // false
  * @endcode
@@ -6548,7 +6582,7 @@ ecs_id_t ecs_strip_generation(
  * the generation has been stripped. A typical scenario in which this happens is
  * when iterating relationships in an entity type.
  *
- * For example, when obtaining the parent id from a ChildOf relationship, the parent
+ * For example, when obtaining the parent id from a `ChildOf` relationship, the parent
  * (second element of the pair) will have been stored in a 32 bit value, which
  * cannot store the entity generation. This function can retrieve the identifier
  * with the current generation for that id.
@@ -6583,6 +6617,8 @@ ecs_entity_t ecs_get_alive(
  *
  * @param world The world.
  * @param entity The entity id to make alive.
+ *
+ * @see ecs_make_alive_id()
  */
 FLECS_API
 void ecs_make_alive(
@@ -6632,7 +6668,7 @@ bool ecs_exists(
  * specified generation, which can be useful if an entity is externally managed,
  * like for external pools, savefiles or netcode.
  * 
- * This operation is similar to ecs_make_alive, except that it will also
+ * This operation is similar to ecs_make_alive(), except that it will also
  * override the generation of an alive entity.
  *
  * @param world The world.
@@ -6687,12 +6723,15 @@ char* ecs_type_str(
     const ecs_type_t* type);
 
 /** Convert table to string.
- * Same as ecs_type_str(world, ecs_table_get_type(table)). The result of this
+ * Same as `ecs_type_str(world, ecs_table_get_type(table))`. The result of this
  * operation must be freed with ecs_os_free().
  *
  * @param world The world.
  * @param table The table.
  * @return The stringified table type.
+ *
+ * @see ecs_table_get_type()
+ * @see ecs_type_str()
  */
 FLECS_API
 char* ecs_table_str(
@@ -6709,6 +6748,9 @@ char* ecs_table_str(
  * @param world The world.
  * @param entity The entity.
  * @return The entity path with stringified type.
+ *
+ * @see ecs_get_path()
+ * @see ecs_type_str()
  */
 FLECS_API
 char* ecs_entity_str(
@@ -6722,6 +6764,8 @@ char* ecs_entity_str(
  * @param entity The entity.
  * @param id The id to test for.
  * @return True if the entity has the id, false if not.
+ *
+ * @see ecs_owns_id()
  */
 FLECS_API
 bool ecs_has_id(
@@ -6732,7 +6776,7 @@ bool ecs_has_id(
 /** Test if an entity owns an id.
  * This operation returns true if the entity has the specified id. The operation
  * behaves the same as ecs_has_id(), except that it will return false for
- * components that are inherited through an IsA relationship.
+ * components that are inherited through an `IsA` relationship.
  *
  * @param world The world.
  * @param entity The entity.
@@ -6766,7 +6810,7 @@ ecs_entity_t ecs_get_target(
     ecs_entity_t rel,
     int32_t index);
 
-/** Get parent (target of ChildOf relationship) for entity.
+/** Get parent (target of `ChildOf` relationship) for entity.
  * This operation is the same as calling:
  *
  * @code
@@ -6776,6 +6820,8 @@ ecs_entity_t ecs_get_target(
  * @param world The world.
  * @param entity The entity.
  * @return The parent of the entity, 0 if the entity has no parent.
+ *
+ * @see ecs_get_target()
  */
 FLECS_API
 ecs_entity_t ecs_get_parent(
@@ -6789,7 +6835,7 @@ ecs_entity_t ecs_get_parent(
  * relationship, the operation will return 0.
  *
  * This operation can be used to lookup, for example, which prefab is providing
- * a component by specifying the IsA relationship:
+ * a component by specifying the `IsA` relationship:
  *
  * @code
  * // Is Position provided by the entity or one of its base entities?
@@ -6848,11 +6894,13 @@ int32_t ecs_count_id(
  */
 
 /** Get the name of an entity.
- * This will return the name stored in (EcsIdentifier, EcsName).
+ * This will return the name stored in `(EcsIdentifier, EcsName)`.
  *
  * @param world The world.
  * @param entity The entity.
  * @return The type of the entity, NULL if the entity has no name.
+ *
+ * @see ecs_set_name()
  */
 FLECS_API
 const char* ecs_get_name(
@@ -6860,11 +6908,13 @@ const char* ecs_get_name(
     ecs_entity_t entity);
 
 /** Get the symbol of an entity.
- * This will return the symbol stored in (EcsIdentifier, EcsSymbol).
+ * This will return the symbol stored in `(EcsIdentifier, EcsSymbol)`.
  *
  * @param world The world.
  * @param entity The entity.
  * @return The type of the entity, NULL if the entity has no name.
+ *
+ * @see ecs_set_symbol()
  */
 FLECS_API
 const char* ecs_get_symbol(
@@ -6875,12 +6925,14 @@ const char* ecs_get_symbol(
  * This will set or overwrite the name of an entity. If no entity is provided,
  * a new entity will be created.
  *
- * The name is stored in (EcsIdentifier, EcsName).
+ * The name is stored in `(EcsIdentifier, EcsName)`.
  *
  * @param world The world.
  * @param entity The entity.
  * @param name The name.
  * @return The provided entity, or a new entity if 0 was provided.
+ *
+ * @see ecs_get_name()
  */
 FLECS_API
 ecs_entity_t ecs_set_name(
@@ -6898,6 +6950,8 @@ ecs_entity_t ecs_set_name(
  * @param entity The entity.
  * @param symbol The symbol.
  * @return The provided entity, or a new entity if 0 was provided.
+ *
+ * @see ecs_get_symbol()
  */
 FLECS_API
 ecs_entity_t ecs_set_symbol(
@@ -6910,7 +6964,7 @@ ecs_entity_t ecs_set_symbol(
  * providing the fully qualified name if its parent. An entity can only have
  * a single alias.
  *
- * The symbol is stored in (EcsIdentifier, EcsAlias).
+ * The symbol is stored in `(EcsIdentifier, EcsAlias)`.
  *
  * @param world The world.
  * @param entity The entity.
@@ -6932,6 +6986,10 @@ void ecs_set_alias(
  * @param world The world.
  * @param path The entity path.
  * @return The entity with the specified path, or 0 if no entity was found.
+ *
+ * @see ecs_lookup_child()
+ * @see ecs_lookup_path_w_sep()
+ * @see ecs_lookup_symbol()
  */
 FLECS_API
 ecs_entity_t ecs_lookup(
@@ -6947,6 +7005,10 @@ ecs_entity_t ecs_lookup(
  * @param parent The parent for which to lookup the child.
  * @param name The entity name.
  * @return The entity with the specified name, or 0 if no entity was found.
+ *
+ * @see ecs_lookup()
+ * @see ecs_lookup_path_w_sep()
+ * @see ecs_lookup_symbol()
  */
 FLECS_API
 ecs_entity_t ecs_lookup_child(
@@ -6971,6 +7033,10 @@ ecs_entity_t ecs_lookup_child(
  * @param prefix The path prefix.
  * @param recursive Recursively traverse up the tree until entity is found.
  * @return The entity if found, else 0.
+ *
+ * @see ecs_lookup()
+ * @see ecs_lookup_child()
+ * @see ecs_lookup_symbol()
  */
 FLECS_API
 ecs_entity_t ecs_lookup_path_w_sep(
@@ -6982,7 +7048,7 @@ ecs_entity_t ecs_lookup_path_w_sep(
     bool recursive);
 
 /** Lookup an entity by its symbol name.
- * This looks up an entity by symbol stored in (EcsIdentifier, EcsSymbol). The
+ * This looks up an entity by symbol stored in `(EcsIdentifier, EcsSymbol)`. The
  * operation does not take into account hierarchies.
  *
  * This operation can be useful to resolve, for example, a type by its C
@@ -6993,6 +7059,10 @@ ecs_entity_t ecs_lookup_path_w_sep(
  * @param lookup_as_path If not found as a symbol, lookup as path.
  * @param recursive If looking up as path, recursively traverse up the tree.
  * @return The entity if found, else 0.
+ *
+ * @see ecs_lookup()
+ * @see ecs_lookup_child()
+ * @see ecs_lookup_path_w_sep()
  */
 FLECS_API
 ecs_entity_t ecs_lookup_symbol(
@@ -7019,6 +7089,8 @@ ecs_entity_t ecs_lookup_symbol(
  * @param sep The separator to use between path elements.
  * @param prefix The initial character to use for root elements.
  * @return The relative entity path.
+ *
+ * @see ecs_get_path_w_sep_buf()
  */
 FLECS_API
 char* ecs_get_path_w_sep(
@@ -7037,6 +7109,8 @@ char* ecs_get_path_w_sep(
  * @param sep The separator to use between path elements.
  * @param prefix The initial character to use for root elements.
  * @param buf The buffer to write to.
+ *
+ * @see ecs_get_path_w_sep()
  */
 void ecs_get_path_w_sep_buf(
     const ecs_world_t *world,
@@ -7102,6 +7176,8 @@ ecs_entity_t ecs_add_path_w_sep(
  * @param world The world.
  * @param scope The entity to use as scope.
  * @return The previous scope.
+ *
+ * @see ecs_get_scope()
  */
 FLECS_API
 ecs_entity_t ecs_set_scope(
@@ -7156,6 +7232,8 @@ const char* ecs_set_name_prefix(
  * @param world The world.
  * @param lookup_path 0-terminated array with entity ids for the lookup path.
  * @return Current lookup path array.
+ *
+ * @see ecs_get_lookup_path()
  */
 FLECS_API
 ecs_entity_t* ecs_set_lookup_path(
@@ -7260,7 +7338,7 @@ const ecs_type_hooks_t* ecs_get_hooks_id(
  * - it is an entity without the EcsComponent component
  * - it has an EcsComponent with size member set to 0
  * - it is a pair where both elements are a tag
- * - it is a pair where the first element has the EcsPairIsTag tag
+ * - it is a pair where the first element has the #EcsPairIsTag tag
  *
  * @param world The world.
  * @param id The id.
@@ -7558,6 +7636,8 @@ bool ecs_each_next(
  * @param world The world.
  * @param parent The parent.
  * @return An iterator that iterates all children of the parent.
+ *
+ * @see ecs_each_id()
 */
 FLECS_API
 ecs_iter_t ecs_children(
@@ -7628,7 +7708,7 @@ const char* ecs_query_var_name(
 
 /** Test if variable is an entity.
  * Internally the query engine has entity variables and table variables. When
- * iterating through query variables (by using ecs_query_variable_count) only
+ * iterating through query variables (by using ecs_query_variable_count()) only
  * the values for entity variables are accessible. This operation enables an
  * application to check if a variable is an entity variable.
  *
@@ -7684,7 +7764,8 @@ bool ecs_query_var_is_entity(
  * @endcode
  * 
  * If query iteration is stopped without the last call to ecs_query_next() 
- * returning false, iterator resources need to be cleaned up explicitly. 
+ * returning false, iterator resources need to be cleaned up explicitly
+ * with ecs_iter_fini().
  * 
  * Example:
  * @code
@@ -7705,6 +7786,7 @@ bool ecs_query_var_is_entity(
  * @param world The world.
  * @param query The query.
  * @return An iterator.
+ *
  * @see ecs_query_next()
  */
 FLECS_API
@@ -7716,6 +7798,7 @@ ecs_iter_t ecs_query_iter(
  *
  * @param it The iterator.
  * @return True if the iterator has more results, false if not.
+ *
  * @see ecs_query_iter()
  */
 FLECS_API
@@ -7725,7 +7808,7 @@ bool ecs_query_next(
 /** Match entity with query.
  * This operation matches an entity with a query and returns the result of the
  * match in the "it" out parameter. An application should free the iterator
- * resources if this function returns true.
+ * resources with ecs_iter_fini() if this function returns true.
  * 
  * Usage:
  * @code
@@ -7749,7 +7832,7 @@ bool ecs_query_has(
 /** Match table with query.
  * This operation matches a table with a query and returns the result of the
  * match in the "it" out parameter. An application should free the iterator
- * resources if this function returns true.
+ * resources with ecs_iter_fini() if this function returns true.
  * 
  * Usage:
  * @code
@@ -7773,7 +7856,7 @@ bool ecs_query_has_table(
 /** Match range with query.
  * This operation matches a range with a query and returns the result of the
  * match in the "it" out parameter. An application should free the iterator
- * resources if this function returns true.
+ * resources with ecs_iter_fini() if this function returns true.
  * 
  * The entire range must match the query for the operation to return true.
  * 
@@ -7829,7 +7912,10 @@ char* ecs_query_plan(
 /** Convert query to string with profile.
  * To use this you must set the EcsIterProfile flag on an iterator before
  * starting iteration:
+ *
+ * @code
  *   it.flags |= EcsIterProfile
+ * @endcode
  * 
  * The returned string must be freed with ecs_os_free().
  *
@@ -7845,7 +7931,10 @@ char* ecs_query_plan_w_profile(
 /** Populate variables from key-value string.
  * Convenience function to set query variables from a key-value string separated
  * by comma's. The string must have the following format:
+ *
+ * @code
  *   var_a: value, var_b: value
+ * @endcode
  *
  * The key-value list may optionally be enclosed in parenthesis.
  * 
@@ -7961,7 +8050,7 @@ const ecs_query_group_info_t* ecs_query_get_group_info(
     const ecs_query_t *query,
     uint64_t group_id);
 
-/** Struct returned by ecs_query_count. */
+/** Struct returned by ecs_query_count(). */
 typedef struct ecs_query_count_t {
     int32_t results;      /**< Number of results returned by query. */
     int32_t entities;     /**< Number of entities returned by query. */
@@ -7999,7 +8088,7 @@ bool ecs_query_is_true(
 
 /** Send event.
  * This sends an event to matching triggers & is the mechanism used by flecs
- * itself to send OnAdd, OnRemove, etc events.
+ * itself to send `OnAdd`, `OnRemove`, etc events.
  *
  * Applications can use this function to send custom events, where a custom
  * event can be any regular entity.
@@ -8013,6 +8102,8 @@ bool ecs_query_is_true(
  *
  * @param world The world.
  * @param desc Event parameters.
+ *
+ * @see ecs_enqueue()
  */
 FLECS_API
 void ecs_emit(
@@ -8177,6 +8268,9 @@ ecs_entity_t ecs_iter_first(
  * @param it The iterator.
  * @param var_id The variable index.
  * @param entity The entity variable value.
+ *
+ * @see ecs_iter_set_var_as_range()
+ * @see ecs_iter_set_var_as_table()
  */
 FLECS_API
 void ecs_iter_set_var(
@@ -8190,6 +8284,9 @@ void ecs_iter_set_var(
  * @param it The iterator.
  * @param var_id The variable index.
  * @param table The table variable value.
+ *
+ * @see ecs_iter_set_var()
+ * @see ecs_iter_set_var_as_range()
  */
 FLECS_API
 void ecs_iter_set_var_as_table(
@@ -8203,6 +8300,9 @@ void ecs_iter_set_var_as_table(
  * @param it The iterator.
  * @param var_id The variable index.
  * @param range The range variable value.
+ *
+ * @see ecs_iter_set_var()
+ * @see ecs_iter_set_var_as_table()
  */
 FLECS_API
 void ecs_iter_set_var_as_range(
@@ -8381,8 +8481,8 @@ bool ecs_worker_next(
  * term in the query. The index refers to the location of the term in the query,
  * and starts counting from one.
  *
- * For example, the query "Position, Velocity" will return the Position array
- * for index 1, and the Velocity array for index 2.
+ * For example, the query `"Position, Velocity"` will return the `Position` array
+ * for index 1, and the `Velocity` array for index 2.
  *
  * When the specified field is not owned by the entity this function returns a
  * pointer instead of an array. This happens when the source of a field is not
@@ -8392,7 +8492,7 @@ bool ecs_worker_next(
  *
  * The provided size must be either 0 or must match the size of the datatype
  * of the returned array. If the size does not match, the operation may assert.
- * The size can be dynamically obtained with ecs_field_size.
+ * The size can be dynamically obtained with ecs_field_size().
  *
  * @param it The iterator.
  * @param size The type size of the requested data.
@@ -8536,6 +8636,8 @@ const ecs_type_t* ecs_table_get_type(
  * @param table The table.
  * @param id The id.
  * @return The index of the id in the table type, or -1 if not found.
+ *
+ * @see ecs_table_has_id()
  */
 FLECS_API
 int32_t ecs_table_get_type_index(
@@ -8559,7 +8661,7 @@ int32_t ecs_table_get_column_index(
     ecs_id_t id);
 
 /** Return number of columns in table.
- * Similar to ecs_table_get_type(table)->count, except that the column count
+ * Similar to `ecs_table_get_type(table)->count`, except that the column count
  * only counts the number of components in a table.
  *
  * @param table The table.
@@ -8579,6 +8681,8 @@ int32_t ecs_table_column_count(
  * @param table The table.
  * @param index The index in the table type.
  * @return The index in the table column array.
+ *
+ * @see ecs_table_column_to_type_index()
  */
 FLECS_API
 int32_t ecs_table_type_to_column_index(
@@ -8653,12 +8757,14 @@ int32_t ecs_table_count(
     const ecs_table_t *table);
 
 /** Test if table has id.
- * Same as ecs_table_get_type_index(world, table, id) != -1.
+ * Same as `ecs_table_get_type_index(world, table, id) != -1`.
  *
  * @param world The world.
  * @param table The table.
  * @param id The id.
  * @return True if the table has the id, false if the table doesn't.
+ *
+ * @see ecs_table_get_type_index()
  */
 FLECS_API
 bool ecs_table_has_id(
@@ -8793,15 +8899,15 @@ void ecs_table_swap_rows(
  * - Ctor for each component in the target table
  * - Move for each overlapping component
  * - Dtor for each component in the source table.
- * - OnAdd triggers for non-overlapping components in the target table
- * - OnRemove triggers for non-overlapping components in the source table.
+ * - `OnAdd` triggers for non-overlapping components in the target table
+ * - `OnRemove` triggers for non-overlapping components in the source table.
  *
  * This operation is a faster than adding/removing components individually.
  *
  * The application must explicitly provide the difference in components between
  * tables as the added/removed parameters. This can usually be derived directly
  * from the result of ecs_table_add_id() and ecs_table_remove_id(). These arrays are
- * required to properly execute OnAdd/OnRemove triggers.
+ * required to properly execute `OnAdd`/`OnRemove` triggers.
  *
  * @param world The world.
  * @param entity The entity to commit.
@@ -8833,6 +8939,9 @@ bool ecs_commit(
  * @param id The id to search for.
  * @param id_out If provided, it will be set to the found id (optional).
  * @return The index of the id in the table type.
+ *
+ * @see ecs_search_offset()
+ * @see ecs_search_relation()
  */
 FLECS_API
 int32_t ecs_search(
@@ -8856,10 +8965,10 @@ int32_t ecs_search(
  * @endcode
  *
  * Depending on how the operation is used it is either linear or constant time.
- * When the id has the form (id) or (rel, *) and the operation is invoked as
+ * When the id has the form `(id)` or `(rel, *)` and the operation is invoked as
  * in the above example, it is guaranteed to be constant time.
  *
- * If the provided id has the form (*, tgt) the operation takes linear time. The
+ * If the provided id has the form `(*, tgt)` the operation takes linear time. The
  * reason for this is that ids for an target are not packed together, as they
  * are sorted relationship first.
  *
@@ -8872,6 +8981,9 @@ int32_t ecs_search(
  * @param id The id to search for.
  * @param id_out If provided, it will be set to the found id (optional).
  * @return The index of the id in the table type.
+ *
+ * @see ecs_search()
+ * @see ecs_search_relation()
  */
 FLECS_API
 int32_t ecs_search_offset(
@@ -8885,7 +8997,7 @@ int32_t ecs_search_offset(
  * This operation is the same as ecs_search_offset(), but has the additional
  * capability of traversing relationships to find a component. For example, if
  * an application wants to find a component for either the provided table or a
- * prefab (using the IsA relationship) of that table, it could use the operation
+ * prefab (using the `IsA` relationship) of that table, it could use the operation
  * like this:
  *
  * @code
@@ -8902,8 +9014,8 @@ int32_t ecs_search_offset(
  *   NULL);            // internal type with information about matched id
  * @endcode
  *
- * The operation searches depth first. If a table type has 2 IsA relationships, the
- * operation will first search the IsA tree of the first relationship.
+ * The operation searches depth first. If a table type has 2 `IsA` relationships, the
+ * operation will first search the `IsA` tree of the first relationship.
  *
  * When choosing between ecs_search(), ecs_search_offset() and ecs_search_relation(),
  * the simpler the function the better its performance.
@@ -8918,6 +9030,9 @@ int32_t ecs_search_offset(
  * @param id_out If provided, it will be set to the found id (optional).
  * @param tr_out Internal datatype.
  * @return The index of the id in the table type.
+ *
+ * @see ecs_search()
+ * @see ecs_search_offset()
  */
 FLECS_API
 int32_t ecs_search_relation(
