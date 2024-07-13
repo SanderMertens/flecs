@@ -47,6 +47,20 @@ while (world.progress()) { }
 ```
 
 </li>
+<li><b class="tab-title">C#</b>
+
+```cs
+// Optional, gather statistics for explorer
+world.Import<Ecs.Stats>();
+
+// Creates REST server on default port (27750)
+world.Set<flecs.EcsRest>(default);
+
+// Runs the system serving up REST requests
+while (world.Progress()) { }
+```
+
+</li>
 <li><b class="tab-title">Rust</b>
 
 ```rust
@@ -88,6 +102,17 @@ world.app()
   .enable_stats()
   .enable_rest()
   .run();
+```
+
+</li>
+<li><b class="tab-title">C#</b>
+
+```cs
+world.App()
+  // Optional, gather statistics for explorer
+  .EnableStats()
+  .EnableRest()
+  .Run();
 ```
 
 </li>
@@ -290,6 +315,20 @@ world.set<flecs::Rest>({});
 
 // Runs the system serving up REST requests
 while (world.progress()) { }
+```
+
+</li>
+<li><b class="tab-title">C#</b>
+
+```cs
+// Optional, gather statistics for explorer
+world.Import<Ecs.Stats>();
+
+// Creates REST server on default port (27750)
+world.Set<flecs.EcsRest>(default);
+
+// Runs the system serving up REST requests
+while (world.Progress()) { }
 ```
 
 </li>
