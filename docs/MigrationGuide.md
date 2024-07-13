@@ -254,6 +254,16 @@ Position(parent)
 Position(up)
 ```
 
+The `$(Relationship)` notation was removed from the DSL in v4:
+```c
+// v3
+$(Movement)
+```
+```c
+// v4
+(Movement, $Movement)
+```
+
 ## Systems & Pipelines
 Systems have remained mostly the same. A list of the things that changed:
 
