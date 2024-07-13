@@ -53,6 +53,11 @@ ecs_flags32_t flecs_id_flag_for_event(
     if (e == EcsOnTableDelete) {
         return EcsIdHasOnTableDelete;
     }
+    if (e == EcsWildcard) {
+        return EcsIdHasOnAdd|EcsIdHasOnRemove|EcsIdHasOnSet|
+            EcsIdHasOnTableFill|EcsIdHasOnTableEmpty|
+            EcsIdHasOnTableCreate|EcsIdHasOnTableDelete;
+    }
     return 0;
 }
 

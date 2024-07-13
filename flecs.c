@@ -13897,6 +13897,11 @@ ecs_flags32_t flecs_id_flag_for_event(
     if (e == EcsOnTableDelete) {
         return EcsIdHasOnTableDelete;
     }
+    if (e == EcsWildcard) {
+        return EcsIdHasOnAdd|EcsIdHasOnRemove|EcsIdHasOnSet|
+            EcsIdHasOnTableFill|EcsIdHasOnTableEmpty|
+            EcsIdHasOnTableCreate|EcsIdHasOnTableDelete;
+    }
     return 0;
 }
 
@@ -36123,6 +36128,10 @@ void flecs_table_add_trigger_flags(
         table->flags |= EcsTableHasOnTableFill;
     } else if (event == EcsOnTableEmpty) {
         table->flags |= EcsTableHasOnTableEmpty;
+    } else if (event == EcsWildcard) {
+        table->flags |= EcsTableHasOnAdd|EcsTableHasOnRemove|EcsTableHasOnSet|
+            EcsTableHasOnTableFill|EcsTableHasOnTableEmpty|
+            EcsTableHasOnTableCreate|EcsTableHasOnTableDelete;
     }
 }
 

@@ -618,6 +618,10 @@ void flecs_table_add_trigger_flags(
         table->flags |= EcsTableHasOnTableFill;
     } else if (event == EcsOnTableEmpty) {
         table->flags |= EcsTableHasOnTableEmpty;
+    } else if (event == EcsWildcard) {
+        table->flags |= EcsTableHasOnAdd|EcsTableHasOnRemove|EcsTableHasOnSet|
+            EcsTableHasOnTableFill|EcsTableHasOnTableEmpty|
+            EcsTableHasOnTableCreate|EcsTableHasOnTableDelete;
     }
 }
 
