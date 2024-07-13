@@ -929,7 +929,6 @@ void Observer_name_from_root(void) {
     test_assert(ns == sys.parent());
 }
 
-<<<<<<< HEAD
 void Observer_term_index(void) {
     flecs::world ecs;
 
@@ -949,7 +948,7 @@ void Observer_term_index(void) {
     e1.set<Velocity>({ 30, 40 }); 
     test_int(last_term, 2);
 }
-=======
+
 void Observer_implicit_register_in_emit_for_named_entity(void) {
     flecs::world world;
 
@@ -1021,4 +1020,3 @@ void Observer_add_to_named_in_emit_for_named_entity_w_defer(void) {
     e1.emit<MyEvent>({ 10 });
     world.defer_end();
 }
->>>>>>> 575f9d23f (Fix LOCKED_STORAGE issues when emitting events)

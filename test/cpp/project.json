@@ -655,31 +655,16 @@
                 "find_not_found",
                 "find_w_entity",
                 "optional_pair_term",
-<<<<<<< HEAD:test/cpp_api/project.json
                 "empty_tables_each",
                 "empty_tables_each_w_entity",
-                "empty_tables_each_w_iter"
-=======
+                "empty_tables_each_w_iter",
                 "query_from_entity",
-<<<<<<< HEAD
-                "query_from_entity_name"
->>>>>>> cf1a8ef63 (v4):test/cpp/project.json
-=======
                 "query_from_entity_name",
-<<<<<<< HEAD
-                "run_w_iter_fini"
->>>>>>> 3f87a122d (Add flecs::iter::fini)
-=======
                 "run_w_iter_fini",
                 "run_w_iter_fini_interrupt",
-<<<<<<< HEAD
-                "run_w_iter_fini_empty"
->>>>>>> bdcdd0010 (Add ecs_get_entities function)
-=======
                 "run_w_iter_fini_empty",
                 "add_to_match_from_staged_query",
                 "add_to_match_from_staged_query_readonly_threaded"
->>>>>>> c5e9d2e49 (Create staged iterators from queries created with stage)
             ]
         }, {
             "id": "QueryBuilder",
@@ -918,50 +903,13 @@
                 "add_in_yield_existing",
                 "add_in_yield_existing_multi",
                 "name_from_root",
-<<<<<<< HEAD
-                "term_index"
-=======
+                "term_index",
                 "implicit_register_in_emit_for_named_entity",
                 "add_to_named_in_emit_for_named_entity",
                 "implicit_register_in_emit_for_named_entity_w_defer",
                 "add_to_named_in_emit_for_named_entity_w_defer"
->>>>>>> 575f9d23f (Fix LOCKED_STORAGE issues when emitting events)
             ]
         }, {
-<<<<<<< HEAD:test/cpp_api/project.json
-            "id": "Filter",
-            "testcases": [
-                "term_each_component",
-                "term_each_tag",
-                "term_each_id",
-                "term_each_pair_type",
-                "term_each_pair_id",
-                "term_each_pair_relation_wildcard",
-                "term_each_pair_object_wildcard",
-                "default_ctor_no_assign",
-                "term_get_id",
-                "term_get_subj",
-                "term_get_pred",
-                "term_get_obj",
-                "get_first",
-                "get_count_direct",
-                "get_is_true_direct",
-                "get_first_direct",
-                "each_w_no_this",
-                "each_w_iter_no_this",
-
-                "named_filter",
-                "named_scoped_filter",
-                "set_this_var",
-                "inspect_terms_w_expr",
-                "find",
-                "find_not_found",
-                "find_w_entity",
-                "optional_pair_term"
-            ]
-        }, {
-=======
->>>>>>> cf1a8ef63 (v4):test/cpp/project.json
             "id": "ComponentLifecycle",
             "testcases": [
                 "ctor_on_add",
@@ -1241,11 +1189,8 @@
                 "atfini_w_ctx",
                 "get_mut_T",
                 "get_mut_R_T",
-<<<<<<< HEAD:test/cpp_api/project.json
-                "world_mini"
-=======
+                "world_mini",
                 "copy_world"
->>>>>>> cf1a8ef63 (v4):test/cpp/project.json
             ]
         }, {
             "id": "Singleton",

@@ -655,7 +655,17 @@
                 "stage_query",
                 "world_query_w_stage_iter",
                 "stage_query_w_nth_stage",
-                "world_query_w_nth_stage_iter"
+                "world_query_w_nth_stage_iter",
+                "match_empty",
+                "match_new_empty",
+                "match_empty_w_component",
+                "match_new_empty_w_component",
+                "match_empty_w_ref",
+                "match_new_empty_w_ref",
+                "match_empty_w_order_by",
+                "match_new_empty_w_order_by",
+                "match_empty_w_bitset",
+                "default_query_flags"
             ]
         }, {
             "id": "Combinations",
@@ -1603,7 +1613,8 @@
                 "query_changed_no_source",
                 "query_changed_no_source_component",
                 "query_changed_w_not_out",
-                "query_change_w_optional"
+                "query_change_w_optional",
+                "query_changed_after_count"
             ]
         }, {
             "id": "GroupBy",

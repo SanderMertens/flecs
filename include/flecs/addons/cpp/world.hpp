@@ -153,18 +153,12 @@ struct world {
 
     /** Create world from C world.
      */
-<<<<<<< HEAD
-    explicit world(world_t *w, bool owned = false)
-        : m_world( w )
-        , m_owned( owned ) { }
-=======
     explicit world(world_t *w)
         : world_( w ) { 
             if (w) {
                 flecs_poly_claim(w);
             }
         }
->>>>>>> cf1a8ef63 (v4)
 
     /** Not allowed to copy a world. May only take a reference.
      */

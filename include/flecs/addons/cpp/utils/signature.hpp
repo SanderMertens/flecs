@@ -16,13 +16,8 @@ namespace _ {
     }
 
     template <typename T, if_t< is_reference<T>::value > = 0>
-<<<<<<< HEAD
     constexpr flecs::inout_kind_t type_to_inout() {
-        return flecs::Out;
-=======
-    static constexpr flecs::inout_kind_t type_to_inout() {
         return flecs::InOut;
->>>>>>> cf1a8ef63 (v4)
     }
 
     template <typename T, if_not_t< 

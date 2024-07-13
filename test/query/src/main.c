@@ -644,6 +644,16 @@ void Basic_stage_query(void);
 void Basic_world_query_w_stage_iter(void);
 void Basic_stage_query_w_nth_stage(void);
 void Basic_world_query_w_nth_stage_iter(void);
+void Basic_match_empty(void);
+void Basic_match_new_empty(void);
+void Basic_match_empty_w_component(void);
+void Basic_match_new_empty_w_component(void);
+void Basic_match_empty_w_ref(void);
+void Basic_match_new_empty_w_ref(void);
+void Basic_match_empty_w_order_by(void);
+void Basic_match_new_empty_w_order_by(void);
+void Basic_match_empty_w_bitset(void);
+void Basic_default_query_flags(void);
 
 // Testsuite 'Combinations'
 void Combinations_setup(void);
@@ -1543,6 +1553,7 @@ void ChangeDetection_query_changed_no_source(void);
 void ChangeDetection_query_changed_no_source_component(void);
 void ChangeDetection_query_changed_w_not_out(void);
 void ChangeDetection_query_change_w_optional(void);
+void ChangeDetection_query_changed_after_count(void);
 
 // Testsuite 'GroupBy'
 void GroupBy_group_by(void);
@@ -4528,6 +4539,46 @@ bake_test_case Basic_testcases[] = {
     {
         "world_query_w_nth_stage_iter",
         Basic_world_query_w_nth_stage_iter
+    },
+    {
+        "match_empty",
+        Basic_match_empty
+    },
+    {
+        "match_new_empty",
+        Basic_match_new_empty
+    },
+    {
+        "match_empty_w_component",
+        Basic_match_empty_w_component
+    },
+    {
+        "match_new_empty_w_component",
+        Basic_match_new_empty_w_component
+    },
+    {
+        "match_empty_w_ref",
+        Basic_match_empty_w_ref
+    },
+    {
+        "match_new_empty_w_ref",
+        Basic_match_new_empty_w_ref
+    },
+    {
+        "match_empty_w_order_by",
+        Basic_match_empty_w_order_by
+    },
+    {
+        "match_new_empty_w_order_by",
+        Basic_match_new_empty_w_order_by
+    },
+    {
+        "match_empty_w_bitset",
+        Basic_match_empty_w_bitset
+    },
+    {
+        "default_query_flags",
+        Basic_default_query_flags
     }
 };
 
@@ -8031,6 +8082,10 @@ bake_test_case ChangeDetection_testcases[] = {
     {
         "query_change_w_optional",
         ChangeDetection_query_change_w_optional
+    },
+    {
+        "query_changed_after_count",
+        ChangeDetection_query_changed_after_count
     }
 };
 
@@ -9882,7 +9937,7 @@ static bake_test_suite suites[] = {
         "Basic",
         Basic_setup,
         NULL,
-        203,
+        213,
         Basic_testcases,
         1,
         Basic_params
@@ -9989,7 +10044,7 @@ static bake_test_suite suites[] = {
         "ChangeDetection",
         NULL,
         NULL,
-        33,
+        34,
         ChangeDetection_testcases
     },
     {

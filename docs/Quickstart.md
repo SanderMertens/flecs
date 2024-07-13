@@ -1750,17 +1750,8 @@ An example of an observer with two components:
 
 ```c
 ecs_observer(world, {
-<<<<<<< HEAD
-<<<<<<< HEAD
-    .filter.terms = { { ecs_id(Position) }, { ecs_id(Velocity) }},
-    .events = { EcsOnSet },
-=======
-    .terms = { { ecs_id(Position) }, { ecs_id(Velocity) }},
-=======
     .query.terms = { { ecs_id(Position) }, { ecs_id(Velocity) }},
->>>>>>> dd5abb5a7 (Fix issues in quickstart and component traits manual)
-    .event = EcsOnSet,
->>>>>>> cf1a8ef63 (v4)
+    .event = { EcsOnSet },
     .callback = OnSetPosition
 });
 

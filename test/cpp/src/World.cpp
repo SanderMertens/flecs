@@ -1932,19 +1932,18 @@ void World_get_mut_R_T(void) {
     test_int(p->y, 20);
 }
 
-<<<<<<< HEAD:test/cpp_api/src/World.cpp
 void World_world_mini(void) {
-    flecs::world world(ecs_mini(), true);
+    flecs::world world(ecs_mini());
 
     test_assert(world.lookup("flecs.system") == 0);
     test_assert(world.lookup("flecs.pipeline") == 0);
     test_assert(world.lookup("flecs.timer") == 0);
     test_assert(world.lookup("flecs.meta") == 0);
-=======
+}
+
 void World_copy_world(void) {
     flecs::world world_1;
     flecs::world world_2 = world_1;
 
     test_assert(world_1.c_ptr() == world_2.c_ptr());
->>>>>>> cf1a8ef63 (v4):test/cpp/src/World.cpp
 }

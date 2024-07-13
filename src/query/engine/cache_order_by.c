@@ -108,7 +108,9 @@ void flecs_query_cache_build_sorted_table_range(
         ecs_table_t *table = cur->table;
         ecs_data_t *data = &table->data;
 
-        ecs_assert(ecs_table_count(table) != 0, ECS_INTERNAL_ERROR, NULL);
+        if (ecs_table_count(table) == 0) {
+            continue;
+        }
 
         if (id) {
             const ecs_term_t *term = &cache->query->terms[order_by_term];

@@ -255,6 +255,11 @@ void flecs_query_fini(
 }
 
 static
+void flecs_query_poly_fini(void *ptr) {
+    flecs_query_fini(ptr);
+}
+
+static
 char* flecs_query_append_token(
     char *dst,
     const char *src)
@@ -406,7 +411,7 @@ ecs_query_t* ecs_query_init(
     result->pub.binding_ctx = const_desc->binding_ctx;
     result->ctx_free = const_desc->ctx_free;
     result->binding_ctx_free = const_desc->binding_ctx_free;
-    result->dtor = (flecs_poly_dtor_t)flecs_query_fini;
+    result->dtor = flecs_query_poly_fini;
     result->cache = NULL;
 
     /* Initialize query cache if necessary */
@@ -513,6 +518,7 @@ ecs_query_count_t ecs_query_count(
         while (flecs_query_next_instanced(&it)) {
             result.results ++;
             result.entities += it.count;
+            ecs_iter_skip(&it);
         }
     }
 

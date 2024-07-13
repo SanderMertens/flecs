@@ -512,6 +512,7 @@ void flecs_query_sync_match_monitor(
     ecs_query_cache_table_match_t *match)
 {
     ecs_assert(match != NULL, ECS_INTERNAL_ERROR, NULL);
+
     if (!match->monitor) {
         if (impl->pub.flags & EcsQueryHasMonitor) {
             flecs_query_get_match_monitor(impl, match);
