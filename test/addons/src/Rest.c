@@ -509,3 +509,39 @@ void Rest_import_rest_after_mini(void) {
 
     ecs_fini(world);
 }
+
+static
+void Move(ecs_iter_t *it) { }
+
+void Rest_get_pipeline_stats_after_delete_system(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_IMPORT(world, FlecsStats);
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ECS_SYSTEM(world, Move, EcsOnUpdate, Position, Velocity);
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_progress(world, 1.0);
+
+    ecs_delete(world, ecs_id(Move));
+
+    ecs_progress(world, 1.0);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(0, ecs_http_server_request(srv, "GET",
+        "/stats/pipeline?name=all&period=1m", &reply));
+    test_int(reply.code, 200);
+    
+    char *reply_str = ecs_strbuf_get(&reply.body);
+    test_assert(reply_str != NULL);
+    ecs_os_free(reply_str);
+
+    ecs_rest_server_fini(srv);
+
+    ecs_fini(world);
+}
