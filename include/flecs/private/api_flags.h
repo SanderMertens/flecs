@@ -160,7 +160,7 @@ extern "C" {
 #define EcsQueryIsCacheable           (1u << 24u) /* All terms of query are cacheable */
 #define EcsQueryHasTableThisVar       (1u << 25u) /* Does query have $this table var */
 #define EcsQueryHasSparseThis         (1u << 26u) /* Does query have $this sparse fields */
-
+#define EcsQueryCacheYieldEmptyTables      (1u << 27u) /* Does query cache empty tables */
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Term flags (used by ecs_term_t::flags_)
@@ -234,22 +234,6 @@ extern "C" {
 
 
 ////////////////////////////////////////////////////////////////////////////////
-<<<<<<< HEAD
-//// Query flags (used by ecs_query_t::flags)
-////////////////////////////////////////////////////////////////////////////////
-
-#define EcsQueryHasRefs                (1u << 1u)  /* Does query have references */
-#define EcsQueryIsSubquery             (1u << 2u)  /* Is query a subquery */
-#define EcsQueryIsOrphaned             (1u << 3u)  /* Is subquery orphaned */
-#define EcsQueryHasOutTerms            (1u << 4u)  /* Does query have out terms */
-#define EcsQueryHasNonThisOutTerms     (1u << 5u)  /* Does query have non-this out terms */
-#define EcsQueryHasMonitor             (1u << 6u)  /* Does query track changes */
-#define EcsQueryTrivialIter            (1u << 7u)  /* Does the query require special features to iterate */
-#define EcsQueryMatchEmptyTables       (1u << 8u)  /* Query cache contains empty tables */
-
-////////////////////////////////////////////////////////////////////////////////
-=======
->>>>>>> cf1a8ef63 (v4)
 //// Aperiodic action flags (used by ecs_run_aperiodic)
 ////////////////////////////////////////////////////////////////////////////////
 

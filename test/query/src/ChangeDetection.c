@@ -1518,3 +1518,50 @@ void ChangeDetection_query_change_w_optional(void) {
 
     ecs_fini(world);
 }
+
+void ChangeDetection_query_changed_after_count(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t foo = ecs_new(world);
+
+    // This makes the query not entirely cacheable, which prevents query_count
+    // from just getting the numbers from the cache.
+    ecs_add_id(world, foo, EcsCanToggle);
+
+    ecs_entity_t bar = ecs_new(world);
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_add_id(world, e1, foo);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ .id = foo, .inout = EcsIn }},
+        .cache_kind = EcsQueryCacheAuto
+    });
+    test_assert(q != NULL);
+
+    ecs_add_id(world, e1, bar);
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(true, ecs_query_next(&it));
+        test_int(1, it.count);
+        test_bool(true, ecs_iter_changed(&it));
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_remove_id(world, e1, bar);
+    ecs_add_id(world, e1, bar);
+
+    ecs_query_count(q); // Make sure this doesn't affect change detection
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(true, ecs_query_next(&it));
+        test_int(1, it.count);
+        test_bool(true, ecs_iter_changed(&it));
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}

@@ -261,21 +261,12 @@ protected:
         return it_;
     }
 
-<<<<<<< HEAD
     ecs_iter_next_action_t next_action() const override {
-        return m_next;
-    }
-
-    ecs_iter_next_action_t next_each_action() const override {
-        return m_next_each;
-=======
-    ecs_iter_next_action_t next_action() const {
         return next_;
     }
 
-    ecs_iter_next_action_t next_each_action() const {
+    ecs_iter_next_action_t next_each_action() const override {
         return next_each_;
->>>>>>> cf1a8ef63 (v4)
     }
 
 private:

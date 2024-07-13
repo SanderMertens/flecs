@@ -510,7 +510,9 @@ ecs_query_cache_table_match_t* flecs_query_cache_add_table_match(
     qm->sources = flecs_balloc(&cache->allocators.sources);
 
     /* Insert match to iteration list if table is not empty */
-    if (!table || ecs_table_count(table) != 0) {
+    if (!table || ecs_table_count(table) != 0 || 
+        (cache->query->flags & EcsQueryCacheYieldEmptyTables))
+    {
         flecs_query_cache_insert_table_node(cache, qm);
     }
 
@@ -597,7 +599,13 @@ ecs_query_cache_table_t* flecs_query_cache_table_insert(
     } else {
         qt->table_id = 0;
     }
-    ecs_table_cache_insert(&cache->cache, table, &qt->hdr);
+
+    if (cache->query->flags & EcsQueryCacheYieldEmptyTables) {
+        ecs_table_cache_insert_w_empty(&cache->cache, table, &qt->hdr, false);
+    } else {
+        ecs_table_cache_insert(&cache->cache, table, &qt->hdr);
+    }
+
     return qt;
 }
 
@@ -1256,21 +1264,34 @@ ecs_query_cache_t* flecs_query_cache_init(
 
     ecs_observer_desc_t observer_desc = { .query = desc };
 
+    ecs_flags32_t query_flags = const_desc->flags | world->default_query_flags;
     desc.flags |= EcsQueryMatchEmptyTables | EcsQueryTableOnly;
     ecs_query_t *q = result->query = ecs_query_init(world, &desc);
     if (!q) {
         goto error;
     }
 
+    /* The uncached query used to populate the cache always matches empty 
+     * tables. This flag determines whether the empty tables are stored 
+     * separately in the cache or are treated as regular tables. This is only
+     * enabled if the user requested that the query matches empty tables. */
+    ECS_BIT_COND(q->flags, EcsQueryCacheYieldEmptyTables, 
+        !!(query_flags & EcsQueryMatchEmptyTables));
+
     flecs_query_cache_allocators_init(result);
 
     if (q->term_count) {
         observer_desc.run = flecs_query_cache_on_event;
         observer_desc.ctx = impl;
-        observer_desc.events[0] = EcsOnTableEmpty;
-        observer_desc.events[1] = EcsOnTableFill;
-        observer_desc.events[2] = EcsOnTableCreate;
-        observer_desc.events[3] = EcsOnTableDelete;
+
+        int32_t event_index = 0;
+        if (!(q->flags & EcsQueryCacheYieldEmptyTables)) {
+            observer_desc.events[event_index ++] = EcsOnTableEmpty;
+            observer_desc.events[event_index ++] = EcsOnTableFill;
+        }
+
+        observer_desc.events[event_index ++] = EcsOnTableCreate;
+        observer_desc.events[event_index ++] = EcsOnTableDelete;
         observer_desc.query.flags |= EcsQueryNoData|EcsQueryIsInstanced;
         observer_desc.flags_ = EcsObserverBypassQuery;
 

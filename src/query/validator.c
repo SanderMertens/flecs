@@ -1423,12 +1423,10 @@ int flecs_query_finalize_terms(
     }
 
     /* Set cacheable flags */
-    if (!(q->flags & EcsQueryMatchEmptyTables)) {
-        ECS_BIT_COND(q->flags, EcsQueryHasCacheable, 
-            cacheable_terms != 0);
-        ECS_BIT_COND(q->flags, EcsQueryIsCacheable, 
-            cacheable && (cacheable_terms == term_count));
-    }
+    ECS_BIT_COND(q->flags, EcsQueryHasCacheable, 
+        cacheable_terms != 0);
+    ECS_BIT_COND(q->flags, EcsQueryIsCacheable, 
+        cacheable && (cacheable_terms == term_count));
 
     for (i = 0; i < q->term_count; i ++) {
         ecs_term_t *term = &q->terms[i];
@@ -1515,7 +1513,7 @@ int flecs_query_finalize_query(
         "ecs_query_desc_t was not initialized to zero");
     ecs_stage_t *stage = flecs_stage_from_world(&world);
 
-    q->flags |= desc->flags;
+    q->flags |= desc->flags | world->default_query_flags;
 
     /* Populate term array from desc terms & DSL expression */
     if (flecs_query_query_populate_terms(world, stage, q, desc)) {

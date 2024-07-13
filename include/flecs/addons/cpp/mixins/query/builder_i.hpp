@@ -358,13 +358,9 @@ struct query_builder_i : term_builder_i<Base> {
     }
 
 protected:
-<<<<<<< HEAD
     virtual flecs::world_t* world_v() override = 0;
-=======
-    virtual flecs::world_t* world_v() = 0;
     int32_t term_index_;
     int32_t expr_count_;
->>>>>>> cf1a8ef63 (v4)
 
 private:
     operator Base&() {

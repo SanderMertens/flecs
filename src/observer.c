@@ -858,13 +858,11 @@ error:
     return -1;
 }
 
-<<<<<<< HEAD
-/* ecs_poly_dtor_t-compatible wrapper */
 static
-void flecs_observer_fini_poly(void *observer)
-{
-    flecs_observer_fini(observer);
-=======
+void flecs_observer_poly_fini(void *ptr) {
+    flecs_observer_fini(ptr);
+}
+
 ecs_observer_t* flecs_observer_init(
     ecs_world_t *world,
     ecs_entity_t entity,
@@ -882,7 +880,7 @@ ecs_observer_t* flecs_observer_init(
     flecs_poly_init(impl, ecs_observer_t);
     ecs_observer_t *o = &impl->pub;
     impl->id = flecs_sparse_last_id(&world->store.observers);
-    impl->dtor = (flecs_poly_dtor_t)flecs_observer_fini;
+    impl->dtor = flecs_observer_poly_fini;
 
     /* Make writeable copy of query desc so that we can set name. This will
      * make debugging easier, as any error messages related to creating the
@@ -982,7 +980,6 @@ ecs_observer_t* flecs_observer_init(
     return o;
 error:
     return NULL;
->>>>>>> cf1a8ef63 (v4)
 }
 
 ecs_entity_t ecs_observer_init(
@@ -1004,103 +1001,9 @@ ecs_entity_t ecs_observer_init(
 
     EcsPoly *poly = flecs_poly_bind(world, entity, ecs_observer_t);
     if (!poly->poly) {
-<<<<<<< HEAD
-        ecs_check(desc->callback != NULL || desc->run != NULL, 
-            ECS_INVALID_OPERATION, NULL);
-
-        ecs_observer_t *observer = ecs_poly_new(ecs_observer_t);
-        ecs_assert(observer != NULL, ECS_INTERNAL_ERROR, NULL);
-        observer->dtor = flecs_observer_fini_poly;
-
-        /* Make writeable copy of filter desc so that we can set name. This will
-         * make debugging easier, as any error messages related to creating the
-         * filter will have the name of the observer. */
-        ecs_filter_desc_t filter_desc = desc->filter;
-        filter_desc.entity = entity;
-        ecs_filter_t *filter = filter_desc.storage = &observer->filter;
-        *filter = ECS_FILTER_INIT;
-
-        /* Parse filter */
-        if (ecs_filter_init(world, &filter_desc) == NULL) {
-            flecs_observer_fini(observer);
-            return 0;
-        }
-
-        /* Observer must have at least one term */
-        ecs_check(observer->filter.term_count > 0, ECS_INVALID_PARAMETER, NULL);
-
-        poly->poly = observer;
-
-        ecs_observable_t *observable = desc->observable;
-        if (!observable) {
-            observable = ecs_get_observable(world);
-        }
-
-        observer->run = desc->run;
-        observer->callback = desc->callback;
-        observer->ctx = desc->ctx;
-        observer->binding_ctx = desc->binding_ctx;
-        observer->ctx_free = desc->ctx_free;
-        observer->binding_ctx_free = desc->binding_ctx_free;
-        observer->term_index = desc->term_index;
-        observer->observable = observable;
-
-        /* Check if observer is monitor. Monitors are created as multi observers
-         * since they require pre/post checking of the filter to test if the
-         * entity is entering/leaving the monitor. */
-        int i;
-        for (i = 0; i < FLECS_EVENT_DESC_MAX; i ++) {
-            ecs_entity_t event = desc->events[i];
-            if (!event) {
-                break;
-            }
-
-            if (event == EcsMonitor) {
-                /* Monitor event must be first and last event */
-                ecs_check(i == 0, ECS_INVALID_PARAMETER, NULL);
-
-                observer->events[0] = EcsOnAdd;
-                observer->events[1] = EcsOnRemove;
-                observer->event_count ++;
-                observer->flags |= EcsObserverIsMonitor;
-            } else {
-                observer->events[i] = event;
-            }
-
-            observer->event_count ++;
-        }
-
-        /* Observer must have at least one event */
-        ecs_check(observer->event_count != 0, ECS_INVALID_PARAMETER, NULL);
-
-        bool multi = false;
-
-        if (filter->term_count == 1 && !desc->last_event_id) {
-            ecs_term_t *term = &filter->terms[0];
-            /* If the filter has a single term but it is a *From operator, we
-             * need to create a multi observer */
-            multi |= (term->oper == EcsAndFrom) || (term->oper == EcsOrFrom);
-            
-            /* An observer with only optional terms is a special case that is
-             * only handled by multi observers */
-            multi |= term->oper == EcsOptional;
-        }
-
-        bool is_monitor = observer->flags & EcsObserverIsMonitor;
-        if (filter->term_count == 1 && !is_monitor && !multi) {
-            if (flecs_uni_observer_init(world, observer, desc)) {
-                goto error;
-            }
-        } else {
-            if (flecs_multi_observer_init(world, observer, desc)) {
-                goto error;
-            }
-        }
-=======
         ecs_observer_t *o = flecs_observer_init(world, entity, desc);
         ecs_assert(o->entity == entity, ECS_INTERNAL_ERROR, NULL);
         poly->poly = o;
->>>>>>> cf1a8ef63 (v4)
 
         if (ecs_get_name(world, entity)) {
             ecs_trace("#[green]observer#[reset] %s created", 

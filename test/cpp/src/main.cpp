@@ -516,7 +516,6 @@ void Event_entity_emit_event_type_no_src(void);
 void Event_entity_emit_event_w_payload_no_src(void);
 void Event_entity_emit_event_w_payload_derived_event_type(void);
 void Event_entity_emit_event_w_payload_derived_event_type_no_src(void);
-void Event_entity_observe_generic(void);
 void Event_enqueue_event(void);
 void Event_enqueue_entity_event(void);
 void Event_enqueue_event_w_payload(void);
@@ -552,7 +551,6 @@ void Query_each(void);
 void Query_each_const(void);
 void Query_each_shared(void);
 void Query_each_optional(void);
-void Query_each_generic(void);
 void Query_signature(void);
 void Query_signature_const(void);
 void Query_signature_shared(void);
@@ -632,30 +630,17 @@ void Query_iter_get_pair_w_id(void);
 void Query_find(void);
 void Query_find_not_found(void);
 void Query_find_w_entity(void);
-void Query_find_generic(void);
 void Query_optional_pair_term(void);
-<<<<<<< HEAD:test/cpp_api/src/main.cpp
 void Query_empty_tables_each(void);
 void Query_empty_tables_each_w_entity(void);
 void Query_empty_tables_each_w_iter(void);
-=======
 void Query_query_from_entity(void);
 void Query_query_from_entity_name(void);
-<<<<<<< HEAD
->>>>>>> cf1a8ef63 (v4):test/cpp/src/main.cpp
-=======
 void Query_run_w_iter_fini(void);
-<<<<<<< HEAD
->>>>>>> 3f87a122d (Add flecs::iter::fini)
-=======
 void Query_run_w_iter_fini_interrupt(void);
 void Query_run_w_iter_fini_empty(void);
-<<<<<<< HEAD
->>>>>>> bdcdd0010 (Add ecs_get_entities function)
-=======
 void Query_add_to_match_from_staged_query(void);
 void Query_add_to_match_from_staged_query_readonly_threaded(void);
->>>>>>> c5e9d2e49 (Create staged iterators from queries created with stage)
 
 // Testsuite 'QueryBuilder'
 void QueryBuilder_setup(void);
@@ -885,46 +870,12 @@ void Observer_on_add_with_pair_singleton(void);
 void Observer_add_in_yield_existing(void);
 void Observer_add_in_yield_existing_multi(void);
 void Observer_name_from_root(void);
-<<<<<<< HEAD
 void Observer_term_index(void);
-=======
 void Observer_implicit_register_in_emit_for_named_entity(void);
 void Observer_add_to_named_in_emit_for_named_entity(void);
 void Observer_implicit_register_in_emit_for_named_entity_w_defer(void);
 void Observer_add_to_named_in_emit_for_named_entity_w_defer(void);
->>>>>>> 575f9d23f (Fix LOCKED_STORAGE issues when emitting events)
 
-<<<<<<< HEAD:test/cpp_api/src/main.cpp
-// Testsuite 'Filter'
-void Filter_term_each_component(void);
-void Filter_term_each_tag(void);
-void Filter_term_each_id(void);
-void Filter_term_each_pair_type(void);
-void Filter_term_each_pair_id(void);
-void Filter_term_each_pair_relation_wildcard(void);
-void Filter_term_each_pair_object_wildcard(void);
-void Filter_default_ctor_no_assign(void);
-void Filter_term_get_id(void);
-void Filter_term_get_subj(void);
-void Filter_term_get_pred(void);
-void Filter_term_get_obj(void);
-void Filter_get_first(void);
-void Filter_get_count_direct(void);
-void Filter_get_is_true_direct(void);
-void Filter_get_first_direct(void);
-void Filter_each_w_no_this(void);
-void Filter_each_w_iter_no_this(void);
-void Filter_named_filter(void);
-void Filter_named_scoped_filter(void);
-void Filter_set_this_var(void);
-void Filter_inspect_terms_w_expr(void);
-void Filter_find(void);
-void Filter_find_not_found(void);
-void Filter_find_w_entity(void);
-void Filter_optional_pair_term(void);
-
-=======
->>>>>>> cf1a8ef63 (v4):test/cpp/src/main.cpp
 // Testsuite 'ComponentLifecycle'
 void ComponentLifecycle_ctor_on_add(void);
 void ComponentLifecycle_dtor_on_remove(void);
@@ -1193,11 +1144,8 @@ void World_atfini(void);
 void World_atfini_w_ctx(void);
 void World_get_mut_T(void);
 void World_get_mut_R_T(void);
-<<<<<<< HEAD:test/cpp_api/src/main.cpp
 void World_world_mini(void);
-=======
 void World_copy_world(void);
->>>>>>> cf1a8ef63 (v4):test/cpp/src/main.cpp
 
 // Testsuite 'Singleton'
 void Singleton_set_get_singleton(void);
@@ -3369,10 +3317,6 @@ bake_test_case Event_testcases[] = {
         Event_entity_emit_event_w_payload_derived_event_type_no_src
     },
     {
-        "entity_observe_generic",
-        Event_entity_observe_generic
-    },
-    {
         "enqueue_event",
         Event_enqueue_event
     },
@@ -3501,10 +3445,6 @@ bake_test_case Query_testcases[] = {
     {
         "each_optional",
         Query_each_optional
-    },
-    {
-        "each_generic",
-        Query_each_generic
     },
     {
         "signature",
@@ -3823,15 +3763,10 @@ bake_test_case Query_testcases[] = {
         Query_find_w_entity
     },
     {
-        "find_generic",
-        Query_find_generic
-    },
-    {
         "optional_pair_term",
         Query_optional_pair_term
     },
     {
-<<<<<<< HEAD:test/cpp_api/src/main.cpp
         "empty_tables_each",
         Query_empty_tables_each
     },
@@ -3842,23 +3777,18 @@ bake_test_case Query_testcases[] = {
     {
         "empty_tables_each_w_iter",
         Query_empty_tables_each_w_iter
-=======
+    },
+    {
         "query_from_entity",
         Query_query_from_entity
     },
     {
         "query_from_entity_name",
         Query_query_from_entity_name
-<<<<<<< HEAD
->>>>>>> cf1a8ef63 (v4):test/cpp/src/main.cpp
-=======
     },
     {
         "run_w_iter_fini",
         Query_run_w_iter_fini
-<<<<<<< HEAD
->>>>>>> 3f87a122d (Add flecs::iter::fini)
-=======
     },
     {
         "run_w_iter_fini_interrupt",
@@ -3867,9 +3797,6 @@ bake_test_case Query_testcases[] = {
     {
         "run_w_iter_fini_empty",
         Query_run_w_iter_fini_empty
-<<<<<<< HEAD
->>>>>>> bdcdd0010 (Add ecs_get_entities function)
-=======
     },
     {
         "add_to_match_from_staged_query",
@@ -3878,7 +3805,6 @@ bake_test_case Query_testcases[] = {
     {
         "add_to_match_from_staged_query_readonly_threaded",
         Query_add_to_match_from_staged_query_readonly_threaded
->>>>>>> c5e9d2e49 (Create staged iterators from queries created with stage)
     }
 };
 
@@ -4778,10 +4704,10 @@ bake_test_case Observer_testcases[] = {
         Observer_name_from_root
     },
     {
-<<<<<<< HEAD
         "term_index",
         Observer_term_index
-=======
+    },
+    {
         "implicit_register_in_emit_for_named_entity",
         Observer_implicit_register_in_emit_for_named_entity
     },
@@ -4796,120 +4722,9 @@ bake_test_case Observer_testcases[] = {
     {
         "add_to_named_in_emit_for_named_entity_w_defer",
         Observer_add_to_named_in_emit_for_named_entity_w_defer
->>>>>>> 575f9d23f (Fix LOCKED_STORAGE issues when emitting events)
     }
 };
 
-<<<<<<< HEAD:test/cpp_api/src/main.cpp
-bake_test_case Filter_testcases[] = {
-    {
-        "term_each_component",
-        Filter_term_each_component
-    },
-    {
-        "term_each_tag",
-        Filter_term_each_tag
-    },
-    {
-        "term_each_id",
-        Filter_term_each_id
-    },
-    {
-        "term_each_pair_type",
-        Filter_term_each_pair_type
-    },
-    {
-        "term_each_pair_id",
-        Filter_term_each_pair_id
-    },
-    {
-        "term_each_pair_relation_wildcard",
-        Filter_term_each_pair_relation_wildcard
-    },
-    {
-        "term_each_pair_object_wildcard",
-        Filter_term_each_pair_object_wildcard
-    },
-    {
-        "default_ctor_no_assign",
-        Filter_default_ctor_no_assign
-    },
-    {
-        "term_get_id",
-        Filter_term_get_id
-    },
-    {
-        "term_get_subj",
-        Filter_term_get_subj
-    },
-    {
-        "term_get_pred",
-        Filter_term_get_pred
-    },
-    {
-        "term_get_obj",
-        Filter_term_get_obj
-    },
-    {
-        "get_first",
-        Filter_get_first
-    },
-    {
-        "get_count_direct",
-        Filter_get_count_direct
-    },
-    {
-        "get_is_true_direct",
-        Filter_get_is_true_direct
-    },
-    {
-        "get_first_direct",
-        Filter_get_first_direct
-    },
-    {
-        "each_w_no_this",
-        Filter_each_w_no_this
-    },
-    {
-        "each_w_iter_no_this",
-        Filter_each_w_iter_no_this
-    },
-    {
-        "named_filter",
-        Filter_named_filter
-    },
-    {
-        "named_scoped_filter",
-        Filter_named_scoped_filter
-    },
-    {
-        "set_this_var",
-        Filter_set_this_var
-    },
-    {
-        "inspect_terms_w_expr",
-        Filter_inspect_terms_w_expr
-    },
-    {
-        "find",
-        Filter_find
-    },
-    {
-        "find_not_found",
-        Filter_find_not_found
-    },
-    {
-        "find_w_entity",
-        Filter_find_w_entity
-    },
-    {
-        "optional_pair_term",
-        Filter_optional_pair_term
-    }
-};
-
-=======
->>>>>>> cf1a8ef63 (v4):test/cpp/src/main.cpp
 bake_test_case ComponentLifecycle_testcases[] = {
     {
         "ctor_on_add",
@@ -5955,13 +5770,12 @@ bake_test_case World_testcases[] = {
         World_get_mut_R_T
     },
     {
-<<<<<<< HEAD:test/cpp_api/src/main.cpp
         "world_mini",
         World_world_mini
-=======
+    },
+    {
         "copy_world",
         World_copy_world
->>>>>>> cf1a8ef63 (v4):test/cpp/src/main.cpp
     }
 };
 
@@ -6709,23 +6523,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD:test/cpp_api/src/main.cpp
-        94,
-=======
-        103,
->>>>>>> cf1a8ef63 (v4):test/cpp/src/main.cpp
-=======
-        104,
->>>>>>> 3f87a122d (Add flecs::iter::fini)
-=======
-        106,
->>>>>>> bdcdd0010 (Add ecs_get_entities function)
-=======
-        108,
->>>>>>> c5e9d2e49 (Create staged iterators from queries created with stage)
+        110,
         Query_testcases
     },
     {
@@ -6748,28 +6546,10 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-<<<<<<< HEAD
-<<<<<<< HEAD
-        33,
-=======
-        36,
->>>>>>> 575f9d23f (Fix LOCKED_STORAGE issues when emitting events)
-=======
-        40,
->>>>>>> ab0ba86cd (Fix issues with observer run callback)
+        41,
         Observer_testcases
     },
     {
-<<<<<<< HEAD:test/cpp_api/src/main.cpp
-        "Filter",
-        NULL,
-        NULL,
-        26,
-        Filter_testcases
-    },
-    {
-=======
->>>>>>> cf1a8ef63 (v4):test/cpp/src/main.cpp
         "ComponentLifecycle",
         NULL,
         NULL,
@@ -6808,7 +6588,7 @@ static bake_test_suite suites[] = {
         "World",
         NULL,
         NULL,
-        113,
+        114,
         World_testcases
     },
     {

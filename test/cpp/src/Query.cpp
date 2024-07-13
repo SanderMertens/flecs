@@ -2766,138 +2766,6 @@ void Query_not_w_write(void) {
     test_int(1, count);
 }
 
-<<<<<<< HEAD:test/cpp_api/src/Query.cpp
-void Query_get_first(void) {
-    flecs::world ecs;
-
-    struct A {};
-
-    auto e1 = ecs.entity().add<A>();
-    ecs.entity().add<A>();
-    ecs.entity().add<A>();
-
-    auto q = ecs.query<A>();
-
-    auto first = q.iter().first();
-    test_assert(first != 0);
-    test_assert(first == e1);
-}
-
-void Query_get_first_direct(void) {
-    flecs::world ecs;
-
-    struct A {};
-
-    auto e1 = ecs.entity().add<A>();
-    ecs.entity().add<A>();
-    ecs.entity().add<A>();
-
-    auto q = ecs.query<A>();
-
-    auto first = q.first();
-    test_assert(first != 0);
-    test_assert(first == e1);
-}
-
-void Query_get_count_direct(void) {
-    flecs::world ecs;
-
-    struct A {};
-
-    ecs.entity().add<A>();
-    ecs.entity().add<A>();
-    ecs.entity().add<A>();
-
-    auto q = ecs.query<A>();
-
-    test_int(3, q.count());
-}
-
-void Query_get_is_true_direct(void) {
-    flecs::world ecs;
-
-    struct A {};
-    struct B {};
-
-    ecs.entity().add<A>();
-    ecs.entity().add<A>();
-    ecs.entity().add<A>();
-
-    auto q_1 = ecs.query<A>();
-    auto q_2 = ecs.query<B>();
-
-    test_bool(true, q_1.is_true());
-    test_bool(false, q_2.is_true());
-}
-
-void Query_each_w_no_this(void) {
-    flecs::world ecs;
-
-    auto e = ecs.entity()
-        .set<Position>({10, 20})
-        .set<Velocity>({1, 2});
-
-    auto q = ecs.query_builder<Position, Velocity>()
-        .arg(1).src(e)
-        .arg(2).src(e)
-        .build();
-
-    int32_t count = 0;
-
-    q.each([&](Position& p, Velocity& v) {
-        count ++;
-        test_int(p.x, 10);
-        test_int(p.y, 20);
-        test_int(v.x, 1);
-        test_int(v.y, 2);
-    });
-
-    test_int(count, 1);
-}
-
-void Query_named_query(void) {
-    flecs::world ecs;
-
-    auto e1 = ecs.entity().add<Position>();
-    auto e2 = ecs.entity().add<Position>();
-
-    auto q = ecs.query<Position>("my_query");
-
-    int32_t count = 0;
-    q.each([&](flecs::entity e, Position&) {
-        test_assert(e == e1 || e == e2);
-        count ++;
-    });
-    test_int(count, 2);
-
-    flecs::entity qe = q.entity();
-    test_assert(qe != 0);
-    test_str(qe.name(), "my_query");
-}
-
-void Query_named_scoped_query(void) {
-    flecs::world ecs;
-
-    auto e1 = ecs.entity().add<Position>();
-    auto e2 = ecs.entity().add<Position>();
-
-    auto q = ecs.query<Position>("my::query");
-
-    int32_t count = 0;
-    q.each([&](flecs::entity e, Position&) {
-        test_assert(e == e1 || e == e2);
-        count ++;
-    });
-    test_int(count, 2);
-
-    flecs::entity qe = q.entity();
-    test_assert(qe != 0);
-    test_str(qe.name(), "query");
-    test_str(qe.path(), "::my::query");
-}
-
-=======
->>>>>>> cf1a8ef63 (v4):test/cpp/src/Query.cpp
 void Query_instanced_nested_query_w_iter(void) {
     flecs::world ecs;
 
@@ -3146,123 +3014,6 @@ void Query_query_from_entity_name(void) {
     test_int(count, 2);
 }
 
-<<<<<<< HEAD
-void Query_empty_tables_each(void) {
-    flecs::world world;
-
-    world.component<Position>();
-    world.component<Velocity>();
-    world.component<Tag>();
-
-    auto e1 = flecs::entity(world)
-        .set<Position>({10, 20})
-        .set<Velocity>({1, 2});
-
-    auto e2 = flecs::entity(world)
-        .set<Position>({20, 30})
-        .set<Velocity>({2, 3});
-
-    e2.add<Tag>();
-    e2.remove<Tag>();
-
-    auto q = world.query_builder<Position, Velocity>()
-        .filter_flags(EcsFilterMatchEmptyTables)
-        .build();
-
-    q.each([](Position& p, Velocity& v) {
-        p.x += v.x;
-        p.y += v.y;
-    });
-
-    {
-        const Position *p = e1.get<Position>();
-        test_int(p->x, 11);
-        test_int(p->y, 22);
-    }
-    {
-        const Position *p = e2.get<Position>();
-        test_int(p->x, 22);
-        test_int(p->y, 33);
-    }
-}
-
-void Query_empty_tables_each_w_entity(void) {
-    flecs::world world;
-
-    world.component<Position>();
-    world.component<Velocity>();
-    world.component<Tag>();
-
-    auto e1 = flecs::entity(world)
-        .set<Position>({10, 20})
-        .set<Velocity>({1, 2});
-
-    auto e2 = flecs::entity(world)
-        .set<Position>({20, 30})
-        .set<Velocity>({2, 3});
-
-    e2.add<Tag>();
-    e2.remove<Tag>();
-
-    auto q = world.query_builder<Position, Velocity>()
-        .filter_flags(EcsFilterMatchEmptyTables)
-        .build();
-
-    q.each([](flecs::entity e, Position& p, Velocity& v) {
-        p.x += v.x;
-        p.y += v.y;
-    });
-
-    {
-        const Position *p = e1.get<Position>();
-        test_int(p->x, 11);
-        test_int(p->y, 22);
-    }
-    {
-        const Position *p = e2.get<Position>();
-        test_int(p->x, 22);
-        test_int(p->y, 33);
-    }
-}
-
-void Query_empty_tables_each_w_iter(void) {
-    flecs::world world;
-
-    world.component<Position>();
-    world.component<Velocity>();
-    world.component<Tag>();
-
-    auto e1 = flecs::entity(world)
-        .set<Position>({10, 20})
-        .set<Velocity>({1, 2});
-
-    auto e2 = flecs::entity(world)
-        .set<Position>({20, 30})
-        .set<Velocity>({2, 3});
-
-    e2.add<Tag>();
-    e2.remove<Tag>();
-
-    auto q = world.query_builder<Position, Velocity>()
-        .filter_flags(EcsFilterMatchEmptyTables)
-        .build();
-
-    q.each([](flecs::iter&, size_t, Position& p, Velocity& v) {
-        p.x += v.x;
-        p.y += v.y;
-    });
-
-    {
-        const Position *p = e1.get<Position>();
-        test_int(p->x, 11);
-        test_int(p->y, 22);
-    }
-    {
-        const Position *p = e2.get<Position>();
-        test_int(p->x, 22);
-        test_int(p->y, 33);
-    }
-=======
 void Query_run_w_iter_fini(void) {
     flecs::world ecs;
 
@@ -3277,7 +3028,6 @@ void Query_run_w_iter_fini(void) {
     test_int(count, 1);
 
     // should be no leakage assert
->>>>>>> 3f87a122d (Add flecs::iter::fini)
 }
 
 void Query_run_w_iter_fini_interrupt(void) {
@@ -3373,4 +3123,121 @@ void Query_add_to_match_from_staged_query_readonly_threaded(void) {
 
     test_assert(e.has<Position>());
     test_assert(e.has<Velocity>());
+}
+
+void Query_empty_tables_each(void) {
+    flecs::world world;
+
+    world.component<Position>();
+    world.component<Velocity>();
+    world.component<Tag>();
+
+    auto e1 = flecs::entity(world)
+        .set<Position>({10, 20})
+        .set<Velocity>({1, 2});
+
+    auto e2 = flecs::entity(world)
+        .set<Position>({20, 30})
+        .set<Velocity>({2, 3});
+
+    e2.add<Tag>();
+    e2.remove<Tag>();
+
+    auto q = world.query_builder<Position, Velocity>()
+        .query_flags(EcsQueryMatchEmptyTables)
+        .build();
+
+    q.each([](Position& p, Velocity& v) {
+        p.x += v.x;
+        p.y += v.y;
+    });
+
+    {
+        const Position *p = e1.get<Position>();
+        test_int(p->x, 11);
+        test_int(p->y, 22);
+    }
+    {
+        const Position *p = e2.get<Position>();
+        test_int(p->x, 22);
+        test_int(p->y, 33);
+    }
+}
+
+void Query_empty_tables_each_w_entity(void) {
+    flecs::world world;
+
+    world.component<Position>();
+    world.component<Velocity>();
+    world.component<Tag>();
+
+    auto e1 = flecs::entity(world)
+        .set<Position>({10, 20})
+        .set<Velocity>({1, 2});
+
+    auto e2 = flecs::entity(world)
+        .set<Position>({20, 30})
+        .set<Velocity>({2, 3});
+
+    e2.add<Tag>();
+    e2.remove<Tag>();
+
+    auto q = world.query_builder<Position, Velocity>()
+        .query_flags(EcsQueryMatchEmptyTables)
+        .build();
+
+    q.each([](flecs::entity e, Position& p, Velocity& v) {
+        p.x += v.x;
+        p.y += v.y;
+    });
+
+    {
+        const Position *p = e1.get<Position>();
+        test_int(p->x, 11);
+        test_int(p->y, 22);
+    }
+    {
+        const Position *p = e2.get<Position>();
+        test_int(p->x, 22);
+        test_int(p->y, 33);
+    }
+}
+
+void Query_empty_tables_each_w_iter(void) {
+    flecs::world world;
+
+    world.component<Position>();
+    world.component<Velocity>();
+    world.component<Tag>();
+
+    auto e1 = flecs::entity(world)
+        .set<Position>({10, 20})
+        .set<Velocity>({1, 2});
+
+    auto e2 = flecs::entity(world)
+        .set<Position>({20, 30})
+        .set<Velocity>({2, 3});
+
+    e2.add<Tag>();
+    e2.remove<Tag>();
+
+    auto q = world.query_builder<Position, Velocity>()
+        .query_flags(EcsQueryMatchEmptyTables)
+        .build();
+
+    q.each([](flecs::iter&, size_t, Position& p, Velocity& v) {
+        p.x += v.x;
+        p.y += v.y;
+    });
+
+    {
+        const Position *p = e1.get<Position>();
+        test_int(p->x, 11);
+        test_int(p->y, 22);
+    }
+    {
+        const Position *p = e2.get<Position>();
+        test_int(p->x, 22);
+        test_int(p->y, 33);
+    }
 }

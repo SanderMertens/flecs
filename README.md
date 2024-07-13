@@ -15,7 +15,6 @@ Flecs is a fast and lightweight Entity Component System that lets you build game
 - Code base that builds in less than 5 seconds
 - Runs [in the browser](https://flecs.dev/city) without modifications with emscripten
 - Cache friendly [archetype/SoA storage](https://ajmmertens.medium.com/building-an-ecs-2-archetypes-and-vectorization-fe21690805f9) that can process millions of entities every frame
-- Supports entities with hundreds of components and applications with tens of thousands of archetypes
 - Automatic component registration that works out of the box across shared libraries/DLLs
 - Write free functions with [queries](https://github.com/SanderMertens/flecs/tree/master/examples/cpp/queries/basics) or run code automatically in [systems](https://github.com/SanderMertens/flecs/tree/master/examples/cpp/systems/pipeline)
 - Run games on multiple CPU cores with a fast lockless scheduler
@@ -24,7 +23,7 @@ Flecs is a fast and lightweight Entity Component System that lets you build game
 - [Unit annotations](https://github.com/SanderMertens/flecs/tree/master/examples/cpp/reflection/units) for components
 - Powerful [query language](https://github.com/SanderMertens/flecs/tree/master/examples/cpp/queries) with support for [joins](https://github.com/SanderMertens/flecs/tree/master/examples/cpp/queries/setting_variables) and [inheritance](https://github.com/SanderMertens/flecs/tree/master/examples/cpp/queries/component_inheritance)
 - [Statistics addon](https://www.flecs.dev/flecs/group__c__addons__stats.html) for profiling ECS performance
-- A web-based UI for monitoring & controlling your apps ([demo](https://flecs.dev/explorer), [code](https://github.com/flecs-hub/explorer)):
+- A web-based UI for monitoring & controlling your apps:
 
 [![Flecs Explorer](docs/img/explorer.png)](https://flecs.dev/explorer)
 
@@ -37,22 +36,6 @@ ECS is a way of organizing code and data that lets you build games that are larg
 - Has _systems_ which are functions that run for all entities matching a component _query_
 
 For more information, check the [ECS FAQ](https://github.com/SanderMertens/ecs-faq)!
-
-## Try it out!
-The [Flecs playground](https://www.flecs.dev/explorer/?local=true&wasm=https://www.flecs.dev/explorer/playground.js) lets you try Flecs without writing any C/C++ code!
-
-[![Flecs playground](docs/img/playground.png)](https://www.flecs.dev/explorer/?local=true&wasm=https://www.flecs.dev/explorer/playground.js)
-
-To learn how to use the playground, check the [Flecs Script Tutorial](https://www.flecs.dev/flecs/md_docs_2FlecsScriptTutorial.html).
-
-## Documentation
-- [Quickstart](https://www.flecs.dev/flecs/md_docs_2Quickstart.html)
-- [FAQ](https://www.flecs.dev/flecs/md_docs_2FAQ.html)
-- [Examples](https://github.com/SanderMertens/flecs/tree/master/examples)
-- [All Documentation](https://www.flecs.dev/flecs/md_docs_2Docs.html)
-
-## Performance
-For a list of regularly tracked benchmarks, see the [ECS Benchmark](https://github.com/SanderMertens/ecs_benchmark) project.
 
 ## Show me the code!
 C99 example:

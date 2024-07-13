@@ -190,7 +190,7 @@ void flecs_system_fini(ecs_system_t *sys) {
 
 /* ecs_poly_dtor_t-compatible wrapper */
 static
-void flecs_system_fini_poly(void *sys)
+void flecs_system_poly_fini(void *sys)
 {
     flecs_system_fini(sys);
 }
@@ -249,11 +249,7 @@ ecs_entity_t ecs_system_init(
         
         poly->poly = system;
         system->world = world;
-<<<<<<< HEAD
-        system->dtor = flecs_system_fini_poly;
-=======
-        system->dtor = (flecs_poly_dtor_t)flecs_system_fini;
->>>>>>> cf1a8ef63 (v4)
+        system->dtor = flecs_system_poly_fini;
         system->entity = entity;
 
         ecs_query_desc_t query_desc = desc->query;

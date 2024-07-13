@@ -355,7 +355,10 @@ ecs_iter_t ecs_query_iter(
 {
     ecs_assert(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(q != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_run_aperiodic(q->real_world, EcsAperiodicEmptyTables);
+    
+    if (!(q->flags & EcsQueryCacheYieldEmptyTables)) {
+        ecs_run_aperiodic(q->real_world, EcsAperiodicEmptyTables);
+    }
 
     /* Ok, only for stats */
     ECS_CONST_CAST(ecs_query_t*, q)->eval_count ++;
