@@ -19,6 +19,7 @@
 - [Relationships Manual](Relationships.md)
 - [Flecs Script Manual](FlecsScript.md)
 - [Flecs Remote API Manual](FlecsRemoteApi.md)
+- [v3 Migration Guide](FlecsRemoteApi.md)
 
 ## API reference
  - [C API](@ref c)
@@ -31,7 +32,7 @@
 - [Rust examples](https://github.com/Indra-db/flecs-ecs-rs/tree/main/flecs_ecs/examples/flecs)
  
 ## Demos
-- [Playground](https://www.flecs.dev/explorer/?host=flecs_explorer.wasm)
+- [Playground (Flecs Script)](https://www.flecs.dev/explorer/?host=flecs_explorer.wasm)
 - [Tower Defense (C++)](https://github.com/SanderMertens/tower_defense)
 - [City (C)](https://github.com/flecs-hub/city)
 
@@ -45,3 +46,23 @@
 - [Why storing state machines in ECS is a bad idea](https://ajmmertens.medium.com/why-storing-state-machines-in-ecs-is-a-bad-idea-742de7a18e59)
 - [Why vanilla ECS is not enough](https://ajmmertens.medium.com/why-vanilla-ecs-is-not-enough-d7ed4e3bebe5)
 - [ECS: From tool to paradigm](https://ajmmertens.medium.com/ecs-from-tool-to-paradigm-350587cdf216)
+
+## Resources
+
+### Resources provided by the community
+Some of these are quite old, and might contain information that is out of date!
+
+- [Extermination Shock Source](https://github.com/Wizard-Of-Chaos/ExShock_code)
+- [Bgfx/Imgui module](https://github.com/flecs-hub/flecs-systems-bgfx/tree/bgfx_imgui)
+- [Tower defense example](https://gist.github.com/oldmanauz/b4ced44737bf9d248233538fa06a989e)
+- [Unreal + Flecs example](https://github.com/PreyK/Unreal-Minimum-Viable-Flecs)
+- [Building a space battle with Flecs in UE4](https://twitter.com/ajmmertens/status/1361070033334456320)
+- [Flecs + SDL + Web ASM example](https://github.com/HeatXD/flecs_web_demo) ([live demo](https://heatxd.github.io/flecs_web_demo/))
+- [Flecs + Raylib example](https://github.com/Lexxicon/FlecsRaylib)
+- [Flecs + gunslinger example](https://github.com/MrFrenik/gs_examples/blob/main/ex_demos/flecs/source/main.c)
+
+### Flecs around the web
+- [Discord](https://discord.gg/BEzP5Rgrrp)
+- [Medium](https://ajmmertens.medium.com)
+- [Twitter](https://twitter.com/ajmmertens)
+- [Reddit](https://www.reddit.com/r/flecs)
