@@ -40,7 +40,7 @@ flecs::entity my_entity = world.entity();
 <li><b class="tab-title">C#</b>
 
 ```cs
-Entity my_entity world.Entity();
+Entity myEntity world.Entity();
 ```
 
 </li>
@@ -79,7 +79,7 @@ my_entity.destruct();
 <li><b class="tab-title">C#</b>
 
 ```cs
-my_entity.Destruct();
+myEntity.Destruct();
 ```
 
 </li>
@@ -218,7 +218,7 @@ my_entity.clear();
 <li><b class="tab-title">C#</b>
 
 ```cs
-my_entity.Clear();
+myEntity.Clear();
 ```
 
 </li>
@@ -399,7 +399,7 @@ world.set_version(versioned_id);
 <li><b class="tab-title">C#</b>
 
 ```cs
-world.SetVersion(versioned_id);
+world.SetVersion(versionedId);
 ```
 
 </li>
@@ -1110,10 +1110,10 @@ Entity p2 = world.Prefab()
     .Add(e3);
 
 // Disable e1, e2, e3
-p2.disable();
+p2.Disable();
 
 // Enable e1
-p1.enable();
+p1.Enable();
 ```
 
 </li>
@@ -1250,12 +1250,12 @@ std::cout << "{size: " << comp_data->size << ", "
 
 ```cs
 // Get the entity for the Position component
-Entity = world.Component<Position>().Entity;
+Entity pos = world.Component<Position>();
 
 // Component entities have the Component component
-ref readonly Ecs.Component comp_data = ref e.Get<Ecs.Component>();
+ref readonly flecs.EcsComponent compData = ref e.Get<flecs.EcsComponent>();
 
-Console.WriteLine(comp_data.ToString());
+Console.WriteLine($"Size: {compData.size}, Alignment: {compData.alignment}");
 ```
 
 </li>
@@ -1467,7 +1467,59 @@ int main(int argc, char *argv[]) {
 
 </li>
 <li><b class="tab-title">C#</b>
-TODO
+
+In C# components are automatically registered upon first usage. The following example shows how:
+
+```cs
+public static void Main()
+{
+    using World world = World.Create();
+
+    Entity e1 = world.Entity()
+        .Set(new Position(10, 20)) // Position registered here
+        .Set(new Velocity(1, 2));  // Velocity registered here
+
+    Entity e2 = world.Entity()
+        .Set(new Position(10, 20)) // Position already registered
+        .Set(new Velocity(1, 2));  // Velocity already registered
+}
+
+```
+
+Components can be registered in advance, which can be done for several reasons:
+
+- Makes it easier to see which components are used by an application
+- No unexpected registration code that suddenly runs in the middle of a frame
+- Component needs to be setup with traits, reflection data, hooks etc.
+
+To register a component in advance, do:
+
+```cs
+world.Component<Position>();
+```
+
+In general it is recommended to register components in advance, and to only use automatic registration during prototyping.
+
+A convenient way to organize component registration code is to use Flecs modules. An example:
+
+```cs
+public struct Movement : IFlecsModule
+{
+    public void InitModule(World world)
+    {
+        world.Component<Position>();
+        world.Component<Velocity>();
+    }
+}
+
+public static void Main()
+{
+    using World world = World.Create();
+
+    world.Import<Movement>();
+}
+```
+
 </li>
 <li><b class="tab-title">Rust</b>
 
@@ -1694,7 +1746,7 @@ pos.destruct();
 <li><b class="tab-title">C#</b>
 
 ```cs
-Entity pos = world.Component<Position>().Entity;
+Entity pos = world.Component<Position>();
 
 // Create entity with Position
 Entity e = world.Entity().Add<Position>();
@@ -1757,7 +1809,7 @@ const TimeOfDay *t = world.get<TimeOfDay>();
 
 ```cs
 // Set singleton
-world.Set(new TimeOfDay( 0.5 ));
+world.Set(new TimeOfDay(0.5));
 
 // Get singleton
 ref readonly TimeOfDay t = ref world.Get<TimeOfDay>();
@@ -1810,10 +1862,10 @@ world.component<TimeOfDay>().set(TimeOfDay{ 0.5 })
 
 ```cs
 // Set singleton
-world.Set(new TimeOfDay( 0.5 ));
+world.Set(new TimeOfDay(0.5));
 
 // Equivalent to:
-world.Component<TimeOfDay>().Entity.Set(new TimeOfDay( 0.5 ));
+world.Component<TimeOfDay>().Entity.Set(new TimeOfDay(0.5));
 ```
 
 </li>
@@ -1877,10 +1929,10 @@ e.is_enabled<Position>()  // True
 
 ```cs
 ecs.Component<Position>().Entity
-    .add<Ecs.CanToggle>();
+    .Add(Ecs.CanToggle);
 
 Entity e = world.Entity()
-    .Set<Position>(new (10, 20));
+    .Set<Position>(new(10, 20));
 
 // Disable component
 e.Disable<Position>();
