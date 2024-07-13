@@ -62,18 +62,18 @@ const Defense *d = inst_1.get<Defense>();
 <li><b class="tab-title">C#</b>
 
 ```cs
-file record struct Defense(double Value);
+public record struct Defense(double Value);
 
 // Create a SpaceShip prefab with a Defense component.
-Entity SpaceShip = world.Entity("SpaceShip")
+Entity spaceship = world.Entity("Spaceship")
     .Set(new Defense(50));
 
 // Create two prefab instances
-Entity Inst1 = world.Entity().IsA(SpaceShip);
-Entity Inst2 = world.Entity().IsA(SpaceShip);
+Entity inst1 = world.Entity().IsA(spaceship);
+Entity inst2 = world.Entity().IsA(spaceship);
 
 // Get instantiated component
-ref readonly Attack attack = ref inst_1.Get<Defense>();
+ref readonly Defense attack = ref inst1.Get<Defense>();
 ```
 
 </li>
@@ -280,7 +280,9 @@ world.query_builder<Position>()
 <li><b class="tab-title">C#</b>
 
 ```cs
-TODO
+world.QueryBuilder()
+    .QueryFlags(Ecs.QueryMatchPrefab)
+    .Build();
 ```
 
 </li>
@@ -366,12 +368,12 @@ world.Component<Defense>()
     .Add(Ecs.OnInstantiate, Ecs.Inherit);
 
 // Create prefab
-Entity SpaceShip = world.Prefab("SpaceShip")
+Entity spaceship = world.Prefab("Spaceship")
     .Set<Health>(new(100))
     .Set<Defense>(new(50));
 
 // Create a prefab instance
-Entity inst = world.Entity().IsA(SpaceShip);
+Entity inst = world.Entity().IsA(spaceship);
 
 // Component is retrieved from instance
 ref readonly Attack attack = ref inst.Get<Attack>();
@@ -484,7 +486,7 @@ if (!inherited_from) {
 
 ```cs
 Entity inheritedFrom = inst.TargetFor<Defense>();
-if (!inheritedFrom) {
+if (inheritedFrom == 0) {
     // not inherited
 }
 ```
@@ -562,15 +564,15 @@ world.Component<Defense>()
     .Add(Ecs.OnInstantiate, Ecs.Inherit);
 
 // Create prefab
-Entity SpaceShip = world.Prefab("SpaceShip")
+Entity spaceship = world.Prefab("Spaceship")
     .Set<Defense>(new(50));
 
 // Create a prefab instance
-Entity inst_a = world.Entity().IsA(SpaceShip);
-Entity inst_b = world.Entity().IsA(SpaceShip);
+Entity instA = world.Entity().IsA(spaceship);
+Entity instB = world.Entity().IsA(spaceship);
 
-// Override Defense only for inst_a
-inst_a.Set(new Defense(75));
+// Override Defense only for instA
+instA.Set(new Defense(75));
 ```
 
 </li>
@@ -655,16 +657,16 @@ world.Component<Defense>()
     .Add(Ecs.OnInstantiate, Ecs.Inherit);
 
 // Create prefab
-Entity SpaceShip = world.Prefab("SpaceShip")
+Entity spaceship = world.Prefab("Spaceship")
     .Set<Health>(new(100))
     .Set<Defense>(new(50));
 
 // Create a prefab instance
-Entity inst_a = world.Entity().IsA(SpaceShip);
-Entity inst_b = world.Entity().IsA(SpaceShip);
+Entity instA = world.Entity().IsA(spaceship);
+Entity instB = world.Entity().IsA(spaceship);
 
-// Override Defense only for inst_a
-inst_a.Add<Defense>(); // Initialized with value 50
+// Override Defense only for instA
+instA.Add<Defense>(); // Initialized with value 50
 ```
 
 </li>
@@ -748,11 +750,11 @@ world.Component<Defense>()
     .Add(Ecs.OnInstantiate, Ecs.Inherit);
 
 // Create prefab
-Entity SpaceShip = world.Prefab()
-    .SetAutoOverride(Defense{50}); // Set & auto override Defense
+Entity spaceship = world.Prefab()
+    .SetAutoOverride<Defense>(new(50)); // Set & auto override Defense
 
 // Create prefab instance
-Entity inst = world.Entity().IsA(SpaceShip);
+Entity inst = world.Entity().IsA(spaceship);
 inst.Owns<Defense>(); // true
 ```
 
@@ -841,19 +843,19 @@ const Defense *defense = inst.get<Defense>(); // 50
 
 ```cs
 // Create prefab
-Entity SpaceShip = world.Prefab("SpaceShip")
-    .set<Defense>(new (50))
-    .set<Health>(new (100));
+Entity spaceship = world.Prefab("Spaceship")
+    .Set<Defense>(new(50))
+    .Set<Health>(new(100));
 
 // Create prefab variant
-Entity Freighter = world.Prefab("Freighter")
-    .IsA(SpaceShip)
-    .set<Health>(new (150)); // Override the Health component of the freighter
+Entity freighter = world.Prefab("Freighter")
+    .IsA(spaceShip)
+    .Set<Health>(new(150)); // Override the Health component of the freighter
 
 // Create prefab instance
-Entity inst = world.Entity().IsA(Freighter);
-ref readonly Attack attack = ref inst.get<Health>(); // 150
-ref readonly Defense defense = ref inst.get<Defense>(); // 50
+Entity inst = world.Entity().IsA(freighter);
+ref readonly Health health = ref inst.Get<Health>(); // 150
+ref readonly Defense defense = ref inst.Get<Defense>(); // 50
 ```
 
 </li>
@@ -933,15 +935,15 @@ flecs::entity inst_cockpit = inst.lookup("Cockpit");
 <li><b class="tab-title">C#</b>
 
 ```cs
-Entity SpaceShip = world.Prefab("SpaceShip");
-Entity Cockpit = world.Prefab("Cockpit")
-    .ChildOf(SpaceShip);
+Entity spaceship = world.Prefab("Spaceship");
+Entity cockpit = world.Prefab("Cockpit")
+    .ChildOf(spaceship);
 
 // Instantiate the prefab hierarchy
-Entity inst = ecs.Entity().IsA(SpaceShip);
+Entity inst = ecs.Entity().IsA(spaceship);
 
 // Lookup instantiated child
-Entity inst_cockpit = inst.Lookup("Cockpit");
+Entity instCockpit = inst.Lookup("Cockpit");
 ```
 
 </li>
@@ -1018,16 +1020,16 @@ flecs::entity inst_cockpit = inst.target(CockPit);
 <li><b class="tab-title">C#</b>
 
 ```cs
-Entity SpaceShip = world.Prefab("SpaceShip");
-Entity Cockpit = world.Prefab("Cockpit")
-    .ChildOf(SpaceShip)
-    .SlotOf(SpaceShip);
+Entity spaceship = world.Prefab("Spaceship");
+Entity cockpit = world.Prefab("Cockpit")
+    .ChildOf(spaceship)
+    .SlotOf(spaceship);
 
 // Instantiate the prefab hierarchy
-Entity inst = ecs.Entity().IsA(SpaceShip);
+Entity inst = ecs.Entity().IsA(spaceship);
 
 // Lookup instantiated child
-Entity inst_cockpit = inst.Target(CockPit);
+Entity instCockpit = inst.Target(cockpit);
 ```
 
 </li>
@@ -1075,19 +1077,19 @@ flecs::entity prefab = world.lookup("SpaceShip");
 <li><b class="tab-title">C#</b>
 
 ```cs
-file struct SpaceShip { }
+public struct Spaceship { }
 
-// Create prefab associated with the SpaceShip type
-world.Prefab<SpaceShip>()
-    .Set<Defense>(new (50))
-    .Set<Health>(new (100));
+// Create prefab associated with the Spaceship type
+world.Prefab<Spaceship>()
+    .Set<Defense>(new(50))
+    .Set<Health>(new(100));
 
 // Instantiate prefab with type
 Entity inst = world.Entity()
-    .IsA<SpaceShip>();
+    .IsA<Spaceship>();
 
 // Lookup prefab handle
-Entity prefab = world.Lookup("SpaceShip");
+Entity prefab = world.Lookup("Spaceship");
 ```
 
 </li>
