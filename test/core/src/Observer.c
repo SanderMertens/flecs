@@ -5852,6 +5852,55 @@ void Observer_on_set_w_not_component(void) {
     ecs_fini(world);
 }
 
+void Observer_wildcard_event(void) {
+    ecs_world_t* world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    Probe ctx = {0};
+
+    ecs_observer(world, {
+        .query.terms = {
+            { .id = ecs_id(Position) },
+        },
+        .callback = Observer,
+        .events = { EcsWildcard },
+        .ctx = &ctx,
+    });
+
+    test_int(ctx.invoked, 0);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_add(world, e, Position);
+
+    test_int(ctx.invoked, 2);
+    test_int(ctx.count, 1);
+    test_int(ctx.e[0], e);
+    test_uint(ctx.event, EcsOnAdd);
+
+    ecs_os_zeromem(&ctx);
+    test_int(ctx.invoked, 0);
+
+    ecs_set(world, e, Position, {10, 20});
+
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.e[0], e);
+    test_uint(ctx.event, EcsOnSet);
+
+    ecs_os_zeromem(&ctx);
+    test_int(ctx.invoked, 0);
+
+    ecs_remove(world, e, Position);
+
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.e[0], e);
+    test_uint(ctx.event, EcsOnRemove);
+
+    ecs_fini(world);
+}
+
 void Observer_cache_test_1(void) {
     ecs_world_t *world = ecs_mini();
     

@@ -1455,6 +1455,7 @@ void Observer_register_comp_w_macro_in_emit_named_entity(void);
 void Observer_add_to_self_in_emit_entity(void);
 void Observer_on_set_w_not_tag(void);
 void Observer_on_set_w_not_component(void);
+void Observer_wildcard_event(void);
 void Observer_cache_test_1(void);
 void Observer_cache_test_2(void);
 void Observer_cache_test_3(void);
@@ -7708,6 +7709,10 @@ bake_test_case Observer_testcases[] = {
         Observer_on_set_w_not_component
     },
     {
+        "wildcard_event",
+        Observer_wildcard_event
+    },
+    {
         "cache_test_1",
         Observer_cache_test_1
     },
@@ -10330,7 +10335,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        167,
+        168,
         Observer_testcases
     },
     {

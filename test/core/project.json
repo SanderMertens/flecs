@@ -1516,6 +1516,7 @@
                 "add_to_self_in_emit_entity",
                 "on_set_w_not_tag",
                 "on_set_w_not_component",
+                "wildcard_event",
                 "cache_test_1",
                 "cache_test_2",
                 "cache_test_3",
