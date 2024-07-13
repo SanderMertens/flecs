@@ -35,10 +35,10 @@ e.add(ChildOf, parent); // Covered by cleanup traits
 ```cs
 public struct MyComponent
 {
-    public entity e; // Not covered by cleanup traits
+    public Entity e; // Not covered by cleanup traits
 }
 
-e.Add(ChildOf, parent); // Covered by cleanup traits
+e.Add(Ecs.ChildOf, parent); // Covered by cleanup traits
 ```
 
 </li>
@@ -78,7 +78,7 @@ world.remove_all(Archer);
 <li><b class="tab-title">C#</b>
 
 ```cs
-world.RemoveAll(Archer);
+world.RemoveAll(archer);
 ```
 
 </li>
@@ -117,9 +117,9 @@ world.remove_all(flecs::Wildcard, Archer);
 <li><b class="tab-title">C#</b>
 
 ```cs
-world.RemoveAll(Archer);
-world.RemoveAll(Archer, Ecs.Wildcard);
-world.RemoveAll(Ecs.Wildcard, Archer);
+world.RemoveAll(archer);
+world.RemoveAll(archer, Ecs.Wildcard);
+world.RemoveAll(Ecs.Wildcard, archer);
 ```
 
 </li>
@@ -607,7 +607,7 @@ public struct Loves { }
 
 world.Component<Likes>().Entity.Add(Ecs.Relationship);
 
-world.Component<Loves>().Entity.Add(Ecs.With, world.Component<Likes>().Entity);
+world.Component<Loves>().Entity.Add(Ecs.With, world.Component<Likes>());
 ```
 
 </li>
@@ -681,7 +681,7 @@ world.Component<Apples>().Entity.Add(Ecs.Target);
 Entity e = ecs.Entity()
     .Add<Apples>()         // Panic, 'Apples' is not used as target
     .Add<Apples, Likes>()  // Panic, 'Apples' is not used as target
-    .add<Likes, Apples>(); // OK
+    .Add<Likes, Apples>(); // OK
 ```
 
 </li>
@@ -859,7 +859,7 @@ const Position *p = e.get<Serializable, Position>();
 ```cs
 // Ensure that Serializable never contains data
 ecs.Component<Serializable>().Entity
-    .Add<Ecs.Tag>();
+    .Add(Ecs.PairIsTag);
 
 Entity e = ecs.Entity()
     .Set<Position>(new(10, 20))
@@ -994,15 +994,15 @@ assert(base.get<Mass>() != inst.get<Mass>());
 ```cs
 // Register component with trait. Optional, since this is the default behavior.
 ecs.Component<Mass>().Entity
-    .add<Ecs.OnInstantiate, Ecs.Override>();
+    .Add(Ecs.OnInstantiate, Ecs.Override);
 
-ecs_entity_t base = ecs.Entity()
-    .Set<Mass>(new ( 100 ));
+Entity base = ecs.Entity()
+    .Set<Mass>(new(100));
 
-ecs_entity_t inst = ecs.Entity()
+Entity inst = ecs.Entity()
     .IsA(base); // Mass is copied to inst
 
-assert(inst.Owns<Mass>());
+Debug.Assert(inst.Owns<Mass>());
 ```
 
 </li>
@@ -1071,16 +1071,16 @@ assert(base.get<Mass>() != inst.get<Mass>());
 ```cs
 // Register component with trait
 ecs.Component<Mass>().Entity
-    .add<Ecs.OnInstantiate, Ecs.Inherit>();
+    .Add(Ecs.OnInstantiate, Ecs.Inherit);
 
-ecs_entity_t base = ecs.Entity()
-    .Set<Mass>(new ( 100 ));
+Entity base = ecs.Entity()
+    .Set<Mass>(new(100));
 
-ecs_entity_t inst = ecs.Entity()
+Entity inst = ecs.Entity()
     .IsA(base);
 
-assert(inst.has<Mass>());
-assert(!inst.Owns<Mass>());
+Debug.Assert(inst.Has<Mass>());
+Debug.Assert(!inst.Owns<Mass>());
 ```
 
 </li>
@@ -1150,16 +1150,16 @@ assert(inst.get<Mass>() == nullptr);
 ```cs
 // Register component with trait
 ecs.Component<Mass>().Entity
-    .add<Ecs.OnInstantiate, Ecs.DontInherit>();
+    .Add(Ecs.OnInstantiate, Ecs.DontInherit);
 
-ecs_entity_t base = ecs.Entity()
-    .Set<Mass>(new ( 100 ));
+Entity base = ecs.Entity()
+    .Set<Mass>(new(100));
 
-ecs_entity_t inst = ecs.Entity()
+Entity inst = ecs.Entity()
     .IsA(base);
 
-assert(!inst.has<Mass>());
-assert(!inst.Owns<Mass>());
+Debug.Assert(!inst.Has<Mass>());
+Debug.Assert(!inst.Owns<Mass>());
 ```
 
 </li>
@@ -1235,13 +1235,13 @@ NewYork.add(LocatedIn, USA);
 <li><b class="tab-title">C#</b>
 
 ```cs
-Entity LocatedIn = world.Entity();
-Entity Manhattan = world.Entity();
-Entity NewYork = world.Entity();
-Entity USA = world.Entity();
+Entity locatedin = world.Entity();
+Entity manhattan = world.Entity();
+Entity newyork = world.Entity();
+Entity usa = world.Entity();
 
-Manhattan.Add(LocatedIn, NewYork);
-NewYork.Add(LocatedIn, USA);
+Manhattan.Add(locatedin, newyork);
+NewYork.Add(locatedin, usa);
 ```
 
 </li>
@@ -1282,7 +1282,7 @@ LocatedIn.add(flecs::Transitive);
 <li><b class="tab-title">C#</b>
 
 ```cs
-LocatedIn.Add(Ecs.Transitive);
+locatedIn.Add(Ecs.Transitive);
 ```
 
 </li>
@@ -1407,7 +1407,7 @@ flecs::entity MarriedTo = world.entity()
 <li><b class="tab-title">C#</b>
 
 ```cs
-Entity MarriedTo = world.Entity()
+Entity marriedTo = world.Entity()
     .Add(Ecs.Exclusive);
 ```
 
@@ -1466,16 +1466,16 @@ assert(e.is_enabled<Position>());
 
 ```cs
 ecs.Component<Position>().Entity
-    .add<Ecs.CanToggle>();
+    .Add(Ecs.CanToggle);
 
 Entity e = world.Entity()
-    .Set<Position>(new (10, 20));
+    .Set<Position>(new(10, 20));
 
 e.Disable<Position>(); // Disable component
-assert(!e.IsEnabled<Position>());
+Debug.Assert(!e.IsEnabled<Position>());
 
 e.Enable<Position>(); // Enable component
-assert(e.IsEnabled<Position>());
+Debug.Assert(e.IsEnabled<Position>());
 ```
 
 </li>
@@ -1536,12 +1536,12 @@ e.add(Movement, Walking); // replaces (Movement, Running)
 <li><b class="tab-title">C#</b>
 
 ```cs
-Entity Movement = world.Entity().Add(Ecs.Union);
-Entity Walking = world.Entity();
-Entity Running = world.Entity();
+Entity movement = world.Entity().Add(Ecs.Union);
+Entity walking = world.Entity();
+Entity running = world.Entity();
 
-Entity e = world.Entity().Add(Movement, Running);
-e.Add(Movement, Walking); // replaces (Movement, Running)
+Entity e = world.Entity().Add(movement, running);
+e.Add(movement, walking); // replaces (Movement, Running)
 ```
 
 </li>
@@ -1598,7 +1598,7 @@ world.component<Position>().add(flecs::Sparse);
 
 ```cs
 ecs.Component<Position>().Entity
-    .add<Ecs.Sparse>();
+    .Add(Ecs.Sparse);
 ```
 
 </li>
@@ -1642,10 +1642,10 @@ Bob.add(MarriedTo, Alice); // Also adds (MarriedTo, Bob) to Alice
 <li><b class="tab-title">C#</b>
 
 ```cs
-Entity MarriedTo = world.Entity().Add(Ecs.Symmetric);
-Entity Bob = ecs.Entity();
-Entity Alice = ecs.Entity();
-Bob.Add(MarriedTo, Alice); // Also adds (MarriedTo, Bob) to Alice
+Entity marriedTo = world.Entity().Add(Ecs.Symmetric);
+Entity bob = ecs.Entity();
+Entity alice = ecs.Entity();
+Bob.Add(marriedTo, alice); // Also adds (MarriedTo, Bob) to Alice
 ```
 
 </li>
@@ -1692,11 +1692,11 @@ auto e = world.entity().add(Power);
 <li><b class="tab-title">C#</b>
 
 ```cs
-Entity Responsibility = world.Entity();
-Entity Power = world.Entity().Add(Ecs.With, Responsibility);
+Entity responsibility = world.Entity();
+Entity power = world.Entity().Add(Ecs.With, responsibility);
 
 // Create new entity that has both Power and Responsibility
-Entity e = world.Entity().Add(Power);
+Entity e = world.Entity().Add(power);
 ```
 
 </li>
@@ -1745,12 +1745,12 @@ auto e = world.entity().add(Loves, Pears);
 <li><b class="tab-title">C#</b>
 
 ```cs
-Entity Likes = world.Entity();
-Entity Loves = world.Entity().Add(Ecs.With, Likes);
-Entity Pears = world.Entity();
+Entity likes = world.Entity();
+Entity loves = world.Entity().Add(Ecs.With, likes);
+Entity pears = world.Entity();
 
 // Create new entity with both (Loves, Pears) and (Likes, Pears)
-Entity e = world.Entity().Add(Loves, Pears);
+Entity e = world.Entity().Add(loves, pears);
 ```
 
 </li>
@@ -1815,15 +1815,15 @@ auto b = world.entity().add(Food, Fork);
 
 ```cs
 // Enforce that target of relationship is child of Food
-Entity Food = world.Entity().Add(Ecs.OneOf);
-Entity Apples = world.Entity().ChildOf(Food);
-Entity Fork = world.Entity();
+Entity food = world.Entity().Add(Ecs.OneOf);
+Entity apples = world.Entity().ChildOf(food);
+Entity fork = world.Entity();
 
 // This is ok, Apples is a child of Food
-Entity a = world.Entity().Add(Food, Apples);
+Entity a = world.Entity().Add(food, apples);
 
 // This is not ok, Fork is not a child of Food
-Entity b = world.Entity().Add(Food, Fork);
+Entity b = world.Entity().Add(food, fork);
 ```
 
 </li>
@@ -1891,16 +1891,16 @@ auto b = world.entity().add(Eats, Fork);
 
 ```cs
 // Enforce that target of relationship is child of Food
-Entity Food = world.Entity();
-Entity Eats = world.Entity().Add(Ecs.OneOf, Food);
-Entity Apples = world.Entity().ChildOf(Food);
-Entity Fork = world.Entity();
+Entity food = world.Entity();
+Entity eats = world.Entity().Add(Ecs.OneOf, food);
+Entity apples = world.Entity().ChildOf(food);
+Entity fork = world.Entity();
 
 // This is ok, Apples is a child of Food
-Entity a = world.Entity().Add(Eats, Apples);
+Entity a = world.Entity().Add(eats, apples);
 
 // This is not ok, Fork is not a child of Food
-Entity b = world.Entity().Add(Eats, Fork);
+Entity b = world.Entity().Add(eats, fork);
 ```
 
 </li>
