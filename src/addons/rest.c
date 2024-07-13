@@ -921,6 +921,10 @@ void flecs_all_systems_stats_to_json(
             ecs_entity_t id = ecs_map_key(&it);
             ecs_system_stats_t *sys_stats = ecs_map_ptr(&it);
 
+            if (!ecs_is_alive(world, id)) {
+                continue;
+            }
+
             ecs_strbuf_list_next(&reply->body);
             flecs_system_stats_to_json(world, &reply->body, id, sys_stats);
         }
@@ -979,6 +983,11 @@ void flecs_pipeline_stats_to_json(
         ecs_pipeline_op_t *op = &ops[o];
         for (s = op->offset; s < (op->offset + op->count); s ++) {
             ecs_entity_t system = systems[s];
+
+            if (!ecs_is_alive(world, system)) {
+                continue;
+            }
+
             ecs_system_stats_t *sys_stats = ecs_map_get_deref(
                 &system_stats->stats, ecs_system_stats_t, system);
             ecs_strbuf_list_next(&reply->body);

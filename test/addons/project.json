@@ -494,7 +494,8 @@
                 "request_commands_no_commands",
                 "request_commands_garbage_collect",
                 "script_error",
-                "import_rest_after_mini"
+                "import_rest_after_mini",
+                "get_pipeline_stats_after_delete_system"
             ]
         }, {
             "id": "Metrics",
