@@ -1246,6 +1246,21 @@ void DeserializeFromJson_struct_w_2_nested_members_struct(void) {
     ecs_fini(world);
 }
 
+void DeserializeFromJson_ser_deser_entity_named(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    char *json = ecs_entity_to_json(world, e, NULL);
+
+    const char *r = ecs_entity_from_json(world, e, json, NULL);
+    test_assert(r != NULL);
+    ecs_os_free(json);
+
+    test_str(ecs_get_name(world, e), "e");
+
+    ecs_fini(world);
+}
+
 void DeserializeFromJson_deser_entity_1_component_1_member(void) {
     ecs_world_t *world = ecs_init();
 
@@ -1625,6 +1640,33 @@ void DeserializeFromJson_deser_entity_w_ids(void) {
     test_str(r, "");
     test_str(ecs_get_name(world, e), NULL);
     test_assert(ecs_has(world, e, Position));
+
+    ecs_fini(world);
+}
+
+void DeserializeFromJson_deser_entity_1_pair_2_targets(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, TgtA);
+    ECS_TAG(world, TgtB);
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_add_pair(world, e, Rel, TgtA);
+    ecs_add_pair(world, e, Rel, TgtB);
+
+    char *json = ecs_entity_to_json(world, e, NULL);
+
+    ecs_remove_pair(world, e, Rel, EcsWildcard);
+    test_assert(!ecs_has_pair(world, e, Rel, TgtA));
+    test_assert(!ecs_has_pair(world, e, Rel, TgtB));
+
+    const char *r = ecs_entity_from_json(world, e, json, NULL);
+    test_assert(r != NULL);
+    ecs_os_free(json);
+
+    test_assert(ecs_has_pair(world, e, Rel, TgtA));
+    test_assert(ecs_has_pair(world, e, Rel, TgtB));
 
     ecs_fini(world);
 }
