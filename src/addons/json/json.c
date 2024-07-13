@@ -368,7 +368,7 @@ const char* flecs_json_skip_object(
         ecs_assert(json != NULL, ECS_INTERNAL_ERROR, NULL);
     }
 
-    ecs_parser_error(desc->name, desc->expr, json - desc->expr, 
+    ecs_parser_error(desc->name, desc->expr, 0, 
         "expected }, got end of string");
     return NULL;
 }

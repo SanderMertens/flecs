@@ -438,6 +438,7 @@ void DeserializeFromJson_struct_w_nested_member_i32(void);
 void DeserializeFromJson_struct_w_2_nested_members_i32(void);
 void DeserializeFromJson_struct_w_nested_members_struct(void);
 void DeserializeFromJson_struct_w_2_nested_members_struct(void);
+void DeserializeFromJson_ser_deser_entity_named(void);
 void DeserializeFromJson_deser_entity_1_component_1_member(void);
 void DeserializeFromJson_deser_entity_1_component_1_member_w_spaces(void);
 void DeserializeFromJson_deser_entity_1_component_2_members(void);
@@ -447,6 +448,7 @@ void DeserializeFromJson_deser_entity_1_component_composite_member(void);
 void DeserializeFromJson_deser_entity_1_component_nested_member(void);
 void DeserializeFromJson_deser_entity_1_pair(void);
 void DeserializeFromJson_deser_entity_2_pairs(void);
+void DeserializeFromJson_deser_entity_1_pair_2_targets(void);
 void DeserializeFromJson_deser_entity_empty(void);
 void DeserializeFromJson_deser_entity_w_path(void);
 void DeserializeFromJson_deser_entity_w_path_and_ids(void);
@@ -2581,6 +2583,10 @@ bake_test_case DeserializeFromJson_testcases[] = {
         DeserializeFromJson_struct_w_2_nested_members_struct
     },
     {
+        "ser_deser_entity_named",
+        DeserializeFromJson_ser_deser_entity_named
+    },
+    {
         "deser_entity_1_component_1_member",
         DeserializeFromJson_deser_entity_1_component_1_member
     },
@@ -2615,6 +2621,10 @@ bake_test_case DeserializeFromJson_testcases[] = {
     {
         "deser_entity_2_pairs",
         DeserializeFromJson_deser_entity_2_pairs
+    },
+    {
+        "deser_entity_1_pair_2_targets",
+        DeserializeFromJson_deser_entity_1_pair_2_targets
     },
     {
         "deser_entity_empty",
@@ -4509,7 +4519,7 @@ static bake_test_suite suites[] = {
         "DeserializeFromJson",
         NULL,
         NULL,
-        130,
+        132,
         DeserializeFromJson_testcases
     },
     {
