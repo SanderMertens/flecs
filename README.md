@@ -122,14 +122,14 @@ If you have a project you'd like to share, let me know on [Discord](https://disc
 ### Extermination Shock
 [![image](docs/img/projects/extermination_shock.png)](https://store.steampowered.com/app/2510820/Extermination_Shock/)
 
+### Tome Tumble Tournament
+[![image](docs/img/projects/tome_tumble.png)](https://terzalo.itch.io/tome-tumble-tournament)
+
 ### Sol Survivor
 [![image](docs/img/projects/sol_survivor.png)](https://nicok.itch.io/sol-survivor-demo)
 
 ### Equilibrium Engine
 [![image](docs/img/projects/equilibrium_engine.png)](https://github.com/clibequilibrium/EquilibriumEngine)
-
-### Gravitas
-[![image](docs/img/projects/gravitas.png)](https://thepunkcollective.itch.io/gravitas)
 
 ### After Sun
 [![image](docs/img/projects/after_sun.png)](https://github.com/foxnne/aftersun)
@@ -140,25 +140,6 @@ https://github.com/SanderMertens/tower_defense
 
 https://github.com/flecs-hub/city
 [![City](docs/img/projects/city.png)](https://www.flecs.dev/city)
-
-## Resources
-
-### Resources provided by the community :heart:
-- [Unreal Minimum Viable Flecs Project](https://github.com/PreyK/Unreal-Minimum-Viable-Flecs)
-- [Bgfx/Imgui module](https://github.com/flecs-hub/flecs-systems-bgfx/tree/bgfx_imgui)
-- [Tower defense example](https://gist.github.com/oldmanauz/b4ced44737bf9d248233538fa06a989e)
-- [Unreal + Flecs example](https://github.com/PreyK/Unreal-Minimum-Viable-Flecs)
-- [Building a space battle with Flecs in UE4](https://twitter.com/ajmmertens/status/1361070033334456320)
-- [Flecs + SDL + Web ASM example](https://github.com/HeatXD/flecs_web_demo) ([live demo](https://heatxd.github.io/flecs_web_demo/))
-- [Flecs + Raylib example](https://github.com/Lexxicon/FlecsRaylib)
-- [Flecs + gunslinger example](https://github.com/MrFrenik/gs_examples/blob/main/ex_demos/flecs/source/main.c)
-- [Flecs based 3D game engine with editor](https://bit.ly/3T9cc1o)
-
-### Flecs around the web
-- [Discord](https://discord.gg/BEzP5Rgrrp)
-- [Medium](https://ajmmertens.medium.com)
-- [Twitter](https://twitter.com/ajmmertens)
-- [Reddit](https://www.reddit.com/r/flecs)
 
 ## Flecs Hub
 [Flecs Hub](https://github.com/flecs-hub) is a collection of repositories that show how Flecs can be used to build game systems like input handling, hierarchical transforms and rendering.
