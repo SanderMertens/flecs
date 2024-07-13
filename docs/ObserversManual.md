@@ -56,7 +56,7 @@ world.Observer<Position>()
     .Event(Ecs.OnSet)
     .Each((Iter it, int i, ref Position p) =>
     {
-        Console.WriteLine($"OnSet: ({p.x}, {p.y})");
+        Console.WriteLine($"OnSet: ({p.X}, {p.Y})");
     });
 
 world.Entity().Set(new Position(10, 20)); // Invokes observer
@@ -972,8 +972,8 @@ e.set(Position{20, 30});
 ```cs
 // OnSet observer with both component and tag
 world.Observer<Position>()
-    .with<Npc>() // Tag
-    .Event(flecs::OnSet)
+    .With<Npc>() // Tag
+    .Event(Ecs.OnSet)
     .Each((Iter it, int i, ref Position p) =>
     {
         // ...
@@ -1080,7 +1080,7 @@ e.remove<Velocity>();
 // Observer with a Not term
 world.Observer<Position>()
     .Without<Velocity>()
-    .Event(flecs::OnAdd)
+    .Event(Ecs.OnAdd)
     .Each((Iter it, int i, ref Position p) =>
     {
         // ...
@@ -1205,7 +1205,7 @@ e.remove<Position>();
 ```cs
 // Monitor observer
 world.Observer<Position, Velocity>()
-    .Event(flecs::Monitor)
+    .Event(Ecs.Monitor)
     .Each((Iter it, int i, ref Position p, ref Velocity v) =>
     {
         if (it.Event() == Ecs.OnAdd) {
@@ -1326,7 +1326,7 @@ Entity e1 = world.Entity().Set(new Position(10, 20));
 
 // Yield existing observer
 world.Observer<Position, Velocity>()
-    .Event(flecs::OnAdd)
+    .Event(Ecs.OnAdd)
     .YieldExisting()
     .Each((Iter it, int i, ref Position p, ref Velocity v) =>
     {
@@ -1418,19 +1418,19 @@ flecs::entity e = world.entity().set(TimeOfDay{0});
 
 ```cs
 // Entity used for fixed source
-Entity Game = world.Entity().Set(new TimeOfDay(0));
+Entity game = world.Entity().Set(new TimeOfDay(0));
 
 // Observer with fixed source
 world.Observer<Game>()
-    .TermAt(0).Src(Game) // Match TimeOfDay on Game
-    .Event(flecs::OnSet)
+    .TermAt(0).Src(game) // Match TimeOfDay on Game
+    .Event(Ecs.OnSet)
     .Each((Iter it, int i, ref Position p, ref Velocity v) =>
     {
         // ...
     });
 
 // Triggers observer
-Game.Set(new TimeOfDay(1));
+game.Set(new TimeOfDay(1));
 
 // Does not trigger observer
 Entity e = world.Entity().Set(new TimeOfDay(0));
@@ -1521,7 +1521,7 @@ world.Set(new TimeOfDay(0));
 // Observer with singleton source
 world.Observer<TimeOfDay>()
     .TermAt(0).Singleton()
-    .Event(flecs::OnSet)
+    .Event(Ecs.OnSet)
     .Each((Iter it, int i, ref TimeOfDay t) =>
     {
         // ...
@@ -1819,7 +1819,7 @@ world.emit<Synchronized>()
 
 ```cs
 // Create a custom event
-file struct Synchronized;
+public struct Synchronized;
 
 // Alternatively, an plain entity could also be used as event
 // Entity Synchronized = world.Entity();
@@ -1928,7 +1928,7 @@ widget.emit<Clicked>();
 
 ```cs
 // Create a custom event
-file struct Clicked;
+public struct Clicked;
 
 // Create entity
 Entity widget = world.Entity("widget");
@@ -2024,7 +2024,7 @@ widget.emit<Resize>({100, 200});
 
 ```cs
 // Create a custom event
-file record struct Resize(double Width, double Height);
+public record struct Resize(double Width, double Height);
 
 // Create entity
 Entity widget = world.Entity("widget");
@@ -2122,7 +2122,7 @@ world.defer_end();
 
 ```cs
 world.Observer<Position>()
-    .Event(flecs::OnSet)
+    .Event(Ecs.OnSet)
     .Each((Iter it, int i, ref Position p) =>
     {
         // ...
