@@ -1,5 +1,5 @@
 /**
- * @file table_graph.h
+ * @file storage/table_graph.h
  * @brief Table graph types and functions.
  */
 

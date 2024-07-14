@@ -1,5 +1,5 @@
 /**
- * @file table.c
+ * @file storage/table.c
  * @brief Table storage implementation.
  * 
  * Tables are the data structure that store the component data. Tables have

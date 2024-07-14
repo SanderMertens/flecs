@@ -1,5 +1,5 @@
 /**
- * @file json/serialize_type_info.c
+ * @file addons/json/serialize_type_info.c
  * @brief Serialize type (reflection) information to JSON.
  */
 

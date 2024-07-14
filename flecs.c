@@ -271,7 +271,7 @@ void flecs_bitset_swap(
 #endif
 
 /**
- * @file table.h
+ * @file storage/table.h
  * @brief Table storage implementation.
  */
 
@@ -279,7 +279,7 @@ void flecs_bitset_swap(
 #define FLECS_TABLE_H
 
 /**
- * @file table_graph.h
+ * @file storage/table_graph.h
  * @brief Table graph types and functions.
  */
 
@@ -1010,7 +1010,7 @@ struct ecs_world_t {
 #endif
 
 /**
- * @file table_cache.h
+ * @file storage/table_cache.h
  * @brief Data structure for fast table iteration/lookups.
  */
 
@@ -1082,7 +1082,7 @@ ecs_table_cache_hdr_t* flecs_table_cache_next_(
 #endif
 
 /**
- * @file id_index.h
+ * @file storage/id_index.h
  * @brief Index for looking up tables by (component) id.
  */
 
@@ -32969,7 +32969,7 @@ void flecs_query_apply_iter_flags(
 }
 
 /**
- * @file validator.c
+ * @file query/validator.c
  * @brief Validate and finalize queries.
  */
 
@@ -34842,7 +34842,7 @@ const uint64_t* flecs_entity_index_ids(
 }
 
 /**
- * @file id_index.c
+ * @file storage/id_index.c
  * @brief Index for looking up tables by (component) id.
  * 
  * An id record stores the administration for an in use (component) id, that is
@@ -35519,7 +35519,7 @@ void flecs_fini_id_records(
 }
 
 /**
- * @file table.c
+ * @file storage/table.c
  * @brief Table storage implementation.
  * 
  * Tables are the data structure that store the component data. Tables have
@@ -37913,7 +37913,7 @@ error:
 }
 
 /**
- * @file table_cache.c
+ * @file storage/table_cache.c
  * @brief Data structure for fast table iteration/lookups.
  * 
  * A table cache is a data structure that provides constant time operations for
@@ -38204,7 +38204,7 @@ ecs_table_cache_hdr_t* flecs_table_cache_next_(
 }
 
 /**
- * @file table_graph.c
+ * @file storage/table_graph.c
  * @brief Data structure to speed up table transitions.
  * 
  * The table graph is used to speed up finding tables in add/remove operations.
@@ -39446,12 +39446,12 @@ ecs_table_t* ecs_table_find(
 }
 
 /**
- * @file json/deserialize.c
+ * @file addons/json/deserialize.c
  * @brief Deserialize JSON strings into (component) values.
  */
 
 /**
- * @file json/json.h
+ * @file addons/json/json.h
  * @brief Internal functions for JSON addon.
  */
 
@@ -40539,7 +40539,7 @@ const char* ecs_world_from_json_file(
 #endif
 
 /**
- * @file json/deserialize.c
+ * @file addons/json/deserialize_legacy.c
  * @brief Deserialize JSON strings into (component) values.
  */
 
@@ -41617,7 +41617,7 @@ const char* ecs_world_from_json_file_legacy(
 #endif
 
 /**
- * @file json/deserialize.c
+ * @file addons/json/deserialize_value.c
  * @brief Deserialize JSON strings into (component) values.
  */
 
@@ -41772,7 +41772,7 @@ error:
 #endif
 
 /**
- * @file json/json.c
+ * @file addons/json/json.c
  * @brief JSON serializer utilities.
  */
 
@@ -42461,12 +42461,12 @@ ecs_primitive_kind_t flecs_json_op_to_primitive_kind(
 #endif
 
 /**
- * @file json/serialize_entity.c
+ * @file addons/json/serialize_entity.c
  * @brief Serialize single entity.
  */
 
 /**
- * @file meta/meta.h
+ * @file addons/meta/meta.h
  * @brief Private functions for meta addon.
  */
 
@@ -42592,8 +42592,8 @@ char* ecs_entity_to_json(
 #endif
 
 /**
- * @file json/serialize_type_info.c
- * @brief Serialize type (reflection) information to JSON.
+ * @file addons/json/serialize_field_info.c
+ * @brief Serialize query field information to JSON.
  */
 
 
@@ -42690,7 +42690,7 @@ void flecs_json_serialize_field(
 #endif
 
 /**
- * @file json/serialize_iter.c
+ * @file addons/json/serialize_iter.c
  * @brief Serialize iterator to JSON.
  */
 
@@ -43026,7 +43026,7 @@ char* ecs_iter_to_json(
 #endif
 
 /**
- * @file json/serialize_iter_rows.c
+ * @file addons/json/serialize_iter_rows.c
  * @brief Serialize (component) values to JSON strings.
  */
 
@@ -43521,7 +43521,7 @@ error:
 #endif
 
 /**
- * @file json/serialize_iter_result_query.c
+ * @file addons/json/serialize_iter_result_query.c
  * @brief Serialize matched query data of result.
  */
 
@@ -43803,7 +43803,7 @@ int flecs_json_serialize_iter_result_query(
 #endif
 
 /**
- * @file json/serialize_iter_result_table.c
+ * @file addons/json/serialize_iter_result_table.c
  * @brief Serialize all components of matched entity.
  */
 
@@ -44307,7 +44307,7 @@ int flecs_json_serialize_iter_result_table(
 #endif
 
 /**
- * @file json/serialize_query_info.c
+ * @file addons/json/serialize_query_info.c
  * @brief Serialize (component) values to JSON strings.
  */
 
@@ -44511,7 +44511,7 @@ void flecs_json_serialize_query(
 #endif
 
 /**
- * @file json/serialize_type_info.c
+ * @file addons/json/serialize_type_info.c
  * @brief Serialize type (reflection) information to JSON.
  */
 
@@ -44958,7 +44958,7 @@ char* ecs_type_info_to_json(
 #endif
 
 /**
- * @file json/serialize_iter.c
+ * @file addons/json/serialize_value.c
  * @brief Serialize value to JSON.
  */
 
@@ -45552,7 +45552,7 @@ char* ecs_ptr_to_json(
 #endif
 
 /**
- * @file json/serialize_world.c
+ * @file addons/json/serialize_world.c
  * @brief Serialize world to JSON.
  */
 
@@ -45624,7 +45624,7 @@ char* ecs_world_to_json(
 
 
 /**
- * @file meta/api.c
+ * @file addons/meta/api.c
  * @brief API for creating entities with reflection data.
  */
 
@@ -46219,7 +46219,7 @@ ecs_entity_t ecs_quantity_init(
 #endif
 
 /**
- * @file addons/meta_c.c
+ * @file addons/meta/c_utils.c
  * @brief C utilities for meta addon.
  */
 
@@ -47072,7 +47072,7 @@ error:
 #endif
 
 /**
- * @file meta/cursor.c
+ * @file addons/meta/cursor.c
  * @brief API for assigning values of runtime types with reflection.
  */
 
@@ -49168,7 +49168,7 @@ double ecs_meta_ptr_to_float(
 
 
 /**
- * @file meta/definitions.c
+ * @file addons/meta/definitions.c
  * @brief Reflection definitions for builtin types.
  */
 
@@ -49453,7 +49453,7 @@ void flecs_meta_import_definitions(
 #endif
 
 /**
- * @file meta/meta.c
+ * @file addons/meta/meta.c
  * @brief Meta addon.
  */
 
@@ -50915,7 +50915,7 @@ void FlecsMetaImport(
 #endif
 
 /**
- * @file meta/serialized.c
+ * @file addons/meta/serialized.c
  * @brief Serialize type into flat operations array to speed up deserialization.
  */
 
@@ -51851,7 +51851,7 @@ void ecs_set_os_api_impl(void) {
 #endif
 
 /**
- * @file addons/ipeline/pipeline.c
+ * @file addons/pipeline/pipeline.c
  * @brief Functions for building and running pipelines.
  */
 

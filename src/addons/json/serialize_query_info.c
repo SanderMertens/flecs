@@ -1,5 +1,5 @@
 /**
- * @file json/serialize_query_info.c
+ * @file addons/json/serialize_query_info.c
  * @brief Serialize (component) values to JSON strings.
  */
 

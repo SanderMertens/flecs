@@ -1,5 +1,5 @@
 /**
- * @file json/serialize_world.c
+ * @file addons/json/serialize_world.c
  * @brief Serialize world to JSON.
  */
 

@@ -1,5 +1,5 @@
 /**
- * @file meta/cursor.c
+ * @file addons/meta/cursor.c
  * @brief API for assigning values of runtime types with reflection.
  */
 

@@ -1,5 +1,5 @@
 /**
- * @file addons/meta_c.c
+ * @file addons/meta/c_utils.c
  * @brief C utilities for meta addon.
  */
 

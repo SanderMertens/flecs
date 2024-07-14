@@ -1,5 +1,5 @@
 /**
- * @file meta/api.c
+ * @file addons/meta/api.c
  * @brief API for creating entities with reflection data.
  */
 

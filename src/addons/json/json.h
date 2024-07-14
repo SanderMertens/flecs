@@ -1,5 +1,5 @@
 /**
- * @file json/json.h
+ * @file addons/json/json.h
  * @brief Internal functions for JSON addon.
  */
 
