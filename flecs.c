@@ -31651,7 +31651,7 @@ void* ecs_vec_first(
 }
 
  /**
- * @file addons/rules/api.c
+ * @file queries/api.c
  * @brief User facing API for rules.
  */
 

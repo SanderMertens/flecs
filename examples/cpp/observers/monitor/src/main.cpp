@@ -2,7 +2,7 @@
 #include <iostream>
 
 // A monitor observer triggers when an entity starts/stop matching the observer
-// filter. The observer communicates whether an entity is "entering/leaving" the
+// query. The observer communicates whether an entity is "entering/leaving" the
 // monitor by setting ecs_iter_t::event to EcsOnAdd (for entering) or 
 // EcsOnRemove (for leaving).
 //

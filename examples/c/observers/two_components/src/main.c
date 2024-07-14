@@ -2,7 +2,7 @@
 #include <stdio.h>
 
 // An observer can match multiple components/tags. Only entities that match the
-// entire observer filter will be forwarded to the callback. For example, an
+// entire observer query will be forwarded to the callback. For example, an
 // observer for Position,Velocity won't match an entity that only has Position.
 
 typedef struct {

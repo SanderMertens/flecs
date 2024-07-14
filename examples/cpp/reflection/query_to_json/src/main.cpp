@@ -39,8 +39,7 @@ int main(int, char *[]) {
     flecs::query<Position, const Velocity> q = 
         ecs.query<Position, const Velocity>();
 
-    // Serialize query to JSON. Note that this works for any iterable object,
-    // including filters & rules.
+    // Serialize query to JSON. Note that this works for any iterable object.
     std::cout << q.iter().to_json().c_str() << "\n";
 
     // Iterator returns 2 sets of results, one for each table.

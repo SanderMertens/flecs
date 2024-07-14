@@ -1,8 +1,8 @@
 #include <facts.h>
 #include <iostream>
 
-// This example shows how to use rules for testing facts. A fact is a query that
-// has no variable elements. Consider a regular ECS query like this:
+// This example shows how to use queries for testing facts. A fact is a query
+// that has no variable elements. Consider a regular ECS query like this:
 //   Position, Velocity
 //
 // When written out in full, this query looks like:

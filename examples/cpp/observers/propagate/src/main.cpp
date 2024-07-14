@@ -5,7 +5,7 @@
 // listen for events from a parent or prefab, like triggering when a component
 // inherited from a prefab was set.
 //
-// Event propagation happens automatically when an observer contains a filter
+// Event propagation happens automatically when an observer contains a query
 // with the EcsUp flag set (indicating upwards traversal). Observers use the 
 // same matching logic as queries: if a query with upwards traversal matches an
 // entity, so will an observer.
