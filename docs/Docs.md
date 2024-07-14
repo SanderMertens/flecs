@@ -29,7 +29,7 @@
 - [C examples](https://github.com/SanderMertens/flecs/tree/master/examples/c)
 - [C++ examples](https://github.com/SanderMertens/flecs/tree/master/examples/cpp)
 - [C# examples](https://github.com/BeanCheeseBurrito/Flecs.NET/tree/main/src/Flecs.NET.Examples)
-- [Rust examples](https://github.com/Indra-db/flecs-ecs-rs/tree/main/flecs_ecs/examples/flecs)
+- [Rust examples](https://github.com/Indra-db/Flecs-Rust/tree/main/flecs_ecs/examples/flecs)
  
 ## Demos
 - [Playground (Flecs Script)](https://www.flecs.dev/explorer/?host=flecs_explorer.wasm)

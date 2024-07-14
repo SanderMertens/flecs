@@ -41,7 +41,7 @@ Make sure to check out the query code examples in the repository:
 
  - [queries (C)](https://github.com/SanderMertens/flecs/tree/master/examples/c/queries)
  - [queries (C++)](https://github.com/SanderMertens/flecs/tree/master/examples/cpp/queries)
- - [queries (Rust)](https://github.com/Indra-db/flecs-ecs-rs/tree/main/flecs_ecs/examples/flecs/queries)
+ - [queries (Rust)](https://github.com/Indra-db/Flecs-Rust/tree/main/flecs_ecs/examples/flecs/queries)
 
 ## Performance and Caching
 Understanding the basic architecture of queries helps to make the right tradeoffs when using queries in games. The biggest impact on query performance is whether a query is cached or not. This section goes over what caching is, how it can be used and when it makes sense to use it.
