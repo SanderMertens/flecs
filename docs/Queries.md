@@ -392,7 +392,7 @@ while (ecs_query_next(&it)) {
 
 Iteration is split up into two loops: the outer loop which iterates tables, and the inner loop which iterates the entities in that table. This approach provides direct access to component arrays, which allows compilers to do performance optimizations like auto-vectorization.
 
-The indices provided to the `ecs_field` function must correspond with the order in which terms have been specified in the query. This index starts counting from `1`, with index `0` reserved for the array containing entity ids.
+The indices provided to the `ecs_field()` function must correspond with the order in which terms have been specified in the query. This index starts counting from `0`.
 
 </li>
 <li><b class="tab-title">C++</b>

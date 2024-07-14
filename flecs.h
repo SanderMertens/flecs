@@ -8479,10 +8479,10 @@ bool ecs_worker_next(
 /** Obtain data for a query field.
  * This operation retrieves a pointer to an array of data that belongs to the
  * term in the query. The index refers to the location of the term in the query,
- * and starts counting from one.
+ * and starts counting from zero.
  *
  * For example, the query `"Position, Velocity"` will return the `Position` array
- * for index 1, and the `Velocity` array for index 2.
+ * for index 0, and the `Velocity` array for index 1.
  *
  * When the specified field is not owned by the entity this function returns a
  * pointer instead of an array. This happens when the source of a field is not
