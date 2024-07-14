@@ -21376,8 +21376,7 @@ struct world {
         remove_all(_::type<First>::id(world_), second);
     }
 
-    /** Defer all operations called in function. If the world is already in
-     * deferred mode, do nothing.
+    /** Defer all operations called in function.
      *
      * @see flecs::world::defer_begin()
      * @see flecs::world::defer_end()
