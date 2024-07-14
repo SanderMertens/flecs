@@ -1384,6 +1384,10 @@ void Traversal_self_up_2_levels_other_trav_rel(void);
 void Traversal_up_2_levels(void);
 void Traversal_up_2_levels_other_trav_rel(void);
 void Traversal_self_up_mixed_traversable(void);
+void Traversal_not_up(void);
+void Traversal_not_self_up(void);
+void Traversal_not_up_wildcard(void);
+void Traversal_not_self_up_wildcard(void);
 void Traversal_not_up_disabled(void);
 void Traversal_up_2_rel_instances(void);
 void Traversal_up_2_rel_instances_match_2nd(void);
@@ -7423,6 +7427,22 @@ bake_test_case Traversal_testcases[] = {
         Traversal_self_up_mixed_traversable
     },
     {
+        "not_up",
+        Traversal_not_up
+    },
+    {
+        "not_self_up",
+        Traversal_not_self_up
+    },
+    {
+        "not_up_wildcard",
+        Traversal_not_up_wildcard
+    },
+    {
+        "not_self_up_wildcard",
+        Traversal_not_self_up_wildcard
+    },
+    {
         "not_up_disabled",
         Traversal_not_up_disabled
     },
@@ -10021,7 +10041,7 @@ static bake_test_suite suites[] = {
         "Traversal",
         Traversal_setup,
         NULL,
-        106,
+        110,
         Traversal_testcases,
         1,
         Traversal_params

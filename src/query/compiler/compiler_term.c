@@ -1088,12 +1088,12 @@ void flecs_query_set_op_kind(
             }
         }
     } else {
-        if (term->flags_ & (EcsTermMatchAny|EcsTermMatchAnySrc)) {
-            op->kind = EcsQueryAndAny;
-        } else if ((term->src.id & trav_flags) == EcsUp) {
+        if ((term->src.id & trav_flags) == EcsUp) {
             op->kind = EcsQueryUp;
         } else if ((term->src.id & trav_flags) == (EcsSelf|EcsUp)) {
             op->kind = EcsQuerySelfUp;
+        } else if (term->flags_ & (EcsTermMatchAny|EcsTermMatchAnySrc)) {
+            op->kind = EcsQueryAndAny;
         }
     }
 
