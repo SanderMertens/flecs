@@ -55330,6 +55330,9 @@ error:
 #pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
 #pragma GCC diagnostic ignored "-Wswitch-enum"
 #pragma GCC diagnostic ignored "-Wshadow"
+#elif defined(ECS_TARGET_MSVC)
+/* Allow for variable shadowing */
+#pragma warning(disable : 4456)
 #endif
 
 /* Create script & parser structs with static token buffer */
