@@ -62,9 +62,9 @@ int main(int argc, char *argv[]) {
 
   ECS_SYSTEM(ecs, Move, EcsOnUpdate, Position, Velocity);
 
-  ecs_entity_t e = ecs_new(ecs);
-  ecs_set(ecs, e, Position, {10, 20});
-  ecs_set(ecs, e, Velocity, {1, 2});
+  ecs_entity_t e = ecs_insert(ecs, 
+    ecs_value(Position, {10, 20}),
+    ecs_value(Velocity, {1, 2}));
 
   while (ecs_progress(ecs, 0)) { }
 }
@@ -163,7 +163,7 @@ The following language bindings have been developed with Flecs! Note that these 
 - C#:
   - [BeanCheeseBurrito/Flecs.NET](https://github.com/BeanCheeseBurrito/Flecs.NET)
 - Rust:
-  - [flecs-ecs-rs](https://github.com/Indra-db/flecs-ecs-rs)
+  - [Flecs-Rust](https://github.com/Indra-db/Flecs-Rust)
   - [flecs-polyglot](https://github.com/flecs-hub/flecs-polyglot)
   - [flecs-rs](https://github.com/jazzay/flecs-rs)
 - Zig:
