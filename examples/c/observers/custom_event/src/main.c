@@ -47,7 +47,7 @@ int main(int argc, char *argv[]) {
     // Create entity
     ecs_entity_t e = ecs_entity(ecs, { .name = "e" });
     
-    // The observer filter can be matched against the entity, so make sure it
+    // The observer query can be matched against the entity, so make sure it
     // has the Position component before emitting the event. This does not 
     // trigger the observer yet.
     ecs_set(ecs, e, Position, {10, 20});

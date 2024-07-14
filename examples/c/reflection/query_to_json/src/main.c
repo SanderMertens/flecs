@@ -66,8 +66,7 @@ int main(int argc, char *argv[]) {
         }
     });
 
-    // Serialize query to JSON. Note that this works for iterators from any
-    // source, including filters & rules.
+    // Serialize query to JSON. This works for any iterator.
     ecs_iter_t it = ecs_query_iter(ecs, q);
     char *json = ecs_iter_to_json(&it, NULL);
     printf("%s\n", json);

@@ -155,7 +155,7 @@ static const flecs::entity_t Symbol = EcsSymbol;
 static const flecs::entity_t Sparse = EcsSparse;
 static const flecs::entity_t Union = EcsUnion;
 
-/* Builtin predicates for comparing entity ids in queries. Only supported by rules */
+/* Builtin predicates for comparing entity ids in queries. */
 static const flecs::entity_t PredEq = EcsPredEq;
 static const flecs::entity_t PredMatch = EcsPredMatch;
 static const flecs::entity_t PredLookup = EcsPredLookup;

@@ -2053,13 +2053,10 @@ void ecs_set_target_fps(
  * list of available flags, see include/flecs/private/api_flags.h. Typical flags
  * to use are:
  * 
- *  - `EcsFilterMatchInstanced`
- *  - `EcsFilterMatchEmptyTables`
- *  - `EcsFilterMatchDisabled`
- *  - `EcsFilterMatchPrefab`
- * 
- * Only use flags that start with `EcsFilter`. Do not use `EcsQuery*` flags. This
- * function may only be called when no queries are created.
+ *  - `EcsQueryIsInstanced`
+ *  - `EcsQueryMatchEmptyTables`
+ *  - `EcsQueryMatchDisabled`
+ *  - `EcsQueryMatchPrefab`
  * 
  * @param world The world.
  * @param flags The query flags.

@@ -25,9 +25,6 @@ int main(int, char *[]) {
 
     // Here we're creating a query that in the query DSL would look like this:
     //   Eats($this, $Food), Healthy($Food)
-    //
-    // Rules are similar to queries, but support more advanced features. This
-    // example shows how the basics of how to use rules & variables.
     flecs::query<> q = ecs.query_builder()
         // Identifiers that start with $ are query variables. Query variables
         // are like wildcards, but enforce that the entity substituted by the

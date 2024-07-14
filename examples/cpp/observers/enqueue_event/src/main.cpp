@@ -25,7 +25,7 @@ int main(int, char *[]) {
                 << it.entity(i).name() << "\n";
         });
 
-    // The observer filter can be matched against the entity, so make sure it
+    // The observer query can be matched against the entity, so make sure it
     // has the Position component before emitting the event. This does not 
     // trigger the observer yet.
     flecs::entity e = ecs.entity("e")

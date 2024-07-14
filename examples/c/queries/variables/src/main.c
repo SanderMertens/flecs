@@ -28,9 +28,6 @@ int main(int argc, char *argv[]) {
 
     // Here we're creating a query that in the query DSL would look like this:
     //   Eats($this, $Food), Healthy($Food)
-    //
-    // Rules are similar to queries, but support more advanced features. This
-    // example shows how the basics of how to use rules & variables.
     ecs_query_t *q = ecs_query(ecs, {
         .terms = {
             // Query variables are like wildcards, but enforce that the entity
@@ -61,7 +58,6 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    // Rules need to be explicitly deleted
     ecs_query_fini(q);
 
     // Output

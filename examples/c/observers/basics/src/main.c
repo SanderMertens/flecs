@@ -68,7 +68,7 @@ int main(int argc, char *argv[]) {
     // The ecs_observer macro (which calls the ecs_observer_init function) can
     // be used to create an observer.
     ecs_observer(ecs, {
-        // Observer filter. Uses same ecs_query_desc_t as systems/queries
+        // Observer query. Uses same ecs_query_desc_t as systems/queries
         .query  = { .terms = {{ .id = ecs_id(Position) }}},
         // Events the observer will listen for. Can contain multiple events
         .events = { EcsOnAdd, EcsOnRemove },

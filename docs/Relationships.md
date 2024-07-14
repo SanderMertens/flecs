@@ -726,7 +726,7 @@ parent.each_child(|child| {
 </ul>
 </div>
 
-More advanced queries are possible with filters, queries and rules. See the [Queries manual](Queries.md) for more details.
+More advanced queries are possible with Flecs queries. See the [Queries manual](Queries.md) for more details.
 
 ## Relationship components
 Relationship pairs, just like regular component, can be associated with data. To associate data with a relationship pair, at least one of its elements needs to be a component. A pair can be associated with at most one type. To determine which type is associated with a relationship pair, the following rules are followed in order:

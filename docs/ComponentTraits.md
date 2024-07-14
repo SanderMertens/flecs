@@ -1563,10 +1563,7 @@ e.add_id((movement, walking)); // replaces (Movement, Running)
 When compared to regular relationships, union relationships have some differences and limitations:
 - Relationship cleanup does not work yet for union relationships
 - Removing a union relationship removes any target, even if the specified target is different
-- Queries and rules do not support union relationships
 - Union relationships cannot have data
-- Union relationship query terms can use only the `And` operator
-- Queries with a `(R, *)` term will return `(R, *)` as term id for each entity
 
 ## Sparse trait
 The `Sparse` trait configures a component to use sparse storage. Sparse components are stored outside of tables, which means they do not have to be moved. Sparse components are also guaranteed to have stable pointers, which means that a component pointer is not invalidated when an entity moves to a new table. ECS operations and queries work as expected with sparse components.

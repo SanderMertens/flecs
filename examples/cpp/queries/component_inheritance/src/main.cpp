@@ -1,7 +1,7 @@
 #include <component_inheritance.h>
 #include <iostream>
 
-// This example shows how rules can be used to match simple inheritance trees.
+// This example shows how queries can be used to match simple inheritance trees.
 
 struct Unit { };
 struct CombatUnit : Unit { };
