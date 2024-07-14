@@ -1,5 +1,5 @@
 /**
- * @file table_cache.c
+ * @file storage/table_cache.c
  * @brief Data structure for fast table iteration/lookups.
  * 
  * A table cache is a data structure that provides constant time operations for

@@ -1,5 +1,5 @@
 /**
- * @file json/serialize_entity.c
+ * @file addons/json/serialize_entity.c
  * @brief Serialize single entity.
  */
 

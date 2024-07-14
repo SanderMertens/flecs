@@ -1,5 +1,5 @@
 /**
- * @file json/serialize_iter_rows.c
+ * @file addons/json/serialize_iter_rows.c
  * @brief Serialize (component) values to JSON strings.
  */
 

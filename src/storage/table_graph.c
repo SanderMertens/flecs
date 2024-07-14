@@ -1,5 +1,5 @@
 /**
- * @file table_graph.c
+ * @file storage/table_graph.c
  * @brief Data structure to speed up table transitions.
  * 
  * The table graph is used to speed up finding tables in add/remove operations.

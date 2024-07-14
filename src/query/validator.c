@@ -1,5 +1,5 @@
 /**
- * @file validator.c
+ * @file query/validator.c
  * @brief Validate and finalize queries.
  */
 

@@ -1,5 +1,5 @@
 /**
- * @file json/serialize_iter_result_query.c
+ * @file addons/json/serialize_iter_result_query.c
  * @brief Serialize matched query data of result.
  */
 

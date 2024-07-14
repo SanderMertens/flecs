@@ -1,5 +1,5 @@
 /**
- * @file json/json.c
+ * @file addons/json/json.c
  * @brief JSON serializer utilities.
  */
 

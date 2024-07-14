@@ -1,5 +1,5 @@
 /**
- * @file json/serialize_iter.c
+ * @file addons/json/serialize_iter.c
  * @brief Serialize iterator to JSON.
  */
 

@@ -1,5 +1,5 @@
 /**
- * @file meta/meta.h
+ * @file addons/meta/meta.h
  * @brief Private functions for meta addon.
  */
 

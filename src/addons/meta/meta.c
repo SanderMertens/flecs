@@ -1,5 +1,5 @@
 /**
- * @file meta/meta.c
+ * @file addons/meta/meta.c
  * @brief Meta addon.
  */
 

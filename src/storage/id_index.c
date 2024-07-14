@@ -1,5 +1,5 @@
 /**
- * @file id_index.c
+ * @file storage/id_index.c
  * @brief Index for looking up tables by (component) id.
  * 
  * An id record stores the administration for an in use (component) id, that is

@@ -1,5 +1,5 @@
 /**
- * @file id_index.h
+ * @file storage/id_index.h
  * @brief Index for looking up tables by (component) id.
  */
 

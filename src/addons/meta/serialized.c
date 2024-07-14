@@ -1,5 +1,5 @@
 /**
- * @file meta/serialized.c
+ * @file addons/meta/serialized.c
  * @brief Serialize type into flat operations array to speed up deserialization.
  */
 

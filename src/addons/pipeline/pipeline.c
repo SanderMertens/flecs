@@ -1,5 +1,5 @@
 /**
- * @file addons/ipeline/pipeline.c
+ * @file addons/pipeline/pipeline.c
  * @brief Functions for building and running pipelines.
  */
 

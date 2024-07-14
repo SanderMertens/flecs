@@ -1,6 +1,6 @@
 
 /**
- * @file meta/definitions.c
+ * @file addons/meta/definitions.c
  * @brief Reflection definitions for builtin types.
  */
 

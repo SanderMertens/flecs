@@ -1,5 +1,5 @@
 /**
- * @file table_cache.h
+ * @file storage/table_cache.h
  * @brief Data structure for fast table iteration/lookups.
  */
 

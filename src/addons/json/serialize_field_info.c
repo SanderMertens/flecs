@@ -1,6 +1,6 @@
 /**
- * @file json/serialize_type_info.c
- * @brief Serialize type (reflection) information to JSON.
+ * @file addons/json/serialize_field_info.c
+ * @brief Serialize query field information to JSON.
  */
 
 #include "json.h"

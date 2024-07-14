@@ -1,5 +1,5 @@
 /**
- * @file json/serialize_iter_result_table.c
+ * @file addons/json/serialize_iter_result_table.c
  * @brief Serialize all components of matched entity.
  */
 

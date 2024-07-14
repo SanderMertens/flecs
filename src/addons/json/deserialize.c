@@ -1,5 +1,5 @@
 /**
- * @file json/deserialize.c
+ * @file addons/json/deserialize.c
  * @brief Deserialize JSON strings into (component) values.
  */
 
