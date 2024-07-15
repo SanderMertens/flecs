@@ -19,7 +19,7 @@
 - [Relationships Manual](Relationships.md)
 - [Flecs Script Manual](FlecsScript.md)
 - [Flecs Remote API Manual](FlecsRemoteApi.md)
-- [v3 Migration Guide](FlecsRemoteApi.md)
+- [v3 Migration Guide](MigrationGuide.md)
 
 ## API reference
  - [C API](@ref c)
