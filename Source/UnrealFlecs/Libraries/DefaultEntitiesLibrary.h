@@ -135,13 +135,6 @@ public:
 	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Flecs | Default Entities", meta = (WorldContext = "WorldContextObject"))
-	static FORCEINLINE FFlecsEntityHandle GetUnSetEntity(const UObject* WorldContextObject)
-	{
-		const UFlecsWorld* World = UFlecsWorldSubsystem::GetDefaultWorld(WorldContextObject);
-		return FFlecsEntityHandle(flecs::entity(World->World, flecs::UnSet));
-	}
-
-	UFUNCTION(BlueprintCallable, BlueprintPure, Category = "Flecs | Default Entities", meta = (WorldContext = "WorldContextObject"))
 	static FORCEINLINE FFlecsEntityHandle GetOnTableCreateEntity(const UObject* WorldContextObject)
 	{
 		const UFlecsWorld* World = UFlecsWorldSubsystem::GetDefaultWorld(WorldContextObject);

@@ -12,16 +12,4 @@ UFlecsWorldDeveloperSettings::UFlecsWorldDeveloperSettings()
 void UFlecsWorldDeveloperSettings::PostInitProperties()
 {
 	Super::PostInitProperties();
-
-	#if WITH_EDITOR
-
-	if (Worlds.IsEmpty())
-	{
-		FFlecsWorldSettings FlecsWorldSettings;
-		FlecsWorldSettings.WorldName = DEFAULT_FLECS_WORLD_NAME.data();
-		
-		Worlds.Add(FlecsWorldSettings);
-	}
-
-	#endif // WITH_EDITOR
 }

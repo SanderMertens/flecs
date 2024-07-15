@@ -1,6 +1,7 @@
 ﻿// Solstice Games © 2024. All Rights Reserved.
 
 // ReSharper disable CppUE4CodingStandardNamingViolationWarning
+// ReSharper disable CppExpressionWithoutSideEffects
 #pragma once
 
 #include "CoreMinimal.h"
@@ -65,7 +66,7 @@ public:
 			.read()
 			.rate(UOBJECT_VALID_CHECK_FRAME_RATE)
 			.multi_threaded()
-			.each([](flecs::entity InEntity, const FFlecsUObjectComponent& InComponent)
+			.each([](const flecs::entity InEntity, const FFlecsUObjectComponent& InComponent)
 			{
 				if (!InComponent.IsValid())
 				{
@@ -110,8 +111,7 @@ public:
 
 	FORCEINLINE FFlecsEntityHandle CreateEntityWithId(const flecs::entity_t InId) const
 	{
-		const ecs_entity_t NewCEntity = ecs_new_w_id(World.c_ptr(), InId);
-		return FFlecsEntityHandle(NewCEntity);
+		return FFlecsEntityHandle(ecs_new_w_id(World.c_ptr(), InId));
 	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
@@ -420,7 +420,7 @@ public:
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
-	FORCEINLINE float GetDeltaTime() const
+	FORCEINLINE double GetDeltaTime() const
 	{
 		return World.delta_time();
 	}
@@ -846,16 +846,19 @@ public:
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs")
-	FORCEINLINE FFlecsEntityHandle CreatePrefab(const FString& Name) const
+	FORCEINLINE FFlecsEntityHandle CreatePrefab(const FFlecsEntityRecord& InRecord) const
 	{
-		FFlecsEntityHandle Prefab = World.prefab(StringCast<char>(*Name).Get());
+		FFlecsEntityHandle Prefab = World.prefab(StringCast<char>(*InRecord.Name).Get());
 		solid_checkf(Prefab.IsPrefab(), TEXT("Entity is not a prefab"));
+		
+		InRecord.ApplyRecordToEntity(Prefab);
 
-		const FFlecsPrefabComponent PrefabComponent;
+		FFlecsPrefabComponent PrefabComponent;
+		PrefabComponent.EntityRecord = InRecord;
 
 		#if WITH_EDITOR
 		
-		Prefab.SetDocName(Name);
+		Prefab.SetDocName(InRecord.Name);
 
 		#endif // WITH_EDITOR
 

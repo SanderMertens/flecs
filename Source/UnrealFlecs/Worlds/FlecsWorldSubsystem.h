@@ -136,15 +136,6 @@ public:
 		
 		WorldNameMap.emplace(Name, NewFlecsWorld);
 
-		#if WITH_EDITOR || UE_BUILD_DEBUG
-		
-		if (DeveloperSettings->bAutoImportExplorer)
-		{
-			ImportRestModule(Name, true, FFlecsRestSettings());
-		}
-		
-		#endif // WITH_EDITOR
-
 		GetDefaultWorld(this)->AddSingleton<FFlecsTypeMapComponent>();
 
 		NewFlecsWorld->SetThreads(DeveloperSettings->DefaultWorkerThreads);
@@ -170,25 +161,6 @@ public:
 	FORCEINLINE bool HasWorld(const FString& Name) const
 	{
 		return WorldNameMap.contains(Name);
-	}
-
-	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | REST API")
-	FORCEINLINE void ImportRestModule(const FString& WorldName, const bool bUseMonitoring, const FFlecsRestSettings& Settings) const
-	{
-		GetFlecsWorld(WorldName)->SetSingleton<flecs::Rest>(
-				flecs::Rest { static_cast<uint16>(Settings.Port),
-			const_cast<ANSICHAR*>(StringCast<ANSICHAR>(*Settings.IPAddress).Get()) });
-
-		if (bUseMonitoring)
-		{
-			ImportMonitoringModule(WorldName);
-		}
-	}
-
-	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs")
-	FORCEINLINE void ImportMonitoringModule(const FString& WorldName) const
-	{
-		GetFlecsWorld(WorldName)->ImportModule<flecs::monitor>();
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs")
