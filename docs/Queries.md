@@ -4200,7 +4200,7 @@ q.set_group(Region_01).each([](flecs::entity e) {
 </li>
 <li><b class="tab-title">Rust</b>
 
-// This section for Rust is unfinished for group_by, for code examples see group_by example is examples folder under query from Rust. Note, this still partically uses the C API. Until the Rust API is updated, this section will remain unfinished.
+This section for Rust is unfinished. For code examples, see the group_by examples in the `examples/flecs/queries` folder. Note, this still partially uses the C API. Until the Rust API is updated, this section will remain unfinished.
 
 The following example shows how grouping can be used to group entities that are in the same game region.
 
