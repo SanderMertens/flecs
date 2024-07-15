@@ -26606,6 +26606,10 @@ void FlecsRestImport(
 
     ecs_set_name_prefix(world, "EcsRest");
     ECS_TAG_DEFINE(world, EcsRestPlecs);
+
+    /* Enable frame time measurements so we're guaranteed to have a delta time
+     * value to pass into the HTTP server. */
+    ecs_measure_frame_time(world, true);
 }
 
 #endif
