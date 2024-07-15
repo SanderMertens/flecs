@@ -1227,8 +1227,8 @@ world.system::<&Position>().read::<Transform>().each(|p| {
 </ul>
 </div>
 
-### No readonly systems
-By default systems are ran while the world is in "readonly" mode, where all ECS operations are enqueued as commands. Note that readonly mode only applies to "structural" changes, such as changing the components of an entity or other operations that mutate ECS data structures. Systems can still write component values while in readonly mode.
+### Immediate systems
+By default systems are ran while the world is in "readonly" mode, where all ECS operations are enqueued as commands. Readonly here means that structural changes, such as changing the components of an entity are deferred. Systems can still write component values while in readonly mode.
 
 In some cases however, operations need to be immediately visible to a system. A typical example is a system that assigns tasks to resources, like assigning plates to a waiter. A system should only assign plates to a waiter that hasn't been assigned any plates yet, but to know which waiters are free, the operation that assigns a plate to a waiter must be immediately visible.
 
