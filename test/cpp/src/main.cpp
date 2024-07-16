@@ -172,6 +172,7 @@ void Entity_defer_new_w_with(void);
 void Entity_defer_new_w_name_scope_with(void);
 void Entity_defer_w_with_implicit_component(void);
 void Entity_defer_suspend_resume(void);
+void Entity_defer_ensure(void);
 void Entity_entity_id_str(void);
 void Entity_pair_id_str(void);
 void Entity_role_id_str(void);
@@ -1969,6 +1970,10 @@ bake_test_case Entity_testcases[] = {
     {
         "defer_suspend_resume",
         Entity_defer_suspend_resume
+    },
+    {
+        "defer_ensure",
+        Entity_defer_ensure
     },
     {
         "entity_id_str",
@@ -6467,7 +6472,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        268,
+        269,
         Entity_testcases
     },
     {

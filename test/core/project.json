@@ -1901,6 +1901,7 @@
                 "defer_twice_in_progress",
                 "run_w_defer",
                 "system_in_progress_w_defer",
+                "defer_ensure",
                 "defer_ensure_no_modify",
                 "defer_ensure_w_modify",
                 "defer_modify",

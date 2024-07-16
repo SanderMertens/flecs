@@ -2965,6 +2965,25 @@ void Entity_defer_suspend_resume(void) {
     test_assert(e.has<TagB>());
 }
 
+void Entity_defer_ensure(void) {
+    flecs::world world;
+
+    flecs::entity e = world.entity();
+
+    {
+        world.defer_begin();
+        Position& p = e.ensure<Position>();
+        p.x = 10;
+        p.y = 20;
+        world.defer_end();
+    }
+
+    Position* p = e.get_mut<Position>();
+    test_assert(p != nullptr);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+}
+
 void Entity_with_after_builder_method(void) {
     flecs::world ecs;
 

@@ -409,6 +409,32 @@ void Commands_system_in_progress_w_defer(void) {
     ecs_fini(world);
 }
 
+void Commands_defer_ensure(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e = ecs_new(world);
+
+    ecs_defer_begin(world);
+    {
+        Position *p = ecs_ensure(world, e, Position);
+        test_assert(p != NULL);
+        p->x = 10;
+        p->y = 20;
+    }
+    ecs_defer_end(world);
+
+    {
+        Position *p = ecs_get_mut(world, e, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+    }
+
+    ecs_fini(world);
+}
+
 static bool on_set_invoked = 0;
 
 static

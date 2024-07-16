@@ -1820,6 +1820,7 @@ void Commands_defer_twice(void);
 void Commands_defer_twice_in_progress(void);
 void Commands_run_w_defer(void);
 void Commands_system_in_progress_w_defer(void);
+void Commands_defer_ensure(void);
 void Commands_defer_ensure_no_modify(void);
 void Commands_defer_ensure_w_modify(void);
 void Commands_defer_modify(void);
@@ -9103,6 +9104,10 @@ bake_test_case Commands_testcases[] = {
         Commands_system_in_progress_w_defer
     },
     {
+        "defer_ensure",
+        Commands_defer_ensure
+    },
+    {
         "defer_ensure_no_modify",
         Commands_defer_ensure_no_modify
     },
@@ -10405,7 +10410,7 @@ static bake_test_suite suites[] = {
         "Commands",
         NULL,
         NULL,
-        134,
+        135,
         Commands_testcases
     },
     {
