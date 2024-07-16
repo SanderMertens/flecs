@@ -1792,6 +1792,61 @@ void Commands_defer_disable(void) {
     ecs_fini(world);
 }
 
+void Commands_defer_enable_from_stage(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t e = ecs_new(world);
+
+    ecs_world_t *stage = ecs_get_stage(world, 0);
+
+    ecs_defer_begin(world);
+    ecs_enable(stage, e, false);
+    test_assert(!ecs_has_id(world, e, EcsDisabled));
+    ecs_defer_end(world);
+
+    test_assert(ecs_has_id(world, e, EcsDisabled));
+
+    ecs_fini(world);
+}
+
+void Commands_defer_toggle(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ecs_add_id(world, Foo, EcsCanToggle);
+
+    ecs_entity_t e = ecs_new_w(world, Foo);
+
+    ecs_defer_begin(world);
+    ecs_enable_id(world, e, Foo, false);
+    test_assert(ecs_is_enabled_id(world, e, Foo));
+    ecs_defer_end(world);
+
+    test_assert(!ecs_is_enabled_id(world, e, Foo));
+
+    ecs_fini(world);
+}
+
+void Commands_defer_toggle_from_stage(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ecs_add_id(world, Foo, EcsCanToggle);
+
+    ecs_entity_t e = ecs_new_w(world, Foo);
+
+    ecs_world_t *stage = ecs_get_stage(world, 0);
+
+    ecs_defer_begin(world);
+    ecs_enable_id(stage, e, Foo, false);
+    test_assert(ecs_is_enabled_id(stage, e, Foo));
+    ecs_defer_end(world);
+
+    test_assert(!ecs_is_enabled_id(world, e, Foo));
+
+    ecs_fini(world);
+}
+
 void Commands_defer_delete_with(void) {
     ecs_world_t *world = ecs_mini();
 

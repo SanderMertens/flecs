@@ -1867,6 +1867,9 @@ void Commands_register_component_while_staged(void);
 void Commands_register_component_while_deferred(void);
 void Commands_defer_enable(void);
 void Commands_defer_disable(void);
+void Commands_defer_enable_from_stage(void);
+void Commands_defer_toggle(void);
+void Commands_defer_toggle_from_stage(void);
 void Commands_defer_delete_with(void);
 void Commands_defer_remove_all(void);
 void Commands_deferred_modified_after_remove(void);
@@ -9292,6 +9295,18 @@ bake_test_case Commands_testcases[] = {
         Commands_defer_disable
     },
     {
+        "defer_enable_from_stage",
+        Commands_defer_enable_from_stage
+    },
+    {
+        "defer_toggle",
+        Commands_defer_toggle
+    },
+    {
+        "defer_toggle_from_stage",
+        Commands_defer_toggle_from_stage
+    },
+    {
         "defer_delete_with",
         Commands_defer_delete_with
     },
@@ -10410,7 +10425,7 @@ static bake_test_suite suites[] = {
         "Commands",
         NULL,
         NULL,
-        135,
+        138,
         Commands_testcases
     },
     {
