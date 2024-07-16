@@ -751,7 +751,15 @@
                 "pair_first_wildcard",
                 "pair_first_wildcard_cached",
                 "pair_second_wildcard",
-                "pair_second_wildcard_cached"
+                "pair_second_wildcard_cached",
+                "0_src_tag",
+                "0_src_component",
+                "0_src_w_sparse",
+                "0_src_w_toggle",
+                "0_src_w_union",
+                "0_src_w_sparse_and_component",
+                "0_src_w_toggle_and_component",
+                "0_src_w_union_and_component"
             ]
         }, {
             "id": "Variables",
@@ -1903,7 +1911,9 @@
                 "1_sparse_self_up",
                 "1_sparse_written_self",
                 "1_sparse_written_up",
-                "1_sparse_written_self_up"
+                "1_sparse_written_self_up",
+                "sparse_0_src_only_term",
+                "sparse_0_src"
             ]
         }, {
             "id": "Union",

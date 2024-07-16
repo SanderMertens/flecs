@@ -732,6 +732,14 @@ void Plan_pair_first_wildcard(void);
 void Plan_pair_first_wildcard_cached(void);
 void Plan_pair_second_wildcard(void);
 void Plan_pair_second_wildcard_cached(void);
+void Plan_0_src_tag(void);
+void Plan_0_src_component(void);
+void Plan_0_src_w_sparse(void);
+void Plan_0_src_w_toggle(void);
+void Plan_0_src_w_union(void);
+void Plan_0_src_w_sparse_and_component(void);
+void Plan_0_src_w_toggle_and_component(void);
+void Plan_0_src_w_union_and_component(void);
 
 // Testsuite 'Variables'
 void Variables_setup(void);
@@ -1826,6 +1834,8 @@ void Sparse_1_sparse_self_up(void);
 void Sparse_1_sparse_written_self(void);
 void Sparse_1_sparse_written_up(void);
 void Sparse_1_sparse_written_self_up(void);
+void Sparse_sparse_0_src_only_term(void);
+void Sparse_sparse_0_src(void);
 
 // Testsuite 'Union'
 void Union_setup(void);
@@ -4883,6 +4893,38 @@ bake_test_case Plan_testcases[] = {
     {
         "pair_second_wildcard_cached",
         Plan_pair_second_wildcard_cached
+    },
+    {
+        "0_src_tag",
+        Plan_0_src_tag
+    },
+    {
+        "0_src_component",
+        Plan_0_src_component
+    },
+    {
+        "0_src_w_sparse",
+        Plan_0_src_w_sparse
+    },
+    {
+        "0_src_w_toggle",
+        Plan_0_src_w_toggle
+    },
+    {
+        "0_src_w_union",
+        Plan_0_src_w_union
+    },
+    {
+        "0_src_w_sparse_and_component",
+        Plan_0_src_w_sparse_and_component
+    },
+    {
+        "0_src_w_toggle_and_component",
+        Plan_0_src_w_toggle_and_component
+    },
+    {
+        "0_src_w_union_and_component",
+        Plan_0_src_w_union_and_component
     }
 };
 
@@ -9148,6 +9190,14 @@ bake_test_case Sparse_testcases[] = {
     {
         "1_sparse_written_self_up",
         Sparse_1_sparse_written_self_up
+    },
+    {
+        "sparse_0_src_only_term",
+        Sparse_sparse_0_src_only_term
+    },
+    {
+        "sparse_0_src",
+        Sparse_sparse_0_src
     }
 };
 
@@ -9985,7 +10035,7 @@ static bake_test_suite suites[] = {
         "Plan",
         NULL,
         NULL,
-        64,
+        72,
         Plan_testcases
     },
     {
@@ -10106,7 +10156,7 @@ static bake_test_suite suites[] = {
         "Sparse",
         Sparse_setup,
         NULL,
-        19,
+        21,
         Sparse_testcases,
         1,
         Sparse_params

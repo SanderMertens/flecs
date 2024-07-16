@@ -2317,3 +2317,248 @@ void Plan_pair_second_wildcard_cached(void) {
 
     ecs_fini(world);
 }
+
+void Plan_0_src_tag(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "Foo(#0)"
+    });
+
+    test_assert(q != NULL);
+
+    ecs_log_enable_colors(false);
+
+    const char *expect = 
+    HEAD " 0. [-1,  1]  setfix      "
+    LINE " 1. [ 0,  2]  setids      "
+    LINE " 2. [ 1,  3]  yield       "
+    LINE "";
+    char *plan = ecs_query_plan(q);
+
+    test_str(expect, plan);
+    ecs_os_free(plan);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Plan_0_src_component(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "Position(#0)"
+    });
+
+    test_assert(q != NULL);
+
+    ecs_log_enable_colors(false);
+
+    const char *expect = 
+    HEAD " 0. [-1,  1]  setfix      "
+    LINE " 1. [ 0,  2]  setids      "
+    LINE " 2. [ 1,  3]  yield       "
+    LINE "";
+    char *plan = ecs_query_plan(q);
+
+    test_str(expect, plan);
+    ecs_os_free(plan);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Plan_0_src_w_sparse(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_add_id(world, ecs_id(Position), EcsSparse);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "Position(#0)"
+    });
+
+    test_assert(q != NULL);
+
+    ecs_log_enable_colors(false);
+
+    const char *expect = 
+    HEAD " 0. [-1,  1]  setfix      "
+    LINE " 1. [ 0,  2]  setids      "
+    LINE " 2. [ 1,  3]  yield       "
+    LINE "";
+    char *plan = ecs_query_plan(q);
+
+    test_str(expect, plan);
+    ecs_os_free(plan);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Plan_0_src_w_toggle(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_add_id(world, ecs_id(Position), EcsCanToggle);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "Position(#0)"
+    });
+
+    test_assert(q != NULL);
+
+    ecs_log_enable_colors(false);
+
+    const char *expect = 
+    HEAD " 0. [-1,  1]  setfix      "
+    LINE " 1. [ 0,  2]  setids      "
+    LINE " 2. [ 1,  3]  yield       "
+    LINE "";
+    char *plan = ecs_query_plan(q);
+
+    test_str(expect, plan);
+    ecs_os_free(plan);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Plan_0_src_w_union(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Movement);
+
+    ecs_add_id(world, ecs_id(Movement), EcsUnion);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "Movement(#0, *)"
+    });
+
+    test_assert(q != NULL);
+
+    ecs_log_enable_colors(false);
+
+    const char *expect = 
+    HEAD " 0. [-1,  1]  setfix      "
+    LINE " 1. [ 0,  2]  setids      "
+    LINE " 2. [ 1,  3]  yield       "
+    LINE "";
+    char *plan = ecs_query_plan(q);
+
+    test_str(expect, plan);
+    ecs_os_free(plan);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Plan_0_src_w_sparse_and_component(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_add_id(world, ecs_id(Position), EcsSparse);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "Position(#0), Velocity"
+    });
+
+    test_assert(q != NULL);
+
+    ecs_log_enable_colors(false);
+
+    const char *expect = 
+    HEAD " 0. [-1,  1]  setfix      "
+    LINE " 1. [ 0,  2]  setids      "
+    LINE " 2. [ 1,  3]  andid       $[this]           (Velocity)"
+    LINE " 3. [ 2,  4]  popself     {1}"
+    LINE " 4. [ 3,  5]  yield       "
+    LINE "";
+    char *plan = ecs_query_plan(q);
+
+    test_str(expect, plan);
+    ecs_os_free(plan);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world); 
+}
+
+void Plan_0_src_w_toggle_and_component(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_add_id(world, ecs_id(Position), EcsCanToggle);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "Position(#0), Velocity"
+    });
+
+    test_assert(q != NULL);
+
+    ecs_log_enable_colors(false);
+
+    const char *expect = 
+    HEAD " 0. [-1,  1]  setfix      "
+    LINE " 1. [ 0,  2]  setids      "
+    LINE " 2. [ 1,  3]  andid       $[this]           (Velocity)"
+    LINE " 3. [ 2,  4]  popself     {1}"
+    LINE " 4. [ 3,  5]  yield       "
+    LINE "";
+    char *plan = ecs_query_plan(q);
+
+    test_str(expect, plan);
+    ecs_os_free(plan);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world); 
+}
+
+void Plan_0_src_w_union_and_component(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Movement);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_add_id(world, ecs_id(Movement), EcsUnion);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "Movement(#0, *), Velocity"
+    });
+
+    test_assert(q != NULL);
+
+    ecs_log_enable_colors(false);
+
+    const char *expect = 
+    HEAD " 0. [-1,  1]  setfix      "
+    LINE " 1. [ 0,  2]  setids      "
+    LINE " 2. [ 1,  3]  andid       $[this]           (Velocity)"
+    LINE " 3. [ 2,  4]  popself     {1}"
+    LINE " 4. [ 3,  5]  yield       "
+    LINE "";
+    char *plan = ecs_query_plan(q);
+
+    test_str(expect, plan);
+    ecs_os_free(plan);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}

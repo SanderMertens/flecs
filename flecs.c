@@ -34164,7 +34164,9 @@ int flecs_query_finalize_terms(
             }
         }
 
-        if (term->inout == EcsInOutNone) {
+        if (term->src.id == EcsIsEntity) {
+            nodata_term = true;
+        } else if (term->inout == EcsInOutNone) {
             nodata_term = true;
         } else if (!ecs_get_type_info(world, term->id)) {
             nodata_term = true;
