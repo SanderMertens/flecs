@@ -1674,7 +1674,9 @@ void FlecsRestImport(
 
     /* Enable frame time measurements so we're guaranteed to have a delta time
      * value to pass into the HTTP server. */
-    ecs_measure_frame_time(world, true);
+    if (ecs_os_has_time()) {
+        ecs_measure_frame_time(world, true);
+    }
 }
 
 #endif
