@@ -4217,7 +4217,8 @@ void Toggle_this_written_toggle_w_not_toggle(void) {
     ecs_enable_component(world, e11, Velocity, false);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "Tag, Position, !Velocity"
+        .expr = "Tag, Position, !Velocity",
+        .cache_kind = cache_kind
     });
 
     test_assert(q != NULL);
@@ -4343,7 +4344,8 @@ void Toggle_this_written_not_toggle_w_toggle(void) {
     ecs_enable_component(world, e11, Velocity, false);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "Tag, !Velocity, Position"
+        .expr = "Tag, !Velocity, Position",
+        .cache_kind = cache_kind
     });
 
     test_assert(q != NULL);
@@ -4469,7 +4471,8 @@ void Toggle_this_written_toggle_w_optional_toggle(void) {
     ecs_enable_component(world, e11, Velocity, false);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "Tag, Position, ?Velocity"
+        .expr = "Tag, Position, ?Velocity",
+        .cache_kind = cache_kind
     });
 
     test_assert(q != NULL);
@@ -4625,7 +4628,8 @@ void Toggle_this_written_optional_toggle_w_toggle(void) {
     ecs_enable_component(world, e11, Velocity, false);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "Tag, ?Velocity, Position"
+        .expr = "Tag, ?Velocity, Position",
+        .cache_kind = cache_kind
     });
 
     test_assert(q != NULL);
@@ -4781,7 +4785,8 @@ void Toggle_this_written_not_w_optional_toggle(void) {
     ecs_enable_component(world, e11, Velocity, false);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "Tag, !Velocity, ?Position"
+        .expr = "Tag, !Velocity, ?Position",
+        .cache_kind = cache_kind
     });
 
     test_assert(q != NULL);
@@ -4937,7 +4942,8 @@ void Toggle_this_written_optional_w_not_toggle(void) {
     ecs_enable_component(world, e11, Velocity, false);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "Tag, ?Position, !Velocity"
+        .expr = "Tag, ?Position, !Velocity",
+        .cache_kind = cache_kind
     });
 
     test_assert(q != NULL);
@@ -5093,7 +5099,8 @@ void Toggle_this_written_2_not_toggle(void) {
     ecs_enable_component(world, e11, Velocity, false);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "Tag, !Position, !Velocity"
+        .expr = "Tag, !Position, !Velocity",
+        .cache_kind = cache_kind
     });
 
     test_assert(q != NULL);
@@ -5209,7 +5216,8 @@ void Toggle_this_written_2_optional_toggle(void) {
     ecs_enable_component(world, e11, Velocity, false);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "Tag, ?Position, ?Velocity"
+        .expr = "Tag, ?Position, ?Velocity",
+        .cache_kind = cache_kind
     });
 
     test_assert(q != NULL);
@@ -5456,7 +5464,8 @@ void Toggle_this_written_toggle_w_2_not_toggle(void) {
     ecs_enable_component(world, e15, Mass, true);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "Tag, Position, !Velocity, !Mass"
+        .expr = "Tag, Position, !Velocity, !Mass",
+        .cache_kind = cache_kind
     });
 
     test_assert(q != NULL);
@@ -5641,7 +5650,8 @@ void Toggle_this_written_toggle_w_2_optional_toggle(void) {
     ecs_enable_component(world, e15, Mass, true);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "Tag, Position, ?Velocity, ?Mass"
+        .expr = "Tag, Position, ?Velocity, ?Mass",
+        .cache_kind = cache_kind
     });
 
     test_assert(q != NULL);
@@ -5886,7 +5896,8 @@ void Toggle_this_written_2_toggle_w_not_toggle(void) {
     ecs_enable_component(world, e15, Mass, true);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "Tag, Position, Velocity, !Mass"
+        .expr = "Tag, Position, Velocity, !Mass",
+        .cache_kind = cache_kind
     });
 
     test_assert(q != NULL);
@@ -6035,7 +6046,8 @@ void Toggle_this_written_2_toggle_w_optional_toggle(void) {
     ecs_enable_component(world, e15, Mass, true);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "Tag, Position, Velocity, ?Mass"
+        .expr = "Tag, Position, Velocity, ?Mass",
+        .cache_kind = cache_kind
     });
 
     test_assert(q != NULL);
@@ -6090,6 +6102,64 @@ void Toggle_this_written_2_toggle_w_optional_toggle(void) {
     test_bool(false, ecs_field_is_set(&it, 3));
 
     test_bool(false, ecs_iter_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Toggle_toggle_0_src_only_term(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_add_id(world, ecs_id(Position), EcsCanToggle);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "Position(#0)",
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(0, it.count);
+    test_uint(ecs_id(Position), ecs_field_id(&it, 0));
+    test_bool(false, ecs_field_is_set(&it, 0));
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Toggle_toggle_0_src(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Foo);
+
+    ecs_add_id(world, ecs_id(Position), EcsCanToggle);
+
+    ecs_entity_t e = ecs_new_w(world, Foo);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "Position(#0), Foo",
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(e, it.entities[0]);
+    test_uint(ecs_id(Position), ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
+    test_bool(false, ecs_field_is_set(&it, 0));
+    test_bool(true, ecs_field_is_set(&it, 1));
+    test_bool(false, ecs_query_next(&it));
 
     ecs_query_fini(q);
 

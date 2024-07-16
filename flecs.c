@@ -33826,7 +33826,10 @@ int flecs_term_finalize(
 
         /* Check if term has toggleable component */
         if (id_flags & EcsIdCanToggle) {
-            term->flags_ |= EcsTermIsToggle;
+            /* If the term isn't matched on a #0 source */
+            if (term->src.id != EcsIsEntity) {
+                term->flags_ |= EcsTermIsToggle;
+            }
         }
 
         /* Check if this is a member query */
