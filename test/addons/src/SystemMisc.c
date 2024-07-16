@@ -1669,3 +1669,124 @@ void SystemMisc_system_no_id_in_scope(void) {
 
     ecs_fini(world);
 }
+
+static int callback_callback_invoked = 0;
+static int callback_run_invoked = 0;
+
+static
+void callback_callback(ecs_iter_t *it) {
+    callback_callback_invoked ++;
+}
+
+static
+void callback_run(ecs_iter_t *it) {
+    callback_run_invoked ++;
+}
+
+void SystemMisc_register_callback_after_run(void) {
+    ecs_world_t* world = ecs_mini();
+
+    ecs_entity_t s = ecs_system(world, {
+        .callback = callback_callback
+    });
+
+    ecs_run(world, s, 0, 0);
+    test_int(callback_callback_invoked, 1);
+    test_int(callback_run_invoked, 0);
+
+    ecs_system(world, {
+        .entity = s,
+        .run = callback_run
+    });
+
+    ecs_run(world, s, 0, 0);
+    test_int(callback_callback_invoked, 1);
+    test_int(callback_run_invoked, 1);
+
+    ecs_fini(world);
+}
+
+void SystemMisc_register_run_after_callback(void) {
+    ecs_world_t* world = ecs_mini();
+
+    ecs_entity_t s = ecs_system(world, {
+        .run = callback_run
+    });
+
+    ecs_run(world, s, 0, 0);
+    test_int(callback_callback_invoked, 0);
+    test_int(callback_run_invoked, 1);
+
+    ecs_system(world, {
+        .entity = s,
+        .callback = callback_callback
+    });
+
+    ecs_run(world, s, 0, 0);
+    test_int(callback_callback_invoked, 1);
+    test_int(callback_run_invoked, 1);
+
+    ecs_fini(world);
+}
+
+static
+void ctx_free_3(void *ptr) {
+    int32_t *ctx = ptr;
+    ctx[0]++;
+}
+
+void SystemMisc_register_callback_after_run_ctx(void) {
+    ecs_world_t* world = ecs_mini();
+
+    int32_t callback_ctx = 0, run_ctx = 0;
+
+    ecs_entity_t s = ecs_system(world, {
+        .callback = callback_callback,
+        .callback_ctx = &callback_ctx,
+        .callback_ctx_free = ctx_free_3
+    });
+
+    test_int(callback_ctx, 0);
+
+    ecs_system(world, {
+        .entity = s,
+        .run = callback_run,
+        .run_ctx = &run_ctx,
+        .run_ctx_free = ctx_free_3
+    });
+
+    test_int(callback_ctx, 1);
+
+    ecs_fini(world);
+
+    test_int(callback_ctx, 1);
+    test_int(run_ctx, 1);
+}
+
+void SystemMisc_register_run_after_callback_ctx(void) {
+    ecs_world_t* world = ecs_mini();
+
+    int32_t callback_ctx = 0, run_ctx = 0;
+
+    ecs_entity_t s = ecs_system(world, {
+        .run = callback_run,
+        .run_ctx = &run_ctx,
+        .run_ctx_free = ctx_free_3
+    });
+
+    test_int(run_ctx, 0);
+
+    ecs_system(world, {
+        .entity = s,
+        .callback = callback_callback,
+        .callback_ctx = &callback_ctx,
+        .callback_ctx_free = ctx_free_3
+    });
+
+    test_int(run_ctx, 1);
+
+    ecs_fini(world);
+
+    test_int(callback_ctx, 1);
+    test_int(run_ctx, 1);
+}

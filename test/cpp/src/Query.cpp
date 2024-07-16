@@ -3077,6 +3077,20 @@ void Query_run_w_iter_fini_empty(void) {
     test_int(count, 1);
 }
 
+void Query_run_w_iter_fini_no_query(void) {
+    flecs::world ecs;
+
+    flecs::query<> q = ecs.query();
+
+    int32_t count = 0;
+    q.run([&](flecs::iter& it) {
+        count ++;
+        it.fini();
+    });
+
+    test_int(count, 1);
+}
+
 void Query_add_to_match_from_staged_query(void) {
     flecs::world ecs;
 

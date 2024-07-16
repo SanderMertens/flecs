@@ -2463,3 +2463,91 @@ void System_pipeline_step_depends_on_pipeline_step_with_enum(void) {
     ecs.progress();
     test_assert(ran_test);
 }
+
+void System_register_twice_w_each(void) {
+    flecs::world ecs;
+
+    int count1 = 0, count2 = 0;
+
+    flecs::system sys1 = ecs.system("Test")
+        .each([&](flecs::iter&, size_t) {
+            count1 ++;
+        });
+
+    sys1.run();
+    test_int(count1, 1);
+
+    flecs::system sys2 = ecs.system("Test")
+        .each([&](flecs::iter&, size_t) {
+            count2 ++;
+        });
+
+    sys2.run();
+    test_int(count2, 1);
+}
+
+void System_register_twice_w_run(void) {
+    flecs::world ecs;
+
+    int count1 = 0, count2 = 0;
+
+    flecs::system sys1 = ecs.system("Test")
+        .run([&](flecs::iter&) {
+            count1 ++;
+        });
+
+    sys1.run();
+    test_int(count1, 1);
+
+    flecs::system sys2 = ecs.system("Test")
+        .run([&](flecs::iter&) {
+            count2 ++;
+        });
+
+    sys2.run();
+    test_int(count2, 1);
+}
+
+void System_register_twice_w_run_each(void) {
+    flecs::world ecs;
+
+    int count1 = 0, count2 = 0;
+
+    flecs::system sys1 = ecs.system("Test")
+        .run([&](flecs::iter&) {
+            count1 ++;
+        });
+
+    sys1.run();
+    test_int(count1, 1);
+
+    flecs::system sys2 = ecs.system("Test")
+        .each([&](flecs::iter&, size_t) {
+            count2 ++;
+        });
+
+    sys2.run();
+    test_int(count2, 1);
+}
+
+void System_register_twice_w_each_run(void) {
+    flecs::world ecs;
+
+    int count1 = 0, count2 = 0;
+
+    flecs::system sys1 = ecs.system("Test")
+        .each([&](flecs::iter&, size_t) {
+            count1 ++;
+        });
+
+    sys1.run();
+    test_int(count1, 1);
+
+    flecs::system sys2 = ecs.system("Test")
+        .run([&](flecs::iter&) {
+            count2 ++;
+        });
+
+    sys2.run();
+    test_int(count2, 1);
+}

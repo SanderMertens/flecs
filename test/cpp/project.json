@@ -508,7 +508,11 @@
                 "optional_pair_term",
                 "singleton_tick_source",
                 "pipeline_step_with_kind_enum",
-                "pipeline_step_depends_on_pipeline_step_with_enum"
+                "pipeline_step_depends_on_pipeline_step_with_enum",
+                "register_twice_w_each",
+                "register_twice_w_run",
+                "register_twice_w_run_each",
+                "register_twice_w_each_run"
             ]
         }, {
             "id": "Event",
@@ -664,6 +668,7 @@
                 "run_w_iter_fini",
                 "run_w_iter_fini_interrupt",
                 "run_w_iter_fini_empty",
+                "run_w_iter_fini_no_query",
                 "add_to_match_from_staged_query",
                 "add_to_match_from_staged_query_readonly_threaded"
             ]

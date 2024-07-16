@@ -8716,4 +8716,3 @@ void Traversal_match_empty_table_up_written_isa(void) {
 
     ecs_fini(world);
 }
-

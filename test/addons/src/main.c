@@ -170,6 +170,10 @@ void SystemMisc_update_rate_w_system_init(void);
 void SystemMisc_system_w_interval_rate_stop_timer(void);
 void SystemMisc_system_same_interval_same_tick(void);
 void SystemMisc_system_no_id_in_scope(void);
+void SystemMisc_register_callback_after_run(void);
+void SystemMisc_register_run_after_callback(void);
+void SystemMisc_register_callback_after_run_ctx(void);
+void SystemMisc_register_run_after_callback_ctx(void);
 
 // Testsuite 'SystemPeriodic'
 void SystemPeriodic_1_type_1_component(void);
@@ -1160,6 +1164,22 @@ bake_test_case SystemMisc_testcases[] = {
     {
         "system_no_id_in_scope",
         SystemMisc_system_no_id_in_scope
+    },
+    {
+        "register_callback_after_run",
+        SystemMisc_register_callback_after_run
+    },
+    {
+        "register_run_after_callback",
+        SystemMisc_register_run_after_callback
+    },
+    {
+        "register_callback_after_run_ctx",
+        SystemMisc_register_callback_after_run_ctx
+    },
+    {
+        "register_run_after_callback_ctx",
+        SystemMisc_register_run_after_callback_ctx
     }
 };
 
@@ -2492,7 +2512,7 @@ static bake_test_suite suites[] = {
         "SystemMisc",
         NULL,
         NULL,
-        64,
+        68,
         SystemMisc_testcases
     },
     {

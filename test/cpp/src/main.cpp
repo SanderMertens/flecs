@@ -491,6 +491,10 @@ void System_optional_pair_term(void);
 void System_singleton_tick_source(void);
 void System_pipeline_step_with_kind_enum(void);
 void System_pipeline_step_depends_on_pipeline_step_with_enum(void);
+void System_register_twice_w_each(void);
+void System_register_twice_w_run(void);
+void System_register_twice_w_run_each(void);
+void System_register_twice_w_each_run(void);
 
 // Testsuite 'Event'
 void Event_evt_1_id_entity(void);
@@ -640,6 +644,7 @@ void Query_query_from_entity_name(void);
 void Query_run_w_iter_fini(void);
 void Query_run_w_iter_fini_interrupt(void);
 void Query_run_w_iter_fini_empty(void);
+void Query_run_w_iter_fini_no_query(void);
 void Query_add_to_match_from_staged_query(void);
 void Query_add_to_match_from_staged_query_readonly_threaded(void);
 
@@ -3221,6 +3226,22 @@ bake_test_case System_testcases[] = {
     {
         "pipeline_step_depends_on_pipeline_step_with_enum",
         System_pipeline_step_depends_on_pipeline_step_with_enum
+    },
+    {
+        "register_twice_w_each",
+        System_register_twice_w_each
+    },
+    {
+        "register_twice_w_run",
+        System_register_twice_w_run
+    },
+    {
+        "register_twice_w_run_each",
+        System_register_twice_w_run_each
+    },
+    {
+        "register_twice_w_each_run",
+        System_register_twice_w_each_run
     }
 };
 
@@ -3802,6 +3823,10 @@ bake_test_case Query_testcases[] = {
     {
         "run_w_iter_fini_empty",
         Query_run_w_iter_fini_empty
+    },
+    {
+        "run_w_iter_fini_no_query",
+        Query_run_w_iter_fini_no_query
     },
     {
         "add_to_match_from_staged_query",
@@ -6507,7 +6532,7 @@ static bake_test_suite suites[] = {
         "System",
         NULL,
         NULL,
-        71,
+        75,
         System_testcases
     },
     {
@@ -6528,7 +6553,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        110,
+        111,
         Query_testcases
     },
     {
