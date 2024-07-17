@@ -9828,6 +9828,10 @@ void flecs_cmd_batch_for_entity(
         flecs_notify_on_add(world, table, start_table, 
             ECS_RECORD_TO_ROW(r->row), 1, &added, 0, set_mask, true);
         flecs_defer_end(world, world->stages[0]);
+        if (r->row & EcsEntityIsTraversable) {
+            /* Update monitors since we didn't do this in flecs_commit. */
+            flecs_update_component_monitors(world, &added, NULL);
+        }
     }
 
     diff->added.array = added.array;

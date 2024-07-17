@@ -8716,3 +8716,40 @@ void Traversal_match_empty_table_up_written_isa(void) {
 
     ecs_fini(world);
 }
+
+void Traversal_up_after_add_batched_to_parent(void) {
+	ecs_world_t *world = ecs_init();
+
+	ECS_TAG(world, Foo);
+	ECS_TAG(world, Bar);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {
+            { .id = Foo, .src.id = EcsUp }
+        },
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+	ecs_entity_t e1 = ecs_new(world);
+	ecs_entity_t e2 = ecs_new(world);
+	ecs_add_pair(world, e2, EcsChildOf, e1);
+
+    ecs_defer_begin(world);
+    ecs_add(world, e1, Foo);
+    ecs_add(world, e1, Bar);
+    ecs_defer_end(world);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(it.count, 1);
+    test_uint(it.entities[0], e2);
+    test_uint(Foo, ecs_field_id(&it, 0));
+    test_uint(e1, ecs_field_src(&it, 0));
+    test_bool(true, ecs_field_is_set(&it, 0));
+
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_fini(world);
+}

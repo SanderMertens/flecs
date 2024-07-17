@@ -1468,7 +1468,8 @@
                 "match_empty_table_up_implicit_isa",
                 "match_empty_table_up_written_implicit_isa",
                 "match_empty_table_up_isa",
-                "match_empty_table_up_written_isa"
+                "match_empty_table_up_written_isa",
+                "up_after_add_batched_to_parent"
             ]
         }, {
             "id": "Cascade",
