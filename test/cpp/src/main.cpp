@@ -881,6 +881,10 @@ void Observer_implicit_register_in_emit_for_named_entity(void);
 void Observer_add_to_named_in_emit_for_named_entity(void);
 void Observer_implicit_register_in_emit_for_named_entity_w_defer(void);
 void Observer_add_to_named_in_emit_for_named_entity_w_defer(void);
+void Observer_register_twice_w_each(void);
+void Observer_register_twice_w_run(void);
+void Observer_register_twice_w_run_each(void);
+void Observer_register_twice_w_each_run(void);
 
 // Testsuite 'ComponentLifecycle'
 void ComponentLifecycle_ctor_on_add(void);
@@ -4752,6 +4756,22 @@ bake_test_case Observer_testcases[] = {
     {
         "add_to_named_in_emit_for_named_entity_w_defer",
         Observer_add_to_named_in_emit_for_named_entity_w_defer
+    },
+    {
+        "register_twice_w_each",
+        Observer_register_twice_w_each
+    },
+    {
+        "register_twice_w_run",
+        Observer_register_twice_w_run
+    },
+    {
+        "register_twice_w_run_each",
+        Observer_register_twice_w_run_each
+    },
+    {
+        "register_twice_w_each_run",
+        Observer_register_twice_w_each_run
     }
 };
 
@@ -6576,7 +6596,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        41,
+        45,
         Observer_testcases
     },
     {

@@ -1456,6 +1456,10 @@ void Observer_add_to_self_in_emit_entity(void);
 void Observer_on_set_w_not_tag(void);
 void Observer_on_set_w_not_component(void);
 void Observer_wildcard_event(void);
+void Observer_register_callback_after_run(void);
+void Observer_register_run_after_callback(void);
+void Observer_register_callback_after_run_ctx(void);
+void Observer_register_run_after_callback_ctx(void);
 void Observer_cache_test_1(void);
 void Observer_cache_test_2(void);
 void Observer_cache_test_3(void);
@@ -7717,6 +7721,22 @@ bake_test_case Observer_testcases[] = {
         Observer_wildcard_event
     },
     {
+        "register_callback_after_run",
+        Observer_register_callback_after_run
+    },
+    {
+        "register_run_after_callback",
+        Observer_register_run_after_callback
+    },
+    {
+        "register_callback_after_run_ctx",
+        Observer_register_callback_after_run_ctx
+    },
+    {
+        "register_run_after_callback_ctx",
+        Observer_register_run_after_callback_ctx
+    },
+    {
         "cache_test_1",
         Observer_cache_test_1
     },
@@ -10355,7 +10375,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        168,
+        172,
         Observer_testcases
     },
     {

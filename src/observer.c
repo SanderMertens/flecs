@@ -1018,14 +1018,6 @@ ecs_entity_t ecs_observer_init(
         flecs_poly_assert(poly->poly, ecs_observer_t);
         ecs_observer_t *o = (ecs_observer_t*)poly->poly;
 
-        if (desc->run) {
-            o->run = desc->run;
-        }
-
-        if (desc->callback) {
-            o->callback = desc->callback;
-        }
-
         if (o->ctx_free) {
             if (o->ctx && o->ctx != desc->ctx) {
                 o->ctx_free(o->ctx);
@@ -1033,18 +1025,32 @@ ecs_entity_t ecs_observer_init(
         }
 
         if (o->callback_ctx_free) {
-            if (o->callback_ctx && 
-                o->callback_ctx != desc->callback_ctx) 
-            {
+            if (o->callback_ctx && o->callback_ctx != desc->callback_ctx) {
                 o->callback_ctx_free(o->callback_ctx);
+                o->callback_ctx_free = NULL;
+                o->callback_ctx = NULL;
             }
         }
 
         if (o->run_ctx_free) {
-            if (o->run_ctx && 
-                o->run_ctx != desc->run_ctx) 
-            {
+            if (o->run_ctx && o->run_ctx != desc->run_ctx) {
                 o->run_ctx_free(o->run_ctx);
+                o->run_ctx_free = NULL;
+                o->run_ctx = NULL;
+            }
+        }
+
+        if (desc->run) {
+            o->run = desc->run;
+            if (!desc->callback) {
+                o->callback = NULL;
+            }
+        }
+
+        if (desc->callback) {
+            o->callback = desc->callback;
+            if (!desc->run) {
+                o->run = NULL;
             }
         }
 

@@ -913,7 +913,11 @@
                 "implicit_register_in_emit_for_named_entity",
                 "add_to_named_in_emit_for_named_entity",
                 "implicit_register_in_emit_for_named_entity_w_defer",
-                "add_to_named_in_emit_for_named_entity_w_defer"
+                "add_to_named_in_emit_for_named_entity_w_defer",
+                "register_twice_w_each",
+                "register_twice_w_run",
+                "register_twice_w_run_each",
+                "register_twice_w_each_run"
             ]
         }, {
             "id": "ComponentLifecycle",

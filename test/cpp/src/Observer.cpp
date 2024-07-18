@@ -1020,3 +1020,99 @@ void Observer_add_to_named_in_emit_for_named_entity_w_defer(void) {
     e1.emit<MyEvent>({ 10 });
     world.defer_end();
 }
+
+void Observer_register_twice_w_each(void) {
+    flecs::world ecs;
+
+    int count1 = 0, count2 = 0;
+
+    ecs.observer<Position>("Test")
+        .event(flecs::OnSet)
+        .each([&](Position&) {
+            count1 ++;
+        });
+
+    ecs.entity().set(Position{10, 20});
+    test_int(count1, 1);
+
+    ecs.observer<Position>("Test")
+        .event(flecs::OnSet)
+        .each([&](Position&) {
+            count2 ++;
+        });
+
+    ecs.entity().set(Position{10, 20});
+    test_int(count2, 1);
+}
+
+void Observer_register_twice_w_run(void) {
+    flecs::world ecs;
+
+    int count1 = 0, count2 = 0;
+
+    ecs.observer<Position>("Test")
+        .event(flecs::OnSet)
+        .run([&](flecs::iter&) {
+            count1 ++;
+        });
+
+    ecs.entity().set(Position{10, 20});
+    test_int(count1, 1);
+
+    ecs.observer<Position>("Test")
+        .event(flecs::OnSet)
+        .run([&](flecs::iter&) {
+            count2 ++;
+        });
+
+    ecs.entity().set(Position{10, 20});
+    test_int(count2, 1);
+}
+
+void Observer_register_twice_w_run_each(void) {
+    flecs::world ecs;
+
+    int count1 = 0, count2 = 0;
+
+    ecs.observer<Position>("Test")
+        .event(flecs::OnSet)
+        .run([&](flecs::iter&) {
+            count1 ++;
+        });
+
+    ecs.entity().set(Position{10, 20});
+    test_int(count1, 1);
+
+    ecs.observer<Position>("Test")
+        .event(flecs::OnSet)
+        .each([&](Position&) {
+            count2 ++;
+        });
+
+    ecs.entity().set(Position{10, 20});
+    test_int(count2, 1);
+}
+
+void Observer_register_twice_w_each_run(void) {
+    flecs::world ecs;
+
+    int count1 = 0, count2 = 0;
+
+    ecs.observer<Position>("Test")
+        .event(flecs::OnSet)
+        .each([&](Position&) {
+            count1 ++;
+        });
+
+    ecs.entity().set(Position{10, 20});
+    test_int(count1, 1);
+
+    ecs.observer<Position>("Test")
+        .event(flecs::OnSet)
+        .run([&](flecs::iter&) {
+            count2 ++;
+        });
+
+    ecs.entity().set(Position{10, 20});
+    test_int(count2, 1);
+}
