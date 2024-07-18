@@ -7,6 +7,20 @@
 
 #ifdef FLECS_JSON
 
+bool flecs_json_is_builtin(
+    ecs_id_t id)
+{
+    if (ECS_IS_PAIR(id)) {
+        if (ECS_PAIR_FIRST(id) == EcsChildOf) {
+            return true;
+        }
+        if (id == ecs_pair_t(EcsIdentifier, EcsName)) {
+            return true;
+        }
+    }
+    return false;
+}
+
 static
 bool flecs_json_serialize_table_type_info(
     const ecs_world_t *world,
@@ -27,6 +41,13 @@ bool flecs_json_serialize_table_type_info(
 
     for (i = 0; i < column_count; i ++) {
         ecs_column_t *column = &columns[i];
+
+        if (!desc || !desc->serialize_builtin) {
+            if (flecs_json_is_builtin(column->id)) {
+                continue;
+            }
+        }
+
         ecs_type_info_t *ti = column->ti;
         ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
 
@@ -63,6 +84,12 @@ bool flecs_json_serialize_table_tags(
             continue;
         }
 
+        if (!desc || !desc->serialize_builtin) {
+            if (flecs_json_is_builtin(id)) {
+                continue;
+            }
+        }
+
         if (column_map && column_map[f] != -1) {
             continue; /* Ignore components */
         }
@@ -82,7 +109,8 @@ bool flecs_json_serialize_table_tags(
         }
 
         flecs_json_next(buf);
-        flecs_json_path_or_label(buf, world, id, desc->serialize_full_paths);
+        flecs_json_path_or_label(buf, world, id, 
+            desc ? desc->serialize_full_paths : true);
 
         tag_count ++;
     }
@@ -115,6 +143,12 @@ bool flecs_json_serialize_table_pairs(
         ecs_id_t id = ids[f];
         if (!ECS_IS_PAIR(id)) {
             continue;
+        }
+
+        if (!desc || !desc->serialize_builtin) {
+            if (flecs_json_is_builtin(id)) {
+                continue;
+            }
         }
 
         if (column_map && column_map[f] != -1) {
@@ -154,7 +188,8 @@ bool flecs_json_serialize_table_pairs(
         if (!same_first) {
             /* Only append pair label if we're not appending to array */
             flecs_json_next(buf);
-            flecs_json_path_or_label(buf, world, first, desc->serialize_full_paths);
+            flecs_json_path_or_label(buf, world, first, 
+                desc ? desc->serialize_full_paths : true);
             ecs_strbuf_appendlit(buf, ":");
 
             /* Open array scope if this is a pair with multiple targets */
@@ -173,7 +208,8 @@ bool flecs_json_serialize_table_pairs(
             second = ecs_get_target(world, e, first, 0);
         }
 
-        flecs_json_path_or_label(buf, world, second, desc->serialize_full_paths);
+        flecs_json_path_or_label(buf, world, second, 
+            desc ? desc->serialize_full_paths : true);
 
         pair_count ++;
     }
@@ -229,7 +265,7 @@ bool flecs_json_serialize_table_inherited_type_components(
         ecs_strbuf_list_next(buf);
         ecs_strbuf_appendlit(buf, "\"");
         flecs_json_id_member(buf, world, column->id,
-            desc ? desc->serialize_full_paths : false);
+            desc ? desc->serialize_full_paths : true);
         ecs_strbuf_appendlit(buf, "\":");
 
         if (ts) {
@@ -365,6 +401,13 @@ int flecs_json_serialize_table_components(
     int32_t f, component_count = 0;
     for (f = 0; f < column_count; f ++) {
         ecs_column_t *column = &table->data.columns[f];
+
+        if (!desc || !desc->serialize_builtin) {
+            if (flecs_json_is_builtin(column->id)) {
+                continue;
+            }
+        }
+
         ecs_json_value_ser_ctx_t *value_ctx = &values_ctx[f];
         bool has_reflection = flecs_json_serialize_get_value_ctx(
             world, column->id, value_ctx, desc);

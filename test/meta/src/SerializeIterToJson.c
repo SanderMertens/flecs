@@ -848,6 +848,7 @@ void SerializeIterToJson_serialize_w_var_labels(void) {
 
     ecs_iter_to_json_desc_t desc = ECS_ITER_TO_JSON_INIT;
     desc.serialize_doc = true;
+    desc.serialize_full_paths = false;
     char *json = ecs_iter_to_json(&it, &desc);
 
     test_json(json, "{\"results\":[{\"name\":\"Foo\", \"doc\":{\"label\":\"Foo\"}, \"vars\":{\"X\":\"Object A\"},\"fields\":{\"ids\":[[\"Rel\",\"ObjA\"]]}}, {\"name\":\"Bar\", \"doc\":{\"label\":\"Bar\"}, \"vars\":{\"X\":\"ObjB\"},\"fields\":{\"ids\":[[\"Rel\",\"ObjB\"]]}}]}");
@@ -1400,7 +1401,37 @@ void SerializeIterToJson_serialize_variable_anonymous(void) {
     test_assert(json != NULL);
 
     char *expect = flecs_asprintf(
-        "{\"results\":[{\"vars\":{\"Entity\":#10000},\"fields\":{\"sources\":[\"#10000\"]}}]}");
+        "{\"results\":[{\"vars\":{\"Entity\":\"#10000\"},\"fields\":{\"sources\":[\"#10000\"]}}]}");
+    test_json(json, expect);
+
+    ecs_os_free(json);
+    ecs_os_free(expect);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void SerializeIterToJson_serialize_variable_anonymous_no_full_path(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Tag);
+
+    ecs_query_t *q = ecs_query(world, { .expr = "Tag($Entity)" });
+
+    ecs_entity_t e = 10000;
+    ecs_make_alive(world, 10000);
+    ecs_add(world, e, Tag);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    ecs_iter_to_json_desc_t desc = ECS_ITER_TO_JSON_INIT;
+    desc.serialize_values = false;
+    desc.serialize_full_paths = false;
+    char *json = ecs_iter_to_json(&it, &desc);
+    test_assert(json != NULL);
+
+    char *expect = flecs_asprintf(
+        "{\"results\":[{\"vars\":{\"Entity\":\"#10000\"},\"fields\":{\"sources\":[\"#10000\"]}}]}");
     test_json(json, expect);
 
     ecs_os_free(json);
@@ -1904,7 +1935,7 @@ void SerializeIterToJson_serialize_table(void) {
     char *json = ecs_iter_to_json(&it, &desc);
     test_assert(json != NULL);
 
-    test_json(json, "{\"results\":[{\"name\":\"e1\", \"tags\":[\"Foo\"], \"components\":{\"Position\":{\"x\":10, \"y\":20}, \"(Identifier,Name)\":null}}, {\"name\":\"e2\", \"tags\":[\"Foo\", \"Bar\"], \"components\":{\"Position\":{\"x\":20, \"y\":30}, \"Velocity\":{\"x\":1, \"y\":1}, \"(Identifier,Name)\":null}}, {\"name\":\"e3\", \"components\":{\"Position\":{\"x\":30, \"y\":40}, \"Mass\":{\"value\":100}, \"(Identifier,Name)\":null}}]}");
+    test_json(json, "{\"results\":[{\"name\":\"e1\", \"tags\":[\"Foo\"], \"components\":{\"Position\":{\"x\":10, \"y\":20}}}, {\"name\":\"e2\", \"tags\":[\"Foo\", \"Bar\"], \"components\":{\"Position\":{\"x\":20, \"y\":30}, \"Velocity\":{\"x\":1, \"y\":1}}}, {\"name\":\"e3\", \"components\":{\"Position\":{\"x\":30, \"y\":40}, \"Mass\":{\"value\":100}}}]}");
     
     ecs_os_free(json);
 
@@ -1974,10 +2005,11 @@ void SerializeIterToJson_serialize_table_w_id_labels(void) {
 
     ecs_iter_to_json_desc_t desc = ECS_ITER_TO_JSON_INIT;
     desc.serialize_table = true;
+    desc.serialize_full_paths = false;
     char *json = ecs_iter_to_json(&it, &desc);
     test_assert(json != NULL);
 
-    test_json(json, "{\"results\":[{\"name\":\"e1\", \"tags\":[\"Foo\"], \"components\":{\"position\":{\"x\":10, \"y\":20}, \"(Identifier,Name)\":null}}, {\"name\":\"e2\", \"tags\":[\"Foo\", \"Bar\"], \"components\":{\"position\":{\"x\":20, \"y\":30}, \"velocity\":{\"x\":1, \"y\":1}, \"(Identifier,Name)\":null}}, {\"name\":\"e3\", \"components\":{\"position\":{\"x\":30, \"y\":40}, \"mass\":{\"value\":100}, \"(Identifier,Name)\":null}}]}");
+    test_json(json, "{\"results\":[{\"name\":\"e1\", \"tags\":[\"Foo\"], \"components\":{\"position\":{\"x\":10, \"y\":20}}}, {\"name\":\"e2\", \"tags\":[\"Foo\", \"Bar\"], \"components\":{\"position\":{\"x\":20, \"y\":30}, \"velocity\":{\"x\":1, \"y\":1}}}, {\"name\":\"e3\", \"components\":{\"position\":{\"x\":30, \"y\":40}, \"mass\":{\"value\":100}}}]}");
     
     ecs_os_free(json);
 
@@ -2051,11 +2083,11 @@ void SerializeIterToJson_serialize_table_w_var_labels(void) {
 
     ecs_iter_to_json_desc_t desc = ECS_ITER_TO_JSON_INIT;
     desc.serialize_table = true;
-    desc.serialize_var_labels = true;
+    desc.serialize_full_paths = false;
     char *json = ecs_iter_to_json(&it, &desc);
     test_assert(json != NULL);
 
-    test_json(json, "{\"results\":[{\"parent\":\"Parent\", \"name\":\"e1\", \"tags\":[\"Foo\"],\"pairs\":{\"ChildOf\":\"parent\"},\"vars\":{\"p\":\"parent\"}, \"components\":{\"Position\":{\"x\":10, \"y\":20}, \"(Identifier,Name)\":null}}, {\"parent\":\"Parent\", \"name\":\"e2\", \"tags\":[\"Foo\", \"Bar\"],\"pairs\":{\"ChildOf\":\"parent\"},\"vars\":{\"p\":\"parent\"}, \"components\":{\"Position\":{\"x\":20, \"y\":30}, \"Velocity\":{\"x\":1, \"y\":1}, \"(Identifier,Name)\":null}}, {\"parent\":\"Parent\", \"name\":\"e3\", \"pairs\":{\"ChildOf\":\"parent\"},\"vars\":{\"p\":\"parent\"}, \"components\":{\"Position\":{\"x\":30, \"y\":40}, \"Mass\":{\"value\":100}, \"(Identifier,Name)\":null}}]}");
+    test_json(json, "{\"results\":[{\"parent\":\"Parent\", \"name\":\"e1\", \"tags\":[\"Foo\"],\"vars\":{\"p\":\"parent\"}, \"components\":{\"Position\":{\"x\":10, \"y\":20}}}, {\"parent\":\"Parent\", \"name\":\"e2\", \"tags\":[\"Foo\", \"Bar\"],\"vars\":{\"p\":\"parent\"}, \"components\":{\"Position\":{\"x\":20, \"y\":30}, \"Velocity\":{\"x\":1, \"y\":1}}}, {\"parent\":\"Parent\", \"name\":\"e3\", \"vars\":{\"p\":\"parent\"}, \"components\":{\"Position\":{\"x\":30, \"y\":40}, \"Mass\":{\"value\":100}}}]}");
 
     ecs_os_free(json);
 
@@ -2256,6 +2288,7 @@ void SerializeIterToJson_serialize_var_labels_for_query(void) {
     ecs_add_id(world, e2, Foo);
 
     ecs_iter_to_json_desc_t desc = ECS_ITER_TO_JSON_INIT;
+    desc.serialize_full_paths = false;
     ecs_iter_t it = ecs_query_iter(world, q);
     char *json = ecs_iter_to_json(&it, &desc);
     test_assert(json != NULL);

@@ -219,6 +219,7 @@ typedef struct ecs_entity_to_json_desc_t {
     bool serialize_full_paths; /**< Serialize full paths for tags, components and pairs */
     bool serialize_inherited;  /**< Serialize base components */
     bool serialize_values;     /**< Serialize component values */
+    bool serialize_builtin;    /**< Serialize builtin data as components (e.g. "name", "parent") */
     bool serialize_type_info;  /**< Serialize type info (requires serialize_values) */
     bool serialize_alerts;     /**< Serialize active alerts for entity */
     ecs_entity_t serialize_refs; /**< Serialize references (incoming edges) for relationship */
@@ -228,9 +229,10 @@ typedef struct ecs_entity_to_json_desc_t {
 /** Utility used to initialize JSON entity serializer. */
 #define ECS_ENTITY_TO_JSON_INIT (ecs_entity_to_json_desc_t){\
     .serialize_doc = false, \
-    .serialize_full_paths = false, \
+    .serialize_full_paths = true, \
     .serialize_inherited = false, \
     .serialize_values = true, \
+    .serialize_builtin = false, \
     .serialize_type_info = false, \
     .serialize_alerts = false, \
     .serialize_refs = 0, \
@@ -272,8 +274,8 @@ int ecs_entity_to_json_buf(
 typedef struct ecs_iter_to_json_desc_t {
     bool serialize_entity_ids;      /**< Serialize entity ids */
     bool serialize_values;          /**< Serialize component values */
+    bool serialize_builtin;         /**< Serialize builtin data as components (e.g. "name", "parent") */
     bool serialize_doc;             /**< Serialize doc attributes */
-    bool serialize_var_labels;      /**< Serialize doc names of matched variables */
     bool serialize_full_paths;      /**< Serialize full paths for tags, components and pairs */
     bool serialize_fields;          /**< Serialize field data */
     bool serialize_inherited;       /**< Serialize inherited components */
@@ -294,8 +296,9 @@ typedef struct ecs_iter_to_json_desc_t {
 #define ECS_ITER_TO_JSON_INIT (ecs_iter_to_json_desc_t){\
     .serialize_entity_ids =      false, \
     .serialize_values =          true, \
+    .serialize_builtin =         false, \
     .serialize_doc =             false, \
-    .serialize_full_paths =      false, \
+    .serialize_full_paths =      true, \
     .serialize_fields =          true, \
     .serialize_inherited =       false, \
     .serialize_table =           false, \

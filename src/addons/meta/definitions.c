@@ -60,8 +60,11 @@ void flecs_meta_import_core_definitions(
 
     ecs_entity_t addon_vec = ecs_opaque(world, {
         .entity = ecs_component(world, { 
-            .type = {
+            .entity = ecs_entity(world, {
                 .name = "flecs.core.addon_vec_t",
+                .root_sep = ""
+            }),
+            .type = {
                 .size = ECS_SIZEOF(char**),
                 .alignment = ECS_ALIGNOF(char**)
             }
