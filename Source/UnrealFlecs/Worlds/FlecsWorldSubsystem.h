@@ -27,22 +27,6 @@
 // ReSharper disable once CppUE4CodingStandardNamingViolationWarning
 constexpr std::string_view DEFAULT_FLECS_WORLD_NAME = "DefaultFlecsWorld";
 
-USTRUCT(BlueprintType)
-struct FFlecsRestSettings
-{
-	GENERATED_BODY()
-
-	/* Defaults Set, according to flecs's defaults */
-	
-	UPROPERTY(EditAnywhere, Category = "Flecs | REST API",
-		meta = (ClampMin = "0", ClampMax = "65535", UIMin = "0", UIMax = "65535"))
-	int32 Port = 27750;
-
-	UPROPERTY(EditAnywhere, Category = "Flecs | REST API")
-	FString IPAddress = "0.0.0.0";
-	
-}; // struct FFlecsRestSettings
-
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnWorldCreated, const FString&, UFlecsWorld*);
 
 UCLASS(BlueprintType)
@@ -59,7 +43,7 @@ public:
 	virtual ETickableTickType GetTickableTickType() const override
 	{
 		return GetDefault<UFlecsDeveloperSettings>()
-			&& GetDefault<UFlecsDeveloperSettings>()->bAutoTickWorld ? ETickableTickType::Always : ETickableTickType::Never;
+			&& GetDefault<UFlecsDeveloperSettings>()->bEnableFlecs ? ETickableTickType::Always : ETickableTickType::Never;
 	}
 	
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override
@@ -96,7 +80,7 @@ public:
 
 	virtual void Tick(float DeltaTime) override
 	{
-		for (const UFlecsWorld* World : Worlds)
+		for (const UFlecsWorld* World : AutoTickableWorlds)
 		{
 			World->Progress();
 		}
@@ -138,9 +122,14 @@ public:
 
 		GetDefaultWorld(this)->AddSingleton<FFlecsTypeMapComponent>();
 
-		NewFlecsWorld->SetThreads(DeveloperSettings->DefaultWorkerThreads);
+		NewFlecsWorld->SetThreads(Settings.DefaultWorkerThreads);
 
 		RegisterAllGameplayTags(NewFlecsWorld);
+
+		if (Settings.bAutoTickWorld)
+		{
+			AutoTickableWorlds.Add(NewFlecsWorld);
+		}
 
 		for (UObject* Module : Settings.Modules)
 		{
@@ -183,6 +172,15 @@ public:
 			}
 		}
 
+		for (int32 Index = 0; Index < AutoTickableWorlds.Num(); ++Index)
+		{
+			if (AutoTickableWorlds[Index] == World)
+			{
+				AutoTickableWorlds.RemoveAt(Index);
+				break;
+			}
+		}
+		
 		World->DestroyWorld();
 	}
 
@@ -218,6 +216,9 @@ public:
 protected:
 	UPROPERTY()
 	TArray<TObjectPtr<UFlecsWorld>> Worlds;
+
+	UPROPERTY()
+	TArray<TObjectPtr<UFlecsWorld>> AutoTickableWorlds;
 
 	robin_hood::unordered_flat_map<FString, UFlecsWorld*> WorldNameMap;
 

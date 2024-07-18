@@ -286,6 +286,12 @@ public:
 		return World.get_ref<T>();
 	}
 
+	template <typename T>
+	FORCEINLINE NO_DISCARD FFlecsEntityHandle GetSingletonEntity() const
+	{
+		return World.entity<T>();
+	}
+
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
 	FORCEINLINE void Merge() const
 	{

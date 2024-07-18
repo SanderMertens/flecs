@@ -5,10 +5,10 @@
 #include "CoreMinimal.h"
 #include "Modules/FlecsModuleInterface.h"
 #include "UObject/Object.h"
-#include "FlecsStatsModule.generated.h"
+#include "FlecsRestModule.generated.h"
 
 UCLASS(BlueprintType, EditInlineNew, DefaultToInstanced)
-class UNREALFLECS_API UFlecsStatsModule final : public UObject, public IFlecsModuleInterface
+class UNREALFLECS_API UFlecsRestModule final : public UObject, public IFlecsModuleInterface
 {
 	GENERATED_BODY()
 
@@ -17,6 +17,13 @@ public:
 	virtual void InitializeModule(UFlecsWorld* InWorld, const FFlecsEntityHandle& InModuleEntity) override;
 	virtual void DeinitializeModule(UFlecsWorld* InWorld) override;
 
-	FFlecsEntityHandle StatsEntity;
+	FFlecsEntityHandle RestEntity;
 
-}; // class UFlecsStatsModule
+	UPROPERTY(EditAnywhere, Category = "Flecs | REST API",
+		meta = (ClampMin = "0", ClampMax = "65535", UIMin = "0", UIMax = "65535"))
+	int32 Port = 27750;
+
+	UPROPERTY(EditAnywhere, Category = "Flecs | REST API")
+	FString IPAddress = "0.0.0.0";
+
+}; // class UFlecsRestModule

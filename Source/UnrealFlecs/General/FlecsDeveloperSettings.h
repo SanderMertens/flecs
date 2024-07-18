@@ -17,16 +17,4 @@ public:
 	UPROPERTY(EditAnywhere, Config, Category = "Flecs")
 	uint32 bEnableFlecs : 1 = true;
 
-	UPROPERTY(EditAnywhere, Config, Category = "Flecs")
-	uint32 bAutoTickWorld : 1 = true;
-
-	UPROPERTY(EditAnywhere, Config, Category = "Flecs")
-	uint32 bDefaultAutoMerge : 1 = true;
-
-	UPROPERTY(EditAnywhere, Config, Category = "Flecs")
-	uint32 bAutoImportExplorer : 1 = true;
-
-	UPROPERTY(EditAnywhere, Config, Category = "Flecs", meta = (ClampMin = "0"))
-	int32 DefaultWorkerThreads = 4;
-
 }; // class UFlecsDeveloperSettings

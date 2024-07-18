@@ -1,5 +1,6 @@
 ﻿// Fill out your copyright notice in the Description page of Project Settings.
 
+// ReSharper disable CppExpressionWithoutSideEffects
 #include "FlecsStatsModule.h"
 #include "Worlds/FlecsWorld.h"
 
@@ -7,11 +8,23 @@
 
 void UFlecsStatsModule::InitializeModule(UFlecsWorld* InWorld, const FFlecsEntityHandle& InModuleEntity)
 {
-	InModuleEntity.Destroy();
-	ModuleEntity = InWorld->World.import<flecs::stats>();
+	#if WITH_EDITOR
+	
+	StatsEntity = InWorld->World.import<flecs::stats>();
+	
+	#endif // WITH_EDITOR
 }
 
 void UFlecsStatsModule::DeinitializeModule(UFlecsWorld* InWorld)
 {
-	ModuleEntity.Destroy();
+	#if WITH_EDITOR
+
+	if UNLIKELY(!StatsEntity.IsValid())
+	{
+		return;
+	}
+	
+	StatsEntity.Disable();
+	
+	#endif // WITH_EDITOR
 }
