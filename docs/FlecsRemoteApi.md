@@ -465,6 +465,7 @@ GET entity/<path>
 | full_paths    | bool     | Serialize full tag/pair/component paths         |
 | inherited     | bool     | Serialize inherited components                  |
 | values        | bool     | Serialize component values                      |
+| builtin       | bool     | Serialize builtin components for parent & name  |
 | type_info     | bool     | Serialize type info for components              |
 | matches       | bool     | Serialize matched with queries                  |
 | alerts        | bool     | Serialize active alerts for entity & children   |
@@ -473,7 +474,7 @@ GET entity/<path>
 
 #### Examples
 
-In this example, `Mass` is a component with reflection data, `(Identifier, Name)` is a pair component without reflection data, and `(Description, Color)` is a pair component with reflection data.
+In this example, `Mass` is a component with reflection data, `Position` is a pair component without reflection data, and `(Description, Color)` is a pair component with reflection data.
 
 <div class="flecs-snippet-tabs">
 <ul>
@@ -526,22 +527,19 @@ auto json = e.to_json();
   "tags": [
     "Planet"
   ],
-  "pairs": {
-    "ChildOf": "Sun"
-  },
   "components": {
     "Mass": {
       "value": "5.9722e24"
     },
-    "(Identifier,Name)": null,
-    "(Description,Color)": {
+    "Position": null,
+    "(flecs.doc.Description,flecs.doc.Color)": {
       "value": "#6b93d6"
     }
   }
 }
 ```
 ---
-This example shows how `type_info` can be used to obtain the component schema's. If no schema is available a `null` placeholder is sent. The example also shows the `entity_id` option, which adds the `id` member.
+This example shows how `type_info` can be used to obtain the component schema's. If no schema is available a `null` placeholder is sent. Note how the member name used in the `type_info` object is the same as used in the `components` object. The example also shows the `entity_id` option, which adds the `id` member.
 
 <div class="flecs-snippet-tabs">
 <ul>
@@ -608,8 +606,8 @@ auto json = e.to_json(&desc);
         }
       ]
     },
-    "(Identifier,Name)": 0,
-    "(Description,Color)": {
+    "Position": 0,
+    "(flecs.doc.Description,flecs.doc.Color)": {
       "value": [
         "text"
       ]
@@ -618,85 +616,11 @@ auto json = e.to_json(&desc);
   "tags": [
     "Planet"
   ],
-  "pairs": {
-    "ChildOf": "Sun"
-  },
   "components": {
     "Mass": {
       "value": "5.9722e24"
     },
-    "(Identifier,Name)": null,
-    "(Description,Color)": {
-      "value": "#6b93d6"
-    }
-  }
-}
-```
----
-This example shows the effect of setting `full_paths`. This can be useful when tag, pair or component names are used in follow up requests, which often require full paths. It can also be used to disambiguate between names in different namespaces.
-
-<div class="flecs-snippet-tabs">
-<ul>
-<li><b class="tab-title">HTTP</b>
-
-```
-GET /entity/Sun/Earth?full_paths=true
-```
-
-</li>
-<li><b class="tab-title">JavaScript</b>
-
-```js
-const conn = flecs.connect("localhost");
-
-conn.entity("Sun.Earth", {full_paths: true}, (reply) => {
-  // ...
-});
-```
-
-</li>
-<li><b class="tab-title">C</b>
-
-```c
-ecs_entity_t e = ecs_lookup(world, "Sun.Earth");
-
-ecs_entity_to_json_desc_t desc = ECS_ENTITY_TO_JSON_INIT;
-desc.serialize_full_paths = true;
-char *json = ecs_entity_to_json(world, e, &desc);
-// ...
-ecs_os_free(json);
-```
-
-</li>
-<li><b class="tab-title">C++</b>
-
-```cpp
-flecs::entity e = world.lookup("Sun::Earth");
-
-ecs_entity_to_json_desc_t desc = ECS_ENTITY_TO_JSON_INIT;
-desc.serialize_full_paths = true;
-auto json = e.to_json(&desc);
-```
-
-</li>
-</ul>
-</div>
-
-```json
-{
-  "parent": "Sun",
-  "name": "Earth",
-  "tags": [
-    "planets.Planet"
-  ],
-  "pairs": {
-    "flecs.core.ChildOf": "Sun"
-  },
-  "components": {
-    "planets.Mass": {
-      "value": "5.9722e24"
-    },
-    "(flecs.core.Identifier,flecs.core.Name)": null,
+    "Position": null,
     "(flecs.doc.Description,flecs.doc.Color)": {
       "value": "#6b93d6"
     }
@@ -761,8 +685,7 @@ auto json = e.to_json(&desc);
     "Planet"
   ],
   "pairs": {
-    "ChildOf": "Sun",
-    "IsA": "HabitablePlanet"
+    "flecs.core.IsA": "HabitablePlanet"
   },
   "inherited": {
     "planets.HabitablePlanet": {
@@ -775,10 +698,6 @@ auto json = e.to_json(&desc);
   "components": {
     "Mass": {
       "value": "5.9722e24"
-    },
-    "(Identifier,Name)": null,
-    "(Description,Color)": {
-      "value": "#6b93d6"
     }
   }
 }
@@ -840,13 +759,8 @@ auto json = e.to_json(&desc);
   "tags": [
     "Planet"
   ],
-  "pairs": {
-    "ChildOf": "Sun"
-  },
   "components": {
     "Mass": null,
-    "(Identifier,Name)": null,
-    "(Description,Color)": null
   }
 }
 ```
@@ -1254,6 +1168,7 @@ GET /query/?expr=<query expression>
 | full_paths    | bool     | Serialize full tag/pair/component paths         |
 | inherited     | bool     | Serialize inherited components                  |
 | values        | bool     | Serialize component values                      |
+| builtin       | bool     | Serialize builtin components for parent & name  |
 | fields        | bool     | Serialize query fields                          |
 | table         | bool     | Serialize table (all components for match)      |
 | result        | bool     | Serialize results (disable for metadata-only request) |
@@ -1419,8 +1334,7 @@ auto json = q.iter().to_json(&desc);
         "FtlEnabled"
       ],
       "pairs": {
-        "ChildOf": "shipyard",
-        "IsA": "Freighter"
+        "flecs.core.IsA": "Freighter"
       },
       "components": {
         "Position": {
@@ -1430,8 +1344,7 @@ auto json = q.iter().to_json(&desc);
         "Velocity": {
           "x": 1,
           "y": 1
-        },
-        "(Identifier,Name)": null
+        }
       }
     },
     {
@@ -1441,7 +1354,6 @@ auto json = q.iter().to_json(&desc);
         "FtlEnabled"
       ],
       "pairs": {
-        "ChildOf": "shipyard",
         "IsA": "Freighter"
       },
       "components": {
@@ -1452,8 +1364,7 @@ auto json = q.iter().to_json(&desc);
         "Velocity": {
           "x": 3,
           "y": 4
-        },
-        "(Identifier,Name)": null
+        }
       }
     }
   ]

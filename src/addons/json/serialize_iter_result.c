@@ -46,7 +46,7 @@ bool flecs_json_serialize_vars(
 
         flecs_json_member(buf, var_name);
         flecs_json_path_or_label(buf, world, var, 
-            desc ? desc->serialize_full_paths : false);
+            desc ? desc->serialize_full_paths : true);
     }
 
     if (actual_count) {
@@ -306,7 +306,7 @@ bool flecs_json_serialize_get_value_ctx(
 
         ecs_strbuf_t idlbl = ECS_STRBUF_INIT;
         flecs_json_id_member(&idlbl, world, id, 
-            desc ? desc->serialize_full_paths : false);
+            desc ? desc->serialize_full_paths : true);
         ctx->id_label = ecs_strbuf_get(&idlbl);
 
         ecs_entity_t type = ecs_get_typeid(world, id);

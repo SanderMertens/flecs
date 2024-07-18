@@ -464,6 +464,8 @@
                 "struct_w_nested_members_struct",
                 "struct_w_2_nested_members_struct",
                 "ser_deser_entity_named",
+                "ser_deser_entity_named_child",
+                "ser_deser_entity_namespaced_component",
                 "deser_entity_1_component_1_member",
                 "deser_entity_1_component_1_member_w_spaces",
                 "deser_entity_1_component_2_members",
@@ -656,7 +658,11 @@
                 "serialize_no_matches",
                 "serialize_id_recycled",
                 "serialize_union_target",
-                "serialize_union_target_recycled"
+                "serialize_union_target_recycled",
+                "serialize_anonymous_w_builtin",
+                "serialize_named_w_builtin",
+                "serialize_named_child_w_builtin",
+                "serialize_named_child_w_builtin_w_type_info"
             ]
         }, {
             "id": "SerializeIterToJson",
@@ -701,6 +707,7 @@
                 "serialize_ids_2_entities",
                 "serialize_anonymous",
                 "serialize_anonymous_ids",
+                "serialize_variable_anonymous_no_full_path",
                 "serialize_variable_anonymous",
                 "serialize_anonymous_tag",
                 "serialize_anonymous_component",

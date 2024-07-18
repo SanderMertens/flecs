@@ -439,6 +439,8 @@ void DeserializeFromJson_struct_w_2_nested_members_i32(void);
 void DeserializeFromJson_struct_w_nested_members_struct(void);
 void DeserializeFromJson_struct_w_2_nested_members_struct(void);
 void DeserializeFromJson_ser_deser_entity_named(void);
+void DeserializeFromJson_ser_deser_entity_named_child(void);
+void DeserializeFromJson_ser_deser_entity_namespaced_component(void);
 void DeserializeFromJson_deser_entity_1_component_1_member(void);
 void DeserializeFromJson_deser_entity_1_component_1_member_w_spaces(void);
 void DeserializeFromJson_deser_entity_1_component_2_members(void);
@@ -628,6 +630,10 @@ void SerializeEntityToJson_serialize_no_matches(void);
 void SerializeEntityToJson_serialize_id_recycled(void);
 void SerializeEntityToJson_serialize_union_target(void);
 void SerializeEntityToJson_serialize_union_target_recycled(void);
+void SerializeEntityToJson_serialize_anonymous_w_builtin(void);
+void SerializeEntityToJson_serialize_named_w_builtin(void);
+void SerializeEntityToJson_serialize_named_child_w_builtin(void);
+void SerializeEntityToJson_serialize_named_child_w_builtin_w_type_info(void);
 
 // Testsuite 'SerializeIterToJson'
 void SerializeIterToJson_serialize_1_comps_empty(void);
@@ -670,6 +676,7 @@ void SerializeIterToJson_serialize_ids(void);
 void SerializeIterToJson_serialize_ids_2_entities(void);
 void SerializeIterToJson_serialize_anonymous(void);
 void SerializeIterToJson_serialize_anonymous_ids(void);
+void SerializeIterToJson_serialize_variable_anonymous_no_full_path(void);
 void SerializeIterToJson_serialize_variable_anonymous(void);
 void SerializeIterToJson_serialize_anonymous_tag(void);
 void SerializeIterToJson_serialize_anonymous_component(void);
@@ -2587,6 +2594,14 @@ bake_test_case DeserializeFromJson_testcases[] = {
         DeserializeFromJson_ser_deser_entity_named
     },
     {
+        "ser_deser_entity_named_child",
+        DeserializeFromJson_ser_deser_entity_named_child
+    },
+    {
+        "ser_deser_entity_namespaced_component",
+        DeserializeFromJson_ser_deser_entity_namespaced_component
+    },
+    {
         "deser_entity_1_component_1_member",
         DeserializeFromJson_deser_entity_1_component_1_member
     },
@@ -3331,6 +3346,22 @@ bake_test_case SerializeEntityToJson_testcases[] = {
     {
         "serialize_union_target_recycled",
         SerializeEntityToJson_serialize_union_target_recycled
+    },
+    {
+        "serialize_anonymous_w_builtin",
+        SerializeEntityToJson_serialize_anonymous_w_builtin
+    },
+    {
+        "serialize_named_w_builtin",
+        SerializeEntityToJson_serialize_named_w_builtin
+    },
+    {
+        "serialize_named_child_w_builtin",
+        SerializeEntityToJson_serialize_named_child_w_builtin
+    },
+    {
+        "serialize_named_child_w_builtin_w_type_info",
+        SerializeEntityToJson_serialize_named_child_w_builtin_w_type_info
     }
 };
 
@@ -3494,6 +3525,10 @@ bake_test_case SerializeIterToJson_testcases[] = {
     {
         "serialize_anonymous_ids",
         SerializeIterToJson_serialize_anonymous_ids
+    },
+    {
+        "serialize_variable_anonymous_no_full_path",
+        SerializeIterToJson_serialize_variable_anonymous_no_full_path
     },
     {
         "serialize_variable_anonymous",
@@ -4519,7 +4554,7 @@ static bake_test_suite suites[] = {
         "DeserializeFromJson",
         NULL,
         NULL,
-        132,
+        134,
         DeserializeFromJson_testcases
     },
     {
@@ -4533,14 +4568,14 @@ static bake_test_suite suites[] = {
         "SerializeEntityToJson",
         NULL,
         NULL,
-        45,
+        49,
         SerializeEntityToJson_testcases
     },
     {
         "SerializeIterToJson",
         NULL,
         NULL,
-        68,
+        69,
         SerializeIterToJson_testcases
     },
     {

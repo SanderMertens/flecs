@@ -290,6 +290,9 @@ int flecs_json_serialize_alerts(
     ecs_strbuf_t *buf,
     ecs_entity_t entity);
 
+bool flecs_json_is_builtin(
+    ecs_id_t id);
+
 #endif
 
 #endif /* FLECS_JSON_PRIVATE_H */

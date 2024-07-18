@@ -1261,6 +1261,57 @@ void DeserializeFromJson_ser_deser_entity_named(void) {
     ecs_fini(world);
 }
 
+void DeserializeFromJson_ser_deser_entity_named_child(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_entity(world, { .name = "parent.e" });
+    char *json = ecs_entity_to_json(world, e, NULL);
+
+    const char *r = ecs_entity_from_json(world, e, json, NULL);
+    test_assert(r != NULL);
+    ecs_os_free(json);
+
+    ecs_entity_t parent = ecs_lookup(world, "parent");
+    test_assert(parent != 0);
+
+    test_str(ecs_get_name(world, e), "e");
+    test_uint(parent, ecs_get_target(world, e, EcsChildOf, 0));
+
+    ecs_fini(world);
+}
+
+void DeserializeFromJson_ser_deser_entity_namespaced_component(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "ns.Position" }),
+        .members = {
+            { "x", .type = ecs_id(ecs_i32_t) },
+            { "y", .type = ecs_id(ecs_i32_t) }
+        }
+    });
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_set(world, e, Position, {10, 20});
+    
+    char *json = ecs_entity_to_json(world, e, NULL);
+    ecs_set(world, e, Position, {0, 0});
+    const char *r = ecs_entity_from_json(world, e, json, NULL);
+    test_assert(r != NULL);
+    ecs_os_free(json);
+
+    test_str(ecs_get_name(world, e), "e");
+
+    {
+        const Position *p = ecs_get(world, e, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+    }
+
+    ecs_fini(world);
+}
+
 void DeserializeFromJson_deser_entity_1_component_1_member(void) {
     ecs_world_t *world = ecs_init();
 
@@ -1797,6 +1848,8 @@ void DeserializeFromJson_ser_deser_new_world(void) {
     desc.serialize_modules = true;
     char *json = ecs_world_to_json(world, &desc);
     test_assert(json != NULL);
+
+    // printf("%s\n", json);
 
     ecs_fini(world);
     world = ecs_init();
@@ -3743,6 +3796,11 @@ void DeserializeFromJson_ser_deser_restore_1_deleted_anon_w_cycle_ref(void) {
     const char *r = ecs_world_from_json(world, json, NULL);
     test_str(r, "");
     ecs_os_free(json);
+
+    ecs_entity_t tagA = ecs_lookup(world, "TagA");
+
+    test_assert(tagA != 0);
+    test_assert(tagA == TagA);
 
     e1 = ecs_get_target(world, e2, TagA, 0);
     test_assert(e1 != 0);
