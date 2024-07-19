@@ -1957,3 +1957,37 @@ void World_copy_world(void) {
 
     test_assert(world_1.c_ptr() == world_2.c_ptr());
 }
+
+void World_fini_reentrancy(void) {
+    {
+        struct A {
+            int a;
+        };
+
+        flecs::world world;
+
+        // declare on remove hook for component A:
+        world.component<A>().on_remove([&world](flecs::entity e, A &) {  //
+            // This code runs on world destroy, since we did not remove this component manually before the world was destroyed.
+
+            // before we make a copy of the world, the refcount has to be 1 since this is the special case where
+            // we will be copying a world object precisely when the world is being destroyed.
+            // see world::~world() code and notes.
+            const ecs_header_t *hdr = (const ecs_header_t*) world.c_ptr();
+            test_assert(hdr->refcount == 1);
+
+            // obtain the entity's world. This increments the world's hdr refcount
+            flecs::world world_copy = e.world();
+
+            test_assert(hdr->refcount == 2);
+            // here world_copy object wrapping c world is destroyed
+            // therefore, world destroy will be called again wreaking havoc.
+        });
+
+        world.entity().add<A>();
+
+        // world will be destroyed here, and hook above will be called.
+    }
+    test_assert(true); // if this runs, ecs_fini did not abort and we're good.
+
+}

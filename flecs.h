@@ -20509,6 +20509,10 @@ struct world {
                 if (ecs_stage_get_id(world_) == -1) {
                     ecs_stage_free(world_);
                 } else {
+                    // before we call ecs_fini(), we increment the reference count back to 1
+                    // otherwise, copies of this object created during ecs_fini (e.g. a component on_remove hook)
+                    // would call again this destructor and ecs_fini().
+                    flecs_poly_claim(world_);
                     ecs_fini(world_);
                 }
             }
