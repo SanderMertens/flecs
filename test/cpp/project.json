@@ -1200,7 +1200,8 @@
                 "get_mut_T",
                 "get_mut_R_T",
                 "world_mini",
-                "copy_world"
+                "copy_world",
+                "fini_reentrancy"
             ]
         }, {
             "id": "Singleton",

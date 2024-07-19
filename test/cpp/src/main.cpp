@@ -1156,6 +1156,7 @@ void World_get_mut_T(void);
 void World_get_mut_R_T(void);
 void World_world_mini(void);
 void World_copy_world(void);
+void World_fini_reentrancy(void);
 
 // Testsuite 'Singleton'
 void Singleton_set_get_singleton(void);
@@ -5826,6 +5827,10 @@ bake_test_case World_testcases[] = {
     {
         "copy_world",
         World_copy_world
+    },
+    {
+        "fini_reentrancy",
+        World_fini_reentrancy
     }
 };
 
@@ -6638,7 +6643,7 @@ static bake_test_suite suites[] = {
         "World",
         NULL,
         NULL,
-        114,
+        115,
         World_testcases
     },
     {
