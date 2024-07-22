@@ -18,21 +18,21 @@ void IFlecsModuleInterface::ImportModule(const flecs::world& InWorld)
 	}
 	else
 	{
-		ModuleEntity = InWorld.entity(StringCast<char>(*GetModuleName()).Get());
+		ModuleEntity = InWorld.entity(StringCast<char>(*Execute_GetModuleName(_getUObject())).Get());
 		solid_checkf(ModuleEntity.IsValid(), TEXT("Module entity is not valid!"));
 	}
 
 	ModuleEntity.Add(flecs::Module);
 		
 	InitializeModule(World.Get(), ModuleEntity);
-	BP_InitializeModule(World.Get());
+	Execute_BP_InitializeModule(_getUObject(), World.Get());
 }
 
 void IFlecsModuleInterface::DeinitModule_Internal()
 {
 	ModuleEntity.Disable();
 	DeinitializeModule(World.Get());
-	BP_DeinitializeModule(World.Get());
+	Execute_BP_DeinitializeModule(_getUObject(), World.Get());
 }
 
 void IFlecsModuleInterface::InitializeModule(UFlecsWorld* InWorld, const FFlecsEntityHandle& InModuleEntity)

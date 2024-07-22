@@ -1,5 +1,6 @@
 ﻿// Fill out your copyright notice in the Description page of Project Settings.
 
+// ReSharper disable CppExpressionWithoutSideEffects
 #pragma once
 
 #include <vector>
@@ -15,6 +16,8 @@ struct UNREALFLECS_API FFlecsComponentProperties
 	std::string_view Name;
 	std::vector<flecs::entity_t> Entities;
 }; // struct FFlecsComponentProperties
+
+DECLARE_DELEGATE_OneParam(FOnComponentPropertiesRegistered, FFlecsComponentProperties);
 
 struct UNREALFLECS_API FFlecsComponentPropertiesRegistry final
 {
@@ -61,9 +64,13 @@ public:
 					"Updated component properties: %s", *FString(Name.data()));
 			}
 		}
+
+		OnComponentPropertiesRegistered.ExecuteIfBound(ComponentProperties[Name]);
 	}
 	
 	robin_hood::unordered_map<std::string_view, FFlecsComponentProperties> ComponentProperties;
+
+	FOnComponentPropertiesRegistered OnComponentPropertiesRegistered;
 }; // struct FFlecsComponentPropertiesRegistry
 
 #define REGISTER_FLECS_COMPONENT_PROPERTIES(ComponentType, ...) \

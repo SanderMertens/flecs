@@ -28,7 +28,6 @@ public:
 	virtual void CustomizeHeader(TSharedRef<IPropertyHandle> InPropertyHandle, FDetailWidgetRow& HeaderRow,
 		IPropertyTypeCustomizationUtils& CustomizationUtils) override
 	{
-		
 	}
 
 	virtual void CustomizeChildren(TSharedRef<IPropertyHandle> InPropertyHandle, IDetailChildrenBuilder& ChildBuilder,
@@ -320,7 +319,7 @@ private:
 			];
 	}
 
-	TSharedRef<ITableRow> OnGenerateRow(FName InItem, const TSharedRef<STableViewBase>& OwnerTable)
+	TSharedRef<ITableRow> OnGenerateRow(const FName InItem, const TSharedRef<STableViewBase>& OwnerTable)
 	{
 		return SNew(STableRow<FName>, OwnerTable)
 			[

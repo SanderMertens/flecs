@@ -15,6 +15,6 @@ class UNREALFLECS_API UFlecsDeveloperSettings final : public UDeveloperSettings
 public:
 
 	UPROPERTY(EditAnywhere, Config, Category = "Flecs")
-	uint32 bEnableFlecs : 1 = true;
+	bool bEnableFlecs = true;
 
 }; // class UFlecsDeveloperSettings

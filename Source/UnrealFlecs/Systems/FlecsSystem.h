@@ -1,6 +1,7 @@
 ﻿// Solstice Games © 2024. All Rights Reserved.
 
 // ReSharper disable CppExpressionWithoutSideEffects
+// ReSharper disable CppMemberFunctionMayBeConst
 #pragma once
 
 #include "CoreMinimal.h"

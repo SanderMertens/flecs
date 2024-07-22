@@ -43,7 +43,7 @@ void FUnrealFlecsEditorModule::RegisterExplorerMenuExtension()
 		FUIAction(
 			FExecuteAction::CreateLambda([]()
 			{
-				FPlatformProcess::LaunchURL(TEXT("https://flecs.dev/explorer/v4/?remote=true"), nullptr, nullptr);
+				FPlatformProcess::LaunchURL(TEXT("https://flecs.dev/explorer/?remote=true"), nullptr, nullptr);
 			})
 		),
 		INVTEXT("Open Flecs Explorer"),

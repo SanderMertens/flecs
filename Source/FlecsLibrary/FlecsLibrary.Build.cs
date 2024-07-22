@@ -38,7 +38,8 @@ public class FlecsLibrary : ModuleRules
                 "CoreUObject",
                 "Engine",
                 "Slate",
-                "SlateCore"
+                "SlateCore",
+                "SolidMacros"
             }
         );
     }

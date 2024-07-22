@@ -10,18 +10,21 @@
 #include "CoreMinimal.h"
 #include "flecs.h"
 #include "FlecsWorld.h"
-#include "FlecsWorldDeveloperSettings.h"
 #include "FlecsWorldSettings.h"
+#include "FlecsWorldSettingsAsset.h"
+#include "FlecsWorldStartComponent.h"
 #include "GameplayTagContainer.h"
 #include "GameplayTagsManager.h"
 #include "Components/FlecsGameplayTagEntityComponent.h"
 #include "Components/FlecsWorldPtrComponent.h"
 #include "Entities/FlecsDefaultEntityEngineSubsystem.h"
+#include "GameFramework/GameStateBase.h"
 #include "General/FlecsDeveloperSettings.h"
 #include "SolidMacros/Concepts/SolidConcepts.h"
 #include "SolidMacros/Standard/Hashing.h"
 #include "Standard/robin_hood.h"
 #include "Subsystems/WorldSubsystem.h"
+#include "Unlog/Target/MessageLog.h"
 #include "FlecsWorldSubsystem.generated.h"
 
 // ReSharper disable once CppUE4CodingStandardNamingViolationWarning
@@ -55,11 +58,17 @@ public:
 
 	virtual void OnWorldBeginPlay(UWorld& InWorld) override
 	{
-		UFlecsWorldDeveloperSettings* WorldDeveloperSettings = GetMutableDefault<UFlecsWorldDeveloperSettings>();
-		
-		for (const FFlecsWorldSettings& Settings : WorldDeveloperSettings->Worlds)
+		Super::OnWorldBeginPlay(InWorld);
+
+		AGameStateBase* GameState = InWorld.GetGameState();
+		solid_checkf(IsValid(GameState), TEXT("GameState must be valid"));
+
+		UFlecsWorldStartComponent* StartComponent = GameState->FindComponentByClass<UFlecsWorldStartComponent>();
+		solid_checkf(IsValid(StartComponent), TEXT("StartComponent must be valid"));
+
+		for (const UFlecsWorldSettingsAsset* WorldSettings : StartComponent->Worlds)
 		{
-			CreateWorld(Settings.WorldName, Settings);
+			CreateWorld(WorldSettings->WorldSettings.WorldName, WorldSettings->WorldSettings);
 		}
 	}
 
@@ -67,6 +76,11 @@ public:
 	{
 		for (UFlecsWorld* World : Worlds)
 		{
+			if UNLIKELY_IF(!IsValid(World))
+			{
+				continue;
+			}
+			
 			World->DestroyWorld();
 		}
 		
@@ -138,6 +152,8 @@ public:
 			
 			NewFlecsWorld->ImportModule(Module);
 		}
+
+		NewFlecsWorld->Progress();
 		
 		NewFlecsWorld->WorldBeginPlay();
 		
@@ -201,8 +217,14 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Flecs", Meta = (WorldContext = "WorldContextObject"))
 	static FORCEINLINE UFlecsWorld* GetDefaultWorld(const UObject* WorldContextObject)
 	{
+		solid_checkf(GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::Assert)
+					  ->GetSubsystem<UFlecsWorldSubsystem>()->Worlds.Num() > 0, TEXT("No worlds found"));
+		
+		solid_checkf(GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::Assert)
+			->GetSubsystem<UFlecsWorldSubsystem>(), TEXT("FlecsWorldSubsystem must be valid"));
+		
 		return GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::Assert)
-		              ->GetSubsystem<UFlecsWorldSubsystem>()->GetFlecsWorld(DEFAULT_FLECS_WORLD_NAME.data());
+		              ->GetSubsystem<UFlecsWorldSubsystem>()->Worlds[0];
 	}
 	
 	virtual bool DoesSupportWorldType(const EWorldType::Type WorldType) const override

@@ -39,7 +39,7 @@ public:
 		for (const auto& ComponentProperties : FFlecsComponentPropertiesRegistry::Get().ComponentProperties)
 		{
 			flecs::observer_builder<> ObserverBuilder = CreateObserver(TEXT("ComponentObserver"))
-				.name(ComponentProperties.first.data())
+				//.name(ComponentProperties.first.data())
 				.with<flecs::Component>()
 				.event(flecs::OnAdd)
 				.yield_existing();
@@ -55,6 +55,27 @@ public:
 				NewObserver.destruct();
 			});
 		}
+
+		FFlecsComponentPropertiesRegistry::Get().OnComponentPropertiesRegistered.BindLambda([&]
+			(const FFlecsComponentProperties& InProperties)
+		{
+			flecs::observer_builder<> ObserverBuilder = CreateObserver(TEXT("ComponentObserver"))
+				.name(InProperties.Name.data())
+				.with<flecs::Component>()
+				.event(flecs::OnAdd)
+				.yield_existing();
+
+			const flecs::observer NewObserver = ObserverBuilder
+				.each([&](flecs::entity InEntity)
+			{
+				for (const flecs::entity_t Entity : InProperties.Entities)
+				{
+					InEntity.add(Entity);
+				}
+
+				NewObserver.destruct();
+			});
+		});
 	}
 
 	FORCEINLINE void InitializeSystems()
@@ -580,7 +601,7 @@ public:
 			return Handle;
 		}
 		
-		const FFlecsEntityHandle ScriptStructComponent = World.entity(StringCast<char>(*ScriptStruct->GetStructCPPName()).Get())
+		FFlecsEntityHandle ScriptStructComponent = World.entity(StringCast<char>(*ScriptStruct->GetStructCPPName()).Get())
 			.set<flecs::Component>({ ScriptStruct->GetStructureSize(), ScriptStruct->GetMinAlignment() })
 			.set<FFlecsScriptStructComponent>({ ScriptStruct });
 		
@@ -588,8 +609,7 @@ public:
 
 		#if WITH_EDITOR
 
-		flecs::untyped_component* UntypedComponent
-			= const_cast<flecs::untyped_component*>(ScriptStructComponent.GetUntypedComponent());
+		flecs::untyped_component& UntypedComponent = ScriptStructComponent.GetUntypedComponent();
 		
 		for (TFieldIterator<FProperty> PropertyIt(ScriptStruct); PropertyIt; ++PropertyIt)
 		{
@@ -598,35 +618,35 @@ public:
 			
 			if (Property->IsA<FBoolProperty>())
 			{
-				UntypedComponent->member<bool>(StringCast<char>(*Property->GetName()).Get());
+				UntypedComponent.member<bool>(StringCast<char>(*Property->GetName()).Get());
 			}
 			else if (Property->IsA<FByteProperty>())
 			{
-				UntypedComponent->member<uint8>(StringCast<char>(*Property->GetName()).Get());
+				UntypedComponent.member<uint8>(StringCast<char>(*Property->GetName()).Get());
 			}
 			else if (Property->IsA<FIntProperty>())
 			{
-				UntypedComponent->member<int32>(StringCast<char>(*Property->GetName()).Get());
+				UntypedComponent.member<int32>(StringCast<char>(*Property->GetName()).Get());
 			}
 			else if (Property->IsA<FFloatProperty>())
 			{
-				UntypedComponent->member<float>(StringCast<char>(*Property->GetName()).Get());
+				UntypedComponent.member<float>(StringCast<char>(*Property->GetName()).Get());
 			}
 			else if (Property->IsA<FDoubleProperty>())
 			{
-				UntypedComponent->member<double>(StringCast<char>(*Property->GetName()).Get());
+				UntypedComponent.member<double>(StringCast<char>(*Property->GetName()).Get());
 			}
 			else if (Property->IsA<FStrProperty>())
 			{
-				UntypedComponent->member<FString>(StringCast<char>(*Property->GetName()).Get());
+				UntypedComponent.member<FString>(StringCast<char>(*Property->GetName()).Get());
 			}
 			else if (Property->IsA<FNameProperty>())
 			{
-				UntypedComponent->member<FName>(StringCast<char>(*Property->GetName()).Get());
+				UntypedComponent.member<FName>(StringCast<char>(*Property->GetName()).Get());
 			}
 			else if (Property->IsA<FTextProperty>())
 			{
-				UntypedComponent->member<FText>(StringCast<char>(*Property->GetName()).Get());
+				UntypedComponent.member<FText>(StringCast<char>(*Property->GetName()).Get());
 			}
 		}
 
@@ -651,14 +671,13 @@ public:
 		return ScriptStructComponent;
 	}
 
-	FORCEINLINE void RegisterScriptStruct(const UScriptStruct* ScriptStruct, const FFlecsEntityHandle& InEntity) const
+	FORCEINLINE void RegisterScriptStruct(const UScriptStruct* ScriptStruct, FFlecsEntityHandle InEntity) const
 	{
 		GetSingletonRef<FFlecsTypeMapComponent>().ScriptStructMap.emplace(const_cast<UScriptStruct*>(ScriptStruct), InEntity);
 
 		#if WITH_EDITOR
 
-		flecs::untyped_component* UntypedComponent
-			= const_cast<flecs::untyped_component*>(InEntity.GetUntypedComponent());
+		flecs::untyped_component& UntypedComponent = InEntity.GetUntypedComponent();
 		
 		for (TFieldIterator<FProperty> PropertyIt(ScriptStruct); PropertyIt; ++PropertyIt)
 		{
@@ -667,35 +686,35 @@ public:
 			
 			if (Property->IsA<FBoolProperty>())
 			{
-				UntypedComponent->member<bool>(StringCast<char>(*Property->GetName()).Get());
+				UntypedComponent.member<bool>(StringCast<char>(*Property->GetName()).Get());
 			}
 			else if (Property->IsA<FByteProperty>())
 			{
-				UntypedComponent->member<uint8>(StringCast<char>(*Property->GetName()).Get());
+				UntypedComponent.member<uint8>(StringCast<char>(*Property->GetName()).Get());
 			}
 			else if (Property->IsA<FIntProperty>())
 			{
-				UntypedComponent->member<int32>(StringCast<char>(*Property->GetName()).Get());
+				UntypedComponent.member<int32>(StringCast<char>(*Property->GetName()).Get());
 			}
 			else if (Property->IsA<FFloatProperty>())
 			{
-				UntypedComponent->member<float>(StringCast<char>(*Property->GetName()).Get());
+				UntypedComponent.member<float>(StringCast<char>(*Property->GetName()).Get());
 			}
 			else if (Property->IsA<FDoubleProperty>())
 			{
-				UntypedComponent->member<double>(StringCast<char>(*Property->GetName()).Get());
+				UntypedComponent.member<double>(StringCast<char>(*Property->GetName()).Get());
 			}
 			else if (Property->IsA<FStrProperty>())
 			{
-				UntypedComponent->member<FString>(StringCast<char>(*Property->GetName()).Get());
+				UntypedComponent.member<FString>(StringCast<char>(*Property->GetName()).Get());
 			}
 			else if (Property->IsA<FNameProperty>())
 			{
-				UntypedComponent->member<FName>(StringCast<char>(*Property->GetName()).Get());
+				UntypedComponent.member<FName>(StringCast<char>(*Property->GetName()).Get());
 			}
 			else if (Property->IsA<FTextProperty>())
 			{
-				UntypedComponent->member<FText>(StringCast<char>(*Property->GetName()).Get());
+				UntypedComponent.member<FText>(StringCast<char>(*Property->GetName()).Get());
 			}
 		}
 

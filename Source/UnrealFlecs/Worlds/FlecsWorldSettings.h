@@ -33,13 +33,13 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs")
     FString WorldName;
     
-    UPROPERTY(EditAnywhere, Config, Category = "Flecs")
-    uint32 bAutoTickWorld : 1 = true;
+    UPROPERTY(EditAnywhere, Category = "Flecs")
+    uint8 bAutoTickWorld : 1 = true;
     
-    UPROPERTY(EditAnywhere, Config, Category = "Flecs")
-    uint32 bDefaultAutoMerge : 1 = true;
+    UPROPERTY(EditAnywhere, Category = "Flecs")
+    uint8 bDefaultAutoMerge : 1 = true;
 
-    UPROPERTY(EditAnywhere, Config, Category = "Flecs", meta = (ClampMin = "0"))
+    UPROPERTY(EditAnywhere, Category = "Flecs", meta = (ClampMin = "0"))
     int32 DefaultWorkerThreads = 4;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Instanced, Category = "Flecs",

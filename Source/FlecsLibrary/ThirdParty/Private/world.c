@@ -830,6 +830,7 @@ static const char *flecs_addons_info[] = {
 NULL
 };
 
+
 static const ecs_build_info_t flecs_build_info = {
     .compiler = flecs_compiler_info,
     .addons = flecs_addons_info,
