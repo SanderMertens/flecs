@@ -17,6 +17,11 @@ public:
 	virtual void InitializeModule(UFlecsWorld* InWorld, const FFlecsEntityHandle& InModuleEntity) override;
 	virtual void DeinitializeModule(UFlecsWorld* InWorld) override;
 
+	FORCEINLINE virtual FString GetModuleName_Implementation() const override
+	{
+		return TEXT("FlecsStatsModule");
+	}
+
 	UPROPERTY()
 	FFlecsEntityHandle StatsEntity;
 
