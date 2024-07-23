@@ -5599,14 +5599,15 @@ void flecs_notify_on_add(
     const ecs_type_t *added,
     ecs_flags32_t flags,
     ecs_flags64_t set_mask,
-    bool construct)
+    bool construct,
+    bool sparse)
 {
     ecs_assert(added != NULL, ECS_INTERNAL_ERROR, NULL);
 
     if (added->count) {
         ecs_flags32_t table_flags = table->flags;
 
-        if (table_flags & EcsTableHasSparse) {
+        if (sparse && (table_flags & EcsTableHasSparse)) {
             flecs_sparse_on_add(world, table, row, count, added, construct);
         }
 
@@ -5736,7 +5737,7 @@ ecs_record_t* flecs_new_entity(
     ecs_assert(ecs_vec_count(&table->data.entities) > row, 
         ECS_INTERNAL_ERROR, NULL);
     flecs_notify_on_add(
-        world, table, NULL, row, 1, &diff->added, evt_flags, 0, ctor);
+        world, table, NULL, row, 1, &diff->added, evt_flags, 0, ctor, true);
 
     return record;
 }
@@ -5783,7 +5784,7 @@ void flecs_move_entity(
     
     flecs_table_delete(world, src_table, src_row, false);
     flecs_notify_on_add(
-        world, dst_table, src_table, dst_row, 1, &diff->added, evt_flags, 0, ctor);
+        world, dst_table, src_table, dst_row, 1, &diff->added, evt_flags, 0, ctor, true);
 
     flecs_update_name_index(world, src_table, dst_table, dst_row, 1);
 
@@ -5870,7 +5871,7 @@ void flecs_commit(
         if (src_table) {
             flecs_notify_on_add(world, src_table, src_table, 
                 ECS_RECORD_TO_ROW(record->row), 1, &diff->added, evt_flags, 0, 
-                    construct);
+                    construct, true);
         }
         flecs_journal_end();
         return;
@@ -5966,7 +5967,7 @@ const ecs_entity_t* flecs_bulk_new(
     flecs_defer_begin(world, world->stages[0]);
 
     flecs_notify_on_add(world, table, NULL, row, count, &diff->added, 
-        (component_data == NULL) ? 0 : EcsEventNoOnSet, 0, true);
+        (component_data == NULL) ? 0 : EcsEventNoOnSet, 0, true, true);
 
     if (component_data) {
         int32_t c_i;
@@ -9740,6 +9741,13 @@ void flecs_cmd_batch_for_entity(
     flecs_commit(world, entity, r, table, &table_diff, true, 0);
     flecs_defer_end(world, world->stages[0]);
 
+    /* If destination table has new sparse components, make sure they're created
+     * for the entity. */
+    if (table && (table->flags & EcsTableHasSparse) && added.count) {
+        flecs_sparse_on_add(
+            world, table, ECS_RECORD_TO_ROW(r->row), 1, &added, true);
+    }
+
     /* If the batch contains set commands, copy the component value from the 
      * temporary command storage to the actual component storage before OnSet
      * observers are invoked. This ensures that for multi-component OnSet 
@@ -9826,7 +9834,7 @@ void flecs_cmd_batch_for_entity(
     if (added.count) {
         flecs_defer_begin(world, world->stages[0]);
         flecs_notify_on_add(world, table, start_table, 
-            ECS_RECORD_TO_ROW(r->row), 1, &added, 0, set_mask, true);
+            ECS_RECORD_TO_ROW(r->row), 1, &added, 0, set_mask, true, false);
         flecs_defer_end(world, world->stages[0]);
         if (r->row & EcsEntityIsTraversable) {
             /* Update monitors since we didn't do this in flecs_commit. */
@@ -16541,10 +16549,16 @@ void* flecs_defer_set(
             const ecs_table_record_t *tr = flecs_id_record_get_table(
                 idr, table);
             if (tr) {
-                ecs_assert(tr->column != -1, ECS_NOT_A_COMPONENT, NULL);
-                /* Entity has the component */
-                ecs_vec_t *column = &table->data.columns[tr->column].data;
-                existing = ecs_vec_get(column, size, ECS_RECORD_TO_ROW(r->row));
+                if (tr->column != -1) {
+                    /* Entity has the component */
+                    ecs_vec_t *column = &table->data.columns[tr->column].data;
+                    existing = ecs_vec_get(column, size, 
+                        ECS_RECORD_TO_ROW(r->row));
+                } else {
+                    ecs_assert(idr->flags & EcsIdIsSparse, 
+                        ECS_NOT_A_COMPONENT, NULL);
+                    existing = flecs_sparse_get_any(idr->sparse, 0, entity);
+                }
             }
         }
     }

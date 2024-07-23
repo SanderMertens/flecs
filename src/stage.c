@@ -370,10 +370,16 @@ void* flecs_defer_set(
             const ecs_table_record_t *tr = flecs_id_record_get_table(
                 idr, table);
             if (tr) {
-                ecs_assert(tr->column != -1, ECS_NOT_A_COMPONENT, NULL);
-                /* Entity has the component */
-                ecs_vec_t *column = &table->data.columns[tr->column].data;
-                existing = ecs_vec_get(column, size, ECS_RECORD_TO_ROW(r->row));
+                if (tr->column != -1) {
+                    /* Entity has the component */
+                    ecs_vec_t *column = &table->data.columns[tr->column].data;
+                    existing = ecs_vec_get(column, size, 
+                        ECS_RECORD_TO_ROW(r->row));
+                } else {
+                    ecs_assert(idr->flags & EcsIdIsSparse, 
+                        ECS_NOT_A_COMPONENT, NULL);
+                    existing = flecs_sparse_get_any(idr->sparse, 0, entity);
+                }
             }
         }
     }
