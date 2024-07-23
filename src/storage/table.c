@@ -1671,7 +1671,7 @@ void flecs_table_move(
             if (dst_id < src_id) {
                 flecs_table_invoke_add_hooks(world, dst_table,
                     dst_column, &dst_entity, dst_index, 1, construct);
-            } else {
+            } else if (same_entity) {
                 flecs_table_invoke_remove_hooks(world, src_table,
                     src_column, &src_entity, src_index, 1, use_move_dtor);
             }
@@ -1686,9 +1686,11 @@ void flecs_table_move(
             &dst_entity, dst_index, 1, construct);
     }
 
-    for (; (i_old < src_column_count); i_old ++) {
-        flecs_table_invoke_remove_hooks(world, src_table, &src_columns[i_old], 
-            &src_entity, src_index, 1, use_move_dtor);
+    if (same_entity) {
+        for (; (i_old < src_column_count); i_old ++) {
+            flecs_table_invoke_remove_hooks(world, src_table, &src_columns[i_old], 
+                &src_entity, src_index, 1, use_move_dtor);
+        }
     }
 
     flecs_table_check_sanity(dst_table);

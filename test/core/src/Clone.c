@@ -363,6 +363,7 @@ void Clone_clone_w_name(void) {
     test_assert(ecs_has(world, i, Position));
     test_assert(ecs_has(world, i, Velocity));
     test_assert(!ecs_has_pair(world, i, ecs_id(EcsIdentifier), EcsName));
+    test_assert(ecs_lookup(world, "template") == t);
 
     const Position *p = ecs_get(world, i, Position);
     test_assert(p != NULL);
