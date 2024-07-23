@@ -1134,3 +1134,1110 @@ void Sparse_sparse_relationship(void) {
 
     ecs_fini(world);
 }
+
+void Sparse_defer_ensure(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_add_id(world, ecs_id(Position), EcsSparse);
+
+    ecs_entity_t e = ecs_new(world);
+
+    ecs_defer_begin(world);
+
+    {
+        Position *p = ecs_ensure(world, e, Position);
+        test_assert(p != NULL);
+        p->x = 10;
+        p->y = 20;
+    }
+
+    test_assert(!ecs_has(world, e, Position));
+    ecs_defer_end(world);
+    test_assert(ecs_has(world, e, Position));
+
+    {
+        const Position *p = ecs_get(world, e, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+    }
+
+    ecs_fini(world);
+}
+
+void Sparse_defer_ensure_w_modified(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_add_id(world, ecs_id(Position), EcsSparse);
+
+    ecs_entity_t e = ecs_new(world);
+
+    ecs_defer_begin(world);
+
+    {
+        Position *p = ecs_ensure(world, e, Position);
+        test_assert(p != NULL);
+        p->x = 10;
+        p->y = 20;
+    }
+
+    ecs_modified(world, e, Position);
+
+    test_assert(!ecs_has(world, e, Position));
+    ecs_defer_end(world);
+    test_assert(ecs_has(world, e, Position));
+
+    {
+        const Position *p = ecs_get(world, e, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+    }
+
+    ecs_fini(world);
+}
+
+void Sparse_defer_ensure_modified(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_add_id(world, ecs_id(Position), EcsSparse);
+
+    ecs_entity_t e = ecs_new(world);
+
+    ecs_defer_begin(world);
+
+    {
+        Position *p = ecs_ensure_modified_id(world, e, ecs_id(Position));
+        test_assert(p != NULL);
+        p->x = 10;
+        p->y = 20;
+    }
+
+    test_assert(!ecs_has(world, e, Position));
+    ecs_defer_end(world);
+    test_assert(ecs_has(world, e, Position));
+
+    {
+        const Position *p = ecs_get(world, e, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+    }
+
+    ecs_fini(world);
+}
+
+void Sparse_defer_set(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_add_id(world, ecs_id(Position), EcsSparse);
+
+    ecs_entity_t e = ecs_new(world);
+
+    ecs_defer_begin(world);
+
+    ecs_set(world, e, Position, {10, 20});
+
+    test_assert(!ecs_has(world, e, Position));
+    ecs_defer_end(world);
+    test_assert(ecs_has(world, e, Position));
+
+    const Position *p = ecs_get(world, e, Position);
+    test_assert(p != NULL);
+
+    ecs_fini(world);
+}
+
+void Sparse_defer_emplace(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_add_id(world, ecs_id(Position), EcsSparse);
+
+    ecs_entity_t e = ecs_new(world);
+
+    ecs_defer_begin(world);
+
+    {
+        bool is_new = false;
+        Position *p = ecs_emplace(world, e, Position, &is_new);
+        test_assert(p != NULL);
+        test_bool(is_new, true);
+        p->x = 10;
+        p->y = 20;
+    }
+
+    test_assert(!ecs_has(world, e, Position));
+    ecs_defer_end(world);
+    test_assert(ecs_has(world, e, Position));
+
+    {
+        const Position *p = ecs_get(world, e, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+    }
+
+    ecs_fini(world);
+}
+
+void Sparse_defer_emplace_w_modified(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_add_id(world, ecs_id(Position), EcsSparse);
+
+    ecs_entity_t e = ecs_new(world);
+
+    ecs_defer_begin(world);
+
+    {
+        bool is_new = false;
+        Position *p = ecs_emplace(world, e, Position, &is_new);
+        test_assert(p != NULL);
+        test_bool(is_new, true);
+        p->x = 10;
+        p->y = 20;
+    }
+
+    ecs_modified(world, e, Position);
+
+    test_assert(!ecs_has(world, e, Position));
+    ecs_defer_end(world);
+    test_assert(ecs_has(world, e, Position));
+
+    {
+        const Position *p = ecs_get(world, e, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+    }
+
+    ecs_fini(world);
+}
+
+void Sparse_defer_ensure_existing(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_add_id(world, ecs_id(Position), EcsSparse);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_add(world, e, Position);
+
+    ecs_defer_begin(world);
+
+    {
+        Position *p = ecs_ensure(world, e, Position);
+        test_assert(p != NULL);
+        p->x = 10;
+        p->y = 20;
+    }
+
+    ecs_defer_end(world);
+
+    {
+        const Position *p = ecs_get(world, e, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+    }
+
+    ecs_fini(world);
+}
+
+void Sparse_defer_ensure_existing_twice(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_add_id(world, ecs_id(Position), EcsSparse);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_add(world, e, Position);
+
+    ecs_defer_begin(world);
+
+    {
+        Position *p = ecs_ensure(world, e, Position);
+        test_assert(p != NULL);
+        p->x = 10;
+        p->y = 20;
+    }
+
+    {
+        Position *p = ecs_ensure(world, e, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+        p->x = 30;
+        p->y = 40;
+    }
+
+    ecs_defer_end(world);
+
+    {
+        const Position *p = ecs_get(world, e, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 30);
+        test_int(p->y, 40);
+    }
+
+    ecs_fini(world);
+}
+
+void Sparse_defer_ensure_w_modified_existing(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_add_id(world, ecs_id(Position), EcsSparse);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_add(world, e, Position);
+
+    ecs_defer_begin(world);
+
+    {
+        Position *p = ecs_ensure(world, e, Position);
+        test_assert(p != NULL);
+        p->x = 10;
+        p->y = 20;
+    }
+
+    ecs_modified(world, e, Position);
+
+    ecs_defer_end(world);
+
+    {
+        const Position *p = ecs_get(world, e, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+    }
+
+    ecs_fini(world);
+}
+
+void Sparse_defer_ensure_modified_existing(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_add_id(world, ecs_id(Position), EcsSparse);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_add(world, e, Position);
+
+    ecs_defer_begin(world);
+
+    {
+        Position *p = ecs_ensure_modified_id(world, e, ecs_id(Position));
+        test_assert(p != NULL);
+        p->x = 10;
+        p->y = 20;
+    }
+
+    ecs_defer_end(world);
+
+    {
+        const Position *p = ecs_get(world, e, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+    }
+
+    ecs_fini(world);
+}
+
+void Sparse_defer_set_existing(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_add_id(world, ecs_id(Position), EcsSparse);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_add(world, e, Position);
+
+    ecs_defer_begin(world);
+
+    ecs_set(world, e, Position, {10, 20});
+
+    ecs_defer_end(world);
+
+    const Position *p = ecs_get(world, e, Position);
+    test_assert(p != NULL);
+
+    ecs_fini(world);
+}
+
+void Sparse_defer_emplace_existing(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_add_id(world, ecs_id(Position), EcsSparse);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_add(world, e, Position);
+
+    ecs_defer_begin(world);
+
+    {
+        bool is_new = false;
+        Position *p = ecs_emplace(world, e, Position, &is_new);
+        test_assert(p != NULL);
+        test_bool(is_new, false);
+        p->x = 10;
+        p->y = 20;
+    }
+
+    ecs_defer_end(world);
+
+    {
+        const Position *p = ecs_get(world, e, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+    }
+
+    ecs_fini(world);
+}
+
+void Sparse_defer_emplace_w_modified_existing(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_add_id(world, ecs_id(Position), EcsSparse);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_add(world, e, Position);
+
+    ecs_defer_begin(world);
+
+    {
+        bool is_new = false;
+        Position *p = ecs_emplace(world, e, Position, &is_new);
+        test_assert(p != NULL);
+        test_bool(is_new, false);
+        p->x = 10;
+        p->y = 20;
+    }
+
+    ecs_modified(world, e, Position);
+
+    ecs_defer_end(world);
+
+    {
+        const Position *p = ecs_get(world, e, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+    }
+
+    ecs_fini(world);
+}
+
+void Sparse_defer_batched_ensure(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_add_id(world, ecs_id(Position), EcsSparse);
+    ecs_add_id(world, ecs_id(Velocity), EcsSparse);
+
+    ecs_entity_t e = ecs_new(world);
+
+    ecs_defer_begin(world);
+
+    {
+        Position *p = ecs_ensure(world, e, Position);
+        test_assert(p != NULL);
+        p->x = 10;
+        p->y = 20;
+    }
+    {
+        Velocity *p = ecs_ensure(world, e, Velocity);
+        test_assert(p != NULL);
+        p->x = 1;
+        p->y = 2;
+    }
+
+    test_assert(!ecs_has(world, e, Position));
+    test_assert(!ecs_has(world, e, Velocity));
+    ecs_defer_end(world);
+    test_assert(ecs_has(world, e, Position));
+    test_assert(ecs_has(world, e, Velocity));
+
+    {
+        const Position *p = ecs_get(world, e, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+    }
+    {
+        const Velocity *p = ecs_get(world, e, Velocity);
+        test_assert(p != NULL);
+        test_int(p->x, 1);
+        test_int(p->y, 2);
+    }
+
+    ecs_fini(world);
+}
+
+void Sparse_defer_batched_ensure_w_modified(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_add_id(world, ecs_id(Position), EcsSparse);
+    ecs_add_id(world, ecs_id(Velocity), EcsSparse);
+
+    ecs_entity_t e = ecs_new(world);
+
+    ecs_defer_begin(world);
+
+    {
+        Position *p = ecs_ensure(world, e, Position);
+        test_assert(p != NULL);
+        p->x = 10;
+        p->y = 20;
+    }
+    ecs_modified(world, e, Position);
+
+    {
+        Velocity *p = ecs_ensure(world, e, Velocity);
+        test_assert(p != NULL);
+        p->x = 1;
+        p->y = 2;
+    }
+    ecs_modified(world, e, Velocity);
+
+    test_assert(!ecs_has(world, e, Position));
+    test_assert(!ecs_has(world, e, Velocity));
+    ecs_defer_end(world);
+    test_assert(ecs_has(world, e, Position));
+    test_assert(ecs_has(world, e, Velocity));
+
+    {
+        const Position *p = ecs_get(world, e, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+    }
+    {
+        const Velocity *p = ecs_get(world, e, Velocity);
+        test_assert(p != NULL);
+        test_int(p->x, 1);
+        test_int(p->y, 2);
+    }
+
+    ecs_fini(world);
+}
+
+void Sparse_defer_batched_ensure_modified(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_add_id(world, ecs_id(Position), EcsSparse);
+    ecs_add_id(world, ecs_id(Velocity), EcsSparse);
+
+    ecs_entity_t e = ecs_new(world);
+
+    ecs_defer_begin(world);
+
+    {
+        Position *p = ecs_ensure_modified_id(world, e, ecs_id(Position));
+        test_assert(p != NULL);
+        p->x = 10;
+        p->y = 20;
+    }
+    {
+        Velocity *p = ecs_ensure_modified_id(world, e, ecs_id(Velocity));
+        test_assert(p != NULL);
+        p->x = 1;
+        p->y = 2;
+    }
+
+    test_assert(!ecs_has(world, e, Position));
+    test_assert(!ecs_has(world, e, Velocity));
+    ecs_defer_end(world);
+    test_assert(ecs_has(world, e, Position));
+    test_assert(ecs_has(world, e, Velocity));
+
+    {
+        const Position *p = ecs_get(world, e, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+    }
+    {
+        const Velocity *p = ecs_get(world, e, Velocity);
+        test_assert(p != NULL);
+        test_int(p->x, 1);
+        test_int(p->y, 2);
+    }
+
+    ecs_fini(world);
+}
+
+void Sparse_defer_batched_emplace(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_add_id(world, ecs_id(Position), EcsSparse);
+    ecs_add_id(world, ecs_id(Velocity), EcsSparse);
+
+    ecs_entity_t e = ecs_new(world);
+
+    ecs_defer_begin(world);
+
+    {
+        bool is_new = false;
+        Position *p = ecs_emplace(world, e, Position, &is_new);
+        test_assert(p != NULL);
+        test_bool(is_new, true);
+        p->x = 10;
+        p->y = 20;
+    }
+
+    {
+        bool is_new = false;
+        Velocity *p = ecs_emplace(world, e, Velocity, &is_new);
+        test_assert(p != NULL);
+        test_bool(is_new, true);
+        p->x = 1;
+        p->y = 2;
+    }
+
+    test_assert(!ecs_has(world, e, Position));
+    test_assert(!ecs_has(world, e, Velocity));
+    ecs_defer_end(world);
+    test_assert(ecs_has(world, e, Position));
+    test_assert(ecs_has(world, e, Velocity));
+
+    {
+        const Position *p = ecs_get(world, e, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+    }
+    {
+        const Velocity *p = ecs_get(world, e, Velocity);
+        test_assert(p != NULL);
+        test_int(p->x, 1);
+        test_int(p->y, 2);
+    }
+
+    ecs_fini(world);
+}
+
+void Sparse_defer_batched_emplace_w_modified(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_add_id(world, ecs_id(Position), EcsSparse);
+    ecs_add_id(world, ecs_id(Velocity), EcsSparse);
+
+    ecs_entity_t e = ecs_new(world);
+
+    ecs_defer_begin(world);
+
+    {
+        bool is_new = false;
+        Position *p = ecs_emplace(world, e, Position, &is_new);
+        test_assert(p != NULL);
+        test_bool(is_new, true);
+        p->x = 10;
+        p->y = 20;
+    }
+    ecs_modified(world, e, Position);
+
+    {
+        bool is_new = false;
+        Velocity *p = ecs_emplace(world, e, Velocity, &is_new);
+        test_assert(p != NULL);
+        test_bool(is_new, true);
+        p->x = 1;
+        p->y = 2;
+    }
+    ecs_modified(world, e, Velocity);
+
+    test_assert(!ecs_has(world, e, Position));
+    test_assert(!ecs_has(world, e, Velocity));
+    ecs_defer_end(world);
+    test_assert(ecs_has(world, e, Position));
+    test_assert(ecs_has(world, e, Velocity));
+
+    {
+        const Position *p = ecs_get(world, e, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+    }
+    {
+        const Velocity *p = ecs_get(world, e, Velocity);
+        test_assert(p != NULL);
+        test_int(p->x, 1);
+        test_int(p->y, 2);
+    }
+
+    ecs_fini(world);
+}
+
+void Sparse_defer_batched_set(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_add_id(world, ecs_id(Position), EcsSparse);
+    ecs_add_id(world, ecs_id(Velocity), EcsSparse);
+
+    ecs_entity_t e = ecs_new(world);
+
+    ecs_defer_begin(world);
+
+    ecs_set(world, e, Position, {10, 20});
+    ecs_set(world, e, Velocity, {1, 2});
+
+    test_assert(!ecs_has(world, e, Position));
+    test_assert(!ecs_has(world, e, Velocity));
+    ecs_defer_end(world);
+    test_assert(ecs_has(world, e, Position));
+    test_assert(ecs_has(world, e, Velocity));
+
+    {
+        const Position *p = ecs_get(world, e, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+    }
+    {
+        const Velocity *p = ecs_get(world, e, Velocity);
+        test_assert(p != NULL);
+        test_int(p->x, 1);
+        test_int(p->y, 2);
+    }
+
+    ecs_fini(world);
+}
+
+void Sparse_defer_batched_ensure_existing(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_add_id(world, ecs_id(Position), EcsSparse);
+    ecs_add_id(world, ecs_id(Velocity), EcsSparse);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_add(world, e, Position);
+    ecs_add(world, e, Velocity);
+
+    ecs_defer_begin(world);
+
+    {
+        Position *p = ecs_ensure(world, e, Position);
+        test_assert(p != NULL);
+        p->x = 10;
+        p->y = 20;
+    }
+    {
+        Velocity *p = ecs_ensure(world, e, Velocity);
+        test_assert(p != NULL);
+        p->x = 1;
+        p->y = 2;
+    }
+
+    ecs_defer_end(world);
+
+    {
+        const Position *p = ecs_get(world, e, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+    }
+    {
+        const Velocity *p = ecs_get(world, e, Velocity);
+        test_assert(p != NULL);
+        test_int(p->x, 1);
+        test_int(p->y, 2);
+    }
+
+    ecs_fini(world);
+}
+
+void Sparse_defer_batched_ensure_existing_twice(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_add_id(world, ecs_id(Position), EcsSparse);
+    ecs_add_id(world, ecs_id(Velocity), EcsSparse);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_add(world, e, Position);
+    ecs_add(world, e, Velocity);
+
+    ecs_defer_begin(world);
+
+    {
+        Position *p = ecs_ensure(world, e, Position);
+        test_assert(p != NULL);
+        p->x = 10;
+        p->y = 20;
+    }
+    {
+        Velocity *p = ecs_ensure(world, e, Velocity);
+        test_assert(p != NULL);
+        p->x = 1;
+        p->y = 2;
+    }
+    {
+        Position *p = ecs_ensure(world, e, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+        p->x = 30;
+        p->y = 40;
+    }
+    {
+        Velocity *p = ecs_ensure(world, e, Velocity);
+        test_assert(p != NULL);
+        test_int(p->x, 1);
+        test_int(p->y, 2);
+        p->x = 3;
+        p->y = 4;
+    }
+
+    ecs_defer_end(world);
+
+    {
+        const Position *p = ecs_get(world, e, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 30);
+        test_int(p->y, 40);
+    }
+    {
+        const Velocity *p = ecs_get(world, e, Velocity);
+        test_assert(p != NULL);
+        test_int(p->x, 3);
+        test_int(p->y, 4);
+    }
+
+    ecs_fini(world);
+}
+
+void Sparse_defer_batched_ensure_w_modified_existing(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_add_id(world, ecs_id(Position), EcsSparse);
+    ecs_add_id(world, ecs_id(Velocity), EcsSparse);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_add(world, e, Position);
+    ecs_add(world, e, Velocity);
+
+    ecs_defer_begin(world);
+
+    {
+        Position *p = ecs_ensure(world, e, Position);
+        test_assert(p != NULL);
+        p->x = 10;
+        p->y = 20;
+    }
+    ecs_modified(world, e, Position);
+
+    {
+        Velocity *p = ecs_ensure(world, e, Velocity);
+        test_assert(p != NULL);
+        p->x = 1;
+        p->y = 2;
+    }
+    ecs_modified(world, e, Velocity);
+
+    ecs_defer_end(world);
+
+    {
+        const Position *p = ecs_get(world, e, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+    }
+    {
+        const Velocity *p = ecs_get(world, e, Velocity);
+        test_assert(p != NULL);
+        test_int(p->x, 1);
+        test_int(p->y, 2);
+    }
+
+    ecs_fini(world);
+}
+
+void Sparse_defer_batched_ensure_modified_existing(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_add_id(world, ecs_id(Position), EcsSparse);
+    ecs_add_id(world, ecs_id(Velocity), EcsSparse);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_add(world, e, Position);
+    ecs_add(world, e, Velocity);
+
+    ecs_defer_begin(world);
+
+    {
+        Position *p = ecs_ensure_modified_id(world, e, ecs_id(Position));
+        test_assert(p != NULL);
+        p->x = 10;
+        p->y = 20;
+    }
+    {
+        Velocity *p = ecs_ensure_modified_id(world, e, ecs_id(Velocity));
+        test_assert(p != NULL);
+        p->x = 1;
+        p->y = 2;
+    }
+
+    ecs_defer_end(world);
+
+    {
+        const Position *p = ecs_get(world, e, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+    }
+    {
+        const Velocity *p = ecs_get(world, e, Velocity);
+        test_assert(p != NULL);
+        test_int(p->x, 1);
+        test_int(p->y, 2);
+    }
+
+    ecs_fini(world);
+}
+
+void Sparse_defer_batched_emplace_existing(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_add_id(world, ecs_id(Position), EcsSparse);
+    ecs_add_id(world, ecs_id(Velocity), EcsSparse);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_add(world, e, Position);
+    ecs_add(world, e, Velocity);
+
+    ecs_defer_begin(world);
+
+    {
+        bool is_new = false;
+        Position *p = ecs_emplace(world, e, Position, &is_new);
+        test_assert(p != NULL);
+        test_bool(is_new, false);
+        p->x = 10;
+        p->y = 20;
+    }
+
+    {
+        bool is_new = false;
+        Velocity *p = ecs_emplace(world, e, Velocity, &is_new);
+        test_assert(p != NULL);
+        test_bool(is_new, false);
+        p->x = 1;
+        p->y = 2;
+    }
+
+    ecs_defer_end(world);
+
+    {
+        const Position *p = ecs_get(world, e, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+    }
+    {
+        const Velocity *p = ecs_get(world, e, Velocity);
+        test_assert(p != NULL);
+        test_int(p->x, 1);
+        test_int(p->y, 2);
+    }
+
+    ecs_fini(world);
+}
+
+void Sparse_defer_batched_emplace_w_modified_existing(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_add_id(world, ecs_id(Position), EcsSparse);
+    ecs_add_id(world, ecs_id(Velocity), EcsSparse);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_add(world, e, Position);
+    ecs_add(world, e, Velocity);
+
+    ecs_defer_begin(world);
+
+    {
+        bool is_new = false;
+        Position *p = ecs_emplace(world, e, Position, &is_new);
+        test_assert(p != NULL);
+        test_bool(is_new, false);
+        p->x = 10;
+        p->y = 20;
+    }
+    ecs_modified(world, e, Position);
+
+    {
+        bool is_new = false;
+        Velocity *p = ecs_emplace(world, e, Velocity, &is_new);
+        test_assert(p != NULL);
+        test_bool(is_new, false);
+        p->x = 1;
+        p->y = 2;
+    }
+    ecs_modified(world, e, Velocity);
+
+    ecs_defer_end(world);
+
+    {
+        const Position *p = ecs_get(world, e, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+    }
+    {
+        const Velocity *p = ecs_get(world, e, Velocity);
+        test_assert(p != NULL);
+        test_int(p->x, 1);
+        test_int(p->y, 2);
+    }
+
+    ecs_fini(world);
+}
+
+void Sparse_defer_batched_set_existing(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_add_id(world, ecs_id(Position), EcsSparse);
+    ecs_add_id(world, ecs_id(Velocity), EcsSparse);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_add(world, e, Position);
+    ecs_add(world, e, Velocity);
+
+    ecs_defer_begin(world);
+
+    ecs_set(world, e, Position, {10, 20});
+    ecs_set(world, e, Velocity, {1, 2});
+
+    ecs_defer_end(world);
+
+    {
+        const Position *p = ecs_get(world, e, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+    }
+    {
+        const Velocity *p = ecs_get(world, e, Velocity);
+        test_assert(p != NULL);
+        test_int(p->x, 1);
+        test_int(p->y, 2);
+    }
+
+    ecs_fini(world);
+}
+
+void Sparse_defer_batched_set_remove(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_add_id(world, ecs_id(Position), EcsSparse);
+
+    ecs_entity_t e = ecs_new(world);
+
+    ecs_defer_begin(world);
+
+    ecs_set(world, e, Position, {10, 20});
+    ecs_remove(world, e, Position);
+
+    ecs_defer_end(world);
+
+    test_assert(!ecs_has(world, e, Position));
+
+    {
+        const Position *p = ecs_get(world, e, Position);
+        test_assert(p == NULL);
+    }
+
+    ecs_fini(world);
+}
+
+void Sparse_defer_batched_set_remove_existing(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_add_id(world, ecs_id(Position), EcsSparse);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_add(world, e, Position);
+
+    ecs_defer_begin(world);
+
+    ecs_set(world, e, Position, {10, 20});
+    ecs_remove(world, e, Position);
+
+    ecs_defer_end(world);
+
+    test_assert(!ecs_has(world, e, Position));
+
+    {
+        const Position *p = ecs_get(world, e, Position);
+        test_assert(p == NULL);
+    }
+
+    ecs_fini(world);
+}

@@ -456,6 +456,34 @@ void Sparse_on_add_remove_after_fini(void);
 void Sparse_on_set_after_set(void);
 void Sparse_on_set_after_modified(void);
 void Sparse_sparse_relationship(void);
+void Sparse_defer_ensure(void);
+void Sparse_defer_ensure_w_modified(void);
+void Sparse_defer_ensure_modified(void);
+void Sparse_defer_emplace(void);
+void Sparse_defer_emplace_w_modified(void);
+void Sparse_defer_set(void);
+void Sparse_defer_ensure_existing(void);
+void Sparse_defer_ensure_existing_twice(void);
+void Sparse_defer_ensure_w_modified_existing(void);
+void Sparse_defer_ensure_modified_existing(void);
+void Sparse_defer_emplace_existing(void);
+void Sparse_defer_emplace_w_modified_existing(void);
+void Sparse_defer_set_existing(void);
+void Sparse_defer_batched_ensure(void);
+void Sparse_defer_batched_ensure_w_modified(void);
+void Sparse_defer_batched_ensure_modified(void);
+void Sparse_defer_batched_emplace(void);
+void Sparse_defer_batched_emplace_w_modified(void);
+void Sparse_defer_batched_set(void);
+void Sparse_defer_batched_ensure_existing(void);
+void Sparse_defer_batched_ensure_existing_twice(void);
+void Sparse_defer_batched_ensure_w_modified_existing(void);
+void Sparse_defer_batched_ensure_modified_existing(void);
+void Sparse_defer_batched_emplace_existing(void);
+void Sparse_defer_batched_emplace_w_modified_existing(void);
+void Sparse_defer_batched_set_existing(void);
+void Sparse_defer_batched_set_remove(void);
+void Sparse_defer_batched_set_remove_existing(void);
 
 // Testsuite 'Union'
 void Union_add(void);
@@ -3828,6 +3856,118 @@ bake_test_case Sparse_testcases[] = {
     {
         "sparse_relationship",
         Sparse_sparse_relationship
+    },
+    {
+        "defer_ensure",
+        Sparse_defer_ensure
+    },
+    {
+        "defer_ensure_w_modified",
+        Sparse_defer_ensure_w_modified
+    },
+    {
+        "defer_ensure_modified",
+        Sparse_defer_ensure_modified
+    },
+    {
+        "defer_emplace",
+        Sparse_defer_emplace
+    },
+    {
+        "defer_emplace_w_modified",
+        Sparse_defer_emplace_w_modified
+    },
+    {
+        "defer_set",
+        Sparse_defer_set
+    },
+    {
+        "defer_ensure_existing",
+        Sparse_defer_ensure_existing
+    },
+    {
+        "defer_ensure_existing_twice",
+        Sparse_defer_ensure_existing_twice
+    },
+    {
+        "defer_ensure_w_modified_existing",
+        Sparse_defer_ensure_w_modified_existing
+    },
+    {
+        "defer_ensure_modified_existing",
+        Sparse_defer_ensure_modified_existing
+    },
+    {
+        "defer_emplace_existing",
+        Sparse_defer_emplace_existing
+    },
+    {
+        "defer_emplace_w_modified_existing",
+        Sparse_defer_emplace_w_modified_existing
+    },
+    {
+        "defer_set_existing",
+        Sparse_defer_set_existing
+    },
+    {
+        "defer_batched_ensure",
+        Sparse_defer_batched_ensure
+    },
+    {
+        "defer_batched_ensure_w_modified",
+        Sparse_defer_batched_ensure_w_modified
+    },
+    {
+        "defer_batched_ensure_modified",
+        Sparse_defer_batched_ensure_modified
+    },
+    {
+        "defer_batched_emplace",
+        Sparse_defer_batched_emplace
+    },
+    {
+        "defer_batched_emplace_w_modified",
+        Sparse_defer_batched_emplace_w_modified
+    },
+    {
+        "defer_batched_set",
+        Sparse_defer_batched_set
+    },
+    {
+        "defer_batched_ensure_existing",
+        Sparse_defer_batched_ensure_existing
+    },
+    {
+        "defer_batched_ensure_existing_twice",
+        Sparse_defer_batched_ensure_existing_twice
+    },
+    {
+        "defer_batched_ensure_w_modified_existing",
+        Sparse_defer_batched_ensure_w_modified_existing
+    },
+    {
+        "defer_batched_ensure_modified_existing",
+        Sparse_defer_batched_ensure_modified_existing
+    },
+    {
+        "defer_batched_emplace_existing",
+        Sparse_defer_batched_emplace_existing
+    },
+    {
+        "defer_batched_emplace_w_modified_existing",
+        Sparse_defer_batched_emplace_w_modified_existing
+    },
+    {
+        "defer_batched_set_existing",
+        Sparse_defer_batched_set_existing
+    },
+    {
+        "defer_batched_set_remove",
+        Sparse_defer_batched_set_remove
+    },
+    {
+        "defer_batched_set_remove_existing",
+        Sparse_defer_batched_set_remove_existing
     }
 };
 
@@ -10256,7 +10396,7 @@ static bake_test_suite suites[] = {
         "Sparse",
         NULL,
         NULL,
-        42,
+        70,
         Sparse_testcases
     },
     {
