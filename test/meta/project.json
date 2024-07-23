@@ -609,7 +609,8 @@
                 "array_array_i32_3",
                 "vector_i32_3",
                 "vector_struct_i32_i32",
-                "vector_array_i32_3"
+                "vector_array_i32_3",
+                "serialize_from_stage"
             ]
         }, {
             "id": "SerializeEntityToJson",
@@ -662,7 +663,8 @@
                 "serialize_anonymous_w_builtin",
                 "serialize_named_w_builtin",
                 "serialize_named_child_w_builtin",
-                "serialize_named_child_w_builtin_w_type_info"
+                "serialize_named_child_w_builtin_w_type_info",
+                "serialize_from_stage"
             ]
         }, {
             "id": "SerializeIterToJson",
@@ -735,7 +737,8 @@
                 "serialize_rule_w_optional_component",
                 "serialize_entity_w_flecs_core_parent",
                 "no_fields",
-                "no_fields_w_vars"
+                "no_fields_w_vars",
+                "serialize_from_stage"
             ]
         }, {
             "id": "SerializeIterToRowJson",

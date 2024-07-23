@@ -583,6 +583,7 @@ void SerializeToJson_array_array_i32_3(void);
 void SerializeToJson_vector_i32_3(void);
 void SerializeToJson_vector_struct_i32_i32(void);
 void SerializeToJson_vector_array_i32_3(void);
+void SerializeToJson_serialize_from_stage(void);
 
 // Testsuite 'SerializeEntityToJson'
 void SerializeEntityToJson_serialize_empty(void);
@@ -634,6 +635,7 @@ void SerializeEntityToJson_serialize_anonymous_w_builtin(void);
 void SerializeEntityToJson_serialize_named_w_builtin(void);
 void SerializeEntityToJson_serialize_named_child_w_builtin(void);
 void SerializeEntityToJson_serialize_named_child_w_builtin_w_type_info(void);
+void SerializeEntityToJson_serialize_from_stage(void);
 
 // Testsuite 'SerializeIterToJson'
 void SerializeIterToJson_serialize_1_comps_empty(void);
@@ -705,6 +707,7 @@ void SerializeIterToJson_serialize_rule_w_optional_component(void);
 void SerializeIterToJson_serialize_entity_w_flecs_core_parent(void);
 void SerializeIterToJson_no_fields(void);
 void SerializeIterToJson_no_fields_w_vars(void);
+void SerializeIterToJson_serialize_from_stage(void);
 
 // Testsuite 'SerializeIterToRowJson'
 void SerializeIterToRowJson_serialize_this_w_1_tag(void);
@@ -3163,6 +3166,10 @@ bake_test_case SerializeToJson_testcases[] = {
     {
         "vector_array_i32_3",
         SerializeToJson_vector_array_i32_3
+    },
+    {
+        "serialize_from_stage",
+        SerializeToJson_serialize_from_stage
     }
 };
 
@@ -3362,6 +3369,10 @@ bake_test_case SerializeEntityToJson_testcases[] = {
     {
         "serialize_named_child_w_builtin_w_type_info",
         SerializeEntityToJson_serialize_named_child_w_builtin_w_type_info
+    },
+    {
+        "serialize_from_stage",
+        SerializeEntityToJson_serialize_from_stage
     }
 };
 
@@ -3641,6 +3652,10 @@ bake_test_case SerializeIterToJson_testcases[] = {
     {
         "no_fields_w_vars",
         SerializeIterToJson_no_fields_w_vars
+    },
+    {
+        "serialize_from_stage",
+        SerializeIterToJson_serialize_from_stage
     }
 };
 
@@ -4561,21 +4576,21 @@ static bake_test_suite suites[] = {
         "SerializeToJson",
         NULL,
         NULL,
-        45,
+        46,
         SerializeToJson_testcases
     },
     {
         "SerializeEntityToJson",
         NULL,
         NULL,
-        49,
+        50,
         SerializeEntityToJson_testcases
     },
     {
         "SerializeIterToJson",
         NULL,
         NULL,
-        69,
+        70,
         SerializeIterToJson_testcases
     },
     {

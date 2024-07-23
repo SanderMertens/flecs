@@ -2488,3 +2488,29 @@ void SerializeIterToJson_no_fields_w_vars(void) {
 
     ecs_fini(world);
 }
+
+void SerializeIterToJson_serialize_from_stage(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, MyTag);
+
+    ecs_entity_t e1 = ecs_entity(world, { .name = "Foo" });
+    ecs_entity_t e2 = ecs_entity(world, { .name = "Bar" });
+
+    ecs_add(world, e1, MyTag);
+    ecs_add(world, e2, MyTag);
+
+    ecs_query_t *q = ecs_query(world, { .expr = "MyTag" });
+
+    ecs_world_t *stage = ecs_get_stage(world, 0);
+    ecs_iter_t it = ecs_query_iter(stage, q);
+
+    char *json = ecs_iter_to_json(&it, NULL);
+    test_json(json, "{\"results\":[{\"name\":\"Foo\", \"fields\":{}}, {\"name\":\"Bar\", \"fields\":{}}]}");
+
+    ecs_os_free(json);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}

@@ -42599,11 +42599,13 @@ int flecs_expr_ser_primitive(
 #ifdef FLECS_JSON
 
 int ecs_entity_to_json_buf(
-    const ecs_world_t *world,
+    const ecs_world_t *stage,
     ecs_entity_t entity,
     ecs_strbuf_t *buf,
     const ecs_entity_to_json_desc_t *desc)
 {
+    const ecs_world_t *world = ecs_get_world(stage);
+
     if (!entity || !ecs_is_valid(world, entity)) {
         return -1;
     }

@@ -1374,3 +1374,18 @@ void SerializeEntityToJson_serialize_named_child_w_builtin_w_type_info(void) {
 
     ecs_fini(world);
 }
+
+void SerializeEntityToJson_serialize_from_stage(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_entity(world, { .name = "Foo" });
+
+    ecs_world_t *stage = ecs_get_stage(world, 0);
+
+    char *json = ecs_entity_to_json(stage, e, NULL);
+    test_assert(json != NULL);
+    test_json(json, "{\"name\":\"Foo\"}");
+    ecs_os_free(json);
+
+    ecs_fini(world);
+}
