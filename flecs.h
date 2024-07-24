@@ -432,24 +432,26 @@ extern "C" {
 #define EcsIterProfile                 (1u << 7u)  /* Profile iterator performance */
 #define EcsIterTrivialSearch           (1u << 8u)  /* Trivial iterator mode */
 #define EcsIterTrivialSearchNoData     (1u << 9u)  /* Trivial iterator w/no data */
-#define EcsIterTrivialTest             (1u << 10u) /* Trivial test mode (constrained $this) */
-#define EcsIterTrivialTestWildcard     (1u << 11u) /* Trivial test w/wildcards */
-#define EcsIterTrivialSearchWildcard   (1u << 12u) /* Trivial search with wildcard ids */
-#define EcsIterCacheSearch             (1u << 13u) /* Cache search */
-#define EcsIterFixedInChangeComputed   (1u << 14u) /* Change detection for fixed in terms is done */
-#define EcsIterFixedInChanged          (1u << 15u) /* Fixed in terms changed */
-#define EcsIterSkip                    (1u << 16u) /* Result was skipped for change detection */
-#define EcsIterCppEach                 (1u << 17u) /* Uses C++ 'each' iterator */
+#define EcsIterTrivialSearchWildcard   (1u << 10u) /* Trivial search with wildcard ids */
+#define EcsIterTrivialTest             (1u << 11u) /* Trivial test mode (constrained $this) */
+#define EcsIterTrivialTestNoData       (1u << 12u) /* Trivial test mode w/no data (constrained $this) */
+#define EcsIterTrivialTestWildcard     (1u << 13u) /* Trivial test w/wildcards */
+#define EcsIterTrivialCached           (1u << 14u) /* Trivial search for cached query */
+#define EcsIterCacheSearch             (1u << 15u) /* Cache search */
+#define EcsIterFixedInChangeComputed   (1u << 16u) /* Change detection for fixed in terms is done */
+#define EcsIterFixedInChanged          (1u << 17u) /* Fixed in terms changed */
+#define EcsIterSkip                    (1u << 18u) /* Result was skipped for change detection */
+#define EcsIterCppEach                 (1u << 19u) /* Uses C++ 'each' iterator */
 
 /* Same as event flags */
-#define EcsIterTableOnly               (1u << 18u)  /* Result only populates table */
+#define EcsIterTableOnly               (1u << 20u)  /* Result only populates table */
 
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Event flags (used by ecs_event_decs_t::flags)
 ////////////////////////////////////////////////////////////////////////////////
 
-#define EcsEventTableOnly              (1u << 18u) /* Table event (no data, same as iter flags) */
+#define EcsEventTableOnly              (1u << 20u) /* Table event (no data, same as iter flags) */
 #define EcsEventNoOnSet                (1u << 16u) /* Don't emit OnSet for inherited ids */
 
 
