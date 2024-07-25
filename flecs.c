@@ -1877,47 +1877,39 @@ int32_t flecs_query_cache_entity_count(
 
 /* Cache search without data */
 bool flecs_query_cache_search(
-    const ecs_query_impl_t *impl,
     const ecs_query_run_ctx_t *ctx);
 
 /* Cache search with data */
 bool flecs_query_cache_data_search(
-    const ecs_query_impl_t *impl,
     const ecs_query_run_ctx_t *ctx);
 
 /* Cache search without data where entire query is cached */
 bool flecs_query_is_cache_search(
-    const ecs_query_impl_t *impl,
     const ecs_query_run_ctx_t *ctx);
 
 /* Cache search with data where entire query is cached */
 bool flecs_query_is_cache_data_search(
-    const ecs_query_impl_t *impl,
     const ecs_query_run_ctx_t *ctx);
 
 /* Cache test without data */
 bool flecs_query_cache_test(
-    const ecs_query_impl_t *impl,
     const ecs_query_run_ctx_t *ctx,
-    bool first);
+    bool redo);
 
 /* Cache test without data where entire query is cached */
 bool flecs_query_is_cache_test(
-    const ecs_query_impl_t *impl,
     const ecs_query_run_ctx_t *ctx,
-    bool first);
+    bool redo);
 
 /* Cache test with data */
 bool flecs_query_cache_data_test(
-    const ecs_query_impl_t *impl,
     const ecs_query_run_ctx_t *ctx,
-    bool first);
+    bool redo);
 
 /* Cache test with data where entire query is cached */
 bool flecs_query_is_cache_data_test(
-    const ecs_query_impl_t *impl,
     const ecs_query_run_ctx_t *ctx,
-    bool first);
+    bool redo);
 
 /**
  * @file query/engine/change_detection.h
@@ -2022,40 +2014,35 @@ void flecs_query_up_cache_fini(
 
 /* Iterator for trivial queries. */
 bool flecs_query_trivial_search(
-    const ecs_query_impl_t *query,
     const ecs_query_run_ctx_t *ctx,
     ecs_query_trivial_ctx_t *op_ctx,
-    bool first,
+    bool redo,
     ecs_flags64_t field_set);
 
 /* Iterator for trivial queries. */
 bool flecs_query_trivial_search_nodata(
-    const ecs_query_impl_t *query,
     const ecs_query_run_ctx_t *ctx,
     ecs_query_trivial_ctx_t *op_ctx,
-    bool first,
+    bool redo,
     ecs_flags64_t field_set);
 
 /* Iterator for trivial queries with wildcard matching. */
 bool flecs_query_trivial_search_w_wildcards(
-    const ecs_query_impl_t *query,
     const ecs_query_run_ctx_t *ctx,
     ecs_query_trivial_ctx_t *op_ctx,
-    bool first,
+    bool redo,
     ecs_flags64_t field_set);
 
 /* Trivial test for constrained $this. */
 bool flecs_query_trivial_test(
-    const ecs_query_impl_t *query,
     const ecs_query_run_ctx_t *ctx,
     bool first,
     ecs_flags64_t field_set);
 
 /* Trivial test for constrained $this with wildcard matching. */
 bool flecs_query_trivial_test_w_wildcards(
-    const ecs_query_impl_t *query,
     const ecs_query_run_ctx_t *ctx,
-    bool first,
+    bool redo,
     ecs_flags64_t field_set);
 
 
@@ -2477,6 +2464,10 @@ ecs_iter_t flecs_query_iter(
     const ecs_world_t *world,
     const ecs_query_t *q);
 
+/* Internal function for initializing an iterator after vars are constrained */
+void flecs_query_iter_constrain(
+    ecs_iter_t *it);
+
 /**
  * @file observable.h
  * @brief Functions for sending events.
@@ -2608,9 +2599,6 @@ void flecs_iter_init(
     const ecs_world_t *world,
     ecs_iter_t *it,
     ecs_flags8_t fields);
-
-void flecs_iter_validate(
-    ecs_iter_t *it);
 
 bool flecs_iter_next_row(
     ecs_iter_t *it);
@@ -6156,7 +6144,7 @@ void flecs_invoke_hook(
 
     ecs_iter_t it = { .field_count = 1};
     it.entities = entities;
-    
+
     flecs_iter_init(world, &it, flecs_iter_cache_all);
     it.world = world;
     it.real_world = world;
@@ -6170,7 +6158,7 @@ void flecs_invoke_hook(
     it.callback_ctx = ti->hooks.binding_ctx;
     it.count = count;
     it.offset = row;
-    flecs_iter_validate(&it);
+    it.flags = EcsIterIsValid;
     hook(&it);
     ecs_iter_fini(&it);
 
@@ -10988,22 +10976,6 @@ void flecs_iter_init(
     INIT_CACHE(it, stack, fields, ptrs, void*, it->field_count);
 }
 
-void flecs_iter_validate(
-    ecs_iter_t *it)
-{
-    ECS_BIT_SET(it->flags, EcsIterIsValid);
-
-    /* Make sure multithreaded iterator isn't created for real world */
-    ecs_world_t *world = it->real_world;
-    flecs_poly_assert(world, ecs_world_t);
-    ecs_check(!(world->flags & EcsWorldMultiThreaded) || it->world != it->real_world,
-        ECS_INVALID_PARAMETER, 
-            "create iterator for stage when world is in multithreaded mode");
-    (void)world;
-error:
-    return;
-}
-
 void ecs_iter_fini(
     ecs_iter_t *it)
 {
@@ -11549,6 +11521,9 @@ void ecs_iter_set_var(
 
     it->constrained_vars |= flecs_ito(uint64_t, 1 << var_id);
 
+    /* Update iterator for constrained iterator */
+    flecs_query_iter_constrain(it);
+
 error:
     return;
 }
@@ -11594,6 +11569,9 @@ void ecs_iter_set_var_as_range(
     }
 
     it->constrained_vars |= flecs_uto(uint64_t, 1 << var_id);
+
+    /* Update iterator for constrained iterator */
+    flecs_query_iter_constrain(it);
 
 error:
     return;
@@ -67311,7 +67289,8 @@ void ecs_iter_set_group(
 {
     ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(it->next == ecs_query_next, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(!(it->flags & EcsIterIsValid), ECS_INVALID_PARAMETER, NULL);
+    ecs_check(!(it->flags & EcsIterIsValid), ECS_INVALID_PARAMETER, 
+        "cannot set group during iteration");
 
     ecs_query_iter_t *qit = &it->priv_.iter.query;
     ecs_query_impl_t *q = flecs_query_impl(qit->query);
@@ -67399,19 +67378,18 @@ ecs_query_cache_table_match_t* flecs_query_next(
 
 static
 ecs_query_cache_table_match_t* flecs_query_test(
-    const ecs_query_impl_t *impl,
     const ecs_query_run_ctx_t *ctx,
-    bool first)
+    bool redo)
 {
     ecs_iter_t *it = ctx->it;
-    if (first) {
+    if (!redo) {
         ecs_var_t *var = &ctx->vars[0];
         ecs_table_t *table = var->range.table;
         ecs_assert(table != NULL, ECS_INVALID_OPERATION, 
             "the variable set on the iterator is missing a table");
 
         ecs_query_cache_table_t *qt = flecs_query_cache_get_table(
-            impl->cache, table);
+            ctx->query->cache, table);
         if (!qt) {
             return NULL;
         }
@@ -67529,7 +67507,6 @@ void flecs_query_populate_ptrs_w_shared(
  * This requires a mapping from cached fields to query fields. */
 static
 void flecs_query_cache_data_populate(
-    const ecs_query_impl_t *impl,
     ecs_iter_t *it,
     const ecs_query_run_ctx_t *ctx,
     ecs_query_cache_table_match_t *node)
@@ -67547,6 +67524,7 @@ void flecs_query_cache_data_populate(
         return;
     }
 
+    const ecs_query_impl_t *impl = ctx->query;
     ecs_query_t *cache_query = impl->cache->query;
     if (!ecs_vec_count(&node->refs)) {
         flecs_query_populate_ptrs_w_field_map(
@@ -67588,11 +67566,11 @@ void flecs_query_is_cache_data_populate(
 
 static
 void flecs_query_cache_init_mapped_fields(
-    const ecs_query_impl_t *impl,
     const ecs_query_run_ctx_t *ctx,
     ecs_query_cache_table_match_t *node)
 {
     ecs_iter_t *it = ctx->it;
+    const ecs_query_impl_t *impl = ctx->query;
     ecs_query_cache_t *cache = impl->cache;
     int32_t i, field_count = cache->query->field_count;
     int8_t *field_map = impl->field_map;
@@ -67613,7 +67591,6 @@ void flecs_query_cache_init_mapped_fields(
 
 /* Iterate cache for query that's partially cached */
 bool flecs_query_cache_search(
-    const ecs_query_impl_t *impl,
     const ecs_query_run_ctx_t *ctx)
 {
     ecs_query_cache_table_match_t *node = flecs_query_next(ctx);
@@ -67621,7 +67598,7 @@ bool flecs_query_cache_search(
         return false;
     }
 
-    flecs_query_cache_init_mapped_fields(impl, ctx, node);
+    flecs_query_cache_init_mapped_fields(ctx, node);
 
     ctx->vars[0].range.count = node->count;
     ctx->vars[0].range.offset = node->offset;
@@ -67630,11 +67607,8 @@ bool flecs_query_cache_search(
 
 /* Iterate cache for query that's entirely cached */
 bool flecs_query_is_cache_search(
-    const ecs_query_impl_t *impl,
     const ecs_query_run_ctx_t *ctx)
 {
-    (void)impl;
-
     ecs_query_cache_table_match_t *node = flecs_query_next(ctx);
     if (!node) {
         return false;
@@ -67654,25 +67628,23 @@ bool flecs_query_is_cache_search(
 
 /* Iterate cache for query that's partially cached with data */
 bool flecs_query_cache_data_search(
-    const ecs_query_impl_t *impl,
     const ecs_query_run_ctx_t *ctx)
 {
-    if (!flecs_query_cache_search(impl, ctx)) {
+    if (!flecs_query_cache_search(ctx)) {
         return false;
     }
 
     ecs_iter_t *it = ctx->it;
     ecs_query_iter_t *qit = &it->priv_.iter.query;
-    flecs_query_cache_data_populate(impl, it, ctx, qit->prev);
+    flecs_query_cache_data_populate(it, ctx, qit->prev);
     return true;
 }
 
 /* Iterate cache for query that's entirely cached with data */
 bool flecs_query_is_cache_data_search(
-    const ecs_query_impl_t *impl,
     const ecs_query_run_ctx_t *ctx)
 {
-    if (!flecs_query_is_cache_search(impl, ctx)) {
+    if (!flecs_query_is_cache_search(ctx)) {
         return false;
     }
 
@@ -67684,27 +67656,25 @@ bool flecs_query_is_cache_data_search(
 
 /* Test if query that is entirely cached matches constrained $this */
 bool flecs_query_cache_test(
-    const ecs_query_impl_t *impl,
     const ecs_query_run_ctx_t *ctx,
-    bool first)
+    bool redo)
 {
-    ecs_query_cache_table_match_t *node = flecs_query_test(impl, ctx, first);
+    ecs_query_cache_table_match_t *node = flecs_query_test(ctx, redo);
     if (!node) {
         return false;
     }
 
-    flecs_query_cache_init_mapped_fields(impl, ctx, node);
+    flecs_query_cache_init_mapped_fields(ctx, node);
 
     return true;
 }
 
 /* Test if query that is entirely cached matches constrained $this */
 bool flecs_query_is_cache_test(
-    const ecs_query_impl_t *impl,
     const ecs_query_run_ctx_t *ctx,
-    bool first)
+    bool redo)
 {
-    ecs_query_cache_table_match_t *node = flecs_query_test(impl, ctx, first);
+    ecs_query_cache_table_match_t *node = flecs_query_test(ctx, redo);
     if (!node) {
         return false;
     }
@@ -67719,27 +67689,25 @@ bool flecs_query_is_cache_test(
 
 /* Test if query that is partially cached matches constrained $this */
 bool flecs_query_cache_data_test(
-    const ecs_query_impl_t *impl,
     const ecs_query_run_ctx_t *ctx,
-    bool first)
+    bool redo)
 {
-    if (!flecs_query_cache_test(impl, ctx, first)) {
+    if (!flecs_query_cache_test(ctx, redo)) {
         return false;
     }
 
     ecs_iter_t *it = ctx->it;
     ecs_query_iter_t *qit = &it->priv_.iter.query;
-    flecs_query_cache_data_populate(impl, it, ctx, qit->prev);
+    flecs_query_cache_data_populate(it, ctx, qit->prev);
     return true;
 }
 
 /* Test if query that is entirely cached matches constrained $this with data */
 bool flecs_query_is_cache_data_test(
-    const ecs_query_impl_t *impl,
     const ecs_query_run_ctx_t *ctx,
-    bool first)
+    bool redo)
 {
-    if (!flecs_query_is_cache_test(impl, ctx, first)) {
+    if (!flecs_query_is_cache_test(ctx, redo)) {
         return false;
     }
 
@@ -69361,11 +69329,9 @@ bool flecs_query_triv(
     ctx->written[ctx->op_index + 1] |= 1ull;
     if (written & 1ull) {
         flecs_query_set_iter_this(ctx->it, ctx);
-        return flecs_query_trivial_test(
-            ctx->query, ctx, !redo, termset);
+        return flecs_query_trivial_test(ctx, redo, termset);
     } else {
-        return flecs_query_trivial_search_nodata(
-            ctx->query, ctx, op_ctx, !redo, termset);
+        return flecs_query_trivial_search_nodata(ctx, op_ctx, redo, termset);
     }
 }
 
@@ -69381,11 +69347,9 @@ bool flecs_query_triv_data(
     ctx->written[ctx->op_index + 1] |= 1ull;
     if (written & 1ull) {
         flecs_query_set_iter_this(ctx->it, ctx);
-        return flecs_query_trivial_test(
-            ctx->query, ctx, !redo, termset);
+        return flecs_query_trivial_test(ctx, redo, termset);
     } else {
-        return flecs_query_trivial_search(
-            ctx->query, ctx, op_ctx, !redo, termset);
+        return flecs_query_trivial_search(ctx, op_ctx, redo, termset);
     }
 }
 
@@ -69402,10 +69366,10 @@ bool flecs_query_triv_wildcard(
     if (written & 1ull) {
         flecs_query_set_iter_this(ctx->it, ctx);
         return flecs_query_trivial_test_w_wildcards(
-            ctx->query, ctx, !redo, termset);
+            ctx, redo, termset);
     } else {
         return flecs_query_trivial_search_w_wildcards(
-            ctx->query, ctx, op_ctx, !redo, termset);
+            ctx, op_ctx, redo, termset);
     }
 }
 
@@ -69421,9 +69385,9 @@ bool flecs_query_cache(
     uint64_t written = ctx->written[ctx->op_index];
     ctx->written[ctx->op_index + 1] |= 1ull;
     if (written & 1ull) {
-        return flecs_query_cache_test(ctx->query, ctx, !redo);
+        return flecs_query_cache_test(ctx, redo);
     } else {
-        return flecs_query_cache_search(ctx->query, ctx);
+        return flecs_query_cache_search(ctx);
     }
 }
 
@@ -69439,9 +69403,9 @@ bool flecs_query_cache_data(
     uint64_t written = ctx->written[ctx->op_index];
     ctx->written[ctx->op_index + 1] |= 1ull;
     if (written & 1ull) {
-        return flecs_query_cache_data_test(ctx->query, ctx, !redo);
+        return flecs_query_cache_data_test(ctx, redo);
     } else {
-        return flecs_query_cache_data_search(ctx->query, ctx);
+        return flecs_query_cache_data_search(ctx);
     }
 }
 
@@ -69456,9 +69420,9 @@ bool flecs_query_is_cache(
     uint64_t written = ctx->written[ctx->op_index];
     ctx->written[ctx->op_index + 1] |= 1ull;
     if (written & 1ull) {
-        return flecs_query_is_cache_test(ctx->query, ctx, !redo);
+        return flecs_query_is_cache_test(ctx, redo);
     } else {
-        return flecs_query_is_cache_search(ctx->query, ctx);
+        return flecs_query_is_cache_search(ctx);
     }
 }
 
@@ -69473,9 +69437,9 @@ bool flecs_query_is_cache_data(
     uint64_t written = ctx->written[ctx->op_index];
     ctx->written[ctx->op_index + 1] |= 1ull;
     if (written & 1ull) {
-        return flecs_query_is_cache_data_test(ctx->query, ctx, !redo);
+        return flecs_query_is_cache_data_test(ctx, redo);
     } else {
-        return flecs_query_is_cache_data_search(ctx->query, ctx);
+        return flecs_query_is_cache_data_search(ctx);
     }
 }
 
@@ -70561,20 +70525,37 @@ bool flecs_query_run_until(
 
 
 static
-void flecs_query_iter_init(
+void flecs_query_iter_run_ctx_init(
+    ecs_iter_t *it,
     ecs_query_run_ctx_t *ctx)
 {
-    ecs_assert(ctx->written != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_iter_t *it = ctx->it;
+    ecs_query_iter_t *qit = &it->priv_.iter.query;
+    ecs_query_impl_t *impl = ECS_CONST_CAST(ecs_query_impl_t*, qit->query);
+    ctx->world = it->real_world;
+    ctx->query = impl;
+    ctx->it = it;
+    ctx->vars = qit->vars;
+    ctx->query_vars = qit->query_vars;
+    ctx->written = qit->written;
+    ctx->op_ctx = qit->op_ctx;
+    ctx->qit = qit;
+}
 
-    const ecs_query_impl_t *query = ctx->query;
+void flecs_query_iter_constrain(
+    ecs_iter_t *it)
+{
+    ecs_query_run_ctx_t ctx;
+    flecs_query_iter_run_ctx_init(it, &ctx);
+    ecs_assert(ctx.written != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    const ecs_query_impl_t *query = ctx.query;
     const ecs_query_t *q = &query->pub;
     ecs_flags64_t it_written = it->constrained_vars;
-    ctx->written[0] = it_written;
-    if (it_written && ctx->query->src_vars) {
+    ctx.written[0] = it_written;
+    if (it_written && ctx.query->src_vars) {
         /* If variables were constrained, check if there are any table
          * variables that have a constrained entity variable. */
-        ecs_var_t *vars = ctx->vars;
+        ecs_var_t *vars = ctx.vars;
         int32_t i, count = q->field_count;
         for (i = 0; i < count; i ++) {
             ecs_var_id_t var_id = query->src_vars[i];
@@ -70588,18 +70569,31 @@ void flecs_query_iter_init(
 
             /* Initialize table variable with constrained entity variable */
             ecs_var_t *tvar = &vars[var->table_id];
-            tvar->range = flecs_range_from_entity(vars[var_id].entity, ctx);
-            ctx->written[0] |= (1ull << var->table_id); /* Mark as written */
+            tvar->range = flecs_range_from_entity(vars[var_id].entity, &ctx);
+            ctx.written[0] |= (1ull << var->table_id); /* Mark as written */
         }
     }
 
+    /* This function can be called multiple times when setting variables, so
+     * reset flags before setting them. */
+    it->flags &= ~(EcsIterTrivialTestWildcard|EcsIterTrivialTest|
+        EcsIterTrivialTestNoData|EcsIterTrivialCached|
+        EcsIterTrivialSearchWildcard|EcsIterTrivialSearchNoData|
+        EcsIterTrivialSearch);
+
+    /* Figure out whether this query can utilize specialized iterator modes for
+     * improved performance. */
     ecs_flags32_t flags = q->flags;
     ecs_query_cache_t *cache = query->cache;
     bool no_data = !!((flags & EcsQueryNoData) || (it->flags & EcsIterNoData));
     if (flags & EcsQueryIsTrivial) {
         if ((flags & EcsQueryMatchOnlySelf)) {
             if (it_written) {
-                flecs_query_set_iter_this(it, ctx);
+                /* When we're testing against an entity or table, set the $this
+                 * variable in advance since it won't change later on. This 
+                 * initializes it.count, it.entities and it.table. */
+                flecs_query_set_iter_this(it, &ctx);
+
                 if (!cache) {
                     if (flags & EcsQueryMatchWildcards) {
                         it->flags |= EcsIterTrivialTestWildcard;
@@ -70608,7 +70602,8 @@ void flecs_query_iter_init(
                     }
                 } else if (flags & EcsQueryIsCacheable) {
                     if (no_data) {
-                        it->flags |= EcsIterTrivialTestNoData|EcsIterTrivialCached;
+                        it->flags |= 
+                            EcsIterTrivialTestNoData|EcsIterTrivialCached;
                     } else {
                         it->flags |= EcsIterTrivialTest|EcsIterTrivialCached;
                     }
@@ -70625,23 +70620,24 @@ void flecs_query_iter_init(
                 } else if (flags & EcsQueryIsCacheable) {
                     if (!cache->order_by_callback) {
                         if (no_data) {
-                            it->flags |= EcsIterTrivialSearchNoData|EcsIterTrivialCached;
+                            it->flags |= 
+                                EcsIterTrivialSearchNoData|EcsIterTrivialCached;
                         } else {
-                            it->flags |= EcsIterTrivialSearch|EcsIterTrivialCached;
+                            it->flags |= 
+                                EcsIterTrivialSearch|EcsIterTrivialCached;
                         }
                     }
                 }
             }
 
-            flecs_query_setids(&query->ops[0], false, ctx);
+            /* If we're using a specialized iterator mode, make sure to 
+             * initialize static component ids. Usually this is the first 
+             * instruction of a query plan, but because we're not running the
+             * query plan when using a specialized iterator mode, manually call
+             * the operation on iterator init. */
+            flecs_query_setids(&query->ops[0], false, &ctx);
         }
     }
-
-    if (cache) {
-        cache->prev_match_count = cache->match_count;
-    }
-
-    flecs_iter_validate(it);
 }
 
 bool flecs_query_next_instanced(
@@ -70653,112 +70649,104 @@ bool flecs_query_next_instanced(
     ecs_query_iter_t *qit = &it->priv_.iter.query;
     ecs_query_impl_t *impl = ECS_CONST_CAST(ecs_query_impl_t*, qit->query);
     ecs_query_run_ctx_t ctx;
-    ctx.world = it->real_world;
-    ctx.query = impl;
-    ctx.it = it;
-    ctx.vars = qit->vars;
-    ctx.query_vars = qit->query_vars;
-    ctx.written = qit->written;
-    ctx.op_ctx = qit->op_ctx;
-    ctx.qit = qit;
+    flecs_query_iter_run_ctx_init(it, &ctx);
     const ecs_query_op_t *ops = qit->ops;
 
-    bool redo = true;
-    if (!(it->flags & EcsIterIsValid)) {
-        ecs_assert(impl != NULL, ECS_INVALID_PARAMETER, NULL);
-        flecs_query_iter_init(&ctx);
-        redo = false;
-    } else {
-        it->frame_offset += it->count;
-
+    bool redo = it->flags & EcsIterIsValid;
+    if (redo) {
+        /* Change detection */
         if (!(it->flags & EcsIterSkip)) {
+            /* Mark table columns that are written to dirty */
             flecs_query_mark_fields_dirty(impl, it);
             if (qit->prev) {
                 if (ctx.query->pub.flags & EcsQueryHasMonitor) {
+                    /* If this query uses change detection, synchronize the
+                     * monitor for the iterated table with the query */
                     flecs_query_sync_match_monitor(impl, qit->prev);
                 }
             }
         }
-
-        it->flags &= ~EcsIterSkip;
     }
 
-    /* Specialized iterator modes for trivial queries */
+    it->flags &= ~(EcsIterSkip);
+    it->flags |= EcsIterIsValid;
+    it->frame_offset += it->count;
+
+    /* Specialized iterator modes. When a query doesn't use any advanced 
+     * features, it can call specialized iterator functions directly instead of
+     * going through the dispatcher of the query engine. 
+     * The iterator mode is set during iterator initialization. Besides being
+     * determined by the query, there are different modes for searching and 
+     * testing, where searching returns all matches for a query, whereas testing
+     * tests a single table or table range against the query. */
+
     if (it->flags & EcsIterTrivialCached) {
-        if (it->flags & (EcsIterTrivialSearch)) {
-            if (!flecs_query_is_cache_data_search(ctx.query, &ctx)) {
-                goto done;
+        /* Cached iterator modes */
+        if (it->flags & EcsIterTrivialSearch) {
+            if (flecs_query_is_cache_data_search(&ctx)) {
+                goto trivial_search_yield;
             }
-            goto trivial_search_yield;
-        } else if (it->flags & (EcsIterTrivialSearchNoData)) {
-            if (!flecs_query_is_cache_search(ctx.query, &ctx)) {
-                goto done;
+        } else if (it->flags & EcsIterTrivialSearchNoData) {
+            if (flecs_query_is_cache_search(&ctx)) {
+                goto trivial_search_yield;
             }
-            goto trivial_search_yield;
-        } else if (it->flags & (EcsIterTrivialTest)) {
-            if (!flecs_query_is_cache_data_test(ctx.query, &ctx, !redo)) {
-                goto done;
+        } else if (it->flags & EcsIterTrivialTest) {
+            if (flecs_query_is_cache_data_test(&ctx, redo)) {
+                goto yield;
             }
-            return true;
-        } else if (it->flags & (EcsIterTrivialTestNoData)) {
-            if (!flecs_query_is_cache_test(ctx.query, &ctx, !redo)) {
-                goto done;
+        } else if (it->flags & EcsIterTrivialTestNoData) {
+            if (flecs_query_is_cache_test(&ctx, redo)) {
+                goto yield;
             }
-            return true;
         }
     } else {
+        /* Uncached iterator modes */
+
+        /* Uncached iterator functions accept a mask which marks the terms that
+         * can be trivially iterated. If the entire query is trivial, create a
+         * mask that marks all terms. */
+        int32_t fields = ctx.query->pub.term_count;
+        ecs_flags64_t mask = (2llu << (fields - 1)) - 1;
+
         if (it->flags & EcsIterTrivialSearch) {
             ecs_query_trivial_ctx_t *op_ctx = &ctx.op_ctx[0].is.trivial;
-            int32_t fields = ctx.query->pub.term_count;
-            ecs_flags64_t mask = (2llu << (fields - 1)) - 1;
-            if (!flecs_query_trivial_search(ctx.query, &ctx, op_ctx, !redo, mask)) {
-                goto done;
+            if (flecs_query_trivial_search(&ctx, op_ctx, redo, mask)) {
+                goto trivial_search_yield;
             }
-            goto trivial_search_yield;
         } else if (it->flags & EcsIterTrivialSearchNoData) {
             ecs_query_trivial_ctx_t *op_ctx = &ctx.op_ctx[0].is.trivial;
-            int32_t fields = ctx.query->pub.term_count;
-            ecs_flags64_t mask = (2llu << (fields - 1)) - 1;
-            if (!flecs_query_trivial_search_nodata(ctx.query, &ctx, op_ctx, !redo, mask)) {
-                goto done;
+            if (flecs_query_trivial_search_nodata(&ctx, op_ctx, redo, mask)) {
+                goto trivial_search_yield;
             }
-            goto trivial_search_yield;
         } else if (it->flags & EcsIterTrivialSearchWildcard) {
             ecs_query_trivial_ctx_t *op_ctx = &ctx.op_ctx[0].is.trivial;
-            int32_t fields = ctx.query->pub.term_count;
-            ecs_flags64_t mask = (2llu << (fields - 1)) - 1;
-            if (!flecs_query_trivial_search_w_wildcards(ctx.query, &ctx, op_ctx, !redo, mask)) {
-                goto done;
+            if (flecs_query_trivial_search_w_wildcards(&ctx, op_ctx, redo, mask)) {
+                goto trivial_search_yield;
             }
-            goto trivial_search_yield;
         } else if (it->flags & EcsIterTrivialTest) {
-            int32_t fields = ctx.query->pub.term_count;
-            ecs_flags64_t mask = (2llu << (fields - 1)) - 1;
-            if (!flecs_query_trivial_test(ctx.query, &ctx, !redo, mask)) {
-                goto done;
+            if (flecs_query_trivial_test(&ctx, redo, mask)) {
+                goto yield;
             }
-            return true;
         } else if (it->flags & EcsIterTrivialTestWildcard) {
-            int32_t fields = ctx.query->pub.term_count;
-            ecs_flags64_t mask = (2llu << (fields - 1)) - 1;
-            if (!flecs_query_trivial_test_w_wildcards(ctx.query, &ctx, !redo, mask)) {
-                goto done;
+            if (flecs_query_trivial_test_w_wildcards(&ctx, redo, mask)) {
+                goto yield;
             }
-            return true;
+        } else {
+            /* Default iterator mode. This enters the query VM dispatch loop. */
+            if (flecs_query_run_until(
+                redo, &ctx, ops, -1, qit->op, impl->op_count - 1)) 
+            {
+                ecs_assert(ops[ctx.op_index].kind == EcsQueryYield, 
+                    ECS_INTERNAL_ERROR, NULL);
+                flecs_query_set_iter_this(it, &ctx);
+                ecs_assert(it->count >= 0, ECS_INTERNAL_ERROR, NULL);
+                qit->op = flecs_itolbl(ctx.op_index - 1);
+                goto yield;
+            }
         }
     }
 
-    /* Default iterator mode */
-    if (flecs_query_run_until(redo, &ctx, ops, -1, qit->op, impl->op_count - 1)) {
-        ecs_assert(ops[ctx.op_index].kind == EcsQueryYield, 
-            ECS_INTERNAL_ERROR, NULL);
-        flecs_query_set_iter_this(it, &ctx);
-        ecs_assert(it->count >= 0, ECS_INTERNAL_ERROR, NULL);
-        qit->op = flecs_itolbl(ctx.op_index - 1);
-        return true;
-    }
-
-done:
+    /* Done iterating */
     flecs_query_mark_fixed_fields_dirty(impl, it);
     if (ctx.query->monitor) {
         flecs_query_update_fixed_monitor(
@@ -70772,6 +70760,8 @@ trivial_search_yield:
     it->table = ctx.vars[0].range.table;
     it->count = ecs_table_count(it->table);
     it->entities = flecs_table_entities_array(it->table);
+
+yield:
     return true;
 }
 
@@ -70882,6 +70872,10 @@ ecs_iter_t flecs_query_iter(
     it.real_world = q->real_world;
     ecs_assert(flecs_poly_is(it.real_world, ecs_world_t),
         ECS_INTERNAL_ERROR, NULL);
+    ecs_check(!(it.real_world->flags & EcsWorldMultiThreaded) || 
+        it.world != it.real_world, ECS_INVALID_PARAMETER, 
+            "create iterator for stage when world is in multithreaded mode");
+
     it.query = q;
     it.system = q->entity;
     it.next = ecs_query_next;
@@ -70913,6 +70907,8 @@ ecs_iter_t flecs_query_iter(
             qit->last = ecs_vec_last_t(
                 &cache->table_slices, ecs_query_cache_table_match_t);
         }
+
+        cache->prev_match_count = cache->match_count;
     }
 
     if (var_count) {
@@ -70936,6 +70932,9 @@ ecs_iter_t flecs_query_iter(
     it.variable_count = impl->pub.var_count;
     it.variable_names = impl->pub.vars;
 
+    /* Set flags for unconstrained query iteration. Can be reinitialized when
+     * variables are constrained on iterator. */
+    flecs_query_iter_constrain(&it);
 error:
     return it;
 }
@@ -73659,10 +73658,10 @@ bool flecs_query_trivial_search_init(
     const ecs_query_run_ctx_t *ctx,
     ecs_query_trivial_ctx_t *op_ctx,
     const ecs_query_t *query,
-    bool first,
+    bool redo,
     ecs_flags64_t term_set)
 {
-    if (first) {
+    if (!redo) {
         /* Find first trivial term*/
         int32_t t;
         for (t = 0; t < query->term_count; t ++) {
@@ -73703,18 +73702,18 @@ bool flecs_query_trivial_search_init(
 }
 
 bool flecs_query_trivial_search(
-    const ecs_query_impl_t *query,
     const ecs_query_run_ctx_t *ctx,
     ecs_query_trivial_ctx_t *op_ctx,
-    bool first,
+    bool redo,
     ecs_flags64_t term_set)
 {
+    const ecs_query_impl_t *query = ctx->query;
     const ecs_query_t *q = &query->pub;
     const ecs_term_t *terms = q->terms;
     ecs_iter_t *it = ctx->it;
     int32_t t, term_count = query->pub.term_count;
 
-    if (!flecs_query_trivial_search_init(ctx, op_ctx, q, first, term_set)) {
+    if (!flecs_query_trivial_search_init(ctx, op_ctx, q, redo, term_set)) {
         return false;
     }
 
@@ -73777,17 +73776,17 @@ bool flecs_query_trivial_search(
 }
 
 bool flecs_query_trivial_search_w_wildcards(
-    const ecs_query_impl_t *query,
     const ecs_query_run_ctx_t *ctx,
     ecs_query_trivial_ctx_t *op_ctx,
-    bool first,
+    bool redo,
     ecs_flags64_t term_set)
 {
     bool result = flecs_query_trivial_search(
-        query, ctx, op_ctx, first, term_set);
+        ctx, op_ctx, redo, term_set);
     if (result) {
         ecs_iter_t *it = ctx->it;
         ecs_table_t *table = ctx->vars[0].range.table;
+        const ecs_query_impl_t *query = ctx->query;
         int32_t t, term_count = query->pub.term_count;
         for (t = 0; t < term_count; t ++) {
             if (term_set & (1llu << t)) {
@@ -73802,18 +73801,18 @@ bool flecs_query_trivial_search_w_wildcards(
 }
 
 bool flecs_query_trivial_search_nodata(
-    const ecs_query_impl_t *query,
     const ecs_query_run_ctx_t *ctx,
     ecs_query_trivial_ctx_t *op_ctx,
-    bool first,
+    bool redo,
     ecs_flags64_t term_set)
 {
+    const ecs_query_impl_t *query = ctx->query;
     const ecs_query_t *q = &query->pub;
     const ecs_term_t *terms = q->terms;
     ecs_iter_t *it = ctx->it;
     int32_t t, term_count = query->pub.term_count;
 
-    if (!flecs_query_trivial_search_init(ctx, op_ctx, q, first, term_set)) {
+    if (!flecs_query_trivial_search_init(ctx, op_ctx, q, redo, term_set)) {
         return false;
     }
 
@@ -73862,12 +73861,14 @@ bool flecs_query_trivial_search_nodata(
 }
 
 bool flecs_query_trivial_test(
-    const ecs_query_impl_t *impl,
     const ecs_query_run_ctx_t *ctx,
-    bool first,
+    bool redo,
     ecs_flags64_t term_set)
 {
-    if (first) {
+    if (redo) {
+        return false;
+    } else {
+        const ecs_query_impl_t *impl = ctx->query;
         const ecs_query_t *q = &impl->pub;
         const ecs_term_t *terms = q->terms;
         ecs_iter_t *it = ctx->it;
@@ -73908,20 +73909,17 @@ bool flecs_query_trivial_test(
         }
 
         return true;
-    } else {
-        return false;
     }
 }
 
 bool flecs_query_trivial_test_w_wildcards(
-    const ecs_query_impl_t *query,
     const ecs_query_run_ctx_t *ctx,
-    bool first,
+    bool redo,
     ecs_flags64_t term_set)
 {
+    const ecs_query_impl_t *query = ctx->query;
     int32_t t, term_count = query->pub.term_count;
-    bool result = flecs_query_trivial_test(
-        query, ctx, first, term_set);
+    bool result = flecs_query_trivial_test(ctx, redo, term_set);
     if (result) {
         ecs_iter_t *it = ctx->it;
         ecs_table_t *table = ctx->vars[0].range.table;

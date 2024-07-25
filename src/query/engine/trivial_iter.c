@@ -10,10 +10,10 @@ bool flecs_query_trivial_search_init(
     const ecs_query_run_ctx_t *ctx,
     ecs_query_trivial_ctx_t *op_ctx,
     const ecs_query_t *query,
-    bool first,
+    bool redo,
     ecs_flags64_t term_set)
 {
-    if (first) {
+    if (!redo) {
         /* Find first trivial term*/
         int32_t t;
         for (t = 0; t < query->term_count; t ++) {
@@ -54,18 +54,18 @@ bool flecs_query_trivial_search_init(
 }
 
 bool flecs_query_trivial_search(
-    const ecs_query_impl_t *query,
     const ecs_query_run_ctx_t *ctx,
     ecs_query_trivial_ctx_t *op_ctx,
-    bool first,
+    bool redo,
     ecs_flags64_t term_set)
 {
+    const ecs_query_impl_t *query = ctx->query;
     const ecs_query_t *q = &query->pub;
     const ecs_term_t *terms = q->terms;
     ecs_iter_t *it = ctx->it;
     int32_t t, term_count = query->pub.term_count;
 
-    if (!flecs_query_trivial_search_init(ctx, op_ctx, q, first, term_set)) {
+    if (!flecs_query_trivial_search_init(ctx, op_ctx, q, redo, term_set)) {
         return false;
     }
 
@@ -128,17 +128,17 @@ bool flecs_query_trivial_search(
 }
 
 bool flecs_query_trivial_search_w_wildcards(
-    const ecs_query_impl_t *query,
     const ecs_query_run_ctx_t *ctx,
     ecs_query_trivial_ctx_t *op_ctx,
-    bool first,
+    bool redo,
     ecs_flags64_t term_set)
 {
     bool result = flecs_query_trivial_search(
-        query, ctx, op_ctx, first, term_set);
+        ctx, op_ctx, redo, term_set);
     if (result) {
         ecs_iter_t *it = ctx->it;
         ecs_table_t *table = ctx->vars[0].range.table;
+        const ecs_query_impl_t *query = ctx->query;
         int32_t t, term_count = query->pub.term_count;
         for (t = 0; t < term_count; t ++) {
             if (term_set & (1llu << t)) {
@@ -153,18 +153,18 @@ bool flecs_query_trivial_search_w_wildcards(
 }
 
 bool flecs_query_trivial_search_nodata(
-    const ecs_query_impl_t *query,
     const ecs_query_run_ctx_t *ctx,
     ecs_query_trivial_ctx_t *op_ctx,
-    bool first,
+    bool redo,
     ecs_flags64_t term_set)
 {
+    const ecs_query_impl_t *query = ctx->query;
     const ecs_query_t *q = &query->pub;
     const ecs_term_t *terms = q->terms;
     ecs_iter_t *it = ctx->it;
     int32_t t, term_count = query->pub.term_count;
 
-    if (!flecs_query_trivial_search_init(ctx, op_ctx, q, first, term_set)) {
+    if (!flecs_query_trivial_search_init(ctx, op_ctx, q, redo, term_set)) {
         return false;
     }
 
@@ -213,12 +213,14 @@ bool flecs_query_trivial_search_nodata(
 }
 
 bool flecs_query_trivial_test(
-    const ecs_query_impl_t *impl,
     const ecs_query_run_ctx_t *ctx,
-    bool first,
+    bool redo,
     ecs_flags64_t term_set)
 {
-    if (first) {
+    if (redo) {
+        return false;
+    } else {
+        const ecs_query_impl_t *impl = ctx->query;
         const ecs_query_t *q = &impl->pub;
         const ecs_term_t *terms = q->terms;
         ecs_iter_t *it = ctx->it;
@@ -259,20 +261,17 @@ bool flecs_query_trivial_test(
         }
 
         return true;
-    } else {
-        return false;
     }
 }
 
 bool flecs_query_trivial_test_w_wildcards(
-    const ecs_query_impl_t *query,
     const ecs_query_run_ctx_t *ctx,
-    bool first,
+    bool redo,
     ecs_flags64_t term_set)
 {
+    const ecs_query_impl_t *query = ctx->query;
     int32_t t, term_count = query->pub.term_count;
-    bool result = flecs_query_trivial_test(
-        query, ctx, first, term_set);
+    bool result = flecs_query_trivial_test(ctx, redo, term_set);
     if (result) {
         ecs_iter_t *it = ctx->it;
         ecs_table_t *table = ctx->vars[0].range.table;

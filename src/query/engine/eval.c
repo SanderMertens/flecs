@@ -640,11 +640,9 @@ bool flecs_query_triv(
     ctx->written[ctx->op_index + 1] |= 1ull;
     if (written & 1ull) {
         flecs_query_set_iter_this(ctx->it, ctx);
-        return flecs_query_trivial_test(
-            ctx->query, ctx, !redo, termset);
+        return flecs_query_trivial_test(ctx, redo, termset);
     } else {
-        return flecs_query_trivial_search_nodata(
-            ctx->query, ctx, op_ctx, !redo, termset);
+        return flecs_query_trivial_search_nodata(ctx, op_ctx, redo, termset);
     }
 }
 
@@ -660,11 +658,9 @@ bool flecs_query_triv_data(
     ctx->written[ctx->op_index + 1] |= 1ull;
     if (written & 1ull) {
         flecs_query_set_iter_this(ctx->it, ctx);
-        return flecs_query_trivial_test(
-            ctx->query, ctx, !redo, termset);
+        return flecs_query_trivial_test(ctx, redo, termset);
     } else {
-        return flecs_query_trivial_search(
-            ctx->query, ctx, op_ctx, !redo, termset);
+        return flecs_query_trivial_search(ctx, op_ctx, redo, termset);
     }
 }
 
@@ -681,10 +677,10 @@ bool flecs_query_triv_wildcard(
     if (written & 1ull) {
         flecs_query_set_iter_this(ctx->it, ctx);
         return flecs_query_trivial_test_w_wildcards(
-            ctx->query, ctx, !redo, termset);
+            ctx, redo, termset);
     } else {
         return flecs_query_trivial_search_w_wildcards(
-            ctx->query, ctx, op_ctx, !redo, termset);
+            ctx, op_ctx, redo, termset);
     }
 }
 
@@ -700,9 +696,9 @@ bool flecs_query_cache(
     uint64_t written = ctx->written[ctx->op_index];
     ctx->written[ctx->op_index + 1] |= 1ull;
     if (written & 1ull) {
-        return flecs_query_cache_test(ctx->query, ctx, !redo);
+        return flecs_query_cache_test(ctx, redo);
     } else {
-        return flecs_query_cache_search(ctx->query, ctx);
+        return flecs_query_cache_search(ctx);
     }
 }
 
@@ -718,9 +714,9 @@ bool flecs_query_cache_data(
     uint64_t written = ctx->written[ctx->op_index];
     ctx->written[ctx->op_index + 1] |= 1ull;
     if (written & 1ull) {
-        return flecs_query_cache_data_test(ctx->query, ctx, !redo);
+        return flecs_query_cache_data_test(ctx, redo);
     } else {
-        return flecs_query_cache_data_search(ctx->query, ctx);
+        return flecs_query_cache_data_search(ctx);
     }
 }
 
@@ -735,9 +731,9 @@ bool flecs_query_is_cache(
     uint64_t written = ctx->written[ctx->op_index];
     ctx->written[ctx->op_index + 1] |= 1ull;
     if (written & 1ull) {
-        return flecs_query_is_cache_test(ctx->query, ctx, !redo);
+        return flecs_query_is_cache_test(ctx, redo);
     } else {
-        return flecs_query_is_cache_search(ctx->query, ctx);
+        return flecs_query_is_cache_search(ctx);
     }
 }
 
@@ -752,9 +748,9 @@ bool flecs_query_is_cache_data(
     uint64_t written = ctx->written[ctx->op_index];
     ctx->written[ctx->op_index + 1] |= 1ull;
     if (written & 1ull) {
-        return flecs_query_is_cache_data_test(ctx->query, ctx, !redo);
+        return flecs_query_is_cache_data_test(ctx, redo);
     } else {
-        return flecs_query_is_cache_data_search(ctx->query, ctx);
+        return flecs_query_is_cache_data_search(ctx);
     }
 }
 

@@ -68,22 +68,6 @@ void flecs_iter_init(
     INIT_CACHE(it, stack, fields, ptrs, void*, it->field_count);
 }
 
-void flecs_iter_validate(
-    ecs_iter_t *it)
-{
-    ECS_BIT_SET(it->flags, EcsIterIsValid);
-
-    /* Make sure multithreaded iterator isn't created for real world */
-    ecs_world_t *world = it->real_world;
-    flecs_poly_assert(world, ecs_world_t);
-    ecs_check(!(world->flags & EcsWorldMultiThreaded) || it->world != it->real_world,
-        ECS_INVALID_PARAMETER, 
-            "create iterator for stage when world is in multithreaded mode");
-    (void)world;
-error:
-    return;
-}
-
 void ecs_iter_fini(
     ecs_iter_t *it)
 {
@@ -629,6 +613,9 @@ void ecs_iter_set_var(
 
     it->constrained_vars |= flecs_ito(uint64_t, 1 << var_id);
 
+    /* Update iterator for constrained iterator */
+    flecs_query_iter_constrain(it);
+
 error:
     return;
 }
@@ -674,6 +661,9 @@ void ecs_iter_set_var_as_range(
     }
 
     it->constrained_vars |= flecs_uto(uint64_t, 1 << var_id);
+
+    /* Update iterator for constrained iterator */
+    flecs_query_iter_constrain(it);
 
 error:
     return;

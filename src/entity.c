@@ -1160,7 +1160,7 @@ void flecs_invoke_hook(
 
     ecs_iter_t it = { .field_count = 1};
     it.entities = entities;
-    
+
     flecs_iter_init(world, &it, flecs_iter_cache_all);
     it.world = world;
     it.real_world = world;
@@ -1174,7 +1174,7 @@ void flecs_invoke_hook(
     it.callback_ctx = ti->hooks.binding_ctx;
     it.count = count;
     it.offset = row;
-    flecs_iter_validate(&it);
+    it.flags = EcsIterIsValid;
     hook(&it);
     ecs_iter_fini(&it);
 
