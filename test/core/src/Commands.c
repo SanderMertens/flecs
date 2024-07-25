@@ -4125,3 +4125,31 @@ void Commands_add_batched_set_with(void) {
 
     ecs_fini(world);
 }
+
+void Commands_defer_emplace_after_remove(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e = ecs_insert(world, ecs_value(Position, {0, 0}));
+
+    ecs_defer_begin(world);
+    ecs_remove(world, e, Position);
+    {
+        Position *p = ecs_emplace(world, e, Position, NULL);
+        test_assert(p != NULL);
+        p->x = 10;
+        p->y = 20;
+    }
+    ecs_defer_end(world);
+    
+    test_assert(ecs_has(world, e, Position));
+    {
+        const Position *p = ecs_get(world, e, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+    }
+
+    ecs_fini(world);
+}
