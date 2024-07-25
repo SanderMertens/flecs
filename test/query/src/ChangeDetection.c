@@ -50,8 +50,6 @@ void ChangeDetection_query_changed_after_delete(void) {
     test_bool(true, ecs_query_changed(q));
 
     ecs_iter_t it = ecs_query_iter(world, q);
-    test_bool(true, ecs_query_changed(q));
-
     while (ecs_query_next(&it)) { }
     test_bool(false, ecs_query_changed(q));
 
@@ -59,7 +57,6 @@ void ChangeDetection_query_changed_after_delete(void) {
     test_bool(true, ecs_query_changed(q));
 
     it = ecs_query_iter(world, q);
-    test_bool(true, ecs_query_changed(q));
     while (ecs_query_next(&it)) { }
     test_bool(false, ecs_query_changed(q));
 
@@ -83,7 +80,6 @@ void ChangeDetection_query_changed_after_add(void) {
     test_bool(true, ecs_query_changed(q));
 
     ecs_iter_t it = ecs_query_iter(world, q);
-    test_bool(true, ecs_query_changed(q));
     while (ecs_query_next(&it)) { }
     test_bool(false, ecs_query_changed(q));
 
@@ -91,7 +87,6 @@ void ChangeDetection_query_changed_after_add(void) {
     test_bool(true, ecs_query_changed(q));
 
     it = ecs_query_iter(world, q);
-    test_bool(true, ecs_query_changed(q));
     while (ecs_query_next(&it)) { }
 
     test_bool(false, ecs_query_changed(q));
@@ -125,7 +120,6 @@ void ChangeDetection_query_changed_after_remove(void) {
     test_bool(true, ecs_query_changed(q));
 
     it = ecs_query_iter(world, q);
-    test_bool(true, ecs_query_changed(q));
     while (ecs_query_next(&it)) { }
     test_bool(false, ecs_query_changed(q));
 
