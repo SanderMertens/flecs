@@ -32136,6 +32136,7 @@ bool ecs_query_has_table(
     ecs_check(q->flags & EcsQueryMatchThis, ECS_INVALID_PARAMETER, NULL);
 
     *it = ecs_query_iter(q->world, q);
+    it->flags |= EcsIterNoData;
     ecs_iter_set_var_as_table(it, 0, table);
     return ecs_query_next(it);
 error:
@@ -32158,6 +32159,7 @@ bool ecs_query_has_range(
     }
 
     *it = ecs_query_iter(q->world, q);
+    it->flags |= EcsIterNoData;
     if (q->flags & EcsQueryMatchThis) {
         ecs_iter_set_var_as_range(it, 0, range);
     }
@@ -68485,7 +68487,7 @@ void flecs_query_mark_fields_dirty(
     /* Evaluate all writeable non-fixed fields, set fields */
     ecs_termset_t write_fields = 
         (ecs_termset_t)(q->write_fields & ~q->fixed_fields & it->set_fields);
-    if (!write_fields) {
+    if (!write_fields || (it->flags & EcsIterNoData)) {
         return;
     }
 

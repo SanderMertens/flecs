@@ -1540,6 +1540,7 @@ void ChangeDetection_query_changed_after_remove(void);
 void ChangeDetection_query_changed_after_set(void);
 void ChangeDetection_query_change_after_modified(void);
 void ChangeDetection_query_change_after_out_system(void);
+void ChangeDetection_query_change_after_out_query_no_data_flag(void);
 void ChangeDetection_query_change_after_in_system(void);
 void ChangeDetection_query_change_after_modified_out_term(void);
 void ChangeDetection_query_change_check_iter(void);
@@ -8049,6 +8050,10 @@ bake_test_case ChangeDetection_testcases[] = {
         ChangeDetection_query_change_after_out_system
     },
     {
+        "query_change_after_out_query_no_data_flag",
+        ChangeDetection_query_change_after_out_query_no_data_flag
+    },
+    {
         "query_change_after_in_system",
         ChangeDetection_query_change_after_in_system
     },
@@ -10129,7 +10134,7 @@ static bake_test_suite suites[] = {
         "ChangeDetection",
         NULL,
         NULL,
-        34,
+        35,
         ChangeDetection_testcases
     },
     {

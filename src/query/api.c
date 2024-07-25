@@ -463,6 +463,7 @@ bool ecs_query_has_table(
     ecs_check(q->flags & EcsQueryMatchThis, ECS_INVALID_PARAMETER, NULL);
 
     *it = ecs_query_iter(q->world, q);
+    it->flags |= EcsIterNoData;
     ecs_iter_set_var_as_table(it, 0, table);
     return ecs_query_next(it);
 error:
@@ -485,6 +486,7 @@ bool ecs_query_has_range(
     }
 
     *it = ecs_query_iter(q->world, q);
+    it->flags |= EcsIterNoData;
     if (q->flags & EcsQueryMatchThis) {
         ecs_iter_set_var_as_range(it, 0, range);
     }
