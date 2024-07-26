@@ -45,7 +45,6 @@ typedef enum {
     EcsQueryOnlyAny,        /* Dedicated instruction for _ queries where the src is unknown */
     EcsQueryTriv,           /* Trivial search (batches multiple terms) */
     EcsQueryTrivData,       /* Trivial search with setting data fields */
-    EcsQueryTrivWildcard,   /* Trivial search with (exclusive) wildcard ids */
     EcsQueryCache,          /* Cached search */
     EcsQueryCacheData,      /* Cached search with setting data fields */
     EcsQueryIsCache,        /* Cached search for queries that are entirely cached */
