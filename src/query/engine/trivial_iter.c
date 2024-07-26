@@ -23,6 +23,7 @@ bool flecs_query_trivial_search_init(
         }
 
         ecs_assert(t != query->term_count, ECS_INTERNAL_ERROR, NULL);
+        op_ctx->start_from = t;
 
         const ecs_term_t *term = &query->terms[t];
         ecs_id_record_t *idr = flecs_id_record_get(ctx->world, term->id);
@@ -41,7 +42,8 @@ bool flecs_query_trivial_search_init(
         }
 
         /* Find next term to evaluate once */
-        for (; t < query->term_count; t ++) {
+        
+        for (t = t + 1; t < query->term_count; t ++) {
             if (term_set & (1llu << t)) {
                 break;
             }
@@ -113,10 +115,12 @@ bool flecs_query_trivial_search(
             ctx->vars[0].range.table = table;
             ctx->vars[0].range.count = 0;
             ctx->vars[0].range.offset = 0;
-            it->columns[first_term] = tr->index;
-            if (!(terms[first_term].flags_ & EcsTermNoData)) {
+
+            int32_t start_from = op_ctx->start_from;
+            it->columns[start_from] = tr->index;
+            if (!(terms[start_from].flags_ & EcsTermNoData)) {
                 if (tr->column != -1) {
-                    it->ptrs[first_term] = ecs_vec_first(
+                    it->ptrs[start_from] = ecs_vec_first(
                         &table->data.columns[tr->column].data);
                 }
             }
