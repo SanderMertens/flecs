@@ -73741,7 +73741,8 @@ bool flecs_query_trivial_search(
         return false;
     }
 
-    do {
+next:
+    {
         const ecs_table_record_t *tr = flecs_table_cache_next(
             &op_ctx->it, ecs_table_record_t);
         if (!tr) {
@@ -73750,7 +73751,7 @@ bool flecs_query_trivial_search(
 
         ecs_table_t *table = tr->hdr.table;
         if (table->flags & (EcsTableNotQueryable|EcsTableIsPrefab|EcsTableIsDisabled)) {
-            continue;
+            goto next;
         }
 
         int32_t first_term = op_ctx->first_to_eval;
@@ -73769,7 +73770,7 @@ bool flecs_query_trivial_search(
             const ecs_table_record_t *tr_with = flecs_id_record_get_table(
                 idr, table);
             if (!tr_with) {
-                break;
+                goto next;
             }
 
             it->columns[term->field_index] = tr_with->index;
@@ -73781,22 +73782,19 @@ bool flecs_query_trivial_search(
             }
         }
 
-        if (t == term_count) {
-            ctx->vars[0].range.table = table;
-            ctx->vars[0].range.count = 0;
-            ctx->vars[0].range.offset = 0;
+        ctx->vars[0].range.table = table;
+        ctx->vars[0].range.count = 0;
+        ctx->vars[0].range.offset = 0;
 
-            int32_t start_from = op_ctx->start_from;
-            it->columns[start_from] = tr->index;
-            if (!(terms[start_from].flags_ & EcsTermNoData)) {
-                if (tr->column != -1) {
-                    it->ptrs[start_from] = ecs_vec_first(
-                        &table->data.columns[tr->column].data);
-                }
+        int32_t start_from = op_ctx->start_from;
+        it->columns[start_from] = tr->index;
+        if (!(terms[start_from].flags_ & EcsTermNoData)) {
+            if (tr->column != -1) {
+                it->ptrs[start_from] = ecs_vec_first(
+                    &table->data.columns[tr->column].data);
             }
-            break;
         }
-    } while (true);
+    }
 
     return true;
 }
