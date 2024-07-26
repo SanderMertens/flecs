@@ -421,9 +421,10 @@ void Plan_3_trivial_plan_w_wildcard(void) {
     ecs_log_enable_colors(false);
 
     const char *expect = 
-    HEAD " 0. [-1,  1]  setids      " 
-    LINE " 1. [ 0,  2]  trivwc      {0,1,2}"
-    LINE " 2. [ 1,  3]  yield       "
+    HEAD " 0. [-1,  1]  setids      "
+    LINE " 1. [ 0,  2]  triv        {0,1}"
+    LINE " 2. [ 1,  3]  and         $[this]           (ChildOf, $*'1)"
+    LINE " 3. [ 2,  4]  yield       "
     LINE "";
     char *plan = ecs_query_plan(r);
 
@@ -519,9 +520,10 @@ void Plan_3_trivial_plan_w_wildcard_component(void) {
     ecs_log_enable_colors(false);
 
     const char *expect = 
-    HEAD " 0. [-1,  1]  setids      " 
-    LINE " 1. [ 0,  2]  trivwc      {0,1,2}"
-    LINE " 2. [ 1,  3]  yield       "
+    HEAD " 0. [-1,  1]  setids      "
+    LINE " 1. [ 0,  2]  trivpop     {0,1}"
+    LINE " 2. [ 1,  3]  and         $[this]           (ChildOf, $*'1)"
+    LINE " 3. [ 2,  4]  yield       "
     LINE "";
     char *plan = ecs_query_plan(r);
 
@@ -647,9 +649,10 @@ void Plan_2_trivial_plan_w_wildcard(void) {
     ecs_log_enable_colors(false);
 
     const char *expect = 
-    HEAD " 0. [-1,  1]  setids      " 
-    LINE " 1. [ 0,  2]  trivwc      {0,1}"
-    LINE " 2. [ 1,  3]  yield       "
+    HEAD " 0. [-1,  1]  setids      "
+    LINE " 1. [ 0,  2]  andid       $[this]           (Foo)"
+    LINE " 2. [ 1,  3]  and         $[this]           (ChildOf, $*'1)"
+    LINE " 3. [ 2,  4]  yield       "
     LINE "";
     char *plan = ecs_query_plan(r);
 

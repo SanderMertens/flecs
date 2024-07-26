@@ -665,26 +665,6 @@ bool flecs_query_triv_data(
 }
 
 static
-bool flecs_query_triv_wildcard(
-    const ecs_query_op_t *op,
-    bool redo,
-    const ecs_query_run_ctx_t *ctx)
-{
-    ecs_query_trivial_ctx_t *op_ctx = flecs_op_ctx(ctx, trivial);
-    ecs_flags64_t termset = op->src.entity;
-    uint64_t written = ctx->written[ctx->op_index];
-    ctx->written[ctx->op_index + 1] |= 1ull;
-    if (written & 1ull) {
-        flecs_query_set_iter_this(ctx->it, ctx);
-        return flecs_query_trivial_test_w_wildcards(
-            ctx, redo, termset);
-    } else {
-        return flecs_query_trivial_search_w_wildcards(
-            ctx, op_ctx, redo, termset);
-    }
-}
-
-static
 bool flecs_query_cache(
     const ecs_query_op_t *op,
     bool redo,
@@ -1710,7 +1690,6 @@ bool flecs_query_dispatch(
     case EcsQueryAndAny: return flecs_query_and_any(op, redo, ctx);
     case EcsQueryTriv: return flecs_query_triv(op, redo, ctx);
     case EcsQueryTrivData: return flecs_query_triv_data(op, redo, ctx);
-    case EcsQueryTrivWildcard: return flecs_query_triv_wildcard(op, redo, ctx);
     case EcsQueryCache: return flecs_query_cache(op, redo, ctx);
     case EcsQueryIsCache: return flecs_query_is_cache(op, redo, ctx);
     case EcsQueryCacheData: return flecs_query_cache_data(op, redo, ctx);

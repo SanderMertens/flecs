@@ -179,7 +179,6 @@ const char* flecs_query_op_str(
     case EcsQueryAndAny:         return "andany    ";
     case EcsQueryTriv:           return "triv      ";
     case EcsQueryTrivData:       return "trivpop   ";
-    case EcsQueryTrivWildcard:   return "trivwc    ";
     case EcsQueryCache:          return "cache     ";
     case EcsQueryCacheData:      return "cachepop  ";
     case EcsQueryIsCache:        return "xcache    ";
@@ -358,8 +357,7 @@ void flecs_query_plan_w_profile(
             op->kind == EcsQueryPopulateSelf ||
             op->kind == EcsQueryPopulateSparse ||
             op->kind == EcsQueryTriv ||
-            op->kind == EcsQueryTrivData ||
-            op->kind == EcsQueryTrivWildcard)
+            op->kind == EcsQueryTrivData)
         {
             flecs_query_str_append_bitset(buf, op->src.entity);
         }

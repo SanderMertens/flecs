@@ -1430,8 +1430,13 @@ int flecs_query_finalize_terms(
     /* Set cacheable flags */
     ECS_BIT_COND(q->flags, EcsQueryHasCacheable, 
         cacheable_terms != 0);
+
+    /* Exclude queries with order_by from setting the IsCacheable flag. This 
+     * allows the routine that evaluates entirely cached queries to use more
+     * optimized logic as it doesn't have to deal with order_by edge cases */
     ECS_BIT_COND(q->flags, EcsQueryIsCacheable, 
-        cacheable && (cacheable_terms == term_count));
+        cacheable && (cacheable_terms == term_count) &&
+            !desc->order_by_callback);
 
     for (i = 0; i < q->term_count; i ++) {
         ecs_term_t *term = &q->terms[i];

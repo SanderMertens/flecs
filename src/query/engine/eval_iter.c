@@ -57,10 +57,9 @@ void flecs_query_iter_constrain(
 
     /* This function can be called multiple times when setting variables, so
      * reset flags before setting them. */
-    it->flags &= ~(EcsIterTrivialTestWildcard|EcsIterTrivialTest|
+    it->flags &= ~(EcsIterTrivialTest|
         EcsIterTrivialTestNoData|EcsIterTrivialCached|
-        EcsIterTrivialSearchWildcard|EcsIterTrivialSearchNoData|
-        EcsIterTrivialSearch);
+        EcsIterTrivialSearchNoData|EcsIterTrivialSearch);
 
     /* Figure out whether this query can utilize specialized iterator modes for
      * improved performance. */
@@ -76,9 +75,7 @@ void flecs_query_iter_constrain(
                 flecs_query_set_iter_this(it, &ctx);
 
                 if (!cache) {
-                    if (flags & EcsQueryMatchWildcards) {
-                        it->flags |= EcsIterTrivialTestWildcard;
-                    } else {
+                    if (!(flags & EcsQueryMatchWildcards)) {
                         it->flags |= EcsIterTrivialTest;
                     }
                 } else if (flags & EcsQueryIsCacheable) {
@@ -91,12 +88,12 @@ void flecs_query_iter_constrain(
                 }
             } else {
                 if (!cache) {
-                    if (flags & EcsQueryMatchWildcards) {
-                        it->flags |= EcsIterTrivialSearchWildcard;
-                    } else if (no_data) {
-                        it->flags |= EcsIterTrivialSearchNoData;
-                    } else {
-                        it->flags |= EcsIterTrivialSearch;
+                    if (!(flags & EcsQueryMatchWildcards)) {
+                        if (no_data) {
+                            it->flags |= EcsIterTrivialSearchNoData;
+                        } else {
+                            it->flags |= EcsIterTrivialSearch;
+                        }
                     }
                 } else if (flags & EcsQueryIsCacheable) {
                     if (!cache->order_by_callback) {
@@ -182,34 +179,20 @@ bool flecs_query_next_instanced(
         }
     } else {
         /* Uncached iterator modes */
-
-        /* Uncached iterator functions accept a mask which marks the terms that
-         * can be trivially iterated. If the entire query is trivial, create a
-         * mask that marks all terms. */
-        int32_t fields = ctx.query->pub.term_count;
-        ecs_flags64_t mask = (2llu << (fields - 1)) - 1;
-
         if (it->flags & EcsIterTrivialSearch) {
             ecs_query_trivial_ctx_t *op_ctx = &ctx.op_ctx[0].is.trivial;
-            if (flecs_query_trivial_search(&ctx, op_ctx, redo, mask)) {
-                goto trivial_search_yield;
+            if (flecs_query_is_trivial_search(&ctx, op_ctx, redo)) {
+                goto yield;
             }
         } else if (it->flags & EcsIterTrivialSearchNoData) {
             ecs_query_trivial_ctx_t *op_ctx = &ctx.op_ctx[0].is.trivial;
-            if (flecs_query_trivial_search_nodata(&ctx, op_ctx, redo, mask)) {
-                goto trivial_search_yield;
-            }
-        } else if (it->flags & EcsIterTrivialSearchWildcard) {
-            ecs_query_trivial_ctx_t *op_ctx = &ctx.op_ctx[0].is.trivial;
-            if (flecs_query_trivial_search_w_wildcards(&ctx, op_ctx, redo, mask)) {
-                goto trivial_search_yield;
-            }
-        } else if (it->flags & EcsIterTrivialTest) {
-            if (flecs_query_trivial_test(&ctx, redo, mask)) {
+            if (flecs_query_is_trivial_search_nodata(&ctx, op_ctx, redo)) {
                 goto yield;
             }
-        } else if (it->flags & EcsIterTrivialTestWildcard) {
-            if (flecs_query_trivial_test_w_wildcards(&ctx, redo, mask)) {
+        } else if (it->flags & EcsIterTrivialTest) {
+            int32_t fields = ctx.query->pub.term_count;
+            ecs_flags64_t mask = (2llu << (fields - 1)) - 1;
+            if (flecs_query_trivial_test(&ctx, redo, mask)) {
                 goto yield;
             }
         } else {

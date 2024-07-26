@@ -6,7 +6,7 @@
 #include "../../private_api.h"
 
 static
-ecs_query_cache_table_match_t* flecs_query_next(
+ecs_query_cache_table_match_t* flecs_query_cache_next(
     const ecs_query_run_ctx_t *ctx)
 {
     ecs_iter_t *it = ctx->it;
@@ -51,7 +51,7 @@ ecs_query_cache_table_match_t* flecs_query_test(
         qit->last = qt->last;
     }
 
-    return flecs_query_next(ctx);
+    return flecs_query_cache_next(ctx);
 }
 
 static
@@ -244,7 +244,7 @@ void flecs_query_cache_init_mapped_fields(
 bool flecs_query_cache_search(
     const ecs_query_run_ctx_t *ctx)
 {
-    ecs_query_cache_table_match_t *node = flecs_query_next(ctx);
+    ecs_query_cache_table_match_t *node = flecs_query_cache_next(ctx);
     if (!node) {
         return false;
     }
@@ -260,7 +260,7 @@ bool flecs_query_cache_search(
 bool flecs_query_is_cache_search(
     const ecs_query_run_ctx_t *ctx)
 {
-    ecs_query_cache_table_match_t *node = flecs_query_next(ctx);
+    ecs_query_cache_table_match_t *node = flecs_query_cache_next(ctx);
     if (!node) {
         return false;
     }
@@ -272,8 +272,6 @@ bool flecs_query_is_cache_search(
     it->set_fields = node->set_fields;
     it->up_fields = node->up_fields;
 
-    ctx->vars[0].range.count = node->count;
-    ctx->vars[0].range.offset = node->offset;
     return true;
 }
 

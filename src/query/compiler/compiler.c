@@ -601,11 +601,12 @@ void flecs_query_insert_trivial_search(
             continue;
         }
 
-        trivial_set |= (1llu << i);
-
+        /* Wildcards are not supported for trivial queries */
         if (ecs_id_is_wildcard(term->id)) {
-            trivial_wildcard_terms ++;
+            continue;
         }
+
+        trivial_set |= (1llu << i);
 
         if (populate) {
             if (q->data_fields & (1llu << term->field_index)) {
@@ -629,9 +630,7 @@ void flecs_query_insert_trivial_search(
 
         /* If there's more than 1 trivial term, batch them in trivial search */
         ecs_query_op_t trivial = {0};
-        if (trivial_wildcard_terms) {
-            trivial.kind = EcsQueryTrivWildcard;
-        } else {
+        if (!trivial_wildcard_terms) {
             if (trivial_data_terms) {
                 trivial.kind = EcsQueryTrivData;
             }
