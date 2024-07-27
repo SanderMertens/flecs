@@ -15,6 +15,8 @@ struct UNREALFLECS_API FFlecsComponentProperties
 {
 	std::string_view Name;
 	std::vector<flecs::entity_t> Entities;
+	
+	TArray<FInstancedStruct> ComponentPropertyStructs;
 }; // struct FFlecsComponentProperties
 
 DECLARE_DELEGATE_OneParam(FOnComponentPropertiesRegistered, FFlecsComponentProperties);
@@ -29,7 +31,7 @@ public:
 	}
 
 	void RegisterComponentProperties(const std::string_view& Name, const std::vector<flecs::entity_t>& Entities,
-		const bool bResetExisting = false)
+		const TArray<FInstancedStruct>& ComponentPropertyStructs, const bool bResetExisting = false)
 	{
 		UNLOG_CATEGORY_SCOPED(LogFlecsComponentProperties);
 
@@ -43,7 +45,7 @@ public:
 		
 		if (!ComponentProperties.contains(Name))
 		{
-			ComponentProperties[Name] = FFlecsComponentProperties{ Name, Entities };
+			ComponentProperties[Name] = FFlecsComponentProperties{ Name, Entities, ComponentPropertyStructs };
 			
 			UN_LOGF(LogFlecsComponentProperties, Log,
 				"Registered component properties: %s", *FString(Name.data()));
@@ -63,6 +65,11 @@ public:
 				UN_LOGF(LogFlecsComponentProperties, Log,
 					"Updated component properties: %s", *FString(Name.data()));
 			}
+
+			for (const FInstancedStruct& ComponentPropertyStruct : ComponentPropertyStructs)
+			{
+				ComponentProperties[Name].ComponentPropertyStructs.Add(ComponentPropertyStruct);
+			}
 		}
 
 		OnComponentPropertiesRegistered.ExecuteIfBound(ComponentProperties[Name]);
@@ -73,15 +80,16 @@ public:
 	FOnComponentPropertiesRegistered OnComponentPropertiesRegistered;
 }; // struct FFlecsComponentPropertiesRegistry
 
-#define REGISTER_FLECS_COMPONENT_PROPERTIES(ComponentType, ...) \
+#define REGISTER_FLECS_COMPONENT_PROPERTIES(ComponentType, EntitiesArray, ComponentPropertyStructsArray) \
 	namespace \
 	{ \
 		struct FAutoRegister##ComponentType \
 		{ \
 			FAutoRegister##ComponentType() \
 			{ \
-				std::vector<flecs::entity_t> Entities = { __VA_ARGS__ }; \
-				FFlecsComponentPropertiesRegistry::Get().RegisterComponentProperties(nameof(ComponentType), Entities); \
+			std::vector<flecs::entity_t> Entities = EntitiesArray; \
+			TArray<FInstancedStruct> ComponentPropertyStructs = ComponentPropertyStructsArray; \
+			FFlecsComponentPropertiesRegistry::Get().RegisterComponentProperties(nameof(ComponentType), Entities, ComponentPropertyStructs); \
 			} \
 		}; \
 		static FAutoRegister##ComponentType AutoRegister##ComponentType##_Instance; \

@@ -129,8 +129,7 @@ public:
 		
 		NewFlecsWorld->SetContext(this);
 
-		NewFlecsWorld->SetSingleton<FFlecsWorldPtrComponent>(FFlecsWorldPtrComponent
-			{ NewFlecsWorld, GetWorld() });
+		NewFlecsWorld->SetSingleton<FFlecsWorldPtrComponent>(FFlecsWorldPtrComponent { NewFlecsWorld, GetWorld() });
 		
 		WorldNameMap.emplace(Name, NewFlecsWorld);
 

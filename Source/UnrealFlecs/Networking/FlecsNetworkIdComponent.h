@@ -55,7 +55,7 @@ public:
 		return FString::Printf(TEXT("NetworkId: %llu"), NetworkId.Get(std::numeric_limits<uint64>::max()));
 	}
 
-	FORCEINLINE bool NetSerialize(FArchive& Ar, UPackageMap* Map, bool& bOutSuccess)
+	FORCEINLINE bool NetSerialize(FArchive& Ar, MAYBE_UNUSED UPackageMap* Map, bool& bOutSuccess)
 	{
 		const TOptional InvalidNetworkId = std::numeric_limits<uint64>::max();
 		

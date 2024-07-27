@@ -20,7 +20,7 @@ void UFlecsComponentPropertiesAsset::PostLoad()
 	}
 
 	FFlecsComponentPropertiesRegistry::Get()
-		.RegisterComponentProperties(ComponentTypeName, ComponentPropertiesEntities, true);
+		.RegisterComponentProperties(ComponentTypeName, ComponentPropertiesEntities, ComponentPropertyStructs, false);
 }
 
 void UFlecsComponentPropertiesAsset::BeginDestroy()

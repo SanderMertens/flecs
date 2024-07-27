@@ -20,6 +20,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Component Properties")
 	TArray<FFlecsEntityHandle> ComponentProperties;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Component Properties")
+	TArray<FInstancedStruct> ComponentPropertyStructs;
+
 	FORCEINLINE virtual FPrimaryAssetId GetPrimaryAssetId() const override final
 	{
 		return FPrimaryAssetId("FlecsComponentProperties", GetFName());
