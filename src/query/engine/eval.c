@@ -195,7 +195,7 @@ repeat: {}
     }
 
     flecs_query_var_set_range(op, op->src.var, table, 0, 0, ctx);
-    flecs_query_it_set_column(it, field, tr->index);
+    flecs_query_it_set_tr(it, field, tr);
     return true;
 }
 
@@ -233,7 +233,7 @@ bool flecs_query_with_id(
         return false;
     }
 
-    flecs_query_it_set_column(it, field, tr->index);
+    flecs_query_it_set_tr(it, field, tr);
     return true;
 }
 
@@ -457,7 +457,7 @@ bool flecs_query_up_with(
 
         it->sources[op->field_index] = flecs_entities_get_alive(
             ctx->world, up->src);
-        it->columns[op->field_index] = up->column;
+        it->trs[op->field_index] = up->tr;
         it->ids[op->field_index] = up->id;
         flecs_query_set_vars(op, up->id, ctx);
         flecs_set_source_set_flag(it, op->field_index);
@@ -949,7 +949,7 @@ bool flecs_query_ids(
         ecs_iter_t *it = ctx->it;
         it->ids[op->field_index] = id;
         it->sources[op->field_index] = EcsWildcard;
-        it->columns[op->field_index] = -1; /* Mark field as set */
+        it->trs[op->field_index] = NULL; /* Mark field as set */
     }
 
     return true;

@@ -1196,6 +1196,10 @@ int flecs_query_finalize_terms(
             nodata_term = true;
         } else if (!ecs_get_type_info(world, term->id)) {
             nodata_term = true;
+        } else if (term->flags_ & EcsTermIsUnion) {
+            nodata_term = true;
+        } else if (scope_nesting) {
+            nodata_term = true;
         } else {
             if (ecs_id_is_tag(world, term->id)) {
                 nodata_term = true;
@@ -1483,7 +1487,7 @@ int flecs_query_query_populate_terms(
         /* Allocate buffer that's large enough to tokenize the query string */
         script.token_buffer_size = ecs_os_strlen(expr) * 2 + 1;
         script.token_buffer = flecs_alloc(
-            &stage->allocator, script.token_buffer_size);
+            &flecs_query_impl(q)->stage->allocator, script.token_buffer_size);
 
         if (flecs_terms_parse(&script.pub, &q->terms[term_count], 
             &term_count))

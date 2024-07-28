@@ -27,8 +27,7 @@ bool flecs_query_trivial_search_init(
         ecs_assert(t != query->term_count, ECS_INTERNAL_ERROR, NULL);
         op_ctx->start_from = t;
 
-        const ecs_term_t *term = &query->terms[t];
-        ecs_id_record_t *idr = flecs_id_record_get(ctx->world, term->id);
+        ecs_id_record_t *idr = flecs_id_record_get(ctx->world, query->ids[t]);
         if (!idr) {
             return false;
         }
@@ -105,7 +104,7 @@ next:
                 goto next;
             }
 
-            it->columns[term->field_index] = tr_with->index;
+            it->trs[term->field_index] = tr_with;
             if (!(term->flags_ & EcsTermNoData)) {
                 if (tr_with->column != -1) {
                     it->ptrs[term->field_index] = ecs_vec_first(
@@ -119,7 +118,7 @@ next:
         ctx->vars[0].range.offset = 0;
 
         int32_t start_from = op_ctx->start_from;
-        it->columns[start_from] = tr->index;
+        it->trs[start_from] = tr;
         if (!(terms[start_from].flags_ & EcsTermNoData)) {
             if (tr->column != -1) {
                 it->ptrs[start_from] = ecs_vec_first(
@@ -138,7 +137,7 @@ bool flecs_query_is_trivial_search(
 {
     const ecs_query_impl_t *query = ctx->query;
     const ecs_query_t *q = &query->pub;
-    const ecs_term_t *terms = q->terms;
+    const ecs_id_t *ids = q->ids;
     ecs_iter_t *it = ctx->it;
     int32_t t, term_count = query->pub.term_count;
 
@@ -160,8 +159,7 @@ next:
         }
 
         for (t = 1; t < term_count; t ++) {
-            const ecs_term_t *term = &terms[t];
-            ecs_id_record_t *idr = flecs_id_record_get(ctx->world, term->id);
+            ecs_id_record_t *idr = flecs_id_record_get(ctx->world, ids[t]);
             if (!idr) {
                 return false;
             }
@@ -172,7 +170,7 @@ next:
                 goto next;
             }
 
-            it->columns[t] = tr_with->index;
+            it->trs[t] = tr_with;
             if (tr_with->column != -1) {
                 it->ptrs[t] = ecs_vec_first(
                     &table->data.columns[tr_with->column].data);
@@ -182,8 +180,7 @@ next:
         it->table = table;
         it->count = ecs_table_count(table);
         it->entities = flecs_table_entities_array(table);
-        it->offset = 0;
-        it->columns[0] = tr->index;
+        it->trs[0] = tr;
 
         if (tr->column != -1) {
             it->ptrs[0] = ecs_vec_first(
@@ -239,14 +236,14 @@ bool flecs_query_trivial_search_nodata(
                 break;
             }
 
-            it->columns[term->field_index] = tr_with->index;
+            it->trs[term->field_index] = tr_with;
         }
 
         if (t == term_count) {
             ctx->vars[0].range.table = table;
             ctx->vars[0].range.count = 0;
             ctx->vars[0].range.offset = 0;
-            it->columns[0] = tr->index;
+            it->trs[0] = tr;
             break;
         }
     } while (true);
@@ -261,7 +258,7 @@ bool flecs_query_is_trivial_search_nodata(
 {
     const ecs_query_impl_t *query = ctx->query;
     const ecs_query_t *q = &query->pub;
-    const ecs_term_t *terms = q->terms;
+    const ecs_id_t *ids = q->ids;
     ecs_iter_t *it = ctx->it;
     int32_t t, term_count = query->pub.term_count;
 
@@ -283,8 +280,7 @@ next:
         }
 
         for (t = 1; t < term_count; t ++) {
-            const ecs_term_t *term = &terms[t];
-            ecs_id_record_t *idr = flecs_id_record_get(ctx->world, term->id);
+            ecs_id_record_t *idr = flecs_id_record_get(ctx->world, ids[t]);
             if (!idr) {
                 return false;
             }
@@ -295,16 +291,13 @@ next:
                 goto next;
             }
 
-            it->columns[t] = tr_with->index;
+            it->trs[t] = tr_with;
         }
 
-        if (t == term_count) {
-            it->table = table;
-            it->count = ecs_table_count(table);
-            it->entities = flecs_table_entities_array(table);
-            it->offset = 0;
-            it->columns[0] = tr->index;
-        }
+        it->table = table;
+        it->count = ecs_table_count(table);
+        it->entities = flecs_table_entities_array(table);
+        it->trs[0] = tr;
     }
 
     return true;
@@ -344,7 +337,7 @@ bool flecs_query_trivial_test(
                 return false;
             }
 
-            it->columns[term->field_index] = tr->index;
+            it->trs[term->field_index] = tr;
             if (it->count && tr->column != -1) {
                 it->ptrs[term->field_index] = ecs_vec_get(
                     &table->data.columns[tr->column].data,

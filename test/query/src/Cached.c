@@ -1675,7 +1675,7 @@ void Cached_filter_term(void) {
     test_assert(it.entities[0] == e);
 
     test_assert(it.ptrs != NULL);
-    test_assert(it.columns != NULL);
+    test_assert(it.trs != NULL);
 
     test_bool(ecs_query_next(&it), false);
 
@@ -1714,7 +1714,7 @@ void Cached_2_terms_1_filter(void) {
 
     test_assert(it.ptrs != NULL);
     test_assert(it.sizes != NULL);
-    test_assert(it.columns != NULL);
+    test_assert(it.trs != NULL);
 
     test_assert(it.ptrs[0] == NULL);
     test_assert(it.ptrs[1] != NULL);
@@ -1761,7 +1761,7 @@ void Cached_3_terms_2_filter(void) {
 
     test_assert(it.ptrs != NULL);
     test_assert(it.sizes != NULL);
-    test_assert(it.columns != NULL);
+    test_assert(it.trs != NULL);
 
     test_assert(it.ptrs[0] == NULL);
     test_assert(it.ptrs[1] == NULL);

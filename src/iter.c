@@ -63,7 +63,7 @@ void flecs_iter_init(
 
     INIT_CACHE(it, stack, fields, ids, ecs_id_t, it->field_count);
     INIT_CACHE(it, stack, fields, sources, ecs_entity_t, it->field_count);
-    INIT_CACHE(it, stack, fields, columns, int32_t, it->field_count);
+    INIT_CACHE(it, stack, fields, trs, ecs_table_record_t*, it->field_count);
     INIT_CACHE(it, stack, fields, variables, ecs_var_t, it->variable_count);
     INIT_CACHE(it, stack, fields, ptrs, void*, it->field_count);
 }
@@ -84,7 +84,7 @@ void ecs_iter_fini(
 
     FINI_CACHE(it, ids, ecs_id_t, it->field_count);
     FINI_CACHE(it, sources, ecs_entity_t, it->field_count);
-    FINI_CACHE(it, columns, int32_t, it->field_count);
+    FINI_CACHE(it, trs, ecs_table_record_t*, it->field_count);
     FINI_CACHE(it, variables, ecs_var_t, it->variable_count);
     FINI_CACHE(it, ptrs, void*, it->field_count);
 
@@ -220,7 +220,12 @@ int32_t ecs_field_column(
     ecs_check(index < it->field_count, ECS_INVALID_PARAMETER, 
         "field index %d out of bounds", index);
 
-    return it->columns[index];
+    const ecs_table_record_t *tr = it->trs[index];
+    if (tr) {
+        return tr->index;
+    } else {
+        return -1;
+    }
 error:
     return 0;
 }

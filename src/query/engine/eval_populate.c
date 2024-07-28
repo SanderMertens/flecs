@@ -9,18 +9,45 @@ void flecs_query_populate_field_from_range(
     ecs_iter_t *it,
     ecs_table_range_t *range,
     int8_t field_index,
-    int32_t index)
+    const ecs_table_record_t *tr)
 {
-    ecs_assert(index >= 0, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(range->table != NULL, ECS_INTERNAL_ERROR, NULL);
-    if (range->count && range->table->column_map) {
-        int32_t column = range->table->column_map[index];
-        if (column != -1) {
-            it->ptrs[field_index] = ECS_ELEM(
-                range->table->data.columns[column].data.array,
-                it->sizes[field_index],
-                range->offset);
-        }
+    int32_t column = tr->column;
+    if (column == -1) {
+        return;
+    }
+
+    if (range->count) {
+        ecs_assert(tr->hdr.table == range->table, ECS_INTERNAL_ERROR, NULL);
+        it->ptrs[field_index] = ECS_ELEM(
+            range->table->data.columns[column].data.array,
+            it->sizes[field_index],
+            range->offset);
+    }
+}
+
+void flecs_query_populate_shared_field(
+    ecs_iter_t *it,
+    ecs_entity_t src,
+    int8_t field_index,
+    const ecs_query_run_ctx_t *ctx)
+{
+    ecs_record_t *r = flecs_entities_get(ctx->world, src);
+    ecs_table_t *src_table = r->table;
+    const ecs_table_record_t *tr = it->trs[field_index];
+    if (tr) {
+        ecs_assert(tr->column < src_table->column_count, 
+            ECS_INTERNAL_ERROR, NULL);
+        int32_t column = tr->column;
+        ecs_assert(column >= 0, ECS_INTERNAL_ERROR, NULL);
+
+        ecs_assert(tr->hdr.table == src_table, ECS_INTERNAL_ERROR, NULL);
+        it->ptrs[field_index] = ecs_vec_get(
+            &src_table->data.columns[column].data,
+            it->sizes[field_index],
+            ECS_RECORD_TO_ROW(r->row));
+
+        ECS_TERMSET_SET(it->shared_fields, 1u << field_index);
     }
 }
 
@@ -31,30 +58,15 @@ void flecs_query_populate_field(
     int8_t field_index,
     ecs_query_run_ctx_t *ctx)
 {
-    int32_t index = it->columns[field_index];
-    ecs_assert(index >= 0, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(ecs_field_is_set(it, field_index), ECS_INTERNAL_ERROR, NULL);
 
     ecs_entity_t src = it->sources[field_index];
     if (!src) {
-        flecs_query_populate_field_from_range(it, range, field_index, index);
+        const ecs_table_record_t *tr = it->trs[field_index];
+        flecs_query_populate_field_from_range(it, range, field_index, tr);
         ECS_TERMSET_CLEAR(it->shared_fields, 1u << field_index);
     } else {
-        ecs_record_t *r = flecs_entities_get(ctx->world, src);
-        ecs_table_t *src_table = r->table;
-        if (src_table->column_map) {
-            ecs_assert(index < src_table->type.count, ECS_INTERNAL_ERROR, NULL);
-            int32_t column = src_table->column_map[index];
-            if (column != -1) {
-                ecs_assert(column >= 0, ECS_INTERNAL_ERROR, NULL);
-                it->ptrs[field_index] = ecs_vec_get(
-                    &src_table->data.columns[column].data,
-                    it->sizes[field_index],
-                    ECS_RECORD_TO_ROW(r->row));
-
-                ECS_TERMSET_SET(it->shared_fields, 1u << field_index);
-            }
-        }
+        flecs_query_populate_shared_field(it, src, field_index, ctx);
     }
 }
 
@@ -126,10 +138,9 @@ bool flecs_query_populate_self(
                 continue;
             }
 
-            int32_t index = it->columns[i];
-            ecs_assert(index >= 0, ECS_INTERNAL_ERROR, NULL);
+            ecs_assert(it->trs[i] != NULL, ECS_INTERNAL_ERROR, NULL);
 
-            int32_t column = table->column_map[index];
+            int32_t column = it->trs[i]->column;
             if (column != -1) {
                 it->ptrs[i] = ECS_ELEM(
                     table->data.columns[column].data.array,

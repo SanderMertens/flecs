@@ -47,14 +47,6 @@ struct ecs_observable_t {
     ecs_sparse_t events;  /* sparse<event, ecs_event_record_t> */
 };
 
-/** Record for entity index */
-struct ecs_record_t {
-    ecs_id_record_t *idr; /* Id record to (*, entity) for target entities */
-    ecs_table_t *table;   /* Identifies a type (and table) in world */
-    uint32_t row;         /* Table row of the entity */
-    int32_t dense;        /* Index in dense array of entity index */    
-};
-
 /** Range in table */
 typedef struct ecs_table_range_t {
     ecs_table_t *table;
@@ -139,7 +131,7 @@ typedef struct ecs_query_iter_t {
  * Used by flecs_iter_init, flecs_iter_validate and ecs_iter_fini. 
  * Constants are named to enable easy macro substitution. */
 #define flecs_iter_cache_ids           (1u << 0u)
-#define flecs_iter_cache_columns       (1u << 1u)
+#define flecs_iter_cache_trs           (1u << 1u)
 #define flecs_iter_cache_sources       (1u << 2u)
 #define flecs_iter_cache_ptrs          (1u << 3u)
 #define flecs_iter_cache_variables     (1u << 4u)

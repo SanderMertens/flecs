@@ -51,7 +51,7 @@ bool flecs_query_member_cmp(
          * value against. */
         void *old_data = it->ptrs[field_index];
         flecs_query_populate_field_from_range(
-            it, &range, field_index, it->columns[field_index]);
+            it, &range, field_index, it->trs[field_index]);
         data = op_ctx->data = it->ptrs[field_index];
 
         /* Ensure we only write ptrs when we match data */

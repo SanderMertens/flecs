@@ -1409,6 +1409,16 @@ void Traversal_match_empty_table_up_written_implicit_isa(void);
 void Traversal_match_empty_table_up_isa(void);
 void Traversal_match_empty_table_up_written_isa(void);
 void Traversal_up_after_add_batched_to_parent(void);
+void Traversal_up_component_after_parent_table_change(void);
+void Traversal_up_component_w_singleton_after_parent_table_change(void);
+void Traversal_up_component_w_var_after_parent_table_change(void);
+void Traversal_test_up_component_after_parent_table_change(void);
+void Traversal_test_up_component_w_singleton_after_parent_table_change(void);
+void Traversal_up_component_after_parent_table_change_no_data(void);
+void Traversal_up_component_w_singleton_after_parent_table_change_no_data(void);
+void Traversal_up_component_w_var_after_parent_table_change_no_data(void);
+void Traversal_test_up_component_after_parent_table_change_no_data(void);
+void Traversal_test_up_component_w_singleton_after_parent_table_change_no_data(void);
 
 // Testsuite 'Cascade'
 void Cascade_this_self_cascade_childof_uncached(void);
@@ -7531,6 +7541,46 @@ bake_test_case Traversal_testcases[] = {
     {
         "up_after_add_batched_to_parent",
         Traversal_up_after_add_batched_to_parent
+    },
+    {
+        "up_component_after_parent_table_change",
+        Traversal_up_component_after_parent_table_change
+    },
+    {
+        "up_component_w_singleton_after_parent_table_change",
+        Traversal_up_component_w_singleton_after_parent_table_change
+    },
+    {
+        "up_component_w_var_after_parent_table_change",
+        Traversal_up_component_w_var_after_parent_table_change
+    },
+    {
+        "test_up_component_after_parent_table_change",
+        Traversal_test_up_component_after_parent_table_change
+    },
+    {
+        "test_up_component_w_singleton_after_parent_table_change",
+        Traversal_test_up_component_w_singleton_after_parent_table_change
+    },
+    {
+        "up_component_after_parent_table_change_no_data",
+        Traversal_up_component_after_parent_table_change_no_data
+    },
+    {
+        "up_component_w_singleton_after_parent_table_change_no_data",
+        Traversal_up_component_w_singleton_after_parent_table_change_no_data
+    },
+    {
+        "up_component_w_var_after_parent_table_change_no_data",
+        Traversal_up_component_w_var_after_parent_table_change_no_data
+    },
+    {
+        "test_up_component_after_parent_table_change_no_data",
+        Traversal_test_up_component_after_parent_table_change_no_data
+    },
+    {
+        "test_up_component_w_singleton_after_parent_table_change_no_data",
+        Traversal_test_up_component_w_singleton_after_parent_table_change_no_data
     }
 };
 
@@ -10071,7 +10121,7 @@ static bake_test_suite suites[] = {
         "Traversal",
         Traversal_setup,
         NULL,
-        111,
+        121,
         Traversal_testcases,
         1,
         Traversal_params

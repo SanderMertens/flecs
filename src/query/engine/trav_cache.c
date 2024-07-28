@@ -70,8 +70,9 @@ void flecs_query_build_up_cache(
 
         ecs_trav_elem_t *el = ecs_vec_append_t(a, &cache->entities, 
             ecs_trav_elem_t);
+        
         el->entity = second;
-        el->column = root_column;
+        el->tr = &table->_->records[i];
         el->idr = NULL;
 
         ecs_record_t *r = flecs_entities_get_any(world, second);

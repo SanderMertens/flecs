@@ -115,12 +115,10 @@ void flecs_query_cache_build_sorted_table_range(
         if (id) {
             const ecs_term_t *term = &cache->query->terms[order_by_term];
             int32_t field = term->field_index;
-            int32_t column = cur->columns[field];
             ecs_size_t size = cache->query->sizes[field];
-            ecs_assert(column >= 0, ECS_INTERNAL_ERROR, NULL);
             ecs_entity_t src = cur->sources[field];
             if (src == 0) {
-                column = table->column_map[column];
+                int32_t column = cur->trs[field]->column;
                 ecs_vec_t *vec = &data->columns[column].data;
                 helper[to_sort].ptr = ecs_vec_first(vec);
                 helper[to_sort].elem_size = size;
@@ -195,7 +193,7 @@ void flecs_query_cache_build_sorted_table_range(
         }
 
         sort_helper_t *cur_helper = &helper[min];
-        if (!cur || cur->columns != cur_helper->match->columns) {
+        if (!cur || cur->trs != cur_helper->match->trs) {
             cur = ecs_vec_append_t(NULL, &cache->table_slices, 
                 ecs_query_cache_table_match_t);
             *cur = *(cur_helper->match);

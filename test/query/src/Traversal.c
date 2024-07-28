@@ -8751,5 +8751,931 @@ void Traversal_up_after_add_batched_to_parent(void) {
 
     test_bool(false, ecs_query_next(&it));
 
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Traversal_up_component_after_parent_table_change(void) {
+	ecs_world_t *world = ecs_init();
+
+	ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Foo);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {
+            { .id = ecs_id(Position) },
+            { .id = ecs_id(Position), .src.id = EcsUp }
+        },
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+	ecs_entity_t e1 = ecs_new(world);
+    ecs_set(world, e1, Position, {10, 20});
+	ecs_entity_t e2 = ecs_new(world);
+	ecs_add_pair(world, e2, EcsChildOf, e1);
+    ecs_set(world, e2, Position, {30, 40});
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(true, ecs_query_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e2);
+        test_uint(ecs_id(Position), ecs_field_id(&it, 0));
+        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_uint(e1, ecs_field_src(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 1));
+        {
+            Position *p1 = ecs_field(&it, Position, 0);
+            Position *p2 = ecs_field(&it, Position, 1);
+            test_assert(p1 != NULL);
+            test_assert(p2 != NULL);
+            test_int(p1->x, 30); test_int(p1->y, 40);
+            test_int(p2->x, 10); test_int(p2->y, 20);
+        }
+        test_assert(it.trs[0]->hdr.table == ecs_get_table(world, e2));
+        test_assert(it.trs[1]->hdr.table == ecs_get_table(world, e1));
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_add(world, e1, Foo);
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(true, ecs_query_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e2);
+        test_uint(ecs_id(Position), ecs_field_id(&it, 0));
+        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_uint(e1, ecs_field_src(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 1));
+        {
+            Position *p1 = ecs_field(&it, Position, 0);
+            Position *p2 = ecs_field(&it, Position, 1);
+            test_assert(p1 != NULL);
+            test_assert(p2 != NULL);
+            test_int(p1->x, 30); test_int(p1->y, 40);
+            test_int(p2->x, 10); test_int(p2->y, 20);
+        }
+        test_assert(it.trs[0]->hdr.table == ecs_get_table(world, e2));
+        test_assert(it.trs[1]->hdr.table == ecs_get_table(world, e1));
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Traversal_up_component_w_singleton_after_parent_table_change(void) {
+	ecs_world_t *world = ecs_init();
+
+	ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_TAG(world, Foo);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {
+            { .id = ecs_id(Position) },
+            { .id = ecs_id(Position), .src.id = EcsUp },
+            { .id = ecs_id(Velocity), .src.id = EcsSingleton }
+        },
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    ecs_singleton_set(world, Velocity, {1, 2});
+
+	ecs_entity_t e1 = ecs_new(world);
+    ecs_set(world, e1, Position, {10, 20});
+	ecs_entity_t e2 = ecs_new(world);
+	ecs_add_pair(world, e2, EcsChildOf, e1);
+    ecs_set(world, e2, Position, {30, 40});
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(true, ecs_query_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e2);
+        test_uint(ecs_id(Position), ecs_field_id(&it, 0));
+        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+        test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_uint(e1, ecs_field_src(&it, 1));
+        test_uint(ecs_id(Velocity), ecs_field_src(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 2));
+        {
+            Position *p1 = ecs_field(&it, Position, 0);
+            Position *p2 = ecs_field(&it, Position, 1);
+            Velocity *v = ecs_field(&it, Velocity, 2);
+            test_assert(p1 != NULL);
+            test_assert(p2 != NULL);
+            test_assert(v != NULL);
+            test_int(p1->x, 30); test_int(p1->y, 40);
+            test_int(p2->x, 10); test_int(p2->y, 20);
+            test_int(v->x, 1); test_int(v->y, 2);
+        }
+        test_assert(it.trs[0]->hdr.table == ecs_get_table(world, e2));
+        test_assert(it.trs[1]->hdr.table == ecs_get_table(world, e1));
+        test_assert(it.trs[2]->hdr.table == ecs_get_table(world, ecs_id(Velocity)));
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_add(world, e1, Foo);
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(true, ecs_query_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e2);
+        test_uint(ecs_id(Position), ecs_field_id(&it, 0));
+        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+        test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_uint(e1, ecs_field_src(&it, 1));
+        test_uint(ecs_id(Velocity), ecs_field_src(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 2));
+        {
+            Position *p1 = ecs_field(&it, Position, 0);
+            Position *p2 = ecs_field(&it, Position, 1);
+            Velocity *v = ecs_field(&it, Velocity, 2);
+            test_assert(p1 != NULL);
+            test_assert(p2 != NULL);
+            test_assert(v != NULL);
+            test_int(p1->x, 30); test_int(p1->y, 40);
+            test_int(p2->x, 10); test_int(p2->y, 20);
+            test_int(v->x, 1); test_int(v->y, 2);
+        }
+        test_assert(it.trs[0]->hdr.table == ecs_get_table(world, e2));
+        test_assert(it.trs[1]->hdr.table == ecs_get_table(world, e1));
+        test_assert(it.trs[2]->hdr.table == ecs_get_table(world, ecs_id(Velocity)));
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Traversal_up_component_w_var_after_parent_table_change(void) {
+	ecs_world_t *world = ecs_init();
+
+	ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_TAG(world, Foo);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "Position, Position(up), (Velocity, $this)",
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+	ecs_entity_t e1 = ecs_new(world);
+    ecs_set(world, e1, Position, {10, 20});
+
+	ecs_entity_t e2 = ecs_new(world);
+	ecs_add_pair(world, e2, EcsChildOf, e1);
+    ecs_set(world, e2, Position, {30, 40});
+    ecs_set_pair(world, e2, Velocity, e2, {1, 2});
+
+	ecs_entity_t e3 = ecs_new(world);
+	ecs_add_pair(world, e3, EcsChildOf, e1);
+    ecs_set(world, e3, Position, {50, 60});
+    ecs_set_pair(world, e3, Velocity, e3, {3, 4});
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(true, ecs_query_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e2);
+        test_uint(ecs_id(Position), ecs_field_id(&it, 0));
+        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+        test_uint(ecs_pair_t(Velocity, e2), ecs_field_id(&it, 2));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_uint(e1, ecs_field_src(&it, 1));
+        test_uint(0, ecs_field_src(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 2));
+        {
+            Position *p1 = ecs_field(&it, Position, 0);
+            Position *p2 = ecs_field(&it, Position, 1);
+            Velocity *v = ecs_field(&it, Velocity, 2);
+            test_assert(p1 != NULL);
+            test_assert(p2 != NULL);
+            test_assert(v != NULL);
+            test_int(p1->x, 30); test_int(p1->y, 40);
+            test_int(p2->x, 10); test_int(p2->y, 20);
+            test_int(v->x, 1); test_int(v->y, 2);
+        }
+        test_assert(it.trs[0]->hdr.table == ecs_get_table(world, e2));
+        test_assert(it.trs[1]->hdr.table == ecs_get_table(world, e1));
+        test_assert(it.trs[2]->hdr.table == ecs_get_table(world, e2));
+
+        test_bool(true, ecs_query_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e3);
+        test_uint(ecs_id(Position), ecs_field_id(&it, 0));
+        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+        test_uint(ecs_pair_t(Velocity, e3), ecs_field_id(&it, 2));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_uint(e1, ecs_field_src(&it, 1));
+        test_uint(0, ecs_field_src(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 2));
+        {
+            Position *p1 = ecs_field(&it, Position, 0);
+            Position *p2 = ecs_field(&it, Position, 1);
+            Velocity *v = ecs_field(&it, Velocity, 2);
+            test_assert(p1 != NULL);
+            test_assert(p2 != NULL);
+            test_assert(v != NULL);
+            test_int(p1->x, 50); test_int(p1->y, 60);
+            test_int(p2->x, 10); test_int(p2->y, 20);
+            test_int(v->x, 3); test_int(v->y, 4);
+        }
+
+        test_assert(it.trs[0]->hdr.table == ecs_get_table(world, e3));
+        test_assert(it.trs[1]->hdr.table == ecs_get_table(world, e1));
+        test_assert(it.trs[2]->hdr.table == ecs_get_table(world, e3));
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_add(world, e1, Foo);
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(true, ecs_query_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e2);
+        test_uint(ecs_id(Position), ecs_field_id(&it, 0));
+        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+        test_uint(ecs_pair_t(Velocity, e2), ecs_field_id(&it, 2));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_uint(e1, ecs_field_src(&it, 1));
+        test_uint(0, ecs_field_src(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 2));
+        {
+            Position *p1 = ecs_field(&it, Position, 0);
+            Position *p2 = ecs_field(&it, Position, 1);
+            Velocity *v = ecs_field(&it, Velocity, 2);
+            test_assert(p1 != NULL);
+            test_assert(p2 != NULL);
+            test_assert(v != NULL);
+            test_int(p1->x, 30); test_int(p1->y, 40);
+            test_int(p2->x, 10); test_int(p2->y, 20);
+            test_int(v->x, 1); test_int(v->y, 2);
+        }
+        test_assert(it.trs[0]->hdr.table == ecs_get_table(world, e2));
+        test_assert(it.trs[1]->hdr.table == ecs_get_table(world, e1));
+        test_assert(it.trs[2]->hdr.table == ecs_get_table(world, e2));
+
+        test_bool(true, ecs_query_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e3);
+        test_uint(ecs_id(Position), ecs_field_id(&it, 0));
+        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+        test_uint(ecs_pair_t(Velocity, e3), ecs_field_id(&it, 2));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_uint(e1, ecs_field_src(&it, 1));
+        test_uint(0, ecs_field_src(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 2));
+        {
+            Position *p1 = ecs_field(&it, Position, 0);
+            Position *p2 = ecs_field(&it, Position, 1);
+            Velocity *v = ecs_field(&it, Velocity, 2);
+            test_assert(p1 != NULL);
+            test_assert(p2 != NULL);
+            test_assert(v != NULL);
+            test_int(p1->x, 50); test_int(p1->y, 60);
+            test_int(p2->x, 10); test_int(p2->y, 20);
+            test_int(v->x, 3); test_int(v->y, 4);
+        }
+
+        test_assert(it.trs[0]->hdr.table == ecs_get_table(world, e3));
+        test_assert(it.trs[1]->hdr.table == ecs_get_table(world, e1));
+        test_assert(it.trs[2]->hdr.table == ecs_get_table(world, e3));
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Traversal_test_up_component_after_parent_table_change(void) {
+	ecs_world_t *world = ecs_init();
+
+	ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Foo);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {
+            { .id = ecs_id(Position) },
+            { .id = ecs_id(Position), .src.id = EcsUp }
+        },
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+	ecs_entity_t e1 = ecs_new(world);
+    ecs_set(world, e1, Position, {10, 20});
+	ecs_entity_t e2 = ecs_new(world);
+	ecs_add_pair(world, e2, EcsChildOf, e1);
+    ecs_set(world, e2, Position, {30, 40});
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        ecs_iter_set_var(&it, 0, e2);
+        test_bool(true, ecs_query_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e2);
+        test_uint(ecs_id(Position), ecs_field_id(&it, 0));
+        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_uint(e1, ecs_field_src(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 1));
+        {
+            Position *p1 = ecs_field(&it, Position, 0);
+            Position *p2 = ecs_field(&it, Position, 1);
+            test_assert(p1 != NULL);
+            test_assert(p2 != NULL);
+            test_int(p1->x, 30); test_int(p1->y, 40);
+            test_int(p2->x, 10); test_int(p2->y, 20);
+        }
+
+        test_assert(it.trs[0]->hdr.table == ecs_get_table(world, e2));
+        test_assert(it.trs[1]->hdr.table == ecs_get_table(world, e1));
+        test_bool(false, ecs_query_next(&it));
+    }
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        ecs_iter_set_var(&it, 0, e1);
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_add(world, e1, Foo);
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        ecs_iter_set_var(&it, 0, e2);
+        test_bool(true, ecs_query_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e2);
+        test_uint(ecs_id(Position), ecs_field_id(&it, 0));
+        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_uint(e1, ecs_field_src(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 1));
+        {
+            Position *p1 = ecs_field(&it, Position, 0);
+            Position *p2 = ecs_field(&it, Position, 1);
+            test_assert(p1 != NULL);
+            test_assert(p2 != NULL);
+            test_int(p1->x, 30); test_int(p1->y, 40);
+            test_int(p2->x, 10); test_int(p2->y, 20);
+        }
+
+        test_assert(it.trs[0]->hdr.table == ecs_get_table(world, e2));
+        test_assert(it.trs[1]->hdr.table == ecs_get_table(world, e1));
+        test_bool(false, ecs_query_next(&it));
+    }
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        ecs_iter_set_var(&it, 0, e1);
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Traversal_test_up_component_w_singleton_after_parent_table_change(void) {
+	ecs_world_t *world = ecs_init();
+
+	ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_TAG(world, Foo);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {
+            { .id = ecs_id(Position) },
+            { .id = ecs_id(Position), .src.id = EcsUp },
+            { .id = ecs_id(Velocity), .src.id = EcsSingleton }
+        },
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    ecs_singleton_set(world, Velocity, {1, 2});
+
+	ecs_entity_t e1 = ecs_new(world);
+    ecs_set(world, e1, Position, {10, 20});
+	ecs_entity_t e2 = ecs_new(world);
+	ecs_add_pair(world, e2, EcsChildOf, e1);
+    ecs_set(world, e2, Position, {30, 40});
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        ecs_iter_set_var(&it, 0, e2);
+        test_bool(true, ecs_query_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e2);
+        test_uint(ecs_id(Position), ecs_field_id(&it, 0));
+        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+        test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_uint(e1, ecs_field_src(&it, 1));
+        test_uint(ecs_id(Velocity), ecs_field_src(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 2));
+        {
+            Position *p1 = ecs_field(&it, Position, 0);
+            Position *p2 = ecs_field(&it, Position, 1);
+            Velocity *v = ecs_field(&it, Velocity, 2);
+            test_assert(p1 != NULL);
+            test_assert(p2 != NULL);
+            test_assert(v != NULL);
+            test_int(p1->x, 30); test_int(p1->y, 40);
+            test_int(p2->x, 10); test_int(p2->y, 20);
+            test_int(v->x, 1); test_int(v->y, 2);
+        }
+
+        test_assert(it.trs[0]->hdr.table == ecs_get_table(world, e2));
+        test_assert(it.trs[1]->hdr.table == ecs_get_table(world, e1));
+        test_assert(it.trs[2]->hdr.table == ecs_get_table(world, ecs_id(Velocity)));
+        test_bool(false, ecs_query_next(&it));
+    }
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        ecs_iter_set_var(&it, 0, e1);
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_add(world, e1, Foo);
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        ecs_iter_set_var(&it, 0, e2);
+        test_bool(true, ecs_query_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e2);
+        test_uint(ecs_id(Position), ecs_field_id(&it, 0));
+        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+        test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_uint(e1, ecs_field_src(&it, 1));
+        test_uint(ecs_id(Velocity), ecs_field_src(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 2));
+        {
+            Position *p1 = ecs_field(&it, Position, 0);
+            Position *p2 = ecs_field(&it, Position, 1);
+            Velocity *v = ecs_field(&it, Velocity, 2);
+            test_assert(p1 != NULL);
+            test_assert(p2 != NULL);
+            test_assert(v != NULL);
+            test_int(p1->x, 30); test_int(p1->y, 40);
+            test_int(p2->x, 10); test_int(p2->y, 20);
+            test_int(v->x, 1); test_int(v->y, 2);
+        }
+
+        test_assert(it.trs[0]->hdr.table == ecs_get_table(world, e2));
+        test_assert(it.trs[1]->hdr.table == ecs_get_table(world, e1));
+        test_assert(it.trs[2]->hdr.table == ecs_get_table(world, ecs_id(Velocity)));
+        test_bool(false, ecs_query_next(&it));
+    }
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        ecs_iter_set_var(&it, 0, e1);
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Traversal_up_component_after_parent_table_change_no_data(void) {
+	ecs_world_t *world = ecs_init();
+
+	ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Foo);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {
+            { .id = ecs_id(Position), .inout = EcsInOutNone },
+            { .id = ecs_id(Position), .src.id = EcsUp, .inout = EcsInOutNone }
+        },
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+	ecs_entity_t e1 = ecs_new(world);
+    ecs_set(world, e1, Position, {10, 20});
+	ecs_entity_t e2 = ecs_new(world);
+	ecs_add_pair(world, e2, EcsChildOf, e1);
+    ecs_set(world, e2, Position, {30, 40});
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(true, ecs_query_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e2);
+        test_uint(ecs_id(Position), ecs_field_id(&it, 0));
+        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_uint(e1, ecs_field_src(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 1));
+        test_assert(it.trs[0]->hdr.table == ecs_get_table(world, e2));
+        test_assert(it.trs[1]->hdr.table == ecs_get_table(world, e1));
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_add(world, e1, Foo);
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(true, ecs_query_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e2);
+        test_uint(ecs_id(Position), ecs_field_id(&it, 0));
+        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_uint(e1, ecs_field_src(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 1));
+        test_assert(it.trs[0]->hdr.table == ecs_get_table(world, e2));
+        test_assert(it.trs[1]->hdr.table == ecs_get_table(world, e1));
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Traversal_up_component_w_singleton_after_parent_table_change_no_data(void) {
+	ecs_world_t *world = ecs_init();
+
+	ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_TAG(world, Foo);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {
+            { .id = ecs_id(Position), .inout = EcsInOutNone },
+            { .id = ecs_id(Position), .src.id = EcsUp, .inout = EcsInOutNone },
+            { .id = ecs_id(Velocity), .src.id = EcsSingleton, .inout = EcsInOutNone }
+        },
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    ecs_singleton_set(world, Velocity, {1, 2});
+
+	ecs_entity_t e1 = ecs_new(world);
+    ecs_set(world, e1, Position, {10, 20});
+	ecs_entity_t e2 = ecs_new(world);
+	ecs_add_pair(world, e2, EcsChildOf, e1);
+    ecs_set(world, e2, Position, {30, 40});
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(true, ecs_query_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e2);
+        test_uint(ecs_id(Position), ecs_field_id(&it, 0));
+        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+        test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_uint(e1, ecs_field_src(&it, 1));
+        test_uint(ecs_id(Velocity), ecs_field_src(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 2));
+        test_assert(it.trs[0]->hdr.table == ecs_get_table(world, e2));
+        test_assert(it.trs[1]->hdr.table == ecs_get_table(world, e1));
+        test_assert(it.trs[2]->hdr.table == ecs_get_table(world, ecs_id(Velocity)));
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_add(world, e1, Foo);
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(true, ecs_query_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e2);
+        test_uint(ecs_id(Position), ecs_field_id(&it, 0));
+        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+        test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_uint(e1, ecs_field_src(&it, 1));
+        test_uint(ecs_id(Velocity), ecs_field_src(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 2));
+        test_assert(it.trs[0]->hdr.table == ecs_get_table(world, e2));
+        test_assert(it.trs[1]->hdr.table == ecs_get_table(world, e1));
+        test_assert(it.trs[2]->hdr.table == ecs_get_table(world, ecs_id(Velocity)));
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Traversal_up_component_w_var_after_parent_table_change_no_data(void) {
+	ecs_world_t *world = ecs_init();
+
+	ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_TAG(world, Foo);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "[none] Position, [none] Position(up), [none] (Velocity, $this)",
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+	ecs_entity_t e1 = ecs_new(world);
+    ecs_set(world, e1, Position, {10, 20});
+
+	ecs_entity_t e2 = ecs_new(world);
+	ecs_add_pair(world, e2, EcsChildOf, e1);
+    ecs_set(world, e2, Position, {30, 40});
+    ecs_set_pair(world, e2, Velocity, e2, {1, 2});
+
+	ecs_entity_t e3 = ecs_new(world);
+	ecs_add_pair(world, e3, EcsChildOf, e1);
+    ecs_set(world, e3, Position, {50, 60});
+    ecs_set_pair(world, e3, Velocity, e3, {3, 4});
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(true, ecs_query_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e2);
+        test_uint(ecs_id(Position), ecs_field_id(&it, 0));
+        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+        test_uint(ecs_pair_t(Velocity, e2), ecs_field_id(&it, 2));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_uint(e1, ecs_field_src(&it, 1));
+        test_uint(0, ecs_field_src(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 2));
+        test_assert(it.trs[0]->hdr.table == ecs_get_table(world, e2));
+        test_assert(it.trs[1]->hdr.table == ecs_get_table(world, e1));
+        test_assert(it.trs[2]->hdr.table == ecs_get_table(world, e2));
+
+        test_bool(true, ecs_query_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e3);
+        test_uint(ecs_id(Position), ecs_field_id(&it, 0));
+        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+        test_uint(ecs_pair_t(Velocity, e3), ecs_field_id(&it, 2));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_uint(e1, ecs_field_src(&it, 1));
+        test_uint(0, ecs_field_src(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 2));
+
+        test_assert(it.trs[0]->hdr.table == ecs_get_table(world, e3));
+        test_assert(it.trs[1]->hdr.table == ecs_get_table(world, e1));
+        test_assert(it.trs[2]->hdr.table == ecs_get_table(world, e3));
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_add(world, e1, Foo);
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(true, ecs_query_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e2);
+        test_uint(ecs_id(Position), ecs_field_id(&it, 0));
+        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+        test_uint(ecs_pair_t(Velocity, e2), ecs_field_id(&it, 2));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_uint(e1, ecs_field_src(&it, 1));
+        test_uint(0, ecs_field_src(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 2));
+        test_assert(it.trs[0]->hdr.table == ecs_get_table(world, e2));
+        test_assert(it.trs[1]->hdr.table == ecs_get_table(world, e1));
+        test_assert(it.trs[2]->hdr.table == ecs_get_table(world, e2));
+
+        test_bool(true, ecs_query_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e3);
+        test_uint(ecs_id(Position), ecs_field_id(&it, 0));
+        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+        test_uint(ecs_pair_t(Velocity, e3), ecs_field_id(&it, 2));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_uint(e1, ecs_field_src(&it, 1));
+        test_uint(0, ecs_field_src(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 2));
+
+        test_assert(it.trs[0]->hdr.table == ecs_get_table(world, e3));
+        test_assert(it.trs[1]->hdr.table == ecs_get_table(world, e1));
+        test_assert(it.trs[2]->hdr.table == ecs_get_table(world, e3));
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Traversal_test_up_component_after_parent_table_change_no_data(void) {
+	ecs_world_t *world = ecs_init();
+
+	ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Foo);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {
+            { .id = ecs_id(Position), .inout = EcsInOutNone },
+            { .id = ecs_id(Position), .src.id = EcsUp, .inout = EcsInOutNone }
+        },
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+	ecs_entity_t e1 = ecs_new(world);
+    ecs_set(world, e1, Position, {10, 20});
+	ecs_entity_t e2 = ecs_new(world);
+	ecs_add_pair(world, e2, EcsChildOf, e1);
+    ecs_set(world, e2, Position, {30, 40});
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        ecs_iter_set_var(&it, 0, e2);
+        test_bool(true, ecs_query_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e2);
+        test_uint(ecs_id(Position), ecs_field_id(&it, 0));
+        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_uint(e1, ecs_field_src(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 1));
+        test_assert(it.trs[0]->hdr.table == ecs_get_table(world, e2));
+        test_assert(it.trs[1]->hdr.table == ecs_get_table(world, e1));
+        test_bool(false, ecs_query_next(&it));
+    }
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        ecs_iter_set_var(&it, 0, e1);
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_add(world, e1, Foo);
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        ecs_iter_set_var(&it, 0, e2);
+        test_bool(true, ecs_query_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e2);
+        test_uint(ecs_id(Position), ecs_field_id(&it, 0));
+        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_uint(e1, ecs_field_src(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 1));
+        test_assert(it.trs[0]->hdr.table == ecs_get_table(world, e2));
+        test_assert(it.trs[1]->hdr.table == ecs_get_table(world, e1));
+        test_bool(false, ecs_query_next(&it));
+    }
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        ecs_iter_set_var(&it, 0, e1);
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Traversal_test_up_component_w_singleton_after_parent_table_change_no_data(void) {
+	ecs_world_t *world = ecs_init();
+
+	ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_TAG(world, Foo);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {
+            { .id = ecs_id(Position), .inout = EcsInOutNone },
+            { .id = ecs_id(Position), .src.id = EcsUp, .inout = EcsInOutNone },
+            { .id = ecs_id(Velocity), .src.id = EcsSingleton, .inout = EcsInOutNone }
+        },
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    ecs_singleton_set(world, Velocity, {1, 2});
+
+	ecs_entity_t e1 = ecs_new(world);
+    ecs_set(world, e1, Position, {10, 20});
+	ecs_entity_t e2 = ecs_new(world);
+	ecs_add_pair(world, e2, EcsChildOf, e1);
+    ecs_set(world, e2, Position, {30, 40});
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        ecs_iter_set_var(&it, 0, e2);
+        test_bool(true, ecs_query_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e2);
+        test_uint(ecs_id(Position), ecs_field_id(&it, 0));
+        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+        test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_uint(e1, ecs_field_src(&it, 1));
+        test_uint(ecs_id(Velocity), ecs_field_src(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 2));
+        test_assert(it.trs[0]->hdr.table == ecs_get_table(world, e2));
+        test_assert(it.trs[1]->hdr.table == ecs_get_table(world, e1));
+        test_assert(it.trs[2]->hdr.table == ecs_get_table(world, ecs_id(Velocity)));
+        test_bool(false, ecs_query_next(&it));
+    }
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        ecs_iter_set_var(&it, 0, e1);
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_add(world, e1, Foo);
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        ecs_iter_set_var(&it, 0, e2);
+        test_bool(true, ecs_query_next(&it));
+        test_int(it.count, 1);
+        test_uint(it.entities[0], e2);
+        test_uint(ecs_id(Position), ecs_field_id(&it, 0));
+        test_uint(ecs_id(Position), ecs_field_id(&it, 1));
+        test_uint(ecs_id(Velocity), ecs_field_id(&it, 2));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_uint(e1, ecs_field_src(&it, 1));
+        test_uint(ecs_id(Velocity), ecs_field_src(&it, 2));
+        test_bool(true, ecs_field_is_set(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 1));
+        test_bool(true, ecs_field_is_set(&it, 2));
+        test_assert(it.trs[0]->hdr.table == ecs_get_table(world, e2));
+        test_assert(it.trs[1]->hdr.table == ecs_get_table(world, e1));
+        test_assert(it.trs[2]->hdr.table == ecs_get_table(world, ecs_id(Velocity)));
+        test_bool(false, ecs_query_next(&it));
+    }
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        ecs_iter_set_var(&it, 0, e1);
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_query_fini(q);
+
     ecs_fini(world);
 }

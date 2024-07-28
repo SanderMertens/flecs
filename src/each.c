@@ -47,7 +47,7 @@ bool ecs_each_next(
     ecs_iter_t *it)
 {
     ecs_each_iter_t *each_iter = &it->priv_.iter.each;
-    ecs_table_record_t *next = flecs_table_cache_next(
+    const ecs_table_record_t *next = flecs_table_cache_next(
         &each_iter->it, ecs_table_record_t);
     it->flags |= EcsIterIsValid;
     if (next) {
@@ -56,12 +56,11 @@ bool ecs_each_next(
         it->count = ecs_table_count(table);
         it->entities = flecs_table_entities_array(table);
         it->ids = &table->type.array[next->index];
-        it->columns = &each_iter->columns;
+        it->trs = (const ecs_table_record_t**)&next;
         it->sources = &each_iter->sources;
         it->sizes = &each_iter->sizes;
         it->ptrs = &each_iter->ptrs;
         it->set_fields = 1;
-        each_iter->columns = next->index;
 
         if (next->column != -1) {
             each_iter->ptrs = ecs_vec_first(

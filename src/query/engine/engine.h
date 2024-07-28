@@ -110,10 +110,10 @@ int16_t flecs_query_next_column(
     ecs_id_t id,
     int32_t column);
 
-void flecs_query_it_set_column(
+void flecs_query_it_set_tr(
     ecs_iter_t *it,
     int32_t field_index,
-    int32_t column);
+    const ecs_table_record_t *tr);
 
 ecs_id_t flecs_query_it_set_id(
     ecs_iter_t *it,
@@ -129,7 +129,7 @@ void flecs_query_set_match(
 
 void flecs_query_set_trav_match(
     const ecs_query_op_t *op,
-    int32_t column,
+    const ecs_table_record_t *tr,
     ecs_entity_t trav,
     ecs_entity_t second,
     const ecs_query_run_ctx_t *ctx);
@@ -143,7 +143,13 @@ void flecs_query_populate_field_from_range(
     ecs_iter_t *it,
     ecs_table_range_t *range,
     int8_t field_index,
-    int32_t index);
+    const ecs_table_record_t *tr);
+
+void flecs_query_populate_shared_field(
+    ecs_iter_t *it,
+    ecs_entity_t src,
+    int8_t field_index,
+    const ecs_query_run_ctx_t *ctx);
 
 bool flecs_query_setids(
     const ecs_query_op_t *op,

@@ -290,6 +290,7 @@ void flecs_query_iter_fini(
     flecs_iter_free_n(qit->vars, ecs_var_t, var_count);
     flecs_iter_free_n(qit->written, ecs_write_flags_t, op_count);
     flecs_iter_free_n(qit->op_ctx, ecs_query_op_ctx_t, op_count);
+
     qit->vars = NULL;
     qit->written = NULL;
     qit->op_ctx = NULL;
@@ -337,7 +338,7 @@ ecs_iter_t flecs_query_iter(
 
     flecs_iter_init(it.world, &it, 
         flecs_iter_cache_ids |
-        flecs_iter_cache_columns |
+        flecs_iter_cache_trs |
         flecs_iter_cache_sources |
         flecs_iter_cache_ptrs);
 

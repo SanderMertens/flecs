@@ -4511,24 +4511,24 @@ void Operators_2_or_w_and(void) {
     test_uint(e1, it.entities[0]);
     test_uint(TagA, ecs_field_id(&it, 0));
     test_uint(Foo, ecs_field_id(&it, 1));
-    test_int(0, it.columns[0]);
-    test_int(1, it.columns[1]);
+    test_int(0, it.trs[0]->index);
+    test_int(1, it.trs[1]->index);
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e2, it.entities[0]);
     test_uint(TagA, ecs_field_id(&it, 0));
     test_uint(Foo, ecs_field_id(&it, 1));
-    test_int(0, it.columns[0]);
-    test_int(2, it.columns[1]);
+    test_int(0, it.trs[0]->index);
+    test_int(2, it.trs[1]->index);
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e3, it.entities[0]);
     test_uint(TagB, ecs_field_id(&it, 0));
     test_uint(Foo, ecs_field_id(&it, 1));
-    test_int(0, it.columns[0]);
-    test_int(1, it.columns[1]);
+    test_int(0, it.trs[0]->index);
+    test_int(1, it.trs[1]->index);
 
     test_bool(false, ecs_query_next(&it));
 
@@ -4579,9 +4579,9 @@ void Operators_and_w_2_or_w_and(void) {
     test_uint(Foo, ecs_field_id(&it, 0));
     test_uint(TagA, ecs_field_id(&it, 1));
     test_uint(Bar, ecs_field_id(&it, 2));
-    test_int(1, it.columns[0]);
-    test_int(0, it.columns[1]);
-    test_int(2, it.columns[2]);
+    test_int(1, it.trs[0]->index);
+    test_int(0, it.trs[1]->index);
+    test_int(2, it.trs[2]->index);
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
@@ -4589,9 +4589,9 @@ void Operators_and_w_2_or_w_and(void) {
     test_uint(Foo, ecs_field_id(&it, 0));
     test_uint(TagA, ecs_field_id(&it, 1));
     test_uint(Bar, ecs_field_id(&it, 2));
-    test_int(2, it.columns[0]);
-    test_int(0, it.columns[1]);
-    test_int(3, it.columns[2]);
+    test_int(2, it.trs[0]->index);
+    test_int(0, it.trs[1]->index);
+    test_int(3, it.trs[2]->index);
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
@@ -4599,9 +4599,9 @@ void Operators_and_w_2_or_w_and(void) {
     test_uint(Foo, ecs_field_id(&it, 0));
     test_uint(TagB, ecs_field_id(&it, 1));
     test_uint(Bar, ecs_field_id(&it, 2));
-    test_int(1, it.columns[0]);
-    test_int(0, it.columns[1]);
-    test_int(2, it.columns[2]);
+    test_int(1, it.trs[0]->index);
+    test_int(0, it.trs[1]->index);
+    test_int(2, it.trs[2]->index);
 
     test_bool(false, ecs_query_next(&it));
 
@@ -4652,9 +4652,9 @@ void Operators_and_w_2_or_w_and_components(void) {
     test_uint(ecs_id(Position), ecs_field_id(&it, 0));
     test_uint(TagA, ecs_field_id(&it, 1));
     test_uint(ecs_id(Mass), ecs_field_id(&it, 2));
-    test_int(0, it.columns[0]);
-    test_int(2, it.columns[1]);
-    test_int(1, it.columns[2]);
+    test_int(0, it.trs[0]->index);
+    test_int(2, it.trs[1]->index);
+    test_int(1, it.trs[2]->index);
     {
         Position *p = ecs_field(&it, Position, 0);
         test_assert(p != NULL);
@@ -4672,9 +4672,9 @@ void Operators_and_w_2_or_w_and_components(void) {
     test_uint(ecs_id(Position), ecs_field_id(&it, 0));
     test_uint(TagA, ecs_field_id(&it, 1));
     test_uint(ecs_id(Mass), ecs_field_id(&it, 2));
-    test_int(0, it.columns[0]);
-    test_int(2, it.columns[1]);
-    test_int(1, it.columns[2]);
+    test_int(0, it.trs[0]->index);
+    test_int(2, it.trs[1]->index);
+    test_int(1, it.trs[2]->index);
     {
         Position *p = ecs_field(&it, Position, 0);
         test_assert(p != NULL);
@@ -4692,9 +4692,9 @@ void Operators_and_w_2_or_w_and_components(void) {
     test_uint(ecs_id(Position), ecs_field_id(&it, 0));
     test_uint(TagB, ecs_field_id(&it, 1));
     test_uint(ecs_id(Mass), ecs_field_id(&it, 2));
-    test_int(0, it.columns[0]);
-    test_int(2, it.columns[1]);
-    test_int(1, it.columns[2]);
+    test_int(0, it.trs[0]->index);
+    test_int(2, it.trs[1]->index);
+    test_int(1, it.trs[2]->index);
     {
         Position *p = ecs_field(&it, Position, 0);
         test_assert(p != NULL);
@@ -4757,9 +4757,9 @@ void Operators_and_w_2_or_w_and_set_this(void) {
         test_uint(Foo, ecs_field_id(&it, 0));
         test_uint(TagA, ecs_field_id(&it, 1));
         test_uint(Bar, ecs_field_id(&it, 2));
-        test_int(1, it.columns[0]);
-        test_int(0, it.columns[1]);
-        test_int(2, it.columns[2]);
+        test_int(1, it.trs[0]->index);
+        test_int(0, it.trs[1]->index);
+        test_int(2, it.trs[2]->index);
         test_bool(false, ecs_query_next(&it));
     }
 
@@ -4772,9 +4772,9 @@ void Operators_and_w_2_or_w_and_set_this(void) {
         test_uint(Foo, ecs_field_id(&it, 0));
         test_uint(TagA, ecs_field_id(&it, 1));
         test_uint(Bar, ecs_field_id(&it, 2));
-        test_int(2, it.columns[0]);
-        test_int(0, it.columns[1]);
-        test_int(3, it.columns[2]);
+        test_int(2, it.trs[0]->index);
+        test_int(0, it.trs[1]->index);
+        test_int(3, it.trs[2]->index);
         test_bool(false, ecs_query_next(&it));
     }
 
@@ -4787,9 +4787,9 @@ void Operators_and_w_2_or_w_and_set_this(void) {
         test_uint(Foo, ecs_field_id(&it, 0));
         test_uint(TagB, ecs_field_id(&it, 1));
         test_uint(Bar, ecs_field_id(&it, 2));
-        test_int(1, it.columns[0]);
-        test_int(0, it.columns[1]);
-        test_int(2, it.columns[2]);
+        test_int(1, it.trs[0]->index);
+        test_int(0, it.trs[1]->index);
+        test_int(2, it.trs[2]->index);
         test_bool(false, ecs_query_next(&it));
     }
 
@@ -4842,9 +4842,9 @@ void Operators_and_w_2_or_w_and_components_set_this(void) {
         test_uint(ecs_id(Position), ecs_field_id(&it, 0));
         test_uint(TagA, ecs_field_id(&it, 1));
         test_uint(ecs_id(Mass), ecs_field_id(&it, 2));
-        test_int(0, it.columns[0]);
-        test_int(2, it.columns[1]);
-        test_int(1, it.columns[2]);
+        test_int(0, it.trs[0]->index);
+        test_int(2, it.trs[1]->index);
+        test_int(1, it.trs[2]->index);
         {
             Position *p = ecs_field(&it, Position, 0);
             test_assert(p != NULL);
@@ -4867,9 +4867,9 @@ void Operators_and_w_2_or_w_and_components_set_this(void) {
         test_uint(ecs_id(Position), ecs_field_id(&it, 0));
         test_uint(TagA, ecs_field_id(&it, 1));
         test_uint(ecs_id(Mass), ecs_field_id(&it, 2));
-        test_int(0, it.columns[0]);
-        test_int(2, it.columns[1]);
-        test_int(1, it.columns[2]);
+        test_int(0, it.trs[0]->index);
+        test_int(2, it.trs[1]->index);
+        test_int(1, it.trs[2]->index);
         {
             Position *p = ecs_field(&it, Position, 0);
             test_assert(p != NULL);
@@ -4892,9 +4892,9 @@ void Operators_and_w_2_or_w_and_components_set_this(void) {
         test_uint(ecs_id(Position), ecs_field_id(&it, 0));
         test_uint(TagB, ecs_field_id(&it, 1));
         test_uint(ecs_id(Mass), ecs_field_id(&it, 2));
-        test_int(0, it.columns[0]);
-        test_int(2, it.columns[1]);
-        test_int(1, it.columns[2]);
+        test_int(0, it.trs[0]->index);
+        test_int(2, it.trs[1]->index);
+        test_int(1, it.trs[2]->index);
         {
             Position *p = ecs_field(&it, Position, 0);
             test_assert(p != NULL);

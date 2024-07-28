@@ -280,7 +280,7 @@ void flecs_query_populate_tokens(
     int32_t old_tokens_len = impl->tokens_len;
     impl->tokens = NULL;
     impl->tokens_len = 0;
-    
+
     /* Step 1: determine size of token buffer */
     int32_t len = 0;
     for (i = 0; i < term_count; i ++) {
