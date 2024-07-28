@@ -6,7 +6,7 @@ void Observer(ecs_iter_t *it) {
 }
 
 static
-void Observer_w_value(ecs_iter_t *it) {
+void Observer_w_value_1(ecs_iter_t *it) {
     probe_system_w_ctx(it, it->ctx);
 
     test_int(it->count, 1);
@@ -16,12 +16,25 @@ void Observer_w_value(ecs_iter_t *it) {
     Position *p = ecs_field(it, Position, 0);
     test_int(p->x, 10);
     test_int(p->y, 20);
+}
 
-    if (it->field_count > 1) {
-        Velocity *v = ecs_field(it, Velocity, 1);
-        test_int(v->x, 1);
-        test_int(v->y, 2);
-    }
+static
+void Observer_w_value_2(ecs_iter_t *it) {
+    probe_system_w_ctx(it, it->ctx);
+
+    test_int(it->count, 1);
+    test_assert(it->entities != NULL);
+    test_assert(it->entities[0] != 0);
+
+    Position *p = ecs_field(it, Position, 0);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    Velocity *v = ecs_field(it, Velocity, 1);
+    test_assert(v != NULL);
+    test_int(v->x, 1);
+    test_int(v->y, 2);
 }
 
 static
@@ -177,7 +190,7 @@ void Observer_2_terms_w_on_set_value(void) {
     ecs_entity_t o = ecs_observer_init(world, &(ecs_observer_desc_t){
         .query.terms = {{ecs_id(Position)}, {ecs_id(Velocity)}},
         .events = {EcsOnSet},
-        .callback = Observer_w_value,
+        .callback = Observer_w_value_2,
         .ctx = &ctx
     });
     test_assert(o != 0);
@@ -212,7 +225,7 @@ void Observer_2_terms_w_on_remove_value(void) {
     ecs_entity_t o = ecs_observer_init(world, &(ecs_observer_desc_t){
         .query.terms = {{ecs_id(Position)}, {ecs_id(Velocity)}},
         .events = {EcsOnRemove},
-        .callback = Observer_w_value,
+        .callback = Observer_w_value_2,
         .ctx = &ctx
     });
     test_assert(o != 0);
@@ -240,6 +253,84 @@ void Observer_2_terms_w_on_remove_value(void) {
     ecs_fini(world);
 }
 
+void Observer_2_terms_w_on_set_value_self_up(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    Probe ctx = {0};
+    ecs_entity_t o = ecs_observer_init(world, &(ecs_observer_desc_t){
+        .query.terms = {
+            {ecs_id(Position), .src.id = EcsSelf|EcsUp}, 
+            {ecs_id(Velocity), .src.id = EcsSelf|EcsUp}
+        },
+        .events = {EcsOnSet},
+        .callback = Observer_w_value_2,
+        .ctx = &ctx
+    });
+    test_assert(o != 0);
+
+    ecs_entity_t e = ecs_new(world);
+
+    ecs_set(world, e, Velocity, {1, 2});
+    test_int(ctx.invoked, 0);
+
+    ecs_set(world, e, Position, {10, 20});
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, o);
+    test_int(ctx.event, EcsOnSet);
+    test_int(ctx.term_count, 2);
+    test_null(ctx.param);
+
+    test_int(ctx.e[0], e);
+    test_int(ctx.c[0][0], ecs_id(Position));
+    test_int(ctx.c[0][1], ecs_id(Velocity));
+
+    ecs_fini(world);
+}
+
+void Observer_2_terms_w_on_remove_value_self_up(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    Probe ctx = {0};
+    ecs_entity_t o = ecs_observer_init(world, &(ecs_observer_desc_t){
+        .query.terms = {
+            {ecs_id(Position), .src.id = EcsSelf|EcsUp}, 
+            {ecs_id(Velocity), .src.id = EcsSelf|EcsUp}
+        },
+        .events = {EcsOnRemove},
+        .callback = Observer_w_value_2,
+        .ctx = &ctx
+    });
+    test_assert(o != 0);
+
+    ecs_entity_t e = ecs_new(world);
+
+    ecs_set(world, e, Velocity, {1, 2});
+    test_int(ctx.invoked, 0);
+
+    ecs_set(world, e, Position, {10, 20});
+    test_int(ctx.invoked, 0);
+
+    ecs_remove(world, e, Position);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, o);
+    test_int(ctx.event, EcsOnRemove);
+    test_int(ctx.term_count, 2);
+    test_null(ctx.param);
+
+    test_int(ctx.e[0], e);
+    test_int(ctx.c[0][0], ecs_id(Position));
+    test_int(ctx.c[0][1], ecs_id(Velocity));
+
+    ecs_fini(world);
+}
 
 void Observer_2_terms_w_on_add_2nd(void) {
     ecs_world_t *world = ecs_mini();
@@ -709,7 +800,7 @@ void Observer_wildcard_pair_w_pred_component(void) {
     ecs_entity_t o = ecs_observer_init(world, &(ecs_observer_desc_t){
         .query.terms = {{ecs_pair(ecs_id(Position), EcsWildcard)}},
         .events = {EcsOnSet},
-        .callback = Observer_w_value,
+        .callback = Observer_w_value_1,
         .ctx = &ctx
     });
     test_assert(o != 0);
@@ -764,7 +855,7 @@ void Observer_wildcard_pair_w_obj_component(void) {
     ecs_entity_t o = ecs_observer_init(world, &(ecs_observer_desc_t){
         .query.terms = {{ ecs_pair(EcsWildcard, ecs_id(Position)) }},
         .events = {EcsOnSet},
-        .callback = Observer_w_value,
+        .callback = Observer_w_value_1,
         .ctx = &ctx
     });
     test_assert(o != 0);
@@ -3298,7 +3389,7 @@ void Observer_custom_run_w_yield_existing_1_field_w_callback(void) {
         .query.terms = {{ ecs_id(Position) }},
         .events = {EcsOnSet},
         .run = Run_w_1_field_w_callback,
-        .callback = Observer_w_value,
+        .callback = Observer_w_value_1,
         .yield_existing = true,
         .ctx = &ctx
     });
@@ -3377,7 +3468,7 @@ void Observer_custom_run_w_yield_existing_2_fields_w_callback(void) {
         .query.terms = {{ ecs_id(Position) }, { ecs_id(Velocity) }},
         .events = {EcsOnSet},
         .run = Run_w_2_fields_w_callback,
-        .callback = Observer_w_value,
+        .callback = Observer_w_value_2,
         .yield_existing = true,
         .ctx = &ctx
     });
@@ -7181,3 +7272,4 @@ void Observer_multi_observer_eval_count(void) {
 
     ecs_fini(world);
 }
+

@@ -1336,6 +1336,8 @@ void Observer_2_terms_w_on_add(void);
 void Observer_2_terms_w_on_remove(void);
 void Observer_2_terms_w_on_set_value(void);
 void Observer_2_terms_w_on_remove_value(void);
+void Observer_2_terms_w_on_set_value_self_up(void);
+void Observer_2_terms_w_on_remove_value_self_up(void);
 void Observer_2_terms_w_on_add_2nd(void);
 void Observer_2_terms_w_on_remove_2nd(void);
 void Observer_2_pair_terms_w_on_add(void);
@@ -7270,6 +7272,14 @@ bake_test_case Observer_testcases[] = {
         Observer_2_terms_w_on_remove_value
     },
     {
+        "2_terms_w_on_set_value_self_up",
+        Observer_2_terms_w_on_set_value_self_up
+    },
+    {
+        "2_terms_w_on_remove_value_self_up",
+        Observer_2_terms_w_on_remove_value_self_up
+    },
+    {
         "2_terms_w_on_add_2nd",
         Observer_2_terms_w_on_add_2nd
     },
@@ -10520,7 +10530,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        172,
+        174,
         Observer_testcases
     },
     {

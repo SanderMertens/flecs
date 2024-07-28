@@ -1398,6 +1398,8 @@
                 "2_terms_w_on_remove",
                 "2_terms_w_on_set_value",
                 "2_terms_w_on_remove_value",
+                "2_terms_w_on_set_value_self_up",
+                "2_terms_w_on_remove_value_self_up",
                 "2_terms_w_on_add_2nd",
                 "2_terms_w_on_remove_2nd",
                 "2_pair_terms_w_on_add",
