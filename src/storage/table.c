@@ -651,8 +651,14 @@ void flecs_table_invoke_hook(
     int32_t row,
     int32_t count)
 {
-    void *ptr = ecs_vec_get(&column->data, column->size, row);
-    flecs_invoke_hook(world, table, count, row, entities, ptr, column->id, 
+    int32_t column_index = (column - table->data.columns);
+    ecs_assert(column_index >= 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(column_index < table->column_count, ECS_INTERNAL_ERROR, NULL);
+    int32_t type_index = table->column_map[table->type.count + column_index];
+    ecs_assert(type_index >= 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(type_index < table->type.count, ECS_INTERNAL_ERROR, NULL);
+    const ecs_table_record_t *tr = &table->_->records[type_index];
+    flecs_invoke_hook(world, table, tr, count, row, entities, column->id, 
         column->ti, event, callback);
 }
 

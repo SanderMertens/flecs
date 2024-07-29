@@ -642,24 +642,6 @@ bool flecs_query_triv(
         flecs_query_set_iter_this(ctx->it, ctx);
         return flecs_query_trivial_test(ctx, redo, termset);
     } else {
-        return flecs_query_trivial_search_nodata(ctx, op_ctx, redo, termset);
-    }
-}
-
-static
-bool flecs_query_triv_data(
-    const ecs_query_op_t *op,
-    bool redo,
-    const ecs_query_run_ctx_t *ctx)
-{
-    ecs_query_trivial_ctx_t *op_ctx = flecs_op_ctx(ctx, trivial);
-    ecs_flags64_t termset = op->src.entity;
-    uint64_t written = ctx->written[ctx->op_index];
-    ctx->written[ctx->op_index + 1] |= 1ull;
-    if (written & 1ull) {
-        flecs_query_set_iter_this(ctx->it, ctx);
-        return flecs_query_trivial_test(ctx, redo, termset);
-    } else {
         return flecs_query_trivial_search(ctx, op_ctx, redo, termset);
     }
 }
@@ -683,24 +665,6 @@ bool flecs_query_cache(
 }
 
 static
-bool flecs_query_cache_data(
-    const ecs_query_op_t *op,
-    bool redo,
-    const ecs_query_run_ctx_t *ctx)
-{
-    (void)op;
-    (void)redo;
-
-    uint64_t written = ctx->written[ctx->op_index];
-    ctx->written[ctx->op_index + 1] |= 1ull;
-    if (written & 1ull) {
-        return flecs_query_cache_data_test(ctx, redo);
-    } else {
-        return flecs_query_cache_data_search(ctx);
-    }
-}
-
-static
 bool flecs_query_is_cache(
     const ecs_query_op_t *op,
     bool redo,
@@ -714,23 +678,6 @@ bool flecs_query_is_cache(
         return flecs_query_is_cache_test(ctx, redo);
     } else {
         return flecs_query_is_cache_search(ctx);
-    }
-}
-
-static
-bool flecs_query_is_cache_data(
-    const ecs_query_op_t *op,
-    bool redo,
-    const ecs_query_run_ctx_t *ctx)
-{
-    (void)op;
-
-    uint64_t written = ctx->written[ctx->op_index];
-    ctx->written[ctx->op_index + 1] |= 1ull;
-    if (written & 1ull) {
-        return flecs_query_is_cache_data_test(ctx, redo);
-    } else {
-        return flecs_query_is_cache_data_search(ctx);
     }
 }
 
@@ -1348,6 +1295,8 @@ void flecs_query_reset_after_block(
         it->ids[field] = id;
     }
 
+    it->trs[field] = NULL;
+
     /* Reset variables */
     if (flags_1st & EcsQueryIsVar) {
         if (!flecs_ref_is_written(op, &op->first, EcsQueryFirst, written_cur)){
@@ -1489,7 +1438,7 @@ bool flecs_query_select_or(
             ecs_var_t old_table_var;
             ecs_os_memset_t(&old_table_var, 0, ecs_var_t);
             bool restore_table_var = false;
-            
+
             if (prev_op->flags & (EcsQueryIsVar << EcsQuerySrc)) {
                 if (first_op->src.var != prev_op->src.var) {
                     restore_table_var = true;
@@ -1498,6 +1447,10 @@ bool flecs_query_select_or(
                         ctx->vars[prev_op->src.var];
                 }
             }
+
+            int16_t field_index = op->field_index;
+            ecs_id_t prev_id = it->ids[field_index];
+            const ecs_table_record_t *prev_tr = it->trs[field_index];
 
             do {
                 ctx->written[prev] = ctx->written[last];
@@ -1524,6 +1477,9 @@ bool flecs_query_select_or(
                 continue;
             }
 
+            /* Restore id in case op set it */
+            it->ids[field_index] = prev_id;
+            it->trs[field_index] = prev_tr;
             break;
         }
 
@@ -1689,11 +1645,8 @@ bool flecs_query_dispatch(
     case EcsQueryAndId: return flecs_query_and_id(op, redo, ctx);
     case EcsQueryAndAny: return flecs_query_and_any(op, redo, ctx);
     case EcsQueryTriv: return flecs_query_triv(op, redo, ctx);
-    case EcsQueryTrivData: return flecs_query_triv_data(op, redo, ctx);
     case EcsQueryCache: return flecs_query_cache(op, redo, ctx);
     case EcsQueryIsCache: return flecs_query_is_cache(op, redo, ctx);
-    case EcsQueryCacheData: return flecs_query_cache_data(op, redo, ctx);
-    case EcsQueryIsCacheData: return flecs_query_is_cache_data(op, redo, ctx);
     case EcsQueryOnlyAny: return flecs_query_only_any(op, redo, ctx);
     case EcsQueryUp: return flecs_query_up(op, redo, ctx);
     case EcsQueryUpId: return flecs_query_up_id(op, redo, ctx);
@@ -1739,9 +1692,6 @@ bool flecs_query_dispatch(
     case EcsQuerySetId: return flecs_query_setid(op, redo, ctx);
     case EcsQueryContain: return flecs_query_contain(op, redo, ctx);
     case EcsQueryPairEq: return flecs_query_pair_eq(op, redo, ctx);
-    case EcsQueryPopulate: return flecs_query_populate(op, redo, ctx);
-    case EcsQueryPopulateSelf: return flecs_query_populate_self(op, redo, ctx);
-    case EcsQueryPopulateSparse: return flecs_query_populate_sparse(op, redo, ctx);
     case EcsQueryYield: return false;
     case EcsQueryNothing: return false;
     }

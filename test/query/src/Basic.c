@@ -4716,8 +4716,6 @@ void Basic_nodata_term(void) {
         test_uint(ent, ecs_field_src(&it, 0));
         test_bool(true, ecs_field_is_set(&it, 0));
         test_bool(false, ecs_field_is_readonly(&it, 0));
-        const Position *p = ecs_field(&it, Position, 0);
-        test_assert(p == NULL);
         test_bool(false, ecs_query_next(&it));
     }
 
@@ -6504,10 +6502,6 @@ void Basic_inout_none_first_term(void) {
     test_bool(true, ecs_field_is_set(&it, 0));
     test_bool(true, ecs_field_is_set(&it, 1));
     {
-        Position *p = ecs_field(&it, Position, 0);
-        test_assert(p == NULL);
-    }
-    {
         Velocity *v = ecs_field(&it, Velocity, 1);
         test_assert(v != NULL);
         test_int(v->x, 1);
@@ -6547,10 +6541,6 @@ void Basic_inout_none_first_term_self_up(void) {
     test_uint(ecs_id(Velocity), ecs_field_id(&it, 1));
     test_bool(true, ecs_field_is_set(&it, 0));
     test_bool(true, ecs_field_is_set(&it, 1));
-    {
-        Position *p = ecs_field(&it, Position, 0);
-        test_assert(p == NULL);
-    }
     {
         Velocity *v = ecs_field(&it, Velocity, 1);
         test_assert(v != NULL);
@@ -6597,10 +6587,6 @@ void Basic_inout_none_second_term(void) {
         test_int(p->x, 10);
         test_int(p->y, 20);
     }
-    {
-        Velocity *v = ecs_field(&it, Velocity, 1);
-        test_assert(v == NULL);
-    }
 
     test_bool(false, ecs_query_next(&it));
 
@@ -6641,10 +6627,6 @@ void Basic_inout_none_second_term_self_up(void) {
         test_int(p->x, 10);
         test_int(p->y, 20);
     }
-    {
-        Velocity *v = ecs_field(&it, Velocity, 1);
-        test_assert(v == NULL);
-    }
 
     test_bool(false, ecs_query_next(&it));
 
@@ -6682,7 +6664,6 @@ void Basic_inout_none_singleton(void) {
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
-    test_assert(ecs_field(&it, Velocity, 1) == NULL);
     test_bool(false, ecs_query_next(&it));
 
     ecs_query_fini(q);
@@ -6721,7 +6702,6 @@ void Basic_inout_none_singleton_w_or(void) {
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
-    test_assert(ecs_field(&it, Velocity, 1) == NULL);
     test_bool(false, ecs_query_next(&it));
 
     ecs_query_fini(q);
@@ -6759,7 +6739,6 @@ void Basic_inout_none_component_w_or(void) {
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
-    test_assert(ecs_field(&it, Velocity, 1) == NULL);
     test_bool(false, ecs_query_next(&it));
 
     ecs_query_fini(q);
@@ -6794,14 +6773,6 @@ void Basic_no_data_rule(void) {
     test_uint(ecs_id(Velocity), ecs_field_id(&it, 1));
     test_bool(true, ecs_field_is_set(&it, 0));
     test_bool(true, ecs_field_is_set(&it, 1));
-    {
-        Position *p = ecs_field(&it, Position, 0);
-        test_assert(p == NULL);
-    }
-    {
-        Velocity *v = ecs_field(&it, Velocity, 1);
-        test_assert(v == NULL);
-    }
 
     test_bool(false, ecs_query_next(&it));
 

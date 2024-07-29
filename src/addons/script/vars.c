@@ -219,7 +219,7 @@ void ecs_script_vars_from_iter(
                 continue;
             }
 
-            void *ptr = it->ptrs[i];
+            void *ptr = ecs_field_w_size(it, size, i);
             if (!ptr) {
                 continue;
             }

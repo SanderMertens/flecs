@@ -44,11 +44,8 @@ typedef enum {
     EcsQueryAndAny,         /* And operator with support for matching Any src/id */
     EcsQueryOnlyAny,        /* Dedicated instruction for _ queries where the src is unknown */
     EcsQueryTriv,           /* Trivial search (batches multiple terms) */
-    EcsQueryTrivData,       /* Trivial search with setting data fields */
     EcsQueryCache,          /* Cached search */
-    EcsQueryCacheData,      /* Cached search with setting data fields */
     EcsQueryIsCache,        /* Cached search for queries that are entirely cached */
-    EcsQueryIsCacheData,    /* Same as EcsQueryIsCache with data fields */
     EcsQueryUp,             /* Up traversal */
     EcsQueryUpId,           /* Up traversal for fixed id (like AndId) */
     EcsQuerySelfUp,         /* Self|up traversal */
@@ -93,9 +90,6 @@ typedef enum {
     EcsQuerySetId,          /* Set id if not set */
     EcsQueryContain,        /* Test if table contains entity */
     EcsQueryPairEq,         /* Test if both elements of pair are the same */
-    EcsQueryPopulate,       /* Populate any data fields */
-    EcsQueryPopulateSelf,   /* Populate only self (owned) data fields */
-    EcsQueryPopulateSparse, /* Populate sparse fields */
     EcsQueryYield,          /* Yield result back to application */
     EcsQueryNothing         /* Must be last */
 } ecs_query_op_kind_t;

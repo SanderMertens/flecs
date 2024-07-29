@@ -1053,7 +1053,6 @@ struct ecs_iter_t {
 
     /* Matched data */
     ecs_entity_t *entities;       /**< Entity identifiers */
-    void **ptrs;                  /**< Pointers to components. Array if from this, pointer if not. */
     const ecs_size_t *sizes;      /**< Component sizes */
     ecs_table_t *table;           /**< Current table */
     ecs_table_t *other_table;     /**< Prev or next table when adding/removing */
@@ -5332,8 +5331,13 @@ bool ecs_worker_next(
  * the entity being iterated, such as a shared component (from a prefab), a
  * component from a parent, or another entity. The ecs_field_is_self() operation
  * can be used to test dynamically if a field is owned.
+ * 
+ * When a field contains a sparse component, use the ecs_field_at function. When
+ * a field is guaranteed to be set and owned, the ecs_field_self() function can be
+ * used. ecs_field_self() has slightly better performance, and provides stricter 
+ * validity checking.
  *
- * The provided size must be either 0 or must match the size of the datatype
+ * The provided size must be either 0 or must match the size of the type
  * of the returned array. If the size does not match, the operation may assert.
  * The size can be dynamically obtained with ecs_field_size().
  *
@@ -5347,6 +5351,19 @@ void* ecs_field_w_size(
     const ecs_iter_t *it,
     size_t size,
     int32_t index);
+
+FLECS_API
+void* ecs_field_self_w_size(
+    const ecs_iter_t *it,
+    size_t size,
+    int32_t index);
+
+FLECS_API
+void* ecs_field_at_w_size(
+    const ecs_iter_t *it,
+    size_t size,
+    int32_t index,
+    int32_t row);
 
 /** Test whether the field is readonly.
  * This operation returns whether the field is readonly. Readonly fields are

@@ -106,10 +106,10 @@ void* flecs_get_base_component(
 void flecs_invoke_hook(
     ecs_world_t *world,
     ecs_table_t *table,
+    const ecs_table_record_t *tr,
     int32_t count,
     int32_t row,
     ecs_entity_t *entities,
-    void *ptr,
     ecs_id_t id,
     const ecs_type_info_t *ti,
     ecs_entity_t event,

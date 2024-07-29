@@ -139,18 +139,6 @@ bool flecs_query_table_filter(
     ecs_query_lbl_t other,
     ecs_flags32_t filter_mask);
 
-void flecs_query_populate_field_from_range(
-    ecs_iter_t *it,
-    ecs_table_range_t *range,
-    int8_t field_index,
-    const ecs_table_record_t *tr);
-
-void flecs_query_populate_shared_field(
-    ecs_iter_t *it,
-    ecs_entity_t src,
-    int8_t field_index,
-    const ecs_query_run_ctx_t *ctx);
-
 bool flecs_query_setids(
     const ecs_query_op_t *op,
     bool redo,
@@ -207,24 +195,6 @@ bool flecs_query_self_up_with(
     bool redo,
     const ecs_query_run_ctx_t *ctx,
     bool id_only);
-
-
-/* Populate data fields */
-
-bool flecs_query_populate(
-    const ecs_query_op_t *op,
-    bool redo,
-    ecs_query_run_ctx_t *ctx);
-
-bool flecs_query_populate_self(
-    const ecs_query_op_t *op,
-    bool redo,
-    ecs_query_run_ctx_t *ctx);
-
-bool flecs_query_populate_sparse(
-    const ecs_query_op_t *op,
-    bool redo,
-    ecs_query_run_ctx_t *ctx);
 
 
 /* Union evaluation */

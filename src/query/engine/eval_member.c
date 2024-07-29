@@ -49,20 +49,10 @@ bool flecs_query_member_cmp(
 
         /* Populate data field so we have the array we can compare the member
          * value against. */
-        void *old_data = it->ptrs[field_index];
-        flecs_query_populate_field_from_range(
-            it, &range, field_index, it->trs[field_index]);
-        data = op_ctx->data = it->ptrs[field_index];
+        data = op_ctx->data = 
+            ecs_table_get_column(range.table, it->trs[field_index]->column, 0);
 
-        /* Ensure we only write ptrs when we match data */
-        it->ptrs[field_index] = old_data;
-
-        /* Member fields are of type ecs_entity_t */
-        #ifdef FLECS_META
-        it->ids[field_index] = ecs_id(ecs_entity_t);
-        #else
-        it->ids[field_index] = 0;
-        #endif
+        it->ids[field_index] = ctx->query->pub.terms[op->term_index].id;
     } else {
         row = ++ op_ctx->each.row;
         if (op_ctx->each.row >= end) {
@@ -124,7 +114,9 @@ match:
         flecs_query_var_set_entity(op, op->src.var, e, ctx);
     }
 
-    it->ptrs[field_index] = val;
+    ecs_entity_t mbr = ECS_PAIR_FIRST(it->ids[field_index]);
+    it->ids[field_index] = ecs_pair(mbr, val[0]);
+
     op_ctx->each.row = row;
 
     return true;

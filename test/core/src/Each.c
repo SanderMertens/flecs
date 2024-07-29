@@ -59,12 +59,13 @@ void Each_each_component(void) {
     test_uint(e3, it.entities[0]);
     test_uint(ecs_id(Position), ecs_field_id(&it, 0));
     test_bool(true, ecs_field_is_set(&it, 0));
-    test_bool(false, ecs_iter_next(&it));
     {    
         Position *p = ecs_field(&it, Position, 0);
         test_assert(p != NULL);
         test_int(p[0].x, 30); test_int(p[0].y, 40);
     }
+
+    test_bool(false, ecs_iter_next(&it));
 
     ecs_fini(world);
 }

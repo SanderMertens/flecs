@@ -16,7 +16,6 @@ int flecs_query_compile_term(
     ecs_world_t *world,
     ecs_query_impl_t *query,
     ecs_term_t *term,
-    ecs_flags64_t *populated,
     ecs_query_compile_ctx_t *ctx);
 
 /* Compile term ref (first, second or src) */

@@ -4521,7 +4521,6 @@ void Variables_1_set_src_this_to_empty_table_w_component(void) {
     test_assert(it.table == t1);
     test_uint(ecs_field_id(&it, 0), ecs_id(Position));
     test_uint(ecs_field_size(&it, 0), sizeof(Position));
-    test_assert(ecs_field(&it, Position, 0) == NULL);
     ecs_table_t* this_var = ecs_iter_get_var_as_table(&it, this_var_id);
     test_assert(this_var != NULL);
     test_assert(this_var == t1);
@@ -4560,7 +4559,6 @@ void Variables_1_set_src_this_to_empty_table_w_component_self(void) {
     test_assert(it.table == t1);
     test_uint(ecs_field_id(&it, 0), ecs_id(Position));
     test_uint(ecs_field_size(&it, 0), sizeof(Position));
-    test_assert(ecs_field(&it, Position, 0) == NULL);
     ecs_table_t* this_var = ecs_iter_get_var_as_table(&it, this_var_id);
     test_assert(this_var != NULL);
     test_assert(this_var == t1);

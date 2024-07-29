@@ -308,6 +308,9 @@ void flecs_observer_invoke(
             ECS_INTERNAL_ERROR, NULL);
     }
 
+    ecs_termset_t set_fields = it->set_fields;
+    // it->set_fields = 1; /* Field 0 is set otherwise we wouldn't be triggering */
+
     bool match_this = query->flags & EcsQueryMatchThis;
     if (match_this) {
         callback(it);
@@ -341,9 +344,12 @@ void flecs_observer_invoke(
                 break;
             }
         }
+
         it->entities = entities;
         it->count = count;
     }
+
+    it->set_fields = set_fields;
 
     flecs_stage_set_system(world->stages[0], old_system);
 
@@ -518,7 +524,6 @@ void flecs_multi_observer_invoke(
         ecs_assert(pivot_field >= 0, ECS_INTERNAL_ERROR, NULL);
         ecs_assert(pivot_field < user_it.field_count, ECS_INTERNAL_ERROR, NULL);
         user_it.ids[pivot_field] = it->event_id;
-        user_it.ptrs[pivot_field] = it->ptrs[0];
         user_it.trs[pivot_field] = it->trs[0];
         user_it.term_index = pivot_term;
 

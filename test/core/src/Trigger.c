@@ -4199,6 +4199,7 @@ void Trigger_w_nonzero_value(ecs_iter_t *it) {
     test_int(it->count, 1);
     test_assert(it->entities != NULL);
     test_assert(it->entities[0] != 0);
+    // test_assert(ecs_field_is_set(it, 0));
 
     Position *p = ecs_field(it, Position, 0);
     test_assert(p != NULL);

@@ -103,7 +103,7 @@ typedef struct ecs_each_iter_t {
     ecs_entity_t sources;
     ecs_size_t sizes;
     int32_t columns;
-    void *ptrs;
+    const ecs_table_record_t* trs;
 } ecs_each_iter_t;
 
 typedef struct ecs_query_op_profile_t {

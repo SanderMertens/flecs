@@ -430,9 +430,7 @@ extern "C" {
 #define EcsIterHasCondSet              (1u << 6u)  /* Does iterator have conditionally set fields */
 #define EcsIterProfile                 (1u << 7u)  /* Profile iterator performance */
 #define EcsIterTrivialSearch           (1u << 8u)  /* Trivial iterator mode */
-#define EcsIterTrivialSearchNoData     (1u << 9u)  /* Trivial iterator w/no data */
 #define EcsIterTrivialTest             (1u << 11u) /* Trivial test mode (constrained $this) */
-#define EcsIterTrivialTestNoData       (1u << 12u) /* Trivial test mode w/no data (constrained $this) */
 #define EcsIterTrivialCached           (1u << 14u) /* Trivial search for cached query */
 #define EcsIterCacheSearch             (1u << 15u) /* Cache search */
 #define EcsIterFixedInChangeComputed   (1u << 16u) /* Change detection for fixed in terms is done */
@@ -1019,7 +1017,7 @@ typedef struct ecs_allocator_t ecs_allocator_t;
     {\
         for (int32_t i = 0; i < _it->count; i ++) {\
             ecs_entity_t entity = _it->entities[i];\
-            type *var = &((type*)_it->ptrs[0])[i];\
+            type *var = ecs_field(_it, type, 0);\
             (void)entity;\
             (void)var;\
             __VA_ARGS__\
@@ -3606,7 +3604,7 @@ typedef struct ecs_each_iter_t {
     ecs_entity_t sources;
     ecs_size_t sizes;
     int32_t columns;
-    void *ptrs;
+    const ecs_table_record_t* trs;
 } ecs_each_iter_t;
 
 typedef struct ecs_query_op_profile_t {
@@ -4192,7 +4190,6 @@ struct ecs_iter_t {
 
     /* Matched data */
     ecs_entity_t *entities;       /**< Entity identifiers */
-    void **ptrs;                  /**< Pointers to components. Array if from this, pointer if not. */
     const ecs_size_t *sizes;      /**< Component sizes */
     ecs_table_t *table;           /**< Current table */
     ecs_table_t *other_table;     /**< Prev or next table when adding/removing */
@@ -8492,8 +8489,13 @@ bool ecs_worker_next(
  * the entity being iterated, such as a shared component (from a prefab), a
  * component from a parent, or another entity. The ecs_field_is_self() operation
  * can be used to test dynamically if a field is owned.
+ * 
+ * When a field contains a sparse component, use the ecs_field_at function. When
+ * a field is guaranteed to be set and owned, the ecs_field_self() function can be
+ * used. ecs_field_self() has slightly better performance, and provides stricter 
+ * validity checking.
  *
- * The provided size must be either 0 or must match the size of the datatype
+ * The provided size must be either 0 or must match the size of the type
  * of the returned array. If the size does not match, the operation may assert.
  * The size can be dynamically obtained with ecs_field_size().
  *
@@ -8507,6 +8509,19 @@ void* ecs_field_w_size(
     const ecs_iter_t *it,
     size_t size,
     int32_t index);
+
+FLECS_API
+void* ecs_field_self_w_size(
+    const ecs_iter_t *it,
+    size_t size,
+    int32_t index);
+
+FLECS_API
+void* ecs_field_at_w_size(
+    const ecs_iter_t *it,
+    size_t size,
+    int32_t index,
+    int32_t row);
 
 /** Test whether the field is readonly.
  * This operation returns whether the field is readonly. Readonly fields are
@@ -9930,6 +9945,12 @@ int ecs_value_move_ctor(
 
 #define ecs_field(it, T, index)\
     (ECS_CAST(T*, ecs_field_w_size(it, sizeof(T), index)))
+
+#define ecs_field_self(it, T, index)\
+    (ECS_CAST(T*, ecs_field_self_w_size(it, sizeof(T), index)))
+
+#define ecs_field_at(it, T, index, row)\
+    (ECS_CAST(T*, ecs_field_at_w_size(it, sizeof(T), index, row)))
 
 /** @} */
 

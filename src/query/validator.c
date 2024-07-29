@@ -1198,6 +1198,8 @@ int flecs_query_finalize_terms(
             nodata_term = true;
         } else if (term->flags_ & EcsTermIsUnion) {
             nodata_term = true;
+        } else if (term->flags_ & EcsTermIsMember) {
+            nodata_term = true;
         } else if (scope_nesting) {
             nodata_term = true;
         } else {
@@ -1381,13 +1383,6 @@ int flecs_query_finalize_terms(
                     q->sizes[field] = ti->size;
                     q->ids[field] = term->id;
                 }
-            }
-
-            if (term->flags_ & EcsTermIsMember) {
-                q->sizes[field] = ECS_SIZEOF(ecs_entity_t);
-#ifdef FLECS_META
-                q->ids[field] = ecs_id(ecs_entity_t);
-#endif
             }
         }
     }

@@ -65,7 +65,6 @@ void flecs_iter_init(
     INIT_CACHE(it, stack, fields, sources, ecs_entity_t, it->field_count);
     INIT_CACHE(it, stack, fields, trs, ecs_table_record_t*, it->field_count);
     INIT_CACHE(it, stack, fields, variables, ecs_var_t, it->variable_count);
-    INIT_CACHE(it, stack, fields, ptrs, void*, it->field_count);
 }
 
 void ecs_iter_fini(
@@ -86,7 +85,6 @@ void ecs_iter_fini(
     FINI_CACHE(it, sources, ecs_entity_t, it->field_count);
     FINI_CACHE(it, trs, ecs_table_record_t*, it->field_count);
     FINI_CACHE(it, variables, ecs_var_t, it->variable_count);
-    FINI_CACHE(it, ptrs, void*, it->field_count);
 
     ecs_stage_t *stage = flecs_stage_from_world(&world);
     flecs_stack_restore_cursor(&stage->allocators.iter_stack, 
@@ -106,12 +104,135 @@ void* ecs_field_w_size(
         "invalid field index %d", index);
     ecs_check(index < it->field_count, ECS_INVALID_PARAMETER, 
         "field index %d out of bounds", index);
-    ecs_check(!size || ecs_field_size(it, index) == size ||
-        (!ecs_field_size(it, index) && (!it->ptrs[index])),
+    ecs_check(!size || ecs_field_size(it, index) == size || 
+        !ecs_field_size(it, index),
             ECS_INVALID_PARAMETER, "mismatching size for field %d", index);
     (void)size;
 
-    return it->ptrs[index];
+    const ecs_table_record_t *tr = it->trs[index];
+    if (!tr) {
+        ecs_assert(!ecs_field_is_set(it, index), ECS_INTERNAL_ERROR, NULL);
+        return NULL;
+    }
+
+    ecs_id_record_t *idr = (ecs_id_record_t*)tr->hdr.cache;
+    ecs_assert(!(idr->flags & EcsIdIsSparse), ECS_INVALID_OPERATION,
+        "use ecs_field_at to access fields for sparse components");
+    (void)idr;
+
+    ecs_entity_t src = it->sources[index];
+    ecs_table_t *table;
+    int32_t row;
+    if (!src) {
+        table = it->table;
+        row = it->offset;
+    } else {
+        ecs_record_t *r = flecs_entities_get(it->real_world, src);
+        table = r->table;
+        row = ECS_RECORD_TO_ROW(r->row);
+    }
+
+    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(tr->hdr.table == table, ECS_INTERNAL_ERROR, NULL);
+
+    int32_t column_index = tr->column;
+    ecs_assert(column_index != -1, ECS_NOT_A_COMPONENT, 
+        "only components can be fetched with fields");
+    ecs_assert(column_index >= 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(column_index < table->column_count, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_column_t *column = &table->data.columns[column_index];
+    ecs_assert(row < ecs_vec_count(&column->data), ECS_INTERNAL_ERROR, NULL);
+
+    void *data = ecs_vec_first(&column->data);
+    return ECS_ELEM(data, column->size, row);
+error:
+    return NULL;
+}
+
+void* ecs_field_self_w_size(
+    const ecs_iter_t *it,
+    size_t size,
+    int32_t index)
+{
+    ecs_check(it->flags & EcsIterIsValid, ECS_INVALID_PARAMETER,
+        "operation invalid before calling next()");
+    ecs_check(index >= 0, ECS_INVALID_PARAMETER, 
+        "invalid field index %d", index);
+    ecs_check(index < it->field_count, ECS_INVALID_PARAMETER, 
+        "field index %d out of bounds", index);
+    ecs_check(!size || ecs_field_size(it, index) == size || 
+        !ecs_field_size(it, index),
+            ECS_INVALID_PARAMETER, "mismatching size for field %d", index);
+    (void)size;
+
+    const ecs_table_record_t *tr = it->trs[index];
+    ecs_assert(tr != NULL, ECS_INVALID_OPERATION,
+        "field is not set, use ecs_field for optional fields");
+
+    ecs_id_record_t *idr = (ecs_id_record_t*)tr->hdr.cache;
+    ecs_assert(!(idr->flags & EcsIdIsSparse), ECS_INVALID_OPERATION,
+        "use ecs_field_at to access fields for sparse components");
+    (void)idr;
+
+    ecs_assert(it->sources[index] == 0, ECS_INVALID_OPERATION,
+        "use ecs_field for fields that are not matched on self");
+
+    ecs_table_t *table = it->table;
+    int32_t row = it->offset;
+    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(tr->hdr.table == table, ECS_INTERNAL_ERROR, NULL);
+
+    int32_t column_index = tr->column;
+    ecs_assert(column_index != -1, ECS_NOT_A_COMPONENT, 
+        "only components can be fetched with fields");
+    ecs_assert(column_index >= 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(column_index < table->column_count, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_column_t *column = &table->data.columns[column_index];
+    ecs_assert(!size || flecs_itosize(column->size) == size, 
+        ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(row < ecs_vec_count(&column->data), ECS_INTERNAL_ERROR, NULL);
+
+    void *data = ecs_vec_first(&column->data);
+    return ECS_ELEM(data, column->size, row);
+error:
+    return NULL;
+}
+
+void* ecs_field_at_w_size(
+    const ecs_iter_t *it,
+    size_t size,
+    int32_t index,
+    int32_t row)
+{
+    ecs_check(it->flags & EcsIterIsValid, ECS_INVALID_PARAMETER,
+        "operation invalid before calling next()");
+    ecs_check(index >= 0, ECS_INVALID_PARAMETER, 
+        "invalid field index %d", index);
+    ecs_check(index < it->field_count, ECS_INVALID_PARAMETER, 
+        "field index %d out of bounds", index);
+    ecs_check(!size || ecs_field_size(it, index) == size || 
+        !ecs_field_size(it, index),
+            ECS_INVALID_PARAMETER, "mismatching size for field %d", index);
+    (void)size;
+
+    const ecs_table_record_t *tr = it->trs[index];
+    if (!tr) {
+        ecs_assert(!ecs_field_is_set(it, index), ECS_INTERNAL_ERROR, NULL);
+        return NULL;
+    }
+
+    ecs_id_record_t *idr = (ecs_id_record_t*)tr->hdr.cache;
+    ecs_assert((idr->flags & EcsIdIsSparse), ECS_INVALID_OPERATION,
+        "use ecs_field to access fields for non-sparse components");
+
+    ecs_entity_t src = it->sources[index];
+    if (!src) {
+        src = flecs_table_entities_array(it->table)[row];
+    }
+
+    return flecs_sparse_get_any(idr->sparse, size, src);
 error:
     return NULL;
 }
@@ -664,31 +785,6 @@ error:
     return (ecs_iter_t){ 0 };
 }
 
-static
-void flecs_offset_iter(
-    ecs_iter_t *it,
-    int32_t offset)
-{
-    it->entities = &it->entities[offset];
-
-    int32_t t, field_count = it->field_count;
-    void **it_ptrs = it->ptrs;
-    if (it_ptrs) {
-        for (t = 0; t < field_count; t ++) {
-            void *ptrs = it_ptrs[t];
-            if (!ptrs) {
-                continue;
-            }
-
-            if (it->sources[t]) {
-                continue;
-            }
-
-            it->ptrs[t] = ECS_OFFSET(ptrs, offset * it->sizes[t]);
-        }
-    }
-}
-
 bool ecs_page_next(
     ecs_iter_t *it)
 {
@@ -732,10 +828,11 @@ bool ecs_page_next(
                 it->count = 0;
                 continue;
             } else {
-                it->offset += offset;
-                count = it->count -= offset;
                 iter->offset = 0;
-                flecs_offset_iter(it, offset);
+                it->offset = offset;
+                count = it->count -= offset;
+                it->entities = 
+                    &(flecs_table_entities_array(it->table)[it->offset]);
             }
         }
 
@@ -839,10 +936,10 @@ bool ecs_worker_next(
     } while (!per_worker);
 
     it->frame_offset += first;
-
-    flecs_offset_iter(it, it->offset + first);
     it->count = per_worker;
     it->offset += first;
+
+    it->entities = &(flecs_table_entities_array(it->table)[it->offset]);
 
     return true;
 error:
