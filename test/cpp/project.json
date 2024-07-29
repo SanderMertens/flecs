@@ -1016,6 +1016,7 @@
                 "from_stage",
                 "default_ctor",
                 "ctor_from_entity",
+                "implicit_operator_bool",
                 "try_get"
             ]
         }, {

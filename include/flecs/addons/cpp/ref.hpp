@@ -66,6 +66,11 @@ struct ref {
         return get();
     }
 
+    /** implicit conversion to bool.  return true if there is a valid T* being referred to **/
+    operator bool() {       
+        return !!try_get();
+    }
+
     flecs::entity entity() const;
 
 private:

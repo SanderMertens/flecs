@@ -173,6 +173,16 @@ void Refs_ctor_from_entity(void) {
     test_int(p->y, 20);
 }
 
+void Refs_implicit_operator_bool(void) {
+    flecs::world world;
+
+    flecs::entity e = world.entity().set<Position>({10, 20});
+
+    flecs::ref<Position> p(e);
+
+    test_assert(p);
+}
+
 void Refs_try_get(void) {
     flecs::world world;
 
