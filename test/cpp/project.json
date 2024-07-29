@@ -1015,6 +1015,7 @@
                 "pair_ref_second",
                 "from_stage",
                 "default_ctor",
+                "ctor_from_entity",
                 "try_get"
             ]
         }, {

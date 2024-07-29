@@ -162,6 +162,17 @@ void Refs_default_ctor(void) {
     test_int(p->y, 20);
 }
 
+void Refs_ctor_from_entity(void) {
+    flecs::world world;
+
+    flecs::entity e = world.entity().set<Position>({10, 20});
+
+    flecs::ref<Position> p(e);
+
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+}
+
 void Refs_try_get(void) {
     flecs::world world;
 
