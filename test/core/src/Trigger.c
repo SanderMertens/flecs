@@ -3395,61 +3395,6 @@ void Trigger_on_add_base_2_entities_filter(void) {
     test_int(ctx.invoked, 0);
 }
 
-void Trigger_on_set_base_w_value_2_entities(void) {
-    ecs_world_t *world = ecs_mini();
-
-    ECS_COMPONENT(world, Position);
-    ECS_COMPONENT(world, Velocity);
-
-    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
-    ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
-
-    /* Create trigger before table */
-    Probe ctx = {0};
-    ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
-        .query.terms[0].id = ecs_id(Position), /* Implicitly also listens to IsA */
-        .events = {EcsOnSet},
-        .callback = Trigger_w_value,
-        .ctx = &ctx
-    });
-
-    ecs_entity_t base = ecs_new_w_id(world, EcsPrefab);
-    ecs_entity_t e1 = ecs_new_w_pair(world, EcsIsA, base);
-    ecs_entity_t e2 = ecs_new_w_pair(world, EcsIsA, base);
-    test_int(ctx.invoked, 0);
-
-    ecs_set(world, base, Position, {10, 20});
-    test_int(ctx.invoked, 2);
-    test_int(ctx.count, 2);
-    test_int(ctx.system, t);
-    test_int(ctx.event, EcsOnSet);
-    test_int(ctx.event_id, ecs_id(Position));
-    test_int(ctx.term_count, 1);
-    test_null(ctx.param);
-    test_int(ctx.e[0], e1);
-    test_int(ctx.e[1], e2);
-
-    ecs_os_zeromem(&ctx);
-
-    ecs_set(world, base, Position, {10, 20});
-    test_int(ctx.invoked, 2);
-    test_int(ctx.count, 2);
-    test_int(ctx.system, t);
-    test_int(ctx.event, EcsOnSet);
-    test_int(ctx.event_id, ecs_id(Position));
-    test_int(ctx.term_count, 1);
-    test_null(ctx.param);
-    test_int(ctx.e[0], e1);
-    test_int(ctx.e[1], e2);
-
-    ecs_os_zeromem(&ctx);
-
-    ecs_set(world, base, Velocity, {1, 2});
-    test_int(ctx.invoked, 0);
-
-    ecs_fini(world);
-}
-
 void Trigger_on_set_base_w_value_2_entities_instanced(void) {
     ecs_world_t *world = ecs_mini();
 
@@ -3463,7 +3408,6 @@ void Trigger_on_set_base_w_value_2_entities_instanced(void) {
     Probe ctx = {0};
     ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
         .query.terms[0].id = ecs_id(Position), /* Implicitly also listens to IsA */
-        .query.flags = EcsQueryIsInstanced,
         .events = {EcsOnSet},
         .callback = Trigger_w_value_instanced,
         .ctx = &ctx

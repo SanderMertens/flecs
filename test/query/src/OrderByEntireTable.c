@@ -1307,7 +1307,6 @@ void OrderByEntireTable_sort_shared_component(void) {
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "Position(self|up IsA)",
-        .flags = EcsQueryIsInstanced,
         .order_by = ecs_id(Position),
         .order_by_callback = ecs_compare(Position),
     });
@@ -1918,7 +1917,6 @@ void SortingEntireTable_sort_shared_w_delete(void) {
         .terms = {
             { .id = ecs_id(Position), .inout = EcsIn }
         },
-        .flags = EcsQueryIsInstanced,
         .order_by = ecs_id(Position),
         .order_by_callback = ecs_compare(Position),
         .order_by_table_callback = ecs_sort_table(Position)
@@ -1971,7 +1969,6 @@ void OrderByEntireTable_sort_shared_w_delete(void) {
         .terms = {
             { .id = ecs_id(Position), .inout = EcsIn }
         },
-        .flags = EcsQueryIsInstanced,
         .order_by = ecs_id(Position),
         .order_by_callback = ecs_compare(Position),
         .order_by_table_callback = ecs_sort_table(Position)

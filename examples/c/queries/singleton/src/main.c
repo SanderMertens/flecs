@@ -37,11 +37,7 @@ int main(int argc, char *argv[]) {
             { .id = ecs_id(Velocity) },
             // A singleton is a component matched on itself
             { .id = ecs_id(Gravity), .src.id =  ecs_id(Gravity) }
-        },
-
-        // Optional, but lets us iterate entities in bulk even though the query
-        // returns fields with mixed counts (see query manual).
-        .flags = EcsQueryIsInstanced
+        }
     });
 
     // In a query string expression you can use the $ shortcut for singletons:

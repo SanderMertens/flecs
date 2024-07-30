@@ -212,11 +212,9 @@ void Iter_worker_iter_w_shared_comp(void);
 void Iter_paged_iter_w_task_query(void);
 void Iter_worker_iter_w_task_query(void);
 void Iter_worker_iter_w_singleton(void);
-void Iter_worker_iter_w_singleton_component(void);
 void Iter_worker_iter_w_singleton_instanced(void);
 void Iter_worker_iter_w_singleton_component_instanced(void);
 void Iter_paged_iter_w_singleton(void);
-void Iter_paged_iter_w_singleton_component(void);
 void Iter_paged_iter_w_singleton_instanced(void);
 void Iter_paged_iter_w_singleton_component_instanced(void);
 void Iter_page_iter_w_offset_skip_1_archetype(void);
@@ -1294,7 +1292,6 @@ void Trigger_on_add_base_superset_trigger(void);
 void Trigger_on_add_base_superset_trigger_2_lvls(void);
 void Trigger_on_add_base_2_entities(void);
 void Trigger_on_add_base_2_entities_filter(void);
-void Trigger_on_set_base_w_value_2_entities(void);
 void Trigger_on_set_base_w_value_2_entities_instanced(void);
 void Trigger_on_add_base_w_override(void);
 void Trigger_on_set_base_w_override(void);
@@ -2929,10 +2926,6 @@ bake_test_case Iter_testcases[] = {
         Iter_worker_iter_w_singleton
     },
     {
-        "worker_iter_w_singleton_component",
-        Iter_worker_iter_w_singleton_component
-    },
-    {
         "worker_iter_w_singleton_instanced",
         Iter_worker_iter_w_singleton_instanced
     },
@@ -2943,10 +2936,6 @@ bake_test_case Iter_testcases[] = {
     {
         "paged_iter_w_singleton",
         Iter_paged_iter_w_singleton
-    },
-    {
-        "paged_iter_w_singleton_component",
-        Iter_paged_iter_w_singleton_component
     },
     {
         "paged_iter_w_singleton_instanced",
@@ -7109,10 +7098,6 @@ bake_test_case Trigger_testcases[] = {
         Trigger_on_add_base_2_entities_filter
     },
     {
-        "on_set_base_w_value_2_entities",
-        Trigger_on_set_base_w_value_2_entities
-    },
-    {
         "on_set_base_w_value_2_entities_instanced",
         Trigger_on_set_base_w_value_2_entities_instanced
     },
@@ -10355,7 +10340,7 @@ static bake_test_suite suites[] = {
         "Iter",
         NULL,
         NULL,
-        60,
+        58,
         Iter_testcases
     },
     {
@@ -10523,7 +10508,7 @@ static bake_test_suite suites[] = {
         "Trigger",
         NULL,
         NULL,
-        117,
+        116,
         Trigger_testcases
     },
     {

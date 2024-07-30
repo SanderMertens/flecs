@@ -279,20 +279,12 @@ bool flecs_ignore_observer(
 }
 
 static
-bool flecs_is_simple_result(
-    ecs_iter_t *it)
-{
-    return (it->count == 1) || (it->sizes[0] == 0) || (it->sources[0] == 0);
-}
-
-static
 void flecs_observer_invoke(
     ecs_world_t *world,
     ecs_iter_t *it,
     ecs_observer_t *o,
     ecs_iter_action_t callback,
-    int32_t term_index,
-    bool simple_result) 
+    int32_t term_index) 
 {
     ecs_assert(it->callback != NULL, ECS_INVALID_PARAMETER, NULL);
 
@@ -316,11 +308,8 @@ void flecs_observer_invoke(
             ECS_INTERNAL_ERROR, NULL);
     }
 
-    bool instanced = query->flags & EcsQueryIsInstanced;
     bool match_this = query->flags & EcsQueryMatchThis;
-    bool table_only = it->flags & EcsIterTableOnly;
-
-    if (match_this && (simple_result || instanced || table_only)) {
+    if (match_this) {
         callback(it);
         query->eval_count ++;
     } else {
@@ -374,8 +363,7 @@ void flecs_default_uni_observer_run_callback(ecs_iter_t *it) {
     }
 
     ecs_log_push_3();
-    flecs_observer_invoke(it->real_world, it, o, o->callback, 0,
-        flecs_is_simple_result(it));
+    flecs_observer_invoke(it->real_world, it, o, o->callback, 0);
     ecs_log_pop_3();
 }
 
@@ -385,8 +373,7 @@ void flecs_uni_observer_invoke(
     ecs_observer_t *o,
     ecs_iter_t *it,
     ecs_table_t *table,
-    ecs_entity_t trav,
-    bool simple_result)
+    ecs_entity_t trav)
 {
     ecs_query_t *query = o->query;
     ecs_term_t *term = &query->terms[0];
@@ -421,7 +408,7 @@ void flecs_uni_observer_invoke(
     } else {
         ecs_iter_action_t callback = o->callback;
         it->callback = callback;
-        flecs_observer_invoke(world, it, o, callback, 0, simple_result);
+        flecs_observer_invoke(world, it, o, callback, 0);
     }
 
     it->event = event;
@@ -438,13 +425,12 @@ void flecs_observers_invoke(
     if (ecs_map_is_init(observers)) {
         ecs_table_lock(it->world, table);
 
-        bool simple_result = flecs_is_simple_result(it);
         ecs_map_iter_t oit = ecs_map_iter(observers);
         while (ecs_map_next(&oit)) {
             ecs_observer_t *o = ecs_map_ptr(&oit);
             ecs_assert(it->table == table, ECS_INTERNAL_ERROR, NULL);
             flecs_uni_observer_invoke(
-                world, o, it, table, trav, simple_result);
+                world, o, it, table, trav);
         }
 
         ecs_table_unlock(it->world, table);

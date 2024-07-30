@@ -21,11 +21,6 @@ struct query_builder_i : term_builder_i<Base> {
         , expr_count_(0)
         , desc_(desc) { }
 
-    Base& instanced() {
-        desc_->flags |= EcsQueryIsInstanced;
-        return *this;
-    }
-
     Base& query_flags(ecs_flags32_t flags) {
         desc_->flags |= flags;
         return *this;

@@ -33,8 +33,7 @@ void SystemCascade_cascade_depth_1(void) {
 
     ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, ?Position(cascade));
     ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = Iter,
-        .query.flags = EcsQueryIsInstanced
+        .entity = Iter
     });
 
     ecs_set(world, e1, Position, {1, 2});
@@ -101,8 +100,7 @@ void SystemCascade_cascade_depth_2(void) {
 
     ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, ?Position(cascade));
     ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = Iter,
-        .query.flags = EcsQueryIsInstanced
+        .entity = Iter
     });
 
     ecs_set(world, e1, Position, {1, 2});
@@ -182,8 +180,7 @@ void SystemCascade_cascade_depth_2_new_syntax(void) {
 
     ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, ?Position(cascade ChildOf));
     ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = Iter,
-        .query.flags = EcsQueryIsInstanced
+        .entity = Iter
     });
 
     ecs_set(world, e1, Position, {1, 2});
@@ -279,8 +276,7 @@ void SystemCascade_add_after_match(void) {
 
     ECS_SYSTEM(world, AddParent, EcsOnUpdate, Position, ?Position(cascade));
     ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = AddParent,
-        .query.flags = EcsQueryIsInstanced
+        .entity = AddParent
     });
 
     ecs_entity_t parent = ecs_new(world);
@@ -356,8 +352,7 @@ void SystemCascade_adopt_after_match(void) {
 
     ECS_SYSTEM(world, AddParent, EcsOnUpdate, Position, ?Position(cascade));
     ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = AddParent,
-        .query.flags = EcsQueryIsInstanced
+        .entity = AddParent
     });
 
     ecs_entity_t parent = ecs_insert(world, ecs_value(Position, {1, 2}));
@@ -428,8 +423,7 @@ void SystemCascade_custom_relation_cascade_depth_1(void) {
 
     ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, ?Position(cascade Rel));
     ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = Iter,
-        .query.flags = EcsQueryIsInstanced
+        .entity = Iter
     });
 
     ecs_set(world, e1, Position, {1, 2});
@@ -497,8 +491,7 @@ void SystemCascade_custom_relation_cascade_depth_2(void) {
 
     ECS_SYSTEM(world, Iter, EcsOnUpdate, Position, ?Position(cascade Rel));
     ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = Iter,
-        .query.flags = EcsQueryIsInstanced
+        .entity = Iter
     });
 
     ecs_set(world, e1, Position, {1, 2});
@@ -577,8 +570,7 @@ void SystemCascade_custom_relation_add_after_match(void) {
 
     ECS_SYSTEM(world, AddParent, EcsOnUpdate, Position, ?Position(cascade Rel));
     ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = AddParent,
-        .query.flags = EcsQueryIsInstanced
+        .entity = AddParent
     });
 
     ecs_entity_t parent = ecs_new(world);
@@ -655,8 +647,7 @@ void SystemCascade_custom_relation_adopt_after_match(void) {
 
     ECS_SYSTEM(world, AddParent, EcsOnUpdate, Position, ?Position(cascade Rel));
     ecs_system_init(world, &(ecs_system_desc_t){
-        .entity = AddParent,
-        .query.flags = EcsQueryIsInstanced
+        .entity = AddParent
     });
 
     ecs_entity_t parent = ecs_insert(world, ecs_value(Position, {1, 2}));

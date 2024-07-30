@@ -93,57 +93,6 @@ void ecs_iter_fini(
         it->priv_.cache.stack_cursor);
 }
 
-bool flecs_iter_next_row(
-    ecs_iter_t *it)
-{
-    ecs_assert(it != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    bool is_instanced = ECS_BIT_IS_SET(it->flags, EcsIterIsInstanced);
-    if (!is_instanced) {
-        int32_t instance_count = it->instance_count;
-        int32_t count = it->count;
-        int32_t offset = it->offset;
-
-        if (instance_count > count && offset < (instance_count - 1)) {
-            ecs_assert(count == 1, ECS_INTERNAL_ERROR, NULL);
-            int t, field_count = it->field_count;
-
-            for (t = 0; t < field_count; t ++) {
-                ecs_entity_t src = it->sources[t];
-                if (!src) {
-                    void *ptr = it->ptrs[t];
-                    if (ptr) {
-                        it->ptrs[t] = ECS_OFFSET(ptr, it->sizes[t]);
-                    }
-                }
-            }
-
-            if (it->entities) {
-                it->entities ++;
-            }
-            it->offset ++;
-
-            return true;
-        }
-    }
-
-    return false;
-}
-
-bool flecs_iter_next_instanced(
-    ecs_iter_t *it,
-    bool result)
-{
-    it->instance_count = it->count;
-    bool is_instanced = ECS_BIT_IS_SET(it->flags, EcsIterIsInstanced);
-
-    if (result && !is_instanced && it->count && it->shared_fields) {
-        it->count = 1;
-    }
-
-    return result;
-}
-
 /* --- Public API --- */
 
 void* ecs_field_w_size(
@@ -410,7 +359,6 @@ int32_t ecs_iter_count(
     ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
 
     ECS_BIT_SET(it->flags, EcsIterNoData);
-    ECS_BIT_SET(it->flags, EcsIterIsInstanced);
 
     int32_t count = 0;
     while (ecs_iter_next(it)) {
@@ -427,7 +375,6 @@ ecs_entity_t ecs_iter_first(
     ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
 
     ECS_BIT_SET(it->flags, EcsIterNoData);
-    ECS_BIT_SET(it->flags, EcsIterIsInstanced);
 
     ecs_entity_t result = 0;
     if (ecs_iter_next(it)) {
@@ -446,7 +393,6 @@ bool ecs_iter_is_true(
     ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
 
     ECS_BIT_SET(it->flags, EcsIterNoData);
-    ECS_BIT_SET(it->flags, EcsIterIsInstanced);
 
     bool result = ecs_iter_next(it);
     if (result) {
@@ -738,8 +684,7 @@ void flecs_offset_iter(
     }
 }
 
-static
-bool ecs_page_next_instanced(
+bool ecs_page_next(
     ecs_iter_t *it)
 {
     ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
@@ -747,7 +692,6 @@ bool ecs_page_next_instanced(
     ecs_check(it->next == ecs_page_next, ECS_INVALID_PARAMETER, NULL);
 
     ecs_iter_t *chain_it = it->chain_it;
-    bool instanced = ECS_BIT_IS_SET(it->flags, EcsIterIsInstanced);
 
     do {
         if (!ecs_iter_next(chain_it)) {
@@ -758,9 +702,6 @@ bool ecs_page_next_instanced(
         
         /* Copy everything up to the private iterator data */
         ecs_os_memcpy(it, chain_it, offsetof(ecs_iter_t, priv_));
-
-        /* Keep instancing setting from original iterator */
-        ECS_BIT_COND(it->flags, EcsIterIsInstanced, instanced);
 
         if (!chain_it->table) {
             goto yield; /* Task query */
@@ -807,33 +748,13 @@ bool ecs_page_next_instanced(
     } while (it->count == 0);
 
 yield:
-    if (!ECS_BIT_IS_SET(it->flags, EcsIterIsInstanced)) {
-        it->offset = 0;
-    }
-
     return true;
+
 done:
     /* Cleanup iterator resources if it wasn't yet depleted */
     ecs_iter_fini(chain_it);
+
 depleted:
-error:
-    return false;
-}
-
-bool ecs_page_next(
-    ecs_iter_t *it)
-{
-    ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(it->next == ecs_page_next, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(it->chain_it != NULL, ECS_INVALID_PARAMETER, NULL);
-
-    ECS_BIT_SET(it->chain_it->flags, EcsIterIsInstanced);
-
-    if (flecs_iter_next_row(it)) {
-        return true;
-    }
-
-    return flecs_iter_next_instanced(it, ecs_page_next_instanced(it));
 error:
     return false;
 }
@@ -866,20 +787,17 @@ error:
     return (ecs_iter_t){ 0 };
 }
 
-static
-bool ecs_worker_next_instanced(
+bool ecs_worker_next(
     ecs_iter_t *it)
 {
     ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(it->chain_it != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(it->next == ecs_worker_next, ECS_INVALID_PARAMETER, NULL);
 
-    bool instanced = ECS_BIT_IS_SET(it->flags, EcsIterIsInstanced);
-
     ecs_iter_t *chain_it = it->chain_it;
     ecs_worker_iter_t *iter = &it->priv_.iter.worker;
     int32_t res_count = iter->count, res_index = iter->index;
-    int32_t per_worker, instances_per_worker, first;
+    int32_t per_worker, first;
 
     do {
         if (!ecs_iter_next(chain_it)) {
@@ -889,13 +807,8 @@ bool ecs_worker_next_instanced(
         /* Copy everything up to the private iterator data */
         ecs_os_memcpy(it, chain_it, offsetof(ecs_iter_t, priv_));
 
-        /* Keep instancing setting from original iterator */
-        ECS_BIT_COND(it->flags, EcsIterIsInstanced, instanced);
-
         int32_t count = it->count;
-        int32_t instance_count = it->instance_count;
         per_worker = count / res_count;
-        instances_per_worker = instance_count / res_count;
         first = per_worker * res_index;
         count -= per_worker * res_count;
 
@@ -920,37 +833,13 @@ bool ecs_worker_next_instanced(
         }
     } while (!per_worker);
 
-    it->instance_count = instances_per_worker;
     it->frame_offset += first;
 
     flecs_offset_iter(it, it->offset + first);
     it->count = per_worker;
-
-    if (ECS_BIT_IS_SET(it->flags, EcsIterIsInstanced)) {
-        it->offset += first;
-    } else {
-        it->offset = 0;
-    }
+    it->offset += first;
 
     return true;
-error:
-    return false;
-}
-
-bool ecs_worker_next(
-    ecs_iter_t *it)
-{
-    ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(it->next == ecs_worker_next, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(it->chain_it != NULL, ECS_INVALID_PARAMETER, NULL);
-
-    ECS_BIT_SET(it->chain_it->flags, EcsIterIsInstanced);
-
-    if (flecs_iter_next_row(it)) {
-        return true;
-    }
-
-    return flecs_iter_next_instanced(it, ecs_worker_next_instanced(it));
 error:
     return false;
 }

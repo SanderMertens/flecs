@@ -16,12 +16,7 @@ struct observer final : entity
 
     explicit observer() : entity() { }
 
-    observer(flecs::world_t *world, ecs_observer_desc_t *desc, bool instanced) 
-    {
-        if (!(desc->query.flags & EcsQueryIsInstanced)) {
-            ECS_BIT_COND(desc->query.flags, EcsQueryIsInstanced, instanced);
-        }
-
+    observer(flecs::world_t *world, ecs_observer_desc_t *desc) {
         world_ = world;
         id_ = ecs_observer_init(world, desc);
     }

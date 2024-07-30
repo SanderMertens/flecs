@@ -118,7 +118,7 @@ void flecs_query_iter_constrain(
     }
 }
 
-bool flecs_query_next_instanced(
+bool ecs_query_next(
     ecs_iter_t *it)
 {
     ecs_assert(it != NULL, ECS_INVALID_PARAMETER, NULL);
@@ -227,21 +227,6 @@ trivial_search_yield:
 
 yield:
     return true;
-}
-
-bool ecs_query_next(
-    ecs_iter_t *it)
-{
-    ecs_check(it != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_check(it->next == ecs_query_next, ECS_INVALID_PARAMETER, NULL);
-
-    if (flecs_iter_next_row(it)) {
-        return true;
-    }
-
-    return flecs_iter_next_instanced(it, flecs_query_next_instanced(it));
-error:
-    return false;
 }
 
 static

@@ -261,7 +261,8 @@ world.system<Position, const Velocity>("Move")
 
 The `run()` function can be invoked multiple times per frame, once for each matched table. The `each` function is called once per matched entity.
 
-Note that there is no significant performance difference between `iter()` and `each`, which can both be vectorized by the compiler. By default `each` can actually end up being faster, as it is instanced (see [query manual](Queries.md#each-c)).
+Note that there is no significant performance difference between `iter()` and `each`, which can both be vectorized by the compiler.
+
 </li>
 <li><b class="tab-title">C#</b>
 
@@ -368,7 +369,7 @@ world
 
 The `run` function can be invoked multiple times per frame, once for each matched table. The `each` function is called once per matched entity.
 
-Note that there is no significant performance difference between `run` and `each`, which can both be vectorized by the compiler. By default `each` can actually end up being faster, as it is instanced (see [query manual](Queries.md#each-rust)).
+Note that there is no significant performance difference between `run` and `each`, which can both be vectorized by the compiler.
 </li>
 </ul>
 </div>

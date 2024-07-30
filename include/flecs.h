@@ -1073,7 +1073,6 @@ struct ecs_iter_t {
     int32_t frame_offset;         /**< Offset relative to start of iteration */
     int32_t offset;               /**< Offset relative to current table */
     int32_t count;                /**< Number of entities to iterate */
-    int32_t instance_count;       /**< Number of entities to iterate before next table */
 
     /* Misc */
     ecs_flags32_t flags;          /**< Iterator flags */
@@ -1111,12 +1110,6 @@ struct ecs_iter_t {
  * \ingroup queries
  */
 #define EcsQueryNoData                (1u << 4u)
-
-/** Query iteration is always instanced.
- * Can be combined with other query flags on the ecs_query_desc_t::flags field.
- * \ingroup queries
- */
-#define EcsQueryIsInstanced           (1u << 5u)
 
 /** Query may have unresolved entity identifiers.
  * Can be combined with other query flags on the ecs_query_desc_t::flags field.
@@ -2052,8 +2045,7 @@ void ecs_set_target_fps(
  * are applied in addition to the flags provided in the descriptor. For a
  * list of available flags, see include/flecs/private/api_flags.h. Typical flags
  * to use are:
- * 
- *  - `EcsQueryIsInstanced`
+ *
  *  - `EcsQueryMatchEmptyTables`
  *  - `EcsQueryMatchDisabled`
  *  - `EcsQueryMatchPrefab`
@@ -4799,7 +4791,6 @@ const char* ecs_query_args_parse(
  *
  * - The iterator is a query iterator (created with ecs_query_iter())
  * - The iterator must be valid (ecs_query_next() must have returned true)
- * - The iterator must be instanced
  *
  * @param query The query (optional if 'it' is provided).
  * @return true if entities changed, otherwise false.

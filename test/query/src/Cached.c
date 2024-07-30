@@ -1772,100 +1772,6 @@ void Cached_3_terms_2_filter(void) {
     ecs_fini(world);
 }
 
-void Cached_no_instancing_w_singleton(void) {
-    ecs_world_t *world = ecs_mini();
-    
-    ECS_ENTITY(world, Tag, (OnInstantiate, Inherit));
-
-    ECS_COMPONENT(world, Position);
-    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
-    ECS_COMPONENT(world, Velocity);
-    ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
-
-    ecs_singleton_set(world, Velocity, {1, 2});
-
-    ecs_entity_t e1 = ecs_insert(world, ecs_value(Position, {10, 20}));
-    ecs_entity_t e2 = ecs_insert(world, ecs_value(Position, {20, 30}));
-    ecs_entity_t e3 = ecs_insert(world, ecs_value(Position, {30, 40}));
-
-    ecs_entity_t e4 = ecs_insert(world, ecs_value(Position, {40, 50}));
-    ecs_entity_t e5 = ecs_insert(world, ecs_value(Position, {50, 60}));
-
-    ecs_add(world, e4, Tag);
-    ecs_add(world, e5, Tag);
-
-    ecs_query_t *q = ecs_query(world, {
-        .expr = "Position, Velocity($)",
-        .cache_kind = EcsQueryCacheAuto
-    });
-    test_assert(q != NULL);
-
-    ecs_iter_t it = ecs_query_iter(world, q);
-    test_assert(ecs_query_next(&it));
-    {
-        Position *p = ecs_field(&it, Position, 0);
-        Velocity *v = ecs_field(&it, Velocity, 1);
-        test_int(it.count, 1);
-        test_int(it.entities[0], e1);
-        test_int(p->x, 10);
-        test_int(p->y, 20);
-        test_int(v->x, 1);
-        test_int(v->y, 2);
-    }
-
-    test_assert(ecs_query_next(&it));
-    {
-        Position *p = ecs_field(&it, Position, 0);
-        Velocity *v = ecs_field(&it, Velocity, 1);
-        test_int(it.count, 1);
-        test_int(it.entities[0], e2);
-        test_int(p->x, 20);
-        test_int(p->y, 30);
-        test_int(v->x, 1);
-        test_int(v->y, 2);
-    }
-
-    test_assert(ecs_query_next(&it));
-    {
-        Position *p = ecs_field(&it, Position, 0);
-        Velocity *v = ecs_field(&it, Velocity, 1);
-        test_int(it.count, 1);
-        test_int(it.entities[0], e3);
-        test_int(p->x, 30);
-        test_int(p->y, 40);
-        test_int(v->x, 1);
-        test_int(v->y, 2);
-    }
-
-    test_assert(ecs_query_next(&it));
-    {
-        Position *p = ecs_field(&it, Position, 0);
-        Velocity *v = ecs_field(&it, Velocity, 1);
-        test_int(it.count, 1);
-        test_int(it.entities[0], e4);
-        test_int(p->x, 40);
-        test_int(p->y, 50);
-        test_int(v->x, 1);
-        test_int(v->y, 2);
-    }
-
-    test_assert(ecs_query_next(&it));
-    {
-        Position *p = ecs_field(&it, Position, 0);
-        Velocity *v = ecs_field(&it, Velocity, 1);
-        test_int(it.count, 1);
-        test_int(it.entities[0], e5);
-        test_int(p->x, 50);
-        test_int(p->y, 60);
-        test_int(v->x, 1);
-        test_int(v->y, 2);
-    }
-
-    test_assert(!ecs_query_next(&it));
-
-    ecs_fini(world);
-}
-
 void Cached_add_singleton_after_query(void) {
     ecs_world_t *world = ecs_mini();
 
@@ -2421,7 +2327,6 @@ void Cached_superset_2_relations_instanced(void) {
             { .id = TagA, .trav = EcsChildOf, .src.id = EcsUp },
             { .id = TagA, .trav = EcsIsA, .src.id = EcsUp },
         },
-        .flags = EcsQueryIsInstanced,
         .cache_kind = EcsQueryCacheAuto
     });
 
@@ -2477,36 +2382,23 @@ void Cached_superset_2_relations_w_component(void) {
     ecs_iter_t it = ecs_query_iter(world, q);
     {
         test_bool(true, ecs_query_next(&it));
-        test_int(1, it.count);
+        test_int(2, it.count);
         test_uint(e1, it.entities[0]);
+        test_uint(e2, it.entities[1]);
         test_uint(parent, it.sources[0]);
         test_uint(base, it.sources[1]);
         Position *p1 = ecs_field(&it, Position, 0);
         Position *p2 = ecs_field(&it, Position, 1);
         test_assert(p1 != NULL);
         test_assert(p2 != NULL);
-        test_int(p1->x, 30);
-        test_int(p1->y, 40);
-        test_int(p2->x, 10);
-        test_int(p2->y, 20);
-    }
-    {
-        test_bool(true, ecs_query_next(&it));
-        test_int(1, it.count);
-        test_uint(e2, it.entities[0]);
-        test_uint(parent, it.sources[0]);
-        test_uint(base, it.sources[1]);
-        Position *p1 = ecs_field(&it, Position, 0);
-        Position *p2 = ecs_field(&it, Position, 1);
-        test_assert(p1 != NULL);
-        test_assert(p2 != NULL);
-        test_int(p1->x, 30);
-        test_int(p1->y, 40);
-        test_int(p2->x, 10);
-        test_int(p2->y, 20);
+        test_int(p1->x, 30); test_int(p1->y, 40);
+        test_int(p2->x, 10); test_int(p2->y, 20);
+        test_int(p1->x, 30); test_int(p1->y, 40);
+        test_int(p2->x, 10); test_int(p2->y, 20);
     }
     test_bool(false, ecs_query_next(&it));
 
+    ecs_query_fini(q);
 
     ecs_fini(world);
 }
@@ -2522,7 +2414,6 @@ void Cached_superset_2_relations_instanced_w_component(void) {
             { .id = ecs_id(Position), .trav = EcsChildOf, .src.id = EcsUp },
             { .id = ecs_id(Position), .trav = EcsIsA, .src.id = EcsUp },
         },
-        .flags = EcsQueryIsInstanced,
         .cache_kind = EcsQueryCacheAuto
     });
 

@@ -462,12 +462,8 @@ void System_custom_pipeline(void);
 void System_custom_pipeline_w_kind(void);
 void System_instanced_query_w_singleton_each(void);
 void System_instanced_query_w_base_each(void);
-void System_un_instanced_query_w_singleton_each(void);
-void System_un_instanced_query_w_base_each(void);
 void System_instanced_query_w_singleton_iter(void);
 void System_instanced_query_w_base_iter(void);
-void System_un_instanced_query_w_singleton_iter(void);
-void System_un_instanced_query_w_base_iter(void);
 void System_create_w_no_template_args(void);
 void System_system_w_type_kind_type_pipeline(void);
 void System_default_ctor(void);
@@ -594,12 +590,8 @@ void Query_iter_query_in_system(void);
 void Query_iter_type(void);
 void Query_instanced_query_w_singleton_each(void);
 void Query_instanced_query_w_base_each(void);
-void Query_un_instanced_query_w_singleton_each(void);
-void Query_un_instanced_query_w_base_each(void);
 void Query_instanced_query_w_singleton_iter(void);
 void Query_instanced_query_w_base_iter(void);
-void Query_un_instanced_query_w_singleton_iter(void);
-void Query_un_instanced_query_w_base_iter(void);
 void Query_query_each_from_component(void);
 void Query_query_iter_from_component(void);
 void Query_query_each_w_func_ptr(void);
@@ -3119,28 +3111,12 @@ bake_test_case System_testcases[] = {
         System_instanced_query_w_base_each
     },
     {
-        "un_instanced_query_w_singleton_each",
-        System_un_instanced_query_w_singleton_each
-    },
-    {
-        "un_instanced_query_w_base_each",
-        System_un_instanced_query_w_base_each
-    },
-    {
         "instanced_query_w_singleton_iter",
         System_instanced_query_w_singleton_iter
     },
     {
         "instanced_query_w_base_iter",
         System_instanced_query_w_base_iter
-    },
-    {
-        "un_instanced_query_w_singleton_iter",
-        System_un_instanced_query_w_singleton_iter
-    },
-    {
-        "un_instanced_query_w_base_iter",
-        System_un_instanced_query_w_base_iter
     },
     {
         "create_w_no_template_args",
@@ -3632,28 +3608,12 @@ bake_test_case Query_testcases[] = {
         Query_instanced_query_w_base_each
     },
     {
-        "un_instanced_query_w_singleton_each",
-        Query_un_instanced_query_w_singleton_each
-    },
-    {
-        "un_instanced_query_w_base_each",
-        Query_un_instanced_query_w_base_each
-    },
-    {
         "instanced_query_w_singleton_iter",
         Query_instanced_query_w_singleton_iter
     },
     {
         "instanced_query_w_base_iter",
         Query_instanced_query_w_base_iter
-    },
-    {
-        "un_instanced_query_w_singleton_iter",
-        Query_un_instanced_query_w_singleton_iter
-    },
-    {
-        "un_instanced_query_w_base_iter",
-        Query_un_instanced_query_w_base_iter
     },
     {
         "query_each_from_component",
@@ -6567,7 +6527,7 @@ static bake_test_suite suites[] = {
         "System",
         NULL,
         NULL,
-        75,
+        71,
         System_testcases
     },
     {
@@ -6588,7 +6548,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        111,
+        107,
         Query_testcases
     },
     {
