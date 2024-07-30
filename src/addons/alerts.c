@@ -262,7 +262,6 @@ void MonitorAlerts(ecs_iter_t *it) {
 
         ecs_iter_t rit = ecs_query_iter(world, q);
         rit.flags |= EcsIterNoData;
-        rit.flags |= EcsIterIsInstanced;
 
         while (ecs_query_next(&rit)) {
             ecs_entity_t severity = flecs_alert_get_severity(
@@ -401,7 +400,6 @@ void MonitorAlertInstances(ecs_iter_t *it) {
         /* Check if alert instance still matches query */
         ecs_iter_t rit = ecs_query_iter(world, query);
         rit.flags |= EcsIterNoData;
-        rit.flags |= EcsIterIsInstanced;
         ecs_iter_set_var(&rit, 0, e);
 
         if (ecs_query_next(&rit)) {

@@ -517,10 +517,6 @@ void Basic_not_any(void);
 void Basic_rule_w_iter_next(void);
 void Basic_empty_rule(void);
 void Basic_invalid_rule(void);
-void Basic_not_instanced_table_src(void);
-void Basic_not_instanced_entity_src(void);
-void Basic_not_instanced_mixed_src(void);
-void Basic_not_instanced_inherited(void);
 void Basic_instanced_table_src(void);
 void Basic_instanced_entity_src(void);
 void Basic_instanced_mixed_src(void);
@@ -582,8 +578,6 @@ void Basic_oneof_wildcard(void);
 void Basic_oneof_any(void);
 void Basic_instanced_w_singleton(void);
 void Basic_instanced_w_base(void);
-void Basic_not_instanced_w_singleton(void);
-void Basic_not_instanced_w_base(void);
 void Basic_unknown_before_known(void);
 void Basic_unknown_before_known_after_or(void);
 void Basic_unknown_before_known_after_not(void);
@@ -1486,7 +1480,6 @@ void Cached_iter_type_set(void);
 void Cached_filter_term(void);
 void Cached_2_terms_1_filter(void);
 void Cached_3_terms_2_filter(void);
-void Cached_no_instancing_w_singleton(void);
 void Cached_add_singleton_after_query(void);
 void Cached_query_w_component_from_parent_from_non_this(void);
 void Cached_create_query_while_pending(void);
@@ -1550,7 +1543,6 @@ void ChangeDetection_query_change_parent_term(void);
 void ChangeDetection_query_change_prefab_term(void);
 void ChangeDetection_query_change_parent_term_w_tag(void);
 void ChangeDetection_query_change_prefab_term_w_tag(void);
-void ChangeDetection_query_change_skip_non_instanced(void);
 void ChangeDetection_query_changed_w_or(void);
 void ChangeDetection_query_changed_or(void);
 void ChangeDetection_query_changed_w_singleton(void);
@@ -4051,22 +4043,6 @@ bake_test_case Basic_testcases[] = {
         Basic_invalid_rule
     },
     {
-        "not_instanced_table_src",
-        Basic_not_instanced_table_src
-    },
-    {
-        "not_instanced_entity_src",
-        Basic_not_instanced_entity_src
-    },
-    {
-        "not_instanced_mixed_src",
-        Basic_not_instanced_mixed_src
-    },
-    {
-        "not_instanced_inherited",
-        Basic_not_instanced_inherited
-    },
-    {
         "instanced_table_src",
         Basic_instanced_table_src
     },
@@ -4309,14 +4285,6 @@ bake_test_case Basic_testcases[] = {
     {
         "instanced_w_base",
         Basic_instanced_w_base
-    },
-    {
-        "not_instanced_w_singleton",
-        Basic_not_instanced_w_singleton
-    },
-    {
-        "not_instanced_w_base",
-        Basic_not_instanced_w_base
     },
     {
         "unknown_before_known",
@@ -7839,10 +7807,6 @@ bake_test_case Cached_testcases[] = {
         Cached_3_terms_2_filter
     },
     {
-        "no_instancing_w_singleton",
-        Cached_no_instancing_w_singleton
-    },
-    {
         "add_singleton_after_query",
         Cached_add_singleton_after_query
     },
@@ -8088,10 +8052,6 @@ bake_test_case ChangeDetection_testcases[] = {
     {
         "query_change_prefab_term_w_tag",
         ChangeDetection_query_change_prefab_term_w_tag
-    },
-    {
-        "query_change_skip_non_instanced",
-        ChangeDetection_query_change_skip_non_instanced
     },
     {
         "query_changed_w_or",
@@ -10027,7 +9987,7 @@ static bake_test_suite suites[] = {
         "Basic",
         Basic_setup,
         NULL,
-        213,
+        207,
         Basic_testcases,
         1,
         Basic_params
@@ -10127,14 +10087,14 @@ static bake_test_suite suites[] = {
         "Cached",
         NULL,
         NULL,
-        87,
+        86,
         Cached_testcases
     },
     {
         "ChangeDetection",
         NULL,
         NULL,
-        35,
+        34,
         ChangeDetection_testcases
     },
     {

@@ -18,7 +18,6 @@ ecs_query_cache_table_match_t* flecs_query_cache_next(
         ecs_assert(node != NULL, ECS_INTERNAL_ERROR, NULL);
         ctx->vars[0].range.table = node->table;
         it->group_id = node->group_id;
-        it->instance_count = 0;
         qit->node = node->next;
         qit->prev = node;
         return node;

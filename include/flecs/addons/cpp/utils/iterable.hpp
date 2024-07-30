@@ -23,14 +23,11 @@ struct iterable {
      *  - func(flecs::entity e, Components& ...)
      *  - func(flecs::iter& it, size_t index, Components& ....)
      *  - func(Components& ...)
-     * 
-     * Each iterators are automatically instanced.
      */
     template <typename Func>
     void each(Func&& func) const {
         ecs_iter_t it = this->get_iter(nullptr);
-        ECS_BIT_SET(it.flags, EcsIterIsInstanced);
-        ecs_iter_next_action_t next = this->next_each_action();
+        ecs_iter_next_action_t next = this->next_action();
         while (next(&it)) {
             _::each_delegate<Func, Components...>(func).invoke(&it);
         }
@@ -50,8 +47,7 @@ struct iterable {
     template <typename Func>
     flecs::entity find(Func&& func) const {
         ecs_iter_t it = this->get_iter(nullptr);
-        ECS_BIT_SET(it.flags, EcsIterIsInstanced);
-        ecs_iter_next_action_t next = this->next_each_action();
+        ecs_iter_next_action_t next = this->next_action();
 
         flecs::entity result;
         while (!result && next(&it)) {
@@ -153,7 +149,6 @@ protected:
 
     virtual ecs_iter_t get_iter(flecs::world_t *stage) const = 0;
     virtual ecs_iter_next_action_t next_action() const = 0;
-    virtual ecs_iter_next_action_t next_each_action() const = 0;
 };
 
 template <typename ... Components>
@@ -265,10 +260,6 @@ protected:
         return next_;
     }
 
-    ecs_iter_next_action_t next_each_action() const override {
-        return next_each_;
-    }
-
 private:
     ecs_iter_t it_;
     ecs_iter_next_action_t next_;
@@ -312,10 +303,6 @@ protected:
         return ecs_page_next;
     }
 
-    ecs_iter_next_action_t next_each_action() const {
-        return ecs_page_next;
-    }
-
 private:
     ecs_iter_t chain_it_;
     int32_t offset_;
@@ -345,10 +332,6 @@ protected:
     }
 
     ecs_iter_next_action_t next_action() const {
-        return ecs_worker_next;
-    }
-
-    ecs_iter_next_action_t next_each_action() const {
         return ecs_worker_next;
     }
 

@@ -1290,7 +1290,6 @@ void OrderBy_sort_shared_component(void) {
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "Position(self|up IsA)",
-        .flags = EcsQueryIsInstanced,
         .order_by = ecs_id(Position),
         .order_by_callback = compare_position,
     });
@@ -1354,7 +1353,6 @@ void OrderBy_sort_shared_component_childof(void) {
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "Position(self|up ChildOf)",
-        .flags = EcsQueryIsInstanced,
         .order_by = ecs_id(Position),
         .order_by_callback = compare_position,
     });
@@ -1937,7 +1935,6 @@ void Sorting_sort_shared_w_delete(void) {
         .terms = {
             { .id = ecs_id(Position), .inout = EcsIn }
         },
-        .flags = EcsQueryIsInstanced,
         .order_by_callback = compare_position,
         .order_by = ecs_id(Position)
     });
@@ -2043,7 +2040,6 @@ void OrderBy_sort_shared_w_delete(void) {
         .terms = {
             { .id = ecs_id(Position), .inout = EcsIn }
         },
-        .flags = EcsQueryIsInstanced,
         .order_by_callback = compare_position,
         .order_by = ecs_id(Position)
     });

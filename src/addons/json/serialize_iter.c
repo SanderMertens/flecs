@@ -158,10 +158,8 @@ void flecs_json_serialize_query_profile(
         component_bytes = 0;
         shared_component_bytes = 0;
 
-        ecs_iter_t qit = ecs_query_iter(world, desc->query);
-        qit.flags |= EcsIterIsInstanced;
-    
-        while (ecs_iter_next(&qit)) {
+        ecs_iter_t qit = ecs_query_iter(world, desc->query);    
+        while (ecs_query_next(&qit)) {
             result_count ++;
             entity_count += qit.count;
 
@@ -288,9 +286,6 @@ int ecs_iter_to_json_buf(
     if (!desc || !desc->dont_serialize_results) {
         flecs_json_memberl(buf, "results");
         flecs_json_array_push(buf);
-
-        /* Use instancing for improved performance */
-        ECS_BIT_SET(it->flags, EcsIterIsInstanced);
 
         /* If serializing entire table, don't bother letting the iterator populate
          * data fields as we'll be iterating all columns. */

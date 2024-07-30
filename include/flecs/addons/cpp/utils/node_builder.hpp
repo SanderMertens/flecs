@@ -21,7 +21,6 @@ public:
         : IBase(&desc_)
         , desc_{}
         , world_(world)
-        , instanced_(false)
     {
         ecs_entity_desc_t entity_desc = {};
         entity_desc.name = name;
@@ -40,7 +39,7 @@ public:
         desc_.run_ctx = ctx;
         desc_.run_ctx_free = reinterpret_cast<
             ecs_ctx_free_t>(_::free_obj<Delegate>);
-        return T(world_, &desc_, false);
+        return T(world_, &desc_);
     }
 
     template <typename Func, typename EachFunc>
@@ -60,21 +59,18 @@ public:
     T each(Func&& func) {
         using Delegate = typename _::each_delegate<
             typename std::decay<Func>::type, Components...>;
-        instanced_ = true;
-
         auto ctx = FLECS_NEW(Delegate)(FLECS_FWD(func));
         desc_.callback = Delegate::run;
         desc_.callback_ctx = ctx;
         desc_.callback_ctx_free = reinterpret_cast<
             ecs_ctx_free_t>(_::free_obj<Delegate>);
-        return T(world_, &desc_, true);
+        return T(world_, &desc_);
     }
 
 protected:
     flecs::world_t* world_v() override { return world_; }
     TDesc desc_;
     flecs::world_t *world_;
-    bool instanced_;
 };
 
 #undef FLECS_IBUILDER

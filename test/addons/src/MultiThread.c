@@ -606,7 +606,6 @@ void MultiThread_2_thread_1_entity_instanced(void) {
         .callback = Progress,
         .query = {
             .expr = "Position",
-            .flags = EcsQueryIsInstanced
         },
         .multi_threaded = true
     });
@@ -645,7 +644,6 @@ void MultiThread_2_thread_5_entity_instanced(void) {
         .callback = Progress,
         .query = {
             .expr = "Position",
-            .flags = EcsQueryIsInstanced
         },
         .multi_threaded = true
     });
@@ -684,7 +682,6 @@ void MultiThread_2_thread_10_entity_instanced(void) {
         .callback = Progress,
         .query = {
             .expr = "Position",
-            .flags = EcsQueryIsInstanced
         },
         .multi_threaded = true
     });

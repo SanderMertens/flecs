@@ -355,10 +355,6 @@ ecs_entity_t ecs_system_init(
             system->run_ctx_free = desc->run_ctx_free;
         }
 
-        if (desc->query.flags & EcsQueryIsInstanced) {
-            ECS_BIT_SET(system->query->flags, EcsQueryIsInstanced);
-        }
-
         if (desc->multi_threaded) {
             system->multi_threaded = desc->multi_threaded;
         }

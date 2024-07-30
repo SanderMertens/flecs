@@ -218,10 +218,6 @@ private:
     ecs_iter_next_action_t next_action() const override {
         return ecs_query_next;
     }
-
-    ecs_iter_next_action_t next_each_action() const override {
-        return flecs_query_next_instanced;
-    }
 };
 
 // World mixin implementation

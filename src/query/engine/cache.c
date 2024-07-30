@@ -620,7 +620,6 @@ void flecs_query_cache_match_tables(
     ecs_query_cache_table_t *qt = NULL;
 
     ecs_iter_t it = ecs_query_iter(world, cache->query);
-    ECS_BIT_SET(it.flags, EcsIterIsInstanced);
     ECS_BIT_SET(it.flags, EcsIterNoData);
     ECS_BIT_SET(it.flags, EcsIterTableOnly);
 
@@ -654,7 +653,6 @@ bool flecs_query_cache_match_table(
     /* Iterate uncached query for table to check if it matches. If this is a
      * wildcard query, a table can match multiple times. */
     ecs_iter_t it = flecs_query_iter(world, q);
-    it.flags |= EcsIterIsInstanced;
     it.flags |= EcsIterNoData;
     ecs_iter_set_var_as_table(&it, 0, table);
 
@@ -895,7 +893,6 @@ void flecs_query_cache_rematch_tables(
     cache->monitor_generation = world->monitor_generation;
 
     it = ecs_query_iter(world, cache->query);
-    ECS_BIT_SET(it.flags, EcsIterIsInstanced);
     ECS_BIT_SET(it.flags, EcsIterNoData);
 
     world->info.rematch_count_total ++;
@@ -1292,7 +1289,7 @@ ecs_query_cache_t* flecs_query_cache_init(
 
         observer_desc.events[event_index ++] = EcsOnTableCreate;
         observer_desc.events[event_index ++] = EcsOnTableDelete;
-        observer_desc.query.flags |= EcsQueryNoData|EcsQueryIsInstanced;
+        observer_desc.query.flags |= EcsQueryNoData;
         observer_desc.flags_ = EcsObserverBypassQuery;
 
         /* ecs_query_init could have moved away resources from the terms array

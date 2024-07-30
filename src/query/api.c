@@ -512,10 +512,9 @@ ecs_query_count_t ecs_query_count(
         result.empty_tables = flecs_query_cache_empty_table_count(impl->cache);
     } else {
         ecs_iter_t it = flecs_query_iter(q->world, q);
-        it.flags |= EcsIterIsInstanced;
         it.flags |= EcsIterNoData;
 
-        while (flecs_query_next_instanced(&it)) {
+        while (ecs_query_next(&it)) {
             result.results ++;
             result.entities += it.count;
             ecs_iter_skip(&it);

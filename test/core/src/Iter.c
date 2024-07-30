@@ -881,8 +881,7 @@ void Iter_paged_iter_w_shared_comp(void) {
     ecs_add(world, e5, TagB);
 
     ecs_query_t *q = ecs_query(world, {
-        .terms = {{ ecs_id(Self) }, { ecs_id(Position), .src.id = foo} },
-        .flags = EcsQueryIsInstanced
+        .terms = {{ ecs_id(Self) }, { ecs_id(Position), .src.id = foo} }
     });
 
     ecs_iter_t it = ecs_query_iter(world, q);
@@ -974,8 +973,7 @@ void Iter_worker_iter_w_shared_comp(void) {
     ecs_add(world, e5, TagB);
 
     ecs_query_t *q = ecs_query(world, {
-        .terms = {{ ecs_id(Self) }, { ecs_id(Position), .src.id = foo} },
-        .flags = EcsQueryIsInstanced
+        .terms = {{ ecs_id(Self) }, { ecs_id(Position), .src.id = foo} }
     });
 
     ecs_iter_t it_1 = ecs_query_iter(world, q);
@@ -1203,76 +1201,6 @@ void Iter_worker_iter_w_singleton(void) {
     ecs_fini(world);
 }
 
-void Iter_worker_iter_w_singleton_component(void) {
-    ecs_world_t *world = ecs_mini();
-
-    ECS_COMPONENT(world, Position);
-    ECS_COMPONENT(world, Velocity);
-
-    ecs_singleton_set(world, Velocity, {1, 2});
-    ecs_entity_t e1 = ecs_insert(world, ecs_value(Position, {10, 20}));
-    ecs_entity_t e2 = ecs_insert(world, ecs_value(Position, {20, 30}));
-    ecs_entity_t e3 = ecs_insert(world, ecs_value(Position, {30, 40}));
-    ecs_entity_t e4 = ecs_insert(world, ecs_value(Position, {40, 50}));
-
-    ecs_query_t *q = ecs_query(world, { .expr = "Position, Velocity($)" });
-
-    Position *p;
-    Velocity *v;
-
-    ecs_iter_t it_1 = ecs_query_iter(world, q);
-    ecs_iter_t wit_1 = ecs_worker_iter(&it_1, 0, 2);
-    test_bool(ecs_worker_next(&wit_1), true);
-    test_int(wit_1.count, 1);
-    test_int(wit_1.entities[0], e1);
-    p = ecs_field(&wit_1, Position, 0);
-    test_int(p[0].x, 10);
-    test_int(p[0].y, 20);
-    v = ecs_field(&wit_1, Velocity, 1);
-    test_int(v[0].x, 1);
-    test_int(v[0].y, 2);
-
-    test_bool(ecs_worker_next(&wit_1), true);
-    test_int(wit_1.count, 1);
-    test_int(wit_1.entities[0], e2);
-    p = ecs_field(&wit_1, Position, 0);
-    test_int(p[0].x, 20);
-    test_int(p[0].y, 30);
-    v = ecs_field(&wit_1, Velocity, 1);
-    test_int(v[0].x, 1);
-    test_int(v[0].y, 2);
-
-    test_bool(ecs_worker_next(&wit_1), false);
-
-    ecs_iter_t it_2 = ecs_query_iter(world, q);
-    ecs_iter_t wit_2 = ecs_worker_iter(&it_2, 1, 2);
-    test_bool(ecs_worker_next(&wit_2), true);
-    test_int(wit_2.count, 1);
-    test_int(wit_2.entities[0], e3);
-    p = ecs_field(&wit_2, Position, 0);
-    test_int(p[0].x, 30);
-    test_int(p[0].y, 40);
-    v = ecs_field(&wit_2, Velocity, 1);
-    test_int(v[0].x, 1);
-    test_int(v[0].y, 2);
-
-    test_bool(ecs_worker_next(&wit_2), true);
-    test_int(wit_2.count, 1);
-    test_int(wit_2.entities[0], e4);
-    p = ecs_field(&wit_2, Position, 0);
-    test_int(p[0].x, 40);
-    test_int(p[0].y, 50);
-    v = ecs_field(&wit_2, Velocity, 1);
-    test_int(v[0].x, 1);
-    test_int(v[0].y, 2);
-
-    test_bool(ecs_worker_next(&wit_2), false);
-
-    ecs_query_fini(q);
-
-    ecs_fini(world);
-}
-
 void Iter_worker_iter_w_singleton_instanced(void) {
     ecs_world_t *world = ecs_mini();
 
@@ -1286,8 +1214,7 @@ void Iter_worker_iter_w_singleton_instanced(void) {
     ecs_entity_t e4 = ecs_insert(world, ecs_value(Position, {40, 50}));
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "Position, Singleton($)",
-        .flags = EcsQueryIsInstanced
+        .expr = "Position, Singleton($)"
     });
 
     Position *p;
@@ -1336,8 +1263,7 @@ void Iter_worker_iter_w_singleton_component_instanced(void) {
     ecs_entity_t e4 = ecs_insert(world, ecs_value(Position, {40, 50}));
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "Position, Velocity($)",
-        .flags = EcsQueryIsInstanced
+        .expr = "Position, Velocity($)"
     });
 
     Position *p;
@@ -1427,72 +1353,6 @@ void Iter_paged_iter_w_singleton(void) {
     ecs_fini(world);
 }
 
-void Iter_paged_iter_w_singleton_component(void) {
-    ecs_world_t *world = ecs_mini();
-
-    ECS_COMPONENT(world, Position);
-    ECS_COMPONENT(world, Velocity);
-
-    ecs_singleton_set(world, Velocity, {1, 2});
-    ecs_entity_t e1 = ecs_insert(world, ecs_value(Position, {10, 20}));
-    ecs_entity_t e2 = ecs_insert(world, ecs_value(Position, {20, 30}));
-    ecs_entity_t e3 = ecs_insert(world, ecs_value(Position, {30, 40}));
-    ecs_entity_t e4 = ecs_insert(world, ecs_value(Position, {40, 50}));
-
-    ecs_query_t *q = ecs_query(world, { .expr = "Position, Velocity($)" });
-
-    Position *p;
-    Velocity *v;
-
-    ecs_iter_t it_1 = ecs_query_iter(world, q);
-    ecs_iter_t pit_1 = ecs_page_iter(&it_1, 0, 2);
-    test_bool(ecs_page_next(&pit_1), true);
-    test_int(pit_1.count, 1);
-    test_int(pit_1.entities[0], e1);
-    p = ecs_field(&pit_1, Position, 0);
-    test_int(p[0].x, 10);
-    test_int(p[0].y, 20);
-    v = ecs_field(&pit_1, Velocity, 1);
-    test_int(v[0].x, 1);
-    test_int(v[0].y, 2);
-    test_bool(ecs_page_next(&pit_1), true);
-    test_int(pit_1.count, 1);
-    test_int(pit_1.entities[0], e2);
-    p = ecs_field(&pit_1, Position, 0);
-    test_int(p[0].x, 20);
-    test_int(p[0].y, 30);
-    v = ecs_field(&pit_1, Velocity, 1);
-    test_int(v[0].x, 1);
-    test_int(v[0].y, 2);
-    test_bool(ecs_page_next(&pit_1), false);
-
-    ecs_iter_t it_2 = ecs_query_iter(world, q);
-    ecs_iter_t pit_2 = ecs_page_iter(&it_2, 2, 2);
-    test_bool(ecs_page_next(&pit_2), true);
-    test_int(pit_2.count, 1);
-    test_int(pit_2.entities[0], e3);
-    p = ecs_field(&pit_2, Position, 0);
-    test_int(p[0].x, 30);
-    test_int(p[0].y, 40);
-    v = ecs_field(&pit_2, Velocity, 1);
-    test_int(v[0].x, 1);
-    test_int(v[0].y, 2);
-    test_bool(ecs_page_next(&pit_2), true);
-    test_int(pit_2.count, 1);
-    test_int(pit_2.entities[0], e4);
-    p = ecs_field(&pit_2, Position, 0);
-    test_int(p[0].x, 40);
-    test_int(p[0].y, 50);
-    v = ecs_field(&pit_2, Velocity, 1);
-    test_int(v[0].x, 1);
-    test_int(v[0].y, 2);
-    test_bool(ecs_page_next(&pit_2), false);
-
-    ecs_query_fini(q);
-
-    ecs_fini(world);
-}
-
 void Iter_paged_iter_w_singleton_instanced(void) {
     ecs_world_t *world = ecs_mini();
 
@@ -1506,8 +1366,7 @@ void Iter_paged_iter_w_singleton_instanced(void) {
     ecs_entity_t e4 = ecs_insert(world, ecs_value(Position, {40, 50}));
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "Position, Singleton($)",
-        .flags = EcsQueryIsInstanced
+        .expr = "Position, Singleton($)"
     });
 
     Position *p;
@@ -1556,8 +1415,7 @@ void Iter_paged_iter_w_singleton_component_instanced(void) {
     ecs_entity_t e4 = ecs_insert(world, ecs_value(Position, {40, 50}));
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "Position, Velocity($)",
-        .flags = EcsQueryIsInstanced
+        .expr = "Position, Velocity($)"
     });
 
     Position *p;

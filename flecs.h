@@ -425,7 +425,6 @@ extern "C" {
 
 #define EcsIterIsValid                 (1u << 0u)  /* Does iterator contain valid result */
 #define EcsIterNoData                  (1u << 1u)  /* Does iterator provide (component) data */
-#define EcsIterIsInstanced             (1u << 2u)  /* Is iterator instanced */
 #define EcsIterNoResults               (1u << 3u)  /* Iterator has no results */
 #define EcsIterIgnoreThis              (1u << 4u)  /* Only evaluate non-this terms */
 #define EcsIterHasCondSet              (1u << 6u)  /* Does iterator have conditionally set fields */
@@ -3851,9 +3850,6 @@ int32_t flecs_poly_refcount(
 #define flecs_poly_release(poly) \
     flecs_poly_release_(ECS_CONST_CAST(void*, reinterpret_cast<const void*>(poly)))
 
-FLECS_API
-bool flecs_query_next_instanced(
-    ecs_iter_t *it);
 
 /** Calculate offset from address */
 #ifdef __cplusplus
@@ -4224,7 +4220,6 @@ struct ecs_iter_t {
     int32_t frame_offset;         /**< Offset relative to start of iteration */
     int32_t offset;               /**< Offset relative to current table */
     int32_t count;                /**< Number of entities to iterate */
-    int32_t instance_count;       /**< Number of entities to iterate before next table */
 
     /* Misc */
     ecs_flags32_t flags;          /**< Iterator flags */
@@ -4262,12 +4257,6 @@ struct ecs_iter_t {
  * \ingroup queries
  */
 #define EcsQueryNoData                (1u << 4u)
-
-/** Query iteration is always instanced.
- * Can be combined with other query flags on the ecs_query_desc_t::flags field.
- * \ingroup queries
- */
-#define EcsQueryIsInstanced           (1u << 5u)
 
 /** Query may have unresolved entity identifiers.
  * Can be combined with other query flags on the ecs_query_desc_t::flags field.
@@ -5224,8 +5213,7 @@ void ecs_set_target_fps(
  * are applied in addition to the flags provided in the descriptor. For a
  * list of available flags, see include/flecs/private/api_flags.h. Typical flags
  * to use are:
- * 
- *  - `EcsQueryIsInstanced`
+ *
  *  - `EcsQueryMatchEmptyTables`
  *  - `EcsQueryMatchDisabled`
  *  - `EcsQueryMatchPrefab`
@@ -7971,7 +7959,6 @@ const char* ecs_query_args_parse(
  *
  * - The iterator is a query iterator (created with ecs_query_iter())
  * - The iterator must be valid (ecs_query_next() must have returned true)
- * - The iterator must be instanced
  *
  * @param query The query (optional if 'it' is provided).
  * @return true if entities changed, otherwise false.
@@ -25771,11 +25758,6 @@ struct each_delegate : public delegate {
         run(iter);
     }
 
-    // Each delegates always use instanced iterators
-    static bool instanced() {
-        return true;
-    }
-
 private:
     // func(flecs::entity, Components...)
     template <template<typename X, typename = int> class ColumnType, 
@@ -25881,11 +25863,6 @@ struct find_delegate : public delegate {
         } else {
             return invoke_callback< each_column >(iter, func_, 0, terms.terms_);
         }   
-    }
-
-    // Find delegates always use instanced iterators
-    static bool instanced() {
-        return true;
     }
 
 private:
@@ -27658,14 +27635,11 @@ struct iterable {
      *  - func(flecs::entity e, Components& ...)
      *  - func(flecs::iter& it, size_t index, Components& ....)
      *  - func(Components& ...)
-     * 
-     * Each iterators are automatically instanced.
      */
     template <typename Func>
     void each(Func&& func) const {
         ecs_iter_t it = this->get_iter(nullptr);
-        ECS_BIT_SET(it.flags, EcsIterIsInstanced);
-        ecs_iter_next_action_t next = this->next_each_action();
+        ecs_iter_next_action_t next = this->next_action();
         while (next(&it)) {
             _::each_delegate<Func, Components...>(func).invoke(&it);
         }
@@ -27685,8 +27659,7 @@ struct iterable {
     template <typename Func>
     flecs::entity find(Func&& func) const {
         ecs_iter_t it = this->get_iter(nullptr);
-        ECS_BIT_SET(it.flags, EcsIterIsInstanced);
-        ecs_iter_next_action_t next = this->next_each_action();
+        ecs_iter_next_action_t next = this->next_action();
 
         flecs::entity result;
         while (!result && next(&it)) {
@@ -27788,7 +27761,6 @@ protected:
 
     virtual ecs_iter_t get_iter(flecs::world_t *stage) const = 0;
     virtual ecs_iter_next_action_t next_action() const = 0;
-    virtual ecs_iter_next_action_t next_each_action() const = 0;
 };
 
 template <typename ... Components>
@@ -27914,10 +27886,6 @@ protected:
         return next_;
     }
 
-    ecs_iter_next_action_t next_each_action() const override {
-        return next_each_;
-    }
-
 private:
     ecs_iter_t it_;
     ecs_iter_next_action_t next_;
@@ -27961,10 +27929,6 @@ protected:
         return ecs_page_next;
     }
 
-    ecs_iter_next_action_t next_each_action() const {
-        return ecs_page_next;
-    }
-
 private:
     ecs_iter_t chain_it_;
     int32_t offset_;
@@ -27994,10 +27958,6 @@ protected:
     }
 
     ecs_iter_next_action_t next_action() const {
-        return ecs_worker_next;
-    }
-
-    ecs_iter_next_action_t next_each_action() const {
         return ecs_worker_next;
     }
 
@@ -29135,11 +29095,6 @@ struct query_builder_i : term_builder_i<Base> {
         , expr_count_(0)
         , desc_(desc) { }
 
-    Base& instanced() {
-        desc_->flags |= EcsQueryIsInstanced;
-        return *this;
-    }
-
     Base& query_flags(ecs_flags32_t flags) {
         desc_->flags |= flags;
         return *this;
@@ -29741,10 +29696,6 @@ private:
     ecs_iter_next_action_t next_action() const override {
         return ecs_query_next;
     }
-
-    ecs_iter_next_action_t next_each_action() const override {
-        return flecs_query_next_instanced;
-    }
 };
 
 // World mixin implementation
@@ -29881,7 +29832,6 @@ public:
         : IBase(&desc_)
         , desc_{}
         , world_(world)
-        , instanced_(false)
     {
         ecs_entity_desc_t entity_desc = {};
         entity_desc.name = name;
@@ -29900,7 +29850,7 @@ public:
         desc_.run_ctx = ctx;
         desc_.run_ctx_free = reinterpret_cast<
             ecs_ctx_free_t>(_::free_obj<Delegate>);
-        return T(world_, &desc_, false);
+        return T(world_, &desc_);
     }
 
     template <typename Func, typename EachFunc>
@@ -29920,21 +29870,18 @@ public:
     T each(Func&& func) {
         using Delegate = typename _::each_delegate<
             typename std::decay<Func>::type, Components...>;
-        instanced_ = true;
-
         auto ctx = FLECS_NEW(Delegate)(FLECS_FWD(func));
         desc_.callback = Delegate::run;
         desc_.callback_ctx = ctx;
         desc_.callback_ctx_free = reinterpret_cast<
             ecs_ctx_free_t>(_::free_obj<Delegate>);
-        return T(world_, &desc_, true);
+        return T(world_, &desc_);
     }
 
 protected:
     flecs::world_t* world_v() override { return world_; }
     TDesc desc_;
     flecs::world_t *world_;
-    bool instanced_;
 };
 
 #undef FLECS_IBUILDER
@@ -30052,12 +29999,7 @@ struct observer final : entity
 
     explicit observer() : entity() { }
 
-    observer(flecs::world_t *world, ecs_observer_desc_t *desc, bool instanced) 
-    {
-        if (!(desc->query.flags & EcsQueryIsInstanced)) {
-            ECS_BIT_COND(desc->query.flags, EcsQueryIsInstanced, instanced);
-        }
-
+    observer(flecs::world_t *world, ecs_observer_desc_t *desc) {
         world_ = world;
         id_ = ecs_observer_init(world, desc);
     }
@@ -30584,12 +30526,7 @@ struct system final : entity
         world_ = nullptr;
     }
 
-    explicit system(flecs::world_t *world, ecs_system_desc_t *desc, bool instanced) 
-    {
-        if (!(desc->query.flags & EcsQueryIsInstanced)) {
-            ECS_BIT_COND(desc->query.flags, EcsQueryIsInstanced, instanced);
-        }
-
+    explicit system(flecs::world_t *world, ecs_system_desc_t *desc) {
         world_ = world;
         id_ = ecs_system_init(world, desc);
     }

@@ -238,11 +238,6 @@ struct each_delegate : public delegate {
         run(iter);
     }
 
-    // Each delegates always use instanced iterators
-    static bool instanced() {
-        return true;
-    }
-
 private:
     // func(flecs::entity, Components...)
     template <template<typename X, typename = int> class ColumnType, 
@@ -348,11 +343,6 @@ struct find_delegate : public delegate {
         } else {
             return invoke_callback< each_column >(iter, func_, 0, terms.terms_);
         }   
-    }
-
-    // Find delegates always use instanced iterators
-    static bool instanced() {
-        return true;
     }
 
 private:

@@ -111,7 +111,6 @@ extern "C" {
 
 #define EcsIterIsValid                 (1u << 0u)  /* Does iterator contain valid result */
 #define EcsIterNoData                  (1u << 1u)  /* Does iterator provide (component) data */
-#define EcsIterIsInstanced             (1u << 2u)  /* Is iterator instanced */
 #define EcsIterNoResults               (1u << 3u)  /* Iterator has no results */
 #define EcsIterIgnoreThis              (1u << 4u)  /* Only evaluate non-this terms */
 #define EcsIterHasCondSet              (1u << 6u)  /* Does iterator have conditionally set fields */

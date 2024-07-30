@@ -633,15 +633,5 @@ void ecs_iter_skip(
     ecs_assert(it->next == ecs_query_next, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(ECS_BIT_IS_SET(it->flags, EcsIterIsValid), 
         ECS_INVALID_PARAMETER, NULL);
-
-    ecs_query_iter_t *qit = &it->priv_.iter.query;
-    if (it->instance_count > it->count) {
-        qit->skip_count ++;
-        if (qit->skip_count == it->instance_count) {
-            /* For non-instanced queries, make sure all entities are skipped */
-            it->flags |= EcsIterSkip;
-        }
-    } else {
-        it->flags |= EcsIterSkip;
-    }
+    it->flags |= EcsIterSkip;
 }

@@ -70,12 +70,7 @@ struct system final : entity
         world_ = nullptr;
     }
 
-    explicit system(flecs::world_t *world, ecs_system_desc_t *desc, bool instanced) 
-    {
-        if (!(desc->query.flags & EcsQueryIsInstanced)) {
-            ECS_BIT_COND(desc->query.flags, EcsQueryIsInstanced, instanced);
-        }
-
+    explicit system(flecs::world_t *world, ecs_system_desc_t *desc) {
         world_ = world;
         id_ = ecs_system_init(world, desc);
     }
