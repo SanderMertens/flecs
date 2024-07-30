@@ -29,6 +29,9 @@ struct untyped_component;
 template <typename T>
 struct component;
 
+template <typename T>
+struct ref;
+
 namespace _
 {
 template <typename T, typename U = int>
@@ -95,13 +98,13 @@ struct each_delegate;
 #include "log.hpp"
 #include "pair.hpp"
 #include "lifecycle_traits.hpp"
-#include "ref.hpp"
 #include "world.hpp"
 #include "field.hpp"
 #include "iter.hpp"
 #include "entity.hpp"
 #include "delegate.hpp"
 #include "component.hpp"
+#include "ref.hpp"
 #include "type.hpp"
 #include "table.hpp"
 #include "utils/iterable.hpp"
