@@ -799,6 +799,7 @@ struct ecs_query_t {
     ecs_termset_t data_fields;  /**< Fields that have data */
     ecs_termset_t write_fields; /**< Fields that write data */
     ecs_termset_t read_fields;  /**< Fields that read data */
+    ecs_termset_t row_fields;   /**< Fields that must be acquired with field_at */
     ecs_termset_t shared_readonly_fields; /**< Fields that don't write shared data */
     ecs_termset_t set_fields;   /**< Fields that will be set */
 
@@ -1048,8 +1049,8 @@ typedef struct ecs_component_desc_t {
  */
 struct ecs_iter_t {
     /* World */
-    ecs_world_t *world;           /**< The world */
-    ecs_world_t *real_world;      /**< Actual world. This differs from world when in readonly mode */
+    ecs_world_t *world;           /**< The world. Can point to stage when in deferred/readonly mode. */
+    ecs_world_t *real_world;      /**< Actual world. Never points to a stage. */
 
     /* Matched data */
     ecs_entity_t *entities;       /**< Entity identifiers */
@@ -1062,9 +1063,8 @@ struct ecs_iter_t {
     ecs_entity_t *sources;        /**< Entity on which the id was matched (0 if same as entities) */
     ecs_flags64_t constrained_vars; /**< Bitset that marks constrained variables */
     uint64_t group_id;            /**< Group id for table, if group_by is used */
-    int32_t field_count;          /**< Number of fields in iterator */
     ecs_termset_t set_fields;     /**< Fields that are set */
-    ecs_termset_t shared_fields;  /**< Bitset with shared fields */
+    ecs_termset_t ref_fields;     /**< Bitset with fields that aren't component arrays */
     ecs_termset_t up_fields;      /**< Bitset with fields matched through up traversal */
 
     /* Input information */
@@ -1074,11 +1074,12 @@ struct ecs_iter_t {
     int32_t event_cur;            /**< Unique event id. Used to dedup observer calls */
 
     /* Query information */
-    const ecs_query_t *query;     /**< Query being evaluated */
-    int32_t term_index;           /**< Index of term that emitted an event.
+    int16_t field_count;          /**< Number of fields in iterator */
+    int16_t term_index;           /**< Index of term that emitted an event.
                                    * This field will be set to the 'index' field
                                    * of an observer term. */
     int32_t variable_count;       /**< Number of variables for query */
+    const ecs_query_t *query;     /**< Query being evaluated */
     char **variable_names;        /**< Names of variables (if any) */
 
     /* Context */

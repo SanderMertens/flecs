@@ -10965,7 +10965,9 @@ void* ecs_field_w_size(
     ecs_assert(column_index < table->column_count, ECS_INTERNAL_ERROR, NULL);
 
     ecs_column_t *column = &table->data.columns[column_index];
-    ecs_assert(row < ecs_vec_count(&column->data), ECS_INTERNAL_ERROR, NULL);
+    ecs_assert((row < ecs_vec_count(&column->data)) ||
+        (it->query && (it->query->flags & EcsQueryMatchEmptyTables)),
+            ECS_INTERNAL_ERROR, NULL);
 
     void *data = ecs_vec_first(&column->data);
     return ECS_ELEM(data, column->size, row);
@@ -11015,7 +11017,9 @@ void* ecs_field_self_w_size(
     ecs_column_t *column = &table->data.columns[column_index];
     ecs_assert(!size || flecs_itosize(column->size) == size, 
         ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(row < ecs_vec_count(&column->data), ECS_INTERNAL_ERROR, NULL);
+    ecs_assert((row < ecs_vec_count(&column->data)) ||
+        (it->query && (it->query->flags & EcsQueryMatchEmptyTables)),
+            ECS_INTERNAL_ERROR, NULL);
 
     void *data = ecs_vec_first(&column->data);
     return ECS_ELEM(data, column->size, row);
@@ -34151,6 +34155,11 @@ int flecs_query_finalize_terms(
                         cacheable_terms --;
                         ECS_BIT_CLEAR16(term->flags_, EcsTermIsCacheable);
                     }
+                }
+
+                /* Sparse component fields must be accessed with ecs_field_at */
+                if (!nodata_term) {
+                    q->row_fields |= (1llu << i);
                 }
             }
         }
@@ -70149,6 +70158,7 @@ ecs_iter_t flecs_query_iter(
     it.field_count = q->field_count;
     it.sizes = q->sizes;
     it.set_fields = q->set_fields;
+    it.ref_fields = q->fixed_fields | q->row_fields;
     it.up_fields = 0;
     flecs_query_apply_iter_flags(&it, q);
 

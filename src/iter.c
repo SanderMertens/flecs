@@ -142,7 +142,9 @@ void* ecs_field_w_size(
     ecs_assert(column_index < table->column_count, ECS_INTERNAL_ERROR, NULL);
 
     ecs_column_t *column = &table->data.columns[column_index];
-    ecs_assert(row < ecs_vec_count(&column->data), ECS_INTERNAL_ERROR, NULL);
+    ecs_assert((row < ecs_vec_count(&column->data)) ||
+        (it->query && (it->query->flags & EcsQueryMatchEmptyTables)),
+            ECS_INTERNAL_ERROR, NULL);
 
     void *data = ecs_vec_first(&column->data);
     return ECS_ELEM(data, column->size, row);
@@ -192,7 +194,9 @@ void* ecs_field_self_w_size(
     ecs_column_t *column = &table->data.columns[column_index];
     ecs_assert(!size || flecs_itosize(column->size) == size, 
         ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(row < ecs_vec_count(&column->data), ECS_INTERNAL_ERROR, NULL);
+    ecs_assert((row < ecs_vec_count(&column->data)) ||
+        (it->query && (it->query->flags & EcsQueryMatchEmptyTables)),
+            ECS_INTERNAL_ERROR, NULL);
 
     void *data = ecs_vec_first(&column->data);
     return ECS_ELEM(data, column->size, row);

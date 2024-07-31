@@ -31,6 +31,8 @@ void Sparse_1_fixed_sparse(void) {
     });
     test_assert(q != NULL);
 
+    test_bool(true, !!(q->row_fields & (1llu << 0)));
+
     ecs_iter_t it = ecs_query_iter(world, q);
     test_bool(true, ecs_query_next(&it));
     test_int(0, it.count);
@@ -64,6 +66,8 @@ void Sparse_1_fixed_sparse_none(void) {
     });
     test_assert(q != NULL);
 
+    test_bool(false, !!(q->row_fields & (1llu << 0)));
+
     ecs_iter_t it = ecs_query_iter(world, q);
     test_bool(true, ecs_query_next(&it));
     test_int(0, it.count);
@@ -88,6 +92,8 @@ void Sparse_1_this_sparse(void) {
         .cache_kind = cache_kind
     });
     test_assert(q != NULL);
+
+    test_bool(true, !!(q->row_fields & (1llu << 0)));
 
     ecs_entity_t e1 = ecs_insert(world, ecs_value(Position, {10, 20}));
     ecs_entity_t e2 = ecs_insert(world, ecs_value(Position, {30, 40}));
@@ -137,6 +143,8 @@ void Sparse_1_this_sparse_none(void) {
     });
     test_assert(q != NULL);
 
+    test_bool(false, !!(q->row_fields & (1llu << 0)));
+
     ecs_entity_t e1 = ecs_insert(world, ecs_value(Position, {10, 20}));
     ecs_entity_t e2 = ecs_insert(world, ecs_value(Position, {30, 40}));
     ecs_entity_t e3 = ecs_insert(world, ecs_value(Position, {50, 60}));
@@ -167,6 +175,9 @@ void Sparse_1_this_sparse_written(void) {
         .cache_kind = cache_kind
     });
     test_assert(q != NULL);
+    
+    test_bool(false, !!(q->row_fields & (1llu << 0)));
+    test_bool(true, !!(q->row_fields & (1llu << 1)));
 
     ecs_entity_t e1 = ecs_insert(world, {Foo}, ecs_value(Position, {10, 20}));
     ecs_entity_t e2 = ecs_insert(world, {Foo}, ecs_value(Position, {30, 40}));
@@ -217,6 +228,9 @@ void Sparse_1_this_sparse_written_none(void) {
     });
     test_assert(q != NULL);
 
+    test_bool(false, !!(q->row_fields & (1llu << 0)));
+    test_bool(false, !!(q->row_fields & (1llu << 1)));
+
     ecs_entity_t e1 = ecs_insert(world, {Foo}, ecs_value(Position, {10, 20}));
     ecs_entity_t e2 = ecs_insert(world, {Foo}, ecs_value(Position, {30, 40}));
     ecs_entity_t e3 = ecs_insert(world, {Foo}, ecs_value(Position, {50, 60}));
@@ -246,6 +260,8 @@ void Sparse_1_var_sparse(void) {
         .cache_kind = cache_kind
     });
     test_assert(q != NULL);
+
+    test_bool(true, !!(q->row_fields & (1llu << 0)));
 
     int x_var = ecs_query_find_var(q, "x");
     test_assert(x_var != -1);
@@ -302,6 +318,8 @@ void Sparse_1_var_sparse_none(void) {
     });
     test_assert(q != NULL);
 
+    test_bool(false, !!(q->row_fields & (1llu << 0)));
+
     int x_var = ecs_query_find_var(q, "x");
     test_assert(x_var != -1);
 
@@ -342,6 +360,9 @@ void Sparse_1_var_sparse_written(void) {
         .cache_kind = cache_kind
     });
     test_assert(q != NULL);
+
+    test_bool(false, !!(q->row_fields & (1llu << 0)));
+    test_bool(true, !!(q->row_fields & (1llu << 1)));
 
     int x_var = ecs_query_find_var(q, "x");
     test_assert(x_var != -1);
@@ -399,6 +420,9 @@ void Sparse_1_var_sparse_written_none(void) {
     });
     test_assert(q != NULL);
 
+    test_bool(false, !!(q->row_fields & (1llu << 0)));
+    test_bool(false, !!(q->row_fields & (1llu << 1)));
+
     int x_var = ecs_query_find_var(q, "x");
     test_assert(x_var != -1);
 
@@ -440,6 +464,9 @@ void Sparse_2_sparse(void) {
         .cache_kind = cache_kind
     });
     test_assert(q != NULL);
+
+    test_bool(true, !!(q->row_fields & (1llu << 0)));
+    test_bool(true, !!(q->row_fields & (1llu << 1)));
 
     ecs_entity_t e1 = ecs_insert(world, 
         ecs_value(Position, {10, 20}),
@@ -511,6 +538,9 @@ void Sparse_2_sparse_and_regular(void) {
     });
     test_assert(q != NULL);
 
+    test_bool(true, !!(q->row_fields & (1llu << 0)));
+    test_bool(false, !!(q->row_fields & (1llu << 1)));
+
     ecs_entity_t e1 = ecs_insert(world, 
         ecs_value(Position, {10, 20}),
         ecs_value(Velocity, {1,  2}));
@@ -580,6 +610,9 @@ void Sparse_2_regular_and_sparse(void) {
         .cache_kind = cache_kind
     });
     test_assert(q != NULL);
+
+    test_bool(false, !!(q->row_fields & (1llu << 0)));
+    test_bool(true, !!(q->row_fields & (1llu << 1)));
 
     ecs_entity_t e1 = ecs_insert(world, 
         ecs_value(Position, {10, 20}),
@@ -651,6 +684,8 @@ void Sparse_1_sparse_self(void) {
     });
     test_assert(q != NULL);
 
+    test_bool(true, !!(q->row_fields & (1llu << 0)));
+
     ecs_entity_t base = ecs_insert(world, {EcsPrefab}, ecs_value(Position, {1, 2}));
     ecs_entity_t e1 = ecs_insert(world, {ecs_isa(base)}, ecs_value(Position, {10, 20}));
     ecs_entity_t e2 = ecs_insert(world, {ecs_isa(base)}, ecs_value(Position, {30, 40}));
@@ -694,6 +729,8 @@ void Sparse_1_sparse_up(void) {
         .cache_kind = cache_kind
     });
     test_assert(q != NULL);
+
+    test_bool(true, !!(q->row_fields & (1llu << 0)));
 
     ecs_entity_t base = ecs_insert(world, {EcsPrefab}, ecs_value(Position, {1, 2}));
     ecs_entity_t e1 = ecs_insert(world, {ecs_isa(base)}, ecs_value(Position, {10, 20}));
@@ -742,6 +779,8 @@ void Sparse_1_sparse_self_up(void) {
         .cache_kind = cache_kind
     });
     test_assert(q != NULL);
+
+    test_bool(true, !!(q->row_fields & (1llu << 0)));
 
     ecs_entity_t base = ecs_insert(world, {EcsPrefab}, ecs_value(Position, {1, 2}));
     ecs_entity_t e1 = ecs_insert(world, {ecs_isa(base)}, ecs_value(Position, {10, 20}));
@@ -804,6 +843,9 @@ void Sparse_1_sparse_written_self(void) {
     });
     test_assert(q != NULL);
 
+    test_bool(false, !!(q->row_fields & (1llu << 0)));
+    test_bool(true, !!(q->row_fields & (1llu << 1)));
+
     ecs_entity_t base = ecs_insert(world, {EcsPrefab}, ecs_value(Position, {1, 2}));
     ecs_entity_t e1 = ecs_insert(world, {ecs_isa(base)}, {Foo}, ecs_value(Position, {10, 20}));
     ecs_entity_t e2 = ecs_insert(world, {ecs_isa(base)}, {Foo}, ecs_value(Position, {30, 40}));
@@ -848,6 +890,9 @@ void Sparse_1_sparse_written_up(void) {
         .cache_kind = cache_kind
     });
     test_assert(q != NULL);
+
+    test_bool(false, !!(q->row_fields & (1llu << 0)));
+    test_bool(true, !!(q->row_fields & (1llu << 1)));
 
     ecs_entity_t base = ecs_insert(world, {EcsPrefab}, ecs_value(Position, {1, 2}));
     ecs_entity_t e1 = ecs_insert(world, {ecs_isa(base)}, {Foo}, ecs_value(Position, {10, 20}));
@@ -897,6 +942,9 @@ void Sparse_1_sparse_written_self_up(void) {
         .cache_kind = cache_kind
     });
     test_assert(q != NULL);
+
+    test_bool(false, !!(q->row_fields & (1llu << 0)));
+    test_bool(true, !!(q->row_fields & (1llu << 1)));
 
     ecs_entity_t base = ecs_insert(world, {EcsPrefab}, ecs_value(Position, {1, 2}));
     ecs_entity_t e1 = ecs_insert(world, {ecs_isa(base)}, {Foo}, ecs_value(Position, {10, 20}));
@@ -958,6 +1006,8 @@ void Sparse_sparse_0_src_only_term(void) {
 
     test_assert(q != NULL);
 
+    test_bool(false, !!(q->row_fields & (1llu << 0)));
+
     ecs_iter_t it = ecs_query_iter(world, q);
     test_bool(true, ecs_query_next(&it));
     test_int(0, it.count);
@@ -986,6 +1036,8 @@ void Sparse_sparse_0_src(void) {
     });
 
     test_assert(q != NULL);
+
+    test_bool(false, !!(q->row_fields & (1llu << 0)));
 
     ecs_iter_t it = ecs_query_iter(world, q);
     test_bool(true, ecs_query_next(&it));

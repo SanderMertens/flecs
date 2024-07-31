@@ -1292,6 +1292,11 @@ int flecs_query_finalize_terms(
                         ECS_BIT_CLEAR16(term->flags_, EcsTermIsCacheable);
                     }
                 }
+
+                /* Sparse component fields must be accessed with ecs_field_at */
+                if (!nodata_term) {
+                    q->row_fields |= (1llu << i);
+                }
             }
         }
 

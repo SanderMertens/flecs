@@ -303,6 +303,7 @@ ecs_iter_t flecs_query_iter(
     it.field_count = q->field_count;
     it.sizes = q->sizes;
     it.set_fields = q->set_fields;
+    it.ref_fields = q->fixed_fields | q->row_fields;
     it.up_fields = 0;
     flecs_query_apply_iter_flags(&it, q);
 
