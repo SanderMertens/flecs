@@ -4,9 +4,6 @@
 // Observers can enable a "yield_existing" feature that upon creation of the
 // observer produces events for all entities that match the observer query. The
 // feature is only implemented for the builtin EcsOnAdd and EcsOnSet events.
-//
-// Custom events can also implement behavior for yield_existing by adding the
-// Iterable component to the event (see EcsIterable for more details).
 
 struct Position {
     double x, y;
