@@ -108,6 +108,7 @@ void Eval_using_nested_in_scope(void);
 void Eval_using_with_scope(void);
 void Eval_using_w_entity_ref_in_value_2_members(void);
 void Eval_using_w_entity_ref_in_value_3_members(void);
+void Eval_script_w_only_using(void);
 void Eval_2_using_scope(void);
 void Eval_2_using_in_different_scope(void);
 void Eval_empty_scope_after_using(void);
@@ -1011,6 +1012,10 @@ bake_test_case Eval_testcases[] = {
     {
         "using_w_entity_ref_in_value_3_members",
         Eval_using_w_entity_ref_in_value_3_members
+    },
+    {
+        "script_w_only_using",
+        Eval_script_w_only_using
     },
     {
         "2_using_scope",
@@ -3019,7 +3024,7 @@ static bake_test_suite suites[] = {
         "Eval",
         NULL,
         NULL,
-        278,
+        279,
         Eval_testcases
     },
     {

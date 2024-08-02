@@ -355,9 +355,13 @@ with_stmt: {
 // using
 using_stmt: {
     // using flecs.meta\n
-    Parse_2(EcsTokIdentifier, '\n',
+    Parse_1(EcsTokIdentifier,
         flecs_script_insert_using(parser, Token(1));
-        EndOfRule;
+
+        Parse(
+            EcsTokEndOfStatement:
+                EndOfRule;
+        )
     )
 }
 

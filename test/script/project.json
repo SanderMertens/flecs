@@ -112,6 +112,7 @@
                 "using_with_scope",
                 "using_w_entity_ref_in_value_2_members",
                 "using_w_entity_ref_in_value_3_members",
+                "script_w_only_using",
                 "2_using_scope",
                 "2_using_in_different_scope",
                 "empty_scope_after_using",

@@ -2681,6 +2681,14 @@ void Eval_using_w_entity_ref_in_value_3_members(void) {
     ecs_fini(world);
 }
 
+void Eval_script_w_only_using(void) {
+    ecs_world_t *world = ecs_init();
+
+    test_assert(ecs_script_run(world, NULL, "using flecs") == 0);
+
+    ecs_fini(world);
+}
+
 void Eval_2_using_scope(void) {
     ecs_world_t *world = ecs_init();
 
