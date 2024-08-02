@@ -402,7 +402,7 @@ int flecs_query_discover_vars(
 
     query->vars = query_vars;
     query->var_count = var_count;
-    query->pub.var_count = flecs_ito(int16_t, var_count);
+    query->pub.var_count = flecs_ito(int8_t, var_count);
     ECS_BIT_COND(query->pub.flags, EcsQueryHasTableThisVar, 
         !entity_before_table_this);
     query->var_size = var_count + anonymous_count;
@@ -432,7 +432,7 @@ int flecs_query_discover_vars(
 
     /* Hide anonymous table variables from application */
     query->pub.var_count = 
-        flecs_ito(int16_t, query->pub.var_count - anonymous_table_count);
+        flecs_ito(int8_t, query->pub.var_count - anonymous_table_count);
 
     /* Sanity check to make sure that the public part of the variable array only
      * contains entity variables. */

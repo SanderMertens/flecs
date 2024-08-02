@@ -584,7 +584,6 @@ void flecs_emit_forward_id(
     ecs_entity_t tgt,
     ecs_table_t *tgt_table,
     int32_t column,
-    int32_t offset,
     ecs_entity_t trav)
 {
     ecs_id_t id = idr->id;
@@ -686,7 +685,6 @@ void flecs_emit_forward_and_cache_id(
     ecs_table_t *tgt_table,
     const ecs_table_record_t *tgt_tr,
     int32_t column,
-    int32_t offset,
     ecs_vec_t *reachable_ids,
     ecs_entity_t trav)
 {
@@ -703,7 +701,7 @@ void flecs_emit_forward_and_cache_id(
     ecs_assert(tgt_table == tgt_record->table, ECS_INTERNAL_ERROR, NULL);
 
     flecs_emit_forward_id(world, er, er_onset, emit_ids, it, table, idr,
-        tgt, tgt_table, column, offset, trav);
+        tgt, tgt_table, column, trav);
 }
 
 static
@@ -766,11 +764,10 @@ void flecs_emit_forward_cached_ids(
             continue;
         }
 
-        int32_t rc_offset = ECS_RECORD_TO_ROW(rc_record->row);
         flecs_emit_forward_and_cache_id(world, er, er_onset, emit_ids,
             it, table, rc_idr, rc_elem->src,
                 rc_record, rc_record->table, rc_tr, rc_tr->index,
-                    rc_offset, reachable_ids, trav);
+                    reachable_ids, trav);
     }
 }
 
@@ -814,7 +811,6 @@ void flecs_emit_forward_table_up(
     ecs_allocator_t *a = &world->allocator;
     int32_t i, id_count = tgt_table->type.count;
     ecs_id_t *ids = tgt_table->type.array;
-    int32_t offset = ECS_RECORD_TO_ROW(tgt_record->row);
     int32_t rc_child_offset = ecs_vec_count(reachable_ids);
     int32_t stack_count = ecs_vec_count(stack);
 
@@ -908,7 +904,7 @@ void flecs_emit_forward_table_up(
 
         flecs_emit_forward_and_cache_id(world, er, er_onset, emit_ids, it,
             table, idr, tgt, tgt_record, tgt_table, tgt_tr, i, 
-                offset, reachable_ids, trav);
+                reachable_ids, trav);
     }
 
     if (parent_revalidate) {
@@ -1039,9 +1035,8 @@ void flecs_emit_forward(
                 ECS_INTERNAL_ERROR, NULL);
             ecs_dbg_assert(r->table == elem->table, ECS_INTERNAL_ERROR, NULL);
 
-            int32_t offset = ECS_RECORD_TO_ROW(r->row);
             flecs_emit_forward_id(world, er, er_onset, emit_ids, it, table,
-                rc_idr, elem->src, r->table, tr->index, offset, trav);
+                rc_idr, elem->src, r->table, tr->index, trav);
         }
     }
 

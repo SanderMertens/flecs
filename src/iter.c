@@ -96,7 +96,7 @@ void ecs_iter_fini(
 void* ecs_field_w_size(
     const ecs_iter_t *it,
     size_t size,
-    int32_t index)
+    int8_t index)
 {
     ecs_check(it->flags & EcsIterIsValid, ECS_INVALID_PARAMETER,
         "operation invalid before calling next()");
@@ -152,62 +152,10 @@ error:
     return NULL;
 }
 
-void* ecs_field_self_w_size(
-    const ecs_iter_t *it,
-    size_t size,
-    int32_t index)
-{
-    ecs_check(it->flags & EcsIterIsValid, ECS_INVALID_PARAMETER,
-        "operation invalid before calling next()");
-    ecs_check(index >= 0, ECS_INVALID_PARAMETER, 
-        "invalid field index %d", index);
-    ecs_check(index < it->field_count, ECS_INVALID_PARAMETER, 
-        "field index %d out of bounds", index);
-    ecs_check(!size || ecs_field_size(it, index) == size || 
-        !ecs_field_size(it, index),
-            ECS_INVALID_PARAMETER, "mismatching size for field %d", index);
-    (void)size;
-
-    const ecs_table_record_t *tr = it->trs[index];
-    ecs_assert(tr != NULL, ECS_INVALID_OPERATION,
-        "field is not set, use ecs_field for optional fields");
-
-    ecs_id_record_t *idr = (ecs_id_record_t*)tr->hdr.cache;
-    ecs_assert(!(idr->flags & EcsIdIsSparse), ECS_INVALID_OPERATION,
-        "use ecs_field_at to access fields for sparse components");
-    (void)idr;
-
-    ecs_assert(it->sources[index] == 0, ECS_INVALID_OPERATION,
-        "use ecs_field for fields that are not matched on self");
-
-    ecs_table_t *table = it->table;
-    int32_t row = it->offset;
-    ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(tr->hdr.table == table, ECS_INTERNAL_ERROR, NULL);
-
-    int32_t column_index = tr->column;
-    ecs_assert(column_index != -1, ECS_NOT_A_COMPONENT, 
-        "only components can be fetched with fields");
-    ecs_assert(column_index >= 0, ECS_INTERNAL_ERROR, NULL);
-    ecs_assert(column_index < table->column_count, ECS_INTERNAL_ERROR, NULL);
-
-    ecs_column_t *column = &table->data.columns[column_index];
-    ecs_assert(!size || flecs_itosize(column->size) == size, 
-        ECS_INTERNAL_ERROR, NULL);
-    ecs_assert((row < ecs_vec_count(&column->data)) ||
-        (it->query && (it->query->flags & EcsQueryMatchEmptyTables)),
-            ECS_INTERNAL_ERROR, NULL);
-
-    void *data = ecs_vec_first(&column->data);
-    return ECS_ELEM(data, column->size, row);
-error:
-    return NULL;
-}
-
 void* ecs_field_at_w_size(
     const ecs_iter_t *it,
     size_t size,
-    int32_t index,
+    int8_t index,
     int32_t row)
 {
     ecs_check(it->flags & EcsIterIsValid, ECS_INVALID_PARAMETER,
@@ -219,7 +167,6 @@ void* ecs_field_at_w_size(
     ecs_check(!size || ecs_field_size(it, index) == size || 
         !ecs_field_size(it, index),
             ECS_INVALID_PARAMETER, "mismatching size for field %d", index);
-    (void)size;
 
     const ecs_table_record_t *tr = it->trs[index];
     if (!tr) {
@@ -236,14 +183,14 @@ void* ecs_field_at_w_size(
         src = flecs_table_entities_array(it->table)[row];
     }
 
-    return flecs_sparse_get_any(idr->sparse, size, src);
+    return flecs_sparse_get_any(idr->sparse, flecs_uto(int32_t, size), src);
 error:
     return NULL;
 }
 
 bool ecs_field_is_readonly(
     const ecs_iter_t *it,
-    int32_t index)
+    int8_t index)
 {
     ecs_check(it->flags & EcsIterIsValid, ECS_INVALID_PARAMETER,
         "operation invalid before calling next()");
@@ -274,7 +221,7 @@ error:
 
 bool ecs_field_is_writeonly(
     const ecs_iter_t *it,
-    int32_t index)
+    int8_t index)
 {
     ecs_check(it->flags & EcsIterIsValid, ECS_INVALID_PARAMETER,
         "operation invalid before calling next()");
@@ -294,7 +241,7 @@ error:
 
 bool ecs_field_is_set(
     const ecs_iter_t *it,
-    int32_t index)
+    int8_t index)
 {
     ecs_check(it->flags & EcsIterIsValid, ECS_INVALID_PARAMETER,
         "operation invalid before calling next()");
@@ -310,7 +257,7 @@ error:
 
 bool ecs_field_is_self(
     const ecs_iter_t *it,
-    int32_t index)
+    int8_t index)
 {
     ecs_check(index >= 0, ECS_INVALID_PARAMETER, 
         "invalid field index %d", index);
@@ -324,7 +271,7 @@ error:
 
 ecs_id_t ecs_field_id(
     const ecs_iter_t *it,
-    int32_t index)
+    int8_t index)
 {
     ecs_check(index >= 0, ECS_INVALID_PARAMETER, 
         "invalid field index %d", index);
@@ -338,7 +285,7 @@ error:
 
 int32_t ecs_field_column(
     const ecs_iter_t *it,
-    int32_t index)
+    int8_t index)
 {
     ecs_check(index >= 0, ECS_INVALID_PARAMETER, 
         "invalid field index %d", index);
@@ -357,7 +304,7 @@ error:
 
 ecs_entity_t ecs_field_src(
     const ecs_iter_t *it,
-    int32_t index)
+    int8_t index)
 {
     ecs_check(index >= 0, ECS_INVALID_PARAMETER, 
         "invalid field index %d", index);
@@ -375,7 +322,7 @@ error:
 
 size_t ecs_field_size(
     const ecs_iter_t *it,
-    int32_t index)
+    int8_t index)
 {
     ecs_check(index >= 0, ECS_INVALID_PARAMETER, 
         "invalid field index %d", index);
@@ -396,7 +343,7 @@ char* ecs_iter_str(
 
     ecs_world_t *world = it->world;
     ecs_strbuf_t buf = ECS_STRBUF_INIT;
-    int i;
+    int8_t i;
 
     if (it->field_count) {
         ecs_strbuf_list_push(&buf, "id:  ", ",");

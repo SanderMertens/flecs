@@ -37,10 +37,10 @@ struct component_binding_ctx {
 
 // Utility to convert template argument pack to array of term ptrs
 struct field_ptr {
-    void *ptr;
-    int16_t index;
-    bool is_ref;
-    bool is_row;
+    void *ptr = nullptr;
+    int8_t index = 0;
+    bool is_ref = false;
+    bool is_row = false;
 };
 
 template <typename ... Components>
@@ -61,7 +61,7 @@ struct field_ptrs {
                     *>(nullptr)...);
     }
 
-    array terms_;
+    array fields_;
 
 private:
     void populate(const ecs_iter_t*, size_t) { }
@@ -76,13 +76,13 @@ private:
         ecs_assert(q != NULL, ECS_INTERNAL_ERROR, NULL);
         if (q->row_fields & (1llu << index)) {
             /* Need to fetch the value with ecs_field_at() */
-            terms_[index].is_row = true;
-            terms_[index].is_ref = true;
-            terms_[index].index = index;
+            fields_[index].is_row = true;
+            fields_[index].is_ref = true;
+            fields_[index].index = static_cast<int8_t>(index);
         } else {
-            terms_[index].ptr = ecs_field_w_size(iter, sizeof(A), index);
-            terms_[index].is_ref = iter->sources[index] != 0;
-            terms_[index].is_row = false;
+            fields_[index].ptr = ecs_field_w_size(iter, sizeof(A), 
+                static_cast<int8_t>(index));
+            fields_[index].is_ref = iter->sources[index] != 0;
         }
 
         populate(iter, index + 1, comps ...);
@@ -101,7 +101,8 @@ private:
         typename A = remove_pointer_t<actual_type_t<T>>,
             if_not_t< is_empty<A>::value > = 0>
     void populate_self(const ecs_iter_t *iter, size_t index, T, Targs... comps) {
-        terms_[index].ptr = ecs_field_w_size(iter, sizeof(A), index);
+        fields_[index].ptr = ecs_field_w_size(iter, sizeof(A), 
+            static_cast<int8_t>(index));
         populate(iter, index + 1, comps ...);
     }
 
@@ -214,7 +215,8 @@ struct each_ref_field : public each_field<T> {
         }
 
         if (field.is_row) {
-            field.ptr = ecs_field_at_w_size(iter, sizeof(T), field.index, row);
+            field.ptr = ecs_field_at_w_size(iter, sizeof(T), field.index, 
+                static_cast<int8_t>(row));
         }
     }
 };
@@ -242,10 +244,10 @@ struct each_delegate : public delegate {
 
         if (iter->ref_fields | iter->up_fields) {
             terms.populate(iter);
-            invoke_unpack< each_ref_field >(iter, func_, 0, terms.terms_);
+            invoke_unpack< each_ref_field >(iter, func_, 0, terms.fields_);
         } else {
             terms.populate_self(iter);
-            invoke_unpack< each_field >(iter, func_, 0, terms.terms_);
+            invoke_unpack< each_field >(iter, func_, 0, terms.fields_);
         }
     }
 
@@ -394,10 +396,10 @@ struct find_delegate : public delegate {
 
         if (iter->ref_fields | iter->up_fields) {
             terms.populate(iter);
-            return invoke_callback< each_ref_field >(iter, func_, 0, terms.terms_);
+            return invoke_callback< each_ref_field >(iter, func_, 0, terms.fields_);
         } else {
             terms.populate_self(iter);
-            return invoke_callback< each_field >(iter, func_, 0, terms.terms_);
+            return invoke_callback< each_field >(iter, func_, 0, terms.fields_);
         }
     }
 

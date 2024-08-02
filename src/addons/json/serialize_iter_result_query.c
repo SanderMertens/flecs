@@ -19,7 +19,7 @@ bool flecs_json_serialize_iter_result_is_set(
     flecs_json_memberl(buf, "is_set");
     flecs_json_array_push(buf);
 
-    int32_t i, count = it->field_count;
+    int8_t i, count = it->field_count;
     for (i = 0; i < count; i ++) {
         ecs_strbuf_list_next(buf);
         if (ecs_field_is_set(it, i)) {
@@ -162,7 +162,7 @@ int flecs_json_serialize_iter_result_field_values(
     const ecs_iter_to_json_desc_t *desc,
     ecs_json_ser_ctx_t *ser_ctx)
 {
-    int32_t f, field_count = it->field_count;
+    int8_t f, field_count = it->field_count;
     if (!field_count) {
         return 0;
     }
@@ -170,7 +170,7 @@ int flecs_json_serialize_iter_result_field_values(
     ecs_strbuf_appendlit(buf, "\"values\":");
     flecs_json_array_push(buf);
 
-    ecs_flags16_t fields = it->set_fields;
+    ecs_termset_t fields = it->set_fields;
     if (it->query) {
         fields &= it->query->data_fields;
     }
@@ -191,7 +191,7 @@ int flecs_json_serialize_iter_result_field_values(
         }
 
         ecs_size_t size = it->sizes[f];
-        void *ptr = ecs_field_w_size(it, size, f);
+        void *ptr = ecs_field_w_size(it, flecs_itosize(size), f);
 
         if (!ptr) {
             ecs_strbuf_list_appendlit(buf, "0");

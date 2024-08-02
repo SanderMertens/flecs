@@ -651,7 +651,7 @@ void flecs_table_invoke_hook(
     int32_t row,
     int32_t count)
 {
-    int32_t column_index = (column - table->data.columns);
+    int32_t column_index = flecs_ito(int32_t, column - table->data.columns);
     ecs_assert(column_index >= 0, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(column_index < table->column_count, ECS_INTERNAL_ERROR, NULL);
     int32_t type_index = table->column_map[table->type.count + column_index];

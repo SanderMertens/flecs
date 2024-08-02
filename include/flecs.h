@@ -273,7 +273,7 @@
 #define FLECS_VARIABLE_COUNT_MAX (64)
 
 /** \def FLECS_TERM_COUNT_MAX 
- * Maximum number of terms in queries. Should not be set higher than 64. */
+ * Maximum number of terms in queries. Should not exceed 64. */
 #ifndef FLECS_TERM_COUNT_MAX
 #define FLECS_TERM_COUNT_MAX 32
 #endif
@@ -285,7 +285,7 @@
 #endif
 
 /** \def FLECS_QUERY_VARIABLE_COUNT_MAX
- * Maximum number of query variables per query */
+ * Maximum number of query variables per query. Should not exceed 128. */
 #ifndef FLECS_QUERY_VARIABLE_COUNT_MAX
 #define FLECS_QUERY_VARIABLE_COUNT_MAX (64)
 #endif
@@ -774,7 +774,7 @@ struct ecs_term_t {
     int16_t inout;              /**< Access to contents matched by term */
     int16_t oper;               /**< Operator of term */
 
-    int16_t field_index;        /**< Index of field for term in iterator */
+    int8_t field_index;         /**< Index of field for term in iterator */
     ecs_flags16_t flags_;       /**< Flags that help eval, set by ecs_query_init() */
 };
 
@@ -789,7 +789,7 @@ struct ecs_query_t {
     ecs_id_t ids[FLECS_TERM_COUNT_MAX]; /**< Component ids. Indexed by field */
 
     ecs_flags32_t flags;        /**< Query flags */
-    int16_t var_count;          /**< Number of query variables */
+    int8_t var_count;           /**< Number of query variables */
     int8_t term_count;          /**< Number of query terms */
     int8_t field_count;         /**< Number of fields returned by query */
 
@@ -1074,11 +1074,11 @@ struct ecs_iter_t {
     int32_t event_cur;            /**< Unique event id. Used to dedup observer calls */
 
     /* Query information */
-    int16_t field_count;          /**< Number of fields in iterator */
-    int16_t term_index;           /**< Index of term that emitted an event.
+    int8_t field_count;           /**< Number of fields in iterator */
+    int8_t term_index;            /**< Index of term that emitted an event.
                                    * This field will be set to the 'index' field
                                    * of an observer term. */
-    int32_t variable_count;       /**< Number of variables for query */
+    int8_t variable_count;        /**< Number of variables for query */
     const ecs_query_t *query;     /**< Query being evaluated */
     char **variable_names;        /**< Names of variables (if any) */
 
@@ -1280,7 +1280,7 @@ typedef struct ecs_observer_desc_t {
     int32_t *last_event_id;
 
     /** Used for internal purposes */
-    int32_t term_index_;
+    int8_t term_index_;
     ecs_flags32_t flags_;
 } ecs_observer_desc_t;
 
@@ -5319,7 +5319,7 @@ FLECS_API
 bool ecs_worker_next(
     ecs_iter_t *it);
 
-/** Obtain data for a query field.
+/** Get data for field.
  * This operation retrieves a pointer to an array of data that belongs to the
  * term in the query. The index refers to the location of the term in the query,
  * and starts counting from zero.
@@ -5341,29 +5341,57 @@ bool ecs_worker_next(
  * The provided size must be either 0 or must match the size of the type
  * of the returned array. If the size does not match, the operation may assert.
  * The size can be dynamically obtained with ecs_field_size().
+ * 
+ * An example:
+ * 
+ * @code
+ * while (ecs_query_next(&it)) {
+ *   Position *p = ecs_field(&it, Position, 0);
+ *   Velocity *v = ecs_field(&it, Velocity, 1);
+ *   for (int32_t i = 0; i < it->count; i ++) {
+ *     p[i].x += v[i].x;
+ *     p[i].y += v[i].y;
+ *   }
+ * }
+ * @endcode
  *
  * @param it The iterator.
- * @param size The type size of the requested data.
- * @param index The index of the field in the iterator.
+ * @param size The size of the field type.
+ * @param index The index of the field.
  * @return A pointer to the data of the field.
  */
 FLECS_API
 void* ecs_field_w_size(
     const ecs_iter_t *it,
     size_t size,
-    int32_t index);
+    int8_t index);
 
-FLECS_API
-void* ecs_field_self_w_size(
-    const ecs_iter_t *it,
-    size_t size,
-    int32_t index);
-
+/** Get data for field at specified row.
+ * This operation should be used instead of ecs_field_w_size for sparse 
+ * component fields. This operation should be called for each returned row in a
+ * result. In the following example the Velocity component is sparse:
+ * 
+ * @code
+ * while (ecs_query_next(&it)) {
+ *   Position *p = ecs_field(&it, Position, 0);
+ *   for (int32_t i = 0; i < it->count; i ++) {
+ *     Velocity *v = ecs_field_at(&it, Velocity, 1);
+ *     p[i].x += v->x;
+ *     p[i].y += v->y;
+ *   }
+ * }
+ * @endcode
+ * 
+ * @param it the iterator.
+ * @param size The size of the field type.
+ * @param index The index of the field.
+ * @return A pointer to the data of the field.
+ */
 FLECS_API
 void* ecs_field_at_w_size(
     const ecs_iter_t *it,
     size_t size,
-    int32_t index,
+    int8_t index,
     int32_t row);
 
 /** Test whether the field is readonly.
@@ -5377,7 +5405,7 @@ void* ecs_field_at_w_size(
 FLECS_API
 bool ecs_field_is_readonly(
     const ecs_iter_t *it,
-    int32_t index);
+    int8_t index);
 
 /** Test whether the field is writeonly.
  * This operation returns whether this is a writeonly field. Writeonly terms are
@@ -5392,7 +5420,7 @@ bool ecs_field_is_readonly(
 FLECS_API
 bool ecs_field_is_writeonly(
     const ecs_iter_t *it,
-    int32_t index);
+    int8_t index);
 
 /** Test whether field is set.
  *
@@ -5403,7 +5431,7 @@ bool ecs_field_is_writeonly(
 FLECS_API
 bool ecs_field_is_set(
     const ecs_iter_t *it,
-    int32_t index);
+    int8_t index);
 
 /** Return id matched for field.
  *
@@ -5414,7 +5442,7 @@ bool ecs_field_is_set(
 FLECS_API
 ecs_id_t ecs_field_id(
     const ecs_iter_t *it,
-    int32_t index);
+    int8_t index);
 
 /** Return index of matched table column.
  * This function only returns column indices for fields that have been matched
@@ -5427,7 +5455,7 @@ ecs_id_t ecs_field_id(
 FLECS_API
 int32_t ecs_field_column(
     const ecs_iter_t *it,
-    int32_t index);
+    int8_t index);
 
 /** Return field source.
  * The field source is the entity on which the field was matched.
@@ -5439,7 +5467,7 @@ int32_t ecs_field_column(
 FLECS_API
 ecs_entity_t ecs_field_src(
     const ecs_iter_t *it,
-    int32_t index);
+    int8_t index);
 
 /** Return field type size.
  * Return type size of the field. Returns 0 if the field has no data.
@@ -5451,7 +5479,7 @@ ecs_entity_t ecs_field_src(
 FLECS_API
 size_t ecs_field_size(
     const ecs_iter_t *it,
-    int32_t index);
+    int8_t index);
 
 /** Test whether the field is matched on self.
  * This operation returns whether the field is matched on the currently iterated
@@ -5469,7 +5497,7 @@ size_t ecs_field_size(
 FLECS_API
 bool ecs_field_is_self(
     const ecs_iter_t *it,
-    int32_t index);
+    int8_t index);
 
 /** @} */
 

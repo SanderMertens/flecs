@@ -163,7 +163,7 @@ void flecs_json_serialize_query_profile(
             result_count ++;
             entity_count += qit.count;
 
-            int32_t f, field_count = qit.field_count;
+            int8_t f, field_count = qit.field_count;
             for (f = 0; f < field_count; f ++) {
                 size_t size = ecs_field_size(&qit, f);
                 if (ecs_field_is_set(&qit, f) && size) {

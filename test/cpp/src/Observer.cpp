@@ -943,10 +943,10 @@ void Observer_term_index(void) {
         });
 
     e1.set<Position>({ 10, 20 });
-    test_int(last_term, 1);
+    test_int(last_term, 0);
 
     e1.set<Velocity>({ 30, 40 }); 
-    test_int(last_term, 2);
+    test_int(last_term, 1);
 }
 
 void Observer_implicit_register_in_emit_for_named_entity(void) {

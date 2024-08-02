@@ -1064,7 +1064,7 @@ int flecs_query_finalize_terms(
     ecs_query_t *q,
     const ecs_query_desc_t *desc)
 {
-    int32_t i, term_count = q->term_count, field_count = 0;
+    int8_t i, term_count = q->term_count, field_count = 0;
     ecs_term_t *terms = q->terms;
     int32_t nodata_terms = 0, scope_nesting = 0, cacheable_terms = 0;
     bool cond_set = false;
@@ -1150,7 +1150,7 @@ int flecs_query_finalize_terms(
             field_count ++;
         }
 
-        term->field_index = flecs_ito(int16_t, field_count - 1);
+        term->field_index = flecs_ito(int8_t, field_count - 1);
 
         if (ecs_id_is_wildcard(term->id)) {
             q->flags |= EcsQueryMatchWildcards;
@@ -1295,7 +1295,7 @@ int flecs_query_finalize_terms(
 
                 /* Sparse component fields must be accessed with ecs_field_at */
                 if (!nodata_term) {
-                    q->row_fields |= (1llu << i);
+                    q->row_fields |= flecs_uto(uint32_t, 1llu << i);
                 }
             }
         }

@@ -512,7 +512,8 @@ void flecs_query_cache_set_table_match(
     int32_t field_count = query->field_count;
 
     /* Reset resources in case this is an existing record */
-    ecs_os_memcpy_n(qm->trs, it->trs, ecs_table_record_t*, field_count);
+    ecs_os_memcpy_n(ECS_CONST_CAST(ecs_table_record_t**, qm->trs), 
+        it->trs, ecs_table_record_t*, field_count);
     ecs_os_memcpy_n(qm->ids, it->ids, ecs_id_t, field_count);
     ecs_os_memcpy_n(qm->sources, it->sources, ecs_entity_t, field_count);
     qm->set_fields = it->set_fields;
@@ -760,7 +761,7 @@ void flecs_query_cache_table_match_free(
     ecs_world_t *world = cache->query->world;
 
     for (cur = first; cur != NULL; cur = next) {
-        flecs_bfree(&cache->allocators.trs, cur->trs);
+        flecs_bfree(&cache->allocators.trs, ECS_CONST_CAST(void*, cur->trs));
         flecs_bfree(&cache->allocators.ids, cur->ids);
         flecs_bfree(&cache->allocators.sources, cur->sources);
 

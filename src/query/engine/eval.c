@@ -1610,7 +1610,7 @@ bool flecs_query_if_set(
     ecs_query_run_ctx_t *ctx)
 {
     ecs_iter_t *it = ctx->it;
-    uint8_t field_index = flecs_ito(uint8_t, op->other);
+    int8_t field_index = flecs_ito(int8_t, op->other);
 
     ecs_query_ctrl_ctx_t *op_ctx = flecs_op_ctx(ctx, ctrl);
     if (!redo) {

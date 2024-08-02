@@ -275,7 +275,7 @@
 #define FLECS_VARIABLE_COUNT_MAX (64)
 
 /** \def FLECS_TERM_COUNT_MAX 
- * Maximum number of terms in queries. Should not be set higher than 64. */
+ * Maximum number of terms in queries. Should not exceed 64. */
 #ifndef FLECS_TERM_COUNT_MAX
 #define FLECS_TERM_COUNT_MAX 32
 #endif
@@ -287,7 +287,7 @@
 #endif
 
 /** \def FLECS_QUERY_VARIABLE_COUNT_MAX
- * Maximum number of query variables per query */
+ * Maximum number of query variables per query. Should not exceed 128. */
 #ifndef FLECS_QUERY_VARIABLE_COUNT_MAX
 #define FLECS_QUERY_VARIABLE_COUNT_MAX (64)
 #endif
@@ -681,6 +681,8 @@ extern "C" {
  * initialized), and later versions of gcc (>=11) seem to no longer throw this 
  * warning. */
 #pragma GCC diagnostic ignored "-Wmissing-field-initializers"
+/* Produces false positives in addons/cpp/delegate.hpp. */
+#pragma GCC diagnostic ignored "-Warray-bounds"
 #endif
 
 /* Standard library dependencies */
@@ -3366,7 +3368,7 @@ struct ecs_term_t {
     int16_t inout;              /**< Access to contents matched by term */
     int16_t oper;               /**< Operator of term */
 
-    int16_t field_index;        /**< Index of field for term in iterator */
+    int8_t field_index;         /**< Index of field for term in iterator */
     ecs_flags16_t flags_;       /**< Flags that help eval, set by ecs_query_init() */
 };
 
@@ -3381,7 +3383,7 @@ struct ecs_query_t {
     ecs_id_t ids[FLECS_TERM_COUNT_MAX]; /**< Component ids. Indexed by field */
 
     ecs_flags32_t flags;        /**< Query flags */
-    int16_t var_count;          /**< Number of query variables */
+    int8_t var_count;           /**< Number of query variables */
     int8_t term_count;          /**< Number of query terms */
     int8_t field_count;         /**< Number of fields returned by query */
 
@@ -4211,11 +4213,11 @@ struct ecs_iter_t {
     int32_t event_cur;            /**< Unique event id. Used to dedup observer calls */
 
     /* Query information */
-    int16_t field_count;          /**< Number of fields in iterator */
-    int16_t term_index;           /**< Index of term that emitted an event.
+    int8_t field_count;           /**< Number of fields in iterator */
+    int8_t term_index;            /**< Index of term that emitted an event.
                                    * This field will be set to the 'index' field
                                    * of an observer term. */
-    int32_t variable_count;       /**< Number of variables for query */
+    int8_t variable_count;        /**< Number of variables for query */
     const ecs_query_t *query;     /**< Query being evaluated */
     char **variable_names;        /**< Names of variables (if any) */
 
@@ -4417,7 +4419,7 @@ typedef struct ecs_observer_desc_t {
     int32_t *last_event_id;
 
     /** Used for internal purposes */
-    int32_t term_index_;
+    int8_t term_index_;
     ecs_flags32_t flags_;
 } ecs_observer_desc_t;
 
@@ -8477,7 +8479,7 @@ FLECS_API
 bool ecs_worker_next(
     ecs_iter_t *it);
 
-/** Obtain data for a query field.
+/** Get data for field.
  * This operation retrieves a pointer to an array of data that belongs to the
  * term in the query. The index refers to the location of the term in the query,
  * and starts counting from zero.
@@ -8499,29 +8501,57 @@ bool ecs_worker_next(
  * The provided size must be either 0 or must match the size of the type
  * of the returned array. If the size does not match, the operation may assert.
  * The size can be dynamically obtained with ecs_field_size().
+ * 
+ * An example:
+ * 
+ * @code
+ * while (ecs_query_next(&it)) {
+ *   Position *p = ecs_field(&it, Position, 0);
+ *   Velocity *v = ecs_field(&it, Velocity, 1);
+ *   for (int32_t i = 0; i < it->count; i ++) {
+ *     p[i].x += v[i].x;
+ *     p[i].y += v[i].y;
+ *   }
+ * }
+ * @endcode
  *
  * @param it The iterator.
- * @param size The type size of the requested data.
- * @param index The index of the field in the iterator.
+ * @param size The size of the field type.
+ * @param index The index of the field.
  * @return A pointer to the data of the field.
  */
 FLECS_API
 void* ecs_field_w_size(
     const ecs_iter_t *it,
     size_t size,
-    int32_t index);
+    int8_t index);
 
-FLECS_API
-void* ecs_field_self_w_size(
-    const ecs_iter_t *it,
-    size_t size,
-    int32_t index);
-
+/** Get data for field at specified row.
+ * This operation should be used instead of ecs_field_w_size for sparse 
+ * component fields. This operation should be called for each returned row in a
+ * result. In the following example the Velocity component is sparse:
+ * 
+ * @code
+ * while (ecs_query_next(&it)) {
+ *   Position *p = ecs_field(&it, Position, 0);
+ *   for (int32_t i = 0; i < it->count; i ++) {
+ *     Velocity *v = ecs_field_at(&it, Velocity, 1);
+ *     p[i].x += v->x;
+ *     p[i].y += v->y;
+ *   }
+ * }
+ * @endcode
+ * 
+ * @param it the iterator.
+ * @param size The size of the field type.
+ * @param index The index of the field.
+ * @return A pointer to the data of the field.
+ */
 FLECS_API
 void* ecs_field_at_w_size(
     const ecs_iter_t *it,
     size_t size,
-    int32_t index,
+    int8_t index,
     int32_t row);
 
 /** Test whether the field is readonly.
@@ -8535,7 +8565,7 @@ void* ecs_field_at_w_size(
 FLECS_API
 bool ecs_field_is_readonly(
     const ecs_iter_t *it,
-    int32_t index);
+    int8_t index);
 
 /** Test whether the field is writeonly.
  * This operation returns whether this is a writeonly field. Writeonly terms are
@@ -8550,7 +8580,7 @@ bool ecs_field_is_readonly(
 FLECS_API
 bool ecs_field_is_writeonly(
     const ecs_iter_t *it,
-    int32_t index);
+    int8_t index);
 
 /** Test whether field is set.
  *
@@ -8561,7 +8591,7 @@ bool ecs_field_is_writeonly(
 FLECS_API
 bool ecs_field_is_set(
     const ecs_iter_t *it,
-    int32_t index);
+    int8_t index);
 
 /** Return id matched for field.
  *
@@ -8572,7 +8602,7 @@ bool ecs_field_is_set(
 FLECS_API
 ecs_id_t ecs_field_id(
     const ecs_iter_t *it,
-    int32_t index);
+    int8_t index);
 
 /** Return index of matched table column.
  * This function only returns column indices for fields that have been matched
@@ -8585,7 +8615,7 @@ ecs_id_t ecs_field_id(
 FLECS_API
 int32_t ecs_field_column(
     const ecs_iter_t *it,
-    int32_t index);
+    int8_t index);
 
 /** Return field source.
  * The field source is the entity on which the field was matched.
@@ -8597,7 +8627,7 @@ int32_t ecs_field_column(
 FLECS_API
 ecs_entity_t ecs_field_src(
     const ecs_iter_t *it,
-    int32_t index);
+    int8_t index);
 
 /** Return field type size.
  * Return type size of the field. Returns 0 if the field has no data.
@@ -8609,7 +8639,7 @@ ecs_entity_t ecs_field_src(
 FLECS_API
 size_t ecs_field_size(
     const ecs_iter_t *it,
-    int32_t index);
+    int8_t index);
 
 /** Test whether the field is matched on self.
  * This operation returns whether the field is matched on the currently iterated
@@ -8627,7 +8657,7 @@ size_t ecs_field_size(
 FLECS_API
 bool ecs_field_is_self(
     const ecs_iter_t *it,
-    int32_t index);
+    int8_t index);
 
 /** @} */
 
@@ -22456,7 +22486,7 @@ public:
      *
      * @param index The field index.
      */
-    bool is_self(int32_t index) const {
+    bool is_self(int8_t index) const {
         return ecs_field_is_self(iter_, index);
     }
 
@@ -22464,7 +22494,7 @@ public:
      *
      * @param index The field index.
      */
-    bool is_set(int32_t index) const {
+    bool is_set(int8_t index) const {
         return ecs_field_is_set(iter_, index);
     }
 
@@ -22472,7 +22502,7 @@ public:
      *
      * @param index The field index.
      */
-    bool is_readonly(int32_t index) const {
+    bool is_readonly(int8_t index) const {
         return ecs_field_is_readonly(iter_, index);
     }
 
@@ -22486,7 +22516,7 @@ public:
      *
      * @param index The field id.
      */
-    size_t size(int32_t index) const {
+    size_t size(int8_t index) const {
         return ecs_field_size(iter_, index);
     }
 
@@ -22494,33 +22524,33 @@ public:
      *
      * @param index The field index.
      */
-    flecs::entity src(int32_t index) const;
+    flecs::entity src(int8_t index) const;
 
     /** Obtain id matched for field.
      *
      * @param index The field index.
      */
-    flecs::id id(int32_t index) const;
+    flecs::id id(int8_t index) const;
 
     /** Obtain pair id matched for field.
      * This operation will fail if the id is not a pair.
      *
      * @param index The field index.
      */
-    flecs::id pair(int32_t index) const;
+    flecs::id pair(int8_t index) const;
 
     /** Obtain column index for field.
      *
      * @param index The field index.
      */
-    int32_t column_index(int32_t index) const {
+    int32_t column_index(int8_t index) const {
         return ecs_field_column(iter_, index);
     }
 
     /** Obtain term that triggered an observer
      */
-    int32_t term_index() const {
-        return iter_->term_index + 1; // in iter_t, the term index is zero-based, so add 1.
+    int8_t term_index() const {
+        return iter_->term_index;
     }
 
     /** Convert current iterator result to string.
@@ -22540,7 +22570,7 @@ public:
      */
     template <typename T, typename A = actual_type_t<T>,
         typename std::enable_if<std::is_const<T>::value, void>::type* = nullptr>
-    flecs::field<A> field(int32_t index) const;
+    flecs::field<A> field(int8_t index) const;
 
     /** Get read/write access to field data.
      * If the matched id for the specified field does not match with the provided
@@ -22553,7 +22583,7 @@ public:
     template <typename T, typename A = actual_type_t<T>,
         typename std::enable_if<
             std::is_const<T>::value == false, void>::type* = nullptr>
-    flecs::field<A> field(int32_t index) const;
+    flecs::field<A> field(int8_t index) const;
 
     /** Get unchecked access to field data.
      * Unchecked access is required when a system does not know the type of a
@@ -22561,21 +22591,21 @@ public:
      *
      * @param index The field index.
      */
-    flecs::untyped_field field(int32_t index) const {
+    flecs::untyped_field field(int8_t index) const {
         ecs_assert(!(iter_->flags & EcsIterCppEach), ECS_INVALID_OPERATION,
             "cannot .field from .each, use .field_at(%d, row) instead", index);
         return get_unchecked_field(index);
     }
 
     /** Get pointer to field at row. */
-    void* field_at(int32_t index, size_t row) const {
+    void* field_at(int8_t index, size_t row) const {
         return get_unchecked_field(index)[row];
     }
 
     /** Get reference to field at row. */
     template <typename T, typename A = actual_type_t<T>,
         typename std::enable_if<std::is_const<T>::value, void>::type* = nullptr>
-    const A& field_at(int32_t index, size_t row) const {
+    const A& field_at(int8_t index, size_t row) const {
         return get_field<A>(index)[row];
     }
 
@@ -22583,7 +22613,7 @@ public:
     template <typename T, typename A = actual_type_t<T>,
         typename std::enable_if<
             std::is_const<T>::value == false, void>::type* = nullptr>
-    A& field_at(int32_t index, size_t row) const {
+    A& field_at(int8_t index, size_t row) const {
         ecs_assert(!ecs_field_is_readonly(iter_, index),
             ECS_ACCESS_VIOLATION, NULL);
         return get_field<A>(index)[row];
@@ -22675,7 +22705,7 @@ public:
 private:
     /* Get field, check if correct type is used */
     template <typename T, typename A = actual_type_t<T>>
-    flecs::field<T> get_field(int32_t index) const {
+    flecs::field<T> get_field(int8_t index) const {
 
 #ifndef FLECS_NDEBUG
         ecs_entity_t term_id = ecs_field_id(iter_, index);
@@ -22703,7 +22733,7 @@ private:
             count, is_shared);
     }
 
-    flecs::untyped_field get_unchecked_field(int32_t index) const {
+    flecs::untyped_field get_unchecked_field(int8_t index) const {
         size_t count;
         size_t size = ecs_field_size(iter_, index);
         bool is_shared = !ecs_field_is_self(iter_, index);
@@ -25525,10 +25555,10 @@ struct component_binding_ctx {
 
 // Utility to convert template argument pack to array of term ptrs
 struct field_ptr {
-    void *ptr;
-    int16_t index;
-    bool is_ref;
-    bool is_row;
+    void *ptr = nullptr;
+    int8_t index = 0;
+    bool is_ref = false;
+    bool is_row = false;
 };
 
 template <typename ... Components>
@@ -25549,7 +25579,7 @@ struct field_ptrs {
                     *>(nullptr)...);
     }
 
-    array terms_;
+    array fields_;
 
 private:
     void populate(const ecs_iter_t*, size_t) { }
@@ -25564,13 +25594,13 @@ private:
         ecs_assert(q != NULL, ECS_INTERNAL_ERROR, NULL);
         if (q->row_fields & (1llu << index)) {
             /* Need to fetch the value with ecs_field_at() */
-            terms_[index].is_row = true;
-            terms_[index].is_ref = true;
-            terms_[index].index = index;
+            fields_[index].is_row = true;
+            fields_[index].is_ref = true;
+            fields_[index].index = static_cast<int8_t>(index);
         } else {
-            terms_[index].ptr = ecs_field_w_size(iter, sizeof(A), index);
-            terms_[index].is_ref = iter->sources[index] != 0;
-            terms_[index].is_row = false;
+            fields_[index].ptr = ecs_field_w_size(iter, sizeof(A), 
+                static_cast<int8_t>(index));
+            fields_[index].is_ref = iter->sources[index] != 0;
         }
 
         populate(iter, index + 1, comps ...);
@@ -25589,7 +25619,8 @@ private:
         typename A = remove_pointer_t<actual_type_t<T>>,
             if_not_t< is_empty<A>::value > = 0>
     void populate_self(const ecs_iter_t *iter, size_t index, T, Targs... comps) {
-        terms_[index].ptr = ecs_field_w_size(iter, sizeof(A), index);
+        fields_[index].ptr = ecs_field_w_size(iter, sizeof(A), 
+            static_cast<int8_t>(index));
         populate(iter, index + 1, comps ...);
     }
 
@@ -25702,7 +25733,8 @@ struct each_ref_field : public each_field<T> {
         }
 
         if (field.is_row) {
-            field.ptr = ecs_field_at_w_size(iter, sizeof(T), field.index, row);
+            field.ptr = ecs_field_at_w_size(iter, sizeof(T), field.index, 
+                static_cast<int8_t>(row));
         }
     }
 };
@@ -25730,10 +25762,10 @@ struct each_delegate : public delegate {
 
         if (iter->ref_fields | iter->up_fields) {
             terms.populate(iter);
-            invoke_unpack< each_ref_field >(iter, func_, 0, terms.terms_);
+            invoke_unpack< each_ref_field >(iter, func_, 0, terms.fields_);
         } else {
             terms.populate_self(iter);
-            invoke_unpack< each_field >(iter, func_, 0, terms.terms_);
+            invoke_unpack< each_field >(iter, func_, 0, terms.fields_);
         }
     }
 
@@ -25882,10 +25914,10 @@ struct find_delegate : public delegate {
 
         if (iter->ref_fields | iter->up_fields) {
             terms.populate(iter);
-            return invoke_callback< each_ref_field >(iter, func_, 0, terms.terms_);
+            return invoke_callback< each_ref_field >(iter, func_, 0, terms.fields_);
         } else {
             terms.populate_self(iter);
-            return invoke_callback< each_field >(iter, func_, 0, terms.terms_);
+            return invoke_callback< each_field >(iter, func_, 0, terms.fields_);
         }
     }
 
@@ -32081,15 +32113,15 @@ inline flecs::entity iter::entity(size_t row) const {
     return flecs::entity(iter_->world, iter_->entities[row]);
 }
 
-inline flecs::entity iter::src(int32_t index) const {
+inline flecs::entity iter::src(int8_t index) const {
     return flecs::entity(iter_->world, ecs_field_src(iter_, index));
 }
 
-inline flecs::id iter::id(int32_t index) const {
+inline flecs::id iter::id(int8_t index) const {
     return flecs::id(iter_->world, ecs_field_id(iter_, index));
 }
 
-inline flecs::id iter::pair(int32_t index) const {
+inline flecs::id iter::pair(int8_t index) const {
     flecs::id_t id = ecs_field_id(iter_, index);
     ecs_check(ECS_HAS_ID_FLAG(id, PAIR), ECS_INVALID_PARAMETER, NULL);
     return flecs::id(iter_->world, id);
@@ -32112,7 +32144,7 @@ inline flecs::table_range iter::range() const {
 
 template <typename T, typename A,
     typename std::enable_if<std::is_const<T>::value, void>::type*>
-inline flecs::field<A> iter::field(int32_t index) const {
+inline flecs::field<A> iter::field(int8_t index) const {
     ecs_assert(!(iter_->flags & EcsIterCppEach), ECS_INVALID_OPERATION,
         "cannot .field from .each, use .field_at<const %s>(%d, row) instead",
             _::type_name<T>(), index);
@@ -32122,7 +32154,7 @@ inline flecs::field<A> iter::field(int32_t index) const {
 template <typename T, typename A,
     typename std::enable_if<
         std::is_const<T>::value == false, void>::type*>
-inline flecs::field<A> iter::field(int32_t index) const {
+inline flecs::field<A> iter::field(int8_t index) const {
     ecs_assert(!(iter_->flags & EcsIterCppEach), ECS_INVALID_OPERATION,
         "cannot .field from .each, use .field_at<%s>(%d, row) instead",
             _::type_name<T>(), index);
