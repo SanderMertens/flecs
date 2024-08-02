@@ -285,7 +285,12 @@
                 "kind_not_found",
                 "base_not_found",
                 "dont_inherit_script_pair",
-                "entity_w_anon_tag"
+                "entity_w_anonymous_tag",
+                "update_script_w_anonymous",
+                "update_script_w_anonymous_paren",
+                "clear_script",
+                "clear_script_w_anonymous",
+                "clear_script_w_anonymous_paren"
             ]
         }, {
             "id": "Template",

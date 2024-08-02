@@ -8255,7 +8255,7 @@ void Eval_dont_inherit_script_pair(void) {
     ecs_fini(world);
 }
 
-void Eval_entity_w_anon_tag(void) {
+void Eval_entity_w_anonymous_tag(void) {
     ecs_world_t *world = ecs_init();
 
     const char *expr =
@@ -8269,6 +8269,222 @@ void Eval_entity_w_anon_tag(void) {
         .code = expr
     });
     test_assert(s == 0);
+
+    ecs_fini(world);
+}
+
+void Eval_update_script_w_anonymous(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "Position"}),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code = "_ { Position: {x: 10, y: 20} }"
+    });
+    test_assert(s != 0);
+
+    {
+        ecs_iter_t it = ecs_each(world, Position);
+        test_bool(true, ecs_each_next(&it));
+        test_int(1, it.count);
+        Position *p = ecs_field(&it, Position, 0);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+        test_bool(false, ecs_each_next(&it));
+    }
+
+    ecs_script_update(world, s, 0, "_ { Position: {x: 30, y: 40} }");
+
+    {
+        ecs_iter_t it = ecs_each(world, Position);
+        test_bool(true, ecs_each_next(&it));
+        test_int(1, it.count);
+        Position *p = ecs_field(&it, Position, 0);
+        test_assert(p != NULL);
+        test_int(p->x, 30);
+        test_int(p->y, 40);
+        test_bool(false, ecs_each_next(&it));
+    }
+
+    ecs_fini(world);
+}
+
+void Eval_update_script_w_anonymous_paren(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "Position"}),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code = "Position(x: 10, y: 20)"
+    });
+    test_assert(s != 0);
+
+    {
+        ecs_iter_t it = ecs_each(world, Position);
+        test_bool(true, ecs_each_next(&it));
+        test_int(1, it.count);
+        Position *p = ecs_field(&it, Position, 0);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+        test_bool(false, ecs_each_next(&it));
+    }
+
+    ecs_script_update(world, s, 0, "Position(x: 30, y: 40)");
+
+    {
+        ecs_iter_t it = ecs_each(world, Position);
+        test_bool(true, ecs_each_next(&it));
+        test_int(1, it.count);
+        Position *p = ecs_field(&it, Position, 0);
+        test_assert(p != NULL);
+        test_int(p->x, 30);
+        test_int(p->y, 40);
+        test_bool(false, ecs_each_next(&it));
+    }
+
+    ecs_fini(world);
+}
+
+void Eval_clear_script(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "Position"}),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code = "e { Position: {x: 10, y: 20} }"
+    });
+    test_assert(s != 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    {
+        ecs_iter_t it = ecs_each(world, Position);
+        test_bool(true, ecs_each_next(&it));
+        test_int(1, it.count);
+        test_uint(e, it.entities[0]);
+        Position *p = ecs_field(&it, Position, 0);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+        test_bool(false, ecs_each_next(&it));
+    }
+
+    ecs_script_clear(world, s, 0);
+
+    {
+        ecs_iter_t it = ecs_each(world, Position);
+        test_bool(false, ecs_each_next(&it));
+    }
+
+    ecs_fini(world);
+}
+
+void Eval_clear_script_w_anonymous(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "Position"}),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code = "_ { Position: {x: 10, y: 20} }"
+    });
+    test_assert(s != 0);
+
+    {
+        ecs_iter_t it = ecs_each(world, Position);
+        test_bool(true, ecs_each_next(&it));
+        test_int(1, it.count);
+        Position *p = ecs_field(&it, Position, 0);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+        test_bool(false, ecs_each_next(&it));
+    }
+
+    ecs_script_clear(world, s, 0);
+
+    {
+        ecs_iter_t it = ecs_each(world, Position);
+        test_bool(false, ecs_each_next(&it));
+    }
+
+    ecs_fini(world);
+}
+
+void Eval_clear_script_w_anonymous_paren(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "Position"}),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code = "Position(x: 10, y: 20)"
+    });
+    test_assert(s != 0);
+
+    {
+        ecs_iter_t it = ecs_each(world, Position);
+        test_bool(true, ecs_each_next(&it));
+        test_int(1, it.count);
+        Position *p = ecs_field(&it, Position, 0);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+        test_bool(false, ecs_each_next(&it));
+    }
+
+    ecs_script_clear(world, s, 0);
+
+    {
+        ecs_iter_t it = ecs_each(world, Position);
+        test_bool(false, ecs_each_next(&it));
+    }
 
     ecs_fini(world);
 }

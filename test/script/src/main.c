@@ -281,7 +281,12 @@ void Eval_pair_second_not_found(void);
 void Eval_kind_not_found(void);
 void Eval_base_not_found(void);
 void Eval_dont_inherit_script_pair(void);
-void Eval_entity_w_anon_tag(void);
+void Eval_entity_w_anonymous_tag(void);
+void Eval_update_script_w_anonymous(void);
+void Eval_update_script_w_anonymous_paren(void);
+void Eval_clear_script(void);
+void Eval_clear_script_w_anonymous(void);
+void Eval_clear_script_w_anonymous_paren(void);
 
 // Testsuite 'Template'
 void Template_template_no_scope(void);
@@ -1700,8 +1705,28 @@ bake_test_case Eval_testcases[] = {
         Eval_dont_inherit_script_pair
     },
     {
-        "entity_w_anon_tag",
-        Eval_entity_w_anon_tag
+        "entity_w_anonymous_tag",
+        Eval_entity_w_anonymous_tag
+    },
+    {
+        "update_script_w_anonymous",
+        Eval_update_script_w_anonymous
+    },
+    {
+        "update_script_w_anonymous_paren",
+        Eval_update_script_w_anonymous_paren
+    },
+    {
+        "clear_script",
+        Eval_clear_script
+    },
+    {
+        "clear_script_w_anonymous",
+        Eval_clear_script_w_anonymous
+    },
+    {
+        "clear_script_w_anonymous_paren",
+        Eval_clear_script_w_anonymous_paren
     }
 };
 
@@ -2994,7 +3019,7 @@ static bake_test_suite suites[] = {
         "Eval",
         NULL,
         NULL,
-        273,
+        278,
         Eval_testcases
     },
     {

@@ -59407,17 +59407,11 @@ ecs_entity_t flecs_script_create_entity(
         with = ecs_vec_first_t(&v->with, ecs_value_t);
     }
 
-    if (name || with) {
-        ecs_entity_desc_t desc = {0};
-        desc.name = name;
-        desc.parent = v->parent;
-        desc.set = with;
-        return ecs_entity_init(v->world, &desc);
-    } else if (v->parent) {
-        return ecs_new_w_pair(v->world, EcsChildOf, v->parent);
-    } else {
-        return ecs_new(v->world);
-    }
+    ecs_entity_desc_t desc = {0};
+    desc.name = name;
+    desc.parent = v->parent;
+    desc.set = with;
+    return ecs_entity_init(v->world, &desc);
 }
 
 static
