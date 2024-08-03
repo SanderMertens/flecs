@@ -1064,7 +1064,7 @@ int flecs_query_finalize_terms(
     ecs_query_t *q,
     const ecs_query_desc_t *desc)
 {
-    int32_t i, term_count = q->term_count, field_count = 0;
+    int8_t i, term_count = q->term_count, field_count = 0;
     ecs_term_t *terms = q->terms;
     int32_t nodata_terms = 0, scope_nesting = 0, cacheable_terms = 0;
     bool cond_set = false;
@@ -1150,7 +1150,7 @@ int flecs_query_finalize_terms(
             field_count ++;
         }
 
-        term->field_index = flecs_ito(int16_t, field_count - 1);
+        term->field_index = flecs_ito(int8_t, field_count - 1);
 
         if (ecs_id_is_wildcard(term->id)) {
             q->flags |= EcsQueryMatchWildcards;
@@ -1195,6 +1195,12 @@ int flecs_query_finalize_terms(
         } else if (term->inout == EcsInOutNone) {
             nodata_term = true;
         } else if (!ecs_get_type_info(world, term->id)) {
+            nodata_term = true;
+        } else if (term->flags_ & EcsTermIsUnion) {
+            nodata_term = true;
+        } else if (term->flags_ & EcsTermIsMember) {
+            nodata_term = true;
+        } else if (scope_nesting) {
             nodata_term = true;
         } else {
             if (ecs_id_is_tag(world, term->id)) {
@@ -1285,6 +1291,11 @@ int flecs_query_finalize_terms(
                         cacheable_terms --;
                         ECS_BIT_CLEAR16(term->flags_, EcsTermIsCacheable);
                     }
+                }
+
+                /* Sparse component fields must be accessed with ecs_field_at */
+                if (!nodata_term) {
+                    q->row_fields |= flecs_uto(uint32_t, 1llu << i);
                 }
             }
         }
@@ -1377,13 +1388,6 @@ int flecs_query_finalize_terms(
                     q->sizes[field] = ti->size;
                     q->ids[field] = term->id;
                 }
-            }
-
-            if (term->flags_ & EcsTermIsMember) {
-                q->sizes[field] = ECS_SIZEOF(ecs_entity_t);
-#ifdef FLECS_META
-                q->ids[field] = ecs_id(ecs_entity_t);
-#endif
             }
         }
     }
@@ -1483,7 +1487,7 @@ int flecs_query_query_populate_terms(
         /* Allocate buffer that's large enough to tokenize the query string */
         script.token_buffer_size = ecs_os_strlen(expr) * 2 + 1;
         script.token_buffer = flecs_alloc(
-            &stage->allocator, script.token_buffer_size);
+            &flecs_query_impl(q)->stage->allocator, script.token_buffer_size);
 
         if (flecs_terms_parse(&script.pub, &q->terms[term_count], 
             &term_count))

@@ -1547,7 +1547,7 @@ void ecs_rest_server_fini(
 
 static
 void flecs_on_set_rest(ecs_iter_t *it) {
-    EcsRest *rest = it->ptrs[0];
+    EcsRest *rest = ecs_field(it, EcsRest, 0);
 
     int i;
     for(i = 0; i < it->count; i ++) {

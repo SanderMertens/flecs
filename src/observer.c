@@ -308,6 +308,9 @@ void flecs_observer_invoke(
             ECS_INTERNAL_ERROR, NULL);
     }
 
+    ecs_termset_t set_fields = it->set_fields;
+    // it->set_fields = 1; /* Field 0 is set otherwise we wouldn't be triggering */
+
     bool match_this = query->flags & EcsQueryMatchThis;
     if (match_this) {
         callback(it);
@@ -341,9 +344,12 @@ void flecs_observer_invoke(
                 break;
             }
         }
+
         it->entities = entities;
         it->count = count;
     }
+
+    it->set_fields = set_fields;
 
     flecs_stage_set_system(world->stages[0], old_system);
 
@@ -456,7 +462,7 @@ void flecs_multi_observer_invoke(
 
     ecs_table_t *table = it->table;
     ecs_table_t *prev_table = it->other_table;
-    int32_t pivot_term = it->term_index;
+    int8_t pivot_term = it->term_index;
     ecs_term_t *term = &o->query->terms[pivot_term];
 
     bool is_not = term->oper == EcsNot;
@@ -514,12 +520,11 @@ void flecs_multi_observer_invoke(
          * got matched by ecs_query_has_range may not be the same as the one
          * that caused the event. We need to make sure to communicate the
          * component id that actually triggered the observer. */
-        int32_t pivot_field = term->field_index;
+        int8_t pivot_field = term->field_index;
         ecs_assert(pivot_field >= 0, ECS_INTERNAL_ERROR, NULL);
         ecs_assert(pivot_field < user_it.field_count, ECS_INTERNAL_ERROR, NULL);
         user_it.ids[pivot_field] = it->event_id;
-        user_it.ptrs[pivot_field] = it->ptrs[0];
-        user_it.columns[pivot_field] = it->columns[0];
+        user_it.trs[pivot_field] = it->trs[0];
         user_it.term_index = pivot_term;
 
         user_it.ctx = o->ctx;
@@ -645,7 +650,7 @@ int flecs_uni_observer_init(
         impl->last_event_id = &impl->last_event_id_storage;
     }
     impl->register_id = term->id;
-    term->field_index = flecs_ito(int16_t, desc->term_index_);
+    term->field_index = flecs_ito(int8_t, desc->term_index_);
 
     if (ecs_id_is_tag(world, term->id)) {
         /* If id is a tag, downgrade OnSet to OnAdd. */

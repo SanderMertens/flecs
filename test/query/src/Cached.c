@@ -1216,58 +1216,44 @@ void Cached_query_rematch_optional_after_add(void) {
 }
 
 void Cached_get_owned_tag(void) {
+    install_test_abort();
     ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, Tag, (OnInstantiate, Inherit));
 
-    ecs_entity_t e = ecs_new_w(world, Tag);
+    ecs_new_w(world, Tag);
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "Tag",
         .cache_kind = EcsQueryCacheAuto
     });
 
-    int count = 0;
     ecs_iter_t it = ecs_query_iter(world, q);
-    while (ecs_query_next(&it)) {
-        test_assert(ecs_field_w_size(&it, 0, 0) == NULL);
-        test_int(it.count, 1);
-        test_int(it.entities[0], e);
-        count += it.count;
-    }
+    test_bool(true, ecs_query_next(&it));
 
-    test_int(count, 1);
-
-
-    ecs_fini(world);
+    test_expect_abort();
+    test_assert(ecs_field_w_size(&it, 0, 0) == NULL);
 }
 
 void Cached_get_shared_tag(void) {
+    install_test_abort();
     ecs_world_t *world = ecs_mini();
 
     ECS_ENTITY(world, Tag, (OnInstantiate, Inherit));
 
     ecs_entity_t base = ecs_new_w(world, Tag);
-    ecs_entity_t instance = ecs_new_w_pair(world, EcsIsA, base);
+    ecs_new_w_pair(world, EcsIsA, base);
 
     ecs_query_t *q = ecs_query(world, {
         .expr = "Tag(up IsA)",
         .cache_kind = EcsQueryCacheAuto
     });
 
-    int count = 0;
     ecs_iter_t it = ecs_query_iter(world, q);
-    while (ecs_query_next(&it)) {
-        test_assert(ecs_field_w_size(&it, 0, 0) == NULL);
-        test_int(it.count, 1);
-        test_int(it.entities[0], instance);
-        count += it.count;
-    }
+    test_bool(true, ecs_query_next(&it));
 
-    test_int(count, 1);
-
-
-    ecs_fini(world);
+    test_expect_abort();
+    test_assert(ecs_field_w_size(&it, 0, 0) == NULL);
 }
 
 void Cached_explicit_delete(void) {
@@ -1674,8 +1660,7 @@ void Cached_filter_term(void) {
     test_assert(it.entities != NULL);
     test_assert(it.entities[0] == e);
 
-    test_assert(it.ptrs != NULL);
-    test_assert(it.columns != NULL);
+    test_assert(it.trs != NULL);
 
     test_bool(ecs_query_next(&it), false);
 
@@ -1712,12 +1697,10 @@ void Cached_2_terms_1_filter(void) {
     test_assert(it.entities != NULL);
     test_assert(it.entities[0] == e);
 
-    test_assert(it.ptrs != NULL);
     test_assert(it.sizes != NULL);
-    test_assert(it.columns != NULL);
+    test_assert(it.trs != NULL);
 
-    test_assert(it.ptrs[0] == NULL);
-    test_assert(it.ptrs[1] != NULL);
+    test_assert(ecs_field_w_size(&it, 0, 1) != NULL);
 
     test_bool(ecs_query_next(&it), false);
 
@@ -1759,13 +1742,10 @@ void Cached_3_terms_2_filter(void) {
     test_assert(it.entities != NULL);
     test_assert(it.entities[0] == e);
 
-    test_assert(it.ptrs != NULL);
     test_assert(it.sizes != NULL);
-    test_assert(it.columns != NULL);
+    test_assert(it.trs != NULL);
 
-    test_assert(it.ptrs[0] == NULL);
-    test_assert(it.ptrs[1] == NULL);
-    test_assert(it.ptrs[2] != NULL);
+    test_assert(ecs_field_w_size(&it, 0, 2) != NULL);
 
     test_bool(ecs_query_next(&it), false);
 

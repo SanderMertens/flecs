@@ -1463,7 +1463,17 @@
                 "match_empty_table_up_written_implicit_isa",
                 "match_empty_table_up_isa",
                 "match_empty_table_up_written_isa",
-                "up_after_add_batched_to_parent"
+                "up_after_add_batched_to_parent",
+                "up_component_after_parent_table_change",
+                "up_component_w_singleton_after_parent_table_change",
+                "up_component_w_var_after_parent_table_change",
+                "test_up_component_after_parent_table_change",
+                "test_up_component_w_singleton_after_parent_table_change",
+                "up_component_after_parent_table_change_no_data",
+                "up_component_w_singleton_after_parent_table_change_no_data",
+                "up_component_w_var_after_parent_table_change_no_data",
+                "test_up_component_after_parent_table_change_no_data",
+                "test_up_component_w_singleton_after_parent_table_change_no_data"
             ]
         }, {
             "id": "Cascade",

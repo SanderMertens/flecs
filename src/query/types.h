@@ -44,11 +44,8 @@ typedef enum {
     EcsQueryAndAny,         /* And operator with support for matching Any src/id */
     EcsQueryOnlyAny,        /* Dedicated instruction for _ queries where the src is unknown */
     EcsQueryTriv,           /* Trivial search (batches multiple terms) */
-    EcsQueryTrivData,       /* Trivial search with setting data fields */
     EcsQueryCache,          /* Cached search */
-    EcsQueryCacheData,      /* Cached search with setting data fields */
     EcsQueryIsCache,        /* Cached search for queries that are entirely cached */
-    EcsQueryIsCacheData,    /* Same as EcsQueryIsCache with data fields */
     EcsQueryUp,             /* Up traversal */
     EcsQueryUpId,           /* Up traversal for fixed id (like AndId) */
     EcsQuerySelfUp,         /* Self|up traversal */
@@ -93,9 +90,6 @@ typedef enum {
     EcsQuerySetId,          /* Set id if not set */
     EcsQueryContain,        /* Test if table contains entity */
     EcsQueryPairEq,         /* Test if both elements of pair are the same */
-    EcsQueryPopulate,       /* Populate any data fields */
-    EcsQueryPopulateSelf,   /* Populate only self (owned) data fields */
-    EcsQueryPopulateSparse, /* Populate sparse fields */
     EcsQueryYield,          /* Yield result back to application */
     EcsQueryNothing         /* Must be last */
 } ecs_query_op_kind_t;
@@ -164,7 +158,7 @@ typedef struct {
 typedef struct {
     ecs_entity_t src;
     ecs_id_t id;
-    int32_t column;
+    ecs_table_record_t *tr;
     bool ready;
 } ecs_trav_up_t;
 
@@ -203,7 +197,7 @@ typedef struct {
 typedef struct {
     ecs_entity_t entity;
     ecs_id_record_t *idr;
-    int32_t column;
+    const ecs_table_record_t *tr;
 } ecs_trav_elem_t;
 
 typedef struct {
@@ -400,11 +394,9 @@ struct ecs_query_cache_table_match_t {
     ecs_table_t *table;              /* The current table. */
     int32_t offset;                  /* Starting point in table  */
     int32_t count;                   /* Number of entities to iterate in table */
-    int32_t *columns;                /* Mapping from query fields to table columns */
-    int32_t *storage_columns;        /* Mapping from query fields to storage columns */
+    const ecs_table_record_t **trs;  /* Information about where to find field in table */
     ecs_id_t *ids;                   /* Resolved (component) ids for current table */
     ecs_entity_t *sources;           /* Subjects (sources) of ids */
-    ecs_vec_t refs;                  /* Cached components for non-this terms */
     ecs_termset_t set_fields;        /* Fields that are set */
     ecs_termset_t up_fields;         /* Fields that are matched through traversal */
     uint64_t group_id;               /* Value used to organize tables in groups */
@@ -444,7 +436,7 @@ typedef struct ecs_query_cache_event_t {
 
 /* Query level block allocators have sizes that depend on query field count */
 typedef struct ecs_query_cache_allocators_t {
-    ecs_block_allocator_t columns;
+    ecs_block_allocator_t trs;
     ecs_block_allocator_t ids;
     ecs_block_allocator_t sources;
     ecs_block_allocator_t monitors;

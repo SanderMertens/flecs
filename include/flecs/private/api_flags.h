@@ -116,9 +116,7 @@ extern "C" {
 #define EcsIterHasCondSet              (1u << 6u)  /* Does iterator have conditionally set fields */
 #define EcsIterProfile                 (1u << 7u)  /* Profile iterator performance */
 #define EcsIterTrivialSearch           (1u << 8u)  /* Trivial iterator mode */
-#define EcsIterTrivialSearchNoData     (1u << 9u)  /* Trivial iterator w/no data */
 #define EcsIterTrivialTest             (1u << 11u) /* Trivial test mode (constrained $this) */
-#define EcsIterTrivialTestNoData       (1u << 12u) /* Trivial test mode w/no data (constrained $this) */
 #define EcsIterTrivialCached           (1u << 14u) /* Trivial search for cached query */
 #define EcsIterCacheSearch             (1u << 15u) /* Cache search */
 #define EcsIterFixedInChangeComputed   (1u << 16u) /* Change detection for fixed in terms is done */

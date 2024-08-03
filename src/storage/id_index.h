@@ -6,14 +6,6 @@
 #ifndef FLECS_ID_INDEX_H
 #define FLECS_ID_INDEX_H
 
-/* Payload for id cache */
-struct ecs_table_record_t {
-    ecs_table_cache_hdr_t hdr;  /* Table cache header */
-    int16_t index;              /* First type index where id occurs in table */
-    int16_t count;              /* Number of times id occurs in table */
-    int16_t column;             /* First column index where id occurs */
-};
-
 /* Linked list of id records */
 typedef struct ecs_id_record_elem_t {
     struct ecs_id_record_t *prev, *next;

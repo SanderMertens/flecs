@@ -1706,6 +1706,7 @@ void Cascade_cascade_after_recycled_parent_change(void) {
     test_int(it.count, 1);
     test_uint(it.entities[0], parent);
     test_assert(ecs_field_src(&it, 1) == 0);
+    test_assert(!ecs_field_is_set(&it, 1));
     const Position *p = ecs_field(&it, Position, 1);
     test_assert(p == NULL);
 
@@ -1713,6 +1714,7 @@ void Cascade_cascade_after_recycled_parent_change(void) {
     test_int(it.count, 1);
     test_uint(it.entities[0], child);
     test_assert(ecs_field_src(&it, 1) == 0);
+    test_assert(!ecs_field_is_set(&it, 1));
     p = ecs_field(&it, Position, 1);
     test_assert(p == NULL);
 
@@ -1720,6 +1722,7 @@ void Cascade_cascade_after_recycled_parent_change(void) {
     test_int(it.count, 1);
     test_uint(it.entities[0], e);
     test_assert(ecs_field_src(&it, 1) == 0);
+    test_assert(!ecs_field_is_set(&it, 1));
     p = ecs_field(&it, Position, 1);
     test_assert(p == NULL);
 
@@ -1734,7 +1737,7 @@ void Cascade_cascade_after_recycled_parent_change(void) {
     test_bool(ecs_query_next(&it), true);
     test_int(it.count, 1);
     test_uint(it.entities[0], parent);
-    test_assert(ecs_field_is_set(&it, 1) == false);
+    test_assert(!ecs_field_is_set(&it, 1));
     p = ecs_field(&it, Position, 1);
     test_assert(p == NULL);
 
@@ -1742,6 +1745,7 @@ void Cascade_cascade_after_recycled_parent_change(void) {
     test_int(it.count, 1);
     test_uint(it.entities[0], child);
     test_assert(ecs_field_src(&it, 1) == parent);
+    test_assert(ecs_field_is_set(&it, 1));
     p = ecs_field(&it, Position, 1);
     test_assert(p != NULL);
     test_int(p->x, 10);
@@ -1751,6 +1755,7 @@ void Cascade_cascade_after_recycled_parent_change(void) {
     test_int(it.count, 1);
     test_uint(it.entities[0], e);
     test_assert(ecs_field_src(&it, 1) == child);
+    test_assert(ecs_field_is_set(&it, 1));
     p = ecs_field(&it, Position, 1);
     test_assert(p != NULL);
     test_int(p->x, 20);

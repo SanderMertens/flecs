@@ -178,11 +178,8 @@ const char* flecs_query_op_str(
     case EcsQueryAndId:          return "andid     ";
     case EcsQueryAndAny:         return "andany    ";
     case EcsQueryTriv:           return "triv      ";
-    case EcsQueryTrivData:       return "trivpop   ";
     case EcsQueryCache:          return "cache     ";
-    case EcsQueryCacheData:      return "cachepop  ";
     case EcsQueryIsCache:        return "xcache    ";
-    case EcsQueryIsCacheData:    return "xcachepop ";
     case EcsQueryOnlyAny:        return "any       ";
     case EcsQueryUp:             return "up        ";
     case EcsQueryUpId:           return "upid      ";
@@ -228,9 +225,6 @@ const char* flecs_query_op_str(
     case EcsQuerySetId:          return "setid     ";
     case EcsQueryContain:        return "contain   ";
     case EcsQueryPairEq:         return "pair_eq   ";
-    case EcsQueryPopulate:       return "pop       ";
-    case EcsQueryPopulateSelf:   return "popself   ";
-    case EcsQueryPopulateSparse: return "popsparse ";
     case EcsQueryYield:          return "yield     ";
     case EcsQueryNothing:        return "nothing   ";
     default:                     return "!invalid  ";
@@ -353,12 +347,7 @@ void flecs_query_plan_w_profile(
             indent ++;
         }
 
-        if (op->kind == EcsQueryPopulate || 
-            op->kind == EcsQueryPopulateSelf ||
-            op->kind == EcsQueryPopulateSparse ||
-            op->kind == EcsQueryTriv ||
-            op->kind == EcsQueryTrivData)
-        {
+        if (op->kind == EcsQueryTriv) {
             flecs_query_str_append_bitset(buf, op->src.entity);
         }
 

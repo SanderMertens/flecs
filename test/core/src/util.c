@@ -24,6 +24,17 @@ void probe_system_w_ctx(
 
         ecs_id_t field_id = ecs_field_id(it, i);
         test_assert(field_id != 0);
+
+        if (ecs_field_is_set(it, i)) {
+            if (it->trs[i]) {
+                if (it->sources[i]) {
+                    ecs_table_t *table = ecs_get_table(it->world, it->sources[i]);
+                    test_assert(it->trs[i]->hdr.table == table);
+                } else {
+                    test_assert(it->trs[i]->hdr.table == it->table);
+                }
+            }
+        }
     }
 
     for (i = 0; i < it->count; i ++) {

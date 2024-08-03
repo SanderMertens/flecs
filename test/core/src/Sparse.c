@@ -708,7 +708,7 @@ static ECS_DTOR(Position, ptr, {
 
 static void Position_on_add(ecs_iter_t *it) {
     test_int(1, position_ctor_invoked);
-    Position *p = ecs_field(it, Position, 0);
+    Position *p = ecs_field_at(it, Position, 0, 0);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -719,7 +719,7 @@ static void Position_on_add(ecs_iter_t *it) {
 
 static void Position_on_remove(ecs_iter_t *it) {
     test_int(0, position_dtor_invoked);
-    Position *p = ecs_field(it, Position, 0);
+    Position *p = ecs_field_at(it, Position, 0, 0);
     test_assert(p != NULL);
     test_int(p->x, 10);
     test_int(p->y, 20);
@@ -731,7 +731,7 @@ static void Position_on_remove(ecs_iter_t *it) {
 static void Position_on_set(ecs_iter_t *it) {
     test_int(1, position_ctor_invoked);
     test_int(0, position_dtor_invoked);
-    Position *p = ecs_field(it, Position, 0);
+    Position *p = ecs_field_at(it, Position, 0, 0);
     test_assert(p != NULL);
     test_int(p->x, 30);
     test_int(p->y, 40);

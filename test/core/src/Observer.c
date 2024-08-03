@@ -57,9 +57,6 @@ void Observer_w_filter_term(ecs_iter_t *it) {
     test_int(it->count, 1);
     test_assert(it->entities != NULL);
     test_assert(it->entities[0] != 0);
-
-    /* Not guaranteed to be NULL */
-    // test_assert(it->ptrs == NULL);
 }
 
 static
@@ -69,11 +66,6 @@ void Observer_w_1_filter_term(ecs_iter_t *it) {
     test_int(it->count, 1);
     test_assert(it->entities != NULL);
     test_assert(it->entities[0] != 0);
-
-    test_assert(it->ptrs != NULL);
-    /* Not guaranteed to be NULL */
-    // test_assert(it->ptrs[0] == NULL);
-    test_assert(it->ptrs[1] != NULL);
 
     Velocity *v = ecs_field(it, Velocity, 1);
     test_int(v->x, 1);
@@ -87,14 +79,7 @@ void Observer_w_2_filter_terms(ecs_iter_t *it) {
     test_int(it->count, 1);
     test_assert(it->entities != NULL);
     test_assert(it->entities[0] != 0);
-
-    test_assert(it->ptrs != NULL);
     test_assert(it->sizes != NULL);
-
-    /* Not guaranteed to be NULL */
-    // test_assert(it->ptrs[0] == NULL);
-    // test_assert(it->ptrs[1] == NULL);
-    test_assert(it->ptrs[2] != NULL);
 
     Mass *m = ecs_field(it, Mass, 2);
     test_int(m[0], 100);
@@ -4577,7 +4562,7 @@ static int32_t pair_column = 0;
 static
 void OnTagPair(ecs_iter_t *it) {
     test_int(it->count, 1);
-    pair_column = it->columns[0];
+    pair_column = it->trs[0]->index;
     probe_iter(it);
 }
 
@@ -4586,7 +4571,7 @@ void OnPair(ecs_iter_t *it) {
     test_int(it->count, 1);
     Position *p = ecs_field(it, Position, 0);
     pair_x = p->x;
-    pair_column = it->columns[0];
+    pair_column = it->trs[0]->index;
     probe_iter(it);
 }
 
@@ -4611,7 +4596,7 @@ void Observer_on_add_2_pairs_w_uni_observer(void) {
     test_int(ctx.system, OnTagPair);
     test_int(ctx.term_count, 1);
     test_int(ctx.event_id, ecs_pair(Rel, TgtA));
-    test_int(pair_column, 2);
+    test_int(pair_column, 1);
 
     ecs_os_zeromem(&ctx);
     ecs_add_pair(world, e, Rel, TgtB);
@@ -4620,7 +4605,7 @@ void Observer_on_add_2_pairs_w_uni_observer(void) {
     test_int(ctx.system, OnTagPair);
     test_int(ctx.term_count, 1);
     test_int(ctx.event_id, ecs_pair(Rel, TgtB));
-    test_int(pair_column, 3);
+    test_int(pair_column, 2);
 
     ecs_os_zeromem(&ctx);
     ecs_add_pair(world, e, Rel, TgtC);
@@ -4629,7 +4614,7 @@ void Observer_on_add_2_pairs_w_uni_observer(void) {
     test_int(ctx.system, OnTagPair);
     test_int(ctx.term_count, 1);
     test_int(ctx.event_id, ecs_pair(Rel, TgtC));
-    test_int(pair_column, 4);
+    test_int(pair_column, 3);
 
     ecs_fini(world);
 }
@@ -4655,7 +4640,7 @@ void Observer_on_add_2_pairs_w_multi_observer(void) {
     test_int(ctx.system, OnTagPair);
     test_int(ctx.term_count, 2);
     test_int(ctx.event_id, ecs_pair(Rel, TgtA));
-    test_int(pair_column, 2);
+    test_int(pair_column, 1);
 
     ecs_os_zeromem(&ctx);
     ecs_add_pair(world, e, Rel, TgtB);
@@ -4664,7 +4649,7 @@ void Observer_on_add_2_pairs_w_multi_observer(void) {
     test_int(ctx.system, OnTagPair);
     test_int(ctx.term_count, 2);
     test_int(ctx.event_id, ecs_pair(Rel, TgtB));
-    test_int(pair_column, 3);
+    test_int(pair_column, 2);
 
     ecs_os_zeromem(&ctx);
     ecs_add_pair(world, e, Rel, TgtC);
@@ -4673,7 +4658,7 @@ void Observer_on_add_2_pairs_w_multi_observer(void) {
     test_int(ctx.system, OnTagPair);
     test_int(ctx.term_count, 2);
     test_int(ctx.event_id, ecs_pair(Rel, TgtC));
-    test_int(pair_column, 4);
+    test_int(pair_column, 3);
 
     ecs_fini(world);
 }
@@ -4699,7 +4684,7 @@ void Observer_on_set_2_pairs_w_uni_observer(void) {
     test_int(ctx.system, OnPair);
     test_int(ctx.term_count, 1);
     test_int(ctx.event_id, ecs_pair(ecs_id(Position), TgtA));
-    test_int(pair_column, 2);
+    test_int(pair_column, 1);
     test_int(pair_x, 1);
 
     ecs_os_zeromem(&ctx);
@@ -4709,7 +4694,7 @@ void Observer_on_set_2_pairs_w_uni_observer(void) {
     test_int(ctx.system, OnPair);
     test_int(ctx.term_count, 1);
     test_int(ctx.event_id, ecs_pair(ecs_id(Position), TgtB));
-    test_int(pair_column, 3);
+    test_int(pair_column, 2);
     test_int(pair_x, 2);
 
     ecs_os_zeromem(&ctx);
@@ -4719,7 +4704,7 @@ void Observer_on_set_2_pairs_w_uni_observer(void) {
     test_int(ctx.system, OnPair);
     test_int(ctx.term_count, 1);
     test_int(ctx.event_id, ecs_pair(ecs_id(Position), TgtC));
-    test_int(pair_column, 4);
+    test_int(pair_column, 3);
     test_int(pair_x, 3);
 
     ecs_fini(world);
@@ -4746,7 +4731,7 @@ void Observer_on_set_2_pairs_w_multi_observer(void) {
     test_int(ctx.system, OnPair);
     test_int(ctx.term_count, 2);
     test_int(ctx.event_id, ecs_pair(ecs_id(Position), TgtA));
-    test_int(pair_column, 2);
+    test_int(pair_column, 1);
     test_int(pair_x, 1);
 
     ecs_os_zeromem(&ctx);
@@ -4756,7 +4741,7 @@ void Observer_on_set_2_pairs_w_multi_observer(void) {
     test_int(ctx.system, OnPair);
     test_int(ctx.term_count, 2);
     test_int(ctx.event_id, ecs_pair(ecs_id(Position), TgtB));
-    test_int(pair_column, 3);
+    test_int(pair_column, 2);
     test_int(pair_x, 2);
 
     ecs_os_zeromem(&ctx);
@@ -4766,7 +4751,7 @@ void Observer_on_set_2_pairs_w_multi_observer(void) {
     test_int(ctx.system, OnPair);
     test_int(ctx.term_count, 2);
     test_int(ctx.event_id, ecs_pair(ecs_id(Position), TgtC));
-    test_int(pair_column, 4);
+    test_int(pair_column, 3);
     test_int(pair_x, 3);
 
     ecs_fini(world);

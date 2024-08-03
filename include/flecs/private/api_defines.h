@@ -134,6 +134,8 @@
  * initialized), and later versions of gcc (>=11) seem to no longer throw this 
  * warning. */
 #pragma GCC diagnostic ignored "-Wmissing-field-initializers"
+/* Produces false positives in addons/cpp/delegate.hpp. */
+#pragma GCC diagnostic ignored "-Warray-bounds"
 #endif
 
 /* Standard library dependencies */
@@ -431,7 +433,7 @@ typedef struct ecs_allocator_t ecs_allocator_t;
     {\
         for (int32_t i = 0; i < _it->count; i ++) {\
             ecs_entity_t entity = _it->entities[i];\
-            type *var = &((type*)_it->ptrs[0])[i];\
+            type *var = ecs_field(_it, type, 0);\
             (void)entity;\
             (void)var;\
             __VA_ARGS__\

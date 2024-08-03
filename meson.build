@@ -99,7 +99,6 @@ flecs_src = files(
     'src/query/engine/change_detection.c',
     'src/query/engine/eval_iter.c',
     'src/query/engine/eval_member.c',
-    'src/query/engine/eval_populate.c',
     'src/query/engine/eval_pred.c',
     'src/query/engine/eval_toggle.c',
     'src/query/engine/eval_trav.c',

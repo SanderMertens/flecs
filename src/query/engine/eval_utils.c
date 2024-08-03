@@ -338,14 +338,13 @@ int16_t flecs_query_next_column(
     return flecs_ito(int16_t, column);
 }
 
-void flecs_query_it_set_column(
+void flecs_query_it_set_tr(
     ecs_iter_t *it,
     int32_t field_index,
-    int32_t column)
+    const ecs_table_record_t *tr)
 {
-    ecs_assert(column >= 0, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(field_index >= 0, ECS_INTERNAL_ERROR, NULL);
-    it->columns[field_index] = column;
+    it->trs[field_index] = tr;
 }
 
 ecs_id_t flecs_query_it_set_id(
@@ -374,14 +373,15 @@ void flecs_query_set_match(
     ecs_iter_t *it = ctx->it;
     ecs_assert(column >= 0, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(column < table->type.count, ECS_INTERNAL_ERROR, NULL);
-    flecs_query_it_set_column(it, field_index, column);
-    ecs_id_t matched = flecs_query_it_set_id(it, table, field_index, column);
+    const ecs_table_record_t *tr = &table->_->records[column];
+    flecs_query_it_set_tr(it, field_index, tr);
+    ecs_id_t matched = flecs_query_it_set_id(it, table, field_index, tr->index);
     flecs_query_set_vars(op, matched, ctx);
 }
 
 void flecs_query_set_trav_match(
     const ecs_query_op_t *op,
-    int32_t column,
+    const ecs_table_record_t *tr,
     ecs_entity_t trav,
     ecs_entity_t second,
     const ecs_query_run_ctx_t *ctx)
@@ -394,9 +394,7 @@ void flecs_query_set_trav_match(
     ecs_iter_t *it = ctx->it;
     ecs_id_t matched = ecs_pair(trav, second);
     it->ids[op->field_index] = matched;
-    if (column != -1) {
-        flecs_query_it_set_column(it, op->field_index, column);
-    }
+    flecs_query_it_set_tr(it, op->field_index, tr);
     flecs_query_set_vars(op, matched, ctx);
 }
 

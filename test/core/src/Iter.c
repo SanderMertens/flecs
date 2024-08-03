@@ -2702,14 +2702,14 @@ void Iter_column_index_not(void) {
     test_uint(e1, it.entities[0]);
     test_int(0, ecs_field_column(&it, 0));
     test_int(1, ecs_field_column(&it, 1));
-    test_int(0, ecs_field_column(&it, 2));
+    test_int(-1, ecs_field_column(&it, 2));
 
     test_bool(true, ecs_query_next(&it));
     test_int(1, it.count);
     test_uint(e2, it.entities[0]);
     test_int(1, ecs_field_column(&it, 0));
     test_int(2, ecs_field_column(&it, 1));
-    test_int(0, ecs_field_column(&it, 2));
+    test_int(-1, ecs_field_column(&it, 2));
     
     test_bool(false, ecs_query_next(&it));
 

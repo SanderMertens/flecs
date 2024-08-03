@@ -1134,7 +1134,7 @@ void ecs_meta_type_init_default_ctor(ecs_iter_t *it) {
 
 static
 void flecs_member_on_set(ecs_iter_t *it) {
-    EcsMember *mbr = it->ptrs[0];
+    EcsMember *mbr = ecs_field(it, EcsMember, 0);
     if (!mbr->count) {
         mbr->count = 1;
     }

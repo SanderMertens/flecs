@@ -212,14 +212,14 @@ void ecs_script_vars_from_iter(
 
     /* Set variables for fields */
     {
-        int32_t i, field_count = it->field_count;
+        int8_t i, field_count = it->field_count;
         for (i = 0; i < field_count; i ++) {
             ecs_size_t size = it->sizes[i];
             if (!size) {
                 continue;
             }
 
-            void *ptr = it->ptrs[i];
+            void *ptr = ecs_field_w_size(it, flecs_itosize(size), i);
             if (!ptr) {
                 continue;
             }
