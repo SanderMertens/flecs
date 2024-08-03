@@ -165,7 +165,7 @@ void flecs_script_template_on_set(
 }
 
 static
-int flecs_script_eval_prop(
+int flecs_script_template_eval_prop(
     ecs_script_eval_visitor_t *v,
     ecs_script_var_node_t *node)
 {
@@ -224,8 +224,6 @@ int flecs_script_template_eval(
     ecs_script_node_t *node)
 {
     switch(node->kind) {
-    case EcsAstProp:
-        return flecs_script_eval_prop(v, (ecs_script_var_node_t*)node);
     case EcsAstScope:
     case EcsAstTag:
     case EcsAstComponent:
@@ -234,16 +232,34 @@ int flecs_script_template_eval(
     case EcsAstWithVar:
     case EcsAstWithTag:
     case EcsAstWithComponent:
-    case EcsAstWith:
     case EcsAstUsing:
     case EcsAstModule:
     case EcsAstAnnotation:
-    case EcsAstTemplate:
     case EcsAstConst:
     case EcsAstEntity:
     case EcsAstPairScope:
-    case EcsAstIf:
+    case EcsAstTemplate:
         break;
+    case EcsAstProp:
+        return flecs_script_template_eval_prop(v, (ecs_script_var_node_t*)node);
+    case EcsAstWith:
+        if (ecs_script_visit_scope(v, ((ecs_script_with_t*)node)->expressions)) {
+            return -1;
+        }
+        if (ecs_script_visit_scope(v, ((ecs_script_with_t*)node)->scope)) {
+            return -1;
+        }
+        return 0;
+    case EcsAstIf:
+        if (ecs_script_visit_scope(v, ((ecs_script_if_t*)node)->if_true)) {
+            return -1;
+        }
+        if (((ecs_script_if_t*)node)->if_false) {
+            if (ecs_script_visit_scope(v, ((ecs_script_if_t*)node)->if_false)) {
+                return -1;
+            }
+        }
+        return 0;
     }
 
     return flecs_script_eval_node(v, node);
@@ -345,6 +361,11 @@ int flecs_script_eval_template(
     ecs_script_eval_visitor_t *v,
     ecs_script_template_node_t *node)
 {
+    if (v->template) {
+        flecs_script_eval_error(v, node, "nested templates are not allowed");
+        return -1;        
+    }
+
     ecs_entity_t template_entity = flecs_script_create_entity(v, node->name);
     if (!template_entity) {
         return -1;

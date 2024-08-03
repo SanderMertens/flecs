@@ -201,6 +201,31 @@ ecs_entity_t flecs_script_find_entity_action(
 }
 
 static
+int flecs_script_find_template_entity(
+    ecs_script_eval_visitor_t *v,
+    const char *name)
+{
+    /* Loop template scope to see if it declares an entity with requested name */
+    ecs_script_template_t *t = v->template;
+    ecs_script_scope_t *scope = t->node->scope;
+    ecs_script_node_t **nodes = ecs_vec_first_t(
+        &scope->stmts, ecs_script_node_t*);
+
+    int32_t i, count = ecs_vec_count(&scope->stmts);
+    for (i = 0; i < count; i ++) {
+        ecs_script_node_t *node = nodes[i];
+        if (node->kind == EcsAstEntity) {
+            ecs_script_entity_t *entity_node = (ecs_script_entity_t*)node;
+            if (!ecs_os_strcmp(entity_node->name, name)) {
+                return 0;
+            }
+        }
+    }
+
+    return -1;
+}
+
+static
 int flecs_script_eval_id(
     ecs_script_eval_visitor_t *v,
     void *node,
@@ -249,12 +274,13 @@ int flecs_script_eval_id(
                 return -1;
             }
 
-            /* Tags/components must be created in advance for templates */
+            /* Targets may be defined by the template */
             if (v->template) {
-                flecs_script_eval_error(v, node, 
-                    "'%s' must be defined outside of template scope", 
-                        id->second);
-                return -1;
+                if (!flecs_script_find_template_entity(v, id->second)) {
+                    return 0;
+                } else {
+                    return -1;
+                }
             }
 
             if (second_from) {
@@ -334,7 +360,9 @@ int flecs_script_eval_scope(
     v->vars = flecs_script_vars_push(v->vars, &v->stack, a);
 
     if (scope_parent && (scope_parent->kind == EcsAstEntity)) {
-        v->parent = ecs_script_node(entity, scope_parent)->eval;
+        if (!v->template) {
+            v->parent = ecs_script_node(entity, scope_parent)->eval;
+        }
     }
 
     int result = ecs_script_visit_scope(v, node);
@@ -404,6 +432,9 @@ int flecs_script_eval_entity(
     }
 
     if (v->template) {
+        if (ecs_script_visit_node(v, node->scope)) {
+            return -1;
+        }
         return 0;
     }
 
@@ -510,6 +541,10 @@ int flecs_script_eval_tag(
         return -1;
     }
 
+    if (v->template) {
+        return 0;
+    }
+
     ecs_entity_t src = flecs_script_get_src(
         v, v->entity->eval, node->id.eval);
     ecs_add_id(v->world, src, node->id.eval);
@@ -539,6 +574,10 @@ int flecs_script_eval_component(
                 node->id.first);
         }
         return -1;
+    }
+
+    if (v->template) {
+        return 0;
     }
 
     ecs_entity_t src = flecs_script_get_src(v, v->entity->eval, node->id.eval);
@@ -614,6 +653,10 @@ int flecs_script_eval_var_component(
         return -1;
     }
 
+    if (v->template) {
+        return 0;
+    }
+
     ecs_id_t var_id = var->value.type;
 
     if (var->value.ptr) {
@@ -647,6 +690,10 @@ int flecs_script_eval_default_component(
         flecs_script_eval_error(v, node, 
             "missing entity for default component");
         return -1;
+    }
+
+    if (v->template) {
+        return 0;
     }
 
     ecs_script_scope_t *scope = ecs_script_current_scope(v);
@@ -704,6 +751,10 @@ int flecs_script_eval_with_var(
         return -1;
     }
 
+    if (v->template) {
+        return 0;
+    }
+
     ecs_allocator_t *a = v->allocator;
     ecs_value_t *value = flecs_script_with_append(a, v);
     *value = var->value;
@@ -718,6 +769,10 @@ int flecs_script_eval_with_tag(
 {
     if (flecs_script_eval_id(v, node, &node->id)) {
         return -1;
+    }
+
+    if (v->template) {
+        return 0;
     }
 
     ecs_allocator_t *a = v->allocator;
@@ -735,6 +790,10 @@ int flecs_script_eval_with_component(
 {
     if (flecs_script_eval_id(v, node, &node->id)) {
         return -1;
+    }
+
+    if (v->template) {
+        return 0;
     }
 
     ecs_allocator_t *a = v->allocator;

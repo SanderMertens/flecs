@@ -40,7 +40,6 @@ void Eval_multiple_multi_line_comment_w_newlines(void);
 void Eval_multi_line_comment_after_stmt_same_line(void);
 void Eval_multi_line_comment_before_scope_open(void);
 void Eval_multi_line_comment_after_newline_before_scope_open(void);
-void Eval_multi_line_comment_after_newline_before_newline_scope_open(void);
 void Eval_multi_line_comment_multiple_lines(void);
 void Eval_hierarchy_1_child(void);
 void Eval_hierarchy_2_children(void);
@@ -54,7 +53,6 @@ void Eval_2_newline_before_scope_open(void);
 void Eval_2_newline_w_whitespace_before_scope_open(void);
 void Eval_hierarchy_2_levels(void);
 void Eval_hierarchy_2_levels_2_subtrees(void);
-void Eval_missing_end_of_scope(void);
 void Eval_create_in_scope(void);
 void Eval_hierarchy_w_pred_subj(void);
 void Eval_hierarchy_custom_relation(void);
@@ -72,7 +70,6 @@ void Eval_with_tag_2_levels(void);
 void Eval_with_tag_2_levels_2_subtrees(void);
 void Eval_with_n_tags(void);
 void Eval_with_n_tags_2_levels(void);
-void Eval_with_n_tags_2_levels_invalid_tag(void);
 void Eval_with_after_scope(void);
 void Eval_with_after_with(void);
 void Eval_scope_inside_with_inside_scope(void);
@@ -112,9 +109,6 @@ void Eval_script_w_only_using(void);
 void Eval_2_using_scope(void);
 void Eval_2_using_in_different_scope(void);
 void Eval_empty_scope_after_using(void);
-void Eval_assignment_to_non_component(void);
-void Eval_struct_w_member_w_assignment_to_nothing(void);
-void Eval_struct_w_member_w_assignment_to_empty_scope(void);
 void Eval_scope_after_assign(void);
 void Eval_assign_after_inherit(void);
 void Eval_multiple_tags_single_line(void);
@@ -122,12 +116,8 @@ void Eval_multiple_pairs_single_line(void);
 void Eval_multiple_vars_single_line(void);
 void Eval_multiple_assignments_single_line(void);
 void Eval_2_stmts_in_scope_w_no_parent(void);
-void Eval_invalid_nested_assignment(void);
-void Eval_invalid_partial_pair_assignment(void);
-void Eval_empty_assignment(void);
 void Eval_assign_tag_to_parent(void);
 void Eval_assign_component_to_parent(void);
-void Eval_empty_assignment_before_end_of_scope(void);
 void Eval_assign_to_parent_pair_w_new_entities_in_scope(void);
 void Eval_assign_to_parent_pair_w_existing_entities_in_scope(void);
 void Eval_default_child_component(void);
@@ -137,7 +127,6 @@ void Eval_struct_type_w_default_child_component_nested_member(void);
 void Eval_enum_type_w_default_child_component(void);
 void Eval_default_type_from_with(void);
 void Eval_default_type_from_nested_with(void);
-void Eval_default_type_with_tag(void);
 void Eval_default_type_from_with_in_entity_scope_w_default_type(void);
 void Eval_default_type_from_entity_scope_in_with(void);
 void Eval_scope_w_1_subj_and_2_pairs(void);
@@ -148,7 +137,6 @@ void Eval_assign_pair_component_in_script(void);
 void Eval_assign_pair_component_in_script_update(void);
 void Eval_set_entity_names(void);
 void Eval_oneof(void);
-void Eval_invalid_oneof(void);
 void Eval_brief_annotation(void);
 void Eval_name_annotation(void);
 void Eval_link_annotation(void);
@@ -156,7 +144,6 @@ void Eval_color_annotation(void);
 void Eval_multiple_annotations(void);
 void Eval_annotation_w_trailing_space(void);
 void Eval_multiline_string(void);
-void Eval_unterminated_multiline_string(void);
 void Eval_declaration_w_underscore_name(void);
 void Eval_annotate_declaration(void);
 void Eval_anonymous_entity(void);
@@ -167,7 +154,6 @@ void Eval_const_var_float(void);
 void Eval_const_var_bool(void);
 void Eval_const_var_string(void);
 void Eval_const_var_struct(void);
-void Eval_const_var_redeclare(void);
 void Eval_const_var_scoped(void);
 void Eval_assign_component_from_var(void);
 void Eval_assign_component_from_var_in_scope(void);
@@ -189,16 +175,13 @@ void Eval_parse_with_2_nested_vars(void);
 void Eval_parse_with_var_in_scope(void);
 void Eval_assign_const_w_expr(void);
 void Eval_const_w_type(void);
-void Eval_typed_const_w_composite_type_invalid_assignment(void);
 void Eval_typed_const_w_composite_type(void);
 void Eval_assign_var_to_typed_const_w_composite_type(void);
-void Eval_typed_const_w_composite_type_invalid_assignment(void);
 void Eval_using_wildcard(void);
 void Eval_single_line_comment_in_value(void);
 void Eval_single_line_comment_in_value_after_scope(void);
 void Eval_multi_line_comment_in_value(void);
 void Eval_multi_line_comment_in_value_after_scope(void);
-void Eval_unterminated_multi_line_comment_in_value(void);
 void Eval_module_stmt(void);
 void Eval_nested_module_stmt(void);
 void Eval_module_stmt_w_scope(void);
@@ -213,18 +196,8 @@ void Eval_with_pair_in_scope(void);
 void Eval_with_pair_component_in_scope(void);
 void Eval_pair_w_rel_var(void);
 void Eval_pair_w_tgt_var(void);
-void Eval_pair_w_rel_var_invalid_type(void);
-void Eval_pair_w_tgt_var_invalid_type(void);
-void Eval_with_value_not_a_component(void);
-void Eval_component_in_with_scope(void);
-void Eval_component_in_with_scope_nested(void);
 void Eval_component_in_with_scope_in_scope(void);
-void Eval_assign_after_with_in_scope(void);
 void Eval_array_component(void);
-void Eval_not_an_array_component(void);
-void Eval_array_component_w_curly_brackets(void);
-void Eval_unknown_identifier(void);
-void Eval_unknown_identifier_for_int_field(void);
 void Eval_on_set_w_kind_paren_no_reflection(void);
 void Eval_on_set_w_kind_paren(void);
 void Eval_on_set_w_kind_no_paren_no_reflection(void);
@@ -262,7 +235,6 @@ void Eval_lowercase_prefab_kind(void);
 void Eval_assign_component_to_const(void);
 void Eval_assign_component_member_to_const(void);
 void Eval_prefab_w_slot(void);
-void Eval_prefab_w_slot_no_parent(void);
 void Eval_prefab_w_slot_variant(void);
 void Eval_const_w_component_expr(void);
 void Eval_const_w_component_expr_in_scope(void);
@@ -275,14 +247,7 @@ void Eval_path_tag_in_scope(void);
 void Eval_path_tag_in_module(void);
 void Eval_path_tag_in_nested_scope(void);
 void Eval_path_tag_in_nested_module(void);
-void Eval_tag_not_found(void);
-void Eval_component_not_found(void);
-void Eval_pair_first_not_found(void);
-void Eval_pair_second_not_found(void);
-void Eval_kind_not_found(void);
-void Eval_base_not_found(void);
 void Eval_dont_inherit_script_pair(void);
-void Eval_entity_w_anonymous_tag(void);
 void Eval_update_script_w_anonymous(void);
 void Eval_update_script_w_anonymous_paren(void);
 void Eval_clear_script(void);
@@ -291,18 +256,7 @@ void Eval_clear_script_w_anonymous_paren(void);
 
 // Testsuite 'Template'
 void Template_template_no_scope(void);
-void Template_template_empty(void);
-void Template_template_unresolved_tag(void);
-void Template_template_unresolved_component(void);
-void Template_template_unresolved_pair_relationship(void);
-void Template_template_unresolved_pair_target(void);
-void Template_template_unresolved_with_tag(void);
-void Template_template_unresolved_with_component(void);
-void Template_template_unresolved_with_pair_relationship(void);
-void Template_template_unresolved_with_pair_target(void);
 void Template_template_no_props(void);
-void Template_template_prop_no_type(void);
-void Template_template_prop_no_default(void);
 void Template_template_prop(void);
 void Template_template_prop_space_colon(void);
 void Template_template_2_props(void);
@@ -324,19 +278,77 @@ void Template_3_templates(void);
 void Template_template_nested_w_default_var(void);
 void Template_template_w_anonymous(void);
 void Template_template_w_anonymous_parse_again(void);
-void Template_template_redeclare_prop_as_const(void);
-void Template_template_redeclare_prop_as_prop(void);
-void Template_template_redeclare_const_as_const(void);
-void Template_template_w_composite_prop_invalid_assignment(void);
 void Template_template_w_composite_prop(void);
 void Template_template_with_with(void);
 void Template_module_w_template(void);
 void Template_module_w_nested_template(void);
 void Template_template_w_pair_w_this_var(void);
-void Template_run_template_after_error(void);
-void Template_update_template_after_error(void);
 void Template_prop_without_using_meta(void);
 void Template_hoist_var(void);
+
+// Testsuite 'Error'
+void Error_multi_line_comment_after_newline_before_newline_scope_open(void);
+void Error_missing_end_of_scope(void);
+void Error_with_n_tags_2_levels_invalid_tag(void);
+void Error_assignment_to_non_component(void);
+void Error_struct_w_member_w_assignment_to_nothing(void);
+void Error_struct_w_member_w_assignment_to_empty_scope(void);
+void Error_invalid_nested_assignment(void);
+void Error_invalid_partial_pair_assignment(void);
+void Error_empty_assignment(void);
+void Error_empty_assignment_before_end_of_scope(void);
+void Error_default_type_with_tag(void);
+void Error_invalid_oneof(void);
+void Error_default_type_with_tag(void);
+void Error_unterminated_multiline_string(void);
+void Error_const_var_redeclare(void);
+void Error_typed_const_w_composite_type_invalid_assignment(void);
+void Error_unterminated_multi_line_comment_in_value(void);
+void Error_pair_w_rel_var_invalid_type(void);
+void Error_pair_w_tgt_var_invalid_type(void);
+void Error_with_value_not_a_component(void);
+void Error_component_in_with_scope(void);
+void Error_component_in_with_scope_nested(void);
+void Error_assign_after_with_in_scope(void);
+void Error_not_an_array_component(void);
+void Error_array_component_w_curly_brackets(void);
+void Error_unknown_identifier(void);
+void Error_unknown_identifier_for_int_field(void);
+void Error_prefab_w_slot_no_parent(void);
+void Error_tag_not_found(void);
+void Error_component_not_found(void);
+void Error_pair_first_not_found(void);
+void Error_pair_second_not_found(void);
+void Error_kind_not_found(void);
+void Error_base_not_found(void);
+void Error_entity_w_anonymous_tag(void);
+void Error_member_expr_without_value_end_of_scope(void);
+void Error_member_expr_without_value_comma(void);
+void Error_member_expr_without_value_newline(void);
+void Error_2_member_expr_without_value(void);
+void Error_expr_junk_after_number(void);
+void Error_expr_junk_after_unary_minus(void);
+void Error_expr_comma_after_nothing(void);
+void Error_expr_digit_with_two_dots(void);
+void Error_template_empty(void);
+void Error_template_unresolved_tag(void);
+void Error_template_unresolved_component(void);
+void Error_template_unresolved_pair_relationship(void);
+void Error_template_unresolved_pair_target(void);
+void Error_template_unresolved_with_tag(void);
+void Error_template_unresolved_with_component(void);
+void Error_template_unresolved_with_pair_relationship(void);
+void Error_template_unresolved_with_pair_target(void);
+void Error_template_unresolved_tag_in_child(void);
+void Error_template_prop_no_type(void);
+void Error_template_prop_no_default(void);
+void Error_template_w_composite_prop_invalid_assignment(void);
+void Error_template_redeclare_prop_as_const(void);
+void Error_template_redeclare_prop_as_prop(void);
+void Error_template_redeclare_const_as_const(void);
+void Error_run_template_after_error(void);
+void Error_update_template_after_error(void);
+void Error_template_in_template(void);
 
 // Testsuite 'Expr'
 void Expr_add_2_int_literals(void);
@@ -742,10 +754,6 @@ bake_test_case Eval_testcases[] = {
         Eval_multi_line_comment_after_newline_before_scope_open
     },
     {
-        "multi_line_comment_after_newline_before_newline_scope_open",
-        Eval_multi_line_comment_after_newline_before_newline_scope_open
-    },
-    {
         "multi_line_comment_multiple_lines",
         Eval_multi_line_comment_multiple_lines
     },
@@ -796,10 +804,6 @@ bake_test_case Eval_testcases[] = {
     {
         "hierarchy_2_levels_2_subtrees",
         Eval_hierarchy_2_levels_2_subtrees
-    },
-    {
-        "missing_end_of_scope",
-        Eval_missing_end_of_scope
     },
     {
         "create_in_scope",
@@ -868,10 +872,6 @@ bake_test_case Eval_testcases[] = {
     {
         "with_n_tags_2_levels",
         Eval_with_n_tags_2_levels
-    },
-    {
-        "with_n_tags_2_levels_invalid_tag",
-        Eval_with_n_tags_2_levels_invalid_tag
     },
     {
         "with_after_scope",
@@ -1030,18 +1030,6 @@ bake_test_case Eval_testcases[] = {
         Eval_empty_scope_after_using
     },
     {
-        "assignment_to_non_component",
-        Eval_assignment_to_non_component
-    },
-    {
-        "struct_w_member_w_assignment_to_nothing",
-        Eval_struct_w_member_w_assignment_to_nothing
-    },
-    {
-        "struct_w_member_w_assignment_to_empty_scope",
-        Eval_struct_w_member_w_assignment_to_empty_scope
-    },
-    {
         "scope_after_assign",
         Eval_scope_after_assign
     },
@@ -1070,28 +1058,12 @@ bake_test_case Eval_testcases[] = {
         Eval_2_stmts_in_scope_w_no_parent
     },
     {
-        "invalid_nested_assignment",
-        Eval_invalid_nested_assignment
-    },
-    {
-        "invalid_partial_pair_assignment",
-        Eval_invalid_partial_pair_assignment
-    },
-    {
-        "empty_assignment",
-        Eval_empty_assignment
-    },
-    {
         "assign_tag_to_parent",
         Eval_assign_tag_to_parent
     },
     {
         "assign_component_to_parent",
         Eval_assign_component_to_parent
-    },
-    {
-        "empty_assignment_before_end_of_scope",
-        Eval_empty_assignment_before_end_of_scope
     },
     {
         "assign_to_parent_pair_w_new_entities_in_scope",
@@ -1128,10 +1100,6 @@ bake_test_case Eval_testcases[] = {
     {
         "default_type_from_nested_with",
         Eval_default_type_from_nested_with
-    },
-    {
-        "default_type_with_tag",
-        Eval_default_type_with_tag
     },
     {
         "default_type_from_with_in_entity_scope_w_default_type",
@@ -1174,10 +1142,6 @@ bake_test_case Eval_testcases[] = {
         Eval_oneof
     },
     {
-        "invalid_oneof",
-        Eval_invalid_oneof
-    },
-    {
         "brief_annotation",
         Eval_brief_annotation
     },
@@ -1204,10 +1168,6 @@ bake_test_case Eval_testcases[] = {
     {
         "multiline_string",
         Eval_multiline_string
-    },
-    {
-        "unterminated_multiline_string",
-        Eval_unterminated_multiline_string
     },
     {
         "declaration_w_underscore_name",
@@ -1248,10 +1208,6 @@ bake_test_case Eval_testcases[] = {
     {
         "const_var_struct",
         Eval_const_var_struct
-    },
-    {
-        "const_var_redeclare",
-        Eval_const_var_redeclare
     },
     {
         "const_var_scoped",
@@ -1338,20 +1294,12 @@ bake_test_case Eval_testcases[] = {
         Eval_const_w_type
     },
     {
-        "typed_const_w_composite_type_invalid_assignment",
-        Eval_typed_const_w_composite_type_invalid_assignment
-    },
-    {
         "typed_const_w_composite_type",
         Eval_typed_const_w_composite_type
     },
     {
         "assign_var_to_typed_const_w_composite_type",
         Eval_assign_var_to_typed_const_w_composite_type
-    },
-    {
-        "typed_const_w_composite_type_invalid_assignment",
-        Eval_typed_const_w_composite_type_invalid_assignment
     },
     {
         "using_wildcard",
@@ -1372,10 +1320,6 @@ bake_test_case Eval_testcases[] = {
     {
         "multi_line_comment_in_value_after_scope",
         Eval_multi_line_comment_in_value_after_scope
-    },
-    {
-        "unterminated_multi_line_comment_in_value",
-        Eval_unterminated_multi_line_comment_in_value
     },
     {
         "module_stmt",
@@ -1434,52 +1378,12 @@ bake_test_case Eval_testcases[] = {
         Eval_pair_w_tgt_var
     },
     {
-        "pair_w_rel_var_invalid_type",
-        Eval_pair_w_rel_var_invalid_type
-    },
-    {
-        "pair_w_tgt_var_invalid_type",
-        Eval_pair_w_tgt_var_invalid_type
-    },
-    {
-        "with_value_not_a_component",
-        Eval_with_value_not_a_component
-    },
-    {
-        "component_in_with_scope",
-        Eval_component_in_with_scope
-    },
-    {
-        "component_in_with_scope_nested",
-        Eval_component_in_with_scope_nested
-    },
-    {
         "component_in_with_scope_in_scope",
         Eval_component_in_with_scope_in_scope
     },
     {
-        "assign_after_with_in_scope",
-        Eval_assign_after_with_in_scope
-    },
-    {
         "array_component",
         Eval_array_component
-    },
-    {
-        "not_an_array_component",
-        Eval_not_an_array_component
-    },
-    {
-        "array_component_w_curly_brackets",
-        Eval_array_component_w_curly_brackets
-    },
-    {
-        "unknown_identifier",
-        Eval_unknown_identifier
-    },
-    {
-        "unknown_identifier_for_int_field",
-        Eval_unknown_identifier_for_int_field
     },
     {
         "on_set_w_kind_paren_no_reflection",
@@ -1630,10 +1534,6 @@ bake_test_case Eval_testcases[] = {
         Eval_prefab_w_slot
     },
     {
-        "prefab_w_slot_no_parent",
-        Eval_prefab_w_slot_no_parent
-    },
-    {
         "prefab_w_slot_variant",
         Eval_prefab_w_slot_variant
     },
@@ -1682,36 +1582,8 @@ bake_test_case Eval_testcases[] = {
         Eval_path_tag_in_nested_module
     },
     {
-        "tag_not_found",
-        Eval_tag_not_found
-    },
-    {
-        "component_not_found",
-        Eval_component_not_found
-    },
-    {
-        "pair_first_not_found",
-        Eval_pair_first_not_found
-    },
-    {
-        "pair_second_not_found",
-        Eval_pair_second_not_found
-    },
-    {
-        "kind_not_found",
-        Eval_kind_not_found
-    },
-    {
-        "base_not_found",
-        Eval_base_not_found
-    },
-    {
         "dont_inherit_script_pair",
         Eval_dont_inherit_script_pair
-    },
-    {
-        "entity_w_anonymous_tag",
-        Eval_entity_w_anonymous_tag
     },
     {
         "update_script_w_anonymous",
@@ -1741,52 +1613,8 @@ bake_test_case Template_testcases[] = {
         Template_template_no_scope
     },
     {
-        "template_empty",
-        Template_template_empty
-    },
-    {
-        "template_unresolved_tag",
-        Template_template_unresolved_tag
-    },
-    {
-        "template_unresolved_component",
-        Template_template_unresolved_component
-    },
-    {
-        "template_unresolved_pair_relationship",
-        Template_template_unresolved_pair_relationship
-    },
-    {
-        "template_unresolved_pair_target",
-        Template_template_unresolved_pair_target
-    },
-    {
-        "template_unresolved_with_tag",
-        Template_template_unresolved_with_tag
-    },
-    {
-        "template_unresolved_with_component",
-        Template_template_unresolved_with_component
-    },
-    {
-        "template_unresolved_with_pair_relationship",
-        Template_template_unresolved_with_pair_relationship
-    },
-    {
-        "template_unresolved_with_pair_target",
-        Template_template_unresolved_with_pair_target
-    },
-    {
         "template_no_props",
         Template_template_no_props
-    },
-    {
-        "template_prop_no_type",
-        Template_template_prop_no_type
-    },
-    {
-        "template_prop_no_default",
-        Template_template_prop_no_default
     },
     {
         "template_prop",
@@ -1873,22 +1701,6 @@ bake_test_case Template_testcases[] = {
         Template_template_w_anonymous_parse_again
     },
     {
-        "template_redeclare_prop_as_const",
-        Template_template_redeclare_prop_as_const
-    },
-    {
-        "template_redeclare_prop_as_prop",
-        Template_template_redeclare_prop_as_prop
-    },
-    {
-        "template_redeclare_const_as_const",
-        Template_template_redeclare_const_as_const
-    },
-    {
-        "template_w_composite_prop_invalid_assignment",
-        Template_template_w_composite_prop_invalid_assignment
-    },
-    {
         "template_w_composite_prop",
         Template_template_w_composite_prop
     },
@@ -1909,20 +1721,263 @@ bake_test_case Template_testcases[] = {
         Template_template_w_pair_w_this_var
     },
     {
-        "run_template_after_error",
-        Template_run_template_after_error
-    },
-    {
-        "update_template_after_error",
-        Template_update_template_after_error
-    },
-    {
         "prop_without_using_meta",
         Template_prop_without_using_meta
     },
     {
         "hoist_var",
         Template_hoist_var
+    }
+};
+
+bake_test_case Error_testcases[] = {
+    {
+        "multi_line_comment_after_newline_before_newline_scope_open",
+        Error_multi_line_comment_after_newline_before_newline_scope_open
+    },
+    {
+        "missing_end_of_scope",
+        Error_missing_end_of_scope
+    },
+    {
+        "with_n_tags_2_levels_invalid_tag",
+        Error_with_n_tags_2_levels_invalid_tag
+    },
+    {
+        "assignment_to_non_component",
+        Error_assignment_to_non_component
+    },
+    {
+        "struct_w_member_w_assignment_to_nothing",
+        Error_struct_w_member_w_assignment_to_nothing
+    },
+    {
+        "struct_w_member_w_assignment_to_empty_scope",
+        Error_struct_w_member_w_assignment_to_empty_scope
+    },
+    {
+        "invalid_nested_assignment",
+        Error_invalid_nested_assignment
+    },
+    {
+        "invalid_partial_pair_assignment",
+        Error_invalid_partial_pair_assignment
+    },
+    {
+        "empty_assignment",
+        Error_empty_assignment
+    },
+    {
+        "empty_assignment_before_end_of_scope",
+        Error_empty_assignment_before_end_of_scope
+    },
+    {
+        "default_type_with_tag",
+        Error_default_type_with_tag
+    },
+    {
+        "invalid_oneof",
+        Error_invalid_oneof
+    },
+    {
+        "default_type_with_tag",
+        Error_default_type_with_tag
+    },
+    {
+        "unterminated_multiline_string",
+        Error_unterminated_multiline_string
+    },
+    {
+        "const_var_redeclare",
+        Error_const_var_redeclare
+    },
+    {
+        "typed_const_w_composite_type_invalid_assignment",
+        Error_typed_const_w_composite_type_invalid_assignment
+    },
+    {
+        "unterminated_multi_line_comment_in_value",
+        Error_unterminated_multi_line_comment_in_value
+    },
+    {
+        "pair_w_rel_var_invalid_type",
+        Error_pair_w_rel_var_invalid_type
+    },
+    {
+        "pair_w_tgt_var_invalid_type",
+        Error_pair_w_tgt_var_invalid_type
+    },
+    {
+        "with_value_not_a_component",
+        Error_with_value_not_a_component
+    },
+    {
+        "component_in_with_scope",
+        Error_component_in_with_scope
+    },
+    {
+        "component_in_with_scope_nested",
+        Error_component_in_with_scope_nested
+    },
+    {
+        "assign_after_with_in_scope",
+        Error_assign_after_with_in_scope
+    },
+    {
+        "not_an_array_component",
+        Error_not_an_array_component
+    },
+    {
+        "array_component_w_curly_brackets",
+        Error_array_component_w_curly_brackets
+    },
+    {
+        "unknown_identifier",
+        Error_unknown_identifier
+    },
+    {
+        "unknown_identifier_for_int_field",
+        Error_unknown_identifier_for_int_field
+    },
+    {
+        "prefab_w_slot_no_parent",
+        Error_prefab_w_slot_no_parent
+    },
+    {
+        "tag_not_found",
+        Error_tag_not_found
+    },
+    {
+        "component_not_found",
+        Error_component_not_found
+    },
+    {
+        "pair_first_not_found",
+        Error_pair_first_not_found
+    },
+    {
+        "pair_second_not_found",
+        Error_pair_second_not_found
+    },
+    {
+        "kind_not_found",
+        Error_kind_not_found
+    },
+    {
+        "base_not_found",
+        Error_base_not_found
+    },
+    {
+        "entity_w_anonymous_tag",
+        Error_entity_w_anonymous_tag
+    },
+    {
+        "member_expr_without_value_end_of_scope",
+        Error_member_expr_without_value_end_of_scope
+    },
+    {
+        "member_expr_without_value_comma",
+        Error_member_expr_without_value_comma
+    },
+    {
+        "member_expr_without_value_newline",
+        Error_member_expr_without_value_newline
+    },
+    {
+        "2_member_expr_without_value",
+        Error_2_member_expr_without_value
+    },
+    {
+        "expr_junk_after_number",
+        Error_expr_junk_after_number
+    },
+    {
+        "expr_junk_after_unary_minus",
+        Error_expr_junk_after_unary_minus
+    },
+    {
+        "expr_comma_after_nothing",
+        Error_expr_comma_after_nothing
+    },
+    {
+        "expr_digit_with_two_dots",
+        Error_expr_digit_with_two_dots
+    },
+    {
+        "template_empty",
+        Error_template_empty
+    },
+    {
+        "template_unresolved_tag",
+        Error_template_unresolved_tag
+    },
+    {
+        "template_unresolved_component",
+        Error_template_unresolved_component
+    },
+    {
+        "template_unresolved_pair_relationship",
+        Error_template_unresolved_pair_relationship
+    },
+    {
+        "template_unresolved_pair_target",
+        Error_template_unresolved_pair_target
+    },
+    {
+        "template_unresolved_with_tag",
+        Error_template_unresolved_with_tag
+    },
+    {
+        "template_unresolved_with_component",
+        Error_template_unresolved_with_component
+    },
+    {
+        "template_unresolved_with_pair_relationship",
+        Error_template_unresolved_with_pair_relationship
+    },
+    {
+        "template_unresolved_with_pair_target",
+        Error_template_unresolved_with_pair_target
+    },
+    {
+        "template_unresolved_tag_in_child",
+        Error_template_unresolved_tag_in_child
+    },
+    {
+        "template_prop_no_type",
+        Error_template_prop_no_type
+    },
+    {
+        "template_prop_no_default",
+        Error_template_prop_no_default
+    },
+    {
+        "template_w_composite_prop_invalid_assignment",
+        Error_template_w_composite_prop_invalid_assignment
+    },
+    {
+        "template_redeclare_prop_as_const",
+        Error_template_redeclare_prop_as_const
+    },
+    {
+        "template_redeclare_prop_as_prop",
+        Error_template_redeclare_prop_as_prop
+    },
+    {
+        "template_redeclare_const_as_const",
+        Error_template_redeclare_const_as_const
+    },
+    {
+        "run_template_after_error",
+        Error_run_template_after_error
+    },
+    {
+        "update_template_after_error",
+        Error_update_template_after_error
+    },
+    {
+        "template_in_template",
+        Error_template_in_template
     }
 };
 
@@ -3024,15 +3079,22 @@ static bake_test_suite suites[] = {
         "Eval",
         NULL,
         NULL,
-        279,
+        244,
         Eval_testcases
     },
     {
         "Template",
         NULL,
         NULL,
-        47,
+        30,
         Template_testcases
+    },
+    {
+        "Error",
+        NULL,
+        NULL,
+        62,
+        Error_testcases
     },
     {
         "Expr",
@@ -3065,5 +3127,5 @@ static bake_test_suite suites[] = {
 };
 
 int main(int argc, char *argv[]) {
-    return bake_test_run("script", argc, argv, suites, 6);
+    return bake_test_run("script", argc, argv, suites, 7);
 }

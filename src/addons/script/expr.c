@@ -142,6 +142,22 @@ const char* flecs_parse_expr_token(
         return NULL;
     }
 
+    bool isDigit = isdigit(ch) || (ch == '-');
+
+    if (ch == '-') {
+        if (!isdigit(ptr[1]) && ptr[1] != '$' && ptr[1] != '(') {
+            ecs_parser_error(name, expr, column,
+                "invalid number token");
+            return NULL;
+        }
+        if (ptr[1] == '$' || ptr[1] == '(') {
+            isDigit = false; /* -$var */
+        }
+    }
+
+    bool hasDot = false;
+    bool hasE = false;
+
     tptr[0] = ch;
     tptr ++;
     ptr ++;
@@ -171,6 +187,27 @@ const char* flecs_parse_expr_token(
             continue;
         } else if (!flecs_valid_token_char(ch) && !in_str) {
             break;
+        }
+
+        if (isDigit) {
+            if (!isdigit(ch) && (ch != '.') && (ch != 'e')) {
+                ecs_parser_error(name, expr, column, "invalid token");
+                return NULL;
+            }
+            if (ch == '.') {
+                if (hasDot) {
+                    ecs_parser_error(name, expr, column, "invalid token");
+                    return NULL;
+                }
+                hasDot = true;
+            }
+            if (ch == 'e') {
+                if (hasE) {
+                    ecs_parser_error(name, expr, column, "invalid token");
+                    return NULL;
+                }
+                hasE = true;
+            }
         }
 
         if (delim && (ch == delim)) {
