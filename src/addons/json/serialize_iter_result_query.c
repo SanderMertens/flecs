@@ -175,8 +175,10 @@ int flecs_json_serialize_iter_result_field_values(
         fields &= it->query->data_fields;
     }
 
+    ecs_termset_t row_fields = it->query ? it->query->row_fields : 0;
+
     for (f = 0; f < field_count; f ++) {
-        ecs_flags16_t field_bit = flecs_ito(uint16_t, 1 << f);
+        ecs_termset_t field_bit = (ecs_termset_t)flecs_ito(uint64_t, 1 << f);
         if (!(fields & field_bit)) {
             ecs_strbuf_list_appendlit(buf, "0");
             continue;
@@ -190,16 +192,21 @@ int flecs_json_serialize_iter_result_field_values(
             continue;
         }
 
-        ecs_size_t size = it->sizes[f];
-        void *ptr = ecs_field_w_size(it, flecs_itosize(size), f);
+        void *ptr;
+        if (row_fields & field_bit) {
+            ptr = ecs_field_at_w_size(it, 0, f, i);
+        } else {
+            ecs_size_t size = it->sizes[f];
+            ptr = ecs_field_w_size(it, flecs_itosize(size), f);
 
-        if (!ptr) {
-            ecs_strbuf_list_appendlit(buf, "0");
-            continue;
-        }
+            if (!ptr) {
+                ecs_strbuf_list_appendlit(buf, "0");
+                continue;
+            }
 
-        if (!it->sources[f]) {
-            ptr = ECS_ELEM(ptr, size, i);
+            if (!it->sources[f]) {
+                ptr = ECS_ELEM(ptr, size, i);
+            }
         }
 
         flecs_json_next(buf);
