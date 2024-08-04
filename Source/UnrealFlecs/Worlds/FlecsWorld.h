@@ -6,12 +6,14 @@
 
 #include "CoreMinimal.h"
 #include "flecs.h"
+#include "AssetRegistry/AssetRegistryModule.h"
 #include "Components/FlecsTypeMapComponent.h"
 #include "Components/FlecsUObjectComponent.h"
 #include "Entities/FlecsEntityRecord.h"
 #include "SolidMacros/Concepts/SolidConcepts.h"
 #include "Entities/FlecsId.h"
 #include "Modules/FlecsModuleInterface.h"
+#include "Prefabs/FlecsPrefabAsset.h"
 #include "Prefabs/FlecsPrefabComponent.h"
 #include "Systems/FlecsSystem.h"
 #include "Timers/FlecsTimer.h"
@@ -32,6 +34,7 @@ public:
 	{
 		InitializeComponentObservers();
 		InitializeSystems();
+		InitializePrefabs();
 	}
 
 	FORCEINLINE void InitializeComponentObservers()
@@ -39,7 +42,9 @@ public:
 		for (const auto& ComponentProperties : FFlecsComponentPropertiesRegistry::Get().ComponentProperties)
 		{
 			flecs::observer_builder<> ObserverBuilder = CreateObserver(TEXT("ComponentObserver"))
-				//.name(ComponentProperties.first.data())
+				.cached()
+				.with_name_component()
+				.name(ComponentProperties.second.Name.data())
 				.with<flecs::Component>()
 				.event(flecs::OnAdd)
 				.yield_existing();
@@ -60,6 +65,8 @@ public:
 			(const FFlecsComponentProperties& InProperties)
 		{
 			flecs::observer_builder<> ObserverBuilder = CreateObserver(TEXT("ComponentObserver"))
+				.cached()
+				.with_name_component()
 				.name(InProperties.Name.data())
 				.with<flecs::Component>()
 				.event(flecs::OnAdd)
@@ -78,7 +85,7 @@ public:
 		});
 	}
 
-	FORCEINLINE void InitializeSystems()
+	FORCEINLINE void InitializeSystems() const
 	{
 		static constexpr int32 UOBJECT_VALID_CHECK_FRAME_RATE = 60;
 		
@@ -94,6 +101,31 @@ public:
 					InEntity.destruct();
 				}
 			});
+	}
+
+	FORCEINLINE void InitializePrefabs() const
+	{
+		FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>(TEXT("AssetRegistry"));
+		IAssetRegistry& AssetRegistry = AssetRegistryModule.Get();
+
+		TArray<FAssetData> AssetData;
+		AssetRegistry.GetAssetsByClass(FTopLevelAssetPath(UFlecsPrefabAsset::StaticClass()), AssetData);
+
+		AssetRegistry.OnAssetAdded().AddLambda([&](const FAssetData& InAssetData)
+		{
+			if (InAssetData.GetClass() == UFlecsPrefabAsset::StaticClass())
+			{
+				CreatePrefab(CastChecked<UFlecsPrefabAsset>(InAssetData.GetAsset())->EntityRecord);
+			}
+		});
+
+		for (const FAssetData& Asset : AssetData)
+		{
+			if (const UFlecsPrefabAsset* PrefabAsset = Cast<UFlecsPrefabAsset>(Asset.GetAsset()))
+			{
+				CreatePrefab(PrefabAsset->EntityRecord);
+			}
+		}
 	}
 	
 	FORCEINLINE void SetWorld(flecs::world&& InWorld)
@@ -424,6 +456,10 @@ public:
 	
 	FORCEINLINE void DestroyWorld()
 	{
+		FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>(TEXT("AssetRegistry"));
+		IAssetRegistry& AssetRegistry = AssetRegistryModule.Get();
+		AssetRegistry.OnAssetAdded().RemoveAll(this);
+		
 		World.~world();
 		MarkAsGarbage();
 	}

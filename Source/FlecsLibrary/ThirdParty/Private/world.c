@@ -840,7 +840,7 @@ static const ecs_build_info_t flecs_build_info = {
 #ifdef FLECS_SANITIZE
     .sanitize = true,
 #endif
-#ifdef FLECS_PERF_TRACE
+#if 1 //defined(FLECS_PERF_TRACE)
     .perf_trace = true,
 #endif
     .version = FLECS_VERSION,

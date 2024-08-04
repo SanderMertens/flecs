@@ -15,7 +15,7 @@ void UFlecsRestModule::InitializeModule(UFlecsWorld* InWorld, const FFlecsEntity
 
 void UFlecsRestModule::DeinitializeModule(UFlecsWorld* InWorld)
 {
-	if UNLIKELY(!RestEntity.IsValid())
+	if UNLIKELY_IF(!RestEntity.IsValid())
 	{
 		return;
 	}

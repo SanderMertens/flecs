@@ -28,6 +28,11 @@
 			"Name": "UnrealFlecsEditor",
 			"Type": "Editor",
 			"LoadingPhase": "Default"
+		},
+		{
+			"Name": "UnrealFlecsTests",
+			"Type": "Developer",
+			"LoadingPhase": "Default"
 		}
 	],
 	"Plugins": [

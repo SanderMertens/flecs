@@ -45,7 +45,8 @@ public:
 		
 		if (!ComponentProperties.contains(Name))
 		{
-			ComponentProperties[Name] = FFlecsComponentProperties{ Name, Entities, ComponentPropertyStructs };
+			ComponentProperties[Name] = FFlecsComponentProperties{ Name, Entities,
+				ComponentPropertyStructs };
 			
 			UN_LOGF(LogFlecsComponentProperties, Log,
 				"Registered component properties: %s", *FString(Name.data()));

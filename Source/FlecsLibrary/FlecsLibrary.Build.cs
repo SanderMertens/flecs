@@ -8,7 +8,7 @@ public class FlecsLibrary : ModuleRules
     {
         PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
         
-        CStandard = CStandardVersion.C99;
+        //CStandard = CStandardVersion.C99;
         
         bEnableUndefinedIdentifierWarnings = false;
         

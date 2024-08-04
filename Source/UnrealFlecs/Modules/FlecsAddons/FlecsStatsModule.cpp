@@ -19,7 +19,7 @@ void UFlecsStatsModule::DeinitializeModule(UFlecsWorld* InWorld)
 {
 	#if WITH_EDITOR
 
-	if UNLIKELY(!StatsEntity.IsValid())
+	if UNLIKELY_IF(!StatsEntity.IsValid())
 	{
 		return;
 	}
