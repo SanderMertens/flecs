@@ -13596,31 +13596,6 @@ int ecs_world_to_json_buf(
     ecs_strbuf_t *buf_out,
     const ecs_world_to_json_desc_t *desc);
 
-
-
-/* Legacy deserializer functions. These can be used to load a v3 JSON string and
- * save it to the new format. These functions will be removed in the next
- * release. */
-
-FLECS_API
-const char* ecs_entity_from_json_legacy(
-    ecs_world_t *world,
-    ecs_entity_t entity,
-    const char *json,
-    const ecs_from_json_desc_t *desc);
-
-FLECS_API
-const char* ecs_world_from_json_legacy(
-    ecs_world_t *world,
-    const char *json,
-    const ecs_from_json_desc_t *desc);
-
-FLECS_API
-const char* ecs_world_from_json_file_legacy(
-    ecs_world_t *world,
-    const char *filename,
-    const ecs_from_json_desc_t *desc);
-
 #ifdef __cplusplus
 }
 #endif
