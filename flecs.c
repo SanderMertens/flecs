@@ -6063,6 +6063,7 @@ void flecs_invoke_hook(
     it.real_world = world;
     it.table = table;
     it.trs[0] = tr;
+    it.row_fields = !!(((ecs_id_record_t*)tr->hdr.cache)->flags & EcsIdIsSparse);
     it.sizes = ECS_CONST_CAST(ecs_size_t*, &ti->size);
     it.ids[0] = id;
     it.event = event;
@@ -11000,6 +11001,7 @@ void* ecs_field_at_w_size(
     ecs_id_record_t *idr = (ecs_id_record_t*)tr->hdr.cache;
     ecs_assert((idr->flags & EcsIdIsSparse), ECS_INVALID_OPERATION,
         "use ecs_field to access fields for non-sparse components");
+    ecs_assert(it->row_fields & (1ull << index), ECS_INTERNAL_ERROR, NULL);
 
     ecs_entity_t src = it->sources[index];
     if (!src) {
@@ -69018,6 +69020,7 @@ ecs_iter_t flecs_query_iter(
     it.sizes = q->sizes;
     it.set_fields = q->set_fields;
     it.ref_fields = q->fixed_fields | q->row_fields;
+    it.row_fields = q->row_fields;
     it.up_fields = 0;
     flecs_query_apply_iter_flags(&it, q);
 

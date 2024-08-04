@@ -599,7 +599,7 @@ void Query_optional_pair_term(void) {
     test_int(1, without_pair);
 }
 
-void Query_action(void) {
+void Query_run(void) {
     flecs::world world;
 
     world.component<Position>();
@@ -628,7 +628,7 @@ void Query_action(void) {
     test_int(p->y, 22);
 }
 
-void Query_action_const(void) {
+void Query_run_const(void) {
     flecs::world world;
 
     world.component<Position>();
@@ -657,7 +657,7 @@ void Query_action_const(void) {
     test_int(p->y, 22);
 }
 
-void Query_action_shared(void) {
+void Query_run_shared(void) {
     flecs::world world;
 
     world.component<Position>().add(flecs::OnInstantiate, flecs::Inherit);
@@ -706,7 +706,7 @@ void Query_action_shared(void) {
     test_int(p->y, 24);  
 }
 
-void Query_action_optional(void) {
+void Query_run_optional(void) {
     flecs::world world;
 
     world.component<Position>();
@@ -766,6 +766,35 @@ void Query_action_optional(void) {
     p = e4.get<Position>();
     test_int(p->x, 71);
     test_int(p->y, 81);
+}
+
+void Query_run_sparse(void) {
+    flecs::world world;
+
+    world.component<Position>().add(flecs::Sparse);
+    world.component<Velocity>();
+
+    auto entity = flecs::entity(world)
+        .set<Position>({10, 20})
+        .set<Velocity>({1, 2});
+
+    auto q = world.query<Position, Velocity>();
+
+    q.run([](flecs::iter& it) {
+        while (it.next()) {
+            auto v = it.field<Velocity>(1);
+
+            for (auto i : it) {
+                auto& p = it.field_at<Position>(0, i);
+                p.x += v[i].x;
+                p.y += v[i].y;
+            }
+        }
+    });
+
+    const Position *p = entity.get<Position>();
+    test_int(p->x, 11);
+    test_int(p->y, 22);
 }
 
 void Query_each(void) {
@@ -903,6 +932,28 @@ void Query_each_optional(void) {
     p = e4.get<Position>();
     test_int(p->x, 71);
     test_int(p->y, 81);  
+}
+
+void Query_each_sparse(void) {
+    flecs::world world;
+
+    world.component<Position>().add(flecs::Sparse);
+    world.component<Velocity>();
+
+    auto entity = flecs::entity(world)
+        .set<Position>({10, 20})
+        .set<Velocity>({1, 2});
+
+    auto q = world.query<Position, Velocity>();
+
+    q.each([](Position& p, Velocity& v) {
+        p.x += v.x;
+        p.y += v.y;
+    });
+
+    const Position *p = entity.get<Position>();
+    test_int(p->x, 11);
+    test_int(p->y, 22);
 }
 
 // Generic lambdas are a C++14 feature.
