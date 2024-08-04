@@ -1171,6 +1171,7 @@ void flecs_invoke_hook(
     it.real_world = world;
     it.table = table;
     it.trs[0] = tr;
+    it.row_fields = !!(((ecs_id_record_t*)tr->hdr.cache)->flags & EcsIdIsSparse);
     it.sizes = ECS_CONST_CAST(ecs_size_t*, &ti->size);
     it.ids[0] = id;
     it.event = event;

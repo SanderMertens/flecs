@@ -4204,6 +4204,7 @@ struct ecs_iter_t {
     uint64_t group_id;            /**< Group id for table, if group_by is used */
     ecs_termset_t set_fields;     /**< Fields that are set */
     ecs_termset_t ref_fields;     /**< Bitset with fields that aren't component arrays */
+    ecs_termset_t row_fields;     /**< Fields that must be obtained with field_at */
     ecs_termset_t up_fields;      /**< Bitset with fields matched through up traversal */
 
     /* Input information */
@@ -22574,14 +22575,22 @@ public:
 
     /** Get pointer to field at row. */
     void* field_at(int8_t index, size_t row) const {
-        return get_unchecked_field(index)[row];
+        if (iter_->row_fields & (1llu << index)) {
+            return get_unchecked_field_at(index, row)[0];
+        } else {
+            return get_unchecked_field(index)[row];
+        }
     }
 
     /** Get reference to field at row. */
     template <typename T, typename A = actual_type_t<T>,
         typename std::enable_if<std::is_const<T>::value, void>::type* = nullptr>
     const A& field_at(int8_t index, size_t row) const {
-        return get_field<A>(index)[row];
+        if (iter_->row_fields & (1llu << index)) {
+            return get_field_at<A>(index, row)[0];
+        } else {
+            return get_field<A>(index)[row];
+        }
     }
 
     /** Get reference to field at row. */
@@ -22591,7 +22600,11 @@ public:
     A& field_at(int8_t index, size_t row) const {
         ecs_assert(!ecs_field_is_readonly(iter_, index),
             ECS_ACCESS_VIOLATION, NULL);
-        return get_field<A>(index)[row];
+        if (iter_->row_fields & (1llu << index)) {
+            return get_field_at<A>(index, row)[0];
+        } else {
+            return get_field<A>(index)[row];
+        }
     }
 
     /** Get readonly access to entity ids.
@@ -22708,6 +22721,22 @@ private:
             count, is_shared);
     }
 
+    /* Get field, check if correct type is used */
+    template <typename T, typename A = actual_type_t<T>>
+    flecs::field<T> get_field_at(int8_t index, int32_t row) const {
+
+#ifndef FLECS_NDEBUG
+        ecs_entity_t term_id = ecs_field_id(iter_, index);
+        ecs_assert(ECS_HAS_ID_FLAG(term_id, PAIR) ||
+            term_id == _::type<T>::id(iter_->world),
+            ECS_COLUMN_TYPE_MISMATCH, NULL);
+#endif
+
+        return flecs::field<A>(
+            static_cast<T*>(ecs_field_at_w_size(iter_, sizeof(A), index, row)),
+                1, false);
+    }
+
     flecs::untyped_field get_unchecked_field(int8_t index) const {
         size_t count;
         size_t size = ecs_field_size(iter_, index);
@@ -22726,6 +22755,13 @@ private:
 
         return flecs::untyped_field(
             ecs_field_w_size(iter_, 0, index), size, count, is_shared);
+    }
+
+    flecs::untyped_field get_unchecked_field_at(int8_t index, size_t row) const {
+        size_t size = ecs_field_size(iter_, index);
+        return flecs::untyped_field(
+            ecs_field_at_w_size(iter_, 0, index, static_cast<int32_t>(row)), 
+                size, 1, false);
     }
 
     flecs::iter_t *iter_;
@@ -25563,11 +25599,7 @@ private:
         typename A = remove_pointer_t<actual_type_t<T>>,
             if_not_t< is_empty<A>::value > = 0>
     void populate(const ecs_iter_t *iter, size_t index, T, Targs... comps) {
-        const flecs::query_t *q = iter->query;
-
-        /* Can't have a result with ref fields if this is not a query. */
-        ecs_assert(q != NULL, ECS_INTERNAL_ERROR, NULL);
-        if (q->row_fields & (1llu << index)) {
+        if (iter->row_fields & (1llu << index)) {
             /* Need to fetch the value with ecs_field_at() */
             fields_[index].is_row = true;
             fields_[index].is_ref = true;

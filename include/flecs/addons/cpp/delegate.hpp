@@ -70,11 +70,7 @@ private:
         typename A = remove_pointer_t<actual_type_t<T>>,
             if_not_t< is_empty<A>::value > = 0>
     void populate(const ecs_iter_t *iter, size_t index, T, Targs... comps) {
-        const flecs::query_t *q = iter->query;
-
-        /* Can't have a result with ref fields if this is not a query. */
-        ecs_assert(q != NULL, ECS_INTERNAL_ERROR, NULL);
-        if (q->row_fields & (1llu << index)) {
+        if (iter->row_fields & (1llu << index)) {
             /* Need to fetch the value with ecs_field_at() */
             fields_[index].is_row = true;
             fields_[index].is_ref = true;

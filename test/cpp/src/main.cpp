@@ -544,14 +544,16 @@ void Query_term_get_subj(void);
 void Query_term_get_pred(void);
 void Query_term_get_obj(void);
 void Query_set_this_var(void);
-void Query_action(void);
-void Query_action_const(void);
-void Query_action_shared(void);
-void Query_action_optional(void);
+void Query_run(void);
+void Query_run_const(void);
+void Query_run_shared(void);
+void Query_run_optional(void);
+void Query_run_sparse(void);
 void Query_each(void);
 void Query_each_const(void);
 void Query_each_shared(void);
 void Query_each_optional(void);
+void Query_each_sparse(void);
 void Query_signature(void);
 void Query_signature_const(void);
 void Query_signature_shared(void);
@@ -3424,20 +3426,24 @@ bake_test_case Query_testcases[] = {
         Query_set_this_var
     },
     {
-        "action",
-        Query_action
+        "run",
+        Query_run
     },
     {
-        "action_const",
-        Query_action_const
+        "run_const",
+        Query_run_const
     },
     {
-        "action_shared",
-        Query_action_shared
+        "run_shared",
+        Query_run_shared
     },
     {
-        "action_optional",
-        Query_action_optional
+        "run_optional",
+        Query_run_optional
+    },
+    {
+        "run_sparse",
+        Query_run_sparse
     },
     {
         "each",
@@ -3454,6 +3460,10 @@ bake_test_case Query_testcases[] = {
     {
         "each_optional",
         Query_each_optional
+    },
+    {
+        "each_sparse",
+        Query_each_sparse
     },
     {
         "signature",
@@ -6548,7 +6558,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        107,
+        109,
         Query_testcases
     },
     {

@@ -177,6 +177,7 @@ void* ecs_field_at_w_size(
     ecs_id_record_t *idr = (ecs_id_record_t*)tr->hdr.cache;
     ecs_assert((idr->flags & EcsIdIsSparse), ECS_INVALID_OPERATION,
         "use ecs_field to access fields for non-sparse components");
+    ecs_assert(it->row_fields & (1ull << index), ECS_INTERNAL_ERROR, NULL);
 
     ecs_entity_t src = it->sources[index];
     if (!src) {

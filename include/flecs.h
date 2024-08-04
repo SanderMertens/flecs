@@ -1065,6 +1065,7 @@ struct ecs_iter_t {
     uint64_t group_id;            /**< Group id for table, if group_by is used */
     ecs_termset_t set_fields;     /**< Fields that are set */
     ecs_termset_t ref_fields;     /**< Bitset with fields that aren't component arrays */
+    ecs_termset_t row_fields;     /**< Fields that must be obtained with field_at */
     ecs_termset_t up_fields;      /**< Bitset with fields matched through up traversal */
 
     /* Input information */
