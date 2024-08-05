@@ -9,7 +9,8 @@ public class UnrealFlecs : ModuleRules
 		PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
 
 		CppStandard = CppStandardVersion.Latest;
-		CStandard = CStandardVersion.C99;
+
+		OptimizationLevel = OptimizationMode.Speed;
 		
 		PublicIncludePaths.AddRange(
 			new string[] {

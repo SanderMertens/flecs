@@ -101,5 +101,3 @@ public:
 	FFlecsEntityHandle PrefabObserverEntity;
 	
 }; // struct FFlecsPrefabComponent
-
-REGISTER_FLECS_COMPONENT_PROPERTIES(FFlecsPrefabComponent, { flecs::DontInherit }, {});

@@ -19,7 +19,9 @@ public class UnrealFlecsTests : ModuleRules
                 "CoreUObject",
                 "Engine",
                 "Slate",
-                "SlateCore"
+                "SlateCore",
+                "UnrealFlecs",
+                "SolidMacros",
             }
         );
     }

@@ -8,9 +8,9 @@ public class FlecsLibrary : ModuleRules
     {
         PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
         
-        //CStandard = CStandardVersion.C99;
+        OptimizationLevel = OptimizationMode.Speed;
         
-        bEnableUndefinedIdentifierWarnings = false;
+        OptimizeCode = CodeOptimization.Always;
         
         PublicIncludePaths.AddRange(
             new string[] {

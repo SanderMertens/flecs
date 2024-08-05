@@ -31,7 +31,7 @@
 		},
 		{
 			"Name": "UnrealFlecsTests",
-			"Type": "Developer",
+			"Type": "DeveloperTool",
 			"LoadingPhase": "Default"
 		}
 	],
