@@ -746,9 +746,6 @@ identifier_paren: {
                     ecs_script_component_t *comp = 
                         flecs_script_insert_component(parser, Token(0)); 
                     comp->expr = Token(2);
-                    if (!ecs_os_strcmp(comp->expr, "{}")) {
-                        comp->expr = NULL;
-                    }
                 )
 
                 EndOfRule;

@@ -72,18 +72,10 @@ _ {
 A tag can be added to an entity by simply specifying the tag's identifier in an entity scope. Example:
 
 ```c
-my_entity {
-  SpaceShip // SpaceShip tag
-}
-```
-
-If a tag didn't exist yet, it will be automatically created in the script root. The following example is equivalent to the previous one:
-
-```c
-SpaceShip
+SpaceShip {} // Define SpaceShip tag
 
 my_entity {
-  SpaceShip // Now resolves to the existing SpaceShip tag
+  SpaceShip // Add SpaceShip to my_entity
 }
 ```
 
@@ -91,12 +83,13 @@ my_entity {
 Pairs are added to entities by adding them to an entity scope, just like tags:
 
 ```c
+Likes {}
+Pizza {}
+
 my_entity {
   (Likes, Pizza)
 }
 ```
-
-Just like with tags, if the entities in the pair did not yet exist, they will be created in the script root.
 
 ### Components
 Components are specified like tags, but with an additional value:
@@ -107,7 +100,7 @@ my_entity {
 }
 ```
 
-A component must exist before it can be used. Furthermore, for it to be assignable with a value, it also needs to be described in the reflection framework.
+For a component to be assignable with a value, it also needs to be described in the reflection framework.
 
 A component can also be added without a value. This will create a default constructed component. Example:
 

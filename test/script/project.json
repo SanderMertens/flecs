@@ -290,7 +290,11 @@
                 "module_w_nested_template",
                 "template_w_pair_w_this_var",
                 "prop_without_using_meta",
-                "hoist_var"
+                "hoist_var",
+                "anonymous_template_instance",
+                "anonymous_template_instance_no_scope",
+                "anonymous_template_instance_w_prop",
+                "anonymous_template_instance_w_prop_no_scope"
             ]
         }, {
             "id": "Error",

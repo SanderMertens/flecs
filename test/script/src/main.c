@@ -285,6 +285,10 @@ void Template_module_w_nested_template(void);
 void Template_template_w_pair_w_this_var(void);
 void Template_prop_without_using_meta(void);
 void Template_hoist_var(void);
+void Template_anonymous_template_instance(void);
+void Template_anonymous_template_instance_no_scope(void);
+void Template_anonymous_template_instance_w_prop(void);
+void Template_anonymous_template_instance_w_prop_no_scope(void);
 
 // Testsuite 'Error'
 void Error_multi_line_comment_after_newline_before_newline_scope_open(void);
@@ -1727,6 +1731,22 @@ bake_test_case Template_testcases[] = {
     {
         "hoist_var",
         Template_hoist_var
+    },
+    {
+        "anonymous_template_instance",
+        Template_anonymous_template_instance
+    },
+    {
+        "anonymous_template_instance_no_scope",
+        Template_anonymous_template_instance_no_scope
+    },
+    {
+        "anonymous_template_instance_w_prop",
+        Template_anonymous_template_instance_w_prop
+    },
+    {
+        "anonymous_template_instance_w_prop_no_scope",
+        Template_anonymous_template_instance_w_prop_no_scope
     }
 };
 
@@ -3086,7 +3106,7 @@ static bake_test_suite suites[] = {
         "Template",
         NULL,
         NULL,
-        30,
+        34,
         Template_testcases
     },
     {
