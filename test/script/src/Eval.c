@@ -7856,6 +7856,75 @@ void Eval_clear_script_w_anonymous_paren(void) {
     ecs_fini(world);
 }
 
-void Eval_multi_line_comment_after_newline_before_newline_scope_open(void) {
-    // Implement testcase
+void Eval_partial_assign(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "Position"}),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code = "Position foo(x: 10); Position foo(y: 20)"
+    });
+    test_assert(s != 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "foo");
+    test_assert(foo != 0);
+    
+    const Position *p = ecs_get(world, foo, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 0);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+typedef struct Strings {
+    char *a;
+    char *b;
+} Strings;
+
+ECS_DTOR(Strings, ptr, {
+    ecs_os_free(ptr->a);
+    ecs_os_free(ptr->b);
+});
+
+void Eval_partial_assign_nontrivial(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Strings);
+
+    ecs_set_hooks(world, Strings, {
+        .ctor = flecs_default_ctor,
+        .dtor = ecs_dtor(Strings)
+    });
+
+    ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "Strings"}),
+        .members = {
+            {"a", ecs_id(ecs_string_t)},
+            {"b", ecs_id(ecs_string_t)}
+        }
+    });
+
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code = "Strings foo(a: \"hello\", b: \"world\"); Strings foo(b: \"bar\")"
+    });
+    test_assert(s != 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "foo");
+    test_assert(foo != 0);
+    
+    const Strings *p = ecs_get(world, foo, Strings);
+    test_assert(p != NULL);
+    test_str(p->a, NULL);
+    test_str(p->b, "bar");
+
+    ecs_fini(world);
 }

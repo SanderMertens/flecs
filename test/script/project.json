@@ -256,7 +256,9 @@
                 "update_script_w_anonymous_paren",
                 "clear_script",
                 "clear_script_w_anonymous",
-                "clear_script_w_anonymous_paren"
+                "clear_script_w_anonymous_paren",
+                "partial_assign",
+                "partial_assign_nontrivial"
             ]
         }, {
             "id": "Template",

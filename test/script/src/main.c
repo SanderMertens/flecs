@@ -253,6 +253,8 @@ void Eval_update_script_w_anonymous_paren(void);
 void Eval_clear_script(void);
 void Eval_clear_script_w_anonymous(void);
 void Eval_clear_script_w_anonymous_paren(void);
+void Eval_partial_assign(void);
+void Eval_partial_assign_nontrivial(void);
 
 // Testsuite 'Template'
 void Template_template_no_scope(void);
@@ -1608,6 +1610,14 @@ bake_test_case Eval_testcases[] = {
     {
         "clear_script_w_anonymous_paren",
         Eval_clear_script_w_anonymous_paren
+    },
+    {
+        "partial_assign",
+        Eval_partial_assign
+    },
+    {
+        "partial_assign_nontrivial",
+        Eval_partial_assign_nontrivial
     }
 };
 
@@ -3099,7 +3109,7 @@ static bake_test_suite suites[] = {
         "Eval",
         NULL,
         NULL,
-        244,
+        246,
         Eval_testcases
     },
     {

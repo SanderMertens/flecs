@@ -58831,6 +58831,17 @@ int flecs_script_eval_component(
             .type = ti->component
         };
 
+        /* Assign entire value, including members not set by expression. This 
+         * prevents uninitialized or unexpected values. */
+        if (!ti->hooks.ctor) {
+            ecs_os_memset(value.ptr, 0, ti->size);
+        } else if (ti->hooks.ctor) {
+            if (ti->hooks.dtor) {
+                ti->hooks.dtor(value.ptr, 1, ti);
+            }
+            ti->hooks.ctor(value.ptr, 1, ti);
+        }
+
         if (ecs_os_strcmp(node->expr, "{}")) {
             if (flecs_script_eval_expr(v, node->expr, &value)) {
                 return -1;
