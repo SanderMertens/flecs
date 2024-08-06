@@ -258,7 +258,12 @@
                 "clear_script_w_anonymous",
                 "clear_script_w_anonymous_paren",
                 "partial_assign",
-                "partial_assign_nontrivial"
+                "partial_assign_nontrivial",
+                "partial_assign_with",
+                "partial_assign_nontrivial_with",
+                "partial_assign_with_large_array",
+                "non_trivial_var_component",
+                "non_trivial_var_with"
             ]
         }, {
             "id": "Template",
