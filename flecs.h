@@ -14973,6 +14973,7 @@ typedef struct EcsMember {
     int32_t count;                                 /**< Number of elements (for inline arrays). */
     ecs_entity_t unit;                             /**< Member unit. */
     int32_t offset;                                /**< Member offset. */
+    bool explicit_offset;                          /**< if Offset should be explicitly used. */
 } EcsMember;
 
 /** Type expressing a range for a member value */

@@ -438,7 +438,7 @@ int flecs_add_member_to_struct(
     }
 
     bool explicit_offset = false;
-    if (m->offset) {
+    if (m->offset || m->explicit_offset) { 
         explicit_offset = true;
     }
 
