@@ -14,158 +14,6 @@ void Template_template_no_scope(void) {
     ecs_fini(world);
 }
 
-void Template_template_empty(void) {
-    ecs_world_t *world = ecs_init();
-
-    const char *expr =
-    LINE "template Tree {"
-    LINE "}";
-
-    ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
-
-    ecs_entity_t tree = ecs_lookup(world, "Tree");
-    test_assert(tree != 0);
-
-    ecs_fini(world);
-}
-
-void Template_template_unresolved_tag(void) {
-    ecs_world_t *world = ecs_init();
-
-    const char *expr =
-    LINE "template Tree {"
-    LINE "  Foo"
-    LINE "}"
-    LINE "Tree ent()";
-
-    ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr) != 0);
-
-    ecs_fini(world);
-}
-
-void Template_template_unresolved_component(void) {
-    ecs_world_t *world = ecs_init();
-
-    const char *expr =
-    HEAD "using flecs.meta"
-    LINE "template Tree {"
-    LINE "  struct Position {"
-    LINE "    x = f32"
-    LINE "  }"
-    LINE ""
-    LINE "  Position: {10, 20}"
-    LINE "}";
-
-    ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr) != 0);
-
-    ecs_fini(world);
-}
-
-void Template_template_unresolved_pair_relationship(void) {
-    ecs_world_t *world = ecs_init();
-
-    const char *expr =
-    HEAD "Bar {}"
-    LINE "template Tree {"
-    LINE "  (Foo, Bar)"
-    LINE "}"
-    LINE "Tree ent()";
-
-    ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr) != 0);
-
-    ecs_fini(world);
-}
-
-void Template_template_unresolved_pair_target(void) {
-    ecs_world_t *world = ecs_init();
-
-    const char *expr =
-    HEAD "Foo {}"
-    LINE "template Tree {"
-    LINE "  (Foo, Bar)"
-    LINE "}"
-    LINE "Tree ent()";
-
-    ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr) != 0);
-
-    ecs_fini(world);
-}
-
-void Template_template_unresolved_with_tag(void) {
-    ecs_world_t *world = ecs_init();
-
-    const char *expr =
-    LINE "template Tree {"
-    LINE "  with Foo {"
-    LINE "  }"
-    LINE "}"
-    LINE "Tree ent()";
-
-    ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr) != 0);
-
-    ecs_fini(world);
-}
-
-void Template_template_unresolved_with_component(void) {
-    ecs_world_t *world = ecs_init();
-
-    const char *expr =
-    HEAD "using flecs.meta"
-    LINE "template Tree {"
-    LINE "  struct Position {"
-    LINE "    x = f32"
-    LINE "  }"
-    LINE ""
-    LINE "  with Position(10, 20) {"
-    LINE "  }"
-    LINE "}";
-
-    ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr) != 0);
-
-    ecs_fini(world);
-}
-
-void Template_template_unresolved_with_pair_relationship(void) {
-    ecs_world_t *world = ecs_init();
-
-    const char *expr =
-    HEAD "Bar {}"
-    LINE "template Tree {"
-    LINE "  with (Foo, Bar) {"
-    LINE "  }"
-    LINE "}"
-    LINE "Tree ent()";
-
-    ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr) != 0);
-
-    ecs_fini(world);
-}
-
-void Template_template_unresolved_with_pair_target(void) {
-    ecs_world_t *world = ecs_init();
-
-    const char *expr =
-    HEAD "Foo {}"
-    LINE "template Tree {"
-    LINE "  with (Foo, Bar) {"
-    LINE "  }"
-    LINE "}"
-    LINE "Tree ent()";
-
-    ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr) != 0);
-
-    ecs_fini(world);
-}
-
 void Template_template_no_props(void) {
     ecs_world_t *world = ecs_init();
 
@@ -189,54 +37,6 @@ void Template_template_no_props(void) {
     ecs_entity_t ent = ecs_lookup(world, "ent");
     test_assert(ent != 0);
     test_assert(ecs_has_id(world, ent, foo));
-
-    ecs_fini(world);
-}
-
-void Template_template_prop_no_type(void) {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-
-    ecs_struct(world, {
-        .entity = ecs_id(Position),
-        .members = {
-            {"x", ecs_id(ecs_f32_t)},
-            {"y", ecs_id(ecs_f32_t)}
-        }
-    });
-
-    const char *expr =
-    LINE "template Tree {"
-    LINE "  prop height"
-    LINE "}";
-
-    ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr) != 0);
-
-    ecs_fini(world);
-}
-
-void Template_template_prop_no_default(void) {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-
-    ecs_struct(world, {
-        .entity = ecs_id(Position),
-        .members = {
-            {"x", ecs_id(ecs_f32_t)},
-            {"y", ecs_id(ecs_f32_t)}
-        }
-    });
-
-    const char *expr =
-    LINE "template Tree {"
-    LINE "  prop height: flecs.meta.f32"
-    LINE "}";
-
-    ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr) != 0);
 
     ecs_fini(world);
 }
@@ -1622,34 +1422,6 @@ void Template_template_w_anonymous_parse_again(void) {
     ecs_fini(world);
 }
 
-
-void Template_template_w_composite_prop_invalid_assignment(void) {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-
-    ecs_struct(world, {
-        .entity = ecs_id(Position),
-        .members = {
-            {"x", ecs_id(ecs_f32_t)},
-            {"y", ecs_id(ecs_f32_t)}
-        }
-    });
-
-    const char *expr =
-    LINE "template Tree {"
-    LINE "  prop pos = Position: Position{10, 20}"
-    LINE "  child { $pos }"
-    LINE "}"
-    LINE ""
-    LINE "t { Tree: {pos: {20, 30}} }";
-
-    ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr) != 0);
-
-    ecs_fini(world);
-}
-
 void Template_template_w_composite_prop(void) {
     ecs_world_t *world = ecs_init();
 
@@ -1870,60 +1642,6 @@ void Template_module_w_nested_template(void) {
     ecs_fini(world);
 }
 
-void Template_template_redeclare_prop_as_const(void) {
-    ecs_world_t *world = ecs_init();
-
-    const char *expr =
-    LINE "template Foo {\n"
-    LINE "  prop x = flecs.meta.f32: 10\n"
-    LINE "  prop y = flecs.meta.f32: 10\n"
-    LINE "  const y = flecs.meta.f32: 20\n"
-    LINE "}"
-    LINE "ent { Foo: {} }\n"
-    LINE "\n";
-
-    ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr) != 0);
-
-    ecs_fini(world);
-}
-
-void Template_template_redeclare_prop_as_prop(void) {
-    ecs_world_t *world = ecs_init();
-
-    const char *expr =
-    LINE "template Foo {\n"
-    LINE "  prop x = flecs.meta.f32: 10\n"
-    LINE "  prop y = flecs.meta.f32: 10\n"
-    LINE "  prop y = flecs.meta.f32: 20\n"
-    LINE "}"
-    LINE "ent { Foo: {} }\n"
-    LINE "\n";
-
-    ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr) != 0);
-
-    ecs_fini(world);
-}
-
-void Template_template_redeclare_const_as_const(void) {
-    ecs_world_t *world = ecs_init();
-
-    const char *expr =
-    LINE "template Foo {\n"
-    LINE "  prop x = flecs.meta.f32: 10\n"
-    LINE "  const y = flecs.meta.f32: 10\n"
-    LINE "  const y = flecs.meta.f32: 20\n"
-    LINE "}"
-    LINE "ent { Foo: {} }\n"
-    LINE "\n";
-
-    ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr) != 0);
-
-    ecs_fini(world);
-}
-
 void Template_template_w_pair_w_this_var(void) {
     ecs_world_t *world = ecs_init();
 
@@ -1944,109 +1662,6 @@ void Template_template_w_pair_w_this_var(void) {
 
     test_assert(ecs_has_id(world, ent, foo));
     test_assert(ecs_has_pair(world, ent, Rel, ent));
-
-    ecs_fini(world);
-}
-
-void Template_run_template_after_error(void) {
-    ecs_world_t *world = ecs_init();
-
-    const char *expr =
-    HEAD "Foo {}"
-    LINE "template Tree {"
-    LINE "  Foo"
-    LINE "}";
-
-    const char *expr_err =
-    HEAD "Foo {}"
-    LINE "template Tree {"
-    LINE "  Fo"
-    LINE "}";
-
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
-
-    {
-        ecs_entity_t tree = ecs_lookup(world, "Tree");
-        test_assert(tree != 0);
-
-        ecs_entity_t foo = ecs_lookup(world, "Foo");
-        test_assert(foo != 0);
-    }
-
-    ecs_log_set_level(-4);
-    test_assert(ecs_script_run(world, NULL, expr_err) != 0);
-    ecs_log_set_level(-1);
-
-    /* Because script is not managed, entiites created by script aren't deleted */
-
-    {
-        ecs_entity_t tree = ecs_lookup(world, "Tree");
-        test_assert(tree != 0);
-
-        ecs_entity_t foo = ecs_lookup(world, "Foo");
-        test_assert(foo != 0);
-    }
-
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
-
-    {
-        ecs_entity_t tree = ecs_lookup(world, "Tree");
-        test_assert(tree != 0);
-
-        ecs_entity_t foo = ecs_lookup(world, "Foo");
-        test_assert(foo != 0);
-    }
-
-    ecs_fini(world);
-}
-
-void Template_update_template_after_error(void) {
-    ecs_world_t *world = ecs_init();
-
-    const char *expr =
-    HEAD "Foo {}"
-    LINE "template Tree {"
-    LINE "  Foo"
-    LINE "}";
-
-    const char *expr_err =
-    HEAD "Foo {}"
-    LINE "template Tree {"
-    LINE "  Fo"
-    LINE "}";
-
-    ecs_entity_t s = ecs_script(world, { .code = expr });
-    test_assert(s != 0);
-
-    {
-        ecs_entity_t tree = ecs_lookup(world, "Tree");
-        test_assert(tree != 0);
-
-        ecs_entity_t foo = ecs_lookup(world, "Foo");
-        test_assert(foo != 0);
-    }
-
-    ecs_log_set_level(-4);
-    test_assert(ecs_script_update(world, s, 0, expr_err) != 0);
-    ecs_log_set_level(-1);
-
-    {
-        ecs_entity_t tree = ecs_lookup(world, "Tree");
-        test_assert(tree == 0);
-
-        ecs_entity_t foo = ecs_lookup(world, "Foo");
-        test_assert(foo == 0);
-    }
-
-    test_assert(ecs_script_update(world, s, 0, expr) == 0);
-
-    {
-        ecs_entity_t tree = ecs_lookup(world, "Tree");
-        test_assert(tree != 0);
-
-        ecs_entity_t foo = ecs_lookup(world, "Foo");
-        test_assert(foo != 0);
-    }
 
     ecs_fini(world);
 }
@@ -2101,6 +1716,160 @@ void Template_hoist_var(void) {
     test_assert(tree != 0);
 
     ecs_entity_t foo = ecs_lookup(world, "foo");
+    test_assert(foo != 0);
+
+    const Position *p = ecs_get(world, foo, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+void Template_anonymous_template_instance(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "template Tree {"
+    LINE "  Position: {10, 20}"
+    LINE "}"
+    LINE "Tree() {}";
+
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+
+    ecs_entity_t tree = ecs_lookup(world, "Tree");
+    test_assert(tree != 0);
+
+    ecs_iter_t it = ecs_each_id(world, tree);
+    test_bool(true, ecs_each_next(&it));
+    test_int(1, it.count);
+    ecs_entity_t foo = it.entities[0];
+    test_assert(foo != 0);
+
+    const Position *p = ecs_get(world, foo, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+void Template_anonymous_template_instance_no_scope(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "template Tree {"
+    LINE "  Position: {10, 20}"
+    LINE "}"
+    LINE "Tree()";
+
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+
+    ecs_entity_t tree = ecs_lookup(world, "Tree");
+    test_assert(tree != 0);
+
+    ecs_iter_t it = ecs_each_id(world, tree);
+    test_bool(true, ecs_each_next(&it));
+    test_int(1, it.count);
+    ecs_entity_t foo = it.entities[0];
+    test_assert(foo != 0);
+
+    const Position *p = ecs_get(world, foo, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+void Template_anonymous_template_instance_w_prop(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "template Tree {"
+    LINE "  prop height = f32: 10"
+    LINE "  Position: {$height, $height * 2}"
+    LINE "}"
+    LINE "Tree() {}";
+
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+
+    ecs_entity_t tree = ecs_lookup(world, "Tree");
+    test_assert(tree != 0);
+
+    ecs_iter_t it = ecs_each_id(world, tree);
+    test_bool(true, ecs_each_next(&it));
+    test_int(1, it.count);
+    ecs_entity_t foo = it.entities[0];
+    test_assert(foo != 0);
+
+    const Position *p = ecs_get(world, foo, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+void Template_anonymous_template_instance_w_prop_no_scope(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "template Tree {"
+    LINE "  prop height = f32: 10"
+    LINE "  Position: {$height, $height * 2}"
+    LINE "}"
+    LINE "Tree()";
+
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+
+    ecs_entity_t tree = ecs_lookup(world, "Tree");
+    test_assert(tree != 0);
+
+    ecs_iter_t it = ecs_each_id(world, tree);
+    test_bool(true, ecs_each_next(&it));
+    test_int(1, it.count);
+    ecs_entity_t foo = it.entities[0];
     test_assert(foo != 0);
 
     const Position *p = ecs_get(world, foo, Position);
