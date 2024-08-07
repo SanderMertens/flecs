@@ -1369,3 +1369,41 @@ void Meta_component_as_array(void) {
     test_assert(ptr->type == ecs.id<float>());
     test_int(ptr->count, 2);
 }
+
+void Meta_out_of_order_member_declaration(void) {
+    flecs::world ecs;
+
+    auto c = ecs.component<Position>()
+        .member<float>("y", 1, offsetof(Position, y))
+        .member<float>("x", 1, offsetof(Position, x));
+    test_assert(c != 0);
+
+    const flecs::Component *ptr = c.get<flecs::Component>();
+    test_int(ptr->size, 8);
+    test_int(ptr->alignment, 4);
+
+    auto xe = c.lookup("x");
+    test_assert(xe != 0);
+    test_assert( xe.has<flecs::Member>() );
+    const flecs::Member *x = xe.get<flecs::Member>();
+    test_uint(x->type, flecs::F32);
+    test_uint(x->offset, 0);
+
+    auto ye = c.lookup("y");
+    test_assert(ye != 0);
+    test_assert( ye.has<flecs::Member>() );
+    const flecs::Member *y = ye.get<flecs::Member>();
+    test_uint(y->type, flecs::F32);
+    test_uint(y->offset, 4);
+
+    flecs::entity e2 = ecs.entity("ent2").set<Position>({10, 20});
+    const Position *p = e2.get<Position>();
+
+    auto json = ecs.to_json(p);
+    test_str(json.c_str(), "{\"y\":20, \"x\":10}");
+
+    Position p2 = {};
+    ecs.from_json(&p2, json.c_str());
+    test_int(p2.x, 10);
+    test_int(p2.y, 20);
+}

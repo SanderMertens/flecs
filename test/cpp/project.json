@@ -1337,7 +1337,8 @@
                 "error_range",
                 "struct_member_ptr",
                 "struct_member_ptr_packed_struct",
-                "component_as_array"
+                "component_as_array",
+                "out_of_order_member_declaration"
             ]
         }, {
             "id": "Table",

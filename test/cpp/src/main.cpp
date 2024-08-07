@@ -1287,6 +1287,7 @@ void Meta_error_range(void);
 void Meta_struct_member_ptr(void);
 void Meta_struct_member_ptr_packed_struct(void);
 void Meta_component_as_array(void);
+void Meta_out_of_order_member_declaration(void);
 
 // Testsuite 'Table'
 void Table_each(void);
@@ -6328,6 +6329,10 @@ bake_test_case Meta_testcases[] = {
     {
         "component_as_array",
         Meta_component_as_array
+    },
+    {
+        "out_of_order_member_declaration",
+        Meta_out_of_order_member_declaration
     }
 };
 
@@ -6644,7 +6649,7 @@ static bake_test_suite suites[] = {
         "Meta",
         NULL,
         NULL,
-        55,
+        56,
         Meta_testcases
     },
     {
