@@ -36,8 +36,8 @@ untyped_component& internal_member(flecs::entity_t type_id, flecs::entity_t unit
 public: 
 
 /** Add member with unit. */
-untyped_component& member(flecs::entity_t type_id, flecs::entity_t unit, const char *name) {
-    return internal_member(type_id, unit, name, 0, 0, false);
+untyped_component& member(flecs::entity_t type_id, flecs::entity_t unit, const char *name, int32_t count = 0) {
+    return internal_member(type_id, unit, name, count, 0, false);
 }
 
 /** Add member with unit. */
@@ -46,8 +46,8 @@ untyped_component& member(flecs::entity_t type_id, flecs::entity_t unit, const c
 }
 
 /** Add member. */
-untyped_component& member(flecs::entity_t type_id, const char* name) {
-    return member(type_id, 0, name);
+untyped_component& member(flecs::entity_t type_id, const char* name, int32_t count = 0) {
+    return member(type_id, 0, name, count);
 }
 
 /** Add member. */
@@ -57,9 +57,9 @@ untyped_component& member(flecs::entity_t type_id, const char* name, int32_t cou
 
 /** Add member. */
 template <typename MemberType>
-untyped_component& member(const char *name) {
+untyped_component& member(const char *name, int32_t count = 0) {
     flecs::entity_t type_id = _::type<MemberType>::id(world_);
-    return member(type_id, name);
+    return member(type_id, name, count);
 }
 
 /** Add member. */
@@ -71,9 +71,9 @@ untyped_component& member(const char *name, int32_t count, size_t offset) {
 
 /** Add member with unit. */
 template <typename MemberType>
-untyped_component& member(flecs::entity_t unit, const char *name) {
+untyped_component& member(flecs::entity_t unit, const char *name, int32_t count = 0) {
     flecs::entity_t type_id = _::type<MemberType>::id(world_);
-    return member(type_id, unit, name);
+    return member(type_id, unit, name, count);
 }
 
 /** Add member with unit. */
@@ -85,10 +85,10 @@ untyped_component& member(flecs::entity_t unit, const char *name, int32_t count,
 
 /** Add member with unit. */
 template <typename MemberType, typename UnitType>
-untyped_component& member(const char *name) {
+untyped_component& member(const char *name, int32_t count = 0) {
     flecs::entity_t type_id = _::type<MemberType>::id(world_);
     flecs::entity_t unit_id = _::type<UnitType>::id(world_);
-    return member(type_id, unit_id, name);
+    return member(type_id, unit_id, name, count);
 }
 
 /** Add member with unit. */
