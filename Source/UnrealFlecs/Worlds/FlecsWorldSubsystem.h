@@ -27,9 +27,6 @@
 #include "Unlog/Target/MessageLog.h"
 #include "FlecsWorldSubsystem.generated.h"
 
-// ReSharper disable once CppUE4CodingStandardNamingViolationWarning
-constexpr std::string_view DEFAULT_FLECS_WORLD_NAME = "DefaultFlecsWorld";
-
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnWorldCreated, const FString&, UFlecsWorld*);
 
 UCLASS(BlueprintType)
@@ -108,6 +105,8 @@ public:
 
 		flecs::world NewWorld = flecs::world();
 
+		const bool bIsDefaultWorld = Worlds.Num() == 0;
+
 		TArray<FFlecsDefaultMetaEntity> DefaultEntities = GetDefault<UFlecsDefaultEntityEngineSubsystem>()->AddedDefaultEntities;
 		TMap<FString, flecs::entity_t> DefaultEntityIds
 			= GetDefault<UFlecsDefaultEntityEngineSubsystem>()->DefaultEntityOptions;
@@ -125,11 +124,12 @@ public:
 			NewFlecsWorld->CreateEntityWithRecordWithId(DefaultEntities[Index].EntityRecord, EntityId);
 		}
 
-		NewFlecsWorld->SetName(Name);
+		NewFlecsWorld->SetWorldName(Name);
 		
 		NewFlecsWorld->SetContext(this);
 
-		NewFlecsWorld->SetSingleton<FFlecsWorldPtrComponent>(FFlecsWorldPtrComponent { NewFlecsWorld, GetWorld() });
+		NewFlecsWorld->SetSingleton<FFlecsWorldPtrComponent>(
+			FFlecsWorldPtrComponent { NewFlecsWorld, GetWorld(), bIsDefaultWorld });
 		
 		WorldNameMap.emplace(Name, NewFlecsWorld);
 

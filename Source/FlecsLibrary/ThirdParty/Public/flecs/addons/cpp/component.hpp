@@ -8,6 +8,8 @@
 #include <ctype.h>
 #include <stdio.h>
 
+#include "Concepts/SolidConcepts.h"
+
 /**
  * @defgroup cpp_components Components
  * @ingroup cpp_core
@@ -127,6 +129,10 @@ void register_lifecycle_actions(
 // is not known the component has been registered by another world and will be
 // registered with the world using the same id. If the id does exist, the class
 // will register it as a component, and verify whether the input is consistent.
+    struct type_impl_struct_event_info {
+    UScriptStruct* scriptStruct;
+    };
+    
 template <typename T>
 struct type_impl {
     static_assert(is_pointer<T>::value == false,
@@ -244,6 +250,21 @@ struct type_impl {
             // require construction/destruction/copy/move's.
             if (size() && !existing) {
                 register_lifecycle_actions<T>(world, s_id);
+            }
+
+            if constexpr (Solid::IsStaticStruct<T>()) {
+                ECS_COMPONENT(world, type_impl_struct_event_info);
+                
+                UScriptStruct* scriptStruct = TBaseStructure<T>::Get();
+                ecs_assert(scriptStruct != nullptr, ECS_INTERNAL_ERROR, "script struct is null");
+            
+                ecs_event_desc_t desc = {};
+                desc.event = ecs_id(type_impl_struct_event_info);
+                desc.entity = s_id;
+                type_impl_struct_event_info temp_event_info { scriptStruct };
+                desc.param = &temp_event_info;
+                
+                ecs_emit(world, &desc);
             }
 
             if (prev_with) {

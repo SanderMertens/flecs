@@ -37,52 +37,16 @@ public:
 		InitializePrefabs();
 	}
 
-	FORCEINLINE void InitializeComponentObservers()
+	FORCEINLINE void InitializeComponentObservers() const
 	{
-		for (const auto& ComponentProperties : FFlecsComponentPropertiesRegistry::Get().ComponentProperties)
-		{
-			flecs::observer_builder<> ObserverBuilder = CreateObserver(TEXT("ComponentObserver"))
+		CreateObserver<flecs::_::type_impl_struct_event_info>(TEXT("StructComponentObserver"))
 				.cached()
-				.with_name_component()
-				.name(ComponentProperties.second.Name.data())
-				.with<flecs::Component>()
-				.event(flecs::OnAdd)
-				.yield_existing();
-
-			const flecs::observer NewObserver = ObserverBuilder
-				.each([&](flecs::entity InEntity)
-			{
-				for (const flecs::entity_t Entity : ComponentProperties.second.Entities)
+				.event<flecs::_::type_impl_struct_event_info>()
+				.yield_existing()
+				.each([&](flecs::iter& InIter, size_t Index, flecs::_::type_impl_struct_event_info& InEventInfo)
 				{
-					InEntity.add(Entity);
-				}
-
-				NewObserver.destruct();
-			});
-		}
-
-		FFlecsComponentPropertiesRegistry::Get().OnComponentPropertiesRegistered.BindLambda([&]
-			(const FFlecsComponentProperties& InProperties)
-		{
-			flecs::observer_builder<> ObserverBuilder = CreateObserver(TEXT("ComponentObserver"))
-				.cached()
-				.with_name_component()
-				.name(InProperties.Name.data())
-				.with<flecs::Component>()
-				.event(flecs::OnAdd)
-				.yield_existing();
-
-			const flecs::observer NewObserver = ObserverBuilder
-				.each([&](flecs::entity InEntity)
-			{
-				for (const flecs::entity_t Entity : InProperties.Entities)
-				{
-					InEntity.add(Entity);
-				}
-
-				NewObserver.destruct();
-			});
-		});
+					InIter.entity(Index).set<FFlecsScriptStructComponent>({ InEventInfo.scriptStruct });
+				});
 	}
 
 	FORCEINLINE void InitializeSystems() const
@@ -356,9 +320,8 @@ public:
 	{
 		return GetSingleton<FString>();
 	}
-
-	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
-	FORCEINLINE void SetName(const FString& InName) const
+	
+	FORCEINLINE void SetWorldName(const FString& InName) const
 	{
 		SetSingleton<FString>(InName);
 
@@ -755,15 +718,6 @@ public:
 		}
 
 		#endif // WITH_EDITOR
-	}
-
-	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs")
-	FORCEINLINE FFlecsEntityHandle RegisterComponentType(const FString& Name, const int32 Size, const int32 Alignment) const
-	{
-		const flecs::entity Component = World.entity(StringCast<char>(*Name).Get())
-			.set<flecs::Component>({ Size, Alignment });
-
-		return FFlecsEntityHandle(Component);
 	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs")

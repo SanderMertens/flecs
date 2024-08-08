@@ -4,7 +4,6 @@
 
 #include "CoreMinimal.h"
 #include "FlecsDefaultEntitiesDeveloperSettings.h"
-#include "SolidMacros/Macros.h"
 #include "Subsystems/EngineSubsystem.h"
 #include "FlecsDefaultEntityEngineSubsystem.generated.h"
 
