@@ -753,6 +753,20 @@ int flecs_multi_observer_init(
         }
     }
 
+    /* If an observer is only interested in table events, we only need to
+     * observe a single component, as each table event will be emitted for all
+     * components of the source table. */
+    bool only_table_events = true;
+    for (i = 0; i < o->event_count; i ++) {
+        ecs_entity_t e = o->events[i];
+        if (e != EcsOnTableCreate && e != EcsOnTableDelete && 
+            e != EcsOnTableEmpty && e != EcsOnTableFill)
+        {
+            only_table_events = false;
+            break;
+        }
+    }
+
     if (query->flags & EcsQueryMatchPrefab) {
         child_desc.query.flags |= EcsQueryMatchPrefab;
     }
@@ -761,6 +775,7 @@ int flecs_multi_observer_init(
         child_desc.query.flags |= EcsQueryMatchDisabled;
     }
 
+    bool self_term_handled = false;
     for (i = 0; i < term_count; i ++) {
         if (query->terms[i].inout == EcsInOutFilter) {
             continue;
@@ -772,6 +787,23 @@ int flecs_multi_observer_init(
 
         int16_t oper = term->oper;
         ecs_id_t id = term->id;
+
+        if (only_table_events) {
+            /* For table event observers, only observe a single $this|self 
+             * term. Make sure to create observers for non-self terms, as those
+             * require event propagation. */
+            if (ecs_term_match_this(term) && 
+               (term->src.id & EcsTraverseFlags) == EcsSelf) 
+            {
+                if (oper == EcsAnd) {
+                    if (!self_term_handled) {
+                        self_term_handled = true;
+                    } else {
+                        continue;
+                    }
+                }
+            }
+        }
 
         /* AndFrom & OrFrom terms insert multiple observers */
         if (oper == EcsAndFrom || oper == EcsOrFrom) {
