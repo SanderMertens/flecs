@@ -48211,7 +48211,8 @@ void flecs_meta_import_meta_definitions(
             { .name = "type", .type = ecs_id(ecs_entity_t) },
             { .name = "count", .type = ecs_id(ecs_i32_t) },
             { .name = "unit", .type = ecs_id(ecs_entity_t) },
-            { .name = "offset", .type = ecs_id(ecs_i32_t) }
+            { .name = "offset", .type = ecs_id(ecs_i32_t) },
+            { .name = "use_offset", .type = ecs_id(ecs_bool_t) }
         }
     });
 
@@ -48764,10 +48765,7 @@ int flecs_add_member_to_struct(
         count ++;
     }
 
-    bool explicit_offset = false;
-    if (m->offset) {
-        explicit_offset = true;
-    }
+    bool explicit_offset = m->offset || m->use_offset;
 
     /* Compute member offsets and size & alignment of struct */
     ecs_size_t size = 0;

@@ -437,10 +437,7 @@ int flecs_add_member_to_struct(
         count ++;
     }
 
-    bool explicit_offset = false;
-    if (m->offset) {
-        explicit_offset = true;
-    }
+    bool explicit_offset = m->offset || m->use_offset;
 
     /* Compute member offsets and size & alignment of struct */
     ecs_size_t size = 0;

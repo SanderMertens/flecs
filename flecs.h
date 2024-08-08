@@ -14973,6 +14973,7 @@ typedef struct EcsMember {
     int32_t count;                                 /**< Number of elements (for inline arrays). */
     ecs_entity_t unit;                             /**< Member unit. */
     int32_t offset;                                /**< Member offset. */
+    bool use_offset;                               /**< If offset should be explicitly used. */
 } EcsMember;
 
 /** Type expressing a range for a member value */
@@ -26788,8 +26789,10 @@ struct untyped_component : entity {
  * @{
  */
 
-/** Add member with unit. */
-untyped_component& member(flecs::entity_t type_id, flecs::entity_t unit, const char *name, int32_t count = 0, size_t offset = 0) {
+private:
+
+/** internal add member to unit */
+untyped_component& internal_member(flecs::entity_t type_id, flecs::entity_t unit, const char *name, int32_t count = 0, size_t offset = 0, bool use_offset = false) {
     ecs_entity_desc_t desc = {};
     desc.name = name;
     desc.parent = id_;
@@ -26803,33 +26806,73 @@ untyped_component& member(flecs::entity_t type_id, flecs::entity_t unit, const c
     m.unit = unit;
     m.count = count;
     m.offset = static_cast<int32_t>(offset);
+    m.use_offset = use_offset;
     e.set<Member>(m);
 
     return *this;
 }
 
+public: 
+
+/** Add member with unit. */
+untyped_component& member(flecs::entity_t type_id, flecs::entity_t unit, const char *name, int32_t count = 0) {
+    return internal_member(type_id, unit, name, count, 0, false);
+}
+
+/** Add member with unit. */
+untyped_component& member(flecs::entity_t type_id, flecs::entity_t unit, const char *name, int32_t count, size_t offset) {
+    return internal_member(type_id, unit, name, count, offset, true);
+}
+
 /** Add member. */
-untyped_component& member(flecs::entity_t type_id, const char* name, int32_t count = 0, size_t offset = 0) {
+untyped_component& member(flecs::entity_t type_id, const char* name, int32_t count = 0) {
+    return member(type_id, 0, name, count);
+}
+
+/** Add member. */
+untyped_component& member(flecs::entity_t type_id, const char* name, int32_t count, size_t offset) {
     return member(type_id, 0, name, count, offset);
 }
 
 /** Add member. */
 template <typename MemberType>
-untyped_component& member(const char *name, int32_t count = 0, size_t offset = 0) {
+untyped_component& member(const char *name, int32_t count = 0) {
+    flecs::entity_t type_id = _::type<MemberType>::id(world_);
+    return member(type_id, name, count);
+}
+
+/** Add member. */
+template <typename MemberType>
+untyped_component& member(const char *name, int32_t count, size_t offset) {
     flecs::entity_t type_id = _::type<MemberType>::id(world_);
     return member(type_id, name, count, offset);
 }
 
 /** Add member with unit. */
 template <typename MemberType>
-untyped_component& member(flecs::entity_t unit, const char *name, int32_t count = 0, size_t offset = 0) {
+untyped_component& member(flecs::entity_t unit, const char *name, int32_t count = 0) {
+    flecs::entity_t type_id = _::type<MemberType>::id(world_);
+    return member(type_id, unit, name, count);
+}
+
+/** Add member with unit. */
+template <typename MemberType>
+untyped_component& member(flecs::entity_t unit, const char *name, int32_t count, size_t offset) {
     flecs::entity_t type_id = _::type<MemberType>::id(world_);
     return member(type_id, unit, name, count, offset);
 }
 
 /** Add member with unit. */
 template <typename MemberType, typename UnitType>
-untyped_component& member(const char *name, int32_t count = 0, size_t offset = 0) {
+untyped_component& member(const char *name, int32_t count = 0) {
+    flecs::entity_t type_id = _::type<MemberType>::id(world_);
+    flecs::entity_t unit_id = _::type<UnitType>::id(world_);
+    return member(type_id, unit_id, name, count);
+}
+
+/** Add member with unit. */
+template <typename MemberType, typename UnitType>
+untyped_component& member(const char *name, int32_t count, size_t offset) {
     flecs::entity_t type_id = _::type<MemberType>::id(world_);
     flecs::entity_t unit_id = _::type<UnitType>::id(world_);
     return member(type_id, unit_id, name, count, offset);

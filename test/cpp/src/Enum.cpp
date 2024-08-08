@@ -1001,14 +1001,14 @@ void Enum_query_union_enum(void) {
         while (it.next()) {
             test_int(it.count(), 1);
             if (count == 0) {
-                test_int(it.entity(0), e2);
-                test_assert(it.id(0) == 
-                    ecs.pair<StandardEnum>(ecs.to_entity(StandardEnum::Green)));
-            }
-            if (count == 2) {
                 test_int(it.entity(0), e1);
                 test_assert(it.id(0) == 
                     ecs.pair<StandardEnum>(ecs.to_entity(StandardEnum::Red)));
+            }
+            if (count == 2) {
+                test_int(it.entity(0), e2);
+                test_assert(it.id(0) == 
+                    ecs.pair<StandardEnum>(ecs.to_entity(StandardEnum::Green)));
             }
             if (count == 1) {
                 test_int(it.entity(0), e3);
