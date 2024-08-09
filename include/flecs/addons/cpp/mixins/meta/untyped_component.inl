@@ -12,8 +12,15 @@
 
 private:
 
-/** internal add member to unit */
-untyped_component& internal_member(flecs::entity_t type_id, flecs::entity_t unit, const char *name, int32_t count = 0, size_t offset = 0, bool use_offset = false) {
+/** Private method that adds member to component. */
+untyped_component& internal_member(
+    flecs::entity_t type_id, 
+    flecs::entity_t unit, 
+    const char *name, 
+    int32_t count = 0, 
+    size_t offset = 0, 
+    bool use_offset = false) 
+{
     ecs_entity_desc_t desc = {};
     desc.name = name;
     desc.parent = id_;
@@ -36,56 +43,95 @@ untyped_component& internal_member(flecs::entity_t type_id, flecs::entity_t unit
 public: 
 
 /** Add member with unit. */
-untyped_component& member(flecs::entity_t type_id, flecs::entity_t unit, const char *name, int32_t count = 0) {
+untyped_component& member(
+    flecs::entity_t type_id, 
+    flecs::entity_t unit, 
+    const char *name, 
+    int32_t count = 0) 
+{
     return internal_member(type_id, unit, name, count, 0, false);
 }
 
-/** Add member with unit. */
-untyped_component& member(flecs::entity_t type_id, flecs::entity_t unit, const char *name, int32_t count, size_t offset) {
+/** Add member with unit, count and offset. */
+untyped_component& member(
+    flecs::entity_t type_id, 
+    flecs::entity_t unit, 
+    const char *name, 
+    int32_t count, 
+    size_t offset) 
+{
     return internal_member(type_id, unit, name, count, offset, true);
 }
 
 /** Add member. */
-untyped_component& member(flecs::entity_t type_id, const char* name, int32_t count = 0) {
+untyped_component& member(
+    flecs::entity_t type_id, 
+    const char* name,
+    int32_t count = 0) 
+{
     return member(type_id, 0, name, count);
 }
 
-/** Add member. */
-untyped_component& member(flecs::entity_t type_id, const char* name, int32_t count, size_t offset) {
+/** Add member with count and offset. */
+untyped_component& member(
+    flecs::entity_t type_id, 
+    const char* name, 
+    int32_t count, 
+    size_t offset) 
+{
     return member(type_id, 0, name, count, offset);
 }
 
 /** Add member. */
 template <typename MemberType>
-untyped_component& member(const char *name, int32_t count = 0) {
+untyped_component& member(
+    const char *name,
+    int32_t count = 0) 
+{
     flecs::entity_t type_id = _::type<MemberType>::id(world_);
     return member(type_id, name, count);
 }
 
 /** Add member. */
 template <typename MemberType>
-untyped_component& member(const char *name, int32_t count, size_t offset) {
+untyped_component& member(
+    const char *name,
+    int32_t count, 
+    size_t offset) 
+{
     flecs::entity_t type_id = _::type<MemberType>::id(world_);
     return member(type_id, name, count, offset);
 }
 
 /** Add member with unit. */
 template <typename MemberType>
-untyped_component& member(flecs::entity_t unit, const char *name, int32_t count = 0) {
+untyped_component& member(
+    flecs::entity_t unit,
+    const char *name, 
+    int32_t count = 0) 
+{
     flecs::entity_t type_id = _::type<MemberType>::id(world_);
     return member(type_id, unit, name, count);
 }
 
 /** Add member with unit. */
 template <typename MemberType>
-untyped_component& member(flecs::entity_t unit, const char *name, int32_t count, size_t offset) {
+untyped_component& member(
+    flecs::entity_t unit,
+    const char *name, 
+    int32_t count, 
+    size_t offset) 
+{
     flecs::entity_t type_id = _::type<MemberType>::id(world_);
     return member(type_id, unit, name, count, offset);
 }
 
 /** Add member with unit. */
 template <typename MemberType, typename UnitType>
-untyped_component& member(const char *name, int32_t count = 0) {
+untyped_component& member(
+    const char *name,
+    int32_t count = 0) 
+{
     flecs::entity_t type_id = _::type<MemberType>::id(world_);
     flecs::entity_t unit_id = _::type<UnitType>::id(world_);
     return member(type_id, unit_id, name, count);
@@ -93,31 +139,48 @@ untyped_component& member(const char *name, int32_t count = 0) {
 
 /** Add member with unit. */
 template <typename MemberType, typename UnitType>
-untyped_component& member(const char *name, int32_t count, size_t offset) {
+untyped_component& member(
+    const char *name, 
+    int32_t count, 
+    size_t offset) 
+{
     flecs::entity_t type_id = _::type<MemberType>::id(world_);
     flecs::entity_t unit_id = _::type<UnitType>::id(world_);
     return member(type_id, unit_id, name, count, offset);
 }
 
 /** Add member using pointer-to-member. */
-template <typename MemberType, typename ComponentType, typename RealType = typename std::remove_extent<MemberType>::type>
-untyped_component& member(const char* name, const MemberType ComponentType::* ptr) {
+template <typename MemberType, typename ComponentType, 
+    typename RealType = typename std::remove_extent<MemberType>::type>
+untyped_component& member(
+    const char* name, 
+    const MemberType ComponentType::* ptr) 
+{
     flecs::entity_t type_id = _::type<RealType>::id(world_);
     size_t offset = reinterpret_cast<size_t>(&(static_cast<ComponentType*>(nullptr)->*ptr));
     return member(type_id, name, std::extent<MemberType>::value, offset);
 }
 
 /** Add member with unit using pointer-to-member. */
-template <typename MemberType, typename ComponentType, typename RealType = typename std::remove_extent<MemberType>::type>
-untyped_component& member(flecs::entity_t unit, const char* name, const MemberType ComponentType::* ptr) {
+template <typename MemberType, typename ComponentType, 
+    typename RealType = typename std::remove_extent<MemberType>::type>
+untyped_component& member(
+    flecs::entity_t unit, 
+    const char* name, 
+    const MemberType ComponentType::* ptr) 
+{
     flecs::entity_t type_id = _::type<RealType>::id(world_);
     size_t offset = reinterpret_cast<size_t>(&(static_cast<ComponentType*>(nullptr)->*ptr));
     return member(type_id, unit, name, std::extent<MemberType>::value, offset);
 }
 
 /** Add member with unit using pointer-to-member. */
-template <typename UnitType, typename MemberType, typename ComponentType, typename RealType = typename std::remove_extent<MemberType>::type>
-untyped_component& member(const char* name, const MemberType ComponentType::* ptr) {
+template <typename UnitType, typename MemberType, typename ComponentType, 
+    typename RealType = typename std::remove_extent<MemberType>::type>
+untyped_component& member(
+    const char* name, 
+    const MemberType ComponentType::* ptr) 
+{
     flecs::entity_t type_id = _::type<RealType>::id(world_);
     flecs::entity_t unit_id = _::type<UnitType>::id(world_);
     size_t offset = reinterpret_cast<size_t>(&(static_cast<ComponentType*>(nullptr)->*ptr));
@@ -125,7 +188,10 @@ untyped_component& member(const char* name, const MemberType ComponentType::* pt
 }
 
 /** Add constant. */
-untyped_component& constant(const char *name, int32_t value) {
+untyped_component& constant(
+    const char *name,
+    int32_t value) 
+{
     ecs_add_id(world_, id_, _::type<flecs::Enum>::id(world_));
 
     ecs_entity_desc_t desc = {};
@@ -142,7 +208,10 @@ untyped_component& constant(const char *name, int32_t value) {
 }
 
 /** Add bitmask constant. */
-untyped_component& bit(const char *name, uint32_t value) {
+untyped_component& bit(
+    const char *name, 
+    uint32_t value) 
+{
     ecs_add_id(world_, id_, _::type<flecs::Bitmask>::id(world_));
 
     ecs_entity_desc_t desc = {};
@@ -160,7 +229,9 @@ untyped_component& bit(const char *name, uint32_t value) {
 
 /** Register array metadata for component */
 template <typename Elem>
-untyped_component& array(int32_t elem_count) {
+untyped_component& array(
+    int32_t elem_count) 
+{
     ecs_array_desc_t desc = {};
     desc.entity = id_;
     desc.type = _::type<Elem>::id(world_);
@@ -170,7 +241,10 @@ untyped_component& array(int32_t elem_count) {
 }
 
 /** Add member value range */
-untyped_component& range(double min, double max) {
+untyped_component& range(
+    double min,
+    double max) 
+{
     const flecs::member_t *m = ecs_cpp_last_member(world_, id_);
     if (!m) {
         return *this;
@@ -189,7 +263,10 @@ untyped_component& range(double min, double max) {
 }
 
 /** Add member warning range */
-untyped_component& warning_range(double min, double max) {
+untyped_component& warning_range(
+    double min,
+    double max) 
+{
     const flecs::member_t *m = ecs_cpp_last_member(world_, id_);
     if (!m) {
         return *this;
@@ -208,7 +285,10 @@ untyped_component& warning_range(double min, double max) {
 }
 
 /** Add member error range */
-untyped_component& error_range(double min, double max) {
+untyped_component& error_range(
+    double min,
+    double max) 
+{
     const flecs::member_t *m = ecs_cpp_last_member(world_, id_);
     if (!m) {
         return *this;
@@ -225,6 +305,5 @@ untyped_component& error_range(double min, double max) {
     me.modified<flecs::MemberRanges>();
     return *this;
 }
-
 
 /** @} */

@@ -236,6 +236,11 @@ typedef struct ecs_member_t {
      * type entity is also a unit */
     ecs_entity_t unit;
 
+    /** Set to true to prevent automatic offset computation. This option should
+     * be used when members are registered out of order or where calculation of
+     * member offsets doesn't match C type offsets. */
+    bool use_offset;
+
     /** Numerical range that specifies which values member can assume. This
      * range may be used by UI elements such as a progress bar or slider. The
      * value of a member should not exceed this range. */

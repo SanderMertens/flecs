@@ -820,3 +820,42 @@ void StructTypes_struct_w_16_alignment(void) {
 
     ecs_fini(world);
 }
+
+void StructTypes_struct_w_use_offset(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t s = ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {{ 
+            .name = "y",
+            .type = ecs_id(ecs_i32_t),
+            .offset = offsetof(Position, y),
+            .use_offset = true
+        }, { 
+            .name = "x",
+            .type = ecs_id(ecs_i32_t),
+            .offset = offsetof(Position, x),
+            .use_offset = true
+        }}
+    });
+
+    test_assert(s == ecs_id(Position));
+
+    const EcsComponent *cptr = ecs_get(world, s, EcsComponent);
+    test_assert(cptr != NULL);
+    test_int(cptr->size, sizeof(Position));
+    test_int(cptr->alignment, ECS_ALIGNOF(Position));
+
+    const EcsType *mptr = ecs_get(world, s, EcsType);
+    test_assert(mptr != NULL);
+    // test_bool(mptr->partial, false); TODO
+    test_bool(mptr->existing, true);
+
+    meta_test_struct(world, s, Position);
+    meta_test_member(world, s, Position, x, ecs_id(ecs_i32_t), 1);
+    meta_test_member(world, s, Position, y, ecs_id(ecs_i32_t), 1);
+
+    ecs_fini(world);
+}
