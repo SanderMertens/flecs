@@ -1710,6 +1710,9 @@ typedef struct ecs_query_cache_t {
     
     ecs_entity_t entity;
 
+    /* Zero'd out sources array, used for results that only match on $this */
+    ecs_entity_t *sources;
+
     /* Query-level allocators */
     ecs_query_cache_allocators_t allocators;
 } ecs_query_cache_t;
@@ -65163,26 +65166,15 @@ static
 ecs_query_cache_table_match_t* flecs_query_cache_add_table_match(
     ecs_query_cache_t *cache,
     ecs_query_cache_table_t *qt,
-    ecs_iter_t *it,
     ecs_table_t *table)
 {
     /* Add match for table. One table can have more than one match, if
      * the query contains wildcards. */
     ecs_query_cache_table_match_t *qm = flecs_query_cache_cache_add(
         cache->query->world, qt);
+    
     qm->table = table;
-
     qm->trs = flecs_balloc(&cache->allocators.trs);
-    qm->ids = flecs_balloc(&cache->allocators.ids);
-
-    int32_t i, field_count = it->field_count;
-    for (i = 0; i < field_count; i ++) {
-        if (it->sources[i]) {
-            break;
-        }
-    }
-
-    qm->sources = flecs_balloc(&cache->allocators.sources);
 
     /* Insert match to iteration list if table is not empty */
     if (!table || ecs_table_count(table) != 0 || 
@@ -65201,13 +65193,53 @@ void flecs_query_cache_set_table_match(
     ecs_iter_t *it)
 {
     ecs_query_t *query = cache->query;
-    int32_t field_count = query->field_count;
+    int8_t i, field_count = query->field_count;
+
+    ecs_assert(field_count > 0, ECS_INTERNAL_ERROR, NULL);
 
     /* Reset resources in case this is an existing record */
     ecs_os_memcpy_n(ECS_CONST_CAST(ecs_table_record_t**, qm->trs), 
         it->trs, ecs_table_record_t*, field_count);
-    ecs_os_memcpy_n(qm->ids, it->ids, ecs_id_t, field_count);
-    ecs_os_memcpy_n(qm->sources, it->sources, ecs_entity_t, field_count);
+
+    /* Find out whether to store result-specific ids array or fixed array */
+    ecs_id_t *ids = cache->query->ids;
+    for (i = 0; i < field_count; i ++) {
+        if (it->ids[i] != ids[i]) {
+            break;
+        }
+    }
+
+    if (i != field_count) {
+        if (qm->ids == ids || !qm->ids) {
+            qm->ids = flecs_balloc(&cache->allocators.ids);
+        }
+        ecs_os_memcpy_n(qm->ids, it->ids, ecs_id_t, field_count);
+    } else {
+        if (qm->ids != ids) {
+            flecs_bfree(&cache->allocators.ids, qm->ids);
+            qm->ids = ids;
+        }
+    }
+
+    /* Find out whether to store result-specific sources array or fixed array */
+    for (i = 0; i < field_count; i ++) {
+        if (it->sources[i]) {
+            break;
+        }
+    }
+
+    if (i != field_count) {
+        if (qm->sources == cache->sources || !qm->sources) {
+            qm->sources = flecs_balloc(&cache->allocators.sources);
+        }
+        ecs_os_memcpy_n(qm->sources, it->sources, ecs_entity_t, field_count);
+    } else {
+        if (qm->sources != cache->sources) {
+            flecs_bfree(&cache->allocators.sources, qm->sources);
+            qm->sources = cache->sources;
+        }
+    }
+
     qm->set_fields = it->set_fields;
     qm->up_fields = it->up_fields;
 }
@@ -65255,7 +65287,7 @@ void flecs_query_cache_match_tables(
         }
 
         ecs_query_cache_table_match_t *qm = 
-            flecs_query_cache_add_table_match(cache, qt, &it, table);
+            flecs_query_cache_add_table_match(cache, qt, table);
         flecs_query_cache_set_table_match(cache, qm, &it);
     }
 }
@@ -65287,7 +65319,7 @@ bool flecs_query_cache_match_table(
         }
 
         ecs_query_cache_table_match_t *qm = flecs_query_cache_add_table_match(
-            cache, qt, &it, table);
+            cache, qt, table);
         flecs_query_cache_set_table_match(cache, qm, &it);
     }
 
@@ -65454,12 +65486,19 @@ void flecs_query_cache_table_match_free(
 
     for (cur = first; cur != NULL; cur = next) {
         flecs_bfree(&cache->allocators.trs, ECS_CONST_CAST(void*, cur->trs));
-        flecs_bfree(&cache->allocators.ids, cur->ids);
-        flecs_bfree(&cache->allocators.sources, cur->sources);
+
+        if (cur->ids != cache->query->ids) {
+            flecs_bfree(&cache->allocators.ids, cur->ids);
+        }
+
+        if (cur->sources != cache->sources) {
+            flecs_bfree(&cache->allocators.sources, cur->sources);
+        }
 
         if (cur->monitor) {
             flecs_bfree(&cache->allocators.monitors, cur->monitor);
         }
+
         if (!elem->hdr.empty) {
             flecs_query_cache_remove_table_node(cache, cur);
         }
@@ -65547,7 +65586,7 @@ void flecs_query_cache_rematch_tables(
             qm = qm->next_match;
         }
         if (!qm) {
-            qm = flecs_query_cache_add_table_match(cache, qt, &it, table);
+            qm = flecs_query_cache_add_table_match(cache, qt, table);
         }
 
         flecs_query_cache_set_table_match(cache, qm, &it);
@@ -65837,6 +65876,11 @@ void flecs_query_cache_fini(
     ecs_map_fini(&cache->groups);
 
     ecs_vec_fini_t(NULL, &cache->table_slices, ecs_query_cache_table_match_t);
+    
+    if (cache->query->term_count) {
+        flecs_bfree(&cache->allocators.sources, cache->sources);
+    }
+
     flecs_query_cache_allocators_fini(cache);
     ecs_query_fini(cache->query);
 
@@ -65896,6 +65940,13 @@ ecs_query_cache_t* flecs_query_cache_init(
         !!(query_flags & EcsQueryMatchEmptyTables));
 
     flecs_query_cache_allocators_init(result);
+
+    /* Zero'd out sources array that's used for results that only match $this. 
+     * This reduces the amount of memory used by the cache, and improves CPU
+     * cache locality during iteration when doing source checks. */
+    if (result->query->term_count) {
+        result->sources = flecs_bcalloc(&result->allocators.sources);
+    }
 
     if (q->term_count) {
         observer_desc.run = flecs_query_cache_on_event;

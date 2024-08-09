@@ -683,6 +683,9 @@ extern "C" {
 #pragma GCC diagnostic ignored "-Wmissing-field-initializers"
 /* Produces false positives in addons/cpp/delegate.hpp. */
 #pragma GCC diagnostic ignored "-Warray-bounds"
+/* Produces false positives in queries/src/cache.c */
+#pragma GCC diagnostic ignored "-Wstringop-overflow"
+#pragma GCC diagnostic ignored "-Wrestrict"
 #endif
 
 /* Standard library dependencies */
