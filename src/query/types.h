@@ -484,6 +484,9 @@ typedef struct ecs_query_cache_t {
     
     ecs_entity_t entity;
 
+    /* Zero'd out sources array, used for results that only match on $this */
+    ecs_entity_t *sources;
+
     /* Query-level allocators */
     ecs_query_cache_allocators_t allocators;
 } ecs_query_cache_t;
