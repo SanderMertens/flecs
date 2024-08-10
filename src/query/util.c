@@ -302,6 +302,11 @@ void flecs_query_plan_w_profile(
     ecs_query_impl_t *impl = flecs_query_impl(q);
     ecs_query_op_t *ops = impl->ops;
     int32_t i, count = impl->op_count, indent = 0;
+    if (!count) {
+        ecs_strbuf_append(buf, "");
+        return; /* No plan */
+    }
+
     for (i = 0; i < count; i ++) {
         ecs_query_op_t *op = &ops[i];
         ecs_flags16_t flags = op->flags;

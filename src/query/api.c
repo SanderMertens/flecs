@@ -419,7 +419,6 @@ ecs_query_t* ecs_query_init(
         goto error;
     }
 
-    /* Compile query to operations */
     if (flecs_query_compile(world, stage, result)) {
         goto error;
     }

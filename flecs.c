@@ -31962,7 +31962,6 @@ ecs_query_t* ecs_query_init(
         goto error;
     }
 
-    /* Compile query to operations */
     if (flecs_query_compile(world, stage, result)) {
         goto error;
     }
@@ -32399,6 +32398,11 @@ void flecs_query_plan_w_profile(
     ecs_query_impl_t *impl = flecs_query_impl(q);
     ecs_query_op_t *ops = impl->ops;
     int32_t i, count = impl->op_count, indent = 0;
+    if (!count) {
+        ecs_strbuf_append(buf, "");
+        return; /* No plan */
+    }
+
     for (i = 0; i < count; i ++) {
         ecs_query_op_t *op = &ops[i];
         ecs_flags16_t flags = op->flags;
@@ -62969,6 +62973,36 @@ int flecs_query_compile(
     ctx.cur->lbl_begin = -1;
     ecs_vec_clear(ctx.ops);
 
+    /* Compile query to operations. Only necessary for non-trivial queries, as
+     * trivial queries use trivial iterators that don't use query ops. */
+    bool needs_plan = true;
+    ecs_flags32_t flags = query->pub.flags;
+    ecs_flags32_t trivial_flags = EcsQueryIsTrivial|EcsQueryMatchOnlySelf;
+    if ((flags & trivial_flags) == trivial_flags) {
+        if (query->cache) {
+            if (flags & EcsQueryIsCacheable) {
+                needs_plan = false;                
+            }
+        } else {
+            if (!(flags & EcsQueryMatchWildcards)) {
+                needs_plan = false;
+            }
+        }
+    }
+
+    if (!needs_plan) {
+        /* Initialize space for $this variable */
+        query->pub.var_count = 1;
+        query->var_count = 1;
+        query->var_size = 1;
+        query->vars = flecs_calloc(&stage->allocator,
+            ECS_SIZEOF(ecs_query_var_t) + ECS_SIZEOF(char*));
+        query->pub.vars = ECS_OFFSET(query->vars, ECS_SIZEOF(ecs_query_var_t));
+        query->vars[0].kind = EcsVarTable;
+        query->vars[0].table_id = EcsVarNone;
+        return 0;
+    }
+
     /* Find all variables defined in query */
     if (flecs_query_discover_vars(stage, query)) {
         return -1;
@@ -69232,7 +69266,8 @@ ecs_iter_t flecs_query_iter(
     flecs_poly_assert(q, ecs_query_t);
     ecs_query_impl_t *impl = flecs_query_impl(q);
 
-    int32_t i, var_count = impl->var_count, op_count = impl->op_count;
+    int32_t i, var_count = impl->var_count;
+    int32_t op_count = impl->op_count ? impl->op_count : 1;
     it.world = ECS_CONST_CAST(ecs_world_t*, world);
 
     /* If world passed to iterator is the real world, but query was created from

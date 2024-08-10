@@ -853,6 +853,36 @@ int flecs_query_compile(
     ctx.cur->lbl_begin = -1;
     ecs_vec_clear(ctx.ops);
 
+    /* Compile query to operations. Only necessary for non-trivial queries, as
+     * trivial queries use trivial iterators that don't use query ops. */
+    bool needs_plan = true;
+    ecs_flags32_t flags = query->pub.flags;
+    ecs_flags32_t trivial_flags = EcsQueryIsTrivial|EcsQueryMatchOnlySelf;
+    if ((flags & trivial_flags) == trivial_flags) {
+        if (query->cache) {
+            if (flags & EcsQueryIsCacheable) {
+                needs_plan = false;                
+            }
+        } else {
+            if (!(flags & EcsQueryMatchWildcards)) {
+                needs_plan = false;
+            }
+        }
+    }
+
+    if (!needs_plan) {
+        /* Initialize space for $this variable */
+        query->pub.var_count = 1;
+        query->var_count = 1;
+        query->var_size = 1;
+        query->vars = flecs_calloc(&stage->allocator,
+            ECS_SIZEOF(ecs_query_var_t) + ECS_SIZEOF(char*));
+        query->pub.vars = ECS_OFFSET(query->vars, ECS_SIZEOF(ecs_query_var_t));
+        query->vars[0].kind = EcsVarTable;
+        query->vars[0].table_id = EcsVarNone;
+        return 0;
+    }
+
     /* Find all variables defined in query */
     if (flecs_query_discover_vars(stage, query)) {
         return -1;
