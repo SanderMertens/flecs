@@ -738,7 +738,7 @@ void flecs_bootstrap(
     /* Register observer for tag property before adding EcsPairIsTag */
     ecs_observer(world, {
         .entity = ecs_entity(world, { .parent = EcsFlecsInternals }),
-        .query.terms[0] = { .id = EcsPairIsTag, .src.id = EcsSelf },
+        .query.terms[0] = { .id = EcsPairIsTag },
         .events = {EcsOnAdd, EcsOnRemove},
         .callback = flecs_register_tag,
         .yield_existing = true
@@ -891,7 +891,7 @@ void flecs_bootstrap(
      * set flags on an id record when a property is added to a component, which
      * allows for quick property testing in various operations. */
     ecs_observer(world, {
-        .query.terms = {{ .id = EcsFinal, .src.id = EcsSelf }},
+        .query.terms = {{ .id = EcsFinal }},
         .query.flags = EcsQueryMatchPrefab|EcsQueryMatchDisabled,
         .events = {EcsOnAdd},
         .callback = flecs_register_final
@@ -899,7 +899,7 @@ void flecs_bootstrap(
 
     ecs_observer(world, {
         .query.terms = {
-            { .id = ecs_pair(EcsOnDelete, EcsWildcard), .src.id = EcsSelf }
+            { .id = ecs_pair(EcsOnDelete, EcsWildcard) }
         },
         .query.flags = EcsQueryMatchPrefab|EcsQueryMatchDisabled,
         .events = {EcsOnAdd, EcsOnRemove},
@@ -908,7 +908,7 @@ void flecs_bootstrap(
 
     ecs_observer(world, {
         .query.terms = {
-            { .id = ecs_pair(EcsOnDeleteTarget, EcsWildcard), .src.id = EcsSelf }
+            { .id = ecs_pair(EcsOnDeleteTarget, EcsWildcard) }
         },
         .query.flags = EcsQueryMatchPrefab|EcsQueryMatchDisabled,
         .events = {EcsOnAdd, EcsOnRemove},
@@ -917,7 +917,7 @@ void flecs_bootstrap(
 
     ecs_observer(world, {
         .query.terms = {
-            { .id = ecs_pair(EcsOnInstantiate, EcsWildcard), .src.id = EcsSelf }
+            { .id = ecs_pair(EcsOnInstantiate, EcsWildcard) }
         },
         .query.flags = EcsQueryMatchPrefab|EcsQueryMatchDisabled,
         .events = {EcsOnAdd},
@@ -925,7 +925,7 @@ void flecs_bootstrap(
     });
 
     ecs_observer(world, {
-        .query.terms = {{ .id = EcsSymmetric, .src.id = EcsSelf }},
+        .query.terms = {{ .id = EcsSymmetric }},
         .query.flags = EcsQueryMatchPrefab|EcsQueryMatchDisabled,
         .events = {EcsOnAdd},
         .callback = flecs_register_symmetric
@@ -933,7 +933,7 @@ void flecs_bootstrap(
 
     static ecs_on_trait_ctx_t traversable_trait = { EcsIdTraversable, EcsIdTraversable };
     ecs_observer(world, {
-        .query.terms = {{ .id = EcsTraversable, .src.id = EcsSelf }},
+        .query.terms = {{ .id = EcsTraversable }},
         .query.flags = EcsQueryMatchPrefab|EcsQueryMatchDisabled,
         .events = {EcsOnAdd, EcsOnRemove},
         .callback = flecs_register_trait,
@@ -942,7 +942,7 @@ void flecs_bootstrap(
 
     static ecs_on_trait_ctx_t exclusive_trait = { EcsIdExclusive, EcsIdExclusive };
     ecs_observer(world, {
-        .query.terms = {{ .id = EcsExclusive, .src.id = EcsSelf  }},
+        .query.terms = {{ .id = EcsExclusive  }},
         .query.flags = EcsQueryMatchPrefab|EcsQueryMatchDisabled,
         .events = {EcsOnAdd, EcsOnRemove},
         .callback = flecs_register_trait,
@@ -951,7 +951,7 @@ void flecs_bootstrap(
 
     static ecs_on_trait_ctx_t toggle_trait = { EcsIdCanToggle, 0 };
     ecs_observer(world, {
-        .query.terms = {{ .id = EcsCanToggle, .src.id = EcsSelf }},
+        .query.terms = {{ .id = EcsCanToggle }},
         .query.flags = EcsQueryMatchPrefab|EcsQueryMatchDisabled,
         .events = {EcsOnAdd},
         .callback = flecs_register_trait,
@@ -961,7 +961,7 @@ void flecs_bootstrap(
     static ecs_on_trait_ctx_t with_trait = { EcsIdWith, 0 };
     ecs_observer(world, {
         .query.terms = {
-            { .id = ecs_pair(EcsWith, EcsWildcard), .src.id = EcsSelf },
+            { .id = ecs_pair(EcsWith, EcsWildcard) },
         },
         .query.flags = EcsQueryMatchPrefab|EcsQueryMatchDisabled,
         .events = {EcsOnAdd},
@@ -971,7 +971,7 @@ void flecs_bootstrap(
 
     static ecs_on_trait_ctx_t sparse_trait = { EcsIdIsSparse, 0 };
     ecs_observer(world, {
-        .query.terms = {{ .id = EcsSparse, .src.id = EcsSelf }},
+        .query.terms = {{ .id = EcsSparse }},
         .query.flags = EcsQueryMatchPrefab|EcsQueryMatchDisabled,
         .events = {EcsOnAdd},
         .callback = flecs_register_trait,
@@ -980,7 +980,7 @@ void flecs_bootstrap(
 
     static ecs_on_trait_ctx_t union_trait = { EcsIdIsUnion, 0 };
     ecs_observer(world, {
-        .query.terms = {{ .id = EcsUnion, .src.id = EcsSelf }},
+        .query.terms = {{ .id = EcsUnion }},
         .query.flags = EcsQueryMatchPrefab|EcsQueryMatchDisabled,
         .events = {EcsOnAdd},
         .callback = flecs_register_trait,
@@ -991,7 +991,7 @@ void flecs_bootstrap(
      * only point to a single entity. */
     ecs_observer(world, {
         .query.terms = {
-            { .id = ecs_pair(EcsSlotOf, EcsWildcard), .src.id = EcsSelf }
+            { .id = ecs_pair(EcsSlotOf, EcsWildcard) }
         },
         .query.flags = EcsQueryMatchPrefab|EcsQueryMatchDisabled,
         .events = {EcsOnAdd},
@@ -1001,7 +1001,7 @@ void flecs_bootstrap(
     /* Define observer to make sure that adding a module to a child entity also
      * adds it to the parent. */
     ecs_observer(world, {
-        .query.terms = {{ .id = EcsModule, .src.id = EcsSelf } },
+        .query.terms = {{ .id = EcsModule } },
         .query.flags = EcsQueryMatchPrefab|EcsQueryMatchDisabled,
         .events = {EcsOnAdd},
         .callback = flecs_ensure_module_tag
@@ -1010,8 +1010,8 @@ void flecs_bootstrap(
     /* Observer that tracks whether observers are disabled */
     ecs_observer(world, {
         .query.terms = {
-            { .id = EcsObserver, .src.id = EcsSelf, .inout = EcsInOutFilter },
-            { .id = EcsDisabled, .src.id = EcsSelf },
+            { .id = EcsObserver },
+            { .id = EcsDisabled },
         },
         .events = {EcsOnAdd, EcsOnRemove},
         .callback = flecs_disable_observer
@@ -1020,8 +1020,8 @@ void flecs_bootstrap(
     /* Observer that tracks whether modules are disabled */
     ecs_observer(world, {
         .query.terms = {
-            { .id = EcsModule, .src.id = EcsSelf, .inout = EcsInOutFilter },
-            { .id = EcsDisabled, .src.id = EcsSelf },
+            { .id = EcsModule },
+            { .id = EcsDisabled },
         },
         .events = {EcsOnAdd, EcsOnRemove},
         .callback = flecs_disable_module

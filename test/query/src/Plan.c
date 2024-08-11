@@ -268,14 +268,8 @@ void Plan_1_trivial_plan(void) {
 
     ecs_log_enable_colors(false);
 
-    const char *expect = 
-    HEAD " 0. [-1,  1]  setids      " 
-    LINE " 1. [ 0,  2]  andid       $[this]           (Foo)"
-    LINE " 2. [ 1,  3]  yield       "
-    LINE "";
     char *plan = ecs_query_plan(r);
-
-    test_str(expect, plan);
+    test_str(NULL, plan);
     ecs_os_free(plan);
 
     ecs_query_fini(r);
@@ -297,14 +291,8 @@ void Plan_2_trivial_plan(void) {
 
     ecs_log_enable_colors(false);
 
-    const char *expect = 
-    HEAD " 0. [-1,  1]  setids      " 
-    LINE " 1. [ 0,  2]  triv        {0,1}"
-    LINE " 2. [ 1,  3]  yield       "
-    LINE "";
     char *plan = ecs_query_plan(r);
-
-    test_str(expect, plan);
+    test_str(NULL, plan);
     ecs_os_free(plan);
 
     ecs_query_fini(r);
@@ -326,14 +314,8 @@ void Plan_1_trivial_plan_component(void) {
 
     ecs_log_enable_colors(false);
 
-    const char *expect = 
-    HEAD " 0. [-1,  1]  setids      " 
-    LINE " 1. [ 0,  2]  andid       $[this]           (Position)"
-    LINE " 2. [ 1,  3]  yield       "
-    LINE "";
     char *plan = ecs_query_plan(r);
-
-    test_str(expect, plan);
+    test_str(NULL, plan);
     ecs_os_free(plan);
 
     ecs_query_fini(r);
@@ -357,14 +339,8 @@ void Plan_2_trivial_plan_component(void) {
 
     ecs_log_enable_colors(false);
 
-    const char *expect = 
-    HEAD " 0. [-1,  1]  setids      " 
-    LINE " 1. [ 0,  2]  triv        {0,1}"
-    LINE " 2. [ 1,  3]  yield       "
-    LINE "";
     char *plan = ecs_query_plan(r);
-
-    test_str(expect, plan);
+    test_str(NULL, plan);
     ecs_os_free(plan);
 
     ecs_query_fini(r);
@@ -388,14 +364,8 @@ void Plan_3_trivial_plan_w_pair(void) {
 
     ecs_log_enable_colors(false);
 
-    const char *expect = 
-    HEAD " 0. [-1,  1]  setids      " 
-    LINE " 1. [ 0,  2]  triv        {0,1,2}"
-    LINE " 2. [ 1,  3]  yield       "
-    LINE "";
     char *plan = ecs_query_plan(r);
-
-    test_str(expect, plan);
+    test_str(NULL, plan);
     ecs_os_free(plan);
 
     ecs_query_fini(r);
@@ -485,14 +455,8 @@ void Plan_3_trivial_plan_w_pair_component(void) {
 
     ecs_log_enable_colors(false);
 
-    const char *expect = 
-    HEAD " 0. [-1,  1]  setids      " 
-    LINE " 1. [ 0,  2]  triv        {0,1,2}"
-    LINE " 2. [ 1,  3]  yield       "
-    LINE "";
     char *plan = ecs_query_plan(r);
-
-    test_str(expect, plan);
+    test_str(NULL, plan);
     ecs_os_free(plan);
 
     ecs_query_fini(r);
@@ -586,14 +550,8 @@ void Plan_1_trivial_component_w_none(void) {
 
     ecs_log_enable_colors(false);
 
-    const char *expect = 
-    HEAD " 0. [-1,  1]  setids      " 
-    LINE " 1. [ 0,  2]  andid       $[this]           (Position)"
-    LINE " 2. [ 1,  3]  yield       "
-    LINE "";
     char *plan = ecs_query_plan(r);
-
-    test_str(expect, plan);
+    test_str(NULL, plan);
     ecs_os_free(plan);
 
     ecs_query_fini(r);
@@ -619,14 +577,8 @@ void Plan_2_trivial_component_w_none(void) {
 
     ecs_log_enable_colors(false);
 
-    const char *expect = 
-    HEAD " 0. [-1,  1]  setids      " 
-    LINE " 1. [ 0,  2]  triv        {0,1}"
-    LINE " 2. [ 1,  3]  yield       "
-    LINE "";
     char *plan = ecs_query_plan(r);
-
-    test_str(expect, plan);
+    test_str(NULL, plan);
     ecs_os_free(plan);
 
     ecs_query_fini(r);

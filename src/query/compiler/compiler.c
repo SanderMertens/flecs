@@ -207,7 +207,7 @@ int flecs_query_discover_vars(
                         anonymous_table_count ++;
                     }
 
-                    if (!(term->flags_ & EcsTermNoData)) {
+                    if (((1llu << term->field_index) & query->pub.data_fields)) {
                         /* Can't have an anonymous variable as source of a term
                          * that returns a component. We need to return each
                          * instance of the component, whereas anonymous 
@@ -237,20 +237,6 @@ int flecs_query_discover_vars(
         } else if ((src->id & EcsIsVariable) && (ECS_TERM_REF_ID(src) == EcsThis)) {
             if (flecs_term_is_builtin_pred(term) && term->oper == EcsOr) {
                 flecs_query_add_var(query, EcsThisName, vars, EcsVarEntity);
-            }
-
-            if (term->flags_ & EcsTermIsSparse) {
-                /* If this is a sparse $this term entities have to be returned
-                 * one by one. */
-                flecs_query_add_var(query, EcsThisName, vars, EcsVarEntity);
-
-                /* Track if query contains $this sparse terms. Queries with 
-                 * sparse $this fields need to return results one by one. */
-                if ((ECS_TERM_REF_ID(&term->src) == EcsThis) && 
-                    ((term->src.id & (EcsSelf|EcsIsVariable)) == (EcsSelf|EcsIsVariable)))
-                {
-                    query->pub.flags |= EcsQueryHasSparseThis;
-                }
             }
         }
 
@@ -351,6 +337,7 @@ int flecs_query_discover_vars(
             ecs_os_free(var_name);
         }
     }
+
     var_count = ecs_vec_count(vars);
 
     /* Add non-This table variables */
@@ -393,7 +380,7 @@ int flecs_query_discover_vars(
     /* Always include spot for This variable, even if query doesn't use it */
     var_count ++;
 
-    ecs_query_var_t *query_vars = &query->vars_cache.var;
+    ecs_query_var_t *query_vars = &flecs_this_array;
     if ((var_count + anonymous_count) > 1) {
         query_vars = flecs_alloc(&stage->allocator,
             (ECS_SIZEOF(ecs_query_var_t) + ECS_SIZEOF(char*)) * 
@@ -407,17 +394,24 @@ int flecs_query_discover_vars(
         !entity_before_table_this);
     query->var_size = var_count + anonymous_count;
 
-    char **var_names = ECS_ELEM(query_vars, ECS_SIZEOF(ecs_query_var_t), 
-        var_count + anonymous_count);
+    char **var_names;
+    if (query_vars != &flecs_this_array) {
+        query_vars[0].kind = EcsVarTable;
+        query_vars[0].name = NULL;
+        flecs_set_var_label(&query_vars[0], NULL);
+        query_vars[0].id = 0;
+        query_vars[0].table_id = EcsVarNone;
+        query_vars[0].lookup = NULL;
+
+        var_names = ECS_ELEM(query_vars, ECS_SIZEOF(ecs_query_var_t), 
+            var_count + anonymous_count);
+        var_names[0] = ECS_CONST_CAST(char*, query_vars[0].name);
+    } else {
+        var_names = &flecs_this_name_array;
+    }
+
     query->pub.vars = (char**)var_names;
 
-    query_vars[0].kind = EcsVarTable;
-    query_vars[0].name = NULL;
-    flecs_set_var_label(&query_vars[0], NULL);
-    query_vars[0].id = 0;
-    query_vars[0].table_id = EcsVarNone;
-    query_vars[0].lookup = NULL;
-    var_names[0] = ECS_CONST_CAST(char*, query_vars[0].name);
     query_vars ++;
     var_names ++;
     var_count --;
@@ -426,6 +420,8 @@ int flecs_query_discover_vars(
         ecs_query_var_t *user_vars = ecs_vec_first_t(vars, ecs_query_var_t);
         ecs_os_memcpy_n(query_vars, user_vars, ecs_query_var_t, var_count);
         for (i = 0; i < var_count; i ++) {
+            ecs_assert(&var_names[i] != &(&flecs_this_name_array)[i], 
+                ECS_INTERNAL_ERROR, NULL);
             var_names[i] = ECS_CONST_CAST(char*, query_vars[i].name);
         }
     }
@@ -843,6 +839,34 @@ int flecs_query_compile(
     ecs_stage_t *stage,
     ecs_query_impl_t *query)
 {
+    /* Compile query to operations. Only necessary for non-trivial queries, as
+     * trivial queries use trivial iterators that don't use query ops. */
+    bool needs_plan = true;
+    ecs_flags32_t flags = query->pub.flags;
+    ecs_flags32_t trivial_flags = EcsQueryIsTrivial|EcsQueryMatchOnlySelf;
+    if ((flags & trivial_flags) == trivial_flags) {
+        if (query->cache) {
+            if (flags & EcsQueryIsCacheable) {
+                needs_plan = false;                
+            }
+        } else {
+            if (!(flags & EcsQueryMatchWildcards)) {
+                needs_plan = false;
+            }
+        }
+    }
+
+    if (!needs_plan) {
+        /* Initialize space for $this variable */
+        query->pub.var_count = 1;
+        query->var_count = 1;
+        query->var_size = 1;
+        query->vars = &flecs_this_array;
+        query->pub.vars = &flecs_this_name_array;
+        query->pub.flags |= EcsQueryHasTableThisVar;
+        return 0;
+    }
+
     ecs_query_t *q = &query->pub;
     ecs_term_t *terms = q->terms;
     ecs_query_compile_ctx_t ctx = {0};

@@ -137,4 +137,7 @@ void flecs_init_id_records(
 void flecs_fini_id_records(
     ecs_world_t *world);
 
+ecs_id_t flecs_id_record_hash(
+    ecs_id_t id);
+
 #endif

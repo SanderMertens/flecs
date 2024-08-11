@@ -273,8 +273,7 @@ void flecs_bootstrap_hierarchy(ecs_world_t *world) {
     ecs_observer(world, {
         .entity = ecs_entity(world, { .parent = EcsFlecsInternals }),
         .query.terms[0] = {
-            .id = ecs_pair(ecs_id(EcsIdentifier), EcsSymbol), 
-            .src.id = EcsSelf 
+            .id = ecs_pair(ecs_id(EcsIdentifier), EcsSymbol)
         },
         .callback = flecs_on_set_symbol,
         .events = {EcsOnSet},

@@ -109,7 +109,7 @@ void flecs_remove_id_elem(
     }
 }
 
-static
+
 ecs_id_t flecs_id_record_hash(
     ecs_id_t id)
 {

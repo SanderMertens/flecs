@@ -6754,10 +6754,9 @@ void Basic_no_data_rule(void) {
 
     ecs_query_t *r = ecs_query(world, {
         .terms = {
-            { .id = ecs_id(Position) },
-            { .id = ecs_id(Velocity) }
+            { .id = ecs_id(Position), .inout = EcsInOutNone },
+            { .id = ecs_id(Velocity), .inout = EcsInOutNone }
         },
-        .flags = EcsQueryNoData,
         .cache_kind = cache_kind
     });
 

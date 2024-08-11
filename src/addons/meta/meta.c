@@ -1317,79 +1317,79 @@ void FlecsMetaImport(
     ecs_entity_t old_scope = ecs_set_scope( /* Keep meta scope clean */
         world, EcsFlecsInternals);
     ecs_observer(world, {
-        .query.terms[0] = { .id = ecs_id(EcsPrimitive), .src.id = EcsSelf },
+        .query.terms[0] = { .id = ecs_id(EcsPrimitive) },
         .events = {EcsOnSet},
         .callback = flecs_set_primitive
     });
 
     ecs_observer(world, {
-        .query.terms[0] = { .id = ecs_id(EcsMember), .src.id = EcsSelf },
+        .query.terms[0] = { .id = ecs_id(EcsMember) },
         .events = {EcsOnSet},
         .callback = flecs_set_member
     });
 
     ecs_observer(world, {
-        .query.terms[0] = { .id = ecs_id(EcsMemberRanges), .src.id = EcsSelf },
+        .query.terms[0] = { .id = ecs_id(EcsMemberRanges) },
         .events = {EcsOnSet},
         .callback = flecs_set_member_ranges
     });
 
     ecs_observer(world, {
-        .query.terms[0] = { .id = ecs_id(EcsEnum), .src.id = EcsSelf },
+        .query.terms[0] = { .id = ecs_id(EcsEnum) },
         .events = {EcsOnAdd},
         .callback = flecs_add_enum
     });
 
     ecs_observer(world, {
-        .query.terms[0] = { .id = ecs_id(EcsBitmask), .src.id = EcsSelf },
+        .query.terms[0] = { .id = ecs_id(EcsBitmask) },
         .events = {EcsOnAdd},
         .callback = flecs_add_bitmask
     });
 
     ecs_observer(world, {
-        .query.terms[0] = { .id = EcsConstant, .src.id = EcsSelf },
+        .query.terms[0] = { .id = EcsConstant },
         .events = {EcsOnAdd},
         .callback = flecs_add_constant
     });
 
     ecs_observer(world, {
-        .query.terms[0] = { .id = ecs_pair(EcsConstant, EcsWildcard), .src.id = EcsSelf },
+        .query.terms[0] = { .id = ecs_pair(EcsConstant, EcsWildcard) },
         .events = {EcsOnSet},
         .callback = flecs_add_constant
     });
 
     ecs_observer(world, {
-        .query.terms[0] = { .id = ecs_id(EcsArray), .src.id = EcsSelf },
+        .query.terms[0] = { .id = ecs_id(EcsArray) },
         .events = {EcsOnSet},
         .callback = flecs_set_array
     });
 
     ecs_observer(world, {
-        .query.terms[0] = { .id = ecs_id(EcsVector), .src.id = EcsSelf },
+        .query.terms[0] = { .id = ecs_id(EcsVector) },
         .events = {EcsOnSet},
         .callback = flecs_set_vector
     });
 
     ecs_observer(world, {
-        .query.terms[0] = { .id = ecs_id(EcsOpaque), .src.id = EcsSelf },
+        .query.terms[0] = { .id = ecs_id(EcsOpaque) },
         .events = {EcsOnSet},
         .callback = flecs_set_custom_type
     });
 
     ecs_observer(world, {
-        .query.terms[0] = { .id = ecs_id(EcsUnit), .src.id = EcsSelf },
+        .query.terms[0] = { .id = ecs_id(EcsUnit) },
         .events = {EcsOnSet},
         .callback = flecs_set_unit
     });
 
     ecs_observer(world, {
-        .query.terms[0] = { .id = ecs_id(EcsType), .src.id = EcsSelf },
+        .query.terms[0] = { .id = ecs_id(EcsType) },
         .events = {EcsOnSet},
         .callback = ecs_meta_type_serialized_init
     });
 
     ecs_observer(world, {
-        .query.terms[0] = { .id = ecs_id(EcsType), .src.id = EcsSelf },
+        .query.terms[0] = { .id = ecs_id(EcsType) },
         .events = {EcsOnSet},
         .callback = ecs_meta_type_init_default_ctor
     });

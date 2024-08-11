@@ -58,11 +58,11 @@ void* flecs_dup(
 #define flecs_calloc_n(a, T, count) flecs_calloc(a, ECS_SIZEOF(T) * (count))
 
 #define flecs_free(a, size, ptr)\
-    flecs_bfree(flecs_allocator_get(a, size), ptr)
+    flecs_bfree((ptr) ? flecs_allocator_get(a, size) : NULL, ptr)
 #define flecs_free_t(a, T, ptr)\
-    flecs_bfree_w_dbg_info(flecs_allocator_get(a, ECS_SIZEOF(T)), ptr, #T)
+    flecs_bfree_w_dbg_info((ptr) ? flecs_allocator_get(a, ECS_SIZEOF(T)) : NULL, ptr, #T)
 #define flecs_free_n(a, T, count, ptr)\
-    flecs_bfree_w_dbg_info(flecs_allocator_get(a, ECS_SIZEOF(T) * (count))\
+    flecs_bfree_w_dbg_info((ptr) ? flecs_allocator_get(a, ECS_SIZEOF(T) * (count)) : NULL\
         , ptr, #T)
 
 #define flecs_realloc(a, size_dst, size_src, ptr)\

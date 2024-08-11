@@ -140,7 +140,22 @@
                 "validate_trav_isa_w_any",
                 "validate_custom_trav_w_inherit_id",
                 "validate_custom_trav_w_inherit_id_w_self_up",
-                "validate_custom_trav_w_inherit_id_w_up"
+                "validate_custom_trav_w_inherit_id_w_up",
+                "validate_simple_1_term_is_cacheable",
+                "validate_simple_1_term_pair_is_cacheable",
+                "validate_simple_1_term_pair_recycled_is_cacheable",
+                "validate_simple_1_term_tag_is_cacheable",
+                "validate_simple_2_term_is_cacheable",
+                "validate_simple_w_can_inherit",
+                "validate_simple_w_can_toggle",
+                "validate_simple_w_sparse",
+                "validate_simple_w_union",
+                "validate_simple_w_union_pair",
+                "validate_simple_w_transitive",
+                "validate_simple_w_transitive_pair",
+                "validate_simple_w_reflexive",
+                "validate_simple_w_reflexive_pair",
+                "validate_simple_w_inherited_component"
             ]
         }, {
             "id": "Parser",
