@@ -400,8 +400,10 @@ void flecs_uni_observer_invoke(
     it->callback_ctx = o->callback_ctx;
     it->run_ctx = o->run_ctx;
     it->term_index = impl->term_index;
-    it->query = o->query;
-
+    it->query = query;
+    it->ref_fields = query->fixed_fields | query->row_fields;
+    it->row_fields = query->row_fields;
+    
     ecs_entity_t event = it->event;
     int32_t event_cur = it->event_cur;
     it->event = flecs_get_observer_event(term, event);
