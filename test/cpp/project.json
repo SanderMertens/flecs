@@ -896,6 +896,7 @@
                 "get_query",
                 "on_set_w_set",
                 "on_set_w_defer_set",
+                "on_set_w_set_sparse",
                 "on_add_singleton",
                 "on_add_pair_singleton",
                 "on_add_pair_wildcard_singleton",
