@@ -43140,12 +43140,13 @@ int flecs_json_serialize_table_components(
                 ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
                 type_ser = ecs_get(world, ti->component, EcsTypeSerializer);
             }
-            has_reflection = true;
+            has_reflection = type_ser != NULL;
         }
 
         component_count[0] ++;
 
         if (has_reflection && (!desc || desc->serialize_values)) {
+            ecs_assert(type_ser != NULL, ECS_INTERNAL_ERROR, NULL);
             if (flecs_json_ser_type(
                 world, &type_ser->ops, ptr, buf) != 0) 
             {

@@ -594,6 +594,12 @@ void SerializeEntityToJson_serialize_w_name_2_tags(void);
 void SerializeEntityToJson_serialize_w_name_1_pair(void);
 void SerializeEntityToJson_serialize_w_base(void);
 void SerializeEntityToJson_serialize_w_2_base(void);
+void SerializeEntityToJson_serialize_component_w_base(void);
+void SerializeEntityToJson_serialize_component_w_base_no_reflection_data(void);
+void SerializeEntityToJson_serialize_component_w_base_w_owned(void);
+void SerializeEntityToJson_serialize_component_w_base_w_owned_no_reflection_data(void);
+void SerializeEntityToJson_serialize_component_w_base_w_owned_override(void);
+void SerializeEntityToJson_serialize_component_w_base_w_owned_no_reflection_data_override(void);
 void SerializeEntityToJson_serialize_w_nested_base(void);
 void SerializeEntityToJson_serialize_w_1_component(void);
 void SerializeEntityToJson_serialize_w_2_components(void);
@@ -3215,6 +3221,30 @@ bake_test_case SerializeEntityToJson_testcases[] = {
         SerializeEntityToJson_serialize_w_2_base
     },
     {
+        "serialize_component_w_base",
+        SerializeEntityToJson_serialize_component_w_base
+    },
+    {
+        "serialize_component_w_base_no_reflection_data",
+        SerializeEntityToJson_serialize_component_w_base_no_reflection_data
+    },
+    {
+        "serialize_component_w_base_w_owned",
+        SerializeEntityToJson_serialize_component_w_base_w_owned
+    },
+    {
+        "serialize_component_w_base_w_owned_no_reflection_data",
+        SerializeEntityToJson_serialize_component_w_base_w_owned_no_reflection_data
+    },
+    {
+        "serialize_component_w_base_w_owned_override",
+        SerializeEntityToJson_serialize_component_w_base_w_owned_override
+    },
+    {
+        "serialize_component_w_base_w_owned_no_reflection_data_override",
+        SerializeEntityToJson_serialize_component_w_base_w_owned_no_reflection_data_override
+    },
+    {
         "serialize_w_nested_base",
         SerializeEntityToJson_serialize_w_nested_base
     },
@@ -4623,7 +4653,7 @@ static bake_test_suite suites[] = {
         "SerializeEntityToJson",
         NULL,
         NULL,
-        56,
+        62,
         SerializeEntityToJson_testcases
     },
     {
