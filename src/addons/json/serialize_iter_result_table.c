@@ -43,9 +43,10 @@ bool flecs_json_serialize_table_type_info(
 
     for (i = 0; i < column_count; i ++) {
         ecs_column_t *column = &columns[i];
+        ecs_id_t id = flecs_column_id(table, i);
 
         if (!desc || !desc->serialize_builtin) {
-            if (flecs_json_is_builtin(column->id)) {
+            if (flecs_json_is_builtin(id)) {
                 continue;
             }
         }
@@ -55,7 +56,7 @@ bool flecs_json_serialize_table_type_info(
 
         flecs_json_next(buf);
         ecs_strbuf_appendlit(buf, "\"");
-        flecs_json_id_member(buf, world, column->id, desc->serialize_full_paths);
+        flecs_json_id_member(buf, world, id, desc->serialize_full_paths);
         ecs_strbuf_appendlit(buf, "\":");
 
         ecs_type_info_to_json_buf(world, ti->component, buf);
@@ -261,8 +262,8 @@ int flecs_json_serialize_table_components(
         int32_t column_index = table->column_map ? table->column_map[i] : -1;
         if (column_index != -1) {
             ecs_column_t *column = &table->data.columns[column_index];
-            ptr = ecs_vec_get(&column->data, column->size, row);
             ti = column->ti;
+            ptr = ecs_vec_get(&column->data, ti->size, row);
         } else {
             const ecs_table_record_t *tr = &table->_->records[i];
             ecs_id_record_t *idr = (ecs_id_record_t*)tr->hdr.cache;
