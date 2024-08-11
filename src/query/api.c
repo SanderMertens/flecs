@@ -6,6 +6,13 @@
 #include "../private_api.h"
 #include <ctype.h>
 
+/* Placeholder arrays for queries that only have $this variable */
+ecs_query_var_t flecs_this_array = {
+    .kind = EcsVarTable,
+    .table_id = EcsVarNone
+};
+char *flecs_this_name_array = NULL;
+
 ecs_mixins_t ecs_query_t_mixins = {
     .type_name = "ecs_query_t",
     .elems = {
@@ -179,10 +186,10 @@ int flecs_query_create_cache(
                 goto error;
             }
 
-            impl->field_map = flecs_alloc_n(&impl->stage->allocator,
+            impl->cache->field_map = flecs_alloc_n(&impl->stage->allocator,
                 int8_t, FLECS_TERM_COUNT_MAX);
 
-            ecs_os_memcpy_n(impl->field_map, field_map, int8_t, dst_count);
+            ecs_os_memcpy_n(impl->cache->field_map, field_map, int8_t, dst_count);
         }
     }
 
@@ -207,17 +214,16 @@ void flecs_query_fini(
         impl->binding_ctx_free(impl->pub.binding_ctx);
     }
 
-    if (impl->vars != &impl->vars_cache.var) {
+    if (impl->vars != &flecs_this_array) {
         flecs_free(a, (ECS_SIZEOF(ecs_query_var_t) + ECS_SIZEOF(char*)) * 
             impl->var_size, impl->vars);
+        flecs_name_index_fini(&impl->tvar_index);
+        flecs_name_index_fini(&impl->evar_index);
     }
 
     flecs_free_n(a, ecs_query_op_t, impl->op_count, impl->ops);
     flecs_free_n(a, ecs_var_id_t, impl->pub.field_count, impl->src_vars);
     flecs_free_n(a, int32_t, impl->pub.field_count, impl->monitor);
-    flecs_free_n(a, int8_t, FLECS_TERM_COUNT_MAX, impl->field_map);
-    flecs_name_index_fini(&impl->tvar_index);
-    flecs_name_index_fini(&impl->evar_index);
 
     ecs_query_t *q = &impl->pub;
     int i, count = q->term_count;
@@ -247,6 +253,7 @@ void flecs_query_fini(
     }
 
     if (impl->cache) {
+        flecs_free_n(a, int8_t, FLECS_TERM_COUNT_MAX, impl->cache->field_map);
         flecs_query_cache_fini(impl);
     }
 
@@ -257,75 +264,6 @@ void flecs_query_fini(
 static
 void flecs_query_poly_fini(void *ptr) {
     flecs_query_fini(ptr);
-}
-
-static
-char* flecs_query_append_token(
-    char *dst,
-    const char *src)
-{
-    int32_t len = ecs_os_strlen(src);
-    ecs_os_memcpy(dst, src, len + 1);
-    return dst + len + 1;
-}
-
-static
-void flecs_query_populate_tokens(
-    ecs_query_impl_t *impl)
-{
-    ecs_query_t *q = &impl->pub;
-    int32_t i, term_count = q->term_count;
-
-    char *old_tokens = impl->tokens;
-    int32_t old_tokens_len = impl->tokens_len;
-    impl->tokens = NULL;
-    impl->tokens_len = 0;
-
-    /* Step 1: determine size of token buffer */
-    int32_t len = 0;
-    for (i = 0; i < term_count; i ++) {
-        ecs_term_t *term = &q->terms[i];
-        
-        if (term->first.name) {
-            len += ecs_os_strlen(term->first.name) + 1;
-        }
-        if (term->second.name) {
-            len += ecs_os_strlen(term->second.name) + 1;
-        }
-        if (term->src.name) {
-            len += ecs_os_strlen(term->src.name) + 1;
-        }
-    }
-
-    /* Step 2: reassign term tokens to buffer */
-    if (len) {
-        impl->tokens = flecs_alloc(&impl->stage->allocator, len);
-        impl->tokens_len = flecs_ito(int16_t, len);
-        char *token = impl->tokens, *next;
-
-        for (i = 0; i < term_count; i ++) {
-            ecs_term_t *term = &q->terms[i];
-            if (term->first.name) {
-                next = flecs_query_append_token(token, term->first.name);
-                term->first.name = token;
-                token = next;
-            }
-            if (term->second.name) {
-                next = flecs_query_append_token(token, term->second.name);
-                term->second.name = token;
-                token = next;
-            }
-            if (term->src.name) {
-                next = flecs_query_append_token(token, term->src.name);
-                term->src.name = token;
-                token = next;
-            }
-        }
-    }
-
-    if (old_tokens) {
-        flecs_free(&impl->stage->allocator, old_tokens_len, old_tokens);
-    }
 }
 
 static
@@ -395,16 +333,15 @@ ecs_query_t* ecs_query_init(
     ecs_assert(flecs_poly_is(result->stage, ecs_stage_t),
         ECS_INTERNAL_ERROR, NULL);
 
+    /* Validate input, translate to canonical query representation */
     if (flecs_query_finalize_query(world, &result->pub, &desc)) {
         goto error;
     }
 
-    /* If query terms have itself as source, add term ids to self */
+    /* If query terms have itself as source, add term ids to self. This makes it
+     * easy to attach components to queries, which is one of the ways
+     * applications can attach data to systems. */
     flecs_query_add_self_ref(&result->pub);
-
-    /* Store remaining string tokens in terms (after entity lookups) in single
-     * token buffer which simplifies memory management & reduces allocations. */
-    flecs_query_populate_tokens(result);
 
     /* Initialize static context */
     result->pub.ctx = const_desc->ctx;

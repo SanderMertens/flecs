@@ -1130,12 +1130,6 @@ struct ecs_iter_t {
  */
 #define EcsQueryMatchEmptyTables      (1u << 3u)
 
-/** Query won't provide component data.
- * Can be combined with other query flags on the ecs_query_desc_t::flags field.
- * \ingroup queries
- */
-#define EcsQueryNoData                (1u << 4u)
-
 /** Query may have unresolved entity identifiers.
  * Can be combined with other query flags on the ecs_query_desc_t::flags field.
  * \ingroup queries

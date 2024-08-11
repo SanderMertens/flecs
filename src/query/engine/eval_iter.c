@@ -96,7 +96,7 @@ void flecs_query_iter_constrain(
              * instruction of a query plan, but because we're not running the
              * query plan when using a specialized iterator mode, manually call
              * the operation on iterator init. */
-            flecs_query_setids(&query->ops[0], false, &ctx);
+            flecs_query_setids(NULL, false, &ctx);
         }
     }
 }

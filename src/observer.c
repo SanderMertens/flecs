@@ -512,9 +512,6 @@ void flecs_multi_observer_invoke(
             }
         }
 
-        ECS_BIT_COND(user_it.flags, EcsIterNoData,    
-            ECS_BIT_IS_SET(o->query->flags, EcsQueryNoData));
-
         /* Patch data from original iterator. If the observer query has 
          * wildcards which triggered the original event, the component id that
          * got matched by ecs_query_has_range may not be the same as the one

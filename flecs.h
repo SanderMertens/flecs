@@ -387,6 +387,7 @@ extern "C" {
 #define EcsIdTag                       (1u << 11)
 #define EcsIdWith                      (1u << 12)
 #define EcsIdCanToggle                 (1u << 13)
+#define EcsIdIsTransitive              (1u << 14)
 
 #define EcsIdHasOnAdd                  (1u << 16) /* Same values as table flags */
 #define EcsIdHasOnRemove               (1u << 17) 
@@ -470,8 +471,7 @@ extern "C" {
 #define EcsQueryHasCacheable          (1u << 23u) /* Query has cacheable terms */
 #define EcsQueryIsCacheable           (1u << 24u) /* All terms of query are cacheable */
 #define EcsQueryHasTableThisVar       (1u << 25u) /* Does query have $this table var */
-#define EcsQueryHasSparseThis         (1u << 26u) /* Does query have $this sparse fields */
-#define EcsQueryCacheYieldEmptyTables      (1u << 27u) /* Does query cache empty tables */
+#define EcsQueryCacheYieldEmptyTables (1u << 27u) /* Does query cache empty tables */
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Term flags (used by ecs_term_t::flags_)
@@ -483,7 +483,6 @@ extern "C" {
 #define EcsTermReflexive              (1u << 3)
 #define EcsTermIdInherited            (1u << 4)
 #define EcsTermIsTrivial              (1u << 5)
-#define EcsTermNoData                 (1u << 6)
 #define EcsTermIsCacheable            (1u << 7)
 #define EcsTermIsScope                (1u << 8)
 #define EcsTermIsMember               (1u << 9)
@@ -1984,11 +1983,11 @@ void* flecs_dup(
 #define flecs_calloc_n(a, T, count) flecs_calloc(a, ECS_SIZEOF(T) * (count))
 
 #define flecs_free(a, size, ptr)\
-    flecs_bfree(flecs_allocator_get(a, size), ptr)
+    flecs_bfree((ptr) ? flecs_allocator_get(a, size) : NULL, ptr)
 #define flecs_free_t(a, T, ptr)\
-    flecs_bfree_w_dbg_info(flecs_allocator_get(a, ECS_SIZEOF(T)), ptr, #T)
+    flecs_bfree_w_dbg_info((ptr) ? flecs_allocator_get(a, ECS_SIZEOF(T)) : NULL, ptr, #T)
 #define flecs_free_n(a, T, count, ptr)\
-    flecs_bfree_w_dbg_info(flecs_allocator_get(a, ECS_SIZEOF(T) * (count))\
+    flecs_bfree_w_dbg_info((ptr) ? flecs_allocator_get(a, ECS_SIZEOF(T) * (count)) : NULL\
         , ptr, #T)
 
 #define flecs_realloc(a, size_dst, size_src, ptr)\
@@ -4271,12 +4270,6 @@ struct ecs_iter_t {
  * \ingroup queries
  */
 #define EcsQueryMatchEmptyTables      (1u << 3u)
-
-/** Query won't provide component data.
- * Can be combined with other query flags on the ecs_query_desc_t::flags field.
- * \ingroup queries
- */
-#define EcsQueryNoData                (1u << 4u)
 
 /** Query may have unresolved entity identifiers.
  * Can be combined with other query flags on the ecs_query_desc_t::flags field.

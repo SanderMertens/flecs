@@ -73,6 +73,7 @@ extern "C" {
 #define EcsIdTag                       (1u << 11)
 #define EcsIdWith                      (1u << 12)
 #define EcsIdCanToggle                 (1u << 13)
+#define EcsIdIsTransitive              (1u << 14)
 
 #define EcsIdHasOnAdd                  (1u << 16) /* Same values as table flags */
 #define EcsIdHasOnRemove               (1u << 17) 
@@ -156,8 +157,7 @@ extern "C" {
 #define EcsQueryHasCacheable          (1u << 23u) /* Query has cacheable terms */
 #define EcsQueryIsCacheable           (1u << 24u) /* All terms of query are cacheable */
 #define EcsQueryHasTableThisVar       (1u << 25u) /* Does query have $this table var */
-#define EcsQueryHasSparseThis         (1u << 26u) /* Does query have $this sparse fields */
-#define EcsQueryCacheYieldEmptyTables      (1u << 27u) /* Does query cache empty tables */
+#define EcsQueryCacheYieldEmptyTables (1u << 27u) /* Does query cache empty tables */
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Term flags (used by ecs_term_t::flags_)
@@ -169,7 +169,6 @@ extern "C" {
 #define EcsTermReflexive              (1u << 3)
 #define EcsTermIdInherited            (1u << 4)
 #define EcsTermIsTrivial              (1u << 5)
-#define EcsTermNoData                 (1u << 6)
 #define EcsTermIsCacheable            (1u << 7)
 #define EcsTermIsScope                (1u << 8)
 #define EcsTermIsMember               (1u << 9)

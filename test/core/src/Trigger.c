@@ -4702,9 +4702,8 @@ void Trigger_on_set_superset_after_filter_observer(void) {
     Probe ctx_1 = {0};
     ecs_observer(world, {
         .query.terms = {
-            { ecs_id(Position) }
+            { ecs_id(Position), .inout = EcsInOutNone }
         },
-        .query.flags = EcsQueryNoData,
         .events = { EcsOnSet },
         .callback = Trigger,
         .ctx = &ctx_1
@@ -4748,9 +4747,8 @@ void Trigger_on_set_superset_after_filter_observer_w_on_add(void) {
     Probe ctx_1 = {0};
     ecs_observer(world, {
         .query.terms = {
-            { ecs_id(Position) }
+            { ecs_id(Position), .inout = EcsInOutNone }
         },
-        .query.flags = EcsQueryNoData,
         .events = { EcsOnAdd },
         .callback = Trigger,
         .ctx = &ctx_1
@@ -4794,9 +4792,8 @@ void Trigger_on_set_superset_after_filter_observer_w_on_add_isa_after_set(void) 
     Probe ctx_1 = {0};
     ecs_observer(world, {
         .query.terms = {
-            { ecs_id(Position), .src.id = EcsUp, .trav = EcsIsA, }
+            { ecs_id(Position), .src.id = EcsUp, .trav = EcsIsA, .inout = EcsInOutNone }
         },
-        .query.flags = EcsQueryNoData,
         .events = { EcsOnAdd },
         .callback = Trigger,
         .ctx = &ctx_1
@@ -4847,9 +4844,8 @@ void Trigger_on_set_superset_after_filter_observer_w_on_add_2(void) {
     Probe ctx_1 = {0};
     ecs_observer(world, { 
         .query.terms = {
-            { ecs_id(Position) }
+            { ecs_id(Position), .inout = EcsInOutNone }
         },
-        .query.flags = EcsQueryNoData,
         .events = { EcsOnAdd },
         .callback = Trigger,
         .ctx = &ctx_1

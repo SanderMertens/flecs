@@ -136,6 +136,21 @@ void Validator_validate_trav_isa_w_any(void);
 void Validator_validate_custom_trav_w_inherit_id(void);
 void Validator_validate_custom_trav_w_inherit_id_w_self_up(void);
 void Validator_validate_custom_trav_w_inherit_id_w_up(void);
+void Validator_validate_simple_1_term_is_cacheable(void);
+void Validator_validate_simple_1_term_pair_is_cacheable(void);
+void Validator_validate_simple_1_term_pair_recycled_is_cacheable(void);
+void Validator_validate_simple_1_term_tag_is_cacheable(void);
+void Validator_validate_simple_2_term_is_cacheable(void);
+void Validator_validate_simple_w_can_inherit(void);
+void Validator_validate_simple_w_can_toggle(void);
+void Validator_validate_simple_w_sparse(void);
+void Validator_validate_simple_w_union(void);
+void Validator_validate_simple_w_union_pair(void);
+void Validator_validate_simple_w_transitive(void);
+void Validator_validate_simple_w_transitive_pair(void);
+void Validator_validate_simple_w_reflexive(void);
+void Validator_validate_simple_w_reflexive_pair(void);
+void Validator_validate_simple_w_inherited_component(void);
 
 // Testsuite 'Parser'
 void Parser_resolve_this(void);
@@ -2541,6 +2556,66 @@ bake_test_case Validator_testcases[] = {
     {
         "validate_custom_trav_w_inherit_id_w_up",
         Validator_validate_custom_trav_w_inherit_id_w_up
+    },
+    {
+        "validate_simple_1_term_is_cacheable",
+        Validator_validate_simple_1_term_is_cacheable
+    },
+    {
+        "validate_simple_1_term_pair_is_cacheable",
+        Validator_validate_simple_1_term_pair_is_cacheable
+    },
+    {
+        "validate_simple_1_term_pair_recycled_is_cacheable",
+        Validator_validate_simple_1_term_pair_recycled_is_cacheable
+    },
+    {
+        "validate_simple_1_term_tag_is_cacheable",
+        Validator_validate_simple_1_term_tag_is_cacheable
+    },
+    {
+        "validate_simple_2_term_is_cacheable",
+        Validator_validate_simple_2_term_is_cacheable
+    },
+    {
+        "validate_simple_w_can_inherit",
+        Validator_validate_simple_w_can_inherit
+    },
+    {
+        "validate_simple_w_can_toggle",
+        Validator_validate_simple_w_can_toggle
+    },
+    {
+        "validate_simple_w_sparse",
+        Validator_validate_simple_w_sparse
+    },
+    {
+        "validate_simple_w_union",
+        Validator_validate_simple_w_union
+    },
+    {
+        "validate_simple_w_union_pair",
+        Validator_validate_simple_w_union_pair
+    },
+    {
+        "validate_simple_w_transitive",
+        Validator_validate_simple_w_transitive
+    },
+    {
+        "validate_simple_w_transitive_pair",
+        Validator_validate_simple_w_transitive_pair
+    },
+    {
+        "validate_simple_w_reflexive",
+        Validator_validate_simple_w_reflexive
+    },
+    {
+        "validate_simple_w_reflexive_pair",
+        Validator_validate_simple_w_reflexive_pair
+    },
+    {
+        "validate_simple_w_inherited_component",
+        Validator_validate_simple_w_inherited_component
     }
 };
 
@@ -10023,7 +10098,7 @@ static bake_test_suite suites[] = {
         "Validator",
         NULL,
         NULL,
-        127,
+        142,
         Validator_testcases
     },
     {

@@ -7085,7 +7085,6 @@ void Observer_multi_observer_table_fill_w_singleton(void) {
             { .id = ecs_id(Position), .src.id = ecs_id(Position)|EcsIsEntity },
             { .id = ecs_id(Velocity) },
         },
-        .query.flags = EcsQueryNoData,
         .callback = Observer,
         .events = { EcsOnTableFill },
         .ctx = &ctx

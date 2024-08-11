@@ -12,7 +12,6 @@ typedef int16_t ecs_query_lbl_t;
 typedef ecs_flags64_t ecs_write_flags_t;
 
 #define flecs_query_impl(query) (ECS_CONST_CAST(ecs_query_impl_t*, query))
-
 #define EcsQueryMaxVarCount     (64)
 #define EcsVarNone              ((ecs_var_id_t)-1)
 #define EcsThisName             "this"
@@ -36,6 +35,10 @@ typedef struct ecs_query_var_t {
     const char *label;     /* for debugging */
 #endif
 } ecs_query_var_t;
+
+/* Placeholder values for queries with only $this variable */
+extern ecs_query_var_t flecs_this_array;
+extern char *flecs_this_name_array;
 
 /* -- Instruction kinds -- */
 typedef enum {
@@ -339,11 +342,6 @@ typedef struct {
     ecs_query_iter_t *qit;
 } ecs_query_run_ctx_t;
 
-typedef struct {
-    ecs_query_var_t var;
-    const char *name;
-} ecs_query_var_cache_t;
-
 struct ecs_query_impl_t {
     ecs_query_t pub;              /* Public query data */
 
@@ -355,23 +353,19 @@ struct ecs_query_impl_t {
     int32_t var_size;             /* Size of variable array */
     ecs_hashmap_t tvar_index;     /* Name index for table variables */
     ecs_hashmap_t evar_index;     /* Name index for entity variables */
-    ecs_query_var_cache_t vars_cache; /* For trivial queries with only This variables */
     ecs_var_id_t *src_vars;       /* Array with ids to source variables for fields */
 
     /* Query plan */
     ecs_query_op_t *ops;          /* Operations */
     int32_t op_count;             /* Number of operations */
 
-    /* Query cache */
-    struct ecs_query_cache_t *cache; /* Cache, if query contains cached terms */
-    int8_t *field_map;            /* Map field indices from cache to query */
-
-    /* Change detection */
-    int32_t *monitor;             /* Change monitor for fields with fixed src */
-
     /* Misc */
     int16_t tokens_len;           /* Length of tokens buffer */
     char *tokens;                 /* Buffer with string tokens used by terms */
+    int32_t *monitor;             /* Change monitor for fields with fixed src */
+
+    /* Query cache */
+    struct ecs_query_cache_t *cache; /* Cache, if query contains cached terms */
 
     /* User context */
     ecs_ctx_free_t ctx_free;         /* Callback to free ctx */
@@ -486,6 +480,9 @@ typedef struct ecs_query_cache_t {
 
     /* Zero'd out sources array, used for results that only match on $this */
     ecs_entity_t *sources;
+
+    /* Map field indices from cache to query */
+    int8_t *field_map;
 
     /* Query-level allocators */
     ecs_query_cache_allocators_t allocators;
