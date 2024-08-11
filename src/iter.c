@@ -146,8 +146,12 @@ void* ecs_field_w_size(
         (it->query && (it->query->flags & EcsQueryMatchEmptyTables)),
             ECS_INTERNAL_ERROR, NULL);
 
+    if (!size) {
+        size = column->ti->size;
+    }
+
     void *data = ecs_vec_first(&column->data);
-    return ECS_ELEM(data, column->size, row);
+    return ECS_ELEM(data, (ecs_size_t)size, row);
 error:
     return NULL;
 }

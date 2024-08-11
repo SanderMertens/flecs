@@ -44,7 +44,7 @@ flecs_component_ptr_t flecs_table_get_component(
     ecs_column_t *column = &table->data.columns[column_index];
     return (flecs_component_ptr_t){
         .ti = column->ti,
-        .ptr = ecs_vec_get(&column->data, column->size, row)
+        .ptr = ecs_vec_get(&column->data, column->ti->size, row)
     };
 error:
     return (flecs_component_ptr_t){0};
@@ -999,7 +999,7 @@ const ecs_entity_t* flecs_bulk_new(
             int32_t index = tr->column;
             ecs_column_t *column = &table->data.columns[index];
             ecs_type_info_t *ti = column->ti;
-            int32_t size = column->size;
+            int32_t size = ti->size;
             ecs_assert(size != 0, ECS_INTERNAL_ERROR, NULL);
             void *ptr = ecs_vec_get(&column->data, size, row);
 
@@ -1016,8 +1016,9 @@ const ecs_entity_t* flecs_bulk_new(
 
         int32_t j, storage_count = table->column_count;
         for (j = 0; j < storage_count; j ++) {
+            ecs_id_t id = flecs_column_id(table, j);
             ecs_type_t set_type = {
-                .array = &table->data.columns[j].id,
+                .array = &id,
                 .count = 1
             };
 
@@ -2851,8 +2852,9 @@ ecs_entity_t ecs_clone(
             row, src_table, ECS_RECORD_TO_ROW(src_r->row), true);
         int32_t i, count = dst_table->column_count;
         for (i = 0; i < count; i ++) {
+            ecs_id_t id = flecs_column_id(dst_table, i);
             ecs_type_t type = {
-                .array = &dst_table->data.columns[i].id,
+                .array = &id,
                 .count = 1
             };
             flecs_notify_on_set(world, dst_table, row, 1, &type, true);

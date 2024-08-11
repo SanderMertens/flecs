@@ -48,9 +48,7 @@ typedef struct ecs_table__t {
 /** Table column */
 typedef struct ecs_column_t {
     ecs_vec_t data;                  /* Vector with component data */
-    ecs_id_t id;                     /* Component id */
     ecs_type_info_t *ti;             /* Component type info */
-    ecs_size_t size;                 /* Component size */
 } ecs_column_t;
 
 /** Table data */
@@ -250,5 +248,9 @@ int32_t flecs_table_get_toggle_column(
 ecs_bitset_t* flecs_table_get_toggle(
     ecs_table_t *table,
     ecs_id_t id);
+
+ecs_id_t flecs_column_id(
+    ecs_table_t *table,
+    int32_t column_index);
 
 #endif
