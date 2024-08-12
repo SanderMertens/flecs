@@ -3196,3 +3196,141 @@ void OnDelete_delete_on_delete_from_disabled(void) {
 
     ecs_fini(world);
 }
+
+void OnDelete_remove_all_1(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_set(world, e1, Position, {10, 20});
+
+    ecs_remove_all(world, ecs_id(Position));
+
+    test_assert(ecs_is_alive(world, e1));
+
+    test_assert(!ecs_has(world, e1, Position));
+
+    test_assert(ecs_lookup(world, "e1") == e1);
+
+    test_int(0, ecs_count(world, Position));
+
+    ecs_fini(world);
+}
+
+void OnDelete_remove_all_2(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
+    ecs_set(world, e1, Position, {10, 20});
+    ecs_set(world, e2, Position, {30, 40});
+
+    ecs_remove_all(world, ecs_id(Position));
+
+    test_assert(ecs_is_alive(world, e1));
+    test_assert(ecs_is_alive(world, e2));
+
+    test_assert(!ecs_has(world, e1, Position));
+    test_assert(!ecs_has(world, e2, Position));
+
+    test_assert(ecs_lookup(world, "e1") == e1);
+    test_assert(ecs_lookup(world, "e2") == e2);
+
+    test_int(0, ecs_count(world, Position));
+
+    ecs_fini(world);
+}
+
+void OnDelete_remove_all_3(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
+    ecs_entity_t e3 = ecs_entity(world, { .name = "e3" });
+    ecs_set(world, e1, Position, {10, 20});
+    ecs_set(world, e2, Position, {30, 40});
+    ecs_set(world, e3, Position, {50, 60});
+
+    ecs_remove_all(world, ecs_id(Position));
+
+    test_assert(ecs_is_alive(world, e1));
+    test_assert(ecs_is_alive(world, e2));
+    test_assert(ecs_is_alive(world, e3));
+
+    test_assert(!ecs_has(world, e1, Position));
+    test_assert(!ecs_has(world, e2, Position));
+    test_assert(!ecs_has(world, e3, Position));
+
+    test_assert(ecs_lookup(world, "e1") == e1);
+    test_assert(ecs_lookup(world, "e2") == e2);
+    test_assert(ecs_lookup(world, "e3") == e3);
+
+    test_int(0, ecs_count(world, Position));
+
+    ecs_fini(world);
+}
+
+void OnDelete_delete_with_1(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_set(world, e1, Position, {10, 20});
+
+    ecs_delete_with(world, ecs_id(Position));
+
+    test_assert(!ecs_is_alive(world, e1));
+
+    test_int(0, ecs_count(world, Position));
+
+    ecs_fini(world);
+}
+
+void OnDelete_delete_with_2(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
+    ecs_set(world, e1, Position, {10, 20});
+    ecs_set(world, e2, Position, {30, 40});
+
+    ecs_delete_with(world, ecs_id(Position));
+
+    test_assert(!ecs_is_alive(world, e1));
+    test_assert(!ecs_is_alive(world, e2));
+
+    test_int(0, ecs_count(world, Position));
+
+    ecs_fini(world);
+}
+
+void OnDelete_delete_with_3(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e1 = ecs_entity(world, { .name = "e1" });
+    ecs_entity_t e2 = ecs_entity(world, { .name = "e2" });
+    ecs_entity_t e3 = ecs_entity(world, { .name = "e3" });
+    ecs_set(world, e1, Position, {10, 20});
+    ecs_set(world, e2, Position, {30, 40});
+    ecs_set(world, e3, Position, {50, 60});
+
+    ecs_delete_with(world, ecs_id(Position));
+
+    test_assert(!ecs_is_alive(world, e1));
+    test_assert(!ecs_is_alive(world, e2));
+    test_assert(!ecs_is_alive(world, e3));
+
+    test_int(0, ecs_count(world, Position));
+
+    ecs_fini(world);
+}

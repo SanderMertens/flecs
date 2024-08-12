@@ -372,8 +372,8 @@ void* flecs_defer_set(
             if (tr) {
                 if (tr->column != -1) {
                     /* Entity has the component */
-                    ecs_vec_t *column = &table->data.columns[tr->column].data;
-                    existing = ecs_vec_get(column, size, 
+                    existing = table->data.columns[tr->column].data;
+                    existing = ECS_ELEM(existing, size, 
                         ECS_RECORD_TO_ROW(r->row));
                 } else {
                     ecs_assert(idr->flags & EcsIdIsSparse, 

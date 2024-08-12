@@ -193,7 +193,7 @@ bool ecs_query_next(
 trivial_search_yield:
     it->table = ctx.vars[0].range.table;
     it->count = ecs_table_count(it->table);
-    it->entities = flecs_table_entities_array(it->table);
+    it->entities = ecs_table_entities(it->table);
 
 yield:
     return true;

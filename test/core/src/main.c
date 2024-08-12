@@ -848,6 +848,12 @@ void OnDelete_add_on_delete_from_prefab(void);
 void OnDelete_add_on_delete_from_disabled(void);
 void OnDelete_delete_on_delete_from_prefab(void);
 void OnDelete_delete_on_delete_from_disabled(void);
+void OnDelete_remove_all_1(void);
+void OnDelete_remove_all_2(void);
+void OnDelete_remove_all_3(void);
+void OnDelete_delete_with_1(void);
+void OnDelete_delete_with_2(void);
+void OnDelete_delete_with_3(void);
 
 // Testsuite 'Set'
 void Set_set_empty(void);
@@ -5368,6 +5374,30 @@ bake_test_case OnDelete_testcases[] = {
     {
         "delete_on_delete_from_disabled",
         OnDelete_delete_on_delete_from_disabled
+    },
+    {
+        "remove_all_1",
+        OnDelete_remove_all_1
+    },
+    {
+        "remove_all_2",
+        OnDelete_remove_all_2
+    },
+    {
+        "remove_all_3",
+        OnDelete_remove_all_3
+    },
+    {
+        "delete_with_1",
+        OnDelete_delete_with_1
+    },
+    {
+        "delete_with_2",
+        OnDelete_delete_with_2
+    },
+    {
+        "delete_with_3",
+        OnDelete_delete_with_3
     }
 };
 
@@ -10452,7 +10482,7 @@ static bake_test_suite suites[] = {
         "OnDelete",
         NULL,
         NULL,
-        118,
+        124,
         OnDelete_testcases
     },
     {

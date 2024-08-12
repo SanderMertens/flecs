@@ -891,7 +891,13 @@
                 "add_on_delete_from_prefab",
                 "add_on_delete_from_disabled",
                 "delete_on_delete_from_prefab",
-                "delete_on_delete_from_disabled"
+                "delete_on_delete_from_disabled",
+                "remove_all_1",
+                "remove_all_2",
+                "remove_all_3",
+                "delete_with_1",
+                "delete_with_2",
+                "delete_with_3"
             ]
         }, {
             "id": "Set",

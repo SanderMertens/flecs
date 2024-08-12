@@ -213,7 +213,7 @@ bool flecs_json_serialize_table_pairs(
         
         if (second == EcsUnion) {
             ecs_assert(row < ecs_table_count(table), ECS_INTERNAL_ERROR, NULL);
-            ecs_entity_t e = flecs_table_entities_array(table)[row];
+            ecs_entity_t e = ecs_table_entities(table)[row];
             second = ecs_get_target(world, e, first, 0);
         }
 
@@ -263,14 +263,14 @@ int flecs_json_serialize_table_components(
         if (column_index != -1) {
             ecs_column_t *column = &table->data.columns[column_index];
             ti = column->ti;
-            ptr = ecs_vec_get(&column->data, ti->size, row);
+            ptr = ECS_ELEM(column->data, ti->size, row);
         } else {
             const ecs_table_record_t *tr = &table->_->records[i];
             ecs_id_record_t *idr = (ecs_id_record_t*)tr->hdr.cache;
             if (!(idr->flags & EcsIdIsSparse)) {
                 continue;
             }
-            ecs_entity_t e = flecs_table_entities_array(table)[row];
+            ecs_entity_t e = ecs_table_entities(table)[row];
             ptr = flecs_sparse_get_any(idr->sparse, 0, e);
             ti = idr->type_info;
         }

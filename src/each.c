@@ -56,7 +56,7 @@ bool ecs_each_next(
         ecs_table_t *table = next->hdr.table;
         it->table = table;
         it->count = ecs_table_count(table);
-        it->entities = flecs_table_entities_array(table);
+        it->entities = ecs_table_entities(table);
         it->ids = &table->type.array[next->index];
         it->trs = &each_iter->trs;
         it->sources = &each_iter->sources;
