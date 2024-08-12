@@ -863,6 +863,7 @@ void Observer_run_callback_w_yield_existing_2_fields(void);
 void Observer_get_query(void);
 void Observer_on_set_w_set(void);
 void Observer_on_set_w_defer_set(void);
+void Observer_on_set_w_set_sparse(void);
 void Observer_on_add_singleton(void);
 void Observer_on_add_pair_singleton(void);
 void Observer_on_add_pair_wildcard_singleton(void);
@@ -4684,6 +4685,10 @@ bake_test_case Observer_testcases[] = {
         Observer_on_set_w_defer_set
     },
     {
+        "on_set_w_set_sparse",
+        Observer_on_set_w_set_sparse
+    },
+    {
         "on_add_singleton",
         Observer_on_add_singleton
     },
@@ -6586,7 +6591,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        45,
+        46,
         Observer_testcases
     },
     {

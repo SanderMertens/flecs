@@ -778,6 +778,26 @@ void Observer_on_set_w_defer_set(void) {
     test_int(count, 1);
 }
 
+void Observer_on_set_w_set_sparse(void) {
+    flecs::world world;
+
+    world.component<Position>().add(flecs::Sparse);
+
+    int32_t count = 0;
+
+    world.observer<Position>()
+        .event(flecs::OnSet)
+        .each([&](flecs::entity e, Position& p) {
+            count ++;          
+        });
+
+    flecs::entity e = world.entity();
+    test_int(count, 0);
+
+    e.set<Position>({10, 20});
+    test_int(count, 1);
+}
+
 #include <iostream>
 
 void Observer_on_add_singleton(void) {
