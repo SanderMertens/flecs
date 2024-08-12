@@ -75,8 +75,8 @@ int flecs_json_serialize_matches(
                 ecs_table_t *table = tr->hdr.table;
                 EcsPoly *queries = ecs_table_get_column(table, tr->column, 0);
 
+                ecs_entity_t *entities = ecs_table_entities(table);
                 int32_t i, count = ecs_table_count(table);
-                ecs_entity_t *entities = ecs_vec_first(&table->data.entities);
                 for (i = 0; i < count; i ++) {
                     ecs_query_t *q = queries[i].poly;
                     if (!q) {
@@ -129,8 +129,8 @@ int flecs_json_serialize_refs_idr(
         const ecs_table_record_t *tr;
         while ((tr = flecs_table_cache_next(&it, ecs_table_record_t))) {
             ecs_table_t *table = tr->hdr.table;
+            ecs_entity_t *entities = ecs_table_entities(table);
             int32_t i, count = ecs_table_count(table);
-            ecs_entity_t *entities = ecs_vec_first(&table->data.entities);
             for (i = 0; i < count; i ++) {
                 ecs_entity_t e = entities[i];
                 flecs_json_next(buf);
@@ -423,7 +423,7 @@ int flecs_json_serialize_iter_result(
     } else {
         ecs_table_t *table = it->table;
         if (table) {
-            this_data.ids = &flecs_table_entities_array(table)[it->offset];
+            this_data.ids = &ecs_table_entities(table)[it->offset];
 
             /* Get path to parent once for entire table */
             if (table->flags & EcsTableHasChildOf) {

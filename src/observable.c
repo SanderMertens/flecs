@@ -276,7 +276,7 @@ void flecs_emit_propagate_id(
         it->offset = 0;
         it->count = entity_count;
         if (entity_count) {
-            it->entities = ecs_vec_first(&table->data.entities);
+            it->entities = ecs_table_entities(table);
         }
 
         /* Treat as new event as this could invoke observers again for
@@ -298,7 +298,7 @@ void flecs_emit_propagate_id(
             continue;
         }
 
-        ecs_entity_t *entities = ecs_vec_first(&table->data.entities);
+        ecs_entity_t *entities = ecs_table_entities(table);
         for (e = 0; e < entity_count; e ++) {
             ecs_record_t *r = flecs_entities_get(world, entities[e]);
             ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -392,7 +392,7 @@ void flecs_emit_propagate_invalidate_tables(
             }
 
             int32_t e, entity_count = ecs_table_count(table);
-            ecs_entity_t *entities = ecs_vec_first(&table->data.entities);
+            ecs_entity_t *entities = ecs_table_entities(table);
 
             for (e = 0; e < entity_count; e ++) {
                 ecs_record_t *r = flecs_entities_get(world, entities[e]);
@@ -413,8 +413,7 @@ void flecs_emit_propagate_invalidate(
     int32_t offset,
     int32_t count)
 {
-    ecs_entity_t *entities = ecs_vec_get_t(&table->data.entities, 
-        ecs_entity_t, offset);
+    ecs_entity_t *entities = &ecs_table_entities(table)[offset];
     int32_t i;
     for (i = 0; i < count; i ++) {
         ecs_record_t *record = flecs_entities_get(world, entities[i]);
@@ -511,8 +510,7 @@ void flecs_override_copy(
 
     ecs_iter_action_t on_set = ti->hooks.on_set;
     if (on_set) {
-        ecs_entity_t *entities = ecs_vec_get_t(
-            &table->data.entities, ecs_entity_t, offset);
+        ecs_entity_t *entities = &ecs_table_entities(table)[offset];
         flecs_invoke_hook(world, table, tr, count, offset, entities,
             ti->component, ti, EcsOnSet, on_set);
     }
@@ -553,7 +551,7 @@ void* flecs_override(
 
             ecs_column_t *column = &table->data.columns[index];
             ecs_size_t size = column->ti->size;
-            return ecs_vec_get(&column->data, size, it->offset);
+            return ECS_ELEM(column->data, size, it->offset);
         }
     }
 
@@ -1043,7 +1041,7 @@ void flecs_emit_forward(
     /* Propagate events for new reachable ids downwards */
     if (table->_->traversable_count) {
         int32_t i;
-        ecs_entity_t *entities = flecs_table_entities_array(table);
+        ecs_entity_t *entities = ecs_table_entities(table);
         entities = ECS_ELEM_T(entities, ecs_entity_t, it->offset);
         for (i = 0; i < it->count; i ++) {
             ecs_record_t *r = flecs_entities_get(world, entities[i]);
@@ -1177,7 +1175,7 @@ void flecs_emit(
     if (count) {
         storage = &table->data;
         columns = storage->columns;
-        it.entities = ecs_vec_get_t(&storage->entities, ecs_entity_t, offset);
+        it.entities = &ecs_table_entities(table)[offset];
     }
 
     int32_t id_count = ids->count;
@@ -1291,8 +1289,8 @@ repeat_event:
                             ecs_record_t *base_r = flecs_entities_get(world, base);
                             ecs_assert(base_r != NULL, ECS_INTERNAL_ERROR, NULL);
                             int32_t base_row = ECS_RECORD_TO_ROW(base_r->row);
-                            ecs_vec_t *base_v = &base_table->data.columns[base_column].data;
-                            override_ptr = ecs_vec_get(base_v, ti->size, base_row);
+                            override_ptr = base_table->data.columns[base_column].data;
+                            override_ptr = ECS_ELEM(override_ptr, ti->size, base_row);
                         }
                     }
                 }
@@ -1341,12 +1339,12 @@ repeat_event:
                     ecs_assert(count == 1, ECS_UNSUPPORTED, 
                         "events for multiple entities are currently unsupported"
                         " for sparse components");
-                    ecs_entity_t e = flecs_table_entities_array(table)[offset];
+                    ecs_entity_t e = ecs_table_entities(table)[offset];
                     ptr = flecs_sparse_get(idr->sparse, 0, e);
                 } else{
                     ecs_assert(idr->type_info != NULL, ECS_INTERNAL_ERROR, NULL);
                     ecs_column_t *c = &columns[storage_i];
-                    ptr = ecs_vec_get(&c->data, size, offset);
+                    ptr = ECS_ELEM(c->data, size, offset);
                 }
 
                 /* safe, owned by observer */

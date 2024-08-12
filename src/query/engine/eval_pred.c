@@ -58,8 +58,7 @@ bool flecs_query_pred_eq_w_range(
         ecs_var_id_t l = src_var;
         ctx->vars[l].range = r;
         if (r.count == 1) {
-            ctx->vars[l].entity = ecs_vec_get_t(&r.table->data.entities, 
-                ecs_entity_t, r.offset)[0];
+            ctx->vars[l].entity = ecs_table_entities(r.table)[r.offset];
         }
         return true;
     } else {
@@ -231,7 +230,7 @@ bool flecs_query_pred_match(
         l = op_ctx->range;
     }
 
-    const EcsIdentifier *names = l.table->data.columns[op_ctx->name_col].data.array;
+    const EcsIdentifier *names = l.table->data.columns[op_ctx->name_col].data;
     int32_t count = l.offset + l.count, offset = -1;
     for (; op_ctx->index < count; op_ctx->index ++) {
         const char *name = names[op_ctx->index].value;

@@ -15,26 +15,25 @@ void flecs_query_cache_sort_table(
     ecs_order_by_action_t compare,
     ecs_sort_table_action_t sort)
 {
-    ecs_data_t *data = &table->data;
-    if (!ecs_vec_count(&data->entities)) {
+    int32_t count = ecs_table_count(table);
+    if (!count) {
         /* Nothing to sort */
         return;
     }
-
-    int32_t count = flecs_table_data_count(data);
+    
     if (count < 2) {
         return;
     }
 
-    ecs_entity_t *entities = ecs_vec_first(&data->entities);
+    ecs_entity_t *entities = ecs_table_entities(table);
 
     void *ptr = NULL;
     int32_t size = 0;
     if (column_index != -1) {
-        ecs_column_t *column = &data->columns[column_index];
+        ecs_column_t *column = &table->data.columns[column_index];
         ecs_type_info_t *ti = column->ti;
         size = ti->size;
-        ptr = ecs_vec_first(&column->data);
+        ptr = column->data;
     }
 
     if (sort) {
@@ -106,7 +105,6 @@ void flecs_query_cache_build_sorted_table_range(
     ecs_query_cache_table_match_t *cur, *end = list->last->next;
     for (cur = list->first; cur != end; cur = cur->next) {
         ecs_table_t *table = cur->table;
-        ecs_data_t *data = &table->data;
 
         if (ecs_table_count(table) == 0) {
             continue;
@@ -118,9 +116,9 @@ void flecs_query_cache_build_sorted_table_range(
             ecs_size_t size = cache->query->sizes[field];
             ecs_entity_t src = cur->sources[field];
             if (src == 0) {
-                int32_t column = cur->trs[field]->column;
-                ecs_vec_t *vec = &data->columns[column].data;
-                helper[to_sort].ptr = ecs_vec_first(vec);
+                int32_t column_index = cur->trs[field]->column;
+                ecs_column_t *column = &table->data.columns[column_index];
+                helper[to_sort].ptr = column->data;
                 helper[to_sort].elem_size = size;
                 helper[to_sort].shared = false;
             } else {
@@ -151,7 +149,7 @@ void flecs_query_cache_build_sorted_table_range(
         }
 
         helper[to_sort].match = cur;
-        helper[to_sort].entities = ecs_vec_first(&data->entities);
+        helper[to_sort].entities = ecs_table_entities(table);
         helper[to_sort].row = 0;
         helper[to_sort].count = ecs_table_count(table);
         to_sort ++;      

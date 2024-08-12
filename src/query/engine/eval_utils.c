@@ -20,8 +20,7 @@ void flecs_query_set_iter_this(
         it->table = table;
         it->offset = range->offset;
         it->count = count;
-        it->entities = ECS_ELEM_T(
-            table->data.entities.array, ecs_entity_t, it->offset);
+        it->entities = &ecs_table_entities(table)[it->offset];
     } else if (count == 1) {
         it->count = 1;
         it->entities = &ctx->vars[0].entity;
@@ -155,7 +154,7 @@ ecs_entity_t flecs_query_var_get_entity(
 
     ecs_assert(var->range.count == 1, ECS_INTERNAL_ERROR, NULL);
     ecs_table_t *table = var->range.table;
-    ecs_entity_t *entities = table->data.entities.array;
+    ecs_entity_t *entities = ecs_table_entities(table);
     var->entity = entities[var->range.offset];
     return var->entity;
 }
@@ -209,7 +208,7 @@ void flecs_query_var_narrow_range(
     ecs_assert(var_id < ctx->query->var_count, ECS_INTERNAL_ERROR, NULL);
     if (ctx->query_vars[var_id].kind != EcsVarTable) {    
         ecs_assert(count == 1, ECS_INTERNAL_ERROR, NULL);
-        var->entity = flecs_table_entities_array(table)[offset];
+        var->entity = ecs_table_entities(table)[offset];
     }
 }
 

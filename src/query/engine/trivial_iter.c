@@ -161,7 +161,7 @@ next:
 
         it->table = table;
         it->count = ecs_table_count(table);
-        it->entities = flecs_table_entities_array(table);
+        it->entities = ecs_table_entities(table);
         it->trs[0] = tr;
     }
 
@@ -205,7 +205,7 @@ bool flecs_query_trivial_test(
             it->trs[term->field_index] = tr;
         }
 
-        it->entities = flecs_table_entities_array(table);
+        it->entities = ecs_table_entities(table);
         if (it->entities) {
             it->entities = &it->entities[it->offset];
         }

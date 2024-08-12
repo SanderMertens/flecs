@@ -50,7 +50,7 @@ int ecs_entity_to_json_buf(
         .table = r->table,
         .offset = row,
         .count = 1,
-        .entities = &flecs_table_entities_array(r->table)[row],
+        .entities = &ecs_table_entities(r->table)[row],
         .field_count = 0
     };
 

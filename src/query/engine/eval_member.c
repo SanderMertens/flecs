@@ -64,7 +64,7 @@ bool flecs_query_member_cmp(
 
     int32_t offset = (int32_t)op->first.entity;
     int32_t size = (int32_t)(op->first.entity >> 32);
-    ecs_entity_t *entities = table->data.entities.array;
+    ecs_entity_t *entities = ecs_table_entities(table);
     ecs_entity_t e = 0;
     ecs_entity_t *val;
 

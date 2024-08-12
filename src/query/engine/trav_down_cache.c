@@ -66,7 +66,7 @@ ecs_trav_down_t* flecs_trav_table_down(
 
     ecs_assert(idr_with != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_entity_t *entities = ecs_vec_first(&table->data.entities);
+    ecs_entity_t *entities = ecs_table_entities(table);
     int32_t i, count = ecs_table_count(table);
     for (i = 0; i < count; i ++) {
         ecs_entity_t entity = entities[i];
@@ -122,7 +122,7 @@ void flecs_trav_entity_down_isa(
                 continue;
             }
 
-            ecs_entity_t *entities = ecs_vec_first(&table->data.entities);
+            ecs_entity_t *entities = ecs_table_entities(table);
             int32_t i, count = ecs_table_count(table);
             for (i = 0; i < count; i ++) {
                 ecs_entity_t e = entities[i];

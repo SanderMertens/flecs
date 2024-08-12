@@ -142,16 +142,15 @@ void* ecs_field_w_size(
     ecs_assert(column_index < table->column_count, ECS_INTERNAL_ERROR, NULL);
 
     ecs_column_t *column = &table->data.columns[column_index];
-    ecs_assert((row < ecs_vec_count(&column->data)) ||
+    ecs_assert((row < table->data.count) ||
         (it->query && (it->query->flags & EcsQueryMatchEmptyTables)),
             ECS_INTERNAL_ERROR, NULL);
 
     if (!size) {
-        size = column->ti->size;
+        size = (size_t)column->ti->size;
     }
 
-    void *data = ecs_vec_first(&column->data);
-    return ECS_ELEM(data, (ecs_size_t)size, row);
+    return ECS_ELEM(column->data, (ecs_size_t)size, row);
 error:
     return NULL;
 }
@@ -185,7 +184,7 @@ void* ecs_field_at_w_size(
 
     ecs_entity_t src = it->sources[index];
     if (!src) {
-        src = flecs_table_entities_array(it->table)[row];
+        src = ecs_table_entities(it->table)[row];
     }
 
     return flecs_sparse_get_any(idr->sparse, flecs_uto(int32_t, size), src);
@@ -506,8 +505,7 @@ ecs_entity_t ecs_iter_get_var(
             if ((var->range.count == 1) || (ecs_table_count(table) == 1)) {
                 ecs_assert(ecs_table_count(table) > var->range.offset,
                     ECS_INTERNAL_ERROR, NULL);
-                e = ecs_vec_get_t(&table->data.entities, ecs_entity_t,
-                    var->range.offset)[0];
+                e = ecs_table_entities(table)[var->range.offset];
             }
         }
     } else {
@@ -682,8 +680,7 @@ void ecs_iter_set_var_as_range(
 
     if (range->count == 1) {
         ecs_table_t *table = range->table;
-        var->entity = ecs_vec_get_t(
-            &table->data.entities, ecs_entity_t, range->offset)[0];
+        var->entity = ecs_table_entities(table)[range->offset];
     } else {
         var->entity = 0;
     }
@@ -788,7 +785,7 @@ bool ecs_page_next(
                 it->offset = offset;
                 count = it->count -= offset;
                 it->entities = 
-                    &(flecs_table_entities_array(it->table)[it->offset]);
+                    &(ecs_table_entities(it->table)[it->offset]);
             }
         }
 
@@ -895,7 +892,7 @@ bool ecs_worker_next(
     it->count = per_worker;
     it->offset += first;
 
-    it->entities = &(flecs_table_entities_array(it->table)[it->offset]);
+    it->entities = &(ecs_table_entities(it->table)[it->offset]);
 
     return true;
 error:

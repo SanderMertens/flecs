@@ -8790,16 +8790,35 @@ size_t ecs_table_get_column_size(
     const ecs_table_t *table,
     int32_t index);
 
-/** Returns the number of records in the table.
- * This operation returns the number of records that have been populated through
- * the regular (entity) API as well as the number of records that have been
- * inserted using the direct access API.
+/** Returns the number of entities in the table.
+ * This operation returns the number of entities in the table.
  *
  * @param table The table.
- * @return The number of records in a table.
+ * @return The number of entities in the table.
  */
 FLECS_API
 int32_t ecs_table_count(
+    const ecs_table_t *table);
+
+/** Returns allocated size of table.
+ * This operation returns the number of elements allocated in the table 
+ * per column.
+ * 
+ * @param table The table.
+ * @return The number of allocated elements in the table.
+ */
+FLECS_API
+int32_t ecs_table_size(
+    const ecs_table_t *table);
+
+/** Returns array with entity ids for table.
+ * The size of the returned array is the result of ecs_table_count().
+ * 
+ * @param table The table.
+ * @return Array with entity ids for table.
+ */
+FLECS_API
+ecs_entity_t* ecs_table_entities(
     const ecs_table_t *table);
 
 /** Test if table has id.
