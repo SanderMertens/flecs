@@ -117,7 +117,8 @@ struct ecs_table_t {
     ecs_graph_node_t node;           /* Graph node */
     
     int32_t *dirty_state;            /* Keep track of changes in columns */
-    int32_t *column_map;             /* Map type index <-> column
+    int16_t *component_map;          /* Get column for component id */
+    int16_t *column_map;             /* Map type index <-> column
                                       *  - 0..count(T):        type index -> column
                                       *  - count(T)..count(C): column -> type index
                                       */

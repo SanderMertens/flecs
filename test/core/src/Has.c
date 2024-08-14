@@ -261,14 +261,15 @@ void Has_has_entity_owned_0(void) {
 }
 
 void Has_has_entity_owned_0_component(void) {
+    install_test_abort();
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t e = ecs_new(world);
     test_assert(e != 0);
 
-    test_assert( ecs_owns_id(world, e, 0) == false);
-
-    ecs_fini(world);
+    test_expect_abort();
+    bool dummy = ecs_owns_id(world, e, 0);
+    test_assert(!dummy); // should not reach this code
 }
 
 void Has_has_wildcard(void) {

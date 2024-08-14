@@ -75,9 +75,9 @@ bool flecs_json_serialize_table_tags(
     ecs_strbuf_t *buf,
     const ecs_iter_to_json_desc_t *desc)
 {
-    int32_t f, type_count = table->type.count;
+    int16_t f, type_count = flecs_ito(int16_t, table->type.count);
     ecs_id_t *ids = table->type.array;
-    int32_t *column_map = table->column_map;
+    int16_t *column_map = table->column_map;
     
     int32_t tag_count = 0;
     ecs_table_record_t *trs = table->_->records;
@@ -137,9 +137,9 @@ bool flecs_json_serialize_table_pairs(
     ecs_strbuf_t *buf,
     const ecs_iter_to_json_desc_t *desc)
 {
-    int32_t f, type_count = table->type.count;
+    int16_t f, type_count = flecs_ito(int16_t, table->type.count);
     ecs_id_t *ids = table->type.array;
-    int32_t *column_map = table->column_map;
+    int16_t *column_map = table->column_map;
     
     int32_t pair_count = 0;
     bool same_first = false;

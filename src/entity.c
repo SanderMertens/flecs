@@ -1121,11 +1121,34 @@ flecs_component_ptr_t flecs_ensure(
         ECS_HAS_ID_FLAG(id, PAIR), ECS_INVALID_PARAMETER,
             "invalid component id specified for ensure");
 
-    ecs_id_record_t *idr = flecs_id_record_get(world, id);
-    if (r->table) {
-        dst = flecs_get_component_ptr(r->table, ECS_RECORD_TO_ROW(r->row), idr);
-        if (dst.ptr) {
-            return dst;
+    ecs_id_record_t *idr = NULL;
+    ecs_table_t *table;
+    if ((table = r->table)) {
+        if (id < FLECS_HI_COMPONENT_ID) {
+            int16_t column_index = table->component_map[id];
+            if (column_index > 0) {
+                ecs_column_t *column = &table->data.columns[column_index - 1];
+                ecs_type_info_t *ti = column->ti;
+                dst.ptr = ECS_ELEM(column->data, ti->size, 
+                    ECS_RECORD_TO_ROW(r->row));
+                dst.ti = ti;
+                return dst;
+            } else if (column_index < 0) {
+                column_index = flecs_ito(int16_t, -column_index - 1);
+                const ecs_table_record_t *tr = &table->_->records[column_index];
+                idr = (ecs_id_record_t*)tr->hdr.cache;
+                if (idr->flags & EcsIdIsSparse) {
+                    dst.ptr = flecs_sparse_get_any(idr->sparse, 0, entity);
+                    dst.ti = idr->type_info;
+                    return dst;
+                }
+            }
+        } else {
+            idr = flecs_id_record_get(world, id);
+            dst = flecs_get_component_ptr(table, ECS_RECORD_TO_ROW(r->row), idr);
+            if (dst.ptr) {
+                return dst;
+            }
         }
     }
 
@@ -2865,6 +2888,22 @@ error:
     return 0;
 }
 
+#define ecs_get_low_id(table, r, id)\
+    ecs_assert(table->component_map != NULL, ECS_INTERNAL_ERROR, NULL);\
+    int16_t column_index = table->component_map[id];\
+    if (column_index > 0) {\
+        ecs_column_t *column = &table->data.columns[column_index - 1];\
+        return ECS_ELEM(column->data, column->ti->size, \
+            ECS_RECORD_TO_ROW(r->row));\
+    } else if (column_index < 0) {\
+        column_index = flecs_ito(int16_t, -column_index - 1);\
+        const ecs_table_record_t *tr = &table->_->records[column_index];\
+        ecs_id_record_t *idr = (ecs_id_record_t*)tr->hdr.cache;\
+        if (idr->flags & EcsIdIsSparse) {\
+            return flecs_sparse_get_any(idr->sparse, 0, entity);\
+        }\
+    }
+
 const void* ecs_get_id(
     const ecs_world_t *world,
     ecs_entity_t entity,
@@ -2881,6 +2920,13 @@ const void* ecs_get_id(
     ecs_table_t *table = r->table;
     if (!table) {
         return NULL;
+    }
+
+    if (id < FLECS_HI_COMPONENT_ID) {
+        ecs_get_low_id(table, r, id);
+        if (!(table->flags & EcsTableHasIsA)) {
+            return NULL;
+        }
     }
 
     ecs_id_record_t *idr = flecs_id_record_get(world, id);
@@ -2919,6 +2965,11 @@ void* ecs_get_mut_id(
 
     ecs_table_t *table = r->table;
     if (!table) {
+        return NULL;
+    }
+
+    if (id < FLECS_HI_COMPONENT_ID) {
+        ecs_get_low_id(table, r, id);
         return NULL;
     }
 
@@ -3526,12 +3577,17 @@ bool ecs_has_id(
         return false;
     }
 
-    ecs_id_record_t *idr = flecs_id_record_get(world, id);
-    int32_t column;
-    if (idr) {
-        ecs_table_record_t *tr = flecs_id_record_get_table(idr, table);
-        if (tr) {
+    if (id < FLECS_HI_COMPONENT_ID) {
+        if (table->component_map[id] != 0) {
             return true;
+        }
+    } else {
+        ecs_id_record_t *idr = flecs_id_record_get(world, id);
+        if (idr) {
+            ecs_table_record_t *tr = flecs_id_record_get_table(idr, table);
+            if (tr) {
+                return true;
+            }
         }
     }
 
@@ -3549,7 +3605,7 @@ bool ecs_has_id(
     }
 
     ecs_table_record_t *tr;
-    column = ecs_search_relation(world, table, 0, id, 
+    int32_t column = ecs_search_relation(world, table, 0, id, 
         EcsIsA, 0, 0, 0, &tr);
     if (column == -1) {
         return false;
@@ -3565,7 +3621,34 @@ bool ecs_owns_id(
     ecs_entity_t entity,
     ecs_id_t id)
 {
-    return (ecs_search(world, ecs_get_table(world, entity), id, 0) != -1);
+    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ecs_is_alive(world, entity), ECS_INVALID_PARAMETER, NULL);
+    ecs_check(id != 0, ECS_INVALID_PARAMETER, NULL);
+
+    /* Make sure we're not working with a stage */
+    world = ecs_get_world(world);
+
+    ecs_record_t *r = flecs_entities_get_any(world, entity);
+    ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_table_t *table = r->table;
+    if (!table) {
+        return false;
+    }
+
+    if (id < FLECS_HI_COMPONENT_ID) {
+        return table->component_map[id] != 0;
+    } else {
+        ecs_id_record_t *idr = flecs_id_record_get(world, id);
+        if (idr) {
+            ecs_table_record_t *tr = flecs_id_record_get_table(idr, table);
+            if (tr) {
+                return true;
+            }
+        }
+    }
+
+error:
+    return false;
 }
 
 ecs_entity_t ecs_get_target(

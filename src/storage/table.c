@@ -55,7 +55,7 @@ void flecs_table_check_sanity(
         int32_t column_count = table->column_count;
         ecs_assert(type_count >= column_count, ECS_INTERNAL_ERROR, NULL);
 
-        int32_t *column_map = table->column_map;
+        int16_t *column_map = table->column_map;
         ecs_assert(column_map != NULL, ECS_INTERNAL_ERROR, NULL);
         ecs_assert(table->data.columns != NULL, ECS_INTERNAL_ERROR, NULL);
 
@@ -130,23 +130,33 @@ void flecs_table_init_columns(
     ecs_table_t *table,
     int32_t column_count)
 {
+    int16_t i, cur = 0, ids_count = flecs_ito(int16_t, table->type.count);
+
+    for (i = 0; i < ids_count; i ++) {
+        ecs_id_t id = table->type.array[i];
+        if (id < FLECS_HI_COMPONENT_ID) {
+            table->component_map[id] = flecs_ito(int16_t, -(i + 1));
+        }
+    }
+
     if (!column_count) {
         return;
     }
 
-    int32_t i, cur = 0, ids_count = table->type.count;
     ecs_column_t *columns = flecs_wcalloc_n(world, ecs_column_t, column_count);
     table->data.columns = columns;
 
     ecs_id_t *ids = table->type.array;
     ecs_table_record_t *records = table->_->records;
-    int32_t *t2s = table->column_map;
-    int32_t *s2t = &table->column_map[ids_count];
+    int16_t *t2s = table->column_map;
+    int16_t *s2t = &table->column_map[ids_count];
 
     for (i = 0; i < ids_count; i ++) {
+        ecs_id_t id = table->type.array[i];
         ecs_table_record_t *tr = &records[i];
         ecs_id_record_t *idr = (ecs_id_record_t*)tr->hdr.cache;
         const ecs_type_info_t *ti = idr->type_info;
+
         if (!ti || (idr->flags & EcsIdIsSparse)) {
             t2s[i] = -1;
             continue;
@@ -157,6 +167,10 @@ void flecs_table_init_columns(
         tr->column = flecs_ito(int16_t, cur);
 
         columns[cur].ti = ECS_CONST_CAST(ecs_type_info_t*, ti);
+        
+        if (id < FLECS_HI_COMPONENT_ID) {
+            table->component_map[id] = flecs_ito(int16_t, cur + 1);
+        }
 
         if (ECS_IS_PAIR(ids[i])) {
             ecs_table_record_t *wc_tr = flecs_id_record_get_table(
@@ -555,8 +569,11 @@ void flecs_table_init(
         }
     }
 
+    table->component_map = flecs_wcalloc_n(
+        world, int16_t, FLECS_HI_COMPONENT_ID);
+
     if (column_count) {
-        table->column_map = flecs_walloc_n(world, int32_t, 
+        table->column_map = flecs_walloc_n(world, int16_t, 
             dst_count + column_count);
     }
 
@@ -989,8 +1006,9 @@ void flecs_table_fini(
     }
 
     flecs_wfree_n(world, int32_t, table->column_count + 1, table->dirty_state);
-    flecs_wfree_n(world, int32_t, table->column_count + table->type.count, 
+    flecs_wfree_n(world, int16_t, table->column_count + table->type.count, 
         table->column_map);
+    flecs_wfree_n(world, int16_t, FLECS_HI_COMPONENT_ID, table->component_map);
     flecs_table_records_unregister(world, table);
 
     /* Update counters */
@@ -2265,7 +2283,7 @@ int32_t ecs_table_type_to_column_index(
 {
     ecs_assert(index >= 0, ECS_INVALID_PARAMETER, NULL);
     ecs_check(index < table->type.count, ECS_INVALID_PARAMETER, NULL);
-    int32_t *column_map = table->column_map;
+    int16_t *column_map = table->column_map;
     if (column_map) {
         return column_map[index];
     }
