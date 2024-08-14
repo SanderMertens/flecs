@@ -3056,7 +3056,7 @@ void flecs_invoke_hook(
     const ecs_table_record_t *tr,
     int32_t count,
     int32_t row,
-    ecs_entity_t *entities,
+    const ecs_entity_t *entities,
     ecs_id_t id,
     const ecs_type_info_t *ti,
     ecs_entity_t event,
@@ -5342,7 +5342,7 @@ void flecs_instantiate_children(
     }
 
     /* Instantiate the prefab child table for each new instance */
-    ecs_entity_t *instances = ecs_table_entities(table);
+    const ecs_entity_t *instances = ecs_table_entities(table);
     int32_t child_count = ecs_table_count(child_table);
 
     for (i = row; i < count + row; i ++) {
@@ -5362,7 +5362,7 @@ void flecs_instantiate_children(
         /* The instance is trying to instantiate from a base that is also
          * its parent. This would cause the hierarchy to instantiate itself
          * which would cause infinite recursion. */
-        ecs_entity_t *children = ecs_table_entities(child_table);
+        const ecs_entity_t *children = ecs_table_entities(child_table);
 
 #ifdef FLECS_DEBUG
         for (j = 0; j < child_count; j ++) {
@@ -5443,7 +5443,7 @@ void flecs_sparse_on_add(
             const ecs_type_info_t *ti = idr->type_info;
             ecs_xtor_t ctor = ti->hooks.ctor;
             ecs_iter_action_t on_add = ti->hooks.on_add;
-            ecs_entity_t *entities = ecs_table_entities(table);
+            const ecs_entity_t *entities = ecs_table_entities(table);
             for (j = 0; j < count; j ++) {
                 ecs_entity_t e = entities[row + j];
                 void *ptr = flecs_sparse_ensure(idr->sparse, 0, e);
@@ -5481,7 +5481,7 @@ void flecs_sparse_on_remove(
                 flecs_id_record_get_table(idr, table);
             ecs_xtor_t dtor = ti->hooks.dtor;
             ecs_iter_action_t on_remove = ti->hooks.on_remove;
-            ecs_entity_t *entities = ecs_table_entities(table);
+            const ecs_entity_t *entities = ecs_table_entities(table);
             for (j = 0; j < count; j ++) {
                 ecs_entity_t e = entities[row + j];
                 if (on_remove) {
@@ -5513,7 +5513,7 @@ void flecs_union_on_add(
             ecs_id_t wc = ecs_pair(ECS_PAIR_FIRST(id), EcsUnion);
             ecs_id_record_t *idr = flecs_id_record_get(world, wc);
             if (idr && idr->flags & EcsIdIsUnion) {
-                ecs_entity_t *entities = ecs_table_entities(table);
+                const ecs_entity_t *entities = ecs_table_entities(table);
                 for (j = 0; j < count; j ++) {
                     ecs_entity_t e = entities[row + j];
                     flecs_switch_set(
@@ -5539,7 +5539,7 @@ void flecs_union_on_remove(
             ecs_id_t wc = ecs_pair(ECS_PAIR_FIRST(id), EcsUnion);
             ecs_id_record_t *idr = flecs_id_record_get(world, wc);
             if (idr && idr->flags & EcsIdIsUnion) {
-                ecs_entity_t *entities = ecs_table_entities(table);
+                const ecs_entity_t *entities = ecs_table_entities(table);
                 for (j = 0; j < count; j ++) {
                     ecs_entity_t e = entities[row + j];
                     flecs_switch_reset(idr->sparse, (uint32_t)e);
@@ -5658,7 +5658,7 @@ void flecs_update_name_index(
     ecs_assert(names != NULL, ECS_INTERNAL_ERROR, NULL);
 
     int32_t i;
-    ecs_entity_t *entities = &ecs_table_entities(dst)[offset];
+    const ecs_entity_t *entities = &ecs_table_entities(dst)[offset];
     for (i = 0; i < count; i ++) {
         ecs_entity_t e = entities[i];
         EcsIdentifier *name = &names[i];
@@ -6105,7 +6105,7 @@ void flecs_invoke_hook(
     const ecs_table_record_t *tr,
     int32_t count,
     int32_t row,
-    ecs_entity_t *entities,
+    const ecs_entity_t *entities,
     ecs_id_t id,
     const ecs_type_info_t *ti,
     ecs_entity_t event,
@@ -6149,7 +6149,7 @@ void flecs_notify_on_set(
     bool owned)
 {
     ecs_assert(ids != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_entity_t *entities = &ecs_table_entities(table)[row];
+    const ecs_entity_t *entities = &ecs_table_entities(table)[row];
     ecs_assert(entities != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert((row + count) <= ecs_table_count(table), 
         ECS_INTERNAL_ERROR, NULL);
@@ -7190,7 +7190,7 @@ void flecs_targets_mark_for_delete(
     ecs_table_t *table)
 {
     ecs_id_record_t *idr;
-    ecs_entity_t *entities = ecs_table_entities(table);
+    const ecs_entity_t *entities = ecs_table_entities(table);
     int32_t i, count = ecs_table_count(table);
     for (i = 0; i < count; i ++) {
         ecs_record_t *r = flecs_entities_get(world, entities[i]);
@@ -8983,7 +8983,7 @@ void ecs_set_version(
     ecs_record_t *r = flecs_entities_get(world, entity_with_generation);
     if (r && r->table) {
         int32_t row = ECS_RECORD_TO_ROW(r->row);
-        ecs_entity_t *entities = ecs_table_entities(r->table);
+        ecs_entity_t *entities = r->table->data.entities;
         entities[row] = entity_with_generation;
     }
 }
@@ -12546,7 +12546,7 @@ void flecs_emit_propagate_id(
             continue;
         }
 
-        ecs_entity_t *entities = ecs_table_entities(table);
+        const ecs_entity_t *entities = ecs_table_entities(table);
         for (e = 0; e < entity_count; e ++) {
             ecs_record_t *r = flecs_entities_get(world, entities[e]);
             ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -12640,7 +12640,7 @@ void flecs_emit_propagate_invalidate_tables(
             }
 
             int32_t e, entity_count = ecs_table_count(table);
-            ecs_entity_t *entities = ecs_table_entities(table);
+            const ecs_entity_t *entities = ecs_table_entities(table);
 
             for (e = 0; e < entity_count; e ++) {
                 ecs_record_t *r = flecs_entities_get(world, entities[e]);
@@ -12661,7 +12661,7 @@ void flecs_emit_propagate_invalidate(
     int32_t offset,
     int32_t count)
 {
-    ecs_entity_t *entities = &ecs_table_entities(table)[offset];
+    const ecs_entity_t *entities = &ecs_table_entities(table)[offset];
     int32_t i;
     for (i = 0; i < count; i ++) {
         ecs_record_t *record = flecs_entities_get(world, entities[i]);
@@ -12684,7 +12684,7 @@ void flecs_propagate_entities(
     ecs_world_t *world,
     ecs_iter_t *it,
     ecs_id_record_t *idr,
-    ecs_entity_t *entities,
+    const ecs_entity_t *entities,
     int32_t count,
     ecs_entity_t src,
     ecs_event_id_record_t **iders,
@@ -12697,7 +12697,7 @@ void flecs_propagate_entities(
     ecs_entity_t old_src = it->sources[0];
     ecs_table_t *old_table = it->table;
     ecs_table_t *old_other_table = it->other_table;
-    ecs_entity_t *old_entities = it->entities;
+    const ecs_entity_t *old_entities = it->entities;
     int32_t old_count = it->count;
     int32_t old_offset = it->offset;
 
@@ -12758,7 +12758,7 @@ void flecs_override_copy(
 
     ecs_iter_action_t on_set = ti->hooks.on_set;
     if (on_set) {
-        ecs_entity_t *entities = &ecs_table_entities(table)[offset];
+        const ecs_entity_t *entities = &ecs_table_entities(table)[offset];
         flecs_invoke_hook(world, table, tr, count, offset, entities,
             ti->component, ti, EcsOnSet, on_set);
     }
@@ -13289,7 +13289,7 @@ void flecs_emit_forward(
     /* Propagate events for new reachable ids downwards */
     if (table->_->traversable_count) {
         int32_t i;
-        ecs_entity_t *entities = ecs_table_entities(table);
+        const ecs_entity_t *entities = ecs_table_entities(table);
         entities = ECS_ELEM_T(entities, ecs_entity_t, it->offset);
         for (i = 0; i < it->count; i ++) {
             ecs_record_t *r = flecs_entities_get(world, entities[i]);
@@ -14067,7 +14067,7 @@ void flecs_observer_invoke(
             observer_src = 0;
         }
 
-        ecs_entity_t *entities = it->entities;
+        const ecs_entity_t *entities = it->entities;
         int32_t i, count = it->count;
         ecs_entity_t src = it->sources[0];
         it->count = 1;
@@ -17861,7 +17861,7 @@ void flecs_fini_root_tables(
         }
 
         int32_t i, count = ecs_table_count(table);
-        ecs_entity_t *entities = ecs_table_entities(table);
+        const ecs_entity_t *entities = ecs_table_entities(table);
 
         if (fini_targets) {
             /* Only delete entities that are used as pair target. Iterate
@@ -19186,7 +19186,7 @@ void flecs_process_empty_queries(
 
             for (i = 0; i < count; i ++) {
                 ecs_query_t *query = queries[i].poly;
-                ecs_entity_t *entities = ecs_table_entities(table);
+                const ecs_entity_t *entities = ecs_table_entities(table);
                 if (!ecs_query_is_true(query)) {
                     ecs_add_id(world, entities[i], EcsEmpty);
                 }
@@ -36277,7 +36277,7 @@ void flecs_table_invoke_hook(
     ecs_iter_action_t callback,
     ecs_entity_t event,
     ecs_column_t *column,
-    ecs_entity_t *entities,
+    const ecs_entity_t *entities,
     int32_t row,
     int32_t count)
 {
@@ -36391,7 +36391,7 @@ void flecs_table_dtor_all(
     int32_t count,
     bool is_delete)
 {
-    ecs_entity_t *entities = ecs_table_entities(table);
+    const ecs_entity_t *entities = ecs_table_entities(table);
     int32_t column_count = table->column_count;
     int32_t i, c, end = row + count;
 
@@ -36532,7 +36532,7 @@ void flecs_table_fini_data(
     table->flags &= ~EcsTableHasTraversable;
 }
 
-ecs_entity_t* ecs_table_entities(
+const ecs_entity_t* ecs_table_entities(
     const ecs_table_t *table)
 {
     return table->data.entities;
@@ -37099,7 +37099,7 @@ void flecs_table_delete(
     ecs_assert(row <= count, ECS_INTERNAL_ERROR, NULL);
 
     /* Move last entity id to row */
-    ecs_entity_t *entities = ecs_table_entities(table);
+    ecs_entity_t *entities = table->data.entities;
     ecs_entity_t entity_to_move = entities[count];
     ecs_entity_t entity_to_delete = entities[row];
     entities[row] = entity_to_move;
@@ -37445,7 +37445,7 @@ void flecs_table_swap(
     /* If the table is monitored indicate that there has been a change */
     flecs_table_mark_table_dirty(world, table, 0);    
 
-    ecs_entity_t *entities = ecs_table_entities(table);
+    ecs_entity_t *entities = table->data.entities;
     ecs_entity_t e1 = entities[row_1];
     ecs_entity_t e2 = entities[row_2];
 
@@ -37707,7 +37707,7 @@ void flecs_table_merge(
     flecs_table_check_sanity(world, src_table);
     flecs_table_check_sanity(world, dst_table);
 
-    ecs_entity_t *src_entities = ecs_table_entities(src_table);
+    const ecs_entity_t *src_entities = ecs_table_entities(src_table);
     int32_t src_count = ecs_table_count(src_table);
     int32_t dst_count = ecs_table_count(dst_table);
 
@@ -39649,7 +39649,7 @@ typedef struct ecs_json_ser_ctx_t {
 } ecs_json_ser_ctx_t;
 
 typedef struct ecs_json_this_data_t {
-    ecs_entity_t *ids;
+    const ecs_entity_t *ids;
     const EcsIdentifier *names;
     const EcsDocDescription *label;
     const EcsDocDescription *brief;
@@ -42217,7 +42217,7 @@ int flecs_json_serialize_matches(
                 ecs_table_t *table = tr->hdr.table;
                 EcsPoly *queries = ecs_table_get_column(table, tr->column, 0);
 
-                ecs_entity_t *entities = ecs_table_entities(table);
+                const ecs_entity_t *entities = ecs_table_entities(table);
                 int32_t i, count = ecs_table_count(table);
                 for (i = 0; i < count; i ++) {
                     ecs_query_t *q = queries[i].poly;
@@ -42271,7 +42271,7 @@ int flecs_json_serialize_refs_idr(
         const ecs_table_record_t *tr;
         while ((tr = flecs_table_cache_next(&it, ecs_table_record_t))) {
             ecs_table_t *table = tr->hdr.table;
-            ecs_entity_t *entities = ecs_table_entities(table);
+            const ecs_entity_t *entities = ecs_table_entities(table);
             int32_t i, count = ecs_table_count(table);
             for (i = 0; i < count; i ++) {
                 ecs_entity_t e = entities[i];
@@ -58287,7 +58287,9 @@ void ecs_script_vars_from_iter(
             var = ecs_script_vars_declare(vars, "this");
             var->value.type = ecs_id(ecs_entity_t);
         }
-        var->value.ptr = &it->entities[offset];
+
+        /* Safe, variable value will never be written */
+        var->value.ptr = ECS_CONST_CAST(ecs_entity_t*, &it->entities[offset]);
     }
 
     /* Set variables for fields */
@@ -58325,14 +58327,14 @@ void ecs_script_vars_from_iter(
     {
         int32_t i, var_count = it->variable_count;
         for (i = 1 /* skip this variable */ ; i < var_count; i ++) {
-            ecs_entity_t *e_ptr = NULL;
+            const ecs_entity_t *e_ptr = NULL;
             ecs_var_t *query_var = &it->variables[i];
             if (query_var->entity) {
                 e_ptr = &query_var->entity;
             } else {
                 ecs_table_range_t *range = &query_var->range;
                 if (range->count == 1) {
-                    ecs_entity_t *entities = 
+                    const ecs_entity_t *entities = 
                         ecs_table_entities(range->table);
                     e_ptr = &entities[range->offset];
                 }
@@ -58350,7 +58352,9 @@ void ecs_script_vars_from_iter(
                 ecs_check(var->value.type == ecs_id(ecs_entity_t), 
                     ECS_INVALID_PARAMETER, NULL);
             }
-            var->value.ptr = e_ptr;
+
+            /* Safe, variable value will never be written */
+            var->value.ptr = ECS_CONST_CAST(ecs_entity_t*, e_ptr);
         }
     }
 
@@ -66609,7 +66613,7 @@ void flecs_query_cache_sort_table(
         return;
     }
 
-    ecs_entity_t *entities = ecs_table_entities(table);
+    ecs_entity_t *entities = table->data.entities;
 
     void *ptr = NULL;
     int32_t size = 0;
@@ -66733,7 +66737,7 @@ void flecs_query_cache_build_sorted_table_range(
         }
 
         helper[to_sort].match = cur;
-        helper[to_sort].entities = ecs_table_entities(table);
+        helper[to_sort].entities = table->data.entities;
         helper[to_sort].row = 0;
         helper[to_sort].count = ecs_table_count(table);
         to_sort ++;      
@@ -67838,7 +67842,7 @@ bool flecs_query_up_select(
             } else {
                 int32_t row;
                 ecs_entity_t entity = 0;
-                ecs_entity_t *entities = ecs_table_entities(table);
+                const ecs_entity_t *entities = ecs_table_entities(table);
 
                 for (row = op_ctx->row; row < op_ctx->end; row ++) {
                     entity = entities[row];
@@ -68509,7 +68513,7 @@ bool flecs_query_each(
     }
 
     ecs_assert(row < ecs_table_count(table), ECS_INTERNAL_ERROR, NULL);
-    ecs_entity_t *entities = ecs_table_entities(table);
+    const ecs_entity_t *entities = ecs_table_entities(table);
     flecs_query_var_set_entity(op, op->src.var, entities[row], ctx);
 
     return true;
@@ -69689,7 +69693,7 @@ bool flecs_query_member_cmp(
 
     int32_t offset = (int32_t)op->first.entity;
     int32_t size = (int32_t)(op->first.entity >> 32);
-    ecs_entity_t *entities = ecs_table_entities(table);
+    const ecs_entity_t *entities = ecs_table_entities(table);
     ecs_entity_t e = 0;
     ecs_entity_t *val;
 
@@ -70420,7 +70424,7 @@ bool flecs_query_trav_fixed_src_reflexive(
 {
     ecs_table_t *table = range->table;
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_entity_t *entities = ecs_table_entities(table);
+    const ecs_entity_t *entities = ecs_table_entities(table);
     int32_t count = range->count;
     if (!count) {
         count = ecs_table_count(table);
@@ -71229,7 +71233,7 @@ ecs_entity_t flecs_query_var_get_entity(
 
     ecs_assert(var->range.count == 1, ECS_INTERNAL_ERROR, NULL);
     ecs_table_t *table = var->range.table;
-    ecs_entity_t *entities = ecs_table_entities(table);
+    const ecs_entity_t *entities = ecs_table_entities(table);
     var->entity = entities[var->range.offset];
     return var->entity;
 }
@@ -71517,7 +71521,7 @@ void flecs_query_build_down_cache(
             }
 
             int32_t i, count = ecs_table_count(table);
-            ecs_entity_t *entities = ecs_table_entities(table);
+            const ecs_entity_t *entities = ecs_table_entities(table);
             for (i = 0; i < count; i ++) {
                 ecs_record_t *r = flecs_entities_get(world, entities[i]);
                 if (r->row & EcsEntityIsTraversable) {
@@ -71696,7 +71700,7 @@ ecs_trav_down_t* flecs_trav_table_down(
 
     ecs_assert(idr_with != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_entity_t *entities = ecs_table_entities(table);
+    const ecs_entity_t *entities = ecs_table_entities(table);
     int32_t i, count = ecs_table_count(table);
     for (i = 0; i < count; i ++) {
         ecs_entity_t entity = entities[i];
@@ -71752,7 +71756,7 @@ void flecs_trav_entity_down_isa(
                 continue;
             }
 
-            ecs_entity_t *entities = ecs_table_entities(table);
+            const ecs_entity_t *entities = ecs_table_entities(table);
             int32_t i, count = ecs_table_count(table);
             for (i = 0; i < count; i ++) {
                 ecs_entity_t e = entities[i];

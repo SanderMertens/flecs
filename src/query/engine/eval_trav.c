@@ -15,7 +15,7 @@ bool flecs_query_trav_fixed_src_reflexive(
 {
     ecs_table_t *table = range->table;
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_entity_t *entities = ecs_table_entities(table);
+    const ecs_entity_t *entities = ecs_table_entities(table);
     int32_t count = range->count;
     if (!count) {
         count = ecs_table_count(table);

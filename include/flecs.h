@@ -1053,7 +1053,7 @@ struct ecs_iter_t {
     ecs_world_t *real_world;      /**< Actual world. Never points to a stage. */
 
     /* Matched data */
-    ecs_entity_t *entities;       /**< Entity identifiers */
+    const ecs_entity_t *entities; /**< Entity identifiers */
     const ecs_size_t *sizes;      /**< Component sizes */
     ecs_table_t *table;           /**< Current table */
     ecs_table_t *other_table;     /**< Prev or next table when adding/removing */
@@ -5656,7 +5656,7 @@ int32_t ecs_table_size(
  * @return Array with entity ids for table.
  */
 FLECS_API
-ecs_entity_t* ecs_table_entities(
+const ecs_entity_t* ecs_table_entities(
     const ecs_table_t *table);
 
 /** Test if table has id.

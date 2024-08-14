@@ -44,7 +44,7 @@ typedef struct ecs_json_ser_ctx_t {
 } ecs_json_ser_ctx_t;
 
 typedef struct ecs_json_this_data_t {
-    ecs_entity_t *ids;
+    const ecs_entity_t *ids;
     const EcsIdentifier *names;
     const EcsDocDescription *label;
     const EcsDocDescription *brief;

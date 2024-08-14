@@ -154,7 +154,7 @@ ecs_entity_t flecs_query_var_get_entity(
 
     ecs_assert(var->range.count == 1, ECS_INTERNAL_ERROR, NULL);
     ecs_table_t *table = var->range.table;
-    ecs_entity_t *entities = ecs_table_entities(table);
+    const ecs_entity_t *entities = ecs_table_entities(table);
     var->entity = entities[var->range.offset];
     return var->entity;
 }

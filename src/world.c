@@ -638,7 +638,7 @@ void flecs_fini_root_tables(
         }
 
         int32_t i, count = ecs_table_count(table);
-        ecs_entity_t *entities = ecs_table_entities(table);
+        const ecs_entity_t *entities = ecs_table_entities(table);
 
         if (fini_targets) {
             /* Only delete entities that are used as pair target. Iterate
@@ -1963,7 +1963,7 @@ void flecs_process_empty_queries(
 
             for (i = 0; i < count; i ++) {
                 ecs_query_t *query = queries[i].poly;
-                ecs_entity_t *entities = ecs_table_entities(table);
+                const ecs_entity_t *entities = ecs_table_entities(table);
                 if (!ecs_query_is_true(query)) {
                     ecs_add_id(world, entities[i], EcsEmpty);
                 }

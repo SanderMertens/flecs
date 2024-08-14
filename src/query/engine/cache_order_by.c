@@ -25,7 +25,7 @@ void flecs_query_cache_sort_table(
         return;
     }
 
-    ecs_entity_t *entities = ecs_table_entities(table);
+    ecs_entity_t *entities = table->data.entities;
 
     void *ptr = NULL;
     int32_t size = 0;
@@ -149,7 +149,7 @@ void flecs_query_cache_build_sorted_table_range(
         }
 
         helper[to_sort].match = cur;
-        helper[to_sort].entities = ecs_table_entities(table);
+        helper[to_sort].entities = table->data.entities;
         helper[to_sort].row = 0;
         helper[to_sort].count = ecs_table_count(table);
         to_sort ++;      
