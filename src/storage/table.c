@@ -650,7 +650,7 @@ void flecs_table_invoke_hook(
     ecs_iter_action_t callback,
     ecs_entity_t event,
     ecs_column_t *column,
-    ecs_entity_t *entities,
+    const ecs_entity_t *entities,
     int32_t row,
     int32_t count)
 {
@@ -764,7 +764,7 @@ void flecs_table_dtor_all(
     int32_t count,
     bool is_delete)
 {
-    ecs_entity_t *entities = ecs_table_entities(table);
+    const ecs_entity_t *entities = ecs_table_entities(table);
     int32_t column_count = table->column_count;
     int32_t i, c, end = row + count;
 
@@ -905,7 +905,7 @@ void flecs_table_fini_data(
     table->flags &= ~EcsTableHasTraversable;
 }
 
-ecs_entity_t* ecs_table_entities(
+const ecs_entity_t* ecs_table_entities(
     const ecs_table_t *table)
 {
     return table->data.entities;
@@ -1472,7 +1472,7 @@ void flecs_table_delete(
     ecs_assert(row <= count, ECS_INTERNAL_ERROR, NULL);
 
     /* Move last entity id to row */
-    ecs_entity_t *entities = ecs_table_entities(table);
+    ecs_entity_t *entities = table->data.entities;
     ecs_entity_t entity_to_move = entities[count];
     ecs_entity_t entity_to_delete = entities[row];
     entities[row] = entity_to_move;
@@ -1818,7 +1818,7 @@ void flecs_table_swap(
     /* If the table is monitored indicate that there has been a change */
     flecs_table_mark_table_dirty(world, table, 0);    
 
-    ecs_entity_t *entities = ecs_table_entities(table);
+    ecs_entity_t *entities = table->data.entities;
     ecs_entity_t e1 = entities[row_1];
     ecs_entity_t e2 = entities[row_2];
 
@@ -2080,7 +2080,7 @@ void flecs_table_merge(
     flecs_table_check_sanity(world, src_table);
     flecs_table_check_sanity(world, dst_table);
 
-    ecs_entity_t *src_entities = ecs_table_entities(src_table);
+    const ecs_entity_t *src_entities = ecs_table_entities(src_table);
     int32_t src_count = ecs_table_count(src_table);
     int32_t dst_count = ecs_table_count(dst_table);
 

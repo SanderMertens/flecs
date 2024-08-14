@@ -298,7 +298,7 @@ void flecs_emit_propagate_id(
             continue;
         }
 
-        ecs_entity_t *entities = ecs_table_entities(table);
+        const ecs_entity_t *entities = ecs_table_entities(table);
         for (e = 0; e < entity_count; e ++) {
             ecs_record_t *r = flecs_entities_get(world, entities[e]);
             ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -392,7 +392,7 @@ void flecs_emit_propagate_invalidate_tables(
             }
 
             int32_t e, entity_count = ecs_table_count(table);
-            ecs_entity_t *entities = ecs_table_entities(table);
+            const ecs_entity_t *entities = ecs_table_entities(table);
 
             for (e = 0; e < entity_count; e ++) {
                 ecs_record_t *r = flecs_entities_get(world, entities[e]);
@@ -413,7 +413,7 @@ void flecs_emit_propagate_invalidate(
     int32_t offset,
     int32_t count)
 {
-    ecs_entity_t *entities = &ecs_table_entities(table)[offset];
+    const ecs_entity_t *entities = &ecs_table_entities(table)[offset];
     int32_t i;
     for (i = 0; i < count; i ++) {
         ecs_record_t *record = flecs_entities_get(world, entities[i]);
@@ -436,7 +436,7 @@ void flecs_propagate_entities(
     ecs_world_t *world,
     ecs_iter_t *it,
     ecs_id_record_t *idr,
-    ecs_entity_t *entities,
+    const ecs_entity_t *entities,
     int32_t count,
     ecs_entity_t src,
     ecs_event_id_record_t **iders,
@@ -449,7 +449,7 @@ void flecs_propagate_entities(
     ecs_entity_t old_src = it->sources[0];
     ecs_table_t *old_table = it->table;
     ecs_table_t *old_other_table = it->other_table;
-    ecs_entity_t *old_entities = it->entities;
+    const ecs_entity_t *old_entities = it->entities;
     int32_t old_count = it->count;
     int32_t old_offset = it->offset;
 
@@ -510,7 +510,7 @@ void flecs_override_copy(
 
     ecs_iter_action_t on_set = ti->hooks.on_set;
     if (on_set) {
-        ecs_entity_t *entities = &ecs_table_entities(table)[offset];
+        const ecs_entity_t *entities = &ecs_table_entities(table)[offset];
         flecs_invoke_hook(world, table, tr, count, offset, entities,
             ti->component, ti, EcsOnSet, on_set);
     }
@@ -1041,7 +1041,7 @@ void flecs_emit_forward(
     /* Propagate events for new reachable ids downwards */
     if (table->_->traversable_count) {
         int32_t i;
-        ecs_entity_t *entities = ecs_table_entities(table);
+        const ecs_entity_t *entities = ecs_table_entities(table);
         entities = ECS_ELEM_T(entities, ecs_entity_t, it->offset);
         for (i = 0; i < it->count; i ++) {
             ecs_record_t *r = flecs_entities_get(world, entities[i]);

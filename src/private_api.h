@@ -109,7 +109,7 @@ void flecs_invoke_hook(
     const ecs_table_record_t *tr,
     int32_t count,
     int32_t row,
-    ecs_entity_t *entities,
+    const ecs_entity_t *entities,
     ecs_id_t id,
     const ecs_type_info_t *ti,
     ecs_entity_t event,

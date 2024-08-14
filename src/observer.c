@@ -321,7 +321,7 @@ void flecs_observer_invoke(
             observer_src = 0;
         }
 
-        ecs_entity_t *entities = it->entities;
+        const ecs_entity_t *entities = it->entities;
         int32_t i, count = it->count;
         ecs_entity_t src = it->sources[0];
         it->count = 1;

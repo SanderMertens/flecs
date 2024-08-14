@@ -362,7 +362,7 @@ bool flecs_query_up_select(
             } else {
                 int32_t row;
                 ecs_entity_t entity = 0;
-                ecs_entity_t *entities = ecs_table_entities(table);
+                const ecs_entity_t *entities = ecs_table_entities(table);
 
                 for (row = op_ctx->row; row < op_ctx->end; row ++) {
                     entity = entities[row];
@@ -1033,7 +1033,7 @@ bool flecs_query_each(
     }
 
     ecs_assert(row < ecs_table_count(table), ECS_INTERNAL_ERROR, NULL);
-    ecs_entity_t *entities = ecs_table_entities(table);
+    const ecs_entity_t *entities = ecs_table_entities(table);
     flecs_query_var_set_entity(op, op->src.var, entities[row], ctx);
 
     return true;
