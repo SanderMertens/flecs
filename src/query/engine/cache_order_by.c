@@ -26,7 +26,6 @@ void flecs_query_cache_sort_table(
     }
 
     ecs_entity_t *entities = table->data.entities;
-
     void *ptr = NULL;
     int32_t size = 0;
     if (column_index != -1) {
