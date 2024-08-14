@@ -1499,6 +1499,7 @@ error:
     return -1;
 }
 
+#ifndef FLECS_SANITIZE
 static
 bool flecs_query_finalize_simple(
     ecs_world_t *world,
@@ -1668,6 +1669,7 @@ bool flecs_query_finalize_simple(
 
     return true;
 }
+#endif
 
 static
 char* flecs_query_append_token(

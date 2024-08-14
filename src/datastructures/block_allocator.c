@@ -150,6 +150,7 @@ void* flecs_bcalloc(
     ecs_block_allocator_t *ba) 
 {
 #ifdef FLECS_USE_OS_ALLOC
+    ecs_assert(ba != NULL, ECS_INTERNAL_ERROR, NULL);
     return ecs_os_calloc(ba->data_size);
 #else
     if (!ba) return NULL;
