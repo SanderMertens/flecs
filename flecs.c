@@ -66614,7 +66614,10 @@ void flecs_query_cache_sort_table(
     }
 
     ecs_entity_t *entities = table->data.entities;
+<<<<<<< HEAD
 
+=======
+>>>>>>> d4ee89af3 (Change return type of ecs_table_entities to const ecs_entity_t*)
     void *ptr = NULL;
     int32_t size = 0;
     if (column_index != -1) {
