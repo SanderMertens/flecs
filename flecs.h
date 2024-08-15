@@ -25620,8 +25620,8 @@ private:
     void populate(const ecs_iter_t *iter, size_t index, T, Targs... comps) {
         if (iter->row_fields & (1llu << index)) {
             /* Need to fetch the value with ecs_field_at() due to being sparse */
-            fields_[index].ptr = ecs_field_at_w_size(iter, sizeof(T), static_cast<int8_t>(index), 
-                static_cast<int32_t>(index));
+            fields_[index].ptr = ecs_field_at_w_size(iter, sizeof(A), static_cast<int8_t>(index), 
+                0);
             fields_[index].is_ref = true;
         } else {
             fields_[index].ptr = ecs_field_w_size(iter, sizeof(A), 
