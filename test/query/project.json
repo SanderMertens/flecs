@@ -1400,6 +1400,8 @@
                 "2_self_up_terms_2_targets",
                 "self_up_empty_table",
                 "up_empty_table",
+                "self_up_match_empty_table",
+                "up_match_empty_table",
                 "self_up_all_owned",
                 "up_all_owned",
                 "this_self_up_childof_inherited",
@@ -1605,6 +1607,7 @@
                 "rematch_after_delete_inherited_tag",
                 "rematch_after_delete_rel_of_inherited_pair",
                 "rematch_after_delete_obj_of_inherited_pair",
+                "rematch_empty",
                 "rematch_empty_table_w_superset",
                 "2_self_up_terms_new_tables",
                 "this_self_up_childof_pair_new_tables"

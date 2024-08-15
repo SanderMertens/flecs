@@ -2538,6 +2538,81 @@ void Traversal_up_empty_table(void) {
     ecs_fini(world);
 }
 
+void Traversal_self_up_match_empty_table(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, Foo, (OnInstantiate, Inherit));
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ Foo }},
+        .cache_kind = cache_kind,
+        .flags = EcsQueryMatchEmptyTables
+    });
+
+    ecs_entity_t base = ecs_new(world);
+    ecs_table_t *table = ecs_table_add_id(world, NULL, ecs_pair(EcsIsA, base));
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_add(world, base, Foo);
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+
+        test_bool(true, ecs_query_next(&it));
+        test_int(1, it.count);
+        test_uint(base, it.entities[0]);
+        test_uint(Foo, ecs_field_id(&it, 0));
+        test_uint(0, ecs_field_src(&it, 0));
+
+        test_bool(true, ecs_query_next(&it));
+        test_assert(table == it.table);
+        test_int(0, it.count);
+        test_uint(Foo, ecs_field_id(&it, 0));
+        test_uint(base, ecs_field_src(&it, 0));
+
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Traversal_up_match_empty_table(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, Foo, (OnInstantiate, Inherit));
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ Foo, .src.id = EcsUp, .trav = EcsIsA }},
+        .cache_kind = cache_kind,
+        .flags = EcsQueryMatchEmptyTables
+    });
+
+    ecs_entity_t base = ecs_new_w(world, Foo);
+    ecs_table_t *table = ecs_table_add_id(world, NULL, ecs_pair(EcsIsA, base));
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+
+        test_bool(true, ecs_query_next(&it));
+        test_assert(table == it.table);
+        test_int(0, it.count);
+        test_uint(Foo, ecs_field_id(&it, 0));
+        test_uint(base, ecs_field_src(&it, 0));
+
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
 void Traversal_self_up_all_owned(void) {
     ecs_world_t *world = ecs_mini();
 

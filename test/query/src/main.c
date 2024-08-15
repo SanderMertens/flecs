@@ -1345,6 +1345,8 @@ void Traversal_2_self_up_terms(void);
 void Traversal_2_self_up_terms_2_targets(void);
 void Traversal_self_up_empty_table(void);
 void Traversal_up_empty_table(void);
+void Traversal_self_up_match_empty_table(void);
+void Traversal_up_match_empty_table(void);
 void Traversal_self_up_all_owned(void);
 void Traversal_up_all_owned(void);
 void Traversal_this_self_up_childof_inherited(void);
@@ -1546,6 +1548,7 @@ void Cached_query_w_pair_id_and_subj(void);
 void Cached_rematch_after_delete_inherited_tag(void);
 void Cached_rematch_after_delete_rel_of_inherited_pair(void);
 void Cached_rematch_after_delete_obj_of_inherited_pair(void);
+void Cached_rematch_empty(void);
 void Cached_rematch_empty_table_w_superset(void);
 void Cached_2_self_up_terms_new_tables(void);
 void Cached_this_self_up_childof_pair_new_tables(void);
@@ -7302,6 +7305,14 @@ bake_test_case Traversal_testcases[] = {
         Traversal_up_empty_table
     },
     {
+        "self_up_match_empty_table",
+        Traversal_self_up_match_empty_table
+    },
+    {
+        "up_match_empty_table",
+        Traversal_up_match_empty_table
+    },
+    {
         "self_up_all_owned",
         Traversal_self_up_all_owned
     },
@@ -8094,6 +8105,10 @@ bake_test_case Cached_testcases[] = {
     {
         "rematch_after_delete_obj_of_inherited_pair",
         Cached_rematch_after_delete_obj_of_inherited_pair
+    },
+    {
+        "rematch_empty",
+        Cached_rematch_empty
     },
     {
         "rematch_empty_table_w_superset",
@@ -10196,7 +10211,7 @@ static bake_test_suite suites[] = {
         "Traversal",
         Traversal_setup,
         NULL,
-        121,
+        123,
         Traversal_testcases,
         1,
         Traversal_params
@@ -10212,7 +10227,7 @@ static bake_test_suite suites[] = {
         "Cached",
         NULL,
         NULL,
-        86,
+        87,
         Cached_testcases
     },
     {
