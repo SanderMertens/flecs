@@ -273,7 +273,7 @@ bool flecs_query_up_select(
             ecs_pair(op_ctx->trav, EcsWildcard));
     }
 
-    if (!op_ctx->idr_trav || !flecs_table_cache_count(&op_ctx->idr_trav->cache)){
+    if (!op_ctx->idr_trav || !flecs_table_cache_all_count(&op_ctx->idr_trav->cache)){
         if (!self) {
             return false;
         } else if (kind == FlecsQueryUpSelectId) {
