@@ -25619,11 +25619,9 @@ private:
             if_not_t< is_empty<A>::value > = 0>
     void populate(const ecs_iter_t *iter, size_t index, T, Targs... comps) {
         if (iter->row_fields & (1llu << index)) {
-            /* Need to fetch the value with ecs_field_at() due to being sparse 
-            since this also a reference, we can set the row to 0 as a ref always is a
-            single value */
+            /* Need to fetch the value with ecs_field_at() due to being sparse */
             fields_[index].ptr = ecs_field_at_w_size(iter, sizeof(T), static_cast<int8_t>(index), 
-                0);
+                static_cast<int32_t>(index));
             fields_[index].is_ref = true;
         } else {
             fields_[index].ptr = ecs_field_w_size(iter, sizeof(A), 
