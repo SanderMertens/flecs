@@ -2074,9 +2074,15 @@ void Stresstests_add_1k_tags(void);
 
 // Testsuite 'Table'
 void Table_get_index(void);
+void Table_get_index_after_tag(void);
 void Table_get_index_not_in_table(void);
+void Table_get_index_tag(void);
+void Table_get_index_pair(void);
+void Table_get_index_pair_tag(void);
 void Table_get_column(void);
 void Table_get_column_for_tag(void);
+void Table_get_column_for_low_tag(void);
+void Table_get_column_for_high_component(void);
 void Table_get_column_for_component_after_tag(void);
 void Table_get_column_w_offset(void);
 void Table_get_id(void);
@@ -10138,8 +10144,24 @@ bake_test_case Table_testcases[] = {
         Table_get_index
     },
     {
+        "get_index_after_tag",
+        Table_get_index_after_tag
+    },
+    {
         "get_index_not_in_table",
         Table_get_index_not_in_table
+    },
+    {
+        "get_index_tag",
+        Table_get_index_tag
+    },
+    {
+        "get_index_pair",
+        Table_get_index_pair
+    },
+    {
+        "get_index_pair_tag",
+        Table_get_index_pair_tag
     },
     {
         "get_column",
@@ -10148,6 +10170,14 @@ bake_test_case Table_testcases[] = {
     {
         "get_column_for_tag",
         Table_get_column_for_tag
+    },
+    {
+        "get_column_for_low_tag",
+        Table_get_column_for_low_tag
+    },
+    {
+        "get_column_for_high_component",
+        Table_get_column_for_high_component
     },
     {
         "get_column_for_component_after_tag",
@@ -10636,7 +10666,7 @@ static bake_test_suite suites[] = {
         "Table",
         NULL,
         NULL,
-        14,
+        20,
         Table_testcases
     },
     {

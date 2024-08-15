@@ -36799,17 +36799,29 @@ void flecs_table_mark_dirty(
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
     if (table->dirty_state) {
-        ecs_id_record_t *idr = flecs_id_record_get(world, component);
-        if (!idr) {
-            return;
+        int32_t column;
+        if (component < FLECS_HI_COMPONENT_ID) {
+            column = table->component_map[component];
+            if (column <= 0) {
+                return;
+            }
+        } else {
+            ecs_id_record_t *idr = flecs_id_record_get(world, component);
+            if (!idr) {
+                return;
+            }
+
+            const ecs_table_record_t *tr = flecs_id_record_get_table(idr, table);
+            if (!tr || tr->column == -1) {
+                return;
+            }
+            
+            column = tr->column + 1;
         }
 
-        const ecs_table_record_t *tr = flecs_id_record_get_table(idr, table);
-        if (!tr || tr->column == -1) {
-            return;
-        }
+        /* Column is offset by 1, 0 is reserved for entity column. */
 
-        table->dirty_state[tr->column + 1] ++;
+        table->dirty_state[column] ++;
     }
 }
 
@@ -37946,6 +37958,15 @@ int32_t ecs_table_get_type_index(
     ecs_check(table != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(ecs_id_is_valid(world, id), ECS_INVALID_PARAMETER, NULL);
 
+    if (id < FLECS_HI_COMPONENT_ID) {
+        int16_t res = table->component_map[id];
+        if (res > 0) {
+            return table->column_map[table->type.count + (res - 1)];
+        }
+
+        return -res - 1;
+    }
+
     ecs_id_record_t *idr = flecs_id_record_get(world, id);
     if (!idr) {
         return -1;
@@ -37969,6 +37990,14 @@ int32_t ecs_table_get_column_index(
     flecs_poly_assert(world, ecs_world_t);
     ecs_check(table != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(ecs_id_is_valid(world, id), ECS_INVALID_PARAMETER, NULL);
+
+    if (id < FLECS_HI_COMPONENT_ID) {
+        int16_t res = table->component_map[id];
+        if (res > 0) {
+            return res - 1;
+        }
+        return -1;
+    }
 
     ecs_id_record_t *idr = flecs_id_record_get(world, id);
     if (!idr) {
