@@ -38,9 +38,7 @@ struct component_binding_ctx {
 // Utility to convert template argument pack to array of term ptrs
 struct field_ptr {
     void *ptr = nullptr;
-    int8_t index = 0;
     bool is_ref = false;
-    bool is_row = false;
 };
 
 template <typename ... Components>
@@ -71,10 +69,10 @@ private:
             if_not_t< is_empty<A>::value > = 0>
     void populate(const ecs_iter_t *iter, size_t index, T, Targs... comps) {
         if (iter->row_fields & (1llu << index)) {
-            /* Need to fetch the value with ecs_field_at() */
-            fields_[index].is_row = true;
+            /* Need to fetch the value with ecs_field_at() due to being sparse */
+            fields_[index].ptr = ecs_field_at_w_size(iter, sizeof(T), static_cast<int8_t>(index), 
+                static_cast<int32_t>(index));
             fields_[index].is_ref = true;
-            fields_[index].index = static_cast<int8_t>(index);
         } else {
             fields_[index].ptr = ecs_field_w_size(iter, sizeof(A), 
                 static_cast<int8_t>(index));
@@ -208,11 +206,6 @@ struct each_ref_field : public each_field<T> {
             // over caused the query to match a reference. The check is
             // performed once per iterated table.
             this->row_ = 0;
-        }
-
-        if (field.is_row) {
-            field.ptr = ecs_field_at_w_size(iter, sizeof(T), field.index, 
-                static_cast<int8_t>(row));
         }
     }
 };
