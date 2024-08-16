@@ -46,7 +46,7 @@ Run the following commands to run all tests (use `-j` to specify the number of t
 
 ```bash
 # Core test suite
-bake run test/api -- -j 4
+bake run test/core -- -j 4
 
 # Addon tests
 bake run test/addons -- -j 4
@@ -55,7 +55,7 @@ bake run test/addons -- -j 4
 bake run test/meta -- -j 4
 
 # C++ tests
-bake run test/cpp_api -- -j 4
+bake run test/cpp -- -j 4
 ```
 
 To run tests with asan enabled, add `--cfg sanitize` to the command:
