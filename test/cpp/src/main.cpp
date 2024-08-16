@@ -808,6 +808,8 @@ void QueryBuilder_named_scoped_rule(void);
 void QueryBuilder_is_valid(void);
 void QueryBuilder_unresolved_by_name(void);
 void QueryBuilder_scope(void);
+void QueryBuilder_sparse_term_and_term_with_ref(void);
+void QueryBuilder_sparse_multiple_term_and_term_with_ref(void);
 
 // Testsuite 'SystemBuilder'
 void SystemBuilder_builder_assign_same_type(void);
@@ -4473,6 +4475,14 @@ bake_test_case QueryBuilder_testcases[] = {
     {
         "scope",
         QueryBuilder_scope
+    },
+    {
+        "sparse_term_and_term_with_ref",
+        QueryBuilder_sparse_term_and_term_with_ref
+    },
+    {
+        "sparse_multiple_term_and_term_with_ref",
+        QueryBuilder_sparse_multiple_term_and_term_with_ref
     }
 };
 
@@ -6575,7 +6585,7 @@ static bake_test_suite suites[] = {
         "QueryBuilder",
         QueryBuilder_setup,
         NULL,
-        164,
+        166,
         QueryBuilder_testcases,
         1,
         QueryBuilder_params

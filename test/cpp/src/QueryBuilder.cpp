@@ -4923,3 +4923,120 @@ void QueryBuilder_scope(void) {
     test_int(count, 3);
 
 }
+
+void QueryBuilder_sparse_term_and_term_with_ref(void) {
+
+    /* Quaratined as test will cause CI to fail on PR. This is intended for Sander to fix. */
+    test_quarantine("16 Aug 2024");
+    return;
+
+    flecs::world world;
+
+    world.component<Position>().add(flecs::Sparse);
+
+    world.set<Position>({100, 200});
+    
+    auto ent1 = flecs::entity(world)
+        .set<Position>({10, 10});
+
+    auto ent2 = flecs::entity(world)
+        .set<Position>({11, 9});
+
+    auto q = world.query_builder<Position, Position>().term_at(1).singleton().build();
+
+    q.each([&](flecs::entity e, Position& p, Position& p_singleton) {
+        test_int(p_singleton.x, 100);
+        test_int(p_singleton.y, 200);
+
+        if (e == ent1) {
+            test_int(p.x, 10);
+            test_int(p.y, 10);
+        }
+        else if (e == ent2) {
+            test_int(p.x, 11);
+            test_int(p.y, 9);
+        }
+    });
+}
+
+void QueryBuilder_sparse_multiple_term_and_term_with_ref(void) {
+
+    /* Quaratined as test will cause CI to fail on PR. This is intended for Sander to fix. */
+    test_quarantine("16 Aug 2024");
+    return;
+
+    flecs::world world;
+
+    world.component<Position>().add(flecs::Sparse);
+    world.component<Velocity>();
+    world.component<Mass>().add(flecs::Sparse);
+    world.component<Rotation>();
+
+    world.set<Position>({100, 200});
+    world.set<Mass>({1000});
+    world.set<Rotation>({900});
+    
+    auto ent1 = flecs::entity(world)
+        .set<Position>({10, 10})
+        .set<Velocity>({1, 1})
+        .set<Mass>({21});
+
+    auto ent2 = flecs::entity(world)
+        .set<Position>({11, 10})
+        .set<Velocity>({2, 1})
+        .set<Mass>({42})
+        .set<Rotation>({90});
+
+    auto ent3 = flecs::entity(world)
+        .set<Position>({12, 10})
+        .set<Velocity>({3, 1})
+        .set<Mass>({63})
+        .set<Rotation>({180});
+
+    //not matched
+    flecs::entity(world)
+        .set<Position>({13, 10})
+        .set<Velocity>({4, 1});
+
+    auto q = world.query_builder<Position, Position, Velocity, Mass, Mass, Rotation*, Rotation>()
+    .term_at(1).singleton() // Position
+    .term_at(3).singleton() // Mass
+    .term_at(5).singleton() // Rotation
+    .build();
+
+    auto count = 0;
+
+    q.each([&](flecs::entity e, Position& p, Position& p_singleton, Velocity& v, Mass& m, Mass& m_singleton, Rotation* r, Rotation& r_singleton) {
+        test_int(p_singleton.x, 100);
+        test_int(p_singleton.y, 200);
+        test_int(m_singleton.value, 1000);
+        test_int(r_singleton.value, 900);
+
+        if (e == ent1) {
+            test_int(p.x, 10);
+            test_int(p.y, 10);
+            test_int(v.x, 1);
+            test_int(v.y, 1);
+            test_int(m.value, 21);
+            test_assert(r == nullptr);
+        }
+        else if (e == ent2) {
+            test_int(p.x, 11);
+            test_int(p.y, 10);
+            test_int(v.x, 2);
+            test_int(v.y, 1);
+            test_int(m.value, 42);
+            test_int(r->value, 90);
+        }
+        else if (e == ent3) {
+            test_int(p.x, 12);
+            test_int(p.y, 10);
+            test_int(v.x, 3);
+            test_int(v.y, 1);
+            test_int(m.value, 63);
+            test_int(r->value, 180);
+        }
+        count++;
+    });
+    test_int(count, 3);
+}

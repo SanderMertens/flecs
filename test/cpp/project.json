@@ -836,7 +836,9 @@
                 "named_scoped_rule",
                 "is_valid",
                 "unresolved_by_name",
-                "scope"
+                "scope",
+                "sparse_term_and_term_with_ref",
+                "sparse_multiple_term_and_term_with_ref"
             ]
         }, {
             "id": "SystemBuilder",
