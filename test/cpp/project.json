@@ -1033,7 +1033,10 @@
                 "lookup_module_after_reparent",
                 "reparent_module_in_ctor",
                 "implicitly_add_module_to_scopes_component",
-                "implicitly_add_module_to_scopes_entity"
+                "implicitly_add_module_to_scopes_entity",
+                "rename_namespace_shorter",
+                "rename_namespace_longer",
+                "rename_namespace_nested"
             ]
         }, {
             "id": "ImplicitComponents",
