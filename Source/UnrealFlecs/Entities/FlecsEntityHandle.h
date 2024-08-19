@@ -8,7 +8,9 @@
 #include "FlecsArchetype.h"
 #include "GameplayTagContainer.h"
 #include "InstancedStruct.h"
+#include "Logs/FlecsCategories.h"
 #include "SolidMacros/Macros.h"
+#include "Unlog/Unlog.h"
 #include "FlecsEntityHandle.generated.h"
 
 class UFlecsWorld;
@@ -72,8 +74,11 @@ public:
 	template <typename First, typename Second>
 	FORCEINLINE NO_DISCARD bool Has() const { return GetEntity().has<First, Second>(); }
 
-	template <typename TSecond>
-	FORCEINLINE NO_DISCARD bool Has(const FFlecsEntityHandle& InFirst) const { return GetEntity().has<TSecond>(InFirst); }
+	template <typename First>
+	FORCEINLINE NO_DISCARD bool Has(const FFlecsEntityHandle& InSecond) const { return GetEntity().has<First>(InSecond.GetEntity()); }
+
+	template <typename First, typename Second>
+	FORCEINLINE NO_DISCARD bool Has(const Second& InSecond) const { return GetEntity().has<First, Second>(InSecond); }
 
 	FORCEINLINE NO_DISCARD bool Has(const UScriptStruct* StructType) const
 	{
@@ -268,6 +273,7 @@ public:
 
 	FORCEINLINE void SetName(const FString& InName) const { GetEntity().set_name(StringCast<char>(*InName).Get()); }
 	FORCEINLINE NO_DISCARD FString GetName() const { return FString(GetEntity().name()); }
+	FORCEINLINE NO_DISCARD bool HasName() const { return Has<flecs::Identifier>(flecs::Name); }
 
 	FORCEINLINE void SetDocBrief(const FString& InDocBrief) const { GetEntity().set_doc_brief(StringCast<char>(*InDocBrief).Get()); }
 	FORCEINLINE NO_DISCARD FString GetDocBrief() const { return FString(GetEntity().doc_brief()); }
@@ -324,16 +330,10 @@ public:
 		return Has<flecs::Component>();
 	}
 
-	FORCEINLINE NO_DISCARD flecs::untyped_component& GetUntypedComponent()
+	FORCEINLINE NO_DISCARD flecs::untyped_component GetUntypedComponent() const
 	{
 		solid_checkf(IsComponent(), TEXT("Entity is not a component"));
-		return GetRef<flecs::untyped_component>();
-	}
-	
-	FORCEINLINE NO_DISCARD const flecs::untyped_component* GetUntypedComponent() const
-	{
-		solid_checkf(IsComponent(), TEXT("Entity is not a component"));
-		return GetPtr<flecs::untyped_component>();
+		return flecs::untyped_component(GetFlecsWorld_Internal(), GetEntity());
 	}
 
 	template <typename T>
@@ -432,350 +432,657 @@ public:
 		GetEntity().each<TFirst, FunctionType>(InFunction);
 	}
 
+	FORCEINLINE NO_DISCARD bool IsTraitEntity() const
+	{
+		return Has(flecs::Trait);
+	}
+
 	template <typename TComponent, typename TTrait>
 	FORCEINLINE void AddTrait() const
 	{
+		if UNLIKELY_IF(!Has<TComponent>())
+		{
+			return;
+		}
+		
 		ObtainTraitHolderEntity<TComponent>().template Add<TTrait>();
 	}
 
 	template <typename TComponent>
 	FORCEINLINE void AddTrait(const UScriptStruct* StructType) const
 	{
+		if UNLIKELY_IF(!Has<TComponent>())
+		{
+			return;
+		}
+		
 		ObtainTraitHolderEntity<TComponent>().Add(StructType);
 	}
 
 	template <typename TComponent>
 	FORCEINLINE void AddTrait(const FGameplayTag& InTag) const
 	{
+		if UNLIKELY_IF(!Has<TComponent>())
+		{
+			return;
+		}
+		
 		ObtainTraitHolderEntity<TComponent>().Add(InTag);
 	}
 
 	template <typename TComponent>
 	FORCEINLINE void AddTrait(const FFlecsEntityHandle& InTrait) const
 	{
+		if UNLIKELY_IF(!Has<TComponent>())
+		{
+			return;
+		}
+		
 		ObtainTraitHolderEntity<TComponent>().Add(InTrait);
 	}
 
 	FORCEINLINE void AddTrait(const UScriptStruct* StructType, const UScriptStruct* TraitType) const
 	{
+		if UNLIKELY_IF(!Has(StructType))
+		{
+			return;
+		}
+		
 		ObtainTraitHolderEntity(StructType).Add(TraitType);
 	}
 
 	FORCEINLINE void AddTrait(const UScriptStruct* StructType, const FGameplayTag& InTag) const
 	{
+		if UNLIKELY_IF(!Has(StructType))
+		{
+			return;
+		}
+		
 		ObtainTraitHolderEntity(StructType).Add(InTag);
 	}
 
 	FORCEINLINE void AddTrait(const UScriptStruct* StructType, const FFlecsEntityHandle& InTrait) const
 	{
+		if UNLIKELY_IF(!Has(StructType))
+		{
+			return;
+		}
+		
 		ObtainTraitHolderEntity(StructType).Add(InTrait);
 	}
 
 	template <typename TComponent, typename TTrait>
 	FORCEINLINE void RemoveTrait() const
 	{
+		if UNLIKELY_IF(!Has<TComponent>())
+		{
+			return;
+		}
+		
 		ObtainTraitHolderEntity<TComponent>().template Remove<TTrait>();
 	}
 
 	template <typename TComponent>
 	FORCEINLINE void RemoveTrait(const UScriptStruct* TraitStructType) const
 	{
+		if UNLIKELY_IF(!Has<TComponent>())
+		{
+			return;
+		}
+		
 		ObtainTraitHolderEntity<TComponent>().Remove(TraitStructType);
 	}
 
 	template <typename TComponent>
 	FORCEINLINE void RemoveTrait(const FGameplayTag& InTag) const
 	{
+		if UNLIKELY_IF(!Has<TComponent>())
+		{
+			return;
+		}
+		
 		ObtainTraitHolderEntity<TComponent>().Remove(InTag);
 	}
 
 	template <typename TComponent>
 	FORCEINLINE void RemoveTrait(const FFlecsEntityHandle& InTrait) const
 	{
+		if UNLIKELY_IF(!Has<TComponent>())
+		{
+			return;
+		}
+		
 		ObtainTraitHolderEntity<TComponent>().Remove(InTrait);
 	}
 
 	FORCEINLINE void RemoveTrait(const UScriptStruct* ComponentStructType, const UScriptStruct* TraitType) const
 	{
+		if UNLIKELY_IF(!Has(ComponentStructType))
+		{
+			return;
+		}
+		
 		ObtainTraitHolderEntity(ComponentStructType).Remove(TraitType);
 	}
 
 	FORCEINLINE void RemoveTrait(const UScriptStruct* ComponentStructType, const FGameplayTag& InTag) const
 	{
+		if UNLIKELY_IF(!Has(ComponentStructType))
+		{
+			return;
+		}
+		
 		ObtainTraitHolderEntity(ComponentStructType).Remove(InTag);
 	}
 
 	FORCEINLINE void RemoveTrait(const UScriptStruct* ComponentStructType, const FFlecsEntityHandle& InTrait) const
 	{
+		if UNLIKELY_IF(!Has(ComponentStructType))
+		{
+			return;
+		}
+		
 		ObtainTraitHolderEntity(ComponentStructType).Remove(InTrait);
 	}
 
 	template <typename TComponent, typename TTrait>
 	FORCEINLINE bool HasTrait() const
 	{
-		return ObtainTraitHolderEntity<TComponent>().template Has<TTrait>();
+		if (!Has<TComponent>())
+		{
+			return false;
+		}
+		
+		return ObtainTraitHolderEntity<TComponent>().Has<TTrait>();
 	}
 
 	template <typename TComponent>
 	FORCEINLINE bool HasTrait(const UScriptStruct* TraitStructType) const
 	{
+		if (!Has<TComponent>())
+		{
+			return false;
+		}
+		
 		return ObtainTraitHolderEntity<TComponent>().Has(TraitStructType);
 	}
 
 	template <typename TComponent>
 	FORCEINLINE bool HasTrait(const FGameplayTag& InTag) const
 	{
+		if (!Has<TComponent>())
+		{
+			return false;
+		}
+		
 		return ObtainTraitHolderEntity<TComponent>().Has(InTag);
 	}
 
 	template <typename TComponent>
 	FORCEINLINE bool HasTrait(const FFlecsEntityHandle& InTrait) const
 	{
+		if (!Has<TComponent>())
+		{
+			return false;
+		}
+		
 		return ObtainTraitHolderEntity<TComponent>().Has(InTrait);
 	}
 
 	FORCEINLINE bool HasTrait(const UScriptStruct* ComponentStructType, const UScriptStruct* TraitType) const
 	{
+		if (!Has(ComponentStructType))
+		{
+			return false;
+		}
+		
 		return ObtainTraitHolderEntity(ComponentStructType).Has(TraitType);
 	}
 
 	FORCEINLINE bool HasTrait(const UScriptStruct* ComponentStructType, const FGameplayTag& InTag) const
 	{
+		if (!Has(ComponentStructType))
+		{
+			return false;
+		}
+		
 		return ObtainTraitHolderEntity(ComponentStructType).Has(InTag);
 	}
 
 	FORCEINLINE bool HasTrait(const UScriptStruct* ComponentStructType, const FFlecsEntityHandle& InTrait) const
 	{
+		if (!Has(ComponentStructType))
+		{
+			return false;
+		}
+		
 		return ObtainTraitHolderEntity(ComponentStructType).Has(InTrait);
 	}
 
 	template <typename TComponent, typename TTrait>
 	FORCEINLINE void SetTrait(const TTrait& InValue) const
 	{
+		if UNLIKELY_IF(!Has<TComponent>())
+		{
+			return;
+		}
+		
 		ObtainTraitHolderEntity<TComponent>().template Set<TTrait>(InValue);
 	}
 
 	template <typename TComponent>
 	FORCEINLINE void SetTrait(const UScriptStruct* TraitStructType, const void* InValue) const
 	{
+		if UNLIKELY_IF(!Has<TComponent>())
+		{
+			return;
+		}
+		
 		ObtainTraitHolderEntity<TComponent>().Set(TraitStructType, InValue);
 	}
 
 	FORCEINLINE void SetTrait(const UScriptStruct* ComponentStructType, const UScriptStruct* TraitType, const void* InValue) const
 	{
+		if UNLIKELY_IF(!Has(ComponentStructType))
+		{
+			return;
+		}
+		
 		ObtainTraitHolderEntity(ComponentStructType).Set(TraitType, InValue);
 	}
 
 	FORCEINLINE void SetTrait(const UScriptStruct* ComponentStructType, const FInstancedStruct& InValue) const
 	{
+		if UNLIKELY_IF(!Has(ComponentStructType))
+		{
+			return;
+		}
+		
 		ObtainTraitHolderEntity(ComponentStructType).Set(InValue);
 	}
 
 	template <typename TComponent, typename TTrait>
 	FORCEINLINE TTrait GetTrait() const
 	{
+		if UNLIKELY_IF(!Has<TComponent>())
+		{
+			return TTrait();
+		}
+		
 		return ObtainTraitHolderEntity<TComponent>().template Get<TTrait>();
 	}
 
 	template <typename TComponent, typename TTrait>
 	FORCEINLINE TTrait* GetTraitPtr()
 	{
+		if UNLIKELY_IF(!Has<TComponent>())
+		{
+			return nullptr;
+		}
+		
 		return ObtainTraitHolderEntity<TComponent>().GetPtr<TTrait>();
 	}
 
 	template <typename TComponent, typename TTrait>
 	FORCEINLINE const TTrait* GetTraitPtr() const
 	{
+		if UNLIKELY_IF(!Has<TComponent>())
+		{
+			return nullptr;
+		}
+		
 		return ObtainTraitHolderEntity<TComponent>().template GetPtr<TTrait>();
 	}
 
 	template <typename TComponent>
 	FORCEINLINE void* GetTraitPtr(const UScriptStruct* TraitStructType)
 	{
+		if UNLIKELY_IF(!Has<TComponent>())
+		{
+			return nullptr;
+		}
+		
 		return ObtainTraitHolderEntity<TComponent>().GetPtr(TraitStructType);
 	}
 
 	template <typename TComponent>
 	FORCEINLINE const void* GetTraitPtr(const UScriptStruct* TraitStructType) const
 	{
+		if UNLIKELY_IF(!Has<TComponent>())
+		{
+			return nullptr;
+		}
+		
 		return ObtainTraitHolderEntity<TComponent>().GetPtr(TraitStructType);
 	}
 
 	FORCEINLINE void* GetTraitPtr(const UScriptStruct* ComponentStructType, const UScriptStruct* TraitType)
 	{
+		if UNLIKELY_IF(!Has(ComponentStructType))
+		{
+			return nullptr;
+		}
+		
 		return ObtainTraitHolderEntity(ComponentStructType).GetPtr(TraitType);
 	}
 
 	FORCEINLINE const void* GetTraitPtr(const UScriptStruct* ComponentStructType, const UScriptStruct* TraitType) const
 	{
+		if UNLIKELY_IF(!Has(ComponentStructType))
+		{
+			return nullptr;
+		}
+		
 		return ObtainTraitHolderEntity(ComponentStructType).GetPtr(TraitType);
 	}
 
 	template <typename TComponent, typename TTrait>
 	FORCEINLINE TTrait& GetTraitRef() const
 	{
-		return ObtainTraitHolderEntity<TComponent>().template GetRef<TTrait>();
+		solid_checkf(Has<TComponent>(), "Entity does not have component %s", nameof(TComponent));
+		return ObtainTraitHolderEntity<TComponent>().GetRef<TTrait>();
 	}
 
 	template <typename TComponent, typename TTrait>
 	FORCEINLINE flecs::ref<TTrait> GetTraitFlecsRef() const
 	{
+		solid_checkf(Has<TComponent>(), "Entity does not have component %s", nameof(TComponent));
 		return ObtainTraitHolderEntity<TComponent>().template GetFlecsRef<TTrait>();
 	}
 
 	template <typename TComponent, typename TTrait>
 	FORCEINLINE void EnableTrait() const
 	{
-		ObtainTraitHolderEntity<TComponent>().template Enable<TTrait>();
+		if UNLIKELY_IF(!Has<TComponent>())
+		{
+			return;
+		}
+		
+		ObtainTraitHolderEntity<TComponent>().Enable<TTrait>();
 	}
 
 	template <typename TComponent>
 	FORCEINLINE void EnableTrait(const UScriptStruct* TraitStructType) const
 	{
+		if UNLIKELY_IF(!Has<TComponent>())
+		{
+			return;
+		}
+		
 		ObtainTraitHolderEntity<TComponent>().Enable(TraitStructType);
 	}
 
 	template <typename TComponent>
 	FORCEINLINE void EnableTrait(const FGameplayTag& InTag) const
 	{
+		if UNLIKELY_IF(!Has<TComponent>())
+		{
+			return;
+		}
+		
 		ObtainTraitHolderEntity<TComponent>().Enable(InTag);
 	}
 
 	template <typename TComponent>
 	FORCEINLINE void EnableTrait(const FFlecsEntityHandle& InTrait) const
 	{
+		if UNLIKELY_IF(!Has<TComponent>())
+		{
+			return;
+		}
+		
 		ObtainTraitHolderEntity<TComponent>().Enable(InTrait);
 	}
 
 	FORCEINLINE void EnableTrait(const UScriptStruct* ComponentStructType, const UScriptStruct* TraitType) const
 	{
+		if UNLIKELY_IF(!Has(ComponentStructType))
+		{
+			return;
+		}
+		
 		ObtainTraitHolderEntity(ComponentStructType).Enable(TraitType);
 	}
 
 	FORCEINLINE void EnableTrait(const UScriptStruct* ComponentStructType, const FGameplayTag& InTag) const
 	{
+		if UNLIKELY_IF(!Has(ComponentStructType))
+		{
+			return;
+		}
+		
 		ObtainTraitHolderEntity(ComponentStructType).Enable(InTag);
 	}
 
 	FORCEINLINE void EnableTrait(const UScriptStruct* ComponentStructType, const FFlecsEntityHandle& InTrait) const
 	{
+		if UNLIKELY_IF(!Has(ComponentStructType))
+		{
+			return;
+		}
+		
 		ObtainTraitHolderEntity(ComponentStructType).Enable(InTrait);
 	}
 
 	template <typename TComponent, typename TTrait>
 	FORCEINLINE void DisableTrait() const
 	{
-		ObtainTraitHolderEntity<TComponent>().template Disable<TTrait>();
+		if UNLIKELY_IF(!Has<TComponent>())
+		{
+			return;
+		}
+		
+		ObtainTraitHolderEntity<TComponent>().Disable<TTrait>();
 	}
 
 	template <typename TComponent>
 	FORCEINLINE void DisableTrait(const UScriptStruct* TraitStructType) const
 	{
+		if UNLIKELY_IF(!Has<TComponent>())
+		{
+			return;
+		}
+		
 		ObtainTraitHolderEntity<TComponent>().Disable(TraitStructType);
 	}
 
 	template <typename TComponent>
 	FORCEINLINE void DisableTrait(const FGameplayTag& InTag) const
 	{
+		if UNLIKELY_IF(!Has<TComponent>())
+		{
+			return;
+		}
+		
 		ObtainTraitHolderEntity<TComponent>().Disable(InTag);
 	}
 
 	template <typename TComponent>
 	FORCEINLINE void DisableTrait(const FFlecsEntityHandle& InTrait) const
 	{
+		if UNLIKELY_IF(!Has<TComponent>())
+		{
+			return;
+		}
+		
 		ObtainTraitHolderEntity<TComponent>().Disable(InTrait);
 	}
 
 	FORCEINLINE void DisableTrait(const UScriptStruct* ComponentStructType, const UScriptStruct* TraitType) const
 	{
+		if UNLIKELY_IF(!Has(ComponentStructType))
+		{
+			return;
+		}
+		
 		ObtainTraitHolderEntity(ComponentStructType).Disable(TraitType);
 	}
 
 	FORCEINLINE void DisableTrait(const UScriptStruct* ComponentStructType, const FGameplayTag& InTag) const
 	{
+		if UNLIKELY_IF(!Has(ComponentStructType))
+		{
+			return;
+		}
+		
 		ObtainTraitHolderEntity(ComponentStructType).Disable(InTag);
 	}
 
 	FORCEINLINE void DisableTrait(const UScriptStruct* ComponentStructType, const FFlecsEntityHandle& InTrait) const
 	{
+		if UNLIKELY_IF(!Has(ComponentStructType))
+		{
+			return;
+		}
+		
 		ObtainTraitHolderEntity(ComponentStructType).Disable(InTrait);
 	}
 
 	template <typename TComponent, typename TTrait>
 	FORCEINLINE NO_DISCARD bool IsTraitEnabled() const
 	{
-		return ObtainTraitHolderEntity<TComponent>().template IsEnabled<TTrait>();
+		if (!Has<TComponent>())
+		{
+			return false;
+		}
+		
+		return ObtainTraitHolderEntity<TComponent>().IsEnabled<TTrait>();
 	}
 
 	template <typename TComponent>
 	FORCEINLINE bool IsTraitEnabled(const UScriptStruct* TraitStructType) const
 	{
+		if (!Has<TComponent>())
+		{
+			return false;
+		}
+		
 		return ObtainTraitHolderEntity<TComponent>().IsEnabled(TraitStructType);
 	}
 
 	template <typename TComponent>
 	FORCEINLINE NO_DISCARD bool IsTraitEnabled(const FGameplayTag& InTag) const
 	{
+		if (!Has<TComponent>())
+		{
+			return false;
+		}
+		
 		return ObtainTraitHolderEntity<TComponent>().IsEnabled(InTag);
 	}
 
 	template <typename TComponent>
 	FORCEINLINE NO_DISCARD bool IsTraitEnabled(const FFlecsEntityHandle& InTrait) const
 	{
+		if (!Has<TComponent>())
+		{
+			return false;
+		}
+		
 		return ObtainTraitHolderEntity<TComponent>().IsEnabled(InTrait);
 	}
 
 	FORCEINLINE NO_DISCARD bool IsTraitEnabled(const UScriptStruct* ComponentStructType, const UScriptStruct* TraitType) const
 	{
+		if (!Has(ComponentStructType))
+		{
+			return false;
+		}
+		
 		return ObtainTraitHolderEntity(ComponentStructType).IsEnabled(TraitType);
 	}
 
 	FORCEINLINE NO_DISCARD bool IsTraitEnabled(const UScriptStruct* ComponentStructType, const FGameplayTag& InTag) const
 	{
+		if (!Has(ComponentStructType))
+		{
+			return false;
+		}
+		
 		return ObtainTraitHolderEntity(ComponentStructType).IsEnabled(InTag);
 	}
 
 	FORCEINLINE NO_DISCARD bool IsTraitEnabled(const UScriptStruct* ComponentStructType, const FFlecsEntityHandle& InTrait) const
 	{
+		if (!Has(ComponentStructType))
+		{
+			return false;
+		}
+		
 		return ObtainTraitHolderEntity(ComponentStructType).IsEnabled(InTrait);
 	}
 
 	template <typename TComponent, typename TTrait>
 	FORCEINLINE void ToggleTrait() const
 	{
-		ObtainTraitHolderEntity<TComponent>().template Toggle<TTrait>();
+		if UNLIKELY_IF(!Has<TComponent>())
+		{
+			return;
+		}
+		
+		ObtainTraitHolderEntity<TComponent>().Toggle<TTrait>();
 	}
 
 	template <typename TComponent>
 	FORCEINLINE void ToggleTrait(const UScriptStruct* TraitStructType) const
 	{
+		if UNLIKELY_IF(!Has<TComponent>())
+		{
+			return;
+		}
+		
 		ObtainTraitHolderEntity<TComponent>().Toggle(TraitStructType);
 	}
 
 	template <typename TComponent>
 	FORCEINLINE void ToggleTrait(const FGameplayTag& InTag) const
 	{
+		if UNLIKELY_IF(!Has<TComponent>())
+		{
+			return;
+		}
+		
 		ObtainTraitHolderEntity<TComponent>().Toggle(InTag);
 	}
 
 	template <typename TComponent>
 	FORCEINLINE void ToggleTrait(const FFlecsEntityHandle& InTrait) const
 	{
+		if UNLIKELY_IF(!Has<TComponent>())
+		{
+			return;
+		}
+		
 		ObtainTraitHolderEntity<TComponent>().Toggle(InTrait);
 	}
 
 	FORCEINLINE void ToggleTrait(const UScriptStruct* ComponentStructType, const UScriptStruct* TraitType) const
 	{
+		if UNLIKELY_IF(!Has(ComponentStructType))
+		{
+			return;
+		}
+		
 		ObtainTraitHolderEntity(ComponentStructType).Toggle(TraitType);
 	}
 
 	FORCEINLINE void ToggleTrait(const UScriptStruct* ComponentStructType, const FGameplayTag& InTag) const
 	{
+		if UNLIKELY_IF(!Has(ComponentStructType))
+		{
+			return;
+		}
+		
 		ObtainTraitHolderEntity(ComponentStructType).Toggle(InTag);
 	}
 
 	FORCEINLINE void ToggleTrait(const UScriptStruct* ComponentStructType, const FFlecsEntityHandle& InTrait) const
 	{
+		if UNLIKELY_IF(!Has(ComponentStructType))
+		{
+			return;
+		}
+		
 		ObtainTraitHolderEntity(ComponentStructType).Toggle(InTrait);
 	}
 
@@ -853,7 +1160,7 @@ private:
 	FORCEINLINE NO_DISCARD flecs::world GetFlecsWorld_Internal() const { return GetEntity().world(); }
 
 	template <typename TComponent>
-	FORCEINLINE NO_DISCARD FFlecsEntityHandle ObtainTraitHolderEntity()
+	FORCEINLINE NO_DISCARD FFlecsEntityHandle ObtainTraitHolderEntity() const
 	{
 		solid_checkf(Has<TComponent>(), TEXT("Entity does not have component"));
 
@@ -870,7 +1177,7 @@ private:
 			return false;
 		});
 
-		if (TraitHolder)
+		if LIKELY_IF(TraitHolder.IsValid())
 		{
 			return TraitHolder;
 		}
@@ -903,7 +1210,7 @@ private:
 			return false;
 		});
 
-		if LIKELY_IF(TraitHolder)
+		if LIKELY_IF(TraitHolder.IsValid())
 		{
 			return TraitHolder;
 		}

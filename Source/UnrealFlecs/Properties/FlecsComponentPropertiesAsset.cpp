@@ -15,7 +15,7 @@ void UFlecsComponentPropertiesAsset::PostLoad()
 	
 	for (const FFlecsEntityHandle& ComponentProperty : ComponentProperties)
 	{
-		ComponentPropertiesEntities.push_back(ComponentProperty.GetEntity());
+		ComponentPropertiesEntities.emplace_back(ComponentProperty.GetEntity());
 	}
 
 	FFlecsComponentPropertiesRegistry::Get()

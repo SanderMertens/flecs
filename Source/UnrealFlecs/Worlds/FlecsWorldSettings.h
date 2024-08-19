@@ -19,6 +19,19 @@ struct FFlecsWorldSettings
     
 public:
     FFlecsWorldSettings() = default;
+    
+    FORCEINLINE FFlecsWorldSettings(const FString& InWorldName, const bool bInAutoTickWorld = true,
+        const bool bInDefaultAutoMerge = true, const int32 InDefaultWorkerThreads = 4,
+        const TArray<TObjectPtr<UObject>>& InModules = {},
+        const TArray<FInstancedStruct>& InModuleStructs = {})
+        : WorldName(InWorldName)
+        , bAutoTickWorld(bInAutoTickWorld)
+        , bDefaultAutoMerge(bInDefaultAutoMerge)
+        , DefaultWorkerThreads(InDefaultWorkerThreads)
+        , Modules(InModules)
+        , ModuleStructs(InModuleStructs)
+    {
+    }
 
     FORCEINLINE NO_DISCARD bool operator==(const FFlecsWorldSettings& Other) const
     {

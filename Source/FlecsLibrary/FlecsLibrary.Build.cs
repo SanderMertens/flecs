@@ -8,6 +8,8 @@ public class FlecsLibrary : ModuleRules
     {
         PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
         
+        CppStandard = CppStandardVersion.Cpp20;
+        
         OptimizationLevel = OptimizationMode.Speed;
         
         OptimizeCode = CodeOptimization.Always;
@@ -39,7 +41,6 @@ public class FlecsLibrary : ModuleRules
                 "Engine",
                 "Slate",
                 "SlateCore",
-                "SolidMacros"
             }
         );
     }

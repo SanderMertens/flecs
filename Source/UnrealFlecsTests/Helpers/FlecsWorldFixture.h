@@ -11,7 +11,9 @@ class FFlecsWorldFixture
 {
 public:
 	
-	FORCEINLINE explicit FFlecsWorldFixture(const FFlecsWorldSettings& FlecsWorldSettings, const FURL& URL = FURL())
+	FORCEINLINE explicit FFlecsWorldFixture(
+		const FFlecsWorldSettings& FlecsWorldSettings = FFlecsWorldSettings(TEXT("TestFlecsWorld"))
+		, const FURL& URL = FURL())
 	{
 		if UNLIKELY_IF(GEngine == nullptr)
 		{
@@ -21,7 +23,7 @@ public:
 		static uint32 WorldCounter = 0;
 		const FString WorldName = FString::Printf(TEXT("WorldFixture_%d"), WorldCounter++);
  
-		if (UWorld* World = UWorld::CreateWorld(EWorldType::Game, false, *WorldName, GetTransientPackage()))
+		if (UWorld* World = UWorld::CreateWorld(EWorldType::Game, true, *WorldName, GetTransientPackage()))
 		{
 			FWorldContext& WorldContext = GEngine->CreateNewWorldContext(EWorldType::Game);
 			WorldContext.SetCurrentWorld(World);
@@ -61,6 +63,11 @@ public:
 	FORCEINLINE NO_DISCARD UWorld* GetWorld() const
 	{
 		return WeakWorld.Get();
+	}
+
+	FORCEINLINE NO_DISCARD UFlecsWorld* GetFlecsWorld() const
+	{
+		return FlecsWorld;
 	}
 
 private:

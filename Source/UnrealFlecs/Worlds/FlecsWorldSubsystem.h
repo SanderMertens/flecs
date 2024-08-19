@@ -57,8 +57,12 @@ public:
 	{
 		Super::OnWorldBeginPlay(InWorld);
 
-		AGameStateBase* GameState = InWorld.GetGameState();
-		solid_checkf(IsValid(GameState), TEXT("GameState must be valid"));
+		const AGameStateBase* GameState = InWorld.GetGameState();
+		
+		if UNLIKELY_IF(!IsValid(GameState))
+		{
+			return;
+		}
 
 		UFlecsWorldStartComponent* StartComponent = GameState->FindComponentByClass<UFlecsWorldStartComponent>();
 		solid_checkf(IsValid(StartComponent), TEXT("StartComponent must be valid"));

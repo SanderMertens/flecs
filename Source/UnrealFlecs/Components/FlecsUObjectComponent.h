@@ -9,7 +9,7 @@
 #include "FlecsUObjectComponent.generated.h"
 
 USTRUCT(BlueprintType)
-struct UNREALFLECS_API FFlecsUObjectComponent final
+struct UNREALFLECS_API FFlecsUObjectComponent
 {
 	GENERATED_BODY()
 

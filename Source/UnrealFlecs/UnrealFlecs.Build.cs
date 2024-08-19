@@ -33,7 +33,10 @@ public class UnrealFlecs : ModuleRules
 				"FlecsLibrary",
 				"SolidMacros",
 				"GameplayTags",
-				"AssetRegistry"
+				"AssetRegistry",
+				"StructUtils",
+				"NetCore",
+				"NetCommon",
 			}
 			);
 			
@@ -45,10 +48,7 @@ public class UnrealFlecs : ModuleRules
 				"Engine",
 				"Slate",
 				"SlateCore",
-				"StructUtils",
 				"DeveloperSettings",
-				"NetCore",
-				"NetCommon",
 			}
 			);
 		

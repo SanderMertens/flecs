@@ -19,7 +19,7 @@ class UFlecsWorld;
  */
 // This class does not need to be modified.
 UINTERFACE()
-class UFlecsModuleInterface : public UInterface
+class UNREALFLECS_API UFlecsModuleInterface : public UInterface
 {
 	GENERATED_BODY()
 }; // class UFlecsModuleInterface

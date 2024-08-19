@@ -69,7 +69,15 @@
  * allocation counters in the OS API) are accurate in multithreaded
  * applications, at the cost of increased overhead.
  */
- #define FLECS_ACCURATE_COUNTERS
+#if WITH_EDITOR || defined(FLECS_SANITIZE)
+#define FLECS_ACCURATE_COUNTERS
+#endif
+
+#if (!defined(FLECS_DEBUG)) && WITH_EDITOR
+   #define FLECS_DEBUG
+   #undef FLECS_NDEBUG
+   #undef NDEBUG
+#endif
 
 /* Make sure provided configuration is valid */
 #if defined(FLECS_DEBUG) && defined(FLECS_NDEBUG)
@@ -118,7 +126,7 @@
  * Even though an application may still be able to continue running after a soft
  * assert, it should be treated as if in an undefined state.
  */
-// #define FLECS_SOFT_ASSERT
+ #define FLECS_SOFT_ASSERT
 
 /** @def FLECS_KEEP_ASSERT
  * By default asserts are disabled in release mode, when either FLECS_NDEBUG or
@@ -6050,7 +6058,7 @@ int ecs_value_move_ctor(
     ecs_entity_t type,
     void* dst,
     void *src);
-
+ 
 /** @} */
 
 /** @} */

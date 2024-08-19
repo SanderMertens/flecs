@@ -293,13 +293,13 @@ struct type_impl {
     // Return the size of a component.
     static size_t size() {
         ecs_assert(s_id != 0, ECS_INTERNAL_ERROR, NULL);
-        return s_size;
+        return sizeof(T);
     }
 
     // Return the alignment of a component.
     static size_t alignment() {
         ecs_assert(s_id != 0, ECS_INTERNAL_ERROR, NULL);
-        return s_alignment;
+        return alignof(T);
     }
 
     // Was the component already registered.
@@ -317,7 +317,7 @@ struct type_impl {
         }
         
         const char* typeName = type_name<T>();
-        entity_t current = ecs_lookup(world, typeName);
+        const entity_t current = ecs_lookup(world, typeName);
         if (current) {
             s_id = current;
             return true;

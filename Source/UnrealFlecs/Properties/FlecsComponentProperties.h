@@ -61,7 +61,7 @@ public:
 					continue;
 				}
 
-				ComponentProperties[Name].Entities.push_back(Entity);
+				ComponentProperties[Name].Entities.emplace_back(Entity);
 
 				UN_LOGF(LogFlecsComponentProperties, Log,
 					"Updated component properties: %s", *FString(Name.data()));

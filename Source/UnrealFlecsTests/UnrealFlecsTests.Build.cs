@@ -10,6 +10,10 @@ public class UnrealFlecsTests : ModuleRules
             new string[]
             {
                 "Core",
+                "StructUtils",
+                "SolidMacros",
+                "FlecsLibrary",
+                "UnrealFlecs",
             }
         );
 
@@ -20,8 +24,6 @@ public class UnrealFlecsTests : ModuleRules
                 "Engine",
                 "Slate",
                 "SlateCore",
-                "UnrealFlecs",
-                "SolidMacros",
             }
         );
     }

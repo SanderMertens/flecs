@@ -7,11 +7,13 @@
 #include "CoreMinimal.h"
 #include "flecs.h"
 #include "AssetRegistry/AssetRegistryModule.h"
+#include "Components/FlecsPrimaryAssetComponent.h"
 #include "Components/FlecsTypeMapComponent.h"
 #include "Components/FlecsUObjectComponent.h"
 #include "Entities/FlecsEntityRecord.h"
 #include "SolidMacros/Concepts/SolidConcepts.h"
 #include "Entities/FlecsId.h"
+#include "Logs/FlecsCategories.h"
 #include "Modules/FlecsModuleInterface.h"
 #include "Prefabs/FlecsPrefabAsset.h"
 #include "Prefabs/FlecsPrefabComponent.h"
@@ -34,7 +36,7 @@ public:
 	{
 		InitializeComponentObservers();
 		InitializeSystems();
-		InitializePrefabs();
+		InitializeAssetRegistry();
 	}
 
 	FORCEINLINE void InitializeComponentObservers() const
@@ -54,8 +56,8 @@ public:
 		static constexpr int32 UOBJECT_VALID_CHECK_FRAME_RATE = 60;
 		
 		CreateSystemWithBuilder<const FFlecsUObjectComponent&>(TEXT("FlecsUObjectComponentSystem"))
-			.term_at(1)
-			.read()
+			.term_at(0)
+				.read()
 			.rate(UOBJECT_VALID_CHECK_FRAME_RATE)
 			.multi_threaded()
 			.each([](const flecs::entity InEntity, const FFlecsUObjectComponent& InComponent)
@@ -67,29 +69,65 @@ public:
 			});
 	}
 
-	FORCEINLINE void InitializePrefabs() const
+	FORCEINLINE void InitializeAssetRegistry()
 	{
 		FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>(TEXT("AssetRegistry"));
 		IAssetRegistry& AssetRegistry = AssetRegistryModule.Get();
 
 		TArray<FAssetData> AssetData;
-		AssetRegistry.GetAssetsByClass(FTopLevelAssetPath(UFlecsPrefabAsset::StaticClass()), AssetData);
+		AssetRegistry.GetAssetsByClass(FTopLevelAssetPath(UFlecsPrimaryDataAsset::StaticClass()), AssetData,
+			true);
 
 		AssetRegistry.OnAssetAdded().AddLambda([&](const FAssetData& InAssetData)
 		{
-			if (InAssetData.GetClass() == UFlecsPrefabAsset::StaticClass())
-			{
-				CreatePrefab(CastChecked<UFlecsPrefabAsset>(InAssetData.GetAsset())->EntityRecord);
-			}
+			RegisterFlecsAsset(CastChecked<UFlecsPrimaryDataAsset>(InAssetData.GetAsset()));
 		});
 
 		for (const FAssetData& Asset : AssetData)
 		{
-			if (const UFlecsPrefabAsset* PrefabAsset = Cast<UFlecsPrefabAsset>(Asset.GetAsset()))
-			{
-				CreatePrefab(PrefabAsset->EntityRecord);
-			}
+			RegisterFlecsAsset(CastChecked<UFlecsPrimaryDataAsset>(Asset.GetAsset()));
 		}
+		
+		AssetRegistry.OnAssetRemoved().AddLambda([&](const FAssetData& InAssetData)
+		{
+			UnregisterFlecsAsset(CastChecked<UFlecsPrimaryDataAsset>(InAssetData.GetAsset()));
+		});
+	}
+
+	FORCEINLINE void RegisterFlecsAsset(UFlecsPrimaryDataAsset* InAsset)
+	{
+		solid_checkf(IsValid(InAsset), TEXT("Asset is nullptr"));
+
+		if (!InAsset->ShouldSpawn())
+		{
+			return;
+		}
+
+		const FFlecsEntityHandle AssetEntity = CreateEntity(InAsset->GetPrimaryAssetId().ToString());
+		AssetEntity.Set<FFlecsPrimaryAssetComponent>(FFlecsPrimaryAssetComponent{ InAsset->GetPrimaryAssetId() });
+		InAsset->OnEntityCreated(AssetEntity, this);
+	}
+
+	FORCEINLINE void UnregisterFlecsAsset(UFlecsPrimaryDataAsset* InAsset)
+	{
+		solid_checkf(IsValid(InAsset), TEXT("Asset is nullptr"));
+
+		if (!InAsset->ShouldSpawn())
+		{
+			return;
+		}
+
+		const FFlecsEntityHandle AssetEntity = LookupEntity(InAsset->GetPrimaryAssetId().ToString());
+		
+		if UNLIKELY_IF(!AssetEntity.IsValid())
+		{
+			UN_LOGF(LogFlecsWorld, Warning, "Asset entity %s not found",
+				*InAsset->GetPrimaryAssetId().ToString());
+			return;
+		}
+		
+		InAsset->OnEntityDestroyed(AssetEntity, this);
+		AssetEntity.Destroy();
 	}
 	
 	FORCEINLINE void SetWorld(flecs::world&& InWorld)
@@ -128,7 +166,7 @@ public:
 
 	FORCEINLINE FFlecsEntityHandle CreateEntityWithId(const flecs::entity_t InId) const
 	{
-		return FFlecsEntityHandle(ecs_new_w_id(World.c_ptr(), InId));
+		return FFlecsEntityHandle(World.make_alive(InId));
 	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
@@ -608,7 +646,7 @@ public:
 
 		#if WITH_EDITOR
 
-		flecs::untyped_component& UntypedComponent = ScriptStructComponent.GetUntypedComponent();
+		flecs::untyped_component UntypedComponent = ScriptStructComponent.GetUntypedComponent();
 		
 		for (TFieldIterator<FProperty> PropertyIt(ScriptStruct); PropertyIt; ++PropertyIt)
 		{
@@ -647,6 +685,14 @@ public:
 			{
 				UntypedComponent.member<FText>(StringCast<char>(*Property->GetName()).Get());
 			}
+			else if (Property->IsA<FObjectProperty>())
+			{
+				UntypedComponent.member<TObjectPtr<UObject>>(StringCast<char>(*Property->GetName()).Get());
+			}
+			else if (Property->IsA<FStructProperty>())
+			{
+				UntypedComponent.member<TStructOnScope<FStructProperty>>(StringCast<char>(*Property->GetName()).Get());
+			}
 		}
 
 		#endif // WITH_EDITOR
@@ -676,7 +722,7 @@ public:
 
 		#if WITH_EDITOR
 
-		flecs::untyped_component& UntypedComponent = InEntity.GetUntypedComponent();
+		flecs::untyped_component UntypedComponent = InEntity.GetUntypedComponent();
 		
 		for (TFieldIterator<FProperty> PropertyIt(ScriptStruct); PropertyIt; ++PropertyIt)
 		{
@@ -880,6 +926,12 @@ public:
 		Prefab.Set<FFlecsPrefabComponent>(PrefabComponent);
 		
 		return Prefab;
+	}
+
+	UFUNCTION(BlueprintCallable, Category = "Flecs")
+	FORCEINLINE void DestroyPrefab(const FFlecsEntityHandle& InPrefab) const
+	{
+		World.delete_with(InPrefab.GetEntity(), true);
 	}
 	
 	flecs::world World;
