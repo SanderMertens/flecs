@@ -21,11 +21,6 @@ struct query_builder_i : term_builder_i<Base> {
         , expr_count_(0)
         , desc_(desc) { }
 
-    Base& instanced() {
-        desc_->flags |= EcsQueryIsInstanced;
-        return *this;
-    }
-
     Base& query_flags(ecs_flags32_t flags) {
         desc_->flags |= flags;
         return *this;
@@ -73,18 +68,18 @@ struct query_builder_i : term_builder_i<Base> {
         return *this;
     }
 
-    Base& with_name_component() {
-        this->term();
-        *this->term_ = flecs::term(flecs::Name);
-        return *this;
-    }
-
     Base& with(const char *name) {
         this->term();
         *this->term_ = flecs::term().first(name);
         if (this->term_->inout == EcsInOutDefault) {
             this->inout_none();
         }
+        return *this;
+    }
+
+    Base& with_name_component() {
+        this->term();
+        *this->term_ = flecs::term(flecs::Name);
         return *this;
     }
 
@@ -362,7 +357,8 @@ struct query_builder_i : term_builder_i<Base> {
         desc_->on_group_delete = action;
         return *this;
     }
-    
+
+protected:
     virtual flecs::world_t* world_v() override = 0;
     int32_t term_index_;
     int32_t expr_count_;

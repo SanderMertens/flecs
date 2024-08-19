@@ -22,7 +22,7 @@ public:
 
 	FORCEINLINE void InitializeSystem_Internal(const flecs::world& InWorld)
 	{
-		flecs::system_builder Builder(InWorld, StringCast<char>(*GetName()).Get());
+		flecs::system_builder<> Builder(InWorld, StringCast<char>(*GetName()).Get());
 		BuildSystem(Builder);
 
 		System = Builder;

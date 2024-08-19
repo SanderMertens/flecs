@@ -184,7 +184,7 @@ protected:
 template<typename ... Components>
 struct query : query_base, iterable<Components...> {
 private:
-    using Terms = typename _::term_ptrs<Components...>::array;
+    using Fields = typename _::field_ptrs<Components...>::array;
 
 public:
     using query_base::query_base;
@@ -217,10 +217,6 @@ private:
 
     ecs_iter_next_action_t next_action() const override {
         return ecs_query_next;
-    }
-
-    ecs_iter_next_action_t next_each_action() const override {
-        return flecs_query_next_instanced;
     }
 };
 
