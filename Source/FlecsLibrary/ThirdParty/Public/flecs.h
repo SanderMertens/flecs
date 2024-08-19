@@ -33,7 +33,7 @@
 /* Flecs version macros */
 #define FLECS_VERSION_MAJOR 4  /**< Flecs major version. */
 #define FLECS_VERSION_MINOR 0  /**< Flecs minor version. */
-#define FLECS_VERSION_PATCH 0  /**< Flecs patch version. */
+#define FLECS_VERSION_PATCH 1  /**< Flecs patch version. */
 
 /** Flecs version. */
 #define FLECS_VERSION FLECS_VERSION_IMPL(\
@@ -63,6 +63,11 @@
  * Define when building for C89
  */
 // #define FLECS_LEGACY
+
+/** @def FLECS_NO_DEPRECATED_WARNINGS
+ * disables deprecated warnings
+ */
+#define FLECS_NO_DEPRECATED_WARNINGS
 
 /** @def FLECS_ACCURATE_COUNTERS
  * Define to ensure that global counters used for statistics (such as the
@@ -281,7 +286,7 @@
 #define FLECS_VARIABLE_COUNT_MAX (64)
 
 /** \def FLECS_TERM_COUNT_MAX 
- * Maximum number of terms in queries. Should not be set higher than 64. */
+ * Maximum number of terms in queries. Should not exceed 64. */
 #ifndef FLECS_TERM_COUNT_MAX
 #define FLECS_TERM_COUNT_MAX 32
 #endif
@@ -293,7 +298,7 @@
 #endif
 
 /** \def FLECS_QUERY_VARIABLE_COUNT_MAX
- * Maximum number of query variables per query */
+ * Maximum number of query variables per query. Should not exceed 128. */
 #ifndef FLECS_QUERY_VARIABLE_COUNT_MAX
 #define FLECS_QUERY_VARIABLE_COUNT_MAX (64)
 #endif
@@ -458,9 +463,6 @@ typedef struct ecs_record_t ecs_record_t;
 /** Information about a (component) id, such as type info and tables with the id */
 typedef struct ecs_id_record_t ecs_id_record_t;
 
-/** Information about where in a table a specific (component) id is stored. */
-typedef struct ecs_table_record_t ecs_table_record_t;
-
 /** A poly object.
  * A poly (short for polymorph) object is an object that has a variable list of
  * capabilities, determined by a mixin table. This is the current list of types
@@ -487,11 +489,38 @@ typedef struct ecs_mixins_t ecs_mixins_t;
 
 /** Header for ecs_poly_t objects. */
 typedef struct ecs_header_t {
-    int32_t magic;        /**< Magic number verifying it's a flecs object */
-    int32_t type;         /**< Magic number indicating which type of flecs object */
-    int32_t refcount;     /**< Refcount, to enable RAII handles */
-    ecs_mixins_t *mixins; /**< Table with offsets to (optional) mixins */
+    int32_t magic;              /**< Magic number verifying it's a flecs object */
+    int32_t type;               /**< Magic number indicating which type of flecs object */
+    int32_t refcount;           /**< Refcount, to enable RAII handles */
+    ecs_mixins_t *mixins;       /**< Table with offsets to (optional) mixins */
 } ecs_header_t;
+
+/** Record for entity index */
+struct ecs_record_t {
+    ecs_id_record_t *idr;       /**< Id record to (*, entity) for target entities */
+    ecs_table_t *table;         /**< Identifies a type (and table) in world */
+    uint32_t row;               /**< Table row of the entity */
+    int32_t dense;              /**< Index in dense array of entity index */    
+};
+
+/** Header for table cache elements. */
+typedef struct ecs_table_cache_hdr_t {
+    struct ecs_table_cache_t *cache;  /**< Table cache of element. Of type ecs_id_record_t* for component index elements. */
+    ecs_table_t *table;               /**< Table associated with element. */
+    struct ecs_table_cache_hdr_t *prev, *next; /**< Next/previous elements for id in table cache. */
+    bool empty;                       /**< Whether element is in empty list. */
+} ecs_table_cache_hdr_t;
+
+/** Metadata describing where a component id is stored in a table.
+ * This type is used as element type for the component index table cache. One
+ * record exists per table/component in the table. Only records for wildcard ids
+ * can have a count > 1. */
+typedef struct ecs_table_record_t {
+    ecs_table_cache_hdr_t hdr;  /**< Table cache header */
+    int16_t index;              /**< First type index where id occurs in table */
+    int16_t count;              /**< Number of times id occurs in table */
+    int16_t column;             /**< First column index where id occurs */
+} ecs_table_record_t;
 
 /** @} */
 
@@ -758,7 +787,7 @@ struct ecs_term_t {
     int16_t inout;              /**< Access to contents matched by term */
     int16_t oper;               /**< Operator of term */
 
-    int16_t field_index;        /**< Index of field for term in iterator */
+    int8_t field_index;         /**< Index of field for term in iterator */
     ecs_flags16_t flags_;       /**< Flags that help eval, set by ecs_query_init() */
 };
 
@@ -773,7 +802,7 @@ struct ecs_query_t {
     ecs_id_t ids[FLECS_TERM_COUNT_MAX]; /**< Component ids. Indexed by field */
 
     ecs_flags32_t flags;        /**< Query flags */
-    int16_t var_count;          /**< Number of query variables */
+    int8_t var_count;           /**< Number of query variables */
     int8_t term_count;          /**< Number of query terms */
     int8_t field_count;         /**< Number of fields returned by query */
 
@@ -783,6 +812,7 @@ struct ecs_query_t {
     ecs_termset_t data_fields;  /**< Fields that have data */
     ecs_termset_t write_fields; /**< Fields that write data */
     ecs_termset_t read_fields;  /**< Fields that read data */
+    ecs_termset_t row_fields;   /**< Fields that must be acquired with field_at */
     ecs_termset_t shared_readonly_fields; /**< Fields that don't write shared data */
     ecs_termset_t set_fields;   /**< Fields that will be set */
 
@@ -885,6 +915,7 @@ struct ecs_type_hooks_t {
  * @ingroup components
  */
 struct ecs_type_info_t {
+    const ecs_world_t *world; /**< World */
     ecs_size_t size;         /**< Size of type */
     ecs_size_t alignment;    /**< Alignment of type */
     ecs_type_hooks_t hooks;  /**< Type hooks */
@@ -1032,24 +1063,23 @@ typedef struct ecs_component_desc_t {
  */
 struct ecs_iter_t {
     /* World */
-    ecs_world_t *world;           /**< The world */
-    ecs_world_t *real_world;      /**< Actual world. This differs from world when in readonly mode */
+    ecs_world_t *world;           /**< The world. Can point to stage when in deferred/readonly mode. */
+    ecs_world_t *real_world;      /**< Actual world. Never points to a stage. */
 
     /* Matched data */
-    ecs_entity_t *entities;       /**< Entity identifiers */
-    void **ptrs;                  /**< Pointers to components. Array if from this, pointer if not. */
+    const ecs_entity_t *entities; /**< Entity identifiers */
     const ecs_size_t *sizes;      /**< Component sizes */
     ecs_table_t *table;           /**< Current table */
     ecs_table_t *other_table;     /**< Prev or next table when adding/removing */
     ecs_id_t *ids;                /**< (Component) ids */
     ecs_var_t *variables;         /**< Values of variables (if any) */
-    int32_t *columns;             /**< Query term to table column mapping */
+    const ecs_table_record_t **trs; /**< Info on where to find field in table */
     ecs_entity_t *sources;        /**< Entity on which the id was matched (0 if same as entities) */
     ecs_flags64_t constrained_vars; /**< Bitset that marks constrained variables */
     uint64_t group_id;            /**< Group id for table, if group_by is used */
-    int32_t field_count;          /**< Number of fields in iterator */
     ecs_termset_t set_fields;     /**< Fields that are set */
-    ecs_termset_t shared_fields;  /**< Bitset with shared fields */
+    ecs_termset_t ref_fields;     /**< Bitset with fields that aren't component arrays */
+    ecs_termset_t row_fields;     /**< Fields that must be obtained with field_at */
     ecs_termset_t up_fields;      /**< Bitset with fields matched through up traversal */
 
     /* Input information */
@@ -1059,11 +1089,12 @@ struct ecs_iter_t {
     int32_t event_cur;            /**< Unique event id. Used to dedup observer calls */
 
     /* Query information */
-    const ecs_query_t *query;     /**< Query being evaluated */
-    int32_t term_index;           /**< Index of term that emitted an event.
+    int8_t field_count;           /**< Number of fields in iterator */
+    int8_t term_index;            /**< Index of term that emitted an event.
                                    * This field will be set to the 'index' field
                                    * of an observer term. */
-    int32_t variable_count;       /**< Number of variables for query */
+    int8_t variable_count;        /**< Number of variables for query */
+    const ecs_query_t *query;     /**< Query being evaluated */
     char **variable_names;        /**< Names of variables (if any) */
 
     /* Context */
@@ -1081,7 +1112,6 @@ struct ecs_iter_t {
     int32_t frame_offset;         /**< Offset relative to start of iteration */
     int32_t offset;               /**< Offset relative to current table */
     int32_t count;                /**< Number of entities to iterate */
-    int32_t instance_count;       /**< Number of entities to iterate before next table */
 
     /* Misc */
     ecs_flags32_t flags;          /**< Iterator flags */
@@ -1113,18 +1143,6 @@ struct ecs_iter_t {
  * \ingroup queries
  */
 #define EcsQueryMatchEmptyTables      (1u << 3u)
-
-/** Query won't provide component data.
- * Can be combined with other query flags on the ecs_query_desc_t::flags field.
- * \ingroup queries
- */
-#define EcsQueryNoData                (1u << 4u)
-
-/** Query iteration is always instanced.
- * Can be combined with other query flags on the ecs_query_desc_t::flags field.
- * \ingroup queries
- */
-#define EcsQueryIsInstanced           (1u << 5u)
 
 /** Query may have unresolved entity identifiers.
  * Can be combined with other query flags on the ecs_query_desc_t::flags field.
@@ -1271,7 +1289,7 @@ typedef struct ecs_observer_desc_t {
     int32_t *last_event_id;
 
     /** Used for internal purposes */
-    int32_t term_index_;
+    int8_t term_index_;
     ecs_flags32_t flags_;
 } ecs_observer_desc_t;
 
@@ -1542,6 +1560,9 @@ FLECS_API extern const ecs_entity_t EcsThis;
 
 /** Variable entity ("$"). Used in expressions to prefix variable names */
 FLECS_API extern const ecs_entity_t EcsVariable;
+
+/** Shortcut as EcsVariable is typically used as source for singleton terms */
+#define EcsSingleton EcsVariable
 
 /** Marks a relationship as transitive.
  * Behavior:
@@ -2060,8 +2081,7 @@ void ecs_set_target_fps(
  * are applied in addition to the flags provided in the descriptor. For a
  * list of available flags, see include/flecs/private/api_flags.h. Typical flags
  * to use are:
- * 
- *  - `EcsQueryIsInstanced`
+ *
  *  - `EcsQueryMatchEmptyTables`
  *  - `EcsQueryMatchDisabled`
  *  - `EcsQueryMatchPrefab`
@@ -4604,6 +4624,16 @@ bool ecs_query_var_is_entity(
  * @code
  * ecs_iter_t it = ecs_query_iter(world, q);
  * 
+ * @param query The query.
+ * @param var_id The variable index.
+ * @return The variable name.
+ */
+
+/** Test if variable is an entity.
+ * Internally the query engine has entity variables and table variables. When
+ * iterating through query variables (by using ecs_query_variable_count()) only
+ * the values for entity variables are accessible. This operation enables an
+ * application to check if a variable is an entity variable.
  * while (ecs_query_next(&it)) {
  *   if (!ecs_field_is_set(&it, 0)) {
  *     ecs_iter_fini(&it); // Free iterator resources
@@ -4807,7 +4837,6 @@ const char* ecs_query_args_parse(
  *
  * - The iterator is a query iterator (created with ecs_query_iter())
  * - The iterator must be valid (ecs_query_next() must have returned true)
- * - The iterator must be instanced
  *
  * @param query The query (optional if 'it' is provided).
  * @return true if entities changed, otherwise false.
@@ -5309,7 +5338,7 @@ FLECS_API
 bool ecs_worker_next(
     ecs_iter_t *it);
 
-/** Obtain data for a query field.
+/** Get data for field.
  * This operation retrieves a pointer to an array of data that belongs to the
  * term in the query. The index refers to the location of the term in the query,
  * and starts counting from zero.
@@ -5322,21 +5351,67 @@ bool ecs_worker_next(
  * the entity being iterated, such as a shared component (from a prefab), a
  * component from a parent, or another entity. The ecs_field_is_self() operation
  * can be used to test dynamically if a field is owned.
+ * 
+ * When a field contains a sparse component, use the ecs_field_at function. When
+ * a field is guaranteed to be set and owned, the ecs_field_self() function can be
+ * used. ecs_field_self() has slightly better performance, and provides stricter 
+ * validity checking.
  *
- * The provided size must be either 0 or must match the size of the datatype
+ * The provided size must be either 0 or must match the size of the type
  * of the returned array. If the size does not match, the operation may assert.
  * The size can be dynamically obtained with ecs_field_size().
+ * 
+ * An example:
+ * 
+ * @code
+ * while (ecs_query_next(&it)) {
+ *   Position *p = ecs_field(&it, Position, 0);
+ *   Velocity *v = ecs_field(&it, Velocity, 1);
+ *   for (int32_t i = 0; i < it->count; i ++) {
+ *     p[i].x += v[i].x;
+ *     p[i].y += v[i].y;
+ *   }
+ * }
+ * @endcode
  *
  * @param it The iterator.
- * @param size The type size of the requested data.
- * @param index The index of the field in the iterator.
+ * @param size The size of the field type.
+ * @param index The index of the field.
  * @return A pointer to the data of the field.
  */
 FLECS_API
 void* ecs_field_w_size(
     const ecs_iter_t *it,
     size_t size,
-    int32_t index);
+    int8_t index);
+
+/** Get data for field at specified row.
+ * This operation should be used instead of ecs_field_w_size for sparse 
+ * component fields. This operation should be called for each returned row in a
+ * result. In the following example the Velocity component is sparse:
+ * 
+ * @code
+ * while (ecs_query_next(&it)) {
+ *   Position *p = ecs_field(&it, Position, 0);
+ *   for (int32_t i = 0; i < it->count; i ++) {
+ *     Velocity *v = ecs_field_at(&it, Velocity, 1);
+ *     p[i].x += v->x;
+ *     p[i].y += v->y;
+ *   }
+ * }
+ * @endcode
+ * 
+ * @param it the iterator.
+ * @param size The size of the field type.
+ * @param index The index of the field.
+ * @return A pointer to the data of the field.
+ */
+FLECS_API
+void* ecs_field_at_w_size(
+    const ecs_iter_t *it,
+    size_t size,
+    int8_t index,
+    int32_t row);
 
 /** Test whether the field is readonly.
  * This operation returns whether the field is readonly. Readonly fields are
@@ -5349,7 +5424,7 @@ void* ecs_field_w_size(
 FLECS_API
 bool ecs_field_is_readonly(
     const ecs_iter_t *it,
-    int32_t index);
+    int8_t index);
 
 /** Test whether the field is writeonly.
  * This operation returns whether this is a writeonly field. Writeonly terms are
@@ -5364,7 +5439,7 @@ bool ecs_field_is_readonly(
 FLECS_API
 bool ecs_field_is_writeonly(
     const ecs_iter_t *it,
-    int32_t index);
+    int8_t index);
 
 /** Test whether field is set.
  *
@@ -5375,7 +5450,7 @@ bool ecs_field_is_writeonly(
 FLECS_API
 bool ecs_field_is_set(
     const ecs_iter_t *it,
-    int32_t index);
+    int8_t index);
 
 /** Return id matched for field.
  *
@@ -5386,7 +5461,7 @@ bool ecs_field_is_set(
 FLECS_API
 ecs_id_t ecs_field_id(
     const ecs_iter_t *it,
-    int32_t index);
+    int8_t index);
 
 /** Return index of matched table column.
  * This function only returns column indices for fields that have been matched
@@ -5399,7 +5474,7 @@ ecs_id_t ecs_field_id(
 FLECS_API
 int32_t ecs_field_column(
     const ecs_iter_t *it,
-    int32_t index);
+    int8_t index);
 
 /** Return field source.
  * The field source is the entity on which the field was matched.
@@ -5411,7 +5486,7 @@ int32_t ecs_field_column(
 FLECS_API
 ecs_entity_t ecs_field_src(
     const ecs_iter_t *it,
-    int32_t index);
+    int8_t index);
 
 /** Return field type size.
  * Return type size of the field. Returns 0 if the field has no data.
@@ -5423,7 +5498,7 @@ ecs_entity_t ecs_field_src(
 FLECS_API
 size_t ecs_field_size(
     const ecs_iter_t *it,
-    int32_t index);
+    int8_t index);
 
 /** Test whether the field is matched on self.
  * This operation returns whether the field is matched on the currently iterated
@@ -5441,7 +5516,7 @@ size_t ecs_field_size(
 FLECS_API
 bool ecs_field_is_self(
     const ecs_iter_t *it,
-    int32_t index);
+    int8_t index);
 
 /** @} */
 
@@ -5577,16 +5652,35 @@ size_t ecs_table_get_column_size(
     const ecs_table_t *table,
     int32_t index);
 
-/** Returns the number of records in the table.
- * This operation returns the number of records that have been populated through
- * the regular (entity) API as well as the number of records that have been
- * inserted using the direct access API.
+/** Returns the number of entities in the table.
+ * This operation returns the number of entities in the table.
  *
  * @param table The table.
- * @return The number of records in a table.
+ * @return The number of entities in the table.
  */
 FLECS_API
 int32_t ecs_table_count(
+    const ecs_table_t *table);
+
+/** Returns allocated size of table.
+ * This operation returns the number of elements allocated in the table 
+ * per column.
+ * 
+ * @param table The table.
+ * @return The number of allocated elements in the table.
+ */
+FLECS_API
+int32_t ecs_table_size(
+    const ecs_table_t *table);
+
+/** Returns array with entity ids for table.
+ * The size of the returned array is the result of ecs_table_count().
+ * 
+ * @param table The table.
+ * @return Array with entity ids for table.
+ */
+FLECS_API
+const ecs_entity_t* ecs_table_entities(
     const ecs_table_t *table);
 
 /** Test if table has id.

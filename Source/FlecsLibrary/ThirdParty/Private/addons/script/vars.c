@@ -207,19 +207,21 @@ void ecs_script_vars_from_iter(
             var = ecs_script_vars_declare(vars, "this");
             var->value.type = ecs_id(ecs_entity_t);
         }
-        var->value.ptr = &it->entities[offset];
+
+        /* Safe, variable value will never be written */
+        var->value.ptr = ECS_CONST_CAST(ecs_entity_t*, &it->entities[offset]);
     }
 
     /* Set variables for fields */
     {
-        int32_t i, field_count = it->field_count;
+        int8_t i, field_count = it->field_count;
         for (i = 0; i < field_count; i ++) {
             ecs_size_t size = it->sizes[i];
             if (!size) {
                 continue;
             }
 
-            void *ptr = it->ptrs[i];
+            void *ptr = ecs_field_w_size(it, flecs_itosize(size), i);
             if (!ptr) {
                 continue;
             }
@@ -245,14 +247,15 @@ void ecs_script_vars_from_iter(
     {
         int32_t i, var_count = it->variable_count;
         for (i = 1 /* skip this variable */ ; i < var_count; i ++) {
-            ecs_entity_t *e_ptr = NULL;
+            const ecs_entity_t *e_ptr = NULL;
             ecs_var_t *query_var = &it->variables[i];
             if (query_var->entity) {
                 e_ptr = &query_var->entity;
             } else {
                 ecs_table_range_t *range = &query_var->range;
                 if (range->count == 1) {
-                    ecs_entity_t *entities = range->table->data.entities.array;
+                    const ecs_entity_t *entities = 
+                        ecs_table_entities(range->table);
                     e_ptr = &entities[range->offset];
                 }
             }
@@ -269,7 +272,9 @@ void ecs_script_vars_from_iter(
                 ecs_check(var->value.type == ecs_id(ecs_entity_t), 
                     ECS_INVALID_PARAMETER, NULL);
             }
-            var->value.ptr = e_ptr;
+
+            /* Safe, variable value will never be written */
+            var->value.ptr = ECS_CONST_CAST(ecs_entity_t*, e_ptr);
         }
     }
 

@@ -19,7 +19,7 @@ bool flecs_json_serialize_iter_result_is_set(
     flecs_json_memberl(buf, "is_set");
     flecs_json_array_push(buf);
 
-    int32_t i, count = it->field_count;
+    int8_t i, count = it->field_count;
     for (i = 0; i < count; i ++) {
         ecs_strbuf_list_next(buf);
         if (ecs_field_is_set(it, i)) {
@@ -162,7 +162,7 @@ int flecs_json_serialize_iter_result_field_values(
     const ecs_iter_to_json_desc_t *desc,
     ecs_json_ser_ctx_t *ser_ctx)
 {
-    int32_t f, field_count = it->field_count;
+    int8_t f, field_count = it->field_count;
     if (!field_count) {
         return 0;
     }
@@ -170,9 +170,16 @@ int flecs_json_serialize_iter_result_field_values(
     ecs_strbuf_appendlit(buf, "\"values\":");
     flecs_json_array_push(buf);
 
+    ecs_termset_t fields = it->set_fields;
+    if (it->query) {
+        fields &= it->query->data_fields;
+    }
+
+    ecs_termset_t row_fields = it->query ? it->query->row_fields : 0;
+
     for (f = 0; f < field_count; f ++) {
-        ecs_flags16_t field_bit = flecs_ito(uint16_t, 1 << f);
-        if (!(it->set_fields & field_bit)) {
+        ecs_termset_t field_bit = (ecs_termset_t)flecs_ito(uint64_t, 1 << f);
+        if (!(fields & field_bit)) {
             ecs_strbuf_list_appendlit(buf, "0");
             continue;
         }
@@ -185,14 +192,21 @@ int flecs_json_serialize_iter_result_field_values(
             continue;
         }
 
-        if (!it->ptrs[f]) {
-            ecs_strbuf_list_appendlit(buf, "0");
-            continue;
-        }
+        void *ptr;
+        if (row_fields & field_bit) {
+            ptr = ecs_field_at_w_size(it, 0, f, i);
+        } else {
+            ecs_size_t size = it->sizes[f];
+            ptr = ecs_field_w_size(it, flecs_itosize(size), f);
 
-        void *ptr = it->ptrs[f];
-        if (!it->sources[f]) {
-            ptr = ECS_ELEM(ptr, it->sizes[f], i);
+            if (!ptr) {
+                ecs_strbuf_list_appendlit(buf, "0");
+                continue;
+            }
+
+            if (!it->sources[f]) {
+                ptr = ECS_ELEM(ptr, size, i);
+            }
         }
 
         flecs_json_next(buf);

@@ -295,14 +295,6 @@ ecs_entity_t ecs_system_init(
         flecs_poly_assert(poly->poly, ecs_system_t);
         ecs_system_t *system = (ecs_system_t*)poly->poly;
 
-        if (desc->run) {
-            system->run = desc->run;
-        }
-
-        if (desc->callback) {
-            system->action = desc->callback;
-        }
-
         if (system->ctx_free) {
             if (system->ctx && system->ctx != desc->ctx) {
                 system->ctx_free(system->ctx);
@@ -312,12 +304,30 @@ ecs_entity_t ecs_system_init(
         if (system->callback_ctx_free) {
             if (system->callback_ctx && system->callback_ctx != desc->callback_ctx) {
                 system->callback_ctx_free(system->callback_ctx);
+                system->callback_ctx_free = NULL;
+                system->callback_ctx = NULL;
             }
         }
 
         if (system->run_ctx_free) {
             if (system->run_ctx && system->run_ctx != desc->run_ctx) {
                 system->run_ctx_free(system->run_ctx);
+                system->run_ctx_free = NULL;
+                system->run_ctx = NULL;
+            }
+        }
+
+        if (desc->run) {
+            system->run = desc->run;
+            if (!desc->callback) {
+                system->action = NULL;
+            }
+        }
+
+        if (desc->callback) {
+            system->action = desc->callback;
+            if (!desc->run) {
+                system->run = NULL;
             }
         }
 
@@ -343,10 +353,6 @@ ecs_entity_t ecs_system_init(
 
         if (desc->run_ctx_free) {
             system->run_ctx_free = desc->run_ctx_free;
-        }
-
-        if (desc->query.flags & EcsQueryIsInstanced) {
-            ECS_BIT_SET(system->query->flags, EcsQueryIsInstanced);
         }
 
         if (desc->multi_threaded) {

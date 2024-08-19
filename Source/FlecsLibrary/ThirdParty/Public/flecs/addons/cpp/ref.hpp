@@ -40,6 +40,9 @@ struct ref {
         ref_ = ecs_ref_init_id(world_, entity, id);
     }
 
+    ref(flecs::entity entity, flecs::id_t id = 0)
+        : ref(entity.world(), entity.id(), id) { }
+
     T* operator->() {
         T* result = static_cast<T*>(ecs_ref_get_id(
             world_, &ref_, this->ref_.id));
@@ -61,6 +64,11 @@ struct ref {
         }
 
         return get();
+    }
+
+    /** implicit conversion to bool.  return true if there is a valid T* being referred to **/
+    operator bool() {       
+        return !!try_get();
     }
 
     flecs::entity entity() const;

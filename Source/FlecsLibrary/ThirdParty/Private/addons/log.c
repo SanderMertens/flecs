@@ -71,7 +71,7 @@ void flecs_colorize_buf(
                 if (enable_colors) ecs_strbuf_appendlit(buf, ECS_GREEN);
             } else if (!ecs_os_strncmp(&ptr[2], "red]", ecs_os_strlen("red]"))) {
                 if (enable_colors) ecs_strbuf_appendlit(buf, ECS_RED);
-            } else if (!ecs_os_strncmp(&ptr[2], "blue]", ecs_os_strlen("red]"))) {
+            } else if (!ecs_os_strncmp(&ptr[2], "blue]", ecs_os_strlen("blue]"))) {
                 if (enable_colors) ecs_strbuf_appendlit(buf, ECS_BLUE);
             } else if (!ecs_os_strncmp(&ptr[2], "magenta]", ecs_os_strlen("magenta]"))) {
                 if (enable_colors) ecs_strbuf_appendlit(buf, ECS_MAGENTA);

@@ -8,6 +8,50 @@
 
 #include "table_graph.h"
 
+#ifdef FLECS_SANITIZE
+#define ecs_vec_from_column(arg_column, table, arg_elem_size) {\
+    .array = (arg_column)->data,\
+    .count = table->data.count,\
+    .size = table->data.size,\
+    .elem_size = arg_elem_size\
+}
+
+#define ecs_vec_from_column_ext(arg_column, arg_count, arg_size, arg_elem_size) {\
+    .array = (arg_column)->data,\
+    .count = arg_count,\
+    .size = arg_size,\
+    .elem_size = arg_elem_size\
+}
+
+#define ecs_vec_from_entities(table) {\
+    .array = table->data.entities,\
+    .count = table->data.count,\
+    .size = table->data.size,\
+    .elem_size = ECS_SIZEOF(ecs_entity_t)\
+}
+#else
+#define ecs_vec_from_column(arg_column, table, arg_elem_size) {\
+    .array = (arg_column)->data,\
+    .count = table->data.count,\
+    .size = table->data.size,\
+}
+
+#define ecs_vec_from_column_ext(arg_column, arg_count, arg_size, arg_elem_size) {\
+    .array = (arg_column)->data,\
+    .count = arg_count,\
+    .size = arg_size,\
+}
+
+#define ecs_vec_from_entities(table) {\
+    .array = table->data.entities,\
+    .count = table->data.count,\
+    .size = table->data.size,\
+}
+#endif
+
+#define ecs_vec_from_column_t(arg_column, table, T)\
+    ecs_vec_from_column(arg_column, table, ECS_SIZEOF(T))
+
 /* Table event type for notifying tables of world events */
 typedef enum ecs_table_eventkind_t {
     EcsTableTriggersForId,
@@ -47,16 +91,16 @@ typedef struct ecs_table__t {
 
 /** Table column */
 typedef struct ecs_column_t {
-    ecs_vec_t data;                  /* Vector with component data */
-    ecs_id_t id;                     /* Component id */
+    void *data;                      /* Array with component data */
     ecs_type_info_t *ti;             /* Component type info */
-    ecs_size_t size;                 /* Component size */
 } ecs_column_t;
 
 /** Table data */
 struct ecs_data_t {
-    ecs_vec_t entities;              /* Entity ids */
+    ecs_entity_t *entities;          /* Entity ids */
     ecs_column_t *columns;           /* Component data */
+    int32_t count;
+    int32_t size;
 };
 
 /** A table is the Flecs equivalent of an archetype. Tables store all entities
@@ -73,7 +117,8 @@ struct ecs_table_t {
     ecs_graph_node_t node;           /* Graph node */
     
     int32_t *dirty_state;            /* Keep track of changes in columns */
-    int32_t *column_map;             /* Map type index <-> column
+    int16_t *component_map;          /* Get column for component id */
+    int16_t *column_map;             /* Map type index <-> column
                                       *  - 0..count(T):        type index -> column
                                       *  - count(T)..count(C): column -> type index
                                       */
@@ -122,10 +167,6 @@ void flecs_table_clear_entities_silent(
     ecs_world_t *world,
     ecs_table_t *table);
 
-/* Return number of entities in data */
-int32_t flecs_table_data_count(
-    const ecs_data_t *data);
-
 /* Add a new entry to the table for the specified entity */
 int32_t flecs_table_append(
     ecs_world_t *world,
@@ -161,16 +202,8 @@ void flecs_table_move(
 int32_t flecs_table_appendn(
     ecs_world_t *world,
     ecs_table_t *table,
-    ecs_data_t *data,
     int32_t count,
     const ecs_entity_t *ids);
-
-/* Set table to a fixed size. Useful for preallocating memory in advance. */
-void flecs_table_set_size(
-    ecs_world_t *world,
-    ecs_table_t *table,
-    ecs_data_t *data,
-    int32_t count);
 
 /* Shrink table to contents */
 bool flecs_table_shrink(
@@ -232,12 +265,6 @@ void flecs_table_traversable_add(
     ecs_table_t *table,
     int32_t value);
 
-const ecs_vec_t* flecs_table_entities(
-    const ecs_table_t *table);
-
-ecs_entity_t* flecs_table_entities_array(
-    const ecs_table_t *table);
-
 void flecs_table_emit(
     ecs_world_t *world,
     ecs_table_t *table,
@@ -250,5 +277,9 @@ int32_t flecs_table_get_toggle_column(
 ecs_bitset_t* flecs_table_get_toggle(
     ecs_table_t *table,
     ecs_id_t id);
+
+ecs_id_t flecs_column_id(
+    ecs_table_t *table,
+    int32_t column_index);
 
 #endif

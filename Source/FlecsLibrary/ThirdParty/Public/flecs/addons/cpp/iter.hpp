@@ -160,7 +160,7 @@ public:
      *
      * @param index The field index.
      */
-    bool is_self(int32_t index) const {
+    bool is_self(int8_t index) const {
         return ecs_field_is_self(iter_, index);
     }
 
@@ -168,7 +168,7 @@ public:
      *
      * @param index The field index.
      */
-    bool is_set(int32_t index) const {
+    bool is_set(int8_t index) const {
         return ecs_field_is_set(iter_, index);
     }
 
@@ -176,7 +176,7 @@ public:
      *
      * @param index The field index.
      */
-    bool is_readonly(int32_t index) const {
+    bool is_readonly(int8_t index) const {
         return ecs_field_is_readonly(iter_, index);
     }
 
@@ -190,7 +190,7 @@ public:
      *
      * @param index The field id.
      */
-    size_t size(int32_t index) const {
+    size_t size(int8_t index) const {
         return ecs_field_size(iter_, index);
     }
 
@@ -198,33 +198,33 @@ public:
      *
      * @param index The field index.
      */
-    flecs::entity src(int32_t index) const;
+    flecs::entity src(int8_t index) const;
 
     /** Obtain id matched for field.
      *
      * @param index The field index.
      */
-    flecs::id id(int32_t index) const;
+    flecs::id id(int8_t index) const;
 
     /** Obtain pair id matched for field.
      * This operation will fail if the id is not a pair.
      *
      * @param index The field index.
      */
-    flecs::id pair(int32_t index) const;
+    flecs::id pair(int8_t index) const;
 
     /** Obtain column index for field.
      *
      * @param index The field index.
      */
-    int32_t column_index(int32_t index) const {
+    int32_t column_index(int8_t index) const {
         return ecs_field_column(iter_, index);
     }
 
     /** Obtain term that triggered an observer
      */
-    int32_t term_index() const {
-        return iter_->term_index + 1; // in iter_t, the term index is zero-based, so add 1.
+    int8_t term_index() const {
+        return iter_->term_index;
     }
 
     /** Convert current iterator result to string.
@@ -244,7 +244,7 @@ public:
      */
     template <typename T, typename A = actual_type_t<T>,
         typename std::enable_if<std::is_const<T>::value, void>::type* = nullptr>
-    flecs::field<A> field(int32_t index) const;
+    flecs::field<A> field(int8_t index) const;
 
     /** Get read/write access to field data.
      * If the matched id for the specified field does not match with the provided
@@ -257,7 +257,7 @@ public:
     template <typename T, typename A = actual_type_t<T>,
         typename std::enable_if<
             std::is_const<T>::value == false, void>::type* = nullptr>
-    flecs::field<A> field(int32_t index) const;
+    flecs::field<A> field(int8_t index) const;
 
     /** Get unchecked access to field data.
      * Unchecked access is required when a system does not know the type of a
@@ -265,32 +265,44 @@ public:
      *
      * @param index The field index.
      */
-    flecs::untyped_field field(int32_t index) const {
+    flecs::untyped_field field(int8_t index) const {
         ecs_assert(!(iter_->flags & EcsIterCppEach), ECS_INVALID_OPERATION,
             "cannot .field from .each, use .field_at(%d, row) instead", index);
         return get_unchecked_field(index);
     }
 
     /** Get pointer to field at row. */
-    void* field_at(int32_t index, size_t row) const {
-        return get_unchecked_field(index)[row];
+    void* field_at(int8_t index, size_t row) const {
+        if (iter_->row_fields & (1llu << index)) {
+            return get_unchecked_field_at(index, row)[0];
+        } else {
+            return get_unchecked_field(index)[row];
+        }
     }
 
     /** Get reference to field at row. */
     template <typename T, typename A = actual_type_t<T>,
         typename std::enable_if<std::is_const<T>::value, void>::type* = nullptr>
-    const A& field_at(int32_t index, size_t row) const {
-        return get_field<A>(index)[row];
+    const A& field_at(int8_t index, size_t row) const {
+        if (iter_->row_fields & (1llu << index)) {
+            return get_field_at<A>(index, row)[0];
+        } else {
+            return get_field<A>(index)[row];
+        }
     }
 
     /** Get reference to field at row. */
     template <typename T, typename A = actual_type_t<T>,
         typename std::enable_if<
             std::is_const<T>::value == false, void>::type* = nullptr>
-    A& field_at(int32_t index, size_t row) const {
+    A& field_at(int8_t index, size_t row) const {
         ecs_assert(!ecs_field_is_readonly(iter_, index),
             ECS_ACCESS_VIOLATION, NULL);
-        return get_field<A>(index)[row];
+        if (iter_->row_fields & (1llu << index)) {
+            return get_field_at<A>(index, row)[0];
+        } else {
+            return get_field<A>(index)[row];
+        }
     }
 
     /** Get readonly access to entity ids.
@@ -379,7 +391,7 @@ public:
 private:
     /* Get field, check if correct type is used */
     template <typename T, typename A = actual_type_t<T>>
-    flecs::field<T> get_field(int32_t index) const {
+    flecs::field<T> get_field(int8_t index) const {
 
 #ifndef FLECS_NDEBUG
         ecs_entity_t term_id = ecs_field_id(iter_, index);
@@ -407,7 +419,23 @@ private:
             count, is_shared);
     }
 
-    flecs::untyped_field get_unchecked_field(int32_t index) const {
+    /* Get field, check if correct type is used */
+    template <typename T, typename A = actual_type_t<T>>
+    flecs::field<T> get_field_at(int8_t index, int32_t row) const {
+
+#ifndef FLECS_NDEBUG
+        ecs_entity_t term_id = ecs_field_id(iter_, index);
+        ecs_assert(ECS_HAS_ID_FLAG(term_id, PAIR) ||
+            term_id == _::type<T>::id(iter_->world),
+            ECS_COLUMN_TYPE_MISMATCH, NULL);
+#endif
+
+        return flecs::field<A>(
+            static_cast<T*>(ecs_field_at_w_size(iter_, sizeof(A), index, row)),
+                1, false);
+    }
+
+    flecs::untyped_field get_unchecked_field(int8_t index) const {
         size_t count;
         size_t size = ecs_field_size(iter_, index);
         bool is_shared = !ecs_field_is_self(iter_, index);
@@ -425,6 +453,13 @@ private:
 
         return flecs::untyped_field(
             ecs_field_w_size(iter_, 0, index), size, count, is_shared);
+    }
+
+    flecs::untyped_field get_unchecked_field_at(int8_t index, size_t row) const {
+        size_t size = ecs_field_size(iter_, index);
+        return flecs::untyped_field(
+            ecs_field_at_w_size(iter_, 0, index, static_cast<int32_t>(row)), 
+                size, 1, false);
     }
 
     flecs::iter_t *iter_;

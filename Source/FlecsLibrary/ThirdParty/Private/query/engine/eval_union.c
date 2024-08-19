@@ -64,7 +64,7 @@ next_row:
         return false;
     }
 
-    ecs_entity_t e = flecs_table_entities_array(range.table)
+    ecs_entity_t e = ecs_table_entities(range.table)
         [range.offset + op_ctx->row];
     ecs_entity_t tgt = flecs_switch_get(op_ctx->idr->sparse, (uint32_t)e);
     if (!tgt) {
@@ -128,7 +128,7 @@ next_row:
         return false;
     }
 
-    ecs_entity_t e = flecs_table_entities_array(range.table)
+    ecs_entity_t e = ecs_table_entities(range.table)
         [range.offset + op_ctx->row];
     ecs_entity_t e_tgt = flecs_switch_get(op_ctx->idr->sparse, (uint32_t)e);
     bool match = e_tgt == tgt;

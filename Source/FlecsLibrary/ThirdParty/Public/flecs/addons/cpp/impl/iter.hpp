@@ -30,15 +30,15 @@ inline flecs::entity iter::entity(size_t row) const {
     return flecs::entity(iter_->world, iter_->entities[row]);
 }
 
-inline flecs::entity iter::src(int32_t index) const {
+inline flecs::entity iter::src(int8_t index) const {
     return flecs::entity(iter_->world, ecs_field_src(iter_, index));
 }
 
-inline flecs::id iter::id(int32_t index) const {
+inline flecs::id iter::id(int8_t index) const {
     return flecs::id(iter_->world, ecs_field_id(iter_, index));
 }
 
-inline flecs::id iter::pair(int32_t index) const {
+inline flecs::id iter::pair(int8_t index) const {
     flecs::id_t id = ecs_field_id(iter_, index);
     ecs_check(ECS_HAS_ID_FLAG(id, PAIR), ECS_INVALID_PARAMETER, NULL);
     return flecs::id(iter_->world, id);
@@ -61,7 +61,7 @@ inline flecs::table_range iter::range() const {
 
 template <typename T, typename A,
     typename std::enable_if<std::is_const<T>::value, void>::type*>
-inline flecs::field<A> iter::field(int32_t index) const {
+inline flecs::field<A> iter::field(int8_t index) const {
     ecs_assert(!(iter_->flags & EcsIterCppEach), ECS_INVALID_OPERATION,
         "cannot .field from .each, use .field_at<const %s>(%d, row) instead",
             _::type_name<T>(), index);
@@ -71,7 +71,7 @@ inline flecs::field<A> iter::field(int32_t index) const {
 template <typename T, typename A,
     typename std::enable_if<
         std::is_const<T>::value == false, void>::type*>
-inline flecs::field<A> iter::field(int32_t index) const {
+inline flecs::field<A> iter::field(int8_t index) const {
     ecs_assert(!(iter_->flags & EcsIterCppEach), ECS_INVALID_OPERATION,
         "cannot .field from .each, use .field_at<%s>(%d, row) instead",
             _::type_name<T>(), index);

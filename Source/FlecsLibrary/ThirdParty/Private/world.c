@@ -637,8 +637,8 @@ void flecs_fini_root_tables(
             continue; /* Query out modules */
         }
 
-        int32_t i, count = table->data.entities.count;
-        ecs_entity_t *entities = table->data.entities.array;
+        int32_t i, count = ecs_table_count(table);
+        const ecs_entity_t *entities = ecs_table_entities(table);
 
         if (fini_targets) {
             /* Only delete entities that are used as pair target. Iterate
@@ -646,6 +646,7 @@ void flecs_fini_root_tables(
             for (i = count - 1; i >= 0; i --) {
                 ecs_record_t *r = flecs_entities_get(world, entities[i]);
                 ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
+                ecs_assert(r->table == table, ECS_INTERNAL_ERROR, NULL);
                 if (ECS_RECORD_TO_ROW_FLAGS(r->row) & EcsEntityIsTarget) {
                     ecs_delete(world, entities[i]);
                 }
@@ -657,6 +658,7 @@ void flecs_fini_root_tables(
             for (i = count - 1; i >= 0; i --) {
                 ecs_record_t *r = flecs_entities_get(world, entities[i]);
                 ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
+                ecs_assert(r->table == table, ECS_INTERNAL_ERROR, NULL);
                 if (!ECS_RECORD_TO_ROW_FLAGS(r->row)) {
                     ecs_delete(world, entities[i]);
                 }
@@ -1652,6 +1654,7 @@ ecs_type_info_t* flecs_type_info_ensure(
             &world->type_info, ecs_type_info_t, component);
         ecs_assert(ti_mut != NULL, ECS_INTERNAL_ERROR, NULL);
         ti_mut->component = component;
+        ti_mut->world = world;
     } else {
         ti_mut = ECS_CONST_CAST(ecs_type_info_t*, ti);
     }
@@ -1962,7 +1965,7 @@ void flecs_process_empty_queries(
 
             for (i = 0; i < count; i ++) {
                 ecs_query_t *query = queries[i].poly;
-                ecs_entity_t *entities = table->data.entities.array;
+                const ecs_entity_t *entities = ecs_table_entities(table);
                 if (!ecs_query_is_true(query)) {
                     ecs_add_id(world, entities[i], EcsEmpty);
                 }

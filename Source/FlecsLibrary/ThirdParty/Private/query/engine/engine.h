@@ -110,10 +110,10 @@ int16_t flecs_query_next_column(
     ecs_id_t id,
     int32_t column);
 
-void flecs_query_it_set_column(
+void flecs_query_it_set_tr(
     ecs_iter_t *it,
     int32_t field_index,
-    int32_t column);
+    const ecs_table_record_t *tr);
 
 ecs_id_t flecs_query_it_set_id(
     ecs_iter_t *it,
@@ -129,7 +129,7 @@ void flecs_query_set_match(
 
 void flecs_query_set_trav_match(
     const ecs_query_op_t *op,
-    int32_t column,
+    const ecs_table_record_t *tr,
     ecs_entity_t trav,
     ecs_entity_t second,
     const ecs_query_run_ctx_t *ctx);
@@ -138,12 +138,6 @@ bool flecs_query_table_filter(
     ecs_table_t *table,
     ecs_query_lbl_t other,
     ecs_flags32_t filter_mask);
-
-void flecs_query_populate_field_from_range(
-    ecs_iter_t *it,
-    ecs_table_range_t *range,
-    int8_t field_index,
-    int32_t index);
 
 bool flecs_query_setids(
     const ecs_query_op_t *op,
@@ -201,24 +195,6 @@ bool flecs_query_self_up_with(
     bool redo,
     const ecs_query_run_ctx_t *ctx,
     bool id_only);
-
-
-/* Populate data fields */
-
-bool flecs_query_populate(
-    const ecs_query_op_t *op,
-    bool redo,
-    ecs_query_run_ctx_t *ctx);
-
-bool flecs_query_populate_self(
-    const ecs_query_op_t *op,
-    bool redo,
-    ecs_query_run_ctx_t *ctx);
-
-bool flecs_query_populate_sparse(
-    const ecs_query_op_t *op,
-    bool redo,
-    ecs_query_run_ctx_t *ctx);
 
 
 /* Union evaluation */

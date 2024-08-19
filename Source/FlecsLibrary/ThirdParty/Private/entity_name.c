@@ -25,31 +25,39 @@ bool flecs_path_append(
     ecs_size_t name_len = 0;
 
     if (child && ecs_is_alive(world, child)) {
-        cur = ecs_get_target(world, child, EcsChildOf, 0);
-        if (cur) {
-            ecs_assert(cur != child, ECS_CYCLE_DETECTED, NULL);
-            if (cur != parent && (cur != EcsFlecsCore || prefix != NULL)) {
-                flecs_path_append(world, parent, cur, sep, prefix, buf);
-                if (!sep[1]) {
-                    ecs_strbuf_appendch(buf, sep[0]);
-                } else {
-                    ecs_strbuf_appendstr(buf, sep);
-                }
-            }
-        } else if (prefix && prefix[0]) {
-            if (!prefix[1]) {
-                ecs_strbuf_appendch(buf, prefix[0]);
-            } else {
-                ecs_strbuf_appendstr(buf, prefix);
-            }
+        ecs_record_t *r = flecs_entities_get(world, child);
+        bool hasName = false;
+        if (r && r->table) {
+            hasName = r->table->flags & EcsTableHasName;
         }
 
-        const EcsIdentifier *id = ecs_get_pair(
-            world, child, EcsIdentifier, EcsName);
-        if (id) {
-            name = id->value;
-            name_len = id->length;
-        }      
+        if (hasName) {
+            cur = ecs_get_target(world, child, EcsChildOf, 0);
+            if (cur) {
+                ecs_assert(cur != child, ECS_CYCLE_DETECTED, NULL);
+                if (cur != parent && (cur != EcsFlecsCore || prefix != NULL)) {
+                    flecs_path_append(world, parent, cur, sep, prefix, buf);
+                    if (!sep[1]) {
+                        ecs_strbuf_appendch(buf, sep[0]);
+                    } else {
+                        ecs_strbuf_appendstr(buf, sep);
+                    }
+                }
+            } else if (prefix && prefix[0]) {
+                if (!prefix[1]) {
+                    ecs_strbuf_appendch(buf, prefix[0]);
+                } else {
+                    ecs_strbuf_appendstr(buf, prefix);
+                }
+            }
+
+            const EcsIdentifier *id = ecs_get_pair(
+                world, child, EcsIdentifier, EcsName);
+            if (id) {
+                name = id->value;
+                name_len = id->length;
+            } 
+        }     
     }
 
     if (name) {
@@ -265,8 +273,7 @@ void flecs_bootstrap_hierarchy(ecs_world_t *world) {
     ecs_observer(world, {
         .entity = ecs_entity(world, { .parent = EcsFlecsInternals }),
         .query.terms[0] = {
-            .id = ecs_pair(ecs_id(EcsIdentifier), EcsSymbol), 
-            .src.id = EcsSelf 
+            .id = ecs_pair(ecs_id(EcsIdentifier), EcsSymbol)
         },
         .callback = flecs_on_set_symbol,
         .events = {EcsOnSet},
@@ -565,6 +572,9 @@ void flecs_add_path(
     if (parent) {
         ecs_add_pair(world, entity, EcsChildOf, parent);
     }
+
+    ecs_assert(name[0] != '#', ECS_INVALID_PARAMETER, 
+        "path should not contain identifier with #");
 
     ecs_set_name(world, entity, name);
 

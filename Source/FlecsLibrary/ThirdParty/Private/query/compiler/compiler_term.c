@@ -245,6 +245,7 @@ void flecs_query_begin_block_or(
 {
     ecs_query_op_t *or_op = flecs_query_begin_block(EcsQueryNot, ctx);
     or_op->kind = EcsQueryOr;
+    or_op->field_index = term->field_index;
 
     /* Set the source of the evaluate terms as source of the Or instruction. 
      * This lets the engine determine whether the variable has already been
@@ -1114,7 +1115,6 @@ int flecs_query_compile_term(
     ecs_world_t *world,
     ecs_query_impl_t *query,
     ecs_term_t *term,
-    ecs_flags64_t *populated,
     ecs_query_compile_ctx_t *ctx)
 {
     ecs_id_t term_id = term->id;
@@ -1123,7 +1123,6 @@ int flecs_query_compile_term(
     bool toggle_term = (term->flags_ & EcsTermIsToggle) != 0;
     bool member_term = (term->flags_ & EcsTermIsMember) != 0;
     if (member_term) {
-        (*populated) |= (1llu << term->field_index);
         flecs_query_compile_begin_member_term(world, term, ctx, first_id);
     }
 

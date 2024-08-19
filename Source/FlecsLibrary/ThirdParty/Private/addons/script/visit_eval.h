@@ -16,6 +16,7 @@ typedef struct ecs_script_eval_visitor_t {
     ecs_script_entity_t *entity;
     ecs_vec_t using;
     ecs_vec_t with;
+    ecs_vec_t with_type_info;
     ecs_vec_t annot;
     ecs_entity_t with_relationship;
     int32_t with_relationship_sp;

@@ -12,7 +12,6 @@ typedef int16_t ecs_query_lbl_t;
 typedef ecs_flags64_t ecs_write_flags_t;
 
 #define flecs_query_impl(query) (ECS_CONST_CAST(ecs_query_impl_t*, query))
-
 #define EcsQueryMaxVarCount     (64)
 #define EcsVarNone              ((ecs_var_id_t)-1)
 #define EcsThisName             "this"
@@ -37,6 +36,10 @@ typedef struct ecs_query_var_t {
 #endif
 } ecs_query_var_t;
 
+/* Placeholder values for queries with only $this variable */
+extern ecs_query_var_t flecs_this_array;
+extern char *flecs_this_name_array;
+
 /* -- Instruction kinds -- */
 typedef enum {
     EcsQueryAnd,            /* And operator: find or match id against variable source */
@@ -44,12 +47,8 @@ typedef enum {
     EcsQueryAndAny,         /* And operator with support for matching Any src/id */
     EcsQueryOnlyAny,        /* Dedicated instruction for _ queries where the src is unknown */
     EcsQueryTriv,           /* Trivial search (batches multiple terms) */
-    EcsQueryTrivData,       /* Trivial search with setting data fields */
-    EcsQueryTrivWildcard,   /* Trivial search with (exclusive) wildcard ids */
     EcsQueryCache,          /* Cached search */
-    EcsQueryCacheData,      /* Cached search with setting data fields */
     EcsQueryIsCache,        /* Cached search for queries that are entirely cached */
-    EcsQueryIsCacheData,    /* Same as EcsQueryIsCache with data fields */
     EcsQueryUp,             /* Up traversal */
     EcsQueryUpId,           /* Up traversal for fixed id (like AndId) */
     EcsQuerySelfUp,         /* Self|up traversal */
@@ -94,9 +93,6 @@ typedef enum {
     EcsQuerySetId,          /* Set id if not set */
     EcsQueryContain,        /* Test if table contains entity */
     EcsQueryPairEq,         /* Test if both elements of pair are the same */
-    EcsQueryPopulate,       /* Populate any data fields */
-    EcsQueryPopulateSelf,   /* Populate only self (owned) data fields */
-    EcsQueryPopulateSparse, /* Populate sparse fields */
     EcsQueryYield,          /* Yield result back to application */
     EcsQueryNothing         /* Must be last */
 } ecs_query_op_kind_t;
@@ -165,7 +161,7 @@ typedef struct {
 typedef struct {
     ecs_entity_t src;
     ecs_id_t id;
-    int32_t column;
+    ecs_table_record_t *tr;
     bool ready;
 } ecs_trav_up_t;
 
@@ -204,7 +200,7 @@ typedef struct {
 typedef struct {
     ecs_entity_t entity;
     ecs_id_record_t *idr;
-    int32_t column;
+    const ecs_table_record_t *tr;
 } ecs_trav_elem_t;
 
 typedef struct {
@@ -258,6 +254,7 @@ typedef struct {
 typedef struct {
     ecs_table_cache_iter_t it;
     const ecs_table_record_t *tr;
+    int32_t start_from;
     int32_t first_to_eval;
 } ecs_query_trivial_ctx_t;
 
@@ -345,11 +342,6 @@ typedef struct {
     ecs_query_iter_t *qit;
 } ecs_query_run_ctx_t;
 
-typedef struct {
-    ecs_query_var_t var;
-    const char *name;
-} ecs_query_var_cache_t;
-
 struct ecs_query_impl_t {
     ecs_query_t pub;              /* Public query data */
 
@@ -361,23 +353,19 @@ struct ecs_query_impl_t {
     int32_t var_size;             /* Size of variable array */
     ecs_hashmap_t tvar_index;     /* Name index for table variables */
     ecs_hashmap_t evar_index;     /* Name index for entity variables */
-    ecs_query_var_cache_t vars_cache; /* For trivial queries with only This variables */
     ecs_var_id_t *src_vars;       /* Array with ids to source variables for fields */
 
     /* Query plan */
     ecs_query_op_t *ops;          /* Operations */
     int32_t op_count;             /* Number of operations */
 
-    /* Query cache */
-    struct ecs_query_cache_t *cache; /* Cache, if query contains cached terms */
-    int8_t *field_map;            /* Map field indices from cache to query */
-
-    /* Change detection */
-    int32_t *monitor;             /* Change monitor for fields with fixed src */
-
     /* Misc */
     int16_t tokens_len;           /* Length of tokens buffer */
     char *tokens;                 /* Buffer with string tokens used by terms */
+    int32_t *monitor;             /* Change monitor for fields with fixed src */
+
+    /* Query cache */
+    struct ecs_query_cache_t *cache; /* Cache, if query contains cached terms */
 
     /* User context */
     ecs_ctx_free_t ctx_free;         /* Callback to free ctx */
@@ -400,11 +388,9 @@ struct ecs_query_cache_table_match_t {
     ecs_table_t *table;              /* The current table. */
     int32_t offset;                  /* Starting point in table  */
     int32_t count;                   /* Number of entities to iterate in table */
-    int32_t *columns;                /* Mapping from query fields to table columns */
-    int32_t *storage_columns;        /* Mapping from query fields to storage columns */
+    const ecs_table_record_t **trs;  /* Information about where to find field in table */
     ecs_id_t *ids;                   /* Resolved (component) ids for current table */
     ecs_entity_t *sources;           /* Subjects (sources) of ids */
-    ecs_vec_t refs;                  /* Cached components for non-this terms */
     ecs_termset_t set_fields;        /* Fields that are set */
     ecs_termset_t up_fields;         /* Fields that are matched through traversal */
     uint64_t group_id;               /* Value used to organize tables in groups */
@@ -444,7 +430,7 @@ typedef struct ecs_query_cache_event_t {
 
 /* Query level block allocators have sizes that depend on query field count */
 typedef struct ecs_query_cache_allocators_t {
-    ecs_block_allocator_t columns;
+    ecs_block_allocator_t trs;
     ecs_block_allocator_t ids;
     ecs_block_allocator_t sources;
     ecs_block_allocator_t monitors;
@@ -491,6 +477,12 @@ typedef struct ecs_query_cache_t {
     int32_t rematch_count;           /* Track which tables were added during rematch */
     
     ecs_entity_t entity;
+
+    /* Zero'd out sources array, used for results that only match on $this */
+    ecs_entity_t *sources;
+
+    /* Map field indices from cache to query */
+    int8_t *field_map;
 
     /* Query-level allocators */
     ecs_query_cache_allocators_t allocators;

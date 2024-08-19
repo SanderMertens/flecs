@@ -150,6 +150,7 @@ void* flecs_bcalloc(
     ecs_block_allocator_t *ba) 
 {
 #ifdef FLECS_USE_OS_ALLOC
+    ecs_assert(ba != NULL, ECS_INTERNAL_ERROR, NULL);
     return ecs_os_calloc(ba->data_size);
 #else
     if (!ba) return NULL;
@@ -166,7 +167,7 @@ void flecs_bfree(
     flecs_bfree_w_dbg_info(ba, memory, NULL);
 }
 
-
+FLECS_API
 void flecs_bfree_w_dbg_info(
     ecs_block_allocator_t *ba, 
     void *memory,
@@ -209,7 +210,8 @@ void flecs_bfree_w_dbg_info(
     ecs_block_allocator_chunk_header_t *chunk = memory;
     chunk->next = ba->head;
     ba->head = chunk;
-    ecs_assert(ba->alloc_count >= 0, ECS_INTERNAL_ERROR, "corrupted allocator");
+    ecs_assert(ba->alloc_count >= 0, ECS_INTERNAL_ERROR, 
+        "corrupted allocator (size = %d)", ba->chunk_size);
 #endif
 }
 

@@ -60,8 +60,11 @@ void flecs_meta_import_core_definitions(
 
     ecs_entity_t addon_vec = ecs_opaque(world, {
         .entity = ecs_component(world, { 
-            .type = {
+            .entity = ecs_entity(world, {
                 .name = "flecs.core.addon_vec_t",
+                .root_sep = ""
+            }),
+            .type = {
                 .size = ECS_SIZEOF(char**),
                 .alignment = ECS_ALIGNOF(char**)
             }
@@ -170,7 +173,8 @@ void flecs_meta_import_meta_definitions(
             { .name = "type", .type = ecs_id(ecs_entity_t) },
             { .name = "count", .type = ecs_id(ecs_i32_t) },
             { .name = "unit", .type = ecs_id(ecs_entity_t) },
-            { .name = "offset", .type = ecs_id(ecs_i32_t) }
+            { .name = "offset", .type = ecs_id(ecs_i32_t) },
+            { .name = "use_offset", .type = ecs_id(ecs_bool_t) }
         }
     });
 

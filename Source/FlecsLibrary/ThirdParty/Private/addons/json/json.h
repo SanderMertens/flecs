@@ -44,7 +44,7 @@ typedef struct ecs_json_ser_ctx_t {
 } ecs_json_ser_ctx_t;
 
 typedef struct ecs_json_this_data_t {
-    ecs_entity_t *ids;
+    const ecs_entity_t *ids;
     const EcsIdentifier *names;
     const EcsDocDescription *label;
     const EcsDocDescription *brief;
@@ -289,6 +289,9 @@ int flecs_json_serialize_alerts(
     const ecs_world_t *world,
     ecs_strbuf_t *buf,
     ecs_entity_t entity);
+
+bool flecs_json_is_builtin(
+    ecs_id_t id);
 
 #endif
 

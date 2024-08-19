@@ -35,7 +35,7 @@ void flecs_query_build_down_cache(
             }
 
             int32_t i, count = ecs_table_count(table);
-            ecs_entity_t *entities = table->data.entities.array;
+            const ecs_entity_t *entities = ecs_table_entities(table);
             for (i = 0; i < count; i ++) {
                 ecs_record_t *r = flecs_entities_get(world, entities[i]);
                 if (r->row & EcsEntityIsTraversable) {
@@ -70,8 +70,9 @@ void flecs_query_build_up_cache(
 
         ecs_trav_elem_t *el = ecs_vec_append_t(a, &cache->entities, 
             ecs_trav_elem_t);
+        
         el->entity = second;
-        el->column = root_column;
+        el->tr = &table->_->records[i];
         el->idr = NULL;
 
         ecs_record_t *r = flecs_entities_get_any(world, second);

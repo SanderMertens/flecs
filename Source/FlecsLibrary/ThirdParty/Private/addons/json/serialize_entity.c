@@ -9,11 +9,13 @@
 #ifdef FLECS_JSON
 
 int ecs_entity_to_json_buf(
-    const ecs_world_t *world,
+    const ecs_world_t *stage,
     ecs_entity_t entity,
     ecs_strbuf_t *buf,
     const ecs_entity_to_json_desc_t *desc)
 {
+    const ecs_world_t *world = ecs_get_world(stage);
+
     if (!entity || !ecs_is_valid(world, entity)) {
         return -1;
     }
@@ -48,7 +50,7 @@ int ecs_entity_to_json_buf(
         .table = r->table,
         .offset = row,
         .count = 1,
-        .entities = &flecs_table_entities_array(r->table)[row],
+        .entities = &ecs_table_entities(r->table)[row],
         .field_count = 0
     };
 
@@ -57,11 +59,12 @@ int ecs_entity_to_json_buf(
         .serialize_table = true,
         .serialize_entity_ids =   desc ? desc->serialize_entity_id : false,
         .serialize_values =       desc ? desc->serialize_values : true,
+        .serialize_builtin =       desc ? desc->serialize_builtin : false,
         .serialize_doc =          desc ? desc->serialize_doc : false,
         .serialize_matches =      desc ? desc->serialize_matches : false,
         .serialize_refs =         desc ? desc->serialize_refs : 0,
         .serialize_alerts =       desc ? desc->serialize_alerts : false,
-        .serialize_full_paths =   desc ? desc->serialize_full_paths : false,
+        .serialize_full_paths =   desc ? desc->serialize_full_paths : true,
         .serialize_inherited =    desc ? desc->serialize_inherited : false,
         .serialize_type_info =    desc ? desc->serialize_type_info : false
     };

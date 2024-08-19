@@ -178,12 +178,8 @@ const char* flecs_query_op_str(
     case EcsQueryAndId:          return "andid     ";
     case EcsQueryAndAny:         return "andany    ";
     case EcsQueryTriv:           return "triv      ";
-    case EcsQueryTrivData:       return "trivpop   ";
-    case EcsQueryTrivWildcard:   return "trivwc    ";
     case EcsQueryCache:          return "cache     ";
-    case EcsQueryCacheData:      return "cachepop  ";
     case EcsQueryIsCache:        return "xcache    ";
-    case EcsQueryIsCacheData:    return "xcachepop ";
     case EcsQueryOnlyAny:        return "any       ";
     case EcsQueryUp:             return "up        ";
     case EcsQueryUpId:           return "upid      ";
@@ -229,9 +225,6 @@ const char* flecs_query_op_str(
     case EcsQuerySetId:          return "setid     ";
     case EcsQueryContain:        return "contain   ";
     case EcsQueryPairEq:         return "pair_eq   ";
-    case EcsQueryPopulate:       return "pop       ";
-    case EcsQueryPopulateSelf:   return "popself   ";
-    case EcsQueryPopulateSparse: return "popsparse ";
     case EcsQueryYield:          return "yield     ";
     case EcsQueryNothing:        return "nothing   ";
     default:                     return "!invalid  ";
@@ -309,6 +302,11 @@ void flecs_query_plan_w_profile(
     ecs_query_impl_t *impl = flecs_query_impl(q);
     ecs_query_op_t *ops = impl->ops;
     int32_t i, count = impl->op_count, indent = 0;
+    if (!count) {
+        ecs_strbuf_append(buf, "");
+        return; /* No plan */
+    }
+
     for (i = 0; i < count; i ++) {
         ecs_query_op_t *op = &ops[i];
         ecs_flags16_t flags = op->flags;
@@ -354,13 +352,7 @@ void flecs_query_plan_w_profile(
             indent ++;
         }
 
-        if (op->kind == EcsQueryPopulate || 
-            op->kind == EcsQueryPopulateSelf ||
-            op->kind == EcsQueryPopulateSparse ||
-            op->kind == EcsQueryTriv ||
-            op->kind == EcsQueryTrivData ||
-            op->kind == EcsQueryTrivWildcard)
-        {
+        if (op->kind == EcsQueryTriv) {
             flecs_query_str_append_bitset(buf, op->src.entity);
         }
 
@@ -754,10 +746,7 @@ void flecs_query_apply_iter_flags(
     ecs_iter_t *it,
     const ecs_query_t *query)
 {
-    ECS_BIT_COND(it->flags, EcsIterIsInstanced, 
-        ECS_BIT_IS_SET(query->flags, EcsQueryIsInstanced));
-    ECS_BIT_COND(it->flags, EcsIterNoData,
-        ECS_BIT_IS_SET(query->flags, EcsQueryNoData));
     ECS_BIT_COND(it->flags, EcsIterHasCondSet, 
         ECS_BIT_IS_SET(query->flags, EcsQueryHasCondSet));
+    ECS_BIT_COND(it->flags, EcsIterNoData, query->data_fields == 0);
 }

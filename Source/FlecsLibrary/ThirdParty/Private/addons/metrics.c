@@ -339,8 +339,7 @@ static void UpdateCounterIdInstance(ecs_iter_t *it) {
 static void UpdateOneOfInstance(ecs_iter_t *it, bool counter) {
     ecs_world_t *world = it->real_world;
     ecs_table_t *table = it->table;
-    void *m = ecs_table_get_column(table, 
-        ecs_table_type_to_column_index(table, it->columns[0]), it->offset);
+    void *m = ecs_table_get_column(table, it->trs[0]->column, it->offset);
     EcsMetricOneOfInstance *mi = ecs_field(it, EcsMetricOneOfInstance, 1);
     ecs_ftime_t dt = it->delta_time;
 
@@ -572,11 +571,7 @@ int flecs_member_metric_init(
     ecs_observer(world, {
         .entity = metric,
         .events = { EcsOnAdd },
-        .query.terms[0] = {
-            .id = id,
-            .src.id = EcsSelf,
-            .inout = EcsInOutNone
-        },
+        .query.terms[0] = { .id = id },
         .callback = flecs_metrics_on_member_metric,
         .yield_existing = true,
         .ctx = ctx
@@ -607,11 +602,7 @@ int flecs_id_metric_init(
     ecs_observer(world, {
         .entity = metric,
         .events = { EcsOnAdd },
-        .query.terms[0] = {
-            .id = desc->id,
-            .src.id = EcsSelf,
-            .inout = EcsInOutNone
-        },
+        .query.terms[0] = { .id = desc->id },
         .callback = flecs_metrics_on_id_metric,
         .yield_existing = true,
         .ctx = ctx
@@ -682,11 +673,7 @@ int flecs_oneof_metric_init(
     ecs_observer(world, {
         .entity = metric,
         .events = { EcsMonitor },
-        .query.terms[0] = {
-            .id = desc->id,
-            .src.id = EcsSelf,
-            .inout = EcsInOutNone
-        },
+        .query.terms[0] = { .id = desc->id },
         .callback = flecs_metrics_on_oneof_metric,
         .yield_existing = true,
         .ctx = ctx

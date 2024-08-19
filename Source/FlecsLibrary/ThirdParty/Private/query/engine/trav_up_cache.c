@@ -30,7 +30,8 @@ int32_t flecs_trav_type_search(
     ecs_table_record_t *tr = ecs_table_cache_get(&idr_with->cache, table);
     if (tr) {
         up->id = type->array[tr->index];
-        return up->column = tr->index;
+        up->tr = tr;
+        return tr->index;
     }
 
     return -1;
@@ -39,6 +40,7 @@ int32_t flecs_trav_type_search(
 static
 int32_t flecs_trav_type_offset_search(
     ecs_trav_up_t *up,
+    const ecs_table_t *table,
     int32_t offset,
     ecs_id_t with,
     ecs_type_t *type)
@@ -50,7 +52,8 @@ int32_t flecs_trav_type_offset_search(
         ecs_id_t type_id = type->array[offset ++];
         if (ecs_id_match(type_id, with)) {
             up->id = type_id;
-            return up->column = offset - 1;
+            up->tr = &table->_->records[offset - 1];
+            return offset - 1;
         }
     }
 
@@ -109,15 +112,15 @@ ecs_trav_up_t* flecs_trav_table_up(
 
             ecs_trav_up_t *up_parent = flecs_trav_table_up(ctx, a, cache,
                 world, tgt, with, rel, idr_with, idr_trav);
-            if (up_parent->column != -1) {
+            if (up_parent->tr) {
                 up->src = up_parent->src;
-                up->column = up_parent->column;
+                up->tr = up_parent->tr;
                 up->id = up_parent->id;
                 goto found;
             }
 
             r_column = flecs_trav_type_offset_search(
-                &up_pair, r_column + 1, rel, &type);
+                &up_pair, table, r_column + 1, rel, &type);
         }
 
         if (!is_a) {
@@ -131,21 +134,21 @@ ecs_trav_up_t* flecs_trav_table_up(
 
                 ecs_trav_up_t *up_parent = flecs_trav_table_up(ctx, a, cache,
                     world, tgt, with, rel, idr_with, idr_trav);
-                if (up_parent->column != -1) {
+                if (up_parent->tr) {
                     up->src = up_parent->src;
-                    up->column = up_parent->column;
+                    up->tr = up_parent->tr;
                     up->id = up_parent->id;
                     goto found;
                 }
 
                 r_column = flecs_trav_type_offset_search(
-                    &up_pair, r_column + 1, rel, &type);
+                    &up_pair, table, r_column + 1, rel, &type);
             }
         }
     }
 
 not_found:
-    up->column = -1;
+    up->tr = NULL;
 found:
     up->ready = true;
     return up;

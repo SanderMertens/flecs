@@ -202,6 +202,7 @@ typedef struct EcsMember {
     int32_t count;                                 /**< Number of elements (for inline arrays). */
     ecs_entity_t unit;                             /**< Member unit. */
     int32_t offset;                                /**< Member offset. */
+    bool use_offset;                               /**< If offset should be explicitly used. */
 } EcsMember;
 
 /** Type expressing a range for a member value */
@@ -234,6 +235,11 @@ typedef struct ecs_member_t {
     /** May be set when used with ecs_struct_desc_t, will be auto-populated if
      * type entity is also a unit */
     ecs_entity_t unit;
+
+    /** Set to true to prevent automatic offset computation. This option should
+     * be used when members are registered out of order or where calculation of
+     * member offsets doesn't match C type offsets. */
+    bool use_offset;
 
     /** Numerical range that specifies which values member can assume. This
      * range may be used by UI elements such as a progress bar or slider. The

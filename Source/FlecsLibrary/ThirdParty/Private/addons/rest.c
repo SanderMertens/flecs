@@ -170,6 +170,7 @@ void flecs_rest_parse_json_ser_entity_params(
     flecs_rest_bool_param(req, "full_paths", &desc->serialize_full_paths);
     flecs_rest_bool_param(req, "inherited", &desc->serialize_inherited);
     flecs_rest_bool_param(req, "values", &desc->serialize_values);
+    flecs_rest_bool_param(req, "builtin", &desc->serialize_builtin);
     flecs_rest_bool_param(req, "type_info", &desc->serialize_type_info);
     flecs_rest_bool_param(req, "matches", &desc->serialize_matches);
     flecs_rest_bool_param(req, "alerts", &desc->serialize_alerts);
@@ -190,6 +191,8 @@ void flecs_rest_parse_json_ser_iter_params(
     flecs_rest_bool_param(req, "doc", &desc->serialize_doc);
     flecs_rest_bool_param(req, "full_paths", &desc->serialize_full_paths);
     flecs_rest_bool_param(req, "inherited", &desc->serialize_inherited);
+    flecs_rest_bool_param(req, "values", &desc->serialize_values);
+    flecs_rest_bool_param(req, "builtin", &desc->serialize_builtin);
     flecs_rest_bool_param(req, "type_info", &desc->serialize_type_info);
     flecs_rest_bool_param(req, "field_info", &desc->serialize_field_info);
     flecs_rest_bool_param(req, "query_info", &desc->serialize_query_info);
@@ -1080,16 +1083,17 @@ void flecs_rest_reply_table_append_memory(
     const ecs_table_t *table)
 {
     int32_t used = 0, allocated = 0;
+    int32_t count = ecs_table_count(table), size = ecs_table_size(table);
 
-    used += table->data.entities.count * ECS_SIZEOF(ecs_entity_t);
-    allocated += table->data.entities.size * ECS_SIZEOF(ecs_entity_t);
+    used += count * ECS_SIZEOF(ecs_entity_t);
+    allocated += size * ECS_SIZEOF(ecs_entity_t);
 
     int32_t i, storage_count = table->column_count;
     ecs_column_t *columns = table->data.columns;
 
     for (i = 0; i < storage_count; i ++) {
-        used += columns[i].data.count * columns[i].ti->size;
-        allocated += columns[i].data.size * columns[i].ti->size;
+        used += count * columns[i].ti->size;
+        allocated += size * columns[i].ti->size;
     }
 
     ecs_strbuf_list_push(reply, "{", ",");
@@ -1544,7 +1548,7 @@ void ecs_rest_server_fini(
 
 static
 void flecs_on_set_rest(ecs_iter_t *it) {
-    EcsRest *rest = it->ptrs[0];
+    EcsRest *rest = ecs_field(it, EcsRest, 0);
 
     int i;
     for(i = 0; i < it->count; i ++) {
@@ -1671,6 +1675,12 @@ void FlecsRestImport(
 
     ecs_set_name_prefix(world, "EcsRest");
     ECS_TAG_DEFINE(world, EcsRestPlecs);
+
+    /* Enable frame time measurements so we're guaranteed to have a delta time
+     * value to pass into the HTTP server. */
+    if (ecs_os_has_time()) {
+        ecs_measure_frame_time(world, true);
+    }
 }
 
 #endif

@@ -355,9 +355,13 @@ with_stmt: {
 // using
 using_stmt: {
     // using flecs.meta\n
-    Parse_2(EcsTokIdentifier, '\n',
+    Parse_1(EcsTokIdentifier,
         flecs_script_insert_using(parser, Token(1));
-        EndOfRule;
+
+        Parse(
+            EcsTokEndOfStatement:
+                EndOfRule;
+        )
     )
 }
 
@@ -742,9 +746,6 @@ identifier_paren: {
                     ecs_script_component_t *comp = 
                         flecs_script_insert_component(parser, Token(0)); 
                     comp->expr = Token(2);
-                    if (!ecs_os_strcmp(comp->expr, "{}")) {
-                        comp->expr = NULL;
-                    }
                 )
 
                 EndOfRule;

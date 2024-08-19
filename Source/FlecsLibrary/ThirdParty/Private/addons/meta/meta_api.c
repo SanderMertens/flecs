@@ -376,7 +376,8 @@ ecs_entity_t ecs_struct_init(
             .type = m_desc->type, 
             .count = m_desc->count,
             .offset = m_desc->offset,
-            .unit = m_desc->unit
+            .unit = m_desc->unit,
+            .use_offset = m_desc->use_offset
         });
 
         EcsMemberRanges *ranges = NULL;

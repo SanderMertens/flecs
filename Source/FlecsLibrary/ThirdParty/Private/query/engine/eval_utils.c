@@ -20,8 +20,18 @@ void flecs_query_set_iter_this(
         it->table = table;
         it->offset = range->offset;
         it->count = count;
-        it->entities = ECS_ELEM_T(
-            table->data.entities.array, ecs_entity_t, it->offset);
+#ifndef FLECS_SANITIZE
+        it->entities = &ecs_table_entities(table)[it->offset];
+        ecs_assert(it->entities != NULL || it->offset == 0, 
+            ECS_INTERNAL_ERROR, NULL);
+#else
+        /* Prevent "applying zero offset to null pointer" sanitizer error. The
+         * code panics on a bad offset value, but asan doesn't know that. */
+        it->entities = ecs_table_entities(table);
+        if (it->entities) {
+            it->entities += it->offset;
+        }
+#endif
     } else if (count == 1) {
         it->count = 1;
         it->entities = &ctx->vars[0].entity;
@@ -155,7 +165,7 @@ ecs_entity_t flecs_query_var_get_entity(
 
     ecs_assert(var->range.count == 1, ECS_INTERNAL_ERROR, NULL);
     ecs_table_t *table = var->range.table;
-    ecs_entity_t *entities = table->data.entities.array;
+    const ecs_entity_t *entities = ecs_table_entities(table);
     var->entity = entities[var->range.offset];
     return var->entity;
 }
@@ -209,7 +219,7 @@ void flecs_query_var_narrow_range(
     ecs_assert(var_id < ctx->query->var_count, ECS_INTERNAL_ERROR, NULL);
     if (ctx->query_vars[var_id].kind != EcsVarTable) {    
         ecs_assert(count == 1, ECS_INTERNAL_ERROR, NULL);
-        var->entity = flecs_table_entities_array(table)[offset];
+        var->entity = ecs_table_entities(table)[offset];
     }
 }
 
@@ -338,14 +348,13 @@ int16_t flecs_query_next_column(
     return flecs_ito(int16_t, column);
 }
 
-void flecs_query_it_set_column(
+void flecs_query_it_set_tr(
     ecs_iter_t *it,
     int32_t field_index,
-    int32_t column)
+    const ecs_table_record_t *tr)
 {
-    ecs_assert(column >= 0, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(field_index >= 0, ECS_INTERNAL_ERROR, NULL);
-    it->columns[field_index] = column;
+    it->trs[field_index] = tr;
 }
 
 ecs_id_t flecs_query_it_set_id(
@@ -374,14 +383,15 @@ void flecs_query_set_match(
     ecs_iter_t *it = ctx->it;
     ecs_assert(column >= 0, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(column < table->type.count, ECS_INTERNAL_ERROR, NULL);
-    flecs_query_it_set_column(it, field_index, column);
-    ecs_id_t matched = flecs_query_it_set_id(it, table, field_index, column);
+    const ecs_table_record_t *tr = &table->_->records[column];
+    flecs_query_it_set_tr(it, field_index, tr);
+    ecs_id_t matched = flecs_query_it_set_id(it, table, field_index, tr->index);
     flecs_query_set_vars(op, matched, ctx);
 }
 
 void flecs_query_set_trav_match(
     const ecs_query_op_t *op,
-    int32_t column,
+    const ecs_table_record_t *tr,
     ecs_entity_t trav,
     ecs_entity_t second,
     const ecs_query_run_ctx_t *ctx)
@@ -394,9 +404,7 @@ void flecs_query_set_trav_match(
     ecs_iter_t *it = ctx->it;
     ecs_id_t matched = ecs_pair(trav, second);
     it->ids[op->field_index] = matched;
-    if (column != -1) {
-        flecs_query_it_set_column(it, op->field_index, column);
-    }
+    flecs_query_it_set_tr(it, op->field_index, tr);
     flecs_query_set_vars(op, matched, ctx);
 }
 

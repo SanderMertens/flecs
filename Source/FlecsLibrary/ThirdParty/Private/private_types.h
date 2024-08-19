@@ -73,14 +73,6 @@ typedef struct ecs_hashed_string_t {
     uint64_t hash;
 } ecs_hashed_string_t;
 
-/** Must appear as first member in payload of table cache */
-typedef struct ecs_table_cache_hdr_t {
-    struct ecs_table_cache_t *cache;
-    ecs_table_t *table;
-    struct ecs_table_cache_hdr_t *prev, *next;
-    bool empty;
-} ecs_table_cache_hdr_t;
-
 /** Linked list of tables in table cache */
 typedef struct ecs_table_cache_list_t {
     ecs_table_cache_hdr_t *first;

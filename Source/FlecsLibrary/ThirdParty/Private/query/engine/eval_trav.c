@@ -15,7 +15,7 @@ bool flecs_query_trav_fixed_src_reflexive(
 {
     ecs_table_t *table = range->table;
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_entity_t *entities = table->data.entities.array;
+    const ecs_entity_t *entities = ecs_table_entities(table);
     int32_t count = range->count;
     if (!count) {
         count = ecs_table_count(table);
@@ -46,7 +46,7 @@ bool flecs_query_trav_fixed_src_reflexive(
         var->entity = entities[i];
     }
 
-    flecs_query_set_trav_match(op, -1, trav, second, ctx);
+    flecs_query_set_trav_match(op, NULL, trav, second, ctx);
     return true;
 }
 
@@ -72,7 +72,7 @@ bool flecs_query_trav_unknown_src_reflexive(
         }
     }
 
-    flecs_query_set_trav_match(op, -1, trav, second, ctx);
+    flecs_query_set_trav_match(op, NULL, trav, second, ctx);
     return true;
 }
 
@@ -95,9 +95,11 @@ bool flecs_query_trav_fixed_src_up_fixed_second(
     ecs_table_t *table = range.table;
 
     /* Check if table has transitive relationship by traversing upwards */
-    int32_t column = ecs_search_relation(ctx->world, table, 0, 
-        ecs_pair(trav, second), trav, EcsSelf|EcsUp, NULL, NULL, NULL);
-    if (column == -1) {
+    ecs_table_record_t *tr = NULL;
+    ecs_search_relation(ctx->world, table, 0, 
+        ecs_pair(trav, second), trav, EcsSelf|EcsUp, NULL, NULL, &tr);
+
+    if (!tr) {
         if (op->match_flags & EcsTermReflexive) {
             return flecs_query_trav_fixed_src_reflexive(op, ctx,
                 &range, trav, second);
@@ -106,7 +108,7 @@ bool flecs_query_trav_fixed_src_up_fixed_second(
         }
     }
 
-    flecs_query_set_trav_match(op, column, trav, second, ctx);
+    flecs_query_set_trav_match(op, tr, trav, second, ctx);
     return true;
 }
 
@@ -201,9 +203,8 @@ bool flecs_query_trav_yield_reflexive_src(
         return false;
     }
 
-    ecs_entity_t entity = ecs_vec_get_t(
-        &range->table->data.entities, ecs_entity_t, trav_ctx->index)[0];
-    flecs_query_set_trav_match(op, -1, trav, entity, ctx);
+    ecs_entity_t entity = ecs_table_entities(range->table)[trav_ctx->index];
+    flecs_query_set_trav_match(op, NULL, trav, entity, ctx);
 
     /* Hijack existing variable to return one result at a time */
     if (src_is_var) {
@@ -259,7 +260,7 @@ bool flecs_query_trav_fixed_src_up_unknown_second(
 
     ecs_trav_elem_t *el = ecs_vec_get_t(
         &trav_ctx->cache.entities, ecs_trav_elem_t, trav_ctx->index);
-    flecs_query_set_trav_match(op, el->column, trav, el->entity, ctx);
+    flecs_query_set_trav_match(op, el->tr, trav, el->entity, ctx);
     return true;
 }
 

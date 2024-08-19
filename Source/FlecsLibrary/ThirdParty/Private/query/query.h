@@ -23,3 +23,7 @@ int flecs_query_finalize_query(
 ecs_iter_t flecs_query_iter(
     const ecs_world_t *world,
     const ecs_query_t *q);
+
+/* Internal function for initializing an iterator after vars are constrained */
+void flecs_query_iter_constrain(
+    ecs_iter_t *it);

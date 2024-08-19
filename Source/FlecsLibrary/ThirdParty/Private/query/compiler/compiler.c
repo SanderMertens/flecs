@@ -207,7 +207,7 @@ int flecs_query_discover_vars(
                         anonymous_table_count ++;
                     }
 
-                    if (!(term->flags_ & EcsTermNoData)) {
+                    if (((1llu << term->field_index) & query->pub.data_fields)) {
                         /* Can't have an anonymous variable as source of a term
                          * that returns a component. We need to return each
                          * instance of the component, whereas anonymous 
@@ -237,20 +237,6 @@ int flecs_query_discover_vars(
         } else if ((src->id & EcsIsVariable) && (ECS_TERM_REF_ID(src) == EcsThis)) {
             if (flecs_term_is_builtin_pred(term) && term->oper == EcsOr) {
                 flecs_query_add_var(query, EcsThisName, vars, EcsVarEntity);
-            }
-
-            if (term->flags_ & EcsTermIsSparse) {
-                /* If this is a sparse $this term entities have to be returned
-                 * one by one. */
-                flecs_query_add_var(query, EcsThisName, vars, EcsVarEntity);
-
-                /* Track if query contains $this sparse terms. Queries with 
-                 * sparse $this fields need to return results one by one. */
-                if ((ECS_TERM_REF_ID(&term->src) == EcsThis) && 
-                    ((term->src.id & (EcsSelf|EcsIsVariable)) == (EcsSelf|EcsIsVariable)))
-                {
-                    query->pub.flags |= EcsQueryHasSparseThis;
-                }
             }
         }
 
@@ -351,6 +337,7 @@ int flecs_query_discover_vars(
             ecs_os_free(var_name);
         }
     }
+
     var_count = ecs_vec_count(vars);
 
     /* Add non-This table variables */
@@ -393,7 +380,7 @@ int flecs_query_discover_vars(
     /* Always include spot for This variable, even if query doesn't use it */
     var_count ++;
 
-    ecs_query_var_t *query_vars = &query->vars_cache.var;
+    ecs_query_var_t *query_vars = &flecs_this_array;
     if ((var_count + anonymous_count) > 1) {
         query_vars = flecs_alloc(&stage->allocator,
             (ECS_SIZEOF(ecs_query_var_t) + ECS_SIZEOF(char*)) * 
@@ -402,22 +389,29 @@ int flecs_query_discover_vars(
 
     query->vars = query_vars;
     query->var_count = var_count;
-    query->pub.var_count = flecs_ito(int16_t, var_count);
+    query->pub.var_count = flecs_ito(int8_t, var_count);
     ECS_BIT_COND(query->pub.flags, EcsQueryHasTableThisVar, 
         !entity_before_table_this);
     query->var_size = var_count + anonymous_count;
 
-    char **var_names = ECS_ELEM(query_vars, ECS_SIZEOF(ecs_query_var_t), 
-        var_count + anonymous_count);
+    char **var_names;
+    if (query_vars != &flecs_this_array) {
+        query_vars[0].kind = EcsVarTable;
+        query_vars[0].name = NULL;
+        flecs_set_var_label(&query_vars[0], NULL);
+        query_vars[0].id = 0;
+        query_vars[0].table_id = EcsVarNone;
+        query_vars[0].lookup = NULL;
+
+        var_names = ECS_ELEM(query_vars, ECS_SIZEOF(ecs_query_var_t), 
+            var_count + anonymous_count);
+        var_names[0] = ECS_CONST_CAST(char*, query_vars[0].name);
+    } else {
+        var_names = &flecs_this_name_array;
+    }
+
     query->pub.vars = (char**)var_names;
 
-    query_vars[0].kind = EcsVarTable;
-    query_vars[0].name = NULL;
-    flecs_set_var_label(&query_vars[0], NULL);
-    query_vars[0].id = 0;
-    query_vars[0].table_id = EcsVarNone;
-    query_vars[0].lookup = NULL;
-    var_names[0] = ECS_CONST_CAST(char*, query_vars[0].name);
     query_vars ++;
     var_names ++;
     var_count --;
@@ -426,13 +420,15 @@ int flecs_query_discover_vars(
         ecs_query_var_t *user_vars = ecs_vec_first_t(vars, ecs_query_var_t);
         ecs_os_memcpy_n(query_vars, user_vars, ecs_query_var_t, var_count);
         for (i = 0; i < var_count; i ++) {
+            ecs_assert(&var_names[i] != &(&flecs_this_name_array)[i], 
+                ECS_INTERNAL_ERROR, NULL);
             var_names[i] = ECS_CONST_CAST(char*, query_vars[i].name);
         }
     }
 
     /* Hide anonymous table variables from application */
     query->pub.var_count = 
-        flecs_ito(int16_t, query->pub.var_count - anonymous_table_count);
+        flecs_ito(int8_t, query->pub.var_count - anonymous_table_count);
 
     /* Sanity check to make sure that the public part of the variable array only
      * contains entity variables. */
@@ -556,7 +552,6 @@ static
 void flecs_query_insert_trivial_search(
     ecs_query_impl_t *query,
     ecs_flags64_t *compiled,
-    ecs_flags64_t *populated,
     ecs_query_compile_ctx_t *ctx)
 {
     ecs_query_t *q = &query->pub;
@@ -571,19 +566,7 @@ void flecs_query_insert_trivial_search(
 
     /* Find trivial terms, which can be handled in single instruction */
     int32_t trivial_wildcard_terms = 0;
-    int32_t trivial_data_terms = 0;
     int32_t trivial_terms = 0;
-    bool populate = true;
-
-    for (i = 0; i < term_count; i ++) {
-        ecs_term_t *term = &terms[i];
-        if (term->flags_ & (EcsTermIsToggle|EcsTermIsMember|EcsTermIsSparse)) {
-            /* If query returns individual entities, let dedicated populate
-             * instruction handle populating data fields */
-            populate = false;
-            break;
-        }
-    }
 
     for (i = 0; i < term_count; i ++) {
         /* Term is already compiled */
@@ -601,17 +584,12 @@ void flecs_query_insert_trivial_search(
             continue;
         }
 
-        trivial_set |= (1llu << i);
-
+        /* Wildcards are not supported for trivial queries */
         if (ecs_id_is_wildcard(term->id)) {
-            trivial_wildcard_terms ++;
+            continue;
         }
 
-        if (populate) {
-            if (q->data_fields & (1llu << term->field_index)) {
-                trivial_data_terms ++;
-            }
-        }
+        trivial_set |= (1llu << i);
 
         trivial_terms ++;
     }
@@ -621,23 +599,13 @@ void flecs_query_insert_trivial_search(
         for (i = 0; i < q->term_count; i ++) {
             if (trivial_set & (1llu << i)) {
                 *compiled |= (1ull << i);
-                if (populate) {
-                    *populated |= (1ull << terms[i].field_index);
-                }
             }
         }
 
         /* If there's more than 1 trivial term, batch them in trivial search */
         ecs_query_op_t trivial = {0};
-        if (trivial_wildcard_terms) {
-            trivial.kind = EcsQueryTrivWildcard;
-        } else {
-            if (trivial_data_terms) {
-                trivial.kind = EcsQueryTrivData;
-            }
-            if (!trivial.kind) {
-                trivial.kind = EcsQueryTriv;
-            }
+        if (!trivial_wildcard_terms) {
+            trivial.kind = EcsQueryTriv;
         }
 
         /* Store the bitset with trivial terms on the instruction */
@@ -653,7 +621,6 @@ static
 void flecs_query_insert_cache_search(
     ecs_query_impl_t *query,
     ecs_flags64_t *compiled,
-    ecs_flags64_t *populated,
     ecs_query_compile_ctx_t *ctx)
 {
     if (!query->cache) {
@@ -661,70 +628,36 @@ void flecs_query_insert_cache_search(
     }
 
     ecs_query_t *q = &query->pub;
-    bool populate = true;
 
-    int32_t populate_count = 0;
     if (q->cache_kind == EcsQueryCacheAll) {
         /* If all terms are cacheable, make sure no other terms are compiled */
         *compiled = 0xFFFFFFFFFFFFFFFF;
-
-        /* If query has a sparse $this field, fields can't be populated by the cache
-        * instruction. The reason for this is that sparse $this fields have to be
-        * returned one at a time. This means that the same needs to happen for
-        * cached fields, and the cache instruction only returns entire arrays. */
-        if (!(query->pub.flags & EcsQueryHasSparseThis)) {
-            *populated = 0xFFFFFFFFFFFFFFFF;
-            populate_count = query->pub.field_count;
-        }
     } else if (q->cache_kind == EcsQueryCacheAuto) {
         /* The query is partially cacheable */
         ecs_term_t *terms = q->terms;
         int32_t i, count = q->term_count;
 
         for (i = 0; i < count; i ++) {
-            ecs_term_t *term = &terms[i];
-            if (term->flags_ & (EcsTermIsToggle|EcsTermIsMember|EcsTermIsSparse)) {
-                /* If query returns individual entities, let dedicated populate
-                 * instruction handle populating data fields */
-                populate = false;
-                break;
-            }
-        }
-
-        for (i = 0; i < count; i ++) {
-            ecs_term_t *term = &terms[i];
-            int16_t field = term->field_index;
             if ((*compiled) & (1ull << i)) {
                 continue;
             }
 
+            ecs_term_t *term = &terms[i];
             if (!(term->flags_ & EcsTermIsCacheable)) {
                 continue;
             }
 
             *compiled |= (1ull << i);
-
-            if (populate) {
-                *populated |= (1ull << field);
-                populate_count ++; 
-            }
         }
     }
 
     /* Insert the operation for cache traversal */
     ecs_query_op_t op = {0};
-    if (!populate_count || (q->flags & EcsQueryNoData)) {
-        if (q->flags & EcsQueryIsCacheable) {
-            op.kind = EcsQueryIsCache;
-        } else {
-            op.kind = EcsQueryCache;
-        }
+
+    if (q->flags & EcsQueryIsCacheable) {
+        op.kind = EcsQueryIsCache;
     } else {
-        if (q->flags & EcsQueryIsCacheable) {
-            op.kind = EcsQueryIsCacheData;
-        } else {
-            op.kind = EcsQueryCacheData;
-        }
+        op.kind = EcsQueryCache;
     }
 
     flecs_query_write(0, &op.written);
@@ -745,70 +678,6 @@ bool flecs_term_match_multiple(
 {
     return flecs_term_ref_match_multiple(&term->first) ||
         flecs_term_ref_match_multiple(&term->second);
-}
-
-/* Insert instruction to populate data fields. */
-void flecs_query_insert_populate(
-    ecs_query_impl_t *query,
-    ecs_query_compile_ctx_t *ctx,
-    ecs_flags64_t populated)
-{
-    ecs_query_t *q = &query->pub;
-    int32_t i, term_count = q->term_count;
-
-    if (populated && !(q->flags & EcsQueryNoData)) {
-        ecs_flags64_t sparse_fields = 0;
-        int32_t populate_count = 0;
-        int32_t self_count = 0;
-
-        /* Figure out which populate instruction to use */
-        for (i = 0; i < term_count; i ++) {
-            ecs_term_t *term = &q->terms[i];
-            int16_t field = term->field_index;
-            ecs_flags64_t field_bit = (1ull << field);
-
-            if (!(populated & field_bit)) {
-                /* Only check fields that need to be populated */
-                continue;
-            }
-
-            populate_count ++;
-
-            /* Callee is asking us to populate a term without data */
-            if (ecs_term_match_this(term) && !(term->src.id & EcsUp)) {
-                self_count ++;
-            }
-
-            /* Track sparse fields as they require a separate instruction */
-            if (term->flags_ & EcsTermIsSparse) {
-                sparse_fields |= field_bit;
-            }
-        }
-
-        ecs_assert(populate_count != 0, ECS_INTERNAL_ERROR, NULL);
-
-        /* Mask out the sparse fields as they are populated separately. */
-        populated &= ~sparse_fields;
-
-        if (populated) {
-            ecs_query_op_kind_t kind = EcsQueryPopulate;
-            if (populate_count == self_count) {
-                kind = EcsQueryPopulateSelf;
-            }
-
-            ecs_query_op_t op = {0};
-            op.kind = flecs_ito(uint8_t, kind);
-            op.src.entity = populated; /* Abuse for bitset w/fields to populate */
-            flecs_query_op_insert(&op, ctx);
-        }
-
-        if (sparse_fields) {
-            ecs_query_op_t op = {0};
-            op.kind = EcsQueryPopulateSparse;
-            op.src.entity = sparse_fields; /* Abuse for bitset w/fields to populate */
-            flecs_query_op_insert(&op, ctx);
-        }
-    }
 }
 
 static
@@ -918,13 +787,11 @@ int flecs_query_insert_fixed_src_terms(
     ecs_world_t *world,
     ecs_query_impl_t *impl,
     ecs_flags64_t *compiled,
-    ecs_flags64_t *populated_out,
     ecs_query_compile_ctx_t *ctx)
 {
     ecs_query_t *q = &impl->pub;
     int32_t i, term_count = q->term_count;
     ecs_term_t *terms = q->terms;
-    ecs_flags64_t populated = 0;
 
     for (i = 0; i < term_count; i ++) {
         ecs_term_t *term = &terms[i];
@@ -956,31 +823,13 @@ int flecs_query_insert_fixed_src_terms(
         }
 
         if (term->src.id & EcsIsEntity && ECS_TERM_REF_ID(&term->src)) {
-            if (flecs_query_compile_term(world, impl, term, populated_out, ctx)) {
+            if (flecs_query_compile_term(world, impl, term, ctx)) {
                 return -1;
             }
 
             *compiled |= (1llu << i);
-
-            /* If this is a data field, track it. This will let us insert an
-             * instruction specifically for populating data fields of terms with
-             * fixed source (see below). */
-            if (q->data_fields & (1llu << term->field_index)) {
-                populated |= (1llu << term->field_index);
-            }
         }
     }
-
-    if (populated) {
-        /* If data fields with a fixed source were evaluated, insert a populate
-         * instruction that just populates those fields. The advantage of doing
-         * this before the rest of the query is evaluated, is that we only 
-         * populate data for static fields once vs. for each returned result of
-         * the query, which would be wasteful since this data doesn't change. */
-        flecs_query_insert_populate(impl, ctx, populated);
-    }
-
-    *populated_out |= populated;
 
     return 0;
 }
@@ -990,6 +839,34 @@ int flecs_query_compile(
     ecs_stage_t *stage,
     ecs_query_impl_t *query)
 {
+    /* Compile query to operations. Only necessary for non-trivial queries, as
+     * trivial queries use trivial iterators that don't use query ops. */
+    bool needs_plan = true;
+    ecs_flags32_t flags = query->pub.flags;
+    ecs_flags32_t trivial_flags = EcsQueryIsTrivial|EcsQueryMatchOnlySelf;
+    if ((flags & trivial_flags) == trivial_flags) {
+        if (query->cache) {
+            if (flags & EcsQueryIsCacheable) {
+                needs_plan = false;                
+            }
+        } else {
+            if (!(flags & EcsQueryMatchWildcards)) {
+                needs_plan = false;
+            }
+        }
+    }
+
+    if (!needs_plan) {
+        /* Initialize space for $this variable */
+        query->pub.var_count = 1;
+        query->var_count = 1;
+        query->var_size = 1;
+        query->vars = &flecs_this_array;
+        query->pub.vars = &flecs_this_name_array;
+        query->pub.flags |= EcsQueryHasTableThisVar;
+        return 0;
+    }
+
     ecs_query_t *q = &query->pub;
     ecs_term_t *terms = q->terms;
     ecs_query_compile_ctx_t ctx = {0};
@@ -1037,19 +914,16 @@ int flecs_query_compile(
     }
 
     ecs_flags64_t compiled = 0;
-    ecs_flags64_t populated = 0;
 
     /* Always evaluate terms with fixed source before other terms */
     flecs_query_insert_fixed_src_terms(
-        world, query, &compiled, &populated, &ctx);
+        world, query, &compiled, &ctx);
 
     /* Compile cacheable terms */
-    flecs_query_insert_cache_search(
-        query, &compiled, &populated, &ctx);
+    flecs_query_insert_cache_search(query, &compiled, &ctx);
 
     /* Insert trivial term search if query allows for it */
-    flecs_query_insert_trivial_search(
-        query, &compiled, &populated, &ctx);
+    flecs_query_insert_trivial_search(query, &compiled, &ctx);
 
     /* If a query starts with one or more optional terms, first compile the non
      * optional terms. This prevents having to insert an instruction that 
@@ -1106,7 +980,7 @@ int flecs_query_compile(
                 }
             }
 
-            if (flecs_query_compile_term(world, query, term, &populated, &ctx)) {
+            if (flecs_query_compile_term(world, query, term, &ctx)) {
                 return -1;
             }
 
@@ -1122,16 +996,6 @@ int flecs_query_compile(
 
     ecs_var_id_t this_id = flecs_query_find_var_id(query, "this", EcsVarEntity);
     if (this_id != EcsVarNone) {
-        /* If query has a $this term with a sparse component value and so far
-         * we've only accessed $this as table, we need to insert an each 
-         * instruction. This is because we can't return multiple sparse 
-         * component instances in a single query result. */
-        if ((query->pub.flags & EcsQueryHasSparseThis) && 
-            !(ctx.written & (1ull << this_id))) 
-        {
-            flecs_query_insert_each(0, this_id, &ctx, false);
-        }
-
         /* If This variable has been written as entity, insert an operation to 
          * assign it to it.entities for consistency. */
         if (ctx.written & (1ull << this_id)) {
@@ -1228,10 +1092,6 @@ int flecs_query_compile(
         if (!(q->flags & EcsQueryTableOnly)) {
             flecs_query_insert_toggle(query, &ctx);
         }
-
-        /* Insert instruction to populate remaining data fields */
-        ecs_flags64_t remaining = q->data_fields & ~populated;
-        flecs_query_insert_populate(query, &ctx, remaining);
 
         /* Insert yield. If program reaches this operation, a result was found */
         ecs_query_op_t yield = {0};

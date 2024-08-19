@@ -687,6 +687,12 @@
 #define ecs_field(it, T, index)\
     (ECS_CAST(T*, ecs_field_w_size(it, sizeof(T), index)))
 
+#define ecs_field_self(it, T, index)\
+    (ECS_CAST(T*, ecs_field_self_w_size(it, sizeof(T), index)))
+
+#define ecs_field_at(it, T, index, row)\
+    (ECS_CAST(T*, ecs_field_at_w_size(it, sizeof(T), index, row)))
+
 /** @} */
 
 /**
