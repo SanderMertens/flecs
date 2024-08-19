@@ -3498,6 +3498,7 @@ struct ecs_type_hooks_t {
  * @ingroup components
  */
 struct ecs_type_info_t {
+    const ecs_world_t *world; /**< World */
     ecs_size_t size;         /**< Size of type */
     ecs_size_t alignment;    /**< Alignment of type */
     ecs_type_hooks_t hooks;  /**< Type hooks */
