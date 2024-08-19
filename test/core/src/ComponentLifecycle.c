@@ -2628,6 +2628,7 @@ void ComponentLifecycle_component_init_set_hooks(void) {
     test_uint(ti->alignment, ECS_ALIGNOF(Position));
     test_assert(ti->hooks.on_add == test_on_add);
     test_assert(ti->hooks.on_remove == test_on_remove);
+    test_assert(ti->world == world);
 
     test_int(0, on_add_count);
     test_int(0, on_remove_count);
@@ -2857,7 +2858,8 @@ void ComponentLifecycle_with_before_hooks(void) {
     const ecs_type_info_t *ti = ecs_get_type_info(world, ecs_id(Position));
     test_assert(ti != NULL);
     test_assert(ti->hooks.ctor == ecs_ctor(Position));
-
+    test_assert(ti->world == world);
+    
     ecs_fini(world);
 }
 
