@@ -78,7 +78,8 @@ void FlecsEntityTests::Define()
 			TestTrue("Entity has component", TestEntity.Has<FlecsEntityTesting::FTestComponent>());
 			TestEqual("Component value is correct", TestEntity.Get<FlecsEntityTesting::FTestComponent>().Value, 42);
 			TestTrue("Entity has trait", TestEntity.HasTrait<FlecsEntityTesting::FTestComponent, FlecsEntityTesting::FTestTrait>());
-			TestEqual("Trait value is correct", TestEntity.GetTrait<FlecsEntityTesting::FTestComponent, FlecsEntityTesting::FTestTrait>().Value, 24);
+			TestEqual("Trait value is correct",
+				TestEntity.GetTrait<FlecsEntityTesting::FTestComponent, FlecsEntityTesting::FTestTrait>().Value, 24);
 		});
 
 		It("Should create an Entity with a Component and Trait then remove Trait", [&]()
@@ -91,7 +92,8 @@ void FlecsEntityTests::Define()
 			
 			TestTrue("Entity has component", TestEntity.Has<FlecsEntityTesting::FTestComponent>());
 			TestEqual("Component value is correct", TestEntity.Get<FlecsEntityTesting::FTestComponent>().Value, 42);
-			TestFalse("Entity has no trait", TestEntity.HasTrait<FlecsEntityTesting::FTestComponent, FlecsEntityTesting::FTestTrait>());
+			TestFalse("Entity has no trait",
+				TestEntity.HasTrait<FlecsEntityTesting::FTestComponent, FlecsEntityTesting::FTestTrait>());
 		});
 
 		It("Should create an Entity with a Component and Trait then remove Component", [&]()
@@ -103,10 +105,26 @@ void FlecsEntityTests::Define()
 			TestEntity.Remove<FlecsEntityTesting::FTestComponent>();
 			
 			TestFalse("Entity has no component", TestEntity.Has<FlecsEntityTesting::FTestComponent>());
-			TestFalse("Entity has no trait", TestEntity.HasTrait<FlecsEntityTesting::FTestComponent, FlecsEntityTesting::FTestTrait>());
+			TestFalse("Entity has no trait",
+				TestEntity.HasTrait<FlecsEntityTesting::FTestComponent, FlecsEntityTesting::FTestTrait>());
+		});
+
+		It("Should verify components are copied on cloning", [&]()
+		{
+			const FFlecsEntityHandle Entity = WorldFixture->GetFlecsWorld()->CreateEntity();
+			Entity.Set<FlecsEntityTesting::FTestComponent>({ 42 });
+
+			const FFlecsEntityHandle ClonedEntity = Entity.Clone();
+
+			TestTrue("Cloned entity is valid", ClonedEntity.IsValid());
+			TestTrue("Cloned entity has component", ClonedEntity.Has<FlecsEntityTesting::FTestComponent>());
+			TestEqual("Cloned component value is correct",
+				ClonedEntity.Get<FlecsEntityTesting::FTestComponent>().Value, 42);
 		});
 		
 	});
+// Additional test
+		
 	
 }
 
