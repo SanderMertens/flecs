@@ -995,6 +995,9 @@ void Module_lookup_module_after_reparent(void);
 void Module_reparent_module_in_ctor(void);
 void Module_implicitly_add_module_to_scopes_component(void);
 void Module_implicitly_add_module_to_scopes_entity(void);
+void Module_rename_namespace_shorter(void);
+void Module_rename_namespace_longer(void);
+void Module_rename_namespace_nested(void);
 
 // Testsuite 'ImplicitComponents'
 void ImplicitComponents_add(void);
@@ -5196,6 +5199,18 @@ bake_test_case Module_testcases[] = {
     {
         "implicitly_add_module_to_scopes_entity",
         Module_implicitly_add_module_to_scopes_entity
+    },
+    {
+        "rename_namespace_shorter",
+        Module_rename_namespace_shorter
+    },
+    {
+        "rename_namespace_longer",
+        Module_rename_namespace_longer
+    },
+    {
+        "rename_namespace_nested",
+        Module_rename_namespace_nested
     }
 };
 
@@ -6612,7 +6627,7 @@ static bake_test_suite suites[] = {
         "Module",
         NULL,
         NULL,
-        17,
+        20,
         Module_testcases
     },
     {

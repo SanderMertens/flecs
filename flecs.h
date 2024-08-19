@@ -30476,11 +30476,17 @@ ecs_entity_t do_import(world& world, const char *symbol) {
     // Initialize module component type & don't allow it to be registered as a
     // tag, as this would prevent calling emplace()
     auto c_ = component<T>(world, nullptr, false);
-    ecs_add_id(world, c_, EcsModule);
+
+    // Make module component sparse so that it'll never move in memory. This
+    // guarantees that a module destructor can be reliably used to cleanup
+    // module resources.
+    c_.add(flecs::Sparse);
 
     ecs_set_scope(world, c_);
     world.emplace<T>(world);
     ecs_set_scope(world, scope);
+
+    ecs_add_id(world, c_, EcsModule);
 
     // It should now be possible to lookup the module
     ecs_entity_t m = ecs_lookup_symbol(world, symbol, false, false);
@@ -30530,12 +30536,30 @@ flecs::entity import(world& world) {
 
 template <typename Module>
 inline flecs::entity world::module(const char *name) const {
-    flecs::id_t result = _::type<Module>::id(world_, nullptr, false);
+    flecs::entity result = this->entity(_::type<Module>::id(
+        world_, nullptr, false));
+
     if (name) {
+        flecs::entity prev_parent = result.parent();
         ecs_add_path_w_sep(world_, result, 0, name, "::", "::");
+        flecs::entity parent = result.parent();
+        if (prev_parent != parent) {
+            // Module was reparented, cleanup old parent(s)
+            flecs::entity cur = prev_parent, next;
+            do {
+                next = cur.parent();
+
+                ecs_iter_t it = ecs_each_id(world_, ecs_pair(EcsChildOf, cur));
+                if (!ecs_iter_is_true(&it)) {
+                    cur.destruct();
+                }
+
+                cur = next;
+            } while (cur);
+        }
     }
-    ecs_set_scope(world_, result);
-    return flecs::entity(world_, result);
+
+    return result;
 }
 
 template <typename Module>
