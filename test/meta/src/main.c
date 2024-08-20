@@ -362,7 +362,7 @@ void Cursor_opaque_set_char(void);
 void Cursor_opaque_set_int(void);
 void Cursor_opaque_set_uint(void);
 void Cursor_opaque_set_float(void);
-void Cursor_opaque_set_string(void);
+void Cursor_opaque_get_set_string(void);
 void Cursor_opaque_set_entity(void);
 void Cursor_opaque_set_id(void);
 void Cursor_opaque_set_int_vec(void);
@@ -2310,8 +2310,8 @@ bake_test_case Cursor_testcases[] = {
         Cursor_opaque_set_float
     },
     {
-        "opaque_set_string",
-        Cursor_opaque_set_string
+        "opaque_get_set_string",
+        Cursor_opaque_get_set_string
     },
     {
         "opaque_set_entity",
