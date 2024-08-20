@@ -2249,7 +2249,7 @@ void Cursor_struct_pop_after_dotmember(void) {
         }
     });
 
-    T value = {{0}};
+    T value = {{{0, 0},{0, 0}}, {{0, 0},{0, 0}}};
 
     ecs_meta_cursor_t cur = ecs_meta_cursor(world, t, &value);
     test_ok( ecs_meta_push(&cur) );
@@ -2941,7 +2941,14 @@ void Cursor_opaque_set_float(void) {
     ecs_fini(world);
 }
 
-void Cursor_opaque_set_string(void) {
+static
+int const_string_t_serialize(const ecs_serializer_t *ser, const void *ptr) {
+    char **data = ECS_CONST_CAST(char**, ptr);
+    ser->value(ser, ecs_id(ecs_string_t), data);
+    return 0;
+}
+
+void Cursor_opaque_get_set_string(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Opaque_const_string_t);
@@ -2949,7 +2956,8 @@ void Cursor_opaque_set_string(void) {
     ecs_opaque(world, {
         .entity = ecs_id(Opaque_const_string_t),
         .type.as_type = ecs_id(ecs_string_t),
-        .type.assign_string = const_string_t_set
+        .type.assign_string = const_string_t_set,
+        .type.serialize = const_string_t_serialize
     });
 
     Opaque_const_string_t v = { 0 };
@@ -2957,6 +2965,9 @@ void Cursor_opaque_set_string(void) {
     ecs_meta_cursor_t cur = ecs_meta_cursor(world, ecs_id(Opaque_const_string_t), &v);
     test_int(0, ecs_meta_set_string(&cur, "Hello World"));
     test_str(v.value, "Hello World");
+
+    const char* str = ecs_meta_get_string(&cur);
+    test_str(str, "Hello World");
 
     ecs_fini(world);
 }

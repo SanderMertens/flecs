@@ -385,7 +385,7 @@
                 "opaque_set_int",
                 "opaque_set_uint",
                 "opaque_set_float",
-                "opaque_set_string",
+                "opaque_get_set_string",
                 "opaque_set_entity",
                 "opaque_set_id",
                 "opaque_set_int_vec",
