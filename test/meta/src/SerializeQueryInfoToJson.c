@@ -691,3 +691,61 @@ void SerializeQueryInfoToJson_anonymous_component_recycled(void) {
 
     ecs_fini(world);
 }
+
+void SerializeQueryInfoToJson_serialize_plan_trivial_query(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ ecs_id(Position) }}
+    });
+
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    ecs_iter_to_json_desc_t desc = {
+        .serialize_query_plan = true,
+        .query = q
+    };
+
+    char *json = ecs_iter_to_json(&it, &desc);
+    char *expect = flecs_asprintf("{\"query_plan\":null, \"results\":[]}");
+    test_json(json, expect);
+    ecs_os_free(json);
+    ecs_os_free(expect);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void SerializeQueryInfoToJson_serialize_plan_nontrivial_query(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ ecs_id(Position) }}
+    });
+
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    ecs_iter_to_json_desc_t desc = {
+        .serialize_query_plan = true,
+        .query = q
+    };
+
+    char *json = ecs_iter_to_json(&it, &desc);
+    char *expect = flecs_asprintf("{\"query_plan\":\"[[0;49m 0. [[[0;37m-1[[0;49m, [[0;32m 1[[0;49m]  setids      \\n[[0;49m 1. [[[0;37m 0[[0;49m, [[0;32m 2[[0;49m]  selfupid    [[0;32m$[[0;49m[[[0;32mthis[[0;49m]           ([[0;34mPosition[[0;49m)\\n[[0;49m 2. [[[0;37m 1[[0;49m, [[0;32m 3[[0;49m]  yield       \\n\", \"results\":[]}");
+    test_json(json, expect);
+    ecs_os_free(json);
+    ecs_os_free(expect);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}

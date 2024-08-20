@@ -130,8 +130,12 @@ void flecs_json_serialize_query_plan(
 
     bool prev_color = ecs_log_enable_colors(true);
     char *plan = ecs_query_plan(q);
-    flecs_json_string_escape(buf, plan);
-    ecs_os_free(plan);
+    if (plan) {
+        flecs_json_string_escape(buf, plan);
+        ecs_os_free(plan);
+    } else {
+        flecs_json_null(buf);
+    }
     ecs_log_enable_colors(prev_color);
 }
 
