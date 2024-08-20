@@ -853,6 +853,8 @@ void SerializeQueryInfoToJson_anonymous_component(void);
 void SerializeQueryInfoToJson_anonymous_tag_recycled(void);
 void SerializeQueryInfoToJson_anonymous_pair_recycled(void);
 void SerializeQueryInfoToJson_anonymous_component_recycled(void);
+void SerializeQueryInfoToJson_serialize_plan_trivial_query(void);
+void SerializeQueryInfoToJson_serialize_plan_nontrivial_query(void);
 
 // Testsuite 'MetaUtils'
 void MetaUtils_struct_w_2_i32(void);
@@ -4235,6 +4237,14 @@ bake_test_case SerializeQueryInfoToJson_testcases[] = {
     {
         "anonymous_component_recycled",
         SerializeQueryInfoToJson_anonymous_component_recycled
+    },
+    {
+        "serialize_plan_trivial_query",
+        SerializeQueryInfoToJson_serialize_plan_trivial_query
+    },
+    {
+        "serialize_plan_nontrivial_query",
+        SerializeQueryInfoToJson_serialize_plan_nontrivial_query
     }
 };
 
@@ -4681,7 +4691,7 @@ static bake_test_suite suites[] = {
         "SerializeQueryInfoToJson",
         NULL,
         NULL,
-        25,
+        27,
         SerializeQueryInfoToJson_testcases
     },
     {

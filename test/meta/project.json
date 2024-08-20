@@ -889,7 +889,9 @@
                 "anonymous_component",
                 "anonymous_tag_recycled",
                 "anonymous_pair_recycled",
-                "anonymous_component_recycled"
+                "anonymous_component_recycled",
+                "serialize_plan_trivial_query",
+                "serialize_plan_nontrivial_query"
             ]
         }, {
             "id": "MetaUtils",
