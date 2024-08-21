@@ -1,0 +1,10 @@
+"Example for using the flecs as a dependency using bazel"
+module(name = "flecs_bazel_example", version = "1.0.0")
+
+bazel_dep(name = "rules_cc", version = "0.0.9")
+bazel_dep(name = "flecs")
+git_override(
+    module_name = "flecs",
+    remote = "https://github.com/SanderMertens/flecs.git",
+    commit = "02c8c2666b22ccce5706c8f16efaf813704fe31e",
+)

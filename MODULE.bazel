@@ -1,16 +1,18 @@
-load("@bazel_tools//tools/build_defs/repo:git.bzl", "new_git_repository")
+"A fast entity component system (ECS) for C & C++"
+module(name = "flecs", version = "4.0.1")
 
-new_git_repository(
+git_repository = use_repo_rule("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
+
+git_repository(
     name = "bake",
-    remote = "git@github.com:SanderMertens/bake.git",
-    commit = "cfc90745f9daa7b7fba80f229af18cdd5029b066",
-    shallow_since = "1614835160 -0800",
-
+    remote = "https://github.com/SanderMertens/bake.git",
+    commit = "10c02123d6e3e200578128d73c3fa3bb996dff4f",
     build_file_content = """
 cc_library(
     name = "driver-test",
     visibility = ["//visibility:public"],
     deps = [":util", ":bake"],
+    defines = ["__BAKE__", "bake_test_EXPORTS"],
 
     srcs = glob(["drivers/test/src/**/*.c", "drivers/test/src/**/*.h"]),
     hdrs = glob(["drivers/test/include/**/*.h"]),
@@ -30,10 +32,10 @@ cc_library(
 cc_library(
     name = "util",
     visibility = ["//visibility:public"],
-    defines = ["__BAKE__", "_XOPEN_SOURCE=600"],
+    defines = ["__BAKE__", "_XOPEN_SOURCE=600", "bake_util_EXPORTS", "UT_IMPL"],
 
     linkopts = select({
-        "@bazel_tools//src/conditions:windows": [],
+        "@bazel_tools//src/conditions:windows": ["Dbghelp.lib", "Shell32.lib", "Shlwapi.lib"],
         "//conditions:default": ["-lrt -lpthread -ldl"],
     }),
 
@@ -47,5 +49,5 @@ cc_library(
     }),
     includes = ["util/include"],
 )
-"""
+""",
 )
