@@ -4,7 +4,8 @@
     "value": {
         "author": "Sander Mertens",
         "description": "Entity Component System written in C99/C++11",
-        "amalgamate": true
+        "amalgamate": true,
+        "amalgamate-path": "distr"
     },
     "dependee": {
         "lang.c": {

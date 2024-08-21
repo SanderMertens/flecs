@@ -418,7 +418,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: build flecs
-        run: ${{ matrix.compiler }} flecs.c --shared -fPIC -pedantic -Wall -Wextra -Wno-unused-parameter -Werror -Wshadow -Wconversion -Wno-missing-field-initializers
+        run: ${{ matrix.compiler }} distr/flecs.c --shared -fPIC -pedantic -Wall -Wextra -Wno-unused-parameter -Werror -Wshadow -Wconversion -Wno-missing-field-initializers
 
   test-amalgamated:
     needs: build-linux
