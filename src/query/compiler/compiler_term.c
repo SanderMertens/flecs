@@ -1038,11 +1038,9 @@ void flecs_query_mark_last_or_op(
 
 static
 void flecs_query_set_op_kind(
-    ecs_query_t *q,
     ecs_query_op_t *op,
     ecs_term_t *term,
-    bool src_is_var,
-    bool member_term)
+    bool src_is_var)
 {
     /* Default instruction for And operators. If the source is fixed (like for
      * singletons or terms with an entity source), use With, which like And but
@@ -1095,18 +1093,6 @@ void flecs_query_set_op_kind(
             op->kind = EcsQuerySelfUp;
         } else if (term->flags_ & (EcsTermMatchAny|EcsTermMatchAnySrc)) {
             op->kind = EcsQueryAndAny;
-        }
-    }
-
-    /* If term has fixed id, insert simpler instruction that skips dealing with
-     * wildcard terms and variables */
-    if (flecs_term_is_fixed_id(q, term) && !member_term) {
-        if (op->kind == EcsQueryAnd) {
-            op->kind = EcsQueryAndId;
-        } else if (op->kind == EcsQuerySelfUp) {
-            op->kind = EcsQuerySelfUpId;
-        } else if (op->kind == EcsQueryUp) {
-            op->kind = EcsQueryUpId;
         }
     }
 }
@@ -1207,7 +1193,7 @@ int flecs_query_compile_term(
     op.field_index = flecs_ito(int8_t, term->field_index);
     op.term_index = flecs_ito(int8_t, term - q->terms);
 
-    flecs_query_set_op_kind(q, &op, term, src_is_var, member_term);
+    flecs_query_set_op_kind(&op, term, src_is_var);
 
     bool is_not = (term->oper == EcsNot) && !builtin_pred;
 

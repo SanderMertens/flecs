@@ -1303,16 +1303,13 @@ extern char *flecs_this_name_array;
 /* -- Instruction kinds -- */
 typedef enum {
     EcsQueryAnd,            /* And operator: find or match id against variable source */
-    EcsQueryAndId,          /* And operator for fixed id (no wildcards/variables) */
     EcsQueryAndAny,         /* And operator with support for matching Any src/id */
     EcsQueryOnlyAny,        /* Dedicated instruction for _ queries where the src is unknown */
     EcsQueryTriv,           /* Trivial search (batches multiple terms) */
     EcsQueryCache,          /* Cached search */
     EcsQueryIsCache,        /* Cached search for queries that are entirely cached */
     EcsQueryUp,             /* Up traversal */
-    EcsQueryUpId,           /* Up traversal for fixed id (like AndId) */
     EcsQuerySelfUp,         /* Self|up traversal */
-    EcsQuerySelfUpId,       /* Self|up traversal for fixed id (like AndId) */
     EcsQueryWith,           /* Match id against fixed or variable source */
     EcsQueryTrav,           /* Support for transitive/reflexive queries */
     EcsQueryAndFrom,        /* AndFrom operator */
@@ -32336,16 +32333,13 @@ const char* flecs_query_op_str(
 {
     switch(kind) {
     case EcsQueryAnd:            return "and       ";
-    case EcsQueryAndId:          return "andid     ";
     case EcsQueryAndAny:         return "andany    ";
     case EcsQueryTriv:           return "triv      ";
     case EcsQueryCache:          return "cache     ";
     case EcsQueryIsCache:        return "xcache    ";
     case EcsQueryOnlyAny:        return "any       ";
     case EcsQueryUp:             return "up        ";
-    case EcsQueryUpId:           return "upid      ";
     case EcsQuerySelfUp:         return "selfup    ";
-    case EcsQuerySelfUpId:       return "selfupid  ";
     case EcsQueryWith:           return "with      ";
     case EcsQueryTrav:           return "trav      ";
     case EcsQueryAndFrom:        return "andfrom   ";
@@ -64667,11 +64661,9 @@ void flecs_query_mark_last_or_op(
 
 static
 void flecs_query_set_op_kind(
-    ecs_query_t *q,
     ecs_query_op_t *op,
     ecs_term_t *term,
-    bool src_is_var,
-    bool member_term)
+    bool src_is_var)
 {
     /* Default instruction for And operators. If the source is fixed (like for
      * singletons or terms with an entity source), use With, which like And but
@@ -64724,18 +64716,6 @@ void flecs_query_set_op_kind(
             op->kind = EcsQuerySelfUp;
         } else if (term->flags_ & (EcsTermMatchAny|EcsTermMatchAnySrc)) {
             op->kind = EcsQueryAndAny;
-        }
-    }
-
-    /* If term has fixed id, insert simpler instruction that skips dealing with
-     * wildcard terms and variables */
-    if (flecs_term_is_fixed_id(q, term) && !member_term) {
-        if (op->kind == EcsQueryAnd) {
-            op->kind = EcsQueryAndId;
-        } else if (op->kind == EcsQuerySelfUp) {
-            op->kind = EcsQuerySelfUpId;
-        } else if (op->kind == EcsQueryUp) {
-            op->kind = EcsQueryUpId;
         }
     }
 }
@@ -64836,7 +64816,7 @@ int flecs_query_compile_term(
     op.field_index = flecs_ito(int8_t, term->field_index);
     op.term_index = flecs_ito(int8_t, term - q->terms);
 
-    flecs_query_set_op_kind(q, &op, term, src_is_var, member_term);
+    flecs_query_set_op_kind(&op, term, src_is_var);
 
     bool is_not = (term->oper == EcsNot) && !builtin_pred;
 
@@ -67855,21 +67835,6 @@ bool flecs_query_with_id(
     return true;
 }
 
-static
-bool flecs_query_and_id(
-    const ecs_query_op_t *op,
-    bool redo,
-    const ecs_query_run_ctx_t *ctx)
-{
-    uint64_t written = ctx->written[ctx->op_index];
-    if (written & (1ull << op->src.var)) {
-        return flecs_query_with_id(op, redo, ctx);
-    } else {
-        return flecs_query_select_id(op, redo, ctx, 
-            (EcsTableNotQueryable|EcsTableIsPrefab|EcsTableIsDisabled));
-    }
-}
-
 bool flecs_query_up_select(
     const ecs_query_op_t *op,
     bool redo,
@@ -68151,36 +68116,6 @@ bool flecs_query_self_up(
     } else {
         return flecs_query_up_select(op, redo, ctx, 
             FlecsQueryUpSelectSelfUp, FlecsQueryUpSelectDefault);
-    }
-}
-
-static
-bool flecs_query_up_id(
-    const ecs_query_op_t *op,
-    bool redo,
-    const ecs_query_run_ctx_t *ctx)
-{
-    uint64_t written = ctx->written[ctx->op_index];
-    if (flecs_ref_is_written(op, &op->src, EcsQuerySrc, written)) {
-        return flecs_query_up_with(op, redo, ctx);
-    } else {
-        return flecs_query_up_select(op, redo, ctx, 
-            FlecsQueryUpSelectUp, FlecsQueryUpSelectId);
-    }
-}
-
-static
-bool flecs_query_self_up_id(
-    const ecs_query_op_t *op,
-    bool redo,
-    const ecs_query_run_ctx_t *ctx)
-{
-    uint64_t written = ctx->written[ctx->op_index];
-    if (flecs_ref_is_written(op, &op->src, EcsQuerySrc, written)) {
-        return flecs_query_self_up_with(op, redo, ctx, true);
-    } else {
-        return flecs_query_up_select(op, redo, ctx, 
-            FlecsQueryUpSelectSelfUp, FlecsQueryUpSelectId);
     }
 }
 
@@ -69260,16 +69195,13 @@ bool flecs_query_dispatch(
 {
     switch(op->kind) {
     case EcsQueryAnd: return flecs_query_and(op, redo, ctx);
-    case EcsQueryAndId: return flecs_query_and_id(op, redo, ctx);
     case EcsQueryAndAny: return flecs_query_and_any(op, redo, ctx);
     case EcsQueryTriv: return flecs_query_triv(op, redo, ctx);
     case EcsQueryCache: return flecs_query_cache(op, redo, ctx);
     case EcsQueryIsCache: return flecs_query_is_cache(op, redo, ctx);
     case EcsQueryOnlyAny: return flecs_query_only_any(op, redo, ctx);
     case EcsQueryUp: return flecs_query_up(op, redo, ctx);
-    case EcsQueryUpId: return flecs_query_up_id(op, redo, ctx);
     case EcsQuerySelfUp: return flecs_query_self_up(op, redo, ctx);
-    case EcsQuerySelfUpId: return flecs_query_self_up_id(op, redo, ctx);
     case EcsQueryWith: return flecs_query_with(op, redo, ctx);
     case EcsQueryTrav: return flecs_query_trav(op, redo, ctx);
     case EcsQueryAndFrom: return flecs_query_and_from(op, redo, ctx);
@@ -69595,8 +69527,6 @@ void flecs_query_iter_fini_ctx(
             break;
         case EcsQueryUp:
         case EcsQuerySelfUp:
-        case EcsQueryUpId:
-        case EcsQuerySelfUpId: 
         case EcsQueryUnionEqUp:
         case EcsQueryUnionEqSelfUp: {
             ecs_trav_up_cache_t *cache = &ctx[i].is.up.cache;

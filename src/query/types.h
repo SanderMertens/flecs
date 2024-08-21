@@ -43,16 +43,13 @@ extern char *flecs_this_name_array;
 /* -- Instruction kinds -- */
 typedef enum {
     EcsQueryAnd,            /* And operator: find or match id against variable source */
-    EcsQueryAndId,          /* And operator for fixed id (no wildcards/variables) */
     EcsQueryAndAny,         /* And operator with support for matching Any src/id */
     EcsQueryOnlyAny,        /* Dedicated instruction for _ queries where the src is unknown */
     EcsQueryTriv,           /* Trivial search (batches multiple terms) */
     EcsQueryCache,          /* Cached search */
     EcsQueryIsCache,        /* Cached search for queries that are entirely cached */
     EcsQueryUp,             /* Up traversal */
-    EcsQueryUpId,           /* Up traversal for fixed id (like AndId) */
     EcsQuerySelfUp,         /* Self|up traversal */
-    EcsQuerySelfUpId,       /* Self|up traversal for fixed id (like AndId) */
     EcsQueryWith,           /* Match id against fixed or variable source */
     EcsQueryTrav,           /* Support for transitive/reflexive queries */
     EcsQueryAndFrom,        /* AndFrom operator */
