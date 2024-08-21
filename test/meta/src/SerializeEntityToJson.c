@@ -303,10 +303,14 @@ void SerializeEntityToJson_serialize_component_w_base_w_owned_no_reflection_data
 
     ecs_entity_t base = ecs_new(world);
     ecs_set(world, base, Position, {10, 20});
+    /* Give base a name so we don't have to test unstable entity ids */
+    ecs_set_name(world, base, "Base");
 
     ecs_entity_t e = ecs_new(world);
     ecs_add_pair(world, e, EcsIsA, base);
     ecs_set(world, e, Velocity, {1, 2});
+    /* Give our test entity a name so we don't have to test unstable entity ids */
+    ecs_set_name(world, e, "SomeEntity");
 
     ecs_entity_to_json_desc_t desc = {
         .serialize_inherited = true,
@@ -314,7 +318,7 @@ void SerializeEntityToJson_serialize_component_w_base_w_owned_no_reflection_data
     };
     char *json = ecs_entity_to_json(world, e, &desc);
     test_assert(json != NULL);
-    test_json(json, "{\"name\":\"#514\", \"pairs\":{\"IsA\":\"#513\"},\"inherited\":{\"#513\":{\"components\":{\"Position\":null}}}, \"components\":{\"Position\":null, \"Velocity\":null}}");
+    test_json(json, "{\"name\":\"SomeEntity\", \"pairs\":{\"IsA\":\"Base\"},\"inherited\":{\"Base\":{\"components\":{\"Position\":null}}}, \"components\":{\"Position\":null, \"Velocity\":null}}");
 
     ecs_os_free(json);
 
@@ -986,8 +990,15 @@ void SerializeEntityToJson_serialize_w_2_alerts(void) {
     char *json = ecs_entity_to_json(world, e1, &desc);
     test_assert(json != NULL);
 
-    test_json(json, "{\"name\":\"e1\", \"alerts\":true, \"components\":{\"flecs.alerts.AlertsActive\":{\"info_count\":0, \"warning_count\":0, \"error_count\":2}, \"Position\":null}, \"alerts\":[{\"alert\":\"position_without_velocity.e1_alert_1\", \"message\":\"e1 has Position but not Velocity\", \"severity\":\"Error\"}, {\"alert\":\"position_without_mass.e1_alert_2\", \"message\":\"e1 has Position but not Mass\", \"severity\":\"Error\"}]}");
-    // test_json(json, "{\"name\":\"e1\", \"alerts\":true, \"components\":{\"AlertsActive\":{\"info_count\":0, \"warning_count\":0, \"error_count\":2}, \"Position\":null, \"alerts\":[{\"alert\":\"position_without_mass.e1_alert_2\", \"message\":\"e1 has Position but not Mass\", \"severity\":\"Error\"}, {\"alert\":\"position_without_velocity.e1_alert_1\", \"message\":\"e1 has Position but not Velocity\", \"severity\":\"Error\"}]}");
+    /* Since alerts can come in any order, test against the two possibilities: */
+    const char* alerts_option1 = "{\"name\":\"e1\", \"alerts\":true, \"components\":{\"flecs.alerts.AlertsActive\":{\"info_count\":0, \"warning_count\":0, \"error_count\":2}, \"Position\":null}, \"alerts\":[{\"alert\":\"position_without_velocity.e1_alert_1\", \"message\":\"e1 has Position but not Velocity\", \"severity\":\"Error\"}, {\"alert\":\"position_without_mass.e1_alert_2\", \"message\":\"e1 has Position but not Mass\", \"severity\":\"Error\"}]}";
+    const char* alerts_option2 = "{\"name\":\"e1\", \"alerts\":true, \"components\":{\"flecs.alerts.AlertsActive\":{\"info_count\":0, \"warning_count\":0, \"error_count\":2}, \"Position\":null}, \"alerts\":[{\"alert\":\"position_without_mass.e1_alert_2\", \"message\":\"e1 has Position but not Mass\", \"severity\":\"Error\"}, {\"alert\":\"position_without_velocity.e1_alert_1\", \"message\":\"e1 has Position but not Velocity\", \"severity\":\"Error\"}]}";
+
+    if(ecs_os_strcmp(json, alerts_option1) && ecs_os_strcmp(json, alerts_option2)) {
+        // neither matched, so throw an assert.
+        test_json(json, alerts_option1);
+    }
+
     ecs_os_free(json);
 
     ecs_fini(world);
