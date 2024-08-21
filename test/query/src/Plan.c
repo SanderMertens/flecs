@@ -16,11 +16,11 @@ void Plan_reordered_plan_1(void) {
 
     const char *expect = 
     HEAD " 0. [-1,  1]  setids      "
-    LINE " 1. [ 0,  2]  selfupid    $[this]           (Foo)"
+    LINE " 1. [ 0,  2]  selfup      $[this]           (Foo)"
     LINE " 2. [ 1,  3]  and         $[this]           (ChildOf, $p)"
     LINE " 3. [ 2,  4]  and         $p                (ChildOf, $gp)"
     LINE " 4. [ 3,  5]  and         $gp               (ChildOf, $ggp)"
-    LINE " 5. [ 4,  6]  selfupid    $ggp              (Bar)"
+    LINE " 5. [ 4,  6]  selfup      $ggp              (Bar)"
     LINE " 6. [ 5,  7]  setvars     "
     LINE " 7. [ 6,  8]  yield       "
     LINE "";
@@ -50,14 +50,14 @@ void Plan_reordered_plan_2(void) {
 
     const char *expect = 
     HEAD " 0. [-1,  1]  setids      "
-    LINE " 1. [ 0,  2]  selfupid    $[ggp]            (Foo)"
+    LINE " 1. [ 0,  2]  selfup      $[ggp]            (Foo)"
     LINE " 2. [ 1,  3]  each        $ggp              ($[ggp])"
     LINE " 3. [ 2,  4]  and         $[gp]             (ChildOf, $ggp)"
     LINE " 4. [ 3,  5]  each        $gp               ($[gp])"
     LINE " 5. [ 4,  6]  and         $[p]              (ChildOf, $gp)"
     LINE " 6. [ 5,  7]  each        $p                ($[p])"
     LINE " 7. [ 6,  8]  and         $[this]           (ChildOf, $p)"
-    LINE " 8. [ 7,  9]  selfupid    $[this]           (Bar)"
+    LINE " 8. [ 7,  9]  selfup      $[this]           (Bar)"
     LINE " 9. [ 8, 10]  setvars     "
     LINE "10. [ 9, 11]  yield       "
     LINE "";
@@ -87,7 +87,7 @@ void Plan_reordered_plan_3(void) {
 
     const char *expect = 
     HEAD " 0. [-1,  1]  setids      "
-    LINE " 1. [ 0,  2]  andid       $[this]           (Bar)"
+    LINE " 1. [ 0,  2]  and         $[this]           (Bar)"
     LINE " 2. [ 1,  4]  option      "
     LINE " 3. [ 2,  4]   and        $[this]           (Foo)"
     LINE " 4. [ 2,  5]  end         $[this]           (Foo)"
@@ -121,12 +121,12 @@ void Plan_reordered_plan_4(void) {
 
     const char *expect = 
     HEAD " 0. [-1,  1]  setids      "
-    LINE " 1. [ 0,  2]  andid       $[this]           (Hello)"
+    LINE " 1. [ 0,  2]  and         $[this]           (Hello)"
     LINE " 2. [ 1,  4]  option      "
     LINE " 3. [ 2,  4]   and        $[this]           (Foo)"
     LINE " 4. [ 2,  5]  end         $[this]           (Foo)"
     LINE " 5. [ 4,  7]  option      "
-    LINE " 6. [ 5,  7]   andid      $[this]           (Bar)"
+    LINE " 6. [ 5,  7]   and        $[this]           (Bar)"
     LINE " 7. [ 5,  8]  end         $[this]           (Bar)"
     LINE " 8. [ 7,  9]  yield       "
     LINE "";
@@ -157,12 +157,12 @@ void Plan_reordered_plan_5(void) {
 
     const char *expect = 
     HEAD " 0. [-1,  1]  setids      "
-    LINE " 1. [ 0,  2]  andid       $[this]           (Hello)"
+    LINE " 1. [ 0,  2]  and         $[this]           (Hello)"
     LINE " 2. [ 1,  4]  option      "
     LINE " 3. [ 2,  4]   and        $[this]           (Foo)"
     LINE " 4. [ 2,  5]  end         $[this]           (Foo)"
     LINE " 5. [ 4,  7]  option      "
-    LINE " 6. [ 5,  7]   andid      $[this]           (Bar)"
+    LINE " 6. [ 5,  7]   and        $[this]           (Bar)"
     LINE " 7. [ 5,  8]  end         $[this]           (Bar)"
     LINE " 8. [ 7,  9]  yield       "
     LINE "";
@@ -199,7 +199,7 @@ void Plan_reordered_plan_6(void) {
     LINE " 3. [ 2,  4]   and        $[this]           (Foo)"
     LINE " 4. [ 2,  5]  end         $[this]           (Foo)"
     LINE " 5. [ 4,  7]  option      "
-    LINE " 6. [ 5,  7]   andid      $[this]           (Bar)"
+    LINE " 6. [ 5,  7]   and        $[this]           (Bar)"
     LINE " 7. [ 5,  8]  end         $[this]           (Bar)"
     LINE " 8. [ 7,  9]  yield       "
     LINE "";
@@ -231,7 +231,7 @@ void Plan_reordered_plan_7(void) {
 
     const char *expect = 
     HEAD " 0. [-1,  1]  setids      "
-    LINE " 1. [ 0,  2]  andid       $[this]           (Hello)"
+    LINE " 1. [ 0,  2]  and         $[this]           (Hello)"
     LINE " 2. [ 1,  4]  option      "
     LINE " 3. [ 2,  4]   and        $[this]           (Foo)"
     LINE " 4. [ 2,  5]  end         $[this]           (Foo)"
@@ -239,7 +239,7 @@ void Plan_reordered_plan_7(void) {
     LINE " 6. [ 5,  7]   and        $[this]           (Bar, $foo)"
     LINE " 7. [ 5,  8]  end         $[this]           (Bar, $foo)"
     LINE " 8. [ 7, 10]  ifvar       $foo"
-    LINE " 9. [ 8, 10]   andid      $foo              (World)"
+    LINE " 9. [ 8, 10]   and        $foo              (World)"
     LINE "10. [ 8, 11]  end         $foo              (World)"
     LINE "11. [10, 12]  setvars     "
     LINE "12. [11, 13]  yield       "
@@ -601,7 +601,7 @@ void Plan_2_trivial_plan_w_wildcard(void) {
 
     const char *expect = 
     HEAD " 0. [-1,  1]  setids      "
-    LINE " 1. [ 0,  2]  andid       $[this]           (Foo)"
+    LINE " 1. [ 0,  2]  and         $[this]           (Foo)"
     LINE " 2. [ 1,  3]  and         $[this]           (ChildOf, $*'1)"
     LINE " 3. [ 2,  4]  yield       "
     LINE "";
@@ -634,8 +634,8 @@ void Plan_this_before_fixed_src(void) {
     const char *expect = 
     HEAD " 0. [-1,  1]  setfix      "
     LINE " 1. [ 0,  2]  setids      "
-    LINE " 2. [ 1,  3]  selfupid    e                 (Bar)"
-    LINE " 3. [ 2,  4]  selfupid    $[this]           (Foo)"
+    LINE " 2. [ 1,  3]  selfup      e                 (Bar)"
+    LINE " 3. [ 2,  4]  selfup      $[this]           (Foo)"
     LINE " 4. [ 3,  5]  yield       "
     LINE "";
     char *plan = ecs_query_plan(r);
@@ -667,8 +667,8 @@ void Plan_fixed_src_before_this(void) {
     const char *expect = 
     HEAD " 0. [-1,  1]  setfix      "
     LINE " 1. [ 0,  2]  setids      "
-    LINE " 2. [ 1,  3]  selfupid    e                 (Bar)"
-    LINE " 3. [ 2,  4]  selfupid    $[this]           (Foo)"
+    LINE " 2. [ 1,  3]  selfup      e                 (Bar)"
+    LINE " 3. [ 2,  4]  selfup      $[this]           (Foo)"
     LINE " 4. [ 3,  5]  yield       "
     LINE "";
     char *plan = ecs_query_plan(r);
@@ -700,8 +700,8 @@ void Plan_var_before_fixed_src(void) {
     const char *expect = 
     HEAD " 0. [-1,  1]  setfix      "
     LINE " 1. [ 0,  2]  setids      "
-    LINE " 2. [ 1,  3]  selfupid    e                 (Bar)"
-    LINE " 3. [ 2,  4]  selfupid    $[var]            (Foo)"
+    LINE " 2. [ 1,  3]  selfup      e                 (Bar)"
+    LINE " 3. [ 2,  4]  selfup      $[var]            (Foo)"
     LINE " 4. [ 3,  5]  each        $var              ($[var])"
     LINE " 5. [ 4,  6]  setvars     "
     LINE " 6. [ 5,  7]  yield       "
@@ -735,8 +735,8 @@ void Plan_fixed_src_before_var(void) {
     const char *expect = 
     HEAD " 0. [-1,  1]  setfix      "
     LINE " 1. [ 0,  2]  setids      "
-    LINE " 2. [ 1,  3]  selfupid    e                 (Bar)"
-    LINE " 3. [ 2,  4]  selfupid    $[var]            (Foo)"
+    LINE " 2. [ 1,  3]  selfup      e                 (Bar)"
+    LINE " 3. [ 2,  4]  selfup      $[var]            (Foo)"
     LINE " 4. [ 3,  5]  each        $var              ($[var])"
     LINE " 5. [ 4,  6]  setvars     "
     LINE " 6. [ 5,  7]  yield       "
@@ -771,9 +771,9 @@ void Plan_this_before_fixed_src_w_not(void) {
     HEAD " 0. [-1,  1]  setfix      "
     LINE " 1. [ 0,  2]  setids      "
     LINE " 2. [ 1,  4]  not         "
-    LINE " 3. [ 2,  4]   selfupid   e                 (Bar)"
+    LINE " 3. [ 2,  4]   selfup     e                 (Bar)"
     LINE " 4. [ 2,  5]  end         e                 (Bar)"
-    LINE " 5. [ 4,  6]  selfupid    $[this]           (Foo)"
+    LINE " 5. [ 4,  6]  selfup      $[this]           (Foo)"
     LINE " 6. [ 5,  7]  yield       "
     LINE "";
     char *plan = ecs_query_plan(r);
@@ -806,7 +806,7 @@ void Plan_this_before_fixed_src_w_first_var(void) {
     HEAD " 0. [-1,  1]  setfix      "
     LINE " 1. [ 0,  2]  setids      "
     LINE " 2. [ 1,  3]  with        e                 ($this)"
-    LINE " 3. [ 2,  4]  selfupid    $this             (Foo)"
+    LINE " 3. [ 2,  4]  selfup      $this             (Foo)"
     LINE " 4. [ 3,  5]  setthis                       ($this)"
     LINE " 5. [ 4,  6]  yield       "
     LINE "";
@@ -839,7 +839,7 @@ void Plan_this_before_fixed_src_w_first_var_w_not(void) {
     const char *expect = 
     HEAD " 0. [-1,  1]  setfix      "
     LINE " 1. [ 0,  2]  setids      "
-    LINE " 2. [ 1,  3]  selfupid    $[this]           (Foo)"
+    LINE " 2. [ 1,  3]  selfup      $[this]           (Foo)"
     LINE " 3. [ 2,  4]  each        $this             ($[this])"
     LINE " 4. [ 3,  6]  not         "
     LINE " 5. [ 4,  6]   with       e                 ($this)"
@@ -877,7 +877,7 @@ void Plan_this_before_fixed_src_w_second_var(void) {
     HEAD " 0. [-1,  1]  setfix      "
     LINE " 1. [ 0,  2]  setids      "
     LINE " 2. [ 1,  3]  selfup      e                 (Bar, $this)"
-    LINE " 3. [ 2,  4]  selfupid    $this             (Foo)"
+    LINE " 3. [ 2,  4]  selfup      $this             (Foo)"
     LINE " 4. [ 3,  5]  setthis                       ($this)"
     LINE " 5. [ 4,  6]  yield       "
     LINE "";
@@ -910,7 +910,7 @@ void Plan_this_before_fixed_src_w_second_var_w_not(void) {
     const char *expect = 
     HEAD " 0. [-1,  1]  setfix      "
     LINE " 1. [ 0,  2]  setids      "
-    LINE " 2. [ 1,  3]  selfupid    $[this]           (Foo)"
+    LINE " 2. [ 1,  3]  selfup      $[this]           (Foo)"
     LINE " 3. [ 2,  4]  each        $this             ($[this])"
     LINE " 4. [ 3,  6]  not         "
     LINE " 5. [ 4,  6]   selfup     e                 (Bar, $this)"
@@ -949,7 +949,7 @@ void Plan_populate_1_fixed(void) {
     const char *expect = 
     HEAD " 0. [-1,  1]  setfix      "
     LINE " 1. [ 0,  2]  setids      "
-    LINE " 2. [ 1,  3]  selfupid    e                 (Position)"
+    LINE " 2. [ 1,  3]  selfup      e                 (Position)"
     LINE " 3. [ 2,  4]  yield       "
     LINE "";
     char *plan = ecs_query_plan(r);
@@ -983,8 +983,8 @@ void Plan_populate_2_fixed(void) {
     const char *expect = 
     HEAD " 0. [-1,  1]  setfix      "
     LINE " 1. [ 0,  2]  setids      "
-    LINE " 2. [ 1,  3]  selfupid    e                 (Position)"
-    LINE " 3. [ 2,  4]  selfupid    e                 (Velocity)"
+    LINE " 2. [ 1,  3]  selfup      e                 (Position)"
+    LINE " 3. [ 2,  4]  selfup      e                 (Velocity)"
     LINE " 4. [ 3,  5]  yield       "
     LINE "";
     char *plan = ecs_query_plan(r);
@@ -1018,8 +1018,8 @@ void Plan_populate_1_fixed_1_this_self(void) {
     const char *expect = 
     HEAD " 0. [-1,  1]  setfix      "
     LINE " 1. [ 0,  2]  setids      "
-    LINE " 2. [ 1,  3]  selfupid    e                 (Position)"
-    LINE " 3. [ 2,  4]  andid       $[this]           (Velocity)"
+    LINE " 2. [ 1,  3]  selfup      e                 (Position)"
+    LINE " 3. [ 2,  4]  and         $[this]           (Velocity)"
     LINE " 4. [ 3,  5]  yield       "
     LINE "";
     char *plan = ecs_query_plan(r);
@@ -1057,8 +1057,8 @@ void Plan_populate_2_fixed_2_this_self(void) {
     const char *expect = 
     HEAD " 0. [-1,  1]  setfix      "
     LINE " 1. [ 0,  2]  setids      "
-    LINE " 2. [ 1,  3]  selfupid    e                 (Position)"
-    LINE " 3. [ 2,  4]  selfupid    e                 (Velocity)"
+    LINE " 2. [ 1,  3]  selfup      e                 (Position)"
+    LINE " 3. [ 2,  4]  selfup      e                 (Velocity)"
     LINE " 4. [ 3,  5]  triv        {2,3}"
     LINE " 5. [ 4,  6]  yield       "
     LINE "";
@@ -1097,8 +1097,8 @@ void Plan_populate_2_fixed_2_this_self_interleaved(void) {
     const char *expect = 
     HEAD " 0. [-1,  1]  setfix      "
     LINE " 1. [ 0,  2]  setids      "
-    LINE " 2. [ 1,  3]  selfupid    e                 (Position)"
-    LINE " 3. [ 2,  4]  selfupid    e                 (Velocity)"
+    LINE " 2. [ 1,  3]  selfup      e                 (Position)"
+    LINE " 3. [ 2,  4]  selfup      e                 (Velocity)"
     LINE " 4. [ 3,  5]  triv        {1,3}"
     LINE " 5. [ 4,  6]  yield       "
     LINE "";
@@ -1137,8 +1137,8 @@ void Plan_populate_2_this_self_2_fixed(void) {
     const char *expect = 
     HEAD " 0. [-1,  1]  setfix      "
     LINE " 1. [ 0,  2]  setids      "
-    LINE " 2. [ 1,  3]  selfupid    e                 (Position)"
-    LINE " 3. [ 2,  4]  selfupid    e                 (Velocity)"
+    LINE " 2. [ 1,  3]  selfup      e                 (Position)"
+    LINE " 3. [ 2,  4]  selfup      e                 (Velocity)"
     LINE " 4. [ 3,  5]  triv        {0,1}"
     LINE " 5. [ 4,  6]  yield       "
     LINE "";
@@ -1173,8 +1173,8 @@ void Plan_populate_1_fixed_1_this_up(void) {
     const char *expect = 
     HEAD " 0. [-1,  1]  setfix      "
     LINE " 1. [ 0,  2]  setids      "
-    LINE " 2. [ 1,  3]  selfupid    e                 (Position)"
-    LINE " 3. [ 2,  4]  upid        $[this]           (Velocity)"
+    LINE " 2. [ 1,  3]  selfup      e                 (Position)"
+    LINE " 3. [ 2,  4]  up          $[this]           (Velocity)"
     LINE " 4. [ 3,  5]  yield       "
     LINE "";
     char *plan = ecs_query_plan(r);
@@ -1212,10 +1212,10 @@ void Plan_populate_2_fixed_2_this_up(void) {
     const char *expect = 
     HEAD " 0. [-1,  1]  setfix      "
     LINE " 1. [ 0,  2]  setids      "
-    LINE " 2. [ 1,  3]  selfupid    e                 (Position)"
-    LINE " 3. [ 2,  4]  selfupid    e                 (Velocity)"
-    LINE " 4. [ 3,  5]  upid        $[this]           (Mass)"
-    LINE " 5. [ 4,  6]  upid        $[this]           (Rotation)"
+    LINE " 2. [ 1,  3]  selfup      e                 (Position)"
+    LINE " 3. [ 2,  4]  selfup      e                 (Velocity)"
+    LINE " 4. [ 3,  5]  up          $[this]           (Mass)"
+    LINE " 5. [ 4,  6]  up          $[this]           (Rotation)"
     LINE " 6. [ 5,  7]  yield       "
     LINE "";
     char *plan = ecs_query_plan(r);
@@ -1253,10 +1253,10 @@ void Plan_populate_2_fixed_2_this_up_interleaved(void) {
     const char *expect = 
     HEAD " 0. [-1,  1]  setfix      "
     LINE " 1. [ 0,  2]  setids      "
-    LINE " 2. [ 1,  3]  selfupid    e                 (Position)"
-    LINE " 3. [ 2,  4]  selfupid    e                 (Velocity)"
-    LINE " 4. [ 3,  5]  upid        $[this]           (Mass)"
-    LINE " 5. [ 4,  6]  upid        $[this]           (Rotation)"
+    LINE " 2. [ 1,  3]  selfup      e                 (Position)"
+    LINE " 3. [ 2,  4]  selfup      e                 (Velocity)"
+    LINE " 4. [ 3,  5]  up          $[this]           (Mass)"
+    LINE " 5. [ 4,  6]  up          $[this]           (Rotation)"
     LINE " 6. [ 5,  7]  yield       "
     LINE "";
     char *plan = ecs_query_plan(r);
@@ -1294,10 +1294,10 @@ void Plan_populate_2_this_up_2_fixed(void) {
     const char *expect = 
     HEAD " 0. [-1,  1]  setfix      "
     LINE " 1. [ 0,  2]  setids      "
-    LINE " 2. [ 1,  3]  selfupid    e                 (Position)"
-    LINE " 3. [ 2,  4]  selfupid    e                 (Velocity)"
-    LINE " 4. [ 3,  5]  upid        $[this]           (Mass)"
-    LINE " 5. [ 4,  6]  upid        $[this]           (Rotation)"
+    LINE " 2. [ 1,  3]  selfup      e                 (Position)"
+    LINE " 3. [ 2,  4]  selfup      e                 (Velocity)"
+    LINE " 4. [ 3,  5]  up          $[this]           (Mass)"
+    LINE " 5. [ 4,  6]  up          $[this]           (Rotation)"
     LINE " 6. [ 5,  7]  yield       "
     LINE "";
     char *plan = ecs_query_plan(r);
@@ -1332,7 +1332,7 @@ void Plan_populate_1_fixed_1_this_self_cached(void) {
     const char *expect = 
     HEAD " 0. [-1,  1]  setfix      "
     LINE " 1. [ 0,  2]  setids      "
-    LINE " 2. [ 1,  3]  selfupid    e                 (Position)"
+    LINE " 2. [ 1,  3]  selfup      e                 (Position)"
     LINE " 3. [ 2,  4]  cache       "
     LINE " 4. [ 3,  5]  yield       "
     LINE "";
@@ -1372,8 +1372,8 @@ void Plan_populate_2_fixed_2_this_self_cached(void) {
     const char *expect = 
     HEAD " 0. [-1,  1]  setfix      "
     LINE " 1. [ 0,  2]  setids      "
-    LINE " 2. [ 1,  3]  selfupid    e                 (Position)"
-    LINE " 3. [ 2,  4]  selfupid    e                 (Velocity)"
+    LINE " 2. [ 1,  3]  selfup      e                 (Position)"
+    LINE " 3. [ 2,  4]  selfup      e                 (Velocity)"
     LINE " 4. [ 3,  5]  cache       "
     LINE " 5. [ 4,  6]  yield       "
     LINE "";
@@ -1413,8 +1413,8 @@ void Plan_populate_2_fixed_2_this_self_interleaved_cached(void) {
     const char *expect = 
     HEAD " 0. [-1,  1]  setfix      "
     LINE " 1. [ 0,  2]  setids      "
-    LINE " 2. [ 1,  3]  selfupid    e                 (Position)"
-    LINE " 3. [ 2,  4]  selfupid    e                 (Velocity)"
+    LINE " 2. [ 1,  3]  selfup      e                 (Position)"
+    LINE " 3. [ 2,  4]  selfup      e                 (Velocity)"
     LINE " 4. [ 3,  5]  cache       "
     LINE " 5. [ 4,  6]  yield       "
     LINE "";
@@ -1454,8 +1454,8 @@ void Plan_populate_2_this_self_2_fixed_cached(void) {
     const char *expect = 
     HEAD " 0. [-1,  1]  setfix      "
     LINE " 1. [ 0,  2]  setids      "
-    LINE " 2. [ 1,  3]  selfupid    e                 (Position)"
-    LINE " 3. [ 2,  4]  selfupid    e                 (Velocity)"
+    LINE " 2. [ 1,  3]  selfup      e                 (Position)"
+    LINE " 3. [ 2,  4]  selfup      e                 (Velocity)"
     LINE " 4. [ 3,  5]  cache       "
     LINE " 5. [ 4,  6]  yield       "
     LINE "";
@@ -1491,7 +1491,7 @@ void Plan_populate_1_fixed_1_this_up_cached(void) {
     const char *expect = 
     HEAD " 0. [-1,  1]  setfix      "
     LINE " 1. [ 0,  2]  setids      "
-    LINE " 2. [ 1,  3]  selfupid    e                 (Position)"
+    LINE " 2. [ 1,  3]  selfup      e                 (Position)"
     LINE " 3. [ 2,  4]  cache       "
     LINE " 4. [ 3,  5]  yield       "
     LINE "";
@@ -1531,8 +1531,8 @@ void Plan_populate_2_fixed_2_this_up_cached(void) {
     const char *expect = 
     HEAD " 0. [-1,  1]  setfix      "
     LINE " 1. [ 0,  2]  setids      "
-    LINE " 2. [ 1,  3]  selfupid    e                 (Position)"
-    LINE " 3. [ 2,  4]  selfupid    e                 (Velocity)"
+    LINE " 2. [ 1,  3]  selfup      e                 (Position)"
+    LINE " 3. [ 2,  4]  selfup      e                 (Velocity)"
     LINE " 4. [ 3,  5]  cache       "
     LINE " 5. [ 4,  6]  yield       "
     LINE "";
@@ -1572,8 +1572,8 @@ void Plan_populate_2_fixed_2_this_up_interleaved_cached(void) {
     const char *expect = 
     HEAD " 0. [-1,  1]  setfix      "
     LINE " 1. [ 0,  2]  setids      "
-    LINE " 2. [ 1,  3]  selfupid    e                 (Position)"
-    LINE " 3. [ 2,  4]  selfupid    e                 (Velocity)"
+    LINE " 2. [ 1,  3]  selfup      e                 (Position)"
+    LINE " 3. [ 2,  4]  selfup      e                 (Velocity)"
     LINE " 4. [ 3,  5]  cache       "
     LINE " 5. [ 4,  6]  yield       "
     LINE "";
@@ -1613,8 +1613,8 @@ void Plan_populate_2_this_up_2_fixed_cached(void) {
     const char *expect = 
     HEAD " 0. [-1,  1]  setfix      "
     LINE " 1. [ 0,  2]  setids      "
-    LINE " 2. [ 1,  3]  selfupid    e                 (Position)"
-    LINE " 3. [ 2,  4]  selfupid    e                 (Velocity)"
+    LINE " 2. [ 1,  3]  selfup      e                 (Position)"
+    LINE " 3. [ 2,  4]  selfup      e                 (Velocity)"
     LINE " 4. [ 3,  5]  cache       "
     LINE " 5. [ 4,  6]  yield       "
     LINE "";
@@ -1650,8 +1650,8 @@ void Plan_populate_1_fixed_1_var_self(void) {
     const char *expect = 
     HEAD " 0. [-1,  1]  setfix      "
     LINE " 1. [ 0,  2]  setids      "
-    LINE " 2. [ 1,  3]  selfupid    e                 (Position)"
-    LINE " 3. [ 2,  4]  andid       $[var]            (Velocity)"
+    LINE " 2. [ 1,  3]  selfup      e                 (Position)"
+    LINE " 3. [ 2,  4]  and         $[var]            (Velocity)"
     LINE " 4. [ 3,  5]  each        $var              ($[var])"
     LINE " 5. [ 4,  6]  setvars     "
     LINE " 6. [ 5,  7]  yield       "
@@ -1692,10 +1692,10 @@ void Plan_populate_2_fixed_2_var_self(void) {
     const char *expect = 
     HEAD " 0. [-1,  1]  setfix      "
     LINE " 1. [ 0,  2]  setids      "
-    LINE " 2. [ 1,  3]  selfupid    e                 (Position)"
-    LINE " 3. [ 2,  4]  selfupid    e                 (Velocity)"
-    LINE " 4. [ 3,  5]  andid       $[var]            (Mass)"
-    LINE " 5. [ 4,  6]  andid       $[var]            (Rotation)"
+    LINE " 2. [ 1,  3]  selfup      e                 (Position)"
+    LINE " 3. [ 2,  4]  selfup      e                 (Velocity)"
+    LINE " 4. [ 3,  5]  and         $[var]            (Mass)"
+    LINE " 5. [ 4,  6]  and         $[var]            (Rotation)"
     LINE " 6. [ 5,  7]  each        $var              ($[var])"
     LINE " 7. [ 6,  8]  setvars     "
     LINE " 8. [ 7,  9]  yield       "
@@ -1736,10 +1736,10 @@ void Plan_populate_2_fixed_2_var_self_interleaved(void) {
     const char *expect = 
     HEAD " 0. [-1,  1]  setfix      "
     LINE " 1. [ 0,  2]  setids      "
-    LINE " 2. [ 1,  3]  selfupid    e                 (Position)"
-    LINE " 3. [ 2,  4]  selfupid    e                 (Velocity)"
-    LINE " 4. [ 3,  5]  andid       $[var]            (Mass)"
-    LINE " 5. [ 4,  6]  andid       $[var]            (Rotation)"
+    LINE " 2. [ 1,  3]  selfup      e                 (Position)"
+    LINE " 3. [ 2,  4]  selfup      e                 (Velocity)"
+    LINE " 4. [ 3,  5]  and         $[var]            (Mass)"
+    LINE " 5. [ 4,  6]  and         $[var]            (Rotation)"
     LINE " 6. [ 5,  7]  each        $var              ($[var])"
     LINE " 7. [ 6,  8]  setvars     "
     LINE " 8. [ 7,  9]  yield       "
@@ -1780,10 +1780,10 @@ void Plan_populate_2_var_self_2_fixed(void) {
     const char *expect = 
     HEAD " 0. [-1,  1]  setfix      "
     LINE " 1. [ 0,  2]  setids      "
-    LINE " 2. [ 1,  3]  selfupid    e                 (Position)"
-    LINE " 3. [ 2,  4]  selfupid    e                 (Velocity)"
-    LINE " 4. [ 3,  5]  andid       $[var]            (Mass)"
-    LINE " 5. [ 4,  6]  andid       $[var]            (Rotation)"
+    LINE " 2. [ 1,  3]  selfup      e                 (Position)"
+    LINE " 3. [ 2,  4]  selfup      e                 (Velocity)"
+    LINE " 4. [ 3,  5]  and         $[var]            (Mass)"
+    LINE " 5. [ 4,  6]  and         $[var]            (Rotation)"
     LINE " 6. [ 5,  7]  each        $var              ($[var])"
     LINE " 7. [ 6,  8]  setvars     "
     LINE " 8. [ 7,  9]  yield       "
@@ -1820,8 +1820,8 @@ void Plan_populate_1_fixed_1_var_up(void) {
     const char *expect = 
     HEAD " 0. [-1,  1]  setfix      "
     LINE " 1. [ 0,  2]  setids      "
-    LINE " 2. [ 1,  3]  selfupid    e                 (Position)"
-    LINE " 3. [ 2,  4]  upid        $[var]            (Velocity)"
+    LINE " 2. [ 1,  3]  selfup      e                 (Position)"
+    LINE " 3. [ 2,  4]  up          $[var]            (Velocity)"
     LINE " 4. [ 3,  5]  each        $var              ($[var])"
     LINE " 5. [ 4,  6]  setvars     "
     LINE " 6. [ 5,  7]  yield       "
@@ -1862,10 +1862,10 @@ void Plan_populate_2_fixed_2_var_up(void) {
     const char *expect = 
     HEAD " 0. [-1,  1]  setfix      "
     LINE " 1. [ 0,  2]  setids      "
-    LINE " 2. [ 1,  3]  selfupid    e                 (Position)"
-    LINE " 3. [ 2,  4]  selfupid    e                 (Velocity)"
-    LINE " 4. [ 3,  5]  upid        $[var]            (Mass)"
-    LINE " 5. [ 4,  6]  upid        $[var]            (Rotation)"
+    LINE " 2. [ 1,  3]  selfup      e                 (Position)"
+    LINE " 3. [ 2,  4]  selfup      e                 (Velocity)"
+    LINE " 4. [ 3,  5]  up          $[var]            (Mass)"
+    LINE " 5. [ 4,  6]  up          $[var]            (Rotation)"
     LINE " 6. [ 5,  7]  each        $var              ($[var])"
     LINE " 7. [ 6,  8]  setvars     "
     LINE " 8. [ 7,  9]  yield       "
@@ -1906,10 +1906,10 @@ void Plan_populate_2_fixed_2_var_up_interleaved(void) {
     const char *expect = 
     HEAD " 0. [-1,  1]  setfix      "
     LINE " 1. [ 0,  2]  setids      "
-    LINE " 2. [ 1,  3]  selfupid    e                 (Position)"
-    LINE " 3. [ 2,  4]  selfupid    e                 (Velocity)"
-    LINE " 4. [ 3,  5]  upid        $[var]            (Mass)"
-    LINE " 5. [ 4,  6]  upid        $[var]            (Rotation)"
+    LINE " 2. [ 1,  3]  selfup      e                 (Position)"
+    LINE " 3. [ 2,  4]  selfup      e                 (Velocity)"
+    LINE " 4. [ 3,  5]  up          $[var]            (Mass)"
+    LINE " 5. [ 4,  6]  up          $[var]            (Rotation)"
     LINE " 6. [ 5,  7]  each        $var              ($[var])"
     LINE " 7. [ 6,  8]  setvars     "
     LINE " 8. [ 7,  9]  yield       "
@@ -1950,10 +1950,10 @@ void Plan_populate_2_var_up_2_fixed(void) {
     const char *expect = 
     HEAD " 0. [-1,  1]  setfix      "
     LINE " 1. [ 0,  2]  setids      "
-    LINE " 2. [ 1,  3]  selfupid    e                 (Position)"
-    LINE " 3. [ 2,  4]  selfupid    e                 (Velocity)"
-    LINE " 4. [ 3,  5]  upid        $[var]            (Mass)"
-    LINE " 5. [ 4,  6]  upid        $[var]            (Rotation)"
+    LINE " 2. [ 1,  3]  selfup      e                 (Position)"
+    LINE " 3. [ 2,  4]  selfup      e                 (Velocity)"
+    LINE " 4. [ 3,  5]  up          $[var]            (Mass)"
+    LINE " 5. [ 4,  6]  up          $[var]            (Rotation)"
     LINE " 6. [ 5,  7]  each        $var              ($[var])"
     LINE " 7. [ 6,  8]  setvars     "
     LINE " 8. [ 7,  9]  yield       "
@@ -2398,7 +2398,7 @@ void Plan_0_src_w_sparse_and_component(void) {
     const char *expect = 
     HEAD " 0. [-1,  1]  setfix      "
     LINE " 1. [ 0,  2]  setids      "
-    LINE " 2. [ 1,  3]  andid       $[this]           (Velocity)"
+    LINE " 2. [ 1,  3]  and         $[this]           (Velocity)"
     LINE " 3. [ 2,  4]  yield       "
     LINE "";
     char *plan = ecs_query_plan(q);
@@ -2430,7 +2430,7 @@ void Plan_0_src_w_toggle_and_component(void) {
     const char *expect = 
     HEAD " 0. [-1,  1]  setfix      "
     LINE " 1. [ 0,  2]  setids      "
-    LINE " 2. [ 1,  3]  andid       $[this]           (Velocity)"
+    LINE " 2. [ 1,  3]  and         $[this]           (Velocity)"
     LINE " 3. [ 2,  4]  yield       "
     LINE "";
     char *plan = ecs_query_plan(q);
@@ -2462,7 +2462,7 @@ void Plan_0_src_w_union_and_component(void) {
     const char *expect = 
     HEAD " 0. [-1,  1]  setfix      "
     LINE " 1. [ 0,  2]  setids      "
-    LINE " 2. [ 1,  3]  andid       $[this]           (Velocity)"
+    LINE " 2. [ 1,  3]  and         $[this]           (Velocity)"
     LINE " 3. [ 2,  4]  yield       "
     LINE "";
     char *plan = ecs_query_plan(q);
