@@ -15,10 +15,10 @@ class UFlecsWorld;
 /**
  * This flecs module impl, doesn't take advantage of scoping in flecs as
  * that creates a lot of problems with the Reflection system.
- * for type impl for modules, you can disable, enable, and toggle the types directly(types will be registered)
+ * for type impl for modules, you can disable, enable, and toggle the types directly (types will be registered)
  */
 // This class does not need to be modified.
-UINTERFACE()
+UINTERFACE(Blueprintable)
 class UNREALFLECS_API UFlecsModuleInterface : public UInterface
 {
 	GENERATED_BODY()
@@ -94,6 +94,8 @@ public:
 
 	virtual NO_DISCARD FString GetModuleName() const
 		PURE_VIRTUAL(FFlecsModuleStructInterface::GetModuleName, return FString(););
+
+	
 
 	FORCEINLINE NO_DISCARD UFlecsWorld* GetFlecsWorld() const;
 

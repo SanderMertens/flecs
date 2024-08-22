@@ -310,7 +310,7 @@ public:
 		GetEntity().child_of(InParent);
 	}
 
-	FORCEINLINE void SetParent(const FFlecsEntityHandle& InParent, const bool bIsA) const
+	FORCEINLINE void SetParent(const FFlecsEntityHandle& InParent, const bool bIsA = false) const
 	{
 		GetEntity().child_of(InParent);
 

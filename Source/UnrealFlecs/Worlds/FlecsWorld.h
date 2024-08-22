@@ -903,7 +903,7 @@ public:
 	FORCEINLINE UFlecsWorld* GetParentWorld() const
 	{
 		solid_checkf(IsStage(), TEXT("World is not a stage"));
-		return GetTypedOuter<UFlecsWorld>();
+		return GetTypedOuter<UFlecsWorld>(); 
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs")

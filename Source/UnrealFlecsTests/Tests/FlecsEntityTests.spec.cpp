@@ -123,7 +123,6 @@ void FlecsEntityTests::Define()
 		});
 		
 	});
-// Additional test
 		
 	
 }
