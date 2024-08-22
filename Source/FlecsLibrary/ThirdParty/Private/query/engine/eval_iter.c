@@ -218,8 +218,6 @@ void flecs_query_iter_fini_ctx(
             break;
         case EcsQueryUp:
         case EcsQuerySelfUp:
-        case EcsQueryUpId:
-        case EcsQuerySelfUpId: 
         case EcsQueryUnionEqUp:
         case EcsQueryUnionEqSelfUp: {
             ecs_trav_up_cache_t *cache = &ctx[i].is.up.cache;

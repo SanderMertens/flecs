@@ -175,16 +175,13 @@ const char* flecs_query_op_str(
 {
     switch(kind) {
     case EcsQueryAnd:            return "and       ";
-    case EcsQueryAndId:          return "andid     ";
     case EcsQueryAndAny:         return "andany    ";
     case EcsQueryTriv:           return "triv      ";
     case EcsQueryCache:          return "cache     ";
     case EcsQueryIsCache:        return "xcache    ";
     case EcsQueryOnlyAny:        return "any       ";
     case EcsQueryUp:             return "up        ";
-    case EcsQueryUpId:           return "upid      ";
     case EcsQuerySelfUp:         return "selfup    ";
-    case EcsQuerySelfUpId:       return "selfupid  ";
     case EcsQueryWith:           return "with      ";
     case EcsQueryTrav:           return "trav      ";
     case EcsQueryAndFrom:        return "andfrom   ";
