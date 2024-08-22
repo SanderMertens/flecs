@@ -929,6 +929,13 @@ public:
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs")
+	FORCEINLINE FFlecsEntityHandle FindPrefabEntity(UFlecsPrefabAsset* InPrefabAsset) const
+	{
+		solid_checkf(IsValid(InPrefabAsset), TEXT("Prefab asset is nullptr"));
+		return World.lookup(StringCast<char>(*InPrefabAsset->GetPrimaryAssetId().ToString()).Get());
+	}
+
+	UFUNCTION(BlueprintCallable, Category = "Flecs")
 	FORCEINLINE void DestroyPrefab(const FFlecsEntityHandle& InPrefab) const
 	{
 		World.delete_with(InPrefab.GetEntity(), true);
