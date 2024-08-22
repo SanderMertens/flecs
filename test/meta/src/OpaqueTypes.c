@@ -637,3 +637,51 @@ void OpaqueTypes_ser_deser_0_entity(void) {
 
     ecs_fini(world);
 }
+
+
+void OpaqueTypes_const_string(void) {
+
+    typedef struct test_string_struct {
+        const char *value;
+    } test_string_struct;
+
+    const char *test_string = "Const String. Don't try to free me!";
+
+    ecs_world_t *world = ecs_init();
+
+    // Lookup const string type:
+    ecs_entity_t const_string = ecs_lookup(world, "flecs.core.const_string_t");
+
+    // Create a reflection interface for `test_struct`:
+    ecs_entity_t test_struct = ecs_struct(world, {
+    .entity = ecs_entity(world, {
+        .name = "test_struct", .root_sep = ""}),
+        .members = {
+            {
+                .name = "value",
+                .type = const_string },
+            }
+    });
+
+    ecs_entity_t e = ecs_entity(world, {.name = "MyEntity"});
+    test_string_struct *st = (test_string_struct *) ecs_ensure_id(world, e, test_struct);
+    st->value = test_string;
+
+    // we should be able to retrieve the string with a cursor:
+    ecs_meta_cursor_t cursor = ecs_meta_cursor(world, test_struct, st);
+    ecs_meta_push(&cursor);
+    ecs_meta_member(&cursor, "value");
+
+    const char *retrieved_string = ecs_meta_get_string(&cursor);
+
+    test_assert(!ecs_os_strcmp(retrieved_string, test_string));
+
+    // When deleting the entity, Flecs must not try to free the above const string,
+    // otherwise the below will segfault:
+    ecs_delete(world, e);
+
+    test_assert(true);  // If we get to this point without a crash, we're good.
+
+    ecs_fini(world);
+
+}

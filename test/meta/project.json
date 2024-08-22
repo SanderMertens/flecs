@@ -938,7 +938,8 @@
                 "deser_entity_from_json",
                 "ser_deser_world_w_ser_opaque",
                 "ser_deser_entity",
-                "ser_deser_0_entity"
+                "ser_deser_0_entity",
+                "const_string"
             ]
         }, {
             "id": "Misc",
