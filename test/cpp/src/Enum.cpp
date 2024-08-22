@@ -992,34 +992,36 @@ void Enum_query_union_enum(void) {
     flecs::entity e2 = ecs.entity().add(StandardEnum::Green);
     flecs::entity e3 = ecs.entity().add(StandardEnum::Blue);
 
+
     auto q = ecs.query_builder()
         .with<StandardEnum>().second(flecs::Wildcard)
         .build();
 
-    int32_t count = 0;
+
+    // Entity order in the query is not guaranteed. Thus,
+    // we store the query result in a map and check afterwards.
+    ecs_map_t map;
+    ecs_map_init(&map, nullptr);
     q.run([&](flecs::iter& it) {
         while (it.next()) {
             test_int(it.count(), 1);
-            if (count == 0) {
-                test_int(it.entity(0), e1);
-                test_assert(it.id(0) == 
-                    ecs.pair<StandardEnum>(ecs.to_entity(StandardEnum::Red)));
-            }
-            if (count == 2) {
-                test_int(it.entity(0), e2);
-                test_assert(it.id(0) == 
-                    ecs.pair<StandardEnum>(ecs.to_entity(StandardEnum::Green)));
-            }
-            if (count == 1) {
-                test_int(it.entity(0), e3);
-                test_assert(it.id(0) == 
-                    ecs.pair<StandardEnum>(ecs.to_entity(StandardEnum::Blue)));
-            }
-            count ++;
+            ecs_map_insert(&map, it.entity(0), it.id(0));
         }
     });
 
-    test_int(count, 3);
+    //Helper function to query the map:
+    auto get_from_map = [&map](const flecs::entity &e) -> flecs::id_t {
+        ecs_map_val_t* val = ecs_map_get(&map, e);
+        return val ? flecs::id_t(*val) : 0;
+    };
+
+    test_int(ecs_map_count(&map), 3);
+
+    test_assert(get_from_map(e1) == ecs.pair<StandardEnum>(ecs.to_entity(StandardEnum::Red)));
+    test_assert(get_from_map(e2) == ecs.pair<StandardEnum>(ecs.to_entity(StandardEnum::Green)));
+    test_assert(get_from_map(e3) == ecs.pair<StandardEnum>(ecs.to_entity(StandardEnum::Blue)));
+
+    ecs_map_fini(&map);
 }
 
 void Enum_query_union_enum_invalid_query_type(void) {
