@@ -898,6 +898,7 @@ void OpaqueTypes_deser_entity_from_json(void);
 void OpaqueTypes_ser_deser_world_w_ser_opaque(void);
 void OpaqueTypes_ser_deser_entity(void);
 void OpaqueTypes_ser_deser_0_entity(void);
+void OpaqueTypes_const_string(void);
 
 // Testsuite 'Misc'
 void Misc_primitive_from_stage(void);
@@ -4407,6 +4408,10 @@ bake_test_case OpaqueTypes_testcases[] = {
     {
         "ser_deser_0_entity",
         OpaqueTypes_ser_deser_0_entity
+    },
+    {
+        "const_string",
+        OpaqueTypes_const_string
     }
 };
 
@@ -4705,7 +4710,7 @@ static bake_test_suite suites[] = {
         "OpaqueTypes",
         NULL,
         NULL,
-        17,
+        18,
         OpaqueTypes_testcases
     },
     {
