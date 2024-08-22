@@ -1991,3 +1991,60 @@ void World_fini_reentrancy(void) {
     test_assert(true); // if this runs, ecs_fini did not abort and we're good.
 
 }
+
+// Test whether overwriting a world instance with another via
+// copy-assign or move-assign properly destroys the overwritten instance
+void World_fini_copy_move_assign(void) {
+    // helper component to tag worlds:
+    struct ID {
+        int id;
+    };
+
+    auto fini_handler = [](ecs_world_t *world, void *ctx) {
+    bool *finished = (bool *) ctx;
+    *finished = true;
+    };
+
+    auto get_world_id = [](const flecs::world &world) { return world.get<ID>()->id; };
+
+    bool finished_1 = false;
+    bool finished_2 = false;
+    bool finished_3 = false;
+
+    // Create three worlds '1', '2' and '3', that initially start in 'A', 'B' and 'C' respectively:
+    flecs::world world_A;
+    world_A.set<ID>({1});
+    world_A.atfini(fini_handler, &finished_1);
+
+    flecs::world world_B;
+    world_B.set<ID>(ID{2});
+    world_B.atfini(fini_handler, &finished_2);
+
+    flecs::world world_C;
+    world_C.set<ID>(ID{3});
+    world_C.atfini(fini_handler, &finished_3);
+
+    // now overwrite one with another using copy-assign
+    world_A = world_B;  // (copy assign). Overwrite world_A with world_B
+    // world with ID '1' contained in world_A should have been destroyed:
+    test_assert(finished_1 == true);
+
+    // now world_A and world_B point to the same world '2'
+    test_assert(world_A.c_ptr() == world_B.c_ptr());
+    test_assert(get_world_id(world_A) == 2);
+    test_assert(get_world_id(world_B) == 2);
+
+    // test move-assign properly releases existing world '3' in C:
+    world_C = FLECS_MOV(world_B);        // move-assign, overwrite what is in C.
+    test_assert(world_B.c_ptr() == nullptr);  // B is now empty
+    test_assert(finished_2 == false);         // still '2' is alive (in 'A')
+    test_assert(finished_3 == true);          // world '3' destroyed after being overwritten
+    test_assert(get_world_id(world_C) == 2);  // world '2' is now in 'C'
+
+    world_A.release();
+    test_assert(world_A.c_ptr() == nullptr);  // A is now empty
+    test_assert(finished_2 == false);         // '2' is still alive in 'C', though.
+
+    world_C.release();
+    test_assert(finished_2 == true);  // '2' is now finished as well.
+}
