@@ -51,3 +51,22 @@ public:
 	FFlecsSystem System;
 	
 }; // class IFlecsSystemInterface
+
+template <typename ...TArgs>
+struct TFlecsSystemTemplateInterface
+{
+public:
+	virtual ~TFlecsSystemTemplateInterface() = default;
+
+	void InitializeSystemTemplate(const flecs::world& InWorld)
+	{
+		auto Builder = InWorld.system<TArgs...>();
+		BuildSystemTemplate(Builder);
+		System = Builder;
+	}
+
+	virtual void BuildSystem(flecs::system& Builder) = 0;
+
+	FFlecsSystem System;
+}; // struct TFlecsSystemTemplateInterface
+

@@ -94,9 +94,7 @@ public:
 
 	virtual NO_DISCARD FString GetModuleName() const
 		PURE_VIRTUAL(FFlecsModuleStructInterface::GetModuleName, return FString(););
-
 	
-
 	FORCEINLINE NO_DISCARD UFlecsWorld* GetFlecsWorld() const;
 
 	FORCEINLINE NO_DISCARD bool IsEnabled() const

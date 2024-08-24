@@ -15,7 +15,7 @@ public:
 		const FFlecsWorldSettings& FlecsWorldSettings = FFlecsWorldSettings(TEXT("TestFlecsWorld"))
 		, const FURL& URL = FURL())
 	{
-		if UNLIKELY_IF(GEngine == nullptr)
+		if UNLIKELY_IF(GEngine)
 		{
 			return;
 		}

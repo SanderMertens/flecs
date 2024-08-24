@@ -9,6 +9,7 @@
 #include "flecs.h"
 #include "Standard/robin_hood.h"
 #include "SolidMacros/Macros.h"
+#include "InstancedStruct.h"
 #include "Unlog/Unlog.h"
 
 struct UNREALFLECS_API FFlecsComponentProperties
