@@ -74,7 +74,7 @@ void flecs_notify_on_remove(
     ecs_table_t *other_table,
     int32_t row,
     int32_t count,
-    const ecs_type_t *diff);
+    const ecs_table_diff_t *diff);
 
 void flecs_notify_on_set(
     ecs_world_t *world,

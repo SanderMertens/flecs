@@ -655,7 +655,9 @@ void flecs_table_notify_on_remove(
 {
     int32_t count = ecs_table_count(table);
     if (count) {
-        flecs_notify_on_remove(world, table, NULL, 0, count, &table->type);
+        ecs_table_diff_t diff = ECS_TABLE_DIFF_INIT;
+        diff.removed = table->type;
+        flecs_notify_on_remove(world, table, NULL, 0, count, &diff);
     }
 }
 
