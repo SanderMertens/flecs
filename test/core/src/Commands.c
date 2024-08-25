@@ -2496,8 +2496,6 @@ void Commands_add_in_observer_during_merge_2_commands(void) {
 
     ecs_entity_t e = ecs_new(world);
 
-    ecs_log_set_level(0);
-
     ecs_defer_begin(world);
     ecs_add(world, e, TagA);
     ecs_add(world, e, TagB);
@@ -2514,8 +2512,6 @@ void Commands_add_in_observer_during_merge_2_commands(void) {
     test_assert(ptr != NULL);
     test_int(ptr->x, 10);
     test_int(ptr->y, 20);
-
-    ecs_log_set_level(-1);
 
     ecs_fini(world);
 }

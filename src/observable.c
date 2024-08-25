@@ -207,13 +207,19 @@ int32_t flecs_event_observers_get(
             ecs_id_t id_fwc = ecs_pair(EcsWildcard, ECS_PAIR_SECOND(id));
             ecs_id_t id_swc = ecs_pair(ECS_PAIR_FIRST(id), EcsWildcard);
             ecs_id_t id_pwc = ecs_pair(EcsWildcard, EcsWildcard);
-            iders[count] = flecs_event_id_record_get_if(er, id_fwc);
-            count += iders[count] != 0;
-            iders[count] = flecs_event_id_record_get_if(er, id_swc);
-            count += iders[count] != 0;
-            iders[count] = flecs_event_id_record_get_if(er, id_pwc);
-            count += iders[count] != 0;
-        } else {
+            if (id_fwc != id) {
+                iders[count] = flecs_event_id_record_get_if(er, id_fwc);
+                count += iders[count] != 0;
+            }
+            if (id_swc != id) {
+                iders[count] = flecs_event_id_record_get_if(er, id_swc);
+                count += iders[count] != 0;
+            }
+            if (id_pwc != id) {
+                iders[count] = flecs_event_id_record_get_if(er, id_pwc);
+                count += iders[count] != 0;
+            }
+        } else if (id != EcsWildcard) {
             iders[count] = flecs_event_id_record_get_if(er, EcsWildcard);
             count += iders[count] != 0;
         }
@@ -1218,6 +1224,8 @@ repeat_event:
         ecs_id_record_t *idr = NULL;
         const ecs_type_info_t *ti = NULL;
         ecs_id_t id = id_array[i];
+        ecs_assert(id == EcsAny || !ecs_id_is_wildcard(id), 
+            ECS_INVALID_PARAMETER, "cannot emit wildcard ids");
         int32_t ider_i, ider_count = 0;
         bool is_pair = ECS_IS_PAIR(id);
         void *override_ptr = NULL;
@@ -1323,7 +1331,6 @@ repeat_event:
 
         int32_t storage_i;
         it.trs[0] = tr;
-        // it.ptrs[0] = NULL;
         ECS_CONST_CAST(int32_t*, it.sizes)[0] = 0; /* safe, owned by observer */
         it.event_id = id;
         it.ids[0] = id;
@@ -1369,7 +1376,6 @@ repeat_event:
                             /* Set the source temporarily to the base and base
                              * component pointer. */
                             it.sources[0] = base;
-                            // it.ptrs[0] = ptr;
                             for (ider_set_i = 0; ider_set_i < ider_set_count; ider_set_i ++) {
                                 ecs_event_id_record_t *ider = iders_set[ider_set_i];
                                 flecs_observers_invoke(
@@ -1386,8 +1392,6 @@ repeat_event:
                         }
                     }
                 }
-
-                // it.ptrs[0] = ptr;
             }
         }
 

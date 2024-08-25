@@ -1060,7 +1060,7 @@ void flecs_notify_tables(
         int32_t i, count = flecs_sparse_count(tables);
         for (i = 0; i < count; i ++) {
             ecs_table_t *table = flecs_sparse_get_dense_t(tables, ecs_table_t, i);
-            flecs_table_notify(world, table, event);
+            flecs_table_notify(world, table, id, event);
         }
 
     /* If id is specified, only broadcast to tables with id */
@@ -1075,7 +1075,7 @@ void flecs_notify_tables(
 
         flecs_table_cache_all_iter(&idr->cache, &it);
         while ((tr = flecs_table_cache_next(&it, ecs_table_record_t))) {
-            flecs_table_notify(world, tr->hdr.table, event);
+            flecs_table_notify(world, tr->hdr.table, id, event);
         }
     }
 }

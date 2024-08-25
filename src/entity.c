@@ -615,16 +615,17 @@ void flecs_notify_on_add(
 
     if (added->count) {
         ecs_flags32_t table_flags = table->flags;
+        ecs_flags32_t diff_flags = diff->added_flags;
 
-        if (sparse && (diff->added_flags & EcsTableHasSparse)) {
+        if (sparse && (diff_flags & EcsTableHasSparse)) {
             flecs_sparse_on_add(world, table, row, count, added, construct);
         }
 
-        if (diff->added_flags & EcsTableHasUnion) {
+        if (diff_flags & EcsTableHasUnion) {
             flecs_union_on_add(world, table, row, count, added);
         }
 
-        if (table_flags & (EcsTableHasOnAdd|EcsTableHasIsA|EcsTableHasTraversable)) {
+        if ((diff_flags & EcsTableHasOnAdd) || table_flags & (EcsTableHasIsA|EcsTableHasTraversable)) {
             flecs_emit(world, world, set_mask, &(ecs_event_desc_t){
                 .event = EcsOnAdd,
                 .ids = added,
@@ -1322,12 +1323,12 @@ bool ecs_commit(
 
     if (added) {
         diff.added = *added;
-        diff.added_flags = table->flags & EcsTableNonTrivialEdge;
+        diff.added_flags = table->flags & EcsTableAddEdgeFlags;
     }
     if (removed) {
         diff.removed = *removed;
         if (src_table) {
-            diff.removed_flags = src_table->flags & EcsTableNonTrivialEdge;
+            diff.removed_flags = src_table->flags & EcsTableRemoveEdgeFlags;
         }
     }
 
@@ -2867,7 +2868,10 @@ ecs_entity_t ecs_clone(
     }
 
     ecs_type_t dst_type = dst_table->type;
-    ecs_table_diff_t diff = { .added = dst_type };
+    ecs_table_diff_t diff = {
+        .added = dst_type,
+        .added_flags = dst_table->flags & EcsTableEdgeFlags
+    };
     ecs_record_t *dst_r = flecs_entities_get(world, dst);
     flecs_new_entity(world, dst, dst_r, dst_table, &diff, true, 0);
     int32_t row = ECS_RECORD_TO_ROW(dst_r->row);

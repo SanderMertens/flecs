@@ -92,6 +92,1040 @@ void Dummy(ecs_iter_t *it) {
     dummy_called = true;
 }
 
+void Observer_on_add_before_edge(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+
+    Probe ctx = {0};
+    ecs_entity_t o = ecs_observer(world, {
+        .query.terms = {{TagA}},
+        .events = {EcsOnAdd},
+        .callback = Observer,
+        .ctx = &ctx
+    });
+    test_assert(o != 0);
+
+    ecs_entity_t e = ecs_new(world);
+
+    ecs_add_id(world, e, TagA);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, o);
+    test_int(ctx.event, EcsOnAdd);
+    test_int(ctx.term_count, 1);
+    test_null(ctx.param);
+    test_int(ctx.e[0], e);
+    test_int(ctx.c[0][0], TagA);
+
+    ecs_fini(world);
+}
+
+void Observer_on_add_after_edge(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_add(world, e1, TagA); // create edge from [] -> [TagA]
+
+    Probe ctx = {0};
+    ecs_entity_t o = ecs_observer(world, {
+        .query.terms = {{TagA}},
+        .events = {EcsOnAdd},
+        .callback = Observer,
+        .ctx = &ctx
+    });
+    test_assert(o != 0);
+    test_int(ctx.invoked, 0);
+
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_add(world, e2, TagA);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, o);
+    test_int(ctx.event, EcsOnAdd);
+    test_int(ctx.term_count, 1);
+    test_null(ctx.param);
+    test_int(ctx.e[0], e2);
+    test_int(ctx.c[0][0], TagA);
+
+    ecs_fini(world);
+}
+
+void Observer_on_add_wildcard_before_edge(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+
+    Probe ctx = {0};
+    ecs_entity_t o = ecs_observer(world, {
+        .query.terms = {{EcsWildcard}},
+        .events = {EcsOnAdd},
+        .callback = Observer,
+        .ctx = &ctx
+    });
+    test_assert(o != 0);
+
+    ecs_entity_t e = ecs_new(world);
+
+    ecs_add_id(world, e, TagA);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, o);
+    test_int(ctx.event, EcsOnAdd);
+    test_int(ctx.term_count, 1);
+    test_null(ctx.param);
+    test_int(ctx.e[0], e);
+    test_int(ctx.c[0][0], TagA);
+
+    ecs_fini(world);
+}
+
+void Observer_on_add_wildcard_after_edge(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_add(world, e1, TagA); // create edge from [] -> [TagA]
+
+    Probe ctx = {0};
+    ecs_entity_t o = ecs_observer(world, {
+        .query.terms = {{EcsWildcard}},
+        .events = {EcsOnAdd},
+        .callback = Observer,
+        .ctx = &ctx
+    });
+    test_assert(o != 0);
+    test_int(ctx.invoked, 0);
+
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_add(world, e2, TagA);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, o);
+    test_int(ctx.event, EcsOnAdd);
+    test_int(ctx.term_count, 1);
+    test_null(ctx.param);
+    test_int(ctx.e[0], e2);
+    test_int(ctx.c[0][0], TagA);
+
+    ecs_fini(world);
+}
+
+void Observer_on_add_R_wildcard_before_edge(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, TgtA);
+    ECS_TAG(world, TgtB);
+
+    Probe ctx = {0};
+    ecs_entity_t o = ecs_observer(world, {
+        .query.terms = {{ ecs_pair(Rel, EcsWildcard) }},
+        .events = {EcsOnAdd},
+        .callback = Observer,
+        .ctx = &ctx
+    });
+    test_assert(o != 0);
+
+    ecs_entity_t e = ecs_new(world);
+
+    ecs_add_pair(world, e, Rel, TgtA);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, o);
+    test_int(ctx.event, EcsOnAdd);
+    test_int(ctx.term_count, 1);
+    test_null(ctx.param);
+    test_int(ctx.e[0], e);
+    test_int(ctx.c[0][0], ecs_pair(Rel, TgtA));
+
+    ecs_os_zeromem(&ctx);
+
+    ecs_add_pair(world, e, Rel, TgtB);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, o);
+    test_int(ctx.event, EcsOnAdd);
+    test_int(ctx.term_count, 1);
+    test_null(ctx.param);
+    test_int(ctx.e[0], e);
+    test_int(ctx.c[0][0], ecs_pair(Rel, TgtB));
+
+    ecs_fini(world);
+}
+
+void Observer_on_add_R_wildcard_after_edge(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, TgtA);
+    ECS_TAG(world, TgtB);
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_add_pair(world, e1, Rel, TgtA);
+    ecs_add_pair(world, e1, Rel, TgtB);
+
+    Probe ctx = {0};
+    ecs_entity_t o = ecs_observer(world, {
+        .query.terms = {{ ecs_pair(Rel, EcsWildcard) }},
+        .events = {EcsOnAdd},
+        .callback = Observer,
+        .ctx = &ctx
+    });
+    test_assert(o != 0);
+
+    test_int(ctx.invoked, 0);
+
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_add_pair(world, e2, Rel, TgtA);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, o);
+    test_int(ctx.event, EcsOnAdd);
+    test_int(ctx.term_count, 1);
+    test_null(ctx.param);
+    test_int(ctx.e[0], e2);
+    test_int(ctx.c[0][0], ecs_pair(Rel, TgtA));
+
+    ecs_os_zeromem(&ctx);
+
+    ecs_add_pair(world, e2, Rel, TgtB);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, o);
+    test_int(ctx.event, EcsOnAdd);
+    test_int(ctx.term_count, 1);
+    test_null(ctx.param);
+    test_int(ctx.e[0], e2);
+    test_int(ctx.c[0][0], ecs_pair(Rel, TgtB));
+
+    ecs_fini(world);
+}
+
+void Observer_on_add_wildcard_T_before_edge(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, RelA);
+    ECS_TAG(world, RelB);
+    ECS_TAG(world, Tgt);
+
+    Probe ctx = {0};
+    ecs_entity_t o = ecs_observer(world, {
+        .query.terms = {{ ecs_pair(EcsWildcard, Tgt) }},
+        .events = {EcsOnAdd},
+        .callback = Observer,
+        .ctx = &ctx
+    });
+    test_assert(o != 0);
+
+    ecs_entity_t e = ecs_new(world);
+
+    ecs_add_pair(world, e, RelA, Tgt);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, o);
+    test_int(ctx.event, EcsOnAdd);
+    test_int(ctx.term_count, 1);
+    test_null(ctx.param);
+    test_int(ctx.e[0], e);
+    test_int(ctx.c[0][0], ecs_pair(RelA, Tgt));
+
+    ecs_os_zeromem(&ctx);
+
+    ecs_add_pair(world, e, RelB, Tgt);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, o);
+    test_int(ctx.event, EcsOnAdd);
+    test_int(ctx.term_count, 1);
+    test_null(ctx.param);
+    test_int(ctx.e[0], e);
+    test_int(ctx.c[0][0], ecs_pair(RelB, Tgt));
+
+    ecs_fini(world);
+}
+
+void Observer_on_add_wildcard_T_after_edge(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, RelA);
+    ECS_TAG(world, RelB);
+    ECS_TAG(world, Tgt);
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_add_pair(world, e1, RelA, Tgt);
+    ecs_add_pair(world, e1, RelB, Tgt);
+
+    Probe ctx = {0};
+    ecs_entity_t o = ecs_observer(world, {
+        .query.terms = {{ ecs_pair(EcsWildcard, Tgt) }},
+        .events = {EcsOnAdd},
+        .callback = Observer,
+        .ctx = &ctx
+    });
+    test_assert(o != 0);
+
+    test_int(ctx.invoked, 0);
+
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_add_pair(world, e2, RelA, Tgt);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, o);
+    test_int(ctx.event, EcsOnAdd);
+    test_int(ctx.term_count, 1);
+    test_null(ctx.param);
+    test_int(ctx.e[0], e2);
+    test_int(ctx.c[0][0], ecs_pair(RelA, Tgt));
+
+    ecs_os_zeromem(&ctx);
+
+    ecs_add_pair(world, e2, RelB, Tgt);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, o);
+    test_int(ctx.event, EcsOnAdd);
+    test_int(ctx.term_count, 1);
+    test_null(ctx.param);
+    test_int(ctx.e[0], e2);
+    test_int(ctx.c[0][0], ecs_pair(RelB, Tgt));
+
+    ecs_fini(world);
+}
+
+void Observer_on_add_wildcard_wildcard_before_edge(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, RelA);
+    ECS_TAG(world, RelB);
+    ECS_TAG(world, Tgt);
+
+    Probe ctx = {0};
+    ecs_entity_t o = ecs_observer(world, {
+        .query.terms = {{ ecs_pair(EcsWildcard, EcsWildcard) }},
+        .events = {EcsOnAdd},
+        .callback = Observer,
+        .ctx = &ctx
+    });
+    test_assert(o != 0);
+
+    ecs_entity_t e = ecs_new(world);
+
+    ecs_add_pair(world, e, RelA, Tgt);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, o);
+    test_int(ctx.event, EcsOnAdd);
+    test_int(ctx.term_count, 1);
+    test_null(ctx.param);
+    test_int(ctx.e[0], e);
+    test_int(ctx.c[0][0], ecs_pair(RelA, Tgt));
+
+    ecs_os_zeromem(&ctx);
+
+    ecs_add_pair(world, e, RelB, Tgt);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, o);
+    test_int(ctx.event, EcsOnAdd);
+    test_int(ctx.term_count, 1);
+    test_null(ctx.param);
+    test_int(ctx.e[0], e);
+    test_int(ctx.c[0][0], ecs_pair(RelB, Tgt));
+
+    ecs_fini(world);
+}
+
+void Observer_on_add_wildcard_wildcard_after_edge(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, RelA);
+    ECS_TAG(world, RelB);
+    ECS_TAG(world, Tgt);
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_add_pair(world, e1, RelA, Tgt);
+    ecs_add_pair(world, e1, RelB, Tgt);
+
+    Probe ctx = {0};
+    ecs_entity_t o = ecs_observer(world, {
+        .query.terms = {{ ecs_pair(EcsWildcard, EcsWildcard) }},
+        .events = {EcsOnAdd},
+        .callback = Observer,
+        .ctx = &ctx
+    });
+    test_assert(o != 0);
+
+    test_int(ctx.invoked, 0);
+
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_add_pair(world, e2, RelA, Tgt);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, o);
+    test_int(ctx.event, EcsOnAdd);
+    test_int(ctx.term_count, 1);
+    test_null(ctx.param);
+    test_int(ctx.e[0], e2);
+    test_int(ctx.c[0][0], ecs_pair(RelA, Tgt));
+
+    ecs_os_zeromem(&ctx);
+
+    ecs_add_pair(world, e2, RelB, Tgt);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, o);
+    test_int(ctx.event, EcsOnAdd);
+    test_int(ctx.term_count, 1);
+    test_null(ctx.param);
+    test_int(ctx.e[0], e2);
+    test_int(ctx.c[0][0], ecs_pair(RelB, Tgt));
+
+    ecs_fini(world);
+}
+
+void Observer_on_add_any_before_edge(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, RelA);
+    ECS_TAG(world, RelB);
+    ECS_TAG(world, Tgt);
+
+    Probe ctx = {0};
+    ecs_entity_t o = ecs_observer(world, {
+        .query.terms = {{ EcsAny }},
+        .events = {EcsOnAdd},
+        .callback = Observer,
+        .ctx = &ctx
+    });
+    test_assert(o != 0);
+
+    ecs_entity_t e = ecs_new(world);
+
+    ecs_add_pair(world, e, RelA, Tgt);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, o);
+    test_int(ctx.event, EcsOnAdd);
+    test_int(ctx.term_count, 1);
+    test_null(ctx.param);
+    test_int(ctx.e[0], e);
+    test_int(ctx.c[0][0], ecs_pair(RelA, Tgt));
+
+    ecs_os_zeromem(&ctx);
+
+    ecs_add_pair(world, e, RelB, Tgt);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, o);
+    test_int(ctx.event, EcsOnAdd);
+    test_int(ctx.term_count, 1);
+    test_null(ctx.param);
+    test_int(ctx.e[0], e);
+    test_int(ctx.c[0][0], ecs_pair(RelB, Tgt));
+
+    ecs_fini(world);
+}
+
+void Observer_on_add_any_after_edge(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, RelA);
+    ECS_TAG(world, RelB);
+    ECS_TAG(world, Tgt);
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_add_pair(world, e1, RelA, Tgt);
+    ecs_add_pair(world, e1, RelB, Tgt);
+
+    Probe ctx = {0};
+    ecs_entity_t o = ecs_observer(world, {
+        .query.terms = {{ EcsAny }},
+        .events = {EcsOnAdd},
+        .callback = Observer,
+        .ctx = &ctx
+    });
+    test_assert(o != 0);
+
+    test_int(ctx.invoked, 0);
+
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_add_pair(world, e2, RelA, Tgt);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, o);
+    test_int(ctx.event, EcsOnAdd);
+    test_int(ctx.term_count, 1);
+    test_null(ctx.param);
+    test_int(ctx.e[0], e2);
+    test_int(ctx.c[0][0], ecs_pair(RelA, Tgt));
+
+    ecs_os_zeromem(&ctx);
+
+    ecs_add_pair(world, e2, RelB, Tgt);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, o);
+    test_int(ctx.event, EcsOnAdd);
+    test_int(ctx.term_count, 1);
+    test_null(ctx.param);
+    test_int(ctx.e[0], e2);
+    test_int(ctx.c[0][0], ecs_pair(RelB, Tgt));
+
+    ecs_fini(world);
+}
+
+void Observer_on_remove_before_edge(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+
+    Probe ctx = {0};
+    ecs_entity_t o = ecs_observer(world, {
+        .query.terms = {{TagA}},
+        .events = {EcsOnRemove},
+        .callback = Observer,
+        .ctx = &ctx
+    });
+    test_assert(o != 0);
+
+    ecs_entity_t e = ecs_new(world);
+
+    ecs_add_id(world, e, TagA);
+    test_int(ctx.invoked, 0);
+
+    ecs_remove_id(world, e, TagA);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, o);
+    test_int(ctx.event, EcsOnRemove);
+    test_int(ctx.term_count, 1);
+    test_null(ctx.param);
+    test_int(ctx.e[0], e);
+    test_int(ctx.c[0][0], TagA);
+
+    ecs_fini(world);
+}
+
+void Observer_on_remove_after_edge(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_add(world, e1, TagA);
+    ecs_remove(world, e1, TagA); // create edge from [TagA] -> []
+
+    Probe ctx = {0};
+    ecs_entity_t o = ecs_observer(world, {
+        .query.terms = {{TagA}},
+        .events = {EcsOnRemove},
+        .callback = Observer,
+        .ctx = &ctx
+    });
+    test_assert(o != 0);
+    test_int(ctx.invoked, 0);
+
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_add(world, e2, TagA);
+    test_int(ctx.invoked, 0);
+
+    ecs_remove(world, e2, TagA);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, o);
+    test_int(ctx.event, EcsOnRemove);
+    test_int(ctx.term_count, 1);
+    test_null(ctx.param);
+    test_int(ctx.e[0], e2);
+    test_int(ctx.c[0][0], TagA);
+
+    ecs_fini(world);
+}
+
+void Observer_on_remove_wildcard_before_edge(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+
+    Probe ctx = {0};
+    ecs_entity_t o = ecs_observer(world, {
+        .query.terms = {{EcsWildcard}},
+        .events = {EcsOnRemove},
+        .callback = Observer,
+        .ctx = &ctx
+    });
+    test_assert(o != 0);
+
+    ecs_entity_t e = ecs_new(world);
+
+    ecs_add_id(world, e, TagA);
+    test_int(ctx.invoked, 0);
+
+    ecs_remove_id(world, e, TagA);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, o);
+    test_int(ctx.event, EcsOnRemove);
+    test_int(ctx.term_count, 1);
+    test_null(ctx.param);
+    test_int(ctx.e[0], e);
+    test_int(ctx.c[0][0], TagA);
+
+    ecs_fini(world);
+}
+
+void Observer_on_remove_wildcard_after_edge(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_add(world, e1, TagA);
+    ecs_remove(world, e1, TagA); // create edge from [TagA] -> []
+
+    Probe ctx = {0};
+    ecs_entity_t o = ecs_observer(world, {
+        .query.terms = {{EcsWildcard}},
+        .events = {EcsOnRemove},
+        .callback = Observer,
+        .ctx = &ctx
+    });
+    test_assert(o != 0);
+    test_int(ctx.invoked, 0);
+
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_add(world, e2, TagA);
+    test_int(ctx.invoked, 0);
+
+    ecs_remove(world, e2, TagA);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, o);
+    test_int(ctx.event, EcsOnRemove);
+    test_int(ctx.term_count, 1);
+    test_null(ctx.param);
+    test_int(ctx.e[0], e2);
+    test_int(ctx.c[0][0], TagA);
+
+    ecs_fini(world);
+}
+
+void Observer_on_remove_R_wildcard_before_edge(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, TgtA);
+    ECS_TAG(world, TgtB);
+
+    Probe ctx = {0};
+    ecs_entity_t o = ecs_observer(world, {
+        .query.terms = {{ ecs_pair(Rel, EcsWildcard) }},
+        .events = {EcsOnRemove},
+        .callback = Observer,
+        .ctx = &ctx
+    });
+    test_assert(o != 0);
+
+    ecs_entity_t e = ecs_new(world);
+
+    ecs_add_pair(world, e, Rel, TgtA);
+    test_int(ctx.invoked, 0);
+
+    ecs_remove_pair(world, e, Rel, TgtA);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, o);
+    test_int(ctx.event, EcsOnRemove);
+    test_int(ctx.term_count, 1);
+    test_null(ctx.param);
+    test_int(ctx.e[0], e);
+    test_int(ctx.c[0][0], ecs_pair(Rel, TgtA));
+
+    ecs_os_zeromem(&ctx);
+
+    ecs_add_pair(world, e, Rel, TgtB);
+    test_int(ctx.invoked, 0);
+    
+    ecs_remove_pair(world, e, Rel, TgtB);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, o);
+    test_int(ctx.event, EcsOnRemove);
+    test_int(ctx.term_count, 1);
+    test_null(ctx.param);
+    test_int(ctx.e[0], e);
+    test_int(ctx.c[0][0], ecs_pair(Rel, TgtB));
+
+    ecs_fini(world);
+}
+
+void Observer_on_remove_R_wildcard_after_edge(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, TgtA);
+    ECS_TAG(world, TgtB);
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_add_pair(world, e1, Rel, TgtA);
+    ecs_add_pair(world, e1, Rel, TgtB);
+    ecs_remove_pair(world, e1, Rel, TgtA);
+    ecs_remove_pair(world, e1, Rel, TgtB);
+
+    Probe ctx = {0};
+    ecs_entity_t o = ecs_observer(world, {
+        .query.terms = {{ ecs_pair(Rel, EcsWildcard) }},
+        .events = {EcsOnRemove},
+        .callback = Observer,
+        .ctx = &ctx
+    });
+    test_assert(o != 0);
+
+    test_int(ctx.invoked, 0);
+
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_add_pair(world, e2, Rel, TgtA);
+    ecs_add_pair(world, e2, Rel, TgtB);
+    test_int(ctx.invoked, 0);
+
+    ecs_remove_pair(world, e2, Rel, TgtA);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, o);
+    test_int(ctx.event, EcsOnRemove);
+    test_int(ctx.term_count, 1);
+    test_null(ctx.param);
+    test_int(ctx.e[0], e2);
+    test_int(ctx.c[0][0], ecs_pair(Rel, TgtA));
+
+    ecs_os_zeromem(&ctx);
+
+    ecs_remove_pair(world, e2, Rel, TgtB);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, o);
+    test_int(ctx.event, EcsOnRemove);
+    test_int(ctx.term_count, 1);
+    test_null(ctx.param);
+    test_int(ctx.e[0], e2);
+    test_int(ctx.c[0][0], ecs_pair(Rel, TgtB));
+
+    ecs_fini(world);
+}
+
+void Observer_on_remove_wildcard_T_before_edge(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, RelA);
+    ECS_TAG(world, RelB);
+    ECS_TAG(world, Tgt);
+
+    Probe ctx = {0};
+    ecs_entity_t o = ecs_observer(world, {
+        .query.terms = {{ ecs_pair(EcsWildcard, Tgt) }},
+        .events = {EcsOnRemove},
+        .callback = Observer,
+        .ctx = &ctx
+    });
+    test_assert(o != 0);
+
+    ecs_entity_t e = ecs_new(world);
+
+    ecs_add_pair(world, e, RelA, Tgt);
+    test_int(ctx.invoked, 0);
+
+    ecs_remove_pair(world, e, RelA, Tgt);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, o);
+    test_int(ctx.event, EcsOnRemove);
+    test_int(ctx.term_count, 1);
+    test_null(ctx.param);
+    test_int(ctx.e[0], e);
+    test_int(ctx.c[0][0], ecs_pair(RelA, Tgt));
+
+    ecs_os_zeromem(&ctx);
+
+    ecs_add_pair(world, e, RelB, Tgt);
+    test_int(ctx.invoked, 0);
+    
+    ecs_remove_pair(world, e, RelB, Tgt);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, o);
+    test_int(ctx.event, EcsOnRemove);
+    test_int(ctx.term_count, 1);
+    test_null(ctx.param);
+    test_int(ctx.e[0], e);
+    test_int(ctx.c[0][0], ecs_pair(RelB, Tgt));
+
+    ecs_fini(world);
+}
+
+void Observer_on_remove_wildcard_T_after_edge(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, RelA);
+    ECS_TAG(world, RelB);
+    ECS_TAG(world, Tgt);
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_add_pair(world, e1, RelA, Tgt);
+    ecs_add_pair(world, e1, RelB, Tgt);
+    ecs_remove_pair(world, e1, RelA, Tgt);
+    ecs_remove_pair(world, e1, RelB, Tgt);
+
+    Probe ctx = {0};
+    ecs_entity_t o = ecs_observer(world, {
+        .query.terms = {{ ecs_pair(EcsWildcard, Tgt) }},
+        .events = {EcsOnRemove},
+        .callback = Observer,
+        .ctx = &ctx
+    });
+    test_assert(o != 0);
+
+    test_int(ctx.invoked, 0);
+
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_add_pair(world, e2, RelA, Tgt);
+    ecs_add_pair(world, e2, RelB, Tgt);
+    test_int(ctx.invoked, 0);
+
+    ecs_remove_pair(world, e2, RelA, Tgt);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, o);
+    test_int(ctx.event, EcsOnRemove);
+    test_int(ctx.term_count, 1);
+    test_null(ctx.param);
+    test_int(ctx.e[0], e2);
+    test_int(ctx.c[0][0], ecs_pair(RelA, Tgt));
+
+    ecs_os_zeromem(&ctx);
+
+    ecs_remove_pair(world, e2, RelB, Tgt);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, o);
+    test_int(ctx.event, EcsOnRemove);
+    test_int(ctx.term_count, 1);
+    test_null(ctx.param);
+    test_int(ctx.e[0], e2);
+    test_int(ctx.c[0][0], ecs_pair(RelB, Tgt));
+
+    ecs_fini(world);
+}
+
+void Observer_on_remove_wildcard_wildcard_before_edge(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, RelA);
+    ECS_TAG(world, RelB);
+    ECS_TAG(world, Tgt);
+
+    Probe ctx = {0};
+    ecs_entity_t o = ecs_observer(world, {
+        .query.terms = {{ ecs_pair(EcsWildcard, EcsWildcard) }},
+        .events = {EcsOnRemove},
+        .callback = Observer,
+        .ctx = &ctx
+    });
+    test_assert(o != 0);
+
+    ecs_entity_t e = ecs_new(world);
+
+    ecs_add_pair(world, e, RelA, Tgt);
+    test_int(ctx.invoked, 0);
+
+    ecs_remove_pair(world, e, RelA, Tgt);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, o);
+    test_int(ctx.event, EcsOnRemove);
+    test_int(ctx.term_count, 1);
+    test_null(ctx.param);
+    test_int(ctx.e[0], e);
+    test_int(ctx.c[0][0], ecs_pair(RelA, Tgt));
+
+    ecs_os_zeromem(&ctx);
+
+    ecs_add_pair(world, e, RelB, Tgt);
+    test_int(ctx.invoked, 0);
+    
+    ecs_remove_pair(world, e, RelB, Tgt);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, o);
+    test_int(ctx.event, EcsOnRemove);
+    test_int(ctx.term_count, 1);
+    test_null(ctx.param);
+    test_int(ctx.e[0], e);
+    test_int(ctx.c[0][0], ecs_pair(RelB, Tgt));
+
+    ecs_fini(world);
+}
+
+void Observer_on_remove_wildcard_wildcard_after_edge(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, RelA);
+    ECS_TAG(world, RelB);
+    ECS_TAG(world, Tgt);
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_add_pair(world, e1, RelA, Tgt);
+    ecs_add_pair(world, e1, RelB, Tgt);
+    ecs_remove_pair(world, e1, RelA, Tgt);
+    ecs_remove_pair(world, e1, RelB, Tgt);
+
+    Probe ctx = {0};
+    ecs_entity_t o = ecs_observer(world, {
+        .query.terms = {{ ecs_pair(EcsWildcard, EcsWildcard) }},
+        .events = {EcsOnRemove},
+        .callback = Observer,
+        .ctx = &ctx
+    });
+    test_assert(o != 0);
+
+    test_int(ctx.invoked, 0);
+
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_add_pair(world, e2, RelA, Tgt);
+    ecs_add_pair(world, e2, RelB, Tgt);
+    test_int(ctx.invoked, 0);
+
+    ecs_remove_pair(world, e2, RelA, Tgt);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, o);
+    test_int(ctx.event, EcsOnRemove);
+    test_int(ctx.term_count, 1);
+    test_null(ctx.param);
+    test_int(ctx.e[0], e2);
+    test_int(ctx.c[0][0], ecs_pair(RelA, Tgt));
+
+    ecs_os_zeromem(&ctx);
+
+    ecs_remove_pair(world, e2, RelB, Tgt);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, o);
+    test_int(ctx.event, EcsOnRemove);
+    test_int(ctx.term_count, 1);
+    test_null(ctx.param);
+    test_int(ctx.e[0], e2);
+    test_int(ctx.c[0][0], ecs_pair(RelB, Tgt));
+
+    ecs_fini(world);
+}
+
+void Observer_on_remove_any_before_edge(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, RelA);
+    ECS_TAG(world, RelB);
+    ECS_TAG(world, Tgt);
+
+    Probe ctx = {0};
+    ecs_entity_t o = ecs_observer(world, {
+        .query.terms = {{ EcsAny }},
+        .events = {EcsOnRemove},
+        .callback = Observer,
+        .ctx = &ctx
+    });
+    test_assert(o != 0);
+
+    ecs_entity_t e = ecs_new(world);
+
+    ecs_add_pair(world, e, RelA, Tgt);
+    test_int(ctx.invoked, 0);
+
+    ecs_remove_pair(world, e, RelA, Tgt);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, o);
+    test_int(ctx.event, EcsOnRemove);
+    test_int(ctx.term_count, 1);
+    test_null(ctx.param);
+    test_int(ctx.e[0], e);
+    test_int(ctx.c[0][0], ecs_pair(RelA, Tgt));
+
+    ecs_os_zeromem(&ctx);
+
+    ecs_add_pair(world, e, RelB, Tgt);
+    test_int(ctx.invoked, 0);
+    
+    ecs_remove_pair(world, e, RelB, Tgt);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, o);
+    test_int(ctx.event, EcsOnRemove);
+    test_int(ctx.term_count, 1);
+    test_null(ctx.param);
+    test_int(ctx.e[0], e);
+    test_int(ctx.c[0][0], ecs_pair(RelB, Tgt));
+
+    ecs_fini(world);
+}
+
+void Observer_on_remove_any_after_edge(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, RelA);
+    ECS_TAG(world, RelB);
+    ECS_TAG(world, Tgt);
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_add_pair(world, e1, RelA, Tgt);
+    ecs_add_pair(world, e1, RelB, Tgt);
+    ecs_remove_pair(world, e1, RelA, Tgt);
+    ecs_remove_pair(world, e1, RelB, Tgt);
+
+    Probe ctx = {0};
+    ecs_entity_t o = ecs_observer(world, {
+        .query.terms = {{ EcsAny }},
+        .events = {EcsOnRemove},
+        .callback = Observer,
+        .ctx = &ctx
+    });
+    test_assert(o != 0);
+
+    test_int(ctx.invoked, 0);
+
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_add_pair(world, e2, RelA, Tgt);
+    ecs_add_pair(world, e2, RelB, Tgt);
+    test_int(ctx.invoked, 0);
+
+    ecs_remove_pair(world, e2, RelA, Tgt);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, o);
+    test_int(ctx.event, EcsOnRemove);
+    test_int(ctx.term_count, 1);
+    test_null(ctx.param);
+    test_int(ctx.e[0], e2);
+    test_int(ctx.c[0][0], ecs_pair(RelA, Tgt));
+
+    ecs_os_zeromem(&ctx);
+
+    ecs_remove_pair(world, e2, RelB, Tgt);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, o);
+    test_int(ctx.event, EcsOnRemove);
+    test_int(ctx.term_count, 1);
+    test_null(ctx.param);
+    test_int(ctx.e[0], e2);
+    test_int(ctx.c[0][0], ecs_pair(RelB, Tgt));
+
+    ecs_fini(world);
+}
+
 void Observer_2_terms_w_on_add(void) {
     ecs_world_t *world = ecs_mini();
 
@@ -7256,4 +8290,3 @@ void Observer_multi_observer_eval_count(void) {
 
     ecs_fini(world);
 }
-

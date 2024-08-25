@@ -105,4 +105,10 @@ void flecs_table_diff_build_noalloc(
     ecs_table_diff_builder_t *builder,
     ecs_table_diff_t *diff);
 
+void flecs_table_edges_add_flags(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_id_t id,
+    ecs_flags32_t flags);
+
 #endif

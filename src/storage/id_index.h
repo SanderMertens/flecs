@@ -137,7 +137,9 @@ void flecs_init_id_records(
 void flecs_fini_id_records(
     ecs_world_t *world);
 
-ecs_id_t flecs_id_record_hash(
+/* Return flags for matching id records */
+ecs_flags32_t flecs_id_flags_get(
+    ecs_world_t *world,
     ecs_id_t id);
 
 #endif
