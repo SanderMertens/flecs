@@ -1336,6 +1336,30 @@ void Trigger_on_set_superset_after_filter_observer_w_on_add_isa_after_set(void);
 void Trigger_on_set_superset_after_filter_observer_w_on_add_2(void);
 
 // Testsuite 'Observer'
+void Observer_on_add_before_edge(void);
+void Observer_on_add_after_edge(void);
+void Observer_on_add_wildcard_before_edge(void);
+void Observer_on_add_wildcard_after_edge(void);
+void Observer_on_add_R_wildcard_before_edge(void);
+void Observer_on_add_R_wildcard_after_edge(void);
+void Observer_on_add_wildcard_T_before_edge(void);
+void Observer_on_add_wildcard_T_after_edge(void);
+void Observer_on_add_wildcard_wildcard_before_edge(void);
+void Observer_on_add_wildcard_wildcard_after_edge(void);
+void Observer_on_add_any_before_edge(void);
+void Observer_on_add_any_after_edge(void);
+void Observer_on_remove_before_edge(void);
+void Observer_on_remove_after_edge(void);
+void Observer_on_remove_wildcard_before_edge(void);
+void Observer_on_remove_wildcard_after_edge(void);
+void Observer_on_remove_R_wildcard_before_edge(void);
+void Observer_on_remove_R_wildcard_after_edge(void);
+void Observer_on_remove_wildcard_T_before_edge(void);
+void Observer_on_remove_wildcard_T_after_edge(void);
+void Observer_on_remove_wildcard_wildcard_before_edge(void);
+void Observer_on_remove_wildcard_wildcard_after_edge(void);
+void Observer_on_remove_any_before_edge(void);
+void Observer_on_remove_any_after_edge(void);
 void Observer_2_terms_w_on_add(void);
 void Observer_2_terms_w_on_remove(void);
 void Observer_2_terms_w_on_set_value(void);
@@ -7282,6 +7306,102 @@ bake_test_case Trigger_testcases[] = {
 
 bake_test_case Observer_testcases[] = {
     {
+        "on_add_before_edge",
+        Observer_on_add_before_edge
+    },
+    {
+        "on_add_after_edge",
+        Observer_on_add_after_edge
+    },
+    {
+        "on_add_wildcard_before_edge",
+        Observer_on_add_wildcard_before_edge
+    },
+    {
+        "on_add_wildcard_after_edge",
+        Observer_on_add_wildcard_after_edge
+    },
+    {
+        "on_add_R_wildcard_before_edge",
+        Observer_on_add_R_wildcard_before_edge
+    },
+    {
+        "on_add_R_wildcard_after_edge",
+        Observer_on_add_R_wildcard_after_edge
+    },
+    {
+        "on_add_wildcard_T_before_edge",
+        Observer_on_add_wildcard_T_before_edge
+    },
+    {
+        "on_add_wildcard_T_after_edge",
+        Observer_on_add_wildcard_T_after_edge
+    },
+    {
+        "on_add_wildcard_wildcard_before_edge",
+        Observer_on_add_wildcard_wildcard_before_edge
+    },
+    {
+        "on_add_wildcard_wildcard_after_edge",
+        Observer_on_add_wildcard_wildcard_after_edge
+    },
+    {
+        "on_add_any_before_edge",
+        Observer_on_add_any_before_edge
+    },
+    {
+        "on_add_any_after_edge",
+        Observer_on_add_any_after_edge
+    },
+    {
+        "on_remove_before_edge",
+        Observer_on_remove_before_edge
+    },
+    {
+        "on_remove_after_edge",
+        Observer_on_remove_after_edge
+    },
+    {
+        "on_remove_wildcard_before_edge",
+        Observer_on_remove_wildcard_before_edge
+    },
+    {
+        "on_remove_wildcard_after_edge",
+        Observer_on_remove_wildcard_after_edge
+    },
+    {
+        "on_remove_R_wildcard_before_edge",
+        Observer_on_remove_R_wildcard_before_edge
+    },
+    {
+        "on_remove_R_wildcard_after_edge",
+        Observer_on_remove_R_wildcard_after_edge
+    },
+    {
+        "on_remove_wildcard_T_before_edge",
+        Observer_on_remove_wildcard_T_before_edge
+    },
+    {
+        "on_remove_wildcard_T_after_edge",
+        Observer_on_remove_wildcard_T_after_edge
+    },
+    {
+        "on_remove_wildcard_wildcard_before_edge",
+        Observer_on_remove_wildcard_wildcard_before_edge
+    },
+    {
+        "on_remove_wildcard_wildcard_after_edge",
+        Observer_on_remove_wildcard_wildcard_after_edge
+    },
+    {
+        "on_remove_any_before_edge",
+        Observer_on_remove_any_before_edge
+    },
+    {
+        "on_remove_any_after_edge",
+        Observer_on_remove_any_after_edge
+    },
+    {
         "2_terms_w_on_add",
         Observer_2_terms_w_on_add
     },
@@ -10580,7 +10700,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        174,
+        198,
         Observer_testcases
     },
     {
