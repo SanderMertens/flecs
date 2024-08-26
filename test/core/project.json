@@ -1284,6 +1284,7 @@
                "on_add_tag",
                "on_add_component",
                "on_add_wildcard",
+               "on_add_wildcard_after_table",
                "on_add_pair",
                "on_add_pair_obj_wildcard",
                "on_add_pair_pred_wildcard",

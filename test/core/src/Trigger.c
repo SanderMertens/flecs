@@ -351,6 +351,57 @@ void Trigger_on_add_wildcard(void) {
     ecs_fini(world);
 }
 
+void Trigger_on_add_wildcard_after_table(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+
+    ecs_entity_t dummy = ecs_new_w(world, TagA);
+    ecs_delete(world, dummy);
+
+    Probe ctx = {0};
+    ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
+        .query.terms[0].id = EcsWildcard,
+        .events = {EcsOnAdd},
+        .callback = Trigger,
+        .ctx = &ctx
+    });
+
+    test_int(ctx.invoked, 0);
+
+    ecs_entity_t e = ecs_new_w(world, TagA);
+    test_assert(e != 0);
+
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, t);
+    test_int(ctx.event, EcsOnAdd);
+    test_int(ctx.event_id, TagA);
+    test_int(ctx.term_count, 1);
+    test_null(ctx.param);
+
+    test_int(ctx.e[0], e);
+    test_int(ctx.c[0][0], TagA);
+
+    ecs_os_zeromem(&ctx);
+
+    ecs_add_id(world, e, TagB);
+
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, t);
+    test_int(ctx.event, EcsOnAdd);
+    test_int(ctx.event_id, TagB);
+    test_int(ctx.term_count, 1);
+    test_null(ctx.param);
+
+    test_int(ctx.e[0], e);
+    test_int(ctx.c[0][0], TagB);
+
+    ecs_fini(world);
+}
+
 void Trigger_on_add_pair(void) {
     ecs_world_t *world = ecs_mini();
 
