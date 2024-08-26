@@ -153,8 +153,13 @@ public:
 	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
-	FORCEINLINE FFlecsEntityHandle CreateEntity(const FString& Name = "None") const
+	FORCEINLINE FFlecsEntityHandle CreateEntity(const FString& Name = "") const
 	{
+		if (Name.IsEmpty())
+		{
+			World.entity();
+		}
+
 		return World.entity(StringCast<char>(*Name).Get());
 	}
 

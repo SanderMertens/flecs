@@ -5,7 +5,44 @@
 
 #include "../private_api.h"
 
+#include <windows.h>
+#include <dbghelp.h>
+#include <stdio.h>
+#include <stdlib.h>
+
 #ifdef FLECS_LOG
+
+void InitializeDbgHelp() {
+    static int initialized = 0;
+    if (!initialized) {
+        SymInitialize(GetCurrentProcess(), NULL, TRUE);
+        initialized = 1;
+    }
+}
+
+void CaptureStackTrace(void** stack, int framesToSkip, int framesToCapture) {
+    USHORT frames = CaptureStackBackTrace(framesToSkip, framesToCapture, stack, NULL);
+    for (USHORT i = frames; i < framesToCapture; ++i) {
+        stack[i] = NULL;
+    }
+}
+
+void GetStackTraceString(void** stack, int frames, char* buffer, size_t bufferSize) {
+    char symbolBuffer[sizeof(SYMBOL_INFO) + MAX_SYM_NAME * sizeof(TCHAR)];
+    PSYMBOL_INFO symbol = (PSYMBOL_INFO)symbolBuffer;
+    symbol->SizeOfStruct = sizeof(SYMBOL_INFO);
+    symbol->MaxNameLen = MAX_SYM_NAME;
+
+    buffer[0] = '\0';
+    for (int i = 0; i < frames && stack[i] != NULL; ++i) {
+        DWORD64 displacement = 0;
+        if (SymFromAddr(GetCurrentProcess(), (DWORD64)stack[i], &displacement, symbol)) {
+            snprintf(buffer + strlen(buffer), bufferSize - strlen(buffer), "%s [0x%0llX]\n", symbol->Name, symbol->Address);
+        } else {
+            snprintf(buffer + strlen(buffer), bufferSize - strlen(buffer), "Unknown [0x%p]\n", stack[i]);
+        }
+    }
+}
 
 void flecs_colorize_buf(
     char *msg,
@@ -365,6 +402,17 @@ void ecs_assert_log_(
         ecs_fatal_(file, line, "assert: %s %s",
             cond_str, ecs_strerror(err));
     }
+
+    InitializeDbgHelp();
+
+    void* stack[30];
+    CaptureStackTrace(stack, 2, 30);
+    char callstack_buffer[1024];
+    GetStackTraceString(stack, 30, callstack_buffer, sizeof(callstack_buffer));
+
+    // Log the call stack
+    printf("Call stack:\n%s", callstack_buffer);
+
     ecs_os_api.log_last_error_ = err;
 }
 

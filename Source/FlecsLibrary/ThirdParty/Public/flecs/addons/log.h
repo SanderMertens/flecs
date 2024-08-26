@@ -350,14 +350,23 @@ void ecs_parser_errorv_(
     #define ecs_assert(condition, error_code, ...) __assume(condition)
     #else
 
-    #ifndef __cplusplus
-        #define ecs_assert(condition, error_code, ...)\
-            if (!(condition)) {\
-            ecs_assert_log_(error_code, #condition, __FILE__, __LINE__, __VA_ARGS__);\
-            ecs_os_abort(); \
-            abort(); /* satisfy compiler/static analyzers */\
-            }
-    #endif // __cplusplus
+    #define ecs_assert(condition, error_code, ...)\
+        if (!(condition)) {                                             \
+        ecs_assert_log_(error_code, #condition, __FILE__, __LINE__, __VA_ARGS__); \
+        abort(); /* satisfy compiler/static analyzers */            \
+        }       
+    
+    // #include <exception>
+    // #include <stdexcept>
+    // #include <string>
+    //
+    // #define ecs_assert(condition, error_code, ...)\
+    //     if (!(condition)) [[unlikely]] { \
+    //     ecs_assert_log_(error_code, #condition, __FILE__, __LINE__, __VA_ARGS__);\
+    //     throw std::runtime_error(std::string("Assertion failed: ") \
+    //         + #condition + " at " + __FILE__ + ":" + std::to_string(__LINE__)); \
+    //         __assume(0); \
+    //     }
     
     #endif // FLECS_NDEBUG
 
@@ -574,21 +583,6 @@ int ecs_log_last_error(void);
 
 #ifdef __cplusplus
 }
-#endif
-
-#if defined(__cplusplus) && !defined(ecs_assert)
-
-#include <exception>
-#include <stdexcept>
-#include <string>
-
-// C++ specific exception handling with call stack
-#define ecs_assert(condition, error_code, ...)\
-    if (!(condition)) {\
-    ecs_assert_log_(error_code, #condition, __FILE__, __LINE__, __VA_ARGS__);\
-    throw std::runtime_error(std::string("Assertion failed: ") + #condition + " at " + __FILE__ + ":" + std::to_string(__LINE__));\
-    }
-
 #endif
 
 /** @} */

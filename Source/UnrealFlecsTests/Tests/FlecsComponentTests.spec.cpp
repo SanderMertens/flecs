@@ -26,6 +26,7 @@ void FlecsComponentTests::Define()
 
 		It("Should register component using UScriptStruct", [&]()
 		{
+			TestTrue("World is valid", IsValid(WorldFixture->GetFlecsWorld()));
 			FFlecsEntityHandle TestEntity = WorldFixture->GetFlecsWorld()->CreateEntity();
 			TestEntity.Add(FTestUSTRUCTComponent::StaticStruct());
 			TestTrue("Component is registered", TestEntity.Has<FTestUSTRUCTComponent>());

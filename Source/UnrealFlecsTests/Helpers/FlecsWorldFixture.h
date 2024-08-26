@@ -1,5 +1,6 @@
 ﻿// Fill out your copyright notice in the Description page of Project Settings.
 
+// ReSharper disable CppExpressionWithoutSideEffects
 #pragma once
 
 #include "CoreMinimal.h"
@@ -10,8 +11,9 @@
 class FFlecsWorldFixture
 {
 public:
-	
-	FORCEINLINE explicit FFlecsWorldFixture(
+	static constexpr bool bInformEngineOfWorld = false;
+
+	FORCEINLINE_DEBUGGABLE explicit FFlecsWorldFixture(
 		const FFlecsWorldSettings& FlecsWorldSettings = FFlecsWorldSettings(TEXT("TestFlecsWorld"))
 		, const FURL& URL = FURL())
 	{
@@ -20,17 +22,19 @@ public:
 			return;
 		}
 
+		FlecsWorld = nullptr;
+
 		static uint32 WorldCounter = 0;
-		const FString WorldName = FString::Printf(TEXT("WorldFixture_%d"), WorldCounter++);
+		const FString WorldName = FString::Printf(TEXT("WorldFixture_%d"), ++WorldCounter);
  
-		if (UWorld* World = UWorld::CreateWorld(EWorldType::Game, true, *WorldName, GetTransientPackage()))
+		if (UWorld* World = UWorld::CreateWorld(EWorldType::Game, bInformEngineOfWorld, *WorldName, GetTransientPackage()))
 		{
 			FWorldContext& WorldContext = GEngine->CreateNewWorldContext(EWorldType::Game);
 			WorldContext.SetCurrentWorld(World);
  
 			World->InitializeActorsForPlay(URL);
 			
-			if (IsValid(World->GetWorldSettings()))
+			if LIKELY_IF(IsValid(World->GetWorldSettings()))
 			{
 				World->GetWorldSettings()->NotifyBeginPlay();
 				World->GetWorldSettings()->NotifyMatchStarted();
@@ -39,6 +43,7 @@ public:
 			World->BeginPlay();
 			
 			FlecsWorld = World->GetSubsystem<UFlecsWorldSubsystem>()->CreateWorld(TEXT("TestFlecsWorld"), FlecsWorldSettings);
+			solid_checkf(IsValid(FlecsWorld), TEXT("Failed to create Flecs world"));
  
 			WeakWorld = World;
 		}
@@ -46,7 +51,7 @@ public:
 
 	FORCEINLINE ~FFlecsWorldFixture()
 	{
-		if (WeakWorld.IsValid() && GEngine != nullptr)
+		if (WeakWorld.IsValid())
 		{
 			WeakWorld->BeginTearingDown();
 			
@@ -54,10 +59,17 @@ public:
 			{
 				It->Destroy();
 			}
- 
-			GEngine->DestroyWorldContext(WeakWorld.Get());
-			WeakWorld->DestroyWorld(false);
+
+			if (GEngine)
+			{
+				GEngine->DestroyWorldContext(WeakWorld.Get());
+			}
+			
+			WeakWorld->DestroyWorld(bInformEngineOfWorld);
 		}
+
+		delete FlecsWorld;
+		FlecsWorld = nullptr;
 	}
 
 	FORCEINLINE NO_DISCARD UWorld* GetWorld() const
@@ -71,7 +83,7 @@ public:
 	}
 
 private:
-	UFlecsWorld* FlecsWorld;
+	UFlecsWorld* FlecsWorld = nullptr;
 	TWeakObjectPtr<UWorld> WeakWorld;
 	
 }; // class FFlecsWorldFixture

@@ -70,3 +70,13 @@ public:
     
     flecs::id Id;
 }; // struct FFlecsId
+
+template<>
+struct TStructOpsTypeTraits<FFlecsId> : public TStructOpsTypeTraitsBase2<FFlecsId>
+{
+    enum
+    {
+        WithCopy = true,
+        WithIdenticalViaEquality = true
+    };
+};

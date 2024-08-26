@@ -12,8 +12,6 @@ public class FlecsLibrary : ModuleRules
         
         OptimizationLevel = OptimizationMode.Speed;
         
-        OptimizeCode = CodeOptimization.Always;
-        
         PublicIncludePaths.AddRange(
             new string[] {
                 ModuleDirectory + "/ThirdParty/Public",

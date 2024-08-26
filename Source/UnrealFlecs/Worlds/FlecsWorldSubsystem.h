@@ -97,6 +97,7 @@ public:
 	{
 		for (const UFlecsWorld* World : AutoTickableWorlds)
 		{
+			solid_checkf(IsValid(World), TEXT("World must be valid"));
 			World->Progress();
 		}
 	}
