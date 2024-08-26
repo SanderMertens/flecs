@@ -1224,6 +1224,7 @@ void Trigger_on_remove_trigger_after_table(void);
 void Trigger_on_add_tag(void);
 void Trigger_on_add_component(void);
 void Trigger_on_add_wildcard(void);
+void Trigger_on_add_wildcard_after_table(void);
 void Trigger_on_add_pair(void);
 void Trigger_on_add_pair_obj_wildcard(void);
 void Trigger_on_add_pair_pred_wildcard(void);
@@ -6838,6 +6839,10 @@ bake_test_case Trigger_testcases[] = {
         Trigger_on_add_wildcard
     },
     {
+        "on_add_wildcard_after_table",
+        Trigger_on_add_wildcard_after_table
+    },
+    {
         "on_add_pair",
         Trigger_on_add_pair
     },
@@ -10568,7 +10573,7 @@ static bake_test_suite suites[] = {
         "Trigger",
         NULL,
         NULL,
-        116,
+        117,
         Trigger_testcases
     },
     {
