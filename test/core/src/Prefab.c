@@ -4553,3 +4553,47 @@ void Prefab_disable_nested_ids(void) {
 
     ecs_fini(world);
 }
+
+void Prefab_prefab_w_children_w_isa_auto_override(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t child = ecs_insert(world, ecs_value(Position, {10, 20}));
+
+    ecs_entity_t base = ecs_new_w_id(world, EcsPrefab);
+
+    ecs_entity_t child_1 = ecs_new_w_pair(world, EcsIsA, child);
+    ecs_add_pair(world, child_1, EcsChildOf, base);
+    ecs_set_name(world, child_1, "child_1");
+
+    ecs_entity_t child_2 = ecs_new_w_pair(world, EcsIsA, child);
+    ecs_add_pair(world, child_2, EcsChildOf, base);
+    ecs_set_name(world, child_2, "child_2");
+
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
+
+    {
+        ecs_entity_t inst_child = ecs_lookup_from(world, inst, "child_1");
+        test_assert(inst_child != 0);
+        test_assert(ecs_owns(world, inst_child, Position));
+
+        const Position *p = ecs_get(world, inst_child, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+    }
+
+    {
+        ecs_entity_t inst_child = ecs_lookup_from(world, inst, "child_2");
+        test_assert(inst_child != 0);
+        test_assert(ecs_owns(world, inst_child, Position));
+
+        const Position *p = ecs_get(world, inst_child, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+    }
+
+    ecs_fini(world);
+}

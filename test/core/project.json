@@ -1846,7 +1846,8 @@
                 "override_exclusive_2_lvls",
                 "hierarchy_w_recycled_id",
                 "disable_ids",
-                "disable_nested_ids"
+                "disable_nested_ids",
+                "prefab_w_children_w_isa_auto_override"
             ]
         }, {
             "id": "World",
