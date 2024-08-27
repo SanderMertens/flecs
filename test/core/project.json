@@ -459,6 +459,7 @@
                 "get_ref_recycled",
                 "test_stable_ptr",
                 "has_after_remove",
+                "has_after_clear",
                 "get_after_remove",
                 "get_mut_after_remove",
                 "sparse_w_hole",

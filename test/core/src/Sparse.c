@@ -463,6 +463,25 @@ void Sparse_has_after_remove(void) {
     ecs_fini(world);
 }
 
+void Sparse_has_after_clear(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_add_id(world, ecs_id(Position), EcsSparse);
+
+    ecs_entity_t e = ecs_new(world);
+    test_bool(false, ecs_has(world, e, Position));
+
+    ecs_add(world, e, Position);
+    test_bool(true, ecs_has(world, e, Position));
+
+    ecs_clear(world, e);
+    test_bool(false, ecs_has(world, e, Position));
+
+    ecs_fini(world);
+}
+
 void Sparse_get_after_remove(void) {
     ecs_world_t *world = ecs_mini();
 
