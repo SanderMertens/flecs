@@ -5338,6 +5338,7 @@ void flecs_instantiate_children(
 
         diff.added.array[diff.added.count] = id;
         diff.added.count ++;
+        diff.added_flags |= flecs_id_flags_get(world, id);
     }
 
     /* Table must contain children of base */
@@ -5577,8 +5578,11 @@ void flecs_notify_on_add(
     const ecs_type_t *added = &diff->added;
 
     if (added->count) {
-        ecs_flags32_t table_flags = table->flags;
-        ecs_flags32_t diff_flags = diff->added_flags;
+        ecs_flags32_t diff_flags = 
+            diff->added_flags|(table->flags & EcsTableHasTraversable);
+        if (!diff_flags) {
+            return;
+        }
 
         if (sparse && (diff_flags & EcsTableHasSparse)) {
             flecs_sparse_on_add(world, table, row, count, added, construct);
@@ -5588,7 +5592,7 @@ void flecs_notify_on_add(
             flecs_union_on_add(world, table, row, count, added);
         }
 
-        if ((diff_flags & EcsTableHasOnAdd) || table_flags & (EcsTableHasIsA|EcsTableHasTraversable)) {
+        if (diff_flags & (EcsTableHasOnAdd|EcsTableHasTraversable)) {
             flecs_emit(world, world, set_mask, &(ecs_event_desc_t){
                 .event = EcsOnAdd,
                 .ids = added,
@@ -5616,8 +5620,11 @@ void flecs_notify_on_remove(
     ecs_assert(count != 0, ECS_INTERNAL_ERROR, NULL);
 
     if (removed->count) {
-        ecs_flags32_t table_flags = table->flags;
-        ecs_flags32_t diff_flags = diff->removed_flags;
+        ecs_flags32_t diff_flags = 
+            diff->removed_flags|(table->flags & EcsTableHasTraversable);
+        if (!diff_flags) {
+            return;
+        }
 
         if (diff_flags & EcsTableHasSparse) {
             flecs_sparse_on_remove(world, table, row, count, removed);
@@ -5627,9 +5634,7 @@ void flecs_notify_on_remove(
             flecs_union_on_remove(world, table, row, count, removed);
         }
 
-        if ((diff_flags & EcsTableHasOnRemove) || table_flags & (EcsTableHasIsA|
-            EcsTableHasTraversable))
-        {
+        if (diff_flags & (EcsTableHasOnRemove|EcsTableHasTraversable)) {
             flecs_emit(world, world, 0, &(ecs_event_desc_t) {
                 .event = EcsOnRemove,
                 .ids = removed,
@@ -35759,7 +35764,11 @@ ecs_flags32_t flecs_id_flags(
 {
     const ecs_id_record_t *idr = flecs_id_record_get(world, id);
     if (idr) {
-        return idr->flags;
+        ecs_flags32_t extra_flags = 0;
+        if (idr->flags & EcsIdOnInstantiateInherit) {
+            extra_flags |= EcsIdHasOnAdd|EcsIdHasOnRemove;
+        }
+        return idr->flags|extra_flags;
     }
     return flecs_id_record_event_flags(world, id);
 }
@@ -35786,6 +35795,10 @@ ecs_flags32_t flecs_id_flags_get(
         }
         if (id != ecs_pair(EcsWildcard, EcsWildcard)) {
             result |= flecs_id_flags(world, ecs_pair(EcsWildcard, EcsWildcard));
+        }
+
+        if (first == EcsIsA) {
+            result |= EcsIdHasOnAdd|EcsIdHasOnRemove;
         }
     } else if (id != EcsWildcard) {
         result |= flecs_id_flags(world, EcsWildcard);

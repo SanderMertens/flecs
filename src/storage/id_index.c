@@ -693,7 +693,11 @@ ecs_flags32_t flecs_id_flags(
 {
     const ecs_id_record_t *idr = flecs_id_record_get(world, id);
     if (idr) {
-        return idr->flags;
+        ecs_flags32_t extra_flags = 0;
+        if (idr->flags & EcsIdOnInstantiateInherit) {
+            extra_flags |= EcsIdHasOnAdd|EcsIdHasOnRemove;
+        }
+        return idr->flags|extra_flags;
     }
     return flecs_id_record_event_flags(world, id);
 }
@@ -720,6 +724,10 @@ ecs_flags32_t flecs_id_flags_get(
         }
         if (id != ecs_pair(EcsWildcard, EcsWildcard)) {
             result |= flecs_id_flags(world, ecs_pair(EcsWildcard, EcsWildcard));
+        }
+
+        if (first == EcsIsA) {
+            result |= EcsIdHasOnAdd|EcsIdHasOnRemove;
         }
     } else if (id != EcsWildcard) {
         result |= flecs_id_flags(world, EcsWildcard);
