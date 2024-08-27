@@ -85,6 +85,9 @@ void BitmaskTypes_bitmask_4_constants_manual_values(void);
 void BitmaskTypes_struct_w_bitmask(void);
 void BitmaskTypes_bitmask_w_short_notation(void);
 
+// Testsuite 'RuntimeTypes'
+void RuntimeTypes_simple(void);
+
 // Testsuite 'StructTypes'
 void StructTypes_i32(void);
 void StructTypes_i32_i32(void);
@@ -1232,6 +1235,13 @@ bake_test_case BitmaskTypes_testcases[] = {
     {
         "bitmask_w_short_notation",
         BitmaskTypes_bitmask_w_short_notation
+    }
+};
+
+bake_test_case RuntimeTypes_testcases[] = {
+    {
+        "simple",
+        RuntimeTypes_simple
     }
 };
 
@@ -4602,6 +4612,13 @@ static bake_test_suite suites[] = {
         BitmaskTypes_testcases
     },
     {
+        "RuntimeTypes",
+        NULL,
+        NULL,
+        1,
+        RuntimeTypes_testcases
+    },
+    {
         "StructTypes",
         NULL,
         NULL,
@@ -4723,5 +4740,5 @@ static bake_test_suite suites[] = {
 };
 
 int main(int argc, char *argv[]) {
-    return bake_test_run("meta", argc, argv, suites, 20);
+    return bake_test_run("meta", argc, argv, suites, 21);
 }

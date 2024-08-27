@@ -73,6 +73,13 @@
  */
 // #define FLECS_ACCURATE_COUNTERS
 
+/** @def FLECS_DISABLE_COUNTERS
+ * Disables counters used for statistics. Improves performance, but
+ * will prevent some features that rely on statistics from working,
+ * like the statistics pages in the explorer.
+ */
+// #define FLECS_DISABLE_COUNTERS
+
 /* Make sure provided configuration is valid */
 #if defined(FLECS_DEBUG) && defined(FLECS_NDEBUG)
 #error "invalid configuration: cannot both define FLECS_DEBUG and FLECS_NDEBUG"
@@ -199,6 +206,7 @@
 #define FLECS_HTTP          /**< Tiny HTTP server for connecting to remote UI */
 #define FLECS_REST          /**< REST API for querying application data */
 // #define FLECS_JOURNAL    /**< Journaling addon (disabled by default) */
+// #define FLECS_PERF_TRACE /**< Enable performance tracing (disabled by default) */
 #endif // ifndef FLECS_CUSTOM_BUILD
 
 /** @def FLECS_LOW_FOOTPRINT
@@ -392,12 +400,12 @@ extern "C" {
 #define EcsIdHasOnAdd                  (1u << 16) /* Same values as table flags */
 #define EcsIdHasOnRemove               (1u << 17) 
 #define EcsIdHasOnSet                  (1u << 18)
-#define EcsIdHasOnTableFill            (1u << 20)
-#define EcsIdHasOnTableEmpty           (1u << 21)
-#define EcsIdHasOnTableCreate          (1u << 22)
-#define EcsIdHasOnTableDelete          (1u << 23)
-#define EcsIdIsSparse                  (1u << 24)
-#define EcsIdIsUnion                   (1u << 25)
+#define EcsIdHasOnTableFill            (1u << 19)
+#define EcsIdHasOnTableEmpty           (1u << 20)
+#define EcsIdHasOnTableCreate          (1u << 21)
+#define EcsIdHasOnTableDelete          (1u << 22)
+#define EcsIdIsSparse                  (1u << 23)
+#define EcsIdIsUnion                   (1u << 24)
 #define EcsIdEventMask\
     (EcsIdHasOnAdd|EcsIdHasOnRemove|EcsIdHasOnSet|\
         EcsIdHasOnTableFill|EcsIdHasOnTableEmpty|EcsIdHasOnTableCreate|\
@@ -460,17 +468,18 @@ extern "C" {
 #define EcsQueryMatchOnlyThis         (1u << 12u) /* Query only has terms with $this source */
 #define EcsQueryMatchOnlySelf         (1u << 13u) /* Query has no terms with up traversal */
 #define EcsQueryMatchWildcards        (1u << 14u) /* Query matches wildcards */
-#define EcsQueryHasCondSet            (1u << 15u) /* Query has conditionally set fields */
-#define EcsQueryHasPred               (1u << 16u) /* Query has equality predicates */
-#define EcsQueryHasScopes             (1u << 17u) /* Query has query scopes */
-#define EcsQueryHasRefs               (1u << 18u) /* Query has terms with static source */
-#define EcsQueryHasOutTerms           (1u << 19u) /* Query has [out] terms */
-#define EcsQueryHasNonThisOutTerms    (1u << 20u) /* Query has [out] terms with no $this source */
-#define EcsQueryHasMonitor            (1u << 21u) /* Query has monitor for change detection */
-#define EcsQueryIsTrivial             (1u << 22u) /* Query can use trivial evaluation function */
-#define EcsQueryHasCacheable          (1u << 23u) /* Query has cacheable terms */
-#define EcsQueryIsCacheable           (1u << 24u) /* All terms of query are cacheable */
-#define EcsQueryHasTableThisVar       (1u << 25u) /* Does query have $this table var */
+#define EcsQueryMatchNothing          (1u << 15u) /* Query matches nothing */
+#define EcsQueryHasCondSet            (1u << 16u) /* Query has conditionally set fields */
+#define EcsQueryHasPred               (1u << 17u) /* Query has equality predicates */
+#define EcsQueryHasScopes             (1u << 18u) /* Query has query scopes */
+#define EcsQueryHasRefs               (1u << 19u) /* Query has terms with static source */
+#define EcsQueryHasOutTerms           (1u << 20u) /* Query has [out] terms */
+#define EcsQueryHasNonThisOutTerms    (1u << 21u) /* Query has [out] terms with no $this source */
+#define EcsQueryHasMonitor            (1u << 22u) /* Query has monitor for change detection */
+#define EcsQueryIsTrivial             (1u << 23u) /* Query can use trivial evaluation function */
+#define EcsQueryHasCacheable          (1u << 24u) /* Query has cacheable terms */
+#define EcsQueryIsCacheable           (1u << 25u) /* All terms of query are cacheable */
+#define EcsQueryHasTableThisVar       (1u << 26u) /* Does query have $this table var */
 #define EcsQueryCacheYieldEmptyTables (1u << 27u) /* Does query cache empty tables */
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -526,22 +535,24 @@ extern "C" {
 #define EcsTableHasOnAdd               (1u << 16u) /* Same values as id flags */
 #define EcsTableHasOnRemove            (1u << 17u)
 #define EcsTableHasOnSet               (1u << 18u)
-#define EcsTableHasOnTableFill         (1u << 20u)
-#define EcsTableHasOnTableEmpty        (1u << 21u)
-#define EcsTableHasOnTableCreate       (1u << 22u)
-#define EcsTableHasOnTableDelete       (1u << 23u)
-#define EcsTableHasSparse              (1u << 24u)
-#define EcsTableHasUnion               (1u << 25u)
+#define EcsTableHasOnTableFill         (1u << 19u)
+#define EcsTableHasOnTableEmpty        (1u << 20u)
+#define EcsTableHasOnTableCreate       (1u << 21u)
+#define EcsTableHasOnTableDelete       (1u << 22u)
+#define EcsTableHasSparse              (1u << 23u)
+#define EcsTableHasUnion               (1u << 24u)
 
 #define EcsTableHasTraversable         (1u << 26u)
 #define EcsTableMarkedForDelete        (1u << 30u)
 
 /* Composite table flags */
-#define EcsTableHasLifecycle        (EcsTableHasCtors | EcsTableHasDtors)
-#define EcsTableIsComplex           (EcsTableHasLifecycle | EcsTableHasToggle | EcsTableHasSparse)
-#define EcsTableHasAddActions       (EcsTableHasIsA | EcsTableHasCtors | EcsTableHasOnAdd | EcsTableHasOnSet)
-#define EcsTableHasRemoveActions    (EcsTableHasIsA | EcsTableHasDtors | EcsTableHasOnRemove)
-
+#define EcsTableHasLifecycle     (EcsTableHasCtors | EcsTableHasDtors)
+#define EcsTableIsComplex        (EcsTableHasLifecycle | EcsTableHasToggle | EcsTableHasSparse)
+#define EcsTableHasAddActions    (EcsTableHasIsA | EcsTableHasCtors | EcsTableHasOnAdd | EcsTableHasOnSet)
+#define EcsTableHasRemoveActions (EcsTableHasIsA | EcsTableHasDtors | EcsTableHasOnRemove)
+#define EcsTableEdgeFlags        (EcsTableHasOnAdd | EcsTableHasOnRemove | EcsTableHasSparse | EcsTableHasUnion)
+#define EcsTableAddEdgeFlags     (EcsTableHasOnAdd | EcsTableHasSparse | EcsTableHasUnion)
+#define EcsTableRemoveEdgeFlags  (EcsTableHasOnRemove | EcsTableHasSparse | EcsTableHasUnion)
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Aperiodic action flags (used by ecs_run_aperiodic)
@@ -810,6 +821,8 @@ typedef struct ecs_allocator_t ecs_allocator_t;
 #elif defined(ECS_TARGET_MSVC)
 #define ECS_ALIGNOF(T) (int64_t)__alignof(T)
 #elif defined(ECS_TARGET_GNU)
+#define ECS_ALIGNOF(T) (int64_t)__alignof__(T)
+#elif defined(ECS_TARGET_CLANG)
 #define ECS_ALIGNOF(T) (int64_t)__alignof__(T)
 #else
 #define ECS_ALIGNOF(T) ((int64_t)&((struct { char c; T d; } *)0)->d)
@@ -2424,6 +2437,12 @@ typedef
 char* (*ecs_os_api_module_to_path_t)(
     const char *module_id);
 
+/* Performance tracing */
+typedef void (*ecs_os_api_perf_trace_t)(
+    const char *filename,
+    size_t line,
+    const char *name);
+
 /* Prefix members of struct with 'ecs_' as some system headers may define
  * macros for functions like "strdup", "log" or "_free" */
 
@@ -2499,6 +2518,12 @@ typedef struct ecs_os_api_t {
     /* Overridable function that translates from a logical module id to a
      * path that contains module-specif resources or assets */
     ecs_os_api_module_to_path_t module_to_etc_;    /**< module_to_etc callback. */
+
+    /* Performance tracing */
+    ecs_os_api_perf_trace_t perf_trace_push_;
+
+    /* Performance tracing */
+    ecs_os_api_perf_trace_t perf_trace_pop_;
 
     int32_t log_level_;                            /**< Tracing level. */
     int32_t log_indent_;                           /**< Tracing indentation level. */
@@ -2689,6 +2714,7 @@ void ecs_os_set_api_defaults(void);
 #define ecs_os_now() ecs_os_api.now_()
 #define ecs_os_get_time(time_out) ecs_os_api.get_time_(time_out)
 
+#ifndef FLECS_DISABLE_COUNTERS
 #ifdef FLECS_ACCURATE_COUNTERS
 #define ecs_os_inc(v)  (ecs_os_ainc(v))
 #define ecs_os_linc(v) (ecs_os_lainc(v))
@@ -2700,6 +2726,13 @@ void ecs_os_set_api_defaults(void);
 #define ecs_os_dec(v)  (--(*v))
 #define ecs_os_ldec(v) (--(*v))
 #endif
+#else
+#define ecs_os_inc(v)
+#define ecs_os_linc(v)
+#define ecs_os_dec(v)
+#define ecs_os_ldec(v)
+#endif
+
 
 #ifdef ECS_TARGET_MINGW
 /* mingw bug: without this a conversion error is thrown, but isnan/isinf should
@@ -2809,6 +2842,25 @@ FLECS_API
 void ecs_os_strset(
     char **str, 
     const char *value);
+
+/* Profile tracing */
+#ifdef FLECS_PERF_TRACE
+#define ecs_os_perf_trace_push(name) ecs_os_perf_trace_push_(__FILE__, __LINE__, name)
+#define ecs_os_perf_trace_pop(name) ecs_os_perf_trace_pop_(__FILE__, __LINE__, name)
+#else
+#define ecs_os_perf_trace_push(name)
+#define ecs_os_perf_trace_pop(name)
+#endif
+
+void ecs_os_perf_trace_push_(
+    const char *file,
+    size_t line,
+    const char *name);
+
+void ecs_os_perf_trace_pop_(
+    const char *file,
+    size_t line,
+    const char *name);
 
 /** Sleep with floating point time. 
  * 
@@ -3391,6 +3443,7 @@ struct ecs_query_t {
 
     /* Bitmasks for quick field information lookups */
     ecs_termset_t fixed_fields; /**< Fields with a fixed source */
+    ecs_termset_t var_fields;   /**< Fields with non-$this variable source */
     ecs_termset_t static_id_fields; /**< Fields with a static (component) id */
     ecs_termset_t data_fields;  /**< Fields that have data */
     ecs_termset_t write_fields; /**< Fields that write data */
@@ -3486,14 +3539,11 @@ struct ecs_type_hooks_t {
      * destructor is invoked. */
     ecs_iter_action_t on_remove;
 
-    void *ctx;                         /**< User defined context */
-    void *binding_ctx;                 /**< Language binding context */
-    void *lifecycle_ctx;               /**< Component lifecycle context (see meta add-on)*/
+    void *ctx;                       /**< User defined context */
+    void *binding_ctx;               /**< Language binding context */
 
-    ecs_ctx_free_t ctx_free;           /**< Callback to free ctx */
-    ecs_ctx_free_t binding_ctx_free;   /**< Callback to free binding_ctx */
-    ecs_ctx_free_t lifecycle_ctx_free; /**< Callback to free lifecycle_ctx */
-
+    ecs_ctx_free_t ctx_free;         /**< Callback to free ctx */
+    ecs_ctx_free_t binding_ctx_free; /**< Callback to free binding_ctx */
 };
 
 /** Type that contains component information (passed to ctors/dtors/...)
@@ -4514,6 +4564,7 @@ typedef struct ecs_world_info_t {
 
     int64_t frame_count_total;        /**< Total number of frames */
     int64_t merge_count_total;        /**< Total number of merges */
+    int64_t eval_comp_monitors_total; /**< Total number of monitor evaluations */
     int64_t rematch_count_total;      /**< Total number of rematches */
 
     int64_t id_create_total;          /**< Total number of times a new id was created */
@@ -12117,6 +12168,9 @@ typedef struct ecs_system_t {
 
     /** Is system ran in immediate mode */
     bool immediate;
+
+    /** Cached system name (for perf tracing) */
+    const char *name;
 
     /** Userdata for system */
     void *ctx;
@@ -20471,6 +20525,7 @@ struct world {
     }
 
     world& operator=(const world& obj) noexcept {
+        release();
         this->world_ = obj.world_;
         flecs_poly_claim(this->world_);
         return *this;
@@ -20482,12 +20537,15 @@ struct world {
     }
 
     world& operator=(world&& obj) noexcept {
+        release();
         world_ = obj.world_;
         obj.world_ = nullptr;
         return *this;
     }
 
-    ~world() {
+    /* Releases the underlying world object. If this is the last handle, the world
+       will be finalized. */
+    void release() {
         if (world_) {
             if (!flecs_poly_release(world_)) {
                 if (ecs_stage_get_id(world_) == -1) {
@@ -20500,7 +20558,12 @@ struct world {
                     ecs_fini(world_);
                 }
             }
-        }
+            world_ = nullptr;
+        }        
+    }
+
+    ~world() {
+        release();
     }
 
     /* Implicit conversion to world_t* */
@@ -25653,6 +25716,9 @@ private:
     void populate_self(const ecs_iter_t *iter, size_t index, T, Targs... comps) {
         fields_[index].ptr = ecs_field_w_size(iter, sizeof(A), 
             static_cast<int8_t>(index));
+        // fields_[index].is_ref = iter->sources[index] != 0;
+        fields_[index].is_ref = false;
+        ecs_assert(iter->sources[index] == 0, ECS_INTERNAL_ERROR, NULL);
         populate_self(iter, index + 1, comps ...);
     }
 
@@ -25674,7 +25740,8 @@ struct each_field { };
 // Base class
 struct each_column_base {
     each_column_base(const _::field_ptr& field, size_t row) 
-        : field_(field), row_(row) { }
+        : field_(field), row_(row) {
+    }
 
 protected:
     const _::field_ptr& field_;
@@ -25770,7 +25837,6 @@ struct each_ref_field : public each_field<T> {
         }
     }
 };
-
 
 // Type that handles passing components to each callbacks
 template <typename Func, typename ... Components>
@@ -26374,6 +26440,7 @@ struct entity_with_delegate_impl<arg_list<Args ...>> {
                 elem = store_added(added, elem, prev, next, w.id<Args>()),
                 prev = next, 0
             )... });
+
             (void)dummy_before;
 
             // If table is different, move entity straight to it
@@ -26486,7 +26553,8 @@ inline const char* type_name() {
     static const size_t len = ECS_FUNC_TYPE_LEN(const char*, type_name, ECS_FUNC_NAME);
     static char result[len + 1] = {};
     static const size_t front_len = ECS_FUNC_NAME_FRONT(const char*, type_name);
-    return ecs_cpp_get_type_name(result, ECS_FUNC_NAME, len, front_len);
+    static const char* cppTypeName = ecs_cpp_get_type_name(result, ECS_FUNC_NAME, len, front_len);
+    return cppTypeName;
 }
 #else
 #error "implicit component registration not supported"
@@ -26498,7 +26566,8 @@ template <typename T>
 inline const char* symbol_name() {
     static const size_t len = ECS_FUNC_TYPE_LEN(const char*, symbol_name, ECS_FUNC_NAME);
     static char result[len + 1] = {};
-    return ecs_cpp_get_symbol_name(result, type_name<T>(), len);
+    static const char* cppSymbolName = ecs_cpp_get_symbol_name(result, type_name<T>(), len);
+    return cppSymbolName;
 }
 
 template <> inline const char* symbol_name<uint8_t>() {
@@ -27457,9 +27526,13 @@ struct ref {
         return get();
     }
 
-    /** implicit conversion to bool.  return true if there is a valid T* being referred to **/
-    operator bool() {       
+    bool has() {
         return !!try_get();
+    }
+
+    /** implicit conversion to bool.  return true if there is a valid T* being referred to **/
+    operator bool() {
+        return has();
     }
 
     flecs::entity entity() const;
@@ -29467,15 +29540,6 @@ struct query_builder_i : term_builder_i<Base> {
     Base& with(entity_t r, const char *o) {
         this->term();
         *this->term_ = flecs::term(r).second(o);
-        if (this->term_->inout == EcsInOutDefault) {
-            this->inout_none();
-        }
-        return *this;
-    }
-
-    Base& with(const char *r, entity_t o) {
-        this->term();
-        *this->term_ = flecs::term().first(r).second(o);
         if (this->term_->inout == EcsInOutDefault) {
             this->inout_none();
         }

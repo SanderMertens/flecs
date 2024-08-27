@@ -259,14 +259,22 @@ int flecs_init_type(
 
     EcsType *meta_type = ecs_ensure(world, type, EcsType);
     if (meta_type->kind == 0) {
+        ecs_type_info_t *ti = flecs_type_info_ensure(world, type);
         meta_type->existing = ecs_has(world, type, EcsComponent);
+
+        if(!meta_type->existing && kind == EcsStructType){
+            ti->hooks.dtor = flecs_meta_rtt_dtor;
+            ti->hooks.ctor = flecs_meta_rtt_ctor;
+            ti->hooks.copy = flecs_meta_rtt_copy;
+            ti->hooks.move = flecs_meta_rtt_move;
+        }
 
         /* Ensure that component has a default constructor, to prevent crashing
          * serializers on uninitialized values. */
-        ecs_type_info_t *ti = flecs_type_info_ensure(world, type);
         if (!ti->hooks.ctor) {
             ti->hooks.ctor = flecs_default_ctor;
         }
+
     } else {
         if (meta_type->kind != kind) {
             ecs_err("type '%s' reregistered as '%s' (was '%s')", 

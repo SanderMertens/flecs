@@ -34,6 +34,11 @@ int flecs_expr_ser_primitive(
     ecs_strbuf_t *str,
     bool is_expr);
 
+void flecs_meta_rtt_dtor(void *ptr, int32_t count, const ecs_type_info_t *type_info); 
+void flecs_meta_rtt_ctor(void *ptr, int32_t count, const ecs_type_info_t *type_info); 
+void flecs_meta_rtt_move(void *dst_ptr, void *src_ptr, int32_t count, const ecs_type_info_t *type_info);
+void flecs_meta_rtt_copy(void *dst_ptr, const void *src_ptr, int32_t count, const ecs_type_info_t *type_info);
+
 #endif
 
 #endif

@@ -1067,8 +1067,10 @@ void ComponentLifecycle_dtor_component_new_obj_pair_id_while_fini(void);
 void ComponentLifecycle_ctor_move_dtor_after_resize(void);
 void ComponentLifecycle_ctx_free(void);
 void ComponentLifecycle_binding_ctx_free(void);
+void ComponentLifecycle_lifecycle_ctx_free(void);
 void ComponentLifecycle_ctx_free_after_delete_component(void);
 void ComponentLifecycle_binding_ctx_free_after_delete_component(void);
+void ComponentLifecycle_lifecycle_ctx_free_after_delete_component(void);
 void ComponentLifecycle_on_add_ctx(void);
 void ComponentLifecycle_on_remove_ctx(void);
 void ComponentLifecycle_on_set_ctx(void);
@@ -6284,12 +6286,20 @@ bake_test_case ComponentLifecycle_testcases[] = {
         ComponentLifecycle_binding_ctx_free
     },
     {
+        "lifecycle_ctx_free",
+        ComponentLifecycle_lifecycle_ctx_free
+    },
+    {
         "ctx_free_after_delete_component",
         ComponentLifecycle_ctx_free_after_delete_component
     },
     {
         "binding_ctx_free_after_delete_component",
         ComponentLifecycle_binding_ctx_free_after_delete_component
+    },
+    {
+        "lifecycle_ctx_free_after_delete_component",
+        ComponentLifecycle_lifecycle_ctx_free_after_delete_component
     },
     {
         "on_add_ctx",

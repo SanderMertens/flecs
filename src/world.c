@@ -1213,8 +1213,10 @@ void ecs_set_hooks_id(
 
     if (h->ctx) ti->hooks.ctx = h->ctx;
     if (h->binding_ctx) ti->hooks.binding_ctx = h->binding_ctx;
+    if (h->lifecycle_ctx) ti->hooks.lifecycle_ctx = h->lifecycle_ctx;
     if (h->ctx_free) ti->hooks.ctx_free = h->ctx_free;
     if (h->binding_ctx_free) ti->hooks.binding_ctx_free = h->binding_ctx_free;
+    if (h->lifecycle_ctx_free) ti->hooks.lifecycle_ctx_free = h->lifecycle_ctx_free;
 
     /* If no constructor is set, invoking any of the other lifecycle actions
      * is not safe as they will potentially access uninitialized memory. For
@@ -1755,6 +1757,9 @@ void flecs_type_info_fini(
     }
     if (ti->hooks.binding_ctx_free) {
         ti->hooks.binding_ctx_free(ti->hooks.binding_ctx);
+    }
+    if (ti->hooks.lifecycle_ctx_free) {
+        ti->hooks.lifecycle_ctx_free(ti->hooks.lifecycle_ctx);
     }
     if (ti->name) {
         /* Safe to cast away const, world has ownership over string */

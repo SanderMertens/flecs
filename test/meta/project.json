@@ -95,6 +95,11 @@
                 "bitmask_w_short_notation"
             ]
         }, {
+            "id": "RuntimeTypes",
+            "testcases": [
+                "simple"
+            ]            
+        }, {
             "id": "StructTypes",
             "testcases": [
                 "i32",
