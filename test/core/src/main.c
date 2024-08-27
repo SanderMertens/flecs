@@ -432,6 +432,7 @@ void Sparse_set_recycled(void);
 void Sparse_get_ref_recycled(void);
 void Sparse_test_stable_ptr(void);
 void Sparse_has_after_remove(void);
+void Sparse_has_after_clear(void);
 void Sparse_get_after_remove(void);
 void Sparse_get_mut_after_remove(void);
 void Sparse_sparse_w_hole(void);
@@ -3797,6 +3798,10 @@ bake_test_case Sparse_testcases[] = {
     {
         "has_after_remove",
         Sparse_has_after_remove
+    },
+    {
+        "has_after_clear",
+        Sparse_has_after_clear
     },
     {
         "get_after_remove",
@@ -10581,7 +10586,7 @@ static bake_test_suite suites[] = {
         "Sparse",
         NULL,
         NULL,
-        70,
+        71,
         Sparse_testcases
     },
     {

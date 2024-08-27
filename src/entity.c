@@ -654,16 +654,17 @@ void flecs_notify_on_remove(
 
     if (removed->count) {
         ecs_flags32_t table_flags = table->flags;
+        ecs_flags32_t diff_flags = diff->removed_flags;
 
-        if (table_flags & EcsTableHasSparse) {
+        if (diff_flags & EcsTableHasSparse) {
             flecs_sparse_on_remove(world, table, row, count, removed);
         }
     
-        if (table_flags & EcsTableHasUnion) {
+        if (diff_flags & EcsTableHasUnion) {
             flecs_union_on_remove(world, table, row, count, removed);
         }
 
-        if (table_flags & (EcsTableHasOnRemove|EcsTableHasIsA|
+        if ((diff_flags & EcsTableHasOnRemove) || table_flags & (EcsTableHasIsA|
             EcsTableHasTraversable))
         {
             flecs_emit(world, world, 0, &(ecs_event_desc_t) {
@@ -2204,7 +2205,8 @@ void ecs_clear(
     ecs_table_t *table = r->table;
     if (table) {
         ecs_table_diff_t diff = {
-            .removed = table->type
+            .removed = table->type,
+            .removed_flags = table->flags & EcsTableRemoveEdgeFlags
         };
 
         flecs_delete_entity(world, r, &diff);
@@ -2777,7 +2779,8 @@ void ecs_delete(
 
         if (table) {
             ecs_table_diff_t diff = {
-                .removed = table->type
+                .removed = table->type,
+                .removed_flags = table->flags & EcsTableRemoveEdgeFlags
             };
 
             flecs_delete_entity(world, r, &diff);
@@ -2870,7 +2873,7 @@ ecs_entity_t ecs_clone(
     ecs_type_t dst_type = dst_table->type;
     ecs_table_diff_t diff = {
         .added = dst_type,
-        .added_flags = dst_table->flags & EcsTableEdgeFlags
+        .added_flags = dst_table->flags & EcsTableAddEdgeFlags
     };
     ecs_record_t *dst_r = flecs_entities_get(world, dst);
     flecs_new_entity(world, dst, dst_r, dst_table, &diff, true, 0);
@@ -4798,6 +4801,7 @@ void flecs_cmd_batch_for_entity(
                     &diff->removed, ecs_id_t, table->type.count);
                 ecs_os_memcpy_n(ids, table->type.array, ecs_id_t, 
                     table->type.count);
+                diff->removed_flags |= table->flags & EcsTableRemoveEdgeFlags;
             }
             table = &world->store.root;
             world->info.cmd.batched_command_count ++;

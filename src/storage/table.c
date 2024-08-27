@@ -650,8 +650,8 @@ void flecs_table_add_trigger_flags(
 
     table->flags |= flags;
 
-    /* Add flag to incoming edges for id */
-    if (id) {
+    /* Add observer flags to incoming edges for id */
+    if (id && ((flags == EcsTableHasOnAdd) || (flags == EcsTableHasOnRemove))) {
         flecs_table_edges_add_flags(world, table, id, flags);
     }
 }
@@ -667,6 +667,7 @@ void flecs_table_notify_on_remove(
     if (count) {
         ecs_table_diff_t diff = ECS_TABLE_DIFF_INIT;
         diff.removed = table->type;
+        diff.removed_flags = table->flags & EcsTableRemoveEdgeFlags;
         flecs_notify_on_remove(world, table, NULL, 0, count, &diff);
     }
 }

@@ -1184,21 +1184,41 @@ void flecs_table_edges_add_flags(
     ecs_graph_edge_hdr_t *node_refs = &table_node->refs;
 
     /* Add flags to incoming matching add edges */
-    ecs_graph_edge_hdr_t *next, *cur = node_refs->next;
-    if (cur) {
-        do {
-            ecs_graph_edge_t *edge = (ecs_graph_edge_t*)cur;
-            if ((id == EcsAny) || ecs_id_match(edge->id, id)) {
+    if (flags == EcsTableHasOnAdd) {
+        ecs_graph_edge_hdr_t *next, *cur = node_refs->next;
+        if (cur) {
+            do {
+                ecs_graph_edge_t *edge = (ecs_graph_edge_t*)cur;
+                if ((id == EcsAny) || ecs_id_match(edge->id, id)) {
+                    if (!edge->diff) {
+                        edge->diff = flecs_bcalloc(&world->allocators.table_diff);
+                        edge->diff->added.array = flecs_walloc_t(world, ecs_id_t);
+                        edge->diff->added.count = 1;
+                        edge->diff->added.array[0] = edge->id;
+                    }
+                    edge->diff->added_flags |= EcsTableHasOnAdd;
+                }
+                next = cur->next;
+            } while ((cur = next));
+        }
+    }
+
+    /* Add flags to outgoing matching remove edges */
+    if (flags == EcsTableHasOnRemove) {
+        ecs_map_iter_t it = ecs_map_iter(table->node.remove.hi);
+        while (ecs_map_next(&it)) {
+            ecs_id_t edge_id = ecs_map_key(&it);
+            if ((id == EcsAny) || ecs_id_match(edge_id, id)) {
+                ecs_graph_edge_t *edge = ecs_map_ptr(&it);
                 if (!edge->diff) {
                     edge->diff = flecs_bcalloc(&world->allocators.table_diff);
-                    edge->diff->added.array = flecs_walloc_t(world, ecs_id_t);
-                    edge->diff->added.count = 1;
-                    edge->diff->added.array[0] = edge->id;
+                    edge->diff->removed.array = flecs_walloc_t(world, ecs_id_t);
+                    edge->diff->removed.count = 1;
+                    edge->diff->removed.array[0] = edge->id;
                 }
-                edge->diff->added_flags |= flags;
+                edge->diff->removed_flags |= EcsTableHasOnRemove;
             }
-            next = cur->next;
-        } while ((cur = next));
+        }
     }
 }
 
