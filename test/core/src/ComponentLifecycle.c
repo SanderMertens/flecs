@@ -175,7 +175,7 @@ static void ecs_on_add(Position)(ecs_iter_t *it) {
     }
 }
 
-static void on_add_position_emplace(ecs_iter_t *it) {
+static void on_add_position_count(ecs_iter_t *it) {
     on_add_position += it->count;
 }
 
@@ -1254,7 +1254,7 @@ void ComponentLifecycle_on_add_w_emplace(void) {
     ECS_COMPONENT(world, Position);
 
     ecs_set_hooks(world, Position, {
-        .on_add = on_add_position_emplace
+        .on_add = on_add_position_count
     });
 
     ecs_entity_t e = ecs_new(world);
@@ -1276,7 +1276,7 @@ void ComponentLifecycle_on_add_w_emplace_existing(void) {
 
     ecs_set_hooks(world, Position, {
         .ctor = ecs_ctor(Position),
-        .on_add = on_add_position_emplace
+        .on_add = on_add_position_count
     });
 
     ecs_entity_t e = ecs_new_w(world, Velocity);
@@ -1298,7 +1298,7 @@ void ComponentLifecycle_on_add_w_emplace_defer(void) {
     ECS_COMPONENT(world, Position);
 
     ecs_set_hooks(world, Position, {
-        .on_add = on_add_position_emplace
+        .on_add = on_add_position_count
     });
 
     ecs_entity_t e = ecs_new(world);
@@ -3403,7 +3403,7 @@ void ComponentLifecycle_new_w_table_on_add_hook(void) {
     ECS_TAG(world, Bar);
 
     ecs_set_hooks(world, Position, {
-        .on_add = ecs_on_add(Position)
+        .on_add = on_add_position_count
     });
 
     ecs_table_t *table = ecs_table_add_id(world, NULL, ecs_id(Position));
