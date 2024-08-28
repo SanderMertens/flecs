@@ -1638,7 +1638,7 @@ void SerializeIterToJson_serialize_w_alert(void) {
     desc.serialize_values = false;
     char *json = ecs_iter_to_json(&it, &desc);
     test_assert(json != NULL);
-    test_json(json, "{\"results\":[{\"name\":\"e1\", \"fields\":{}}, {\"name\":\"e2\", \"alerts\":true, \"fields\":{}}]}");
+    test_json(json, "{\"results\":[{\"name\":\"e1\", \"fields\":{}}, {\"name\":\"e2\", \"has_alerts\":true, \"fields\":{}}]}");
 
     ecs_os_free(json);
 

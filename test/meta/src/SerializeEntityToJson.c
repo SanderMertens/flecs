@@ -944,7 +944,7 @@ void SerializeEntityToJson_serialize_w_1_alert(void) {
     char *json = ecs_entity_to_json(world, e1, &desc);
     test_assert(json != NULL);
 
-    test_json(json, "{\"name\":\"e1\", \"alerts\":true, \"components\":{\"flecs.alerts.AlertsActive\":{\"info_count\":0, \"warning_count\":0, \"error_count\":1}, \"Position\":null}, \"alerts\":[{\"alert\":\"position_without_velocity.e1_alert\", \"message\":\"e1 has Position but not Velocity\", \"severity\":\"Error\"}]}");
+    test_json(json, "{\"name\":\"e1\", \"has_alerts\":true, \"components\":{\"flecs.alerts.AlertsActive\":{\"info_count\":0, \"warning_count\":0, \"error_count\":1}, \"Position\":null}, \"alerts\":[{\"alert\":\"position_without_velocity.e1_alert\", \"message\":\"e1 has Position but not Velocity\", \"severity\":\"Error\"}]}");
     ecs_os_free(json);
 
     ecs_fini(world);
@@ -991,8 +991,8 @@ void SerializeEntityToJson_serialize_w_2_alerts(void) {
     test_assert(json != NULL);
 
     /* Since alerts can come in any order, test against the two possibilities: */
-    const char* alerts_option1 = "{\"name\":\"e1\", \"alerts\":true, \"components\":{\"flecs.alerts.AlertsActive\":{\"info_count\":0, \"warning_count\":0, \"error_count\":2}, \"Position\":null}, \"alerts\":[{\"alert\":\"position_without_velocity.e1_alert_1\", \"message\":\"e1 has Position but not Velocity\", \"severity\":\"Error\"}, {\"alert\":\"position_without_mass.e1_alert_2\", \"message\":\"e1 has Position but not Mass\", \"severity\":\"Error\"}]}";
-    const char* alerts_option2 = "{\"name\":\"e1\", \"alerts\":true, \"components\":{\"flecs.alerts.AlertsActive\":{\"info_count\":0, \"warning_count\":0, \"error_count\":2}, \"Position\":null}, \"alerts\":[{\"alert\":\"position_without_mass.e1_alert_2\", \"message\":\"e1 has Position but not Mass\", \"severity\":\"Error\"}, {\"alert\":\"position_without_velocity.e1_alert_1\", \"message\":\"e1 has Position but not Velocity\", \"severity\":\"Error\"}]}";
+    const char* alerts_option1 = "{\"name\":\"e1\", \"has_alerts\":true, \"components\":{\"flecs.alerts.AlertsActive\":{\"info_count\":0, \"warning_count\":0, \"error_count\":2}, \"Position\":null}, \"alerts\":[{\"alert\":\"position_without_velocity.e1_alert_1\", \"message\":\"e1 has Position but not Velocity\", \"severity\":\"Error\"}, {\"alert\":\"position_without_mass.e1_alert_2\", \"message\":\"e1 has Position but not Mass\", \"severity\":\"Error\"}]}";
+    const char* alerts_option2 = "{\"name\":\"e1\", \"has_alerts\":true, \"components\":{\"flecs.alerts.AlertsActive\":{\"info_count\":0, \"warning_count\":0, \"error_count\":2}, \"Position\":null}, \"alerts\":[{\"alert\":\"position_without_mass.e1_alert_2\", \"message\":\"e1 has Position but not Mass\", \"severity\":\"Error\"}, {\"alert\":\"position_without_velocity.e1_alert_1\", \"message\":\"e1 has Position but not Velocity\", \"severity\":\"Error\"}]}";
 
     if(ecs_os_strcmp(json, alerts_option1) && ecs_os_strcmp(json, alerts_option2)) {
         // neither matched, so throw an assert.
@@ -1057,7 +1057,7 @@ void SerializeEntityToJson_serialize_w_child_alerts(void) {
     char *json = ecs_entity_to_json(world, e1, &desc);
     test_assert(json != NULL);
 
-    test_json(json, "{\"name\":\"e1\", \"alerts\":true, \"components\":{\"flecs.alerts.AlertsActive\":{\"info_count\":0, \"warning_count\":0, \"error_count\":1}, \"Position\":null}, \"alerts\":[{\"alert\":\"position_without_velocity.e1_alert\", \"message\":\"e1 has Position but not Velocity\", \"severity\":\"Error\"}, {\"alert\":\"position_without_velocity.child1_alert\", \"message\":\"e1.child1 has Position but not Velocity\", \"severity\":\"Error\", \"path\":\"e1.child1\"}, {\"alert\":\"position_without_velocity.grandchild1_alert\", \"message\":\"e1.child1.grandchild1 has Position but not Velocity\", \"severity\":\"Error\", \"path\":\"e1.child1.grandchild1\"}, {\"alert\":\"position_without_velocity.child2_alert\", \"message\":\"e1.child2 has Position but not Velocity\", \"severity\":\"Error\", \"path\":\"e1.child2\"}]}");
+    test_json(json, "{\"name\":\"e1\", \"has_alerts\":true, \"components\":{\"flecs.alerts.AlertsActive\":{\"info_count\":0, \"warning_count\":0, \"error_count\":1}, \"Position\":null}, \"alerts\":[{\"alert\":\"position_without_velocity.e1_alert\", \"message\":\"e1 has Position but not Velocity\", \"severity\":\"Error\"}, {\"alert\":\"position_without_velocity.child1_alert\", \"message\":\"e1.child1 has Position but not Velocity\", \"severity\":\"Error\", \"path\":\"e1.child1\"}, {\"alert\":\"position_without_velocity.grandchild1_alert\", \"message\":\"e1.child1.grandchild1 has Position but not Velocity\", \"severity\":\"Error\", \"path\":\"e1.child1.grandchild1\"}, {\"alert\":\"position_without_velocity.child2_alert\", \"message\":\"e1.child2 has Position but not Velocity\", \"severity\":\"Error\", \"path\":\"e1.child2\"}]}");
     ecs_os_free(json);
 
     ecs_fini(world);
@@ -1098,7 +1098,7 @@ void SerializeEntityToJson_serialize_w_severity_filter_alert(void) {
     char *json = ecs_entity_to_json(world, e1, &desc);
     test_assert(json != NULL);
 
-    test_json(json, "{\"name\":\"e1\", \"alerts\":true, \"tags\":[\"Tag\"], \"components\":{\"flecs.alerts.AlertsActive\":{\"info_count\":0, \"warning_count\":0, \"error_count\":1}, \"Position\":null}, \"alerts\":[{\"alert\":\"position_without_velocity.e1_alert\", \"message\":\"e1 has Position but not Velocity\", \"severity\":\"Warning\"}]}");
+    test_json(json, "{\"name\":\"e1\", \"has_alerts\":true, \"tags\":[\"Tag\"], \"components\":{\"flecs.alerts.AlertsActive\":{\"info_count\":0, \"warning_count\":0, \"error_count\":1}, \"Position\":null}, \"alerts\":[{\"alert\":\"position_without_velocity.e1_alert\", \"message\":\"e1 has Position but not Velocity\", \"severity\":\"Warning\"}]}");
     ecs_os_free(json);
 
     ecs_fini(world);
@@ -1154,7 +1154,7 @@ void SerializeEntityToJson_serialize_w_alerts_no_message(void) {
     char *json = ecs_entity_to_json(world, e1, &desc);
     test_assert(json != NULL);
 
-    test_json(json, "{\"name\":\"e1\", \"alerts\":true, \"tags\":[\"Tag\"], \"components\":{\"flecs.alerts.AlertsActive\":{\"info_count\":0, \"warning_count\":0, \"error_count\":1}, \"Position\":null}, \"alerts\":[{\"alert\":\"position_without_velocity.e1_alert\", \"severity\":\"Error\"}]}");
+    test_json(json, "{\"name\":\"e1\", \"has_alerts\":true, \"tags\":[\"Tag\"], \"components\":{\"flecs.alerts.AlertsActive\":{\"info_count\":0, \"warning_count\":0, \"error_count\":1}, \"Position\":null}, \"alerts\":[{\"alert\":\"position_without_velocity.e1_alert\", \"severity\":\"Error\"}]}");
     ecs_os_free(json);
 
     ecs_fini(world);

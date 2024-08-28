@@ -40808,7 +40808,7 @@ const char* flecs_entity_from_json(
         return NULL;
     }
 
-    if (!ecs_os_strcmp(token, "alerts")) {
+    if (!ecs_os_strcmp(token, "has_alerts")) {
         json = flecs_json_expect(json, JsonBoolean, token, desc);
         if (!json) {
             goto error;
@@ -42871,7 +42871,7 @@ void flecs_json_serialize_iter_this(
 #endif
 
     if (this_data->has_alerts) {
-        flecs_json_memberl(buf, "alerts");
+        flecs_json_memberl(buf, "has_alerts");
         flecs_json_true(buf);
     }
 }
