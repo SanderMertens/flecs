@@ -463,3 +463,69 @@ void New_new_w_type_w_with_defer_w_scope(void) {
 
     ecs_fini(world);
 }
+
+void New_new_w_table(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    ecs_table_t *table = ecs_table_add_id(world, NULL, Foo);
+    table = ecs_table_add_id(world, table, Bar);
+
+    ecs_entity_t e = ecs_new_w_table(world, table);
+    test_assert(e != 0);
+    test_assert(ecs_has(world, e, Foo));
+    test_assert(ecs_has(world, e, Bar));
+    test_assert(table == ecs_get_table(world, e));
+
+    ecs_fini(world);
+}
+
+void New_new_w_null_table(void) {
+    install_test_abort();
+    ecs_world_t *world = ecs_mini();
+
+    test_expect_abort();
+    ecs_new_w_table(world, NULL);
+}
+
+void New_new_w_table_component(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Bar);
+
+    ecs_table_t *table = ecs_table_add_id(world, NULL, ecs_id(Position));
+    table = ecs_table_add_id(world, table, Bar);
+
+    ecs_entity_t e = ecs_new_w_table(world, table);
+    test_assert(e != 0);
+    test_assert(ecs_has(world, e, Position));
+    test_assert(ecs_has(world, e, Bar));
+    test_assert(ecs_get(world, e, Position) != NULL);
+    test_assert(table == ecs_get_table(world, e));
+
+    ecs_fini(world);
+}
+
+void New_new_w_table_sparse_component(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Bar);
+
+    ecs_add_id(world, ecs_id(Position), EcsSparse);
+
+    ecs_table_t *table = ecs_table_add_id(world, NULL, ecs_id(Position));
+    table = ecs_table_add_id(world, table, Bar);
+
+    ecs_entity_t e = ecs_new_w_table(world, table);
+    test_assert(e != 0);
+    test_assert(ecs_has(world, e, Position));
+    test_assert(ecs_has(world, e, Bar));
+    test_assert(ecs_get(world, e, Position) != NULL);
+    test_assert(table == ecs_get_table(world, e));
+
+    ecs_fini(world);
+}

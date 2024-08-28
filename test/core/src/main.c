@@ -339,6 +339,10 @@ void New_new_w_id_w_with_defer(void);
 void New_new_w_id_w_with_defer_w_scope(void);
 void New_new_w_type_w_with_defer(void);
 void New_new_w_type_w_with_defer_w_scope(void);
+void New_new_w_table(void);
+void New_new_w_null_table(void);
+void New_new_w_table_component(void);
+void New_new_w_table_sparse_component(void);
 
 // Testsuite 'New_w_Count'
 void New_w_Count_empty(void);
@@ -1089,6 +1093,8 @@ void ComponentLifecycle_batched_set_new_component_w_lifecycle(void);
 void ComponentLifecycle_batched_ensure_new_component_w_lifecycle(void);
 void ComponentLifecycle_on_nested_prefab_copy_test_invokes_copy_count(void);
 void ComponentLifecycle_no_move_no_move_ctor_with_move_dtor_with_ctor_move_dtor(void);
+void ComponentLifecycle_new_w_table_ctor(void);
+void ComponentLifecycle_new_w_table_on_add_hook(void);
 
 // Testsuite 'Pairs'
 void Pairs_type_w_one_pair(void);
@@ -1519,6 +1525,7 @@ void Observer_register_callback_after_run(void);
 void Observer_register_run_after_callback(void);
 void Observer_register_callback_after_run_ctx(void);
 void Observer_register_run_after_callback_ctx(void);
+void Observer_on_add_after_new_w_table(void);
 void Observer_cache_test_1(void);
 void Observer_cache_test_2(void);
 void Observer_cache_test_3(void);
@@ -3452,6 +3459,22 @@ bake_test_case New_testcases[] = {
     {
         "new_w_type_w_with_defer_w_scope",
         New_new_w_type_w_with_defer_w_scope
+    },
+    {
+        "new_w_table",
+        New_new_w_table
+    },
+    {
+        "new_w_null_table",
+        New_new_w_null_table
+    },
+    {
+        "new_w_table_component",
+        New_new_w_table_component
+    },
+    {
+        "new_w_table_sparse_component",
+        New_new_w_table_sparse_component
     }
 };
 
@@ -6333,6 +6356,14 @@ bake_test_case ComponentLifecycle_testcases[] = {
     {
         "no_move_no_move_ctor_with_move_dtor_with_ctor_move_dtor",
         ComponentLifecycle_no_move_no_move_ctor_with_move_dtor_with_ctor_move_dtor
+    },
+    {
+        "new_w_table_ctor",
+        ComponentLifecycle_new_w_table_ctor
+    },
+    {
+        "new_w_table_on_add_hook",
+        ComponentLifecycle_new_w_table_on_add_hook
     }
 };
 
@@ -8038,6 +8069,10 @@ bake_test_case Observer_testcases[] = {
     {
         "register_run_after_callback_ctx",
         Observer_register_run_after_callback_ctx
+    },
+    {
+        "on_add_after_new_w_table",
+        Observer_on_add_after_new_w_table
     },
     {
         "cache_test_1",
@@ -10556,7 +10591,7 @@ static bake_test_suite suites[] = {
         "New",
         New_setup,
         NULL,
-        24,
+        28,
         New_testcases
     },
     {
@@ -10689,7 +10724,7 @@ static bake_test_suite suites[] = {
         "ComponentLifecycle",
         ComponentLifecycle_setup,
         NULL,
-        92,
+        94,
         ComponentLifecycle_testcases
     },
     {
@@ -10710,7 +10745,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        198,
+        199,
         Observer_testcases
     },
     {

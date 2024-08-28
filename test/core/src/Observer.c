@@ -7157,6 +7157,45 @@ void Observer_register_run_after_callback_ctx(void) {
     test_int(run_ctx, 1);
 }
 
+void Observer_on_add_after_new_w_table(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Bar);
+
+    Probe ctx = {0};
+
+    ecs_observer(world, {
+        .query.terms = {
+            { .id = ecs_id(Position) }
+        },
+        .callback = Observer,
+        .events = { EcsOnAdd },
+        .ctx = &ctx
+    });
+
+    ecs_table_t *table = ecs_table_add_id(world, NULL, ecs_id(Position));
+    table = ecs_table_add_id(world, table, Bar);
+
+    test_int(ctx.invoked, 0);
+
+    ecs_entity_t e = ecs_new_w_table(world, table);
+    test_assert(e != 0);
+    test_assert(ecs_has(world, e, Position));
+    test_assert(ecs_has(world, e, Bar));
+    test_assert(ecs_get(world, e, Position) != NULL);
+    test_assert(table == ecs_get_table(world, e));
+
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.e[0], e);
+    test_int(ctx.s[0][0], 0);
+    test_int(ctx.c[0][0], ecs_id(Position));
+    test_int(ctx.event, EcsOnAdd);
+
+    ecs_fini(world);
+}
+
 void Observer_cache_test_1(void) {
     ecs_world_t *world = ecs_mini();
     

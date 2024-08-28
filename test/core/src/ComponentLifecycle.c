@@ -3369,3 +3369,55 @@ void ComponentLifecycle_no_move_no_move_ctor_with_move_dtor_with_ctor_move_dtor(
 
     ecs_fini(world);
 }
+
+void ComponentLifecycle_new_w_table_ctor(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Bar);
+
+    ecs_set_hooks(world, Position, {
+        .ctor = ecs_ctor(Position)
+    });
+
+    ecs_table_t *table = ecs_table_add_id(world, NULL, ecs_id(Position));
+    table = ecs_table_add_id(world, table, Bar);
+
+    test_int(ctor_position, 0);
+
+    ecs_entity_t e = ecs_new_w_table(world, table);
+    test_assert(e != 0);
+    test_assert(ecs_has(world, e, Position));
+    test_assert(ecs_has(world, e, Bar));
+    test_assert(ecs_get(world, e, Position) != NULL);
+    test_assert(table == ecs_get_table(world, e));
+    test_int(ctor_position, 1);
+
+    ecs_fini(world);
+}
+
+void ComponentLifecycle_new_w_table_on_add_hook(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Bar);
+
+    ecs_set_hooks(world, Position, {
+        .on_add = ecs_on_add(Position)
+    });
+
+    ecs_table_t *table = ecs_table_add_id(world, NULL, ecs_id(Position));
+    table = ecs_table_add_id(world, table, Bar);
+
+    test_int(ctor_position, 0);
+
+    ecs_entity_t e = ecs_new_w_table(world, table);
+    test_assert(e != 0);
+    test_assert(ecs_has(world, e, Position));
+    test_assert(ecs_has(world, e, Bar));
+    test_assert(ecs_get(world, e, Position) != NULL);
+    test_assert(table == ecs_get_table(world, e));
+    test_int(on_add_position, 1);
+
+    ecs_fini(world);
+}
