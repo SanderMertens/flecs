@@ -545,6 +545,8 @@ ecs_table_t *flecs_table_new(
     flecs_hashmap_result_t table_elem,
     ecs_table_t *prev)
 {
+    ecs_os_perf_trace_push("flecs.table.create");
+
     ecs_table_t *result = flecs_sparse_add_t(&world->store.tables, ecs_table_t);
     ecs_assert(result != NULL, ECS_INTERNAL_ERROR, NULL);
     result->_ = flecs_calloc_t(&world->allocator, ecs_table__t);
@@ -596,6 +598,8 @@ ecs_table_t *flecs_table_new(
     world->info.table_create_total ++;
 
     ecs_log_pop_2();
+
+    ecs_os_perf_trace_pop("flecs.table.create");
 
     return result;
 }

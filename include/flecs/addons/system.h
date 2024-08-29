@@ -128,6 +128,9 @@ typedef struct ecs_system_t {
     /** Is system ran in immediate mode */
     bool immediate;
 
+    /** Cached system name (for perf tracing) */
+    const char *name;
+
     /** Userdata for system */
     void *ctx;
 

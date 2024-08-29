@@ -987,6 +987,8 @@ void flecs_table_fini(
         ECS_INTERNAL_ERROR, NULL);
     (void)world;
 
+    ecs_os_perf_trace_push("flecs.table.free");
+
     if (!is_root && !(world->flags & EcsWorldQuit)) {
         if (table->flags & EcsTableHasOnTableDelete) {
             flecs_table_emit(world, table, EcsOnTableDelete);
@@ -1037,6 +1039,8 @@ void flecs_table_fini(
     }
 
     ecs_log_pop_2();
+
+    ecs_os_perf_trace_pop("flecs.table.free");
 }
 
 /* Free table type. Do this separately from freeing the table as types can be

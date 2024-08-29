@@ -467,11 +467,13 @@ void flecs_instantiate(
     ecs_id_record_t *idr = flecs_id_record_get(world, ecs_childof(base));
     ecs_table_cache_iter_t it;
     if (idr && flecs_table_cache_all_iter((ecs_table_cache_t*)idr, &it)) {
+        ecs_os_perf_trace_push("flecs.instantiate");
         const ecs_table_record_t *tr;
         while ((tr = flecs_table_cache_next(&it, ecs_table_record_t))) {
             flecs_instantiate_children(
                 world, base, table, row, count, tr->hdr.table);
         }
+        ecs_os_perf_trace_pop("flecs.instantiate");
     }
 }
 
@@ -895,6 +897,8 @@ void flecs_commit(
         return;
     }
 
+    ecs_os_perf_trace_push("flecs.commit");
+
     if (src_table) {
         ecs_assert(dst_table != NULL, ECS_INTERNAL_ERROR, NULL);
         flecs_table_traversable_add(dst_table, is_trav);
@@ -930,7 +934,9 @@ void flecs_commit(
             ECS_OUT_OF_RANGE, 0);
         ecs_check(entity >= world->info.min_id, 
             ECS_OUT_OF_RANGE, 0);
-    } 
+    }
+
+    ecs_os_perf_trace_pop("flecs.commit");
 
 error:
     flecs_journal_end();
@@ -2757,6 +2763,8 @@ void ecs_delete(
         return;
     }
 
+    ecs_os_perf_trace_push("flecs.delete");
+
     ecs_record_t *r = flecs_entities_try(world, entity);
     if (r) {
         flecs_journal_begin(world, EcsJournalDelete, entity, NULL, NULL);
@@ -2805,6 +2813,7 @@ void ecs_delete(
 
     flecs_defer_end(world, stage);
 error:
+    ecs_os_perf_trace_pop("flecs.delete");
     return;
 }
 
@@ -4976,6 +4985,8 @@ bool flecs_defer_end(
     ecs_assert(stage->defer > 0, ECS_INTERNAL_ERROR, NULL);
 
     if (!--stage->defer) {
+        ecs_os_perf_trace_push("flecs.commands.merge");
+
         /* Test whether we're flushing to another queue or whether we're 
          * flushing to the storage */
         bool merge_to_world = false;
@@ -5169,6 +5180,8 @@ bool flecs_defer_end(
                     world->on_commands_ctx_active);
             }
         }
+
+        ecs_os_perf_trace_pop("flecs.commands.merge");
 
         return true;
     }
