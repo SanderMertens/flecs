@@ -641,6 +641,8 @@ void Query_run_w_iter_fini_empty(void);
 void Query_run_w_iter_fini_no_query(void);
 void Query_add_to_match_from_staged_query(void);
 void Query_add_to_match_from_staged_query_readonly_threaded(void);
+void Query_pair_with_variable_src(void);
+void Query_pair_with_variable_src_no_row_fields(void);
 
 // Testsuite 'QueryBuilder'
 void QueryBuilder_setup(void);
@@ -3818,6 +3820,14 @@ bake_test_case Query_testcases[] = {
     {
         "add_to_match_from_staged_query_readonly_threaded",
         Query_add_to_match_from_staged_query_readonly_threaded
+    },
+    {
+        "pair_with_variable_src",
+        Query_pair_with_variable_src
+    },
+    {
+        "pair_with_variable_src_no_row_fields",
+        Query_pair_with_variable_src_no_row_fields
     }
 };
 
@@ -6588,7 +6598,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        109,
+        111,
         Query_testcases
     },
     {

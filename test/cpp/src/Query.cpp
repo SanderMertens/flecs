@@ -3057,8 +3057,7 @@ void Query_empty_tables_each_w_iter(void) {
 void Query_pair_with_variable_src(void) {
     flecs::world world;
 
-    struct EmptyRel {};
-    struct Rel { int x; };
+    struct Rel {};
     struct ThisComp { int x; };
     struct OtherComp { int x; };
 
@@ -3069,30 +3068,15 @@ void Query_pair_with_variable_src(void) {
     auto other = flecs::entity(world)
         .set(OtherComp{0});
 
+    // Guaranty we don't lukily hit zero if we read the the wrong component
     flecs::entity(world)
         .set(OtherComp{1});
 
     for (int i = 0; i < 3; ++i)
         flecs::entity(world)
             .set(ThisComp{i})
-            .add<Rel>(other)
-            .add<EmptyRel>(other);
+            .add<Rel>(other);
 
-    {
-        auto q = world.query_builder<Rel, ThisComp, OtherComp>()
-            .term_at(0).second("$other")
-            .term_at(2).src("$other")
-            .build();
-
-        size_t isPresentBitField = 0;
-        q.each([&isPresentBitField](Rel &rel, ThisComp &thisComp, OtherComp &otherComp) {
-            isPresentBitField |= (1 << thisComp.x);
-            rel.x = thisComp.x;
-            test_int(otherComp.x, 0);
-        });
-
-        test_int(isPresentBitField, 7);
-    }
     {
         auto q = world.query_builder<Rel const, ThisComp const, OtherComp const>()
             .term_at(0).second("$other")
@@ -3102,20 +3086,44 @@ void Query_pair_with_variable_src(void) {
         size_t isPresentBitField = 0;
         q.each([&isPresentBitField](Rel const &rel, ThisComp const &thisComp, OtherComp const &otherComp) {
             isPresentBitField |= (1 << thisComp.x);
-            test_int(rel.x, thisComp.x);
             test_int(otherComp.x, 0);
         });
 
         test_int(isPresentBitField, 7);
     }
+}
+
+void Query_pair_with_variable_src_no_row_fields(void) {
+    flecs::world world;
+
+    struct Rel { int dummy; }; // make sure this isn't a tag, so that the query contains no row field
+    struct ThisComp { int x; };
+    struct OtherComp { int x; };
+
+    world.component<Rel>();
+    world.component<ThisComp>();
+    world.component<OtherComp>();
+
+    auto other = flecs::entity(world)
+        .set(OtherComp{0});
+
+    // Guaranty we don't lukily hit zero if we read the the wrong component
+    flecs::entity(world)
+        .set(OtherComp{1});
+
+    for (int i = 0; i < 3; ++i)
+        flecs::entity(world)
+            .set(ThisComp{i})
+            .add<Rel>(other);
+
     {
-        auto q = world.query_builder<EmptyRel const, ThisComp const, OtherComp const>()
+        auto q = world.query_builder<Rel const, ThisComp const, OtherComp const>()
             .term_at(0).second("$other")
             .term_at(2).src("$other")
             .build();
 
         size_t isPresentBitField = 0;
-        q.each([&isPresentBitField](EmptyRel const &, ThisComp const &thisComp, OtherComp const &otherComp) {
+        q.each([&isPresentBitField](Rel const &rel, ThisComp const &thisComp, OtherComp const &otherComp) {
             isPresentBitField |= (1 << thisComp.x);
             test_int(otherComp.x, 0);
         });
