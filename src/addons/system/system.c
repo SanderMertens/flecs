@@ -59,6 +59,8 @@ ecs_entity_t flecs_run_intern(
         }
     }
 
+    ecs_os_perf_trace_push(system_data->name);
+
     if (ecs_should_log_3()) {
         char *path = ecs_get_path(world, system);
         ecs_dbg_3("worker %d: %s", stage_index, path);
@@ -135,6 +137,8 @@ ecs_entity_t flecs_run_intern(
 
     flecs_defer_end(world, stage);
 
+    ecs_os_perf_trace_pop(system_data->name);
+
     return it->interrupted_by;
 }
 
@@ -184,6 +188,9 @@ void flecs_system_fini(ecs_system_t *sys) {
     if (sys->run_ctx_free) {
         sys->run_ctx_free(sys->run_ctx);
     }
+
+    /* Safe cast, type owns name */
+    ecs_os_free(ECS_CONST_CAST(char*, sys->name));
 
     flecs_poly_free(sys, ecs_system_t);
 }
@@ -282,6 +289,8 @@ ecs_entity_t ecs_system_init(
 
         system->multi_threaded = desc->multi_threaded;
         system->immediate = desc->immediate;
+
+        system->name = ecs_get_path(world, entity);
 
         flecs_system_init_timer(world, entity, desc);
 

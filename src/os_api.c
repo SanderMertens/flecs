@@ -350,6 +350,26 @@ void ecs_os_strset(char **str, const char *value) {
     ecs_os_free(old);
 }
 
+void ecs_os_perf_trace_push_(
+    const char *file,
+    size_t line,
+    const char *name)
+{
+    if (ecs_os_api.perf_trace_push_) {
+        ecs_os_api.perf_trace_push_(file, line, name);
+    }
+}
+
+void ecs_os_perf_trace_pop_(
+    const char *file,
+    size_t line,
+    const char *name)
+{
+    if (ecs_os_api.perf_trace_pop_) {
+        ecs_os_api.perf_trace_pop_(file, line, name);
+    }
+}
+
 /* Replace dots with underscores */
 static
 char *module_file_base(const char *module, char sep) {

@@ -1,0 +1,14 @@
+{
+    "id": "perf_trace",
+    "type": "application",
+    "value": {
+        "public": false,
+        "use": [
+            "flecs"
+        ],
+        "standalone": true
+    },
+    "lang.c": {
+        "defines": ["FLECS_PERF_TRACE"]
+    }
+}
