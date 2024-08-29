@@ -25659,6 +25659,7 @@ private:
     void populate_self(const ecs_iter_t *iter, size_t index, T, Targs... comps) {
         fields_[index].ptr = ecs_field_w_size(iter, sizeof(A), 
             static_cast<int8_t>(index));
+        fields_[index].is_ref = iter->sources[index] != 0;
         populate_self(iter, index + 1, comps ...);
     }
 
@@ -25680,7 +25681,19 @@ struct each_field { };
 // Base class
 struct each_column_base {
     each_column_base(const _::field_ptr& field, size_t row) 
-        : field_(field), row_(row) { }
+        : field_(field), row_(row) {
+
+        if (field.is_ref) {
+            // If this is a reference, set the row to 0 as a ref always is a
+            // single value, not an array. This prevents the application from
+            // having to do an if-check on whether the column is owned.
+            //
+            // This check only happens when the current table being iterated
+            // over caused the query to match a reference. The check is
+            // performed once per iterated table.
+            this->row_ = 0;
+        }
+    }
 
 protected:
     const _::field_ptr& field_;
@@ -25758,17 +25771,6 @@ template <typename T, typename = int>
 struct each_ref_field : public each_field<T> {
     each_ref_field(const flecs::iter_t *iter, _::field_ptr& field, size_t row)
         : each_field<T>(iter, field, row) {
-
-        if (field.is_ref) {
-            // If this is a reference, set the row to 0 as a ref always is a
-            // single value, not an array. This prevents the application from
-            // having to do an if-check on whether the column is owned.
-            //
-            // This check only happens when the current table being iterated
-            // over caused the query to match a reference. The check is
-            // performed once per iterated table.
-            this->row_ = 0;
-        }
 
         if (field.is_row) {
             field.ptr = ecs_field_at_w_size(iter, sizeof(T), field.index, 
