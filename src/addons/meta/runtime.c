@@ -38,9 +38,12 @@ typedef struct ecs_meta_rtt_ctx_t {
 
 static void flecs_meta_rtt_xtor(ecs_vec_t *xtor_data_vec, void *ptr, int32_t count, const ecs_type_info_t *type_info) {
   int cb_count = ecs_vec_count(xtor_data_vec);
-  for (int i = 0; i < cb_count; i++) {
-    ecs_meta_rtt_xtor_data_t *xtor_data = ecs_vec_get_t(xtor_data_vec, ecs_meta_rtt_xtor_data_t, i);
-    xtor_data->xtor(ECS_OFFSET(ptr, xtor_data->offset), xtor_data->count, xtor_data->type_info);
+  for (int j = 0; j < count; j++) {
+    void *elem_ptr = ECS_ELEM(ptr, type_info->size, j);
+    for (int i = 0; i < cb_count; i++) {
+      ecs_meta_rtt_xtor_data_t *xtor_data = ecs_vec_get_t(xtor_data_vec, ecs_meta_rtt_xtor_data_t, i);
+      xtor_data->xtor(ECS_OFFSET(elem_ptr, xtor_data->offset), xtor_data->count, xtor_data->type_info);
+    }
   }
 }
 
@@ -61,10 +64,14 @@ void flecs_meta_rtt_move(void *dst_ptr, void *src_ptr, int32_t count, const ecs_
   ecs_assert(rtt_ctx != NULL, ECS_INTERNAL_ERROR, NULL);
 
   int cb_count = ecs_vec_count(&rtt_ctx->moves);
-  for (int i = 0; i < cb_count; i++) {
-    ecs_meta_rtt_move_data_t *move_data = ecs_vec_get_t(&rtt_ctx->moves, ecs_meta_rtt_move_data_t, i);
-    move_data->move(ECS_OFFSET(dst_ptr, move_data->offset), ECS_OFFSET(src_ptr, move_data->offset), move_data->count,
-                    move_data->type_info);
+  for (int j = 0; j < count; j++) {
+    void *elem_dst_ptr = ECS_ELEM(dst_ptr, type_info->size, j);
+    void *elem_src_ptr = ECS_ELEM(src_ptr, type_info->size, j);
+    for (int i = 0; i < cb_count; i++) {
+      ecs_meta_rtt_move_data_t *move_data = ecs_vec_get_t(&rtt_ctx->moves, ecs_meta_rtt_move_data_t, i);
+      move_data->move(ECS_OFFSET(elem_dst_ptr, move_data->offset), ECS_OFFSET(elem_src_ptr, move_data->offset),
+                      move_data->count, move_data->type_info);
+    }
   }
 }
 
@@ -73,10 +80,14 @@ void flecs_meta_rtt_copy(void *dst_ptr, const void *src_ptr, int32_t count, cons
   ecs_assert(rtt_ctx != NULL, ECS_INTERNAL_ERROR, NULL);
 
   int cb_count = ecs_vec_count(&rtt_ctx->copys);
-  for (int i = 0; i < cb_count; i++) {
-    ecs_meta_rtt_copy_data_t *copy_data = ecs_vec_get_t(&rtt_ctx->copys, ecs_meta_rtt_copy_data_t, i);
-    copy_data->copy(ECS_OFFSET(dst_ptr, copy_data->offset), ECS_OFFSET(src_ptr, copy_data->offset), copy_data->count,
-                    copy_data->type_info);
+  for (int j = 0; j < count; j++) {
+    void *elem_dst_ptr = ECS_ELEM(dst_ptr, type_info->size, j);
+    const void *elem_src_ptr = ECS_ELEM(src_ptr, type_info->size, j);
+    for (int i = 0; i < cb_count; i++) {
+      ecs_meta_rtt_copy_data_t *copy_data = ecs_vec_get_t(&rtt_ctx->copys, ecs_meta_rtt_copy_data_t, i);
+      copy_data->copy(ECS_OFFSET(elem_dst_ptr, copy_data->offset), ECS_OFFSET(elem_src_ptr, copy_data->offset),
+                      copy_data->count, copy_data->type_info);
+    }
   }
 }
 
@@ -165,18 +176,10 @@ void flecs_meta_rtt_init_default_hooks(ecs_iter_t *it) {
       for (int i = 0; i < ecs_vec_count(&struct_info->members); i++) {
         ecs_member_t *m = ecs_vec_get_t(&struct_info->members, ecs_member_t, i);
         const ecs_type_info_t *member_ti = ecs_get_type_info(world, m->type);
-        if (member_ti->hooks.ctor && member_ti->hooks.ctor != flecs_default_ctor) {
-          ctor_hook_required = true;
-        }
-        if (member_ti->hooks.dtor) {
-          dtor_hook_required = true;
-        }
-        if (member_ti->hooks.move) {
-          move_hook_required = true;
-        }
-        if (member_ti->hooks.copy) {
-          copy_hook_required = true;
-        }
+        ctor_hook_required |= member_ti->hooks.ctor && member_ti->hooks.ctor != flecs_default_ctor;
+        dtor_hook_required |= member_ti->hooks.dtor != NULL;
+        move_hook_required |= member_ti->hooks.move != NULL;
+        copy_hook_required |= member_ti->hooks.copy != NULL;
       }
 
       ecs_meta_rtt_ctx_t *rtt_ctx = flecs_meta_rtt_configure_hooks(world, ti, ctor_hook_required, dtor_hook_required,
