@@ -16,7 +16,7 @@ typedef struct ecs_meta_rtt_call_data_t {
     ecs_copy_t copy;
   } hook;
   const ecs_type_info_t *type_info;
-  size_t offset;
+  int32_t offset;
   int32_t count;
 } ecs_meta_rtt_call_data_t;
 
@@ -96,11 +96,13 @@ static void flecs_meta_rtt_copy(void *dst_ptr, const void *src_ptr, int32_t coun
 
 //
 static void flecs_meta_rtt_default_move(void *dst_ptr, void *src_ptr, int32_t count, const ecs_type_info_t *type_info) {
+  (void) type_info;  // silence unused warning
   ecs_os_memcpy(dst_ptr, src_ptr, count);
 }
 
 static void flecs_meta_rtt_default_copy(void *dst_ptr, const void *src_ptr, int32_t count,
                                         const ecs_type_info_t *type_info) {
+  (void) type_info;  // silence unused warning
   ecs_os_memcpy(dst_ptr, src_ptr, count);
 }
 

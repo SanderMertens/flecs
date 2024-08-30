@@ -259,18 +259,16 @@ int flecs_init_type(
 
     EcsType *meta_type = ecs_ensure(world, type, EcsType);
     if (meta_type->kind == 0) {
-        ecs_type_info_t *ti = flecs_type_info_ensure(world, type);
-
         /* Determine if this is an existing type or a reflection-defined type (runtime type) */
         meta_type->existing = ecs_has(world, type, EcsComponent);
 
         /* For existing types, ensure that component has a default constructor, to prevent crashing
-         * serializers on uninitialized values. For runtime types (rtt), de default hooks are set
+         * serializers on uninitialized values. For runtime types (rtt), the default hooks are set
          by flecs_meta_rtt_init_default_hooks */
-         if (meta_type->existing && !ti->hooks.ctor) {
+        ecs_type_info_t *ti = flecs_type_info_ensure(world, type);
+        if (meta_type->existing && !ti->hooks.ctor) {
             ti->hooks.ctor = flecs_default_ctor;
         } 
-
     } else {
         if (meta_type->kind != kind) {
             ecs_err("type '%s' reregistered as '%s' (was '%s')", 
