@@ -86,7 +86,18 @@ void BitmaskTypes_struct_w_bitmask(void);
 void BitmaskTypes_bitmask_w_short_notation(void);
 
 // Testsuite 'RuntimeTypes'
-void RuntimeTypes_strings(void);
+void RuntimeTypes_trivial_struct(void);
+void RuntimeTypes_ctor(void);
+void RuntimeTypes_dtor(void);
+void RuntimeTypes_move(void);
+void RuntimeTypes_copy(void);
+void RuntimeTypes_combined(void);
+void RuntimeTypes_trivial_array(void);
+void RuntimeTypes_array_ctor(void);
+void RuntimeTypes_array_dtor(void);
+void RuntimeTypes_array_move(void);
+void RuntimeTypes_array_copy(void);
+void RuntimeTypes_mixed(void);
 
 // Testsuite 'StructTypes'
 void StructTypes_i32(void);
@@ -1240,8 +1251,52 @@ bake_test_case BitmaskTypes_testcases[] = {
 
 bake_test_case RuntimeTypes_testcases[] = {
     {
-        "strings",
-        RuntimeTypes_strings
+        "trivial_struct",
+        RuntimeTypes_trivial_struct
+    },
+    {
+        "ctor",
+        RuntimeTypes_ctor
+    },
+    {
+        "dtor",
+        RuntimeTypes_dtor
+    },
+    {
+        "move",
+        RuntimeTypes_move
+    },
+    {
+        "copy",
+        RuntimeTypes_copy
+    },
+    {
+        "combined",
+        RuntimeTypes_combined
+    },
+    {
+        "trivial_array",
+        RuntimeTypes_trivial_array
+    },
+    {
+        "array_ctor",
+        RuntimeTypes_array_ctor
+    },
+    {
+        "array_dtor",
+        RuntimeTypes_array_dtor
+    },
+    {
+        "array_move",
+        RuntimeTypes_array_move
+    },
+    {
+        "array_copy",
+        RuntimeTypes_array_copy
+    },
+    {
+        "mixed",
+        RuntimeTypes_mixed
     }
 };
 
@@ -4615,7 +4670,7 @@ static bake_test_suite suites[] = {
         "RuntimeTypes",
         NULL,
         NULL,
-        1,
+        12,
         RuntimeTypes_testcases
     },
     {

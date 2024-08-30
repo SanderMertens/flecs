@@ -97,7 +97,18 @@
         }, {
             "id": "RuntimeTypes",
             "testcases": [
-                "strings"
+                "trivial_struct",
+                "ctor",
+                "dtor",
+                "move",
+                "copy",
+                "combined",
+                "trivial_array",
+                "array_ctor",
+                "array_dtor",
+                "array_move",
+                "array_copy",
+                "mixed"
             ]            
         }, {
             "id": "StructTypes",
