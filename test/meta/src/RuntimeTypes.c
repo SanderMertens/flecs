@@ -1,7 +1,7 @@
 #include <stdint.h>
 #include <meta.h>
 
-#define UINT32_PATTERN(x) ((x) + ((x) << 8) + ((x) << 16) + ((x) << 24))
+#define UINT32_PATTERN(x) (((uint32_t) (x)) + ((uint32_t) (x) << 8) + ((uint32_t) (x) << 16) + ((uint32_t) (x) << 24))
 
 bool is_memory_filled_with(const void *ptr, size_t size, unsigned char byte) {
   const unsigned char *byte_ptr = (const unsigned char *) ptr;
@@ -657,6 +657,7 @@ void RuntimeTypes_array_ctor(void) {
   ecs_add_id(world, e, arr_of_resources);
   test_int(7, available_resource_count());  // 3 resources were used out of 10, since the array has a size of 3
 
+  ecs_fini(world);
   free_resource_ids();
 }
 
@@ -707,6 +708,7 @@ void RuntimeTypes_array_dtor(void) {
   test_assert(resource_id_available(200));
   test_assert(resource_id_available(300));
 
+  ecs_fini(world);
   free_resource_ids();
 }
 
@@ -769,6 +771,7 @@ void RuntimeTypes_array_move(void) {
   test_assert(!resource_id_available(200));
   test_assert(!resource_id_available(300));
 
+  ecs_fini(world);
   free_resource_ids();
 }
 
@@ -826,6 +829,7 @@ void RuntimeTypes_array_copy(void) {
   ecs_delete(world, e);
   test_int(7, available_resource_count());  // resources not returned since we did not hook a destructor
 
+  ecs_fini(world);
   free_resource_ids();
 }
 
