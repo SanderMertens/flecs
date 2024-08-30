@@ -4,7 +4,6 @@
 
 #include "CoreMinimal.h"
 #include "Entities/FlecsEntityRecord.h"
-#include "Properties/FlecsComponentProperties.h"
 #include "FlecsPrefabComponent.generated.h"
 
 USTRUCT(BlueprintType)

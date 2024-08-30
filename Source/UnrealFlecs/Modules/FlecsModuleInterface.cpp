@@ -28,7 +28,7 @@ void IFlecsModuleInterface::ImportModule(const flecs::world& InWorld)
 	Execute_BP_InitializeModule(_getUObject(), World.Get());
 }
 
-void IFlecsModuleInterface::DeinitModule_Internal()
+void IFlecsModuleInterface::DeinitializeModule_Internal()
 {
 	ModuleEntity.Disable();
 	DeinitializeModule(World.Get());
@@ -76,7 +76,7 @@ void FFlecsModuleStructInterface::ImportModule(const flecs::world& InWorld)
 	InitializeModule(World.Get(), ModuleEntity);
 }
 
-void FFlecsModuleStructInterface::DeinitModule_Internal()
+void FFlecsModuleStructInterface::DeinitializeModule_Internal()
 {
 	ModuleEntity.Disable();
 	DeinitializeModule(World.Get());

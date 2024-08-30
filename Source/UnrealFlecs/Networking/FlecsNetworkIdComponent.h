@@ -18,10 +18,10 @@ struct UNREALFLECS_API FFlecsNetworkIdComponent
 
 public:
 	FORCEINLINE FFlecsNetworkIdComponent() = default;
-	FORCEINLINE FFlecsNetworkIdComponent(const uint64 InNetworkId) : NetworkId(InNetworkId) {}
+	FORCEINLINE FFlecsNetworkIdComponent(const uint32 InNetworkId) : NetworkId(InNetworkId) {}
 
-	FORCEINLINE NO_DISCARD uint64 GetNetworkId() const { return NetworkId.Get(std::numeric_limits<uint64>::max()); }
-	FORCEINLINE void SetNetworkId(const uint64 InNetworkId) { NetworkId = InNetworkId; }
+	FORCEINLINE NO_DISCARD uint32 GetNetworkId() const { return NetworkId.Get(std::numeric_limits<uint32>::max()); }
+	FORCEINLINE void SetNetworkId(const uint32 InNetworkId) { NetworkId = InNetworkId; }
 
 	FORCEINLINE NO_DISCARD bool IsValid() const { return NetworkId.IsSet(); }
 
@@ -37,29 +37,29 @@ public:
 		return !(*this == Other);
 	}
 
-	FORCEINLINE bool operator==(const uint64 Other) const
+	FORCEINLINE bool operator==(const uint32 Other) const
 	{
 		return NetworkId == Other;
 	}
 
-	FORCEINLINE bool operator!=(const uint64 Other) const
+	FORCEINLINE bool operator!=(const uint32 Other) const
 	{
 		return !(*this == Other);
 	}
 	
 	UPROPERTY()
-	TOptional<uint64> NetworkId;
+	TOptional<uint32> NetworkId;
 
 	FORCEINLINE NO_DISCARD FString ToString() const
 	{
-		return FString::Printf(TEXT("NetworkId: %llu"), NetworkId.Get(std::numeric_limits<uint64>::max()));
+		return FString::Printf(TEXT("NetworkId: %lu"), NetworkId.Get(std::numeric_limits<uint32>::max()));
 	}
 
 	FORCEINLINE bool NetSerialize(FArchive& Ar, MAYBE_UNUSED UPackageMap* Map, bool& bOutSuccess)
 	{
-		const TOptional InvalidNetworkId = std::numeric_limits<uint64>::max();
+		const TOptional InvalidNetworkId = std::numeric_limits<uint32>::max();
 		
-		SerializeOptionalValue<TOptional<uint64>>(Ar.IsSaving(), Ar, NetworkId, InvalidNetworkId);
+		SerializeOptionalValue<TOptional<uint32>>(Ar.IsSaving(), Ar, NetworkId, InvalidNetworkId);
 
 		bOutSuccess = true;
 		return true;

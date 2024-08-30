@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "FlecsSystem.h"
+#include "Components/FlecsUObjectComponent.h"
 #include "UObject/Interface.h"
 #include "FlecsSystemInterface.generated.h"
 
@@ -26,6 +27,8 @@ public:
 		BuildSystem(Builder);
 
 		System = Builder;
+
+		System.GetEntity().Set<FFlecsUObjectComponent>({ _getUObject() });
 		
 		InitializeSystem();
 		BP_InitializeSystem();

@@ -1913,7 +1913,7 @@ void ecs_frame_end(
     ecs_check(!(world->flags & EcsWorldReadonly), ECS_INVALID_OPERATION, 
         "cannot end frame while world is in readonly mode");
 
-    world->info.frame_count_total ++;
+    ++world->info.frame_count_total;
     
     int32_t i, count = world->stage_count;
     for (i = 0; i < count; i ++) {

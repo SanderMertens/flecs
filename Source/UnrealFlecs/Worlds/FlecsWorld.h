@@ -31,36 +31,68 @@ class UNREALFLECS_API UFlecsWorld final : public UObject
 	GENERATED_BODY()
 
 public:
-
+	
 	FORCEINLINE void WorldBeginPlay()
 	{
-		InitializeComponentObservers();
+		UN_LOG(LogFlecsWorld, Log, "Flecs World begin play");
+		
 		InitializeSystems();
+		InitializeDefaultComponents();
 		InitializeAssetRegistry();
 	}
 
-	FORCEINLINE void InitializeComponentObservers() const
+	FORCEINLINE void InitializeDefaultComponents()
 	{
-		CreateObserver<flecs::_::type_impl_struct_event_info>(TEXT("StructComponentObserver"))
-				.cached()
-				.event<flecs::_::type_impl_struct_event_info>()
-				.yield_existing()
-				.each([&](flecs::iter& InIter, size_t Index, flecs::_::type_impl_struct_event_info& InEventInfo)
-				{
-					InIter.entity(Index).set<FFlecsScriptStructComponent>({ InEventInfo.scriptStruct });
-				});
+		/* Opaque FString to flecs::string */
+		World.component<FString>()
+			.opaque(flecs::String);
 	}
 
 	FORCEINLINE void InitializeSystems() const
 	{
 		static constexpr int32 UOBJECT_VALID_CHECK_FRAME_RATE = 60;
+
+		ObtainComponentTypeStruct(FFlecsScriptStructComponent::StaticStruct());
+		CreateObserver<flecs::_::type_impl_struct_event_info>(TEXT("StructComponentObserver"))
+				.cached()
+				.event(flecs::OnSet)
+				.yield_existing()
+				.each([&](flecs::entity InEntity, flecs::_::type_impl_struct_event_info InEventInfo)
+				{
+					solid_checkf(InEventInfo.scriptStruct != nullptr, TEXT("Script struct is nullptr"));
+
+					if UNLIKELY_IF(InEventInfo.scriptStruct == FFlecsScriptStructComponent::StaticStruct())
+					{
+						return;
+					}
+
+					if UNLIKELY_IF(InEntity.has<FFlecsScriptStructComponent>())
+					{
+						InEntity.remove<flecs::_::type_impl_struct_event_info>();
+						return;
+					}
+					
+					InEntity.set<FFlecsScriptStructComponent>({ InEventInfo.scriptStruct });
+
+					UN_LOGF(LogFlecsWorld, Log,
+						"Struct component %s registered", *InEventInfo.scriptStruct->GetStructCPPName());
+
+					#if WITH_EDITOR
+
+					this->RegisterMemberProperties(InEventInfo.scriptStruct, InEntity);
+					
+					#endif // WITH_EDITOR
+
+					InEntity.remove<flecs::_::type_impl_struct_event_info>();
+				});
 		
 		CreateSystemWithBuilder<const FFlecsUObjectComponent&>(TEXT("FlecsUObjectComponentSystem"))
+			.kind(flecs::PostFrame)
 			.term_at(0)
 				.read()
 			.rate(UOBJECT_VALID_CHECK_FRAME_RATE)
 			.multi_threaded()
-			.each([](const flecs::entity InEntity, const FFlecsUObjectComponent& InComponent)
+			.each([](flecs::entity InEntity, const FFlecsUObjectComponent& InComponent)
 			{
 				if (!InComponent.IsValid())
 				{
@@ -273,12 +305,6 @@ public:
 	{
 		World.remove<First>(InSecond);
 	}
-
-	template <typename First, typename ...TArgs>
-	FORCEINLINE void RemoveSingleton() const
-	{
-		World.remove<First, TArgs...>();
-	}
 	
 	template <typename T>
 	FORCEINLINE NO_DISCARD bool HasSingleton() const
@@ -401,6 +427,12 @@ public:
 		CastChecked<IFlecsModuleInterface>(InModule)->ImportModule(World);
 	}
 
+	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
+	FORCEINLINE bool IsModuleImported(const TSubclassOf<UFlecsModuleInterface> InModule) const
+	{
+		return true;
+	}
+
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
 	FORCEINLINE bool BeginDefer() const
 	{
@@ -462,7 +494,8 @@ public:
 	
 	FORCEINLINE void DestroyWorld()
 	{
-		FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>(TEXT("AssetRegistry"));
+		const FAssetRegistryModule& AssetRegistryModule
+			= FModuleManager::LoadModuleChecked<FAssetRegistryModule>(TEXT("AssetRegistry"));
 		IAssetRegistry& AssetRegistry = AssetRegistryModule.Get();
 		AssetRegistry.OnAssetAdded().RemoveAll(this);
 		
@@ -628,30 +661,13 @@ public:
 	{
 		return HasScriptStruct(T::StaticStruct());
 	}
-	
-	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs")
-	FORCEINLINE FFlecsEntityHandle RegisterScriptStruct(UScriptStruct* ScriptStruct) const
+
+	#if WITH_EDITOR
+
+	FORCEINLINE void RegisterMemberProperties(const UScriptStruct* ScriptStruct,
+		const FFlecsEntityHandle& InEntity) const
 	{
-		if UNLIKELY_IF(ScriptStruct == nullptr)
-		{
-			return FFlecsEntityHandle();
-		}
-
-		if (const FFlecsEntityHandle Handle = World.lookup(StringCast<char>(*ScriptStruct->GetStructCPPName()).Get()))
-		{
-			RegisterScriptStruct(ScriptStruct, Handle);
-			return Handle;
-		}
-		
-		FFlecsEntityHandle ScriptStructComponent = World.entity(StringCast<char>(*ScriptStruct->GetStructCPPName()).Get())
-			.set<flecs::Component>({ ScriptStruct->GetStructureSize(), ScriptStruct->GetMinAlignment() })
-			.set<FFlecsScriptStructComponent>({ ScriptStruct });
-		
-		GetSingletonRef<FFlecsTypeMapComponent>().ScriptStructMap.emplace(ScriptStruct, ScriptStructComponent);
-
-		#if WITH_EDITOR
-
-		flecs::untyped_component UntypedComponent = ScriptStructComponent.GetUntypedComponent();
+		flecs::untyped_component UntypedComponent = InEntity.GetUntypedComponent();
 		
 		for (TFieldIterator<FProperty> PropertyIt(ScriptStruct); PropertyIt; ++PropertyIt)
 		{
@@ -669,6 +685,18 @@ public:
 			else if (Property->IsA<FIntProperty>())
 			{
 				UntypedComponent.member<int32>(StringCast<char>(*Property->GetName()).Get());
+			}
+			else if (Property->IsA<FUInt32Property>())
+			{
+				UntypedComponent.member<uint32>(StringCast<char>(*Property->GetName()).Get());
+			}
+			else if (Property->IsA<FInt64Property>())
+			{
+				UntypedComponent.member<int64>(StringCast<char>(*Property->GetName()).Get());
+			}
+			else if (Property->IsA<FUInt64Property>())
+			{
+				UntypedComponent.member<uint64>(StringCast<char>(*Property->GetName()).Get());
 			}
 			else if (Property->IsA<FFloatProperty>())
 			{
@@ -694,11 +722,54 @@ public:
 			{
 				UntypedComponent.member<TObjectPtr<UObject>>(StringCast<char>(*Property->GetName()).Get());
 			}
+			else if (Property->IsA<FWeakObjectProperty>())
+			{
+				UntypedComponent.member<TWeakObjectPtr<UObject>>(StringCast<char>(*Property->GetName()).Get());
+			}
+			else if (Property->IsA<FSoftObjectProperty>())
+			{
+				UntypedComponent.member<TSoftObjectPtr<UObject>>(StringCast<char>(*Property->GetName()).Get());
+			}
+			else if (Property->IsA<FClassProperty>())
+			{
+				UntypedComponent.member<TSubclassOf<UObject>>(StringCast<char>(*Property->GetName()).Get());
+			}
+			else if (Property->IsA<FEnumProperty>())
+			{
+				UntypedComponent.member<int64>(StringCast<char>(*Property->GetName()).Get());
+			}
 			else if (Property->IsA<FStructProperty>())
 			{
 				UntypedComponent.member<TStructOnScope<FStructProperty>>(StringCast<char>(*Property->GetName()).Get());
 			}
 		}
+	}
+
+	#endif // WITH_EDITOR
+	
+	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs")
+	FORCEINLINE FFlecsEntityHandle RegisterScriptStruct(UScriptStruct* ScriptStruct) const
+	{
+		if UNLIKELY_IF(ScriptStruct == nullptr)
+		{
+			return FFlecsEntityHandle();
+		}
+
+		if (const FFlecsEntityHandle Handle = World.lookup(StringCast<char>(*ScriptStruct->GetStructCPPName()).Get()))
+		{
+			RegisterScriptStruct(ScriptStruct, Handle);
+			return Handle;
+		}
+		
+		FFlecsEntityHandle ScriptStructComponent = World.entity(StringCast<char>(*ScriptStruct->GetStructCPPName()).Get())
+			.set<flecs::Component>({ ScriptStruct->GetStructureSize(), ScriptStruct->GetMinAlignment() })
+			.set<FFlecsScriptStructComponent>({ ScriptStruct });
+		
+		GetSingletonRef<FFlecsTypeMapComponent>().ScriptStructMap.emplace(ScriptStruct, ScriptStructComponent);
+
+		#if WITH_EDITOR
+
+		const_cast<UFlecsWorld*>(this)->RegisterMemberProperties(ScriptStruct, ScriptStructComponent);
 
 		#endif // WITH_EDITOR
 
@@ -721,52 +792,14 @@ public:
 		return ScriptStructComponent;
 	}
 
-	FORCEINLINE void RegisterScriptStruct(const UScriptStruct* ScriptStruct, FFlecsEntityHandle InEntity) const
+	FORCEINLINE void RegisterScriptStruct(const UScriptStruct* ScriptStruct, FFlecsEntityHandle InComponentEntity) const
 	{
-		GetSingletonRef<FFlecsTypeMapComponent>().ScriptStructMap.emplace(const_cast<UScriptStruct*>(ScriptStruct), InEntity);
+		GetSingletonRef<FFlecsTypeMapComponent>().ScriptStructMap
+			.emplace(const_cast<UScriptStruct*>(ScriptStruct), InComponentEntity);
 
 		#if WITH_EDITOR
 
-		flecs::untyped_component UntypedComponent = InEntity.GetUntypedComponent();
-		
-		for (TFieldIterator<FProperty> PropertyIt(ScriptStruct); PropertyIt; ++PropertyIt)
-		{
-			const FProperty* Property = *PropertyIt;
-			solid_checkf(Property != nullptr, TEXT("Property is nullptr"));
-			
-			if (Property->IsA<FBoolProperty>())
-			{
-				UntypedComponent.member<bool>(StringCast<char>(*Property->GetName()).Get());
-			}
-			else if (Property->IsA<FByteProperty>())
-			{
-				UntypedComponent.member<uint8>(StringCast<char>(*Property->GetName()).Get());
-			}
-			else if (Property->IsA<FIntProperty>())
-			{
-				UntypedComponent.member<int32>(StringCast<char>(*Property->GetName()).Get());
-			}
-			else if (Property->IsA<FFloatProperty>())
-			{
-				UntypedComponent.member<float>(StringCast<char>(*Property->GetName()).Get());
-			}
-			else if (Property->IsA<FDoubleProperty>())
-			{
-				UntypedComponent.member<double>(StringCast<char>(*Property->GetName()).Get());
-			}
-			else if (Property->IsA<FStrProperty>())
-			{
-				UntypedComponent.member<FString>(StringCast<char>(*Property->GetName()).Get());
-			}
-			else if (Property->IsA<FNameProperty>())
-			{
-				UntypedComponent.member<FName>(StringCast<char>(*Property->GetName()).Get());
-			}
-			else if (Property->IsA<FTextProperty>())
-			{
-				UntypedComponent.member<FText>(StringCast<char>(*Property->GetName()).Get());
-			}
-		}
+		const_cast<UFlecsWorld*>(this)->RegisterMemberProperties(ScriptStruct, InComponentEntity);
 
 		#endif // WITH_EDITOR
 	}

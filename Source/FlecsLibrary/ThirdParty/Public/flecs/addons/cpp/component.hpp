@@ -129,7 +129,7 @@ void register_lifecycle_actions(
 // is not known the component has been registered by another world and will be
 // registered with the world using the same id. If the id does exist, the class
 // will register it as a component, and verify whether the input is consistent.
-    struct type_impl_struct_event_info {
+    FLECS_API struct type_impl_struct_event_info {
     UScriptStruct* scriptStruct;
     };
     
@@ -253,18 +253,13 @@ struct type_impl {
             }
 
             if constexpr (Solid::IsStaticStruct<T>()) {
-                ECS_COMPONENT(world, type_impl_struct_event_info);
+                flecs::world P_world = flecs::world(world);
                 
                 UScriptStruct* scriptStruct = TBaseStructure<T>::Get();
                 ecs_assert(scriptStruct != nullptr, ECS_INTERNAL_ERROR, "script struct is null");
-            
-                ecs_event_desc_t desc = {};
-                desc.event = ecs_id(type_impl_struct_event_info);
-                desc.entity = s_id;
-                type_impl_struct_event_info temp_event_info { scriptStruct };
-                desc.param = &temp_event_info;
-                
-                ecs_emit(world, &desc);
+
+                const entity NewScriptStructEntity(world, s_id);
+                NewScriptStructEntity.set<type_impl_struct_event_info>({ scriptStruct });
             }
 
             if (prev_with) {
@@ -379,20 +374,20 @@ struct type<T, if_t< is_pair<T>::value >>
 
 } // namespace _
 
-/** Untyped component class.
- * Generic base class for flecs::component.
- *
- * @ingroup cpp_components
- */
-struct untyped_component : entity {
+    /** Untyped component class.
+* Generic base class for flecs::component.
+*
+* @ingroup cpp_components
+*/
+    struct untyped_component : entity {
     using entity::entity;
 
-#   ifdef FLECS_META
-#   include "mixins/meta/untyped_component.inl"
-#   endif
-#   ifdef FLECS_METRICS
-#   include "mixins/metrics/untyped_component.inl"
-#   endif
+    #   ifdef FLECS_META
+    #   include "mixins/meta/untyped_component.inl"
+    #   endif
+    #   ifdef FLECS_METRICS
+    #   include "mixins/metrics/untyped_component.inl"
+    #   endif
 };
 
 /** Component class.
