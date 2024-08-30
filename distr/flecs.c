@@ -50536,10 +50536,10 @@ typedef struct ecs_meta_rtt_call_data_t {
 
 // Lifecycle context for runtime types
 typedef struct ecs_meta_rtt_ctx_t {
-  ecs_vec_t ctors; /*< vector<ecs_meta_rtt_call_data_t> */
-  ecs_vec_t dtors; /*< vector<ecs_meta_rtt_call_data_t> */
-  ecs_vec_t copys; /*< vector<ecs_meta_rtt_call_data_t> */
-  ecs_vec_t moves; /*< vector<ecs_meta_rtt_call_data_t> */
+  ecs_vec_t ctors; /* vector<ecs_meta_rtt_call_data_t> */
+  ecs_vec_t dtors; /* vector<ecs_meta_rtt_call_data_t> */
+  ecs_vec_t copys; /* vector<ecs_meta_rtt_call_data_t> */
+  ecs_vec_t moves; /* vector<ecs_meta_rtt_call_data_t> */
 } ecs_meta_rtt_ctx_t;
 
 // Invokes underlying type's constructor/destructor using saved information in the lifecycle context

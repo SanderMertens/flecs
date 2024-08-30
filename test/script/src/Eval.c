@@ -4063,8 +4063,6 @@ void Eval_multiline_string(void) {
         "Special characters }{\"\"'',\n"
     );
 
-    ecs_os_free(ptr->value);
-
     ecs_fini(world);
 }
 
