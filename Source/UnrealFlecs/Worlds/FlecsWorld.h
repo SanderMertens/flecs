@@ -736,7 +736,7 @@ public:
 			}
 			else if (Property->IsA<FEnumProperty>())
 			{
-				UntypedComponent.member<int64>(StringCast<char>(*Property->GetName()).Get());
+				UntypedComponent.member(flecs::meta::EnumType, StringCast<char>(*Property->GetName()).Get());
 			}
 			else if (Property->IsA<FStructProperty>())
 			{
@@ -769,7 +769,7 @@ public:
 
 		#if WITH_EDITOR
 
-		const_cast<UFlecsWorld*>(this)->RegisterMemberProperties(ScriptStruct, ScriptStructComponent);
+		this->RegisterMemberProperties(ScriptStruct, ScriptStructComponent);
 
 		#endif // WITH_EDITOR
 
@@ -799,7 +799,7 @@ public:
 
 		#if WITH_EDITOR
 
-		const_cast<UFlecsWorld*>(this)->RegisterMemberProperties(ScriptStruct, InComponentEntity);
+		this->RegisterMemberProperties(ScriptStruct, InComponentEntity);
 
 		#endif // WITH_EDITOR
 	}
