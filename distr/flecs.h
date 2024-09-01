@@ -3425,6 +3425,7 @@ struct ecs_query_t {
 
     /* Bitmasks for quick field information lookups */
     ecs_termset_t fixed_fields; /**< Fields with a fixed source */
+    ecs_termset_t var_fields;   /**< Fields with non-$this variable source */
     ecs_termset_t static_id_fields; /**< Fields with a static (component) id */
     ecs_termset_t data_fields;  /**< Fields that have data */
     ecs_termset_t write_fields; /**< Fields that write data */
@@ -25719,17 +25720,6 @@ struct each_field { };
 struct each_column_base {
     each_column_base(const _::field_ptr& field, size_t row) 
         : field_(field), row_(row) {
-
-        if (field.is_ref) {
-            // If this is a reference, set the row to 0 as a ref always is a
-            // single value, not an array. This prevents the application from
-            // having to do an if-check on whether the column is owned.
-            //
-            // This check only happens when the current table being iterated
-            // over caused the query to match a reference. The check is
-            // performed once per iterated table.
-            this->row_ = 0;
-        }
     }
 
 protected:
@@ -25809,13 +25799,23 @@ struct each_ref_field : public each_field<T> {
     each_ref_field(const flecs::iter_t *iter, _::field_ptr& field, size_t row)
         : each_field<T>(iter, field, row) {
 
+        if (field.is_ref) {
+            // If this is a reference, set the row to 0 as a ref always is a
+            // single value, not an array. This prevents the application from
+            // having to do an if-check on whether the column is owned.
+            //
+            // This check only happens when the current table being iterated
+            // over caused the query to match a reference. The check is
+            // performed once per iterated table.
+            this->row_ = 0;
+        }
+
         if (field.is_row) {
             field.ptr = ecs_field_at_w_size(iter, sizeof(T), field.index, 
                 static_cast<int8_t>(row));
         }
     }
 };
-
 
 // Type that handles passing components to each callbacks
 template <typename Func, typename ... Components>

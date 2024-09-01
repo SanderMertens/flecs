@@ -663,6 +663,11 @@ void Basic_match_empty_w_order_by(void);
 void Basic_match_new_empty_w_order_by(void);
 void Basic_match_empty_w_bitset(void);
 void Basic_default_query_flags(void);
+void Basic_ref_fields_this(void);
+void Basic_ref_fields_static_src(void);
+void Basic_ref_fields_variable_src(void);
+void Basic_ref_fields_up_src(void);
+void Basic_ref_fields_self_up_src(void);
 
 // Testsuite 'Combinations'
 void Combinations_setup(void);
@@ -4653,6 +4658,26 @@ bake_test_case Basic_testcases[] = {
     {
         "default_query_flags",
         Basic_default_query_flags
+    },
+    {
+        "ref_fields_this",
+        Basic_ref_fields_this
+    },
+    {
+        "ref_fields_static_src",
+        Basic_ref_fields_static_src
+    },
+    {
+        "ref_fields_variable_src",
+        Basic_ref_fields_variable_src
+    },
+    {
+        "ref_fields_up_src",
+        Basic_ref_fields_up_src
+    },
+    {
+        "ref_fields_self_up_src",
+        Basic_ref_fields_self_up_src
     }
 };
 
@@ -10127,7 +10152,7 @@ static bake_test_suite suites[] = {
         "Basic",
         Basic_setup,
         NULL,
-        207,
+        212,
         Basic_testcases,
         1,
         Basic_params
