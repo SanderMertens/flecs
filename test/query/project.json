@@ -674,7 +674,12 @@
                 "match_empty_w_order_by",
                 "match_new_empty_w_order_by",
                 "match_empty_w_bitset",
-                "default_query_flags"
+                "default_query_flags",
+                "ref_fields_this",
+                "ref_fields_static_src",
+                "ref_fields_variable_src",
+                "ref_fields_up_src",
+                "ref_fields_self_up_src"
             ]
         }, {
             "id": "Combinations",
