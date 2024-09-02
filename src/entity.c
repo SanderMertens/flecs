@@ -1496,12 +1496,18 @@ ecs_entity_t ecs_new_w_table(
     flecs_stage_from_world(&world);    
     ecs_entity_t entity = ecs_new(world);
     ecs_record_t *r = flecs_entities_get(world, entity);
+    ecs_flags32_t flags = table->flags & EcsTableAddEdgeFlags;
+    if (table->flags & EcsTableHasIsA) {
+        flags |= EcsTableHasOnAdd;
+    }
 
     ecs_table_diff_t table_diff = { 
         .added = table->type,
-        .added_flags = table->flags & EcsTableAddEdgeFlags
+        .added_flags = flags
     };
+
     flecs_new_entity(world, entity, r, table, &table_diff, true, 0);
+
     return entity;
 error:
     return 0;

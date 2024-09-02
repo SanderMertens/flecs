@@ -529,3 +529,24 @@ void New_new_w_table_sparse_component(void) {
 
     ecs_fini(world);
 }
+
+void New_new_w_table_override(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Bar);
+
+    ecs_entity_t base = ecs_insert(world, ecs_value(Position, {10, 20}));
+
+    ecs_table_t *table = ecs_table_add_id(world, NULL, ecs_pair(EcsIsA, base));
+
+    ecs_entity_t inst = ecs_new_w_table(world, table);
+    test_assert(ecs_has(world, inst, Position));
+    test_assert(ecs_has_pair(world, inst, EcsIsA, base));
+
+    const Position *p = ecs_get(world, inst, Position);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}

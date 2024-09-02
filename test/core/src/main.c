@@ -343,6 +343,7 @@ void New_new_w_table(void);
 void New_new_w_null_table(void);
 void New_new_w_table_component(void);
 void New_new_w_table_sparse_component(void);
+void New_new_w_table_override(void);
 
 // Testsuite 'New_w_Count'
 void New_w_Count_empty(void);
@@ -3477,6 +3478,10 @@ bake_test_case New_testcases[] = {
     {
         "new_w_table_sparse_component",
         New_new_w_table_sparse_component
+    },
+    {
+        "new_w_table_override",
+        New_new_w_table_override
     }
 };
 
@@ -10601,7 +10606,7 @@ static bake_test_suite suites[] = {
         "New",
         New_setup,
         NULL,
-        28,
+        29,
         New_testcases
     },
     {

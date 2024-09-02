@@ -359,7 +359,8 @@
                 "new_w_table",
                 "new_w_null_table",
                 "new_w_table_component",
-                "new_w_table_sparse_component"
+                "new_w_table_sparse_component",
+                "new_w_table_override"
             ]
         }, {
             "id": "New_w_Count",
