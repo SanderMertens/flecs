@@ -1879,3 +1879,59 @@ void Template_anonymous_template_instance_w_prop_no_scope(void) {
 
     ecs_fini(world);
 }
+
+void Template_with_after_template(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Bar);
+
+    const char *expr =
+    HEAD "template Foo {}"
+    LINE "with Bar {"
+    LINE "  withBar {}"
+    LINE "}"
+    LINE "withoutBar {}";
+
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+
+    ecs_entity_t withBar = ecs_lookup(world, "withBar");
+    test_assert(withBar != 0);
+    ecs_entity_t withoutBar = ecs_lookup(world, "withoutBar");
+    test_assert(withoutBar != 0);
+
+    test_assert(ecs_has(world, withBar, Bar));
+    test_assert(!ecs_has(world, withoutBar, Bar));
+
+    ecs_fini(world);
+}
+
+void Template_with_in_scope_after_template(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Bar);
+
+    const char *expr =
+    HEAD "template Foo {}"
+    LINE "parent {"
+    LINE "  with Bar {"
+    LINE "    withBar {}"
+    LINE "  }"
+    LINE "  withoutBar {}"
+    LINE "}"
+    LINE "defWithoutBar {}";
+
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+
+    ecs_entity_t withBar = ecs_lookup(world, "parent.withBar");
+    test_assert(withBar != 0);
+    ecs_entity_t withoutBar = ecs_lookup(world, "parent.withoutBar");
+    test_assert(withoutBar != 0);
+    ecs_entity_t defWithoutBar = ecs_lookup(world, "defWithoutBar");
+    test_assert(defWithoutBar != 0);
+
+    test_assert(ecs_has(world, withBar, Bar));
+    test_assert(!ecs_has(world, withoutBar, Bar));
+    test_assert(!ecs_has(world, defWithoutBar, Bar));
+
+    ecs_fini(world);
+}

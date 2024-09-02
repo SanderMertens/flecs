@@ -57848,11 +57848,13 @@ int flecs_script_template_preprocess(
     ecs_script_eval_visitor_t *v,
     ecs_script_template_t *template)
 {
+    ecs_visit_action_t prev_visit = v->base.visit;
     v->template = template;
     v->base.visit = (ecs_visit_action_t)flecs_script_template_eval;
     v->vars = flecs_script_vars_push(v->vars, &v->stack, v->allocator);
     int result = ecs_script_visit_scope(v, template->node->scope);
     v->vars = ecs_script_vars_pop(v->vars);
+    v->base.visit = prev_visit;
     v->template = NULL;
     return result;
 }

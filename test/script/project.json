@@ -301,7 +301,9 @@
                 "anonymous_template_instance",
                 "anonymous_template_instance_no_scope",
                 "anonymous_template_instance_w_prop",
-                "anonymous_template_instance_w_prop_no_scope"
+                "anonymous_template_instance_w_prop_no_scope",
+                "with_after_template",
+                "with_in_scope_after_template"
             ]
         }, {
             "id": "Error",

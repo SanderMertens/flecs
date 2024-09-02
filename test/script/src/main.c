@@ -296,6 +296,8 @@ void Template_anonymous_template_instance(void);
 void Template_anonymous_template_instance_no_scope(void);
 void Template_anonymous_template_instance_w_prop(void);
 void Template_anonymous_template_instance_w_prop_no_scope(void);
+void Template_with_after_template(void);
+void Template_with_in_scope_after_template(void);
 
 // Testsuite 'Error'
 void Error_multi_line_comment_after_newline_before_newline_scope_open(void);
@@ -1782,6 +1784,14 @@ bake_test_case Template_testcases[] = {
     {
         "anonymous_template_instance_w_prop_no_scope",
         Template_anonymous_template_instance_w_prop_no_scope
+    },
+    {
+        "with_after_template",
+        Template_with_after_template
+    },
+    {
+        "with_in_scope_after_template",
+        Template_with_in_scope_after_template
     }
 };
 
@@ -3141,7 +3151,7 @@ static bake_test_suite suites[] = {
         "Template",
         NULL,
         NULL,
-        34,
+        36,
         Template_testcases
     },
     {
