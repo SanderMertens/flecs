@@ -3421,3 +3421,51 @@ void ComponentLifecycle_new_w_table_on_add_hook(void) {
 
     ecs_fini(world);
 }
+
+static int hook_count = 0;
+static void hook_w_count(ecs_iter_t *it) {
+    hook_count = ecs_count_id(it->world, ecs_field_id(it, 0));
+    test_int(hook_count, 1);
+}
+
+void ComponentLifecycle_count_in_on_add(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .on_add = hook_w_count
+    });
+
+    ecs_entity_t e = ecs_new_w(world, Position);
+    test_int(hook_count, 1);
+
+    ecs_iter_t it = ecs_each(world, Position);
+    test_bool(true, ecs_each_next(&it));
+    test_int(1, it.count);
+    test_uint(e, it.entities[0]);
+    test_bool(false, ecs_each_next(&it));
+
+    ecs_fini(world);
+}
+
+void ComponentLifecycle_count_in_on_remove(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .on_remove = hook_w_count
+    });
+
+    ecs_entity_t e = ecs_new_w(world, Position);
+    test_int(hook_count, 0);
+
+    ecs_delete(world, e);
+    test_int(hook_count, 1);
+
+    ecs_iter_t it = ecs_each(world, Position);
+    test_bool(false, ecs_each_next(&it));
+
+    ecs_fini(world);
+}

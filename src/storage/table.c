@@ -1436,6 +1436,12 @@ int32_t flecs_table_append(
     table->data.count = v_entities.count;
     table->data.size = v_entities.size;
 
+    /* If this is the first entity in this table, signal queries so that the
+     * table moves from an inactive table to an active table. */
+    if (!count) {
+        flecs_table_set_empty(world, table);
+    }
+
     /* Reobtain size to ensure that the columns have the same size as the 
      * entities and record vectors. This keeps reasoning about when allocations
      * occur easier. */
@@ -1470,12 +1476,6 @@ int32_t flecs_table_append(
         ecs_assert(bs_columns != NULL, ECS_INTERNAL_ERROR, NULL);
         ecs_bitset_t *bs = &bs_columns[i];
         flecs_bitset_addn(bs, 1);
-    }
-
-    /* If this is the first entity in this table, signal queries so that the
-     * table moves from an inactive table to an active table. */
-    if (!count) {
-        flecs_table_set_empty(world, table);
     }
 
     flecs_table_check_sanity(world, table);
@@ -1538,13 +1538,6 @@ void flecs_table_delete(
     /* If the table is monitored indicate that there has been a change */
     flecs_table_mark_table_dirty(world, table, 0);    
 
-    /* If table is empty, deactivate it */
-    if (!count) {
-        table->data.count --;
-        flecs_table_set_empty(world, table);
-        table->data.count ++;
-    }
-
     /* Destruct component data */
     ecs_column_t *columns = table->data.columns;
     int32_t column_count = table->column_count;
@@ -1558,6 +1551,9 @@ void flecs_table_delete(
         }
 
         table->data.count --;
+        if (!count) {
+            flecs_table_set_empty(world, table);
+        }
 
         flecs_table_check_sanity(world, table);
         return;
@@ -1621,6 +1617,9 @@ void flecs_table_delete(
     }
 
     table->data.count --;
+    if (!count) {
+        flecs_table_set_empty(world, table);
+    }
 
     flecs_table_check_sanity(world, table);
 }
