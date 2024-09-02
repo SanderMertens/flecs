@@ -1920,3 +1920,46 @@ void ComponentLifecycle_sparse_component(void) {
     test_int(Pod::copy_ctor_invoked, 0);
     test_int(Pod::move_ctor_invoked, 0);
 }
+
+void ComponentLifecycle_count_in_add_hook(void) {
+    flecs::world ecs;
+
+    int count = 0;
+
+    ecs.component<Position>().on_add([&](Position& p) {
+        count = ecs.count<Position>();
+    });
+
+    auto ent = ecs.entity().set<Position>({1, 2});
+    test_int(count, 1);
+    
+    int matched = 0;
+    ecs.query<Position>().each([&](Position& p) {
+        matched ++;
+    });
+
+    test_int(matched, 1);
+}
+
+void ComponentLifecycle_count_in_remove_hook(void) {
+    flecs::world ecs;
+
+    int count = 0;
+
+    ecs.component<Position>().on_remove([&](Position& p) {
+        count = ecs.count<Position>();
+    });
+
+    auto ent = ecs.entity().set<Position>({1, 2});
+    test_int(count, 0);
+
+    ent.destruct();
+    test_int(count, 1);
+    
+    int matched = 0;
+    ecs.query<Position>().each([&](Position& p) {
+        matched ++;
+    });
+
+    test_int(matched, 0);
+}

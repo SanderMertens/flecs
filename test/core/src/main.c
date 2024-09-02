@@ -1095,6 +1095,8 @@ void ComponentLifecycle_on_nested_prefab_copy_test_invokes_copy_count(void);
 void ComponentLifecycle_no_move_no_move_ctor_with_move_dtor_with_ctor_move_dtor(void);
 void ComponentLifecycle_new_w_table_ctor(void);
 void ComponentLifecycle_new_w_table_on_add_hook(void);
+void ComponentLifecycle_count_in_on_add(void);
+void ComponentLifecycle_count_in_on_remove(void);
 
 // Testsuite 'Pairs'
 void Pairs_type_w_one_pair(void);
@@ -6364,6 +6366,14 @@ bake_test_case ComponentLifecycle_testcases[] = {
     {
         "new_w_table_on_add_hook",
         ComponentLifecycle_new_w_table_on_add_hook
+    },
+    {
+        "count_in_on_add",
+        ComponentLifecycle_count_in_on_add
+    },
+    {
+        "count_in_on_remove",
+        ComponentLifecycle_count_in_on_remove
     }
 };
 
@@ -10724,7 +10734,7 @@ static bake_test_suite suites[] = {
         "ComponentLifecycle",
         ComponentLifecycle_setup,
         NULL,
-        94,
+        96,
         ComponentLifecycle_testcases
     },
     {
