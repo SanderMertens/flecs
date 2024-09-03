@@ -2,6 +2,7 @@
 
 // ReSharper disable CppUE4CodingStandardNamingViolationWarning
 // ReSharper disable CppExpressionWithoutSideEffects
+// ReSharper disable CppMemberFunctionMayBeStatic
 #pragma once
 
 #include "CoreMinimal.h"
@@ -53,6 +54,7 @@ public:
 		static constexpr int32 UOBJECT_VALID_CHECK_FRAME_RATE = 60;
 
 		ObtainComponentTypeStruct(FFlecsScriptStructComponent::StaticStruct());
+		
 		CreateObserver<flecs::_::type_impl_struct_event_info>(TEXT("StructComponentObserver"))
 				.cached()
 				.event(flecs::OnSet)
@@ -87,6 +89,7 @@ public:
 				});
 		
 		CreateSystemWithBuilder<const FFlecsUObjectComponent&>(TEXT("FlecsUObjectComponentSystem"))
+			.cached()
 			.kind(flecs::PostFrame)
 			.term_at(0)
 				.read()
@@ -769,7 +772,7 @@ public:
 
 		#if WITH_EDITOR
 
-		this->RegisterMemberProperties(ScriptStruct, ScriptStructComponent);
+		RegisterMemberProperties(ScriptStruct, ScriptStructComponent);
 
 		#endif // WITH_EDITOR
 
@@ -799,7 +802,7 @@ public:
 
 		#if WITH_EDITOR
 
-		this->RegisterMemberProperties(ScriptStruct, InComponentEntity);
+		RegisterMemberProperties(ScriptStruct, InComponentEntity);
 
 		#endif // WITH_EDITOR
 	}

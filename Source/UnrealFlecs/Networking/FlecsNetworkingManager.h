@@ -56,9 +56,9 @@ private:
 	FFlecsEntityHandle NetworkInitializedObserver;
 
 	UPROPERTY()
-	uint64 NextNetworkId = 0;
+	uint32 NextNetworkId = 0;
 
-	FORCEINLINE NO_DISCARD uint64 GetNextNetworkId() { return ++NextNetworkId; }
+	FORCEINLINE NO_DISCARD uint32 GetNextNetworkId() { return ++NextNetworkId; }
 
 	UPROPERTY()
 	TWeakObjectPtr<UFlecsWorld> FlecsWorld;

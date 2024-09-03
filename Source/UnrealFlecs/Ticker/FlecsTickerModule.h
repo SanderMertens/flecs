@@ -19,6 +19,8 @@ public:
 	virtual void InitializeModule(UFlecsWorld* InWorld, const FFlecsEntityHandle& InModuleEntity) override;
 	virtual void DeinitializeModule(UFlecsWorld* InWorld) override;
 
+	FORCEINLINE virtual FString GetModuleName_Implementation() const override { return TEXT("Flecs Ticker Module"); }
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Ticker",
 		meta = (Units = "Hz", ClampMin = "1", ClampMax = "1000"))
 	int64 TickerRate = 60;

@@ -24,6 +24,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs")
 	FFlecsEntityRecord EntityRecord;
 
+	UPROPERTY()
 	FFlecsEntityHandle EntityHandle;
 
 	FORCEINLINE virtual void OnEntityCreated(const FFlecsEntityHandle& InEntityHandle, UFlecsWorld* World) override final;

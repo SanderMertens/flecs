@@ -29,7 +29,7 @@ void UFlecsNetworkingManager::BeginPlay()
 	{
 		NetworkIdObserver =
 			FlecsWorld->CreateObserver<FFlecsNetworkIdComponent>(TEXT("NetworkingIdObserver"))
-		.term_at(1)
+		.term_at(0)
 			.event(flecs::OnAdd)
 			.yield_existing(true)
 			.read_write()

@@ -5,7 +5,6 @@
 #include "FlecsTickerComponent.h"
 #include "Worlds/FlecsWorld.h"
 
-
 #include UE_INLINE_GENERATED_CPP_BY_NAME(FlecsTickerModule)
 
 UNLOG_CATEGORY(LogFlecsTicker);
@@ -30,6 +29,8 @@ void UFlecsTickerModule::InitializeModule(UFlecsWorld* InWorld, const FFlecsEnti
 			++Ticker.TickId;
 			Iter.world().defer_resume();
 		});
+
+	
 }
 
 void UFlecsTickerModule::DeinitializeModule(UFlecsWorld* InWorld)

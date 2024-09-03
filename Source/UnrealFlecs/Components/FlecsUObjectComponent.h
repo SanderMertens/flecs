@@ -9,7 +9,7 @@
 #include "FlecsUObjectComponent.generated.h"
 
 USTRUCT(BlueprintType)
-struct UNREALFLECS_API FFlecsUObjectComponent
+struct alignas(8) UNREALFLECS_API FFlecsUObjectComponent
 {
 	GENERATED_BODY()
 
@@ -57,7 +57,7 @@ public:
 
 	FORCEINLINE NO_DISCARD FString ToString() const
 	{
-		return Object.IsValid() ? Object->GetName() : TEXT("Invalid");
+		return IsValid() ? Object->GetName() : TEXT("Invalid");
 	}
 	
 }; // struct FFlecsUObjectComponent

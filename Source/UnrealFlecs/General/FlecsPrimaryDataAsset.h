@@ -16,8 +16,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs")
 	bool bEnabledOnStartup = true;
 
-	virtual void OnEntityCreated(const FFlecsEntityHandle& InEntityHandle, UFlecsWorld* World) PURE_VIRTUAL(UFlecsPrimaryDataAsset::OnEntityCreated, );
-	virtual void OnEntityDestroyed(const FFlecsEntityHandle& InEntityHandle, UFlecsWorld* World) PURE_VIRTUAL(UFlecsPrimaryDataAsset::OnEntityDestroyed, );
+	virtual void OnEntityCreated(const FFlecsEntityHandle& InEntityHandle, UFlecsWorld* World)
+		PURE_VIRTUAL(UFlecsPrimaryDataAsset::OnEntityCreated, );
+	virtual void OnEntityDestroyed(const FFlecsEntityHandle& InEntityHandle, UFlecsWorld* World)
+		PURE_VIRTUAL(UFlecsPrimaryDataAsset::OnEntityDestroyed, );
 
 	FORCEINLINE NO_DISCARD bool ShouldSpawn() const
 	{

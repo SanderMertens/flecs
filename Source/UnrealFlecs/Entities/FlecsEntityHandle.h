@@ -10,13 +10,12 @@
 #include "InstancedStruct.h"
 #include "Logs/FlecsCategories.h"
 #include "SolidMacros/Macros.h"
-#include "Unlog/Unlog.h"
 #include "FlecsEntityHandle.generated.h"
 
 class UFlecsWorld;
 
 USTRUCT(BlueprintType)
-struct UNREALFLECS_API FFlecsEntityHandle
+struct alignas(8) UNREALFLECS_API FFlecsEntityHandle
 {
 	GENERATED_BODY()
 
@@ -294,11 +293,6 @@ public:
 	{
 		GetEntity().set_second(InRelation, InTarget);
 	}
-
-	FORCEINLINE NO_DISCARD bool IsPair() const
-	{
-		return GetEntity().is_pair();
-	}
 	
 	FORCEINLINE NO_DISCARD FFlecsEntityHandle GetParent() const
 	{
@@ -353,6 +347,23 @@ public:
 		GetEntity().emit(InEntity);
 	}
 
+	template <typename T>
+	FORCEINLINE void Enqueue() const
+	{
+		GetEntity().enqueue<T>();
+	}
+
+	template <typename T>
+	FORCEINLINE void Enqueue(const T& InValue) const
+	{
+		GetEntity().enqueue<T>(InValue);
+	}
+
+	FORCEINLINE void Enqueue(const FFlecsEntityHandle& InEntity) const
+	{
+		GetEntity().enqueue(InEntity.GetEntity());
+	}
+
 	template <typename FunctionType>
 	FORCEINLINE void Observe(FunctionType&& InFunction) const
 	{
@@ -368,7 +379,7 @@ public:
 	template <typename FunctionType>
 	FORCEINLINE void Observe(const FFlecsEntityHandle& InEntity, FunctionType&& InFunction) const
 	{
-		GetEntity().observe(InEntity, InFunction);
+		GetEntity().observe(InEntity.GetEntity(), InFunction);
 	}
 
 	FORCEINLINE NO_DISCARD bool operator==(const FFlecsEntityHandle& Other) const
@@ -1091,8 +1102,7 @@ public:
 	{
 		GetEntity().modified<TComponent>();
 	}
-
-	template <typename TComponent>
+	
 	FORCEINLINE void Modified(const UScriptStruct* StructType) const
 	{
 		GetEntity().modified(ObtainComponentTypeStruct(StructType));
@@ -1108,11 +1118,6 @@ public:
 	FORCEINLINE void Modified(const FFlecsEntityHandle& InEntity) const
 	{
 		GetEntity().modified(InEntity);
-	}
-
-	FORCEINLINE void Modified(const UScriptStruct* StructType) const
-	{
-		GetEntity().modified(ObtainTraitHolderEntity(StructType));
 	}
 
 	FORCEINLINE void Modified(const FGameplayTag& InTag) const

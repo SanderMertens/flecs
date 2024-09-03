@@ -35,6 +35,7 @@ void UFlecsNetworkingActorComponent::Client_UpdateCreatedNetworkedEntities_Imple
 				"Created entity %s in world %s, sent from server",
 				*EntityName,
 				*WorldName);
+			UMeshComponent
 		}
 
 		Entity.Set<FFlecsNetworkIdComponent>(NetworkId);

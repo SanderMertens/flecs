@@ -19,7 +19,7 @@ public:
 
 	FORCEINLINE virtual FString GetModuleName_Implementation() const override
 	{
-		return TEXT("FlecsRestModule");
+		return TEXT("Flecs Rest Module");
 	}
 
 	UPROPERTY()
