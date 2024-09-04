@@ -7,6 +7,8 @@
 #include "Subsystems/EngineSubsystem.h"
 #include "FlecsDefaultEntityEngineSubsystem.generated.h"
 
+INLINE ECS_ENTITY_DECLARE(FlecsNotNetworkedTrait);
+
 UCLASS(BlueprintType)
 class UNREALFLECS_API UFlecsDefaultEntityEngineSubsystem : public UEngineSubsystem
 {
@@ -26,7 +28,7 @@ public:
 
 	TArray<FFlecsDefaultMetaEntity> CodeAddedDefaultEntities;
 
-	void AddDefaultEntity(const FFlecsDefaultMetaEntity& DefaultEntity);
+	flecs::entity_t AddDefaultEntity(const FFlecsDefaultMetaEntity& DefaultEntity);
 
 	flecs::world DefaultEntityWorld;
 	flecs::entity TestEntity;
@@ -39,13 +41,14 @@ public:
 	FFlecsDefaultMetaEntity EntityName##MetaEntity; \
 	EntityName##MetaEntity.EntityRecord.Name = TEXT(#EntityName); \
 	EntityName##MetaEntity.bIsOptionEntity = true; \
-	GEngine->GetEngineSubsystem<UFlecsDefaultEntityEngineSubsystem>()->AddDefaultEntity(EntityName##MetaEntity);
+	EntityName = GEngine->GetEngineSubsystem<UFlecsDefaultEntityEngineSubsystem>()->AddDefaultEntity(EntityName##MetaEntity)
 
 #else // WITH_EDITOR
 
 #define DEFINE_DEFAULT_ENTITY_OPTION(EntityName) \
 	FFlecsDefaultMetaEntity EntityName##MetaEntity; \
 	EntityName##MetaEntity.EntityRecord.Name = #EntityName; \
-	GEngine->GetEngineSubsystem<UFlecsDefaultEntityEngineSubsystem>()->AddDefaultEntity(EntityName##MetaEntity);
+	EntityName##MetaEntity.bIsOptionEntity = true; \
+	EntityName = GEngine->GetEngineSubsystem<UFlecsDefaultEntityEngineSubsystem>()->AddDefaultEntity(EntityName##MetaEntity);
 
 #endif // WITH_EDITOR

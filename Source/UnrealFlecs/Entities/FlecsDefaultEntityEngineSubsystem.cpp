@@ -24,7 +24,7 @@ void UFlecsDefaultEntityEngineSubsystem::Initialize(FSubsystemCollectionBase& Co
 	UFlecsDefaultEntitiesDeveloperSettings* Settings = GetMutableDefault<UFlecsDefaultEntitiesDeveloperSettings>();
 	solid_checkf(Settings, TEXT("Default Entities Developer Settings not found"));
 
-	DEFINE_DEFAULT_ENTITY_OPTION(NotNetworked);
+	DEFINE_DEFAULT_ENTITY_OPTION(FlecsNotNetworkedTrait);
 
 	#if WITH_EDITOR
 	
@@ -100,8 +100,9 @@ void UFlecsDefaultEntityEngineSubsystem::RefreshDefaultEntities()
 	}
 }
 
-void UFlecsDefaultEntityEngineSubsystem::AddDefaultEntity(const FFlecsDefaultMetaEntity& DefaultEntity)
+flecs::entity_t UFlecsDefaultEntityEngineSubsystem::AddDefaultEntity(const FFlecsDefaultMetaEntity& DefaultEntity)
 {
 	CodeAddedDefaultEntities.Add(DefaultEntity);
 	RefreshDefaultEntities();
+	return DefaultEntityOptions[DefaultEntity.EntityRecord.Name];
 }

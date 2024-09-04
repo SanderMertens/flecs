@@ -11,9 +11,9 @@ struct UNREALFLECS_API FFlecsRotationComponent
 {
 	GENERATED_BODY()
 
-	FORCEINLINE friend NO_DISCARD uint32 GetTypeHash(FFlecsRotationComponent& InComponent)
+	FORCEINLINE friend NO_DISCARD uint32 GetTypeHash(const FFlecsRotationComponent& InComponent)
 	{
-		return InComponent.Rotation.To
+		return GetTypeHash(InComponent.Rotation.Quaternion());
 	}
 
 	FORCEINLINE FFlecsRotationComponent() = default;
@@ -40,6 +40,11 @@ struct UNREALFLECS_API FFlecsRotationComponent
 	FORCEINLINE bool operator==(const FFlecsRotationComponent& InComponent) const
 	{
 		return Rotation == InComponent.Rotation;
+	}
+	
+	FORCEINLINE bool operator!=(const FFlecsRotationComponent& InComponent) const
+	{
+		return !(*this == InComponent);
 	}
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs")

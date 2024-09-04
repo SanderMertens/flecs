@@ -333,12 +333,6 @@ public:
 		return World.has<First>(InSecond);
 	}
 
-	template <typename First, typename ...TArgs>
-	FORCEINLINE NO_DISCARD bool HasSingleton() const
-	{
-		return World.has<First, TArgs...>();
-	}
-
 	template <typename T>
 	FORCEINLINE NO_DISCARD T GetSingleton() const
 	{
@@ -366,6 +360,7 @@ public:
 	template <typename T>
 	FORCEINLINE NO_DISCARD const T& GetSingletonRef() const
 	{
+		solid_checkf(HasSingleton<T>(), TEXT("Singleton %s not found"), *T::StaticStruct()->GetName());
 		return *GetSingletonPtr<T>();
 	}
 
@@ -433,7 +428,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
 	FORCEINLINE bool IsModuleImported(const TSubclassOf<UFlecsModuleInterface> InModule) const
 	{
-		return true;
+		return false;
 	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")

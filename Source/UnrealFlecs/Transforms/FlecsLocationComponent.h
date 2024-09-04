@@ -41,6 +41,11 @@ struct UNREALFLECS_API FFlecsLocationComponent
 	{
 		return Location == InComponent.Location;
 	}
+	
+	FORCEINLINE bool operator!=(const FFlecsLocationComponent& InComponent) const
+	{
+		return !(*this == InComponent);
+	}
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs")
 	FVector Location;

@@ -25,7 +25,7 @@ public:
 	FFlecsEntityRecord EntityRecord;
 
 	UPROPERTY()
-	FFlecsEntityHandle EntityHandle;
+	FFlecsEntityHandle PrefabEntityHandle;
 
 	FORCEINLINE virtual void OnEntityCreated(const FFlecsEntityHandle& InEntityHandle, UFlecsWorld* World) override final;
 
