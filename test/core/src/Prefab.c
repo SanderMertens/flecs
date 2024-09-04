@@ -4597,3 +4597,68 @@ void Prefab_prefab_w_children_w_isa_auto_override(void) {
 
     ecs_fini(world);
 }
+
+void Prefab_prefab_child_w_override(void) {
+    ecs_world_t* ecs = ecs_mini();
+
+    ECS_COMPONENT(ecs, Position);
+
+    ecs_entity_t p = ecs_entity(ecs, { .name = "p", .add = ecs_ids(EcsPrefab) });
+    ecs_entity_t c = ecs_new_w_pair(ecs, EcsChildOf, p);
+    ecs_set_name(ecs, c, "c");
+    ecs_auto_override(ecs, c, Position);
+
+    ecs_entity_t i = ecs_new_w_pair(ecs, EcsIsA, p);
+    ecs_entity_t ic = ecs_lookup_from(ecs, i, "c");
+    test_assert(ic != 0);
+    test_assert(ecs_has(ecs, ic, Position));
+    test_assert(!ecs_has_id(ecs, ic, ECS_AUTO_OVERRIDE | ecs_id(Position)));
+
+    ecs_fini(ecs);
+}
+
+void Prefab_prefab_child_w_override_and_higher_component(void) {
+    ecs_world_t* ecs = ecs_mini();
+
+    ECS_COMPONENT(ecs, Position);
+    ECS_COMPONENT(ecs, Velocity);
+
+    ecs_entity_t p = ecs_entity(ecs, { .name = "p", .add = ecs_ids(EcsPrefab) });
+    ecs_entity_t c = ecs_new_w_pair(ecs, EcsChildOf, p);
+    ecs_set_name(ecs, c, "c");
+    ecs_auto_override(ecs, c, Position);
+    ecs_add(ecs, c, Velocity);
+
+    ecs_entity_t i = ecs_new_w_pair(ecs, EcsIsA, p);
+    ecs_entity_t ic = ecs_lookup_from(ecs, i, "c");
+    test_assert(ic != 0);
+    test_assert(ecs_has(ecs, ic, Position));
+    test_assert(ecs_has(ecs, ic, Velocity));
+    test_assert(!ecs_has_id(ecs, ic, ECS_AUTO_OVERRIDE | ecs_id(Position)));
+    test_assert(!ecs_has_id(ecs, ic, ECS_AUTO_OVERRIDE | ecs_id(Velocity)));
+
+    ecs_fini(ecs);
+}
+
+void Prefab_prefab_child_w_override_and_lower_component(void) {
+    ecs_world_t* ecs = ecs_mini();
+
+    ECS_COMPONENT(ecs, Velocity);
+    ECS_COMPONENT(ecs, Position);
+
+    ecs_entity_t p = ecs_entity(ecs, { .name = "p", .add = ecs_ids(EcsPrefab) });
+    ecs_entity_t c = ecs_new_w_pair(ecs, EcsChildOf, p);
+    ecs_set_name(ecs, c, "c");
+    ecs_auto_override(ecs, c, Position);
+    ecs_add(ecs, c, Velocity);
+
+    ecs_entity_t i = ecs_new_w_pair(ecs, EcsIsA, p);
+    ecs_entity_t ic = ecs_lookup_from(ecs, i, "c");
+    test_assert(ic != 0);
+    test_assert(ecs_has(ecs, ic, Position));
+    test_assert(ecs_has(ecs, ic, Velocity));
+    test_assert(!ecs_has_id(ecs, ic, ECS_AUTO_OVERRIDE | ecs_id(Position)));
+    test_assert(!ecs_has_id(ecs, ic, ECS_AUTO_OVERRIDE | ecs_id(Velocity)));
+
+    ecs_fini(ecs);
+}
