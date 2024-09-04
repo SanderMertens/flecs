@@ -50768,32 +50768,26 @@ static void flecs_meta_rtt_init_default_hooks_array(ecs_world_t *world, ecs_enti
   if (!rtt_ctx)
     return;  // no hooks required
 
+  ecs_meta_rtt_call_data_t default_call_data = {.count = array_info->count, .offset = 0, .type_info = array_ti};
+
   if (ctor_hook_required) {
     ecs_meta_rtt_call_data_t *ctor_data = ecs_vec_append_t(NULL, &rtt_ctx->ctors, ecs_meta_rtt_call_data_t);
-    ctor_data->count = array_info->count;
-    ctor_data->offset = 0;
-    ctor_data->type_info = array_ti;
+    *ctor_data = default_call_data;
     ctor_data->hook.xtor = array_ti->hooks.ctor;
   }
   if (dtor_hook_required) {
     ecs_meta_rtt_call_data_t *dtor_data = ecs_vec_append_t(NULL, &rtt_ctx->dtors, ecs_meta_rtt_call_data_t);
-    dtor_data->count = array_info->count;
-    dtor_data->offset = 0;
-    dtor_data->type_info = array_ti;
+    *dtor_data = default_call_data;
     dtor_data->hook.xtor = array_ti->hooks.dtor;
   }
   if (move_hook_required) {
     ecs_meta_rtt_call_data_t *move_data = ecs_vec_append_t(NULL, &rtt_ctx->moves, ecs_meta_rtt_call_data_t);
-    move_data->count = array_info->count;
-    move_data->offset = 0;
-    move_data->type_info = array_ti;
+    *move_data = default_call_data;
     move_data->hook.move = array_ti->hooks.move;
   }
   if (copy_hook_required) {
     ecs_meta_rtt_call_data_t *copy_data = ecs_vec_append_t(NULL, &rtt_ctx->copys, ecs_meta_rtt_call_data_t);
-    copy_data->count = array_info->count;
-    copy_data->offset = 0;
-    copy_data->type_info = array_ti;
+    *copy_data = default_call_data;
     copy_data->hook.copy = array_ti->hooks.copy;
   }
 }
