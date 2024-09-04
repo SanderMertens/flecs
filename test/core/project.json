@@ -633,7 +633,7 @@
                 "new_from_path_existing_depth_2",
                 "add_path_depth_0",
                 "add_path_depth_1",
-                "add_path_depth_2", 
+                "add_path_depth_2",
                 "add_path_existing_depth_0",
                 "add_path_existing_depth_1",
                 "add_path_existing_depth_2",
@@ -1444,7 +1444,7 @@
                 "2_pair_terms_w_on_remove",
                 "2_wildcard_pair_terms_w_on_add",
                 "2_wildcard_pair_terms_w_on_add_2_matching",
-                "2_wildcard_pair_terms_w_on_add_3_matching",                
+                "2_wildcard_pair_terms_w_on_add_3_matching",
                 "2_wildcard_pair_terms_w_on_remove",
                 "on_set_n_entities",
                 "on_set_n_entities_2_comp",
@@ -1607,7 +1607,7 @@
                 "cache_test_14",
                 "cache_test_15",
                 "cache_test_16"
-            ]                
+            ]
         }, {
             "id": "ObserverOnSet",
             "testcases": [
@@ -1755,7 +1755,7 @@
                 "prefab_w_base_w_child",
                 "prefab_w_child_w_base",
                 "prefab_w_child_w_base_w_children",
-                "prefab_w_child_new_w_count",                
+                "prefab_w_child_new_w_count",
                 "prefab_auto_override_child_component",
                 "ignore_on_add",
                 "ignore_on_remove",
@@ -1804,7 +1804,7 @@
                 "rematch_after_prefab_delete",
                 "add_tag_w_low_id_to_instance",
                 "get_type_after_base_add",
-                "get_type_after_recycled_base_add",                
+                "get_type_after_recycled_base_add",
                 "new_w_recycled_base",
                 "add_recycled_base",
                 "remove_recycled_base",
@@ -1857,7 +1857,10 @@
                 "hierarchy_w_recycled_id",
                 "disable_ids",
                 "disable_nested_ids",
-                "prefab_w_children_w_isa_auto_override"
+                "prefab_w_children_w_isa_auto_override",
+                "prefab_child_w_override",
+                "prefab_child_w_override_and_higher_component",
+                "prefab_child_w_override_and_lower_component"
             ]
         }, {
             "id": "World",
