@@ -123,7 +123,10 @@ static void flecs_meta_rtt_free_lifecycle_ctx(void *ctx) {
 static ecs_meta_rtt_ctx_t *flecs_meta_rtt_configure_hooks(ecs_world_t *world, const ecs_type_info_t *ti, bool ctor,
                                                           bool dtor, bool move, bool copy) {
   ecs_type_hooks_t hooks = ti->hooks;
-  flecs_meta_rtt_free_lifecycle_ctx(hooks.lifecycle_ctx);
+  if (hooks.lifecycle_ctx_free) {
+    hooks.lifecycle_ctx_free(hooks.lifecycle_ctx);
+  }
+
   ecs_meta_rtt_ctx_t *rtt_ctx = NULL;
   if (ctor || dtor || move || copy) {
     rtt_ctx = ecs_os_malloc_t(ecs_meta_rtt_ctx_t);
@@ -148,6 +151,7 @@ static ecs_meta_rtt_ctx_t *flecs_meta_rtt_configure_hooks(ecs_world_t *world, co
     }
   } else {
     hooks.lifecycle_ctx = NULL;
+    hooks.lifecycle_ctx_free = NULL;
   }
   ecs_set_hooks_id(world, ti->component, &hooks);
   return rtt_ctx;
