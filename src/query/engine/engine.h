@@ -160,41 +160,28 @@ bool flecs_query_select(
     bool redo,
     const ecs_query_run_ctx_t *ctx);
 
+bool flecs_query_select_id(
+    const ecs_query_op_t *op,
+    bool redo,
+    const ecs_query_run_ctx_t *ctx,
+    ecs_flags32_t table_filter);
+
+bool flecs_query_with(
+    const ecs_query_op_t *op,
+    bool redo,
+    const ecs_query_run_ctx_t *ctx);
+
+bool flecs_query_with_id(
+    const ecs_query_op_t *op,
+    bool redo,
+    const ecs_query_run_ctx_t *ctx);
+
 bool flecs_query_select_w_id(
     const ecs_query_op_t *op,
     bool redo,
     const ecs_query_run_ctx_t *ctx,
     ecs_id_t id,
     ecs_flags32_t filter_mask);
-
-typedef enum ecs_query_up_select_trav_kind_t {
-    FlecsQueryUpSelectUp,
-    FlecsQueryUpSelectSelfUp
-} ecs_query_up_select_trav_kind_t;
-
-typedef enum ecs_query_up_select_kind_t {
-    FlecsQueryUpSelectDefault,
-    FlecsQueryUpSelectId,
-    FlecsQueryUpSelectUnion
-} ecs_query_up_select_kind_t;
-
-bool flecs_query_up_select(
-    const ecs_query_op_t *op,
-    bool redo,
-    const ecs_query_run_ctx_t *ctx,
-    ecs_query_up_select_trav_kind_t trav_kind,
-    ecs_query_up_select_kind_t kind);
-
-bool flecs_query_up_with(
-    const ecs_query_op_t *op,
-    bool redo,
-    const ecs_query_run_ctx_t *ctx);
-
-bool flecs_query_self_up_with(
-    const ecs_query_op_t *op,
-    bool redo,
-    const ecs_query_run_ctx_t *ctx,
-    bool id_only);
 
 
 /* Union evaluation */
@@ -294,6 +281,56 @@ bool flecs_query_member_neq(
     const ecs_query_op_t *op,
     bool redo,
     ecs_query_run_ctx_t *ctx);
+
+
+/* Up traversal */
+
+typedef enum ecs_query_up_select_trav_kind_t {
+    FlecsQueryUpSelectUp,
+    FlecsQueryUpSelectSelfUp
+} ecs_query_up_select_trav_kind_t;
+
+typedef enum ecs_query_up_select_kind_t {
+    FlecsQueryUpSelectDefault,
+    FlecsQueryUpSelectId,
+    FlecsQueryUpSelectUnion
+} ecs_query_up_select_kind_t;
+
+bool flecs_query_up_select(
+    const ecs_query_op_t *op,
+    bool redo,
+    const ecs_query_run_ctx_t *ctx,
+    ecs_query_up_select_trav_kind_t trav_kind,
+    ecs_query_up_select_kind_t kind);
+
+bool flecs_query_up_with(
+    const ecs_query_op_t *op,
+    bool redo,
+    const ecs_query_run_ctx_t *ctx);
+
+bool flecs_query_self_up_with(
+    const ecs_query_op_t *op,
+    bool redo,
+    const ecs_query_run_ctx_t *ctx,
+    bool id_only);
+
+bool flecs_query_up_select(
+    const ecs_query_op_t *op,
+    bool redo,
+    const ecs_query_run_ctx_t *ctx,
+    ecs_query_up_select_trav_kind_t trav_kind,
+    ecs_query_up_select_kind_t kind);
+
+bool flecs_query_up_with(
+    const ecs_query_op_t *op,
+    bool redo,
+    const ecs_query_run_ctx_t *ctx);
+
+bool flecs_query_self_up_with(
+    const ecs_query_op_t *op,
+    bool redo,
+    const ecs_query_run_ctx_t *ctx,
+    bool id_only);
 
 
 /* Transitive relationship traversal */
