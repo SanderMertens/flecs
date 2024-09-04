@@ -1781,6 +1781,9 @@ void Prefab_hierarchy_w_recycled_id(void);
 void Prefab_disable_ids(void);
 void Prefab_disable_nested_ids(void);
 void Prefab_prefab_w_children_w_isa_auto_override(void);
+void Prefab_prefab_child_w_override(void);
+void Prefab_prefab_child_w_override_and_higher_component(void);
+void Prefab_prefab_child_w_override_and_lower_component(void);
 
 // Testsuite 'World'
 void World_setup(void);
@@ -9055,6 +9058,18 @@ bake_test_case Prefab_testcases[] = {
     {
         "prefab_w_children_w_isa_auto_override",
         Prefab_prefab_w_children_w_isa_auto_override
+    },
+    {
+        "prefab_child_w_override",
+        Prefab_prefab_child_w_override
+    },
+    {
+        "prefab_child_w_override_and_higher_component",
+        Prefab_prefab_child_w_override_and_higher_component
+    },
+    {
+        "prefab_child_w_override_and_lower_component",
+        Prefab_prefab_child_w_override_and_lower_component
     }
 };
 
@@ -10787,7 +10802,7 @@ static bake_test_suite suites[] = {
         "Prefab",
         Prefab_setup,
         NULL,
-        130,
+        133,
         Prefab_testcases
     },
     {
