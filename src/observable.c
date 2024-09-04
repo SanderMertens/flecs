@@ -1265,7 +1265,7 @@ repeat_event:
                              * from being called recursively, in case prefab
                              * children also have IsA relationships. */
                             world->stages[0]->base = tgt;
-                            flecs_instantiate(world, tgt, table, offset, count);
+                            flecs_instantiate(world, tgt, table, offset, count, NULL);
                             world->stages[0]->base = 0;
                         }
 

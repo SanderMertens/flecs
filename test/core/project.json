@@ -1860,7 +1860,24 @@
                 "prefab_w_children_w_isa_auto_override",
                 "prefab_child_w_override",
                 "prefab_child_w_override_and_higher_component",
-                "prefab_child_w_override_and_lower_component"
+                "prefab_child_w_override_and_lower_component",
+                "prefab_1_child_offset_id",
+                "prefab_2_children_offset_id",
+                "prefab_3_children_offset_id",
+                "prefab_2_children_2_types_offset_id",
+                "prefab_3_children_3_types_offset_id",
+                "prefab_2_children_2_types_reverse_offset_id",
+                "prefab_3_children_3_types_reverse_offset_id",
+                "prefab_2_lvl_nested_children_offset_id",
+                "prefab_3_lvl_nested_children_offset_id",
+                "prefab_recycled_children_offset_id",
+                "prefab_recycled_instance_offset_id",
+                "prefab_children_recycled_offset_id",
+                "prefab_recycled_children_recycled_offset_id",
+                "prefab_recycled_children_recycled_offset_id_different_generation",
+                "prefab_1_child_offset_id_occupied",
+                "prefab_1_child_offset_id_recycled_occupied",
+                "prefab_child_offset_w_smaller_child_id"
             ]
         }, {
             "id": "World",
