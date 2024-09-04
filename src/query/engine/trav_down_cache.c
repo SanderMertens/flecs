@@ -122,6 +122,11 @@ void flecs_trav_entity_down_isa(
                 continue;
             }
 
+            if (ecs_table_has_id(world, table, idr_with->id)) {
+                /* Table owns component */
+                continue;
+            }
+
             const ecs_entity_t *entities = ecs_table_entities(table);
             int32_t i, count = ecs_table_count(table);
             for (i = 0; i < count; i ++) {

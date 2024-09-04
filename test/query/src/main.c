@@ -1356,8 +1356,12 @@ void Traversal_self_up_all_owned(void);
 void Traversal_up_all_owned(void);
 void Traversal_this_self_up_childof_inherited(void);
 void Traversal_this_up_childof_inherited(void);
+void Traversal_this_self_up_childof_inherited_override(void);
+void Traversal_this_up_childof_inherited_override(void);
 void Traversal_this_written_self_up_childof_inherited(void);
 void Traversal_this_written_up_childof_inherited(void);
+void Traversal_this_written_self_up_childof_inherited_override(void);
+void Traversal_this_written_up_childof_inherited_override(void);
 void Traversal_var_self_up_childof_inherited(void);
 void Traversal_var_up_childof_inherited(void);
 void Traversal_var_written_self_up_childof_inherited(void);
@@ -7354,12 +7358,28 @@ bake_test_case Traversal_testcases[] = {
         Traversal_this_up_childof_inherited
     },
     {
+        "this_self_up_childof_inherited_override",
+        Traversal_this_self_up_childof_inherited_override
+    },
+    {
+        "this_up_childof_inherited_override",
+        Traversal_this_up_childof_inherited_override
+    },
+    {
         "this_written_self_up_childof_inherited",
         Traversal_this_written_self_up_childof_inherited
     },
     {
         "this_written_up_childof_inherited",
         Traversal_this_written_up_childof_inherited
+    },
+    {
+        "this_written_self_up_childof_inherited_override",
+        Traversal_this_written_self_up_childof_inherited_override
+    },
+    {
+        "this_written_up_childof_inherited_override",
+        Traversal_this_written_up_childof_inherited_override
     },
     {
         "var_self_up_childof_inherited",
@@ -10236,7 +10256,7 @@ static bake_test_suite suites[] = {
         "Traversal",
         Traversal_setup,
         NULL,
-        123,
+        127,
         Traversal_testcases,
         1,
         Traversal_params

@@ -59,6 +59,7 @@ bool flecs_query_up_select_table(
 }
 
 /* Find next traversable entity in table. */
+static
 ecs_trav_down_t* flecs_query_up_find_next_traversable(
     const ecs_query_op_t *op,
     const ecs_query_run_ctx_t *ctx,

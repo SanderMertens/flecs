@@ -2338,24 +2338,6 @@ bool flecs_query_self_up_with(
     const ecs_query_run_ctx_t *ctx,
     bool id_only);
 
-bool flecs_query_up_select(
-    const ecs_query_op_t *op,
-    bool redo,
-    const ecs_query_run_ctx_t *ctx,
-    ecs_query_up_select_trav_kind_t trav_kind,
-    ecs_query_up_select_kind_t kind);
-
-bool flecs_query_up_with(
-    const ecs_query_op_t *op,
-    bool redo,
-    const ecs_query_run_ctx_t *ctx);
-
-bool flecs_query_self_up_with(
-    const ecs_query_op_t *op,
-    bool redo,
-    const ecs_query_run_ctx_t *ctx,
-    bool id_only);
-
 
 /* Transitive relationship traversal */
 
@@ -71328,6 +71310,7 @@ bool flecs_query_up_select_table(
 }
 
 /* Find next traversable entity in table. */
+static
 ecs_trav_down_t* flecs_query_up_find_next_traversable(
     const ecs_query_op_t *op,
     const ecs_query_run_ctx_t *ctx,
@@ -72320,6 +72303,11 @@ void flecs_trav_entity_down_isa(
         while ((tr = flecs_table_cache_next(&it, ecs_table_record_t))) {
             ecs_table_t *table = tr->hdr.table;
             if (!table->_->traversable_count) {
+                continue;
+            }
+
+            if (ecs_table_has_id(world, table, idr_with->id)) {
+                /* Table owns component */
                 continue;
             }
 

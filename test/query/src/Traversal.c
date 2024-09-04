@@ -2811,6 +2811,78 @@ void Traversal_this_up_childof_inherited(void) {
     ecs_fini(world);
 }
 
+void Traversal_this_self_up_childof_inherited_override(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, Foo, (OnInstantiate, Inherit));
+
+    ecs_entity_t base = ecs_entity(world, { .add = ecs_ids(Foo) });
+    ecs_entity_t parent = ecs_entity(world, { .add = ecs_ids(ecs_isa(base), Foo) });
+    ecs_entity_t child = ecs_entity(world, { .parent = parent });
+    
+    ecs_query_t *r = ecs_query(world, {
+        .expr = "Foo(self|up)",
+        .cache_kind = cache_kind
+    });
+
+    test_assert(r != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, r);
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(base, it.entities[0]);
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(parent, it.entities[0]);
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(child, it.entities[0]);
+    test_uint(parent, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
+
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(r);
+
+    ecs_fini(world);
+}
+
+void Traversal_this_up_childof_inherited_override(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, Foo, (OnInstantiate, Inherit));
+
+    ecs_entity_t base = ecs_entity(world, { .add = ecs_ids(Foo) });
+    ecs_entity_t parent = ecs_entity(world, { .add = ecs_ids(ecs_isa(base), Foo) });
+    ecs_entity_t child = ecs_entity(world, { .parent = parent });
+    
+    ecs_query_t *r = ecs_query(world, {
+        .expr = "Foo(up)",
+        .cache_kind = cache_kind
+    });
+
+    test_assert(r != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, r);
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(child, it.entities[0]);
+    test_uint(parent, ecs_field_src(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 0));
+
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(r);
+
+    ecs_fini(world);
+}
+
 void Traversal_this_written_self_up_childof_inherited(void) {
     ecs_world_t *world = ecs_mini();
 
@@ -2879,6 +2951,92 @@ void Traversal_this_written_up_childof_inherited(void) {
     test_uint(child, it.entities[0]);
     test_uint(0, ecs_field_src(&it, 0));
     test_uint(base, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
+
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(r);
+
+    ecs_fini(world);
+}
+
+void Traversal_this_written_self_up_childof_inherited_override(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, Foo, (OnInstantiate, Inherit));
+    ECS_ENTITY(world, Tag, (OnInstantiate, Inherit));
+
+    ecs_query_t *r = ecs_query(world, {
+        .expr = "Tag(self), Foo(self|up)",
+        .cache_kind = cache_kind
+    });
+
+    test_assert(r != NULL);
+
+    ecs_set_with(world, Tag);
+    ecs_entity_t base = ecs_entity(world, { .add = ecs_ids(Foo) });
+    ecs_entity_t parent = ecs_entity(world, { .add = ecs_ids(ecs_isa(base), Foo) });
+    ecs_entity_t child = ecs_entity(world, { .parent = parent });
+    ecs_set_with(world, 0);
+    
+    ecs_iter_t it = ecs_query_iter(world, r);
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(base, it.entities[0]);
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(0, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(parent, it.entities[0]);
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(0, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(child, it.entities[0]);
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(parent, ecs_field_src(&it, 1));
+    test_uint(Tag, ecs_field_id(&it, 0));
+    test_uint(Foo, ecs_field_id(&it, 1));
+
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(r);
+
+    ecs_fini(world);
+}
+
+void Traversal_this_written_up_childof_inherited_override(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, Foo, (OnInstantiate, Inherit));
+    ECS_ENTITY(world, Tag, (OnInstantiate, Inherit));
+
+    ecs_query_t *r = ecs_query(world, {
+        .expr = "Tag(self), Foo(up)",
+        .cache_kind = cache_kind
+    });
+
+    test_assert(r != NULL);
+
+    ecs_set_with(world, Tag);
+    ecs_entity_t base = ecs_entity(world, { .add = ecs_ids(Foo) });
+    ecs_entity_t parent = ecs_entity(world, { .add = ecs_ids(ecs_isa(base), Foo) });
+    ecs_entity_t child = ecs_entity(world, { .parent = parent });
+    ecs_set_with(world, 0);
+    
+    ecs_iter_t it = ecs_query_iter(world, r);
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(child, it.entities[0]);
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(parent, ecs_field_src(&it, 1));
     test_uint(Tag, ecs_field_id(&it, 0));
     test_uint(Foo, ecs_field_id(&it, 1));
 
