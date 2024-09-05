@@ -1791,6 +1791,8 @@ ecs_ftime_t flecs_insert_sleep(
         return delta_time;
     }
 
+    ecs_os_perf_trace_push("flecs.insert_sleep");
+
     ecs_ftime_t target_delta_time =
         ((ecs_ftime_t)1.0 / (ecs_ftime_t)world->info.target_fps);
 
@@ -1813,6 +1815,8 @@ ecs_ftime_t flecs_insert_sleep(
         delta_time = (ecs_ftime_t)ecs_time_measure(&now);
     } while ((target_delta_time - delta_time) >
         (sleep_time / (ecs_ftime_t)2.0));
+
+    ecs_os_perf_trace_pop("flecs.insert_sleep");
 
     *stop = now;
     return delta_time;
