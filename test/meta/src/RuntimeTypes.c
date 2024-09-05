@@ -837,6 +837,7 @@ typedef struct BigStruct {
   ResNestedStruct ns;
   int32_t x;
   ResourceHandle arr[3];
+  ecs_vec_t vec;  // vector<ResourceHandle>
 } BigStruct;
 
 void initialize_big_struct(BigStruct *arr_bs, size_t num_elements) {
@@ -848,6 +849,8 @@ void initialize_big_struct(BigStruct *arr_bs, size_t num_elements) {
     arr_bs[i].arr[0].value = 110 + i * 100;  // do not set arr[0].id
     arr_bs[i].arr[1].value = 120 + i * 100;  // do not set arr[1].id
     arr_bs[i].arr[2].value = 130 + i * 100;  // do not set arr[2].id
+    ecs_vec_set_count_t(NULL, &arr_bs[i].vec, ResourceHandle, 3);
+    ResourceHandle_ctor(ecs_vec_first(&arr_bs[i].vec), 3, NULL);
   }
 }
 bool compare_res_nested_struct(const ResNestedStruct *m, const ResNestedStruct *n) {
@@ -872,60 +875,185 @@ bool compare_big_struct(const BigStruct *m, const BigStruct *n, size_t num_eleme
         return false;
       }
     }
+
+    // Compare vector
+    if (ecs_vec_count(&m[i].vec) != ecs_vec_count(&n[i].vec))
+      return false;
+    ResourceHandle *mh = ecs_vec_first_t(&m[i].vec, ResourceHandle);
+    ResourceHandle *nh = ecs_vec_first_t(&n[i].vec, ResourceHandle);
+    for (int j = 0; j < ecs_vec_count(&m[i].vec); j++) {
+      if (!compare_resource_handle(&mh[j], &nh[j]))
+        return false;
+    }
   }
 
   // All comparisons passed
   return true;
 }
 
-// Create a mixed type of array and nested structs and test all hooks together.
+void RuntimeTypes_vector_lifecycle(void) {
+  ecs_world_t *world = ecs_init();
+
+  // create some "resources"
+  int initial_resources = 10;
+  initialize_resource_ids(initial_resources);
+  test_int(10, available_resource_count());
+
+  define_resource_handle(world, true, true, true, true);
+
+  // create a vector of ResourceHandles
+  ecs_vector_desc_t desc = {.entity = 0, .type = resource_handle};
+  ecs_entity_t vector_of_resources = ecs_vector_init(world, &desc);
+
+  const ecs_type_hooks_t *hooks = &ecs_get_type_info(world, vector_of_resources)->hooks;
+
+  // a vector type requires al 4 hooks:
+  test_assert(hooks->ctor != NULL);
+  test_assert(hooks->dtor != NULL);
+  test_assert(hooks->move != NULL);
+  test_assert(hooks->copy != NULL);
+
+  // Test the vector type is working:
+  ecs_entity_t prefab = ecs_new(world);
+  ecs_add_id(world, prefab, EcsPrefab);
+  ecs_vec_t *v = (ecs_vec_t *) ecs_ensure_id(world, prefab, vector_of_resources);
+  test_assert(v != NULL);
+  test_assert(v->array == NULL);
+  test_assert(v->count == 0);
+  test_int(initial_resources, available_resource_count());  // still have 10 resources since vector is empty
+
+  // manually add some items to the vector. These must be constructed by hand:
+  ecs_vec_set_count_t(NULL, v, ResourceHandle, 3);
+  ResourceHandle_ctor(ecs_vec_first(v), 3, NULL);
+  test_int(initial_resources - 3, available_resource_count());  // Used up 3 resources that are now in the vector
+
+  // test vector copy assign by instantiating the prefab
+  ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, prefab);
+  test_int(initial_resources - 6, available_resource_count());  // Used up 3 more resources after copying the vector
+
+  // test vector move assign by forcing a move via archetype change:
+  ecs_add_id(world, e, ecs_new(world));
+  test_int(initial_resources - 6, available_resource_count());  // No more resources consumed
+
+  ecs_delete(world, e);
+  test_int(initial_resources - 3, available_resource_count());  // Frees 3 resources held by the instance
+
+  ecs_delete(world, prefab);
+  test_int(initial_resources, available_resource_count());  // Frees another 3 resources held by the prefab
+
+  // check if all resources were returned:
+  for (int i = 0; i < initial_resources; i++) {
+    test_assert(resource_id_available(i + 1));
+  }
+  ecs_fini(world);
+  free_resource_ids();
+}
+
+void RuntimeTypes_vector_lifecycle_trivial_type(void) {
+  ecs_world_t *world = ecs_init();
+
+  // create a vector of ints
+  ecs_vector_desc_t desc = {.entity = 0, .type = ecs_id(ecs_i32_t)};
+  ecs_entity_t vector_of_ints = ecs_vector_init(world, &desc);
+
+  const ecs_type_hooks_t *hooks = &ecs_get_type_info(world, vector_of_ints)->hooks;
+
+  // a vector type requires al 4 hooks, even for trivial types:
+  test_assert(hooks->ctor != NULL);
+  test_assert(hooks->dtor != NULL);
+  test_assert(hooks->move != NULL);
+  test_assert(hooks->copy != NULL);
+
+  // Test the vector type is working:
+  ecs_entity_t prefab = ecs_new(world);
+  ecs_add_id(world, prefab, EcsPrefab);
+  ecs_vec_t *v = (ecs_vec_t *) ecs_ensure_id(world, prefab, vector_of_ints);
+  test_assert(v != NULL);
+  test_assert(v->array == NULL);
+  test_assert(v->count == 0);
+
+  // manually add some items to the vector. These must be constructed by hand:
+  for (int i = 0; i < 3; i++) {
+    *ecs_vec_append_t(NULL, v, int) = 79;
+  }
+
+  // test vector copy assign by instantiating the prefab
+  ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, prefab);
+
+  // verify we got a copy:
+  const ecs_vec_t *vcopy = (const ecs_vec_t *) ecs_get_id(world, e, vector_of_ints);
+  int32_t count = ecs_vec_count(vcopy);
+  test_int(ecs_vec_count(v), count);
+  test_assert(0 == ecs_os_memcmp(ecs_vec_first(v), ecs_vec_first(vcopy), sizeof(int32_t) * count));
+
+  // test vector move assign by forcing a move via archetype change:
+  ecs_add_id(world, e, ecs_new(world));
+  const ecs_vec_t *vcopy_moved = (const ecs_vec_t *) ecs_get_id(world, e, vector_of_ints);
+  count = ecs_vec_count(vcopy_moved);
+  test_assert(vcopy != vcopy_moved);
+  test_int(ecs_vec_count(v), count);
+  test_assert(0 == ecs_os_memcmp(ecs_vec_first(v), ecs_vec_first(vcopy_moved), sizeof(int32_t) * count));
+
+  ecs_delete(world, e);
+  ecs_delete(world, prefab);
+
+  ecs_fini(world);
+  free_resource_ids();
+}
+
+// Create a mixed type of array, vectors and nested structs and test all hooks together.
 void RuntimeTypes_mixed(void) {
   ecs_world_t *world = ecs_init();
 
   // create some "resources"
-  const int initial_resources = 30;
+  const int initial_resources = 50;
   initialize_resource_ids(initial_resources);
 
   define_resource_handle(world, true, true, true, true);
   define_nested_struct_with_resources(world);
 
   // create an array of 3 ResourceHandles
-  ecs_array_desc_t desc = (ecs_array_desc_t){.entity = 0, .type = resource_handle, .count = 3};
-  ecs_entity_t arr_of_resources = ecs_array_init(world, &desc);
+  ecs_array_desc_t arr_desc = (ecs_array_desc_t){.entity = 0, .type = resource_handle, .count = 3};
+  ecs_entity_t arr_of_resources = ecs_array_init(world, &arr_desc);
   ecs_set_name(world, arr_of_resources, "ArrOfResources_3");
+
+  // create a vector of ResourceHandle
+  ecs_vector_desc_t vector_desc = {.entity = 0, .type = resource_handle};
+  ecs_entity_t vec_of_resources = ecs_vector_init(world, &vector_desc);
 
   // define BigStruct
   ecs_entity_t big_struct = ecs_struct(world, {.entity = ecs_new(world),
                                                .members = {{.name = "ns", .type = nested_struct},
                                                            {.name = "x", .type = ecs_id(ecs_i32_t)},
-                                                           {.name = "arr", .type = arr_of_resources}}});
+                                                           {.name = "arr", .type = arr_of_resources},
+                                                           {.name = "vec", .type = vec_of_resources}}});
 
   // create an array of BigStruct
-  desc = (ecs_array_desc_t){.entity = 0, .type = big_struct, .count = 2};
-  ecs_entity_t arr_of_big_struct = ecs_array_init(world, &desc);
+  arr_desc = (ecs_array_desc_t){.entity = 0, .type = big_struct, .count = 2};
+  ecs_entity_t arr_of_big_struct = ecs_array_init(world, &arr_desc);
   ecs_set_name(world, arr_of_big_struct, "ArrOfBigStruct_5");
 
   ecs_entity_t prefab = ecs_new(world);
 
   BigStruct *arr_bs = (BigStruct *) ecs_ensure_id(world, prefab, arr_of_big_struct);
   // set the array of BigStruct to some test values:
-  initialize_big_struct(arr_bs, desc.count);
+  initialize_big_struct(arr_bs, arr_desc.count);
 
-  test_int(initial_resources - 8, available_resource_count());  // 8 resources were consumed
+  test_int(initial_resources - 14, available_resource_count());  // 14 resources were consumed
 
   // now instantiate this prefab to trigger a copy
   ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, prefab);
-  test_int(initial_resources - 16, available_resource_count());  // 16 resources should be in use
+  test_int(initial_resources - 28, available_resource_count());  // 28 resources should be in use
   const BigStruct *instance_bs = (const BigStruct *) ecs_get_id(world, e, arr_of_big_struct);
 
-  test_assert(compare_big_struct(arr_bs, instance_bs, desc.count));
+  test_assert(compare_big_struct(arr_bs, instance_bs, arr_desc.count));
 
   // add another entity to have `e` change archetypes and trigger a move:
   ecs_add_id(world, e, ecs_new(world));
-  test_int(initial_resources - 16, available_resource_count());  // 16 resources should still be in use
+  test_int(initial_resources - 28, available_resource_count());  // 28 resources should still be in use
 
   instance_bs = (const BigStruct *) ecs_get_id(world, e, arr_of_big_struct);
-  test_assert(compare_big_struct(arr_bs, instance_bs, desc.count));
+  test_assert(compare_big_struct(arr_bs, instance_bs, arr_desc.count));
 
   // destroy world:
   ecs_fini(world);

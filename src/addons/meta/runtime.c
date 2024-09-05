@@ -24,9 +24,13 @@ typedef struct ecs_meta_rtt_call_data_t {
 typedef struct ecs_meta_rtt_ctx_t {
   ecs_vec_t ctors; /* vector<ecs_meta_rtt_call_data_t> */
   ecs_vec_t dtors; /* vector<ecs_meta_rtt_call_data_t> */
-  ecs_vec_t copys; /* vector<ecs_meta_rtt_call_data_t> */
   ecs_vec_t moves; /* vector<ecs_meta_rtt_call_data_t> */
+  ecs_vec_t copys; /* vector<ecs_meta_rtt_call_data_t> */
 } ecs_meta_rtt_ctx_t;
+
+typedef struct ecs_meta_rtt_vector_ctx_t {
+  const ecs_type_info_t *type_info;
+} ecs_meta_rtt_vector_ctx_t;
 
 // Invokes underlying type's constructor/destructor using saved information in the lifecycle context
 static void flecs_meta_rtt_xtor(ecs_vec_t *xtor_data_vec, void *ptr, int32_t count, const ecs_type_info_t *type_info) {
@@ -91,6 +95,67 @@ static void flecs_meta_rtt_copy(void *dst_ptr, const void *src_ptr, int32_t coun
       copy_data->hook.copy(ECS_OFFSET(elem_dst_ptr, copy_data->offset), ECS_OFFSET(elem_src_ptr, copy_data->offset),
                            copy_data->count, copy_data->type_info);
     }
+  }
+}
+
+static void flecs_meta_rtt_free_lifecycle_vector_ctx(void *ctx) {
+  if (!ctx)
+    return;
+
+  ecs_os_free(ctx);
+}
+
+static void flecs_meta_rtt_vector_ctor(void *ptr, int32_t count, const ecs_type_info_t *type_info) {
+  ecs_meta_rtt_vector_ctx_t *rtt_ctx = (ecs_meta_rtt_vector_ctx_t *) type_info->hooks.lifecycle_ctx;
+  for (int i = 0; i < count; i++) {
+    ecs_vec_t *vec = ECS_ELEM(ptr, type_info->size, i);
+    ecs_vec_init(NULL, vec, rtt_ctx->type_info->size, 0);
+  }
+}
+
+static void flecs_meta_rtt_vector_dtor(void *ptr, int32_t count, const ecs_type_info_t *type_info) {
+  ecs_meta_rtt_vector_ctx_t *rtt_ctx = (ecs_meta_rtt_vector_ctx_t *) type_info->hooks.lifecycle_ctx;
+  ecs_xtor_t dtor = rtt_ctx->type_info->hooks.dtor;
+  for (int i = 0; i < count; i++) {
+    ecs_vec_t *vec = ECS_ELEM(ptr, type_info->size, i);
+    int32_t num_elements = ecs_vec_count(vec);
+    if (dtor && num_elements) {
+      dtor(ecs_vec_first(vec), num_elements, rtt_ctx->type_info);
+    }
+    ecs_vec_fini(NULL, vec, rtt_ctx->type_info->size);
+  }
+}
+
+static void flecs_meta_rtt_vector_move(void *dst_ptr, void *src_ptr, int32_t count, const ecs_type_info_t *type_info) {
+  flecs_meta_rtt_vector_dtor(dst_ptr, count, type_info);
+  for (int i = 0; i < count; i++) {
+    ecs_vec_t *src_vec = ECS_ELEM(src_ptr, type_info->size, i);
+    ecs_vec_t *dst_vec = ECS_ELEM(dst_ptr, type_info->size, i);
+    *dst_vec = *src_vec;
+    src_vec->array = NULL;
+    src_vec->count = 0;
+  }
+}
+
+static void flecs_meta_rtt_default_copy2(void *dst_ptr, const void *src_ptr, int32_t count,
+                                         const ecs_type_info_t *type_info) {
+  ecs_os_memcpy(dst_ptr, src_ptr, count * type_info->size);
+}
+
+static void flecs_meta_rtt_vector_copy(void *dst_ptr, const void *src_ptr, int32_t count,
+                                       const ecs_type_info_t *type_info) {
+  ecs_meta_rtt_vector_ctx_t *rtt_ctx = (ecs_meta_rtt_vector_ctx_t *) type_info->hooks.lifecycle_ctx;
+  flecs_meta_rtt_vector_dtor(dst_ptr, count, type_info);
+  ecs_copy_t copy = rtt_ctx->type_info->hooks.copy ? rtt_ctx->type_info->hooks.copy : flecs_meta_rtt_default_copy2;
+  ecs_xtor_t ctor = rtt_ctx->type_info->hooks.ctor ? rtt_ctx->type_info->hooks.ctor : flecs_default_ctor;
+  for (int i = 0; i < count; i++) {
+    const ecs_vec_t *src_vec = ECS_ELEM(src_ptr, type_info->size, i);
+    ecs_vec_t *dst_vec = ECS_ELEM(dst_ptr, type_info->size, i);
+    int32_t elem_count = ecs_vec_count(src_vec);
+    ecs_vec_init(NULL, dst_vec, rtt_ctx->type_info->size, elem_count);
+    ecs_vec_set_count(NULL, dst_vec, rtt_ctx->type_info->size, elem_count);
+    ctor(ecs_vec_first(dst_vec), elem_count, rtt_ctx->type_info);
+    copy(ecs_vec_first(dst_vec), ecs_vec_first(src_vec), elem_count, rtt_ctx->type_info);
   }
 }
 
@@ -309,8 +374,21 @@ void flecs_meta_rtt_init_default_hooks(ecs_iter_t *it) {
       } else if (type->kind == EcsArrayType) {
         flecs_meta_rtt_init_default_hooks_array(world, component, ti);
       } else if (type->kind == EcsVectorType) {
-        // TODO -- pending cursor primitives to manipulate vectors. These cursor primitives would have to at least
-        // invoke ctor/dtor when growing/shrinking the vector.
+        const EcsVector *vector_info = ecs_get(world, component, EcsVector);
+        ecs_assert(vector_info != NULL, ECS_INTERNAL_ERROR, NULL);
+        const ecs_type_info_t *vector_ti = ecs_get_type_info(world, vector_info->type);
+        ecs_meta_rtt_vector_ctx_t *rtt_ctx = ecs_os_malloc_t(ecs_meta_rtt_vector_ctx_t);
+        rtt_ctx->type_info = vector_ti;
+        ecs_type_hooks_t hooks = *ecs_get_hooks_id(world, component);
+        if (hooks.lifecycle_ctx_free)
+          hooks.lifecycle_ctx_free(hooks.lifecycle_ctx);
+        hooks.lifecycle_ctx = rtt_ctx;
+        hooks.lifecycle_ctx_free = flecs_meta_rtt_free_lifecycle_vector_ctx;
+        hooks.ctor = flecs_meta_rtt_vector_ctor;
+        hooks.dtor = flecs_meta_rtt_vector_dtor;
+        hooks.move = flecs_meta_rtt_vector_move;
+        hooks.copy = flecs_meta_rtt_vector_copy;
+        ecs_set_hooks_id(world, component, &hooks);
       }
     }
 
