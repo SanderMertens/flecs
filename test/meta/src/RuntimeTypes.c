@@ -1066,3 +1066,36 @@ void RuntimeTypes_mixed(void) {
   }
   free_resource_ids();
 }
+
+// Tests that RTT ignores opaque types
+void RuntimeTypes_opaque(void) {
+  ecs_world_t *world = ecs_init();
+
+  ECS_COMPONENT(world, ResourceHandle);
+
+  ecs_type_hooks_t hooks = *ecs_get_hooks(world, ResourceHandle);
+  hooks.ctor = ResourceHandle_ctor;
+  hooks.dtor = ResourceHandle_dtor;
+  hooks.move = ResourceHandle_move;
+  hooks.copy = ResourceHandle_copy;
+  ecs_set_hooks_id(world, ecs_id(ResourceHandle), &hooks);
+
+  // Create struct type that describes the structure of ResourceHandle
+  ecs_entity_t resource_handle_descriptor = ecs_struct(world, {.members = {
+                                                                   {.name = "value", .type = ecs_id(ecs_u32_t)},
+                                                               }});
+  // Register ResourceHandle as opaque type.
+  ecs_opaque(world, {// Link reflection with component
+                     .entity = ecs_id(ResourceHandle),
+                     // Let reflection framework know the type represents a struct
+                     .type = {.as_type = resource_handle_descriptor}});
+
+  // Now test that hooks defined for the opaque type are intact:
+  hooks = *ecs_get_hooks(world, ResourceHandle);
+  test_assert(hooks.ctor == ResourceHandle_ctor);
+  test_assert(hooks.dtor == ResourceHandle_dtor);
+  test_assert(hooks.move == ResourceHandle_move);
+  test_assert(hooks.copy == ResourceHandle_copy);
+
+  ecs_fini(world);
+}

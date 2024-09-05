@@ -108,7 +108,10 @@
                 "array_dtor",
                 "array_move",
                 "array_copy",
-                "mixed"
+                "vector_lifecycle",
+                "vector_lifecycle_trivial_type",
+                "mixed",
+                "opaque"
             ]            
         }, {
             "id": "StructTypes",
