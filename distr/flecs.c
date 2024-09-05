@@ -19040,12 +19040,16 @@ void ecs_set_entity_range(
     ecs_check(!id_end || id_end > flecs_entities_max_id(world),
         ECS_INVALID_PARAMETER, NULL);
 
+    if (id_start == 0) {
+      id_start = flecs_entities_max_id(world) + 1;
+    }
+
     uint32_t start = (uint32_t)id_start;
     uint32_t end = (uint32_t)id_end;
 
-    if (flecs_entities_max_id(world) < start) {
-        flecs_entities_max_id(world) = start - 1;
-    }
+    flecs_entities_max_id(world) = start - 1;
+    ecs_check(!id_end || id_end > flecs_entities_max_id(world),
+        ECS_INVALID_PARAMETER, NULL);
 
     world->info.min_id = start;
     world->info.max_id = end;
