@@ -3102,7 +3102,7 @@ void Query_pair_with_variable_src_no_row_fields(void) {
     auto other = world.entity()
         .set(OtherComp{0});
 
-    // Guarantee we don't luckily hit zero if we read the the wrong component
+    // Guarantee we don't luckily hit zero if we read the wrong component
     world.entity()
         .set(OtherComp{1});
 
