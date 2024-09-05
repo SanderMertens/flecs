@@ -28,6 +28,11 @@ typedef struct ecs_meta_rtt_ctx_t {
   ecs_vec_t copys; /* vector<ecs_meta_rtt_call_data_t> */
 } ecs_meta_rtt_ctx_t;
 
+typedef struct ecs_meta_rtt_array_ctx_t {
+  const ecs_type_info_t *type_info;
+  int32_t elem_count;
+} ecs_meta_rtt_array_ctx_t;
+
 typedef struct ecs_meta_rtt_vector_ctx_t {
   const ecs_type_info_t *type_info;
 } ecs_meta_rtt_vector_ctx_t;
@@ -95,6 +100,54 @@ static void flecs_meta_rtt_copy(void *dst_ptr, const void *src_ptr, int32_t coun
       copy_data->hook.copy(ECS_OFFSET(elem_dst_ptr, copy_data->offset), ECS_OFFSET(elem_src_ptr, copy_data->offset),
                            copy_data->count, copy_data->type_info);
     }
+  }
+}
+
+/* Array support */
+
+static void flecs_meta_rtt_free_lifecycle_array_ctx(void *ctx) {
+  if (!ctx)
+    return;
+
+  ecs_os_free(ctx);
+}
+
+static void flecs_meta_rtt_array_ctor(void *ptr, int32_t count, const ecs_type_info_t *type_info) {
+  ecs_meta_rtt_array_ctx_t *rtt_ctx = (ecs_meta_rtt_array_ctx_t *) type_info->hooks.lifecycle_ctx;
+  ecs_xtor_t ctor = rtt_ctx->type_info->hooks.ctor;
+  for (int i = 0; i < count; i++) {
+    void *arr = ECS_ELEM(ptr, type_info->size, i);
+    ctor(arr, rtt_ctx->elem_count, rtt_ctx->type_info);
+  }
+}
+
+static void flecs_meta_rtt_array_dtor(void *ptr, int32_t count, const ecs_type_info_t *type_info) {
+  ecs_meta_rtt_array_ctx_t *rtt_ctx = (ecs_meta_rtt_array_ctx_t *) type_info->hooks.lifecycle_ctx;
+  ecs_xtor_t dtor = rtt_ctx->type_info->hooks.dtor;
+  for (int i = 0; i < count; i++) {
+    void *arr = ECS_ELEM(ptr, type_info->size, i);
+    dtor(arr, rtt_ctx->elem_count, rtt_ctx->type_info);
+  }
+}
+
+static void flecs_meta_rtt_array_move(void *dst_ptr, void *src_ptr, int32_t count, const ecs_type_info_t *type_info) {
+  ecs_meta_rtt_array_ctx_t *rtt_ctx = (ecs_meta_rtt_array_ctx_t *) type_info->hooks.lifecycle_ctx;
+  ecs_move_t move = rtt_ctx->type_info->hooks.move;
+  for (int i = 0; i < count; i++) {
+    void *src_arr = ECS_ELEM(src_ptr, type_info->size, i);
+    void *dst_arr = ECS_ELEM(dst_ptr, type_info->size, i);
+    move(dst_arr, src_arr, rtt_ctx->elem_count, rtt_ctx->type_info);
+  }
+}
+
+static void flecs_meta_rtt_array_copy(void *dst_ptr, const void *src_ptr, int32_t count,
+                                      const ecs_type_info_t *type_info) {
+  ecs_meta_rtt_array_ctx_t *rtt_ctx = (ecs_meta_rtt_array_ctx_t *) type_info->hooks.lifecycle_ctx;
+  ecs_copy_t copy = rtt_ctx->type_info->hooks.copy;
+  for (int i = 0; i < count; i++) {
+    const void *src_arr = ECS_ELEM(src_ptr, type_info->size, i);
+    void *dst_arr = ECS_ELEM(dst_ptr, type_info->size, i);
+    copy(dst_arr, src_arr, rtt_ctx->elem_count, rtt_ctx->type_info);
   }
 }
 
@@ -317,34 +370,49 @@ static void flecs_meta_rtt_init_default_hooks_array(ecs_world_t *world, ecs_enti
   bool move_hook_required = array_ti->hooks.move != NULL;
   bool copy_hook_required = array_ti->hooks.copy != NULL;
 
-  ecs_meta_rtt_ctx_t *rtt_ctx = flecs_meta_rtt_configure_hooks(world, ti, ctor_hook_required, dtor_hook_required,
-                                                               move_hook_required, copy_hook_required);
-
-  if (!rtt_ctx)
+  if (!ctor_hook_required && !dtor_hook_required && !move_hook_required && !copy_hook_required)
     return;  // no hooks required
 
-  ecs_meta_rtt_call_data_t default_call_data = {.count = array_info->count, .offset = 0, .type_info = array_ti};
+  ecs_meta_rtt_array_ctx_t *rtt_ctx = ecs_os_malloc_t(ecs_meta_rtt_array_ctx_t);
+  rtt_ctx->type_info = array_ti;
+  rtt_ctx->elem_count = array_info->count;
+  ecs_type_hooks_t hooks = *ecs_get_hooks_id(world, component);
+  if (hooks.lifecycle_ctx_free)
+    hooks.lifecycle_ctx_free(hooks.lifecycle_ctx);
+  hooks.lifecycle_ctx = rtt_ctx;
+  hooks.lifecycle_ctx_free = flecs_meta_rtt_free_lifecycle_array_ctx;
 
-  if (ctor_hook_required) {
-    ecs_meta_rtt_call_data_t *ctor_data = ecs_vec_append_t(NULL, &rtt_ctx->ctors, ecs_meta_rtt_call_data_t);
-    *ctor_data = default_call_data;
-    ctor_data->hook.xtor = array_ti->hooks.ctor;
-  }
-  if (dtor_hook_required) {
-    ecs_meta_rtt_call_data_t *dtor_data = ecs_vec_append_t(NULL, &rtt_ctx->dtors, ecs_meta_rtt_call_data_t);
-    *dtor_data = default_call_data;
-    dtor_data->hook.xtor = array_ti->hooks.dtor;
-  }
-  if (move_hook_required) {
-    ecs_meta_rtt_call_data_t *move_data = ecs_vec_append_t(NULL, &rtt_ctx->moves, ecs_meta_rtt_call_data_t);
-    *move_data = default_call_data;
-    move_data->hook.move = array_ti->hooks.move;
-  }
-  if (copy_hook_required) {
-    ecs_meta_rtt_call_data_t *copy_data = ecs_vec_append_t(NULL, &rtt_ctx->copys, ecs_meta_rtt_call_data_t);
-    *copy_data = default_call_data;
-    copy_data->hook.copy = array_ti->hooks.copy;
-  }
+  if (ctor_hook_required)
+    hooks.ctor = flecs_meta_rtt_array_ctor;
+
+  if (dtor_hook_required)
+    hooks.dtor = flecs_meta_rtt_array_dtor;
+
+  if (move_hook_required)
+    hooks.move = flecs_meta_rtt_array_move;
+
+  if (copy_hook_required)
+    hooks.copy = flecs_meta_rtt_array_copy;
+
+  ecs_set_hooks_id(world, component, &hooks);
+}
+static void flecs_meta_rtt_init_default_hooks_vector(ecs_world_t *world, ecs_entity_t component,
+                                                     const ecs_type_info_t *ti) {
+  const EcsVector *vector_info = ecs_get(world, component, EcsVector);
+  ecs_assert(vector_info != NULL, ECS_INTERNAL_ERROR, NULL);
+  const ecs_type_info_t *vector_ti = ecs_get_type_info(world, vector_info->type);
+  ecs_meta_rtt_vector_ctx_t *rtt_ctx = ecs_os_malloc_t(ecs_meta_rtt_vector_ctx_t);
+  rtt_ctx->type_info = vector_ti;
+  ecs_type_hooks_t hooks = *ecs_get_hooks_id(world, component);
+  if (hooks.lifecycle_ctx_free)
+    hooks.lifecycle_ctx_free(hooks.lifecycle_ctx);
+  hooks.lifecycle_ctx = rtt_ctx;
+  hooks.lifecycle_ctx_free = flecs_meta_rtt_free_lifecycle_vector_ctx;
+  hooks.ctor = flecs_meta_rtt_vector_ctor;
+  hooks.dtor = flecs_meta_rtt_vector_dtor;
+  hooks.move = flecs_meta_rtt_vector_move;
+  hooks.copy = flecs_meta_rtt_vector_copy;
+  ecs_set_hooks_id(world, component, &hooks);
 }
 
 void flecs_meta_rtt_init_default_hooks(ecs_iter_t *it) {
@@ -374,21 +442,7 @@ void flecs_meta_rtt_init_default_hooks(ecs_iter_t *it) {
       } else if (type->kind == EcsArrayType) {
         flecs_meta_rtt_init_default_hooks_array(world, component, ti);
       } else if (type->kind == EcsVectorType) {
-        const EcsVector *vector_info = ecs_get(world, component, EcsVector);
-        ecs_assert(vector_info != NULL, ECS_INTERNAL_ERROR, NULL);
-        const ecs_type_info_t *vector_ti = ecs_get_type_info(world, vector_info->type);
-        ecs_meta_rtt_vector_ctx_t *rtt_ctx = ecs_os_malloc_t(ecs_meta_rtt_vector_ctx_t);
-        rtt_ctx->type_info = vector_ti;
-        ecs_type_hooks_t hooks = *ecs_get_hooks_id(world, component);
-        if (hooks.lifecycle_ctx_free)
-          hooks.lifecycle_ctx_free(hooks.lifecycle_ctx);
-        hooks.lifecycle_ctx = rtt_ctx;
-        hooks.lifecycle_ctx_free = flecs_meta_rtt_free_lifecycle_vector_ctx;
-        hooks.ctor = flecs_meta_rtt_vector_ctor;
-        hooks.dtor = flecs_meta_rtt_vector_dtor;
-        hooks.move = flecs_meta_rtt_vector_move;
-        hooks.copy = flecs_meta_rtt_vector_copy;
-        ecs_set_hooks_id(world, component, &hooks);
+        flecs_meta_rtt_init_default_hooks_vector(world, component, ti);
       }
     }
 
