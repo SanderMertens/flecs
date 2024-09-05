@@ -542,3 +542,25 @@ void Rest_get_pipeline_stats_after_delete_system(void) {
 
     ecs_fini(world);
 }
+
+void Rest_request_world_summary_before_monitor_sys_run(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_IMPORT(world, FlecsStats);
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(0, ecs_http_server_request(srv, "GET",
+        "/entity/flecs/core/World?values=true", &reply));
+    test_int(reply.code, 200);
+    
+    char *reply_str = ecs_strbuf_get(&reply.body);
+    test_assert(reply_str != NULL);
+    ecs_os_free(reply_str);
+
+    ecs_rest_server_fini(srv);
+
+    ecs_fini(world);
+}

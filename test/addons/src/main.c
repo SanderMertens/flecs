@@ -452,6 +452,7 @@ void Rest_request_commands_garbage_collect(void);
 void Rest_script_error(void);
 void Rest_import_rest_after_mini(void);
 void Rest_get_pipeline_stats_after_delete_system(void);
+void Rest_request_world_summary_before_monitor_sys_run(void);
 
 // Testsuite 'Metrics'
 void Metrics_member_gauge_1_entity(void);
@@ -2183,6 +2184,10 @@ bake_test_case Rest_testcases[] = {
     {
         "get_pipeline_stats_after_delete_system",
         Rest_get_pipeline_stats_after_delete_system
+    },
+    {
+        "request_world_summary_before_monitor_sys_run",
+        Rest_request_world_summary_before_monitor_sys_run
     }
 };
 
@@ -2635,7 +2640,7 @@ static bake_test_suite suites[] = {
         "Rest",
         NULL,
         NULL,
-        16,
+        17,
         Rest_testcases
     },
     {
