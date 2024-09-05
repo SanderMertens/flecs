@@ -1371,6 +1371,7 @@ typedef struct ecs_world_info_t {
 
     int64_t frame_count_total;        /**< Total number of frames */
     int64_t merge_count_total;        /**< Total number of merges */
+    int64_t eval_comp_monitors_total; /**< Total number of monitor evaluations */
     int64_t rematch_count_total;      /**< Total number of rematches */
 
     int64_t id_create_total;          /**< Total number of times a new id was created */

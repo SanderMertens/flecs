@@ -17896,6 +17896,8 @@ void flecs_eval_component_monitor(
         return;
     }
 
+    world->info.eval_comp_monitors_total ++;
+
     ecs_os_perf_trace_push("flecs.component_monitor.eval");
 
     world->monitors.is_dirty = false;
