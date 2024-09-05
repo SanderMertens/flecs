@@ -74,6 +74,7 @@ public:
  * that creates a lot of problems with the Reflection system.
  * for type impl for modules, you can disable, enable, and toggle the types directly(types will be registered)
  */
+// @TODO Not useable yet
 USTRUCT(BlueprintType)
 struct UNREALFLECS_API FFlecsModuleStructInterface
 {

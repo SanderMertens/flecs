@@ -1,6 +1,8 @@
 ﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 #include "FlecsModuleInterface.h"
+
+#include "Components/FlecsModuleComponent.h"
 #include "Components/FlecsWorldPtrComponent.h"
 #include "Logs/FlecsCategories.h"
 #include "Unlog/Unlog.h"
@@ -23,6 +25,8 @@ void IFlecsModuleInterface::ImportModule(const flecs::world& InWorld)
 	}
 
 	ModuleEntity.Add(flecs::Module);
+	ModuleEntity.Set<FFlecsModuleComponent>({ _getUObject()->GetClass() });
+	ModuleEntity.Set<FFlecsUObjectComponent>({ _getUObject() });
 		
 	InitializeModule(World.Get(), ModuleEntity);
 	Execute_BP_InitializeModule(_getUObject(), World.Get());

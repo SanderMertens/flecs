@@ -27,6 +27,12 @@ public:
 	template <typename T>
 	FORCEINLINE NO_DISCARD T* GetObject() const { return Cast<T>(GetObject()); }
 
+	FORCEINLINE NO_DISCARD UObject* GetObjectChecked() const
+	{
+		solid_checkf(IsValid(), TEXT("Object is not valid!"));
+		return Object.Get();
+	}
+
 	template <typename T>
 	FORCEINLINE NO_DISCARD T* GetObjectChecked() const { return CastChecked<T>(GetObject()); }
 	

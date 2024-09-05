@@ -8,6 +8,7 @@
 #include "CoreMinimal.h"
 #include "flecs.h"
 #include "AssetRegistry/AssetRegistryModule.h"
+#include "Components/FlecsModuleComponent.h"
 #include "Components/FlecsPrimaryAssetComponent.h"
 #include "Components/FlecsTypeMapComponent.h"
 #include "Components/FlecsUObjectComponent.h"
@@ -426,9 +427,53 @@ public:
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
-	FORCEINLINE bool IsModuleImported(const TSubclassOf<UFlecsModuleInterface> InModule) const
+	FORCEINLINE bool IsModuleImported(const TSubclassOf<UObject> InModule) const
 	{
-		return false;
+		const flecs::entity ModuleEntity = World.query<FFlecsModuleComponent>()
+			.find([&](flecs::entity InEntity, FFlecsModuleComponent& InComponent)
+			{
+				return InComponent.ModuleClass == InModule;
+			});
+
+		return ModuleEntity.is_valid();
+	}
+
+	template <typename T>
+	FORCEINLINE NO_DISCARD bool IsModuleImported() const
+	{
+		return IsModuleImported(T::StaticClass());
+	}
+
+	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
+	FORCEINLINE FFlecsEntityHandle GetModuleEntity(const TSubclassOf<UObject> InModule) const
+	{
+		const flecs::entity ModuleEntity = World.query<FFlecsModuleComponent>()
+			.find([&](flecs::entity InEntity, FFlecsModuleComponent& InComponent)
+			{
+				return InComponent.ModuleClass == InModule;
+			});
+
+		return ModuleEntity;
+	}
+
+	template <typename T>
+	FORCEINLINE NO_DISCARD FFlecsEntityHandle GetModuleEntity() const
+	{
+		return GetModuleEntity(T::StaticClass());
+	}
+
+	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
+	FORCEINLINE UObject* GetModule(const TSubclassOf<UObject> InModule) const
+	{
+		const FFlecsEntityHandle ModuleEntity = GetModuleEntity(InModule);
+		return ModuleEntity.Get<FFlecsUObjectComponent>().GetObjectChecked();
+	}
+
+	template <typename T>
+	FORCEINLINE NO_DISCARD T* GetModule() const
+	{
+		const FFlecsEntityHandle ModuleEntity = GetModuleEntity<T>();
+		return ModuleEntity.Get<FFlecsUObjectComponent>().GetObjectChecked<T>();
 	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
