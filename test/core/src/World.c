@@ -261,6 +261,37 @@ void World_entity_range_add_out_of_range_staged(void) {
     ecs_fini(world);
 }
 
+void World_entity_range_offset_0(void) {
+    ecs_world_t *world = ecs_mini();
+
+    const ecs_world_info_t *info = ecs_get_world_info(world);
+    test_assert(info != NULL);
+
+    ecs_set_entity_range(world, 0, 1000);
+
+    test_uint(info->min_id, ecs_get_max_id(world) + 1);
+    test_uint(info->max_id, 1000);
+
+    ecs_fini(world);
+}
+
+void World_entity_range_set_limit_to_lower(void) {
+    ecs_world_t *world = ecs_mini();
+
+    const ecs_world_info_t *info = ecs_get_world_info(world);
+    test_assert(info != NULL);
+
+    ecs_set_entity_range(world, 0, 2000);
+
+    test_uint(info->max_id, 2000);
+
+    ecs_set_entity_range(world, 0, 1000);
+
+    test_uint(info->max_id, 1000);
+
+    ecs_fini(world);
+}
+
 void World_get_tick(void) {
     ecs_world_t *world = ecs_init();
 

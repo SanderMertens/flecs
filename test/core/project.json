@@ -1891,6 +1891,8 @@
                 "entity_range_add_out_of_range_staged",
                 "entity_range_out_of_range_check_disabled",
                 "entity_range_check_after_delete",
+                "entity_range_offset_0",
+                "entity_range_set_limit_to_lower",
                 "dim",
                 "phases",
                 "phases_w_merging",
