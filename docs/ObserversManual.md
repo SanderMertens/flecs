@@ -1808,7 +1808,7 @@ world.observer<Position>()
 flecs::entity e = world.entity().set(Position{10, 20});
 
 // Emit custom event
-world.emit<Synchronized>()
+world.event<Synchronized>()
     .id<Position>()
     .entity(e)
     .emit();
