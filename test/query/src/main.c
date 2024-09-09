@@ -668,6 +668,8 @@ void Basic_ref_fields_static_src(void);
 void Basic_ref_fields_variable_src(void);
 void Basic_ref_fields_up_src(void);
 void Basic_ref_fields_self_up_src(void);
+void Basic_0_src_match_nothing(void);
+void Basic_0_terms_match_nothing(void);
 
 // Testsuite 'Combinations'
 void Combinations_setup(void);
@@ -4682,6 +4684,14 @@ bake_test_case Basic_testcases[] = {
     {
         "ref_fields_self_up_src",
         Basic_ref_fields_self_up_src
+    },
+    {
+        "0_src_match_nothing",
+        Basic_0_src_match_nothing
+    },
+    {
+        "0_terms_match_nothing",
+        Basic_0_terms_match_nothing
     }
 };
 
@@ -10172,7 +10182,7 @@ static bake_test_suite suites[] = {
         "Basic",
         Basic_setup,
         NULL,
-        212,
+        214,
         Basic_testcases,
         1,
         Basic_params

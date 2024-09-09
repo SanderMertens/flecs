@@ -492,6 +492,7 @@ void System_register_twice_w_each(void);
 void System_register_twice_w_run(void);
 void System_register_twice_w_run_each(void);
 void System_register_twice_w_each_run(void);
+void System_run_w_0_src_query(void);
 
 // Testsuite 'Event'
 void Event_evt_1_id_entity(void);
@@ -3242,6 +3243,10 @@ bake_test_case System_testcases[] = {
     {
         "register_twice_w_each_run",
         System_register_twice_w_each_run
+    },
+    {
+        "run_w_0_src_query",
+        System_run_w_0_src_query
     }
 };
 
@@ -6592,7 +6597,7 @@ static bake_test_suite suites[] = {
         "System",
         NULL,
         NULL,
-        72,
+        73,
         System_testcases
     },
     {

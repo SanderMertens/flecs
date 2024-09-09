@@ -104,6 +104,8 @@ void Pipeline_run_pipeline_multithreaded_tasks(void);
 void Pipeline_pipeline_init_no_terms(void);
 void Pipeline_pipeline_init_no_system_term(void);
 void Pipeline_disable_component_from_immediate_system(void);
+void Pipeline_run_w_empty_query(void);
+void Pipeline_run_w_0_src_query(void);
 
 // Testsuite 'SystemMisc'
 void SystemMisc_invalid_not_without_id(void);
@@ -907,6 +909,14 @@ bake_test_case Pipeline_testcases[] = {
     {
         "disable_component_from_immediate_system",
         Pipeline_disable_component_from_immediate_system
+    },
+    {
+        "run_w_empty_query",
+        Pipeline_run_w_empty_query
+    },
+    {
+        "run_w_0_src_query",
+        Pipeline_run_w_0_src_query
     }
 };
 
@@ -2515,7 +2525,7 @@ static bake_test_suite suites[] = {
         "Pipeline",
         NULL,
         NULL,
-        83,
+        85,
         Pipeline_testcases
     },
     {
