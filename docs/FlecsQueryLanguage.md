@@ -135,6 +135,25 @@ This would cause the above query to be equivalent to:
 Position, Velocity || Mass
 ```
 
+## Access Modifiers
+The following access modifiers can be added to terms to specify how term data is accessed:
+
+| Modifier | Description |
+| -------- | ----------- |
+| `[in]`   | Matched component is read-only |
+| `[out]`  | Matched component is read-write |
+| `[inout]` | Matched component is read-write |
+| `[none]`  | Matched component is not accessed |
+| `[filter]` | Term does not produce events (for use with observers only) |
+
+An example:
+
+```c
+[inout] Position, [in] Velocity
+```
+
+When no access modifier is specified, the term defaults to `InOutDefault`. This defaults to `[inout]` for terms that match owned components, and `[in]` for terms that match shared components (like singleton terms or terms matched through `up` traversal).
+
 ## Wildcards
 Query expressions can use wildcards to match any or all instances of a matching component or pair. Wildcards may appear in all parts of a term. The following examples are all valid wildcard queries:
 
