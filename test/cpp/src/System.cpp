@@ -1044,6 +1044,26 @@ void System_rate_filter(void) {
     }
 }
 
+void System_self_rate_filter(void) {
+    flecs::world world;
+
+    int32_t count = 0;
+
+    auto sys = world.system<Position>("sys")
+        .rate(2)
+        .each([&](Position & p){
+            count ++;
+        });
+
+    world.entity().set<Position>({1.0, 2.0});
+
+    for(int i = 0; i < 10; i++) {
+        world.progress();
+    }
+
+    test_int(count, 5);
+}
+
 void System_update_rate_filter(void) {
     flecs::world world;
 

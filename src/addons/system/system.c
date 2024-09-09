@@ -203,11 +203,18 @@ void flecs_system_poly_fini(void *sys)
 }
 
 static
-void flecs_system_init_timer(
+int flecs_system_init_timer(
     ecs_world_t *world,
     ecs_entity_t entity,
     const ecs_system_desc_t *desc)
 {
+    if (ECS_NEQZERO(desc->interval) && ECS_NEQZERO(desc->rate)) {
+        char *name = ecs_get_path(world, entity);
+        ecs_err("system %s cannot have both interval and rate set", name);
+        ecs_os_free(name);
+        return -1;
+    }
+
     if (ECS_NEQZERO(desc->interval) || ECS_NEQZERO(desc->rate) || 
         ECS_NEQZERO(desc->tick_source)) 
     {
@@ -218,9 +225,6 @@ void flecs_system_init_timer(
 
         if (desc->rate) {
             ecs_entity_t tick_source = desc->tick_source;
-            if (!tick_source) {
-                tick_source = entity;
-            }
             ecs_set_rate(world, entity, desc->rate, tick_source);
         } else if (desc->tick_source) {
             ecs_set_tick_source(world, entity, desc->tick_source);
@@ -231,6 +235,8 @@ void flecs_system_init_timer(
         ecs_abort(ECS_UNSUPPORTED, "timer module not available");
 #endif
     }
+
+    return 0;
 }
 
 ecs_entity_t ecs_system_init(
@@ -292,14 +298,18 @@ ecs_entity_t ecs_system_init(
 
         system->name = ecs_get_path(world, entity);
 
-        flecs_system_init_timer(world, entity, desc);
+        if (flecs_system_init_timer(world, entity, desc)) {
+            ecs_delete(world, entity);
+            ecs_defer_end(world);
+            goto error;
+        }
 
         if (ecs_get_name(world, entity)) {
             ecs_trace("#[green]system#[reset] %s created", 
                 ecs_get_name(world, entity));
         }
 
-        ecs_defer_end(world);            
+        ecs_defer_end(world);
     } else {
         flecs_poly_assert(poly->poly, ecs_system_t);
         ecs_system_t *system = (ecs_system_t*)poly->poly;
@@ -372,7 +382,9 @@ ecs_entity_t ecs_system_init(
             system->immediate = desc->immediate;
         }
 
-        flecs_system_init_timer(world, entity, desc);
+        if (flecs_system_init_timer(world, entity, desc)) {
+            return 0;
+        }
     }
 
     flecs_poly_modified(world, entity, ecs_system_t);

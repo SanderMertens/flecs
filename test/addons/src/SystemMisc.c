@@ -5,7 +5,7 @@ int32_t dummy_invoked = false;
 
 static
 void Dummy(ecs_iter_t *it) {
-    dummy_invoked = true;
+    dummy_invoked ++;
     probe_iter(it);
 }
 
@@ -1559,6 +1559,8 @@ void SystemMisc_update_rate_w_system_init(void) {
 void SystemMisc_system_w_interval_rate_stop_timer(void) {
     ecs_world_t *world = ecs_init();
 
+    ecs_log_set_level(-4);
+
     ecs_entity_t system = ecs_system(world, {
         .entity = ecs_entity(world, { .add = ecs_ids(ecs_dependson(EcsOnUpdate)) }),
         .interval = 1.0,
@@ -1566,26 +1568,31 @@ void SystemMisc_system_w_interval_rate_stop_timer(void) {
         .callback = Dummy
     });
 
-    for (int i = 0; i < 5; i ++) {
-        ecs_progress(world, 0.5);
-        test_assert(dummy_invoked == 0);
-    }
+    test_assert(system == 0);
 
-    ecs_progress(world, 0.5);
+    ecs_fini(world);
+}
 
-    test_assert(dummy_invoked == 1);
-    dummy_invoked = 0;
+void SystemMisc_system_w_rate_filter_self(void) {
+    ecs_world_t *world = ecs_init();
 
-    ecs_stop_timer(world, system);
+    ecs_system(world, {
+        .entity = ecs_entity(world, { .add = ecs_ids(ecs_dependson(EcsOnUpdate)) }),
+        .rate = 2.0,
+        .callback = Dummy
+    });
 
-    for (int i = 0; i < 5; i ++) {
-        ecs_progress(world, 0.5);
-        test_assert(dummy_invoked == 0);
-    }
+    ecs_progress(world, 0);
+    test_int(dummy_invoked, 0);
 
-    ecs_progress(world, 0.5);
+    ecs_progress(world, 0);
+    test_int(dummy_invoked, 1);
 
-    test_assert(dummy_invoked == 0);
+    ecs_progress(world, 0);
+    test_int(dummy_invoked, 1);
+
+    ecs_progress(world, 0);
+    test_int(dummy_invoked, 2);
 
     ecs_fini(world);
 }
