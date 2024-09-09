@@ -109,7 +109,9 @@
                 "run_pipeline_multithreaded_tasks",
                 "pipeline_init_no_terms",
                 "pipeline_init_no_system_term",
-                "disable_component_from_immediate_system"
+                "disable_component_from_immediate_system",
+                "run_w_empty_query",
+                "run_w_0_src_query"
             ]
         }, {
             "id": "SystemMisc",

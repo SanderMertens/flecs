@@ -679,7 +679,9 @@
                 "ref_fields_static_src",
                 "ref_fields_variable_src",
                 "ref_fields_up_src",
-                "ref_fields_self_up_src"
+                "ref_fields_self_up_src",
+                "0_src_match_nothing",
+                "0_terms_match_nothing"
             ]
         }, {
             "id": "Combinations",

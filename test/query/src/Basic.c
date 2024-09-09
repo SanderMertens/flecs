@@ -10741,3 +10741,38 @@ void Basic_ref_fields_self_up_src(void) {
 
     ecs_fini(world);
 }
+
+void Basic_0_src_match_nothing(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ .id = ecs_id(Position), .src.id = EcsIsEntity }},
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+    test_assert(q->flags & EcsQueryMatchNothing);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Basic_0_terms_match_nothing(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_query_t *q = ecs_query(world, {
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+    test_assert(q->flags & EcsQueryMatchNothing);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}

@@ -34173,6 +34173,7 @@ int flecs_query_finalize_terms(
     }
 
     bool cacheable = true;
+    bool match_nothing = true;
     for (i = 0; i < term_count; i ++) {
         ecs_term_t *term = &terms[i];
         bool prev_is_or = i && term[-1].oper == EcsOr;
@@ -34181,6 +34182,11 @@ int flecs_query_finalize_terms(
 
         if (flecs_term_finalize(world, term, &ctx)) {
             return -1;
+        }
+
+        if (term->src.id != EcsIsEntity) {
+            /* If term doesn't match 0 entity, query doesn't match nothing */
+            match_nothing = false;
         }
 
         if (scope_nesting) {
@@ -34508,6 +34514,9 @@ int flecs_query_finalize_terms(
     ECS_BIT_COND(q->flags, EcsQueryIsCacheable, 
         cacheable && (cacheable_terms == term_count) &&
             !desc->order_by_callback);
+
+    /* If none of the terms match a source, the query matches nothing */
+    ECS_BIT_COND(q->flags, EcsQueryMatchNothing, match_nothing);
 
     for (i = 0; i < q->term_count; i ++) {
         ecs_term_t *term = &q->terms[i];
@@ -62641,7 +62650,10 @@ ecs_entity_t flecs_run_intern(
 
     ecs_run_action_t run = system_data->run;
     if (run) {
-        if (!system_data->query->term_count) {
+        /* If system query matches nothing, the system run callback doesn't have
+         * anything to iterate, so the iterator resources don't get cleaned up
+         * automatically, so clean it up here. */
+        if (system_data->query->flags & EcsQueryMatchNothing) {
             it->next = flecs_default_next_callback; /* Return once */
             run(it);
             ecs_iter_fini(&qit);

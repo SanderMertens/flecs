@@ -1095,6 +1095,7 @@ int flecs_query_finalize_terms(
     }
 
     bool cacheable = true;
+    bool match_nothing = true;
     for (i = 0; i < term_count; i ++) {
         ecs_term_t *term = &terms[i];
         bool prev_is_or = i && term[-1].oper == EcsOr;
@@ -1103,6 +1104,11 @@ int flecs_query_finalize_terms(
 
         if (flecs_term_finalize(world, term, &ctx)) {
             return -1;
+        }
+
+        if (term->src.id != EcsIsEntity) {
+            /* If term doesn't match 0 entity, query doesn't match nothing */
+            match_nothing = false;
         }
 
         if (scope_nesting) {
@@ -1430,6 +1436,9 @@ int flecs_query_finalize_terms(
     ECS_BIT_COND(q->flags, EcsQueryIsCacheable, 
         cacheable && (cacheable_terms == term_count) &&
             !desc->order_by_callback);
+
+    /* If none of the terms match a source, the query matches nothing */
+    ECS_BIT_COND(q->flags, EcsQueryMatchNothing, match_nothing);
 
     for (i = 0; i < q->term_count; i ++) {
         ecs_term_t *term = &q->terms[i];

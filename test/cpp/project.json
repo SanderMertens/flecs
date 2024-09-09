@@ -509,7 +509,8 @@
                 "register_twice_w_each",
                 "register_twice_w_run",
                 "register_twice_w_run_each",
-                "register_twice_w_each_run"
+                "register_twice_w_each_run",
+                "run_w_0_src_query"
             ]
         }, {
             "id": "Event",

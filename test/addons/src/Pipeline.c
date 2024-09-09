@@ -3246,3 +3246,42 @@ void Pipeline_disable_component_from_immediate_system(void) {
 
     ecs_fini(world);
 }
+
+void Pipeline_run_w_empty_query(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_system(world, {
+        .entity = ecs_entity(world, {
+            .add = ecs_ids(ecs_pair(EcsDependsOn, EcsOnUpdate))
+        }),
+        .run = SysA
+    });
+
+    ecs_progress(world, 0);
+    test_int(sys_a_invoked, 1);
+
+    ecs_fini(world);
+}
+
+void Pipeline_run_w_0_src_query(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_system(world, {
+        .entity = ecs_entity(world, {
+            .add = ecs_ids(ecs_pair(EcsDependsOn, EcsOnUpdate))
+        }),
+        .query.terms = {
+            { ecs_id(Position), .src.id = EcsIsEntity }
+        },
+        .run = SysA
+    });
+
+    ecs_progress(world, 0);
+    test_int(sys_a_invoked, 1);
+
+    ecs_fini(world);
+}
