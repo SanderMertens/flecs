@@ -176,6 +176,7 @@
                 "update_interval_w_system_init",
                 "update_rate_w_system_init",
                 "system_w_interval_rate_stop_timer",
+                "system_w_rate_filter_self",
                 "system_same_interval_same_tick",
                 "system_no_id_in_scope",
                 "register_callback_after_run",

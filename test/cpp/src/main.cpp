@@ -454,6 +454,7 @@ void System_new_from_iter(void);
 void System_each_w_mut_children_it(void);
 void System_readonly_children_iter(void);
 void System_rate_filter(void);
+void System_self_rate_filter(void);
 void System_update_rate_filter(void);
 void System_default_ctor(void);
 void System_test_auto_defer_each(void);
@@ -3089,6 +3090,10 @@ bake_test_case System_testcases[] = {
     {
         "rate_filter",
         System_rate_filter
+    },
+    {
+        "self_rate_filter",
+        System_self_rate_filter
     },
     {
         "update_rate_filter",
@@ -6587,7 +6592,7 @@ static bake_test_suite suites[] = {
         "System",
         NULL,
         NULL,
-        71,
+        72,
         System_testcases
     },
     {

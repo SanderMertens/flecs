@@ -168,6 +168,7 @@ void SystemMisc_system_w_short_notation(void);
 void SystemMisc_update_interval_w_system_init(void);
 void SystemMisc_update_rate_w_system_init(void);
 void SystemMisc_system_w_interval_rate_stop_timer(void);
+void SystemMisc_system_w_rate_filter_self(void);
 void SystemMisc_system_same_interval_same_tick(void);
 void SystemMisc_system_no_id_in_scope(void);
 void SystemMisc_register_callback_after_run(void);
@@ -1157,6 +1158,10 @@ bake_test_case SystemMisc_testcases[] = {
     {
         "system_w_interval_rate_stop_timer",
         SystemMisc_system_w_interval_rate_stop_timer
+    },
+    {
+        "system_w_rate_filter_self",
+        SystemMisc_system_w_rate_filter_self
     },
     {
         "system_same_interval_same_tick",
@@ -2517,7 +2522,7 @@ static bake_test_suite suites[] = {
         "SystemMisc",
         NULL,
         NULL,
-        68,
+        69,
         SystemMisc_testcases
     },
     {

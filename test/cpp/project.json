@@ -472,6 +472,7 @@
                 "each_w_mut_children_it",
                 "readonly_children_iter",
                 "rate_filter",
+                "self_rate_filter",
                 "update_rate_filter",
                 "default_ctor",
                 "test_auto_defer_each",

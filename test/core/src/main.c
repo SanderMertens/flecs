@@ -1787,6 +1787,23 @@ void Prefab_prefab_w_children_w_isa_auto_override(void);
 void Prefab_prefab_child_w_override(void);
 void Prefab_prefab_child_w_override_and_higher_component(void);
 void Prefab_prefab_child_w_override_and_lower_component(void);
+void Prefab_prefab_1_child_offset_id(void);
+void Prefab_prefab_2_children_offset_id(void);
+void Prefab_prefab_3_children_offset_id(void);
+void Prefab_prefab_2_children_2_types_offset_id(void);
+void Prefab_prefab_3_children_3_types_offset_id(void);
+void Prefab_prefab_2_children_2_types_reverse_offset_id(void);
+void Prefab_prefab_3_children_3_types_reverse_offset_id(void);
+void Prefab_prefab_2_lvl_nested_children_offset_id(void);
+void Prefab_prefab_3_lvl_nested_children_offset_id(void);
+void Prefab_prefab_recycled_children_offset_id(void);
+void Prefab_prefab_recycled_instance_offset_id(void);
+void Prefab_prefab_children_recycled_offset_id(void);
+void Prefab_prefab_recycled_children_recycled_offset_id(void);
+void Prefab_prefab_recycled_children_recycled_offset_id_different_generation(void);
+void Prefab_prefab_1_child_offset_id_occupied(void);
+void Prefab_prefab_1_child_offset_id_recycled_occupied(void);
+void Prefab_prefab_child_offset_w_smaller_child_id(void);
 
 // Testsuite 'World'
 void World_setup(void);
@@ -1801,6 +1818,8 @@ void World_entity_range_add_in_range_staged(void);
 void World_entity_range_add_out_of_range_staged(void);
 void World_entity_range_out_of_range_check_disabled(void);
 void World_entity_range_check_after_delete(void);
+void World_entity_range_offset_0(void);
+void World_entity_range_set_limit_to_lower(void);
 void World_dim(void);
 void World_phases(void);
 void World_phases_w_merging(void);
@@ -9085,6 +9104,74 @@ bake_test_case Prefab_testcases[] = {
     {
         "prefab_child_w_override_and_lower_component",
         Prefab_prefab_child_w_override_and_lower_component
+    },
+    {
+        "prefab_1_child_offset_id",
+        Prefab_prefab_1_child_offset_id
+    },
+    {
+        "prefab_2_children_offset_id",
+        Prefab_prefab_2_children_offset_id
+    },
+    {
+        "prefab_3_children_offset_id",
+        Prefab_prefab_3_children_offset_id
+    },
+    {
+        "prefab_2_children_2_types_offset_id",
+        Prefab_prefab_2_children_2_types_offset_id
+    },
+    {
+        "prefab_3_children_3_types_offset_id",
+        Prefab_prefab_3_children_3_types_offset_id
+    },
+    {
+        "prefab_2_children_2_types_reverse_offset_id",
+        Prefab_prefab_2_children_2_types_reverse_offset_id
+    },
+    {
+        "prefab_3_children_3_types_reverse_offset_id",
+        Prefab_prefab_3_children_3_types_reverse_offset_id
+    },
+    {
+        "prefab_2_lvl_nested_children_offset_id",
+        Prefab_prefab_2_lvl_nested_children_offset_id
+    },
+    {
+        "prefab_3_lvl_nested_children_offset_id",
+        Prefab_prefab_3_lvl_nested_children_offset_id
+    },
+    {
+        "prefab_recycled_children_offset_id",
+        Prefab_prefab_recycled_children_offset_id
+    },
+    {
+        "prefab_recycled_instance_offset_id",
+        Prefab_prefab_recycled_instance_offset_id
+    },
+    {
+        "prefab_children_recycled_offset_id",
+        Prefab_prefab_children_recycled_offset_id
+    },
+    {
+        "prefab_recycled_children_recycled_offset_id",
+        Prefab_prefab_recycled_children_recycled_offset_id
+    },
+    {
+        "prefab_recycled_children_recycled_offset_id_different_generation",
+        Prefab_prefab_recycled_children_recycled_offset_id_different_generation
+    },
+    {
+        "prefab_1_child_offset_id_occupied",
+        Prefab_prefab_1_child_offset_id_occupied
+    },
+    {
+        "prefab_1_child_offset_id_recycled_occupied",
+        Prefab_prefab_1_child_offset_id_recycled_occupied
+    },
+    {
+        "prefab_child_offset_w_smaller_child_id",
+        Prefab_prefab_child_offset_w_smaller_child_id
     }
 };
 
@@ -9132,6 +9219,14 @@ bake_test_case World_testcases[] = {
     {
         "entity_range_check_after_delete",
         World_entity_range_check_after_delete
+    },
+    {
+        "entity_range_offset_0",
+        World_entity_range_offset_0
+    },
+    {
+        "entity_range_set_limit_to_lower",
+        World_entity_range_set_limit_to_lower
     },
     {
         "dim",
@@ -10817,14 +10912,14 @@ static bake_test_suite suites[] = {
         "Prefab",
         Prefab_setup,
         NULL,
-        133,
+        150,
         Prefab_testcases
     },
     {
         "World",
         World_setup,
         NULL,
-        58,
+        60,
         World_testcases
     },
     {
