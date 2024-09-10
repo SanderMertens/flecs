@@ -1447,6 +1447,26 @@ void Traversal_up_component_w_singleton_after_parent_table_change_no_data(void);
 void Traversal_up_component_w_var_after_parent_table_change_no_data(void);
 void Traversal_test_up_component_after_parent_table_change_no_data(void);
 void Traversal_test_up_component_w_singleton_after_parent_table_change_no_data(void);
+void Traversal_this_up_childof_isa_childof(void);
+void Traversal_this_up_isa_childof(void);
+void Traversal_this_up_isa_isa_childof(void);
+void Traversal_this_up_isa_childof_isa(void);
+void Traversal_this_up_isa_childof_isa_childof(void);
+void Traversal_this_self_up_childof_isa_childof(void);
+void Traversal_this_self_up_isa_childof(void);
+void Traversal_this_self_up_isa_isa_childof(void);
+void Traversal_this_self_up_isa_childof_isa(void);
+void Traversal_this_self_up_isa_childof_isa_childof(void);
+void Traversal_this_written_up_childof_isa_childof(void);
+void Traversal_this_written_up_isa_childof(void);
+void Traversal_this_written_up_isa_isa_childof(void);
+void Traversal_this_written_up_isa_childof_isa(void);
+void Traversal_this_written_up_isa_childof_isa_childof(void);
+void Traversal_this_written_self_up_childof_isa_childof(void);
+void Traversal_this_written_self_up_isa_childof(void);
+void Traversal_this_written_self_up_isa_isa_childof(void);
+void Traversal_this_written_self_up_isa_childof_isa(void);
+void Traversal_this_written_self_up_isa_childof_isa_childof(void);
 
 // Testsuite 'Cascade'
 void Cascade_this_self_cascade_childof_uncached(void);
@@ -7722,6 +7742,86 @@ bake_test_case Traversal_testcases[] = {
     {
         "test_up_component_w_singleton_after_parent_table_change_no_data",
         Traversal_test_up_component_w_singleton_after_parent_table_change_no_data
+    },
+    {
+        "this_up_childof_isa_childof",
+        Traversal_this_up_childof_isa_childof
+    },
+    {
+        "this_up_isa_childof",
+        Traversal_this_up_isa_childof
+    },
+    {
+        "this_up_isa_isa_childof",
+        Traversal_this_up_isa_isa_childof
+    },
+    {
+        "this_up_isa_childof_isa",
+        Traversal_this_up_isa_childof_isa
+    },
+    {
+        "this_up_isa_childof_isa_childof",
+        Traversal_this_up_isa_childof_isa_childof
+    },
+    {
+        "this_self_up_childof_isa_childof",
+        Traversal_this_self_up_childof_isa_childof
+    },
+    {
+        "this_self_up_isa_childof",
+        Traversal_this_self_up_isa_childof
+    },
+    {
+        "this_self_up_isa_isa_childof",
+        Traversal_this_self_up_isa_isa_childof
+    },
+    {
+        "this_self_up_isa_childof_isa",
+        Traversal_this_self_up_isa_childof_isa
+    },
+    {
+        "this_self_up_isa_childof_isa_childof",
+        Traversal_this_self_up_isa_childof_isa_childof
+    },
+    {
+        "this_written_up_childof_isa_childof",
+        Traversal_this_written_up_childof_isa_childof
+    },
+    {
+        "this_written_up_isa_childof",
+        Traversal_this_written_up_isa_childof
+    },
+    {
+        "this_written_up_isa_isa_childof",
+        Traversal_this_written_up_isa_isa_childof
+    },
+    {
+        "this_written_up_isa_childof_isa",
+        Traversal_this_written_up_isa_childof_isa
+    },
+    {
+        "this_written_up_isa_childof_isa_childof",
+        Traversal_this_written_up_isa_childof_isa_childof
+    },
+    {
+        "this_written_self_up_childof_isa_childof",
+        Traversal_this_written_self_up_childof_isa_childof
+    },
+    {
+        "this_written_self_up_isa_childof",
+        Traversal_this_written_self_up_isa_childof
+    },
+    {
+        "this_written_self_up_isa_isa_childof",
+        Traversal_this_written_self_up_isa_isa_childof
+    },
+    {
+        "this_written_self_up_isa_childof_isa",
+        Traversal_this_written_self_up_isa_childof_isa
+    },
+    {
+        "this_written_self_up_isa_childof_isa_childof",
+        Traversal_this_written_self_up_isa_childof_isa_childof
     }
 };
 
@@ -10266,7 +10366,7 @@ static bake_test_suite suites[] = {
         "Traversal",
         Traversal_setup,
         NULL,
-        127,
+        147,
         Traversal_testcases,
         1,
         Traversal_params

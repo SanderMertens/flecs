@@ -1501,7 +1501,27 @@
                 "up_component_w_singleton_after_parent_table_change_no_data",
                 "up_component_w_var_after_parent_table_change_no_data",
                 "test_up_component_after_parent_table_change_no_data",
-                "test_up_component_w_singleton_after_parent_table_change_no_data"
+                "test_up_component_w_singleton_after_parent_table_change_no_data",
+                "this_up_childof_isa_childof",
+                "this_up_isa_childof",
+                "this_up_isa_isa_childof",
+                "this_up_isa_childof_isa",
+                "this_up_isa_childof_isa_childof",
+                "this_self_up_childof_isa_childof",
+                "this_self_up_isa_childof",
+                "this_self_up_isa_isa_childof",
+                "this_self_up_isa_childof_isa",
+                "this_self_up_isa_childof_isa_childof",
+                "this_written_up_childof_isa_childof",
+                "this_written_up_isa_childof",
+                "this_written_up_isa_isa_childof",
+                "this_written_up_isa_childof_isa",
+                "this_written_up_isa_childof_isa_childof",
+                "this_written_self_up_childof_isa_childof",
+                "this_written_self_up_isa_childof",
+                "this_written_self_up_isa_isa_childof",
+                "this_written_self_up_isa_childof_isa",
+                "this_written_self_up_isa_childof_isa_childof"
             ]
         }, {
             "id": "Cascade",
