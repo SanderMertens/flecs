@@ -190,3 +190,39 @@ void Refs_try_get(void) {
 
     test_assert(p.try_get() == nullptr);
 }
+
+void Refs_has(void) {
+    flecs::world world;
+
+    flecs::entity e = world.entity();
+
+    {
+        flecs::ref<Position> p = e.get_ref<Position>();
+        test_assert(!p.has());
+    }
+
+    e.set<Position>({10, 20});
+
+    {
+        flecs::ref<Position> p = e.get_ref<Position>();
+        test_assert(p.has());
+    }
+}
+
+void Refs_bool_operator(void) {
+    flecs::world world;
+
+    flecs::entity e = world.entity();
+
+    {
+        flecs::ref<Position> p = e.get_ref<Position>();
+        test_assert(!p);
+    }
+
+    e.set<Position>({10, 20});
+
+    {
+        flecs::ref<Position> p = e.get_ref<Position>();
+        test_assert(p);
+    }
+}
