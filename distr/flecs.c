@@ -72432,6 +72432,9 @@ void flecs_trav_entity_down_isa(
                         flecs_trav_entity_down(world, a, cache, dst, trav, e,
                             idr_trav, idr_with, self, empty);
                     }
+
+                    flecs_trav_entity_down_isa(world, a, cache, dst, trav, e, 
+                        idr_with, self, empty);
                 }
             }
         }
