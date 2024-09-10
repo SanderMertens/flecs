@@ -982,6 +982,8 @@ void Refs_default_ctor(void);
 void Refs_ctor_from_entity(void);
 void Refs_implicit_operator_bool(void);
 void Refs_try_get(void);
+void Refs_has(void);
+void Refs_bool_operator(void);
 
 // Testsuite 'Module'
 void Module_import(void);
@@ -5159,6 +5161,14 @@ bake_test_case Refs_testcases[] = {
     {
         "try_get",
         Refs_try_get
+    },
+    {
+        "has",
+        Refs_has
+    },
+    {
+        "bool_operator",
+        Refs_bool_operator
     }
 };
 
@@ -6655,7 +6665,7 @@ static bake_test_suite suites[] = {
         "Refs",
         NULL,
         NULL,
-        15,
+        17,
         Refs_testcases
     },
     {

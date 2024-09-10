@@ -1018,7 +1018,9 @@
                 "default_ctor",
                 "ctor_from_entity",
                 "implicit_operator_bool",
-                "try_get"
+                "try_get",
+                "has",
+                "bool_operator"
             ]
         }, {
             "id": "Module",
