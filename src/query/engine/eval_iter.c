@@ -372,7 +372,7 @@ ecs_iter_t ecs_query_iter(
     }
 
     /* Ok, only for stats */
-    ECS_CONST_CAST(ecs_query_t*, q)->eval_count ++;
+    ecs_os_linc(&ECS_CONST_CAST(ecs_query_t*, q)->eval_count);
 
     ecs_query_impl_t *impl = flecs_query_impl(q);
     ecs_query_cache_t *cache = impl->cache;

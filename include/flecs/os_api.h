@@ -517,6 +517,7 @@ void ecs_os_set_api_defaults(void);
 #define ecs_os_now() ecs_os_api.now_()
 #define ecs_os_get_time(time_out) ecs_os_api.get_time_(time_out)
 
+#ifndef FLECS_DISABLE_COUNTERS
 #ifdef FLECS_ACCURATE_COUNTERS
 #define ecs_os_inc(v)  (ecs_os_ainc(v))
 #define ecs_os_linc(v) (ecs_os_lainc(v))
@@ -528,6 +529,13 @@ void ecs_os_set_api_defaults(void);
 #define ecs_os_dec(v)  (--(*v))
 #define ecs_os_ldec(v) (--(*v))
 #endif
+#else
+#define ecs_os_inc(v)
+#define ecs_os_linc(v)
+#define ecs_os_dec(v)
+#define ecs_os_ldec(v)
+#endif
+
 
 #ifdef ECS_TARGET_MINGW
 /* mingw bug: without this a conversion error is thrown, but isnan/isinf should

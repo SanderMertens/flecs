@@ -560,9 +560,11 @@ int32_t flecs_run_pipeline_ops(
         ecs_system_t* sys = (ecs_system_t*)poly->poly;
 
         /* Keep track of the last frame for which the system has ran, so we
-        * know from where to resume the schedule in case the schedule
-        * changes during a merge. */
-        sys->last_frame = world->info.frame_count_total + 1;
+         * know from where to resume the schedule in case the schedule
+         * changes during a merge. */
+        if (stage_index == 0) {
+            sys->last_frame = world->info.frame_count_total + 1;
+        }
 
         ecs_stage_t* s = NULL;
         if (!op->immediate) {
@@ -574,7 +576,7 @@ int32_t flecs_run_pipeline_ops(
         flecs_run_intern(world, s, system, sys, stage_index,
             stage_count, delta_time, NULL);
 
-        world->info.systems_ran_frame++;
+        ecs_os_linc(&world->info.systems_ran_frame);
         ran_since_merge++;
 
         if (ran_since_merge == op->count) {

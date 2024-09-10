@@ -14284,7 +14284,7 @@ void flecs_observer_invoke(
     bool match_this = query->flags & EcsQueryMatchThis;
     if (match_this) {
         callback(it);
-        query->eval_count ++;
+        ecs_os_inc(&query->eval_count);
     } else {
         ecs_entity_t observer_src = ECS_TERM_REF_ID(&term->src);
         if (observer_src && !(term->src.id & EcsIsEntity)) {
@@ -14300,7 +14300,7 @@ void flecs_observer_invoke(
             it->entities = &e;
             if (!observer_src) {
                 callback(it);
-                query->eval_count ++;
+                ecs_os_inc(&query->eval_count);
             } else if (observer_src == e) {
                 ecs_entity_t dummy = 0;
                 it->entities = &dummy;
@@ -14309,7 +14309,7 @@ void flecs_observer_invoke(
                 }
 
                 callback(it);
-                query->eval_count ++;
+                ecs_os_inc(&query->eval_count);
                 it->sources[0] = src;
                 break;
             }
@@ -52131,9 +52131,11 @@ int32_t flecs_run_pipeline_ops(
         ecs_system_t* sys = (ecs_system_t*)poly->poly;
 
         /* Keep track of the last frame for which the system has ran, so we
-        * know from where to resume the schedule in case the schedule
-        * changes during a merge. */
-        sys->last_frame = world->info.frame_count_total + 1;
+         * know from where to resume the schedule in case the schedule
+         * changes during a merge. */
+        if (stage_index == 0) {
+            sys->last_frame = world->info.frame_count_total + 1;
+        }
 
         ecs_stage_t* s = NULL;
         if (!op->immediate) {
@@ -52145,7 +52147,7 @@ int32_t flecs_run_pipeline_ops(
         flecs_run_intern(world, s, system, sys, stage_index,
             stage_count, delta_time, NULL);
 
-        world->info.systems_ran_frame++;
+        ecs_os_linc(&world->info.systems_ran_frame);
         ran_since_merge++;
 
         if (ran_since_merge == op->count) {
@@ -69889,7 +69891,7 @@ ecs_iter_t ecs_query_iter(
     }
 
     /* Ok, only for stats */
-    ECS_CONST_CAST(ecs_query_t*, q)->eval_count ++;
+    ecs_os_linc(&ECS_CONST_CAST(ecs_query_t*, q)->eval_count);
 
     ecs_query_impl_t *impl = flecs_query_impl(q);
     ecs_query_cache_t *cache = impl->cache;
