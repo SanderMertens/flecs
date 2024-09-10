@@ -71,6 +71,13 @@
  */
 // #define FLECS_ACCURATE_COUNTERS
 
+/** @def FLECS_DISABLE_COUNTERS
+ * Disables counters used for statistics. Improves performance, but
+ * will prevent some features that rely on statistics from working,
+ * like the statistics pages in the explorer.
+ */
+// #define FLECS_DISABLE_COUNTERS
+
 /* Make sure provided configuration is valid */
 #if defined(FLECS_DEBUG) && defined(FLECS_NDEBUG)
 #error "invalid configuration: cannot both define FLECS_DEBUG and FLECS_NDEBUG"

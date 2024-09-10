@@ -314,7 +314,7 @@ void flecs_observer_invoke(
     bool match_this = query->flags & EcsQueryMatchThis;
     if (match_this) {
         callback(it);
-        query->eval_count ++;
+        ecs_os_inc(&query->eval_count);
     } else {
         ecs_entity_t observer_src = ECS_TERM_REF_ID(&term->src);
         if (observer_src && !(term->src.id & EcsIsEntity)) {
@@ -330,7 +330,7 @@ void flecs_observer_invoke(
             it->entities = &e;
             if (!observer_src) {
                 callback(it);
-                query->eval_count ++;
+                ecs_os_inc(&query->eval_count);
             } else if (observer_src == e) {
                 ecs_entity_t dummy = 0;
                 it->entities = &dummy;
@@ -339,7 +339,7 @@ void flecs_observer_invoke(
                 }
 
                 callback(it);
-                query->eval_count ++;
+                ecs_os_inc(&query->eval_count);
                 it->sources[0] = src;
                 break;
             }
