@@ -50622,8 +50622,8 @@ void FlecsMetaImport(
 #endif
 
 /*
- * @file addons/meta/runtime.c
- * @brief Runtime components.
+ * @file addons/meta/rtt_lifecycle.c
+ * @brief Runtime components lifecycle management
  */
 
 

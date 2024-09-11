@@ -1299,7 +1299,6 @@ static void test_runtime_type(ecs_world_t *world, ecs_entity_t tut) {
     const char *tut_name = ecs_get_name(world, tut);
     int resources_required = ecs_get(world, tut, TestTypeInfo)->resources;
     ecs_entity_t prefab = ecs_new(world);
-    printf("testing %s\n", tut_name);
 
     int32_t initial_resources = ecs_vec_count(&resource_ids);
     ecs_add_id(world, prefab, tut);
