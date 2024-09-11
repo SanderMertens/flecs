@@ -74,13 +74,6 @@ static void test_ctor(void *ptr, int32_t count,
     ecs_os_memset(ptr, ctor_pattern, count * type_info->size);
 }
 
-void reset_test_ctor() {
-    ctor_calls = 0;
-    ctor_ptr = 0;
-    ctor_count = 0;
-    ctor_component = 0;
-}
-
 static int dtor_calls = 0;
 static uintptr_t dtor_ptr = 0;
 static int32_t dtor_count = 0;
@@ -92,13 +85,6 @@ static void test_dtor(void *ptr, int32_t count,
     dtor_count = count;
     dtor_component = type_info->component;
     ecs_os_memset(ptr, 0xDE, count * type_info->size);
-}
-
-void reset_test_dtor() {
-    dtor_calls = 0;
-    dtor_ptr = 0;
-    dtor_count = 0;
-    dtor_component = 0;
 }
 
 static int move_calls = 0;
@@ -117,14 +103,6 @@ static void test_move(void *dst_ptr, void *src_ptr, int32_t count,
     ecs_os_memset(src_ptr, 0xBC, count * type_info->size);
 }
 
-void reset_test_move() {
-    move_calls = 0;
-    move_dst_ptr = 0;
-    move_src_ptr = 0;
-    move_count = 0;
-    move_component = 0;
-}
-
 static int copy_calls = 0;
 static uintptr_t copy_dst_ptr = 0;
 static uintptr_t copy_src_ptr = 0;
@@ -138,14 +116,6 @@ static void test_copy(void *dst_ptr, const void *src_ptr, int32_t count,
     copy_count = count;
     copy_component = type_info->component;
     ecs_os_memcpy(dst_ptr, src_ptr, count * type_info->size);
-}
-
-void reset_test_copy() {
-    copy_calls = 0;
-    copy_dst_ptr = 0;
-    copy_src_ptr = 0;
-    copy_count = 0;
-    copy_component = 0;
 }
 
 /* Define a nested struct that will have one or more hooks depending on the test
@@ -186,7 +156,6 @@ const ecs_type_info_t *define_test_struct(ecs_world_t *world) {
 /* Tests that a constructor is generated for a struct if at least a member has
    itself a constructor Also tests if the generated constructor works. */
 void RuntimeTypes_ctor(void) {
-    reset_test_ctor();
     ecs_world_t *world = ecs_init();
 
     /* Define NestedStruct: */
@@ -237,7 +206,6 @@ void RuntimeTypes_ctor(void) {
 /* Tests that a destructor is generated for a struct if at least a member has
    itself a destructor Also tests if the generated destructor works. */
 void RuntimeTypes_dtor(void) {
-    reset_test_dtor();
     ecs_world_t *world = ecs_init();
 
     /* Define NestedStruct: */
@@ -284,7 +252,6 @@ void RuntimeTypes_dtor(void) {
 /* Tests that a move hook is generated for a struct if at least a member has
    itself a move hook Also tests if the generated move hook works. */
 void RuntimeTypes_move(void) {
-    reset_test_move();
     ecs_world_t *world = ecs_init();
     define_nested_struct(world);
 
@@ -350,7 +317,6 @@ void RuntimeTypes_move(void) {
 /* Tests that a copy hook is generated for a struct if at least a member has
    itself a copy hook Also tests if the generated copy hook works. */
 void RuntimeTypes_copy(void) {
-    reset_test_copy();
     ecs_world_t *world = ecs_init();
 
     /* Define NestedStruct: */
