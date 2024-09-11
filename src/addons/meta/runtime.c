@@ -1,4 +1,4 @@
-/**
+/*
  * @file addons/meta/runtime.c
  * @brief Runtime components.
  */
@@ -8,8 +8,8 @@
 
 #ifdef FLECS_META
 
-// Stores all the information necessary to forward a hook call to a
-// nested/underlying type
+/* Stores all the information necessary to forward a hook call to a
+ * nested/underlying type */
 typedef struct ecs_meta_rtt_call_data_t {
     union {
         ecs_xtor_t xtor;
@@ -21,7 +21,7 @@ typedef struct ecs_meta_rtt_call_data_t {
     int32_t count;
 } ecs_meta_rtt_call_data_t;
 
-// Lifecycle context for runtime types
+/* Lifecycle context for runtime types */
 typedef struct ecs_meta_rtt_struct_ctx_t {
     ecs_vec_t ctors; /* vector<ecs_meta_rtt_call_data_t> */
     ecs_vec_t dtors; /* vector<ecs_meta_rtt_call_data_t> */
@@ -38,7 +38,7 @@ typedef struct ecs_meta_rtt_vector_ctx_t {
     const ecs_type_info_t *type_info;
 } ecs_meta_rtt_vector_ctx_t;
 
-// Generic copy assign hook
+/* Generic copy assign hook */
 static void
 flecs_meta_rtt_default_copy(
     void *dst_ptr,
@@ -49,7 +49,7 @@ flecs_meta_rtt_default_copy(
     ecs_os_memcpy(dst_ptr, src_ptr, count * type_info->size);
 }
 
-// Generic move assign hook
+/* Generic move assign hook */
 static void
 flecs_meta_rtt_default_move(
     void *dst_ptr,
@@ -66,8 +66,8 @@ flecs_meta_rtt_default_move(
  *
  */
 
-// Invokes underlying type's constructor/destructor using saved information in
-// the lifecycle context
+/* Invokes underlying type's constructor/destructor using saved information in
+ * the lifecycle context */
 static void
 flecs_meta_rtt_struct_xtor(
     ecs_vec_t *xtor_data_vec,
@@ -76,9 +76,10 @@ flecs_meta_rtt_struct_xtor(
     const ecs_type_info_t *type_info)
 {
     int cb_count = ecs_vec_count(xtor_data_vec);
-    for (int j = 0; j < count; j++) {
+    int i, j;
+    for (j = 0; j < count; j++) {
         void *elem_ptr = ECS_ELEM(ptr, type_info->size, j);
-        for (int i = 0; i < cb_count; i++) {
+        for (i = 0; i < cb_count; i++) {
             ecs_meta_rtt_call_data_t *xtor_data =
                 ecs_vec_get_t(xtor_data_vec, ecs_meta_rtt_call_data_t, i);
             xtor_data->hook.xtor(
@@ -89,9 +90,9 @@ flecs_meta_rtt_struct_xtor(
     }
 }
 
-// Generic constructor. It will read hook information call data from the type's
-// lifecycle context and call the constructors configured when the type was
-// created.
+/* Generic constructor. It will read hook information call data from the type's
+ * lifecycle context and call the constructors configured when the type was
+ * created. */
 static void
 flecs_meta_rtt_struct_ctor(
     void *ptr,
@@ -104,9 +105,9 @@ flecs_meta_rtt_struct_ctor(
     flecs_meta_rtt_struct_xtor(&rtt_ctx->ctors, ptr, count, type_info);
 }
 
-// Generic destructor. It will read hook information call data from the type's
-// lifecycle context and call the destructors configured when the type was
-// created.
+/* Generic destructor. It will read hook information call data from the type's
+ * lifecycle context and call the destructors configured when the type was
+ * created. */
 static void
 flecs_meta_rtt_struct_dtor(
     void *ptr,
@@ -119,9 +120,9 @@ flecs_meta_rtt_struct_dtor(
     flecs_meta_rtt_struct_xtor(&rtt_ctx->dtors, ptr, count, type_info);
 }
 
-// Generic move hook. It will read hook information call data from the type's
-// lifecycle context and call the move hooks configured when the type was
-// created.
+/* Generic move hook. It will read hook information call data from the type's
+ * lifecycle context and call the move hooks configured when the type was
+ * created. */
 static void
 flecs_meta_rtt_struct_move(
     void *dst_ptr,
@@ -134,11 +135,12 @@ flecs_meta_rtt_struct_move(
     ecs_assert(rtt_ctx != NULL, ECS_INTERNAL_ERROR, NULL);
 
     int cb_count = ecs_vec_count(&rtt_ctx->moves);
-    for (int j = 0; j < count; j++) {
+    int i, j;
+    for (j = 0; j < count; j++) {
         ecs_size_t elem_offset = type_info->size * j;
         void *elem_dst_ptr = ECS_OFFSET(dst_ptr, elem_offset);
         void *elem_src_ptr = ECS_OFFSET(src_ptr, elem_offset);
-        for (int i = 0; i < cb_count; i++) {
+        for (i = 0; i < cb_count; i++) {
             ecs_meta_rtt_call_data_t *move_data =
                 ecs_vec_get_t(&rtt_ctx->moves, ecs_meta_rtt_call_data_t, i);
             move_data->hook.move(
@@ -150,9 +152,9 @@ flecs_meta_rtt_struct_move(
     }
 }
 
-// Generic copy hook. It will read hook information call data from the type's
-// lifecycle context and call the copy hooks configured when the type was
-// created.
+/* Generic copy hook. It will read hook information call data from the type's
+ * lifecycle context and call the copy hooks configured when the type was
+ * created. */
 static void
 flecs_meta_rtt_struct_copy(
     void *dst_ptr,
@@ -165,11 +167,12 @@ flecs_meta_rtt_struct_copy(
     ecs_assert(rtt_ctx != NULL, ECS_INTERNAL_ERROR, NULL);
 
     int cb_count = ecs_vec_count(&rtt_ctx->copys);
-    for (int j = 0; j < count; j++) {
+    int i, j;
+    for (j = 0; j < count; j++) {
         ecs_size_t elem_offset = type_info->size * j;
         void *elem_dst_ptr = ECS_OFFSET(dst_ptr, elem_offset);
         const void *elem_src_ptr = ECS_OFFSET(src_ptr, elem_offset);
-        for (int i = 0; i < cb_count; i++) {
+        for (i = 0; i < cb_count; i++) {
             ecs_meta_rtt_call_data_t *copy_data =
                 ecs_vec_get_t(&rtt_ctx->copys, ecs_meta_rtt_call_data_t, i);
             copy_data->hook.copy(
@@ -242,29 +245,30 @@ flecs_meta_rtt_configure_struct_hooks(
     return rtt_ctx;
 }
 
-// Checks if a struct member's types have hooks installed. If so, it generates
-// and installs required hooks for the struct type itself. These hooks will
-// invoke the member hooks when necessary returns true if hooks were actually
-// configured, false otherwise (struct did not need hooks)
+/* Checks if a struct member's types have hooks installed. If so, it generates
+ * and installs required hooks for the struct type itself. These hooks will
+ * invoke the member hooks when necessary returns true if hooks were actually
+ * configured, false otherwise (struct did not need hooks) */
 static void
 flecs_meta_rtt_init_default_hooks_struct(
     ecs_world_t *world,
     ecs_entity_t component,
     const ecs_type_info_t *ti)
 {
-    // Obtain struct information to figure out what members it contains:
+    /* Obtain struct information to figure out what members it contains: */
     const EcsStruct *struct_info = ecs_get(world, component, EcsStruct);
     ecs_assert(struct_info != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    // These flags will be set to true if we determine we need to generate a
-    // hook of a particular type:
+    /* These flags will be set to true if we determine we need to generate a
+     * hook of a particular type: */
     bool ctor_hook_required = false;
     bool dtor_hook_required = false;
     bool move_hook_required = false;
     bool copy_hook_required = false;
 
-    // Iterate all struct members and see if hooks are required:
-    for (int i = 0; i < ecs_vec_count(&struct_info->members); i++) {
+    /* Iterate all struct members and see if hooks are required: */
+    int i;
+    for (i = 0; i < ecs_vec_count(&struct_info->members); i++) {
         ecs_member_t *m = ecs_vec_get_t(&struct_info->members, ecs_member_t, i);
         const ecs_type_info_t *member_ti = ecs_get_type_info(world, m->type);
         ctor_hook_required |= member_ti->hooks.ctor &&
@@ -274,8 +278,8 @@ flecs_meta_rtt_init_default_hooks_struct(
         copy_hook_required |= member_ti->hooks.copy != NULL;
     }
 
-    // If any hook is required, then create a lifecycle context and configure a
-    // generic hook that will interpret that context:
+    /* If any hook is required, then create a lifecycle context and configure a
+     * generic hook that will interpret that context: */
     ecs_meta_rtt_struct_ctx_t *rtt_ctx = flecs_meta_rtt_configure_struct_hooks(
         world,
         ti,
@@ -285,12 +289,12 @@ flecs_meta_rtt_init_default_hooks_struct(
         copy_hook_required);
 
     if (!rtt_ctx)
-        return;  // no hooks required
+        return; /* no hooks required */
 
-    // At least a hook was configured, therefore examine each struct member to
-    // build the vector of calls that will then be executed by the generic hook
-    // handler:
-    for (int i = 0; i < ecs_vec_count(&struct_info->members); i++) {
+    /* At least a hook was configured, therefore examine each struct member to
+     * build the vector of calls that will then be executed by the generic hook
+     * handler: */
+    for (i = 0; i < ecs_vec_count(&struct_info->members); i++) {
         ecs_member_t *m = ecs_vec_get_t(&struct_info->members, ecs_member_t, i);
         const ecs_type_info_t *member_ti = ecs_get_type_info(world, m->type);
         if (ctor_hook_required) {
@@ -365,7 +369,8 @@ flecs_meta_rtt_array_ctor(
     ecs_meta_rtt_array_ctx_t *rtt_ctx =
         (ecs_meta_rtt_array_ctx_t *)type_info->hooks.lifecycle_ctx;
     ecs_xtor_t ctor = rtt_ctx->type_info->hooks.ctor;
-    for (int i = 0; i < count; i++) {
+    int i;
+    for (i = 0; i < count; i++) {
         void *arr = ECS_ELEM(ptr, type_info->size, i);
         ctor(arr, rtt_ctx->elem_count, rtt_ctx->type_info);
     }
@@ -380,7 +385,8 @@ flecs_meta_rtt_array_dtor(
     ecs_meta_rtt_array_ctx_t *rtt_ctx =
         (ecs_meta_rtt_array_ctx_t *)type_info->hooks.lifecycle_ctx;
     ecs_xtor_t dtor = rtt_ctx->type_info->hooks.dtor;
-    for (int i = 0; i < count; i++) {
+    int i;
+    for (i = 0; i < count; i++) {
         void *arr = ECS_ELEM(ptr, type_info->size, i);
         dtor(arr, rtt_ctx->elem_count, rtt_ctx->type_info);
     }
@@ -396,7 +402,8 @@ flecs_meta_rtt_array_move(
     ecs_meta_rtt_array_ctx_t *rtt_ctx =
         (ecs_meta_rtt_array_ctx_t *)type_info->hooks.lifecycle_ctx;
     ecs_move_t move = rtt_ctx->type_info->hooks.move;
-    for (int i = 0; i < count; i++) {
+    int i;
+    for (i = 0; i < count; i++) {
         void *src_arr = ECS_ELEM(src_ptr, type_info->size, i);
         void *dst_arr = ECS_ELEM(dst_ptr, type_info->size, i);
         move(dst_arr, src_arr, rtt_ctx->elem_count, rtt_ctx->type_info);
@@ -413,16 +420,17 @@ flecs_meta_rtt_array_copy(
     ecs_meta_rtt_array_ctx_t *rtt_ctx =
         (ecs_meta_rtt_array_ctx_t *)type_info->hooks.lifecycle_ctx;
     ecs_copy_t copy = rtt_ctx->type_info->hooks.copy;
-    for (int i = 0; i < count; i++) {
+    int i;
+    for (i = 0; i < count; i++) {
         const void *src_arr = ECS_ELEM(src_ptr, type_info->size, i);
         void *dst_arr = ECS_ELEM(dst_ptr, type_info->size, i);
         copy(dst_arr, src_arr, rtt_ctx->elem_count, rtt_ctx->type_info);
     }
 }
 
-// Checks if an array's underlying type has hooks installed. If so, it generates
-// and installs required hooks for the array type itself. These hooks will
-// invoke the underlying type's hook for each element in the array.
+/* Checks if an array's underlying type has hooks installed. If so, it generates
+ * and installs required hooks for the array type itself. These hooks will
+ * invoke the underlying type's hook for each element in the array. */
 static void
 flecs_meta_rtt_init_default_hooks_array(
     ecs_world_t *world,
@@ -440,7 +448,7 @@ flecs_meta_rtt_init_default_hooks_array(
 
     if (!ctor_hook_required && !dtor_hook_required && !move_hook_required &&
         !copy_hook_required)
-        return;  // no hooks required
+        return; /* no hooks required */
 
     ecs_meta_rtt_array_ctx_t *rtt_ctx =
         ecs_os_malloc_t(ecs_meta_rtt_array_ctx_t);
@@ -491,7 +499,8 @@ flecs_meta_rtt_vector_ctor(
 {
     ecs_meta_rtt_vector_ctx_t *rtt_ctx =
         (ecs_meta_rtt_vector_ctx_t *)type_info->hooks.lifecycle_ctx;
-    for (int i = 0; i < count; i++) {
+    int i;
+    for (i = 0; i < count; i++) {
         ecs_vec_t *vec = ECS_ELEM(ptr, type_info->size, i);
         ecs_vec_init(NULL, vec, rtt_ctx->type_info->size, 0);
     }
@@ -506,7 +515,8 @@ flecs_meta_rtt_vector_dtor(
     ecs_meta_rtt_vector_ctx_t *rtt_ctx =
         (ecs_meta_rtt_vector_ctx_t *)type_info->hooks.lifecycle_ctx;
     ecs_xtor_t dtor = rtt_ctx->type_info->hooks.dtor;
-    for (int i = 0; i < count; i++) {
+    int i;
+    for (i = 0; i < count; i++) {
         ecs_vec_t *vec = ECS_ELEM(ptr, type_info->size, i);
         int32_t num_elements = ecs_vec_count(vec);
         if (dtor && num_elements) {
@@ -524,7 +534,8 @@ flecs_meta_rtt_vector_move(
     const ecs_type_info_t *type_info)
 {
     flecs_meta_rtt_vector_dtor(dst_ptr, count, type_info);
-    for (int i = 0; i < count; i++) {
+    int i;
+    for (i = 0; i < count; i++) {
         ecs_vec_t *src_vec = ECS_ELEM(src_ptr, type_info->size, i);
         ecs_vec_t *dst_vec = ECS_ELEM(dst_ptr, type_info->size, i);
         *dst_vec = *src_vec;
@@ -549,7 +560,8 @@ flecs_meta_rtt_vector_copy(
     ecs_xtor_t ctor = rtt_ctx->type_info->hooks.ctor
                           ? rtt_ctx->type_info->hooks.ctor
                           : flecs_default_ctor;
-    for (int i = 0; i < count; i++) {
+    int i;
+    for (i = 0; i < count; i++) {
         const ecs_vec_t *src_vec = ECS_ELEM(src_ptr, type_info->size, i);
         ecs_vec_t *dst_vec = ECS_ELEM(dst_ptr, type_info->size, i);
         int32_t elem_count = ecs_vec_count(src_vec);
@@ -564,10 +576,10 @@ flecs_meta_rtt_vector_copy(
     }
 }
 
-// Generates and installs required hooks for managing the vector and underlying
-// type lifecycle. Vectors always have hooks because at the very least the
-// vector structure itself must be initialized/destroyed/copied/moved, even if
-// empty.
+/* Generates and installs required hooks for managing the vector and underlying
+ * type lifecycle. Vectors always have hooks because at the very least the
+ * vector structure itself must be initialized/destroyed/copied/moved, even if
+ * empty. */
 static void
 flecs_meta_rtt_init_default_hooks_vector(
     ecs_world_t *world,
@@ -603,7 +615,7 @@ flecs_meta_rtt_init_default_hooks(
     for (i = 0; i < it->count; i++) {
         EcsType *type = &type_field[i];
         if (type->existing)
-            continue;  // non-rtt type. Ignore.
+            continue; /* non-rtt type. Ignore. */
 
         /* If a component is defined from reflection data, configure appropriate
          * default hooks.
