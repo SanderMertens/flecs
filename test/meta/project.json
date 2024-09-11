@@ -102,7 +102,6 @@
                 "dtor",
                 "move",
                 "copy",
-                "combined",
                 "trivial_array",
                 "array_ctor",
                 "array_dtor",
@@ -110,7 +109,7 @@
                 "array_copy",
                 "vector_lifecycle",
                 "vector_lifecycle_trivial_type",
-                "mixed",
+                "universal_type_tester",
                 "opaque"
             ]            
         }, {

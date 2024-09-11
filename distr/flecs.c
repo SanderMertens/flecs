@@ -50802,7 +50802,8 @@ flecs_rtt_struct_copy(
 }
 
 static void
-flecs_rtt_free_lifecycle_struct_ctx(void *ctx)
+flecs_rtt_free_lifecycle_struct_ctx(
+    void *ctx)
 {
     if (!ctx) {
         return;
@@ -50970,7 +50971,8 @@ flecs_rtt_init_default_hooks_struct(
  */
 
 static void
-flecs_rtt_free_lifecycle_array_ctx(void *ctx)
+flecs_rtt_free_lifecycle_array_ctx(
+    void *ctx)
 {
     if (!ctx) {
         return;
@@ -50980,7 +50982,10 @@ flecs_rtt_free_lifecycle_array_ctx(void *ctx)
 }
 
 static void
-flecs_rtt_array_ctor(void *ptr, int32_t count, const ecs_type_info_t *type_info)
+flecs_rtt_array_ctor(
+    void *ptr,
+    int32_t count,
+    const ecs_type_info_t *type_info)
 {
     ecs_rtt_array_ctx_t *rtt_ctx = type_info->hooks.lifecycle_ctx;
     ecs_xtor_t ctor = rtt_ctx->type_info->hooks.ctor;
@@ -50992,7 +50997,10 @@ flecs_rtt_array_ctor(void *ptr, int32_t count, const ecs_type_info_t *type_info)
 }
 
 static void
-flecs_rtt_array_dtor(void *ptr, int32_t count, const ecs_type_info_t *type_info)
+flecs_rtt_array_dtor(
+    void *ptr,
+    int32_t count,
+    const ecs_type_info_t *type_info)
 {
     ecs_rtt_array_ctx_t *rtt_ctx = type_info->hooks.lifecycle_ctx;
     ecs_xtor_t dtor = rtt_ctx->type_info->hooks.dtor;
@@ -51041,7 +51049,9 @@ flecs_rtt_array_copy(
  * and installs required hooks for the array type itself. These hooks will
  * invoke the underlying type's hook for each element in the array. */
 static void
-flecs_rtt_init_default_hooks_array(ecs_world_t *world, ecs_entity_t component)
+flecs_rtt_init_default_hooks_array(
+    ecs_world_t *world,
+    ecs_entity_t component)
 {
     const EcsArray *array_info = ecs_get(world, component, EcsArray);
     ecs_assert(array_info != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -51095,7 +51105,8 @@ flecs_rtt_init_default_hooks_array(ecs_world_t *world, ecs_entity_t component)
  */
 
 static void
-flecs_rtt_free_lifecycle_vector_ctx(void *ctx)
+flecs_rtt_free_lifecycle_vector_ctx(
+    void *ctx)
 {
     if (!ctx) {
         return;
@@ -51191,7 +51202,9 @@ flecs_rtt_vector_copy(
  * vector structure itself must be initialized/destroyed/copied/moved, even if
  * empty. */
 static void
-flecs_rtt_init_default_hooks_vector(ecs_world_t *world, ecs_entity_t component)
+flecs_rtt_init_default_hooks_vector(
+    ecs_world_t *world,
+    ecs_entity_t component)
 {
     const EcsVector *vector_info = ecs_get(world, component, EcsVector);
     ecs_assert(vector_info != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -51213,7 +51226,8 @@ flecs_rtt_init_default_hooks_vector(ecs_world_t *world, ecs_entity_t component)
 }
 
 void
-flecs_rtt_init_default_hooks(ecs_iter_t *it)
+flecs_rtt_init_default_hooks(
+    ecs_iter_t *it)
 {
     ecs_world_t *world = it->world;
     EcsType *type_field = ecs_field(it, EcsType, 0);
@@ -51224,7 +51238,7 @@ flecs_rtt_init_default_hooks(ecs_iter_t *it)
         if (type->existing) {
             continue; /* non-rtt type. Ignore. */
         }
-        
+
         /* If a component is defined from reflection data, configure appropriate
          * default hooks.
          * - For trivial types, at least set a default constructor so memory is

@@ -91,7 +91,6 @@ void RuntimeTypes_ctor(void);
 void RuntimeTypes_dtor(void);
 void RuntimeTypes_move(void);
 void RuntimeTypes_copy(void);
-void RuntimeTypes_combined(void);
 void RuntimeTypes_trivial_array(void);
 void RuntimeTypes_array_ctor(void);
 void RuntimeTypes_array_dtor(void);
@@ -99,7 +98,7 @@ void RuntimeTypes_array_move(void);
 void RuntimeTypes_array_copy(void);
 void RuntimeTypes_vector_lifecycle(void);
 void RuntimeTypes_vector_lifecycle_trivial_type(void);
-void RuntimeTypes_mixed(void);
+void RuntimeTypes_universal_type_tester(void);
 void RuntimeTypes_opaque(void);
 
 // Testsuite 'StructTypes'
@@ -1274,10 +1273,6 @@ bake_test_case RuntimeTypes_testcases[] = {
         RuntimeTypes_copy
     },
     {
-        "combined",
-        RuntimeTypes_combined
-    },
-    {
         "trivial_array",
         RuntimeTypes_trivial_array
     },
@@ -1306,8 +1301,8 @@ bake_test_case RuntimeTypes_testcases[] = {
         RuntimeTypes_vector_lifecycle_trivial_type
     },
     {
-        "mixed",
-        RuntimeTypes_mixed
+        "universal_type_tester",
+        RuntimeTypes_universal_type_tester
     },
     {
         "opaque",
@@ -4685,7 +4680,7 @@ static bake_test_suite suites[] = {
         "RuntimeTypes",
         NULL,
         NULL,
-        15,
+        14,
         RuntimeTypes_testcases
     },
     {
