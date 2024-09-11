@@ -267,9 +267,10 @@ flecs_meta_rtt_init_default_hooks_struct(
     bool copy_hook_required = false;
 
     /* Iterate all struct members and see if hooks are required: */
-    int i;
-    for (i = 0; i < ecs_vec_count(&struct_info->members); i++) {
-        ecs_member_t *m = ecs_vec_get_t(&struct_info->members, ecs_member_t, i);
+    int i, member_count = ecs_vec_count(&struct_info->members);
+    ecs_member_t *members = ecs_vec_first(&struct_info->members);
+    for (i = 0; i < member_count; i++) {
+        ecs_member_t *m = &members[i];
         const ecs_type_info_t *member_ti = ecs_get_type_info(world, m->type);
         ctor_hook_required |= member_ti->hooks.ctor &&
                               member_ti->hooks.ctor != flecs_default_ctor;
@@ -294,8 +295,8 @@ flecs_meta_rtt_init_default_hooks_struct(
     /* At least a hook was configured, therefore examine each struct member to
      * build the vector of calls that will then be executed by the generic hook
      * handler: */
-    for (i = 0; i < ecs_vec_count(&struct_info->members); i++) {
-        ecs_member_t *m = ecs_vec_get_t(&struct_info->members, ecs_member_t, i);
+    for (i = 0; i < member_count; i++) {
+        ecs_member_t *m = &members[i];
         const ecs_type_info_t *member_ti = ecs_get_type_info(world, m->type);
         if (ctor_hook_required) {
             ecs_meta_rtt_call_data_t *ctor_data = ecs_vec_append_t(
