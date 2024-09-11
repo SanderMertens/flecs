@@ -1369,7 +1369,7 @@ void FlecsMetaImport(
     ecs_observer(world, {
         .query.terms[0] = { .id = ecs_id(EcsType) },
         .events = {EcsOnSet},
-        .callback = flecs_meta_rtt_init_default_hooks
+        .callback = flecs_rtt_init_default_hooks
     });
 
     ecs_observer(world, {
