@@ -97,7 +97,7 @@
         }, {
             "id": "RuntimeTypes",
             "testcases": [
-                "simple"
+                "strings"
             ]            
         }, {
             "id": "StructTypes",

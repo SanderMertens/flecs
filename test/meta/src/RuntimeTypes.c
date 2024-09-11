@@ -3,6 +3,18 @@
 ecs_os_api_free_t oldfree = NULL;
 int free_count = 0;
 const void *search_ptr = NULL;
+ecs_os_api_t os_api;
+
+uint64_t hash(const char *str) {
+  uint64_t hash = 5381;
+  int c;
+
+  while ((c = *str++)) {
+    hash = ((hash << 5) + hash) + (uint64_t) c;  // hash * 33 + c
+  }
+
+  return hash;
+}
 
 void snoop_free(void *ptr) {
   if (ptr) {
@@ -14,16 +26,24 @@ void snoop_free(void *ptr) {
   // printf("snoop %p", ptr);
 }
 
-void RuntimeTypes_simple(void) {
-  // set up a hook on the free() function used by Flecs
-  // This will allow us to check if strings are freed properly.
+void setup_free_hook() {
+  free_count = 0;
   ecs_os_set_api_defaults();
-  ecs_os_api_t os_api = ecs_os_get_api();
+  os_api = ecs_os_get_api();
   oldfree = os_api.free_;
   os_api.free_ = snoop_free;
   ecs_os_set_api(&os_api);
+}
 
-  free_count = 0;
+void clear_free_hook() {
+  ecs_os_api.free_ = oldfree;  // remove the hook.
+  ecs_os_set_api(&os_api);
+}
+
+void RuntimeTypes_strings(void) {
+  // set up a hook on the free() function used by Flecs
+  // This will allow us to check if strings are freed properly.
+  setup_free_hook();
 
   ecs_world_t *world = ecs_init();
 
@@ -61,5 +81,5 @@ void RuntimeTypes_simple(void) {
   test_assert(free_count == 1);
 
   ecs_fini(world);
-  ecs_os_api.free_ = oldfree;  // remove the hook.
+  clear_free_hook();
 }

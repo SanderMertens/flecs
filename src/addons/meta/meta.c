@@ -260,20 +260,16 @@ int flecs_init_type(
     EcsType *meta_type = ecs_ensure(world, type, EcsType);
     if (meta_type->kind == 0) {
         ecs_type_info_t *ti = flecs_type_info_ensure(world, type);
+
+        /* Determine if this is an existing type or a reflection-defined type (runtime type) */
         meta_type->existing = ecs_has(world, type, EcsComponent);
 
-        if(!meta_type->existing && kind == EcsStructType){
-            ti->hooks.dtor = flecs_meta_rtt_dtor;
-            ti->hooks.ctor = flecs_meta_rtt_ctor;
-            ti->hooks.copy = flecs_meta_rtt_copy;
-            ti->hooks.move = flecs_meta_rtt_move;
-        }
-
-        /* Ensure that component has a default constructor, to prevent crashing
-         * serializers on uninitialized values. */
-        if (!ti->hooks.ctor) {
+        /* For existing types, ensure that component has a default constructor, to prevent crashing
+         * serializers on uninitialized values. For runtime types (rtt), de default hooks are set
+         by flecs_meta_rtt_init_default_hooks */
+         if (meta_type->existing && !ti->hooks.ctor) {
             ti->hooks.ctor = flecs_default_ctor;
-        }
+        } 
 
     } else {
         if (meta_type->kind != kind) {
@@ -1114,30 +1110,6 @@ void flecs_unit_quantity_monitor(ecs_iter_t *it) {
 }
 
 static
-void ecs_meta_type_init_default_ctor(ecs_iter_t *it) {
-    ecs_world_t *world = it->world;
-    EcsType *type = ecs_field(it, EcsType, 0);
-
-    int i;
-    for (i = 0; i < it->count; i ++) {
-        /* If a component is defined from reflection data, configure it with the
-         * default constructor. This ensures that a new component value does not
-         * contain uninitialized memory, which could cause serializers to crash
-         * when for example inspecting string fields. */
-        if (!type->existing) {
-            ecs_entity_t e = it->entities[i];
-            const ecs_type_info_t *ti = ecs_get_type_info(world, e);
-            if (!ti || !ti->hooks.ctor) {
-                ecs_set_hooks_id(world, e, 
-                    &(ecs_type_hooks_t){ 
-                        .ctor = flecs_default_ctor
-                    });
-            }
-        }
-    }
-}
-
-static
 void flecs_member_on_set(ecs_iter_t *it) {
     EcsMember *mbr = ecs_field(it, EcsMember, 0);
     if (!mbr->count) {
@@ -1399,7 +1371,7 @@ void FlecsMetaImport(
     ecs_observer(world, {
         .query.terms[0] = { .id = ecs_id(EcsType) },
         .events = {EcsOnSet},
-        .callback = ecs_meta_type_init_default_ctor
+        .callback = flecs_meta_rtt_init_default_hooks
     });
 
     ecs_observer(world, {

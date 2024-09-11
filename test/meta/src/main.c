@@ -86,7 +86,7 @@ void BitmaskTypes_struct_w_bitmask(void);
 void BitmaskTypes_bitmask_w_short_notation(void);
 
 // Testsuite 'RuntimeTypes'
-void RuntimeTypes_simple(void);
+void RuntimeTypes_strings(void);
 
 // Testsuite 'StructTypes'
 void StructTypes_i32(void);
@@ -1240,8 +1240,8 @@ bake_test_case BitmaskTypes_testcases[] = {
 
 bake_test_case RuntimeTypes_testcases[] = {
     {
-        "simple",
-        RuntimeTypes_simple
+        "strings",
+        RuntimeTypes_strings
     }
 };
 

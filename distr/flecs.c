@@ -295,11 +295,15 @@ void flecs_bitset_swap(
 typedef struct ecs_table_diff_builder_t {
     ecs_vec_t added;
     ecs_vec_t removed;
+    ecs_flags32_t added_flags;
+    ecs_flags32_t removed_flags;
 } ecs_table_diff_builder_t;
 
 typedef struct ecs_table_diff_t {
     ecs_type_t added;                /* Components added between tables */
     ecs_type_t removed;              /* Components removed between tables */
+    ecs_flags32_t added_flags;
+    ecs_flags32_t removed_flags;
 } ecs_table_diff_t;
 
 /** Edge linked list (used to keep track of incoming edges) */
@@ -313,7 +317,7 @@ typedef struct ecs_graph_edge_t {
     ecs_graph_edge_hdr_t hdr;
     ecs_table_t *from;               /* Edge source table */
     ecs_table_t *to;                 /* Edge destination table */
-    ecs_table_diff_t *diff;          /* Index into diff vector, if non trivial edge */
+    ecs_table_diff_t *diff;          /* Added/removed components for edge */
     ecs_id_t id;                     /* Id associated with edge */
 } ecs_graph_edge_t;
 
@@ -380,6 +384,12 @@ void flecs_table_diff_build(
 void flecs_table_diff_build_noalloc(
     ecs_table_diff_builder_t *builder,
     ecs_table_diff_t *diff);
+
+void flecs_table_edges_add_flags(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_id_t id,
+    ecs_flags32_t flags);
 
 #endif
 
@@ -630,6 +640,7 @@ void flecs_table_mark_dirty(
 void flecs_table_notify(
     ecs_world_t *world,
     ecs_table_t *table,
+    ecs_id_t id,
     ecs_table_event_t *event);
 
 void flecs_table_delete_entities(
@@ -1243,7 +1254,9 @@ void flecs_init_id_records(
 void flecs_fini_id_records(
     ecs_world_t *world);
 
-ecs_id_t flecs_id_record_hash(
+/* Return flags for matching id records */
+ecs_flags32_t flecs_id_flags_get(
+    ecs_world_t *world,
     ecs_id_t id);
 
 #endif
@@ -3019,7 +3032,7 @@ void flecs_notify_on_remove(
     ecs_table_t *other_table,
     int32_t row,
     int32_t count,
-    const ecs_type_t *diff);
+    const ecs_table_diff_t *diff);
 
 void flecs_notify_on_set(
     ecs_world_t *world,
@@ -5325,6 +5338,7 @@ void flecs_instantiate_children(
 
         diff.added.array[diff.added.count] = id;
         diff.added.count ++;
+        diff.added_flags |= flecs_id_flags_get(world, id);
     }
 
     /* Table must contain children of base */
@@ -5554,26 +5568,31 @@ void flecs_notify_on_add(
     ecs_table_t *other_table,
     int32_t row,
     int32_t count,
-    const ecs_type_t *added,
+    const ecs_table_diff_t *diff,
     ecs_flags32_t flags,
     ecs_flags64_t set_mask,
     bool construct,
     bool sparse)
 {
-    ecs_assert(added != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(diff != NULL, ECS_INTERNAL_ERROR, NULL);
+    const ecs_type_t *added = &diff->added;
 
     if (added->count) {
-        ecs_flags32_t table_flags = table->flags;
+        ecs_flags32_t diff_flags = 
+            diff->added_flags|(table->flags & EcsTableHasTraversable);
+        if (!diff_flags) {
+            return;
+        }
 
-        if (sparse && (table_flags & EcsTableHasSparse)) {
+        if (sparse && (diff_flags & EcsTableHasSparse)) {
             flecs_sparse_on_add(world, table, row, count, added, construct);
         }
 
-        if (table_flags & EcsTableHasUnion) {
+        if (diff_flags & EcsTableHasUnion) {
             flecs_union_on_add(world, table, row, count, added);
         }
 
-        if (table_flags & (EcsTableHasOnAdd|EcsTableHasIsA|EcsTableHasTraversable)) {
+        if (diff_flags & (EcsTableHasOnAdd|EcsTableHasTraversable)) {
             flecs_emit(world, world, set_mask, &(ecs_event_desc_t){
                 .event = EcsOnAdd,
                 .ids = added,
@@ -5594,25 +5613,28 @@ void flecs_notify_on_remove(
     ecs_table_t *other_table,
     int32_t row,
     int32_t count,
-    const ecs_type_t *removed)
+    const ecs_table_diff_t *diff)
 {
-    ecs_assert(removed != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(diff != NULL, ECS_INTERNAL_ERROR, NULL);
+    const ecs_type_t *removed = &diff->removed;
     ecs_assert(count != 0, ECS_INTERNAL_ERROR, NULL);
 
     if (removed->count) {
-        ecs_flags32_t table_flags = table->flags;
+        ecs_flags32_t diff_flags = 
+            diff->removed_flags|(table->flags & EcsTableHasTraversable);
+        if (!diff_flags) {
+            return;
+        }
 
-        if (table_flags & EcsTableHasSparse) {
+        if (diff_flags & EcsTableHasSparse) {
             flecs_sparse_on_remove(world, table, row, count, removed);
         }
     
-        if (table_flags & EcsTableHasUnion) {
+        if (diff_flags & EcsTableHasUnion) {
             flecs_union_on_remove(world, table, row, count, removed);
         }
 
-        if (table_flags & (EcsTableHasOnRemove|EcsTableHasIsA|
-            EcsTableHasTraversable))
-        {
+        if (diff_flags & (EcsTableHasOnRemove|EcsTableHasTraversable)) {
             flecs_emit(world, world, 0, &(ecs_event_desc_t) {
                 .event = EcsOnRemove,
                 .ids = removed,
@@ -5693,7 +5715,7 @@ ecs_record_t* flecs_new_entity(
 
     ecs_assert(ecs_table_count(table) > row, ECS_INTERNAL_ERROR, NULL);
     flecs_notify_on_add(
-        world, table, NULL, row, 1, &diff->added, evt_flags, 0, ctor, true);
+        world, table, NULL, row, 1, diff, evt_flags, 0, ctor, true);
     ecs_assert(table == record->table, ECS_INTERNAL_ERROR, NULL);
 
     return record;
@@ -5728,8 +5750,7 @@ void flecs_move_entity(
         false, false);
 
     /* Invoke remove actions for removed components */
-    flecs_notify_on_remove(
-        world, src_table, dst_table, src_row, 1, &diff->removed);
+    flecs_notify_on_remove(world, src_table, dst_table, src_row, 1, diff);
 
     /* Copy entity & components from src_table to dst_table */
     flecs_table_move(world, entity, entity, dst_table, dst_row, 
@@ -5741,7 +5762,7 @@ void flecs_move_entity(
     record->row = ECS_ROW_TO_RECORD(dst_row, record->row & ECS_ROW_FLAGS_MASK);
     
     flecs_table_delete(world, src_table, src_row, false);
-    flecs_notify_on_add(world, dst_table, src_table, dst_row, 1, &diff->added, 
+    flecs_notify_on_add(world, dst_table, src_table, dst_row, 1, diff, 
         evt_flags, 0, ctor, true);
 
     flecs_update_name_index(world, src_table, dst_table, dst_row, 1);
@@ -5761,7 +5782,7 @@ void flecs_delete_entity(
     int32_t row = ECS_RECORD_TO_ROW(record->row);
 
     /* Invoke remove actions before deleting */
-    flecs_notify_on_remove(world, table, NULL, row, 1, &diff->removed);
+    flecs_notify_on_remove(world, table, NULL, row, 1, diff);
     flecs_table_delete(world, table, row, true);
 }
 
@@ -5827,9 +5848,10 @@ void flecs_commit(
         /* If source and destination table are the same no action is needed *
          * However, if a component was added in the process of traversing a
          * table, this suggests that a union relationship could have changed. */
-        if (src_table) {
+        if (src_table && src_table->flags & EcsTableHasUnion) {
+            diff->added_flags |= EcsIdIsUnion;
             flecs_notify_on_add(world, src_table, src_table, 
-                ECS_RECORD_TO_ROW(record->row), 1, &diff->added, evt_flags, 0, 
+                ECS_RECORD_TO_ROW(record->row), 1, diff, evt_flags, 0, 
                     construct, true);
         }
         flecs_journal_end();
@@ -5924,7 +5946,7 @@ const ecs_entity_t* flecs_bulk_new(
 
     flecs_defer_begin(world, world->stages[0]);
 
-    flecs_notify_on_add(world, table, NULL, row, count, &diff->added, 
+    flecs_notify_on_add(world, table, NULL, row, count, diff,
         (component_data == NULL) ? 0 : EcsEventNoOnSet, 0, true, true);
 
     if (component_data) {
@@ -6270,9 +6292,13 @@ bool ecs_commit(
 
     if (added) {
         diff.added = *added;
+        diff.added_flags = table->flags & EcsTableAddEdgeFlags;
     }
     if (removed) {
         diff.removed = *removed;
+        if (src_table) {
+            diff.removed_flags = src_table->flags & EcsTableRemoveEdgeFlags;
+        }
     }
 
     ecs_defer_begin(world);
@@ -7147,7 +7173,8 @@ void ecs_clear(
     ecs_table_t *table = r->table;
     if (table) {
         ecs_table_diff_t diff = {
-            .removed = table->type
+            .removed = table->type,
+            .removed_flags = table->flags & EcsTableRemoveEdgeFlags
         };
 
         flecs_delete_entity(world, r, &diff);
@@ -7470,8 +7497,7 @@ void flecs_remove_from_table(
                 ecs_log_push_3();
                 ecs_table_diff_t td;
                 flecs_table_diff_build_noalloc(&diff, &td);
-                flecs_notify_on_remove(world, table, NULL, 0, table_count, 
-                    &td.removed);
+                flecs_notify_on_remove(world, table, NULL, 0, table_count, &td);
                 ecs_log_pop_3();
             }
 
@@ -7721,7 +7747,8 @@ void ecs_delete(
 
         if (table) {
             ecs_table_diff_t diff = {
-                .removed = table->type
+                .removed = table->type,
+                .removed_flags = table->flags & EcsTableRemoveEdgeFlags
             };
 
             flecs_delete_entity(world, r, &diff);
@@ -7812,7 +7839,10 @@ ecs_entity_t ecs_clone(
     }
 
     ecs_type_t dst_type = dst_table->type;
-    ecs_table_diff_t diff = { .added = dst_type };
+    ecs_table_diff_t diff = {
+        .added = dst_type,
+        .added_flags = dst_table->flags & EcsTableAddEdgeFlags
+    };
     ecs_record_t *dst_r = flecs_entities_get(world, dst);
     /* Note 'ctor' parameter below is set to 'false' if the value will be copied, since flecs_table_move
        will call a copy constructor */
@@ -9741,6 +9771,7 @@ void flecs_cmd_batch_for_entity(
                     &diff->removed, ecs_id_t, table->type.count);
                 ecs_os_memcpy_n(ids, table->type.array, ecs_id_t, 
                     table->type.count);
+                diff->removed_flags |= table->flags & EcsTableRemoveEdgeFlags;
             }
             table = &world->store.root;
             world->info.cmd.batched_command_count ++;
@@ -9869,9 +9900,13 @@ void flecs_cmd_batch_for_entity(
     }
 
     if (added.count) {
+        ecs_table_diff_t add_diff = ECS_TABLE_DIFF_INIT;
+        add_diff.added = added;
+        add_diff.added_flags = diff->added_flags;
+
         flecs_defer_begin(world, world->stages[0]);
         flecs_notify_on_add(world, table, start_table, 
-            ECS_RECORD_TO_ROW(r->row), 1, &added, 0, set_mask, true, false);
+            ECS_RECORD_TO_ROW(r->row), 1, &add_diff, 0, set_mask, true, false);
         flecs_defer_end(world, world->stages[0]);
         if (r->row & EcsEntityIsTraversable) {
             /* Update monitors since we didn't do this in flecs_commit. */
@@ -12538,13 +12573,19 @@ int32_t flecs_event_observers_get(
             ecs_id_t id_fwc = ecs_pair(EcsWildcard, ECS_PAIR_SECOND(id));
             ecs_id_t id_swc = ecs_pair(ECS_PAIR_FIRST(id), EcsWildcard);
             ecs_id_t id_pwc = ecs_pair(EcsWildcard, EcsWildcard);
-            iders[count] = flecs_event_id_record_get_if(er, id_fwc);
-            count += iders[count] != 0;
-            iders[count] = flecs_event_id_record_get_if(er, id_swc);
-            count += iders[count] != 0;
-            iders[count] = flecs_event_id_record_get_if(er, id_pwc);
-            count += iders[count] != 0;
-        } else {
+            if (id_fwc != id) {
+                iders[count] = flecs_event_id_record_get_if(er, id_fwc);
+                count += iders[count] != 0;
+            }
+            if (id_swc != id) {
+                iders[count] = flecs_event_id_record_get_if(er, id_swc);
+                count += iders[count] != 0;
+            }
+            if (id_pwc != id) {
+                iders[count] = flecs_event_id_record_get_if(er, id_pwc);
+                count += iders[count] != 0;
+            }
+        } else if (id != EcsWildcard) {
             iders[count] = flecs_event_id_record_get_if(er, EcsWildcard);
             count += iders[count] != 0;
         }
@@ -13549,6 +13590,8 @@ repeat_event:
         ecs_id_record_t *idr = NULL;
         const ecs_type_info_t *ti = NULL;
         ecs_id_t id = id_array[i];
+        ecs_assert(id == EcsAny || !ecs_id_is_wildcard(id), 
+            ECS_INVALID_PARAMETER, "cannot emit wildcard ids");
         int32_t ider_i, ider_count = 0;
         bool is_pair = ECS_IS_PAIR(id);
         void *override_ptr = NULL;
@@ -13654,7 +13697,6 @@ repeat_event:
 
         int32_t storage_i;
         it.trs[0] = tr;
-        // it.ptrs[0] = NULL;
         ECS_CONST_CAST(int32_t*, it.sizes)[0] = 0; /* safe, owned by observer */
         it.event_id = id;
         it.ids[0] = id;
@@ -13700,7 +13742,6 @@ repeat_event:
                             /* Set the source temporarily to the base and base
                              * component pointer. */
                             it.sources[0] = base;
-                            // it.ptrs[0] = ptr;
                             for (ider_set_i = 0; ider_set_i < ider_set_count; ider_set_i ++) {
                                 ecs_event_id_record_t *ider = iders_set[ider_set_i];
                                 flecs_observers_invoke(
@@ -13717,8 +13758,6 @@ repeat_event:
                         }
                     }
                 }
-
-                // it.ptrs[0] = ptr;
             }
         }
 
@@ -18366,7 +18405,7 @@ void flecs_notify_tables(
         int32_t i, count = flecs_sparse_count(tables);
         for (i = 0; i < count; i ++) {
             ecs_table_t *table = flecs_sparse_get_dense_t(tables, ecs_table_t, i);
-            flecs_table_notify(world, table, event);
+            flecs_table_notify(world, table, id, event);
         }
 
     /* If id is specified, only broadcast to tables with id */
@@ -18381,7 +18420,7 @@ void flecs_notify_tables(
 
         flecs_table_cache_all_iter(&idr->cache, &it);
         while ((tr = flecs_table_cache_next(&it, ecs_table_record_t))) {
-            flecs_table_notify(world, tr->hdr.table, event);
+            flecs_table_notify(world, tr->hdr.table, id, event);
         }
     }
 }
@@ -18432,7 +18471,7 @@ void flecs_default_move_ctor_w_dtor(void *dst_ptr, void *src_ptr,
 }
 
 static
-void flecs_default_move(void *dst_ptr, void *src_ptr,
+void flecs_default_move_dtor(void *dst_ptr, void *src_ptr,
     int32_t count, const ecs_type_info_t *ti)
 {
     const ecs_type_hooks_t *cl = &ti->hooks;
@@ -18569,7 +18608,7 @@ void ecs_set_hooks_id(
             if (h->dtor) {
                 ti->hooks.move_dtor = flecs_default_move_w_dtor;
             } else {
-                ti->hooks.move_dtor = flecs_default_move;
+                ti->hooks.move_dtor = flecs_default_move_dtor;
             }
         } else {
             if (h->dtor) {
@@ -35148,7 +35187,7 @@ void flecs_remove_id_elem(
     }
 }
 
-
+static
 ecs_id_t flecs_id_record_hash(
     ecs_id_t id)
 {
@@ -35206,6 +35245,23 @@ void flecs_id_record_fini_sparse(
             ecs_abort(ECS_INTERNAL_ERROR, "unknown sparse storage");
         }
     }
+}
+
+static
+ecs_flags32_t flecs_id_record_event_flags(
+    ecs_world_t *world,
+    ecs_id_t id)
+{
+    ecs_observable_t *o = &world->observable;
+    ecs_flags32_t result = 0;
+    result |= flecs_observers_exist(o, id, EcsOnAdd) * EcsIdHasOnAdd;
+    result |= flecs_observers_exist(o, id, EcsOnRemove) * EcsIdHasOnRemove;
+    result |= flecs_observers_exist(o, id, EcsOnSet) * EcsIdHasOnSet;
+    result |= flecs_observers_exist(o, id, EcsOnTableFill) * EcsIdHasOnTableFill;
+    result |= flecs_observers_exist(o, id, EcsOnTableEmpty) * EcsIdHasOnTableEmpty;
+    result |= flecs_observers_exist(o, id, EcsOnTableCreate) * EcsIdHasOnTableCreate;
+    result |= flecs_observers_exist(o, id, EcsOnTableDelete) * EcsIdHasOnTableDelete;
+    return result;
 }
 
 static
@@ -35390,14 +35446,7 @@ ecs_id_record_t* flecs_id_record_new(
         }
     }
 
-    ecs_observable_t *o = &world->observable;
-    idr->flags |= flecs_observers_exist(o, id, EcsOnAdd) * EcsIdHasOnAdd;
-    idr->flags |= flecs_observers_exist(o, id, EcsOnRemove) * EcsIdHasOnRemove;
-    idr->flags |= flecs_observers_exist(o, id, EcsOnSet) * EcsIdHasOnSet;
-    idr->flags |= flecs_observers_exist(o, id, EcsOnTableFill) * EcsIdHasOnTableFill;
-    idr->flags |= flecs_observers_exist(o, id, EcsOnTableEmpty) * EcsIdHasOnTableEmpty;
-    idr->flags |= flecs_observers_exist(o, id, EcsOnTableCreate) * EcsIdHasOnTableCreate;
-    idr->flags |= flecs_observers_exist(o, id, EcsOnTableDelete) * EcsIdHasOnTableDelete;
+    idr->flags |= flecs_id_record_event_flags(world, id);
 
     if (idr->flags & EcsIdIsSparse) {
         flecs_id_record_init_sparse(world, idr);
@@ -35713,6 +35762,56 @@ void flecs_fini_id_records(
 
     ecs_map_fini(&world->id_index_hi);
     ecs_os_free(world->id_index_lo);
+}
+
+static
+ecs_flags32_t flecs_id_flags(
+    ecs_world_t *world,
+    ecs_id_t id)
+{
+    const ecs_id_record_t *idr = flecs_id_record_get(world, id);
+    if (idr) {
+        ecs_flags32_t extra_flags = 0;
+        if (idr->flags & EcsIdOnInstantiateInherit) {
+            extra_flags |= EcsIdHasOnAdd|EcsIdHasOnRemove;
+        }
+        return idr->flags|extra_flags;
+    }
+    return flecs_id_record_event_flags(world, id);
+}
+
+ecs_flags32_t flecs_id_flags_get(
+    ecs_world_t *world,
+    ecs_id_t id)
+{
+    ecs_flags32_t result = flecs_id_flags(world, id);
+
+    if (id != EcsAny) {
+        result |= flecs_id_flags(world, EcsAny);
+    }
+
+    if (ECS_IS_PAIR(id)) {
+        ecs_entity_t first = ECS_PAIR_FIRST(id);
+        ecs_entity_t second = ECS_PAIR_SECOND(id);
+
+        if (id != ecs_pair(first, EcsWildcard)) {
+            result |= flecs_id_flags(world, ecs_pair(first, EcsWildcard));
+        }
+        if (id != ecs_pair(EcsWildcard, second)) {
+            result |= flecs_id_flags(world, ecs_pair(EcsWildcard, second));
+        }
+        if (id != ecs_pair(EcsWildcard, EcsWildcard)) {
+            result |= flecs_id_flags(world, ecs_pair(EcsWildcard, EcsWildcard));
+        }
+
+        if (first == EcsIsA) {
+            result |= EcsIdHasOnAdd|EcsIdHasOnRemove;
+        }
+    } else if (id != EcsWildcard) {
+        result |= flecs_id_flags(world, EcsWildcard);
+    }
+
+    return result;
 }
 
 /**
@@ -36341,24 +36440,34 @@ static
 void flecs_table_add_trigger_flags(
     ecs_world_t *world, 
     ecs_table_t *table, 
+    ecs_id_t id,
     ecs_entity_t event) 
 {
     (void)world;
 
+    ecs_flags32_t flags = 0;
+
     if (event == EcsOnAdd) {
-        table->flags |= EcsTableHasOnAdd;
+        flags = EcsTableHasOnAdd;
     } else if (event == EcsOnRemove) {
-        table->flags |= EcsTableHasOnRemove;
+        flags = EcsTableHasOnRemove;
     } else if (event == EcsOnSet) {
-        table->flags |= EcsTableHasOnSet;
+        flags = EcsTableHasOnSet;
     } else if (event == EcsOnTableFill) {
-        table->flags |= EcsTableHasOnTableFill;
+        flags = EcsTableHasOnTableFill;
     } else if (event == EcsOnTableEmpty) {
-        table->flags |= EcsTableHasOnTableEmpty;
+        flags = EcsTableHasOnTableEmpty;
     } else if (event == EcsWildcard) {
-        table->flags |= EcsTableHasOnAdd|EcsTableHasOnRemove|EcsTableHasOnSet|
+        flags = EcsTableHasOnAdd|EcsTableHasOnRemove|EcsTableHasOnSet|
             EcsTableHasOnTableFill|EcsTableHasOnTableEmpty|
             EcsTableHasOnTableCreate|EcsTableHasOnTableDelete;
+    }
+
+    table->flags |= flags;
+
+    /* Add observer flags to incoming edges for id */
+    if (id && ((flags == EcsTableHasOnAdd) || (flags == EcsTableHasOnRemove))) {
+        flecs_table_edges_add_flags(world, table, id, flags);
     }
 }
 
@@ -36371,7 +36480,10 @@ void flecs_table_notify_on_remove(
 {
     int32_t count = ecs_table_count(table);
     if (count) {
-        flecs_notify_on_remove(world, table, NULL, 0, count, &table->type);
+        ecs_table_diff_t diff = ECS_TABLE_DIFF_INIT;
+        diff.removed = table->type;
+        diff.removed_flags = table->flags & EcsTableRemoveEdgeFlags;
+        flecs_notify_on_remove(world, table, NULL, 0, count, &diff);
     }
 }
 
@@ -37861,6 +37973,7 @@ void flecs_table_merge(
 void flecs_table_notify(
     ecs_world_t *world,
     ecs_table_t *table,
+    ecs_id_t id,
     ecs_table_event_t *event)
 {
     if (world->flags & EcsWorldFini) {
@@ -37869,10 +37982,10 @@ void flecs_table_notify(
 
     switch(event->kind) {
     case EcsTableTriggersForId:
-        flecs_table_add_trigger_flags(world, table, event->event);
+        flecs_table_add_trigger_flags(world, table, id, event->event);
         break;
     case EcsTableNoTriggersForId:
-        break;
+        break; /* TODO */
     }
 }
 
@@ -38787,6 +38900,8 @@ void flecs_table_diff_builder_init(
     ecs_allocator_t *a = &world->allocator;
     ecs_vec_init_t(a, &builder->added, ecs_id_t, 256);
     ecs_vec_init_t(a, &builder->removed, ecs_id_t, 256);
+    builder->added_flags = 0;
+    builder->removed_flags = 0;
 }
 
 void flecs_table_diff_builder_fini(
@@ -38833,6 +38948,8 @@ void flecs_table_diff_build(
         added_offset);
     flecs_table_diff_build_type(world, &builder->removed, &diff->removed, 
         removed_offset);
+    diff->added_flags = builder->added_flags;
+    diff->removed_flags = builder->removed_flags;
 }
 
 void flecs_table_diff_build_noalloc(
@@ -38843,6 +38960,8 @@ void flecs_table_diff_build_noalloc(
         .array = builder->added.array, .count = builder->added.count };
     diff->removed = (ecs_type_t){
         .array = builder->removed.array, .count = builder->removed.count };
+    diff->added_flags = builder->added_flags;
+    diff->removed_flags = builder->removed_flags;
 }
 
 static
@@ -38868,6 +38987,8 @@ void flecs_table_diff_build_append_table(
 {
     flecs_table_diff_build_add_type_to_vec(world, &dst->added, &src->added);
     flecs_table_diff_build_add_type_to_vec(world, &dst->removed, &src->removed);
+    dst->added_flags |= src->added_flags;
+    dst->removed_flags |= src->removed_flags;
 }
 
 static
@@ -39163,6 +39284,7 @@ void flecs_compute_table_diff(
                     &world->allocators.table_diff);
                 diff->added.count = 1;
                 diff->added.array = flecs_wdup_n(world, ecs_id_t, 1, &id);
+                diff->added_flags = EcsTableHasUnion;
                 edge->diff = diff;
                 return;
             }
@@ -39175,6 +39297,7 @@ void flecs_compute_table_diff(
     int32_t i_next = 0, next_count = next_type.count;
     int32_t added_count = 0;
     int32_t removed_count = 0;
+    ecs_flags32_t added_flags = 0, removed_flags = 0;
     bool trivial_edge = !ECS_HAS_RELATION(id, EcsIsA);
 
     /* First do a scan to see how big the diff is, so we don't have to realloc
@@ -39189,18 +39312,36 @@ void flecs_compute_table_diff(
         trivial_edge &= !added || id_next == id;
         trivial_edge &= !removed || id_node == id;
 
-        added_count += added;
-        removed_count += removed;
+        if (added) {
+            added_flags |= flecs_id_flags_get(world, id_next) & 
+                EcsTableAddEdgeFlags;
+            added_count ++;
+        }
+
+        if (removed) {
+            removed_flags |= flecs_id_flags_get(world, id_node) & 
+                EcsTableRemoveEdgeFlags;
+            removed_count ++;
+        }
 
         i_node += id_node <= id_next;
         i_next += id_next <= id_node;
     }
 
-    added_count += next_count - i_next;
-    removed_count += node_count - i_node;
+    for (; i_next < next_count; i_next ++) {
+        added_flags |= flecs_id_flags_get(world, ids_next[i_next]) & 
+            EcsTableAddEdgeFlags;
+        added_count ++;
+    }
+
+    for (; i_node < node_count; i_node ++) {
+        removed_flags |= flecs_id_flags_get(world, ids_node[i_node]) & 
+            EcsTableRemoveEdgeFlags;
+        removed_count ++;
+    }
 
     trivial_edge &= (added_count + removed_count) <= 1 && 
-        !ecs_id_is_wildcard(id);
+        !ecs_id_is_wildcard(id) && !(added_flags|removed_flags);
 
     if (trivial_edge) {
         /* If edge is trivial there's no need to create a diff element for it */
@@ -39235,6 +39376,8 @@ void flecs_compute_table_diff(
     ecs_table_diff_t *diff = flecs_bcalloc(&world->allocators.table_diff);
     edge->diff = diff;
     flecs_table_diff_build(world, builder, diff, added_offset, removed_offset);
+    diff->added_flags = added_flags;
+    diff->removed_flags = removed_flags;
 
     ecs_assert(diff->added.count == added_count, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(diff->removed.count == removed_count, ECS_INTERNAL_ERROR, NULL);
@@ -39597,6 +39740,11 @@ ecs_table_t* flecs_table_traverse_add(
     if (node != to || edge->diff) {
         if (edge->diff) {
             *diff = *edge->diff;
+            if (edge->diff->added_flags & EcsIdIsUnion) {
+                diff->added.array = id_ptr;
+                diff->added.count = 1;
+                diff->removed.count = 0;
+            }
         } else {
             diff->added.array = id_ptr;
             diff->added.count = 1;
@@ -39630,6 +39778,54 @@ void flecs_init_root_table(
     uint64_t new_id = flecs_sparse_new_id(&world->store.tables);
     ecs_assert(new_id == 0, ECS_INTERNAL_ERROR, NULL);
     (void)new_id;
+}
+
+void flecs_table_edges_add_flags(
+    ecs_world_t *world,
+    ecs_table_t *table,
+    ecs_id_t id,
+    ecs_flags32_t flags)
+{
+    ecs_graph_node_t *table_node = &table->node;
+    ecs_graph_edge_hdr_t *node_refs = &table_node->refs;
+
+    /* Add flags to incoming matching add edges */
+    if (flags == EcsTableHasOnAdd) {
+        ecs_graph_edge_hdr_t *next, *cur = node_refs->next;
+        if (cur) {
+            do {
+                ecs_graph_edge_t *edge = (ecs_graph_edge_t*)cur;
+                if ((id == EcsAny) || ecs_id_match(edge->id, id)) {
+                    if (!edge->diff) {
+                        edge->diff = flecs_bcalloc(&world->allocators.table_diff);
+                        edge->diff->added.array = flecs_walloc_t(world, ecs_id_t);
+                        edge->diff->added.count = 1;
+                        edge->diff->added.array[0] = edge->id;
+                    }
+                    edge->diff->added_flags |= EcsTableHasOnAdd;
+                }
+                next = cur->next;
+            } while ((cur = next));
+        }
+    }
+
+    /* Add flags to outgoing matching remove edges */
+    if (flags == EcsTableHasOnRemove) {
+        ecs_map_iter_t it = ecs_map_iter(table->node.remove.hi);
+        while (ecs_map_next(&it)) {
+            ecs_id_t edge_id = ecs_map_key(&it);
+            if ((id == EcsAny) || ecs_id_match(edge_id, id)) {
+                ecs_graph_edge_t *edge = ecs_map_ptr(&it);
+                if (!edge->diff) {
+                    edge->diff = flecs_bcalloc(&world->allocators.table_diff);
+                    edge->diff->removed.array = flecs_walloc_t(world, ecs_id_t);
+                    edge->diff->removed.count = 1;
+                    edge->diff->removed.array[0] = edge->id;
+                }
+                edge->diff->removed_flags |= EcsTableHasOnRemove;
+            }
+        }
+    }
 }
 
 void flecs_table_clear_edges(
@@ -40618,7 +40814,7 @@ const char* flecs_entity_from_json(
         return NULL;
     }
 
-    if (!ecs_os_strcmp(token, "alerts")) {
+    if (!ecs_os_strcmp(token, "has_alerts")) {
         json = flecs_json_expect(json, JsonBoolean, token, desc);
         if (!json) {
             goto error;
@@ -41753,10 +41949,11 @@ int flecs_expr_ser_primitive(
     ecs_strbuf_t *str,
     bool is_expr);
 
-void flecs_meta_rtt_dtor(void *ptr, int32_t count, const ecs_type_info_t *type_info); 
 void flecs_meta_rtt_ctor(void *ptr, int32_t count, const ecs_type_info_t *type_info); 
+void flecs_meta_rtt_dtor(void *ptr, int32_t count, const ecs_type_info_t *type_info); 
 void flecs_meta_rtt_move(void *dst_ptr, void *src_ptr, int32_t count, const ecs_type_info_t *type_info);
 void flecs_meta_rtt_copy(void *dst_ptr, const void *src_ptr, int32_t count, const ecs_type_info_t *type_info);
+void flecs_meta_rtt_init_default_hooks(ecs_iter_t *it);
 
 #endif
 
@@ -42686,7 +42883,7 @@ void flecs_json_serialize_iter_this(
 #endif
 
     if (this_data->has_alerts) {
-        flecs_json_memberl(buf, "alerts");
+        flecs_json_memberl(buf, "has_alerts");
         flecs_json_true(buf);
     }
 }
@@ -48548,6 +48745,13 @@ size_t flecs_addon_vec_count(const void *ptr) {
     return flecs_ito(size_t, count);
 }
 
+static
+int flecs_const_str_serialize(const ecs_serializer_t *ser, const void *ptr) {
+    char **data = ECS_CONST_CAST(char**, ptr);
+    ser->value(ser, ecs_id(ecs_string_t), data);
+    return 0;
+}
+
 /* Initialize reflection data for core components */
 static
 void flecs_meta_import_core_definitions(
@@ -48565,6 +48769,29 @@ void flecs_meta_import_core_definitions(
         .entity = ecs_id(EcsDefaultChildComponent),
         .members = {
             { .name = "component", .type = ecs_id(ecs_entity_t) }
+        }
+    });
+
+    /* Define const string as an opaque type that maps to string
+       This enables reflection for strings that are in .rodata,
+       (read-only) so that the meta add-on does not try to free them.
+       This opaque type defines how to serialize (read) the string,
+       but won't let users assign a new value.
+    */
+    ecs_entity_t const_string = ecs_opaque(world, {
+        .entity = ecs_component(world, {
+              .entity = ecs_entity(world, {
+                .name = "flecs.core.const_string_t",
+                .root_sep = ""
+            }),
+            .type = {
+                .size = ECS_SIZEOF(const char*),
+                .alignment = ECS_ALIGNOF(const char*)
+            }          
+        }),
+        .type = {
+            .as_type = ecs_id(ecs_string_t),
+            .serialize = flecs_const_str_serialize,       
         }
     });
 
@@ -48600,9 +48827,9 @@ void flecs_meta_import_core_definitions(
             .root_sep = ""
         }),
         .members = {
-            { .name = "compiler", .type = ecs_id(ecs_string_t) },
+            { .name = "compiler", .type = const_string },
             { .name = "addons", .type = addon_vec },
-            { .name = "version", .type = ecs_id(ecs_string_t) },
+            { .name = "version", .type = const_string },
             { .name = "version_major", .type = ecs_id(ecs_i16_t) },
             { .name = "version_minor", .type = ecs_id(ecs_i16_t) },
             { .name = "version_patch", .type = ecs_id(ecs_i16_t) },
@@ -49068,20 +49295,16 @@ int flecs_init_type(
     EcsType *meta_type = ecs_ensure(world, type, EcsType);
     if (meta_type->kind == 0) {
         ecs_type_info_t *ti = flecs_type_info_ensure(world, type);
+
+        /* Determine if this is an existing type or a reflection-defined type (runtime type) */
         meta_type->existing = ecs_has(world, type, EcsComponent);
 
-        if(!meta_type->existing && kind == EcsStructType){
-            ti->hooks.dtor = flecs_meta_rtt_dtor;
-            ti->hooks.ctor = flecs_meta_rtt_ctor;
-            ti->hooks.copy = flecs_meta_rtt_copy;
-            ti->hooks.move = flecs_meta_rtt_move;
-        }
-
-        /* Ensure that component has a default constructor, to prevent crashing
-         * serializers on uninitialized values. */
-        if (!ti->hooks.ctor) {
+        /* For existing types, ensure that component has a default constructor, to prevent crashing
+         * serializers on uninitialized values. For runtime types (rtt), de default hooks are set
+         by flecs_meta_rtt_init_default_hooks */
+         if (meta_type->existing && !ti->hooks.ctor) {
             ti->hooks.ctor = flecs_default_ctor;
-        }
+        } 
 
     } else {
         if (meta_type->kind != kind) {
@@ -49922,30 +50145,6 @@ void flecs_unit_quantity_monitor(ecs_iter_t *it) {
 }
 
 static
-void ecs_meta_type_init_default_ctor(ecs_iter_t *it) {
-    ecs_world_t *world = it->world;
-    EcsType *type = ecs_field(it, EcsType, 0);
-
-    int i;
-    for (i = 0; i < it->count; i ++) {
-        /* If a component is defined from reflection data, configure it with the
-         * default constructor. This ensures that a new component value does not
-         * contain uninitialized memory, which could cause serializers to crash
-         * when for example inspecting string fields. */
-        if (!type->existing) {
-            ecs_entity_t e = it->entities[i];
-            const ecs_type_info_t *ti = ecs_get_type_info(world, e);
-            if (!ti || !ti->hooks.ctor) {
-                ecs_set_hooks_id(world, e, 
-                    &(ecs_type_hooks_t){ 
-                        .ctor = flecs_default_ctor
-                    });
-            }
-        }
-    }
-}
-
-static
 void flecs_member_on_set(ecs_iter_t *it) {
     EcsMember *mbr = ecs_field(it, EcsMember, 0);
     if (!mbr->count) {
@@ -50207,7 +50406,7 @@ void FlecsMetaImport(
     ecs_observer(world, {
         .query.terms[0] = { .id = ecs_id(EcsType) },
         .events = {EcsOnSet},
-        .callback = ecs_meta_type_init_default_ctor
+        .callback = flecs_meta_rtt_init_default_hooks
     });
 
     ecs_observer(world, {
@@ -50282,271 +50481,284 @@ void FlecsMetaImport(
 
 #ifdef FLECS_META
 
-static uintptr_t base;
-#define PRINT_OFFSET(ptr) printf("offset=%lu\n", ((uintptr_t) ptr) - base);
+typedef struct ecs_meta_rtt_xtor_data_t {
+  ecs_xtor_t xtor;
+  const ecs_type_info_t *type_info;
+  size_t offset;
+  int32_t count;
+} ecs_meta_rtt_xtor_data_t;
 
-typedef void (*ecs_meta_rtt_handle_opcode)(const ecs_world_t *world, void *dst_ptr, void *src_ptr,
-                                           ecs_meta_type_op_t *op);
+typedef struct ecs_meta_rtt_move_data_t {
+  ecs_move_t move;
+  const ecs_type_info_t *type_info;
+  size_t offset;
+  int32_t count;
+} ecs_meta_rtt_move_data_t;
 
-typedef struct ecs_meta_rtt_walk_t {
-  ecs_meta_rtt_handle_opcode handle_opaque;
-  ecs_meta_rtt_handle_opcode handle_vector;
-  ecs_meta_rtt_handle_opcode handle_string;
-  ecs_meta_rtt_handle_opcode handle_value;
-} ecs_meta_rtt_walk_t;
+typedef struct ecs_meta_rtt_copy_data_t {
+  ecs_copy_t copy;
+  const ecs_type_info_t *type_info;
+  size_t offset;
+  int32_t count;
+} ecs_meta_rtt_copy_data_t;
 
-static int flecs_meta_rtt_walk(const ecs_world_t *world, void *dst_ptr, void *src_ptr, ecs_meta_type_op_t *ops,
-                               int32_t ser_op_count, const ecs_meta_rtt_walk_t *walk) {
-  for (int i = 0; i < ser_op_count; i++) {
-    ecs_meta_type_op_t *op = &ops[i];
-    switch (op->kind) {
-      case EcsOpPush: {
-        int pop_index = 0;
-        for (int c = 0; c < op->count; c++) {
-          size_t offset = op->size * c;
-          pop_index = flecs_meta_rtt_walk(world, ECS_OFFSET(dst_ptr, offset), ECS_OFFSET(src_ptr, offset), &ops[i + 1],
-                                          ser_op_count - i - 1, walk);
-          ecs_assert(pop_index != -1, ECS_INTERNAL_ERROR, "unmatched push/pop");
-        }
-        i += pop_index + 1;
-        break;
-      }
-      case EcsOpPop: {
-        return i;
-      }
-      case EcsOpOpaque:
-        if (walk->handle_opaque)
-          walk->handle_opaque(world, ECS_OFFSET(dst_ptr, op->offset), ECS_OFFSET(src_ptr, op->offset), op);
-        break;
-      case EcsOpVector:
-        if (walk->handle_vector)
-          walk->handle_vector(world, ECS_OFFSET(dst_ptr, op->offset), ECS_OFFSET(src_ptr, op->offset), op);
-        break;
-      case EcsOpString:
-        if (walk->handle_string)
-          walk->handle_string(world, ECS_OFFSET(dst_ptr, op->offset), ECS_OFFSET(src_ptr, op->offset), op);
-        break;
-      case EcsOpArray:
-      case EcsOpScope:
-      case EcsOpEnum:
-      case EcsOpBitmask:
-      case EcsOpPrimitive:
-      case EcsOpBool:
-      case EcsOpChar:
-      case EcsOpByte:
-      case EcsOpU8:
-      case EcsOpU16:
-      case EcsOpU32:
-      case EcsOpU64:
-      case EcsOpI8:
-      case EcsOpI16:
-      case EcsOpI32:
-      case EcsOpI64:
-      case EcsOpF32:
-      case EcsOpF64:
-      case EcsOpUPtr:
-      case EcsOpIPtr:
-      case EcsOpEntity:
-      case EcsOpId:
-      default:
-        walk->handle_value(world, ECS_OFFSET(dst_ptr, op->offset), ECS_OFFSET(src_ptr, op->offset), op);
-        break;
-    }
+typedef struct ecs_meta_rtt_ctx_t {
+  ecs_vec_t ctors; /*< vector<ecs_meta_rtt_xtor_data_t> */
+  ecs_vec_t dtors; /*< vector<ecs_meta_rtt_xtor_data_t> */
+  ecs_vec_t copys; /*< vector<ecs_meta_rtt_move_data_t> */
+  ecs_vec_t moves; /*< vector<ecs_meta_rtt_copy_data_t> */
+} ecs_meta_rtt_ctx_t;
+
+static void flecs_meta_rtt_xtor(ecs_vec_t *xtor_data_vec, void *ptr, int32_t count, const ecs_type_info_t *type_info) {
+  int cb_count = ecs_vec_count(xtor_data_vec);
+  for (int i = 0; i < cb_count; i++) {
+    ecs_meta_rtt_xtor_data_t *xtor_data = ecs_vec_get_t(xtor_data_vec, ecs_meta_rtt_xtor_data_t, i);
+    xtor_data->xtor(ECS_OFFSET(ptr, xtor_data->offset), xtor_data->count, xtor_data->type_info);
   }
-  return -1;
-}
-
-// Destructors:
-static void flecs_meta_rtt_opaque_dtor(const ecs_world_t *world, void *dst_ptr, void *src_ptr, ecs_meta_type_op_t *op) {
-  printf("dtor opaque at %p\n", dst_ptr);
-
-  const ecs_type_info_t *ti = ecs_get_type_info(world, op->type);
-  ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
-
-  if (ti->hooks.dtor) {
-    ti->hooks.dtor(dst_ptr, 1, ti);
-  }
-}
-
-static void flecs_meta_rtt_vector_dtor(const ecs_world_t *world, void *dst_ptr, void *src_ptr, ecs_meta_type_op_t *op) {
-  const EcsVector *vt = ecs_get(world, op->type, EcsVector);
-  ecs_assert(vt != NULL, ECS_INTERNAL_ERROR, NULL);
-
-  ecs_vec_t *vec = (ecs_vec_t *) dst_ptr;
-  const ecs_type_info_t *ti = ecs_get_type_info(world, vt->type);
-  ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
-
-  int32_t count = ecs_vec_count(vec);
-  if (count && ti->hooks.dtor) {
-    ti->hooks.dtor(ecs_vec_first(vec), count, ti);
-  }
-  ecs_vec_fini(NULL, vec, 0);
-}
-
-static void flecs_meta_rtt_value_dtor(const ecs_world_t *world, void *dst_ptr, void *src_ptr, ecs_meta_type_op_t *op) {
-#ifndef NDEBUG
-  ecs_os_memset(dst_ptr, 0xDE, op->size);
-#endif
-}
-
-static void flecs_meta_rtt_string_dtor(const ecs_world_t *world, void *dst_ptr, void *src_ptr, ecs_meta_type_op_t *op) {
-  char **ppstr = (char **) dst_ptr;
-  ecs_os_free(*ppstr);
-  *ppstr = NULL;
-}
-
-// Constructors:
-static void flecs_meta_rtt_opaque_ctor(const ecs_world_t *world, void *dst_ptr, void *src_ptr, ecs_meta_type_op_t *op) {
-  printf("ctor opaque at %p\n", dst_ptr);
-
-  const ecs_type_info_t *ti = ecs_get_type_info(world, op->type);
-  ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
-
-  if (ti->hooks.ctor) {
-    ti->hooks.ctor(dst_ptr, 1, ti);
-  }
-}
-
-static void flecs_meta_rtt_vector_ctor(const ecs_world_t *world, void *dst_ptr, void *src_ptr, ecs_meta_type_op_t *op) {
-  const EcsVector *vt = ecs_get(world, op->type, EcsVector);
-  ecs_assert(vt != NULL, ECS_INTERNAL_ERROR, NULL);
-
-  ecs_vec_t *vec = (ecs_vec_t *) dst_ptr;
-  const ecs_type_info_t *ti = ecs_get_type_info(world, vt->type);
-  ecs_vec_init(NULL, vec, ti->size, 0);
-}
-
-static void flecs_meta_rtt_string_ctor(const ecs_world_t *world, void *dst_ptr, void *src_ptr, ecs_meta_type_op_t *op) {
-  char **ppstr = (char **) dst_ptr;
-  *ppstr = NULL;
-}
-
-static void flecs_meta_rtt_value_ctor(const ecs_world_t *world, void *dst_ptr, void *src_ptr, ecs_meta_type_op_t *op) {
-  ecs_os_memset(dst_ptr, 0, op->size);
-}
-
-// Move assign:
-static void flecs_meta_rtt_opaque_move(const ecs_world_t *world, void *dst_ptr, void *src_ptr, ecs_meta_type_op_t *op) {
-  const ecs_type_info_t *ti = ecs_get_type_info(world, op->type);
-  ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
-  ecs_assert(ti->hooks.move, ECS_INTERNAL_ERROR, "Cannot move component %s", ti->name);
-
-  ti->hooks.move(dst_ptr, src_ptr, 1, ti);
-}
-
-static void flecs_meta_rtt_vector_move(const ecs_world_t *world, void *dst_ptr, void *src_ptr, ecs_meta_type_op_t *op) {
-  flecs_meta_rtt_vector_dtor(world, dst_ptr, NULL, op);
-
-  ecs_vec_t *dst_vec = (ecs_vec_t *) dst_ptr;
-  ecs_vec_t *src_vec = (ecs_vec_t *) src_ptr;
-
-  *dst_vec = *src_vec;
-  src_vec->array = NULL;
-}
-
-static void flecs_meta_rtt_string_move(const ecs_world_t *world, void *dst_ptr, void *src_ptr, ecs_meta_type_op_t *op) {
-  flecs_meta_rtt_string_dtor(world, dst_ptr, NULL, op);
-
-  char **dst_ppstr = (char **) dst_ptr;
-  char **src_ppstr = (char **) src_ptr;
-
-  *dst_ppstr = *src_ppstr;
-  *src_ppstr = NULL;
-}
-
-// Copy assign:
-static void flecs_meta_rtt_opaque_copy(const ecs_world_t *world, void *dst_ptr, void *src_ptr, ecs_meta_type_op_t *op) {
-  const ecs_type_info_t *ti = ecs_get_type_info(world, op->type);
-  ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
-
-  if (ti->hooks.copy) {
-    ti->hooks.copy(dst_ptr, src_ptr, 1, ti);
-  } else {
-    ecs_os_memcpy(dst_ptr, src_ptr, ti->size);
-  }
-}
-
-static void flecs_meta_rtt_vector_copy(const ecs_world_t *world, void *dst_ptr, void *src_ptr, ecs_meta_type_op_t *op) {
-  flecs_meta_rtt_vector_dtor(world, dst_ptr, NULL, op);
-
-  const ecs_type_info_t *ti = ecs_get_type_info(world, op->type);
-  ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
-
-  ecs_vec_t *dst_vec = (ecs_vec_t *) dst_vec;
-  ecs_vec_t *src_vec = (ecs_vec_t *) src_vec;
-  int32_t count = ecs_vec_count(src_vec);
-  ecs_vec_init(NULL, dst_vec, ti->size, count);
-  if (ti->hooks.copy) {
-    ti->hooks.copy(ecs_vec_first(dst_vec), ecs_vec_first(src_vec), count, ti);
-  } else {
-    ecs_os_memcpy(dst_ptr, src_ptr, count * ti->size);
-  }
-}
-
-static void flecs_meta_rtt_string_copy(const ecs_world_t *world, void *dst_ptr, void *src_ptr, ecs_meta_type_op_t *op) {
-  flecs_meta_rtt_string_dtor(world, dst_ptr, src_ptr, op);
-  char **dst_ppstr = (char **) dst_ptr;
-  char **src_ppstr = (char **) src_ptr;
-
-  size_t len = ecs_os_strlen(*src_ppstr);
-  *dst_ppstr = ecs_os_malloc(len);
-  ecs_os_strcpy(*dst_ppstr, *src_ppstr);
-}
-
-static void flecs_meta_rtt_value_move_copy(const ecs_world_t *world, void *dst_ptr, void *src_ptr,
-                                           ecs_meta_type_op_t *op) {
-  ecs_os_memcpy(dst_ptr, src_ptr, op->size);
-}
-
-static const ecs_meta_rtt_walk_t rtt_dtor_walk = {.handle_opaque = flecs_meta_rtt_opaque_dtor,
-                                                  .handle_vector = flecs_meta_rtt_vector_dtor,
-                                                  .handle_string = flecs_meta_rtt_string_dtor,
-                                                  .handle_value = flecs_meta_rtt_value_dtor};
-
-static const ecs_meta_rtt_walk_t rtt_ctor_walk = {.handle_opaque = flecs_meta_rtt_opaque_ctor,
-                                                  .handle_vector = flecs_meta_rtt_vector_ctor,
-                                                  .handle_string = flecs_meta_rtt_string_ctor,
-                                                  .handle_value = flecs_meta_rtt_value_ctor};
-
-static const ecs_meta_rtt_walk_t rtt_move_walk = {.handle_opaque = flecs_meta_rtt_opaque_move,
-                                                  .handle_vector = flecs_meta_rtt_vector_move,
-                                                  .handle_string = flecs_meta_rtt_string_move,
-                                                  .handle_value = flecs_meta_rtt_value_move_copy};
-
-static const ecs_meta_rtt_walk_t rtt_copy_walk = {.handle_opaque = flecs_meta_rtt_opaque_copy,
-                                                  .handle_vector = flecs_meta_rtt_vector_copy,
-                                                  .handle_string = flecs_meta_rtt_string_copy,
-                                                  .handle_value = flecs_meta_rtt_value_move_copy};
-
-static void flecs_meta_rtt_walk_opcodes(void *dst_ptr, void *src_ptr, int32_t count, const ecs_type_info_t *type_info,
-                                        const ecs_meta_rtt_walk_t *walk) {
-  const ecs_world_t *world = type_info->world;
-  const EcsTypeSerializer *ser = ecs_get(world, type_info->component, EcsTypeSerializer);
-  ecs_assert(ser != NULL, ECS_INTERNAL_ERROR, NULL);
-
-  ecs_meta_type_op_t *ops = ecs_vec_first_t(&ser->ops, ecs_meta_type_op_t);
-  int32_t op_count = ecs_vec_count(&ser->ops);
-  base = (uintptr_t) dst_ptr;
-  for (int i = 0; i < count; i++) {
-    size_t offset = type_info->size * i;
-    flecs_meta_rtt_walk(world, ECS_OFFSET(dst_ptr, offset), ECS_OFFSET(src_ptr, offset), ops, op_count, walk);
-  }
-}
-
-void flecs_meta_rtt_dtor(void *ptr, int32_t count, const ecs_type_info_t *type_info) {
-  flecs_meta_rtt_walk_opcodes(ptr, NULL, count, type_info, &rtt_dtor_walk);
 }
 
 void flecs_meta_rtt_ctor(void *ptr, int32_t count, const ecs_type_info_t *type_info) {
-  flecs_meta_rtt_walk_opcodes(ptr, NULL, count, type_info, &rtt_ctor_walk);
+  ecs_meta_rtt_ctx_t *rtt_ctx = (ecs_meta_rtt_ctx_t *) type_info->hooks.lifecycle_ctx;
+  ecs_assert(rtt_ctx != NULL, ECS_INTERNAL_ERROR, NULL);
+  flecs_meta_rtt_xtor(&rtt_ctx->ctors, ptr, count, type_info);
+}
+
+void flecs_meta_rtt_dtor(void *ptr, int32_t count, const ecs_type_info_t *type_info) {
+  ecs_meta_rtt_ctx_t *rtt_ctx = (ecs_meta_rtt_ctx_t *) type_info->hooks.lifecycle_ctx;
+  ecs_assert(rtt_ctx != NULL, ECS_INTERNAL_ERROR, NULL);
+  flecs_meta_rtt_xtor(&rtt_ctx->dtors, ptr, count, type_info);
 }
 
 void flecs_meta_rtt_move(void *dst_ptr, void *src_ptr, int32_t count, const ecs_type_info_t *type_info) {
-  flecs_meta_rtt_walk_opcodes(dst_ptr, src_ptr, count, type_info, &rtt_move_walk);
+  ecs_meta_rtt_ctx_t *rtt_ctx = (ecs_meta_rtt_ctx_t *) type_info->hooks.lifecycle_ctx;
+  ecs_assert(rtt_ctx != NULL, ECS_INTERNAL_ERROR, NULL);
+
+  int cb_count = ecs_vec_count(&rtt_ctx->moves);
+  for (int i = 0; i < cb_count; i++) {
+    ecs_meta_rtt_move_data_t *move_data = ecs_vec_get_t(&rtt_ctx->moves, ecs_meta_rtt_move_data_t, i);
+    move_data->move(ECS_OFFSET(dst_ptr, move_data->offset), ECS_OFFSET(src_ptr, move_data->offset), move_data->count,
+                    move_data->type_info);
+  }
 }
 
 void flecs_meta_rtt_copy(void *dst_ptr, const void *src_ptr, int32_t count, const ecs_type_info_t *type_info) {
-  flecs_meta_rtt_walk_opcodes(dst_ptr, ECS_CONST_CAST(void *, src_ptr), count, type_info, &rtt_copy_walk);
+  ecs_meta_rtt_ctx_t *rtt_ctx = (ecs_meta_rtt_ctx_t *) type_info->hooks.lifecycle_ctx;
+  ecs_assert(rtt_ctx != NULL, ECS_INTERNAL_ERROR, NULL);
+
+  int cb_count = ecs_vec_count(&rtt_ctx->copys);
+  for (int i = 0; i < cb_count; i++) {
+    ecs_meta_rtt_copy_data_t *copy_data = ecs_vec_get_t(&rtt_ctx->copys, ecs_meta_rtt_copy_data_t, i);
+    copy_data->copy(ECS_OFFSET(dst_ptr, copy_data->offset), ECS_OFFSET(src_ptr, copy_data->offset), copy_data->count,
+                    copy_data->type_info);
+  }
+}
+
+static void flecs_meta_rtt_default_move(void *dst_ptr, void *src_ptr, int32_t count, const ecs_type_info_t *type_info) {
+  ecs_os_memcpy(dst_ptr, src_ptr, count);
+}
+
+static void flecs_meta_rtt_default_copy(void *dst_ptr, const void *src_ptr, int32_t count,
+                                        const ecs_type_info_t *type_info) {
+  ecs_os_memcpy(dst_ptr, src_ptr, count);
+}
+
+static void flecs_meta_rtt_free_lifecycle_ctx(void *ctx) {
+  if (!ctx)
+    return;
+
+  ecs_meta_rtt_ctx_t *lifecycle_ctx = (ecs_meta_rtt_ctx_t *) ctx;
+
+  ecs_vec_fini_t(NULL, &lifecycle_ctx->ctors, ecs_meta_rtt_xtor_data_t);
+  ecs_vec_fini_t(NULL, &lifecycle_ctx->dtors, ecs_meta_rtt_xtor_data_t);
+  ecs_vec_fini_t(NULL, &lifecycle_ctx->moves, ecs_meta_rtt_move_data_t);
+  ecs_vec_fini_t(NULL, &lifecycle_ctx->copys, ecs_meta_rtt_copy_data_t);
+
+  ecs_os_free(ctx);
+}
+
+static ecs_meta_rtt_ctx_t *flecs_meta_rtt_configure_hooks(ecs_world_t *world, const ecs_type_info_t *ti, bool ctor,
+                                                          bool dtor, bool move, bool copy) {
+  if (ctor || dtor || move || copy) {
+    ecs_type_hooks_t hooks = ti->hooks;
+    flecs_meta_rtt_free_lifecycle_ctx(hooks.lifecycle_ctx);
+
+    ecs_meta_rtt_ctx_t *rtt_ctx = ecs_os_malloc_t(ecs_meta_rtt_ctx_t);
+    ecs_vec_init_t(NULL, &rtt_ctx->ctors, ecs_meta_rtt_xtor_data_t, 0);
+    ecs_vec_init_t(NULL, &rtt_ctx->dtors, ecs_meta_rtt_xtor_data_t, 0);
+    ecs_vec_init_t(NULL, &rtt_ctx->moves, ecs_meta_rtt_move_data_t, 0);
+    ecs_vec_init_t(NULL, &rtt_ctx->copys, ecs_meta_rtt_copy_data_t, 0);
+    hooks.lifecycle_ctx = rtt_ctx;
+    hooks.lifecycle_ctx_free = flecs_meta_rtt_free_lifecycle_ctx;
+
+    if (ctor) {
+      hooks.ctor = flecs_meta_rtt_ctor;
+    }
+    if (dtor) {
+      hooks.dtor = flecs_meta_rtt_dtor;
+    }
+    if (move) {
+      hooks.move = flecs_meta_rtt_move;
+    }
+    if (copy) {
+      hooks.copy = flecs_meta_rtt_copy;
+    }
+
+    ecs_set_hooks_id(world, ti->component, &hooks);
+    return rtt_ctx;
+  } else {
+    return NULL;
+  }
+}
+
+void flecs_meta_rtt_init_default_hooks(ecs_iter_t *it) {
+  ecs_world_t *world = it->world;
+  EcsType *type_field = ecs_field(it, EcsType, 0);
+
+  int i;
+  for (i = 0; i < it->count; i++) {
+    EcsType *type = &type_field[i];
+    if (type->existing)
+      continue;  // non-rtt type.
+
+    /* If a component is defined from reflection data, configure it with the
+     * default constructor. This ensures that a new component value does not
+     * contain uninitialized memory, which could cause serializers to crash
+     * when for example inspecting string fields. */
+
+    ecs_entity_t e = it->entities[i];
+    const ecs_type_info_t *ti = ecs_get_type_info(world, e);
+
+    if (type->kind == EcsStructType) {
+      const EcsStruct *struct_info = ecs_get(world, e, EcsStruct);
+      ecs_assert(struct_info != NULL, ECS_INTERNAL_ERROR, NULL);
+      bool ctor_hook_required = false;
+      bool dtor_hook_required = false;
+      bool move_hook_required = false;
+      bool copy_hook_required = false;
+
+      for (int i = 0; i < ecs_vec_count(&struct_info->members); i++) {
+        ecs_member_t *m = ecs_vec_get_t(&struct_info->members, ecs_member_t, i);
+        const ecs_type_info_t *member_ti = ecs_get_type_info(world, m->type);
+        if (member_ti->hooks.ctor && member_ti->hooks.ctor != flecs_default_ctor) {
+          ctor_hook_required = true;
+        }
+        if (member_ti->hooks.dtor) {
+          dtor_hook_required = true;
+        }
+        if (member_ti->hooks.move) {
+          move_hook_required = true;
+        }
+        if (member_ti->hooks.copy) {
+          copy_hook_required = true;
+        }
+      }
+
+      ecs_meta_rtt_ctx_t *rtt_ctx = flecs_meta_rtt_configure_hooks(world, ti, ctor_hook_required, dtor_hook_required,
+                                                                   move_hook_required, copy_hook_required);
+
+      if (rtt_ctx) {
+        for (int i = 0; i < ecs_vec_count(&struct_info->members); i++) {
+          ecs_member_t *m = ecs_vec_get_t(&struct_info->members, ecs_member_t, i);
+          const ecs_type_info_t *member_ti = ecs_get_type_info(world, m->type);
+          if (ctor_hook_required) {
+            ecs_meta_rtt_xtor_data_t *ctor_data = ecs_vec_append_t(NULL, &rtt_ctx->ctors, ecs_meta_rtt_xtor_data_t);
+            ctor_data->count = m->count;
+            ctor_data->offset = m->offset;
+            ctor_data->type_info = member_ti;
+            if (member_ti->hooks.ctor) {
+              ctor_data->xtor = member_ti->hooks.ctor;
+            } else {
+              ctor_data->xtor = flecs_default_ctor;
+            }
+          }
+          if (dtor_hook_required) {
+            if (member_ti->hooks.dtor) {
+              ecs_meta_rtt_xtor_data_t *dtor_data = ecs_vec_append_t(NULL, &rtt_ctx->dtors, ecs_meta_rtt_xtor_data_t);
+              dtor_data->count = m->count;
+              dtor_data->offset = m->offset;
+              dtor_data->type_info = member_ti;
+              dtor_data->xtor = member_ti->hooks.dtor;
+            }
+          }
+          if (move_hook_required) {
+            ecs_meta_rtt_move_data_t *move_data = ecs_vec_append_t(NULL, &rtt_ctx->moves, ecs_meta_rtt_move_data_t);
+            move_data->offset = m->offset;
+            move_data->type_info = member_ti;
+            if (member_ti->hooks.move) {
+              move_data->count = m->count;
+              move_data->move = member_ti->hooks.move;
+            } else {
+              move_data->count = m->size * m->count;
+              move_data->move = flecs_meta_rtt_default_move;
+            }
+          }
+          if (copy_hook_required) {
+            ecs_meta_rtt_copy_data_t *copy_data = ecs_vec_append_t(NULL, &rtt_ctx->copys, ecs_meta_rtt_copy_data_t);
+            copy_data->offset = m->offset;
+            copy_data->type_info = member_ti;
+            if (member_ti->hooks.copy) {
+              copy_data->count = m->count;
+              copy_data->copy = member_ti->hooks.copy;
+            } else {
+              copy_data->count = m->size * m->count;
+              copy_data->copy = flecs_meta_rtt_default_copy;
+            }
+          }
+        }
+
+        continue;
+      }
+      // rtt hook not required, so potentially set a default ctor below.
+    } else if (type->kind == EcsArrayType) {
+      const EcsArray *array_info = ecs_get(world, e, EcsArray);
+      ecs_assert(array_info != NULL, ECS_INTERNAL_ERROR, NULL);
+      const ecs_type_info_t *array_ti = ecs_get_type_info(world, array_info->type);
+      bool ctor_hook_required = array_ti->hooks.ctor && array_ti->hooks.ctor != flecs_default_ctor;
+      bool dtor_hook_required = array_ti->hooks.dtor != NULL;
+      bool move_hook_required = array_ti->hooks.move != NULL;
+      bool copy_hook_required = array_ti->hooks.copy != NULL;
+
+      ecs_meta_rtt_ctx_t *rtt_ctx = flecs_meta_rtt_configure_hooks(world, ti, ctor_hook_required, dtor_hook_required,
+                                                                   move_hook_required, copy_hook_required);
+
+      if (rtt_ctx) {
+        if (ctor_hook_required) {
+          ecs_meta_rtt_xtor_data_t *ctor_data = ecs_vec_append_t(NULL, &rtt_ctx->ctors, ecs_meta_rtt_xtor_data_t);
+          ctor_data->count = array_info->count;
+          ctor_data->offset = 0;
+          ctor_data->type_info = array_ti;
+          ctor_data->xtor = array_ti->hooks.ctor;
+        }
+        if (dtor_hook_required) {
+          ecs_meta_rtt_xtor_data_t *dtor_data = ecs_vec_append_t(NULL, &rtt_ctx->dtors, ecs_meta_rtt_xtor_data_t);
+          dtor_data->count = array_info->count;
+          dtor_data->offset = 0;
+          dtor_data->type_info = array_ti;
+          dtor_data->xtor = array_ti->hooks.dtor;
+        }
+        if (move_hook_required) {
+          ecs_meta_rtt_move_data_t *move_data = ecs_vec_append_t(NULL, &rtt_ctx->moves, ecs_meta_rtt_move_data_t);
+          move_data->count = array_info->count;
+          move_data->offset = 0;
+          move_data->type_info = array_ti;
+          move_data->move = array_ti->hooks.move;
+        }
+        if (copy_hook_required) {
+          ecs_meta_rtt_copy_data_t *copy_data = ecs_vec_append_t(NULL, &rtt_ctx->copys, ecs_meta_rtt_copy_data_t);
+          copy_data->count = array_info->count;
+          copy_data->offset = 0;
+          copy_data->type_info = array_ti;
+          copy_data->copy = array_ti->hooks.copy;
+        }
+        continue;
+      }
+    } else if (type->kind == EcsVectorType) {
+      // TODO -- pending cursor primitives to manipulate vectors
+    }
+    if (!ti || !ti->hooks.ctor) {
+      ecs_set_hooks_id(world, e, &(ecs_type_hooks_t){.ctor = flecs_default_ctor});
+    }
+  }
 }
 
 #endif
