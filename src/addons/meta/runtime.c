@@ -182,7 +182,8 @@ flecs_meta_rtt_struct_copy(
 }
 
 static void
-flecs_meta_rtt_free_lifecycle_struct_ctx(void *ctx)
+flecs_meta_rtt_free_lifecycle_struct_ctx(
+    void *ctx)
 {
     if (!ctx)
         return;
@@ -284,7 +285,7 @@ flecs_meta_rtt_init_default_hooks_struct(
         copy_hook_required);
 
     if (!rtt_ctx)
-        return; // no hooks required
+        return;  // no hooks required
 
     // At least a hook was configured, therefore examine each struct member to
     // build the vector of calls that will then be executed by the generic hook
@@ -346,7 +347,8 @@ flecs_meta_rtt_init_default_hooks_struct(
  */
 
 static void
-flecs_meta_rtt_free_lifecycle_array_ctx(void *ctx)
+flecs_meta_rtt_free_lifecycle_array_ctx(
+    void *ctx)
 {
     if (!ctx)
         return;
@@ -438,7 +440,7 @@ flecs_meta_rtt_init_default_hooks_array(
 
     if (!ctor_hook_required && !dtor_hook_required && !move_hook_required &&
         !copy_hook_required)
-        return; // no hooks required
+        return;  // no hooks required
 
     ecs_meta_rtt_array_ctx_t *rtt_ctx =
         ecs_os_malloc_t(ecs_meta_rtt_array_ctx_t);
@@ -472,7 +474,8 @@ flecs_meta_rtt_init_default_hooks_array(
  */
 
 static void
-flecs_meta_rtt_free_lifecycle_vector_ctx(void *ctx)
+flecs_meta_rtt_free_lifecycle_vector_ctx(
+    void *ctx)
 {
     if (!ctx)
         return;
@@ -590,7 +593,8 @@ flecs_meta_rtt_init_default_hooks_vector(
 }
 
 void
-flecs_meta_rtt_init_default_hooks(ecs_iter_t *it)
+flecs_meta_rtt_init_default_hooks(
+    ecs_iter_t *it)
 {
     ecs_world_t *world = it->world;
     EcsType *type_field = ecs_field(it, EcsType, 0);
@@ -599,7 +603,7 @@ flecs_meta_rtt_init_default_hooks(ecs_iter_t *it)
     for (i = 0; i < it->count; i++) {
         EcsType *type = &type_field[i];
         if (type->existing)
-            continue; // non-rtt type. Ignore.
+            continue;  // non-rtt type. Ignore.
 
         /* If a component is defined from reflection data, configure appropriate
          * default hooks.
