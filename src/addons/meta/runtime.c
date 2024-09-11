@@ -183,8 +183,9 @@ flecs_rtt_struct_copy(
 static void
 flecs_rtt_free_lifecycle_struct_ctx(void *ctx)
 {
-    if (!ctx)
+    if (!ctx) {
         return;
+    }
 
     ecs_rtt_struct_ctx_t *lifecycle_ctx = ctx;
 
@@ -284,8 +285,9 @@ flecs_rtt_init_default_hooks_struct(
         move_hook_required,
         copy_hook_required);
 
-    if (!rtt_ctx)
+    if (!rtt_ctx) {
         return; /* no hooks required */
+    }
 
     /* At least a hook was configured, therefore examine each struct member to
      * build the vector of calls that will then be executed by the generic hook
@@ -349,8 +351,9 @@ flecs_rtt_init_default_hooks_struct(
 static void
 flecs_rtt_free_lifecycle_array_ctx(void *ctx)
 {
-    if (!ctx)
+    if (!ctx) {
         return;
+    }
 
     ecs_os_free(ctx);
 }
@@ -430,29 +433,36 @@ flecs_rtt_init_default_hooks_array(ecs_world_t *world, ecs_entity_t component)
     bool copy_hook_required = array_ti->hooks.copy != NULL;
 
     if (!ctor_hook_required && !dtor_hook_required && !move_hook_required &&
-        !copy_hook_required)
+        !copy_hook_required) {
         return; /* no hooks required */
+    }
 
     ecs_rtt_array_ctx_t *rtt_ctx = ecs_os_malloc_t(ecs_rtt_array_ctx_t);
     rtt_ctx->type_info = array_ti;
     rtt_ctx->elem_count = array_info->count;
     ecs_type_hooks_t hooks = *ecs_get_hooks_id(world, component);
-    if (hooks.lifecycle_ctx_free)
+    if (hooks.lifecycle_ctx_free) {
         hooks.lifecycle_ctx_free(hooks.lifecycle_ctx);
+    }
+
     hooks.lifecycle_ctx = rtt_ctx;
     hooks.lifecycle_ctx_free = flecs_rtt_free_lifecycle_array_ctx;
 
-    if (ctor_hook_required)
+    if (ctor_hook_required) {
         hooks.ctor = flecs_rtt_array_ctor;
+    }
 
-    if (dtor_hook_required)
+    if (dtor_hook_required) {
         hooks.dtor = flecs_rtt_array_dtor;
+    }
 
-    if (move_hook_required)
+    if (move_hook_required) {
         hooks.move = flecs_rtt_array_move;
+    }
 
-    if (copy_hook_required)
+    if (copy_hook_required) {
         hooks.copy = flecs_rtt_array_copy;
+    }
 
     ecs_set_hooks_id(world, component, &hooks);
 }
@@ -466,8 +476,9 @@ flecs_rtt_init_default_hooks_array(ecs_world_t *world, ecs_entity_t component)
 static void
 flecs_rtt_free_lifecycle_vector_ctx(void *ctx)
 {
-    if (!ctx)
+    if (!ctx) {
         return;
+    }
 
     ecs_os_free(ctx);
 }
@@ -568,8 +579,9 @@ flecs_rtt_init_default_hooks_vector(ecs_world_t *world, ecs_entity_t component)
     ecs_rtt_vector_ctx_t *rtt_ctx = ecs_os_malloc_t(ecs_rtt_vector_ctx_t);
     rtt_ctx->type_info = vector_ti;
     ecs_type_hooks_t hooks = *ecs_get_hooks_id(world, component);
-    if (hooks.lifecycle_ctx_free)
+    if (hooks.lifecycle_ctx_free) {
         hooks.lifecycle_ctx_free(hooks.lifecycle_ctx);
+    }
     hooks.lifecycle_ctx = rtt_ctx;
     hooks.lifecycle_ctx_free = flecs_rtt_free_lifecycle_vector_ctx;
     hooks.ctor = flecs_rtt_vector_ctor;
@@ -588,9 +600,10 @@ flecs_rtt_init_default_hooks(ecs_iter_t *it)
     int i;
     for (i = 0; i < it->count; i++) {
         EcsType *type = &type_field[i];
-        if (type->existing)
+        if (type->existing) {
             continue; /* non-rtt type. Ignore. */
-
+        }
+        
         /* If a component is defined from reflection data, configure appropriate
          * default hooks.
          * - For trivial types, at least set a default constructor so memory is
