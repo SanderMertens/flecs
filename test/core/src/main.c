@@ -2152,6 +2152,10 @@ void Table_get_depth(void);
 void Table_get_depth_non_acyclic(void);
 void Table_get_depth_2_paths(void);
 void Table_get_column_size(void);
+void Table_has_id(void);
+void Table_has_pair(void);
+void Table_has_wildcard_pair(void);
+void Table_has_any_pair(void);
 
 // Testsuite 'Poly'
 void Poly_on_set_poly_observer(void);
@@ -10513,6 +10517,22 @@ bake_test_case Table_testcases[] = {
     {
         "get_column_size",
         Table_get_column_size
+    },
+    {
+        "has_id",
+        Table_has_id
+    },
+    {
+        "has_pair",
+        Table_has_pair
+    },
+    {
+        "has_wildcard_pair",
+        Table_has_wildcard_pair
+    },
+    {
+        "has_any_pair",
+        Table_has_any_pair
     }
 };
 
@@ -10961,7 +10981,7 @@ static bake_test_suite suites[] = {
         "Table",
         NULL,
         NULL,
-        20,
+        24,
         Table_testcases
     },
     {

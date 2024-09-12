@@ -542,3 +542,78 @@ void Table_get_column_size(void) {
 
     ecs_fini(world);
 }
+
+void Table_has_id(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+    ECS_TAG(world, Foo);
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_add(world, e1, Foo);
+
+    ecs_table_t *table = ecs_get_table(world, e1);
+    test_assert(table != NULL);
+
+    test_assert(ecs_table_has_id(world, table, Foo));
+    test_assert(!ecs_table_has_id(world, table, Tag));
+
+    ecs_fini(world);
+}
+
+void Table_has_pair(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, Tgt);
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_add_pair(world, e1, Rel, Tgt);
+
+    ecs_table_t *table = ecs_get_table(world, e1);
+    test_assert(table != NULL);
+
+    test_assert(ecs_table_has_id(world, table, ecs_pair(Rel, Tgt)));
+    test_assert(!ecs_table_has_id(world, table, Tag));
+
+    ecs_fini(world);
+}
+
+void Table_has_wildcard_pair(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, Tgt);
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_add_pair(world, e1, Rel, Tgt);
+
+    ecs_table_t *table = ecs_get_table(world, e1);
+    test_assert(table != NULL);
+
+    test_assert(ecs_table_has_id(world, table, ecs_pair(Rel, EcsWildcard)));
+    test_assert(!ecs_table_has_id(world, table, Tag));
+
+    ecs_fini(world);
+}
+
+void Table_has_any_pair(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, Tgt);
+    ECS_TAG(world, Tag);
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_add_pair(world, e1, Rel, Tgt);
+
+    ecs_table_t *table = ecs_get_table(world, e1);
+    test_assert(table != NULL);
+
+    test_assert(ecs_table_has_id(world, table, ecs_pair(Rel, EcsAny)));
+    test_assert(!ecs_table_has_id(world, table, Tag));
+
+    ecs_fini(world);
+}

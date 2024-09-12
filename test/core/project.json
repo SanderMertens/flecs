@@ -2239,7 +2239,11 @@
                 "get_depth",
                 "get_depth_non_acyclic",
                 "get_depth_2_paths",
-                "get_column_size"
+                "get_column_size",
+                "has_id",
+                "has_pair",
+                "has_wildcard_pair",
+                "has_any_pair"
             ]
         }, {
             "id": "Poly",
