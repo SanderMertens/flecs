@@ -3809,6 +3809,32 @@ void QueryBuilder_with_pair_component_id(void) {
     test_int(count, 1);
 }
 
+void QueryBuilder_with_pair_name_component_id(void) {
+    flecs::world ecs;
+
+    flecs::entity Likes = ecs.entity("Likes");
+    flecs::entity Apples = ecs.entity("Apples");
+    flecs::entity Pears = ecs.entity("Pears");
+
+    flecs::query<> q = 
+        ecs.query_builder()
+            .with<Position>()
+            .with("Likes", Apples)
+            .cache_kind(cache_kind)
+            .build();
+
+    auto e1 = ecs.entity().add<Position>().add(Likes, Apples);
+    ecs.entity().add<Position>().add(Likes, Pears);
+
+    int32_t count = 0;
+    q.each([&](flecs::entity e) {
+        count ++;
+        test_assert(e == e1);
+    });
+    
+    test_int(count, 1);
+}
+
 void QueryBuilder_with_pair_component_name(void) {
     flecs::world ecs;
 
@@ -4045,6 +4071,32 @@ void QueryBuilder_without_pair_component_name(void) {
 
     ecs.entity().add<Position>().add<Likes>(Apples);
     auto e2 = ecs.entity().add<Position>().add<Likes>(Pears);
+
+    int32_t count = 0;
+    q.each([&](flecs::entity e) {
+        count ++;
+        test_assert(e == e2);
+    });
+    
+    test_int(count, 1);
+}
+
+void QueryBuilder_without_pair_name_component_id(void) {
+    flecs::world ecs;
+
+    flecs::entity Likes = ecs.entity("Likes");
+    flecs::entity Apples = ecs.entity("Apples");
+    flecs::entity Pears = ecs.entity("Pears");
+
+    flecs::query<> q = 
+        ecs.query_builder()
+            .with<Position>()
+            .without("Likes", Apples)
+            .cache_kind(cache_kind)
+            .build();
+
+    ecs.entity().add<Position>().add(Likes, Apples);
+    auto e2 = ecs.entity().add<Position>().add(Likes, Pears);
 
     int32_t count = 0;
     q.each([&](flecs::entity e) {

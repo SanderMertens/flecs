@@ -746,6 +746,7 @@ void QueryBuilder_with_pair_name(void);
 void QueryBuilder_with_pair_components(void);
 void QueryBuilder_with_pair_component_id(void);
 void QueryBuilder_with_pair_component_name(void);
+void QueryBuilder_with_pair_name_component_id(void);
 void QueryBuilder_with_enum(void);
 void QueryBuilder_without_id(void);
 void QueryBuilder_without_name(void);
@@ -755,6 +756,7 @@ void QueryBuilder_without_pair_name(void);
 void QueryBuilder_without_pair_components(void);
 void QueryBuilder_without_pair_component_id(void);
 void QueryBuilder_without_pair_component_name(void);
+void QueryBuilder_without_pair_name_component_id(void);
 void QueryBuilder_without_enum(void);
 void QueryBuilder_write_id(void);
 void QueryBuilder_write_name(void);
@@ -4239,6 +4241,10 @@ bake_test_case QueryBuilder_testcases[] = {
         QueryBuilder_with_pair_component_name
     },
     {
+        "with_pair_name_component_id",
+        QueryBuilder_with_pair_name_component_id
+    },
+    {
         "with_enum",
         QueryBuilder_with_enum
     },
@@ -4273,6 +4279,10 @@ bake_test_case QueryBuilder_testcases[] = {
     {
         "without_pair_component_name",
         QueryBuilder_without_pair_component_name
+    },
+    {
+        "without_pair_name_component_id",
+        QueryBuilder_without_pair_name_component_id
     },
     {
         "without_enum",
@@ -6635,7 +6645,7 @@ static bake_test_suite suites[] = {
         "QueryBuilder",
         QueryBuilder_setup,
         NULL,
-        164,
+        166,
         QueryBuilder_testcases,
         1,
         QueryBuilder_params
