@@ -321,7 +321,7 @@ public:
 
 	FORCEINLINE NO_DISCARD bool IsComponent() const
 	{
-		return Has<flecs::Component>();
+		return Has<flecs::Component>() || Has<flecs::untyped_component>();
 	}
 
 	FORCEINLINE NO_DISCARD flecs::untyped_component GetUntypedComponent() const

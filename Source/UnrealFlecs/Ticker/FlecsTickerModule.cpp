@@ -16,21 +16,22 @@ UFlecsTickerModule::UFlecsTickerModule(const FObjectInitializer& InObjectInitial
 
 void UFlecsTickerModule::InitializeModule(UFlecsWorld* InWorld, const FFlecsEntityHandle& InModuleEntity)
 {
-	InWorld->SetSingleton<FFlecsTickerComponent>(FFlecsTickerComponent(0));
-	
-	TickerSystem = InWorld->CreateSystemWithBuilder<FFlecsTickerComponent>(TEXT("FlecsTickerSystem"))
-		.interval(1.0f / TickerRate)
-		.kind(flecs::PreFrame)
-		.singleton()
-		.immediate()
-		.each([](flecs::iter& Iter, size_t, FFlecsTickerComponent& Ticker)
-		{
-			Iter.world().defer_suspend();
-			++Ticker.TickId;
-			Iter.world().defer_resume();
-		});
+	FFlecsTickerComponent TickerComponent;
+	TickerComponent.TickId = 0;
+	InWorld->SetSingleton<FFlecsTickerComponent>(TickerComponent);
+	InWorld->World.modified<FFlecsTickerComponent>();
 
-	
+	TickerSystem = InWorld->CreateSystemWithBuilder<FFlecsTickerComponent>(TEXT("FlecsTickerSystem"))
+		.cached()
+		.interval(1.0 / GetTickerRate())
+		.kind(flecs::PreUpdate)
+		.term_at(0).singleton()
+		.write<FFlecsTickerComponent>()
+		.immediate()
+		.each([](FFlecsTickerComponent& Ticker)
+		{
+			++Ticker.TickId;
+		});
 }
 
 void UFlecsTickerModule::DeinitializeModule(UFlecsWorld* InWorld)

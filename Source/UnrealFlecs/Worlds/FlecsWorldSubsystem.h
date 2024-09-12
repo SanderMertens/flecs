@@ -17,6 +17,7 @@
 #include "GameplayTagsManager.h"
 #include "Components/FlecsGameplayTagEntityComponent.h"
 #include "Components/FlecsWorldPtrComponent.h"
+#include "Components/UWorldPtrComponent.h"
 #include "Entities/FlecsDefaultEntityEngineSubsystem.h"
 #include "GameFramework/GameStateBase.h"
 #include "General/FlecsDeveloperSettings.h"
@@ -134,7 +135,9 @@ public:
 		NewFlecsWorld->SetContext(this);
 
 		NewFlecsWorld->SetSingleton<FFlecsWorldPtrComponent>(
-			FFlecsWorldPtrComponent { NewFlecsWorld, GetWorld(), bIsDefaultWorld });
+			FFlecsWorldPtrComponent { NewFlecsWorld, bIsDefaultWorld });
+
+		NewFlecsWorld->SetSingleton<FUWorldPtrComponent>(FUWorldPtrComponent { GetWorld() });
 		
 		WorldNameMap.emplace(Name, NewFlecsWorld);
 
@@ -142,12 +145,16 @@ public:
 
 		NewFlecsWorld->SetThreads(Settings.DefaultWorkerThreads);
 
+		NewFlecsWorld->RegisterScriptStruct(FGameplayTag::StaticStruct());
+
 		RegisterAllGameplayTags(NewFlecsWorld);
 
 		if (Settings.bAutoTickWorld)
 		{
 			AutoTickableWorlds.Add(NewFlecsWorld);
 		}
+		
+		NewFlecsWorld->WorldBeginPlay();
 
 		for (UObject* Module : Settings.Modules)
 		{
@@ -158,8 +165,6 @@ public:
 		}
 
 		NewFlecsWorld->Progress();
-		
-		NewFlecsWorld->WorldBeginPlay();
 		
 		OnWorldCreated.Broadcast(Name, NewFlecsWorld);
 		

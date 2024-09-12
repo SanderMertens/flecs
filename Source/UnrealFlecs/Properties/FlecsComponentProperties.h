@@ -31,7 +31,7 @@ public:
 		return Instance;
 	}
 
-	void RegisterComponentProperties(const std::string_view& Name, const std::vector<flecs::entity_t>& Entities,
+	FORCEINLINE void RegisterComponentProperties(const std::string_view& Name, const std::vector<flecs::entity_t>& Entities,
 		const TArray<FInstancedStruct>& ComponentPropertyStructs, const bool bResetExisting = false)
 	{
 		UNLOG_CATEGORY_SCOPED(LogFlecsComponentProperties);
@@ -56,7 +56,7 @@ public:
 		{
 			for (const flecs::entity_t& Entity : Entities)
 			{
-				if (std::find(ComponentProperties[Name].Entities.begin(), ComponentProperties[Name].Entities.end(), Entity)
+				if (std::ranges::find(ComponentProperties[Name].Entities, Entity)
 					!= ComponentProperties[Name].Entities.end())
 				{
 					continue;
@@ -77,7 +77,7 @@ public:
 		OnComponentPropertiesRegistered.ExecuteIfBound(ComponentProperties[Name]);
 	}
 	
-	robin_hood::unordered_map<std::string_view, FFlecsComponentProperties> ComponentProperties;
+	robin_hood::unordered_flat_map<std::string_view, FFlecsComponentProperties> ComponentProperties;
 
 	FOnComponentPropertiesRegistered OnComponentPropertiesRegistered;
 }; // struct FFlecsComponentPropertiesRegistry

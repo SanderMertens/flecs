@@ -3,6 +3,7 @@
 // ReSharper disable CppTooWideScopeInitStatement
 #include "FlecsEntityHandle.h"
 #include "Components/FlecsWorldPtrComponent.h"
+#include "Components/UWorldPtrComponent.h"
 #include "Networking/FlecsNetworkingActorComponent.h"
 #include "Worlds/FlecsWorld.h"
 #include "Worlds/FlecsWorldSubsystem.h"
@@ -51,7 +52,8 @@ UFlecsWorld* FFlecsEntityHandle::GetFlecsWorld() const
 
 UWorld* FFlecsEntityHandle::GetOuterWorld() const
 {
-    return GetFlecsWorld()->GetSingleton<FFlecsWorldPtrComponent>().OwningWorld.Get();
+    solid_checkf(GetFlecsWorld(), TEXT("Flecs World not found"));
+    return GetFlecsWorld()->GetSingleton<FUWorldPtrComponent>().World.Get();
 }
 
 FString FFlecsEntityHandle::GetWorldName() const

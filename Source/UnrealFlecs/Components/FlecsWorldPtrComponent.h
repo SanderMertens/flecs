@@ -20,19 +20,17 @@ struct UNREALFLECS_API FFlecsWorldPtrComponent
 
 	FORCEINLINE FFlecsWorldPtrComponent() = default;
 
-	FORCEINLINE FFlecsWorldPtrComponent(UFlecsWorld* InWorld, UWorld* InOwningWorld, bool bInIsDefaultWorld = false)
+	FORCEINLINE FFlecsWorldPtrComponent(UFlecsWorld* InWorld, const bool bInIsDefaultWorld = false)
 		: World(InWorld)
-		, OwningWorld(InOwningWorld)
 		, bIsDefaultWorld(bInIsDefaultWorld)
 	{
 	}
 
 	FORCEINLINE NO_DISCARD UFlecsWorld* GetFlecsWorld() const { return World.Get(); }
-	FORCEINLINE NO_DISCARD UWorld* GetOwningWorld() const { return OwningWorld.Get(); }
 
 	FORCEINLINE NO_DISCARD bool IsValid() const
 	{
-		return GetFlecsWorld() && GetOwningWorld();
+		return World.IsValid();
 	}
 
 	FORCEINLINE FFlecsWorldPtrComponent& operator=(UFlecsWorld* InWorld)
@@ -41,34 +39,24 @@ struct UNREALFLECS_API FFlecsWorldPtrComponent
 		return *this;
 	}
 
-	FORCEINLINE FFlecsWorldPtrComponent& operator=(UWorld* InOwningWorld)
-	{
-		OwningWorld = InOwningWorld;
-		return *this;
-	}
-
 	FORCEINLINE FFlecsWorldPtrComponent& operator=(const FFlecsWorldPtrComponent& InComponent)
 	{
 		World = InComponent.World;
-		OwningWorld = InComponent.OwningWorld;
 		return *this;
 	}
 
 	FORCEINLINE bool operator==(const FFlecsWorldPtrComponent& InComponent) const
 	{
-		return World == InComponent.World && OwningWorld == InComponent.OwningWorld;
+		return World == InComponent.World;
 	}
 
 	FORCEINLINE bool operator!=(const FFlecsWorldPtrComponent& InComponent) const
 	{
-		return World != InComponent.World || OwningWorld != InComponent.OwningWorld;
+		return World != InComponent.World;
 	}
 
 	UPROPERTY(BlueprintReadOnly, Category = "Flecs")
 	TWeakObjectPtr<UFlecsWorld> World;
-
-	UPROPERTY(BlueprintReadOnly, Category = "Flecs")
-	TWeakObjectPtr<UWorld> OwningWorld;
 
 	UPROPERTY(BlueprintReadOnly, Category = "Flecs")
 	bool bIsDefaultWorld = false;

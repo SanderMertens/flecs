@@ -13,12 +13,12 @@ struct UNREALFLECS_API FFlecsTickerComponent final
 
 public:
 	FORCEINLINE FFlecsTickerComponent() = default;
-	FORCEINLINE FFlecsTickerComponent(const uint64 InTickId) : TickId(InTickId) {}
+	FORCEINLINE FFlecsTickerComponent(const int32 InTickId) : TickId(InTickId) {}
 
 	UPROPERTY()
-	uint64 TickId = 0;
+	int32 TickId = 0;
 	
 }; // struct FFlecsTickerComponent
 
-REGISTER_FLECS_COMPONENT_PROPERTIES(FFlecsTickerComponent, { flecs::Sparse }, { })
+REGISTER_FLECS_COMPONENT_PROPERTIES(FFlecsTickerComponent, { flecs::Sparse }, {} )
 

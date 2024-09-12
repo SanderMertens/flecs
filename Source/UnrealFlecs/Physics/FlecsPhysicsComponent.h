@@ -11,4 +11,5 @@ struct UNREALFLECS_API FFlecsPhysicsComponent
 	GENERATED_BODY()
 
 public:
+	FPhysicsActorHandle PhysicsActorHandle;
 }; // struct FFlecsPhysicsComponent

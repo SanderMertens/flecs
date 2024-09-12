@@ -37,6 +37,10 @@ public class UnrealFlecs : ModuleRules
 				"StructUtils",
 				"NetCore",
 				"NetCommon",
+				"PhysicsCore",
+                "Chaos",
+                "ChaosCore",
+                "ChaosSolverEngine",
 			}
 			);
 			

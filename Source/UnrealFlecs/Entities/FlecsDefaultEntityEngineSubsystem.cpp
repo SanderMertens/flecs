@@ -52,10 +52,8 @@ void UFlecsDefaultEntityEngineSubsystem::RefreshDefaultEntities()
 		
 		DefaultEntityWorld.query_builder<>()
 			.without(TestEntity)
-			.with(flecs::Trait)
-			.or_()
-			.with(flecs::PairIsTag)
-			.or_()
+			.with(flecs::Trait).or_()
+			.with(flecs::PairIsTag).or_()
 			.with_name_component()
 			.each([&](flecs::entity Entity)
 			{

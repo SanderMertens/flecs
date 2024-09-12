@@ -9,7 +9,7 @@
 #include "FlecsPhysicsModule.generated.h"
 
 UCLASS(BlueprintType, DefaultToInstanced, EditInlineNew)
-class UNREALFLECS_API UFlecsPhysicsModule : public UObject, public IFlecsModuleInterface
+class UNREALFLECS_API UFlecsPhysicsModule final : public UObject, public IFlecsModuleInterface
 {
 	GENERATED_BODY()
 
@@ -17,9 +17,19 @@ public:
 	virtual void InitializeModule(UFlecsWorld* InWorld, const FFlecsEntityHandle& InModuleEntity) override;
 	virtual void DeinitializeModule(UFlecsWorld* InWorld) override;
 
+	FORCEINLINE virtual FString GetModuleName_Implementation() const override { return TEXT("Flecs Physics Module"); }
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Physics")
+	bool bAllowResimulation = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Physics",
+		meta = (EditCondition = "bAllowResimulation"))
+	int32 MaxFrameHistory = 300;
+
 	UPROPERTY()
 	FFlecsSystem PhysicsTickSystem;
 
 private:
-
+	int32 PreResimValue = 0;
+	
 }; // class UFlecsPhysicsModule

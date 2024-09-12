@@ -19,7 +19,6 @@ public:
 	FFlecsSystem() = default;
 	
 	FORCEINLINE FFlecsSystem(const flecs::system& InSystem) : System(InSystem) {}
-	FORCEINLINE FFlecsSystem(const flecs::system* InSystem) : System(*InSystem) {}
 
 	template <typename ...TComponents>
 	FORCEINLINE FFlecsSystem(flecs::system_builder<TComponents...>& InBuilder)
@@ -162,7 +161,7 @@ public:
 		System.set_tick_source<T>();
 	}
 
-	FORCEINLINE void SetTickSource(const flecs::entity InSource)
+	FORCEINLINE void SetTickSource(const FFlecsEntityHandle& InSource)
 	{
 		System.set_tick_source(InSource);
 	}
@@ -178,6 +177,7 @@ public:
 	}
 	
 	flecs::system System;
+	
 }; // struct FFlecsSystem
 
 FORCEINLINE NO_DISCARD bool IsValid(const FFlecsSystem& InSystem)

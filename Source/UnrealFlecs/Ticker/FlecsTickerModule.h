@@ -22,7 +22,7 @@ public:
 	FORCEINLINE virtual FString GetModuleName_Implementation() const override { return TEXT("Flecs Ticker Module"); }
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Ticker",
-		meta = (Units = "Hz", ClampMin = "1", ClampMax = "1000"))
+		meta = (Units = "Hz", ClampMin = "1", ClampMax = "240", EditCondition = "!bUsePhysicsTick"))
 	int64 TickerRate = 60;
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | Ticker")
@@ -33,6 +33,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | Ticker")
 	FORCEINLINE FFlecsSystem GetTickerSystem() const { return TickerSystem; }
+
+	UFUNCTION(BlueprintCallable, Category = "Flecs | Ticker")
+	FORCEINLINE FFlecsEntityHandle GetTickerSource() const { return TickerSystem.GetEntity(); }
 
 	UPROPERTY()
 	FFlecsSystem TickerSystem;

@@ -62,38 +62,39 @@ public:
 				.yield_existing()
 				.each([&](flecs::entity InEntity, flecs::_::type_impl_struct_event_info InEventInfo)
 				{
+					FFlecsEntityHandle EntityHandle = InEntity;
+					
 					solid_checkf(InEventInfo.scriptStruct != nullptr, TEXT("Script struct is nullptr"));
+					solid_checkf(EntityHandle.IsComponent(), TEXT("Entity is not a component"));
 
 					if UNLIKELY_IF(InEventInfo.scriptStruct == FFlecsScriptStructComponent::StaticStruct())
 					{
 						return;
 					}
 
-					if UNLIKELY_IF(InEntity.has<FFlecsScriptStructComponent>())
+					if UNLIKELY_IF(EntityHandle.Has<FFlecsScriptStructComponent>())
 					{
-						InEntity.remove<flecs::_::type_impl_struct_event_info>();
+						EntityHandle.Remove<flecs::_::type_impl_struct_event_info>();
 						return;
 					}
 					
-					InEntity.set<FFlecsScriptStructComponent>({ InEventInfo.scriptStruct });
+					EntityHandle.Set<FFlecsScriptStructComponent>({ InEventInfo.scriptStruct });
 
 					UN_LOGF(LogFlecsWorld, Log,
 						"Struct component %s registered", *InEventInfo.scriptStruct->GetStructCPPName());
 
 					#if WITH_EDITOR
 
-					this->RegisterMemberProperties(InEventInfo.scriptStruct, InEntity);
+					this->RegisterMemberProperties(InEventInfo.scriptStruct, EntityHandle);
 					
 					#endif // WITH_EDITOR
 
-					InEntity.remove<flecs::_::type_impl_struct_event_info>();
+					EntityHandle.Remove<flecs::_::type_impl_struct_event_info>();
 				});
 		
 		CreateSystemWithBuilder<const FFlecsUObjectComponent&>(TEXT("FlecsUObjectComponentSystem"))
 			.cached()
 			.kind(flecs::PostFrame)
-			.term_at(0)
-				.read()
 			.rate(UOBJECT_VALID_CHECK_FRAME_RATE)
 			.multi_threaded()
 			.each([](flecs::entity InEntity, const FFlecsUObjectComponent& InComponent)
@@ -347,6 +348,12 @@ public:
 	}
 
 	template <typename T>
+	FORCEINLINE NO_DISCARD T* GetSingletonPtr()
+	{
+		return World.get_mut<T>();
+	}
+
+	template <typename T>
 	FORCEINLINE NO_DISCARD const T* GetSingletonPtr() const
 	{
 		return World.get<T>();
@@ -375,6 +382,12 @@ public:
 	FORCEINLINE NO_DISCARD FFlecsEntityHandle GetSingletonEntity() const
 	{
 		return World.entity<T>();
+	}
+
+	template <typename T>
+	FORCEINLINE void ModifiedSingleton() const
+	{
+		World.modified<T>();
 	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
@@ -429,8 +442,10 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
 	FORCEINLINE bool IsModuleImported(const TSubclassOf<UObject> InModule) const
 	{
-		const flecs::entity ModuleEntity = World.query<FFlecsModuleComponent>()
-			.find([&](flecs::entity InEntity, FFlecsModuleComponent& InComponent)
+		const flecs::entity ModuleEntity = World.query_builder<const FFlecsModuleComponent>()
+			.read<FFlecsModuleComponent>()
+			.build()
+			.find([&](flecs::entity InEntity, const FFlecsModuleComponent& InComponent)
 			{
 				return InComponent.ModuleClass == InModule;
 			});
@@ -447,8 +462,10 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
 	FORCEINLINE FFlecsEntityHandle GetModuleEntity(const TSubclassOf<UObject> InModule) const
 	{
-		const flecs::entity ModuleEntity = World.query<FFlecsModuleComponent>()
-			.find([&](flecs::entity InEntity, FFlecsModuleComponent& InComponent)
+		const flecs::entity ModuleEntity = World.query_builder<const FFlecsModuleComponent>()
+			.read<FFlecsModuleComponent>()
+			.build()
+			.find([&](flecs::entity InEntity, const FFlecsModuleComponent& InComponent)
 			{
 				return InComponent.ModuleClass == InModule;
 			});
@@ -783,7 +800,9 @@ public:
 			}
 			else if (Property->IsA<FStructProperty>())
 			{
-				UntypedComponent.member<TStructOnScope<FStructProperty>>(StringCast<char>(*Property->GetName()).Get());
+				//FFlecsEntityHandle StructComponent
+				//	= ObtainComponentTypeStruct(CastFieldChecked<FStructProperty>(Property)->Struct);
+				//UntypedComponent.member(StructComponent, StringCast<char>(*Property->GetName()).Get());
 			}
 		}
 	}
@@ -807,6 +826,8 @@ public:
 		FFlecsEntityHandle ScriptStructComponent = World.entity(StringCast<char>(*ScriptStruct->GetStructCPPName()).Get())
 			.set<flecs::Component>({ ScriptStruct->GetStructureSize(), ScriptStruct->GetMinAlignment() })
 			.set<FFlecsScriptStructComponent>({ ScriptStruct });
+
+		solid_check(ScriptStructComponent.IsComponent());
 		
 		GetSingletonRef<FFlecsTypeMapComponent>().ScriptStructMap.emplace(ScriptStruct, ScriptStructComponent);
 
@@ -908,13 +929,13 @@ public:
 	}
 
 	template <typename ...TArgs>
-	FORCEINLINE NO_DISCARD FFlecsTimer CreateTimer(const TArgs&... Args) const
+	FORCEINLINE NO_DISCARD flecs::timer CreateTimer(const TArgs&... Args) const
 	{
 		return World.timer(Args...);
 	}
 
 	template <typename T>
-	FORCEINLINE NO_DISCARD FFlecsTimer CreateTimer() const
+	FORCEINLINE NO_DISCARD flecs::timer CreateTimer() const
 	{
 		return World.timer<T>();
 	}
