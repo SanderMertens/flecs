@@ -1118,7 +1118,7 @@ void RuntimeTypes_struct_with_opaque(void) {
                                {"a", resource_handle_opaque},
                            }});
 
-    /* struct_with_opaque will consume 1 test resources per instance */
+    /* struct_with_opaque consumes 1 test resources per instance */
     const int initial_resources = 4;
     initialize_resource_ids(initial_resources);
 
@@ -1157,8 +1157,7 @@ void RuntimeTypes_struct_with_opaque(void) {
     /* Test deleting: */
     ecs_delete(world, e);
 
-    /* After destroying one of the entities, only 1 resource(s) should be in use
-     */
+    /* After destroying the first entity, only 1 resource(s) should be in use */
     test_int(1, initial_resources - resources_left());
     ecs_delete(world, instance);
 
@@ -1334,16 +1333,13 @@ void RuntimeTypes_struct_with_array_of_array_of_strings(void) {
         StructWithArrayOfArrayOfStrings *ptr =
             ecs_ensure_id(world, e, struct_with_array_of_array_of_strings);
         test_memory_zero(ptr, sizeof(StructWithArrayOfArrayOfStrings));
-        ptr->a[0][0] = ecs_os_strdup("String100");
-        ptr->a[0][1] = ecs_os_strdup("String101");
-        ptr->a[0][2] = ecs_os_strdup("String102");
-        ptr->a[1][0] = ecs_os_strdup("String103");
-        ptr->a[1][1] = ecs_os_strdup("String104");
-        ptr->a[1][2] = ecs_os_strdup("String105");
-        ptr->a[2][0] = ecs_os_strdup("String106");
-        ptr->a[2][1] = ecs_os_strdup("String107");
-        ptr->a[2][2] = ecs_os_strdup("String108");
-        ptr->b = ecs_os_strdup("String109");
+        int i;
+        for (i = 0; i < 3; i++) {
+            ptr->a[i][0] = ecs_os_strdup("String100");
+            ptr->a[i][1] = ecs_os_strdup("String101");
+            ptr->a[i][2] = ecs_os_strdup("String102");
+        }
+        ptr->b = ecs_os_strdup("String103");
     }
 
     /* Test copying: */
@@ -1351,16 +1347,13 @@ void RuntimeTypes_struct_with_array_of_array_of_strings(void) {
     {
         const StructWithArrayOfArrayOfStrings *ptr =
             ecs_get_id(world, instance, struct_with_array_of_array_of_strings);
-        test_str("String100", ptr->a[0][0]);
-        test_str("String101", ptr->a[0][1]);
-        test_str("String102", ptr->a[0][2]);
-        test_str("String103", ptr->a[1][0]);
-        test_str("String104", ptr->a[1][1]);
-        test_str("String105", ptr->a[1][2]);
-        test_str("String106", ptr->a[2][0]);
-        test_str("String107", ptr->a[2][1]);
-        test_str("String108", ptr->a[2][2]);
-        test_str("String109", ptr->b);
+        int i;
+        for (i = 0; i < 3; i++) {
+            test_str("String100", ptr->a[i][0]);
+            test_str("String101", ptr->a[i][1]);
+            test_str("String102", ptr->a[i][2]);
+        }
+        test_str("String103", ptr->b);
     }
 
     /* Test moving by forcing an archetype change: */
@@ -1369,16 +1362,13 @@ void RuntimeTypes_struct_with_array_of_array_of_strings(void) {
     {
         const StructWithArrayOfArrayOfStrings *ptr =
             ecs_get_id(world, instance, struct_with_array_of_array_of_strings);
-        test_str("String100", ptr->a[0][0]);
-        test_str("String101", ptr->a[0][1]);
-        test_str("String102", ptr->a[0][2]);
-        test_str("String103", ptr->a[1][0]);
-        test_str("String104", ptr->a[1][1]);
-        test_str("String105", ptr->a[1][2]);
-        test_str("String106", ptr->a[2][0]);
-        test_str("String107", ptr->a[2][1]);
-        test_str("String108", ptr->a[2][2]);
-        test_str("String109", ptr->b);
+        int i;
+        for (i = 0; i < 3; i++) {
+            test_str("String100", ptr->a[i][0]);
+            test_str("String101", ptr->a[i][1]);
+            test_str("String102", ptr->a[i][2]);
+        }
+        test_str("String103", ptr->b);
     }
 
     /* Test deleting: */
@@ -2055,8 +2045,7 @@ void RuntimeTypes_array_of_struct_with_opaques(void) {
     ecs_entity_t /* StructWithOpaque[3] */ array_of_struct_with_opaques =
         ecs_array(world, {.type = struct_with_opaque, .count = 3});
 
-    /* array_of_struct_with_opaques will consume 3 test resources per instance
-     */
+    /* array_of_struct_with_opaques consumes 3 test resources per instance */
     const int initial_resources = 12;
     initialize_resource_ids(initial_resources);
 
@@ -2106,8 +2095,7 @@ void RuntimeTypes_array_of_struct_with_opaques(void) {
     /* Test deleting: */
     ecs_delete(world, e);
 
-    /* After destroying one of the entities, only 3 resource(s) should be in use
-     */
+    /* After destroying the first entity, only 3 resource(s) should be in use */
     test_int(3, initial_resources - resources_left());
     ecs_delete(world, instance);
 
@@ -2137,15 +2125,12 @@ void RuntimeTypes_array_of_array_of_strings(void) {
         ecs_string_t(*arr)[3] =
             ecs_ensure_id(world, e, array_of_array_of_strings);
         test_memory_zero(arr, sizeof(ecs_string_t[3][3]));
-        arr[0][0] = ecs_os_strdup("String100");
-        arr[0][1] = ecs_os_strdup("String101");
-        arr[0][2] = ecs_os_strdup("String102");
-        arr[1][0] = ecs_os_strdup("String103");
-        arr[1][1] = ecs_os_strdup("String104");
-        arr[1][2] = ecs_os_strdup("String105");
-        arr[2][0] = ecs_os_strdup("String106");
-        arr[2][1] = ecs_os_strdup("String107");
-        arr[2][2] = ecs_os_strdup("String108");
+        int i;
+        for (i = 0; i < 3; i++) {
+            arr[i][0] = ecs_os_strdup("String100");
+            arr[i][1] = ecs_os_strdup("String101");
+            arr[i][2] = ecs_os_strdup("String102");
+        }
     }
 
     /* Test copying: */
@@ -2153,15 +2138,12 @@ void RuntimeTypes_array_of_array_of_strings(void) {
     {
         const ecs_string_t(*arr)[3] = (const ecs_string_t(*)[3]) ecs_get_id(
             world, e, array_of_array_of_strings);
-        test_str("String100", arr[0][0]);
-        test_str("String101", arr[0][1]);
-        test_str("String102", arr[0][2]);
-        test_str("String103", arr[1][0]);
-        test_str("String104", arr[1][1]);
-        test_str("String105", arr[1][2]);
-        test_str("String106", arr[2][0]);
-        test_str("String107", arr[2][1]);
-        test_str("String108", arr[2][2]);
+        int i;
+        for (i = 0; i < 3; i++) {
+            test_str("String100", arr[i][0]);
+            test_str("String101", arr[i][1]);
+            test_str("String102", arr[i][2]);
+        }
     }
 
     /* Test moving by forcing an archetype change: */
@@ -2170,15 +2152,12 @@ void RuntimeTypes_array_of_array_of_strings(void) {
     {
         const ecs_string_t(*arr)[3] = (const ecs_string_t(*)[3]) ecs_get_id(
             world, e, array_of_array_of_strings);
-        test_str("String100", arr[0][0]);
-        test_str("String101", arr[0][1]);
-        test_str("String102", arr[0][2]);
-        test_str("String103", arr[1][0]);
-        test_str("String104", arr[1][1]);
-        test_str("String105", arr[1][2]);
-        test_str("String106", arr[2][0]);
-        test_str("String107", arr[2][1]);
-        test_str("String108", arr[2][2]);
+        int i;
+        for (i = 0; i < 3; i++) {
+            test_str("String100", arr[i][0]);
+            test_str("String101", arr[i][1]);
+            test_str("String102", arr[i][2]);
+        }
     }
 
     /* Test deleting: */
@@ -2216,33 +2195,18 @@ void RuntimeTypes_array_of_array_of_struct_with_strings(void) {
         StructWithStrings(*arr)[3] =
             ecs_ensure_id(world, e, array_of_array_of_struct_with_strings);
         test_memory_zero(arr, sizeof(StructWithStrings[3][3]));
-        arr[0][0].a = ecs_os_strdup("String100");
-        arr[0][0].b = 101;
-        arr[0][0].c = ecs_os_strdup("String102");
-        arr[0][1].a = ecs_os_strdup("String103");
-        arr[0][1].b = 104;
-        arr[0][1].c = ecs_os_strdup("String105");
-        arr[0][2].a = ecs_os_strdup("String106");
-        arr[0][2].b = 107;
-        arr[0][2].c = ecs_os_strdup("String108");
-        arr[1][0].a = ecs_os_strdup("String109");
-        arr[1][0].b = 110;
-        arr[1][0].c = ecs_os_strdup("String111");
-        arr[1][1].a = ecs_os_strdup("String112");
-        arr[1][1].b = 113;
-        arr[1][1].c = ecs_os_strdup("String114");
-        arr[1][2].a = ecs_os_strdup("String115");
-        arr[1][2].b = 116;
-        arr[1][2].c = ecs_os_strdup("String117");
-        arr[2][0].a = ecs_os_strdup("String118");
-        arr[2][0].b = 119;
-        arr[2][0].c = ecs_os_strdup("String120");
-        arr[2][1].a = ecs_os_strdup("String121");
-        arr[2][1].b = 122;
-        arr[2][1].c = ecs_os_strdup("String123");
-        arr[2][2].a = ecs_os_strdup("String124");
-        arr[2][2].b = 125;
-        arr[2][2].c = ecs_os_strdup("String126");
+        int i;
+        for (i = 0; i < 3; i++) {
+            arr[i][0].a = ecs_os_strdup("String100");
+            arr[i][0].b = 101;
+            arr[i][0].c = ecs_os_strdup("String102");
+            arr[i][1].a = ecs_os_strdup("String103");
+            arr[i][1].b = 104;
+            arr[i][1].c = ecs_os_strdup("String105");
+            arr[i][2].a = ecs_os_strdup("String106");
+            arr[i][2].b = 107;
+            arr[i][2].c = ecs_os_strdup("String108");
+        }
     }
 
     /* Test copying: */
@@ -2251,33 +2215,18 @@ void RuntimeTypes_array_of_array_of_struct_with_strings(void) {
         const StructWithStrings(*arr)[3] =
             (const StructWithStrings(*)[3]) ecs_get_id(
                 world, e, array_of_array_of_struct_with_strings);
-        test_str("String100", arr[0][0].a);
-        test_int(101, arr[0][0].b);
-        test_str("String102", arr[0][0].c);
-        test_str("String103", arr[0][1].a);
-        test_int(104, arr[0][1].b);
-        test_str("String105", arr[0][1].c);
-        test_str("String106", arr[0][2].a);
-        test_int(107, arr[0][2].b);
-        test_str("String108", arr[0][2].c);
-        test_str("String109", arr[1][0].a);
-        test_int(110, arr[1][0].b);
-        test_str("String111", arr[1][0].c);
-        test_str("String112", arr[1][1].a);
-        test_int(113, arr[1][1].b);
-        test_str("String114", arr[1][1].c);
-        test_str("String115", arr[1][2].a);
-        test_int(116, arr[1][2].b);
-        test_str("String117", arr[1][2].c);
-        test_str("String118", arr[2][0].a);
-        test_int(119, arr[2][0].b);
-        test_str("String120", arr[2][0].c);
-        test_str("String121", arr[2][1].a);
-        test_int(122, arr[2][1].b);
-        test_str("String123", arr[2][1].c);
-        test_str("String124", arr[2][2].a);
-        test_int(125, arr[2][2].b);
-        test_str("String126", arr[2][2].c);
+        int i;
+        for (i = 0; i < 3; i++) {
+            test_str("String100", arr[i][0].a);
+            test_int(101, arr[i][0].b);
+            test_str("String102", arr[i][0].c);
+            test_str("String103", arr[i][1].a);
+            test_int(104, arr[i][1].b);
+            test_str("String105", arr[i][1].c);
+            test_str("String106", arr[i][2].a);
+            test_int(107, arr[i][2].b);
+            test_str("String108", arr[i][2].c);
+        }
     }
 
     /* Test moving by forcing an archetype change: */
@@ -2287,33 +2236,18 @@ void RuntimeTypes_array_of_array_of_struct_with_strings(void) {
         const StructWithStrings(*arr)[3] =
             (const StructWithStrings(*)[3]) ecs_get_id(
                 world, e, array_of_array_of_struct_with_strings);
-        test_str("String100", arr[0][0].a);
-        test_int(101, arr[0][0].b);
-        test_str("String102", arr[0][0].c);
-        test_str("String103", arr[0][1].a);
-        test_int(104, arr[0][1].b);
-        test_str("String105", arr[0][1].c);
-        test_str("String106", arr[0][2].a);
-        test_int(107, arr[0][2].b);
-        test_str("String108", arr[0][2].c);
-        test_str("String109", arr[1][0].a);
-        test_int(110, arr[1][0].b);
-        test_str("String111", arr[1][0].c);
-        test_str("String112", arr[1][1].a);
-        test_int(113, arr[1][1].b);
-        test_str("String114", arr[1][1].c);
-        test_str("String115", arr[1][2].a);
-        test_int(116, arr[1][2].b);
-        test_str("String117", arr[1][2].c);
-        test_str("String118", arr[2][0].a);
-        test_int(119, arr[2][0].b);
-        test_str("String120", arr[2][0].c);
-        test_str("String121", arr[2][1].a);
-        test_int(122, arr[2][1].b);
-        test_str("String123", arr[2][1].c);
-        test_str("String124", arr[2][2].a);
-        test_int(125, arr[2][2].b);
-        test_str("String126", arr[2][2].c);
+        int i;
+        for (i = 0; i < 3; i++) {
+            test_str("String100", arr[i][0].a);
+            test_int(101, arr[i][0].b);
+            test_str("String102", arr[i][0].c);
+            test_str("String103", arr[i][1].a);
+            test_int(104, arr[i][1].b);
+            test_str("String105", arr[i][1].c);
+            test_str("String106", arr[i][2].a);
+            test_int(107, arr[i][2].b);
+            test_str("String108", arr[i][2].c);
+        }
     }
 
     /* Test deleting: */
@@ -2559,7 +2493,7 @@ void RuntimeTypes_array_of_opaque(void) {
     ecs_entity_t /* ResourceHandle[3] */ array_of_opaque =
         ecs_array(world, {.type = resource_handle_opaque, .count = 3});
 
-    /* array_of_opaque will consume 3 test resources per instance */
+    /* array_of_opaque consumes 3 test resources per instance */
     const int initial_resources = 12;
     initialize_resource_ids(initial_resources);
 
@@ -2606,8 +2540,7 @@ void RuntimeTypes_array_of_opaque(void) {
     /* Test deleting: */
     ecs_delete(world, e);
 
-    /* After destroying one of the entities, only 3 resource(s) should be in use
-     */
+    /* After destroying the first entity, only 3 resource(s) should be in use */
     test_int(3, initial_resources - resources_left());
     ecs_delete(world, instance);
 
@@ -2896,15 +2829,12 @@ void RuntimeTypes_vector_of_arrays_of_strings(void) {
             ecs_string_t(*v)[3] = ecs_vec_first(vec);
             invoke_type_ctor(world, v, 3, array_of_strings);
             test_memory_zero(v, sizeof(ecs_string_t[3]) * 3);
-            v[0][0] = ecs_os_strdup("String100");
-            v[0][1] = ecs_os_strdup("String101");
-            v[0][2] = ecs_os_strdup("String102");
-            v[1][0] = ecs_os_strdup("String103");
-            v[1][1] = ecs_os_strdup("String104");
-            v[1][2] = ecs_os_strdup("String105");
-            v[2][0] = ecs_os_strdup("String106");
-            v[2][1] = ecs_os_strdup("String107");
-            v[2][2] = ecs_os_strdup("String108");
+            int i;
+            for (i = 0; i < 3; i++) {
+                v[i][0] = ecs_os_strdup("String100");
+                v[i][1] = ecs_os_strdup("String101");
+                v[i][2] = ecs_os_strdup("String102");
+            }
         }
     }
 
@@ -2918,15 +2848,12 @@ void RuntimeTypes_vector_of_arrays_of_strings(void) {
             const ecs_string_t(*v)[3] =
                 (const ecs_string_t(*)[3]) ecs_vec_first(vec);
             test_assert(v != NULL);
-            test_str("String100", v[0][0]);
-            test_str("String101", v[0][1]);
-            test_str("String102", v[0][2]);
-            test_str("String103", v[1][0]);
-            test_str("String104", v[1][1]);
-            test_str("String105", v[1][2]);
-            test_str("String106", v[2][0]);
-            test_str("String107", v[2][1]);
-            test_str("String108", v[2][2]);
+            int i;
+            for (i = 0; i < 3; i++) {
+                test_str("String100", v[i][0]);
+                test_str("String101", v[i][1]);
+                test_str("String102", v[i][2]);
+            }
         }
     }
 
@@ -2941,15 +2868,12 @@ void RuntimeTypes_vector_of_arrays_of_strings(void) {
             const ecs_string_t(*v)[3] =
                 (const ecs_string_t(*)[3]) ecs_vec_first(vec);
             test_assert(v != NULL);
-            test_str("String100", v[0][0]);
-            test_str("String101", v[0][1]);
-            test_str("String102", v[0][2]);
-            test_str("String103", v[1][0]);
-            test_str("String104", v[1][1]);
-            test_str("String105", v[1][2]);
-            test_str("String106", v[2][0]);
-            test_str("String107", v[2][1]);
-            test_str("String108", v[2][2]);
+            int i;
+            for (i = 0; i < 3; i++) {
+                test_str("String100", v[i][0]);
+                test_str("String101", v[i][1]);
+                test_str("String102", v[i][2]);
+            }
         }
     }
 
@@ -2968,7 +2892,7 @@ void RuntimeTypes_vector_of_opaque(void) {
     ecs_entity_t /* vector<ResourceHandle> */ vector_of_opaque =
         ecs_vector(world, {.type = resource_handle_opaque});
 
-    /* vector_of_opaque will consume 3 test resources per instance */
+    /* vector_of_opaque consumes 3 test resources per instance */
     const int initial_resources = 12;
     initialize_resource_ids(initial_resources);
 
@@ -3031,8 +2955,7 @@ void RuntimeTypes_vector_of_opaque(void) {
     /* Test deleting: */
     ecs_delete(world, e);
 
-    /* After destroying one of the entities, only 3 resource(s) should be in use
-     */
+    /* After destroying the first entity, only 3 resource(s) should be in use */
     test_int(3, initial_resources - resources_left());
     ecs_delete(world, instance);
 
