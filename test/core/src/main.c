@@ -991,6 +991,7 @@ void Clone_null_w_value(void);
 void Clone_1_component(void);
 void Clone_2_component(void);
 void Clone_1_component_w_value(void);
+void Clone_1_component_w_lifecycle(void);
 void Clone_2_component_w_value(void);
 void Clone_3_component(void);
 void Clone_3_component_w_value(void);
@@ -5988,6 +5989,10 @@ bake_test_case Clone_testcases[] = {
         Clone_1_component_w_value
     },
     {
+        "1_component_w_lifecycle",
+        Clone_1_component_w_lifecycle
+    },
+    {
         "2_component_w_value",
         Clone_2_component_w_value
     },
@@ -10862,7 +10867,7 @@ static bake_test_suite suites[] = {
         "Clone",
         NULL,
         NULL,
-        15,
+        16,
         Clone_testcases
     },
     {
