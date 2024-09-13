@@ -7,6 +7,13 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  typos:
+    runs-on: ubuntu-latest
+    name: typos
+    steps:
+      - uses: actions/checkout@v4
+      - uses: crate-ci/typos@master
+
   build-linux:
     runs-on: ubuntu-latest
     timeout-minutes: 30
