@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "InstancedStruct.h"
 #include "Entities/FlecsEntityHandle.h"
+#include "Properties/FlecsComponentProperties.h"
 #include "FlecsEntityRecord.generated.h"
 
 UENUM(BlueprintType)
@@ -14,7 +15,6 @@ enum class EFlecsComponentNodeType : uint8
 	EntityHandle = 1,
 	FGameplayTag = 2,
 }; // enum class EFlecsComponentNodeType
-
 
 USTRUCT(BlueprintType)
 struct UNREALFLECS_API FFlecsTraitTypeInfo final
@@ -98,6 +98,9 @@ struct UNREALFLECS_API FFlecsEntityRecord
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Entity Record")
 	TArray<FFlecsComponentTypeInfo> Components;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Entity Record")
+	TArray<TInstancedStruct<FFlecsEntityRecord>> SubEntities;
+
 	FORCEINLINE NO_DISCARD bool operator==(const FFlecsEntityRecord& Other) const
 	{
 		return Name == Other.Name && Components == Other.Components;
@@ -161,6 +164,16 @@ struct UNREALFLECS_API FFlecsEntityRecord
 				break;
 			}
 		}
+
+		for (const TInstancedStruct<FFlecsEntityRecord>& SubEntity : SubEntities)
+		{
+			FFlecsEntityRecord NewEntityRecord = SubEntity.Get();
+			FFlecsEntityHandle NewEntityHandle = InEntityHandle.GetEntity().world().entity(StringCast<char>(*NewEntityRecord.Name).Get());
+			NewEntityRecord.ApplyRecordToEntity(NewEntityHandle);
+			InEntityHandle.Add(NewEntityHandle);
+		}
 	}
 
 }; // struct FFlecsEntityRecord
+
+REGISTER_FLECS_COMPONENT_PROPERTIES(FFlecsEntityRecord, { flecs::Sparse }, {} );

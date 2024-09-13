@@ -26,8 +26,7 @@ public:
 		meta = (EditCondition = "bAllowResimulation"))
 	int32 MaxFrameHistory = 300;
 
-	UPROPERTY()
-	FFlecsSystem PhysicsTickSystem;
+	flecs::observer AddPhysicsComponentObserver;
 
 private:
 	int32 PreResimValue = 0;

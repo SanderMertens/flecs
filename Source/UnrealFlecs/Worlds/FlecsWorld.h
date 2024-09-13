@@ -20,7 +20,6 @@
 #include "Prefabs/FlecsPrefabAsset.h"
 #include "Prefabs/FlecsPrefabComponent.h"
 #include "Systems/FlecsSystem.h"
-#include "Timers/FlecsTimer.h"
 #include "FlecsWorld.generated.h"
 
 DECLARE_STATS_GROUP(TEXT("FlecsWorld"), STATGROUP_FlecsWorld, STATCAT_Advanced);
@@ -43,7 +42,7 @@ public:
 		InitializeAssetRegistry();
 	}
 
-	FORCEINLINE void InitializeDefaultComponents()
+	FORCEINLINE void InitializeDefaultComponents() const
 	{
 		/* Opaque FString to flecs::string */
 		World.component<FString>()
@@ -727,7 +726,7 @@ public:
 	FORCEINLINE void RegisterMemberProperties(const UScriptStruct* ScriptStruct,
 		const FFlecsEntityHandle& InEntity) const
 	{
-		flecs::untyped_component UntypedComponent = InEntity.GetUntypedComponent();
+		flecs::untyped_component UntypedComponent = InEntity.GetUntypedComponent_Unsafe();
 		
 		for (TFieldIterator<FProperty> PropertyIt(ScriptStruct); PropertyIt; ++PropertyIt)
 		{
@@ -800,9 +799,9 @@ public:
 			}
 			else if (Property->IsA<FStructProperty>())
 			{
-				//FFlecsEntityHandle StructComponent
-				//	= ObtainComponentTypeStruct(CastFieldChecked<FStructProperty>(Property)->Struct);
-				//UntypedComponent.member(StructComponent, StringCast<char>(*Property->GetName()).Get());
+				FFlecsEntityHandle StructComponent
+					= ObtainComponentTypeStruct(CastFieldChecked<FStructProperty>(Property)->Struct);
+				UntypedComponent.member(StructComponent, StringCast<char>(*Property->GetName()).Get());
 			}
 		}
 	}
@@ -826,8 +825,6 @@ public:
 		FFlecsEntityHandle ScriptStructComponent = World.entity(StringCast<char>(*ScriptStruct->GetStructCPPName()).Get())
 			.set<flecs::Component>({ ScriptStruct->GetStructureSize(), ScriptStruct->GetMinAlignment() })
 			.set<FFlecsScriptStructComponent>({ ScriptStruct });
-
-		solid_check(ScriptStructComponent.IsComponent());
 		
 		GetSingletonRef<FFlecsTypeMapComponent>().ScriptStructMap.emplace(ScriptStruct, ScriptStructComponent);
 

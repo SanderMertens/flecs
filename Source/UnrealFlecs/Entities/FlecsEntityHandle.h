@@ -323,10 +323,15 @@ public:
 	{
 		return Has<flecs::Component>() || Has<flecs::untyped_component>();
 	}
-
+	
 	FORCEINLINE NO_DISCARD flecs::untyped_component GetUntypedComponent() const
 	{
 		solid_checkf(IsComponent(), TEXT("Entity is not a component"));
+		return flecs::untyped_component(GetFlecsWorld_Internal(), GetEntity());
+	}
+
+	FORCEINLINE NO_DISCARD flecs::untyped_component GetUntypedComponent_Unsafe() const
+	{
 		return flecs::untyped_component(GetFlecsWorld_Internal(), GetEntity());
 	}
 

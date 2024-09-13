@@ -229,9 +229,6 @@ public:
 		solid_checkf(GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::Assert)
 					  ->GetSubsystem<UFlecsWorldSubsystem>()->Worlds.Num() > 0, TEXT("No worlds found"));
 		
-		solid_checkf(GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::Assert)
-			->GetSubsystem<UFlecsWorldSubsystem>(), TEXT("FlecsWorldSubsystem must be valid"));
-		
 		return GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::Assert)
 		              ->GetSubsystem<UFlecsWorldSubsystem>()->Worlds[0];
 	}

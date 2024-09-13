@@ -12,4 +12,20 @@ struct UNREALFLECS_API FFlecsPhysicsComponent
 
 public:
 	FPhysicsActorHandle PhysicsActorHandle;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Physics")
+	uint8 bSimulatePhysics : 1 = true;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Physics")
+	uint8 bEnableGravity : 1 = true;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Physics")
+	uint8 bStatic : 1 = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Physics")
+	uint8 bUpdateKinematicFromSimulation : 1 = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Physics")
+	uint8 bStartAwake : 1 = true;
+	
 }; // struct FFlecsPhysicsComponent

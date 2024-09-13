@@ -1,12 +1,15 @@
 ﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 #include "FlecsPhysicsModule.h"
+
+#include "FlecsPhysicsComponent.h"
 #include "FlecsPhysicsSceneComponent.h"
 #include "PBDRigidsSolver.h"
 #include "TickerPhysicsHistoryComponent.h"
 #include "Physics/Experimental/PhysScene_Chaos.h"
 #include "Ticker/FlecsTickerComponent.h"
 #include "Ticker/FlecsTickerModule.h"
+#include "Transforms/FlecsTransformComponent.h"
 #include "Worlds/FlecsWorld.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(FlecsPhysicsModule)
@@ -22,7 +25,7 @@ void UFlecsPhysicsModule::InitializeModule(UFlecsWorld* InWorld, const FFlecsEnt
 	
 	GetFlecsWorld()->SetSingleton<FFlecsPhysicsSceneComponent>(FFlecsPhysicsSceneComponent{ Scene });
 
-	UFlecsTickerModule* TickerModule = GetFlecsWorld()->GetModule<UFlecsTickerModule>();
+	const UFlecsTickerModule* TickerModule = GetFlecsWorld()->GetModule<UFlecsTickerModule>();
 	solid_check(IsValid(TickerModule));
 	
 	Scene->GetSolver()->EnableAsyncMode(1.0 / TickerModule->GetTickerRate());
@@ -38,9 +41,6 @@ void UFlecsPhysicsModule::InitializeModule(UFlecsWorld* InWorld, const FFlecsEnt
 
 		Scene->GetSolver()->EnableRewindCapture(MaxFrameHistory, true);
 		Scene->GetSolver()->SetThreadingMode_External(Chaos::EThreadingModeTemp::SingleThread);
-		// GetFlecsWorld()->GetWorld()->StartPhysicsTickFunction.bCanEverTick = false;
-		// GetFlecsWorld()->GetWorld()->EndPhysicsTickFunction.bCanEverTick = false;
-		// GetFlecsWorld()->GetWorld()->bShouldSimulatePhysics = false;
 
 		GetFlecsWorld()->AddSingleton<FTickerPhysicsHistoryComponent>();
 		
@@ -50,7 +50,7 @@ void UFlecsPhysicsModule::InitializeModule(UFlecsWorld* InWorld, const FFlecsEnt
 		HistoryComponentPtr->HistoryItems.Reserve(MaxFrameHistory);
 
 		FSolverPostAdvance::FDelegate PostAdvanceDelegate;
-		PostAdvanceDelegate.BindWeakLambda(this, [&](float InDeltaTime)
+		PostAdvanceDelegate.BindWeakLambda(this, [&](MAYBE_UNUSED float InDeltaTime)
 		{
 			FTickerPhysicsHistoryComponent* HistoryComponent = GetFlecsWorld()->GetSingletonPtr<FTickerPhysicsHistoryComponent>();
 			solid_check(HistoryComponent);
@@ -78,59 +78,29 @@ void UFlecsPhysicsModule::InitializeModule(UFlecsWorld* InWorld, const FFlecsEnt
 		});
 
 		Scene->GetSolver()->AddPostAdvanceCallback(PostAdvanceDelegate);
-		
-		/*PhysicsTickSystem = GetFlecsWorld()->CreateSystemWithBuilder
-			<FFlecsTickerComponent, FFlecsPhysicsSceneComponent, FTickerPhysicsHistoryComponent>(TEXT("PhysicsTickSystem"))
-			.cached()
-			.kind(flecs::OnUpdate)
-			.tick_source(GetFlecsWorld()->GetModule<UFlecsTickerModule>()->GetTickerSource())
-			.term_at(0).singleton()
-			.read<FFlecsTickerComponent>()
-			.term_at(1).singleton()
-			.term_at(2).singleton()
-			.write<FTickerPhysicsHistoryComponent>()
-			.each([&](flecs::iter& Iter, MAYBE_UNUSED size_t Index,
-				FFlecsTickerComponent& InTicker, FFlecsPhysicsSceneComponent& InPhysicsScene,
-				FTickerPhysicsHistoryComponent& InHistory)
-			{
-				if UNLIKELY_IF(!InPhysicsScene)
-				{
-					UN_LOG(LogFlecsPhysicsModule, Error, "Physics scene is null");
-					return;
-				}
-				
-				if UNLIKELY_IF(!InPhysicsScene->GetSolver())
-				{
-					UN_LOG(LogFlecsPhysicsModule, Error, "Physics scene solver is null");
-					return;
-				}
-
-				InPhysicsScene->StartFrame();
-				InPhysicsScene->WaitPhysScenes();
-				InPhysicsScene->EndFrame();
-
-				const int32 CurrentPhysicsFrame = Scene->GetSolver()->GetCurrentFrame();
-
-				if LIKELY_IF(InHistory.HistoryItems.Num() >= MaxFrameHistory)
-				{
-					InHistory.HistoryItems.RemoveAt(0, EAllowShrinking::No);
-				}
-
-				FTickerPhysicsHistoryItem CurrentPhysicsFrameItem;
-				CurrentPhysicsFrameItem.TickId = GetFlecsWorld()->GetSingleton<FFlecsTickerComponent>().TickId;
-				CurrentPhysicsFrameItem.PhysicsFrame = CurrentPhysicsFrame;
-
-				InHistory.HistoryItems.Add(CurrentPhysicsFrameItem);
-			});*/
 	}
 
+	AddPhysicsComponentObserver = GetFlecsWorld()->CreateObserver<FFlecsPhysicsComponent,
+		const FFlecsTransformComponent>(TEXT("PhysicsComponentObserver"))
+		.event(flecs::OnAdd)
+		.yield_existing()
+		.term_at(0).read_write()
+		.each([](flecs::iter& It, size_t Index, FFlecsPhysicsComponent& PhysicsComponent,
+			const FFlecsTransformComponent& Transform)
+		{
+			FActorCreationParams Params;
+			Params.bSimulatePhysics = PhysicsComponent.bSimulatePhysics;
+			Params.bEnableGravity = PhysicsComponent.bEnableGravity;
+			Params.bStartAwake = PhysicsComponent.bStartAwake;
+			Params.bUpdateKinematicFromSimulation = PhysicsComponent.bUpdateKinematicFromSimulation;
+			
+			
+		});
 }
 
 void UFlecsPhysicsModule::DeinitializeModule(UFlecsWorld* InWorld)
 {
 	GetFlecsWorld()->RemoveSingleton<FFlecsPhysicsSceneComponent>();
-
-	//PhysicsTickSystem.GetEntity().Destroy();
 
 	if (bAllowResimulation)
 	{

@@ -28,3 +28,6 @@ public:
 	UPROPERTY()
 	TArray<FTickerPhysicsHistoryItem> HistoryItems;
 }; // struct FTickerPhysicsHistoryComponent
+
+REGISTER_FLECS_COMPONENT_PROPERTIES(FTickerPhysicsHistoryComponent,
+	{ flecs::Sparse }, {} )
