@@ -98,8 +98,33 @@ void RuntimeTypes_array_move(void);
 void RuntimeTypes_array_copy(void);
 void RuntimeTypes_vector_lifecycle(void);
 void RuntimeTypes_vector_lifecycle_trivial_type(void);
-void RuntimeTypes_universal_type_tester(void);
 void RuntimeTypes_opaque(void);
+void RuntimeTypes_struct_with_ints(void);
+void RuntimeTypes_struct_with_strings(void);
+void RuntimeTypes_struct_with_opaque(void);
+void RuntimeTypes_nested_struct_with_strings(void);
+void RuntimeTypes_struct_with_array_of_strings(void);
+void RuntimeTypes_struct_with_array_of_array_of_strings(void);
+void RuntimeTypes_struct_with_vector_of_ints(void);
+void RuntimeTypes_struct_with_vector_of_strings(void);
+void RuntimeTypes_nested_struct_with_vector_of_ints(void);
+void RuntimeTypes_nested_struct_with_vector_of_strings(void);
+void RuntimeTypes_array_of_ints(void);
+void RuntimeTypes_array_of_strings(void);
+void RuntimeTypes_array_of_struct_with_ints(void);
+void RuntimeTypes_array_of_struct_with_strings(void);
+void RuntimeTypes_array_of_struct_with_opaques(void);
+void RuntimeTypes_array_of_array_of_strings(void);
+void RuntimeTypes_array_of_array_of_struct_with_strings(void);
+void RuntimeTypes_array_of_vectors_of_ints(void);
+void RuntimeTypes_array_of_vectors_of_strings(void);
+void RuntimeTypes_array_of_opaque(void);
+void RuntimeTypes_vector_of_ints(void);
+void RuntimeTypes_vector_of_strings(void);
+void RuntimeTypes_vector_of_struct_with_ints(void);
+void RuntimeTypes_vector_of_struct_with_strings(void);
+void RuntimeTypes_vector_of_arrays_of_strings(void);
+void RuntimeTypes_vector_of_opaque(void);
 
 // Testsuite 'StructTypes'
 void StructTypes_i32(void);
@@ -1301,12 +1326,112 @@ bake_test_case RuntimeTypes_testcases[] = {
         RuntimeTypes_vector_lifecycle_trivial_type
     },
     {
-        "universal_type_tester",
-        RuntimeTypes_universal_type_tester
-    },
-    {
         "opaque",
         RuntimeTypes_opaque
+    },
+    {
+        "struct_with_ints",
+        RuntimeTypes_struct_with_ints
+    },
+    {
+        "struct_with_strings",
+        RuntimeTypes_struct_with_strings
+    },
+    {
+        "struct_with_opaque",
+        RuntimeTypes_struct_with_opaque
+    },
+    {
+        "nested_struct_with_strings",
+        RuntimeTypes_nested_struct_with_strings
+    },
+    {
+        "struct_with_array_of_strings",
+        RuntimeTypes_struct_with_array_of_strings
+    },
+    {
+        "struct_with_array_of_array_of_strings",
+        RuntimeTypes_struct_with_array_of_array_of_strings
+    },
+    {
+        "struct_with_vector_of_ints",
+        RuntimeTypes_struct_with_vector_of_ints
+    },
+    {
+        "struct_with_vector_of_strings",
+        RuntimeTypes_struct_with_vector_of_strings
+    },
+    {
+        "nested_struct_with_vector_of_ints",
+        RuntimeTypes_nested_struct_with_vector_of_ints
+    },
+    {
+        "nested_struct_with_vector_of_strings",
+        RuntimeTypes_nested_struct_with_vector_of_strings
+    },
+    {
+        "array_of_ints",
+        RuntimeTypes_array_of_ints
+    },
+    {
+        "array_of_strings",
+        RuntimeTypes_array_of_strings
+    },
+    {
+        "array_of_struct_with_ints",
+        RuntimeTypes_array_of_struct_with_ints
+    },
+    {
+        "array_of_struct_with_strings",
+        RuntimeTypes_array_of_struct_with_strings
+    },
+    {
+        "array_of_struct_with_opaques",
+        RuntimeTypes_array_of_struct_with_opaques
+    },
+    {
+        "array_of_array_of_strings",
+        RuntimeTypes_array_of_array_of_strings
+    },
+    {
+        "array_of_array_of_struct_with_strings",
+        RuntimeTypes_array_of_array_of_struct_with_strings
+    },
+    {
+        "array_of_vectors_of_ints",
+        RuntimeTypes_array_of_vectors_of_ints
+    },
+    {
+        "array_of_vectors_of_strings",
+        RuntimeTypes_array_of_vectors_of_strings
+    },
+    {
+        "array_of_opaque",
+        RuntimeTypes_array_of_opaque
+    },
+    {
+        "vector_of_ints",
+        RuntimeTypes_vector_of_ints
+    },
+    {
+        "vector_of_strings",
+        RuntimeTypes_vector_of_strings
+    },
+    {
+        "vector_of_struct_with_ints",
+        RuntimeTypes_vector_of_struct_with_ints
+    },
+    {
+        "vector_of_struct_with_strings",
+        RuntimeTypes_vector_of_struct_with_strings
+    },
+    {
+        "vector_of_arrays_of_strings",
+        RuntimeTypes_vector_of_arrays_of_strings
+    },
+    {
+        "vector_of_opaque",
+        RuntimeTypes_vector_of_opaque
     }
 };
 
@@ -4680,7 +4805,7 @@ static bake_test_suite suites[] = {
         "RuntimeTypes",
         NULL,
         NULL,
-        14,
+        39,
         RuntimeTypes_testcases
     },
     {

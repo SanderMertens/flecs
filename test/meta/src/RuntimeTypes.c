@@ -5,7 +5,8 @@
     (((uint32_t) (x)) + ((uint32_t) (x) << 8) + ((uint32_t) (x) << 16) + \
      ((uint32_t) (x) << 24))
 
-bool is_memory_filled_with(const void *ptr, size_t size, unsigned char byte) {
+static bool is_memory_filled_with(const void *ptr, size_t size,
+                                  unsigned char byte) {
     const unsigned char *byte_ptr = (const unsigned char *) ptr;
 
     for (size_t i = 0; i < size; i++) {
@@ -16,6 +17,12 @@ bool is_memory_filled_with(const void *ptr, size_t size, unsigned char byte) {
 
     return true;
 }
+
+static bool memory_is_zero(const void *ptr, size_t size) {
+    return is_memory_filled_with(ptr, size, 0);
+}
+
+#define test_memory_zero(ptr, size) test_assert(memory_is_zero((ptr), (size)))
 
 /* Test hooks for runtime trivial structs
    These structs have no special copy/move/dtor logic and are zero-initialized
@@ -430,7 +437,7 @@ bool resource_id_available(int id) {
 }
 
 /* Returns the numer of currently available resources */
-int available_resource_count() { return ecs_vec_count(&resource_ids); }
+int resources_left() { return ecs_vec_count(&resource_ids); }
 
 /* Define a ResourceHandle constructor that sets the payload value to 0 and
  * obtains a unique resource id: */
@@ -561,7 +568,7 @@ void RuntimeTypes_array_ctor(void) {
 
     /* create some "resources" */
     initialize_resource_ids(10);
-    test_int(10, available_resource_count());
+    test_int(10, resources_left());
 
     /* Define the Resource with only a constructor hook. */
     define_resource_handle(world, true, false, false, false);
@@ -585,7 +592,7 @@ void RuntimeTypes_array_ctor(void) {
     ecs_entity_t e = ecs_new(world);
     ecs_add_id(world, e, arr_of_resources);
     test_int(7,
-             available_resource_count()); /* 3 resources were used out of 10,
+             resources_left()); /* 3 resources were used out of 10,
                                              since the array has a size of 3 */
 
     ecs_fini(world);
@@ -624,7 +631,7 @@ void RuntimeTypes_array_dtor(void) {
     /* Test that the set dtor hook is indeed working. */
     ecs_entity_t e = ecs_new(world);
     ecs_add_id(world, e, arr_of_resources);
-    test_int(10, available_resource_count()); /* since no special ctor is
+    test_int(10, resources_left()); /* since no special ctor is
        defined, it won't pick up resources from the pool, and it stays the same.
 
        The default constructor should've set the whole array to zero: */
@@ -642,7 +649,7 @@ void RuntimeTypes_array_dtor(void) {
        component, invoking the destructors
 
        check that made-up resources are now in the pool: */
-    test_int(13, available_resource_count());
+    test_int(13, resources_left());
     test_assert(resource_id_available(100));
     test_assert(resource_id_available(200));
     test_assert(resource_id_available(300));
@@ -651,8 +658,20 @@ void RuntimeTypes_array_dtor(void) {
     free_resource_ids();
 }
 
+/* compares two resource handles */
 static bool resource_handle_compare(ecs_world_t *world, void *a, void *b,
-                                    int32_t count, const ecs_type_info_t *ti);
+                                    int32_t count, const ecs_type_info_t *ti) {
+    for (int j = 0; j < count; j++) {
+        const ResourceHandle *ra =
+            (const ResourceHandle *) ECS_ELEM(a, ti->size, j);
+        const ResourceHandle *rb =
+            (const ResourceHandle *) ECS_ELEM(b, ti->size, j);
+        if (ra->value != rb->value) {
+            return false;
+        }
+    }
+    return true;
+}
 
 /* Tests that if on the array's underlying type only a move hook is defined,
    only a move hook is defined for the array itself. Tests that the specified
@@ -687,7 +706,7 @@ void RuntimeTypes_array_move(void) {
     /* Test that the set move hook is indeed working. */
     ecs_entity_t e = ecs_new(world);
     ecs_add_id(world, e, arr_of_resources);
-    test_int(10, available_resource_count()); /* since no special ctor is
+    test_int(10, resources_left()); /* since no special ctor is
        defined, it won't pick up resources from the pool, and it stays the same.
 
        The default constructor should've set the whole array to zero: */
@@ -717,13 +736,13 @@ void RuntimeTypes_array_move(void) {
         world, &(ResourceHandle){.id = 300, .value = 333}, &handles[2], 1,
         rh_ti));
 
-    test_int(10, available_resource_count()); /* pool stays the same */
+    test_int(10, resources_left()); /* pool stays the same */
 
     ecs_delete(world, e);
 
     /* since no special destructor is defined, the resources 100,200,300 are not
      * returned to the pool: */
-    test_int(10, available_resource_count());
+    test_int(10, resources_left());
     test_assert(!resource_id_available(100));
     test_assert(!resource_id_available(200));
     test_assert(!resource_id_available(300));
@@ -740,7 +759,7 @@ void RuntimeTypes_array_copy(void) {
 
     /* create some "resources" */
     initialize_resource_ids(10);
-    test_int(10, available_resource_count());
+    test_int(10, resources_left());
 
     /* Define the Resource with only a move hook. */
     define_resource_handle(world, false, false, false, true);
@@ -766,7 +785,7 @@ void RuntimeTypes_array_copy(void) {
     /* Test that the set copy hook is indeed working. */
     ecs_entity_t prefab = ecs_new(world);
     ecs_add_id(world, prefab, arr_of_resources);
-    test_int(10, available_resource_count()); /* since no special ctor is
+    test_int(10, resources_left()); /* since no special ctor is
        defined, it won't pick up resources from the pool, and it stays the same.
 
        The default constructor should've set the whole array to zero: */
@@ -782,7 +801,7 @@ void RuntimeTypes_array_copy(void) {
 
     /* Instantiate a prefab to trigger a copy: */
     ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, prefab);
-    test_int(7, available_resource_count()); /* should've taken 3 resources from
+    test_int(7, resources_left()); /* should've taken 3 resources from
                                                 the pool */
 
     ResourceHandle *handles =
@@ -797,7 +816,7 @@ void RuntimeTypes_array_copy(void) {
                                         1, rh_ti));
 
     ecs_delete(world, e);
-    test_int(7, available_resource_count()); /* resources not returned since we
+    test_int(7, resources_left()); /* resources not returned since we
                                                 did not hook a destructor */
 
     ecs_fini(world);
@@ -811,7 +830,7 @@ void RuntimeTypes_vector_lifecycle(void) {
     /* create some "resources" */
     int initial_resources = 10;
     initialize_resource_ids(initial_resources);
-    test_int(10, available_resource_count());
+    test_int(10, resources_left());
 
     define_resource_handle(world, true, true, true, true);
 
@@ -837,32 +856,31 @@ void RuntimeTypes_vector_lifecycle(void) {
     test_assert(v->array == NULL);
     test_assert(v->count == 0);
     test_int(initial_resources,
-             available_resource_count()); /* still have 10 resources since
+             resources_left()); /* still have 10 resources since
 vector is empty
 
 manually add some items to the vector. These must be constructed by hand: */
     ecs_vec_set_count_t(NULL, v, ResourceHandle, 3);
     ResourceHandle_ctor(ecs_vec_first(v), 3, NULL);
-    test_int(initial_resources - 3, available_resource_count()); /* Used up 3
+    test_int(initial_resources - 3, resources_left()); /* Used up 3
        resources that are now in the vector
 
        test vector copy assign by instantiating the prefab */
     ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, prefab);
-    test_int(initial_resources - 6, available_resource_count()); /* Used up 3
+    test_int(initial_resources - 6, resources_left()); /* Used up 3
        more resources after copying the vector
 
        test vector move assign by forcing a move via archetype change: */
     ecs_add_id(world, e, ecs_new(world));
     test_int(initial_resources - 6,
-             available_resource_count()); /* No more resources consumed */
+             resources_left()); /* No more resources consumed */
 
     ecs_delete(world, e);
-    test_int(initial_resources - 3,
-             available_resource_count()); /* Frees 3 resources held by the
-                                             instance */
+    test_int(initial_resources - 3, resources_left()); /* Frees 3 resources held
+                                                          by the instance */
 
     ecs_delete(world, prefab);
-    test_int(initial_resources, available_resource_count()); /* Frees another 3
+    test_int(initial_resources, resources_left()); /* Frees another 3
        resources held by the prefab
 
        check if all resources were returned: */
@@ -971,519 +989,2060 @@ void RuntimeTypes_opaque(void) {
     ecs_fini(world);
 }
 
-/*
-
-RTT universal type tester
-
-The following code runs tests on any run-time type. It has the following
-elements:
-
-* Universal comparer that takes two type instances and determines if they
-contain the same data, taking into account if these are arrays, structs, vectors
-or primitive types.
-* Comparer function registry for comparing special types like strings
-* Universal initializer that takes a component instance and fills it with test
-data, for testing purposes
-* Initializer function registry for initializing special types like strings
-* The RTT tester itself that runs the same test for each type.
-* The test function where all types under test (tuts) are defined.
-
-*/
-
-/* Comparison function pointer interface. Returns true if all `count` elements
- * are equal */
-typedef bool (*comparer)(ecs_world_t *world, const void *a, const void *b,
-                         int32_t count, const ecs_type_info_t *ti);
-
-/* comprarer map registry allows to register a comparison function for specific
- * types */
-ecs_map_t comparer_map; /* map of ecs_entity_t -> comparer */
-
-/* Compares two component instances
-   returns true if both instances are the same according to the comparer
-   functions registered for each type. if no comparison function is registered,
-   it will do a memory comparison */
-bool compare(ecs_world_t *world, const void *a, const void *b, int32_t count,
-             const ecs_type_info_t *ti) {
-    const EcsType *type = ecs_get(world, ti->component, EcsType);
-
-    if (type) {
-        if (type->kind == EcsStructType) {
-            const EcsStruct *struct_info =
-                ecs_get(world, ti->component, EcsStruct);
-            ecs_assert(struct_info != NULL, ECS_INTERNAL_ERROR, NULL);
-            for (int j = 0; j < count; j++) {
-                const void *element_a = ECS_ELEM(a, ti->size, j);
-                const void *element_b = ECS_ELEM(b, ti->size, j);
-                for (int i = 0; i < ecs_vec_count(&struct_info->members); i++) {
-                    ecs_member_t *m =
-                        ecs_vec_get_t(&struct_info->members, ecs_member_t, i);
-                    const ecs_type_info_t *member_ti =
-                        ecs_get_type_info(world, m->type);
-                    if (!compare(world, ECS_OFFSET(element_a, m->offset),
-                                 ECS_OFFSET(element_b, m->offset), m->count,
-                                 member_ti)) {
-                        return false;
-                    }
-                }
-            }
-            return true;
-        } else if (type->kind == EcsArrayType) {
-            const EcsArray *array_info =
-                ecs_get(world, ti->component, EcsArray);
-            ecs_assert(array_info != NULL, ECS_INTERNAL_ERROR, NULL);
-            const ecs_type_info_t *array_ti =
-                ecs_get_type_info(world, array_info->type);
-            for (int j = 0; j < count; j++) {
-                const void *element_a = ECS_ELEM(a, ti->size, j);
-                const void *element_b = ECS_ELEM(b, ti->size, j);
-                if (!compare(world, element_a, element_b, array_info->count,
-                             array_ti)) {
-                    return false;
-                }
-            }
-            return true;
-        } else if (type->kind == EcsVectorType) {
-            const EcsVector *vector_info =
-                ecs_get(world, ti->component, EcsVector);
-            ecs_assert(vector_info != NULL, ECS_INTERNAL_ERROR, NULL);
-            const ecs_type_info_t *vector_ti =
-                ecs_get_type_info(world, vector_info->type);
-            for (int j = 0; j < count; j++) {
-                const void *element_a = ECS_ELEM(a, ti->size, j);
-                const void *element_b = ECS_ELEM(b, ti->size, j);
-                ecs_vec_t *va = (ecs_vec_t *) element_a;
-                ecs_vec_t *vb = (ecs_vec_t *) element_b;
-                int32_t vector_count = ecs_vec_count(va);
-                if (vector_count != ecs_vec_count(vb)) {
-                    return false;
-                }
-                if (!compare(world, ecs_vec_first(va), ecs_vec_first(vb),
-                             vector_count, vector_ti)) {
-                    return false;
-                }
-            }
-            return true;
+/* Helper function used in the tests below to invoke a type's registered
+ * constructor, if any, when adding items to vectors */
+static void invoke_type_ctor(ecs_world_t *world, void *ptr, int32_t count,
+                             ecs_entity_t component) {
+    const ecs_type_info_t *ti = ecs_get_type_info(world, component);
+    if (ti) {
+        if (ti->hooks.ctor) {
+            ti->hooks.ctor(ptr, count, ti);
+        } else {
+            ecs_os_memset(ptr, 0, ti->size * count);
         }
     }
-
-    ecs_map_val_t *comp_ptr = ecs_map_get(&comparer_map, ti->component);
-    if (comp_ptr) {
-        comparer comp = (comparer) (uintptr_t) (*comp_ptr);
-        return comp(world, a, b, count, ti);
-    }
-
-    return 0 == ecs_os_memcmp(a, b, ti->size * count);
 }
 
-/* Initializer function pointer. */
-typedef void (*initializer)(ecs_world_t *world, void *ptr, int32_t count,
-                            const ecs_type_info_t *ti);
+/* Test RTT combinations */
+void RuntimeTypes_struct_with_ints(void) {
+    ecs_world_t *world = ecs_init();
 
-/* Allows to register an initializer with test data for the given type */
-ecs_map_t initializer_map; /* map of ecs_entity_t -> initializer */
+    typedef struct {
+        ecs_i32_t a;
+        ecs_i32_t b;
+    } StructWithInts;
+    ecs_entity_t struct_with_ints =
+        ecs_struct(world, {.members = {
+                               {"a", ecs_id(ecs_i32_t)},
+                               {"b", ecs_id(ecs_i32_t)},
+                           }});
 
-/* Initializes the given component instance with test data according to the test
-   data initializers registered for each type. If no initializer is registered,
-   it leaves what the component's registered constructor already did, which
-   could be zeroed memory if no constructor was defined. */
-static void initialize(ecs_world_t *world, void *ptr, int32_t count,
-                       const ecs_type_info_t *ti) {
-    const EcsType *type = ecs_get(world, ti->component, EcsType);
-
-    if (type) {
-        if (type->kind == EcsStructType) {
-            const EcsStruct *struct_info =
-                ecs_get(world, ti->component, EcsStruct);
-            ecs_assert(struct_info != NULL, ECS_INTERNAL_ERROR, NULL);
-            for (int j = 0; j < count; j++) {
-                void *element = ECS_ELEM(ptr, ti->size, j);
-                for (int i = 0; i < ecs_vec_count(&struct_info->members); i++) {
-                    ecs_member_t *m =
-                        ecs_vec_get_t(&struct_info->members, ecs_member_t, i);
-                    const ecs_type_info_t *member_ti =
-                        ecs_get_type_info(world, m->type);
-                    initialize(world, ECS_OFFSET(element, m->offset), m->count,
-                               member_ti);
-                }
-            }
-            return;
-        }
-        if (type->kind == EcsArrayType) {
-            const EcsArray *array_info =
-                ecs_get(world, ti->component, EcsArray);
-            ecs_assert(array_info != NULL, ECS_INTERNAL_ERROR, NULL);
-            const ecs_type_info_t *array_ti =
-                ecs_get_type_info(world, array_info->type);
-            for (int j = 0; j < count; j++) {
-                void *element = ECS_ELEM(ptr, ti->size, j);
-                initialize(world, element, array_info->count, array_ti);
-            }
-            return;
-        }
-        if (type->kind == EcsVectorType) {
-            const EcsVector *vector_info =
-                ecs_get(world, ti->component, EcsVector);
-            ecs_assert(vector_info != NULL, ECS_INTERNAL_ERROR, NULL);
-            const ecs_type_info_t *vector_ti =
-                ecs_get_type_info(world, vector_info->type);
-            for (int j = 0; j < count; j++) {
-                const void *element = ECS_ELEM(ptr, ti->size, j);
-                ecs_vec_t *v = (ecs_vec_t *) element;
-                /* arbitrarly size the vector to have 3 items: */
-                ecs_vec_set_count(NULL, v, vector_ti->size, 3);
-                void *vec_first = ecs_vec_first(v);
-                int32_t vec_count = ecs_vec_count(v);
-                if (vector_ti->hooks.ctor) {
-                    vector_ti->hooks.ctor(vec_first, vec_count, vector_ti);
-                } else {
-                    flecs_default_ctor(vec_first, vec_count, vector_ti);
-                }
-                initialize(world, vec_first, vec_count, vector_ti);
-            }
-            return;
-        }
+    /* Test constructor: */
+    ecs_entity_t e = ecs_new(world);
+    {
+        StructWithInts *ptr = ecs_ensure_id(world, e, struct_with_ints);
+        test_memory_zero(ptr, sizeof(StructWithInts));
+        ptr->a = 100;
+        ptr->b = 101;
     }
 
-    ecs_map_val_t *init_ptr = ecs_map_get(&initializer_map, ti->component);
-    if (init_ptr) {
-        initializer init = (initializer) (uintptr_t) (*init_ptr);
-        init(world, ptr, count, ti);
+    /* Test copying: */
+    ecs_entity_t instance = ecs_clone(world, 0, e, true);
+    {
+        const StructWithInts *ptr =
+            ecs_get_id(world, instance, struct_with_ints);
+        test_int(100, ptr->a);
+        test_int(101, ptr->b);
     }
-    /* do nothing (leave to what the component's ctor did) */
-}
 
-/* Initializes an int type with test data */
-static void int_initialize(ecs_world_t *world, void *ptr, int32_t count,
-                           const ecs_type_info_t *ti) {
-    for (int j = 0; j < count; j++) {
-        int *element = (int *) ECS_ELEM(ptr, ti->size, j);
-        *element = 100 + j;
+    /* Test moving by forcing an archetype change: */
+    ECS_TAG(world, MakeMeMove);
+    ecs_add(world, e, MakeMeMove);
+    {
+        const StructWithInts *ptr =
+            ecs_get_id(world, instance, struct_with_ints);
+        test_int(100, ptr->a);
+        test_int(101, ptr->b);
     }
-}
 
-/* Initializes a string type with test data */
-static void string_initialize(ecs_world_t *world, void *ptr, int32_t count,
-                              const ecs_type_info_t *ti) {
-    for (int j = 0; j < count; j++) {
-        char **element = (char **) ECS_ELEM(ptr, ti->size, j);
-        char buf[100];
-        ecs_os_snprintf(buf, sizeof(buf), "String%d", j);
-        *element = ecs_os_strdup(buf);
-    }
-}
-
-/* Compares two string component instances */
-static bool string_compare(ecs_world_t *world, void *a, void *b, int32_t count,
-                           const ecs_type_info_t *ti) {
-    for (int j = 0; j < count; j++) {
-        const char **st_a = (const char **) ECS_ELEM(a, ti->size, j);
-        const char **st_b = (const char **) ECS_ELEM(b, ti->size, j);
-        if (*st_a == *st_b) {
-            continue;
-        }
-        if (*st_a == NULL || *st_b == NULL) {
-            return false;
-        }
-        if (0 != strcmp(*st_a, *st_b)) {
-            return false;
-        }
-    }
-    return true;
-}
-
-/* Initializes a resource handle type with test data */
-static void resource_handle_initialize(ecs_world_t *world, void *ptr,
-                                       int32_t count,
-                                       const ecs_type_info_t *ti) {
-    for (int j = 0; j < count; j++) {
-        ResourceHandle *rh = (ResourceHandle *) ECS_ELEM(ptr, ti->size, j);
-        rh->value = 200 + j;
-    }
-}
-
-/* compares two resource handles */
-static bool resource_handle_compare(ecs_world_t *world, void *a, void *b,
-                                    int32_t count, const ecs_type_info_t *ti) {
-    for (int j = 0; j < count; j++) {
-        const ResourceHandle *ra =
-            (const ResourceHandle *) ECS_ELEM(a, ti->size, j);
-        const ResourceHandle *rb =
-            (const ResourceHandle *) ECS_ELEM(b, ti->size, j);
-        if (ra->value != rb->value) {
-            return false;
-        }
-    }
-    return true;
-}
-
-/* Asserts the condition showing a helpful message in case it fails */
-static void test_assert_fmt(bool condition, const char *fmt, ...) {
-    if (!condition) {
-        va_list args;
-        va_start(args, fmt);
-        vprintf(fmt, args);
-        va_end(args);
-        test_assert(false);
-    }
-}
-
-/* Asserts equality of two ints showing a helpful message in case it fails */
-static void test_int_fmt(int expected, int actual, const char *fmt, ...) {
-    if (expected != actual) {
-        va_list args;
-        va_start(args, fmt);
-        vprintf(fmt, args);
-        va_end(args);
-        test_assert(false);
-    }
-}
-
-/* Asserts expected resource usage showing a helpful message in case it fails */
-static void test_resource_usage(int32_t initial, int32_t expected_usage,
-                                const char *tut_name, const char *action) {
-    test_int_fmt(initial - expected_usage, available_resource_count(),
-                 "When testing %s after %s, expected resource usage is %d, "
-                 "however %d resources were used.\n",
-                 tut_name, action, expected_usage,
-                 initial - available_resource_count());
-}
-
-/* Component used to mark an entity as a type under test (tut) and also indicate
- * how many "test resources" is expected to consume during the test */
-typedef struct TestTypeInfo {
-    int resources;
-} TestTypeInfo;
-
-/* Applies a test to a runtime type. Constructs the type, copies the type
- * instantiating a prefab, forces a move with an archetype change and then
- * destroys it, verifying the data matches in all steps and that resources are
- * consumed / returned properly and in the right amount. */
-static void test_runtime_type(ecs_world_t *world, ecs_entity_t tut) {
-    ECS_COMPONENT(world, TestTypeInfo);
-    const ecs_type_info_t *ti = ecs_get_type_info(world, tut);
-    const char *tut_name = ecs_get_name(world, tut);
-    int resources_required = ecs_get(world, tut, TestTypeInfo)->resources;
-    ecs_entity_t prefab = ecs_new(world);
-
-    int32_t initial_resources = ecs_vec_count(&resource_ids);
-    ecs_add_id(world, prefab, tut);
-    void *prefab_data = ecs_get_mut_id(world, prefab, tut);
-    initialize(world, prefab_data, 1, ti);
-    test_resource_usage(initial_resources, resources_required, tut_name,
-                        "creating prefab");
-
-    /* now instantiate this prefab to trigger a copy */
-    ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, prefab);
-    test_resource_usage(initial_resources, resources_required * 2, tut_name,
-                        "instancing prefab");
-
-    const void *instance_data = ecs_get_id(world, e, tut);
-
-    test_assert_fmt(
-        compare(world, prefab_data, instance_data, 1, ti),
-        "When testing %s, prefab data did not match with instance data\n",
-        tut_name);
-
-    ecs_entity_t changer = ecs_new(world);
-    /* add another entity to have `e` change archetypes and trigger a move: */
-    ecs_add_id(world, e, changer);
-    test_resource_usage(initial_resources, resources_required * 2, tut_name,
-                        "moving instance");
-
-    const void *instance_data2 = ecs_get_id(world, e, tut);
-    test_assert(instance_data != instance_data2);
-
-    test_assert_fmt(compare(world, prefab_data, instance_data2, 1, ti),
-                    "When testing %s, prefab data did not match with instance "
-                    "data after move\n",
-                    tut_name);
-
+    /* Test deleting: */
     ecs_delete(world, e);
-    test_resource_usage(initial_resources, resources_required, tut_name,
-                        "destroying instance");
+    ecs_delete(world, instance);
 
-    ecs_delete(world, prefab);
-    test_resource_usage(initial_resources, 0, tut_name, "destroying prefab");
+    ecs_fini(world);
+}
 
-    ecs_delete(world, changer);
+void RuntimeTypes_struct_with_strings(void) {
+    ecs_world_t *world = ecs_init();
 
-    /* check if all resources were returned: */
-    for (int i = 0; i < initial_resources; i++) {
-        test_assert_fmt(resource_id_available(i + 1),
-                        "When testing %s, could not find resource with id %d, "
-                        "it should have been returned by destructors\n",
-                        tut_name, i + 1);
+    typedef struct {
+        ecs_string_t a;
+        ecs_i32_t b;
+        ecs_string_t c;
+    } StructWithStrings;
+    ecs_entity_t struct_with_strings =
+        ecs_struct(world, {.members = {
+                               {"a", ecs_id(ecs_string_t)},
+                               {"b", ecs_id(ecs_i32_t)},
+                               {"c", ecs_id(ecs_string_t)},
+                           }});
+
+    /* Test constructor: */
+    ecs_entity_t e = ecs_new(world);
+    {
+        StructWithStrings *ptr = ecs_ensure_id(world, e, struct_with_strings);
+        test_memory_zero(ptr, sizeof(StructWithStrings));
+        ptr->a = ecs_os_strdup("String100");
+        ptr->b = 101;
+        ptr->c = ecs_os_strdup("String102");
     }
+
+    /* Test copying: */
+    ecs_entity_t instance = ecs_clone(world, 0, e, true);
+    {
+        const StructWithStrings *ptr =
+            ecs_get_id(world, instance, struct_with_strings);
+        test_str("String100", ptr->a);
+        test_int(101, ptr->b);
+        test_str("String102", ptr->c);
+    }
+
+    /* Test moving by forcing an archetype change: */
+    ECS_TAG(world, MakeMeMove);
+    ecs_add(world, e, MakeMeMove);
+    {
+        const StructWithStrings *ptr =
+            ecs_get_id(world, instance, struct_with_strings);
+        test_str("String100", ptr->a);
+        test_int(101, ptr->b);
+        test_str("String102", ptr->c);
+    }
+
+    /* Test deleting: */
+    ecs_delete(world, e);
+    ecs_delete(world, instance);
+
+    ecs_fini(world);
 }
 
-/* Creates a test entity with a name and expected test resource usage */
-ecs_entity_t test_entity(ecs_world_t *world, int resources, const char *name) {
-    ECS_COMPONENT(world, TestTypeInfo);
-    ecs_entity_t tut = ecs_new(world);
-    ecs_ensure(world, tut, TestTypeInfo)->resources = resources;
-    ecs_set_name(world, tut, name);
-    return tut;
-}
+void RuntimeTypes_struct_with_opaque(void) {
+    ecs_world_t *world = ecs_init();
 
-/*
-Define all Types under Test inside this function. When using `test_entity()` to
-create the entity, the tut is marked so it can be found later to run tests on
-it.
-*/
-void define_types_under_test(ecs_world_t *world) {
     ecs_entity_t resource_handle_opaque = define_ResourceHandle_opaque(world);
 
-    /* Register comparers for special types */
-    ecs_map_insert(&comparer_map, ecs_id(ecs_string_t),
-                   (ecs_map_val_t) (uintptr_t) string_compare);
-    ecs_map_insert(&comparer_map, resource_handle_opaque,
-                   (ecs_map_val_t) (uintptr_t) resource_handle_compare);
+    typedef struct {
+        ResourceHandle a;
+    } StructWithOpaque;
+    ecs_entity_t struct_with_opaque =
+        ecs_struct(world, {.members = {
+                               {"a", resource_handle_opaque},
+                           }});
 
-    /* Register initializers for special types */
-    ecs_map_insert(&initializer_map, ecs_id(ecs_string_t),
-                   (ecs_map_val_t) (uintptr_t) string_initialize);
-    ecs_map_insert(&initializer_map, ecs_id(ecs_i32_t),
-                   (ecs_map_val_t) (uintptr_t) int_initialize);
-    ecs_map_insert(&initializer_map, resource_handle_opaque,
-                   (ecs_map_val_t) (uintptr_t) resource_handle_initialize);
+    /* struct_with_opaque will consume 1 test resources per instance */
+    const int initial_resources = 4;
+    initialize_resource_ids(initial_resources);
 
-    /* Actually define the tuts below: */
+    /* Test constructor: */
+    ecs_entity_t e = ecs_new(world);
+    {
+        StructWithOpaque *ptr = ecs_ensure_id(world, e, struct_with_opaque);
+        test_assert(ptr->a.id != 0);
+        test_int(0, ptr->a.value);
+        ptr->a.value = 100;
+    }
+    /* 1 resource(s) should have been used */
+    test_int(1, initial_resources - resources_left());
 
-    ecs_entity_t struct_with_strings = ecs_struct(
-        world, {.entity = test_entity(world, 0, "struct_with_strings"),
-                .members = {{.name = "a", .type = ecs_id(ecs_string_t)},
-                            {.name = "b", .type = ecs_id(ecs_string_t)}}});
+    /* Test copying: */
+    ecs_entity_t instance = ecs_clone(world, 0, e, true);
+    {
+        const StructWithOpaque *ptr =
+            ecs_get_id(world, instance, struct_with_opaque);
+        test_int(100, ptr->a.value);
+    }
+    /* 2 resource(s) should be in use now */
+    test_int(2, initial_resources - resources_left());
 
-    ecs_struct(world,
-               {.entity = test_entity(world, 0, "nested_struct_with_strings"),
-                .members = {{.name = "a", .type = struct_with_strings},
-                            {.name = "b", .type = ecs_id(ecs_i32_t)},
-                            {.name = "c", .type = struct_with_strings}}});
+    /* Test moving by forcing an archetype change: */
+    ECS_TAG(world, MakeMeMove);
+    ecs_add(world, e, MakeMeMove);
+    {
+        const StructWithOpaque *ptr =
+            ecs_get_id(world, instance, struct_with_opaque);
+        test_int(100, ptr->a.value);
+    }
+    /* 2 resource(s) should still be in use after a move */
+    test_int(2, initial_resources - resources_left());
 
-    ecs_entity_t array_of_strings =
-        ecs_array(world, {.entity = test_entity(world, 0, "array_of_strings"),
-                          .type = ecs_id(ecs_string_t),
-                          .count = 3});
+    /* Test deleting: */
+    ecs_delete(world, e);
 
-    ecs_struct(world,
-               {.entity = test_entity(world, 0, "struct_with_array_of_strings"),
-                .members = {{.name = "a", .type = array_of_strings},
-                            {.name = "b", .type = ecs_id(ecs_i32_t)}}});
+    /* After destroying one of the entities, only 1 resource(s) should be in use
+     */
+    test_int(1, initial_resources - resources_left());
+    ecs_delete(world, instance);
 
-    ecs_struct(world,
-               {.entity = test_entity(world, 1, "struct_with_opaque"),
-                .members = {{.name = "a", .type = resource_handle_opaque}}});
-
-    ecs_entity_t vector_of_ints =
-        ecs_vector(world, {.entity = test_entity(world, 0, "vector_of_ints"),
-                           .type = ecs_id(ecs_i32_t)});
-
-    ecs_struct(world,
-               {.entity = test_entity(world, 0, "struct_with_vector_of_ints"),
-                .members = {{.name = "a", .type = vector_of_ints}}});
-
-    ecs_entity_t vector_of_strings =
-        ecs_vector(world, {.entity = test_entity(world, 0, "vector_of_strings"),
-                           .type = ecs_id(ecs_string_t)});
-
-    ecs_struct(world, {.entity = test_entity(world, 0,
-                                             "struct_with_vector_of_strings"),
-                       .members = {{.name = "a", .type = vector_of_strings}}});
-
-    ecs_struct(
-        world,
-        {.entity = test_entity(world, 0, "nested_struct_with_vector_of_ints"),
-         .members = {
-             {.name = "a", .type = vector_of_ints},
-             {.name = "b", .type = ecs_id(ecs_i32_t)},
-             {.name = "c",
-              .type = ecs_struct(
-                  world,
-                  {.members = {{.name = "a", .type = vector_of_ints},
-                               {.name = "b", .type = ecs_id(ecs_i32_t)},
-                               {.name = "c", .type = vector_of_ints}}})}}});
-
-    ecs_struct(
-        world,
-        {.entity =
-             test_entity(world, 0, "nested_struct_with_vector_of_strings"),
-         .members = {
-             {.name = "a", .type = vector_of_strings},
-             {.name = "b", .type = ecs_id(ecs_i32_t)},
-             {.name = "c",
-              .type = ecs_struct(
-                  world,
-                  {.members = {{.name = "a", .type = vector_of_strings},
-                               {.name = "b", .type = ecs_id(ecs_i32_t)},
-                               {.name = "c", .type = vector_of_strings}}})}}});
-
-    ecs_entity_t array_of_struct_with_strings = ecs_array(
-        world, {.entity = test_entity(world, 0, "array_of_struct_with_strings"),
-                .type = struct_with_strings,
-                .count = 3});
-
-    ecs_array(world,
-              {.entity = test_entity(world, 0, "array_of_array_of_strings"),
-               .type = array_of_strings,
-               .count = 3});
-
-    ecs_array(world, {.entity = test_entity(
-                          world, 0, "array_of_array_of_struct_with_strings"),
-                      .type = array_of_struct_with_strings,
-                      .count = 3});
-
-    ecs_array(world,
-              {.entity = test_entity(world, 0, "array_of_vectors_of_ints"),
-               .type = vector_of_ints,
-               .count = 3});
-
-    ecs_array(world,
-              {.entity = test_entity(world, 0, "array_of_vectors_of_strings"),
-               .type = vector_of_strings,
-               .count = 3});
-
-    ecs_array(world, {.entity = test_entity(world, 3, "array_of_opaque"),
-                      .type = resource_handle_opaque,
-                      .count = 3});
-
-    ecs_vector(world, {.entity = test_entity(world, 0,
-                                             "vector_of_structs_with_strings"),
-                       .type = struct_with_strings});
-
-    ecs_vector(world,
-               {.entity = test_entity(world, 0, "vector_of_arrays_of_strings"),
-                .type = array_of_strings});
-
-    ecs_vector(world, {.entity = test_entity(world, 3, "vector_of_opaque"),
-                       .type = resource_handle_opaque});
+    /* check if all 2 test resources were returned and exactly all resource ids
+     * are back: */
+    test_int(initial_resources, resources_left());
+    int i;
+    for (i = 1; i <= initial_resources; i++) {
+        test_assert(resource_id_available(i));
+    }
+    ecs_fini(world);
+    free_resource_ids();
 }
 
-/* Actual universal type tester */
-void RuntimeTypes_universal_type_tester(void) {
+void RuntimeTypes_nested_struct_with_strings(void) {
     ecs_world_t *world = ecs_init();
-    ECS_COMPONENT(world, TestTypeInfo);
 
-    /* create some "resources" */
-    const int initial_resources = 50;
-    initialize_resource_ids(initial_resources);
-    ecs_map_init(&comparer_map, NULL);
-    ecs_map_init(&initializer_map, NULL);
+    typedef struct {
+        ecs_string_t a;
+        ecs_i32_t b;
+        ecs_string_t c;
+    } StructWithStrings;
+    ecs_entity_t struct_with_strings =
+        ecs_struct(world, {.members = {
+                               {"a", ecs_id(ecs_string_t)},
+                               {"b", ecs_id(ecs_i32_t)},
+                               {"c", ecs_id(ecs_string_t)},
+                           }});
 
-    define_types_under_test(world);
+    typedef struct {
+        StructWithStrings a;
+        ecs_i32_t b;
+        StructWithStrings c;
+    } NestedStructWithStrings;
+    ecs_entity_t nested_struct_with_strings =
+        ecs_struct(world, {.members = {
+                               {"a", struct_with_strings},
+                               {"b", ecs_id(ecs_i32_t)},
+                               {"c", struct_with_strings},
+                           }});
 
-    /* This query finds all tuts and runs tests on them */
-    ecs_query_t *q = ecs_query(world, {.terms = {{ecs_id(TestTypeInfo)}}});
-    ecs_iter_t it = ecs_query_iter(world, q);
-    while (ecs_query_next(&it)) {
-        for (int i = 0; i < it.count; i++) {
-            test_runtime_type(world, it.entities[i]);
+    /* Test constructor: */
+    ecs_entity_t e = ecs_new(world);
+    {
+        NestedStructWithStrings *ptr =
+            ecs_ensure_id(world, e, nested_struct_with_strings);
+        test_memory_zero(ptr, sizeof(NestedStructWithStrings));
+        ptr->a.a = ecs_os_strdup("String100");
+        ptr->a.b = 101;
+        ptr->a.c = ecs_os_strdup("String102");
+        ptr->b = 103;
+        ptr->c.a = ecs_os_strdup("String104");
+        ptr->c.b = 105;
+        ptr->c.c = ecs_os_strdup("String106");
+    }
+
+    /* Test copying: */
+    ecs_entity_t instance = ecs_clone(world, 0, e, true);
+    {
+        const NestedStructWithStrings *ptr =
+            ecs_get_id(world, instance, nested_struct_with_strings);
+        test_str("String100", ptr->a.a);
+        test_int(101, ptr->a.b);
+        test_str("String102", ptr->a.c);
+        test_int(103, ptr->b);
+        test_str("String104", ptr->c.a);
+        test_int(105, ptr->c.b);
+        test_str("String106", ptr->c.c);
+    }
+
+    /* Test moving by forcing an archetype change: */
+    ECS_TAG(world, MakeMeMove);
+    ecs_add(world, e, MakeMeMove);
+    {
+        const NestedStructWithStrings *ptr =
+            ecs_get_id(world, instance, nested_struct_with_strings);
+        test_str("String100", ptr->a.a);
+        test_int(101, ptr->a.b);
+        test_str("String102", ptr->a.c);
+        test_int(103, ptr->b);
+        test_str("String104", ptr->c.a);
+        test_int(105, ptr->c.b);
+        test_str("String106", ptr->c.c);
+    }
+
+    /* Test deleting: */
+    ecs_delete(world, e);
+    ecs_delete(world, instance);
+
+    ecs_fini(world);
+}
+
+void RuntimeTypes_struct_with_array_of_strings(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t /* ecs_string_t[3] */ array_of_strings =
+        ecs_array(world, {.type = ecs_id(ecs_string_t), .count = 3});
+
+    typedef struct {
+        ecs_string_t a[3];
+        ecs_i32_t b;
+    } StructWithArrayOfStrings;
+    ecs_entity_t struct_with_array_of_strings =
+        ecs_struct(world, {.members = {
+                               {"a", array_of_strings},
+                               {"b", ecs_id(ecs_i32_t)},
+                           }});
+
+    /* Test constructor: */
+    ecs_entity_t e = ecs_new(world);
+    {
+        StructWithArrayOfStrings *ptr =
+            ecs_ensure_id(world, e, struct_with_array_of_strings);
+        test_memory_zero(ptr, sizeof(StructWithArrayOfStrings));
+        ptr->a[0] = ecs_os_strdup("String100");
+        ptr->a[1] = ecs_os_strdup("String101");
+        ptr->a[2] = ecs_os_strdup("String102");
+        ptr->b = 103;
+    }
+
+    /* Test copying: */
+    ecs_entity_t instance = ecs_clone(world, 0, e, true);
+    {
+        const StructWithArrayOfStrings *ptr =
+            ecs_get_id(world, instance, struct_with_array_of_strings);
+        test_str("String100", ptr->a[0]);
+        test_str("String101", ptr->a[1]);
+        test_str("String102", ptr->a[2]);
+        test_int(103, ptr->b);
+    }
+
+    /* Test moving by forcing an archetype change: */
+    ECS_TAG(world, MakeMeMove);
+    ecs_add(world, e, MakeMeMove);
+    {
+        const StructWithArrayOfStrings *ptr =
+            ecs_get_id(world, instance, struct_with_array_of_strings);
+        test_str("String100", ptr->a[0]);
+        test_str("String101", ptr->a[1]);
+        test_str("String102", ptr->a[2]);
+        test_int(103, ptr->b);
+    }
+
+    /* Test deleting: */
+    ecs_delete(world, e);
+    ecs_delete(world, instance);
+
+    ecs_fini(world);
+}
+
+void RuntimeTypes_struct_with_array_of_array_of_strings(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t /* ecs_string_t[3] */ array_of_strings =
+        ecs_array(world, {.type = ecs_id(ecs_string_t), .count = 3});
+
+    ecs_entity_t /* ecs_string_t[3][3] */ array_of_array_of_strings =
+        ecs_array(world, {.type = array_of_strings, .count = 3});
+
+    typedef struct {
+        ecs_string_t a[3][3];
+        ecs_string_t b;
+    } StructWithArrayOfArrayOfStrings;
+    ecs_entity_t struct_with_array_of_array_of_strings =
+        ecs_struct(world, {.members = {
+                               {"a", array_of_array_of_strings},
+                               {"b", ecs_id(ecs_string_t)},
+                           }});
+
+    /* Test constructor: */
+    ecs_entity_t e = ecs_new(world);
+    {
+        StructWithArrayOfArrayOfStrings *ptr =
+            ecs_ensure_id(world, e, struct_with_array_of_array_of_strings);
+        test_memory_zero(ptr, sizeof(StructWithArrayOfArrayOfStrings));
+        ptr->a[0][0] = ecs_os_strdup("String100");
+        ptr->a[0][1] = ecs_os_strdup("String101");
+        ptr->a[0][2] = ecs_os_strdup("String102");
+        ptr->a[1][0] = ecs_os_strdup("String103");
+        ptr->a[1][1] = ecs_os_strdup("String104");
+        ptr->a[1][2] = ecs_os_strdup("String105");
+        ptr->a[2][0] = ecs_os_strdup("String106");
+        ptr->a[2][1] = ecs_os_strdup("String107");
+        ptr->a[2][2] = ecs_os_strdup("String108");
+        ptr->b = ecs_os_strdup("String109");
+    }
+
+    /* Test copying: */
+    ecs_entity_t instance = ecs_clone(world, 0, e, true);
+    {
+        const StructWithArrayOfArrayOfStrings *ptr =
+            ecs_get_id(world, instance, struct_with_array_of_array_of_strings);
+        test_str("String100", ptr->a[0][0]);
+        test_str("String101", ptr->a[0][1]);
+        test_str("String102", ptr->a[0][2]);
+        test_str("String103", ptr->a[1][0]);
+        test_str("String104", ptr->a[1][1]);
+        test_str("String105", ptr->a[1][2]);
+        test_str("String106", ptr->a[2][0]);
+        test_str("String107", ptr->a[2][1]);
+        test_str("String108", ptr->a[2][2]);
+        test_str("String109", ptr->b);
+    }
+
+    /* Test moving by forcing an archetype change: */
+    ECS_TAG(world, MakeMeMove);
+    ecs_add(world, e, MakeMeMove);
+    {
+        const StructWithArrayOfArrayOfStrings *ptr =
+            ecs_get_id(world, instance, struct_with_array_of_array_of_strings);
+        test_str("String100", ptr->a[0][0]);
+        test_str("String101", ptr->a[0][1]);
+        test_str("String102", ptr->a[0][2]);
+        test_str("String103", ptr->a[1][0]);
+        test_str("String104", ptr->a[1][1]);
+        test_str("String105", ptr->a[1][2]);
+        test_str("String106", ptr->a[2][0]);
+        test_str("String107", ptr->a[2][1]);
+        test_str("String108", ptr->a[2][2]);
+        test_str("String109", ptr->b);
+    }
+
+    /* Test deleting: */
+    ecs_delete(world, e);
+    ecs_delete(world, instance);
+
+    ecs_fini(world);
+}
+
+void RuntimeTypes_struct_with_vector_of_ints(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t /* vector<ecs_i32_t> */ vector_of_ints =
+        ecs_vector(world, {.type = ecs_id(ecs_i32_t)});
+
+    typedef struct {
+        ecs_vec_t a;
+    } StructWithVectorOfInts;
+    ecs_entity_t struct_with_vector_of_ints =
+        ecs_struct(world, {.members = {
+                               {"a", vector_of_ints},
+                           }});
+
+    /* Test constructor: */
+    ecs_entity_t e = ecs_new(world);
+    {
+        StructWithVectorOfInts *ptr =
+            ecs_ensure_id(world, e, struct_with_vector_of_ints);
+        {
+            test_int(0, ecs_vec_count(&ptr->a));
+            ecs_vec_set_count(NULL, &ptr->a, sizeof(ecs_i32_t), 3);
+            ecs_i32_t *va = ecs_vec_first(&ptr->a);
+            invoke_type_ctor(world, va, 3, ecs_id(ecs_i32_t));
+            test_memory_zero(va, sizeof(ecs_i32_t) * 3);
+            va[0] = 100;
+            va[1] = 101;
+            va[2] = 102;
         }
     }
-    ecs_query_fini(q);
 
-    ecs_map_fini(&comparer_map);
-    ecs_map_fini(&initializer_map);
-    free_resource_ids();
+    /* Test copying: */
+    ecs_entity_t instance = ecs_clone(world, 0, e, true);
+    {
+        const StructWithVectorOfInts *ptr =
+            ecs_get_id(world, instance, struct_with_vector_of_ints);
+        {
+            test_int(3, ecs_vec_count(&ptr->a));
+            const ecs_i32_t *va = ecs_vec_first(&ptr->a);
+            test_assert(va != NULL);
+            test_int(100, va[0]);
+            test_int(101, va[1]);
+            test_int(102, va[2]);
+        }
+    }
+
+    /* Test moving by forcing an archetype change: */
+    ECS_TAG(world, MakeMeMove);
+    ecs_add(world, e, MakeMeMove);
+    {
+        const StructWithVectorOfInts *ptr =
+            ecs_get_id(world, instance, struct_with_vector_of_ints);
+        {
+            test_int(3, ecs_vec_count(&ptr->a));
+            const ecs_i32_t *va = ecs_vec_first(&ptr->a);
+            test_assert(va != NULL);
+            test_int(100, va[0]);
+            test_int(101, va[1]);
+            test_int(102, va[2]);
+        }
+    }
+
+    /* Test deleting: */
+    ecs_delete(world, e);
+    ecs_delete(world, instance);
+
     ecs_fini(world);
+}
+
+void RuntimeTypes_struct_with_vector_of_strings(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t /* vector<ecs_string_t> */ vector_of_strings =
+        ecs_vector(world, {.type = ecs_id(ecs_string_t)});
+
+    typedef struct {
+        ecs_vec_t a;
+    } StructWithVectorOfStrings;
+    ecs_entity_t struct_with_vector_of_strings =
+        ecs_struct(world, {.members = {
+                               {"a", vector_of_strings},
+                           }});
+
+    /* Test constructor: */
+    ecs_entity_t e = ecs_new(world);
+    {
+        StructWithVectorOfStrings *ptr =
+            ecs_ensure_id(world, e, struct_with_vector_of_strings);
+        {
+            test_int(0, ecs_vec_count(&ptr->a));
+            ecs_vec_set_count(NULL, &ptr->a, sizeof(ecs_string_t), 3);
+            ecs_string_t *va = ecs_vec_first(&ptr->a);
+            invoke_type_ctor(world, va, 3, ecs_id(ecs_string_t));
+            test_memory_zero(va, sizeof(ecs_string_t) * 3);
+            va[0] = ecs_os_strdup("String100");
+            va[1] = ecs_os_strdup("String101");
+            va[2] = ecs_os_strdup("String102");
+        }
+    }
+
+    /* Test copying: */
+    ecs_entity_t instance = ecs_clone(world, 0, e, true);
+    {
+        const StructWithVectorOfStrings *ptr =
+            ecs_get_id(world, instance, struct_with_vector_of_strings);
+        {
+            test_int(3, ecs_vec_count(&ptr->a));
+            const ecs_string_t *va = ecs_vec_first(&ptr->a);
+            test_assert(va != NULL);
+            test_str("String100", va[0]);
+            test_str("String101", va[1]);
+            test_str("String102", va[2]);
+        }
+    }
+
+    /* Test moving by forcing an archetype change: */
+    ECS_TAG(world, MakeMeMove);
+    ecs_add(world, e, MakeMeMove);
+    {
+        const StructWithVectorOfStrings *ptr =
+            ecs_get_id(world, instance, struct_with_vector_of_strings);
+        {
+            test_int(3, ecs_vec_count(&ptr->a));
+            const ecs_string_t *va = ecs_vec_first(&ptr->a);
+            test_assert(va != NULL);
+            test_str("String100", va[0]);
+            test_str("String101", va[1]);
+            test_str("String102", va[2]);
+        }
+    }
+
+    /* Test deleting: */
+    ecs_delete(world, e);
+    ecs_delete(world, instance);
+
+    ecs_fini(world);
+}
+
+void RuntimeTypes_nested_struct_with_vector_of_ints(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t /* vector<ecs_i32_t> */ vector_of_ints =
+        ecs_vector(world, {.type = ecs_id(ecs_i32_t)});
+
+    typedef struct {
+        ecs_vec_t a;
+        ecs_i32_t b;
+        ecs_vec_t c;
+    } InnerStruct1;
+    ecs_entity_t inner_struct_1 =
+        ecs_struct(world, {.members = {
+                               {"a", vector_of_ints},
+                               {"b", ecs_id(ecs_i32_t)},
+                               {"c", vector_of_ints},
+                           }});
+
+    typedef struct {
+        ecs_vec_t a;
+        ecs_i32_t b;
+        InnerStruct1 c;
+    } NestedStructWithVectorOfInts;
+    ecs_entity_t nested_struct_with_vector_of_ints =
+        ecs_struct(world, {.members = {
+                               {"a", vector_of_ints},
+                               {"b", ecs_id(ecs_i32_t)},
+                               {"c", inner_struct_1},
+                           }});
+
+    /* Test constructor: */
+    ecs_entity_t e = ecs_new(world);
+    {
+        NestedStructWithVectorOfInts *ptr =
+            ecs_ensure_id(world, e, nested_struct_with_vector_of_ints);
+        {
+            test_int(0, ecs_vec_count(&ptr->a));
+            ecs_vec_set_count(NULL, &ptr->a, sizeof(ecs_i32_t), 3);
+            ecs_i32_t *va = ecs_vec_first(&ptr->a);
+            invoke_type_ctor(world, va, 3, ecs_id(ecs_i32_t));
+            test_memory_zero(va, sizeof(ecs_i32_t) * 3);
+            va[0] = 100;
+            va[1] = 101;
+            va[2] = 102;
+        }
+        test_int(0, ptr->b);
+        ptr->b = 103;
+        {
+            test_int(0, ecs_vec_count(&ptr->c.a));
+            ecs_vec_set_count(NULL, &ptr->c.a, sizeof(ecs_i32_t), 3);
+            ecs_i32_t *vca = ecs_vec_first(&ptr->c.a);
+            invoke_type_ctor(world, vca, 3, ecs_id(ecs_i32_t));
+            test_memory_zero(vca, sizeof(ecs_i32_t) * 3);
+            vca[0] = 104;
+            vca[1] = 105;
+            vca[2] = 106;
+        }
+        test_int(0, ptr->c.b);
+        ptr->c.b = 107;
+        {
+            test_int(0, ecs_vec_count(&ptr->c.c));
+            ecs_vec_set_count(NULL, &ptr->c.c, sizeof(ecs_i32_t), 3);
+            ecs_i32_t *vcc = ecs_vec_first(&ptr->c.c);
+            invoke_type_ctor(world, vcc, 3, ecs_id(ecs_i32_t));
+            test_memory_zero(vcc, sizeof(ecs_i32_t) * 3);
+            vcc[0] = 108;
+            vcc[1] = 109;
+            vcc[2] = 110;
+        }
+    }
+
+    /* Test copying: */
+    ecs_entity_t instance = ecs_clone(world, 0, e, true);
+    {
+        const NestedStructWithVectorOfInts *ptr =
+            ecs_get_id(world, instance, nested_struct_with_vector_of_ints);
+        {
+            test_int(3, ecs_vec_count(&ptr->a));
+            const ecs_i32_t *va = ecs_vec_first(&ptr->a);
+            test_assert(va != NULL);
+            test_int(100, va[0]);
+            test_int(101, va[1]);
+            test_int(102, va[2]);
+        }
+        test_int(103, ptr->b);
+        {
+            test_int(3, ecs_vec_count(&ptr->c.a));
+            const ecs_i32_t *vca = ecs_vec_first(&ptr->c.a);
+            test_assert(vca != NULL);
+            test_int(104, vca[0]);
+            test_int(105, vca[1]);
+            test_int(106, vca[2]);
+        }
+        test_int(107, ptr->c.b);
+        {
+            test_int(3, ecs_vec_count(&ptr->c.c));
+            const ecs_i32_t *vcc = ecs_vec_first(&ptr->c.c);
+            test_assert(vcc != NULL);
+            test_int(108, vcc[0]);
+            test_int(109, vcc[1]);
+            test_int(110, vcc[2]);
+        }
+    }
+
+    /* Test moving by forcing an archetype change: */
+    ECS_TAG(world, MakeMeMove);
+    ecs_add(world, e, MakeMeMove);
+    {
+        const NestedStructWithVectorOfInts *ptr =
+            ecs_get_id(world, instance, nested_struct_with_vector_of_ints);
+        {
+            test_int(3, ecs_vec_count(&ptr->a));
+            const ecs_i32_t *va = ecs_vec_first(&ptr->a);
+            test_assert(va != NULL);
+            test_int(100, va[0]);
+            test_int(101, va[1]);
+            test_int(102, va[2]);
+        }
+        test_int(103, ptr->b);
+        {
+            test_int(3, ecs_vec_count(&ptr->c.a));
+            const ecs_i32_t *vca = ecs_vec_first(&ptr->c.a);
+            test_assert(vca != NULL);
+            test_int(104, vca[0]);
+            test_int(105, vca[1]);
+            test_int(106, vca[2]);
+        }
+        test_int(107, ptr->c.b);
+        {
+            test_int(3, ecs_vec_count(&ptr->c.c));
+            const ecs_i32_t *vcc = ecs_vec_first(&ptr->c.c);
+            test_assert(vcc != NULL);
+            test_int(108, vcc[0]);
+            test_int(109, vcc[1]);
+            test_int(110, vcc[2]);
+        }
+    }
+
+    /* Test deleting: */
+    ecs_delete(world, e);
+    ecs_delete(world, instance);
+
+    ecs_fini(world);
+}
+
+void RuntimeTypes_nested_struct_with_vector_of_strings(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t /* vector<ecs_string_t> */ vector_of_strings =
+        ecs_vector(world, {.type = ecs_id(ecs_string_t)});
+
+    typedef struct {
+        ecs_vec_t a;
+        ecs_i32_t b;
+        ecs_vec_t c;
+    } InnerStruct2;
+    ecs_entity_t inner_struct_2 =
+        ecs_struct(world, {.members = {
+                               {"a", vector_of_strings},
+                               {"b", ecs_id(ecs_i32_t)},
+                               {"c", vector_of_strings},
+                           }});
+
+    typedef struct {
+        ecs_vec_t a;
+        ecs_i32_t b;
+        InnerStruct2 c;
+    } NestedStructWithVectorOfStrings;
+    ecs_entity_t nested_struct_with_vector_of_strings =
+        ecs_struct(world, {.members = {
+                               {"a", vector_of_strings},
+                               {"b", ecs_id(ecs_i32_t)},
+                               {"c", inner_struct_2},
+                           }});
+
+    /* Test constructor: */
+    ecs_entity_t e = ecs_new(world);
+    {
+        NestedStructWithVectorOfStrings *ptr =
+            ecs_ensure_id(world, e, nested_struct_with_vector_of_strings);
+        {
+            test_int(0, ecs_vec_count(&ptr->a));
+            ecs_vec_set_count(NULL, &ptr->a, sizeof(ecs_string_t), 3);
+            ecs_string_t *va = ecs_vec_first(&ptr->a);
+            invoke_type_ctor(world, va, 3, ecs_id(ecs_string_t));
+            test_memory_zero(va, sizeof(ecs_string_t) * 3);
+            va[0] = ecs_os_strdup("String100");
+            va[1] = ecs_os_strdup("String101");
+            va[2] = ecs_os_strdup("String102");
+        }
+        test_int(0, ptr->b);
+        ptr->b = 103;
+        {
+            test_int(0, ecs_vec_count(&ptr->c.a));
+            ecs_vec_set_count(NULL, &ptr->c.a, sizeof(ecs_string_t), 3);
+            ecs_string_t *vca = ecs_vec_first(&ptr->c.a);
+            invoke_type_ctor(world, vca, 3, ecs_id(ecs_string_t));
+            test_memory_zero(vca, sizeof(ecs_string_t) * 3);
+            vca[0] = ecs_os_strdup("String104");
+            vca[1] = ecs_os_strdup("String105");
+            vca[2] = ecs_os_strdup("String106");
+        }
+        test_int(0, ptr->c.b);
+        ptr->c.b = 107;
+        {
+            test_int(0, ecs_vec_count(&ptr->c.c));
+            ecs_vec_set_count(NULL, &ptr->c.c, sizeof(ecs_string_t), 3);
+            ecs_string_t *vcc = ecs_vec_first(&ptr->c.c);
+            invoke_type_ctor(world, vcc, 3, ecs_id(ecs_string_t));
+            test_memory_zero(vcc, sizeof(ecs_string_t) * 3);
+            vcc[0] = ecs_os_strdup("String108");
+            vcc[1] = ecs_os_strdup("String109");
+            vcc[2] = ecs_os_strdup("String110");
+        }
+    }
+
+    /* Test copying: */
+    ecs_entity_t instance = ecs_clone(world, 0, e, true);
+    {
+        const NestedStructWithVectorOfStrings *ptr =
+            ecs_get_id(world, instance, nested_struct_with_vector_of_strings);
+        {
+            test_int(3, ecs_vec_count(&ptr->a));
+            const ecs_string_t *va = ecs_vec_first(&ptr->a);
+            test_assert(va != NULL);
+            test_str("String100", va[0]);
+            test_str("String101", va[1]);
+            test_str("String102", va[2]);
+        }
+        test_int(103, ptr->b);
+        {
+            test_int(3, ecs_vec_count(&ptr->c.a));
+            const ecs_string_t *vca = ecs_vec_first(&ptr->c.a);
+            test_assert(vca != NULL);
+            test_str("String104", vca[0]);
+            test_str("String105", vca[1]);
+            test_str("String106", vca[2]);
+        }
+        test_int(107, ptr->c.b);
+        {
+            test_int(3, ecs_vec_count(&ptr->c.c));
+            const ecs_string_t *vcc = ecs_vec_first(&ptr->c.c);
+            test_assert(vcc != NULL);
+            test_str("String108", vcc[0]);
+            test_str("String109", vcc[1]);
+            test_str("String110", vcc[2]);
+        }
+    }
+
+    /* Test moving by forcing an archetype change: */
+    ECS_TAG(world, MakeMeMove);
+    ecs_add(world, e, MakeMeMove);
+    {
+        const NestedStructWithVectorOfStrings *ptr =
+            ecs_get_id(world, instance, nested_struct_with_vector_of_strings);
+        {
+            test_int(3, ecs_vec_count(&ptr->a));
+            const ecs_string_t *va = ecs_vec_first(&ptr->a);
+            test_assert(va != NULL);
+            test_str("String100", va[0]);
+            test_str("String101", va[1]);
+            test_str("String102", va[2]);
+        }
+        test_int(103, ptr->b);
+        {
+            test_int(3, ecs_vec_count(&ptr->c.a));
+            const ecs_string_t *vca = ecs_vec_first(&ptr->c.a);
+            test_assert(vca != NULL);
+            test_str("String104", vca[0]);
+            test_str("String105", vca[1]);
+            test_str("String106", vca[2]);
+        }
+        test_int(107, ptr->c.b);
+        {
+            test_int(3, ecs_vec_count(&ptr->c.c));
+            const ecs_string_t *vcc = ecs_vec_first(&ptr->c.c);
+            test_assert(vcc != NULL);
+            test_str("String108", vcc[0]);
+            test_str("String109", vcc[1]);
+            test_str("String110", vcc[2]);
+        }
+    }
+
+    /* Test deleting: */
+    ecs_delete(world, e);
+    ecs_delete(world, instance);
+
+    ecs_fini(world);
+}
+
+void RuntimeTypes_array_of_ints(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t /* ecs_i32_t[3] */ array_of_ints =
+        ecs_array(world, {.type = ecs_id(ecs_i32_t), .count = 3});
+
+    /* Test constructor: */
+    ecs_entity_t e = ecs_new(world);
+    {
+        ecs_i32_t *arr = ecs_ensure_id(world, e, array_of_ints);
+        test_memory_zero(arr, sizeof(ecs_i32_t[3]));
+        arr[0] = 100;
+        arr[1] = 101;
+        arr[2] = 102;
+    }
+
+    /* Test copying: */
+    ecs_entity_t instance = ecs_clone(world, 0, e, true);
+    {
+        const ecs_i32_t *arr = ecs_get_id(world, e, array_of_ints);
+        test_int(100, arr[0]);
+        test_int(101, arr[1]);
+        test_int(102, arr[2]);
+    }
+
+    /* Test moving by forcing an archetype change: */
+    ECS_TAG(world, MakeMeMove);
+    ecs_add(world, e, MakeMeMove);
+    {
+        const ecs_i32_t *arr = ecs_get_id(world, e, array_of_ints);
+        test_int(100, arr[0]);
+        test_int(101, arr[1]);
+        test_int(102, arr[2]);
+    }
+
+    /* Test deleting: */
+    ecs_delete(world, e);
+    ecs_delete(world, instance);
+
+    ecs_fini(world);
+}
+
+void RuntimeTypes_array_of_strings(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t /* ecs_string_t[3] */ array_of_strings =
+        ecs_array(world, {.type = ecs_id(ecs_string_t), .count = 3});
+
+    /* Test constructor: */
+    ecs_entity_t e = ecs_new(world);
+    {
+        ecs_string_t *arr = ecs_ensure_id(world, e, array_of_strings);
+        test_memory_zero(arr, sizeof(ecs_string_t[3]));
+        arr[0] = ecs_os_strdup("String100");
+        arr[1] = ecs_os_strdup("String101");
+        arr[2] = ecs_os_strdup("String102");
+    }
+
+    /* Test copying: */
+    ecs_entity_t instance = ecs_clone(world, 0, e, true);
+    {
+        const ecs_string_t *arr = ecs_get_id(world, e, array_of_strings);
+        test_str("String100", arr[0]);
+        test_str("String101", arr[1]);
+        test_str("String102", arr[2]);
+    }
+
+    /* Test moving by forcing an archetype change: */
+    ECS_TAG(world, MakeMeMove);
+    ecs_add(world, e, MakeMeMove);
+    {
+        const ecs_string_t *arr = ecs_get_id(world, e, array_of_strings);
+        test_str("String100", arr[0]);
+        test_str("String101", arr[1]);
+        test_str("String102", arr[2]);
+    }
+
+    /* Test deleting: */
+    ecs_delete(world, e);
+    ecs_delete(world, instance);
+
+    ecs_fini(world);
+}
+
+void RuntimeTypes_array_of_struct_with_ints(void) {
+    ecs_world_t *world = ecs_init();
+
+    typedef struct {
+        ecs_i32_t a;
+        ecs_i32_t b;
+    } StructWithInts;
+    ecs_entity_t struct_with_ints =
+        ecs_struct(world, {.members = {
+                               {"a", ecs_id(ecs_i32_t)},
+                               {"b", ecs_id(ecs_i32_t)},
+                           }});
+
+    ecs_entity_t /* StructWithInts[3] */ array_of_struct_with_ints =
+        ecs_array(world, {.type = struct_with_ints, .count = 3});
+
+    /* Test constructor: */
+    ecs_entity_t e = ecs_new(world);
+    {
+        StructWithInts *arr =
+            ecs_ensure_id(world, e, array_of_struct_with_ints);
+        test_memory_zero(arr, sizeof(StructWithInts[3]));
+        arr[0].a = 100;
+        arr[0].b = 101;
+        arr[1].a = 102;
+        arr[1].b = 103;
+        arr[2].a = 104;
+        arr[2].b = 105;
+    }
+
+    /* Test copying: */
+    ecs_entity_t instance = ecs_clone(world, 0, e, true);
+    {
+        const StructWithInts *arr =
+            ecs_get_id(world, e, array_of_struct_with_ints);
+        test_int(100, arr[0].a);
+        test_int(101, arr[0].b);
+        test_int(102, arr[1].a);
+        test_int(103, arr[1].b);
+        test_int(104, arr[2].a);
+        test_int(105, arr[2].b);
+    }
+
+    /* Test moving by forcing an archetype change: */
+    ECS_TAG(world, MakeMeMove);
+    ecs_add(world, e, MakeMeMove);
+    {
+        const StructWithInts *arr =
+            ecs_get_id(world, e, array_of_struct_with_ints);
+        test_int(100, arr[0].a);
+        test_int(101, arr[0].b);
+        test_int(102, arr[1].a);
+        test_int(103, arr[1].b);
+        test_int(104, arr[2].a);
+        test_int(105, arr[2].b);
+    }
+
+    /* Test deleting: */
+    ecs_delete(world, e);
+    ecs_delete(world, instance);
+
+    ecs_fini(world);
+}
+
+void RuntimeTypes_array_of_struct_with_strings(void) {
+    ecs_world_t *world = ecs_init();
+
+    typedef struct {
+        ecs_string_t a;
+        ecs_i32_t b;
+        ecs_string_t c;
+    } StructWithStrings;
+    ecs_entity_t struct_with_strings =
+        ecs_struct(world, {.members = {
+                               {"a", ecs_id(ecs_string_t)},
+                               {"b", ecs_id(ecs_i32_t)},
+                               {"c", ecs_id(ecs_string_t)},
+                           }});
+
+    ecs_entity_t /* StructWithStrings[3] */ array_of_struct_with_strings =
+        ecs_array(world, {.type = struct_with_strings, .count = 3});
+
+    /* Test constructor: */
+    ecs_entity_t e = ecs_new(world);
+    {
+        StructWithStrings *arr =
+            ecs_ensure_id(world, e, array_of_struct_with_strings);
+        test_memory_zero(arr, sizeof(StructWithStrings[3]));
+        arr[0].a = ecs_os_strdup("String100");
+        arr[0].b = 101;
+        arr[0].c = ecs_os_strdup("String102");
+        arr[1].a = ecs_os_strdup("String103");
+        arr[1].b = 104;
+        arr[1].c = ecs_os_strdup("String105");
+        arr[2].a = ecs_os_strdup("String106");
+        arr[2].b = 107;
+        arr[2].c = ecs_os_strdup("String108");
+    }
+
+    /* Test copying: */
+    ecs_entity_t instance = ecs_clone(world, 0, e, true);
+    {
+        const StructWithStrings *arr =
+            ecs_get_id(world, e, array_of_struct_with_strings);
+        test_str("String100", arr[0].a);
+        test_int(101, arr[0].b);
+        test_str("String102", arr[0].c);
+        test_str("String103", arr[1].a);
+        test_int(104, arr[1].b);
+        test_str("String105", arr[1].c);
+        test_str("String106", arr[2].a);
+        test_int(107, arr[2].b);
+        test_str("String108", arr[2].c);
+    }
+
+    /* Test moving by forcing an archetype change: */
+    ECS_TAG(world, MakeMeMove);
+    ecs_add(world, e, MakeMeMove);
+    {
+        const StructWithStrings *arr =
+            ecs_get_id(world, e, array_of_struct_with_strings);
+        test_str("String100", arr[0].a);
+        test_int(101, arr[0].b);
+        test_str("String102", arr[0].c);
+        test_str("String103", arr[1].a);
+        test_int(104, arr[1].b);
+        test_str("String105", arr[1].c);
+        test_str("String106", arr[2].a);
+        test_int(107, arr[2].b);
+        test_str("String108", arr[2].c);
+    }
+
+    /* Test deleting: */
+    ecs_delete(world, e);
+    ecs_delete(world, instance);
+
+    ecs_fini(world);
+}
+
+void RuntimeTypes_array_of_struct_with_opaques(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t resource_handle_opaque = define_ResourceHandle_opaque(world);
+
+    typedef struct {
+        ResourceHandle a;
+    } StructWithOpaque;
+    ecs_entity_t struct_with_opaque =
+        ecs_struct(world, {.members = {
+                               {"a", resource_handle_opaque},
+                           }});
+
+    ecs_entity_t /* StructWithOpaque[3] */ array_of_struct_with_opaques =
+        ecs_array(world, {.type = struct_with_opaque, .count = 3});
+
+    /* array_of_struct_with_opaques will consume 3 test resources per instance
+     */
+    const int initial_resources = 12;
+    initialize_resource_ids(initial_resources);
+
+    /* Test constructor: */
+    ecs_entity_t e = ecs_new(world);
+    {
+        StructWithOpaque *arr =
+            ecs_ensure_id(world, e, array_of_struct_with_opaques);
+        test_assert(arr[0].a.id != 0);
+        test_int(0, arr[0].a.value);
+        arr[0].a.value = 100;
+        test_assert(arr[1].a.id != 0);
+        test_int(0, arr[1].a.value);
+        arr[1].a.value = 101;
+        test_assert(arr[2].a.id != 0);
+        test_int(0, arr[2].a.value);
+        arr[2].a.value = 102;
+    }
+    /* 3 resource(s) should have been used */
+    test_int(3, initial_resources - resources_left());
+
+    /* Test copying: */
+    ecs_entity_t instance = ecs_clone(world, 0, e, true);
+    {
+        const StructWithOpaque *arr =
+            ecs_get_id(world, e, array_of_struct_with_opaques);
+        test_int(100, arr[0].a.value);
+        test_int(101, arr[1].a.value);
+        test_int(102, arr[2].a.value);
+    }
+    /* 6 resource(s) should be in use now */
+    test_int(6, initial_resources - resources_left());
+
+    /* Test moving by forcing an archetype change: */
+    ECS_TAG(world, MakeMeMove);
+    ecs_add(world, e, MakeMeMove);
+    {
+        const StructWithOpaque *arr =
+            ecs_get_id(world, e, array_of_struct_with_opaques);
+        test_int(100, arr[0].a.value);
+        test_int(101, arr[1].a.value);
+        test_int(102, arr[2].a.value);
+    }
+    /* 6 resource(s) should still be in use after a move */
+    test_int(6, initial_resources - resources_left());
+
+    /* Test deleting: */
+    ecs_delete(world, e);
+
+    /* After destroying one of the entities, only 3 resource(s) should be in use
+     */
+    test_int(3, initial_resources - resources_left());
+    ecs_delete(world, instance);
+
+    /* check if all 6 test resources were returned and exactly all resource ids
+     * are back: */
+    test_int(initial_resources, resources_left());
+    int i;
+    for (i = 1; i <= initial_resources; i++) {
+        test_assert(resource_id_available(i));
+    }
+    ecs_fini(world);
+    free_resource_ids();
+}
+
+void RuntimeTypes_array_of_array_of_strings(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t /* ecs_string_t[3] */ array_of_strings =
+        ecs_array(world, {.type = ecs_id(ecs_string_t), .count = 3});
+
+    ecs_entity_t /* ecs_string_t[3][3] */ array_of_array_of_strings =
+        ecs_array(world, {.type = array_of_strings, .count = 3});
+
+    /* Test constructor: */
+    ecs_entity_t e = ecs_new(world);
+    {
+        ecs_string_t(*arr)[3] =
+            ecs_ensure_id(world, e, array_of_array_of_strings);
+        test_memory_zero(arr, sizeof(ecs_string_t[3][3]));
+        arr[0][0] = ecs_os_strdup("String100");
+        arr[0][1] = ecs_os_strdup("String101");
+        arr[0][2] = ecs_os_strdup("String102");
+        arr[1][0] = ecs_os_strdup("String103");
+        arr[1][1] = ecs_os_strdup("String104");
+        arr[1][2] = ecs_os_strdup("String105");
+        arr[2][0] = ecs_os_strdup("String106");
+        arr[2][1] = ecs_os_strdup("String107");
+        arr[2][2] = ecs_os_strdup("String108");
+    }
+
+    /* Test copying: */
+    ecs_entity_t instance = ecs_clone(world, 0, e, true);
+    {
+        const ecs_string_t(*arr)[3] = (const ecs_string_t(*)[3]) ecs_get_id(
+            world, e, array_of_array_of_strings);
+        test_str("String100", arr[0][0]);
+        test_str("String101", arr[0][1]);
+        test_str("String102", arr[0][2]);
+        test_str("String103", arr[1][0]);
+        test_str("String104", arr[1][1]);
+        test_str("String105", arr[1][2]);
+        test_str("String106", arr[2][0]);
+        test_str("String107", arr[2][1]);
+        test_str("String108", arr[2][2]);
+    }
+
+    /* Test moving by forcing an archetype change: */
+    ECS_TAG(world, MakeMeMove);
+    ecs_add(world, e, MakeMeMove);
+    {
+        const ecs_string_t(*arr)[3] = (const ecs_string_t(*)[3]) ecs_get_id(
+            world, e, array_of_array_of_strings);
+        test_str("String100", arr[0][0]);
+        test_str("String101", arr[0][1]);
+        test_str("String102", arr[0][2]);
+        test_str("String103", arr[1][0]);
+        test_str("String104", arr[1][1]);
+        test_str("String105", arr[1][2]);
+        test_str("String106", arr[2][0]);
+        test_str("String107", arr[2][1]);
+        test_str("String108", arr[2][2]);
+    }
+
+    /* Test deleting: */
+    ecs_delete(world, e);
+    ecs_delete(world, instance);
+
+    ecs_fini(world);
+}
+
+void RuntimeTypes_array_of_array_of_struct_with_strings(void) {
+    ecs_world_t *world = ecs_init();
+
+    typedef struct {
+        ecs_string_t a;
+        ecs_i32_t b;
+        ecs_string_t c;
+    } StructWithStrings;
+    ecs_entity_t struct_with_strings =
+        ecs_struct(world, {.members = {
+                               {"a", ecs_id(ecs_string_t)},
+                               {"b", ecs_id(ecs_i32_t)},
+                               {"c", ecs_id(ecs_string_t)},
+                           }});
+
+    ecs_entity_t /* StructWithStrings[3] */ array_of_struct_with_strings =
+        ecs_array(world, {.type = struct_with_strings, .count = 3});
+
+    ecs_entity_t /* StructWithStrings[3][3] */
+        array_of_array_of_struct_with_strings = ecs_array(
+            world, {.type = array_of_struct_with_strings, .count = 3});
+
+    /* Test constructor: */
+    ecs_entity_t e = ecs_new(world);
+    {
+        StructWithStrings(*arr)[3] =
+            ecs_ensure_id(world, e, array_of_array_of_struct_with_strings);
+        test_memory_zero(arr, sizeof(StructWithStrings[3][3]));
+        arr[0][0].a = ecs_os_strdup("String100");
+        arr[0][0].b = 101;
+        arr[0][0].c = ecs_os_strdup("String102");
+        arr[0][1].a = ecs_os_strdup("String103");
+        arr[0][1].b = 104;
+        arr[0][1].c = ecs_os_strdup("String105");
+        arr[0][2].a = ecs_os_strdup("String106");
+        arr[0][2].b = 107;
+        arr[0][2].c = ecs_os_strdup("String108");
+        arr[1][0].a = ecs_os_strdup("String109");
+        arr[1][0].b = 110;
+        arr[1][0].c = ecs_os_strdup("String111");
+        arr[1][1].a = ecs_os_strdup("String112");
+        arr[1][1].b = 113;
+        arr[1][1].c = ecs_os_strdup("String114");
+        arr[1][2].a = ecs_os_strdup("String115");
+        arr[1][2].b = 116;
+        arr[1][2].c = ecs_os_strdup("String117");
+        arr[2][0].a = ecs_os_strdup("String118");
+        arr[2][0].b = 119;
+        arr[2][0].c = ecs_os_strdup("String120");
+        arr[2][1].a = ecs_os_strdup("String121");
+        arr[2][1].b = 122;
+        arr[2][1].c = ecs_os_strdup("String123");
+        arr[2][2].a = ecs_os_strdup("String124");
+        arr[2][2].b = 125;
+        arr[2][2].c = ecs_os_strdup("String126");
+    }
+
+    /* Test copying: */
+    ecs_entity_t instance = ecs_clone(world, 0, e, true);
+    {
+        const StructWithStrings(*arr)[3] =
+            (const StructWithStrings(*)[3]) ecs_get_id(
+                world, e, array_of_array_of_struct_with_strings);
+        test_str("String100", arr[0][0].a);
+        test_int(101, arr[0][0].b);
+        test_str("String102", arr[0][0].c);
+        test_str("String103", arr[0][1].a);
+        test_int(104, arr[0][1].b);
+        test_str("String105", arr[0][1].c);
+        test_str("String106", arr[0][2].a);
+        test_int(107, arr[0][2].b);
+        test_str("String108", arr[0][2].c);
+        test_str("String109", arr[1][0].a);
+        test_int(110, arr[1][0].b);
+        test_str("String111", arr[1][0].c);
+        test_str("String112", arr[1][1].a);
+        test_int(113, arr[1][1].b);
+        test_str("String114", arr[1][1].c);
+        test_str("String115", arr[1][2].a);
+        test_int(116, arr[1][2].b);
+        test_str("String117", arr[1][2].c);
+        test_str("String118", arr[2][0].a);
+        test_int(119, arr[2][0].b);
+        test_str("String120", arr[2][0].c);
+        test_str("String121", arr[2][1].a);
+        test_int(122, arr[2][1].b);
+        test_str("String123", arr[2][1].c);
+        test_str("String124", arr[2][2].a);
+        test_int(125, arr[2][2].b);
+        test_str("String126", arr[2][2].c);
+    }
+
+    /* Test moving by forcing an archetype change: */
+    ECS_TAG(world, MakeMeMove);
+    ecs_add(world, e, MakeMeMove);
+    {
+        const StructWithStrings(*arr)[3] =
+            (const StructWithStrings(*)[3]) ecs_get_id(
+                world, e, array_of_array_of_struct_with_strings);
+        test_str("String100", arr[0][0].a);
+        test_int(101, arr[0][0].b);
+        test_str("String102", arr[0][0].c);
+        test_str("String103", arr[0][1].a);
+        test_int(104, arr[0][1].b);
+        test_str("String105", arr[0][1].c);
+        test_str("String106", arr[0][2].a);
+        test_int(107, arr[0][2].b);
+        test_str("String108", arr[0][2].c);
+        test_str("String109", arr[1][0].a);
+        test_int(110, arr[1][0].b);
+        test_str("String111", arr[1][0].c);
+        test_str("String112", arr[1][1].a);
+        test_int(113, arr[1][1].b);
+        test_str("String114", arr[1][1].c);
+        test_str("String115", arr[1][2].a);
+        test_int(116, arr[1][2].b);
+        test_str("String117", arr[1][2].c);
+        test_str("String118", arr[2][0].a);
+        test_int(119, arr[2][0].b);
+        test_str("String120", arr[2][0].c);
+        test_str("String121", arr[2][1].a);
+        test_int(122, arr[2][1].b);
+        test_str("String123", arr[2][1].c);
+        test_str("String124", arr[2][2].a);
+        test_int(125, arr[2][2].b);
+        test_str("String126", arr[2][2].c);
+    }
+
+    /* Test deleting: */
+    ecs_delete(world, e);
+    ecs_delete(world, instance);
+
+    ecs_fini(world);
+}
+
+void RuntimeTypes_array_of_vectors_of_ints(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t /* vector<ecs_i32_t> */ vector_of_ints =
+        ecs_vector(world, {.type = ecs_id(ecs_i32_t)});
+
+    ecs_entity_t /* ecs_vec_t[3] */ array_of_vectors_of_ints =
+        ecs_array(world, {.type = vector_of_ints, .count = 3});
+
+    /* Test constructor: */
+    ecs_entity_t e = ecs_new(world);
+    {
+        ecs_vec_t *arr = ecs_ensure_id(world, e, array_of_vectors_of_ints);
+        {
+            test_int(0, ecs_vec_count(&arr[0]));
+            ecs_vec_set_count(NULL, &arr[0], sizeof(ecs_i32_t), 3);
+            ecs_i32_t *v = ecs_vec_first(&arr[0]);
+            invoke_type_ctor(world, v, 3, ecs_id(ecs_i32_t));
+            test_memory_zero(v, sizeof(ecs_i32_t) * 3);
+            v[0] = 100;
+            v[1] = 101;
+            v[2] = 102;
+        }
+        {
+            test_int(0, ecs_vec_count(&arr[1]));
+            ecs_vec_set_count(NULL, &arr[1], sizeof(ecs_i32_t), 3);
+            ecs_i32_t *v = ecs_vec_first(&arr[1]);
+            invoke_type_ctor(world, v, 3, ecs_id(ecs_i32_t));
+            test_memory_zero(v, sizeof(ecs_i32_t) * 3);
+            v[0] = 103;
+            v[1] = 104;
+            v[2] = 105;
+        }
+        {
+            test_int(0, ecs_vec_count(&arr[2]));
+            ecs_vec_set_count(NULL, &arr[2], sizeof(ecs_i32_t), 3);
+            ecs_i32_t *v = ecs_vec_first(&arr[2]);
+            invoke_type_ctor(world, v, 3, ecs_id(ecs_i32_t));
+            test_memory_zero(v, sizeof(ecs_i32_t) * 3);
+            v[0] = 106;
+            v[1] = 107;
+            v[2] = 108;
+        }
+    }
+
+    /* Test copying: */
+    ecs_entity_t instance = ecs_clone(world, 0, e, true);
+    {
+        const ecs_vec_t *arr = ecs_get_id(world, e, array_of_vectors_of_ints);
+        {
+            test_int(3, ecs_vec_count(&arr[0]));
+            const ecs_i32_t *v = ecs_vec_first(&arr[0]);
+            test_assert(v != NULL);
+            test_int(100, v[0]);
+            test_int(101, v[1]);
+            test_int(102, v[2]);
+        }
+        {
+            test_int(3, ecs_vec_count(&arr[1]));
+            const ecs_i32_t *v = ecs_vec_first(&arr[1]);
+            test_assert(v != NULL);
+            test_int(103, v[0]);
+            test_int(104, v[1]);
+            test_int(105, v[2]);
+        }
+        {
+            test_int(3, ecs_vec_count(&arr[2]));
+            const ecs_i32_t *v = ecs_vec_first(&arr[2]);
+            test_assert(v != NULL);
+            test_int(106, v[0]);
+            test_int(107, v[1]);
+            test_int(108, v[2]);
+        }
+    }
+
+    /* Test moving by forcing an archetype change: */
+    ECS_TAG(world, MakeMeMove);
+    ecs_add(world, e, MakeMeMove);
+    {
+        const ecs_vec_t *arr = ecs_get_id(world, e, array_of_vectors_of_ints);
+        {
+            test_int(3, ecs_vec_count(&arr[0]));
+            const ecs_i32_t *v = ecs_vec_first(&arr[0]);
+            test_assert(v != NULL);
+            test_int(100, v[0]);
+            test_int(101, v[1]);
+            test_int(102, v[2]);
+        }
+        {
+            test_int(3, ecs_vec_count(&arr[1]));
+            const ecs_i32_t *v = ecs_vec_first(&arr[1]);
+            test_assert(v != NULL);
+            test_int(103, v[0]);
+            test_int(104, v[1]);
+            test_int(105, v[2]);
+        }
+        {
+            test_int(3, ecs_vec_count(&arr[2]));
+            const ecs_i32_t *v = ecs_vec_first(&arr[2]);
+            test_assert(v != NULL);
+            test_int(106, v[0]);
+            test_int(107, v[1]);
+            test_int(108, v[2]);
+        }
+    }
+
+    /* Test deleting: */
+    ecs_delete(world, e);
+    ecs_delete(world, instance);
+
+    ecs_fini(world);
+}
+
+void RuntimeTypes_array_of_vectors_of_strings(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t /* vector<ecs_string_t> */ vector_of_strings =
+        ecs_vector(world, {.type = ecs_id(ecs_string_t)});
+
+    ecs_entity_t /* ecs_vec_t[3] */ array_of_vectors_of_strings =
+        ecs_array(world, {.type = vector_of_strings, .count = 3});
+
+    /* Test constructor: */
+    ecs_entity_t e = ecs_new(world);
+    {
+        ecs_vec_t *arr = ecs_ensure_id(world, e, array_of_vectors_of_strings);
+        {
+            test_int(0, ecs_vec_count(&arr[0]));
+            ecs_vec_set_count(NULL, &arr[0], sizeof(ecs_string_t), 3);
+            ecs_string_t *v = ecs_vec_first(&arr[0]);
+            invoke_type_ctor(world, v, 3, ecs_id(ecs_string_t));
+            test_memory_zero(v, sizeof(ecs_string_t) * 3);
+            v[0] = ecs_os_strdup("String100");
+            v[1] = ecs_os_strdup("String101");
+            v[2] = ecs_os_strdup("String102");
+        }
+        {
+            test_int(0, ecs_vec_count(&arr[1]));
+            ecs_vec_set_count(NULL, &arr[1], sizeof(ecs_string_t), 3);
+            ecs_string_t *v = ecs_vec_first(&arr[1]);
+            invoke_type_ctor(world, v, 3, ecs_id(ecs_string_t));
+            test_memory_zero(v, sizeof(ecs_string_t) * 3);
+            v[0] = ecs_os_strdup("String103");
+            v[1] = ecs_os_strdup("String104");
+            v[2] = ecs_os_strdup("String105");
+        }
+        {
+            test_int(0, ecs_vec_count(&arr[2]));
+            ecs_vec_set_count(NULL, &arr[2], sizeof(ecs_string_t), 3);
+            ecs_string_t *v = ecs_vec_first(&arr[2]);
+            invoke_type_ctor(world, v, 3, ecs_id(ecs_string_t));
+            test_memory_zero(v, sizeof(ecs_string_t) * 3);
+            v[0] = ecs_os_strdup("String106");
+            v[1] = ecs_os_strdup("String107");
+            v[2] = ecs_os_strdup("String108");
+        }
+    }
+
+    /* Test copying: */
+    ecs_entity_t instance = ecs_clone(world, 0, e, true);
+    {
+        const ecs_vec_t *arr =
+            ecs_get_id(world, e, array_of_vectors_of_strings);
+        {
+            test_int(3, ecs_vec_count(&arr[0]));
+            const ecs_string_t *v = ecs_vec_first(&arr[0]);
+            test_assert(v != NULL);
+            test_str("String100", v[0]);
+            test_str("String101", v[1]);
+            test_str("String102", v[2]);
+        }
+        {
+            test_int(3, ecs_vec_count(&arr[1]));
+            const ecs_string_t *v = ecs_vec_first(&arr[1]);
+            test_assert(v != NULL);
+            test_str("String103", v[0]);
+            test_str("String104", v[1]);
+            test_str("String105", v[2]);
+        }
+        {
+            test_int(3, ecs_vec_count(&arr[2]));
+            const ecs_string_t *v = ecs_vec_first(&arr[2]);
+            test_assert(v != NULL);
+            test_str("String106", v[0]);
+            test_str("String107", v[1]);
+            test_str("String108", v[2]);
+        }
+    }
+
+    /* Test moving by forcing an archetype change: */
+    ECS_TAG(world, MakeMeMove);
+    ecs_add(world, e, MakeMeMove);
+    {
+        const ecs_vec_t *arr =
+            ecs_get_id(world, e, array_of_vectors_of_strings);
+        {
+            test_int(3, ecs_vec_count(&arr[0]));
+            const ecs_string_t *v = ecs_vec_first(&arr[0]);
+            test_assert(v != NULL);
+            test_str("String100", v[0]);
+            test_str("String101", v[1]);
+            test_str("String102", v[2]);
+        }
+        {
+            test_int(3, ecs_vec_count(&arr[1]));
+            const ecs_string_t *v = ecs_vec_first(&arr[1]);
+            test_assert(v != NULL);
+            test_str("String103", v[0]);
+            test_str("String104", v[1]);
+            test_str("String105", v[2]);
+        }
+        {
+            test_int(3, ecs_vec_count(&arr[2]));
+            const ecs_string_t *v = ecs_vec_first(&arr[2]);
+            test_assert(v != NULL);
+            test_str("String106", v[0]);
+            test_str("String107", v[1]);
+            test_str("String108", v[2]);
+        }
+    }
+
+    /* Test deleting: */
+    ecs_delete(world, e);
+    ecs_delete(world, instance);
+
+    ecs_fini(world);
+}
+
+void RuntimeTypes_array_of_opaque(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t resource_handle_opaque = define_ResourceHandle_opaque(world);
+
+    ecs_entity_t /* ResourceHandle[3] */ array_of_opaque =
+        ecs_array(world, {.type = resource_handle_opaque, .count = 3});
+
+    /* array_of_opaque will consume 3 test resources per instance */
+    const int initial_resources = 12;
+    initialize_resource_ids(initial_resources);
+
+    /* Test constructor: */
+    ecs_entity_t e = ecs_new(world);
+    {
+        ResourceHandle *arr = ecs_ensure_id(world, e, array_of_opaque);
+        test_assert(arr[0].id != 0);
+        test_int(0, arr[0].value);
+        arr[0].value = 100;
+        test_assert(arr[1].id != 0);
+        test_int(0, arr[1].value);
+        arr[1].value = 101;
+        test_assert(arr[2].id != 0);
+        test_int(0, arr[2].value);
+        arr[2].value = 102;
+    }
+    /* 3 resource(s) should have been used */
+    test_int(3, initial_resources - resources_left());
+
+    /* Test copying: */
+    ecs_entity_t instance = ecs_clone(world, 0, e, true);
+    {
+        const ResourceHandle *arr = ecs_get_id(world, e, array_of_opaque);
+        test_int(100, arr[0].value);
+        test_int(101, arr[1].value);
+        test_int(102, arr[2].value);
+    }
+    /* 6 resource(s) should be in use now */
+    test_int(6, initial_resources - resources_left());
+
+    /* Test moving by forcing an archetype change: */
+    ECS_TAG(world, MakeMeMove);
+    ecs_add(world, e, MakeMeMove);
+    {
+        const ResourceHandle *arr = ecs_get_id(world, e, array_of_opaque);
+        test_int(100, arr[0].value);
+        test_int(101, arr[1].value);
+        test_int(102, arr[2].value);
+    }
+    /* 6 resource(s) should still be in use after a move */
+    test_int(6, initial_resources - resources_left());
+
+    /* Test deleting: */
+    ecs_delete(world, e);
+
+    /* After destroying one of the entities, only 3 resource(s) should be in use
+     */
+    test_int(3, initial_resources - resources_left());
+    ecs_delete(world, instance);
+
+    /* check if all 6 test resources were returned and exactly all resource ids
+     * are back: */
+    test_int(initial_resources, resources_left());
+    int i;
+    for (i = 1; i <= initial_resources; i++) {
+        test_assert(resource_id_available(i));
+    }
+    ecs_fini(world);
+    free_resource_ids();
+}
+
+void RuntimeTypes_vector_of_ints(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t /* vector<ecs_i32_t> */ vector_of_ints =
+        ecs_vector(world, {.type = ecs_id(ecs_i32_t)});
+
+    /* Test constructor: */
+    ecs_entity_t e = ecs_new(world);
+    {
+        ecs_vec_t *vec = ecs_ensure_id(world, e, vector_of_ints);
+        {
+            test_int(0, ecs_vec_count(vec));
+            ecs_vec_set_count(NULL, vec, sizeof(ecs_i32_t), 3);
+            ecs_i32_t *v = ecs_vec_first(vec);
+            invoke_type_ctor(world, v, 3, ecs_id(ecs_i32_t));
+            test_memory_zero(v, sizeof(ecs_i32_t) * 3);
+            v[0] = 100;
+            v[1] = 101;
+            v[2] = 102;
+        }
+    }
+
+    /* Test copying: */
+    ecs_entity_t instance = ecs_clone(world, 0, e, true);
+    {
+        const ecs_vec_t *vec = ecs_get_id(world, e, vector_of_ints);
+        {
+            test_int(3, ecs_vec_count(vec));
+            const ecs_i32_t *v = ecs_vec_first(vec);
+            test_assert(v != NULL);
+            test_int(100, v[0]);
+            test_int(101, v[1]);
+            test_int(102, v[2]);
+        }
+    }
+
+    /* Test moving by forcing an archetype change: */
+    ECS_TAG(world, MakeMeMove);
+    ecs_add(world, e, MakeMeMove);
+    {
+        const ecs_vec_t *vec = ecs_get_id(world, e, vector_of_ints);
+        {
+            test_int(3, ecs_vec_count(vec));
+            const ecs_i32_t *v = ecs_vec_first(vec);
+            test_assert(v != NULL);
+            test_int(100, v[0]);
+            test_int(101, v[1]);
+            test_int(102, v[2]);
+        }
+    }
+
+    /* Test deleting: */
+    ecs_delete(world, e);
+    ecs_delete(world, instance);
+
+    ecs_fini(world);
+}
+
+void RuntimeTypes_vector_of_strings(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t /* vector<ecs_string_t> */ vector_of_strings =
+        ecs_vector(world, {.type = ecs_id(ecs_string_t)});
+
+    /* Test constructor: */
+    ecs_entity_t e = ecs_new(world);
+    {
+        ecs_vec_t *vec = ecs_ensure_id(world, e, vector_of_strings);
+        {
+            test_int(0, ecs_vec_count(vec));
+            ecs_vec_set_count(NULL, vec, sizeof(ecs_string_t), 3);
+            ecs_string_t *v = ecs_vec_first(vec);
+            invoke_type_ctor(world, v, 3, ecs_id(ecs_string_t));
+            test_memory_zero(v, sizeof(ecs_string_t) * 3);
+            v[0] = ecs_os_strdup("String100");
+            v[1] = ecs_os_strdup("String101");
+            v[2] = ecs_os_strdup("String102");
+        }
+    }
+
+    /* Test copying: */
+    ecs_entity_t instance = ecs_clone(world, 0, e, true);
+    {
+        const ecs_vec_t *vec = ecs_get_id(world, e, vector_of_strings);
+        {
+            test_int(3, ecs_vec_count(vec));
+            const ecs_string_t *v = ecs_vec_first(vec);
+            test_assert(v != NULL);
+            test_str("String100", v[0]);
+            test_str("String101", v[1]);
+            test_str("String102", v[2]);
+        }
+    }
+
+    /* Test moving by forcing an archetype change: */
+    ECS_TAG(world, MakeMeMove);
+    ecs_add(world, e, MakeMeMove);
+    {
+        const ecs_vec_t *vec = ecs_get_id(world, e, vector_of_strings);
+        {
+            test_int(3, ecs_vec_count(vec));
+            const ecs_string_t *v = ecs_vec_first(vec);
+            test_assert(v != NULL);
+            test_str("String100", v[0]);
+            test_str("String101", v[1]);
+            test_str("String102", v[2]);
+        }
+    }
+
+    /* Test deleting: */
+    ecs_delete(world, e);
+    ecs_delete(world, instance);
+
+    ecs_fini(world);
+}
+
+void RuntimeTypes_vector_of_struct_with_ints(void) {
+    ecs_world_t *world = ecs_init();
+
+    typedef struct {
+        ecs_i32_t a;
+        ecs_i32_t b;
+    } StructWithInts;
+    ecs_entity_t struct_with_ints =
+        ecs_struct(world, {.members = {
+                               {"a", ecs_id(ecs_i32_t)},
+                               {"b", ecs_id(ecs_i32_t)},
+                           }});
+
+    ecs_entity_t /* StructWithInts[3] */ vector_of_struct_with_ints =
+        ecs_array(world, {.type = struct_with_ints, .count = 3});
+
+    /* Test constructor: */
+    ecs_entity_t e = ecs_new(world);
+    {
+        StructWithInts *arr =
+            ecs_ensure_id(world, e, vector_of_struct_with_ints);
+        test_memory_zero(arr, sizeof(StructWithInts[3]));
+        arr[0].a = 100;
+        arr[0].b = 101;
+        arr[1].a = 102;
+        arr[1].b = 103;
+        arr[2].a = 104;
+        arr[2].b = 105;
+    }
+
+    /* Test copying: */
+    ecs_entity_t instance = ecs_clone(world, 0, e, true);
+    {
+        const StructWithInts *arr =
+            ecs_get_id(world, e, vector_of_struct_with_ints);
+        test_int(100, arr[0].a);
+        test_int(101, arr[0].b);
+        test_int(102, arr[1].a);
+        test_int(103, arr[1].b);
+        test_int(104, arr[2].a);
+        test_int(105, arr[2].b);
+    }
+
+    /* Test moving by forcing an archetype change: */
+    ECS_TAG(world, MakeMeMove);
+    ecs_add(world, e, MakeMeMove);
+    {
+        const StructWithInts *arr =
+            ecs_get_id(world, e, vector_of_struct_with_ints);
+        test_int(100, arr[0].a);
+        test_int(101, arr[0].b);
+        test_int(102, arr[1].a);
+        test_int(103, arr[1].b);
+        test_int(104, arr[2].a);
+        test_int(105, arr[2].b);
+    }
+
+    /* Test deleting: */
+    ecs_delete(world, e);
+    ecs_delete(world, instance);
+
+    ecs_fini(world);
+}
+
+void RuntimeTypes_vector_of_struct_with_strings(void) {
+    ecs_world_t *world = ecs_init();
+
+    typedef struct {
+        ecs_string_t a;
+        ecs_i32_t b;
+        ecs_string_t c;
+    } StructWithStrings;
+    ecs_entity_t struct_with_strings =
+        ecs_struct(world, {.members = {
+                               {"a", ecs_id(ecs_string_t)},
+                               {"b", ecs_id(ecs_i32_t)},
+                               {"c", ecs_id(ecs_string_t)},
+                           }});
+
+    ecs_entity_t /* StructWithStrings[3] */ vector_of_struct_with_strings =
+        ecs_array(world, {.type = struct_with_strings, .count = 3});
+
+    /* Test constructor: */
+    ecs_entity_t e = ecs_new(world);
+    {
+        StructWithStrings *arr =
+            ecs_ensure_id(world, e, vector_of_struct_with_strings);
+        test_memory_zero(arr, sizeof(StructWithStrings[3]));
+        arr[0].a = ecs_os_strdup("String100");
+        arr[0].b = 101;
+        arr[0].c = ecs_os_strdup("String102");
+        arr[1].a = ecs_os_strdup("String103");
+        arr[1].b = 104;
+        arr[1].c = ecs_os_strdup("String105");
+        arr[2].a = ecs_os_strdup("String106");
+        arr[2].b = 107;
+        arr[2].c = ecs_os_strdup("String108");
+    }
+
+    /* Test copying: */
+    ecs_entity_t instance = ecs_clone(world, 0, e, true);
+    {
+        const StructWithStrings *arr =
+            ecs_get_id(world, e, vector_of_struct_with_strings);
+        test_str("String100", arr[0].a);
+        test_int(101, arr[0].b);
+        test_str("String102", arr[0].c);
+        test_str("String103", arr[1].a);
+        test_int(104, arr[1].b);
+        test_str("String105", arr[1].c);
+        test_str("String106", arr[2].a);
+        test_int(107, arr[2].b);
+        test_str("String108", arr[2].c);
+    }
+
+    /* Test moving by forcing an archetype change: */
+    ECS_TAG(world, MakeMeMove);
+    ecs_add(world, e, MakeMeMove);
+    {
+        const StructWithStrings *arr =
+            ecs_get_id(world, e, vector_of_struct_with_strings);
+        test_str("String100", arr[0].a);
+        test_int(101, arr[0].b);
+        test_str("String102", arr[0].c);
+        test_str("String103", arr[1].a);
+        test_int(104, arr[1].b);
+        test_str("String105", arr[1].c);
+        test_str("String106", arr[2].a);
+        test_int(107, arr[2].b);
+        test_str("String108", arr[2].c);
+    }
+
+    /* Test deleting: */
+    ecs_delete(world, e);
+    ecs_delete(world, instance);
+
+    ecs_fini(world);
+}
+
+void RuntimeTypes_vector_of_arrays_of_strings(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t /* ecs_string_t[3] */ array_of_strings =
+        ecs_array(world, {.type = ecs_id(ecs_string_t), .count = 3});
+
+    ecs_entity_t /* vector<ecs_string_t[3]> */ vector_of_arrays_of_strings =
+        ecs_vector(world, {.type = array_of_strings});
+
+    /* Test constructor: */
+    ecs_entity_t e = ecs_new(world);
+    {
+        ecs_vec_t *vec = ecs_ensure_id(world, e, vector_of_arrays_of_strings);
+        {
+            test_int(0, ecs_vec_count(vec));
+            ecs_vec_set_count(NULL, vec, sizeof(ecs_string_t[3]), 3);
+            ecs_string_t(*v)[3] = ecs_vec_first(vec);
+            invoke_type_ctor(world, v, 3, array_of_strings);
+            test_memory_zero(v, sizeof(ecs_string_t[3]) * 3);
+            v[0][0] = ecs_os_strdup("String100");
+            v[0][1] = ecs_os_strdup("String101");
+            v[0][2] = ecs_os_strdup("String102");
+            v[1][0] = ecs_os_strdup("String103");
+            v[1][1] = ecs_os_strdup("String104");
+            v[1][2] = ecs_os_strdup("String105");
+            v[2][0] = ecs_os_strdup("String106");
+            v[2][1] = ecs_os_strdup("String107");
+            v[2][2] = ecs_os_strdup("String108");
+        }
+    }
+
+    /* Test copying: */
+    ecs_entity_t instance = ecs_clone(world, 0, e, true);
+    {
+        const ecs_vec_t *vec =
+            ecs_get_id(world, e, vector_of_arrays_of_strings);
+        {
+            test_int(3, ecs_vec_count(vec));
+            const ecs_string_t(*v)[3] =
+                (const ecs_string_t(*)[3]) ecs_vec_first(vec);
+            test_assert(v != NULL);
+            test_str("String100", v[0][0]);
+            test_str("String101", v[0][1]);
+            test_str("String102", v[0][2]);
+            test_str("String103", v[1][0]);
+            test_str("String104", v[1][1]);
+            test_str("String105", v[1][2]);
+            test_str("String106", v[2][0]);
+            test_str("String107", v[2][1]);
+            test_str("String108", v[2][2]);
+        }
+    }
+
+    /* Test moving by forcing an archetype change: */
+    ECS_TAG(world, MakeMeMove);
+    ecs_add(world, e, MakeMeMove);
+    {
+        const ecs_vec_t *vec =
+            ecs_get_id(world, e, vector_of_arrays_of_strings);
+        {
+            test_int(3, ecs_vec_count(vec));
+            const ecs_string_t(*v)[3] =
+                (const ecs_string_t(*)[3]) ecs_vec_first(vec);
+            test_assert(v != NULL);
+            test_str("String100", v[0][0]);
+            test_str("String101", v[0][1]);
+            test_str("String102", v[0][2]);
+            test_str("String103", v[1][0]);
+            test_str("String104", v[1][1]);
+            test_str("String105", v[1][2]);
+            test_str("String106", v[2][0]);
+            test_str("String107", v[2][1]);
+            test_str("String108", v[2][2]);
+        }
+    }
+
+    /* Test deleting: */
+    ecs_delete(world, e);
+    ecs_delete(world, instance);
+
+    ecs_fini(world);
+}
+
+void RuntimeTypes_vector_of_opaque(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t resource_handle_opaque = define_ResourceHandle_opaque(world);
+
+    ecs_entity_t /* vector<ResourceHandle> */ vector_of_opaque =
+        ecs_vector(world, {.type = resource_handle_opaque});
+
+    /* vector_of_opaque will consume 3 test resources per instance */
+    const int initial_resources = 12;
+    initialize_resource_ids(initial_resources);
+
+    /* Test constructor: */
+    ecs_entity_t e = ecs_new(world);
+    {
+        ecs_vec_t *vec = ecs_ensure_id(world, e, vector_of_opaque);
+        {
+            test_int(0, ecs_vec_count(vec));
+            ecs_vec_set_count(NULL, vec, sizeof(ResourceHandle), 3);
+            ResourceHandle *v = ecs_vec_first(vec);
+            invoke_type_ctor(world, v, 3, resource_handle_opaque);
+            test_assert(v[0].id != 0);
+            test_int(0, v[0].value);
+            v[0].value = 100;
+            test_assert(v[1].id != 0);
+            test_int(0, v[1].value);
+            v[1].value = 101;
+            test_assert(v[2].id != 0);
+            test_int(0, v[2].value);
+            v[2].value = 102;
+        }
+    }
+    /* 3 resource(s) should have been used */
+    test_int(3, initial_resources - resources_left());
+
+    /* Test copying: */
+    ecs_entity_t instance = ecs_clone(world, 0, e, true);
+    {
+        const ecs_vec_t *vec = ecs_get_id(world, e, vector_of_opaque);
+        {
+            test_int(3, ecs_vec_count(vec));
+            const ResourceHandle *v = ecs_vec_first(vec);
+            test_assert(v != NULL);
+            test_int(100, v[0].value);
+            test_int(101, v[1].value);
+            test_int(102, v[2].value);
+        }
+    }
+    /* 6 resource(s) should be in use now */
+    test_int(6, initial_resources - resources_left());
+
+    /* Test moving by forcing an archetype change: */
+    ECS_TAG(world, MakeMeMove);
+    ecs_add(world, e, MakeMeMove);
+    {
+        const ecs_vec_t *vec = ecs_get_id(world, e, vector_of_opaque);
+        {
+            test_int(3, ecs_vec_count(vec));
+            const ResourceHandle *v = ecs_vec_first(vec);
+            test_assert(v != NULL);
+            test_int(100, v[0].value);
+            test_int(101, v[1].value);
+            test_int(102, v[2].value);
+        }
+    }
+    /* 6 resource(s) should still be in use after a move */
+    test_int(6, initial_resources - resources_left());
+
+    /* Test deleting: */
+    ecs_delete(world, e);
+
+    /* After destroying one of the entities, only 3 resource(s) should be in use
+     */
+    test_int(3, initial_resources - resources_left());
+    ecs_delete(world, instance);
+
+    /* check if all 6 test resources were returned and exactly all resource ids
+     * are back: */
+    test_int(initial_resources, resources_left());
+    int i;
+    for (i = 1; i <= initial_resources; i++) {
+        test_assert(resource_id_available(i));
+    }
+    ecs_fini(world);
+    free_resource_ids();
 }

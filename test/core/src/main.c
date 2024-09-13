@@ -10884,7 +10884,7 @@ static bake_test_suite suites[] = {
         "ComponentLifecycle",
         ComponentLifecycle_setup,
         NULL,
-        96,
+        98,
         ComponentLifecycle_testcases
     },
     {
