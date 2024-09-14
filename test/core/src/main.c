@@ -735,8 +735,13 @@ void Get_component_get_wildcard(void);
 void Reference_setup(void);
 void Reference_get_ref(void);
 void Reference_get_ref_after_add(void);
+void Reference_get_ref_after_add_other(void);
 void Reference_get_ref_after_remove(void);
+void Reference_get_ref_after_remove_other(void);
+void Reference_get_ref_after_remove_component(void);
 void Reference_get_ref_after_delete(void);
+void Reference_get_ref_after_clear(void);
+void Reference_get_ref_after_clear_other(void);
 void Reference_get_ref_after_realloc(void);
 void Reference_get_ref_after_realloc_w_lifecycle(void);
 void Reference_get_ref_staged(void);
@@ -5154,12 +5159,32 @@ bake_test_case Reference_testcases[] = {
         Reference_get_ref_after_add
     },
     {
+        "get_ref_after_add_other",
+        Reference_get_ref_after_add_other
+    },
+    {
         "get_ref_after_remove",
         Reference_get_ref_after_remove
     },
     {
+        "get_ref_after_remove_other",
+        Reference_get_ref_after_remove_other
+    },
+    {
+        "get_ref_after_remove_component",
+        Reference_get_ref_after_remove_component
+    },
+    {
         "get_ref_after_delete",
         Reference_get_ref_after_delete
+    },
+    {
+        "get_ref_after_clear",
+        Reference_get_ref_after_clear
+    },
+    {
+        "get_ref_after_clear_other",
+        Reference_get_ref_after_clear_other
     },
     {
         "get_ref_after_realloc",
@@ -11548,7 +11573,7 @@ static bake_test_suite suites[] = {
         "Reference",
         Reference_setup,
         NULL,
-        13,
+        18,
         Reference_testcases
     },
     {
