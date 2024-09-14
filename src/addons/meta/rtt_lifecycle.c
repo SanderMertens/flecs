@@ -23,10 +23,10 @@ typedef struct ecs_rtt_call_data_t {
 
 /* Lifecycle context for runtime types */
 typedef struct ecs_rtt_struct_ctx_t {
-    ecs_vec_t ctors; /* vector<ecs_string_initializertt_call_data_t> */
-    ecs_vec_t dtors; /* vector<ecs_rtt_call_data_t> */
-    ecs_vec_t moves; /* vector<ecs_rtt_call_data_t> */
-    ecs_vec_t copys; /* vector<ecs_rtt_call_data_t> */
+    ecs_vec_t vctor; /* vector<ecs_string_initializertt_call_data_t> */
+    ecs_vec_t vdtor; /* vector<ecs_rtt_call_data_t> */
+    ecs_vec_t vmove; /* vector<ecs_rtt_call_data_t> */
+    ecs_vec_t vcopy; /* vector<ecs_rtt_call_data_t> */
 } ecs_rtt_struct_ctx_t;
 
 typedef struct ecs_rtt_array_ctx_t {
@@ -101,7 +101,7 @@ void flecs_rtt_struct_ctor(
 {
     ecs_rtt_struct_ctx_t *rtt_ctx = type_info->hooks.lifecycle_ctx;
     ecs_assert(rtt_ctx != NULL, ECS_INTERNAL_ERROR, NULL);
-    flecs_rtt_struct_xtor(&rtt_ctx->ctors, ptr, count, type_info);
+    flecs_rtt_struct_xtor(&rtt_ctx->vctor, ptr, count, type_info);
 }
 
 /* Generic destructor. It will read hook information call data from the type's
@@ -115,7 +115,7 @@ void flecs_rtt_struct_dtor(
 {
     ecs_rtt_struct_ctx_t *rtt_ctx = type_info->hooks.lifecycle_ctx;
     ecs_assert(rtt_ctx != NULL, ECS_INTERNAL_ERROR, NULL);
-    flecs_rtt_struct_xtor(&rtt_ctx->dtors, ptr, count, type_info);
+    flecs_rtt_struct_xtor(&rtt_ctx->vdtor, ptr, count, type_info);
 }
 
 /* Generic move hook. It will read hook information call data from the type's
@@ -131,7 +131,7 @@ void flecs_rtt_struct_move(
     ecs_rtt_struct_ctx_t *rtt_ctx = type_info->hooks.lifecycle_ctx;
     ecs_assert(rtt_ctx != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    int cb_count = ecs_vec_count(&rtt_ctx->moves);
+    int cb_count = ecs_vec_count(&rtt_ctx->vmove);
     int i, j;
     for (j = 0; j < count; j++) {
         ecs_size_t elem_offset = type_info->size * j;
@@ -139,7 +139,7 @@ void flecs_rtt_struct_move(
         void *elem_src_ptr = ECS_OFFSET(src_ptr, elem_offset);
         for (i = 0; i < cb_count; i++) {
             ecs_rtt_call_data_t *move_data =
-                ecs_vec_get_t(&rtt_ctx->moves, ecs_rtt_call_data_t, i);
+                ecs_vec_get_t(&rtt_ctx->vmove, ecs_rtt_call_data_t, i);
             move_data->hook.move(
                 ECS_OFFSET(elem_dst_ptr, move_data->offset),
                 ECS_OFFSET(elem_src_ptr, move_data->offset),
@@ -162,7 +162,7 @@ void flecs_rtt_struct_copy(
     ecs_rtt_struct_ctx_t *rtt_ctx = type_info->hooks.lifecycle_ctx;
     ecs_assert(rtt_ctx != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    int cb_count = ecs_vec_count(&rtt_ctx->copys);
+    int cb_count = ecs_vec_count(&rtt_ctx->vcopy);
     int i, j;
     for (j = 0; j < count; j++) {
         ecs_size_t elem_offset = type_info->size * j;
@@ -170,7 +170,7 @@ void flecs_rtt_struct_copy(
         const void *elem_src_ptr = ECS_OFFSET(src_ptr, elem_offset);
         for (i = 0; i < cb_count; i++) {
             ecs_rtt_call_data_t *copy_data =
-                ecs_vec_get_t(&rtt_ctx->copys, ecs_rtt_call_data_t, i);
+                ecs_vec_get_t(&rtt_ctx->vcopy, ecs_rtt_call_data_t, i);
             copy_data->hook.copy(
                 ECS_OFFSET(elem_dst_ptr, copy_data->offset),
                 ECS_OFFSET(elem_src_ptr, copy_data->offset),
@@ -190,10 +190,10 @@ void flecs_rtt_free_lifecycle_struct_ctx(
 
     ecs_rtt_struct_ctx_t *lifecycle_ctx = ctx;
 
-    ecs_vec_fini_t(NULL, &lifecycle_ctx->ctors, ecs_rtt_call_data_t);
-    ecs_vec_fini_t(NULL, &lifecycle_ctx->dtors, ecs_rtt_call_data_t);
-    ecs_vec_fini_t(NULL, &lifecycle_ctx->moves, ecs_rtt_call_data_t);
-    ecs_vec_fini_t(NULL, &lifecycle_ctx->copys, ecs_rtt_call_data_t);
+    ecs_vec_fini_t(NULL, &lifecycle_ctx->vctor, ecs_rtt_call_data_t);
+    ecs_vec_fini_t(NULL, &lifecycle_ctx->vdtor, ecs_rtt_call_data_t);
+    ecs_vec_fini_t(NULL, &lifecycle_ctx->vmove, ecs_rtt_call_data_t);
+    ecs_vec_fini_t(NULL, &lifecycle_ctx->vcopy, ecs_rtt_call_data_t);
 
     ecs_os_free(ctx);
 }
@@ -215,10 +215,10 @@ ecs_rtt_struct_ctx_t * flecs_rtt_configure_struct_hooks(
     ecs_rtt_struct_ctx_t *rtt_ctx = NULL;
     if (ctor || dtor || move || copy) {
         rtt_ctx = ecs_os_malloc_t(ecs_rtt_struct_ctx_t);
-        ecs_vec_init_t(NULL, &rtt_ctx->ctors, ecs_rtt_call_data_t, 0);
-        ecs_vec_init_t(NULL, &rtt_ctx->dtors, ecs_rtt_call_data_t, 0);
-        ecs_vec_init_t(NULL, &rtt_ctx->moves, ecs_rtt_call_data_t, 0);
-        ecs_vec_init_t(NULL, &rtt_ctx->copys, ecs_rtt_call_data_t, 0);
+        ecs_vec_init_t(NULL, &rtt_ctx->vctor, ecs_rtt_call_data_t, 0);
+        ecs_vec_init_t(NULL, &rtt_ctx->vdtor, ecs_rtt_call_data_t, 0);
+        ecs_vec_init_t(NULL, &rtt_ctx->vmove, ecs_rtt_call_data_t, 0);
+        ecs_vec_init_t(NULL, &rtt_ctx->vcopy, ecs_rtt_call_data_t, 0);
         hooks.lifecycle_ctx = rtt_ctx;
         hooks.lifecycle_ctx_free = flecs_rtt_free_lifecycle_struct_ctx;
 
@@ -298,7 +298,7 @@ void flecs_rtt_init_default_hooks_struct(
         const ecs_type_info_t *member_ti = ecs_get_type_info(world, m->type);
         if (ctor_hook_required) {
             ecs_rtt_call_data_t *ctor_data =
-                ecs_vec_append_t(NULL, &rtt_ctx->ctors, ecs_rtt_call_data_t);
+                ecs_vec_append_t(NULL, &rtt_ctx->vctor, ecs_rtt_call_data_t);
             ctor_data->count = m->count;
             ctor_data->offset = m->offset;
             ctor_data->type_info = member_ti;
@@ -310,7 +310,7 @@ void flecs_rtt_init_default_hooks_struct(
         }
         if (dtor_hook_required && member_ti->hooks.dtor) {
             ecs_rtt_call_data_t *dtor_data =
-                ecs_vec_append_t(NULL, &rtt_ctx->dtors, ecs_rtt_call_data_t);
+                ecs_vec_append_t(NULL, &rtt_ctx->vdtor, ecs_rtt_call_data_t);
             dtor_data->count = m->count;
             dtor_data->offset = m->offset;
             dtor_data->type_info = member_ti;
@@ -318,7 +318,7 @@ void flecs_rtt_init_default_hooks_struct(
         }
         if (move_hook_required) {
             ecs_rtt_call_data_t *move_data =
-                ecs_vec_append_t(NULL, &rtt_ctx->moves, ecs_rtt_call_data_t);
+                ecs_vec_append_t(NULL, &rtt_ctx->vmove, ecs_rtt_call_data_t);
             move_data->offset = m->offset;
             move_data->type_info = member_ti;
             move_data->count = m->count;
@@ -330,7 +330,7 @@ void flecs_rtt_init_default_hooks_struct(
         }
         if (copy_hook_required) {
             ecs_rtt_call_data_t *copy_data =
-                ecs_vec_append_t(NULL, &rtt_ctx->copys, ecs_rtt_call_data_t);
+                ecs_vec_append_t(NULL, &rtt_ctx->vcopy, ecs_rtt_call_data_t);
             copy_data->offset = m->offset;
             copy_data->type_info = member_ti;
             copy_data->count = m->count;
