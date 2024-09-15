@@ -1045,6 +1045,7 @@
                 "1_component",
                 "2_component",
                 "1_component_w_value",
+                "1_component_w_lifecycle",
                 "2_component_w_value",
                 "3_component",
                 "3_component_w_value",
