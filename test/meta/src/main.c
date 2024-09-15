@@ -85,6 +85,47 @@ void BitmaskTypes_bitmask_4_constants_manual_values(void);
 void BitmaskTypes_struct_w_bitmask(void);
 void BitmaskTypes_bitmask_w_short_notation(void);
 
+// Testsuite 'RuntimeTypes'
+void RuntimeTypes_trivial_struct(void);
+void RuntimeTypes_ctor(void);
+void RuntimeTypes_dtor(void);
+void RuntimeTypes_move(void);
+void RuntimeTypes_copy(void);
+void RuntimeTypes_trivial_array(void);
+void RuntimeTypes_array_ctor(void);
+void RuntimeTypes_array_dtor(void);
+void RuntimeTypes_array_move(void);
+void RuntimeTypes_array_copy(void);
+void RuntimeTypes_vector_lifecycle(void);
+void RuntimeTypes_vector_lifecycle_trivial_type(void);
+void RuntimeTypes_opaque(void);
+void RuntimeTypes_struct_with_ints(void);
+void RuntimeTypes_struct_with_strings(void);
+void RuntimeTypes_struct_with_opaque(void);
+void RuntimeTypes_nested_struct_with_strings(void);
+void RuntimeTypes_struct_with_array_of_strings(void);
+void RuntimeTypes_struct_with_array_of_array_of_strings(void);
+void RuntimeTypes_struct_with_vector_of_ints(void);
+void RuntimeTypes_struct_with_vector_of_strings(void);
+void RuntimeTypes_nested_struct_with_vector_of_ints(void);
+void RuntimeTypes_nested_struct_with_vector_of_strings(void);
+void RuntimeTypes_array_of_ints(void);
+void RuntimeTypes_array_of_strings(void);
+void RuntimeTypes_array_of_struct_with_ints(void);
+void RuntimeTypes_array_of_struct_with_strings(void);
+void RuntimeTypes_array_of_struct_with_opaques(void);
+void RuntimeTypes_array_of_array_of_strings(void);
+void RuntimeTypes_array_of_array_of_struct_with_strings(void);
+void RuntimeTypes_array_of_vectors_of_ints(void);
+void RuntimeTypes_array_of_vectors_of_strings(void);
+void RuntimeTypes_array_of_opaque(void);
+void RuntimeTypes_vector_of_ints(void);
+void RuntimeTypes_vector_of_strings(void);
+void RuntimeTypes_vector_of_struct_with_ints(void);
+void RuntimeTypes_vector_of_struct_with_strings(void);
+void RuntimeTypes_vector_of_arrays_of_strings(void);
+void RuntimeTypes_vector_of_opaque(void);
+
 // Testsuite 'StructTypes'
 void StructTypes_i32(void);
 void StructTypes_i32_i32(void);
@@ -1232,6 +1273,165 @@ bake_test_case BitmaskTypes_testcases[] = {
     {
         "bitmask_w_short_notation",
         BitmaskTypes_bitmask_w_short_notation
+    }
+};
+
+bake_test_case RuntimeTypes_testcases[] = {
+    {
+        "trivial_struct",
+        RuntimeTypes_trivial_struct
+    },
+    {
+        "ctor",
+        RuntimeTypes_ctor
+    },
+    {
+        "dtor",
+        RuntimeTypes_dtor
+    },
+    {
+        "move",
+        RuntimeTypes_move
+    },
+    {
+        "copy",
+        RuntimeTypes_copy
+    },
+    {
+        "trivial_array",
+        RuntimeTypes_trivial_array
+    },
+    {
+        "array_ctor",
+        RuntimeTypes_array_ctor
+    },
+    {
+        "array_dtor",
+        RuntimeTypes_array_dtor
+    },
+    {
+        "array_move",
+        RuntimeTypes_array_move
+    },
+    {
+        "array_copy",
+        RuntimeTypes_array_copy
+    },
+    {
+        "vector_lifecycle",
+        RuntimeTypes_vector_lifecycle
+    },
+    {
+        "vector_lifecycle_trivial_type",
+        RuntimeTypes_vector_lifecycle_trivial_type
+    },
+    {
+        "opaque",
+        RuntimeTypes_opaque
+    },
+    {
+        "struct_with_ints",
+        RuntimeTypes_struct_with_ints
+    },
+    {
+        "struct_with_strings",
+        RuntimeTypes_struct_with_strings
+    },
+    {
+        "struct_with_opaque",
+        RuntimeTypes_struct_with_opaque
+    },
+    {
+        "nested_struct_with_strings",
+        RuntimeTypes_nested_struct_with_strings
+    },
+    {
+        "struct_with_array_of_strings",
+        RuntimeTypes_struct_with_array_of_strings
+    },
+    {
+        "struct_with_array_of_array_of_strings",
+        RuntimeTypes_struct_with_array_of_array_of_strings
+    },
+    {
+        "struct_with_vector_of_ints",
+        RuntimeTypes_struct_with_vector_of_ints
+    },
+    {
+        "struct_with_vector_of_strings",
+        RuntimeTypes_struct_with_vector_of_strings
+    },
+    {
+        "nested_struct_with_vector_of_ints",
+        RuntimeTypes_nested_struct_with_vector_of_ints
+    },
+    {
+        "nested_struct_with_vector_of_strings",
+        RuntimeTypes_nested_struct_with_vector_of_strings
+    },
+    {
+        "array_of_ints",
+        RuntimeTypes_array_of_ints
+    },
+    {
+        "array_of_strings",
+        RuntimeTypes_array_of_strings
+    },
+    {
+        "array_of_struct_with_ints",
+        RuntimeTypes_array_of_struct_with_ints
+    },
+    {
+        "array_of_struct_with_strings",
+        RuntimeTypes_array_of_struct_with_strings
+    },
+    {
+        "array_of_struct_with_opaques",
+        RuntimeTypes_array_of_struct_with_opaques
+    },
+    {
+        "array_of_array_of_strings",
+        RuntimeTypes_array_of_array_of_strings
+    },
+    {
+        "array_of_array_of_struct_with_strings",
+        RuntimeTypes_array_of_array_of_struct_with_strings
+    },
+    {
+        "array_of_vectors_of_ints",
+        RuntimeTypes_array_of_vectors_of_ints
+    },
+    {
+        "array_of_vectors_of_strings",
+        RuntimeTypes_array_of_vectors_of_strings
+    },
+    {
+        "array_of_opaque",
+        RuntimeTypes_array_of_opaque
+    },
+    {
+        "vector_of_ints",
+        RuntimeTypes_vector_of_ints
+    },
+    {
+        "vector_of_strings",
+        RuntimeTypes_vector_of_strings
+    },
+    {
+        "vector_of_struct_with_ints",
+        RuntimeTypes_vector_of_struct_with_ints
+    },
+    {
+        "vector_of_struct_with_strings",
+        RuntimeTypes_vector_of_struct_with_strings
+    },
+    {
+        "vector_of_arrays_of_strings",
+        RuntimeTypes_vector_of_arrays_of_strings
+    },
+    {
+        "vector_of_opaque",
+        RuntimeTypes_vector_of_opaque
     }
 };
 
@@ -4602,6 +4802,13 @@ static bake_test_suite suites[] = {
         BitmaskTypes_testcases
     },
     {
+        "RuntimeTypes",
+        NULL,
+        NULL,
+        39,
+        RuntimeTypes_testcases
+    },
+    {
         "StructTypes",
         NULL,
         NULL,
@@ -4723,5 +4930,5 @@ static bake_test_suite suites[] = {
 };
 
 int main(int argc, char *argv[]) {
-    return bake_test_run("meta", argc, argv, suites, 20);
+    return bake_test_run("meta", argc, argv, suites, 21);
 }

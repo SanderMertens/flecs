@@ -899,11 +899,14 @@ struct ecs_type_hooks_t {
      * destructor is invoked. */
     ecs_iter_action_t on_remove;
 
-    void *ctx;                       /**< User defined context */
-    void *binding_ctx;               /**< Language binding context */
+    void *ctx;                         /**< User defined context */
+    void *binding_ctx;                 /**< Language binding context */
+    void *lifecycle_ctx;               /**< Component lifecycle context (see meta add-on)*/
 
-    ecs_ctx_free_t ctx_free;         /**< Callback to free ctx */
-    ecs_ctx_free_t binding_ctx_free; /**< Callback to free binding_ctx */
+    ecs_ctx_free_t ctx_free;           /**< Callback to free ctx */
+    ecs_ctx_free_t binding_ctx_free;   /**< Callback to free binding_ctx */
+    ecs_ctx_free_t lifecycle_ctx_free; /**< Callback to free lifecycle_ctx */
+
 };
 
 /** Type that contains component information (passed to ctors/dtors/...)
@@ -911,7 +914,6 @@ struct ecs_type_hooks_t {
  * @ingroup components
  */
 struct ecs_type_info_t {
-    const ecs_world_t *world; /**< World */
     ecs_size_t size;         /**< Size of type */
     ecs_size_t alignment;    /**< Alignment of type */
     ecs_type_hooks_t hooks;  /**< Type hooks */

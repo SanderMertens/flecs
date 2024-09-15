@@ -34,6 +34,8 @@ int flecs_expr_ser_primitive(
     ecs_strbuf_t *str,
     bool is_expr);
 
+void flecs_rtt_init_default_hooks(ecs_iter_t *it);
+
 #endif
 
 #endif

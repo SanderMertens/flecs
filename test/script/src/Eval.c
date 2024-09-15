@@ -4063,8 +4063,6 @@ void Eval_multiline_string(void) {
         "Special characters }{\"\"'',\n"
     );
 
-    ecs_os_free(ptr->value);
-
     ecs_fini(world);
 }
 
@@ -7898,13 +7896,13 @@ ECS_CTOR(Strings, ptr, {
     ptr->a = NULL;
     ptr->b = NULL;
     strings_ctor_invoked ++;
-});
+})
 
 ECS_DTOR(Strings, ptr, {
     ecs_os_free(ptr->a);
     ecs_os_free(ptr->b);
     strings_dtor_invoked ++;
-});
+})
 
 ECS_MOVE(Strings, dst, src, {
     ecs_os_free(dst->a);
@@ -7914,7 +7912,7 @@ ECS_MOVE(Strings, dst, src, {
     src->a = NULL;
     dst->a = NULL;
     strings_move_invoked ++;
-});
+})
 
 ECS_COPY(Strings, dst, src, {
     ecs_os_free(dst->a);
@@ -7922,7 +7920,7 @@ ECS_COPY(Strings, dst, src, {
     dst->a = ecs_os_strdup(src->a);
     dst->b = ecs_os_strdup(src->b);
     strings_copy_invoked ++;
-});
+})
 
 void Eval_partial_assign_nontrivial(void) {
     ecs_world_t *world = ecs_init();
