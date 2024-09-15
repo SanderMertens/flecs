@@ -41,8 +41,8 @@ typedef struct ecs_rtt_vector_ctx_t {
 } ecs_rtt_vector_ctx_t;
 
 /* Generic copy assign hook */
-static void
-flecs_rtt_default_copy(
+static
+void flecs_rtt_default_copy(
     void *dst_ptr,
     const void *src_ptr,
     int32_t count,
@@ -52,8 +52,8 @@ flecs_rtt_default_copy(
 }
 
 /* Generic move assign hook */
-static void
-flecs_rtt_default_move(
+static
+void flecs_rtt_default_move(
     void *dst_ptr,
     void *src_ptr,
     int32_t count,
@@ -70,8 +70,8 @@ flecs_rtt_default_move(
 
 /* Invokes struct member type's constructor/destructor using saved information
  * in the lifecycle context */
-static void
-flecs_rtt_struct_xtor(
+static
+void flecs_rtt_struct_xtor(
     ecs_vec_t *xtor_data_vec,
     void *ptr,
     int32_t count,
@@ -95,8 +95,8 @@ flecs_rtt_struct_xtor(
 /* Generic struct constructor. It will read hook information call data from
  * the structs's lifecycle context and call the constructors configured when
  * the type was created. */
-static void
-flecs_rtt_struct_ctor(
+static
+void flecs_rtt_struct_ctor(
     void *ptr,
     int32_t count,
     const ecs_type_info_t *type_info)
@@ -109,8 +109,8 @@ flecs_rtt_struct_ctor(
 /* Generic struct destructor. It will read hook information call data from
  * the structs's lifecycle context and call the constructors configured when
  * the type was created. */
-static void
-flecs_rtt_struct_dtor(
+static
+void flecs_rtt_struct_dtor(
     void *ptr,
     int32_t count,
     const ecs_type_info_t *type_info)
@@ -123,8 +123,8 @@ flecs_rtt_struct_dtor(
 /* Generic move hook. It will read hook information call data from the
  * structs's lifecycle context and call the move hooks configured when
  * the type was created. */
-static void
-flecs_rtt_struct_move(
+static
+void flecs_rtt_struct_move(
     void *dst_ptr,
     void *src_ptr,
     int32_t count,
@@ -154,8 +154,8 @@ flecs_rtt_struct_move(
 /* Generic copy hook. It will read hook information call data from the
  * structs's lifecycle context and call the copy hooks configured when
  * the type was created. */
-static void
-flecs_rtt_struct_copy(
+static
+void flecs_rtt_struct_copy(
     void *dst_ptr,
     const void *src_ptr,
     int32_t count,
@@ -182,8 +182,9 @@ flecs_rtt_struct_copy(
     }
 }
 
-static void
-flecs_rtt_free_lifecycle_struct_ctx(void *ctx)
+static
+void flecs_rtt_free_lifecycle_struct_ctx(
+    void *ctx)
 {
     if (!ctx) {
         return;
@@ -199,8 +200,8 @@ flecs_rtt_free_lifecycle_struct_ctx(void *ctx)
     ecs_os_free(ctx);
 }
 
-static ecs_rtt_struct_ctx_t *
-flecs_rtt_configure_struct_hooks(
+static
+ecs_rtt_struct_ctx_t * flecs_rtt_configure_struct_hooks(
     ecs_world_t *world,
     const ecs_type_info_t *ti,
     bool ctor,
@@ -246,8 +247,8 @@ flecs_rtt_configure_struct_hooks(
 /* Checks if a struct member's types have hooks installed. If so, it generates
  * and installs required hooks for the struct type itself. These hooks will
  * invoke the member hooks when necessary  */
-static void
-flecs_rtt_init_default_hooks_struct(
+static
+void flecs_rtt_init_default_hooks_struct(
     ecs_world_t *world,
     ecs_entity_t component,
     const ecs_type_info_t *ti)
@@ -350,8 +351,9 @@ flecs_rtt_init_default_hooks_struct(
  *
  */
 
-static void
-flecs_rtt_free_lifecycle_array_ctx(void *ctx)
+static
+void flecs_rtt_free_lifecycle_array_ctx(
+    void *ctx)
 {
     if (!ctx) {
         return;
@@ -362,8 +364,8 @@ flecs_rtt_free_lifecycle_array_ctx(void *ctx)
 
 /* Generic array constructor. It will invoke the constructor of the underlying
  * type for all the elements */
-static void
-flecs_rtt_array_ctor(
+static
+void flecs_rtt_array_ctor(
     void *ptr,
     int32_t count, /* note: "count" is how many arrays to initialize, not how
                       many elements are in the array */
@@ -380,8 +382,8 @@ flecs_rtt_array_ctor(
 
 /* Generic array constructor. It will invoke the destructor of the underlying
  * type for all the elements */
-static void
-flecs_rtt_array_dtor(
+static
+void flecs_rtt_array_dtor(
     void *ptr,
     int32_t count, /* note: "count" is how many arrays to destroy, not how
                       many elements are in the array */
@@ -398,8 +400,8 @@ flecs_rtt_array_dtor(
 
 /* Generic array move hook. It will invoke the move hook of the underlying
  * type for all the elements */
-static void
-flecs_rtt_array_move(
+static
+void flecs_rtt_array_move(
     void *dst_ptr,
     void *src_ptr,
     int32_t count, /* note: "count" is how many arrays to move, not how
@@ -418,8 +420,8 @@ flecs_rtt_array_move(
 
 /* Generic array copy hook. It will invoke the copy hook of the underlying
  * type for all the elements */
-static void
-flecs_rtt_array_copy(
+static
+void flecs_rtt_array_copy(
     void *dst_ptr,
     const void *src_ptr,
     int32_t count, /* note: "count" is how many arrays to copy, not how
@@ -439,8 +441,10 @@ flecs_rtt_array_copy(
 /* Checks if an array's underlying type has hooks installed. If so, it generates
  * and installs required hooks for the array type itself. These hooks will
  * invoke the underlying type's hook for each element in the array. */
-static void
-flecs_rtt_init_default_hooks_array(ecs_world_t *world, ecs_entity_t component)
+static
+void flecs_rtt_init_default_hooks_array(
+    ecs_world_t *world, 
+    ecs_entity_t component)
 {
     const EcsArray *array_info = ecs_get(world, component, EcsArray);
     ecs_assert(array_info != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -493,8 +497,9 @@ flecs_rtt_init_default_hooks_array(ecs_world_t *world, ecs_entity_t component)
  *
  */
 
-static void
-flecs_rtt_free_lifecycle_vector_ctx(void *ctx)
+static
+void flecs_rtt_free_lifecycle_vector_ctx(
+    void *ctx)
 {
     if (!ctx) {
         return;
@@ -505,8 +510,8 @@ flecs_rtt_free_lifecycle_vector_ctx(void *ctx)
 
 /* Generic vector constructor. Makes sure the vector structure is initialized to
  * 0 elements */
-static void
-flecs_rtt_vector_ctor(
+static
+void flecs_rtt_vector_ctor(
     void *ptr,
     int32_t count,
     const ecs_type_info_t *type_info)
@@ -521,8 +526,8 @@ flecs_rtt_vector_ctor(
 
 /* Generic vector destructor. It will invoke the destructor for each element of
  * the vector and finalize resources associated to the vector itself. */
-static void
-flecs_rtt_vector_dtor(
+static
+void flecs_rtt_vector_dtor(
     void *ptr,
     int32_t count,
     const ecs_type_info_t *type_info)
@@ -541,8 +546,8 @@ flecs_rtt_vector_dtor(
 }
 
 /* Generic vector move hook. */
-static void
-flecs_rtt_vector_move(
+static
+void flecs_rtt_vector_move(
     void *dst_ptr,
     void *src_ptr,
     int32_t count,
@@ -560,8 +565,8 @@ flecs_rtt_vector_move(
 }
 
 /* Generic vector copy hook. It makes a deep copy of vector contents */
-static void
-flecs_rtt_vector_copy(
+static
+void flecs_rtt_vector_copy(
     void *dst_ptr,
     const void *src_ptr,
     int32_t count,
@@ -599,8 +604,10 @@ flecs_rtt_vector_copy(
  * type lifecycle. Vectors always have hooks because at the very least the
  * vector structure itself must be initialized/destroyed/copied/moved, even if
  * empty. */
-static void
-flecs_rtt_init_default_hooks_vector(ecs_world_t *world, ecs_entity_t component)
+static
+void flecs_rtt_init_default_hooks_vector(
+    ecs_world_t *world,
+    ecs_entity_t component)
 {
     const EcsVector *vector_info = ecs_get(world, component, EcsVector);
     ecs_assert(vector_info != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -621,8 +628,8 @@ flecs_rtt_init_default_hooks_vector(ecs_world_t *world, ecs_entity_t component)
     ecs_set_hooks_id(world, component, &hooks);
 }
 
-void
-flecs_rtt_init_default_hooks(ecs_iter_t *it)
+void flecs_rtt_init_default_hooks(
+    ecs_iter_t *it)
 {
     ecs_world_t *world = it->world;
     EcsType *type_field = ecs_field(it, EcsType, 0);
