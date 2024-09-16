@@ -2846,48 +2846,55 @@ void RuntimeTypes_vector_of_struct_with_ints(void) {
         }
     });
 
-    ecs_entity_t /* StructWithInts[3] */ vector_of_struct_with_ints =
-        ecs_array(world, {.type = struct_with_ints, .count = 3});
+    ecs_entity_t /* vector<StructWithInts> */ vector_of_struct_with_ints =
+        ecs_vector(world, {.type = struct_with_ints});
 
     /* Test constructor: */
     ecs_entity_t e = ecs_new(world);
     {
-        StructWithInts *arr =
-            ecs_ensure_id(world, e, vector_of_struct_with_ints);
-        test_memory_zero(arr, sizeof(StructWithInts[3]));
-        arr[0].a = 100;
-        arr[0].b = 101;
-        arr[1].a = 102;
-        arr[1].b = 103;
-        arr[2].a = 104;
-        arr[2].b = 105;
+        ecs_vec_t *vec = ecs_ensure_id(world, e, vector_of_struct_with_ints);
+        test_int(0, ecs_vec_count(vec));
+        ecs_vec_set_count(NULL, vec, sizeof(StructWithInts), 3);
+        StructWithInts *v = ecs_vec_first(vec);
+        invoke_type_ctor(world, v, 3, struct_with_ints);
+        test_memory_zero(v, sizeof(StructWithInts) * 3);
+        v[0].a = 100;
+        v[0].b = 101;
+        v[1].a = 102;
+        v[1].b = 103;
+        v[2].a = 104;
+        v[2].b = 105;
     }
 
     /* Test copying: */
     ecs_entity_t instance = ecs_clone(world, 0, e, true);
     {
-        const StructWithInts *arr =
-            ecs_get_id(world, e, vector_of_struct_with_ints);
-        test_int(100, arr[0].a);
-        test_int(101, arr[0].b);
-        test_int(102, arr[1].a);
-        test_int(103, arr[1].b);
-        test_int(104, arr[2].a);
-        test_int(105, arr[2].b);
+        const ecs_vec_t *vec = ecs_get_id(world, e, vector_of_struct_with_ints);
+        test_int(3, ecs_vec_count(vec));
+        const StructWithInts *v = ecs_vec_first(vec);
+        test_assert(v != NULL);
+        test_int(100, v[0].a);
+        test_int(101, v[0].b);
+        test_int(102, v[1].a);
+        test_int(103, v[1].b);
+        test_int(104, v[2].a);
+        test_int(105, v[2].b);
     }
 
     /* Test moving by forcing an archetype change: */
     ECS_TAG(world, MakeMeMove);
     ecs_add(world, e, MakeMeMove);
     {
-        const StructWithInts *arr =
-            ecs_get_id(world, e, vector_of_struct_with_ints);
-        test_int(100, arr[0].a);
-        test_int(101, arr[0].b);
-        test_int(102, arr[1].a);
-        test_int(103, arr[1].b);
-        test_int(104, arr[2].a);
-        test_int(105, arr[2].b);
+        const ecs_vec_t *vec = ecs_get_id(world, e, vector_of_struct_with_ints);
+        test_int(3, ecs_vec_count(vec));
+        const StructWithInts *v = ecs_vec_first(vec);
+        test_assert(v != NULL);
+        test_int(100, v[0].a);
+        test_int(101, v[0].b);
+        test_int(102, v[1].a);
+        test_int(103, v[1].b);
+        test_int(104, v[2].a);
+        test_int(105, v[2].b);
     }
 
     /* Test deleting: */
@@ -2914,57 +2921,66 @@ void RuntimeTypes_vector_of_struct_with_strings(void) {
         }
     });
 
-    ecs_entity_t /* StructWithStrings[3] */ vector_of_struct_with_strings =
-        ecs_array(world, {.type = struct_with_strings, .count = 3});
+    ecs_entity_t /* vector<StructWithStrings> */ vector_of_struct_with_strings =
+        ecs_vector(world, {.type = struct_with_strings});
 
     /* Test constructor: */
     ecs_entity_t e = ecs_new(world);
     {
-        StructWithStrings *arr =
-            ecs_ensure_id(world, e, vector_of_struct_with_strings);
-        test_memory_zero(arr, sizeof(StructWithStrings[3]));
-        arr[0].a = ecs_os_strdup("String100");
-        arr[0].b = 101;
-        arr[0].c = ecs_os_strdup("String102");
-        arr[1].a = ecs_os_strdup("String103");
-        arr[1].b = 104;
-        arr[1].c = ecs_os_strdup("String105");
-        arr[2].a = ecs_os_strdup("String106");
-        arr[2].b = 107;
-        arr[2].c = ecs_os_strdup("String108");
+        ecs_vec_t *vec = ecs_ensure_id(world, e, vector_of_struct_with_strings);
+        test_int(0, ecs_vec_count(vec));
+        ecs_vec_set_count(NULL, vec, sizeof(StructWithStrings), 3);
+        StructWithStrings *v = ecs_vec_first(vec);
+        invoke_type_ctor(world, v, 3, struct_with_strings);
+        test_memory_zero(v, sizeof(StructWithStrings) * 3);
+        v[0].a = ecs_os_strdup("String100");
+        v[0].b = 101;
+        v[0].c = ecs_os_strdup("String102");
+        v[1].a = ecs_os_strdup("String103");
+        v[1].b = 104;
+        v[1].c = ecs_os_strdup("String105");
+        v[2].a = ecs_os_strdup("String106");
+        v[2].b = 107;
+        v[2].c = ecs_os_strdup("String108");
     }
 
     /* Test copying: */
     ecs_entity_t instance = ecs_clone(world, 0, e, true);
     {
-        const StructWithStrings *arr =
-            ecs_get_id(world, e, vector_of_struct_with_strings);
-        test_str("String100", arr[0].a);
-        test_int(101, arr[0].b);
-        test_str("String102", arr[0].c);
-        test_str("String103", arr[1].a);
-        test_int(104, arr[1].b);
-        test_str("String105", arr[1].c);
-        test_str("String106", arr[2].a);
-        test_int(107, arr[2].b);
-        test_str("String108", arr[2].c);
+        const ecs_vec_t *vec =
+        ecs_get_id(world, e, vector_of_struct_with_strings);
+        test_int(3, ecs_vec_count(vec));
+        const StructWithStrings *v = ecs_vec_first(vec);
+        test_assert(v != NULL);
+        test_str("String100", v[0].a);
+        test_int(101, v[0].b);
+        test_str("String102", v[0].c);
+        test_str("String103", v[1].a);
+        test_int(104, v[1].b);
+        test_str("String105", v[1].c);
+        test_str("String106", v[2].a);
+        test_int(107, v[2].b);
+        test_str("String108", v[2].c);
     }
 
     /* Test moving by forcing an archetype change: */
     ECS_TAG(world, MakeMeMove);
     ecs_add(world, e, MakeMeMove);
     {
-        const StructWithStrings *arr =
-            ecs_get_id(world, e, vector_of_struct_with_strings);
-        test_str("String100", arr[0].a);
-        test_int(101, arr[0].b);
-        test_str("String102", arr[0].c);
-        test_str("String103", arr[1].a);
-        test_int(104, arr[1].b);
-        test_str("String105", arr[1].c);
-        test_str("String106", arr[2].a);
-        test_int(107, arr[2].b);
-        test_str("String108", arr[2].c);
+        const ecs_vec_t *vec =
+        ecs_get_id(world, e, vector_of_struct_with_strings);
+        test_int(3, ecs_vec_count(vec));
+        const StructWithStrings *v = ecs_vec_first(vec);
+        test_assert(v != NULL);
+        test_str("String100", v[0].a);
+        test_int(101, v[0].b);
+        test_str("String102", v[0].c);
+        test_str("String103", v[1].a);
+        test_int(104, v[1].b);
+        test_str("String105", v[1].c);
+        test_str("String106", v[2].a);
+        test_int(107, v[2].b);
+        test_str("String108", v[2].c);
     }
 
     /* Test deleting: */
