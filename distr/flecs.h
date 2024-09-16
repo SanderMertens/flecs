@@ -510,7 +510,8 @@ extern "C" {
 #define EcsObserverIsMonitor           (1u << 2u)  /* Is observer a monitor */
 #define EcsObserverIsDisabled          (1u << 3u)  /* Is observer entity disabled */
 #define EcsObserverIsParentDisabled    (1u << 4u)  /* Is module parent of observer disabled  */
-#define EcsObserverBypassQuery         (1u << 5u)
+#define EcsObserverBypassQuery         (1u << 5u)  /* Don't evaluate query for multi-component observer*/
+#define EcsObserverYieldOnDelete       (1u << 6u)  /* Yield matching entities when deleting observer */
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Table flags (used by ecs_table_t::flags)

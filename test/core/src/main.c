@@ -1437,6 +1437,13 @@ void Observer_on_add_yield_existing_2_terms(void);
 void Observer_on_add_yield_existing_wildcard(void);
 void Observer_on_add_yield_existing_wildcard_multi(void);
 void Observer_on_add_yield_existing_wildcard_multi_w_wildcard_pivot(void);
+void Observer_on_remove_yield_existing(void);
+void Observer_on_remove_yield_existing_2_tables(void);
+void Observer_on_remove_yield_existing_2_terms(void);
+void Observer_on_remove_yield_existing_wildcard(void);
+void Observer_on_remove_yield_existing_wildcard_multi(void);
+void Observer_on_remove_yield_existing_wildcard_multi_w_wildcard_pivot(void);
+void Observer_on_add_remove_yield_existing(void);
 void Observer_observer_superset_wildcard(void);
 void Observer_observer_superset_wildcard_add_isa(void);
 void Observer_observer_superset_wildcard_add_isa_at_offset(void);
@@ -1495,8 +1502,10 @@ void Observer_notify_after_defer_batched_2_entities_in_table(void);
 void Observer_notify_after_defer_batched_2_entities_in_table_w_tgt(void);
 void Observer_multi_observer_table_fill_w_singleton(void);
 void Observer_wildcard_propagate_w_other_table(void);
-void Observer_add_in_yield_existing(void);
-void Observer_add_in_yield_existing_multi(void);
+void Observer_add_in_on_add_yield_existing(void);
+void Observer_add_in_on_add_yield_existing_multi(void);
+void Observer_add_in_on_remove_yield_existing(void);
+void Observer_add_in_on_remove_yield_existing_multi(void);
 void Observer_disable_observer(void);
 void Observer_disable_observer_module(void);
 void Observer_disable_observer_module_nested(void);
@@ -1654,6 +1663,7 @@ void Monitor_monitor_w_wildcard(void);
 void Monitor_monitor_at_fini(void);
 void Monitor_monitor_other_table(void);
 void Monitor_monitor_component(void);
+void Monitor_yield_existing(void);
 
 // Testsuite 'Prefab'
 void Prefab_setup(void);
@@ -7751,6 +7761,34 @@ bake_test_case Observer_testcases[] = {
         Observer_on_add_yield_existing_wildcard_multi_w_wildcard_pivot
     },
     {
+        "on_remove_yield_existing",
+        Observer_on_remove_yield_existing
+    },
+    {
+        "on_remove_yield_existing_2_tables",
+        Observer_on_remove_yield_existing_2_tables
+    },
+    {
+        "on_remove_yield_existing_2_terms",
+        Observer_on_remove_yield_existing_2_terms
+    },
+    {
+        "on_remove_yield_existing_wildcard",
+        Observer_on_remove_yield_existing_wildcard
+    },
+    {
+        "on_remove_yield_existing_wildcard_multi",
+        Observer_on_remove_yield_existing_wildcard_multi
+    },
+    {
+        "on_remove_yield_existing_wildcard_multi_w_wildcard_pivot",
+        Observer_on_remove_yield_existing_wildcard_multi_w_wildcard_pivot
+    },
+    {
+        "on_add_remove_yield_existing",
+        Observer_on_add_remove_yield_existing
+    },
+    {
         "observer_superset_wildcard",
         Observer_observer_superset_wildcard
     },
@@ -7983,12 +8021,20 @@ bake_test_case Observer_testcases[] = {
         Observer_wildcard_propagate_w_other_table
     },
     {
-        "add_in_yield_existing",
-        Observer_add_in_yield_existing
+        "add_in_on_add_yield_existing",
+        Observer_add_in_on_add_yield_existing
     },
     {
-        "add_in_yield_existing_multi",
-        Observer_add_in_yield_existing_multi
+        "add_in_on_add_yield_existing_multi",
+        Observer_add_in_on_add_yield_existing_multi
+    },
+    {
+        "add_in_on_remove_yield_existing",
+        Observer_add_in_on_remove_yield_existing
+    },
+    {
+        "add_in_on_remove_yield_existing_multi",
+        Observer_add_in_on_remove_yield_existing_multi
     },
     {
         "disable_observer",
@@ -8588,6 +8634,10 @@ bake_test_case Monitor_testcases[] = {
     {
         "monitor_component",
         Monitor_monitor_component
+    },
+    {
+        "yield_existing",
+        Monitor_yield_existing
     }
 };
 
@@ -10905,7 +10955,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        199,
+        208,
         Observer_testcases
     },
     {
@@ -10940,7 +10990,7 @@ static bake_test_suite suites[] = {
         "Monitor",
         NULL,
         NULL,
-        17,
+        18,
         Monitor_testcases
     },
     {
