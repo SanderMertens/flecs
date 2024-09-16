@@ -14571,7 +14571,8 @@ void flecs_multi_observer_builtin_run(ecs_iter_t *it) {
 static
 void flecs_observer_yield_existing(
     ecs_world_t *world,
-    ecs_observer_t *o)
+    ecs_observer_t *o,
+    bool yield_on_remove)
 {
     ecs_run_action_t run = o->run;
     if (!run) {
@@ -14586,6 +14587,19 @@ void flecs_observer_yield_existing(
      * the event, if the event is iterable. */
     int i, count = o->event_count;
     for (i = 0; i < count; i ++) {
+        ecs_entity_t event = o->events[i];
+
+        /* We only yield for OnRemove events if the observer is deleted. */
+        if (event == EcsOnRemove) {
+            if (!yield_on_remove) {
+                continue;
+            }
+        } else {
+            if (yield_on_remove) {
+                continue;
+            }
+        }
+
         ecs_iter_t it = ecs_query_iter(world, o->query);
         it.system = o->entity;
         it.ctx = o;
@@ -14919,6 +14933,8 @@ ecs_observer_t* flecs_observer_init(
     impl->term_index = desc->term_index_;
     impl->flags = desc->flags_;
 
+    bool yield_on_create = false;
+
     /* Check if observer is monitor. Monitors are created as multi observers
      * since they require pre/post checking of the filter to test if the
      * entity is entering/leaving the monitor. */
@@ -14937,8 +14953,19 @@ ecs_observer_t* flecs_observer_init(
             o->events[1] = EcsOnRemove;
             o->event_count ++;
             impl->flags |= EcsObserverIsMonitor;
+            if (desc->yield_existing) {
+                impl->flags |= EcsObserverYieldOnDelete;
+                yield_on_create = true;
+            }
         } else {
             o->events[i] = event;
+            if (desc->yield_existing) {
+                if (event == EcsOnRemove) {
+                    impl->flags |= EcsObserverYieldOnDelete;
+                } else {
+                    yield_on_create = true;
+                }
+            }
         }
 
         o->event_count ++;
@@ -14972,8 +14999,8 @@ ecs_observer_t* flecs_observer_init(
         }
     }
 
-    if (desc->yield_existing) {
-        flecs_observer_yield_existing(world, o);
+    if (yield_on_create) {
+        flecs_observer_yield_existing(world, o, false);
     }
 
     return o;
@@ -15097,6 +15124,10 @@ void flecs_observer_fini(
     ecs_assert(o->query != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_world_t *world = o->query->world;
     ecs_observer_impl_t *impl = flecs_observer_impl(o);
+
+    if (impl->flags & EcsObserverYieldOnDelete) {
+        flecs_observer_yield_existing(world, o, true);
+    }
 
     if (impl->flags & EcsObserverIsMulti) {
         ecs_observer_t **children = ecs_vec_first(&impl->children);

@@ -1930,7 +1930,7 @@ void ComponentLifecycle_count_in_add_hook(void) {
         count = ecs.count<Position>();
     });
 
-    auto ent = ecs.entity().set<Position>({1, 2});
+    ecs.entity().set<Position>({1, 2});
     test_int(count, 1);
     
     int matched = 0;

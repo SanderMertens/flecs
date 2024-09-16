@@ -1499,6 +1499,13 @@
                 "on_add_yield_existing_wildcard",
                 "on_add_yield_existing_wildcard_multi",
                 "on_add_yield_existing_wildcard_multi_w_wildcard_pivot",
+                "on_remove_yield_existing",
+                "on_remove_yield_existing_2_tables",
+                "on_remove_yield_existing_2_terms",
+                "on_remove_yield_existing_wildcard",
+                "on_remove_yield_existing_wildcard_multi",
+                "on_remove_yield_existing_wildcard_multi_w_wildcard_pivot",
+                "on_add_remove_yield_existing",
                 "observer_superset_wildcard",
                 "observer_superset_wildcard_add_isa",
                 "observer_superset_wildcard_add_isa_at_offset",
@@ -1557,8 +1564,10 @@
                 "notify_after_defer_batched_2_entities_in_table_w_tgt",
                 "multi_observer_table_fill_w_singleton",
                 "wildcard_propagate_w_other_table",
-                "add_in_yield_existing",
-                "add_in_yield_existing_multi",
+                "add_in_on_add_yield_existing",
+                "add_in_on_add_yield_existing_multi",
+                "add_in_on_remove_yield_existing",
+                "add_in_on_remove_yield_existing_multi",
                 "disable_observer",
                 "disable_observer_module",
                 "disable_observer_module_nested",
@@ -1725,7 +1734,8 @@
                 "monitor_w_wildcard",
                 "monitor_at_fini",
                 "monitor_other_table",
-                "monitor_component"
+                "monitor_component",
+                "yield_existing"
             ]
         }, {
             "id": "Prefab",
