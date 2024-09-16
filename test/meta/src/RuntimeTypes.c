@@ -5,9 +5,13 @@
     (((uint32_t) (x)) + ((uint32_t) (x) << 8) + ((uint32_t) (x) << 16) + \
      ((uint32_t) (x) << 24))
 
-static bool is_memory_filled_with(const void *ptr, size_t size,
-                                  unsigned char byte) {
-    const unsigned char *byte_ptr = (const unsigned char *) ptr;
+static 
+bool is_memory_filled_with(
+    const void *ptr,
+    size_t size,
+    unsigned char byte)
+{
+    const unsigned char *byte_ptr = (const unsigned char *)ptr;
 
     for (size_t i = 0; i < size; i++) {
         if (byte_ptr[i] != byte) {
@@ -18,7 +22,11 @@ static bool is_memory_filled_with(const void *ptr, size_t size,
     return true;
 }
 
-static bool memory_is_zero(const void *ptr, size_t size) {
+static 
+bool memory_is_zero(
+    const void *ptr,
+    size_t size)
+{
     return is_memory_filled_with(ptr, size, 0);
 }
 
@@ -35,17 +43,25 @@ void RuntimeTypes_trivial_struct(void) {
     ecs_entity_t subtype = ecs_entity(world, {.name = "Some Subtype"});
 
     /* Configure as a struct: */
-    ecs_struct(world, {.entity = subtype,
-                       .members = {{.name = "x", .type = ecs_id(ecs_i32_t)},
-                                   {.name = "r", .type = ecs_id(ecs_f32_t)}}});
+    ecs_struct(world, {
+        .entity = subtype,
+        .members = {
+            {.name = "x", .type = ecs_id(ecs_i32_t)},
+            {.name = "r", .type = ecs_id(ecs_f32_t)}
+        }
+    });
 
     /* Create a new component: */
     ecs_entity_t trivial_struct = ecs_entity(world, {.name = "Trivial Struct"});
 
-    ecs_struct(world, {.entity = trivial_struct,
-                       .members = {{.name = "a", .type = ecs_id(ecs_i32_t)},
-                                   {.name = "b", .type = ecs_id(ecs_f32_t)},
-                                   {.name = "s", .type = subtype}}});
+    ecs_struct(world, {
+        .entity = trivial_struct,
+        .members = {
+            {.name = "a", .type = ecs_id(ecs_i32_t)},
+            {.name = "b", .type = ecs_id(ecs_f32_t)},
+            {.name = "s", .type = subtype}
+        }
+    });
 
     const ecs_type_info_t *ti = ecs_get_type_info(world, trivial_struct);
 
@@ -64,6 +80,7 @@ void RuntimeTypes_trivial_struct(void) {
         if (i % 3 == 0)
             ecs_delete(world, e);
     }
+
     ecs_fini(world);
 }
 
@@ -72,8 +89,13 @@ static int ctor_calls = 0;
 static uintptr_t ctor_ptr = 0;
 static int32_t ctor_count = 0;
 static ecs_entity_t ctor_component = 0;
-static void test_ctor(void *ptr, int32_t count,
-                      const ecs_type_info_t *type_info) {
+
+static
+void test_ctor(
+    void *ptr,
+    int32_t count,
+    const ecs_type_info_t *type_info)
+{
     ctor_calls++;
     ctor_ptr = (uintptr_t) ptr;
     ctor_count = count;
@@ -85,8 +107,13 @@ static int dtor_calls = 0;
 static uintptr_t dtor_ptr = 0;
 static int32_t dtor_count = 0;
 static ecs_entity_t dtor_component = 0;
-static void test_dtor(void *ptr, int32_t count,
-                      const ecs_type_info_t *type_info) {
+
+static
+void test_dtor(
+    void *ptr,
+    int32_t count,
+    const ecs_type_info_t *type_info)
+{
     dtor_calls++;
     dtor_ptr = (uintptr_t) ptr;
     dtor_count = count;
@@ -99,8 +126,14 @@ static uintptr_t move_dst_ptr = 0;
 static uintptr_t move_src_ptr = 0;
 static int32_t move_count = 0;
 static ecs_entity_t move_component = 0;
-static void test_move(void *dst_ptr, void *src_ptr, int32_t count,
-                      const ecs_type_info_t *type_info) {
+
+static
+void test_move(
+    void *dst_ptr,
+    void *src_ptr,
+    int32_t count,
+    const ecs_type_info_t *type_info)
+{
     move_calls++;
     move_dst_ptr = (uintptr_t) dst_ptr;
     move_src_ptr = (uintptr_t) src_ptr;
@@ -115,8 +148,14 @@ static uintptr_t copy_dst_ptr = 0;
 static uintptr_t copy_src_ptr = 0;
 static int32_t copy_count = 0;
 static ecs_entity_t copy_component = 0;
-static void test_copy(void *dst_ptr, const void *src_ptr, int32_t count,
-                      const ecs_type_info_t *type_info) {
+
+static
+void test_copy(
+    void *dst_ptr,
+    const void *src_ptr,
+    int32_t count,
+    const ecs_type_info_t *type_info)
+{
     copy_calls++;
     copy_dst_ptr = (uintptr_t) dst_ptr;
     copy_src_ptr = (uintptr_t) src_ptr;
@@ -131,13 +170,21 @@ typedef struct NestedStruct {
     uint32_t a;
     uint32_t b;
 } NestedStruct;
+
 static ecs_entity_t nested_struct;
 
-const ecs_type_info_t *define_nested_struct(ecs_world_t *world) {
-    nested_struct = ecs_struct(
-        world, {.entity = ecs_entity(world, {.name = "NestedStruct"}),
-                .members = {{.name = "a", .type = ecs_id(ecs_u32_t)},
-                            {.name = "b", .type = ecs_id(ecs_u32_t)}}});
+static
+const ecs_type_info_t *define_nested_struct(
+    ecs_world_t *world) 
+{
+    nested_struct = ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "NestedStruct"}),
+        .members = {
+            { .name = "a", .type = ecs_id(ecs_u32_t)},
+            { .name = "b", .type = ecs_id(ecs_u32_t)}
+        }
+    });
+
     return ecs_get_type_info(world, nested_struct);
 }
 
@@ -148,20 +195,28 @@ typedef struct TestStruct {
     uint32_t y;
     NestedStruct s2;
 } TestStruct;
+
 static ecs_entity_t test_struct;
 
-const ecs_type_info_t *define_test_struct(ecs_world_t *world) {
-    test_struct =
-        ecs_struct(world, {.entity = ecs_entity(world, {.name = "TestStruct"}),
-                           .members = {{.name = "x", .type = ecs_id(ecs_u32_t)},
-                                       {.name = "s1", .type = nested_struct},
-                                       {.name = "y", .type = ecs_id(ecs_u32_t)},
-                                       {.name = "s2", .type = nested_struct}}});
+static
+const ecs_type_info_t *define_test_struct(
+    ecs_world_t *world) 
+{
+    test_struct = ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "TestStruct"}),
+        .members = {
+            {.name = "x", .type = ecs_id(ecs_u32_t)},
+            {.name = "s1", .type = nested_struct},
+            {.name = "y", .type = ecs_id(ecs_u32_t)},
+            {.name = "s2", .type = nested_struct}
+        }
+    });
+
     return ecs_get_type_info(world, test_struct);
 }
 
 /* Tests that a constructor is generated for a struct if at least a member has
-   itself a constructor Also tests if the generated constructor works. */
+ * itself a constructor Also tests if the generated constructor works. */
 void RuntimeTypes_ctor(void) {
     ecs_world_t *world = ecs_init();
 
@@ -173,8 +228,8 @@ void RuntimeTypes_ctor(void) {
     ecs_set_hooks_id(world, nested_struct, &hooks);
 
     /* Define TestStruct, which has two "NestedStruct" members.
-       A constructor should be automatically generated for TestStruct to invoke
-       NestedStruct's specific constructor: */
+     * A constructor should be automatically generated for TestStruct to invoke
+     * NestedStruct's specific constructor: */
     const ecs_type_info_t *test_struct_ti = define_test_struct(world);
 
     /* TestStruct should only have a constructor: */
@@ -186,15 +241,12 @@ void RuntimeTypes_ctor(void) {
     test_assert(test_struct_ti->hooks.copy == NULL);
 
     /* Now instantiate TestStruct and see the constructor for NestedStruct is
-       called twice, since TestStruct contains two
-
-       NestedStructs: */
+     * called twice, since TestStruct contains two NestedStructs: */
     ecs_entity_t e = ecs_new(world);
 
     test_int(0, ctor_calls);
     ecs_add_id(world, e, test_struct);
-    test_int(
-        2, ctor_calls); /* called twice because there are two "nested_struct" */
+    test_int(2, ctor_calls); /* called twice because there are two "nested_struct" */
 
     const TestStruct *ss = (TestStruct *) ecs_get_id(world, e, test_struct);
 
@@ -211,7 +263,7 @@ void RuntimeTypes_ctor(void) {
 }
 
 /* Tests that a destructor is generated for a struct if at least a member has
-   itself a destructor Also tests if the generated destructor works. */
+ * itself a destructor Also tests if the generated destructor works. */
 void RuntimeTypes_dtor(void) {
     ecs_world_t *world = ecs_init();
 
@@ -224,8 +276,8 @@ void RuntimeTypes_dtor(void) {
     ecs_set_hooks_id(world, nested_struct, &hooks);
 
     /* Define TestStruct, which has two "NestedStruct" members.
-       A destructor should be automatically generated for TestStruct to invoke
-       NestedStruct's specific destructor: */
+     * A destructor should be automatically generated for TestStruct to invoke
+     * NestedStruct's specific destructor: */
     const ecs_type_info_t *test_struct_ti = define_test_struct(world);
 
     /* TestStruct should have a default constructor and the generated
@@ -257,7 +309,7 @@ void RuntimeTypes_dtor(void) {
 }
 
 /* Tests that a move hook is generated for a struct if at least a member has
-   itself a move hook Also tests if the generated move hook works. */
+ * itself a move hook Also tests if the generated move hook works. */
 void RuntimeTypes_move(void) {
     ecs_world_t *world = ecs_init();
     define_nested_struct(world);
@@ -270,12 +322,11 @@ void RuntimeTypes_move(void) {
     ecs_set_hooks_id(world, nested_struct, &hooks);
 
     /* Define TestStruct, which has two "NestedStruct" members.
-       A move hook should be automatically generated for TestStruct to invoke
-       NestedStruct's specific move hook: */
+     * A move hook should be automatically generated for TestStruct to invoke
+     * NestedStruct's specific move hook: */
     const ecs_type_info_t *test_struct_ti = define_test_struct(world);
 
-    /* TestStruct should have a default constructor and the generated move hook:
-     */
+    /* TestStruct should have a default constructor and the generated move hook: */
     test_assert(test_struct_ti->hooks.ctor != NULL);
     test_assert(test_struct_ti->hooks.move != NULL);
 
@@ -322,7 +373,7 @@ void RuntimeTypes_move(void) {
 }
 
 /* Tests that a copy hook is generated for a struct if at least a member has
-   itself a copy hook Also tests if the generated copy hook works. */
+ * itself a copy hook Also tests if the generated copy hook works. */
 void RuntimeTypes_copy(void) {
     ecs_world_t *world = ecs_init();
 
@@ -335,12 +386,11 @@ void RuntimeTypes_copy(void) {
     ecs_set_hooks_id(world, nested_struct, &hooks);
 
     /* Define TestStruct, which has two "NestedStruct" members.
-       A copy hook should be automatically generated for TestStruct to invoke
-       NestedStruct's specific copy hook: */
+     * A copy hook should be automatically generated for TestStruct to invoke
+     * NestedStruct's specific copy hook: */
     const ecs_type_info_t *test_struct_ti = define_test_struct(world);
 
-    /* TestStruct should have a default constructor and the generated copy hook:
-     */
+    /* TestStruct should have a default constructor and the generated copy hook: */
     test_assert(test_struct_ti->hooks.ctor != NULL);
     test_assert(test_struct_ti->hooks.copy != NULL);
 
@@ -396,10 +446,13 @@ typedef struct ResourceHandle {
 } ResourceHandle;
 
 /* This vector will hold all available ids. */
-ecs_vec_t resource_ids;
+static ecs_vec_t resource_ids;
 
 /* Initializes the available "resource ids" */
-void initialize_resource_ids(int num_resources) {
+static
+void initialize_resource_ids(
+    int num_resources) 
+{
     ecs_vec_init_t(NULL, &resource_ids, int, num_resources);
     ecs_vec_set_count_t(NULL, &resource_ids, int, num_resources);
     for (int i = 0; i < num_resources; i++) {
@@ -407,11 +460,16 @@ void initialize_resource_ids(int num_resources) {
     }
 }
 
-void free_resource_ids() { ecs_vec_fini_t(NULL, &resource_ids, int); }
+static
+void free_resource_ids() {
+    ecs_vec_fini_t(NULL, &resource_ids, int);
+}
 
 /* Gets a resource id from the vector. It will return 0 if no more resources
  * available. */
-int get_resource_id() {
+static
+int get_resource_id() 
+{
     size_t idcount = ecs_vec_count(&resource_ids);
     if (idcount == 0)
         return 0;
@@ -421,14 +479,20 @@ int get_resource_id() {
 }
 
 /* Returns a resource for reuse. */
-void return_resource_id(int id) {
+static
+void return_resource_id(
+    int id) 
+{
     if (id == 0)
         return;
     *(ecs_vec_append_t(NULL, &resource_ids, int)) = id;
 }
 
 /* Returns true if a specific resource id is in the pool. */
-bool resource_id_available(int id) {
+static
+bool resource_id_available(
+    int id) 
+{
     for (int i = 0; i < ecs_vec_count(&resource_ids); i++) {
         if (id == *ecs_vec_get_t(&resource_ids, int, i))
             return true;
@@ -437,12 +501,20 @@ bool resource_id_available(int id) {
 }
 
 /* Returns the numer of currently available resources */
-int resources_left() { return ecs_vec_count(&resource_ids); }
+static
+int resources_left() 
+{ 
+    return ecs_vec_count(&resource_ids); 
+}
 
 /* Define a ResourceHandle constructor that sets the payload value to 0 and
  * obtains a unique resource id: */
-static void ResourceHandle_ctor(void *ptr, int32_t count,
-                                const ecs_type_info_t *type_info) {
+static
+void ResourceHandle_ctor(
+    void *ptr, 
+    int32_t count,
+    const ecs_type_info_t *type_info) 
+{
     for (int i = 0; i < count; i++) {
         ResourceHandle *r =
             (ResourceHandle *) ECS_ELEM_T(ptr, ResourceHandle, i);
@@ -453,8 +525,12 @@ static void ResourceHandle_ctor(void *ptr, int32_t count,
 }
 
 /* Define a ResourceHandle destructor that returns the borrowed resource id: */
-static void ResourceHandle_dtor(void *ptr, int32_t count,
-                                const ecs_type_info_t *type_info) {
+static
+void ResourceHandle_dtor(
+    void *ptr, 
+    int32_t count,
+    const ecs_type_info_t *type_info) 
+{
     for (int i = 0; i < count; i++) {
         ResourceHandle *r =
             (ResourceHandle *) ECS_ELEM_T(ptr, ResourceHandle, i);
@@ -463,8 +539,13 @@ static void ResourceHandle_dtor(void *ptr, int32_t count,
 }
 
 /* Define a ResourceHandle move operation that transfers the resource id: */
-static void ResourceHandle_move(void *dst_ptr, void *src_ptr, int32_t count,
-                                const ecs_type_info_t *type_info) {
+static
+void ResourceHandle_move(
+    void *dst_ptr, 
+    void *src_ptr, 
+    int32_t count,
+    const ecs_type_info_t *type_info) 
+{
     for (int i = 0; i < count; i++) {
         ResourceHandle *src_r =
             (ResourceHandle *) ECS_ELEM_T(src_ptr, ResourceHandle, i);
@@ -478,9 +559,13 @@ static void ResourceHandle_move(void *dst_ptr, void *src_ptr, int32_t count,
 
 /* Define a ResourceHandle copy operation that copies the payload value but
  * obtains its own resource id: */
-static void ResourceHandle_copy(void *dst_ptr, const void *src_ptr,
-                                int32_t count,
-                                const ecs_type_info_t *type_info) {
+static
+void ResourceHandle_copy(
+    void *dst_ptr, 
+    const void *src_ptr, 
+    int32_t count,
+    const ecs_type_info_t *type_info) 
+{
     for (int i = 0; i < count; i++) {
         const ResourceHandle *src_r =
             (const ResourceHandle *) ECS_ELEM_T(src_ptr, ResourceHandle, i);
@@ -494,14 +579,24 @@ static void ResourceHandle_copy(void *dst_ptr, const void *src_ptr,
 }
 
 /* Defines a struct in Flecs to model the ResourceHandle struct
-   For different tests, it can set specific hooks or not. */
-ecs_entity_t resource_handle;
-void define_resource_handle(ecs_world_t *world, bool ctor, bool dtor, bool move,
-                            bool copy) {
-    resource_handle = ecs_struct(
-        world, {.entity = ecs_entity(world, {.name = "ResourceHandle"}),
-                .members = {{.name = "id", .type = ecs_id(ecs_i32_t)},
-                            {.name = "value", .type = ecs_id(ecs_u32_t)}}});
+ * For different tests, it can set specific hooks or not. */
+static ecs_entity_t resource_handle;
+
+static
+void define_resource_handle(
+    ecs_world_t *world, 
+    bool ctor, 
+    bool dtor, 
+    bool move,
+    bool copy) 
+{
+    resource_handle = ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "ResourceHandle"}),
+        .members = {
+            {.name = "id", .type = ecs_id(ecs_i32_t)},
+            {.name = "value", .type = ecs_id(ecs_u32_t)}
+        }
+    });
 
     const ecs_type_info_t *ti = ecs_get_type_info(world, resource_handle);
     ecs_type_hooks_t hooks = ti->hooks;
@@ -519,18 +614,21 @@ void define_resource_handle(ecs_world_t *world, bool ctor, bool dtor, bool move,
 }
 
 /* Test hooks for runtime array of trivial structs
-   These structs have no special copy/move/dtor logic and are zero-initialized
-   Trivial structs should get flecs default constructor and nothing else
-   An array of trivial struct should also only get flecs default constructor and
-   nothing else. */
+ * These structs have no special copy/move/dtor logic and are zero-initialized
+ * Trivial structs should get flecs default constructor and nothing else
+ * An array of trivial struct should also only get flecs default constructor and
+ * nothing else. */
 void RuntimeTypes_trivial_array(void) {
     ecs_world_t *world = ecs_init();
 
     /* Create a new component: */
-    ecs_entity_t trivial_struct = ecs_struct(
-        world, {.entity = ecs_entity(world, {.name = "Trivial Struct"}),
-                .members = {{.name = "a", .type = ecs_id(ecs_i32_t)},
-                            {.name = "b", .type = ecs_id(ecs_f32_t)}}});
+    ecs_entity_t trivial_struct = ecs_struct(world, {
+            .entity = ecs_entity(world, {.name = "Trivial Struct"}),
+            .members = {
+                {.name = "a", .type = ecs_id(ecs_i32_t)},
+                {.name = "b", .type = ecs_id(ecs_f32_t)}
+        }
+    });
 
     /* create an array of 3 trivial structs: */
     ecs_array_desc_t desc = {.entity = 0, .type = trivial_struct, .count = 3};
@@ -538,17 +636,16 @@ void RuntimeTypes_trivial_array(void) {
 
     const ecs_type_info_t *ti = ecs_get_type_info(world, arr_of_struct);
 
-    test_assert(ti->hooks.ctor !=
-                NULL); /* should have got flecs default constructor.
+    test_assert(ti->hooks.ctor != NULL); /* should have got flecs default constructor. */
 
-no other hooks should've been set: */
+    /* no other hooks should've been set:  */
     test_assert(ti->hooks.copy == NULL);
     test_assert(ti->hooks.move == NULL);
     test_assert(ti->hooks.dtor == NULL);
 
     /* Check if the ctor initialized everything to 0.
-       Do this a couple of times to make sure we don't get a zero-initialized
-       struct out of sheer luck: */
+     * Do this a couple of times to make sure we don't get a zero-initialized
+     * struct out of sheer luck: */
     for (int i = 0; i < 30; i++) {
         ecs_entity_t e = ecs_new(world);
         ecs_add_id(world, e, arr_of_struct);
@@ -557,12 +654,13 @@ no other hooks should've been set: */
         if (i % 3 == 0)
             ecs_delete(world, e);
     }
+
     ecs_fini(world);
 }
 
 /* Tests that if on the array's underlying type only a ctor is defined, only a
-   ctor is defined for the array itself Tests that the specified constructor is
-   called for each array element. */
+ * ctor is defined for the array itself Tests that the specified constructor is
+ * called for each array element. */
 void RuntimeTypes_array_ctor(void) {
     ecs_world_t *world = ecs_init();
 
@@ -580,10 +678,10 @@ void RuntimeTypes_array_ctor(void) {
     const ecs_type_hooks_t *hooks =
         &ecs_get_type_info(world, arr_of_resources)->hooks;
 
-    test_assert(hooks->ctor != NULL); /* a ctor should've been generated
+    test_assert(hooks->ctor != NULL); /* a ctor should've been generated */
 
-       no other hooks should have been generated, since the depending type,
-       "resource_handle" only has a ctor hook: */
+    /* no other hooks should have been generated, since the depending type,
+     * "resource_handle" only has a ctor hook: */
     test_assert(hooks->dtor == NULL);
     test_assert(hooks->move == NULL);
     test_assert(hooks->copy == NULL);
@@ -591,17 +689,16 @@ void RuntimeTypes_array_ctor(void) {
     /* Test that the set ctor hook is indeed working: */
     ecs_entity_t e = ecs_new(world);
     ecs_add_id(world, e, arr_of_resources);
-    test_int(7,
-             resources_left()); /* 3 resources were used out of 10,
-                                             since the array has a size of 3 */
+    test_int(7, resources_left()); /* 3 resources were used out of 10, since the array has a size of 3 */
 
     ecs_fini(world);
+
     free_resource_ids();
 }
 
 /* Tests that if on the array's underlying type only a dtor is defined, only a
-   dtor is defined for the array itself Tests that the specified destructor is
-   called for each array element. */
+ * dtor is defined for the array itself Tests that the specified destructor is
+ * called for each array element. */
 void RuntimeTypes_array_dtor(void) {
     ecs_world_t *world = ecs_init();
 
@@ -655,12 +752,19 @@ void RuntimeTypes_array_dtor(void) {
     test_assert(resource_id_available(300));
 
     ecs_fini(world);
+
     free_resource_ids();
 }
 
 /* compares two resource handles */
-static bool resource_handle_compare(ecs_world_t *world, void *a, void *b,
-                                    int32_t count, const ecs_type_info_t *ti) {
+static 
+bool resource_handle_compare(
+    ecs_world_t *world, 
+    void *a, 
+    void *b,
+    int32_t count, 
+    const ecs_type_info_t *ti) 
+{
     for (int j = 0; j < count; j++) {
         const ResourceHandle *ra =
             (const ResourceHandle *) ECS_ELEM(a, ti->size, j);
@@ -674,8 +778,8 @@ static bool resource_handle_compare(ecs_world_t *world, void *a, void *b,
 }
 
 /* Tests that if on the array's underlying type only a move hook is defined,
-   only a move hook is defined for the array itself. Tests that the specified
-   move hook is called for each array element. */
+ * only a move hook is defined for the array itself. Tests that the specified
+ * move hook is called for each array element. */
 void RuntimeTypes_array_move(void) {
     ecs_world_t *world = ecs_init();
 
@@ -748,6 +852,7 @@ void RuntimeTypes_array_move(void) {
     test_assert(!resource_id_available(300));
 
     ecs_fini(world);
+
     free_resource_ids();
 }
 
@@ -820,6 +925,7 @@ void RuntimeTypes_array_copy(void) {
                                                 did not hook a destructor */
 
     ecs_fini(world);
+
     free_resource_ids();
 }
 
@@ -887,7 +993,9 @@ manually add some items to the vector. These must be constructed by hand: */
     for (int i = 0; i < initial_resources; i++) {
         test_assert(resource_id_available(i + 1));
     }
+
     ecs_fini(world);
+
     free_resource_ids();
 }
 
@@ -947,11 +1055,14 @@ void RuntimeTypes_vector_lifecycle_trivial_type(void) {
     ecs_delete(world, prefab);
 
     ecs_fini(world);
+
     free_resource_ids();
 }
 
 /* Configure an opaque type that consumes resources */
-ecs_entity_t define_ResourceHandle_opaque(ecs_world_t *world) {
+ecs_entity_t define_ResourceHandle_opaque(
+    ecs_world_t *world) 
+{
     ECS_COMPONENT(world, ResourceHandle);
 
     ecs_type_hooks_t hooks = *ecs_get_hooks(world, ResourceHandle);
@@ -962,13 +1073,17 @@ ecs_entity_t define_ResourceHandle_opaque(ecs_world_t *world) {
     ecs_set_hooks_id(world, ecs_id(ResourceHandle), &hooks);
 
     /* Create struct type that describes the structure of ResourceHandle */
-    ecs_entity_t resource_handle_descriptor =
-        ecs_struct(world, {.members = {
-                               {.name = "value", .type = ecs_id(ecs_u32_t)},
-                           }});
+    ecs_entity_t resource_handle_descriptor = ecs_struct(world, {
+        .members = {
+            {.name = "value", .type = ecs_id(ecs_u32_t)},
+        }
+    });
+
     /* Register ResourceHandle as opaque type. */
-    ecs_opaque(world, {.entity = ecs_id(ResourceHandle),
-                       .type = {.as_type = resource_handle_descriptor}});
+    ecs_opaque(world, {
+        .entity = ecs_id(ResourceHandle),
+        .type = {.as_type = resource_handle_descriptor}
+    });
 
     return ecs_id(ResourceHandle);
 }
@@ -991,8 +1106,13 @@ void RuntimeTypes_opaque(void) {
 
 /* Helper function used in the tests below to invoke a type's registered
  * constructor, if any, when adding items to vectors */
-static void invoke_type_ctor(ecs_world_t *world, void *ptr, int32_t count,
-                             ecs_entity_t component) {
+static 
+void invoke_type_ctor(
+    ecs_world_t *world, 
+    void *ptr, 
+    int32_t count,
+    ecs_entity_t component) 
+{
     const ecs_type_info_t *ti = ecs_get_type_info(world, component);
     if (ti) {
         if (ti->hooks.ctor) {
@@ -1011,11 +1131,13 @@ void RuntimeTypes_struct_with_ints(void) {
         ecs_i32_t a;
         ecs_i32_t b;
     } StructWithInts;
-    ecs_entity_t struct_with_ints =
-        ecs_struct(world, {.members = {
-                               {"a", ecs_id(ecs_i32_t)},
-                               {"b", ecs_id(ecs_i32_t)},
-                           }});
+
+    ecs_entity_t struct_with_ints = ecs_struct(world, {
+        .members = {
+            {"a", ecs_id(ecs_i32_t)},
+            {"b", ecs_id(ecs_i32_t)},
+        }
+    });
 
     /* Test constructor: */
     ecs_entity_t e = ecs_new(world);
@@ -1038,6 +1160,7 @@ void RuntimeTypes_struct_with_ints(void) {
     /* Test moving by forcing an archetype change: */
     ECS_TAG(world, MakeMeMove);
     ecs_add(world, e, MakeMeMove);
+
     {
         const StructWithInts *ptr =
             ecs_get_id(world, instance, struct_with_ints);
@@ -1060,12 +1183,14 @@ void RuntimeTypes_struct_with_strings(void) {
         ecs_i32_t b;
         ecs_string_t c;
     } StructWithStrings;
-    ecs_entity_t struct_with_strings =
-        ecs_struct(world, {.members = {
-                               {"a", ecs_id(ecs_string_t)},
-                               {"b", ecs_id(ecs_i32_t)},
-                               {"c", ecs_id(ecs_string_t)},
-                           }});
+
+    ecs_entity_t struct_with_strings = ecs_struct(world, {
+        .members = {
+            {"a", ecs_id(ecs_string_t)},
+            {"b", ecs_id(ecs_i32_t)},
+            {"c", ecs_id(ecs_string_t)},
+        }
+    });
 
     /* Test constructor: */
     ecs_entity_t e = ecs_new(world);
@@ -1113,10 +1238,12 @@ void RuntimeTypes_struct_with_opaque(void) {
     typedef struct {
         ResourceHandle a;
     } StructWithOpaque;
-    ecs_entity_t struct_with_opaque =
-        ecs_struct(world, {.members = {
-                               {"a", resource_handle_opaque},
-                           }});
+    
+    ecs_entity_t struct_with_opaque = ecs_struct(world, {
+        .members = {
+            {"a", resource_handle_opaque},
+        }
+    });
 
     /* struct_with_opaque consumes 1 test resources per instance */
     const int initial_resources = 4;
@@ -1168,7 +1295,9 @@ void RuntimeTypes_struct_with_opaque(void) {
     for (i = 1; i <= initial_resources; i++) {
         test_assert(resource_id_available(i));
     }
+
     ecs_fini(world);
+
     free_resource_ids();
 }
 
@@ -1180,24 +1309,27 @@ void RuntimeTypes_nested_struct_with_strings(void) {
         ecs_i32_t b;
         ecs_string_t c;
     } StructWithStrings;
-    ecs_entity_t struct_with_strings =
-        ecs_struct(world, {.members = {
-                               {"a", ecs_id(ecs_string_t)},
-                               {"b", ecs_id(ecs_i32_t)},
-                               {"c", ecs_id(ecs_string_t)},
-                           }});
+
+    ecs_entity_t struct_with_strings = ecs_struct(world, {
+        .members = {
+            {"a", ecs_id(ecs_string_t)},
+            {"b", ecs_id(ecs_i32_t)},
+            {"c", ecs_id(ecs_string_t)},
+        }});
 
     typedef struct {
         StructWithStrings a;
         ecs_i32_t b;
         StructWithStrings c;
     } NestedStructWithStrings;
-    ecs_entity_t nested_struct_with_strings =
-        ecs_struct(world, {.members = {
-                               {"a", struct_with_strings},
-                               {"b", ecs_id(ecs_i32_t)},
-                               {"c", struct_with_strings},
-                           }});
+
+    ecs_entity_t nested_struct_with_strings = ecs_struct(world, {
+        .members = {
+            {"a", struct_with_strings},
+            {"b", ecs_id(ecs_i32_t)},
+            {"c", struct_with_strings},
+        }
+    });
 
     /* Test constructor: */
     ecs_entity_t e = ecs_new(world);
@@ -1260,11 +1392,13 @@ void RuntimeTypes_struct_with_array_of_strings(void) {
         ecs_string_t a[3];
         ecs_i32_t b;
     } StructWithArrayOfStrings;
-    ecs_entity_t struct_with_array_of_strings =
-        ecs_struct(world, {.members = {
-                               {"a", array_of_strings},
-                               {"b", ecs_id(ecs_i32_t)},
-                           }});
+   
+    ecs_entity_t struct_with_array_of_strings = ecs_struct(world, {
+        .members = {
+            {"a", array_of_strings},
+            {"b", ecs_id(ecs_i32_t)},
+        }
+    });
 
     /* Test constructor: */
     ecs_entity_t e = ecs_new(world);
@@ -1321,11 +1455,13 @@ void RuntimeTypes_struct_with_array_of_array_of_strings(void) {
         ecs_string_t a[3][3];
         ecs_string_t b;
     } StructWithArrayOfArrayOfStrings;
-    ecs_entity_t struct_with_array_of_array_of_strings =
-        ecs_struct(world, {.members = {
-                               {"a", array_of_array_of_strings},
-                               {"b", ecs_id(ecs_string_t)},
-                           }});
+
+    ecs_entity_t struct_with_array_of_array_of_strings = ecs_struct(world, {
+        .members = {
+            {"a", array_of_array_of_strings},
+            {"b", ecs_id(ecs_string_t)},
+        }
+    });
 
     /* Test constructor: */
     ecs_entity_t e = ecs_new(world);
@@ -1387,10 +1523,12 @@ void RuntimeTypes_struct_with_vector_of_ints(void) {
     typedef struct {
         ecs_vec_t a;
     } StructWithVectorOfInts;
-    ecs_entity_t struct_with_vector_of_ints =
-        ecs_struct(world, {.members = {
-                               {"a", vector_of_ints},
-                           }});
+
+    ecs_entity_t struct_with_vector_of_ints = ecs_struct(world, {
+        .members = {
+            {"a", vector_of_ints},
+        }
+    });
 
     /* Test constructor: */
     ecs_entity_t e = ecs_new(world);
@@ -1456,10 +1594,12 @@ void RuntimeTypes_struct_with_vector_of_strings(void) {
     typedef struct {
         ecs_vec_t a;
     } StructWithVectorOfStrings;
-    ecs_entity_t struct_with_vector_of_strings =
-        ecs_struct(world, {.members = {
-                               {"a", vector_of_strings},
-                           }});
+
+    ecs_entity_t struct_with_vector_of_strings = ecs_struct(world, {
+        .members = {
+            {"a", vector_of_strings},
+        }
+    });
 
     /* Test constructor: */
     ecs_entity_t e = ecs_new(world);
@@ -1527,24 +1667,28 @@ void RuntimeTypes_nested_struct_with_vector_of_ints(void) {
         ecs_i32_t b;
         ecs_vec_t c;
     } InnerStruct1;
-    ecs_entity_t inner_struct_1 =
-        ecs_struct(world, {.members = {
-                               {"a", vector_of_ints},
-                               {"b", ecs_id(ecs_i32_t)},
-                               {"c", vector_of_ints},
-                           }});
+
+    ecs_entity_t inner_struct_1 = ecs_struct(world, {
+        .members = {
+            {"a", vector_of_ints},
+            {"b", ecs_id(ecs_i32_t)},
+            {"c", vector_of_ints},
+        }
+    });
 
     typedef struct {
         ecs_vec_t a;
         ecs_i32_t b;
         InnerStruct1 c;
     } NestedStructWithVectorOfInts;
-    ecs_entity_t nested_struct_with_vector_of_ints =
-        ecs_struct(world, {.members = {
-                               {"a", vector_of_ints},
-                               {"b", ecs_id(ecs_i32_t)},
-                               {"c", inner_struct_1},
-                           }});
+
+    ecs_entity_t nested_struct_with_vector_of_ints = ecs_struct(world, {
+        .members = {
+            {"a", vector_of_ints},
+            {"b", ecs_id(ecs_i32_t)},
+            {"c", inner_struct_1},
+        }
+    });
 
     /* Test constructor: */
     ecs_entity_t e = ecs_new(world);
@@ -1672,24 +1816,28 @@ void RuntimeTypes_nested_struct_with_vector_of_strings(void) {
         ecs_i32_t b;
         ecs_vec_t c;
     } InnerStruct2;
-    ecs_entity_t inner_struct_2 =
-        ecs_struct(world, {.members = {
-                               {"a", vector_of_strings},
-                               {"b", ecs_id(ecs_i32_t)},
-                               {"c", vector_of_strings},
-                           }});
+
+    ecs_entity_t inner_struct_2 = ecs_struct(world, {
+        .members = {
+            {"a", vector_of_strings},
+            {"b", ecs_id(ecs_i32_t)},
+            {"c", vector_of_strings},
+        }
+    });
 
     typedef struct {
         ecs_vec_t a;
         ecs_i32_t b;
         InnerStruct2 c;
     } NestedStructWithVectorOfStrings;
-    ecs_entity_t nested_struct_with_vector_of_strings =
-        ecs_struct(world, {.members = {
-                               {"a", vector_of_strings},
-                               {"b", ecs_id(ecs_i32_t)},
-                               {"c", inner_struct_2},
-                           }});
+
+    ecs_entity_t nested_struct_with_vector_of_strings = ecs_struct(world, {
+        .members = {
+            {"a", vector_of_strings},
+            {"b", ecs_id(ecs_i32_t)},
+            {"c", inner_struct_2},
+        }
+    });
 
     /* Test constructor: */
     ecs_entity_t e = ecs_new(world);
@@ -1897,11 +2045,13 @@ void RuntimeTypes_array_of_struct_with_ints(void) {
         ecs_i32_t a;
         ecs_i32_t b;
     } StructWithInts;
-    ecs_entity_t struct_with_ints =
-        ecs_struct(world, {.members = {
-                               {"a", ecs_id(ecs_i32_t)},
-                               {"b", ecs_id(ecs_i32_t)},
-                           }});
+
+    ecs_entity_t struct_with_ints = ecs_struct(world, {
+        .members = {
+            {"a", ecs_id(ecs_i32_t)},
+            {"b", ecs_id(ecs_i32_t)},
+        }
+    });
 
     ecs_entity_t /* StructWithInts[3] */ array_of_struct_with_ints =
         ecs_array(world, {.type = struct_with_ints, .count = 3});
@@ -1962,12 +2112,14 @@ void RuntimeTypes_array_of_struct_with_strings(void) {
         ecs_i32_t b;
         ecs_string_t c;
     } StructWithStrings;
-    ecs_entity_t struct_with_strings =
-        ecs_struct(world, {.members = {
-                               {"a", ecs_id(ecs_string_t)},
-                               {"b", ecs_id(ecs_i32_t)},
-                               {"c", ecs_id(ecs_string_t)},
-                           }});
+
+    ecs_entity_t struct_with_strings = ecs_struct(world, {
+        .members = {
+            {"a", ecs_id(ecs_string_t)},
+            {"b", ecs_id(ecs_i32_t)},
+            {"c", ecs_id(ecs_string_t)},
+        }
+    });
 
     ecs_entity_t /* StructWithStrings[3] */ array_of_struct_with_strings =
         ecs_array(world, {.type = struct_with_strings, .count = 3});
@@ -2037,10 +2189,12 @@ void RuntimeTypes_array_of_struct_with_opaques(void) {
     typedef struct {
         ResourceHandle a;
     } StructWithOpaque;
-    ecs_entity_t struct_with_opaque =
-        ecs_struct(world, {.members = {
-                               {"a", resource_handle_opaque},
-                           }});
+
+    ecs_entity_t struct_with_opaque = ecs_struct(world, {
+        .members = {
+            {"a", resource_handle_opaque},
+        }
+    });
 
     ecs_entity_t /* StructWithOpaque[3] */ array_of_struct_with_opaques =
         ecs_array(world, {.type = struct_with_opaque, .count = 3});
@@ -2106,7 +2260,9 @@ void RuntimeTypes_array_of_struct_with_opaques(void) {
     for (i = 1; i <= initial_resources; i++) {
         test_assert(resource_id_available(i));
     }
+
     ecs_fini(world);
+
     free_resource_ids();
 }
 
@@ -2175,12 +2331,14 @@ void RuntimeTypes_array_of_array_of_struct_with_strings(void) {
         ecs_i32_t b;
         ecs_string_t c;
     } StructWithStrings;
-    ecs_entity_t struct_with_strings =
-        ecs_struct(world, {.members = {
-                               {"a", ecs_id(ecs_string_t)},
-                               {"b", ecs_id(ecs_i32_t)},
-                               {"c", ecs_id(ecs_string_t)},
-                           }});
+
+    ecs_entity_t struct_with_strings = ecs_struct(world, {
+        .members = {
+            {"a", ecs_id(ecs_string_t)},
+            {"b", ecs_id(ecs_i32_t)},
+            {"c", ecs_id(ecs_string_t)},
+        }
+    });
 
     ecs_entity_t /* StructWithStrings[3] */ array_of_struct_with_strings =
         ecs_array(world, {.type = struct_with_strings, .count = 3});
@@ -2551,7 +2709,9 @@ void RuntimeTypes_array_of_opaque(void) {
     for (i = 1; i <= initial_resources; i++) {
         test_assert(resource_id_available(i));
     }
+
     ecs_fini(world);
+
     free_resource_ids();
 }
 
@@ -2678,11 +2838,13 @@ void RuntimeTypes_vector_of_struct_with_ints(void) {
         ecs_i32_t a;
         ecs_i32_t b;
     } StructWithInts;
-    ecs_entity_t struct_with_ints =
-        ecs_struct(world, {.members = {
-                               {"a", ecs_id(ecs_i32_t)},
-                               {"b", ecs_id(ecs_i32_t)},
-                           }});
+
+    ecs_entity_t struct_with_ints = ecs_struct(world, {
+        .members = {
+            {"a", ecs_id(ecs_i32_t)},
+            {"b", ecs_id(ecs_i32_t)},
+        }
+    });
 
     ecs_entity_t /* StructWithInts[3] */ vector_of_struct_with_ints =
         ecs_array(world, {.type = struct_with_ints, .count = 3});
@@ -2743,12 +2905,14 @@ void RuntimeTypes_vector_of_struct_with_strings(void) {
         ecs_i32_t b;
         ecs_string_t c;
     } StructWithStrings;
-    ecs_entity_t struct_with_strings =
-        ecs_struct(world, {.members = {
-                               {"a", ecs_id(ecs_string_t)},
-                               {"b", ecs_id(ecs_i32_t)},
-                               {"c", ecs_id(ecs_string_t)},
-                           }});
+
+    ecs_entity_t struct_with_strings = ecs_struct(world, {
+        .members = {
+            {"a", ecs_id(ecs_string_t)},
+            {"b", ecs_id(ecs_i32_t)},
+            {"c", ecs_id(ecs_string_t)},
+        }
+    });
 
     ecs_entity_t /* StructWithStrings[3] */ vector_of_struct_with_strings =
         ecs_array(world, {.type = struct_with_strings, .count = 3});
@@ -2966,6 +3130,8 @@ void RuntimeTypes_vector_of_opaque(void) {
     for (i = 1; i <= initial_resources; i++) {
         test_assert(resource_id_available(i));
     }
+
     ecs_fini(world);
+
     free_resource_ids();
 }
