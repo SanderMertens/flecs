@@ -1136,3 +1136,65 @@ void Observer_register_twice_w_each_run(void) {
     ecs.entity().set(Position{10, 20});
     test_int(count2, 1);
 }
+
+void Observer_other_table(void) {
+    flecs::world ecs;
+
+    int32_t count = 0;
+
+    ecs.observer<Velocity>()
+        .event(flecs::OnAdd)
+        .each([&](flecs::iter& it, size_t, Velocity&) {
+            test_assert(it.table().has<Velocity>());
+            test_assert(!it.other_table().has<Velocity>());
+            count ++;
+        });
+
+    flecs::entity e = ecs.entity().add<Position>().add<Velocity>();
+
+    test_int(count, 1);
+}
+
+void Observer_other_table_w_pair(void) {
+    flecs::world ecs;
+
+    struct Likes {};
+    struct Apples {};
+
+    int32_t count = 0;
+
+    ecs.observer()
+        .with<Likes, Apples>()
+        .event(flecs::OnAdd)
+        .each([&](flecs::iter& it, size_t) {
+            test_assert((it.table().has<Likes, Apples>()));
+            test_assert((!it.other_table().has<Likes, Apples>()));
+            count ++;
+        });
+
+    flecs::entity e = ecs.entity().add<Position>().add<Likes, Apples>();
+
+    test_int(count, 1);
+}
+
+void Observer_other_table_w_pair_wildcard(void) {
+    flecs::world ecs;
+
+    struct Likes {};
+    struct Apples {};
+
+    int32_t count = 0;
+
+    ecs.observer()
+        .with<Likes, Apples>()
+        .event(flecs::OnAdd)
+        .each([&](flecs::iter& it, size_t) {
+            test_assert((it.table().has<Likes>(flecs::Wildcard)));
+            test_assert((!it.other_table().has<Likes>(flecs::Wildcard)));
+            count ++;
+        });
+
+    flecs::entity e = ecs.entity().add<Position>().add<Likes, Apples>();
+
+    test_int(count, 1);
+}

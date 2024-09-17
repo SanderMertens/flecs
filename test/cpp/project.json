@@ -918,7 +918,10 @@
                 "register_twice_w_each",
                 "register_twice_w_run",
                 "register_twice_w_run_each",
-                "register_twice_w_each_run"
+                "register_twice_w_each_run",
+                "other_table",
+                "other_table_w_pair",
+                "other_table_w_pair_wildcard"
             ]
         }, {
             "id": "ComponentLifecycle",

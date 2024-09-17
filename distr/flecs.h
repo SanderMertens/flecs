@@ -22510,6 +22510,8 @@ public:
 
     flecs::table table() const;
 
+    flecs::table other_table() const;
+
     flecs::table_range range() const;
 
     /** Access ctx.
@@ -32401,6 +32403,10 @@ inline flecs::type iter::type() const {
 
 inline flecs::table iter::table() const {
     return flecs::table(iter_->real_world, iter_->table);
+}
+
+inline flecs::table iter::other_table() const {
+    return flecs::table(iter_->real_world, iter_->other_table);
 }
 
 inline flecs::table_range iter::range() const {
