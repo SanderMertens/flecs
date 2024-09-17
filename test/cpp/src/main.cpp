@@ -886,6 +886,9 @@ void Observer_register_twice_w_each(void);
 void Observer_register_twice_w_run(void);
 void Observer_register_twice_w_run_each(void);
 void Observer_register_twice_w_each_run(void);
+void Observer_other_table(void);
+void Observer_other_table_w_pair(void);
+void Observer_other_table_w_pair_wildcard(void);
 
 // Testsuite 'ComponentLifecycle'
 void ComponentLifecycle_ctor_on_add(void);
@@ -4789,6 +4792,18 @@ bake_test_case Observer_testcases[] = {
     {
         "register_twice_w_each_run",
         Observer_register_twice_w_each_run
+    },
+    {
+        "other_table",
+        Observer_other_table
+    },
+    {
+        "other_table_w_pair",
+        Observer_other_table_w_pair
+    },
+    {
+        "other_table_w_pair_wildcard",
+        Observer_other_table_w_pair_wildcard
     }
 };
 
@@ -6661,7 +6676,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        46,
+        49,
         Observer_testcases
     },
     {

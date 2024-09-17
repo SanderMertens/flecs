@@ -117,6 +117,8 @@ public:
 
     flecs::table table() const;
 
+    flecs::table other_table() const;
+
     flecs::table_range range() const;
 
     /** Access ctx.
