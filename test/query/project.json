@@ -1948,6 +1948,7 @@
             "testcases": [
                 "1_fixed_sparse",
                 "1_fixed_sparse_none",
+                "1_this_sparse_simple",
                 "1_this_sparse",
                 "1_this_sparse_none",
                 "1_this_sparse_written",
@@ -1956,6 +1957,7 @@
                 "1_var_sparse_none",
                 "1_var_sparse_written",
                 "1_var_sparse_written_none",
+                "2_sparse_simple",
                 "2_sparse",
                 "2_sparse_and_regular",
                 "2_regular_and_sparse",

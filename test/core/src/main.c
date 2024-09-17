@@ -448,6 +448,9 @@ void Sparse_get_inherited(void);
 void Sparse_get_mut_inherited(void);
 void Sparse_ensure_inherited(void);
 void Sparse_emplace_inherited(void);
+void Sparse_override_component(void);
+void Sparse_delete_w_override_component(void);
+void Sparse_delete_w_override_on_remove_isa(void);
 void Sparse_ctor_after_emplace(void);
 void Sparse_ctor_dtor_after_remove(void);
 void Sparse_ctor_dtor_after_clear(void);
@@ -459,6 +462,18 @@ void Sparse_on_add_remove_after_delete(void);
 void Sparse_on_add_remove_after_fini(void);
 void Sparse_on_set_after_set(void);
 void Sparse_on_set_after_modified(void);
+void Sparse_on_add_observer(void);
+void Sparse_on_set_observer_set(void);
+void Sparse_on_set_observer_modified(void);
+void Sparse_on_set_observer_insert(void);
+void Sparse_on_remove_observer_remove(void);
+void Sparse_on_remove_observer_clear(void);
+void Sparse_on_remove_observer_delete(void);
+void Sparse_on_remove_observer_fini(void);
+void Sparse_on_set_after_remove_override(void);
+void Sparse_on_add_observer_2_terms(void);
+void Sparse_on_set_observer_2_terms(void);
+void Sparse_on_remove_observer_2_terms(void);
 void Sparse_sparse_relationship(void);
 void Sparse_defer_ensure(void);
 void Sparse_defer_ensure_w_modified(void);
@@ -3914,6 +3929,18 @@ bake_test_case Sparse_testcases[] = {
         Sparse_emplace_inherited
     },
     {
+        "override_component",
+        Sparse_override_component
+    },
+    {
+        "delete_w_override_component",
+        Sparse_delete_w_override_component
+    },
+    {
+        "delete_w_override_on_remove_isa",
+        Sparse_delete_w_override_on_remove_isa
+    },
+    {
         "ctor_after_emplace",
         Sparse_ctor_after_emplace
     },
@@ -3956,6 +3983,54 @@ bake_test_case Sparse_testcases[] = {
     {
         "on_set_after_modified",
         Sparse_on_set_after_modified
+    },
+    {
+        "on_add_observer",
+        Sparse_on_add_observer
+    },
+    {
+        "on_set_observer_set",
+        Sparse_on_set_observer_set
+    },
+    {
+        "on_set_observer_modified",
+        Sparse_on_set_observer_modified
+    },
+    {
+        "on_set_observer_insert",
+        Sparse_on_set_observer_insert
+    },
+    {
+        "on_remove_observer_remove",
+        Sparse_on_remove_observer_remove
+    },
+    {
+        "on_remove_observer_clear",
+        Sparse_on_remove_observer_clear
+    },
+    {
+        "on_remove_observer_delete",
+        Sparse_on_remove_observer_delete
+    },
+    {
+        "on_remove_observer_fini",
+        Sparse_on_remove_observer_fini
+    },
+    {
+        "on_set_after_remove_override",
+        Sparse_on_set_after_remove_override
+    },
+    {
+        "on_add_observer_2_terms",
+        Sparse_on_add_observer_2_terms
+    },
+    {
+        "on_set_observer_2_terms",
+        Sparse_on_set_observer_2_terms
+    },
+    {
+        "on_remove_observer_2_terms",
+        Sparse_on_remove_observer_2_terms
     },
     {
         "sparse_relationship",
@@ -10836,7 +10911,7 @@ static bake_test_suite suites[] = {
         "Sparse",
         NULL,
         NULL,
-        71,
+        86,
         Sparse_testcases
     },
     {

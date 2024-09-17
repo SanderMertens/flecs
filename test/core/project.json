@@ -475,6 +475,9 @@
                 "get_mut_inherited",
                 "ensure_inherited",
                 "emplace_inherited",
+                "override_component",
+                "delete_w_override_component",
+                "delete_w_override_on_remove_isa",
                 "ctor_after_emplace",
                 "ctor_dtor_after_remove",
                 "ctor_dtor_after_clear",
@@ -486,6 +489,18 @@
                 "on_add_remove_after_fini",
                 "on_set_after_set",
                 "on_set_after_modified",
+                "on_add_observer",
+                "on_set_observer_set",
+                "on_set_observer_modified",
+                "on_set_observer_insert",
+                "on_remove_observer_remove",
+                "on_remove_observer_clear",
+                "on_remove_observer_delete",
+                "on_remove_observer_fini",
+                "on_set_after_remove_override",
+                "on_add_observer_2_terms",
+                "on_set_observer_2_terms",
+                "on_remove_observer_2_terms",
                 "sparse_relationship",
                 "defer_ensure",
                 "defer_ensure_w_modified",
@@ -515,7 +530,6 @@
                 "defer_batched_set_existing",
                 "defer_batched_set_remove",
                 "defer_batched_set_remove_existing"
-
             ]
         }, {
             "id": "Union",
