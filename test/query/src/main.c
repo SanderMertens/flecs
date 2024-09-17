@@ -1870,6 +1870,7 @@ void Toggle_toggle_0_src(void);
 void Sparse_setup(void);
 void Sparse_1_fixed_sparse(void);
 void Sparse_1_fixed_sparse_none(void);
+void Sparse_1_this_sparse_simple(void);
 void Sparse_1_this_sparse(void);
 void Sparse_1_this_sparse_none(void);
 void Sparse_1_this_sparse_written(void);
@@ -1878,6 +1879,7 @@ void Sparse_1_var_sparse(void);
 void Sparse_1_var_sparse_none(void);
 void Sparse_1_var_sparse_written(void);
 void Sparse_1_var_sparse_written_none(void);
+void Sparse_2_sparse_simple(void);
 void Sparse_2_sparse(void);
 void Sparse_2_sparse_and_regular(void);
 void Sparse_2_regular_and_sparse(void);
@@ -9389,6 +9391,10 @@ bake_test_case Sparse_testcases[] = {
         Sparse_1_fixed_sparse_none
     },
     {
+        "1_this_sparse_simple",
+        Sparse_1_this_sparse_simple
+    },
+    {
         "1_this_sparse",
         Sparse_1_this_sparse
     },
@@ -9419,6 +9425,10 @@ bake_test_case Sparse_testcases[] = {
     {
         "1_var_sparse_written_none",
         Sparse_1_var_sparse_written_none
+    },
+    {
+        "2_sparse_simple",
+        Sparse_2_sparse_simple
     },
     {
         "2_sparse",
@@ -10421,7 +10431,7 @@ static bake_test_suite suites[] = {
         "Sparse",
         Sparse_setup,
         NULL,
-        21,
+        23,
         Sparse_testcases,
         1,
         Sparse_params

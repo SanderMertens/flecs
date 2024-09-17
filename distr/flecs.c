@@ -5705,10 +5705,6 @@ void flecs_notify_on_remove(
             return;
         }
 
-        if (diff_flags & EcsTableHasSparse) {
-            flecs_sparse_on_remove(world, table, row, count, removed);
-        }
-    
         if (diff_flags & EcsTableHasUnion) {
             flecs_union_on_remove(world, table, row, count, removed);
         }
@@ -5723,6 +5719,10 @@ void flecs_notify_on_remove(
                 .count = count,
                 .observable = world
             });
+        }
+
+        if (diff_flags & EcsTableHasSparse) {
+            flecs_sparse_on_remove(world, table, row, count, removed);
         }
     }
 }
@@ -14280,8 +14280,8 @@ void flecs_observer_invoke(
             ECS_INTERNAL_ERROR, NULL);
     }
 
-    ecs_termset_t set_fields = it->set_fields;
-    // it->set_fields = 1; /* Field 0 is set otherwise we wouldn't be triggering */
+    ecs_termset_t row_fields = it->row_fields;
+    it->row_fields = query->row_fields;
 
     bool match_this = query->flags & EcsQueryMatchThis;
     if (match_this) {
@@ -14321,7 +14321,7 @@ void flecs_observer_invoke(
         it->count = count;
     }
 
-    it->set_fields = set_fields;
+    it->row_fields = row_fields;
 
     flecs_stage_set_system(world->stages[0], old_system);
 
@@ -34748,6 +34748,7 @@ bool flecs_query_finalize_simple(
             if (idr->flags & EcsIdIsSparse) {
                 term->flags_ |= EcsTermIsSparse;
                 cacheable = false; trivial = false;
+                q->row_fields |= (1llu << i);
             }
         }
 

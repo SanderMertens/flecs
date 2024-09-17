@@ -717,10 +717,6 @@ void flecs_notify_on_remove(
             return;
         }
 
-        if (diff_flags & EcsTableHasSparse) {
-            flecs_sparse_on_remove(world, table, row, count, removed);
-        }
-    
         if (diff_flags & EcsTableHasUnion) {
             flecs_union_on_remove(world, table, row, count, removed);
         }
@@ -735,6 +731,10 @@ void flecs_notify_on_remove(
                 .count = count,
                 .observable = world
             });
+        }
+
+        if (diff_flags & EcsTableHasSparse) {
+            flecs_sparse_on_remove(world, table, row, count, removed);
         }
     }
 }

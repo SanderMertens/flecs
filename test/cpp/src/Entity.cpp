@@ -4772,3 +4772,39 @@ void Entity_emplace_sparse(void) {
     test_int(v->x, 1);
     test_int(v->y, 2);
 }
+
+void Entity_override_sparse(void) {
+    flecs::world world;
+
+    world.component<Velocity>().add(flecs::Sparse);
+
+    flecs::entity base = world.entity().set(Velocity{1, 2});
+
+    flecs::entity e = world.entity().is_a(base);
+
+    test_assert(e.has<Velocity>());
+    test_assert(e.owns<Velocity>());
+
+    const Velocity *v = e.get<Velocity>();
+    test_int(v->x, 1);
+    test_int(v->y, 2);
+}
+
+void Entity_delete_w_override_sparse(void) {
+    flecs::world world;
+
+    world.component<Velocity>().add(flecs::Sparse);
+
+    flecs::entity base = world.entity().set(Velocity{1, 2});
+
+    flecs::entity e = world.entity().is_a(base);
+
+    test_assert(e.has<Velocity>());
+    test_assert(e.owns<Velocity>());
+
+    const Velocity *v = e.get<Velocity>();
+    test_int(v->x, 1);
+    test_int(v->y, 2);
+
+    e.destruct();
+}
