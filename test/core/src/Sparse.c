@@ -807,6 +807,7 @@ static int position_dtor_invoked = 0;
 static int position_on_add_invoked = 0;
 static int position_on_remove_invoked = 0;
 static int position_on_set_invoked = 0;
+static Position position_on_set_value = {0, 0};
 
 static ECS_CTOR(Position, ptr, {
     position_ctor_invoked ++;
@@ -847,8 +848,7 @@ static void Position_on_set(ecs_iter_t *it) {
     test_int(0, position_dtor_invoked);
     Position *p = ecs_field_at(it, Position, 0, 0);
     test_assert(p != NULL);
-    test_int(p->x, 30);
-    test_int(p->y, 40);
+    position_on_set_value = *p;
     test_uint(it->event, EcsOnSet);
 
     position_on_set_invoked ++;
@@ -1182,6 +1182,8 @@ void Sparse_on_set_after_set(void) {
     test_int(1, position_ctor_invoked);
     test_int(1, position_on_add_invoked);
     test_int(1, position_on_set_invoked);
+    test_int(30, position_on_set_value.x);
+    test_int(40, position_on_set_value.y);
 
     {
         const Position *ptr = ecs_get(world, e, Position);
@@ -1217,12 +1219,53 @@ void Sparse_on_set_after_modified(void) {
     test_int(1, position_ctor_invoked);
     test_int(1, position_on_add_invoked);
     test_int(1, position_on_set_invoked);
+    test_int(30, position_on_set_value.x);
+    test_int(40, position_on_set_value.y);
 
     {
         const Position *ptr = ecs_get(world, e, Position);
         test_int(ptr->x, 30);
         test_int(ptr->y, 40);
     }
+
+    ecs_fini(world);
+}
+
+void Sparse_on_set_at_offset(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Tag);
+
+    ecs_add_id(world, ecs_id(Position), EcsSparse);
+
+    ecs_set_hooks(world, Position, {
+        .ctor = ecs_ctor(Position),
+        .on_add = Position_on_add,
+        .on_set = Position_on_set
+    });
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_set(world, e, Position, {10, 20});
+
+    test_int(1, position_ctor_invoked);
+    test_int(1, position_on_add_invoked);
+    test_int(1, position_on_set_invoked);
+    test_int(10, position_on_set_value.x);
+    test_int(20, position_on_set_value.y);
+    
+    position_ctor_invoked  = 0;
+    position_on_add_invoked = 0;
+    position_on_set_invoked = 0;
+
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_set(world, e2, Position, {30, 40});
+
+    test_int(1, position_ctor_invoked);
+    test_int(1, position_on_add_invoked);
+    test_int(1, position_on_set_invoked);
+    test_int(30, position_on_set_value.x);
+    test_int(40, position_on_set_value.y);
 
     ecs_fini(world);
 }

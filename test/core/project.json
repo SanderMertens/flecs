@@ -489,6 +489,7 @@
                 "on_add_remove_after_fini",
                 "on_set_after_set",
                 "on_set_after_modified",
+                "on_set_at_offset",
                 "on_add_observer",
                 "on_set_observer_set",
                 "on_set_observer_modified",

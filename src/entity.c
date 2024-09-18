@@ -1263,6 +1263,7 @@ void flecs_invoke_hook(
     it.table = table;
     it.trs[0] = tr;
     it.row_fields = !!(((ecs_id_record_t*)tr->hdr.cache)->flags & EcsIdIsSparse);
+    it.ref_fields = it.row_fields;
     it.sizes = ECS_CONST_CAST(ecs_size_t*, &ti->size);
     it.ids[0] = id;
     it.event = event;
@@ -1272,6 +1273,7 @@ void flecs_invoke_hook(
     it.count = count;
     it.offset = row;
     it.flags = EcsIterIsValid;
+
     hook(&it);
     ecs_iter_fini(&it);
 

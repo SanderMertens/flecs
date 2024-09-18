@@ -952,6 +952,15 @@ void ComponentLifecycle_on_set_hook(void);
 void ComponentLifecycle_on_add_hook_w_entity(void);
 void ComponentLifecycle_on_remove_hook_w_entity(void);
 void ComponentLifecycle_on_set_hook_w_entity(void);
+void ComponentLifecycle_on_add_hook_sparse(void);
+void ComponentLifecycle_on_remove_hook_sparse(void);
+void ComponentLifecycle_on_set_hook_sparse(void);
+void ComponentLifecycle_on_add_hook_sparse_w_entity(void);
+void ComponentLifecycle_on_remove_hook_sparse_w_entity(void);
+void ComponentLifecycle_on_set_hook_sparse_w_entity(void);
+void ComponentLifecycle_on_add_hook_sparse_w_iter(void);
+void ComponentLifecycle_on_remove_hook_sparse_w_iter(void);
+void ComponentLifecycle_on_set_hook_sparse_w_iter(void);
 void ComponentLifecycle_chained_hooks(void);
 void ComponentLifecycle_ctor_w_2_worlds(void);
 void ComponentLifecycle_ctor_w_2_worlds_explicit_registration(void);
@@ -5055,6 +5064,42 @@ bake_test_case ComponentLifecycle_testcases[] = {
         ComponentLifecycle_on_set_hook_w_entity
     },
     {
+        "on_add_hook_sparse",
+        ComponentLifecycle_on_add_hook_sparse
+    },
+    {
+        "on_remove_hook_sparse",
+        ComponentLifecycle_on_remove_hook_sparse
+    },
+    {
+        "on_set_hook_sparse",
+        ComponentLifecycle_on_set_hook_sparse
+    },
+    {
+        "on_add_hook_sparse_w_entity",
+        ComponentLifecycle_on_add_hook_sparse_w_entity
+    },
+    {
+        "on_remove_hook_sparse_w_entity",
+        ComponentLifecycle_on_remove_hook_sparse_w_entity
+    },
+    {
+        "on_set_hook_sparse_w_entity",
+        ComponentLifecycle_on_set_hook_sparse_w_entity
+    },
+    {
+        "on_add_hook_sparse_w_iter",
+        ComponentLifecycle_on_add_hook_sparse_w_iter
+    },
+    {
+        "on_remove_hook_sparse_w_iter",
+        ComponentLifecycle_on_remove_hook_sparse_w_iter
+    },
+    {
+        "on_set_hook_sparse_w_iter",
+        ComponentLifecycle_on_set_hook_sparse_w_iter
+    },
+    {
         "chained_hooks",
         ComponentLifecycle_chained_hooks
     },
@@ -6693,7 +6738,7 @@ static bake_test_suite suites[] = {
         "ComponentLifecycle",
         NULL,
         NULL,
-        79,
+        88,
         ComponentLifecycle_testcases
     },
     {

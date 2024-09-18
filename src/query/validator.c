@@ -1633,7 +1633,7 @@ bool flecs_query_finalize_simple(
             if (idr->flags & EcsIdIsSparse) {
                 term->flags_ |= EcsTermIsSparse;
                 cacheable = false; trivial = false;
-                q->row_fields |= (1llu << i);
+                q->row_fields |= flecs_uto(uint32_t, 1llu << i);
             }
         }
 

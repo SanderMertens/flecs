@@ -462,6 +462,7 @@ void Sparse_on_add_remove_after_delete(void);
 void Sparse_on_add_remove_after_fini(void);
 void Sparse_on_set_after_set(void);
 void Sparse_on_set_after_modified(void);
+void Sparse_on_set_at_offset(void);
 void Sparse_on_add_observer(void);
 void Sparse_on_set_observer_set(void);
 void Sparse_on_set_observer_modified(void);
@@ -3983,6 +3984,10 @@ bake_test_case Sparse_testcases[] = {
     {
         "on_set_after_modified",
         Sparse_on_set_after_modified
+    },
+    {
+        "on_set_at_offset",
+        Sparse_on_set_at_offset
     },
     {
         "on_add_observer",
@@ -10911,7 +10916,7 @@ static bake_test_suite suites[] = {
         "Sparse",
         NULL,
         NULL,
-        86,
+        87,
         Sparse_testcases
     },
     {
