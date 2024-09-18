@@ -1896,6 +1896,8 @@ void World_set_get_binding_context(void);
 void World_set_get_context_w_free(void);
 void World_set_get_binding_context_w_free(void);
 void World_get_entities(void);
+void World_run_post_frame(void);
+void World_run_post_frame_outside_of_frame(void);
 
 // Testsuite 'WorldInfo'
 void WorldInfo_get_tick(void);
@@ -9564,6 +9566,14 @@ bake_test_case World_testcases[] = {
     {
         "get_entities",
         World_get_entities
+    },
+    {
+        "run_post_frame",
+        World_run_post_frame
+    },
+    {
+        "run_post_frame_outside_of_frame",
+        World_run_post_frame_outside_of_frame
     }
 };
 
@@ -11084,7 +11094,7 @@ static bake_test_suite suites[] = {
         "World",
         World_setup,
         NULL,
-        60,
+        62,
         World_testcases
     },
     {

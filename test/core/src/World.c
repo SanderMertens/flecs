@@ -1639,3 +1639,40 @@ void World_get_entities(void) {
 
     ecs_fini(world);
 }
+
+static
+int post_frame_action_invoked = 0;
+
+static
+void post_frame_action(
+    ecs_world_t *world, 
+    void *ctx) 
+{
+    test_int(*(int*)ctx, 10);
+    post_frame_action_invoked ++;
+}
+
+void World_run_post_frame(void) {
+    ecs_world_t *world = ecs_mini();
+    
+    ecs_frame_begin(world, 0);
+
+    int ctx = 10;
+    ecs_run_post_frame(world, post_frame_action, &ctx);
+
+    test_int(post_frame_action_invoked, 0);
+    ecs_frame_end(world);
+    test_int(post_frame_action_invoked, 1);
+
+    ecs_fini(world);
+}
+
+void World_run_post_frame_outside_of_frame(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_mini();
+    
+    test_expect_abort();
+    int ctx = 10;
+    ecs_run_post_frame(world, post_frame_action, &ctx);
+}
