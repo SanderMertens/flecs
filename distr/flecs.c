@@ -6251,6 +6251,7 @@ void flecs_invoke_hook(
     it.table = table;
     it.trs[0] = tr;
     it.row_fields = !!(((ecs_id_record_t*)tr->hdr.cache)->flags & EcsIdIsSparse);
+    it.ref_fields = it.row_fields;
     it.sizes = ECS_CONST_CAST(ecs_size_t*, &ti->size);
     it.ids[0] = id;
     it.event = event;
@@ -6260,6 +6261,7 @@ void flecs_invoke_hook(
     it.count = count;
     it.offset = row;
     it.flags = EcsIterIsValid;
+
     hook(&it);
     ecs_iter_fini(&it);
 
@@ -11283,7 +11285,7 @@ void* ecs_field_at_w_size(
 
     ecs_entity_t src = it->sources[index];
     if (!src) {
-        src = ecs_table_entities(it->table)[row];
+        src = ecs_table_entities(it->table)[row + it->offset];
     }
 
     return flecs_sparse_get_any(idr->sparse, flecs_uto(int32_t, size), src);
@@ -34748,7 +34750,7 @@ bool flecs_query_finalize_simple(
             if (idr->flags & EcsIdIsSparse) {
                 term->flags_ |= EcsTermIsSparse;
                 cacheable = false; trivial = false;
-                q->row_fields |= (1llu << i);
+                q->row_fields |= flecs_uto(uint32_t, 1llu << i);
             }
         }
 

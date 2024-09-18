@@ -1448,15 +1448,19 @@ void ComponentLifecycle_on_add_hook_w_entity(void) {
         test_int(0, count);
         test_assert(e_arg == 0);
 
-        auto e = ecs.entity().add<Position>();
+        auto e1 = ecs.entity().add<Position>();
         test_int(1, count);
-        test_assert(e_arg == e);
+        test_assert(e_arg == e1);
 
-        e.add<Position>();
+        e1.add<Position>();
         test_int(1, count);
+
+        auto e2 = ecs.entity().add<Position>();
+        test_int(2, count);
+        test_assert(e_arg == e2);
     }
 
-    test_int(1, count);
+    test_int(2, count);
 }
 
 void ComponentLifecycle_on_remove_hook_w_entity(void) {
@@ -1501,6 +1505,282 @@ void ComponentLifecycle_on_set_hook_w_entity(void) {
             v = p;
             e_arg = arg;
         });
+
+        test_int(0, count);
+
+        auto e1 = ecs.entity().add<Position>();
+        test_int(0, count);
+
+        e1.set<Position>({10, 20});
+        test_int(1, count);
+        test_assert(e_arg == e1);
+        test_int(10, v.x);
+        test_int(20, v.y);
+
+        auto e2 = ecs.entity().set<Position>({30, 40});
+        test_int(2, count);
+        test_assert(e_arg == e2);
+        test_int(30, v.x);
+        test_int(40, v.y);
+    }
+
+    test_int(2, count);
+}
+
+void ComponentLifecycle_on_add_hook_sparse(void) {
+    int count = 0;
+
+    {
+        flecs::world ecs;
+
+        ecs.component<Position>().add(flecs::Sparse);
+        ecs.component<Position>().on_add([&](Position& p) {
+            count ++;
+        });
+
+        test_int(0, count);
+
+        auto e = ecs.entity().add<Position>();
+        test_int(1, count);
+
+        e.add<Position>();
+        test_int(1, count);
+    }
+
+    test_int(1, count);
+}
+
+void ComponentLifecycle_on_remove_hook_sparse(void) {
+    int count = 0;
+    
+    {
+        flecs::world ecs;
+
+        ecs.component<Position>().add(flecs::Sparse);
+        ecs.component<Position>().on_remove([&](Position& p) {
+            count ++;
+        });
+
+        test_int(0, count);
+
+        auto e1 = ecs.entity().add<Position>();
+        ecs.entity().add<Position>();
+        test_int(0, count);
+
+        e1.remove<Position>();
+        test_int(1, count);
+    }
+
+    test_int(2, count);
+}
+
+void ComponentLifecycle_on_set_hook_sparse(void) {
+    int count = 0;
+    Position v = {0};
+
+    {
+        flecs::world ecs;
+
+        ecs.component<Position>().add(flecs::Sparse);
+        ecs.component<Position>().on_set([&](Position& p) {
+            count ++;
+            v = p;
+        });
+
+        test_int(0, count);
+
+        auto e1 = ecs.entity().add<Position>();
+        test_int(0, count);
+
+        e1.set<Position>({10, 20});
+        test_int(1, count);
+        test_int(10, v.x);
+        test_int(20, v.y);
+
+        ecs.entity().set<Position>({30, 40});
+        test_int(2, count);
+        test_int(30, v.x);
+        test_int(40, v.y);
+    }
+
+    test_int(2, count);
+}
+
+void ComponentLifecycle_on_add_hook_sparse_w_entity(void) {
+    int count = 0;
+    flecs::entity e_arg;
+
+    {
+        flecs::world ecs;
+
+        ecs.component<Position>().add(flecs::Sparse);
+        ecs.component<Position>().on_add([&](flecs::entity arg, Position& p) {
+            e_arg = arg;
+            count ++;
+        });
+
+        test_int(0, count);
+        test_assert(e_arg == 0);
+
+        auto e1 = ecs.entity().add<Position>();
+        test_int(1, count);
+        test_assert(e_arg == e1);
+
+        e1.add<Position>();
+        test_int(1, count);
+
+        auto e2 = ecs.entity().add<Position>();
+        test_int(2, count);
+        test_assert(e_arg == e2);
+    }
+
+    test_int(2, count);
+}
+
+void ComponentLifecycle_on_remove_hook_sparse_w_entity(void) {
+    int count = 0;
+    flecs::entity e_arg;
+    flecs::entity e2;
+    
+    {
+        flecs::world ecs;
+
+        ecs.component<Position>().add(flecs::Sparse);
+        ecs.component<Position>().on_remove([&](flecs::entity arg, Position& p){
+            e_arg = arg;
+            count ++;
+        });
+
+        test_int(0, count);
+        test_assert(e_arg == 0);
+
+        auto e1 = ecs.entity().add<Position>();
+        e2 = ecs.entity().add<Position>();
+        test_int(0, count);
+
+        e1.remove<Position>();
+        test_int(1, count);
+        test_assert(e_arg == e1);
+    }
+
+    test_int(2, count);
+    test_assert(e_arg == e2);
+}
+
+void ComponentLifecycle_on_set_hook_sparse_w_entity(void) {
+    int count = 0;
+    Position v = {0};
+    flecs::entity e_arg;
+
+    {
+        flecs::world ecs;
+
+        ecs.component<Position>().add(flecs::Sparse);
+        ecs.component<Position>().on_set([&](flecs::entity arg, Position& p) {
+            count ++;
+            v = p;
+            e_arg = arg;
+        });
+
+        test_int(0, count);
+
+        auto e1 = ecs.entity().add<Position>();
+        test_int(0, count);
+
+        e1.set<Position>({10, 20});
+        test_int(1, count);
+        test_assert(e_arg == e1);
+        test_int(10, v.x);
+        test_int(20, v.y);
+
+        auto e2 = ecs.entity().set<Position>({30, 40});
+        test_int(2, count);
+        test_assert(e_arg == e2);
+        test_int(30, v.x);
+        test_int(40, v.y);
+    }
+
+    test_int(2, count);
+}
+
+void ComponentLifecycle_on_add_hook_sparse_w_iter(void) {
+    int count = 0;
+    flecs::entity e_arg;
+
+    {
+        flecs::world ecs;
+
+        ecs.component<Position>().add(flecs::Sparse);
+        ecs.component<Position>()
+            .on_add([&](flecs::iter& it, size_t row, Position& p) {
+                e_arg = it.entity(row);
+                count ++;
+            });
+
+        test_int(0, count);
+        test_assert(e_arg == 0);
+
+        auto e1 = ecs.entity().add<Position>();
+        test_int(1, count);
+        test_assert(e_arg == e1);
+
+        e1.add<Position>();
+        test_int(1, count);
+
+        auto e2 = ecs.entity().add<Position>();
+        test_int(2, count);
+        test_assert(e_arg == e2);
+    }
+
+    test_int(2, count);
+}
+
+void ComponentLifecycle_on_remove_hook_sparse_w_iter(void) {
+    int count = 0;
+    flecs::entity e_arg;
+    flecs::entity e2;
+    
+    {
+        flecs::world ecs;
+
+        ecs.component<Position>().add(flecs::Sparse);
+        ecs.component<Position>()
+            .on_remove([&](flecs::iter& it, size_t row, Position& p){
+                e_arg = it.entity(row);
+                count ++;
+            });
+
+        test_int(0, count);
+        test_assert(e_arg == 0);
+
+        auto e1 = ecs.entity().add<Position>();
+        e2 = ecs.entity().add<Position>();
+        test_int(0, count);
+
+        e1.remove<Position>();
+        test_int(1, count);
+        test_assert(e_arg == e1);
+    }
+
+    test_int(2, count);
+    test_assert(e_arg == e2);
+}
+
+void ComponentLifecycle_on_set_hook_sparse_w_iter(void) {
+    int count = 0;
+    Position v = {0};
+    flecs::entity e_arg;
+
+    {
+        flecs::world ecs;
+
+        ecs.component<Position>().add(flecs::Sparse);
+        ecs.component<Position>()
+            .on_set([&](flecs::iter& it, size_t row, Position& p) {
+                count ++;
+                v = p;
+                e_arg = it.entity(row);
+            });
 
         test_int(0, count);
 
