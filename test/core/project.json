@@ -477,7 +477,7 @@
                 "emplace_inherited",
                 "override_component",
                 "delete_w_override_component",
-                "delete_w_override_on_remove_isa",
+                "delete_w_override_on_remove_isa", 
                 "ctor_after_emplace",
                 "ctor_dtor_after_remove",
                 "ctor_dtor_after_clear",
@@ -1970,7 +1970,9 @@
                 "set_get_binding_context",
                 "set_get_context_w_free",
                 "set_get_binding_context_w_free",
-                "get_entities"
+                "get_entities",
+                "run_post_frame",
+                "run_post_frame_outside_of_frame"
             ]
         }, {
             "id": "WorldInfo",
