@@ -6,7 +6,7 @@
 #pragma once
 
 // STL includes
-#ifndef FLECS_CUSTOM_STD_INCLUDE
+#ifndef FLECS_NO_STD_INCLUDE
 #include <type_traits>
 #endif
 
@@ -15,7 +15,15 @@
 #endif
 
 #ifndef FLECS_API_GLOBAL
-#define FLECS_API_GLOBAL static
+#define FLECS_API_GLOBAL
+#endif
+
+#ifndef FLECS_API_DEPENDENCY
+#define FLECS_API_DEPENDENCY
+#endif
+
+#ifndef FLECS_STATIC_IN_HEADER
+#define FLECS_STATIC_IN_HEADER static
 #endif
 
 /**

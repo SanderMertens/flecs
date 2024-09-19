@@ -55,59 +55,59 @@ FLECS_API_STRUCT struct bitmask {
 };
 
 /* Handles to builtin reflection types */
-FLECS_API_GLOBAL const flecs::entity_t Bool = ecs_id(ecs_bool_t);
-FLECS_API_GLOBAL const flecs::entity_t Char = ecs_id(ecs_char_t);
-FLECS_API_GLOBAL const flecs::entity_t Byte = ecs_id(ecs_byte_t);
-FLECS_API_GLOBAL const flecs::entity_t U8 = ecs_id(ecs_u8_t);
-FLECS_API_GLOBAL const flecs::entity_t U16 = ecs_id(ecs_u16_t);
-FLECS_API_GLOBAL const flecs::entity_t U32 = ecs_id(ecs_u32_t);
-FLECS_API_GLOBAL const flecs::entity_t U64 = ecs_id(ecs_u64_t);
-FLECS_API_GLOBAL const flecs::entity_t Uptr = ecs_id(ecs_uptr_t);
-FLECS_API_GLOBAL const flecs::entity_t I8 = ecs_id(ecs_i8_t);
-FLECS_API_GLOBAL const flecs::entity_t I16 = ecs_id(ecs_i16_t);
-FLECS_API_GLOBAL const flecs::entity_t I32 = ecs_id(ecs_i32_t);
-FLECS_API_GLOBAL const flecs::entity_t I64 = ecs_id(ecs_i64_t);
-FLECS_API_GLOBAL const flecs::entity_t Iptr = ecs_id(ecs_iptr_t);
-FLECS_API_GLOBAL const flecs::entity_t F32 = ecs_id(ecs_f32_t);
-FLECS_API_GLOBAL const flecs::entity_t F64 = ecs_id(ecs_f64_t);
-FLECS_API_GLOBAL const flecs::entity_t String = ecs_id(ecs_string_t);
-FLECS_API_GLOBAL const flecs::entity_t Entity = ecs_id(ecs_entity_t);
-FLECS_API_GLOBAL const flecs::entity_t Constant = EcsConstant;
-FLECS_API_GLOBAL const flecs::entity_t Quantity = EcsQuantity;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t Bool = ecs_id(ecs_bool_t);
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t Char = ecs_id(ecs_char_t);
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t Byte = ecs_id(ecs_byte_t);
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t U8 = ecs_id(ecs_u8_t);
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t U16 = ecs_id(ecs_u16_t);
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t U32 = ecs_id(ecs_u32_t);
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t U64 = ecs_id(ecs_u64_t);
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t Uptr = ecs_id(ecs_uptr_t);
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t I8 = ecs_id(ecs_i8_t);
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t I16 = ecs_id(ecs_i16_t);
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t I32 = ecs_id(ecs_i32_t);
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t I64 = ecs_id(ecs_i64_t);
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t Iptr = ecs_id(ecs_iptr_t);
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t F32 = ecs_id(ecs_f32_t);
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t F64 = ecs_id(ecs_f64_t);
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t String = ecs_id(ecs_string_t);
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t Entity = ecs_id(ecs_entity_t);
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t Constant = EcsConstant;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t Quantity = EcsQuantity;
 
 namespace meta {
 
 /* Type kinds supported by reflection system */
 FLECS_API_STRUCT using type_kind_t = ecs_type_kind_t;
-FLECS_API_GLOBAL const type_kind_t PrimitiveType = EcsPrimitiveType;
-FLECS_API_GLOBAL const type_kind_t BitmaskType = EcsBitmaskType;
-FLECS_API_GLOBAL const type_kind_t EnumType = EcsEnumType;
-FLECS_API_GLOBAL const type_kind_t StructType = EcsStructType;
-FLECS_API_GLOBAL const type_kind_t ArrayType = EcsArrayType;
-FLECS_API_GLOBAL const type_kind_t VectorType = EcsVectorType;
-FLECS_API_GLOBAL const type_kind_t CustomType = EcsOpaqueType;
-FLECS_API_GLOBAL const type_kind_t TypeKindLast = EcsTypeKindLast;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const type_kind_t PrimitiveType = EcsPrimitiveType;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const type_kind_t BitmaskType = EcsBitmaskType;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const type_kind_t EnumType = EcsEnumType;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const type_kind_t StructType = EcsStructType;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const type_kind_t ArrayType = EcsArrayType;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const type_kind_t VectorType = EcsVectorType;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const type_kind_t CustomType = EcsOpaqueType;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const type_kind_t TypeKindLast = EcsTypeKindLast;
 
 /* Primitive type kinds supported by reflection system */
 FLECS_API_STRUCT using primitive_kind_t = ecs_primitive_kind_t;
-FLECS_API_GLOBAL const primitive_kind_t Bool = EcsBool;
-FLECS_API_GLOBAL const primitive_kind_t Char = EcsChar;
-FLECS_API_GLOBAL const primitive_kind_t Byte = EcsByte;
-FLECS_API_GLOBAL const primitive_kind_t U8 = EcsU8;
-FLECS_API_GLOBAL const primitive_kind_t U16 = EcsU16;
-FLECS_API_GLOBAL const primitive_kind_t U32 = EcsU32;
-FLECS_API_GLOBAL const primitive_kind_t U64 = EcsU64;
-FLECS_API_GLOBAL const primitive_kind_t I8 = EcsI8;
-FLECS_API_GLOBAL const primitive_kind_t I16 = EcsI16;
-FLECS_API_GLOBAL const primitive_kind_t I32 = EcsI32;
-FLECS_API_GLOBAL const primitive_kind_t I64 = EcsI64;
-FLECS_API_GLOBAL const primitive_kind_t F32 = EcsF32;
-FLECS_API_GLOBAL const primitive_kind_t F64 = EcsF64;
-FLECS_API_GLOBAL const primitive_kind_t UPtr = EcsUPtr;
-FLECS_API_GLOBAL const primitive_kind_t IPtr = EcsIPtr;
-FLECS_API_GLOBAL const primitive_kind_t String = EcsString;
-FLECS_API_GLOBAL const primitive_kind_t Entity = EcsEntity;
-FLECS_API_GLOBAL const primitive_kind_t PrimitiveKindLast = EcsPrimitiveKindLast;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const primitive_kind_t Bool = EcsBool;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const primitive_kind_t Char = EcsChar;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const primitive_kind_t Byte = EcsByte;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const primitive_kind_t U8 = EcsU8;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const primitive_kind_t U16 = EcsU16;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const primitive_kind_t U32 = EcsU32;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const primitive_kind_t U64 = EcsU64;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const primitive_kind_t I8 = EcsI8;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const primitive_kind_t I16 = EcsI16;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const primitive_kind_t I32 = EcsI32;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const primitive_kind_t I64 = EcsI64;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const primitive_kind_t F32 = EcsF32;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const primitive_kind_t F64 = EcsF64;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const primitive_kind_t UPtr = EcsUPtr;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const primitive_kind_t IPtr = EcsIPtr;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const primitive_kind_t String = EcsString;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const primitive_kind_t Entity = EcsEntity;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const primitive_kind_t PrimitiveKindLast = EcsPrimitiveKindLast;
 
 /** @} */
 

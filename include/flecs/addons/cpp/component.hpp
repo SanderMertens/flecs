@@ -5,7 +5,7 @@
 
 #pragma once
 
-#ifndef FLECS_CUSTOM_STD_INCLUDE
+#ifndef FLECS_NO_STD_INCLUDE
 #include <ctype.h>
 #include <stdio.h>
 #endif
