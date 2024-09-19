@@ -16649,7 +16649,7 @@ const ecs_member_t* ecs_cpp_last_member(
 #pragma once
 
 // STL includes
-#ifndef FLECS_CUSTOM_STD_INCLUDE
+#ifndef FLECS_NO_STD_INCLUDE
 #include <type_traits>
 #endif
 
@@ -16658,7 +16658,15 @@ const ecs_member_t* ecs_cpp_last_member(
 #endif
 
 #ifndef FLECS_API_GLOBAL
-#define FLECS_API_GLOBAL static
+#define FLECS_API_GLOBAL
+#endif
+
+#ifndef FLECS_API_DEPENDENCY
+#define FLECS_API_DEPENDENCY
+#endif
+
+#ifndef FLECS_STATIC_IN_HEADER
+#define FLECS_STATIC_IN_HEADER static
 #endif
 
 /**
@@ -16774,96 +16782,96 @@ using Poly = EcsPoly;
 using DefaultChildComponent = EcsDefaultChildComponent;
 
 /* Builtin tags */
-FLECS_API_GLOBAL const flecs::entity_t Query = EcsQuery;
-FLECS_API_GLOBAL const flecs::entity_t Observer = EcsObserver;
-FLECS_API_GLOBAL const flecs::entity_t Private = EcsPrivate;
-FLECS_API_GLOBAL const flecs::entity_t Module = EcsModule;
-FLECS_API_GLOBAL const flecs::entity_t Prefab = EcsPrefab;
-FLECS_API_GLOBAL const flecs::entity_t Disabled = EcsDisabled;
-FLECS_API_GLOBAL const flecs::entity_t Empty = EcsEmpty;
-FLECS_API_GLOBAL const flecs::entity_t Monitor = EcsMonitor;
-FLECS_API_GLOBAL const flecs::entity_t System = EcsSystem;
-FLECS_API_GLOBAL const flecs::entity_t Pipeline = ecs_id(EcsPipeline);
-FLECS_API_GLOBAL const flecs::entity_t Phase = EcsPhase;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t Query = EcsQuery;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t Observer = EcsObserver;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t Private = EcsPrivate;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t Module = EcsModule;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t Prefab = EcsPrefab;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t Disabled = EcsDisabled;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t Empty = EcsEmpty;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t Monitor = EcsMonitor;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t System = EcsSystem;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t Pipeline = ecs_id(EcsPipeline);
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t Phase = EcsPhase;
 
 /* Builtin event tags */
-FLECS_API_GLOBAL const flecs::entity_t OnAdd = EcsOnAdd;
-FLECS_API_GLOBAL const flecs::entity_t OnRemove = EcsOnRemove;
-FLECS_API_GLOBAL const flecs::entity_t OnSet = EcsOnSet;
-FLECS_API_GLOBAL const flecs::entity_t OnTableCreate = EcsOnTableCreate;
-FLECS_API_GLOBAL const flecs::entity_t OnTableDelete = EcsOnTableDelete;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t OnAdd = EcsOnAdd;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t OnRemove = EcsOnRemove;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t OnSet = EcsOnSet;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t OnTableCreate = EcsOnTableCreate;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t OnTableDelete = EcsOnTableDelete;
 
 /* Builtin term flags */
-FLECS_API_GLOBAL const uint64_t Self = EcsSelf;
-FLECS_API_GLOBAL const uint64_t Up = EcsUp;
-FLECS_API_GLOBAL const uint64_t Trav = EcsTrav;
-FLECS_API_GLOBAL const uint64_t Cascade = EcsCascade;
-FLECS_API_GLOBAL const uint64_t Desc = EcsDesc;
-FLECS_API_GLOBAL const uint64_t IsVariable = EcsIsVariable;
-FLECS_API_GLOBAL const uint64_t IsEntity = EcsIsEntity;
-FLECS_API_GLOBAL const uint64_t IsName = EcsIsName;
-FLECS_API_GLOBAL const uint64_t TraverseFlags = EcsTraverseFlags;
-FLECS_API_GLOBAL const uint64_t TermRefFlags = EcsTermRefFlags;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const uint64_t Self = EcsSelf;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const uint64_t Up = EcsUp;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const uint64_t Trav = EcsTrav;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const uint64_t Cascade = EcsCascade;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const uint64_t Desc = EcsDesc;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const uint64_t IsVariable = EcsIsVariable;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const uint64_t IsEntity = EcsIsEntity;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const uint64_t IsName = EcsIsName;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const uint64_t TraverseFlags = EcsTraverseFlags;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const uint64_t TermRefFlags = EcsTermRefFlags;
 
 /* Builtin entity ids */
-FLECS_API_GLOBAL const flecs::entity_t Flecs = EcsFlecs;
-FLECS_API_GLOBAL const flecs::entity_t FlecsCore = EcsFlecsCore;
-FLECS_API_GLOBAL const flecs::entity_t World = EcsWorld;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t Flecs = EcsFlecs;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t FlecsCore = EcsFlecsCore;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t World = EcsWorld;
 
 /* Component traits */
-FLECS_API_GLOBAL const flecs::entity_t Wildcard = EcsWildcard;
-FLECS_API_GLOBAL const flecs::entity_t Any = EcsAny;
-FLECS_API_GLOBAL const flecs::entity_t This = EcsThis;
-FLECS_API_GLOBAL const flecs::entity_t Transitive = EcsTransitive;
-FLECS_API_GLOBAL const flecs::entity_t Reflexive = EcsReflexive;
-FLECS_API_GLOBAL const flecs::entity_t Final = EcsFinal;
-FLECS_API_GLOBAL const flecs::entity_t PairIsTag = EcsPairIsTag;
-FLECS_API_GLOBAL const flecs::entity_t Exclusive = EcsExclusive;
-FLECS_API_GLOBAL const flecs::entity_t Acyclic = EcsAcyclic;
-FLECS_API_GLOBAL const flecs::entity_t Traversable = EcsTraversable;
-FLECS_API_GLOBAL const flecs::entity_t Symmetric = EcsSymmetric;
-FLECS_API_GLOBAL const flecs::entity_t With = EcsWith;
-FLECS_API_GLOBAL const flecs::entity_t OneOf = EcsOneOf;
-FLECS_API_GLOBAL const flecs::entity_t Trait = EcsTrait;
-FLECS_API_GLOBAL const flecs::entity_t Relationship = EcsRelationship;
-FLECS_API_GLOBAL const flecs::entity_t Target = EcsTarget;
-FLECS_API_GLOBAL const flecs::entity_t CanToggle = EcsCanToggle;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t Wildcard = EcsWildcard;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t Any = EcsAny;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t This = EcsThis;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t Transitive = EcsTransitive;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t Reflexive = EcsReflexive;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t Final = EcsFinal;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t PairIsTag = EcsPairIsTag;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t Exclusive = EcsExclusive;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t Acyclic = EcsAcyclic;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t Traversable = EcsTraversable;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t Symmetric = EcsSymmetric;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t With = EcsWith;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t OneOf = EcsOneOf;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t Trait = EcsTrait;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t Relationship = EcsRelationship;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t Target = EcsTarget;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t CanToggle = EcsCanToggle;
 
 /* OnInstantiate trait */
-FLECS_API_GLOBAL const flecs::entity_t OnInstantiate = EcsOnInstantiate;
-FLECS_API_GLOBAL const flecs::entity_t Override = EcsOverride;
-FLECS_API_GLOBAL const flecs::entity_t Inherit = EcsInherit;
-FLECS_API_GLOBAL const flecs::entity_t DontInherit = EcsDontInherit;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t OnInstantiate = EcsOnInstantiate;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t Override = EcsOverride;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t Inherit = EcsInherit;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t DontInherit = EcsDontInherit;
 
 /* OnDelete/OnDeleteTarget traits */
-FLECS_API_GLOBAL const flecs::entity_t OnDelete = EcsOnDelete;
-FLECS_API_GLOBAL const flecs::entity_t OnDeleteTarget = EcsOnDeleteTarget;
-FLECS_API_GLOBAL const flecs::entity_t Remove = EcsRemove;
-FLECS_API_GLOBAL const flecs::entity_t Delete = EcsDelete;
-FLECS_API_GLOBAL const flecs::entity_t Panic = EcsPanic;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t OnDelete = EcsOnDelete;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t OnDeleteTarget = EcsOnDeleteTarget;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t Remove = EcsRemove;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t Delete = EcsDelete;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t Panic = EcsPanic;
 
 /* Builtin relationships */
-FLECS_API_GLOBAL const flecs::entity_t IsA = EcsIsA;
-FLECS_API_GLOBAL const flecs::entity_t ChildOf = EcsChildOf;
-FLECS_API_GLOBAL const flecs::entity_t DependsOn = EcsDependsOn;
-FLECS_API_GLOBAL const flecs::entity_t SlotOf = EcsSlotOf;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t IsA = EcsIsA;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t ChildOf = EcsChildOf;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t DependsOn = EcsDependsOn;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t SlotOf = EcsSlotOf;
 
 /* Builtin identifiers */
-FLECS_API_GLOBAL const flecs::entity_t Name = EcsName;
-FLECS_API_GLOBAL const flecs::entity_t Symbol = EcsSymbol;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t Name = EcsName;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t Symbol = EcsSymbol;
 
 /* Storage */
-FLECS_API_GLOBAL const flecs::entity_t Sparse = EcsSparse;
-FLECS_API_GLOBAL const flecs::entity_t Union = EcsUnion;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t Sparse = EcsSparse;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t Union = EcsUnion;
 
 /* Builtin predicates for comparing entity ids in queries. */
-FLECS_API_GLOBAL const flecs::entity_t PredEq = EcsPredEq;
-FLECS_API_GLOBAL const flecs::entity_t PredMatch = EcsPredMatch;
-FLECS_API_GLOBAL const flecs::entity_t PredLookup = EcsPredLookup;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t PredEq = EcsPredEq;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t PredMatch = EcsPredMatch;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t PredLookup = EcsPredLookup;
 
 /* Builtin marker entities for query scopes */
-FLECS_API_GLOBAL const flecs::entity_t ScopeOpen = EcsScopeOpen;
-FLECS_API_GLOBAL const flecs::entity_t ScopeClose = EcsScopeClose;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t ScopeOpen = EcsScopeOpen;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t ScopeClose = EcsScopeClose;
 
 /** @} */
 
@@ -16935,8 +16943,8 @@ template<class Ty> inline void free_obj(Ty* _ptr) {
 #define flecs_static_assert(cond, str) static_assert(cond, str)
 #endif
 
-FLECS_API inline void* operator new(size_t,   flecs::_::placement_new_tag_t, void* _ptr) noexcept { return _ptr; }
-FLECS_API inline void  operator delete(void*, flecs::_::placement_new_tag_t, void*)      noexcept {              }
+FLECS_API_DEPENDENCY inline void* operator new(size_t,   flecs::_::placement_new_tag_t, void* _ptr) noexcept { return _ptr; }
+FLECS_API_DEPENDENCY inline void  operator delete(void*, flecs::_::placement_new_tag_t, void*)      noexcept {              }
 
 namespace flecs
 {
@@ -17019,7 +17027,7 @@ struct always_false {
 
 } // namespace flecs
 
-#ifndef FLECS_CUSTOM_STD_INCLUDE
+#ifndef FLECS_NO_STD_INCLUDE
 #include <stdlib.h>
 #endif
 /**
@@ -17295,7 +17303,7 @@ struct string_view : string {
  * and their names. This is used to automatically register enum constants.
  */
 
-#ifndef FLECS_CUSTOM_STD_INCLUDE
+#ifndef FLECS_NO_STD_INCLUDE
 #include <string.h>
 #include <limits>
 #endif
@@ -17672,13 +17680,15 @@ public:
 template <typename E>
 enum_data_impl<E> enum_type<E>::data;
 
+FLECS_API_DEPENDENCY
 template <typename E, if_t< is_enum<E>::value > = 0>
-inline static void init_enum(flecs::world_t *world, flecs::entity_t id) {
+inline FLECS_STATIC_IN_HEADER void init_enum(flecs::world_t *world, flecs::entity_t id) {
     _::enum_type<E>::get().init(world, id);
 }
 
+FLECS_API_DEPENDENCY
 template <typename E, if_not_t< is_enum<E>::value > = 0>
-inline static void init_enum(flecs::world_t*, flecs::entity_t) { }
+inline FLECS_STATIC_IN_HEADER void init_enum(flecs::world_t*, flecs::entity_t) { }
 
 } // namespace _
 
@@ -18473,17 +18483,17 @@ template <typename ... Components>
 struct pipeline_builder;
 
 /* Builtin pipeline tags */
-FLECS_API_GLOBAL const flecs::entity_t OnStart = EcsOnStart;
-FLECS_API_GLOBAL const flecs::entity_t PreFrame = EcsPreFrame;
-FLECS_API_GLOBAL const flecs::entity_t OnLoad = EcsOnLoad;
-FLECS_API_GLOBAL const flecs::entity_t PostLoad = EcsPostLoad;
-FLECS_API_GLOBAL const flecs::entity_t PreUpdate = EcsPreUpdate;
-FLECS_API_GLOBAL const flecs::entity_t OnUpdate = EcsOnUpdate;
-FLECS_API_GLOBAL const flecs::entity_t OnValidate = EcsOnValidate;
-FLECS_API_GLOBAL const flecs::entity_t PostUpdate = EcsPostUpdate;
-FLECS_API_GLOBAL const flecs::entity_t PreStore = EcsPreStore;
-FLECS_API_GLOBAL const flecs::entity_t OnStore = EcsOnStore;
-FLECS_API_GLOBAL const flecs::entity_t PostFrame = EcsPostFrame;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t OnStart = EcsOnStart;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t PreFrame = EcsPreFrame;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t OnLoad = EcsOnLoad;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t PostLoad = EcsPostLoad;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t PreUpdate = EcsPreUpdate;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t OnUpdate = EcsOnUpdate;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t OnValidate = EcsOnValidate;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t PostUpdate = EcsPostUpdate;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t PreStore = EcsPreStore;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t OnStore = EcsOnStore;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t PostFrame = EcsPostFrame;
 
 /** @} */
 
@@ -18549,16 +18559,16 @@ FLECS_API_STRUCT using Description = EcsDocDescription;
 static const flecs::entity_t Uuid = EcsDocUuid;
 
 /** flecs.doc.Brief component */
-FLECS_API_GLOBAL const flecs::entity_t Brief = EcsDocBrief;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t Brief = EcsDocBrief;
 
 /** flecs.doc.Detail component */
-FLECS_API_GLOBAL const flecs::entity_t Detail = EcsDocDetail;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t Detail = EcsDocDetail;
 
 /** flecs.doc.Link component */
-FLECS_API_GLOBAL const flecs::entity_t Link = EcsDocLink;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t Link = EcsDocLink;
 
 /** flecs.doc.Color component */
-FLECS_API_GLOBAL const flecs::entity_t Color = EcsDocColor;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t Color = EcsDocColor;
 
 /** @private */
 namespace _ {
@@ -18665,59 +18675,59 @@ FLECS_API_STRUCT struct bitmask {
 };
 
 /* Handles to builtin reflection types */
-FLECS_API_GLOBAL const flecs::entity_t Bool = ecs_id(ecs_bool_t);
-FLECS_API_GLOBAL const flecs::entity_t Char = ecs_id(ecs_char_t);
-FLECS_API_GLOBAL const flecs::entity_t Byte = ecs_id(ecs_byte_t);
-FLECS_API_GLOBAL const flecs::entity_t U8 = ecs_id(ecs_u8_t);
-FLECS_API_GLOBAL const flecs::entity_t U16 = ecs_id(ecs_u16_t);
-FLECS_API_GLOBAL const flecs::entity_t U32 = ecs_id(ecs_u32_t);
-FLECS_API_GLOBAL const flecs::entity_t U64 = ecs_id(ecs_u64_t);
-FLECS_API_GLOBAL const flecs::entity_t Uptr = ecs_id(ecs_uptr_t);
-FLECS_API_GLOBAL const flecs::entity_t I8 = ecs_id(ecs_i8_t);
-FLECS_API_GLOBAL const flecs::entity_t I16 = ecs_id(ecs_i16_t);
-FLECS_API_GLOBAL const flecs::entity_t I32 = ecs_id(ecs_i32_t);
-FLECS_API_GLOBAL const flecs::entity_t I64 = ecs_id(ecs_i64_t);
-FLECS_API_GLOBAL const flecs::entity_t Iptr = ecs_id(ecs_iptr_t);
-FLECS_API_GLOBAL const flecs::entity_t F32 = ecs_id(ecs_f32_t);
-FLECS_API_GLOBAL const flecs::entity_t F64 = ecs_id(ecs_f64_t);
-FLECS_API_GLOBAL const flecs::entity_t String = ecs_id(ecs_string_t);
-FLECS_API_GLOBAL const flecs::entity_t Entity = ecs_id(ecs_entity_t);
-FLECS_API_GLOBAL const flecs::entity_t Constant = EcsConstant;
-FLECS_API_GLOBAL const flecs::entity_t Quantity = EcsQuantity;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t Bool = ecs_id(ecs_bool_t);
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t Char = ecs_id(ecs_char_t);
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t Byte = ecs_id(ecs_byte_t);
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t U8 = ecs_id(ecs_u8_t);
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t U16 = ecs_id(ecs_u16_t);
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t U32 = ecs_id(ecs_u32_t);
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t U64 = ecs_id(ecs_u64_t);
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t Uptr = ecs_id(ecs_uptr_t);
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t I8 = ecs_id(ecs_i8_t);
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t I16 = ecs_id(ecs_i16_t);
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t I32 = ecs_id(ecs_i32_t);
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t I64 = ecs_id(ecs_i64_t);
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t Iptr = ecs_id(ecs_iptr_t);
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t F32 = ecs_id(ecs_f32_t);
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t F64 = ecs_id(ecs_f64_t);
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t String = ecs_id(ecs_string_t);
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t Entity = ecs_id(ecs_entity_t);
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t Constant = EcsConstant;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t Quantity = EcsQuantity;
 
 namespace meta {
 
 /* Type kinds supported by reflection system */
 FLECS_API_STRUCT using type_kind_t = ecs_type_kind_t;
-FLECS_API_GLOBAL const type_kind_t PrimitiveType = EcsPrimitiveType;
-FLECS_API_GLOBAL const type_kind_t BitmaskType = EcsBitmaskType;
-FLECS_API_GLOBAL const type_kind_t EnumType = EcsEnumType;
-FLECS_API_GLOBAL const type_kind_t StructType = EcsStructType;
-FLECS_API_GLOBAL const type_kind_t ArrayType = EcsArrayType;
-FLECS_API_GLOBAL const type_kind_t VectorType = EcsVectorType;
-FLECS_API_GLOBAL const type_kind_t CustomType = EcsOpaqueType;
-FLECS_API_GLOBAL const type_kind_t TypeKindLast = EcsTypeKindLast;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const type_kind_t PrimitiveType = EcsPrimitiveType;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const type_kind_t BitmaskType = EcsBitmaskType;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const type_kind_t EnumType = EcsEnumType;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const type_kind_t StructType = EcsStructType;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const type_kind_t ArrayType = EcsArrayType;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const type_kind_t VectorType = EcsVectorType;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const type_kind_t CustomType = EcsOpaqueType;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const type_kind_t TypeKindLast = EcsTypeKindLast;
 
 /* Primitive type kinds supported by reflection system */
 FLECS_API_STRUCT using primitive_kind_t = ecs_primitive_kind_t;
-FLECS_API_GLOBAL const primitive_kind_t Bool = EcsBool;
-FLECS_API_GLOBAL const primitive_kind_t Char = EcsChar;
-FLECS_API_GLOBAL const primitive_kind_t Byte = EcsByte;
-FLECS_API_GLOBAL const primitive_kind_t U8 = EcsU8;
-FLECS_API_GLOBAL const primitive_kind_t U16 = EcsU16;
-FLECS_API_GLOBAL const primitive_kind_t U32 = EcsU32;
-FLECS_API_GLOBAL const primitive_kind_t U64 = EcsU64;
-FLECS_API_GLOBAL const primitive_kind_t I8 = EcsI8;
-FLECS_API_GLOBAL const primitive_kind_t I16 = EcsI16;
-FLECS_API_GLOBAL const primitive_kind_t I32 = EcsI32;
-FLECS_API_GLOBAL const primitive_kind_t I64 = EcsI64;
-FLECS_API_GLOBAL const primitive_kind_t F32 = EcsF32;
-FLECS_API_GLOBAL const primitive_kind_t F64 = EcsF64;
-FLECS_API_GLOBAL const primitive_kind_t UPtr = EcsUPtr;
-FLECS_API_GLOBAL const primitive_kind_t IPtr = EcsIPtr;
-FLECS_API_GLOBAL const primitive_kind_t String = EcsString;
-FLECS_API_GLOBAL const primitive_kind_t Entity = EcsEntity;
-FLECS_API_GLOBAL const primitive_kind_t PrimitiveKindLast = EcsPrimitiveKindLast;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const primitive_kind_t Bool = EcsBool;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const primitive_kind_t Char = EcsChar;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const primitive_kind_t Byte = EcsByte;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const primitive_kind_t U8 = EcsU8;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const primitive_kind_t U16 = EcsU16;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const primitive_kind_t U32 = EcsU32;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const primitive_kind_t U64 = EcsU64;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const primitive_kind_t I8 = EcsI8;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const primitive_kind_t I16 = EcsI16;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const primitive_kind_t I32 = EcsI32;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const primitive_kind_t I64 = EcsI64;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const primitive_kind_t F32 = EcsF32;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const primitive_kind_t F64 = EcsF64;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const primitive_kind_t UPtr = EcsUPtr;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const primitive_kind_t IPtr = EcsIPtr;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const primitive_kind_t String = EcsString;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const primitive_kind_t Entity = EcsEntity;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const primitive_kind_t PrimitiveKindLast = EcsPrimitiveKindLast;
 
 /** @} */
 
@@ -25809,7 +25819,7 @@ const char* from_json(const char *json) {
 
 #pragma once
 
-#ifndef FLECS_CUSTOM_STD_INCLUDE
+#ifndef FLECS_NO_STD_INCLUDE
 #include <utility> // std::declval
 #endif
 
@@ -26712,7 +26722,7 @@ using delegate = _::each_delegate<typename std::decay<Func>::type, Args...>;
 
 #pragma once
 
-#ifndef FLECS_CUSTOM_STD_INCLUDE
+#ifndef FLECS_NO_STD_INCLUDE
 #include <ctype.h>
 #include <stdio.h>
 #endif

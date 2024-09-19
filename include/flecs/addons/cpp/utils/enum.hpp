@@ -6,7 +6,7 @@
  * and their names. This is used to automatically register enum constants.
  */
 
-#ifndef FLECS_CUSTOM_STD_INCLUDE
+#ifndef FLECS_NO_STD_INCLUDE
 #include <string.h>
 #include <limits>
 #endif
@@ -383,13 +383,15 @@ public:
 template <typename E>
 enum_data_impl<E> enum_type<E>::data;
 
+FLECS_API_DEPENDENCY
 template <typename E, if_t< is_enum<E>::value > = 0>
-inline static void init_enum(flecs::world_t *world, flecs::entity_t id) {
+inline FLECS_STATIC_IN_HEADER void init_enum(flecs::world_t *world, flecs::entity_t id) {
     _::enum_type<E>::get().init(world, id);
 }
 
+FLECS_API_DEPENDENCY
 template <typename E, if_not_t< is_enum<E>::value > = 0>
-inline static void init_enum(flecs::world_t*, flecs::entity_t) { }
+inline FLECS_STATIC_IN_HEADER void init_enum(flecs::world_t*, flecs::entity_t) { }
 
 } // namespace _
 
