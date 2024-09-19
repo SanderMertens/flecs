@@ -16935,8 +16935,8 @@ template<class Ty> inline void free_obj(Ty* _ptr) {
 #define flecs_static_assert(cond, str) static_assert(cond, str)
 #endif
 
-inline void* operator new(size_t,   flecs::_::placement_new_tag_t, void* _ptr) noexcept { return _ptr; }
-inline void  operator delete(void*, flecs::_::placement_new_tag_t, void*)      noexcept {              }
+FLECS_API inline void* operator new(size_t,   flecs::_::placement_new_tag_t, void* _ptr) noexcept { return _ptr; }
+FLECS_API inline void  operator delete(void*, flecs::_::placement_new_tag_t, void*)      noexcept {              }
 
 namespace flecs
 {
