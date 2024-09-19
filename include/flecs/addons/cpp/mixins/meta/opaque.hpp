@@ -18,16 +18,18 @@ namespace flecs {
  */
 
 /** Serializer object, used for serializing opaque types */
-using serializer = ecs_serializer_t;
+FLECS_API_STRUCT using serializer = ecs_serializer_t;
 
 /** Serializer function, used to serialize opaque types */
-using serialize_t = ecs_meta_serialize_t;
+FLECS_API_STRUCT using serialize_t = ecs_meta_serialize_t;
 
 /** Type safe variant of serializer function */
+FLECS_API_STRUCT
 template <typename T>
 using serialize = int(*)(const serializer *, const T*);
 
 /** Type safe interface for opaque types */
+FLECS_API_STRUCT
 template <typename T, typename ElemType = void>
 struct opaque {
     opaque(flecs::world_t *w = nullptr) : world(w) {

@@ -7,8 +7,8 @@
 
 namespace flecs {
 
-struct id;
-struct entity;
+FLECS_API_STRUCT struct id;
+FLECS_API_STRUCT struct entity;
 
 /**
  * @defgroup cpp_ids Ids
@@ -24,6 +24,7 @@ struct entity;
  * - pair ids
  * - entities with id flags set (like flecs::AUTO_OVERRIDE, flecs::TOGGLE)
  */
+FLECS_API_STRUCT
 struct id {
     id()
         : world_(nullptr)

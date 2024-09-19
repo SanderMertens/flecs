@@ -5,8 +5,10 @@
 
 #pragma once
 
+#ifndef FLECS_CUSTOM_STD_INCLUDE
 #include <ctype.h>
 #include <stdio.h>
+#endif
 
 /**
  * @defgroup cpp_components Components
@@ -260,7 +262,7 @@ struct type_impl {
         (void)name;
         (void)allow_tag;
 
-        ecs_assert(registered(world), ECS_INVALID_OPERATION, 
+        ecs_assert(registered(world), ECS_INVALID_OPERATION,
             "component '%s' was not registered before use",
             type_name<T>());
 #endif

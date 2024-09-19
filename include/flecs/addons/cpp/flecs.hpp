@@ -6,7 +6,17 @@
 #pragma once
 
 // STL includes
+#ifndef FLECS_CUSTOM_STD_INCLUDE
 #include <type_traits>
+#endif
+
+#ifndef FLECS_API_STRUCT
+#define FLECS_API_STRUCT
+#endif
+
+#ifndef FLECS_API_GLOBAL
+#define FLECS_API_GLOBAL static
+#endif
 
 /**
  * @defgroup cpp C++ API
@@ -16,19 +26,21 @@
 namespace flecs
 {
 
-struct world;
-struct world_async_stage;
-struct iter;
-struct entity_view;
-struct entity;
-struct type;
-struct table;
-struct table_range;
-struct untyped_component;
+FLECS_API_STRUCT struct world;
+FLECS_API_STRUCT struct world_async_stage;
+FLECS_API_STRUCT struct iter;
+FLECS_API_STRUCT struct entity_view;
+FLECS_API_STRUCT struct entity;
+FLECS_API_STRUCT struct type;
+FLECS_API_STRUCT struct table;
+FLECS_API_STRUCT struct table_range;
+FLECS_API_STRUCT struct untyped_component;
 
+FLECS_API_STRUCT
 template <typename T>
 struct component;
 
+FLECS_API_STRUCT
 template <typename T>
 struct ref;
 

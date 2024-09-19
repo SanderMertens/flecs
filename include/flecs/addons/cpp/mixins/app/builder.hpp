@@ -16,6 +16,7 @@ namespace flecs {
  */
 
 /** App builder interface */
+FLECS_API_STRUCT
 struct app_builder {
     app_builder(flecs::world_t *world)
         : world_(world)
