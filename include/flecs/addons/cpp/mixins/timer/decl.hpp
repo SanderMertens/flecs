@@ -15,10 +15,10 @@ namespace flecs {
  * @{
  */
 
-using Timer = EcsTimer;
-using RateFilter = EcsRateFilter;
+FLECS_API_STRUCT using Timer = EcsTimer;
+FLECS_API_STRUCT using RateFilter = EcsRateFilter;
 
-struct timer;
+FLECS_API_STRUCT struct timer;
 
 /** @} */
 

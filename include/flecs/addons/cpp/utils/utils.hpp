@@ -1,7 +1,7 @@
 /**
  * @file addons/cpp/utils/utils.hpp
  * @brief Flecs STL (FTL?)
- * 
+ *
  * Flecs STL (FTL?)
  * Minimalistic utilities that allow for STL like functionality without having
  * to depend on the actual STL.
@@ -36,7 +36,7 @@
 #define FLECS_FWD(...) \
   static_cast<decltype(__VA_ARGS__)&&>(__VA_ARGS__)
 
-namespace flecs 
+namespace flecs
 {
 
 namespace _
@@ -46,10 +46,10 @@ namespace _
 struct placement_new_tag_t{};
 constexpr placement_new_tag_t placement_new_tag{};
 template<class Ty> inline void destruct_obj(Ty* _ptr) { _ptr->~Ty(); }
-template<class Ty> inline void free_obj(Ty* _ptr) { 
+template<class Ty> inline void free_obj(Ty* _ptr) {
     if (_ptr) {
-        destruct_obj(_ptr); 
-        ecs_os_free(_ptr); 
+        destruct_obj(_ptr);
+        ecs_os_free(_ptr);
     }
 }
 
@@ -146,7 +146,9 @@ struct always_false {
 
 } // namespace flecs
 
+#ifndef FLECS_CUSTOM_STD_INCLUDE
 #include <stdlib.h>
+#endif
 #include "array.hpp"
 #include "string.hpp"
 #include "enum.hpp"

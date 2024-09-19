@@ -7,19 +7,19 @@
 
 #include "builder.hpp"
 
-namespace flecs 
+namespace flecs
 {
 
 struct query_base {
     query_base() { }
 
     query_base(query_t *q)
-        : query_(q) { 
+        : query_(q) {
             flecs_poly_claim(q);
         }
 
     query_base(const query_t *q)
-        : query_(ECS_CONST_CAST(query_t*, q)) { 
+        : query_(ECS_CONST_CAST(query_t*, q)) {
             flecs_poly_claim(q);
         }
 
@@ -45,7 +45,7 @@ struct query_base {
     query_base& operator=(const query_base& obj) {
         this->query_ = obj.query_;
         flecs_poly_claim(this->query_);
-        return *this; 
+        return *this;
     }
 
     query_base(query_base&& obj) noexcept {
@@ -56,7 +56,7 @@ struct query_base {
     query_base& operator=(query_base&& obj) noexcept {
         this->query_ = obj.query_;
         obj.query_ = nullptr;
-        return *this; 
+        return *this;
     }
 
     flecs::entity entity() {
@@ -78,7 +78,7 @@ struct query_base {
     /** Free persistent query.
      * A persistent query is a query that is associated with an entity, such as
      * system queries and named queries. Persistent queries must be deleted with
-     * destruct(), or will be deleted automatically at world cleanup. 
+     * destruct(), or will be deleted automatically at world cleanup.
      */
     void destruct() {
         ecs_assert(query_->entity != 0, ECS_INVALID_OPERATION, "destruct() "
@@ -106,15 +106,15 @@ struct query_base {
      * - new entities have been matched with
      * - matched entities were deleted
      * - matched components were changed
-     * 
+     *
      * @return true if entities changed, otherwise false.
      */
     bool changed() const {
         return ecs_query_changed(query_);
     }
 
-    /** Get info for group. 
-     * 
+    /** Get info for group.
+     *
      * @param group_id The group id for which to retrieve the info.
      * @return The group info.
      */
@@ -122,8 +122,8 @@ struct query_base {
         return ecs_query_get_group_info(query_, group_id);
     }
 
-    /** Get context for group. 
-     * 
+    /** Get context for group.
+     *
      * @param group_id The group id for which to retrieve the context.
      * @return The group context.
      */
@@ -207,7 +207,7 @@ public:
 
 private:
     ecs_iter_t get_iter(flecs::world_t *world) const override {
-        ecs_assert(query_ != nullptr, ECS_INVALID_PARAMETER, 
+        ecs_assert(query_ != nullptr, ECS_INVALID_PARAMETER,
             "cannot iterate invalid query");
         if (!world) {
             world = query_->world;

@@ -16,14 +16,18 @@ namespace flecs {
  */
 
 /** Component that stores world statistics */
+FLECS_API_STRUCT
 using WorldStats = EcsWorldStats;
 
 /** Component that stores system/pipeline statistics */
+FLECS_API_STRUCT
 using PipelineStats = EcsPipelineStats;
 
 /** Component with world summary stats */
+FLECS_API_STRUCT
 using WorldSummary = EcsWorldSummary;
 
+FLECS_API_STRUCT
 struct stats {
     stats(flecs::world& world);
 };

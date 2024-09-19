@@ -73,96 +73,96 @@ using Poly = EcsPoly;
 using DefaultChildComponent = EcsDefaultChildComponent;
 
 /* Builtin tags */
-static const flecs::entity_t Query = EcsQuery;
-static const flecs::entity_t Observer = EcsObserver;
-static const flecs::entity_t Private = EcsPrivate;
-static const flecs::entity_t Module = EcsModule;
-static const flecs::entity_t Prefab = EcsPrefab;
-static const flecs::entity_t Disabled = EcsDisabled;
-static const flecs::entity_t Empty = EcsEmpty;
-static const flecs::entity_t Monitor = EcsMonitor;
-static const flecs::entity_t System = EcsSystem;
-static const flecs::entity_t Pipeline = ecs_id(EcsPipeline);
-static const flecs::entity_t Phase = EcsPhase;
+FLECS_API_GLOBAL const flecs::entity_t Query = EcsQuery;
+FLECS_API_GLOBAL const flecs::entity_t Observer = EcsObserver;
+FLECS_API_GLOBAL const flecs::entity_t Private = EcsPrivate;
+FLECS_API_GLOBAL const flecs::entity_t Module = EcsModule;
+FLECS_API_GLOBAL const flecs::entity_t Prefab = EcsPrefab;
+FLECS_API_GLOBAL const flecs::entity_t Disabled = EcsDisabled;
+FLECS_API_GLOBAL const flecs::entity_t Empty = EcsEmpty;
+FLECS_API_GLOBAL const flecs::entity_t Monitor = EcsMonitor;
+FLECS_API_GLOBAL const flecs::entity_t System = EcsSystem;
+FLECS_API_GLOBAL const flecs::entity_t Pipeline = ecs_id(EcsPipeline);
+FLECS_API_GLOBAL const flecs::entity_t Phase = EcsPhase;
 
 /* Builtin event tags */
-static const flecs::entity_t OnAdd = EcsOnAdd;
-static const flecs::entity_t OnRemove = EcsOnRemove;
-static const flecs::entity_t OnSet = EcsOnSet;
-static const flecs::entity_t OnTableCreate = EcsOnTableCreate;
-static const flecs::entity_t OnTableDelete = EcsOnTableDelete;
+FLECS_API_GLOBAL const flecs::entity_t OnAdd = EcsOnAdd;
+FLECS_API_GLOBAL const flecs::entity_t OnRemove = EcsOnRemove;
+FLECS_API_GLOBAL const flecs::entity_t OnSet = EcsOnSet;
+FLECS_API_GLOBAL const flecs::entity_t OnTableCreate = EcsOnTableCreate;
+FLECS_API_GLOBAL const flecs::entity_t OnTableDelete = EcsOnTableDelete;
 
 /* Builtin term flags */
-static const uint64_t Self = EcsSelf;
-static const uint64_t Up = EcsUp;
-static const uint64_t Trav = EcsTrav;
-static const uint64_t Cascade = EcsCascade;
-static const uint64_t Desc = EcsDesc;
-static const uint64_t IsVariable = EcsIsVariable;
-static const uint64_t IsEntity = EcsIsEntity;
-static const uint64_t IsName = EcsIsName;
-static const uint64_t TraverseFlags = EcsTraverseFlags;
-static const uint64_t TermRefFlags = EcsTermRefFlags;
+FLECS_API_GLOBAL const uint64_t Self = EcsSelf;
+FLECS_API_GLOBAL const uint64_t Up = EcsUp;
+FLECS_API_GLOBAL const uint64_t Trav = EcsTrav;
+FLECS_API_GLOBAL const uint64_t Cascade = EcsCascade;
+FLECS_API_GLOBAL const uint64_t Desc = EcsDesc;
+FLECS_API_GLOBAL const uint64_t IsVariable = EcsIsVariable;
+FLECS_API_GLOBAL const uint64_t IsEntity = EcsIsEntity;
+FLECS_API_GLOBAL const uint64_t IsName = EcsIsName;
+FLECS_API_GLOBAL const uint64_t TraverseFlags = EcsTraverseFlags;
+FLECS_API_GLOBAL const uint64_t TermRefFlags = EcsTermRefFlags;
 
 /* Builtin entity ids */
-static const flecs::entity_t Flecs = EcsFlecs;
-static const flecs::entity_t FlecsCore = EcsFlecsCore;
-static const flecs::entity_t World = EcsWorld;
+FLECS_API_GLOBAL const flecs::entity_t Flecs = EcsFlecs;
+FLECS_API_GLOBAL const flecs::entity_t FlecsCore = EcsFlecsCore;
+FLECS_API_GLOBAL const flecs::entity_t World = EcsWorld;
 
 /* Component traits */
-static const flecs::entity_t Wildcard = EcsWildcard;
-static const flecs::entity_t Any = EcsAny;
-static const flecs::entity_t This = EcsThis;
-static const flecs::entity_t Transitive = EcsTransitive;
-static const flecs::entity_t Reflexive = EcsReflexive;
-static const flecs::entity_t Final = EcsFinal;
-static const flecs::entity_t PairIsTag = EcsPairIsTag;
-static const flecs::entity_t Exclusive = EcsExclusive;
-static const flecs::entity_t Acyclic = EcsAcyclic;
-static const flecs::entity_t Traversable = EcsTraversable;
-static const flecs::entity_t Symmetric = EcsSymmetric;
-static const flecs::entity_t With = EcsWith;
-static const flecs::entity_t OneOf = EcsOneOf;
-static const flecs::entity_t Trait = EcsTrait;
-static const flecs::entity_t Relationship = EcsRelationship;
-static const flecs::entity_t Target = EcsTarget;
-static const flecs::entity_t CanToggle = EcsCanToggle;
+FLECS_API_GLOBAL const flecs::entity_t Wildcard = EcsWildcard;
+FLECS_API_GLOBAL const flecs::entity_t Any = EcsAny;
+FLECS_API_GLOBAL const flecs::entity_t This = EcsThis;
+FLECS_API_GLOBAL const flecs::entity_t Transitive = EcsTransitive;
+FLECS_API_GLOBAL const flecs::entity_t Reflexive = EcsReflexive;
+FLECS_API_GLOBAL const flecs::entity_t Final = EcsFinal;
+FLECS_API_GLOBAL const flecs::entity_t PairIsTag = EcsPairIsTag;
+FLECS_API_GLOBAL const flecs::entity_t Exclusive = EcsExclusive;
+FLECS_API_GLOBAL const flecs::entity_t Acyclic = EcsAcyclic;
+FLECS_API_GLOBAL const flecs::entity_t Traversable = EcsTraversable;
+FLECS_API_GLOBAL const flecs::entity_t Symmetric = EcsSymmetric;
+FLECS_API_GLOBAL const flecs::entity_t With = EcsWith;
+FLECS_API_GLOBAL const flecs::entity_t OneOf = EcsOneOf;
+FLECS_API_GLOBAL const flecs::entity_t Trait = EcsTrait;
+FLECS_API_GLOBAL const flecs::entity_t Relationship = EcsRelationship;
+FLECS_API_GLOBAL const flecs::entity_t Target = EcsTarget;
+FLECS_API_GLOBAL const flecs::entity_t CanToggle = EcsCanToggle;
 
 /* OnInstantiate trait */
-static const flecs::entity_t OnInstantiate = EcsOnInstantiate;
-static const flecs::entity_t Override = EcsOverride;
-static const flecs::entity_t Inherit = EcsInherit;
-static const flecs::entity_t DontInherit = EcsDontInherit;
+FLECS_API_GLOBAL const flecs::entity_t OnInstantiate = EcsOnInstantiate;
+FLECS_API_GLOBAL const flecs::entity_t Override = EcsOverride;
+FLECS_API_GLOBAL const flecs::entity_t Inherit = EcsInherit;
+FLECS_API_GLOBAL const flecs::entity_t DontInherit = EcsDontInherit;
 
 /* OnDelete/OnDeleteTarget traits */
-static const flecs::entity_t OnDelete = EcsOnDelete;
-static const flecs::entity_t OnDeleteTarget = EcsOnDeleteTarget;
-static const flecs::entity_t Remove = EcsRemove;
-static const flecs::entity_t Delete = EcsDelete;
-static const flecs::entity_t Panic = EcsPanic;
+FLECS_API_GLOBAL const flecs::entity_t OnDelete = EcsOnDelete;
+FLECS_API_GLOBAL const flecs::entity_t OnDeleteTarget = EcsOnDeleteTarget;
+FLECS_API_GLOBAL const flecs::entity_t Remove = EcsRemove;
+FLECS_API_GLOBAL const flecs::entity_t Delete = EcsDelete;
+FLECS_API_GLOBAL const flecs::entity_t Panic = EcsPanic;
 
 /* Builtin relationships */
-static const flecs::entity_t IsA = EcsIsA;
-static const flecs::entity_t ChildOf = EcsChildOf;
-static const flecs::entity_t DependsOn = EcsDependsOn;
-static const flecs::entity_t SlotOf = EcsSlotOf;
+FLECS_API_GLOBAL const flecs::entity_t IsA = EcsIsA;
+FLECS_API_GLOBAL const flecs::entity_t ChildOf = EcsChildOf;
+FLECS_API_GLOBAL const flecs::entity_t DependsOn = EcsDependsOn;
+FLECS_API_GLOBAL const flecs::entity_t SlotOf = EcsSlotOf;
 
 /* Builtin identifiers */
-static const flecs::entity_t Name = EcsName;
-static const flecs::entity_t Symbol = EcsSymbol;
+FLECS_API_GLOBAL const flecs::entity_t Name = EcsName;
+FLECS_API_GLOBAL const flecs::entity_t Symbol = EcsSymbol;
 
 /* Storage */
-static const flecs::entity_t Sparse = EcsSparse;
-static const flecs::entity_t Union = EcsUnion;
+FLECS_API_GLOBAL const flecs::entity_t Sparse = EcsSparse;
+FLECS_API_GLOBAL const flecs::entity_t Union = EcsUnion;
 
 /* Builtin predicates for comparing entity ids in queries. */
-static const flecs::entity_t PredEq = EcsPredEq;
-static const flecs::entity_t PredMatch = EcsPredMatch;
-static const flecs::entity_t PredLookup = EcsPredLookup;
+FLECS_API_GLOBAL const flecs::entity_t PredEq = EcsPredEq;
+FLECS_API_GLOBAL const flecs::entity_t PredMatch = EcsPredMatch;
+FLECS_API_GLOBAL const flecs::entity_t PredLookup = EcsPredLookup;
 
 /* Builtin marker entities for query scopes */
-static const flecs::entity_t ScopeOpen = EcsScopeOpen;
-static const flecs::entity_t ScopeClose = EcsScopeClose;
+FLECS_API_GLOBAL const flecs::entity_t ScopeOpen = EcsScopeOpen;
+FLECS_API_GLOBAL const flecs::entity_t ScopeClose = EcsScopeClose;
 
 /** @} */
 

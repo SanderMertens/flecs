@@ -16,6 +16,7 @@ namespace flecs {
  */
 
 /** Module */
+FLECS_API_STRUCT
 struct alerts {
     using AlertsActive = EcsAlertsActive;
     using Instance = EcsAlertInstance;
@@ -28,9 +29,11 @@ struct alerts {
     alerts(flecs::world& world);
 };
 
+FLECS_API_STRUCT
 template <typename ... Components>
 struct alert;
 
+FLECS_API_STRUCT
 template <typename ... Components>
 struct alert_builder;
 

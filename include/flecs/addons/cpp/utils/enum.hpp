@@ -1,13 +1,15 @@
 /**
  * @file addons/cpp/utils/enum.hpp
  * @brief Compile time enum reflection utilities.
- * 
+ *
  * Discover at compile time valid enumeration constants for an enumeration type
  * and their names. This is used to automatically register enum constants.
  */
 
+#ifndef FLECS_CUSTOM_STD_INCLUDE
 #include <string.h>
 #include <limits>
+#endif
 
 #define FLECS_ENUM_MAX(T) _::to_constant<T, 128>::value
 #define FLECS_ENUM_MAX_COUNT (FLECS_ENUM_MAX(int) + 1)
@@ -75,7 +77,7 @@ namespace _ {
             #define ECS_SIZE_T_STR "unsigned __int64"
         #else
             #define ECS_SIZE_T_STR "unsigned int"
-        #endif 
+        #endif
     #elif defined(__clang__)
         #define ECS_SIZE_T_STR "size_t"
     #else
@@ -91,7 +93,7 @@ namespace _ {
             #define ECS_SIZE_T_STR "unsigned __int32"
         #else
             #define ECS_SIZE_T_STR "unsigned int"
-        #endif 
+        #endif
     #elif defined(__clang__)
         #define ECS_SIZE_T_STR "size_t"
     #else
@@ -105,12 +107,12 @@ namespace _ {
 
 template <typename E>
 constexpr size_t enum_type_len() {
-    return ECS_FUNC_TYPE_LEN(, enum_type_len, ECS_FUNC_NAME) 
+    return ECS_FUNC_TYPE_LEN(, enum_type_len, ECS_FUNC_NAME)
         - (sizeof(ECS_SIZE_T_STR) - 1u);
 }
 
 /** Test if value is valid for enumeration.
- * This function leverages that when a valid value is provided, 
+ * This function leverages that when a valid value is provided,
  * __PRETTY_FUNCTION__ contains the enumeration name, whereas if a value is
  * invalid, the string contains a number or a negative (-) symbol. */
 #if defined(ECS_TARGET_CLANG)
@@ -179,11 +181,11 @@ struct enum_constant_data {
 
 /**
  * @brief Provides utilities for enum reflection.
- * 
+ *
  * This struct provides static functions for enum reflection, including conversion
  * between enum values and their underlying integral types, and iteration over enum
  * values.
- * 
+ *
  * @tparam E The enum type.
  * @tparam Handler The handler for enum reflection operations.
  */
@@ -197,7 +199,7 @@ struct enum_reflection {
      * Recursively divide and conquers the search space to reduce the template-depth. Once
      * recursive division is complete, calls Handle<E>::handle_constant in ascending order,
      * passing the values computed up the chain.
-     * 
+     *
      * @tparam Low The lower bound of the search range, inclusive.
      * @tparam High The upper bound of the search range, inclusive.
      * @tparam Args Additional arguments to be passed through to Handler::handle_constant
@@ -220,10 +222,10 @@ struct enum_reflection {
     /**
      * @brief Iterates over the mask range (Low, High] of enum values between Low and High.
      *
-     * Recursively iterates the search space, looking for enums defined as multiple-of-2 
+     * Recursively iterates the search space, looking for enums defined as multiple-of-2
      * bitmasks. Each iteration, shifts bit to the right until it hits Low, then calls
      * Handler::handle_constant for each bitmask in ascending order.
-     * 
+     *
      * @tparam Low The lower bound of the search range, not inclusive
      * @tparam High The upper bound of the search range, inclusive.
      * @tparam Args Additional arguments to be passed through to Handler::handle_constant
@@ -245,10 +247,10 @@ struct enum_reflection {
     /**
      * @brief Handles enum iteration for gathering reflection data.
      *
-     * Iterates over all enum values up to a specified maximum value 
+     * Iterates over all enum values up to a specified maximum value
      * (each_enum_range<0, Value>), then iterates the rest of the possible bitmasks
      * (each_mask_range<Value, high_bit>).
-     * 
+     *
      * @tparam Value The maximum enum value to iterate up to.
      * @tparam Args Additional arguments to be passed through to Handler::handle_constant
      * @param args Additional arguments to be passed through to Handler::handle_constant
@@ -320,7 +322,7 @@ private:
             // Constant is valid, so fill reflection data.
             auto v = Value;
             const char *name = enum_constant_to_name<E, flecs_enum_cast(E, Value)>();
-            
+
             ++enum_type<E>::data.max; // Increment cursor as we build constants array.
 
             // If the enum was previously contiguous, and continues to be through the current value...
@@ -399,10 +401,10 @@ struct enum_data {
     enum_data(flecs::world_t *world, _::enum_data_impl<E>& impl)
         : world_(world)
         , impl_(impl) { }
-    
+
 	/**
      * @brief Checks if a given integral value is a valid enum value.
-     * 
+     *
      * @param value The integral value.
      * @return true If the value is a valid enum value.
      * @return false If the value is not a valid enum value.
@@ -417,7 +419,7 @@ struct enum_data {
 
     /**
      * @brief Checks if a given enum value is valid.
-     * 
+     *
      * @param value The enum value.
      * @return true If the value is valid.
      * @return false If the value is not valid.
@@ -428,7 +430,7 @@ struct enum_data {
 
     /**
      * @brief Finds the index into the constants array for a value, if one exists
-     * 
+     *
      * @param value The enum value.
      * @return int The index of the enum value.
      */
@@ -452,7 +454,7 @@ struct enum_data {
 
     /**
      * @brief Finds the index into the constants array for an enum value, if one exists
-     * 
+     *
      * @param value The enum value.
      * @return int The index of the enum value.
      */

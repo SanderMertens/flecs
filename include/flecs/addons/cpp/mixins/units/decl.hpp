@@ -6,6 +6,8 @@
 #pragma once
 
 namespace flecs {
+
+FLECS_API_STRUCT
 struct units {
 
 /**

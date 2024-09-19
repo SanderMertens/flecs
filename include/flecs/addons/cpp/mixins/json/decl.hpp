@@ -15,9 +15,9 @@ namespace flecs {
  * @{
  */
 
-using from_json_desc_t = ecs_from_json_desc_t;
-using entity_to_json_desc_t = ecs_entity_to_json_desc_t;
-using iter_to_json_desc_t = ecs_iter_to_json_desc_t;
+FLECS_API_STRUCT using from_json_desc_t = ecs_from_json_desc_t;
+FLECS_API_STRUCT using entity_to_json_desc_t = ecs_entity_to_json_desc_t;
+FLECS_API_STRUCT using iter_to_json_desc_t = ecs_iter_to_json_desc_t;
 
 /** @} */
 

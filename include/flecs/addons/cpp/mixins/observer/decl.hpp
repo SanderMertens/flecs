@@ -15,8 +15,9 @@ namespace flecs {
  * @{
  */
 
-struct observer;
+FLECS_API_STRUCT struct observer;
 
+FLECS_API_STRUCT
 template<typename ... Components>
 struct observer_builder;
 

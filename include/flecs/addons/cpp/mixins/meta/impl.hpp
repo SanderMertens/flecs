@@ -66,18 +66,18 @@ inline void init(flecs::world& world) {
 
     if (!flecs::is_same<i32_t, iptr_t>() && !flecs::is_same<i64_t, iptr_t>()) {
         flecs::_::type<iptr_t>::init(flecs::Iptr, true);
-        ecs_assert(flecs::type_id<iptr_t>() == flecs::Iptr, 
+        ecs_assert(flecs::type_id<iptr_t>() == flecs::Iptr,
             ECS_INTERNAL_ERROR, NULL);
-        // Remove symbol to prevent validation errors, as it doesn't match with 
+        // Remove symbol to prevent validation errors, as it doesn't match with
         // the typename
         ecs_remove_pair(world, flecs::Iptr, ecs_id(EcsIdentifier), EcsSymbol);
     }
 
     if (!flecs::is_same<u32_t, uptr_t>() && !flecs::is_same<u64_t, uptr_t>()) {
         flecs::_::type<uptr_t>::init(flecs::Uptr, true);
-        ecs_assert(flecs::type_id<uptr_t>() == flecs::Uptr, 
+        ecs_assert(flecs::type_id<uptr_t>() == flecs::Uptr,
             ECS_INTERNAL_ERROR, NULL);
-        // Remove symbol to prevent validation errors, as it doesn't match with 
+        // Remove symbol to prevent validation errors, as it doesn't match with
         // the typename
         ecs_remove_pair(world, flecs::Uptr, ecs_id(EcsIdentifier), EcsSymbol);
     }
@@ -148,6 +148,8 @@ inline flecs::entity world::vector() {
 
 } // namespace flecs
 
+extern "C++" {
+
 inline int ecs_serializer_t::value(ecs_entity_t type, const void *v) const {
     return this->value_(this, type, v);
 }
@@ -160,4 +162,5 @@ inline int ecs_serializer_t::value(const T& v) const {
 
 inline int ecs_serializer_t::member(const char *name) const {
     return this->member_(this, name);
+}
 }

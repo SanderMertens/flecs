@@ -15,10 +15,12 @@ namespace flecs {
  * @{
  */
 
+FLECS_API_STRUCT
 using TickSource = EcsTickSource;
 
-struct system;
+FLECS_API_STRUCT struct system;
 
+FLECS_API_STRUCT
 template<typename ... Components>
 struct system_builder;
 

@@ -16,9 +16,11 @@ namespace flecs {
 
 struct query_base;
 
+FLECS_API_STRUCT
 template<typename ... Components>
 struct query;
 
+FLECS_API_STRUCT
 template<typename ... Components>
 struct query_builder;
 

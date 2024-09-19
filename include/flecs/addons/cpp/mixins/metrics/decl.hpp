@@ -18,6 +18,7 @@ namespace flecs {
  * @{
  */
 
+FLECS_API_STRUCT
 struct metrics {
     using Value = EcsMetricValue;
     using Source = EcsMetricSource;
