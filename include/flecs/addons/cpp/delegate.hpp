@@ -5,12 +5,14 @@
 
 #pragma once
 
+#ifndef FLECS_CUSTOM_STD_INCLUDE
 #include <utility> // std::declval
+#endif
 
 namespace flecs
 {
 
-namespace _ 
+namespace _
 {
 
 // Binding ctx for component hooks
@@ -66,7 +68,7 @@ struct field_ptrs {
 private:
     void populate(const ecs_iter_t*, size_t) { }
 
-    template <typename T, typename... Targs, 
+    template <typename T, typename... Targs,
         typename A = remove_pointer_t<actual_type_t<T>>,
             if_not_t< is_empty<A>::value > = 0>
     void populate(const ecs_iter_t *iter, size_t index, T, Targs... comps) {
@@ -76,7 +78,7 @@ private:
             fields_[index].is_ref = true;
             fields_[index].index = static_cast<int8_t>(index);
         } else {
-            fields_[index].ptr = ecs_field_w_size(iter, sizeof(A), 
+            fields_[index].ptr = ecs_field_w_size(iter, sizeof(A),
                 static_cast<int8_t>(index));
             fields_[index].is_ref = iter->sources[index] != 0;
         }
@@ -84,7 +86,7 @@ private:
         populate(iter, index + 1, comps ...);
     }
 
-    template <typename T, typename... Targs, 
+    template <typename T, typename... Targs,
         typename A = remove_pointer_t<actual_type_t<T>>,
             if_t< is_empty<A>::value > = 0>
     void populate(const ecs_iter_t *iter, size_t index, T, Targs... comps) {
@@ -93,11 +95,11 @@ private:
 
     void populate_self(const ecs_iter_t*, size_t) { }
 
-    template <typename T, typename... Targs, 
+    template <typename T, typename... Targs,
         typename A = remove_pointer_t<actual_type_t<T>>,
             if_not_t< is_empty<A>::value > = 0>
     void populate_self(const ecs_iter_t *iter, size_t index, T, Targs... comps) {
-        fields_[index].ptr = ecs_field_w_size(iter, sizeof(A), 
+        fields_[index].ptr = ecs_field_w_size(iter, sizeof(A),
             static_cast<int8_t>(index));
         fields_[index].is_ref = false;
         ecs_assert(iter->sources[index] == 0, ECS_INTERNAL_ERROR, NULL);
@@ -121,27 +123,27 @@ struct each_field { };
 
 // Base class
 struct each_column_base {
-    each_column_base(const _::field_ptr& field, size_t row) 
+    each_column_base(const _::field_ptr& field, size_t row)
         : field_(field), row_(row) {
     }
 
 protected:
     const _::field_ptr& field_;
-    size_t row_;    
+    size_t row_;
 };
 
 // If type is not a pointer, return a reference to the type (default case)
 template <typename T>
-struct each_field<T, if_t< !is_pointer<T>::value && 
-        !is_empty<actual_type_t<T>>::value && is_actual<T>::value > > 
-    : each_column_base 
+struct each_field<T, if_t< !is_pointer<T>::value &&
+        !is_empty<actual_type_t<T>>::value && is_actual<T>::value > >
+    : each_column_base
 {
-    each_field(const flecs::iter_t*, _::field_ptr& field, size_t row) 
+    each_field(const flecs::iter_t*, _::field_ptr& field, size_t row)
         : each_column_base(field, row) { }
 
     T& get_row() {
         return static_cast<T*>(this->field_.ptr)[this->row_];
-    }  
+    }
 };
 
 // If argument type is not the same as actual component type, return by value.
@@ -149,25 +151,25 @@ struct each_field<T, if_t< !is_pointer<T>::value &&
 // A typical scenario where this happens is when using flecs::pair types.
 template <typename T>
 struct each_field<T, if_t< !is_pointer<T>::value &&
-        !is_empty<actual_type_t<T>>::value && !is_actual<T>::value> > 
-    : each_column_base 
+        !is_empty<actual_type_t<T>>::value && !is_actual<T>::value> >
+    : each_column_base
 {
-    each_field(const flecs::iter_t*, _::field_ptr& field, size_t row) 
+    each_field(const flecs::iter_t*, _::field_ptr& field, size_t row)
         : each_column_base(field, row) { }
 
     T get_row() {
         return static_cast<actual_type_t<T>*>(this->field_.ptr)[this->row_];
-    }  
+    }
 };
 
 // If type is empty (indicating a tag) the query will pass a nullptr. To avoid
 // returning nullptr to reference arguments, return a temporary value.
 template <typename T>
-struct each_field<T, if_t< is_empty<actual_type_t<T>>::value && 
-        !is_pointer<T>::value > > 
-    : each_column_base 
+struct each_field<T, if_t< is_empty<actual_type_t<T>>::value &&
+        !is_pointer<T>::value > >
+    : each_column_base
 {
-    each_field(const flecs::iter_t*, _::field_ptr& field, size_t row) 
+    each_field(const flecs::iter_t*, _::field_ptr& field, size_t row)
         : each_column_base(field, row) { }
 
     T get_row() {
@@ -178,11 +180,11 @@ struct each_field<T, if_t< is_empty<actual_type_t<T>>::value &&
 // If type is a pointer (indicating an optional value) don't index with row if
 // the field is not set.
 template <typename T>
-struct each_field<T, if_t< is_pointer<T>::value && 
-        !is_empty<actual_type_t<T>>::value > > 
-    : each_column_base 
+struct each_field<T, if_t< is_pointer<T>::value &&
+        !is_empty<actual_type_t<T>>::value > >
+    : each_column_base
 {
-    each_field(const flecs::iter_t*, _::field_ptr& field, size_t row) 
+    each_field(const flecs::iter_t*, _::field_ptr& field, size_t row)
         : each_column_base(field, row) { }
 
     actual_type_t<T> get_row() {
@@ -214,7 +216,7 @@ struct each_ref_field : public each_field<T> {
         }
 
         if (field.is_row) {
-            field.ptr = ecs_field_at_w_size(iter, sizeof(T), field.index, 
+            field.ptr = ecs_field_at_w_size(iter, sizeof(T), field.index,
                 static_cast<int8_t>(row));
         }
     }
@@ -226,10 +228,10 @@ struct each_delegate : public delegate {
     using Terms = typename field_ptrs<Components ...>::array;
 
     template < if_not_t< is_same< decay_t<Func>, decay_t<Func>& >::value > = 0>
-    explicit each_delegate(Func&& func) noexcept 
+    explicit each_delegate(Func&& func) noexcept
         : func_(FLECS_MOV(func)) { }
 
-    explicit each_delegate(const Func& func) noexcept 
+    explicit each_delegate(const Func& func) noexcept
         : func_(func) { }
 
     // Invoke object directly. This operation is useful when the calling
@@ -292,14 +294,14 @@ struct each_delegate : public delegate {
 
 private:
     // func(flecs::entity, Components...)
-    template <template<typename X, typename = int> class ColumnType, 
+    template <template<typename X, typename = int> class ColumnType,
         typename... Args,
         typename Fn = Func,
         decltype(std::declval<const Fn&>()(
             std::declval<flecs::entity>(),
             std::declval<ColumnType< remove_reference_t<Components> > >().get_row()...), 0) = 0>
     static void invoke_callback(
-        ecs_iter_t *iter, const Func& func, size_t i, Args... comps) 
+        ecs_iter_t *iter, const Func& func, size_t i, Args... comps)
     {
         ecs_assert(iter->count > 0, ECS_INVALID_OPERATION,
             "no entities returned, use each() without flecs::entity argument");
@@ -310,7 +312,7 @@ private:
     }
 
     // func(flecs::iter&, size_t row, Components...)
-    template <template<typename X, typename = int> class ColumnType, 
+    template <template<typename X, typename = int> class ColumnType,
         typename... Args,
         typename Fn = Func,
         decltype(std::declval<const Fn&>()(
@@ -318,7 +320,7 @@ private:
             std::declval<size_t&>(),
             std::declval<ColumnType< remove_reference_t<Components> > >().get_row()...), 0) = 0>
     static void invoke_callback(
-        ecs_iter_t *iter, const Func& func, size_t i, Args... comps) 
+        ecs_iter_t *iter, const Func& func, size_t i, Args... comps)
     {
         flecs::iter it(iter);
         func(it, i, (ColumnType< remove_reference_t<Components> >(iter, comps, i)
@@ -326,23 +328,23 @@ private:
     }
 
     // func(Components...)
-    template <template<typename X, typename = int> class ColumnType, 
+    template <template<typename X, typename = int> class ColumnType,
         typename... Args,
         typename Fn = Func,
         decltype(std::declval<const Fn&>()(
             std::declval<ColumnType< remove_reference_t<Components> > >().get_row()...), 0) = 0>
     static void invoke_callback(
-        ecs_iter_t *iter, const Func& func, size_t i, Args... comps) 
+        ecs_iter_t *iter, const Func& func, size_t i, Args... comps)
     {
         func((ColumnType< remove_reference_t<Components> >(iter, comps, i)
             .get_row())...);
     }
 
-    template <template<typename X, typename = int> class ColumnType, 
-        typename... Args, if_t< 
+    template <template<typename X, typename = int> class ColumnType,
+        typename... Args, if_t<
             sizeof...(Components) == sizeof...(Args)> = 0>
     static void invoke_unpack(
-        ecs_iter_t *iter, const Func& func, size_t, Terms&, Args... comps) 
+        ecs_iter_t *iter, const Func& func, size_t, Terms&, Args... comps)
     {
         ECS_TABLE_LOCK(iter->world, iter->table);
 
@@ -360,14 +362,14 @@ private:
         ECS_TABLE_UNLOCK(iter->world, iter->table);
     }
 
-    template <template<typename X, typename = int> class ColumnType, 
+    template <template<typename X, typename = int> class ColumnType,
         typename... Args, if_t< sizeof...(Components) != sizeof...(Args) > = 0>
-    static void invoke_unpack(ecs_iter_t *iter, const Func& func, 
-        size_t index, Terms& columns, Args... comps) 
+    static void invoke_unpack(ecs_iter_t *iter, const Func& func,
+        size_t index, Terms& columns, Args... comps)
     {
         invoke_unpack<ColumnType>(
             iter, func, index + 1, columns, comps..., columns[index]);
-    }    
+    }
 
 public:
     Func func_;
@@ -378,10 +380,10 @@ struct find_delegate : public delegate {
     using Terms = typename field_ptrs<Components ...>::array;
 
     template < if_not_t< is_same< decay_t<Func>, decay_t<Func>& >::value > = 0>
-    explicit find_delegate(Func&& func) noexcept 
+    explicit find_delegate(Func&& func) noexcept
         : func_(FLECS_MOV(func)) { }
 
-    explicit find_delegate(const Func& func) noexcept 
+    explicit find_delegate(const Func& func) noexcept
         : func_(func) { }
 
     // Invoke object directly. This operation is useful when the calling
@@ -412,7 +414,7 @@ private:
             std::declval<flecs::entity>(),
             std::declval<ColumnType< remove_reference_t<Components> > >().get_row()...))) = true>
     static flecs::entity invoke_callback(
-        ecs_iter_t *iter, const Func& func, size_t, Terms&, Args... comps) 
+        ecs_iter_t *iter, const Func& func, size_t, Terms&, Args... comps)
     {
         ECS_TABLE_LOCK(iter->world, iter->table);
 
@@ -449,7 +451,7 @@ private:
             std::declval<size_t&>(),
             std::declval<ColumnType< remove_reference_t<Components> > >().get_row()...))) = true>
     static flecs::entity invoke_callback(
-        ecs_iter_t *iter, const Func& func, size_t, Terms&, Args... comps) 
+        ecs_iter_t *iter, const Func& func, size_t, Terms&, Args... comps)
     {
         size_t count = static_cast<size_t>(iter->count);
         if (count == 0) {
@@ -464,7 +466,7 @@ private:
         ECS_TABLE_LOCK(iter->world, iter->table);
 
         for (size_t i = 0; i < count; i ++) {
-            if (func(it, i, 
+            if (func(it, i,
                 (ColumnType< remove_reference_t<Components> >(iter, comps, i)
                     .get_row())...))
             {
@@ -486,7 +488,7 @@ private:
         decltype(bool(std::declval<const Fn&>()(
             std::declval<ColumnType< remove_reference_t<Components> > >().get_row()...))) = true>
     static flecs::entity invoke_callback(
-        ecs_iter_t *iter, const Func& func, size_t, Terms&, Args... comps) 
+        ecs_iter_t *iter, const Func& func, size_t, Terms&, Args... comps)
     {
         size_t count = static_cast<size_t>(iter->count);
         if (count == 0) {
@@ -515,10 +517,10 @@ private:
         return result;
     }
 
-    template <template<typename X, typename = int> class ColumnType, 
+    template <template<typename X, typename = int> class ColumnType,
         typename... Args, if_t< sizeof...(Components) != sizeof...(Args) > = 0>
-    static flecs::entity invoke_callback(ecs_iter_t *iter, const Func& func, 
-        size_t index, Terms& columns, Args... comps) 
+    static flecs::entity invoke_callback(ecs_iter_t *iter, const Func& func,
+        size_t index, Terms& columns, Args... comps)
     {
         return invoke_callback<ColumnType>(
             iter, func, index + 1, columns, comps..., columns[index]);
@@ -534,10 +536,10 @@ private:
 template <typename Func>
 struct run_delegate : delegate {
     template < if_not_t< is_same< decay_t<Func>, decay_t<Func>& >::value > = 0>
-    explicit run_delegate(Func&& func) noexcept 
+    explicit run_delegate(Func&& func) noexcept
         : func_(FLECS_MOV(func)) { }
 
-    explicit run_delegate(const Func& func) noexcept 
+    explicit run_delegate(const Func& func) noexcept
         : func_(func) { }
 
     // Invoke object directly. This operation is useful when the calling
@@ -566,7 +568,7 @@ struct run_delegate : delegate {
 
 template <typename Func>
 struct entity_observer_delegate : delegate {
-    explicit entity_observer_delegate(Func&& func) noexcept 
+    explicit entity_observer_delegate(Func&& func) noexcept
         : func_(FLECS_MOV(func)) { }
 
     // Static function that can be used as callback for systems/triggers
@@ -596,7 +598,7 @@ private:
 
 template <typename Func, typename Event>
 struct entity_payload_observer_delegate : delegate {
-    explicit entity_payload_observer_delegate(Func&& func) noexcept 
+    explicit entity_payload_observer_delegate(Func&& func) noexcept
         : func_(FLECS_MOV(func)) { }
 
     // Static function that can be used as callback for systems/triggers
@@ -612,7 +614,7 @@ private:
         auto self = static_cast<const entity_payload_observer_delegate*>(
             iter->callback_ctx);
         ecs_assert(self != nullptr, ECS_INTERNAL_ERROR, NULL);
-        ecs_assert(iter->param != nullptr, ECS_INVALID_OPERATION, 
+        ecs_assert(iter->param != nullptr, ECS_INVALID_OPERATION,
             "entity observer invoked without payload");
 
         Event *data = static_cast<Event*>(iter->param);
@@ -627,7 +629,7 @@ private:
         auto self = static_cast<const entity_payload_observer_delegate*>(
             iter->callback_ctx);
         ecs_assert(self != nullptr, ECS_INTERNAL_ERROR, NULL);
-        ecs_assert(iter->param != nullptr, ECS_INVALID_OPERATION, 
+        ecs_assert(iter->param != nullptr, ECS_INVALID_OPERATION,
             "entity observer invoked without payload");
 
         Event *data = static_cast<Event*>(iter->param);
@@ -665,13 +667,13 @@ struct entity_with_delegate_impl<arg_list<Args ...>> {
         return true;
     }
 
-    static 
+    static
     bool get_ptrs(world_t *world, flecs::entity_t e, const ecs_record_t *r, ecs_table_t *table,
-        ArrayType& ptrs) 
+        ArrayType& ptrs)
     {
         ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
-        if (!ecs_table_column_count(table) && 
-            !ecs_table_has_flags(table, EcsTableHasSparse)) 
+        if (!ecs_table_column_count(table) &&
+            !ecs_table_has_flags(table, EcsTableHasSparse))
         {
             return false;
         }
@@ -685,7 +687,7 @@ struct entity_with_delegate_impl<arg_list<Args ...>> {
 
         /* Get column indices for components */
         ColumnArray columns ({
-            ecs_table_get_column_index(real_world, table, 
+            ecs_table_get_column_index(real_world, table,
                 _::type<Args>().id(world))...
         });
 
@@ -713,12 +715,12 @@ struct entity_with_delegate_impl<arg_list<Args ...>> {
         /* Get pointers w/ensure */
         size_t i = 0;
         DummyArray dummy ({
-            (ptrs[i ++] = ecs_ensure_id(world, e, 
+            (ptrs[i ++] = ecs_ensure_id(world, e,
                 _::type<Args>().id(world)), 0)...
         });
 
         return true;
-    }    
+    }
 
     template <typename Func>
     static bool invoke_read(world_t *world, entity_t e, const Func& func) {
@@ -776,8 +778,8 @@ struct entity_with_delegate_impl<arg_list<Args ...>> {
     }
 
     // Utility for storing id in array in pack expansion
-    static size_t store_added(IdArray& added, size_t elem, ecs_table_t *prev, 
-        ecs_table_t *next, id_t id) 
+    static size_t store_added(IdArray& added, size_t elem, ecs_table_t *prev,
+        ecs_table_t *next, id_t id)
     {
         // Array should only contain ids for components that are actually added,
         // so check if the prev and next tables are different.
@@ -858,21 +860,21 @@ struct entity_with_delegate_impl<arg_list<Args ...>> {
         (void)dummy_after;
 
         return true;
-    }    
+    }
 
 private:
-    template <typename Func, typename ... TArgs, 
+    template <typename Func, typename ... TArgs,
         if_t<sizeof...(TArgs) == sizeof...(Args)> = 0>
     static void invoke_callback(
-        const Func& f, size_t, ArrayType&, TArgs&& ... comps) 
+        const Func& f, size_t, ArrayType&, TArgs&& ... comps)
     {
         f(*static_cast<typename base_arg_type<Args>::type*>(comps)...);
     }
 
-    template <typename Func, typename ... TArgs, 
+    template <typename Func, typename ... TArgs,
         if_t<sizeof...(TArgs) != sizeof...(Args)> = 0>
-    static void invoke_callback(const Func& f, size_t arg, ArrayType& ptrs, 
-        TArgs&& ... comps) 
+    static void invoke_callback(const Func& f, size_t arg, ArrayType& ptrs,
+        TArgs&& ... comps)
     {
         invoke_callback(f, arg + 1, ptrs, comps..., ptrs[arg]);
     }
