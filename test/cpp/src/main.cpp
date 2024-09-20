@@ -420,6 +420,16 @@ void Paths_alias_entity(void);
 void Paths_alias_entity_by_name(void);
 void Paths_alias_entity_by_scoped_name(void);
 void Paths_alias_entity_empty(void);
+void Paths_id_from_str_0_entity(void);
+void Paths_id_from_str_entity_from_str(void);
+void Paths_id_from_str_unresolved_entity_from_str(void);
+void Paths_id_from_str_scoped_entity_from_str(void);
+void Paths_id_from_str_template_entity_from_str(void);
+void Paths_id_from_str_pair_from_str(void);
+void Paths_id_from_str_unresolved_pair_from_str(void);
+void Paths_id_from_str_wildcard_pair_from_str(void);
+void Paths_id_from_str_any_pair_from_str(void);
+void Paths_id_from_str_invalid_pair(void);
 
 // Testsuite 'System'
 void System_iter(void);
@@ -2978,6 +2988,46 @@ bake_test_case Paths_testcases[] = {
     {
         "alias_entity_empty",
         Paths_alias_entity_empty
+    },
+    {
+        "id_from_str_0_entity",
+        Paths_id_from_str_0_entity
+    },
+    {
+        "id_from_str_entity_from_str",
+        Paths_id_from_str_entity_from_str
+    },
+    {
+        "id_from_str_unresolved_entity_from_str",
+        Paths_id_from_str_unresolved_entity_from_str
+    },
+    {
+        "id_from_str_scoped_entity_from_str",
+        Paths_id_from_str_scoped_entity_from_str
+    },
+    {
+        "id_from_str_template_entity_from_str",
+        Paths_id_from_str_template_entity_from_str
+    },
+    {
+        "id_from_str_pair_from_str",
+        Paths_id_from_str_pair_from_str
+    },
+    {
+        "id_from_str_unresolved_pair_from_str",
+        Paths_id_from_str_unresolved_pair_from_str
+    },
+    {
+        "id_from_str_wildcard_pair_from_str",
+        Paths_id_from_str_wildcard_pair_from_str
+    },
+    {
+        "id_from_str_any_pair_from_str",
+        Paths_id_from_str_any_pair_from_str
+    },
+    {
+        "id_from_str_invalid_pair",
+        Paths_id_from_str_invalid_pair
     }
 };
 
@@ -6680,7 +6730,7 @@ static bake_test_suite suites[] = {
         "Paths",
         NULL,
         NULL,
-        15,
+        25,
         Paths_testcases
     },
     {

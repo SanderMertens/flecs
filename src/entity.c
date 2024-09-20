@@ -1616,6 +1616,15 @@ int flecs_traverse_from_expr(
             if (!id) {
                 break;
             }
+
+            if (!ecs_id_is_valid(world, id)) {
+                char *idstr = ecs_id_str(world, id);
+                ecs_parser_error(name, expr, (ptr - expr), 
+                    "id %s is invalid for add expression", idstr);
+                ecs_os_free(idstr);
+                goto error;
+            }
+
             ecs_vec_append_t(&world->allocator, ids, ecs_id_t)[0] = id;
         }
 

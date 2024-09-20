@@ -233,3 +233,97 @@ void Paths_alias_entity_empty(void) {
     test_assert(e.id() != 0);
 }
 
+
+void Paths_id_from_str_0_entity(void) {
+    flecs::world ecs;
+
+    flecs::id id = ecs.id("#0");
+    test_assert(id == 0);
+}
+
+void Paths_id_from_str_entity_from_str(void) {
+    flecs::world ecs;
+
+    flecs::entity foo = ecs.entity("foo");
+
+    flecs::id id = ecs.id("foo");
+    test_assert(id != 0);
+    test_assert(id == foo);
+}
+
+void Paths_id_from_str_unresolved_entity_from_str(void) {
+    flecs::world ecs;
+
+    flecs::id id = ecs.id("foo");
+    test_assert(id == 0);
+}
+
+void Paths_id_from_str_scoped_entity_from_str(void) {
+    flecs::world ecs;
+
+    flecs::entity foo = ecs.entity("foo::bar");
+
+    flecs::id id = ecs.id("foo.bar");
+    test_assert(id != 0);
+    test_assert(id == foo);
+}
+
+void Paths_id_from_str_template_entity_from_str(void) {
+    flecs::world ecs;
+
+    flecs::entity foo = ecs.entity("foo<bar>");
+
+    flecs::id id = ecs.id("foo<bar>");
+    test_assert(id != 0);
+    test_assert(id == foo);
+}
+
+void Paths_id_from_str_pair_from_str(void) {
+    flecs::world ecs;
+
+    flecs::entity rel = ecs.entity("Rel");
+    flecs::entity tgt = ecs.entity("Tgt");
+
+    flecs::id id = ecs.id("(Rel, Tgt)");
+    test_assert(id != 0);
+    test_assert(id == ecs.pair(rel, tgt));
+}
+
+void Paths_id_from_str_unresolved_pair_from_str(void) {
+    flecs::world ecs;
+
+    flecs::entity rel = ecs.entity("Rel");
+
+    flecs::id id = ecs.id("(Rel, Tgt)");
+    test_assert(id == 0);
+}
+
+void Paths_id_from_str_wildcard_pair_from_str(void) {
+    flecs::world ecs;
+
+    flecs::entity rel = ecs.entity("Rel");
+
+    flecs::id id = ecs.id("(Rel, *)");
+    test_assert(id != 0);
+    test_assert(id == ecs.pair(rel, flecs::Wildcard));
+}
+
+void Paths_id_from_str_any_pair_from_str(void) {
+    flecs::world ecs;
+
+    flecs::entity rel = ecs.entity("Rel");
+
+    flecs::id id = ecs.id("(Rel, _)");
+    test_assert(id != 0);
+    test_assert(id == ecs.pair(rel, flecs::Any));
+}
+
+void Paths_id_from_str_invalid_pair(void) {
+    flecs::world ecs;
+
+    flecs::entity rel = ecs.entity("Rel");
+    flecs::entity tgt = ecs.entity("Tgt");
+
+    flecs::id id = ecs.id("(Rel, Tgt");
+    test_assert(id == 0);
+}

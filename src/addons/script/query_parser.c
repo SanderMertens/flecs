@@ -666,12 +666,6 @@ const char* flecs_id_parse(
         return NULL;
     }
 
-    if (!ecs_id_is_valid(world, term.id)) {
-        ecs_parser_error(name, expr, (result - expr), 
-            "invalid term for add expression");
-        return NULL;
-    }
-
     if (term.oper != EcsAnd) {
         ecs_parser_error(name, expr, (result - expr), 
             "invalid operator for add expression");
