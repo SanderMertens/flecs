@@ -12749,6 +12749,7 @@ void flecs_emit_propagate_id(
         it->other_table = NULL;
         it->offset = 0;
         it->count = entity_count;
+        it->up_fields = 1;
         if (entity_count) {
             it->entities = ecs_table_entities(table);
         }
@@ -12787,6 +12788,7 @@ void flecs_emit_propagate_id(
     }
 
     it->event_cur = event_cur;
+    it->up_fields = 0;
 }
 
 static
@@ -13081,6 +13083,7 @@ void flecs_emit_forward_id(
     it->sources[0] = tgt;
     it->event_id = id;
     ECS_CONST_CAST(int32_t*, it->sizes)[0] = 0; /* safe, owned by observer */
+    it->up_fields = 1;
 
     int32_t storage_i = ecs_table_type_to_column_index(tgt_table, column);
     if (storage_i != -1) {
@@ -13141,6 +13144,8 @@ void flecs_emit_forward_id(
             it->trs[0] = base_tr;
         }
     }
+
+    it->up_fields = 0;
 }
 
 static

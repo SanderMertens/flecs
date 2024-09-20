@@ -923,7 +923,10 @@
                 "register_twice_w_each_run",
                 "other_table",
                 "other_table_w_pair",
-                "other_table_w_pair_wildcard"
+                "other_table_w_pair_wildcard",
+                "on_add_inherited",
+                "on_set_inherited",
+                "on_remove_inherited"
             ]
         }, {
             "id": "ComponentLifecycle",

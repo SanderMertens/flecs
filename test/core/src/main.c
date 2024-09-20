@@ -1557,6 +1557,14 @@ void Observer_register_run_after_callback(void);
 void Observer_register_callback_after_run_ctx(void);
 void Observer_register_run_after_callback_ctx(void);
 void Observer_on_add_after_new_w_table(void);
+void Observer_ref_flag_term_1(void);
+void Observer_ref_flag_term_2(void);
+void Observer_forward_up_flag_term_1(void);
+void Observer_forward_up_flag_term_2(void);
+void Observer_propagate_up_flag_term_1(void);
+void Observer_propagate_up_flag_term_2(void);
+void Observer_row_flag_term_1(void);
+void Observer_row_flag_term_2(void);
 void Observer_cache_test_1(void);
 void Observer_cache_test_2(void);
 void Observer_cache_test_3(void);
@@ -8259,6 +8267,38 @@ bake_test_case Observer_testcases[] = {
         Observer_on_add_after_new_w_table
     },
     {
+        "ref_flag_term_1",
+        Observer_ref_flag_term_1
+    },
+    {
+        "ref_flag_term_2",
+        Observer_ref_flag_term_2
+    },
+    {
+        "forward_up_flag_term_1",
+        Observer_forward_up_flag_term_1
+    },
+    {
+        "forward_up_flag_term_2",
+        Observer_forward_up_flag_term_2
+    },
+    {
+        "propagate_up_flag_term_1",
+        Observer_propagate_up_flag_term_1
+    },
+    {
+        "propagate_up_flag_term_2",
+        Observer_propagate_up_flag_term_2
+    },
+    {
+        "row_flag_term_1",
+        Observer_row_flag_term_1
+    },
+    {
+        "row_flag_term_2",
+        Observer_row_flag_term_2
+    },
+    {
         "cache_test_1",
         Observer_cache_test_1
     },
@@ -11045,7 +11085,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        208,
+        216,
         Observer_testcases
     },
     {
