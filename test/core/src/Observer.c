@@ -8766,3 +8766,294 @@ void Observer_multi_observer_eval_count(void) {
 
     ecs_fini(world);
 }
+
+void Observer_ref_flag_term_1(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    Probe ctx = {0};
+    
+    ecs_entity_t s = ecs_new(world);
+
+    ecs_entity_t o = ecs_observer(world, {
+        .query.terms = {
+            { .id = ecs_id(Position), .src.id = s },
+        },
+        .callback = Observer,
+        .events = { EcsOnAdd },
+        .ctx = &ctx
+    });
+
+    ecs_set(world, s, Position, {10, 20});
+
+    test_int(ctx.invoked, 1);
+    // test_int(ctx.count, 0); // TODO
+    test_int(ctx.system, o);
+    test_int(ctx.event, EcsOnAdd);
+    test_uint(ctx.s[0][0], s);
+    test_uint(ctx.ref_fields, (1llu << 0));
+    test_uint(ctx.up_fields, 0);
+    test_uint(ctx.row_fields, 0);
+
+    ecs_fini(world);
+}
+
+void Observer_ref_flag_term_2(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    Probe ctx = {0};
+    
+    ecs_entity_t s = ecs_new(world);
+
+    ecs_entity_t o = ecs_observer(world, {
+        .query.terms = {
+            { .id = ecs_id(Position), .src.id = s },
+            { .id = ecs_id(Velocity), .src.id = s }
+        },
+        .callback = Observer,
+        .events = { EcsOnAdd },
+        .ctx = &ctx
+    });
+
+    test_int(ctx.invoked, 0);
+
+    ecs_set(world, s, Position, {10, 20});
+    test_int(ctx.invoked, 0);
+
+    ecs_set(world, s, Velocity, {10, 20});
+
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 0);
+    test_int(ctx.system, o);
+    test_int(ctx.event, EcsOnAdd);
+    test_uint(ctx.s[0][0], s);
+    test_uint(ctx.s[0][1], s);
+    test_uint(ctx.ref_fields, (1llu << 0) | (1llu << 1));
+    test_uint(ctx.up_fields, 0);
+    test_uint(ctx.row_fields, 0);
+
+    ecs_fini(world);
+}
+
+void Observer_forward_up_flag_term_1(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    Probe ctx = {0};
+
+    ecs_entity_t o = ecs_observer(world, {
+        .query.terms = {
+            { .id = ecs_id(Position), .src.id = EcsUp },
+        },
+        .callback = Observer,
+        .events = { EcsOnAdd },
+        .ctx = &ctx
+    });
+
+    ecs_entity_t s = ecs_new(world);
+    ecs_set(world, s, Position, {10, 20});
+
+    test_int(ctx.invoked, 0);
+
+    ecs_new_w_pair(world, EcsChildOf, s);
+
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, o);
+    test_int(ctx.event, EcsOnAdd);
+    test_uint(ctx.s[0][0], s);
+    test_uint(ctx.ref_fields, 0);
+    test_uint(ctx.up_fields, (1llu << 0));
+    test_uint(ctx.row_fields, 0);
+
+    ecs_fini(world);
+}
+
+void Observer_forward_up_flag_term_2(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    Probe ctx = {0};
+
+    ecs_entity_t o = ecs_observer(world, {
+        .query.terms = {
+            { .id = ecs_id(Position), .src.id = EcsUp },
+            { .id = ecs_id(Velocity), .src.id = EcsUp },
+        },
+        .callback = Observer,
+        .events = { EcsOnAdd },
+        .ctx = &ctx
+    });
+
+    ecs_entity_t s = ecs_new(world);
+    ecs_set(world, s, Position, {10, 20});
+    ecs_set(world, s, Velocity, {1, 2});
+
+    test_int(ctx.invoked, 0);
+
+    ecs_new_w_pair(world, EcsChildOf, s);
+
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, o);
+    test_int(ctx.event, EcsOnAdd);
+    test_uint(ctx.s[0][0], s);
+    test_uint(ctx.ref_fields, 0);
+    test_uint(ctx.up_fields, (1llu << 0) | (1llu << 1));
+    test_uint(ctx.row_fields, 0);
+
+    ecs_fini(world);
+}
+
+void Observer_propagate_up_flag_term_1(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    Probe ctx = {0};
+
+    ecs_entity_t o = ecs_observer(world, {
+        .query.terms = {
+            { .id = ecs_id(Position), .src.id = EcsUp },
+        },
+        .callback = Observer,
+        .events = { EcsOnAdd },
+        .ctx = &ctx
+    });
+
+    ecs_entity_t s = ecs_new(world);
+    ecs_new_w_pair(world, EcsChildOf, s);
+    test_int(ctx.invoked, 0);
+
+    ecs_set(world, s, Position, {10, 20});
+
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, o);
+    test_int(ctx.event, EcsOnAdd);
+    test_uint(ctx.s[0][0], s);
+    test_uint(ctx.ref_fields, 0);
+    test_uint(ctx.up_fields, (1llu << 0));
+    test_uint(ctx.row_fields, 0);
+
+    ecs_fini(world);
+}
+
+void Observer_propagate_up_flag_term_2(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    Probe ctx = {0};
+
+    ecs_entity_t o = ecs_observer(world, {
+        .query.terms = {
+            { .id = ecs_id(Position), .src.id = EcsUp },
+            { .id = ecs_id(Velocity), .src.id = EcsUp },
+        },
+        .callback = Observer,
+        .events = { EcsOnAdd },
+        .ctx = &ctx
+    });
+
+    ecs_entity_t s = ecs_new(world);
+    ecs_new_w_pair(world, EcsChildOf, s);
+    test_int(ctx.invoked, 0);
+
+    ecs_set(world, s, Position, {10, 20});
+    test_int(ctx.invoked, 0);
+
+    ecs_set(world, s, Velocity, {1, 2});
+
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, o);
+    test_int(ctx.event, EcsOnAdd);
+    test_uint(ctx.s[0][0], s);
+    test_uint(ctx.ref_fields, 0);
+    test_uint(ctx.up_fields, (1llu << 0) | (1llu << 1));
+    test_uint(ctx.row_fields, 0);
+
+    ecs_fini(world);
+}
+
+void Observer_row_flag_term_1(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_add_id(world, ecs_id(Position), EcsSparse);
+
+    Probe ctx = {0};
+
+    ecs_entity_t o = ecs_observer(world, {
+        .query.terms = {
+            { .id = ecs_id(Position) },
+        },
+        .callback = Observer,
+        .events = { EcsOnAdd },
+        .ctx = &ctx
+    });
+
+    ecs_entity_t s = ecs_new(world);
+    ecs_set(world, s, Position, {10, 20});
+
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, o);
+    test_int(ctx.event, EcsOnAdd);
+    test_uint(ctx.s[0][0], 0);
+    test_uint(ctx.ref_fields, (1llu << 0));
+    test_uint(ctx.up_fields, 0);
+    test_uint(ctx.row_fields, (1llu << 0));
+
+    ecs_fini(world);
+}
+
+void Observer_row_flag_term_2(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    
+    ecs_add_id(world, ecs_id(Position), EcsSparse);
+    ecs_add_id(world, ecs_id(Velocity), EcsSparse);
+
+    Probe ctx = {0};
+
+    ecs_entity_t o = ecs_observer(world, {
+        .query.terms = {
+            { .id = ecs_id(Position) },
+            { .id = ecs_id(Velocity) },
+        },
+        .callback = Observer,
+        .events = { EcsOnAdd },
+        .ctx = &ctx
+    });
+
+    ecs_entity_t s = ecs_new(world);
+
+    ecs_set(world, s, Position, {10, 20});
+    test_int(ctx.invoked, 0);
+
+    ecs_set(world, s, Velocity, {1, 2});
+
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, o);
+    test_int(ctx.event, EcsOnAdd);
+    test_uint(ctx.s[0][0], 0);
+    test_uint(ctx.ref_fields, (1llu << 0) | (1llu << 1));
+    test_uint(ctx.up_fields, 0);
+    test_uint(ctx.row_fields, (1llu << 0) | (1llu << 1));
+
+    ecs_fini(world);
+}

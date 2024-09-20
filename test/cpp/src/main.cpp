@@ -901,6 +901,9 @@ void Observer_register_twice_w_each_run(void);
 void Observer_other_table(void);
 void Observer_other_table_w_pair(void);
 void Observer_other_table_w_pair_wildcard(void);
+void Observer_on_add_inherited(void);
+void Observer_on_set_inherited(void);
+void Observer_on_remove_inherited(void);
 
 // Testsuite 'ComponentLifecycle'
 void ComponentLifecycle_ctor_on_add(void);
@@ -4873,6 +4876,18 @@ bake_test_case Observer_testcases[] = {
     {
         "other_table_w_pair_wildcard",
         Observer_other_table_w_pair_wildcard
+    },
+    {
+        "on_add_inherited",
+        Observer_on_add_inherited
+    },
+    {
+        "on_set_inherited",
+        Observer_on_set_inherited
+    },
+    {
+        "on_remove_inherited",
+        Observer_on_remove_inherited
     }
 };
 
@@ -6781,7 +6796,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        49,
+        52,
         Observer_testcases
     },
     {

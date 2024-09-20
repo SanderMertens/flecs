@@ -29,6 +29,9 @@ typedef struct Probe {
     ecs_entity_t e[MAX_ENTITIES];
     ecs_entity_t c[MAX_INVOCATIONS][MAX_SYS_COLUMNS];
     ecs_entity_t s[MAX_INVOCATIONS][MAX_SYS_COLUMNS];
+    ecs_flags32_t ref_fields;
+    ecs_flags32_t up_fields;
+    ecs_flags32_t row_fields;
     void *param;
 } Probe;
 
