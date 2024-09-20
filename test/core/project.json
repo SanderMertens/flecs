@@ -50,7 +50,17 @@
                 "pair_id_toggle_is_tag",
                 "make_pair",
                 "make_pair_of_pair",
-                "make_pair_of_pair_tgt"
+                "make_pair_of_pair_tgt",
+                "0_entity",
+                "entity_from_str",
+                "unresolved_entity_from_str",
+                "scoped_entity_from_str",
+                "template_entity_from_str",
+                "pair_from_str",
+                "unresolved_pair_from_str",
+                "wildcard_pair_from_str",
+                "any_pair_from_str",
+                "invalid_pair"
             ]
         }, {
             "id": "Entity",

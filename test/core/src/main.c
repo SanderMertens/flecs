@@ -46,6 +46,16 @@ void Id_pair_id_toggle_is_tag(void);
 void Id_make_pair(void);
 void Id_make_pair_of_pair(void);
 void Id_make_pair_of_pair_tgt(void);
+void Id_0_entity(void);
+void Id_entity_from_str(void);
+void Id_unresolved_entity_from_str(void);
+void Id_scoped_entity_from_str(void);
+void Id_template_entity_from_str(void);
+void Id_pair_from_str(void);
+void Id_unresolved_pair_from_str(void);
+void Id_wildcard_pair_from_str(void);
+void Id_any_pair_from_str(void);
+void Id_invalid_pair(void);
 
 // Testsuite 'Entity'
 void Entity_init_id(void);
@@ -2381,6 +2391,46 @@ bake_test_case Id_testcases[] = {
     {
         "make_pair_of_pair_tgt",
         Id_make_pair_of_pair_tgt
+    },
+    {
+        "0_entity",
+        Id_0_entity
+    },
+    {
+        "entity_from_str",
+        Id_entity_from_str
+    },
+    {
+        "unresolved_entity_from_str",
+        Id_unresolved_entity_from_str
+    },
+    {
+        "scoped_entity_from_str",
+        Id_scoped_entity_from_str
+    },
+    {
+        "template_entity_from_str",
+        Id_template_entity_from_str
+    },
+    {
+        "pair_from_str",
+        Id_pair_from_str
+    },
+    {
+        "unresolved_pair_from_str",
+        Id_unresolved_pair_from_str
+    },
+    {
+        "wildcard_pair_from_str",
+        Id_wildcard_pair_from_str
+    },
+    {
+        "any_pair_from_str",
+        Id_any_pair_from_str
+    },
+    {
+        "invalid_pair",
+        Id_invalid_pair
     }
 };
 
@@ -10849,7 +10899,7 @@ static bake_test_suite suites[] = {
         "Id",
         NULL,
         NULL,
-        37,
+        47,
         Id_testcases
     },
     {

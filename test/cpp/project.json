@@ -435,7 +435,17 @@
                 "alias_entity",
                 "alias_entity_by_name",
                 "alias_entity_by_scoped_name",
-                "alias_entity_empty"
+                "alias_entity_empty",
+                "id_from_str_0_entity",
+                "id_from_str_entity_from_str",
+                "id_from_str_unresolved_entity_from_str",
+                "id_from_str_scoped_entity_from_str",
+                "id_from_str_template_entity_from_str",
+                "id_from_str_pair_from_str",
+                "id_from_str_unresolved_pair_from_str",
+                "id_from_str_wildcard_pair_from_str",
+                "id_from_str_any_pair_from_str",
+                "id_from_str_invalid_pair"
             ]
         }, {
             "id": "System",

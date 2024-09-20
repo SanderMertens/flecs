@@ -4310,7 +4310,7 @@ FLECS_API
 const char* ecs_id_flag_str(
     ecs_id_t id_flags);
 
-/** Convert id to string.
+/** Convert (component) id to string.
  * This operation interprets the structure of an id and converts it to a string.
  *
  * @param world The world.
@@ -4322,7 +4322,7 @@ char* ecs_id_str(
     const ecs_world_t *world,
     ecs_id_t id);
 
-/** Write id string to buffer.
+/** Write (component) id string to buffer.
  * Same as ecs_id_str() but writes result to ecs_strbuf_t.
  *
  * @param world The world.
@@ -4334,6 +4334,18 @@ void ecs_id_str_buf(
     const ecs_world_t *world,
     ecs_id_t id,
     ecs_strbuf_t *buf);
+
+/** Convert string to a (component) id.
+ * This operation is the reverse of ecs_id_str(). The FLECS_SCRIPT addon
+ * is required for this operation to work.
+ *
+ * @param world The world.
+ * @param expr The string to convert to an id.
+ */
+FLECS_API
+ecs_id_t ecs_id_from_str(
+    const ecs_world_t *world,
+    const char *expr);
 
 /** @} */
 
