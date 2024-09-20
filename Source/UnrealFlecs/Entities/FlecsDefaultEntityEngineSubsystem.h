@@ -4,51 +4,36 @@
 
 #include "CoreMinimal.h"
 #include "FlecsDefaultEntitiesDeveloperSettings.h"
-#include "Subsystems/EngineSubsystem.h"
-#include "FlecsDefaultEntityEngineSubsystem.generated.h"
+#include "flecs.h"
 
-INLINE ECS_ENTITY_DECLARE(FlecsNotNetworkedTrait);
-
-UCLASS(BlueprintType)
-class UNREALFLECS_API UFlecsDefaultEntityEngineSubsystem : public UEngineSubsystem
+struct UNREALFLECS_API FFlecsDefaultEntityEngine final
 {
-	GENERATED_BODY()
-
-public:
-	UFlecsDefaultEntityEngineSubsystem();
+	static FFlecsDefaultEntityEngine& Get()
+	{
+		static FFlecsDefaultEntityEngine Instance;
+		return Instance;
+	}
 	
-	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
-
-	virtual void Deinitialize() override;
+public:
+	FFlecsDefaultEntityEngine();
 	
 	void RefreshDefaultEntities();
-
+	
+	flecs::entity_t AddDefaultEntity(const FFlecsDefaultMetaEntity& DefaultEntity);
+	
 	TMap<FString, flecs::entity_t> DefaultEntityOptions;
 	TArray<FFlecsDefaultMetaEntity> AddedDefaultEntities;
-
 	TArray<FFlecsDefaultMetaEntity> CodeAddedDefaultEntities;
-
-	flecs::entity_t AddDefaultEntity(const FFlecsDefaultMetaEntity& DefaultEntity);
-
+	
 	flecs::world DefaultEntityWorld;
 	flecs::entity TestEntity;
-	
-}; // class UFlecsDefaultEntityEngineSubsystem
 
-#if WITH_EDITOR
+private:
+	void Initialize();
+};
 
 #define DEFINE_DEFAULT_ENTITY_OPTION(EntityName) \
 	FFlecsDefaultMetaEntity EntityName##MetaEntity; \
 	EntityName##MetaEntity.EntityRecord.Name = TEXT(#EntityName); \
-	EntityName##MetaEntity.bIsOptionEntity = true; \
-	EntityName = GEngine->GetEngineSubsystem<UFlecsDefaultEntityEngineSubsystem>()->AddDefaultEntity(EntityName##MetaEntity)
+	EntityName = FFlecsDefaultEntityEngine::Get().AddDefaultEntity(EntityName##MetaEntity)
 
-#else // WITH_EDITOR
-
-#define DEFINE_DEFAULT_ENTITY_OPTION(EntityName) \
-	FFlecsDefaultMetaEntity EntityName##MetaEntity; \
-	EntityName##MetaEntity.EntityRecord.Name = #EntityName; \
-	EntityName##MetaEntity.bIsOptionEntity = true; \
-	EntityName = GEngine->GetEngineSubsystem<UFlecsDefaultEntityEngineSubsystem>()->AddDefaultEntity(EntityName##MetaEntity);
-
-#endif // WITH_EDITOR

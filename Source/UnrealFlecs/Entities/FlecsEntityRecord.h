@@ -92,6 +92,8 @@ struct UNREALFLECS_API FFlecsEntityRecord
 {
 	GENERATED_BODY()
 
+	FORCEINLINE FFlecsEntityRecord() = default;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Entity Record")
 	FString Name;
 

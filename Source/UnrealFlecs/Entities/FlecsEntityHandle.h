@@ -3,6 +3,8 @@
 // ReSharper disable CppExpressionWithoutSideEffects
 #pragma once
 
+#include <functional>
+
 #include "CoreMinimal.h"
 #include "flecs.h"
 #include "FlecsArchetype.h"
@@ -461,7 +463,7 @@ public:
 			return;
 		}
 		
-		ObtainTraitHolderEntity<TComponent>().template Add<TTrait>();
+		ObtainTraitHolderEntity<TComponent>().Add<TTrait>();
 	}
 
 	template <typename TComponent>
@@ -535,7 +537,7 @@ public:
 			return;
 		}
 		
-		ObtainTraitHolderEntity<TComponent>().template Remove<TTrait>();
+		ObtainTraitHolderEntity<TComponent>().Remove<TTrait>();
 	}
 
 	template <typename TComponent>
@@ -683,7 +685,7 @@ public:
 			return;
 		}
 		
-		ObtainTraitHolderEntity<TComponent>().template Set<TTrait>(InValue);
+		ObtainTraitHolderEntity<TComponent>().Set<TTrait>(InValue);
 	}
 
 	template <typename TComponent>
@@ -725,7 +727,7 @@ public:
 			return TTrait();
 		}
 		
-		return ObtainTraitHolderEntity<TComponent>().template Get<TTrait>();
+		return ObtainTraitHolderEntity<TComponent>().Get<TTrait>();
 	}
 
 	template <typename TComponent, typename TTrait>
@@ -747,7 +749,7 @@ public:
 			return nullptr;
 		}
 		
-		return ObtainTraitHolderEntity<TComponent>().template GetPtr<TTrait>();
+		return ObtainTraitHolderEntity<TComponent>().GetPtr<TTrait>();
 	}
 
 	template <typename TComponent>
@@ -803,7 +805,7 @@ public:
 	FORCEINLINE flecs::ref<TTrait> GetTraitFlecsRef() const
 	{
 		solid_checkf(Has<TComponent>(), "Entity does not have component %s", nameof(TComponent));
-		return ObtainTraitHolderEntity<TComponent>().template GetFlecsRef<TTrait>();
+		return ObtainTraitHolderEntity<TComponent>().GetFlecsRef<TTrait>();
 	}
 
 	template <typename TComponent, typename TTrait>
@@ -1176,15 +1178,13 @@ private:
 
 		FFlecsEntityHandle TraitHolder;
 
-		GetEntity().each<TComponent>([&](const FFlecsEntityHandle& InEntity)
+		GetEntity().each<TComponent>([&](flecs::iter& Iter, const FFlecsEntityHandle& InEntity)
 		{
 			if (InEntity.Has(flecs::Trait))
 			{
 				TraitHolder = InEntity;
-				return true;
+				Iter.fini();
 			}
-
-			return false;
 		});
 
 		if LIKELY_IF(TraitHolder.IsValid())

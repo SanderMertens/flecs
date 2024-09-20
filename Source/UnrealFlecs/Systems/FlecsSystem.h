@@ -19,17 +19,17 @@ public:
 	FFlecsSystem() = default;
 	
 	FORCEINLINE FFlecsSystem(const flecs::system& InSystem) : System(InSystem) {}
-
+	
 	template <typename ...TComponents>
 	FORCEINLINE FFlecsSystem(flecs::system_builder<TComponents...>& InBuilder)
 	{
 		System = InBuilder.build();
 	}
 
-	FORCEINLINE FFlecsSystem(const FFlecsEntityHandle& InEntity, const flecs::world& InWorld)
+	FORCEINLINE FFlecsSystem(const FFlecsEntityHandle& InEntity)
 	{
 		solid_checkf(InEntity.IsValid(), TEXT("Entity is invalid!"));
-		System = InWorld.system(InEntity.GetEntity());
+		System = InEntity->world().system(InEntity.GetEntity());
 	}
 
 	template <typename ...TComponents>
@@ -42,6 +42,35 @@ public:
 	FORCEINLINE NO_DISCARD static flecs::system_builder<TComponents...> CreateSystem(flecs::world& InWorld, const TCHAR* InName)
 	{
 		return InWorld.system<TComponents...>(StringCast<char>(InName).Get());
+	}
+	
+	FORCEINLINE FFlecsSystem& operator=(const flecs::system& InSystem)
+	{
+		System = InSystem;
+		return *this;
+	}
+
+	FORCEINLINE FFlecsSystem& operator=(const FFlecsEntityHandle& InEntity)
+	{
+		solid_checkf(InEntity.IsValid(), TEXT("Entity is invalid!"));
+		System = InEntity->world().system(InEntity.GetEntity());
+		return *this;
+	}
+
+	FORCEINLINE FFlecsSystem& operator=(const flecs::entity& InEntity)
+	{
+		System = InEntity.world().system(InEntity);
+		return *this;
+	}
+
+	FORCEINLINE NO_DISCARD bool operator==(const FFlecsSystem& Other) const
+	{
+		return System == Other.System;
+	}
+
+	FORCEINLINE NO_DISCARD bool operator!=(const FFlecsSystem& Other) const
+	{
+		return !(*this == Other);
 	}
 
 	FORCEINLINE void Enable()

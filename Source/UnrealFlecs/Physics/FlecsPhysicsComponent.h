@@ -12,6 +12,9 @@ struct UNREALFLECS_API FFlecsPhysicsComponent
 
 public:
 	FPhysicsActorHandle PhysicsActorHandle;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Physics")
+	FBodyInstance BodyInstance;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Physics")
 	uint8 bSimulatePhysics : 1 = true;

@@ -65,14 +65,7 @@ bool UFlecsEntityActorComponent::CanEditChange(const FProperty* InProperty) cons
 	{
 		if (InProperty->GetFName() == GET_MEMBER_NAME_CHECKED(UFlecsEntityActorComponent, EntityRecord))
 		{
-			if (EntityHandle.DisplayName.IsNone())
-			{
-				return true;
-			}
-			else
-			{
-				return false;
-			}
+			return EntityHandle.DisplayName.IsNone();
 		}
 	}
 	

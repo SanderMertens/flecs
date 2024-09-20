@@ -41,22 +41,19 @@ public:
 	FMessageLog("Flecs").Info(FText::FromString("Customizing Flecs Entity Handle"));
 
     for (const auto& [EntityName, EntityId] :
-        GEngine->GetEngineSubsystem<UFlecsDefaultEntityEngineSubsystem>()->DefaultEntityOptions)
+        FFlecsDefaultEntityEngine::Get().DefaultEntityOptions)
     {
         UN_LOGF(LogFlecsEditor, Verbose,
             "Adding entity %s to entity handle options.", *EntityName);
 
     	bool bIsAddedEntity = false;
 
-    	for (auto [EntityRecord, bIsOptionEntity]
-    		: GEngine->GetEngineSubsystem<UFlecsDefaultEntityEngineSubsystem>()->AddedDefaultEntities)
+    	for (auto [EntityRecord]
+    		: FFlecsDefaultEntityEngine::Get().AddedDefaultEntities)
     	{
     		if (EntityRecord.Name == EntityName)
 			{
-    			if (bIsOptionEntity)
-    			{
-    				Options.Add(FName(*EntityName));
-    			}
+    			Options.Add(FName(*EntityName));
     			
     			bIsAddedEntity = true;
 				break;
@@ -150,8 +147,7 @@ private:
 					}
 
 					FFlecsEntityHandle* EntityId = static_cast<FFlecsEntityHandle*>(RawData);
-					EntityId->SetEntity(GEngine->GetEngineSubsystem<UFlecsDefaultEntityEngineSubsystem>()
-						->DefaultEntityOptions[NewValue.ToString()]);
+					EntityId->SetEntity(FFlecsDefaultEntityEngine::Get().DefaultEntityOptions[NewValue.ToString()]);
 					EntityId->DisplayName = NewValue;
 					return true;
 				});

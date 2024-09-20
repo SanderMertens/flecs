@@ -16,20 +16,9 @@ struct FFlecsDefaultMetaEntity
 	UPROPERTY(EditAnywhere, Category = "Flecs | Default Entities")
 	FFlecsEntityRecord EntityRecord;
 
-	#if WITH_EDITORONLY_DATA
-	
-	UPROPERTY(EditAnywhere, Category = "Flecs | Default Entities")
-	bool bIsOptionEntity = false;
-	
-	#endif // WITH_EDITORONLY_DATA
-
 	FORCEINLINE NO_DISCARD bool operator==(const FFlecsDefaultMetaEntity& Other) const
 	{
-		return EntityRecord == Other.EntityRecord
-		#if WITH_EDITORONLY_DATA
-		&& bIsOptionEntity == Other.bIsOptionEntity
-		#endif // WITH_EDITORONLY_DATA
-		;
+		return EntityRecord == Other.EntityRecord;
 	}
 
 	FORCEINLINE NO_DISCARD bool operator!=(const FFlecsDefaultMetaEntity& Other) const
@@ -37,6 +26,12 @@ struct FFlecsDefaultMetaEntity
 		return !(*this == Other);
 	}
 
+	FFlecsDefaultMetaEntity() = default;
+	FFlecsDefaultMetaEntity(const FFlecsEntityRecord& EntityRecord)
+		: EntityRecord(EntityRecord)
+	{
+	}
+	
 }; // struct FFlecsEntityRecord
 
 UCLASS(BlueprintType, Config = Flecs, DefaultConfig, Category = "Flecs",

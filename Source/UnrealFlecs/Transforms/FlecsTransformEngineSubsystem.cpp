@@ -15,6 +15,5 @@ void UFlecsTransformEngineSubsystem::Initialize(FSubsystemCollectionBase& Collec
 	Super::Initialize(Collection);
 
 	DEFINE_DEFAULT_ENTITY_OPTION(FlecsLocalTrait);
-	DEFINE_DEFAULT_ENTITY_OPTION(FlecsRelativeTrait);
 	DEFINE_DEFAULT_ENTITY_OPTION(FlecsGlobalTrait);
 }

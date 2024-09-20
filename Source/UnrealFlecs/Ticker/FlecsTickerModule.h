@@ -4,12 +4,13 @@
 
 #include "CoreMinimal.h"
 #include "Modules/FlecsModuleInterface.h"
+#include "Modules/FlecsModuleProgressInterface.h"
 #include "Systems/FlecsSystem.h"
 #include "UObject/Object.h"
 #include "FlecsTickerModule.generated.h"
 
 UCLASS(Blueprintable, BlueprintType, EditInlineNew)
-class UNREALFLECS_API UFlecsTickerModule : public UObject, public IFlecsModuleInterface
+class UNREALFLECS_API UFlecsTickerModule final : public UObject, public IFlecsModuleInterface, public IFlecsModuleProgressInterface
 {
 	GENERATED_BODY()
 
@@ -18,6 +19,8 @@ public:
 
 	virtual void InitializeModule(UFlecsWorld* InWorld, const FFlecsEntityHandle& InModuleEntity) override;
 	virtual void DeinitializeModule(UFlecsWorld* InWorld) override;
+
+	FORCEINLINE virtual void ProgressModule(double InDeltaTime) override;
 
 	FORCEINLINE virtual FString GetModuleName_Implementation() const override { return TEXT("Flecs Ticker Module"); }
 
@@ -39,5 +42,14 @@ public:
 
 	UPROPERTY()
 	FFlecsSystem TickerSystem;
+
+	UPROPERTY()
+	FFlecsEntityHandle MainPipeline;
+
+	UPROPERTY()
+	FFlecsEntityHandle TickerPipeline;
+
+	UPROPERTY()
+	double TickerAccumulator = 0.0;
 
 }; // class UFlecsTickerModule

@@ -17,6 +17,9 @@ public:
 	virtual void InitializeModule(UFlecsWorld* InWorld, const FFlecsEntityHandle& InModuleEntity) override;
 	virtual void DeinitializeModule(UFlecsWorld* InWorld) override;
 
+	FORCEINLINE void ResimulationHandlers();
+	FORCEINLINE void PhysicsComponentObservers();
+
 	FORCEINLINE virtual FString GetModuleName_Implementation() const override { return TEXT("Flecs Physics Module"); }
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Physics")

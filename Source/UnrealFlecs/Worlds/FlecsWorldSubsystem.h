@@ -44,7 +44,8 @@ public:
 	virtual ETickableTickType GetTickableTickType() const override
 	{
 		return GetDefault<UFlecsDeveloperSettings>()
-			&& GetDefault<UFlecsDeveloperSettings>()->bEnableFlecs ? ETickableTickType::Always : ETickableTickType::Never;
+			&& GetDefault<UFlecsDeveloperSettings>()->bEnableFlecs
+			? ETickableTickType::Always : ETickableTickType::Never;
 	}
 	
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override
@@ -89,17 +90,17 @@ public:
 		Super::Deinitialize();
 	}
 
-	virtual TStatId GetStatId() const override
+	FORCEINLINE virtual TStatId GetStatId() const override
 	{
 		RETURN_QUICK_DECLARE_CYCLE_STAT(UFlecsWorldSubsystem, STATGROUP_Tickables);
 	}
 
 	virtual void Tick(float DeltaTime) override
 	{
-		for (const UFlecsWorld* World : AutoTickableWorlds)
+		for (UFlecsWorld* World : AutoTickableWorlds)
 		{
 			solid_checkf(IsValid(World), TEXT("World must be valid"));
-			World->Progress();
+			World->Progress(DeltaTime);
 		}
 	}
 	
@@ -112,10 +113,10 @@ public:
 		flecs::world NewWorld = flecs::world();
 
 		const bool bIsDefaultWorld = Worlds.Num() == 0;
-
-		TArray<FFlecsDefaultMetaEntity> DefaultEntities = GetDefault<UFlecsDefaultEntityEngineSubsystem>()->AddedDefaultEntities;
+		
+		TArray<FFlecsDefaultMetaEntity> DefaultEntities = FFlecsDefaultEntityEngine::Get().AddedDefaultEntities;
 		TMap<FString, flecs::entity_t> DefaultEntityIds
-			= GetDefault<UFlecsDefaultEntityEngineSubsystem>()->DefaultEntityOptions;
+			= FFlecsDefaultEntityEngine::Get().DefaultEntityOptions;
 
 		UFlecsWorld* NewFlecsWorld = NewObject<UFlecsWorld>(this);
 		NewFlecsWorld->SetWorld(std::move(NewWorld));
@@ -126,8 +127,21 @@ public:
 		{
 			FString EntityName = DefaultEntities[Index].EntityRecord.Name;
 			const flecs::entity_t EntityId = DefaultEntityIds[EntityName];
-			
+
+			#if WITH_EDITOR
+			FFlecsEntityHandle NewEntity =
+			#endif // WITH_EDITOR
 			NewFlecsWorld->CreateEntityWithRecordWithId(DefaultEntities[Index].EntityRecord, EntityId);
+
+			#if WITH_EDITOR
+
+			UN_LOGF(LogFlecsCore, Log,
+				"Created default entity %s with id %d", *EntityName, EntityId);
+			
+			UN_LOGF(LogFlecsCore, Log,
+				"Entity %s with id %d", *NewEntity.GetName(), NewEntity.GetId());
+
+			#endif // WITH_EDITOR
 		}
 
 		NewFlecsWorld->SetWorldName(Name);
@@ -145,7 +159,7 @@ public:
 
 		NewFlecsWorld->SetThreads(Settings.DefaultWorkerThreads);
 
-		NewFlecsWorld->RegisterScriptStruct(FGameplayTag::StaticStruct());
+		NewFlecsWorld->WorldBeginPlay();
 
 		RegisterAllGameplayTags(NewFlecsWorld);
 
@@ -153,8 +167,6 @@ public:
 		{
 			AutoTickableWorlds.Add(NewFlecsWorld);
 		}
-		
-		NewFlecsWorld->WorldBeginPlay();
 
 		for (UObject* Module : Settings.Modules)
 		{

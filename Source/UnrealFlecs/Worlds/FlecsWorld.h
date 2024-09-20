@@ -17,6 +17,7 @@
 #include "Entities/FlecsId.h"
 #include "Logs/FlecsCategories.h"
 #include "Modules/FlecsModuleInterface.h"
+#include "Modules/FlecsModuleProgressInterface.h"
 #include "Prefabs/FlecsPrefabAsset.h"
 #include "Prefabs/FlecsPrefabComponent.h"
 #include "Systems/FlecsSystem.h"
@@ -25,6 +26,7 @@
 DECLARE_STATS_GROUP(TEXT("FlecsWorld"), STATGROUP_FlecsWorld, STATCAT_Advanced);
 
 DECLARE_CYCLE_STAT(TEXT("FlecsWorld::Progress"), STAT_FlecsWorldProgress, STATGROUP_FlecsWorld);
+DECLARE_CYCLE_STAT(TEXT("FlecsWorld::Progress::ProgressModule"), STAT_FlecsWorldProgressModule, STATGROUP_FlecsWorld);
 
 UCLASS(BlueprintType)
 class UNREALFLECS_API UFlecsWorld final : public UObject
@@ -40,6 +42,151 @@ public:
 		InitializeSystems();
 		InitializeDefaultComponents();
 		InitializeAssetRegistry();
+		InitializeOSAPI();
+	}
+
+	FORCEINLINE void InitializeOSAPI() const
+	{
+		struct FFlecsThread
+        {
+            FRunnable* Runnable;
+            FRunnableThread* Thread;
+        };
+
+        // Runnable implementation for Flecs tasks
+        class FFlecsRunnable : public FRunnable
+        {
+        public:
+            FFlecsRunnable(ecs_os_thread_callback_t InCallback, void* InParam)
+                : Callback(InCallback), Param(InParam)
+            {
+            }
+
+            virtual uint32 Run() override
+            {
+                Callback(Param);
+                return 0;
+            }
+
+        private:
+            ecs_os_thread_callback_t Callback;
+            void* Param;
+        };
+
+        ecs_os_set_api_defaults();
+
+        // Thread functions
+        ecs_os_api_t os_api = ecs_os_api;
+
+        os_api.thread_new_ = [](ecs_os_thread_callback_t Callback, void* Param) -> ecs_os_thread_t
+        {
+            // Allocate memory without zero-initialization for speed
+            FFlecsThread* FlecsThread = static_cast<FFlecsThread*>(FMemory::Malloc(sizeof(FFlecsThread)));
+
+            // Directly use FRunnable and FRunnableThread for minimal overhead
+            FlecsThread->Runnable = new FFlecsRunnable(Callback, Param);
+            FlecsThread->Thread = FRunnableThread::Create(FlecsThread->Runnable,
+            	TEXT("FlecsThread"), 0, TPri_Normal);
+
+            return reinterpret_cast<ecs_os_thread_t>(FlecsThread);
+        };
+
+        os_api.thread_join_ = [](ecs_os_thread_t Thread) -> void*
+        {
+	        FFlecsThread* FlecsThread = reinterpret_cast<FFlecsThread*>(Thread);
+            if (FlecsThread && FlecsThread->Thread)
+            {
+                FlecsThread->Thread->WaitForCompletion();
+                delete FlecsThread->Runnable;
+                delete FlecsThread->Thread;
+                FMemory::Free(FlecsThread);
+            }
+            return nullptr;
+        };
+		
+        struct FFlecsSpinLock
+        {
+            volatile int32 LockFlag = 0;
+        };
+
+        os_api.mutex_new_ = []() -> ecs_os_mutex_t
+        {
+	        FFlecsSpinLock* SpinLock = static_cast<FFlecsSpinLock*>(FMemory::Malloc(sizeof(FFlecsSpinLock)));
+            // Avoid zero-initialization for speed
+            SpinLock->LockFlag = 0;
+            return reinterpret_cast<ecs_os_mutex_t>(SpinLock);
+        };
+
+        os_api.mutex_free_ = [](ecs_os_mutex_t Mutex)
+        {
+	        FFlecsSpinLock* SpinLock = reinterpret_cast<FFlecsSpinLock*>(Mutex);
+            FMemory::Free(SpinLock);
+        };
+
+        os_api.mutex_lock_ = [](ecs_os_mutex_t Mutex)
+        {
+	        FFlecsSpinLock* SpinLock = reinterpret_cast<FFlecsSpinLock*>(Mutex);
+            while (FPlatformAtomics::InterlockedCompareExchange(&SpinLock->LockFlag, 1, 0) != 0)
+            {
+                // Busy wait (spin)
+            }
+        };
+
+        os_api.mutex_unlock_ = [](ecs_os_mutex_t Mutex)
+        {
+	        FFlecsSpinLock* SpinLock = reinterpret_cast<FFlecsSpinLock*>(Mutex);
+            FPlatformAtomics::InterlockedExchange(&SpinLock->LockFlag, 0);
+        };
+
+        // Sleep function using minimal overhead
+        os_api.sleep_ = [](int32_t Seconds, int32_t Nanoseconds)
+        {
+            const double TotalSeconds = Seconds + Nanoseconds / 1e9;
+            FPlatformProcess::SleepNoStats(static_cast<float>(TotalSeconds));
+        };
+
+        // High-resolution timer
+        os_api.now_ = []() -> uint64_t
+        {
+            return FPlatformTime::Cycles64();
+        };
+
+        os_api.get_time_ = [](ecs_time_t* TimeOut)
+        {
+            const double Seconds = FPlatformTime::Seconds();
+            TimeOut->sec = static_cast<int32_t>(Seconds);
+            TimeOut->nanosec = static_cast<int32_t>((Seconds - TimeOut->sec) * 1e9);
+        };
+
+        os_api.abort_ = []()
+        {
+            UN_LOG(LogFlecsCore, Fatal, "Flecs: abort");
+        };
+
+        os_api.log_ = [](int32_t Level, const char* File, int32_t Line, const char* Message)
+        {
+            // Minimal logging to reduce overhead
+#if UNLOG_ENABLED
+            switch (Level)
+            {
+                case -4: // Fatal
+                    UN_LOGF(LogFlecsCore, Fatal, "Flecs: %s",
+                    	StringCast<TCHAR>(Message).Get());
+                    break;
+                case -3: // Error
+                    UN_LOGF(LogFlecsCore, Error, "Flecs: %s", StringCast<TCHAR>(Message).Get());
+                    break;
+                case -2: // Warning
+                    UN_LOGF(LogFlecsCore, Warning, "Flecs: %s", StringCast<TCHAR>(Message).Get());
+                    break;
+                default: // Info and Debug
+                    UN_LOGF(LogFlecsCore, Log, "Flecs: %s", StringCast<TCHAR>(Message).Get());
+                    break;
+            }
+#endif // UNLOG_ENABLED
+        };
+		
+        ecs_os_set_api(&os_api);
 	}
 
 	FORCEINLINE void InitializeDefaultComponents() const
@@ -49,7 +196,7 @@ public:
 			.opaque(flecs::String);
 	}
 
-	FORCEINLINE void InitializeSystems() const
+	FORCEINLINE void InitializeSystems()
 	{
 		static constexpr int32 UOBJECT_VALID_CHECK_FRAME_RATE = 60;
 
@@ -84,7 +231,7 @@ public:
 
 					#if WITH_EDITOR
 
-					this->RegisterMemberProperties(InEventInfo.scriptStruct, EntityHandle);
+					RegisterMemberProperties(InEventInfo.scriptStruct, EntityHandle);
 					
 					#endif // WITH_EDITOR
 
@@ -95,6 +242,7 @@ public:
 			.cached()
 			.kind(flecs::PostFrame)
 			.rate(UOBJECT_VALID_CHECK_FRAME_RATE)
+			.read<FFlecsUObjectComponent>()
 			.multi_threaded()
 			.each([](flecs::entity InEntity, const FFlecsUObjectComponent& InComponent)
 			{
@@ -103,11 +251,51 @@ public:
 					InEntity.destruct();
 				}
 			});
+
+		CreateObserver<FFlecsModuleComponent, const FFlecsUObjectComponent>(TEXT("AddModuleComponentObserver"))
+			.cached()
+			.event(flecs::OnAdd)
+			.yield_existing()
+			.each([&](flecs::entity InEntity, FFlecsModuleComponent& InComponent,
+				const FFlecsUObjectComponent& InUObjectComponent)
+			{
+				const FFlecsEntityHandle EntityHandle = InEntity;
+				
+				if (InUObjectComponent.GetObjectChecked()->Implements<UFlecsModuleProgressInterface>())
+				{
+					ProgressModules.Add(InUObjectComponent.GetObjectChecked());
+				}
+			});
+
+		CreateObserver(TEXT("RemoveModuleComponentObserver"))
+			.cached()
+			.with<FFlecsModuleComponent>().event(flecs::OnRemove)
+			.each([&](flecs::iter& Iter, size_t IterIndex)
+			{
+				for (uint32 Index = ProgressModules.Num(); Index > 0; --Index)
+				{
+					const UObject* Module = ProgressModules[Index - 1].Get();
+					
+					if UNLIKELY_IF(Module == nullptr)
+					{
+						ProgressModules.RemoveAt(Index - 1);
+					}
+					
+					if (Module
+						== Iter.entity(IterIndex)
+							.get<FFlecsUObjectComponent>()->GetObjectChecked())
+					{
+						ProgressModules.RemoveAt(Index - 1);
+						break;
+					}
+				}
+			});
 	}
 
 	FORCEINLINE void InitializeAssetRegistry()
 	{
-		FAssetRegistryModule& AssetRegistryModule = FModuleManager::LoadModuleChecked<FAssetRegistryModule>(TEXT("AssetRegistry"));
+		const FAssetRegistryModule& AssetRegistryModule
+			= FModuleManager::LoadModuleChecked<FAssetRegistryModule>(TEXT("AssetRegistry"));
 		IAssetRegistry& AssetRegistry = AssetRegistryModule.Get();
 
 		TArray<FAssetData> AssetData;
@@ -528,9 +716,22 @@ public:
 	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
-	FORCEINLINE bool Progress(const double DeltaTime = 0.0) const
+	FORCEINLINE bool Progress(const double DeltaTime = 0.0)
 	{
 		SCOPE_CYCLE_COUNTER(STAT_FlecsWorldProgress);
+
+		{
+			SCOPE_CYCLE_COUNTER(STAT_FlecsWorldProgressModule);
+			
+			for (TWeakObjectPtr<UObject> Module : ProgressModules)
+			{
+				solid_checkf(Module.IsValid(), TEXT("Module is nullptr"));
+			
+				IFlecsModuleProgressInterface* ModuleProgress = Cast<IFlecsModuleProgressInterface>(Module.Get());
+				ModuleProgress->ProgressModule(DeltaTime);
+			}
+		}
+		
 		return World.progress(DeltaTime);
 	}
 
@@ -920,6 +1121,12 @@ public:
 		return World.pipeline<TComponents...>();
 	}
 
+	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs")
+	FORCEINLINE void RunPipeline(const FFlecsEntityHandle& InPipeline, const double DeltaTime = 0.0) const
+	{
+		World.run_pipeline(InPipeline.GetEntity(), DeltaTime);
+	}
+
 	FORCEINLINE void RandomizeTimers() const
 	{
 		World.randomize_timers();
@@ -1041,5 +1248,8 @@ public:
 	}
 	
 	flecs::world World;
+
+	UPROPERTY()
+	TArray<TWeakObjectPtr<UObject>> ProgressModules;
 	
 }; // class UFlecsWorld

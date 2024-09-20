@@ -13,14 +13,14 @@ struct UNREALFLECS_API FFlecsModuleComponent
 
 	FORCEINLINE FFlecsModuleComponent() = default;
 
-	FORCEINLINE FFlecsModuleComponent(const TSubclassOf<UObject>& InModuleClass)
+	FORCEINLINE FFlecsModuleComponent(UClass* InModuleClass)
 		: ModuleClass(InModuleClass)
 	{
 	}
 
 	FORCEINLINE NO_DISCARD TSubclassOf<UObject> GetModuleClass() const { return ModuleClass; }
 
-	FORCEINLINE FFlecsModuleComponent& operator=(const TSubclassOf<UObject>& InModuleClass)
+	FORCEINLINE FFlecsModuleComponent& operator=(UClass* InModuleClass)
 	{
 		ModuleClass = InModuleClass;
 		return *this;
@@ -42,7 +42,6 @@ struct UNREALFLECS_API FFlecsModuleComponent
 		return !(*this == InComponent);
 	}
 
-	UPROPERTY()
-	TSubclassOf<UObject> ModuleClass;
+	UClass* ModuleClass;
 
 }; // struct FFlecsModuleComponent

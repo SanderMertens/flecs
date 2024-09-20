@@ -24,6 +24,7 @@ struct UNREALFLECS_API FFlecsTransformComponent
 	}
 
 	FORCEINLINE NO_DISCARD FTransform GetTransform() const { return Transform; }
+	FORCEINLINE operator FTransform() const { return Transform; }
 
 	FORCEINLINE FFlecsTransformComponent& operator=(const FTransform& InTransform)
 	{

@@ -58,6 +58,11 @@ public:
 		return World.Get();
 	}
 
+	FORCEINLINE NO_DISCARD bool IsWorldValid() const
+	{
+		return World.IsValid();
+	}
+
 	FORCEINLINE NO_DISCARD FFlecsEntityHandle GetModuleEntity() const
 	{
 		return ModuleEntity;
