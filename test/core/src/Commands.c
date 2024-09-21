@@ -4149,3 +4149,44 @@ void Commands_defer_emplace_after_remove(void) {
 
     ecs_fini(world);
 }
+
+static
+void RemoveVelocity(ecs_iter_t *it) {
+    test_int(it->count, 1);
+    ecs_remove(it->world, it->entities[0], Velocity);
+}
+
+void Commands_batched_w_table_change_in_observer(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT_DEFINE(world, Position);
+    ECS_COMPONENT_DEFINE(world, Velocity);
+    ECS_TAG(world, Foo);
+
+    ecs_observer(world, {
+        .query.terms = {{ ecs_id(Position) }},
+        .events = { EcsOnRemove },
+        .callback = RemoveVelocity
+    });
+
+    ecs_observer(world, {
+        .query.terms = {{ Foo }},
+        .events = { EcsOnAdd },
+        .callback = DummyObserver
+    });
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_add(world, e1, Position);
+    ecs_add(world, e1, Velocity);
+
+    ecs_defer_begin(world);
+    ecs_remove(world, e1, Position);
+    ecs_add(world, e1, Foo);
+    ecs_defer_end(world);
+
+    test_assert(ecs_has(world, e1, Foo));
+    test_assert(!ecs_has(world, e1, Position));
+    test_assert(!ecs_has(world, e1, Velocity));
+
+    ecs_fini(world);
+}
