@@ -760,6 +760,9 @@ void Plan_cached_isa_tgt(void);
 void Plan_cached_isa_tgt_w_self_second(void);
 void Plan_cached_isa_tgt_no_expr(void);
 void Plan_cached_isa_tgt_w_self_second_no_expr(void);
+void Plan_cached_w_not_and_uncacheable(void);
+void Plan_cached_w_optional_and_uncacheable(void);
+void Plan_cached_w_not_optional_and_uncacheable(void);
 
 // Testsuite 'Variables'
 void Variables_setup(void);
@@ -5070,6 +5073,18 @@ bake_test_case Plan_testcases[] = {
     {
         "cached_isa_tgt_w_self_second_no_expr",
         Plan_cached_isa_tgt_w_self_second_no_expr
+    },
+    {
+        "cached_w_not_and_uncacheable",
+        Plan_cached_w_not_and_uncacheable
+    },
+    {
+        "cached_w_optional_and_uncacheable",
+        Plan_cached_w_optional_and_uncacheable
+    },
+    {
+        "cached_w_not_optional_and_uncacheable",
+        Plan_cached_w_not_optional_and_uncacheable
     }
 };
 
@@ -10360,7 +10375,7 @@ static bake_test_suite suites[] = {
         "Plan",
         NULL,
         NULL,
-        76,
+        79,
         Plan_testcases
     },
     {

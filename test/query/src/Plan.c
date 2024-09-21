@@ -2586,3 +2586,106 @@ void Plan_cached_isa_tgt_w_self_second_no_expr(void) {
 
     ecs_fini(world);
 }
+
+void Plan_cached_w_not_and_uncacheable(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tgt);
+    ECS_TAG(world, Foo);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "(IsA, Tgt), !Foo",
+        .cache_kind = EcsQueryCacheAuto
+    });
+
+    test_assert(q != NULL);
+
+    ecs_log_enable_colors(false);
+
+    const char *expect = 
+    HEAD " 0. [-1,  1]  setids      "
+    LINE " 1. [ 0,  2]  trav        $[this]           (IsA, Tgt)"
+    LINE " 2. [ 1,  4]  not         "
+    LINE " 3. [ 2,  4]   and        $[this]           (Foo)"
+    LINE " 4. [ 2,  5]  end         $[this]           (Foo)"
+    LINE " 5. [ 4,  6]  yield       "
+    LINE "";
+    char *plan = ecs_query_plan(q);
+
+    test_str(expect, plan);
+    ecs_os_free(plan);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Plan_cached_w_optional_and_uncacheable(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tgt);
+    ECS_TAG(world, Foo);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "(IsA, Tgt), ?Foo",
+        .cache_kind = EcsQueryCacheAuto
+    });
+
+    test_assert(q != NULL);
+
+    ecs_log_enable_colors(false);
+
+    const char *expect = 
+    HEAD " 0. [-1,  1]  setids      "
+    LINE " 1. [ 0,  2]  trav        $[this]           (IsA, Tgt)"
+    LINE " 2. [ 1,  4]  option      "
+    LINE " 3. [ 2,  4]   and        $[this]           (Foo)"
+    LINE " 4. [ 2,  5]  end         $[this]           (Foo)"
+    LINE " 5. [ 4,  6]  yield       "
+    LINE "";
+    char *plan = ecs_query_plan(q);
+
+    test_str(expect, plan);
+    ecs_os_free(plan);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Plan_cached_w_not_optional_and_uncacheable(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tgt);
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "(IsA, Tgt), !Foo, ?Bar",
+        .cache_kind = EcsQueryCacheAuto
+    });
+
+    test_assert(q != NULL);
+
+    ecs_log_enable_colors(false);
+
+    const char *expect = 
+    HEAD " 0. [-1,  1]  setids      "
+    LINE " 1. [ 0,  2]  trav        $[this]           (IsA, Tgt)"
+    LINE " 2. [ 1,  4]  not         "
+    LINE " 3. [ 2,  4]   and        $[this]           (Foo)"
+    LINE " 4. [ 2,  5]  end         $[this]           (Foo)"
+    LINE " 5. [ 4,  7]  option      "
+    LINE " 6. [ 5,  7]   and        $[this]           (Bar)"
+    LINE " 7. [ 5,  8]  end         $[this]           (Bar)"
+    LINE " 8. [ 7,  9]  yield       "
+    LINE "";
+    char *plan = ecs_query_plan(q);
+
+    test_str(expect, plan);
+    ecs_os_free(plan);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
