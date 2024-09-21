@@ -10006,13 +10006,13 @@ void flecs_cmd_batch_for_entity(
         } while ((cur = next_for_entity));
     }
 
-    if (added.count) {
+    if (added.count && r->table) {
         ecs_table_diff_t add_diff = ECS_TABLE_DIFF_INIT;
         add_diff.added = added;
         add_diff.added_flags = diff->added_flags;
 
         flecs_defer_begin(world, world->stages[0]);
-        flecs_notify_on_add(world, table, start_table, 
+        flecs_notify_on_add(world, r->table, start_table,
             ECS_RECORD_TO_ROW(r->row), 1, &add_diff, 0, set_mask, true, false);
         flecs_defer_end(world, world->stages[0]);
         if (r->row & EcsEntityIsTraversable) {

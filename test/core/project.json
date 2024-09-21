@@ -2172,7 +2172,8 @@
                 "add_isa_set_w_override_batched",
                 "add_set_isa_w_override_batched",
                 "add_batched_set_with",
-                "defer_emplace_after_remove"
+                "defer_emplace_after_remove",
+                "batched_w_table_change_in_observer"
             ]
         }, {
             "id": "SingleThreadStaging",

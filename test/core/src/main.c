@@ -2092,6 +2092,7 @@ void Commands_add_isa_set_w_override_batched(void);
 void Commands_add_set_isa_w_override_batched(void);
 void Commands_add_batched_set_with(void);
 void Commands_defer_emplace_after_remove(void);
+void Commands_batched_w_table_change_in_observer(void);
 
 // Testsuite 'SingleThreadStaging'
 void SingleThreadStaging_setup(void);
@@ -10349,6 +10350,10 @@ bake_test_case Commands_testcases[] = {
     {
         "defer_emplace_after_remove",
         Commands_defer_emplace_after_remove
+    },
+    {
+        "batched_w_table_change_in_observer",
+        Commands_batched_w_table_change_in_observer
     }
 };
 
@@ -11205,7 +11210,7 @@ static bake_test_suite suites[] = {
         "Commands",
         NULL,
         NULL,
-        139,
+        140,
         Commands_testcases
     },
     {
