@@ -775,7 +775,11 @@
                 "0_src_w_union",
                 "0_src_w_sparse_and_component",
                 "0_src_w_toggle_and_component",
-                "0_src_w_union_and_component"
+                "0_src_w_union_and_component",
+                "cached_isa_tgt",
+                "cached_isa_tgt_w_self_second",
+                "cached_isa_tgt_no_expr",
+                "cached_isa_tgt_w_self_second_no_expr"
             ]
         }, {
             "id": "Variables",

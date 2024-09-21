@@ -2474,3 +2474,115 @@ void Plan_0_src_w_union_and_component(void) {
 
     ecs_fini(world);
 }
+
+void Plan_cached_isa_tgt(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tgt);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "(IsA, Tgt)",
+        .cache_kind = EcsQueryCacheAuto
+    });
+
+    test_assert(q != NULL);
+
+    ecs_log_enable_colors(false);
+
+    const char *expect = 
+    HEAD " 0. [-1,  1]  trav        $[this]           (IsA, Tgt)"
+    LINE " 1. [ 0,  2]  yield       "
+    LINE "";
+    char *plan = ecs_query_plan(q);
+
+    test_str(expect, plan);
+    ecs_os_free(plan);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Plan_cached_isa_tgt_w_self_second(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tgt);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "(IsA, Tgt|self)",
+        .cache_kind = EcsQueryCacheAuto
+    });
+
+    test_assert(q != NULL);
+
+    ecs_log_enable_colors(false);
+
+    const char *expect = 
+    HEAD " 0. [-1,  1]  xcache      "
+    LINE " 1. [ 0,  2]  yield       "
+    LINE "";
+    char *plan = ecs_query_plan(q);
+
+    test_str(expect, plan);
+    ecs_os_free(plan);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Plan_cached_isa_tgt_no_expr(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tgt);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ ecs_pair(EcsIsA, Tgt) }},
+        .cache_kind = EcsQueryCacheAuto
+    });
+
+    test_assert(q != NULL);
+
+    ecs_log_enable_colors(false);
+
+    const char *expect = 
+    HEAD " 0. [-1,  1]  trav        $[this]           (IsA, Tgt)"
+    LINE " 1. [ 0,  2]  yield       "
+    LINE "";
+    char *plan = ecs_query_plan(q);
+
+    test_str(expect, plan);
+    ecs_os_free(plan);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Plan_cached_isa_tgt_w_self_second_no_expr(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tgt);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ ecs_pair(EcsIsA, Tgt), .second.id = EcsSelf }},
+        .cache_kind = EcsQueryCacheAuto
+    });
+
+    test_assert(q != NULL);
+
+    ecs_log_enable_colors(false);
+
+    const char *expect = 
+    HEAD " 0. [-1,  1]  xcache      "
+    LINE " 1. [ 0,  2]  yield       "
+    LINE "";
+    char *plan = ecs_query_plan(q);
+
+    test_str(expect, plan);
+    ecs_os_free(plan);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}

@@ -756,6 +756,10 @@ void Plan_0_src_w_union(void);
 void Plan_0_src_w_sparse_and_component(void);
 void Plan_0_src_w_toggle_and_component(void);
 void Plan_0_src_w_union_and_component(void);
+void Plan_cached_isa_tgt(void);
+void Plan_cached_isa_tgt_w_self_second(void);
+void Plan_cached_isa_tgt_no_expr(void);
+void Plan_cached_isa_tgt_w_self_second_no_expr(void);
 
 // Testsuite 'Variables'
 void Variables_setup(void);
@@ -5050,6 +5054,22 @@ bake_test_case Plan_testcases[] = {
     {
         "0_src_w_union_and_component",
         Plan_0_src_w_union_and_component
+    },
+    {
+        "cached_isa_tgt",
+        Plan_cached_isa_tgt
+    },
+    {
+        "cached_isa_tgt_w_self_second",
+        Plan_cached_isa_tgt_w_self_second
+    },
+    {
+        "cached_isa_tgt_no_expr",
+        Plan_cached_isa_tgt_no_expr
+    },
+    {
+        "cached_isa_tgt_w_self_second_no_expr",
+        Plan_cached_isa_tgt_w_self_second_no_expr
     }
 };
 
@@ -10340,7 +10360,7 @@ static bake_test_suite suites[] = {
         "Plan",
         NULL,
         NULL,
-        72,
+        76,
         Plan_testcases
     },
     {
