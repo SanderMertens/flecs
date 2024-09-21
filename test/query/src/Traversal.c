@@ -9946,6 +9946,8 @@ void Traversal_this_up_childof_isa_childof(void) {
         test_bool(false, ecs_query_next(&it));
     }
 
+    ecs_query_fini(q);
+
     ecs_fini(world);
 }
 
@@ -9978,6 +9980,8 @@ void Traversal_this_up_isa_childof(void) {
         test_uint(e0, ecs_field_src(&it, 0));
         test_bool(false, ecs_query_next(&it));
     }
+
+    ecs_query_fini(q);
 
     ecs_fini(world);
 }
@@ -10015,6 +10019,8 @@ void Traversal_this_up_isa_isa_childof(void) {
         test_bool(false, ecs_query_next(&it));
     }
 
+    ecs_query_fini(q);
+
     ecs_fini(world);
 }
 
@@ -10050,6 +10056,8 @@ void Traversal_this_up_isa_childof_isa(void) {
         test_uint(e0, ecs_field_src(&it, 0));
         test_bool(false, ecs_query_next(&it));
     }
+
+    ecs_query_fini(q);
 
     ecs_fini(world);
 }
@@ -10089,6 +10097,8 @@ void Traversal_this_up_isa_childof_isa_childof(void) {
         test_uint(e0, ecs_field_src(&it, 0));
         test_bool(false, ecs_query_next(&it));
     }
+
+    ecs_query_fini(q);
 
     ecs_fini(world);
 }
@@ -10131,6 +10141,8 @@ void Traversal_this_self_up_childof_isa_childof(void) {
         test_bool(false, ecs_query_next(&it));
     }
 
+    ecs_query_fini(q);
+
     ecs_fini(world);
 }
 
@@ -10168,6 +10180,8 @@ void Traversal_this_self_up_isa_childof(void) {
         test_uint(e0, ecs_field_src(&it, 0));
         test_bool(false, ecs_query_next(&it));
     }
+
+    ecs_query_fini(q);
 
     ecs_fini(world);
 }
@@ -10210,6 +10224,8 @@ void Traversal_this_self_up_isa_isa_childof(void) {
         test_bool(false, ecs_query_next(&it));
     }
 
+    ecs_query_fini(q);
+
     ecs_fini(world);
 }
 
@@ -10250,6 +10266,8 @@ void Traversal_this_self_up_isa_childof_isa(void) {
         test_uint(e0, ecs_field_src(&it, 0));
         test_bool(false, ecs_query_next(&it));
     }
+
+    ecs_query_fini(q);
 
     ecs_fini(world);
 }
@@ -10295,6 +10313,8 @@ void Traversal_this_self_up_isa_childof_isa_childof(void) {
         test_bool(false, ecs_query_next(&it));
     }
 
+    ecs_query_fini(q);
+
     ecs_fini(world);
 }
 
@@ -10328,6 +10348,8 @@ void Traversal_this_written_up_childof_isa_childof(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(false, ecs_query_next(&it));
     }
+
+    ecs_query_fini(q);
 
     ecs_fini(world);
 }
@@ -10364,6 +10386,8 @@ void Traversal_this_written_up_isa_childof(void) {
         test_uint(e0, ecs_field_src(&it, 1));
         test_bool(false, ecs_query_next(&it));
     }
+
+    ecs_query_fini(q);
 
     ecs_fini(world);
 }
@@ -10404,6 +10428,8 @@ void Traversal_this_written_up_isa_isa_childof(void) {
         test_bool(false, ecs_query_next(&it));
     }
 
+    ecs_query_fini(q);
+
     ecs_fini(world);
 }
 
@@ -10437,6 +10463,8 @@ void Traversal_this_written_up_isa_childof_isa(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(false, ecs_query_next(&it));
     }
+
+    ecs_query_fini(q);
 
     ecs_fini(world);
 }
@@ -10475,6 +10503,8 @@ void Traversal_this_written_up_isa_childof_isa_childof(void) {
         test_bool(false, ecs_query_next(&it));
     }
 
+    ecs_query_fini(q);
+
     ecs_fini(world);
 }
 
@@ -10508,6 +10538,8 @@ void Traversal_this_written_self_up_childof_isa_childof(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(false, ecs_query_next(&it));
     }
+
+    ecs_query_fini(q);
 
     ecs_fini(world);
 }
@@ -10544,6 +10576,8 @@ void Traversal_this_written_self_up_isa_childof(void) {
         test_uint(e0, ecs_field_src(&it, 1));
         test_bool(false, ecs_query_next(&it));
     }
+
+    ecs_query_fini(q);
 
     ecs_fini(world);
 }
@@ -10583,6 +10617,8 @@ void Traversal_this_written_self_up_isa_isa_childof(void) {
         test_bool(false, ecs_query_next(&it));
     }
 
+    ecs_query_fini(q);
+
     ecs_fini(world);
 }
 
@@ -10616,6 +10652,8 @@ void Traversal_this_written_self_up_isa_childof_isa(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(false, ecs_query_next(&it));
     }
+
+    ecs_query_fini(q);
 
     ecs_fini(world);
 }
@@ -10653,6 +10691,8 @@ void Traversal_this_written_self_up_isa_childof_isa_childof(void) {
         ecs_iter_t it = ecs_query_iter(world, q);
         test_bool(false, ecs_query_next(&it));
     }
+
+    ecs_query_fini(q);
 
     ecs_fini(world);
 }

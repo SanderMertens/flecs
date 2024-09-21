@@ -902,6 +902,8 @@ void Cached_singleton_w_optional_new_empty_table(void) {
 
     test_assert(total_count == (prev_total_count - 1));
 
+    ecs_query_fini(q);
+
     ecs_fini(world);
 }
 
@@ -958,6 +960,7 @@ void Cached_singleton_w_optional_new_empty_non_empty_table(void) {
     test_int(count, 1);
     test_assert(total_count == prev_total_count);
 
+    ecs_query_fini(q);
 
     ecs_fini(world);
 }
@@ -1017,6 +1020,7 @@ void Cached_singleton_w_optional_new_unset_tables(void) {
     test_int(count, 1);
     test_assert(total_count == prev_total_count);
 
+    ecs_query_fini(q);
 
     ecs_fini(world);
 }

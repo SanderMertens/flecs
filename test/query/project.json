@@ -779,7 +779,10 @@
                 "cached_isa_tgt",
                 "cached_isa_tgt_w_self_second",
                 "cached_isa_tgt_no_expr",
-                "cached_isa_tgt_w_self_second_no_expr"
+                "cached_isa_tgt_w_self_second_no_expr",
+                "cached_w_not_and_uncacheable",
+                "cached_w_optional_and_uncacheable",
+                "cached_w_not_optional_and_uncacheable"
             ]
         }, {
             "id": "Variables",
