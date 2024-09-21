@@ -976,6 +976,12 @@ void Operators_1_not_any_src_any_tgt_fixed_first(void);
 void Operators_1_not_any_src_any_first_fixed_tgt(void);
 void Operators_1_not_any_src_any_childof_pair_any_tgt(void);
 void Operators_1_not_any_src_any_isa_pair_any_tgt(void);
+void Operators_1_not_match_prefab(void);
+void Operators_1_not_match_disabled(void);
+void Operators_1_not_match_not_queryable(void);
+void Operators_1_not_match_prefab_w_match_prefab_flag(void);
+void Operators_1_not_match_disabled_w_match_disabled_flag(void);
+void Operators_1_not_match_disabled_w_match_prefab_disabled_flag(void);
 void Operators_2_and_optional(void);
 void Operators_3_and_optional_optional(void);
 void Operators_2_and_optional_pair_rel_wildcard(void);
@@ -5908,6 +5914,30 @@ bake_test_case Operators_testcases[] = {
         Operators_1_not_any_src_any_isa_pair_any_tgt
     },
     {
+        "1_not_match_prefab",
+        Operators_1_not_match_prefab
+    },
+    {
+        "1_not_match_disabled",
+        Operators_1_not_match_disabled
+    },
+    {
+        "1_not_match_not_queryable",
+        Operators_1_not_match_not_queryable
+    },
+    {
+        "1_not_match_prefab_w_match_prefab_flag",
+        Operators_1_not_match_prefab_w_match_prefab_flag
+    },
+    {
+        "1_not_match_disabled_w_match_disabled_flag",
+        Operators_1_not_match_disabled_w_match_disabled_flag
+    },
+    {
+        "1_not_match_disabled_w_match_prefab_disabled_flag",
+        Operators_1_not_match_disabled_w_match_prefab_disabled_flag
+    },
+    {
         "2_and_optional",
         Operators_2_and_optional
     },
@@ -10326,7 +10356,7 @@ static bake_test_suite suites[] = {
         "Operators",
         Operators_setup,
         NULL,
-        143,
+        149,
         Operators_testcases,
         1,
         Operators_params

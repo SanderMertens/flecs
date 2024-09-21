@@ -1495,6 +1495,195 @@ void Operators_1_not_any_src_any_isa_pair_any_tgt(void) {
     ecs_fini(world);
 }
 
+void Operators_1_not_match_prefab(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "!Foo"
+    });
+
+    test_assert(q != NULL);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_add_id(world, e, EcsPrefab);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    while (ecs_query_next(&it)) {
+        for (int i = 0; i < it.count; i ++) {
+            test_assert(it.entities[i] != e);
+        }
+    }
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Operators_1_not_match_disabled(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "!Foo"
+    });
+
+    test_assert(q != NULL);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_add_id(world, e, EcsDisabled);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    while (ecs_query_next(&it)) {
+        for (int i = 0; i < it.count; i ++) {
+            test_assert(it.entities[i] != e);
+        }
+    }
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Operators_1_not_match_not_queryable(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "!Foo"
+    });
+
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    while (ecs_query_next(&it)) {
+        for (int i = 0; i < it.count; i ++) {
+            test_assert(it.entities[i] != EcsWildcard);
+            test_assert(it.entities[i] != EcsAny);
+            test_assert(it.entities[i] != EcsThis);
+        }
+    }
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Operators_1_not_match_prefab_w_match_prefab_flag(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "!Foo",
+        .flags = EcsQueryMatchPrefab
+    });
+
+    test_assert(q != NULL);
+
+    ecs_entity_t p = ecs_new(world);
+    ecs_add_id(world, p, EcsPrefab);
+    ecs_entity_t d = ecs_new(world);
+    ecs_add_id(world, d, EcsDisabled);
+
+    bool prefab_matched = false;
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    while (ecs_query_next(&it)) {
+        for (int i = 0; i < it.count; i ++) {
+            test_assert(it.entities[i] != d);
+            if (it.entities[i] == p) {
+                prefab_matched = true;
+            }
+        }
+    }
+
+    test_assert(prefab_matched);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Operators_1_not_match_disabled_w_match_disabled_flag(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "!Foo",
+        .flags = EcsQueryMatchDisabled
+    });
+
+    test_assert(q != NULL);
+
+    ecs_entity_t p = ecs_new(world);
+    ecs_add_id(world, p, EcsPrefab);
+    ecs_entity_t d = ecs_new(world);
+    ecs_add_id(world, d, EcsDisabled);
+
+    bool disabled_matched = false;
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    while (ecs_query_next(&it)) {
+        for (int i = 0; i < it.count; i ++) {
+            test_assert(it.entities[i] != p);
+            if (it.entities[i] == d) {
+                disabled_matched = true;
+            }
+        }
+    }
+
+    test_assert(disabled_matched);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Operators_1_not_match_disabled_w_match_prefab_disabled_flag(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "!Foo",
+        .flags = EcsQueryMatchPrefab|EcsQueryMatchDisabled
+    });
+
+    test_assert(q != NULL);
+
+    ecs_entity_t p = ecs_new(world);
+    ecs_add_id(world, p, EcsPrefab);
+    ecs_entity_t d = ecs_new(world);
+    ecs_add_id(world, d, EcsDisabled);
+
+    bool prefab_matched = false;
+    bool disabled_matched = false;
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    while (ecs_query_next(&it)) {
+        for (int i = 0; i < it.count; i ++) {
+            if (it.entities[i] == p) {
+                prefab_matched = true;
+            }
+            if (it.entities[i] == d) {
+                disabled_matched = true;
+            }
+        }
+    }
+
+    test_assert(prefab_matched);
+    test_assert(disabled_matched);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
 void Operators_2_and_optional(void) {
     ecs_world_t *world = ecs_mini();
 

@@ -4122,6 +4122,7 @@ void flecs_bootstrap(
     ecs_add_id(world, EcsThis, EcsNotQueryable);
     ecs_add_id(world, EcsWildcard, EcsNotQueryable);
     ecs_add_id(world, EcsAny, EcsNotQueryable);
+    ecs_add_id(world, EcsVariable, EcsNotQueryable);
 
     /* Tag relationships (relationships that should never have data) */
     ecs_add_id(world, EcsIsA, EcsPairIsTag);
@@ -65632,7 +65633,29 @@ error:
 }
 
 static
+ecs_flags32_t flecs_query_to_table_flags(
+    const ecs_query_t *q)
+{
+    ecs_flags32_t query_flags = q->flags;
+    if (!(query_flags & EcsQueryMatchDisabled) || 
+        !(query_flags & EcsQueryMatchPrefab)) 
+    {
+        ecs_flags32_t table_flags = EcsTableNotQueryable;
+        if (!(query_flags & EcsQueryMatchDisabled)) {
+            table_flags |= EcsTableIsDisabled;
+        }
+        if (!(query_flags & EcsQueryMatchPrefab)) {
+            table_flags |= EcsTableIsPrefab;
+        }
+
+        return table_flags;
+    }
+    return 0;
+}
+
+static
 bool flecs_query_select_all(
+    const ecs_query_t *q,
     ecs_term_t *term,
     ecs_query_op_t *op,
     ecs_var_id_t src_var,
@@ -65660,6 +65683,7 @@ bool flecs_query_select_all(
             match_any.flags |= (EcsQueryIsEntity << EcsQuerySecond);
         }
         match_any.written = (1ull << src_var);
+        match_any.other = flecs_itolbl(flecs_query_to_table_flags(q));
         flecs_query_op_insert(&match_any, ctx);
         flecs_query_write_ctx(op->src.var, ctx, false);
 
@@ -66073,7 +66097,7 @@ int flecs_query_compile_term(
      * written to yet, insert instruction that selects all entities so we have
      * something to match the optional/not against. */
     if (src_is_var && !src_written && !src_is_wildcard && !src_is_lookup) {
-        src_written = flecs_query_select_all(term, &op, op.src.var, ctx);
+        src_written = flecs_query_select_all(q, term, &op, op.src.var, ctx);
     }
 
     /* A bit of special logic for OR expressions and equality predicates. If the
@@ -66212,20 +66236,7 @@ int flecs_query_compile_term(
      * filtering out disabled/prefab entities is the default and this check is
      * cheap to perform on table flags, it's worth special casing. */
     if (!src_written && op.src.var == 0) {
-        ecs_flags32_t query_flags = q->flags;
-        if (!(query_flags & EcsQueryMatchDisabled) || 
-            !(query_flags & EcsQueryMatchPrefab)) 
-        {
-            ecs_flags32_t table_flags = EcsTableNotQueryable;
-            if (!(query_flags & EcsQueryMatchDisabled)) {
-                table_flags |= EcsTableIsDisabled;
-            }
-            if (!(query_flags & EcsQueryMatchPrefab)) {
-                table_flags |= EcsTableIsPrefab;
-            }
-
-            op.other = flecs_itolbl(table_flags);
-        }
+        op.other = flecs_itolbl(flecs_query_to_table_flags(q));
     }
 
     /* After evaluating a term, a used variable is always written */
