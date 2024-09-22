@@ -2173,7 +2173,8 @@
                 "add_set_isa_w_override_batched",
                 "add_batched_set_with",
                 "defer_emplace_after_remove",
-                "batched_w_table_change_in_observer"
+                "batched_w_table_change_in_observer",
+                "redefine_named_in_threaded_app"
             ]
         }, {
             "id": "SingleThreadStaging",

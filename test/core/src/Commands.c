@@ -4190,3 +4190,22 @@ void Commands_batched_w_table_change_in_observer(void) {
 
     ecs_fini(world);
 }
+
+void Commands_redefine_named_in_threaded_app(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_set_threads(world, 2);
+
+    ecs_defer_begin(world);
+    ecs_entity_t c1 = ecs_entity(world, { .name = "parent.child_1" });
+    ecs_entity_t c2 = ecs_entity(world, { .name = "parent.child_2" });
+    ecs_defer_end(world);
+
+    ecs_entity_t p1 = ecs_get_target(world, c1, EcsChildOf, 0);
+    test_assert(p1 != 0);
+    ecs_entity_t p2 = ecs_get_target(world, c2, EcsChildOf, 0);
+    test_assert(p2 != 0);
+    test_assert(p1 == p2);
+
+    ecs_fini(world);
+}
