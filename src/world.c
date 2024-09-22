@@ -192,142 +192,142 @@ ECS_TAG_DECLARE(EcsAlertError);
 ECS_TAG_DECLARE(EcsAlertCritical);
 #endif
 #ifdef FLECS_UNITS
-ECS_DECLARE(EcsUnitPrefixes);
+ecs_entity_t EcsUnitPrefixes;
 
-ECS_DECLARE(EcsYocto);
-ECS_DECLARE(EcsZepto);
-ECS_DECLARE(EcsAtto);
-ECS_DECLARE(EcsFemto);
-ECS_DECLARE(EcsPico);
-ECS_DECLARE(EcsNano);
-ECS_DECLARE(EcsMicro);
-ECS_DECLARE(EcsMilli);
-ECS_DECLARE(EcsCenti);
-ECS_DECLARE(EcsDeci);
-ECS_DECLARE(EcsDeca);
-ECS_DECLARE(EcsHecto);
-ECS_DECLARE(EcsKilo);
-ECS_DECLARE(EcsMega);
-ECS_DECLARE(EcsGiga);
-ECS_DECLARE(EcsTera);
-ECS_DECLARE(EcsPeta);
-ECS_DECLARE(EcsExa);
-ECS_DECLARE(EcsZetta);
-ECS_DECLARE(EcsYotta);
+ecs_entity_t EcsYocto;
+ecs_entity_t EcsZepto;
+ecs_entity_t EcsAtto;
+ecs_entity_t EcsFemto;
+ecs_entity_t EcsPico;
+ecs_entity_t EcsNano;
+ecs_entity_t EcsMicro;
+ecs_entity_t EcsMilli;
+ecs_entity_t EcsCenti;
+ecs_entity_t EcsDeci;
+ecs_entity_t EcsDeca;
+ecs_entity_t EcsHecto;
+ecs_entity_t EcsKilo;
+ecs_entity_t EcsMega;
+ecs_entity_t EcsGiga;
+ecs_entity_t EcsTera;
+ecs_entity_t EcsPeta;
+ecs_entity_t EcsExa;
+ecs_entity_t EcsZetta;
+ecs_entity_t EcsYotta;
 
-ECS_DECLARE(EcsKibi);
-ECS_DECLARE(EcsMebi);
-ECS_DECLARE(EcsGibi);
-ECS_DECLARE(EcsTebi);
-ECS_DECLARE(EcsPebi);
-ECS_DECLARE(EcsExbi);
-ECS_DECLARE(EcsZebi);
-ECS_DECLARE(EcsYobi);
+ecs_entity_t EcsKibi;
+ecs_entity_t EcsMebi;
+ecs_entity_t EcsGibi;
+ecs_entity_t EcsTebi;
+ecs_entity_t EcsPebi;
+ecs_entity_t EcsExbi;
+ecs_entity_t EcsZebi;
+ecs_entity_t EcsYobi;
 
-ECS_DECLARE(EcsDuration);
-    ECS_DECLARE(EcsPicoSeconds);
-    ECS_DECLARE(EcsNanoSeconds);
-    ECS_DECLARE(EcsMicroSeconds);
-    ECS_DECLARE(EcsMilliSeconds);
-    ECS_DECLARE(EcsSeconds);
-    ECS_DECLARE(EcsMinutes);
-    ECS_DECLARE(EcsHours);
-    ECS_DECLARE(EcsDays);
+ecs_entity_t EcsDuration;
+    ecs_entity_t EcsPicoSeconds;
+    ecs_entity_t EcsNanoSeconds;
+    ecs_entity_t EcsMicroSeconds;
+    ecs_entity_t EcsMilliSeconds;
+    ecs_entity_t EcsSeconds;
+    ecs_entity_t EcsMinutes;
+    ecs_entity_t EcsHours;
+    ecs_entity_t EcsDays;
 
-ECS_DECLARE(EcsTime);
-    ECS_DECLARE(EcsDate);
+ecs_entity_t EcsTime;
+    ecs_entity_t EcsDate;
 
-ECS_DECLARE(EcsMass);
-    ECS_DECLARE(EcsGrams);
-    ECS_DECLARE(EcsKiloGrams);
+ecs_entity_t EcsMass;
+    ecs_entity_t EcsGrams;
+    ecs_entity_t EcsKiloGrams;
 
-ECS_DECLARE(EcsElectricCurrent);
-    ECS_DECLARE(EcsAmpere);
+ecs_entity_t EcsElectricCurrent;
+    ecs_entity_t EcsAmpere;
 
-ECS_DECLARE(EcsAmount);
-    ECS_DECLARE(EcsMole);
+ecs_entity_t EcsAmount;
+    ecs_entity_t EcsMole;
 
-ECS_DECLARE(EcsLuminousIntensity);
-    ECS_DECLARE(EcsCandela);
+ecs_entity_t EcsLuminousIntensity;
+    ecs_entity_t EcsCandela;
 
-ECS_DECLARE(EcsForce);
-    ECS_DECLARE(EcsNewton);
+ecs_entity_t EcsForce;
+    ecs_entity_t EcsNewton;
 
-ECS_DECLARE(EcsLength);
-    ECS_DECLARE(EcsMeters);
-        ECS_DECLARE(EcsPicoMeters);
-        ECS_DECLARE(EcsNanoMeters);
-        ECS_DECLARE(EcsMicroMeters);
-        ECS_DECLARE(EcsMilliMeters);
-        ECS_DECLARE(EcsCentiMeters);
-        ECS_DECLARE(EcsKiloMeters);
-    ECS_DECLARE(EcsMiles);
-    ECS_DECLARE(EcsPixels);
+ecs_entity_t EcsLength;
+    ecs_entity_t EcsMeters;
+        ecs_entity_t EcsPicoMeters;
+        ecs_entity_t EcsNanoMeters;
+        ecs_entity_t EcsMicroMeters;
+        ecs_entity_t EcsMilliMeters;
+        ecs_entity_t EcsCentiMeters;
+        ecs_entity_t EcsKiloMeters;
+    ecs_entity_t EcsMiles;
+    ecs_entity_t EcsPixels;
 
-ECS_DECLARE(EcsPressure);
-    ECS_DECLARE(EcsPascal);
-    ECS_DECLARE(EcsBar);
+ecs_entity_t EcsPressure;
+    ecs_entity_t EcsPascal;
+    ecs_entity_t EcsBar;
 
-ECS_DECLARE(EcsSpeed);
-    ECS_DECLARE(EcsMetersPerSecond);
-    ECS_DECLARE(EcsKiloMetersPerSecond);
-    ECS_DECLARE(EcsKiloMetersPerHour);
-    ECS_DECLARE(EcsMilesPerHour);
+ecs_entity_t EcsSpeed;
+    ecs_entity_t EcsMetersPerSecond;
+    ecs_entity_t EcsKiloMetersPerSecond;
+    ecs_entity_t EcsKiloMetersPerHour;
+    ecs_entity_t EcsMilesPerHour;
 
-ECS_DECLARE(EcsAcceleration);
+ecs_entity_t EcsAcceleration;
 
-ECS_DECLARE(EcsTemperature);
-    ECS_DECLARE(EcsKelvin);
-    ECS_DECLARE(EcsCelsius);
-    ECS_DECLARE(EcsFahrenheit);
+ecs_entity_t EcsTemperature;
+    ecs_entity_t EcsKelvin;
+    ecs_entity_t EcsCelsius;
+    ecs_entity_t EcsFahrenheit;
 
-ECS_DECLARE(EcsData);
-    ECS_DECLARE(EcsBits);
-        ECS_DECLARE(EcsKiloBits);
-        ECS_DECLARE(EcsMegaBits);
-        ECS_DECLARE(EcsGigaBits);
-    ECS_DECLARE(EcsBytes);
-        ECS_DECLARE(EcsKiloBytes);
-        ECS_DECLARE(EcsMegaBytes);
-        ECS_DECLARE(EcsGigaBytes);
-        ECS_DECLARE(EcsKibiBytes);
-        ECS_DECLARE(EcsGibiBytes);
-        ECS_DECLARE(EcsMebiBytes);
+ecs_entity_t EcsData;
+    ecs_entity_t EcsBits;
+        ecs_entity_t EcsKiloBits;
+        ecs_entity_t EcsMegaBits;
+        ecs_entity_t EcsGigaBits;
+    ecs_entity_t EcsBytes;
+        ecs_entity_t EcsKiloBytes;
+        ecs_entity_t EcsMegaBytes;
+        ecs_entity_t EcsGigaBytes;
+        ecs_entity_t EcsKibiBytes;
+        ecs_entity_t EcsGibiBytes;
+        ecs_entity_t EcsMebiBytes;
 
-ECS_DECLARE(EcsDataRate);
-    ECS_DECLARE(EcsBitsPerSecond);
-    ECS_DECLARE(EcsKiloBitsPerSecond);
-    ECS_DECLARE(EcsMegaBitsPerSecond);
-    ECS_DECLARE(EcsGigaBitsPerSecond);
-    ECS_DECLARE(EcsBytesPerSecond);
-    ECS_DECLARE(EcsKiloBytesPerSecond);
-    ECS_DECLARE(EcsMegaBytesPerSecond);
-    ECS_DECLARE(EcsGigaBytesPerSecond);
+ecs_entity_t EcsDataRate;
+    ecs_entity_t EcsBitsPerSecond;
+    ecs_entity_t EcsKiloBitsPerSecond;
+    ecs_entity_t EcsMegaBitsPerSecond;
+    ecs_entity_t EcsGigaBitsPerSecond;
+    ecs_entity_t EcsBytesPerSecond;
+    ecs_entity_t EcsKiloBytesPerSecond;
+    ecs_entity_t EcsMegaBytesPerSecond;
+    ecs_entity_t EcsGigaBytesPerSecond;
 
-ECS_DECLARE(EcsPercentage);
+ecs_entity_t EcsPercentage;
 
-ECS_DECLARE(EcsAngle);
-    ECS_DECLARE(EcsRadians);
-    ECS_DECLARE(EcsDegrees);
+ecs_entity_t EcsAngle;
+    ecs_entity_t EcsRadians;
+    ecs_entity_t EcsDegrees;
 
-ECS_DECLARE(EcsColor);
-    ECS_DECLARE(EcsColorRgb);
-    ECS_DECLARE(EcsColorHsl);
-    ECS_DECLARE(EcsColorCss);
+ecs_entity_t EcsColor;
+    ecs_entity_t EcsColorRgb;
+    ecs_entity_t EcsColorHsl;
+    ecs_entity_t EcsColorCss;
 
-ECS_DECLARE(EcsBel);
-ECS_DECLARE(EcsDeciBel);
+ecs_entity_t EcsBel;
+ecs_entity_t EcsDeciBel;
 
-ECS_DECLARE(EcsFrequency);
-    ECS_DECLARE(EcsHertz);
-    ECS_DECLARE(EcsKiloHertz);
-    ECS_DECLARE(EcsMegaHertz);
-    ECS_DECLARE(EcsGigaHertz);
+ecs_entity_t EcsFrequency;
+    ecs_entity_t EcsHertz;
+    ecs_entity_t EcsKiloHertz;
+    ecs_entity_t EcsMegaHertz;
+    ecs_entity_t EcsGigaHertz;
 
-ECS_DECLARE(EcsUri);
-    ECS_DECLARE(EcsUriHyperlink);
-    ECS_DECLARE(EcsUriImage);
-    ECS_DECLARE(EcsUriFile);
+ecs_entity_t EcsUri;
+    ecs_entity_t EcsUriHyperlink;
+    ecs_entity_t EcsUriImage;
+    ecs_entity_t EcsUriFile;
 #endif
 
 /* -- Private functions -- */
