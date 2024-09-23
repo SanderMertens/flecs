@@ -8,5 +8,8 @@
             "flecs"
         ],
         "language": "c++"
+    },
+    "lang.cpp": {
+        "cpp-standard": "c++11"
     }
 }
