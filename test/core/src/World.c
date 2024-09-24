@@ -292,6 +292,68 @@ void World_entity_range_set_limit_to_lower(void) {
     ecs_fini(world);
 }
 
+void World_entity_range_set_limit_to_lower_than_offset(void) {
+    ecs_world_t *world = ecs_mini();
+
+    const ecs_world_info_t *info = ecs_get_world_info(world);
+    test_assert(info != NULL);
+
+    ecs_set_entity_range(world, 2000, 3000);
+
+    test_uint(info->max_id, 3000);
+
+    ecs_set_entity_range(world, 0, 1000);
+
+    test_uint(info->max_id, 1000);
+
+    ecs_fini(world);
+}
+
+void World_entity_range_overlapping_new_id(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_mini();
+
+    const ecs_world_info_t *info = ecs_get_world_info(world);
+    test_assert(info != NULL);
+
+    ecs_set_entity_range(world, 2000, 3000);
+    test_uint(info->max_id, 3000);
+
+    ecs_entity_t e1 = ecs_new(world);
+    test_assert(e1 == 2000);
+
+    ecs_set_entity_range(world, 1999, 0);
+
+    ecs_entity_t e2 = ecs_new(world);
+    test_assert(e2 == 1999);
+
+    test_expect_abort();
+    ecs_new(world);
+}
+
+void World_entity_range_overlapping_new_bulk_id(void) {
+    install_test_abort();
+
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    const ecs_world_info_t *info = ecs_get_world_info(world);
+    test_assert(info != NULL);
+
+    ecs_set_entity_range(world, 2000, 3000);
+    test_uint(info->max_id, 3000);
+
+    ecs_entity_t e1 = ecs_new(world);
+    test_assert(e1 == 2000);
+
+    ecs_set_entity_range(world, 1999, 0);
+
+    test_expect_abort();
+    ecs_bulk_new(world, Position, 2);
+}
+
 void World_get_tick(void) {
     ecs_world_t *world = ecs_init();
 
