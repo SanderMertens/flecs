@@ -564,3 +564,28 @@ void Rest_request_world_summary_before_monitor_sys_run(void) {
 
     ecs_fini(world);
 }
+
+void Rest_escape_backslash(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_IMPORT(world, FlecsStats);
+
+    ecs_http_server_t *srv = ecs_rest_server_init(world, NULL);
+    test_assert(srv != NULL);
+
+    ecs_entity(world, { .name = "foo/bar" });
+
+    ecs_http_reply_t reply = ECS_HTTP_REPLY_INIT;
+    test_int(0, ecs_http_server_request(srv, "GET",
+        "/entity/foo%5C%2Fbar", &reply));
+    test_int(reply.code, 200);
+    
+    char *reply_str = ecs_strbuf_get(&reply.body);
+    test_assert(reply_str != NULL);
+    test_str(reply_str, "{\"name\":\"foo/bar\"}");
+    ecs_os_free(reply_str);
+
+    ecs_rest_server_fini(srv);
+
+    ecs_fini(world);
+}

@@ -456,6 +456,7 @@ void Rest_script_error(void);
 void Rest_import_rest_after_mini(void);
 void Rest_get_pipeline_stats_after_delete_system(void);
 void Rest_request_world_summary_before_monitor_sys_run(void);
+void Rest_escape_backslash(void);
 
 // Testsuite 'Metrics'
 void Metrics_member_gauge_1_entity(void);
@@ -2203,6 +2204,10 @@ bake_test_case Rest_testcases[] = {
     {
         "request_world_summary_before_monitor_sys_run",
         Rest_request_world_summary_before_monitor_sys_run
+    },
+    {
+        "escape_backslash",
+        Rest_escape_backslash
     }
 };
 
@@ -2655,7 +2660,7 @@ static bake_test_suite suites[] = {
         "Rest",
         NULL,
         NULL,
-        17,
+        18,
         Rest_testcases
     },
     {
