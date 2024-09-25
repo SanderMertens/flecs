@@ -347,7 +347,8 @@
                 "get_entity_count",
                 "get_pipeline_stats_w_task_system",
                 "get_not_alive_entity_count",
-                "progress_stats_systems"
+                "progress_stats_systems",
+                "progress_stats_systems_w_empty_table_flag"
             ]
         }, {
             "id": "Run",

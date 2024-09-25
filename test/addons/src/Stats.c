@@ -259,9 +259,25 @@ void Stats_progress_stats_systems(void) {
 
     ECS_IMPORT(world, FlecsStats);
 
-    // for (int i = 0; i < 60 * 60; i ++) {
-    //     ecs_progress(world, 0.016);
-    // }
+    for (int i = 0; i < 60 * 60; i ++) {
+        ecs_progress(world, 0.016);
+    }
+
+    test_assert(true); // used to catch memory leaks
+
+    ecs_fini(world);
+}
+
+void Stats_progress_stats_systems_w_empty_table_flag(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_set_default_query_flags(world, EcsQueryMatchEmptyTables);
+
+    ECS_IMPORT(world, FlecsStats);
+
+    for (int i = 0; i < 60 * 60; i ++) {
+        ecs_progress(world, 0.016);
+    }
 
     test_assert(true); // used to catch memory leaks
 
