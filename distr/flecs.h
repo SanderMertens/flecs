@@ -482,6 +482,7 @@ extern "C" {
 #define EcsQueryHasTableThisVar       (1u << 26u) /* Does query have $this table var */
 #define EcsQueryCacheYieldEmptyTables (1u << 27u) /* Does query cache empty tables */
 
+
 ////////////////////////////////////////////////////////////////////////////////
 //// Term flags (used by ecs_term_t::flags_)
 ////////////////////////////////////////////////////////////////////////////////
@@ -511,7 +512,9 @@ extern "C" {
 #define EcsObserverIsDisabled          (1u << 3u)  /* Is observer entity disabled */
 #define EcsObserverIsParentDisabled    (1u << 4u)  /* Is module parent of observer disabled  */
 #define EcsObserverBypassQuery         (1u << 5u)  /* Don't evaluate query for multi-component observer*/
-#define EcsObserverYieldOnDelete       (1u << 6u)  /* Yield matching entities when deleting observer */
+#define EcsObserverYieldOnCreate       (1u << 6u)  /* Yield matching entities when creating observer */
+#define EcsObserverYieldOnDelete       (1u << 7u)  /* Yield matching entities when deleting observer */
+
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Table flags (used by ecs_table_t::flags)

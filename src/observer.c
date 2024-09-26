@@ -961,7 +961,10 @@ ecs_observer_t* flecs_observer_init(
     impl->term_index = desc->term_index_;
     impl->flags = desc->flags_;
 
-    bool yield_on_create = false;
+    ecs_check(!(desc->yield_existing && 
+        (desc->flags_ & (EcsObserverYieldOnCreate|EcsObserverYieldOnDelete))), 
+        ECS_INVALID_PARAMETER,
+         "cannot set yield_existing and YieldOn* flags at the same time");
 
     /* Check if observer is monitor. Monitors are created as multi observers
      * since they require pre/post checking of the filter to test if the
@@ -982,8 +985,8 @@ ecs_observer_t* flecs_observer_init(
             o->event_count ++;
             impl->flags |= EcsObserverIsMonitor;
             if (desc->yield_existing) {
+                impl->flags |= EcsObserverYieldOnCreate;
                 impl->flags |= EcsObserverYieldOnDelete;
-                yield_on_create = true;
             }
         } else {
             o->events[i] = event;
@@ -991,7 +994,7 @@ ecs_observer_t* flecs_observer_init(
                 if (event == EcsOnRemove) {
                     impl->flags |= EcsObserverYieldOnDelete;
                 } else {
-                    yield_on_create = true;
+                    impl->flags |= EcsObserverYieldOnCreate;
                 }
             }
         }
@@ -1027,7 +1030,7 @@ ecs_observer_t* flecs_observer_init(
         }
     }
 
-    if (yield_on_create) {
+    if (impl->flags & EcsObserverYieldOnCreate) {
         flecs_observer_yield_existing(world, o, false);
     }
 
