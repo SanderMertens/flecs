@@ -1993,7 +1993,8 @@
                 "set_get_binding_context_w_free",
                 "get_entities",
                 "run_post_frame",
-                "run_post_frame_outside_of_frame"
+                "run_post_frame_outside_of_frame",
+                "get_flags"
             ]
         }, {
             "id": "WorldInfo",

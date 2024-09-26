@@ -5167,6 +5167,17 @@ FLECS_API
 ecs_entities_t ecs_get_entities(
     const ecs_world_t *world);
 
+/** Get flags set on the world.
+ * This operation returns the internal flags (see api_flags.h) that are
+ * set on the world.
+ *
+ * @param world The world.
+ * @return Flags set on the world.
+ */
+FLECS_API
+ecs_flags32_t ecs_world_get_flags(
+    const ecs_world_t *world);
+
 /** @} */
 
 /**

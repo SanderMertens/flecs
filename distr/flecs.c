@@ -19765,6 +19765,13 @@ ecs_entities_t ecs_get_entities(
     return result;
 }
 
+ecs_flags32_t ecs_world_get_flags(
+    const ecs_world_t *world)
+{
+    flecs_poly_assert(world, ecs_world_t);
+    return world->flags;
+}
+
 /**
  * @file addons/alerts.c
  * @brief Alerts addon.
