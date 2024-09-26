@@ -51,9 +51,8 @@ public:
         {
             FRunnable* Runnable;
             FRunnableThread* Thread;
-        };
-
-        // Runnable implementation for Flecs tasks
+        }; // struct FFlecsThread
+		
         class FFlecsRunnable : public FRunnable
         {
         public:
@@ -71,7 +70,7 @@ public:
         private:
             ecs_os_thread_callback_t Callback;
             void* Param;
-        };
+        }; // class FFlecsRunnable
 
         ecs_os_set_api_defaults();
 
@@ -94,6 +93,7 @@ public:
         os_api.thread_join_ = [](ecs_os_thread_t Thread) -> void*
         {
 	        FFlecsThread* FlecsThread = reinterpret_cast<FFlecsThread*>(Thread);
+        	
             if (FlecsThread && FlecsThread->Thread)
             {
                 FlecsThread->Thread->WaitForCompletion();
@@ -101,18 +101,18 @@ public:
                 delete FlecsThread->Thread;
                 FMemory::Free(FlecsThread);
             }
+        	
             return nullptr;
         };
 		
         struct FFlecsSpinLock
         {
             volatile int32 LockFlag = 0;
-        };
+        }; // struct FFlecsSpinLock
 
         os_api.mutex_new_ = []() -> ecs_os_mutex_t
         {
 	        FFlecsSpinLock* SpinLock = static_cast<FFlecsSpinLock*>(FMemory::Malloc(sizeof(FFlecsSpinLock)));
-            // Avoid zero-initialization for speed
             SpinLock->LockFlag = 0;
             return reinterpret_cast<ecs_os_mutex_t>(SpinLock);
         };
@@ -165,7 +165,6 @@ public:
 
         os_api.log_ = [](int32_t Level, const char* File, int32_t Line, const char* Message)
         {
-            // Minimal logging to reduce overhead
 #if UNLOG_ENABLED
             switch (Level)
             {
@@ -198,11 +197,10 @@ public:
 
 	FORCEINLINE void InitializeSystems()
 	{
-		static constexpr int32 UOBJECT_VALID_CHECK_FRAME_RATE = 60;
-
 		ObtainComponentTypeStruct(FFlecsScriptStructComponent::StaticStruct());
 		
 		CreateObserver<flecs::_::type_impl_struct_event_info>(TEXT("StructComponentObserver"))
+				.with_symbol_component()
 				.cached()
 				.event(flecs::OnSet)
 				.yield_existing()
@@ -218,16 +216,44 @@ public:
 						return;
 					}
 
+					if (FFlecsComponentPropertiesRegistry::Get().ContainsComponentProperties(
+						std::string(InEntity.symbol())))
+					{
+						const FFlecsComponentProperties* Properties = FFlecsComponentPropertiesRegistry::Get().
+							GetComponentProperties(std::string(InEntity.symbol()));
+					
+						for (const flecs::entity_t& Entity : Properties->Entities)
+						{
+							EntityHandle.Add(Entity);
+						}
+
+						for (const FInstancedStruct& InstancedStruct : Properties->ComponentPropertyStructs)
+						{
+							EntityHandle.Set(InstancedStruct);
+						}
+
+						UN_LOGF(LogFlecsWorld, Log,
+							"Component properties %s found with %d entities and %d component properties",
+							*EntityHandle.GetSymbol(), Properties->Entities.size(), Properties->ComponentPropertyStructs.Num());
+					}
+					#if WITH_EDITOR
+					else
+					{
+						UN_LOGF(LogFlecsWorld, Log,
+							"Component properties %s not found", *EntityHandle.GetSymbol());
+					}
+					#endif // WITH_EDITOR
+
 					if UNLIKELY_IF(EntityHandle.Has<FFlecsScriptStructComponent>())
 					{
 						EntityHandle.Remove<flecs::_::type_impl_struct_event_info>();
 						return;
 					}
-					
+
 					EntityHandle.Set<FFlecsScriptStructComponent>({ InEventInfo.scriptStruct });
 
 					UN_LOGF(LogFlecsWorld, Log,
-						"Struct component %s registered", *InEventInfo.scriptStruct->GetStructCPPName());
+						"Struct component %s registered", *EntityHandle.GetSymbol());
 
 					#if WITH_EDITOR
 
@@ -237,20 +263,21 @@ public:
 
 					EntityHandle.Remove<flecs::_::type_impl_struct_event_info>();
 				});
-		
-		CreateSystemWithBuilder<const FFlecsUObjectComponent&>(TEXT("FlecsUObjectComponentSystem"))
+
+		ObjectComponentQuery = World.query_builder<FFlecsUObjectComponent>("UObjectComponentQuery")
 			.cached()
-			.kind(flecs::PostFrame)
-			.rate(UOBJECT_VALID_CHECK_FRAME_RATE)
-			.read<FFlecsUObjectComponent>()
-			.multi_threaded()
-			.each([](flecs::entity InEntity, const FFlecsUObjectComponent& InComponent)
+			.build();
+
+		FCoreUObjectDelegates::GarbageCollectComplete.AddWeakLambda(this, [this]
+		{
+			ObjectComponentQuery.each([this](flecs::iter& Iter, size_t Index, const FFlecsUObjectComponent& InComponent)
 			{
 				if (!InComponent.IsValid())
 				{
-					InEntity.destruct();
+					Iter.entity(Index).destruct();
 				}
 			});
+		});
 
 		CreateObserver<FFlecsModuleComponent, const FFlecsUObjectComponent>(TEXT("AddModuleComponentObserver"))
 			.cached()
@@ -270,9 +297,9 @@ public:
 		CreateObserver(TEXT("RemoveModuleComponentObserver"))
 			.cached()
 			.with<FFlecsModuleComponent>().event(flecs::OnRemove)
-			.each([&](flecs::iter& Iter, size_t IterIndex)
+			.each([&](flecs::iter& Iter, const size_t IterIndex)
 			{
-				for (uint32 Index = ProgressModules.Num(); Index > 0; --Index)
+				for (int32 Index = ProgressModules.Num(); Index > 0; --Index)
 				{
 					const UObject* Module = ProgressModules[Index - 1].Get();
 					
@@ -1251,5 +1278,7 @@ public:
 
 	UPROPERTY()
 	TArray<TWeakObjectPtr<UObject>> ProgressModules;
+
+	flecs::query<FFlecsUObjectComponent> ObjectComponentQuery;
 	
 }; // class UFlecsWorld

@@ -14,7 +14,7 @@
 
 struct UNREALFLECS_API FFlecsComponentProperties
 {
-	std::string_view Name;
+	std::string Name;
 	std::vector<flecs::entity_t> Entities;
 	
 	TArray<FInstancedStruct> ComponentPropertyStructs;
@@ -31,7 +31,7 @@ public:
 		return Instance;
 	}
 
-	FORCEINLINE void RegisterComponentProperties(const std::string_view& Name, const std::vector<flecs::entity_t>& Entities,
+	FORCEINLINE void RegisterComponentProperties(const std::string& Name, const std::vector<flecs::entity_t>& Entities,
 		const TArray<FInstancedStruct>& ComponentPropertyStructs, const bool bResetExisting = false)
 	{
 		UNLOG_CATEGORY_SCOPED(LogFlecsComponentProperties);
@@ -76,8 +76,20 @@ public:
 
 		OnComponentPropertiesRegistered.ExecuteIfBound(ComponentProperties[Name]);
 	}
+
+	FORCEINLINE NO_DISCARD bool ContainsComponentProperties(const std::string& Name) const
+	{
+		return ComponentProperties.contains(Name);
+	}
+
+	FORCEINLINE const FFlecsComponentProperties* GetComponentProperties(const std::string& Name) const
+	{
+		solid_checkf(!Name.empty(), TEXT("Component properties name is empty!"));
+		solid_checkf(ComponentProperties.contains(Name), TEXT("Component properties not found!"));
+		return &ComponentProperties.at(Name);
+	}
 	
-	robin_hood::unordered_flat_map<std::string_view, FFlecsComponentProperties> ComponentProperties;
+	robin_hood::unordered_flat_map<std::string, FFlecsComponentProperties> ComponentProperties;
 
 	FOnComponentPropertiesRegistered OnComponentPropertiesRegistered;
 }; // struct FFlecsComponentPropertiesRegistry
@@ -91,7 +103,7 @@ public:
 			{ \
 			std::vector<flecs::entity_t> Entities = EntitiesArray; \
 			TArray<FInstancedStruct> ComponentPropertyStructs = ComponentPropertyStructsArray; \
-			FFlecsComponentPropertiesRegistry::Get().RegisterComponentProperties(nameof(ComponentType), Entities, ComponentPropertyStructs); \
+			FFlecsComponentPropertiesRegistry::Get().RegisterComponentProperties(#ComponentType, Entities, ComponentPropertyStructs); \
 			} \
 		}; \
 		static FAutoRegister##ComponentType AutoRegister##ComponentType##_Instance; \

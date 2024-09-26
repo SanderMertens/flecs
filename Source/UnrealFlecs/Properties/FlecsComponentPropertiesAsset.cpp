@@ -9,8 +9,6 @@ void UFlecsComponentPropertiesAsset::PostLoad()
 {
 	Super::PostLoad();
 
-	const std::string_view ComponentTypeName = std::string_view(StringCast<ANSICHAR>(*ComponentType->GetName()).Get());
-
 	std::vector<flecs::entity_t> ComponentPropertiesEntities;
 	
 	for (const FFlecsEntityHandle& ComponentProperty : ComponentProperties)
@@ -19,7 +17,8 @@ void UFlecsComponentPropertiesAsset::PostLoad()
 	}
 
 	FFlecsComponentPropertiesRegistry::Get()
-		.RegisterComponentProperties(ComponentTypeName, ComponentPropertiesEntities, ComponentPropertyStructs, false);
+		.RegisterComponentProperties(StringCast<ANSICHAR>(*ComponentType->GetName()).Get(),
+			ComponentPropertiesEntities, ComponentPropertyStructs, false);
 }
 
 void UFlecsComponentPropertiesAsset::BeginDestroy()

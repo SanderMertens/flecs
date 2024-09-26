@@ -6,6 +6,7 @@
 #include "CoreMinimal.h"
 #include "SolidMacros/Macros.h"
 #include "UObject/Object.h"
+#include "Properties/FlecsComponentProperties.h"
 #include "FlecsUObjectComponent.generated.h"
 
 USTRUCT(BlueprintType)
@@ -67,3 +68,6 @@ public:
 	}
 	
 }; // struct FFlecsUObjectComponent
+
+REGISTER_FLECS_COMPONENT_PROPERTIES(FFlecsUObjectComponent,
+	{ flecs::Sparse }, {})

@@ -276,6 +276,9 @@ public:
 	FORCEINLINE NO_DISCARD FString GetName() const { return FString(GetEntity().name()); }
 	FORCEINLINE NO_DISCARD bool HasName() const { return Has<flecs::Identifier>(flecs::Name); }
 
+	FORCEINLINE NO_DISCARD FString GetSymbol() const { return FString(GetEntity().symbol()); }
+	FORCEINLINE NO_DISCARD bool HasSymbol() const { return Has<flecs::Identifier>(flecs::Symbol); }
+
 	FORCEINLINE void SetDocBrief(const FString& InDocBrief) const { GetEntity().set_doc_brief(StringCast<char>(*InDocBrief).Get()); }
 	FORCEINLINE NO_DISCARD FString GetDocBrief() const { return FString(GetEntity().doc_brief()); }
 
@@ -299,6 +302,11 @@ public:
 	FORCEINLINE NO_DISCARD FFlecsEntityHandle GetParent() const
 	{
 		return GetEntity().parent();
+	}
+
+	FORCEINLINE NO_DISCARD bool HasParent() const
+	{
+		return GetEntity().parent().is_valid();
 	}
 
 	FORCEINLINE void SetParent(const FFlecsEntityHandle& InParent) const
@@ -1208,16 +1216,16 @@ private:
 
 		FFlecsEntityHandle TraitHolder;
 
-		GetEntity().each(ObtainComponentTypeStruct(StructType).GetEntity().view(),
-			[&](const FFlecsEntityHandle& InEntity)
+		GetEntity().children(ObtainComponentTypeStruct(StructType).GetEntity(),
+			[&](flecs::iter& Iter, size_t Index)
 		{
+			const FFlecsEntityHandle InEntity = Iter.entity(Index);
+				
 			if (InEntity.Has(flecs::Trait))
 			{
 				TraitHolder = InEntity;
-				return true;
+				Iter.fini();
 			}
-
-			return false;
 		});
 
 		if LIKELY_IF(TraitHolder.IsValid())
@@ -1228,7 +1236,7 @@ private:
 		const flecs::world World = GetFlecsWorld_Internal();
 		TraitHolder = World.entity();
 		TraitHolder.Add(flecs::Trait);
-		TraitHolder.SetParent(GetEntity());
+		TraitHolder.SetParent(GetEntity(), true);
 
 		GetEntity().add(ObtainComponentTypeStruct(StructType), TraitHolder);
 		

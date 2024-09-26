@@ -51,4 +51,7 @@ struct UNREALFLECS_API FFlecsTransformComponent
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs")
 	FTransform Transform;
 
+	UPROPERTY(BlueprintReadWrite, Category = "Flecs")
+	FTransform GlobalTransform;
+
 }; // struct FFlecsTransformComponent

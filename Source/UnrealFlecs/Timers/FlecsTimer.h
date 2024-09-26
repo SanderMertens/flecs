@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "flecs.h"
+#include "Entities/FlecsEntityHandle.h"
 #include "SolidMacros/Macros.h"
 #include "FlecsTimer.generated.h"
 

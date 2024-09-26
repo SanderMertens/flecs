@@ -78,9 +78,11 @@ struct query_builder_i : term_builder_i<Base> {
     }
 
     Base& with_name_component() {
-        this->term();
-        *this->term_ = flecs::term(flecs::Name);
-        return *this;
+        return with<flecs::Identifier>(flecs::Name);
+    }
+
+    Base& with_symbol_component() {
+        return with<flecs::Identifier>(flecs::Symbol);
     }
 
     Base& with(const char *first, const char *second) {

@@ -29,8 +29,9 @@ public:
 	FORCEINLINE NO_DISCARD UFlecsWorld* GetFlecsWorld() const
 	{
 		solid_check(IsValid(GetWorld()));
-		UFlecsWorldSubsystem* FlecsWorldSubsystem = GetWorld()->GetSubsystem<UFlecsWorldSubsystem>();
+		const UFlecsWorldSubsystem* FlecsWorldSubsystem = GetWorld()->GetSubsystem<UFlecsWorldSubsystem>();
 		solid_check(IsValid(FlecsWorldSubsystem));
+		
 		return FlecsWorldSubsystem->GetDefaultWorld(this);
 	}
 

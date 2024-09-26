@@ -233,7 +233,7 @@ struct term_builder_i : term_ref_builder_i<Base> {
     Base& up() {
         return this->up(_::type<Trav>::id(this->world_v()));
     }
-
+    
     /* The cascade flag is like up, but returns results in breadth-first order.
      * Only supported for flecs::query */
     Base& cascade(flecs::entity_t trav = 0) {
