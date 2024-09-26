@@ -1738,3 +1738,19 @@ void World_run_post_frame_outside_of_frame(void) {
     int ctx = 10;
     ecs_run_post_frame(world, post_frame_action, &ctx);
 }
+
+void World_get_flags(void) {
+    ecs_world_t *world = ecs_mini();
+
+    test_assert(!(ecs_world_get_flags(world) & EcsWorldFrameInProgress));
+
+    ecs_frame_begin(world, 0);
+
+    test_assert((ecs_world_get_flags(world) & EcsWorldFrameInProgress));
+
+    ecs_frame_end(world);
+
+    test_assert(!(ecs_world_get_flags(world) & EcsWorldFrameInProgress));
+
+    ecs_fini(world);
+}

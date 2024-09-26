@@ -1919,6 +1919,7 @@ void World_set_get_binding_context_w_free(void);
 void World_get_entities(void);
 void World_run_post_frame(void);
 void World_run_post_frame_outside_of_frame(void);
+void World_get_flags(void);
 
 // Testsuite 'WorldInfo'
 void WorldInfo_get_tick(void);
@@ -9681,6 +9682,10 @@ bake_test_case World_testcases[] = {
     {
         "run_post_frame_outside_of_frame",
         World_run_post_frame_outside_of_frame
+    },
+    {
+        "get_flags",
+        World_get_flags
     }
 };
 
@@ -11209,7 +11214,7 @@ static bake_test_suite suites[] = {
         "World",
         World_setup,
         NULL,
-        65,
+        66,
         World_testcases
     },
     {
