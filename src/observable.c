@@ -1345,7 +1345,8 @@ repeat_event:
         if (count) {
             storage_i = tr->column;
             bool is_sparse = idr->flags & EcsIdIsSparse;
-            if (storage_i != -1 || is_sparse) {
+
+            if (!ecs_id_is_wildcard(id) && (storage_i != -1 || is_sparse)) {
                 void *ptr;
                 ecs_size_t size = idr->type_info->size;
 

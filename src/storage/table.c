@@ -152,7 +152,7 @@ void flecs_table_init_columns(
     int16_t *s2t = &table->column_map[ids_count];
 
     for (i = 0; i < ids_count; i ++) {
-        ecs_id_t id = table->type.array[i];
+        ecs_id_t id = ids[i];
         ecs_table_record_t *tr = &records[i];
         ecs_id_record_t *idr = (ecs_id_record_t*)tr->hdr.cache;
         const ecs_type_info_t *ti = idr->type_info;
@@ -172,16 +172,20 @@ void flecs_table_init_columns(
             table->component_map[id] = flecs_ito(int16_t, cur + 1);
         }
 
-        if (ECS_IS_PAIR(ids[i])) {
-            ecs_table_record_t *wc_tr = flecs_id_record_get_table(
-                idr->parent, table);
-            if (wc_tr->index == tr->index) {
-                wc_tr->column = tr->column;
-            }
-        }
-
         table->flags |= flecs_type_info_flags(ti);
         cur ++;
+    }
+
+    int32_t record_count = table->_->record_count;
+    for (; i < record_count; i ++) {
+        ecs_table_record_t *tr = &records[i];
+        ecs_id_record_t *idr = (ecs_id_record_t*)tr->hdr.cache;
+        ecs_id_t id = idr->id;
+        
+        if (ecs_id_is_wildcard(id)) {
+            ecs_table_record_t *first_tr = &records[tr->index];
+            tr->column = first_tr->column;
+        }
     }
 }
 
