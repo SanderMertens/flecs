@@ -13849,7 +13849,8 @@ repeat_event:
         if (count) {
             storage_i = tr->column;
             bool is_sparse = idr->flags & EcsIdIsSparse;
-            if (storage_i != -1 || is_sparse) {
+
+            if (!ecs_id_is_wildcard(id) && (storage_i != -1 || is_sparse)) {
                 void *ptr;
                 ecs_size_t size = idr->type_info->size;
 
@@ -36230,7 +36231,7 @@ void flecs_table_init_columns(
     int16_t *s2t = &table->column_map[ids_count];
 
     for (i = 0; i < ids_count; i ++) {
-        ecs_id_t id = table->type.array[i];
+        ecs_id_t id = ids[i];
         ecs_table_record_t *tr = &records[i];
         ecs_id_record_t *idr = (ecs_id_record_t*)tr->hdr.cache;
         const ecs_type_info_t *ti = idr->type_info;
@@ -36250,16 +36251,20 @@ void flecs_table_init_columns(
             table->component_map[id] = flecs_ito(int16_t, cur + 1);
         }
 
-        if (ECS_IS_PAIR(ids[i])) {
-            ecs_table_record_t *wc_tr = flecs_id_record_get_table(
-                idr->parent, table);
-            if (wc_tr->index == tr->index) {
-                wc_tr->column = tr->column;
-            }
-        }
-
         table->flags |= flecs_type_info_flags(ti);
         cur ++;
+    }
+
+    int32_t record_count = table->_->record_count;
+    for (; i < record_count; i ++) {
+        ecs_table_record_t *tr = &records[i];
+        ecs_id_record_t *idr = (ecs_id_record_t*)tr->hdr.cache;
+        ecs_id_t id = idr->id;
+        
+        if (ecs_id_is_wildcard(id)) {
+            ecs_table_record_t *first_tr = &records[tr->index];
+            tr->column = first_tr->column;
+        }
     }
 }
 
@@ -68947,7 +68952,7 @@ bool flecs_query_with(
 {
     ecs_query_and_ctx_t *op_ctx = flecs_op_ctx(ctx, and);
     ecs_id_record_t *idr = op_ctx->idr;
-    const ecs_table_record_t *tr;
+    ecs_table_record_t *tr;
 
     ecs_table_t *table = flecs_query_get_table(op, &op->src, EcsQuerySrc, ctx);
     if (!table) {
@@ -68970,6 +68975,7 @@ bool flecs_query_with(
 
         op_ctx->column = flecs_ito(int16_t, tr->index);
         op_ctx->remaining = flecs_ito(int16_t, tr->count);
+        op_ctx->it.cur = &tr->hdr;
     } else {
         ecs_assert((op_ctx->remaining + op_ctx->column - 1) < table->type.count, 
             ECS_INTERNAL_ERROR, NULL);
@@ -69117,16 +69123,6 @@ bool flecs_query_self_up(
 }
 
 static
-bool flecs_query_select_any(
-    const ecs_query_op_t *op,
-    bool redo,
-    const ecs_query_run_ctx_t *ctx)
-{
-    return flecs_query_select_w_id(op, redo, ctx, EcsAny, 
-        (EcsTableNotQueryable|EcsTableIsPrefab|EcsTableIsDisabled));
-}
-
-static
 bool flecs_query_and_any(
     const ecs_query_op_t *op,
     bool redo,
@@ -69149,8 +69145,9 @@ bool flecs_query_and_any(
         remaining = 0;
     }
 
+    ecs_query_and_ctx_t *op_ctx = flecs_op_ctx(ctx, and);
+
     if (!redo) {
-        ecs_query_and_ctx_t *op_ctx = flecs_op_ctx(ctx, and);
         if (match_flags & EcsTermMatchAny && op_ctx->remaining) {
             op_ctx->remaining = flecs_ito(int16_t, remaining);
         }
@@ -69160,6 +69157,8 @@ bool flecs_query_and_any(
     if (field != -1) {
         ctx->it->ids[field] = flecs_query_op_get_id(op, ctx);
     }
+
+    ctx->it->trs[field] = (ecs_table_record_t*)op_ctx->it.cur;
 
     return result;
 }
@@ -69174,7 +69173,8 @@ bool flecs_query_only_any(
     if (flecs_ref_is_written(op, &op->src, EcsQuerySrc, written)) {
         return flecs_query_and_any(op, redo, ctx);
     } else {
-        return flecs_query_select_any(op, redo, ctx);
+        return flecs_query_select_w_id(op, redo, ctx, EcsAny, 
+            (EcsTableNotQueryable|EcsTableIsPrefab|EcsTableIsDisabled));
     }
 }
 

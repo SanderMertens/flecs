@@ -670,6 +670,16 @@ void Basic_ref_fields_up_src(void);
 void Basic_ref_fields_self_up_src(void);
 void Basic_0_src_match_nothing(void);
 void Basic_0_terms_match_nothing(void);
+void Basic_any_record(void);
+void Basic_pair_rel_any_record(void);
+void Basic_pair_tgt_any_record(void);
+void Basic_pair_any_any_record(void);
+void Basic_written_any_record(void);
+void Basic_written_pair_rel_any_record(void);
+void Basic_written_pair_tgt_any_record(void);
+void Basic_written_pair_any_any_record(void);
+void Basic_pair_rel_any_record_component(void);
+void Basic_pair_tgt_any_record_component(void);
 
 // Testsuite 'Combinations'
 void Combinations_setup(void);
@@ -4727,6 +4737,46 @@ bake_test_case Basic_testcases[] = {
     {
         "0_terms_match_nothing",
         Basic_0_terms_match_nothing
+    },
+    {
+        "any_record",
+        Basic_any_record
+    },
+    {
+        "pair_rel_any_record",
+        Basic_pair_rel_any_record
+    },
+    {
+        "pair_tgt_any_record",
+        Basic_pair_tgt_any_record
+    },
+    {
+        "pair_any_any_record",
+        Basic_pair_any_any_record
+    },
+    {
+        "written_any_record",
+        Basic_written_any_record
+    },
+    {
+        "written_pair_rel_any_record",
+        Basic_written_pair_rel_any_record
+    },
+    {
+        "written_pair_tgt_any_record",
+        Basic_written_pair_tgt_any_record
+    },
+    {
+        "written_pair_any_any_record",
+        Basic_written_pair_any_any_record
+    },
+    {
+        "pair_rel_any_record_component",
+        Basic_pair_rel_any_record_component
+    },
+    {
+        "pair_tgt_any_record_component",
+        Basic_pair_tgt_any_record_component
     }
 };
 
@@ -10357,7 +10407,7 @@ static bake_test_suite suites[] = {
         "Basic",
         Basic_setup,
         NULL,
-        214,
+        224,
         Basic_testcases,
         1,
         Basic_params

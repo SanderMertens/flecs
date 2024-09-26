@@ -10776,3 +10776,443 @@ void Basic_0_terms_match_nothing(void) {
 
     ecs_fini(world);
 }
+
+void Basic_any_record(void) {
+    test_quarantine("25 Sept 2024");
+
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, RelX);
+    ECS_TAG(world, RelY);
+    ECS_TAG(world, TgtA);
+    ECS_TAG(world, TgtB);
+    ECS_TAG(world, TgtC);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "_",
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_add(world, e, Position);
+    ecs_add_pair(world, e, RelX, TgtA);
+    ecs_add_pair(world, e, RelX, TgtB);
+    ecs_add_pair(world, e, RelX, TgtC);
+    ecs_add_pair(world, e, RelY, TgtA);
+    ecs_add_pair(world, e, RelY, TgtB);
+
+    bool matched = false;
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    while (ecs_query_next(&it)) {
+        if (it.count == 1 && it.entities[0] == e) {
+            test_uint(EcsWildcard, ecs_field_id(&it, 0));
+            const ecs_table_record_t *tr = it.trs[0];
+            test_assert(tr != NULL);
+            test_int(tr->index, 0);
+            test_int(tr->column, -1);
+            test_int(tr->count, 6);
+            matched = true;
+        }
+    }
+
+    test_bool(true, matched);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Basic_pair_rel_any_record(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, RelX);
+    ECS_TAG(world, RelY);
+    ECS_TAG(world, TgtA);
+    ECS_TAG(world, TgtB);
+    ECS_TAG(world, TgtC);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "(_, TgtB)",
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_add(world, e, Position);
+    ecs_add_pair(world, e, RelX, TgtA);
+    ecs_add_pair(world, e, RelX, TgtB);
+    ecs_add_pair(world, e, RelX, TgtC);
+    ecs_add_pair(world, e, RelY, TgtA);
+    ecs_add_pair(world, e, RelY, TgtB);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_uint(1, it.count);
+    test_uint(e, it.entities[0]);
+    test_uint(ecs_pair(EcsWildcard, TgtB), ecs_field_id(&it, 0));
+    const ecs_table_record_t *tr = it.trs[0];
+    test_assert(tr != NULL);
+    test_int(tr->index, 2);
+    test_int(tr->column, -1);
+    test_int(tr->count, 2);
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Basic_pair_tgt_any_record(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, RelX);
+    ECS_TAG(world, RelY);
+    ECS_TAG(world, TgtA);
+    ECS_TAG(world, TgtB);
+    ECS_TAG(world, TgtC);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "(RelX, _)",
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_add(world, e, Position);
+    ecs_add_pair(world, e, RelX, TgtA);
+    ecs_add_pair(world, e, RelX, TgtB);
+    ecs_add_pair(world, e, RelX, TgtC);
+    ecs_add_pair(world, e, RelY, TgtA);
+    ecs_add_pair(world, e, RelY, TgtB);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_uint(1, it.count);
+    test_uint(e, it.entities[0]);
+    test_uint(ecs_pair(RelX, EcsWildcard), ecs_field_id(&it, 0));
+    const ecs_table_record_t *tr = it.trs[0];
+    test_assert(tr != NULL);
+    test_int(tr->index, 1);
+    test_int(tr->column, -1);
+    test_int(tr->count, 3);
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Basic_pair_any_any_record(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, RelX);
+    ECS_TAG(world, RelY);
+    ECS_TAG(world, TgtA);
+    ECS_TAG(world, TgtB);
+    ECS_TAG(world, TgtC);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "(_, _)",
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_add(world, e, Position);
+    ecs_add_pair(world, e, RelX, TgtA);
+    ecs_add_pair(world, e, RelX, TgtB);
+    ecs_add_pair(world, e, RelX, TgtC);
+    ecs_add_pair(world, e, RelY, TgtA);
+    ecs_add_pair(world, e, RelY, TgtB);
+
+    bool matched = false;
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    while (ecs_query_next(&it)) {
+        if (it.count == 1 && it.entities[0] == e) {
+            test_uint(ecs_pair(EcsWildcard, EcsWildcard), ecs_field_id(&it, 0));
+            const ecs_table_record_t *tr = it.trs[0];
+            test_assert(tr != NULL);
+            test_int(tr->index, 1);
+            test_int(tr->column, -1);
+            test_int(tr->count, 5);
+            matched = true;
+        }
+    }
+
+    test_bool(true, matched);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Basic_written_any_record(void) {
+    test_quarantine("25 Sept 2024");
+
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, RelX);
+    ECS_TAG(world, RelY);
+    ECS_TAG(world, TgtA);
+    ECS_TAG(world, TgtB);
+    ECS_TAG(world, TgtC);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "Position, _",
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_add(world, e, Position);
+    ecs_add_pair(world, e, RelX, TgtA);
+    ecs_add_pair(world, e, RelX, TgtB);
+    ecs_add_pair(world, e, RelX, TgtC);
+    ecs_add_pair(world, e, RelY, TgtA);
+    ecs_add_pair(world, e, RelY, TgtB);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_uint(1, it.count);
+    test_uint(e, it.entities[0]);
+    test_uint(EcsWildcard, ecs_field_id(&it, 1));
+    const ecs_table_record_t *tr = it.trs[1];
+    test_assert(tr != NULL);
+    test_int(tr->index, 0);
+    test_int(tr->column, -1);
+    test_int(tr->count, 6);
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Basic_written_pair_rel_any_record(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, RelX);
+    ECS_TAG(world, RelY);
+    ECS_TAG(world, TgtA);
+    ECS_TAG(world, TgtB);
+    ECS_TAG(world, TgtC);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "Position, (_, TgtB)",
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_add(world, e, Position);
+    ecs_add_pair(world, e, RelX, TgtA);
+    ecs_add_pair(world, e, RelX, TgtB);
+    ecs_add_pair(world, e, RelX, TgtC);
+    ecs_add_pair(world, e, RelY, TgtA);
+    ecs_add_pair(world, e, RelY, TgtB);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_uint(1, it.count);
+    test_uint(e, it.entities[0]);
+    test_uint(ecs_pair(EcsWildcard, TgtB), ecs_field_id(&it, 1));
+    const ecs_table_record_t *tr = it.trs[1];
+    test_assert(tr != NULL);
+    test_int(tr->index, 2);
+    test_int(tr->column, -1);
+    test_int(tr->count, 2);
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Basic_written_pair_tgt_any_record(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, RelX);
+    ECS_TAG(world, RelY);
+    ECS_TAG(world, TgtA);
+    ECS_TAG(world, TgtB);
+    ECS_TAG(world, TgtC);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "Position, (RelX, _)",
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_add(world, e, Position);
+    ecs_add_pair(world, e, RelX, TgtA);
+    ecs_add_pair(world, e, RelX, TgtB);
+    ecs_add_pair(world, e, RelX, TgtC);
+    ecs_add_pair(world, e, RelY, TgtA);
+    ecs_add_pair(world, e, RelY, TgtB);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_uint(1, it.count);
+    test_uint(e, it.entities[0]);
+    test_uint(ecs_pair(RelX, EcsWildcard), ecs_field_id(&it, 1));
+    const ecs_table_record_t *tr = it.trs[1];
+    test_assert(tr != NULL);
+    test_int(tr->index, 1);
+    test_int(tr->column, -1);
+    test_int(tr->count, 3);
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Basic_written_pair_any_any_record(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, RelX);
+    ECS_TAG(world, RelY);
+    ECS_TAG(world, TgtA);
+    ECS_TAG(world, TgtB);
+    ECS_TAG(world, TgtC);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "Position, (_, _)",
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_add(world, e, Position);
+    ecs_add_pair(world, e, RelX, TgtA);
+    ecs_add_pair(world, e, RelX, TgtB);
+    ecs_add_pair(world, e, RelX, TgtC);
+    ecs_add_pair(world, e, RelY, TgtA);
+    ecs_add_pair(world, e, RelY, TgtB);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_uint(1, it.count);
+    test_uint(e, it.entities[0]);
+    test_uint(ecs_pair(EcsWildcard, EcsWildcard), ecs_field_id(&it, 1));
+    const ecs_table_record_t *tr = it.trs[1];
+    test_assert(tr != NULL);
+    test_int(tr->index, 1);
+    test_int(tr->column, -1);
+    test_int(tr->count, 5);
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Basic_pair_rel_any_record_component(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, RelX);
+    ECS_TAG(world, RelY);
+    ECS_TAG(world, TgtA);
+    ECS_TAG(world, TgtB);
+    ECS_TAG(world, TgtC);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "(_, Position)",
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_add(world, e, Position);
+    ecs_set_pair_second(world, e, RelX, Position, {10, 20});
+    ecs_set_pair_second(world, e, RelY, Position, {20, 0});
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_uint(1, it.count);
+    test_uint(e, it.entities[0]);
+    test_uint(ecs_pair(EcsWildcard, ecs_id(Position)), ecs_field_id(&it, 0));
+    const ecs_table_record_t *tr = it.trs[0];
+    test_assert(tr != NULL);
+    test_int(tr->index, 1);
+    test_int(tr->column, 1);
+    test_int(tr->count, 2);
+    {
+        Position *p = ecs_field(&it, Position, 0);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+    }
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Basic_pair_tgt_any_record_component(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, RelX);
+    ECS_TAG(world, RelY);
+    ECS_TAG(world, TgtA);
+    ECS_TAG(world, TgtB);
+    ECS_TAG(world, TgtC);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "(Position, _)",
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_add(world, e, Position);
+    ecs_set_pair(world, e, Position, RelX, {10, 20});
+    ecs_set_pair(world, e, Position, RelY, {20, 30});
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_uint(1, it.count);
+    test_uint(e, it.entities[0]);
+    test_uint(ecs_pair_t(Position, EcsWildcard), ecs_field_id(&it, 0));
+    const ecs_table_record_t *tr = it.trs[0];
+    test_assert(tr != NULL);
+    test_int(tr->index, 1);
+    test_int(tr->column, 1);
+    test_int(tr->count, 2);
+    {
+        Position *p = ecs_field(&it, Position, 0);
+        test_assert(p != NULL);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+    }
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}

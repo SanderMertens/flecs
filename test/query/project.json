@@ -681,7 +681,17 @@
                 "ref_fields_up_src",
                 "ref_fields_self_up_src",
                 "0_src_match_nothing",
-                "0_terms_match_nothing"
+                "0_terms_match_nothing",
+                "any_record",
+                "pair_rel_any_record",
+                "pair_tgt_any_record",
+                "pair_any_any_record",
+                "written_any_record",
+                "written_pair_rel_any_record",
+                "written_pair_tgt_any_record",
+                "written_pair_any_any_record",
+                "pair_rel_any_record_component",
+                "pair_tgt_any_record_component"
             ]
         }, {
             "id": "Combinations",
