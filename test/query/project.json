@@ -695,7 +695,8 @@
                 "entity_iteration_w_match_empty_tables",
                 "get_cache_query_uncached",
                 "get_cache_query_cached",
-                "get_cache_query_partially_cached"
+                "get_cache_query_partially_cached",
+                "written_pair_any_any_record"
             ]
         }, {
             "id": "Combinations",
