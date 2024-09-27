@@ -864,6 +864,9 @@ void Observer_2_entities_each(void);
 void Observer_create_w_no_template_args(void);
 void Observer_yield_existing(void);
 void Observer_yield_existing_2_terms(void);
+void Observer_yield_existing_on_create_flag(void);
+void Observer_yield_existing_on_delete_flag(void);
+void Observer_yield_existing_on_create_delete_flag(void);
 void Observer_default_ctor(void);
 void Observer_entity_ctor(void);
 void Observer_on_add(void);
@@ -4730,6 +4733,18 @@ bake_test_case Observer_testcases[] = {
         Observer_yield_existing_2_terms
     },
     {
+        "yield_existing_on_create_flag",
+        Observer_yield_existing_on_create_flag
+    },
+    {
+        "yield_existing_on_delete_flag",
+        Observer_yield_existing_on_delete_flag
+    },
+    {
+        "yield_existing_on_create_delete_flag",
+        Observer_yield_existing_on_create_delete_flag
+    },
+    {
         "default_ctor",
         Observer_default_ctor
     },
@@ -6796,7 +6811,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        52,
+        55,
         Observer_testcases
     },
     {
