@@ -1470,6 +1470,9 @@ void Observer_on_remove_yield_existing_wildcard(void);
 void Observer_on_remove_yield_existing_wildcard_multi(void);
 void Observer_on_remove_yield_existing_wildcard_multi_w_wildcard_pivot(void);
 void Observer_on_add_remove_yield_existing(void);
+void Observer_on_add_remove_yield_existing_flags(void);
+void Observer_on_add_remove_no_on_add_yield_existing(void);
+void Observer_on_add_remove_no_on_remove_yield_existing(void);
 void Observer_observer_superset_wildcard(void);
 void Observer_observer_superset_wildcard_add_isa(void);
 void Observer_observer_superset_wildcard_add_isa_at_offset(void);
@@ -7935,6 +7938,18 @@ bake_test_case Observer_testcases[] = {
         Observer_on_add_remove_yield_existing
     },
     {
+        "on_add_remove_yield_existing_flags",
+        Observer_on_add_remove_yield_existing_flags
+    },
+    {
+        "on_add_remove_no_on_add_yield_existing",
+        Observer_on_add_remove_no_on_add_yield_existing
+    },
+    {
+        "on_add_remove_no_on_remove_yield_existing",
+        Observer_on_add_remove_no_on_remove_yield_existing
+    },
+    {
         "observer_superset_wildcard",
         Observer_observer_superset_wildcard
     },
@@ -11165,7 +11180,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        216,
+        219,
         Observer_testcases
     },
     {
