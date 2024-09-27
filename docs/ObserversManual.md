@@ -1270,7 +1270,7 @@ Monitors are implemented by evaluating the observer query twice: once on the pre
 Note that because monitors have to evaluate the query twice, they are more expensive to evaluate than regular observers.
 
 ## Yield Existing
-Observers can be created with the "yield existing" property, which invokes the observer with all entities that already match the observer. This can make it easier to make code order-independent, as entities created before the observer will still trigger the observer. Yield existing only works with `OnAdd` and `OnSet` events. An example:
+Observers can be created with the "yield existing" property, which invokes the observer with all entities that already match the observer. This can make it easier to make code order-independent, as entities created before the observer will still trigger the observer. Yield existing only works with `OnAdd`, `OnSet` and `OnRemove` events. An example:
 
 <div class="flecs-snippet-tabs">
 <ul>
@@ -1358,6 +1358,64 @@ world
 
 // Fires observer as usual
 let e2 = world.entity().set(Position { x: 10.0, y: 20.0 });
+```
+
+</li>
+</ul>
+</div>
+
+When `yield_existing` is enabled on an `OnRemove` observer, the observer will be invoked with matching entities when the observer is deleted. This makes symmetric event handling (each `OnAdd` is matched by an `OnRemove`) easier in scenarios where entities outlive the observer.
+
+### Yield_existing flags
+Applications can customize the behavior of yield_existing with the following observer flags:
+
+| Flag | Description |
+|------|-------------|
+| `EcsObserverYieldOnCreate` | Yield results on observer creation |
+| `EcsObserverYieldOnDelete` | Yield results on observer deletion |
+
+These flags can be set on the `flags_` member of `ecs_observer_desc_t`. These flags should not be set at the same time as `.yield_existing`. An example:
+
+<div class="flecs-snippet-tabs">
+<ul>
+<li><b class="tab-title">C</b>
+
+```c
+ecs_observer(world, {
+    .query.terms = {
+        { ecs_id(Position) }
+    },
+    .events = { EcsOnAdd },
+    .callback = MyObserver,
+    .flags_ = EcsObserverYieldOnDelete // only yield on observer deletion
+});
+```
+
+</li>
+<li><b class="tab-title">C++</b>
+
+```cpp
+// Yield existing observer
+world.observer<Position, Velocity>()
+    .event(flecs::OnAdd)
+    .observer_flags(EcsObserverYieldOnDelete)
+    .each([](flecs::iter& it, size_t i, Position& p, Velocity& v) {
+        // ...
+    });
+```
+
+</li>
+<li><b class="tab-title">C#</b>
+
+```cs
+// TODO
+```
+
+</li>
+<li><b class="tab-title">Rust</b>
+
+```rust
+// TODO
 ```
 
 </li>

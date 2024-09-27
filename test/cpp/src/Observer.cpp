@@ -390,6 +390,94 @@ void Observer_yield_existing_2_terms(void) {
     test_int(count, 6);
 }
 
+
+void Observer_yield_existing_on_create_flag(void) {
+    flecs::world world;
+
+    struct Tag0 { };
+    struct Tag1 { };
+
+    auto e1 = world.entity().add<Tag0>();
+    auto e2 = world.entity().add<Tag0>();
+    auto e3 = world.entity().add<Tag0>().add<Tag1>();
+
+    int32_t count = 0;
+
+    auto o = world.observer<Tag0>()
+        .event(flecs::OnAdd)
+        .event(flecs::OnRemove)
+        .observer_flags(EcsObserverYieldOnCreate)
+        .each([&](flecs::entity e, Tag0) {
+            if (e == e1) count ++;
+            if (e == e2) count += 2;
+            if (e == e3) count += 3;
+        });
+
+    test_int(count, 6);
+
+    o.destruct();
+
+    test_int(count, 6);
+}
+
+void Observer_yield_existing_on_delete_flag(void) {
+    flecs::world world;
+
+    struct Tag0 { };
+    struct Tag1 { };
+
+    auto e1 = world.entity().add<Tag0>();
+    auto e2 = world.entity().add<Tag0>();
+    auto e3 = world.entity().add<Tag0>().add<Tag1>();
+
+    int32_t count = 0;
+
+    auto o = world.observer<Tag0>()
+        .event(flecs::OnAdd)
+        .event(flecs::OnRemove)
+        .observer_flags(EcsObserverYieldOnDelete)
+        .each([&](flecs::entity e, Tag0) {
+            if (e == e1) count ++;
+            if (e == e2) count += 2;
+            if (e == e3) count += 3;
+        });
+
+    test_int(count, 0);
+
+    o.destruct();
+
+    test_int(count, 6);
+}
+
+void Observer_yield_existing_on_create_delete_flag(void) {
+    flecs::world world;
+
+    struct Tag0 { };
+    struct Tag1 { };
+
+    auto e1 = world.entity().add<Tag0>();
+    auto e2 = world.entity().add<Tag0>();
+    auto e3 = world.entity().add<Tag0>().add<Tag1>();
+
+    int32_t count = 0;
+
+    auto o = world.observer<Tag0>()
+        .event(flecs::OnAdd)
+        .event(flecs::OnRemove)
+        .observer_flags(EcsObserverYieldOnCreate|EcsObserverYieldOnDelete)
+        .each([&](flecs::entity e, Tag0) {
+            if (e == e1) count ++;
+            if (e == e2) count += 2;
+            if (e == e3) count += 3;
+        });
+
+    test_int(count, 6);
+
+    o.destruct();
+
+    test_int(count, 12);
+}
+
 void Observer_default_ctor(void) {
     flecs::world world;
 
