@@ -1160,6 +1160,29 @@ public:
 	{
 		GetEntity().modified(ObtainTraitHolderEntity(StructType), InTrait);
 	}
+
+	FORCEINLINE NO_DISCARD int32 GetDepth(const FFlecsEntityHandle& InEntity) const
+	{
+		return GetEntity().depth(InEntity);
+	}
+
+	template <typename TEntity>
+	FORCEINLINE NO_DISCARD int32 GetDepth() const
+	{
+		return GetEntity().depth<TEntity>();
+	}
+
+	FORCEINLINE NO_DISCARD FString GetPath() const
+	{
+		return FString(GetEntity().path());
+	}
+
+	FORCEINLINE NO_DISCARD FString GetPath(const FString& InSeparator,
+		const FString& InitialSeparator) const
+	{
+		return FString(GetEntity().path(StringCast<char>(*InSeparator).Get(),
+			StringCast<char>(*InitialSeparator).Get()));
+	}
 	
 	#if WITH_EDITORONLY_DATA
 
@@ -1213,24 +1236,19 @@ private:
 	FORCEINLINE NO_DISCARD FFlecsEntityHandle ObtainTraitHolderEntity(const UScriptStruct* StructType) const
 	{
 		solid_checkf(Has(StructType), TEXT("Entity does not have component"));
-
+		
 		FFlecsEntityHandle TraitHolder;
 
-		GetEntity().children(ObtainComponentTypeStruct(StructType).GetEntity(),
-			[&](flecs::iter& Iter, size_t Index)
+		if LIKELY_IF(GetEntity().has(ObtainComponentTypeStruct(StructType), flecs::Wildcard))
 		{
-			const FFlecsEntityHandle InEntity = Iter.entity(Index);
-				
-			if (InEntity.Has(flecs::Trait))
-			{
-				TraitHolder = InEntity;
-				Iter.fini();
-			}
-		});
+			TraitHolder
+				= GetEntity()
+					.target_for(ObtainComponentTypeStruct(StructType), flecs::ChildOf);
 
-		if LIKELY_IF(TraitHolder.IsValid())
-		{
-			return TraitHolder;
+			if LIKELY_IF(TraitHolder.IsValid())
+			{
+				return TraitHolder;
+			}
 		}
 		
 		const flecs::world World = GetFlecsWorld_Internal();

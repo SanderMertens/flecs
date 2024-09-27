@@ -13,14 +13,71 @@ UFlecsTransformModule::UFlecsTransformModule()
 
 void UFlecsTransformModule::InitializeModule(UFlecsWorld* InWorld, const FFlecsEntityHandle& InModuleEntity)
 {
-    InWorld->CreateSystemWithBuilder(TEXT("FlecsTransformPropagateSystem"))
+    InWorld->CreateSystemWithBuilder<FFlecsTransformComponent, const FFlecsTransformComponent>(TEXT("FlecsTransformPropagateSystem"))
         .kind(flecs::PreUpdate)
         .with<FFlecsTransformComponent>()
-        .with<FFlecsTransformComponent>().up()
+        .with<FFlecsTransformComponent>().cascade()
         .cached()
         .immediate()
-        .run([](flecs::iter& It)
+        .run([](flecs::iter& Iter)
         {
+        	while (Iter.next())
+        	{
+        		if (!Iter.changed())
+        		{
+					Iter.skip();
+					continue;
+				}
+
+        		flecs::field<FFlecsTransformComponent> TransformField = Iter.field<FFlecsTransformComponent>(0);
+        		flecs::field<FFlecsTransformComponent> ParentTransformField = Iter.field<FFlecsTransformComponent>(1);
+
+        		for (const flecs::entity_t Index : Iter)
+        		{
+        			if UNLIKELY_IF(!Iter.is_set(1))
+					{
+						UN_LOGF(LogFlecsSystem, Log,
+							"FlecsTransformPropagateSystem: Entity %s has no parent",
+							Iter.entity(Index).name().c_str());
+						continue;
+					}
+
+        			FFlecsEntityHandle Entity = Iter.entity(Index);
+        			FFlecsTransformComponent& Transform = TransformField[Index];
+        			FFlecsTransformComponent& ParentTransform = ParentTransformField[Index];
+
+        			if (Entity.HasTrait<FFlecsTransformComponent, FFlecsRelativeTrait>())
+					{
+						const int32 RelativeTraitIndex
+        					= Entity.GetTrait<FFlecsTransformComponent, FFlecsRelativeTrait>().RelativeToIndex;
+
+        				static constexpr std::string_view PathSeparator = "::";
+
+        				FString Path = Entity.GetPath();
+        				solid_checkf(Path.Len() > 0, TEXT("Entity path cannot be empty"));
+        				
+        				const int32 SeparatorIndex = Path.Find(PathSeparator.data(),
+								ESearchCase::IgnoreCase, ESearchDir::FromEnd, Path.Len() - RelativeTraitIndex);
+
+        				FFlecsEntityHandle RelativeEntity = Entity.GetFlecsWorld()->LookupEntity(Path.Left(SeparatorIndex));
+        				solid_checkf(RelativeEntity.IsValid(), TEXT("Relative entity is invalid"));
+
+        				FFlecsTransformComponent RelativeTransform = RelativeEntity.Get<FFlecsTransformComponent>();
+        				Transform.GlobalTransform = RelativeTransform.GlobalTransform * Transform.Transform;
+					}
+			        else if (Entity.HasTrait<FFlecsTransformComponent>(FlecsLocalTrait))
+			        {
+				        Transform.GlobalTransform = ParentTransform.GlobalTransform * Transform.Transform;
+			        }
+        			// implied global transform
+        			else
+			        {
+				        Transform.GlobalTransform = Transform.Transform;
+			        }
+        		}
+
+        		
+			}
         });
 }
 
