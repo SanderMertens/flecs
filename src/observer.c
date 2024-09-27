@@ -743,6 +743,7 @@ int flecs_multi_observer_init(
     child_desc.run_ctx = NULL;
     child_desc.run_ctx_free = NULL;
     child_desc.yield_existing = false;
+    child_desc.flags_ &= ~(EcsObserverYieldOnCreate|EcsObserverYieldOnDelete);
     ecs_os_zeromem(&child_desc.entity);
     ecs_os_zeromem(&child_desc.query.terms);
     ecs_os_zeromem(&child_desc.query);

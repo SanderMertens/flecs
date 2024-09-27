@@ -4331,6 +4331,154 @@ void Observer_on_add_remove_no_on_remove_yield_existing(void) {
     ecs_fini(world);
 }
 
+void Observer_yield_existing_flags_w_multi_observer(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, TagA);
+    ECS_TAG(world, TagB);
+
+    /* Create entities before trigger */
+    ecs_entity_t e1 = ecs_new_w(world, TagA);
+    ecs_add(world, e1, TagB);
+    ecs_entity_t e2 = ecs_new_w(world, TagA);
+    ecs_add(world, e2, TagB);
+    ecs_entity_t e3 = ecs_new_w(world, TagA);
+    ecs_add(world, e3, TagB);
+
+    test_assert(e1 != 0);
+    test_assert(e2 != 0);
+    test_assert(e3 != 0);
+
+    Probe ctx = {0};
+    ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
+        .query.terms = {{ TagA }, { TagB }},
+        .events = {EcsOnAdd, EcsOnRemove},
+        .callback = Observer,
+        .ctx = &ctx,
+        .flags_ = EcsObserverYieldOnCreate|EcsObserverYieldOnDelete
+    });
+
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 3);
+    test_int(ctx.system, t);
+    test_int(ctx.event, EcsOnAdd);
+    test_int(ctx.term_count, 2);
+    test_null(ctx.param);
+
+    test_int(ctx.e[0], e1);
+    test_int(ctx.e[1], e2);
+    test_int(ctx.e[2], e3);
+    test_int(ctx.c[0][0], TagA);
+    test_int(ctx.c[0][1], TagB);
+
+    ecs_os_zeromem(&ctx);
+
+    ecs_delete(world, t);
+
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 3);
+    test_int(ctx.system, t);
+    test_int(ctx.event, EcsOnRemove);
+    test_int(ctx.term_count, 2);
+    test_null(ctx.param);
+
+    test_int(ctx.e[0], e1);
+    test_int(ctx.e[1], e2);
+    test_int(ctx.e[2], e3);
+    test_int(ctx.c[0][0], TagA);
+    test_int(ctx.c[0][1], TagB);
+
+    ecs_fini(world);
+}
+
+void Observer_yield_on_create_without_on_add(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+
+    /* Create entities before trigger */
+    ecs_entity_t e1 = ecs_new_w(world, Tag);
+    ecs_entity_t e2 = ecs_new_w(world, Tag);
+    ecs_entity_t e3 = ecs_new_w(world, Tag);
+
+    test_assert(e1 != 0);
+    test_assert(e2 != 0);
+    test_assert(e3 != 0);
+
+    Probe ctx = {0};
+    ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
+        .query.terms = {{ Tag }},
+        .events = {EcsOnRemove},
+        .callback = Observer,
+        .ctx = &ctx,
+        .flags_ = EcsObserverYieldOnCreate|EcsObserverYieldOnDelete
+    });
+
+    test_int(ctx.invoked, 0);
+
+    ecs_delete(world, t);
+
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 3);
+    test_int(ctx.system, t);
+    test_int(ctx.event, EcsOnRemove);
+    test_int(ctx.event_id, Tag);
+    test_int(ctx.term_count, 1);
+    test_null(ctx.param);
+
+    test_int(ctx.e[0], e1);
+    test_int(ctx.e[1], e2);
+    test_int(ctx.e[2], e3);
+    test_int(ctx.c[0][0], Tag);
+
+    ecs_fini(world);
+}
+
+void Observer_yield_on_delete_without_on_remove(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Tag);
+
+    /* Create entities before trigger */
+    ecs_entity_t e1 = ecs_new_w(world, Tag);
+    ecs_entity_t e2 = ecs_new_w(world, Tag);
+    ecs_entity_t e3 = ecs_new_w(world, Tag);
+
+    test_assert(e1 != 0);
+    test_assert(e2 != 0);
+    test_assert(e3 != 0);
+
+    Probe ctx = {0};
+    ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
+        .query.terms = {{ Tag }},
+        .events = {EcsOnAdd},
+        .callback = Observer,
+        .ctx = &ctx,
+        .flags_ = EcsObserverYieldOnCreate|EcsObserverYieldOnDelete
+    });
+
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 3);
+    test_int(ctx.system, t);
+    test_int(ctx.event, EcsOnAdd);
+    test_int(ctx.event_id, Tag);
+    test_int(ctx.term_count, 1);
+    test_null(ctx.param);
+
+    test_int(ctx.e[0], e1);
+    test_int(ctx.e[1], e2);
+    test_int(ctx.e[2], e3);
+    test_int(ctx.c[0][0], Tag);
+
+    ecs_os_zeromem(&ctx);
+
+    ecs_delete(world, t);
+
+    test_int(ctx.invoked, 0);
+
+    ecs_fini(world);
+}
+
 void Observer_observer_superset_wildcard(void) {
     ecs_world_t *world = ecs_mini();
 
