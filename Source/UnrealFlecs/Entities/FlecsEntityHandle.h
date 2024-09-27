@@ -1209,18 +1209,16 @@ private:
 
 		FFlecsEntityHandle TraitHolder;
 
-		GetEntity().each<TComponent>([&](flecs::iter& Iter, const FFlecsEntityHandle& InEntity)
+		if LIKELY_IF(GetEntity().has<TComponent>(flecs::Wildcard))
 		{
-			if (InEntity.Has(flecs::Trait))
-			{
-				TraitHolder = InEntity;
-				Iter.fini();
-			}
-		});
+			TraitHolder
+				= GetEntity()
+					.target_for<TComponent>(flecs::ChildOf);
 
-		if LIKELY_IF(TraitHolder.IsValid())
-		{
-			return TraitHolder;
+			if LIKELY_IF(TraitHolder.IsValid())
+			{
+				return TraitHolder;
+			}
 		}
 
 		const flecs::world World = GetFlecsWorld_Internal();
