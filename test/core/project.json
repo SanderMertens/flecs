@@ -2296,7 +2296,13 @@
                 "has_id",
                 "has_pair",
                 "has_wildcard_pair",
-                "has_any_pair"
+                "has_any_pair",
+                "clear_table_kills_entities",
+                "clear_table_add_new",
+                "clear_table_check_size",
+                "clear_table_twice_check_size",
+                "clear_table_on_remove_hooks",
+                "clear_table_on_remove_observer"
             ]
         }, {
             "id": "Poly",

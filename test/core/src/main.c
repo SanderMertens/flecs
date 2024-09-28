@@ -2210,6 +2210,12 @@ void Table_has_id(void);
 void Table_has_pair(void);
 void Table_has_wildcard_pair(void);
 void Table_has_any_pair(void);
+void Table_clear_table_kills_entities(void);
+void Table_clear_table_add_new(void);
+void Table_clear_table_check_size(void);
+void Table_clear_table_twice_check_size(void);
+void Table_clear_table_on_remove_hooks(void);
+void Table_clear_table_on_remove_observer(void);
 
 // Testsuite 'Poly'
 void Poly_on_set_poly_observer(void);
@@ -10803,6 +10809,30 @@ bake_test_case Table_testcases[] = {
     {
         "has_any_pair",
         Table_has_any_pair
+    },
+    {
+        "clear_table_kills_entities",
+        Table_clear_table_kills_entities
+    },
+    {
+        "clear_table_add_new",
+        Table_clear_table_add_new
+    },
+    {
+        "clear_table_check_size",
+        Table_clear_table_check_size
+    },
+    {
+        "clear_table_twice_check_size",
+        Table_clear_table_twice_check_size
+    },
+    {
+        "clear_table_on_remove_hooks",
+        Table_clear_table_on_remove_hooks
+    },
+    {
+        "clear_table_on_remove_observer",
+        Table_clear_table_on_remove_observer
     }
 };
 
@@ -11251,7 +11281,7 @@ static bake_test_suite suites[] = {
         "Table",
         NULL,
         NULL,
-        24,
+        30,
         Table_testcases
     },
     {

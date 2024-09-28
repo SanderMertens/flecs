@@ -963,7 +963,7 @@ void ecs_table_clear_entities(
     bool notify,
     bool deallocate)
 {
-    flecs_table_fini_data(world, table, notify, false, true, deallocate);
+    flecs_table_fini_data(world, table, notify, true, true, deallocate);
 }
 
 /* Cleanup, no OnRemove, clear entity index, deactivate table, free allocations */
