@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Properties/FlecsComponentProperties.h"
 #include "Standard/Hashing.h"
 #include "FlecsScriptStructComponent.generated.h"
 
@@ -34,5 +35,7 @@ struct FFlecsScriptStructComponent
     TWeakObjectPtr<UScriptStruct> ScriptStruct;
     
 }; // struct FFlecsScriptStructComponent
+REGISTER_FLECS_COMPONENT_PROPERTIES(FFlecsScriptStructComponent,
+    { flecs::Sparse }, {} )
 
 DEFINE_STD_HASH(FFlecsScriptStructComponent)

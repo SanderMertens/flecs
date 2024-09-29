@@ -30,6 +30,9 @@ void IFlecsModuleInterface::ImportModule(const flecs::world& InWorld)
 		
 	InitializeModule(World.Get(), ModuleEntity);
 	Execute_BP_InitializeModule(_getUObject(), World.Get());
+
+	UN_LOGF(LogFlecsCore, Log,
+		"Imported module: %s", *IFlecsModuleInterface::Execute_GetModuleName(_getUObject()));
 }
 
 void IFlecsModuleInterface::DeinitializeModule_Internal()
@@ -37,6 +40,9 @@ void IFlecsModuleInterface::DeinitializeModule_Internal()
 	ModuleEntity.Disable();
 	DeinitializeModule(World.Get());
 	Execute_BP_DeinitializeModule(_getUObject(), World.Get());
+
+	UN_LOGF(LogFlecsCore, Log, "Deinitialized module: %s",
+		*IFlecsModuleInterface::Execute_GetModuleName(_getUObject()));
 }
 
 void IFlecsModuleInterface::InitializeModule(UFlecsWorld* InWorld, const FFlecsEntityHandle& InModuleEntity)

@@ -81,8 +81,7 @@ public:
         {
             // Allocate memory without zero-initialization for speed
             FFlecsThread* FlecsThread = static_cast<FFlecsThread*>(FMemory::Malloc(sizeof(FFlecsThread)));
-
-            // Directly use FRunnable and FRunnableThread for minimal overhead
+        	
             FlecsThread->Runnable = new FFlecsRunnable(Callback, Param);
             FlecsThread->Thread = FRunnableThread::Create(FlecsThread->Runnable,
             	TEXT("FlecsThread"), 0, TPri_Normal);
@@ -208,7 +207,7 @@ public:
 				{
 					FFlecsEntityHandle EntityHandle = InEntity;
 					
-					solid_checkf(InEventInfo.scriptStruct != nullptr, TEXT("Script struct is nullptr"));
+					solid_checkf(InEventInfo.scriptStruct, TEXT("Script struct is nullptr"));
 					solid_checkf(EntityHandle.IsComponent(), TEXT("Entity is not a component"));
 
 					if UNLIKELY_IF(InEventInfo.scriptStruct == FFlecsScriptStructComponent::StaticStruct())
@@ -246,6 +245,8 @@ public:
 
 					if UNLIKELY_IF(EntityHandle.Has<FFlecsScriptStructComponent>())
 					{
+						UN_LOGF(LogFlecsWorld, Warning, "Struct component %s already registered",
+							*EntityHandle.GetSymbol());
 						EntityHandle.Remove<flecs::_::type_impl_struct_event_info>();
 						return;
 					}
@@ -279,18 +280,23 @@ public:
 			});
 		});
 
-		CreateObserver<FFlecsModuleComponent, const FFlecsUObjectComponent>(TEXT("AddModuleComponentObserver"))
+		CreateObserver<const FFlecsUObjectComponent&>(TEXT("AddModuleComponentObserver"))
 			.cached()
+			.with<FFlecsModuleComponent>().inout_none()
 			.event(flecs::OnAdd)
-			.yield_existing()
-			.each([&](flecs::entity InEntity, FFlecsModuleComponent& InComponent,
+			.each([&](flecs::entity InEntity,
 				const FFlecsUObjectComponent& InUObjectComponent)
 			{
 				const FFlecsEntityHandle EntityHandle = InEntity;
+
+				UN_LOGF(LogFlecsWorld, Log, "Module component %s added",
+                    *InUObjectComponent.GetObjectChecked()->GetName());
 				
 				if (InUObjectComponent.GetObjectChecked()->Implements<UFlecsModuleProgressInterface>())
 				{
 					ProgressModules.Add(InUObjectComponent.GetObjectChecked());
+					UN_LOGF(LogFlecsWorld, Log, "Progress module %s added",
+						*InUObjectComponent.GetObjectChecked()->GetName());
 				}
 			});
 
@@ -309,8 +315,7 @@ public:
 					}
 					
 					if (Module
-						== Iter.entity(IterIndex)
-							.get<FFlecsUObjectComponent>()->GetObjectChecked())
+						== Iter.entity(IterIndex).get<FFlecsUObjectComponent>()->GetObjectChecked())
 					{
 						ProgressModules.RemoveAt(Index - 1);
 						break;
@@ -363,16 +368,11 @@ public:
 	{
 		solid_checkf(IsValid(InAsset), TEXT("Asset is nullptr"));
 
-		if (!InAsset->ShouldSpawn())
-		{
-			return;
-		}
-
 		const FFlecsEntityHandle AssetEntity = LookupEntity(InAsset->GetPrimaryAssetId().ToString());
 		
-		if UNLIKELY_IF(!AssetEntity.IsValid())
+		if (!AssetEntity.IsValid())
 		{
-			UN_LOGF(LogFlecsWorld, Warning, "Asset entity %s not found",
+			UN_LOGF(LogFlecsWorld, Log, "Asset entity %s not found",
 				*InAsset->GetPrimaryAssetId().ToString());
 			return;
 		}
