@@ -18,7 +18,7 @@ void UFlecsNetworkingManager::BeginPlay()
 {
 	Super::BeginPlay();
 
-	FlecsWorld = UFlecsWorldSubsystem::GetDefaultWorld(this);
+	FlecsWorld = UFlecsWorldSubsystem::GetDefaultWorldStatic(this);
 
 	#if WITH_SERVER_CODE
 

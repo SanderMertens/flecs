@@ -28,17 +28,6 @@ void UFlecsTickerModule::InitializeModule(UFlecsWorld* InWorld, const FFlecsEnti
 	InWorld->SetSingleton<FFlecsTickerComponent>(TickerComponent);
 	InWorld->World.modified<FFlecsTickerComponent>();
 
-	TickerSystem = InWorld->CreateSystemWithBuilder<FFlecsTickerComponent>(TEXT("FlecsTickerSystem"))
-		.cached()
-		.kind(flecs::PreFrame)
-		.term_at(0).singleton()
-		.write<FFlecsTickerComponent>()
-		.immediate()
-		.each([](FFlecsTickerComponent& Ticker)
-		{
-			++Ticker.TickId;
-		}).add(FlecsFixedTick);
-
 	MainPipeline = InWorld->CreatePipeline()
 		.cached()
 		.with(flecs::System)
@@ -60,6 +49,16 @@ void UFlecsTickerModule::InitializeModule(UFlecsWorld* InWorld, const FFlecsEnti
 		.set_name("TickerPipeline");
 
 	InWorld->SetPipeline(MainPipeline);
+
+	TickerSystem = InWorld->CreateSystemWithBuilder<FFlecsTickerComponent>(TEXT("FlecsTickerSystem"))
+		.cached()
+		.kind(flecs::PreFrame)
+		.term_at(0).singleton()
+		.immediate()
+		.each([](FFlecsTickerComponent& Ticker)
+		{
+			++Ticker.TickId;
+		}).add(FlecsFixedTick);
 }
 
 void UFlecsTickerModule::DeinitializeModule(UFlecsWorld* InWorld)

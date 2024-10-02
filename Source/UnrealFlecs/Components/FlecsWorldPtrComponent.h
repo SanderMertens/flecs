@@ -20,9 +20,8 @@ struct UNREALFLECS_API FFlecsWorldPtrComponent
 
 	FORCEINLINE FFlecsWorldPtrComponent() = default;
 
-	FORCEINLINE FFlecsWorldPtrComponent(UFlecsWorld* InWorld, const bool bInIsDefaultWorld = false)
+	FORCEINLINE FFlecsWorldPtrComponent(UFlecsWorld* InWorld)
 		: World(InWorld)
-		, bIsDefaultWorld(bInIsDefaultWorld)
 	{
 	}
 
@@ -57,9 +56,6 @@ struct UNREALFLECS_API FFlecsWorldPtrComponent
 
 	UPROPERTY(BlueprintReadOnly, Category = "Flecs")
 	TWeakObjectPtr<UFlecsWorld> World;
-
-	UPROPERTY(BlueprintReadOnly, Category = "Flecs")
-	bool bIsDefaultWorld = false;
 	
 }; // struct FFlecsWorldPtrComponent
 

@@ -17,7 +17,7 @@ FFlecsEntityHandle::FFlecsEntityHandle()
         return;
     }
 
-    if (WorldName.IsEmpty() || GetEntity().id() == 0)
+    if (GetEntity().id() == 0)
     {
         return;
     }
@@ -25,19 +25,16 @@ FFlecsEntityHandle::FFlecsEntityHandle()
     if (GetEntity().world() == nullptr)
     {
         UFlecsWorldSubsystem* FlecsWorldSubsystem = GWorld->GetSubsystem<UFlecsWorldSubsystem>();
-        if LIKELY_IF(FlecsWorldSubsystem->HasWorld(WorldName))
+        if LIKELY_IF(FlecsWorldSubsystem->HasValidFlecsWorld())
         {
-            SetEntity(flecs::entity(FlecsWorldSubsystem->GetFlecsWorld(WorldName)->World, GetEntity().id()));
+            SetEntity(flecs::entity(FlecsWorldSubsystem->GetDefaultWorld()->World, GetEntity().id()));
         }
         else
         {
             FDelegateHandle OnWorldCreatedHandle = FlecsWorldSubsystem
-                ->OnWorldCreated.AddLambda([&](const FString& Name, const UFlecsWorld* InFlecsWorld)
+                ->OnWorldCreated.AddLambda([&](MAYBE_UNUSED const FString& Name, const UFlecsWorld* InFlecsWorld)
             {
-                if (Name == WorldName)
-                {
-                    SetEntity(flecs::entity(InFlecsWorld->World, GetEntity().id()));
-                }
+                SetEntity(flecs::entity(InFlecsWorld->World, GetEntity().id()));
 
                 FlecsWorldSubsystem->OnWorldCreated.Remove(OnWorldCreatedHandle);
             });
@@ -68,13 +65,10 @@ bool FFlecsEntityHandle::NetSerialize(FArchive& Ar, UPackageMap* Map, bool& bOut
         FNetworkedEntityInfo Info;
         Info.NetSerialize(Ar, Map, bOutSuccess);
 
-        WorldName = Info.WorldName;
-
         const UFlecsWorldSubsystem* FlecsWorldSubsystem = GWorld->GetSubsystem<UFlecsWorldSubsystem>();
         solid_checkf(FlecsWorldSubsystem, TEXT("Flecs World Subsystem not found"));
-        solid_checkf(FlecsWorldSubsystem->HasWorld(WorldName), TEXT("Flecs World not found"))
 
-        const flecs::query<const FFlecsNetworkIdComponent> Query = FlecsWorldSubsystem->GetFlecsWorld(WorldName)->World
+        const flecs::query<const FFlecsNetworkIdComponent> Query = FlecsWorldSubsystem->GetDefaultWorld()->World
             .query<const FFlecsNetworkIdComponent>();
 
         const FFlecsEntityHandle EntityHandle = Query.find([&Info](const FFlecsNetworkIdComponent& InNetworkId)
@@ -88,7 +82,7 @@ bool FFlecsEntityHandle::NetSerialize(FArchive& Ar, UPackageMap* Map, bool& bOut
         }
         else
         {
-            SetEntity(FlecsWorldSubsystem->GetFlecsWorld(WorldName)->LookupEntity(Info.EntityName).GetEntity());
+            SetEntity(FlecsWorldSubsystem->GetDefaultWorld()->LookupEntity(Info.EntityName).GetEntity());
         }
         
         bOutSuccess = true;

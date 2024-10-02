@@ -21,300 +21,300 @@ struct alignas(8) UNREALFLECS_API FFlecsEntityHandle
 {
 	GENERATED_BODY()
 
-	FORCEINLINE NO_DISCARD friend uint32 GetTypeHash(const FFlecsEntityHandle& InEntity)
+	FORCEINLINE_DEBUGGABLE NO_DISCARD friend uint32 GetTypeHash(const FFlecsEntityHandle& InEntity)
 	{
 		return GetTypeHash(InEntity.GetEntity().id());
 	}
 
-	FORCEINLINE static NO_DISCARD FFlecsEntityHandle GetNullHandle()
+	FORCEINLINE_DEBUGGABLE static NO_DISCARD FFlecsEntityHandle GetNullHandle()
 	{
 		return flecs::entity::null();
 	}
 
 public:
 	FFlecsEntityHandle();
-	FORCEINLINE FFlecsEntityHandle(const flecs::entity& InEntity) : Entity(InEntity) {}
+	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle(const flecs::entity& InEntity) : Entity(InEntity) {}
 
-	FORCEINLINE FFlecsEntityHandle(const flecs::entity_t& InEntity) : Entity(InEntity) 
+	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle(const flecs::entity_t& InEntity) : Entity(InEntity) 
 	{
 		FFlecsEntityHandle();
 	}
 	
-	FORCEINLINE NO_DISCARD flecs::entity GetEntity() const { return Entity; }
+	FORCEINLINE_DEBUGGABLE NO_DISCARD flecs::entity GetEntity() const { return Entity; }
 
-	FORCEINLINE void SetEntity(const flecs::entity& InEntity) { Entity = InEntity; }
-	FORCEINLINE void SetEntity(const flecs::entity_t& InEntity)
+	FORCEINLINE_DEBUGGABLE void SetEntity(const flecs::entity& InEntity) { Entity = InEntity; }
+	FORCEINLINE_DEBUGGABLE void SetEntity(const flecs::entity_t& InEntity)
 	{
 		*this = FFlecsEntityHandle(InEntity);
 	}
 	
-	FORCEINLINE operator flecs::entity() const { return GetEntity(); }
-	FORCEINLINE operator flecs::id_t() const { return GetEntity().id(); }
-	FORCEINLINE operator flecs::entity_view() const { return GetEntity().view(); }
+	FORCEINLINE_DEBUGGABLE operator flecs::entity() const { return GetEntity(); }
+	FORCEINLINE_DEBUGGABLE operator flecs::id_t() const { return GetEntity().id(); }
+	FORCEINLINE_DEBUGGABLE operator flecs::entity_view() const { return GetEntity().view(); }
 	
-	FORCEINLINE NO_DISCARD bool IsValid() const { return GetEntity().is_valid(); }
-	FORCEINLINE NO_DISCARD bool IsAlive() const { return GetEntity().is_alive(); }
+	FORCEINLINE_DEBUGGABLE NO_DISCARD bool IsValid() const { return GetEntity().is_valid(); }
+	FORCEINLINE_DEBUGGABLE NO_DISCARD bool IsAlive() const { return GetEntity().is_alive(); }
 
-	FORCEINLINE operator bool() const { return IsValid(); }
+	FORCEINLINE_DEBUGGABLE operator bool() const { return IsValid(); }
 
-	FORCEINLINE NO_DISCARD uint32 GetId() const { return GetEntity().id(); }
-	FORCEINLINE NO_DISCARD uint32 GetGeneration() const { return get_generation(GetEntity()); }
+	FORCEINLINE_DEBUGGABLE NO_DISCARD uint32 GetId() const { return GetEntity().id(); }
+	FORCEINLINE_DEBUGGABLE NO_DISCARD uint32 GetGeneration() const { return get_generation(GetEntity()); }
 	
-	FORCEINLINE NO_DISCARD UFlecsWorld* GetFlecsWorld() const;
-	FORCEINLINE NO_DISCARD UWorld* GetOuterWorld() const;
+	FORCEINLINE_DEBUGGABLE NO_DISCARD UFlecsWorld* GetFlecsWorld() const;
+	FORCEINLINE_DEBUGGABLE NO_DISCARD UWorld* GetOuterWorld() const;
 	
-	FORCEINLINE NO_DISCARD FString GetWorldName() const;
+	FORCEINLINE_DEBUGGABLE NO_DISCARD FString GetWorldName() const;
 	
-	FORCEINLINE NO_DISCARD FFlecsArchetype GetType() const { return FFlecsArchetype(GetEntity().type()); }
+	FORCEINLINE_DEBUGGABLE NO_DISCARD FFlecsArchetype GetType() const { return FFlecsArchetype(GetEntity().type()); }
 
-	FORCEINLINE NO_DISCARD bool Has(const FFlecsEntityHandle& InEntity) const { return GetEntity().has(InEntity); }
+	FORCEINLINE_DEBUGGABLE NO_DISCARD bool Has(const FFlecsEntityHandle& InEntity) const { return GetEntity().has(InEntity); }
 
 	template <typename T>
-	FORCEINLINE NO_DISCARD bool Has() const { return GetEntity().has<T>(); }
+	FORCEINLINE_DEBUGGABLE NO_DISCARD bool Has() const { return GetEntity().has<T>(); }
 
 	template <typename First, typename Second>
-	FORCEINLINE NO_DISCARD bool Has() const { return GetEntity().has<First, Second>(); }
+	FORCEINLINE_DEBUGGABLE NO_DISCARD bool Has() const { return GetEntity().has<First, Second>(); }
 
 	template <typename First>
-	FORCEINLINE NO_DISCARD bool Has(const FFlecsEntityHandle& InSecond) const { return GetEntity().has<First>(InSecond.GetEntity()); }
+	FORCEINLINE_DEBUGGABLE NO_DISCARD bool Has(const FFlecsEntityHandle& InSecond) const { return GetEntity().has<First>(InSecond.GetEntity()); }
 
 	template <typename First, typename Second>
-	FORCEINLINE NO_DISCARD bool Has(const Second& InSecond) const { return GetEntity().has<First, Second>(InSecond); }
+	FORCEINLINE_DEBUGGABLE NO_DISCARD bool Has(const Second& InSecond) const { return GetEntity().has<First, Second>(InSecond); }
 
-	FORCEINLINE NO_DISCARD bool Has(const UScriptStruct* StructType) const
+	FORCEINLINE_DEBUGGABLE NO_DISCARD bool Has(const UScriptStruct* StructType) const
 	{
 		return Has(ObtainComponentTypeStruct(StructType));
 	}
 
-	FORCEINLINE NO_DISCARD bool Has(const FGameplayTag& InTag) const
+	FORCEINLINE_DEBUGGABLE NO_DISCARD bool Has(const FGameplayTag& InTag) const
 	{
 		return Has(GetTagEntity(InTag));
 	}
 
-	FORCEINLINE void Add(const FFlecsEntityHandle& InEntity) const { GetEntity().add(InEntity); }
+	FORCEINLINE_DEBUGGABLE void Add(const FFlecsEntityHandle& InEntity) const { GetEntity().add(InEntity); }
 
-	FORCEINLINE void Add(const UScriptStruct* StructType) const
+	FORCEINLINE_DEBUGGABLE void Add(const UScriptStruct* StructType) const
 	{
 		Add(ObtainComponentTypeStruct(StructType));
 	}
 
-	FORCEINLINE void Add(const FGameplayTag& InTag) const
+	FORCEINLINE_DEBUGGABLE void Add(const FGameplayTag& InTag) const
 	{
 		Add(GetTagEntity(InTag));
 	}
 	
 	template <typename T>
-	FORCEINLINE void Add() const { GetEntity().add<T>(); }
+	FORCEINLINE_DEBUGGABLE void Add() const { GetEntity().add<T>(); }
 	
-	FORCEINLINE void Remove(const FFlecsEntityHandle& InEntity) const { GetEntity().remove(InEntity); }
+	FORCEINLINE_DEBUGGABLE void Remove(const FFlecsEntityHandle& InEntity) const { GetEntity().remove(InEntity); }
 
-	FORCEINLINE void Remove(const FFlecsEntityHandle InFirst, const FFlecsEntityHandle InSecond) const
+	FORCEINLINE_DEBUGGABLE void Remove(const FFlecsEntityHandle InFirst, const FFlecsEntityHandle InSecond) const
 	{
 		GetEntity().remove(InFirst, InSecond);
 	}
 
-	FORCEINLINE void Remove(const UScriptStruct* StructType) const
+	FORCEINLINE_DEBUGGABLE void Remove(const UScriptStruct* StructType) const
 	{
 		Remove(ObtainComponentTypeStruct(StructType));
 	}
 
-	FORCEINLINE void Remove(const FGameplayTag& InTag) const
+	FORCEINLINE_DEBUGGABLE void Remove(const FGameplayTag& InTag) const
 	{
 		Remove(GetTagEntity(InTag));
 	}
 
 	template <typename T>
-	FORCEINLINE void Remove() const { GetEntity().remove<T>(); }
+	FORCEINLINE_DEBUGGABLE void Remove() const { GetEntity().remove<T>(); }
 
-	FORCEINLINE void Set(const FFlecsEntityHandle& InEntity) const { GetEntity().set(InEntity); }
+	FORCEINLINE_DEBUGGABLE void Set(const FFlecsEntityHandle& InEntity) const { GetEntity().set(InEntity); }
 
 	template <typename T>
-	FORCEINLINE void Set(const T& InValue) const { GetEntity().set<T>(InValue); }
+	FORCEINLINE_DEBUGGABLE void Set(const T& InValue) const { GetEntity().set<T>(InValue); }
 
-	FORCEINLINE void Set(const FFlecsEntityHandle& InEntity, const void* InValue) const
+	FORCEINLINE_DEBUGGABLE void Set(const FFlecsEntityHandle& InEntity, const void* InValue) const
 	{
 		GetEntity().set_ptr(InEntity, InValue);
 	}
 
-	FORCEINLINE void Set(const UScriptStruct* StructType, const void* InValue) const
+	FORCEINLINE_DEBUGGABLE void Set(const UScriptStruct* StructType, const void* InValue) const
 	{
 		Set(ObtainComponentTypeStruct(StructType), InValue);
 	}
 
-	FORCEINLINE void Set(const FInstancedStruct& InValue) const
+	FORCEINLINE_DEBUGGABLE void Set(const FInstancedStruct& InValue) const
 	{
 		Set(ObtainComponentTypeStruct(InValue.GetScriptStruct()), InValue.GetMemory());
 	}
 	
 	template <typename T>
-	FORCEINLINE NO_DISCARD T Get() const { return *GetEntity().get<T>(); }
+	FORCEINLINE_DEBUGGABLE NO_DISCARD T Get() const { return *GetEntity().get<T>(); }
 
-	FORCEINLINE NO_DISCARD void* GetPtr(const FFlecsEntityHandle& InEntity)
+	FORCEINLINE_DEBUGGABLE NO_DISCARD void* GetPtr(const FFlecsEntityHandle& InEntity)
 	{
 		return GetEntity().get_mut(InEntity);
 	}
 
-	FORCEINLINE NO_DISCARD const void* GetPtr(const FFlecsEntityHandle& InEntity) const
+	FORCEINLINE_DEBUGGABLE NO_DISCARD const void* GetPtr(const FFlecsEntityHandle& InEntity) const
 	{
 		return GetEntity().get(InEntity);
 	}
 	
 	template <typename T>
-	FORCEINLINE NO_DISCARD T* GetPtr() { return GetEntity().get_mut<T>(); }
+	FORCEINLINE_DEBUGGABLE NO_DISCARD T* GetPtr() { return GetEntity().get_mut<T>(); }
 	
 	template <typename T>
-	FORCEINLINE NO_DISCARD const T* GetPtr() const { return GetEntity().get<T>(); }
+	FORCEINLINE_DEBUGGABLE NO_DISCARD const T* GetPtr() const { return GetEntity().get<T>(); }
 
-	FORCEINLINE NO_DISCARD void* GetPtr(const UScriptStruct* StructType)
+	FORCEINLINE_DEBUGGABLE NO_DISCARD void* GetPtr(const UScriptStruct* StructType)
 	{
 		return GetPtr(ObtainComponentTypeStruct(StructType));
 	}
 
-	FORCEINLINE NO_DISCARD const void* GetPtr(const UScriptStruct* StructType) const
+	FORCEINLINE_DEBUGGABLE NO_DISCARD const void* GetPtr(const UScriptStruct* StructType) const
 	{
 		return GetPtr(ObtainComponentTypeStruct(StructType));
 	}
 
 	template <typename T>
-	FORCEINLINE NO_DISCARD T& GetRef() { return *GetEntity().get_ref<T>().get(); }
+	FORCEINLINE_DEBUGGABLE NO_DISCARD T& GetRef() { return *GetEntity().get_ref<T>().get(); }
 
 	template <typename T>
-	FORCEINLINE NO_DISCARD const T& GetRef() const { return *GetEntity().get_ref<T>().get(); }
+	FORCEINLINE_DEBUGGABLE NO_DISCARD const T& GetRef() const { return *GetEntity().get_ref<T>().get(); }
 
 	template <typename T>
-	FORCEINLINE NO_DISCARD flecs::ref<T> GetFlecsRef() const { return GetEntity().get_ref<T>(); }
+	FORCEINLINE_DEBUGGABLE NO_DISCARD flecs::ref<T> GetFlecsRef() const { return GetEntity().get_ref<T>(); }
 
 	template <typename T>
-	FORCEINLINE NO_DISCARD flecs::ref<T> GetFlecsRef() { return GetEntity().get_ref<T>(); }
+	FORCEINLINE_DEBUGGABLE NO_DISCARD flecs::ref<T> GetFlecsRef() { return GetEntity().get_ref<T>(); }
 
 	template <typename T>
-	FORCEINLINE NO_DISCARD bool Has() { return GetEntity().has<T>(); }
+	FORCEINLINE_DEBUGGABLE NO_DISCARD bool Has() { return GetEntity().has<T>(); }
 
-	FORCEINLINE void Clear() const { GetEntity().clear(); }
+	FORCEINLINE_DEBUGGABLE void Clear() const { GetEntity().clear(); }
 
-	FORCEINLINE void Enable() const { GetEntity().enable(); }
-	FORCEINLINE void Disable() const { GetEntity().disable(); }
+	FORCEINLINE_DEBUGGABLE void Enable() const { GetEntity().enable(); }
+	FORCEINLINE_DEBUGGABLE void Disable() const { GetEntity().disable(); }
 
 	template <typename T>
-	FORCEINLINE void Enable() const { GetEntity().enable<T>(); }
+	FORCEINLINE_DEBUGGABLE void Enable() const { GetEntity().enable<T>(); }
 
-	FORCEINLINE void Enable(const FFlecsEntityHandle& InEntity) const { GetEntity().enable(InEntity); }
+	FORCEINLINE_DEBUGGABLE void Enable(const FFlecsEntityHandle& InEntity) const { GetEntity().enable(InEntity); }
 	
-	FORCEINLINE void Enable(const UScriptStruct* StructType) const
+	FORCEINLINE_DEBUGGABLE void Enable(const UScriptStruct* StructType) const
 	{
 		Enable(ObtainComponentTypeStruct(StructType));
 	}
 
-	FORCEINLINE void Enable(const FGameplayTag& InTag) const
+	FORCEINLINE_DEBUGGABLE void Enable(const FGameplayTag& InTag) const
 	{
 		Enable(GetTagEntity(InTag));
 	}
 
-	FORCEINLINE void Disable(const FFlecsEntityHandle& InEntity) const { GetEntity().disable(InEntity); }
+	FORCEINLINE_DEBUGGABLE void Disable(const FFlecsEntityHandle& InEntity) const { GetEntity().disable(InEntity); }
 	
-	FORCEINLINE void Disable(const UScriptStruct* StructType) const
+	FORCEINLINE_DEBUGGABLE void Disable(const UScriptStruct* StructType) const
 	{
 		Disable(ObtainComponentTypeStruct(StructType));
 	}
 
-	FORCEINLINE void Disable(const FGameplayTag& InTag) const
+	FORCEINLINE_DEBUGGABLE void Disable(const FGameplayTag& InTag) const
 	{
 		Disable(GetTagEntity(InTag));
 	}
 
 	template <typename T>
-	FORCEINLINE void Disable() const { GetEntity().disable<T>(); }
+	FORCEINLINE_DEBUGGABLE void Disable() const { GetEntity().disable<T>(); }
 
-	FORCEINLINE void Toggle() const { IsEnabled() ? Disable() : Enable(); }
+	FORCEINLINE_DEBUGGABLE void Toggle() const { IsEnabled() ? Disable() : Enable(); }
 
 	template <typename T>
-	FORCEINLINE void Toggle() const { IsEnabled<T>() ? Disable<T>() : Enable<T>(); }
+	FORCEINLINE_DEBUGGABLE void Toggle() const { IsEnabled<T>() ? Disable<T>() : Enable<T>(); }
 
-	FORCEINLINE void Toggle(const FFlecsEntityHandle& InEntity) const
+	FORCEINLINE_DEBUGGABLE void Toggle(const FFlecsEntityHandle& InEntity) const
 	{
 		GetEntity().enable(InEntity, !IsEnabled(InEntity));
 	}
 
-	FORCEINLINE void Toggle(const UScriptStruct* StructType) const
+	FORCEINLINE_DEBUGGABLE void Toggle(const UScriptStruct* StructType) const
 	{
 		Toggle(ObtainComponentTypeStruct(StructType));
 	}
 
-	FORCEINLINE void Toggle(const FGameplayTag& InTag) const
+	FORCEINLINE_DEBUGGABLE void Toggle(const FGameplayTag& InTag) const
 	{
 		Toggle(GetTagEntity(InTag));
 	}
 
-	FORCEINLINE NO_DISCARD bool IsEnabled() const { return GetEntity().enabled(); }
+	FORCEINLINE_DEBUGGABLE NO_DISCARD bool IsEnabled() const { return GetEntity().enabled(); }
 
 	template <typename T>
-	FORCEINLINE NO_DISCARD bool IsEnabled() const { return GetEntity().enabled<T>(); }
+	FORCEINLINE_DEBUGGABLE NO_DISCARD bool IsEnabled() const { return GetEntity().enabled<T>(); }
 
-	FORCEINLINE NO_DISCARD bool IsEnabled(const FFlecsEntityHandle& InEntity) const
+	FORCEINLINE_DEBUGGABLE NO_DISCARD bool IsEnabled(const FFlecsEntityHandle& InEntity) const
 	{
 		return GetEntity().enabled(InEntity);
 	}
 	
-	FORCEINLINE NO_DISCARD bool IsEnabled(const UScriptStruct* StructType) const
+	FORCEINLINE_DEBUGGABLE NO_DISCARD bool IsEnabled(const UScriptStruct* StructType) const
 	{
 		return IsEnabled(ObtainComponentTypeStruct(StructType));
 	}
 
-	FORCEINLINE NO_DISCARD bool IsEnabled(const FGameplayTag& InTag) const
+	FORCEINLINE_DEBUGGABLE NO_DISCARD bool IsEnabled(const FGameplayTag& InTag) const
 	{
 		return IsEnabled(GetTagEntity(InTag));
 	}
 
-	FORCEINLINE void Destroy() const { GetEntity().destruct(); }
+	FORCEINLINE_DEBUGGABLE void Destroy() const { GetEntity().destruct(); }
 
-	FORCEINLINE NO_DISCARD FFlecsEntityHandle Clone(const bool bCloneValue = true, const int32 DestinationId = 0) const
+	FORCEINLINE_DEBUGGABLE NO_DISCARD FFlecsEntityHandle Clone(const bool bCloneValue = true, const int32 DestinationId = 0) const
 	{
 		return GetEntity().clone(bCloneValue, DestinationId);
 	}
 
-	FORCEINLINE void SetName(const FString& InName) const { GetEntity().set_name(StringCast<char>(*InName).Get()); }
-	FORCEINLINE NO_DISCARD FString GetName() const { return FString(GetEntity().name()); }
-	FORCEINLINE NO_DISCARD bool HasName() const { return Has<flecs::Identifier>(flecs::Name); }
+	FORCEINLINE_DEBUGGABLE void SetName(const FString& InName) const { GetEntity().set_name(StringCast<char>(*InName).Get()); }
+	FORCEINLINE_DEBUGGABLE NO_DISCARD FString GetName() const { return FString(GetEntity().name()); }
+	FORCEINLINE_DEBUGGABLE NO_DISCARD bool HasName() const { return Has<flecs::Identifier>(flecs::Name); }
 
-	FORCEINLINE NO_DISCARD FString GetSymbol() const { return FString(GetEntity().symbol()); }
-	FORCEINLINE NO_DISCARD bool HasSymbol() const { return Has<flecs::Identifier>(flecs::Symbol); }
+	FORCEINLINE_DEBUGGABLE NO_DISCARD FString GetSymbol() const { return FString(GetEntity().symbol()); }
+	FORCEINLINE_DEBUGGABLE NO_DISCARD bool HasSymbol() const { return Has<flecs::Identifier>(flecs::Symbol); }
 
-	FORCEINLINE void SetDocBrief(const FString& InDocBrief) const { GetEntity().set_doc_brief(StringCast<char>(*InDocBrief).Get()); }
-	FORCEINLINE NO_DISCARD FString GetDocBrief() const { return FString(GetEntity().doc_brief()); }
+	FORCEINLINE_DEBUGGABLE void SetDocBrief(const FString& InDocBrief) const { GetEntity().set_doc_brief(StringCast<char>(*InDocBrief).Get()); }
+	FORCEINLINE_DEBUGGABLE NO_DISCARD FString GetDocBrief() const { return FString(GetEntity().doc_brief()); }
 
-	FORCEINLINE void SetDocColor(const FString& Link) const { GetEntity().set_doc_color(StringCast<char>(*Link).Get()); }
-	FORCEINLINE NO_DISCARD FString GetDocColor() const { return FString(GetEntity().doc_color()); }
+	FORCEINLINE_DEBUGGABLE void SetDocColor(const FString& Link) const { GetEntity().set_doc_color(StringCast<char>(*Link).Get()); }
+	FORCEINLINE_DEBUGGABLE NO_DISCARD FString GetDocColor() const { return FString(GetEntity().doc_color()); }
 
-	FORCEINLINE void SetDocName(const FString& InDocName) const { GetEntity().set_doc_name(StringCast<char>(*InDocName).Get()); }
-	FORCEINLINE NO_DISCARD FString GetDocName() const { return FString(GetEntity().doc_name()); }
+	FORCEINLINE_DEBUGGABLE void SetDocName(const FString& InDocName) const { GetEntity().set_doc_name(StringCast<char>(*InDocName).Get()); }
+	FORCEINLINE_DEBUGGABLE NO_DISCARD FString GetDocName() const { return FString(GetEntity().doc_name()); }
 
-	FORCEINLINE void SetDocLink(const FString& InDocLink) const { GetEntity().set_doc_link(StringCast<char>(*InDocLink).Get()); }
-	FORCEINLINE NO_DISCARD FString GetDocLink() const { return FString(GetEntity().doc_link()); }
+	FORCEINLINE_DEBUGGABLE void SetDocLink(const FString& InDocLink) const { GetEntity().set_doc_link(StringCast<char>(*InDocLink).Get()); }
+	FORCEINLINE_DEBUGGABLE NO_DISCARD FString GetDocLink() const { return FString(GetEntity().doc_link()); }
 
-	FORCEINLINE void SetDocDetails(const FString& InDocDetails) const { GetEntity().set_doc_detail(StringCast<char>(*InDocDetails).Get()); }
-	FORCEINLINE NO_DISCARD FString GetDocDetails() const { return FString(GetEntity().doc_detail()); }
+	FORCEINLINE_DEBUGGABLE void SetDocDetails(const FString& InDocDetails) const { GetEntity().set_doc_detail(StringCast<char>(*InDocDetails).Get()); }
+	FORCEINLINE_DEBUGGABLE NO_DISCARD FString GetDocDetails() const { return FString(GetEntity().doc_detail()); }
 
-	FORCEINLINE void SetPair(const FFlecsEntityHandle& InRelation, const FFlecsEntityHandle& InTarget) const
+	FORCEINLINE_DEBUGGABLE void SetPair(const FFlecsEntityHandle& InRelation, const FFlecsEntityHandle& InTarget) const
 	{
 		GetEntity().set_second(InRelation, InTarget);
 	}
 	
-	FORCEINLINE NO_DISCARD FFlecsEntityHandle GetParent() const
+	FORCEINLINE_DEBUGGABLE NO_DISCARD FFlecsEntityHandle GetParent() const
 	{
 		return GetEntity().parent();
 	}
 
-	FORCEINLINE NO_DISCARD bool HasParent() const
+	FORCEINLINE_DEBUGGABLE NO_DISCARD bool HasParent() const
 	{
 		return GetEntity().parent().is_valid();
 	}
 
-	FORCEINLINE void SetParent(const FFlecsEntityHandle& InParent) const
+	FORCEINLINE_DEBUGGABLE void SetParent(const FFlecsEntityHandle& InParent) const
 	{
 		GetEntity().child_of(InParent);
 	}
 
-	FORCEINLINE void SetParent(const FFlecsEntityHandle& InParent, const bool bIsA) const
+	FORCEINLINE_DEBUGGABLE void SetParent(const FFlecsEntityHandle& InParent, const bool bIsA) const
 	{
 		GetEntity().child_of(InParent);
 
@@ -324,114 +324,114 @@ public:
 		}
 	}
 
-	FORCEINLINE NO_DISCARD bool IsPrefab() const
+	FORCEINLINE_DEBUGGABLE NO_DISCARD bool IsPrefab() const
 	{
 		return Has(flecs::Prefab);
 	}
 
-	FORCEINLINE NO_DISCARD bool IsComponent() const
+	FORCEINLINE_DEBUGGABLE NO_DISCARD bool IsComponent() const
 	{
 		return Has<flecs::Component>() || Has<flecs::untyped_component>();
 	}
 	
-	FORCEINLINE NO_DISCARD flecs::untyped_component GetUntypedComponent() const
+	FORCEINLINE_DEBUGGABLE NO_DISCARD flecs::untyped_component GetUntypedComponent() const
 	{
 		solid_checkf(IsComponent(), TEXT("Entity is not a component"));
 		return flecs::untyped_component(GetFlecsWorld_Internal(), GetEntity());
 	}
 
-	FORCEINLINE NO_DISCARD flecs::untyped_component GetUntypedComponent_Unsafe() const
+	FORCEINLINE_DEBUGGABLE NO_DISCARD flecs::untyped_component GetUntypedComponent_Unsafe() const
 	{
 		return flecs::untyped_component(GetFlecsWorld_Internal(), GetEntity());
 	}
 
 	template <typename T>
-	FORCEINLINE void Emit() const
+	FORCEINLINE_DEBUGGABLE void Emit() const
 	{
 		GetEntity().emit<T>();
 	}
 
 	template <typename T>
-	FORCEINLINE void Emit(const T& InValue) const
+	FORCEINLINE_DEBUGGABLE void Emit(const T& InValue) const
 	{
 		GetEntity().emit<T>(InValue);
 	}
 
-	FORCEINLINE void Emit(const FFlecsEntityHandle& InEntity) const
+	FORCEINLINE_DEBUGGABLE void Emit(const FFlecsEntityHandle& InEntity) const
 	{
 		GetEntity().emit(InEntity);
 	}
 
 	template <typename T>
-	FORCEINLINE void Enqueue() const
+	FORCEINLINE_DEBUGGABLE void Enqueue() const
 	{
 		GetEntity().enqueue<T>();
 	}
 
 	template <typename T>
-	FORCEINLINE void Enqueue(const T& InValue) const
+	FORCEINLINE_DEBUGGABLE void Enqueue(const T& InValue) const
 	{
 		GetEntity().enqueue<T>(InValue);
 	}
 
-	FORCEINLINE void Enqueue(const FFlecsEntityHandle& InEntity) const
+	FORCEINLINE_DEBUGGABLE void Enqueue(const FFlecsEntityHandle& InEntity) const
 	{
 		GetEntity().enqueue(InEntity.GetEntity());
 	}
 
 	template <typename FunctionType>
-	FORCEINLINE void Observe(FunctionType&& InFunction) const
+	FORCEINLINE_DEBUGGABLE void Observe(FunctionType&& InFunction) const
 	{
 		GetEntity().observe(InFunction);
 	}
 
 	template <typename TEvent, typename FunctionType>
-	FORCEINLINE void Observe(FunctionType&& InFunction) const
+	FORCEINLINE_DEBUGGABLE void Observe(FunctionType&& InFunction) const
 	{
 		GetEntity().observe<TEvent>(InFunction);
 	}
 
 	template <typename FunctionType>
-	FORCEINLINE void Observe(const FFlecsEntityHandle& InEntity, FunctionType&& InFunction) const
+	FORCEINLINE_DEBUGGABLE void Observe(const FFlecsEntityHandle& InEntity, FunctionType&& InFunction) const
 	{
 		GetEntity().observe(InEntity.GetEntity(), InFunction);
 	}
 
-	FORCEINLINE NO_DISCARD bool operator==(const FFlecsEntityHandle& Other) const
+	FORCEINLINE_DEBUGGABLE NO_DISCARD bool operator==(const FFlecsEntityHandle& Other) const
 	{
 		return GetEntity() == Other.GetEntity();
 	}
 	
-	FORCEINLINE NO_DISCARD bool operator!=(const FFlecsEntityHandle& Other) const
+	FORCEINLINE_DEBUGGABLE NO_DISCARD bool operator!=(const FFlecsEntityHandle& Other) const
 	{
 		return GetEntity() != Other.GetEntity();
 	}
 
-	FORCEINLINE NO_DISCARD bool operator==(const flecs::entity& Other) const
+	FORCEINLINE_DEBUGGABLE NO_DISCARD bool operator==(const flecs::entity& Other) const
 	{
 		return GetEntity() == Other;
 	}
 
-	FORCEINLINE NO_DISCARD bool operator!=(const flecs::entity& Other) const
+	FORCEINLINE_DEBUGGABLE NO_DISCARD bool operator!=(const flecs::entity& Other) const
 	{
 		return GetEntity() != Other;
 	}
 
-	FORCEINLINE flecs::entity* operator->() { return &Entity; }
-	FORCEINLINE const flecs::entity* operator->() const { return &Entity; }
+	FORCEINLINE_DEBUGGABLE flecs::entity* operator->() { return &Entity; }
+	FORCEINLINE_DEBUGGABLE const flecs::entity* operator->() const { return &Entity; }
 
-	FORCEINLINE NO_DISCARD FString ToString() const
+	FORCEINLINE_DEBUGGABLE NO_DISCARD FString ToString() const
 	{
 		return FString::Printf(TEXT("Entity: %hs"), GetEntity().str().c_str());
 	}
 
 	template <typename TEnum>
-	FORCEINLINE NO_DISCARD TEnum ToConstant() const
+	FORCEINLINE_DEBUGGABLE NO_DISCARD TEnum ToConstant() const
 	{
 		return GetEntity().to_constant<TEnum>();
 	}
 
-	FORCEINLINE NO_DISCARD FString ToJson(const bool bSerializePath = true,
+	FORCEINLINE_DEBUGGABLE NO_DISCARD FString ToJson(const bool bSerializePath = true,
 		const bool bSerializeLabel = false, const bool bSerializeBrief = false, const bool bSerializeLink = false,
 		const bool bSerializeColor = false, const bool bSerializeIds = true, const bool bSerializeIdLabels = false,
 		const bool bSerializeBaseComponents = true, const bool bSerializeComponents = true) const
@@ -439,32 +439,32 @@ public:
 		return FString(GetEntity().to_json().c_str());
 	}
 
-	FORCEINLINE void FromJson(const FString& InJson) const
+	FORCEINLINE_DEBUGGABLE void FromJson(const FString& InJson) const
 	{
 		GetEntity().from_json(StringCast<char>(*InJson).Get());
 	}
 
-	FORCEINLINE bool NetSerialize(FArchive& Ar, UPackageMap* Map, bool& bOutSuccess);
+	FORCEINLINE_DEBUGGABLE bool NetSerialize(FArchive& Ar, UPackageMap* Map, bool& bOutSuccess);
 
 	template <typename FunctionType>
-	FORCEINLINE void Iterate(const FunctionType& InFunction) const
+	FORCEINLINE_DEBUGGABLE void Iterate(const FunctionType& InFunction) const
 	{
 		GetEntity().each(InFunction);
 	}
 
 	template <typename TFirst, typename FunctionType>
-	FORCEINLINE void Iterate(const FunctionType& InFunction) const
+	FORCEINLINE_DEBUGGABLE void Iterate(const FunctionType& InFunction) const
 	{
 		GetEntity().each<TFirst, FunctionType>(InFunction);
 	}
 
-	FORCEINLINE NO_DISCARD bool IsTraitEntity() const
+	FORCEINLINE_DEBUGGABLE NO_DISCARD bool IsTraitEntity() const
 	{
 		return Has(flecs::Trait);
 	}
 
 	template <typename TComponent, typename TTrait>
-	FORCEINLINE void AddTrait() const
+	FORCEINLINE_DEBUGGABLE void AddTrait() const
 	{
 		if UNLIKELY_IF(!Has<TComponent>())
 		{
@@ -475,7 +475,7 @@ public:
 	}
 
 	template <typename TComponent>
-	FORCEINLINE void AddTrait(const UScriptStruct* StructType) const
+	FORCEINLINE_DEBUGGABLE void AddTrait(const UScriptStruct* StructType) const
 	{
 		if UNLIKELY_IF(!Has<TComponent>())
 		{
@@ -486,7 +486,7 @@ public:
 	}
 
 	template <typename TComponent>
-	FORCEINLINE void AddTrait(const FGameplayTag& InTag) const
+	FORCEINLINE_DEBUGGABLE void AddTrait(const FGameplayTag& InTag) const
 	{
 		if UNLIKELY_IF(!Has<TComponent>())
 		{
@@ -497,7 +497,7 @@ public:
 	}
 
 	template <typename TComponent>
-	FORCEINLINE void AddTrait(const FFlecsEntityHandle& InTrait) const
+	FORCEINLINE_DEBUGGABLE void AddTrait(const FFlecsEntityHandle& InTrait) const
 	{
 		if UNLIKELY_IF(!Has<TComponent>())
 		{
@@ -507,7 +507,7 @@ public:
 		ObtainTraitHolderEntity<TComponent>().Add(InTrait);
 	}
 
-	FORCEINLINE void AddTrait(const UScriptStruct* StructType, const UScriptStruct* TraitType) const
+	FORCEINLINE_DEBUGGABLE void AddTrait(const UScriptStruct* StructType, const UScriptStruct* TraitType) const
 	{
 		if UNLIKELY_IF(!Has(StructType))
 		{
@@ -517,7 +517,7 @@ public:
 		ObtainTraitHolderEntity(StructType).Add(TraitType);
 	}
 
-	FORCEINLINE void AddTrait(const UScriptStruct* StructType, const FGameplayTag& InTag) const
+	FORCEINLINE_DEBUGGABLE void AddTrait(const UScriptStruct* StructType, const FGameplayTag& InTag) const
 	{
 		if UNLIKELY_IF(!Has(StructType))
 		{
@@ -527,7 +527,7 @@ public:
 		ObtainTraitHolderEntity(StructType).Add(InTag);
 	}
 
-	FORCEINLINE void AddTrait(const UScriptStruct* StructType, const FFlecsEntityHandle& InTrait) const
+	FORCEINLINE_DEBUGGABLE void AddTrait(const UScriptStruct* StructType, const FFlecsEntityHandle& InTrait) const
 	{
 		if UNLIKELY_IF(!Has(StructType))
 		{
@@ -538,7 +538,7 @@ public:
 	}
 
 	template <typename TComponent, typename TTrait>
-	FORCEINLINE void RemoveTrait() const
+	FORCEINLINE_DEBUGGABLE void RemoveTrait() const
 	{
 		if UNLIKELY_IF(!Has<TComponent>())
 		{
@@ -549,7 +549,7 @@ public:
 	}
 
 	template <typename TComponent>
-	FORCEINLINE void RemoveTrait(const UScriptStruct* TraitStructType) const
+	FORCEINLINE_DEBUGGABLE void RemoveTrait(const UScriptStruct* TraitStructType) const
 	{
 		if UNLIKELY_IF(!Has<TComponent>())
 		{
@@ -560,7 +560,7 @@ public:
 	}
 
 	template <typename TComponent>
-	FORCEINLINE void RemoveTrait(const FGameplayTag& InTag) const
+	FORCEINLINE_DEBUGGABLE void RemoveTrait(const FGameplayTag& InTag) const
 	{
 		if UNLIKELY_IF(!Has<TComponent>())
 		{
@@ -571,7 +571,7 @@ public:
 	}
 
 	template <typename TComponent>
-	FORCEINLINE void RemoveTrait(const FFlecsEntityHandle& InTrait) const
+	FORCEINLINE_DEBUGGABLE void RemoveTrait(const FFlecsEntityHandle& InTrait) const
 	{
 		if UNLIKELY_IF(!Has<TComponent>())
 		{
@@ -581,7 +581,7 @@ public:
 		ObtainTraitHolderEntity<TComponent>().Remove(InTrait);
 	}
 
-	FORCEINLINE void RemoveTrait(const UScriptStruct* ComponentStructType, const UScriptStruct* TraitType) const
+	FORCEINLINE_DEBUGGABLE void RemoveTrait(const UScriptStruct* ComponentStructType, const UScriptStruct* TraitType) const
 	{
 		if UNLIKELY_IF(!Has(ComponentStructType))
 		{
@@ -591,7 +591,7 @@ public:
 		ObtainTraitHolderEntity(ComponentStructType).Remove(TraitType);
 	}
 
-	FORCEINLINE void RemoveTrait(const UScriptStruct* ComponentStructType, const FGameplayTag& InTag) const
+	FORCEINLINE_DEBUGGABLE void RemoveTrait(const UScriptStruct* ComponentStructType, const FGameplayTag& InTag) const
 	{
 		if UNLIKELY_IF(!Has(ComponentStructType))
 		{
@@ -601,7 +601,7 @@ public:
 		ObtainTraitHolderEntity(ComponentStructType).Remove(InTag);
 	}
 
-	FORCEINLINE void RemoveTrait(const UScriptStruct* ComponentStructType, const FFlecsEntityHandle& InTrait) const
+	FORCEINLINE_DEBUGGABLE void RemoveTrait(const UScriptStruct* ComponentStructType, const FFlecsEntityHandle& InTrait) const
 	{
 		if UNLIKELY_IF(!Has(ComponentStructType))
 		{
@@ -612,7 +612,7 @@ public:
 	}
 
 	template <typename TComponent, typename TTrait>
-	FORCEINLINE bool HasTrait() const
+	FORCEINLINE_DEBUGGABLE bool HasTrait() const
 	{
 		if (!Has<TComponent>())
 		{
@@ -623,7 +623,7 @@ public:
 	}
 
 	template <typename TComponent>
-	FORCEINLINE bool HasTrait(const UScriptStruct* TraitStructType) const
+	FORCEINLINE_DEBUGGABLE bool HasTrait(const UScriptStruct* TraitStructType) const
 	{
 		if (!Has<TComponent>())
 		{
@@ -634,7 +634,7 @@ public:
 	}
 
 	template <typename TComponent>
-	FORCEINLINE bool HasTrait(const FGameplayTag& InTag) const
+	FORCEINLINE_DEBUGGABLE bool HasTrait(const FGameplayTag& InTag) const
 	{
 		if (!Has<TComponent>())
 		{
@@ -645,7 +645,7 @@ public:
 	}
 
 	template <typename TComponent>
-	FORCEINLINE bool HasTrait(const FFlecsEntityHandle& InTrait) const
+	FORCEINLINE_DEBUGGABLE bool HasTrait(const FFlecsEntityHandle& InTrait) const
 	{
 		if (!Has<TComponent>())
 		{
@@ -655,7 +655,7 @@ public:
 		return ObtainTraitHolderEntity<TComponent>().Has(InTrait);
 	}
 
-	FORCEINLINE bool HasTrait(const UScriptStruct* ComponentStructType, const UScriptStruct* TraitType) const
+	FORCEINLINE_DEBUGGABLE bool HasTrait(const UScriptStruct* ComponentStructType, const UScriptStruct* TraitType) const
 	{
 		if (!Has(ComponentStructType))
 		{
@@ -665,7 +665,7 @@ public:
 		return ObtainTraitHolderEntity(ComponentStructType).Has(TraitType);
 	}
 
-	FORCEINLINE bool HasTrait(const UScriptStruct* ComponentStructType, const FGameplayTag& InTag) const
+	FORCEINLINE_DEBUGGABLE bool HasTrait(const UScriptStruct* ComponentStructType, const FGameplayTag& InTag) const
 	{
 		if (!Has(ComponentStructType))
 		{
@@ -675,7 +675,7 @@ public:
 		return ObtainTraitHolderEntity(ComponentStructType).Has(InTag);
 	}
 
-	FORCEINLINE bool HasTrait(const UScriptStruct* ComponentStructType, const FFlecsEntityHandle& InTrait) const
+	FORCEINLINE_DEBUGGABLE bool HasTrait(const UScriptStruct* ComponentStructType, const FFlecsEntityHandle& InTrait) const
 	{
 		if (!Has(ComponentStructType))
 		{
@@ -686,7 +686,7 @@ public:
 	}
 
 	template <typename TComponent, typename TTrait>
-	FORCEINLINE void SetTrait(const TTrait& InValue) const
+	FORCEINLINE_DEBUGGABLE void SetTrait(const TTrait& InValue) const
 	{
 		if UNLIKELY_IF(!Has<TComponent>())
 		{
@@ -697,7 +697,7 @@ public:
 	}
 
 	template <typename TComponent>
-	FORCEINLINE void SetTrait(const UScriptStruct* TraitStructType, const void* InValue) const
+	FORCEINLINE_DEBUGGABLE void SetTrait(const UScriptStruct* TraitStructType, const void* InValue) const
 	{
 		if UNLIKELY_IF(!Has<TComponent>())
 		{
@@ -707,7 +707,7 @@ public:
 		ObtainTraitHolderEntity<TComponent>().Set(TraitStructType, InValue);
 	}
 
-	FORCEINLINE void SetTrait(const UScriptStruct* ComponentStructType, const UScriptStruct* TraitType, const void* InValue) const
+	FORCEINLINE_DEBUGGABLE void SetTrait(const UScriptStruct* ComponentStructType, const UScriptStruct* TraitType, const void* InValue) const
 	{
 		if UNLIKELY_IF(!Has(ComponentStructType))
 		{
@@ -717,7 +717,7 @@ public:
 		ObtainTraitHolderEntity(ComponentStructType).Set(TraitType, InValue);
 	}
 
-	FORCEINLINE void SetTrait(const UScriptStruct* ComponentStructType, const FInstancedStruct& InValue) const
+	FORCEINLINE_DEBUGGABLE void SetTrait(const UScriptStruct* ComponentStructType, const FInstancedStruct& InValue) const
 	{
 		if UNLIKELY_IF(!Has(ComponentStructType))
 		{
@@ -728,7 +728,7 @@ public:
 	}
 
 	template <typename TComponent, typename TTrait>
-	FORCEINLINE TTrait GetTrait() const
+	FORCEINLINE_DEBUGGABLE TTrait GetTrait() const
 	{
 		if UNLIKELY_IF(!Has<TComponent>())
 		{
@@ -739,7 +739,7 @@ public:
 	}
 
 	template <typename TComponent, typename TTrait>
-	FORCEINLINE TTrait* GetTraitPtr()
+	FORCEINLINE_DEBUGGABLE TTrait* GetTraitPtr()
 	{
 		if UNLIKELY_IF(!Has<TComponent>())
 		{
@@ -750,7 +750,7 @@ public:
 	}
 
 	template <typename TComponent, typename TTrait>
-	FORCEINLINE const TTrait* GetTraitPtr() const
+	FORCEINLINE_DEBUGGABLE const TTrait* GetTraitPtr() const
 	{
 		if UNLIKELY_IF(!Has<TComponent>())
 		{
@@ -761,7 +761,7 @@ public:
 	}
 
 	template <typename TComponent>
-	FORCEINLINE void* GetTraitPtr(const UScriptStruct* TraitStructType)
+	FORCEINLINE_DEBUGGABLE void* GetTraitPtr(const UScriptStruct* TraitStructType)
 	{
 		if UNLIKELY_IF(!Has<TComponent>())
 		{
@@ -772,7 +772,7 @@ public:
 	}
 
 	template <typename TComponent>
-	FORCEINLINE const void* GetTraitPtr(const UScriptStruct* TraitStructType) const
+	FORCEINLINE_DEBUGGABLE const void* GetTraitPtr(const UScriptStruct* TraitStructType) const
 	{
 		if UNLIKELY_IF(!Has<TComponent>())
 		{
@@ -782,7 +782,7 @@ public:
 		return ObtainTraitHolderEntity<TComponent>().GetPtr(TraitStructType);
 	}
 
-	FORCEINLINE void* GetTraitPtr(const UScriptStruct* ComponentStructType, const UScriptStruct* TraitType)
+	FORCEINLINE_DEBUGGABLE void* GetTraitPtr(const UScriptStruct* ComponentStructType, const UScriptStruct* TraitType)
 	{
 		if UNLIKELY_IF(!Has(ComponentStructType))
 		{
@@ -792,7 +792,7 @@ public:
 		return ObtainTraitHolderEntity(ComponentStructType).GetPtr(TraitType);
 	}
 
-	FORCEINLINE const void* GetTraitPtr(const UScriptStruct* ComponentStructType, const UScriptStruct* TraitType) const
+	FORCEINLINE_DEBUGGABLE const void* GetTraitPtr(const UScriptStruct* ComponentStructType, const UScriptStruct* TraitType) const
 	{
 		if UNLIKELY_IF(!Has(ComponentStructType))
 		{
@@ -803,21 +803,21 @@ public:
 	}
 
 	template <typename TComponent, typename TTrait>
-	FORCEINLINE TTrait& GetTraitRef() const
+	FORCEINLINE_DEBUGGABLE TTrait& GetTraitRef() const
 	{
 		solid_checkf(Has<TComponent>(), "Entity does not have component %s", nameof(TComponent));
 		return ObtainTraitHolderEntity<TComponent>().GetRef<TTrait>();
 	}
 
 	template <typename TComponent, typename TTrait>
-	FORCEINLINE flecs::ref<TTrait> GetTraitFlecsRef() const
+	FORCEINLINE_DEBUGGABLE flecs::ref<TTrait> GetTraitFlecsRef() const
 	{
 		solid_checkf(Has<TComponent>(), "Entity does not have component %s", nameof(TComponent));
 		return ObtainTraitHolderEntity<TComponent>().GetFlecsRef<TTrait>();
 	}
 
 	template <typename TComponent, typename TTrait>
-	FORCEINLINE void EnableTrait() const
+	FORCEINLINE_DEBUGGABLE void EnableTrait() const
 	{
 		if UNLIKELY_IF(!Has<TComponent>())
 		{
@@ -828,7 +828,7 @@ public:
 	}
 
 	template <typename TComponent>
-	FORCEINLINE void EnableTrait(const UScriptStruct* TraitStructType) const
+	FORCEINLINE_DEBUGGABLE void EnableTrait(const UScriptStruct* TraitStructType) const
 	{
 		if UNLIKELY_IF(!Has<TComponent>())
 		{
@@ -839,7 +839,7 @@ public:
 	}
 
 	template <typename TComponent>
-	FORCEINLINE void EnableTrait(const FGameplayTag& InTag) const
+	FORCEINLINE_DEBUGGABLE void EnableTrait(const FGameplayTag& InTag) const
 	{
 		if UNLIKELY_IF(!Has<TComponent>())
 		{
@@ -850,7 +850,7 @@ public:
 	}
 
 	template <typename TComponent>
-	FORCEINLINE void EnableTrait(const FFlecsEntityHandle& InTrait) const
+	FORCEINLINE_DEBUGGABLE void EnableTrait(const FFlecsEntityHandle& InTrait) const
 	{
 		if UNLIKELY_IF(!Has<TComponent>())
 		{
@@ -860,7 +860,7 @@ public:
 		ObtainTraitHolderEntity<TComponent>().Enable(InTrait);
 	}
 
-	FORCEINLINE void EnableTrait(const UScriptStruct* ComponentStructType, const UScriptStruct* TraitType) const
+	FORCEINLINE_DEBUGGABLE void EnableTrait(const UScriptStruct* ComponentStructType, const UScriptStruct* TraitType) const
 	{
 		if UNLIKELY_IF(!Has(ComponentStructType))
 		{
@@ -870,7 +870,7 @@ public:
 		ObtainTraitHolderEntity(ComponentStructType).Enable(TraitType);
 	}
 
-	FORCEINLINE void EnableTrait(const UScriptStruct* ComponentStructType, const FGameplayTag& InTag) const
+	FORCEINLINE_DEBUGGABLE void EnableTrait(const UScriptStruct* ComponentStructType, const FGameplayTag& InTag) const
 	{
 		if UNLIKELY_IF(!Has(ComponentStructType))
 		{
@@ -880,7 +880,7 @@ public:
 		ObtainTraitHolderEntity(ComponentStructType).Enable(InTag);
 	}
 
-	FORCEINLINE void EnableTrait(const UScriptStruct* ComponentStructType, const FFlecsEntityHandle& InTrait) const
+	FORCEINLINE_DEBUGGABLE void EnableTrait(const UScriptStruct* ComponentStructType, const FFlecsEntityHandle& InTrait) const
 	{
 		if UNLIKELY_IF(!Has(ComponentStructType))
 		{
@@ -891,7 +891,7 @@ public:
 	}
 
 	template <typename TComponent, typename TTrait>
-	FORCEINLINE void DisableTrait() const
+	FORCEINLINE_DEBUGGABLE void DisableTrait() const
 	{
 		if UNLIKELY_IF(!Has<TComponent>())
 		{
@@ -902,7 +902,7 @@ public:
 	}
 
 	template <typename TComponent>
-	FORCEINLINE void DisableTrait(const UScriptStruct* TraitStructType) const
+	FORCEINLINE_DEBUGGABLE void DisableTrait(const UScriptStruct* TraitStructType) const
 	{
 		if UNLIKELY_IF(!Has<TComponent>())
 		{
@@ -913,7 +913,7 @@ public:
 	}
 
 	template <typename TComponent>
-	FORCEINLINE void DisableTrait(const FGameplayTag& InTag) const
+	FORCEINLINE_DEBUGGABLE void DisableTrait(const FGameplayTag& InTag) const
 	{
 		if UNLIKELY_IF(!Has<TComponent>())
 		{
@@ -924,7 +924,7 @@ public:
 	}
 
 	template <typename TComponent>
-	FORCEINLINE void DisableTrait(const FFlecsEntityHandle& InTrait) const
+	FORCEINLINE_DEBUGGABLE void DisableTrait(const FFlecsEntityHandle& InTrait) const
 	{
 		if UNLIKELY_IF(!Has<TComponent>())
 		{
@@ -934,7 +934,7 @@ public:
 		ObtainTraitHolderEntity<TComponent>().Disable(InTrait);
 	}
 
-	FORCEINLINE void DisableTrait(const UScriptStruct* ComponentStructType, const UScriptStruct* TraitType) const
+	FORCEINLINE_DEBUGGABLE void DisableTrait(const UScriptStruct* ComponentStructType, const UScriptStruct* TraitType) const
 	{
 		if UNLIKELY_IF(!Has(ComponentStructType))
 		{
@@ -944,7 +944,7 @@ public:
 		ObtainTraitHolderEntity(ComponentStructType).Disable(TraitType);
 	}
 
-	FORCEINLINE void DisableTrait(const UScriptStruct* ComponentStructType, const FGameplayTag& InTag) const
+	FORCEINLINE_DEBUGGABLE void DisableTrait(const UScriptStruct* ComponentStructType, const FGameplayTag& InTag) const
 	{
 		if UNLIKELY_IF(!Has(ComponentStructType))
 		{
@@ -954,7 +954,7 @@ public:
 		ObtainTraitHolderEntity(ComponentStructType).Disable(InTag);
 	}
 
-	FORCEINLINE void DisableTrait(const UScriptStruct* ComponentStructType, const FFlecsEntityHandle& InTrait) const
+	FORCEINLINE_DEBUGGABLE void DisableTrait(const UScriptStruct* ComponentStructType, const FFlecsEntityHandle& InTrait) const
 	{
 		if UNLIKELY_IF(!Has(ComponentStructType))
 		{
@@ -965,7 +965,7 @@ public:
 	}
 
 	template <typename TComponent, typename TTrait>
-	FORCEINLINE NO_DISCARD bool IsTraitEnabled() const
+	FORCEINLINE_DEBUGGABLE NO_DISCARD bool IsTraitEnabled() const
 	{
 		if (!Has<TComponent>())
 		{
@@ -976,7 +976,7 @@ public:
 	}
 
 	template <typename TComponent>
-	FORCEINLINE bool IsTraitEnabled(const UScriptStruct* TraitStructType) const
+	FORCEINLINE_DEBUGGABLE bool IsTraitEnabled(const UScriptStruct* TraitStructType) const
 	{
 		if (!Has<TComponent>())
 		{
@@ -987,7 +987,7 @@ public:
 	}
 
 	template <typename TComponent>
-	FORCEINLINE NO_DISCARD bool IsTraitEnabled(const FGameplayTag& InTag) const
+	FORCEINLINE_DEBUGGABLE NO_DISCARD bool IsTraitEnabled(const FGameplayTag& InTag) const
 	{
 		if (!Has<TComponent>())
 		{
@@ -998,7 +998,7 @@ public:
 	}
 
 	template <typename TComponent>
-	FORCEINLINE NO_DISCARD bool IsTraitEnabled(const FFlecsEntityHandle& InTrait) const
+	FORCEINLINE_DEBUGGABLE NO_DISCARD bool IsTraitEnabled(const FFlecsEntityHandle& InTrait) const
 	{
 		if (!Has<TComponent>())
 		{
@@ -1008,7 +1008,7 @@ public:
 		return ObtainTraitHolderEntity<TComponent>().IsEnabled(InTrait);
 	}
 
-	FORCEINLINE NO_DISCARD bool IsTraitEnabled(const UScriptStruct* ComponentStructType, const UScriptStruct* TraitType) const
+	FORCEINLINE_DEBUGGABLE NO_DISCARD bool IsTraitEnabled(const UScriptStruct* ComponentStructType, const UScriptStruct* TraitType) const
 	{
 		if (!Has(ComponentStructType))
 		{
@@ -1018,7 +1018,7 @@ public:
 		return ObtainTraitHolderEntity(ComponentStructType).IsEnabled(TraitType);
 	}
 
-	FORCEINLINE NO_DISCARD bool IsTraitEnabled(const UScriptStruct* ComponentStructType, const FGameplayTag& InTag) const
+	FORCEINLINE_DEBUGGABLE NO_DISCARD bool IsTraitEnabled(const UScriptStruct* ComponentStructType, const FGameplayTag& InTag) const
 	{
 		if (!Has(ComponentStructType))
 		{
@@ -1028,7 +1028,7 @@ public:
 		return ObtainTraitHolderEntity(ComponentStructType).IsEnabled(InTag);
 	}
 
-	FORCEINLINE NO_DISCARD bool IsTraitEnabled(const UScriptStruct* ComponentStructType, const FFlecsEntityHandle& InTrait) const
+	FORCEINLINE_DEBUGGABLE NO_DISCARD bool IsTraitEnabled(const UScriptStruct* ComponentStructType, const FFlecsEntityHandle& InTrait) const
 	{
 		if (!Has(ComponentStructType))
 		{
@@ -1039,7 +1039,7 @@ public:
 	}
 
 	template <typename TComponent, typename TTrait>
-	FORCEINLINE void ToggleTrait() const
+	FORCEINLINE_DEBUGGABLE void ToggleTrait() const
 	{
 		if UNLIKELY_IF(!Has<TComponent>())
 		{
@@ -1050,7 +1050,7 @@ public:
 	}
 
 	template <typename TComponent>
-	FORCEINLINE void ToggleTrait(const UScriptStruct* TraitStructType) const
+	FORCEINLINE_DEBUGGABLE void ToggleTrait(const UScriptStruct* TraitStructType) const
 	{
 		if UNLIKELY_IF(!Has<TComponent>())
 		{
@@ -1061,7 +1061,7 @@ public:
 	}
 
 	template <typename TComponent>
-	FORCEINLINE void ToggleTrait(const FGameplayTag& InTag) const
+	FORCEINLINE_DEBUGGABLE void ToggleTrait(const FGameplayTag& InTag) const
 	{
 		if UNLIKELY_IF(!Has<TComponent>())
 		{
@@ -1072,7 +1072,7 @@ public:
 	}
 
 	template <typename TComponent>
-	FORCEINLINE void ToggleTrait(const FFlecsEntityHandle& InTrait) const
+	FORCEINLINE_DEBUGGABLE void ToggleTrait(const FFlecsEntityHandle& InTrait) const
 	{
 		if UNLIKELY_IF(!Has<TComponent>())
 		{
@@ -1082,7 +1082,7 @@ public:
 		ObtainTraitHolderEntity<TComponent>().Toggle(InTrait);
 	}
 
-	FORCEINLINE void ToggleTrait(const UScriptStruct* ComponentStructType, const UScriptStruct* TraitType) const
+	FORCEINLINE_DEBUGGABLE void ToggleTrait(const UScriptStruct* ComponentStructType, const UScriptStruct* TraitType) const
 	{
 		if UNLIKELY_IF(!Has(ComponentStructType))
 		{
@@ -1092,7 +1092,7 @@ public:
 		ObtainTraitHolderEntity(ComponentStructType).Toggle(TraitType);
 	}
 
-	FORCEINLINE void ToggleTrait(const UScriptStruct* ComponentStructType, const FGameplayTag& InTag) const
+	FORCEINLINE_DEBUGGABLE void ToggleTrait(const UScriptStruct* ComponentStructType, const FGameplayTag& InTag) const
 	{
 		if UNLIKELY_IF(!Has(ComponentStructType))
 		{
@@ -1102,7 +1102,7 @@ public:
 		ObtainTraitHolderEntity(ComponentStructType).Toggle(InTag);
 	}
 
-	FORCEINLINE void ToggleTrait(const UScriptStruct* ComponentStructType, const FFlecsEntityHandle& InTrait) const
+	FORCEINLINE_DEBUGGABLE void ToggleTrait(const UScriptStruct* ComponentStructType, const FFlecsEntityHandle& InTrait) const
 	{
 		if UNLIKELY_IF(!Has(ComponentStructType))
 		{
@@ -1113,71 +1113,71 @@ public:
 	}
 
 	template <typename TComponent>
-	FORCEINLINE void Modified() const
+	FORCEINLINE_DEBUGGABLE void Modified() const
 	{
 		GetEntity().modified<TComponent>();
 	}
 	
-	FORCEINLINE void Modified(const UScriptStruct* StructType) const
+	FORCEINLINE_DEBUGGABLE void Modified(const UScriptStruct* StructType) const
 	{
 		GetEntity().modified(ObtainComponentTypeStruct(StructType));
 	}
 
 	template <typename TComponent>
-	FORCEINLINE void Modified(const FGameplayTag& InTag) const
+	FORCEINLINE_DEBUGGABLE void Modified(const FGameplayTag& InTag) const
 	{
 		GetEntity().modified(GetTagEntity(InTag));
 	}
 
 	template <typename TComponent>
-	FORCEINLINE void Modified(const FFlecsEntityHandle& InEntity) const
+	FORCEINLINE_DEBUGGABLE void Modified(const FFlecsEntityHandle& InEntity) const
 	{
 		GetEntity().modified(InEntity);
 	}
 
-	FORCEINLINE void Modified(const FGameplayTag& InTag) const
+	FORCEINLINE_DEBUGGABLE void Modified(const FGameplayTag& InTag) const
 	{
 		GetEntity().modified(GetTagEntity(InTag));
 	}
 
-	FORCEINLINE void Modified(const FFlecsEntityHandle& InEntity) const
+	FORCEINLINE_DEBUGGABLE void Modified(const FFlecsEntityHandle& InEntity) const
 	{
 		GetEntity().modified(InEntity);
 	}
 
-	FORCEINLINE void Modified(const UScriptStruct* StructType, const UScriptStruct* TraitType) const
+	FORCEINLINE_DEBUGGABLE void Modified(const UScriptStruct* StructType, const UScriptStruct* TraitType) const
 	{
 		GetEntity().modified(ObtainTraitHolderEntity(StructType),
 			ObtainTraitHolderEntity(TraitType));
 	}
 
-	FORCEINLINE void Modified(const UScriptStruct* StructType, const FGameplayTag& InTag) const
+	FORCEINLINE_DEBUGGABLE void Modified(const UScriptStruct* StructType, const FGameplayTag& InTag) const
 	{
 		GetEntity().modified(GetTagEntity(InTag));
 	}
 
-	FORCEINLINE void Modified(const UScriptStruct* StructType, const FFlecsEntityHandle& InTrait) const
+	FORCEINLINE_DEBUGGABLE void Modified(const UScriptStruct* StructType, const FFlecsEntityHandle& InTrait) const
 	{
 		GetEntity().modified(ObtainTraitHolderEntity(StructType), InTrait);
 	}
 
-	FORCEINLINE NO_DISCARD int32 GetDepth(const FFlecsEntityHandle& InEntity) const
+	FORCEINLINE_DEBUGGABLE NO_DISCARD int32 GetDepth(const FFlecsEntityHandle& InEntity) const
 	{
 		return GetEntity().depth(InEntity);
 	}
 
 	template <typename TEntity>
-	FORCEINLINE NO_DISCARD int32 GetDepth() const
+	FORCEINLINE_DEBUGGABLE NO_DISCARD int32 GetDepth() const
 	{
 		return GetEntity().depth<TEntity>();
 	}
 
-	FORCEINLINE NO_DISCARD FString GetPath() const
+	FORCEINLINE_DEBUGGABLE NO_DISCARD FString GetPath() const
 	{
 		return FString(GetEntity().path());
 	}
 
-	FORCEINLINE NO_DISCARD FString GetPath(const FString& InSeparator,
+	FORCEINLINE_DEBUGGABLE NO_DISCARD FString GetPath(const FString& InSeparator,
 		const FString& InitialSeparator) const
 	{
 		return FString(GetEntity().path(StringCast<char>(*InSeparator).Get(),
@@ -1190,20 +1190,17 @@ public:
 	FName DisplayName;
 
 	#endif // WITH_EDITORONLY_DATA
-
-	UPROPERTY(EditAnywhere, Category = "Flecs")
-	FString WorldName = TEXT("DefaultFlecsWorld");
 	
 private:
 	flecs::entity Entity;
 
-	FORCEINLINE NO_DISCARD FFlecsEntityHandle ObtainComponentTypeStruct(const UScriptStruct* StructType) const;
-	FORCEINLINE NO_DISCARD FFlecsEntityHandle GetTagEntity(const FGameplayTag& InTag) const;
+	FORCEINLINE_DEBUGGABLE NO_DISCARD FFlecsEntityHandle ObtainComponentTypeStruct(const UScriptStruct* StructType) const;
+	FORCEINLINE_DEBUGGABLE NO_DISCARD FFlecsEntityHandle GetTagEntity(const FGameplayTag& InTag) const;
 
-	FORCEINLINE NO_DISCARD flecs::world GetFlecsWorld_Internal() const { return GetEntity().world(); }
+	FORCEINLINE_DEBUGGABLE NO_DISCARD flecs::world GetFlecsWorld_Internal() const { return GetEntity().world(); }
 
 	template <typename TComponent>
-	FORCEINLINE NO_DISCARD FFlecsEntityHandle ObtainTraitHolderEntity() const
+	FORCEINLINE_DEBUGGABLE NO_DISCARD FFlecsEntityHandle ObtainTraitHolderEntity() const
 	{
 		solid_checkf(Has<TComponent>(), TEXT("Entity does not have component"));
 
@@ -1231,7 +1228,7 @@ private:
 		return TraitHolder;
 	}
 
-	FORCEINLINE NO_DISCARD FFlecsEntityHandle ObtainTraitHolderEntity(const UScriptStruct* StructType) const
+	FORCEINLINE_DEBUGGABLE NO_DISCARD FFlecsEntityHandle ObtainTraitHolderEntity(const UScriptStruct* StructType) const
 	{
 		solid_checkf(Has(StructType), TEXT("Entity does not have component"));
 		
@@ -1271,7 +1268,7 @@ struct TStructOpsTypeTraits<FFlecsEntityHandle> : public TStructOpsTypeTraitsBas
 	
 }; // struct TStructOpsTypeTraits<FFlecsEntityHandle>
 
-FORCEINLINE bool IsValid(const FFlecsEntityHandle& Test)
+FORCEINLINE_DEBUGGABLE bool IsValid(const FFlecsEntityHandle& Test)
 {
 	return Test.IsValid();
 }

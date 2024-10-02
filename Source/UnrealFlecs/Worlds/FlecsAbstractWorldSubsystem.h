@@ -32,7 +32,7 @@ public:
 		const UFlecsWorldSubsystem* FlecsWorldSubsystem = GetWorld()->GetSubsystem<UFlecsWorldSubsystem>();
 		solid_check(IsValid(FlecsWorldSubsystem));
 		
-		return FlecsWorldSubsystem->GetDefaultWorld(this);
+		return FlecsWorldSubsystem->GetDefaultWorld();
 	}
 
 

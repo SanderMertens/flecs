@@ -19,8 +19,5 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs", meta = (ExposeOnSpawn = true))
 	TObjectPtr<UFlecsWorldSettingsAsset> DefaultWorld;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs", meta = (ExposeOnSpawn = true))
-	TArray<TObjectPtr<UFlecsWorldSettingsAsset>> Worlds;
-
 
 }; // class UFlecsWorldStartComponent

@@ -58,6 +58,7 @@ static ECS_DTOR(EcsRest, ptr, {
             ecs_rest_server_fini(impl->srv);
         }
     }
+    
     ecs_os_free(ptr->ipaddr);
 })
 

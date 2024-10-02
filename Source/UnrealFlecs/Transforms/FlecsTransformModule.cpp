@@ -16,7 +16,7 @@ void UFlecsTransformModule::InitializeModule(UFlecsWorld* InWorld, const FFlecsE
     InWorld->CreateSystemWithBuilder<FFlecsTransformComponent, const FFlecsTransformComponent>(TEXT("FlecsTransformPropagateSystem"))
         .kind(flecs::PreUpdate)
         .with<FFlecsTransformComponent>()
-        .with<FFlecsTransformComponent>().cascade()
+        .with<FFlecsTransformComponent>().parent().cascade()
         .cached()
         .immediate()
         .run([](flecs::iter& Iter)

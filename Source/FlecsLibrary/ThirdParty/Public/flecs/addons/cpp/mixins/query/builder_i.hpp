@@ -145,7 +145,72 @@ struct query_builder_i : term_builder_i<Base> {
         *this->term_ = term;
         return *this;
     }
+    
+    Base& begin_scope_traits()
+    {
+        this->assert_term();
 
+        old_term_ = this->term_;
+
+        this->with(old_term_, flecs::ChildOf);
+        this->src("$child");
+        
+        return *this;
+    }
+
+    Base& end_scope_traits()
+    {
+        // Ensure we have a valid term
+        this->assert_term();
+
+        // Reset the source back to the parent entity
+        this->src("$this");
+
+        *this->term_ = old_term_;
+
+        old_term_ = flecs::term();
+
+        return *this;
+    }
+
+    template <typename TTrait>
+    Base& with_trait() {
+        this->assert_trait_scope();
+
+        this->with<TTrait>();
+        this->src("$child");
+        
+        return *this;
+    }
+
+    Base& with_trait(id_t id) {
+        this->assert_trait_scope();
+
+        this->with(id);
+        this->src("$child");
+        
+        return *this;
+    }
+
+    template <typename TTrait>
+    Base& without_trait() {
+        this->assert_trait_scope();
+
+        this->without<TTrait>();
+        this->src("$child");
+        
+        return *this;
+    }
+
+    Base& without_trait(id_t id) {
+        this->assert_trait_scope();
+
+        this->without(id);
+        this->src("$child");
+        
+        return *this;
+    }
+    
     /* Without methods, shorthand for .with(...).not_(). */
 
     template <typename ... Args>
@@ -364,6 +429,13 @@ protected:
     virtual flecs::world_t* world_v() override = 0;
     int32_t term_index_;
     int32_t expr_count_;
+
+    flecs::term old_term_;
+
+    void assert_trait_scope()
+    {
+        ecs_assert(old_term_.id() != 0, ECS_INVALID_PARAMETER, NULL);
+    }
 
 private:
     operator Base&() {

@@ -43,9 +43,9 @@ void UFlecsEntityActorComponent::InitializeEntity()
 		return;
 	}
 
-	if (GetWorld()->GetSubsystem<UFlecsWorldSubsystem>()->HasWorld(WorldName))
+	if (GetWorld()->GetSubsystem<UFlecsWorldSubsystem>()->HasValidFlecsWorld())
 	{
-		EntityHandle = GetWorld()->GetSubsystem<UFlecsWorldSubsystem>()->GetFlecsWorld(WorldName)
+		EntityHandle = GetWorld()->GetSubsystem<UFlecsWorldSubsystem>()->GetDefaultWorld()
 			->CreateEntityWithRecord(EntityRecord);
 	}
 	else

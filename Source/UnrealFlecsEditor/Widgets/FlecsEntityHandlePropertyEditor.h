@@ -69,13 +69,6 @@ public:
     ApplyMetadataFilters();
     FilteredOptions = Options; // Initialize FilteredOptions to Options
 
-    const TSharedPtr<IPropertyHandle> WorldNameHandle
-        = PropertyHandle->GetChildHandle(GET_MEMBER_NAME_CHECKED(FFlecsEntityHandle, WorldName));
-    if (WorldNameHandle && WorldNameHandle->IsValidHandle())
-    {
-        ChildBuilder.AddProperty(WorldNameHandle.ToSharedRef());
-    }
-
     ChildBuilder.AddCustomRow(NSLOCTEXT("Flecs", "FlecsEntityHandle",
         "Flecs Entity Handle"))
     .NameContent()
@@ -272,7 +265,8 @@ private:
 			PropertyHandle->NotifyPreChange();
 
 			PropertyHandle->EnumerateRawData(
-				[&](void* RawData, MAYBE_UNUSED const int32 DataIndex, MAYBE_UNUSED const int32 NumDatas)
+				[&](void* RawData, MAYBE_UNUSED const int32 DataIndex, \
+					MAYBE_UNUSED const int32 NumDatas)
 				{
 					if (RawData == nullptr)
 					{

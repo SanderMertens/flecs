@@ -81,19 +81,19 @@ public:
 
 		if (GetOwner()->HasAuthority())
 		{
-			const UFlecsWorld* FlecsWorld = UFlecsWorldSubsystem::GetDefaultWorld(GetOwner());
+			const UFlecsWorld* FlecsWorld = UFlecsWorldSubsystem::GetDefaultWorldStatic(GetOwner());
 			solid_checkf(FlecsWorld, TEXT("FlecsWorld must be valid"));
 
 			TArray<FNetworkedEntityInfo> Entities;
 			FlecsWorld->World.query_builder<FFlecsNetworkIdComponent>()
-			.with_name_component()
-			.read<FFlecsNetworkIdComponent>()
-			.build()
-			.each([&](const FFlecsEntityHandle& Entity, const FFlecsNetworkIdComponent& NetworkId)
-			{
-				Entities.Add(FNetworkedEntityInfo{ NetworkId,
-					FlecsWorld->GetWorldName(), Entity.GetName() });
-			});
+				.with_name_component()
+				.read<FFlecsNetworkIdComponent>()
+				.build()
+				.each([&](const FFlecsEntityHandle& Entity, const FFlecsNetworkIdComponent& NetworkId)
+				{
+					Entities.Add(FNetworkedEntityInfo{ NetworkId,
+						FlecsWorld->GetWorldName(), Entity.GetName() });
+				});
 
 			Client_UpdateCreatedNetworkedEntities(Entities);
 		}
