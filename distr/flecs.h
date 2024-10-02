@@ -10314,6 +10314,9 @@ int ecs_value_move_ctor(
 #ifdef FLECS_NO_SYSTEM
 #undef FLECS_SYSTEM
 #endif
+#ifdef FLECS_NO_ALERTS
+#undef FLECS_ALERTS
+#endif
 #ifdef FLECS_NO_PIPELINE
 #undef FLECS_PIPELINE
 #endif
