@@ -167,7 +167,6 @@ void flecs_bfree(
     flecs_bfree_w_dbg_info(ba, memory, NULL);
 }
 
-FLECS_API
 void flecs_bfree_w_dbg_info(
     ecs_block_allocator_t *ba, 
     void *memory,
