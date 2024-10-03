@@ -59,6 +59,8 @@ ecs_entity_t flecs_run_intern(
         }
     }
 
+    ecs_os_perf_trace_push(system_data->name);
+
     if (ecs_should_log_3()) {
         char *path = ecs_get_path(world, system);
         ecs_dbg_3("worker %d: %s", stage_index, path);
@@ -103,7 +105,10 @@ ecs_entity_t flecs_run_intern(
 
     ecs_run_action_t run = system_data->run;
     if (run) {
-        if (!system_data->query->term_count) {
+        /* If system query matches nothing, the system run callback doesn't have
+         * anything to iterate, so the iterator resources don't get cleaned up
+         * automatically, so clean it up here. */
+        if (system_data->query->flags & EcsQueryMatchNothing) {
             it->next = flecs_default_next_callback; /* Return once */
             run(it);
             ecs_iter_fini(&qit);
@@ -134,6 +139,8 @@ ecs_entity_t flecs_run_intern(
     }
 
     flecs_defer_end(world, stage);
+
+    ecs_os_perf_trace_pop(system_data->name);
 
     return it->interrupted_by;
 }
@@ -185,6 +192,9 @@ void flecs_system_fini(ecs_system_t *sys) {
         sys->run_ctx_free(sys->run_ctx);
     }
 
+    /* Safe cast, type owns name */
+    ecs_os_free(ECS_CONST_CAST(char*, sys->name));
+
     flecs_poly_free(sys, ecs_system_t);
 }
 
@@ -196,11 +206,18 @@ void flecs_system_poly_fini(void *sys)
 }
 
 static
-void flecs_system_init_timer(
+int flecs_system_init_timer(
     ecs_world_t *world,
     ecs_entity_t entity,
     const ecs_system_desc_t *desc)
 {
+    if (ECS_NEQZERO(desc->interval) && ECS_NEQZERO(desc->rate)) {
+        char *name = ecs_get_path(world, entity);
+        ecs_err("system %s cannot have both interval and rate set", name);
+        ecs_os_free(name);
+        return -1;
+    }
+
     if (ECS_NEQZERO(desc->interval) || ECS_NEQZERO(desc->rate) || 
         ECS_NEQZERO(desc->tick_source)) 
     {
@@ -211,9 +228,6 @@ void flecs_system_init_timer(
 
         if (desc->rate) {
             ecs_entity_t tick_source = desc->tick_source;
-            if (!tick_source) {
-                tick_source = entity;
-            }
             ecs_set_rate(world, entity, desc->rate, tick_source);
         } else if (desc->tick_source) {
             ecs_set_tick_source(world, entity, desc->tick_source);
@@ -224,6 +238,8 @@ void flecs_system_init_timer(
         ecs_abort(ECS_UNSUPPORTED, "timer module not available");
 #endif
     }
+
+    return 0;
 }
 
 ecs_entity_t ecs_system_init(
@@ -283,14 +299,20 @@ ecs_entity_t ecs_system_init(
         system->multi_threaded = desc->multi_threaded;
         system->immediate = desc->immediate;
 
-        flecs_system_init_timer(world, entity, desc);
+        system->name = ecs_get_path(world, entity);
+
+        if (flecs_system_init_timer(world, entity, desc)) {
+            ecs_delete(world, entity);
+            ecs_defer_end(world);
+            goto error;
+        }
 
         if (ecs_get_name(world, entity)) {
             ecs_trace("#[green]system#[reset] %s created", 
                 ecs_get_name(world, entity));
         }
 
-        ecs_defer_end(world);            
+        ecs_defer_end(world);
     } else {
         flecs_poly_assert(poly->poly, ecs_system_t);
         ecs_system_t *system = (ecs_system_t*)poly->poly;
@@ -363,7 +385,9 @@ ecs_entity_t ecs_system_init(
             system->immediate = desc->immediate;
         }
 
-        flecs_system_init_timer(world, entity, desc);
+        if (flecs_system_init_timer(world, entity, desc)) {
+            return 0;
+        }
     }
 
     flecs_poly_modified(world, entity, ecs_system_t);

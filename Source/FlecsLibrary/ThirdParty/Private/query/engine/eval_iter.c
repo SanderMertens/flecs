@@ -302,7 +302,7 @@ ecs_iter_t flecs_query_iter(
     it.field_count = q->field_count;
     it.sizes = q->sizes;
     it.set_fields = q->set_fields;
-    it.ref_fields = q->fixed_fields | q->row_fields;
+    it.ref_fields = q->fixed_fields | q->row_fields | q->var_fields;
     it.row_fields = q->row_fields;
     it.up_fields = 0;
     flecs_query_apply_iter_flags(&it, q);
@@ -372,7 +372,7 @@ ecs_iter_t ecs_query_iter(
     }
 
     /* Ok, only for stats */
-    ECS_CONST_CAST(ecs_query_t*, q)->eval_count ++;
+    ecs_os_linc(&ECS_CONST_CAST(ecs_query_t*, q)->eval_count);
 
     ecs_query_impl_t *impl = flecs_query_impl(q);
     ecs_query_cache_t *cache = impl->cache;

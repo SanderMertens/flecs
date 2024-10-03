@@ -871,6 +871,7 @@ void flecs_bootstrap(
     ecs_add_id(world, EcsThis, EcsNotQueryable);
     ecs_add_id(world, EcsWildcard, EcsNotQueryable);
     ecs_add_id(world, EcsAny, EcsNotQueryable);
+    ecs_add_id(world, EcsVariable, EcsNotQueryable);
 
     /* Tag relationships (relationships that should never have data) */
     ecs_add_id(world, EcsIsA, EcsPairIsTag);

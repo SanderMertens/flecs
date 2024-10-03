@@ -122,6 +122,11 @@ void flecs_trav_entity_down_isa(
                 continue;
             }
 
+            if (ecs_table_has_id(world, table, idr_with->id)) {
+                /* Table owns component */
+                continue;
+            }
+
             const ecs_entity_t *entities = ecs_table_entities(table);
             int32_t i, count = ecs_table_count(table);
             for (i = 0; i < count; i ++) {
@@ -139,6 +144,9 @@ void flecs_trav_entity_down_isa(
                         flecs_trav_entity_down(world, a, cache, dst, trav, e,
                             idr_trav, idr_with, self, empty);
                     }
+
+                    flecs_trav_entity_down_isa(world, a, cache, dst, trav, e, 
+                        idr_with, self, empty);
                 }
             }
         }
@@ -152,7 +160,7 @@ ecs_trav_down_t* flecs_trav_entity_down(
     ecs_trav_up_cache_t *cache,
     ecs_trav_down_t *dst,
     ecs_entity_t trav,
-    ecs_entity_t entity,
+    ecs_entity_t e,
     ecs_id_record_t *idr_trav,
     ecs_id_record_t *idr_with,
     bool self,
@@ -163,7 +171,7 @@ ecs_trav_down_t* flecs_trav_entity_down(
     ecs_assert(idr_trav != NULL, ECS_INTERNAL_ERROR, NULL);
 
     flecs_trav_entity_down_isa(
-        world, a, cache, dst, trav, entity, idr_with, self, empty);
+        world, a, cache, dst, trav, e, idr_with, self, empty);
 
     int32_t first = ecs_vec_count(&dst->elems);
 
@@ -174,6 +182,7 @@ ecs_trav_down_t* flecs_trav_entity_down(
     } else {
         result = flecs_table_cache_iter(&idr_trav->cache, &it);
     }
+
     if (result) {
         ecs_table_record_t *tr; 
         while ((tr = flecs_table_cache_next(&it, ecs_table_record_t))) {
