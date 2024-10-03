@@ -34,6 +34,13 @@ class UNREALFLECS_API UFlecsWorld final : public UObject
 	GENERATED_BODY()
 
 public:
+	virtual ~UFlecsWorld() override
+	{
+		if (!ShouldQuit())
+		{
+			DestroyWorld();
+		}
+	}
 	
 	FORCEINLINE_DEBUGGABLE void WorldBeginPlay()
 	{
@@ -775,11 +782,6 @@ public:
 		World.set_target_fps(InTargetFps);
 	}
 	
-	FORCEINLINE_DEBUGGABLE void Quit() const
-	{
-		World.quit();
-	}
-	
 	FORCEINLINE_DEBUGGABLE void DestroyWorld()
 	{
 		const FAssetRegistryModule& AssetRegistryModule
@@ -787,7 +789,7 @@ public:
 		IAssetRegistry& AssetRegistry = AssetRegistryModule.Get();
 		AssetRegistry.OnAssetAdded().RemoveAll(this);
 
-		World.quit();
+		World.release();
 		MarkAsGarbage();
 	}
 
@@ -959,7 +961,7 @@ public:
 		
 		for (TFieldIterator<FProperty> PropertyIt(ScriptStruct); PropertyIt; ++PropertyIt)
 		{
-			const FProperty* Property = *PropertyIt;
+			FProperty* Property = *PropertyIt;
 			solid_checkf(Property != nullptr, TEXT("Property is nullptr"));
 			
 			if (Property->IsA<FBoolProperty>())
