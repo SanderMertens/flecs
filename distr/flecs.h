@@ -8168,6 +8168,18 @@ FLECS_API
 bool ecs_query_is_true(
     const ecs_query_t *query);
 
+/** Get query used to populate cache.
+ * This operation returns the query that is used to populate the query cache.
+ * For queries that are can be entirely cached, the returned query will be 
+ * equivalent to the query passed to ecs_query_get_cache_query().
+ *
+ * @param query The query.
+ * @return The query used to populate the cache, NULL if query is not cached.
+ */
+FLECS_API
+const ecs_query_t* ecs_query_get_cache_query(
+    const ecs_query_t *query);
+
 /** @} */
 
 /**

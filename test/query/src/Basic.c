@@ -11259,3 +11259,69 @@ void Basic_entity_iteration_w_match_empty_tables(void) {
 
     ecs_fini(world);
 }
+
+void Basic_get_cache_query_uncached(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "Position",
+        .cache_kind = EcsQueryCacheNone
+    });
+
+    test_assert(q != NULL);
+
+    const ecs_query_t *cq = ecs_query_get_cache_query(q);
+    test_assert(cq == NULL);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Basic_get_cache_query_cached(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "Position",
+        .cache_kind = EcsQueryCacheAll
+    });
+
+    test_assert(q != NULL);
+
+    const ecs_query_t *cq = ecs_query_get_cache_query(q);
+    test_assert(cq != NULL);
+
+    test_int(cq->term_count, 1);
+    test_int(cq->terms[0].id, ecs_id(Position));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Basic_get_cache_query_partially_cached(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "Position, (ChildOf, $this)", // 2nd term cannot be cached
+        .cache_kind = EcsQueryCacheAuto
+    });
+
+    test_assert(q != NULL);
+
+    const ecs_query_t *cq = ecs_query_get_cache_query(q);
+    test_assert(cq != NULL);
+
+    test_int(cq->term_count, 1);
+    test_int(cq->terms[0].id, ecs_id(Position));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
