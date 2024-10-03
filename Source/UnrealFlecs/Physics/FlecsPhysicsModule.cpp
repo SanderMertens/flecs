@@ -90,17 +90,22 @@ void UFlecsPhysicsModule::ResimulationHandlers()
 		{
 			return;
 		}
-		
-		FTickerPhysicsHistoryComponent* HistoryComponent = GetFlecsWorld()->GetSingletonPtr<FTickerPhysicsHistoryComponent>();
-		solid_check(HistoryComponent);
 
-		if UNLIKELY_IF(!GetFlecsWorld()->GetWorld()->GetPhysicsScene()
-			|| !GetFlecsWorld()->GetWorld()->GetPhysicsScene()->GetSolver())
+		UFlecsWorld* FlecsWorld = GetFlecsWorld();
+		solid_checkf(IsValid(FlecsWorld), TEXT("FlecsWorld is invalid"));
+
+		if UNLIKELY_IF(!FlecsWorld->GetWorld()->GetPhysicsScene())
 		{
 			return;
 		}
+		
+		Chaos::FPhysicsSolver* Solver = FlecsWorld->GetWorld()->GetPhysicsScene()->GetSolver();
+		solid_check(Solver);
 
-		const int32 CurrentPhysicsFrame = GetFlecsWorld()->GetWorld()->GetPhysicsScene()->GetSolver()->GetCurrentFrame();
+		FTickerPhysicsHistoryComponent* HistoryComponent = FlecsWorld->GetSingletonPtr<FTickerPhysicsHistoryComponent>();
+		solid_check(HistoryComponent);
+
+		const int32 CurrentPhysicsFrame = Solver->GetCurrentFrame();
 
 		if LIKELY_IF(HistoryComponent->HistoryItems.Num() >= MaxFrameHistory)
 		{
@@ -113,7 +118,7 @@ void UFlecsPhysicsModule::ResimulationHandlers()
 
 		HistoryComponent->HistoryItems.Add(CurrentPhysicsFrameItem);
 
-		GetFlecsWorld()->ModifiedSingleton<FTickerPhysicsHistoryComponent>();
+		FlecsWorld->ModifiedSingleton<FTickerPhysicsHistoryComponent>();
 	});
 	
 	Scene->GetSolver()->AddPostAdvanceCallback(PostAdvanceDelegate);
@@ -130,8 +135,8 @@ void UFlecsPhysicsModule::PhysicsComponentObservers()
 			const FFlecsTransformComponent& Transform)
 		{
 			Iter.entity(Index).modified<FFlecsPhysicsComponent>();
-			
-			flecs::world World = Iter.world();
+
+			const flecs::world World = Iter.world();
 			const UWorld* OuterWorld = World.get<FUWorldPtrComponent>()->GetWorld();
 			solid_check(IsValid(OuterWorld));
 

@@ -11,7 +11,6 @@ struct UNREALFLECS_API FTickerPhysicsHistoryItem final
 	GENERATED_BODY()
 
 public:
-
 	UPROPERTY()
 	int32 TickId = 0;
 
