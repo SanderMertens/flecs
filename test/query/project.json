@@ -212,7 +212,7 @@
                 "inout_component_implicit_subject",
                 "inout_component_explicit_subject",
                 "inout_pair_implicit_subject",
-                "inout_pair_explicit_subject",   
+                "inout_pair_explicit_subject",
                 "out_component_implicit_subject",
                 "out_component_explicit_subject",
                 "out_pair_implicit_subject",
@@ -244,7 +244,7 @@
                 "from_or",
                 "from_not",
                 "pair_implicit_subject_optional",
-                "pair_explicit_subject_optional",                
+                "pair_explicit_subject_optional",
                 "pred_implicit_subject_w_role",
                 "pred_explicit_subject_w_role",
                 "pred_no_subject_w_role",
@@ -288,9 +288,9 @@
                 "pred_implicit_subject_superset_inclusive",
                 "pred_implicit_subject_superset_cascade",
                 "pred_implicit_subject_superset_inclusive_cascade",
-                "pred_implicit_subject_implicit_superset_cascade",         
+                "pred_implicit_subject_implicit_superset_cascade",
                 "pred_implicit_subject_implicit_superset_inclusive_cascade",
-                "pred_implicit_subject_implicit_superset_cascade_w_rel",         
+                "pred_implicit_subject_implicit_superset_cascade_w_rel",
                 "pred_implicit_subject_implicit_superset_inclusive_cascade_w_rel",
                 "pred_implicit_subject_superset_childof",
                 "pred_implicit_subject_cascade_superset_childof",
@@ -691,7 +691,8 @@
                 "written_pair_tgt_any_record",
                 "written_pair_any_any_record",
                 "pair_rel_any_record_component",
-                "pair_tgt_any_record_component"
+                "pair_tgt_any_record_component",
+                "entity_iteration_w_match_empty_tables"
             ]
         }, {
             "id": "Combinations",

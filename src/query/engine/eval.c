@@ -711,6 +711,9 @@ bool flecs_query_each(
     }
 
     if (!redo) {
+        if (!ecs_table_count(table)) {
+            return false;
+        }
         row = op_ctx->row = range.offset;
     } else {
         int32_t end = range.count;

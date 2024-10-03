@@ -680,6 +680,7 @@ void Basic_written_pair_tgt_any_record(void);
 void Basic_written_pair_any_any_record(void);
 void Basic_pair_rel_any_record_component(void);
 void Basic_pair_tgt_any_record_component(void);
+void Basic_entity_iteration_w_match_empty_tables(void);
 
 // Testsuite 'Combinations'
 void Combinations_setup(void);
@@ -4777,6 +4778,10 @@ bake_test_case Basic_testcases[] = {
     {
         "pair_tgt_any_record_component",
         Basic_pair_tgt_any_record_component
+    },
+    {
+        "entity_iteration_w_match_empty_tables",
+        Basic_entity_iteration_w_match_empty_tables
     }
 };
 
@@ -10407,7 +10412,7 @@ static bake_test_suite suites[] = {
         "Basic",
         Basic_setup,
         NULL,
-        224,
+        225,
         Basic_testcases,
         1,
         Basic_params

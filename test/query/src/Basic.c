@@ -11216,3 +11216,46 @@ void Basic_pair_tgt_any_record_component(void) {
 
     ecs_fini(world);
 }
+
+void Basic_entity_iteration_w_match_empty_tables(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "Position($x)", // non-$this variable forces entity iteration
+        .cache_kind = cache_kind,
+        .flags = EcsQueryMatchEmptyTables
+    });
+
+    test_assert(q != NULL);
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_set(world, e, Position, {10, 20});
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(true, ecs_query_next(&it));
+        test_uint(0, it.count);
+        test_uint(e, ecs_field_src(&it, 0));
+        test_uint(ecs_id(Position), ecs_field_id(&it, 0));
+        {
+            const Position *p = ecs_field(&it, Position, 0);
+            test_assert(p != NULL);
+            test_int(p[0].x, 10); test_int(p[0].y, 20);
+        }
+
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    // delete entity, leave empty table
+
+    ecs_delete(world, e);
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, q);
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_fini(world);
+}
