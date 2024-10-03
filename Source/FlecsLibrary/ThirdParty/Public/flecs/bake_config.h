@@ -20,6 +20,8 @@
 /* Headers of public dependencies */
 /* No dependencies */
 
+#define flecs_EXPORTS
+
 /* Convenience macro for exporting symbols */
 #ifndef flecs_STATIC
 #if defined(flecs_EXPORTS) && (defined(_MSC_VER) || defined(__MINGW32__))
