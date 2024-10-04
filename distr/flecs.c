@@ -37034,14 +37034,12 @@ const ecs_entity_t* ecs_table_entities(
     return table->data.entities;
 }
 
-/* Cleanup, optionally run OnRemove, clear entity index, deactivate table, optionally free allocations */
+/* Cleanup, no OnRemove, delete from entity index, deactivate table, retain allocations */
 void ecs_table_clear_entities(
     ecs_world_t* world,
-    ecs_table_t* table,
-    bool notify,
-    bool deallocate)
+    ecs_table_t* table)
 {
-    flecs_table_fini_data(world, table, notify, true, true, deallocate);
+    flecs_table_fini_data(world, table, true, true, true, false);
 }
 
 /* Cleanup, no OnRemove, clear entity index, deactivate table, free allocations */

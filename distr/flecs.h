@@ -9188,21 +9188,17 @@ int32_t ecs_search_relation(
     ecs_id_t *id_out,
     struct ecs_table_record_t **tr_out);
 
-/** Remove all entities in a table. Optionally, notify all observers and 
- * deallocate table memory. Retaining table memory can be efficient when
- * planning to refill the table with operations like ecs_bulk_init
+/** Remove all entities in a table. Does not deallocate table memory. 
+ * Retaining table memory can be efficient when planning 
+ * to refill the table with operations like ecs_bulk_init
  *
  * @param world The world.
  * @param table The table to clear.
- * @param notify Call OnRemove hooks.
- * @param deallocate Deallocate unused table memory.
  */
 FLECS_API
 void ecs_table_clear_entities(
     ecs_world_t* world,
-    ecs_table_t* table,
-    bool notify,
-    bool deallocate);
+    ecs_table_t* table);
     
 /** @} */
 
