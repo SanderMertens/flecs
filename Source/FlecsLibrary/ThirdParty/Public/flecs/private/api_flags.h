@@ -23,7 +23,7 @@ extern "C" {
 #define EcsWorldMeasureFrameTime      (1u << 5)
 #define EcsWorldMeasureSystemTime     (1u << 6)
 #define EcsWorldMultiThreaded         (1u << 7)
-
+#define EcsWorldFrameInProgress       (1u << 8)
 
 ////////////////////////////////////////////////////////////////////////////////
 //// OS API flags
@@ -78,12 +78,12 @@ extern "C" {
 #define EcsIdHasOnAdd                  (1u << 16) /* Same values as table flags */
 #define EcsIdHasOnRemove               (1u << 17) 
 #define EcsIdHasOnSet                  (1u << 18)
-#define EcsIdHasOnTableFill            (1u << 20)
-#define EcsIdHasOnTableEmpty           (1u << 21)
-#define EcsIdHasOnTableCreate          (1u << 22)
-#define EcsIdHasOnTableDelete          (1u << 23)
-#define EcsIdIsSparse                  (1u << 24)
-#define EcsIdIsUnion                   (1u << 25)
+#define EcsIdHasOnTableFill            (1u << 19)
+#define EcsIdHasOnTableEmpty           (1u << 20)
+#define EcsIdHasOnTableCreate          (1u << 21)
+#define EcsIdHasOnTableDelete          (1u << 22)
+#define EcsIdIsSparse                  (1u << 23)
+#define EcsIdIsUnion                   (1u << 24)
 #define EcsIdEventMask\
     (EcsIdHasOnAdd|EcsIdHasOnRemove|EcsIdHasOnSet|\
         EcsIdHasOnTableFill|EcsIdHasOnTableEmpty|EcsIdHasOnTableCreate|\
@@ -146,18 +146,20 @@ extern "C" {
 #define EcsQueryMatchOnlyThis         (1u << 12u) /* Query only has terms with $this source */
 #define EcsQueryMatchOnlySelf         (1u << 13u) /* Query has no terms with up traversal */
 #define EcsQueryMatchWildcards        (1u << 14u) /* Query matches wildcards */
-#define EcsQueryHasCondSet            (1u << 15u) /* Query has conditionally set fields */
-#define EcsQueryHasPred               (1u << 16u) /* Query has equality predicates */
-#define EcsQueryHasScopes             (1u << 17u) /* Query has query scopes */
-#define EcsQueryHasRefs               (1u << 18u) /* Query has terms with static source */
-#define EcsQueryHasOutTerms           (1u << 19u) /* Query has [out] terms */
-#define EcsQueryHasNonThisOutTerms    (1u << 20u) /* Query has [out] terms with no $this source */
-#define EcsQueryHasMonitor            (1u << 21u) /* Query has monitor for change detection */
-#define EcsQueryIsTrivial             (1u << 22u) /* Query can use trivial evaluation function */
-#define EcsQueryHasCacheable          (1u << 23u) /* Query has cacheable terms */
-#define EcsQueryIsCacheable           (1u << 24u) /* All terms of query are cacheable */
-#define EcsQueryHasTableThisVar       (1u << 25u) /* Does query have $this table var */
+#define EcsQueryMatchNothing          (1u << 15u) /* Query matches nothing */
+#define EcsQueryHasCondSet            (1u << 16u) /* Query has conditionally set fields */
+#define EcsQueryHasPred               (1u << 17u) /* Query has equality predicates */
+#define EcsQueryHasScopes             (1u << 18u) /* Query has query scopes */
+#define EcsQueryHasRefs               (1u << 19u) /* Query has terms with static source */
+#define EcsQueryHasOutTerms           (1u << 20u) /* Query has [out] terms */
+#define EcsQueryHasNonThisOutTerms    (1u << 21u) /* Query has [out] terms with no $this source */
+#define EcsQueryHasMonitor            (1u << 22u) /* Query has monitor for change detection */
+#define EcsQueryIsTrivial             (1u << 23u) /* Query can use trivial evaluation function */
+#define EcsQueryHasCacheable          (1u << 24u) /* Query has cacheable terms */
+#define EcsQueryIsCacheable           (1u << 25u) /* All terms of query are cacheable */
+#define EcsQueryHasTableThisVar       (1u << 26u) /* Does query have $this table var */
 #define EcsQueryCacheYieldEmptyTables (1u << 27u) /* Does query cache empty tables */
+
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Term flags (used by ecs_term_t::flags_)
@@ -187,7 +189,10 @@ extern "C" {
 #define EcsObserverIsMonitor           (1u << 2u)  /* Is observer a monitor */
 #define EcsObserverIsDisabled          (1u << 3u)  /* Is observer entity disabled */
 #define EcsObserverIsParentDisabled    (1u << 4u)  /* Is module parent of observer disabled  */
-#define EcsObserverBypassQuery         (1u << 5u)
+#define EcsObserverBypassQuery         (1u << 5u)  /* Don't evaluate query for multi-component observer*/
+#define EcsObserverYieldOnCreate       (1u << 6u)  /* Yield matching entities when creating observer */
+#define EcsObserverYieldOnDelete       (1u << 7u)  /* Yield matching entities when deleting observer */
+
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Table flags (used by ecs_table_t::flags)
@@ -212,22 +217,24 @@ extern "C" {
 #define EcsTableHasOnAdd               (1u << 16u) /* Same values as id flags */
 #define EcsTableHasOnRemove            (1u << 17u)
 #define EcsTableHasOnSet               (1u << 18u)
-#define EcsTableHasOnTableFill         (1u << 20u)
-#define EcsTableHasOnTableEmpty        (1u << 21u)
-#define EcsTableHasOnTableCreate       (1u << 22u)
-#define EcsTableHasOnTableDelete       (1u << 23u)
-#define EcsTableHasSparse              (1u << 24u)
-#define EcsTableHasUnion               (1u << 25u)
+#define EcsTableHasOnTableFill         (1u << 19u)
+#define EcsTableHasOnTableEmpty        (1u << 20u)
+#define EcsTableHasOnTableCreate       (1u << 21u)
+#define EcsTableHasOnTableDelete       (1u << 22u)
+#define EcsTableHasSparse              (1u << 23u)
+#define EcsTableHasUnion               (1u << 24u)
 
 #define EcsTableHasTraversable         (1u << 26u)
 #define EcsTableMarkedForDelete        (1u << 30u)
 
 /* Composite table flags */
-#define EcsTableHasLifecycle        (EcsTableHasCtors | EcsTableHasDtors)
-#define EcsTableIsComplex           (EcsTableHasLifecycle | EcsTableHasToggle | EcsTableHasSparse)
-#define EcsTableHasAddActions       (EcsTableHasIsA | EcsTableHasCtors | EcsTableHasOnAdd | EcsTableHasOnSet)
-#define EcsTableHasRemoveActions    (EcsTableHasIsA | EcsTableHasDtors | EcsTableHasOnRemove)
-
+#define EcsTableHasLifecycle     (EcsTableHasCtors | EcsTableHasDtors)
+#define EcsTableIsComplex        (EcsTableHasLifecycle | EcsTableHasToggle | EcsTableHasSparse)
+#define EcsTableHasAddActions    (EcsTableHasIsA | EcsTableHasCtors | EcsTableHasOnAdd | EcsTableHasOnSet)
+#define EcsTableHasRemoveActions (EcsTableHasIsA | EcsTableHasDtors | EcsTableHasOnRemove)
+#define EcsTableEdgeFlags        (EcsTableHasOnAdd | EcsTableHasOnRemove | EcsTableHasSparse | EcsTableHasUnion)
+#define EcsTableAddEdgeFlags     (EcsTableHasOnAdd | EcsTableHasSparse | EcsTableHasUnion)
+#define EcsTableRemoveEdgeFlags  (EcsTableHasOnRemove | EcsTableHasSparse | EcsTableHasUnion)
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Aperiodic action flags (used by ecs_run_aperiodic)

@@ -109,7 +109,7 @@ void flecs_remove_id_elem(
     }
 }
 
-
+static
 ecs_id_t flecs_id_record_hash(
     ecs_id_t id)
 {
@@ -167,6 +167,23 @@ void flecs_id_record_fini_sparse(
             ecs_abort(ECS_INTERNAL_ERROR, "unknown sparse storage");
         }
     }
+}
+
+static
+ecs_flags32_t flecs_id_record_event_flags(
+    ecs_world_t *world,
+    ecs_id_t id)
+{
+    ecs_observable_t *o = &world->observable;
+    ecs_flags32_t result = 0;
+    result |= flecs_observers_exist(o, id, EcsOnAdd) * EcsIdHasOnAdd;
+    result |= flecs_observers_exist(o, id, EcsOnRemove) * EcsIdHasOnRemove;
+    result |= flecs_observers_exist(o, id, EcsOnSet) * EcsIdHasOnSet;
+    result |= flecs_observers_exist(o, id, EcsOnTableFill) * EcsIdHasOnTableFill;
+    result |= flecs_observers_exist(o, id, EcsOnTableEmpty) * EcsIdHasOnTableEmpty;
+    result |= flecs_observers_exist(o, id, EcsOnTableCreate) * EcsIdHasOnTableCreate;
+    result |= flecs_observers_exist(o, id, EcsOnTableDelete) * EcsIdHasOnTableDelete;
+    return result;
 }
 
 static
@@ -351,14 +368,7 @@ ecs_id_record_t* flecs_id_record_new(
         }
     }
 
-    ecs_observable_t *o = &world->observable;
-    idr->flags |= flecs_observers_exist(o, id, EcsOnAdd) * EcsIdHasOnAdd;
-    idr->flags |= flecs_observers_exist(o, id, EcsOnRemove) * EcsIdHasOnRemove;
-    idr->flags |= flecs_observers_exist(o, id, EcsOnSet) * EcsIdHasOnSet;
-    idr->flags |= flecs_observers_exist(o, id, EcsOnTableFill) * EcsIdHasOnTableFill;
-    idr->flags |= flecs_observers_exist(o, id, EcsOnTableEmpty) * EcsIdHasOnTableEmpty;
-    idr->flags |= flecs_observers_exist(o, id, EcsOnTableCreate) * EcsIdHasOnTableCreate;
-    idr->flags |= flecs_observers_exist(o, id, EcsOnTableDelete) * EcsIdHasOnTableDelete;
+    idr->flags |= flecs_id_record_event_flags(world, id);
 
     if (idr->flags & EcsIdIsSparse) {
         flecs_id_record_init_sparse(world, idr);
@@ -674,4 +684,54 @@ void flecs_fini_id_records(
 
     ecs_map_fini(&world->id_index_hi);
     ecs_os_free(world->id_index_lo);
+}
+
+static
+ecs_flags32_t flecs_id_flags(
+    ecs_world_t *world,
+    ecs_id_t id)
+{
+    const ecs_id_record_t *idr = flecs_id_record_get(world, id);
+    if (idr) {
+        ecs_flags32_t extra_flags = 0;
+        if (idr->flags & EcsIdOnInstantiateInherit) {
+            extra_flags |= EcsIdHasOnAdd|EcsIdHasOnRemove;
+        }
+        return idr->flags|extra_flags;
+    }
+    return flecs_id_record_event_flags(world, id);
+}
+
+ecs_flags32_t flecs_id_flags_get(
+    ecs_world_t *world,
+    ecs_id_t id)
+{
+    ecs_flags32_t result = flecs_id_flags(world, id);
+
+    if (id != EcsAny) {
+        result |= flecs_id_flags(world, EcsAny);
+    }
+
+    if (ECS_IS_PAIR(id)) {
+        ecs_entity_t first = ECS_PAIR_FIRST(id);
+        ecs_entity_t second = ECS_PAIR_SECOND(id);
+
+        if (id != ecs_pair(first, EcsWildcard)) {
+            result |= flecs_id_flags(world, ecs_pair(first, EcsWildcard));
+        }
+        if (id != ecs_pair(EcsWildcard, second)) {
+            result |= flecs_id_flags(world, ecs_pair(EcsWildcard, second));
+        }
+        if (id != ecs_pair(EcsWildcard, EcsWildcard)) {
+            result |= flecs_id_flags(world, ecs_pair(EcsWildcard, EcsWildcard));
+        }
+
+        if (first == EcsIsA) {
+            result |= EcsIdHasOnAdd|EcsIdHasOnRemove;
+        }
+    } else if (id != EcsWildcard) {
+        result |= flecs_id_flags(world, EcsWildcard);
+    }
+
+    return result;
 }

@@ -99,6 +99,8 @@ private:
     void populate_self(const ecs_iter_t *iter, size_t index, T, Targs... comps) {
         fields_[index].ptr = ecs_field_w_size(iter, sizeof(A), 
             static_cast<int8_t>(index));
+        fields_[index].is_ref = false;
+        ecs_assert(iter->sources[index] == 0, ECS_INTERNAL_ERROR, NULL);
         populate_self(iter, index + 1, comps ...);
     }
 
@@ -120,7 +122,8 @@ struct each_field { };
 // Base class
 struct each_column_base {
     each_column_base(const _::field_ptr& field, size_t row) 
-        : field_(field), row_(row) { }
+        : field_(field), row_(row) {
+    }
 
 protected:
     const _::field_ptr& field_;
@@ -216,7 +219,6 @@ struct each_ref_field : public each_field<T> {
         }
     }
 };
-
 
 // Type that handles passing components to each callbacks
 template <typename Func, typename ... Components>
@@ -820,6 +822,7 @@ struct entity_with_delegate_impl<arg_list<Args ...>> {
                 elem = store_added(added, elem, prev, next, w.id<Args>()),
                 prev = next, 0
             )... });
+
             (void)dummy_before;
 
             // If table is different, move entity straight to it

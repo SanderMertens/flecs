@@ -825,29 +825,29 @@ int flecs_term_finalize(
         ecs_record_t *first_record = flecs_entities_get(world, first_entity);
         ecs_table_t *first_table = first_record ? first_record->table : NULL;
         if (first_table) {
-            /* Add traversal flags for transitive relationships */
-            if (ecs_term_ref_is_set(second) && !((second_flags & EcsTraverseFlags) == EcsSelf)) {
-                if (!((src->id & EcsIsVariable) && (src_id == EcsAny))) {
-                    if (!((second->id & EcsIsVariable) && (second_id == EcsAny))) {
-                        if (ecs_table_has_id(world, first_table, EcsTransitive)) {
-                            term->flags_ |= EcsTermTransitive;
+            if (ecs_term_ref_is_set(second)) {
+                /* Add traversal flags for transitive relationships */
+                if (!((second_flags & EcsTraverseFlags) == EcsSelf)) {
+                    if (!((src->id & EcsIsVariable) && (src_id == EcsAny))) {
+                        if (!((second->id & EcsIsVariable) && (second_id == EcsAny))) {
+                            if (ecs_table_has_id(world, first_table, EcsTransitive)) {
+                                term->flags_ |= EcsTermTransitive;
+                            }
+
+                            if (ecs_table_has_id(world, first_table, EcsReflexive)) {
+                                term->flags_ |= EcsTermReflexive;
+                            }
                         }
                     }
                 }
-            }
 
-            if (ECS_IS_PAIR(term->id)) {
-                if (ecs_table_has_id(world, first_table, EcsReflexive)) {
-                    term->flags_ |= EcsTermReflexive;
-                }
-            }
-
-            /* Check if term is union */
-            if (ecs_table_has_id(world, first_table, EcsUnion)) {
-                /* Any wildcards don't need special handling as they just return
-                 * (Rel, *). */
-                if (ECS_IS_PAIR(term->id) && ECS_PAIR_SECOND(term->id) != EcsAny) {
-                    term->flags_ |= EcsTermIsUnion;
+                /* Check if term is union */
+                if (ecs_table_has_id(world, first_table, EcsUnion)) {
+                    /* Any wildcards don't need special handling as they just return
+                    * (Rel, *). */
+                    if (ECS_IS_PAIR(term->id) && ECS_PAIR_SECOND(term->id) != EcsAny) {
+                        term->flags_ |= EcsTermIsUnion;
+                    }
                 }
             }
         }
@@ -919,7 +919,7 @@ int flecs_term_finalize(
 
     if (term->flags_ & EcsTermTransitive) {
         trivial_term = false;
-        cacheable_term = false;
+        cacheable_term = false; 
     }
 
     if (term->flags_ & EcsTermIdInherited) {
@@ -1095,6 +1095,7 @@ int flecs_query_finalize_terms(
     }
 
     bool cacheable = true;
+    bool match_nothing = true;
     for (i = 0; i < term_count; i ++) {
         ecs_term_t *term = &terms[i];
         bool prev_is_or = i && term[-1].oper == EcsOr;
@@ -1103,6 +1104,11 @@ int flecs_query_finalize_terms(
 
         if (flecs_term_finalize(world, term, &ctx)) {
             return -1;
+        }
+
+        if (term->src.id != EcsIsEntity) {
+            /* If term doesn't match 0 entity, query doesn't match nothing */
+            match_nothing = false;
         }
 
         if (scope_nesting) {
@@ -1269,6 +1275,12 @@ int flecs_query_finalize_terms(
             ECS_TERMSET_SET(q->fixed_fields, 1u << term->field_index);
         }
 
+        if ((term->src.id & EcsIsVariable) && 
+            (ECS_TERM_REF_ID(&term->src) != EcsThis)) 
+        {
+            ECS_TERMSET_SET(q->var_fields, 1u << term->field_index);
+        }
+
         ecs_id_record_t *idr = flecs_id_record_get(world, term->id);
         if (idr) {
             if (ecs_os_has_threading()) {
@@ -1424,6 +1436,9 @@ int flecs_query_finalize_terms(
     ECS_BIT_COND(q->flags, EcsQueryIsCacheable, 
         cacheable && (cacheable_terms == term_count) &&
             !desc->order_by_callback);
+
+    /* If none of the terms match a source, the query matches nothing */
+    ECS_BIT_COND(q->flags, EcsQueryMatchNothing, match_nothing);
 
     for (i = 0; i < q->term_count; i ++) {
         ecs_term_t *term = &q->terms[i];
@@ -1618,17 +1633,20 @@ bool flecs_query_finalize_simple(
             if (idr->flags & EcsIdIsSparse) {
                 term->flags_ |= EcsTermIsSparse;
                 cacheable = false; trivial = false;
+                q->row_fields |= flecs_uto(uint32_t, 1llu << i);
             }
         }
 
         if (ECS_IS_PAIR(id)) {
             if (ecs_has_id(world, first, EcsTransitive)) {
                 term->flags_ |= EcsTermTransitive;
-                cacheable = false; trivial = false;
+                trivial = false;
+                cacheable = false; 
             }
             if (ecs_has_id(world, first, EcsReflexive)) {
                 term->flags_ |= EcsTermReflexive;
-                cacheable = false; trivial = false;
+                trivial = false;
+                cacheable = false; 
             }
         }
 

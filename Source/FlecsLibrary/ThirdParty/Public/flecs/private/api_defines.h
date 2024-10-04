@@ -104,9 +104,6 @@
 /* Filenames aren't consistent across targets as they can use different casing 
  * (e.g. WinSock2 vs winsock2). */
 #pragma clang diagnostic ignored "-Wnonportable-system-include-path"
-/* Enum reflection relies on testing constant values that may not be valid for
- * the enumeration. */
-#pragma clang diagnostic ignored "-Wenum-constexpr-conversion"
 /* Very difficult to workaround this warning in C, especially for an ECS. */
 #pragma clang diagnostic ignored "-Wunsafe-buffer-usage"
 /* This warning gets thrown when trying to cast pointer returned from dlproc */
@@ -118,6 +115,11 @@
  * code paths are reached where values are uninitialized. */
 #ifdef FLECS_SOFT_ASSERT
 #pragma clang diagnostic ignored "-Wsometimes-uninitialized"
+#endif
+
+/* Allows for enum reflection support on legacy compilers */
+#if __clang_major__ < 16
+#pragma clang diagnostic ignored "-Wenum-constexpr-conversion"
 #endif
 
 #elif defined(ECS_TARGET_GNU)
@@ -139,6 +141,11 @@
 /* Produces false positives in queries/src/cache.c */
 #pragma GCC diagnostic ignored "-Wstringop-overflow"
 #pragma GCC diagnostic ignored "-Wrestrict"
+#endif
+
+/* Allows for enum reflection support on legacy compilers */
+#if defined(__GNUC__) && __GNUC__ <= 10
+#pragma GCC diagnostic ignored "-Wconversion"
 #endif
 
 /* Standard library dependencies */
@@ -225,6 +232,8 @@ typedef struct ecs_allocator_t ecs_allocator_t;
 #elif defined(ECS_TARGET_MSVC)
 #define ECS_ALIGNOF(T) (int64_t)__alignof(T)
 #elif defined(ECS_TARGET_GNU)
+#define ECS_ALIGNOF(T) (int64_t)__alignof__(T)
+#elif defined(ECS_TARGET_CLANG)
 #define ECS_ALIGNOF(T) (int64_t)__alignof__(T)
 #else
 #define ECS_ALIGNOF(T) ((int64_t)&((struct { char c; T d; } *)0)->d)

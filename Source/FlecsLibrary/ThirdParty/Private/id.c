@@ -5,6 +5,10 @@
 
 #include "private_api.h"
 
+#ifdef FLECS_SCRIPT
+#include "addons/script/script.h"
+#endif
+
 bool ecs_id_match(
     ecs_id_t id,
     ecs_id_t pattern)
@@ -129,4 +133,27 @@ ecs_flags32_t ecs_id_get_flags(
     } else {
         return 0;
     }
+}
+
+ecs_id_t ecs_id_from_str(
+    const ecs_world_t *world,
+    const char *expr)
+{
+#ifdef FLECS_SCRIPT
+    ecs_id_t result;
+
+    /* Temporarily disable parser logging */
+    int prev_level = ecs_log_set_level(-3);
+    if (!flecs_id_parse(world, NULL, expr, &result)) {
+        /* Invalid expression */
+        ecs_log_set_level(prev_level);
+        return 0;
+    }
+    ecs_log_set_level(prev_level);
+    return result;
+#else
+    (void)world;
+    (void)expr;
+    ecs_abort(ECS_UNSUPPORTED, "ecs_id_from_str requires FLECS_SCRIPT addon");
+#endif
 }

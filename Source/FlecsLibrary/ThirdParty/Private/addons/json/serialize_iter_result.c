@@ -400,7 +400,7 @@ void flecs_json_serialize_iter_this(
 #endif
 
     if (this_data->has_alerts) {
-        flecs_json_memberl(buf, "alerts");
+        flecs_json_memberl(buf, "has_alerts");
         flecs_json_true(buf);
     }
 }

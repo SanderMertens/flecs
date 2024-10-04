@@ -854,6 +854,8 @@ void flecs_query_cache_rematch_tables(
         return;
     }
 
+    ecs_os_perf_trace_push("flecs.query.rematch");
+
     cache->monitor_generation = world->monitor_generation;
 
     it = ecs_query_iter(world, cache->query);
@@ -923,6 +925,8 @@ void flecs_query_cache_rematch_tables(
     if (world->flags & EcsWorldMeasureFrameTime) {
         world->info.rematch_time_total += (ecs_ftime_t)ecs_time_measure(&t);
     }
+
+    ecs_os_perf_trace_pop("flecs.query.rematch");
 }
 
 /* -- Private API -- */

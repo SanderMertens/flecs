@@ -168,6 +168,7 @@ struct world {
     }
 
     world& operator=(const world& obj) noexcept {
+        release();
         this->world_ = obj.world_;
         flecs_poly_claim(this->world_);
         return *this;
@@ -179,12 +180,15 @@ struct world {
     }
 
     world& operator=(world&& obj) noexcept {
+        release();
         world_ = obj.world_;
         obj.world_ = nullptr;
         return *this;
     }
 
-    ~world() {
+    /* Releases the underlying world object. If this is the last handle, the world
+       will be finalized. */
+    void release() {
         if (world_) {
             if (!flecs_poly_release(world_)) {
                 if (ecs_stage_get_id(world_) == -1) {
@@ -197,7 +201,12 @@ struct world {
                     ecs_fini(world_);
                 }
             }
-        }
+            world_ = nullptr;
+        }        
+    }
+
+    ~world() {
+        release();
     }
 
     /* Implicit conversion to world_t* */
