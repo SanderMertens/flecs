@@ -692,7 +692,10 @@
                 "written_pair_any_any_record",
                 "pair_rel_any_record_component",
                 "pair_tgt_any_record_component",
-                "entity_iteration_w_match_empty_tables"
+                "entity_iteration_w_match_empty_tables",
+                "get_cache_query_uncached",
+                "get_cache_query_cached",
+                "get_cache_query_partially_cached"
             ]
         }, {
             "id": "Combinations",

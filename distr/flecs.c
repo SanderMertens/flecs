@@ -32449,6 +32449,17 @@ int32_t ecs_query_match_count(
     }
 }
 
+const ecs_query_t* ecs_query_get_cache_query(
+    const ecs_query_t *q)
+{
+    ecs_query_impl_t *impl = flecs_query_impl(q);
+    if (!impl->cache) {
+        return NULL;
+    } else {
+        return impl->cache->query;
+    }
+}
+
  /**
  * @file query/util.c
  * @brief Query utilities.
@@ -42554,17 +42565,49 @@ void flecs_json_serialize_query_plan(
 
     const ecs_query_t *q = desc->query;
     flecs_poly_assert(q, ecs_query_t);
-
+    const ecs_query_t *cq = ecs_query_get_cache_query(q);
+    
     flecs_json_memberl(buf, "query_plan");
 
     bool prev_color = ecs_log_enable_colors(true);
     char *plan = ecs_query_plan(q);
+    char *cache_plan = NULL;
+    if (cq) {
+        flecs_poly_assert(cq, ecs_query_t);
+        cache_plan = ecs_query_plan(cq);
+    }
+
+    ecs_strbuf_t plan_buf = ECS_STRBUF_INIT;
     if (plan) {
-        flecs_json_string_escape(buf, plan);
-        ecs_os_free(plan);
+        ecs_strbuf_appendstr(&plan_buf, plan);
+    } else {
+        if (q->term_count) {
+            ecs_strbuf_append(&plan_buf, "   %sOptimized out (trivial query)\n", ECS_GREY);
+        }
+    }
+
+    if (cq) {
+        ecs_strbuf_appendstr(&plan_buf, "\n\n");
+        ecs_strbuf_appendstr(&plan_buf, "   Cache plan\n");
+        ecs_strbuf_appendstr(&plan_buf, "   ---\n");
+        
+        if (cache_plan) {
+            ecs_strbuf_appendstr(&plan_buf, cache_plan);
+        } else {
+            ecs_strbuf_append(&plan_buf, "   %sOptimized out (trivial query)\n", ECS_GREY);
+        }
+    }
+
+    char *plan_str = ecs_strbuf_get(&plan_buf);
+    if (plan_str) {
+        flecs_json_string_escape(buf, plan_str);
+        ecs_os_free(plan_str);
     } else {
         flecs_json_null(buf);
     }
+
+    ecs_os_free(plan);
+    ecs_os_free(cache_plan);
     ecs_log_enable_colors(prev_color);
 }
 

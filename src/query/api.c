@@ -509,3 +509,14 @@ int32_t ecs_query_match_count(
         return impl->cache->match_count;
     }
 }
+
+const ecs_query_t* ecs_query_get_cache_query(
+    const ecs_query_t *q)
+{
+    ecs_query_impl_t *impl = flecs_query_impl(q);
+    if (!impl->cache) {
+        return NULL;
+    } else {
+        return impl->cache->query;
+    }
+}

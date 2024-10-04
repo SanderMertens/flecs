@@ -710,7 +710,7 @@ void SerializeQueryInfoToJson_serialize_plan_trivial_query(void) {
     };
 
     char *json = ecs_iter_to_json(&it, &desc);
-    char *expect = flecs_asprintf("{\"query_plan\":null, \"results\":[]}");
+    char *expect = flecs_asprintf("{\"query_plan\":\"   [[0;37mOptimized out (trivial query)\\n\", \"results\":[]}");
     test_json(json, expect);
     ecs_os_free(json);
     ecs_os_free(expect);
