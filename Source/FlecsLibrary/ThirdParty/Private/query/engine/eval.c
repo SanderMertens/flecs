@@ -290,10 +290,8 @@ bool flecs_query_and_any(
 
     ecs_query_and_ctx_t *op_ctx = flecs_op_ctx(ctx, and);
 
-    if (!redo) {
-        if (match_flags & EcsTermMatchAny && op_ctx->remaining) {
-            op_ctx->remaining = flecs_ito(int16_t, remaining);
-        }
+    if (match_flags & EcsTermMatchAny && op_ctx->remaining) {
+        op_ctx->remaining = flecs_ito(int16_t, remaining);
     }
 
     int32_t field = op->field_index;
@@ -711,6 +709,9 @@ bool flecs_query_each(
     }
 
     if (!redo) {
+        if (!ecs_table_count(table)) {
+            return false;
+        }
         row = op_ctx->row = range.offset;
     } else {
         int32_t end = range.count;
