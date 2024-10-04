@@ -184,7 +184,7 @@ void* ecs_field_at_w_size(
 
     ecs_entity_t src = it->sources[index];
     if (!src) {
-        src = ecs_table_entities(it->table)[row + it->offset];
+        src = ecs_table_entities(it->table)[row];
     }
 
     return flecs_sparse_get_any(idr->sparse, flecs_uto(int32_t, size), src);

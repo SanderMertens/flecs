@@ -112,15 +112,6 @@ struct query_builder_i : term_builder_i<Base> {
         return *this;
     }
 
-    Base& with(const char *r, entity_t o) {
-        this->term();
-        *this->term_ = flecs::term().first(r).second(o);
-        if (this->term_->inout == EcsInOutDefault) {
-            this->inout_none();
-        }
-        return *this;
-    }
-
     template<typename First>
     Base& with(id_t o) {
         return this->with(_::type<First>::id(this->world_v()), o);

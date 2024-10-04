@@ -480,7 +480,7 @@
     ecs_ref_init_id(world, entity, ecs_id(T))
 
 #define ecs_ref_get(world, ref, T)\
-    (ECS_CAST(T*, ecs_ref_get_id(world, ref, ecs_id(T))))
+    (ECS_CAST(const T*, ecs_ref_get_id(world, ref, ecs_id(T))))
 
 /** @} */
 

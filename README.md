@@ -125,9 +125,6 @@ If you have a project you'd like to share, let me know on [Discord](https://disc
 ### Tome Tumble Tournament
 [![image](docs/img/projects/tome_tumble.png)](https://terzalo.itch.io/tome-tumble-tournament)
 
-### Hyperion Minecraft Server
-[![image](docs/img/projects/hyperion.png)](https://github.com/andrewgazelka/hyperion)
-
 ### Sol Survivor
 [![image](docs/img/projects/sol_survivor.png)](https://nicok.itch.io/sol-survivor-demo)
 

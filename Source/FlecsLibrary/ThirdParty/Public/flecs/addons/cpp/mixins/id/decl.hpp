@@ -41,10 +41,6 @@ struct id {
         : world_(world)
         , id_(ecs_pair(first, second)) { }
 
-    explicit id(flecs::world_t *world, const char *expr)
-        : world_(world)
-        , id_(ecs_id_from_str(world, expr)) { }
-
     explicit id(flecs::id_t first, flecs::id_t second)
         : world_(nullptr)
         , id_(ecs_pair(first, second)) { }

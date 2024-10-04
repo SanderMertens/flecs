@@ -624,7 +624,7 @@ ecs_entity_t ecs_add_path_w_sep(
      * immediately updated. Without this, we could create multiple entities for
      * the same name in a single command queue. */
     bool suspend_defer = ecs_is_deferred(world) &&
-        !(world->flags & EcsWorldMultiThreaded);
+        (ecs_get_stage_count(world) <= 1);
         
     ecs_entity_t cur = parent;
     char *name = NULL;

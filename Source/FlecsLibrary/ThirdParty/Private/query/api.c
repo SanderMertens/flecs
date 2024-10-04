@@ -73,13 +73,13 @@ int flecs_query_set_caching_policy(
     const ecs_query_desc_t *desc)
 {
     ecs_query_cache_kind_t kind = desc->cache_kind;
-    bool group_order_by = desc->group_by || desc->group_by_callback || 
-            desc->order_by || desc->order_by_callback;
 
     /* If caching policy is default, try to pick a policy that does the right
      * thing in most cases. */
     if (kind == EcsQueryCacheDefault) {
-        if (desc->entity || group_order_by) {
+        if (desc->entity || desc->group_by || desc->group_by_callback || 
+            desc->order_by || desc->order_by_callback)
+        {
             /* If the query is created with an entity handle (typically 
              * indicating that the query is named or belongs to a system) the
              * chance is very high that the query will be reused, so enable
@@ -127,29 +127,8 @@ int flecs_query_set_caching_policy(
             /* Same for when the query has no cacheable terms */
             impl->pub.cache_kind = EcsQueryCacheNone;
         } else {
-            /* Part of the query is cacheable. Make sure to only create a cache
-             * if the cacheable part of the query contains not just not/optional
-             * terms, as this would build a cache that contains all tables. */
-            int32_t not_optional_terms = 0, cacheable_terms = 0;
-            if (!group_order_by) {
-                int32_t i, term_count = impl->pub.term_count;
-                const ecs_term_t *terms = impl->pub.terms;
-                for (i = 0; i < term_count; i ++) {
-                    const ecs_term_t *term = &terms[i];
-                    if (term->flags_ & EcsTermIsCacheable) {
-                        cacheable_terms ++;
-                        if (term->oper == EcsNot || term->oper == EcsOptional) {
-                            not_optional_terms ++;
-                        }
-                    }
-                }
-            }
-
-            if (group_order_by || cacheable_terms != not_optional_terms) {
-                impl->pub.cache_kind = EcsQueryCacheAuto;
-            } else {
-                impl->pub.cache_kind = EcsQueryCacheNone;
-            }
+            /* Part of the query is cacheable */
+            impl->pub.cache_kind = EcsQueryCacheAuto;
         }
     }
 

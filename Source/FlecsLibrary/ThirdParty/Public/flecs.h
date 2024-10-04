@@ -84,13 +84,6 @@
    #undef NDEBUG
 #endif
 
-/** @def FLECS_DISABLE_COUNTERS
- * Disables counters used for statistics. Improves performance, but
- * will prevent some features that rely on statistics from working,
- * like the statistics pages in the explorer.
- */
-// #define FLECS_DISABLE_COUNTERS
-
 /* Make sure provided configuration is valid */
 #if defined(FLECS_DEBUG) && defined(FLECS_NDEBUG)
 #error "invalid configuration: cannot both define FLECS_DEBUG and FLECS_NDEBUG"
@@ -217,7 +210,6 @@
 #define FLECS_HTTP          /**< Tiny HTTP server for connecting to remote UI */
 #define FLECS_REST          /**< REST API for querying application data */
 // #define FLECS_JOURNAL    /**< Journaling addon (disabled by default) */
-// #define FLECS_PERF_TRACE /**< Enable performance tracing (disabled by default) */
 #endif // ifndef FLECS_CUSTOM_BUILD
 
 /** @def FLECS_LOW_FOOTPRINT
@@ -808,7 +800,6 @@ struct ecs_query_t {
 
     /* Bitmasks for quick field information lookups */
     ecs_termset_t fixed_fields; /**< Fields with a fixed source */
-    ecs_termset_t var_fields;   /**< Fields with non-$this variable source */
     ecs_termset_t static_id_fields; /**< Fields with a static (component) id */
     ecs_termset_t data_fields;  /**< Fields that have data */
     ecs_termset_t write_fields; /**< Fields that write data */
@@ -904,14 +895,11 @@ struct ecs_type_hooks_t {
      * destructor is invoked. */
     ecs_iter_action_t on_remove;
 
-    void *ctx;                         /**< User defined context */
-    void *binding_ctx;                 /**< Language binding context */
-    void *lifecycle_ctx;               /**< Component lifecycle context (see meta add-on)*/
+    void *ctx;                       /**< User defined context */
+    void *binding_ctx;               /**< Language binding context */
 
-    ecs_ctx_free_t ctx_free;           /**< Callback to free ctx */
-    ecs_ctx_free_t binding_ctx_free;   /**< Callback to free binding_ctx */
-    ecs_ctx_free_t lifecycle_ctx_free; /**< Callback to free lifecycle_ctx */
-
+    ecs_ctx_free_t ctx_free;         /**< Callback to free ctx */
+    ecs_ctx_free_t binding_ctx_free; /**< Callback to free binding_ctx */
 };
 
 /** Type that contains component information (passed to ctors/dtors/...)
@@ -919,6 +907,7 @@ struct ecs_type_hooks_t {
  * @ingroup components
  */
 struct ecs_type_info_t {
+    const ecs_world_t *world; /**< World */
     ecs_size_t size;         /**< Size of type */
     ecs_size_t alignment;    /**< Alignment of type */
     ecs_type_hooks_t hooks;  /**< Type hooks */
@@ -1386,7 +1375,6 @@ typedef struct ecs_world_info_t {
 
     int64_t frame_count_total;        /**< Total number of frames */
     int64_t merge_count_total;        /**< Total number of merges */
-    int64_t eval_comp_monitors_total; /**< Total number of monitor evaluations */
     int64_t rematch_count_total;      /**< Total number of rematches */
 
     int64_t id_create_total;          /**< Total number of times a new id was created */
@@ -1956,17 +1944,6 @@ typedef struct ecs_entities_t {
  */
 FLECS_API
 ecs_entities_t ecs_get_entities(
-    const ecs_world_t *world);
-
-/** Get flags set on the world.
- * This operation returns the internal flags (see api_flags.h) that are
- * set on the world.
- *
- * @param world The world.
- * @return Flags set on the world.
- */
-FLECS_API
-ecs_flags32_t ecs_world_get_flags(
     const ecs_world_t *world);
 
 /** @} */
@@ -4326,7 +4303,7 @@ FLECS_API
 const char* ecs_id_flag_str(
     ecs_id_t id_flags);
 
-/** Convert (component) id to string.
+/** Convert id to string.
  * This operation interprets the structure of an id and converts it to a string.
  *
  * @param world The world.
@@ -4338,7 +4315,7 @@ char* ecs_id_str(
     const ecs_world_t *world,
     ecs_id_t id);
 
-/** Write (component) id string to buffer.
+/** Write id string to buffer.
  * Same as ecs_id_str() but writes result to ecs_strbuf_t.
  *
  * @param world The world.
@@ -4350,18 +4327,6 @@ void ecs_id_str_buf(
     const ecs_world_t *world,
     ecs_id_t id,
     ecs_strbuf_t *buf);
-
-/** Convert string to a (component) id.
- * This operation is the reverse of ecs_id_str(). The FLECS_SCRIPT addon
- * is required for this operation to work.
- *
- * @param world The world.
- * @param expr The string to convert to an id.
- */
-FLECS_API
-ecs_id_t ecs_id_from_str(
-    const ecs_world_t *world,
-    const char *expr);
 
 /** @} */
 

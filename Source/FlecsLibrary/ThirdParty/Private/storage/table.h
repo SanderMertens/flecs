@@ -254,7 +254,6 @@ void flecs_table_mark_dirty(
 void flecs_table_notify(
     ecs_world_t *world,
     ecs_table_t *table,
-    ecs_id_t id,
     ecs_table_event_t *event);
 
 void flecs_table_delete_entities(

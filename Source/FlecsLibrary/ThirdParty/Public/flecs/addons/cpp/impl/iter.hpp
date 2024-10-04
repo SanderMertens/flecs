@@ -54,10 +54,6 @@ inline flecs::table iter::table() const {
     return flecs::table(iter_->real_world, iter_->table);
 }
 
-inline flecs::table iter::other_table() const {
-    return flecs::table(iter_->real_world, iter_->other_table);
-}
-
 inline flecs::table_range iter::range() const {
     return flecs::table_range(iter_->real_world, iter_->table, 
         iter_->offset, iter_->count);

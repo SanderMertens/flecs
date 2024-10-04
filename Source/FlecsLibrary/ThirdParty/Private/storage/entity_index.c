@@ -249,11 +249,6 @@ uint64_t flecs_entity_index_new_id(
 
     /* Create new id */
     uint32_t id = (uint32_t)++ index->max_id;
-
-    /* Make sure id hasn't been issued before */
-    ecs_assert(!flecs_entity_index_exists(index, id), ECS_INVALID_OPERATION, 
-        "new entity %u id already in use (likely due to overlapping ranges)", (uint32_t)id);
-
     ecs_vec_append_t(index->allocator, &index->dense, uint64_t)[0] = id;
 
     ecs_entity_index_page_t *page = flecs_entity_index_ensure_page(index, id);
@@ -285,11 +280,6 @@ uint64_t* flecs_entity_index_new_ids(
     int32_t i, to_add = new_count - dense_count;
     for (i = 0; i < to_add; i ++) {
         uint32_t id = (uint32_t)++ index->max_id;
-
-        /* Make sure id hasn't been issued before */
-        ecs_assert(!flecs_entity_index_exists(index, id), ECS_INVALID_OPERATION, 
-            "new entity %u id already in use (likely due to overlapping ranges)", (uint32_t)id);
-
         int32_t dense = dense_count + i;
         ecs_vec_get_t(&index->dense, uint64_t, dense)[0] = id;
         ecs_entity_index_page_t *page = flecs_entity_index_ensure_page(index, id);

@@ -78,10 +78,6 @@ void MonitorStats(ecs_iter_t *it) {
 
                 cur = 0;
                 count = qit.count;
-                if (!count) {
-                    cur = -1;
-                    continue;
-                }
             } else {
                 cur ++;
             }

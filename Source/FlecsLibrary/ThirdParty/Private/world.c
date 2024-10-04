@@ -192,142 +192,142 @@ ECS_TAG_DECLARE(EcsAlertError);
 ECS_TAG_DECLARE(EcsAlertCritical);
 #endif
 #ifdef FLECS_UNITS
-ecs_entity_t EcsUnitPrefixes;
+ECS_DECLARE(EcsUnitPrefixes);
 
-ecs_entity_t EcsYocto;
-ecs_entity_t EcsZepto;
-ecs_entity_t EcsAtto;
-ecs_entity_t EcsFemto;
-ecs_entity_t EcsPico;
-ecs_entity_t EcsNano;
-ecs_entity_t EcsMicro;
-ecs_entity_t EcsMilli;
-ecs_entity_t EcsCenti;
-ecs_entity_t EcsDeci;
-ecs_entity_t EcsDeca;
-ecs_entity_t EcsHecto;
-ecs_entity_t EcsKilo;
-ecs_entity_t EcsMega;
-ecs_entity_t EcsGiga;
-ecs_entity_t EcsTera;
-ecs_entity_t EcsPeta;
-ecs_entity_t EcsExa;
-ecs_entity_t EcsZetta;
-ecs_entity_t EcsYotta;
+ECS_DECLARE(EcsYocto);
+ECS_DECLARE(EcsZepto);
+ECS_DECLARE(EcsAtto);
+ECS_DECLARE(EcsFemto);
+ECS_DECLARE(EcsPico);
+ECS_DECLARE(EcsNano);
+ECS_DECLARE(EcsMicro);
+ECS_DECLARE(EcsMilli);
+ECS_DECLARE(EcsCenti);
+ECS_DECLARE(EcsDeci);
+ECS_DECLARE(EcsDeca);
+ECS_DECLARE(EcsHecto);
+ECS_DECLARE(EcsKilo);
+ECS_DECLARE(EcsMega);
+ECS_DECLARE(EcsGiga);
+ECS_DECLARE(EcsTera);
+ECS_DECLARE(EcsPeta);
+ECS_DECLARE(EcsExa);
+ECS_DECLARE(EcsZetta);
+ECS_DECLARE(EcsYotta);
 
-ecs_entity_t EcsKibi;
-ecs_entity_t EcsMebi;
-ecs_entity_t EcsGibi;
-ecs_entity_t EcsTebi;
-ecs_entity_t EcsPebi;
-ecs_entity_t EcsExbi;
-ecs_entity_t EcsZebi;
-ecs_entity_t EcsYobi;
+ECS_DECLARE(EcsKibi);
+ECS_DECLARE(EcsMebi);
+ECS_DECLARE(EcsGibi);
+ECS_DECLARE(EcsTebi);
+ECS_DECLARE(EcsPebi);
+ECS_DECLARE(EcsExbi);
+ECS_DECLARE(EcsZebi);
+ECS_DECLARE(EcsYobi);
 
-ecs_entity_t EcsDuration;
-    ecs_entity_t EcsPicoSeconds;
-    ecs_entity_t EcsNanoSeconds;
-    ecs_entity_t EcsMicroSeconds;
-    ecs_entity_t EcsMilliSeconds;
-    ecs_entity_t EcsSeconds;
-    ecs_entity_t EcsMinutes;
-    ecs_entity_t EcsHours;
-    ecs_entity_t EcsDays;
+ECS_DECLARE(EcsDuration);
+    ECS_DECLARE(EcsPicoSeconds);
+    ECS_DECLARE(EcsNanoSeconds);
+    ECS_DECLARE(EcsMicroSeconds);
+    ECS_DECLARE(EcsMilliSeconds);
+    ECS_DECLARE(EcsSeconds);
+    ECS_DECLARE(EcsMinutes);
+    ECS_DECLARE(EcsHours);
+    ECS_DECLARE(EcsDays);
 
-ecs_entity_t EcsTime;
-    ecs_entity_t EcsDate;
+ECS_DECLARE(EcsTime);
+    ECS_DECLARE(EcsDate);
 
-ecs_entity_t EcsMass;
-    ecs_entity_t EcsGrams;
-    ecs_entity_t EcsKiloGrams;
+ECS_DECLARE(EcsMass);
+    ECS_DECLARE(EcsGrams);
+    ECS_DECLARE(EcsKiloGrams);
 
-ecs_entity_t EcsElectricCurrent;
-    ecs_entity_t EcsAmpere;
+ECS_DECLARE(EcsElectricCurrent);
+    ECS_DECLARE(EcsAmpere);
 
-ecs_entity_t EcsAmount;
-    ecs_entity_t EcsMole;
+ECS_DECLARE(EcsAmount);
+    ECS_DECLARE(EcsMole);
 
-ecs_entity_t EcsLuminousIntensity;
-    ecs_entity_t EcsCandela;
+ECS_DECLARE(EcsLuminousIntensity);
+    ECS_DECLARE(EcsCandela);
 
-ecs_entity_t EcsForce;
-    ecs_entity_t EcsNewton;
+ECS_DECLARE(EcsForce);
+    ECS_DECLARE(EcsNewton);
 
-ecs_entity_t EcsLength;
-    ecs_entity_t EcsMeters;
-        ecs_entity_t EcsPicoMeters;
-        ecs_entity_t EcsNanoMeters;
-        ecs_entity_t EcsMicroMeters;
-        ecs_entity_t EcsMilliMeters;
-        ecs_entity_t EcsCentiMeters;
-        ecs_entity_t EcsKiloMeters;
-    ecs_entity_t EcsMiles;
-    ecs_entity_t EcsPixels;
+ECS_DECLARE(EcsLength);
+    ECS_DECLARE(EcsMeters);
+        ECS_DECLARE(EcsPicoMeters);
+        ECS_DECLARE(EcsNanoMeters);
+        ECS_DECLARE(EcsMicroMeters);
+        ECS_DECLARE(EcsMilliMeters);
+        ECS_DECLARE(EcsCentiMeters);
+        ECS_DECLARE(EcsKiloMeters);
+    ECS_DECLARE(EcsMiles);
+    ECS_DECLARE(EcsPixels);
 
-ecs_entity_t EcsPressure;
-    ecs_entity_t EcsPascal;
-    ecs_entity_t EcsBar;
+ECS_DECLARE(EcsPressure);
+    ECS_DECLARE(EcsPascal);
+    ECS_DECLARE(EcsBar);
 
-ecs_entity_t EcsSpeed;
-    ecs_entity_t EcsMetersPerSecond;
-    ecs_entity_t EcsKiloMetersPerSecond;
-    ecs_entity_t EcsKiloMetersPerHour;
-    ecs_entity_t EcsMilesPerHour;
+ECS_DECLARE(EcsSpeed);
+    ECS_DECLARE(EcsMetersPerSecond);
+    ECS_DECLARE(EcsKiloMetersPerSecond);
+    ECS_DECLARE(EcsKiloMetersPerHour);
+    ECS_DECLARE(EcsMilesPerHour);
 
-ecs_entity_t EcsAcceleration;
+ECS_DECLARE(EcsAcceleration);
 
-ecs_entity_t EcsTemperature;
-    ecs_entity_t EcsKelvin;
-    ecs_entity_t EcsCelsius;
-    ecs_entity_t EcsFahrenheit;
+ECS_DECLARE(EcsTemperature);
+    ECS_DECLARE(EcsKelvin);
+    ECS_DECLARE(EcsCelsius);
+    ECS_DECLARE(EcsFahrenheit);
 
-ecs_entity_t EcsData;
-    ecs_entity_t EcsBits;
-        ecs_entity_t EcsKiloBits;
-        ecs_entity_t EcsMegaBits;
-        ecs_entity_t EcsGigaBits;
-    ecs_entity_t EcsBytes;
-        ecs_entity_t EcsKiloBytes;
-        ecs_entity_t EcsMegaBytes;
-        ecs_entity_t EcsGigaBytes;
-        ecs_entity_t EcsKibiBytes;
-        ecs_entity_t EcsGibiBytes;
-        ecs_entity_t EcsMebiBytes;
+ECS_DECLARE(EcsData);
+    ECS_DECLARE(EcsBits);
+        ECS_DECLARE(EcsKiloBits);
+        ECS_DECLARE(EcsMegaBits);
+        ECS_DECLARE(EcsGigaBits);
+    ECS_DECLARE(EcsBytes);
+        ECS_DECLARE(EcsKiloBytes);
+        ECS_DECLARE(EcsMegaBytes);
+        ECS_DECLARE(EcsGigaBytes);
+        ECS_DECLARE(EcsKibiBytes);
+        ECS_DECLARE(EcsGibiBytes);
+        ECS_DECLARE(EcsMebiBytes);
 
-ecs_entity_t EcsDataRate;
-    ecs_entity_t EcsBitsPerSecond;
-    ecs_entity_t EcsKiloBitsPerSecond;
-    ecs_entity_t EcsMegaBitsPerSecond;
-    ecs_entity_t EcsGigaBitsPerSecond;
-    ecs_entity_t EcsBytesPerSecond;
-    ecs_entity_t EcsKiloBytesPerSecond;
-    ecs_entity_t EcsMegaBytesPerSecond;
-    ecs_entity_t EcsGigaBytesPerSecond;
+ECS_DECLARE(EcsDataRate);
+    ECS_DECLARE(EcsBitsPerSecond);
+    ECS_DECLARE(EcsKiloBitsPerSecond);
+    ECS_DECLARE(EcsMegaBitsPerSecond);
+    ECS_DECLARE(EcsGigaBitsPerSecond);
+    ECS_DECLARE(EcsBytesPerSecond);
+    ECS_DECLARE(EcsKiloBytesPerSecond);
+    ECS_DECLARE(EcsMegaBytesPerSecond);
+    ECS_DECLARE(EcsGigaBytesPerSecond);
 
-ecs_entity_t EcsPercentage;
+ECS_DECLARE(EcsPercentage);
 
-ecs_entity_t EcsAngle;
-    ecs_entity_t EcsRadians;
-    ecs_entity_t EcsDegrees;
+ECS_DECLARE(EcsAngle);
+    ECS_DECLARE(EcsRadians);
+    ECS_DECLARE(EcsDegrees);
 
-ecs_entity_t EcsColor;
-    ecs_entity_t EcsColorRgb;
-    ecs_entity_t EcsColorHsl;
-    ecs_entity_t EcsColorCss;
+ECS_DECLARE(EcsColor);
+    ECS_DECLARE(EcsColorRgb);
+    ECS_DECLARE(EcsColorHsl);
+    ECS_DECLARE(EcsColorCss);
 
-ecs_entity_t EcsBel;
-ecs_entity_t EcsDeciBel;
+ECS_DECLARE(EcsBel);
+ECS_DECLARE(EcsDeciBel);
 
-ecs_entity_t EcsFrequency;
-    ecs_entity_t EcsHertz;
-    ecs_entity_t EcsKiloHertz;
-    ecs_entity_t EcsMegaHertz;
-    ecs_entity_t EcsGigaHertz;
+ECS_DECLARE(EcsFrequency);
+    ECS_DECLARE(EcsHertz);
+    ECS_DECLARE(EcsKiloHertz);
+    ECS_DECLARE(EcsMegaHertz);
+    ECS_DECLARE(EcsGigaHertz);
 
-ecs_entity_t EcsUri;
-    ecs_entity_t EcsUriHyperlink;
-    ecs_entity_t EcsUriImage;
-    ecs_entity_t EcsUriFile;
+ECS_DECLARE(EcsUri);
+    ECS_DECLARE(EcsUriHyperlink);
+    ECS_DECLARE(EcsUriImage);
+    ECS_DECLARE(EcsUriFile);
 #endif
 
 /* -- Private functions -- */
@@ -392,7 +392,7 @@ ecs_world_t* flecs_suspend_readonly(
 
     /* Cannot suspend when running with multiple threads */
     ecs_assert(!(world->flags & EcsWorldReadonly) ||
-        !(world->flags & EcsWorldMultiThreaded), ECS_INVALID_WHILE_READONLY, NULL);
+        (ecs_get_stage_count(world) <= 1), ECS_INVALID_WHILE_READONLY, NULL);
 
     state->is_readonly = is_readonly;
     state->is_deferred = stage->defer != 0;
@@ -454,10 +454,6 @@ void flecs_eval_component_monitor(
         return;
     }
 
-    world->info.eval_comp_monitors_total ++;
-
-    ecs_os_perf_trace_push("flecs.component_monitor.eval");
-
     world->monitors.is_dirty = false;
 
     ecs_map_iter_t it = ecs_map_iter(&world->monitors.monitors);
@@ -479,8 +475,6 @@ void flecs_eval_component_monitor(
             });
         }
     }
-
-    ecs_os_perf_trace_pop("flecs.component_monitor.eval");
 }
 
 void flecs_monitor_mark_dirty(
@@ -1067,7 +1061,7 @@ void flecs_notify_tables(
         int32_t i, count = flecs_sparse_count(tables);
         for (i = 0; i < count; i ++) {
             ecs_table_t *table = flecs_sparse_get_dense_t(tables, ecs_table_t, i);
-            flecs_table_notify(world, table, id, event);
+            flecs_table_notify(world, table, event);
         }
 
     /* If id is specified, only broadcast to tables with id */
@@ -1082,7 +1076,7 @@ void flecs_notify_tables(
 
         flecs_table_cache_all_iter(&idr->cache, &it);
         while ((tr = flecs_table_cache_next(&it, ecs_table_record_t))) {
-            flecs_table_notify(world, tr->hdr.table, id, event);
+            flecs_table_notify(world, tr->hdr.table, event);
         }
     }
 }
@@ -1214,10 +1208,8 @@ void ecs_set_hooks_id(
 
     if (h->ctx) ti->hooks.ctx = h->ctx;
     if (h->binding_ctx) ti->hooks.binding_ctx = h->binding_ctx;
-    if (h->lifecycle_ctx) ti->hooks.lifecycle_ctx = h->lifecycle_ctx;
     if (h->ctx_free) ti->hooks.ctx_free = h->ctx_free;
     if (h->binding_ctx_free) ti->hooks.binding_ctx_free = h->binding_ctx_free;
-    if (h->lifecycle_ctx_free) ti->hooks.lifecycle_ctx_free = h->lifecycle_ctx_free;
 
     /* If no constructor is set, invoking any of the other lifecycle actions
      * is not safe as they will potentially access uninitialized memory. For
@@ -1321,9 +1313,6 @@ void ecs_run_post_frame(
     ecs_check(action != NULL, ECS_INVALID_PARAMETER, NULL);
 
     ecs_stage_t *stage = flecs_stage_from_world(&world);
-    ecs_check((world->flags & EcsWorldFrameInProgress), ECS_INVALID_OPERATION, 
-        "cannot register post frame action while frame is not in progress");
-
     ecs_action_elem_t *elem = ecs_vec_append_t(&stage->allocator,
         &stage->post_frame_actions, ecs_action_elem_t);
     ecs_assert(elem != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -1603,15 +1592,15 @@ void ecs_set_entity_range(
 {
     flecs_poly_assert(world, ecs_world_t);
     ecs_check(!id_end || id_end > id_start, ECS_INVALID_PARAMETER, NULL);
-
-    if (id_start == 0) {
-      id_start = flecs_entities_max_id(world) + 1;
-    }
+    ecs_check(!id_end || id_end > flecs_entities_max_id(world),
+        ECS_INVALID_PARAMETER, NULL);
 
     uint32_t start = (uint32_t)id_start;
     uint32_t end = (uint32_t)id_end;
 
-    flecs_entities_max_id(world) = start - 1;
+    if (flecs_entities_max_id(world) < start) {
+        flecs_entities_max_id(world) = start - 1;
+    }
 
     world->info.min_id = start;
     world->info.max_id = end;
@@ -1665,6 +1654,7 @@ ecs_type_info_t* flecs_type_info_ensure(
             &world->type_info, ecs_type_info_t, component);
         ecs_assert(ti_mut != NULL, ECS_INTERNAL_ERROR, NULL);
         ti_mut->component = component;
+        ti_mut->world = world;
     } else {
         ti_mut = ECS_CONST_CAST(ecs_type_info_t*, ti);
     }
@@ -1757,9 +1747,6 @@ void flecs_type_info_fini(
     if (ti->hooks.binding_ctx_free) {
         ti->hooks.binding_ctx_free(ti->hooks.binding_ctx);
     }
-    if (ti->hooks.lifecycle_ctx_free) {
-        ti->hooks.lifecycle_ctx_free(ti->hooks.lifecycle_ctx);
-    }
     if (ti->name) {
         /* Safe to cast away const, world has ownership over string */
         ecs_os_free(ECS_CONST_CAST(char*, ti->name));
@@ -1801,8 +1788,6 @@ ecs_ftime_t flecs_insert_sleep(
         return delta_time;
     }
 
-    ecs_os_perf_trace_push("flecs.insert_sleep");
-
     ecs_ftime_t target_delta_time =
         ((ecs_ftime_t)1.0 / (ecs_ftime_t)world->info.target_fps);
 
@@ -1825,8 +1810,6 @@ ecs_ftime_t flecs_insert_sleep(
         delta_time = (ecs_ftime_t)ecs_time_measure(&now);
     } while ((target_delta_time - delta_time) >
         (sleep_time / (ecs_ftime_t)2.0));
-
-    ecs_os_perf_trace_pop("flecs.insert_sleep");
 
     *stop = now;
     return delta_time;
@@ -1894,8 +1877,6 @@ ecs_ftime_t ecs_frame_begin(
     flecs_poly_assert(world, ecs_world_t);
     ecs_check(!(world->flags & EcsWorldReadonly), ECS_INVALID_OPERATION, 
         "cannot begin frame while world is in readonly mode");
-    ecs_check(!(world->flags & EcsWorldFrameInProgress), ECS_INVALID_OPERATION, 
-        "cannot begin frame while frame is already in progress");
     ecs_check(ECS_NEQZERO(user_delta_time) || ecs_os_has_time(), 
         ECS_MISSING_OS_API, "get_time");
 
@@ -1920,8 +1901,6 @@ ecs_ftime_t ecs_frame_begin(
 
     ecs_run_aperiodic(world, 0);
 
-    world->flags |= EcsWorldFrameInProgress;
-
     return world->info.delta_time;
 error:
     return (ecs_ftime_t)0;
@@ -1933,8 +1912,6 @@ void ecs_frame_end(
     flecs_poly_assert(world, ecs_world_t);
     ecs_check(!(world->flags & EcsWorldReadonly), ECS_INVALID_OPERATION, 
         "cannot end frame while world is in readonly mode");
-    ecs_check((world->flags & EcsWorldFrameInProgress), ECS_INVALID_OPERATION, 
-        "cannot end frame while frame is not in progress");
 
     ++world->info.frame_count_total;
     
@@ -1948,9 +1925,6 @@ void ecs_frame_end(
     /* Reset command handler each frame */
     world->on_commands_active = NULL;
     world->on_commands_ctx_active = NULL;
-
-    world->flags &= ~EcsWorldFrameInProgress;
-    
 error:
     return;
 }
@@ -2039,8 +2013,6 @@ void flecs_process_pending_tables(
         return;
     }
 
-    ecs_os_perf_trace_push("flecs.process_pending_tables");
-
     flecs_journal_begin(world, EcsJournalTableEvents, 0, 0, 0);
 
     do {
@@ -2095,8 +2067,6 @@ void flecs_process_pending_tables(
     } while ((count = flecs_sparse_count(world->pending_tables)));
 
     flecs_journal_end();
-
-    ecs_os_perf_trace_pop("flecs.process_pending_tables");
 }
 
 void flecs_table_set_empty(
@@ -2156,13 +2126,11 @@ int32_t ecs_delete_empty_tables(
 {
     flecs_poly_assert(world, ecs_world_t);
 
-    ecs_os_perf_trace_push("flecs.delete_empty_tables");
-
     /* Make sure empty tables are in the empty table lists */
     ecs_run_aperiodic(world, EcsAperiodicEmptyTables);
 
     ecs_time_t start = {0}, cur = {0};
-    int32_t delete_count = 0;
+    int32_t delete_count = 0, clear_count = 0;
     bool time_budget = false;
 
     if (ECS_NEQZERO(time_budget_seconds) || (ecs_should_log_1() && ecs_os_has_time())) {
@@ -2201,13 +2169,24 @@ int32_t ecs_delete_empty_tables(
                 flecs_table_fini(world, table);
                 delete_count ++;
             } else if (clear_generation && (gen > clear_generation)) {
-                flecs_table_shrink(world, table);
+                if (flecs_table_shrink(world, table)) {
+                    clear_count ++;
+                }
             }
         }
     }
 
 done:
-    ecs_os_perf_trace_pop("flecs.delete_empty_tables");
+    if (ecs_should_log_1() && ecs_os_has_time()) {
+        if (delete_count) {
+            ecs_dbg_1("#[red]deleted#[normal] %d empty tables in %.2fs",
+                delete_count, ecs_time_measure(&start));
+        }
+        if (clear_count) {
+            ecs_dbg_1("#[red]cleared#[normal] %d empty tables in %.2fs",
+                clear_count, ecs_time_measure(&start));
+        }
+    }
 
     return delete_count;
 }
@@ -2220,11 +2199,4 @@ ecs_entities_t ecs_get_entities(
     result.count = flecs_entities_size(world);
     result.alive_count = flecs_entities_count(world);
     return result;
-}
-
-ecs_flags32_t ecs_world_get_flags(
-    const ecs_world_t *world)
-{
-    flecs_poly_assert(world, ecs_world_t);
-    return world->flags;
 }

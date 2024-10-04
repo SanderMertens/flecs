@@ -30,13 +30,6 @@ size_t flecs_addon_vec_count(const void *ptr) {
     return flecs_ito(size_t, count);
 }
 
-static
-int flecs_const_str_serialize(const ecs_serializer_t *ser, const void *ptr) {
-    char **data = ECS_CONST_CAST(char**, ptr);
-    ser->value(ser, ecs_id(ecs_string_t), data);
-    return 0;
-}
-
 /* Initialize reflection data for core components */
 static
 void flecs_meta_import_core_definitions(
@@ -54,29 +47,6 @@ void flecs_meta_import_core_definitions(
         .entity = ecs_id(EcsDefaultChildComponent),
         .members = {
             { .name = "component", .type = ecs_id(ecs_entity_t) }
-        }
-    });
-
-    /* Define const string as an opaque type that maps to string
-       This enables reflection for strings that are in .rodata,
-       (read-only) so that the meta add-on does not try to free them.
-       This opaque type defines how to serialize (read) the string,
-       but won't let users assign a new value.
-    */
-    ecs_entity_t const_string = ecs_opaque(world, {
-        .entity = ecs_component(world, {
-              .entity = ecs_entity(world, {
-                .name = "flecs.core.const_string_t",
-                .root_sep = ""
-            }),
-            .type = {
-                .size = ECS_SIZEOF(const char*),
-                .alignment = ECS_ALIGNOF(const char*)
-            }          
-        }),
-        .type = {
-            .as_type = ecs_id(ecs_string_t),
-            .serialize = flecs_const_str_serialize,       
         }
     });
 
@@ -112,9 +82,9 @@ void flecs_meta_import_core_definitions(
             .root_sep = ""
         }),
         .members = {
-            { .name = "compiler", .type = const_string },
+            { .name = "compiler", .type = ecs_id(ecs_string_t) },
             { .name = "addons", .type = addon_vec },
-            { .name = "version", .type = const_string },
+            { .name = "version", .type = ecs_id(ecs_string_t) },
             { .name = "version_major", .type = ecs_id(ecs_i16_t) },
             { .name = "version_minor", .type = ecs_id(ecs_i16_t) },
             { .name = "version_patch", .type = ecs_id(ecs_i16_t) },

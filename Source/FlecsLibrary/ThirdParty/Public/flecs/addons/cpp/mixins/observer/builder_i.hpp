@@ -49,12 +49,6 @@ struct observer_builder_i : query_builder_i<Base, Components ...> {
         return *this;
     }
 
-    /** Set observer flags */
-    Base& observer_flags(ecs_flags32_t flags) {
-        desc_->flags_ |= flags;
-        return *this;
-    }
-
     /** Set observer context */
     Base& ctx(void *ptr) {
         desc_->ctx = ptr;
