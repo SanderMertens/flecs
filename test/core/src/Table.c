@@ -618,8 +618,7 @@ void Table_has_any_pair(void) {
     ecs_fini(world);
 }
 
-static
-void Clear_table_and_verify_members_not_alive(bool notify, bool dealloc) {
+void Table_clear_table_kills_entities(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -631,7 +630,7 @@ void Clear_table_and_verify_members_not_alive(bool notify, bool dealloc) {
 
     ecs_table_t *table = ecs_get_table(world, e1);
    
-    ecs_table_clear_entities(world, table, notify, dealloc);
+    ecs_table_clear_entities(world, table);
 
     test_assert(!ecs_is_alive(world, e1));
     test_assert(!ecs_is_alive(world, e2));
@@ -640,15 +639,7 @@ void Clear_table_and_verify_members_not_alive(bool notify, bool dealloc) {
     ecs_fini(world);
 }
 
-void Table_clear_table_kills_entities(void) {
-    Clear_table_and_verify_members_not_alive(true, true);
-    Clear_table_and_verify_members_not_alive(false, true);
-    Clear_table_and_verify_members_not_alive(true, false);
-    Clear_table_and_verify_members_not_alive(false, false);
-}
-
-static
-void Clear_table_and_verify_new_members_exist(bool notify, bool dealloc) {
+void Table_clear_table_add_new(void) {
     ecs_world_t *world = ecs_mini();
 
     ecs_entity_t ecs_id(Position) = ecs_component(world, {
@@ -664,7 +655,7 @@ void Clear_table_and_verify_new_members_exist(bool notify, bool dealloc) {
 
     ecs_table_t *table = ecs_get_table(world, e1);
    
-    ecs_table_clear_entities(world, table, notify, dealloc);
+    ecs_table_clear_entities(world, table);
 
     ecs_id(Position) = ecs_component(world, {
         .entity = ecs_new(world),
@@ -688,15 +679,7 @@ void Clear_table_and_verify_new_members_exist(bool notify, bool dealloc) {
     ecs_fini(world);
 }
 
-void Table_clear_table_add_new(void) {
-    Clear_table_and_verify_new_members_exist(true, true);
-    Clear_table_and_verify_new_members_exist(false, true);
-    Clear_table_and_verify_new_members_exist(true, false);
-    Clear_table_and_verify_new_members_exist(false, false);
-}
-
-static
-void Clear_table_and_check_size(bool notify, bool dealloc) {
+void Table_clear_table_check_size(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -709,24 +692,16 @@ void Clear_table_and_check_size(bool notify, bool dealloc) {
     ecs_table_t *table = ecs_get_table(world, e1);
     const int32_t size = ecs_table_size(table);
 
-    ecs_table_clear_entities(world, table, notify, dealloc);
+    ecs_table_clear_entities(world, table);
 
-    const int32_t expected_size = dealloc ? 0 : size;
-    test_int(expected_size, ecs_table_size(table));
+    test_int(size, ecs_table_size(table));
     test_int(0, ecs_table_count(table));
 
     ecs_fini(world);
 }
 
-void Table_clear_table_check_size(void) {
-    Clear_table_and_check_size(true, true);
-    Clear_table_and_check_size(false, true);
-    Clear_table_and_check_size(true, false);
-    Clear_table_and_check_size(false, false);
-}
 
-static
-void Clear_table_twice_and_check_size(bool first_dealloc, bool second_dealloc) {
+void Table_clear_table_twice_check_size(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -739,21 +714,13 @@ void Clear_table_twice_and_check_size(bool first_dealloc, bool second_dealloc) {
     ecs_table_t *table = ecs_get_table(world, e1);
     const int32_t size = ecs_table_size(table);
 
-    ecs_table_clear_entities(world, table, true, first_dealloc);
-    ecs_table_clear_entities(world, table, true, second_dealloc);
+    ecs_table_clear_entities(world, table);
+    ecs_table_clear_entities(world, table);
 
-    const int32_t expected_size = (first_dealloc || second_dealloc) ? 0 : size;
-    test_int(expected_size, ecs_table_size(table));
+    test_int(size, ecs_table_size(table));
     test_int(0, ecs_table_count(table));
  
     ecs_fini(world);
-}
-
-void Table_clear_table_twice_check_size(void) {
-    Clear_table_twice_and_check_size(true, true);
-    Clear_table_twice_and_check_size(false, true);
-    Clear_table_twice_and_check_size(true, false);
-    Clear_table_twice_and_check_size(false, false);
 }
 
 static int on_remove_position = 0;
@@ -770,8 +737,7 @@ static void ecs_on_remove(Position)(ecs_iter_t *it) {
     }
 }
 
-static
-void Verify_on_remove_hooks_table_clear(bool notify, bool dealloc) {
+void Table_clear_table_on_remove_hooks(void) {
     ecs_world_t *world = ecs_mini();
     on_remove_position = 0;
 
@@ -786,18 +752,11 @@ void Verify_on_remove_hooks_table_clear(bool notify, bool dealloc) {
     ecs_entity_t e3 = ecs_insert(world, ecs_value(Position, {10, 20}));
 
     ecs_table_t *table = ecs_get_table(world, e1);
-    ecs_table_clear_entities(world, table, notify, dealloc);
+    ecs_table_clear_entities(world, table);
       
     test_int(on_remove_position, 3);
 
     ecs_fini(world);
-}
-
-void Table_clear_table_on_remove_hooks(void) {
-    Verify_on_remove_hooks_table_clear(true, true);
-    Verify_on_remove_hooks_table_clear(false, true);
-    Verify_on_remove_hooks_table_clear(true, false);
-    Verify_on_remove_hooks_table_clear(false, false);
 }
 
 static
@@ -805,8 +764,7 @@ void Observer(ecs_iter_t *it) {
     probe_system_w_ctx(it, it->ctx);
 }
 
-static 
-void Check_on_remove_when_clearing_table(bool notify, bool dealloc) {
+void Table_clear_table_on_remove_observer(void) {
      ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
@@ -828,17 +786,10 @@ void Check_on_remove_when_clearing_table(bool notify, bool dealloc) {
     test_int(ctx.invoked, 0);
 
     ecs_table_t *table = ecs_get_table(world, e1);
-    ecs_table_clear_entities(world, table, notify, dealloc);
+    ecs_table_clear_entities(world, table);
 
-    test_int(ctx.invoked, notify ? 1 : 0);
-    test_int(ctx.count, notify ? 2 : 0);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 2);
 
     ecs_fini(world);
-}
-
-void Table_clear_table_on_remove_observer(void) {
-    Check_on_remove_when_clearing_table(true, true);
-    Check_on_remove_when_clearing_table(false, true);
-    Check_on_remove_when_clearing_table(true, false);
-    Check_on_remove_when_clearing_table(false, false);
 }
