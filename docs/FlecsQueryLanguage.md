@@ -513,6 +513,6 @@ SpaceShip, !{ (Engine, $engine), Healthy($healthy) }
 ```
 
 ```c
-// Match spaceships where all of the engines
+// Match spaceships where all of the engines are healthy
 SpaceShip, !{ (Engine, $engine), !Healthy($healthy) }
 ```
