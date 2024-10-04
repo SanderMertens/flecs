@@ -362,7 +362,7 @@ This section describes the different ways queries can be iterated.
 <ul>
 <li><b class="tab-title">C</b>
 
-In the C API an iterator object of type `ecs_iter_t` can be created for each of the query kinds, using the `ecs_query_iter`, `ecs_query_iter` and `ecs_query_iter` functions. This iterator can then be iterated with the respective `next` functions: `ecs_query_next`, `ecs_query_next` and `ecs_query_next`.
+In the C API an iterator object of type `ecs_iter_t` can be created using the `ecs_query_iter` function. This iterator can then be iterated with `ecs_query_next`.
 
 An iterator can also be iterated with the `ecs_iter_next` function which is slightly slower, but does not require knowledge about the source the iterator was created for.
 
