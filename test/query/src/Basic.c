@@ -2516,6 +2516,107 @@ void Basic_this_src_w_pair_tgt_any(void) {
     ecs_fini(world);
 }
 
+void Basic_this_src_w_pair_tgt_any_n_tgts(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, RelA);
+    ECS_TAG(world, TgtA);
+    ECS_TAG(world, TgtB);
+    ECS_TAG(world, TgtC);
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_entity_t e3 = ecs_new(world);
+
+    ecs_add_pair(world, e2, RelA, e1);
+    ecs_add_pair(world, e1, RelA, e2);
+    ecs_add_pair(world, e1, RelA, e3);
+
+    ecs_query_t *r = ecs_query(world, {
+        .expr = "RelA($this, _)",
+        .cache_kind = cache_kind
+    });
+
+    test_assert(r != NULL);
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, r);
+        test_bool(true, ecs_query_next(&it));
+        test_uint(1, it.count);
+        test_uint(e2, it.entities[0]);
+        test_uint(ecs_pair(RelA, EcsWildcard), ecs_field_id(&it, 0));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 0));
+
+        test_bool(true, ecs_query_next(&it));
+        test_uint(1, it.count);
+        test_uint(e1, it.entities[0]);
+        test_uint(ecs_pair(RelA, EcsWildcard), ecs_field_id(&it, 0));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 0));
+
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_query_fini(r);
+
+    ecs_fini(world);
+}
+
+void Basic_this_src_w_pair_tgt_any_n_tgts_written(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, RelA);
+    ECS_TAG(world, TgtA);
+    ECS_TAG(world, TgtB);
+    ECS_TAG(world, TgtC);
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_entity_t e3 = ecs_new(world);
+
+    ecs_add(world, e1, Foo);
+    ecs_add(world, e2, Foo);
+    ecs_add(world, e3, Foo);
+
+    ecs_add_pair(world, e2, RelA, e1);
+    ecs_add_pair(world, e1, RelA, e2);
+    ecs_add_pair(world, e1, RelA, e3);
+
+    ecs_query_t *r = ecs_query(world, {
+        .expr = "Foo, RelA($this, _)",
+        .cache_kind = cache_kind
+    });
+
+    test_assert(r != NULL);
+
+    {
+        ecs_iter_t it = ecs_query_iter(world, r);
+        test_bool(true, ecs_query_next(&it));
+        test_uint(1, it.count);
+        test_uint(e2, it.entities[0]);
+        test_uint(Foo, ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelA, EcsWildcard), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 0));
+
+        test_bool(true, ecs_query_next(&it));
+        test_uint(1, it.count);
+        test_uint(e1, it.entities[0]);
+        test_uint(Foo, ecs_field_id(&it, 0));
+        test_uint(ecs_pair(RelA, EcsWildcard), ecs_field_id(&it, 1));
+        test_uint(0, ecs_field_src(&it, 0));
+        test_bool(true, ecs_field_is_set(&it, 0));
+
+        test_bool(false, ecs_query_next(&it));
+    }
+
+    ecs_query_fini(r);
+
+    ecs_fini(world);
+}
+
 void Basic_this_src_w_pair_rel_tgt_any(void) {
     ecs_world_t *world = ecs_mini();
 
