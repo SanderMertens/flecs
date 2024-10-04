@@ -507,6 +507,8 @@ void Basic_this_src_w_any(void);
 void Basic_this_src_w_any_written(void);
 void Basic_this_src_w_pair_rel_any(void);
 void Basic_this_src_w_pair_tgt_any(void);
+void Basic_this_src_w_pair_tgt_any_n_tgts(void);
+void Basic_this_src_w_pair_tgt_any_n_tgts_written(void);
 void Basic_this_src_w_pair_rel_tgt_any(void);
 void Basic_ent_src_w_wildcard(void);
 void Basic_ent_src_w_pair_rel_wildcard(void);
@@ -4090,6 +4092,14 @@ bake_test_case Basic_testcases[] = {
     {
         "this_src_w_pair_tgt_any",
         Basic_this_src_w_pair_tgt_any
+    },
+    {
+        "this_src_w_pair_tgt_any_n_tgts",
+        Basic_this_src_w_pair_tgt_any_n_tgts
+    },
+    {
+        "this_src_w_pair_tgt_any_n_tgts_written",
+        Basic_this_src_w_pair_tgt_any_n_tgts_written
     },
     {
         "this_src_w_pair_rel_tgt_any",
@@ -10432,7 +10442,7 @@ static bake_test_suite suites[] = {
         "Basic",
         Basic_setup,
         NULL,
-        229,
+        231,
         Basic_testcases,
         1,
         Basic_params

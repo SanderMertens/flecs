@@ -519,6 +519,8 @@
                 "this_src_w_any_written",
                 "this_src_w_pair_rel_any",
                 "this_src_w_pair_tgt_any",
+                "this_src_w_pair_tgt_any_n_tgts",
+                "this_src_w_pair_tgt_any_n_tgts_written",
                 "this_src_w_pair_rel_tgt_any",
                 "ent_src_w_wildcard",
                 "ent_src_w_pair_rel_wildcard",
