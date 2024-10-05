@@ -36,9 +36,10 @@ class UNREALFLECS_API UFlecsWorld final : public UObject
 public:
 	virtual ~UFlecsWorld() override
 	{
-		if (!ShouldQuit())
+		if (World.c_ptr() != nullptr)
 		{
 			DestroyWorld();
+			World.world_ = nullptr;
 		}
 	}
 	
@@ -784,6 +785,11 @@ public:
 	
 	FORCEINLINE_DEBUGGABLE void DestroyWorld()
 	{
+		if UNLIKELY_IF(ShouldQuit())
+		{
+			return;
+		}
+		
 		const FAssetRegistryModule& AssetRegistryModule
 			= FModuleManager::LoadModuleChecked<FAssetRegistryModule>(TEXT("AssetRegistry"));
 		IAssetRegistry& AssetRegistry = AssetRegistryModule.Get();

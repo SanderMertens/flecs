@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "FlecsTickerComponent.h"
 #include "Modules/FlecsModuleInterface.h"
 #include "Modules/FlecsModuleProgressInterface.h"
 #include "Systems/FlecsSystem.h"
@@ -40,6 +41,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Flecs | Ticker")
 	FORCEINLINE FFlecsEntityHandle GetTickerSource() const { return TickerSystem.GetEntity(); }
 
+	flecs::ref<FFlecsTickerComponent> TickerComponentRef;
+
 	UPROPERTY()
 	FFlecsSystem TickerSystem;
 
@@ -51,5 +54,7 @@ public:
 
 	UPROPERTY()
 	double TickerAccumulator = 0.0;
+
+	double TickerInterval = 0.0;
 
 }; // class UFlecsTickerModule

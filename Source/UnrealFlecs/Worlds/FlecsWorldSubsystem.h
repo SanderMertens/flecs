@@ -78,7 +78,7 @@ public:
 
 		if (IsValid(DefaultWorld))
 		{
-			DefaultWorld->DestroyWorld();
+			//DefaultWorld->DestroyWorld();
 		}
 	}
 

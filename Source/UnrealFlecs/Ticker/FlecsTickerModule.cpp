@@ -28,6 +28,8 @@ void UFlecsTickerModule::InitializeModule(UFlecsWorld* InWorld, const FFlecsEnti
 	InWorld->SetSingleton<FFlecsTickerComponent>(TickerComponent);
 	InWorld->World.modified<FFlecsTickerComponent>();
 
+	TickerComponentRef = InWorld->GetSingletonFlecsRef<FFlecsTickerComponent>();
+
 	MainPipeline = InWorld->CreatePipeline()
 		.cached()
 		.with(flecs::System)
@@ -50,15 +52,7 @@ void UFlecsTickerModule::InitializeModule(UFlecsWorld* InWorld, const FFlecsEnti
 
 	InWorld->SetPipeline(MainPipeline);
 
-	TickerSystem = InWorld->CreateSystemWithBuilder<FFlecsTickerComponent>(TEXT("FlecsTickerSystem"))
-		.cached()
-		.kind(flecs::PreFrame)
-		.term_at(0).singleton()
-		.immediate()
-		.each([](FFlecsTickerComponent& Ticker)
-		{
-			++Ticker.TickId;
-		}).add(FlecsFixedTick);
+	TickerInterval = 1.0 / TickerRate;
 }
 
 void UFlecsTickerModule::DeinitializeModule(UFlecsWorld* InWorld)
@@ -77,12 +71,14 @@ void UFlecsTickerModule::ProgressModule(double InDeltaTime)
 
 	TickerAccumulator += InDeltaTime;
 	
-	while (TickerAccumulator >= 1.0 / TickerRate)
+	while (TickerAccumulator >= TickerInterval)
 	{
 		SCOPE_CYCLE_COUNTER(STAT_FlecsTickerModule_ProgressModule_RunPipeline);
 		
-		TickerAccumulator -= 1.0 / TickerRate;
+		TickerAccumulator -= TickerInterval;
+
+		++TickerComponentRef->TickId;
 		
-		GetFlecsWorld()->RunPipeline(TickerPipeline);
+		GetFlecsWorld()->RunPipeline(TickerPipeline, TickerInterval);
 	}
 }
