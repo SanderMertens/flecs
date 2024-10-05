@@ -214,6 +214,14 @@ public:
 			{
 				*Data = FName(String);
 			});
+
+		World.component<FFlecsGameplayTagEntityComponent>()
+			.opaque(flecs::Entity)
+			.serialize([](const flecs::serializer* Serializer, const FFlecsGameplayTagEntityComponent* Data)
+			{
+				const flecs::entity_t TagEntity = ecs_lookup(Serializer->world, StringCast<char>(*Data->Tag.ToString()).Get());
+				return Serializer->value(flecs::Entity, &TagEntity);
+			});
 		
 	}
 
