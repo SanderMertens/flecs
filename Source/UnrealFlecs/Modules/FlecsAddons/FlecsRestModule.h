@@ -25,11 +25,4 @@ public:
 	UPROPERTY()
 	FFlecsEntityHandle RestEntity;
 
-	UPROPERTY(EditAnywhere, Category = "Flecs | REST API",
-		meta = (ClampMin = "0", ClampMax = "65535", UIMin = "0", UIMax = "65535"))
-	int32 Port = 27750;
-
-	UPROPERTY(EditAnywhere, Category = "Flecs | REST API")
-	FString IPAddress = "0.0.0.0";
-
 }; // class UFlecsRestModule
