@@ -8,8 +8,7 @@
 
 void UFlecsRestModule::InitializeModule(UFlecsWorld* InWorld, const FFlecsEntityHandle& InModuleEntity)
 {
-	InWorld->SetSingleton<flecs::Rest>(flecs::Rest { static_cast<uint16>(Port),
-			const_cast<ANSICHAR*>(StringCast<ANSICHAR>(*IPAddress).Get()) });
+	InWorld->SetSingleton<flecs::Rest>(flecs::Rest());
 	RestEntity = InWorld->GetSingletonEntity<flecs::Rest>();
 }
 

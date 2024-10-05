@@ -75,6 +75,11 @@ public:
 	virtual void Deinitialize() override
 	{
 		Super::Deinitialize();
+
+		if (IsValid(DefaultWorld))
+		{
+			DefaultWorld->DestroyWorld();
+		}
 	}
 
 	FORCEINLINE virtual TStatId GetStatId() const override

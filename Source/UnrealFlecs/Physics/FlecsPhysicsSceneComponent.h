@@ -31,4 +31,4 @@ public:
 }; // struct FFlecsPhysicsSceneComponent
 
 REGISTER_FLECS_COMPONENT_PROPERTIES(FFlecsPhysicsSceneComponent,
-	{ flecs::Sparse }, {} )
+	{}, {} )

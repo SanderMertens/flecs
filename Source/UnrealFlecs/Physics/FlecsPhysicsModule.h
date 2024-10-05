@@ -3,8 +3,10 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "TickerPhysicsHistoryComponent.h"
 #include "Modules/FlecsModuleInterface.h"
 #include "Systems/FlecsSystem.h"
+#include "Ticker/FlecsTickerComponent.h"
 #include "UObject/Object.h"
 #include "FlecsPhysicsModule.generated.h"
 
@@ -33,5 +35,8 @@ public:
 
 private:
 	int32 PreResimValue = 0;
+
+	flecs::ref<FTickerPhysicsHistoryComponent> PhysicsHistoryComponentRef;
+	flecs::ref<FFlecsTickerComponent> TickerComponentRef;
 	
 }; // class UFlecsPhysicsModule

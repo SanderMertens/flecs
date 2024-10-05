@@ -8,6 +8,7 @@
 #include "CoreMinimal.h"
 #include "flecs.h"
 #include "AssetRegistry/AssetRegistryModule.h"
+#include "Components/FlecsGameplayTagEntityComponent.h"
 #include "Components/FlecsModuleComponent.h"
 #include "Components/FlecsPrimaryAssetComponent.h"
 #include "Components/FlecsTypeMapComponent.h"
@@ -34,15 +35,7 @@ class UNREALFLECS_API UFlecsWorld final : public UObject
 	GENERATED_BODY()
 
 public:
-	virtual ~UFlecsWorld() override
-	{
-		if (World.c_ptr() != nullptr)
-		{
-			DestroyWorld();
-			World.world_ = nullptr;
-		}
-	}
-	
+
 	FORCEINLINE_DEBUGGABLE void WorldBeginPlay()
 	{
 		UN_LOG(LogFlecsWorld, Log, "Flecs World begin play");
@@ -61,7 +54,7 @@ public:
             FRunnableThread* Thread;
         }; // struct FFlecsThread
 		
-        class FFlecsRunnable : public FRunnable
+        class FFlecsRunnable final : public FRunnable
         {
         public:
             FFlecsRunnable(ecs_os_thread_callback_t InCallback, void* InParam)
@@ -199,7 +192,29 @@ public:
 	{
 		/* Opaque FString to flecs::string */
 		World.component<FString>()
-			.opaque(flecs::String);
+			.opaque(flecs::String)
+			.serialize([](const flecs::serializer* Serializer, const FString* Data)
+			{
+				auto String = Data->GetCharArray().GetData();
+				return Serializer->value(flecs::String, String);
+			})
+			.assign_string([](FString* Data, const char* String)
+			{
+				*Data = String;
+			});
+
+		World.component<FName>()
+			.opaque(flecs::String)
+			.serialize([](const flecs::serializer* Serializer, const FName* Data)
+			{
+				auto String = Data->ToString().GetCharArray().GetData();
+				return Serializer->value(flecs::String, String);
+			})
+			.assign_string([](FName* Data, const char* String)
+			{
+				*Data = FName(String);
+			});
+		
 	}
 
 	FORCEINLINE_DEBUGGABLE void InitializeSystems()

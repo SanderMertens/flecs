@@ -76,10 +76,12 @@ void UFlecsPhysicsModule::ResimulationHandlers()
 
 	GetFlecsWorld()->AddSingleton<FTickerPhysicsHistoryComponent>();
 		
-	FTickerPhysicsHistoryComponent* HistoryComponentPtr = GetFlecsWorld()->GetSingletonPtr<FTickerPhysicsHistoryComponent>();
-	solid_check(HistoryComponentPtr);
+	PhysicsHistoryComponentRef = GetFlecsWorld()->GetSingletonFlecsRef<FTickerPhysicsHistoryComponent>();
+	solid_check(PhysicsHistoryComponentRef);
 
-	HistoryComponentPtr->HistoryItems.Reserve(MaxFrameHistory);
+	PhysicsHistoryComponentRef->HistoryItems.Reserve(MaxFrameHistory);
+
+	TickerComponentRef = GetFlecsWorld()->GetSingletonFlecsRef<FFlecsTickerComponent>();
 
 	FSolverPostAdvance::FDelegate PostAdvanceDelegate;
 	PostAdvanceDelegate.BindWeakLambda(this, [&](MAYBE_UNUSED float InDeltaTime)
@@ -102,21 +104,20 @@ void UFlecsPhysicsModule::ResimulationHandlers()
 		Chaos::FPhysicsSolver* Solver = FlecsWorld->GetWorld()->GetPhysicsScene()->GetSolver();
 		solid_check(Solver);
 
-		FTickerPhysicsHistoryComponent* HistoryComponent = FlecsWorld->GetSingletonPtr<FTickerPhysicsHistoryComponent>();
-		solid_check(HistoryComponent);
+		solid_check(PhysicsHistoryComponentRef);
 
 		const int32 CurrentPhysicsFrame = Solver->GetCurrentFrame();
 
-		if LIKELY_IF(HistoryComponent->HistoryItems.Num() >= MaxFrameHistory)
+		if LIKELY_IF(PhysicsHistoryComponentRef->HistoryItems.Num() >= MaxFrameHistory)
 		{
-			HistoryComponent->HistoryItems.RemoveAt(0);
+			PhysicsHistoryComponentRef->HistoryItems.RemoveAt(0);
 		}
 
 		FTickerPhysicsHistoryItem CurrentPhysicsFrameItem;
-		CurrentPhysicsFrameItem.TickId = GetFlecsWorld()->GetSingleton<FFlecsTickerComponent>().TickId;
+		CurrentPhysicsFrameItem.TickId = TickerComponentRef->TickId;
 		CurrentPhysicsFrameItem.PhysicsFrame = CurrentPhysicsFrame;
 
-		HistoryComponent->HistoryItems.Add(CurrentPhysicsFrameItem);
+		PhysicsHistoryComponentRef->HistoryItems.Add(CurrentPhysicsFrameItem);
 
 		FlecsWorld->ModifiedSingleton<FTickerPhysicsHistoryComponent>();
 	});
