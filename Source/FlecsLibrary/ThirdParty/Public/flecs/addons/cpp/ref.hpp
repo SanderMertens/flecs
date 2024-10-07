@@ -43,9 +43,9 @@ struct ref {
     ref(flecs::entity entity, flecs::id_t id = 0)
         : ref(entity.world(), entity.id(), id) { }
 
-    T* operator->() {
+    T* operator->() const {
         T* result = static_cast<T*>(ecs_ref_get_id(
-            world_, &ref_, this->ref_.id));
+            world_, const_cast<ecs_ref_t*>(&ref_), ref_.id));
 
         ecs_assert(result != NULL, ECS_INVALID_PARAMETER,
             "nullptr dereference by flecs::ref");
@@ -53,12 +53,12 @@ struct ref {
         return result;
     }
 
-    T* get() {
+    T* get() const {
         return static_cast<T*>(ecs_ref_get_id(
-            world_, &ref_, this->ref_.id));
+            world_, const_cast<ecs_ref_t*>(&ref_), ref_.id));
     }
 
-    T* try_get() {
+    T* try_get() const {
         if (!world_ || !ref_.entity) {
             return nullptr;
         }
@@ -66,12 +66,13 @@ struct ref {
         return get();
     }
 
-    bool has() {
+    bool has() const {
         return !!try_get();
     }
 
     /** implicit conversion to bool.  return true if there is a valid T* being referred to **/
-    operator bool() {
+    operator bool() const
+    {
         return has();
     }
 

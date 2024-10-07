@@ -26,23 +26,26 @@ void UFlecsPhysicsModule::InitializeModule(UFlecsWorld* InWorld, const FFlecsEnt
 	FPhysScene* Scene = GetFlecsWorld()->GetWorld()->GetPhysicsScene();
 	solid_check(Scene);
 
-	solid_checkf(GetFlecsWorld()->IsModuleImported<UFlecsTickerModule>(), TEXT("FlecsTickerModule is not imported!"));
-	
-	GetFlecsWorld()->SetSingleton<FFlecsPhysicsSceneComponent>(FFlecsPhysicsSceneComponent{ Scene });
-
-	const UFlecsTickerModule* TickerModule = GetFlecsWorld()->GetModule<UFlecsTickerModule>();
-	solid_check(IsValid(TickerModule));
-	
-	Scene->GetSolver()->EnableAsyncMode(1.0 / TickerModule->GetTickerRate());
-	Scene->GetSolver()->SetIsDeterministic(true);
-	Scene->GetSolver()->SetAsyncPhysicsBlockMode(Chaos::BlockForBestInterpolation);
-
-	if (bAllowResimulation)
+	GetFlecsWorld()->RegisterModuleDependency<UFlecsTickerModule>
+	(this, [&](UFlecsTickerModule* InModuleObject,
+		UFlecsWorld* InFlecsWorld, FFlecsEntityHandle& InTickerEntity)
 	{
-		ResimulationHandlers();
-	}
+		GetFlecsWorld()->SetSingleton<FFlecsPhysicsSceneComponent>(FFlecsPhysicsSceneComponent{ Scene });
 
-	PhysicsComponentObservers();
+		const UFlecsTickerModule* TickerModule = GetFlecsWorld()->GetModule<UFlecsTickerModule>();
+		solid_check(IsValid(TickerModule));
+		
+		Scene->GetSolver()->EnableAsyncMode(1.0 / TickerModule->GetTickerRate());
+		Scene->GetSolver()->SetIsDeterministic(true);
+		Scene->GetSolver()->SetAsyncPhysicsBlockMode(Chaos::BlockForBestInterpolation);
+
+		if (bAllowResimulation)
+		{
+			ResimulationHandlers();
+		}
+
+		PhysicsComponentObservers();
+	});
 }
 
 void UFlecsPhysicsModule::DeinitializeModule(UFlecsWorld* InWorld)

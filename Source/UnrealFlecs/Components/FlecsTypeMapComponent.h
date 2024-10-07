@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "FlecsScriptClassComponent.h"
+#include "FlecsScriptEnumComponent.h"
 #include "FlecsScriptStructComponent.h"
 #include "Entities/FlecsEntityHandle.h"
 #include "Standard/robin_hood.h"

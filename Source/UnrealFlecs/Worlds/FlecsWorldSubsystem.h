@@ -38,14 +38,12 @@ class UNREALFLECS_API UFlecsWorldSubsystem final : public UTickableWorldSubsyste
 public:
 	virtual bool ShouldCreateSubsystem(UObject* Outer) const override
 	{
-		return GetDefault<UFlecsDeveloperSettings>() && GetDefault<UFlecsDeveloperSettings>()->bEnableFlecs;
+		return GetDefault<UFlecsDeveloperSettings>()->bEnableFlecs;
 	}
 
 	virtual ETickableTickType GetTickableTickType() const override
 	{
-		return GetDefault<UFlecsDeveloperSettings>()
-			&& GetDefault<UFlecsDeveloperSettings>()->bEnableFlecs
-			? ETickableTickType::Always : ETickableTickType::Never;
+		return ETickableTickType::Always;
 	}
 	
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override
@@ -66,7 +64,7 @@ public:
 			return;
 		}
 
-		UFlecsWorldStartComponent* StartComponent = GameState->FindComponentByClass<UFlecsWorldStartComponent>();
+		const UFlecsWorldStartComponent* StartComponent = GameState->FindComponentByClass<UFlecsWorldStartComponent>();
 		solid_checkf(IsValid(StartComponent), TEXT("StartComponent must be valid"));
 
 		CreateWorld(StartComponent->DefaultWorld->WorldSettings.WorldName, StartComponent->DefaultWorld->WorldSettings);
@@ -89,12 +87,9 @@ public:
 
 	virtual void Tick(float DeltaTime) override
 	{
-		if UNLIKELY_IF(DefaultWorld->ShouldQuit())
-		{
-			return;
-		}
+		const bool bResult = DefaultWorld->Progress(DeltaTime);
 
-		if UNLIKELY_IF(!DefaultWorld->Progress())
+		if UNLIKELY_IF(!bResult)
 		{
 			UN_LOGF(LogFlecsCore, Error, "Failed to progress Flecs world");
 		}
@@ -114,6 +109,14 @@ public:
 		NewFlecsWorld->SetWorld(std::move(NewWorld));
 		
 		DefaultWorld = NewFlecsWorld;
+		
+		GetDefaultWorld()->AddSingleton<FFlecsTypeMapComponent>();
+		GetDefaultWorld()->TypeMapComponent = GetDefaultWorld()->GetSingletonFlecsRef<FFlecsTypeMapComponent>();
+
+		NewFlecsWorld->SetSingleton<FFlecsWorldPtrComponent>(
+			FFlecsWorldPtrComponent { NewFlecsWorld });
+
+		NewFlecsWorld->SetSingleton<FUWorldPtrComponent>(FUWorldPtrComponent { GetWorld() });
 
 		for (int32 Index = 0; Index < DefaultEntities.Num(); ++Index)
 		{
@@ -139,13 +142,6 @@ public:
 		NewFlecsWorld->SetWorldName(Name);
 		
 		NewFlecsWorld->SetContext(this);
-
-		NewFlecsWorld->SetSingleton<FFlecsWorldPtrComponent>(
-			FFlecsWorldPtrComponent { NewFlecsWorld });
-
-		NewFlecsWorld->SetSingleton<FUWorldPtrComponent>(FUWorldPtrComponent { GetWorld() });
-
-		GetDefaultWorldStatic(this)->AddSingleton<FFlecsTypeMapComponent>();
 
 		NewFlecsWorld->SetThreads(Settings.DefaultWorkerThreads);
 

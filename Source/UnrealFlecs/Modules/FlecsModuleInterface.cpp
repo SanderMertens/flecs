@@ -55,7 +55,7 @@ void IFlecsModuleInterface::DeinitializeModule(UFlecsWorld* InWorld)
 
 FString IFlecsModuleInterface::GetModuleName_Implementation() const
 {
-	UN_LOGF(LogFlecsCore, Error,
+	UN_LOGF(LogFlecsCore, Warning,
 		"Module name not implemented! It is recommended to implement this function in the module interface. "
 		"Will return the inherited class name instead. For Class: %s", *_getUObject()->GetClass()->GetName());
 	

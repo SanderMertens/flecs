@@ -10,10 +10,20 @@ void UFlecsRestModule::InitializeModule(UFlecsWorld* InWorld, const FFlecsEntity
 {
 	InWorld->SetSingleton<flecs::Rest>(flecs::Rest());
 	RestEntity = InWorld->GetSingletonEntity<flecs::Rest>();
+
+	if (bImportStats)
+	{
+		StatsEntity = InWorld->World.import<flecs::stats>();
+	}
 }
 
 void UFlecsRestModule::DeinitializeModule(UFlecsWorld* InWorld)
 {
+	if (StatsEntity.IsValid())
+	{
+		StatsEntity.Disable();
+	}
+	
 	if UNLIKELY_IF(!RestEntity.IsValid())
 	{
 		return;

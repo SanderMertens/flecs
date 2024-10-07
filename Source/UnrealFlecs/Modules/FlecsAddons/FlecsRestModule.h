@@ -25,4 +25,10 @@ public:
 	UPROPERTY()
 	FFlecsEntityHandle RestEntity;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Flecs")
+	bool bImportStats = false;
+
+	UPROPERTY()
+	FFlecsEntityHandle StatsEntity;
+
 }; // class UFlecsRestModule
