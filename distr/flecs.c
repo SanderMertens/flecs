@@ -43349,7 +43349,8 @@ bool flecs_json_serialize_iter_result_ids(
 
     ecs_world_t *world = it->world;
     int16_t f, field_count = flecs_ito(int16_t, it->field_count);
-    uint16_t field_mask = flecs_ito(uint16_t, (1 << field_count) - 1);    
+    uint32_t field_mask = (uint32_t)((1llu << field_count) - 1);
+
     if (q->static_id_fields == field_mask) {
         /* All matched ids are static, nothing to serialize */
         return false;
@@ -43359,7 +43360,7 @@ bool flecs_json_serialize_iter_result_ids(
     flecs_json_array_push(buf);
 
     for (f = 0; f < field_count; f ++) {
-        ecs_flags16_t field_bit = flecs_ito(uint16_t, 1 << f);
+        ecs_termset_t field_bit = (ecs_termset_t)(1u << f);
 
         if (!(it->set_fields & field_bit)) {
             /* Don't serialize ids for fields that aren't set */
@@ -43410,7 +43411,7 @@ bool flecs_json_serialize_iter_result_sources(
     flecs_json_array_push(buf);
 
     for (f = 0; f < field_count; f ++) {
-        ecs_flags16_t field_bit = flecs_ito(uint16_t, 1 << f);
+        ecs_termset_t field_bit = (ecs_termset_t)(1u << f);
 
         if (!(it->set_fields & field_bit)) {
             /* Don't serialize source for fields that aren't set */
@@ -43481,7 +43482,7 @@ int flecs_json_serialize_iter_result_field_values(
     ecs_termset_t row_fields = it->query ? it->query->row_fields : 0;
 
     for (f = 0; f < field_count; f ++) {
-        ecs_termset_t field_bit = (ecs_termset_t)flecs_ito(uint64_t, 1 << f);
+        ecs_termset_t field_bit = (ecs_termset_t)(1u << f);
         if (!(fields & field_bit)) {
             ecs_strbuf_list_appendlit(buf, "0");
             continue;
@@ -68709,7 +68710,8 @@ void flecs_query_mark_fields_dirty(
     ecs_world_t *world = q->world;
     int16_t i, field_count = q->field_count;
     for (i = 0; i < field_count; i ++) {
-        if (!(write_fields & flecs_ito(uint32_t, 1 << i))) {
+        ecs_termset_t field_bit = (ecs_termset_t)(1u << i);
+        if (!(write_fields & field_bit)) {
             continue; /* If term doesn't write data there's nothing to track */
         }
 

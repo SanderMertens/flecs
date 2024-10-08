@@ -795,7 +795,11 @@
                 "no_fields",
                 "no_fields_w_vars",
                 "serialize_from_stage",
-                "serialize_sparse"
+                "serialize_sparse",
+                "serialize_15_fields",
+                "serialize_16_fields",
+                "serialize_31_fields",
+                "serialize_32_fields"
             ]
         }, {
             "id": "SerializeIterToRowJson",
