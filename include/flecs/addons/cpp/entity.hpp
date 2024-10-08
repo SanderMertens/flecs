@@ -191,9 +191,13 @@ struct entity : entity_builder<entity>
      * @tparam First The first part of the pair.
      * @tparam Second the second part of the pair.
      */
-    template <typename First, typename Second>
+    template <typename First, typename Second, typename A = actual_type_t<flecs::pair<First, Second>>>
     void modified() const {
-        this->modified<First>(_::type<Second>::id(world_));
+        auto first = _::type<First>::id(world_);
+        auto second = _::type<Second>::id(world_);
+        ecs_assert(_::type<A>::size() != 0, ECS_INVALID_PARAMETER,
+            "operation invalid for empty type");
+        this->modified(first, second);
     }
 
     /** Signal that the first part of a pair was modified.

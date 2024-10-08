@@ -363,7 +363,9 @@
                 "deref_pair_obj",
                 "deref_const_pair_obj",
                 "set_R_existing_value",
-                "symmetric_w_childof"
+                "symmetric_w_childof",
+                "modified_tag_second",
+                "modified_tag_first"
             ]
         }, {
             "id": "Enum",
