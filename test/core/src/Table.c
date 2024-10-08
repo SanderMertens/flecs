@@ -617,3 +617,179 @@ void Table_has_any_pair(void) {
 
     ecs_fini(world);
 }
+
+void Table_clear_table_kills_entities(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_add(world, e1, Position);
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_add(world, e2, Position);
+
+    ecs_table_t *table = ecs_get_table(world, e1);
+   
+    ecs_table_clear_entities(world, table);
+
+    test_assert(!ecs_is_alive(world, e1));
+    test_assert(!ecs_is_alive(world, e2));
+    test_int(0, ecs_table_count(table));
+
+    ecs_fini(world);
+}
+
+void Table_clear_table_add_new(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t ecs_id(Position) = ecs_component(world, {
+        .entity = ecs_new(world),
+        .type.size = ECS_SIZEOF(Position),
+        .type.alignment = ECS_ALIGNOF(Position)
+    });
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_add(world, e1, Position);
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_add(world, e2, Position);
+
+    ecs_table_t *table = ecs_get_table(world, e1);
+   
+    ecs_table_clear_entities(world, table);
+
+    ecs_id(Position) = ecs_component(world, {
+        .entity = ecs_new(world),
+        .type.size = ECS_SIZEOF(Position),
+        .type.alignment = ECS_ALIGNOF(Position)
+    });  
+
+    ecs_entity_t e3 = ecs_new(world);
+    ecs_add(world, e3, Position);
+    ecs_entity_t e4 = ecs_new(world);
+    ecs_add(world, e4, Position);
+    test_assert(ecs_is_alive(world, e3));
+    test_assert(ecs_is_alive(world, e4));
+ 
+    ecs_table_t *table_e3 = ecs_get_table(world, e3);
+    ecs_table_t *table_e4 = ecs_get_table(world, e4);
+
+    test_assert(table_e3 == table_e4);
+    test_int(2, ecs_table_count(table_e3));
+
+    ecs_fini(world);
+}
+
+void Table_clear_table_check_size(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_add(world, e1, Position);
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_add(world, e2, Position);
+
+    ecs_table_t *table = ecs_get_table(world, e1);
+    const int32_t size = ecs_table_size(table);
+
+    ecs_table_clear_entities(world, table);
+
+    test_int(size, ecs_table_size(table));
+    test_int(0, ecs_table_count(table));
+
+    ecs_fini(world);
+}
+
+
+void Table_clear_table_twice_check_size(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_add(world, e1, Position);
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_add(world, e2, Position);
+
+    ecs_table_t *table = ecs_get_table(world, e1);
+    const int32_t size = ecs_table_size(table);
+
+    ecs_table_clear_entities(world, table);
+    ecs_table_clear_entities(world, table);
+
+    test_int(size, ecs_table_size(table));
+    test_int(0, ecs_table_count(table));
+ 
+    ecs_fini(world);
+}
+
+static int on_remove_position = 0;
+
+static void ecs_on_remove(Position)(ecs_iter_t *it) {
+    test_assert(it->count >= 1);
+    test_assert(it->event == EcsOnRemove);
+
+    Position *p = ecs_field(it, Position, 0);
+    for (int i = 0; i < it->count; i ++) {
+        on_remove_position ++;
+        test_int(p[i].x, 10);
+        test_int(p[i].y, 20);
+    }
+}
+
+void Table_clear_table_on_remove_hooks(void) {
+    ecs_world_t *world = ecs_mini();
+    on_remove_position = 0;
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_set_hooks(world, Position, {
+        .on_remove = ecs_on_remove(Position)
+    });
+
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Position, {10, 20}));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Position, {10, 20}));
+    ecs_entity_t e3 = ecs_insert(world, ecs_value(Position, {10, 20}));
+
+    ecs_table_t *table = ecs_get_table(world, e1);
+    ecs_table_clear_entities(world, table);
+      
+    test_int(on_remove_position, 3);
+
+    ecs_fini(world);
+}
+
+static
+void Observer(ecs_iter_t *it) {
+    probe_system_w_ctx(it, it->ctx);
+}
+
+void Table_clear_table_on_remove_observer(void) {
+     ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    Probe ctx = {0};
+    ecs_entity_t o = ecs_observer(world, {
+        .query.terms = {{EcsWildcard}},
+        .events = {EcsOnRemove},
+        .callback = Observer,
+        .ctx = &ctx
+    });
+    test_assert(o != 0);
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_add(world, e1, Position);
+    ecs_entity_t e2 = ecs_new(world);
+    ecs_add(world, e2, Position);
+
+    test_int(ctx.invoked, 0);
+
+    ecs_table_t *table = ecs_get_table(world, e1);
+    ecs_table_clear_entities(world, table);
+
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 2);
+
+    ecs_fini(world);
+}
