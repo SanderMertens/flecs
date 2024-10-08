@@ -1253,3 +1253,50 @@ void Pairs_symmetric_w_childof(void) {
 
     test_assert(bob.has<Likes>(alice));
 }
+
+void Pairs_modified_tag_second(void) {
+    flecs::world ecs;
+
+    int32_t count = 0;
+    ecs.observer<Position>()
+        .term_at(0).second<Tag>()
+        .event(flecs::OnSet)
+        .each([&](Position& p) {
+            test_int(p.x, 10);
+            test_int(p.y, 20);
+            count ++;
+        });
+
+    flecs::entity e = ecs.entity();
+
+    Position& p = e.ensure<Position, Tag>();
+    p.x = 10;
+    p.y = 20;
+    e.modified<Position, Tag>();
+
+    test_int(count, 1);
+}
+
+void Pairs_modified_tag_first(void) {
+    flecs::world ecs;
+
+    int32_t count = 0;
+    ecs.observer()
+        .with<Tag, Position>()
+        .event(flecs::OnSet)
+        .each([&](flecs::iter& it, size_t row) {
+            auto p = it.field_at<Position>(0, row);
+            test_int(p.x, 10);
+            test_int(p.y, 20);
+            count ++;
+        });
+
+    flecs::entity e = ecs.entity();
+
+    Position& p = e.ensure<Tag, Position>();
+    p.x = 10;
+    p.y = 20;
+    e.modified<Tag, Position>();
+
+    test_int(count, 1);
+}

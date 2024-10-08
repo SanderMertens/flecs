@@ -354,6 +354,8 @@ void Pairs_deref_pair_obj(void);
 void Pairs_deref_const_pair_obj(void);
 void Pairs_set_R_existing_value(void);
 void Pairs_symmetric_w_childof(void);
+void Pairs_modified_tag_second(void);
+void Pairs_modified_tag_first(void);
 
 // Testsuite 'Enum'
 void Enum_standard_enum_reflection(void);
@@ -2745,6 +2747,14 @@ bake_test_case Pairs_testcases[] = {
     {
         "symmetric_w_childof",
         Pairs_symmetric_w_childof
+    },
+    {
+        "modified_tag_second",
+        Pairs_modified_tag_second
+    },
+    {
+        "modified_tag_first",
+        Pairs_modified_tag_first
     }
 };
 
@@ -6739,7 +6749,7 @@ static bake_test_suite suites[] = {
         "Pairs",
         NULL,
         NULL,
-        68,
+        70,
         Pairs_testcases
     },
     {
