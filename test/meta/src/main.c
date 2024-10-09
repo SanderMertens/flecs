@@ -763,6 +763,10 @@ void SerializeIterToJson_no_fields(void);
 void SerializeIterToJson_no_fields_w_vars(void);
 void SerializeIterToJson_serialize_from_stage(void);
 void SerializeIterToJson_serialize_sparse(void);
+void SerializeIterToJson_serialize_15_fields(void);
+void SerializeIterToJson_serialize_16_fields(void);
+void SerializeIterToJson_serialize_31_fields(void);
+void SerializeIterToJson_serialize_32_fields(void);
 
 // Testsuite 'SerializeIterToRowJson'
 void SerializeIterToRowJson_serialize_this_w_1_tag(void);
@@ -3929,6 +3933,22 @@ bake_test_case SerializeIterToJson_testcases[] = {
     {
         "serialize_sparse",
         SerializeIterToJson_serialize_sparse
+    },
+    {
+        "serialize_15_fields",
+        SerializeIterToJson_serialize_15_fields
+    },
+    {
+        "serialize_16_fields",
+        SerializeIterToJson_serialize_16_fields
+    },
+    {
+        "serialize_31_fields",
+        SerializeIterToJson_serialize_31_fields
+    },
+    {
+        "serialize_32_fields",
+        SerializeIterToJson_serialize_32_fields
     }
 };
 
@@ -4882,7 +4902,7 @@ static bake_test_suite suites[] = {
         "SerializeIterToJson",
         NULL,
         NULL,
-        71,
+        75,
         SerializeIterToJson_testcases
     },
     {

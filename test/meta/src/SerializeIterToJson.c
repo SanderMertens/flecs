@@ -2548,3 +2548,159 @@ void SerializeIterToJson_serialize_sparse(void) {
 
     ecs_fini(world);
 }
+
+void SerializeIterToJson_serialize_15_fields(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_query_desc_t desc = {0};
+
+    int field_count = 15;
+    ecs_entity_t *tgts = ecs_os_malloc_n(ecs_entity_t, field_count);
+
+    for (int i = 0; i < field_count; i ++) {
+        tgts[i] = ecs_new(world);
+        ecs_set_pair(world, e, Position, tgts[i], {i, i * 2});
+        desc.terms[i].id = ecs_pair_t(Position, tgts[i]);
+    }
+
+    ecs_query_t *q = ecs_query_init(world, &desc);
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    char *json = ecs_iter_to_json(&it, NULL);
+    test_json(json, "{\"results\":[{\"name\":\"e\", \"fields\":{\"values\":[{\"x\":0, \"y\":0}, {\"x\":1, \"y\":2}, {\"x\":2, \"y\":4}, {\"x\":3, \"y\":6}, {\"x\":4, \"y\":8}, {\"x\":5, \"y\":10}, {\"x\":6, \"y\":12}, {\"x\":7, \"y\":14}, {\"x\":8, \"y\":16}, {\"x\":9, \"y\":18}, {\"x\":10, \"y\":20}, {\"x\":11, \"y\":22}, {\"x\":12, \"y\":24}, {\"x\":13, \"y\":26}, {\"x\":14, \"y\":28}]}}]}");
+    ecs_os_free(json);
+    ecs_os_free(tgts);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void SerializeIterToJson_serialize_16_fields(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_query_desc_t desc = {0};
+
+    int field_count = 16;
+    ecs_entity_t *tgts = ecs_os_malloc_n(ecs_entity_t, field_count);
+
+    for (int i = 0; i < field_count; i ++) {
+        tgts[i] = ecs_new(world);
+        ecs_set_pair(world, e, Position, tgts[i], {i, i * 2});
+        desc.terms[i].id = ecs_pair_t(Position, tgts[i]);
+    }
+
+    ecs_query_t *q = ecs_query_init(world, &desc);
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    char *json = ecs_iter_to_json(&it, NULL);
+    test_json(json, "{\"results\":[{\"name\":\"e\", \"fields\":{\"values\":[{\"x\":0, \"y\":0}, {\"x\":1, \"y\":2}, {\"x\":2, \"y\":4}, {\"x\":3, \"y\":6}, {\"x\":4, \"y\":8}, {\"x\":5, \"y\":10}, {\"x\":6, \"y\":12}, {\"x\":7, \"y\":14}, {\"x\":8, \"y\":16}, {\"x\":9, \"y\":18}, {\"x\":10, \"y\":20}, {\"x\":11, \"y\":22}, {\"x\":12, \"y\":24}, {\"x\":13, \"y\":26}, {\"x\":14, \"y\":28}, {\"x\":15, \"y\":30}]}}]}");
+    ecs_os_free(json);
+    ecs_os_free(tgts);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void SerializeIterToJson_serialize_31_fields(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_query_desc_t desc = {0};
+
+    int field_count = 31;
+    ecs_entity_t *tgts = ecs_os_malloc_n(ecs_entity_t, field_count);
+
+    for (int i = 0; i < field_count; i ++) {
+        tgts[i] = ecs_new(world);
+        ecs_set_pair(world, e, Position, tgts[i], {i, i * 2});
+        desc.terms[i].id = ecs_pair_t(Position, tgts[i]);
+    }
+
+    ecs_query_t *q = ecs_query_init(world, &desc);
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    char *json = ecs_iter_to_json(&it, NULL);
+    test_json(json, "{\"results\":[{\"name\":\"e\", \"fields\":{\"values\":[{\"x\":0, \"y\":0}, {\"x\":1, \"y\":2}, {\"x\":2, \"y\":4}, {\"x\":3, \"y\":6}, {\"x\":4, \"y\":8}, {\"x\":5, \"y\":10}, {\"x\":6, \"y\":12}, {\"x\":7, \"y\":14}, {\"x\":8, \"y\":16}, {\"x\":9, \"y\":18}, {\"x\":10, \"y\":20}, {\"x\":11, \"y\":22}, {\"x\":12, \"y\":24}, {\"x\":13, \"y\":26}, {\"x\":14, \"y\":28}, {\"x\":15, \"y\":30}, {\"x\":16, \"y\":32}, {\"x\":17, \"y\":34}, {\"x\":18, \"y\":36}, {\"x\":19, \"y\":38}, {\"x\":20, \"y\":40}, {\"x\":21, \"y\":42}, {\"x\":22, \"y\":44}, {\"x\":23, \"y\":46}, {\"x\":24, \"y\":48}, {\"x\":25, \"y\":50}, {\"x\":26, \"y\":52}, {\"x\":27, \"y\":54}, {\"x\":28, \"y\":56}, {\"x\":29, \"y\":58}, {\"x\":30, \"y\":60}]}}]}");
+    ecs_os_free(json);
+    ecs_os_free(tgts);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void SerializeIterToJson_serialize_32_fields(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_query_desc_t desc = {0};
+
+    int field_count = 32;
+    ecs_entity_t *tgts = ecs_os_malloc_n(ecs_entity_t, field_count);
+
+    for (int i = 0; i < field_count; i ++) {
+        tgts[i] = ecs_new(world);
+        ecs_set_pair(world, e, Position, tgts[i], {i, i * 2});
+        desc.terms[i].id = ecs_pair_t(Position, tgts[i]);
+    }
+
+    ecs_query_t *q = ecs_query_init(world, &desc);
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    char *json = ecs_iter_to_json(&it, NULL);
+    test_json(json, "{\"results\":[{\"name\":\"e\", \"fields\":{\"values\":[{\"x\":0, \"y\":0}, {\"x\":1, \"y\":2}, {\"x\":2, \"y\":4}, {\"x\":3, \"y\":6}, {\"x\":4, \"y\":8}, {\"x\":5, \"y\":10}, {\"x\":6, \"y\":12}, {\"x\":7, \"y\":14}, {\"x\":8, \"y\":16}, {\"x\":9, \"y\":18}, {\"x\":10, \"y\":20}, {\"x\":11, \"y\":22}, {\"x\":12, \"y\":24}, {\"x\":13, \"y\":26}, {\"x\":14, \"y\":28}, {\"x\":15, \"y\":30}, {\"x\":16, \"y\":32}, {\"x\":17, \"y\":34}, {\"x\":18, \"y\":36}, {\"x\":19, \"y\":38}, {\"x\":20, \"y\":40}, {\"x\":21, \"y\":42}, {\"x\":22, \"y\":44}, {\"x\":23, \"y\":46}, {\"x\":24, \"y\":48}, {\"x\":25, \"y\":50}, {\"x\":26, \"y\":52}, {\"x\":27, \"y\":54}, {\"x\":28, \"y\":56}, {\"x\":29, \"y\":58}, {\"x\":30, \"y\":60}, {\"x\":31, \"y\":62}]}}]}");
+    ecs_os_free(json);
+    ecs_os_free(tgts);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}

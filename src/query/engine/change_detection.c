@@ -367,7 +367,8 @@ void flecs_query_mark_fields_dirty(
     ecs_world_t *world = q->world;
     int16_t i, field_count = q->field_count;
     for (i = 0; i < field_count; i ++) {
-        if (!(write_fields & flecs_ito(uint32_t, 1 << i))) {
+        ecs_termset_t field_bit = (ecs_termset_t)(1u << i);
+        if (!(write_fields & field_bit)) {
             continue; /* If term doesn't write data there's nothing to track */
         }
 
