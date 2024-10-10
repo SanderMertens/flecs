@@ -13,6 +13,7 @@ namespace flecs {
  */
 
 /** Script builder interface */
+FLECS_API_STRUCT
 struct script_builder {
     script_builder(flecs::world_t *world, const char *name = nullptr)
         : world_(world)

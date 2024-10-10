@@ -16,7 +16,7 @@ namespace flecs {
  * @{
  */
 
-struct script_builder;
+FLECS_API_STRUCT struct script_builder;
 
 /** @} */
 

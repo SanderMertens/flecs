@@ -17,19 +17,19 @@ namespace doc {
  */
 
 /** flecs.doc.Description component */
-using Description = EcsDocDescription;
+FLECS_API_STRUCT using Description = EcsDocDescription;
 
 /** flecs.doc.Brief component */
-static const flecs::entity_t Brief = EcsDocBrief;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t Brief = EcsDocBrief;
 
 /** flecs.doc.Detail component */
-static const flecs::entity_t Detail = EcsDocDetail;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t Detail = EcsDocDetail;
 
 /** flecs.doc.Link component */
-static const flecs::entity_t Link = EcsDocLink;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t Link = EcsDocLink;
 
 /** flecs.doc.Color component */
-static const flecs::entity_t Color = EcsDocColor;
+FLECS_API_GLOBAL FLECS_STATIC_IN_HEADER const flecs::entity_t Color = EcsDocColor;
 
 /** @private */
 namespace _ {
