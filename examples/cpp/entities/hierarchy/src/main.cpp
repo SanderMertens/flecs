@@ -60,6 +60,30 @@ int main(int, char *[]) {
     // Is the Moon a child of Earth?
     std::cout << "Child of Earth? " << moon.has(flecs::ChildOf, earth) << "\n\n";
 
+    // Lookup the moon by name
+    flecs::entity e = ecs.lookup("Sun::Earth::Moon");
+    std::cout << "Moon found: " << e.path() << "\n\n";
+
     // Do a depth-first walk of the tree
     iterate_tree(sun);
+
+    // Output:
+    //   Child of Earth? 1
+    //   
+    //   Moon found: ::Sun::Earth::Moon
+    //   
+    //   ::Sun [Star, Position, (Identifier,Name)]
+    //   {1, 1}
+    //   
+    //   ::Sun::Mercury [Position, Planet, (Identifier,Name), (ChildOf,Sun)]
+    //   {2, 2}
+    //   
+    //   ::Sun::Venus [Position, Planet, (Identifier,Name), (ChildOf,Sun)]
+    //   {3, 3}
+    //   
+    //   ::Sun::Earth [Position, Planet, (Identifier,Name), (ChildOf,Sun)]
+    //   {4, 4}
+    //   
+    //   ::Sun::Earth::Moon [Position, Moon, (Identifier,Name), (ChildOf,Sun.Earth)]
+    //   {4.1, 4.1}
 }
