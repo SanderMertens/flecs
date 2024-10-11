@@ -901,7 +901,7 @@ ecs_entity_t e = ecs_new(world);
 ecs_enable(world, e, true);
 
 // Disable entity
-ecs_disable(world, e, false);
+ecs_enable(world, e, false);
 ```
 
 </li>
