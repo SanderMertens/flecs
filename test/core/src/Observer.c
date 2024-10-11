@@ -4479,6 +4479,47 @@ void Observer_yield_on_delete_without_on_remove(void) {
     ecs_fini(world);
 }
 
+void Observer_yield_existing_w_not_first_term(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    /* Create entities before trigger */
+    ecs_entity_t e1 = ecs_new_w(world, Foo);
+    ecs_entity_t e2 = ecs_new_w(world, Foo);
+    ecs_entity_t e3 = ecs_new_w(world, Foo);
+
+    test_assert(e1 != 0);
+    test_assert(e2 != 0);
+    test_assert(e3 != 0);
+
+    ecs_add(world, e3, Bar);
+
+    Probe ctx = {0};
+    ecs_entity_t t = ecs_observer_init(world, &(ecs_observer_desc_t){
+        .query.terms = {{ Bar, .oper = EcsNot }, { Foo }},
+        .events = {EcsOnAdd},
+        .callback = Observer,
+        .ctx = &ctx,
+        .yield_existing = true
+    });
+
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 2);
+    test_int(ctx.system, t);
+    test_int(ctx.event, EcsOnAdd);
+    test_int(ctx.term_count, 2);
+    test_null(ctx.param);
+
+    test_int(ctx.e[0], e1);
+    test_int(ctx.e[1], e2);
+    test_int(ctx.c[0][0], Bar);
+    test_int(ctx.c[0][1], Foo);
+
+    ecs_fini(world);
+}
+
 void Observer_observer_superset_wildcard(void) {
     ecs_world_t *world = ecs_mini();
 

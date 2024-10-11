@@ -1476,6 +1476,7 @@ void Observer_on_add_remove_no_on_remove_yield_existing(void);
 void Observer_yield_existing_flags_w_multi_observer(void);
 void Observer_yield_on_create_without_on_add(void);
 void Observer_yield_on_delete_without_on_remove(void);
+void Observer_yield_existing_w_not_first_term(void);
 void Observer_observer_superset_wildcard(void);
 void Observer_observer_superset_wildcard_add_isa(void);
 void Observer_observer_superset_wildcard_add_isa_at_offset(void);
@@ -7971,6 +7972,10 @@ bake_test_case Observer_testcases[] = {
         Observer_yield_on_delete_without_on_remove
     },
     {
+        "yield_existing_w_not_first_term",
+        Observer_yield_existing_w_not_first_term
+    },
+    {
         "observer_superset_wildcard",
         Observer_observer_superset_wildcard
     },
@@ -11225,7 +11230,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        222,
+        223,
         Observer_testcases
     },
     {
