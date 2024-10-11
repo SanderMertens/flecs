@@ -325,7 +325,6 @@ public:
 			.with<FFlecsModuleComponent>()
 			.with<FFlecsUObjectComponent>().filter()
 			.event(flecs::OnAdd)
-			.yield_existing()
 			.each([&](flecs::entity InEntity,
 				const FFlecsUObjectComponent& InUObjectComponent, const FFlecsModuleComponent& InModuleComponent)
 			{
@@ -432,7 +431,7 @@ public:
 		
 		if (IsModuleImported(InDependencyClass))
 		{
-			FFlecsEntityHandle DependencyEntity = GetModuleEntity(InDependencyClass);
+			const FFlecsEntityHandle DependencyEntity = GetModuleEntity(InDependencyClass);
 			UObject* DependencyModuleObject = GetModule(InDependencyClass);
 
 			solid_check(DependencyEntity.IsValid());
@@ -841,11 +840,8 @@ public:
 			for (TWeakObjectPtr<UObject> Module : ProgressModules)
 			{
 				solid_checkf(Module.IsValid(), TEXT("Module is nullptr"));
-
-				UN_LOGF(LogFlecsWorld, Log, "Progressing module %s", *Module->GetName());
 			
 				IFlecsModuleProgressInterface* ModuleProgress = Cast<IFlecsModuleProgressInterface>(Module.Get());
-				
 				ModuleProgress->ProgressModule(DeltaTime);
 			}
 		}
@@ -978,6 +974,15 @@ public:
 	FORCEINLINE_DEBUGGABLE void SetEntityRange(const int32 InMin, const int32 InMax) const
 	{
 		World.set_entity_range(InMin, InMax);
+	}
+
+	template <typename FunctionType>
+	FORCEINLINE_DEBUGGABLE void SetEntityRange(const int32 InMin, const int32 InMax, FunctionType&& Function) const
+	{
+		World.set_entity_range(InMin, InMax);
+		EnforceEntityRange(true);
+		Function();
+		EnforceEntityRange(false);
 	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
@@ -1114,7 +1119,7 @@ public:
 			}
 			else if (Property->IsA<FWeakObjectProperty>())
 			{
-				UntypedComponent.member<FWeakObjectProperty>(StringCast<char>(*Property->GetName()).Get(), 1,
+				UntypedComponent.member<FWeakObjectPtr>(StringCast<char>(*Property->GetName()).Get(), 1,
 					Property->GetOffset_ForInternal());
 			}
 			else if (Property->IsA<FSoftObjectProperty>())
@@ -1136,7 +1141,8 @@ public:
 			{
 				FFlecsEntityHandle StructComponent
 					= ObtainComponentTypeStruct(CastFieldChecked<FStructProperty>(Property)->Struct);
-				UntypedComponent.member(StructComponent, StringCast<char>(*Property->GetName()).Get(), 1,
+				UntypedComponent.member(StructComponent,
+					StringCast<char>(*Property->GetName()).Get(), 1,
 					Property->GetOffset_ForInternal());
 			}
 		}

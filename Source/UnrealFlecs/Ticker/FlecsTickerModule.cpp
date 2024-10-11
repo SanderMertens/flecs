@@ -15,6 +15,8 @@ DECLARE_CYCLE_STAT(TEXT("FlecsTickerModule::ProgressModule"),
 	STAT_FlecsTickerModule_ProgressModule, STATGROUP_FlecsTickerModule);
 DECLARE_CYCLE_STAT(TEXT("FlecsTickerModule::ProgressModule::RunPipeline"),
 	STAT_FlecsTickerModule_ProgressModule_RunPipeline, STATGROUP_FlecsTickerModule);
+DECLARE_DWORD_ACCUMULATOR_STAT(TEXT("FlecsTickerModule::ProgressModule::RunPipeline::Ticks"),
+	STAT_FlecsTickerModule_ProgressModule_RunPipeline_Ticks, STATGROUP_FlecsTickerModule);
 
 UFlecsTickerModule::UFlecsTickerModule(const FObjectInitializer& InObjectInitializer)
 	: Super(InObjectInitializer)
@@ -78,6 +80,7 @@ void UFlecsTickerModule::ProgressModule(double InDeltaTime)
 		TickerAccumulator -= TickerInterval;
 
 		++TickerComponentRef->TickId;
+		SET_DWORD_STAT(STAT_FlecsTickerModule_ProgressModule_RunPipeline_Ticks, TickerComponentRef->TickId);
 		
 		GetFlecsWorld()->RunPipeline(TickerPipeline, TickerInterval);
 	}

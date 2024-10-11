@@ -17,7 +17,6 @@ void UFlecsTransformModule::InitializeModule(UFlecsWorld* InWorld, const FFlecsE
         .kind(flecs::PreUpdate)
         .with<FFlecsTransformComponent>()
         .with<FFlecsTransformComponent>().parent().cascade()
-        .cached()
         .immediate()
         .run([](flecs::iter& Iter)
         {
@@ -62,7 +61,7 @@ void UFlecsTransformModule::InitializeModule(UFlecsWorld* InWorld, const FFlecsE
         				FFlecsEntityHandle RelativeEntity = Entity.GetFlecsWorld()->LookupEntity(Path.Left(SeparatorIndex));
         				solid_checkf(RelativeEntity.IsValid(), TEXT("Relative entity is invalid"));
 
-        				FFlecsTransformComponent RelativeTransform = RelativeEntity.Get<FFlecsTransformComponent>();
+        				const FFlecsTransformComponent RelativeTransform = RelativeEntity.Get<FFlecsTransformComponent>();
         				Transform.GlobalTransform = RelativeTransform.GlobalTransform * Transform.Transform;
 					}
 			        else if (Entity.HasTrait<FFlecsTransformComponent>(FlecsLocalTrait))
@@ -75,8 +74,6 @@ void UFlecsTransformModule::InitializeModule(UFlecsWorld* InWorld, const FFlecsE
 				        Transform.GlobalTransform = Transform.Transform;
 			        }
         		}
-
-        		
 			}
         });
 }

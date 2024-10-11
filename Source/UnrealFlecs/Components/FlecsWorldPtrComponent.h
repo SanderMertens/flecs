@@ -63,8 +63,16 @@ REGISTER_FLECS_COMPONENT_PROPERTIES(FFlecsWorldPtrComponent,
 	{}, {} )
 
 FORCEINLINE NO_DISCARD UFlecsWorld* ToFlecsWorld(const flecs::world& InWorld)
-{ 
+{
+	static flecs::ref<FFlecsWorldPtrComponent> WorldPtrRef;
+	
 	solid_checkf(InWorld.has<FFlecsWorldPtrComponent>(), TEXT("World does not have a FlecsWorldPtrComponent!"));
 	solid_checkf(InWorld.get<FFlecsWorldPtrComponent>()->IsValid(), TEXT("World is not valid!"));
-	return InWorld.get<FFlecsWorldPtrComponent>()->World.Get();
+
+	if (!WorldPtrRef)
+	{
+		WorldPtrRef = InWorld.get_ref<FFlecsWorldPtrComponent>();
+	}
+	
+	return WorldPtrRef->GetFlecsWorld();
 }

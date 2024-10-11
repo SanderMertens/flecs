@@ -1153,7 +1153,8 @@ public:
 
 	SOLID_INLINE void Modified(const UScriptStruct* StructType, const FGameplayTag& InTag) const
 	{
-		GetEntity().modified(GetTagEntity(InTag));
+		GetEntity().modified(ObtainTraitHolderEntity(StructType),
+			GetTagEntity(InTag));
 	}
 
 	SOLID_INLINE void Modified(const UScriptStruct* StructType, const FFlecsEntityHandle& InTrait) const
@@ -1164,6 +1165,16 @@ public:
 	SOLID_INLINE NO_DISCARD int32 GetDepth(const FFlecsEntityHandle& InEntity) const
 	{
 		return GetEntity().depth(InEntity);
+	}
+
+	SOLID_INLINE NO_DISCARD int32 GetDepth(const UScriptStruct* StructType) const
+	{
+		return GetEntity().depth(ObtainComponentTypeStruct(StructType));
+	}
+
+	SOLID_INLINE NO_DISCARD int32 GetDepth(const FGameplayTag& InTag) const
+	{
+		return GetEntity().depth(GetTagEntity(InTag));
 	}
 
 	template <typename TEntity>
@@ -1184,13 +1195,6 @@ public:
 			StringCast<char>(*InitialSeparator).Get()));
 	}
 	
-	#if WITH_EDITORONLY_DATA
-
-	UPROPERTY()
-	FName DisplayName;
-
-	#endif // WITH_EDITORONLY_DATA
-	
 private:
 	flecs::entity Entity;
 
@@ -1208,9 +1212,7 @@ private:
 
 		if LIKELY_IF(GetEntity().has<TComponent>(flecs::Wildcard))
 		{
-			TraitHolder
-				= GetEntity()
-					.target_for<TComponent>(flecs::ChildOf);
+			TraitHolder = GetEntity().target_for<TComponent>(flecs::ChildOf);
 
 			if LIKELY_IF(TraitHolder.IsValid())
 			{
@@ -1236,9 +1238,8 @@ private:
 
 		if LIKELY_IF(GetEntity().has(ObtainComponentTypeStruct(StructType), flecs::Wildcard))
 		{
-			TraitHolder
-				= GetEntity()
-					.target_for(ObtainComponentTypeStruct(StructType), flecs::ChildOf);
+			TraitHolder = GetEntity().target_for(
+					ObtainComponentTypeStruct(StructType), flecs::ChildOf);
 
 			if LIKELY_IF(TraitHolder.IsValid())
 			{
@@ -1255,6 +1256,15 @@ private:
 		
 		return TraitHolder;
 	}
+
+public:
+
+	#if WITH_EDITORONLY_DATA
+
+	UPROPERTY()
+	FName DisplayName;
+
+	#endif // WITH_EDITORONLY_DATA
 	
 }; // struct FFlecsEntityHandle
 

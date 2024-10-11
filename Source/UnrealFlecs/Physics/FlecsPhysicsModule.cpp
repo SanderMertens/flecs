@@ -144,7 +144,7 @@ void UFlecsPhysicsModule::PhysicsComponentObservers()
 			const UWorld* OuterWorld = World.get<FUWorldPtrComponent>()->GetWorld();
 			solid_check(IsValid(OuterWorld));
 
-			FFlecsPhysicsSceneComponent* PhysicsSceneComponent = World.get_mut<FFlecsPhysicsSceneComponent>();
+			const FFlecsPhysicsSceneComponent* PhysicsSceneComponent = World.get_mut<FFlecsPhysicsSceneComponent>();
 			solid_check(PhysicsSceneComponent);
 			
 			FActorCreationParams Params;
