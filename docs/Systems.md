@@ -637,7 +637,7 @@ world.system<Game>("PrintTime")
 
 ```cs
 world.Routine<Game>("PrintTime")
-    .TermAt(1).Singleton()
+    .TermAt(0).Singleton()
     .Kind(Ecs.OnUpdate)
     .Each((ref Game g) =>
     {
