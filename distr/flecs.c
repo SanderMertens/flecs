@@ -14567,8 +14567,6 @@ void flecs_multi_observer_invoke(
 
         ecs_table_unlock(it->world, table);
         flecs_stage_set_system(world->stages[0], old_system);
-        
-        return;
     } else {
         /* While the observer query was strictly speaking evaluated, it's more
          * useful to measure how often the observer was actually invoked. */
@@ -14577,6 +14575,40 @@ void flecs_multi_observer_invoke(
 
 done:
     return;
+}
+
+static
+void flecs_multi_observer_invoke_no_query(
+    ecs_iter_t *it) 
+{
+    ecs_observer_t *o = it->ctx;
+    flecs_poly_assert(o, ecs_observer_t);
+
+    ecs_world_t *world = it->real_world;
+    ecs_table_t *table = it->table;
+    ecs_iter_t user_it = *it;
+
+    user_it.ctx = o->ctx;
+    user_it.callback_ctx = o->callback_ctx;
+    user_it.run_ctx = o->run_ctx;
+    user_it.param = it->param;
+    user_it.callback = o->callback;
+    user_it.system = o->entity;
+    user_it.event = it->event;
+
+    ecs_entity_t old_system = flecs_stage_set_system(
+        world->stages[0], o->entity);
+    ecs_table_lock(it->world, table);
+
+    if (o->run) {
+        user_it.next = flecs_default_next_callback;
+        o->run(&user_it);
+    } else {
+        user_it.callback(&user_it);
+    }
+
+    ecs_table_unlock(it->world, table);
+    flecs_stage_set_system(world->stages[0], old_system);
 }
 
 /* For convenience, so applications can (in theory) use a single run callback 
@@ -14620,7 +14652,7 @@ void flecs_observer_yield_existing(
 {
     ecs_run_action_t run = o->run;
     if (!run) {
-        run = flecs_multi_observer_invoke;
+        run = flecs_multi_observer_invoke_no_query;
     }
 
     ecs_run_aperiodic(world, EcsAperiodicEmptyTables);
