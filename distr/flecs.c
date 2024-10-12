@@ -22704,7 +22704,7 @@ http_conn_res_t http_init_connection(
 }
 
 static
-void http_accept_connections(
+int http_accept_connections(
     ecs_http_server_t* srv, 
     const struct sockaddr* addr, 
     ecs_size_t addr_len) 
@@ -22718,7 +22718,7 @@ void http_accept_connections(
         if (result) {
             ecs_warn("http: WSAStartup failed with GetLastError = %d\n", 
                 GetLastError());
-            return;
+            return 0;
         }
     } else {
         http_close(&testsocket);
@@ -22728,6 +22728,8 @@ void http_accept_connections(
     /* Resolve name + port (used for logging) */
     char addr_host[256];
     char addr_port[20];
+
+    int ret = 0; /* 0 = ok, 1 = port occupied */
 
     ecs_http_socket_t sock = HTTP_SOCKET_INVALID;
     ecs_assert(srv->sock == HTTP_SOCKET_INVALID, ECS_INTERNAL_ERROR, NULL);
@@ -22771,8 +22773,15 @@ void http_accept_connections(
 
         result = http_bind(sock, addr, addr_len);
         if (result) {
-            ecs_err("http: failed to bind to '%s:%s': %s", 
-                addr_host, addr_port, ecs_os_strerror(errno));
+            if (errno == EADDRINUSE) {
+                ret = 1;
+                ecs_warn("http: address '%s:%s' in use, retrying with port %u", 
+                    addr_host, addr_port, srv->port + 1);
+            } else {
+                ecs_err("http: failed to bind to '%s:%s': %s", 
+                    addr_host, addr_port, ecs_os_strerror(errno));
+            }
+
             ecs_os_mutex_unlock(srv->lock);
             goto done;
         }
@@ -22824,6 +22833,8 @@ done:
 
     ecs_trace("http: no longer accepting connections on '%s:%s'",
         addr_host, addr_port);
+
+    return ret;
 }
 
 static
@@ -22832,6 +22843,9 @@ void* http_server_thread(void* arg) {
     struct sockaddr_in addr;
     ecs_os_zeromem(&addr);
     addr.sin_family = AF_INET;
+
+    int retries = 0;
+retry:
     addr.sin_port = htons(srv->port);
 
     if (!srv->ipaddr) {
@@ -22840,7 +22854,18 @@ void* http_server_thread(void* arg) {
         inet_pton(AF_INET, srv->ipaddr, &(addr.sin_addr));
     }
 
-    http_accept_connections(srv, (struct sockaddr*)&addr, ECS_SIZEOF(addr));
+    if (http_accept_connections(
+        srv, (struct sockaddr*)&addr, ECS_SIZEOF(addr)) == 1) 
+    {
+        srv->port ++;
+        retries ++;
+        if (retries < 10) {
+            goto retry;
+        } else {
+            ecs_err("http: failed to connect (retried 10 times)");
+        }
+    }
+
     return NULL;
 }
 
