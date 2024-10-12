@@ -1511,7 +1511,7 @@ move_sys.run();
 
 ```cs
 // Use Each() function that iterates each individual entity
-Routine moveSys = world.Routine<Position, Velocity>()
+System<Position, Velocity> moveSys = world.System<Position, Velocity>()
     .Each((Entity e, ref Position p, ref Velocity v) =>
     {
         p.X += v.X * it.DeltaTime();
@@ -1670,9 +1670,9 @@ world.progress();
 <li><b class="tab-title">C#</b>
 
 ```cs
-world.Routine<Position, Velocity>("Move").Kind(Ecs.OnUpdate).Each( ... );
-world.Routine<Position, Transform>("Transform").Kind(Ecs.PostUpdate).Each( ... );
-world.Routine<Transform, Mesh>("Render").Kind(Ecs.OnStore).Each( ... );
+world.System<Position, Velocity>("Move").Kind(Ecs.OnUpdate).Each( ... );
+world.System<Position, Transform>("Transform").Kind(Ecs.PostUpdate).Each( ... );
+world.System<Transform, Mesh>("Render").Kind(Ecs.OnStore).Each( ... );
 
 world.Progress();
 ```
