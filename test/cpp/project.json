@@ -682,7 +682,12 @@
                 "add_to_match_from_staged_query",
                 "add_to_match_from_staged_query_readonly_threaded",
                 "pair_with_variable_src",
-                "pair_with_variable_src_no_row_fields"
+                "pair_with_variable_src_no_row_fields",
+                "iter_targets",
+                "iter_targets_2nd_field",
+                "iter_targets_field_out_of_range",
+                "iter_targets_field_not_a_pair",
+                "iter_targets_field_not_set"
             ]
         }, {
             "id": "QueryBuilder",

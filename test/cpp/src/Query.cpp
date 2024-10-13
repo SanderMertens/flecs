@@ -3125,3 +3125,148 @@ void Query_pair_with_variable_src_no_row_fields(void) {
 
     test_int(isPresent, 7);
 }
+
+void Query_iter_targets(void) {
+    flecs::world world;
+
+    flecs::entity Likes = world.entity();
+    flecs::entity pizza = world.entity();
+    flecs::entity salad = world.entity();
+    flecs::entity alice = world.entity().add(Likes, pizza).add(Likes, salad);
+
+    auto q = world.query_builder()
+        .with(Likes, flecs::Any)
+        .build();
+
+    int count = 0, tgt_count = 0;
+
+    q.each([&](flecs::iter& it, size_t row) {
+        flecs::entity e = it.entity(row);
+        test_assert(e == alice);
+
+        it.targets(0, [&](flecs::entity tgt) {
+            if (tgt_count == 0) {
+                test_assert(tgt == pizza);
+            }
+            if (tgt_count == 1) {
+                test_assert(tgt == salad);
+            }
+            tgt_count ++;
+        });
+
+        count ++;
+    });
+
+    test_int(count, 1);
+    test_int(tgt_count, 2);
+}
+
+void Query_iter_targets_2nd_field(void) {
+    flecs::world world;
+
+    flecs::entity Likes = world.entity();
+    flecs::entity pizza = world.entity();
+    flecs::entity salad = world.entity();
+    flecs::entity alice = world.entity()
+        .add<Position>()
+        .add(Likes, pizza).add(Likes, salad);
+
+    auto q = world.query_builder()
+        .with<Position>()
+        .with(Likes, flecs::Any)
+        .build();
+
+    int count = 0, tgt_count = 0;
+
+    q.each([&](flecs::iter& it, size_t row) {
+        flecs::entity e = it.entity(row);
+        test_assert(e == alice);
+
+        it.targets(1, [&](flecs::entity tgt) {
+            if (tgt_count == 0) {
+                test_assert(tgt == pizza);
+            }
+            if (tgt_count == 1) {
+                test_assert(tgt == salad);
+            }
+            tgt_count ++;
+        });
+
+        count ++;
+    });
+
+    test_int(count, 1);
+    test_int(tgt_count, 2);
+}
+
+void Query_iter_targets_field_out_of_range(void) {
+    install_test_abort();
+
+    flecs::world world;
+
+    flecs::entity Likes = world.entity();
+    flecs::entity pizza = world.entity();
+    flecs::entity salad = world.entity();
+    flecs::entity alice = world.entity().add(Likes, pizza).add(Likes, salad);
+
+    auto q = world.query_builder()
+        .with(Likes, flecs::Any)
+        .build();
+
+    q.each([&](flecs::iter& it, size_t row) {
+        flecs::entity e = it.entity(row);
+        test_assert(e == alice);
+
+        test_expect_abort();
+        it.targets(1, [&](flecs::entity tgt) { });
+    });
+}
+
+void Query_iter_targets_field_not_a_pair(void) {
+    install_test_abort();
+
+    flecs::world world;
+
+    flecs::entity Likes = world.entity();
+    flecs::entity pizza = world.entity();
+    flecs::entity salad = world.entity();
+    flecs::entity alice = world.entity()
+        .add<Position>()
+        .add(Likes, pizza).add(Likes, salad);
+
+    auto q = world.query_builder()
+        .with<Position>()
+        .build();
+
+    q.each([&](flecs::iter& it, size_t row) {
+        flecs::entity e = it.entity(row);
+        test_assert(e == alice);
+
+        test_expect_abort();
+        it.targets(1, [&](flecs::entity tgt) { });
+    });
+}
+
+void Query_iter_targets_field_not_set(void) {
+    install_test_abort();
+
+    flecs::world world;
+
+    flecs::entity Likes = world.entity();
+    flecs::entity alice = world.entity()
+        .add<Position>();
+
+    auto q = world.query_builder()
+        .with<Position>()
+        .with(Likes, flecs::Any).optional()
+        .build();
+
+    q.each([&](flecs::iter& it, size_t row) {
+        flecs::entity e = it.entity(row);
+        test_assert(e == alice);
+        test_assert(!it.is_set(1));
+
+        test_expect_abort();
+        it.targets(1, [&](flecs::entity tgt) { });
+    });
+}
