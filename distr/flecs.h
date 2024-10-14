@@ -22836,7 +22836,7 @@ public:
      * @param func Callback invoked for each target
      */
     template <typename Func>
-    void targets(int index, const Func& func);
+    void targets(int8_t index, const Func& func);
 
     /** Free iterator resources.
      * This operation only needs to be called when the iterator is not iterated
@@ -32532,7 +32532,7 @@ inline flecs::entity iter::get_var(const char *name) const {
 }
 
 template <typename Func>
-void iter::targets(int index, const Func& func) {
+void iter::targets(int8_t index, const Func& func) {
     ecs_assert(iter_->table != nullptr, ECS_INVALID_OPERATION, NULL);
     ecs_assert(index < iter_->field_count, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(ecs_field_is_set(iter_, index), ECS_INVALID_PARAMETER, NULL);

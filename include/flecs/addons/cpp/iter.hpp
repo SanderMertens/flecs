@@ -380,7 +380,7 @@ public:
      * @param func Callback invoked for each target
      */
     template <typename Func>
-    void targets(int index, const Func& func);
+    void targets(int8_t index, const Func& func);
 
     /** Free iterator resources.
      * This operation only needs to be called when the iterator is not iterated
