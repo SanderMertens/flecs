@@ -374,6 +374,14 @@ public:
         iter_->callback(iter_);
     }
 
+    /** Iterate targets for pair field.
+     * 
+     * @param index The field index.
+     * @param func Callback invoked for each target
+     */
+    template <typename Func>
+    void targets(int index, const Func& func);
+
     /** Free iterator resources.
      * This operation only needs to be called when the iterator is not iterated
      * until completion (e.g. the last call to next() did not return false).

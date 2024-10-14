@@ -659,6 +659,11 @@ void Query_add_to_match_from_staged_query(void);
 void Query_add_to_match_from_staged_query_readonly_threaded(void);
 void Query_pair_with_variable_src(void);
 void Query_pair_with_variable_src_no_row_fields(void);
+void Query_iter_targets(void);
+void Query_iter_targets_2nd_field(void);
+void Query_iter_targets_field_out_of_range(void);
+void Query_iter_targets_field_not_a_pair(void);
+void Query_iter_targets_field_not_set(void);
 
 // Testsuite 'QueryBuilder'
 void QueryBuilder_setup(void);
@@ -3932,6 +3937,26 @@ bake_test_case Query_testcases[] = {
     {
         "pair_with_variable_src_no_row_fields",
         Query_pair_with_variable_src_no_row_fields
+    },
+    {
+        "iter_targets",
+        Query_iter_targets
+    },
+    {
+        "iter_targets_2nd_field",
+        Query_iter_targets_2nd_field
+    },
+    {
+        "iter_targets_field_out_of_range",
+        Query_iter_targets_field_out_of_range
+    },
+    {
+        "iter_targets_field_not_a_pair",
+        Query_iter_targets_field_not_a_pair
+    },
+    {
+        "iter_targets_field_not_set",
+        Query_iter_targets_field_not_set
     }
 };
 
@@ -6798,7 +6823,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        111,
+        116,
         Query_testcases
     },
     {
