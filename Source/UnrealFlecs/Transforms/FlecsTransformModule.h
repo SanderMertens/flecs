@@ -4,7 +4,17 @@
 
 #include "CoreMinimal.h"
 #include "Modules/FlecsModuleInterface.h"
+#include "Properties/FlecsComponentProperties.h"
 #include "FlecsTransformModule.generated.h"
+
+USTRUCT(BlueprintType)
+struct FFlecsDirtyTransformTrait final
+{
+	GENERATED_BODY()
+}; // struct FFlecsDirtyTransform
+
+REGISTER_FLECS_COMPONENT_PROPERTIES(FFlecsDirtyTransformTrait,
+	{ flecs::PairIsTag }, {});
 
 UCLASS(BlueprintType, EditInlineNew, DefaultToInstanced)
 class UNREALFLECS_API UFlecsTransformModule final : public UObject, public IFlecsModuleInterface

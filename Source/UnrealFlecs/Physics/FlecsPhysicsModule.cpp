@@ -27,25 +27,25 @@ void UFlecsPhysicsModule::InitializeModule(UFlecsWorld* InWorld, const FFlecsEnt
 	solid_check(Scene);
 
 	GetFlecsWorld()->RegisterModuleDependency<UFlecsTickerModule>
-	(this, [&](UFlecsTickerModule* InModuleObject,
-		UFlecsWorld* InFlecsWorld, FFlecsEntityHandle& InTickerEntity)
-	{
-		GetFlecsWorld()->SetSingleton<FFlecsPhysicsSceneComponent>(FFlecsPhysicsSceneComponent{ Scene });
-
-		const UFlecsTickerModule* TickerModule = GetFlecsWorld()->GetModule<UFlecsTickerModule>();
-		solid_check(IsValid(TickerModule));
-		
-		Scene->GetSolver()->EnableAsyncMode(1.0 / TickerModule->GetTickerRate());
-		Scene->GetSolver()->SetIsDeterministic(true);
-		Scene->GetSolver()->SetAsyncPhysicsBlockMode(Chaos::BlockForBestInterpolation);
-
-		if (bAllowResimulation)
+		(this, [&](UFlecsTickerModule* InModuleObject,
+			UFlecsWorld* InFlecsWorld, FFlecsEntityHandle& InTickerEntity)
 		{
-			ResimulationHandlers();
-		}
+			InFlecsWorld->SetSingleton<FFlecsPhysicsSceneComponent>(FFlecsPhysicsSceneComponent{ Scene });
 
-		PhysicsComponentObservers();
-	});
+			const UFlecsTickerModule* TickerModule = InFlecsWorld->GetModule<UFlecsTickerModule>();
+			solid_check(IsValid(TickerModule));
+			
+			Scene->GetSolver()->EnableAsyncMode(1.0 / TickerModule->GetTickerRate());
+			Scene->GetSolver()->SetIsDeterministic(true);
+			Scene->GetSolver()->SetAsyncPhysicsBlockMode(Chaos::BlockForBestInterpolation);
+
+			if (bAllowResimulation)
+			{
+				ResimulationHandlers();
+			}
+
+			PhysicsComponentObservers();
+		});
 }
 
 void UFlecsPhysicsModule::DeinitializeModule(UFlecsWorld* InWorld)
@@ -96,7 +96,7 @@ void UFlecsPhysicsModule::ResimulationHandlers()
 			return;
 		}
 
-		UFlecsWorld* FlecsWorld = GetFlecsWorld();
+		const UFlecsWorld* FlecsWorld = GetFlecsWorld();
 		solid_checkf(IsValid(FlecsWorld), TEXT("FlecsWorld is invalid"));
 
 		if UNLIKELY_IF(!FlecsWorld->GetWorld()->GetPhysicsScene())
@@ -133,8 +133,8 @@ void UFlecsPhysicsModule::PhysicsComponentObservers()
 	AddPhysicsComponentObserver = GetFlecsWorld()->CreateObserver<FFlecsPhysicsComponent,
 		const FFlecsTransformComponent>(TEXT("PhysicsComponentObserver"))
 		.event(flecs::OnAdd)
+		.term_at(1).filter()
 		.yield_existing()
-		.cached()
 		.each([](flecs::iter& Iter, size_t Index, FFlecsPhysicsComponent& PhysicsComponent,
 			const FFlecsTransformComponent& Transform)
 		{
@@ -162,6 +162,7 @@ void UFlecsPhysicsModule::PhysicsComponentObservers()
 			bool bWrote = FPhysicsCommand::ExecuteWrite(PhysicsComponent.PhysicsActorHandle,
 				[&](FPhysicsActorHandle& Actor)
 			{
+					
 			});
 
 			

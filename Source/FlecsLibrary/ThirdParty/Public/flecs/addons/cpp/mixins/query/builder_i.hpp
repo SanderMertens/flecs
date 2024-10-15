@@ -154,69 +154,108 @@ struct query_builder_i : term_builder_i<Base> {
         *this->term_ = term;
         return *this;
     }
-    
-    Base& begin_scope_traits()
-    {
-        this->assert_term();
 
-        old_term_ = this->term_;
-
-        this->with(old_term_, flecs::ChildOf);
-        this->src("$child");
-        
-        return *this;
-    }
-
-    Base& end_scope_traits()
-    {
-        // Ensure we have a valid term
-        this->assert_term();
-
-        // Reset the source back to the parent entity
-        this->src("$this");
-
-        *this->term_ = old_term_;
-
-        old_term_ = flecs::term();
-
-        return *this;
-    }
-
-    template <typename TTrait>
+    template <typename TComponent, typename TTrait>
     Base& with_trait() {
-        this->assert_trait_scope();
-
-        this->with<TTrait>();
-        this->src("$child");
-        
+        this->term();
+        this->template first<TComponent>().second(flecs::ChildOf).inout_none().src("$childtrait").filter();
+        this->with<TTrait>().src("$childtrait");
         return *this;
     }
 
-    Base& with_trait(id_t id) {
-        this->assert_trait_scope();
-
-        this->with(id);
-        this->src("$child");
-        
+    template <typename TComponent>
+    Base& with_trait(const char *trait) {
+        this->term();
+        this->template first<TComponent>().second(flecs::ChildOf).inout_none().src("$childtrait");
+        this->with(trait).src("$childtrait");
         return *this;
     }
 
-    template <typename TTrait>
+    template <typename TComponent>
+    Base& with_trait(id_t trait) {
+        this->term();
+        this->template first<TComponent>().second(flecs::ChildOf).inout_none().src("$childtrait");
+        this->with(trait).src("$childtrait");
+        return *this;
+    }
+
+    Base& with_trait(const char *component, const char *trait) {
+        this->term();
+        this->first(component).second(flecs::ChildOf).inout_none().src("$childtrait");
+        this->with(trait).src("$childtrait");
+        return *this;
+    }
+
+    Base& with_trait(const char *component, id_t trait) {
+        this->term();
+        this->first(component).second(flecs::ChildOf).inout_none().src("$childtrait");
+        this->with(trait).src("$childtrait");
+        return *this;
+    }
+
+    Base& with_trait(id_t component, const char *trait) {
+        this->term();
+        this->first(component).second(flecs::ChildOf).inout_none().src("$childtrait");
+        this->with(trait).src("$childtrait");
+        return *this;
+    }
+
+    Base& with_trait(id_t component, id_t trait) {
+        this->term();
+        this->first(component).second(flecs::ChildOf).inout_none().src("$childtrait");
+        this->with(trait).src("$childtrait");
+        return *this;
+    }
+
+    template <typename TComponent, typename TTrait>
     Base& without_trait() {
-        this->assert_trait_scope();
-
-        this->without<TTrait>();
-        this->src("$child");
-        
+        this->term();
+        this->template first<TComponent>().second(flecs::ChildOf).inout_none().src("$childtrait");
+        this->without<TTrait>().src("$childtrait");
         return *this;
     }
 
-    Base& without_trait(id_t id) {
-        this->assert_trait_scope();
+    template <typename TComponent>
+    Base& without_trait(const char *trait) {
+        this->term();
+        this->template first<TComponent>().second(flecs::ChildOf).inout_none().src("$childtrait");
+        this->without(trait).src("$childtrait");
+        return *this;
+    }
 
-        this->without(id);
-        this->src("$child");
-        
+    template <typename TComponent>
+    Base& without_trait(id_t trait) {
+        this->term();
+        this->template first<TComponent>().second(flecs::ChildOf).inout_none().src("$childtrait");
+        this->without(trait).src("$childtrait");
+        return *this;
+    }
+
+    Base& without_trait(const char *component, const char *trait) {
+        this->term();
+        this->first(component).second(flecs::ChildOf).inout_none().src("$childtrait");
+        this->without(trait).src("$childtrait");
+        return *this;
+    }
+
+    Base& without_trait(const char *component, id_t trait) {
+        this->term();
+        this->first(component).second(flecs::ChildOf).inout_none().src("$childtrait");
+        this->without(trait).src("$childtrait");
+        return *this;
+    }
+
+    Base& without_trait(id_t component, const char *trait) {
+        this->term();
+        this->first(component).second(flecs::ChildOf).inout_none().src("$childtrait");
+        this->without(trait).src("$childtrait");
+        return *this;
+    }
+
+    Base& without_trait(id_t component, id_t trait) {
+        this->term();
+        this->first(component).second(flecs::ChildOf).inout_none().src("$childtrait");
+        this->without(trait).src("$childtrait");
         return *this;
     }
     
@@ -438,13 +477,6 @@ protected:
     virtual flecs::world_t* world_v() override = 0;
     int32_t term_index_;
     int32_t expr_count_;
-
-    flecs::term old_term_;
-
-    void assert_trait_scope()
-    {
-        ecs_assert(old_term_.id() != 0, ECS_INVALID_PARAMETER, NULL);
-    }
 
 private:
     operator Base&() {

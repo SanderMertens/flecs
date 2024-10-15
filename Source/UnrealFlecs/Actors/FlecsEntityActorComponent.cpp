@@ -31,13 +31,13 @@ void UFlecsEntityActorComponent::InitializeEntity()
 		return;
 	}
 
-	if (!EntityRecord.IsValid())
+	if UNLIKELY_IF(!EntityRecord.IsValid())
 	{
 		UN_LOG(LogFlecsEntity, Error, "Entity Record is not valid!");
 		return;
 	}
 
-	if (WorldName.IsEmpty())
+	if UNLIKELY_IF(WorldName.IsEmpty())
 	{
 		UN_LOG(LogFlecsEntity, Error, "World Name is empty!");
 		return;

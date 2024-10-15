@@ -265,7 +265,7 @@ private:
 			PropertyHandle->NotifyPreChange();
 
 			PropertyHandle->EnumerateRawData(
-				[&](void* RawData, MAYBE_UNUSED const int32 DataIndex, \
+				[&](void* RawData, MAYBE_UNUSED const int32 DataIndex,
 					MAYBE_UNUSED const int32 NumDatas)
 				{
 					if (RawData == nullptr)

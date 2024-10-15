@@ -216,11 +216,24 @@ public:
 				*Data = FName(String);
 			});
 
+		World.component<FText>()
+			.opaque(flecs::String)
+			.serialize([](const flecs::serializer* Serializer, const FText* Data)
+			{
+				auto* String = Data->ToString().GetCharArray().GetData();
+				return Serializer->value(flecs::String, String);
+			})
+			.assign_string([](FText* Data, const char* String)
+			{
+				*Data = FText::FromString(String);
+			});
+
 		World.component<FFlecsGameplayTagEntityComponent>()
 			.opaque(flecs::Entity)
 			.serialize([](const flecs::serializer* Serializer, const FFlecsGameplayTagEntityComponent* Data)
 			{
-				const flecs::entity_t TagEntity = ecs_lookup(Serializer->world, StringCast<char>(*Data->Tag.ToString()).Get());
+				const flecs::entity_t TagEntity = ecs_lookup(Serializer->world,
+					StringCast<char>(*Data->Tag.ToString()).Get());
 				return Serializer->value(flecs::Entity, &TagEntity);
 			});
 		
@@ -232,7 +245,6 @@ public:
 		
 		CreateObserver<flecs::_::type_impl_struct_event_info>(TEXT("StructComponentObserver"))
 				.with_symbol_component()
-				.cached()
 				.event(flecs::OnSet)
 				.yield_existing()
 				.each([&](flecs::entity InEntity, flecs::_::type_impl_struct_event_info InEventInfo)
@@ -265,7 +277,8 @@ public:
 
 						UN_LOGF(LogFlecsWorld, Log,
 							"Component properties %s found with %d entities and %d component properties",
-							*EntityHandle.GetSymbol(), Properties->Entities.size(), Properties->ComponentPropertyStructs.Num());
+							*EntityHandle.GetSymbol(), Properties->Entities.size(),
+							Properties->ComponentPropertyStructs.Num());
 					}
 					#if WITH_EDITOR
 					else
@@ -321,7 +334,6 @@ public:
 			.build();
 
 		CreateObserver<const FFlecsUObjectComponent&, const FFlecsModuleComponent&>(TEXT("AddModuleComponentObserver"))
-			.cached()
 			.with<FFlecsModuleComponent>()
 			.with<FFlecsUObjectComponent>().filter()
 			.event(flecs::OnAdd)
@@ -350,7 +362,6 @@ public:
 			});
 
 		CreateObserver(TEXT("RemoveModuleComponentObserver"))
-			.cached()
 			.event(flecs::OnRemove)
 			.with<FFlecsModuleComponent>().inout_none()
 			.with<FFlecsUObjectComponent>().filter().read()
@@ -913,12 +924,6 @@ public:
 		return World.make_alive(InId.GetFlecsId());
 	}
 
-	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
-	FFlecsSystem CreateSystem(const FString& InName) const
-	{
-		return CreateSystem<>(InName);
-	}
-
 	template <typename ...TComponents>
 	FORCEINLINE_DEBUGGABLE NO_DISCARD FFlecsSystem CreateSystem(const FString& InName) const
 	{
@@ -1214,7 +1219,7 @@ public:
 
 		return RegisterScriptStruct(ScriptStruct);
 	}
-	
+
 	template <typename ...TComponents>
 	FORCEINLINE_DEBUGGABLE flecs::observer_builder<TComponents...> CreateObserver(const FString& Name) const
 	{
@@ -1227,7 +1232,8 @@ public:
 	}
 
 	template <typename ...TComponents, typename ...TArgs>
-	FORCEINLINE_DEBUGGABLE flecs::observer_builder<TComponents...> CreateObserver(const FFlecsEntityHandle& InEntity, TArgs&&... Args) const
+	FORCEINLINE_DEBUGGABLE flecs::observer_builder<TComponents...> CreateObserver(
+		const FFlecsEntityHandle& InEntity, TArgs&&... Args) const
 	{
 		return World.observer<TComponents...>(InEntity.GetEntity(), std::forward<TArgs>(Args)...);
 	}
