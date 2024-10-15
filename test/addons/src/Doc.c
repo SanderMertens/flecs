@@ -63,6 +63,19 @@ void Doc_get_set_link(void) {
     ecs_fini(world);
 }
 
+void Doc_get_set_uuid(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, MyTag);
+
+    ecs_doc_set_uuid(world, MyTag, "81f50b40-09ff-4ce0-a388-4a52a14052c7");
+
+    test_assert( ecs_has_pair(world, MyTag, ecs_id(EcsDocDescription), EcsDocUuid));
+    test_str( ecs_doc_get_uuid(world, MyTag), "81f50b40-09ff-4ce0-a388-4a52a14052c7");
+
+    ecs_fini(world);
+}
+
 void Doc_set_name_nullptr(void) {
     ecs_world_t *world = ecs_init();
 
@@ -129,6 +142,20 @@ void Doc_set_color_nullptr(void) {
 
     ecs_doc_set_color(world, e, NULL);
     test_assert( !ecs_has_pair(world, e, ecs_id(EcsDocDescription), EcsDocColor));
+
+    ecs_fini(world);
+}
+
+void Doc_set_uuid_nullptr(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t e = ecs_new(world);
+
+    ecs_doc_set_uuid(world, e, "foo");
+    test_assert( ecs_has_pair(world, e, ecs_id(EcsDocDescription), EcsDocUuid));
+
+    ecs_doc_set_uuid(world, e, NULL);
+    test_assert( !ecs_has_pair(world, e, ecs_id(EcsDocDescription), EcsDocUuid));
 
     ecs_fini(world);
 }
