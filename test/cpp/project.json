@@ -946,7 +946,11 @@
                 "other_table_w_pair_wildcard",
                 "on_add_inherited",
                 "on_set_inherited",
-                "on_remove_inherited"
+                "on_remove_inherited",
+                "on_set_after_remove_override",
+                "on_set_after_remove_override_create_observer_before",
+                "on_set_w_override_after_delete",
+                "on_set_w_override_after_clear"
             ]
         }, {
             "id": "ComponentLifecycle",
