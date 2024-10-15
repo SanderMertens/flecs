@@ -2,6 +2,7 @@
 
 static
 void OnPosition(ecs_iter_t *it) {
+    test_assert(ecs_field(it, Position, 0) != NULL);
     probe_iter(it);
 }
 
@@ -454,10 +455,8 @@ void ObserverOnSet_on_set_after_remove_override(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_COMPONENT(world, Position);
-    ECS_COMPONENT(world, Velocity);
 
     ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
-    ecs_add_pair(world, ecs_id(Velocity), EcsOnInstantiate, EcsInherit);
 
     ECS_ENTITY(world, Base, Position);
     ECS_OBSERVER(world, OnPosition, EcsOnSet, Position);
@@ -481,6 +480,106 @@ void ObserverOnSet_on_set_after_remove_override(void) {
     test_int(ctx.e[0], e);
     test_int(ctx.c[0][0], ecs_id(Position));
     test_int(ctx.s[0][0], Base);
+
+    ecs_fini(world);
+}
+
+void ObserverOnSet_on_set_after_remove_override_isa_before_add(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+
+    ECS_ENTITY(world, Base, Position);
+
+    Probe ctx = { 0 };
+    ecs_set_ctx(world, &ctx, NULL);
+
+    ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, Base);
+    ecs_add(world, e, Position);
+
+    ECS_OBSERVER(world, OnPosition, EcsOnSet, Position);
+
+    ecs_remove(world, e, Position);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, OnPosition);
+    test_int(ctx.term_count, 1);
+    test_null(ctx.param);
+
+    test_int(ctx.e[0], e);
+    test_int(ctx.c[0][0], ecs_id(Position));
+    test_int(ctx.s[0][0], Base);
+
+    ecs_fini(world);
+}
+
+void ObserverOnSet_on_set_w_override_after_delete(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+
+    ECS_ENTITY(world, Base, Position);
+
+    Probe ctx = { 0 };
+    ecs_set_ctx(world, &ctx, NULL);
+
+    ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, Base);
+    ecs_add(world, e, Position);
+
+    ECS_OBSERVER(world, OnPosition, EcsOnSet, Position);
+
+    ecs_delete(world, e);
+    test_int(ctx.invoked, 0);
+
+    ecs_fini(world);
+}
+
+void ObserverOnSet_on_set_w_override_after_clear(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+
+    ECS_ENTITY(world, Base, Position);
+
+    Probe ctx = { 0 };
+    ecs_set_ctx(world, &ctx, NULL);
+
+    ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, Base);
+    ecs_add(world, e, Position);
+
+    ECS_OBSERVER(world, OnPosition, EcsOnSet, Position);
+
+    ecs_clear(world, e);
+    test_int(ctx.invoked, 0);
+
+    ecs_fini(world);
+}
+
+void ObserverOnSet_on_set_w_override_after_delete_w_ecs_init(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_add_pair(world, ecs_id(Position), EcsOnInstantiate, EcsInherit);
+
+    ECS_ENTITY(world, Base, Position);
+
+    Probe ctx = { 0 };
+    ecs_set_ctx(world, &ctx, NULL);
+
+    ecs_entity_t e = ecs_new_w_pair(world, EcsIsA, Base);
+    ecs_add(world, e, Position);
+
+    ECS_OBSERVER(world, OnPosition, EcsOnSet, Position);
+
+    ecs_delete(world, e);
+    test_int(ctx.invoked, 0);
 
     ecs_fini(world);
 }

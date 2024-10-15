@@ -914,6 +914,10 @@ void Observer_other_table_w_pair_wildcard(void);
 void Observer_on_add_inherited(void);
 void Observer_on_set_inherited(void);
 void Observer_on_remove_inherited(void);
+void Observer_on_set_after_remove_override(void);
+void Observer_on_set_after_remove_override_create_observer_before(void);
+void Observer_on_set_w_override_after_delete(void);
+void Observer_on_set_w_override_after_clear(void);
 
 // Testsuite 'ComponentLifecycle'
 void ComponentLifecycle_ctor_on_add(void);
@@ -4938,6 +4942,22 @@ bake_test_case Observer_testcases[] = {
     {
         "on_remove_inherited",
         Observer_on_remove_inherited
+    },
+    {
+        "on_set_after_remove_override",
+        Observer_on_set_after_remove_override
+    },
+    {
+        "on_set_after_remove_override_create_observer_before",
+        Observer_on_set_after_remove_override_create_observer_before
+    },
+    {
+        "on_set_w_override_after_delete",
+        Observer_on_set_w_override_after_delete
+    },
+    {
+        "on_set_w_override_after_clear",
+        Observer_on_set_w_override_after_clear
     }
 };
 
@@ -6846,7 +6866,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        55,
+        59,
         Observer_testcases
     },
     {

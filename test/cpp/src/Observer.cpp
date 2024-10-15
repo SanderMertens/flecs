@@ -1370,3 +1370,107 @@ void Observer_on_remove_inherited(void) {
     test_int(count, 1);
     test_assert(i == matched);
 }
+
+void Observer_on_set_after_remove_override(void) {
+    flecs::world ecs;
+
+    ecs.component<Position>().add(flecs::OnInstantiate, flecs::Inherit);
+
+    auto base = ecs.prefab()
+        .set(Position{1, 2});
+
+    auto e1 = ecs.entity().is_a(base)
+        .set(Position{10, 20});
+
+    int count = 0;
+
+    ecs.observer<Position>()
+        .event(flecs::OnSet)
+        .each([&](flecs::iter& it, size_t row, Position& p) {
+            test_assert(it.entity(row) == e1);
+            test_assert(it.src(0) == base);
+            test_int(p.x, 1);
+            test_int(p.y, 2);
+            count ++;
+        });
+
+    e1.remove<Position>();
+
+    test_int(count, 1);
+}
+
+void Observer_on_set_after_remove_override_create_observer_before(void) {
+    flecs::world ecs;
+
+    ecs.component<Position>().add(flecs::OnInstantiate, flecs::Inherit);
+
+    int count = 0;
+
+    flecs::entity base = ecs.prefab();
+    flecs::entity e1 = ecs.entity();
+
+    ecs.observer<Position>()
+        .event(flecs::OnSet)
+        .each([&](flecs::iter& it, size_t row, Position& p) {
+            test_assert(it.entity(row) == e1);
+            test_assert(it.src(0) == base);
+            count ++;
+        });
+
+    base.set(Position{1, 2});
+    e1.add<Position>().is_a(base);
+
+    test_int(count, 0);
+
+    e1.remove<Position>();
+
+    test_int(count, 1);
+}
+
+void Observer_on_set_w_override_after_delete(void) {
+    flecs::world ecs;
+
+    ecs.component<Position>().add(flecs::OnInstantiate, flecs::Inherit);
+
+    auto base = ecs.prefab()
+        .set(Position{1, 2});
+
+    auto e1 = ecs.entity().is_a(base)
+        .set(Position{10, 20});
+
+    int count = 0;
+
+    ecs.observer<Position>()
+        .event(flecs::OnSet)
+        .each([&](flecs::iter& it, size_t row, Position& p) {
+            count ++;
+        });
+
+    e1.destruct();
+
+    test_int(count, 0);
+}
+
+void Observer_on_set_w_override_after_clear(void) {
+    flecs::world ecs;
+
+    ecs.component<Position>().add(flecs::OnInstantiate, flecs::Inherit);
+
+    auto base = ecs.prefab()
+        .set(Position{1, 2});
+
+    auto e1 = ecs.entity().is_a(base)
+        .set(Position{10, 20});
+
+    int count = 0;
+
+    ecs.observer<Position>()
+        .event(flecs::OnSet)
+        .each([&](flecs::iter& it, size_t row, Position& p) {
+            count ++;
+        });
+
+    e1.clear();
+
+    test_int(count, 0);
+}
