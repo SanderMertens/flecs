@@ -232,14 +232,6 @@ struct opaque {
         return *this;
     }
 
-    /** Check if value is null */
-    opaque& is_null(bool (*func)(const T *src)) {
-        this->desc.type.is_null =
-            reinterpret_cast<decltype(
-                this->desc.type.is_null)>(func);
-        return *this;
-    }    
-
     ~opaque() {
         if (world) {
             ecs_opaque_init(world, &desc);

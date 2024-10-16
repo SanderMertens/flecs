@@ -50245,9 +50245,18 @@ bool ecs_meta_get_bool(
     case EcsOpBitmask: return *(ecs_u32_t*)ptr != 0;
     case EcsOpEntity: return *(ecs_entity_t*)ptr != 0;
     case EcsOpId: return *(ecs_id_t*)ptr != 0;
+    case EcsOpOpaque: {
+        /* If opaque type knows how to convert to bool, retrieve it. 
+         Otherwise, fallback to default case (error). */
+        const EcsOpaque *opaque = ecs_get(cursor->world, op->type, EcsOpaque);
+        if(opaque && opaque->get_bool) {
+            return opaque->get_bool(ptr);
+        }
+        /* Not a compatible opaque type, so fall through */
+    }
+    /* fall through */
     case EcsOpArray:
     case EcsOpVector:
-    case EcsOpOpaque:
     case EcsOpPush:
     case EcsOpPop:
     case EcsOpScope:
@@ -50272,9 +50281,18 @@ char ecs_meta_get_char(
     switch(op->kind) {
     case EcsOpChar: 
         return *(ecs_char_t*)ptr != 0;
+    case EcsOpOpaque: {
+        /* If opaque type knows how to convert to char, retrieve it. 
+         Otherwise, fallback to default case (error). */
+        const EcsOpaque *opaque = ecs_get(cursor->world, op->type, EcsOpaque);
+        if(opaque && opaque->get_char) {
+            return opaque->get_char(ptr);
+        }
+        /* Not a compatible opaque type, so fall through */
+    }
+    /* fall through */
     case EcsOpArray:
     case EcsOpVector:
-    case EcsOpOpaque:
     case EcsOpPush:
     case EcsOpPop:
     case EcsOpScope:
@@ -50339,9 +50357,18 @@ int64_t ecs_meta_get_int(
         ecs_throw(ECS_INVALID_PARAMETER,
             "invalid conversion from id to int");
         break;
+    case EcsOpOpaque: {
+        /* If opaque type knows how to convert to int, retrieve it. 
+         Otherwise, fallback to default case (error). */
+        const EcsOpaque *opaque = ecs_get(cursor->world, op->type, EcsOpaque);
+        if(opaque && opaque->get_int) {
+            return opaque->get_int(ptr);
+        }
+        /* Not a compatible opaque type, so fall through */
+    }
+    /* fall through */
     case EcsOpArray:
     case EcsOpVector:
-    case EcsOpOpaque:
     case EcsOpPush:
     case EcsOpPop:
     case EcsOpScope:
@@ -50383,9 +50410,18 @@ uint64_t ecs_meta_get_uint(
     case EcsOpBitmask: return *(const ecs_u32_t*)ptr;
     case EcsOpEntity: return *(const ecs_entity_t*)ptr;
     case EcsOpId: return *(const ecs_id_t*)ptr;
+    case EcsOpOpaque: {
+        /* If opaque type knows how to convert to uint, retrieve it. 
+         Otherwise, fallback to default case (error). */
+        const EcsOpaque *opaque = ecs_get(cursor->world, op->type, EcsOpaque);
+        if(opaque && opaque->get_uint) {
+            return opaque->get_uint(ptr);
+        }
+        /* Not a compatible opaque type, so fall through */
+    }
+    /* fall through */
     case EcsOpArray:
     case EcsOpVector:
-    case EcsOpOpaque:
     case EcsOpPush:
     case EcsOpPop:
     case EcsOpScope:
@@ -50442,7 +50478,7 @@ double flecs_meta_to_float(
         ecs_throw(ECS_INVALID_PARAMETER, "invalid element for float");
         break;
     default:
-        ecs_throw(ECS_INVALID_PARAMETER, "invalid operation");
+       
         break;
     }
 error:
@@ -50455,30 +50491,18 @@ double ecs_meta_get_float(
     ecs_meta_scope_t *scope = flecs_meta_cursor_get_scope(cursor);
     ecs_meta_type_op_t *op = flecs_meta_cursor_get_op(scope);
     void *ptr = flecs_meta_cursor_get_ptr(cursor->world, scope);
-    return flecs_meta_to_float(op->kind, ptr);
-}
-
-/* Handler to get string from opaque (see ecs_meta_get_string below) */
-static int ecs_meta_get_string_value_from_opaque(
-    const struct ecs_serializer_t *ser, ecs_entity_t type, const void *value)
-{
-    if(type != ecs_id(ecs_string_t)) {
-         ecs_err("Expected value call for opaque type to be a string");
-         return -1;
+    if(op->kind == EcsOpOpaque){
+        /* If opaque type knows how to convert to float, retrieve it. 
+         Otherwise, fallback to default case (error). */
+        const EcsOpaque *opaque = ecs_get(cursor->world, op->type, EcsOpaque);
+        if(opaque && opaque->get_float) {
+            return opaque->get_float(ptr);
+        }
+        ecs_throw(ECS_INVALID_PARAMETER, "invalid operation");
+        error:
+        return 0;
     }
-    char*** ctx = (char ***) ser->ctx;
-    *ctx = ECS_CONST_CAST(char**, value);
-    return 0;
-}
-
-/* Handler to get string from opaque (see ecs_meta_get_string below) */
-static int ecs_meta_get_string_member_from_opaque(
-    const struct ecs_serializer_t* ser, const char* name)
-{
-    (void)ser;  // silence unused warning
-    (void)name; // silence unused warning
-    ecs_err("Unexpected member call when serializing string from opaque");
-    return -1;
+    return flecs_meta_to_float(op->kind, ptr);
 }
 
 const char* ecs_meta_get_string(
@@ -50490,21 +50514,11 @@ const char* ecs_meta_get_string(
     switch(op->kind) {
     case EcsOpString: return *(const char**)ptr;
     case EcsOpOpaque: {
-        /* If opaque type happens to map to a string, retrieve it. 
+        /* If opaque type knows how to convert to string, retrieve it. 
          Otherwise, fallback to default case (error). */
         const EcsOpaque *opaque = ecs_get(cursor->world, op->type, EcsOpaque);
-        if(opaque && opaque->as_type == ecs_id(ecs_string_t) && opaque->serialize) {
-            char** str = NULL;
-            ecs_serializer_t ser = {
-                .world = cursor->world,
-                .value = ecs_meta_get_string_value_from_opaque,
-                .member = ecs_meta_get_string_member_from_opaque,
-                .ctx = &str
-            };
-            opaque->serialize(&ser, ptr);
-            if(str && *str)
-                return *str;
-            /* invalid string, so fall through */
+        if(opaque && opaque->get_string) {
+            return opaque->get_string(ptr);
         }
         /* Not a compatible opaque type, so fall through */
     }
@@ -50550,9 +50564,18 @@ ecs_entity_t ecs_meta_get_entity(
     void *ptr = flecs_meta_cursor_get_ptr(cursor->world, scope);
     switch(op->kind) {
     case EcsOpEntity: return *(ecs_entity_t*)ptr;
+    case EcsOpOpaque: {
+        /* If opaque type knows how to convert to entity, retrieve it. 
+         Otherwise, fallback to default case (error). */
+        const EcsOpaque *opaque = ecs_get(cursor->world, op->type, EcsOpaque);
+        if(opaque && opaque->get_entity) {
+            return opaque->get_entity(ptr, cursor->world);
+        }
+        /* Not a compatible opaque type, so fall through */
+    }
+    /* fall through */
     case EcsOpArray:
     case EcsOpVector:
-    case EcsOpOpaque:
     case EcsOpPush:
     case EcsOpPop:
     case EcsOpScope:
@@ -50583,7 +50606,7 @@ error:
     return 0;
 }
 
-ecs_entity_t ecs_meta_get_id(
+ecs_id_t ecs_meta_get_id(
     const ecs_meta_cursor_t *cursor)
 {
     ecs_meta_scope_t *scope = flecs_meta_cursor_get_scope(cursor);
@@ -50592,9 +50615,18 @@ ecs_entity_t ecs_meta_get_id(
     switch(op->kind) {
     case EcsOpEntity: return *(ecs_id_t*)ptr; /* Entities are valid ids */
     case EcsOpId: return *(ecs_id_t*)ptr;
+    case EcsOpOpaque: {
+        /* If opaque type knows how to convert to id, retrieve it. 
+         Otherwise, fallback to default case (error). */
+        const EcsOpaque *opaque = ecs_get(cursor->world, op->type, EcsOpaque);
+        if(opaque && opaque->get_id) {
+            return opaque->get_id(ptr, cursor->world);
+        }
+        /* Not a compatible opaque type, so fall through */
+    }
+    /* fall through */
     case EcsOpArray:
     case EcsOpVector:
-    case EcsOpOpaque:
     case EcsOpPush:
     case EcsOpPop:
     case EcsOpScope:
@@ -50666,10 +50698,8 @@ size_t flecs_addon_vec_count(const void *ptr) {
 }
 
 static
-int flecs_const_str_serialize(const ecs_serializer_t *ser, const void *ptr) {
-    char **data = ECS_CONST_CAST(char**, ptr);
-    ser->value(ser, ecs_id(ecs_string_t), data);
-    return 0;
+const char* flecs_const_get_string(const void *ptr) {
+    return *((const char *const *) ptr);
 }
 
 /* Initialize reflection data for core components */
@@ -50722,7 +50752,7 @@ void flecs_meta_import_core_definitions(
         }),
         .type = {
             .as_type = ecs_id(ecs_string_t),
-            .serialize = flecs_const_str_serialize,       
+            .get_string = flecs_const_get_string,       
         }
     });
 
