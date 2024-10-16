@@ -18,11 +18,13 @@
                 "get_set_brief",
                 "get_set_detail",
                 "get_set_link",
+                "get_set_uuid",
                 "set_name_nullptr",
                 "set_brief_nullptr",
                 "set_detail_nullptr",
                 "set_link_nullptr",
-                "set_color_nullptr"
+                "set_color_nullptr",
+                "set_uuid_nullptr"
             ]
         }, {
             "id": "Pipeline",
