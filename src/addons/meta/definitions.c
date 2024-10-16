@@ -31,6 +31,13 @@ size_t flecs_addon_vec_count(const void *ptr) {
 }
 
 static
+int flecs_const_str_serialize(const ecs_serializer_t *ser, const void *ptr) {
+    char **data = ECS_CONST_CAST(char**, ptr);
+    ser->value(ser, ecs_id(ecs_string_t), data);
+    return 0;
+}
+
+static
 const char* flecs_const_get_string(const void *ptr) {
     return *((const char *const *) ptr);
 }
@@ -74,7 +81,8 @@ void flecs_meta_import_core_definitions(
         }),
         .type = {
             .as_type = ecs_id(ecs_string_t),
-            .get_string = flecs_const_get_string,       
+            .serialize = flecs_const_str_serialize,
+            .get_string = flecs_const_get_string,  
         }
     });
 
