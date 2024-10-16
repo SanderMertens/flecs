@@ -48,6 +48,18 @@ void Doc_set_color(void) {
     test_str(e.doc_color(), "A color");
 }
 
+void Doc_set_uuid(void) {
+    flecs::world ecs;
+
+    auto e = ecs.entity("Foo");
+
+    e.set_doc_uuid("81f50b40-09ff-4ce0-a388-4a52a14052c7");
+
+    test_assert(e.has<flecs::doc::Description>(flecs::doc::Uuid));
+
+    test_str(e.doc_uuid(), "81f50b40-09ff-4ce0-a388-4a52a14052c7");
+}
+
 void Doc_get_name_no_doc_name(void) {
     flecs::world ecs;
 

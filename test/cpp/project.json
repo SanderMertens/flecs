@@ -1439,6 +1439,7 @@
                 "set_name",
                 "set_link",
                 "set_color",
+                "set_uuid",
                 "get_name_no_doc_name"
             ]
         }]

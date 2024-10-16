@@ -67,3 +67,16 @@ const char* doc_link() const {
 const char* doc_color() const {
     return ecs_doc_get_color(world_, id_);
 }
+
+/** Get UUID.
+ *
+ * @see ecs_doc_get_uuid()
+ * @see flecs::doc::get_uuid()
+ * @see flecs::entity_builder::set_doc_uuid()
+ *
+ * @memberof flecs::entity_view
+ * @ingroup cpp_addons_doc
+ */
+const char* doc_uuid() const {
+    return ecs_doc_get_uuid(world_, id_);
+}

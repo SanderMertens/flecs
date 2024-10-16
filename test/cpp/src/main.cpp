@@ -1384,6 +1384,7 @@ void Doc_set_brief(void);
 void Doc_set_name(void);
 void Doc_set_link(void);
 void Doc_set_color(void);
+void Doc_set_uuid(void);
 void Doc_get_name_no_doc_name(void);
 
 bake_test_case PrettyFunction_testcases[] = {
@@ -6765,6 +6766,10 @@ bake_test_case Doc_testcases[] = {
         Doc_set_color
     },
     {
+        "set_uuid",
+        Doc_set_uuid
+    },
+    {
         "get_name_no_doc_name",
         Doc_get_name_no_doc_name
     }
@@ -6943,7 +6948,7 @@ static bake_test_suite suites[] = {
         "Doc",
         NULL,
         NULL,
-        5,
+        6,
         Doc_testcases
     }
 };

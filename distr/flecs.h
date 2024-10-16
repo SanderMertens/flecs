@@ -18520,6 +18520,9 @@ namespace doc {
 /** flecs.doc.Description component */
 using Description = EcsDocDescription;
 
+/** flecs.doc.Uuid component */
+static const flecs::entity_t Uuid = EcsDocUuid;
+
 /** flecs.doc.Brief component */
 static const flecs::entity_t Brief = EcsDocBrief;
 
@@ -23941,6 +23944,19 @@ const char* doc_color() const {
     return ecs_doc_get_color(world_, id_);
 }
 
+/** Get UUID.
+ *
+ * @see ecs_doc_get_uuid()
+ * @see flecs::doc::get_uuid()
+ * @see flecs::entity_builder::set_doc_uuid()
+ *
+ * @memberof flecs::entity_view
+ * @ingroup cpp_addons_doc
+ */
+const char* doc_uuid() const {
+    return ecs_doc_get_uuid(world_, id_);
+}
+
 #   endif
 #   ifdef FLECS_ALERTS
 /**
@@ -25135,8 +25151,23 @@ const Self& set_doc_link(const char *link) const {
  * @memberof flecs::entity_builder
  * @ingroup cpp_addons_doc
  */
-const Self& set_doc_color(const char *link) const {
-    ecs_doc_set_color(world_, id_, link);
+const Self& set_doc_color(const char *color) const {
+    ecs_doc_set_color(world_, id_, color);
+    return to_base();
+}
+
+/** Set doc UUID.
+ * This adds `(flecs.doc.Description, flecs.doc.Uuid)` to the entity.
+ *
+ * @see ecs_doc_set_uuid()
+ * @see flecs::doc::set_uuid()
+ * @see flecs::entity_view::doc_uuid()
+ *
+ * @memberof flecs::entity_builder
+ * @ingroup cpp_addons_doc
+ */
+const Self& set_doc_uuid(const char *uuid) const {
+    ecs_doc_set_uuid(world_, id_, uuid);
     return to_base();
 }
 
@@ -31434,6 +31465,18 @@ inline void timer_init(flecs::world& world) {
 namespace flecs {
 namespace doc {
 
+/** Get UUID for an entity.
+ *
+ * @see ecs_doc_get_uuid()
+ * @see flecs::doc::set_uuid()
+ * @see flecs::entity_view::doc_uuid()
+ *
+ * @ingroup cpp_addons_doc
+ */
+inline const char* get_uuid(const flecs::entity_view& e) {
+    return ecs_doc_get_uuid(e.world(), e);
+}
+
 /** Get human readable name for an entity.
  *
  * @see ecs_doc_get_name()
@@ -31492,6 +31535,18 @@ inline const char* get_link(const flecs::entity_view& e) {
  */
 inline const char* get_color(const flecs::entity_view& e) {
     return ecs_doc_get_color(e.world(), e);
+}
+
+/** Set UUID for an entity.
+ *
+ * @see ecs_doc_set_uuid()
+ * @see flecs::doc::get_uuid()
+ * @see flecs::entity_builder::set_doc_uuid()
+ *
+ * @ingroup cpp_addons_doc
+ */
+inline void set_uuid(flecs::entity& e, const char *uuid) {
+    ecs_doc_set_uuid(e.world(), e, uuid);
 }
 
 /** Set human readable name for an entity.
