@@ -4092,6 +4092,7 @@ void Entity_prefab_hierarchy_w_child_override(void) {
     test_assert(i != 0);
     auto ib = i.lookup("Base");
     test_assert(ib != 0);
+
     test_assert(ib.has<Foo>());
     test_assert(ib.has<Bar>());
 }

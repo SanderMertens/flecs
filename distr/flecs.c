@@ -991,6 +991,9 @@ struct ecs_world_t {
     ecs_stage_t **stages;            /* Stages */
     int32_t stage_count;             /* Number of stages */
 
+    /* -- Component ids -- */
+    ecs_vec_t component_ids;         /* World local component ids */
+
     /* Internal callback for command inspection. Only one callback can be set at
      * a time. After assignment the action will become active at the start of 
      * the next frame, set by ecs_frame_begin, and will be reset by 
@@ -7371,7 +7374,8 @@ int flecs_traverse_add(
         const char *sym = ecs_get_symbol(world, result);
         if (sym) {
             ecs_assert(!ecs_os_strcmp(desc->symbol, sym),
-                ECS_INCONSISTENT_NAME, desc->symbol);
+                ECS_INCONSISTENT_NAME, "%s (provided) vs. %s (existing)",
+                    desc->symbol, sym);
         } else {
             ecs_set_symbol(world, result, desc->symbol);
         }
@@ -19390,6 +19394,7 @@ ecs_world_t *ecs_mini(void) {
     flecs_name_index_init(&world->aliases, a);
     flecs_name_index_init(&world->symbols, a);
     ecs_vec_init_t(a, &world->fini_actions, ecs_action_elem_t, 0);
+    ecs_vec_init_t(a, &world->component_ids, ecs_id_t, 0);
 
     world->info.time_scale = 1.0;
     if (ecs_os_has_time()) {
@@ -20065,6 +20070,7 @@ int ecs_fini(
     flecs_name_index_fini(&world->aliases);
     flecs_name_index_fini(&world->symbols);
     ecs_set_stage_count(world, 0);
+    ecs_vec_fini_t(&world->allocator, &world->component_ids, ecs_id_t);
     ecs_log_pop_1();
 
     flecs_world_allocators_fini(world);
@@ -20831,6 +20837,67 @@ ecs_flags32_t ecs_world_get_flags(
         const ecs_stage_t *stage = (const ecs_stage_t*)world;
         return stage->world->flags;
     }
+}
+
+static int32_t flecs_component_ids_last_index = 0;
+
+int32_t flecs_component_ids_index_get(void) {
+    if (ecs_os_api.ainc_) {
+        return ecs_os_ainc(&flecs_component_ids_last_index);
+    } else {
+        return ++ flecs_component_ids_last_index;
+    }
+}
+
+ecs_entity_t flecs_component_ids_get(
+    const ecs_world_t *stage_world, 
+    int32_t index)
+{
+    ecs_world_t *world =
+        ECS_CONST_CAST(ecs_world_t*, ecs_get_world(stage_world));
+    flecs_poly_assert(world, ecs_world_t);
+
+    if (index >= ecs_vec_count(&world->component_ids)) {
+        return 0;
+    }
+
+    return ecs_vec_get_t(
+        &world->component_ids, ecs_entity_t, index)[0];
+}
+
+ecs_entity_t flecs_component_ids_get_alive(
+    const ecs_world_t *stage_world, 
+    int32_t index)
+{
+    ecs_world_t *world =
+        ECS_CONST_CAST(ecs_world_t*, ecs_get_world(stage_world));
+    flecs_poly_assert(world, ecs_world_t);
+
+    if (index >= ecs_vec_count(&world->component_ids)) {
+        return 0;
+    }
+
+    ecs_entity_t result = ecs_vec_get_t(
+        &world->component_ids, ecs_entity_t, index)[0];
+    if (!flecs_entities_is_alive(world, result)) {
+        return 0;
+    }
+
+    return result;
+}
+
+void flecs_component_ids_set(
+    ecs_world_t *stage_world, 
+    int32_t index,
+    ecs_entity_t component)
+{
+    ecs_world_t *world =
+        ECS_CONST_CAST(ecs_world_t*, ecs_get_world(stage_world));
+    flecs_poly_assert(world, ecs_world_t);
+
+    ecs_vec_set_min_count_zeromem_t(
+        &world->allocator, &world->component_ids, ecs_entity_t, index + 1);
+    ecs_vec_get_t(&world->component_ids, ecs_entity_t, index)[0] = component;
 }
 
 /**
@@ -22272,94 +22339,31 @@ const char* ecs_cpp_trim_module(
     return type_name;
 }
 
-// Validate registered component
-void ecs_cpp_component_validate(
+ecs_entity_t ecs_cpp_component_find(
     ecs_world_t *world,
     ecs_entity_t id,
     const char *name,
     const char *symbol,
     size_t size,
     size_t alignment,
-    bool implicit_name)
-{
-    /* If entity has a name check if it matches */
-    if (ecs_is_valid(world, id) && ecs_get_name(world, id) != NULL) {
-        if (!implicit_name && id >= EcsFirstUserComponentId) {
-#ifndef FLECS_NDEBUG
-            char *path = ecs_get_path_w_sep(
-                world, 0, id, "::", NULL);
-            if (ecs_os_strcmp(path, name)) {
-                ecs_abort(ECS_INCONSISTENT_NAME,
-                    "component '%s' already registered with name '%s'",
-                    name, path);
-            }
-            ecs_os_free(path);
-#endif
-        }
-
-        if (symbol) {
-            const char *existing_symbol = ecs_get_symbol(world, id);
-            if (existing_symbol) {
-                if (ecs_os_strcmp(symbol, existing_symbol)) {
-                    ecs_abort(ECS_INCONSISTENT_NAME,
-                        "component '%s' with symbol '%s' already registered with symbol '%s'",
-                        name, symbol, existing_symbol);
-                }
-            }
-        }
-    } else {
-        /* Ensure that the entity id valid */
-        if (!ecs_is_alive(world, id)) {
-            ecs_make_alive(world, id);
-        }
-
-        /* Register name with entity, so that when the entity is created the
-        * correct id will be resolved from the name. Only do this when the
-        * entity is empty. */
-        ecs_add_path_w_sep(world, id, 0, name, "::", "::");
-    }
-
-    /* If a component was already registered with this id but with a 
-     * different size, the ecs_component_init function will fail. */
-
-    /* We need to explicitly call ecs_component_init here again. Even though
-     * the component was already registered, it may have been registered
-     * with a different world. This ensures that the component is registered
-     * with the same id for the current world. 
-     * If the component was registered already, nothing will change. */
-    ecs_entity_t ent = ecs_component_init(world, &(ecs_component_desc_t){
-        .entity = id,
-        .type.size = flecs_uto(int32_t, size),
-        .type.alignment = flecs_uto(int32_t, alignment)
-    });
-    (void)ent;
-    ecs_assert(ent == id, ECS_INTERNAL_ERROR, NULL);
-}
-
-ecs_entity_t ecs_cpp_component_register(
-    ecs_world_t *world,
-    ecs_entity_t id,
-    const char *name,
-    const char *symbol,
-    ecs_size_t size,
-    ecs_size_t alignment,
     bool implicit_name,
     bool *existing_out)
 {
     (void)size;
     (void)alignment;
 
+    ecs_assert(existing_out != NULL, ECS_INTERNAL_ERROR, NULL);
+
     /* If the component is not yet registered, ensure no other component
      * or entity has been registered with this name. Ensure component is 
      * looked up from root. */
-    bool existing = false;
     ecs_entity_t prev_scope = ecs_set_scope(world, 0);
     ecs_entity_t ent;
     if (id) {
         ent = id;
     } else {
         ent = ecs_lookup_path_w_sep(world, 0, name, "::", "::", false);
-        existing = ent != 0 && ecs_has(world, ent, EcsComponent);
+        *existing_out = ent != 0 && ecs_has(world, ent, EcsComponent);
     }
     ecs_set_scope(world, prev_scope);
 
@@ -22387,16 +22391,23 @@ ecs_entity_t ecs_cpp_component_register(
                  * to alias the type, vs. accidentally registering an unrelated
                  * type with the same size/alignment. */
                 char *type_path = ecs_get_path(world, ent);
-                if (ecs_os_strcmp(type_path, symbol) || 
-                    component->size != size || 
-                    component->alignment != alignment) 
-                {
+                if (ecs_os_strcmp(type_path, symbol)) {
                     ecs_err(
                         "component with name '%s' is already registered for"\
                         " type '%s' (trying to register for type '%s')",
                             name, sym, symbol);
                     ecs_abort(ECS_NAME_IN_USE, NULL);
                 }
+
+                if (flecs_itosize(component->size) != size || 
+                    flecs_itosize(component->alignment) != alignment)
+                {
+                    ecs_err(
+                        "component with name '%s' is already registered with"\
+                        " mismatching size/alignment)", name);
+                    ecs_abort(ECS_INVALID_COMPONENT_SIZE, NULL);
+                }
+
                 ecs_os_free(type_path);
             } else if (!sym) {
                 ecs_set_symbol(world, ent, symbol);
@@ -22407,17 +22418,14 @@ ecs_entity_t ecs_cpp_component_register(
      * registered under a different name. */
     } else if (!implicit_name) {
         ent = ecs_lookup_symbol(world, symbol, false, false);
-        ecs_assert(ent == 0 || (ent == id), ECS_INCONSISTENT_COMPONENT_ID, symbol);
-    }
-
-    if (existing_out) {
-        *existing_out = existing;
+        ecs_assert(ent == 0 || (ent == id), 
+            ECS_INCONSISTENT_COMPONENT_ID, symbol);
     }
 
     return ent;
 }
 
-ecs_entity_t ecs_cpp_component_register_explicit(
+ecs_entity_t ecs_cpp_component_register(
     ecs_world_t *world,
     ecs_entity_t s_id,
     ecs_entity_t id,
@@ -22430,7 +22438,8 @@ ecs_entity_t ecs_cpp_component_register_explicit(
     bool *existing_out)
 {
     char *existing_name = NULL;
-    if (existing_out) *existing_out = false;
+
+    ecs_assert(existing_out != NULL, ECS_INTERNAL_ERROR, NULL);
 
     // If an explicit id is provided, it is possible that the symbol and
     // name differ from the actual type, as the application may alias
@@ -22443,7 +22452,7 @@ ecs_entity_t ecs_cpp_component_register_explicit(
             if (id) {
                 existing_name = ecs_get_path_w_sep(world, 0, id, "::", "::");
                 name = existing_name;
-                if (existing_out) *existing_out = true;
+                *existing_out = true;
             } else {
                 // If type is not yet known, derive from type name
                 name = ecs_cpp_trim_module(world, type_name);
@@ -22554,16 +22563,6 @@ ecs_entity_t ecs_cpp_enum_constant_register(
         ecs_get_name(world, parent), name, value);
 
     return id;
-}
-
-static int32_t flecs_reset_count = 0;
-
-int32_t ecs_cpp_reset_count_get(void) {
-    return flecs_reset_count;
-}
-
-int32_t ecs_cpp_reset_count_inc(void) {
-    return ++flecs_reset_count;
 }
 
 #ifdef FLECS_META
@@ -51685,6 +51684,7 @@ void flecs_set_custom_type(ecs_iter_t *it) {
         if (!comp || !comp->size || !comp->alignment) {
             ecs_err("custom type '%s' has no size/alignment, register as component first",
                 ecs_get_name(world, e));
+            flecs_dump_backtrace(stdout);
             continue;
         }
 

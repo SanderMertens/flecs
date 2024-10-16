@@ -404,6 +404,7 @@ void Enum_component_registered_as_enum(void);
 void Enum_mixed_auto_manual_constants(void);
 void Enum_enum_class_mixed_auto_manual_constants(void);
 void Enum_enum_child_count(void);
+void Enum_multi_world_constant_ids(void);
 
 // Testsuite 'Union'
 void Union_add_case(void);
@@ -1116,7 +1117,6 @@ void World_multi_world_empty(void);
 void World_multi_world_component(void);
 void World_multi_world_component_namespace(void);
 void World_multi_world_module(void);
-void World_multi_world_recycled_component(void);
 void World_multi_world_recycled_component_different_generation(void);
 void World_type_id(void);
 void World_different_comp_same_name(void);
@@ -1133,6 +1133,7 @@ void World_reimport_module_new_world(void);
 void World_reimport_namespaced_module(void);
 void World_c_interop_module(void);
 void World_c_interop_after_reset(void);
+void World_c_interop_module_no_names(void);
 void World_implicit_register_w_new_world(void);
 void World_implicit_register_after_reset_register_w_custom_name(void);
 void World_register_after_reset_register_w_custom_name(void);
@@ -1198,7 +1199,6 @@ void World_is_valid(void);
 void World_exists(void);
 void World_get_alive(void);
 void World_make_alive(void);
-void World_reset_all(void);
 void World_get_tick(void);
 void World_register_from_scope(void);
 void World_register_nested_from_scope(void);
@@ -2976,6 +2976,10 @@ bake_test_case Enum_testcases[] = {
     {
         "enum_child_count",
         Enum_enum_child_count
+    },
+    {
+        "multi_world_constant_ids",
+        Enum_multi_world_constant_ids
     }
 };
 
@@ -5747,10 +5751,6 @@ bake_test_case World_testcases[] = {
         World_multi_world_module
     },
     {
-        "multi_world_recycled_component",
-        World_multi_world_recycled_component
-    },
-    {
         "multi_world_recycled_component_different_generation",
         World_multi_world_recycled_component_different_generation
     },
@@ -5813,6 +5813,10 @@ bake_test_case World_testcases[] = {
     {
         "c_interop_after_reset",
         World_c_interop_after_reset
+    },
+    {
+        "c_interop_module_no_names",
+        World_c_interop_module_no_names
     },
     {
         "implicit_register_w_new_world",
@@ -6073,10 +6077,6 @@ bake_test_case World_testcases[] = {
     {
         "make_alive",
         World_make_alive
-    },
-    {
-        "reset_all",
-        World_reset_all
     },
     {
         "get_tick",
@@ -6926,7 +6926,7 @@ static bake_test_suite suites[] = {
         "Enum",
         NULL,
         NULL,
-        39,
+        40,
         Enum_testcases
     },
     {
@@ -7033,7 +7033,7 @@ static bake_test_suite suites[] = {
         "World",
         NULL,
         NULL,
-        117,
+        116,
         World_testcases
     },
     {

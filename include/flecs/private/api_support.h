@@ -159,8 +159,28 @@ FLECS_API
 int32_t flecs_poly_refcount(
     ecs_poly_t *poly);
 
+FLECS_API
+int32_t flecs_component_ids_index_get(void);
+
+FLECS_API
+ecs_entity_t flecs_component_ids_get(
+    const ecs_world_t *world, 
+    int32_t index);
+
+FLECS_API
+ecs_entity_t flecs_component_ids_get_alive(
+    const ecs_world_t *stage_world, 
+    int32_t index);
+
+FLECS_API
+void flecs_component_ids_set(
+    ecs_world_t *world, 
+    int32_t index,
+    ecs_entity_t id);
+
 #define flecs_poly_claim(poly) \
     flecs_poly_claim_(ECS_CONST_CAST(void*, reinterpret_cast<const void*>(poly)))
+
 #define flecs_poly_release(poly) \
     flecs_poly_release_(ECS_CONST_CAST(void*, reinterpret_cast<const void*>(poly)))
 

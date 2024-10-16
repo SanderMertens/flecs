@@ -610,7 +610,7 @@ struct entity_builder : entity_view {
      */
     template<typename First>
     const Self& enable(flecs::id_t second) const  {
-        return this->enable(_::type<First>::id(), second);
+        return this->enable(_::type<First>::id(world_), second);
     }
 
     /** Enable a pair.
@@ -621,7 +621,7 @@ struct entity_builder : entity_view {
      */
     template<typename First, typename Second>
     const Self& enable() const  {
-        return this->enable<First>(_::type<Second>::id());
+        return this->enable<First>(_::type<Second>::id(world_));
     }
 
     /** Disable an id.
@@ -644,7 +644,7 @@ struct entity_builder : entity_view {
      */
     template<typename T>
     const Self& disable() const  {
-        return this->disable(_::type<T>::id());
+        return this->disable(_::type<T>::id(world_));
     }
 
     /** Disable a pair.
@@ -665,7 +665,7 @@ struct entity_builder : entity_view {
      */
     template<typename First>
     const Self& disable(flecs::id_t second) const  {
-        return this->disable(_::type<First>::id(), second);
+        return this->disable(_::type<First>::id(world_), second);
     }
 
     /** Disable a pair.
@@ -676,7 +676,7 @@ struct entity_builder : entity_view {
      */
     template<typename First, typename Second>
     const Self& disable() const  {
-        return this->disable<First>(_::type<Second>::id());
+        return this->disable<First>(_::type<Second>::id(world_));
     }
 
     const Self& set_ptr(entity_t comp, size_t size, const void *ptr) const  {

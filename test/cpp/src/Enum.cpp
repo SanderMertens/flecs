@@ -1179,3 +1179,29 @@ void Enum_enum_child_count(void) {
 
     test_assert(f.count() == 3);
 }
+
+void Enum_multi_world_constant_ids(void) {
+    flecs::world world_a, world_b;
+
+    world_a.component<Position>(); // Offset low ids by one
+    world_a.entity(); // Offset regular ids by one
+
+    flecs::entity e_a = world_a.component<StandardEnum>();
+    flecs::entity red_a = world_a.to_entity(StandardEnum::Red);
+    flecs::entity green_a = world_a.to_entity(StandardEnum::Green);
+    flecs::entity blue_a = world_a.to_entity(StandardEnum::Blue);
+
+    world_b.component<StandardEnum>();
+
+    // Make sure we're actually testing different ids across worlds
+    test_assert(e_a != world_b.component<StandardEnum>());
+    test_assert(red_a != world_b.to_entity(StandardEnum::Red));
+    test_assert(green_a != world_b.to_entity(StandardEnum::Green));
+    test_assert(blue_a != world_b.to_entity(StandardEnum::Blue));
+
+    // Make sure ids didn't get overwritten for world_a
+    test_assert(e_a == world_a.component<StandardEnum>());
+    test_assert(red_a == world_a.to_entity(StandardEnum::Red));
+    test_assert(green_a == world_a.to_entity(StandardEnum::Green));
+    test_assert(blue_a == world_a.to_entity(StandardEnum::Blue));
+}

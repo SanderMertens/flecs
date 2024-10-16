@@ -6,6 +6,6 @@
             "flecs"
         ],
         "language": "c++",
-        "private": false
+        "public": false
     }
 }

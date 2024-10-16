@@ -275,14 +275,16 @@ inline flecs::entity world::make_alive(flecs::entity_t e) const {
 
 template <typename E>
 inline flecs::entity enum_data<E>::entity() const {
-    return flecs::entity(world_, impl_.id);
+    return flecs::entity(world_, _::type<E>::id(world_));
 }
 
 template <typename E>
 inline flecs::entity enum_data<E>::entity(underlying_type_t<E> value) const {
     int index = index_by_value(value);
     if (index >= 0) {
-        return flecs::entity(world_, impl_.constants[index].id);
+        int32_t constant_i = impl_.constants[index].index;
+        flecs::entity_t entity = flecs_component_ids_get(world_, constant_i);
+        return flecs::entity(world_, entity);
     }
 #ifdef FLECS_META
     // Reflection data lookup failed. Try value lookup amongst flecs::Constant relationships

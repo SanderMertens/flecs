@@ -173,7 +173,7 @@ static const char* enum_constant_to_name() {
 /** Enumeration constant data */
 template<typename T>
 struct enum_constant_data {
-    flecs::entity_t id;
+    int32_t index; // Global index used to obtain world local entity id
     T offset;
 };
 
@@ -284,7 +284,6 @@ private:
     };
 
 public:
-    flecs::entity_t id;
     int min;
     int max;
     bool has_contiguous;
@@ -336,8 +335,17 @@ private:
                 "Signed integer enums causes integer overflow when recording offset from high positive to"
                 " low negative. Consider using unsigned integers as underlying type.");
             enum_type<E>::data.constants[enum_type<E>::data.max].offset = v - last_value;
-            enum_type<E>::data.constants[enum_type<E>::data.max].id = ecs_cpp_enum_constant_register(
-                world, enum_type<E>::data.id, 0, name, static_cast<int32_t>(v));
+            if (!enum_type<E>::data.constants[enum_type<E>::data.max].index) {
+                enum_type<E>::data.constants[enum_type<E>::data.max].index = 
+                    flecs_component_ids_index_get();
+            }
+            
+            flecs::entity_t constant = ecs_cpp_enum_constant_register(
+                world, type<E>::id(world), 0, name, static_cast<int32_t>(v));
+            flecs_component_ids_set(world, 
+                enum_type<E>::data.constants[enum_type<E>::data.max].index, 
+                constant);
+
             return v;
         }
     };
@@ -370,7 +378,7 @@ public:
 
         ecs_log_push();
         ecs_cpp_enum_init(world, id);
-        data.id = id;
+        // data.id = id;
 
         // Generate reflection data
         enum_reflection<E, reflection_init>::template each_enum< static_cast<U>(enum_last<E>::value) >(world);
@@ -412,7 +420,7 @@ struct enum_data {
         if (index < 0) {
             return false;
         }
-        return impl_.constants[index].id != 0;
+        return impl_.constants[index].index != 0;
     }
 
     /**

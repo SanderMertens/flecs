@@ -340,6 +340,9 @@ struct ecs_world_t {
     ecs_stage_t **stages;            /* Stages */
     int32_t stage_count;             /* Number of stages */
 
+    /* -- Component ids -- */
+    ecs_vec_t component_ids;         /* World local component ids */
+
     /* Internal callback for command inspection. Only one callback can be set at
      * a time. After assignment the action will become active at the start of 
      * the next frame, set by ecs_frame_begin, and will be reset by 
