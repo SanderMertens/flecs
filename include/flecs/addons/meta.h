@@ -464,6 +464,33 @@ typedef struct EcsOpaque {
     void (*resize)(
         void *dst,
         size_t count);
+
+    /* Getter interface */
+
+    /** Get bool value */
+    bool (*get_bool)(
+        const void *src);
+
+    /** Get char value */
+    char (*get_char)(
+        const void *src);
+
+    /** Get int value */
+    int64_t (*get_int)(
+        const void *src);
+
+    /** Get unsigned int value */
+    uint64_t (*get_uint)(
+        const void *src);
+
+    /** Get float value */
+    double (*get_float)(
+        const void *src);
+
+    /** Get string value */
+    const char* (*get_string)(
+        const void *src);
+
 } EcsOpaque;
 
 
