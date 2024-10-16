@@ -166,6 +166,56 @@ struct opaque {
         return *this;
     }
 
+    /* Getter interface */
+
+    /** Get bool value */
+    opaque& get_bool(bool (*func)(const T *src)) {
+        this->desc.type.get_bool =
+            reinterpret_cast<decltype(
+                this->desc.type.get_bool)>(func);
+        return *this;
+    }
+
+    /** Get char value */
+    opaque& get_char(char (*func)(const T *src)) {
+        this->desc.type.get_char =
+            reinterpret_cast<decltype(
+                this->desc.type.get_char)>(func);
+        return *this;
+    }
+
+    /** Get int value */
+    opaque& get_int(int64_t (*func)(const T *src)) {
+        this->desc.type.get_int =
+            reinterpret_cast<decltype(
+                this->desc.type.get_int)>(func);
+        return *this;
+    }
+
+    /** Get unsigned int value */
+    opaque& get_uint(uint64_t (*func)(const T *src)) {
+        this->desc.type.get_uint =
+            reinterpret_cast<decltype(
+                this->desc.type.get_uint)>(func);
+        return *this;
+    }
+
+    /** Get float value */
+    opaque& get_float(double (*func)(const T *src)) {
+        this->desc.type.get_float =
+            reinterpret_cast<decltype(
+                this->desc.type.get_float)>(func);
+        return *this;
+    }
+
+    /** Get string value */
+    opaque& get_string(const char* (*func)(const T *src)) {
+        this->desc.type.get_string =
+            reinterpret_cast<decltype(
+                this->desc.type.get_string)>(func);
+        return *this;
+    }
+
     ~opaque() {
         if (world) {
             ecs_opaque_init(world, &desc);
