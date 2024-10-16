@@ -216,6 +216,30 @@ struct opaque {
         return *this;
     }
 
+    /** Get entity value */
+    opaque& get_entity(ecs_entity_t (*func)(const T *src, const flecs::world_t *world)) {
+        this->desc.type.get_entity =
+            reinterpret_cast<decltype(
+                this->desc.type.get_entity)>(func);
+        return *this;
+    }
+
+    /** Get (component) id value */
+    opaque& get_id(ecs_id_t (*func)(const T *src, const flecs::world_t *world)) {
+        this->desc.type.get_id =
+            reinterpret_cast<decltype(
+                this->desc.type.get_id)>(func);
+        return *this;
+    }
+
+    /** Check if value is null */
+    opaque& is_null(bool (*func)(const T *src)) {
+        this->desc.type.is_null =
+            reinterpret_cast<decltype(
+                this->desc.type.is_null)>(func);
+        return *this;
+    }    
+
     ~opaque() {
         if (world) {
             ecs_opaque_init(world, &desc);
