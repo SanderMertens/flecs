@@ -17298,11 +17298,11 @@ struct string_view : string {
 
 #if defined(__clang__) && __clang_major__ >= 16
 // https://reviews.llvm.org/D130058, https://reviews.llvm.org/D131307
-#define enum_cast(T, v) __builtin_bit_cast(T, v)
+#define flecs_enum_cast(T, v) __builtin_bit_cast(T, v)
 #elif defined(__GNUC__) && __GNUC__ > 10
-#define enum_cast(T, v) __builtin_bit_cast(T, v)
+#define flecs_enum_cast(T, v) __builtin_bit_cast(T, v)
 #else
-#define enum_cast(T, v) static_cast<T>(v)
+#define flecs_enum_cast(T, v) static_cast<T>(v)
 #endif
 
 namespace flecs {
@@ -17311,7 +17311,7 @@ namespace flecs {
 namespace _ {
 template <typename E, underlying_type_t<E> Value>
 struct to_constant {
-    static constexpr E value = enum_cast(E, Value);
+    static constexpr E value = flecs_enum_cast(E, Value);
 };
 
 template <typename E, underlying_type_t<E> Value>
@@ -17424,7 +17424,7 @@ constexpr bool enum_constant_is_valid() {
 /* Without this wrapper __builtin_bit_cast doesn't work */
 template <typename E, underlying_type_t<E> C>
 constexpr bool enum_constant_is_valid_wrap() {
-    return enum_constant_is_valid<E, enum_cast(E, C)>();
+    return enum_constant_is_valid<E, flecs_enum_cast(E, C)>();
 }
 
 template <typename E, E C>
@@ -17591,7 +17591,7 @@ private:
         static U handle_constant(U last_value, flecs::world_t *world) {
             // Constant is valid, so fill reflection data.
             auto v = Value;
-            const char *name = enum_constant_to_name<E, enum_cast(E, Value)>();
+            const char *name = enum_constant_to_name<E, flecs_enum_cast(E, Value)>();
             
             ++enum_type<E>::data.max; // Increment cursor as we build constants array.
 
