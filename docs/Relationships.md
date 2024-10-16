@@ -732,7 +732,7 @@ More advanced queries are possible with Flecs queries. See the [Queries manual](
 Relationship pairs, just like regular component, can be associated with data. To associate data with a relationship pair, at least one of its elements needs to be a component. A pair can be associated with at most one type. To determine which type is associated with a relationship pair, the following rules are followed in order:
 
 - If neither the first nor second elements are a type, the pair is a tag
-- If the first element has the [tag](Relationships.md#tag-property) property, the pair is a tag
+- If the first element has the [PairIsTag](https://www.flecs.dev/flecs/md_docs_2ComponentTraits.html#pairistag-trait) trait, the pair is a tag
 - If the first element is a type, the pair type is the first element
 - If the second element is a type, the pair type is the second element
 
