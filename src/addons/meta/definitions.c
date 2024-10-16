@@ -32,8 +32,7 @@ size_t flecs_addon_vec_count(const void *ptr) {
 
 static
 const char* flecs_const_get_string(const void *ptr) {
-    const char **data = (const char**) ptr;
-    return *data;
+    return *((const char *const *) ptr);
 }
 
 /* Initialize reflection data for core components */
