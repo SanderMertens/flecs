@@ -494,10 +494,6 @@ typedef struct EcsOpaque {
         const void *src,
         const ecs_world_t *world);
 
-    /** Check if value is null */
-    bool (*is_null)(
-        const void *src);
-
 } EcsOpaque;
 
 
@@ -963,6 +959,7 @@ ecs_entity_t ecs_meta_get_entity(
  * @param cursor The cursor.
  * @return The value of the current field.
  */
+FLECS_API
 ecs_id_t ecs_meta_get_id(
     const ecs_meta_cursor_t *cursor);
 
