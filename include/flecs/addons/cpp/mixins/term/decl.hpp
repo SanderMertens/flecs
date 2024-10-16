@@ -13,8 +13,8 @@ namespace flecs {
  * @{
  */
 
-struct term;
-struct term_builder;
+FLECS_API_STRUCT struct term;
+FLECS_API_STRUCT struct term_builder;
 
 /** @} */
 
