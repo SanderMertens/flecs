@@ -3124,10 +3124,8 @@ void Cursor_opaque_set_float(void) {
 }
 
 static
-int const_string_t_serialize(const ecs_serializer_t *ser, const void *ptr) {
-    char **data = ECS_CONST_CAST(char**, ptr);
-    ser->value(ser, ecs_id(ecs_string_t), data);
-    return 0;
+const char* const_string_t_get( const void *ptr) {
+    return *((const char**) ptr);
 }
 
 void Cursor_opaque_get_set_string(void) {
@@ -3139,7 +3137,7 @@ void Cursor_opaque_get_set_string(void) {
         .entity = ecs_id(Opaque_const_string_t),
         .type.as_type = ecs_id(ecs_string_t),
         .type.assign_string = const_string_t_set,
-        .type.serialize = const_string_t_serialize
+        .type.get_string = const_string_t_get
     });
 
     Opaque_const_string_t v = { 0 };
