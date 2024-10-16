@@ -2159,7 +2159,7 @@ error:
     return 0;
 }
 
-ecs_entity_t ecs_meta_get_id(
+ecs_id_t ecs_meta_get_id(
     const ecs_meta_cursor_t *cursor)
 {
     ecs_meta_scope_t *scope = flecs_meta_cursor_get_scope(cursor);

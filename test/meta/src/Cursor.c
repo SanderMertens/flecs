@@ -3209,7 +3209,8 @@ void Cursor_opaque_set_id(void) {
     ecs_opaque(world, {
         .entity = ecs_id(Opaque_id),
         .type.as_type = ecs_id(ecs_id_t),
-        .type.assign_id = Opaque_id_set
+        .type.assign_id = Opaque_id_set,
+        .type.get_id = Opaque_id_get
     });
 
     Opaque_id v = { 0 };
@@ -3219,8 +3220,10 @@ void Cursor_opaque_set_id(void) {
     ecs_meta_cursor_t cur = ecs_meta_cursor(world, ecs_id(Opaque_id), &v);
     test_int(0, ecs_meta_set_id(&cur, e1));
     test_uint(v.value, e1);
+    test_uint(ecs_meta_get_id(&cur), e1);
     test_int(0, ecs_meta_set_id(&cur, e2));
     test_uint(v.value, e2);
+    test_uint(ecs_meta_get_id(&cur), e2);
 
     ecs_fini(world);
 }
