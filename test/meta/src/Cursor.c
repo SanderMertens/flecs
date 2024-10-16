@@ -2806,7 +2806,11 @@ typedef const char* const_string_t;
     \
     static void t##_set(void *ptr, t value) { \
         ((Opaque_##t*)ptr)->value = value; \
+    } \
+    static t t##_get(const void *ptr) { \
+        return ((Opaque_##t*)ptr)->value; \
     }
+
 
 OpaqueType(bool)
 OpaqueType(char)
@@ -2827,8 +2831,16 @@ static void Opaque_entity_set(void *ptr, ecs_world_t *world, ecs_entity_t value)
     ((Opaque_entity*)ptr)->value = value;
 }
 
+static ecs_entity_t Opaque_entity_get(const void *ptr, const ecs_world_t *world) {
+    return ((Opaque_entity*)ptr)->value;
+}
+
 static void Opaque_id_set(void *ptr, ecs_world_t *world, ecs_id_t value) {
     ((Opaque_id*)ptr)->value = value;
+}
+
+static ecs_entity_t Opaque_id_get(const void *ptr, const ecs_world_t *world) {
+    return ((Opaque_id*)ptr)->value;
 }
 
 void Cursor_opaque_set_bool(void) {
@@ -2839,7 +2851,8 @@ void Cursor_opaque_set_bool(void) {
     ecs_opaque(world, {
         .entity = ecs_id(Opaque_bool),
         .type.as_type = ecs_id(ecs_bool_t),
-        .type.assign_bool = bool_set
+        .type.assign_bool = bool_set,
+        .type.get_bool = bool_get
     });
 
     Opaque_bool v = { false };
@@ -2847,8 +2860,10 @@ void Cursor_opaque_set_bool(void) {
     ecs_meta_cursor_t cur = ecs_meta_cursor(world, ecs_id(Opaque_bool), &v);
     test_int(0, ecs_meta_set_bool(&cur, true));
     test_bool(v.value, true);
+    test_bool(ecs_meta_get_bool(&cur), true);
     test_int(0, ecs_meta_set_bool(&cur, false));
     test_bool(v.value, false);
+    test_bool(ecs_meta_get_bool(&cur), false);
 
     ecs_fini(world);
 }
@@ -2861,7 +2876,8 @@ void Cursor_opaque_set_char(void) {
     ecs_opaque(world, {
         .entity = ecs_id(Opaque_char),
         .type.as_type = ecs_id(ecs_char_t),
-        .type.assign_char = char_set
+        .type.assign_char = char_set,
+        .type.get_char = char_get
     });
 
     Opaque_char v = { 0 };
@@ -2869,8 +2885,10 @@ void Cursor_opaque_set_char(void) {
     ecs_meta_cursor_t cur = ecs_meta_cursor(world, ecs_id(Opaque_char), &v);
     test_int(0, ecs_meta_set_char(&cur, 'a'));
     test_int(v.value, 'a');
+    test_int(ecs_meta_get_char(&cur), 'a');
     test_int(0, ecs_meta_set_char(&cur, 'A'));
     test_int(v.value, 'A');
+    test_int(ecs_meta_get_char(&cur), 'A');
 
     ecs_fini(world);
 }
@@ -2883,7 +2901,8 @@ void Cursor_opaque_set_int(void) {
     ecs_opaque(world, {
         .entity = ecs_id(Opaque_int64_t),
         .type.as_type = ecs_id(ecs_i64_t),
-        .type.assign_int = int64_t_set
+        .type.assign_int = int64_t_set,
+        .type.get_int = int64_t_get
     });
 
     Opaque_int64_t v = { 0 };
@@ -2891,8 +2910,10 @@ void Cursor_opaque_set_int(void) {
     ecs_meta_cursor_t cur = ecs_meta_cursor(world, ecs_id(Opaque_int64_t), &v);
     test_int(0, ecs_meta_set_int(&cur, 10));
     test_int(v.value, 10);
+    test_int(ecs_meta_get_int(&cur), 10);
     test_int(0, ecs_meta_set_int(&cur, -10));
     test_int(v.value, -10);
+    test_int(ecs_meta_get_int(&cur), -10);
 
     ecs_fini(world);
 }
@@ -2905,7 +2926,8 @@ void Cursor_opaque_set_uint(void) {
     ecs_opaque(world, {
         .entity = ecs_id(Opaque_uint64_t),
         .type.as_type = ecs_id(ecs_i64_t),
-        .type.assign_uint = uint64_t_set
+        .type.assign_uint = uint64_t_set,
+        .type.get_uint = uint64_t_get
     });
 
     Opaque_uint64_t v = { 0 };
@@ -2913,8 +2935,10 @@ void Cursor_opaque_set_uint(void) {
     ecs_meta_cursor_t cur = ecs_meta_cursor(world, ecs_id(Opaque_uint64_t), &v);
     test_int(0, ecs_meta_set_uint(&cur, 10));
     test_int(v.value, 10);
+    test_int(ecs_meta_get_uint(&cur), 10);
     test_int(0, ecs_meta_set_uint(&cur, 20));
     test_int(v.value, 20);
+    test_int(ecs_meta_get_uint(&cur), 20);    
 
     ecs_fini(world);
 }
@@ -2927,7 +2951,8 @@ void Cursor_opaque_set_float(void) {
     ecs_opaque(world, {
         .entity = ecs_id(Opaque_double),
         .type.as_type = ecs_id(ecs_f64_t),
-        .type.assign_float = double_set
+        .type.assign_float = double_set,
+        .type.get_float = double_get
     });
 
     Opaque_double v = { 0 };
@@ -2935,15 +2960,12 @@ void Cursor_opaque_set_float(void) {
     ecs_meta_cursor_t cur = ecs_meta_cursor(world, ecs_id(Opaque_double), &v);
     test_int(0, ecs_meta_set_float(&cur, 10.5));
     test_flt(v.value, 10.5);
+    test_flt(ecs_meta_get_float(&cur), 10.5);
     test_int(0, ecs_meta_set_float(&cur, 20.5));
     test_flt(v.value, 20.5);
+    test_flt(ecs_meta_get_float(&cur), 20.5);
 
     ecs_fini(world);
-}
-
-static
-const char* const_string_t_get( const void *ptr) {
-    return *((const char**) ptr);
 }
 
 void Cursor_opaque_get_set_string(void) {
@@ -2978,7 +3000,8 @@ void Cursor_opaque_set_entity(void) {
     ecs_opaque(world, {
         .entity = ecs_id(Opaque_entity),
         .type.as_type = ecs_id(ecs_entity_t),
-        .type.assign_entity = Opaque_entity_set
+        .type.assign_entity = Opaque_entity_set,
+        .type.get_entity = Opaque_entity_get
     });
 
     Opaque_entity v = { 0 };
@@ -2988,8 +3011,10 @@ void Cursor_opaque_set_entity(void) {
     ecs_meta_cursor_t cur = ecs_meta_cursor(world, ecs_id(Opaque_entity), &v);
     test_int(0, ecs_meta_set_entity(&cur, e1));
     test_uint(v.value, e1);
+    test_uint(ecs_meta_get_entity(&cur), e1);
     test_int(0, ecs_meta_set_entity(&cur, e2));
     test_uint(v.value, e2);
+    test_uint(ecs_meta_get_entity(&cur), e2);
 
     ecs_fini(world);
 }
