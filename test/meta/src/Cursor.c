@@ -3025,7 +3025,7 @@ static ecs_entity_t Opaque_id_get(const void *ptr, const ecs_world_t *world) {
     return ((Opaque_id*)ptr)->value;
 }
 
-void Cursor_opaque_set_bool(void) {
+void Cursor_opaque_get_set_bool(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Opaque_bool);
@@ -3050,7 +3050,7 @@ void Cursor_opaque_set_bool(void) {
     ecs_fini(world);
 }
 
-void Cursor_opaque_set_char(void) {
+void Cursor_opaque_get_set_char(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Opaque_char);
@@ -3075,7 +3075,7 @@ void Cursor_opaque_set_char(void) {
     ecs_fini(world);
 }
 
-void Cursor_opaque_set_int(void) {
+void Cursor_opaque_get_set_int(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Opaque_int64_t);
@@ -3100,7 +3100,7 @@ void Cursor_opaque_set_int(void) {
     ecs_fini(world);
 }
 
-void Cursor_opaque_set_uint(void) {
+void Cursor_opaque_get_set_uint(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Opaque_uint64_t);
@@ -3125,7 +3125,7 @@ void Cursor_opaque_set_uint(void) {
     ecs_fini(world);
 }
 
-void Cursor_opaque_set_float(void) {
+void Cursor_opaque_get_set_float(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Opaque_double);
@@ -3174,7 +3174,7 @@ void Cursor_opaque_get_set_string(void) {
     ecs_fini(world);
 }
 
-void Cursor_opaque_set_entity(void) {
+void Cursor_opaque_get_set_entity(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Opaque_entity);
@@ -3201,7 +3201,7 @@ void Cursor_opaque_set_entity(void) {
     ecs_fini(world);
 }
 
-void Cursor_opaque_set_id(void) {
+void Cursor_opaque_get_set_id(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Opaque_id);
