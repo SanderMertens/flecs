@@ -882,7 +882,7 @@ int flecs_expr_initializer_visit_type(
         }
 
         if (!is_opaque) {
-            elem->offset = (uintptr_t)ecs_meta_get_ptr(cur);
+            elem->offset = (uintptr_t)ecs_meta_get_write_ptr(cur);
         }
     }
 
@@ -1429,7 +1429,7 @@ int flecs_expr_member_visit_type(
     const EcsMember *m = ecs_get(world, ecs_meta_get_member_id(cur), EcsMember);
     ecs_assert(m != NULL, ECS_INTERNAL_ERROR, NULL);
 #endif
-    node->offset = (uintptr_t)ecs_meta_get_ptr(cur);
+    node->offset = (uintptr_t)ecs_meta_get_write_ptr(cur);
 
     return 0;
 error:

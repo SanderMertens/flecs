@@ -484,7 +484,7 @@ int flecs_member_metric_init(
 
         id = desc->id;
         member_type = ecs_meta_get_type(&cur);
-        offset = (uintptr_t)ecs_meta_get_ptr(&cur);
+        offset = (uintptr_t)ecs_meta_get_write_ptr(&cur);
         member = ecs_meta_get_member_id(&cur);
     } else {    
         const EcsMember *m = ecs_get(world, desc->member, EcsMember);
