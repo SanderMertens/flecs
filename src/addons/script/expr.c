@@ -462,7 +462,7 @@ ecs_value_t flecs_dotresolve_var(
     }
 
     return (ecs_value_t){ 
-        .ptr = ecs_meta_get_ptr(&cur),
+        .ptr = ecs_meta_get_write_ptr(&cur),
         .type = ecs_meta_get_type(&cur)
     };
 }
@@ -478,7 +478,7 @@ int flecs_meta_call(
     const char *function) 
 {
     ecs_entity_t type = ecs_meta_get_type(cur);
-    void *value_ptr = ecs_meta_get_ptr(cur);
+    void *value_ptr = ecs_meta_get_write_ptr(cur);
 
     if (!ecs_os_strcmp(function, "parent")) {
         if (type != ecs_id(ecs_entity_t)) {
@@ -1242,7 +1242,7 @@ const char* flecs_funccall_parse(
         }
 
         ecs_entity_t type = ecs_meta_get_type(cur);
-        value->ptr = ecs_meta_get_ptr(cur);
+        value->ptr = ecs_meta_get_write_ptr(cur);
         value->type = type;
 
         ptr += 2;
@@ -1356,7 +1356,7 @@ const char* flecs_script_expr_run(
                 out = &result;
             } else {
                 temp_result.type = ecs_meta_get_type(&cur);
-                temp_result.ptr = ecs_meta_get_ptr(&cur);
+                temp_result.ptr = ecs_meta_get_write_ptr(&cur);
                 out = &temp_result;
             }
 
@@ -1612,7 +1612,7 @@ const char* flecs_script_expr_run(
                         }
 
                         result.type = ecs_meta_get_type(&member_cur);
-                        result.ptr = ecs_meta_get_ptr(&member_cur);
+                        result.ptr = ecs_meta_get_write_ptr(&member_cur);
                     }
                 }
             }
@@ -1635,7 +1635,7 @@ const char* flecs_script_expr_run(
                         out = &result;
                     } else {
                         ecs_entity_t cur_type = ecs_meta_get_type(&cur);
-                        void *cur_ptr = ecs_meta_get_ptr(&cur);
+                        void *cur_ptr = ecs_meta_get_write_ptr(&cur);
                         rvalue.type = cur_type;
                         rvalue.ptr = cur_ptr;
                         temp_out.type = cur_type;
@@ -1667,7 +1667,7 @@ const char* flecs_script_expr_run(
                          * temporary storage, and initialize the result value
                          * for the binary operation with the current cursor */
                         ecs_entity_t cur_type = ecs_meta_get_type(&cur);
-                        void *cur_ptr = ecs_meta_get_ptr(&cur);
+                        void *cur_ptr = ecs_meta_get_write_ptr(&cur);
                         lvalue.type = cur_type;
                         lvalue.ptr = flecs_expr_value_new(stack, cur_type);
                         ecs_value_copy(world, cur_type, lvalue.ptr, cur_ptr);
