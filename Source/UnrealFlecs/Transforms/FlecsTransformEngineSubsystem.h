@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "flecs.h"
+#include "Entities/FlecsEntityHandle.h"
 #include "Subsystems/EngineSubsystem.h"
 #include "FlecsTransformEngineSubsystem.generated.h"
 
@@ -19,6 +20,15 @@ struct UNREALFLECS_API FFlecsRelativeTrait
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Transform")
 	int32 RelativeToIndex = 0;
 }; // struct FFlecsRelativeComponent
+
+USTRUCT()
+struct UNREALFLECS_API FFlecsRelativeCacheTrait
+{
+	GENERATED_BODY()
+
+	UPROPERTY()
+	FFlecsEntityHandle RelativeEntity;
+}; // struct FFlecsRelativeCacheTrait
 
 UCLASS()
 class UNREALFLECS_API UFlecsTransformEngineSubsystem : public UEngineSubsystem

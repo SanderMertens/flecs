@@ -157,104 +157,104 @@ struct query_builder_i : term_builder_i<Base> {
 
     template <typename TComponent, typename TTrait>
     Base& with_trait() {
-        this->term();
-        this->template first<TComponent>().second(flecs::ChildOf).inout_none().src("$childtrait").filter();
+        this->with<TComponent>(flecs::Trait).filter().src("$childtrait");
+        this->and_();
         this->with<TTrait>().src("$childtrait");
         return *this;
     }
 
     template <typename TComponent>
     Base& with_trait(const char *trait) {
-        this->term();
-        this->template first<TComponent>().second(flecs::ChildOf).inout_none().src("$childtrait");
+        this->with<TComponent>(flecs::Trait).filter().src("$childtrait");
+        this->and_();
         this->with(trait).src("$childtrait");
         return *this;
     }
 
     template <typename TComponent>
     Base& with_trait(id_t trait) {
-        this->term();
-        this->template first<TComponent>().second(flecs::ChildOf).inout_none().src("$childtrait");
+        this->with<TComponent>(flecs::Trait).filter().src("$childtrait");
+        this->and_();
         this->with(trait).src("$childtrait");
         return *this;
     }
 
     Base& with_trait(const char *component, const char *trait) {
-        this->term();
-        this->first(component).second(flecs::ChildOf).inout_none().src("$childtrait");
+        this->with(component, flecs::Trait).filter().src("$childtrait");
+        this->and_();
         this->with(trait).src("$childtrait");
         return *this;
     }
 
     Base& with_trait(const char *component, id_t trait) {
-        this->term();
-        this->first(component).second(flecs::ChildOf).inout_none().src("$childtrait");
+        this->with(component, flecs::Trait).filter().src("$childtrait");
+        this->and_();
         this->with(trait).src("$childtrait");
         return *this;
     }
 
     Base& with_trait(id_t component, const char *trait) {
-        this->term();
-        this->first(component).second(flecs::ChildOf).inout_none().src("$childtrait");
+        this->with(component, flecs::Trait).filter().src("$childtrait");
+        this->and_();
         this->with(trait).src("$childtrait");
         return *this;
     }
 
     Base& with_trait(id_t component, id_t trait) {
-        this->term();
-        this->first(component).second(flecs::ChildOf).inout_none().src("$childtrait");
+        this->with(component, flecs::Trait).filter().src("$childtrait");
+        this->and_();
         this->with(trait).src("$childtrait");
         return *this;
     }
 
     template <typename TComponent, typename TTrait>
     Base& without_trait() {
-        this->term();
-        this->template first<TComponent>().second(flecs::ChildOf).inout_none().src("$childtrait");
+        this->with<TComponent>(flecs::Trait).src("$childtrait");
+        this->and_();
         this->without<TTrait>().src("$childtrait");
         return *this;
     }
 
     template <typename TComponent>
     Base& without_trait(const char *trait) {
-        this->term();
-        this->template first<TComponent>().second(flecs::ChildOf).inout_none().src("$childtrait");
+        this->with<TComponent>(flecs::Trait).src("$childtrait");
+        this->and_();
         this->without(trait).src("$childtrait");
         return *this;
     }
 
     template <typename TComponent>
     Base& without_trait(id_t trait) {
-        this->term();
-        this->template first<TComponent>().second(flecs::ChildOf).inout_none().src("$childtrait");
+        this->with<TComponent>(flecs::Trait).src("$childtrait");
+        this->and_();
         this->without(trait).src("$childtrait");
         return *this;
     }
 
     Base& without_trait(const char *component, const char *trait) {
-        this->term();
-        this->first(component).second(flecs::ChildOf).inout_none().src("$childtrait");
+        this->with(component, flecs::Trait).src("$childtrait");
+        this->and_();
         this->without(trait).src("$childtrait");
         return *this;
     }
 
     Base& without_trait(const char *component, id_t trait) {
-        this->term();
-        this->first(component).second(flecs::ChildOf).inout_none().src("$childtrait");
+        this->with(component, flecs::Trait).src("$childtrait");
+        this->and_();
         this->without(trait).src("$childtrait");
         return *this;
     }
 
     Base& without_trait(id_t component, const char *trait) {
-        this->term();
-        this->first(component).second(flecs::ChildOf).inout_none().src("$childtrait");
+        this->with(component, flecs::Trait).src("$childtrait");
+        this->and_();
         this->without(trait).src("$childtrait");
         return *this;
     }
 
     Base& without_trait(id_t component, id_t trait) {
-        this->term();
-        this->first(component).second(flecs::ChildOf).inout_none().src("$childtrait");
+        this->with(component, flecs::Trait).src("$childtrait");
+        this->and_();
         this->without(trait).src("$childtrait");
         return *this;
     }

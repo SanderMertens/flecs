@@ -334,8 +334,7 @@ public:
 			.build();
 
 		CreateObserver<const FFlecsUObjectComponent&, const FFlecsModuleComponent&>(TEXT("AddModuleComponentObserver"))
-			.with<FFlecsModuleComponent>()
-			.with<FFlecsUObjectComponent>().filter()
+			.term_at(0).filter()
 			.event(flecs::OnAdd)
 			.each([&](flecs::entity InEntity,
 				const FFlecsUObjectComponent& InUObjectComponent, const FFlecsModuleComponent& InModuleComponent)
