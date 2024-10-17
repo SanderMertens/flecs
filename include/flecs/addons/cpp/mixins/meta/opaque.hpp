@@ -232,6 +232,22 @@ struct opaque {
         return *this;
     }
 
+    /** Get collection element */
+    opaque& get_element(const void* (*func)(const T *src, size_t elem)) {
+        this->desc.type.get_element =
+            reinterpret_cast<decltype(
+                this->desc.type.get_element)>(func);
+        return *this;
+    }
+
+    /** get element */
+    opaque& get_member(const void* (*func)(const T *src, const char *member)) {
+        this->desc.type.get_member =
+            reinterpret_cast<decltype(
+                this->desc.type.get_member)>(func);
+        return *this;
+    }
+
     ~opaque() {
         if (world) {
             ecs_opaque_init(world, &desc);
