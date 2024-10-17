@@ -664,7 +664,7 @@ ecs_meta_cursor_t ecs_meta_cursor(
  * @return A pointer to the current field for writing.
  */
 FLECS_API
-void* ecs_meta_get_ptr(
+void* ecs_meta_get_write_ptr(
     ecs_meta_cursor_t *cursor);
 
 /** Get pointer to current field for reading.

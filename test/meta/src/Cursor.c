@@ -3123,14 +3123,10 @@ void Cursor_opaque_set_int_vec(void) {
     test_int(ecs_meta_get_int(&cur), 20);
     test_int(0, ecs_meta_next(&cur));
     test_int(ecs_meta_get_int(&cur), 30);
-
-    /* set up an abort handler for the following operations */
-    install_test_abort();
-    test_expect_abort();
+    test_assert(ecs_meta_get_read_ptr(&cur) != NULL); /* still points to a valid item */
 
     test_int(0, ecs_meta_next(&cur));
-    /* Expect the next read to fail since we are trying to read a non-existing element */ 
-    ecs_meta_get_int(&cur); 
+    test_assert(ecs_meta_get_read_ptr(&cur) == NULL); /* now we are out of bounds */
 
     ecs_os_free(v.array);
 
@@ -3385,8 +3381,19 @@ typedef struct {
     int32_t y;
 } OpaqueStruct;
 
-static void* OpaqueStruct_member(void *ptr, const char *member) {
+static void* OpaqueStruct_ensure_member(void *ptr, const char *member) {
     OpaqueStruct *data = ptr;
+    if (!strcmp(member, "x")) {
+        return &data->x;
+    } else if (!strcmp(member, "y")) {
+        return &data->y;
+    } else {
+        return NULL;
+    }
+}
+
+static const void* OpaqueStruct_get_member(const void *ptr, const char *member) {
+    const OpaqueStruct *data = ptr;
     if (!strcmp(member, "x")) {
         return &data->x;
     } else if (!strcmp(member, "y")) {
@@ -3409,7 +3416,8 @@ void Cursor_opaque_set_struct(void) {
                 {"y", .type = ecs_id(ecs_i32_t)}
             }
         }),
-        .type.ensure_member = OpaqueStruct_member
+        .type.ensure_member = OpaqueStruct_ensure_member,
+        .type.get_member = OpaqueStruct_get_member
     });
 
     OpaqueStruct v = { 0 };
@@ -3417,8 +3425,10 @@ void Cursor_opaque_set_struct(void) {
     test_int(0, ecs_meta_push(&cur));
     test_int(0, ecs_meta_member(&cur, "x"));
     test_int(0, ecs_meta_set_int(&cur, 10));
+    test_int(ecs_meta_get_int(&cur), 10);
     test_int(0, ecs_meta_member(&cur, "y"));
     test_int(0, ecs_meta_set_int(&cur, 20));
+    test_int(ecs_meta_get_int(&cur), 20);
     test_int(0, ecs_meta_pop(&cur));
     test_int(v.x, 10);
     test_int(v.y, 20);
@@ -3427,8 +3437,10 @@ void Cursor_opaque_set_struct(void) {
     test_int(0, ecs_meta_push(&cur));
     test_int(0, ecs_meta_member(&cur, "y"));
     test_int(0, ecs_meta_set_int(&cur, 30));
+    test_int(ecs_meta_get_int(&cur), 30);
     test_int(0, ecs_meta_member(&cur, "x"));
     test_int(0, ecs_meta_set_int(&cur, 40));
+    test_int(ecs_meta_get_int(&cur), 40);
     test_int(0, ecs_meta_pop(&cur));
     test_int(v.x, 40);
     test_int(v.y, 30);
@@ -3443,8 +3455,19 @@ typedef struct {
     Position stop;
 } OpaqueNested;
 
-static void* OpaqueNested_member(void *ptr, const char *member) {
+static void* OpaqueNested_ensure_member(void *ptr, const char *member) {
     OpaqueNested *data = ptr;
+    if (!strcmp(member, "start")) {
+        return &data->start;
+    } else if (!strcmp(member, "stop")) {
+        return &data->stop;
+    } else {
+        return NULL;
+    }
+}
+
+static const void* OpaqueNested_get_member(const void *ptr, const char *member) {
+    const OpaqueNested *data = ptr;
     if (!strcmp(member, "start")) {
         return &data->start;
     } else if (!strcmp(member, "stop")) {
@@ -3476,7 +3499,8 @@ void Cursor_opaque_set_nested_struct(void) {
                 {"stop", .type = ecs_id(Position)}
             }
         }),
-        .type.ensure_member = OpaqueNested_member
+        .type.ensure_member = OpaqueNested_ensure_member,
+        .type.get_member = OpaqueNested_get_member,
     });
 
     OpaqueNested v = { 0 };
@@ -3486,15 +3510,19 @@ void Cursor_opaque_set_nested_struct(void) {
         test_int(0, ecs_meta_push(&cur));
             test_int(0, ecs_meta_member(&cur, "x"));
             test_int(0, ecs_meta_set_int(&cur, 10));
+            test_int(ecs_meta_get_int(&cur), 10);
             test_int(0, ecs_meta_member(&cur, "y"));
             test_int(0, ecs_meta_set_int(&cur, 20));
+            test_int(ecs_meta_get_int(&cur), 20);
         test_int(0, ecs_meta_pop(&cur));
         test_int(0, ecs_meta_member(&cur, "stop"));
         test_int(0, ecs_meta_push(&cur));
             test_int(0, ecs_meta_member(&cur, "x"));
             test_int(0, ecs_meta_set_int(&cur, 30));
+            test_int(ecs_meta_get_int(&cur), 30);
             test_int(0, ecs_meta_member(&cur, "y"));
             test_int(0, ecs_meta_set_int(&cur, 40));
+            test_int(ecs_meta_get_int(&cur), 40);
         test_int(0, ecs_meta_pop(&cur));
     test_int(0, ecs_meta_pop(&cur));
 
@@ -3509,15 +3537,19 @@ void Cursor_opaque_set_nested_struct(void) {
         test_int(0, ecs_meta_push(&cur));
             test_int(0, ecs_meta_member(&cur, "y"));
             test_int(0, ecs_meta_set_int(&cur, 50));
+            test_int(ecs_meta_get_int(&cur), 50);
             test_int(0, ecs_meta_member(&cur, "x"));
             test_int(0, ecs_meta_set_int(&cur, 60));
+            test_int(ecs_meta_get_int(&cur), 60);
         test_int(0, ecs_meta_pop(&cur));
         test_int(0, ecs_meta_member(&cur, "start"));
         test_int(0, ecs_meta_push(&cur));
             test_int(0, ecs_meta_member(&cur, "y"));
             test_int(0, ecs_meta_set_int(&cur, 70));
+            test_int(ecs_meta_get_int(&cur), 70);
             test_int(0, ecs_meta_member(&cur, "x"));
             test_int(0, ecs_meta_set_int(&cur, 80));
+            test_int(ecs_meta_get_int(&cur), 80);
         test_int(0, ecs_meta_pop(&cur));
     test_int(0, ecs_meta_pop(&cur));
 
@@ -3536,8 +3568,19 @@ typedef struct {
     OpaqueStruct stop;
 } OpaqueNestedOpaque;
 
-static void* OpaqueNestedOpaque_member(void *ptr, const char *member) {
+static void* OpaqueNestedOpaque_ensure_member(void *ptr, const char *member) {
     OpaqueNestedOpaque *data = ptr;
+    if (!strcmp(member, "start")) {
+        return &data->start;
+    } else if (!strcmp(member, "stop")) {
+        return &data->stop;
+    } else {
+        return NULL;
+    }
+}
+
+static const void* OpaqueNestedOpaque_get_member(const void *ptr, const char *member) {
+    const OpaqueNestedOpaque *data = ptr;
     if (!strcmp(member, "start")) {
         return &data->start;
     } else if (!strcmp(member, "stop")) {
@@ -3561,7 +3604,8 @@ void Cursor_opaque_set_nested_opaque_struct(void) {
                 {"y", .type = ecs_id(ecs_i32_t)}
             }
         }),
-        .type.ensure_member = OpaqueStruct_member
+        .type.ensure_member = OpaqueStruct_ensure_member,
+        .type.get_member = OpaqueStruct_get_member,
     });
 
     ecs_opaque(world, {
@@ -3572,7 +3616,8 @@ void Cursor_opaque_set_nested_opaque_struct(void) {
                 {"stop", .type = ecs_id(OpaqueStruct)}
             }
         }),
-        .type.ensure_member = OpaqueNestedOpaque_member
+        .type.ensure_member = OpaqueNestedOpaque_ensure_member,
+        .type.get_member = OpaqueNestedOpaque_get_member
     });
 
     OpaqueNestedOpaque v = { 0 };
@@ -3582,15 +3627,19 @@ void Cursor_opaque_set_nested_opaque_struct(void) {
         test_int(0, ecs_meta_push(&cur));
             test_int(0, ecs_meta_member(&cur, "x"));
             test_int(0, ecs_meta_set_int(&cur, 10));
+            test_int(ecs_meta_get_int(&cur), 10);
             test_int(0, ecs_meta_member(&cur, "y"));
             test_int(0, ecs_meta_set_int(&cur, 20));
+            test_int(ecs_meta_get_int(&cur), 20);
         test_int(0, ecs_meta_pop(&cur));
         test_int(0, ecs_meta_member(&cur, "stop"));
         test_int(0, ecs_meta_push(&cur));
             test_int(0, ecs_meta_member(&cur, "x"));
             test_int(0, ecs_meta_set_int(&cur, 30));
+            test_int(ecs_meta_get_int(&cur), 30);
             test_int(0, ecs_meta_member(&cur, "y"));
             test_int(0, ecs_meta_set_int(&cur, 40));
+            test_int(ecs_meta_get_int(&cur), 40);
         test_int(0, ecs_meta_pop(&cur));
     test_int(0, ecs_meta_pop(&cur));
 
@@ -3605,15 +3654,19 @@ void Cursor_opaque_set_nested_opaque_struct(void) {
         test_int(0, ecs_meta_push(&cur));
             test_int(0, ecs_meta_member(&cur, "y"));
             test_int(0, ecs_meta_set_int(&cur, 50));
+            test_int(ecs_meta_get_int(&cur), 50);
             test_int(0, ecs_meta_member(&cur, "x"));
             test_int(0, ecs_meta_set_int(&cur, 60));
+            test_int(ecs_meta_get_int(&cur), 60);
         test_int(0, ecs_meta_pop(&cur));
         test_int(0, ecs_meta_member(&cur, "start"));
         test_int(0, ecs_meta_push(&cur));
             test_int(0, ecs_meta_member(&cur, "y"));
             test_int(0, ecs_meta_set_int(&cur, 70));
+            test_int(ecs_meta_get_int(&cur), 70);
             test_int(0, ecs_meta_member(&cur, "x"));
             test_int(0, ecs_meta_set_int(&cur, 80));
+            test_int(ecs_meta_get_int(&cur), 80);
         test_int(0, ecs_meta_pop(&cur));
     test_int(0, ecs_meta_pop(&cur));
 
@@ -4014,7 +4067,8 @@ void Cursor_struct_w_2_opaque_structs(void) {
                 {"y", .type = ecs_id(ecs_i32_t)}
             }
         }),
-        .type.ensure_member = OpaqueStruct_member
+        .type.ensure_member = OpaqueStruct_ensure_member,
+        .type.get_member = OpaqueStruct_get_member
     });
 
     ecs_struct(world, {
@@ -4195,7 +4249,8 @@ void Cursor_struct_w_3_opaque_structs(void) {
                 {"y", .type = ecs_id(ecs_i32_t)}
             }
         }),
-        .type.ensure_member = OpaqueStruct_member
+        .type.ensure_member = OpaqueStruct_ensure_member,
+        .type.get_member = OpaqueStruct_get_member
     });
 
     ecs_struct(world, {
