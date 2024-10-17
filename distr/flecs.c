@@ -21148,12 +21148,9 @@ char* ecs_cpp_get_symbol_name(
     const char *type_name,
     size_t len)
 {
-    // Symbol is same as name, but with '::' replaced with '.'
-    ecs_os_strcpy(symbol_name, type_name);
-
-    char *ptr;
+    const char *ptr;
     size_t i;
-    for (i = 0, ptr = symbol_name; i < len && *ptr; i ++, ptr ++) {
+    for (i = 0, ptr = type_name; i < len && *ptr; i ++, ptr ++) {
         if (*ptr == ':') {
             symbol_name[i] = '.';
             ptr ++;
