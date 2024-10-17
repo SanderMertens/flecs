@@ -1592,6 +1592,54 @@ void QueryBuilder_template_term(void) {
     test_int(count, 1);
 }
 
+void QueryBuilder_typed_term_at(void) {
+    flecs::world ecs;
+
+    struct Rel { int foo; };
+
+    int32_t count = 0;
+
+    auto s = ecs.system<Rel, const Velocity>()
+        .term_at<Velocity>().singleton()
+        .term_at<Rel>().second(flecs::Wildcard)
+        .run([&](flecs::iter it){
+            while (it.next()) {
+                count += it.count();
+            }
+        });
+
+    ecs.entity().add<Rel, Tag>();
+    ecs.set<Velocity>({});
+
+    s.run();
+
+    test_int(count, 1);
+}
+
+void QueryBuilder_typed_term_at_indexed(void) {
+    flecs::world ecs;
+
+    struct Rel { int foo; };
+
+    int32_t count = 0;
+
+    auto s = ecs.system<Rel, const Velocity>()
+        .term_at<Velocity>(1).singleton()
+        .term_at<Rel>(0).second(flecs::Wildcard)
+        .run([&](flecs::iter it){
+            while (it.next()) {
+                count += it.count();
+            }
+        });
+
+    ecs.entity().add<Rel, Tag>();
+    ecs.set<Velocity>({});
+
+    s.run();
+
+    test_int(count, 1);
+}
+
 void QueryBuilder_explicit_subject_w_id(void) {
     flecs::world ecs;
 
