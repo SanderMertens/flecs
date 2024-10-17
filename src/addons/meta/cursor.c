@@ -1892,7 +1892,7 @@ char ecs_meta_get_char(
     }
     switch(op->kind) {
     case EcsOpChar: 
-        return *(const ecs_char_t*)ptr != 0;
+        return *(const ecs_char_t*)ptr;
     case EcsOpOpaque: {
         /* If opaque type knows how to convert to char, retrieve it. 
          Otherwise, fallback to default case (error). */
