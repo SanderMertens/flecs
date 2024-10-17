@@ -4633,8 +4633,19 @@ void Cursor_struct_w_3_opaque_arrays(void) {
     ecs_fini(world);
 }
 
-static void* OpaqueStructIntVec_member(void *ptr, const char *member) {
+static void* OpaqueStructIntVec_ensure_member(void *ptr, const char *member) {
     Struct_w_IntVec *data = ptr;
+    if (!strcmp(member, "foo")) {
+        return &data->foo;
+    } else if (!strcmp(member, "bar")) {
+        return &data->bar;
+    } else {
+        return NULL;
+    }
+}
+
+static const void* OpaqueStructIntVec_get_member(const void *ptr, const char *member) {
+    const Struct_w_IntVec *data = ptr;
     if (!strcmp(member, "foo")) {
         return &data->foo;
     } else if (!strcmp(member, "bar")) {
@@ -4654,6 +4665,7 @@ void Cursor_opaque_struct_w_opaque_vec(void) {
         .entity = ecs_id(IntVec),
         .type.as_type = ecs_vector(world, { .type = ecs_id(ecs_i32_t) }),
         .type.ensure_element = IntVec_ensure,
+        .type.get_element = IntVec_get,
         .type.count = IntVec_count,
         .type.resize = IntVec_resize
     });
@@ -4668,7 +4680,8 @@ void Cursor_opaque_struct_w_opaque_vec(void) {
     ecs_opaque(world, {
         .entity = ecs_id(Struct_w_IntVec),
         .type.as_type = os,
-        .type.ensure_member = OpaqueStructIntVec_member,
+        .type.ensure_member = OpaqueStructIntVec_ensure_member,
+        .type.get_member = OpaqueStructIntVec_get_member
     });
 
     Struct_w_IntVec v = {0};
@@ -4677,19 +4690,37 @@ void Cursor_opaque_struct_w_opaque_vec(void) {
         test_int(0, ecs_meta_member(&cur, "foo"));
         test_int(0, ecs_meta_push(&cur));
             test_int(0, ecs_meta_set_int(&cur, 10));
+            test_int(ecs_meta_get_int(&cur), 10);
             test_int(0, ecs_meta_next(&cur));
             test_int(0, ecs_meta_set_int(&cur, 20));
+            test_int(ecs_meta_get_int(&cur), 20);
             test_int(0, ecs_meta_next(&cur));
             test_int(0, ecs_meta_set_int(&cur, 30));
+            test_int(ecs_meta_get_int(&cur), 30);
         test_int(0, ecs_meta_pop(&cur));
+
+        const IntVec *vec = ecs_meta_get_read_ptr(&cur);
+        test_int(vec->array[0], 10);
+        test_int(vec->array[1], 20);
+        test_int(vec->array[2], 30);
+
         test_int(0, ecs_meta_member(&cur, "bar"));
         test_int(0, ecs_meta_push(&cur));
             test_int(0, ecs_meta_set_int(&cur, 40));
+            test_int(ecs_meta_get_int(&cur), 40);
             test_int(0, ecs_meta_next(&cur));
             test_int(0, ecs_meta_set_int(&cur, 50));
+            test_int(ecs_meta_get_int(&cur), 50);
             test_int(0, ecs_meta_next(&cur));
             test_int(0, ecs_meta_set_int(&cur, 60));
+            test_int(ecs_meta_get_int(&cur), 60);
         test_int(0, ecs_meta_pop(&cur));
+
+        vec = ecs_meta_get_read_ptr(&cur);
+        test_int(vec->array[0], 40);
+        test_int(vec->array[1], 50);
+        test_int(vec->array[2], 60);
+
     test_int(0, ecs_meta_pop(&cur));
 
     test_int(v.foo.count, 3);
@@ -4706,7 +4737,15 @@ void Cursor_opaque_struct_w_opaque_vec(void) {
     ecs_fini(world);
 }
 
-static void* OpaqueStructElem_member(void *ptr, const char *member) {
+static void* OpaqueStructElem_ensure_member(void *ptr, const char *member) {
+    if (!strcmp(member, "i")) {
+        return ptr;
+    } else {
+        return NULL;
+    }
+}
+
+static const void* OpaqueStructElem_get_member(const void *ptr, const char *member) {
     if (!strcmp(member, "i")) {
         return ptr;
     } else {
@@ -4732,13 +4771,15 @@ void Cursor_opaque_vec_w_opaque_elem(void) {
             .type.alignment = ECS_ALIGNOF(ecs_i32_t)
         }),
         .type.as_type = os,
-        .type.ensure_member = OpaqueStructElem_member,
+        .type.ensure_member = OpaqueStructElem_ensure_member,
+        .type.get_member = OpaqueStructElem_get_member,
     });
 
     ecs_opaque(world, {
         .entity = ecs_id(IntVec),
         .type.as_type = ecs_vector(world, { .type = oelem }),
         .type.ensure_element = IntVec_ensure,
+        .type.get_element = IntVec_get,
         .type.count = IntVec_count,
         .type.resize = IntVec_resize
     });
@@ -4749,18 +4790,26 @@ void Cursor_opaque_vec_w_opaque_elem(void) {
         test_int(0, ecs_meta_push(&cur));
             test_int(0, ecs_meta_member(&cur, "i"));
             test_int(0, ecs_meta_set_int(&cur, 10));
+            test_int(ecs_meta_get_int(&cur), 10);
         test_int(0, ecs_meta_pop(&cur));
         test_int(0, ecs_meta_next(&cur));
         test_int(0, ecs_meta_push(&cur));
             test_int(0, ecs_meta_member(&cur, "i"));
             test_int(0, ecs_meta_set_int(&cur, 20));
+            test_int(ecs_meta_get_int(&cur), 20);
         test_int(0, ecs_meta_pop(&cur));
         test_int(0, ecs_meta_next(&cur));
         test_int(0, ecs_meta_push(&cur));
             test_int(0, ecs_meta_member(&cur, "i"));
             test_int(0, ecs_meta_set_int(&cur, 30));
+            test_int(ecs_meta_get_int(&cur), 30);
         test_int(0, ecs_meta_pop(&cur));
     test_int(0, ecs_meta_pop(&cur));
+
+    const IntVec *vec = ecs_meta_get_read_ptr(&cur);
+    test_int(vec->array[0], 10);
+    test_int(vec->array[1], 20);
+    test_int(vec->array[2], 30);
 
     test_int(v.count, 3);
     test_int(v.array[0], 10);
