@@ -3247,6 +3247,14 @@ static void* IntVec_ensure(void *ptr, size_t index) {
     return &data->array[index];
 }
 
+static const void* IntVec_get(const void *ptr, size_t index) {
+    const IntVec *data = ptr;
+    if (index >= data->count) {
+      return NULL;
+    }
+    return &data->array[index];
+}
+
 static void IntVec_resize(void *ptr, size_t size) {
     IntVec *data = ptr;
     if (data->count != size) {
@@ -3269,6 +3277,7 @@ void Cursor_opaque_set_int_vec(void) {
         .entity = ecs_id(IntVec),
         .type.as_type = ecs_vector(world, { .type = ecs_id(ecs_i32_t) }),
         .type.ensure_element = IntVec_ensure,
+        .type.get_element = IntVec_get,
         .type.count = IntVec_count,
         .type.resize = IntVec_resize
     });
@@ -3288,6 +3297,22 @@ void Cursor_opaque_set_int_vec(void) {
     test_int(v.array[0], 10);
     test_int(v.array[1], 20);
     test_int(v.array[2], 30);
+
+    cur = ecs_meta_cursor(world, ecs_id(IntVec), &v);
+    test_int(0, ecs_meta_push(&cur));
+    test_int(ecs_meta_get_int(&cur), 10);
+    test_int(0, ecs_meta_next(&cur));
+    test_int(ecs_meta_get_int(&cur), 20);
+    test_int(0, ecs_meta_next(&cur));
+    test_int(ecs_meta_get_int(&cur), 30);
+
+    /* set up an abort handler for the following operations */
+    install_test_abort();
+    test_expect_abort();
+
+    test_int(0, ecs_meta_next(&cur));
+    /* Expect the next read to fail since we are trying to read a non-existing element */ 
+    ecs_meta_get_int(&cur); 
 
     ecs_os_free(v.array);
 
