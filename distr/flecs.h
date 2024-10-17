@@ -15880,6 +15880,16 @@ typedef struct EcsOpaque {
         const void *src,
         const ecs_world_t *world);
 
+    /** get collection element */
+    const void* (*get_element)(
+        const void *src,
+        size_t elem);
+
+    /** get element */
+    const void* (*get_member)(
+        const void *src,
+        const char *member);
+
 } EcsOpaque;
 
 
@@ -16034,13 +16044,22 @@ ecs_meta_cursor_t ecs_meta_cursor(
     ecs_entity_t type,
     void *ptr);
 
-/** Get pointer to current field.
+/** Get pointer to current field for writing.
  * 
  * @param cursor The cursor.
- * @return A pointer to the current field.
+ * @return A pointer to the current field for writing.
  */
 FLECS_API
-void* ecs_meta_get_ptr(
+void* ecs_meta_get_write_ptr(
+    ecs_meta_cursor_t *cursor);
+
+/** Get pointer to current field for reading.
+ * 
+ * @param cursor The cursor.
+ * @return A pointer to the current field. NULL if element does not exist.
+ */
+FLECS_API
+const void* ecs_meta_get_read_ptr(
     ecs_meta_cursor_t *cursor);
 
 /** Move cursor to next field.
@@ -19243,9 +19262,14 @@ struct cursor {
     /** Get unit of value */
     flecs::entity get_unit() const;
 
-    /** Get untyped pointer to value */
-    void* get_ptr() {
-        return ecs_meta_get_ptr(&cursor_);
+    /** Get untyped pointer to value for writing */
+    void* get_write_ptr() {
+        return ecs_meta_get_write_ptr(&cursor_);
+    }
+
+    /** Get untyped pointer to value for reading */
+    const void* get_read_ptr() {
+        return ecs_meta_get_read_ptr(&cursor_);
     }
 
     /** Set boolean value */
@@ -19570,6 +19594,22 @@ struct opaque {
         this->desc.type.get_id =
             reinterpret_cast<decltype(
                 this->desc.type.get_id)>(func);
+        return *this;
+    }
+
+    /** Get collection element */
+    opaque& get_element(const void* (*func)(const T *src, size_t elem)) {
+        this->desc.type.get_element =
+            reinterpret_cast<decltype(
+                this->desc.type.get_element)>(func);
+        return *this;
+    }
+
+    /** get element */
+    opaque& get_member(const void* (*func)(const T *src, const char *member)) {
+        this->desc.type.get_member =
+            reinterpret_cast<decltype(
+                this->desc.type.get_member)>(func);
         return *this;
     }
 
