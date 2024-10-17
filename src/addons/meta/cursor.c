@@ -264,7 +264,7 @@ error:
     return (ecs_meta_cursor_t){ 0 };
 }
 
-void* ecs_meta_get_ptr(
+void* ecs_meta_get_write_ptr(
     ecs_meta_cursor_t *cursor)
 {
     return flecs_meta_cursor_get_write_ptr(cursor->world, 
@@ -1844,26 +1844,26 @@ bool ecs_meta_get_bool(
         ecs_throw(ECS_OUT_OF_RANGE, "cannot find element");
     }
     switch(op->kind) {
-    case EcsOpBool: return *(ecs_bool_t*)ptr;
-    case EcsOpI8:   return *(ecs_i8_t*)ptr != 0;
-    case EcsOpU8:   return *(ecs_u8_t*)ptr != 0;
-    case EcsOpChar: return *(ecs_char_t*)ptr != 0;
-    case EcsOpByte: return *(ecs_u8_t*)ptr != 0;
-    case EcsOpI16:  return *(ecs_i16_t*)ptr != 0;
-    case EcsOpU16:  return *(ecs_u16_t*)ptr != 0;
-    case EcsOpI32:  return *(ecs_i32_t*)ptr != 0;
-    case EcsOpU32:  return *(ecs_u32_t*)ptr != 0;
-    case EcsOpI64:  return *(ecs_i64_t*)ptr != 0;
-    case EcsOpU64:  return *(ecs_u64_t*)ptr != 0;
-    case EcsOpIPtr: return *(ecs_iptr_t*)ptr != 0;
-    case EcsOpUPtr: return *(ecs_uptr_t*)ptr != 0;
-    case EcsOpF32:  return ECS_NEQZERO(*(ecs_f32_t*)ptr);
-    case EcsOpF64:  return ECS_NEQZERO(*(ecs_f64_t*)ptr);
-    case EcsOpString: return *(const char**)ptr != NULL;
-    case EcsOpEnum: return *(ecs_i32_t*)ptr != 0;
-    case EcsOpBitmask: return *(ecs_u32_t*)ptr != 0;
-    case EcsOpEntity: return *(ecs_entity_t*)ptr != 0;
-    case EcsOpId: return *(ecs_id_t*)ptr != 0;
+    case EcsOpBool: return *(const ecs_bool_t*)ptr;
+    case EcsOpI8:   return *(const ecs_i8_t*)ptr != 0;
+    case EcsOpU8:   return *(const ecs_u8_t*)ptr != 0;
+    case EcsOpChar: return *(const ecs_char_t*)ptr != 0;
+    case EcsOpByte: return *(const ecs_u8_t*)ptr != 0;
+    case EcsOpI16:  return *(const ecs_i16_t*)ptr != 0;
+    case EcsOpU16:  return *(const ecs_u16_t*)ptr != 0;
+    case EcsOpI32:  return *(const ecs_i32_t*)ptr != 0;
+    case EcsOpU32:  return *(const ecs_u32_t*)ptr != 0;
+    case EcsOpI64:  return *(const ecs_i64_t*)ptr != 0;
+    case EcsOpU64:  return *(const ecs_u64_t*)ptr != 0;
+    case EcsOpIPtr: return *(const ecs_iptr_t*)ptr != 0;
+    case EcsOpUPtr: return *(const ecs_uptr_t*)ptr != 0;
+    case EcsOpF32:  return ECS_NEQZERO(*(const ecs_f32_t*)ptr);
+    case EcsOpF64:  return ECS_NEQZERO(*(const ecs_f64_t*)ptr);
+    case EcsOpString: return *(const char* const *)ptr != NULL;
+    case EcsOpEnum: return *(const ecs_i32_t*)ptr != 0;
+    case EcsOpBitmask: return *(const ecs_u32_t*)ptr != 0;
+    case EcsOpEntity: return *(const ecs_entity_t*)ptr != 0;
+    case EcsOpId: return *(const ecs_id_t*)ptr != 0;
     case EcsOpOpaque: {
         /* If opaque type knows how to convert to bool, retrieve it. 
          Otherwise, fallback to default case (error). */
@@ -1902,7 +1902,7 @@ char ecs_meta_get_char(
     }
     switch(op->kind) {
     case EcsOpChar: 
-        return *(ecs_char_t*)ptr != 0;
+        return *(const ecs_char_t*)ptr != 0;
     case EcsOpOpaque: {
         /* If opaque type knows how to convert to char, retrieve it. 
          Otherwise, fallback to default case (error). */
@@ -1971,7 +1971,7 @@ int64_t ecs_meta_get_int(
     case EcsOpUPtr: return flecs_uto(int64_t, *(const ecs_uptr_t*)ptr);
     case EcsOpF32:  return (int64_t)*(const ecs_f32_t*)ptr;
     case EcsOpF64:  return (int64_t)*(const ecs_f64_t*)ptr;
-    case EcsOpString: return atoi(*(const char**)ptr);
+    case EcsOpString: return atoi(*(const char* const *)ptr);
     case EcsOpEnum: return *(const ecs_i32_t*)ptr;
     case EcsOpBitmask: return *(const ecs_u32_t*)ptr;
     case EcsOpEntity:
@@ -2018,22 +2018,22 @@ uint64_t ecs_meta_get_uint(
         ecs_throw(ECS_OUT_OF_RANGE, "cannot find element");
     }
     switch(op->kind) {
-    case EcsOpBool: return *(ecs_bool_t*)ptr;
+    case EcsOpBool: return *(const ecs_bool_t*)ptr;
     case EcsOpI8:   return flecs_ito(uint64_t, *(const ecs_i8_t*)ptr);
-    case EcsOpU8:   return *(ecs_u8_t*)ptr;
+    case EcsOpU8:   return *(const ecs_u8_t*)ptr;
     case EcsOpChar: return flecs_ito(uint64_t, *(const ecs_char_t*)ptr);
     case EcsOpByte: return flecs_ito(uint64_t, *(const ecs_u8_t*)ptr);
     case EcsOpI16:  return flecs_ito(uint64_t, *(const ecs_i16_t*)ptr);
-    case EcsOpU16:  return *(ecs_u16_t*)ptr;
+    case EcsOpU16:  return *(const ecs_u16_t*)ptr;
     case EcsOpI32:  return flecs_ito(uint64_t, *(const ecs_i32_t*)ptr);
-    case EcsOpU32:  return *(ecs_u32_t*)ptr;
+    case EcsOpU32:  return *(const ecs_u32_t*)ptr;
     case EcsOpI64:  return flecs_ito(uint64_t, *(const ecs_i64_t*)ptr);
-    case EcsOpU64:  return *(ecs_u64_t*)ptr;
+    case EcsOpU64:  return *(const ecs_u64_t*)ptr;
     case EcsOpIPtr: return flecs_ito(uint64_t, *(const ecs_i64_t*)ptr);
-    case EcsOpUPtr: return *(ecs_uptr_t*)ptr;
+    case EcsOpUPtr: return *(const ecs_uptr_t*)ptr;
     case EcsOpF32:  return flecs_ito(uint64_t, *(const ecs_f32_t*)ptr);
     case EcsOpF64:  return flecs_ito(uint64_t, *(const ecs_f64_t*)ptr);
-    case EcsOpString: return flecs_ito(uint64_t, atoi(*(const char**)ptr));
+    case EcsOpString: return flecs_ito(uint64_t, atoi(*(const char* const *)ptr));
     case EcsOpEnum: return flecs_ito(uint64_t, *(const ecs_i32_t*)ptr);
     case EcsOpBitmask: return *(const ecs_u32_t*)ptr;
     case EcsOpEntity: return *(const ecs_entity_t*)ptr;
@@ -2146,7 +2146,7 @@ const char* ecs_meta_get_string(
         ecs_throw(ECS_OUT_OF_RANGE, "cannot find element");
     }
     switch(op->kind) {
-    case EcsOpString: return *(const char**)ptr;
+    case EcsOpString: return *(const char* const*)ptr;
     case EcsOpOpaque: {
         /* If opaque type knows how to convert to string, retrieve it. 
          Otherwise, fallback to default case (error). */
@@ -2200,7 +2200,7 @@ ecs_entity_t ecs_meta_get_entity(
         ecs_throw(ECS_OUT_OF_RANGE, "cannot find element");
     }
     switch(op->kind) {
-    case EcsOpEntity: return *(ecs_entity_t*)ptr;
+    case EcsOpEntity: return *(const ecs_entity_t*)ptr;
     case EcsOpOpaque: {
         /* If opaque type knows how to convert to entity, retrieve it. 
          Otherwise, fallback to default case (error). */
@@ -2253,8 +2253,8 @@ ecs_id_t ecs_meta_get_id(
         ecs_throw(ECS_OUT_OF_RANGE, "cannot find element");
     }
     switch(op->kind) {
-    case EcsOpEntity: return *(ecs_id_t*)ptr; /* Entities are valid ids */
-    case EcsOpId: return *(ecs_id_t*)ptr;
+    case EcsOpEntity: return *(const ecs_id_t*)ptr; /* Entities are valid ids */
+    case EcsOpId: return *(const ecs_id_t*)ptr;
     case EcsOpOpaque: {
         /* If opaque type knows how to convert to id, retrieve it. 
          Otherwise, fallback to default case (error). */
