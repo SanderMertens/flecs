@@ -115,8 +115,11 @@ bool flecs_json_serialize_table_tags(
         }
 
         flecs_json_next(buf);
-        flecs_json_path_or_label(buf, world, id, 
+
+        ecs_strbuf_appendlit(buf, "\"");
+        flecs_json_id_member(buf, world, id, 
             desc ? desc->serialize_full_paths : true);
+        ecs_strbuf_appendlit(buf, "\"");
 
         tag_count ++;
     }

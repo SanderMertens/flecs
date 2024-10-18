@@ -651,6 +651,18 @@ void flecs_json_id_member(
     ecs_id_t id,
     bool fullpath)
 {
+    ecs_id_t flags = id & ECS_ID_FLAGS_MASK;
+
+    if (flags & ECS_AUTO_OVERRIDE) {
+        ecs_strbuf_appendlit(buf, "auto_override|");
+        id &= ~ECS_AUTO_OVERRIDE;
+    }
+
+    if (flags & ECS_TOGGLE) {
+        ecs_strbuf_appendlit(buf, "toggle|");
+        id &= ~ECS_TOGGLE;
+    }
+
     if (fullpath) {
         flecs_json_id_member_fullpath(buf, world, id);
         return;

@@ -690,6 +690,13 @@ void SerializeEntityToJson_serialize_sparse_mixed(void);
 void SerializeEntityToJson_serialize_sparse_inherited(void);
 void SerializeEntityToJson_serialize_sparse_inherited_pair(void);
 void SerializeEntityToJson_serialize_sparse_inherited_mixed(void);
+void SerializeEntityToJson_serialize_auto_override_w_inherited(void);
+void SerializeEntityToJson_serialize_auto_override(void);
+void SerializeEntityToJson_serialize_auto_override_pair(void);
+void SerializeEntityToJson_serialize_auto_override_fullpath(void);
+void SerializeEntityToJson_serialize_auto_override_pair_fullpath(void);
+void SerializeEntityToJson_serialize_toggle(void);
+void SerializeEntityToJson_serialize_toggle_pair(void);
 
 // Testsuite 'SerializeIterToJson'
 void SerializeIterToJson_serialize_1_comps_empty(void);
@@ -3646,6 +3653,34 @@ bake_test_case SerializeEntityToJson_testcases[] = {
     {
         "serialize_sparse_inherited_mixed",
         SerializeEntityToJson_serialize_sparse_inherited_mixed
+    },
+    {
+        "serialize_auto_override_w_inherited",
+        SerializeEntityToJson_serialize_auto_override_w_inherited
+    },
+    {
+        "serialize_auto_override",
+        SerializeEntityToJson_serialize_auto_override
+    },
+    {
+        "serialize_auto_override_pair",
+        SerializeEntityToJson_serialize_auto_override_pair
+    },
+    {
+        "serialize_auto_override_fullpath",
+        SerializeEntityToJson_serialize_auto_override_fullpath
+    },
+    {
+        "serialize_auto_override_pair_fullpath",
+        SerializeEntityToJson_serialize_auto_override_pair_fullpath
+    },
+    {
+        "serialize_toggle",
+        SerializeEntityToJson_serialize_toggle
+    },
+    {
+        "serialize_toggle_pair",
+        SerializeEntityToJson_serialize_toggle_pair
     }
 };
 
@@ -4895,7 +4930,7 @@ static bake_test_suite suites[] = {
         "SerializeEntityToJson",
         NULL,
         NULL,
-        62,
+        69,
         SerializeEntityToJson_testcases
     },
     {

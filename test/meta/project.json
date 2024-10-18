@@ -136,7 +136,7 @@
                 "vector_of_struct_with_strings",
                 "vector_of_arrays_of_strings",
                 "vector_of_opaque"
-            ]            
+            ]
         }, {
             "id": "StructTypes",
             "testcases": [
@@ -720,7 +720,14 @@
                 "serialize_sparse_mixed",
                 "serialize_sparse_inherited",
                 "serialize_sparse_inherited_pair",
-                "serialize_sparse_inherited_mixed"
+                "serialize_sparse_inherited_mixed",
+                "serialize_auto_override_w_inherited",
+                "serialize_auto_override",
+                "serialize_auto_override_pair",
+                "serialize_auto_override_fullpath",
+                "serialize_auto_override_pair_fullpath",
+                "serialize_toggle",
+                "serialize_toggle_pair"
             ]
         }, {
             "id": "SerializeIterToJson",
