@@ -686,7 +686,6 @@ void Basic_entity_iteration_w_match_empty_tables(void);
 void Basic_get_cache_query_uncached(void);
 void Basic_get_cache_query_cached(void);
 void Basic_get_cache_query_partially_cached(void);
-void Basic_written_pair_any_any_record(void);
 
 // Testsuite 'Combinations'
 void Combinations_setup(void);
@@ -4808,10 +4807,6 @@ bake_test_case Basic_testcases[] = {
     {
         "get_cache_query_partially_cached",
         Basic_get_cache_query_partially_cached
-    },
-    {
-        "written_pair_any_any_record",
-        Basic_written_pair_any_any_record
     }
 };
 
@@ -10442,7 +10437,7 @@ static bake_test_suite suites[] = {
         "Basic",
         Basic_setup,
         NULL,
-        231,
+        230,
         Basic_testcases,
         1,
         Basic_params

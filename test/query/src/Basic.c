@@ -11358,6 +11358,8 @@ void Basic_entity_iteration_w_match_empty_tables(void) {
         test_bool(false, ecs_query_next(&it));
     }
 
+    ecs_query_fini(q);
+
     ecs_fini(world);
 }
 
