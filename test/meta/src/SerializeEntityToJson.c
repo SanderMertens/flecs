@@ -1778,3 +1778,168 @@ void SerializeEntityToJson_serialize_sparse_inherited_mixed(void) {
 
     ecs_fini(world);
 }
+
+void SerializeEntityToJson_serialize_auto_override_w_inherited(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e"});
+    ecs_auto_override(world, e, Position);
+
+    ecs_entity_to_json_desc_t desc = {
+        .serialize_inherited = true
+    };
+
+    char *json = ecs_entity_to_json(world, e, &desc);
+    test_assert(json != NULL);
+    test_json(json, "{\"name\":\"e\", \"tags\":[\"auto_override|Position\"]}");
+    ecs_os_free(json);
+
+    ecs_fini(world);
+}
+
+void SerializeEntityToJson_serialize_auto_override(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e"});
+    ecs_auto_override(world, e, Position);
+
+    char *json = ecs_entity_to_json(world, e, NULL);
+    test_assert(json != NULL);
+    test_json(json, "{\"name\":\"e\", \"tags\":[\"auto_override|Position\"]}");
+    ecs_os_free(json);
+
+    ecs_fini(world);
+}
+
+void SerializeEntityToJson_serialize_auto_override_pair(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, Tgt);
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e"});
+    ecs_auto_override_pair(world, e, Rel, Tgt);
+
+    char *json = ecs_entity_to_json(world, e, NULL);
+    test_assert(json != NULL);
+    test_json(json, "{\"name\":\"e\", \"tags\":[\"auto_override|(Rel,Tgt)\"]}");
+    ecs_os_free(json);
+
+    ecs_fini(world);
+}
+
+void SerializeEntityToJson_serialize_auto_override_fullpath(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, Tgt);
+
+    ecs_entity_t tag = ecs_entity(world, { .name = "tags.foo"});
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e"});
+    ecs_auto_override_id(world, e, tag);
+
+    {
+        ecs_entity_to_json_desc_t desc = {
+            .serialize_full_paths = true
+        };
+
+        char *json = ecs_entity_to_json(world, e, &desc);
+        test_assert(json != NULL);
+        test_json(json, "{\"name\":\"e\", \"tags\":[\"auto_override|tags.foo\"]}");
+        ecs_os_free(json);
+    }
+
+    {
+        ecs_entity_to_json_desc_t desc = {
+            .serialize_full_paths = false
+        };
+
+        char *json = ecs_entity_to_json(world, e, &desc);
+        test_assert(json != NULL);
+        test_json(json, "{\"name\":\"e\", \"tags\":[\"auto_override|foo\"]}");
+        ecs_os_free(json);
+    }
+
+    ecs_fini(world);
+}
+
+void SerializeEntityToJson_serialize_auto_override_pair_fullpath(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, Tgt);
+
+    ecs_entity_t rel = ecs_entity(world, { .name = "tags.rel"});
+    ecs_entity_t tgt = ecs_entity(world, { .name = "tags.tgt"});
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e"});
+    ecs_auto_override_pair(world, e, rel, tgt);
+
+    {
+        ecs_entity_to_json_desc_t desc = {
+            .serialize_full_paths = true
+        };
+
+        char *json = ecs_entity_to_json(world, e, &desc);
+        test_assert(json != NULL);
+        test_json(json, "{\"name\":\"e\", \"tags\":[\"auto_override|(tags.rel,tags.tgt)\"]}");
+        ecs_os_free(json);
+    }
+
+    {
+        ecs_entity_to_json_desc_t desc = {
+            .serialize_full_paths = false
+        };
+
+        char *json = ecs_entity_to_json(world, e, &desc);
+        test_assert(json != NULL);
+        test_json(json, "{\"name\":\"e\", \"tags\":[\"auto_override|(rel,tgt)\"]}");
+        ecs_os_free(json);
+    }
+
+    ecs_fini(world);
+}
+
+void SerializeEntityToJson_serialize_toggle(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_add_id(world, ecs_id(Position), EcsCanToggle);
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e"});
+    ecs_add(world, e, Position);
+    ecs_enable_component(world, e, Position, false);
+
+    char *json = ecs_entity_to_json(world, e, NULL);
+    test_assert(json != NULL);
+    test_json(json, "{\"name\":\"e\", \"tags\":[\"toggle|Position\"], \"components\":{\"Position\":null}}");
+    ecs_os_free(json);
+
+    ecs_fini(world);
+}
+
+void SerializeEntityToJson_serialize_toggle_pair(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Rel);
+    ECS_TAG(world, Tgt);
+
+    ecs_add_id(world, Rel, EcsCanToggle);
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e"});
+    ecs_add_pair(world, e, Rel, Tgt);
+    ecs_enable_pair(world, e, Rel, Tgt, false);
+
+    char *json = ecs_entity_to_json(world, e, NULL);
+    test_assert(json != NULL);
+    test_json(json, "{\"name\":\"e\", \"tags\":[\"toggle|(Rel,Tgt)\"],\"pairs\":{\"Rel\":[\"Tgt\"]}}");
+    ecs_os_free(json);
+
+    ecs_fini(world);
+}
