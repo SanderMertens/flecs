@@ -596,6 +596,16 @@ void Hierarchies_path_custom_sep(void);
 void Hierarchies_path_custom_prefix(void);
 void Hierarchies_path_prefix_rel_match(void);
 void Hierarchies_path_prefix_rel_no_match(void);
+void Hierarchies_path_escaped_sep(void);
+void Hierarchies_path_escaped_two_sep(void);
+void Hierarchies_path_escaped_two_consecutive_sep(void);
+void Hierarchies_path_escaped_sep_at_begin(void);
+void Hierarchies_path_escaped_sep_at_end(void);
+void Hierarchies_path_escaped_sep_w_parent(void);
+void Hierarchies_path_only_escaped_sep(void);
+void Hierarchies_path_only_escaped_sep_w_parent(void);
+void Hierarchies_path_only_escaped_two_sep(void);
+void Hierarchies_path_only_escaped_two_sep_w_parent(void);
 void Hierarchies_fullpath_for_core(void);
 void Hierarchies_path_w_number(void);
 void Hierarchies_path_w_entity_id(void);
@@ -4549,6 +4559,46 @@ bake_test_case Hierarchies_testcases[] = {
     {
         "path_prefix_rel_no_match",
         Hierarchies_path_prefix_rel_no_match
+    },
+    {
+        "path_escaped_sep",
+        Hierarchies_path_escaped_sep
+    },
+    {
+        "path_escaped_two_sep",
+        Hierarchies_path_escaped_two_sep
+    },
+    {
+        "path_escaped_two_consecutive_sep",
+        Hierarchies_path_escaped_two_consecutive_sep
+    },
+    {
+        "path_escaped_sep_at_begin",
+        Hierarchies_path_escaped_sep_at_begin
+    },
+    {
+        "path_escaped_sep_at_end",
+        Hierarchies_path_escaped_sep_at_end
+    },
+    {
+        "path_escaped_sep_w_parent",
+        Hierarchies_path_escaped_sep_w_parent
+    },
+    {
+        "path_only_escaped_sep",
+        Hierarchies_path_only_escaped_sep
+    },
+    {
+        "path_only_escaped_sep_w_parent",
+        Hierarchies_path_only_escaped_sep_w_parent
+    },
+    {
+        "path_only_escaped_two_sep",
+        Hierarchies_path_only_escaped_two_sep
+    },
+    {
+        "path_only_escaped_two_sep_w_parent",
+        Hierarchies_path_only_escaped_two_sep_w_parent
     },
     {
         "fullpath_for_core",
@@ -11145,7 +11195,7 @@ static bake_test_suite suites[] = {
         "Hierarchies",
         Hierarchies_setup,
         NULL,
-        95,
+        105,
         Hierarchies_testcases
     },
     {

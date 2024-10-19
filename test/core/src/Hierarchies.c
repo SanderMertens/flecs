@@ -381,6 +381,177 @@ void Hierarchies_path_w_entity_id(void) {
     ecs_fini(world);
 }
 
+void Hierarchies_path_escaped_sep(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t e = ecs_entity(world, { .name = "foo\\.bar"});
+    test_assert(e != 0);
+    test_str(ecs_get_name(world, e), "foo.bar");
+    test_assert(ecs_get_parent(world, e) == 0);
+    test_assert(ecs_lookup(world, "foo\\.bar") == e);
+
+    char *path = ecs_get_path(world, e);
+    test_str(path, "foo\\.bar");
+    ecs_os_free(path);
+
+    ecs_fini(world);
+}
+
+void Hierarchies_path_escaped_two_sep(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t e = ecs_entity(world, { .name = "foo\\.bar\\.woo"});
+    test_assert(e != 0);
+    test_str(ecs_get_name(world, e), "foo.bar.woo");
+    test_assert(ecs_get_parent(world, e) == 0);
+    test_assert(ecs_lookup(world, "foo\\.bar\\.woo") == e);
+
+    char *path = ecs_get_path(world, e);
+    test_str(path, "foo\\.bar\\.woo");
+    ecs_os_free(path);
+
+    ecs_fini(world);
+}
+
+void Hierarchies_path_escaped_two_consecutive_sep(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t e = ecs_entity(world, { .name = "foo\\.\\.bar\\.woo"});
+    test_assert(e != 0);
+    test_str(ecs_get_name(world, e), "foo..bar.woo");
+    test_assert(ecs_get_parent(world, e) == 0);
+    test_assert(ecs_lookup(world, "foo\\.\\.bar\\.woo") == e);
+
+    char *path = ecs_get_path(world, e);
+    test_str(path, "foo\\.\\.bar\\.woo");
+    ecs_os_free(path);
+
+    ecs_fini(world);
+}
+
+void Hierarchies_path_escaped_sep_at_begin(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t e = ecs_entity(world, { .name = "\\.foo\\.bar"});
+    test_assert(e != 0);
+    test_str(ecs_get_name(world, e), ".foo.bar");
+    test_assert(ecs_get_parent(world, e) == 0);
+    test_assert(ecs_lookup(world, "\\.foo\\.bar") == e);
+
+    char *path = ecs_get_path(world, e);
+    test_str(path, "\\.foo\\.bar");
+    ecs_os_free(path);
+
+    ecs_fini(world);
+}
+
+void Hierarchies_path_escaped_sep_at_end(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t e = ecs_entity(world, { .name = "foo\\.bar\\."});
+    test_assert(e != 0);
+    test_str(ecs_get_name(world, e), "foo.bar.");
+    test_assert(ecs_get_parent(world, e) == 0);
+    test_assert(ecs_lookup(world, "foo\\.bar\\.") == e);
+
+    char *path = ecs_get_path(world, e);
+    test_str(path, "foo\\.bar\\.");
+    ecs_os_free(path);
+
+    ecs_fini(world);
+}
+
+void Hierarchies_path_escaped_sep_w_parent(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t e = ecs_entity(world, { .name = "parent.foo\\.bar"});
+    test_assert(e != 0);
+    ecs_entity_t p = ecs_lookup(world, "parent");
+    test_assert(p != 0);
+
+    test_str(ecs_get_name(world, e), "foo.bar");
+    test_assert(ecs_get_parent(world, e) == p);
+    test_assert(ecs_lookup(world, "parent.foo\\.bar") == e);
+
+    char *path = ecs_get_path(world, e);
+    test_str(path, "parent.foo\\.bar");
+    ecs_os_free(path);
+
+    ecs_fini(world);
+}
+
+void Hierarchies_path_only_escaped_sep(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t e = ecs_entity(world, { .name = "\\."});
+    test_assert(e != 0);
+
+    test_str(ecs_get_name(world, e), ".");
+    test_assert(ecs_get_parent(world, e) == 0);
+    test_assert(ecs_lookup(world, "\\.") == e);
+
+    char *path = ecs_get_path(world, e);
+    test_str(path, "\\.");
+    ecs_os_free(path);
+
+    ecs_fini(world);
+}
+
+void Hierarchies_path_only_escaped_sep_w_parent(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t e = ecs_entity(world, { .name = "parent.\\."});
+    test_assert(e != 0);
+    ecs_entity_t p = ecs_lookup(world, "parent");
+    test_assert(p != 0);
+
+    test_str(ecs_get_name(world, e), ".");
+    test_assert(ecs_get_parent(world, e) == p);
+    test_assert(ecs_lookup(world, "parent.\\.") == e);
+
+    char *path = ecs_get_path(world, e);
+    test_str(path, "parent.\\.");
+    ecs_os_free(path);
+
+    ecs_fini(world);
+}
+
+void Hierarchies_path_only_escaped_two_sep(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t e = ecs_entity(world, { .name = "\\.\\."});
+    test_assert(e != 0);
+
+    test_str(ecs_get_name(world, e), "..");
+    test_assert(ecs_get_parent(world, e) == 0);
+    test_assert(ecs_lookup(world, "\\.\\.") == e);
+
+    char *path = ecs_get_path(world, e);
+    test_str(path, "\\.\\.");
+    ecs_os_free(path);
+
+    ecs_fini(world);
+}
+
+void Hierarchies_path_only_escaped_two_sep_w_parent(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t e = ecs_entity(world, { .name = "parent.\\.\\."});
+    test_assert(e != 0);
+    ecs_entity_t p = ecs_lookup(world, "parent");
+    test_assert(p != 0);
+
+    test_str(ecs_get_name(world, e), "..");
+    test_assert(ecs_get_parent(world, e) == p);
+    test_assert(ecs_lookup(world, "parent.\\.\\.") == e);
+
+    char *path = ecs_get_path(world, e);
+    test_str(path, "parent.\\.\\.");
+    ecs_os_free(path);
+
+    ecs_fini(world);
+}
+
 void Hierarchies_lookup_depth_0(void) {
     ecs_world_t *world = ecs_mini();
 
