@@ -61,7 +61,28 @@ bool flecs_path_append(
     }
 
     if (name) {
-        ecs_strbuf_appendstrn(buf, name, name_len);
+        /* Check if we need to escape separator character */
+        const char *sep_in_name = NULL;
+        if (!sep[1]) {
+            sep_in_name = strchr(name, sep[0]);
+        }
+
+        if (sep_in_name) {
+            const char *name_ptr = name;
+            while (sep_in_name) {
+                ecs_size_t len = flecs_ito(int32_t, sep_in_name - name_ptr);
+                ecs_strbuf_appendstrn(buf, name_ptr, len);
+                ecs_strbuf_appendch(buf, '\\');
+                ecs_strbuf_appendch(buf, sep[0]);
+                
+                name_ptr = sep_in_name + 1;
+                sep_in_name = strchr(name_ptr, sep[0]);
+            }
+
+            ecs_strbuf_appendstr(buf, name_ptr);
+        } else {
+            ecs_strbuf_appendstrn(buf, name, name_len);
+        }
     } else {
         ecs_strbuf_appendch(buf, '#');
         ecs_strbuf_appendint(buf, flecs_uto(int64_t, (uint32_t)child));
