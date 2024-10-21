@@ -241,10 +241,6 @@ int json_ser_custom_type(
     ecs_assert(ct->as_type != 0, ECS_INVALID_OPERATION, 
         "opaque type %s has not populated as_type field",
             ecs_get_name(world, op->type));
-    ecs_assert(ct->serialize != NULL, ECS_INVALID_OPERATION,
-        "opaque type %s does not have serialize interface", 
-            ecs_get_name(world, op->type));
-
     const EcsType *pt = ecs_get(world, ct->as_type, EcsType);
     ecs_assert(pt != NULL, ECS_INVALID_OPERATION, 
         "opaque type %s is missing flecs.meta.Type component",
@@ -275,7 +271,7 @@ int json_ser_custom_type(
         .ctx = &json_ser
     };
 
-    if (ct->serialize(&ser, base)) {
+    if (!ecs_meta_serialize_opaque(&ser, base, ct, world)) {
         return -1;
     }
 

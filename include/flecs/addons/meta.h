@@ -638,6 +638,15 @@ typedef struct ecs_meta_cursor_t {
     void *lookup_ctx;                              /**< Context for lookup_action */
 } ecs_meta_cursor_t;
 
+/** Serializes an opaque
+*/
+FLECS_API
+bool ecs_meta_serialize_opaque(
+    const ecs_serializer_t *serializer,
+    const void *src,
+    const EcsOpaque *opaque_info,
+    const ecs_world_t *world);
+
 /** Create meta cursor.
  * A meta cursor allows for walking over, reading and writing a value without
  * having to know its type at compile time.
