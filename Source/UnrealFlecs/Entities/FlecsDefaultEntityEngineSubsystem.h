@@ -13,6 +13,8 @@ struct UNREALFLECS_API FFlecsDefaultEntityEngine final
 		static FFlecsDefaultEntityEngine Instance;
 		return Instance;
 	}
+
+	friend class FUnrealFlecsModule;
 	
 public:
 	FFlecsDefaultEntityEngine();
@@ -20,6 +22,7 @@ public:
 	void RefreshDefaultEntities();
 	
 	flecs::entity_t AddDefaultEntity(const FFlecsDefaultMetaEntity& DefaultEntity);
+	static flecs::entity_t EnqueueDefaultEntity(const FFlecsDefaultMetaEntity& DefaultEntity);
 	
 	TMap<FString, flecs::entity_t> DefaultEntityOptions;
 	TArray<FFlecsDefaultMetaEntity> AddedDefaultEntities;
@@ -28,12 +31,32 @@ public:
 	flecs::world DefaultEntityWorld;
 	flecs::entity TestEntity;
 
+	bool bIsInitialized = false;
+
 private:
 	void Initialize();
 };
 
 #define DEFINE_DEFAULT_ENTITY_OPTION(EntityName) \
-	FFlecsDefaultMetaEntity EntityName##MetaEntity; \
-	EntityName##MetaEntity.EntityRecord.Name = TEXT(#EntityName); \
-	EntityName = FFlecsDefaultEntityEngine::Get().AddDefaultEntity(EntityName##MetaEntity)
+		INLINE ECS_ENTITY_DECLARE(EntityName); \
+		namespace \
+		{                                                             \
+			struct FRegister##EntityName \
+			{                                     \
+				FRegister##EntityName() \
+				{										 \
+					FFlecsDefaultMetaEntity MetaEntity;                        \
+					MetaEntity.EntityRecord.Name = TEXT(#EntityName);          \
+					if (FFlecsDefaultEntityEngine::Get().bIsInitialized)       \
+					{                                                         \
+						EntityName = FFlecsDefaultEntityEngine::Get().AddDefaultEntity(MetaEntity); \
+					}                                                         \
+					else                                                      \
+					{                                                         \
+						EntityName = FFlecsDefaultEntityEngine::EnqueueDefaultEntity(MetaEntity); \
+					}                                                         \
+				}                                                               \
+			};                                                                  \
+			static FRegister##EntityName Register##EntityName;                 \
+		}                                                                       \
 

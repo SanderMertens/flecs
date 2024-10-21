@@ -4,12 +4,11 @@
 
 #include "CoreMinimal.h"
 #include "flecs.h"
-#include "Entities/FlecsEntityHandle.h"
-#include "Subsystems/EngineSubsystem.h"
-#include "FlecsTransformEngineSubsystem.generated.h"
+#include "Entities/FlecsDefaultEntityEngineSubsystem.h"
+#include "FlecsTransformDefaultEntities.generated.h"
 
-INLINE ECS_ENTITY_DECLARE(FlecsLocalTrait);
-INLINE ECS_ENTITY_DECLARE(FlecsGlobalTrait);
+DEFINE_DEFAULT_ENTITY_OPTION(FlecsLocalTrait);
+DEFINE_DEFAULT_ENTITY_OPTION(FlecsGlobalTrait);
 
 USTRUCT(BlueprintType)
 struct UNREALFLECS_API FFlecsRelativeTrait
@@ -29,15 +28,3 @@ struct UNREALFLECS_API FFlecsRelativeCacheTrait
 	UPROPERTY()
 	FFlecsEntityHandle RelativeEntity;
 }; // struct FFlecsRelativeCacheTrait
-
-UCLASS()
-class UNREALFLECS_API UFlecsTransformEngineSubsystem : public UEngineSubsystem
-{
-	GENERATED_BODY()
-
-public:
-	UFlecsTransformEngineSubsystem();
-
-	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
-
-}; // class UFlecsTransformEngineSubsystem

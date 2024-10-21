@@ -30,7 +30,7 @@ void UFlecsPhysicsModule::InitializeModule(UFlecsWorld* InWorld, const FFlecsEnt
 		(this, [&](UFlecsTickerModule* InModuleObject,
 			UFlecsWorld* InFlecsWorld, FFlecsEntityHandle& InTickerEntity)
 		{
-			InFlecsWorld->SetSingleton<FFlecsPhysicsSceneComponent>(FFlecsPhysicsSceneComponent{ Scene });
+			InFlecsWorld->SetSingleton<FFlecsPhysicsSceneComponent>(FFlecsPhysicsSceneComponent { Scene });
 
 			const UFlecsTickerModule* TickerModule = InFlecsWorld->GetModule<UFlecsTickerModule>();
 			solid_check(IsValid(TickerModule));
@@ -60,7 +60,7 @@ void UFlecsPhysicsModule::DeinitializeModule(UFlecsWorld* InWorld)
 	if (bAllowResimulation)
 	{
 		IConsoleVariable* ResimConsoleVariable =
-		IConsoleManager::Get().FindConsoleVariable(TEXT("p.Resim.AllowRewindToResimulatedFrames"));
+			IConsoleManager::Get().FindConsoleVariable(TEXT("p.Resim.AllowRewindToResimulatedFrames"));
 		ResimConsoleVariable->Set(PreResimValue);
 	}
 }
@@ -132,7 +132,7 @@ void UFlecsPhysicsModule::PhysicsComponentObservers()
 {
 	AddPhysicsComponentObserver = GetFlecsWorld()->CreateObserver<FFlecsPhysicsComponent,
 		const FFlecsTransformComponent>(TEXT("PhysicsComponentObserver"))
-		.event(flecs::OnAdd)
+		.term_at(0).event(flecs::OnAdd)
 		.term_at(1).filter()
 		.yield_existing()
 		.each([](flecs::iter& Iter, size_t Index, FFlecsPhysicsComponent& PhysicsComponent,
@@ -149,7 +149,7 @@ void UFlecsPhysicsModule::PhysicsComponentObservers()
 			
 			FActorCreationParams Params;
 			Params.Scene = OuterWorld->GetPhysicsScene();
-			Params.InitialTM = Transform.Transform;
+			Params.InitialTM = Transform.GlobalTransform;
 			Params.bSimulatePhysics = PhysicsComponent.bSimulatePhysics;
 			Params.bEnableGravity = PhysicsComponent.bEnableGravity;
 			Params.bStartAwake = PhysicsComponent.bStartAwake;
@@ -161,10 +161,9 @@ void UFlecsPhysicsModule::PhysicsComponentObservers()
 
 			bool bWrote = FPhysicsCommand::ExecuteWrite(PhysicsComponent.PhysicsActorHandle,
 				[&](FPhysicsActorHandle& Actor)
-			{
+				{
 					
-			});
-
+				});
 			
 		});
 }

@@ -19,6 +19,9 @@ public:
 
 	virtual void BeginPlay() override;
 
+	virtual void OnRegister() override;
+	virtual void OnUnregister() override;
+
 	virtual void InitializeEntity();
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | Entity")

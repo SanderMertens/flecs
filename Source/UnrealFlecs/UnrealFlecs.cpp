@@ -2,10 +2,16 @@
 
 #include "UnrealFlecs.h"
 
+#include "Entities/FlecsDefaultEntityEngineSubsystem.h"
+
 #define LOCTEXT_NAMESPACE "FUnrealFlecsModule"
 
 void FUnrealFlecsModule::StartupModule()
 {
+	FCoreDelegates::OnAllModuleLoadingPhasesComplete.AddLambda([]()
+	{
+		FFlecsDefaultEntityEngine::Get().Initialize();
+	});
 }
 
 void FUnrealFlecsModule::ShutdownModule()

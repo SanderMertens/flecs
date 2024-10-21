@@ -15,8 +15,16 @@ UFlecsEntityActorComponent::UFlecsEntityActorComponent(const FObjectInitializer&
 void UFlecsEntityActorComponent::BeginPlay()
 {
 	Super::BeginPlay();
+}
 
-	InitializeEntity();
+void UFlecsEntityActorComponent::OnRegister()
+{
+	Super::OnRegister();
+}
+
+void UFlecsEntityActorComponent::OnUnregister()
+{
+	Super::OnUnregister();
 }
 
 void UFlecsEntityActorComponent::InitializeEntity()

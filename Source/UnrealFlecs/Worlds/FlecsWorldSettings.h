@@ -29,7 +29,6 @@ public:
         , bDefaultAutoMerge(bInDefaultAutoMerge)
         , DefaultWorkerThreads(InDefaultWorkerThreads)
         , Modules(InModules)
-        , ModuleStructs(InModuleStructs)
     {
     }
 
@@ -59,9 +58,9 @@ public:
         meta = (MustImplement = "/Script/UnrealFlecs.FlecsModuleInterface"))
     TArray<TObjectPtr<UObject>> Modules;
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs",
-        meta = (MustImplement = "/Script/UnrealFlecs.FlecsModuleStructInterface"))
-    TArray<FInstancedStruct> ModuleStructs;
+   // UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs",
+   //     meta = (MustImplement = "/Script/UnrealFlecs.FlecsModuleStructInterface"))
+    //TArray<FInstancedStruct> ModuleStructs;
     
 }; // struct FFlecsWorldSettings
 

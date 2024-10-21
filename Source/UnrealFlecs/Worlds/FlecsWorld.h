@@ -8,6 +8,7 @@
 #include "CoreMinimal.h"
 #include "flecs.h"
 #include "AssetRegistry/AssetRegistryModule.h"
+#include "Components/FlecsActorTag.h"
 #include "Components/FlecsGameplayTagEntityComponent.h"
 #include "Components/FlecsModuleComponent.h"
 #include "Components/FlecsPrimaryAssetComponent.h"
@@ -310,13 +311,26 @@ public:
 					EntityHandle.Remove<flecs::_::type_impl_struct_event_info>();
 				});
 
+		CreateObserver<FFlecsUObjectComponent>(TEXT("UObjectComponentObserver"))
+			.event(flecs::OnSet)
+			.yield_existing()
+			.each([&](flecs::entity InEntity, const FFlecsUObjectComponent& InComponent)
+			{
+				const FFlecsEntityHandle EntityHandle = InEntity;
+
+				if (InComponent.GetObject<AActor>())
+				{
+					EntityHandle.Add<FFlecsActorTag>();
+				}
+			});
+
 		ObjectComponentQuery = World.query_builder<FFlecsUObjectComponent>("UObjectComponentQuery")
-			.cached()
 			.build();
 
 		FCoreUObjectDelegates::GarbageCollectComplete.AddWeakLambda(this, [this]
 		{
-			ObjectComponentQuery.each([this](flecs::iter& Iter, size_t Index, const FFlecsUObjectComponent& InComponent)
+			ObjectComponentQuery.each([this](flecs::iter& Iter, size_t Index,
+				const FFlecsUObjectComponent& InComponent)
 			{
 				if (!InComponent.IsValid())
 				{
@@ -535,7 +549,7 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
 	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle CreateEntityWithRecord(const FFlecsEntityRecord& InRecord) const
 	{
-		FFlecsEntityHandle Entity = CreateEntity(InRecord.Name);
+		const FFlecsEntityHandle Entity = CreateEntity(InRecord.Name);
 		InRecord.ApplyRecordToEntity(Entity);
 		return Entity;
 	}
