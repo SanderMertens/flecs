@@ -48,6 +48,7 @@ const char* String_getter(const void *ptr) {
     return ptr;
 }
 
+static
 int IntVec_serialize(const ecs_serializer_t *ser, const void *ptr) {
     test_assert(ser != NULL);
     test_assert(ptr != NULL);
@@ -62,18 +63,21 @@ int IntVec_serialize(const ecs_serializer_t *ser, const void *ptr) {
     return 0;
 }
 
+static
 const void* IntVec_get_element(const void *ptr, size_t i) {
     test_assert(ptr != NULL);
     const IntVec *data = ptr;
     return &data->elems[i];
 }
 
+static
 size_t IntVec_count(const void *ptr) {
     test_assert(ptr != NULL);
     const IntVec *data = ptr;
     return data->count;
 }
 
+static
 int StringVec_serialize(const ecs_serializer_t *ser, const void *ptr) {
     test_assert(ser != NULL);
     test_assert(ptr != NULL);
@@ -88,16 +92,40 @@ int StringVec_serialize(const ecs_serializer_t *ser, const void *ptr) {
     return 0;
 }
 
+static
 const void* StringVec_get_element(const void *ptr, size_t i) {
     test_assert(ptr != NULL);
     const StringVec *data = ptr;
     return &data->elems[i];
 }
 
+static
 size_t StringVec_count(const void *ptr) {
     test_assert(ptr != NULL);
     const StringVec *data = ptr;
     return data->count;
+}
+
+static
+int IntArr_serialize(const ecs_serializer_t *ser, const void *ptr) {
+    test_assert(ser != NULL);
+    test_assert(ptr != NULL);
+
+    const ecs_i32_t *data = ptr;
+    for (int i = 0; i < 3; i ++) {
+        int result = ser->value(ser, ecs_id(ecs_i32_t), &data[i]);
+        test_assert(result == 0);
+    }
+
+    serialize_invoked ++;
+    return 0;
+}
+
+static
+const void* IntArr_get_element(const void *ptr, size_t i) {
+    test_assert(ptr != NULL);
+    const ecs_i32_t *data = ptr;
+    return &data[i];
 }
 
 void OpaqueTypes_ser_i32_type_to_json(void) {
@@ -280,6 +308,62 @@ void OpaqueTypes_ser_vec_string_type_to_json_auto(void) {
     char *json = ecs_ptr_to_json(world, ecs_id(StringVec), &v);
     test_assert(json != NULL);
     test_str(json, "[\"Hello\", \"World\"]");
+    ecs_os_free(json);
+
+    ecs_fini(world);
+}
+
+void OpaqueTypes_ser_arr_i32_type_to_json(void) {
+    typedef ecs_i32_t IntArr[3];
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, IntArr);
+
+    ecs_entity_t int_arr = ecs_array(world, {
+        .type = ecs_id(ecs_i32_t),
+        .count = 3
+    });
+
+    ecs_opaque(world, {
+        .entity = ecs_id(IntArr),
+        .type.as_type = int_arr,
+        .type.serialize = IntArr_serialize
+    });
+
+    IntArr arr = {1, 2, 3};
+
+    char *json = ecs_ptr_to_json(world, ecs_id(IntArr), &arr);
+    test_assert(json != NULL);
+    test_str(json, "[1, 2, 3]");
+    ecs_os_free(json);
+
+    test_int(serialize_invoked, 1);
+
+    ecs_fini(world);
+}
+
+void OpaqueTypes_ser_arr_i32_type_to_json_auto(void) {
+    typedef ecs_i32_t IntArr[3];
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, IntArr);
+
+    ecs_entity_t int_arr = ecs_array(world, {
+        .type = ecs_id(ecs_i32_t),
+        .count = 3
+    });
+
+    ecs_opaque(world, {
+        .entity = ecs_id(IntArr),
+        .type.as_type = int_arr,
+        .type.get_element = IntArr_get_element
+    });
+
+    IntArr arr = {1, 2, 3};
+
+    char *json = ecs_ptr_to_json(world, ecs_id(IntArr), &arr);
+    test_assert(json != NULL);
+    test_str(json, "[1, 2, 3]");
     ecs_os_free(json);
 
     ecs_fini(world);
