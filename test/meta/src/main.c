@@ -968,6 +968,8 @@ void OpaqueTypes_ser_vec_i32_type_to_json(void);
 void OpaqueTypes_ser_vec_i32_type_to_json_auto(void);
 void OpaqueTypes_ser_vec_string_type_to_json(void);
 void OpaqueTypes_ser_vec_string_type_to_json_auto(void);
+void OpaqueTypes_ser_arr_i32_type_to_json(void);
+void OpaqueTypes_ser_arr_i32_type_to_json_auto(void);
 void OpaqueTypes_ser_struct_1_member(void);
 void OpaqueTypes_ser_struct_2_members(void);
 void OpaqueTypes_ser_struct_3_members(void);
@@ -4769,6 +4771,14 @@ bake_test_case OpaqueTypes_testcases[] = {
         OpaqueTypes_ser_vec_string_type_to_json_auto
     },
     {
+        "ser_arr_i32_type_to_json",
+        OpaqueTypes_ser_arr_i32_type_to_json
+    },
+    {
+        "ser_arr_i32_type_to_json_auto",
+        OpaqueTypes_ser_arr_i32_type_to_json_auto
+    },
+    {
         "ser_struct_1_member",
         OpaqueTypes_ser_struct_1_member
     },
@@ -5132,7 +5142,7 @@ static bake_test_suite suites[] = {
         "OpaqueTypes",
         NULL,
         NULL,
-        23,
+        25,
         OpaqueTypes_testcases
     },
     {

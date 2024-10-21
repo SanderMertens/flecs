@@ -1011,6 +1011,8 @@
                 "ser_vec_i32_type_to_json_auto",
                 "ser_vec_string_type_to_json",
                 "ser_vec_string_type_to_json_auto",
+                "ser_arr_i32_type_to_json",
+                "ser_arr_i32_type_to_json_auto",
                 "ser_struct_1_member",
                 "ser_struct_2_members",
                 "ser_struct_3_members",
