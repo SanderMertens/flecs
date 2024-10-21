@@ -27,6 +27,12 @@ int Int32_serialize(const ecs_serializer_t *ser, const void *ptr) {
 }
 
 static
+int64_t Int32_getter(const void *ptr) {
+    test_assert(ptr != NULL);
+    return *((ecs_i32_t*)ptr);
+}
+
+static
 int String_serialize(const ecs_serializer_t *ser, const void *ptr) {
     test_assert(ser != NULL);
     test_assert(ptr != NULL);
@@ -34,6 +40,12 @@ int String_serialize(const ecs_serializer_t *ser, const void *ptr) {
     test_assert(result == 0);
     serialize_invoked ++;
     return result;
+}
+
+static
+const char* String_getter(const void *ptr) {
+    test_assert(ptr != NULL);
+    return ptr;
 }
 
 int IntVec_serialize(const ecs_serializer_t *ser, const void *ptr) {
@@ -50,6 +62,18 @@ int IntVec_serialize(const ecs_serializer_t *ser, const void *ptr) {
     return 0;
 }
 
+const void* IntVec_get_element(const void *ptr, size_t i) {
+    test_assert(ptr != NULL);
+    const IntVec *data = ptr;
+    return &data->elems[i];
+}
+
+size_t IntVec_count(const void *ptr) {
+    test_assert(ptr != NULL);
+    const IntVec *data = ptr;
+    return data->count;
+}
+
 int StringVec_serialize(const ecs_serializer_t *ser, const void *ptr) {
     test_assert(ser != NULL);
     test_assert(ptr != NULL);
@@ -62,6 +86,18 @@ int StringVec_serialize(const ecs_serializer_t *ser, const void *ptr) {
 
     serialize_invoked ++;
     return 0;
+}
+
+const void* StringVec_get_element(const void *ptr, size_t i) {
+    test_assert(ptr != NULL);
+    const StringVec *data = ptr;
+    return &data->elems[i];
+}
+
+size_t StringVec_count(const void *ptr) {
+    test_assert(ptr != NULL);
+    const StringVec *data = ptr;
+    return data->count;
 }
 
 void OpaqueTypes_ser_i32_type_to_json(void) {
@@ -83,6 +119,27 @@ void OpaqueTypes_ser_i32_type_to_json(void) {
     ecs_os_free(json);
 
     test_int(serialize_invoked, 1);
+
+    ecs_fini(world);
+}
+
+void OpaqueTypes_ser_i32_type_to_json_auto(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Int32);
+
+    ecs_opaque(world, {
+        .entity = ecs_id(Int32),
+        .type.as_type = ecs_primitive(world, { .kind = EcsI32 }),
+        .type.get_int = Int32_getter
+    });
+
+    Int32 v = 10;
+
+    char *json = ecs_ptr_to_json(world, ecs_id(Int32), &v);
+    test_assert(json != NULL);
+    test_str(json, "10");
+    ecs_os_free(json);
 
     ecs_fini(world);
 }
@@ -110,6 +167,27 @@ void OpaqueTypes_ser_string_type_to_json(void) {
     ecs_fini(world);
 }
 
+void OpaqueTypes_ser_string_type_to_json_auto(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, String);
+
+    ecs_opaque(world, {
+        .entity = ecs_id(String),
+        .type.as_type = ecs_primitive(world, { .kind = EcsString }),
+        .type.get_string = String_getter
+    });
+
+    String v = "Hello World";
+
+    char *json = ecs_ptr_to_json(world, ecs_id(String), &v);
+    test_assert(json != NULL);
+    test_str(json, "\"Hello World\"");
+    ecs_os_free(json);
+
+    ecs_fini(world);
+}
+
 void OpaqueTypes_ser_vec_i32_type_to_json(void) {
     ecs_world_t *world = ecs_init();
 
@@ -133,6 +211,28 @@ void OpaqueTypes_ser_vec_i32_type_to_json(void) {
     ecs_fini(world);
 }
 
+void OpaqueTypes_ser_vec_i32_type_to_json_auto(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, IntVec);
+
+    ecs_opaque(world, {
+        .entity = ecs_id(IntVec),
+        .type.as_type = ecs_vector(world, { .type = ecs_id(ecs_i32_t) }),
+        .type.get_element = IntVec_get_element,
+        .type.count = IntVec_count,
+    });
+
+    IntVec v = {3, (int[]){1, 2, 3}};
+
+    char *json = ecs_ptr_to_json(world, ecs_id(IntVec), &v);
+    test_assert(json != NULL);
+    test_str(json, "[1, 2, 3]");
+    ecs_os_free(json);
+
+    ecs_fini(world);
+}
+
 void OpaqueTypes_ser_vec_string_type_to_json(void) {
     ecs_world_t *world = ecs_init();
 
@@ -152,6 +252,35 @@ void OpaqueTypes_ser_vec_string_type_to_json(void) {
     ecs_os_free(json);
 
     test_int(serialize_invoked, 1);
+
+    ecs_fini(world);
+}
+
+void OpaqueTypes_ser_vec_string_type_to_json_auto(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, String);
+    ECS_COMPONENT(world, StringVec);
+
+    ecs_opaque(world, {
+        .entity = ecs_id(String),
+        .type.as_type = ecs_primitive(world, { .kind = EcsString }),
+        .type.get_string = String_getter
+    });
+
+    ecs_opaque(world, {
+        .entity = ecs_id(StringVec),
+        .type.as_type = ecs_vector(world, { .type = ecs_id(String) }),
+        .type.get_element = StringVec_get_element,
+        .type.count = StringVec_count
+    });
+
+    StringVec v = {2, (String[]){"Hello", "World"}};
+
+    char *json = ecs_ptr_to_json(world, ecs_id(StringVec), &v);
+    test_assert(json != NULL);
+    test_str(json, "[\"Hello\", \"World\"]");
+    ecs_os_free(json);
 
     ecs_fini(world);
 }
@@ -229,6 +358,19 @@ int Struct_3_member_serialize(const ecs_serializer_t *ser, const void *ptr) {
 
     serialize_invoked ++;
     return 0;
+}
+
+const void* Struct_3_get_member(const void* ptr, const char* name) {
+    test_assert(ptr != NULL);
+    const Struct_3_member *data = ptr;
+    if(!strcmp(name, "x")) {
+        return &data->x;
+    } else if(!strcmp(name, "y")) {
+        return &data->y;
+    } else if(!strcmp(name, "z")) {
+        return &data->z;
+    }
+    return NULL;
 }
 
 void OpaqueTypes_ser_struct_1_member(void) {
@@ -317,6 +459,35 @@ void OpaqueTypes_ser_struct_3_members(void) {
     ecs_os_free(json);
 
     test_int(serialize_invoked, 1);
+
+    ecs_fini(world);
+}
+
+void OpaqueTypes_ser_struct_3_members_auto(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Struct_3_member);
+
+    ecs_entity_t s = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)},
+            {"z", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_opaque(world, {
+        .entity = ecs_id(Struct_3_member),
+        .type.as_type = s,
+        .type.get_member = Struct_3_get_member
+    });
+
+    Struct_3_member v = { 1, 2, 3 };
+
+    char *json = ecs_ptr_to_json(world, ecs_id(Struct_3_member), &v);
+    test_assert(json != NULL);
+    test_str(json, "{\"x\":1, \"y\":2, \"z\":3}");
+    ecs_os_free(json);
 
     ecs_fini(world);
 }

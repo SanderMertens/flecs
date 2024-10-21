@@ -961,12 +961,17 @@ void MetaUtils_enum_constant_w_name_type_prefix(void);
 
 // Testsuite 'OpaqueTypes'
 void OpaqueTypes_ser_i32_type_to_json(void);
+void OpaqueTypes_ser_i32_type_to_json_auto(void);
 void OpaqueTypes_ser_string_type_to_json(void);
+void OpaqueTypes_ser_string_type_to_json_auto(void);
 void OpaqueTypes_ser_vec_i32_type_to_json(void);
+void OpaqueTypes_ser_vec_i32_type_to_json_auto(void);
 void OpaqueTypes_ser_vec_string_type_to_json(void);
+void OpaqueTypes_ser_vec_string_type_to_json_auto(void);
 void OpaqueTypes_ser_struct_1_member(void);
 void OpaqueTypes_ser_struct_2_members(void);
 void OpaqueTypes_ser_struct_3_members(void);
+void OpaqueTypes_ser_struct_3_members_auto(void);
 void OpaqueTypes_deser_bool_from_json(void);
 void OpaqueTypes_deser_char_from_json(void);
 void OpaqueTypes_deser_int_from_json(void);
@@ -4736,16 +4741,32 @@ bake_test_case OpaqueTypes_testcases[] = {
         OpaqueTypes_ser_i32_type_to_json
     },
     {
+        "ser_i32_type_to_json_auto",
+        OpaqueTypes_ser_i32_type_to_json_auto
+    },
+    {
         "ser_string_type_to_json",
         OpaqueTypes_ser_string_type_to_json
+    },
+    {
+        "ser_string_type_to_json_auto",
+        OpaqueTypes_ser_string_type_to_json_auto
     },
     {
         "ser_vec_i32_type_to_json",
         OpaqueTypes_ser_vec_i32_type_to_json
     },
     {
+        "ser_vec_i32_type_to_json_auto",
+        OpaqueTypes_ser_vec_i32_type_to_json_auto
+    },
+    {
         "ser_vec_string_type_to_json",
         OpaqueTypes_ser_vec_string_type_to_json
+    },
+    {
+        "ser_vec_string_type_to_json_auto",
+        OpaqueTypes_ser_vec_string_type_to_json_auto
     },
     {
         "ser_struct_1_member",
@@ -4758,6 +4779,10 @@ bake_test_case OpaqueTypes_testcases[] = {
     {
         "ser_struct_3_members",
         OpaqueTypes_ser_struct_3_members
+    },
+    {
+        "ser_struct_3_members_auto",
+        OpaqueTypes_ser_struct_3_members_auto
     },
     {
         "deser_bool_from_json",
@@ -5107,7 +5132,7 @@ static bake_test_suite suites[] = {
         "OpaqueTypes",
         NULL,
         NULL,
-        18,
+        23,
         OpaqueTypes_testcases
     },
     {
