@@ -5,7 +5,7 @@
 
 #pragma once
 
-namespace flecs
+FLECS_API_NAMESPACE namespace flecs
 {
 
 /* Static helper functions to assign a component value */

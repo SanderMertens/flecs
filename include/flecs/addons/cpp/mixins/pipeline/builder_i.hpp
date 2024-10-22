@@ -7,7 +7,7 @@
 
 #include "../query/builder_i.hpp"
 
-namespace flecs {
+FLECS_API_NAMESPACE namespace flecs {
 
 /** Pipeline builder interface.
  * 

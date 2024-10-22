@@ -7,7 +7,7 @@
 
 #include "builder.hpp"
 
-namespace flecs 
+FLECS_API_NAMESPACE namespace flecs
 {
 
 inline flecs::entity script_builder::run() const {

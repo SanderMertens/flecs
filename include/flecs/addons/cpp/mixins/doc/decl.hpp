@@ -5,7 +5,7 @@
 
 #pragma once
 
-namespace flecs {
+FLECS_API_NAMESPACE namespace flecs {
 namespace doc {
 
 /**
@@ -20,19 +20,25 @@ namespace doc {
 using Description = EcsDocDescription;
 
 /** flecs.doc.Uuid component */
-static const flecs::entity_t Uuid = EcsDocUuid;
+FLECS_STATIC_IN_HEADER const flecs::entity_t Uuid = EcsDocUuid;
 
 /** flecs.doc.Brief component */
-static const flecs::entity_t Brief = EcsDocBrief;
+FLECS_STATIC_IN_HEADER const flecs::entity_t Brief = EcsDocBrief;
 
 /** flecs.doc.Detail component */
-static const flecs::entity_t Detail = EcsDocDetail;
+FLECS_STATIC_IN_HEADER const flecs::entity_t Detail = EcsDocDetail;
 
 /** flecs.doc.Link component */
-static const flecs::entity_t Link = EcsDocLink;
+FLECS_STATIC_IN_HEADER const flecs::entity_t Link = EcsDocLink;
 
 /** flecs.doc.Color component */
-static const flecs::entity_t Color = EcsDocColor;
+FLECS_STATIC_IN_HEADER const flecs::entity_t Color = EcsDocColor;
+} // namespace doc
+} // namespace flecs
+
+namespace flecs {
+
+namespace doc {
 
 /** @private */
 namespace _ {
@@ -42,5 +48,5 @@ void init(flecs::world& world);
 
 /** @} */
 
-}
-}
+} // namespace doc
+} // namespace flecs

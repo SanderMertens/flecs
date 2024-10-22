@@ -5,7 +5,9 @@
 
 #pragma once
 
+#ifndef FLECS_NO_STD_INCLUDE
 #include <utility> // std::declval
+#endif
 
 namespace flecs
 {
@@ -892,6 +894,10 @@ struct entity_with_delegate<Func, if_t< is_callable<Func>::value > >
 };
 
 } // namespace _
+} // namespace flecs
+
+FLECS_API_NAMESPACE namespace flecs
+{
 
 // Experimental: allows using the each delegate for use cases outside of flecs
 template <typename Func, typename ... Args>

@@ -5,7 +5,7 @@
 
 #pragma once
 
-namespace flecs {
+FLECS_API_NAMESPACE namespace flecs {
 
 /**
  * @ingroup cpp_addons_script
@@ -13,6 +13,7 @@ namespace flecs {
  */
 
 /** Script builder interface */
+
 struct script_builder {
     script_builder(flecs::world_t *world, const char *name = nullptr)
         : world_(world)

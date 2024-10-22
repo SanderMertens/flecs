@@ -7,7 +7,7 @@
 
 #include "builder.hpp"
 
-namespace flecs 
+FLECS_API_NAMESPACE namespace flecs
 {
 
 // Mixin implementation
@@ -21,6 +21,9 @@ inline flecs::event_builder_typed<E> world::event() const {
     return flecs::event_builder_typed<E>(world_, _::type<E>().id(world_));
 }
 
+} // namespace flecs
+
+namespace flecs {
 namespace _ {
     inline void entity_observer_create(
         flecs::world_t *world,

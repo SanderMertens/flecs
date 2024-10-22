@@ -9,9 +9,12 @@ namespace flecs {
 
 namespace _ {
     struct pair_base { };
-} // _
+} // namespace _
+
+} // namespace flecs
 
 
+FLECS_API_NAMESPACE namespace flecs {
 /**
  * @defgroup cpp_pair_type Pair type
  * @ingroup cpp_core
@@ -140,4 +143,4 @@ struct is_actual {
         std::is_same<T, actual_type_t<T> >::value && !is_enum<T>::value;
 };
 
-} // flecs
+} // namespace flecs

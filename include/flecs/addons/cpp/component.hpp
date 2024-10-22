@@ -5,8 +5,10 @@
 
 #pragma once
 
+#ifndef FLECS_NO_STD_INCLUDE
 #include <ctype.h>
 #include <stdio.h>
+#endif
 
 /**
  * @defgroup cpp_components Components
@@ -17,7 +19,6 @@
  */
 
 namespace flecs {
-
 namespace _ {
 
 // Trick to obtain typename from type, as described here
@@ -341,6 +342,9 @@ struct type<T, if_t< is_pair<T>::value >>
 };
 
 } // namespace _
+} // namespace flecs
+
+FLECS_API_NAMESPACE namespace flecs {
 
 /** Untyped component class.
  * Generic base class for flecs::component.

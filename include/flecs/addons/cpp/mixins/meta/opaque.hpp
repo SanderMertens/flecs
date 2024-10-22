@@ -7,7 +7,7 @@
 
 #include <stdio.h>
 
-namespace flecs {
+FLECS_API_NAMESPACE namespace flecs {
 
 /**
  * @defgroup cpp_addons_meta Meta
@@ -24,10 +24,12 @@ using serializer = ecs_serializer_t;
 using serialize_t = ecs_meta_serialize_t;
 
 /** Type safe variant of serializer function */
+
 template <typename T>
 using serialize = int(*)(const serializer *, const T*);
 
 /** Type safe interface for opaque types */
+
 template <typename T, typename ElemType = void>
 struct opaque {
     opaque(flecs::world_t *w = nullptr) : world(w) {

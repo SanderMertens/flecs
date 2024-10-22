@@ -7,7 +7,7 @@
 
 #include "builder.hpp"
 
-namespace flecs 
+FLECS_API_NAMESPACE namespace flecs
 {
 
 struct query_base {
@@ -237,8 +237,10 @@ template <typename... Comps, typename... Args>
 inline flecs::query_builder<Comps...> world::query_builder(Args &&... args) const {
     return flecs::query_builder<Comps...>(world_, FLECS_FWD(args)...);
 }
+} // namespace flecs
 
 // world::each
+namespace flecs {
 namespace _ {
 
 // Each with entity parameter
@@ -285,7 +287,10 @@ struct query_delegate<Func, if_not_t<is_same<first_arg_t<Func>, flecs::entity>::
     }
 };
 
-}
+} // namespace _
+} // namespace flecs
+
+FLECS_API_NAMESPACE namespace flecs {
 
 template <typename Func>
 inline void world::each(Func&& func) const {

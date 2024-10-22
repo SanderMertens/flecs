@@ -5,7 +5,7 @@
 
 #pragma once
 
-namespace flecs {
+FLECS_API_NAMESPACE namespace flecs {
 namespace doc {
 
 /** Get UUID for an entity.
@@ -151,7 +151,12 @@ inline void set_link(flecs::entity& e, const char *link) {
 inline void set_color(flecs::entity& e, const char *color) {
     ecs_doc_set_color(e.world(), e, color);
 }
+} // namespace doc
+} // namespace flecs
 
+namespace flecs {
+
+namespace doc {
 /** @private */
 namespace _ {
 

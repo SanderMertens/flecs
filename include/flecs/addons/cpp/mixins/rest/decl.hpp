@@ -5,7 +5,7 @@
 
 #pragma once
 
-namespace flecs {
+FLECS_API_NAMESPACE namespace flecs {
 
 /**
  * @defgroup cpp_addons_rest Rest
@@ -15,17 +15,20 @@ namespace flecs {
  * @{
  */
 
+
 using Rest = EcsRest;
 
-namespace rest {
+} // namespace flecs
 
+namespace flecs {
+namespace rest {
 namespace _ {
 
 void init(flecs::world& world);
 
-}
-}
+} // namespace _
+} // namespace rest
 
 /** @} */
 
-}
+} // namespace flecs

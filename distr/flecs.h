@@ -16502,6 +16502,7 @@ ecs_entity_t ecs_module_init(
 #ifdef FLECS_NO_CPP
 #error "FLECS_NO_CPP failed: CPP is required by other addons"
 #endif
+
 /**
  * @file addons/flecs_cpp.h
  * @brief C++ utility functions
@@ -16638,6 +16639,8 @@ const ecs_member_t* ecs_cpp_last_member(
 #endif // FLECS_CPP
 
 
+#ifndef FLECS_CPP20_MODULE_HEADER
+
 #ifdef __cplusplus
 /**
  * @file addons/cpp/flecs.hpp
@@ -16647,14 +16650,28 @@ const ecs_member_t* ecs_cpp_last_member(
 #pragma once
 
 // STL includes
+#ifndef FLECS_NO_STD_INCLUDE
 #include <type_traits>
+#endif
+
+#ifndef FLECS_API_NAMESPACE
+#define FLECS_API_NAMESPACE
+#endif
+
+#ifndef FLECS_API_DEPENDENCY
+#define FLECS_API_DEPENDENCY
+#endif
+
+#ifndef FLECS_STATIC_IN_HEADER
+#define FLECS_STATIC_IN_HEADER static
+#endif
 
 /**
  * @defgroup cpp C++ API
  * @{
  */
 
-namespace flecs
+FLECS_API_NAMESPACE namespace flecs
 {
 
 struct world;
@@ -16667,12 +16684,17 @@ struct table;
 struct table_range;
 struct untyped_component;
 
+
 template <typename T>
 struct component;
+
 
 template <typename T>
 struct ref;
 
+} // namespace flecs
+
+namespace flecs {
 namespace _
 {
 template <typename T, typename U = int>
@@ -16692,7 +16714,7 @@ struct each_delegate;
 
 #pragma once
 
-namespace flecs {
+FLECS_API_NAMESPACE namespace flecs {
 
 /**
  * @defgroup cpp_globals API Types & Globals
@@ -16745,9 +16767,9 @@ enum query_cache_kind_t {
 };
 
 /** Id bit flags */
-static const flecs::entity_t PAIR = ECS_PAIR;
-static const flecs::entity_t AUTO_OVERRIDE = ECS_AUTO_OVERRIDE;
-static const flecs::entity_t TOGGLE = ECS_TOGGLE;
+FLECS_STATIC_IN_HEADER const flecs::entity_t PAIR = ECS_PAIR;
+FLECS_STATIC_IN_HEADER const flecs::entity_t AUTO_OVERRIDE = ECS_AUTO_OVERRIDE;
+FLECS_STATIC_IN_HEADER const flecs::entity_t TOGGLE = ECS_TOGGLE;
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Builtin components and tags
@@ -16760,96 +16782,96 @@ using Poly = EcsPoly;
 using DefaultChildComponent = EcsDefaultChildComponent;
 
 /* Builtin tags */
-static const flecs::entity_t Query = EcsQuery;
-static const flecs::entity_t Observer = EcsObserver;
-static const flecs::entity_t Private = EcsPrivate;
-static const flecs::entity_t Module = EcsModule;
-static const flecs::entity_t Prefab = EcsPrefab;
-static const flecs::entity_t Disabled = EcsDisabled;
-static const flecs::entity_t Empty = EcsEmpty;
-static const flecs::entity_t Monitor = EcsMonitor;
-static const flecs::entity_t System = EcsSystem;
-static const flecs::entity_t Pipeline = ecs_id(EcsPipeline);
-static const flecs::entity_t Phase = EcsPhase;
+FLECS_STATIC_IN_HEADER const flecs::entity_t Query = EcsQuery;
+FLECS_STATIC_IN_HEADER const flecs::entity_t Observer = EcsObserver;
+FLECS_STATIC_IN_HEADER const flecs::entity_t Private = EcsPrivate;
+FLECS_STATIC_IN_HEADER const flecs::entity_t Module = EcsModule;
+FLECS_STATIC_IN_HEADER const flecs::entity_t Prefab = EcsPrefab;
+FLECS_STATIC_IN_HEADER const flecs::entity_t Disabled = EcsDisabled;
+FLECS_STATIC_IN_HEADER const flecs::entity_t Empty = EcsEmpty;
+FLECS_STATIC_IN_HEADER const flecs::entity_t Monitor = EcsMonitor;
+FLECS_STATIC_IN_HEADER const flecs::entity_t System = EcsSystem;
+FLECS_STATIC_IN_HEADER const flecs::entity_t Pipeline = ecs_id(EcsPipeline);
+FLECS_STATIC_IN_HEADER const flecs::entity_t Phase = EcsPhase;
 
 /* Builtin event tags */
-static const flecs::entity_t OnAdd = EcsOnAdd;
-static const flecs::entity_t OnRemove = EcsOnRemove;
-static const flecs::entity_t OnSet = EcsOnSet;
-static const flecs::entity_t OnTableCreate = EcsOnTableCreate;
-static const flecs::entity_t OnTableDelete = EcsOnTableDelete;
+FLECS_STATIC_IN_HEADER const flecs::entity_t OnAdd = EcsOnAdd;
+FLECS_STATIC_IN_HEADER const flecs::entity_t OnRemove = EcsOnRemove;
+FLECS_STATIC_IN_HEADER const flecs::entity_t OnSet = EcsOnSet;
+FLECS_STATIC_IN_HEADER const flecs::entity_t OnTableCreate = EcsOnTableCreate;
+FLECS_STATIC_IN_HEADER const flecs::entity_t OnTableDelete = EcsOnTableDelete;
 
 /* Builtin term flags */
-static const uint64_t Self = EcsSelf;
-static const uint64_t Up = EcsUp;
-static const uint64_t Trav = EcsTrav;
-static const uint64_t Cascade = EcsCascade;
-static const uint64_t Desc = EcsDesc;
-static const uint64_t IsVariable = EcsIsVariable;
-static const uint64_t IsEntity = EcsIsEntity;
-static const uint64_t IsName = EcsIsName;
-static const uint64_t TraverseFlags = EcsTraverseFlags;
-static const uint64_t TermRefFlags = EcsTermRefFlags;
+FLECS_STATIC_IN_HEADER const uint64_t Self = EcsSelf;
+FLECS_STATIC_IN_HEADER const uint64_t Up = EcsUp;
+FLECS_STATIC_IN_HEADER const uint64_t Trav = EcsTrav;
+FLECS_STATIC_IN_HEADER const uint64_t Cascade = EcsCascade;
+FLECS_STATIC_IN_HEADER const uint64_t Desc = EcsDesc;
+FLECS_STATIC_IN_HEADER const uint64_t IsVariable = EcsIsVariable;
+FLECS_STATIC_IN_HEADER const uint64_t IsEntity = EcsIsEntity;
+FLECS_STATIC_IN_HEADER const uint64_t IsName = EcsIsName;
+FLECS_STATIC_IN_HEADER const uint64_t TraverseFlags = EcsTraverseFlags;
+FLECS_STATIC_IN_HEADER const uint64_t TermRefFlags = EcsTermRefFlags;
 
 /* Builtin entity ids */
-static const flecs::entity_t Flecs = EcsFlecs;
-static const flecs::entity_t FlecsCore = EcsFlecsCore;
-static const flecs::entity_t World = EcsWorld;
+FLECS_STATIC_IN_HEADER const flecs::entity_t Flecs = EcsFlecs;
+FLECS_STATIC_IN_HEADER const flecs::entity_t FlecsCore = EcsFlecsCore;
+FLECS_STATIC_IN_HEADER const flecs::entity_t World = EcsWorld;
 
 /* Component traits */
-static const flecs::entity_t Wildcard = EcsWildcard;
-static const flecs::entity_t Any = EcsAny;
-static const flecs::entity_t This = EcsThis;
-static const flecs::entity_t Transitive = EcsTransitive;
-static const flecs::entity_t Reflexive = EcsReflexive;
-static const flecs::entity_t Final = EcsFinal;
-static const flecs::entity_t PairIsTag = EcsPairIsTag;
-static const flecs::entity_t Exclusive = EcsExclusive;
-static const flecs::entity_t Acyclic = EcsAcyclic;
-static const flecs::entity_t Traversable = EcsTraversable;
-static const flecs::entity_t Symmetric = EcsSymmetric;
-static const flecs::entity_t With = EcsWith;
-static const flecs::entity_t OneOf = EcsOneOf;
-static const flecs::entity_t Trait = EcsTrait;
-static const flecs::entity_t Relationship = EcsRelationship;
-static const flecs::entity_t Target = EcsTarget;
-static const flecs::entity_t CanToggle = EcsCanToggle;
+FLECS_STATIC_IN_HEADER const flecs::entity_t Wildcard = EcsWildcard;
+FLECS_STATIC_IN_HEADER const flecs::entity_t Any = EcsAny;
+FLECS_STATIC_IN_HEADER const flecs::entity_t This = EcsThis;
+FLECS_STATIC_IN_HEADER const flecs::entity_t Transitive = EcsTransitive;
+FLECS_STATIC_IN_HEADER const flecs::entity_t Reflexive = EcsReflexive;
+FLECS_STATIC_IN_HEADER const flecs::entity_t Final = EcsFinal;
+FLECS_STATIC_IN_HEADER const flecs::entity_t PairIsTag = EcsPairIsTag;
+FLECS_STATIC_IN_HEADER const flecs::entity_t Exclusive = EcsExclusive;
+FLECS_STATIC_IN_HEADER const flecs::entity_t Acyclic = EcsAcyclic;
+FLECS_STATIC_IN_HEADER const flecs::entity_t Traversable = EcsTraversable;
+FLECS_STATIC_IN_HEADER const flecs::entity_t Symmetric = EcsSymmetric;
+FLECS_STATIC_IN_HEADER const flecs::entity_t With = EcsWith;
+FLECS_STATIC_IN_HEADER const flecs::entity_t OneOf = EcsOneOf;
+FLECS_STATIC_IN_HEADER const flecs::entity_t Trait = EcsTrait;
+FLECS_STATIC_IN_HEADER const flecs::entity_t Relationship = EcsRelationship;
+FLECS_STATIC_IN_HEADER const flecs::entity_t Target = EcsTarget;
+FLECS_STATIC_IN_HEADER const flecs::entity_t CanToggle = EcsCanToggle;
 
 /* OnInstantiate trait */
-static const flecs::entity_t OnInstantiate = EcsOnInstantiate;
-static const flecs::entity_t Override = EcsOverride;
-static const flecs::entity_t Inherit = EcsInherit;
-static const flecs::entity_t DontInherit = EcsDontInherit;
+FLECS_STATIC_IN_HEADER const flecs::entity_t OnInstantiate = EcsOnInstantiate;
+FLECS_STATIC_IN_HEADER const flecs::entity_t Override = EcsOverride;
+FLECS_STATIC_IN_HEADER const flecs::entity_t Inherit = EcsInherit;
+FLECS_STATIC_IN_HEADER const flecs::entity_t DontInherit = EcsDontInherit;
 
 /* OnDelete/OnDeleteTarget traits */
-static const flecs::entity_t OnDelete = EcsOnDelete;
-static const flecs::entity_t OnDeleteTarget = EcsOnDeleteTarget;
-static const flecs::entity_t Remove = EcsRemove;
-static const flecs::entity_t Delete = EcsDelete;
-static const flecs::entity_t Panic = EcsPanic;
+FLECS_STATIC_IN_HEADER const flecs::entity_t OnDelete = EcsOnDelete;
+FLECS_STATIC_IN_HEADER const flecs::entity_t OnDeleteTarget = EcsOnDeleteTarget;
+FLECS_STATIC_IN_HEADER const flecs::entity_t Remove = EcsRemove;
+FLECS_STATIC_IN_HEADER const flecs::entity_t Delete = EcsDelete;
+FLECS_STATIC_IN_HEADER const flecs::entity_t Panic = EcsPanic;
 
 /* Builtin relationships */
-static const flecs::entity_t IsA = EcsIsA;
-static const flecs::entity_t ChildOf = EcsChildOf;
-static const flecs::entity_t DependsOn = EcsDependsOn;
-static const flecs::entity_t SlotOf = EcsSlotOf;
+FLECS_STATIC_IN_HEADER const flecs::entity_t IsA = EcsIsA;
+FLECS_STATIC_IN_HEADER const flecs::entity_t ChildOf = EcsChildOf;
+FLECS_STATIC_IN_HEADER const flecs::entity_t DependsOn = EcsDependsOn;
+FLECS_STATIC_IN_HEADER const flecs::entity_t SlotOf = EcsSlotOf;
 
 /* Builtin identifiers */
-static const flecs::entity_t Name = EcsName;
-static const flecs::entity_t Symbol = EcsSymbol;
+FLECS_STATIC_IN_HEADER const flecs::entity_t Name = EcsName;
+FLECS_STATIC_IN_HEADER const flecs::entity_t Symbol = EcsSymbol;
 
 /* Storage */
-static const flecs::entity_t Sparse = EcsSparse;
-static const flecs::entity_t Union = EcsUnion;
+FLECS_STATIC_IN_HEADER const flecs::entity_t Sparse = EcsSparse;
+FLECS_STATIC_IN_HEADER const flecs::entity_t Union = EcsUnion;
 
 /* Builtin predicates for comparing entity ids in queries. */
-static const flecs::entity_t PredEq = EcsPredEq;
-static const flecs::entity_t PredMatch = EcsPredMatch;
-static const flecs::entity_t PredLookup = EcsPredLookup;
+FLECS_STATIC_IN_HEADER const flecs::entity_t PredEq = EcsPredEq;
+FLECS_STATIC_IN_HEADER const flecs::entity_t PredMatch = EcsPredMatch;
+FLECS_STATIC_IN_HEADER const flecs::entity_t PredLookup = EcsPredLookup;
 
 /* Builtin marker entities for query scopes */
-static const flecs::entity_t ScopeOpen = EcsScopeOpen;
-static const flecs::entity_t ScopeClose = EcsScopeClose;
+FLECS_STATIC_IN_HEADER const flecs::entity_t ScopeOpen = EcsScopeOpen;
+FLECS_STATIC_IN_HEADER const flecs::entity_t ScopeClose = EcsScopeClose;
 
 /** @} */
 
@@ -16921,10 +16943,10 @@ template<class Ty> inline void free_obj(Ty* _ptr) {
 #define flecs_static_assert(cond, str) static_assert(cond, str)
 #endif
 
-inline void* operator new(size_t,   flecs::_::placement_new_tag_t, void* _ptr) noexcept { return _ptr; }
-inline void  operator delete(void*, flecs::_::placement_new_tag_t, void*)      noexcept {              }
+FLECS_API_DEPENDENCY inline void* operator new(size_t,   flecs::_::placement_new_tag_t, void* _ptr) noexcept { return _ptr; }
+FLECS_API_DEPENDENCY inline void  operator delete(void*, flecs::_::placement_new_tag_t, void*)      noexcept {              }
 
-namespace flecs
+FLECS_API_NAMESPACE namespace flecs
 {
 
 // C++11/C++14 convenience template replacements
@@ -16991,6 +17013,9 @@ using if_t = enable_if_t<V, int>;
 
 template <bool V>
 using if_not_t = enable_if_t<false == V, int>;
+} // namespace flecs
+
+namespace flecs {
 
 namespace _
 {
@@ -17005,7 +17030,9 @@ struct always_false {
 
 } // namespace flecs
 
+#ifndef FLECS_NO_STD_INCLUDE
 #include <stdlib.h>
+#endif
 /**
  * @file addons/cpp/utils/array.hpp
  * @brief Array class.
@@ -17014,7 +17041,7 @@ struct always_false {
  * template code where template expansion would lead to an array with size 0.
  */
 
-namespace flecs {
+FLECS_API_NAMESPACE namespace flecs {
 
 template <typename T>
 struct array_iterator
@@ -17124,7 +17151,7 @@ struct array<T, Size, enable_if_t<Size == 0>> final {
  * @brief String utility that doesn't implicitly allocate memory.
  */
 
-namespace flecs {
+FLECS_API_NAMESPACE namespace flecs {
 
 struct string_view;
 
@@ -17279,8 +17306,10 @@ struct string_view : string {
  * and their names. This is used to automatically register enum constants.
  */
 
+#ifndef FLECS_NO_STD_INCLUDE
 #include <string.h>
 #include <limits>
+#endif
 
 #define FLECS_ENUM_MAX(T) _::to_constant<T, 128>::value
 #define FLECS_ENUM_MAX_COUNT (FLECS_ENUM_MAX(int) + 1)
@@ -17317,14 +17346,17 @@ struct to_constant {
 
 template <typename E, underlying_type_t<E> Value>
 constexpr E to_constant<E, Value>::value;
-}
+} // namespace _
+} // namespace flecs
+
+FLECS_API_NAMESPACE namespace flecs {
 
 /** Convenience type with enum reflection data */
 template <typename E>
 struct enum_data;
 
 template <typename E>
-static enum_data<E> enum_type(flecs::world_t *world);
+FLECS_STATIC_IN_HEADER enum_data<E> enum_type(flecs::world_t *world);
 
 template <typename E>
 struct enum_last {
@@ -17333,12 +17365,15 @@ struct enum_last {
 
 /* Utility macro to override enum_last trait */
 #define FLECS_ENUM_LAST(T, Last)\
-    namespace flecs {\
+    FLECS_API_NAMESPACE namespace flecs {\
     template<>\
     struct enum_last<T> {\
         static constexpr T value = Last;\
     };\
     }
+} // namespace flecs
+
+namespace flecs {
 
 namespace _ {
 
@@ -17654,15 +17689,20 @@ public:
 template <typename E>
 enum_data_impl<E> enum_type<E>::data;
 
+FLECS_API_DEPENDENCY
 template <typename E, if_t< is_enum<E>::value > = 0>
-inline static void init_enum(flecs::world_t *world, flecs::entity_t id) {
+inline FLECS_STATIC_IN_HEADER void init_enum(flecs::world_t *world, flecs::entity_t id) {
     _::enum_type<E>::get().init(world, id);
 }
 
+FLECS_API_DEPENDENCY
 template <typename E, if_not_t< is_enum<E>::value > = 0>
-inline static void init_enum(flecs::world_t*, flecs::entity_t) { }
+inline FLECS_STATIC_IN_HEADER void init_enum(flecs::world_t*, flecs::entity_t) { }
 
 } // namespace _
+} // namespace flecs
+
+FLECS_API_NAMESPACE namespace flecs {
 
 /** Enumeration type data wrapper with world pointer */
 template <typename E>
@@ -17768,7 +17808,7 @@ enum_data<E> enum_type(flecs::world_t *world) {
  * @brief Wrapper around ecs_strbuf_t that provides a simple stringstream like API.
  */
 
-namespace flecs {
+FLECS_API_NAMESPACE namespace flecs {
 
 struct stringstream {
     explicit stringstream() 
@@ -17905,8 +17945,10 @@ template <typename T>
 struct function_traits
     : function_traits_no_cv< decay_t<T> > {};
 
-} // _
+} // namespace _
+} // namespace flecs
 
+FLECS_API_NAMESPACE namespace flecs {
 
 template <typename T>
 struct is_callable {
@@ -17970,7 +18012,7 @@ using second_arg_t = typename second_arg<Func>::type;
 
 #pragma once
 
-namespace flecs {
+FLECS_API_NAMESPACE namespace flecs {
 
 struct id;
 struct entity;
@@ -17989,6 +18031,7 @@ struct entity;
  * - pair ids
  * - entities with id flags set (like flecs::AUTO_OVERRIDE, flecs::TOGGLE)
  */
+
 struct id {
     id()
         : world_(nullptr)
@@ -18123,7 +18166,7 @@ protected:
 
 #pragma once
 
-namespace flecs {
+FLECS_API_NAMESPACE namespace flecs {
 
 /**
  * @ingroup cpp_core_queries
@@ -18145,7 +18188,7 @@ struct term_builder;
 
 #pragma once
 
-namespace flecs {
+FLECS_API_NAMESPACE namespace flecs {
 
 /**
  * @defgroup cpp_core_queries Queries
@@ -18156,8 +18199,10 @@ namespace flecs {
 
 struct query_base;
 
+
 template<typename ... Components>
 struct query;
+
 
 template<typename ... Components>
 struct query_builder;
@@ -18182,7 +18227,7 @@ struct query_builder;
 
 #define ECS_EVENT_DESC_ID_COUNT_MAX (8)
 
-namespace flecs {
+FLECS_API_NAMESPACE namespace flecs {
 
 /**
  * @ingroup cpp_addons_event
@@ -18360,8 +18405,8 @@ struct event_from_func<Func, if_t< arity<Func>::value == 2>> {
 template <typename Func>
 using event_from_func_t = typename event_from_func<Func>::type;
 
-}
-}
+} // namespace _
+} // namespace flecs
 
 /**
  * @file addons/cpp/mixins/observer/decl.hpp
@@ -18370,7 +18415,7 @@ using event_from_func_t = typename event_from_func<Func>::type;
 
 #pragma once
 
-namespace flecs {
+FLECS_API_NAMESPACE namespace flecs {
 
 /**
  * @defgroup cpp_observers Observers
@@ -18381,6 +18426,7 @@ namespace flecs {
  */
 
 struct observer;
+
 
 template<typename ... Components>
 struct observer_builder;
@@ -18397,7 +18443,7 @@ struct observer_builder;
 
 #pragma once
 
-namespace flecs {
+FLECS_API_NAMESPACE namespace flecs {
 
 /**
  * @defgroup cpp_addons_systems Systems
@@ -18407,13 +18453,18 @@ namespace flecs {
  * @{
  */
 
+
 using TickSource = EcsTickSource;
 
 struct system;
 
+
 template<typename ... Components>
 struct system_builder;
 
+} // namespace flecs
+
+namespace flecs {
 namespace _ {
 
 void system_init(flecs::world& world);
@@ -18432,7 +18483,7 @@ void system_init(flecs::world& world);
 
 #pragma once
 
-namespace flecs {
+FLECS_API_NAMESPACE namespace flecs {
 
 /**
  * @defgroup cpp_pipelines Pipelines
@@ -18449,17 +18500,17 @@ template <typename ... Components>
 struct pipeline_builder;
 
 /* Builtin pipeline tags */
-static const flecs::entity_t OnStart = EcsOnStart;
-static const flecs::entity_t PreFrame = EcsPreFrame;
-static const flecs::entity_t OnLoad = EcsOnLoad;
-static const flecs::entity_t PostLoad = EcsPostLoad;
-static const flecs::entity_t PreUpdate = EcsPreUpdate;
-static const flecs::entity_t OnUpdate = EcsOnUpdate;
-static const flecs::entity_t OnValidate = EcsOnValidate;
-static const flecs::entity_t PostUpdate = EcsPostUpdate;
-static const flecs::entity_t PreStore = EcsPreStore;
-static const flecs::entity_t OnStore = EcsOnStore;
-static const flecs::entity_t PostFrame = EcsPostFrame;
+FLECS_STATIC_IN_HEADER const flecs::entity_t OnStart = EcsOnStart;
+FLECS_STATIC_IN_HEADER const flecs::entity_t PreFrame = EcsPreFrame;
+FLECS_STATIC_IN_HEADER const flecs::entity_t OnLoad = EcsOnLoad;
+FLECS_STATIC_IN_HEADER const flecs::entity_t PostLoad = EcsPostLoad;
+FLECS_STATIC_IN_HEADER const flecs::entity_t PreUpdate = EcsPreUpdate;
+FLECS_STATIC_IN_HEADER const flecs::entity_t OnUpdate = EcsOnUpdate;
+FLECS_STATIC_IN_HEADER const flecs::entity_t OnValidate = EcsOnValidate;
+FLECS_STATIC_IN_HEADER const flecs::entity_t PostUpdate = EcsPostUpdate;
+FLECS_STATIC_IN_HEADER const flecs::entity_t PreStore = EcsPreStore;
+FLECS_STATIC_IN_HEADER const flecs::entity_t OnStore = EcsOnStore;
+FLECS_STATIC_IN_HEADER const flecs::entity_t PostFrame = EcsPostFrame;
 
 /** @} */
 
@@ -18474,7 +18525,7 @@ static const flecs::entity_t PostFrame = EcsPostFrame;
 
 #pragma once
 
-namespace flecs {
+FLECS_API_NAMESPACE namespace flecs {
 
 /**
  * @defgroup cpp_addons_timer Timer
@@ -18490,7 +18541,9 @@ using RateFilter = EcsRateFilter;
 struct timer;
 
 /** @} */
+} // namespace flecs
 
+namespace flecs {
 namespace _ {
 
 void timer_init(flecs::world& world);
@@ -18507,7 +18560,7 @@ void timer_init(flecs::world& world);
 
 #pragma once
 
-namespace flecs {
+FLECS_API_NAMESPACE namespace flecs {
 namespace doc {
 
 /**
@@ -18522,19 +18575,25 @@ namespace doc {
 using Description = EcsDocDescription;
 
 /** flecs.doc.Uuid component */
-static const flecs::entity_t Uuid = EcsDocUuid;
+FLECS_STATIC_IN_HEADER const flecs::entity_t Uuid = EcsDocUuid;
 
 /** flecs.doc.Brief component */
-static const flecs::entity_t Brief = EcsDocBrief;
+FLECS_STATIC_IN_HEADER const flecs::entity_t Brief = EcsDocBrief;
 
 /** flecs.doc.Detail component */
-static const flecs::entity_t Detail = EcsDocDetail;
+FLECS_STATIC_IN_HEADER const flecs::entity_t Detail = EcsDocDetail;
 
 /** flecs.doc.Link component */
-static const flecs::entity_t Link = EcsDocLink;
+FLECS_STATIC_IN_HEADER const flecs::entity_t Link = EcsDocLink;
 
 /** flecs.doc.Color component */
-static const flecs::entity_t Color = EcsDocColor;
+FLECS_STATIC_IN_HEADER const flecs::entity_t Color = EcsDocColor;
+} // namespace doc
+} // namespace flecs
+
+namespace flecs {
+
+namespace doc {
 
 /** @private */
 namespace _ {
@@ -18544,8 +18603,8 @@ void init(flecs::world& world);
 
 /** @} */
 
-}
-}
+} // namespace doc
+} // namespace flecs
 
 #endif
 #ifdef FLECS_REST
@@ -18556,7 +18615,7 @@ void init(flecs::world& world);
 
 #pragma once
 
-namespace flecs {
+FLECS_API_NAMESPACE namespace flecs {
 
 /**
  * @defgroup cpp_addons_rest Rest
@@ -18566,20 +18625,23 @@ namespace flecs {
  * @{
  */
 
+
 using Rest = EcsRest;
 
-namespace rest {
+} // namespace flecs
 
+namespace flecs {
+namespace rest {
 namespace _ {
 
 void init(flecs::world& world);
 
-}
-}
+} // namespace _
+} // namespace rest
 
 /** @} */
 
-}
+} // namespace flecs
 
 #endif
 #ifdef FLECS_META
@@ -18590,7 +18652,7 @@ void init(flecs::world& world);
 
 #pragma once
 
-namespace flecs {
+FLECS_API_NAMESPACE namespace flecs {
 
 /**
  * @defgroup cpp_addons_meta Meta
@@ -18640,62 +18702,66 @@ struct bitmask {
 };
 
 /* Handles to builtin reflection types */
-static const flecs::entity_t Bool = ecs_id(ecs_bool_t);
-static const flecs::entity_t Char = ecs_id(ecs_char_t);
-static const flecs::entity_t Byte = ecs_id(ecs_byte_t);
-static const flecs::entity_t U8 = ecs_id(ecs_u8_t);
-static const flecs::entity_t U16 = ecs_id(ecs_u16_t);
-static const flecs::entity_t U32 = ecs_id(ecs_u32_t);
-static const flecs::entity_t U64 = ecs_id(ecs_u64_t);
-static const flecs::entity_t Uptr = ecs_id(ecs_uptr_t);
-static const flecs::entity_t I8 = ecs_id(ecs_i8_t);
-static const flecs::entity_t I16 = ecs_id(ecs_i16_t);
-static const flecs::entity_t I32 = ecs_id(ecs_i32_t);
-static const flecs::entity_t I64 = ecs_id(ecs_i64_t);
-static const flecs::entity_t Iptr = ecs_id(ecs_iptr_t);
-static const flecs::entity_t F32 = ecs_id(ecs_f32_t);
-static const flecs::entity_t F64 = ecs_id(ecs_f64_t);
-static const flecs::entity_t String = ecs_id(ecs_string_t);
-static const flecs::entity_t Entity = ecs_id(ecs_entity_t);
-static const flecs::entity_t Constant = EcsConstant;
-static const flecs::entity_t Quantity = EcsQuantity;
+FLECS_STATIC_IN_HEADER const flecs::entity_t Bool = ecs_id(ecs_bool_t);
+FLECS_STATIC_IN_HEADER const flecs::entity_t Char = ecs_id(ecs_char_t);
+FLECS_STATIC_IN_HEADER const flecs::entity_t Byte = ecs_id(ecs_byte_t);
+FLECS_STATIC_IN_HEADER const flecs::entity_t U8 = ecs_id(ecs_u8_t);
+FLECS_STATIC_IN_HEADER const flecs::entity_t U16 = ecs_id(ecs_u16_t);
+FLECS_STATIC_IN_HEADER const flecs::entity_t U32 = ecs_id(ecs_u32_t);
+FLECS_STATIC_IN_HEADER const flecs::entity_t U64 = ecs_id(ecs_u64_t);
+FLECS_STATIC_IN_HEADER const flecs::entity_t Uptr = ecs_id(ecs_uptr_t);
+FLECS_STATIC_IN_HEADER const flecs::entity_t I8 = ecs_id(ecs_i8_t);
+FLECS_STATIC_IN_HEADER const flecs::entity_t I16 = ecs_id(ecs_i16_t);
+FLECS_STATIC_IN_HEADER const flecs::entity_t I32 = ecs_id(ecs_i32_t);
+FLECS_STATIC_IN_HEADER const flecs::entity_t I64 = ecs_id(ecs_i64_t);
+FLECS_STATIC_IN_HEADER const flecs::entity_t Iptr = ecs_id(ecs_iptr_t);
+FLECS_STATIC_IN_HEADER const flecs::entity_t F32 = ecs_id(ecs_f32_t);
+FLECS_STATIC_IN_HEADER const flecs::entity_t F64 = ecs_id(ecs_f64_t);
+FLECS_STATIC_IN_HEADER const flecs::entity_t String = ecs_id(ecs_string_t);
+FLECS_STATIC_IN_HEADER const flecs::entity_t Entity = ecs_id(ecs_entity_t);
+FLECS_STATIC_IN_HEADER const flecs::entity_t Constant = EcsConstant;
+FLECS_STATIC_IN_HEADER const flecs::entity_t Quantity = EcsQuantity;
 
 namespace meta {
 
 /* Type kinds supported by reflection system */
 using type_kind_t = ecs_type_kind_t;
-static const type_kind_t PrimitiveType = EcsPrimitiveType;
-static const type_kind_t BitmaskType = EcsBitmaskType;
-static const type_kind_t EnumType = EcsEnumType;
-static const type_kind_t StructType = EcsStructType;
-static const type_kind_t ArrayType = EcsArrayType;
-static const type_kind_t VectorType = EcsVectorType;
-static const type_kind_t CustomType = EcsOpaqueType;
-static const type_kind_t TypeKindLast = EcsTypeKindLast;
+FLECS_STATIC_IN_HEADER const type_kind_t PrimitiveType = EcsPrimitiveType;
+FLECS_STATIC_IN_HEADER const type_kind_t BitmaskType = EcsBitmaskType;
+FLECS_STATIC_IN_HEADER const type_kind_t EnumType = EcsEnumType;
+FLECS_STATIC_IN_HEADER const type_kind_t StructType = EcsStructType;
+FLECS_STATIC_IN_HEADER const type_kind_t ArrayType = EcsArrayType;
+FLECS_STATIC_IN_HEADER const type_kind_t VectorType = EcsVectorType;
+FLECS_STATIC_IN_HEADER const type_kind_t CustomType = EcsOpaqueType;
+FLECS_STATIC_IN_HEADER const type_kind_t TypeKindLast = EcsTypeKindLast;
 
 /* Primitive type kinds supported by reflection system */
 using primitive_kind_t = ecs_primitive_kind_t;
-static const primitive_kind_t Bool = EcsBool;
-static const primitive_kind_t Char = EcsChar;
-static const primitive_kind_t Byte = EcsByte;
-static const primitive_kind_t U8 = EcsU8;
-static const primitive_kind_t U16 = EcsU16;
-static const primitive_kind_t U32 = EcsU32;
-static const primitive_kind_t U64 = EcsU64;
-static const primitive_kind_t I8 = EcsI8;
-static const primitive_kind_t I16 = EcsI16;
-static const primitive_kind_t I32 = EcsI32;
-static const primitive_kind_t I64 = EcsI64;
-static const primitive_kind_t F32 = EcsF32;
-static const primitive_kind_t F64 = EcsF64;
-static const primitive_kind_t UPtr = EcsUPtr;
-static const primitive_kind_t IPtr = EcsIPtr;
-static const primitive_kind_t String = EcsString;
-static const primitive_kind_t Entity = EcsEntity;
-static const primitive_kind_t PrimitiveKindLast = EcsPrimitiveKindLast;
+FLECS_STATIC_IN_HEADER const primitive_kind_t Bool = EcsBool;
+FLECS_STATIC_IN_HEADER const primitive_kind_t Char = EcsChar;
+FLECS_STATIC_IN_HEADER const primitive_kind_t Byte = EcsByte;
+FLECS_STATIC_IN_HEADER const primitive_kind_t U8 = EcsU8;
+FLECS_STATIC_IN_HEADER const primitive_kind_t U16 = EcsU16;
+FLECS_STATIC_IN_HEADER const primitive_kind_t U32 = EcsU32;
+FLECS_STATIC_IN_HEADER const primitive_kind_t U64 = EcsU64;
+FLECS_STATIC_IN_HEADER const primitive_kind_t I8 = EcsI8;
+FLECS_STATIC_IN_HEADER const primitive_kind_t I16 = EcsI16;
+FLECS_STATIC_IN_HEADER const primitive_kind_t I32 = EcsI32;
+FLECS_STATIC_IN_HEADER const primitive_kind_t I64 = EcsI64;
+FLECS_STATIC_IN_HEADER const primitive_kind_t F32 = EcsF32;
+FLECS_STATIC_IN_HEADER const primitive_kind_t F64 = EcsF64;
+FLECS_STATIC_IN_HEADER const primitive_kind_t UPtr = EcsUPtr;
+FLECS_STATIC_IN_HEADER const primitive_kind_t IPtr = EcsIPtr;
+FLECS_STATIC_IN_HEADER const primitive_kind_t String = EcsString;
+FLECS_STATIC_IN_HEADER const primitive_kind_t Entity = EcsEntity;
+FLECS_STATIC_IN_HEADER const primitive_kind_t PrimitiveKindLast = EcsPrimitiveKindLast;
 
 /** @} */
+} // namespace meta
+} // namespace flecs
 
+namespace flecs {
+namespace meta {
 namespace _ {
 
 void init(flecs::world& world);
@@ -18711,7 +18777,7 @@ void init(flecs::world& world);
 
 #pragma once
 
-namespace flecs {
+FLECS_API_NAMESPACE namespace flecs {
 
 /**
  * @defgroup cpp_addons_meta Meta
@@ -18876,7 +18942,7 @@ struct cursor {
 
 #include <stdio.h>
 
-namespace flecs {
+FLECS_API_NAMESPACE namespace flecs {
 
 /**
  * @defgroup cpp_addons_meta Meta
@@ -18893,10 +18959,12 @@ using serializer = ecs_serializer_t;
 using serialize_t = ecs_meta_serialize_t;
 
 /** Type safe variant of serializer function */
+
 template <typename T>
 using serialize = int(*)(const serializer *, const T*);
 
 /** Type safe interface for opaque types */
+
 template <typename T, typename ElemType = void>
 struct opaque {
     opaque(flecs::world_t *w = nullptr) : world(w) {
@@ -19060,7 +19128,9 @@ struct opaque {
 
 #pragma once
 
-namespace flecs {
+FLECS_API_NAMESPACE namespace flecs {
+
+
 struct units {
 
 /**
@@ -19425,7 +19495,7 @@ units(flecs::world& world);
 
 #pragma once
 
-namespace flecs {
+FLECS_API_NAMESPACE namespace flecs {
 
 /**
  * @defgroup cpp_addons_stats Stats
@@ -19436,13 +19506,17 @@ namespace flecs {
  */
 
 /** Component that stores world statistics */
+
 using WorldStats = EcsWorldStats;
 
 /** Component that stores system/pipeline statistics */
+
 using PipelineStats = EcsPipelineStats;
 
 /** Component with world summary stats */
+
 using WorldSummary = EcsWorldSummary;
+
 
 struct stats {
     stats(flecs::world& world);
@@ -19470,7 +19544,7 @@ struct stats {
 
 #define ECS_EVENT_DESC_ID_COUNT_MAX (8)
 
-namespace flecs {
+FLECS_API_NAMESPACE namespace flecs {
 
 /**
  * @ingroup cpp_addons_metrics
@@ -19567,7 +19641,7 @@ protected:
 }
 
 
-namespace flecs {
+FLECS_API_NAMESPACE namespace flecs {
 
 /**
  * @defgroup cpp_addons_metrics Metrics
@@ -19577,6 +19651,7 @@ namespace flecs {
  *
  * @{
  */
+
 
 struct metrics {
     using Value = EcsMetricValue;
@@ -19605,7 +19680,7 @@ struct metrics {
 
 #pragma once
 
-namespace flecs {
+FLECS_API_NAMESPACE namespace flecs {
 
 /**
  * @defgroup cpp_addons_alerts Alerts
@@ -19616,6 +19691,7 @@ namespace flecs {
  */
 
 /** Module */
+
 struct alerts {
     using AlertsActive = EcsAlertsActive;
     using Instance = EcsAlertInstance;
@@ -19628,8 +19704,10 @@ struct alerts {
     alerts(flecs::world& world);
 };
 
+
 template <typename ... Components>
 struct alert;
+
 
 template <typename ... Components>
 struct alert_builder;
@@ -19647,7 +19725,7 @@ struct alert_builder;
 
 #pragma once
 
-namespace flecs {
+FLECS_API_NAMESPACE namespace flecs {
 
 /**
  * @defgroup cpp_addons_json Json
@@ -19681,7 +19759,7 @@ using iter_to_json_desc_t = ecs_iter_to_json_desc_t;
 
 #pragma once
 
-namespace flecs {
+FLECS_API_NAMESPACE namespace flecs {
 
 /**
  * @defgroup cpp_addons_app App
@@ -19692,6 +19770,7 @@ namespace flecs {
  */
 
 /** App builder interface */
+
 struct app_builder {
     app_builder(flecs::world_t *world)
         : world_(world)
@@ -19785,7 +19864,7 @@ private:
 
 #pragma once
 
-namespace flecs {
+FLECS_API_NAMESPACE namespace flecs {
 
 /**
  * @ingroup cpp_addons_script
@@ -19793,6 +19872,7 @@ namespace flecs {
  */
 
 /** Script builder interface */
+
 struct script_builder {
     script_builder(flecs::world_t *world, const char *name = nullptr)
         : world_(world)
@@ -19827,7 +19907,7 @@ protected:
 }
 
 
-namespace flecs {
+FLECS_API_NAMESPACE namespace flecs {
 
 /**
  * @defgroup cpp_addons_script Script
@@ -19851,7 +19931,7 @@ struct script_builder;
 
 #pragma once
 
-namespace flecs {
+FLECS_API_NAMESPACE namespace flecs {
 namespace log {
 
 /**
@@ -19953,9 +20033,12 @@ namespace flecs {
 
 namespace _ {
     struct pair_base { };
-} // _
+} // namespace _
+
+} // namespace flecs
 
 
+FLECS_API_NAMESPACE namespace flecs {
 /**
  * @defgroup cpp_pair_type Pair type
  * @ingroup cpp_core
@@ -20084,7 +20167,7 @@ struct is_actual {
         std::is_same<T, actual_type_t<T> >::value && !is_enum<T>::value;
 };
 
-} // flecs
+} // namespace flecs
 
 /**
  * @file addons/cpp/lifecycle_traits.hpp
@@ -20267,7 +20350,11 @@ void move_dtor_impl(void *dst_ptr, void *src_ptr, int32_t count,
     }
 }
 
-} // _
+} // namespace _
+} // namespace flecs
+
+FLECS_API_NAMESPACE namespace flecs
+{
 
 // Trait to test if type is constructible by flecs
 template <typename T>
@@ -20276,6 +20363,9 @@ struct is_flecs_constructible {
         std::is_default_constructible<actual_type_t<T>>::value;
 };
 
+} // namespace flecs
+
+namespace flecs {
 namespace _
 {
 
@@ -20468,7 +20558,7 @@ ecs_move_t move_dtor() {
 
 #pragma once
 
-namespace flecs
+FLECS_API_NAMESPACE namespace flecs
 {
 
 /* Static helper functions to assign a component value */
@@ -22396,7 +22486,7 @@ struct scoped_world : world {
  * @{
  */
 
-namespace flecs
+FLECS_API_NAMESPACE namespace flecs
 {
 
 /** Unsafe wrapper class around a field.
@@ -22552,7 +22642,7 @@ private:
 
 } // namespace flecs
 
-namespace flecs
+FLECS_API_NAMESPACE namespace flecs
 {
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -23003,7 +23093,7 @@ private:
  * @{
  */
 
-namespace flecs
+FLECS_API_NAMESPACE namespace flecs
 {
 
 /** Entity view.
@@ -24106,7 +24196,7 @@ private:
 
 #pragma once
 
-namespace flecs
+FLECS_API_NAMESPACE namespace flecs
 {
 
 /** Entity builder. 
@@ -25431,7 +25521,7 @@ protected:
  * @{
  */
 
-namespace flecs
+FLECS_API_NAMESPACE namespace flecs
 {
 
 /** Entity.
@@ -25770,7 +25860,9 @@ const char* from_json(const char *json) {
 
 #pragma once
 
+#ifndef FLECS_NO_STD_INCLUDE
 #include <utility> // std::declval
+#endif
 
 namespace flecs
 {
@@ -26657,6 +26749,10 @@ struct entity_with_delegate<Func, if_t< is_callable<Func>::value > >
 };
 
 } // namespace _
+} // namespace flecs
+
+FLECS_API_NAMESPACE namespace flecs
+{
 
 // Experimental: allows using the each delegate for use cases outside of flecs
 template <typename Func, typename ... Args>
@@ -26671,8 +26767,10 @@ using delegate = _::each_delegate<typename std::decay<Func>::type, Args...>;
 
 #pragma once
 
+#ifndef FLECS_NO_STD_INCLUDE
 #include <ctype.h>
 #include <stdio.h>
+#endif
 
 /**
  * @defgroup cpp_components Components
@@ -26683,7 +26781,6 @@ using delegate = _::each_delegate<typename std::decay<Func>::type, Args...>;
  */
 
 namespace flecs {
-
 namespace _ {
 
 // Trick to obtain typename from type, as described here
@@ -27007,6 +27104,9 @@ struct type<T, if_t< is_pair<T>::value >>
 };
 
 } // namespace _
+} // namespace flecs
+
+FLECS_API_NAMESPACE namespace flecs {
 
 /** Untyped component class.
  * Generic base class for flecs::component.
@@ -27612,7 +27712,7 @@ inline void reset() {
 
 #pragma once
 
-namespace flecs
+FLECS_API_NAMESPACE namespace flecs
 {
 
 /**
@@ -27700,7 +27800,7 @@ private:
 
 #pragma once
 
-namespace flecs {
+FLECS_API_NAMESPACE namespace flecs {
 
 /**
  * @defgroup cpp_types Types
@@ -27779,7 +27879,7 @@ private:
 
 #pragma once
 
-namespace flecs {
+FLECS_API_NAMESPACE namespace flecs {
 
 /**
  * @defgroup cpp_tables Tables
@@ -28130,7 +28230,7 @@ private:
  * @brief Base class for iterable objects, like queries.
  */
 
-namespace flecs {
+FLECS_API_NAMESPACE namespace flecs {
 
 template <typename ... Components>
 struct iter_iterable;
@@ -28501,7 +28601,7 @@ worker_iterable<Components...> iterable<Components...>::worker(
 
 #pragma once
 
-namespace flecs {
+FLECS_API_NAMESPACE namespace flecs {
 
 inline flecs::entity id::entity() const {
     ecs_assert(!is_pair(), ECS_INVALID_OPERATION, NULL);
@@ -28611,7 +28711,7 @@ inline flecs::id world::pair(entity_t r, entity_t o) const {
 
 #pragma once
 
-namespace flecs {
+FLECS_API_NAMESPACE namespace flecs {
 
 template <typename T>
 flecs::entity ref<T>::entity() const {
@@ -28843,7 +28943,7 @@ inline flecs::entity world::prefab(const char *name) const {
 
 #pragma once
 
-namespace flecs {
+FLECS_API_NAMESPACE namespace flecs {
 
 template <typename T, typename... Args>
 inline flecs::component<T> world::component(Args &&... args) const {
@@ -28955,7 +29055,7 @@ namespace _ {
 } // namespace flecs
 
 
-namespace flecs 
+FLECS_API_NAMESPACE namespace flecs
 {
 
 /** Term identifier builder.
@@ -29388,7 +29488,7 @@ private:
 }
 
 
-namespace flecs {
+FLECS_API_NAMESPACE namespace flecs {
 
 /** Class that describes a term.
  * 
@@ -29596,7 +29696,7 @@ protected:
 #pragma once
 
 
-namespace flecs 
+FLECS_API_NAMESPACE namespace flecs
 {
 
 /** Query builder interface.
@@ -29970,12 +30070,14 @@ namespace flecs {
 namespace _ {
     template <typename ... Components>
     using query_builder_base = builder<
-        query, ecs_query_desc_t, query_builder<Components...>, 
+        query, ecs_query_desc_t, query_builder<Components...>,
         query_builder_i, Components ...>;
-}
+} // namespace _
+} // namespace flecs
 
+FLECS_API_NAMESPACE namespace flecs {
 /** Query builder.
- * 
+ *
  * @ingroup cpp_core_queries
  */
 template <typename ... Components>
@@ -30006,10 +30108,10 @@ struct query_builder final : _::query_builder_base<Components...> {
     }
 };
 
-}
+} // namespace flecs
 
 
-namespace flecs 
+FLECS_API_NAMESPACE namespace flecs
 {
 
 struct query_base {
@@ -30239,8 +30341,10 @@ template <typename... Comps, typename... Args>
 inline flecs::query_builder<Comps...> world::query_builder(Args &&... args) const {
     return flecs::query_builder<Comps...>(world_, FLECS_FWD(args)...);
 }
+} // namespace flecs
 
 // world::each
+namespace flecs {
 namespace _ {
 
 // Each with entity parameter
@@ -30287,7 +30391,10 @@ struct query_delegate<Func, if_not_t<is_same<first_arg_t<Func>, flecs::entity>::
     }
 };
 
-}
+} // namespace _
+} // namespace flecs
+
+FLECS_API_NAMESPACE namespace flecs {
 
 template <typename Func>
 inline void world::each(Func&& func) const {
@@ -30421,7 +30528,7 @@ protected:
 #pragma once
 
 
-namespace flecs {
+FLECS_API_NAMESPACE namespace flecs {
 
 /** Observer builder interface.
  * 
@@ -30500,12 +30607,16 @@ namespace flecs {
 namespace _ {
     template <typename ... Components>
     using observer_builder_base = node_builder<
-        observer, ecs_observer_desc_t, observer_builder<Components...>, 
+        observer, ecs_observer_desc_t, observer_builder<Components...>,
         observer_builder_i, Components ...>;
-}
+
+} // namespace _
+} // namespace flecs
+
+FLECS_API_NAMESPACE namespace flecs {
 
 /** Observer builder.
- * 
+ *
  * @ingroup cpp_observers
  */
 template <typename ... Components>
@@ -30517,10 +30628,10 @@ struct observer_builder final : _::observer_builder_base<Components...> {
     }
 };
 
-}
+} // namespace flecs
 
 
-namespace flecs 
+FLECS_API_NAMESPACE namespace flecs
 {
 
 struct observer final : entity
@@ -30570,7 +30681,7 @@ inline observer_builder<Comps...> world::observer(Args &&... args) const {
 #pragma once
 
 
-namespace flecs 
+FLECS_API_NAMESPACE namespace flecs
 {
 
 // Mixin implementation
@@ -30584,6 +30695,9 @@ inline flecs::event_builder_typed<E> world::event() const {
     return flecs::event_builder_typed<E>(world_, _::type<E>().id(world_));
 }
 
+} // namespace flecs
+
+namespace flecs {
 namespace _ {
     inline void entity_observer_create(
         flecs::world_t *world,
@@ -30676,7 +30790,7 @@ inline void entity_view::enqueue(flecs::entity evt) const {
 
 #pragma once
 
-namespace flecs {
+FLECS_API_NAMESPACE namespace flecs {
 
 template <typename E>
 inline E entity_view::to_constant() const {
@@ -30762,7 +30876,11 @@ flecs::entity import(world& world) {
     return flecs::entity(world, m);
 }
 
-}
+} // namespace _
+} // namespace flecs
+
+
+FLECS_API_NAMESPACE namespace flecs {
 
 /**
  * @defgroup cpp_addons_modules Modules
@@ -30833,7 +30951,7 @@ inline flecs::entity world::import() {
 #pragma once
 
 
-namespace flecs 
+FLECS_API_NAMESPACE namespace flecs
 {
 
 /** System builder interface.
@@ -30992,12 +31110,14 @@ namespace flecs {
 namespace _ {
     template <typename ... Components>
     using system_builder_base = node_builder<
-        system, ecs_system_desc_t, system_builder<Components...>, 
+        system, ecs_system_desc_t, system_builder<Components...>,
         system_builder_i, Components ...>;
-}
+} // namespace _
+} // namespace flecs
 
+FLECS_API_NAMESPACE namespace flecs {
 /** System builder.
- * 
+ *
  * @ingroup cpp_addons_systems
  */
 template <typename ... Components>
@@ -31014,10 +31134,10 @@ struct system_builder final : _::system_builder_base<Components...> {
     }
 };
 
-}
+} // namespace flecs
 
 
-namespace flecs 
+FLECS_API_NAMESPACE namespace flecs
 {
 
 struct system_runner_fluent {
@@ -31189,6 +31309,9 @@ inline system_builder<Comps...> world::system(Args &&... args) const {
     return flecs::system_builder<Comps...>(world_, FLECS_FWD(args)...);
 }
 
+} // namespace flecs
+
+namespace flecs {
 namespace _ {
 
 inline void system_init(flecs::world& world) {
@@ -31222,7 +31345,7 @@ inline void system_init(flecs::world& world) {
 #pragma once
 
 
-namespace flecs {
+FLECS_API_NAMESPACE namespace flecs {
 
 /** Pipeline builder interface.
  * 
@@ -31245,12 +31368,14 @@ namespace flecs {
 namespace _ {
     template <typename ... Components>
     using pipeline_builder_base = builder<
-        pipeline, ecs_pipeline_desc_t, pipeline_builder<Components...>, 
+        pipeline, ecs_pipeline_desc_t, pipeline_builder<Components...>,
         pipeline_builder_i, Components ...>;
-}
+} // namespace _
+} // namespace flecs
 
+FLECS_API_NAMESPACE namespace flecs {
 /** Pipeline builder.
- * 
+ *
  * @ingroup cpp_pipelines
  */
 template <typename ... Components>
@@ -31263,10 +31388,10 @@ struct pipeline_builder final : _::pipeline_builder_base<Components...> {
     }
 };
 
-}
+} // namespace flecs
 
 
-namespace flecs {
+FLECS_API_NAMESPACE namespace flecs {
 
 template <typename ... Components>
 struct pipeline : entity {
@@ -31355,7 +31480,7 @@ inline bool world::using_task_threads() const {
 
 #pragma once
 
-namespace flecs {
+FLECS_API_NAMESPACE namespace flecs {
 
 // Timer class
 struct timer final : entity {
@@ -31444,6 +31569,9 @@ inline void system::set_tick_source(flecs::entity e) {
     ecs_set_tick_source(world_, id_, e);
 }
 
+} // namespace flecs
+
+namespace flecs {
 namespace _ {
 
 inline void timer_init(flecs::world& world) {
@@ -31451,8 +31579,8 @@ inline void timer_init(flecs::world& world) {
     world.component<Timer>("flecs::timer::Timer");
 }
 
-}
-}
+} // namespace _
+} // namespace flecs
 
 #endif
 #ifdef FLECS_DOC
@@ -31463,7 +31591,7 @@ inline void timer_init(flecs::world& world) {
 
 #pragma once
 
-namespace flecs {
+FLECS_API_NAMESPACE namespace flecs {
 namespace doc {
 
 /** Get UUID for an entity.
@@ -31609,7 +31737,12 @@ inline void set_link(flecs::entity& e, const char *link) {
 inline void set_color(flecs::entity& e, const char *color) {
     ecs_doc_set_color(e.world(), e, color);
 }
+} // namespace doc
+} // namespace flecs
 
+namespace flecs {
+
+namespace doc {
 /** @private */
 namespace _ {
 
@@ -31797,6 +31930,8 @@ inline flecs::entity world::vector() {
 
 } // namespace flecs
 
+extern "C++" {
+
 inline int ecs_serializer_t::value(ecs_entity_t type, const void *v) const {
     return this->value_(this, type, v);
 }
@@ -31810,6 +31945,7 @@ inline int ecs_serializer_t::value(const T& v) const {
 inline int ecs_serializer_t::member(const char *name) const {
     return this->member_(this, name);
 }
+}
 
 #endif
 #ifdef FLECS_UNITS
@@ -31820,7 +31956,7 @@ inline int ecs_serializer_t::member(const char *name) const {
 
 #pragma once
 
-namespace flecs {
+FLECS_API_NAMESPACE namespace flecs {
 
 inline units::units(flecs::world& world) {
     /* Import C module  */
@@ -32043,7 +32179,7 @@ inline units::units(flecs::world& world) {
 
 #pragma once
 
-namespace flecs {
+FLECS_API_NAMESPACE namespace flecs {
 
 inline stats::stats(flecs::world& world) {
 #ifdef FLECS_UNITS
@@ -32069,7 +32205,7 @@ inline stats::stats(flecs::world& world) {
 
 #pragma once
 
-namespace flecs {
+FLECS_API_NAMESPACE namespace flecs {
 
 inline metrics::metrics(flecs::world& world) {
     world.import<flecs::units>();
@@ -32212,7 +32348,7 @@ inline untyped_component& untyped_component::metric(
 #pragma once
 
 
-namespace flecs {
+FLECS_API_NAMESPACE namespace flecs {
 
 /** Alert builder interface.
  * 
@@ -32371,12 +32507,14 @@ namespace flecs {
 namespace _ {
     template <typename ... Components>
     using alert_builder_base = builder<
-        alert, ecs_alert_desc_t, alert_builder<Components...>, 
+        alert, ecs_alert_desc_t, alert_builder<Components...>,
         alert_builder_i, Components ...>;
-}
+} // namespace _
+} // namespace flecs
 
+FLECS_API_NAMESPACE namespace flecs {
 /** Alert builder.
- * 
+ *
  * @ingroup cpp_addons_alerts
  */
 template <typename ... Components>
@@ -32395,10 +32533,10 @@ struct alert_builder final : _::alert_builder_base<Components...> {
     }
 };
 
-}
+} // namespace flecs
 
 
-namespace flecs {
+FLECS_API_NAMESPACE namespace flecs {
 
 template <typename ... Components>
 struct alert final : entity
@@ -32448,7 +32586,7 @@ inline flecs::alert_builder<Comps...> world::alert(Args &&... args) const {
 #pragma once
 
 
-namespace flecs 
+FLECS_API_NAMESPACE namespace flecs
 {
 
 inline flecs::entity script_builder::run() const {
@@ -32467,7 +32605,7 @@ inline flecs::entity script_builder::run() const {
 
 #pragma once
 
-namespace flecs
+FLECS_API_NAMESPACE namespace flecs
 {
 
 template <typename T>
@@ -32528,7 +32666,7 @@ T* field<T>::operator->() const {
 
 #pragma once
 
-namespace flecs
+FLECS_API_NAMESPACE namespace flecs
 {
 
 inline flecs::entity iter::system() const {
@@ -32650,7 +32788,7 @@ void iter::targets(int8_t index, const Func& func) {
 
 #pragma once
 
-namespace flecs 
+FLECS_API_NAMESPACE namespace flecs
 {
 
 inline void world::init_builtin_components() {
@@ -32990,6 +33128,8 @@ inline flecs::scoped_world world::scope(const char* name) const {
 /** @} */
 
 #endif // __cplusplus
+
+#endif // !FLECS_CPP20_MODULE_HEADER
 
 #endif // FLECS_CPP
 

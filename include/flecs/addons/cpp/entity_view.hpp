@@ -17,7 +17,7 @@
  * @{
  */
 
-namespace flecs
+FLECS_API_NAMESPACE namespace flecs
 {
 
 /** Entity view.

@@ -5,7 +5,9 @@
 
 #pragma once
 
-namespace flecs {
+FLECS_API_NAMESPACE namespace flecs {
+
+
 struct units {
 
 /**

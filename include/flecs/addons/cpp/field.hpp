@@ -14,7 +14,7 @@
  * @{
  */
 
-namespace flecs
+FLECS_API_NAMESPACE namespace flecs
 {
 
 /** Unsafe wrapper class around a field.

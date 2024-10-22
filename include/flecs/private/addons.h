@@ -200,11 +200,16 @@
 #ifdef FLECS_NO_CPP
 #error "FLECS_NO_CPP failed: CPP is required by other addons"
 #endif
+
 #include "../addons/flecs_cpp.h"
+
+#ifndef FLECS_CPP20_MODULE_HEADER
 
 #ifdef __cplusplus
 #include "../addons/cpp/flecs.hpp"
 #endif // __cplusplus
+
+#endif // !FLECS_CPP20_MODULE_HEADER
 
 #endif // FLECS_CPP
 

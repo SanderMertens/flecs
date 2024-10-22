@@ -5,7 +5,7 @@
 
 #pragma once
 
-namespace flecs {
+FLECS_API_NAMESPACE namespace flecs {
 
 /**
  * @defgroup cpp_pipelines Pipelines
@@ -22,17 +22,17 @@ template <typename ... Components>
 struct pipeline_builder;
 
 /* Builtin pipeline tags */
-static const flecs::entity_t OnStart = EcsOnStart;
-static const flecs::entity_t PreFrame = EcsPreFrame;
-static const flecs::entity_t OnLoad = EcsOnLoad;
-static const flecs::entity_t PostLoad = EcsPostLoad;
-static const flecs::entity_t PreUpdate = EcsPreUpdate;
-static const flecs::entity_t OnUpdate = EcsOnUpdate;
-static const flecs::entity_t OnValidate = EcsOnValidate;
-static const flecs::entity_t PostUpdate = EcsPostUpdate;
-static const flecs::entity_t PreStore = EcsPreStore;
-static const flecs::entity_t OnStore = EcsOnStore;
-static const flecs::entity_t PostFrame = EcsPostFrame;
+FLECS_STATIC_IN_HEADER const flecs::entity_t OnStart = EcsOnStart;
+FLECS_STATIC_IN_HEADER const flecs::entity_t PreFrame = EcsPreFrame;
+FLECS_STATIC_IN_HEADER const flecs::entity_t OnLoad = EcsOnLoad;
+FLECS_STATIC_IN_HEADER const flecs::entity_t PostLoad = EcsPostLoad;
+FLECS_STATIC_IN_HEADER const flecs::entity_t PreUpdate = EcsPreUpdate;
+FLECS_STATIC_IN_HEADER const flecs::entity_t OnUpdate = EcsOnUpdate;
+FLECS_STATIC_IN_HEADER const flecs::entity_t OnValidate = EcsOnValidate;
+FLECS_STATIC_IN_HEADER const flecs::entity_t PostUpdate = EcsPostUpdate;
+FLECS_STATIC_IN_HEADER const flecs::entity_t PreStore = EcsPreStore;
+FLECS_STATIC_IN_HEADER const flecs::entity_t OnStore = EcsOnStore;
+FLECS_STATIC_IN_HEADER const flecs::entity_t PostFrame = EcsPostFrame;
 
 /** @} */
 

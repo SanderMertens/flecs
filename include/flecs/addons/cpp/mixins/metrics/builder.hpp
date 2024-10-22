@@ -7,7 +7,7 @@
 
 #define ECS_EVENT_DESC_ID_COUNT_MAX (8)
 
-namespace flecs {
+FLECS_API_NAMESPACE namespace flecs {
 
 /**
  * @ingroup cpp_addons_metrics

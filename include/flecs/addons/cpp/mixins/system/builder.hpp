@@ -12,12 +12,14 @@ namespace flecs {
 namespace _ {
     template <typename ... Components>
     using system_builder_base = node_builder<
-        system, ecs_system_desc_t, system_builder<Components...>, 
+        system, ecs_system_desc_t, system_builder<Components...>,
         system_builder_i, Components ...>;
-}
+} // namespace _
+} // namespace flecs
 
+FLECS_API_NAMESPACE namespace flecs {
 /** System builder.
- * 
+ *
  * @ingroup cpp_addons_systems
  */
 template <typename ... Components>
@@ -34,4 +36,4 @@ struct system_builder final : _::system_builder_base<Components...> {
     }
 };
 
-}
+} // namespace flecs

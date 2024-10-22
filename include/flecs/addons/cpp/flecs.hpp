@@ -6,14 +6,28 @@
 #pragma once
 
 // STL includes
+#ifndef FLECS_NO_STD_INCLUDE
 #include <type_traits>
+#endif
+
+#ifndef FLECS_API_NAMESPACE
+#define FLECS_API_NAMESPACE
+#endif
+
+#ifndef FLECS_API_DEPENDENCY
+#define FLECS_API_DEPENDENCY
+#endif
+
+#ifndef FLECS_STATIC_IN_HEADER
+#define FLECS_STATIC_IN_HEADER static
+#endif
 
 /**
  * @defgroup cpp C++ API
  * @{
  */
 
-namespace flecs
+FLECS_API_NAMESPACE namespace flecs
 {
 
 struct world;
@@ -26,12 +40,17 @@ struct table;
 struct table_range;
 struct untyped_component;
 
+
 template <typename T>
 struct component;
+
 
 template <typename T>
 struct ref;
 
+} // namespace flecs
+
+namespace flecs {
 namespace _
 {
 template <typename T, typename U = int>

@@ -3,7 +3,7 @@
  * @brief Wrapper around ecs_strbuf_t that provides a simple stringstream like API.
  */
 
-namespace flecs {
+FLECS_API_NAMESPACE namespace flecs {
 
 struct stringstream {
     explicit stringstream() 

@@ -12,12 +12,14 @@ namespace flecs {
 namespace _ {
     template <typename ... Components>
     using query_builder_base = builder<
-        query, ecs_query_desc_t, query_builder<Components...>, 
+        query, ecs_query_desc_t, query_builder<Components...>,
         query_builder_i, Components ...>;
-}
+} // namespace _
+} // namespace flecs
 
+FLECS_API_NAMESPACE namespace flecs {
 /** Query builder.
- * 
+ *
  * @ingroup cpp_core_queries
  */
 template <typename ... Components>
@@ -48,4 +50,4 @@ struct query_builder final : _::query_builder_base<Components...> {
     }
 };
 
-}
+} // namespace flecs

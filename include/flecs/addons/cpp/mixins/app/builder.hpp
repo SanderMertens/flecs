@@ -5,7 +5,7 @@
 
 #pragma once
 
-namespace flecs {
+FLECS_API_NAMESPACE namespace flecs {
 
 /**
  * @defgroup cpp_addons_app App
@@ -16,6 +16,7 @@ namespace flecs {
  */
 
 /** App builder interface */
+
 struct app_builder {
     app_builder(flecs::world_t *world)
         : world_(world)

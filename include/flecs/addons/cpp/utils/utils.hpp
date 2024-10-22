@@ -62,10 +62,10 @@ template<class Ty> inline void free_obj(Ty* _ptr) {
 #define flecs_static_assert(cond, str) static_assert(cond, str)
 #endif
 
-inline void* operator new(size_t,   flecs::_::placement_new_tag_t, void* _ptr) noexcept { return _ptr; }
-inline void  operator delete(void*, flecs::_::placement_new_tag_t, void*)      noexcept {              }
+FLECS_API_DEPENDENCY inline void* operator new(size_t,   flecs::_::placement_new_tag_t, void* _ptr) noexcept { return _ptr; }
+FLECS_API_DEPENDENCY inline void  operator delete(void*, flecs::_::placement_new_tag_t, void*)      noexcept {              }
 
-namespace flecs
+FLECS_API_NAMESPACE namespace flecs
 {
 
 // C++11/C++14 convenience template replacements
@@ -132,6 +132,9 @@ using if_t = enable_if_t<V, int>;
 
 template <bool V>
 using if_not_t = enable_if_t<false == V, int>;
+} // namespace flecs
+
+namespace flecs {
 
 namespace _
 {
@@ -146,7 +149,9 @@ struct always_false {
 
 } // namespace flecs
 
+#ifndef FLECS_NO_STD_INCLUDE
 #include <stdlib.h>
+#endif
 #include "array.hpp"
 #include "string.hpp"
 #include "enum.hpp"

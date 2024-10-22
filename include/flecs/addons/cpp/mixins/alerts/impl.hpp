@@ -7,7 +7,7 @@
 
 #include "builder.hpp"
 
-namespace flecs {
+FLECS_API_NAMESPACE namespace flecs {
 
 template <typename ... Components>
 struct alert final : entity

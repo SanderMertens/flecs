@@ -12,12 +12,14 @@ namespace flecs {
 namespace _ {
     template <typename ... Components>
     using alert_builder_base = builder<
-        alert, ecs_alert_desc_t, alert_builder<Components...>, 
+        alert, ecs_alert_desc_t, alert_builder<Components...>,
         alert_builder_i, Components ...>;
-}
+} // namespace _
+} // namespace flecs
 
+FLECS_API_NAMESPACE namespace flecs {
 /** Alert builder.
- * 
+ *
  * @ingroup cpp_addons_alerts
  */
 template <typename ... Components>
@@ -36,4 +38,4 @@ struct alert_builder final : _::alert_builder_base<Components...> {
     }
 };
 
-}
+} // namespace flecs
