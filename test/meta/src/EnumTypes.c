@@ -263,3 +263,51 @@ void EnumTypes_constant_w_type_prefix(void) {
 void EnumTypes_constant_w_name_type_prefix(void) {
     // Implement testcase
 }
+
+
+int enum_modified_calls = 0;
+
+static
+void enum_modified(ecs_iter_t *it) {
+    enum_modified_calls ++;
+}
+
+/* Checks that observers watching enum changes are notified */
+void EnumTypes_enum_modified_event(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_observer(world, {
+        .query.terms[0] = { .id = ecs_id(EcsEnum) },
+        .events = {EcsOnSet},
+        .callback = enum_modified
+    });
+
+    ecs_entity_t e = ecs_enum_init(world, &(ecs_enum_desc_t){
+        .constants = {
+            {"Red"}, {"Blue"}
+        }
+    });
+
+    test_assert(e != 0);
+    /* must receive two calls, one for each enum member added */
+    test_int(enum_modified_calls, 2); 
+
+    /* run-time add a new member constant to the enum: */
+    ecs_entity_t old_scope = ecs_set_scope(world, e);
+    ecs_entity_t c = ecs_entity(world, {
+        .name = "Orange"
+    });
+    ecs_add_id(world, c, EcsConstant);
+    ecs_set_scope(world, old_scope);
+
+    /* check if observer was called after adding */
+    /* a new member constant */
+    test_int(enum_modified_calls, 3); 
+
+    meta_test_enum(world, e, 3);
+    meta_test_constant(world, e, "Red", 0);
+    meta_test_constant(world, e, "Blue", 1);
+    meta_test_constant(world, e, "Orange", 2);
+
+    ecs_fini(world);
+}

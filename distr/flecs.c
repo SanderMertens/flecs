@@ -50109,6 +50109,7 @@ int flecs_add_constant_to_enum(
     cptr = ecs_ensure_id(world, e, type);
     cptr[0] = value;
 
+    ecs_modified(world, type, EcsEnum);
     return 0;
 }
 
