@@ -30,7 +30,8 @@ void UFlecsTickerModule::InitializeModule(UFlecsWorld* InWorld, const FFlecsEnti
 	InWorld->SetSingleton<FFlecsTickerComponent>(TickerComponent);
 	InWorld->World.modified<FFlecsTickerComponent>();
 
-	TickerComponentRef = InWorld->GetSingletonFlecsRef<FFlecsTickerComponent>();
+	TickerComponentPtr = InWorld->GetSingletonPtr<FFlecsTickerComponent>();
+	solid_checkf(TickerComponentPtr, TEXT("TickerComponentRef is not valid!"));
 
 	MainPipeline = InWorld->CreatePipeline()
 		.cached()
@@ -62,7 +63,10 @@ void UFlecsTickerModule::DeinitializeModule(UFlecsWorld* InWorld)
 	if (IsValid(InWorld))
 	{
 		TickerSystem.GetEntity().Destroy();
+		
 		InWorld->RemoveSingleton<FFlecsTickerComponent>();
+		TickerComponentPtr = nullptr;
+		
 		TickerPipeline.Destroy();
 	}
 }
@@ -79,8 +83,9 @@ void UFlecsTickerModule::ProgressModule(double InDeltaTime)
 		
 		TickerAccumulator -= TickerInterval;
 
-		++TickerComponentRef->TickId;
-		SET_DWORD_STAT(STAT_FlecsTickerModule_ProgressModule_RunPipeline_Ticks, TickerComponentRef->TickId);
+		solid_checkf(TickerComponentPtr, TEXT("TickerComponentRef is not valid!"));
+		++TickerComponentPtr->TickId;
+		SET_DWORD_STAT(STAT_FlecsTickerModule_ProgressModule_RunPipeline_Ticks, TickerComponentPtr->TickId);
 		
 		GetFlecsWorld()->RunPipeline(TickerPipeline, TickerInterval);
 	}

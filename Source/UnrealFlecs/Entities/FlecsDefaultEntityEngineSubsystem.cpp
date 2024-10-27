@@ -6,8 +6,6 @@
 #include "Unlog/Unlog.h"
 #include "Worlds/FlecsWorldSubsystem.h"
 
-static TArray<FFlecsDefaultMetaEntity> GlobalEntityRegistrationQueue;
-
 static constexpr int32 DefaultEntityRangeStart = 2000;
 
 FFlecsDefaultEntityEngine::FFlecsDefaultEntityEngine()
@@ -17,13 +15,14 @@ FFlecsDefaultEntityEngine::FFlecsDefaultEntityEngine()
 // Initializes the entity engine
 void FFlecsDefaultEntityEngine::Initialize()
 {
+	if (bIsInitialized)
+	{
+		RefreshDefaultEntities();
+		return;
+	}
+	
 	UFlecsDefaultEntitiesDeveloperSettings* Settings = GetMutableDefault<UFlecsDefaultEntitiesDeveloperSettings>();
 	checkf(Settings, TEXT("Default Entities Developer Settings not found"));
-
-	for (const FFlecsDefaultMetaEntity& MetaEntity : GlobalEntityRegistrationQueue)
-	{
-		AddDefaultEntity(MetaEntity);
-	}
 
 	#if WITH_EDITOR
 	
@@ -35,8 +34,6 @@ void FFlecsDefaultEntityEngine::Initialize()
 	#endif // WITH_EDITOR
 
 	RefreshDefaultEntities();
-	
-	GlobalEntityRegistrationQueue.Empty();
 	
 	bIsInitialized = true;
 }
@@ -53,9 +50,7 @@ void FFlecsDefaultEntityEngine::RefreshDefaultEntities()
 
 		DefaultEntityWorld.query_builder<>()
 			.without(TestEntity)
-			.with(flecs::Trait).or_()
-			.with(flecs::PairIsTag).or_()
-			.with_name_component()
+			.with(flecs::Trait).or_().with(flecs::PairIsTag).or_().with_name_component()
 			.each([&](flecs::entity Entity)
 			{
 				if (UNLIKELY(Entity.name().length() <= 0))
@@ -107,10 +102,4 @@ flecs::entity_t FFlecsDefaultEntityEngine::AddDefaultEntity(const FFlecsDefaultM
 	CodeAddedDefaultEntities.Add(DefaultEntity);
 	RefreshDefaultEntities();
 	return DefaultEntityOptions[DefaultEntity.EntityRecord.Name];
-}
-
-flecs::entity_t FFlecsDefaultEntityEngine::EnqueueDefaultEntity(const FFlecsDefaultMetaEntity& DefaultEntity)
-{
-	GlobalEntityRegistrationQueue.Add(DefaultEntity);
-	return DefaultEntityRangeStart + (GlobalEntityRegistrationQueue.Num() - 1);
 }

@@ -111,7 +111,8 @@ public:
 		DefaultWorld = NewFlecsWorld;
 		
 		GetDefaultWorld()->AddSingleton<FFlecsTypeMapComponent>();
-		GetDefaultWorld()->TypeMapComponent = GetDefaultWorld()->GetSingletonFlecsRef<FFlecsTypeMapComponent>();
+		GetDefaultWorld()->TypeMapComponent = GetDefaultWorld()->GetSingletonPtr<FFlecsTypeMapComponent>();
+		solid_checkf(GetDefaultWorld()->TypeMapComponent, TEXT("TypeMapComponent must be valid"));
 
 		NewFlecsWorld->SetSingleton<FFlecsWorldPtrComponent>(
 			FFlecsWorldPtrComponent { NewFlecsWorld });
@@ -124,8 +125,11 @@ public:
 			const flecs::entity_t EntityId = DefaultEntityIds[EntityName];
 
 			#if WITH_EDITOR
+			
 			FFlecsEntityHandle NewEntity =
+				
 			#endif // WITH_EDITOR
+				
 			NewFlecsWorld->CreateEntityWithRecordWithId(DefaultEntities[Index].EntityRecord, EntityId);
 
 			#if WITH_EDITOR

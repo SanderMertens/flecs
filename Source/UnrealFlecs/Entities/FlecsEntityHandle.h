@@ -67,7 +67,15 @@ public:
 	
 	SOLID_INLINE NO_DISCARD FFlecsArchetype GetType() const { return FFlecsArchetype(GetEntity().type()); }
 
-	SOLID_INLINE NO_DISCARD bool Has(const FFlecsEntityHandle& InEntity) const { return GetEntity().has(InEntity); }
+	SOLID_INLINE NO_DISCARD bool Has(const FFlecsEntityHandle& InEntity) const
+	{
+		return GetEntity().has(InEntity);
+	}
+
+	SOLID_INLINE NO_DISCARD bool Has(const flecs::id& InId) const
+	{
+		return GetEntity().has(InId);
+	}
 
 	template <typename T>
 	SOLID_INLINE NO_DISCARD bool Has() const { return GetEntity().has<T>(); }
@@ -76,7 +84,16 @@ public:
 	SOLID_INLINE NO_DISCARD bool Has() const { return GetEntity().has<First, Second>(); }
 
 	template <typename First>
-	SOLID_INLINE NO_DISCARD bool Has(const FFlecsEntityHandle& InSecond) const { return GetEntity().has<First>(InSecond.GetEntity()); }
+	SOLID_INLINE NO_DISCARD bool Has(const FFlecsEntityHandle& InSecond) const
+	{
+		return GetEntity().has<First>(InSecond.GetEntity());
+	}
+
+	template <typename First>
+	SOLID_INLINE NO_DISCARD bool Has(const flecs::id& InSecond) const
+	{
+		return GetEntity().has<First>(InSecond);
+	}
 
 	template <typename First, typename Second>
 	SOLID_INLINE NO_DISCARD bool Has(const Second& InSecond) const { return GetEntity().has<First, Second>(InSecond); }
@@ -92,6 +109,7 @@ public:
 	}
 
 	SOLID_INLINE void Add(const FFlecsEntityHandle& InEntity) const { GetEntity().add(InEntity); }
+	SOLID_INLINE void Add(const flecs::id& InId) const { GetEntity().add(InId); }
 
 	SOLID_INLINE void Add(const UScriptStruct* StructType) const
 	{
@@ -107,8 +125,14 @@ public:
 	SOLID_INLINE void Add() const { GetEntity().add<T>(); }
 	
 	SOLID_INLINE void Remove(const FFlecsEntityHandle& InEntity) const { GetEntity().remove(InEntity); }
+	SOLID_INLINE void Remove(const flecs::id& InId) const { GetEntity().remove(InId); }
 
 	SOLID_INLINE void Remove(const FFlecsEntityHandle InFirst, const FFlecsEntityHandle InSecond) const
+	{
+		GetEntity().remove(InFirst, InSecond);
+	}
+	
+	SOLID_INLINE void Remove(const flecs::id InFirst, const flecs::id InSecond) const
 	{
 		GetEntity().remove(InFirst, InSecond);
 	}
@@ -127,6 +151,7 @@ public:
 	SOLID_INLINE void Remove() const { GetEntity().remove<T>(); }
 
 	SOLID_INLINE void Set(const FFlecsEntityHandle& InEntity) const { GetEntity().set(InEntity); }
+	SOLID_INLINE void Set(const flecs::id& InId) const { GetEntity().set(InId); }
 
 	template <typename T>
 	SOLID_INLINE void Set(const T& InValue) const { GetEntity().set<T>(InValue); }
@@ -134,6 +159,11 @@ public:
 	SOLID_INLINE void Set(const FFlecsEntityHandle& InEntity, const void* InValue) const
 	{
 		GetEntity().set_ptr(InEntity, InValue);
+	}
+
+	SOLID_INLINE void Set(const flecs::id& InId, const void* InValue) const
+	{
+		GetEntity().set_ptr(InId, InValue);
 	}
 
 	SOLID_INLINE void Set(const UScriptStruct* StructType, const void* InValue) const
@@ -154,9 +184,19 @@ public:
 		return GetEntity().get_mut(InEntity);
 	}
 
+	SOLID_INLINE NO_DISCARD void* GetPtr(const flecs::id& InId)
+	{
+		return GetEntity().get_mut(InId);
+	}
+
 	SOLID_INLINE NO_DISCARD const void* GetPtr(const FFlecsEntityHandle& InEntity) const
 	{
 		return GetEntity().get(InEntity);
+	}
+
+	SOLID_INLINE NO_DISCARD const void* GetPtr(const flecs::id& InId) const
+	{
+		return GetEntity().get(InId);
 	}
 	
 	template <typename T>
@@ -199,6 +239,7 @@ public:
 	SOLID_INLINE void Enable() const { GetEntity().enable<T>(); }
 
 	SOLID_INLINE void Enable(const FFlecsEntityHandle& InEntity) const { GetEntity().enable(InEntity); }
+	SOLID_INLINE void Enable(const flecs::id& InId) const { GetEntity().enable(InId); }
 	
 	SOLID_INLINE void Enable(const UScriptStruct* StructType) const
 	{
@@ -211,6 +252,7 @@ public:
 	}
 
 	SOLID_INLINE void Disable(const FFlecsEntityHandle& InEntity) const { GetEntity().disable(InEntity); }
+	SOLID_INLINE void Disable(const flecs::id& InId) const { GetEntity().disable(InId); }
 	
 	SOLID_INLINE void Disable(const UScriptStruct* StructType) const
 	{
@@ -235,6 +277,11 @@ public:
 		GetEntity().enable(InEntity, !IsEnabled(InEntity));
 	}
 
+	SOLID_INLINE void Toggle(const flecs::id& InId) const
+	{
+		GetEntity().enable(InId, !IsEnabled(InId));
+	}
+
 	SOLID_INLINE void Toggle(const UScriptStruct* StructType) const
 	{
 		Toggle(ObtainComponentTypeStruct(StructType));
@@ -253,6 +300,11 @@ public:
 	SOLID_INLINE NO_DISCARD bool IsEnabled(const FFlecsEntityHandle& InEntity) const
 	{
 		return GetEntity().enabled(InEntity);
+	}
+
+	SOLID_INLINE NO_DISCARD bool IsEnabled(const flecs::id& InId) const
+	{
+		return GetEntity().enabled(InId);
 	}
 	
 	SOLID_INLINE NO_DISCARD bool IsEnabled(const UScriptStruct* StructType) const
@@ -1239,7 +1291,7 @@ private:
 		if LIKELY_IF(GetEntity().has(ObtainComponentTypeStruct(StructType), flecs::Wildcard))
 		{
 			TraitHolder = GetEntity().target_for(
-					ObtainComponentTypeStruct(StructType), flecs::ChildOf);
+					flecs::ChildOf, ObtainComponentTypeStruct(StructType));
 
 			if LIKELY_IF(TraitHolder.IsValid())
 			{

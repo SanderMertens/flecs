@@ -30,14 +30,11 @@ public:
 		return EntityHandle;
 	}
 
-	UPROPERTY(EditAnywhere, Category = "Flecs | Entity")
+	UPROPERTY()
 	FFlecsEntityHandle EntityHandle;
 
 	UPROPERTY(EditAnywhere, Category = "Flecs | Entity")
 	FFlecsEntityRecord EntityRecord;
-
-	UPROPERTY(EditAnywhere, Category = "Flecs | Entity")
-	FString WorldName = TEXT("DefaultFlecsWorld");
 
 	#if WITH_EDITORONLY_DATA
 
@@ -47,5 +44,8 @@ public:
 
 	UFUNCTION()
 	void OnWorldCreated(const FString& InWorldName, UFlecsWorld* InWorld);
+
+private:
+	void CreateActorEntity(UFlecsWorld* InWorld);
 	
 }; // class UFlecsEntityActorComponent

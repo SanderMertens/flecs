@@ -27,6 +27,9 @@ public:
 
     FORCEINLINE NO_DISCARD flecs::id& GetFlecsId() { return Id; }
     FORCEINLINE NO_DISCARD const flecs::id& GetFlecsId() const { return Id; }
+    
+    FORCEINLINE operator flecs::id() const { return GetFlecsId(); }
+    
 
     FORCEINLINE operator flecs::id&() { return GetFlecsId(); }
     FORCEINLINE operator const flecs::id&() const { return GetFlecsId(); }
@@ -66,7 +69,7 @@ public:
         return Id != *Other;
     }
 
-    FORCEINLINE NO_DISCARD FFlecsEntityHandle GetTypeId() const { return FFlecsEntityHandle(Id.type_id()); }
+    FORCEINLINE NO_DISCARD flecs::entity GetTypeId() const { return Id.type_id(); }
     
     flecs::id Id;
 }; // struct FFlecsId

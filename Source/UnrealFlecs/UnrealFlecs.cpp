@@ -8,7 +8,7 @@
 
 void FUnrealFlecsModule::StartupModule()
 {
-	FCoreDelegates::OnAllModuleLoadingPhasesComplete.AddLambda([]()
+	FCoreDelegates::OnPostEngineInit.AddLambda([]()
 	{
 		FFlecsDefaultEntityEngine::Get().Initialize();
 	});

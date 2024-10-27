@@ -41,7 +41,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Flecs | Ticker")
 	FORCEINLINE FFlecsEntityHandle GetTickerSource() const { return TickerSystem.GetEntity(); }
 
-	flecs::ref<FFlecsTickerComponent> TickerComponentRef;
+	FFlecsTickerComponent* TickerComponentPtr = nullptr;
 
 	UPROPERTY()
 	FFlecsSystem TickerSystem;

@@ -109,7 +109,7 @@ void flecs_sparse_grow_dense(
     ecs_vec_append_t(sparse->allocator, &sparse->dense, uint64_t);
 }
 
-static
+static inline
 uint64_t flecs_sparse_strip_generation(
     uint64_t *index_out)
 {
@@ -174,7 +174,7 @@ void flecs_sparse_set_id(
 }
 
 /* Pair dense id with new sparse id */
-static
+static inline
 uint64_t flecs_sparse_create_id(
     ecs_sparse_t *sparse,
     int32_t dense)
@@ -192,7 +192,7 @@ uint64_t flecs_sparse_create_id(
 }
 
 /* Create new id */
-static
+static inline
 uint64_t flecs_sparse_new_index(
     ecs_sparse_t *sparse)
 {
@@ -211,7 +211,7 @@ uint64_t flecs_sparse_new_index(
 
 /* Get value from sparse set when it is guaranteed that the value exists. This
  * function is used when values are obtained using a dense index */
-static
+static inline
 void* flecs_sparse_get_sparse(
     const ecs_sparse_t *sparse,
     int32_t dense,
@@ -233,7 +233,7 @@ void* flecs_sparse_get_sparse(
 
 /* Swap dense elements. A swap occurs when an element is removed, or when a
  * removed element is recycled. */
-static
+static inline
 void flecs_sparse_swap_dense(
     ecs_sparse_t * sparse,
     ecs_page_t * page_a,

@@ -8,6 +8,9 @@
 #include "CoreMinimal.h"
 #include "flecs.h"
 #include "AssetRegistry/AssetRegistryModule.h"
+#include "Collections/FlecsCollection.h"
+#include "Components/FFlecsActorComponentTag.h"
+#include "Components/FFlecsSceneComponentTag.h"
 #include "Components/FlecsActorTag.h"
 #include "Components/FlecsGameplayTagEntityComponent.h"
 #include "Components/FlecsModuleComponent.h"
@@ -37,6 +40,20 @@ class UNREALFLECS_API UFlecsWorld final : public UObject
 	GENERATED_BODY()
 
 public:
+	virtual ~UFlecsWorld() override
+	{
+		FCoreUObjectDelegates::GarbageCollectComplete.RemoveAll(this);
+
+		const FAssetRegistryModule* AssetRegistryModule
+			= FModuleManager::LoadModulePtr<FAssetRegistryModule>(TEXT("AssetRegistry"));
+
+		if (AssetRegistryModule)
+		{
+			IAssetRegistry& AssetRegistry = AssetRegistryModule->Get();
+			AssetRegistry.OnAssetAdded().RemoveAll(this);
+			AssetRegistry.OnAssetRemoved().RemoveAll(this);
+		}
+	}
 
 	FORCEINLINE_DEBUGGABLE void WorldBeginPlay()
 	{
@@ -302,11 +319,11 @@ public:
 					UN_LOGF(LogFlecsWorld, Log,
 						"Struct component %s registered", *EntityHandle.GetSymbol());
 
-					#if WITH_EDITOR
+					//#if WITH_EDITOR
 
 					RegisterMemberProperties(InEventInfo.scriptStruct, EntityHandle);
 					
-					#endif // WITH_EDITOR
+					//#endif // WITH_EDITOR
 
 					EntityHandle.Remove<flecs::_::type_impl_struct_event_info>();
 				});
@@ -318,9 +335,19 @@ public:
 			{
 				const FFlecsEntityHandle EntityHandle = InEntity;
 
-				if (InComponent.GetObject<AActor>())
+				if (InComponent.IsA<AActor>())
 				{
 					EntityHandle.Add<FFlecsActorTag>();
+				}
+
+				if (InComponent.IsA<UActorComponent>())
+				{
+					EntityHandle.Add<FFlecsActorComponentTag>();
+				}
+
+				if (InComponent.IsA<USceneComponent>())
+				{
+					EntityHandle.Add<FFlecsSceneComponentTag>();
 				}
 			});
 
@@ -340,16 +367,16 @@ public:
 		});
 
 		ModuleComponentQuery = World.query_builder<FFlecsModuleComponent>("ModuleComponentQuery")
-			.cached()
 			.build();
 
 		DependenciesComponentQuery = World.query_builder<FFlecsDependenciesComponent>("DependenciesComponentQuery")
-			.cached()
 			.build();
 
-		CreateObserver<const FFlecsUObjectComponent&, const FFlecsModuleComponent&>(TEXT("AddModuleComponentObserver"))
+		CreateObserver<const FFlecsUObjectComponent&,
+			const FFlecsModuleComponent&>(TEXT("AddModuleComponentObserver"))
 			.term_at(0).filter()
 			.event(flecs::OnAdd)
+			.yield_existing()
 			.each([&](flecs::entity InEntity,
 				const FFlecsUObjectComponent& InUObjectComponent, const FFlecsModuleComponent& InModuleComponent)
 			{
@@ -384,9 +411,10 @@ public:
 				{
 					const UObject* Module = ProgressModules[Index - 1].Get();
 					
-					if UNLIKELY_IF(Module == nullptr)
+					if UNLIKELY_IF(!IsValid(Module))
 					{
 						ProgressModules.RemoveAt(Index - 1);
+						break;
 					}
 					
 					if (Module
@@ -396,6 +424,62 @@ public:
 						break;
 					}
 				}
+			});
+
+		CreateObserver(TEXT("AddComponentCollectionObserver"))
+			.event(flecs::OnAdd)
+			.with("$collection").src(flecs::This)
+			.with(FlecsComponentCollection).src("$collection").filter()
+			.each([&](flecs::iter& Iter, size_t Index)
+			{
+				FFlecsEntityHandle EntityHandle = Iter.entity(Index);
+				const FFlecsEntityHandle CollectionEntity = Iter.get_var("$collection");
+
+				solid_checkf(CollectionEntity.IsValid(), TEXT("Collection entity is not valid"));
+
+				CollectionEntity.Iterate([&](const flecs::id InComponentId)
+				{
+					if (InComponentId == FlecsComponentCollection)
+					{
+						return;
+					}
+
+					#if WITH_EDITOR
+
+					if UNLIKELY_IF(EntityHandle.Has(InComponentId))
+					{
+						UN_LOGF(LogFlecsWorld, Warning,
+							"Component %s already added to entity %s",
+							*EntityHandle.GetSymbol(), *EntityHandle.GetName());
+						return;
+					}
+
+					#endif // WITH_EDITOR
+					
+					EntityHandle.Add(InComponentId);
+				});
+			});
+
+		CreateObserver(TEXT("RemoveComponentCollectionObserver"))
+			.event(flecs::OnRemove)
+			.with("$collection").src(flecs::This)
+			.with(FlecsComponentCollection).src("$collection").filter()
+			.each([&](flecs::iter& Iter, size_t Index)
+			{
+				FFlecsEntityHandle EntityHandle = Iter.entity(Index);
+				const FFlecsEntityHandle CollectionEntity = Iter.get_var("$collection");
+
+				solid_checkf(CollectionEntity.IsValid(), TEXT("Collection entity is not valid"));
+
+				CollectionEntity.Iterate([&](const flecs::id InComponentId)
+				{
+					if (InComponentId == FlecsComponentCollection)
+					{
+						return;
+					}
+					
+					EntityHandle.Remove(InComponentId);
+				});
 			});
 	}
 
@@ -409,9 +493,19 @@ public:
 		AssetRegistry.GetAssetsByClass(FTopLevelAssetPath(UFlecsPrimaryDataAsset::StaticClass()), AssetData,
 			true);
 
-		AssetRegistry.OnAssetAdded().AddLambda([&](const FAssetData& InAssetData)
+		AssetRegistry.OnAssetAdded().AddWeakLambda(this, [&](const FAssetData& InAssetData)
 		{
-			RegisterFlecsAsset(CastChecked<UFlecsPrimaryDataAsset>(InAssetData.GetAsset()));
+			if UNLIKELY_IF(!IsValid(this))
+			{
+				UN_LOG(LogFlecsWorld, Error, "Flecs World is not valid");
+				AssetRegistry.OnAssetAdded().RemoveAll(this);
+				return;
+			}
+
+			if (InAssetData.IsInstanceOf<UFlecsPrimaryDataAsset>())
+			{
+				RegisterFlecsAsset(CastChecked<UFlecsPrimaryDataAsset>(InAssetData.GetAsset()));
+			}
 		});
 
 		for (const FAssetData& Asset : AssetData)
@@ -549,7 +643,7 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
 	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle CreateEntityWithRecord(const FFlecsEntityRecord& InRecord) const
 	{
-		const FFlecsEntityHandle Entity = CreateEntity(InRecord.Name);
+		FFlecsEntityHandle Entity = CreateEntity(InRecord.Name);
 		InRecord.ApplyRecordToEntity(Entity);
 		return Entity;
 	}
@@ -557,7 +651,7 @@ public:
 	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle CreateEntityWithRecordWithId(const FFlecsEntityRecord& InRecord,
 		const flecs::entity_t InId) const
 	{
-		FFlecsEntityHandle Entity = CreateEntityWithId(InId);
+		const FFlecsEntityHandle Entity = CreateEntityWithId(InId);
 		InRecord.ApplyRecordToEntity(Entity);
 		return Entity;
 	}
@@ -891,11 +985,17 @@ public:
 		{
 			return;
 		}
+
+		World.lookup("RemoveComponentCollectionObserver").destruct();
 		
-		const FAssetRegistryModule& AssetRegistryModule
-			= FModuleManager::LoadModuleChecked<FAssetRegistryModule>(TEXT("AssetRegistry"));
-		IAssetRegistry& AssetRegistry = AssetRegistryModule.Get();
-		AssetRegistry.OnAssetAdded().RemoveAll(this);
+		const FAssetRegistryModule* AssetRegistryModule
+			= FModuleManager::LoadModulePtr<FAssetRegistryModule>(TEXT("AssetRegistry"));
+
+		if (AssetRegistryModule)
+		{
+			IAssetRegistry& AssetRegistry = AssetRegistryModule->Get();
+			AssetRegistry.OnAssetAdded().RemoveAll(this);
+		}
 
 		World.release();
 		MarkAsGarbage();
@@ -1063,7 +1163,7 @@ public:
 		return HasScriptStruct(T::StaticStruct());
 	}
 
-	#if WITH_EDITOR
+	//#if WITH_EDITOR
 
 	FORCEINLINE_DEBUGGABLE void RegisterMemberProperties(const UStruct* InStruct,
 		const FFlecsEntityHandle& InEntity) const
@@ -1166,7 +1266,7 @@ public:
 		}
 	}
 
-	#endif // WITH_EDITOR
+	//#endif // WITH_EDITOR
 	
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs")
 	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle RegisterScriptStruct(UScriptStruct* ScriptStruct) const
@@ -1185,11 +1285,11 @@ public:
 		
 		TypeMapComponent->ScriptStructMap.emplace(ScriptStruct, ScriptStructComponent);
 
-		#if WITH_EDITOR
+		//#if WITH_EDITOR
 
 		RegisterMemberProperties(ScriptStruct, ScriptStructComponent);
 
-		#endif // WITH_EDITOR
+		//#endif // WITH_EDITOR
 
 		if (ScriptStruct->GetSuperStruct())
 		{
@@ -1215,11 +1315,11 @@ public:
 		TypeMapComponent->ScriptStructMap
 			.emplace(const_cast<UScriptStruct*>(ScriptStruct), InComponentEntity);
 
-		#if WITH_EDITOR
+		//#if WITH_EDITOR
 
 		RegisterMemberProperties(ScriptStruct, InComponentEntity);
 
-		#endif // WITH_EDITOR
+		//#endif // WITH_EDITOR
 	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs")
@@ -1419,6 +1519,6 @@ public:
 	flecs::query<FFlecsUObjectComponent> ObjectComponentQuery;
 	flecs::query<FFlecsDependenciesComponent> DependenciesComponentQuery;
 
-	flecs::ref<FFlecsTypeMapComponent> TypeMapComponent;
+	FFlecsTypeMapComponent* TypeMapComponent;
 	
 }; // class UFlecsWorld

@@ -10,11 +10,14 @@ UFlecsEntityActorComponent::UFlecsEntityActorComponent(const FObjectInitializer&
 	: Super(ObjectInitializer)
 {
 	PrimaryComponentTick.bCanEverTick = false;
+	SetIsReplicatedByDefault(true);
 }
 
 void UFlecsEntityActorComponent::BeginPlay()
 {
 	Super::BeginPlay();
+
+	InitializeEntity();
 }
 
 void UFlecsEntityActorComponent::OnRegister()
@@ -29,7 +32,7 @@ void UFlecsEntityActorComponent::OnUnregister()
 
 void UFlecsEntityActorComponent::InitializeEntity()
 {
-	if (!GWorld  || !GWorld->IsGameWorld())
+	if UNLIKELY_IF(!GWorld  || !GWorld->IsGameWorld())
 	{
 		return;
 	}
@@ -45,16 +48,9 @@ void UFlecsEntityActorComponent::InitializeEntity()
 		return;
 	}
 
-	if UNLIKELY_IF(WorldName.IsEmpty())
+	if (UFlecsWorldSubsystem::HasValidFlecsWorldStatic(this))
 	{
-		UN_LOG(LogFlecsEntity, Error, "World Name is empty!");
-		return;
-	}
-
-	if (GetWorld()->GetSubsystem<UFlecsWorldSubsystem>()->HasValidFlecsWorld())
-	{
-		EntityHandle = GetWorld()->GetSubsystem<UFlecsWorldSubsystem>()->GetDefaultWorld()
-			->CreateEntityWithRecord(EntityRecord);
+		CreateActorEntity(UFlecsWorldSubsystem::GetDefaultWorldStatic(this));
 	}
 	else
 	{
@@ -84,9 +80,14 @@ bool UFlecsEntityActorComponent::CanEditChange(const FProperty* InProperty) cons
 
 void UFlecsEntityActorComponent::OnWorldCreated(const FString& InWorldName, UFlecsWorld* InWorld)
 {
-	if (InWorldName == WorldName)
-	{
-		EntityHandle = InWorld->CreateEntityWithRecord(EntityRecord);
-		GetWorld()->GetSubsystem<UFlecsWorldSubsystem>()->OnWorldCreated.RemoveAll(this);
-	}
+	CreateActorEntity(InWorld);
+	
+	GetWorld()->GetSubsystem<UFlecsWorldSubsystem>()->OnWorldCreated.RemoveAll(this);
+}
+
+void UFlecsEntityActorComponent::CreateActorEntity(UFlecsWorld* InWorld)
+{
+	EntityHandle = InWorld->CreateEntityWithRecord(EntityRecord);
+	UN_LOGF(LogFlecsEntity, Log, "Created Actor Entity: %s",
+		*EntityHandle.GetName());
 }

@@ -82,25 +82,25 @@ public:
     [
         SNew(SVerticalBox)
         + SVerticalBox::Slot()
-        .AutoHeight()
-        [
-            SNew(SComboButton)
-            .OnGetMenuContent(this, &FFlecsEntityHandleCustomization::OnGenerateWidgetWithSearch)
-            .ContentPadding(2)
-            .ButtonContent()
-            [
-                SNew(STextBlock)
-                .Text(this, &FFlecsEntityHandleCustomization::GetCurrentItemLabel)
-            ]
-        ]
-        + SVerticalBox::Slot()
-        .AutoHeight()
-        [
-            SNew(SButton)
-            .Text(NSLOCTEXT("Flecs", "ClearSelection", "Clear"))
-            .OnClicked(this, &FFlecsEntityHandleCustomization::OnClearClicked)
-            .ContentPadding(2)
-        ]
+	        .AutoHeight()
+	        [
+	            SNew(SComboButton)
+		            .OnGetMenuContent(this, &FFlecsEntityHandleCustomization::OnGenerateWidgetWithSearch)
+		            .ContentPadding(2)
+		            .ButtonContent()
+		            [
+		                SNew(STextBlock)
+		                .Text(this, &FFlecsEntityHandleCustomization::GetCurrentItemLabel)
+		            ]
+	        ]
+	        + SVerticalBox::Slot()
+	        .AutoHeight()
+	        [
+	            SNew(SButton)
+		            .Text(NSLOCTEXT("Flecs", "ClearSelection", "Clear"))
+		            .OnClicked(this, &FFlecsEntityHandleCustomization::OnClearClicked)
+		            .ContentPadding(2)
+	        ]
     ];
 
     if (Options.IsEmpty())

@@ -71,6 +71,13 @@ void flecs_bitset_swap(
     int32_t elem_a,
     int32_t elem_b);
 
+FLECS_DBG_API
+void flecs_bitset_set_range(
+    ecs_bitset_t *bs,
+    int32_t start,
+    int32_t stop,
+    bool value);
+
 #ifdef __cplusplus
 }
 #endif

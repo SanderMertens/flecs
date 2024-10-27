@@ -22,7 +22,6 @@ public:
 	void RefreshDefaultEntities();
 	
 	flecs::entity_t AddDefaultEntity(const FFlecsDefaultMetaEntity& DefaultEntity);
-	static flecs::entity_t EnqueueDefaultEntity(const FFlecsDefaultMetaEntity& DefaultEntity);
 	
 	TMap<FString, flecs::entity_t> DefaultEntityOptions;
 	TArray<FFlecsDefaultMetaEntity> AddedDefaultEntities;
@@ -32,31 +31,47 @@ public:
 	flecs::entity TestEntity;
 
 	bool bIsInitialized = false;
-
-private:
+	
 	void Initialize();
 };
 
-#define DEFINE_DEFAULT_ENTITY_OPTION(EntityName) \
+/*#define DEFINE_DEFAULT_ENTITY_OPTION(EntityName) \
 		INLINE ECS_ENTITY_DECLARE(EntityName); \
 		namespace \
 		{                                                             \
 			struct FRegister##EntityName \
-			{                                     \
-				FRegister##EntityName() \
+			{										   \
+				FRegister##EntityName()					\
 				{										 \
 					FFlecsDefaultMetaEntity MetaEntity;                        \
 					MetaEntity.EntityRecord.Name = TEXT(#EntityName);          \
-					if (FFlecsDefaultEntityEngine::Get().bIsInitialized)       \
-					{                                                         \
-						EntityName = FFlecsDefaultEntityEngine::Get().AddDefaultEntity(MetaEntity); \
-					}                                                         \
-					else                                                      \
-					{                                                         \
-						EntityName = FFlecsDefaultEntityEngine::EnqueueDefaultEntity(MetaEntity); \
-					}                                                         \
+					EntityName = FFlecsDefaultEntityEngine::Get().AddDefaultEntity(MetaEntity); \
 				}                                                               \
 			};                                                                  \
 			static FRegister##EntityName Register##EntityName;                 \
-		}                                                                       \
+		}           */
+
+#define DEFINE_DEFAULT_ENTITY_OPTION(EntityName) \
+	INLINE ECS_ENTITY_DECLARE(EntityName); \
+	namespace \
+	{                                                             \
+		static void Register##EntityName()                        \
+		{                                                         \
+			FFlecsDefaultMetaEntity MetaEntity;                   \
+			MetaEntity.EntityRecord.Name = TEXT(#EntityName);      \
+			if (!FFlecsDefaultEntityEngine::Get().bIsInitialized)  \
+			{                                                     \
+				FFlecsDefaultEntityEngine::Get().Initialize();                                   \
+			}                                                     \
+			EntityName = FFlecsDefaultEntityEngine::Get().AddDefaultEntity(MetaEntity); \
+		}                                                         \
+		struct FRegisterInvoker##EntityName                       \
+		{                                                         \
+			FRegisterInvoker##EntityName()                        \
+			{                                                     \
+				FCoreDelegates::OnPostEngineInit.AddStatic(&Register##EntityName); \
+			}                                                     \
+		};                                                        \
+		static FRegisterInvoker##EntityName Invoker##EntityName;  \
+	}
 

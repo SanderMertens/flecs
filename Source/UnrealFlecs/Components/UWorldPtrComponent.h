@@ -65,3 +65,6 @@ public:
 	TWeakObjectPtr<UWorld> World;
 	
 }; // struct FUWorldPtrComponent
+
+REGISTER_FLECS_COMPONENT_PROPERTIES(FUWorldPtrComponent,
+	{ flecs::Sparse }, {} )

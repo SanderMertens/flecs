@@ -42,10 +42,18 @@ public:
 	template <typename T>
 	FORCEINLINE void SetObject(T* InObject) { Object = InObject; }
 
+	template <typename T>
+	FORCEINLINE NO_DISCARD bool IsA() const { return Object->IsA<T>(); }
+	FORCEINLINE NO_DISCARD bool IsA(const UClass* InClass) const { return Object->IsA(InClass); }
+
 	FORCEINLINE NO_DISCARD bool IsValid() const { return Object.IsValid(false, true); }
 	FORCEINLINE operator bool() const { return IsValid(); }
 	
-	FORCEINLINE NO_DISCARD bool IsStale() const { return Object.IsStale(); }
+	FORCEINLINE NO_DISCARD bool IsStale(
+		const bool bIncludingIfPendingKill = true, const bool bThreadsafeTest = false) const
+	{
+		return Object.IsStale(bIncludingIfPendingKill, bThreadsafeTest);
+	}
 
 	FORCEINLINE void Reset() { Object.Reset(); }
 

@@ -26,6 +26,14 @@ void ensure(
     }
 }
 
+static __forceinline void set_bit(uint64_t *word, uint32_t lo, bool value) {
+    *word = (*word & ~((uint64_t)1 << lo)) | ((uint64_t)value << lo);
+}
+
+static __forceinline bool get_bit(uint64_t word, uint32_t lo) {
+    return !!(word & ((uint64_t)1 << lo));
+}
+
 void flecs_bitset_init(
     ecs_bitset_t* bs)
 {
@@ -68,10 +76,9 @@ void flecs_bitset_set(
     ecs_check(elem < bs->count, ECS_INVALID_PARAMETER, NULL);
     uint32_t hi = ((uint32_t)elem) >> 6;
     uint32_t lo = ((uint32_t)elem) & 0x3F;
-    uint64_t v = bs->data[hi];
-    bs->data[hi] = (v & ~((uint64_t)1 << lo)) | ((uint64_t)value << lo);
-error:
-    return;
+    set_bit(&bs->data[hi], lo, value);
+    error:
+        return;
 }
 
 bool flecs_bitset_get(
@@ -79,7 +86,9 @@ bool flecs_bitset_get(
     int32_t elem)
 {
     ecs_check(elem < bs->count, ECS_INVALID_PARAMETER, NULL);
-    return !!(bs->data[elem >> 6] & ((uint64_t)1 << ((uint64_t)elem & 0x3F)));
+    uint32_t hi = elem >> 6;
+    uint32_t lo = elem & 0x3F;
+    return get_bit(bs->data[hi], lo);
 error:
     return false;
 }
@@ -96,12 +105,14 @@ void flecs_bitset_remove(
 {
     ecs_check(elem < bs->count, ECS_INVALID_PARAMETER, NULL);
     int32_t last = bs->count - 1;
-    bool last_value = flecs_bitset_get(bs, last);
-    flecs_bitset_set(bs, elem, last_value);
+    if (elem != last) {
+        bool last_value = flecs_bitset_get(bs, last);
+        flecs_bitset_set(bs, elem, last_value);
+    }
     flecs_bitset_set(bs, last, 0);
     bs->count --;
-error:
-    return;
+    error:
+        return;
 }
 
 void flecs_bitset_swap(
@@ -118,4 +129,21 @@ void flecs_bitset_swap(
     flecs_bitset_set(bs, elem_b, a);
 error:
     return;
+}
+
+void flecs_bitset_set_range(
+    ecs_bitset_t* bs,
+    int32_t start,
+    int32_t stop,
+    bool value)
+{
+    ecs_check(start < bs->count && stop < bs->count, ECS_INVALID_PARAMETER, NULL);
+
+    for (int32_t elem = start; elem < stop; elem++) {
+        uint32_t hi = ((uint32_t)elem) >> 6;
+        uint32_t lo = ((uint32_t)elem) & 0x3F;
+        set_bit(&bs->data[hi], lo, value);
+    }
+    error:
+        return;
 }
