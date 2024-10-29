@@ -4,14 +4,14 @@
 
 #include "CoreMinimal.h"
 #include "FlecsTickerComponent.h"
-#include "Modules/FlecsModuleInterface.h"
+#include "Modules/FlecsModuleObject.h"
 #include "Modules/FlecsModuleProgressInterface.h"
 #include "Systems/FlecsSystem.h"
 #include "UObject/Object.h"
 #include "FlecsTickerModule.generated.h"
 
 UCLASS(Blueprintable, BlueprintType, EditInlineNew)
-class UNREALFLECS_API UFlecsTickerModule final : public UObject, public IFlecsModuleInterface, public IFlecsModuleProgressInterface
+class UNREALFLECS_API UFlecsTickerModule final : public UFlecsModuleObject, public IFlecsModuleProgressInterface
 {
 	GENERATED_BODY()
 

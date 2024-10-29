@@ -3,11 +3,11 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Modules/FlecsModuleInterface.h"
+#include "Modules/FlecsModuleObject.h"
 #include "FlecsNetworkingModule.generated.h"
 
 UCLASS(BlueprintType, EditInlineNew, DefaultToInstanced, meta = (DisplayName = "Flecs Networking Module"))
-class UNREALFLECS_API UFlecsNetworkingModule final : public UObject, public IFlecsModuleInterface
+class UNREALFLECS_API UFlecsNetworkingModule final : public UFlecsModuleObject
 {
 	GENERATED_BODY()
 

@@ -18,6 +18,17 @@ DECLARE_CYCLE_STAT(TEXT("FlecsTickerModule::ProgressModule::RunPipeline"),
 DECLARE_DWORD_ACCUMULATOR_STAT(TEXT("FlecsTickerModule::ProgressModule::RunPipeline::Ticks"),
 	STAT_FlecsTickerModule_ProgressModule_RunPipeline_Ticks, STATGROUP_FlecsTickerModule);
 
+int __forceinline flecs_entity_compare(
+	ecs_entity_t e1, 
+	const void *ptr1, 
+	ecs_entity_t e2, 
+	const void *ptr2) 
+{
+	(void)ptr1;
+	(void)ptr2;
+	return (e1 > e2) - (e1 < e2);
+}
+
 UFlecsTickerModule::UFlecsTickerModule(const FObjectInitializer& InObjectInitializer)
 	: Super(InObjectInitializer)
 {
@@ -39,7 +50,20 @@ void UFlecsTickerModule::InitializeModule(UFlecsWorld* InWorld, const FFlecsEnti
 		.with(flecs::Phase).cascade(flecs::DependsOn)
 		.without(flecs::Disabled).up(flecs::DependsOn)
 		.without(flecs::Disabled).up(flecs::ChildOf)
+		.with<flecs::SystemPriority>()
 		.without(FlecsFixedTick)
+		.order_by<flecs::SystemPriority>(
+			[](MAYBE_UNUSED flecs::entity_t InEntityA, const flecs::SystemPriority* InPtrA,
+				MAYBE_UNUSED flecs::entity_t InEntityB, const flecs::SystemPriority* InPtrB) -> int
+		{
+			if (InPtrA->value == InPtrB->value) {
+				return flecs_entity_compare(InEntityA, InPtrA, InEntityB, InPtrB);
+			} else if (InPtrA->value > InPtrB->value) {
+				return -1; // Higher priority runs first
+			} else {
+				return 1;
+			}
+		})
 		.build()
 		.set_name("MainPipeline");
 
@@ -50,6 +74,19 @@ void UFlecsTickerModule::InitializeModule(UFlecsWorld* InWorld, const FFlecsEnti
 		.with(FlecsFixedTick)
 		.without(flecs::Disabled).up(flecs::DependsOn)
 		.without(flecs::Disabled).up(flecs::ChildOf)
+		.with<flecs::SystemPriority>()
+		.order_by<flecs::SystemPriority>(
+			[](MAYBE_UNUSED flecs::entity_t InEntityA, const flecs::SystemPriority* InPtrA,
+				MAYBE_UNUSED flecs::entity_t InEntityB, const flecs::SystemPriority* InPtrB) -> int
+		{
+			if (InPtrA->value == InPtrB->value) {
+				return flecs_entity_compare(InEntityA, InPtrA, InEntityB, InPtrB);
+			} else if (InPtrA->value > InPtrB->value) {
+				return -1; // Higher priority runs first
+			} else {
+				return 1;
+			}
+		})
 		.build()
 		.set_name("TickerPipeline");
 

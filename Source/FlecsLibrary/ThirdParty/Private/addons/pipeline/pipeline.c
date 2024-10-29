@@ -23,6 +23,19 @@ static void flecs_pipeline_free(
     }
 }
 
+static int compare_system_priority(
+    ecs_entity_t e1, const EcsSystemPriority *ptr1,
+    ecs_entity_t e2, const EcsSystemPriority *ptr2)
+{
+    if (ptr1->value == ptr2->value) {
+        return flecs_entity_compare(e1, ptr1, e2, ptr2);
+    } else if (ptr1->value > ptr2->value) {
+        return -1;
+    } else {
+        return 1;
+    }
+}
+
 static ECS_MOVE(EcsPipeline, dst, src, {
     flecs_pipeline_free(dst->state);
     dst->state = src->state;
@@ -710,7 +723,7 @@ void flecs_run_startup_systems(
                 { .id = EcsDisabled, .src.id = EcsUp, .trav = EcsDependsOn, .oper = EcsNot },
                 { .id = EcsDisabled, .src.id = EcsUp, .trav = EcsChildOf, .oper = EcsNot }
             },
-            .order_by_callback = flecs_entity_compare
+            .order_by_callback = flecs_entity_compare,
         }
     });
     ecs_log_pop_2();
@@ -935,9 +948,11 @@ void FlecsPipelineImport(
                 { .id = EcsPhase, .src.id = EcsCascade, .trav = EcsDependsOn },
                 { .id = ecs_dependson(EcsOnStart), .trav = EcsDependsOn, .oper = EcsNot },
                 { .id = EcsDisabled, .src.id = EcsUp, .trav = EcsDependsOn, .oper = EcsNot },
-                { .id = EcsDisabled, .src.id = EcsUp, .trav = EcsChildOf, .oper = EcsNot }
+                { .id = EcsDisabled, .src.id = EcsUp, .trav = EcsChildOf, .oper = EcsNot },
+                { .id = ecs_id(EcsSystemPriority) }
             },
-            .order_by_callback = flecs_entity_compare
+            .order_by_callback = (ecs_order_by_action_t)compare_system_priority,
+            .order_by = ecs_id(EcsSystemPriority)
         }
     });
 

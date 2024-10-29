@@ -1,16 +1,13 @@
 ﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 #include "FlecsPhysicsModule.h"
-#include "FlecsPhysicsComponent.h"
 #include "FlecsPhysicsSceneComponent.h"
 #include "PBDRigidsSolver.h"
 #include "TickerPhysicsHistoryComponent.h"
 #include "Components/UWorldPtrComponent.h"
 #include "Physics/Experimental/PhysScene_Chaos.h"
-#include "PhysicsProxy/SingleParticlePhysicsProxy.h"
 #include "Ticker/FlecsTickerComponent.h"
 #include "Ticker/FlecsTickerModule.h"
-#include "Transforms/FlecsTransformComponent.h"
 #include "Worlds/FlecsWorld.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(FlecsPhysicsModule)
@@ -43,8 +40,6 @@ void UFlecsPhysicsModule::InitializeModule(UFlecsWorld* InWorld, const FFlecsEnt
 			{
 				ResimulationHandlers();
 			}
-
-			PhysicsComponentObservers();
 		});
 }
 
@@ -126,45 +121,5 @@ void UFlecsPhysicsModule::ResimulationHandlers()
 	});
 	
 	Scene->GetSolver()->AddPostAdvanceCallback(PostAdvanceDelegate);
-}
-
-void UFlecsPhysicsModule::PhysicsComponentObservers()
-{
-	AddPhysicsComponentObserver = GetFlecsWorld()->CreateObserver<FFlecsPhysicsComponent,
-		const FFlecsTransformComponent>(TEXT("PhysicsComponentObserver"))
-		.term_at(0).event(flecs::OnAdd)
-		.term_at(1).filter()
-		.yield_existing()
-		.each([](flecs::iter& Iter, size_t Index, FFlecsPhysicsComponent& PhysicsComponent,
-			const FFlecsTransformComponent& Transform)
-		{
-			Iter.entity(Index).modified<FFlecsPhysicsComponent>();
-
-			const flecs::world World = Iter.world();
-			const UWorld* OuterWorld = World.get<FUWorldPtrComponent>()->GetWorld();
-			solid_check(IsValid(OuterWorld));
-
-			const FFlecsPhysicsSceneComponent* PhysicsSceneComponent = World.get_mut<FFlecsPhysicsSceneComponent>();
-			solid_check(PhysicsSceneComponent);
-			
-			FActorCreationParams Params;
-			Params.Scene = OuterWorld->GetPhysicsScene();
-			Params.InitialTM = Transform.GlobalTransform;
-			Params.bSimulatePhysics = PhysicsComponent.bSimulatePhysics;
-			Params.bEnableGravity = PhysicsComponent.bEnableGravity;
-			Params.bStartAwake = PhysicsComponent.bStartAwake;
-			Params.bUpdateKinematicFromSimulation = PhysicsComponent.bUpdateKinematicFromSimulation;
-			
-			FPhysicsInterface::CreateActor(Params, PhysicsComponent.PhysicsActorHandle);
-			FPhysicsInterface::AddActorToSolver(PhysicsComponent.PhysicsActorHandle,
-				PhysicsSceneComponent->PhysicsScene->GetSolver());
-
-			bool bWrote = FPhysicsCommand::ExecuteWrite(PhysicsComponent.PhysicsActorHandle,
-				[&](FPhysicsActorHandle& Actor)
-				{
-					
-				});
-			
-		});
 }
 

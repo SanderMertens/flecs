@@ -115,6 +115,11 @@ public:
         return *this;
     }
 
+    Base& priority(int32_t priority) {
+        desc_->priority = priority;
+        return *this;
+    }
+
     /** Set tick source.
      * This operation sets a shared tick source for the system.
      *

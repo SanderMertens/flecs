@@ -1535,6 +1535,9 @@ FLECS_API extern const ecs_entity_t EcsSystem;
 /** TickSource component id. */
 FLECS_API extern const ecs_entity_t ecs_id(EcsTickSource);
 
+/** SystemPriority component id. */
+FLECS_API extern const ecs_entity_t ecs_id(EcsSystemPriority);
+
 /** Pipeline module component ids */
 FLECS_API extern const ecs_entity_t ecs_id(EcsPipelineQuery);
 

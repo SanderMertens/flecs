@@ -176,6 +176,8 @@ const ecs_entity_t EcsDocColor =                    FLECS_HI_COMPONENT_ID + 117;
 const ecs_entity_t ecs_id(EcsRest) =                FLECS_HI_COMPONENT_ID + 118;
 #endif
 
+const ecs_entity_t ecs_id(EcsSystemPriority) =               FLECS_HI_COMPONENT_ID + 119;
+
 /* Default lookup path */
 static ecs_entity_t ecs_default_lookup_path[2] = { 0, 0 };
 

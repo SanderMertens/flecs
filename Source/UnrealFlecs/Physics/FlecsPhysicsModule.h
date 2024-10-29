@@ -4,14 +4,14 @@
 
 #include "CoreMinimal.h"
 #include "TickerPhysicsHistoryComponent.h"
-#include "Modules/FlecsModuleInterface.h"
+#include "Modules/FlecsModuleObject.h"
 #include "Systems/FlecsSystem.h"
 #include "Ticker/FlecsTickerComponent.h"
 #include "UObject/Object.h"
 #include "FlecsPhysicsModule.generated.h"
 
 UCLASS(BlueprintType, DefaultToInstanced, EditInlineNew)
-class UNREALFLECS_API UFlecsPhysicsModule final : public UObject, public IFlecsModuleInterface
+class UNREALFLECS_API UFlecsPhysicsModule final : public UFlecsModuleObject
 {
 	GENERATED_BODY()
 
@@ -20,7 +20,6 @@ public:
 	virtual void DeinitializeModule(UFlecsWorld* InWorld) override;
 
 	FORCEINLINE void ResimulationHandlers();
-	FORCEINLINE void PhysicsComponentObservers();
 
 	FORCEINLINE virtual FString GetModuleName_Implementation() const override { return TEXT("Flecs Physics Module"); }
 

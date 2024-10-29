@@ -4,18 +4,16 @@
 
 #include "CoreMinimal.h"
 #include "Modules/FlecsModuleObject.h"
-#include "FlecsTransformModule.generated.h"
+#include "FlecsGameFrameworkModule.generated.h"
 
-UCLASS(BlueprintType, EditInlineNew, DefaultToInstanced)
-class UNREALFLECS_API UFlecsTransformModule final : public UFlecsModuleObject
+UCLASS()
+class UNREALFLECS_API UFlecsGameFrameworkModule final : public UFlecsModuleObject
 {
 	GENERATED_BODY()
 
 public:
-	UFlecsTransformModule();
-
 	virtual void InitializeModule(UFlecsWorld* InWorld, const FFlecsEntityHandle& InModuleEntity) override;
 	virtual void DeinitializeModule(UFlecsWorld* InWorld) override;
 
 
-}; // class UFlecsTransformModule
+}; // class UFlecsGameFrameworkModule

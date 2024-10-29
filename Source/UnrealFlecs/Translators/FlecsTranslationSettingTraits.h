@@ -6,19 +6,19 @@
 #include "FlecsTranslationSettingTraits.generated.h"
 
 USTRUCT(BlueprintType)
-struct UNREALFLECS_API FFlecsTranslationToActor
+struct UNREALFLECS_API FTranslationToUnrealTrait
 {
 	GENERATED_BODY()
-}; // struct FFlecsTranslationToActor
+}; // struct FTranslationToUnrealTrait
 
 USTRUCT(BlueprintType)
-struct UNREALFLECS_API FFlecsTranslationToFlecs
+struct UNREALFLECS_API FTranslationToFlecsTrait
 {
 	GENERATED_BODY()
-}; // struct FFlecsTranslationToFlecs
+}; // struct FTranslationToFlecsTrait
 
 USTRUCT(BlueprintType)
-struct UNREALFLECS_API FFlecsTranslationToBoth
+struct UNREALFLECS_API FTranslationToBothTrait
 {
 	GENERATED_BODY()
-}; // struct FFlecsTranslationToBoth
+}; // struct FTranslationToBothTrait

@@ -4,11 +4,12 @@
 
 #include "CoreMinimal.h"
 #include "Modules/FlecsModuleInterface.h"
+#include "Modules/FlecsModuleObject.h"
 #include "UObject/Object.h"
 #include "FlecsRestModule.generated.h"
 
-UCLASS(BlueprintType, EditInlineNew, DefaultToInstanced)
-class UNREALFLECS_API UFlecsRestModule final : public UObject, public IFlecsModuleInterface
+UCLASS(BlueprintType)
+class UNREALFLECS_API UFlecsRestModule final : public UFlecsModuleObject
 {
 	GENERATED_BODY()
 

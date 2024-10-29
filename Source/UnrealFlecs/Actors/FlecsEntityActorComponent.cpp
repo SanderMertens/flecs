@@ -88,6 +88,7 @@ void UFlecsEntityActorComponent::OnWorldCreated(const FString& InWorldName, UFle
 void UFlecsEntityActorComponent::CreateActorEntity(UFlecsWorld* InWorld)
 {
 	EntityHandle = InWorld->CreateEntityWithRecord(EntityRecord);
+	EntityHandle.Add<FFlecsActorComponentTag>();
 	UN_LOGF(LogFlecsEntity, Log, "Created Actor Entity: %s",
 		*EntityHandle.GetName());
 }

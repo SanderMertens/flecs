@@ -367,6 +367,7 @@ public:
 		});
 
 		ModuleComponentQuery = World.query_builder<FFlecsModuleComponent>("ModuleComponentQuery")
+			.cached()
 			.build();
 
 		DependenciesComponentQuery = World.query_builder<FFlecsDependenciesComponent>("DependenciesComponentQuery")

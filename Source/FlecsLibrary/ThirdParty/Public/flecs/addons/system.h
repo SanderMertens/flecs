@@ -34,6 +34,10 @@ typedef struct EcsTickSource {
     ecs_ftime_t time_elapsed;  /**< Time elapsed since last tick */
 } EcsTickSource;
 
+typedef struct EcsSystemPriority {
+	int32_t value; /**< Priority value, higher is higher priority */
+} EcsSystemPriority;
+
 /** Use with ecs_system_init() to create or update a system. */
 typedef struct ecs_system_desc_t {
     int32_t _canary;
@@ -85,6 +89,9 @@ typedef struct ecs_system_desc_t {
 
     /** Rate at which the system should run */
     int32_t rate;
+
+	/** Priority of the system */
+	int32_t priority;
 
     /** External tick source that determines when system ticks */
     ecs_entity_t tick_source;

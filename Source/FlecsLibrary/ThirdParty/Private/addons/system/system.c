@@ -390,6 +390,8 @@ ecs_entity_t ecs_system_init(
         }
     }
 
+    ecs_set(world, entity, EcsSystemPriority, { desc->priority });
+
     flecs_poly_modified(world, entity, ecs_system_t);
 
     return entity;
@@ -418,6 +420,7 @@ void FlecsSystemImport(
 
     flecs_bootstrap_tag(world, EcsSystem);
     flecs_bootstrap_component(world, EcsTickSource);
+    flecs_bootstrap_component(world, EcsSystemPriority);
 
     /* Make sure to never inherit system component. This makes sure that any
      * term created for the System component will default to 'self' traversal,

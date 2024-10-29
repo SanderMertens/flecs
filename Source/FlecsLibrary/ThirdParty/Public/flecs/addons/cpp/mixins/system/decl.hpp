@@ -16,6 +16,7 @@ namespace flecs {
  */
 
 using TickSource = EcsTickSource;
+using SystemPriority = EcsSystemPriority;
 
 struct system;
 
