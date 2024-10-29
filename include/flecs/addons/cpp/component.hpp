@@ -453,8 +453,7 @@ struct component : untyped_component {
         BindingCtx *ctx = get_binding_ctx(h);
         h.on_add = Delegate::run_add;
         ctx->on_add = FLECS_NEW(Delegate)(FLECS_FWD(func));
-        ctx->free_on_add = reinterpret_cast<ecs_ctx_free_t>(
-            _::free_obj<Delegate>);
+        ctx->free_on_add = _::free_obj<Delegate>;
         ecs_set_hooks_id(world_, id_, &h);
         return *this;
     }
@@ -470,8 +469,7 @@ struct component : untyped_component {
         BindingCtx *ctx = get_binding_ctx(h);
         h.on_remove = Delegate::run_remove;
         ctx->on_remove = FLECS_NEW(Delegate)(FLECS_FWD(func));
-        ctx->free_on_remove = reinterpret_cast<ecs_ctx_free_t>(
-            _::free_obj<Delegate>);
+        ctx->free_on_remove = _::free_obj<Delegate>;
         ecs_set_hooks_id(world_, id_, &h);
         return *this;
     }
@@ -487,8 +485,7 @@ struct component : untyped_component {
         BindingCtx *ctx = get_binding_ctx(h);
         h.on_set = Delegate::run_set;
         ctx->on_set = FLECS_NEW(Delegate)(FLECS_FWD(func));
-        ctx->free_on_set = reinterpret_cast<ecs_ctx_free_t>(
-            _::free_obj<Delegate>);
+        ctx->free_on_set = _::free_obj<Delegate>;
         ecs_set_hooks_id(world_, id_, &h);
         return *this;
     }
@@ -505,8 +502,7 @@ private:
         if (!result) {
             result = FLECS_NEW(BindingCtx);
             h.binding_ctx = result;
-            h.binding_ctx_free = reinterpret_cast<ecs_ctx_free_t>(
-                _::free_obj<BindingCtx>);
+            h.binding_ctx_free = _::free_obj<BindingCtx>;
         }
         return result;
     }
