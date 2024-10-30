@@ -2704,3 +2704,27 @@ void SerializeIterToJson_serialize_32_fields(void) {
 
     ecs_fini(world);
 }
+
+void SerializeIterToJson_serialize_field_w_escaped_sep(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t rel = ecs_entity(world, { .name = "Rel" });
+    ecs_entity_t tgt = ecs_entity(world, { .name = "Tgt\\.Foo" });
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_add_pair(world, e, rel, tgt);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ ecs_pair(rel, EcsWildcard) }}
+    });
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    char *json = ecs_iter_to_json(&it, NULL);
+    test_json(json, "{\"results\":[{\"name\":\"e\", \"fields\":{\"ids\":[[\"Rel\",\"Tgt\\\\.Foo\"]]}}]}");
+    ecs_os_free(json);
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
