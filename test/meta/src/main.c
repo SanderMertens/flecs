@@ -75,6 +75,7 @@ void EnumTypes_struct_w_enum(void);
 void EnumTypes_zero_initialized(void);
 void EnumTypes_enum_relation(void);
 void EnumTypes_enum_w_short_notation(void);
+void EnumTypes_enum_modified_event(void);
 
 // Testsuite 'BitmaskTypes'
 void BitmaskTypes_bitmask_1_constant(void);
@@ -1257,6 +1258,10 @@ bake_test_case EnumTypes_testcases[] = {
     {
         "enum_w_short_notation",
         EnumTypes_enum_w_short_notation
+    },
+    {
+        "enum_modified_event",
+        EnumTypes_enum_modified_event
     }
 };
 
@@ -4866,7 +4871,7 @@ static bake_test_suite suites[] = {
         "EnumTypes",
         NULL,
         NULL,
-        8,
+        9,
         EnumTypes_testcases
     },
     {

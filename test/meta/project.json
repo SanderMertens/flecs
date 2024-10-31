@@ -81,7 +81,8 @@
                 "struct_w_enum",
                 "zero_initialized",
                 "enum_relation",
-                "enum_w_short_notation"
+                "enum_w_short_notation",
+                "enum_modified_event"
             ]
         }, {
             "id": "BitmaskTypes",
