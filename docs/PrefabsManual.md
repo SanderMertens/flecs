@@ -198,6 +198,8 @@ world.query::<&Position>().with::<flecs::Prefab>().build();
 </ul>
 </div>
 
+> Prefabs are only ignored by queries when they are matched on the `$this` variable, which is the default for query terms. If a prefab component is matched through query traversal, a fixed term source or variable non-`$this` source, the query will not ignore the prefab.
+
 To match both regular and prefab entities, make the prefab term optional:
 
 <div class="flecs-snippet-tabs">
