@@ -634,6 +634,9 @@ void SerializeEntityToJson_serialize_w_name_1_tag(void);
 void SerializeEntityToJson_serialize_w_name_2_tags(void);
 void SerializeEntityToJson_serialize_w_name_1_pair(void);
 void SerializeEntityToJson_serialize_w_base(void);
+void SerializeEntityToJson_serialize_w_base_dont_inherit_tag(void);
+void SerializeEntityToJson_serialize_w_base_dont_inherit_component(void);
+void SerializeEntityToJson_serialize_w_base_dont_inherit_pair(void);
 void SerializeEntityToJson_serialize_w_2_base(void);
 void SerializeEntityToJson_serialize_component_w_base(void);
 void SerializeEntityToJson_serialize_component_w_base_no_reflection_data(void);
@@ -3432,6 +3435,18 @@ bake_test_case SerializeEntityToJson_testcases[] = {
         SerializeEntityToJson_serialize_w_base
     },
     {
+        "serialize_w_base_dont_inherit_tag",
+        SerializeEntityToJson_serialize_w_base_dont_inherit_tag
+    },
+    {
+        "serialize_w_base_dont_inherit_component",
+        SerializeEntityToJson_serialize_w_base_dont_inherit_component
+    },
+    {
+        "serialize_w_base_dont_inherit_pair",
+        SerializeEntityToJson_serialize_w_base_dont_inherit_pair
+    },
+    {
         "serialize_w_2_base",
         SerializeEntityToJson_serialize_w_2_base
     },
@@ -4935,7 +4950,7 @@ static bake_test_suite suites[] = {
         "SerializeEntityToJson",
         NULL,
         NULL,
-        69,
+        72,
         SerializeEntityToJson_testcases
     },
     {

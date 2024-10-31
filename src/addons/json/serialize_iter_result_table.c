@@ -101,7 +101,7 @@ bool flecs_json_serialize_table_tags(
         ecs_id_record_t *idr = (ecs_id_record_t*)tr->hdr.cache;
 
         if (src_table) {
-            if (!(idr->flags & EcsIdOnInstantiateInherit)) {
+            if (idr->flags & EcsIdOnInstantiateDontInherit) {
                 continue;
             }
         }
@@ -168,7 +168,7 @@ bool flecs_json_serialize_table_pairs(
         ecs_id_record_t *idr = (ecs_id_record_t*)tr->hdr.cache;
 
         if (src_table) {
-            if (!(idr->flags & EcsIdOnInstantiateInherit)) {
+            if (idr->flags & EcsIdOnInstantiateDontInherit) {
                 continue;
             }
         }
@@ -241,6 +241,7 @@ static
 int flecs_json_serialize_table_components(
     const ecs_world_t *world,
     ecs_table_t *table,
+    const ecs_table_t *src_table,
     ecs_strbuf_t *buf,
     ecs_json_value_ser_ctx_t *values_ctx,
     const ecs_iter_to_json_desc_t *desc,
@@ -261,6 +262,15 @@ int flecs_json_serialize_table_components(
         }
 
         void *ptr;
+        const ecs_table_record_t *tr = &table->_->records[i];
+        ecs_id_record_t *idr = (ecs_id_record_t*)tr->hdr.cache;
+
+        if (src_table) {
+            if (idr->flags & EcsIdOnInstantiateDontInherit) {
+                continue;
+            }
+        }
+
         const ecs_type_info_t *ti;
         int32_t column_index = table->column_map ? table->column_map[i] : -1;
         if (column_index != -1) {
@@ -268,8 +278,6 @@ int flecs_json_serialize_table_components(
             ti = column->ti;
             ptr = ECS_ELEM(column->data, ti->size, row);
         } else {
-            const ecs_table_record_t *tr = &table->_->records[i];
-            ecs_id_record_t *idr = (ecs_id_record_t*)tr->hdr.cache;
             if (!(idr->flags & EcsIdIsSparse)) {
                 continue;
             }
@@ -373,7 +381,7 @@ bool flecs_json_serialize_table_inherited_type(
 
         int32_t component_count = 0;
         flecs_json_serialize_table_components(
-            world, base_table, buf, NULL, desc, 
+            world, base_table, table, buf, NULL, desc, 
                 ECS_RECORD_TO_ROW(base_record->row), &component_count);
 
         if (desc->serialize_type_info) {
@@ -505,7 +513,7 @@ int flecs_json_serialize_iter_result_table(
 
         component_count = 0; /* Each row has the same number of components */
         if (flecs_json_serialize_table_components(
-            world, table, buf, values_ctx, desc, i, &component_count)) 
+            world, table, NULL, buf, values_ctx, desc, i, &component_count)) 
         {
             result = -1;
             break;
