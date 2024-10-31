@@ -1,5 +1,5 @@
 "A fast entity component system (ECS) for C & C++"
-module(name = "flecs", version = "4.0.1")
+module(name = "flecs")
 
 git_repository = use_repo_rule("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
 
