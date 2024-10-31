@@ -4808,3 +4808,58 @@ void Entity_delete_w_override_sparse(void) {
 
     e.destruct();
 }
+
+void Entity_get_pair_second_invalid_type(void) {
+    install_test_abort();
+
+    flecs::world world;
+
+    auto v = world.component<Velocity>();
+
+    test_expect_abort();
+    world.entity().get_second<Position>(v);
+}
+
+void Entity_get_mut_pair_second_invalid_type(void) {
+    install_test_abort();
+
+    flecs::world world;
+
+    auto v = world.component<Velocity>();
+
+    test_expect_abort();
+    world.entity().get_mut_second<Position>(v);
+}
+
+void Entity_ensure_pair_second_invalid_type(void) {
+    install_test_abort();
+
+    flecs::world world;
+
+    auto v = world.component<Velocity>();
+
+    test_expect_abort();
+    world.entity().ensure_second<Position>(v);
+}
+
+void Entity_set_pair_second_invalid_type(void) {
+    install_test_abort();
+
+    flecs::world world;
+
+    auto v = world.component<Velocity>();
+
+    test_expect_abort();
+    world.entity().set_second<Position>(v, {0});
+}
+
+void Entity_get_ref_pair_second_invalid_type(void) {
+    install_test_abort();
+
+    flecs::world world;
+
+    auto v = world.component<Velocity>();
+
+    test_expect_abort();
+    world.entity().get_ref_second<Position>(v);
+}

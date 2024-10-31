@@ -138,11 +138,11 @@ struct entity : entity_builder<entity>
      */
     template <typename First>
     First& ensure(entity_t second) const {
-        auto comp_id = _::type<First>::id(world_);
+        auto first = _::type<First>::id(world_);
         ecs_assert(_::type<First>::size() != 0, ECS_INVALID_PARAMETER,
             "operation invalid for empty type");
         return *static_cast<First*>(
-            ecs_ensure_id(world_, id_, ecs_pair(comp_id, second)));
+            ecs_ensure_id(world_, id_, ecs_pair(first, second)));
     }
 
     /** Get mutable pointer for a pair (untyped).
@@ -166,6 +166,10 @@ struct entity : entity_builder<entity>
     template <typename Second>
     Second& ensure_second(entity_t first) const {
         auto second = _::type<Second>::id(world_);
+        ecs_assert( ecs_get_type_info(world_, ecs_pair(first, second)) != NULL,
+            ECS_INVALID_PARAMETER, "pair is not a component");
+        ecs_assert( ecs_get_type_info(world_, ecs_pair(first, second))->component == second,
+            ECS_INVALID_PARAMETER, "type of pair is not Second");
         ecs_assert(_::type<Second>::size() != 0, ECS_INVALID_PARAMETER,
             "operation invalid for empty type");
         return *static_cast<Second*>(
@@ -265,20 +269,23 @@ struct entity : entity_builder<entity>
         typename A = actual_type_t<P>>
     ref<A> get_ref() const {
         return ref<A>(world_, id_,
-            ecs_pair(_::type<First>::id(world_),
-                _::type<Second>::id(world_)));
+            ecs_pair(_::type<First>::id(world_), _::type<Second>::id(world_)));
     }
 
     template <typename First>
     ref<First> get_ref(flecs::entity_t second) const {
-        return ref<First>(world_, id_,
-            ecs_pair(_::type<First>::id(world_), second));
+        auto first = _::type<First>::id(world_);
+        return ref<First>(world_, id_, ecs_pair(first, second));
     }
 
     template <typename Second>
     ref<Second> get_ref_second(flecs::entity_t first) const {
-        return ref<Second>(world_, id_,
-            ecs_pair(first, _::type<Second>::id(world_)));
+        auto second = _::type<Second>::id(world_);
+        ecs_assert( ecs_get_type_info(world_, ecs_pair(first, second)) != NULL,
+            ECS_INVALID_PARAMETER, "pair is not a component");
+        ecs_assert( ecs_get_type_info(world_, ecs_pair(first, second))->component == second,
+            ECS_INVALID_PARAMETER, "type of pair is not Second");
+        return ref<Second>(world_, id_, ecs_pair(first, second));
     }
 
     /** Clear an entity.

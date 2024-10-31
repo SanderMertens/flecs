@@ -808,6 +808,10 @@ struct entity_builder : entity_view {
     template <typename Second>
     const Self& set_second(entity_t first, const Second& value) const  {
         auto second = _::type<Second>::id(this->world_);
+        ecs_assert( ecs_get_type_info(world_, ecs_pair(first, second)) != NULL,
+            ECS_INVALID_PARAMETER, "pair is not a component");
+        ecs_assert( ecs_get_type_info(world_, ecs_pair(first, second))->component == second,
+            ECS_INVALID_PARAMETER, "type of pair is not Second");
         flecs::set(this->world_, this->id_, value, 
             ecs_pair(first, second));
         return to_base();
@@ -824,6 +828,10 @@ struct entity_builder : entity_view {
     template <typename Second>
     const Self& set_second(entity_t first, Second&& value) const  {
         auto second = _::type<Second>::id(this->world_);
+        ecs_assert( ecs_get_type_info(world_, ecs_pair(first, second)) != NULL,
+            ECS_INVALID_PARAMETER, "pair is not a component");
+        ecs_assert( ecs_get_type_info(world_, ecs_pair(first, second))->component == second,
+            ECS_INVALID_PARAMETER, "type of pair is not Second");
         flecs::set(this->world_, this->id_, FLECS_FWD(value), 
             ecs_pair(first, second));
         return to_base();
@@ -893,16 +901,22 @@ struct entity_builder : entity_view {
 
     template <typename First, typename ... Args>
     const Self& emplace_first(flecs::entity_t second, Args&&... args) const  {
+        auto first = _::type<First>::id(this->world_);
         flecs::emplace<First>(this->world_, this->id_, 
-            ecs_pair(_::type<First>::id(this->world_), second),
+            ecs_pair(first, second),
             FLECS_FWD(args)...);
         return to_base();
     }
 
     template <typename Second, typename ... Args>
     const Self& emplace_second(flecs::entity_t first, Args&&... args) const  {
+        auto second = _::type<Second>::id(this->world_);
+        ecs_assert( ecs_get_type_info(world_, ecs_pair(first, second)) != NULL,
+            ECS_INVALID_PARAMETER, "pair is not a component");
+        ecs_assert( ecs_get_type_info(world_, ecs_pair(first, second))->component == second,
+            ECS_INVALID_PARAMETER, "type of pair is not Second");
         flecs::emplace<Second>(this->world_, this->id_, 
-            ecs_pair(first, _::type<Second>::id(this->world_)),
+            ecs_pair(first, second),
             FLECS_FWD(args)...);
         return to_base();
     }
