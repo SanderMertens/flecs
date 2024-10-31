@@ -284,6 +284,11 @@ void Entity_insert_2_w_1_sparse(void);
 void Entity_emplace_sparse(void);
 void Entity_override_sparse(void);
 void Entity_delete_w_override_sparse(void);
+void Entity_get_pair_second_invalid_type(void);
+void Entity_get_mut_pair_second_invalid_type(void);
+void Entity_ensure_pair_second_invalid_type(void);
+void Entity_set_pair_second_invalid_type(void);
+void Entity_get_ref_pair_second_invalid_type(void);
 
 // Testsuite 'Pairs'
 void Pairs_add_component_pair(void);
@@ -2482,6 +2487,26 @@ bake_test_case Entity_testcases[] = {
     {
         "delete_w_override_sparse",
         Entity_delete_w_override_sparse
+    },
+    {
+        "get_pair_second_invalid_type",
+        Entity_get_pair_second_invalid_type
+    },
+    {
+        "get_mut_pair_second_invalid_type",
+        Entity_get_mut_pair_second_invalid_type
+    },
+    {
+        "ensure_pair_second_invalid_type",
+        Entity_ensure_pair_second_invalid_type
+    },
+    {
+        "set_pair_second_invalid_type",
+        Entity_set_pair_second_invalid_type
+    },
+    {
+        "get_ref_pair_second_invalid_type",
+        Entity_get_ref_pair_second_invalid_type
     }
 };
 
@@ -6792,7 +6817,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        271,
+        276,
         Entity_testcases
     },
     {

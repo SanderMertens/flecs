@@ -291,7 +291,12 @@
                 "insert_2_w_1_sparse",
                 "emplace_sparse",
                 "override_sparse",
-                "delete_w_override_sparse"
+                "delete_w_override_sparse",
+                "get_pair_second_invalid_type",
+                "get_mut_pair_second_invalid_type",
+                "ensure_pair_second_invalid_type",
+                "set_pair_second_invalid_type",
+                "get_ref_pair_second_invalid_type"
             ]
         }, {
             "id": "Pairs",

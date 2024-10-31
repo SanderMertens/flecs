@@ -300,11 +300,11 @@ struct entity_view : public id {
      */
     template<typename First, typename Second, if_not_t< is_enum<Second>::value> = 0>
     const First* get(Second second) const {
-        auto comp_id = _::type<First>::id(world_);
+        auto first = _::type<First>::id(world_);
         ecs_assert(_::type<First>::size() != 0, ECS_INVALID_PARAMETER,
             "operation invalid for empty type");
         return static_cast<const First*>(
-            ecs_get_id(world_, id_, ecs_pair(comp_id, second)));
+            ecs_get_id(world_, id_, ecs_pair(first, second)));
     }
 
     /** Get a pair.
@@ -397,6 +397,10 @@ struct entity_view : public id {
     template<typename Second>
     const Second* get_second(flecs::entity_t first) const {
         auto second = _::type<Second>::id(world_);
+        ecs_assert( ecs_get_type_info(world_, ecs_pair(first, second)) != NULL,
+            ECS_INVALID_PARAMETER, "pair is not a component");
+        ecs_assert( ecs_get_type_info(world_, ecs_pair(first, second))->component == second,
+            ECS_INVALID_PARAMETER, "type of pair is not Second");
         ecs_assert(_::type<Second>::size() != 0, ECS_INVALID_PARAMETER,
             "operation invalid for empty type");
         return static_cast<const Second*>(
@@ -466,11 +470,11 @@ struct entity_view : public id {
      */
     template<typename First, typename Second, if_not_t< is_enum<Second>::value> = 0>
     First* get_mut(Second second) const {
-        auto comp_id = _::type<First>::id(world_);
+        auto first = _::type<First>::id(world_);
         ecs_assert(_::type<First>::size() != 0, ECS_INVALID_PARAMETER, 
             "operation invalid for empty type");
         return static_cast<First*>(
-            ecs_get_mut_id(world_, id_, ecs_pair(comp_id, second)));
+            ecs_get_mut_id(world_, id_, ecs_pair(first, second)));
     }
 
     /** Get a mutable pair.
@@ -518,6 +522,10 @@ struct entity_view : public id {
     template<typename Second>
     Second* get_mut_second(flecs::entity_t first) const {
         auto second = _::type<Second>::id(world_);
+        ecs_assert( ecs_get_type_info(world_, ecs_pair(first, second)) != NULL,
+            ECS_INVALID_PARAMETER, "pair is not a component");
+        ecs_assert( ecs_get_type_info(world_, ecs_pair(first, second))->component == second,
+            ECS_INVALID_PARAMETER, "type of pair is not Second");
         ecs_assert(_::type<Second>::size() != 0, ECS_INVALID_PARAMETER, 
             "operation invalid for empty type");
         return static_cast<Second*>(
