@@ -143,7 +143,7 @@ int flecs_expr_ser_primitive(
         if (!e) {
             ecs_strbuf_appendlit(str, "#0");
         } else {
-            ecs_get_path_w_sep_buf(world, 0, e, ".", NULL, str);
+            ecs_get_path_w_sep_buf(world, 0, e, ".", NULL, str, false);
         }
         break;
     }
