@@ -3275,6 +3275,37 @@ void OnDelete_remove_all_3(void) {
     ecs_fini(world);
 }
 
+void OnDelete_delete_all_w_component_cycle(void) {
+    ecs_world_t *world = ecs_mini();
+    
+    ecs_entity_t tag = ecs_new(world);
+
+    ecs_entity_t comp_a = ecs_component(world, {
+        .type.size = 4,
+        .type.alignment = 4
+    });
+    ecs_add_id(world, comp_a, tag);
+
+    ecs_entity_t comp_b = ecs_component(world, {
+        .type.size = 4,
+        .type.alignment = 4
+    });
+    ecs_add_id(world, comp_b, tag);
+
+    ecs_add_id(world, comp_a, comp_b);
+    ecs_add_id(world, comp_b, comp_a);
+
+    ecs_delete_with(world, tag);
+
+    test_assert(!ecs_is_alive(world, comp_a));
+    test_assert(!ecs_is_alive(world, comp_b));
+
+    test_assert(ecs_get_type_info(world, comp_a) == NULL);
+    test_assert(ecs_get_type_info(world, comp_b) == NULL);
+
+    ecs_fini(world);
+}
+
 void OnDelete_delete_with_1(void) {
     ecs_world_t *world = ecs_init();
 

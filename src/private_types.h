@@ -276,12 +276,13 @@ typedef struct ecs_store_t {
     /* Records cache */
     ecs_vec_t records;
 
-    /* Stack of ids being deleted. */
+    /* Stack of ids being deleted during cleanup action. */
     ecs_vec_t marked_ids;            /* vector<ecs_marked_ids_t> */
-    
-    /* Entity ids associated with depth (for flat hierarchies) */
-    ecs_vec_t depth_ids;
-    ecs_map_t entity_to_depth; /* What it says */
+
+    /* Components deleted during cleanup action. Used to delay cleaning up of
+     * type info so it's guaranteed that this data is available while the 
+     * storage is cleaning up tables. */
+    ecs_vec_t deleted_components;    /* vector<ecs_entity_t> */
 } ecs_store_t;
 
 /* fini actions */

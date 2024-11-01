@@ -927,12 +927,13 @@ typedef struct ecs_store_t {
     /* Records cache */
     ecs_vec_t records;
 
-    /* Stack of ids being deleted. */
+    /* Stack of ids being deleted during cleanup action. */
     ecs_vec_t marked_ids;            /* vector<ecs_marked_ids_t> */
-    
-    /* Entity ids associated with depth (for flat hierarchies) */
-    ecs_vec_t depth_ids;
-    ecs_map_t entity_to_depth; /* What it says */
+
+    /* Components deleted during cleanup action. Used to delay cleaning up of
+     * type info so it's guaranteed that this data is available while the 
+     * storage is cleaning up tables. */
+    ecs_vec_t deleted_components;    /* vector<ecs_entity_t> */
 } ecs_store_t;
 
 /* fini actions */
@@ -3698,7 +3699,19 @@ void flecs_on_component(ecs_iter_t *it) {
                 flecs_assert_relation_unused(world, e, ecs_id(EcsComponent));
             }
         } else if (it->event == EcsOnRemove) {
-            flecs_type_info_free(world, e);
+            #ifdef FLECS_DEBUG
+            if (ecs_should_log(0)) {
+                char *path = ecs_get_path(world, e);
+                ecs_trace("unregistering component '%s'", path);
+                ecs_os_free(path);
+            }
+            #endif
+            if (!ecs_vec_count(&world->store.marked_ids)) {
+                flecs_type_info_free(world, e);
+            } else {
+                ecs_vec_append_t(&world->allocator, 
+                    &world->store.deleted_components, ecs_entity_t)[0] = e;
+            }
         }
     }
 }
@@ -7735,7 +7748,7 @@ void flecs_on_delete(
     /* Cleanup can happen recursively. If a cleanup action is already in 
      * progress, only append ids to the marked_ids. The topmost cleanup
      * frame will handle the actual cleanup. */
-    int32_t count = ecs_vec_count(&world->store.marked_ids);
+    int32_t i, count = ecs_vec_count(&world->store.marked_ids);
 
     /* Make sure we're evaluating a consistent list of non-empty tables */
     ecs_run_aperiodic(world, EcsAperiodicEmptyTables);
@@ -7760,7 +7773,7 @@ void flecs_on_delete(
         /* Verify deleted ids are no longer in use */
 #ifdef FLECS_DEBUG
         ecs_marked_id_t *ids = ecs_vec_first(&world->store.marked_ids);
-        int32_t i; count = ecs_vec_count(&world->store.marked_ids);
+        count = ecs_vec_count(&world->store.marked_ids);
         for (i = 0; i < count; i ++) {
             ecs_assert(!ecs_id_in_use(world, ids[i].id), 
                 ECS_INTERNAL_ERROR, NULL);
@@ -7770,6 +7783,14 @@ void flecs_on_delete(
 
         /* Ids are deleted, clear stack */
         ecs_vec_clear(&world->store.marked_ids);
+
+        /* If any components got deleted, cleanup type info. Delaying this 
+         * ensures that type info remains available during cleanup. */
+        count = ecs_vec_count(&world->store.deleted_components);
+        ecs_entity_t *comps = ecs_vec_first(&world->store.deleted_components);
+        for (i = 0; i < count; i ++) {
+            flecs_type_info_free(world, comps[i]);
+        }
 
         ecs_log_pop_2();
     }
@@ -18198,8 +18219,7 @@ void flecs_init_store(
     ecs_allocator_t *a = &world->allocator;
     ecs_vec_init_t(a, &world->store.records, ecs_table_record_t, 0);
     ecs_vec_init_t(a, &world->store.marked_ids, ecs_marked_id_t, 0);
-    ecs_vec_init_t(a, &world->store.depth_ids, ecs_entity_t, 0);
-    ecs_map_init(&world->store.entity_to_depth, &world->allocator);
+    ecs_vec_init_t(a, &world->store.deleted_components, ecs_entity_t, 0);
 
     /* Initialize entity index */
     flecs_entities_init(world);
@@ -18214,7 +18234,7 @@ void flecs_init_store(
     /* Initialize root table */
     flecs_init_root_table(world);
 
-    /* Initilaize observer sparse set */
+    /* Initialize observer sparse set */
     flecs_sparse_init_t(&world->store.observers,
         a, &world->allocators.sparse_chunk, ecs_observer_impl_t);
 }
@@ -18336,8 +18356,7 @@ void flecs_fini_store(ecs_world_t *world) {
     ecs_allocator_t *a = &world->allocator;
     ecs_vec_fini_t(a, &world->store.records, ecs_table_record_t);
     ecs_vec_fini_t(a, &world->store.marked_ids, ecs_marked_id_t);
-    ecs_vec_fini_t(a, &world->store.depth_ids, ecs_entity_t);
-    ecs_map_fini(&world->store.entity_to_depth);
+    ecs_vec_fini_t(a, &world->store.deleted_components, ecs_entity_t);
 }
 
 static 
@@ -19391,6 +19410,9 @@ void flecs_type_info_fini(
         ecs_os_free(ECS_CONST_CAST(char*, ti->name));
         ti->name = NULL;
     }
+
+    ti->size = 0;
+    ti->alignment = 0;
 }
 
 void flecs_type_info_free(
@@ -37167,6 +37189,7 @@ void flecs_table_fini_data(
         table->data.entities = NULL;
         table->data.size = 0;
     }
+
     table->data.count = 0;
 
     if (deactivate && count) {

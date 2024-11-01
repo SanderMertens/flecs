@@ -575,8 +575,7 @@ void flecs_init_store(
     ecs_allocator_t *a = &world->allocator;
     ecs_vec_init_t(a, &world->store.records, ecs_table_record_t, 0);
     ecs_vec_init_t(a, &world->store.marked_ids, ecs_marked_id_t, 0);
-    ecs_vec_init_t(a, &world->store.depth_ids, ecs_entity_t, 0);
-    ecs_map_init(&world->store.entity_to_depth, &world->allocator);
+    ecs_vec_init_t(a, &world->store.deleted_components, ecs_entity_t, 0);
 
     /* Initialize entity index */
     flecs_entities_init(world);
@@ -591,7 +590,7 @@ void flecs_init_store(
     /* Initialize root table */
     flecs_init_root_table(world);
 
-    /* Initilaize observer sparse set */
+    /* Initialize observer sparse set */
     flecs_sparse_init_t(&world->store.observers,
         a, &world->allocators.sparse_chunk, ecs_observer_impl_t);
 }
@@ -713,8 +712,7 @@ void flecs_fini_store(ecs_world_t *world) {
     ecs_allocator_t *a = &world->allocator;
     ecs_vec_fini_t(a, &world->store.records, ecs_table_record_t);
     ecs_vec_fini_t(a, &world->store.marked_ids, ecs_marked_id_t);
-    ecs_vec_fini_t(a, &world->store.depth_ids, ecs_entity_t);
-    ecs_map_fini(&world->store.entity_to_depth);
+    ecs_vec_fini_t(a, &world->store.deleted_components, ecs_entity_t);
 }
 
 static 
@@ -1768,6 +1766,9 @@ void flecs_type_info_fini(
         ecs_os_free(ECS_CONST_CAST(char*, ti->name));
         ti->name = NULL;
     }
+
+    ti->size = 0;
+    ti->alignment = 0;
 }
 
 void flecs_type_info_free(

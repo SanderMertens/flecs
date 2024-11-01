@@ -933,6 +933,7 @@
                 "add_on_delete_from_disabled",
                 "delete_on_delete_from_prefab",
                 "delete_on_delete_from_disabled",
+                "delete_all_w_component_cycle",
                 "remove_all_1",
                 "remove_all_2",
                 "remove_all_3",

@@ -263,7 +263,8 @@
                 "partial_assign_nontrivial_with",
                 "partial_assign_with_large_array",
                 "non_trivial_var_component",
-                "non_trivial_var_with"
+                "non_trivial_var_with",
+                "update_template_w_tag"
             ]
         }, {
             "id": "Template",
