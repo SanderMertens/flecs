@@ -885,148 +885,78 @@ public:
 	template <typename TComponent, typename TTrait>
 	SOLID_INLINE void EnableTrait() const
 	{
-		if UNLIKELY_IF(!Has<TComponent>())
-		{
-			return;
-		}
-		
 		ObtainTraitHolderEntity<TComponent>().Enable<TTrait>();
 	}
 
 	template <typename TComponent>
 	SOLID_INLINE void EnableTrait(const UScriptStruct* TraitStructType) const
 	{
-		if UNLIKELY_IF(!Has<TComponent>())
-		{
-			return;
-		}
-		
 		ObtainTraitHolderEntity<TComponent>().Enable(TraitStructType);
 	}
 
 	template <typename TComponent>
 	SOLID_INLINE void EnableTrait(const FGameplayTag& InTag) const
 	{
-		if UNLIKELY_IF(!Has<TComponent>())
-		{
-			return;
-		}
-		
 		ObtainTraitHolderEntity<TComponent>().Enable(InTag);
 	}
 
 	template <typename TComponent>
 	SOLID_INLINE void EnableTrait(const FFlecsEntityHandle& InTrait) const
 	{
-		if UNLIKELY_IF(!Has<TComponent>())
-		{
-			return;
-		}
-		
 		ObtainTraitHolderEntity<TComponent>().Enable(InTrait);
 	}
 
 	SOLID_INLINE void EnableTrait(const UScriptStruct* ComponentStructType, const UScriptStruct* TraitType) const
 	{
-		if UNLIKELY_IF(!Has(ComponentStructType))
-		{
-			return;
-		}
-		
 		ObtainTraitHolderEntity(ComponentStructType).Enable(TraitType);
 	}
 
 	SOLID_INLINE void EnableTrait(const UScriptStruct* ComponentStructType, const FGameplayTag& InTag) const
 	{
-		if UNLIKELY_IF(!Has(ComponentStructType))
-		{
-			return;
-		}
-		
 		ObtainTraitHolderEntity(ComponentStructType).Enable(InTag);
 	}
 
 	SOLID_INLINE void EnableTrait(const UScriptStruct* ComponentStructType, const FFlecsEntityHandle& InTrait) const
 	{
-		if UNLIKELY_IF(!Has(ComponentStructType))
-		{
-			return;
-		}
-		
 		ObtainTraitHolderEntity(ComponentStructType).Enable(InTrait);
 	}
 
 	template <typename TComponent, typename TTrait>
 	SOLID_INLINE void DisableTrait() const
 	{
-		if UNLIKELY_IF(!Has<TComponent>())
-		{
-			return;
-		}
-		
 		ObtainTraitHolderEntity<TComponent>().Disable<TTrait>();
 	}
 
 	template <typename TComponent>
 	SOLID_INLINE void DisableTrait(const UScriptStruct* TraitStructType) const
 	{
-		if UNLIKELY_IF(!Has<TComponent>())
-		{
-			return;
-		}
-		
 		ObtainTraitHolderEntity<TComponent>().Disable(TraitStructType);
 	}
 
 	template <typename TComponent>
 	SOLID_INLINE void DisableTrait(const FGameplayTag& InTag) const
 	{
-		if UNLIKELY_IF(!Has<TComponent>())
-		{
-			return;
-		}
-		
 		ObtainTraitHolderEntity<TComponent>().Disable(InTag);
 	}
 
 	template <typename TComponent>
 	SOLID_INLINE void DisableTrait(const FFlecsEntityHandle& InTrait) const
 	{
-		if UNLIKELY_IF(!Has<TComponent>())
-		{
-			return;
-		}
-		
 		ObtainTraitHolderEntity<TComponent>().Disable(InTrait);
 	}
 
 	SOLID_INLINE void DisableTrait(const UScriptStruct* ComponentStructType, const UScriptStruct* TraitType) const
 	{
-		if UNLIKELY_IF(!Has(ComponentStructType))
-		{
-			return;
-		}
-		
 		ObtainTraitHolderEntity(ComponentStructType).Disable(TraitType);
 	}
 
 	SOLID_INLINE void DisableTrait(const UScriptStruct* ComponentStructType, const FGameplayTag& InTag) const
 	{
-		if UNLIKELY_IF(!Has(ComponentStructType))
-		{
-			return;
-		}
-		
 		ObtainTraitHolderEntity(ComponentStructType).Disable(InTag);
 	}
 
 	SOLID_INLINE void DisableTrait(const UScriptStruct* ComponentStructType, const FFlecsEntityHandle& InTrait) const
 	{
-		if UNLIKELY_IF(!Has(ComponentStructType))
-		{
-			return;
-		}
-		
 		ObtainTraitHolderEntity(ComponentStructType).Disable(InTrait);
 	}
 
@@ -1107,74 +1037,39 @@ public:
 	template <typename TComponent, typename TTrait>
 	SOLID_INLINE void ToggleTrait() const
 	{
-		if UNLIKELY_IF(!Has<TComponent>())
-		{
-			return;
-		}
-		
 		ObtainTraitHolderEntity<TComponent>().Toggle<TTrait>();
 	}
 
 	template <typename TComponent>
 	SOLID_INLINE void ToggleTrait(const UScriptStruct* TraitStructType) const
 	{
-		if UNLIKELY_IF(!Has<TComponent>())
-		{
-			return;
-		}
-		
 		ObtainTraitHolderEntity<TComponent>().Toggle(TraitStructType);
 	}
 
 	template <typename TComponent>
 	SOLID_INLINE void ToggleTrait(const FGameplayTag& InTag) const
 	{
-		if UNLIKELY_IF(!Has<TComponent>())
-		{
-			return;
-		}
-		
 		ObtainTraitHolderEntity<TComponent>().Toggle(InTag);
 	}
 
 	template <typename TComponent>
 	SOLID_INLINE void ToggleTrait(const FFlecsEntityHandle& InTrait) const
 	{
-		if UNLIKELY_IF(!Has<TComponent>())
-		{
-			return;
-		}
-		
 		ObtainTraitHolderEntity<TComponent>().Toggle(InTrait);
 	}
 
 	SOLID_INLINE void ToggleTrait(const UScriptStruct* ComponentStructType, const UScriptStruct* TraitType) const
 	{
-		if UNLIKELY_IF(!Has(ComponentStructType))
-		{
-			return;
-		}
-		
 		ObtainTraitHolderEntity(ComponentStructType).Toggle(TraitType);
 	}
 
 	SOLID_INLINE void ToggleTrait(const UScriptStruct* ComponentStructType, const FGameplayTag& InTag) const
 	{
-		if UNLIKELY_IF(!Has(ComponentStructType))
-		{
-			return;
-		}
-		
 		ObtainTraitHolderEntity(ComponentStructType).Toggle(InTag);
 	}
 
 	SOLID_INLINE void ToggleTrait(const UScriptStruct* ComponentStructType, const FFlecsEntityHandle& InTrait) const
 	{
-		if UNLIKELY_IF(!Has(ComponentStructType))
-		{
-			return;
-		}
-		
 		ObtainTraitHolderEntity(ComponentStructType).Toggle(InTrait);
 	}
 
@@ -1612,7 +1507,7 @@ struct TStructOpsTypeTraits<FFlecsEntityHandle> : public TStructOpsTypeTraitsBas
 	
 }; // struct TStructOpsTypeTraits<FFlecsEntityHandle>
 
-SOLID_INLINE bool IsValid(const FFlecsEntityHandle& Test)
+FORCEINLINE bool IsValid(const FFlecsEntityHandle& Test)
 {
 	return Test.IsValid();
 }
