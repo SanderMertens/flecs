@@ -10,7 +10,7 @@
 #include "UObject/Object.h"
 #include "FlecsTickerModule.generated.h"
 
-UCLASS(Blueprintable, BlueprintType, EditInlineNew)
+UCLASS(BlueprintType)
 class UNREALFLECS_API UFlecsTickerModule final : public UFlecsModuleObject, public IFlecsModuleProgressInterface
 {
 	GENERATED_BODY()

@@ -5,7 +5,6 @@
 #include "CoreMinimal.h"
 #include "InstancedStruct.h"
 #include "Entities/FlecsEntityHandle.h"
-#include "Properties/FlecsComponentProperties.h"
 #include "FlecsEntityRecord.generated.h"
 
 UENUM(BlueprintType)
@@ -14,7 +13,159 @@ enum class EFlecsComponentNodeType : uint8
 	ScriptStruct = 0,
 	EntityHandle = 1,
 	FGameplayTag = 2,
+	Pair = 3
 }; // enum class EFlecsComponentNodeType
+
+UENUM(BlueprintType)
+enum class EFlecsPairNodeType : uint8
+{
+	ScriptStruct = 0,
+	EntityHandle = 1,
+	FGameplayTag = 2
+}; // enum class EFlecsPairNodeType
+
+USTRUCT(BlueprintType)
+struct UNREALFLECS_API FFlecsPairSlot
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Component Tree")
+	EFlecsPairNodeType NodeType = EFlecsPairNodeType::ScriptStruct;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Component Tree",
+		meta = (EditCondition = "NodeType == EFlecsPairNodeType::ScriptStruct", EditConditionHides))
+	FInstancedStruct ScriptStruct;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Component Tree",
+		meta = (EditCondition = "NodeType == EFlecsPairNodeType::EntityHandle", EditConditionHides))
+	FFlecsEntityHandle EntityHandle;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Component Tree",
+		meta = (EditCondition = "NodeType == EFlecsPairNodeType::FGameplayTag", EditConditionHides))
+	FGameplayTag GameplayTag;
+
+	FORCEINLINE NO_DISCARD bool operator==(const FFlecsPairSlot& Other) const
+	{
+		switch (NodeType)
+		{
+		case EFlecsPairNodeType::ScriptStruct:
+			return NodeType == Other.NodeType && ScriptStruct == Other.ScriptStruct;
+		case EFlecsPairNodeType::EntityHandle:
+			return NodeType == Other.NodeType && EntityHandle == Other.EntityHandle;
+		case EFlecsPairNodeType::FGameplayTag:
+			return NodeType == Other.NodeType && GameplayTag == Other.GameplayTag;
+		default: UNLIKELY_ATTRIBUTE
+			solid_checkf(false, TEXT("Invalid NodeType"));
+			return false;
+		}
+	}
+
+	FORCEINLINE NO_DISCARD bool operator!=(const FFlecsPairSlot& Other) const
+	{
+		return !(*this == Other);
+	}
+	
+}; // struct FFlecsPairSlot
+
+USTRUCT(BlueprintType)
+struct UNREALFLECS_API FFlecsPair
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Component Tree")
+	FFlecsPairSlot First;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Component Tree")
+	FFlecsPairSlot Second;
+
+	FORCEINLINE NO_DISCARD bool operator==(const FFlecsPair& Other) const
+	{
+		return First == Other.First && Second == Other.Second;
+	}
+
+	FORCEINLINE NO_DISCARD bool operator!=(const FFlecsPair& Other) const
+	{
+		return !(*this == Other);
+	}
+
+	FORCEINLINE void AddToEntity(const FFlecsEntityHandle& InEntityHandle) const
+	{
+		FFlecsEntityHandle InFirstScriptStructEntity;
+		switch (First.NodeType)
+		{
+		case EFlecsPairNodeType::ScriptStruct:
+			switch (Second.NodeType)
+			{
+			case EFlecsPairNodeType::ScriptStruct:
+				InFirstScriptStructEntity
+					= InEntityHandle.ObtainComponentTypeStruct(First.ScriptStruct.GetScriptStruct());
+				
+				if (InFirstScriptStructEntity.Has(flecs::PairIsTag))
+				{
+					InEntityHandle.SetPairSecond(First.ScriptStruct.GetScriptStruct(),
+						Second.ScriptStruct.GetScriptStruct(), Second.ScriptStruct.GetMemory());
+				}
+				else
+				{
+					InEntityHandle.SetPair(First.ScriptStruct.GetScriptStruct(),
+						First.ScriptStruct.GetMemory(), Second.ScriptStruct.GetScriptStruct());
+				}
+				
+				break;
+			case EFlecsPairNodeType::EntityHandle:
+				InEntityHandle.SetPair(First.ScriptStruct.GetScriptStruct(), First.ScriptStruct.GetMemory(), Second.EntityHandle);
+				break;
+			case EFlecsPairNodeType::FGameplayTag:
+				InEntityHandle.SetPair(First.ScriptStruct.GetScriptStruct(), First.ScriptStruct.GetMemory(), Second.GameplayTag);
+				break;
+			default: UNLIKELY_ATTRIBUTE
+				solid_checkf(false, TEXT("Invalid Second NodeType"));
+				break;
+			}
+			break;
+		case EFlecsPairNodeType::EntityHandle:
+			switch (Second.NodeType)
+			{
+			case EFlecsPairNodeType::ScriptStruct:
+				InEntityHandle.SetPairSecond(First.EntityHandle,
+					Second.ScriptStruct.GetScriptStruct(), Second.ScriptStruct.GetMemory());
+				break;
+			case EFlecsPairNodeType::EntityHandle:
+				InEntityHandle.AddPair(First.EntityHandle, Second.EntityHandle);
+				break;
+			case EFlecsPairNodeType::FGameplayTag:
+				InEntityHandle.AddPair(First.EntityHandle, Second.GameplayTag);
+				break;
+			default: UNLIKELY_ATTRIBUTE
+				solid_checkf(false, TEXT("Invalid Second NodeType"));
+				break;
+			}
+			break;
+		case EFlecsPairNodeType::FGameplayTag:
+			switch (Second.NodeType)
+			{
+			case EFlecsPairNodeType::ScriptStruct:
+				InEntityHandle.SetPairSecond(First.GameplayTag,
+					Second.ScriptStruct.GetScriptStruct(), Second.ScriptStruct.GetMemory());
+				break;
+			case EFlecsPairNodeType::EntityHandle:
+				InEntityHandle.AddPair(First.GameplayTag, Second.EntityHandle);
+				break;
+			case EFlecsPairNodeType::FGameplayTag:
+				InEntityHandle.AddPair(First.GameplayTag, Second.GameplayTag);
+				break;
+			default: UNLIKELY_ATTRIBUTE
+				solid_checkf(false, TEXT("Invalid Second NodeType"));
+				break;
+			}
+			break;
+		default: UNLIKELY_ATTRIBUTE
+			solid_checkf(false, TEXT("Invalid First NodeType"));
+			break;
+		}
+	}
+	
+}; // struct FFlecsPair
 
 USTRUCT(BlueprintType)
 struct UNREALFLECS_API FFlecsTraitTypeInfo final
@@ -36,10 +187,26 @@ struct UNREALFLECS_API FFlecsTraitTypeInfo final
 		meta = (EditCondition = "NodeType == EFlecsComponentNodeType::FGameplayTag", EditConditionHides))
 	FGameplayTag GameplayTag;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Component Tree",
+		meta = (EditCondition = "NodeType == EFlecsComponentNodeType::Pair", EditConditionHides))
+	FFlecsPair Pair;
+	
 	FORCEINLINE NO_DISCARD bool operator==(const FFlecsTraitTypeInfo& Other) const
 	{
-		return NodeType == Other.NodeType && ScriptStruct == Other.ScriptStruct
-			&& EntityHandle == Other.EntityHandle && GameplayTag == Other.GameplayTag;
+		switch (NodeType)
+		{
+		case EFlecsComponentNodeType::ScriptStruct:
+			return NodeType == Other.NodeType && ScriptStruct == Other.ScriptStruct;
+		case EFlecsComponentNodeType::EntityHandle:
+			return NodeType == Other.NodeType && EntityHandle == Other.EntityHandle;
+		case EFlecsComponentNodeType::FGameplayTag:
+			return NodeType == Other.NodeType && GameplayTag == Other.GameplayTag;
+		case EFlecsComponentNodeType::Pair:
+			return NodeType == Other.NodeType && Pair == Other.Pair;
+		default: UNLIKELY_ATTRIBUTE
+			solid_checkf(false, TEXT("Invalid NodeType"));
+			return false;
+		}
 	}
 
 	FORCEINLINE NO_DISCARD bool operator!=(const FFlecsTraitTypeInfo& Other) const
@@ -70,14 +237,27 @@ struct UNREALFLECS_API FFlecsComponentTypeInfo final
 	FGameplayTag GameplayTag;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Component Tree",
+		meta = (EditCondition = "NodeType == EFlecsComponentNodeType::Pair", EditConditionHides))
+	FFlecsPair Pair;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Component Tree",
 		meta = (EditCondition = "NodeType == EFlecsComponentNodeType::ScriptStruct", EditConditionHides))
 	TArray<FFlecsTraitTypeInfo> Traits;
 
 	FORCEINLINE NO_DISCARD bool operator==(const FFlecsComponentTypeInfo& Other) const
 	{
-		return NodeType == Other.NodeType && ScriptStruct == Other.ScriptStruct
-			&& EntityHandle == Other.EntityHandle && GameplayTag == Other.GameplayTag
-			&& Traits == Other.Traits;
+		switch (NodeType)
+		{
+		case EFlecsComponentNodeType::ScriptStruct:
+			return NodeType == Other.NodeType && ScriptStruct == Other.ScriptStruct && Traits == Other.Traits;
+		case EFlecsComponentNodeType::EntityHandle:
+			return NodeType == Other.NodeType && EntityHandle == Other.EntityHandle;
+		case EFlecsComponentNodeType::FGameplayTag:
+			return NodeType == Other.NodeType && GameplayTag == Other.GameplayTag;
+		default: UNLIKELY_ATTRIBUTE
+			solid_checkf(false, TEXT("Invalid NodeType"));
+			return false;
+		}
 	}
 
 	FORCEINLINE NO_DISCARD bool operator!=(const FFlecsComponentTypeInfo& Other) const
@@ -127,7 +307,7 @@ struct UNREALFLECS_API FFlecsEntityRecord
 			InEntityHandle.SetName(Name);
 		}
 
-		for (const auto& [NodeType, ScriptStruct, EntityHandle, GameplayTag, Traits] : Components)
+		for (const auto& [NodeType, ScriptStruct, EntityHandle, GameplayTag, Pair, Traits] : Components)
 		{
 			switch (NodeType)
 			{
@@ -135,7 +315,7 @@ struct UNREALFLECS_API FFlecsEntityRecord
 				
 				InEntityHandle.Set(ScriptStruct);
 
-				for (const auto& [TraitNodeType, TraitScriptStruct, TraitEntityHandle, TraitGameplayTag] : Traits)
+				for (const auto& [TraitNodeType, TraitScriptStruct, TraitEntityHandle, TraitGameplayTag, TraitPair] : Traits)
 				{
 					switch (TraitNodeType)
 					{
@@ -147,6 +327,9 @@ struct UNREALFLECS_API FFlecsEntityRecord
 						break;
 					case EFlecsComponentNodeType::FGameplayTag:
 						InEntityHandle.AddTrait(ScriptStruct.GetScriptStruct(), TraitGameplayTag);
+						break;
+					case EFlecsComponentNodeType::Pair:
+						TraitPair.AddToEntity(InEntityHandle);
 						break;
 					default: UNLIKELY_ATTRIBUTE
 						solid_checkf(false, TEXT("Invalid TraitNodeType"));
@@ -160,6 +343,9 @@ struct UNREALFLECS_API FFlecsEntityRecord
 				break;
 			case EFlecsComponentNodeType::FGameplayTag:
 				InEntityHandle.Add(GameplayTag);
+				break;
+			case EFlecsComponentNodeType::Pair:
+				Pair.AddToEntity(InEntityHandle);
 				break;
 			default: UNLIKELY_ATTRIBUTE
 				solid_checkf(false, TEXT("Invalid NodeType"));
@@ -177,5 +363,3 @@ struct UNREALFLECS_API FFlecsEntityRecord
 	}
 
 }; // struct FFlecsEntityRecord
-
-REGISTER_FLECS_COMPONENT_PROPERTIES(FFlecsEntityRecord, { flecs::Sparse }, {} );

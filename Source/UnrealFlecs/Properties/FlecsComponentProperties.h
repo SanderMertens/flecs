@@ -94,7 +94,7 @@ public:
 	FOnComponentPropertiesRegistered OnComponentPropertiesRegistered;
 }; // struct FFlecsComponentPropertiesRegistry
 
-#define REGISTER_FLECS_COMPONENT_PROPERTIES(ComponentType, EntitiesArray, ComponentPropertyStructsArray) \
+#define REGISTER_FLECS_PROPERTIES(ComponentType, EntitiesArray, ComponentPropertyStructsArray) \
 	namespace \
 	{ \
 		struct FAutoRegister##ComponentType \
@@ -108,3 +108,9 @@ public:
 		}; \
 		static FAutoRegister##ComponentType AutoRegister##ComponentType##_Instance; \
 	}
+
+#define REGISTER_COMPONENT_TAG_PROPERTIES(ComponentType, ...) \
+	REGISTER_FLECS_PROPERTIES(ComponentType, { __VA_ARGS__ }, {})
+
+#define REGISTER_COMPONENT_TRAIT_PROPERTIES(ComponentType, ...) \
+	REGISTER_FLECS_PROPERTIES(ComponentType, {}, { __VA_ARGS__ })

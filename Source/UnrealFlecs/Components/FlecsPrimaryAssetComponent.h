@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "SolidMacros/Macros.h"
+#include "Properties/FlecsComponentProperties.h"
 #include "FlecsPrimaryAssetComponent.generated.h"
 
 USTRUCT()

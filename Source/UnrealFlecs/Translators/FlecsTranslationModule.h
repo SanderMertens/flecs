@@ -3,16 +3,20 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Modules/FlecsModuleInterface.h"
+#include "Modules/FlecsModuleObject.h"
 #include "FlecsTranslationModule.generated.h"
 
-UCLASS(BlueprintType, EditInlineNew, DefaultToInstanced,
-	ClassGroup = (Flecs), meta = (DisplayName = "Flecs Translation Module"))
-class UNREALFLECS_API UFlecsTranslationModule final : public UObject, public IFlecsModuleInterface
+UCLASS(BlueprintType, meta = (DisplayName = "Flecs Translation Module"))
+class UNREALFLECS_API UFlecsTranslationModule final : public UFlecsModuleObject
 {
 	GENERATED_BODY()
 
 public:
+	FORCEINLINE virtual FString GetModuleName_Implementation() const override
+	{
+		return TEXT("Flecs Translation Module");
+	}
+	
 	virtual void InitializeModule(UFlecsWorld* InWorld, const FFlecsEntityHandle& InModuleEntity) override;
 	virtual void DeinitializeModule(UFlecsWorld* InWorld) override;;
 

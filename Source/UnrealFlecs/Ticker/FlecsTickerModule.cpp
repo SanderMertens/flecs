@@ -20,12 +20,10 @@ DECLARE_DWORD_ACCUMULATOR_STAT(TEXT("FlecsTickerModule::ProgressModule::RunPipel
 
 int __forceinline flecs_entity_compare(
 	ecs_entity_t e1, 
-	const void *ptr1, 
+	MAYBE_UNUSED const void *ptr1, 
 	ecs_entity_t e2, 
-	const void *ptr2) 
+	MAYBE_UNUSED const void *ptr2) 
 {
-	(void)ptr1;
-	(void)ptr2;
 	return (e1 > e2) - (e1 < e2);
 }
 
@@ -53,8 +51,8 @@ void UFlecsTickerModule::InitializeModule(UFlecsWorld* InWorld, const FFlecsEnti
 		.with<flecs::SystemPriority>()
 		.without(FlecsFixedTick)
 		.order_by<flecs::SystemPriority>(
-			[](MAYBE_UNUSED flecs::entity_t InEntityA, const flecs::SystemPriority* InPtrA,
-				MAYBE_UNUSED flecs::entity_t InEntityB, const flecs::SystemPriority* InPtrB) -> int
+			[](flecs::entity_t InEntityA, const flecs::SystemPriority* InPtrA,
+				flecs::entity_t InEntityB, const flecs::SystemPriority* InPtrB) -> int
 		{
 			if (InPtrA->value == InPtrB->value) {
 				return flecs_entity_compare(InEntityA, InPtrA, InEntityB, InPtrB);
@@ -76,8 +74,8 @@ void UFlecsTickerModule::InitializeModule(UFlecsWorld* InWorld, const FFlecsEnti
 		.without(flecs::Disabled).up(flecs::ChildOf)
 		.with<flecs::SystemPriority>()
 		.order_by<flecs::SystemPriority>(
-			[](MAYBE_UNUSED flecs::entity_t InEntityA, const flecs::SystemPriority* InPtrA,
-				MAYBE_UNUSED flecs::entity_t InEntityB, const flecs::SystemPriority* InPtrB) -> int
+			[](flecs::entity_t InEntityA, const flecs::SystemPriority* InPtrA,
+				flecs::entity_t InEntityB, const flecs::SystemPriority* InPtrB) -> int
 		{
 			if (InPtrA->value == InPtrB->value) {
 				return flecs_entity_compare(InEntityA, InPtrA, InEntityB, InPtrB);

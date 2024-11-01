@@ -23,6 +23,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Component Properties")
 	TArray<FInstancedStruct> ComponentPropertyStructs;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Component Properties", AdvancedDisplay)
+	bool bResetExistingProperties = false;
+
 	FORCEINLINE virtual FPrimaryAssetId GetPrimaryAssetId() const override final
 	{
 		return FPrimaryAssetId("FlecsComponentProperties", GetFName());

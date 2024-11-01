@@ -19,4 +19,4 @@ struct FFlecsTypeMapComponent final
 	mutable robin_hood::unordered_flat_map<FFlecsScriptClassComponent, FFlecsEntityHandle> ScriptClassMap;
 }; // struct FFlecsTypeMapComponent
 
-REGISTER_FLECS_COMPONENT_PROPERTIES(FFlecsTypeMapComponent, { flecs::Sparse }, {});
+REGISTER_FLECS_PROPERTIES(FFlecsTypeMapComponent, { flecs::Sparse }, {});

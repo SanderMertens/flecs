@@ -30,8 +30,13 @@ public:
 		return EntityHandle;
 	}
 
-	UPROPERTY()
+	UFUNCTION(BlueprintCallable, Category = "Flecs | Entity")
+	FORCEINLINE void SetEntityHandle(const FFlecsEntityHandle& InEntityHandle);
+
+	UPROPERTY(Replicated)
 	FFlecsEntityHandle EntityHandle;
+
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	UPROPERTY(EditAnywhere, Category = "Flecs | Entity")
 	FFlecsEntityRecord EntityRecord;

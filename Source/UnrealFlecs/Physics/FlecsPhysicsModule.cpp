@@ -63,6 +63,7 @@ void UFlecsPhysicsModule::DeinitializeModule(UFlecsWorld* InWorld)
 void UFlecsPhysicsModule::ResimulationHandlers()
 {
 	const FPhysScene* Scene = GetFlecsWorld()->GetWorld()->GetPhysicsScene();
+	solid_check(Scene);
 	
 	IConsoleVariable* ResimConsoleVariable =
 			IConsoleManager::Get().FindConsoleVariable(TEXT("p.Resim.AllowRewindToResimulatedFrames"));

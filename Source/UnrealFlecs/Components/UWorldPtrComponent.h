@@ -66,5 +66,5 @@ public:
 	
 }; // struct FUWorldPtrComponent
 
-REGISTER_FLECS_COMPONENT_PROPERTIES(FUWorldPtrComponent,
+REGISTER_FLECS_PROPERTIES(FUWorldPtrComponent,
 	{ flecs::Sparse }, {} )

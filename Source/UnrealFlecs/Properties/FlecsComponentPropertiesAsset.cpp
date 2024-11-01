@@ -18,7 +18,7 @@ void UFlecsComponentPropertiesAsset::PostLoad()
 
 	FFlecsComponentPropertiesRegistry::Get()
 		.RegisterComponentProperties(StringCast<ANSICHAR>(*ComponentType->GetName()).Get(),
-			ComponentPropertiesEntities, ComponentPropertyStructs, false);
+			ComponentPropertiesEntities, ComponentPropertyStructs, bResetExistingProperties);
 }
 
 void UFlecsComponentPropertiesAsset::BeginDestroy()

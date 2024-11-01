@@ -29,7 +29,7 @@ public:
 	FORCEINLINE FFlecsSystem(const FFlecsEntityHandle& InEntity)
 	{
 		solid_checkf(InEntity.IsValid(), TEXT("Entity is invalid!"));
-		System = InEntity->world().system(InEntity.GetEntity());
+		System = InEntity.GetEntity().world().system(InEntity.GetEntity());
 	}
 
 	template <typename ...TComponents>
@@ -53,7 +53,7 @@ public:
 	FORCEINLINE FFlecsSystem& operator=(const FFlecsEntityHandle& InEntity)
 	{
 		solid_checkf(InEntity.IsValid(), TEXT("Entity is invalid!"));
-		System = InEntity->world().system(InEntity.GetEntity());
+		System = InEntity.GetEntity().world().system(InEntity.GetEntity());
 		return *this;
 	}
 

@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Entities/FlecsEntityRecord.h"
+#include "Properties/FlecsComponentProperties.h"
 #include "FlecsPrefabComponent.generated.h"
 
 USTRUCT(BlueprintType)
@@ -14,10 +15,8 @@ struct FFlecsPrefabComponent final
 public:
 	FORCEINLINE FFlecsPrefabComponent() = default;
 	
-	FORCEINLINE FFlecsPrefabComponent(const FFlecsEntityRecord& InEntityRecord,
-		const FFlecsEntityHandle& InPrefabObserverEntity)
+	FORCEINLINE FFlecsPrefabComponent(const FFlecsEntityRecord& InEntityRecord)
 		: EntityRecord(InEntityRecord)
-		, PrefabObserverEntity(InPrefabObserverEntity)
 	{
 	}
 
@@ -87,16 +86,10 @@ public:
 
 	FORCEINLINE operator FFlecsEntityRecord&() { return EntityRecord; }
 	FORCEINLINE operator const FFlecsEntityRecord&() const { return EntityRecord; }
-
-	FORCEINLINE NO_DISCARD FFlecsEntityHandle GetObserverEntity() const
-	{
-		return PrefabObserverEntity;
-	}
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs")
 	FFlecsEntityRecord EntityRecord;
-
-	UPROPERTY()
-	FFlecsEntityHandle PrefabObserverEntity;
 	
 }; // struct FFlecsPrefabComponent
+
+REGISTER_COMPONENT_TAG_PROPERTIES(FFlecsPrefabComponent, ecs_pair(flecs::OnInstantiate, flecs::DontInherit))

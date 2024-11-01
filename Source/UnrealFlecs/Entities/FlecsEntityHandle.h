@@ -10,7 +10,6 @@
 #include "FlecsArchetype.h"
 #include "GameplayTagContainer.h"
 #include "InstancedStruct.h"
-#include "Logs/FlecsCategories.h"
 #include "SolidMacros/Macros.h"
 #include "FlecsEntityHandle.generated.h"
 
@@ -33,19 +32,37 @@ struct alignas(8) UNREALFLECS_API FFlecsEntityHandle
 
 public:
 	FFlecsEntityHandle();
-	SOLID_INLINE FFlecsEntityHandle(const flecs::entity& InEntity) : Entity(InEntity) {}
-
-	SOLID_INLINE FFlecsEntityHandle(const flecs::entity_t& InEntity) : Entity(InEntity) 
+	SOLID_INLINE FFlecsEntityHandle(const flecs::entity& InEntity)
 	{
-		FFlecsEntityHandle();
+		EntityId = InEntity;
+		World = InEntity.world();
 	}
-	
-	SOLID_INLINE NO_DISCARD flecs::entity GetEntity() const { return Entity; }
 
-	SOLID_INLINE void SetEntity(const flecs::entity& InEntity) { Entity = InEntity; }
-	SOLID_INLINE void SetEntity(const flecs::entity_t& InEntity)
+	SOLID_INLINE FFlecsEntityHandle(const flecs::entity_t InEntity)
+	{
+		EntityId = InEntity;
+	}
+
+	SOLID_INLINE FFlecsEntityHandle(flecs::world_t* InWorld, const flecs::entity_t InEntity);
+	
+	SOLID_INLINE NO_DISCARD flecs::entity GetEntity() const
+	{
+		// if UNLIKELY_IF(!World)
+		// {
+		// 	World = ObtainDefaultFlecsWorld();
+		// }
+		
+		return flecs::entity(World, EntityId);
+	}
+
+	SOLID_INLINE void SetEntity(const flecs::entity& InEntity)
 	{
 		*this = FFlecsEntityHandle(InEntity);
+	}
+	
+	SOLID_INLINE void SetEntity(const flecs::entity_t InEntity)
+	{
+		EntityId = InEntity;
 	}
 	
 	SOLID_INLINE operator flecs::entity() const { return GetEntity(); }
@@ -345,11 +362,6 @@ public:
 
 	SOLID_INLINE void SetDocDetails(const FString& InDocDetails) const { GetEntity().set_doc_detail(StringCast<char>(*InDocDetails).Get()); }
 	SOLID_INLINE NO_DISCARD FString GetDocDetails() const { return FString(GetEntity().doc_detail()); }
-
-	SOLID_INLINE void SetPair(const FFlecsEntityHandle& InRelation, const FFlecsEntityHandle& InTarget) const
-	{
-		GetEntity().set_second(InRelation, InTarget);
-	}
 	
 	SOLID_INLINE NO_DISCARD FFlecsEntityHandle GetParent() const
 	{
@@ -468,9 +480,11 @@ public:
 	{
 		return GetEntity() != Other;
 	}
-
-	SOLID_INLINE flecs::entity* operator->() { return &Entity; }
-	SOLID_INLINE const flecs::entity* operator->() const { return &Entity; }
+	
+	SOLID_INLINE flecs::entity operator->() const
+	{
+		return GetEntity();
+	}
 
 	SOLID_INLINE NO_DISCARD FString ToString() const
 	{
@@ -1164,6 +1178,234 @@ public:
 		ObtainTraitHolderEntity(ComponentStructType).Toggle(InTrait);
 	}
 
+	template <typename TFirst, typename TSecond>
+	SOLID_INLINE void AddPair() const
+	{
+		GetEntity().add<TFirst, TSecond>();
+	}
+
+	template <typename TFirst>
+	SOLID_INLINE void AddPair(const FFlecsEntityHandle& InSecond) const
+	{
+		GetEntity().add<TFirst>(InSecond);
+	}
+
+	template <typename TFirst>
+	SOLID_INLINE void AddPair(const UScriptStruct* InSecond) const
+	{
+		GetEntity().add<TFirst>(ObtainComponentTypeStruct(InSecond));
+	}
+
+	template <typename TFirst>
+	SOLID_INLINE void AddPair(const FGameplayTag& InSecond) const
+	{
+		GetEntity().add<TFirst>(GetTagEntity(InSecond));
+	}
+
+	SOLID_INLINE void AddPair(const UScriptStruct* InFirst, const UScriptStruct* InSecond) const
+	{
+		GetEntity().add(ObtainComponentTypeStruct(InFirst),
+			ObtainComponentTypeStruct(InSecond));
+	}
+
+	SOLID_INLINE void AddPair(const UScriptStruct* InFirst, const FGameplayTag& InSecond) const
+	{
+		GetEntity().add(ObtainComponentTypeStruct(InFirst),
+			GetTagEntity(InSecond));
+	}
+
+	SOLID_INLINE void AddPair(const UScriptStruct* InFirst, const FFlecsEntityHandle& InSecond) const
+	{
+		GetEntity().add(ObtainComponentTypeStruct(InFirst), InSecond);
+	}
+
+	SOLID_INLINE void AddPair(const FGameplayTag& InFirst, const UScriptStruct* InSecond) const
+	{
+		GetEntity().add(GetTagEntity(InFirst),
+			ObtainComponentTypeStruct(InSecond));
+	}
+
+	SOLID_INLINE void AddPair(const FGameplayTag& InFirst, const FGameplayTag& InSecond) const
+	{
+		GetEntity().add(GetTagEntity(InFirst), GetTagEntity(InSecond));
+	}
+
+	SOLID_INLINE void AddPair(const FGameplayTag& InFirst, const FFlecsEntityHandle& InSecond) const
+	{
+		GetEntity().add(GetTagEntity(InFirst), InSecond);
+	}
+
+	SOLID_INLINE void AddPair(const FFlecsEntityHandle& InFirst, const UScriptStruct* InSecond) const
+	{
+		GetEntity().add(InFirst, ObtainComponentTypeStruct(InSecond));
+	}
+
+	SOLID_INLINE void AddPair(const FFlecsEntityHandle& InFirst, const FGameplayTag& InSecond) const
+	{
+		GetEntity().add(InFirst, GetTagEntity(InSecond));
+	}
+
+	SOLID_INLINE void AddPair(const FFlecsEntityHandle& InFirst, const FFlecsEntityHandle& InSecond) const
+	{
+		GetEntity().add(InFirst, InSecond);
+	}
+
+	SOLID_INLINE void RemovePair(const UScriptStruct* InFirst, const UScriptStruct* InSecond) const
+	{
+		GetEntity().remove(ObtainComponentTypeStruct(InFirst),
+			ObtainComponentTypeStruct(InSecond));
+	}
+
+	SOLID_INLINE void RemovePair(const UScriptStruct* InFirst, const FGameplayTag& InSecond) const
+	{
+		GetEntity().remove(ObtainComponentTypeStruct(InFirst),
+			GetTagEntity(InSecond));
+	}
+
+	SOLID_INLINE void RemovePair(const UScriptStruct* InFirst, const FFlecsEntityHandle& InSecond) const
+	{
+		GetEntity().remove(ObtainComponentTypeStruct(InFirst), InSecond);
+	}
+
+	SOLID_INLINE void RemovePair(const FGameplayTag& InFirst, const UScriptStruct* InSecond) const
+	{
+		GetEntity().remove(GetTagEntity(InFirst),
+			ObtainComponentTypeStruct(InSecond));
+	}
+
+	SOLID_INLINE void RemovePair(const FGameplayTag& InFirst, const FGameplayTag& InSecond) const
+	{
+		GetEntity().remove(GetTagEntity(InFirst), GetTagEntity(InSecond));
+	}
+
+	SOLID_INLINE void RemovePair(const FGameplayTag& InFirst, const FFlecsEntityHandle& InSecond) const
+	{
+		GetEntity().remove(GetTagEntity(InFirst), InSecond);
+	}
+
+	SOLID_INLINE void RemovePair(const FFlecsEntityHandle& InFirst, const UScriptStruct* InSecond) const
+	{
+		GetEntity().remove(InFirst, ObtainComponentTypeStruct(InSecond));
+	}
+
+	SOLID_INLINE void RemovePair(const FFlecsEntityHandle& InFirst, const FGameplayTag& InSecond) const
+	{
+		GetEntity().remove(InFirst, GetTagEntity(InSecond));
+	}
+
+	SOLID_INLINE void RemovePair(const FFlecsEntityHandle& InFirst, const FFlecsEntityHandle& InSecond) const
+	{
+		GetEntity().remove(InFirst, InSecond);
+	}
+
+	SOLID_INLINE NO_DISCARD bool HasPair(const UScriptStruct* InFirst, const UScriptStruct* InSecond) const
+	{
+		return GetEntity().has(ObtainComponentTypeStruct(InFirst),
+			ObtainComponentTypeStruct(InSecond));
+	}
+
+	SOLID_INLINE NO_DISCARD bool HasPair(const UScriptStruct* InFirst, const FGameplayTag& InSecond) const
+	{
+		return GetEntity().has(ObtainComponentTypeStruct(InFirst),
+			GetTagEntity(InSecond));
+	}
+
+	SOLID_INLINE NO_DISCARD bool HasPair(const UScriptStruct* InFirst, const FFlecsEntityHandle& InSecond) const
+	{
+		return GetEntity().has(ObtainComponentTypeStruct(InFirst), InSecond);
+	}
+
+	SOLID_INLINE NO_DISCARD bool HasPair(const FGameplayTag& InFirst, const UScriptStruct* InSecond) const
+	{
+		return GetEntity().has(GetTagEntity(InFirst),
+			ObtainComponentTypeStruct(InSecond));
+	}
+
+	SOLID_INLINE NO_DISCARD bool HasPair(const FGameplayTag& InFirst, const FGameplayTag& InSecond) const
+	{
+		return GetEntity().has(GetTagEntity(InFirst), GetTagEntity(InSecond));
+	}
+
+	SOLID_INLINE NO_DISCARD bool HasPair(const FGameplayTag& InFirst, const FFlecsEntityHandle& InSecond) const
+	{
+		return GetEntity().has(GetTagEntity(InFirst), InSecond);
+	}
+
+	SOLID_INLINE NO_DISCARD bool HasPair(const FFlecsEntityHandle& InFirst, const UScriptStruct* InSecond) const
+	{
+		return GetEntity().has(InFirst, ObtainComponentTypeStruct(InSecond));
+	}
+
+	SOLID_INLINE NO_DISCARD bool HasPair(const FFlecsEntityHandle& InFirst, const FGameplayTag& InSecond) const
+	{
+		return GetEntity().has(InFirst, GetTagEntity(InSecond));
+	}
+
+	SOLID_INLINE NO_DISCARD bool HasPair(const FFlecsEntityHandle& InFirst, const FFlecsEntityHandle& InSecond) const
+	{
+		return GetEntity().has(InFirst, InSecond);
+	}
+
+	template <typename TFirst, typename TSecond, typename TActual = TSecond>
+	SOLID_INLINE void SetPair(const TActual& InValue) const
+	{
+		GetEntity().set<TFirst, TSecond>(InValue);
+	}
+
+	template <typename TFirst, typename TActual = TFirst>
+	SOLID_INLINE void SetPair(const FFlecsEntityHandle& InSecond, const TActual& InFirst) const
+	{
+		GetEntity().set<TFirst>(InSecond, InFirst);
+	}
+
+	template <typename TFirst, typename TActual = TFirst>
+	SOLID_INLINE void SetPair(const UScriptStruct* InSecond, const TActual& InFirst) const
+	{
+		GetEntity().set<TFirst>(ObtainComponentTypeStruct(InSecond), InFirst);
+	}
+
+	SOLID_INLINE void SetPair(const UScriptStruct* InFirst, const void* InValue, const UScriptStruct* InSecond) const
+	{
+		AddPair(InFirst, InSecond);
+		Set(InFirst, InValue);
+	}
+
+	SOLID_INLINE void SetPair(const UScriptStruct* InFirst, const void* InValue, const FGameplayTag& InSecond) const
+	{
+		AddPair(InFirst, InSecond);
+		Set(InFirst, InValue);
+	}
+
+	SOLID_INLINE void SetPair(const UScriptStruct* InFirst, const void* InValue, const FFlecsEntityHandle& InSecond) const
+	{
+		AddPair(InFirst, InSecond);
+		Set(InFirst, InValue);
+	}
+
+	SOLID_INLINE void SetPairSecond(const UScriptStruct* InFirst, const UScriptStruct* InSecond, const void* InValue) const
+	{
+		AddPair(InFirst, InSecond);
+		Set(InSecond, InValue);
+	}
+
+	SOLID_INLINE void SetPairSecond(const FFlecsEntityHandle& InFirst, const UScriptStruct* InSecond, const void* InValue) const
+	{
+		AddPair(InFirst, InSecond);
+		Set(InSecond, InValue);
+	}
+
+	SOLID_INLINE void SetPairSecond(const FGameplayTag& InFirst, const UScriptStruct* InSecond, const void* InValue) const
+	{
+		AddPair(InFirst, InSecond);
+		Set(InSecond, InValue);
+	}
+	
+	template <typename TFirst, typename TSecond>
+	SOLID_INLINE void ModifiedPair() const
+	{
+		GetEntity().modified<TFirst, TSecond>();
+	}
+	
 	template <typename TComponent>
 	SOLID_INLINE void Modified() const
 	{
@@ -1246,14 +1488,18 @@ public:
 		return FString(GetEntity().path(StringCast<char>(*InSeparator).Get(),
 			StringCast<char>(*InitialSeparator).Get()));
 	}
-	
-private:
-	flecs::entity Entity;
 
 	SOLID_INLINE NO_DISCARD FFlecsEntityHandle ObtainComponentTypeStruct(const UScriptStruct* StructType) const;
+	
+private:
+	UPROPERTY()
+	uint64 EntityId;
+
+	mutable flecs::world World;
+	
 	SOLID_INLINE NO_DISCARD FFlecsEntityHandle GetTagEntity(const FGameplayTag& InTag) const;
 
-	SOLID_INLINE NO_DISCARD flecs::world GetFlecsWorld_Internal() const { return GetEntity().world(); }
+	SOLID_INLINE NO_DISCARD flecs::world GetFlecsWorld_Internal() const { return World; }
 
 	template <typename TComponent>
 	SOLID_INLINE NO_DISCARD FFlecsEntityHandle ObtainTraitHolderEntity() const
@@ -1271,9 +1517,8 @@ private:
 				return TraitHolder;
 			}
 		}
-
-		const flecs::world World = GetFlecsWorld_Internal();
-		TraitHolder = World.entity();
+		
+		TraitHolder = GetFlecsWorld_Internal().entity();
 		TraitHolder.Add(flecs::Trait);
 		TraitHolder.SetParent(GetEntity());
 
@@ -1288,7 +1533,7 @@ private:
 		
 		FFlecsEntityHandle TraitHolder;
 
-		if LIKELY_IF(GetEntity().has(ObtainComponentTypeStruct(StructType), flecs::Wildcard))
+		if LIKELY_IF(HasPair(ObtainComponentTypeStruct(StructType), flecs::Wildcard))
 		{
 			TraitHolder = GetEntity().target_for(
 					flecs::ChildOf, ObtainComponentTypeStruct(StructType));
@@ -1299,17 +1544,20 @@ private:
 			}
 		}
 		
-		const flecs::world World = GetFlecsWorld_Internal();
-		TraitHolder = World.entity();
+		TraitHolder = GetFlecsWorld_Internal().entity();
 		TraitHolder.Add(flecs::Trait);
-		TraitHolder.SetParent(GetEntity(), true);
+		TraitHolder.SetParent(GetEntity());
 
-		GetEntity().add(ObtainComponentTypeStruct(StructType), TraitHolder);
+		AddPair(ObtainComponentTypeStruct(StructType), TraitHolder);
 		
 		return TraitHolder;
 	}
 
+	SOLID_INLINE flecs::world ObtainDefaultFlecsWorld() const;
+
 public:
+
+	SOLID_INLINE void PostScriptConstruct();
 
 	#if WITH_EDITORONLY_DATA
 
@@ -1317,6 +1565,37 @@ public:
 	FName DisplayName;
 
 	#endif // WITH_EDITORONLY_DATA
+
+	FORCEINLINE bool ImportTextItem(const TCHAR*& Buffer,
+		MAYBE_UNUSED int32 PortFlags, MAYBE_UNUSED UObject* Parent, FOutputDevice* ErrorText)
+	{
+		FString Token;
+		
+		if (!FParse::Token(Buffer, Token, true))
+		{
+			ErrorText->Logf(TEXT("FFlecsEntityHandle::ImportTextItem: Failed to parse token from input"));
+			return false;
+		}
+
+		if (Token.StartsWith(TEXT("EntityId=")))
+		{
+			const FString EntityIdString = Token.RightChop(9);
+			EntityId = FCString::Strtoui64(*EntityIdString, nullptr, 10);
+			return true;
+		}
+		else
+		{
+			ErrorText->Logf(TEXT("FFlecsEntityHandle::ImportTextItem: Invalid format"));
+			return false;
+		}
+	}
+
+	FORCEINLINE bool ExportTextItem(FString& ValueStr, const FFlecsEntityHandle& DefaultValue,
+		MAYBE_UNUSED UObject* Parent, MAYBE_UNUSED int32 PortFlags, MAYBE_UNUSED UObject* ExportRootScope) const
+	{
+		ValueStr += FString::Printf(TEXT("EntityId=%llu"), EntityId);
+		return true;
+	}
 	
 }; // struct FFlecsEntityHandle
 
@@ -1325,7 +1604,10 @@ struct TStructOpsTypeTraits<FFlecsEntityHandle> : public TStructOpsTypeTraitsBas
 {
 	enum
 	{
+		WithPostScriptConstruct = true,
 		WithNetSerializer = true,
+		WithImportTextItem = true,
+		WithExportTextItem = true,
 	}; // enum
 	
 }; // struct TStructOpsTypeTraits<FFlecsEntityHandle>

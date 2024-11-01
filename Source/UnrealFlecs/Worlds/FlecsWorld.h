@@ -8,7 +8,6 @@
 #include "CoreMinimal.h"
 #include "flecs.h"
 #include "AssetRegistry/AssetRegistryModule.h"
-#include "Collections/FlecsCollection.h"
 #include "Components/FFlecsActorComponentTag.h"
 #include "Components/FFlecsSceneComponentTag.h"
 #include "Components/FlecsActorTag.h"
@@ -35,7 +34,7 @@ DECLARE_CYCLE_STAT(TEXT("FlecsWorld::Progress"), STAT_FlecsWorldProgress, STATGR
 DECLARE_CYCLE_STAT(TEXT("FlecsWorld::Progress::ProgressModule"), STAT_FlecsWorldProgressModule, STATGROUP_FlecsWorld);
 
 UCLASS(BlueprintType)
-class UNREALFLECS_API UFlecsWorld final : public UObject
+class UNREALFLECS_API UFlecsWorld : public UObject
 {
 	GENERATED_BODY()
 
@@ -254,7 +253,18 @@ public:
 					StringCast<char>(*Data->Tag.ToString()).Get());
 				return Serializer->value(flecs::Entity, &TagEntity);
 			});
-		
+
+		World.component<FFlecsEntityHandle>()
+            .opaque(flecs::Entity)
+            .serialize([](const flecs::serializer* Serializer, const FFlecsEntityHandle* Data)
+            {
+                const flecs::entity_t Entity = Data->GetEntity();
+                return Serializer->value(flecs::Entity, &Entity);
+            })
+            .assign_entity([](FFlecsEntityHandle* Handle, ecs_world_t* World, ecs_entity_t Entity)
+            {
+                *Handle = FFlecsEntityHandle(World, Entity);
+            });
 	}
 
 	FORCEINLINE_DEBUGGABLE void InitializeSystems()
@@ -425,62 +435,6 @@ public:
 						break;
 					}
 				}
-			});
-
-		CreateObserver(TEXT("AddComponentCollectionObserver"))
-			.event(flecs::OnAdd)
-			.with("$collection").src(flecs::This)
-			.with(FlecsComponentCollection).src("$collection").filter()
-			.each([&](flecs::iter& Iter, size_t Index)
-			{
-				FFlecsEntityHandle EntityHandle = Iter.entity(Index);
-				const FFlecsEntityHandle CollectionEntity = Iter.get_var("$collection");
-
-				solid_checkf(CollectionEntity.IsValid(), TEXT("Collection entity is not valid"));
-
-				CollectionEntity.Iterate([&](const flecs::id InComponentId)
-				{
-					if (InComponentId == FlecsComponentCollection)
-					{
-						return;
-					}
-
-					#if WITH_EDITOR
-
-					if UNLIKELY_IF(EntityHandle.Has(InComponentId))
-					{
-						UN_LOGF(LogFlecsWorld, Warning,
-							"Component %s already added to entity %s",
-							*EntityHandle.GetSymbol(), *EntityHandle.GetName());
-						return;
-					}
-
-					#endif // WITH_EDITOR
-					
-					EntityHandle.Add(InComponentId);
-				});
-			});
-
-		CreateObserver(TEXT("RemoveComponentCollectionObserver"))
-			.event(flecs::OnRemove)
-			.with("$collection").src(flecs::This)
-			.with(FlecsComponentCollection).src("$collection").filter()
-			.each([&](flecs::iter& Iter, size_t Index)
-			{
-				FFlecsEntityHandle EntityHandle = Iter.entity(Index);
-				const FFlecsEntityHandle CollectionEntity = Iter.get_var("$collection");
-
-				solid_checkf(CollectionEntity.IsValid(), TEXT("Collection entity is not valid"));
-
-				CollectionEntity.Iterate([&](const flecs::id InComponentId)
-				{
-					if (InComponentId == FlecsComponentCollection)
-					{
-						return;
-					}
-					
-					EntityHandle.Remove(InComponentId);
-				});
 			});
 	}
 

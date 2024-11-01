@@ -35,22 +35,6 @@ public:
 	void Initialize();
 };
 
-/*#define DEFINE_DEFAULT_ENTITY_OPTION(EntityName) \
-		INLINE ECS_ENTITY_DECLARE(EntityName); \
-		namespace \
-		{                                                             \
-			struct FRegister##EntityName \
-			{										   \
-				FRegister##EntityName()					\
-				{										 \
-					FFlecsDefaultMetaEntity MetaEntity;                        \
-					MetaEntity.EntityRecord.Name = TEXT(#EntityName);          \
-					EntityName = FFlecsDefaultEntityEngine::Get().AddDefaultEntity(MetaEntity); \
-				}                                                               \
-			};                                                                  \
-			static FRegister##EntityName Register##EntityName;                 \
-		}           */
-
 #define DEFINE_DEFAULT_ENTITY_OPTION(EntityName) \
 	INLINE ECS_ENTITY_DECLARE(EntityName); \
 	namespace \

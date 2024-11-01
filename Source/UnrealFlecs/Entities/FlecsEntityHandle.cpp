@@ -10,9 +10,9 @@
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(FlecsEntityHandle)
 
-FFlecsEntityHandle::FFlecsEntityHandle()
+FFlecsEntityHandle::FFlecsEntityHandle() : EntityId(0)
 {
-    if (!GWorld  || !GWorld->IsGameWorld())
+    /*if (!GWorld  || !GWorld->IsGameWorld())
     {
         return;
     }
@@ -39,7 +39,12 @@ FFlecsEntityHandle::FFlecsEntityHandle()
                 FlecsWorldSubsystem->OnWorldCreated.Remove(OnWorldCreatedHandle);
             });
         }
-    }
+    }*/
+}
+
+FFlecsEntityHandle::FFlecsEntityHandle(flecs::world_t* InWorld, const flecs::entity_t InEntity)
+{
+    SetEntity(flecs::entity(InWorld, InEntity));
 }
 
 UFlecsWorld* FFlecsEntityHandle::GetFlecsWorld() const
@@ -113,5 +118,55 @@ FFlecsEntityHandle FFlecsEntityHandle::ObtainComponentTypeStruct(const UScriptSt
 FFlecsEntityHandle FFlecsEntityHandle::GetTagEntity(const FGameplayTag& InTag) const
 {
     return GetFlecsWorld()->GetTagEntity(InTag);
+}
+
+flecs::world FFlecsEntityHandle::ObtainDefaultFlecsWorld() const
+{
+    if (!GWorld  || !GWorld->IsGameWorld())
+    {
+        return flecs::world();
+    }
+
+    const UFlecsWorldSubsystem* FlecsWorldSubsystem = GWorld->GetSubsystem<UFlecsWorldSubsystem>();
+    solid_checkf(FlecsWorldSubsystem, TEXT("Flecs World Subsystem not found"));
+    
+    if LIKELY_IF(FlecsWorldSubsystem->HasValidFlecsWorld())
+    {
+        return FlecsWorldSubsystem->GetDefaultWorld()->World;
+    }
+
+    return flecs::world();
+}
+
+void FFlecsEntityHandle::PostScriptConstruct()
+{
+    if (!GWorld  || !GWorld->IsGameWorld())
+    {
+        return;
+    }
+
+    if (GetEntity().id() == 0)
+    {
+        return;
+    }
+    
+    if (GetEntity().world() == nullptr)
+    {
+        UFlecsWorldSubsystem* FlecsWorldSubsystem = GWorld->GetSubsystem<UFlecsWorldSubsystem>();
+        if LIKELY_IF(FlecsWorldSubsystem->HasValidFlecsWorld())
+        {
+            SetEntity(flecs::entity(FlecsWorldSubsystem->GetDefaultWorld()->World, GetEntity().id()));
+        }
+        else
+        {
+            FDelegateHandle OnWorldCreatedHandle = FlecsWorldSubsystem
+                ->OnWorldCreated.AddLambda([&](MAYBE_UNUSED const FString& Name, const UFlecsWorld* InFlecsWorld)
+            {
+                SetEntity(flecs::entity(InFlecsWorld->World, GetEntity().id()));
+
+                FlecsWorldSubsystem->OnWorldCreated.Remove(OnWorldCreatedHandle);
+            });
+        }
+    }
 }
 

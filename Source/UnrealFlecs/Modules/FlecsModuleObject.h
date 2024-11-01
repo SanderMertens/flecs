@@ -7,7 +7,7 @@
 #include "UObject/Object.h"
 #include "FlecsModuleObject.generated.h"
 
-UCLASS(Abstract, Blueprintable, BlueprintType, EditInlineNew, DefaultToInstanced)
+UCLASS(Abstract, Blueprintable, BlueprintType, EditInlineNew, DefaultToInstanced, ClassGroup = (Flecs))
 class UNREALFLECS_API UFlecsModuleObject : public UObject, public IFlecsModuleInterface
 {
 	GENERATED_BODY()

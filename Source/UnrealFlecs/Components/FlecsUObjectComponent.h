@@ -77,5 +77,5 @@ public:
 	
 }; // struct FFlecsUObjectComponent
 
-REGISTER_FLECS_COMPONENT_PROPERTIES(FFlecsUObjectComponent,
+REGISTER_FLECS_PROPERTIES(FFlecsUObjectComponent,
 	{ flecs::Sparse }, {})

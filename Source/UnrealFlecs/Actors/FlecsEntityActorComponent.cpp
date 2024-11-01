@@ -2,6 +2,8 @@
 
 #include "FlecsEntityActorComponent.h"
 #include "Logs/FlecsCategories.h"
+#include "Net/UnrealNetwork.h"
+#include "Net/Core/PushModel/PushModel.h"
 #include "Worlds/FlecsWorldSubsystem.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(FlecsEntityActorComponent)
@@ -59,6 +61,22 @@ void UFlecsEntityActorComponent::InitializeEntity()
 	}
 }
 
+void UFlecsEntityActorComponent::SetEntityHandle(const FFlecsEntityHandle& InEntityHandle)
+{
+	EntityHandle = InEntityHandle;
+	MARK_PROPERTY_DIRTY_FROM_NAME(UFlecsEntityActorComponent, EntityHandle, this);
+}
+
+void UFlecsEntityActorComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	FDoRepLifetimeParams Params;
+	Params.bIsPushBased = true;
+
+	DOREPLIFETIME_WITH_PARAMS_FAST(UFlecsEntityActorComponent, EntityHandle, Params);
+}
+
 #if WITH_EDITORONLY_DATA
 
 bool UFlecsEntityActorComponent::CanEditChange(const FProperty* InProperty) const
@@ -88,7 +106,10 @@ void UFlecsEntityActorComponent::OnWorldCreated(const FString& InWorldName, UFle
 void UFlecsEntityActorComponent::CreateActorEntity(UFlecsWorld* InWorld)
 {
 	EntityHandle = InWorld->CreateEntityWithRecord(EntityRecord);
-	EntityHandle.Add<FFlecsActorComponentTag>();
+	EntityHandle.Add<FFlecsActorTag>();
+	
 	UN_LOGF(LogFlecsEntity, Log, "Created Actor Entity: %s",
 		*EntityHandle.GetName());
+
+	MARK_PROPERTY_DIRTY_FROM_NAME(UFlecsEntityActorComponent, EntityHandle, this);
 }
