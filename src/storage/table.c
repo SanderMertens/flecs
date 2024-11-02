@@ -944,6 +944,7 @@ void flecs_table_fini_data(
         table->data.entities = NULL;
         table->data.size = 0;
     }
+
     table->data.count = 0;
 
     if (deactivate && count) {

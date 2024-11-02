@@ -260,6 +260,7 @@ void Eval_partial_assign_nontrivial_with(void);
 void Eval_partial_assign_with_large_array(void);
 void Eval_non_trivial_var_component(void);
 void Eval_non_trivial_var_with(void);
+void Eval_update_template_w_tag(void);
 
 // Testsuite 'Template'
 void Template_template_no_scope(void);
@@ -1645,6 +1646,10 @@ bake_test_case Eval_testcases[] = {
     {
         "non_trivial_var_with",
         Eval_non_trivial_var_with
+    },
+    {
+        "update_template_w_tag",
+        Eval_update_template_w_tag
     }
 };
 
@@ -3144,7 +3149,7 @@ static bake_test_suite suites[] = {
         "Eval",
         NULL,
         NULL,
-        251,
+        252,
         Eval_testcases
     },
     {

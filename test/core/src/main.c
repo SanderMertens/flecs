@@ -890,6 +890,7 @@ void OnDelete_add_on_delete_from_prefab(void);
 void OnDelete_add_on_delete_from_disabled(void);
 void OnDelete_delete_on_delete_from_prefab(void);
 void OnDelete_delete_on_delete_from_disabled(void);
+void OnDelete_delete_all_w_component_cycle(void);
 void OnDelete_remove_all_1(void);
 void OnDelete_remove_all_2(void);
 void OnDelete_remove_all_3(void);
@@ -5693,6 +5694,10 @@ bake_test_case OnDelete_testcases[] = {
     {
         "delete_on_delete_from_disabled",
         OnDelete_delete_on_delete_from_disabled
+    },
+    {
+        "delete_all_w_component_cycle",
+        OnDelete_delete_all_w_component_cycle
     },
     {
         "remove_all_1",
@@ -11237,7 +11242,7 @@ static bake_test_suite suites[] = {
         "OnDelete",
         NULL,
         NULL,
-        124,
+        125,
         OnDelete_testcases
     },
     {

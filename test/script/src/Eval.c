@@ -8239,3 +8239,39 @@ void Eval_non_trivial_var_with(void) {
     test_int(strings_copy_invoked, 2);
     test_int(strings_move_invoked, 0);
 }
+
+void Eval_update_template_w_tag(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Bar);
+
+    const char *expr =
+    HEAD "Foo {}"
+    LINE
+    LINE "template Bar {"
+    LINE "  Foo"
+    LINE "}"
+    LINE
+    LINE "Bar e()";
+
+    ecs_entity_t s = ecs_script(world, {
+        .entity = ecs_entity(world, { .name = "main" }),
+        .code = expr
+    });
+    test_assert(s != 0);
+
+    test_assert(ecs_script_update(world, s, 0, expr) == 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    ecs_entity_t bar = ecs_lookup(world, "Bar");
+    ecs_entity_t e = ecs_lookup(world, "e");
+
+    test_assert(foo != 0);
+    test_assert(bar != 0);
+    test_assert(e != 0);
+
+    test_assert(ecs_has_id(world, e, foo));
+    test_assert(ecs_has_id(world, e, bar));
+
+    ecs_fini(world);
+}
