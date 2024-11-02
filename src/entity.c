@@ -2790,6 +2790,8 @@ void flecs_on_delete(
             flecs_type_info_free(world, comps[i]);
         }
 
+        ecs_vec_clear(&world->store.deleted_components);
+
         ecs_log_pop_2();
     }
 }

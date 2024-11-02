@@ -7792,6 +7792,8 @@ void flecs_on_delete(
             flecs_type_info_free(world, comps[i]);
         }
 
+        ecs_vec_clear(&world->store.deleted_components);
+
         ecs_log_pop_2();
     }
 }
@@ -18352,6 +18354,11 @@ void flecs_fini_store(ecs_world_t *world) {
     ecs_assert(flecs_sparse_count(&world->store.observers) == 0, 
         ECS_INTERNAL_ERROR, NULL);
     flecs_sparse_fini(&world->store.observers);
+
+    ecs_assert(ecs_vec_count(&world->store.marked_ids) == 0, 
+        ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(ecs_vec_count(&world->store.deleted_components) == 0, 
+        ECS_INTERNAL_ERROR, NULL);
 
     ecs_allocator_t *a = &world->allocator;
     ecs_vec_fini_t(a, &world->store.records, ecs_table_record_t);
