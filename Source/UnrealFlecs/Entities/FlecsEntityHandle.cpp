@@ -10,38 +10,6 @@
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(FlecsEntityHandle)
 
-FFlecsEntityHandle::FFlecsEntityHandle() : EntityId(0)
-{
-    /*if (!GWorld  || !GWorld->IsGameWorld())
-    {
-        return;
-    }
-
-    if (GetEntity().id() == 0)
-    {
-        return;
-    }
-    
-    if (GetEntity().world() == nullptr)
-    {
-        UFlecsWorldSubsystem* FlecsWorldSubsystem = GWorld->GetSubsystem<UFlecsWorldSubsystem>();
-        if LIKELY_IF(FlecsWorldSubsystem->HasValidFlecsWorld())
-        {
-            SetEntity(flecs::entity(FlecsWorldSubsystem->GetDefaultWorld()->World, GetEntity().id()));
-        }
-        else
-        {
-            FDelegateHandle OnWorldCreatedHandle = FlecsWorldSubsystem
-                ->OnWorldCreated.AddLambda([&](MAYBE_UNUSED const FString& Name, const UFlecsWorld* InFlecsWorld)
-            {
-                SetEntity(flecs::entity(InFlecsWorld->World, GetEntity().id()));
-
-                FlecsWorldSubsystem->OnWorldCreated.Remove(OnWorldCreatedHandle);
-            });
-        }
-    }*/
-}
-
 FFlecsEntityHandle::FFlecsEntityHandle(flecs::world_t* InWorld, const flecs::entity_t InEntity)
 {
     SetEntity(flecs::entity(InWorld, InEntity));
@@ -160,7 +128,7 @@ void FFlecsEntityHandle::PostScriptConstruct()
         else
         {
             FDelegateHandle OnWorldCreatedHandle = FlecsWorldSubsystem
-                ->OnWorldCreated.AddLambda([&](MAYBE_UNUSED const FString& Name, const UFlecsWorld* InFlecsWorld)
+                ->OnWorldCreated.AddLambda([&](const UFlecsWorld* InFlecsWorld)
             {
                 SetEntity(flecs::entity(InFlecsWorld->World, GetEntity().id()));
 

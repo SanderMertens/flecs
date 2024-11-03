@@ -185,7 +185,7 @@ void flecs_assert_relation_unused(
         char *r_str = ecs_get_path(world, rel);
         char *p_str = ecs_get_path(world, property);
 
-        ecs_throw(ECS_ID_IN_USE, 
+        ecs_log(ECS_ID_IN_USE, 
             "cannot change property '%s' for relationship '%s': already in use",
             p_str, r_str);
         

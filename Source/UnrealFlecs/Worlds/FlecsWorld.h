@@ -46,7 +46,7 @@ public:
 		const FAssetRegistryModule* AssetRegistryModule
 			= FModuleManager::LoadModulePtr<FAssetRegistryModule>(TEXT("AssetRegistry"));
 
-		if (AssetRegistryModule)
+		if (AssetRegistryModule && AssetRegistryModule->IsValid())
 		{
 			IAssetRegistry& AssetRegistry = AssetRegistryModule->Get();
 			AssetRegistry.OnAssetAdded().RemoveAll(this);
@@ -61,7 +61,6 @@ public:
 		InitializeSystems();
 		InitializeDefaultComponents();
 		InitializeAssetRegistry();
-		InitializeOSAPI();
 	}
 
 	FORCEINLINE_DEBUGGABLE void InitializeOSAPI() const
@@ -92,14 +91,13 @@ public:
         }; // class FFlecsRunnable
 
         ecs_os_set_api_defaults();
-
-        // Thread functions
+		
         ecs_os_api_t os_api = ecs_os_api;
 
         os_api.thread_new_ = [](ecs_os_thread_callback_t Callback, void* Param) -> ecs_os_thread_t
         {
-            // Allocate memory without zero-initialization for speed
-            FFlecsThread* FlecsThread = static_cast<FFlecsThread*>(FMemory::Malloc(sizeof(FFlecsThread)));
+            FFlecsThread* FlecsThread = static_cast<FFlecsThread*>(
+            	FMemory::Malloc(sizeof(FFlecsThread), alignof(FFlecsThread)));
         	
             FlecsThread->Runnable = new FFlecsRunnable(Callback, Param);
             FlecsThread->Thread = FRunnableThread::Create(FlecsThread->Runnable,
@@ -130,7 +128,8 @@ public:
 
         os_api.mutex_new_ = []() -> ecs_os_mutex_t
         {
-	        FFlecsSpinLock* SpinLock = static_cast<FFlecsSpinLock*>(FMemory::Malloc(sizeof(FFlecsSpinLock)));
+	        FFlecsSpinLock* SpinLock = static_cast<FFlecsSpinLock*>(FMemory::Malloc(
+	        	sizeof(FFlecsSpinLock), alignof(FFlecsSpinLock)));
             SpinLock->LockFlag = 0;
             return reinterpret_cast<ecs_os_mutex_t>(SpinLock);
         };
@@ -202,6 +201,36 @@ public:
             }
 #endif // UNLOG_ENABLED
         };
+
+		os_api.perf_trace_push_ = [](const char* FileName, size_t Line, const char* Name)
+		{
+			FCpuProfilerTrace::OutputBeginDynamicEvent(Name, FileName, Line);
+		};
+
+		os_api.perf_trace_pop_ = [](const char* FileName, size_t Line, const char* Name)
+		{
+			FCpuProfilerTrace::OutputEndEvent();
+		};
+
+		os_api.adec_ = [](int32_t* Value)
+		{
+			return FPlatformAtomics::InterlockedDecrement(Value);
+		};
+
+		os_api.ainc_ = [](int32_t* Value)
+		{
+			return FPlatformAtomics::InterlockedIncrement(Value);
+		};
+
+		os_api.lainc_ = [](int64_t* Value)
+		{
+			return FPlatformAtomics::InterlockedIncrement(Value);
+		};
+
+		os_api.ladec_ = [](int64_t* Value)
+		{
+			return FPlatformAtomics::InterlockedDecrement(Value);
+		};
 		
         ecs_os_set_api(&os_api);
 	}
@@ -338,7 +367,7 @@ public:
 					EntityHandle.Remove<flecs::_::type_impl_struct_event_info>();
 				});
 
-		CreateObserver<FFlecsUObjectComponent>(TEXT("UObjectComponentObserver"))
+		/*CreateObserver<FFlecsUObjectComponent>(TEXT("UObjectComponentObserver"))
 			.event(flecs::OnSet)
 			.yield_existing()
 			.each([&](flecs::entity InEntity, const FFlecsUObjectComponent& InComponent)
@@ -359,7 +388,7 @@ public:
 				{
 					EntityHandle.Add<FFlecsSceneComponentTag>();
 				}
-			});
+			});*/
 
 		ObjectComponentQuery = World.query_builder<FFlecsUObjectComponent>("UObjectComponentQuery")
 			.build();
@@ -581,7 +610,7 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
 	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle CreateEntityWithId(const FFlecsId& InId) const
 	{
-		return World.entity(InId.GetFlecsId());
+		return MakeAlive(InId.GetFlecsId());
 	}
 
 	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle CreateEntityWithId(const flecs::entity_t InId) const
@@ -592,7 +621,7 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
 	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle CreateEntityWithPrefab(const FFlecsEntityHandle& InPrefab) const
 	{
-		return World.entity(InPrefab.GetEntity());
+		return World.entity().is_a(InPrefab.GetEntity());
 	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
@@ -940,8 +969,6 @@ public:
 		{
 			return;
 		}
-
-		World.lookup("RemoveComponentCollectionObserver").destruct();
 		
 		const FAssetRegistryModule* AssetRegistryModule
 			= FModuleManager::LoadModulePtr<FAssetRegistryModule>(TEXT("AssetRegistry"));
@@ -1109,13 +1136,37 @@ public:
 	template <Solid::TStaticStructConcept T>
 	FORCEINLINE_DEBUGGABLE NO_DISCARD FFlecsEntityHandle GetScriptStructEntity() const
 	{
-		return GetScriptStructEntity(T::StaticStruct());
+		return GetScriptStructEntity(StaticStruct<T>());
 	}
 
 	template <Solid::TStaticStructConcept T>
 	FORCEINLINE_DEBUGGABLE NO_DISCARD bool HasScriptStruct() const
 	{
-		return HasScriptStruct(T::StaticStruct());
+		return HasScriptStruct(StaticStruct<T>());
+	}
+
+	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
+	FORCEINLINE_DEBUGGABLE bool HasScriptEnum(UEnum* ScriptEnum) const
+	{
+		return TypeMapComponent->ScriptEnumMap.contains(ScriptEnum);
+	}
+	
+	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
+	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle GetScriptEnumEntity(UEnum* ScriptEnum) const
+	{
+		return TypeMapComponent->ScriptEnumMap.at(ScriptEnum);
+	}
+	
+	template <typename T>
+	FORCEINLINE_DEBUGGABLE NO_DISCARD bool HasScriptEnum() const
+	{
+		return HasScriptEnum(StaticEnum<T>());
+	}
+
+	template <typename T>
+	FORCEINLINE_DEBUGGABLE NO_DISCARD FFlecsEntityHandle GetScriptEnumEntity() const
+	{
+		return GetScriptEnumEntity(StaticEnum<T>());
 	}
 
 	//#if WITH_EDITOR
@@ -1222,6 +1273,53 @@ public:
 	}
 
 	//#endif // WITH_EDITOR
+
+	FORCEINLINE_DEBUGGABLE void RegisterEnumProperties(UEnum* Enum, FFlecsEntityHandle InComponentEntity) const
+	{
+		flecs::untyped_component UntypedComponent = InComponentEntity.GetUntypedComponent_Unsafe();
+		
+		if (Enum->HasAnyEnumFlags(EEnumFlags::Flags))
+		{
+			for (int32 Index = 0; Index < Enum->GetMaxEnumValue(); ++Index)
+			{
+				const uint32 FlagValue = static_cast<uint32>(1) << Index;
+				UntypedComponent.bit(StringCast<char>(*Enum->GetNameStringByIndex(Index)).Get(), FlagValue);
+			}
+		}
+		else
+		{
+			for (int32 Index = 0; Index < Enum->GetMaxEnumValue(); ++Index)
+			{
+				UntypedComponent.constant(StringCast<char>(*Enum->GetNameStringByIndex(Index)).Get(), Index);
+			}
+		}
+	}
+
+	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs")
+	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle RegisterScriptEnum(UEnum* Enum) const
+	{
+		solid_check(IsValid(Enum));
+
+		if (const FFlecsEntityHandle Handle = World.lookup(StringCast<char>(*Enum->GetName()).Get()))
+		{
+			RegisterEnumProperties(Enum, Handle);
+			return Handle;
+		}
+		
+		FFlecsEntityHandle EnumComponent = World.entity(StringCast<char>(*Enum->GetName()).Get())
+			.set<flecs::Component>({ sizeof(int32), alignof(int32) })
+			.set<FFlecsScriptEnumComponent>({ Enum });
+		
+		TypeMapComponent->ScriptEnumMap.emplace(Enum, EnumComponent);
+
+		//#if WITH_EDITOR
+
+		RegisterEnumProperties(Enum, EnumComponent);
+
+		//#endif // WITH_EDITOR
+
+		return EnumComponent;
+	}
 	
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs")
 	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle RegisterScriptStruct(UScriptStruct* ScriptStruct) const
@@ -1259,7 +1357,7 @@ public:
 				ParentEntity = GetScriptStructEntity(static_cast<UScriptStruct*>(ScriptStruct->GetSuperStruct()));
 			}
 			
-			ScriptStructComponent.SetParent(ParentEntity, true);
+			ScriptStructComponent.SetParent(ParentEntity);
 		}
 		
 		return ScriptStructComponent;
@@ -1286,6 +1384,17 @@ public:
 		}
 
 		return RegisterScriptStruct(ScriptStruct);
+	}
+
+	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs")
+	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle ObtainScriptEnumType(UEnum* Enum) const
+	{
+		if (HasScriptEnum(Enum))
+		{
+			return GetScriptEnumEntity(Enum);
+		}
+
+		return RegisterScriptEnum(Enum);
 	}
 
 	template <typename ...TComponents>

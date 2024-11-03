@@ -8,7 +8,7 @@
 #include "UObject/Object.h"
 #include "FlecsRestModule.generated.h"
 
-UCLASS(BlueprintType)
+UCLASS(BlueprintType, DisplayName = "Flecs Rest Module")
 class UNREALFLECS_API UFlecsRestModule final : public UFlecsModuleObject
 {
 	GENERATED_BODY()
@@ -27,7 +27,7 @@ public:
 	FFlecsEntityHandle RestEntity;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Flecs")
-	bool bImportStats = false;
+	bool bImportStats = true;
 
 	UPROPERTY()
 	FFlecsEntityHandle StatsEntity;

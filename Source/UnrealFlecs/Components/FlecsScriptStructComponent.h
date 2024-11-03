@@ -35,7 +35,7 @@ struct FFlecsScriptStructComponent
     TWeakObjectPtr<UScriptStruct> ScriptStruct;
     
 }; // struct FFlecsScriptStructComponent
-REGISTER_FLECS_PROPERTIES(FFlecsScriptStructComponent,
-    { flecs::Sparse }, {} )
+
+REGISTER_COMPONENT_TAG_PROPERTIES(FFlecsScriptStructComponent, flecs::Sparse);
 
 DEFINE_STD_HASH(FFlecsScriptStructComponent)

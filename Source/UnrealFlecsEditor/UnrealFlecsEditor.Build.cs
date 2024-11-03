@@ -28,7 +28,9 @@ public class UnrealFlecsEditor : ModuleRules
                 "FlecsLibrary",
                 "StructUtils",
                 "InputCore",
-                "UnrealEd"
+                "UnrealEd",
+                "GraphEditor",
+                "BlueprintGraph"
             }
         );
     }

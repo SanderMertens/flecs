@@ -31,7 +31,8 @@ struct alignas(8) UNREALFLECS_API FFlecsEntityHandle
 	}
 
 public:
-	FFlecsEntityHandle();
+	FFlecsEntityHandle() : EntityId(flecs::entity::null()) {}
+	
 	SOLID_INLINE FFlecsEntityHandle(const flecs::entity& InEntity)
 	{
 		EntityId = InEntity;

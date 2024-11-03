@@ -47,5 +47,7 @@ struct FFlecsScriptClassComponent
     
 }; // struct FFlecsScriptClassComponent
 
+REGISTER_COMPONENT_TAG_PROPERTIES(FFlecsScriptClassComponent, flecs::Sparse)
+
 DEFINE_STD_HASH(FFlecsScriptClassComponent)
 

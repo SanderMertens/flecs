@@ -28,7 +28,7 @@
 #include "Unlog/Target/MessageLog.h"
 #include "FlecsWorldSubsystem.generated.h"
 
-DECLARE_MULTICAST_DELEGATE_TwoParams(FOnWorldCreated, const FString&, UFlecsWorld*);
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnWorldCreated,UFlecsWorld*);
 
 UCLASS(BlueprintType)
 class UNREALFLECS_API UFlecsWorldSubsystem final : public UTickableWorldSubsystem
@@ -109,6 +109,8 @@ public:
 		NewFlecsWorld->SetWorld(std::move(NewWorld));
 		
 		DefaultWorld = NewFlecsWorld;
+
+		DefaultWorld->InitializeOSAPI();
 		
 		GetDefaultWorld()->AddSingleton<FFlecsTypeMapComponent>();
 		GetDefaultWorld()->TypeMapComponent = GetDefaultWorld()->GetSingletonPtr<FFlecsTypeMapComponent>();
@@ -132,15 +134,11 @@ public:
 				
 			NewFlecsWorld->CreateEntityWithRecordWithId(DefaultEntities[Index].EntityRecord, EntityId);
 
-			#if WITH_EDITOR
-
 			UN_LOGF(LogFlecsCore, Log,
 				"Created default entity %s with id %d", *EntityName, EntityId);
 			
 			UN_LOGF(LogFlecsCore, Log,
 				"Entity %s with id %d", *NewEntity.GetName(), NewEntity.GetId());
-
-			#endif // WITH_EDITOR
 		}
 
 		NewFlecsWorld->SetWorldName(Name);
@@ -163,7 +161,7 @@ public:
 
 		NewFlecsWorld->Progress();
 		
-		OnWorldCreated.Broadcast(Name, NewFlecsWorld);
+		OnWorldCreated.Broadcast(NewFlecsWorld);
 		
 		return NewFlecsWorld;
 	}

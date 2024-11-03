@@ -1,4 +1,4 @@
-﻿{
+{
 	"FileVersion": 3,
 	"Version": 1,
 	"VersionName": "0.1",
@@ -7,7 +7,7 @@
 	"Category": "ECS",
 	"CreatedBy": "Reddy-dev",
 	"CreatedByURL": "",
-	"DocsURL": "",
+	"DocsURL": "https://www.flecs.dev/flecs/",
 	"MarketplaceURL": "",
 	"CanContainContent": true,
 	"IsBetaVersion": true,
@@ -44,5 +44,6 @@
 			"Name": "StructUtils",
 			"Enabled": true
 		}
-	]
+	],
+	"SupportURL": ""
 }

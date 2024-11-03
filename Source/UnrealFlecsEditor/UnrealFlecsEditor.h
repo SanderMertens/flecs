@@ -3,6 +3,8 @@
 #include "CoreMinimal.h"
 #include "Modules/ModuleManager.h"
 
+class FFlecsEntityHandlePinFactory;
+
 class FUnrealFlecsEditorModule : public IModuleInterface
 {
 public:
@@ -11,4 +13,6 @@ public:
 
 private:
     void RegisterExplorerMenuExtension();
+    
+    TSharedPtr<FFlecsEntityHandlePinFactory> FlecsEntityHandlePinFactory;
 }; // class FUnrealFlecsEditorModule

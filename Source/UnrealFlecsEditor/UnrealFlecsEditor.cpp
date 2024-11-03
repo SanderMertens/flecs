@@ -1,6 +1,7 @@
 ﻿#include "UnrealFlecsEditor.h"
 #include "UnrealFlecsEditorStyle.h"
-#include "Widgets/FlecsEntityHandlePropertyEditor.h"
+#include "Widgets/EntityHandle/FlecsEntityHandlePinFactory.h"
+#include "Widgets/EntityHandle/FlecsEntityHandlePropertyEditor.h"
 
 #define LOCTEXT_NAMESPACE "FUnrealFlecsEditorModule"
 
@@ -13,7 +14,11 @@ void FUnrealFlecsEditorModule::StartupModule()
 
 	FPropertyEditorModule& PropertyEditorModule = FModuleManager::LoadModuleChecked<FPropertyEditorModule>("PropertyEditor");
 	PropertyEditorModule.RegisterCustomPropertyTypeLayout("FlecsEntityHandle",
-		FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FFlecsEntityHandleCustomization::MakeInstance));
+		FOnGetPropertyTypeCustomizationInstance
+		::CreateStatic(&FFlecsEntityHandleCustomization::MakeInstance));
+
+	// FlecsEntityHandlePinFactory = MakeShared<FFlecsEntityHandlePinFactory>();
+	// FEdGraphUtilities::RegisterVisualPinFactory(FlecsEntityHandlePinFactory);
 }
 
 void FUnrealFlecsEditorModule::ShutdownModule()
@@ -23,6 +28,12 @@ void FUnrealFlecsEditorModule::ShutdownModule()
 		FPropertyEditorModule& PropertyEditorModule = FModuleManager::GetModuleChecked<FPropertyEditorModule>("PropertyEditor");
 		PropertyEditorModule.UnregisterCustomPropertyTypeLayout("FlecsEntityHandle");
 	}
+	
+	// if (FlecsEntityHandlePinFactory.IsValid())
+	// {
+	// 	FEdGraphUtilities::UnregisterVisualPinFactory(FlecsEntityHandlePinFactory);
+	// 	FlecsEntityHandlePinFactory.Reset();
+	// }
 	
 	FUnrealFlecsEditorStyle::Shutdown();
 	

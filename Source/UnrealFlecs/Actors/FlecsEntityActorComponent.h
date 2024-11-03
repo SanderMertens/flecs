@@ -48,7 +48,7 @@ public:
 	#endif // WITH_EDITORONLY_DATA
 
 	UFUNCTION()
-	void OnWorldCreated(const FString& InWorldName, UFlecsWorld* InWorld);
+	void OnWorldCreated(UFlecsWorld* InWorld);
 
 private:
 	void CreateActorEntity(UFlecsWorld* InWorld);

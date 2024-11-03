@@ -96,7 +96,7 @@ bool UFlecsEntityActorComponent::CanEditChange(const FProperty* InProperty) cons
 
 #endif // WITH_EDITORONLY_DATA
 
-void UFlecsEntityActorComponent::OnWorldCreated(const FString& InWorldName, UFlecsWorld* InWorld)
+void UFlecsEntityActorComponent::OnWorldCreated(UFlecsWorld* InWorld)
 {
 	CreateActorEntity(InWorld);
 	

@@ -829,6 +829,8 @@ void flecs_query_cache_unmatch_table(
     ecs_table_t *table,
     ecs_query_cache_table_t *elem)
 {
+    ecs_os_perf_trace_push("flecs.query.unmatch_table");
+    
     if (!elem) {
         elem = ecs_table_cache_get(&cache->cache, table);
     }
@@ -836,6 +838,8 @@ void flecs_query_cache_unmatch_table(
         ecs_table_cache_remove(&cache->cache, elem->table_id, &elem->hdr);
         flecs_query_cache_table_free(cache, elem);
     }
+
+    ecs_os_perf_trace_pop("flecs.query.unmatch_table");
 }
 
 /* Rematch system with tables after a change happened to a watched entity */
@@ -936,6 +940,8 @@ void flecs_query_cache_notify(
     ecs_query_t *q,
     ecs_query_cache_event_t *event)
 {
+    ecs_os_perf_trace_push("flecs.query.notify");
+    
     flecs_poly_assert(q, ecs_query_t);
     ecs_query_impl_t *impl = flecs_query_impl(q);
     ecs_query_cache_t *cache = impl->cache;
@@ -954,6 +960,8 @@ void flecs_query_cache_notify(
         flecs_query_cache_rematch_tables(world, impl);
         break;
     }
+
+    ecs_os_perf_trace_pop("flecs.query.notify");
 }
 
 static
@@ -964,6 +972,8 @@ int flecs_query_cache_order_by(
     ecs_order_by_action_t order_by_callback,
     ecs_sort_table_action_t action)
 {
+    ecs_os_perf_trace_push("flecs.query.order_by");
+    
     ecs_check(impl != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_query_cache_t *cache = impl->cache;
     ecs_check(cache != NULL, ECS_INVALID_PARAMETER, NULL);
@@ -1006,8 +1016,11 @@ int flecs_query_cache_order_by(
         flecs_query_cache_build_sorted_tables(cache);
     }
 
+    ecs_os_perf_trace_pop("flecs.query.order_by");
+
     return 0;
 error:
+    ecs_os_perf_trace_pop("flecs.query.order_by");
     return -1;
 }
 
