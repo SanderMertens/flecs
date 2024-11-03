@@ -11,8 +11,7 @@
 
 static
 void AddTickSource(ecs_iter_t *it) {
-    int32_t i;
-    for (i = 0; i < it->count; i ++) {
+    for (int32_t i = 0; i < it->count; i ++) {
         ecs_set(it->world, it->entities[i], EcsTickSource, {0});
     }
 }
@@ -24,8 +23,7 @@ void ProgressTimers(ecs_iter_t *it) {
 
     ecs_assert(timer != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    int i;
-    for (i = 0; i < it->count; i ++) {
+    for (int i = 0; i < it->count; i ++) {
         tick_source[i].tick = false;
 
         if (!timer[i].active) {
@@ -61,9 +59,8 @@ void ProgressRateFilters(ecs_iter_t *it) {
     EcsRateFilter *filter = ecs_field(it, EcsRateFilter, 0);
     EcsTickSource *tick_dst = ecs_field(it, EcsTickSource, 1);
 
-    int i;
-    for (i = 0; i < it->count; i ++) {
-        ecs_entity_t src = filter[i].src;
+    for (int i = 0; i < it->count; i ++) {
+        const ecs_entity_t src = filter[i].src;
         bool inc = false;
 
         filter[i].time_elapsed += it->delta_time;
@@ -100,8 +97,7 @@ void ProgressTickSource(ecs_iter_t *it) {
     EcsTickSource *tick_src = ecs_field(it, EcsTickSource, 0);
 
     /* If tick source has no filters, tick unconditionally */
-    int i;
-    for (i = 0; i < it->count; i ++) {
+    for (int i = 0; i < it->count; i ++) {
         tick_src[i].tick = true;
         tick_src[i].time_elapsed = it->delta_time;
     }
@@ -271,8 +267,7 @@ error:
 static
 void RandomizeTimers(ecs_iter_t *it) {
     EcsTimer *timer = ecs_field(it, EcsTimer, 0);
-    int32_t i;
-    for (i = 0; i < it->count; i ++) {
+    for (int32_t i = 0; i < it->count; i ++) {
         timer[i].time = 
             ((ecs_ftime_t)rand() / (ecs_ftime_t)RAND_MAX) * timer[i].timeout;
     }

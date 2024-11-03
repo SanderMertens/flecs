@@ -21,7 +21,7 @@ void InitializeDbgHelp() {
 }
 
 void CaptureStackTrace(void** stack, int framesToSkip, int framesToCapture) {
-    USHORT frames = CaptureStackBackTrace(framesToSkip, framesToCapture, stack, NULL);
+    const USHORT frames = CaptureStackBackTrace(framesToSkip, framesToCapture, stack, NULL);
     for (USHORT i = frames; i < framesToCapture; ++i) {
         stack[i] = NULL;
     }
@@ -29,7 +29,7 @@ void CaptureStackTrace(void** stack, int framesToSkip, int framesToCapture) {
 
 void GetStackTraceString(void** stack, int frames, char* buffer, size_t bufferSize) {
     char symbolBuffer[sizeof(SYMBOL_INFO) + MAX_SYM_NAME * sizeof(TCHAR)];
-    PSYMBOL_INFO symbol = (PSYMBOL_INFO)symbolBuffer;
+    const PSYMBOL_INFO symbol = (PSYMBOL_INFO)symbolBuffer;
     symbol->SizeOfStruct = sizeof(SYMBOL_INFO);
     symbol->MaxNameLen = MAX_SYM_NAME;
 
@@ -58,10 +58,9 @@ void flecs_colorize_buf(
     bool isVar = false;
     bool overrideColor = false;
     bool autoColor = true;
-    bool dontAppend = false;
 
     for (ptr = msg; (ch = *ptr); ptr++) {
-        dontAppend = false;
+        bool dontAppend = false;
 
         if (!overrideColor) {
             if (isNum && !isdigit(ch) && !isalpha(ch) && (ch != '.') && (ch != '%')) {
@@ -280,9 +279,9 @@ void ecs_parser_errorv_(
         ecs_strbuf_t msg_buf = ECS_STRBUF_INIT;
 
         /* Count number of newlines up until column_arg */
-        int32_t i, line = 1;
+        int32_t line = 1;
         if (expr) {
-            for (i = 0; i < column; i ++) {
+            for (int32_t i = 0; i < column; i ++) {
                 if (expr[i] == '\n') {
                     line ++;
                 }
@@ -320,8 +319,8 @@ void ecs_parser_errorv_(
                 }
             }
 
-            /* Strip newlines from current statement, if any */            
-            char *newline_ptr = strchr(expr, '\n');
+            /* Strip newlines from current statement, if any */
+            const char *newline_ptr = strchr(expr, '\n');
             if (newline_ptr) {
                 /* Strip newline from expr */
                 ecs_strbuf_appendstrn(&msg_buf, expr, 
@@ -333,8 +332,7 @@ void ecs_parser_errorv_(
             ecs_strbuf_appendch(&msg_buf, '\n');
 
             if (column != -1) {
-                int32_t c;
-                for (c = 0; c < column; c ++) {
+                for (int32_t c = 0; c < column; c ++) {
                     ecs_strbuf_appendch(&msg_buf, ' ');
                 }
                 ecs_strbuf_appendch(&msg_buf, '^');
@@ -570,7 +568,7 @@ int ecs_log_get_level(void) {
 int ecs_log_set_level(
     int level)
 {
-    int prev = level;
+    const int prev = level;
     ecs_os_api.log_level_ = level;
     return prev;
 }
@@ -601,7 +599,7 @@ bool ecs_log_enable_timedelta(
 
 int ecs_log_last_error(void)
 {
-    int result = ecs_os_api.log_last_error_;
+    const int result = ecs_os_api.log_last_error_;
     ecs_os_api.log_last_error_ = 0;
     return result;
 }

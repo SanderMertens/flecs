@@ -177,14 +177,14 @@ int flecs_meta_serialize_struct(
     const EcsStruct *ptr = ecs_get(world, type, EcsStruct);
     ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    int32_t cur, first = ecs_vec_count(ops);
+    const int32_t first = ecs_vec_count(ops);
     ecs_meta_type_op_t *op = flecs_meta_ops_add(ops, EcsOpPush);
     op->offset = offset;
     op->type = type;
     op->size = flecs_meta_type_size(world, type);
 
     ecs_member_t *members = ecs_vec_first(&ptr->members);
-    int32_t i, count = ecs_vec_count(&ptr->members);
+    const int32_t count = ecs_vec_count(&ptr->members);
 
     ecs_hashmap_t *member_index = NULL;
     if (count) {        
@@ -192,10 +192,10 @@ int flecs_meta_serialize_struct(
             world, &world->allocator);
     }
 
-    for (i = 0; i < count; i ++) {
-        ecs_member_t *member = &members[i];
+    for (int32_t i = 0; i < count; i ++) {
+        const ecs_member_t *member = &members[i];
 
-        cur = ecs_vec_count(ops);
+        const int32_t cur = ecs_vec_count(ops);
         if (flecs_meta_serialize_type(world, member->type, offset + member->offset, ops) != 0) {
             continue;
         }
@@ -279,9 +279,9 @@ void ecs_meta_type_serialized_init(
 {
     ecs_world_t *world = it->world;
 
-    int i, count = it->count;
-    for (i = 0; i < count; i ++) {
-        ecs_entity_t e = it->entities[i];
+    const int count = it->count;
+    for (int i = 0; i < count; i ++) {
+        const ecs_entity_t e = it->entities[i];
         ecs_vec_t ops;
         ecs_vec_init_t(NULL, &ops, ecs_meta_type_op_t, 0);
         flecs_meta_serialize_component(world, e, &ops);

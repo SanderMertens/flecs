@@ -27,7 +27,7 @@ ecs_var_id_t flecs_query_find_var_id(
             return EcsVarNone;
         }
 
-        uint64_t index = flecs_name_index_find(
+        const uint64_t index = flecs_name_index_find(
             &query->tvar_index, name, 0, 0);
         if (index == 0) {
             return EcsVarNone;
@@ -40,7 +40,7 @@ ecs_var_id_t flecs_query_find_var_id(
             return EcsVarNone;
         }
 
-        uint64_t index = flecs_name_index_find(
+        const uint64_t index = flecs_name_index_find(
             &query->evar_index, name, 0, 0);
         if (index == 0) {
             return EcsVarNone;
@@ -51,7 +51,7 @@ ecs_var_id_t flecs_query_find_var_id(
     ecs_assert(kind == EcsVarAny, ECS_INTERNAL_ERROR, NULL);
 
     /* If searching for any kind of variable, start with most specific */
-    ecs_var_id_t index = flecs_query_find_var_id(query, name, EcsVarEntity);
+    const ecs_var_id_t index = flecs_query_find_var_id(query, name, EcsVarEntity);
     if (index != EcsVarNone) {
         return index;
     }
@@ -70,14 +70,14 @@ ecs_var_id_t flecs_query_most_specific_var(
         return flecs_query_find_var_id(query, name, kind);
     }
 
-    ecs_var_id_t evar = flecs_query_find_var_id(query, name, EcsVarEntity);
+    const ecs_var_id_t evar = flecs_query_find_var_id(query, name, EcsVarEntity);
     if ((evar != EcsVarNone) && flecs_query_is_written(evar, ctx->written)) {
         /* If entity variable is available and written to, it contains the most
          * specific result and should be used. */
         return evar;
     }
 
-    ecs_var_id_t tvar = flecs_query_find_var_id(query, name, EcsVarTable);
+    const ecs_var_id_t tvar = flecs_query_find_var_id(query, name, EcsVarTable);
     if ((tvar != EcsVarNone) && !flecs_query_is_written(tvar, ctx->written)) {
         /* If variable of any kind is requested and variable hasn't been written
          * yet, write to table variable */
@@ -98,7 +98,7 @@ ecs_query_lbl_t flecs_query_op_insert(
     ecs_query_compile_ctx_t *ctx)
 {
     ecs_query_op_t *elem = ecs_vec_append_t(NULL, ctx->ops, ecs_query_op_t);
-    int32_t count = ecs_vec_count(ctx->ops);
+    const int32_t count = ecs_vec_count(ctx->ops);
     *elem = *op;
     if (count > 1) {
         if (ctx->cur->lbl_begin == -1) {
@@ -129,14 +129,14 @@ void flecs_query_end_block(
 {
     ecs_query_op_t new_op = {0};
     new_op.kind = EcsQueryEnd;
-    ecs_query_lbl_t end = flecs_query_op_insert(&new_op, ctx);
+    const ecs_query_lbl_t end = flecs_query_op_insert(&new_op, ctx);
     
     ecs_query_op_t *ops = ecs_vec_first_t(ctx->ops, ecs_query_op_t);
     ops[ctx->cur->lbl_begin].next = end;
 
     ecs_query_op_t *end_op = &ops[end];
     if (reset && ctx->cur->lbl_query != -1) {
-        ecs_query_op_t *query_op = &ops[ctx->cur->lbl_query];
+        const ecs_query_op_t *query_op = &ops[ctx->cur->lbl_query];
         end_op->prev = ctx->cur->lbl_begin;
         end_op->src = query_op->src;
         end_op->first = query_op->first;
@@ -222,13 +222,13 @@ void flecs_query_end_block_cond_eval(
     ecs_assert(ctx->cur->lbl_query >= 0, ECS_INTERNAL_ERROR, NULL);
     ecs_query_op_t end_op = {0};
     end_op.kind = EcsQueryEnd;
-    ecs_query_lbl_t end = flecs_query_op_insert(&end_op, ctx);
+    const ecs_query_lbl_t end = flecs_query_op_insert(&end_op, ctx);
 
     ecs_query_op_t *ops = ecs_vec_first_t(ctx->ops, ecs_query_op_t);
     ops[ctx->cur->lbl_cond_eval].next = end;
 
     ecs_query_op_t *end_op_ptr = &ops[end];
-    ecs_query_op_t *query_op = &ops[ctx->cur->lbl_query];
+    const ecs_query_op_t *query_op = &ops[ctx->cur->lbl_query];
     end_op_ptr->prev = ctx->cur->lbl_cond_eval;
     end_op_ptr->src = query_op->src;
     end_op_ptr->first = query_op->first;
@@ -282,7 +282,7 @@ void flecs_query_end_block_or(
 {
     ecs_query_op_t op = {0};
     op.kind = EcsQueryEnd;
-    ecs_query_lbl_t end = flecs_query_op_insert(&op, ctx);
+    const ecs_query_lbl_t end = flecs_query_op_insert(&op, ctx);
 
     ecs_query_op_t *ops = ecs_vec_first_t(ctx->ops, ecs_query_op_t);
     int32_t i, prev_or = ctx->cur->lbl_begin + 1;
@@ -309,20 +309,20 @@ void flecs_query_end_block_or(
     ctx->ctrlflow->in_or = false;
     ctx->cur->lbl_begin = -1;
     if (src_is_var) {
-        ecs_var_id_t src_var = first->src.var;
+        const ecs_var_id_t src_var = first->src.var;
         ctx->written |= (1llu << src_var);
 
         /* If src is a table variable, it is possible that this was resolved to
          * an entity variable in all of the OR terms. If this is the case, mark
          * entity variable as written as well. */
-        ecs_query_var_t *var = &impl->vars[src_var];
+        const ecs_query_var_t *var = &impl->vars[src_var];
         if (var->kind == EcsVarTable) {
             const char *name = var->name;
             if (!name) {
                 name = "this";
             }
 
-            ecs_var_id_t evar = flecs_query_find_var_id(
+            const ecs_var_id_t evar = flecs_query_find_var_id(
                 impl, name, EcsVarEntity);
             if (evar != EcsVarNone && (ctx->cond_written & (1llu << evar))) {
                 ctx->written |= (1llu << evar);
@@ -338,8 +338,8 @@ void flecs_query_end_block_or(
      * variable in part two, leaving it to the previous value. To address this
      * a reset is inserted that resets the variable value on redo. */
     for (i = 1; i < (8 * ECS_SIZEOF(ecs_write_flags_t)); i ++) {
-        ecs_write_flags_t prev = 1 & (ctx->ctrlflow->cond_written_or >> i);
-        ecs_write_flags_t cur = 1 & (ctx->cond_written >> i);
+        const ecs_write_flags_t prev = 1 & (ctx->ctrlflow->cond_written_or >> i);
+        const ecs_write_flags_t cur = 1 & (ctx->cond_written >> i);
 
         /* Skip variable if it's the source for the OR chain */
         if (src_is_var && (i == first->src.var)) {
@@ -401,7 +401,7 @@ void flecs_query_insert_unconstrained_transitive(
     /* Create anonymous variable to store the target ids. This will return the
      * list of targets without constraining the variable of the term, which
      * needs to stay variable to find all transitive relationships for a src. */
-    ecs_var_id_t tgt = flecs_query_add_var(query, NULL, NULL, EcsVarEntity);
+    const ecs_var_id_t tgt = flecs_query_add_var(query, NULL, NULL, EcsVarEntity);
     flecs_set_var_label(&query->vars[tgt], query->vars[op->second.var].name);
 
     /* First, find ids to start traversal from. This fixes op.second. */
@@ -440,8 +440,8 @@ void flecs_query_insert_inheritance(
     bool cond_write)
 {
     /* Anonymous variable to store the resolved component ids */
-    ecs_var_id_t tvar = flecs_query_add_var(query, NULL, NULL, EcsVarTable);
-    ecs_var_id_t evar = flecs_query_add_var(query, NULL, NULL, EcsVarEntity);
+    const ecs_var_id_t tvar = flecs_query_add_var(query, NULL, NULL, EcsVarTable);
+    const ecs_var_id_t evar = flecs_query_add_var(query, NULL, NULL, EcsVarEntity);
 
     flecs_set_var_label(&query->vars[tvar], ecs_get_name(query->pub.world, 
         ECS_TERM_REF_ID(&term->first)));
@@ -465,7 +465,7 @@ void flecs_query_insert_inheritance(
     flecs_query_op_insert(&trav_op, ctx);
     flecs_query_insert_each(tvar, evar, ctx, cond_write);
 
-    ecs_query_ref_t r = { .var = evar };
+    const ecs_query_ref_t r = { .var = evar };
     op->first = r;
     op->flags &= (ecs_flags8_t)~(EcsQueryIsEntity << EcsQueryFirst);
     op->flags |= (EcsQueryIsVar << EcsQueryFirst);
@@ -525,12 +525,12 @@ int flecs_query_compile_ensure_vars(
     bool cond_write,
     bool *written_out)
 {
-    ecs_flags16_t flags = flecs_query_ref_flags(op->flags, ref_kind);
+    const ecs_flags16_t flags = flecs_query_ref_flags(op->flags, ref_kind);
     bool written = false;
 
     if (flags & EcsQueryIsVar) {
-        ecs_var_id_t var_id = ref->var;
-        ecs_query_var_t *var = &query->vars[var_id];
+        const ecs_var_id_t var_id = ref->var;
+        const ecs_query_var_t *var = &query->vars[var_id];
 
         if (var->kind == EcsVarEntity && 
             !flecs_query_is_written(var_id, ctx->written)) 
@@ -538,7 +538,7 @@ int flecs_query_compile_ensure_vars(
             /* If entity variable is not yet written but a table variant exists
              * that has been written, insert each operation to translate from
              * entity variable to table */
-            ecs_var_id_t tvar = var->table_id;
+            const ecs_var_id_t tvar = var->table_id;
             if ((tvar != EcsVarNone) && 
                 flecs_query_is_written(tvar, ctx->written)) 
             {
@@ -588,7 +588,7 @@ bool flecs_query_compile_lookup(
     ecs_query_compile_ctx_t *ctx,
     bool cond_write) 
 {
-    ecs_query_var_t *var = &query->vars[var_id];
+    const ecs_query_var_t *var = &query->vars[var_id];
     if (var->lookup) {
         flecs_query_insert_lookup(var->base_id, var_id, ctx, cond_write);
         return true;
@@ -633,14 +633,14 @@ int flecs_query_compile_builtin_pred(
     ecs_query_op_t *op,
     ecs_write_flags_t write_state)
 {
-    ecs_entity_t id = ECS_TERM_REF_ID(&term->first);
+    const ecs_entity_t id = ECS_TERM_REF_ID(&term->first);
 
-    ecs_query_op_kind_t eq[] = {EcsQueryPredEq, EcsQueryPredNeq};
-    ecs_query_op_kind_t eq_name[] = {EcsQueryPredEqName, EcsQueryPredNeqName};
-    ecs_query_op_kind_t eq_match[] = {EcsQueryPredEqMatch, EcsQueryPredNeqMatch};
-    
-    ecs_flags16_t flags_src = flecs_query_ref_flags(op->flags, EcsQuerySrc);
-    ecs_flags16_t flags_2nd = flecs_query_ref_flags(op->flags, EcsQuerySecond);
+    const ecs_query_op_kind_t eq[] = {EcsQueryPredEq, EcsQueryPredNeq};
+    const ecs_query_op_kind_t eq_name[] = {EcsQueryPredEqName, EcsQueryPredNeqName};
+    const ecs_query_op_kind_t eq_match[] = {EcsQueryPredEqMatch, EcsQueryPredNeqMatch};
+
+    const ecs_flags16_t flags_src = flecs_query_ref_flags(op->flags, EcsQuerySrc);
+    const ecs_flags16_t flags_2nd = flecs_query_ref_flags(op->flags, EcsQuerySecond);
 
     if (id == EcsPredEq) {
         if (term->second.id & EcsIsName) {
@@ -685,12 +685,12 @@ int flecs_query_ensure_scope_var(
     ecs_flags16_t ref_kind,
     ecs_query_compile_ctx_t *ctx)
 {
-    ecs_var_id_t var = ref->var;
+    const ecs_var_id_t var = ref->var;
 
     if (query->vars[var].kind == EcsVarEntity && 
         !flecs_query_is_written(var, ctx->written)) 
     {
-        ecs_var_id_t table_var = query->vars[var].table_id;
+        const ecs_var_id_t table_var = query->vars[var].table_id;
         if (table_var != EcsVarNone && 
             flecs_query_is_written(table_var, ctx->written)) 
         {
@@ -802,7 +802,7 @@ static
 ecs_flags32_t flecs_query_to_table_flags(
     const ecs_query_t *q)
 {
-    ecs_flags32_t query_flags = q->flags;
+    const ecs_flags32_t query_flags = q->flags;
     if (!(query_flags & EcsQueryMatchDisabled) || 
         !(query_flags & EcsQueryMatchPrefab)) 
     {
@@ -876,7 +876,7 @@ int flecs_query_compile_begin_member_term(
     term->flags_ &= (uint16_t)~EcsTermIsMember;
 
     /* Replace term id with member parent (the component) */
-    ecs_entity_t component = ecs_get_parent(world, first_id);
+    const ecs_entity_t component = ecs_get_parent(world, first_id);
     if (!component) {
         ecs_err("member without parent in query");
         return -1;
@@ -919,7 +919,7 @@ int flecs_query_compile_end_member_term(
     ecs_entity_t second_id,
     bool cond_write)
 {
-    ecs_entity_t component = ECS_TERM_REF_ID(&term->first);
+    const ecs_entity_t component = ECS_TERM_REF_ID(&term->first);
     const EcsComponent *comp = ecs_get(world, component, EcsComponent);
     ecs_assert(comp != NULL, ECS_INTERNAL_ERROR, NULL);
 
@@ -933,9 +933,9 @@ int flecs_query_compile_end_member_term(
     first_id = ECS_TERM_REF_ID(&term->first);
     const EcsMember *member = ecs_get(world, first_id, EcsMember);
     ecs_assert(member != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_query_var_t *var = &impl->vars[op->src.var];
+    const ecs_query_var_t *var = &impl->vars[op->src.var];
     const char *var_name = flecs_term_ref_var_name(&term->src);
-    ecs_var_id_t evar = flecs_query_find_var_id(
+    const ecs_var_id_t evar = flecs_query_find_var_id(
         impl, var_name, EcsVarEntity);
     
     bool second_wildcard = 
@@ -1071,7 +1071,7 @@ void flecs_query_set_op_kind(
     op->kind = src_is_var ? EcsQueryAnd : EcsQueryWith;
 
     /* Ignore cascade flag */
-    ecs_entity_t trav_flags = EcsTraverseFlags & ~(EcsCascade|EcsDesc);
+    const ecs_entity_t trav_flags = EcsTraverseFlags & ~(EcsCascade|EcsDesc);
 
     /* Handle *From operators */
     if (term->oper == EcsAndFrom) {

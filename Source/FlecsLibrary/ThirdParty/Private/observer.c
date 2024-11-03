@@ -71,8 +71,8 @@ void flecs_inc_observer_count(
 {
     ecs_event_id_record_t *idt = flecs_event_id_record_ensure(world, evt, id);
     ecs_assert(idt != NULL, ECS_INTERNAL_ERROR, NULL);
-    
-    int32_t result = idt->observer_count += value;
+
+    const int32_t result = idt->observer_count += value;
     if (result == 1) {
         /* Notify framework that there are observers for the event/id. This 
          * allows parts of the code to skip event evaluation early */
@@ -81,7 +81,7 @@ void flecs_inc_observer_count(
             .event = event
         });
 
-        ecs_flags32_t flags = flecs_id_flag_for_event(event);
+        const ecs_flags32_t flags = flecs_id_flag_for_event(event);
         if (flags) {
             ecs_id_record_t *idr = flecs_id_record_get(world, id);
             if (idr) {
@@ -95,7 +95,7 @@ void flecs_inc_observer_count(
             .event = event
         });
 
-        ecs_flags32_t flags = flecs_id_flag_for_event(event);
+        const ecs_flags32_t flags = flecs_id_flag_for_event(event);
         if (flags) {
             ecs_id_record_t *idr = flecs_id_record_get(world, id);
             if (idr) {
@@ -131,14 +131,13 @@ void flecs_register_observer_for_id(
     ecs_observer_t *o,
     size_t offset)
 {
-    ecs_observer_impl_t *impl = flecs_observer_impl(o);
-    ecs_id_t term_id = flecs_observer_id(impl->register_id);
+    const ecs_observer_impl_t *impl = flecs_observer_impl(o);
+    const ecs_id_t term_id = flecs_observer_id(impl->register_id);
     ecs_term_t *term = &o->query->terms[0];
-    ecs_entity_t trav = term->trav;
+    const ecs_entity_t trav = term->trav;
 
-    int i;
-    for (i = 0; i < o->event_count; i ++) {
-        ecs_entity_t event = flecs_get_observer_event(
+    for (int i = 0; i < o->event_count; i ++) {
+        const ecs_entity_t event = flecs_get_observer_event(
             term, o->events[i]);
 
         /* Get observers for event */
@@ -168,8 +167,8 @@ void flecs_uni_observer_register(
     ecs_observable_t *observable,
     ecs_observer_t *o)
 {
-    ecs_term_t *term = &o->query->terms[0];
-    ecs_flags64_t flags = ECS_TERM_REF_FLAGS(&term->src);
+    const ecs_term_t *term = &o->query->terms[0];
+    const ecs_flags64_t flags = ECS_TERM_REF_FLAGS(&term->src);
 
     if ((flags & (EcsSelf|EcsUp)) == (EcsSelf|EcsUp)) {
         flecs_register_observer_for_id(world, observable, o,
@@ -191,14 +190,13 @@ void flecs_unregister_observer_for_id(
     ecs_observer_t *o,
     size_t offset)
 {
-    ecs_observer_impl_t *impl = flecs_observer_impl(o);
-    ecs_id_t term_id = flecs_observer_id(impl->register_id);
+    const ecs_observer_impl_t *impl = flecs_observer_impl(o);
+    const ecs_id_t term_id = flecs_observer_id(impl->register_id);
     ecs_term_t *term = &o->query->terms[0];
-    ecs_entity_t trav = term->trav;
+    const ecs_entity_t trav = term->trav;
 
-    int i;
-    for (i = 0; i < o->event_count; i ++) {
-        ecs_entity_t event = flecs_get_observer_event(
+    for (int i = 0; i < o->event_count; i ++) {
+        const ecs_entity_t event = flecs_get_observer_event(
             term, o->events[i]);
 
         /* Get observers for event */
@@ -234,8 +232,8 @@ void flecs_unregister_observer(
         return;
     }
 
-    ecs_term_t *term = &o->query->terms[0];
-    ecs_flags64_t flags = ECS_TERM_REF_FLAGS(&term->src);
+    const ecs_term_t *term = &o->query->terms[0];
+    const ecs_flags64_t flags = ECS_TERM_REF_FLAGS(&term->src);
 
     if ((flags & (EcsSelf|EcsUp)) == (EcsSelf|EcsUp)) {
         flecs_unregister_observer_for_id(world, observable, o,
@@ -258,8 +256,8 @@ bool flecs_ignore_observer(
     ecs_assert(o != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_observer_impl_t *impl = flecs_observer_impl(o);
-    int32_t *last_event_id = impl->last_event_id;
+    const ecs_observer_impl_t *impl = flecs_observer_impl(o);
+    const int32_t *last_event_id = impl->last_event_id;
     if (last_event_id && last_event_id[0] == it->event_cur) {
         return true;
     }
@@ -296,13 +294,13 @@ void flecs_observer_invoke(
 
     ecs_log_push_3();
 
-    ecs_entity_t old_system = flecs_stage_set_system(
+    const ecs_entity_t old_system = flecs_stage_set_system(
         world->stages[0], o->entity);
     world->info.observers_ran_frame ++;
 
     ecs_query_t *query = o->query;
     ecs_assert(term_index < query->term_count, ECS_INTERNAL_ERROR, NULL);
-    ecs_term_t *term = &query->terms[term_index];
+    const ecs_term_t *term = &query->terms[term_index];
     if (it->table && (term->oper != EcsNot)) {
         ecs_assert((it->offset + it->count) <= ecs_table_count(it->table), 
             ECS_INTERNAL_ERROR, NULL);
@@ -322,17 +320,17 @@ void flecs_observer_invoke(
         }
 
         const ecs_entity_t *entities = it->entities;
-        int32_t i, count = it->count;
-        ecs_entity_t src = it->sources[0];
+        const int32_t count = it->count;
+        const ecs_entity_t src = it->sources[0];
         it->count = 1;
-        for (i = 0; i < count; i ++) {
+        for (int32_t i = 0; i < count; i ++) {
             ecs_entity_t e = entities[i];
             it->entities = &e;
             if (!observer_src) {
                 callback(it);
                 ecs_os_inc(&query->eval_count);
             } else if (observer_src == e) {
-                ecs_entity_t dummy = 0;
+                const ecs_entity_t dummy = 0;
                 it->entities = &dummy;
                 if (!src) {
                     it->sources[0] = e;
@@ -392,7 +390,7 @@ void flecs_uni_observer_invoke(
         return;
     }
 
-    ecs_observer_impl_t *impl = flecs_observer_impl(o);
+    const ecs_observer_impl_t *impl = flecs_observer_impl(o);
     bool is_filter = term->inout == EcsInOutNone;
     ECS_BIT_COND(it->flags, EcsIterNoData, is_filter);
     it->system = o->entity;
@@ -403,9 +401,9 @@ void flecs_uni_observer_invoke(
     it->query = query;
     it->ref_fields = query->fixed_fields | query->row_fields;
     it->row_fields = query->row_fields;
-    
-    ecs_entity_t event = it->event;
-    int32_t event_cur = it->event_cur;
+
+    const ecs_entity_t event = it->event;
+    const int32_t event_cur = it->event_cur;
     it->event = flecs_get_observer_event(term, event);
 
     if (o->run) {
@@ -414,7 +412,7 @@ void flecs_uni_observer_invoke(
         it->ctx = o;
         o->run(it);
     } else {
-        ecs_iter_action_t callback = o->callback;
+        const ecs_iter_action_t callback = o->callback;
         it->callback = callback;
         flecs_observer_invoke(world, it, o, callback, 0);
     }
@@ -565,10 +563,10 @@ static
 void flecs_multi_observer_invoke_no_query(
     ecs_iter_t *it) 
 {
-    ecs_observer_t *o = it->ctx;
+    const ecs_observer_t *o = it->ctx;
     flecs_poly_assert(o, ecs_observer_t);
 
-    ecs_world_t *world = it->real_world;
+    const ecs_world_t *world = it->real_world;
     ecs_table_t *table = it->table;
     ecs_iter_t user_it = *it;
 
@@ -580,7 +578,7 @@ void flecs_multi_observer_invoke_no_query(
     user_it.system = o->entity;
     user_it.event = it->event;
 
-    ecs_entity_t old_system = flecs_stage_set_system(
+    const ecs_entity_t old_system = flecs_stage_set_system(
         world->stages[0], o->entity);
     ecs_table_lock(it->world, table);
 
@@ -612,7 +610,7 @@ bool flecs_default_next_callback(ecs_iter_t *it) {
 static
 void flecs_multi_observer_builtin_run(ecs_iter_t *it) {
     ecs_observer_t *o = it->ctx;
-    ecs_run_action_t run = o->run;
+    const ecs_run_action_t run = o->run;
 
     if (run) {
         if (flecs_observer_impl(o)->flags & EcsObserverBypassQuery) {
@@ -645,9 +643,9 @@ void flecs_observer_yield_existing(
 
     /* If yield existing is enabled, invoke for each thing that matches
      * the event, if the event is iterable. */
-    int i, count = o->event_count;
-    for (i = 0; i < count; i ++) {
-        ecs_entity_t event = o->events[i];
+    const int count = o->event_count;
+    for (int i = 0; i < count; i ++) {
+        const ecs_entity_t event = o->events[i];
 
         /* We only yield for OnRemove events if the observer is deleted. */
         if (event == EcsOnRemove) {
@@ -671,7 +669,7 @@ void flecs_observer_yield_existing(
             it.event_id = it.ids[0];
             it.event_cur = ++ world->event_id;
 
-            ecs_iter_next_action_t next = it.next;
+            const ecs_iter_next_action_t next = it.next;
             it.next = flecs_default_next_callback;
             run(&it);
             it.next = next;
@@ -1002,9 +1000,8 @@ ecs_observer_t* flecs_observer_init(
     /* Check if observer is monitor. Monitors are created as multi observers
      * since they require pre/post checking of the filter to test if the
      * entity is entering/leaving the monitor. */
-    int i;
-    for (i = 0; i < FLECS_EVENT_DESC_MAX; i ++) {
-        ecs_entity_t event = desc->events[i];
+    for (int i = 0; i < FLECS_EVENT_DESC_MAX; i ++) {
+        const ecs_entity_t event = desc->events[i];
         if (!event) {
             break;
         }
@@ -1042,7 +1039,7 @@ ecs_observer_t* flecs_observer_init(
     bool multi = false;
 
     if (query->term_count == 1 && !desc->last_event_id) {
-        ecs_term_t *term = &query->terms[0];
+        const ecs_term_t *term = &query->terms[0];
         /* If the query has a single term but it is a *From operator, we
          * need to create a multi observer */
         multi |= (term->oper == EcsAndFrom) || (term->oper == EcsOrFrom);
@@ -1195,9 +1192,9 @@ void flecs_observer_fini(
 
     if (impl->flags & EcsObserverIsMulti) {
         ecs_observer_t **children = ecs_vec_first(&impl->children);
-        int32_t i, children_count = ecs_vec_count(&impl->children);
+        const int32_t children_count = ecs_vec_count(&impl->children);
 
-        for (i = 0; i < children_count; i ++) {
+        for (int32_t i = 0; i < children_count; i ++) {
             flecs_observer_fini(children[i]);
         }
 
@@ -1251,9 +1248,9 @@ void flecs_observer_set_disable_bit(
     ecs_observer_impl_t *impl = flecs_observer_impl(o);
     if (impl->flags & EcsObserverIsMulti) {
         ecs_observer_t **children = ecs_vec_first(&impl->children);
-        int32_t i, children_count = ecs_vec_count(&impl->children);
+        const int32_t children_count = ecs_vec_count(&impl->children);
         if (children_count) {
-            for (i = 0; i < children_count; i ++) {
+            for (int32_t i = 0; i < children_count; i ++) {
                 ECS_BIT_COND(flecs_observer_impl(children[i])->flags, bit, cond);
             }
         }

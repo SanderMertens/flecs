@@ -475,9 +475,9 @@ void flecs_eval_component_monitor(
 
         m->is_dirty = false;
 
-        int32_t i, count = ecs_vec_count(&m->queries);
+        const int32_t count = ecs_vec_count(&m->queries);
         ecs_query_t **elems = ecs_vec_first(&m->queries);
-        for (i = 0; i < count; i ++) {
+        for (int32_t i = 0; i < count; i ++) {
             ecs_query_t *q = elems[i];
             flecs_poly_assert(q, ecs_query_t);
             flecs_query_cache_notify(world, q, &(ecs_query_cache_event_t) {
@@ -493,7 +493,7 @@ void flecs_monitor_mark_dirty(
     ecs_world_t *world,
     ecs_entity_t id)
 {
-    ecs_map_t *monitors = &world->monitors.monitors;
+    const ecs_map_t *monitors = &world->monitors.monitors;
 
     /* Only flag if there are actually monitors registered, so that we
      * don't waste cycles evaluating monitors if there's no interest */
@@ -548,9 +548,9 @@ void flecs_monitor_unregister(
         return;
     }
 
-    int32_t i, count = ecs_vec_count(&m->queries);
+    int32_t count = ecs_vec_count(&m->queries);
     ecs_query_t **queries = ecs_vec_first(&m->queries);
-    for (i = 0; i < count; i ++) {
+    for (int32_t i = 0; i < count; i ++) {
         if (queries[i] == query) {
             ecs_vec_remove_t(&m->queries, ecs_query_t*, i);
             count --;
@@ -605,7 +605,7 @@ void flecs_clean_tables(
 
     /* Ensure that first table in sparse set has id 0. This is a dummy table
      * that only exists so that there is no table with id 0 */
-    ecs_table_t *first = flecs_sparse_get_dense_t(&world->store.tables,
+    const ecs_table_t *first = flecs_sparse_get_dense_t(&world->store.tables,
         ecs_table_t, 0);
     (void)first;
 
@@ -643,7 +643,7 @@ void flecs_fini_root_tables(
 
     const ecs_table_record_t *tr;
     while ((tr = flecs_table_cache_next(&it, ecs_table_record_t))) {
-        ecs_table_t *table = tr->hdr.table;
+        const ecs_table_t *table = tr->hdr.table;
         if (table->flags & EcsTableHasBuiltins) {
             continue; /* Query out modules */
         }
@@ -655,7 +655,7 @@ void flecs_fini_root_tables(
             /* Only delete entities that are used as pair target. Iterate
              * backwards to minimize moving entities around in table. */
             for (i = count - 1; i >= 0; i --) {
-                ecs_record_t *r = flecs_entities_get(world, entities[i]);
+                const ecs_record_t *r = flecs_entities_get(world, entities[i]);
                 ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
                 ecs_assert(r->table == table, ECS_INTERNAL_ERROR, NULL);
                 if (ECS_RECORD_TO_ROW_FLAGS(r->row) & EcsEntityIsTarget) {
@@ -667,7 +667,7 @@ void flecs_fini_root_tables(
              * entity). This limits table moves during cleanup and delays
              * cleanup of tags. */
             for (i = count - 1; i >= 0; i --) {
-                ecs_record_t *r = flecs_entities_get(world, entities[i]);
+                const ecs_record_t *r = flecs_entities_get(world, entities[i]);
                 ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
                 ecs_assert(r->table == table, ECS_INTERNAL_ERROR, NULL);
                 if (!ECS_RECORD_TO_ROW_FLAGS(r->row)) {
@@ -1071,9 +1071,9 @@ void flecs_notify_tables(
 
     /* If no id is specified, broadcast to all tables */
     if (!id) {
-        ecs_sparse_t *tables = &world->store.tables;
-        int32_t i, count = flecs_sparse_count(tables);
-        for (i = 0; i < count; i ++) {
+        const ecs_sparse_t *tables = &world->store.tables;
+        const int32_t count = flecs_sparse_count(tables);
+        for (int32_t i = 0; i < count; i ++) {
             ecs_table_t *table = flecs_sparse_get_dense_t(tables, ecs_table_t, i);
             flecs_table_notify(world, table, id, event);
         }
@@ -1347,10 +1347,10 @@ static
 void flecs_fini_unset_tables(
     ecs_world_t *world)
 {
-    ecs_sparse_t *tables = &world->store.tables;
-    int32_t i, count = flecs_sparse_count(tables);
+    const ecs_sparse_t *tables = &world->store.tables;
+    const int32_t count = flecs_sparse_count(tables);
 
-    for (i = 0; i < count; i ++) {
+    for (int32_t i = 0; i < count; i ++) {
         ecs_table_t *table = flecs_sparse_get_dense_t(tables, ecs_table_t, i);
         flecs_table_remove_actions(world, table);
     }
@@ -1361,9 +1361,9 @@ static
 void flecs_fini_actions(
     ecs_world_t *world)
 {
-    int32_t i, count = ecs_vec_count(&world->fini_actions);
-    ecs_action_elem_t *elems = ecs_vec_first(&world->fini_actions);
-    for (i = 0; i < count; i ++) {
+    const int32_t count = ecs_vec_count(&world->fini_actions);
+    const ecs_action_elem_t *elems = ecs_vec_first(&world->fini_actions);
+    for (int32_t i = 0; i < count; i ++) {
         elems[i].action(world, elems[i].ctx);
     }
 
@@ -1375,9 +1375,9 @@ static
 void flecs_fini_type_info(
     ecs_world_t *world)
 {
-    int32_t i, count = flecs_sparse_count(&world->type_info);
-    ecs_sparse_t *type_info = &world->type_info;
-    for (i = 0; i < count; i ++) {
+    const int32_t count = flecs_sparse_count(&world->type_info);
+    const ecs_sparse_t *type_info = &world->type_info;
+    for (int32_t i = 0; i < count; i ++) {
         ecs_type_info_t *ti = flecs_sparse_get_dense_t(type_info,
             ecs_type_info_t, i);
         flecs_type_info_fini(ti);
@@ -1616,8 +1616,8 @@ void ecs_set_entity_range(
       id_start = flecs_entities_max_id(world) + 1;
     }
 
-    uint32_t start = (uint32_t)id_start;
-    uint32_t end = (uint32_t)id_end;
+    const uint32_t start = (uint32_t)id_start;
+    const uint32_t end = (uint32_t)id_end;
 
     flecs_entities_max_id(world) = start - 1;
 
@@ -1948,9 +1948,9 @@ void ecs_frame_end(
         "cannot end frame while frame is not in progress");
 
     ++world->info.frame_count_total;
-    
-    int32_t i, count = world->stage_count;
-    for (i = 0; i < count; i ++) {
+
+    const int32_t count = world->stage_count;
+    for (int32_t i = 0; i < count; i ++) {
         flecs_stage_merge_post_frame(world, world->stages[i]);
     }
 
@@ -1996,12 +1996,12 @@ void flecs_process_empty_queries(
     const ecs_table_record_t *tr;
     if (flecs_table_cache_iter(&idr->cache, &it)) {
         while ((tr = flecs_table_cache_next(&it, ecs_table_record_t))) {
-            ecs_table_t *table = tr->hdr.table;
-            EcsPoly *queries = ecs_table_get_column(table, tr->column, 0);
-            int32_t i, count = ecs_table_count(table);
+            const ecs_table_t *table = tr->hdr.table;
+            const EcsPoly *queries = ecs_table_get_column(table, tr->column, 0);
+            const int32_t count = ecs_table_count(table);
 
-            for (i = 0; i < count; i ++) {
-                ecs_query_t *query = queries[i].poly;
+            for (int32_t i = 0; i < count; i ++) {
+                const ecs_query_t *query = queries[i].poly;
                 const ecs_entity_t *entities = ecs_table_entities(table);
                 if (!ecs_query_is_true(query)) {
                     ecs_add_id(world, entities[i], EcsEmpty);
@@ -2045,7 +2045,7 @@ void flecs_process_pending_tables(
      * keep most of the original ordering of events intact, which is desirable
      * as it means that the ordering of tables in the internal data structures is
      * more predictable. */
-    int32_t i, count = flecs_sparse_count(world->pending_tables);
+    int32_t count = flecs_sparse_count(world->pending_tables);
     if (!count) {
         return;
     }
@@ -2064,7 +2064,7 @@ void flecs_process_pending_tables(
          * notification for a table that just became non-empty. */
         flecs_defer_begin(world, world->stages[0]);
 
-        for (i = 0; i < count; i ++) {
+        for (int32_t i = 0; i < count; i ++) {
             ecs_table_t *table = flecs_sparse_get_dense_t(
                 pending_tables, ecs_table_t*, i)[0];
             if (!table->id) {
@@ -2075,14 +2075,14 @@ void flecs_process_pending_tables(
             /* For each id in the table, add it to the empty/non empty list
              * based on its current state */
             if (flecs_table_records_update_empty(table)) {
-                int32_t table_count = ecs_table_count(table);
+                const int32_t table_count = ecs_table_count(table);
                 if (table->flags & (EcsTableHasOnTableFill|EcsTableHasOnTableEmpty)) {
                     /* Only emit an event when there was a change in the
                     * administration. It is possible that a table ended up in the
                     * pending_tables list by going from empty->non-empty, but then
                     * became empty again. By the time we run this code, no changes
                     * in the administration would actually be made. */
-                    ecs_entity_t evt = table_count ? EcsOnTableFill : EcsOnTableEmpty;
+                    const ecs_entity_t evt = table_count ? EcsOnTableFill : EcsOnTableEmpty;
                     if (ecs_should_log_3()) {
                         ecs_dbg_3("table %u state change (%s)",
                             (uint32_t)table->id,
@@ -2207,7 +2207,7 @@ int32_t ecs_delete_empty_tables(
                 continue;
             }
 
-            uint16_t gen = ++ table->_->generation;
+            const uint16_t gen = ++ table->_->generation;
             if (delete_generation && (gen > delete_generation)) {
                 flecs_table_fini(world, table);
                 delete_count ++;

@@ -14,13 +14,13 @@ void ensure(
     ecs_size_t size)
 {
     if (!bs->size) {
-        int32_t new_size = ((size - 1) / 64 + 1) * ECS_SIZEOF(uint64_t);
+        const int32_t new_size = ((size - 1) / 64 + 1) * ECS_SIZEOF(uint64_t);
         bs->size = ((size - 1) / 64 + 1) * 64;
         bs->data = ecs_os_calloc(new_size);
     } else if (size > bs->size) {
-        int32_t prev_size = ((bs->size - 1) / 64 + 1) * ECS_SIZEOF(uint64_t);
+        const int32_t prev_size = ((bs->size - 1) / 64 + 1) * ECS_SIZEOF(uint64_t);
         bs->size = ((size - 1) / 64 + 1) * 64;
-        int32_t new_size = ((size - 1) / 64 + 1) * ECS_SIZEOF(uint64_t);
+        const int32_t new_size = ((size - 1) / 64 + 1) * ECS_SIZEOF(uint64_t);
         bs->data = ecs_os_realloc(bs->data, new_size);
         ecs_os_memset(ECS_OFFSET(bs->data, prev_size), 0, new_size - prev_size);
     }
@@ -64,7 +64,7 @@ void flecs_bitset_addn(
     ecs_bitset_t *bs,
     int32_t count)
 {
-    int32_t elem = bs->count += count;
+    const int32_t elem = bs->count += count;
     ensure(bs, elem);
 }
 
@@ -74,8 +74,8 @@ void flecs_bitset_set(
     bool value)
 {
     ecs_check(elem < bs->count, ECS_INVALID_PARAMETER, NULL);
-    uint32_t hi = ((uint32_t)elem) >> 6;
-    uint32_t lo = ((uint32_t)elem) & 0x3F;
+    const uint32_t hi = ((uint32_t)elem) >> 6;
+    const uint32_t lo = ((uint32_t)elem) & 0x3F;
     set_bit(&bs->data[hi], lo, value);
     error:
         return;
@@ -86,8 +86,8 @@ bool flecs_bitset_get(
     int32_t elem)
 {
     ecs_check(elem < bs->count, ECS_INVALID_PARAMETER, NULL);
-    uint32_t hi = elem >> 6;
-    uint32_t lo = elem & 0x3F;
+    const uint32_t hi = elem >> 6;
+    const uint32_t lo = elem & 0x3F;
     return get_bit(bs->data[hi], lo);
 error:
     return false;
@@ -104,7 +104,7 @@ void flecs_bitset_remove(
     int32_t elem)
 {
     ecs_check(elem < bs->count, ECS_INVALID_PARAMETER, NULL);
-    int32_t last = bs->count - 1;
+    const int32_t last = bs->count - 1;
     if (elem != last) {
         bool last_value = flecs_bitset_get(bs, last);
         flecs_bitset_set(bs, elem, last_value);
@@ -140,8 +140,8 @@ void flecs_bitset_set_range(
     ecs_check(start < bs->count && stop < bs->count, ECS_INVALID_PARAMETER, NULL);
 
     for (int32_t elem = start; elem < stop; elem++) {
-        uint32_t hi = ((uint32_t)elem) >> 6;
-        uint32_t lo = ((uint32_t)elem) & 0x3F;
+        const uint32_t hi = ((uint32_t)elem) >> 6;
+        const uint32_t lo = ((uint32_t)elem) & 0x3F;
         set_bit(&bs->data[hi], lo, value);
     }
     error:

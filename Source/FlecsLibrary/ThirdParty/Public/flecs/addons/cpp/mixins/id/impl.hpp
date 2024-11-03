@@ -20,7 +20,7 @@ inline flecs::entity id::flags() const {
 inline flecs::entity id::first() const {
     ecs_assert(is_pair(), ECS_INVALID_OPERATION, NULL);
 
-    flecs::entity_t e = ECS_PAIR_FIRST(id_);
+    const flecs::entity_t e = ECS_PAIR_FIRST(id_);
     if (world_) {
         return flecs::entity(world_, ecs_get_alive(world_, e));
     } else {
@@ -29,7 +29,7 @@ inline flecs::entity id::first() const {
 }
 
 inline flecs::entity id::second() const {
-    flecs::entity_t e = ECS_PAIR_SECOND(id_);
+    const flecs::entity_t e = ECS_PAIR_SECOND(id_);
     if (world_) {
         return flecs::entity(world_, ecs_get_alive(world_, e));
     } else {

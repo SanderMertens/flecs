@@ -313,8 +313,8 @@ struct type_impl {
             return true;
         }
 
-        ecs_entity_t prev_scope = ecs_set_scope(world, 0);
-        ecs_entity_t prev_with = ecs_set_with(world, 0);
+        const ecs_entity_t prev_scope = ecs_set_scope(world, 0);
+        const ecs_entity_t prev_with = ecs_set_with(world, 0);
         
         const char* typeName = type_name<T>();
         const entity_t current = ecs_lookup(world, typeName);

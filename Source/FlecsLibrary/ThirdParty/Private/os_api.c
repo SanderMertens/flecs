@@ -287,9 +287,9 @@ void ecs_os_fatal(
 static
 void ecs_os_gettime(ecs_time_t *time) {
     ecs_assert(ecs_os_has_time() == true, ECS_MISSING_OS_API, NULL);
-    
-    uint64_t now = ecs_os_now();
-    uint64_t sec = now / 1000000000;
+
+    const uint64_t now = ecs_os_now();
+    const uint64_t sec = now / 1000000000;
 
     assert(sec < UINT32_MAX);
     assert((now - sec * 1000000000) < UINT32_MAX);
@@ -337,7 +337,7 @@ void ecs_os_api_free(void *ptr) {
 static
 char* ecs_os_api_strdup(const char *str) {
     if (str) {
-        int len = ecs_os_strlen(str);
+        const int len = ecs_os_strlen(str);
         char *result = ecs_os_malloc(len + 1);
         ecs_assert(result != NULL, ECS_OUT_OF_MEMORY, NULL);
         ecs_os_strcpy(result, str);
@@ -377,8 +377,8 @@ void ecs_os_perf_trace_pop_(
 static
 char *module_file_base(const char *module, char sep) {
     char *base = ecs_os_strdup(module);
-    ecs_size_t i, len = ecs_os_strlen(base);
-    for (i = 0; i < len; i ++) {
+    const ecs_size_t len = ecs_os_strlen(base);
+    for (ecs_size_t i = 0; i < len; i ++) {
         if (base[i] == '.') {
             base[i] = sep;
         }

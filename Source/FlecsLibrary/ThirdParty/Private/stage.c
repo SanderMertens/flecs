@@ -35,11 +35,11 @@ ecs_cmd_t* flecs_cmd_new_batched(
     ecs_stage_t *stage, 
     ecs_entity_t e)
 {
-    ecs_vec_t *cmds = &stage->cmd->queue;
+    const ecs_vec_t *cmds = &stage->cmd->queue;
     ecs_cmd_entry_t *entry = flecs_sparse_get_any_t(
         &stage->cmd->entries, ecs_cmd_entry_t, e);
 
-    int32_t cur = ecs_vec_count(cmds);
+    const int32_t cur = ecs_vec_count(cmds);
     ecs_cmd_t *cmd = flecs_cmd_new(stage);
     if (entry) {
         if (entry->first == -1) {
@@ -47,7 +47,7 @@ ecs_cmd_t* flecs_cmd_new_batched(
             entry->first = cur;
             cmd->entry = entry;
         } else {
-            int32_t last = entry->last;
+            const int32_t last = entry->last;
             ecs_cmd_t *arr = ecs_vec_first_t(cmds, ecs_cmd_t);
             ecs_assert(arr[last].entity == e, ECS_INTERNAL_ERROR, NULL);
             ecs_cmd_t *last_op = &arr[last];
@@ -97,8 +97,8 @@ void flecs_stage_merge(
     } else {
         /* Merge stages. Only merge if the stage has auto_merging turned on, or 
          * if this is a forced merge (like when ecs_merge is called) */
-        int32_t i, count = ecs_get_stage_count(world);
-        for (i = 0; i < count; i ++) {
+        const int32_t count = ecs_get_stage_count(world);
+        for (int32_t i = 0; i < count; i ++) {
             ecs_stage_t *s = (ecs_stage_t*)ecs_get_stage(world, i);
             flecs_poly_assert(s, ecs_stage_t);
             flecs_defer_end(world, s);
@@ -262,8 +262,7 @@ bool flecs_defer_bulk_new(
         ecs_entity_t *ids = ecs_os_malloc(count * ECS_SIZEOF(ecs_entity_t));
 
         /* Use ecs_new_id as this is thread safe */
-        int i;
-        for (i = 0; i < count; i ++) {
+        for (int i = 0; i < count; i ++) {
             ids[i] = ecs_new(world);
         }
 
@@ -364,7 +363,7 @@ void* flecs_defer_set(
     ecs_table_t *table = NULL;
     if (idr) {
         /* Entity can only have existing component if id record exists */
-        ecs_record_t *r = flecs_entities_get(world, entity);
+        const ecs_record_t *r = flecs_entities_get(world, entity);
         table = r->table;
         if (r && table) {
             const ecs_table_record_t *tr = flecs_id_record_get_table(
@@ -402,14 +401,14 @@ void* flecs_defer_set(
          * responsible for constructing. */
         if (value) {
             if (emplace) {
-                ecs_move_t move = ti->hooks.move_ctor;
+                const ecs_move_t move = ti->hooks.move_ctor;
                 if (move) {
                     move(cmd_value, value, 1, ti);
                 } else {
                     ecs_os_memcpy(cmd_value, value, size);
                 }
             } else {
-                ecs_copy_t copy = ti->hooks.copy_ctor;
+                const ecs_copy_t copy = ti->hooks.copy_ctor;
                 if (copy) {
                     copy(cmd_value, value, 1, ti);
                 } else {
@@ -427,13 +426,13 @@ void* flecs_defer_set(
 
             if (!base) {
                 /* Normal ctor */
-                ecs_xtor_t ctor = ti->hooks.ctor;
+                const ecs_xtor_t ctor = ti->hooks.ctor;
                 if (ctor) {
                     ctor(cmd_value, 1, ti);
                 }
             } else {
                 /* Override */
-                ecs_copy_t copy = ti->hooks.copy_ctor;
+                const ecs_copy_t copy = ti->hooks.copy_ctor;
                 if (copy) {
                     copy(cmd_value, base, 1, ti);
                 } else {
@@ -443,7 +442,7 @@ void* flecs_defer_set(
         }
     } else if (value) {
         /* If component exists and value is provided, copy */
-        ecs_copy_t copy = ti->hooks.copy;
+        const ecs_copy_t copy = ti->hooks.copy;
         if (copy) {
             copy(existing, value, 1, ti);
         } else {
@@ -513,7 +512,7 @@ void flecs_enqueue(
 
     if (desc->ids && desc->ids->count != 0) {
         ecs_type_t *type_cmd = flecs_stack_alloc_t(stack, ecs_type_t);
-        int32_t id_count = desc->ids->count;
+        const int32_t id_count = desc->ids->count;
         type_cmd->count = id_count;
         type_cmd->array = flecs_stack_alloc_n(stack, ecs_id_t, id_count);
         ecs_os_memcpy_n(type_cmd->array, desc->ids->array, ecs_id_t, id_count);
@@ -559,9 +558,9 @@ void flecs_stage_merge_post_frame(
     ecs_stage_t *stage)
 {
     /* Execute post frame actions */
-    int32_t i, count = ecs_vec_count(&stage->post_frame_actions);
-    ecs_action_elem_t *elems = ecs_vec_first(&stage->post_frame_actions);
-    for (i = 0; i < count; i ++) {
+    const int32_t count = ecs_vec_count(&stage->post_frame_actions);
+    const ecs_action_elem_t *elems = ecs_vec_first(&stage->post_frame_actions);
+    for (int32_t i = 0; i < count; i ++) {
         elems[i].action(world, elems[i].ctx);
     }
 
@@ -595,7 +594,7 @@ void flecs_commands_fini(
 void flecs_commands_push(
     ecs_stage_t *stage)
 {
-    int32_t sp = ++ stage->cmd_sp;
+    const int32_t sp = ++ stage->cmd_sp;
     ecs_assert(sp < ECS_MAX_DEFER_STACK, ECS_INTERNAL_ERROR, NULL);
     stage->cmd = &stage->cmd_stack[sp];
 }
@@ -603,7 +602,7 @@ void flecs_commands_push(
 void flecs_commands_pop(
     ecs_stage_t *stage)
 {
-    int32_t sp = -- stage->cmd_sp;
+    const int32_t sp = -- stage->cmd_sp;
     ecs_assert(sp >= 0, ECS_INTERNAL_ERROR, NULL);
     stage->cmd = &stage->cmd_stack[sp];
 }
@@ -612,7 +611,7 @@ ecs_entity_t flecs_stage_set_system(
     ecs_stage_t *stage,
     ecs_entity_t system)
 {
-    ecs_entity_t old = stage->system;
+    const ecs_entity_t old = stage->system;
     stage->system = system;
     return old;
 }
@@ -639,8 +638,7 @@ ecs_stage_t* flecs_stage_new(
     ecs_allocator_t *a = &stage->allocator;
     ecs_vec_init_t(a, &stage->post_frame_actions, ecs_action_elem_t, 0);
 
-    int32_t i;
-    for (i = 0; i < ECS_MAX_DEFER_STACK; i ++) {
+    for (int32_t i = 0; i < ECS_MAX_DEFER_STACK; i ++) {
         flecs_commands_init(stage, &stage->cmd_stack[i]);
     }
 
@@ -665,8 +663,7 @@ void flecs_stage_free(
     ecs_vec_fini(NULL, &stage->variables, 0);
     ecs_vec_fini(NULL, &stage->operations, 0);
 
-    int32_t i;
-    for (i = 0; i < ECS_MAX_DEFER_STACK; i ++) {
+    for (int32_t i = 0; i < ECS_MAX_DEFER_STACK; i ++) {
         flecs_commands_fini(stage, &stage->cmd_stack[i]);
     }
 
@@ -792,7 +789,7 @@ int32_t ecs_stage_get_id(
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
 
     if (flecs_poly_is(world, ecs_stage_t)) {
-        ecs_stage_t *stage = ECS_CONST_CAST(ecs_stage_t*, world);
+        const ecs_stage_t *stage = ECS_CONST_CAST(ecs_stage_t*, world);
 
         /* Index 0 is reserved for main stage */
         return stage->id;
@@ -827,8 +824,8 @@ bool ecs_readonly_begin(
     ecs_dbg_3("#[bold]readonly");
     ecs_log_push_3();
 
-    int32_t i, count = ecs_get_stage_count(world);
-    for (i = 0; i < count; i ++) {
+    const int32_t count = ecs_get_stage_count(world);
+    for (int32_t i = 0; i < count; i ++) {
         ecs_stage_t *stage = world->stages[i];
         stage->lookup_path = world->stages[0]->lookup_path;
         ecs_assert(stage->defer == 0, ECS_INVALID_OPERATION, 

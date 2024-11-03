@@ -14,7 +14,7 @@ static
 void flecs_sync_worker(
     ecs_world_t* world)
 {
-    int32_t stage_count = ecs_get_stage_count(world);
+    const int32_t stage_count = ecs_get_stage_count(world);
     if (stage_count <= 1) {
         return;
     }
@@ -54,7 +54,7 @@ void* flecs_worker(void *arg) {
     ecs_os_mutex_unlock(world->sync_mutex);
 
     while (!(world->flags & EcsWorldQuitWorkers)) {
-        ecs_entity_t old_scope = ecs_set_scope((ecs_world_t*)stage, 0);
+        const ecs_entity_t old_scope = ecs_set_scope((ecs_world_t*)stage, 0);
 
         ecs_dbg_3("worker %d: run", stage->id);
         flecs_run_pipeline_ops(world, stage, stage->id, world->stage_count, 
@@ -81,7 +81,7 @@ void flecs_create_worker_threads(
     ecs_world_t *world)
 {
     flecs_poly_assert(world, ecs_world_t);
-    int32_t stages = ecs_get_stage_count(world);
+    const int32_t stages = ecs_get_stage_count(world);
 
     for (int32_t i = 1; i < stages; i ++) {
         ecs_stage_t *stage = (ecs_stage_t*)ecs_get_stage(world, i);
@@ -123,7 +123,7 @@ void flecs_wait_for_workers(
 {
     flecs_poly_assert(world, ecs_world_t);
 
-    int32_t stage_count = ecs_get_stage_count(world);
+    const int32_t stage_count = ecs_get_stage_count(world);
     if (stage_count <= 1) {
         return;
     }
@@ -142,7 +142,7 @@ void flecs_wait_for_workers(
 void flecs_wait_for_sync(
     ecs_world_t *world)
 {
-    int32_t stage_count = ecs_get_stage_count(world);
+    const int32_t stage_count = ecs_get_stage_count(world);
     if (stage_count <= 1) {
         return;
     }
@@ -168,7 +168,7 @@ void flecs_wait_for_sync(
 void flecs_signal_workers(
     ecs_world_t *world)
 {
-    int32_t stage_count = ecs_get_stage_count(world);
+    const int32_t stage_count = ecs_get_stage_count(world);
     if (stage_count <= 1) {
         return;
     }
@@ -189,7 +189,7 @@ void flecs_join_worker_threads(
      * a potential race if threads haven't spun up yet. */
     int i, count = world->stage_count;
     for (i = 1; i < count; i ++) {
-        ecs_stage_t *stage = world->stages[i];
+        const ecs_stage_t *stage = world->stages[i];
         if (stage->thread) {
             threads_active = true;
             break;
@@ -238,7 +238,7 @@ void flecs_workers_progress(
 
     /* Run pipeline on main thread */
     ecs_world_t *stage = ecs_get_stage(world, 0);
-    ecs_entity_t old_scope = ecs_set_scope((ecs_world_t*)stage, 0);
+    const ecs_entity_t old_scope = ecs_set_scope((ecs_world_t*)stage, 0);
     flecs_run_pipeline(stage, pq, delta_time);
     ecs_set_scope((ecs_world_t*)stage, old_scope);
 }
@@ -254,7 +254,7 @@ void flecs_set_threads_internal(
         : ecs_os_has_threading()), 
             ECS_MISSING_OS_API, NULL);
 
-    int32_t stage_count = ecs_get_stage_count(world);
+    const int32_t stage_count = ecs_get_stage_count(world);
     bool worker_method_changed = (use_task_api != world->workers_use_task_api);
 
     if ((stage_count != threads) || worker_method_changed) {

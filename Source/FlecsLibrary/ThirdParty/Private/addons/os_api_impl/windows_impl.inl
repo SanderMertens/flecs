@@ -20,7 +20,7 @@ typedef struct ecs_win_thread_t {
 
 static
 DWORD flecs_win_thread(void *ptr) {
-    ecs_win_thread_t *thread = ptr;
+    const ecs_win_thread_t *thread = ptr;
     thread->callback(thread->arg);
     return 0;
 }
@@ -43,7 +43,7 @@ void* win_thread_join(
     ecs_os_thread_t thr)
 {
     ecs_win_thread_t *thread = (ecs_win_thread_t*)(uintptr_t)thr;
-    DWORD r = WaitForSingleObject(thread->thread, INFINITE);
+    const DWORD r = WaitForSingleObject(thread->thread, INFINITE);
     if (r == WAIT_FAILED) {
         ecs_err("win_thread_join: WaitForSingleObject failed");
     }
@@ -181,12 +181,11 @@ void win_sleep(
     int32_t sec, 
     int32_t nanosec) 
 {
-    HANDLE timer;
     LARGE_INTEGER ft;
 
     ft.QuadPart = -((int64_t)sec * 10000000 + (int64_t)nanosec / 100);
 
-    timer = CreateWaitableTimer(NULL, TRUE, NULL);
+    const HANDLE timer = CreateWaitableTimer(NULL, TRUE, NULL);
     SetWaitableTimer(timer, &ft, 0, NULL, NULL, 0);
     WaitForSingleObject(timer, INFINITE);
     CloseHandle(timer);
@@ -195,7 +194,7 @@ void win_sleep(
 static
 void win_enable_high_timer_resolution(bool enable)
 {
-    HMODULE hntdll = GetModuleHandle(TEXT("ntdll.dll"));
+    const HMODULE hntdll = GetModuleHandle(TEXT("ntdll.dll"));
     if (!hntdll) {
         return;
     }
@@ -240,11 +239,9 @@ void win_enable_high_timer_resolution(bool enable)
 
 static
 uint64_t win_time_now(void) {
-    uint64_t now;
-
     LARGE_INTEGER qpc_t;
     QueryPerformanceCounter(&qpc_t);
-    now = (uint64_t)((double)qpc_t.QuadPart / win_time_freq);
+    const uint64_t now = (uint64_t)((double)qpc_t.QuadPart / win_time_freq);
 
     return now;
 }

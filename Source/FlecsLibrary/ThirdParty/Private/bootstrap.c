@@ -51,9 +51,9 @@ void ecs_on_set(EcsIdentifier)(ecs_iter_t *it) {
     EcsIdentifier *ptr = ecs_field(it, EcsIdentifier, 0);
     
     ecs_world_t *world = it->real_world;
-    ecs_entity_t evt = it->event;
-    ecs_id_t evt_id = it->event_id;
-    ecs_entity_t kind = ECS_PAIR_SECOND(evt_id); /* Name, Symbol, Alias */
+    const ecs_entity_t evt = it->event;
+    const ecs_id_t evt_id = it->event_id;
+    const ecs_entity_t kind = ECS_PAIR_SECOND(evt_id); /* Name, Symbol, Alias */
     ecs_id_t pair = ecs_childof(0);
     ecs_hashmap_t *index = NULL;
 
@@ -73,9 +73,9 @@ void ecs_on_set(EcsIdentifier)(ecs_iter_t *it) {
         }
     }
 
-    int i, count = it->count;
+    const int count = it->count;
 
-    for (i = 0; i < count; i ++) {
+    for (int i = 0; i < count; i ++) {
         EcsIdentifier *cur = &ptr[i];
         uint64_t hash;
         ecs_size_t len;
@@ -98,8 +98,8 @@ void ecs_on_set(EcsIdentifier)(ecs_iter_t *it) {
         }
 
         if (index) {
-            uint64_t index_hash = cur->index_hash;
-            ecs_entity_t e = it->entities[i];
+            const uint64_t index_hash = cur->index_hash;
+            const ecs_entity_t e = it->entities[i];
 
             if (hash != index_hash) {
                 if (index_hash) {
@@ -130,7 +130,7 @@ static ECS_COPY(EcsPoly, dst, src, {
 
 static ECS_MOVE(EcsPoly, dst, src, {
     if (dst->poly && (dst->poly != src->poly)) {
-        flecs_poly_dtor_t *dtor = ecs_get_dtor(dst->poly);
+    const flecs_poly_dtor_t *dtor = ecs_get_dtor(dst->poly);
         ecs_assert(dtor != NULL, ECS_INTERNAL_ERROR, NULL);
         dtor[0](dst->poly);
     }
@@ -141,7 +141,7 @@ static ECS_MOVE(EcsPoly, dst, src, {
 
 static ECS_DTOR(EcsPoly, ptr, {
     if (ptr->poly) {
-        flecs_poly_dtor_t *dtor = ecs_get_dtor(ptr->poly);
+    const flecs_poly_dtor_t *dtor = ecs_get_dtor(ptr->poly);
         ecs_assert(dtor != NULL, ECS_INTERNAL_ERROR, NULL);
         dtor[0](ptr->poly);
     }
@@ -160,10 +160,10 @@ void flecs_assert_relation_unused(
         return;
     }
 
-    ecs_vec_t *marked_ids = &world->store.marked_ids;
-    int32_t i, count = ecs_vec_count(marked_ids);
-    for (i = 0; i < count; i ++) {
-        ecs_marked_id_t *mid = ecs_vec_get_t(marked_ids, ecs_marked_id_t, i);
+    const ecs_vec_t *marked_ids = &world->store.marked_ids;
+    const int32_t count = ecs_vec_count(marked_ids);
+    for (int32_t i = 0; i < count; i ++) {
+        const ecs_marked_id_t *mid = ecs_vec_get_t(marked_ids, ecs_marked_id_t, i);
         if (mid->id == ecs_pair(rel, EcsWildcard)) {
             /* If id is being cleaned up, no need to throw error as tables will
              * be cleaned up */
@@ -234,11 +234,11 @@ void flecs_register_id_flag_for_relation(
     ecs_flags32_t entity_flag)
 {
     ecs_world_t *world = it->world;
-    ecs_entity_t event = it->event;
+    const ecs_entity_t event = it->event;
 
-    int i, count = it->count;
-    for (i = 0; i < count; i ++) {
-        ecs_entity_t e = it->entities[i];
+    const int count = it->count;
+    for (int i = 0; i < count; i ++) {
+        const ecs_entity_t e = it->entities[i];
         bool changed = false;
 
         if (event == EcsOnAdd) {
@@ -274,11 +274,11 @@ void flecs_register_id_flag_for_relation(
 
 static
 void flecs_register_final(ecs_iter_t *it) {
-    ecs_world_t *world = it->world;
-    
-    int i, count = it->count;
-    for (i = 0; i < count; i ++) {
-        ecs_entity_t e = it->entities[i];
+    const ecs_world_t *world = it->world;
+
+    const int count = it->count;
+    for (int i = 0; i < count; i ++) {
+        const ecs_entity_t e = it->entities[i];
         if (flecs_id_record_get(world, ecs_pair(EcsIsA, e)) != NULL) {
             char *e_str = ecs_get_path(world, e);
             ecs_throw(ECS_ID_IN_USE,
@@ -297,9 +297,9 @@ void flecs_register_tag(ecs_iter_t *it) {
 
     /* Ensure that all id records for tag have type info set to NULL */
     ecs_world_t *world = it->real_world;
-    int i, count = it->count;
-    for (i = 0; i < count; i ++) {
-        ecs_entity_t e = it->entities[i];
+    const int count = it->count;
+    for (int i = 0; i < count; i ++) {
+        const ecs_entity_t e = it->entities[i];
 
         if (it->event == EcsOnAdd) {
             ecs_id_record_t *idr = flecs_id_record_get(world, 
@@ -317,7 +317,7 @@ void flecs_register_tag(ecs_iter_t *it) {
 
 static
 void flecs_register_on_delete(ecs_iter_t *it) {
-    ecs_id_t id = ecs_field_id(it, 0);
+    const ecs_id_t id = ecs_field_id(it, 0);
     flecs_register_id_flag_for_relation(it, EcsOnDelete, 
         ECS_ID_ON_DELETE_FLAG(ECS_PAIR_SECOND(id)),
         EcsIdOnDeleteMask,
@@ -326,7 +326,7 @@ void flecs_register_on_delete(ecs_iter_t *it) {
 
 static
 void flecs_register_on_delete_object(ecs_iter_t *it) {
-    ecs_id_t id = ecs_field_id(it, 0);
+    const ecs_id_t id = ecs_field_id(it, 0);
     flecs_register_id_flag_for_relation(it, EcsOnDeleteTarget, 
         ECS_ID_ON_DELETE_TARGET_FLAG(ECS_PAIR_SECOND(id)),
         EcsIdOnDeleteObjectMask,
@@ -335,7 +335,7 @@ void flecs_register_on_delete_object(ecs_iter_t *it) {
 
 static
 void flecs_register_on_instantiate(ecs_iter_t *it) {
-    ecs_id_t id = ecs_field_id(it, 0);
+    const ecs_id_t id = ecs_field_id(it, 0);
     flecs_register_id_flag_for_relation(it, EcsOnInstantiate, 
         ECS_ID_ON_INSTANTIATE_FLAG(ECS_PAIR_SECOND(id)),
         0, 0);
@@ -347,45 +347,45 @@ typedef struct ecs_on_trait_ctx_t {
 
 static
 void flecs_register_trait(ecs_iter_t *it) {
-    ecs_on_trait_ctx_t *ctx = it->ctx;
+    const ecs_on_trait_ctx_t *ctx = it->ctx;
     flecs_register_id_flag_for_relation(
         it, it->ids[0], ctx->flag, ctx->not_flag, 0);
 }
 
 static
 void flecs_register_trait_pair(ecs_iter_t *it) {
-    ecs_on_trait_ctx_t *ctx = it->ctx;
+    const ecs_on_trait_ctx_t *ctx = it->ctx;
     flecs_register_id_flag_for_relation(
         it, ecs_pair_first(it->world, it->ids[0]), ctx->flag, ctx->not_flag, 0);
 }
 
 static
 void flecs_register_slot_of(ecs_iter_t *it) {
-    int i, count = it->count;
-    for (i = 0; i < count; i ++) {
+    const int count = it->count;
+    for (int i = 0; i < count; i ++) {
         ecs_add_id(it->world, it->entities[i], EcsUnion);
     }
 }
 
 static
 void flecs_on_symmetric_add_remove(ecs_iter_t *it) {
-    ecs_entity_t pair = ecs_field_id(it, 0);
+    const ecs_entity_t pair = ecs_field_id(it, 0);
 
     if (!ECS_HAS_ID_FLAG(pair, PAIR)) {
         /* If relationship was not added as a pair, there's nothing to do */
         return;
     }
 
-    ecs_world_t *world = it->world;
-    ecs_entity_t rel = ECS_PAIR_FIRST(pair);
-    ecs_entity_t obj = ecs_pair_second(world, pair);
-    ecs_entity_t event = it->event;
+    const ecs_world_t *world = it->world;
+    const ecs_entity_t rel = ECS_PAIR_FIRST(pair);
+    const ecs_entity_t obj = ecs_pair_second(world, pair);
+    const ecs_entity_t event = it->event;
 
 
     if (obj) {
-        int i, count = it->count;
-        for (i = 0; i < count; i ++) {
-            ecs_entity_t subj = it->entities[i];
+        const int count = it->count;
+        for (int i = 0; i < count; i ++) {
+            const ecs_entity_t subj = it->entities[i];
             if (event == EcsOnAdd) {
                 if (!ecs_has_id(it->real_world, obj, ecs_pair(rel, subj))) {
                     ecs_add_pair(it->world, obj, rel, subj);   
@@ -403,9 +403,9 @@ static
 void flecs_register_symmetric(ecs_iter_t *it) {
     ecs_world_t *world = it->real_world;
 
-    int i, count = it->count;
-    for (i = 0; i < count; i ++) {
-        ecs_entity_t r = it->entities[i];
+    const int count = it->count;
+    for (int i = 0; i < count; i ++) {
+        const ecs_entity_t r = it->entities[i];
         flecs_assert_relation_unused(world, r, EcsSymmetric);
 
         /* Create observer that adds the reverse relationship when R(X, Y) is
@@ -422,19 +422,19 @@ void flecs_register_symmetric(ecs_iter_t *it) {
 static
 void flecs_on_component(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
-    EcsComponent *c = ecs_field(it, EcsComponent, 0);
+    const EcsComponent *c = ecs_field(it, EcsComponent, 0);
 
-    int i, count = it->count;
-    for (i = 0; i < count; i ++) {
-        ecs_entity_t e = it->entities[i];
+    const int count = it->count;
+    for (int i = 0; i < count; i ++) {
+        const ecs_entity_t e = it->entities[i];
 
-        uint32_t component_id = (uint32_t)e; /* Strip generation */
+        const uint32_t component_id = (uint32_t)e; /* Strip generation */
         ecs_assert(component_id < ECS_MAX_COMPONENT_ID, ECS_OUT_OF_RANGE,
             "component id must be smaller than %u", ECS_MAX_COMPONENT_ID);
         (void)component_id;
 
         if (it->event != EcsOnRemove) {
-            ecs_entity_t parent = ecs_get_target(world, e, EcsChildOf, 0);
+            const ecs_entity_t parent = ecs_get_target(world, e, EcsChildOf, 0);
             if (parent) {
                 ecs_add_id(world, parent, EcsModule);
             }
@@ -468,10 +468,10 @@ static
 void flecs_ensure_module_tag(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
 
-    int i, count = it->count;
-    for (i = 0; i < count; i ++) {
-        ecs_entity_t e = it->entities[i];
-        ecs_entity_t parent = ecs_get_target(world, e, EcsChildOf, 0);
+    const int count = it->count;
+    for (int i = 0; i < count; i ++) {
+        const ecs_entity_t e = it->entities[i];
+        const ecs_entity_t parent = ecs_get_target(world, e, EcsChildOf, 0);
         if (parent) {
             ecs_add_id(world, parent, EcsModule);
         }
@@ -483,10 +483,10 @@ void flecs_disable_observer(
     ecs_iter_t *it) 
 {
     ecs_world_t *world = it->world;
-    ecs_entity_t evt = it->event;
+    const ecs_entity_t evt = it->event;
 
-    int32_t i, count = it->count;
-    for (i = 0; i < count; i ++) {
+    const int32_t count = it->count;
+    for (int32_t i = 0; i < count; i ++) {
         flecs_observer_set_disable_bit(world, it->entities[i], 
             EcsObserverIsDisabled, evt == EcsOnAdd);
     }
@@ -500,7 +500,7 @@ void flecs_disable_module_observers(
 {
     ecs_iter_t child_it = ecs_children(world, module);
     while (ecs_children_next(&child_it)) {
-        ecs_table_t *table = child_it.table;
+        const ecs_table_t *table = child_it.table;
         bool table_disabled = table->flags & EcsTableIsDisabled;
         int32_t i;
 
@@ -527,8 +527,7 @@ void flecs_disable_module_observers(
 
 static
 void flecs_disable_module(ecs_iter_t *it) {
-    int32_t i;
-    for (i = 0; i < it->count; i ++) {
+    for (int32_t i = 0; i < it->count; i ++) {
         flecs_disable_module_observers(
             it->real_world, it->entities[i], it->event == EcsOnAdd);
     }
@@ -551,13 +550,13 @@ void flecs_bootstrap_builtin(
 {
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_column_t *columns = table->data.columns;
+    const ecs_column_t *columns = table->data.columns;
     ecs_assert(columns != NULL, ECS_INTERNAL_ERROR, NULL);
 
     ecs_record_t *record = flecs_entities_ensure(world, entity);
     record->table = table;
 
-    int32_t index = flecs_table_append(world, table, entity, false, false);
+    const int32_t index = flecs_table_append(world, table, entity, false, false);
     record->row = ECS_ROW_TO_RECORD(index, 0);
 
     EcsComponent *component = columns[0].data;
@@ -565,11 +564,11 @@ void flecs_bootstrap_builtin(
     component[index].alignment = alignment;
 
     const char *name = &symbol[3]; /* Strip 'Ecs' */
-    ecs_size_t symbol_length = ecs_os_strlen(symbol);
-    ecs_size_t name_length = symbol_length - 3;
+    const ecs_size_t symbol_length = ecs_os_strlen(symbol);
+    const ecs_size_t name_length = symbol_length - 3;
 
     EcsIdentifier *name_col = columns[1].data;
-    uint64_t name_hash = flecs_hash(name, name_length);
+    const uint64_t name_hash = flecs_hash(name, name_length);
     name_col[index].value = ecs_os_strdup(name);
     name_col[index].length = name_length;
     name_col[index].hash = name_hash;
@@ -814,7 +813,7 @@ void flecs_bootstrap(
     ecs_add_id(world, EcsFlecsInternals, EcsModule);
 
     /* Self check */
-    ecs_record_t *r = flecs_entities_get(world, EcsFlecs);
+    const ecs_record_t *r = flecs_entities_get(world, EcsFlecs);
     ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(r->table != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(r->row & EcsEntityIsTraversable, ECS_INTERNAL_ERROR, NULL);

@@ -268,7 +268,7 @@ struct each_delegate : public delegate {
 
     // Static function to call for component on_add hook
     static void run_add(ecs_iter_t *iter) {
-        component_binding_ctx *ctx = reinterpret_cast<component_binding_ctx*>(
+        const component_binding_ctx *ctx = reinterpret_cast<component_binding_ctx*>(
             iter->callback_ctx);
         iter->callback_ctx = ctx->on_add;
         run(iter);
@@ -276,7 +276,7 @@ struct each_delegate : public delegate {
 
     // Static function to call for component on_remove hook
     static void run_remove(ecs_iter_t *iter) {
-        component_binding_ctx *ctx = reinterpret_cast<component_binding_ctx*>(
+        const component_binding_ctx *ctx = reinterpret_cast<component_binding_ctx*>(
             iter->callback_ctx);
         iter->callback_ctx = ctx->on_remove;
         run(iter);
@@ -284,7 +284,7 @@ struct each_delegate : public delegate {
 
     // Static function to call for component on_set hook
     static void run_set(ecs_iter_t *iter) {
-        component_binding_ctx *ctx = reinterpret_cast<component_binding_ctx*>(
+        const component_binding_ctx *ctx = reinterpret_cast<component_binding_ctx*>(
             iter->callback_ctx);
         iter->callback_ctx = ctx->on_set;
         run(iter);
@@ -416,8 +416,8 @@ private:
     {
         ECS_TABLE_LOCK(iter->world, iter->table);
 
-        ecs_world_t *world = iter->world;
-        size_t count = static_cast<size_t>(iter->count);
+        const ecs_world_t *world = iter->world;
+        const size_t count = static_cast<size_t>(iter->count);
         flecs::entity result;
 
         ecs_assert(count > 0, ECS_INVALID_OPERATION,
@@ -691,7 +691,7 @@ struct entity_with_delegate_impl<arg_list<Args ...>> {
 
         /* Get pointers for columns for entity */
         size_t i = 0;
-        for (int32_t column : columns) {
+        for (const int32_t column : columns) {
             if (column == -1) {
                 /* Component could be sparse */
                 void *ptr = ecs_get_mut_id(world, e, ids[i]);
@@ -733,7 +733,7 @@ struct entity_with_delegate_impl<arg_list<Args ...>> {
         }
 
         ArrayType ptrs;
-        bool has_components = get_ptrs(world, e, r, table, ptrs);
+        const bool has_components = get_ptrs(world, e, r, table, ptrs);
         if (has_components) {
             invoke_callback(func, 0, ptrs);
         }
@@ -756,7 +756,7 @@ struct entity_with_delegate_impl<arg_list<Args ...>> {
         }
 
         ArrayType ptrs;
-        bool has_components = get_ptrs(world, e, r, table, ptrs);
+        const bool has_components = get_ptrs(world, e, r, table, ptrs);
         if (has_components) {
             invoke_callback(func, 0, ptrs);
         }
@@ -790,7 +790,7 @@ struct entity_with_delegate_impl<arg_list<Args ...>> {
 
     template <typename Func>
     static bool invoke_ensure(world_t *world, entity_t id, const Func& func) {
-        flecs::world w(world);
+        const flecs::world w(world);
 
         ArrayType ptrs;
         ecs_table_t *table = NULL;

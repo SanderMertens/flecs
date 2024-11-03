@@ -349,7 +349,7 @@ struct query_builder_i : term_builder_i<Base> {
 
     Base& term_at(int32_t term_index) {
         ecs_assert(term_index >= 0, ECS_INVALID_PARAMETER, NULL);
-        int32_t prev_index = term_index_;
+        const int32_t prev_index = term_index_;
         term_index_ = term_index;
         this->term();
         term_index_ = prev_index;

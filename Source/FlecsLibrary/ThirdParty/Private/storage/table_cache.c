@@ -128,12 +128,7 @@ void ecs_table_cache_insert(
     const ecs_table_t *table,
     ecs_table_cache_hdr_t *result)
 {
-    bool empty;
-    if (!table) {
-        empty = false;
-    } else {
-        empty = ecs_table_count(table) == 0;
-    }
+    bool empty = table && ecs_table_count(table) == 0;
     
     ecs_table_cache_insert_w_empty(cache, table, result, empty);
 }
@@ -147,7 +142,7 @@ void ecs_table_cache_replace(
         &cache->index, ecs_table_cache_hdr_t, table->id);
     ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_table_cache_hdr_t *old = *r;
+    const ecs_table_cache_hdr_t *old = *r;
     ecs_assert(old != NULL, ECS_INTERNAL_ERROR, NULL);
 
     ecs_table_cache_hdr_t *prev = old->prev, *next = old->next;

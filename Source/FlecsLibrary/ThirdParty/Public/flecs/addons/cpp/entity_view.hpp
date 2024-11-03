@@ -316,7 +316,7 @@ struct entity_view : public id {
     template<typename First, typename Second, if_t<is_enum<Second>::value> = 0>
     const First* get(Second constant) const {
         const auto& et = enum_type<Second>(this->world_);
-        flecs::entity_t target = et.entity(constant);
+        const flecs::entity_t target = et.entity(constant);
         return get<First>(target);
     }
 
@@ -486,7 +486,7 @@ struct entity_view : public id {
     template<typename First, typename Second, if_t<is_enum<Second>::value> = 0>
     First* get_mut(Second constant) const {
         const auto& et = enum_type<Second>(this->world_);
-        flecs::entity_t target = et.entity(constant);
+        const flecs::entity_t target = et.entity(constant);
         return get_mut<First>(target);
     }
 
@@ -643,8 +643,8 @@ struct entity_view : public id {
      */
     template <typename T>
     bool has() const {
-        flecs::id_t cid = _::type<T>::id(world_);
-        bool result = ecs_has_id(world_, id_, cid);
+	    const flecs::id_t cid = _::type<T>::id(world_);
+	    const bool result = ecs_has_id(world_, id_, cid);
         if (result) {
             return result;
         }
@@ -715,7 +715,7 @@ struct entity_view : public id {
     template<typename First, typename E, if_t< is_enum<E>::value > = 0>
     bool has(E value) const {
         const auto& et = enum_type<E>(this->world_);
-        flecs::entity_t second = et.entity(value);
+        const flecs::entity_t second = et.entity(value);
         return has<First>(second);
     }
 

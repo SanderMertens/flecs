@@ -41,7 +41,7 @@ struct entity : entity_builder<entity>
         if (!ecs_get_scope(world_) && !ecs_get_with(world_)) {
             id_ = ecs_new(world);
         } else {
-            ecs_entity_desc_t desc = {};
+            const ecs_entity_desc_t desc = {};
             id_ = ecs_entity_init(world_, &desc);
         }
     }

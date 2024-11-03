@@ -95,7 +95,6 @@ bool flecs_query_with(
 {
     ecs_query_and_ctx_t *op_ctx = flecs_op_ctx(ctx, and);
     ecs_id_record_t *idr = op_ctx->idr;
-    ecs_table_record_t *tr;
 
     ecs_table_t *table = flecs_query_get_table(op, &op->src, EcsQuerySrc, ctx);
     if (!table) {
@@ -103,7 +102,7 @@ bool flecs_query_with(
     }
 
     if (!redo) {
-        ecs_id_t id = flecs_query_op_get_id(op, ctx);
+        const ecs_id_t id = flecs_query_op_get_id(op, ctx);
         if (!idr || idr->id != id) {
             idr = op_ctx->idr = flecs_id_record_get(ctx->world, id);
             if (!idr) {
@@ -111,7 +110,7 @@ bool flecs_query_with(
             }
         }
 
-        tr = flecs_id_record_get_table(idr, table);
+        ecs_table_record_t* tr = flecs_id_record_get_table(idr, table);
         if (!tr) {
             return false;
         }
@@ -141,7 +140,7 @@ bool flecs_query_and(
     bool redo,
     const ecs_query_run_ctx_t *ctx)
 {
-    uint64_t written = ctx->written[ctx->op_index];
+    const uint64_t written = ctx->written[ctx->op_index];
     if (written & (1ull << op->src.var)) {
         return flecs_query_with(op, redo, ctx);
     } else {
@@ -157,11 +156,11 @@ bool flecs_query_select_id(
 {
     ecs_query_and_ctx_t *op_ctx = flecs_op_ctx(ctx, and);
     ecs_iter_t *it = ctx->it;
-    int8_t field = op->field_index;
+    const int8_t field = op->field_index;
     ecs_assert(field != -1, ECS_INTERNAL_ERROR, NULL);
 
     if (!redo) {
-        ecs_id_t id = it->ids[field];
+        const ecs_id_t id = it->ids[field];
         ecs_id_record_t *idr = op_ctx->idr;
         if (!idr || idr->id != id) {
             idr = op_ctx->idr = flecs_id_record_get(ctx->world, id);
@@ -209,7 +208,7 @@ bool flecs_query_with_id(
 
     ecs_query_and_ctx_t *op_ctx = flecs_op_ctx(ctx, and);
     ecs_iter_t *it = ctx->it;
-    int8_t field = op->field_index;
+    const int8_t field = op->field_index;
     ecs_assert(field != -1, ECS_INTERNAL_ERROR, NULL);
 
     ecs_table_t *table = flecs_query_get_table(op, &op->src, EcsQuerySrc, ctx);
@@ -217,7 +216,7 @@ bool flecs_query_with_id(
         return false;
     }
 
-    ecs_id_t id = it->ids[field];
+    const ecs_id_t id = it->ids[field];
     ecs_id_record_t *idr = op_ctx->idr;
     if (!idr || idr->id != id) {
         idr = op_ctx->idr = flecs_id_record_get(ctx->world, id);
@@ -241,7 +240,7 @@ bool flecs_query_up(
     bool redo,
     const ecs_query_run_ctx_t *ctx)
 {
-    uint64_t written = ctx->written[ctx->op_index];
+    const uint64_t written = ctx->written[ctx->op_index];
     if (flecs_ref_is_written(op, &op->src, EcsQuerySrc, written)) {
         return flecs_query_up_with(op, redo, ctx);
     } else {
@@ -256,7 +255,7 @@ bool flecs_query_self_up(
     bool redo,
     const ecs_query_run_ctx_t *ctx)
 {
-    uint64_t written = ctx->written[ctx->op_index];
+    const uint64_t written = ctx->written[ctx->op_index];
     if (flecs_ref_is_written(op, &op->src, EcsQuerySrc, written)) {
         return flecs_query_self_up_with(op, redo, ctx, false);
     } else {
@@ -271,14 +270,14 @@ bool flecs_query_and_any(
     bool redo,
     const ecs_query_run_ctx_t *ctx)
 {
-    ecs_flags16_t match_flags = op->match_flags;
+    const ecs_flags16_t match_flags = op->match_flags;
     if (redo) {
         if (match_flags & EcsTermMatchAnySrc) {
             return false;
         }
     }
 
-    uint64_t written = ctx->written[ctx->op_index];
+    const uint64_t written = ctx->written[ctx->op_index];
     int32_t remaining = 1;
     bool result;
     if (flecs_ref_is_written(op, &op->src, EcsQuerySrc, written)) {
@@ -294,7 +293,7 @@ bool flecs_query_and_any(
         op_ctx->remaining = flecs_ito(int16_t, remaining);
     }
 
-    int32_t field = op->field_index;
+    const int32_t field = op->field_index;
     if (field != -1) {
         ctx->it->ids[field] = flecs_query_op_get_id(op, ctx);
     }
@@ -310,7 +309,7 @@ bool flecs_query_only_any(
     bool redo,
     const ecs_query_run_ctx_t *ctx)
 {
-    uint64_t written = ctx->written[ctx->op_index];
+    const uint64_t written = ctx->written[ctx->op_index];
     if (flecs_ref_is_written(op, &op->src, EcsQuerySrc, written)) {
         return flecs_query_and_any(op, redo, ctx);
     } else {
@@ -326,8 +325,8 @@ bool flecs_query_triv(
     const ecs_query_run_ctx_t *ctx)
 {
     ecs_query_trivial_ctx_t *op_ctx = flecs_op_ctx(ctx, trivial);
-    ecs_flags64_t termset = op->src.entity;
-    uint64_t written = ctx->written[ctx->op_index];
+    const ecs_flags64_t termset = op->src.entity;
+    const uint64_t written = ctx->written[ctx->op_index];
     ctx->written[ctx->op_index + 1] |= 1ull;
     if (written & 1ull) {
         flecs_query_set_iter_this(ctx->it, ctx);
@@ -346,7 +345,7 @@ bool flecs_query_cache(
     (void)op;
     (void)redo;
 
-    uint64_t written = ctx->written[ctx->op_index];
+    const uint64_t written = ctx->written[ctx->op_index];
     ctx->written[ctx->op_index + 1] |= 1ull;
     if (written & 1ull) {
         return flecs_query_cache_test(ctx, redo);
@@ -363,7 +362,7 @@ bool flecs_query_is_cache(
 {
     (void)op;
 
-    uint64_t written = ctx->written[ctx->op_index];
+    const uint64_t written = ctx->written[ctx->op_index];
     ctx->written[ctx->op_index + 1] |= 1ull;
     if (written & 1ull) {
         return flecs_query_is_cache_test(ctx, redo);
@@ -378,9 +377,8 @@ int32_t flecs_query_next_inheritable_id(
     ecs_type_t *type,
     int32_t index)
 {
-    int32_t i;
-    for (i = index; i < type->count; i ++) {
-        ecs_id_record_t *idr = flecs_id_record_get(world, type->array[i]);
+    for (int32_t i = index; i < type->count; i ++) {
+        const ecs_id_record_t *idr = flecs_id_record_get(world, type->array[i]);
         if (!(idr->flags & EcsIdOnInstantiateDontInherit)) {
             return i;
         }
@@ -402,7 +400,7 @@ bool flecs_query_x_from(
 
     if (!redo) {
         /* Find entity that acts as the template from which we match the ids */
-        ecs_id_t id = flecs_query_op_get_id(op, ctx);
+        const ecs_id_t id = flecs_query_op_get_id(op, ctx);
         ecs_assert(ecs_is_alive(world, id), ECS_INTERNAL_ERROR, NULL);
         ecs_record_t *r = flecs_entities_get(world, id);
         ecs_table_t *table;
@@ -424,12 +422,12 @@ bool flecs_query_x_from(
         type = op_ctx->type;
     }
 
-    ecs_id_t *ids = type->array;
+    const ecs_id_t *ids = type->array;
 
     /* Check if source is variable, and if it's already written */
     bool src_written = true;
     if (op->flags & (EcsQueryIsVar << EcsQuerySrc)) {
-        uint64_t written = ctx->written[ctx->op_index];
+        const uint64_t written = ctx->written[ctx->op_index];
         src_written = written & (1ull << op->src.var);
     }
 
@@ -438,7 +436,7 @@ bool flecs_query_x_from(
 
         /* If source is not yet written, find tables with first id */
         if (!src_written) {
-            ecs_entity_t first_id = ids[id_index];
+            const ecs_entity_t first_id = ids[id_index];
 
             if (!flecs_query_select_w_id(op, redo, ctx, 
                 first_id, (EcsTableNotQueryable|EcsTableIsPrefab|EcsTableIsDisabled)))
@@ -572,7 +570,7 @@ bool flecs_query_ids(
     }
 
     ecs_id_record_t *cur;
-    ecs_id_t id = flecs_query_op_get_id(op, ctx);
+    const ecs_id_t id = flecs_query_op_get_id(op, ctx);
 
     {
         cur = flecs_id_record_get(ctx->world, id);
@@ -584,7 +582,7 @@ bool flecs_query_ids(
     flecs_query_set_vars(op, cur->id, ctx);
 
     if (op->field_index != -1) {
-        ecs_iter_t *it = ctx->it;
+        const ecs_iter_t *it = ctx->it;
         it->ids[op->field_index] = id;
         it->sources[op->field_index] = EcsWildcard;
         it->trs[op->field_index] = NULL; /* Mark field as set */
@@ -603,7 +601,7 @@ bool flecs_query_idsright(
     ecs_id_record_t *cur;
 
     if (!redo) {
-        ecs_id_t id = flecs_query_op_get_id(op, ctx);
+        const ecs_id_t id = flecs_query_op_get_id(op, ctx);
         if (!ecs_id_is_wildcard(id)) {
             /* If id is not a wildcard, we can directly return it. This can 
              * happen if a variable was constrained by an iterator. */
@@ -634,7 +632,7 @@ bool flecs_query_idsright(
 
     if (op->field_index != -1) {
         ecs_iter_t *it = ctx->it;
-        ecs_id_t id = flecs_query_op_get_id_w_written(op, op->written, ctx);
+        const ecs_id_t id = flecs_query_op_get_id_w_written(op, op->written, ctx);
         it->ids[op->field_index] = id;
         it->sources[op->field_index] = EcsWildcard;
         ECS_TERMSET_SET(it->set_fields, 1u << op->field_index);
@@ -653,7 +651,7 @@ bool flecs_query_idsleft(
     ecs_id_record_t *cur;
 
     if (!redo) {
-        ecs_id_t id = flecs_query_op_get_id(op, ctx);
+        const ecs_id_t id = flecs_query_op_get_id(op, ctx);
         if (!ecs_id_is_wildcard(id)) {
             /* If id is not a wildcard, we can directly return it. This can 
              * happen if a variable was constrained by an iterator. */
@@ -684,7 +682,7 @@ bool flecs_query_idsleft(
 
     if (op->field_index != -1) {
         ecs_iter_t *it = ctx->it;
-        ecs_id_t id = flecs_query_op_get_id_w_written(op, op->written, ctx);
+        const ecs_id_t id = flecs_query_op_get_id_w_written(op, op->written, ctx);
         it->ids[op->field_index] = id;
         it->sources[op->field_index] = EcsWildcard;
         ECS_TERMSET_SET(it->set_fields, 1u << op->field_index);
@@ -702,7 +700,7 @@ bool flecs_query_each(
     ecs_query_each_ctx_t *op_ctx = flecs_op_ctx(ctx, each);
     int32_t row;
 
-    ecs_table_range_t range = flecs_query_var_get_range(op->first.var, ctx);
+    const ecs_table_range_t range = flecs_query_var_get_range(op->first.var, ctx);
     ecs_table_t *table = range.table;
     if (!table) {
         return false;
@@ -772,11 +770,11 @@ bool flecs_query_lookup(
     }
 
     const ecs_query_impl_t *query = ctx->query;
-    ecs_entity_t first = flecs_query_var_get_entity(op->first.var, ctx);
-    ecs_query_var_t *var = &query->vars[op->src.var];
+    const ecs_entity_t first = flecs_query_var_get_entity(op->first.var, ctx);
+    const ecs_query_var_t *var = &query->vars[op->src.var];
 
-    ecs_entity_t result = ecs_lookup_path_w_sep(ctx->world, first, var->lookup,
-        NULL, NULL, false);
+    const ecs_entity_t result = ecs_lookup_path_w_sep(ctx->world, first, var->lookup,
+                                                      NULL, NULL, false);
     if (!result) {
         flecs_query_var_set_entity(op, op->src.var, EcsWildcard, ctx);
         return false;
@@ -797,17 +795,16 @@ bool flecs_query_setvars(
 
     const ecs_query_impl_t *query = ctx->query;
     const ecs_query_t *q = &query->pub;
-    ecs_var_id_t *src_vars = query->src_vars;
-    ecs_iter_t *it = ctx->it;
+    const ecs_var_id_t *src_vars = query->src_vars;
+    const ecs_iter_t *it = ctx->it;
 
     if (redo) {
         return false;
     }
 
-    int32_t i;
-    ecs_flags32_t up_fields = it->up_fields;
-    for (i = 0; i < q->field_count; i ++) {
-        ecs_var_id_t var_id = src_vars[i];
+    const ecs_flags32_t up_fields = it->up_fields;
+    for (int32_t i = 0; i < q->field_count; i ++) {
+        const ecs_var_id_t var_id = src_vars[i];
         if (!var_id) {
             continue;
         }
@@ -830,7 +827,7 @@ bool flecs_query_setthis(
 {
     ecs_query_setthis_ctx_t *op_ctx = flecs_op_ctx(ctx, setthis);
     ecs_var_t *vars = ctx->vars;
-    ecs_var_t *this_var = &vars[op->first.var];
+    const ecs_var_t *this_var = &vars[op->first.var];
 
     if (!redo) {
         /* Save values so we can restore them later */
@@ -858,14 +855,13 @@ bool flecs_query_setfixed(
     (void)op;
     const ecs_query_impl_t *query = ctx->query;
     const ecs_query_t *q = &query->pub;
-    ecs_iter_t *it = ctx->it;
+    const ecs_iter_t *it = ctx->it;
 
     if (redo) {
         return false;
     }
 
-    int32_t i;
-    for (i = 0; i < q->term_count; i ++) {
+    for (int32_t i = 0; i < q->term_count; i ++) {
         const ecs_term_t *term = &q->terms[i];
         const ecs_term_ref_t *src = &term->src;
         if (src->id & EcsIsEntity) {
@@ -884,14 +880,13 @@ bool flecs_query_setids(
     (void)op;
     const ecs_query_impl_t *query = ctx->query;
     const ecs_query_t *q = &query->pub;
-    ecs_iter_t *it = ctx->it;
+    const ecs_iter_t *it = ctx->it;
 
     if (redo) {
         return false;
     }
 
-    int32_t i;
-    for (i = 0; i < q->term_count; i ++) {
+    for (int32_t i = 0; i < q->term_count; i ++) {
         const ecs_term_t *term = &q->terms[i];
         it->ids[term->field_index] = term->id;
     }
@@ -925,12 +920,12 @@ bool flecs_query_contain(
         return false;
     }
 
-    ecs_var_id_t src_id = op->src.var;
-    ecs_var_id_t first_id = op->first.var;
+    const ecs_var_id_t src_id = op->src.var;
+    const ecs_var_id_t first_id = op->first.var;
 
-    ecs_table_t *table = flecs_query_var_get_table(src_id, ctx);
+    const ecs_table_t *table = flecs_query_var_get_table(src_id, ctx);
 
-    ecs_entity_t e = flecs_query_var_get_entity(first_id, ctx);
+    const ecs_entity_t e = flecs_query_var_get_entity(first_id, ctx);
     return table == ecs_get_table(ctx->world, e);
 }
 
@@ -945,8 +940,8 @@ bool flecs_query_pair_eq(
         return false;
     }
 
-    ecs_iter_t *it = ctx->it;
-    ecs_id_t id = it->ids[op->field_index];
+    const ecs_iter_t *it = ctx->it;
+    const ecs_id_t id = it->ids[op->field_index];
     return ECS_PAIR_FIRST(id) == ECS_PAIR_SECOND(id);
 }
 
@@ -957,10 +952,10 @@ void flecs_query_reset_after_block(
     ecs_query_ctrl_ctx_t *op_ctx,
     bool result)
 {
-    ecs_query_lbl_t op_index = start_op->next;
+    const ecs_query_lbl_t op_index = start_op->next;
     const ecs_query_op_t *op = &ctx->qit->ops[op_index];
 
-    int32_t field = op->field_index;
+    const int32_t field = op->field_index;
     if (field == -1) {
         goto done;
     }
@@ -978,13 +973,13 @@ void flecs_query_reset_after_block(
     ECS_TERMSET_CLEAR(it->set_fields, 1u << field);
 
     /* Ignore variables written by Not operation */
-    uint64_t *written = ctx->written;
-    uint64_t written_cur = written[op->prev + 1];
-    ecs_flags16_t flags_1st = flecs_query_ref_flags(op->flags, EcsQueryFirst);
-    ecs_flags16_t flags_2nd = flecs_query_ref_flags(op->flags, EcsQuerySecond);
+    const uint64_t *written = ctx->written;
+    const uint64_t written_cur = written[op->prev + 1];
+    const ecs_flags16_t flags_1st = flecs_query_ref_flags(op->flags, EcsQueryFirst);
+    const ecs_flags16_t flags_2nd = flecs_query_ref_flags(op->flags, EcsQuerySecond);
 
     /* Overwrite id with cleared out variables */
-    ecs_id_t id = flecs_query_op_get_id(op, ctx);
+    const ecs_id_t id = flecs_query_op_get_id(op, ctx);
     if (id) {
         it->ids[field] = id;
     }
@@ -1019,7 +1014,7 @@ bool flecs_query_run_block(
     ecs_query_ctrl_ctx_t *op_ctx)
 {
     ecs_iter_t *it = ctx->it;
-    ecs_query_iter_t *qit = &it->priv_.iter.query;
+    const ecs_query_iter_t *qit = &it->priv_.iter.query;
 
     if (!redo) {
         op_ctx->op_index = flecs_itolbl(ctx->op_index + 1);
@@ -1062,7 +1057,7 @@ bool flecs_query_run_until_for_select_or(
     ecs_query_lbl_t cur,
     int32_t last)
 {
-    ecs_query_lbl_t last_for_cur = flecs_query_last_op_for_or_cond(
+    const ecs_query_lbl_t last_for_cur = flecs_query_last_op_for_or_cond(
         ops, cur, flecs_itolbl(last));
     if (redo) {
         /* If redoing, start from the last instruction of the last executed 
@@ -1085,23 +1080,23 @@ bool flecs_query_select_or(
     ecs_query_run_ctx_t *ctx)
 {
     ecs_iter_t *it = ctx->it;
-    ecs_query_iter_t *qit = &it->priv_.iter.query;
+    const ecs_query_iter_t *qit = &it->priv_.iter.query;
     ecs_query_ctrl_ctx_t *op_ctx = flecs_op_ctx(ctx, ctrl);
 
-    ecs_query_lbl_t first = flecs_itolbl(ctx->op_index + 1);
+    const ecs_query_lbl_t first = flecs_itolbl(ctx->op_index + 1);
     if (!redo) {
         op_ctx->op_index = first;
     }
 
     const ecs_query_op_t *ops = qit->ops;
     const ecs_query_op_t *first_op = &ops[first - 1];
-    ecs_query_lbl_t last = first_op->next;
+    const ecs_query_lbl_t last = first_op->next;
     const ecs_query_op_t *last_op = &ops[last];
     const ecs_query_op_t *cur_op = &ops[op_ctx->op_index];
     bool result = false;
 
     do {
-        ecs_query_lbl_t cur = op_ctx->op_index;
+        const ecs_query_lbl_t cur = op_ctx->op_index;
         ctx->op_index = cur;
         ctx->written[cur] = op->written;
 
@@ -1121,7 +1116,7 @@ bool flecs_query_select_or(
              * up as written for the test. This ensures that the instructions
              * match against the result we already found, vs. starting a new
              * search (the difference between select & with). */
-            ecs_query_lbl_t prev = first;
+            const ecs_query_lbl_t prev = first;
             bool dup_found = false;
 
             /* While terms of an OR chain always operate on the same source, it
@@ -1142,8 +1137,8 @@ bool flecs_query_select_or(
                 }
             }
 
-            int16_t field_index = op->field_index;
-            ecs_id_t prev_id = it->ids[field_index];
+            const int16_t field_index = op->field_index;
+            const ecs_id_t prev_id = it->ids[field_index];
             const ecs_table_record_t *prev_tr = it->trs[field_index];
 
             do {
@@ -1212,7 +1207,7 @@ bool flecs_query_or(
     ecs_query_run_ctx_t *ctx)
 {
     if (op->flags & (EcsQueryIsVar << EcsQuerySrc)) {
-        uint64_t written = ctx->written[ctx->op_index];
+        const uint64_t written = ctx->written[ctx->op_index];
         if (!(written & (1ull << op->src.var))) {
             return flecs_query_select_or(op, redo, ctx);
         }
@@ -1268,9 +1263,8 @@ bool flecs_query_eval_if(
     const ecs_query_ref_t *ref,
     ecs_flags16_t ref_kind)
 {
-    bool result = true;
     if (flecs_query_ref_flags(op->flags, ref_kind) == EcsQueryIsVar) {
-        result = ctx->vars[ref->var].entity != EcsWildcard;
+        bool result = ctx->vars[ref->var].entity != EcsWildcard;
         ecs_query_ctrl_ctx_t *op_ctx = flecs_op_ctx(ctx, ctrl);
         flecs_query_reset_after_block(op, ctx, op_ctx, result);
         return result;
@@ -1303,8 +1297,8 @@ bool flecs_query_if_set(
     bool redo,
     ecs_query_run_ctx_t *ctx)
 {
-    ecs_iter_t *it = ctx->it;
-    int8_t field_index = flecs_ito(int8_t, op->other);
+    const ecs_iter_t *it = ctx->it;
+    const int8_t field_index = flecs_ito(int8_t, op->other);
 
     ecs_query_ctrl_ctx_t *op_ctx = flecs_op_ctx(ctx, ctrl);
     if (!redo) {

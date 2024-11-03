@@ -254,7 +254,7 @@ public:
 			.opaque(flecs::String)
 			.serialize([](const flecs::serializer* Serializer, const FName* Data)
 			{
-				auto* String = Data->ToString().GetCharArray().GetData();
+				const auto* String = Data->ToString().GetCharArray().GetData();
 				return Serializer->value(flecs::String, String);
 			})
 			.assign_string([](FName* Data, const char* String)

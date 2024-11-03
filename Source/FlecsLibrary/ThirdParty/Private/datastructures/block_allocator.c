@@ -95,8 +95,7 @@ void flecs_ballocator_fini(
         "(size = %u)", (uint32_t)ba->data_size);
 #endif
 
-    ecs_block_allocator_block_t *block;
-    for (block = ba->block_head; block;) {
+    for (ecs_block_allocator_block_t* block = ba->block_head; block;) {
         ecs_block_allocator_block_t *next = block->next;
         ecs_os_free(block);
         ecs_os_linc(&ecs_block_allocator_free_count);

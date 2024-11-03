@@ -201,7 +201,7 @@ struct table {
      * @return Pointer to the column, NULL if not found.
      */
     void* get(flecs::id_t id) const {
-        int32_t index = column_index(id);
+        const int32_t index = column_index(id);
         if (index == -1) {
             return NULL;
         }

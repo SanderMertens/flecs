@@ -51,7 +51,7 @@ int flecs_expr_ser_enum(
     const EcsEnum *enum_type = ecs_get(world, op->type, EcsEnum);
     ecs_check(enum_type != NULL, ECS_INVALID_PARAMETER, NULL);
 
-    int32_t val = *(const int32_t*)base;
+    const int32_t val = *(const int32_t*)base;
     
     /* Enumeration constants are stored in a map that is keyed on the
      * enumeration value. */
@@ -90,8 +90,8 @@ int flecs_expr_ser_bitmask(
     ecs_map_iter_t it = ecs_map_iter(&bitmask_type->constants);
     int count = 0;
     while (ecs_map_next(&it)) {
-        ecs_bitmask_constant_t *c = ecs_map_ptr(&it);
-        ecs_map_key_t key = ecs_map_key(&it);
+        const ecs_bitmask_constant_t *c = ecs_map_ptr(&it);
+        const ecs_map_key_t key = ecs_map_key(&it);
         if ((value & key) == key) {
             ecs_strbuf_list_appendstr(str, ecs_get_name(world, c->constant));
             count ++;
@@ -136,8 +136,7 @@ int expr_ser_elements(
 
     const void *ptr = base;
 
-    int i;
-    for (i = 0; i < elem_count; i ++) {
+    for (int i = 0; i < elem_count; i ++) {
         ecs_strbuf_list_next(str);
         if (flecs_expr_ser_type_ops(
             world, ops, op_count, ptr, str, is_array, true)) 
@@ -169,7 +168,7 @@ int expr_ser_type_elements(
     ecs_assert(comp != NULL, ECS_INTERNAL_ERROR, NULL);
 
     ecs_meta_type_op_t *ops = ecs_vec_first_t(&ser->ops, ecs_meta_type_op_t);
-    int32_t op_count = ecs_vec_count(&ser->ops);
+    const int32_t op_count = ecs_vec_count(&ser->ops);
     return expr_ser_elements(
         world, ops, op_count, base, elem_count, comp->size, str, is_array);
 }
@@ -201,8 +200,8 @@ int expr_ser_vector(
     const EcsVector *v = ecs_get(world, op->type, EcsVector);
     ecs_assert(v != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    int32_t count = ecs_vec_count(value);
-    void *array = ecs_vec_first(value);
+    const int32_t count = ecs_vec_count(value);
+    const void *array = ecs_vec_first(value);
 
     /* Serialize contiguous buffer of vector */
     return expr_ser_type_elements(world, v->type, array, count, str, false);
@@ -301,7 +300,7 @@ int flecs_expr_ser_type_ops(
                 ecs_strbuf_append(str, "%s: ", op->name);
             }
 
-            int32_t elem_count = op->count;
+            const int32_t elem_count = op->count;
             if (elem_count > 1) {
                 /* Serialize inline array */
                 if (expr_ser_elements(world, op, op->op_count, base,
@@ -373,7 +372,7 @@ int flecs_expr_ser_type(
     bool is_expr) 
 {
     ecs_meta_type_op_t *ops = ecs_vec_first_t(v_ops, ecs_meta_type_op_t);
-    int32_t count = ecs_vec_count(v_ops);
+    const int32_t count = ecs_vec_count(v_ops);
     return flecs_expr_ser_type_ops(world, ops, count, base, str, 0, is_expr);
 }
 

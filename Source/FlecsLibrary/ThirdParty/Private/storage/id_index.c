@@ -192,7 +192,7 @@ ecs_id_record_t* flecs_id_record_new(
     ecs_id_t id)
 {
     ecs_id_record_t *idr, *idr_t = NULL;
-    ecs_id_t hash = flecs_id_record_hash(id);
+    const ecs_id_t hash = flecs_id_record_hash(id);
     if (hash >= FLECS_HI_ID_RECORD_ID) {
         idr = flecs_bcalloc(&world->allocators.id_record);
         ecs_map_insert_ptr(&world->id_index_hi, hash, idr);
@@ -260,7 +260,7 @@ ecs_id_record_t* flecs_id_record_new(
 
         if (tgt && !ecs_id_is_wildcard(tgt) && tgt != EcsUnion) {
             /* Check if target of relationship satisfies OneOf property */
-            ecs_entity_t oneof = flecs_get_oneof(world, rel);
+            const ecs_entity_t oneof = flecs_get_oneof(world, rel);
             if (oneof) {
                 if (!ecs_has_pair(world, tgt, EcsChildOf, oneof)) {
                     char *idstr = ecs_id_str(world, id);
@@ -411,7 +411,7 @@ void flecs_id_record_free(
 {
     flecs_poly_assert(world, ecs_world_t);
     ecs_assert(idr != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_id_t id = idr->id;
+    const ecs_id_t id = idr->id;
 
     flecs_id_record_assert_empty(idr);
 
@@ -420,8 +420,8 @@ void flecs_id_record_free(
         ECS_ID_IN_USE, "cannot delete id that is queried for");
 
     if (ECS_IS_PAIR(id)) {
-        ecs_entity_t rel = ECS_PAIR_FIRST(id);
-        ecs_entity_t tgt = ECS_PAIR_SECOND(id);
+        const ecs_entity_t rel = ECS_PAIR_FIRST(id);
+        const ecs_entity_t tgt = ECS_PAIR_SECOND(id);
         if (!ecs_id_is_wildcard(id)) {
             if (ECS_PAIR_FIRST(id) != EcsFlag) {
                 /* If id is not a wildcard, remove it from the wildcard lists */
@@ -471,7 +471,7 @@ void flecs_id_record_free(
     flecs_name_index_free(idr->name_index);
     ecs_vec_fini_t(&world->allocator, &idr->reachable.ids, ecs_reachable_elem_t);
 
-    ecs_id_t hash = flecs_id_record_hash(id);
+    const ecs_id_t hash = flecs_id_record_hash(id);
     if (hash >= FLECS_HI_ID_RECORD_ID) {
         ecs_map_remove(&world->id_index_hi, hash);
         flecs_bfree(&world->allocators.id_record, idr);
@@ -510,7 +510,7 @@ ecs_id_record_t* flecs_id_record_get(
         return world->idr_identifier_name;
     }
 
-    ecs_id_t hash = flecs_id_record_hash(id);
+    const ecs_id_t hash = flecs_id_record_hash(id);
     ecs_id_record_t *idr = NULL;
     if (hash >= FLECS_HI_ID_RECORD_ID) {
         idr = ecs_map_get_deref(&world->id_index_hi, ecs_id_record_t, hash);
@@ -536,7 +536,7 @@ int32_t flecs_id_record_release(
     ecs_world_t *world,
     ecs_id_record_t *idr)
 {
-    int32_t rc = -- idr->refcount;
+    const int32_t rc = -- idr->refcount;
     ecs_assert(rc >= 0, ECS_INTERNAL_ERROR, NULL);
 
     if (!rc) {
@@ -671,8 +671,7 @@ void flecs_fini_id_records(
         flecs_id_record_release(world, ecs_map_ptr(&it));
     }
 
-    int32_t i;
-    for (i = 0; i < FLECS_HI_ID_RECORD_ID; i ++) {
+    for (int32_t i = 0; i < FLECS_HI_ID_RECORD_ID; i ++) {
         ecs_id_record_t *idr = &world->id_index_lo[i];
         if (idr->id) {
             flecs_id_record_release(world, idr);
@@ -713,8 +712,8 @@ ecs_flags32_t flecs_id_flags_get(
     }
 
     if (ECS_IS_PAIR(id)) {
-        ecs_entity_t first = ECS_PAIR_FIRST(id);
-        ecs_entity_t second = ECS_PAIR_SECOND(id);
+        const ecs_entity_t first = ECS_PAIR_FIRST(id);
+        const ecs_entity_t second = ECS_PAIR_SECOND(id);
 
         if (id != ecs_pair(first, EcsWildcard)) {
             result |= flecs_id_flags(world, ecs_pair(first, EcsWildcard));

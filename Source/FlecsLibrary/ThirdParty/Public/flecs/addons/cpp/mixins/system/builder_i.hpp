@@ -29,7 +29,7 @@ public:
      * @param phase The phase.
      */
     Base& kind(entity_t phase) {
-        flecs::entity_t cur_phase = ecs_get_target(
+        const flecs::entity_t cur_phase = ecs_get_target(
             world_v(), desc_->entity, EcsDependsOn, 0);
         if (cur_phase) {
             ecs_remove_id(world_v(), desc_->entity, ecs_dependson(cur_phase));
@@ -46,7 +46,7 @@ public:
     Base& kind(E phase)
     {
         const auto& et = enum_type<E>(this->world_v());
-        flecs::entity_t target = et.entity(phase);
+        const flecs::entity_t target = et.entity(phase);
         return this->kind(target);
     }
 

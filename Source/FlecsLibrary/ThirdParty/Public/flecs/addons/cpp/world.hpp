@@ -955,7 +955,7 @@ struct world {
      */
     template <typename Func>
     void with(id_t with_id, const Func& func) const {
-        ecs_id_t prev = ecs_set_with(world_, with_id);
+	    const ecs_id_t prev = ecs_set_with(world_, with_id);
         func();
         ecs_set_with(world_, prev);
     }
@@ -993,7 +993,7 @@ struct world {
      */
     template <typename Func>
     void scope(id_t parent, const Func& func) const {
-        ecs_entity_t prev = ecs_set_scope(world_, parent);
+	    const ecs_entity_t prev = ecs_set_scope(world_, parent);
         func();
         ecs_set_scope(world_, prev);
     }
