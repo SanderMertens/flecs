@@ -573,8 +573,8 @@ void flecs_term_to_buf(
 
         if (term->second.id & EcsIsEntity) {
             if (term->second.id != 0) {
-                ecs_get_path_w_sep_buf(
-                    world, 0, ECS_TERM_REF_ID(&term->second), ".", NULL, buf);
+                ecs_get_path_w_sep_buf(world, 0, ECS_TERM_REF_ID(&term->second), 
+                    ".", NULL, buf, false);
             }
         } else {
             if (term->second.id & EcsIsVariable) {

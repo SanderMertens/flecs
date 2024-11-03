@@ -3989,7 +3989,8 @@ void ecs_get_path_w_sep_buf(
     ecs_entity_t child,
     const char *sep,
     const char *prefix,
-    ecs_strbuf_t *buf);
+    ecs_strbuf_t *buf,
+    bool escape);
 
 /** Find or create entity from path.
  * This operation will find or create an entity from a path, and will create any
@@ -6015,6 +6016,18 @@ int32_t ecs_search_relation(
     ecs_id_t *id_out,
     struct ecs_table_record_t **tr_out);
 
+/** Remove all entities in a table. Does not deallocate table memory. 
+ * Retaining table memory can be efficient when planning 
+ * to refill the table with operations like ecs_bulk_init
+ *
+ * @param world The world.
+ * @param table The table to clear.
+ */
+FLECS_API
+void ecs_table_clear_entities(
+    ecs_world_t* world,
+    ecs_table_t* table);
+    
 /** @} */
 
 /**

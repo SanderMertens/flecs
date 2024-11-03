@@ -169,14 +169,18 @@ const ecs_entity_t EcsDocBrief =                    FLECS_HI_COMPONENT_ID + 114;
 const ecs_entity_t EcsDocDetail =                   FLECS_HI_COMPONENT_ID + 115;
 const ecs_entity_t EcsDocLink =                     FLECS_HI_COMPONENT_ID + 116;
 const ecs_entity_t EcsDocColor =                    FLECS_HI_COMPONENT_ID + 117;
+const ecs_entity_t EcsDocUuid =                     FLECS_HI_COMPONENT_ID + 118;
 #endif
 
 /* REST module components */
 #ifdef FLECS_REST
-const ecs_entity_t ecs_id(EcsRest) =                FLECS_HI_COMPONENT_ID + 118;
+const ecs_entity_t ecs_id(EcsRest) =                FLECS_HI_COMPONENT_ID + 119;
 #endif
 
-const ecs_entity_t ecs_id(EcsSystemPriority) =               FLECS_HI_COMPONENT_ID + 119;
+const ecs_entity_t ecs_id(EcsSystemPriority) =               FLECS_HI_COMPONENT_ID + 120;
+
+/* Max static id:
+ * #define EcsFirstUserEntityId (FLECS_HI_COMPONENT_ID + 128) */
 
 /* Default lookup path */
 static ecs_entity_t ecs_default_lookup_path[2] = { 0, 0 };
@@ -573,8 +577,7 @@ void flecs_init_store(
     ecs_allocator_t *a = &world->allocator;
     ecs_vec_init_t(a, &world->store.records, ecs_table_record_t, 0);
     ecs_vec_init_t(a, &world->store.marked_ids, ecs_marked_id_t, 0);
-    ecs_vec_init_t(a, &world->store.depth_ids, ecs_entity_t, 0);
-    ecs_map_init(&world->store.entity_to_depth, &world->allocator);
+    ecs_vec_init_t(a, &world->store.deleted_components, ecs_entity_t, 0);
 
     /* Initialize entity index */
     flecs_entities_init(world);
@@ -589,7 +592,7 @@ void flecs_init_store(
     /* Initialize root table */
     flecs_init_root_table(world);
 
-    /* Initilaize observer sparse set */
+    /* Initialize observer sparse set */
     flecs_sparse_init_t(&world->store.observers,
         a, &world->allocators.sparse_chunk, ecs_observer_impl_t);
 }
@@ -708,11 +711,15 @@ void flecs_fini_store(ecs_world_t *world) {
         ECS_INTERNAL_ERROR, NULL);
     flecs_sparse_fini(&world->store.observers);
 
+    ecs_assert(ecs_vec_count(&world->store.marked_ids) == 0, 
+        ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(ecs_vec_count(&world->store.deleted_components) == 0, 
+        ECS_INTERNAL_ERROR, NULL);
+
     ecs_allocator_t *a = &world->allocator;
     ecs_vec_fini_t(a, &world->store.records, ecs_table_record_t);
     ecs_vec_fini_t(a, &world->store.marked_ids, ecs_marked_id_t);
-    ecs_vec_fini_t(a, &world->store.depth_ids, ecs_entity_t);
-    ecs_map_fini(&world->store.entity_to_depth);
+    ecs_vec_fini_t(a, &world->store.deleted_components, ecs_entity_t);
 }
 
 static 
@@ -839,7 +846,6 @@ static const char *flecs_addons_info[] = {
 #endif
 NULL
 };
-
 
 static const ecs_build_info_t flecs_build_info = {
     .compiler = flecs_compiler_info,
@@ -1767,6 +1773,9 @@ void flecs_type_info_fini(
         ecs_os_free(ECS_CONST_CAST(char*, ti->name));
         ti->name = NULL;
     }
+
+    ti->size = 0;
+    ti->alignment = 0;
 }
 
 void flecs_type_info_free(

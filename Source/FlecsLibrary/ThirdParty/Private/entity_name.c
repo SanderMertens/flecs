@@ -15,7 +15,8 @@ bool flecs_path_append(
     ecs_entity_t child, 
     const char *sep,
     const char *prefix,
-    ecs_strbuf_t *buf)
+    ecs_strbuf_t *buf,
+    bool escape)
 {
     flecs_poly_assert(world, ecs_world_t);
     ecs_assert(sep[0] != 0, ECS_INVALID_PARAMETER, NULL);
@@ -36,7 +37,7 @@ bool flecs_path_append(
             if (cur) {
                 ecs_assert(cur != child, ECS_CYCLE_DETECTED, NULL);
                 if (cur != parent && (cur != EcsFlecsCore || prefix != NULL)) {
-                    flecs_path_append(world, parent, cur, sep, prefix, buf);
+                    flecs_path_append(world, parent, cur, sep, prefix, buf, escape);
                     if (!sep[1]) {
                         ecs_strbuf_appendch(buf, sep[0]);
                     } else {
@@ -61,7 +62,44 @@ bool flecs_path_append(
     }
 
     if (name) {
-        ecs_strbuf_appendstrn(buf, name, name_len);
+        /* Check if we need to escape separator character */
+        const char *sep_in_name = NULL;
+        if (!sep[1]) {
+            sep_in_name = strchr(name, sep[0]);
+        }
+
+        if (sep_in_name || escape) {
+            const char *name_ptr;
+            char ch;
+            for (name_ptr = name; (ch = name_ptr[0]); name_ptr ++) {
+                char esc[3];
+                if (ch != sep[0]) {
+                    if (escape) {
+                        flecs_chresc(esc, ch, '\"');
+                        ecs_strbuf_appendch(buf, esc[0]);
+                        if (esc[1]) {
+                            ecs_strbuf_appendch(buf, esc[1]);
+                        }
+                    } else {
+                        ecs_strbuf_appendch(buf, ch);
+                    }
+                } else {
+                    if (!escape) {
+                        ecs_strbuf_appendch(buf, '\\');
+                        ecs_strbuf_appendch(buf, sep[0]);
+                    } else {
+                        ecs_strbuf_appendlit(buf, "\\\\");
+                        flecs_chresc(esc, ch, '\"');
+                        ecs_strbuf_appendch(buf, esc[0]);
+                        if (esc[1]) {
+                            ecs_strbuf_appendch(buf, esc[1]);
+                        }
+                    }
+                }
+            }
+        } else {
+            ecs_strbuf_appendstrn(buf, name, name_len);
+        }
     } else {
         ecs_strbuf_appendch(buf, '#');
         ecs_strbuf_appendint(buf, flecs_uto(int64_t, (uint32_t)child));
@@ -290,7 +328,8 @@ void ecs_get_path_w_sep_buf(
     ecs_entity_t child,
     const char *sep,
     const char *prefix,
-    ecs_strbuf_t *buf)
+    ecs_strbuf_t *buf,
+    bool escape)
 {
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(buf != NULL, ECS_INVALID_PARAMETER, NULL);
@@ -311,7 +350,7 @@ void ecs_get_path_w_sep_buf(
     }
 
     if (!child || parent != child) {
-        flecs_path_append(world, parent, child, sep, prefix, buf);
+        flecs_path_append(world, parent, child, sep, prefix, buf, escape);
     } else {
         ecs_strbuf_appendstrn(buf, "", 0);
     }
@@ -328,7 +367,7 @@ char* ecs_get_path_w_sep(
     const char *prefix)
 {
     ecs_strbuf_t buf = ECS_STRBUF_INIT;
-    ecs_get_path_w_sep_buf(world, parent, child, sep, prefix, &buf);
+    ecs_get_path_w_sep_buf(world, parent, child, sep, prefix, &buf, false);
     return ecs_strbuf_get(&buf);
 }
 

@@ -1236,6 +1236,7 @@ repeat_event:
         int32_t ider_i, ider_count = 0;
         bool is_pair = ECS_IS_PAIR(id);
         void *override_ptr = NULL;
+        ecs_table_record_t *base_tr = NULL;
         ecs_entity_t base = 0;
         bool id_can_override = can_override;
         ecs_flags64_t id_bit = 1llu << i;
@@ -1289,7 +1290,6 @@ repeat_event:
                 /* Initialize overridden components with value from base */
                 ti = idr->type_info;
                 if (ti) {
-                    ecs_table_record_t *base_tr = NULL;
                     int32_t base_column = ecs_search_relation(world, table, 
                         0, id, EcsIsA, EcsUp, &base, NULL, &base_tr);
                     if (base_column != -1) {
@@ -1371,7 +1371,7 @@ repeat_event:
                          * with the value of the overridden component. */
                         flecs_override_copy(world, table, tr, ti, ptr, 
                             override_ptr, offset, count);
-                    } else if (er_onset) {
+                    } else if (er_onset && it.other_table) {
                         /* If an override was removed, this re-exposes the
                          * overridden component. Because this causes the actual
                          * (now inherited) value of the component to change, an
@@ -1384,6 +1384,9 @@ repeat_event:
                             /* Set the source temporarily to the base and base
                              * component pointer. */
                             it.sources[0] = base;
+                            it.trs[0] = base_tr;
+                            it.up_fields = 1;
+
                             for (ider_set_i = 0; ider_set_i < ider_set_count; ider_set_i ++) {
                                 ecs_event_id_record_t *ider = iders_set[ider_set_i];
                                 flecs_observers_invoke(
@@ -1397,6 +1400,7 @@ repeat_event:
                             }
 
                             it.sources[0] = 0;
+                            it.trs[0] = tr;
                         }
                     }
                 }

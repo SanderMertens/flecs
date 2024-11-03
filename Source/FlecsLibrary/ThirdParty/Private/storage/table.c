@@ -887,7 +887,8 @@ void flecs_table_fini_data(
     ecs_table_t *table,
     bool do_on_remove,
     bool is_delete,
-    bool deactivate)
+    bool deactivate,
+    bool deallocate)
 {
     ecs_assert(!table->_->lock, ECS_LOCKED_STORAGE, FLECS_LOCKED_STORAGE_MSG);
 
@@ -900,36 +901,51 @@ void flecs_table_fini_data(
         flecs_table_dtor_all(world, table, 0, count, is_delete);
     }
 
-    ecs_column_t *columns = table->data.columns;
-    if (columns) {
-        int32_t c, column_count = table->column_count;
-        for (c = 0; c < column_count; c ++) {
-            ecs_column_t *column = &columns[c];
-            ecs_vec_t v = ecs_vec_from_column(column, table, column->ti->size);
-            ecs_vec_fini(&world->allocator, &v, column->ti->size);
-            column->data = NULL;
-        }
+    if (deallocate) {
+        ecs_column_t *columns = table->data.columns;
+        if (columns) {
+            int32_t c, column_count = table->column_count;
+            for (c = 0; c < column_count; c ++) {
+                ecs_column_t *column = &columns[c];
+                ecs_vec_t v = ecs_vec_from_column(column, table, column->ti->size);
+                ecs_vec_fini(&world->allocator, &v, column->ti->size);
+                column->data = NULL;
+            }
 
-        flecs_wfree_n(world, ecs_column_t, table->column_count, columns);
-        table->data.columns = NULL;
+            flecs_wfree_n(world, ecs_column_t, table->column_count, columns);
+            table->data.columns = NULL;
+        }
     }
 
     ecs_table__t *meta = table->_;
     ecs_bitset_t *bs_columns = meta->bs_columns;
     if (bs_columns) {
         int32_t c, column_count = meta->bs_count;
-        for (c = 0; c < column_count; c ++) {
-            flecs_bitset_fini(&bs_columns[c]);
+        if (deallocate) {
+            for (c = 0; c < column_count; c ++) {
+                flecs_bitset_fini(&bs_columns[c]);
+            }
         }
-        flecs_wfree_n(world, ecs_bitset_t, column_count, bs_columns);
-        meta->bs_columns = NULL;
+        else {
+            for (c = 0; c < column_count; c++) {
+                bs_columns[c].count = 0;
+            }
+        }        
+        
+        if (deallocate) {
+            flecs_wfree_n(world, ecs_bitset_t, column_count, bs_columns);
+            meta->bs_columns = NULL;
+        }
     }
 
-    ecs_vec_t v = ecs_vec_from_entities(table);
-    ecs_vec_fini_t(&world->allocator, &v, ecs_entity_t);
-    table->data.entities = NULL;
+    if (deallocate) {
+        ecs_vec_t v = ecs_vec_from_entities(table);
+        ecs_vec_fini_t(&world->allocator, &v, ecs_entity_t);
+        table->data.entities = NULL;
+        table->data.size = 0;
+    }
+
     table->data.count = 0;
-    table->data.size = 0;
 
     if (deactivate && count) {
         flecs_table_set_empty(world, table);
@@ -945,28 +961,36 @@ const ecs_entity_t* ecs_table_entities(
     return table->data.entities;
 }
 
-/* Cleanup, no OnRemove, clear entity index, deactivate table */
+/* Cleanup, no OnRemove, delete from entity index, deactivate table, retain allocations */
+void ecs_table_clear_entities(
+    ecs_world_t* world,
+    ecs_table_t* table)
+{
+    flecs_table_fini_data(world, table, true, true, true, false);
+}
+
+/* Cleanup, no OnRemove, clear entity index, deactivate table, free allocations */
 void flecs_table_clear_entities_silent(
     ecs_world_t *world,
     ecs_table_t *table)
 {
-    flecs_table_fini_data(world, table, false, false, true);
+    flecs_table_fini_data(world, table, false, false, true, true);
 }
 
-/* Cleanup, run OnRemove, clear entity index, deactivate table */
+/* Cleanup, run OnRemove, clear entity index, deactivate table, free allocations */
 void flecs_table_clear_entities(
     ecs_world_t *world,
     ecs_table_t *table)
 {
-    flecs_table_fini_data(world, table, true, false, true);
+    flecs_table_fini_data(world, table, true, false, true, true);
 }
 
-/* Cleanup, run OnRemove, delete from entity index, deactivate table */
+/* Cleanup, run OnRemove, delete from entity index, deactivate table, free allocations */
 void flecs_table_delete_entities(
     ecs_world_t *world,
     ecs_table_t *table)
 {
-    flecs_table_fini_data(world, table, true, true, true);
+    flecs_table_fini_data(world, table, true, true, true, true);
 }
 
 /* Unset all components in table. This function is called before a table is 
@@ -1011,7 +1035,7 @@ void flecs_table_fini(
     world->info.empty_table_count -= (ecs_table_count(table) == 0);
 
     /* Cleanup data, no OnRemove, delete from entity index, don't deactivate */
-    flecs_table_fini_data(world, table, false, true, false);
+    flecs_table_fini_data(world, table, false, true, false, true);
     flecs_table_clear_edges(world, table);
 
     if (!is_root) {

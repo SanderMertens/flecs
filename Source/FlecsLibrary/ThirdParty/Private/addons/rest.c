@@ -872,7 +872,7 @@ void flecs_system_stats_to_json(
 {
     ecs_strbuf_list_push(reply, "{", ",");
     ecs_strbuf_list_appendlit(reply, "\"name\":\"");
-    ecs_get_path_w_sep_buf(world, 0, system, ".", NULL, reply);
+    ecs_get_path_w_sep_buf(world, 0, system, ".", NULL, reply, true);
     ecs_strbuf_appendch(reply, '"');
 
     bool disabled = ecs_has_id(world, system, EcsDisabled);

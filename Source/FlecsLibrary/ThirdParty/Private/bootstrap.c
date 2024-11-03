@@ -447,7 +447,19 @@ void flecs_on_component(ecs_iter_t *it) {
                 flecs_assert_relation_unused(world, e, ecs_id(EcsComponent));
             }
         } else if (it->event == EcsOnRemove) {
-            flecs_type_info_free(world, e);
+            #ifdef FLECS_DEBUG
+            if (ecs_should_log(0)) {
+                char *path = ecs_get_path(world, e);
+                ecs_trace("unregistering component '%s'", path);
+                ecs_os_free(path);
+            }
+            #endif
+            if (!ecs_vec_count(&world->store.marked_ids)) {
+                flecs_type_info_free(world, e);
+            } else {
+                ecs_vec_append_t(&world->allocator, 
+                    &world->store.deleted_components, ecs_entity_t)[0] = e;
+            }
         }
     }
 }

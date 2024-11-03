@@ -100,4 +100,22 @@ inline flecs::entity iter::get_var(const char *name) const {
     return flecs::entity(iter_->world, ecs_iter_get_var(iter_, var_id));
 }
 
+template <typename Func>
+void iter::targets(int8_t index, const Func& func) {
+    ecs_assert(iter_->table != nullptr, ECS_INVALID_OPERATION, NULL);
+    ecs_assert(index < iter_->field_count, ECS_INVALID_PARAMETER, NULL);
+    ecs_assert(ecs_field_is_set(iter_, index), ECS_INVALID_PARAMETER, NULL);
+    const ecs_type_t *table_type = ecs_table_get_type(iter_->table);
+    const ecs_table_record_t *tr = iter_->trs[index];
+    int32_t i = tr->index, end = i + tr->count;
+    for (; i < end; i ++) {
+        ecs_id_t id = table_type->array[i];
+        ecs_assert(ECS_IS_PAIR(id), ECS_INVALID_PARAMETER, 
+            "field does not match a pair");
+        flecs::entity tgt(iter_->world, 
+            ecs_pair_second(iter_->real_world, id));
+        func(tgt);
+    }
+}
+
 } // namespace flecs

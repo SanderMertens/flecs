@@ -23,7 +23,7 @@ jobs:
           bake --strict
 
   build-macos:
-    runs-on: macOS-latest
+    runs-on: macos-latest
     timeout-minutes: 30
     strategy:
       fail-fast: false
@@ -187,13 +187,13 @@ jobs:
           bake examples/os_api --strict --cfg release
 
   build-cmake:
-    needs: build-linux
+    needs: [build-linux, build-macos]
     runs-on: ${{ matrix.os }}
     timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
-        os: [ ubuntu-latest, macOS-latest, macOS-14 ]
+        os: [ ubuntu-latest, macos-13, macos-latest ]
 
     steps:
       - uses: actions/checkout@v4
@@ -447,7 +447,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ ubuntu-latest, macOS-latest, macOS-14 ]
+        os: [ ubuntu-latest, macos-13, macos-latest ]
 
     steps:
       - uses: actions/checkout@v4
@@ -544,10 +544,9 @@ jobs:
       fail-fast: false
       matrix:
         os: 
-          - { version: macOS-12, xcode: '13.1' }
-          - { version: macOS-12, xcode: '14.0' }
-          - { version: macOS-13, xcode: '14.3.1' }
-          - { version: macOS-14, xcode: '15.2' }
+          - { version: macos-13, xcode: '14.3.1' }
+          - { version: macos-14, xcode: '15.4' }
+          - { version: macos-15, xcode: '16.0' }
 
     env:
       CC: clang
@@ -854,7 +853,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ ubuntu-latest, macOS-latest, macOS-14 ]
+        os: [ ubuntu-latest, macos-13, macos-latest ]
 
     steps:
       - uses: actions/checkout@v4

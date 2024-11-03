@@ -73,7 +73,22 @@ const Self& set_doc_link(const char *link) const {
  * @memberof flecs::entity_builder
  * @ingroup cpp_addons_doc
  */
-const Self& set_doc_color(const char *link) const {
-    ecs_doc_set_color(world_, id_, link);
+const Self& set_doc_color(const char *color) const {
+    ecs_doc_set_color(world_, id_, color);
+    return to_base();
+}
+
+/** Set doc UUID.
+ * This adds `(flecs.doc.Description, flecs.doc.Uuid)` to the entity.
+ *
+ * @see ecs_doc_set_uuid()
+ * @see flecs::doc::set_uuid()
+ * @see flecs::entity_view::doc_uuid()
+ *
+ * @memberof flecs::entity_builder
+ * @ingroup cpp_addons_doc
+ */
+const Self& set_doc_uuid(const char *uuid) const {
+    ecs_doc_set_uuid(world_, id_, uuid);
     return to_base();
 }

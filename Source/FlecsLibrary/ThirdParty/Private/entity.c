@@ -2746,7 +2746,7 @@ void flecs_on_delete(
     /* Cleanup can happen recursively. If a cleanup action is already in 
      * progress, only append ids to the marked_ids. The topmost cleanup
      * frame will handle the actual cleanup. */
-    int32_t count = ecs_vec_count(&world->store.marked_ids);
+    int32_t i, count = ecs_vec_count(&world->store.marked_ids);
 
     /* Make sure we're evaluating a consistent list of non-empty tables */
     ecs_run_aperiodic(world, EcsAperiodicEmptyTables);
@@ -2771,7 +2771,7 @@ void flecs_on_delete(
         /* Verify deleted ids are no longer in use */
 #ifdef FLECS_DEBUG
         ecs_marked_id_t *ids = ecs_vec_first(&world->store.marked_ids);
-        int32_t i; count = ecs_vec_count(&world->store.marked_ids);
+        count = ecs_vec_count(&world->store.marked_ids);
         for (i = 0; i < count; i ++) {
             ecs_assert(!ecs_id_in_use(world, ids[i].id), 
                 ECS_INTERNAL_ERROR, NULL);
@@ -2781,6 +2781,16 @@ void flecs_on_delete(
 
         /* Ids are deleted, clear stack */
         ecs_vec_clear(&world->store.marked_ids);
+
+        /* If any components got deleted, cleanup type info. Delaying this 
+         * ensures that type info remains available during cleanup. */
+        count = ecs_vec_count(&world->store.deleted_components);
+        ecs_entity_t *comps = ecs_vec_first(&world->store.deleted_components);
+        for (i = 0; i < count; i ++) {
+            flecs_type_info_free(world, comps[i]);
+        }
+
+        ecs_vec_clear(&world->store.deleted_components);
 
         ecs_log_pop_2();
     }
@@ -4477,13 +4487,13 @@ void ecs_id_str_buf(
         }
 
         ecs_strbuf_appendch(buf, '(');
-        ecs_get_path_w_sep_buf(world, 0, rel, NULL, NULL, buf);
+        ecs_get_path_w_sep_buf(world, 0, rel, NULL, NULL, buf, false);
         ecs_strbuf_appendch(buf, ',');
-        ecs_get_path_w_sep_buf(world, 0, obj, NULL, NULL, buf);
+        ecs_get_path_w_sep_buf(world, 0, obj, NULL, NULL, buf, false);
         ecs_strbuf_appendch(buf, ')');
     } else {
         ecs_entity_t e = id & ECS_COMPONENT_MASK;
-        ecs_get_path_w_sep_buf(world, 0, e, NULL, NULL, buf);
+        ecs_get_path_w_sep_buf(world, 0, e, NULL, NULL, buf, false);
     }
 
 error:
@@ -4555,7 +4565,7 @@ char* ecs_entity_str(
     ecs_strbuf_t buf = ECS_STRBUF_INIT;
     ecs_check(ecs_is_alive(world, entity), ECS_INVALID_PARAMETER, NULL);
 
-    ecs_get_path_w_sep_buf(world, 0, entity, 0, "", &buf);
+    ecs_get_path_w_sep_buf(world, 0, entity, 0, "", &buf, false);
     
     ecs_strbuf_appendlit(&buf, " [");
     const ecs_type_t *type = ecs_get_type(world, entity);
