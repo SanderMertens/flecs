@@ -17,6 +17,17 @@ static void flecs_pipeline_free(
         ecs_allocator_t *a = &world->allocator;
         ecs_vec_fini_t(a, &p->ops, ecs_pipeline_op_t);
         ecs_vec_fini_t(a, &p->systems, ecs_entity_t);
+
+#ifdef FLECS_PERF_TRACE
+        ecs_vec_fini_t(a, &p->phase_offsets, int32_t);
+        int32_t i, count = ecs_vec_count(&p->phase_names);
+        const char** phase_names = ecs_vec_first_t(&p->phase_names, const char*);
+        for (i = 0; i < count; i ++) {
+            ecs_os_free(ECS_CONST_CAST(char*, phase_names[i]));
+        }
+        ecs_vec_fini_t(a, &p->phase_names, const char*);
+#endif
+
         ecs_os_free(p->iters);
         ecs_query_fini(p->query);
         ecs_os_free(p);
@@ -277,6 +288,14 @@ bool flecs_pipeline_build(
     ecs_vec_reset_t(a, &pq->ops, ecs_pipeline_op_t);
     ecs_vec_reset_t(a, &pq->systems, ecs_entity_t);
 
+#ifdef FLECS_PERF_TRACE
+    ecs_vec_reset_t(a, &pq->phase_offsets, int32_t);
+    ecs_vec_reset_t(a, &pq->phase_names, const char*);
+    /* Local map for building up phase_offsets & phase_names */
+    ecs_map_t phase_offset_map;
+    ecs_map_init(&phase_offset_map, a);
+#endif
+
     bool multi_threaded = false;
     bool immediate = false;
     bool first = true;
@@ -286,6 +305,23 @@ bool flecs_pipeline_build(
         EcsPoly *poly = flecs_pipeline_term_system(&it);
         bool is_active = ecs_table_get_type_index(
             world, it.table, EcsEmpty) == -1;
+
+#ifdef FLECS_PERF_TRACE
+        ecs_entity_t phase = ecs_field_src(&it, 1);
+
+        ecs_map_val_t* phase_offset_p = ecs_map_get(&phase_offset_map, phase);
+        int32_t phase_offset = 0;
+        if (!phase_offset_p) {
+            /* New phase, record its name into the name vector */
+            phase_offset = ecs_vec_count(&pq->phase_names);
+            const char* phase_name = ecs_get_path(world, phase);
+
+            ecs_map_insert(&phase_offset_map, phase, (uint64_t)(phase_offset));
+            ecs_vec_append_t(a, &pq->phase_names, const char*)[0] = phase_name;
+        } else {
+            phase_offset = (int32_t)*phase_offset_p;
+        }
+#endif
 
         int32_t i;
         for (i = 0; i < it.count; i ++) {
@@ -360,6 +396,12 @@ bool flecs_pipeline_build(
             if (is_active) {
                 ecs_vec_append_t(a, &pq->systems, ecs_entity_t)[0] = 
                     it.entities[i];
+
+#ifdef FLECS_PERF_TRACE
+                /* Each system in the systems vector has a corresponding phase offset */
+                ecs_vec_append_t(a, &pq->phase_offsets, int32_t)[0] = phase_offset;
+#endif
+
                 if (!op->count) {
                     op->multi_threaded = multi_threaded;
                     op->immediate = immediate;
@@ -375,6 +417,10 @@ bool flecs_pipeline_build(
 
     ecs_map_fini(&ws.ids);
     ecs_map_fini(&ws.wildcard_ids);
+
+#ifdef FLECS_PERF_TRACE
+    ecs_map_fini(&phase_offset_map);
+#endif
 
     op = ecs_vec_first_t(&pq->ops, ecs_pipeline_op_t);
 
@@ -553,7 +599,27 @@ int32_t flecs_run_pipeline_ops(
     ecs_entity_t* systems = ecs_vec_first_t(&pq->systems, ecs_entity_t);
     int32_t ran_since_merge = i - op->offset;
 
+#ifdef FLECS_PERF_TRACE
+    int32_t* phase_offsets = ecs_vec_first_t(&pq->phase_offsets, int32_t);
+    const char** phase_names = ecs_vec_first_t(&pq->phase_names, const char*);
+#endif
+
     for (; i < count; i++) {
+#ifdef FLECS_PERF_TRACE
+        if (i > 0) {
+            int32_t phase = phase_offsets[i];
+            int32_t last_phase = phase_offsets[i - 1];
+
+            if (phase != last_phase) {
+                /* Close the span of the previous phase and open the current one.
+                 * The first/last phases are handled in flecs_run_pipeline because
+                 * this function may run multiple times during one pipeline. */
+                ecs_os_perf_trace_pop(phase_names[last_phase]);
+                ecs_os_perf_trace_push(phase_names[phase]);
+            }
+        }
+#endif
+
         ecs_entity_t system = systems[i];
         const EcsPoly* poly = ecs_get_pair(world, system, EcsPoly, EcsSystem);
         flecs_poly_assert(poly->poly, ecs_system_t);
@@ -611,6 +677,17 @@ void flecs_run_pipeline(
 
     // Update the pipeline before waking the workers.
     flecs_pipeline_update(world, pq, true);
+
+#ifdef FLECS_PERF_TRACE
+    int32_t* phase_offsets = ecs_vec_first_t(&pq->phase_offsets, int32_t);
+    const char** phase_names = ecs_vec_first_t(&pq->phase_names, const char*);
+
+    if (phase_offsets && phase_names) {
+        /* Open the span of the first phase in the pipeline.
+         * Intermediate phases are handled in flecs_run_pipeline_ops. */
+        ecs_os_perf_trace_push(phase_names[phase_offsets[0]]);
+    }
+#endif
 
     // If there are no operations to execute in the pipeline bail early,
     // no need to wake the workers since they have nothing to do.
@@ -678,6 +755,14 @@ void flecs_run_pipeline(
 
         flecs_pipeline_update(world, pq, false);
     }
+
+#ifdef FLECS_PERF_TRACE
+    if (phase_offsets && phase_names) {
+        int32_t last_phase_offset = ecs_vec_last_t(&pq->phase_offsets, int32_t)[0];
+        /* Close the span of the first phase in the pipeline */
+        ecs_os_perf_trace_pop(phase_names[last_phase_offset]);
+    }
+#endif
 }
 
 static

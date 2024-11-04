@@ -24,6 +24,9 @@ struct ecs_pipeline_state_t {
     ecs_vec_t ops;              /* Pipeline schedule */
     ecs_vec_t systems;          /* Vector with system ids */
 
+    ecs_vec_t phase_offsets;    /* Vector of offsets into phase_names (for perf tracing) */
+    ecs_vec_t phase_names;      /* Vector with phase names (for perf tracing) */
+
     ecs_entity_t last_system;   /* Last system ran by pipeline */
     ecs_id_record_t *idr_inactive; /* Cached record for quick inactive test */
     int32_t match_count;        /* Used to track of rebuild is necessary */
