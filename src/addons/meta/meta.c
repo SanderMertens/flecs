@@ -1130,15 +1130,17 @@ void FlecsMetaImport(
 
     ecs_component(world, {
         .entity = ecs_entity(world, { .id = ecs_id(EcsType),
-            .name = "type", .symbol = "EcsType"
+            .name = "type", .symbol = "EcsType",
+            .add = ecs_ids(ecs_pair(EcsOnInstantiate, EcsDontInherit))
         }),
         .type.size = sizeof(EcsType),
-        .type.alignment = ECS_ALIGNOF(EcsType)
+        .type.alignment = ECS_ALIGNOF(EcsType),
     });
 
     ecs_component(world, {
         .entity = ecs_entity(world, { .id = ecs_id(EcsPrimitive),
-            .name = "primitive", .symbol = "EcsPrimitive"
+            .name = "primitive", .symbol = "EcsPrimitive",
+            .add = ecs_ids(ecs_pair(EcsOnInstantiate, EcsDontInherit))
         }),
         .type.size = sizeof(EcsPrimitive),
         .type.alignment = ECS_ALIGNOF(EcsPrimitive)
@@ -1146,13 +1148,15 @@ void FlecsMetaImport(
 
     ecs_component(world, {
         .entity = ecs_entity(world, { .id = EcsConstant,
-            .name = "constant", .symbol = "EcsConstant"
+            .name = "constant", .symbol = "EcsConstant",
+            .add = ecs_ids(ecs_pair(EcsOnInstantiate, EcsDontInherit))
         })
     });
 
     ecs_component(world, {
         .entity = ecs_entity(world, { .id = ecs_id(EcsEnum),
-            .name = "enum", .symbol = "EcsEnum"
+            .name = "enum", .symbol = "EcsEnum",
+            .add = ecs_ids(ecs_pair(EcsOnInstantiate, EcsDontInherit))
         }),
         .type.size = sizeof(EcsEnum),
         .type.alignment = ECS_ALIGNOF(EcsEnum)
@@ -1160,7 +1164,8 @@ void FlecsMetaImport(
 
     ecs_component(world, {
         .entity = ecs_entity(world, { .id = ecs_id(EcsBitmask),
-            .name = "bitmask", .symbol = "EcsBitmask"
+            .name = "bitmask", .symbol = "EcsBitmask",
+            .add = ecs_ids(ecs_pair(EcsOnInstantiate, EcsDontInherit))
         }),
         .type.size = sizeof(EcsBitmask),
         .type.alignment = ECS_ALIGNOF(EcsBitmask)
@@ -1168,7 +1173,8 @@ void FlecsMetaImport(
 
     ecs_component(world, {
         .entity = ecs_entity(world, { .id = ecs_id(EcsMember),
-            .name = "member", .symbol = "EcsMember"
+            .name = "member", .symbol = "EcsMember",
+            .add = ecs_ids(ecs_pair(EcsOnInstantiate, EcsDontInherit))
         }),
         .type.size = sizeof(EcsMember),
         .type.alignment = ECS_ALIGNOF(EcsMember)
@@ -1176,7 +1182,8 @@ void FlecsMetaImport(
 
     ecs_component(world, {
         .entity = ecs_entity(world, { .id = ecs_id(EcsMemberRanges),
-            .name = "member_ranges", .symbol = "EcsMemberRanges"
+            .name = "member_ranges", .symbol = "EcsMemberRanges",
+            .add = ecs_ids(ecs_pair(EcsOnInstantiate, EcsDontInherit))
         }),
         .type.size = sizeof(EcsMemberRanges),
         .type.alignment = ECS_ALIGNOF(EcsMemberRanges)
@@ -1184,7 +1191,8 @@ void FlecsMetaImport(
 
     ecs_component(world, {
         .entity = ecs_entity(world, { .id = ecs_id(EcsStruct),
-            .name = "struct", .symbol = "EcsStruct"
+            .name = "struct", .symbol = "EcsStruct",
+            .add = ecs_ids(ecs_pair(EcsOnInstantiate, EcsDontInherit))
         }),
         .type.size = sizeof(EcsStruct),
         .type.alignment = ECS_ALIGNOF(EcsStruct)
@@ -1192,7 +1200,8 @@ void FlecsMetaImport(
 
     ecs_component(world, {
         .entity = ecs_entity(world, { .id = ecs_id(EcsArray),
-            .name = "array", .symbol = "EcsArray"
+            .name = "array", .symbol = "EcsArray",
+            .add = ecs_ids(ecs_pair(EcsOnInstantiate, EcsDontInherit))
         }),
         .type.size = sizeof(EcsArray),
         .type.alignment = ECS_ALIGNOF(EcsArray)
@@ -1200,7 +1209,8 @@ void FlecsMetaImport(
 
     ecs_component(world, {
         .entity = ecs_entity(world, { .id = ecs_id(EcsVector),
-            .name = "vector", .symbol = "EcsVector"
+            .name = "vector", .symbol = "EcsVector",
+            .add = ecs_ids(ecs_pair(EcsOnInstantiate, EcsDontInherit))
         }),
         .type.size = sizeof(EcsVector),
         .type.alignment = ECS_ALIGNOF(EcsVector)
@@ -1208,7 +1218,8 @@ void FlecsMetaImport(
 
     ecs_component(world, {
         .entity = ecs_entity(world, { .id = ecs_id(EcsOpaque),
-            .name = "opaque", .symbol = "EcsOpaque"
+            .name = "opaque", .symbol = "EcsOpaque",
+            .add = ecs_ids(ecs_pair(EcsOnInstantiate, EcsDontInherit))
         }),
         .type.size = sizeof(EcsOpaque),
         .type.alignment = ECS_ALIGNOF(EcsOpaque)

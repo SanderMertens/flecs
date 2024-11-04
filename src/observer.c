@@ -437,8 +437,7 @@ void flecs_observers_invoke(
         while (ecs_map_next(&oit)) {
             ecs_observer_t *o = ecs_map_ptr(&oit);
             ecs_assert(it->table == table, ECS_INTERNAL_ERROR, NULL);
-            flecs_uni_observer_invoke(
-                world, o, it, table, trav);
+            flecs_uni_observer_invoke(world, o, it, table, trav);
         }
 
         ecs_table_unlock(it->world, table);

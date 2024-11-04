@@ -1377,6 +1377,9 @@ void Trigger_on_set_self_superset_from_child_base_of_prefab(void);
 void Trigger_on_set_self_auto_override(void);
 void Trigger_on_set_self_superset_auto_override(void);
 void Trigger_on_set_superset_auto_override(void);
+void Trigger_on_set_self_on_instantiate_override(void);
+void Trigger_on_set_self_up_on_instantiate_override(void);
+void Trigger_on_set_up_on_instantiate_override(void);
 void Trigger_not_only(void);
 void Trigger_not_only_w_base(void);
 void Trigger_not_only_w_base_no_match(void);
@@ -7596,6 +7599,18 @@ bake_test_case Trigger_testcases[] = {
         Trigger_on_set_superset_auto_override
     },
     {
+        "on_set_self_on_instantiate_override",
+        Trigger_on_set_self_on_instantiate_override
+    },
+    {
+        "on_set_self_up_on_instantiate_override",
+        Trigger_on_set_self_up_on_instantiate_override
+    },
+    {
+        "on_set_up_on_instantiate_override",
+        Trigger_on_set_up_on_instantiate_override
+    },
+    {
         "not_only",
         Trigger_not_only
     },
@@ -11298,7 +11313,7 @@ static bake_test_suite suites[] = {
         "Trigger",
         NULL,
         NULL,
-        117,
+        120,
         Trigger_testcases
     },
     {

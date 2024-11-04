@@ -1236,6 +1236,7 @@ repeat_event:
         int32_t ider_i, ider_count = 0;
         bool is_pair = ECS_IS_PAIR(id);
         void *override_ptr = NULL;
+        bool override_base_added = false;
         ecs_table_record_t *base_tr = NULL;
         ecs_entity_t base = 0;
         bool id_can_override = can_override;
@@ -1307,6 +1308,26 @@ repeat_event:
                             override_ptr = base_table->data.columns[base_column].data;
                             override_ptr = ECS_ELEM(override_ptr, ti->size, base_row);
                         }
+
+                        /* For ids with override policy, check if base was added 
+                         * in same operation. This will determine later on 
+                         * whether we need to emit an OnSet event. */
+                        if (!(idr->flags & 
+                            (EcsIdOnInstantiateInherit|EcsIdOnInstantiateDontInherit))) {
+                            int32_t base_i;
+                            for (base_i = 0; base_i < id_count; base_i ++) {
+                                ecs_id_t base_id = id_array[base_i];
+                                if (!ECS_IS_PAIR(base_id)) {
+                                    continue;
+                                }
+                                if (ECS_PAIR_FIRST(base_id) != EcsIsA) {
+                                    continue;
+                                }
+                                if (ECS_PAIR_SECOND(base_id) == (uint32_t)base) {
+                                    override_base_added = true;
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -1362,7 +1383,7 @@ repeat_event:
                     ptr = ECS_ELEM(c->data, size, offset);
                 }
 
-                /* safe, owned by observer */
+                /* Safe, owned by observer */
                 ECS_CONST_CAST(int32_t*, it.sizes)[0] = size;
 
                 if (override_ptr) {
@@ -1371,6 +1392,26 @@ repeat_event:
                          * with the value of the overridden component. */
                         flecs_override_copy(world, table, tr, ti, ptr, 
                             override_ptr, offset, count);
+
+                        /* If the base for this component got added in the same
+                         * operation, generate an OnSet event as this is the 
+                         * first time this value is observed for the entity. */
+                        if (override_base_added) {
+                            ecs_event_id_record_t *iders_set[5] = {0};
+                            int32_t ider_set_i, ider_set_count = 
+                                flecs_event_observers_get(er_onset, id, iders_set);
+                            for (ider_set_i = 0; ider_set_i < ider_set_count; ider_set_i ++) {
+                                ecs_event_id_record_t *ider = iders_set[ider_set_i];
+                                flecs_observers_invoke(
+                                    world, &ider->self, &it, table, 0);
+                                ecs_assert(it.event_cur == evtx, 
+                                    ECS_INTERNAL_ERROR, NULL);
+                                flecs_observers_invoke(
+                                    world, &ider->self_up, &it, table, 0);
+                                ecs_assert(it.event_cur == evtx, 
+                                    ECS_INTERNAL_ERROR, NULL);
+                            }
+                        }
                     } else if (er_onset && it.other_table) {
                         /* If an override was removed, this re-exposes the
                          * overridden component. Because this causes the actual
