@@ -4654,6 +4654,93 @@ void Trigger_on_set_superset_auto_override(void) {
     ecs_fini(world);
 }
 
+void Trigger_on_set_self_on_instantiate_override(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t base = ecs_insert(world, ecs_value(Position, {10, 20}));
+
+    Probe ctx = {0};
+    ecs_observer_init(world, &(ecs_observer_desc_t){
+        .query.terms[0] = {
+            .id = ecs_id(Position),
+            .src.id = EcsSelf
+        },
+        .events = {EcsOnSet},
+        .callback = Trigger_w_value,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
+    test_assert( ecs_has(world, inst, Position));
+    test_assert( ecs_owns(world, inst, Position));
+
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.e[0], inst);
+    test_int(ctx.s[0][0], 0);
+
+    ecs_fini(world);
+}
+
+void Trigger_on_set_self_up_on_instantiate_override(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t base = ecs_insert(world, ecs_value(Position, {10, 20}));
+
+    Probe ctx = {0};
+    ecs_observer_init(world, &(ecs_observer_desc_t){
+        .query.terms[0] = {
+            .id = ecs_id(Position),
+            .src.id = EcsSelf|EcsUp
+        },
+        .events = {EcsOnSet},
+        .callback = Trigger_w_value,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
+    test_assert( ecs_has(world, inst, Position));
+    test_assert( ecs_owns(world, inst, Position));
+
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.e[0], inst);
+    test_int(ctx.s[0][0], 0);
+
+    ecs_fini(world);
+}
+
+void Trigger_on_set_up_on_instantiate_override(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t base = ecs_insert(world, ecs_value(Position, {10, 20}));
+
+    Probe ctx = {0};
+    ecs_observer_init(world, &(ecs_observer_desc_t){
+        .query.terms[0] = {
+            .id = ecs_id(Position),
+            .src.id = EcsUp
+        },
+        .events = {EcsOnSet},
+        .callback = Trigger_w_value,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
+    test_assert( ecs_has(world, inst, Position));
+    test_assert( ecs_owns(world, inst, Position));
+
+    test_int(ctx.invoked, 0);
+
+    ecs_fini(world);
+}
+
 void Trigger_not_only(void) {
     ecs_world_t *world = ecs_mini();
 
