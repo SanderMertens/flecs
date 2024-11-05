@@ -1444,3 +1444,56 @@ void Union_defer_add_existing_union_relationship_2_ops(void) {
 
     ecs_fini(world);
 }
+
+void Union_stress_test_1(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, Rel, Union);
+    ECS_TAG(world, TgtA);
+    ECS_TAG(world, TgtB);
+    ECS_TAG(world, TgtC);
+
+    ecs_entity_t e1 = ecs_new(world);
+    ecs_entity_t e2 = ecs_new(world);
+
+    ecs_add_pair(world, e1, Rel, TgtA);
+    ecs_add_pair(world, e2, Rel, TgtA);
+    ecs_add_pair(world, e2, Rel, TgtB);
+
+    ecs_add_pair(world, e2, Rel, TgtA);
+    ecs_add_pair(world, e2, Rel, TgtB);
+    ecs_add_pair(world, e1, Rel, TgtC);
+
+    ecs_add_pair(world, e1, Rel, TgtA);
+    ecs_add_pair(world, e2, Rel, TgtB);
+    ecs_add_pair(world, e1, Rel, TgtC);
+
+    ecs_add_pair(world, e1, Rel, TgtA);
+    ecs_add_pair(world, e2, Rel, TgtA);
+    ecs_add_pair(world, e1, Rel, TgtC);
+
+    test_assert(ecs_has_pair(world, e1, Rel, TgtC));
+    test_assert(ecs_has_pair(world, e2, Rel, TgtA));
+
+    ecs_query_t *q_tgtA = ecs_query(world, {
+        .terms = {{ ecs_pair(Rel, TgtA) }}
+    });
+
+    ecs_query_t *q_tgtB = ecs_query(world, {
+        .terms = {{ ecs_pair(Rel, TgtB) }}
+    });
+
+    ecs_query_t *q_tgtC = ecs_query(world, {
+        .terms = {{ ecs_pair(Rel, TgtC) }}
+    });
+
+    test_int(ecs_query_count(q_tgtA).entities, 1);
+    test_int(ecs_query_count(q_tgtB).entities, 0);
+    test_int(ecs_query_count(q_tgtC).entities, 1);
+
+    ecs_query_fini(q_tgtA);
+    ecs_query_fini(q_tgtB);
+    ecs_query_fini(q_tgtC);
+
+    ecs_fini(world);
+}

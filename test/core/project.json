@@ -595,7 +595,8 @@
                 "defer_add_union_relationship",
                 "defer_add_existing_union_relationship",
                 "defer_add_union_relationship_2_ops",
-                "defer_add_existing_union_relationship_2_ops"
+                "defer_add_existing_union_relationship_2_ops",
+                "stress_test_1"
             ]
         }, {
             "id": "Hierarchies",
