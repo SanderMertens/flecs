@@ -131,6 +131,7 @@ bool flecs_switch_set(
 
         if (!hdr[0]) {
             hdr[0] = (uint64_t)element;
+            node->next = 0;
         } else {
             ecs_switch_node_t *head = flecs_switch_get_node(sw, (uint32_t)hdr[0]);
             ecs_assert(head->prev == 0, ECS_INTERNAL_ERROR, NULL);
@@ -138,6 +139,7 @@ bool flecs_switch_set(
 
             node->next = (uint32_t)hdr[0];
             hdr[0] = (uint64_t)element;
+            ecs_assert(node->next != element, ECS_INTERNAL_ERROR, NULL);
         }
 
         node->prev = 0;

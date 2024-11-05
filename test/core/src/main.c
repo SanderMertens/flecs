@@ -567,6 +567,7 @@ void Union_defer_add_union_relationship(void);
 void Union_defer_add_existing_union_relationship(void);
 void Union_defer_add_union_relationship_2_ops(void);
 void Union_defer_add_existing_union_relationship_2_ops(void);
+void Union_stress_test_1(void);
 
 // Testsuite 'Hierarchies'
 void Hierarchies_setup(void);
@@ -4456,6 +4457,10 @@ bake_test_case Union_testcases[] = {
     {
         "defer_add_existing_union_relationship_2_ops",
         Union_defer_add_existing_union_relationship_2_ops
+    },
+    {
+        "stress_test_1",
+        Union_stress_test_1
     }
 };
 
@@ -11208,7 +11213,7 @@ static bake_test_suite suites[] = {
         "Union",
         NULL,
         NULL,
-        51,
+        52,
         Union_testcases
     },
     {
