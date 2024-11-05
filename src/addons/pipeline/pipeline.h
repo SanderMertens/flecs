@@ -34,6 +34,8 @@ struct ecs_pipeline_state_t {
     ecs_iter_t *iters;          /* Iterator for worker(s) */
     int32_t iter_count;
 
+    int8_t query_phase_term;    /* Pipeline query phase term if != 0 (for perf tracing) */
+
     /* Members for continuing pipeline iteration after pipeline rebuild */
     ecs_pipeline_op_t *cur_op;  /* Current pipeline op */
     int32_t cur_i;              /* Index in current result */
