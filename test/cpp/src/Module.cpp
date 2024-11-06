@@ -68,6 +68,13 @@ public:
 
 }
 
+class ReparentRootModule {
+public:
+    ReparentRootModule(flecs::world& world) {
+        world.module<ReparentRootModule>("ns::ReparentRootModule");
+    }
+};
+
 namespace ns_parent {
     struct NsType {
         float x;
@@ -488,4 +495,14 @@ void Module_rename_namespace_nested(void) {
     auto ns_child = ecs.lookup("::ns::child");
     test_assert(ns_child != 0);
     test_assert(ns_child.has(flecs::Module));
+}
+
+void Module_rename_reparent_root_module(void) {
+    flecs::world ecs;
+
+    flecs::entity m = ecs.import<ReparentRootModule>();
+    flecs::entity p = m.parent();
+    test_assert(p != 0);
+    test_str(p.name(), "ns");
+    test_str(m.name(), "ReparentRootModule");
 }
