@@ -217,6 +217,25 @@ void Error_unterminated_multiline_string(void) {
     ecs_fini(world);
 }
 
+void Error_invalid_assign_multiline_string(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "String"}),
+        .members = {
+            {"value", ecs_id(ecs_bool_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "Foo { String: {value: `foo`} }";
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr) != 0);
+
+    ecs_fini(world);
+}
+
 void Error_const_var_redeclare(void) {
     ecs_world_t *world = ecs_init();
 

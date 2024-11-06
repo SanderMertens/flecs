@@ -323,6 +323,7 @@
                 "invalid_oneof",
                 "default_type_with_tag",
                 "unterminated_multiline_string",
+                "invalid_assign_multiline_string",
                 "const_var_redeclare",
                 "typed_const_w_composite_type_invalid_assignment",
                 "unterminated_multi_line_comment_in_value",
