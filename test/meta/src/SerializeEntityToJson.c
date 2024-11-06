@@ -1858,6 +1858,32 @@ void SerializeEntityToJson_serialize_sparse_inherited_mixed(void) {
     ecs_fini(world);
 }
 
+void SerializeEntityToJson_serialize_sparse_w_type_info(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "Position"}),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_add_id(world, ecs_id(Position), EcsSparse);
+
+    ecs_entity_t e = ecs_insert(world, ecs_value(Position, {10, 20}));
+    ecs_set_name(world, e, "Foo");
+
+    ecs_entity_to_json_desc_t desc = ECS_ENTITY_TO_JSON_INIT;
+    desc.serialize_type_info = true;
+    char *json = ecs_entity_to_json(world, e, &desc);
+    test_assert(json != NULL);
+    test_json(json, "{\"name\":\"Foo\", \"type_info\":{\"Position\":{\"x\":[\"int\"], \"y\":[\"int\"]}}, \"components\":{\"Position\":{\"x\":10, \"y\":20}}}");
+    ecs_os_free(json);
+
+    ecs_fini(world);
+}
+
 void SerializeEntityToJson_serialize_auto_override_w_inherited(void) {
     ecs_world_t *world = ecs_init();
 
