@@ -1092,7 +1092,8 @@
                 "implicitly_add_module_to_scopes_entity",
                 "rename_namespace_shorter",
                 "rename_namespace_longer",
-                "rename_namespace_nested"
+                "rename_namespace_nested",
+                "rename_reparent_root_module"
             ]
         }, {
             "id": "ImplicitComponents",

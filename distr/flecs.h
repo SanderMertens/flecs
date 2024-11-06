@@ -30813,7 +30813,7 @@ inline flecs::entity world::module(const char *name) const {
         if (prev_parent != parent) {
             // Module was reparented, cleanup old parent(s)
             flecs::entity cur = prev_parent, next;
-            do {
+            while (cur) {
                 next = cur.parent();
 
                 ecs_iter_t it = ecs_each_id(world_, ecs_pair(EcsChildOf, cur));
@@ -30822,7 +30822,7 @@ inline flecs::entity world::module(const char *name) const {
                 }
 
                 cur = next;
-            } while (cur);
+            }
         }
     }
 
