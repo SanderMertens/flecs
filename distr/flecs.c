@@ -5513,7 +5513,39 @@ void flecs_instantiate(
 {
     ecs_record_t *record = flecs_entities_get_any(world, base);
     ecs_table_t *base_table = record->table;
-    if (!base_table || !(base_table->flags & EcsTableIsPrefab)) {
+    if (!base_table) {
+        return;
+    }
+
+    /* If prefab has union relationships, also set them on instance */
+    if (base_table->flags & EcsTableHasUnion) {
+        const ecs_entity_t *entities = ecs_table_entities(table);
+        ecs_id_record_t *union_idr = flecs_id_record_get(world, 
+            ecs_pair(EcsWildcard, EcsUnion));
+        ecs_assert(union_idr != NULL, ECS_INTERNAL_ERROR, NULL);
+        const ecs_table_record_t *tr = flecs_id_record_get_table(
+            union_idr, base_table);
+        ecs_assert(tr != NULL, ECS_INTERNAL_ERROR, NULL);
+        int32_t i = 0, j = tr->index, union_count = 0;
+        do {
+            ecs_id_t id = base_table->type.array[i];
+            if (ECS_PAIR_SECOND(id) == EcsUnion) {
+                ecs_entity_t rel = ECS_PAIR_FIRST(id);
+                ecs_entity_t tgt = ecs_get_target(world, base, rel, 0);
+                ecs_assert(tgt != 0, ECS_INTERNAL_ERROR, NULL);
+
+                for (j = row; j < (row + count); j ++) {
+                    ecs_add_pair(world, entities[j], rel, tgt);
+                }
+
+                union_count ++;
+            }
+
+            i ++;
+        } while (union_count < tr->count);
+    }
+
+    if (!(base_table->flags & EcsTableIsPrefab)) {
         /* Don't instantiate children from base entities that aren't prefabs */
         return;
     }

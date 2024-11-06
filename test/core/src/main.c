@@ -1877,6 +1877,9 @@ void Prefab_prefab_recycled_children_recycled_offset_id_different_generation(voi
 void Prefab_prefab_1_child_offset_id_occupied(void);
 void Prefab_prefab_1_child_offset_id_recycled_occupied(void);
 void Prefab_prefab_child_offset_w_smaller_child_id(void);
+void Prefab_prefab_w_union(void);
+void Prefab_prefab_child_w_union(void);
+void Prefab_prefab_w_union_and_component(void);
 
 // Testsuite 'World'
 void World_setup(void);
@@ -9555,6 +9558,18 @@ bake_test_case Prefab_testcases[] = {
     {
         "prefab_child_offset_w_smaller_child_id",
         Prefab_prefab_child_offset_w_smaller_child_id
+    },
+    {
+        "prefab_w_union",
+        Prefab_prefab_w_union
+    },
+    {
+        "prefab_child_w_union",
+        Prefab_prefab_child_w_union
+    },
+    {
+        "prefab_w_union_and_component",
+        Prefab_prefab_w_union_and_component
     }
 };
 
@@ -11367,7 +11382,7 @@ static bake_test_suite suites[] = {
         "Prefab",
         Prefab_setup,
         NULL,
-        150,
+        153,
         Prefab_testcases
     },
     {

@@ -1949,7 +1949,10 @@
                 "prefab_recycled_children_recycled_offset_id_different_generation",
                 "prefab_1_child_offset_id_occupied",
                 "prefab_1_child_offset_id_recycled_occupied",
-                "prefab_child_offset_w_smaller_child_id"
+                "prefab_child_offset_w_smaller_child_id",
+                "prefab_w_union",
+                "prefab_child_w_union",
+                "prefab_w_union_and_component"
             ]
         }, {
             "id": "World",
