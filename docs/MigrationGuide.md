@@ -293,7 +293,7 @@ while (ecs_term_next(&it)) {
 
 ```c
 // v4
-ecs_iter_t it = ecs_each(world Position);
+ecs_iter_t it = ecs_each(world, Position);
 while (ecs_each_next(&it)) {
     Position *p = ecs_field(&it, Position, 0);
     for (int i = 0; i < it.count; i ++) {
