@@ -315,6 +315,7 @@ void Error_default_type_with_tag(void);
 void Error_invalid_oneof(void);
 void Error_default_type_with_tag(void);
 void Error_unterminated_multiline_string(void);
+void Error_invalid_assign_multiline_string(void);
 void Error_const_var_redeclare(void);
 void Error_typed_const_w_composite_type_invalid_assignment(void);
 void Error_unterminated_multi_line_comment_in_value(void);
@@ -1858,6 +1859,10 @@ bake_test_case Error_testcases[] = {
         Error_unterminated_multiline_string
     },
     {
+        "invalid_assign_multiline_string",
+        Error_invalid_assign_multiline_string
+    },
+    {
         "const_var_redeclare",
         Error_const_var_redeclare
     },
@@ -3163,7 +3168,7 @@ static bake_test_suite suites[] = {
         "Error",
         NULL,
         NULL,
-        62,
+        63,
         Error_testcases
     },
     {
