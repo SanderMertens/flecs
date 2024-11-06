@@ -29,21 +29,20 @@ bool flecs_json_serialize_table_type_info(
     ecs_table_t *table,
     ecs_strbuf_t *buf,
     const ecs_iter_to_json_desc_t *desc)
-{
-    ecs_column_t *columns = table->data.columns;
-    int32_t i, column_count = table->column_count;
-    
+{    
     flecs_json_memberl(buf, "type_info");
     flecs_json_object_push(buf);
 
-    if (!column_count) {
-        flecs_json_object_pop(buf);
-        return false;
-    }
-
-    for (i = 0; i < column_count; i ++) {
-        ecs_column_t *column = &columns[i];
-        ecs_id_t id = flecs_column_id(table, i);
+    int32_t i, type_count = table->type.count;
+    for (i = 0; i < type_count; i ++) {
+        const ecs_table_record_t *tr = &table->_->records[i];
+        ecs_id_record_t *idr = (ecs_id_record_t*)tr->hdr.cache;
+        ecs_id_t id = table->type.array[i];
+        if (!(idr->flags & EcsIdIsSparse) && 
+             (!table->column_map || (table->column_map[i] == -1))) 
+        {
+            continue;
+        }
 
         if (!desc || !desc->serialize_builtin) {
             if (flecs_json_is_builtin(id)) {
@@ -51,7 +50,7 @@ bool flecs_json_serialize_table_type_info(
             }
         }
 
-        ecs_type_info_t *ti = column->ti;
+        const ecs_type_info_t *ti = idr->type_info;
         ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
 
         flecs_json_next(buf);

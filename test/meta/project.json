@@ -725,6 +725,7 @@
                 "serialize_sparse_inherited",
                 "serialize_sparse_inherited_pair",
                 "serialize_sparse_inherited_mixed",
+                "serialize_sparse_w_type_info",
                 "serialize_auto_override_w_inherited",
                 "serialize_auto_override",
                 "serialize_auto_override_pair",
