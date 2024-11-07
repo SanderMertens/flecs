@@ -789,6 +789,36 @@ int flecs_term_finalize(
             }
         }
 
+        if (term->first.id & EcsCascade) {
+            flecs_query_validator_error(ctx, 
+                "cascade modifier invalid for term.first");
+            return -1;
+        }
+
+        if (term->second.id & EcsCascade) {
+            flecs_query_validator_error(ctx, 
+                "cascade modifier invalid for term.second");
+            return -1;
+        }
+
+        if (term->first.id & EcsDesc) {
+            flecs_query_validator_error(ctx, 
+                "desc modifier invalid for term.first");
+            return -1;
+        }
+
+        if (term->second.id & EcsDesc) {
+            flecs_query_validator_error(ctx, 
+                "desc modifier invalid for term.second");
+            return -1;
+        }
+
+        if (term->src.id & EcsDesc && !(term->src.id & EcsCascade)) {
+            flecs_query_validator_error(ctx, 
+                "desc modifier invalid without cascade");
+            return -1;
+        }
+
         if (term->src.id & EcsCascade) {
             /* Cascade always implies up traversal */
             term->src.id |= EcsUp;

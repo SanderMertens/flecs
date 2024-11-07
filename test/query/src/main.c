@@ -1498,14 +1498,6 @@ void Traversal_this_written_self_up_isa_childof_isa(void);
 void Traversal_this_written_self_up_isa_childof_isa_childof(void);
 
 // Testsuite 'Cascade'
-void Cascade_this_self_cascade_childof_uncached(void);
-void Cascade_this_cascade_childof_uncached(void);
-void Cascade_this_written_self_cascade_childof_uncached(void);
-void Cascade_this_written_cascade_childof_uncached(void);
-void Cascade_this_self_cascade_childof_w_parent_flag_uncached(void);
-void Cascade_this_cascade_childof_w_parent_flag_uncached(void);
-void Cascade_this_written_self_cascade_childof_w_parent_flag_uncached(void);
-void Cascade_this_written_cascade_childof_w_parent_flag_uncached(void);
 void Cascade_parent_cascade(void);
 void Cascade_existing_custom_rel_cascade(void);
 void Cascade_new_custom_rel_cascade(void);
@@ -1523,6 +1515,12 @@ void Cascade_cascade_desc_rematch_2_lvls(void);
 void Cascade_cascade_desc_rematch_2_lvls_2_relations(void);
 void Cascade_cascade_desc_topological(void);
 void Cascade_cascade_after_recycled_parent_change(void);
+void Cascade_invalid_cascade_for_uncached(void);
+void Cascade_invalid_cascade_for_first(void);
+void Cascade_invalid_cascade_for_second(void);
+void Cascade_invalid_desc_without_cascade(void);
+void Cascade_invalid_desc_for_first(void);
+void Cascade_invalid_desc_for_second(void);
 
 // Testsuite 'Cached'
 void Cached_simple_query_existing_table(void);
@@ -7974,38 +7972,6 @@ bake_test_case Traversal_testcases[] = {
 
 bake_test_case Cascade_testcases[] = {
     {
-        "this_self_cascade_childof_uncached",
-        Cascade_this_self_cascade_childof_uncached
-    },
-    {
-        "this_cascade_childof_uncached",
-        Cascade_this_cascade_childof_uncached
-    },
-    {
-        "this_written_self_cascade_childof_uncached",
-        Cascade_this_written_self_cascade_childof_uncached
-    },
-    {
-        "this_written_cascade_childof_uncached",
-        Cascade_this_written_cascade_childof_uncached
-    },
-    {
-        "this_self_cascade_childof_w_parent_flag_uncached",
-        Cascade_this_self_cascade_childof_w_parent_flag_uncached
-    },
-    {
-        "this_cascade_childof_w_parent_flag_uncached",
-        Cascade_this_cascade_childof_w_parent_flag_uncached
-    },
-    {
-        "this_written_self_cascade_childof_w_parent_flag_uncached",
-        Cascade_this_written_self_cascade_childof_w_parent_flag_uncached
-    },
-    {
-        "this_written_cascade_childof_w_parent_flag_uncached",
-        Cascade_this_written_cascade_childof_w_parent_flag_uncached
-    },
-    {
         "parent_cascade",
         Cascade_parent_cascade
     },
@@ -8072,6 +8038,30 @@ bake_test_case Cascade_testcases[] = {
     {
         "cascade_after_recycled_parent_change",
         Cascade_cascade_after_recycled_parent_change
+    },
+    {
+        "invalid_cascade_for_uncached",
+        Cascade_invalid_cascade_for_uncached
+    },
+    {
+        "invalid_cascade_for_first",
+        Cascade_invalid_cascade_for_first
+    },
+    {
+        "invalid_cascade_for_second",
+        Cascade_invalid_cascade_for_second
+    },
+    {
+        "invalid_desc_without_cascade",
+        Cascade_invalid_desc_without_cascade
+    },
+    {
+        "invalid_desc_for_first",
+        Cascade_invalid_desc_for_first
+    },
+    {
+        "invalid_desc_for_second",
+        Cascade_invalid_desc_for_second
     }
 };
 
@@ -10530,7 +10520,7 @@ static bake_test_suite suites[] = {
         "Cascade",
         NULL,
         NULL,
-        25,
+        23,
         Cascade_testcases
     },
     {

@@ -212,6 +212,27 @@ int flecs_query_create_cache(
 
             ecs_os_memcpy_n(impl->cache->field_map, field_map, int8_t, dst_count);
         }
+    } else {
+        /* Check if query has features that are unsupported for uncached */
+        ecs_assert(q->cache_kind == EcsQueryCacheNone, ECS_INTERNAL_ERROR, NULL);
+
+        if (!(q->flags & EcsQueryNested)) {
+            /* If uncached query is not create to populate a cached query, it 
+             * should not have cascade modifiers */
+            int32_t i, count = q->term_count;
+            ecs_term_t *terms = q->terms;
+            for (i = 0; i < count; i ++) {
+                ecs_term_t *term = &terms[i];
+                if (term->src.id & EcsCascade) {
+                    char *query_str = ecs_query_str(q);
+                    ecs_err(
+                        "cascade is unsupported for uncached query\n  %s",
+                        query_str);
+                    ecs_os_free(query_str);
+                    goto error;
+                }
+            }
+        }
     }
 
     return 0;

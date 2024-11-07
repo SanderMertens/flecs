@@ -249,7 +249,8 @@ void QueryStr_one_term_w_cascade(void) {
     ECS_TAG(world, Foo);
 
     ecs_query_t *q = ecs_query(world, {
-        .terms = {{ .id = Foo, .src.id = EcsCascade }}
+        .terms = {{ .id = Foo, .src.id = EcsCascade }},
+        .cache_kind = EcsQueryCacheAuto
     });
     test_assert(q != NULL);
 

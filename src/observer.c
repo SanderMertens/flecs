@@ -729,6 +729,9 @@ int flecs_observer_add_child(
     ecs_observer_t *o,
     const ecs_observer_desc_t *child_desc)
 {
+    ecs_assert(child_desc->query.flags & EcsQueryNested, 
+        ECS_INTERNAL_ERROR, NULL);
+
     ecs_observer_t *child_observer = flecs_observer_init(
         world, 0, child_desc);
     if (!child_observer) {
@@ -778,8 +781,9 @@ int flecs_multi_observer_init(
     ecs_os_zeromem(&child_desc.entity);
     ecs_os_zeromem(&child_desc.query.terms);
     ecs_os_zeromem(&child_desc.query);
-    ecs_os_memcpy_n(child_desc.events, o->events, 
-        ecs_entity_t, o->event_count);
+    ecs_os_memcpy_n(child_desc.events, o->events, ecs_entity_t, o->event_count);
+
+    child_desc.query.flags |= EcsQueryNested;
 
     int i, term_count = query->term_count;
     bool optional_only = query->flags & EcsQueryMatchThis;
