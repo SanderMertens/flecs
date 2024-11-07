@@ -1754,3 +1754,31 @@ void World_get_flags(void) {
 
     ecs_fini(world);
 }
+
+void World_fini_queue_overflow(void) {
+    /* This test verifies command flushing happens in batches during
+    world fini to avoid overflowing the vector holding the
+    command queue */
+
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    /* create a prefab entity: */
+    ecs_entity_t prefab = ecs_new(world);
+    ecs_add_id(world, prefab, EcsPrefab);
+    ecs_add_id(world, prefab, ecs_id(Position));
+
+    /* Create a large amount of entities. A number greater than 16777216,
+     2^30 / sizeof(ecs_cmd_t) would overflow the command queue vector */
+
+    ecs_bulk_init(world, &(ecs_bulk_desc_t) {
+        .count = 17000000,
+        .ids = { ecs_isa(prefab) }
+    });
+
+    /* on world fini, all entities must be destroyed in batches. */
+    ecs_fini(world);
+    
+    test_assert(true); /* if ecs_fini did not crash we're good */
+}
