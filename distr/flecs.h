@@ -702,6 +702,11 @@ extern "C" {
 /* Produces false positives in queries/src/cache.c */
 #pragma GCC diagnostic ignored "-Wstringop-overflow"
 #pragma GCC diagnostic ignored "-Wrestrict"
+
+#elif defined(ECS_TARGET_MSVC)
+/* recursive on all control paths, function will cause runtime stack overflow
+ * This warning is incorrectly thrown on enum reflection code. */
+#pragma warning(disable: 4717)
 #endif
 
 /* Allows for enum reflection support on legacy compilers */
