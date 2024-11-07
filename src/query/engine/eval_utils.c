@@ -20,18 +20,10 @@ void flecs_query_set_iter_this(
         it->table = table;
         it->offset = range->offset;
         it->count = count;
-#ifndef FLECS_SANITIZE
-        it->entities = &ecs_table_entities(table)[it->offset];
-        ecs_assert(it->entities != NULL || it->offset == 0, 
-            ECS_INTERNAL_ERROR, NULL);
-#else
-        /* Prevent "applying zero offset to null pointer" sanitizer error. The
-         * code panics on a bad offset value, but asan doesn't know that. */
         it->entities = ecs_table_entities(table);
         if (it->entities) {
             it->entities += it->offset;
         }
-#endif
     } else if (count == 1) {
         it->count = 1;
         it->entities = &ctx->vars[0].entity;
