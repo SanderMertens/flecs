@@ -509,10 +509,10 @@ Query scopes can be used to apply an operator to the result of more than one ter
 
 ```c
 // Match spaceships where none of the engines are healthy
-SpaceShip, !{ (Engine, $engine), Healthy($healthy) }
+SpaceShip, !{ (Engine, $engine), Healthy($engine) }
 ```
 
 ```c
 // Match spaceships where all of the engines are healthy
-SpaceShip, !{ (Engine, $engine), !Healthy($healthy) }
+SpaceShip, !{ (Engine, $engine), !Healthy($engine) }
 ```
