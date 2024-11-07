@@ -2379,7 +2379,8 @@
                 "log_log",
                 "log_warning",
                 "log_error",
-                "last_error"
+                "last_error",
+                "set_log_level_return"
             ]
         }, {
             "id": "StackAlloc",

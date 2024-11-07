@@ -524,7 +524,7 @@ int ecs_log_get_level(void) {
 int ecs_log_set_level(
     int level)
 {
-    int prev = level;
+    int prev = ecs_os_api.log_level_;
     ecs_os_api.log_level_ = level;
     return prev;
 }

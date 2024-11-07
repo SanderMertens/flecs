@@ -2287,6 +2287,7 @@ void Error_log_log(void);
 void Error_log_warning(void);
 void Error_log_error(void);
 void Error_last_error(void);
+void Error_set_log_level_return(void);
 
 // Testsuite 'StackAlloc'
 void StackAlloc_init_fini(void);
@@ -11124,6 +11125,10 @@ bake_test_case Error_testcases[] = {
     {
         "last_error",
         Error_last_error
+    },
+    {
+        "set_log_level_return",
+        Error_set_log_level_return
     }
 };
 
@@ -11452,7 +11457,7 @@ static bake_test_suite suites[] = {
         "Error",
         Error_setup,
         NULL,
-        12,
+        13,
         Error_testcases
     },
     {

@@ -107,3 +107,9 @@ void Error_last_error(void) {
     test_int(10, err);
     test_int(0, ecs_log_last_error());
 }
+
+void Error_set_log_level_return(void) {
+    ecs_log_set_level(1);
+    int prev = ecs_log_set_level(-1);
+    test_int(prev, 1);
+}
