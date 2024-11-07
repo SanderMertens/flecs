@@ -524,7 +524,7 @@ void flecs_instantiate(
         const ecs_table_record_t *tr = flecs_id_record_get_table(
             union_idr, base_table);
         ecs_assert(tr != NULL, ECS_INTERNAL_ERROR, NULL);
-        int32_t i = 0, j = tr->index, union_count = 0;
+        int32_t i = 0, j, union_count = 0;
         do {
             ecs_id_t id = base_table->type.array[i];
             if (ECS_PAIR_SECOND(id) == EcsUnion) {
