@@ -1949,6 +1949,7 @@ void World_get_entities(void);
 void World_run_post_frame(void);
 void World_run_post_frame_outside_of_frame(void);
 void World_get_flags(void);
+void World_fini_queue_overflow(void);
 
 // Testsuite 'WorldInfo'
 void WorldInfo_get_tick(void);
@@ -9838,6 +9839,10 @@ bake_test_case World_testcases[] = {
     {
         "get_flags",
         World_get_flags
+    },
+    {
+        "fini_queue_overflow",
+        World_fini_queue_overflow
     }
 };
 
@@ -11394,7 +11399,7 @@ static bake_test_suite suites[] = {
         "World",
         World_setup,
         NULL,
-        66,
+        67,
         World_testcases
     },
     {

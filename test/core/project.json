@@ -2023,7 +2023,8 @@
                 "get_entities",
                 "run_post_frame",
                 "run_post_frame_outside_of_frame",
-                "get_flags"
+                "get_flags",
+                "fini_queue_overflow"
             ]
         }, {
             "id": "WorldInfo",
