@@ -819,7 +819,6 @@ void ObserverOnSet_set_optional(void) {
     test_int(ctx.system, OnPosition);
     test_int(ctx.term_count, 2);
     test_null(ctx.param);
-
     test_int(ctx.e[0], e);
     test_int(ctx.c[0][0], ecs_id(Position));
     test_int(ctx.s[0][0], 0);
@@ -827,7 +826,40 @@ void ObserverOnSet_set_optional(void) {
     ecs_os_zeromem(&ctx);
 
     ecs_set(world, e, Velocity, {10, 20});
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, OnPosition);
+    test_int(ctx.term_count, 2);
+    test_null(ctx.param);
+    test_int(ctx.e[0], e);
+    test_int(ctx.c[0][0], ecs_id(Position));
+    test_int(ctx.c[0][1], ecs_id(Velocity));
+    test_int(ctx.s[0][0], 0);
+
+    ecs_fini(world);
+}
+
+void ObserverOnSet_set_optional_one_term(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_OBSERVER(world, OnPosition, EcsOnSet, ?Position);
+
+    Probe ctx = { 0 };
+    ecs_set_ctx(world, &ctx, NULL);
+
+    ecs_entity_t e = ecs_new_w(world, Position);
     test_int(ctx.invoked, 0);
+
+    ecs_set(world, e, Position, {10, 20});
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, OnPosition);
+    test_int(ctx.term_count, 1);
+    test_null(ctx.param);
+    test_int(ctx.e[0], e);
+    test_int(ctx.c[0][0], ecs_id(Position));
+    test_int(ctx.s[0][0], 0);
 
     ecs_fini(world);
 }
