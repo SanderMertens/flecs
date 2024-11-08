@@ -14884,6 +14884,9 @@ int flecs_observer_add_child(
     ecs_observer_t *o,
     const ecs_observer_desc_t *child_desc)
 {
+    ecs_assert(child_desc->query.flags & EcsQueryNested, 
+        ECS_INTERNAL_ERROR, NULL);
+
     ecs_observer_t *child_observer = flecs_observer_init(
         world, 0, child_desc);
     if (!child_observer) {
@@ -14933,8 +14936,9 @@ int flecs_multi_observer_init(
     ecs_os_zeromem(&child_desc.entity);
     ecs_os_zeromem(&child_desc.query.terms);
     ecs_os_zeromem(&child_desc.query);
-    ecs_os_memcpy_n(child_desc.events, o->events, 
-        ecs_entity_t, o->event_count);
+    ecs_os_memcpy_n(child_desc.events, o->events, ecs_entity_t, o->event_count);
+
+    child_desc.query.flags |= EcsQueryNested;
 
     int i, term_count = query->term_count;
     bool optional_only = query->flags & EcsQueryMatchThis;
@@ -32402,6 +32406,27 @@ int flecs_query_create_cache(
 
             ecs_os_memcpy_n(impl->cache->field_map, field_map, int8_t, dst_count);
         }
+    } else {
+        /* Check if query has features that are unsupported for uncached */
+        ecs_assert(q->cache_kind == EcsQueryCacheNone, ECS_INTERNAL_ERROR, NULL);
+
+        if (!(q->flags & EcsQueryNested)) {
+            /* If uncached query is not create to populate a cached query, it 
+             * should not have cascade modifiers */
+            int32_t i, count = q->term_count;
+            ecs_term_t *terms = q->terms;
+            for (i = 0; i < count; i ++) {
+                ecs_term_t *term = &terms[i];
+                if (term->src.id & EcsCascade) {
+                    char *query_str = ecs_query_str(q);
+                    ecs_err(
+                        "cascade is unsupported for uncached query\n  %s",
+                        query_str);
+                    ecs_os_free(query_str);
+                    goto error;
+                }
+            }
+        }
     }
 
     return 0;
@@ -34247,6 +34272,36 @@ int flecs_term_finalize(
                     return -1;
                 }
             }
+        }
+
+        if (term->first.id & EcsCascade) {
+            flecs_query_validator_error(ctx, 
+                "cascade modifier invalid for term.first");
+            return -1;
+        }
+
+        if (term->second.id & EcsCascade) {
+            flecs_query_validator_error(ctx, 
+                "cascade modifier invalid for term.second");
+            return -1;
+        }
+
+        if (term->first.id & EcsDesc) {
+            flecs_query_validator_error(ctx, 
+                "desc modifier invalid for term.first");
+            return -1;
+        }
+
+        if (term->second.id & EcsDesc) {
+            flecs_query_validator_error(ctx, 
+                "desc modifier invalid for term.second");
+            return -1;
+        }
+
+        if (term->src.id & EcsDesc && !(term->src.id & EcsCascade)) {
+            flecs_query_validator_error(ctx, 
+                "desc modifier invalid without cascade");
+            return -1;
         }
 
         if (term->src.id & EcsCascade) {
@@ -67953,16 +68008,18 @@ ecs_query_cache_t* flecs_query_cache_init(
     desc.ctx = NULL;
     desc.binding_ctx = NULL;
     desc.ctx_free = NULL;
-    desc.binding_ctx_free = NULL;
+    desc.binding_ctx_free = NULL;    
 
     ecs_query_cache_t *result = flecs_bcalloc(&stage->allocators.query_cache);
     result->entity = entity;
     impl->cache = result;
 
     ecs_observer_desc_t observer_desc = { .query = desc };
+    observer_desc.query.flags |= EcsQueryNested;
 
     ecs_flags32_t query_flags = const_desc->flags | world->default_query_flags;
-    desc.flags |= EcsQueryMatchEmptyTables | EcsQueryTableOnly;
+    desc.flags |= EcsQueryMatchEmptyTables | EcsQueryTableOnly | EcsQueryNested;
+
     ecs_query_t *q = result->query = ecs_query_init(world, &desc);
     if (!q) {
         goto error;

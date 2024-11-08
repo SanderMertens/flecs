@@ -1555,14 +1555,6 @@
         }, {
             "id": "Cascade",
             "testcases": [
-                "this_self_cascade_childof_uncached",
-                "this_cascade_childof_uncached",
-                "this_written_self_cascade_childof_uncached",
-                "this_written_cascade_childof_uncached",
-                "this_self_cascade_childof_w_parent_flag_uncached",
-                "this_cascade_childof_w_parent_flag_uncached",
-                "this_written_self_cascade_childof_w_parent_flag_uncached",
-                "this_written_cascade_childof_w_parent_flag_uncached",
                 "parent_cascade",
                 "existing_custom_rel_cascade",
                 "new_custom_rel_cascade",
@@ -1579,7 +1571,13 @@
                 "cascade_desc_rematch_2_lvls",
                 "cascade_desc_rematch_2_lvls_2_relations",
                 "cascade_desc_topological",
-                "cascade_after_recycled_parent_change"
+                "cascade_after_recycled_parent_change",
+                "invalid_cascade_for_uncached",
+                "invalid_cascade_for_first",
+                "invalid_cascade_for_second",
+                "invalid_desc_without_cascade",
+                "invalid_desc_for_first",
+                "invalid_desc_for_second"
             ]
         }, {
             "id": "Cached",

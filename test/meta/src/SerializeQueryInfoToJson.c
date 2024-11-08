@@ -456,7 +456,8 @@ void SerializeQueryInfoToJson_1_tag_cascade(void) {
     ECS_ENTITY(world, Foo, (OnInstantiate, Inherit));
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "Foo(cascade)"
+        .expr = "Foo(cascade)",
+        .cache_kind = EcsQueryCacheAuto
     });
 
     test_assert(q != NULL);

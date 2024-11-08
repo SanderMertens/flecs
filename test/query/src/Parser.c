@@ -3023,7 +3023,8 @@ void Parser_pred_implicit_subject_superset_cascade(void) {
     ECS_TAG(world, Pred);
 
     ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
-        .expr = "Pred(up|cascade)"
+        .expr = "Pred(up|cascade)",
+        .cache_kind = EcsQueryCacheAuto
     });
     test_assert(q != NULL);
     test_int(term_count(q), 1);
@@ -3046,7 +3047,8 @@ void Parser_pred_implicit_subject_superset_inclusive_cascade(void) {
     ECS_TAG(world, Pred);
 
     ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
-        .expr = "Pred(up|cascade|self)"
+        .expr = "Pred(up|cascade|self)",
+        .cache_kind = EcsQueryCacheAuto
     });
     test_assert(q != NULL);
     test_int(term_count(q), 1);
@@ -3069,7 +3071,8 @@ void Parser_pred_implicit_subject_implicit_superset_cascade(void) {
     ECS_TAG(world, Pred);
 
     ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
-        .expr = "Pred(cascade)"
+        .expr = "Pred(cascade)",
+        .cache_kind = EcsQueryCacheAuto
     });
     test_assert(q != NULL);
     test_int(term_count(q), 1);
@@ -3092,7 +3095,8 @@ void Parser_pred_implicit_subject_implicit_superset_inclusive_cascade(void) {
     ECS_TAG(world, Pred);
 
     ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
-        .expr = "Pred(self|cascade)"
+        .expr = "Pred(self|cascade)",
+        .cache_kind = EcsQueryCacheAuto
     });
     test_assert(q != NULL);
     test_int(term_count(q), 1);
@@ -3116,7 +3120,8 @@ void Parser_pred_implicit_subject_implicit_superset_cascade_w_rel(void) {
     ECS_ENTITY(world, Rel, Traversable);
 
     ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
-        .expr = "Pred(cascade Rel)"
+        .expr = "Pred(cascade Rel)",
+        .cache_kind = EcsQueryCacheAuto
     });
     test_assert(q != NULL);
     test_int(term_count(q), 1);
@@ -3140,7 +3145,8 @@ void Parser_pred_implicit_subject_implicit_superset_inclusive_cascade_w_rel(void
     ECS_ENTITY(world, Rel, Traversable);
 
     ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
-        .expr = "Pred(self|cascade Rel)"
+        .expr = "Pred(self|cascade Rel)",
+        .cache_kind = EcsQueryCacheAuto
     });
     test_assert(q != NULL);
     test_int(term_count(q), 1);
@@ -3163,7 +3169,8 @@ void Parser_pred_implicit_subject_superset_childof(void) {
     ECS_ENTITY(world, Pred, (OnInstantiate, Inherit));
 
     ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
-        .expr = "Pred(up IsA)"
+        .expr = "Pred(up IsA)",
+        .cache_kind = EcsQueryCacheAuto
     });
     test_assert(q != NULL);
     test_int(term_count(q), 1);
@@ -3186,7 +3193,8 @@ void Parser_pred_implicit_subject_cascade_superset_childof(void) {
     ECS_ENTITY(world, Pred, (OnInstantiate, Inherit));
 
     ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
-        .expr = "Pred(cascade|up IsA)"
+        .expr = "Pred(cascade|up IsA)",
+        .cache_kind = EcsQueryCacheAuto
     });
     test_assert(q != NULL);
     test_int(term_count(q), 1);
@@ -3209,7 +3217,8 @@ void Parser_pred_implicit_subject_superset_cascade_childof(void) {
     ECS_ENTITY(world, Pred, (OnInstantiate, Inherit));
 
     ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
-        .expr = "Pred(up|cascade IsA)"
+        .expr = "Pred(up|cascade IsA)",
+        .cache_kind = EcsQueryCacheAuto
     });
     test_assert(q != NULL);
     test_int(term_count(q), 1);
@@ -3232,7 +3241,8 @@ void Parser_pred_implicit_subject_superset_cascade_childof_optional(void) {
     ECS_ENTITY(world, Pred, (OnInstantiate, Inherit));
 
     ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
-        .expr = "?Pred(up|cascade IsA)"
+        .expr = "?Pred(up|cascade IsA)",
+        .cache_kind = EcsQueryCacheAuto
     });
     test_assert(q != NULL);
     test_int(term_count(q), 1);
@@ -5818,7 +5828,8 @@ void Parser_cascade_desc(void) {
     ECS_TAG(world, Pred);
 
     ecs_query_t *q = ecs_query_init(world, &(ecs_query_desc_t){
-        .expr = "Pred(cascade|desc)"
+        .expr = "Pred(cascade|desc)",
+        .cache_kind = EcsQueryCacheAuto
     });
     test_assert(q != NULL);
     test_int(term_count(q), 1);

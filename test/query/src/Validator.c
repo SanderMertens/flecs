@@ -785,7 +785,8 @@ void Validator_validate_1_term_cascade_implicit_trav(void) {
     ECS_TAG(world, Tag);
 
     ecs_query_t *q = ecs_query(world, {
-        .terms = {{ .id = Tag, .src.id = EcsCascade }}
+        .terms = {{ .id = Tag, .src.id = EcsCascade }},
+        .cache_kind = EcsQueryCacheAuto
     });
     test_assert(q != NULL);
 
@@ -813,7 +814,8 @@ void Validator_validate_1_term_cascade_isa(void) {
         .terms = {{ 
             .id = Tag, 
             .trav = EcsIsA, .src.id = EcsCascade
-        }}
+        }},
+        .cache_kind = EcsQueryCacheAuto
     });
     test_assert(q != NULL);
 
@@ -840,7 +842,8 @@ void Validator_validate_1_term_cascade_childof(void) {
         .terms = {{ 
             .id = Tag, 
             .trav = EcsChildOf, .src.id = EcsCascade
-        }}
+        }},
+        .cache_kind = EcsQueryCacheAuto
     });
     test_assert(q != NULL);
 
@@ -868,7 +871,8 @@ void Validator_validate_1_term_cascade_down(void) {
         .terms = {{ 
             .id = Tag, 
             .trav = EcsChildOf, .src.id = EcsCascade
-        }}
+        }},
+        .cache_kind = EcsQueryCacheAuto
     });
     test_assert(q != NULL);
 

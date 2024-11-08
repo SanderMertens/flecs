@@ -1226,16 +1226,18 @@ ecs_query_cache_t* flecs_query_cache_init(
     desc.ctx = NULL;
     desc.binding_ctx = NULL;
     desc.ctx_free = NULL;
-    desc.binding_ctx_free = NULL;
+    desc.binding_ctx_free = NULL;    
 
     ecs_query_cache_t *result = flecs_bcalloc(&stage->allocators.query_cache);
     result->entity = entity;
     impl->cache = result;
 
     ecs_observer_desc_t observer_desc = { .query = desc };
+    observer_desc.query.flags |= EcsQueryNested;
 
     ecs_flags32_t query_flags = const_desc->flags | world->default_query_flags;
-    desc.flags |= EcsQueryMatchEmptyTables | EcsQueryTableOnly;
+    desc.flags |= EcsQueryMatchEmptyTables | EcsQueryTableOnly | EcsQueryNested;
+
     ecs_query_t *q = result->query = ecs_query_init(world, &desc);
     if (!q) {
         goto error;

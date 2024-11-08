@@ -159,7 +159,7 @@ extern "C" {
 #define EcsQueryIsCacheable           (1u << 25u) /* All terms of query are cacheable */
 #define EcsQueryHasTableThisVar       (1u << 26u) /* Does query have $this table var */
 #define EcsQueryCacheYieldEmptyTables (1u << 27u) /* Does query cache empty tables */
-
+#define EcsQueryNested                (1u << 28u) /* Query created by a query (for observer, cache) */
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Term flags (used by ecs_term_t::flags_)
