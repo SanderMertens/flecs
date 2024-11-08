@@ -15052,7 +15052,10 @@ int flecs_multi_observer_init(
             term->src.id = EcsThis | EcsIsVariable | EcsSelf;
             term->second.id = 0;
         } else if (term->oper == EcsOptional) {
-            continue;
+            if (only_table_events) {
+                /* For table events optional terms aren't necessary */
+                continue;
+            }
         }
 
         if (flecs_observer_add_child(world, o, &child_desc)) {

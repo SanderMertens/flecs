@@ -1597,6 +1597,12 @@ void Observer_propagate_up_flag_term_1(void);
 void Observer_propagate_up_flag_term_2(void);
 void Observer_row_flag_term_1(void);
 void Observer_row_flag_term_2(void);
+void Observer_on_add_optional(void);
+void Observer_on_remove_optional(void);
+void Observer_on_add_multi_optional(void);
+void Observer_on_remove_multi_optional(void);
+void Observer_on_add_multi_only_optional(void);
+void Observer_on_remove_multi_only_optional(void);
 void Observer_cache_test_1(void);
 void Observer_cache_test_2(void);
 void Observer_cache_test_3(void);
@@ -1637,6 +1643,7 @@ void ObserverOnSet_remove_from_current_in_on_set(void);
 void ObserverOnSet_remove_set_component_in_on_set(void);
 void ObserverOnSet_match_table_created_w_add_in_on_set(void);
 void ObserverOnSet_set_optional(void);
+void ObserverOnSet_set_optional_one_term(void);
 void ObserverOnSet_set_from_nothing(void);
 void ObserverOnSet_add_0_entity_in_on_set(void);
 void ObserverOnSet_on_set_prefab(void);
@@ -8480,6 +8487,30 @@ bake_test_case Observer_testcases[] = {
         Observer_row_flag_term_2
     },
     {
+        "on_add_optional",
+        Observer_on_add_optional
+    },
+    {
+        "on_remove_optional",
+        Observer_on_remove_optional
+    },
+    {
+        "on_add_multi_optional",
+        Observer_on_add_multi_optional
+    },
+    {
+        "on_remove_multi_optional",
+        Observer_on_remove_multi_optional
+    },
+    {
+        "on_add_multi_only_optional",
+        Observer_on_add_multi_only_optional
+    },
+    {
+        "on_remove_multi_only_optional",
+        Observer_on_remove_multi_only_optional
+    },
+    {
         "cache_test_1",
         Observer_cache_test_1
     },
@@ -8633,6 +8664,10 @@ bake_test_case ObserverOnSet_testcases[] = {
     {
         "set_optional",
         ObserverOnSet_set_optional
+    },
+    {
+        "set_optional_one_term",
+        ObserverOnSet_set_optional_one_term
     },
     {
         "set_from_nothing",
@@ -11350,14 +11385,14 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        223,
+        229,
         Observer_testcases
     },
     {
         "ObserverOnSet",
         NULL,
         NULL,
-        25,
+        26,
         ObserverOnSet_testcases
     },
     {

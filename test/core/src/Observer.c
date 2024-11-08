@@ -9390,3 +9390,225 @@ void Observer_row_flag_term_2(void) {
 
     ecs_fini(world);
 }
+
+void Observer_on_add_optional(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    Probe ctx = {0};
+
+    ecs_entity_t o = ecs_observer(world, {
+        .query.terms = {
+            { .id = ecs_id(Position), .oper = EcsOptional }
+        },
+        .callback = Observer,
+        .events = { EcsOnAdd },
+        .ctx = &ctx
+    });
+
+    ecs_entity_t s = ecs_new(world);
+    ecs_add(world, s, Position);
+
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, o);
+    test_int(ctx.event, EcsOnAdd);
+    test_uint(ctx.s[0][0], 0);
+
+    ecs_fini(world);
+}
+
+void Observer_on_remove_optional(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    Probe ctx = {0};
+
+    ecs_entity_t o = ecs_observer(world, {
+        .query.terms = {
+            { .id = ecs_id(Position), .oper = EcsOptional }
+        },
+        .callback = Observer,
+        .events = { EcsOnRemove },
+        .ctx = &ctx
+    });
+
+    ecs_entity_t s = ecs_new(world);
+    ecs_add(world, s, Position);
+    test_int(ctx.invoked, 0);
+
+    ecs_remove(world, s, Position);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, o);
+    test_int(ctx.event, EcsOnRemove);
+    test_uint(ctx.s[0][0], 0);
+
+    ecs_fini(world);
+}
+
+void Observer_on_add_multi_optional(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    Probe ctx = {0};
+
+    ecs_entity_t o = ecs_observer(world, {
+        .query.terms = {
+            { .id = ecs_id(Position), .oper = EcsOptional },
+            { .id = ecs_id(Velocity) }
+        },
+        .callback = Observer,
+        .events = { EcsOnAdd },
+        .ctx = &ctx
+    });
+
+    ecs_entity_t s = ecs_new(world);
+    
+    ecs_add(world, s, Velocity);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, o);
+    test_int(ctx.event, EcsOnAdd);
+    test_uint(ctx.s[0][0], 0);
+
+    ecs_os_zeromem(&ctx);
+
+    ecs_add(world, s, Position);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, o);
+    test_int(ctx.event, EcsOnAdd);
+    test_uint(ctx.s[0][0], 0);
+
+    ecs_fini(world);
+}
+
+void Observer_on_remove_multi_optional(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    Probe ctx = {0};
+
+    ecs_entity_t o = ecs_observer(world, {
+        .query.terms = {
+            { .id = ecs_id(Position), .oper = EcsOptional },
+            { .id = ecs_id(Velocity) }
+        },
+        .callback = Observer,
+        .events = { EcsOnRemove },
+        .ctx = &ctx
+    });
+
+    ecs_entity_t s = ecs_new(world);
+    
+    ecs_add(world, s, Velocity);
+    ecs_add(world, s, Position);
+    test_int(ctx.invoked, 0);
+
+    ecs_remove(world, s, Position);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, o);
+    test_int(ctx.event, EcsOnRemove);
+    test_uint(ctx.s[0][0], 0);
+
+    ecs_os_zeromem(&ctx);
+
+    ecs_remove(world, s, Velocity);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, o);
+    test_int(ctx.event, EcsOnRemove);
+    test_uint(ctx.s[0][0], 0);
+
+    ecs_fini(world);
+}
+
+void Observer_on_add_multi_only_optional(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    Probe ctx = {0};
+
+    ecs_entity_t o = ecs_observer(world, {
+        .query.terms = {
+            { .id = ecs_id(Position), .oper = EcsOptional },
+            { .id = ecs_id(Velocity), .oper = EcsOptional }
+        },
+        .callback = Observer,
+        .events = { EcsOnAdd },
+        .ctx = &ctx
+    });
+
+    ecs_entity_t s = ecs_new(world);
+    
+    ecs_add(world, s, Velocity);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, o);
+    test_int(ctx.event, EcsOnAdd);
+    test_uint(ctx.s[0][0], 0);
+
+    ecs_os_zeromem(&ctx);
+
+    ecs_add(world, s, Position);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, o);
+    test_int(ctx.event, EcsOnAdd);
+    test_uint(ctx.s[0][0], 0);
+
+    ecs_fini(world);
+}
+
+void Observer_on_remove_multi_only_optional(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    Probe ctx = {0};
+
+    ecs_entity_t o = ecs_observer(world, {
+        .query.terms = {
+            { .id = ecs_id(Position), .oper = EcsOptional },
+            { .id = ecs_id(Velocity), .oper = EcsOptional  }
+        },
+        .callback = Observer,
+        .events = { EcsOnRemove },
+        .ctx = &ctx
+    });
+
+    ecs_entity_t s = ecs_new(world);
+
+    ecs_add(world, s, Velocity);
+    ecs_add(world, s, Position);
+    test_int(ctx.invoked, 0);
+
+    ecs_remove(world, s, Position);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, o);
+    test_int(ctx.event, EcsOnRemove);
+    test_uint(ctx.s[0][0], 0);
+
+    ecs_os_zeromem(&ctx);
+
+    ecs_remove(world, s, Velocity);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, o);
+    test_int(ctx.event, EcsOnRemove);
+    test_uint(ctx.s[0][0], 0);
+
+    ecs_fini(world);
+}
