@@ -11,37 +11,6 @@ namespace flecs
 namespace _ 
 {
 
-inline void ecs_ctor_illegal(void *, int32_t, const ecs_type_info_t *ti) {
-    ecs_abort(ECS_INVALID_OPERATION, "invalid constructor for %s", ti->name);
-}
-
-inline void ecs_dtor_illegal(void *, int32_t, const ecs_type_info_t *ti) {
-    ecs_abort(ECS_INVALID_OPERATION, "invalid destructor for %s", ti->name);
-}
-
-inline void ecs_copy_illegal(
-    void *, const void *, int32_t, const ecs_type_info_t *ti)
-{
-    ecs_abort(ECS_INVALID_OPERATION, "invalid copy assignment for %s", ti->name);
-}
-
-inline void ecs_move_illegal(void *, void *, int32_t, const ecs_type_info_t *ti) {
-    ecs_abort(ECS_INVALID_OPERATION, "invalid move assignment for %s", ti->name);
-}
-
-inline void ecs_copy_ctor_illegal(
-    void *, const void *, int32_t, const ecs_type_info_t *ti)
-{
-    ecs_abort(ECS_INVALID_OPERATION, "invalid copy construct for %s", ti->name);
-}
-
-inline void ecs_move_ctor_illegal(
-    void *, void *, int32_t, const ecs_type_info_t *ti)
-{
-    ecs_abort(ECS_INVALID_OPERATION, "invalid move construct for %s", ti->name);
-}
-
-
 // T()
 // Can't coexist with T(flecs::entity) or T(flecs::world, flecs::entity)
 template <typename T>

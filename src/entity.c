@@ -5335,3 +5335,69 @@ bool flecs_defer_purge(
 error:
     return false;
 }
+
+void ecs_ctor_illegal(
+    void * dst,
+    int32_t count,
+    const ecs_type_info_t *ti) {
+    (void)dst; /* silence unused warning */
+    (void)count;
+    ecs_abort(ECS_INVALID_OPERATION, "invalid constructor for %s", ti->name);
+}
+
+void ecs_dtor_illegal(
+    void *dst,
+    int32_t count,
+    const ecs_type_info_t *ti) {
+    (void)dst; /* silence unused warning */
+    (void)count;
+    ecs_abort(ECS_INVALID_OPERATION, "invalid destructor for %s", ti->name);
+}
+
+void ecs_copy_illegal(
+    void *dst,
+    const void *src,
+    int32_t count,
+    const ecs_type_info_t *ti)
+{
+    (void)dst; /* silence unused warning */
+    (void)src; 
+    (void)count;
+    ecs_abort(ECS_INVALID_OPERATION, "invalid copy assignment for %s", ti->name);
+}
+
+void ecs_move_illegal(
+    void * dst,
+    void * src,
+    int32_t count,
+    const ecs_type_info_t *ti) {
+    (void)dst; /* silence unused warning */
+    (void)src;
+    (void)count;
+    ecs_abort(ECS_INVALID_OPERATION, "invalid move assignment for %s", ti->name);
+}
+
+void ecs_copy_ctor_illegal(
+    void *dst,
+    const void *src,
+    int32_t count,
+    const ecs_type_info_t *ti)
+{
+    (void)dst; /* silence unused warning */
+    (void)src;
+    (void)count;
+    ecs_abort(ECS_INVALID_OPERATION, "invalid copy construct for %s", ti->name);
+}
+
+void ecs_move_ctor_illegal(
+    void *dst,
+    void *src,
+    int32_t count,
+    const ecs_type_info_t *ti)
+{
+    (void)dst; /* silence unused warning */
+    (void)src;
+    (void)count;
+    ecs_abort(ECS_INVALID_OPERATION, "invalid move construct for %s", ti->name);
+}
+

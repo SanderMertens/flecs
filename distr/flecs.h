@@ -7351,6 +7351,52 @@ const ecs_type_info_t* ecs_get_type_info(
     const ecs_world_t *world,
     ecs_id_t id);
 
+
+/**
+ * @defgroup illegal_hooks Illegal lifecycle hooks
+ * Functions to mark specific lifecycle hooks as illegal
+ *
+ * @{
+ */
+FLECS_API
+void ecs_ctor_illegal(void *,
+    int32_t,
+    const ecs_type_info_t *ti);
+
+FLECS_API
+void ecs_dtor_illegal(
+    void *,
+    int32_t,
+    const ecs_type_info_t *ti);
+
+FLECS_API
+void ecs_copy_illegal(void *,
+    const void *,
+    int32_t,
+    const ecs_type_info_t *ti);
+
+FLECS_API
+void ecs_move_illegal(void *,
+    void *,
+    int32_t,
+    const ecs_type_info_t *ti);
+
+FLECS_API
+void ecs_copy_ctor_illegal(
+    void *,
+    const void *,
+    int32_t, const ecs_type_info_t *ti);
+
+FLECS_API
+void ecs_move_ctor_illegal(
+    void *,
+    void *,
+    int32_t,
+    const ecs_type_info_t *ti);
+
+/** @} */
+
+
 /** Register hooks for component.
  * Hooks allow for the execution of user code when components are constructed,
  * copied, moved, destructed, added, removed or set. Hooks can be assigned as
@@ -20115,37 +20161,6 @@ namespace flecs
 
 namespace _ 
 {
-
-inline void ecs_ctor_illegal(void *, int32_t, const ecs_type_info_t *ti) {
-    ecs_abort(ECS_INVALID_OPERATION, "invalid constructor for %s", ti->name);
-}
-
-inline void ecs_dtor_illegal(void *, int32_t, const ecs_type_info_t *ti) {
-    ecs_abort(ECS_INVALID_OPERATION, "invalid destructor for %s", ti->name);
-}
-
-inline void ecs_copy_illegal(
-    void *, const void *, int32_t, const ecs_type_info_t *ti)
-{
-    ecs_abort(ECS_INVALID_OPERATION, "invalid copy assignment for %s", ti->name);
-}
-
-inline void ecs_move_illegal(void *, void *, int32_t, const ecs_type_info_t *ti) {
-    ecs_abort(ECS_INVALID_OPERATION, "invalid move assignment for %s", ti->name);
-}
-
-inline void ecs_copy_ctor_illegal(
-    void *, const void *, int32_t, const ecs_type_info_t *ti)
-{
-    ecs_abort(ECS_INVALID_OPERATION, "invalid copy construct for %s", ti->name);
-}
-
-inline void ecs_move_ctor_illegal(
-    void *, void *, int32_t, const ecs_type_info_t *ti)
-{
-    ecs_abort(ECS_INVALID_OPERATION, "invalid move construct for %s", ti->name);
-}
-
 
 // T()
 // Can't coexist with T(flecs::entity) or T(flecs::world, flecs::entity)
