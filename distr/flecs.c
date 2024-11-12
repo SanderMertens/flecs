@@ -10376,7 +10376,10 @@ error:
     return false;
 }
 
-// Define noreturn attribute only for GCC or Clang
+/* Define noreturn attribute only for GCC or Clang.
+ * Certain builds in Windows require this for functions that abort 
+ * (-Wmissing-noreturn)
+*/
 #if defined(__GNUC__) || defined(__clang__)
     #define NORETURN __attribute__((noreturn))
 #else
@@ -10385,7 +10388,7 @@ error:
 
 NORETURN
 static
-void ecs_ctor_illegal_impl(
+void ecs_ctor_illegal(
     void * dst,
     int32_t count,
     const ecs_type_info_t *ti) {
@@ -10394,14 +10397,14 @@ void ecs_ctor_illegal_impl(
     ecs_abort(ECS_INVALID_OPERATION, "invalid constructor for %s", ti->name);
 }
 
-ecs_xtor_t ecs_ctor_illegal(void)
+ecs_xtor_t ecs_ctor_illegal_(void)
 {
-    return ecs_ctor_illegal_impl;
+    return ecs_ctor_illegal;
 }
 
 NORETURN
 static
-void ecs_dtor_illegal_impl(
+void ecs_dtor_illegal(
     void *dst,
     int32_t count,
     const ecs_type_info_t *ti) {
@@ -10410,14 +10413,14 @@ void ecs_dtor_illegal_impl(
     ecs_abort(ECS_INVALID_OPERATION, "invalid destructor for %s", ti->name);
 }
 
-ecs_xtor_t ecs_dtor_illegal(void)
+ecs_xtor_t ecs_dtor_illegal_(void)
 {
-    return ecs_dtor_illegal_impl;
+    return ecs_dtor_illegal;
 }
 
 NORETURN
 static
-void ecs_copy_illegal_impl(
+void ecs_copy_illegal(
     void *dst,
     const void *src,
     int32_t count,
@@ -10429,14 +10432,14 @@ void ecs_copy_illegal_impl(
     ecs_abort(ECS_INVALID_OPERATION, "invalid copy assignment for %s", ti->name);
 }
 
-ecs_copy_t ecs_copy_illegal(void)
+ecs_copy_t ecs_copy_illegal_(void)
 {
-    return ecs_copy_illegal_impl;
+    return ecs_copy_illegal;
 }
 
 NORETURN
 static
-void ecs_move_illegal_impl(
+void ecs_move_illegal(
     void * dst,
     void * src,
     int32_t count,
@@ -10447,14 +10450,14 @@ void ecs_move_illegal_impl(
     ecs_abort(ECS_INVALID_OPERATION, "invalid move assignment for %s", ti->name);
 }
 
-ecs_move_t ecs_move_illegal(void)
+ecs_move_t ecs_move_illegal_(void)
 {
-    return ecs_move_illegal_impl;
+    return ecs_move_illegal;
 }
 
 NORETURN
 static
-void ecs_copy_ctor_illegal_impl(
+void ecs_copy_ctor_illegal(
     void *dst,
     const void *src,
     int32_t count,
@@ -10466,14 +10469,14 @@ void ecs_copy_ctor_illegal_impl(
     ecs_abort(ECS_INVALID_OPERATION, "invalid copy construct for %s", ti->name);
 }
 
-ecs_copy_t ecs_copy_ctor_illegal(void)
+ecs_copy_t ecs_copy_ctor_illegal_(void)
 {
-    return ecs_copy_ctor_illegal_impl;
+    return ecs_copy_ctor_illegal;
 }
 
 NORETURN
 static
-void ecs_move_ctor_illegal_impl(
+void ecs_move_ctor_illegal(
     void *dst,
     void *src,
     int32_t count,
@@ -10485,9 +10488,9 @@ void ecs_move_ctor_illegal_impl(
     ecs_abort(ECS_INVALID_OPERATION, "invalid move construct for %s", ti->name);
 }
 
-ecs_move_t ecs_move_ctor_illegal(void)
+ecs_move_t ecs_move_ctor_illegal_(void)
 {
-    return ecs_move_ctor_illegal_impl;
+    return ecs_move_ctor_illegal;
 }
 
 /**
@@ -19134,16 +19137,16 @@ void ecs_set_hooks_id(
 
     /* Set default copy ctor, move ctor and merge */
     if (!h->copy_ctor) {
-        if(h->copy == ecs_copy_illegal() || h->ctor == ecs_ctor_illegal()) {
-            ti->hooks.copy_ctor = ecs_copy_ctor_illegal();
+        if(h->copy == ECS_COPY_ILLEGAL || h->ctor == ECS_CTOR_ILLEGAL) {
+            ti->hooks.copy_ctor = ECS_COPY_CTOR_ILLEGAL;
         } else if(h->copy) {
             ti->hooks.copy_ctor = flecs_default_copy_ctor;
         }
     }
 
     if (!h->move_ctor) {
-        if(h->move == ecs_move_illegal() || h->ctor == ecs_ctor_illegal()) {
-            ti->hooks.move_ctor = ecs_move_ctor_illegal();
+        if(h->move == ECS_MOVE_ILLEGAL || h->ctor == ECS_CTOR_ILLEGAL) {
+            ti->hooks.move_ctor = ECS_MOVE_CTOR_ILLEGAL;
         } else if (h->move) {
             ti->hooks.move_ctor = flecs_default_move_ctor;
         }
@@ -51544,7 +51547,7 @@ static
 hook_req_t
 get_ctor_hook_req(
     const ecs_type_info_t *member_ti) {
-    if (member_ti->hooks.ctor == ecs_ctor_illegal()) {
+    if (member_ti->hooks.ctor == ECS_CTOR_ILLEGAL) {
         return HookIllegal;
     }
     if (member_ti->hooks.ctor && member_ti->hooks.ctor != flecs_default_ctor) {
@@ -51557,7 +51560,7 @@ static
 hook_req_t get_dtor_hook_req(
     const ecs_type_info_t *member_ti)
 {
-    if (member_ti->hooks.dtor == ecs_dtor_illegal()) {
+    if (member_ti->hooks.dtor == ECS_DTOR_ILLEGAL) {
         return HookIllegal;
     }
     if (member_ti->hooks.dtor != NULL) {
@@ -51570,7 +51573,7 @@ static
 hook_req_t get_move_hook_req(
     const ecs_type_info_t *member_ti)
 {
-    if (member_ti->hooks.move == ecs_move_illegal()) {
+    if (member_ti->hooks.move == ECS_MOVE_ILLEGAL) {
         return HookIllegal;
     }
     if (member_ti->hooks.move != NULL) {
@@ -51583,7 +51586,7 @@ static
 hook_req_t get_copy_hook_req(
     const ecs_type_info_t *member_ti)
 {
-    if (member_ti->hooks.copy == ecs_copy_illegal()) {
+    if (member_ti->hooks.copy == ECS_COPY_ILLEGAL) {
         return HookIllegal;
     }
     if (member_ti->hooks.copy != NULL) {
@@ -51625,10 +51628,10 @@ ecs_rtt_struct_ctx_t * flecs_rtt_configure_struct_hooks(
         hooks.lifecycle_ctx_free = NULL;
     }
 
-    hooks.ctor = GET_HOOK(ctor_req, flecs_rtt_struct_ctor, ecs_ctor_illegal());
-    hooks.dtor = GET_HOOK(dtor_req, flecs_rtt_struct_dtor, ecs_dtor_illegal());
-    hooks.move = GET_HOOK(move_req, flecs_rtt_struct_move, ecs_move_illegal());
-    hooks.copy = GET_HOOK(copy_req, flecs_rtt_struct_copy, ecs_copy_illegal());
+    hooks.ctor = GET_HOOK(ctor_req, flecs_rtt_struct_ctor, ECS_CTOR_ILLEGAL);
+    hooks.dtor = GET_HOOK(dtor_req, flecs_rtt_struct_dtor, ECS_DTOR_ILLEGAL);
+    hooks.move = GET_HOOK(move_req, flecs_rtt_struct_move, ECS_MOVE_ILLEGAL);
+    hooks.copy = GET_HOOK(copy_req, flecs_rtt_struct_copy, ECS_COPY_ILLEGAL);
 
     ecs_set_hooks_id(world, ti->component, &hooks);
     return rtt_ctx;
@@ -51869,10 +51872,10 @@ void flecs_rtt_init_default_hooks_array(
         hooks.lifecycle_ctx_free = NULL;
     }
 
-    hooks.ctor = GET_HOOK(ctor_req, flecs_rtt_array_ctor, ecs_ctor_illegal());
-    hooks.dtor = GET_HOOK(dtor_req, flecs_rtt_array_dtor, ecs_dtor_illegal());
-    hooks.move = GET_HOOK(move_req, flecs_rtt_array_move, ecs_move_illegal());
-    hooks.copy = GET_HOOK(copy_req, flecs_rtt_array_copy, ecs_copy_illegal());
+    hooks.ctor = GET_HOOK(ctor_req, flecs_rtt_array_ctor, ECS_CTOR_ILLEGAL);
+    hooks.dtor = GET_HOOK(dtor_req, flecs_rtt_array_dtor, ECS_DTOR_ILLEGAL);
+    hooks.move = GET_HOOK(move_req, flecs_rtt_array_move, ECS_MOVE_ILLEGAL);
+    hooks.copy = GET_HOOK(copy_req, flecs_rtt_array_copy, ECS_COPY_ILLEGAL);
 
     ecs_set_hooks_id(world, component, &hooks);
 }

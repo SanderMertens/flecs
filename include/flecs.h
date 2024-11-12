@@ -321,13 +321,6 @@
 extern "C" {
 #endif
 
-// Define noreturn attribute only for GCC or Clang
-#if defined(__GNUC__) || defined(__clang__)
-    #define NORETURN __attribute__((noreturn))
-#else
-    #define NORETURN
-#endif
-
 /**
  * @defgroup api_types API types
  * Public API types.
@@ -4171,23 +4164,36 @@ const ecs_type_info_t* ecs_get_type_info(
  *
  * @{
  */
-FLECS_API
-ecs_xtor_t ecs_ctor_illegal(void);
 
+/* Illegal constructor handler and constant */
 FLECS_API
-ecs_xtor_t ecs_dtor_illegal(void);
+ecs_xtor_t ecs_ctor_illegal_(void);
+#define ECS_CTOR_ILLEGAL (ecs_ctor_illegal_())
 
+/* Illegal destructor handler and constant */
 FLECS_API
-ecs_copy_t ecs_copy_illegal(void);
+ecs_xtor_t ecs_dtor_illegal_(void);
+#define ECS_DTOR_ILLEGAL (ecs_dtor_illegal_())
 
+/* Illegal copy-assign handler and constant */
 FLECS_API
-ecs_move_t ecs_move_illegal(void);
+ecs_copy_t ecs_copy_illegal_(void);
+#define ECS_COPY_ILLEGAL (ecs_copy_illegal_())
 
+/* Illegal move-assign handler and constant */
 FLECS_API
-ecs_copy_t ecs_copy_ctor_illegal(void);
+ecs_move_t ecs_move_illegal_(void);
+#define ECS_MOVE_ILLEGAL (ecs_move_illegal_())
 
+/* Illegal copy constructor handler and constant */
 FLECS_API
-ecs_move_t ecs_move_ctor_illegal(void);
+ecs_copy_t ecs_copy_ctor_illegal_(void);
+#define ECS_COPY_CTOR_ILLEGAL (ecs_copy_ctor_illegal_())
+
+/* Illegal move constructor handler and constant */
+FLECS_API
+ecs_move_t ecs_move_ctor_illegal_(void);
+#define ECS_MOVE_CTOR_ILLEGAL (ecs_move_ctor_illegal_())
 
 /** @} */
 

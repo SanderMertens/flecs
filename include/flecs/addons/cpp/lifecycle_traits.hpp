@@ -170,7 +170,7 @@ ecs_xtor_t ctor() {
 template <typename T, if_t< 
     ! std::is_default_constructible<T>::value > = 0>
 ecs_xtor_t ctor() {
-    return ecs_ctor_illegal();
+    return ECS_CTOR_ILLEGAL;
 }
 
 // Default constructible
@@ -200,7 +200,7 @@ template <typename T, if_not_t< std::is_destructible<T>::value > = 0>
 ecs_xtor_t dtor() {
     flecs_static_assert(always_false<T>::value, 
         "component type must be destructible");
-    return ecs_dtor_illegal();
+    return ECS_DTOR_ILLEGAL;
 }
 
 // Trivially copyable
@@ -214,7 +214,7 @@ template <typename T, if_t<
     ! std::is_trivially_copyable<T>::value &&
     ! std::is_copy_assignable<T>::value > = 0>
 ecs_copy_t copy() {
-    return ecs_copy_illegal();
+    return ECS_COPY_ILLEGAL;
 }
 
 // Copy assignment
@@ -234,7 +234,7 @@ ecs_move_t move() {
 // Component types must be move assignable
 template <typename T, if_not_t< std::is_move_assignable<T>::value > = 0>
 ecs_move_t move() {
-    return ecs_move_illegal();
+    return ECS_MOVE_ILLEGAL;
 }
 
 // Move assignment
@@ -255,7 +255,7 @@ ecs_copy_t copy_ctor() {
 // No copy ctor
 template <typename T, if_t< ! std::is_copy_constructible<T>::value > = 0>
 ecs_copy_t copy_ctor() {
-    return ecs_copy_ctor_illegal();
+    return ECS_COPY_CTOR_ILLEGAL;
 }
 
 // Copy ctor
@@ -276,7 +276,7 @@ ecs_move_t move_ctor() {
 // Component types must be move constructible
 template <typename T, if_not_t< std::is_move_constructible<T>::value > = 0>
 ecs_move_t move_ctor() {
-    return ecs_move_ctor_illegal();
+    return ECS_MOVE_CTOR_ILLEGAL;
 }
 
 // Move ctor
@@ -300,7 +300,7 @@ template <typename T, if_t<
     ! std::is_move_constructible<T>::value ||
     ! std::is_destructible<T>::value > = 0>
 ecs_move_t ctor_move_dtor() {
-    return ecs_move_ctor_illegal();
+    return ECS_MOVE_CTOR_ILLEGAL;
 }
 
 // Merge ctor + dtor
@@ -326,7 +326,7 @@ template <typename T, if_t<
     ! std::is_move_assignable<T>::value ||
     ! std::is_destructible<T>::value > = 0>
 ecs_move_t move_dtor() {
-    return ecs_move_ctor_illegal();
+    return ECS_MOVE_CTOR_ILLEGAL;
 }
 
 // Merge assign + dtor
