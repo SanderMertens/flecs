@@ -1256,16 +1256,16 @@ void ecs_set_hooks_id(
 
     /* Set default copy ctor, move ctor and merge */
     if (!h->copy_ctor) {
-        if(h->copy == ecs_get_copy_illegal() || h->ctor == ecs_get_ctor_illegal()) {
-            ti->hooks.copy_ctor = ecs_get_copy_ctor_illegal();
+        if(h->copy == ecs_copy_illegal() || h->ctor == ecs_ctor_illegal()) {
+            ti->hooks.copy_ctor = ecs_copy_ctor_illegal();
         } else if(h->copy) {
             ti->hooks.copy_ctor = flecs_default_copy_ctor;
         }
     }
 
     if (!h->move_ctor) {
-        if(h->move == ecs_get_move_illegal() || h->ctor == ecs_get_ctor_illegal()) {
-            ti->hooks.move_ctor = ecs_get_move_ctor_illegal();
+        if(h->move == ecs_move_illegal() || h->ctor == ecs_ctor_illegal()) {
+            ti->hooks.move_ctor = ecs_move_ctor_illegal();
         } else if (h->move) {
             ti->hooks.move_ctor = flecs_default_move_ctor;
         }

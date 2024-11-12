@@ -214,7 +214,7 @@ static
 hook_req_t
 get_ctor_hook_req(
     const ecs_type_info_t *member_ti) {
-    if (member_ti->hooks.ctor == ecs_get_ctor_illegal()) {
+    if (member_ti->hooks.ctor == ecs_ctor_illegal()) {
         return HookIllegal;
     }
     if (member_ti->hooks.ctor && member_ti->hooks.ctor != flecs_default_ctor) {
@@ -227,7 +227,7 @@ static
 hook_req_t get_dtor_hook_req(
     const ecs_type_info_t *member_ti)
 {
-    if (member_ti->hooks.dtor == ecs_get_dtor_illegal()) {
+    if (member_ti->hooks.dtor == ecs_dtor_illegal()) {
         return HookIllegal;
     }
     if (member_ti->hooks.dtor != NULL) {
@@ -240,7 +240,7 @@ static
 hook_req_t get_move_hook_req(
     const ecs_type_info_t *member_ti)
 {
-    if (member_ti->hooks.move == ecs_get_move_illegal()) {
+    if (member_ti->hooks.move == ecs_move_illegal()) {
         return HookIllegal;
     }
     if (member_ti->hooks.move != NULL) {
@@ -253,7 +253,7 @@ static
 hook_req_t get_copy_hook_req(
     const ecs_type_info_t *member_ti)
 {
-    if (member_ti->hooks.copy == ecs_get_copy_illegal()) {
+    if (member_ti->hooks.copy == ecs_copy_illegal()) {
         return HookIllegal;
     }
     if (member_ti->hooks.copy != NULL) {
@@ -295,10 +295,10 @@ ecs_rtt_struct_ctx_t * flecs_rtt_configure_struct_hooks(
         hooks.lifecycle_ctx_free = NULL;
     }
 
-    hooks.ctor = GET_HOOK(ctor_req, flecs_rtt_struct_ctor, ecs_get_ctor_illegal());
-    hooks.dtor = GET_HOOK(dtor_req, flecs_rtt_struct_dtor, ecs_get_dtor_illegal());
-    hooks.move = GET_HOOK(move_req, flecs_rtt_struct_move, ecs_get_move_illegal());
-    hooks.copy = GET_HOOK(copy_req, flecs_rtt_struct_copy, ecs_get_copy_illegal());
+    hooks.ctor = GET_HOOK(ctor_req, flecs_rtt_struct_ctor, ecs_ctor_illegal());
+    hooks.dtor = GET_HOOK(dtor_req, flecs_rtt_struct_dtor, ecs_dtor_illegal());
+    hooks.move = GET_HOOK(move_req, flecs_rtt_struct_move, ecs_move_illegal());
+    hooks.copy = GET_HOOK(copy_req, flecs_rtt_struct_copy, ecs_copy_illegal());
 
     ecs_set_hooks_id(world, ti->component, &hooks);
     return rtt_ctx;
@@ -539,10 +539,10 @@ void flecs_rtt_init_default_hooks_array(
         hooks.lifecycle_ctx_free = NULL;
     }
 
-    hooks.ctor = GET_HOOK(ctor_req, flecs_rtt_array_ctor, ecs_get_ctor_illegal());
-    hooks.dtor = GET_HOOK(dtor_req, flecs_rtt_array_dtor, ecs_get_dtor_illegal());
-    hooks.move = GET_HOOK(move_req, flecs_rtt_array_move, ecs_get_move_illegal());
-    hooks.copy = GET_HOOK(copy_req, flecs_rtt_array_copy, ecs_get_copy_illegal());
+    hooks.ctor = GET_HOOK(ctor_req, flecs_rtt_array_ctor, ecs_ctor_illegal());
+    hooks.dtor = GET_HOOK(dtor_req, flecs_rtt_array_dtor, ecs_dtor_illegal());
+    hooks.move = GET_HOOK(move_req, flecs_rtt_array_move, ecs_move_illegal());
+    hooks.copy = GET_HOOK(copy_req, flecs_rtt_array_copy, ecs_copy_illegal());
 
     ecs_set_hooks_id(world, component, &hooks);
 }

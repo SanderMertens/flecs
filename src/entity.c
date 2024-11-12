@@ -5336,8 +5336,16 @@ error:
     return false;
 }
 
+// Define noreturn attribute only for GCC or Clang
+#if defined(__GNUC__) || defined(__clang__)
+    #define NORETURN __attribute__((noreturn))
+#else
+    #define NORETURN
+#endif
+
+NORETURN
 static
-void ecs_ctor_illegal(
+void ecs_ctor_illegal_impl(
     void * dst,
     int32_t count,
     const ecs_type_info_t *ti) {
@@ -5346,13 +5354,14 @@ void ecs_ctor_illegal(
     ecs_abort(ECS_INVALID_OPERATION, "invalid constructor for %s", ti->name);
 }
 
-ecs_xtor_t ecs_get_ctor_illegal(void)
+ecs_xtor_t ecs_ctor_illegal(void)
 {
-    return ecs_ctor_illegal;
+    return ecs_ctor_illegal_impl;
 }
 
+NORETURN
 static
-void ecs_dtor_illegal(
+void ecs_dtor_illegal_impl(
     void *dst,
     int32_t count,
     const ecs_type_info_t *ti) {
@@ -5361,13 +5370,14 @@ void ecs_dtor_illegal(
     ecs_abort(ECS_INVALID_OPERATION, "invalid destructor for %s", ti->name);
 }
 
-ecs_xtor_t ecs_get_dtor_illegal(void)
+ecs_xtor_t ecs_dtor_illegal(void)
 {
-    return ecs_dtor_illegal;
+    return ecs_dtor_illegal_impl;
 }
 
+NORETURN
 static
-void ecs_copy_illegal(
+void ecs_copy_illegal_impl(
     void *dst,
     const void *src,
     int32_t count,
@@ -5379,13 +5389,14 @@ void ecs_copy_illegal(
     ecs_abort(ECS_INVALID_OPERATION, "invalid copy assignment for %s", ti->name);
 }
 
-ecs_copy_t ecs_get_copy_illegal(void)
+ecs_copy_t ecs_copy_illegal(void)
 {
-    return ecs_copy_illegal;
+    return ecs_copy_illegal_impl;
 }
 
+NORETURN
 static
-void ecs_move_illegal(
+void ecs_move_illegal_impl(
     void * dst,
     void * src,
     int32_t count,
@@ -5396,13 +5407,14 @@ void ecs_move_illegal(
     ecs_abort(ECS_INVALID_OPERATION, "invalid move assignment for %s", ti->name);
 }
 
-ecs_move_t ecs_get_move_illegal(void)
+ecs_move_t ecs_move_illegal(void)
 {
-    return ecs_move_illegal;
+    return ecs_move_illegal_impl;
 }
 
+NORETURN
 static
-void ecs_copy_ctor_illegal(
+void ecs_copy_ctor_illegal_impl(
     void *dst,
     const void *src,
     int32_t count,
@@ -5414,13 +5426,14 @@ void ecs_copy_ctor_illegal(
     ecs_abort(ECS_INVALID_OPERATION, "invalid copy construct for %s", ti->name);
 }
 
-ecs_copy_t ecs_get_copy_ctor_illegal(void)
+ecs_copy_t ecs_copy_ctor_illegal(void)
 {
-    return ecs_copy_ctor_illegal;
+    return ecs_copy_ctor_illegal_impl;
 }
 
+NORETURN
 static
-void ecs_move_ctor_illegal(
+void ecs_move_ctor_illegal_impl(
     void *dst,
     void *src,
     int32_t count,
@@ -5432,7 +5445,7 @@ void ecs_move_ctor_illegal(
     ecs_abort(ECS_INVALID_OPERATION, "invalid move construct for %s", ti->name);
 }
 
-ecs_move_t ecs_get_move_ctor_illegal(void)
+ecs_move_t ecs_move_ctor_illegal(void)
 {
-    return ecs_move_ctor_illegal;
+    return ecs_move_ctor_illegal_impl;
 }

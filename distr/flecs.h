@@ -7366,22 +7366,22 @@ const ecs_type_info_t* ecs_get_type_info(
  * @{
  */
 FLECS_API
-ecs_xtor_t ecs_get_ctor_illegal(void);
+ecs_xtor_t ecs_ctor_illegal(void);
 
 FLECS_API
-ecs_xtor_t ecs_get_dtor_illegal(void);
+ecs_xtor_t ecs_dtor_illegal(void);
 
 FLECS_API
-ecs_copy_t ecs_get_copy_illegal(void);
+ecs_copy_t ecs_copy_illegal(void);
 
 FLECS_API
-ecs_move_t ecs_get_move_illegal(void);
+ecs_move_t ecs_move_illegal(void);
 
 FLECS_API
-ecs_copy_t ecs_get_copy_ctor_illegal(void);
+ecs_copy_t ecs_copy_ctor_illegal(void);
 
 FLECS_API
-ecs_move_t ecs_get_move_ctor_illegal(void);
+ecs_move_t ecs_move_ctor_illegal(void);
 
 /** @} */
 
@@ -20310,7 +20310,7 @@ ecs_xtor_t ctor() {
 template <typename T, if_t< 
     ! std::is_default_constructible<T>::value > = 0>
 ecs_xtor_t ctor() {
-    return ecs_get_ctor_illegal();
+    return ecs_ctor_illegal();
 }
 
 // Default constructible
@@ -20340,7 +20340,7 @@ template <typename T, if_not_t< std::is_destructible<T>::value > = 0>
 ecs_xtor_t dtor() {
     flecs_static_assert(always_false<T>::value, 
         "component type must be destructible");
-    return ecs_get_dtor_illegal();
+    return ecs_dtor_illegal();
 }
 
 // Trivially copyable
@@ -20354,7 +20354,7 @@ template <typename T, if_t<
     ! std::is_trivially_copyable<T>::value &&
     ! std::is_copy_assignable<T>::value > = 0>
 ecs_copy_t copy() {
-    return ecs_get_copy_illegal();
+    return ecs_copy_illegal();
 }
 
 // Copy assignment
@@ -20374,7 +20374,7 @@ ecs_move_t move() {
 // Component types must be move assignable
 template <typename T, if_not_t< std::is_move_assignable<T>::value > = 0>
 ecs_move_t move() {
-    return ecs_get_move_illegal();
+    return ecs_move_illegal();
 }
 
 // Move assignment
@@ -20395,7 +20395,7 @@ ecs_copy_t copy_ctor() {
 // No copy ctor
 template <typename T, if_t< ! std::is_copy_constructible<T>::value > = 0>
 ecs_copy_t copy_ctor() {
-    return ecs_get_copy_ctor_illegal();
+    return ecs_copy_ctor_illegal();
 }
 
 // Copy ctor
@@ -20416,7 +20416,7 @@ ecs_move_t move_ctor() {
 // Component types must be move constructible
 template <typename T, if_not_t< std::is_move_constructible<T>::value > = 0>
 ecs_move_t move_ctor() {
-    return ecs_get_move_ctor_illegal();
+    return ecs_move_ctor_illegal();
 }
 
 // Move ctor
@@ -20440,7 +20440,7 @@ template <typename T, if_t<
     ! std::is_move_constructible<T>::value ||
     ! std::is_destructible<T>::value > = 0>
 ecs_move_t ctor_move_dtor() {
-    return ecs_get_move_ctor_illegal();
+    return ecs_move_ctor_illegal();
 }
 
 // Merge ctor + dtor
@@ -20466,7 +20466,7 @@ template <typename T, if_t<
     ! std::is_move_assignable<T>::value ||
     ! std::is_destructible<T>::value > = 0>
 ecs_move_t move_dtor() {
-    return ecs_get_move_ctor_illegal();
+    return ecs_move_ctor_illegal();
 }
 
 // Merge assign + dtor
@@ -26832,7 +26832,7 @@ void register_lifecycle_actions(
 
     ecs_set_hooks_id( world, component, &cl);
 
-    if (cl.move == ecs_get_move_illegal() || cl.move_ctor == ecs_get_move_ctor_illegal()) {
+    if (cl.move == ecs_move_illegal() || cl.move_ctor == ecs_move_ctor_illegal()) {
         ecs_add_id(world, component, flecs::Sparse);
     }
 }

@@ -4172,22 +4172,22 @@ const ecs_type_info_t* ecs_get_type_info(
  * @{
  */
 FLECS_API
-ecs_xtor_t ecs_get_ctor_illegal(void);
+ecs_xtor_t ecs_ctor_illegal(void);
 
 FLECS_API
-ecs_xtor_t ecs_get_dtor_illegal(void);
+ecs_xtor_t ecs_dtor_illegal(void);
 
 FLECS_API
-ecs_copy_t ecs_get_copy_illegal(void);
+ecs_copy_t ecs_copy_illegal(void);
 
 FLECS_API
-ecs_move_t ecs_get_move_illegal(void);
+ecs_move_t ecs_move_illegal(void);
 
 FLECS_API
-ecs_copy_t ecs_get_copy_ctor_illegal(void);
+ecs_copy_t ecs_copy_ctor_illegal(void);
 
 FLECS_API
-ecs_move_t ecs_get_move_ctor_illegal(void);
+ecs_move_t ecs_move_ctor_illegal(void);
 
 /** @} */
 
