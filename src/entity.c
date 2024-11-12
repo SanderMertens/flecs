@@ -5336,6 +5336,7 @@ error:
     return false;
 }
 
+static
 void ecs_ctor_illegal(
     void * dst,
     int32_t count,
@@ -5345,6 +5346,12 @@ void ecs_ctor_illegal(
     ecs_abort(ECS_INVALID_OPERATION, "invalid constructor for %s", ti->name);
 }
 
+ecs_xtor_t ecs_get_ctor_illegal(void)
+{
+    return ecs_ctor_illegal;
+}
+
+static
 void ecs_dtor_illegal(
     void *dst,
     int32_t count,
@@ -5354,6 +5361,12 @@ void ecs_dtor_illegal(
     ecs_abort(ECS_INVALID_OPERATION, "invalid destructor for %s", ti->name);
 }
 
+ecs_xtor_t ecs_get_dtor_illegal(void)
+{
+    return ecs_dtor_illegal;
+}
+
+static
 void ecs_copy_illegal(
     void *dst,
     const void *src,
@@ -5366,6 +5379,12 @@ void ecs_copy_illegal(
     ecs_abort(ECS_INVALID_OPERATION, "invalid copy assignment for %s", ti->name);
 }
 
+ecs_copy_t ecs_get_copy_illegal(void)
+{
+    return ecs_copy_illegal;
+}
+
+static
 void ecs_move_illegal(
     void * dst,
     void * src,
@@ -5377,6 +5396,12 @@ void ecs_move_illegal(
     ecs_abort(ECS_INVALID_OPERATION, "invalid move assignment for %s", ti->name);
 }
 
+ecs_move_t ecs_get_move_illegal(void)
+{
+    return ecs_move_illegal;
+}
+
+static
 void ecs_copy_ctor_illegal(
     void *dst,
     const void *src,
@@ -5389,6 +5414,12 @@ void ecs_copy_ctor_illegal(
     ecs_abort(ECS_INVALID_OPERATION, "invalid copy construct for %s", ti->name);
 }
 
+ecs_copy_t ecs_get_copy_ctor_illegal(void)
+{
+    return ecs_copy_ctor_illegal;
+}
+
+static
 void ecs_move_ctor_illegal(
     void *dst,
     void *src,
@@ -5401,3 +5432,7 @@ void ecs_move_ctor_illegal(
     ecs_abort(ECS_INVALID_OPERATION, "invalid move construct for %s", ti->name);
 }
 
+ecs_move_t ecs_get_move_ctor_illegal(void)
+{
+    return ecs_move_ctor_illegal;
+}

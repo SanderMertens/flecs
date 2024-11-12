@@ -321,6 +321,13 @@
 extern "C" {
 #endif
 
+// Define noreturn attribute only for GCC or Clang
+#if defined(__GNUC__) || defined(__clang__)
+    #define NORETURN __attribute__((noreturn))
+#else
+    #define NORETURN
+#endif
+
 /**
  * @defgroup api_types API types
  * Public API types.
@@ -4165,40 +4172,22 @@ const ecs_type_info_t* ecs_get_type_info(
  * @{
  */
 FLECS_API
-void ecs_ctor_illegal(void *,
-    int32_t,
-    const ecs_type_info_t *ti);
+ecs_xtor_t ecs_get_ctor_illegal(void);
 
 FLECS_API
-void ecs_dtor_illegal(
-    void *,
-    int32_t,
-    const ecs_type_info_t *ti);
+ecs_xtor_t ecs_get_dtor_illegal(void);
 
 FLECS_API
-void ecs_copy_illegal(void *,
-    const void *,
-    int32_t,
-    const ecs_type_info_t *ti);
+ecs_copy_t ecs_get_copy_illegal(void);
 
 FLECS_API
-void ecs_move_illegal(void *,
-    void *,
-    int32_t,
-    const ecs_type_info_t *ti);
+ecs_move_t ecs_get_move_illegal(void);
 
 FLECS_API
-void ecs_copy_ctor_illegal(
-    void *,
-    const void *,
-    int32_t, const ecs_type_info_t *ti);
+ecs_copy_t ecs_get_copy_ctor_illegal(void);
 
 FLECS_API
-void ecs_move_ctor_illegal(
-    void *,
-    void *,
-    int32_t,
-    const ecs_type_info_t *ti);
+ecs_move_t ecs_get_move_ctor_illegal(void);
 
 /** @} */
 
