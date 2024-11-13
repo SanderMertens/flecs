@@ -16910,9 +16910,9 @@ namespace _
 struct placement_new_tag_t{};
 constexpr placement_new_tag_t placement_new_tag{};
 template<class Ty> inline void destruct_obj(Ty* _ptr) { _ptr->~Ty(); }
-template<class Ty> inline void free_obj(Ty* _ptr) { 
+template<class Ty> inline void free_obj(void* _ptr) { 
     if (_ptr) {
-        destruct_obj(_ptr); 
+        destruct_obj(static_cast<Ty*>(_ptr)); 
         ecs_os_free(_ptr); 
     }
 }
@@ -26062,7 +26062,7 @@ struct each_delegate : public delegate {
 
     // Function that can be used as callback to free delegate
     static void destruct(void *obj) {
-        _::free_obj<each_delegate>(static_cast<each_delegate*>(obj));
+        _::free_obj<each_delegate>(obj);
     }
 
     // Static function to call for component on_add hook
@@ -27495,8 +27495,7 @@ struct component : untyped_component {
         BindingCtx *ctx = get_binding_ctx(h);
         h.on_add = Delegate::run_add;
         ctx->on_add = FLECS_NEW(Delegate)(FLECS_FWD(func));
-        ctx->free_on_add = reinterpret_cast<ecs_ctx_free_t>(
-            _::free_obj<Delegate>);
+        ctx->free_on_add = _::free_obj<Delegate>;
         ecs_set_hooks_id(world_, id_, &h);
         return *this;
     }
@@ -27512,8 +27511,7 @@ struct component : untyped_component {
         BindingCtx *ctx = get_binding_ctx(h);
         h.on_remove = Delegate::run_remove;
         ctx->on_remove = FLECS_NEW(Delegate)(FLECS_FWD(func));
-        ctx->free_on_remove = reinterpret_cast<ecs_ctx_free_t>(
-            _::free_obj<Delegate>);
+        ctx->free_on_remove = _::free_obj<Delegate>;
         ecs_set_hooks_id(world_, id_, &h);
         return *this;
     }
@@ -27529,8 +27527,7 @@ struct component : untyped_component {
         BindingCtx *ctx = get_binding_ctx(h);
         h.on_set = Delegate::run_set;
         ctx->on_set = FLECS_NEW(Delegate)(FLECS_FWD(func));
-        ctx->free_on_set = reinterpret_cast<ecs_ctx_free_t>(
-            _::free_obj<Delegate>);
+        ctx->free_on_set = _::free_obj<Delegate>;
         ecs_set_hooks_id(world_, id_, &h);
         return *this;
     }
@@ -27582,8 +27579,7 @@ private:
         if (!result) {
             result = FLECS_NEW(BindingCtx);
             h.binding_ctx = result;
-            h.binding_ctx_free = reinterpret_cast<ecs_ctx_free_t>(
-                _::free_obj<BindingCtx>);
+            h.binding_ctx_free = _::free_obj<BindingCtx>;
         }
         return result;
     }
@@ -30406,8 +30402,7 @@ public:
         auto ctx = FLECS_NEW(Delegate)(FLECS_FWD(func));
         desc_.run = Delegate::run;
         desc_.run_ctx = ctx;
-        desc_.run_ctx_free = reinterpret_cast<
-            ecs_ctx_free_t>(_::free_obj<Delegate>);
+        desc_.run_ctx_free = _::free_obj<Delegate>;
         return T(world_, &desc_);
     }
 
@@ -30419,8 +30414,7 @@ public:
         auto ctx = FLECS_NEW(Delegate)(FLECS_FWD(func));
         desc_.run = Delegate::run;
         desc_.run_ctx = ctx;
-        desc_.run_ctx_free = reinterpret_cast<
-            ecs_ctx_free_t>(_::free_obj<Delegate>);
+        desc_.run_ctx_free = _::free_obj<Delegate>;
         return each(FLECS_FWD(each_func));
     }
 
@@ -30431,8 +30425,7 @@ public:
         auto ctx = FLECS_NEW(Delegate)(FLECS_FWD(func));
         desc_.callback = Delegate::run;
         desc_.callback_ctx = ctx;
-        desc_.callback_ctx_free = reinterpret_cast<
-            ecs_ctx_free_t>(_::free_obj<Delegate>);
+        desc_.callback_ctx_free = _::free_obj<Delegate>;
         return T(world_, &desc_);
     }
 
@@ -30649,8 +30642,7 @@ namespace _ {
         {
             using Delegate = _::entity_observer_delegate<Func>;
             auto ctx = FLECS_NEW(Delegate)(FLECS_FWD(f));
-            entity_observer_create(world, _::type<Evt>::id(world), entity, Delegate::run, ctx, 
-                reinterpret_cast<ecs_ctx_free_t>(_::free_obj<Delegate>));
+            entity_observer_create(world, _::type<Evt>::id(world), entity, Delegate::run, ctx, _::free_obj<Delegate>);
         }
 
         template <typename Evt, if_not_t<is_empty<Evt>::value> = 0>
@@ -30661,8 +30653,7 @@ namespace _ {
         {
             using Delegate = _::entity_payload_observer_delegate<Func, Evt>;
             auto ctx = FLECS_NEW(Delegate)(FLECS_FWD(f));
-            entity_observer_create(world, _::type<Evt>::id(world), entity, Delegate::run, ctx, 
-                reinterpret_cast<ecs_ctx_free_t>(_::free_obj<Delegate>));
+            entity_observer_create(world, _::type<Evt>::id(world), entity, Delegate::run, ctx, _::free_obj<Delegate>);
         }
     };
 }
@@ -30673,8 +30664,7 @@ inline const Self& entity_builder<Self>::observe(flecs::entity_t evt, Func&& f) 
     using Delegate = _::entity_observer_delegate<Func>;
     auto ctx = FLECS_NEW(Delegate)(FLECS_FWD(f));
 
-    _::entity_observer_create(world_, evt, id_, Delegate::run, ctx,
-        reinterpret_cast<ecs_ctx_free_t>(_::free_obj<Delegate>));
+    _::entity_observer_create(world_, evt, id_, Delegate::run, ctx, _::free_obj<Delegate>);
 
     return to_base();
 }

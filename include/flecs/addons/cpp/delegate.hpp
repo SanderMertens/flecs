@@ -263,7 +263,7 @@ struct each_delegate : public delegate {
 
     // Function that can be used as callback to free delegate
     static void destruct(void *obj) {
-        _::free_obj<each_delegate>(static_cast<each_delegate*>(obj));
+        _::free_obj<each_delegate>(obj);
     }
 
     // Static function to call for component on_add hook
