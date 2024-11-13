@@ -897,8 +897,8 @@ int flecs_multi_observer_init(
             term->src.id = EcsThis | EcsIsVariable | EcsSelf;
             term->second.id = 0;
         } else if (term->oper == EcsOptional) {
-            if (only_table_events) {
-                /* For table events optional terms aren't necessary */
+            if (only_table_events || desc->events[0] == EcsMonitor) {
+                /* For table events & monitors optional terms aren't necessary */
                 continue;
             }
         }
