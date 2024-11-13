@@ -250,8 +250,8 @@ uint64_t flecs_entity_index_new_id(
     /* Create new id */
     uint32_t id = (uint32_t)++ index->max_id;
 
-    ecs_assert(index->max_id <= UINT32_MAX, ECS_INVALID_OPERATION,
-        "max id %u exceeds 32 bits", index->max_id);
+    ecs_assert(id <= UINT32_MAX, ECS_INVALID_OPERATION,
+        "max id %u exceeds 32 bits", (uint32_t)id);
     
     /* Make sure id hasn't been issued before */
     ecs_assert(!flecs_entity_index_exists(index, id), ECS_INVALID_OPERATION, 
@@ -289,8 +289,8 @@ uint64_t* flecs_entity_index_new_ids(
     for (i = 0; i < to_add; i ++) {
         uint32_t id = (uint32_t)++ index->max_id;
 
-        ecs_assert(index->max_id <= UINT32_MAX, ECS_INVALID_OPERATION,
-            "max id %u exceeds 32 bits", index->max_id);
+        ecs_assert(id <= UINT32_MAX, ECS_INVALID_OPERATION,
+            "max id %u exceeds 32 bits", (uint32_t)id);
 
         /* Make sure id hasn't been issued before */
         ecs_assert(!flecs_entity_index_exists(index, id), ECS_INVALID_OPERATION, 
