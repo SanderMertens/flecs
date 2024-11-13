@@ -250,6 +250,9 @@ uint64_t flecs_entity_index_new_id(
     /* Create new id */
     uint32_t id = (uint32_t)++ index->max_id;
 
+    ecs_assert(index->max_id <= ((1ULL << 32) - 1), ECS_INVALID_OPERATION,
+        "max id %u exceeds 32 bits", index->max_id);
+    
     /* Make sure id hasn't been issued before */
     ecs_assert(!flecs_entity_index_exists(index, id), ECS_INVALID_OPERATION, 
         "new entity %u id already in use (likely due to overlapping ranges)", (uint32_t)id);
@@ -285,6 +288,9 @@ uint64_t* flecs_entity_index_new_ids(
     int32_t i, to_add = new_count - dense_count;
     for (i = 0; i < to_add; i ++) {
         uint32_t id = (uint32_t)++ index->max_id;
+
+        ecs_assert(index->max_id <= ((1ULL << 32) - 1), ECS_INVALID_OPERATION,
+            "max id %u exceeds 32 bits", index->max_id);
 
         /* Make sure id hasn't been issued before */
         ecs_assert(!flecs_entity_index_exists(index, id), ECS_INVALID_OPERATION, 
