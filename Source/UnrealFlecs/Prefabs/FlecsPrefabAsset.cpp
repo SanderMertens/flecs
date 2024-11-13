@@ -3,7 +3,7 @@
 #include "FlecsPrefabAsset.h"
 #include "Worlds/FlecsWorld.h"
 
-#include UE_INLINE_GENERATED_CPP_BY_NAME(FlecsPrefabComponent)
+#include UE_INLINE_GENERATED_CPP_BY_NAME(FlecsPrefabAsset)
 
 void UFlecsPrefabAsset::OnEntityCreated(MAYBE_UNUSED const FFlecsEntityHandle& InEntityHandle, UFlecsWorld* World)
 {

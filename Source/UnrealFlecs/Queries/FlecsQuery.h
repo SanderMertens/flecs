@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "flecs.h"
+#include "Entities/FlecsEntityHandle.h"
 #include "SolidMacros/Macros.h"
 #include "FlecsQuery.generated.h"
 
@@ -87,87 +88,5 @@ public:
 private:
     flecs::query<> Query;
 }; // struct FFlecsQuery
-
-template<typename ...TComponents>
-struct TFlecsQuery
-{
-    FORCEINLINE TFlecsQuery() = default;
-
-    FORCEINLINE TFlecsQuery(const flecs::query<TComponents...>& InQuery) : Query(InQuery) {}
-
-    FORCEINLINE TFlecsQuery(const flecs::query<TComponents...>* InQuery) : Query(*InQuery) {}
-
-    FORCEINLINE NO_DISCARD flecs::query<TComponents...> GetQuery() const
-    {
-        return Query;
-    }
-
-    FORCEINLINE NO_DISCARD int32 GetCount() const
-    {
-        return ecs_query_match_count(Query);
-    }
-
-    FORCEINLINE NO_DISCARD int32 GetFieldCount()
-    {
-        return Query.field_count();
-    }
-
-    FORCEINLINE NO_DISCARD bool HasMatches() const
-    {
-        return ecs_query_is_true(Query);
-    }
-
-    FORCEINLINE NO_DISCARD FString ToString() const
-    {
-        return StringCast<TCHAR>(ecs_query_str(Query)).Get();
-    }
-
-    FORCEINLINE NO_DISCARD FFlecsEntityHandle GetEntity() const
-    {
-        return FFlecsEntityHandle(ecs_get_entity(Query));
-    }
-
-    FORCEINLINE NO_DISCARD bool operator==(const TFlecsQuery& Other) const
-    {
-        return GetEntity() == Other.GetEntity();
-    }
-
-    FORCEINLINE NO_DISCARD bool operator!=(const TFlecsQuery& Other) const
-    {
-        return !(*this == Other);
-    }
-
-    FORCEINLINE NO_DISCARD bool operator==(const flecs::query<TComponents...>& Other) const
-    {
-        return GetEntity() == FFlecsEntityHandle(ecs_get_entity(Other));
-    }
-
-    FORCEINLINE NO_DISCARD bool operator!=(const flecs::query<TComponents...>& Other) const
-    {
-        return !(*this == Other);
-    }
-
-    FORCEINLINE NO_DISCARD bool operator==(const FFlecsQuery& Other) const
-    {
-        return GetEntity() == Other.GetEntity();
-    }
-
-    FORCEINLINE NO_DISCARD bool operator!=(const FFlecsQuery& Other) const
-    {
-        return !(*this == Other);
-    }
-
-    FORCEINLINE NO_DISCARD bool operator==(const flecs::query<>& Other) const
-    {
-        return GetEntity() == FFlecsEntityHandle(ecs_get_entity(Other));
-    }
-
-    FORCEINLINE NO_DISCARD bool operator!=(const flecs::query<>& Other) const
-    {
-        return !(*this == Other);
-    }
-    
-    flecs::query<TComponents...> Query;
-};
 
 

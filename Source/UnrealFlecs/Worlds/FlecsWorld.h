@@ -10,7 +10,6 @@
 #include "AssetRegistry/AssetRegistryModule.h"
 #include "Components/FFlecsActorComponentTag.h"
 #include "Components/FFlecsSceneComponentTag.h"
-#include "Components/FlecsActorTag.h"
 #include "Components/FlecsGameplayTagEntityComponent.h"
 #include "Components/FlecsModuleComponent.h"
 #include "Components/FlecsPrimaryAssetComponent.h"
@@ -24,7 +23,6 @@
 #include "Modules/FlecsModuleInterface.h"
 #include "Modules/FlecsModuleProgressInterface.h"
 #include "Prefabs/FlecsPrefabAsset.h"
-#include "Prefabs/FlecsPrefabComponent.h"
 #include "Systems/FlecsSystem.h"
 #include "FlecsWorld.generated.h"
 
@@ -32,6 +30,11 @@ DECLARE_STATS_GROUP(TEXT("FlecsWorld"), STATGROUP_FlecsWorld, STATCAT_Advanced);
 
 DECLARE_CYCLE_STAT(TEXT("FlecsWorld::Progress"), STAT_FlecsWorldProgress, STATGROUP_FlecsWorld);
 DECLARE_CYCLE_STAT(TEXT("FlecsWorld::Progress::ProgressModule"), STAT_FlecsWorldProgressModule, STATGROUP_FlecsWorld);
+
+namespace Flecs
+{
+	INLINE flecs::world* GFlecsWorld;
+} // namespace flecs
 
 UCLASS(BlueprintType)
 class UNREALFLECS_API UFlecsWorld : public UObject
@@ -186,17 +189,20 @@ public:
             switch (Level)
             {
                 case -4: // Fatal
-                    UN_LOGF(LogFlecsCore, Fatal, "Flecs: %s",
-                    	StringCast<TCHAR>(Message).Get());
+                    UN_LOGF(LogFlecsCore, Fatal, "Flecs - File: %s, Line: %d, Message: %s",
+						File, Line, StringCast<TCHAR>(Message).Get());
                     break;
                 case -3: // Error
-                    UN_LOGF(LogFlecsCore, Error, "Flecs: %s", StringCast<TCHAR>(Message).Get());
+                	UN_LOGF(LogFlecsCore, Error, "Flecs - File: %s, Line: %d, Message: %s",
+						File, Line, StringCast<TCHAR>(Message).Get());
                     break;
                 case -2: // Warning
-                    UN_LOGF(LogFlecsCore, Warning, "Flecs: %s", StringCast<TCHAR>(Message).Get());
+                	UN_LOGF(LogFlecsCore, Warning, "Flecs - File: %s, Line: %d, Message: %s",
+						File, Line, StringCast<TCHAR>(Message).Get());
                     break;
                 default: // Info and Debug
-                    UN_LOGF(LogFlecsCore, Log, "Flecs: %s", StringCast<TCHAR>(Message).Get());
+                	UN_LOGF(LogFlecsCore, Log, "Flecs - File: %s, Line: %d, Message: %s",
+						File, Line, StringCast<TCHAR>(Message).Get());
                     break;
             }
 #endif // UNLOG_ENABLED
@@ -965,6 +971,11 @@ public:
 	
 	FORCEINLINE_DEBUGGABLE void DestroyWorld()
 	{
+		if (Flecs::GFlecsWorld && *Flecs::GFlecsWorld == World)
+		{
+			Flecs::GFlecsWorld = nullptr;
+		}
+		
 		if UNLIKELY_IF(ShouldQuit())
 		{
 			return;
@@ -1540,19 +1551,19 @@ public:
 		solid_checkf(Prefab.IsPrefab(), TEXT("Entity is not a prefab"));
 		
 		InRecord.ApplyRecordToEntity(Prefab);
-
-		FFlecsPrefabComponent PrefabComponent;
-		PrefabComponent.EntityRecord = InRecord;
-
+		
 		#if WITH_EDITOR
 		
 		Prefab.SetDocName(InRecord.Name);
 
 		#endif // WITH_EDITOR
-
-		Prefab.Set<FFlecsPrefabComponent>(PrefabComponent);
 		
 		return Prefab;
+	}
+
+	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle CreatePrefab(const FString& Name) const
+	{
+		return World.prefab(StringCast<char>(*Name).Get());
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs")
@@ -1573,6 +1584,8 @@ public:
 	{
 		return World.should_quit();
 	}
+
+	virtual UWorld *GetWorld() const override final;
 	
 	flecs::world World;
 

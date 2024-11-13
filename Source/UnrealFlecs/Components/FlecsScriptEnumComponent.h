@@ -3,6 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Standard/Hashing.h"
+#include "flecs.h"
 #include "Properties/FlecsComponentProperties.h"
 #include "FlecsScriptEnumComponent.generated.h"
 
@@ -27,8 +29,9 @@ struct FFlecsScriptEnumComponent
 	}
 
 	FORCEINLINE operator UEnum*() const { return ScriptEnum.Get(); }
-    
-	FORCEINLINE FFlecsScriptEnumComponent(UEnum* InScriptEnum = nullptr) : ScriptEnum(InScriptEnum) {}
+
+	FORCEINLINE FFlecsScriptEnumComponent() : ScriptEnum(nullptr) {}
+	FORCEINLINE FFlecsScriptEnumComponent(UEnum* InScriptEnum) : ScriptEnum(InScriptEnum) {}
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs")
 	TWeakObjectPtr<UEnum> ScriptEnum;

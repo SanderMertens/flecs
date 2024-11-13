@@ -34,6 +34,5 @@ public:
 		
 		return FlecsWorldSubsystem->GetDefaultWorld();
 	}
-
-
+	
 }; // class UFlecsAbstractWorldSubsystem

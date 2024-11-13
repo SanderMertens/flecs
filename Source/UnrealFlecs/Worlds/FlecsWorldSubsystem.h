@@ -28,7 +28,7 @@
 #include "Unlog/Target/MessageLog.h"
 #include "FlecsWorldSubsystem.generated.h"
 
-DECLARE_MULTICAST_DELEGATE_OneParam(FOnWorldCreated,UFlecsWorld*);
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnWorldCreated, UFlecsWorld*);
 
 UCLASS(BlueprintType)
 class UNREALFLECS_API UFlecsWorldSubsystem final : public UTickableWorldSubsystem
@@ -89,10 +89,14 @@ public:
 	{
 		const bool bResult = DefaultWorld->Progress(DeltaTime);
 
+		#if WITH_EDITOR
+
 		if UNLIKELY_IF(!bResult)
 		{
 			UN_LOGF(LogFlecsCore, Error, "Failed to progress Flecs world");
 		}
+
+		#endif // WITH_EDITOR
 	}
 	
 	UFUNCTION()
@@ -107,6 +111,7 @@ public:
 
 		UFlecsWorld* NewFlecsWorld = NewObject<UFlecsWorld>(this);
 		NewFlecsWorld->SetWorld(std::move(NewWorld));
+		Flecs::GFlecsWorld = &NewWorld;
 		
 		DefaultWorld = NewFlecsWorld;
 
@@ -117,9 +122,9 @@ public:
 		solid_checkf(GetDefaultWorld()->TypeMapComponent, TEXT("TypeMapComponent must be valid"));
 
 		NewFlecsWorld->SetSingleton<FFlecsWorldPtrComponent>(
-			FFlecsWorldPtrComponent { NewFlecsWorld });
+			FFlecsWorldPtrComponent{ NewFlecsWorld });
 
-		NewFlecsWorld->SetSingleton<FUWorldPtrComponent>(FUWorldPtrComponent { GetWorld() });
+		NewFlecsWorld->SetSingleton<FUWorldPtrComponent>(FUWorldPtrComponent{ GetWorld() });
 
 		for (int32 Index = 0; Index < DefaultEntities.Num(); ++Index)
 		{

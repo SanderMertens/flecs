@@ -294,6 +294,8 @@ void flecs_observer_invoke(
 
     ecs_log_push_3();
 
+    ecs_os_perf_trace_push("flecs.observer.invoke");
+
     const ecs_entity_t old_system = flecs_stage_set_system(
         world->stages[0], o->entity);
     world->info.observers_ran_frame ++;
@@ -350,6 +352,8 @@ void flecs_observer_invoke(
     it->row_fields = row_fields;
 
     flecs_stage_set_system(world->stages[0], old_system);
+
+    ecs_os_perf_trace_pop("flecs.observer.invoke");
 
     ecs_log_pop_3();
 }
@@ -458,6 +462,8 @@ void flecs_multi_observer_invoke(
         return;
     }
 
+    ecs_os_perf_trace_push("flecs.multi_observer.invoke");
+
     impl->last_event_id[0] = world->event_id;
 
     ecs_table_t *table = it->table;
@@ -555,7 +561,10 @@ void flecs_multi_observer_invoke(
         o->query->eval_count --;
     }
 
+    ecs_os_perf_trace_pop("flecs.multi_observer.invoke");
+
 done:
+    ecs_os_perf_trace_pop("flecs.multi_observer.invoke");
     return;
 }
 

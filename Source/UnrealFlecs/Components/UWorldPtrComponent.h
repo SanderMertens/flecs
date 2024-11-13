@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "SolidMacros/Macros.h"
+#include "Properties/FlecsComponentProperties.h"
 #include "UWorldPtrComponent.generated.h"
 
 USTRUCT(BlueprintType)
@@ -66,5 +67,4 @@ public:
 	
 }; // struct FUWorldPtrComponent
 
-REGISTER_FLECS_PROPERTIES(FUWorldPtrComponent,
-	{ flecs::Sparse }, {} )
+REGISTER_COMPONENT_TAG_PROPERTIES(FUWorldPtrComponent, flecs::Sparse)

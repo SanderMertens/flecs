@@ -2,8 +2,13 @@
 
 #pragma once
 
+#include <functional>
+
 #include "CoreMinimal.h"
+#include "Entities/FlecsEntityHandle.h"
 #include "FlecsDependenciesComponent.generated.h"
+
+class UFlecsWorld;
 
 USTRUCT(BlueprintType)
 struct UNREALFLECS_API FFlecsDependenciesComponent

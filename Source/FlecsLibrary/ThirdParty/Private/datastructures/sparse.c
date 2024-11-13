@@ -196,6 +196,8 @@ static inline
 uint64_t flecs_sparse_new_index(
     ecs_sparse_t *sparse)
 {
+    ecs_os_perf_trace_push("flecs.sparse.new_index");
+    
     const int32_t dense_count = ecs_vec_count(&sparse->dense);
     const int32_t count = sparse->count ++;
 
@@ -203,8 +205,10 @@ uint64_t flecs_sparse_new_index(
     if (count < dense_count) {
         /* If there are unused elements in the dense array, return first */
         const uint64_t *dense_array = ecs_vec_first_t(&sparse->dense, uint64_t);
+        ecs_os_perf_trace_pop("flecs.sparse.new_index");
         return dense_array[count];
     } else {
+        ecs_os_perf_trace_pop("flecs.sparse.new_index");
         return flecs_sparse_create_id(sparse, count);
     }
 }

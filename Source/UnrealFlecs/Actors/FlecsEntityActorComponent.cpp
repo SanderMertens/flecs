@@ -1,6 +1,7 @@
 ﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 #include "FlecsEntityActorComponent.h"
+#include "Components/FlecsActorTag.h"
 #include "Logs/FlecsCategories.h"
 #include "Net/UnrealNetwork.h"
 #include "Net/Core/PushModel/PushModel.h"

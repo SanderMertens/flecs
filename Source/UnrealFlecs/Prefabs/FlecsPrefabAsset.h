@@ -4,7 +4,6 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Engine/DataAsset.h"
 #include "Entities/FlecsEntityRecord.h"
 #include "General/FlecsPrimaryDataAsset.h"
 #include "FlecsPrefabAsset.generated.h"
@@ -18,7 +17,7 @@ public:
 	
 	FORCEINLINE virtual FPrimaryAssetId GetPrimaryAssetId() const override final
 	{
-		return FPrimaryAssetId("FlecsPrefab", *GetName());
+		return FPrimaryAssetId("FlecsPrefabAsset", *GetName());
 	}
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs")

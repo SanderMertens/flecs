@@ -95,15 +95,7 @@ flecs::world FFlecsEntityHandle::ObtainDefaultFlecsWorld() const
         return flecs::world();
     }
 
-    const UFlecsWorldSubsystem* FlecsWorldSubsystem = GWorld->GetSubsystem<UFlecsWorldSubsystem>();
-    solid_checkf(FlecsWorldSubsystem, TEXT("Flecs World Subsystem not found"));
-    
-    if LIKELY_IF(FlecsWorldSubsystem->HasValidFlecsWorld())
-    {
-        return FlecsWorldSubsystem->GetDefaultWorld()->World;
-    }
-
-    return flecs::world();
+    return *Flecs::GFlecsWorld;
 }
 
 void FFlecsEntityHandle::PostScriptConstruct()
@@ -123,7 +115,7 @@ void FFlecsEntityHandle::PostScriptConstruct()
         UFlecsWorldSubsystem* FlecsWorldSubsystem = GWorld->GetSubsystem<UFlecsWorldSubsystem>();
         if LIKELY_IF(FlecsWorldSubsystem->HasValidFlecsWorld())
         {
-            SetEntity(flecs::entity(FlecsWorldSubsystem->GetDefaultWorld()->World, GetEntity().id()));
+            SetEntity(flecs::entity(*Flecs::GFlecsWorld, GetEntity().id()));
         }
         else
         {

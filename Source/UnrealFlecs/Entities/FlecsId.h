@@ -81,5 +81,6 @@ struct TStructOpsTypeTraits<FFlecsId> : public TStructOpsTypeTraitsBase2<FFlecsI
     {
         WithCopy = true,
         WithIdenticalViaEquality = true
+        E
     };
 };

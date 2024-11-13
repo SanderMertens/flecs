@@ -13,6 +13,11 @@
 #include "SolidMacros/Macros.h"
 #include "FlecsEntityHandle.generated.h"
 
+namespace Flecs
+{
+	extern flecs::world* GFlecsWorld;
+} // namespace Flecs
+
 class UFlecsWorld;
 
 USTRUCT(BlueprintType)
@@ -36,7 +41,6 @@ public:
 	SOLID_INLINE FFlecsEntityHandle(const flecs::entity& InEntity)
 	{
 		EntityId = InEntity;
-		World = InEntity.world();
 	}
 
 	SOLID_INLINE FFlecsEntityHandle(const flecs::entity_t InEntity)
@@ -48,12 +52,7 @@ public:
 	
 	SOLID_INLINE NO_DISCARD flecs::entity GetEntity() const
 	{
-		// if UNLIKELY_IF(!World)
-		// {
-		// 	World = ObtainDefaultFlecsWorld();
-		// }
-		
-		return flecs::entity(World, EntityId);
+		return flecs::entity(GetFlecsWorld_Internal(), EntityId);
 	}
 
 	SOLID_INLINE void SetEntity(const flecs::entity& InEntity)
@@ -1390,12 +1389,10 @@ public:
 private:
 	UPROPERTY()
 	uint64 EntityId;
-
-	mutable flecs::world World;
 	
 	SOLID_INLINE NO_DISCARD FFlecsEntityHandle GetTagEntity(const FGameplayTag& InTag) const;
 
-	SOLID_INLINE NO_DISCARD flecs::world GetFlecsWorld_Internal() const { return World; }
+	SOLID_INLINE NO_DISCARD flecs::world GetFlecsWorld_Internal() const { return *Flecs::GFlecsWorld; }
 
 	template <typename TComponent>
 	SOLID_INLINE NO_DISCARD FFlecsEntityHandle ObtainTraitHolderEntity() const

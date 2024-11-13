@@ -452,6 +452,8 @@ void flecs_propagate_entities(
         return;
     }
 
+    ecs_os_perf_trace_push("flecs.propagate_entities");
+
     const ecs_entity_t old_src = it->sources[0];
     ecs_table_t *old_table = it->table;
     ecs_table_t *old_other_table = it->other_table;
@@ -483,6 +485,8 @@ void flecs_propagate_entities(
     it->count = old_count;
     it->offset = old_offset;
     it->sources[0] = old_src;
+
+    ecs_os_perf_trace_pop("flecs.propagate_entities");
 }
 
 static

@@ -214,6 +214,8 @@ void ecs_cpp_component_validate(
     size_t alignment,
     bool implicit_name)
 {
+    ecs_os_perf_trace_push("flecs.cpp.component_validate");
+    
     /* If entity has a name check if it matches */
     if (ecs_is_valid(world, id) && ecs_get_name(world, id) != NULL) {
         if (!implicit_name && id >= EcsFirstUserComponentId) {
@@ -264,6 +266,9 @@ void ecs_cpp_component_validate(
                                                     .type.size = flecs_uto(int32_t, size),
                                                     .type.alignment = flecs_uto(int32_t, alignment)
                                                 });
+
+    ecs_os_perf_trace_pop("flecs.cpp.component_validate");
+    
     (void)ent;
     ecs_assert(ent == id, ECS_INTERNAL_ERROR, NULL);
 }
@@ -280,6 +285,8 @@ ecs_entity_t ecs_cpp_component_register(
 {
     (void)size;
     (void)alignment;
+
+    ecs_os_perf_trace_push("flecs.cpp.component_register");
 
     /* If the component is not yet registered, ensure no other component
      * or entity has been registered with this name. Ensure component is 
@@ -346,6 +353,8 @@ ecs_entity_t ecs_cpp_component_register(
         *existing_out = existing;
     }
 
+    ecs_os_perf_trace_pop("flecs.cpp.component_register");
+
     return ent;
 }
 
@@ -361,6 +370,8 @@ ecs_entity_t ecs_cpp_component_register_explicit(
     bool is_component,
     bool *existing_out)
 {
+    ecs_os_perf_trace_push("flecs.cpp.component_register_explicit");
+    
     char *existing_name = NULL;
     if (existing_out) *existing_out = false;
 
@@ -424,6 +435,8 @@ ecs_entity_t ecs_cpp_component_register_explicit(
     ecs_assert(!s_id || s_id == entity, ECS_INTERNAL_ERROR, NULL);
     ecs_os_free(existing_name);
 
+    ecs_os_perf_trace_pop("flecs.cpp.component_register_explicit");
+
     return entity;
 }
 
@@ -448,6 +461,8 @@ ecs_entity_t ecs_cpp_enum_constant_register(
     const char *name,
     int value)
 {
+    ecs_os_perf_trace_push("flecs.cpp.enum_constant_register");
+    
     ecs_suspend_readonly_state_t readonly_state;
     world = flecs_suspend_readonly(world, &readonly_state);
 
@@ -484,6 +499,8 @@ ecs_entity_t ecs_cpp_enum_constant_register(
 
     ecs_trace("#[green]constant#[reset] %s.%s created with value %d", 
         ecs_get_name(world, parent), name, value);
+
+    ecs_os_perf_trace_pop("flecs.cpp.enum_constant_register");
 
     return id;
 }

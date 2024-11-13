@@ -37,7 +37,7 @@ void UFlecsTickerModule::InitializeModule(UFlecsWorld* InWorld, const FFlecsEnti
 	FFlecsTickerComponent TickerComponent;
 	TickerComponent.TickId = 0;
 	InWorld->SetSingleton<FFlecsTickerComponent>(TickerComponent);
-	InWorld->World.modified<FFlecsTickerComponent>();
+	InWorld->ModifiedSingleton<FFlecsTickerComponent>();
 
 	TickerComponentPtr = InWorld->GetSingletonPtr<FFlecsTickerComponent>();
 	solid_checkf(TickerComponentPtr, TEXT("TickerComponentRef is not valid!"));

@@ -11,6 +11,8 @@ public class UnrealFlecs : ModuleRules
 		CppStandard = CppStandardVersion.Latest;
 
 		OptimizationLevel = OptimizationMode.Speed;
+
+		bUseUnity = false;
 		
 		PublicIncludePaths.AddRange(
 			new string[] {

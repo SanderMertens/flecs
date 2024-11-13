@@ -64,12 +64,5 @@ REGISTER_FLECS_PROPERTIES(FFlecsWorldPtrComponent,
 
 FORCEINLINE NO_DISCARD UFlecsWorld* ToFlecsWorld(const flecs::world& InWorld)
 {
-	static flecs::ref<FFlecsWorldPtrComponent> WorldPtrRef;
-	
-	if UNLIKELY_IF(!WorldPtrRef || WorldPtrRef->GetFlecsWorld()->World != InWorld)
-	{
-		WorldPtrRef = InWorld.get_ref<FFlecsWorldPtrComponent>();
-	}
-	
-	return WorldPtrRef->GetFlecsWorld();
+	return InWorld.get_mut<FFlecsWorldPtrComponent>()->GetFlecsWorld();
 }
