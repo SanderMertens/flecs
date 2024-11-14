@@ -676,6 +676,8 @@
                 "serialize_component_w_base_w_owned_no_reflection_data",
                 "serialize_component_w_base_w_owned_override",
                 "serialize_component_w_base_w_owned_no_reflection_data_override",
+                "serialize_component_tag_pair_w_all_inherit_kinds",
+                "serialize_component_tag_pair_w_manual_override",
                 "serialize_w_nested_base",
                 "serialize_w_1_component",
                 "serialize_w_2_components",

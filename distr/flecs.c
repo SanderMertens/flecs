@@ -44047,7 +44047,7 @@ bool flecs_json_serialize_table_tags(
         ecs_id_record_t *idr = (ecs_id_record_t*)tr->hdr.cache;
 
         if (src_table) {
-            if (idr->flags & EcsIdOnInstantiateDontInherit) {
+            if (!(idr->flags & EcsIdOnInstantiateInherit)) {
                 continue;
             }
         }
@@ -44114,7 +44114,7 @@ bool flecs_json_serialize_table_pairs(
         ecs_id_record_t *idr = (ecs_id_record_t*)tr->hdr.cache;
 
         if (src_table) {
-            if (idr->flags & EcsIdOnInstantiateDontInherit) {
+            if (!(idr->flags & EcsIdOnInstantiateInherit)) {
                 continue;
             }
         }
@@ -44212,7 +44212,7 @@ int flecs_json_serialize_table_components(
         ecs_id_record_t *idr = (ecs_id_record_t*)tr->hdr.cache;
 
         if (src_table) {
-            if (idr->flags & EcsIdOnInstantiateDontInherit) {
+            if (!(idr->flags & EcsIdOnInstantiateInherit)) {
                 continue;
             }
         }

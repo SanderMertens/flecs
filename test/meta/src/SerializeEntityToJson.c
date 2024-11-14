@@ -367,7 +367,7 @@ void SerializeEntityToJson_serialize_component_w_base_w_owned_override(void) {
     };
     char *json = ecs_entity_to_json(world, e, &desc);
     test_assert(json != NULL);
-    test_json(json, "{\"name\":\"Foo\", \"pairs\":{\"IsA\":\"Base\"},\"inherited\":{\"Base\":{\"components\":{\"Position\":{\"x\":10, \"y\":20}}}}, \"components\":{\"Position\":{\"x\":10, \"y\":20}, \"Velocity\":{\"x\":1, \"y\":2}}}");
+    test_json(json, "{\"name\":\"Foo\", \"pairs\":{\"IsA\":\"Base\"},\"inherited\":{\"Base\":{}}, \"components\":{\"Position\":{\"x\":10, \"y\":20}, \"Velocity\":{\"x\":1, \"y\":2}}}");
 
     ecs_os_free(json);
 
@@ -397,7 +397,102 @@ void SerializeEntityToJson_serialize_component_w_base_w_owned_no_reflection_data
     };
     char *json = ecs_entity_to_json(world, e, &desc);
     test_assert(json != NULL);
-    test_json(json, "{\"name\":\"SomeEntity\", \"pairs\":{\"IsA\":\"Base\"},\"inherited\":{\"Base\":{\"components\":{\"Position\":null}}}, \"components\":{\"Position\":null, \"Velocity\":null}}");
+    test_json(json, "{\"name\":\"SomeEntity\", \"pairs\":{\"IsA\":\"Base\"},\"inherited\":{\"Base\":{}}, \"components\":{\"Position\":null, \"Velocity\":null}}");
+
+    ecs_os_free(json);
+
+    ecs_fini(world);
+}
+
+void SerializeEntityToJson_serialize_component_tag_pair_w_all_inherit_kinds(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity(world, { .name = "t_override", .add_expr = "(OnInstantiate, Override)" });
+    ecs_entity(world, { .name = "t_inherit", .add_expr = "(OnInstantiate, Inherit)" });
+    ecs_entity(world, { .name = "t_dont_inherit", .add_expr = "(OnInstantiate, DontInherit)" });
+
+    ecs_component(world, { 
+        .entity = ecs_entity(world, { .name = "c_override", .add_expr = "(OnInstantiate, Override)" }),
+        .type.size = 4, .type.alignment = 4 
+    });
+    ecs_component(world, { 
+        .entity = ecs_entity(world, { .name = "c_inherit", .add_expr = "(OnInstantiate, Inherit)" }),
+        .type.size = 4, .type.alignment = 4 
+    });
+    ecs_component(world, { 
+        .entity = ecs_entity(world, { .name = "c_dont_inherit", .add_expr = "(OnInstantiate, DontInherit)" }),
+        .type.size = 4, .type.alignment = 4 
+    });
+
+    ecs_entity(world, { .name = "tgt" });
+
+    ecs_entity_t base = ecs_entity(world, { 
+        .name = "base",
+        .add_expr = "t_override, t_inherit, t_dont_inherit, "\
+                    "c_override, c_inherit, c_dont_inherit, "\
+                    "(t_override, tgt), (t_inherit, tgt), (t_dont_inherit, tgt), "
+                    "(c_override, tgt), (c_inherit, tgt), (c_dont_inherit, tgt)"
+    });
+    test_assert(base != 0);
+
+    ecs_entity_t e = ecs_entity(world, {
+        .name = "e",
+        .add_expr = "(IsA, base)"
+    });
+    test_assert(e != 0);
+
+    ecs_entity_to_json_desc_t desc = {
+        .serialize_inherited = true
+    };
+
+    char *json = ecs_entity_to_json(world, e, &desc);
+    test_assert(json != NULL);
+    test_json(json, "{\"name\":\"e\", \"tags\":[\"t_override\"],\"pairs\":{\"IsA\":\"base\", \"t_override\":\"tgt\"},\"inherited\":{\"base\":{\"tags\":[\"t_inherit\"], \"pairs\":{\"t_inherit\":\"tgt\"}, \"components\":{\"c_inherit\":null, \"(c_inherit,tgt)\":null}}}, \"components\":{\"c_override\":null, \"(c_override,tgt)\":null}}");
+
+    ecs_os_free(json);
+
+    ecs_fini(world);
+}
+
+void SerializeEntityToJson_serialize_component_tag_pair_w_manual_override(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity(world, { .name = "t_inherit", .add_expr = "(OnInstantiate, Inherit)" });
+    ecs_entity(world, { .name = "t_dont_inherit", .add_expr = "(OnInstantiate, DontInherit)" });
+
+    ecs_component(world, { 
+        .entity = ecs_entity(world, { .name = "c_inherit", .add_expr = "(OnInstantiate, Inherit)" }),
+        .type.size = 4, .type.alignment = 4 
+    });
+    ecs_component(world, { 
+        .entity = ecs_entity(world, { .name = "c_dont_inherit", .add_expr = "(OnInstantiate, DontInherit)" }),
+        .type.size = 4, .type.alignment = 4 
+    });
+
+    ecs_entity(world, { .name = "tgt" });
+
+    ecs_entity_t base = ecs_entity(world, { 
+        .name = "base",
+        .add_expr = "t_inherit, t_dont_inherit, "\
+                    "c_inherit, c_dont_inherit, "\
+                    "(t_inherit, tgt), (t_dont_inherit, tgt), "
+                    "(c_inherit, tgt), (c_dont_inherit, tgt)"
+    });
+    test_assert(base != 0);
+
+    ecs_entity_t e = ecs_entity(world, {
+        .name = "e",
+        .add_expr = "(IsA, base), t_inherit, c_inherit, (t_inherit, tgt), (c_inherit, tgt)"
+    });
+    test_assert(e != 0);
+
+    ecs_entity_to_json_desc_t desc = {
+        .serialize_inherited = true
+    };
+
+    char *json = ecs_entity_to_json(world, e, &desc);
+    test_assert(json != NULL);
+    test_json(json, "{\"name\":\"e\", \"tags\":[\"t_inherit\"],\"pairs\":{\"IsA\":\"base\", \"t_inherit\":\"tgt\"},\"inherited\":{\"base\":{\"tags\":[\"t_inherit\"], \"pairs\":{\"t_inherit\":\"tgt\"}, \"components\":{\"c_inherit\":null, \"(c_inherit,tgt)\":null}}}, \"components\":{\"c_inherit\":null, \"(c_inherit,tgt)\":null}}");
 
     ecs_os_free(json);
 
@@ -1852,7 +1947,7 @@ void SerializeEntityToJson_serialize_sparse_inherited_mixed(void) {
     };
     char *json = ecs_entity_to_json(world, e, &desc);
     test_assert(json != NULL);
-    test_json(json, "{\"name\":\"Foo\", \"pairs\":{\"IsA\":\"Base\"},\"inherited\":{\"Base\":{\"components\":{\"Position\":{\"x\":10, \"y\":20}, \"Velocity\":{\"x\":1, \"y\":2}}}}, \"components\":{\"Velocity\":{\"x\":1, \"y\":2}}}");
+    test_json(json, "{\"name\":\"Foo\", \"pairs\":{\"IsA\":\"Base\"},\"inherited\":{\"Base\":{\"components\":{\"Position\":{\"x\":10, \"y\":20}}}}, \"components\":{\"Velocity\":{\"x\":1, \"y\":2}}}");
     ecs_os_free(json);
 
     ecs_fini(world);
