@@ -645,6 +645,8 @@ void SerializeEntityToJson_serialize_component_w_base_w_owned(void);
 void SerializeEntityToJson_serialize_component_w_base_w_owned_no_reflection_data(void);
 void SerializeEntityToJson_serialize_component_w_base_w_owned_override(void);
 void SerializeEntityToJson_serialize_component_w_base_w_owned_no_reflection_data_override(void);
+void SerializeEntityToJson_serialize_component_tag_pair_w_all_inherit_kinds(void);
+void SerializeEntityToJson_serialize_component_tag_pair_w_manual_override(void);
 void SerializeEntityToJson_serialize_w_nested_base(void);
 void SerializeEntityToJson_serialize_w_1_component(void);
 void SerializeEntityToJson_serialize_w_2_components(void);
@@ -3481,6 +3483,14 @@ bake_test_case SerializeEntityToJson_testcases[] = {
         SerializeEntityToJson_serialize_component_w_base_w_owned_no_reflection_data_override
     },
     {
+        "serialize_component_tag_pair_w_all_inherit_kinds",
+        SerializeEntityToJson_serialize_component_tag_pair_w_all_inherit_kinds
+    },
+    {
+        "serialize_component_tag_pair_w_manual_override",
+        SerializeEntityToJson_serialize_component_tag_pair_w_manual_override
+    },
+    {
         "serialize_w_nested_base",
         SerializeEntityToJson_serialize_w_nested_base
     },
@@ -4960,7 +4970,7 @@ static bake_test_suite suites[] = {
         "SerializeEntityToJson",
         NULL,
         NULL,
-        73,
+        75,
         SerializeEntityToJson_testcases
     },
     {
