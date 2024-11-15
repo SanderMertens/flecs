@@ -2036,6 +2036,8 @@ void OrderBy_sort_by_wildcard(void);
 void OrderBy_sort_not_term(void);
 void OrderBy_sort_or_term(void);
 void OrderBy_sort_optional_term(void);
+void OrderBy_order_empty_table(void);
+void OrderBy_order_empty_table_only(void);
 
 // Testsuite 'OrderByEntireTable'
 void OrderByEntireTable_sort_by_component(void);
@@ -10066,6 +10068,14 @@ bake_test_case OrderBy_testcases[] = {
     {
         "sort_optional_term",
         OrderBy_sort_optional_term
+    },
+    {
+        "order_empty_table",
+        OrderBy_order_empty_table
+    },
+    {
+        "order_empty_table_only",
+        OrderBy_order_empty_table_only
     }
 };
 
@@ -10584,7 +10594,7 @@ static bake_test_suite suites[] = {
         "OrderBy",
         NULL,
         NULL,
-        42,
+        44,
         OrderBy_testcases
     },
     {

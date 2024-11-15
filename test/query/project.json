@@ -2120,7 +2120,9 @@
                 "sort_by_wildcard",
                 "sort_not_term",
                 "sort_or_term",
-                "sort_optional_term"
+                "sort_optional_term",
+                "order_empty_table",
+                "order_empty_table_only"
             ]
         }, {
             "id": "OrderByEntireTable",
