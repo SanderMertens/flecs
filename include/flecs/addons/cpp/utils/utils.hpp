@@ -46,9 +46,9 @@ namespace _
 struct placement_new_tag_t{};
 constexpr placement_new_tag_t placement_new_tag{};
 template<class Ty> inline void destruct_obj(Ty* _ptr) { _ptr->~Ty(); }
-template<class Ty> inline void free_obj(Ty* _ptr) { 
+template<class Ty> inline void free_obj(void* _ptr) { 
     if (_ptr) {
-        destruct_obj(_ptr); 
+        destruct_obj(static_cast<Ty*>(_ptr)); 
         ecs_os_free(_ptr); 
     }
 }
