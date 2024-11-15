@@ -59,9 +59,6 @@ struct UNREALFLECS_API FFlecsWorldPtrComponent
 	
 }; // struct FFlecsWorldPtrComponent
 
-REGISTER_FLECS_PROPERTIES(FFlecsWorldPtrComponent,
-	{}, {})
-
 FORCEINLINE NO_DISCARD UFlecsWorld* ToFlecsWorld(const flecs::world& InWorld)
 {
 	return InWorld.get_mut<FFlecsWorldPtrComponent>()->GetFlecsWorld();

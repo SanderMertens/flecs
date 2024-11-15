@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Modules/FlecsModuleObject.h"
+#include "Systems/FlecsSystem.h"
 #include "FlecsCVarModule.generated.h"
 
 
@@ -15,6 +16,11 @@ class UNREALFLECS_API UFlecsCVarModule : public UFlecsModuleObject
 public:
 	virtual void InitializeModule(UFlecsWorld* InWorld, const FFlecsEntityHandle& InModuleEntity) override;
 	virtual void DeinitializeModule(UFlecsWorld* InWorld) override;
+
+	void RegisterCVar(const TCHAR* Name, IConsoleObject* CVar);
+
+	UPROPERTY()
+	FFlecsSystem CVarSystem;
 
 
 }; // class UFlecsCVarModule
