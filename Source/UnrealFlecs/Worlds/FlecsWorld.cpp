@@ -4,8 +4,3 @@
 #include "Components/UWorldPtrComponent.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(FlecsWorld)
-
-UWorld* UFlecsWorld::GetWorld() const
-{
-	return GetSingleton<FUWorldPtrComponent>().GetWorld();
-}

@@ -75,12 +75,12 @@ void UFlecsPhysicsModule::ResimulationHandlers()
 
 	GetFlecsWorld()->AddSingleton<FTickerPhysicsHistoryComponent>();
 		
-	PhysicsHistoryComponentRef = GetFlecsWorld()->GetSingletonFlecsRef<FTickerPhysicsHistoryComponent>();
+	PhysicsHistoryComponentRef = GetFlecsWorld()->GetSingletonPtr<FTickerPhysicsHistoryComponent>();
 	solid_check(PhysicsHistoryComponentRef);
 
 	PhysicsHistoryComponentRef->HistoryItems.Reserve(MaxFrameHistory);
 
-	TickerComponentRef = GetFlecsWorld()->GetSingletonFlecsRef<FFlecsTickerComponent>();
+	TickerComponentRef = GetFlecsWorld()->GetSingletonPtr<FFlecsTickerComponent>();
 
 	FSolverPostAdvance::FDelegate PostAdvanceDelegate;
 	PostAdvanceDelegate.BindWeakLambda(this, [&](MAYBE_UNUSED float InDeltaTime)

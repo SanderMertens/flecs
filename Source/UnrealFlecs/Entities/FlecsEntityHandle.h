@@ -13,11 +13,6 @@
 #include "SolidMacros/Macros.h"
 #include "FlecsEntityHandle.generated.h"
 
-namespace Flecs
-{
-	extern flecs::world* GFlecsWorld;
-} // namespace Flecs
-
 class UFlecsWorld;
 
 USTRUCT(BlueprintType)
@@ -27,7 +22,7 @@ struct alignas(8) UNREALFLECS_API FFlecsEntityHandle
 
 	SOLID_INLINE NO_DISCARD friend uint32 GetTypeHash(const FFlecsEntityHandle& InEntity)
 	{
-		return GetTypeHash(InEntity.GetEntity().id());
+		return GetTypeHash(InEntity.GetId());
 	}
 
 	SOLID_INLINE static NO_DISCARD FFlecsEntityHandle GetNullHandle()
@@ -36,23 +31,29 @@ struct alignas(8) UNREALFLECS_API FFlecsEntityHandle
 	}
 
 public:
-	FFlecsEntityHandle() : EntityId(flecs::entity::null()) {}
+	FFlecsEntityHandle();
 	
-	SOLID_INLINE FFlecsEntityHandle(const flecs::entity& InEntity)
+	FFlecsEntityHandle(const flecs::entity& InEntity)
 	{
-		EntityId = InEntity;
+		Entity = InEntity;
 	}
 
 	SOLID_INLINE FFlecsEntityHandle(const flecs::entity_t InEntity)
 	{
-		EntityId = InEntity;
+		Entity = flecs::entity(InEntity);
+		ObtainFlecsWorld();
 	}
 
-	SOLID_INLINE FFlecsEntityHandle(flecs::world_t* InWorld, const flecs::entity_t InEntity);
+	FFlecsEntityHandle(flecs::world& InWorld, const flecs::entity_t InEntity)
+	{
+		Entity = flecs::entity(InWorld, InEntity);
+	}
+
+	SOLID_INLINE FFlecsEntityHandle(const flecs::world_t* InWorld, const flecs::entity_t InEntity);
 	
 	SOLID_INLINE NO_DISCARD flecs::entity GetEntity() const
 	{
-		return flecs::entity(GetFlecsWorld_Internal(), EntityId);
+		return Entity;
 	}
 
 	SOLID_INLINE void SetEntity(const flecs::entity& InEntity)
@@ -62,7 +63,7 @@ public:
 	
 	SOLID_INLINE void SetEntity(const flecs::entity_t InEntity)
 	{
-		EntityId = InEntity;
+		*this = FFlecsEntityHandle(InEntity);
 	}
 	
 	SOLID_INLINE operator flecs::entity() const { return GetEntity(); }
@@ -74,7 +75,7 @@ public:
 
 	SOLID_INLINE operator bool() const { return IsValid(); }
 
-	SOLID_INLINE NO_DISCARD uint32 GetId() const { return GetEntity().id(); }
+	SOLID_INLINE NO_DISCARD flecs::entity_t GetId() const { return GetEntity().id(); }
 	SOLID_INLINE NO_DISCARD uint32 GetGeneration() const { return get_generation(GetEntity()); }
 	
 	SOLID_INLINE NO_DISCARD UFlecsWorld* GetFlecsWorld() const;
@@ -168,7 +169,6 @@ public:
 	SOLID_INLINE void Remove() const { GetEntity().remove<T>(); }
 
 	SOLID_INLINE void Set(const FFlecsEntityHandle& InEntity) const { GetEntity().set(InEntity); }
-	SOLID_INLINE void Set(const flecs::id& InId) const { GetEntity().set(InId); }
 
 	template <typename T>
 	SOLID_INLINE void Set(const T& InValue) const { GetEntity().set<T>(InValue); }
@@ -179,6 +179,11 @@ public:
 	}
 
 	SOLID_INLINE void Set(const flecs::id& InId, const void* InValue) const
+	{
+		GetEntity().set_ptr(InId, InValue);
+	}
+
+	SOLID_INLINE void Set(const flecs::entity_t InId, const void* InValue) const
 	{
 		GetEntity().set_ptr(InId, InValue);
 	}
@@ -336,7 +341,7 @@ public:
 
 	SOLID_INLINE void Destroy() const { GetEntity().destruct(); }
 
-	SOLID_INLINE NO_DISCARD FFlecsEntityHandle Clone(const bool bCloneValue = true, const int32 DestinationId = 0) const
+	SOLID_INLINE NO_DISCARD FFlecsEntityHandle Clone(const bool bCloneValue = true, const flecs::entity_t DestinationId = 0) const
 	{
 		return GetEntity().clone(bCloneValue, DestinationId);
 	}
@@ -1387,12 +1392,11 @@ public:
 	SOLID_INLINE NO_DISCARD FFlecsEntityHandle ObtainComponentTypeStruct(const UScriptStruct* StructType) const;
 	
 private:
-	UPROPERTY()
-	uint64 EntityId;
+	flecs::entity Entity;
 	
 	SOLID_INLINE NO_DISCARD FFlecsEntityHandle GetTagEntity(const FGameplayTag& InTag) const;
 
-	SOLID_INLINE NO_DISCARD flecs::world GetFlecsWorld_Internal() const { return *Flecs::GFlecsWorld; }
+	SOLID_INLINE NO_DISCARD flecs::world GetFlecsWorld_Internal() const { return Entity.world(); }
 
 	template <typename TComponent>
 	SOLID_INLINE NO_DISCARD FFlecsEntityHandle ObtainTraitHolderEntity() const
@@ -1446,7 +1450,7 @@ private:
 		return TraitHolder;
 	}
 
-	SOLID_INLINE flecs::world ObtainDefaultFlecsWorld() const;
+	SOLID_INLINE void ObtainFlecsWorld();
 
 public:
 
@@ -1473,7 +1477,10 @@ public:
 		if (Token.StartsWith(TEXT("EntityId=")))
 		{
 			const FString EntityIdString = Token.RightChop(9);
-			EntityId = FCString::Strtoui64(*EntityIdString, nullptr, 10);
+			Entity = flecs::entity(FCString::Strtoui64(*EntityIdString, nullptr, 10));
+
+			ObtainFlecsWorld();
+			
 			return true;
 		}
 		else
@@ -1486,7 +1493,7 @@ public:
 	FORCEINLINE bool ExportTextItem(FString& ValueStr, const FFlecsEntityHandle& DefaultValue,
 		MAYBE_UNUSED UObject* Parent, MAYBE_UNUSED int32 PortFlags, MAYBE_UNUSED UObject* ExportRootScope) const
 	{
-		ValueStr += FString::Printf(TEXT("EntityId=%llu"), EntityId);
+		ValueStr += FString::Printf(TEXT("EntityId=%llu"), GetId());
 		return true;
 	}
 	

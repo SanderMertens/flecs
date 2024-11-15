@@ -35,7 +35,7 @@ public:
 private:
 	int32 PreResimValue = 0;
 
-	flecs::ref<FTickerPhysicsHistoryComponent> PhysicsHistoryComponentRef;
-	flecs::ref<FFlecsTickerComponent> TickerComponentRef;
+	FTickerPhysicsHistoryComponent* PhysicsHistoryComponentRef;
+	FFlecsTickerComponent* TickerComponentRef;
 	
 }; // class UFlecsPhysicsModule

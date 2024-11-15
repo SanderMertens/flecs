@@ -10,7 +10,37 @@
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(FlecsEntityHandle)
 
-FFlecsEntityHandle::FFlecsEntityHandle(flecs::world_t* InWorld, const flecs::entity_t InEntity)
+FFlecsEntityHandle::FFlecsEntityHandle()
+{
+    /*if (!GWorld || !GWorld->IsGameWorld())
+    {
+        return;
+    }
+
+    if (Entity.id() == 0 || Entity.world() != nullptr)
+    {
+        return;
+    }
+
+    UFlecsWorldSubsystem* FlecsWorldSubsystem = GWorld->GetSubsystem<UFlecsWorldSubsystem>();
+    if LIKELY_IF(FlecsWorldSubsystem->HasValidFlecsWorld())
+    {
+        SetEntity(flecs::entity(FlecsWorldSubsystem->GetDefaultWorld()->World,
+            Entity.id()));
+    }
+    else
+    {
+        FDelegateHandle OnWorldCreatedHandle = FlecsWorldSubsystem
+            ->OnWorldCreated.AddLambda([&](const UFlecsWorld* InFlecsWorld)
+        {
+            SetEntity(flecs::entity(InFlecsWorld->World, Entity.id()));
+
+            FlecsWorldSubsystem->OnWorldCreated.Remove(OnWorldCreatedHandle);
+        });
+    }*/
+}
+
+FFlecsEntityHandle::FFlecsEntityHandle(const flecs::world_t* InWorld, const flecs::entity_t InEntity)
 {
     SetEntity(flecs::entity(InWorld, InEntity));
 }
@@ -88,14 +118,21 @@ FFlecsEntityHandle FFlecsEntityHandle::GetTagEntity(const FGameplayTag& InTag) c
     return GetFlecsWorld()->GetTagEntity(InTag);
 }
 
-flecs::world FFlecsEntityHandle::ObtainDefaultFlecsWorld() const
+void FFlecsEntityHandle::ObtainFlecsWorld()
 {
-    if (!GWorld  || !GWorld->IsGameWorld())
+    if (!GWorld || !GWorld->IsGameWorld())
     {
-        return flecs::world();
+        return;
     }
+    
+    if (GetEntity().world() == nullptr)
+    {
+        const UFlecsWorldSubsystem* FlecsWorldSubsystem = GWorld->GetSubsystem<UFlecsWorldSubsystem>();
+        solid_checkf(FlecsWorldSubsystem, TEXT("Flecs World Subsystem not found"));
 
-    return *Flecs::GFlecsWorld;
+        SetEntity(flecs::entity(FlecsWorldSubsystem->GetDefaultWorld()->World,
+            GetEntity().id()));
+    }
 }
 
 void FFlecsEntityHandle::PostScriptConstruct()
@@ -115,7 +152,8 @@ void FFlecsEntityHandle::PostScriptConstruct()
         UFlecsWorldSubsystem* FlecsWorldSubsystem = GWorld->GetSubsystem<UFlecsWorldSubsystem>();
         if LIKELY_IF(FlecsWorldSubsystem->HasValidFlecsWorld())
         {
-            SetEntity(flecs::entity(*Flecs::GFlecsWorld, GetEntity().id()));
+            SetEntity(flecs::entity(FlecsWorldSubsystem->GetDefaultWorld()->World,
+                GetEntity().id()));
         }
         else
         {

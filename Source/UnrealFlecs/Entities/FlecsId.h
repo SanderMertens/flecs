@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "flecs.h"
 #include "SolidMacros/Macros.h"
+#include "SolidMacros/Standard/Hashing.h"
 #include "FlecsId.generated.h"
 
 USTRUCT(BlueprintType)
@@ -19,8 +20,10 @@ struct FFlecsId final
 
 public:
     FORCEINLINE FFlecsId() = default;
-    FORCEINLINE FFlecsId(const flecs::id& InId) : Id(InId) {}
-    FORCEINLINE FFlecsId(const flecs::id* InId) : Id(*InId) {}
+    
+    FORCEINLINE FFlecsId(const flecs::id InId) : Id(InId) {}
+    FORCEINLINE FFlecsId(const flecs::entity InEntity) : Id(InEntity.id()) {}
+    FORCEINLINE FFlecsId(const flecs::entity_t InEntity) : Id(InEntity) {}
 
     FORCEINLINE void SetId(const flecs::id& InId) { Id = InId; }
     FORCEINLINE void SetId(const flecs::id* InId) { Id = *InId; }
@@ -29,7 +32,6 @@ public:
     FORCEINLINE NO_DISCARD const flecs::id& GetFlecsId() const { return Id; }
     
     FORCEINLINE operator flecs::id() const { return GetFlecsId(); }
-    
 
     FORCEINLINE operator flecs::id&() { return GetFlecsId(); }
     FORCEINLINE operator const flecs::id&() const { return GetFlecsId(); }
@@ -71,6 +73,38 @@ public:
 
     FORCEINLINE NO_DISCARD flecs::entity GetTypeId() const { return Id.type_id(); }
     
+    FORCEINLINE bool ImportTextItem(const TCHAR*& Buffer,
+        MAYBE_UNUSED int32 PortFlags, MAYBE_UNUSED UObject* Parent,
+        FOutputDevice* ErrorText)
+    {
+        FString Token;
+        
+        if (!FParse::Token(Buffer, Token, true))
+        {
+            ErrorText->Logf(TEXT("FFlecsId::ImportTextItem: Failed to parse token from input"));
+            return false;
+        }
+        
+        if (Token.StartsWith(TEXT("Id=")))
+        {
+            const FString IdString = Token.RightChop(3);
+            Id = flecs::id(FCString::Strtoui64(*IdString, nullptr, 10));
+            return true;
+        }
+        else
+        {
+            ErrorText->Logf(TEXT("FFlecsId::ImportTextItem: Invalid format"));
+            return false;
+        }
+    }
+    
+    FORCEINLINE bool ExportTextItem(FString& ValueStr, const FFlecsId& DefaultValue,
+         MAYBE_UNUSED UObject* Parent, MAYBE_UNUSED int32 PortFlags, MAYBE_UNUSED UObject* ExportRootScope) const
+    {
+        ValueStr = FString::Printf(TEXT("Id=%llu"), Id.raw_id());
+        return true;
+    }
+    
     flecs::id Id;
 }; // struct FFlecsId
 
@@ -80,7 +114,10 @@ struct TStructOpsTypeTraits<FFlecsId> : public TStructOpsTypeTraitsBase2<FFlecsI
     enum
     {
         WithCopy = true,
-        WithIdenticalViaEquality = true
-        E
+        WithIdenticalViaEquality = true,
+        WithImportTextItem = true,
+        WithExportTextItem = true,
     };
 };
+
+DEFINE_STD_HASH(FFlecsId);

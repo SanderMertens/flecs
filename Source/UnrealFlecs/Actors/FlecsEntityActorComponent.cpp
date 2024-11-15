@@ -20,7 +20,7 @@ void UFlecsEntityActorComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	InitializeEntity();
+	//InitializeEntity();
 }
 
 void UFlecsEntityActorComponent::OnRegister()

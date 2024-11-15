@@ -95,10 +95,8 @@ void UFlecsTickerModule::InitializeModule(UFlecsWorld* InWorld, const FFlecsEnti
 
 void UFlecsTickerModule::DeinitializeModule(UFlecsWorld* InWorld)
 {
-	if (IsValid(InWorld))
+	if LIKELY_IF(IsValid(InWorld))
 	{
-		TickerSystem.GetEntity().Destroy();
-		
 		InWorld->RemoveSingleton<FFlecsTickerComponent>();
 		TickerComponentPtr = nullptr;
 		

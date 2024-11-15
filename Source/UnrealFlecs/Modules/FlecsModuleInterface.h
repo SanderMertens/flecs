@@ -35,7 +35,7 @@ class UNREALFLECS_API IFlecsModuleInterface
 
 public:
 
-	FORCEINLINE void ImportModule(const flecs::world& InWorld);
+	FORCEINLINE void ImportModule(flecs::world& InWorld);
 	
 	FORCEINLINE void DeinitializeModule_Internal();
 
@@ -73,55 +73,3 @@ public:
 	FFlecsEntityHandle ModuleEntity;
 	
 }; // class IFlecsModuleInterface
-
-/**
- * This flecs module impl, doesn't take advantage of scoping in flecs as
- * that creates a lot of problems with the Reflection system.
- * for type impl for modules, you can disable, enable, and toggle the types directly(types will be registered)
- */
-// @TODO Not useable yet
-USTRUCT(BlueprintType)
-struct UNREALFLECS_API FFlecsModuleStructInterface
-{
-	GENERATED_BODY()
-
-public:
-	virtual ~FFlecsModuleStructInterface();
-
-	FORCEINLINE void ImportModule(const flecs::world& InWorld);
-
-	FORCEINLINE void DeinitializeModule_Internal();
-
-	virtual void InitializeModule(UFlecsWorld* InWorld, const FFlecsEntityHandle& InModuleEntity)
-		PURE_VIRTUAL(FFlecsModuleStructInterface::InitializeModule, );
-	
-	virtual void DeinitializeModule(UFlecsWorld* InWorld)
-		PURE_VIRTUAL(FFlecsModuleStructInterface::DeinitializeModule, );
-
-	virtual NO_DISCARD FString GetModuleName() const
-		PURE_VIRTUAL(FFlecsModuleStructInterface::GetModuleName, return FString(););
-	
-	FORCEINLINE NO_DISCARD UFlecsWorld* GetFlecsWorld() const;
-
-	FORCEINLINE NO_DISCARD bool IsEnabled() const
-	{
-		return ModuleEntity.IsEnabled();
-	}
-
-	UPROPERTY()
-	TWeakObjectPtr<UFlecsWorld> World;
-
-	UPROPERTY()
-	FFlecsEntityHandle ModuleEntity;
-	
-}; // struct FFlecsModuleInterface
-
-template <>
-struct TStructOpsTypeTraits<FFlecsModuleStructInterface> : public TStructOpsTypeTraitsBase2<FFlecsModuleStructInterface>
-{
-	enum
-	{
-		WithPureVirtual = true
-	}; // enum
-	
-}; // struct TStructOpsTypeTraits<FFlecsModuleStructInterface>

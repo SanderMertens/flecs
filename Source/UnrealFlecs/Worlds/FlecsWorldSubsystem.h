@@ -103,15 +103,11 @@ public:
 	FORCEINLINE UFlecsWorld* CreateWorld(const FString& Name, const FFlecsWorldSettings& Settings)
 	{
 		solid_checkf(!Name.IsEmpty(), TEXT("World name cannot be NAME_None"));
-
-		flecs::world NewWorld = flecs::world();
 		
 		TArray<FFlecsDefaultMetaEntity> DefaultEntities = FFlecsDefaultEntityEngine::Get().AddedDefaultEntities;
 		TMap<FString, flecs::entity_t> DefaultEntityIds = FFlecsDefaultEntityEngine::Get().DefaultEntityOptions;
 
 		UFlecsWorld* NewFlecsWorld = NewObject<UFlecsWorld>(this);
-		NewFlecsWorld->SetWorld(std::move(NewWorld));
-		Flecs::GFlecsWorld = &NewWorld;
 		
 		DefaultWorld = NewFlecsWorld;
 
@@ -119,7 +115,7 @@ public:
 		
 		GetDefaultWorld()->AddSingleton<FFlecsTypeMapComponent>();
 		GetDefaultWorld()->TypeMapComponent = GetDefaultWorld()->GetSingletonPtr<FFlecsTypeMapComponent>();
-		solid_checkf(GetDefaultWorld()->TypeMapComponent, TEXT("TypeMapComponent must be valid"));
+		solid_check(GetDefaultWorld()->TypeMapComponent);
 
 		NewFlecsWorld->SetSingleton<FFlecsWorldPtrComponent>(
 			FFlecsWorldPtrComponent{ NewFlecsWorld });
@@ -163,8 +159,6 @@ public:
 			
 			NewFlecsWorld->ImportModule(Module);
 		}
-
-		NewFlecsWorld->Progress();
 		
 		OnWorldCreated.Broadcast(NewFlecsWorld);
 		
@@ -284,12 +278,15 @@ protected:
 
 	FString ExtractLastPartOfTagName(const FString& FullTagName)
 	{
-		FString LastPartOfTagName;
-		
-		if (FullTagName.Split(TEXT("."), nullptr, &LastPartOfTagName,
-			ESearchCase::IgnoreCase, ESearchDir::FromEnd))
+		if (FullTagName.IsEmpty())
 		{
-			return LastPartOfTagName;
+			return FString();
+		}
+
+		int32 LastDotIndex;
+		if (FullTagName.FindLastChar(TEXT('.'), LastDotIndex))
+		{
+			return FullTagName.RightChop(LastDotIndex + 1);
 		}
 		
 		return FullTagName;

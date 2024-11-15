@@ -7,6 +7,7 @@
 
 #include "CoreMinimal.h"
 #include "flecs.h"
+
 #include "AssetRegistry/AssetRegistryModule.h"
 #include "Components/FFlecsActorComponentTag.h"
 #include "Components/FFlecsSceneComponentTag.h"
@@ -23,7 +24,6 @@
 #include "Modules/FlecsModuleInterface.h"
 #include "Modules/FlecsModuleProgressInterface.h"
 #include "Prefabs/FlecsPrefabAsset.h"
-#include "Systems/FlecsSystem.h"
 #include "FlecsWorld.generated.h"
 
 DECLARE_STATS_GROUP(TEXT("FlecsWorld"), STATGROUP_FlecsWorld, STATCAT_Advanced);
@@ -31,17 +31,18 @@ DECLARE_STATS_GROUP(TEXT("FlecsWorld"), STATGROUP_FlecsWorld, STATCAT_Advanced);
 DECLARE_CYCLE_STAT(TEXT("FlecsWorld::Progress"), STAT_FlecsWorldProgress, STATGROUP_FlecsWorld);
 DECLARE_CYCLE_STAT(TEXT("FlecsWorld::Progress::ProgressModule"), STAT_FlecsWorldProgressModule, STATGROUP_FlecsWorld);
 
-namespace Flecs
-{
-	INLINE flecs::world* GFlecsWorld;
-} // namespace flecs
-
 UCLASS(BlueprintType)
 class UNREALFLECS_API UFlecsWorld : public UObject
 {
 	GENERATED_BODY()
 
 public:
+	UFlecsWorld()
+		: TypeMapComponent(nullptr)
+	{
+		World = flecs::world();
+	}
+	
 	virtual ~UFlecsWorld() override
 	{
 		FCoreUObjectDelegates::GarbageCollectComplete.RemoveAll(this);
@@ -97,6 +98,8 @@ public:
 		
         ecs_os_api_t os_api = ecs_os_api;
 
+		#if 0
+
         os_api.thread_new_ = [](ecs_os_thread_callback_t Callback, void* Param) -> ecs_os_thread_t
         {
             FFlecsThread* FlecsThread = static_cast<FFlecsThread*>(
@@ -129,13 +132,13 @@ public:
             volatile int32 LockFlag = 0;
         }; // struct FFlecsSpinLock
 
-        os_api.mutex_new_ = []() -> ecs_os_mutex_t
-        {
-	        FFlecsSpinLock* SpinLock = static_cast<FFlecsSpinLock*>(FMemory::Malloc(
-	        	sizeof(FFlecsSpinLock), alignof(FFlecsSpinLock)));
-            SpinLock->LockFlag = 0;
-            return reinterpret_cast<ecs_os_mutex_t>(SpinLock);
-        };
+		os_api.mutex_new_ = []() -> ecs_os_mutex_t
+		{
+			FFlecsSpinLock* SpinLock = static_cast<FFlecsSpinLock*>(FMemory::Malloc(
+				sizeof(FFlecsSpinLock), alignof(FFlecsSpinLock)));
+			SpinLock->LockFlag = 0;
+			return reinterpret_cast<ecs_os_mutex_t>(SpinLock);
+		};
 
         os_api.mutex_free_ = [](ecs_os_mutex_t Mutex)
         {
@@ -157,6 +160,8 @@ public:
 	        FFlecsSpinLock* SpinLock = reinterpret_cast<FFlecsSpinLock*>(Mutex);
             FPlatformAtomics::InterlockedExchange(&SpinLock->LockFlag, 0);
         };
+
+		#endif // 0
 
         // Sleep function using minimal overhead
         os_api.sleep_ = [](int32_t Seconds, int32_t Nanoseconds)
@@ -190,19 +195,20 @@ public:
             {
                 case -4: // Fatal
                     UN_LOGF(LogFlecsCore, Fatal, "Flecs - File: %s, Line: %d, Message: %s",
-						File, Line, StringCast<TCHAR>(Message).Get());
+						StringCast<TCHAR>(File).Get(), Line,
+						StringCast<TCHAR>(Message).Get());
                     break;
                 case -3: // Error
                 	UN_LOGF(LogFlecsCore, Error, "Flecs - File: %s, Line: %d, Message: %s",
-						File, Line, StringCast<TCHAR>(Message).Get());
+						StringCast<TCHAR>(File).Get(), Line, StringCast<TCHAR>(Message).Get());
                     break;
                 case -2: // Warning
                 	UN_LOGF(LogFlecsCore, Warning, "Flecs - File: %s, Line: %d, Message: %s",
-						File, Line, StringCast<TCHAR>(Message).Get());
+						StringCast<TCHAR>(File).Get(), Line, StringCast<TCHAR>(Message).Get());
                     break;
                 default: // Info and Debug
                 	UN_LOGF(LogFlecsCore, Log, "Flecs - File: %s, Line: %d, Message: %s",
-						File, Line, StringCast<TCHAR>(Message).Get());
+						StringCast<TCHAR>(File).Get(), Line, StringCast<TCHAR>(Message).Get());
                     break;
             }
 #endif // UNLOG_ENABLED
@@ -372,29 +378,6 @@ public:
 
 					EntityHandle.Remove<flecs::_::type_impl_struct_event_info>();
 				});
-
-		/*CreateObserver<FFlecsUObjectComponent>(TEXT("UObjectComponentObserver"))
-			.event(flecs::OnSet)
-			.yield_existing()
-			.each([&](flecs::entity InEntity, const FFlecsUObjectComponent& InComponent)
-			{
-				const FFlecsEntityHandle EntityHandle = InEntity;
-
-				if (InComponent.IsA<AActor>())
-				{
-					EntityHandle.Add<FFlecsActorTag>();
-				}
-
-				if (InComponent.IsA<UActorComponent>())
-				{
-					EntityHandle.Add<FFlecsActorComponentTag>();
-				}
-
-				if (InComponent.IsA<USceneComponent>())
-				{
-					EntityHandle.Add<FFlecsSceneComponentTag>();
-				}
-			});*/
 
 		ObjectComponentQuery = World.query_builder<FFlecsUObjectComponent>("UObjectComponentQuery")
 			.build();
@@ -579,11 +562,6 @@ public:
 		InAsset->OnEntityDestroyed(AssetEntity, this);
 		AssetEntity.Destroy();
 	}
-	
-	FORCEINLINE_DEBUGGABLE void SetWorld(flecs::world&& InWorld)
-	{
-		World = std::move(InWorld);
-	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
 	FORCEINLINE_DEBUGGABLE void Reset()
@@ -599,7 +577,7 @@ public:
 
 	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle CreateEntity(const flecs::entity_t InEntity) const
 	{
-		return World.make_alive(InEntity);
+		return World.entity(InEntity);
 	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
@@ -616,12 +594,12 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
 	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle CreateEntityWithId(const FFlecsId& InId) const
 	{
-		return MakeAlive(InId.GetFlecsId());
+		return flecs::entity(World, InId.GetFlecsId());
 	}
 
 	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle CreateEntityWithId(const flecs::entity_t InId) const
 	{
-		return FFlecsEntityHandle(World.make_alive(InId));
+		return World.make_alive(InId);
 	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
@@ -651,7 +629,7 @@ public:
 	{
 		return World.lookup(StringCast<char>(*Name).Get());
 	}
-
+	
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
 	FORCEINLINE_DEBUGGABLE void DestroyEntityByName(const FString& Name, const bool bSearchPath = true) const
 	{
@@ -831,20 +809,20 @@ public:
 	}
 
 	template <typename T>
-	FORCEINLINE_DEBUGGABLE void ImportModule()
+	FORCEINLINE_DEBUGGABLE void ImportFlecsModule()
 	{
 		static_assert(!TIsDerivedFrom<T, IFlecsModuleInterface>::Value, "T must not be derived from IFlecsModuleInterface");
 		World.import<T>();
 	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
-	FORCEINLINE_DEBUGGABLE void ImportModule(const TScriptInterface<IFlecsModuleInterface> InModule) const
+	FORCEINLINE_DEBUGGABLE void ImportModule(const TScriptInterface<IFlecsModuleInterface> InModule)
 	{
 		solid_checkf(InModule != nullptr, TEXT("Module is nullptr"));
 		InModule->ImportModule(World);
 	}
 	
-	FORCEINLINE_DEBUGGABLE void ImportModule(UObject* InModule) const
+	FORCEINLINE_DEBUGGABLE void ImportModule(UObject* InModule)
 	{
 		solid_checkf(InModule->GetClass()->ImplementsInterface(UFlecsModuleInterface::StaticClass()),
 			TEXT("Module %s does not implement UFlecsModuleInterface"), *InModule->GetName());
@@ -971,11 +949,6 @@ public:
 	
 	FORCEINLINE_DEBUGGABLE void DestroyWorld()
 	{
-		if (Flecs::GFlecsWorld && *Flecs::GFlecsWorld == World)
-		{
-			Flecs::GFlecsWorld = nullptr;
-		}
-		
 		if UNLIKELY_IF(ShouldQuit())
 		{
 			return;
@@ -1028,15 +1001,6 @@ public:
 	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle MakeAlive(const FFlecsId& InId) const
 	{
 		return World.make_alive(InId.GetFlecsId());
-	}
-
-	template <typename ...TComponents>
-	FORCEINLINE_DEBUGGABLE NO_DISCARD FFlecsSystem CreateSystem(const FString& InName) const
-	{
-		const FFlecsEntityHandle SystemEntity = CreateEntity(InName);
-		const FFlecsSystem System = World.system(SystemEntity.GetEntity());
-		System.ToBuilder<TComponents...>();
-		return System;
 	}
 
 	template <typename ...TComponents>
@@ -1311,9 +1275,12 @@ public:
 	{
 		solid_check(IsValid(Enum));
 
+		FFlecsEntityHandle OldScope = ClearScope();
+
 		if (const FFlecsEntityHandle Handle = World.lookup(StringCast<char>(*Enum->GetName()).Get()))
 		{
 			RegisterEnumProperties(Enum, Handle);
+			SetScope(OldScope);
 			return Handle;
 		}
 		
@@ -1329,6 +1296,7 @@ public:
 
 		//#endif // WITH_EDITOR
 
+		SetScope(OldScope);
 		return EnumComponent;
 	}
 	
@@ -1337,9 +1305,12 @@ public:
 	{
 		solid_check(IsValid(ScriptStruct));
 
+		FFlecsEntityHandle OldScope = ClearScope();
+
 		if (const FFlecsEntityHandle Handle = World.lookup(StringCast<char>(*ScriptStruct->GetStructCPPName()).Get()))
 		{
 			RegisterScriptStruct(ScriptStruct, Handle);
+			SetScope(OldScope);
 			return Handle;
 		}
 		
@@ -1370,14 +1341,15 @@ public:
 			
 			ScriptStructComponent.SetParent(ParentEntity);
 		}
-		
+
+		SetScope(OldScope);
 		return ScriptStructComponent;
 	}
 
-	FORCEINLINE_DEBUGGABLE void RegisterScriptStruct(const UScriptStruct* ScriptStruct, FFlecsEntityHandle InComponentEntity) const
+	FORCEINLINE_DEBUGGABLE void RegisterScriptStruct(UScriptStruct* ScriptStruct, FFlecsEntityHandle InComponentEntity) const
 	{
 		TypeMapComponent->ScriptStructMap
-			.emplace(const_cast<UScriptStruct*>(ScriptStruct), InComponentEntity);
+			.emplace(ScriptStruct, InComponentEntity);
 
 		//#if WITH_EDITOR
 
@@ -1464,10 +1436,9 @@ public:
 		World.randomize_timers();
 	}
 
-	template <typename ...TArgs>
-	FORCEINLINE_DEBUGGABLE NO_DISCARD flecs::timer CreateTimer(const TArgs&... Args) const
+	FORCEINLINE_DEBUGGABLE NO_DISCARD flecs::timer CreateTimer(FString Name) const
 	{
-		return World.timer(Args...);
+		return World.timer(StringCast<char>(*Name).Get());
 	}
 
 	template <typename T>
@@ -1585,7 +1556,41 @@ public:
 		return World.should_quit();
 	}
 
-	virtual UWorld *GetWorld() const override final;
+	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs")
+	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle ClearScope() const
+	{
+		return World.set_scope(0);
+	}
+
+	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs")
+	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle SetScope(const FFlecsEntityHandle& InScope) const
+	{
+		return World.set_scope(InScope.GetEntity());
+	}
+
+	template <typename T>
+	FORCEINLINE_DEBUGGABLE void Scope() const
+	{
+		World.scope<T>();
+	}
+
+	template <typename T, typename FunctionType>
+	FORCEINLINE_DEBUGGABLE void Scope(FunctionType&& Function) const
+	{
+		World.scope<T>(std::forward<FunctionType>(Function));
+	}
+
+	template <typename FunctionType>
+	FORCEINLINE_DEBUGGABLE void Scope(FFlecsId InId, FunctionType&& Function) const
+	{
+		World.scope(InId.GetFlecsId(), std::forward<FunctionType>(Function));
+	}
+
+	UFUNCTION(BlueprintCallable, Category = "Flecs")
+	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle GetScope() const
+	{
+		return World.get_scope();
+	}
 	
 	flecs::world World;
 

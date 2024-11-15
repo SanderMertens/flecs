@@ -1,7 +1,6 @@
 ﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 #include "FlecsModuleInterface.h"
-
 #include "Components/FlecsModuleComponent.h"
 #include "Components/FlecsWorldPtrComponent.h"
 #include "Logs/FlecsCategories.h"
@@ -9,33 +8,32 @@
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(FlecsModuleInterface)
 
-void IFlecsModuleInterface::ImportModule(const flecs::world& InWorld)
+inline void IFlecsModuleInterface::ImportModule(flecs::world& InWorld)
 {
 	World = ToFlecsWorld(InWorld);
 	solid_checkf(World.IsValid(), TEXT("World is not valid!"));
 
-	if (ModuleEntity.IsValid())
-	{
-		ModuleEntity.Enable();
-	}
-	else
-	{
-		ModuleEntity = InWorld.entity(StringCast<char>(*Execute_GetModuleName(_getUObject())).Get());
-		solid_checkf(ModuleEntity.IsValid(), TEXT("Module entity is not valid!"));
-	}
+	const FFlecsEntityHandle OldScope = World->ClearScope();
 
+	ModuleEntity = InWorld.entity(StringCast<char>(*Execute_GetModuleName(_getUObject())).Get());
+	solid_checkf(ModuleEntity.IsValid(), TEXT("Module entity is not valid!"));
+	
 	ModuleEntity.Add(flecs::Module);
 	ModuleEntity.Set<FFlecsUObjectComponent>({ _getUObject() });
 	ModuleEntity.Set<FFlecsModuleComponent>({ _getUObject()->GetClass() });
+
+	World->SetScope(ModuleEntity);
 		
 	InitializeModule(World.Get(), ModuleEntity);
 	Execute_BP_InitializeModule(_getUObject(), World.Get());
 
 	UN_LOGF(LogFlecsCore, Log,
 		"Imported module: %s", *IFlecsModuleInterface::Execute_GetModuleName(_getUObject()));
+	
+	World->SetScope(OldScope);
 }
 
-void IFlecsModuleInterface::DeinitializeModule_Internal()
+inline void IFlecsModuleInterface::DeinitializeModule_Internal()
 {
 	ModuleEntity.Disable();
 	DeinitializeModule(World.Get());
@@ -60,39 +58,4 @@ FString IFlecsModuleInterface::GetModuleName_Implementation() const
 		"Will return the inherited class name instead. For Class: %s", *_getUObject()->GetClass()->GetName());
 	
 	return _getUObject()->GetClass()->GetName();
-}
-
-FFlecsModuleStructInterface::~FFlecsModuleStructInterface()
-{
-}
-
-void FFlecsModuleStructInterface::ImportModule(const flecs::world& InWorld)
-{
-	World = ToFlecsWorld(InWorld);
-	solid_checkf(World.IsValid(), TEXT("World is not valid!"));
-
-	if (ModuleEntity.IsValid())
-	{
-		ModuleEntity.Enable();
-	}
-	else
-	{
-		ModuleEntity = InWorld.entity(StringCast<char>(*GetModuleName()).Get());
-		solid_checkf(ModuleEntity.IsValid(), TEXT("Module entity is not valid!"));
-	}
-
-	ModuleEntity.Add(flecs::Module);
-		
-	InitializeModule(World.Get(), ModuleEntity);
-}
-
-void FFlecsModuleStructInterface::DeinitializeModule_Internal()
-{
-	ModuleEntity.Disable();
-	DeinitializeModule(World.Get());
-}
-
-UFlecsWorld* FFlecsModuleStructInterface::GetFlecsWorld() const
-{
-	return World.Get();
 }
