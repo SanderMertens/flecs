@@ -407,8 +407,10 @@ const char* flecs_parse_multiline_string(
             "missing '`' to close multiline string");
         goto error;
     }
+
     char *strval = ecs_strbuf_get(&str);
     if (ecs_meta_set_string(cur, strval) != 0) {
+        ecs_os_free(strval);
         goto error;
     }
     ecs_os_free(strval);

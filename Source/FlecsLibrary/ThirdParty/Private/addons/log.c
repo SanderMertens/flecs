@@ -5,44 +5,9 @@
 
 #include "../private_api.h"
 
-#include <windows.h>
-#include <dbghelp.h>
-#include <stdio.h>
-#include <stdlib.h>
-
 #ifdef FLECS_LOG
 
-void InitializeDbgHelp() {
-    static int initialized = 0;
-    if (!initialized) {
-        SymInitialize(GetCurrentProcess(), NULL, TRUE);
-        initialized = 1;
-    }
-}
-
-void CaptureStackTrace(void** stack, int framesToSkip, int framesToCapture) {
-    const USHORT frames = CaptureStackBackTrace(framesToSkip, framesToCapture, stack, NULL);
-    for (USHORT i = frames; i < framesToCapture; ++i) {
-        stack[i] = NULL;
-    }
-}
-
-void GetStackTraceString(void** stack, int frames, char* buffer, size_t bufferSize) {
-    char symbolBuffer[sizeof(SYMBOL_INFO) + MAX_SYM_NAME * sizeof(TCHAR)];
-    const PSYMBOL_INFO symbol = (PSYMBOL_INFO)symbolBuffer;
-    symbol->SizeOfStruct = sizeof(SYMBOL_INFO);
-    symbol->MaxNameLen = MAX_SYM_NAME;
-
-    buffer[0] = '\0';
-    for (int i = 0; i < frames && stack[i] != NULL; ++i) {
-        DWORD64 displacement = 0;
-        if (SymFromAddr(GetCurrentProcess(), (DWORD64)stack[i], &displacement, symbol)) {
-            snprintf(buffer + strlen(buffer), bufferSize - strlen(buffer), "%s [0x%0llX]\n", symbol->Name, symbol->Address);
-        } else {
-            snprintf(buffer + strlen(buffer), bufferSize - strlen(buffer), "Unknown [0x%p]\n", stack[i]);
-        }
-    }
-}
+#include <ctype.h>
 
 void flecs_colorize_buf(
     char *msg,
@@ -58,9 +23,10 @@ void flecs_colorize_buf(
     bool isVar = false;
     bool overrideColor = false;
     bool autoColor = true;
+    bool dontAppend = false;
 
     for (ptr = msg; (ch = *ptr); ptr++) {
-        bool dontAppend = false;
+        dontAppend = false;
 
         if (!overrideColor) {
             if (isNum && !isdigit(ch) && !isalpha(ch) && (ch != '.') && (ch != '%')) {
@@ -279,9 +245,9 @@ void ecs_parser_errorv_(
         ecs_strbuf_t msg_buf = ECS_STRBUF_INIT;
 
         /* Count number of newlines up until column_arg */
-        int32_t line = 1;
+        int32_t i, line = 1;
         if (expr) {
-            for (int32_t i = 0; i < column; i ++) {
+            for (i = 0; i < column; i ++) {
                 if (expr[i] == '\n') {
                     line ++;
                 }
@@ -319,8 +285,8 @@ void ecs_parser_errorv_(
                 }
             }
 
-            /* Strip newlines from current statement, if any */
-            const char *newline_ptr = strchr(expr, '\n');
+            /* Strip newlines from current statement, if any */            
+            char *newline_ptr = strchr(expr, '\n');
             if (newline_ptr) {
                 /* Strip newline from expr */
                 ecs_strbuf_appendstrn(&msg_buf, expr, 
@@ -332,7 +298,8 @@ void ecs_parser_errorv_(
             ecs_strbuf_appendch(&msg_buf, '\n');
 
             if (column != -1) {
-                for (int32_t c = 0; c < column; c ++) {
+                int32_t c;
+                for (c = 0; c < column; c ++) {
                     ecs_strbuf_appendch(&msg_buf, ' ');
                 }
                 ecs_strbuf_appendch(&msg_buf, '^');
@@ -400,17 +367,6 @@ void ecs_assert_log_(
         ecs_fatal_(file, line, "assert: %s %s",
             cond_str, ecs_strerror(err));
     }
-
-    InitializeDbgHelp();
-
-    void* stack[30];
-    CaptureStackTrace(stack, 2, 30);
-    char callstack_buffer[1024];
-    GetStackTraceString(stack, 30, callstack_buffer, sizeof(callstack_buffer));
-
-    // Log the call stack
-    printf("Call stack:\n%s", callstack_buffer);
-
     ecs_os_api.log_last_error_ = err;
 }
 
@@ -568,7 +524,7 @@ int ecs_log_get_level(void) {
 int ecs_log_set_level(
     int level)
 {
-    const int prev = level;
+    int prev = ecs_os_api.log_level_;
     ecs_os_api.log_level_ = level;
     return prev;
 }
@@ -599,7 +555,7 @@ bool ecs_log_enable_timedelta(
 
 int ecs_log_last_error(void)
 {
-    const int result = ecs_os_api.log_last_error_;
+    int result = ecs_os_api.log_last_error_;
     ecs_os_api.log_last_error_ = 0;
     return result;
 }

@@ -1149,10 +1149,12 @@ ecs_table_t* flecs_table_traverse_add(
     if (node != to || edge->diff) {
         if (edge->diff) {
             *diff = *edge->diff;
-            if (edge->diff->added_flags & EcsIdIsUnion) {
-                diff->added.array = id_ptr;
-                diff->added.count = 1;
-                diff->removed.count = 0;
+            if (diff->added_flags & EcsIdIsUnion) {
+                if (diff->added.count == 1) {
+                    diff->added.array = id_ptr;
+                    diff->added.count = 1;
+                    diff->removed.count = 0;
+                }
             }
         } else {
             diff->added.array = id_ptr;
