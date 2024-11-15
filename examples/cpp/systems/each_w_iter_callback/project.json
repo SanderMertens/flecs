@@ -1,0 +1,11 @@
+{
+    "id": "each_w_iter_callback",
+    "type": "application",
+    "value": {
+        "use": [
+            "flecs"
+        ],
+        "language": "c++",
+        "public": false
+    }
+}

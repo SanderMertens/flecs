@@ -1,0 +1,11 @@
+{
+    "id": "iter_info",
+    "type": "application",
+    "value": {
+        "use": [
+            "flecs"
+        ],
+        "language": "c++",
+        "public": false
+    }
+}
