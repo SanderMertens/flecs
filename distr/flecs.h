@@ -658,6 +658,11 @@ extern "C" {
 /* Useful, but not reliable enough. It can incorrectly flag macro's as unused
  * in standalone builds. */
 #pragma clang diagnostic ignored "-Wunused-macros"
+/* This warning gets thrown by clang even when a code is handling all case
+ * values but not all cases (for example, when the switch contains a LastValue
+ * case). Adding a "default" case fixes the warning, but silences future 
+ * warnings about unhandled cases, which is worse. */
+#pragma clang diagnostic ignored "-Wswitch-default"
 #if __clang_major__ == 13
 /* clang 13 can throw this warning for a define in ctype.h */
 #pragma clang diagnostic ignored "-Wreserved-identifier"

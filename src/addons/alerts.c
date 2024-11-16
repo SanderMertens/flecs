@@ -219,6 +219,7 @@ ecs_entity_t flecs_alert_out_of_range_kind(
     case EcsString:
     case EcsEntity:
     case EcsId:
+    default:
         return 0;
     }
 
