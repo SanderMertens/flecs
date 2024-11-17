@@ -2168,6 +2168,20 @@ void Entity_set_version_while_deferred(void) {
     ecs_set_version(world, e1 |= 0x200000000ul);
 }
 
+void Entity_set_version_on_not_alive(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t e = ecs_new(world);
+    ecs_delete(world, e);
+
+    ecs_set_version(world, e);
+
+    ecs_entity_t e_ = ecs_new(world);
+    test_assert(e == e_);
+
+    ecs_fini(world);
+}
+
 static
 void Observer(ecs_iter_t *it) {
     int *invoked = it->ctx;

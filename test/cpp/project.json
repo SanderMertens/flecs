@@ -1093,7 +1093,8 @@
                 "rename_namespace_shorter",
                 "rename_namespace_longer",
                 "rename_namespace_nested",
-                "rename_reparent_root_module"
+                "rename_reparent_root_module",
+                "no_recycle_after_rename_reparent"
             ]
         }, {
             "id": "ImplicitComponents",
