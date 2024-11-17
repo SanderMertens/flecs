@@ -1055,6 +1055,7 @@ void Module_rename_namespace_shorter(void);
 void Module_rename_namespace_longer(void);
 void Module_rename_namespace_nested(void);
 void Module_rename_reparent_root_module(void);
+void Module_no_recycle_after_rename_reparent(void);
 
 // Testsuite 'ImplicitComponents'
 void ImplicitComponents_add(void);
@@ -5498,6 +5499,10 @@ bake_test_case Module_testcases[] = {
     {
         "rename_reparent_root_module",
         Module_rename_reparent_root_module
+    },
+    {
+        "no_recycle_after_rename_reparent",
+        Module_no_recycle_after_rename_reparent
     }
 };
 
@@ -6922,7 +6927,7 @@ static bake_test_suite suites[] = {
         "Module",
         NULL,
         NULL,
-        21,
+        22,
         Module_testcases
     },
     {

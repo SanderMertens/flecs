@@ -4254,11 +4254,13 @@ void ecs_set_version(
 
     flecs_entities_make_alive(world, entity_with_generation);
 
-    ecs_record_t *r = flecs_entities_get(world, entity_with_generation);
-    if (r && r->table) {
-        int32_t row = ECS_RECORD_TO_ROW(r->row);
-        ecs_entity_t *entities = r->table->data.entities;
-        entities[row] = entity_with_generation;
+    if (flecs_entities_is_alive(world, entity_with_generation)) {
+        ecs_record_t *r = flecs_entities_get(world, entity_with_generation);
+        if (r && r->table) {
+            int32_t row = ECS_RECORD_TO_ROW(r->row);
+            ecs_entity_t *entities = r->table->data.entities;
+            entities[row] = entity_with_generation;
+        }
     }
 }
 

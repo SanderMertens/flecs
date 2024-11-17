@@ -21629,6 +21629,14 @@ struct world {
      */
     flecs::entity make_alive(flecs::entity_t e) const;
 
+    /** Set version of entity to provided.
+     * 
+     * @see ecs_set_version()
+     */
+    void set_version(flecs::entity_t e) const {
+        ecs_set_version(world_, e);
+    }
+
     /* Run callback after completing frame */
     void run_post_frame(ecs_fini_action_t action, void *ctx) const {
         ecs_run_post_frame(world_, action, ctx);
@@ -30819,6 +30827,11 @@ inline flecs::entity world::module(const char *name) const {
                 ecs_iter_t it = ecs_each_id(world_, ecs_pair(EcsChildOf, cur));
                 if (!ecs_iter_is_true(&it)) {
                     cur.destruct();
+
+                    // Prevent increasing the generation count of the temporary
+                    // parent. This allows entities created during 
+                    // initialization to keep non-recycled ids.
+                    this->set_version(cur);
                 }
 
                 cur = next;
