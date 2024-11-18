@@ -12,8 +12,8 @@ void UFlecsCVarModule::InitializeModule(UFlecsWorld* InWorld, const FFlecsEntity
 {
 	IConsoleManager& ConsoleManager = IConsoleManager::Get();
 	
-	ConsoleManager.ForEachConsoleObjectThatStartsWith(FConsoleObjectVisitor::CreateLambda(
-		[&, this](const TCHAR* Name, IConsoleObject* CVar)
+	ConsoleManager.ForEachConsoleObjectThatStartsWith(
+		FConsoleObjectVisitor::CreateLambda([&, this](const TCHAR* Name, IConsoleObject* CVar)
 		{
 			RegisterCVar(Name, CVar);
 		}
@@ -26,9 +26,43 @@ void UFlecsCVarModule::InitializeModule(UFlecsWorld* InWorld, const FFlecsEntity
 		.or_().with(flecs::F32).var("$CVarValue")
 		.or_().with(flecs::String).var("$CVarValue")
 		.or_().with(flecs::Bool).var("$CVarValue")
-		.each([](flecs::entity CVarEntity)
+		.each([&](flecs::entity CVarEntity)
 		{
+			if (bOutsideChange)
+			{
+				bOutsideChange = false;
+				return;
+			}
+
+			solid_checkf(CVarEntity.has<FFlecsCVarComponent>(flecs::Wildcard),
+				TEXT("CVar entity missing CVar component"));
+
+			IConsoleVariable* CVar = ConsoleManager.FindConsoleVariable(StringCast<TCHAR>(CVarEntity.name().c_str()).Get());
+			solid_checkf(CVar, TEXT("CVar not found for entity %s"), StringCast<TCHAR>(CVarEntity.name().c_str()).Get());
 			
+			if (CVar->IsVariableInt())
+			{
+				CVar->Set(*CVarEntity.get<FFlecsCVarComponent, int32>());
+			}
+			else if (CVar->IsVariableFloat())
+			{
+				CVar->Set(*CVarEntity.get<FFlecsCVarComponent, float>());
+			}
+			else if (CVar->IsVariableString())
+			{
+				CVar->Set(CVarEntity.get<FFlecsCVarComponent, FString>()->GetCharArray().GetData());
+			}
+			else if (CVar->IsVariableBool())
+			{
+				CVar->Set(*CVarEntity.get<FFlecsCVarComponent, bool>());
+			}
+			else
+			{
+				UN_LOGF(LogFlecsCVarModule, Error,
+					"Unknown CVar type for %s", *CVarEntity.name().c_str());
+			}
+
+			bOutsideChange = false;
 		});
 }
 
@@ -72,9 +106,11 @@ void UFlecsCVarModule::RegisterCVar(const TCHAR* Name, IConsoleObject* CVar)
 				return;
 			}
 
-			CVar->AsVariable()->SetOnChangedCallback(FConsoleVariableDelegate::CreateLambda(
-				[&, CVarEntity](IConsoleVariable* ChangedVar)
+			CVar->AsVariable()->SetOnChangedCallback(
+				FConsoleVariableDelegate::CreateLambda([&, CVarEntity](IConsoleVariable* ChangedVar)
 				{
+					bOutsideChange = true;
+					
 					if (ChangedVar->IsVariableInt())
 					{
 						CVarEntity.SetPair<FFlecsCVarComponent, int32>(ChangedVar->GetInt());
@@ -94,6 +130,7 @@ void UFlecsCVarModule::RegisterCVar(const TCHAR* Name, IConsoleObject* CVar)
 					else
 					{
 						UN_LOGF(LogFlecsCVarModule, Error, "Unknown CVar type for %s", Name);
+						bOutsideChange = false;
 						return;
 					}
 				}

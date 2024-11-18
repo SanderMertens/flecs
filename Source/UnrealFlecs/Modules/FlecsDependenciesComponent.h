@@ -5,6 +5,8 @@
 #include <functional>
 
 #include "CoreMinimal.h"
+#include "flecs.h"
+#include "Properties/FlecsComponentProperties.h"
 #include "Entities/FlecsEntityHandle.h"
 #include "FlecsDependenciesComponent.generated.h"
 
@@ -18,3 +20,5 @@ struct UNREALFLECS_API FFlecsDependenciesComponent
 public:
 	TMap<UClass*, std::function<void(UObject*, UFlecsWorld*, FFlecsEntityHandle)>> Dependencies;
 }; // struct FFlecsDependenciesComponent
+
+REGISTER_COMPONENT_TAG_PROPERTIES(FFlecsDependenciesComponent, flecs::Sparse);

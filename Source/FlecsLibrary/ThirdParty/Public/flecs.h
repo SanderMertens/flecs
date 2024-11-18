@@ -243,7 +243,7 @@
  * operations. Component ids that fall outside of this range use a regular map
  * lookup, which is slower but more memory efficient. */
 #ifndef FLECS_HI_COMPONENT_ID
-#define FLECS_HI_COMPONENT_ID (512)
+#define FLECS_HI_COMPONENT_ID (2048)
 #endif
 
 /** @def FLECS_HI_ID_RECORD_ID
@@ -253,7 +253,7 @@
  * lookup, which is slower but more memory efficient.
  */
 #ifndef FLECS_HI_ID_RECORD_ID
-#define FLECS_HI_ID_RECORD_ID (1024)
+#define FLECS_HI_ID_RECORD_ID (4096)
 #endif
 
 /** @def FLECS_SPARSE_PAGE_BITS

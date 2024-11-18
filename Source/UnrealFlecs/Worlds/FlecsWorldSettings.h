@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "SolidMacros/Macros.h"
-#include "InstancedStruct.h"
+#include "Standard/Hashing.h"
 #include "FlecsWorldSettings.generated.h"
 
 USTRUCT(BlueprintType)
@@ -22,8 +22,7 @@ public:
     
     FORCEINLINE FFlecsWorldSettings(const FString& InWorldName, const bool bInAutoTickWorld = true,
         const bool bInDefaultAutoMerge = true, const int32 InDefaultWorkerThreads = 4,
-        const TArray<TObjectPtr<UObject>>& InModules = {},
-        const TArray<FInstancedStruct>& InModuleStructs = {})
+        const TArray<TObjectPtr<UObject>>& InModules = {})
         : WorldName(InWorldName)
         , bAutoTickWorld(bInAutoTickWorld)
         , bDefaultAutoMerge(bInDefaultAutoMerge)
@@ -63,4 +62,6 @@ public:
     //TArray<FInstancedStruct> ModuleStructs;
     
 }; // struct FFlecsWorldSettings
+
+DEFINE_STD_HASH(FFlecsWorldSettings);
 

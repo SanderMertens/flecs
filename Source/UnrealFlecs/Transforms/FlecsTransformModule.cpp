@@ -40,7 +40,7 @@ void UFlecsTransformModule::InitializeModule(UFlecsWorld* InWorld, const FFlecsE
 				.SetTrait<FFlecsTransformComponent, FFlecsRelativeCacheTrait>(FFlecsRelativeCacheTrait{ RelativeEntity });
 		});
 
-	InWorld->CreateObserver<FFlecsTransformComponent&, const FFlecsTransformComponent&>(TEXT("TransformPropagateObserver"))
+	/*InWorld->CreateObserver<FFlecsTransformComponent&, const FFlecsTransformComponent&>(TEXT("TransformPropagateObserver"))
 		.term_at(0).event(flecs::OnSet)
 		.term_at(1).parent().cascade().filter()
 		.yield_existing()
@@ -66,7 +66,7 @@ void UFlecsTransformModule::InitializeModule(UFlecsWorld* InWorld, const FFlecsE
 			{
 				Transform.GlobalTransform = Transform.Transform;
 			}
-		});
+		});*/
 	
 	/*InWorld->CreateSystemWithBuilder(
 		TEXT("FlecsTransformPropagateSystem"))

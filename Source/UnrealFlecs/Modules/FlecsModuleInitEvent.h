@@ -3,10 +3,10 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "ConsoleVariableComponents.generated.h"
+#include "FlecsModuleInitEvent.generated.h"
 
 USTRUCT(BlueprintType)
-struct UNREALFLECS_API FFlecsCVarComponent
+struct UNREALFLECS_API FFlecsModuleInitEvent
 {
 	GENERATED_BODY()
-}; // struct FFlecsCVarComponent
+}; // struct FFlecsModuleInitEvent

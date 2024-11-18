@@ -1,6 +1,7 @@
 ﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 #include "FlecsModuleInterface.h"
+#include "FlecsModuleInitEvent.h"
 #include "Components/FlecsModuleComponent.h"
 #include "Components/FlecsWorldPtrComponent.h"
 #include "Logs/FlecsCategories.h"
@@ -26,11 +27,16 @@ inline void IFlecsModuleInterface::ImportModule(flecs::world& InWorld)
 		
 	InitializeModule(World.Get(), ModuleEntity);
 	Execute_BP_InitializeModule(_getUObject(), World.Get());
-
-	UN_LOGF(LogFlecsCore, Log,
-		"Imported module: %s", *IFlecsModuleInterface::Execute_GetModuleName(_getUObject()));
 	
 	World->SetScope(OldScope);
+
+	World->Event<FFlecsModuleInitEvent>()
+		.id<FFlecsModuleComponent>()
+		.entity(ModuleEntity)
+		.emit();
+	
+	UN_LOGF(LogFlecsCore, Log,
+		"Imported module: %s", *IFlecsModuleInterface::Execute_GetModuleName(_getUObject()));
 }
 
 inline void IFlecsModuleInterface::DeinitializeModule_Internal()

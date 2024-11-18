@@ -100,16 +100,19 @@ struct UNREALFLECS_API FFlecsPair
 				InFirstScriptStructEntity
 					= InEntityHandle.ObtainComponentTypeStruct(First.ScriptStruct.GetScriptStruct());
 				
-				if (InFirstScriptStructEntity.Has(flecs::PairIsTag))
-				{
-					InEntityHandle.SetPairSecond(First.ScriptStruct.GetScriptStruct(),
-						Second.ScriptStruct.GetScriptStruct(), Second.ScriptStruct.GetMemory());
-				}
-				else
-				{
-					InEntityHandle.SetPair(First.ScriptStruct.GetScriptStruct(),
+				// //if (InFirstScriptStructEntity.Has(flecs::Tag))
+				// {
+				// 	InEntityHandle.SetPairSecond(First.ScriptStruct.GetScriptStruct(),
+				// 		Second.ScriptStruct.GetScriptStruct(), Second.ScriptStruct.GetMemory());
+				// }
+				// else
+				// {
+				// 	InEntityHandle.SetPair(First.ScriptStruct.GetScriptStruct(),
+				// 		First.ScriptStruct.GetMemory(), Second.ScriptStruct.GetScriptStruct());
+				// }
+				
+				InEntityHandle.SetPair(First.ScriptStruct.GetScriptStruct(),
 						First.ScriptStruct.GetMemory(), Second.ScriptStruct.GetScriptStruct());
-				}
 				
 				break;
 			case EFlecsPairNodeType::EntityHandle:

@@ -22,5 +22,7 @@ public:
 	UPROPERTY()
 	FFlecsSystem CVarSystem;
 
+	bool bOutsideChange = false;
+
 
 }; // class UFlecsCVarModule

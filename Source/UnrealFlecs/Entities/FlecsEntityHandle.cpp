@@ -74,7 +74,7 @@ bool FFlecsEntityHandle::NetSerialize(FArchive& Ar, UPackageMap* Map, bool& bOut
         const flecs::query<const FFlecsNetworkIdComponent> Query = FlecsWorldSubsystem->GetDefaultWorld()->World
             .query<const FFlecsNetworkIdComponent>();
 
-        const FFlecsEntityHandle EntityHandle = Query.find([&Info](const FFlecsNetworkIdComponent& InNetworkId)
+        const FFlecsEntityHandle EntityHandle = Query.find([&](const FFlecsNetworkIdComponent& InNetworkId)
         {
             return InNetworkId == Info.NetworkId;
         });
@@ -137,12 +137,12 @@ void FFlecsEntityHandle::ObtainFlecsWorld()
 
 void FFlecsEntityHandle::PostScriptConstruct()
 {
-    if (!GWorld  || !GWorld->IsGameWorld())
+    if (GetEntity().id() == 0)
     {
         return;
     }
-
-    if (GetEntity().id() == 0)
+    
+    if (!GWorld  || !GWorld->IsGameWorld())
     {
         return;
     }

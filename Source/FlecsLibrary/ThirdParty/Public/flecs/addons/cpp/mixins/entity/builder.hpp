@@ -685,8 +685,22 @@ struct entity_builder : entity_view {
     }
 
     const Self& set_ptr(entity_t comp, const void *ptr) const  {
-        const flecs::Component *cptr = ecs_get(
-            this->world_, comp, EcsComponent);
+        const flecs::Component *cptr = nullptr;
+        if (ECS_IS_PAIR(comp)) {
+            if (const flecs::entity_t rel = ecs_pair_first(this->world_, comp);
+                ecs_has(this->world_, rel, EcsComponent)) {
+                cptr = ecs_get(this->world_, rel, EcsComponent);
+            }
+            else if (flecs::entity_t target = ecs_pair_second(this->world_, comp); 
+                ecs_has(this->world_, target, EcsComponent)) 
+            {
+                cptr = ecs_get(this->world_, target, EcsComponent);
+            }
+        }
+        else
+        {
+            cptr = ecs_get(this->world_, comp, EcsComponent);
+        }
 
         /* Can't set if it's not a component */
         ecs_assert(cptr != NULL, ECS_INVALID_PARAMETER, NULL);
@@ -841,7 +855,7 @@ struct entity_builder : entity_view {
     const Self& set_second(const Second& value) const  {
         flecs::set<pair_object<First, Second>>(this->world_, this->id_, value);
         return to_base();
-    }    
+    }
 
     /** Set 1..N components.
      * This operation accepts a callback with as arguments the components to

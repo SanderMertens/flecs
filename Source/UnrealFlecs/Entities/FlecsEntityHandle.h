@@ -1246,7 +1246,7 @@ public:
 		return GetEntity().has(InFirst, InSecond);
 	}
 
-	template <typename TFirst, typename TSecond, typename TActual = TSecond>
+	template <typename TFirst, typename TSecond, typename TActual>
 	SOLID_INLINE void SetPair(const TActual& InValue) const
 	{
 		GetEntity().set<TFirst, TSecond>(InValue);
@@ -1266,38 +1266,61 @@ public:
 
 	SOLID_INLINE void SetPair(const UScriptStruct* InFirst, const void* InValue, const UScriptStruct* InSecond) const
 	{
-		AddPair(InFirst, InSecond);
-		Set(InFirst, InValue);
+		if (!HasPair(InFirst, InSecond))
+		{
+			AddPair(InFirst, InSecond);
+		}
+		
+		GetEntity().set_ptr(ObtainComponentTypeStruct(InFirst), InValue);
 	}
 
 	SOLID_INLINE void SetPair(const UScriptStruct* InFirst, const void* InValue, const FGameplayTag& InSecond) const
 	{
-		AddPair(InFirst, InSecond);
-		Set(InFirst, InValue);
+		if (!HasPair(InFirst, InSecond))
+		{
+			AddPair(InFirst, InSecond);
+		}
+		
+		GetEntity().set_ptr(ecs_pair(ObtainComponentTypeStruct(InFirst).GetEntity(), GetTagEntity(InSecond).GetEntity()),
+			InValue);
 	}
 
 	SOLID_INLINE void SetPair(const UScriptStruct* InFirst, const void* InValue, const FFlecsEntityHandle& InSecond) const
 	{
-		AddPair(InFirst, InSecond);
-		Set(InFirst, InValue);
+		if (!HasPair(InFirst, InSecond))
+		{
+			AddPair(InFirst, InSecond);
+		}
+		
+		GetEntity().set_ptr(ObtainComponentTypeStruct(InFirst), InValue);
 	}
 
-	SOLID_INLINE void SetPairSecond(const UScriptStruct* InFirst, const UScriptStruct* InSecond, const void* InValue) const
+	template <typename TFirst, typename TSecond, typename TActual>
+	SOLID_INLINE void SetPairSecond(const TActual& InSecond) const
 	{
-		AddPair(InFirst, InSecond);
-		Set(InSecond, InValue);
+		GetEntity().set_second<TFirst, TSecond>(InSecond);
 	}
 
 	SOLID_INLINE void SetPairSecond(const FFlecsEntityHandle& InFirst, const UScriptStruct* InSecond, const void* InValue) const
 	{
-		AddPair(InFirst, InSecond);
-		Set(InSecond, InValue);
+		if (!HasPair(InFirst, InSecond))
+		{
+			AddPair(InFirst, InSecond);
+		}
+		
+		GetEntity().set_ptr(ecs_pair(InFirst.GetEntity(), ObtainComponentTypeStruct(InSecond).GetEntity()),
+			InSecond->GetStructureSize(), InValue);
 	}
 
 	SOLID_INLINE void SetPairSecond(const FGameplayTag& InFirst, const UScriptStruct* InSecond, const void* InValue) const
 	{
-		AddPair(InFirst, InSecond);
-		Set(InSecond, InValue);
+		if (!HasPair(InFirst, InSecond))
+		{
+			AddPair(InFirst, InSecond);
+		}
+		
+		GetEntity().set_ptr(
+			ecs_pair(GetTagEntity(InFirst).GetEntity(), ObtainComponentTypeStruct(InSecond).GetEntity()), InValue);
 	}
 	
 	template <typename TFirst, typename TSecond>

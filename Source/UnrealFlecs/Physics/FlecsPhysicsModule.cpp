@@ -24,7 +24,7 @@ void UFlecsPhysicsModule::InitializeModule(UFlecsWorld* InWorld, const FFlecsEnt
 	solid_check(Scene);
 
 	GetFlecsWorld()->RegisterModuleDependency<UFlecsTickerModule>
-		(this, [&](MAYBE_UNUSED UFlecsTickerModule* InModuleObject,
+		(this, [&](UFlecsTickerModule* InModuleObject,
 			UFlecsWorld* InFlecsWorld, FFlecsEntityHandle& InTickerEntity)
 		{
 			InFlecsWorld->SetSingleton<FFlecsPhysicsSceneComponent>(FFlecsPhysicsSceneComponent{ Scene });

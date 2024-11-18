@@ -30,5 +30,4 @@ public:
 	TArray<FTickerPhysicsHistoryItem> HistoryItems;
 }; // struct FTickerPhysicsHistoryComponent
 
-REGISTER_FLECS_PROPERTIES(FTickerPhysicsHistoryComponent,
-	{ flecs::Sparse }, { } )
+REGISTER_COMPONENT_TAG_PROPERTIES(FTickerPhysicsHistoryComponent, flecs::Sparse);

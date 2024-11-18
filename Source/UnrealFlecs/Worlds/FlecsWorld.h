@@ -5,6 +5,8 @@
 // ReSharper disable CppMemberFunctionMayBeStatic
 #pragma once
 
+#include <mutex>
+
 #include "CoreMinimal.h"
 #include "flecs.h"
 
@@ -21,6 +23,7 @@
 #include "Entities/FlecsId.h"
 #include "Logs/FlecsCategories.h"
 #include "Modules/FlecsDependenciesComponent.h"
+#include "Modules/FlecsModuleInitEvent.h"
 #include "Modules/FlecsModuleInterface.h"
 #include "Modules/FlecsModuleProgressInterface.h"
 #include "Prefabs/FlecsPrefabAsset.h"
@@ -98,8 +101,6 @@ public:
 		
         ecs_os_api_t os_api = ecs_os_api;
 
-		#if 0
-
         os_api.thread_new_ = [](ecs_os_thread_callback_t Callback, void* Param) -> ecs_os_thread_t
         {
             FFlecsThread* FlecsThread = static_cast<FFlecsThread*>(
@@ -126,42 +127,51 @@ public:
         	
             return nullptr;
         };
-		
-        struct FFlecsSpinLock
-        {
-            volatile int32 LockFlag = 0;
-        }; // struct FFlecsSpinLock
+
+		struct FFlecsMutex
+		{
+			FORCEINLINE void Lock() const
+			{
+				Mutex.lock();
+			}
+
+			FORCEINLINE void Unlock() const
+			{
+				Mutex.unlock();
+			}
+			
+			mutable std::mutex Mutex;
+		}; // struct FFlecsMutex
 
 		os_api.mutex_new_ = []() -> ecs_os_mutex_t
 		{
-			FFlecsSpinLock* SpinLock = static_cast<FFlecsSpinLock*>(FMemory::Malloc(
-				sizeof(FFlecsSpinLock), alignof(FFlecsSpinLock)));
-			SpinLock->LockFlag = 0;
-			return reinterpret_cast<ecs_os_mutex_t>(SpinLock);
+			FFlecsMutex* Mutex = new FFlecsMutex();
+			return reinterpret_cast<ecs_os_mutex_t>(Mutex);
 		};
 
         os_api.mutex_free_ = [](ecs_os_mutex_t Mutex)
         {
-	        FFlecsSpinLock* SpinLock = reinterpret_cast<FFlecsSpinLock*>(Mutex);
-            FMemory::Free(SpinLock);
+        	FFlecsMutex* MutexPtr = reinterpret_cast<FFlecsMutex*>(Mutex);
+			delete MutexPtr;
         };
 
         os_api.mutex_lock_ = [](ecs_os_mutex_t Mutex)
         {
-	        FFlecsSpinLock* SpinLock = reinterpret_cast<FFlecsSpinLock*>(Mutex);
-            while (FPlatformAtomics::InterlockedCompareExchange(&SpinLock->LockFlag, 1, 0) != 0)
-            {
-                // Busy wait (spin)
-            }
+        	FFlecsMutex* MutexPtr = reinterpret_cast<FFlecsMutex*>(Mutex);
+        	ASSUME(MutexPtr);
+        	MutexPtr->Lock();
         };
 
         os_api.mutex_unlock_ = [](ecs_os_mutex_t Mutex)
         {
-	        FFlecsSpinLock* SpinLock = reinterpret_cast<FFlecsSpinLock*>(Mutex);
-            FPlatformAtomics::InterlockedExchange(&SpinLock->LockFlag, 0);
+        	FFlecsMutex* MutexPtr = reinterpret_cast<FFlecsMutex*>(Mutex);
+        	ASSUME(MutexPtr);
+        	MutexPtr->Unlock();
         };
 
-		#endif // 0
+		os_api.task_new_ = [](ecs_os_thread_callback_t Callback, void* Param) -> ecs_os_thread_t
+		{
+		};
 
         // Sleep function using minimal overhead
         os_api.sleep_ = [](int32_t Seconds, int32_t Nanoseconds)
@@ -418,14 +428,24 @@ public:
 					UN_LOGF(LogFlecsWorld, Log, "Progress module %s added",
 						*InUObjectComponent.GetObjectChecked()->GetName());
 				}
+			});
 
-				DependenciesComponentQuery.each([&](flecs::entity ModuleEntity,
-					const FFlecsDependenciesComponent& InDependencies)
+		CreateObserver<FFlecsModuleComponent, FFlecsUObjectComponent>(TEXT("ModuleInitEventObserver"))
+			.event<FFlecsModuleInitEvent>()
+			.term_at(1).filter().read()
+			.each([&](flecs::iter& Iter, const size_t IterIndex,
+				const FFlecsModuleComponent& InModuleComponent, const FFlecsUObjectComponent& InUObjectComponent)
+			{
+				FFlecsEntityHandle ModuleEntity = Iter.entity(IterIndex);
+				
+				DependenciesComponentQuery.each([&](flecs::entity InEntity,
+					const FFlecsDependenciesComponent& InDependenciesComponent)
 				{
-					if (InDependencies.Dependencies.Contains(InModuleComponent.ModuleClass))
+					if (InDependenciesComponent.Dependencies.Contains(InModuleComponent.ModuleClass))
 					{
-						auto& Dependency = InDependencies.Dependencies[InModuleComponent.ModuleClass];
-						Dependency(InUObjectComponent.GetObjectChecked(), this, ModuleEntity);
+						const std::function<void(UObject*, UFlecsWorld*, FFlecsEntityHandle)>& Function
+							= InDependenciesComponent.Dependencies[InModuleComponent.ModuleClass];
+						Function(InUObjectComponent.GetObjectChecked(), this, ModuleEntity);
 					}
 				});
 			});
@@ -1284,7 +1304,7 @@ public:
 			return Handle;
 		}
 		
-		FFlecsEntityHandle EnumComponent = World.entity(StringCast<char>(*Enum->GetName()).Get())
+		FFlecsEntityHandle EnumComponent = World.component(StringCast<char>(*Enum->GetName()).Get())
 			.set<flecs::Component>({ sizeof(int32), alignof(int32) })
 			.set<FFlecsScriptEnumComponent>({ Enum });
 		
@@ -1314,7 +1334,7 @@ public:
 			return Handle;
 		}
 		
-		FFlecsEntityHandle ScriptStructComponent = World.entity(StringCast<char>(*ScriptStruct->GetStructCPPName()).Get())
+		FFlecsEntityHandle ScriptStructComponent = World.component(StringCast<char>(*ScriptStruct->GetStructCPPName()).Get())
 			.set<flecs::Component>({ ScriptStruct->GetStructureSize(), ScriptStruct->GetMinAlignment() })
 			.set<FFlecsScriptStructComponent>({ ScriptStruct });
 		
@@ -1409,7 +1429,7 @@ public:
 	}
 
 	template <typename TEvent>
-	FORCEINLINE_DEBUGGABLE flecs::event_builder Event() const
+	FORCEINLINE_DEBUGGABLE flecs::event_builder_typed<TEvent> Event() const
 	{
 		return World.event<TEvent>();
 	}

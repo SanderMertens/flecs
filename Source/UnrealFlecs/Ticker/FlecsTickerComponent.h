@@ -20,6 +20,5 @@ public:
 	
 }; // struct FFlecsTickerComponent
 
-REGISTER_FLECS_PROPERTIES(FFlecsTickerComponent,
-	{ flecs::Sparse }, {})
+REGISTER_COMPONENT_TAG_PROPERTIES(FFlecsTickerComponent, flecs::Sparse)
 
