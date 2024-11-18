@@ -169,10 +169,6 @@ public:
         	MutexPtr->Unlock();
         };
 
-		os_api.task_new_ = [](ecs_os_thread_callback_t Callback, void* Param) -> ecs_os_thread_t
-		{
-		};
-
         // Sleep function using minimal overhead
         os_api.sleep_ = [](int32_t Seconds, int32_t Nanoseconds)
         {
