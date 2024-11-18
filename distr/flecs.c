@@ -73679,9 +73679,6 @@ ecs_trav_down_t* flecs_trav_entity_down(
     ecs_assert(idr_with != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(idr_trav != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    flecs_trav_entity_down_isa(
-        world, a, cache, dst, trav, e, idr_with, self, empty);
-
     int32_t first = ecs_vec_count(&dst->elems);
 
     ecs_table_cache_iter_t it;
@@ -73777,6 +73774,12 @@ ecs_trav_down_t* flecs_query_get_down_cache(
     }
 
     ecs_vec_init_t(a, &result->elems, ecs_trav_down_elem_t, 0);
+
+    /* Cover IsA -> trav paths. If a parent inherits a component, then children
+     * of that parent should find the component through up traversal. */
+    flecs_trav_entity_down_isa(
+        world, a, cache, result, trav, e, idr_with, self, empty);
+
     flecs_trav_entity_down(
         world, a, cache, result, trav, e, idr_trav, idr_with, self, empty);
     result->ready = true;

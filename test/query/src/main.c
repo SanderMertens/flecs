@@ -1496,6 +1496,10 @@ void Traversal_this_written_self_up_isa_childof(void);
 void Traversal_this_written_self_up_isa_isa_childof(void);
 void Traversal_this_written_self_up_isa_childof_isa(void);
 void Traversal_this_written_self_up_isa_childof_isa_childof(void);
+void Traversal_this_up_isa_childof_2_lvl(void);
+void Traversal_this_up_isa_childof_2_lvl_w_on_instantiate_inherit(void);
+void Traversal_this_up_isa_childof_2_lvl_w_on_instantiate_dont_inherit(void);
+void Traversal_this_up_isa_childof_2_lvl_after_remove_overridex(void);
 
 // Testsuite 'Cascade'
 void Cascade_parent_cascade(void);
@@ -7969,6 +7973,22 @@ bake_test_case Traversal_testcases[] = {
     {
         "this_written_self_up_isa_childof_isa_childof",
         Traversal_this_written_self_up_isa_childof_isa_childof
+    },
+    {
+        "this_up_isa_childof_2_lvl",
+        Traversal_this_up_isa_childof_2_lvl
+    },
+    {
+        "this_up_isa_childof_2_lvl_w_on_instantiate_inherit",
+        Traversal_this_up_isa_childof_2_lvl_w_on_instantiate_inherit
+    },
+    {
+        "this_up_isa_childof_2_lvl_w_on_instantiate_dont_inherit",
+        Traversal_this_up_isa_childof_2_lvl_w_on_instantiate_dont_inherit
+    },
+    {
+        "this_up_isa_childof_2_lvl_after_remove_overridex",
+        Traversal_this_up_isa_childof_2_lvl_after_remove_overridex
     }
 };
 
@@ -10521,7 +10541,7 @@ static bake_test_suite suites[] = {
         "Traversal",
         Traversal_setup,
         NULL,
-        147,
+        151,
         Traversal_testcases,
         1,
         Traversal_params
