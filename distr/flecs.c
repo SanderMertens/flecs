@@ -73533,7 +73533,6 @@ ecs_trav_down_t* flecs_trav_entity_down(
     ecs_trav_up_cache_t *cache,
     ecs_trav_down_t *dst,
     ecs_entity_t trav,
-    ecs_entity_t entity,
     ecs_id_record_t *idr_trav,
     ecs_id_record_t *idr_with,
     bool self,
@@ -73593,7 +73592,7 @@ ecs_trav_down_t* flecs_trav_table_down(
             }
 
             flecs_trav_entity_down(world, a, cache, dst, 
-                trav, entity, idr_trav, idr_with, self, empty);
+                trav, idr_trav, idr_with, self, empty);
         }
     }
 
@@ -73650,7 +73649,7 @@ void flecs_trav_entity_down_isa(
                     ecs_id_record_t *idr_trav = flecs_id_record_get(world, 
                         ecs_pair(trav, e));
                     if (idr_trav) {
-                        flecs_trav_entity_down(world, a, cache, dst, trav, e,
+                        flecs_trav_entity_down(world, a, cache, dst, trav,
                             idr_trav, idr_with, self, empty);
                     }
 
@@ -73669,7 +73668,6 @@ ecs_trav_down_t* flecs_trav_entity_down(
     ecs_trav_up_cache_t *cache,
     ecs_trav_down_t *dst,
     ecs_entity_t trav,
-    ecs_entity_t e,
     ecs_id_record_t *idr_trav,
     ecs_id_record_t *idr_with,
     bool self,
@@ -73777,11 +73775,13 @@ ecs_trav_down_t* flecs_query_get_down_cache(
 
     /* Cover IsA -> trav paths. If a parent inherits a component, then children
      * of that parent should find the component through up traversal. */
-    flecs_trav_entity_down_isa(
-        world, a, cache, result, trav, e, idr_with, self, empty);
+    if (idr_with->flags & EcsIdOnInstantiateInherit) {
+        flecs_trav_entity_down_isa(
+            world, a, cache, result, trav, e, idr_with, self, empty);
+    }
 
     flecs_trav_entity_down(
-        world, a, cache, result, trav, e, idr_trav, idr_with, self, empty);
+        world, a, cache, result, trav, idr_trav, idr_with, self, empty);
     result->ready = true;
 
     return result;
@@ -73923,7 +73923,7 @@ ecs_trav_up_t* flecs_trav_table_up(
                 &up_pair, table, r_column + 1, rel, &type);
         }
 
-        if (!is_a) {
+        if (!is_a && (idr_with->flags & EcsIdOnInstantiateInherit)) {
             idr_trav = world->idr_isa_wildcard;
             r_column = flecs_trav_type_search(
                     &up_pair, table, idr_trav, &type);

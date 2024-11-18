@@ -1499,7 +1499,11 @@ void Traversal_this_written_self_up_isa_childof_isa_childof(void);
 void Traversal_this_up_isa_childof_2_lvl(void);
 void Traversal_this_up_isa_childof_2_lvl_w_on_instantiate_inherit(void);
 void Traversal_this_up_isa_childof_2_lvl_w_on_instantiate_dont_inherit(void);
-void Traversal_this_up_isa_childof_2_lvl_after_remove_overridex(void);
+void Traversal_this_up_isa_childof_2_lvl_after_remove_override(void);
+void Traversal_this_written_up_isa_childof_2_lvl(void);
+void Traversal_this_written_up_isa_childof_2_lvl_w_on_instantiate_inherit(void);
+void Traversal_this_written_up_isa_childof_2_lvl_w_on_instantiate_dont_inherit(void);
+void Traversal_this_written_up_isa_childof_2_lvl_after_remove_override(void);
 
 // Testsuite 'Cascade'
 void Cascade_parent_cascade(void);
@@ -7987,8 +7991,24 @@ bake_test_case Traversal_testcases[] = {
         Traversal_this_up_isa_childof_2_lvl_w_on_instantiate_dont_inherit
     },
     {
-        "this_up_isa_childof_2_lvl_after_remove_overridex",
-        Traversal_this_up_isa_childof_2_lvl_after_remove_overridex
+        "this_up_isa_childof_2_lvl_after_remove_override",
+        Traversal_this_up_isa_childof_2_lvl_after_remove_override
+    },
+    {
+        "this_written_up_isa_childof_2_lvl",
+        Traversal_this_written_up_isa_childof_2_lvl
+    },
+    {
+        "this_written_up_isa_childof_2_lvl_w_on_instantiate_inherit",
+        Traversal_this_written_up_isa_childof_2_lvl_w_on_instantiate_inherit
+    },
+    {
+        "this_written_up_isa_childof_2_lvl_w_on_instantiate_dont_inherit",
+        Traversal_this_written_up_isa_childof_2_lvl_w_on_instantiate_dont_inherit
+    },
+    {
+        "this_written_up_isa_childof_2_lvl_after_remove_override",
+        Traversal_this_written_up_isa_childof_2_lvl_after_remove_override
     }
 };
 
@@ -10541,7 +10561,7 @@ static bake_test_suite suites[] = {
         "Traversal",
         Traversal_setup,
         NULL,
-        151,
+        155,
         Traversal_testcases,
         1,
         Traversal_params
