@@ -121,6 +121,10 @@ void register_lifecycle_actions(
     }
 }
 
+FLECS_API struct type_impl_struct_event_info {
+    UScriptStruct* scriptStruct;
+};
+
 // Class that manages component ids across worlds & binaries.
 // The type class stores the component id for a C++ type in a static global
 // variable that is shared between worlds. Whenever a component is used this
@@ -131,9 +135,6 @@ void register_lifecycle_actions(
 // is not known the component has been registered by another world and will be
 // registered with the world using the same id. If the id does exist, the class
 // will register it as a component, and verify whether the input is consistent.
-    FLECS_API struct type_impl_struct_event_info {
-    UScriptStruct* scriptStruct;
-    };
     
 template <typename T>
 struct type_impl {
