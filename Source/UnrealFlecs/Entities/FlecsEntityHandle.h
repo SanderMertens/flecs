@@ -1211,7 +1211,7 @@ public:
 	template <typename TFirst>
 	SOLID_INLINE NO_DISCARD bool HasPair(const FFlecsEntityHandle& InSecond) const
 	{
-		return GetEntity().has<TFirst>(InSecond);
+		return GetEntity().has<TFirst>(InSecond.GetEntity());
 	}
 
 	template <typename TFirst>
