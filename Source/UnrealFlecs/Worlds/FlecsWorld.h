@@ -216,6 +216,10 @@ public:
                 	UN_LOGF(LogFlecsCore, Warning, "Flecs - File: %s, Line: %d, Message: %s",
 						StringCast<TCHAR>(File).Get(), Line, StringCast<TCHAR>(Message).Get());
                     break;
+            	case 0: // Verbose
+                	UN_LOGF(LogFlecsCore, Verbose, "Flecs - File: %s, Line: %d, Message: %s",
+                		StringCast<TCHAR>(File).Get(), Line, StringCast<TCHAR>(Message).Get());
+                    break;
                 default: // Info and Debug
                 	UN_LOGF(LogFlecsCore, Log, "Flecs - File: %s, Line: %d, Message: %s",
 						StringCast<TCHAR>(File).Get(), Line, StringCast<TCHAR>(Message).Get());
@@ -981,6 +985,8 @@ public:
 		{
 			return;
 		}
+
+		FCoreUObjectDelegates::GarbageCollectComplete.RemoveAll(this);
 		
 		const FAssetRegistryModule* AssetRegistryModule
 			= FModuleManager::LoadModulePtr<FAssetRegistryModule>(TEXT("AssetRegistry"));
@@ -989,8 +995,9 @@ public:
 		{
 			IAssetRegistry& AssetRegistry = AssetRegistryModule->Get();
 			AssetRegistry.OnAssetAdded().RemoveAll(this);
+			AssetRegistry.OnAssetRemoved().RemoveAll(this);
 		}
-
+		
 		World.release();
 		MarkAsGarbage();
 	}

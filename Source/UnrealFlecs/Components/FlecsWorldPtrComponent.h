@@ -44,6 +44,22 @@ struct UNREALFLECS_API FFlecsWorldPtrComponent
 		return *this;
 	}
 
+	FORCEINLINE FFlecsWorldPtrComponent& operator=(const FFlecsWorldPtrComponent&& InComponent)
+	{
+		World = InComponent.World;
+		return *this;
+	}
+
+	FORCEINLINE bool operator==(UFlecsWorld* InWorld) const
+	{
+		return World == InWorld;
+	}
+
+	FORCEINLINE bool operator!=(UFlecsWorld* InWorld) const
+	{
+		return World != InWorld;
+	}
+
 	FORCEINLINE bool operator==(const FFlecsWorldPtrComponent& InComponent) const
 	{
 		return World == InComponent.World;

@@ -7,6 +7,8 @@
 #include "Properties/FlecsComponentProperties.h"
 #include "UWorldPtrComponent.generated.h"
 
+class UWorld;
+
 USTRUCT(BlueprintType)
 struct UNREALFLECS_API FUWorldPtrComponent
 {
@@ -66,5 +68,3 @@ public:
 	TWeakObjectPtr<UWorld> World;
 	
 }; // struct FUWorldPtrComponent
-
-REGISTER_COMPONENT_TAG_PROPERTIES(FUWorldPtrComponent, flecs::Sparse)

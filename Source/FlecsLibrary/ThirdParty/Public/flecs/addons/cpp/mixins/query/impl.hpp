@@ -178,7 +178,7 @@ struct query_base {
     operator query<>() const;
 
 #   ifdef FLECS_JSON
-#   include "../json/query.inl"
+//#   include "../json/query.inl"
 #   endif
 
 protected:

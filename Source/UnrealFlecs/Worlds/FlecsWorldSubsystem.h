@@ -76,8 +76,12 @@ public:
 
 		if (IsValid(DefaultWorld))
 		{
+			DefaultWorld->RemoveSingleton<FFlecsWorldPtrComponent>();
+			DefaultWorld->RemoveSingleton<FUWorldPtrComponent>();
 			DefaultWorld->DestroyWorld();
 		}
+
+		DefaultWorld = nullptr;
 	}
 
 	FORCEINLINE virtual TStatId GetStatId() const override
