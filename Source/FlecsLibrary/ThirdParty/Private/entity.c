@@ -41,7 +41,7 @@ flecs_component_ptr_t flecs_table_get_component(
     int32_t row)
 {
     ecs_check(column_index < table->column_count, ECS_NOT_A_COMPONENT, NULL);
-    const ecs_column_t *column = &table->data.columns[column_index];
+    ecs_column_t *column = &table->data.columns[column_index];
     return (flecs_component_ptr_t){
         .ti = column->ti,
         .ptr = ECS_ELEM(column->data, column->ti->size, row)
@@ -63,7 +63,7 @@ flecs_component_ptr_t flecs_get_component_ptr(
     }
 
     if (idr->flags & EcsIdIsSparse) {
-        const ecs_entity_t entity = ecs_table_entities(table)[row];
+        ecs_entity_t entity = ecs_table_entities(table)[row];
         return (flecs_component_ptr_t){
             .ti = idr->type_info,
             .ptr = flecs_sparse_get_any(idr->sparse, 0, entity)
@@ -113,20 +113,20 @@ void* flecs_get_base_component(
 
     /* Table should always be in the table index for (IsA, *), otherwise the
      * HasBase flag should not have been set */
-    const ecs_table_record_t *tr_isa = flecs_id_record_get_table(
+    ecs_table_record_t *tr_isa = flecs_id_record_get_table(
         world->idr_isa_wildcard, table);
     ecs_check(tr_isa != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    const ecs_type_t type = table->type;
-    const ecs_id_t *ids = type.array;
+    ecs_type_t type = table->type;
+    ecs_id_t *ids = type.array;
     int32_t i = tr_isa->index, end = tr_isa->count + tr_isa->index;
     void *ptr = NULL;
 
     do {
-        const ecs_id_t pair = ids[i ++];
-        const ecs_entity_t base = ecs_pair_second(world, pair);
+        ecs_id_t pair = ids[i ++];
+        ecs_entity_t base = ecs_pair_second(world, pair);
 
-        const ecs_record_t *r = flecs_entities_get(world, base);
+        ecs_record_t *r = flecs_entities_get(world, base);
         ecs_assert(r != NULL, ECS_INTERNAL_ERROR, NULL);
 
         table = r->table;
@@ -142,7 +142,7 @@ void* flecs_get_base_component(
             if (idr->flags & EcsIdIsSparse) {
                 return flecs_sparse_get_any(idr->sparse, 0, base);
             } else {
-                const int32_t row = ECS_RECORD_TO_ROW(r->row);
+                int32_t row = ECS_RECORD_TO_ROW(r->row);
                 return flecs_table_get_component(table, tr->column, row).ptr;
             }
         }
@@ -271,7 +271,7 @@ int32_t flecs_child_type_insert(
 {
     int32_t i, count = type->count;
     for (i = 0; i < count; i ++) {
-        const ecs_id_t cur = type->array[i];
+        ecs_id_t cur = type->array[i];
         if (cur == id) {
             /* Id is already part of type */
             return -1;
@@ -284,7 +284,7 @@ int32_t flecs_child_type_insert(
     }
 
     /* Assumes that the array has enough memory to store the new element. */
-    const int32_t to_move = type->count - i;
+    int32_t to_move = type->count - i;
     if (to_move) {
         ecs_os_memmove(&type->array[i + 1],
             &type->array[i], to_move * ECS_SIZEOF(ecs_id_t));
@@ -313,12 +313,12 @@ void flecs_instantiate_children(
         return;
     }
 
-    const ecs_type_t type = child_table->type;
-    const ecs_data_t *child_data = &child_table->data;
+    ecs_type_t type = child_table->type;
+    ecs_data_t *child_data = &child_table->data;
 
     ecs_entity_t slot_of = 0;
-    const ecs_entity_t *ids = type.array;
-    const int32_t type_count = type.count;
+    ecs_entity_t *ids = type.array;
+    int32_t type_count = type.count;
 
     /* Instantiate child table for each instance */
 
@@ -331,7 +331,7 @@ void flecs_instantiate_children(
      * array, since we'll need this to replace the base with the instance id */
     int j, i, childof_base_index = -1;
     for (i = 0; i < type_count; i ++) {
-        const ecs_id_t id = ids[i];
+        ecs_id_t id = ids[i];
 
         /* If id has DontInherit flag don't inherit it, except for the name
          * and ChildOf pairs. The name is preserved so applications can lookup
@@ -340,8 +340,8 @@ void flecs_instantiate_children(
         if ((id != ecs_pair(ecs_id(EcsIdentifier), EcsName)) &&
             ECS_PAIR_FIRST(id) != EcsChildOf) 
         {
-            const ecs_table_record_t *tr = &child_table->_->records[i];
-            const ecs_id_record_t *idr = (ecs_id_record_t*)tr->hdr.cache;
+            ecs_table_record_t *tr = &child_table->_->records[i];
+            ecs_id_record_t *idr = (ecs_id_record_t*)tr->hdr.cache;
             if (idr->flags & EcsIdOnInstantiateDontInherit) {
                 continue;
             }
@@ -371,12 +371,12 @@ void flecs_instantiate_children(
          * concrete components in the table type so we can check the components
          * that have already been added to the child table type. */
         if (ECS_HAS_ID_FLAG(id, AUTO_OVERRIDE)) {
-            const ecs_id_t concreteId = id & ~ECS_AUTO_OVERRIDE;
+            ecs_id_t concreteId = id & ~ECS_AUTO_OVERRIDE;
             flecs_child_type_insert(&diff.added, component_data, concreteId);
             continue;
         }
 
-        const int32_t storage_index = ecs_table_type_to_column_index(child_table, i);
+        int32_t storage_index = ecs_table_type_to_column_index(child_table, i);
         if (storage_index != -1) {
             component_data[diff.added.count] = 
                 child_data->columns[storage_index].data;
@@ -403,17 +403,18 @@ void flecs_instantiate_children(
 
     /* Instantiate the prefab child table for each new instance */
     const ecs_entity_t *instances = ecs_table_entities(table);
-    const int32_t child_count = ecs_table_count(child_table);
+    int32_t child_count = ecs_table_count(child_table);
     ecs_entity_t *child_ids = flecs_walloc_n(world, ecs_entity_t, child_count);
 
     for (i = row; i < count + row; i ++) {
-        const ecs_entity_t instance = instances[i];
-
+        ecs_entity_t instance = instances[i];
+        ecs_table_t *i_table = NULL;
+ 
         /* Replace ChildOf element in the component array with instance id */
         diff.added.array[childof_base_index] = ecs_pair(EcsChildOf, instance);
 
         /* Find or create table */
-        ecs_table_t* i_table = flecs_table_find_or_create(world, &diff.added);
+        i_table = flecs_table_find_or_create(world, &diff.added);
 
         ecs_assert(i_table != NULL, ECS_INTERNAL_ERROR, NULL);
         ecs_assert(i_table->type.count == diff.added.count,
@@ -426,7 +427,7 @@ void flecs_instantiate_children(
 
 #ifdef FLECS_DEBUG
         for (j = 0; j < child_count; j ++) {
-            const ecs_entity_t child = children[j];        
+            ecs_entity_t child = children[j];        
             ecs_check(child != instance, ECS_INVALID_PARAMETER, 
                 "cycle detected in IsA relationship");
         }
@@ -452,13 +453,13 @@ void flecs_instantiate_children(
             }
 
             /* Get prefab offset, ignore lifecycle generation count */
-            const ecs_entity_t prefab_offset =
+            ecs_entity_t prefab_offset =
                 (uint32_t)children[j] - (uint32_t)ctx_cur.root_prefab;
             ecs_assert(prefab_offset != 0, ECS_INTERNAL_ERROR, NULL);
 
             /* First check if any entity with the desired id exists */
             ecs_entity_t instance_child = (uint32_t)ctx_cur.root_instance + prefab_offset;
-            const ecs_entity_t alive_id = flecs_entities_get_alive(world, instance_child);
+            ecs_entity_t alive_id = flecs_entities_get_alive(world, instance_child);
             if (alive_id && flecs_entities_is_alive(world, alive_id)) {
                 /* Alive entity with requested id exists, can't use offset id */
                 child_ids[j] = ecs_new(world);
@@ -481,8 +482,8 @@ void flecs_instantiate_children(
         /* If children are slots, add slot relationships to parent */
         if (slot_of) {
             for (j = 0; j < child_count; j ++) {
-                const ecs_entity_t child = children[j];
-                const ecs_entity_t i_child = i_children[j];
+                ecs_entity_t child = children[j];
+                ecs_entity_t i_child = i_children[j];
                 flecs_instantiate_slot(world, base, instance, slot_of,
                     child, i_child);
             }
@@ -490,7 +491,7 @@ void flecs_instantiate_children(
 
         /* If prefab child table has children itself, recursively instantiate */
         for (j = 0; j < child_count; j ++) {
-            const ecs_entity_t child = children[j];
+            ecs_entity_t child = children[j];
             flecs_instantiate(world, child, i_table, child_row + j, 1, &ctx_cur);
         }
     }
@@ -508,7 +509,7 @@ void flecs_instantiate(
     int32_t count,
     const ecs_instantiate_ctx_t *ctx)
 {
-    const ecs_record_t *record = flecs_entities_get_any(world, base);
+    ecs_record_t *record = flecs_entities_get_any(world, base);
     ecs_table_t *base_table = record->table;
     if (!base_table) {
         return;
@@ -569,16 +570,17 @@ void flecs_sparse_on_add(
     const ecs_type_t *added,
     bool construct)
 {
-    for (int32_t i = 0; i < added->count; i ++) {
-        const ecs_id_t id = added->array[i];
-        const ecs_id_record_t *idr = flecs_id_record_get(world, id);
+    int32_t i, j;
+    for (i = 0; i < added->count; i ++) {
+        ecs_id_t id = added->array[i];
+        ecs_id_record_t *idr = flecs_id_record_get(world, id);
         if (idr && idr->flags & EcsIdIsSparse) {
             const ecs_type_info_t *ti = idr->type_info;
-            const ecs_xtor_t ctor = ti->hooks.ctor;
-            const ecs_iter_action_t on_add = ti->hooks.on_add;
+            ecs_xtor_t ctor = ti->hooks.ctor;
+            ecs_iter_action_t on_add = ti->hooks.on_add;
             const ecs_entity_t *entities = ecs_table_entities(table);
-            for (int32_t j = 0; j < count; j ++) {
-                const ecs_entity_t e = entities[row + j];
+            for (j = 0; j < count; j ++) {
+                ecs_entity_t e = entities[row + j];
                 void *ptr = flecs_sparse_ensure(idr->sparse, 0, e);
                 ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
                 if (construct && ctor) {
@@ -604,18 +606,19 @@ void flecs_sparse_on_remove(
     int32_t count,
     const ecs_type_t *removed)
 {
-    for (int32_t i = 0; i < removed->count; i ++) {
-        const ecs_id_t id = removed->array[i];
-        const ecs_id_record_t *idr = flecs_id_record_get(world, id);
+    int32_t i, j;
+    for (i = 0; i < removed->count; i ++) {
+        ecs_id_t id = removed->array[i];
+        ecs_id_record_t *idr = flecs_id_record_get(world, id);
         if (idr && idr->flags & EcsIdIsSparse) {
             const ecs_type_info_t *ti = idr->type_info;
             const ecs_table_record_t *tr = 
                 flecs_id_record_get_table(idr, table);
-            const ecs_xtor_t dtor = ti->hooks.dtor;
-            const ecs_iter_action_t on_remove = ti->hooks.on_remove;
+            ecs_xtor_t dtor = ti->hooks.dtor;
+            ecs_iter_action_t on_remove = ti->hooks.on_remove;
             const ecs_entity_t *entities = ecs_table_entities(table);
-            for (int32_t j = 0; j < count; j ++) {
-                const ecs_entity_t e = entities[row + j];
+            for (j = 0; j < count; j ++) {
+                ecs_entity_t e = entities[row + j];
                 if (on_remove) {
                     flecs_invoke_hook(world, table, tr, count, row, 
                         &entities[row + j], id, ti, EcsOnRemove, on_remove);
@@ -638,15 +641,16 @@ void flecs_union_on_add(
     int32_t count,
     const ecs_type_t *added)
 {
-    for (int32_t i = 0; i < added->count; i ++) {
-        const ecs_id_t id = added->array[i];
+    int32_t i, j;
+    for (i = 0; i < added->count; i ++) {
+        ecs_id_t id = added->array[i];
         if (ECS_IS_PAIR(id)) {
-            const ecs_id_t wc = ecs_pair(ECS_PAIR_FIRST(id), EcsUnion);
-            const ecs_id_record_t *idr = flecs_id_record_get(world, wc);
+            ecs_id_t wc = ecs_pair(ECS_PAIR_FIRST(id), EcsUnion);
+            ecs_id_record_t *idr = flecs_id_record_get(world, wc);
             if (idr && idr->flags & EcsIdIsUnion) {
                 const ecs_entity_t *entities = ecs_table_entities(table);
-                for (int32_t j = 0; j < count; j ++) {
-                    const ecs_entity_t e = entities[row + j];
+                for (j = 0; j < count; j ++) {
+                    ecs_entity_t e = entities[row + j];
                     flecs_switch_set(
                         idr->sparse, (uint32_t)e, ecs_pair_second(world, id));
                 }
@@ -663,15 +667,16 @@ void flecs_union_on_remove(
     int32_t count,
     const ecs_type_t *removed)
 {
-    for (int32_t i = 0; i < removed->count; i ++) {
-        const ecs_id_t id = removed->array[i];
+    int32_t i, j;
+    for (i = 0; i < removed->count; i ++) {
+        ecs_id_t id = removed->array[i];
         if (ECS_IS_PAIR(id)) {
-            const ecs_id_t wc = ecs_pair(ECS_PAIR_FIRST(id), EcsUnion);
-            const ecs_id_record_t *idr = flecs_id_record_get(world, wc);
+            ecs_id_t wc = ecs_pair(ECS_PAIR_FIRST(id), EcsUnion);
+            ecs_id_record_t *idr = flecs_id_record_get(world, wc);
             if (idr && idr->flags & EcsIdIsUnion) {
                 const ecs_entity_t *entities = ecs_table_entities(table);
-                for (int32_t j = 0; j < count; j ++) {
-                    const ecs_entity_t e = entities[row + j];
+                for (j = 0; j < count; j ++) {
+                    ecs_entity_t e = entities[row + j];
                     flecs_switch_reset(idr->sparse, (uint32_t)e);
                 }
             }
@@ -696,7 +701,7 @@ void flecs_notify_on_add(
     const ecs_type_t *added = &diff->added;
 
     if (added->count) {
-        const ecs_flags32_t diff_flags = 
+        ecs_flags32_t diff_flags = 
             diff->added_flags|(table->flags & EcsTableHasTraversable);
         if (!diff_flags) {
             return;
@@ -738,7 +743,7 @@ void flecs_notify_on_remove(
     ecs_assert(count != 0, ECS_INTERNAL_ERROR, NULL);
 
     if (removed->count) {
-        const ecs_flags32_t diff_flags = 
+        ecs_flags32_t diff_flags = 
             diff->removed_flags|(table->flags & EcsTableHasTraversable);
         if (!diff_flags) {
             return;
@@ -4244,11 +4249,13 @@ void ecs_set_version(
 
     flecs_entities_make_alive(world, entity_with_generation);
 
-    const ecs_record_t *r = flecs_entities_get(world, entity_with_generation);
-    if (r && r->table) {
+    if (flecs_entities_is_alive(world, entity_with_generation)) {
+        ecs_record_t *r = flecs_entities_get(world, entity_with_generation);
+        if (r && r->table) {
         const int32_t row = ECS_RECORD_TO_ROW(r->row);
-        ecs_entity_t *entities = r->table->data.entities;
-        entities[row] = entity_with_generation;
+            ecs_entity_t *entities = r->table->data.entities;
+            entities[row] = entity_with_generation;
+        }
     }
 }
 
@@ -4882,8 +4889,8 @@ void flecs_cmd_batch_for_entity(
             break;
         case EcsCmdSet:
         case EcsCmdEnsure: {
-            const ecs_id_t *ids = diff->added.array;
-            const uint8_t added_index = flecs_ito(uint8_t, diff->added.count);
+            ecs_id_t *ids = diff->added.array;
+            uint8_t added_index = flecs_ito(uint8_t, diff->added.count);
 
             table = flecs_find_table_add(world, table, id, diff);
 
@@ -4999,10 +5006,10 @@ void flecs_cmd_batch_for_entity(
                  * do anything ensure the entity actually has the component. */
                 if (ptr.ptr) {
                     const ecs_type_info_t *ti = ptr.ti;
-                    const ecs_move_t move = ti->hooks.move;
+                    ecs_move_t move = ti->hooks.move;
                     if (move) {
                         move(ptr.ptr, cmd->is._1.value, 1, ti);
-                        const ecs_xtor_t dtor = ti->hooks.dtor;
+                        ecs_xtor_t dtor = ti->hooks.dtor;
                         if (dtor) {
                             dtor(cmd->is._1.value, 1, ti);
                             cmd->is._1.value = NULL;
@@ -5109,15 +5116,15 @@ bool flecs_defer_end(
             }
 
             ecs_cmd_t *cmds = ecs_vec_first(queue);
-            const int32_t count = ecs_vec_count(queue);
+            int32_t i, count = ecs_vec_count(queue);
 
             ecs_table_diff_builder_t diff;
             flecs_table_diff_builder_init(world, &diff);
             flecs_commands_push(stage);
 
-            for (int32_t i = 0; i < count; i ++) {
+            for (i = 0; i < count; i ++) {
                 ecs_cmd_t *cmd = &cmds[i];
-                const ecs_entity_t e = cmd->entity;
+                ecs_entity_t e = cmd->entity;
                 bool is_alive = flecs_entities_is_alive(world, e);
 
                 /* A negative index indicates the first command for an entity */
@@ -5305,8 +5312,8 @@ bool flecs_defer_purge(
 
         if (ecs_vec_count(&commands)) {
             ecs_cmd_t *cmds = ecs_vec_first(&commands);
-            const int32_t count = ecs_vec_count(&commands);
-            for (int32_t i = 0; i < count; i ++) {
+            int32_t i, count = ecs_vec_count(&commands);
+            for (i = 0; i < count; i ++) {
                 flecs_discard_cmd(world, &cmds[i]);
             }
 
