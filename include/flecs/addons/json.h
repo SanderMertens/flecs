@@ -227,7 +227,9 @@ typedef struct ecs_entity_to_json_desc_t {
 } ecs_entity_to_json_desc_t;
 
 /** Utility used to initialize JSON entity serializer. */
+#ifndef __cplusplus
 #define ECS_ENTITY_TO_JSON_INIT (ecs_entity_to_json_desc_t){\
+    .serialize_entity_id = false, \
     .serialize_doc = false, \
     .serialize_full_paths = true, \
     .serialize_inherited = false, \
@@ -238,6 +240,20 @@ typedef struct ecs_entity_to_json_desc_t {
     .serialize_refs = 0, \
     .serialize_matches = false, \
 }
+#else
+#define ECS_ENTITY_TO_JSON_INIT {\
+    false, \
+    false, \
+    true, \
+    false, \
+    true, \
+    false, \
+    false, \
+    false, \
+    0, \
+    false, \
+}
+#endif
 
 /** Serialize entity into JSON string.
  * This creates a JSON object with the entity's (path) name, which components
@@ -293,6 +309,7 @@ typedef struct ecs_iter_to_json_desc_t {
 } ecs_iter_to_json_desc_t;
 
 /** Utility used to initialize JSON iterator serializer. */
+#ifndef __cplusplus
 #define ECS_ITER_TO_JSON_INIT (ecs_iter_to_json_desc_t){\
     .serialize_entity_ids =      false, \
     .serialize_values =          true, \
@@ -311,7 +328,30 @@ typedef struct ecs_iter_to_json_desc_t {
     .serialize_alerts =          false, \
     .serialize_refs =            false, \
     .serialize_matches =         false, \
+    .query =                     NULL \
 }
+#else
+#define ECS_ITER_TO_JSON_INIT {\
+    false, \
+    true, \
+    false, \
+    false, \
+    true, \
+    true, \
+    false, \
+    false, \
+    false, \
+    false, \
+    false, \
+    false, \
+    false, \
+    false, \
+    false, \
+    false, \
+    false, \
+    nullptr \
+}
+#endif
 
 /** Serialize iterator into JSON string.
  * This operation will iterate the contents of the iterator and serialize them

@@ -1354,6 +1354,8 @@ void Meta_out_of_order_member_declaration(void);
 void Meta_entity_to_json(void);
 void Meta_iter_to_json(void);
 void Meta_query_to_json(void);
+void Meta_entity_to_json_w_default_desc(void);
+void Meta_query_to_json_w_default_desc(void);
 
 // Testsuite 'Table'
 void Table_each(void);
@@ -6664,6 +6666,14 @@ bake_test_case Meta_testcases[] = {
     {
         "query_to_json",
         Meta_query_to_json
+    },
+    {
+        "entity_to_json_w_default_desc",
+        Meta_entity_to_json_w_default_desc
+    },
+    {
+        "query_to_json_w_default_desc",
+        Meta_query_to_json_w_default_desc
     }
 };
 
@@ -6984,7 +6994,7 @@ static bake_test_suite suites[] = {
         "Meta",
         NULL,
         NULL,
-        59,
+        61,
         Meta_testcases
     },
     {
