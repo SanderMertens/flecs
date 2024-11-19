@@ -1328,6 +1328,54 @@ public:
 	{
 		GetEntity().modified<TFirst, TSecond>();
 	}
+
+	SOLID_INLINE void ModifiedPair(const UScriptStruct* InFirst, const UScriptStruct* InSecond) const
+	{
+		GetEntity().modified(ObtainComponentTypeStruct(InFirst),
+			ObtainComponentTypeStruct(InSecond));
+	}
+
+	SOLID_INLINE void ModifiedPair(const UScriptStruct* InFirst, const FGameplayTag& InSecond) const
+	{
+		GetEntity().modified(ObtainComponentTypeStruct(InFirst),
+			GetTagEntity(InSecond));
+	}
+
+	SOLID_INLINE void ModifiedPair(const UScriptStruct* InFirst, const FFlecsEntityHandle& InSecond) const
+	{
+		GetEntity().modified(ObtainComponentTypeStruct(InFirst), InSecond);
+	}
+
+	SOLID_INLINE void ModifiedPair(const FGameplayTag& InFirst, const UScriptStruct* InSecond) const
+	{
+		GetEntity().modified(GetTagEntity(InFirst),
+			ObtainComponentTypeStruct(InSecond));
+	}
+
+	SOLID_INLINE void ModifiedPair(const FGameplayTag& InFirst, const FGameplayTag& InSecond) const
+	{
+		GetEntity().modified(GetTagEntity(InFirst), GetTagEntity(InSecond));
+	}
+
+	SOLID_INLINE void ModifiedPair(const FGameplayTag& InFirst, const FFlecsEntityHandle& InSecond) const
+	{
+		GetEntity().modified(GetTagEntity(InFirst), InSecond);
+	}
+
+	SOLID_INLINE void ModifiedPair(const FFlecsEntityHandle& InFirst, const UScriptStruct* InSecond) const
+	{
+		GetEntity().modified(InFirst, ObtainComponentTypeStruct(InSecond));
+	}
+
+	SOLID_INLINE void ModifiedPair(const FFlecsEntityHandle& InFirst, const FGameplayTag& InSecond) const
+	{
+		GetEntity().modified(InFirst, GetTagEntity(InSecond));
+	}
+
+	SOLID_INLINE void ModifiedPair(const FFlecsEntityHandle& InFirst, const FFlecsEntityHandle& InSecond) const
+	{
+		GetEntity().modified(InFirst, InSecond);
+	}
 	
 	template <typename TComponent>
 	SOLID_INLINE void Modified() const
@@ -1338,18 +1386,6 @@ public:
 	SOLID_INLINE void Modified(const UScriptStruct* StructType) const
 	{
 		GetEntity().modified(ObtainComponentTypeStruct(StructType));
-	}
-
-	template <typename TComponent>
-	SOLID_INLINE void Modified(const FGameplayTag& InTag) const
-	{
-		GetEntity().modified(GetTagEntity(InTag));
-	}
-
-	template <typename TComponent>
-	SOLID_INLINE void Modified(const FFlecsEntityHandle& InEntity) const
-	{
-		GetEntity().modified(InEntity);
 	}
 
 	SOLID_INLINE void Modified(const FGameplayTag& InTag) const
