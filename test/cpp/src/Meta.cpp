@@ -1407,3 +1407,31 @@ void Meta_out_of_order_member_declaration(void) {
     test_int(p2.x, 10);
     test_int(p2.y, 20);
 }
+
+void Meta_entity_to_json(void) {
+    flecs::world ecs;
+
+    flecs::entity e = ecs.entity("foo").set<Position>({10, 20});
+
+    test_str(e.to_json().c_str(), "{\"name\":\"foo\", \"components\":{\"Position\":null}}");
+}
+
+void Meta_iter_to_json(void) {
+    flecs::world ecs;
+
+    ecs.entity("foo").set<Position>({10, 20});
+
+    auto q = ecs.query<Position>();
+
+    test_str(q.iter().to_json().c_str(), "{\"results\":[{\"name\":\"foo\", \"fields\":{\"values\":[0]}}]}");
+}
+
+void Meta_query_to_json(void) {
+    flecs::world ecs;
+
+    ecs.entity("foo").set<Position>({10, 20});
+
+    auto q = ecs.query<Position>();
+
+    test_str(q.to_json().c_str(), "{\"results\":[{\"name\":\"foo\", \"fields\":{\"values\":[0]}}]}");
+}

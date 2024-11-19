@@ -1401,7 +1401,10 @@
                 "struct_member_ptr",
                 "struct_member_ptr_packed_struct",
                 "component_as_array",
-                "out_of_order_member_declaration"
+                "out_of_order_member_declaration",
+                "entity_to_json",
+                "iter_to_json",
+                "query_to_json"
             ]
         }, {
             "id": "Table",

@@ -1351,6 +1351,9 @@ void Meta_struct_member_ptr(void);
 void Meta_struct_member_ptr_packed_struct(void);
 void Meta_component_as_array(void);
 void Meta_out_of_order_member_declaration(void);
+void Meta_entity_to_json(void);
+void Meta_iter_to_json(void);
+void Meta_query_to_json(void);
 
 // Testsuite 'Table'
 void Table_each(void);
@@ -6649,6 +6652,18 @@ bake_test_case Meta_testcases[] = {
     {
         "out_of_order_member_declaration",
         Meta_out_of_order_member_declaration
+    },
+    {
+        "entity_to_json",
+        Meta_entity_to_json
+    },
+    {
+        "iter_to_json",
+        Meta_iter_to_json
+    },
+    {
+        "query_to_json",
+        Meta_query_to_json
     }
 };
 
@@ -6969,7 +6984,7 @@ static bake_test_suite suites[] = {
         "Meta",
         NULL,
         NULL,
-        56,
+        59,
         Meta_testcases
     },
     {
