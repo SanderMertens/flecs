@@ -28,7 +28,7 @@ public:
 	TArray<FFlecsDefaultMetaEntity> CodeAddedDefaultEntities;
 	
 	flecs::world DefaultEntityWorld;
-	flecs::entity TestEntity;
+	flecs::entity NoneEntity;
 
 	bool bIsInitialized = false;
 	

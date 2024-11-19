@@ -45,11 +45,11 @@ void FFlecsDefaultEntityEngine::RefreshDefaultEntities()
 
 	while (DefaultEntityOptions.IsEmpty())
 	{
-		TestEntity = DefaultEntityWorld.entity("TestEntity");
+		NoneEntity = DefaultEntityWorld.entity("NoneEntity");
 		DefaultEntityWorld.progress();
 
 		DefaultEntityWorld.query_builder<>()
-			.without(TestEntity)
+			.without(NoneEntity)
 			.with(flecs::Trait).or_().with(flecs::PairIsTag).or_().with_name_component()
 			.each([&](flecs::entity Entity)
 			{

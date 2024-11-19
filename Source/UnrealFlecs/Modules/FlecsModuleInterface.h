@@ -12,11 +12,6 @@
 
 class UFlecsWorld;
 
-/**
- * This flecs module impl, doesn't take advantage of scoping in flecs as
- * that creates a lot of problems with the Reflection system.
- * for type impl for modules, you can disable, enable, and toggle the types directly (types will be registered)
- */
 // This class does not need to be modified.
 UINTERFACE(Blueprintable)
 class UNREALFLECS_API UFlecsModuleInterface : public UInterface
@@ -24,11 +19,6 @@ class UNREALFLECS_API UFlecsModuleInterface : public UInterface
 	GENERATED_BODY()
 }; // class UFlecsModuleInterface
 
-/**
- * This flecs module impl, doesn't take advantage of scoping in flecs as
- * that creates a lot of problems with the Reflection system.
- * for type impl for modules, you can disable, enable, and toggle the types directly(types will be registered)
- */
 class UNREALFLECS_API IFlecsModuleInterface
 {
 	GENERATED_BODY()

@@ -143,6 +143,8 @@ public:
 			mutable std::mutex Mutex;
 		}; // struct FFlecsMutex
 
+		#if 0
+
 		os_api.mutex_new_ = []() -> ecs_os_mutex_t
 		{
 			FFlecsMutex* Mutex = new FFlecsMutex();
@@ -168,6 +170,8 @@ public:
         	ASSUME(MutexPtr);
         	MutexPtr->Unlock();
         };
+
+		#endif // 0
 
         // Sleep function using minimal overhead
         os_api.sleep_ = [](int32_t Seconds, int32_t Nanoseconds)
@@ -518,7 +522,15 @@ public:
 			std::invoke(InFunction, CastChecked<TModule>(InDependencyObject), InWorld, InDependencyEntity);
 		});
 	}
-	
+
+	/**
+	 * @brief Asynchronously Register a module dependency,
+	 * if the dependency is already imported, the function is called immediately
+	 * if the dependency is not imported, the function is called when the dependency is imported (if it is)
+	 * @param InModuleObject The module object
+	 * @param InDependencyClass The dependency class
+	 * @param InFunction The function to call when the dependency is imported
+	 */
 	FORCEINLINE_DEBUGGABLE void RegisterModuleDependency(
 		const UObject* InModuleObject, const TSubclassOf<UFlecsModuleInterface>& InDependencyClass,
 		const std::function<void(UObject*, UFlecsWorld*, FFlecsEntityHandle)>& InFunction)
