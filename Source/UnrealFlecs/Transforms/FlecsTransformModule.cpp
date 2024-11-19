@@ -73,7 +73,6 @@ void UFlecsTransformModule::InitializeModule(UFlecsWorld* InWorld, const FFlecsE
 		.kind(flecs::PreUpdate)
 		.with<FFlecsTransformComponent>().read_write()
 		.with<FFlecsTransformComponent>().parent().cascade()
-		.and_()
 		.immediate()
 		.run([](flecs::iter& Iter)
 		{
