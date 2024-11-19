@@ -8,8 +8,6 @@
 #ifdef FLECS_SCRIPT
 #include "script.h"
 
-#define flecs_ast_strdup(parser, str)\
-    (str ? flecs_strdup(&parser->script->allocator, str) : NULL)
 #define flecs_ast_new(parser, T, kind)\
     (T*)flecs_ast_new_(parser, ECS_SIZEOF(T), kind)
 #define flecs_ast_vec(parser, vec, T) \

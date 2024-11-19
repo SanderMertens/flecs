@@ -14677,6 +14677,20 @@ int ecs_ptr_to_str_buf(
     const void *data,
     ecs_strbuf_t *buf);
 
+typedef struct ecs_expr_node_t ecs_expr_node_t; 
+
+FLECS_API
+ecs_expr_node_t* ecs_script_parse_expr(
+    ecs_world_t *world,
+    ecs_script_t *script,
+    const char *name,
+    const char *expr);
+
+FLECS_API
+char* ecs_script_expr_to_str(
+    const ecs_world_t *world,
+    const ecs_expr_node_t *expr);
+
 /** Script module import function.
  * Usage:
  * @code

@@ -42,15 +42,27 @@ const char* flecs_script_token_kind_str(
     case EcsTokAnnotation:
     case EcsTokComma:
     case EcsTokSemiColon:
-    case EcsTokMul:
     case EcsTokAssign:
+    case EcsTokAdd:
+    case EcsTokSub:
+    case EcsTokMul:
+    case EcsTokDiv:
+    case EcsTokMod:
     case EcsTokBitwiseOr:
+    case EcsTokBitwiseAnd:
     case EcsTokNot:
     case EcsTokOptional:
     case EcsTokEq:
     case EcsTokNeq:
-    case EcsTokMatch:
+    case EcsTokGt:
+    case EcsTokGtEq:
+    case EcsTokLt:
+    case EcsTokLtEq:
+    case EcsTokAnd:
     case EcsTokOr:
+    case EcsTokMatch:
+    case EcsTokShiftLeft:
+    case EcsTokShiftRight:
         return "";
     case EcsTokKeywordWith:
     case EcsTokKeywordUsing:
@@ -218,12 +230,35 @@ const char* flecs_script_number(
 {
     out->kind = EcsTokNumber;
     out->value = parser->token_cur;
+    
+    bool dot_parsed = false;
+    bool e_parsed = false;
 
     ecs_assert(flecs_script_is_number(pos[0]), ECS_INTERNAL_ERROR, NULL);
     char *outpos = parser->token_cur;
     do {
         char c = pos[0];
-        if (!isdigit(c)) {
+        bool valid_number = false;
+
+        if (c == '.') {
+            if (!dot_parsed && !e_parsed) {
+                if (isdigit(pos[1])) {
+                    dot_parsed = true;
+                    valid_number = true;
+                }
+            }
+        } else if (c == 'e') {
+            if (!e_parsed) {
+                if (isdigit(pos[1])) {
+                    e_parsed = true;
+                    valid_number = true;
+                }
+            }
+        } else if (isdigit(c)) {
+            valid_number = true;
+        }
+
+        if (!valid_number) {
             *outpos = '\0';
             parser->token_cur = outpos + 1;
             break;
@@ -489,17 +524,31 @@ const char* flecs_script_token(
     Operator          ("@",        EcsTokAnnotation)
     Operator          (",",        EcsTokComma)
     Operator          (";",        EcsTokSemiColon)
+    Operator          ("+",        EcsTokAdd)
+    Operator          ("-",        EcsTokSub)
     Operator          ("*",        EcsTokMul)
+    Operator          ("/",        EcsTokDiv)
+    Operator          ("%%",       EcsTokMod)
     Operator          ("?",        EcsTokOptional)
+    Operator          (".",        EcsTokMember)
 
     OperatorMultiChar ("==",       EcsTokEq)
     OperatorMultiChar ("!=",       EcsTokNeq)
-    OperatorMultiChar ("~=",       EcsTokMatch)
+    OperatorMultiChar ("<<",       EcsTokShiftLeft)
+    OperatorMultiChar (">>",       EcsTokShiftRight)
+    OperatorMultiChar (">=",       EcsTokGtEq)
+    OperatorMultiChar ("<=",       EcsTokLtEq)
+    
+    OperatorMultiChar ("&&",       EcsTokAnd)
     OperatorMultiChar ("||",       EcsTokOr)
+    OperatorMultiChar ("~=",       EcsTokMatch)
 
-    OperatorMultiChar ("!",        EcsTokNot)
-    OperatorMultiChar ("=",        EcsTokAssign)
-    OperatorMultiChar ("|",        EcsTokBitwiseOr)
+    Operator          ("!",        EcsTokNot)
+    Operator          ("=",        EcsTokAssign)
+    Operator          ("&",        EcsTokBitwiseAnd)
+    Operator          ("|",        EcsTokBitwiseOr)
+    Operator          (">",        EcsTokGt)
+    Operator          ("<",        EcsTokLt)
 
     Keyword           ("with",     EcsTokKeywordWith)
     Keyword           ("using",    EcsTokKeywordUsing)

@@ -16,20 +16,33 @@ typedef enum ecs_script_token_kind_t {
     EcsTokParenClose = ')',
     EcsTokBracketOpen = '[',
     EcsTokBracketClose = ']',
-    EcsTokMul = '*',
+    EcsTokMember = '.',
     EcsTokComma = ',',
     EcsTokSemiColon = ';',
     EcsTokColon = ':',
     EcsTokAssign = '=',
+    EcsTokAdd = '+',
+    EcsTokSub = '-',
+    EcsTokMul = '*',
+    EcsTokDiv = '/',
+    EcsTokMod = '%',
     EcsTokBitwiseOr = '|',
+    EcsTokBitwiseAnd = '&',
     EcsTokNot = '!',
     EcsTokOptional = '?',
     EcsTokAnnotation = '@',
     EcsTokNewline = '\n',
     EcsTokEq,
     EcsTokNeq,
-    EcsTokMatch,
+    EcsTokGt,
+    EcsTokGtEq,
+    EcsTokLt,
+    EcsTokLtEq,
+    EcsTokAnd,
     EcsTokOr,
+    EcsTokMatch,
+    EcsTokShiftLeft,
+    EcsTokShiftRight,
     EcsTokIdentifier,
     EcsTokString,
     EcsTokNumber,
@@ -52,6 +65,11 @@ typedef struct ecs_script_tokens_t {
     int32_t count;
     ecs_script_token_t tokens[256];
 } ecs_script_tokens_t;
+
+typedef struct ecs_script_tokenizer_t {
+    ecs_script_tokens_t stack;
+    ecs_script_token_t *tokens;
+} ecs_script_tokenizer_t;
 
 const char* flecs_script_expr(
     ecs_script_parser_t *parser,
