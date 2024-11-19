@@ -861,6 +861,19 @@ struct ecs_observer_t {
  *
  * @ingroup components
  */
+
+/* Hook flags */
+#define ECS_CTOR_ILLEGAL           (1 << 0)
+#define ECS_DTOR_ILLEGAL           (1 << 1)
+#define ECS_COPY_ILLEGAL           (1 << 2)
+#define ECS_MOVE_ILLEGAL           (1 << 3)
+#define ECS_COPY_CTOR_ILLEGAL      (1 << 4)
+#define ECS_MOVE_CTOR_ILLEGAL      (1 << 5)
+#define ECS_CTOR_MOVE_DTOR_ILLEGAL (1 << 6)
+#define ECS_MOVE_DTOR_ILLEGAL      (1 << 7)
+
+typedef uint8_t ecs_type_hooks_flags_t;
+
 struct ecs_type_hooks_t {
     ecs_xtor_t ctor;            /**< ctor */
     ecs_xtor_t dtor;            /**< dtor */
@@ -884,6 +897,12 @@ struct ecs_type_hooks_t {
      * location to an existing location, like what happens during a remove. If
      * not set explicitly it will be derived from other callbacks. */
     ecs_move_t move_dtor;
+
+    /** Hook flags 
+     * Indicates if any hook is illegal.
+     * Setting any flag will configure an aborting hook
+    */
+    ecs_type_hooks_flags_t flags;
 
     /** Callback that is invoked when an instance of a component is added. This
      * callback is invoked before triggers are invoked. */
@@ -4156,47 +4175,6 @@ FLECS_API
 const ecs_type_info_t* ecs_get_type_info(
     const ecs_world_t *world,
     ecs_id_t id);
-
-
-/**
- * @defgroup illegal_hooks Illegal lifecycle hooks
- * Functions to mark specific lifecycle hooks as illegal
- *
- * @{
- */
-
-/* Illegal constructor handler and constant */
-FLECS_API
-ecs_xtor_t ecs_ctor_illegal_(void);
-#define ECS_CTOR_ILLEGAL (ecs_ctor_illegal_())
-
-/* Illegal destructor handler and constant */
-FLECS_API
-ecs_xtor_t ecs_dtor_illegal_(void);
-#define ECS_DTOR_ILLEGAL (ecs_dtor_illegal_())
-
-/* Illegal copy-assign handler and constant */
-FLECS_API
-ecs_copy_t ecs_copy_illegal_(void);
-#define ECS_COPY_ILLEGAL (ecs_copy_illegal_())
-
-/* Illegal move-assign handler and constant */
-FLECS_API
-ecs_move_t ecs_move_illegal_(void);
-#define ECS_MOVE_ILLEGAL (ecs_move_illegal_())
-
-/* Illegal copy constructor handler and constant */
-FLECS_API
-ecs_copy_t ecs_copy_ctor_illegal_(void);
-#define ECS_COPY_CTOR_ILLEGAL (ecs_copy_ctor_illegal_())
-
-/* Illegal move constructor handler and constant */
-FLECS_API
-ecs_move_t ecs_move_ctor_illegal_(void);
-#define ECS_MOVE_CTOR_ILLEGAL (ecs_move_ctor_illegal_())
-
-/** @} */
-
 
 /** Register hooks for component.
  * Hooks allow for the execution of user code when components are constructed,
