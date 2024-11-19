@@ -1217,13 +1217,13 @@ public:
 	template <typename TFirst>
 	SOLID_INLINE NO_DISCARD bool HasPair(const UScriptStruct* InSecond) const
 	{
-		return GetEntity().has<TFirst>(ObtainComponentTypeStruct(InSecond));
+		return GetEntity().has<TFirst>(ObtainComponentTypeStruct(InSecond).GetEntity());
 	}
 
 	template <typename TFirst>
 	SOLID_INLINE NO_DISCARD bool HasPair(const FGameplayTag& InSecond) const
 	{
-		return GetEntity().has<TFirst>(GetTagEntity(InSecond));
+		return GetEntity().has<TFirst>(GetTagEntity(InSecond).GetEntity());
 	}
 
 	SOLID_INLINE NO_DISCARD bool HasPair(const UScriptStruct* InFirst, const UScriptStruct* InSecond) const
