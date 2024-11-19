@@ -320,13 +320,13 @@ insert_tag: {
         if (!flecs_script_insert_var_component(parser, &Token(0)[1])) {
             Error(
                 "invalid context for variable component '%s': must be "
-                    "part of entity", tokens[0].value);
+                    "part of entity", tokenizer->tokens[0].value);
         }
     } else {
         if (!flecs_script_insert_tag(parser, Token(0))) {
             Error(
                 "invalid context for tag '%s': must be part of entity", 
-                tokens[0].value);
+                tokenizer->tokens[0].value);
         }
     }
 
