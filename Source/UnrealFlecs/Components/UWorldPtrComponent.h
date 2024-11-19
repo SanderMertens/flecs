@@ -4,7 +4,6 @@
 
 #include "CoreMinimal.h"
 #include "SolidMacros/Macros.h"
-#include "Properties/FlecsComponentProperties.h"
 #include "UWorldPtrComponent.generated.h"
 
 class UWorld;
