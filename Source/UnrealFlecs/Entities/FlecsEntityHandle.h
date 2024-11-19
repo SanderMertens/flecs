@@ -77,6 +77,7 @@ public:
 
 	SOLID_INLINE NO_DISCARD flecs::entity_t GetId() const { return GetEntity().id(); }
 	SOLID_INLINE NO_DISCARD uint32 GetGeneration() const { return get_generation(GetEntity()); }
+	SOLID_INLINE NO_DISCARD uint32 GetVersion() const { return GetGeneration(); }
 	
 	SOLID_INLINE NO_DISCARD UFlecsWorld* GetFlecsWorld() const;
 	SOLID_INLINE NO_DISCARD UWorld* GetOuterWorld() const;
@@ -1555,13 +1556,13 @@ public:
 	{
 		FString Token;
 		
-		if (!FParse::Token(Buffer, Token, true))
+		if UNLIKELY_IF(!FParse::Token(Buffer, Token, true))
 		{
 			ErrorText->Logf(TEXT("FFlecsEntityHandle::ImportTextItem: Failed to parse token from input"));
 			return false;
 		}
 
-		if (Token.StartsWith(TEXT("EntityId=")))
+		if LIKELY_IF(Token.StartsWith(TEXT("EntityId=")))
 		{
 			const FString EntityIdString = Token.RightChop(9);
 			Entity = flecs::entity(FCString::Strtoui64(*EntityIdString, nullptr, 10));
