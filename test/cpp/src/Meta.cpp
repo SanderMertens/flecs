@@ -1435,3 +1435,25 @@ void Meta_query_to_json(void) {
 
     test_str(q.to_json().c_str(), "{\"results\":[{\"name\":\"foo\", \"fields\":{\"values\":[0]}}]}");
 }
+
+void Meta_entity_to_json_w_default_desc(void) {
+    flecs::world ecs;
+
+    flecs::entity e = ecs.entity("foo").set<Position>({10, 20});
+
+    flecs::entity_to_json_desc_t desc = ECS_ENTITY_TO_JSON_INIT;
+
+    test_str(e.to_json(&desc).c_str(), "{\"name\":\"foo\", \"components\":{\"Position\":null}}");
+}
+
+void Meta_query_to_json_w_default_desc(void) {
+    flecs::world ecs;
+
+    ecs.entity("foo").set<Position>({10, 20});
+
+    auto q = ecs.query<Position>();
+
+    flecs::iter_to_json_desc_t desc = ECS_ITER_TO_JSON_INIT;
+
+    test_str(q.to_json(&desc).c_str(), "{\"results\":[{\"name\":\"foo\", \"fields\":{\"values\":[0]}}]}");
+}

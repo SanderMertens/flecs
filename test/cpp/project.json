@@ -1404,7 +1404,9 @@
                 "out_of_order_member_declaration",
                 "entity_to_json",
                 "iter_to_json",
-                "query_to_json"
+                "query_to_json",
+                "entity_to_json_w_default_desc",
+                "query_to_json_w_default_desc"
             ]
         }, {
             "id": "Table",
