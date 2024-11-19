@@ -101,6 +101,8 @@ public:
 		
         ecs_os_api_t os_api = ecs_os_api;
 
+		#if 0
+
         os_api.thread_new_ = [](ecs_os_thread_callback_t Callback, void* Param) -> ecs_os_thread_t
         {
             FFlecsThread* FlecsThread = static_cast<FFlecsThread*>(
@@ -142,8 +144,6 @@ public:
 			
 			mutable std::mutex Mutex;
 		}; // struct FFlecsMutex
-
-		#if 0
 
 		os_api.mutex_new_ = []() -> ecs_os_mutex_t
 		{
