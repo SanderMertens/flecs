@@ -12,7 +12,6 @@ FFlecsDefaultEntityEngine::FFlecsDefaultEntityEngine()
 {
 }
 
-// Initializes the entity engine
 void FFlecsDefaultEntityEngine::Initialize()
 {
 	if (bIsInitialized)
@@ -38,7 +37,6 @@ void FFlecsDefaultEntityEngine::Initialize()
 	bIsInitialized = true;
 }
 
-// Refreshes the default entities
 void FFlecsDefaultEntityEngine::RefreshDefaultEntities()
 {
 	DefaultEntityWorld = flecs::world();
@@ -79,7 +77,6 @@ void FFlecsDefaultEntityEngine::RefreshDefaultEntities()
 		AddedDefaultEntities.Add(FFlecsDefaultMetaEntity(EntityRecord.EntityRecord));
 	}
 
-	// Add code-specified entities
 	for (const FFlecsDefaultMetaEntity& MetaEntity : CodeAddedDefaultEntities)
 	{
 		AddedDefaultEntities.Add(FFlecsDefaultMetaEntity(MetaEntity.EntityRecord));
@@ -95,6 +92,8 @@ void FFlecsDefaultEntityEngine::RefreshDefaultEntities()
 		flecs::entity Entity = DefaultEntityWorld.entity(StringCast<ANSICHAR>(*EntityRecord.Name).Get());
 		DefaultEntityOptions.Add(*EntityRecord.Name, Entity);
 	}
+
+	DefaultEntityWorld.release();
 }
 
 flecs::entity_t FFlecsDefaultEntityEngine::AddDefaultEntity(const FFlecsDefaultMetaEntity& DefaultEntity)

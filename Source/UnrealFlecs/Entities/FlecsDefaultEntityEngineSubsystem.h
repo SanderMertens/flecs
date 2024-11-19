@@ -33,7 +33,7 @@ public:
 	bool bIsInitialized = false;
 	
 	void Initialize();
-};
+}; // struct FFlecsDefaultEntityEngine
 
 #define DEFINE_DEFAULT_ENTITY_OPTION(EntityName) \
 	INLINE ECS_ENTITY_DECLARE(EntityName); \
