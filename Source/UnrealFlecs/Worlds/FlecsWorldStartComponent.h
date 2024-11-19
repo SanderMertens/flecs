@@ -18,6 +18,5 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs", meta = (ExposeOnSpawn = true))
 	TObjectPtr<UFlecsWorldSettingsAsset> DefaultWorld;
-
-
+	
 }; // class UFlecsWorldStartComponent

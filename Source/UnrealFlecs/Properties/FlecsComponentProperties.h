@@ -84,8 +84,8 @@ public:
 
 	FORCEINLINE const FFlecsComponentProperties* GetComponentProperties(const std::string& Name) const
 	{
-		solid_checkf(!Name.empty(), TEXT("Component properties name is empty!"));
-		solid_checkf(ComponentProperties.contains(Name), TEXT("Component properties not found!"));
+		checkf(!Name.empty(), TEXT("Component properties name is empty!"));
+		checkf(ComponentProperties.contains(Name), TEXT("Component properties not found!"));
 		return &ComponentProperties.at(Name);
 	}
 	
@@ -94,6 +94,7 @@ public:
 	FOnComponentPropertiesRegistered OnComponentPropertiesRegistered;
 }; // struct FFlecsComponentPropertiesRegistry
 
+// do not use this macro directly, use REGISTER_COMPONENT_TAG_PROPERTIES or REGISTER_COMPONENT_TRAIT_PROPERTIES
 #define REGISTER_FLECS_PROPERTIES(ComponentType, EntitiesArray, ComponentPropertyStructsArray) \
 	namespace \
 	{ \

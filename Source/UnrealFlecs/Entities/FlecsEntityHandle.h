@@ -199,7 +199,11 @@ public:
 	}
 	
 	template <typename T>
-	SOLID_INLINE NO_DISCARD T Get() const { return *GetEntity().get<T>(); }
+	SOLID_INLINE NO_DISCARD T Get() const
+	{
+		check(Has<T>());
+		return *GetEntity().get<T>();
+	}
 
 	SOLID_INLINE NO_DISCARD void* GetPtr(const FFlecsEntityHandle& InEntity)
 	{
@@ -1198,6 +1202,30 @@ public:
 		GetEntity().remove(InFirst, InSecond);
 	}
 
+	template <typename TFirst, typename TSecond>
+	SOLID_INLINE NO_DISCARD bool HasPair() const
+	{
+		return GetEntity().has<TFirst, TSecond>();
+	}
+
+	template <typename TFirst>
+	SOLID_INLINE NO_DISCARD bool HasPair(const FFlecsEntityHandle& InSecond) const
+	{
+		return GetEntity().has<TFirst>(InSecond);
+	}
+
+	template <typename TFirst>
+	SOLID_INLINE NO_DISCARD bool HasPair(const UScriptStruct* InSecond) const
+	{
+		return GetEntity().has<TFirst>(ObtainComponentTypeStruct(InSecond));
+	}
+
+	template <typename TFirst>
+	SOLID_INLINE NO_DISCARD bool HasPair(const FGameplayTag& InSecond) const
+	{
+		return GetEntity().has<TFirst>(GetTagEntity(InSecond));
+	}
+
 	SOLID_INLINE NO_DISCARD bool HasPair(const UScriptStruct* InFirst, const UScriptStruct* InSecond) const
 	{
 		return GetEntity().has(ObtainComponentTypeStruct(InFirst),
@@ -1464,7 +1492,7 @@ private:
 
 		FFlecsEntityHandle TraitHolder;
 
-		if LIKELY_IF(GetEntity().has<TComponent>(flecs::Wildcard))
+		if LIKELY_IF(HasPair<TComponent>(flecs::Wildcard))
 		{
 			TraitHolder = GetEntity().target_for<TComponent>(flecs::ChildOf);
 

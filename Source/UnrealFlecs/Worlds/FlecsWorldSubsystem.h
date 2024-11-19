@@ -260,7 +260,7 @@ protected:
 
 		const FFlecsEntityHandle TagEntity = NewFlecsWorld->CreateEntity(LastPartOfTagName);
 		
-		TagEntity.Set<FFlecsGameplayTagEntityComponent>({Tag});
+		TagEntity.Set<FFlecsGameplayTagEntityComponent>({ Tag });
 		
 		if (const TArray<FGameplayTag>* Children = TagHierarchy.Find(Tag))
 		{
@@ -283,8 +283,7 @@ protected:
 			return FString();
 		}
 
-		int32 LastDotIndex;
-		if (FullTagName.FindLastChar(TEXT('.'), LastDotIndex))
+		if (int32 LastDotIndex; FullTagName.FindLastChar(TEXT('.'), LastDotIndex))
 		{
 			return FullTagName.RightChop(LastDotIndex + 1);
 		}
