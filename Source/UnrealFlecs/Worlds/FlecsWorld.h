@@ -1034,6 +1034,10 @@ public:
 		}
 
 		FCoreUObjectDelegates::GarbageCollectComplete.RemoveAll(this);
+
+		ModuleComponentQuery.destruct();
+		DependenciesComponentQuery.destruct();
+		ObjectComponentQuery.destruct();
 		
 		const FAssetRegistryModule* AssetRegistryModule
 			= FModuleManager::LoadModulePtr<FAssetRegistryModule>(TEXT("AssetRegistry"));
@@ -1077,6 +1081,22 @@ public:
 	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle GetAlive(const FFlecsId& InId) const
 	{
 		return World.get_alive(InId.GetFlecsId());
+	}
+
+	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle GetAlive(const flecs::entity_t InId) const
+	{
+		return World.get_alive(InId);
+	}
+
+	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
+	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle GetEntity(const FFlecsId& InId) const
+	{
+		return World.get_alive(InId.GetFlecsId());
+	}
+
+	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle GetEntity(const flecs::entity_t InId) const
+	{
+		return World.get_alive(InId);
 	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
