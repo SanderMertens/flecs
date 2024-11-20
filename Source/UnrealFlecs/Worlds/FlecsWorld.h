@@ -34,6 +34,79 @@ DECLARE_STATS_GROUP(TEXT("FlecsWorld"), STATGROUP_FlecsWorld, STATCAT_Advanced);
 DECLARE_CYCLE_STAT(TEXT("FlecsWorld::Progress"), STAT_FlecsWorldProgress, STATGROUP_FlecsWorld);
 DECLARE_CYCLE_STAT(TEXT("FlecsWorld::Progress::ProgressModule"), STAT_FlecsWorldProgressModule, STATGROUP_FlecsWorld);
 
+struct FFlecsTask
+{
+	static constexpr ENamedThreads::Type TaskPriority = ENamedThreads::AnyThread;
+	
+	FGraphEventRef TaskEvent;
+
+	FORCEINLINE FFlecsTask(ecs_os_thread_callback_t InCallback, void* InParam)
+	{
+		TaskEvent = FFunctionGraphTask::CreateAndDispatchWhenReady([InCallback, InParam]()
+		{
+			InCallback(InParam);
+		}, TStatId(), nullptr, TaskPriority);
+	}
+
+	FORCEINLINE void Wait() const
+	{
+		if (TaskEvent.IsValid())
+		{
+			FTaskGraphInterface::Get().WaitUntilTaskCompletes(TaskEvent);
+		}
+	}
+	
+}; // struct FFlecsTask
+
+struct FFlecsMutex
+{
+	FCriticalSection Mutex;
+
+	FORCEINLINE void Lock()
+	{
+		Mutex.Lock();
+	}
+
+	FORCEINLINE void Unlock()
+	{
+		Mutex.Unlock();
+	}
+	
+}; // struct FFlecsMutex
+
+struct FFlecsConditionVariable
+{
+	FEvent* Event;
+
+	FORCEINLINE FFlecsConditionVariable()
+	{
+		Event = FPlatformProcess::GetSynchEventFromPool(true);
+	}
+
+	FORCEINLINE ~FFlecsConditionVariable()
+	{
+		FPlatformProcess::ReturnSynchEventToPool(Event);
+	}
+
+	FORCEINLINE void Wait(FFlecsMutex* Mutex) const
+	{
+		Mutex->Unlock();
+		Event->Wait();
+		Mutex->Lock();
+	}
+
+	FORCEINLINE void Signal() const 
+	{
+		Broadcast();
+	}
+
+	FORCEINLINE void Broadcast() const
+	{
+		Event->Trigger();
+	}
+	
+}; // struct FFlecsConditionVariable
+
 UCLASS(BlueprintType)
 class UNREALFLECS_API UFlecsWorld : public UObject
 {
@@ -72,115 +145,89 @@ public:
 
 	FORCEINLINE_DEBUGGABLE void InitializeOSAPI() const
 	{
-		struct FFlecsThread
-        {
-            FRunnable* Runnable;
-            FRunnableThread* Thread;
-        }; // struct FFlecsThread
-		
-        class FFlecsRunnable final : public FRunnable
-        {
-        public:
-            FFlecsRunnable(ecs_os_thread_callback_t InCallback, void* InParam)
-                : Callback(InCallback), Param(InParam)
-            {
-            }
-
-            virtual uint32 Run() override
-            {
-                Callback(Param);
-                return 0;
-            }
-
-        private:
-            ecs_os_thread_callback_t Callback;
-            void* Param;
-        }; // class FFlecsRunnable
-
         ecs_os_set_api_defaults();
 		
         ecs_os_api_t os_api = ecs_os_api;
-
-		#if 0
-
-        os_api.thread_new_ = [](ecs_os_thread_callback_t Callback, void* Param) -> ecs_os_thread_t
-        {
-            FFlecsThread* FlecsThread = static_cast<FFlecsThread*>(
-            	FMemory::Malloc(sizeof(FFlecsThread), alignof(FFlecsThread)));
-        	
-            FlecsThread->Runnable = new FFlecsRunnable(Callback, Param);
-            FlecsThread->Thread = FRunnableThread::Create(FlecsThread->Runnable,
-            	TEXT("FlecsThread"), 0, TPri_Normal);
-
-            return reinterpret_cast<ecs_os_thread_t>(FlecsThread);
-        };
-
-        os_api.thread_join_ = [](ecs_os_thread_t Thread) -> void*
-        {
-	        FFlecsThread* FlecsThread = reinterpret_cast<FFlecsThread*>(Thread);
-        	
-            if (FlecsThread && FlecsThread->Thread)
-            {
-                FlecsThread->Thread->WaitForCompletion();
-                delete FlecsThread->Runnable;
-                delete FlecsThread->Thread;
-                FMemory::Free(FlecsThread);
-            }
-        	
-            return nullptr;
-        };
-
-		struct FFlecsMutex
+		
+		os_api.thread_new_ = [](ecs_os_thread_callback_t Callback, void* Param) -> ecs_os_thread_t
 		{
-			FORCEINLINE void Lock() const
-			{
-				Mutex.lock();
-			}
+			FFlecsTask* FlecsTask = new FFlecsTask(Callback, Param);
+			return reinterpret_cast<ecs_os_thread_t>(FlecsTask);
+		};
 
-			FORCEINLINE void Unlock() const
+		os_api.thread_join_ = [](ecs_os_thread_t Thread) -> void*
+		{
+			if (const FFlecsTask* FlecsTask = reinterpret_cast<FFlecsTask*>(Thread))
 			{
-				Mutex.unlock();
+				FlecsTask->Wait();
+				delete FlecsTask;
 			}
 			
-			mutable std::mutex Mutex;
-		}; // struct FFlecsMutex
-
+			return nullptr;
+		};
+		
 		os_api.mutex_new_ = []() -> ecs_os_mutex_t
 		{
 			FFlecsMutex* Mutex = new FFlecsMutex();
 			return reinterpret_cast<ecs_os_mutex_t>(Mutex);
 		};
 
-        os_api.mutex_free_ = [](ecs_os_mutex_t Mutex)
-        {
-        	FFlecsMutex* MutexPtr = reinterpret_cast<FFlecsMutex*>(Mutex);
+		os_api.mutex_free_ = [](ecs_os_mutex_t Mutex)
+		{
+			FFlecsMutex* MutexPtr = reinterpret_cast<FFlecsMutex*>(Mutex);
 			delete MutexPtr;
-        };
+		};
 
-        os_api.mutex_lock_ = [](ecs_os_mutex_t Mutex)
-        {
-        	FFlecsMutex* MutexPtr = reinterpret_cast<FFlecsMutex*>(Mutex);
-        	ASSUME(MutexPtr);
-        	MutexPtr->Lock();
-        };
+		os_api.mutex_lock_ = [](ecs_os_mutex_t Mutex)
+		{
+			FFlecsMutex* MutexPtr = reinterpret_cast<FFlecsMutex*>(Mutex);
+			MutexPtr->Lock();
+		};
 
-        os_api.mutex_unlock_ = [](ecs_os_mutex_t Mutex)
-        {
-        	FFlecsMutex* MutexPtr = reinterpret_cast<FFlecsMutex*>(Mutex);
-        	ASSUME(MutexPtr);
-        	MutexPtr->Unlock();
-        };
+		os_api.mutex_unlock_ = [](ecs_os_mutex_t Mutex)
+		{
+			FFlecsMutex* MutexPtr = reinterpret_cast<FFlecsMutex*>(Mutex);
+			MutexPtr->Unlock();
+		};
 
-		#endif // 0
+		// Condition variable implementation using FEvent
+		os_api.cond_new_ = []() -> ecs_os_cond_t
+		{
+			FFlecsConditionVariable* CondVar = new FFlecsConditionVariable();
+			return reinterpret_cast<ecs_os_cond_t>(CondVar);
+		};
 
-        // Sleep function using minimal overhead
+		os_api.cond_free_ = [](ecs_os_cond_t Cond)
+		{
+			FFlecsConditionVariable* CondVar = reinterpret_cast<FFlecsConditionVariable*>(Cond);
+			delete CondVar;
+		};
+
+		os_api.cond_wait_ = [](ecs_os_cond_t Cond, ecs_os_mutex_t Mutex)
+		{
+			FFlecsConditionVariable* CondVar = reinterpret_cast<FFlecsConditionVariable*>(Cond);
+			FFlecsMutex* MutexPtr = reinterpret_cast<FFlecsMutex*>(Mutex);
+			CondVar->Wait(MutexPtr);
+		};
+
+		os_api.cond_signal_ = [](ecs_os_cond_t Cond)
+		{
+			FFlecsConditionVariable* CondVar = reinterpret_cast<FFlecsConditionVariable*>(Cond);
+			CondVar->Signal();
+		};
+
+		os_api.cond_broadcast_ = [](ecs_os_cond_t Cond)
+		{
+			FFlecsConditionVariable* CondVar = reinterpret_cast<FFlecsConditionVariable*>(Cond);
+			CondVar->Broadcast();
+		};
+		
         os_api.sleep_ = [](int32_t Seconds, int32_t Nanoseconds)
         {
             const double TotalSeconds = Seconds + Nanoseconds / 1e9;
             FPlatformProcess::SleepNoStats(static_cast<float>(TotalSeconds));
         };
-
-        // High-resolution timer
+		
         os_api.now_ = []() -> uint64_t
         {
             return FPlatformTime::Cycles64();
