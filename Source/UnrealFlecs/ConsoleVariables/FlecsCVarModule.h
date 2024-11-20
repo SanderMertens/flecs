@@ -9,7 +9,7 @@
 
 
 UCLASS()
-class UNREALFLECS_API UFlecsCVarModule : public UFlecsModuleObject
+class UNREALFLECS_API UFlecsCVarModule : public UFlecsModuleObject, public IConsoleObject
 {
 	GENERATED_BODY()
 
@@ -23,6 +23,5 @@ public:
 	FFlecsSystem CVarSystem;
 
 	bool bOutsideChange = false;
-
 
 }; // class UFlecsCVarModule

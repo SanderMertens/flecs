@@ -2,6 +2,7 @@
 
 #include "FlecsCVarModule.h"
 #include "ConsoleVariableComponents.h"
+#include "HAL/ConsoleManager.h"
 #include "Worlds/FlecsWorld.h"
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(FlecsCVarModule)
@@ -74,7 +75,7 @@ void UFlecsCVarModule::RegisterCVar(const TCHAR* Name, IConsoleObject* CVar)
 {
 	GetFlecsWorld()->Scope(GetModuleEntity().GetId(), [&]()
 	{
-		if (CVar->AsVariable())
+		if LIKELY_IF(CVar->AsVariable())
 		{
 			FFlecsEntityHandle CVarEntity = GetFlecsWorld()->CreateEntity(Name);
 
@@ -106,11 +107,15 @@ void UFlecsCVarModule::RegisterCVar(const TCHAR* Name, IConsoleObject* CVar)
 				return;
 			}
 
-			CVar->AsVariable()->SetOnChangedCallback(
-				FConsoleVariableDelegate::CreateLambda([&, CVarEntity](IConsoleVariable* ChangedVar)
+			auto OnChangedCVar = [&](IConsoleVariable* ChangedVar)
 				{
+					if (bOutsideChange)
+					{
+						return;
+					}
+
 					bOutsideChange = true;
-					
+
 					if (ChangedVar->IsVariableInt())
 					{
 						CVarEntity.SetPair<FFlecsCVarComponent, int32>(ChangedVar->GetInt());
@@ -130,11 +135,8 @@ void UFlecsCVarModule::RegisterCVar(const TCHAR* Name, IConsoleObject* CVar)
 					else
 					{
 						UN_LOGF(LogFlecsCVarModule, Error, "Unknown CVar type for %s", Name);
-						bOutsideChange = false;
-						return;
 					}
-				}
-			));
+				};
 		}
 	});
 }
