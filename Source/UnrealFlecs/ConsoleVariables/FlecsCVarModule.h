@@ -8,8 +8,11 @@
 #include "FlecsCVarModule.generated.h"
 
 
+/**
+ * this is not implemented yet, do not use
+ */
 UCLASS()
-class UNREALFLECS_API UFlecsCVarModule : public UFlecsModuleObject, public IConsoleObject
+class UNREALFLECS_API UFlecsCVarModule : public UFlecsModuleObject
 {
 	GENERATED_BODY()
 
