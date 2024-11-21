@@ -6,7 +6,7 @@
 #include "Unlog/Unlog.h"
 #include "Worlds/FlecsWorldSubsystem.h"
 
-static constexpr int32 DefaultEntityRangeStart = 2000;
+static constexpr int32 DefaultEntityRangeStart = (EcsFirstUserEntityId * 2);
 
 FFlecsDefaultEntityEngine::FFlecsDefaultEntityEngine()
 {
@@ -83,7 +83,7 @@ void FFlecsDefaultEntityEngine::RefreshDefaultEntities()
 	}
 
 	DefaultEntityWorld.progress();
-	DefaultEntityWorld.set_entity_range(DefaultEntityRangeStart, 10000);
+	DefaultEntityWorld.set_entity_range(DefaultEntityRangeStart, 0);
 
 	for (const auto& [EntityRecord] : AddedDefaultEntities)
 	{
