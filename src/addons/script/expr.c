@@ -1162,7 +1162,8 @@ const char* flecs_binary_expr_parse(
         ptr = flecs_parse_ws_eol(ptr);
 
         ecs_value_t rvalue = {0};
-        const char *rptr = flecs_script_expr_run(world, stack, ptr, &rvalue, op, desc);
+        const char *rptr = flecs_script_expr_run(
+            world, stack, ptr, &rvalue, op, desc);
         if (!rptr) {
             return NULL;
         }

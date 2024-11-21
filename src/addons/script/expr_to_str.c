@@ -24,7 +24,7 @@ int flecs_expr_value_to_str(
     const ecs_expr_val_t *node)
 {
     return ecs_ptr_to_str_buf(
-        v->world, node->value.type, node->value.ptr, v->buf);
+        v->world, node->node.type, node->ptr, v->buf);
 }
 
 int flecs_expr_binary_to_str(
@@ -126,6 +126,12 @@ int flecs_expr_node_to_str(
     const ecs_expr_node_t *node)
 {
     ecs_assert(node != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    if (node->type) {
+        ecs_strbuf_appendlit(v->buf, "(");
+        ecs_strbuf_appendstr(v->buf, ecs_get_name(v->world, node->type));
+        ecs_strbuf_appendlit(v->buf, ")");
+    }
 
     switch(node->kind) {
     case EcsExprValue:

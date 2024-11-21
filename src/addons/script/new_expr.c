@@ -275,6 +275,8 @@ ecs_expr_node_t* ecs_script_parse_expr(
         goto error;
     }
 
+    flecs_script_expr_visit_type(script, out);
+
     return out;
 error:
     return NULL;
