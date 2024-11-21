@@ -125,6 +125,8 @@ public:
 			FFlecsWorldPtrComponent{ NewFlecsWorld });
 
 		NewFlecsWorld->SetSingleton<FUWorldPtrComponent>(FUWorldPtrComponent{ GetWorld() });
+		
+		DefaultWorld->InitializeDefaultComponents();
 
 		for (int32 Index = 0; Index < DefaultEntities.Num(); ++Index)
 		{
@@ -150,7 +152,7 @@ public:
 		
 		NewFlecsWorld->SetContext(this);
 
-		NewFlecsWorld->SetThreads(Settings.DefaultWorkerThreads);
+		NewFlecsWorld->SetTaskThreads(Settings.DefaultWorkerThreads);
 
 		NewFlecsWorld->WorldBeginPlay();
 
