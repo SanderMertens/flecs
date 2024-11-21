@@ -50,6 +50,10 @@ public:
     UPROPERTY(EditAnywhere, Category = "Flecs")
     uint8 bDefaultAutoMerge : 1 = true;
 
+    // @TODO: Not implemented due to a bug
+    UPROPERTY(EditAnywhere, Category = "Flecs")
+    uint8 bUseTaskThreads : 1 = true;
+
     UPROPERTY(EditAnywhere, Category = "Flecs", meta = (ClampMin = "0"))
     int32 DefaultWorkerThreads = 4;
 

@@ -114,8 +114,8 @@ public:
 		UFlecsWorld* NewFlecsWorld = NewObject<UFlecsWorld>(this);
 		
 		DefaultWorld = NewFlecsWorld;
-
-		DefaultWorld->InitializeOSAPI();
+		
+		NewFlecsWorld->SetContext(this);
 		
 		GetDefaultWorld()->AddSingleton<FFlecsTypeMapComponent>();
 		GetDefaultWorld()->TypeMapComponent = GetDefaultWorld()->GetSingletonPtr<FFlecsTypeMapComponent>();
@@ -149,10 +149,15 @@ public:
 		}
 
 		NewFlecsWorld->SetWorldName(Name);
-		
-		NewFlecsWorld->SetContext(this);
 
-		NewFlecsWorld->SetTaskThreads(Settings.DefaultWorkerThreads);
+		if (Settings.bUseTaskThreads)
+		{
+			NewFlecsWorld->SetThreads(Settings.DefaultWorkerThreads);
+		}
+		else
+		{
+			NewFlecsWorld->SetThreads(Settings.DefaultWorkerThreads);
+		}
 
 		NewFlecsWorld->WorldBeginPlay();
 

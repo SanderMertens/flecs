@@ -196,6 +196,8 @@
  */
 // #define FLECS_CPP_NO_AUTO_REGISTRATION
 
+#define FLECS_NO_OS_API_IMPL
+
 #ifndef FLECS_CUSTOM_BUILD
 // #define FLECS_C          /**< C API convenience macros, always enabled */
 #define FLECS_CPP           /**< C++ API */
@@ -213,7 +215,7 @@
 #define FLECS_DOC           /**< Document entities & components */
 #define FLECS_LOG           /**< When enabled ECS provides more detailed logs */
 #define FLECS_APP           /**< Application addon */
-#define FLECS_OS_API_IMPL   /**< Default implementation for OS API */
+//#define FLECS_OS_API_IMPL   /**< Default implementation for OS API */
 #define FLECS_HTTP          /**< Tiny HTTP server for connecting to remote UI */
 #define FLECS_REST          /**< REST API for querying application data */
  #define FLECS_JOURNAL    /**< Journaling addon (disabled by default) */

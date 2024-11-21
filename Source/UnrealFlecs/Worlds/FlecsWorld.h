@@ -18,6 +18,7 @@
 #include "Components/FlecsPrimaryAssetComponent.h"
 #include "Components/FlecsTypeMapComponent.h"
 #include "Components/FlecsUObjectComponent.h"
+#include "Components/FlecsWorldNameComponent.h"
 #include "Entities/FlecsEntityRecord.h"
 #include "SolidMacros/Concepts/SolidConcepts.h"
 #include "Entities/FlecsId.h"
@@ -36,7 +37,7 @@ DECLARE_CYCLE_STAT(TEXT("FlecsWorld::Progress::ProgressModule"), STAT_FlecsWorld
 
 struct FFlecsTask
 {
-	static constexpr ENamedThreads::Type TaskPriority = ENamedThreads::AnyThread;
+	static constexpr ENamedThreads::Type TaskPriority = ENamedThreads::Type::AnyBackgroundHiPriTask;
 	
 	FGraphEventRef TaskEvent;
 
@@ -50,7 +51,7 @@ struct FFlecsTask
 
 	FORCEINLINE void Wait() const
 	{
-		if (TaskEvent.IsValid())
+		if LIKELY_IF(TaskEvent.IsValid())
 		{
 			FTaskGraphInterface::Get().WaitUntilTaskCompletes(TaskEvent);
 		}
@@ -107,55 +108,84 @@ struct FFlecsConditionVariable
 	
 }; // struct FFlecsConditionVariable
 
-UCLASS(BlueprintType)
-class UNREALFLECS_API UFlecsWorld : public UObject
+class FFlecsRunnable final : public FRunnable
 {
-	GENERATED_BODY()
-
 public:
-	UFlecsWorld()
-		: TypeMapComponent(nullptr)
+	FFlecsRunnable(ecs_os_thread_callback_t InCallback, void* InParam)
+		: Callback(InCallback), Param(InParam)
 	{
-		World = flecs::world();
+	}
+
+	FORCEINLINE virtual uint32 Run() override
+	{
+		Callback(Param);
+		return 0;
+	}
+
+private:
+	ecs_os_thread_callback_t Callback;
+	void* Param;
+}; // class FFlecsRunnable
+
+struct FFlecsThread
+{
+	FRunnable* Runnable;
+	FRunnableThread* Thread;
+}; // struct FFlecsThread
+
+struct FOSApiInitializer
+{
+	FOSApiInitializer()
+	{
+		UN_LOG(LogFlecsCore, Log, "Initializing Flecs OS API");
+		InitializeOSAPI();
 	}
 	
-	virtual ~UFlecsWorld() override
-	{
-		FCoreUObjectDelegates::GarbageCollectComplete.RemoveAll(this);
-
-		const FAssetRegistryModule* AssetRegistryModule
-			= FModuleManager::LoadModulePtr<FAssetRegistryModule>(TEXT("AssetRegistry"));
-
-		if (AssetRegistryModule && AssetRegistryModule->IsValid())
-		{
-			IAssetRegistry& AssetRegistry = AssetRegistryModule->Get();
-			AssetRegistry.OnAssetAdded().RemoveAll(this);
-			AssetRegistry.OnAssetRemoved().RemoveAll(this);
-		}
-	}
-
-	FORCEINLINE_DEBUGGABLE void WorldBeginPlay()
-	{
-		UN_LOG(LogFlecsWorld, Log, "Flecs World begin play");
-		
-		InitializeSystems();
-		InitializeDefaultComponents();
-		InitializeAssetRegistry();
-	}
-
-	FORCEINLINE_DEBUGGABLE void InitializeOSAPI() const
+	void InitializeOSAPI()
 	{
         ecs_os_set_api_defaults();
 		
         ecs_os_api_t os_api = ecs_os_api;
-		
+
 		os_api.thread_new_ = [](ecs_os_thread_callback_t Callback, void* Param) -> ecs_os_thread_t
+		{
+			FFlecsThread* FlecsThread = static_cast<FFlecsThread*>(
+				FMemory::Malloc(sizeof(FFlecsThread), alignof(FFlecsThread)));
+        	
+			FlecsThread->Runnable = new FFlecsRunnable(Callback, Param);
+			FlecsThread->Thread = FRunnableThread::Create(FlecsThread->Runnable,
+				TEXT("FlecsThread"), 0, TPri_Normal);
+
+			return reinterpret_cast<ecs_os_thread_t>(FlecsThread);
+		};
+
+		os_api.thread_join_ = [](ecs_os_thread_t Thread) -> void*
+		{
+			FFlecsThread* FlecsThread = reinterpret_cast<FFlecsThread*>(Thread);
+        	
+			if LIKELY_IF(FlecsThread && FlecsThread->Thread)
+			{
+				FlecsThread->Thread->WaitForCompletion();
+				delete FlecsThread->Runnable;
+				delete FlecsThread->Thread;
+				FMemory::Free(FlecsThread);
+			}
+        	
+			return nullptr;
+		};
+
+		os_api.thread_self_ = []() -> ecs_os_thread_t
+		{
+			return FPlatformTLS::GetCurrentThreadId();
+		};
+		
+		os_api.task_new_ = [](ecs_os_thread_callback_t Callback, void* Param) -> ecs_os_thread_t
 		{
 			FFlecsTask* FlecsTask = new FFlecsTask(Callback, Param);
 			return reinterpret_cast<ecs_os_thread_t>(FlecsTask);
 		};
 
-		os_api.thread_join_ = [](ecs_os_thread_t Thread) -> void*
+		os_api.task_join_ = [](ecs_os_thread_t Thread) -> void*
 		{
 			if (const FFlecsTask* FlecsTask = reinterpret_cast<FFlecsTask*>(Thread))
 			{
@@ -307,8 +337,46 @@ public:
 		
         ecs_os_set_api(&os_api);
 	}
+}; // struct FOSApiInitializer
 
-	FORCEINLINE_DEBUGGABLE void InitializeDefaultComponents() const
+static FOSApiInitializer OSApiInitializer;
+
+UCLASS(BlueprintType)
+class UNREALFLECS_API UFlecsWorld : public UObject
+{
+	GENERATED_BODY()
+
+public:
+	UFlecsWorld()
+		: TypeMapComponent(nullptr)
+	{
+		World = flecs::world();
+	}
+	
+	virtual ~UFlecsWorld() override
+	{
+		FCoreUObjectDelegates::GarbageCollectComplete.RemoveAll(this);
+
+		const FAssetRegistryModule* AssetRegistryModule
+			= FModuleManager::LoadModulePtr<FAssetRegistryModule>(TEXT("AssetRegistry"));
+
+		if (AssetRegistryModule && AssetRegistryModule->IsValid())
+		{
+			IAssetRegistry& AssetRegistry = AssetRegistryModule->Get();
+			AssetRegistry.OnAssetAdded().RemoveAll(this);
+			AssetRegistry.OnAssetRemoved().RemoveAll(this);
+		}
+	}
+
+	void WorldBeginPlay()
+	{
+		UN_LOG(LogFlecsWorld, Log, "Flecs World begin play");
+		
+		InitializeSystems();
+		InitializeAssetRegistry();
+	}
+
+	void InitializeDefaultComponents() const
 	{
 		/* Opaque FString to flecs::string */
 		World.component<FString>()
@@ -369,7 +437,7 @@ public:
             });
 	}
 
-	FORCEINLINE_DEBUGGABLE void InitializeSystems()
+	void InitializeSystems()
 	{
 		ObtainComponentTypeStruct(FFlecsScriptStructComponent::StaticStruct());
 		
@@ -496,6 +564,9 @@ public:
 					{
 						const std::function<void(UObject*, UFlecsWorld*, FFlecsEntityHandle)>& Function
 							= InDependenciesComponent.Dependencies[InModuleComponent.ModuleClass];
+
+						InEntity.add(flecs::DependsOn, ModuleEntity);
+						
 						Function(InUObjectComponent.GetObjectChecked(), this, ModuleEntity);
 					}
 				});
@@ -607,6 +678,7 @@ public:
 			solid_check(DependencyEntity.IsValid());
 			solid_check(IsValid(DependencyModuleObject));
 
+			ModuleEntity.AddPair(flecs::DependsOn, DependencyEntity);
 			InFunction(DependencyModuleObject, this, DependencyEntity);
 		}
 	}
@@ -808,6 +880,7 @@ public:
 	template <typename T>
 	FORCEINLINE_DEBUGGABLE NO_DISCARD T GetSingleton() const
 	{
+		solid_checkf(HasSingleton<T>(), TEXT("Singleton %hs not found"), nameof(T).data());
 		return *World.get<T>();
 	}
 
@@ -832,19 +905,21 @@ public:
 	template <typename T>
 	FORCEINLINE_DEBUGGABLE NO_DISCARD T& GetSingletonRef()
 	{
+		solid_checkf(HasSingleton<T>(), TEXT("Singleton %hs not found"), nameof(T).data());
 		return *GetSingletonPtr<T>();
 	}
 
 	template <typename T>
 	FORCEINLINE_DEBUGGABLE NO_DISCARD const T& GetSingletonRef() const
 	{
-		solid_checkf(HasSingleton<T>(), TEXT("Singleton %s not found"), *T::StaticStruct()->GetName());
+		solid_checkf(HasSingleton<T>(), TEXT("Singleton %hs not found"), nameof(T).data());
 		return *GetSingletonPtr<T>();
 	}
 
 	template <typename T>
 	FORCEINLINE_DEBUGGABLE NO_DISCARD flecs::ref<T> GetSingletonFlecsRef() const
 	{
+		solid_checkf(HasSingleton<T>(), TEXT("Singleton %hs not found"), nameof(T).data());
 		return World.get_ref<T>();
 	}
 
@@ -869,20 +944,16 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
 	FORCEINLINE_DEBUGGABLE FString GetWorldName() const
 	{
-		return GetSingleton<FString>();
+		return GetSingleton<FFlecsWorldNameComponent>().WorldName;
 	}
 	
 	FORCEINLINE_DEBUGGABLE void SetWorldName(const FString& InName) const
 	{
-		SetSingleton<FString>(InName);
-
+		SetSingleton<FFlecsWorldNameComponent>({ InName });
+		
 		#if WITH_EDITOR
 
-		const char* Name = StringCast<char>(*InName).Get();
-
-		GetWorldEntity().SetDocName(Name);
-		
-		World.entity<FString>().set_doc_name(Name);
+		GetSingletonEntity<FFlecsWorldNameComponent>().SetDocName(InName);
 
 		#endif // WITH_EDITOR
 	}
@@ -890,7 +961,8 @@ public:
 	template <typename T>
 	FORCEINLINE_DEBUGGABLE void ImportFlecsModule()
 	{
-		static_assert(!TIsDerivedFrom<T, IFlecsModuleInterface>::Value, "T must not be derived from IFlecsModuleInterface");
+		static_assert(!TIsDerivedFrom<T, IFlecsModuleInterface>::Value,
+			"T must not be derived from IFlecsModuleInterface, use ImportModule(Non-Template) instead");
 		World.import<T>();
 	}
 
@@ -1173,7 +1245,7 @@ public:
 	{
 		World.children(std::forward<FunctionType>(Function));
 	}
-
+	
 	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
 	FORCEINLINE_DEBUGGABLE void SetThreads(const int32 InThreadCount) const
 	{
@@ -1185,7 +1257,7 @@ public:
 	{
 		return World.get_threads();
 	}
-
+	
 	UFUNCTION(BlueprintCallable, Category = "Flecs | World")
 	FORCEINLINE_DEBUGGABLE bool UsingTaskThreads() const
 	{
@@ -1345,6 +1417,11 @@ public:
 				UntypedComponent.member(StructComponent,
 					StringCast<char>(*Property->GetName()).Get(), 1,
 					Property->GetOffset_ForInternal());
+			}
+			else
+			{
+				UN_LOGF(LogFlecsWorld, Warning,
+					"Property Type: %s is not supported", *Property->GetName());
 			}
 		}
 	}
