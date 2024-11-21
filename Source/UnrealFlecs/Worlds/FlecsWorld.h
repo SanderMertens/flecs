@@ -111,30 +111,78 @@ struct FFlecsConditionVariable
 class FFlecsRunnable final : public FRunnable
 {
 public:
-	FFlecsRunnable(ecs_os_thread_callback_t InCallback, void* InParam)
-		: Callback(InCallback), Param(InParam)
+	explicit FFlecsRunnable(ecs_os_thread_callback_t InCallback, void* InParam)
+		: Callback(InCallback)
+		, Param(InParam)
+		, bShouldRun(true)
 	{
+		solid_check(InCallback != nullptr);
 	}
 
-	FORCEINLINE virtual uint32 Run() override
+	virtual bool Init() override
 	{
-		Callback(Param);
+		return true;
+	}
+
+	virtual uint32 Run() override
+	{
+		if LIKELY_IF(Callback && bShouldRun)
+		{
+			Callback(Param);
+		}
+		
 		return 0;
+	}
+
+	virtual void Stop() override
+	{
+		bShouldRun.store(false);
+	}
+
+	virtual void Exit() override
+	{
 	}
 
 private:
 	ecs_os_thread_callback_t Callback;
 	void* Param;
+	std::atomic<bool> bShouldRun;
 }; // class FFlecsRunnable
 
 struct FFlecsThread
 {
-	FRunnable* Runnable;
+	FFlecsRunnable* Runnable;
 	FRunnableThread* Thread;
+	bool bJoined;
+
+	FFlecsThread() 
+		: Runnable(nullptr)
+		, Thread(nullptr)
+		, bJoined(false) 
+	{}
+
+	~FFlecsThread()
+	{
+		if (!bJoined)
+		{
+			if (Thread)
+			{
+				Thread->Kill(true);
+				delete Thread;
+			}
+			if (Runnable)
+			{
+				delete Runnable;
+			}
+		}
+	}
+	
 }; // struct FFlecsThread
 
 struct FOSApiInitializer
 {
+	static constexpr EThreadPriority ThreadPriority = TPri_Normal;
+	
 	FOSApiInitializer()
 	{
 		UN_LOG(LogFlecsCore, Log, "Initializing Flecs OS API");
@@ -148,31 +196,56 @@ struct FOSApiInitializer
         ecs_os_api_t os_api = ecs_os_api;
 
 		os_api.thread_new_ = [](ecs_os_thread_callback_t Callback, void* Param) -> ecs_os_thread_t
-		{
-			FFlecsThread* FlecsThread = static_cast<FFlecsThread*>(
-				FMemory::Malloc(sizeof(FFlecsThread), alignof(FFlecsThread)));
-        	
-			FlecsThread->Runnable = new FFlecsRunnable(Callback, Param);
-			FlecsThread->Thread = FRunnableThread::Create(FlecsThread->Runnable,
-				TEXT("FlecsThread"), 0, TPri_Normal);
+        {
 
-			return reinterpret_cast<ecs_os_thread_t>(FlecsThread);
-		};
+            FFlecsThread* FlecsThread = static_cast<FFlecsThread*>(
+                FMemory::Malloc(sizeof(FFlecsThread), alignof(FFlecsThread)));
+            
+            new (FlecsThread) FFlecsThread();
+            
+            FlecsThread->Runnable = new FFlecsRunnable(Callback, Param);
 
-		os_api.thread_join_ = [](ecs_os_thread_t Thread) -> void*
-		{
-			FFlecsThread* FlecsThread = reinterpret_cast<FFlecsThread*>(Thread);
-        	
-			if LIKELY_IF(FlecsThread && FlecsThread->Thread)
-			{
-				FlecsThread->Thread->WaitForCompletion();
-				delete FlecsThread->Runnable;
-				delete FlecsThread->Thread;
-				FMemory::Free(FlecsThread);
-			}
-        	
-			return nullptr;
-		};
+            static int32 ThreadCounter = 0;
+            const FString ThreadName = FString::Printf(TEXT("FlecsThread_%d"),
+            	FPlatformAtomics::InterlockedIncrement(&ThreadCounter));
+            
+            FlecsThread->Thread = FRunnableThread::Create(
+                FlecsThread->Runnable,
+                *ThreadName,
+                0,
+                TPri_Normal,
+                FPlatformAffinity::GetPoolThreadMask());
+
+            return reinterpret_cast<ecs_os_thread_t>(FlecsThread);
+        };
+
+        os_api.thread_join_ = [](ecs_os_thread_t Thread) -> void*
+        {
+            FFlecsThread* FlecsThread = reinterpret_cast<FFlecsThread*>(Thread);
+            
+            if (FlecsThread && !FlecsThread->bJoined)
+            {
+                if (FlecsThread->Thread)
+                {
+                    FlecsThread->Runnable->Stop();
+                    FlecsThread->Thread->WaitForCompletion();
+                    delete FlecsThread->Thread;
+                    FlecsThread->Thread = nullptr;
+                }
+                
+                if (FlecsThread->Runnable)
+                {
+                    delete FlecsThread->Runnable;
+                    FlecsThread->Runnable = nullptr;
+                }
+
+                FlecsThread->bJoined = true;
+                FlecsThread->~FFlecsThread();
+                FMemory::Free(FlecsThread);
+            }
+            
+            return nullptr;
+        };
 
 		os_api.thread_self_ = []() -> ecs_os_thread_t
 		{
