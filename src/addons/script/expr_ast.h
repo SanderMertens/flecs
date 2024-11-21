@@ -20,12 +20,13 @@ typedef enum ecs_expr_node_kind_t {
 
 struct ecs_expr_node_t {
     ecs_expr_node_kind_t kind;
+    ecs_entity_t type;
     const char *pos;
 };
 
 typedef struct ecs_expr_val_t {
     ecs_expr_node_t node;
-    ecs_value_t value;
+    void *ptr;
     union {
         bool bool_;
         int8_t i8;
