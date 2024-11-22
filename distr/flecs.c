@@ -4935,6 +4935,9 @@ typedef struct ecs_expr_element_t {
     ecs_expr_node_t *index;
 } ecs_expr_element_t;
 
+ecs_expr_val_t* flecs_expr_value(
+    ecs_script_parser_t *parser);
+
 ecs_expr_val_t* flecs_expr_bool(
     ecs_script_parser_t *parser,
     bool value);
@@ -4985,9 +4988,18 @@ ecs_expr_element_t* flecs_expr_element(
 #ifndef FLECS_EXPR_SCRIPT_VISIT_H
 #define FLECS_EXPR_SCRIPT_VISIT_H
 
+#define flecs_expr_visit_error(script, node, ...) \
+    ecs_parser_error( \
+        script->name, script->code, ((ecs_expr_node_t*)node)->pos - script->code, \
+        __VA_ARGS__);
+
 int flecs_script_expr_visit_type(
     ecs_script_t *script,
     ecs_expr_node_t *node);
+
+int flecs_script_expr_visit_fold(
+    ecs_script_t *script,
+    ecs_expr_node_t **node);
 
 #endif
 
@@ -56559,8 +56571,8 @@ ecs_expr_variable_t* flecs_expr_variable(
 ecs_expr_unary_t* flecs_expr_unary(
     ecs_script_parser_t *parser)
 {
-    ecs_expr_binary_t *result = flecs_expr_ast_new(
-        parser, ecs_expr_binary_t, EcsExprUnary);
+    ecs_expr_unary_t *result = flecs_expr_ast_new(
+        parser, ecs_expr_unary_t, EcsExprUnary);
     return result;
 }
 
@@ -56586,6 +56598,214 @@ ecs_expr_element_t* flecs_expr_element(
     ecs_expr_element_t *result = flecs_expr_ast_new(
         parser, ecs_expr_element_t, EcsExprElement);
     return result;
+}
+
+#endif
+
+/**
+ * @file addons/script/expr_fold.c
+ * @brief Script expression constant folding.
+ */
+
+
+#ifdef FLECS_SCRIPT
+
+#define ECS_VALUE_GET(value, T) (*(T*)((ecs_expr_val_t*)value)->ptr)
+
+#define ECS_BINARY_OP_T(left, right, result, op, R, T)\
+    ECS_VALUE_GET(result, R) = ECS_VALUE_GET(left, T) op ECS_VALUE_GET(right, T)
+
+#define ECS_BINARY_INT_OP(left, right, result, op)\
+    if (left->type == ecs_id(ecs_u64_t)) { \
+        ECS_BINARY_OP_T(left, right, result, op, ecs_u64_t, ecs_u64_t);\
+    } else if (left->type == ecs_id(ecs_i64_t)) { \
+        ECS_BINARY_OP_T(left, right, result, op, ecs_i64_t, ecs_i64_t);\
+    } else {\
+        ecs_abort(ECS_INTERNAL_ERROR, "unexpected type in binary expression");\
+    }
+
+#define ECS_BINARY_OP(left, right, result, op)\
+    if (left->type == ecs_id(ecs_u64_t)) { \
+        ECS_BINARY_OP_T(left, right, result, op, ecs_u64_t, ecs_u64_t);\
+    } else if (left->type == ecs_id(ecs_i64_t)) { \
+        ECS_BINARY_OP_T(left, right, result, op, ecs_i64_t, ecs_i64_t);\
+    } else if (left->type == ecs_id(ecs_f64_t)) { \
+        ECS_BINARY_OP_T(left, right, result, op, ecs_f64_t, ecs_f64_t);\
+    } else {\
+        ecs_abort(ECS_INTERNAL_ERROR, "unexpected type in binary expression");\
+    }
+
+#define ECS_BINARY_COND_EQ_OP(left, right, result, op)\
+    if (left->type == ecs_id(ecs_u64_t)) { \
+        ECS_BINARY_OP_T(left, right, result, op, ecs_bool_t, ecs_u64_t);\
+    } else if (left->type == ecs_id(ecs_i64_t)) { \
+        ECS_BINARY_OP_T(left, right, result, op, ecs_bool_t, ecs_i64_t);\
+    } else if (left->type == ecs_id(ecs_f64_t)) { \
+        flecs_expr_visit_error(script, left, "unsupported operator for floating point");\
+        return -1;\
+    } else if (left->type == ecs_id(ecs_u8_t)) { \
+        ECS_BINARY_OP_T(left, right, result, op, ecs_bool_t, ecs_u8_t);\
+    } else if (left->type == ecs_id(ecs_char_t)) { \
+        ECS_BINARY_OP_T(left, right, result, op, ecs_bool_t, ecs_char_t);\
+    } else if (left->type == ecs_id(ecs_bool_t)) { \
+        ECS_BINARY_OP_T(left, right, result, op, ecs_bool_t, ecs_bool_t);\
+    } else {\
+        ecs_abort(ECS_INTERNAL_ERROR, "unexpected type in binary expression");\
+    }
+
+#define ECS_BINARY_COND_OP(left, right, result, op)\
+    if (left->type == ecs_id(ecs_u64_t)) { \
+        ECS_BINARY_OP_T(left, right, result, op, ecs_bool_t, ecs_u64_t);\
+    } else if (left->type == ecs_id(ecs_i64_t)) { \
+        ECS_BINARY_OP_T(left, right, result, op, ecs_bool_t, ecs_i64_t);\
+    } else if (left->type == ecs_id(ecs_f64_t)) { \
+        ECS_BINARY_OP_T(left, right, result, op, ecs_bool_t, ecs_f64_t);\
+    } else if (left->type == ecs_id(ecs_u8_t)) { \
+        ECS_BINARY_OP_T(left, right, result, op, ecs_bool_t, ecs_u8_t);\
+    } else if (left->type == ecs_id(ecs_char_t)) { \
+        ECS_BINARY_OP_T(left, right, result, op, ecs_bool_t, ecs_char_t);\
+    } else if (left->type == ecs_id(ecs_bool_t)) { \
+        ECS_BINARY_OP_T(left, right, result, op, ecs_bool_t, ecs_bool_t);\
+    } else {\
+        ecs_abort(ECS_INTERNAL_ERROR, "unexpected type in binary expression");\
+    }
+
+#define ECS_BINARY_BOOL_OP(left, right, result, op)\
+    if (left->type == ecs_id(ecs_bool_t)) { \
+        ECS_BINARY_OP_T(left, right, result, op, ecs_bool_t, ecs_bool_t);\
+    } else {\
+        ecs_abort(ECS_INTERNAL_ERROR, "unexpected type in binary expression");\
+    }
+
+#define ECS_BINARY_UINT_OP(left, right, result, op)\
+    if (left->type == ecs_id(ecs_u64_t)) { \
+        ECS_BINARY_OP_T(left, right, result, op, ecs_u64_t, ecs_u64_t);\
+    } else {\
+        ecs_abort(ECS_INTERNAL_ERROR, "unexpected type in binary expression");\
+    }
+
+int flecs_expr_binary_visit_fold(
+    ecs_script_t *script,
+    ecs_expr_node_t **node_ptr)
+{
+    ecs_expr_binary_t *node = (ecs_expr_binary_t*)*node_ptr;
+
+    if (flecs_script_expr_visit_fold(script, &node->left)) {
+        goto error;
+    }
+
+    if (flecs_script_expr_visit_fold(script, &node->right)) {
+        goto error;
+    }
+
+    if (node->left->kind != EcsExprValue || node->right->kind != EcsExprValue) {
+        /* Only folding literals for now */
+        return 0;
+    }
+
+    ecs_expr_val_t *result = flecs_calloc_t(
+        &((ecs_script_impl_t*)script)->allocator, ecs_expr_val_t);
+    result->ptr = &result->storage.u64;
+    result->node.kind = EcsExprValue;
+    result->node.pos = node->node.pos;
+    result->node.type = node->node.type;
+
+    switch(node->operator) {
+    case EcsTokAdd:
+        ECS_BINARY_OP(node->left, node->right, result, +);
+        break;
+    case EcsTokSub:
+        ECS_BINARY_OP(node->left, node->right, result, -);
+        break;
+    case EcsTokMul:
+        ECS_BINARY_OP(node->left, node->right, result, *);
+        break;
+    case EcsTokDiv:
+        ECS_BINARY_OP(node->left, node->right, result, /);
+        break;
+    case EcsTokMod:
+        ECS_BINARY_INT_OP(node->left, node->right, result, %);
+        break;
+    case EcsTokEq:
+        ECS_BINARY_COND_EQ_OP(node->left, node->right, result, ==);
+        break;
+    case EcsTokNeq:
+        ECS_BINARY_COND_EQ_OP(node->left, node->right, result, !=);
+        break;
+    case EcsTokGt:
+        ECS_BINARY_COND_OP(node->left, node->right, result, >);
+        break;
+    case EcsTokGtEq:
+        ECS_BINARY_COND_OP(node->left, node->right, result, >=);
+        break;
+    case EcsTokLt:
+        ECS_BINARY_COND_OP(node->left, node->right, result, <);
+        break;
+    case EcsTokLtEq:
+        ECS_BINARY_COND_OP(node->left, node->right, result, <=);
+        break;
+    case EcsTokAnd:
+        ECS_BINARY_BOOL_OP(node->left, node->right, result, &&);
+        break;
+    case EcsTokOr:
+        ECS_BINARY_BOOL_OP(node->left, node->right, result, ||);
+        break;
+    case EcsTokShiftLeft:
+        ECS_BINARY_UINT_OP(node->left, node->right, result, <<);
+        break;
+    case EcsTokShiftRight:
+        ECS_BINARY_UINT_OP(node->left, node->right, result, >>);
+        break;
+    default:
+        flecs_expr_visit_error(script, node->left, "unsupported operator");
+        goto error;
+    }
+
+    *node_ptr = (ecs_expr_node_t*)result;
+
+    return 0;
+error:  
+    return -1;
+}
+
+int flecs_script_expr_visit_fold(
+    ecs_script_t *script,
+    ecs_expr_node_t **node_ptr)
+{
+    ecs_assert(node_ptr != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_expr_node_t *node = *node_ptr;
+
+    switch(node->kind) {
+    case EcsExprValue:
+        /* Value types are assigned by the AST */
+        break;
+    case EcsExprUnary:
+        // if (flecs_expr_unary_visit_fold(script, (ecs_expr_unary_t*)node)) {
+        //     goto error;
+        // }
+        break;
+    case EcsExprBinary:
+        if (flecs_expr_binary_visit_fold(script, node_ptr)) {
+            goto error;
+        }
+        break;
+    case EcsExprIdentifier:
+        break;
+    case EcsExprVariable:
+        break;
+    case EcsExprFunction:
+        break;
+    case EcsExprMember:
+        break;
+    case EcsExprElement:
+        break;
+    case EcsExprCast:
+        break;
+    }
+
+    return 0;
+error:
+    return -1;
 }
 
 #endif
@@ -56818,11 +57038,6 @@ char* ecs_script_expr_to_str(
 
 
 #ifdef FLECS_SCRIPT
-
-#define flecs_expr_visit_error(script, node, ...) \
-    ecs_parser_error( \
-        script->name, script->code, ((ecs_expr_node_t*)node)->pos - script->code, \
-        __VA_ARGS__);
 
 static
 bool flecs_expr_operator_is_equality(
@@ -57106,7 +57321,7 @@ error:
 }
 
 static
-int flecs_expr_identifier_visit(
+int flecs_expr_identifier_visit_type(
     ecs_script_t *script,
     ecs_expr_identifier_t *node)
 {
@@ -57124,7 +57339,7 @@ error:
 }
 
 static
-int flecs_expr_variable_visit(
+int flecs_expr_variable_visit_type(
     ecs_script_t *script,
     ecs_expr_variable_t *node)
 {
@@ -57133,7 +57348,7 @@ int flecs_expr_variable_visit(
 }
 
 static
-int flecs_expr_member_visit(
+int flecs_expr_member_visit_type(
     ecs_script_t *script,
     ecs_expr_member_t *node)
 {
@@ -57186,7 +57401,7 @@ error:
 }
 
 static
-int flecs_expr_element_visit(
+int flecs_expr_element_visit_type(
     ecs_script_t *script,
     ecs_expr_element_t *node)
 {
@@ -57269,24 +57484,24 @@ int flecs_script_expr_visit_type(
         }
         break;
     case EcsExprIdentifier:
-        if (flecs_expr_identifier_visit(script, (ecs_expr_identifier_t*)node)) {
+        if (flecs_expr_identifier_visit_type(script, (ecs_expr_identifier_t*)node)) {
             goto error;
         }
         break;
     case EcsExprVariable:
-        if (flecs_expr_variable_visit(script, (ecs_expr_variable_t*)node)) {
+        if (flecs_expr_variable_visit_type(script, (ecs_expr_variable_t*)node)) {
             goto error;
         }
         break;
     case EcsExprFunction:
         break;
     case EcsExprMember:
-        if (flecs_expr_member_visit(script, (ecs_expr_member_t*)node)) {
+        if (flecs_expr_member_visit_type(script, (ecs_expr_member_t*)node)) {
             goto error;
         }
         break;
     case EcsExprElement:
-        if (flecs_expr_element_visit(script, (ecs_expr_element_t*)node)) {
+        if (flecs_expr_element_visit_type(script, (ecs_expr_element_t*)node)) {
             goto error;
         }
         break;
@@ -57991,6 +58206,7 @@ ecs_expr_node_t* ecs_script_parse_expr(
     }
 
     flecs_script_expr_visit_type(script, out);
+    flecs_script_expr_visit_fold(script, &out);
 
     return out;
 error:

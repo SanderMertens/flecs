@@ -8,11 +8,6 @@
 #ifdef FLECS_SCRIPT
 #include "script.h"
 
-#define flecs_expr_visit_error(script, node, ...) \
-    ecs_parser_error( \
-        script->name, script->code, ((ecs_expr_node_t*)node)->pos - script->code, \
-        __VA_ARGS__);
-
 static
 bool flecs_expr_operator_is_equality(
     ecs_script_token_kind_t op)
@@ -295,7 +290,7 @@ error:
 }
 
 static
-int flecs_expr_identifier_visit(
+int flecs_expr_identifier_visit_type(
     ecs_script_t *script,
     ecs_expr_identifier_t *node)
 {
@@ -313,7 +308,7 @@ error:
 }
 
 static
-int flecs_expr_variable_visit(
+int flecs_expr_variable_visit_type(
     ecs_script_t *script,
     ecs_expr_variable_t *node)
 {
@@ -322,7 +317,7 @@ int flecs_expr_variable_visit(
 }
 
 static
-int flecs_expr_member_visit(
+int flecs_expr_member_visit_type(
     ecs_script_t *script,
     ecs_expr_member_t *node)
 {
@@ -375,7 +370,7 @@ error:
 }
 
 static
-int flecs_expr_element_visit(
+int flecs_expr_element_visit_type(
     ecs_script_t *script,
     ecs_expr_element_t *node)
 {
@@ -458,24 +453,24 @@ int flecs_script_expr_visit_type(
         }
         break;
     case EcsExprIdentifier:
-        if (flecs_expr_identifier_visit(script, (ecs_expr_identifier_t*)node)) {
+        if (flecs_expr_identifier_visit_type(script, (ecs_expr_identifier_t*)node)) {
             goto error;
         }
         break;
     case EcsExprVariable:
-        if (flecs_expr_variable_visit(script, (ecs_expr_variable_t*)node)) {
+        if (flecs_expr_variable_visit_type(script, (ecs_expr_variable_t*)node)) {
             goto error;
         }
         break;
     case EcsExprFunction:
         break;
     case EcsExprMember:
-        if (flecs_expr_member_visit(script, (ecs_expr_member_t*)node)) {
+        if (flecs_expr_member_visit_type(script, (ecs_expr_member_t*)node)) {
             goto error;
         }
         break;
     case EcsExprElement:
-        if (flecs_expr_element_visit(script, (ecs_expr_element_t*)node)) {
+        if (flecs_expr_element_visit_type(script, (ecs_expr_element_t*)node)) {
             goto error;
         }
         break;

@@ -79,6 +79,9 @@ typedef struct ecs_expr_element_t {
     ecs_expr_node_t *index;
 } ecs_expr_element_t;
 
+ecs_expr_val_t* flecs_expr_value(
+    ecs_script_parser_t *parser);
+
 ecs_expr_val_t* flecs_expr_bool(
     ecs_script_parser_t *parser,
     bool value);
