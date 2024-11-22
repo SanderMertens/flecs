@@ -108,8 +108,8 @@ ecs_expr_variable_t* flecs_expr_variable(
 ecs_expr_unary_t* flecs_expr_unary(
     ecs_script_parser_t *parser)
 {
-    ecs_expr_binary_t *result = flecs_expr_ast_new(
-        parser, ecs_expr_binary_t, EcsExprUnary);
+    ecs_expr_unary_t *result = flecs_expr_ast_new(
+        parser, ecs_expr_unary_t, EcsExprUnary);
     return result;
 }
 

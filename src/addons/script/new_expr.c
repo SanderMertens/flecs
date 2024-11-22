@@ -285,6 +285,7 @@ ecs_expr_node_t* ecs_script_parse_expr(
     }
 
     flecs_script_expr_visit_type(script, out);
+    flecs_script_expr_visit_fold(script, &out);
 
     return out;
 error:
