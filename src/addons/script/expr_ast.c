@@ -137,4 +137,18 @@ ecs_expr_element_t* flecs_expr_element(
     return result;
 }
 
+ecs_expr_cast_t* flecs_expr_cast(
+    ecs_script_t *script,
+    ecs_expr_node_t *expr,
+    ecs_entity_t type)
+{
+    ecs_allocator_t *a = &((ecs_script_impl_t*)script)->allocator;
+    ecs_expr_cast_t *result = flecs_calloc_t(a, ecs_expr_cast_t);
+    result->node.kind = EcsExprCast;
+    result->node.pos = expr->pos;
+    result->node.type = type;
+    result->expr = expr;
+    return result;
+}
+
 #endif

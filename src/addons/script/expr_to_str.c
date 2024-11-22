@@ -141,6 +141,13 @@ int flecs_expr_element_to_str(
     return 0;
 }
 
+int flecs_expr_cast_to_str(
+    ecs_expr_str_visitor_t *v,
+    const ecs_expr_cast_t *node)
+{
+    return flecs_expr_node_to_str(v, node->expr);
+}
+
 int flecs_expr_node_to_str(
     ecs_expr_str_visitor_t *v,
     const ecs_expr_node_t *node)
@@ -192,6 +199,9 @@ int flecs_expr_node_to_str(
         }
         break;
     case EcsExprCast:
+        if (flecs_expr_cast_to_str(v, (ecs_expr_cast_t*)node)) {
+            goto error;
+        }
         break;
     }
 

@@ -208,6 +208,49 @@ error:
     return -1;
 }
 
+int flecs_expr_cast_visit_fold(
+    ecs_script_t *script,
+    ecs_expr_node_t **node_ptr)
+{
+    ecs_expr_cast_t *node = (ecs_expr_cast_t*)*node_ptr;
+
+    if (flecs_script_expr_visit_fold(script, &node->expr)) {
+        goto error;
+    }
+
+    if (node->expr->kind != EcsExprValue) {
+        /* Only folding literals for now */
+        return 0;
+    }
+
+    ecs_expr_val_t *expr = (ecs_expr_val_t*)node->expr;
+
+    /* Reuse existing node to hold casted value */
+    *node_ptr = (ecs_expr_node_t*)expr;
+
+    ecs_entity_t dst_type = node->node.type;
+    ecs_entity_t src_type = expr->node.type;
+
+    if (dst_type == src_type) {
+        /* No cast necessary if types are equal */
+        return 0;
+    }
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(script->world, dst_type, expr->ptr);
+    ecs_value_t value = {
+        .type = src_type,
+        .ptr = expr->ptr
+    };
+
+    ecs_meta_set_value(&cur, &value);
+
+    expr->node.type = dst_type;
+
+    return 0;
+error:  
+    return -1;  
+}
+
 int flecs_script_expr_visit_fold(
     ecs_script_t *script,
     ecs_expr_node_t **node_ptr)
@@ -239,6 +282,9 @@ int flecs_script_expr_visit_fold(
     case EcsExprElement:
         break;
     case EcsExprCast:
+        if (flecs_expr_cast_visit_fold(script, node_ptr)) {
+            goto error;
+        }
         break;
     }
 
