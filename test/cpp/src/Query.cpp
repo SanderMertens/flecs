@@ -523,6 +523,42 @@ void Query_find_w_entity(void) {
     test_assert(r == e2);
 }
 
+void Query_find_w_match_empty_tables(void) {
+    flecs::world ecs;
+
+    auto e1 = ecs.entity().set<Position>({10, 20}).add<Velocity>();
+    e1.destruct(); // creates empty table
+    auto e2 = ecs.entity().set<Position>({20, 30});
+
+    auto q = ecs.query_builder<Position>()
+        .query_flags(EcsQueryMatchEmptyTables)
+        .build();
+
+    auto r = q.find([](Position& p) {
+        return p.x == 20;
+    });
+
+    test_assert(r == e2);
+}
+
+void Query_find_w_entity_w_match_empty_tables(void) {
+    flecs::world ecs;
+
+    auto e1 = ecs.entity().set<Position>({10, 20}).add<Velocity>();
+    e1.destruct(); // creates empty table
+    auto e2 = ecs.entity().set<Position>({20, 30});
+
+    auto q = ecs.query_builder<Position>()
+        .query_flags(EcsQueryMatchEmptyTables)
+        .build();
+
+    auto r = q.find([](flecs::entity e, Position& p) {
+        return p.x == 20;
+    });
+
+    test_assert(r == e2);
+}
+
 // Generic lambdas are a C++14 feature.
 
 struct GenericLambdaFindEntity {

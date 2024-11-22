@@ -674,6 +674,8 @@
                 "find",
                 "find_not_found",
                 "find_w_entity",
+                "find_w_match_empty_tables",
+                "find_w_entity_w_match_empty_tables",
                 "optional_pair_term",
                 "empty_tables_each",
                 "empty_tables_each_w_entity",
