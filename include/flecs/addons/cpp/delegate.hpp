@@ -301,9 +301,6 @@ private:
     static void invoke_callback(
         ecs_iter_t *iter, const Func& func, size_t i, Args... comps) 
     {
-        ecs_assert(iter->count > 0, ECS_INVALID_OPERATION,
-            "no entities returned, use each() without flecs::entity argument");
-
         func(flecs::entity(iter->world, iter->entities[i]),
             (ColumnType< remove_reference_t<Components> >(iter, comps, i)
                 .get_row())...);
@@ -419,9 +416,6 @@ private:
         ecs_world_t *world = iter->world;
         size_t count = static_cast<size_t>(iter->count);
         flecs::entity result;
-
-        ecs_assert(count > 0, ECS_INVALID_OPERATION,
-            "no entities returned, use find() without flecs::entity argument");
 
         for (size_t i = 0; i < count; i ++) {
             if (func(flecs::entity(world, iter->entities[i]),

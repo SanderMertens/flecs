@@ -650,6 +650,8 @@ void Query_iter_get_pair_w_id(void);
 void Query_find(void);
 void Query_find_not_found(void);
 void Query_find_w_entity(void);
+void Query_find_w_match_empty_tables(void);
+void Query_find_w_entity_w_match_empty_tables(void);
 void Query_optional_pair_term(void);
 void Query_empty_tables_each(void);
 void Query_empty_tables_each_w_entity(void);
@@ -3920,6 +3922,14 @@ bake_test_case Query_testcases[] = {
         Query_find_w_entity
     },
     {
+        "find_w_match_empty_tables",
+        Query_find_w_match_empty_tables
+    },
+    {
+        "find_w_entity_w_match_empty_tables",
+        Query_find_w_entity_w_match_empty_tables
+    },
+    {
         "optional_pair_term",
         Query_optional_pair_term
     },
@@ -6908,7 +6918,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        116,
+        118,
         Query_testcases
     },
     {
