@@ -56474,1180 +56474,6 @@ const char* ecs_script_expr_run(
 #endif
 
 /**
- * @file addons/script/expr_ast.c
- * @brief Script expression AST implementation.
- */
-
-
-#ifdef FLECS_SCRIPT
-
-#define flecs_expr_ast_new(parser, T, kind)\
-    (T*)flecs_expr_ast_new_(parser, ECS_SIZEOF(T), kind)
-
-static
-void* flecs_expr_ast_new_(
-    ecs_script_parser_t *parser,
-    ecs_size_t size, 
-    ecs_expr_node_kind_t kind)
-{
-    ecs_assert(parser->script != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_allocator_t *a = &parser->script->allocator;
-    ecs_expr_node_t *result = flecs_calloc(a, size);
-    result->kind = kind;
-    result->pos = parser->pos;
-    return result;
-}
-
-ecs_expr_val_t* flecs_expr_bool(
-    ecs_script_parser_t *parser,
-    bool value)
-{
-    ecs_expr_val_t *result = flecs_expr_ast_new(
-        parser, ecs_expr_val_t, EcsExprValue);
-    result->storage.bool_ = value;
-    result->ptr = &result->storage.bool_;
-    result->node.type = ecs_id(ecs_bool_t);
-    return result;
-}
-
-ecs_expr_val_t* flecs_expr_int(
-    ecs_script_parser_t *parser,
-    int64_t value)
-{
-    ecs_expr_val_t *result = flecs_expr_ast_new(
-        parser, ecs_expr_val_t, EcsExprValue);
-    result->storage.i64 = value;
-    result->ptr = &result->storage.i64;
-    result->node.type = ecs_id(ecs_i64_t);
-    return result;
-}
-
-ecs_expr_val_t* flecs_expr_uint(
-    ecs_script_parser_t *parser,
-    uint64_t value)
-{
-    ecs_expr_val_t *result = flecs_expr_ast_new(
-        parser, ecs_expr_val_t, EcsExprValue);
-    result->storage.u64 = value;
-    result->ptr = &result->storage.u64;
-    result->node.type = ecs_id(ecs_i64_t);
-    return result;
-}
-
-ecs_expr_val_t* flecs_expr_float(
-    ecs_script_parser_t *parser,
-    double value)
-{
-    ecs_expr_val_t *result = flecs_expr_ast_new(
-        parser, ecs_expr_val_t, EcsExprValue);
-    result->storage.f64 = value;
-    result->ptr = &result->storage.f64;
-    result->node.type = ecs_id(ecs_f64_t);
-    return result;
-}
-
-ecs_expr_val_t* flecs_expr_string(
-    ecs_script_parser_t *parser,
-    const char *value)
-{
-    ecs_expr_val_t *result = flecs_expr_ast_new(
-        parser, ecs_expr_val_t, EcsExprValue);
-    result->storage.string = value;
-    result->ptr = &result->storage.string;
-    result->node.type = ecs_id(ecs_string_t);
-    return result;
-}
-
-ecs_expr_identifier_t* flecs_expr_identifier(
-    ecs_script_parser_t *parser,
-    const char *value)
-{
-    ecs_expr_identifier_t *result = flecs_expr_ast_new(
-        parser, ecs_expr_identifier_t, EcsExprIdentifier);
-    result->value = value;
-    return result;
-}
-
-ecs_expr_variable_t* flecs_expr_variable(
-    ecs_script_parser_t *parser,
-    const char *value)
-{
-    ecs_expr_variable_t *result = flecs_expr_ast_new(
-        parser, ecs_expr_variable_t, EcsExprVariable);
-    result->value = value;
-    return result;
-}
-
-ecs_expr_unary_t* flecs_expr_unary(
-    ecs_script_parser_t *parser)
-{
-    ecs_expr_unary_t *result = flecs_expr_ast_new(
-        parser, ecs_expr_unary_t, EcsExprUnary);
-    return result;
-}
-
-ecs_expr_binary_t* flecs_expr_binary(
-    ecs_script_parser_t *parser)
-{
-    ecs_expr_binary_t *result = flecs_expr_ast_new(
-        parser, ecs_expr_binary_t, EcsExprBinary);
-    return result;
-}
-
-ecs_expr_member_t* flecs_expr_member(
-    ecs_script_parser_t *parser)
-{
-    ecs_expr_member_t *result = flecs_expr_ast_new(
-        parser, ecs_expr_member_t, EcsExprMember);
-    return result;
-}
-
-ecs_expr_element_t* flecs_expr_element(
-    ecs_script_parser_t *parser)
-{
-    ecs_expr_element_t *result = flecs_expr_ast_new(
-        parser, ecs_expr_element_t, EcsExprElement);
-    return result;
-}
-
-ecs_expr_cast_t* flecs_expr_cast(
-    ecs_script_t *script,
-    ecs_expr_node_t *expr,
-    ecs_entity_t type)
-{
-    ecs_allocator_t *a = &((ecs_script_impl_t*)script)->allocator;
-    ecs_expr_cast_t *result = flecs_calloc_t(a, ecs_expr_cast_t);
-    result->node.kind = EcsExprCast;
-    result->node.pos = expr->pos;
-    result->node.type = type;
-    result->expr = expr;
-    return result;
-}
-
-#endif
-
-/**
- * @file addons/script/expr_to_str.c
- * @brief Script expression AST to string visitor.
- */
-
-
-#ifdef FLECS_SCRIPT
-
-typedef struct ecs_expr_str_visitor_t {
-    const ecs_world_t *world;
-    ecs_strbuf_t *buf;
-    int32_t depth;
-    bool newline;
-} ecs_expr_str_visitor_t;
-
-int flecs_expr_node_to_str(
-    ecs_expr_str_visitor_t *v,
-    const ecs_expr_node_t *node);
-
-int flecs_expr_value_to_str(
-    ecs_expr_str_visitor_t *v,
-    const ecs_expr_val_t *node)
-{
-    return ecs_ptr_to_str_buf(
-        v->world, node->node.type, node->ptr, v->buf);
-}
-
-int flecs_expr_unary_to_str(
-    ecs_expr_str_visitor_t *v,
-    const ecs_expr_unary_t *node)
-{
-    switch(node->operator) {
-    case EcsTokNot: ecs_strbuf_appendlit(v->buf, "!"); break;
-    default:
-        ecs_err("invalid operator for unary expression");
-        return -1;
-    };
-
-    if (flecs_expr_node_to_str(v, node->expr)) {
-        goto error;
-    }
-
-    return 0;
-error:
-    return -1;
-}
-
-int flecs_expr_binary_to_str(
-    ecs_expr_str_visitor_t *v,
-    const ecs_expr_binary_t *node)
-{
-    ecs_strbuf_appendlit(v->buf, "(");
-
-    if (flecs_expr_node_to_str(v, node->left)) {
-        goto error;
-    }
-
-    ecs_strbuf_appendlit(v->buf, " ");
-
-    switch(node->operator) {
-    case EcsTokAdd: ecs_strbuf_appendlit(v->buf, "+"); break;
-    case EcsTokSub: ecs_strbuf_appendlit(v->buf, "-"); break;
-    case EcsTokMul: ecs_strbuf_appendlit(v->buf, "*"); break;
-    case EcsTokDiv: ecs_strbuf_appendlit(v->buf, "/"); break;
-    case EcsTokMod: ecs_strbuf_appendlit(v->buf, "%%"); break;
-    case EcsTokBitwiseOr: ecs_strbuf_appendlit(v->buf, "|"); break;
-    case EcsTokBitwiseAnd: ecs_strbuf_appendlit(v->buf, "&"); break;
-    case EcsTokEq: ecs_strbuf_appendlit(v->buf, "=="); break;
-    case EcsTokNeq: ecs_strbuf_appendlit(v->buf, "!="); break;
-    case EcsTokGt: ecs_strbuf_appendlit(v->buf, ">"); break;
-    case EcsTokGtEq: ecs_strbuf_appendlit(v->buf, ">="); break;
-    case EcsTokLt: ecs_strbuf_appendlit(v->buf, "<"); break;
-    case EcsTokLtEq: ecs_strbuf_appendlit(v->buf, "<="); break;
-    case EcsTokAnd: ecs_strbuf_appendlit(v->buf, "&&"); break;
-    case EcsTokOr: ecs_strbuf_appendlit(v->buf, "||"); break;
-    case EcsTokShiftLeft: ecs_strbuf_appendlit(v->buf, "<<"); break;
-    case EcsTokShiftRight: ecs_strbuf_appendlit(v->buf, ">>"); break;
-    default:
-        ecs_err("invalid operator for binary expression");
-        return -1;
-    };
-
-    ecs_strbuf_appendlit(v->buf, " ");
-
-    if (flecs_expr_node_to_str(v, node->right)) {
-        goto error;
-    }
-
-    ecs_strbuf_appendlit(v->buf, ")");
-
-    return 0;
-error:
-    return -1;
-}
-
-int flecs_expr_identifier_to_str(
-    ecs_expr_str_visitor_t *v,
-    const ecs_expr_identifier_t *node)
-{
-    ecs_strbuf_appendstr(v->buf, node->value);
-    return 0;
-}
-
-int flecs_expr_variable_to_str(
-    ecs_expr_str_visitor_t *v,
-    const ecs_expr_variable_t *node)
-{
-    ecs_strbuf_appendlit(v->buf, "$");
-    ecs_strbuf_appendstr(v->buf, node->value);
-    return 0;
-}
-
-int flecs_expr_member_to_str(
-    ecs_expr_str_visitor_t *v,
-    const ecs_expr_member_t *node)
-{
-    if (flecs_expr_node_to_str(v, node->left)) {
-        return -1;
-    }
-
-    ecs_strbuf_appendlit(v->buf, ".");
-    ecs_strbuf_appendstr(v->buf, node->member_name);
-    return 0;
-}
-
-int flecs_expr_element_to_str(
-    ecs_expr_str_visitor_t *v,
-    const ecs_expr_element_t *node)
-{
-    if (flecs_expr_node_to_str(v, node->left)) {
-        return -1;
-    }
-
-    ecs_strbuf_appendlit(v->buf, "[");
-    if (flecs_expr_node_to_str(v, node->index)) {
-        return -1;
-    }
-    ecs_strbuf_appendlit(v->buf, "]");
-    return 0;
-}
-
-int flecs_expr_cast_to_str(
-    ecs_expr_str_visitor_t *v,
-    const ecs_expr_cast_t *node)
-{
-    return flecs_expr_node_to_str(v, node->expr);
-}
-
-int flecs_expr_node_to_str(
-    ecs_expr_str_visitor_t *v,
-    const ecs_expr_node_t *node)
-{
-    ecs_assert(node != NULL, ECS_INVALID_PARAMETER, NULL);
-
-    if (node->type) {
-        ecs_strbuf_append(v->buf, "%s", ECS_BLUE);
-        ecs_strbuf_appendstr(v->buf, ecs_get_name(v->world, node->type));
-        ecs_strbuf_append(v->buf, "%s(", ECS_NORMAL);
-    }
-
-    switch(node->kind) {
-    case EcsExprValue:
-        if (flecs_expr_value_to_str(v, (ecs_expr_val_t*)node)) {
-            goto error;
-        }
-        break;
-    case EcsExprUnary:
-        if (flecs_expr_unary_to_str(v, (ecs_expr_unary_t*)node)) {
-            goto error;
-        }
-        break;
-    case EcsExprBinary:
-        if (flecs_expr_binary_to_str(v, (ecs_expr_binary_t*)node)) {
-            goto error;
-        }
-        break;
-    case EcsExprIdentifier:
-        if (flecs_expr_identifier_to_str(v, (ecs_expr_identifier_t*)node)) {
-            goto error;
-        }
-        break;
-    case EcsExprVariable:
-        if (flecs_expr_variable_to_str(v, (ecs_expr_variable_t*)node)) {
-            goto error;
-        }
-        break;
-    case EcsExprFunction:
-        break;
-    case EcsExprMember:
-        if (flecs_expr_member_to_str(v, (ecs_expr_member_t*)node)) {
-            goto error;
-        }
-        break;
-    case EcsExprElement:
-        if (flecs_expr_element_to_str(v, (ecs_expr_element_t*)node)) {
-            goto error;
-        }
-        break;
-    case EcsExprCast:
-        if (flecs_expr_cast_to_str(v, (ecs_expr_cast_t*)node)) {
-            goto error;
-        }
-        break;
-    }
-
-    if (node->type) {
-        ecs_strbuf_append(v->buf, ")");
-    }
-
-    return 0;
-error:
-    return -1;
-}
-
-FLECS_API
-char* ecs_script_expr_to_str(
-    const ecs_world_t *world,
-    const ecs_expr_node_t *expr)
-{
-    ecs_strbuf_t buf = ECS_STRBUF_INIT;
-    ecs_expr_str_visitor_t v = { .world = world, .buf = &buf };
-    if (flecs_expr_node_to_str(&v, expr)) {
-        ecs_strbuf_reset(&buf);
-        return NULL;
-    }
-
-    return ecs_strbuf_get(&buf);
-}
-
-#endif
-
-/**
- * @file addons/script/expr_fold.c
- * @brief Script expression constant folding.
- */
-
-
-#ifdef FLECS_SCRIPT
-
-#define ECS_VALUE_GET(value, T) (*(T*)((ecs_expr_val_t*)value)->ptr)
-
-#define ECS_BINARY_OP_T(left, right, result, op, R, T)\
-    ECS_VALUE_GET(result, R) = ECS_VALUE_GET(left, T) op ECS_VALUE_GET(right, T)
-
-#define ECS_BINARY_INT_OP(left, right, result, op)\
-    if (left->type == ecs_id(ecs_u64_t)) { \
-        ECS_BINARY_OP_T(left, right, result, op, ecs_u64_t, ecs_u64_t);\
-    } else if (left->type == ecs_id(ecs_i64_t)) { \
-        ECS_BINARY_OP_T(left, right, result, op, ecs_i64_t, ecs_i64_t);\
-    } else {\
-        ecs_abort(ECS_INTERNAL_ERROR, "unexpected type in binary expression");\
-    }
-
-#define ECS_BINARY_OP(left, right, result, op)\
-    if (left->type == ecs_id(ecs_u64_t)) { \
-        ECS_BINARY_OP_T(left, right, result, op, ecs_u64_t, ecs_u64_t);\
-    } else if (left->type == ecs_id(ecs_i64_t)) { \
-        ECS_BINARY_OP_T(left, right, result, op, ecs_i64_t, ecs_i64_t);\
-    } else if (left->type == ecs_id(ecs_f64_t)) { \
-        ECS_BINARY_OP_T(left, right, result, op, ecs_f64_t, ecs_f64_t);\
-    } else {\
-        ecs_abort(ECS_INTERNAL_ERROR, "unexpected type in binary expression");\
-    }
-
-#define ECS_BINARY_COND_EQ_OP(left, right, result, op)\
-    if (left->type == ecs_id(ecs_u64_t)) { \
-        ECS_BINARY_OP_T(left, right, result, op, ecs_bool_t, ecs_u64_t);\
-    } else if (left->type == ecs_id(ecs_i64_t)) { \
-        ECS_BINARY_OP_T(left, right, result, op, ecs_bool_t, ecs_i64_t);\
-    } else if (left->type == ecs_id(ecs_f64_t)) { \
-        flecs_expr_visit_error(script, left, "unsupported operator for floating point");\
-        return -1;\
-    } else if (left->type == ecs_id(ecs_u8_t)) { \
-        ECS_BINARY_OP_T(left, right, result, op, ecs_bool_t, ecs_u8_t);\
-    } else if (left->type == ecs_id(ecs_char_t)) { \
-        ECS_BINARY_OP_T(left, right, result, op, ecs_bool_t, ecs_char_t);\
-    } else if (left->type == ecs_id(ecs_bool_t)) { \
-        ECS_BINARY_OP_T(left, right, result, op, ecs_bool_t, ecs_bool_t);\
-    } else {\
-        ecs_abort(ECS_INTERNAL_ERROR, "unexpected type in binary expression");\
-    }
-
-#define ECS_BINARY_COND_OP(left, right, result, op)\
-    if (left->type == ecs_id(ecs_u64_t)) { \
-        ECS_BINARY_OP_T(left, right, result, op, ecs_bool_t, ecs_u64_t);\
-    } else if (left->type == ecs_id(ecs_i64_t)) { \
-        ECS_BINARY_OP_T(left, right, result, op, ecs_bool_t, ecs_i64_t);\
-    } else if (left->type == ecs_id(ecs_f64_t)) { \
-        ECS_BINARY_OP_T(left, right, result, op, ecs_bool_t, ecs_f64_t);\
-    } else if (left->type == ecs_id(ecs_u8_t)) { \
-        ECS_BINARY_OP_T(left, right, result, op, ecs_bool_t, ecs_u8_t);\
-    } else if (left->type == ecs_id(ecs_char_t)) { \
-        ECS_BINARY_OP_T(left, right, result, op, ecs_bool_t, ecs_char_t);\
-    } else if (left->type == ecs_id(ecs_bool_t)) { \
-        ECS_BINARY_OP_T(left, right, result, op, ecs_bool_t, ecs_bool_t);\
-    } else {\
-        ecs_abort(ECS_INTERNAL_ERROR, "unexpected type in binary expression");\
-    }
-
-#define ECS_BINARY_BOOL_OP(left, right, result, op)\
-    if (left->type == ecs_id(ecs_bool_t)) { \
-        ECS_BINARY_OP_T(left, right, result, op, ecs_bool_t, ecs_bool_t);\
-    } else {\
-        ecs_abort(ECS_INTERNAL_ERROR, "unexpected type in binary expression");\
-    }
-
-#define ECS_BINARY_UINT_OP(left, right, result, op)\
-    if (left->type == ecs_id(ecs_u64_t)) { \
-        ECS_BINARY_OP_T(left, right, result, op, ecs_u64_t, ecs_u64_t);\
-    } else {\
-        ecs_abort(ECS_INTERNAL_ERROR, "unexpected type in binary expression");\
-    }
-
-int flecs_expr_unary_visit_fold(
-    ecs_script_t *script,
-    ecs_expr_node_t **node_ptr)
-{
-    ecs_expr_unary_t *node = (ecs_expr_unary_t*)*node_ptr;
-
-    if (node->operator != EcsTokNot) {
-        flecs_expr_visit_error(script, node, 
-            "operator invalid for unary expression");
-        goto error;
-    }
-
-    if (flecs_script_expr_visit_fold(script, &node->expr)) {
-        goto error;
-    }
-
-    if (node->expr->kind != EcsExprValue) {
-        /* Only folding literals for now */
-        return 0;
-    }
-
-    if (node->node.type != ecs_id(ecs_bool_t)) {
-        char *type_str = ecs_get_path(script->world, node->node.type);
-        flecs_expr_visit_error(script, node, 
-            "! operator cannot be applied to value of type '%s' (must be bool)");
-        ecs_os_free(type_str);
-        goto error;
-    }
-
-    ecs_expr_val_t *result = flecs_calloc_t(
-        &((ecs_script_impl_t*)script)->allocator, ecs_expr_val_t);
-    result->node.kind = EcsExprValue;
-    result->node.pos = node->node.pos;
-    result->node.type = ecs_id(ecs_bool_t);
-    result->ptr = &result->storage.bool_;
-    *(bool*)result->ptr = !(*(bool*)((ecs_expr_val_t*)node)->ptr);
-
-    return 0;
-error:
-    return -1;
-}
-
-int flecs_expr_binary_visit_fold(
-    ecs_script_t *script,
-    ecs_expr_node_t **node_ptr)
-{
-    ecs_expr_binary_t *node = (ecs_expr_binary_t*)*node_ptr;
-
-    if (flecs_script_expr_visit_fold(script, &node->left)) {
-        goto error;
-    }
-
-    if (flecs_script_expr_visit_fold(script, &node->right)) {
-        goto error;
-    }
-
-    if (node->left->kind != EcsExprValue || node->right->kind != EcsExprValue) {
-        /* Only folding literals for now */
-        return 0;
-    }
-
-    ecs_expr_val_t *result = flecs_calloc_t(
-        &((ecs_script_impl_t*)script)->allocator, ecs_expr_val_t);
-    result->ptr = &result->storage.u64;
-    result->node.kind = EcsExprValue;
-    result->node.pos = node->node.pos;
-    result->node.type = node->node.type;
-
-    switch(node->operator) {
-    case EcsTokAdd:
-        ECS_BINARY_OP(node->left, node->right, result, +);
-        break;
-    case EcsTokSub:
-        ECS_BINARY_OP(node->left, node->right, result, -);
-        break;
-    case EcsTokMul:
-        ECS_BINARY_OP(node->left, node->right, result, *);
-        break;
-    case EcsTokDiv:
-        ECS_BINARY_OP(node->left, node->right, result, /);
-        break;
-    case EcsTokMod:
-        ECS_BINARY_INT_OP(node->left, node->right, result, %);
-        break;
-    case EcsTokEq:
-        ECS_BINARY_COND_EQ_OP(node->left, node->right, result, ==);
-        break;
-    case EcsTokNeq:
-        ECS_BINARY_COND_EQ_OP(node->left, node->right, result, !=);
-        break;
-    case EcsTokGt:
-        ECS_BINARY_COND_OP(node->left, node->right, result, >);
-        break;
-    case EcsTokGtEq:
-        ECS_BINARY_COND_OP(node->left, node->right, result, >=);
-        break;
-    case EcsTokLt:
-        ECS_BINARY_COND_OP(node->left, node->right, result, <);
-        break;
-    case EcsTokLtEq:
-        ECS_BINARY_COND_OP(node->left, node->right, result, <=);
-        break;
-    case EcsTokAnd:
-        ECS_BINARY_BOOL_OP(node->left, node->right, result, &&);
-        break;
-    case EcsTokOr:
-        ECS_BINARY_BOOL_OP(node->left, node->right, result, ||);
-        break;
-    case EcsTokShiftLeft:
-        ECS_BINARY_UINT_OP(node->left, node->right, result, <<);
-        break;
-    case EcsTokShiftRight:
-        ECS_BINARY_UINT_OP(node->left, node->right, result, >>);
-        break;
-    default:
-        flecs_expr_visit_error(script, node->left, "unsupported operator");
-        goto error;
-    }
-
-    *node_ptr = (ecs_expr_node_t*)result;
-
-    return 0;
-error:  
-    return -1;
-}
-
-int flecs_expr_cast_visit_fold(
-    ecs_script_t *script,
-    ecs_expr_node_t **node_ptr)
-{
-    ecs_expr_cast_t *node = (ecs_expr_cast_t*)*node_ptr;
-
-    if (flecs_script_expr_visit_fold(script, &node->expr)) {
-        goto error;
-    }
-
-    if (node->expr->kind != EcsExprValue) {
-        /* Only folding literals for now */
-        return 0;
-    }
-
-    ecs_expr_val_t *expr = (ecs_expr_val_t*)node->expr;
-
-    /* Reuse existing node to hold casted value */
-    *node_ptr = (ecs_expr_node_t*)expr;
-
-    ecs_entity_t dst_type = node->node.type;
-    ecs_entity_t src_type = expr->node.type;
-
-    if (dst_type == src_type) {
-        /* No cast necessary if types are equal */
-        return 0;
-    }
-
-    ecs_meta_cursor_t cur = ecs_meta_cursor(script->world, dst_type, expr->ptr);
-    ecs_value_t value = {
-        .type = src_type,
-        .ptr = expr->ptr
-    };
-
-    ecs_meta_set_value(&cur, &value);
-
-    expr->node.type = dst_type;
-
-    return 0;
-error:  
-    return -1;  
-}
-
-int flecs_script_expr_visit_fold(
-    ecs_script_t *script,
-    ecs_expr_node_t **node_ptr)
-{
-    ecs_assert(node_ptr != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_expr_node_t *node = *node_ptr;
-
-    switch(node->kind) {
-    case EcsExprValue:
-        break;
-    case EcsExprUnary:
-        if (flecs_expr_unary_visit_fold(script, node_ptr)) {
-            goto error;
-        }
-        break;
-    case EcsExprBinary:
-        if (flecs_expr_binary_visit_fold(script, node_ptr)) {
-            goto error;
-        }
-        break;
-    case EcsExprIdentifier:
-        break;
-    case EcsExprVariable:
-        break;
-    case EcsExprFunction:
-        break;
-    case EcsExprMember:
-        break;
-    case EcsExprElement:
-        break;
-    case EcsExprCast:
-        if (flecs_expr_cast_visit_fold(script, node_ptr)) {
-            goto error;
-        }
-        break;
-    }
-
-    return 0;
-error:
-    return -1;
-}
-
-#endif
-
-/**
- * @file addons/script/expr_ast.c
- * @brief Script expression AST implementation.
- */
-
-
-#ifdef FLECS_SCRIPT
-
-static
-bool flecs_expr_operator_is_equality(
-    ecs_script_token_kind_t op)
-{
-    switch(op) {
-    case EcsTokEq:
-    case EcsTokNeq:
-    case EcsTokGt:
-    case EcsTokGtEq:
-    case EcsTokLt:
-    case EcsTokLtEq:
-        return true;
-    case EcsTokAnd:
-    case EcsTokOr:
-    case EcsTokShiftLeft:
-    case EcsTokShiftRight:
-    case EcsTokAdd:
-    case EcsTokSub:
-    case EcsTokMul:
-    case EcsTokDiv:
-    case EcsTokBitwiseAnd:
-    case EcsTokBitwiseOr:
-        return false;
-    default:
-        ecs_throw(ECS_INTERNAL_ERROR, "invalid operator");
-    }
-error:
-    return false;
-}
-
-static
-bool flecs_expr_is_type_number(
-    ecs_entity_t type)
-{
-    if      (type == ecs_id(ecs_bool_t)) return false;
-    else if (type == ecs_id(ecs_char_t)) return false;
-    else if (type == ecs_id(ecs_u8_t)) return false;
-    else if (type == ecs_id(ecs_u64_t)) return true;
-    else if (type == ecs_id(ecs_i64_t)) return true;
-    else if (type == ecs_id(ecs_f64_t)) return true;
-    else if (type == ecs_id(ecs_string_t)) return false;
-    else if (type == ecs_id(ecs_entity_t)) return false;
-    else return false;
-}
-
-static
-ecs_entity_t flecs_expr_largest_type(
-    const EcsPrimitive *type)
-{
-    switch(type->kind) {
-    case EcsBool:   return ecs_id(ecs_bool_t);
-    case EcsChar:   return ecs_id(ecs_char_t);
-    case EcsByte:   return ecs_id(ecs_u8_t);
-    case EcsU8:     return ecs_id(ecs_u64_t);
-    case EcsU16:    return ecs_id(ecs_u64_t);
-    case EcsU32:    return ecs_id(ecs_u64_t);
-    case EcsU64:    return ecs_id(ecs_u64_t);
-    case EcsI8:     return ecs_id(ecs_i64_t);
-    case EcsI16:    return ecs_id(ecs_i64_t);
-    case EcsI32:    return ecs_id(ecs_i64_t);
-    case EcsI64:    return ecs_id(ecs_i64_t);
-    case EcsF32:    return ecs_id(ecs_f64_t);
-    case EcsF64:    return ecs_id(ecs_f64_t);
-    case EcsUPtr:   return ecs_id(ecs_u64_t);
-    case EcsIPtr:   return ecs_id(ecs_i64_t);
-    case EcsString: return ecs_id(ecs_string_t);
-    case EcsEntity: return ecs_id(ecs_entity_t);
-    case EcsId:     return ecs_id(ecs_id_t);
-    default: ecs_throw(ECS_INTERNAL_ERROR, NULL);
-    }
-error:
-    return 0;
-}
-
-/** Promote type to most expressive (f64 > i64 > u64) */
-static
-ecs_entity_t flecs_expr_promote_type(
-    ecs_entity_t type,
-    ecs_entity_t promote_to)
-{
-    if (type == ecs_id(ecs_u64_t)) {
-        return promote_to;
-    }
-    if (promote_to == ecs_id(ecs_u64_t)) {
-        return type;
-    }
-    if (type == ecs_id(ecs_f64_t)) {
-        return type;
-    }
-    if (promote_to == ecs_id(ecs_f64_t)) {
-        return promote_to;
-    }
-    return ecs_id(ecs_i64_t);
-}
-
-static
-bool flecs_expr_oper_valid_for_type(
-    ecs_entity_t type,
-    ecs_script_token_kind_t op)
-{
-    switch(op) {
-    case EcsTokAdd:
-    case EcsTokSub:
-    case EcsTokMul:
-    case EcsTokDiv:
-        return flecs_expr_is_type_number(type);
-    case EcsTokBitwiseAnd:
-    case EcsTokBitwiseOr:
-    case EcsTokShiftLeft:
-    case EcsTokShiftRight:
-        return type == ecs_id(ecs_u64_t) || 
-               type == ecs_id(ecs_u32_t) || 
-               type == ecs_id(ecs_u16_t) || 
-               type == ecs_id(ecs_u8_t);
-    case EcsTokEq:
-    case EcsTokNeq:
-    case EcsTokAnd:
-    case EcsTokOr:
-    case EcsTokGt:
-    case EcsTokGtEq:
-    case EcsTokLt:
-    case EcsTokLtEq:
-        return flecs_expr_is_type_number(type) ||
-            (type == ecs_id(ecs_bool_t)) ||
-            (type == ecs_id(ecs_char_t)) ||
-            (type == ecs_id(ecs_entity_t));
-    default: 
-        ecs_abort(ECS_INTERNAL_ERROR, NULL);
-    }
-}
-
-static
-int flecs_expr_type_for_oper(
-    ecs_script_t *script,
-    ecs_expr_binary_t *node,
-    ecs_entity_t *operand_type,
-    ecs_entity_t *result_type)
-{
-    ecs_world_t *world = script->world;
-    ecs_expr_node_t *left = node->left, *right = node->right;
-
-    switch(node->operator) {
-    case EcsTokDiv: 
-        /* Result type of a division is always a float */
-        *operand_type = ecs_id(ecs_f64_t);
-        *result_type = ecs_id(ecs_f64_t);
-        return 0;
-    case EcsTokAnd:
-    case EcsTokOr:
-        /* Result type of a condition operator is always a bool */
-        *operand_type = ecs_id(ecs_bool_t);
-        *result_type = ecs_id(ecs_bool_t);
-        return 0;
-    case EcsTokEq:
-    case EcsTokNeq:
-    case EcsTokGt:
-    case EcsTokGtEq:
-    case EcsTokLt:
-    case EcsTokLtEq:
-        /* Result type of equality operator is always bool, but operand types
-         * should not be casted to bool */
-        *result_type = ecs_id(ecs_bool_t);
-        break;
-    case EcsTokShiftLeft:
-    case EcsTokShiftRight:
-    case EcsTokBitwiseAnd:
-    case EcsTokBitwiseOr:
-    case EcsTokAdd:
-    case EcsTokSub:
-    case EcsTokMul:
-        break;
-    default:
-        ecs_throw(ECS_INTERNAL_ERROR, "invalid operator");
-    }
-
-    const EcsPrimitive *ltype_ptr = ecs_get(world, left->type, EcsPrimitive);
-    const EcsPrimitive *rtype_ptr = ecs_get(world, right->type, EcsPrimitive);
-    if (!ltype_ptr || !rtype_ptr) {
-        char *lname = ecs_get_path(world, left->type);
-        char *rname = ecs_get_path(world, right->type);
-        flecs_expr_visit_error(script, node, 
-            "invalid non-primitive type in binary expression (%s, %s)", 
-            lname, rname);
-        ecs_os_free(lname);
-        ecs_os_free(rname);
-        return 0;
-    }
-
-    ecs_entity_t ltype = flecs_expr_largest_type(ltype_ptr);
-    ecs_entity_t rtype = flecs_expr_largest_type(rtype_ptr);
-    if (ltype == rtype) {
-        *operand_type = ltype;
-        goto done;
-    }
-
-    if (flecs_expr_operator_is_equality(node->operator)) {
-        char *lname = ecs_id_str(world, ltype);
-        char *rname = ecs_id_str(world, rtype);
-        flecs_expr_visit_error(script, node, 
-            "mismatching types in equality expression (%s vs %s)", 
-            lname, rname);
-        ecs_os_free(rname);
-        ecs_os_free(lname);
-        return 0;
-    }
-
-    if (!flecs_expr_is_type_number(ltype) || !flecs_expr_is_type_number(rtype)) {
-        flecs_expr_visit_error(script, node,
-            "incompatible types in binary expression");
-        return 0;
-    }
-
-    *operand_type = flecs_expr_promote_type(ltype, rtype);
-
-done:
-    if (node->operator == EcsTokSub && *operand_type == ecs_id(ecs_u64_t)) {
-        /* Result of subtracting two unsigned ints can be negative */
-        *operand_type = ecs_id(ecs_i64_t);
-    }
-
-    if (!*result_type) {
-        *result_type = *operand_type;
-    }
-
-    return 0;
-error:
-    return -1;
-}
-
-static
-int flecs_expr_unary_visit_type(
-    ecs_script_t *script,
-    ecs_expr_unary_t *node)
-{
-    if (flecs_script_expr_visit_type(script, node->expr)) {
-        goto error;
-    }
-
-    /* The only supported unary expression is not (!) which returns a bool */
-    node->node.type = ecs_id(ecs_bool_t);
-
-    return 0;
-error:
-    return -1;
-}
-
-static
-int flecs_expr_binary_visit_type(
-    ecs_script_t *script,
-    ecs_expr_binary_t *node)
-{    
-    /* Operands must be of this type or casted to it */
-    ecs_entity_t operand_type = 0;
-
-    /* Resulting type of binary expression */
-    ecs_entity_t result_type = 0;
-
-    if (flecs_script_expr_visit_type(script, node->left)) {
-        goto error;
-    }
-
-    if (flecs_script_expr_visit_type(script, node->right)) {
-        goto error;
-    }
-
-    if (flecs_expr_type_for_oper(script, node, &operand_type, &result_type)) {
-        goto error;
-    }
-
-    if (!flecs_expr_oper_valid_for_type(result_type, node->operator)) {
-        flecs_expr_visit_error(script, node, "invalid operator for type");
-        goto error;
-    }
-
-    if (operand_type != node->left->type) {
-        node->left = (ecs_expr_node_t*)flecs_expr_cast(
-            script, node->left, operand_type);
-    }
-
-    if (operand_type != node->right->type) {
-        node->right = (ecs_expr_node_t*)flecs_expr_cast(
-            script, node->right, operand_type);
-    }
-
-    node->node.type = result_type;
-
-    return 0;
-error:
-    return -1;
-}
-
-static
-int flecs_expr_identifier_visit_type(
-    ecs_script_t *script,
-    ecs_expr_identifier_t *node)
-{
-    node->node.type = ecs_id(ecs_entity_t);
-    node->id = ecs_lookup(script->world, node->value);
-    if (!node->id) {
-        flecs_expr_visit_error(script, node, 
-            "unresolved identifier '%s'", node->value);
-        goto error;
-    }
-
-    return 0;
-error:
-    return -1;
-}
-
-static
-int flecs_expr_variable_visit_type(
-    ecs_script_t *script,
-    ecs_expr_variable_t *node)
-{
-    node->node.type = ecs_id(ecs_entity_t);
-    return 0;
-}
-
-static
-int flecs_expr_member_visit_type(
-    ecs_script_t *script,
-    ecs_expr_member_t *node)
-{
-    if (flecs_script_expr_visit_type(script, node->left)) {
-        goto error;
-    }
-
-    ecs_world_t *world = script->world;
-    ecs_entity_t left_type = node->left->type;
-
-    const EcsType *type = ecs_get(world, left_type, EcsType);
-    if (!type) {
-        char *type_str = ecs_get_path(world, left_type);
-        flecs_expr_visit_error(script, node, 
-            "cannot resolve member on value of type '%s' (missing reflection data)",
-                type_str);
-        ecs_os_free(type_str);
-        goto error;
-    }
-
-    if (type->kind != EcsStructType) {
-        char *type_str = ecs_get_path(world, left_type);
-        flecs_expr_visit_error(script, node, 
-            "cannot resolve member on non-struct type '%s'",
-                type_str);
-        ecs_os_free(type_str);
-        goto error;
-    }
-
-    ecs_meta_cursor_t cur = ecs_meta_cursor(world, left_type, NULL);
-    ecs_meta_push(&cur); /* { */
-    int prev_log = ecs_log_set_level(-4);
-    if (ecs_meta_dotmember(&cur, node->member_name)) {
-        ecs_log_set_level(prev_log);
-        char *type_str = ecs_get_path(world, left_type);
-        flecs_expr_visit_error(script, node, 
-            "unresolved member '%s' for type '%s'", 
-                node->member_name, type_str);
-        ecs_os_free(type_str);
-        goto error;
-    }
-    ecs_log_set_level(prev_log);
-
-    node->node.type = ecs_meta_get_type(&cur);
-    ecs_meta_pop(&cur); /* } */
-
-    return 0;
-error:
-    return -1;
-}
-
-static
-int flecs_expr_element_visit_type(
-    ecs_script_t *script,
-    ecs_expr_element_t *node)
-{
-    if (flecs_script_expr_visit_type(script, node->left)) {
-        goto error;
-    }
-
-    if (flecs_script_expr_visit_type(script, node->index)) {
-        goto error;
-    }
-
-    ecs_world_t *world = script->world;
-    ecs_entity_t left_type = node->left->type;
-    const EcsType *type = ecs_get(world, left_type, EcsType);
-    if (!type) {
-        char *type_str = ecs_get_path(world, left_type);
-        flecs_expr_visit_error(script, node, 
-            "cannot use [] on value of type '%s' (missing reflection data)",
-                type_str);
-        ecs_os_free(type_str);
-        goto error;
-    }
-
-    bool is_entity_type = false;
-
-    if (type->kind == EcsPrimitiveType) {
-        const EcsPrimitive *ptype = ecs_get(world, left_type, EcsPrimitive);
-        if (ptype->kind == EcsEntity) {
-            is_entity_type = true;
-        }
-    }
-
-    if (is_entity_type) {
-        if (node->index->kind == EcsExprIdentifier) {
-            node->node.type = ((ecs_expr_identifier_t*)node->index)->id;
-        } else {
-            flecs_expr_visit_error(script, node, 
-                "invalid component expression");
-            goto error;
-        }
-    } else if (type->kind == EcsArrayType) {
-        const EcsArray *type_array = ecs_get(world, left_type, EcsArray);
-        ecs_assert(type_array != NULL, ECS_INTERNAL_ERROR, NULL);
-        node->node.type = type_array->type;
-    } else if (type->kind == EcsVectorType) {
-        const EcsVector *type_vector = ecs_get(world, left_type, EcsVector);
-        ecs_assert(type_vector != NULL, ECS_INTERNAL_ERROR, NULL);
-        node->node.type = type_vector->type;
-    } else {
-        char *type_str = ecs_get_path(script->world, node->left->type);
-        flecs_expr_visit_error(script, node, 
-            "invalid usage of [] on non collection/entity type '%s'", type_str);
-        ecs_os_free(type_str);
-        goto error;
-    }
-
-    return 0;
-error:
-    return -1;
-}
-
-int flecs_script_expr_visit_type(
-    ecs_script_t *script,
-    ecs_expr_node_t *node)
-{
-    ecs_assert(node != NULL, ECS_INVALID_PARAMETER, NULL);
-
-    switch(node->kind) {
-    case EcsExprValue:
-        /* Value types are assigned by the AST */
-        break;
-    case EcsExprUnary:
-        if (flecs_expr_unary_visit_type(script, (ecs_expr_unary_t*)node)) {
-            goto error;
-        }
-        break;
-    case EcsExprBinary:
-        if (flecs_expr_binary_visit_type(script, (ecs_expr_binary_t*)node)) {
-            goto error;
-        }
-        break;
-    case EcsExprIdentifier:
-        if (flecs_expr_identifier_visit_type(script, (ecs_expr_identifier_t*)node)) {
-            goto error;
-        }
-        break;
-    case EcsExprVariable:
-        if (flecs_expr_variable_visit_type(script, (ecs_expr_variable_t*)node)) {
-            goto error;
-        }
-        break;
-    case EcsExprFunction:
-        break;
-    case EcsExprMember:
-        if (flecs_expr_member_visit_type(script, (ecs_expr_member_t*)node)) {
-            goto error;
-        }
-        break;
-    case EcsExprElement:
-        if (flecs_expr_element_visit_type(script, (ecs_expr_element_t*)node)) {
-            goto error;
-        }
-        break;
-    case EcsExprCast:
-        break;
-    }
-
-    return 0;
-error:
-    return -1;
-}
-
-#endif
-
-/**
  * @file addons/script/interpolate.c
  * @brief String interpolation.
  */
@@ -57823,8 +56649,8 @@ error:
 #endif
 
 /**
- * @file addons/script/expr.c
- * @brief Script expression parser.
+ * @file addons/script/parser.c
+ * @brief Script grammar parser.
  */
 
 
@@ -58060,299 +56886,6 @@ error:
 
 #endif
 
-
-/* From https://en.cppreference.com/w/c/language/operator_precedence */
-
-static int flecs_expr_precedence[] = {
-    [EcsTokParenOpen] = 1,
-    [EcsTokMember] = 1,
-    [EcsTokBracketOpen] = 1,
-    [EcsTokNot] = 2,
-    [EcsTokMul] = 3,
-    [EcsTokDiv] = 3,
-    [EcsTokMod] = 3,
-    [EcsTokAdd] = 4,
-    [EcsTokSub] = 4,
-    [EcsTokShiftLeft] = 5,
-    [EcsTokShiftRight] = 5,
-    [EcsTokGt] = 6,
-    [EcsTokGtEq] = 6,
-    [EcsTokLt] = 6,
-    [EcsTokLtEq] = 6,
-    [EcsTokEq] = 7,
-    [EcsTokNeq] = 7,
-    [EcsTokBitwiseAnd] = 8,
-    [EcsTokBitwiseOr] = 10,
-    [EcsTokAnd] = 11,
-    [EcsTokOr] = 12,
-};
-
-static
-const char* flecs_script_parse_expr(
-    ecs_script_parser_t *parser,
-    const char *pos,
-    ecs_script_token_kind_t left_oper,
-    ecs_expr_node_t **out);
-
-static
-const char* flecs_script_parse_lhs(
-    ecs_script_parser_t *parser,
-    const char *pos,
-    ecs_script_tokenizer_t *tokenizer,
-    ecs_script_token_kind_t left_oper,
-    ecs_expr_node_t **out);
-
-static
-bool flecs_has_precedence(
-    ecs_script_token_kind_t first,
-    ecs_script_token_kind_t second)
-{
-    if (!flecs_expr_precedence[first]) {
-        return false;
-    }
-    return flecs_expr_precedence[first] < flecs_expr_precedence[second];
-}
-
-static
-const char* flecs_script_parse_rhs(
-    ecs_script_parser_t *parser,
-    const char *pos,
-    ecs_script_tokenizer_t *tokenizer,
-    ecs_expr_node_t *left,
-    ecs_script_token_kind_t left_oper,
-    ecs_expr_node_t **out)
-{
-    const char *last_pos = pos;
-
-    TokenFramePush();
-
-    LookAhead(
-        case EcsTokAdd:
-        case EcsTokSub:
-        case EcsTokMul:
-        case EcsTokDiv:
-        case EcsTokMod:
-        case EcsTokBitwiseOr:
-        case EcsTokBitwiseAnd:
-        case EcsTokEq:
-        case EcsTokNeq:
-        case EcsTokGt:
-        case EcsTokGtEq:
-        case EcsTokLt:
-        case EcsTokLtEq:
-        case EcsTokAnd:
-        case EcsTokOr:
-        case EcsTokShiftLeft:
-        case EcsTokShiftRight: 
-        case EcsTokBracketOpen:
-        case EcsTokMember:
-        {
-            ecs_script_token_kind_t oper = lookahead_token.kind;
-
-            /* Only consume more tokens if operator has precedence */
-            if (flecs_has_precedence(left_oper, oper)) {
-                break;
-            }
-
-            /* Consume lookahead token */
-            pos = lookahead;
-
-            switch(oper) {
-            case EcsTokBracketOpen: {
-                ecs_expr_element_t *result = flecs_expr_element(parser);
-                result->left = *out;
-
-                pos = flecs_script_parse_lhs(
-                    parser, pos, tokenizer, 0, &result->index);
-                if (!pos) {
-                    goto error;
-                }
-
-                Parse_1(']', {
-                    *out = (ecs_expr_node_t*)result;
-                    break;
-                });
-
-                break;
-            }
-
-            case EcsTokMember: {
-                ecs_expr_member_t *result = flecs_expr_member(parser);
-                result->left = *out;
-
-                Parse_1(EcsTokIdentifier, {
-                    result->member_name = Token(1);
-                    *out = (ecs_expr_node_t*)result;
-                    break;
-                });
-
-                break;
-            }
-
-            default: {
-                ecs_expr_binary_t *result = flecs_expr_binary(parser);
-                result->left = *out;
-                result->operator = oper;
-
-                pos = flecs_script_parse_lhs(parser, pos, tokenizer,
-                    result->operator, &result->right);
-                if (!pos) {
-                    goto error;
-                }
-                *out = (ecs_expr_node_t*)result;
-                break;
-            }
-            };
-
-            /* Ensures lookahead tokens in token buffer don't get overwritten */
-            parser->token_keep = parser->token_cur;
-
-            break;
-        }
-    )
-
-    if (pos[0] && (pos != last_pos)) {
-        pos = flecs_script_parse_rhs(parser, pos, tokenizer, *out, 0, out);
-    }
-
-    TokenFramePop();
-
-    return pos;
-error:
-    return NULL;
-}
-
-static
-const char* flecs_script_parse_lhs(
-    ecs_script_parser_t *parser,
-    const char *pos,
-    ecs_script_tokenizer_t *tokenizer,
-    ecs_script_token_kind_t left_oper,
-    ecs_expr_node_t **out)
-{
-    TokenFramePush();
-
-    Parse(
-        case EcsTokNumber: {
-            const char *expr = Token(0);
-            if (strchr(expr, '.') || strchr(expr, 'e')) {
-                *out = (ecs_expr_node_t*)flecs_expr_float(parser, atof(expr));
-            } else if (expr[0] == '-') {
-                *out = (ecs_expr_node_t*)flecs_expr_int(parser, atoll(expr));
-            } else {
-                *out = (ecs_expr_node_t*)flecs_expr_uint(parser, atoll(expr));
-            }
-            break;
-        }
-
-        case EcsTokString: {
-            *out = (ecs_expr_node_t*)flecs_expr_string(parser, Token(0));
-            break;
-        }
-
-        case EcsTokIdentifier: {
-            const char *expr = Token(0);
-            if (expr[0] == '$') {
-                *out = (ecs_expr_node_t*)flecs_expr_variable(parser, &expr[1]);
-            } else if (!ecs_os_strcmp(expr, "true")) {
-                *out = (ecs_expr_node_t*)flecs_expr_bool(parser, true);
-            } else if (!ecs_os_strcmp(expr, "false")) {
-                *out = (ecs_expr_node_t*)flecs_expr_bool(parser, false);
-            } else {
-                *out = (ecs_expr_node_t*)flecs_expr_identifier(parser, expr);
-            }
-            break;
-        }
-
-        case EcsTokParenOpen: {
-            pos = flecs_script_parse_expr(parser, pos, 0, out);
-            Parse_1(EcsTokParenClose, {
-                break;
-            })
-            break;
-        }
-
-        case EcsTokNot: {
-            ecs_expr_unary_t *unary = flecs_expr_unary(parser);
-            pos = flecs_script_parse_expr(parser, pos, EcsTokNot, &unary->expr);
-            unary->operator = EcsTokNot;
-            *out = (ecs_expr_node_t*)unary;
-            break;
-        }
-    )
-
-    TokenFramePop();
-    
-    /* Parse right-hand side of expression if there is one */
-    return flecs_script_parse_rhs(
-        parser, pos, tokenizer, *out, left_oper, out);
-error:
-    return NULL;
-}
-
-static
-const char* flecs_script_parse_expr(
-    ecs_script_parser_t *parser,
-    const char *pos,
-    ecs_script_token_kind_t left_oper,
-    ecs_expr_node_t **out)
-{
-    ParserBegin;
-
-    pos = flecs_script_parse_lhs(parser, pos, tokenizer, left_oper, out);
-
-    EndOfRule;
-
-    ParserEnd;
-}
-
-ecs_expr_node_t* ecs_script_parse_expr(
-    ecs_world_t *world,
-    ecs_script_t *script,
-    const char *name,
-    const char *expr) 
-{
-    if (!script) {
-        script = flecs_script_new(world);
-    }
-
-    ecs_script_parser_t parser = {
-        .script = flecs_script_impl(script),
-        .scope = flecs_script_impl(script)->root,
-        .significant_newline = false
-    };
-
-    ecs_script_impl_t *impl = flecs_script_impl(script);
-
-    impl->token_buffer_size = ecs_os_strlen(expr) * 2 + 1;
-    impl->token_buffer = flecs_alloc(
-        &impl->allocator, impl->token_buffer_size);
-    parser.token_cur = impl->token_buffer;
-
-    ecs_expr_node_t *out = NULL;
-
-    const char *result = flecs_script_parse_expr(&parser, expr, 0, &out);
-    if (!result) {
-        goto error;
-    }
-
-    flecs_script_expr_visit_type(script, out);
-    flecs_script_expr_visit_fold(script, &out);
-
-    return out;
-error:
-    return NULL;
-}
-
-#endif
-
-/**
- * @file addons/script/parser.c
- * @brief Script grammar parser.
- */
-
-
-#ifdef FLECS_SCRIPT
 
 #define EcsTokEndOfStatement\
     case ';':\
@@ -76109,4 +74642,1477 @@ bool flecs_query_trivial_test(
         return true;
     }
 }
+
+/**
+ * @file addons/script/expr_ast.c
+ * @brief Script expression AST implementation.
+ */
+
+
+#ifdef FLECS_SCRIPT
+
+#define flecs_expr_ast_new(parser, T, kind)\
+    (T*)flecs_expr_ast_new_(parser, ECS_SIZEOF(T), kind)
+
+static
+void* flecs_expr_ast_new_(
+    ecs_script_parser_t *parser,
+    ecs_size_t size, 
+    ecs_expr_node_kind_t kind)
+{
+    ecs_assert(parser->script != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_allocator_t *a = &parser->script->allocator;
+    ecs_expr_node_t *result = flecs_calloc(a, size);
+    result->kind = kind;
+    result->pos = parser->pos;
+    return result;
+}
+
+ecs_expr_val_t* flecs_expr_bool(
+    ecs_script_parser_t *parser,
+    bool value)
+{
+    ecs_expr_val_t *result = flecs_expr_ast_new(
+        parser, ecs_expr_val_t, EcsExprValue);
+    result->storage.bool_ = value;
+    result->ptr = &result->storage.bool_;
+    result->node.type = ecs_id(ecs_bool_t);
+    return result;
+}
+
+ecs_expr_val_t* flecs_expr_int(
+    ecs_script_parser_t *parser,
+    int64_t value)
+{
+    ecs_expr_val_t *result = flecs_expr_ast_new(
+        parser, ecs_expr_val_t, EcsExprValue);
+    result->storage.i64 = value;
+    result->ptr = &result->storage.i64;
+    result->node.type = ecs_id(ecs_i64_t);
+    return result;
+}
+
+ecs_expr_val_t* flecs_expr_uint(
+    ecs_script_parser_t *parser,
+    uint64_t value)
+{
+    ecs_expr_val_t *result = flecs_expr_ast_new(
+        parser, ecs_expr_val_t, EcsExprValue);
+    result->storage.u64 = value;
+    result->ptr = &result->storage.u64;
+    result->node.type = ecs_id(ecs_i64_t);
+    return result;
+}
+
+ecs_expr_val_t* flecs_expr_float(
+    ecs_script_parser_t *parser,
+    double value)
+{
+    ecs_expr_val_t *result = flecs_expr_ast_new(
+        parser, ecs_expr_val_t, EcsExprValue);
+    result->storage.f64 = value;
+    result->ptr = &result->storage.f64;
+    result->node.type = ecs_id(ecs_f64_t);
+    return result;
+}
+
+ecs_expr_val_t* flecs_expr_string(
+    ecs_script_parser_t *parser,
+    const char *value)
+{
+    ecs_expr_val_t *result = flecs_expr_ast_new(
+        parser, ecs_expr_val_t, EcsExprValue);
+    result->storage.string = value;
+    result->ptr = &result->storage.string;
+    result->node.type = ecs_id(ecs_string_t);
+    return result;
+}
+
+ecs_expr_identifier_t* flecs_expr_identifier(
+    ecs_script_parser_t *parser,
+    const char *value)
+{
+    ecs_expr_identifier_t *result = flecs_expr_ast_new(
+        parser, ecs_expr_identifier_t, EcsExprIdentifier);
+    result->value = value;
+    return result;
+}
+
+ecs_expr_variable_t* flecs_expr_variable(
+    ecs_script_parser_t *parser,
+    const char *value)
+{
+    ecs_expr_variable_t *result = flecs_expr_ast_new(
+        parser, ecs_expr_variable_t, EcsExprVariable);
+    result->value = value;
+    return result;
+}
+
+ecs_expr_unary_t* flecs_expr_unary(
+    ecs_script_parser_t *parser)
+{
+    ecs_expr_unary_t *result = flecs_expr_ast_new(
+        parser, ecs_expr_unary_t, EcsExprUnary);
+    return result;
+}
+
+ecs_expr_binary_t* flecs_expr_binary(
+    ecs_script_parser_t *parser)
+{
+    ecs_expr_binary_t *result = flecs_expr_ast_new(
+        parser, ecs_expr_binary_t, EcsExprBinary);
+    return result;
+}
+
+ecs_expr_member_t* flecs_expr_member(
+    ecs_script_parser_t *parser)
+{
+    ecs_expr_member_t *result = flecs_expr_ast_new(
+        parser, ecs_expr_member_t, EcsExprMember);
+    return result;
+}
+
+ecs_expr_element_t* flecs_expr_element(
+    ecs_script_parser_t *parser)
+{
+    ecs_expr_element_t *result = flecs_expr_ast_new(
+        parser, ecs_expr_element_t, EcsExprElement);
+    return result;
+}
+
+ecs_expr_cast_t* flecs_expr_cast(
+    ecs_script_t *script,
+    ecs_expr_node_t *expr,
+    ecs_entity_t type)
+{
+    ecs_allocator_t *a = &((ecs_script_impl_t*)script)->allocator;
+    ecs_expr_cast_t *result = flecs_calloc_t(a, ecs_expr_cast_t);
+    result->node.kind = EcsExprCast;
+    result->node.pos = expr->pos;
+    result->node.type = type;
+    result->expr = expr;
+    return result;
+}
+
+#endif
+
+/**
+ * @file addons/script/expr/parser.c
+ * @brief Script expression parser.
+ */
+
+
+#ifdef FLECS_SCRIPT
+
+/* From https://en.cppreference.com/w/c/language/operator_precedence */
+
+static int flecs_expr_precedence[] = {
+    [EcsTokParenOpen] = 1,
+    [EcsTokMember] = 1,
+    [EcsTokBracketOpen] = 1,
+    [EcsTokNot] = 2,
+    [EcsTokMul] = 3,
+    [EcsTokDiv] = 3,
+    [EcsTokMod] = 3,
+    [EcsTokAdd] = 4,
+    [EcsTokSub] = 4,
+    [EcsTokShiftLeft] = 5,
+    [EcsTokShiftRight] = 5,
+    [EcsTokGt] = 6,
+    [EcsTokGtEq] = 6,
+    [EcsTokLt] = 6,
+    [EcsTokLtEq] = 6,
+    [EcsTokEq] = 7,
+    [EcsTokNeq] = 7,
+    [EcsTokBitwiseAnd] = 8,
+    [EcsTokBitwiseOr] = 10,
+    [EcsTokAnd] = 11,
+    [EcsTokOr] = 12,
+};
+
+static
+const char* flecs_script_parse_expr(
+    ecs_script_parser_t *parser,
+    const char *pos,
+    ecs_script_token_kind_t left_oper,
+    ecs_expr_node_t **out);
+
+static
+const char* flecs_script_parse_lhs(
+    ecs_script_parser_t *parser,
+    const char *pos,
+    ecs_script_tokenizer_t *tokenizer,
+    ecs_script_token_kind_t left_oper,
+    ecs_expr_node_t **out);
+
+static
+bool flecs_has_precedence(
+    ecs_script_token_kind_t first,
+    ecs_script_token_kind_t second)
+{
+    if (!flecs_expr_precedence[first]) {
+        return false;
+    }
+    return flecs_expr_precedence[first] < flecs_expr_precedence[second];
+}
+
+static
+const char* flecs_script_parse_rhs(
+    ecs_script_parser_t *parser,
+    const char *pos,
+    ecs_script_tokenizer_t *tokenizer,
+    ecs_expr_node_t *left,
+    ecs_script_token_kind_t left_oper,
+    ecs_expr_node_t **out)
+{
+    const char *last_pos = pos;
+
+    TokenFramePush();
+
+    LookAhead(
+        case EcsTokAdd:
+        case EcsTokSub:
+        case EcsTokMul:
+        case EcsTokDiv:
+        case EcsTokMod:
+        case EcsTokBitwiseOr:
+        case EcsTokBitwiseAnd:
+        case EcsTokEq:
+        case EcsTokNeq:
+        case EcsTokGt:
+        case EcsTokGtEq:
+        case EcsTokLt:
+        case EcsTokLtEq:
+        case EcsTokAnd:
+        case EcsTokOr:
+        case EcsTokShiftLeft:
+        case EcsTokShiftRight: 
+        case EcsTokBracketOpen:
+        case EcsTokMember:
+        {
+            ecs_script_token_kind_t oper = lookahead_token.kind;
+
+            /* Only consume more tokens if operator has precedence */
+            if (flecs_has_precedence(left_oper, oper)) {
+                break;
+            }
+
+            /* Consume lookahead token */
+            pos = lookahead;
+
+            switch(oper) {
+            case EcsTokBracketOpen: {
+                ecs_expr_element_t *result = flecs_expr_element(parser);
+                result->left = *out;
+
+                pos = flecs_script_parse_lhs(
+                    parser, pos, tokenizer, 0, &result->index);
+                if (!pos) {
+                    goto error;
+                }
+
+                Parse_1(']', {
+                    *out = (ecs_expr_node_t*)result;
+                    break;
+                });
+
+                break;
+            }
+
+            case EcsTokMember: {
+                ecs_expr_member_t *result = flecs_expr_member(parser);
+                result->left = *out;
+
+                Parse_1(EcsTokIdentifier, {
+                    result->member_name = Token(1);
+                    *out = (ecs_expr_node_t*)result;
+                    break;
+                });
+
+                break;
+            }
+
+            default: {
+                ecs_expr_binary_t *result = flecs_expr_binary(parser);
+                result->left = *out;
+                result->operator = oper;
+
+                pos = flecs_script_parse_lhs(parser, pos, tokenizer,
+                    result->operator, &result->right);
+                if (!pos) {
+                    goto error;
+                }
+                *out = (ecs_expr_node_t*)result;
+                break;
+            }
+            };
+
+            /* Ensures lookahead tokens in token buffer don't get overwritten */
+            parser->token_keep = parser->token_cur;
+
+            break;
+        }
+    )
+
+    if (pos[0] && (pos != last_pos)) {
+        pos = flecs_script_parse_rhs(parser, pos, tokenizer, *out, 0, out);
+    }
+
+    TokenFramePop();
+
+    return pos;
+error:
+    return NULL;
+}
+
+static
+const char* flecs_script_parse_lhs(
+    ecs_script_parser_t *parser,
+    const char *pos,
+    ecs_script_tokenizer_t *tokenizer,
+    ecs_script_token_kind_t left_oper,
+    ecs_expr_node_t **out)
+{
+    TokenFramePush();
+
+    Parse(
+        case EcsTokNumber: {
+            const char *expr = Token(0);
+            if (strchr(expr, '.') || strchr(expr, 'e')) {
+                *out = (ecs_expr_node_t*)flecs_expr_float(parser, atof(expr));
+            } else if (expr[0] == '-') {
+                *out = (ecs_expr_node_t*)flecs_expr_int(parser, atoll(expr));
+            } else {
+                *out = (ecs_expr_node_t*)flecs_expr_uint(parser, atoll(expr));
+            }
+            break;
+        }
+
+        case EcsTokString: {
+            *out = (ecs_expr_node_t*)flecs_expr_string(parser, Token(0));
+            break;
+        }
+
+        case EcsTokIdentifier: {
+            const char *expr = Token(0);
+            if (expr[0] == '$') {
+                *out = (ecs_expr_node_t*)flecs_expr_variable(parser, &expr[1]);
+            } else if (!ecs_os_strcmp(expr, "true")) {
+                *out = (ecs_expr_node_t*)flecs_expr_bool(parser, true);
+            } else if (!ecs_os_strcmp(expr, "false")) {
+                *out = (ecs_expr_node_t*)flecs_expr_bool(parser, false);
+            } else {
+                *out = (ecs_expr_node_t*)flecs_expr_identifier(parser, expr);
+            }
+            break;
+        }
+
+        case EcsTokParenOpen: {
+            pos = flecs_script_parse_expr(parser, pos, 0, out);
+            Parse_1(EcsTokParenClose, {
+                break;
+            })
+            break;
+        }
+
+        case EcsTokNot: {
+            ecs_expr_unary_t *unary = flecs_expr_unary(parser);
+            pos = flecs_script_parse_expr(parser, pos, EcsTokNot, &unary->expr);
+            unary->operator = EcsTokNot;
+            *out = (ecs_expr_node_t*)unary;
+            break;
+        }
+    )
+
+    TokenFramePop();
+    
+    /* Parse right-hand side of expression if there is one */
+    return flecs_script_parse_rhs(
+        parser, pos, tokenizer, *out, left_oper, out);
+error:
+    return NULL;
+}
+
+static
+const char* flecs_script_parse_expr(
+    ecs_script_parser_t *parser,
+    const char *pos,
+    ecs_script_token_kind_t left_oper,
+    ecs_expr_node_t **out)
+{
+    ParserBegin;
+
+    pos = flecs_script_parse_lhs(parser, pos, tokenizer, left_oper, out);
+
+    EndOfRule;
+
+    ParserEnd;
+}
+
+ecs_expr_node_t* ecs_script_parse_expr(
+    ecs_world_t *world,
+    ecs_script_t *script,
+    const char *name,
+    const char *expr) 
+{
+    if (!script) {
+        script = flecs_script_new(world);
+    }
+
+    ecs_script_parser_t parser = {
+        .script = flecs_script_impl(script),
+        .scope = flecs_script_impl(script)->root,
+        .significant_newline = false
+    };
+
+    ecs_script_impl_t *impl = flecs_script_impl(script);
+
+    impl->token_buffer_size = ecs_os_strlen(expr) * 2 + 1;
+    impl->token_buffer = flecs_alloc(
+        &impl->allocator, impl->token_buffer_size);
+    parser.token_cur = impl->token_buffer;
+
+    ecs_expr_node_t *out = NULL;
+
+    const char *result = flecs_script_parse_expr(&parser, expr, 0, &out);
+    if (!result) {
+        goto error;
+    }
+
+    flecs_script_expr_visit_type(script, out);
+    flecs_script_expr_visit_fold(script, &out);
+
+    return out;
+error:
+    return NULL;
+}
+
+#endif
+
+/**
+ * @file addons/script/expr_fold.c
+ * @brief Script expression constant folding.
+ */
+
+
+#ifdef FLECS_SCRIPT
+
+#define ECS_VALUE_GET(value, T) (*(T*)((ecs_expr_val_t*)value)->ptr)
+
+#define ECS_BINARY_OP_T(left, right, result, op, R, T)\
+    ECS_VALUE_GET(result, R) = ECS_VALUE_GET(left, T) op ECS_VALUE_GET(right, T)
+
+#define ECS_BINARY_INT_OP(left, right, result, op)\
+    if (left->type == ecs_id(ecs_u64_t)) { \
+        ECS_BINARY_OP_T(left, right, result, op, ecs_u64_t, ecs_u64_t);\
+    } else if (left->type == ecs_id(ecs_i64_t)) { \
+        ECS_BINARY_OP_T(left, right, result, op, ecs_i64_t, ecs_i64_t);\
+    } else {\
+        ecs_abort(ECS_INTERNAL_ERROR, "unexpected type in binary expression");\
+    }
+
+#define ECS_BINARY_OP(left, right, result, op)\
+    if (left->type == ecs_id(ecs_u64_t)) { \
+        ECS_BINARY_OP_T(left, right, result, op, ecs_u64_t, ecs_u64_t);\
+    } else if (left->type == ecs_id(ecs_i64_t)) { \
+        ECS_BINARY_OP_T(left, right, result, op, ecs_i64_t, ecs_i64_t);\
+    } else if (left->type == ecs_id(ecs_f64_t)) { \
+        ECS_BINARY_OP_T(left, right, result, op, ecs_f64_t, ecs_f64_t);\
+    } else {\
+        ecs_abort(ECS_INTERNAL_ERROR, "unexpected type in binary expression");\
+    }
+
+#define ECS_BINARY_COND_EQ_OP(left, right, result, op)\
+    if (left->type == ecs_id(ecs_u64_t)) { \
+        ECS_BINARY_OP_T(left, right, result, op, ecs_bool_t, ecs_u64_t);\
+    } else if (left->type == ecs_id(ecs_i64_t)) { \
+        ECS_BINARY_OP_T(left, right, result, op, ecs_bool_t, ecs_i64_t);\
+    } else if (left->type == ecs_id(ecs_f64_t)) { \
+        flecs_expr_visit_error(script, left, "unsupported operator for floating point");\
+        return -1;\
+    } else if (left->type == ecs_id(ecs_u8_t)) { \
+        ECS_BINARY_OP_T(left, right, result, op, ecs_bool_t, ecs_u8_t);\
+    } else if (left->type == ecs_id(ecs_char_t)) { \
+        ECS_BINARY_OP_T(left, right, result, op, ecs_bool_t, ecs_char_t);\
+    } else if (left->type == ecs_id(ecs_bool_t)) { \
+        ECS_BINARY_OP_T(left, right, result, op, ecs_bool_t, ecs_bool_t);\
+    } else {\
+        ecs_abort(ECS_INTERNAL_ERROR, "unexpected type in binary expression");\
+    }
+
+#define ECS_BINARY_COND_OP(left, right, result, op)\
+    if (left->type == ecs_id(ecs_u64_t)) { \
+        ECS_BINARY_OP_T(left, right, result, op, ecs_bool_t, ecs_u64_t);\
+    } else if (left->type == ecs_id(ecs_i64_t)) { \
+        ECS_BINARY_OP_T(left, right, result, op, ecs_bool_t, ecs_i64_t);\
+    } else if (left->type == ecs_id(ecs_f64_t)) { \
+        ECS_BINARY_OP_T(left, right, result, op, ecs_bool_t, ecs_f64_t);\
+    } else if (left->type == ecs_id(ecs_u8_t)) { \
+        ECS_BINARY_OP_T(left, right, result, op, ecs_bool_t, ecs_u8_t);\
+    } else if (left->type == ecs_id(ecs_char_t)) { \
+        ECS_BINARY_OP_T(left, right, result, op, ecs_bool_t, ecs_char_t);\
+    } else if (left->type == ecs_id(ecs_bool_t)) { \
+        ECS_BINARY_OP_T(left, right, result, op, ecs_bool_t, ecs_bool_t);\
+    } else {\
+        ecs_abort(ECS_INTERNAL_ERROR, "unexpected type in binary expression");\
+    }
+
+#define ECS_BINARY_BOOL_OP(left, right, result, op)\
+    if (left->type == ecs_id(ecs_bool_t)) { \
+        ECS_BINARY_OP_T(left, right, result, op, ecs_bool_t, ecs_bool_t);\
+    } else {\
+        ecs_abort(ECS_INTERNAL_ERROR, "unexpected type in binary expression");\
+    }
+
+#define ECS_BINARY_UINT_OP(left, right, result, op)\
+    if (left->type == ecs_id(ecs_u64_t)) { \
+        ECS_BINARY_OP_T(left, right, result, op, ecs_u64_t, ecs_u64_t);\
+    } else {\
+        ecs_abort(ECS_INTERNAL_ERROR, "unexpected type in binary expression");\
+    }
+
+int flecs_expr_unary_visit_fold(
+    ecs_script_t *script,
+    ecs_expr_node_t **node_ptr)
+{
+    ecs_expr_unary_t *node = (ecs_expr_unary_t*)*node_ptr;
+
+    if (node->operator != EcsTokNot) {
+        flecs_expr_visit_error(script, node, 
+            "operator invalid for unary expression");
+        goto error;
+    }
+
+    if (flecs_script_expr_visit_fold(script, &node->expr)) {
+        goto error;
+    }
+
+    if (node->expr->kind != EcsExprValue) {
+        /* Only folding literals for now */
+        return 0;
+    }
+
+    if (node->expr->type != ecs_id(ecs_bool_t)) {
+        char *type_str = ecs_get_path(script->world, node->node.type);
+        flecs_expr_visit_error(script, node, 
+            "! operator cannot be applied to value of type '%s' (must be bool)");
+        ecs_os_free(type_str);
+        goto error;
+    }
+
+    ecs_expr_val_t *result = flecs_calloc_t(
+        &((ecs_script_impl_t*)script)->allocator, ecs_expr_val_t);
+    result->node.kind = EcsExprValue;
+    result->node.pos = node->node.pos;
+    result->node.type = ecs_id(ecs_bool_t);
+    result->ptr = &result->storage.bool_;
+    *(bool*)result->ptr = !*(bool*)(((ecs_expr_val_t*)node->expr)->ptr);
+
+    *node_ptr = (ecs_expr_node_t*)result;
+
+    return 0;
+error:
+    return -1;
+}
+
+int flecs_expr_binary_visit_fold(
+    ecs_script_t *script,
+    ecs_expr_node_t **node_ptr)
+{
+    ecs_expr_binary_t *node = (ecs_expr_binary_t*)*node_ptr;
+
+    if (flecs_script_expr_visit_fold(script, &node->left)) {
+        goto error;
+    }
+
+    if (flecs_script_expr_visit_fold(script, &node->right)) {
+        goto error;
+    }
+
+    if (node->left->kind != EcsExprValue || node->right->kind != EcsExprValue) {
+        /* Only folding literals for now */
+        return 0;
+    }
+
+    ecs_expr_val_t *result = flecs_calloc_t(
+        &((ecs_script_impl_t*)script)->allocator, ecs_expr_val_t);
+    result->ptr = &result->storage.u64;
+    result->node.kind = EcsExprValue;
+    result->node.pos = node->node.pos;
+    result->node.type = node->node.type;
+
+    switch(node->operator) {
+    case EcsTokAdd:
+        ECS_BINARY_OP(node->left, node->right, result, +);
+        break;
+    case EcsTokSub:
+        ECS_BINARY_OP(node->left, node->right, result, -);
+        break;
+    case EcsTokMul:
+        ECS_BINARY_OP(node->left, node->right, result, *);
+        break;
+    case EcsTokDiv:
+        ECS_BINARY_OP(node->left, node->right, result, /);
+        break;
+    case EcsTokMod:
+        ECS_BINARY_INT_OP(node->left, node->right, result, %);
+        break;
+    case EcsTokEq:
+        ECS_BINARY_COND_EQ_OP(node->left, node->right, result, ==);
+        break;
+    case EcsTokNeq:
+        ECS_BINARY_COND_EQ_OP(node->left, node->right, result, !=);
+        break;
+    case EcsTokGt:
+        ECS_BINARY_COND_OP(node->left, node->right, result, >);
+        break;
+    case EcsTokGtEq:
+        ECS_BINARY_COND_OP(node->left, node->right, result, >=);
+        break;
+    case EcsTokLt:
+        ECS_BINARY_COND_OP(node->left, node->right, result, <);
+        break;
+    case EcsTokLtEq:
+        ECS_BINARY_COND_OP(node->left, node->right, result, <=);
+        break;
+    case EcsTokAnd:
+        ECS_BINARY_BOOL_OP(node->left, node->right, result, &&);
+        break;
+    case EcsTokOr:
+        ECS_BINARY_BOOL_OP(node->left, node->right, result, ||);
+        break;
+    case EcsTokShiftLeft:
+        ECS_BINARY_UINT_OP(node->left, node->right, result, <<);
+        break;
+    case EcsTokShiftRight:
+        ECS_BINARY_UINT_OP(node->left, node->right, result, >>);
+        break;
+    default:
+        flecs_expr_visit_error(script, node->left, "unsupported operator");
+        goto error;
+    }
+
+    *node_ptr = (ecs_expr_node_t*)result;
+
+    return 0;
+error:  
+    return -1;
+}
+
+int flecs_expr_cast_visit_fold(
+    ecs_script_t *script,
+    ecs_expr_node_t **node_ptr)
+{
+    ecs_expr_cast_t *node = (ecs_expr_cast_t*)*node_ptr;
+
+    if (flecs_script_expr_visit_fold(script, &node->expr)) {
+        goto error;
+    }
+
+    if (node->expr->kind != EcsExprValue) {
+        /* Only folding literals for now */
+        return 0;
+    }
+
+    ecs_expr_val_t *expr = (ecs_expr_val_t*)node->expr;
+
+    /* Reuse existing node to hold casted value */
+    *node_ptr = (ecs_expr_node_t*)expr;
+
+    ecs_entity_t dst_type = node->node.type;
+    ecs_entity_t src_type = expr->node.type;
+
+    if (dst_type == src_type) {
+        /* No cast necessary if types are equal */
+        return 0;
+    }
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(script->world, dst_type, expr->ptr);
+    ecs_value_t value = {
+        .type = src_type,
+        .ptr = expr->ptr
+    };
+
+    ecs_meta_set_value(&cur, &value);
+
+    expr->node.type = dst_type;
+
+    return 0;
+error:  
+    return -1;  
+}
+
+int flecs_script_expr_visit_fold(
+    ecs_script_t *script,
+    ecs_expr_node_t **node_ptr)
+{
+    ecs_assert(node_ptr != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_expr_node_t *node = *node_ptr;
+
+    switch(node->kind) {
+    case EcsExprValue:
+        break;
+    case EcsExprUnary:
+        if (flecs_expr_unary_visit_fold(script, node_ptr)) {
+            goto error;
+        }
+        break;
+    case EcsExprBinary:
+        if (flecs_expr_binary_visit_fold(script, node_ptr)) {
+            goto error;
+        }
+        break;
+    case EcsExprIdentifier:
+        break;
+    case EcsExprVariable:
+        break;
+    case EcsExprFunction:
+        break;
+    case EcsExprMember:
+        break;
+    case EcsExprElement:
+        break;
+    case EcsExprCast:
+        if (flecs_expr_cast_visit_fold(script, node_ptr)) {
+            goto error;
+        }
+        break;
+    }
+
+    return 0;
+error:
+    return -1;
+}
+
+#endif
+
+/**
+ * @file addons/script/expr_to_str.c
+ * @brief Script expression AST to string visitor.
+ */
+
+
+#ifdef FLECS_SCRIPT
+
+typedef struct ecs_expr_str_visitor_t {
+    const ecs_world_t *world;
+    ecs_strbuf_t *buf;
+    int32_t depth;
+    bool newline;
+} ecs_expr_str_visitor_t;
+
+int flecs_expr_node_to_str(
+    ecs_expr_str_visitor_t *v,
+    const ecs_expr_node_t *node);
+
+int flecs_expr_value_to_str(
+    ecs_expr_str_visitor_t *v,
+    const ecs_expr_val_t *node)
+{
+    return ecs_ptr_to_str_buf(
+        v->world, node->node.type, node->ptr, v->buf);
+}
+
+int flecs_expr_unary_to_str(
+    ecs_expr_str_visitor_t *v,
+    const ecs_expr_unary_t *node)
+{
+    switch(node->operator) {
+    case EcsTokNot: ecs_strbuf_appendlit(v->buf, "!"); break;
+    default:
+        ecs_err("invalid operator for unary expression");
+        return -1;
+    };
+
+    if (flecs_expr_node_to_str(v, node->expr)) {
+        goto error;
+    }
+
+    return 0;
+error:
+    return -1;
+}
+
+int flecs_expr_binary_to_str(
+    ecs_expr_str_visitor_t *v,
+    const ecs_expr_binary_t *node)
+{
+    ecs_strbuf_appendlit(v->buf, "(");
+
+    if (flecs_expr_node_to_str(v, node->left)) {
+        goto error;
+    }
+
+    ecs_strbuf_appendlit(v->buf, " ");
+
+    switch(node->operator) {
+    case EcsTokAdd: ecs_strbuf_appendlit(v->buf, "+"); break;
+    case EcsTokSub: ecs_strbuf_appendlit(v->buf, "-"); break;
+    case EcsTokMul: ecs_strbuf_appendlit(v->buf, "*"); break;
+    case EcsTokDiv: ecs_strbuf_appendlit(v->buf, "/"); break;
+    case EcsTokMod: ecs_strbuf_appendlit(v->buf, "%%"); break;
+    case EcsTokBitwiseOr: ecs_strbuf_appendlit(v->buf, "|"); break;
+    case EcsTokBitwiseAnd: ecs_strbuf_appendlit(v->buf, "&"); break;
+    case EcsTokEq: ecs_strbuf_appendlit(v->buf, "=="); break;
+    case EcsTokNeq: ecs_strbuf_appendlit(v->buf, "!="); break;
+    case EcsTokGt: ecs_strbuf_appendlit(v->buf, ">"); break;
+    case EcsTokGtEq: ecs_strbuf_appendlit(v->buf, ">="); break;
+    case EcsTokLt: ecs_strbuf_appendlit(v->buf, "<"); break;
+    case EcsTokLtEq: ecs_strbuf_appendlit(v->buf, "<="); break;
+    case EcsTokAnd: ecs_strbuf_appendlit(v->buf, "&&"); break;
+    case EcsTokOr: ecs_strbuf_appendlit(v->buf, "||"); break;
+    case EcsTokShiftLeft: ecs_strbuf_appendlit(v->buf, "<<"); break;
+    case EcsTokShiftRight: ecs_strbuf_appendlit(v->buf, ">>"); break;
+    default:
+        ecs_err("invalid operator for binary expression");
+        return -1;
+    };
+
+    ecs_strbuf_appendlit(v->buf, " ");
+
+    if (flecs_expr_node_to_str(v, node->right)) {
+        goto error;
+    }
+
+    ecs_strbuf_appendlit(v->buf, ")");
+
+    return 0;
+error:
+    return -1;
+}
+
+int flecs_expr_identifier_to_str(
+    ecs_expr_str_visitor_t *v,
+    const ecs_expr_identifier_t *node)
+{
+    ecs_strbuf_appendstr(v->buf, node->value);
+    return 0;
+}
+
+int flecs_expr_variable_to_str(
+    ecs_expr_str_visitor_t *v,
+    const ecs_expr_variable_t *node)
+{
+    ecs_strbuf_appendlit(v->buf, "$");
+    ecs_strbuf_appendstr(v->buf, node->value);
+    return 0;
+}
+
+int flecs_expr_member_to_str(
+    ecs_expr_str_visitor_t *v,
+    const ecs_expr_member_t *node)
+{
+    if (flecs_expr_node_to_str(v, node->left)) {
+        return -1;
+    }
+
+    ecs_strbuf_appendlit(v->buf, ".");
+    ecs_strbuf_appendstr(v->buf, node->member_name);
+    return 0;
+}
+
+int flecs_expr_element_to_str(
+    ecs_expr_str_visitor_t *v,
+    const ecs_expr_element_t *node)
+{
+    if (flecs_expr_node_to_str(v, node->left)) {
+        return -1;
+    }
+
+    ecs_strbuf_appendlit(v->buf, "[");
+    if (flecs_expr_node_to_str(v, node->index)) {
+        return -1;
+    }
+    ecs_strbuf_appendlit(v->buf, "]");
+    return 0;
+}
+
+int flecs_expr_cast_to_str(
+    ecs_expr_str_visitor_t *v,
+    const ecs_expr_cast_t *node)
+{
+    return flecs_expr_node_to_str(v, node->expr);
+}
+
+int flecs_expr_node_to_str(
+    ecs_expr_str_visitor_t *v,
+    const ecs_expr_node_t *node)
+{
+    ecs_assert(node != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    if (node->type) {
+        ecs_strbuf_append(v->buf, "%s", ECS_BLUE);
+        ecs_strbuf_appendstr(v->buf, ecs_get_name(v->world, node->type));
+        ecs_strbuf_append(v->buf, "%s(", ECS_NORMAL);
+    }
+
+    switch(node->kind) {
+    case EcsExprValue:
+        if (flecs_expr_value_to_str(v, (ecs_expr_val_t*)node)) {
+            goto error;
+        }
+        break;
+    case EcsExprUnary:
+        if (flecs_expr_unary_to_str(v, (ecs_expr_unary_t*)node)) {
+            goto error;
+        }
+        break;
+    case EcsExprBinary:
+        if (flecs_expr_binary_to_str(v, (ecs_expr_binary_t*)node)) {
+            goto error;
+        }
+        break;
+    case EcsExprIdentifier:
+        if (flecs_expr_identifier_to_str(v, (ecs_expr_identifier_t*)node)) {
+            goto error;
+        }
+        break;
+    case EcsExprVariable:
+        if (flecs_expr_variable_to_str(v, (ecs_expr_variable_t*)node)) {
+            goto error;
+        }
+        break;
+    case EcsExprFunction:
+        break;
+    case EcsExprMember:
+        if (flecs_expr_member_to_str(v, (ecs_expr_member_t*)node)) {
+            goto error;
+        }
+        break;
+    case EcsExprElement:
+        if (flecs_expr_element_to_str(v, (ecs_expr_element_t*)node)) {
+            goto error;
+        }
+        break;
+    case EcsExprCast:
+        if (flecs_expr_cast_to_str(v, (ecs_expr_cast_t*)node)) {
+            goto error;
+        }
+        break;
+    }
+
+    if (node->type) {
+        ecs_strbuf_append(v->buf, ")");
+    }
+
+    return 0;
+error:
+    return -1;
+}
+
+FLECS_API
+char* ecs_script_expr_to_str(
+    const ecs_world_t *world,
+    const ecs_expr_node_t *expr)
+{
+    ecs_strbuf_t buf = ECS_STRBUF_INIT;
+    ecs_expr_str_visitor_t v = { .world = world, .buf = &buf };
+    if (flecs_expr_node_to_str(&v, expr)) {
+        ecs_strbuf_reset(&buf);
+        return NULL;
+    }
+
+    return ecs_strbuf_get(&buf);
+}
+
+#endif
+
+/**
+ * @file addons/script/expr_ast.c
+ * @brief Script expression AST implementation.
+ */
+
+
+#ifdef FLECS_SCRIPT
+
+static
+bool flecs_expr_operator_is_equality(
+    ecs_script_token_kind_t op)
+{
+    switch(op) {
+    case EcsTokEq:
+    case EcsTokNeq:
+    case EcsTokGt:
+    case EcsTokGtEq:
+    case EcsTokLt:
+    case EcsTokLtEq:
+        return true;
+    case EcsTokAnd:
+    case EcsTokOr:
+    case EcsTokShiftLeft:
+    case EcsTokShiftRight:
+    case EcsTokAdd:
+    case EcsTokSub:
+    case EcsTokMul:
+    case EcsTokDiv:
+    case EcsTokBitwiseAnd:
+    case EcsTokBitwiseOr:
+        return false;
+    default:
+        ecs_throw(ECS_INTERNAL_ERROR, "invalid operator");
+    }
+error:
+    return false;
+}
+
+static
+bool flecs_expr_is_type_number(
+    ecs_entity_t type)
+{
+    if      (type == ecs_id(ecs_bool_t)) return false;
+    else if (type == ecs_id(ecs_char_t)) return false;
+    else if (type == ecs_id(ecs_u8_t)) return false;
+    else if (type == ecs_id(ecs_u64_t)) return true;
+    else if (type == ecs_id(ecs_i64_t)) return true;
+    else if (type == ecs_id(ecs_f64_t)) return true;
+    else if (type == ecs_id(ecs_string_t)) return false;
+    else if (type == ecs_id(ecs_entity_t)) return false;
+    else return false;
+}
+
+static
+ecs_entity_t flecs_expr_largest_type(
+    const EcsPrimitive *type)
+{
+    switch(type->kind) {
+    case EcsBool:   return ecs_id(ecs_bool_t);
+    case EcsChar:   return ecs_id(ecs_char_t);
+    case EcsByte:   return ecs_id(ecs_u8_t);
+    case EcsU8:     return ecs_id(ecs_u64_t);
+    case EcsU16:    return ecs_id(ecs_u64_t);
+    case EcsU32:    return ecs_id(ecs_u64_t);
+    case EcsU64:    return ecs_id(ecs_u64_t);
+    case EcsI8:     return ecs_id(ecs_i64_t);
+    case EcsI16:    return ecs_id(ecs_i64_t);
+    case EcsI32:    return ecs_id(ecs_i64_t);
+    case EcsI64:    return ecs_id(ecs_i64_t);
+    case EcsF32:    return ecs_id(ecs_f64_t);
+    case EcsF64:    return ecs_id(ecs_f64_t);
+    case EcsUPtr:   return ecs_id(ecs_u64_t);
+    case EcsIPtr:   return ecs_id(ecs_i64_t);
+    case EcsString: return ecs_id(ecs_string_t);
+    case EcsEntity: return ecs_id(ecs_entity_t);
+    case EcsId:     return ecs_id(ecs_id_t);
+    default: ecs_throw(ECS_INTERNAL_ERROR, NULL);
+    }
+error:
+    return 0;
+}
+
+/** Promote type to most expressive (f64 > i64 > u64) */
+static
+ecs_entity_t flecs_expr_promote_type(
+    ecs_entity_t type,
+    ecs_entity_t promote_to)
+{
+    if (type == ecs_id(ecs_u64_t)) {
+        return promote_to;
+    }
+    if (promote_to == ecs_id(ecs_u64_t)) {
+        return type;
+    }
+    if (type == ecs_id(ecs_f64_t)) {
+        return type;
+    }
+    if (promote_to == ecs_id(ecs_f64_t)) {
+        return promote_to;
+    }
+    return ecs_id(ecs_i64_t);
+}
+
+static
+bool flecs_expr_oper_valid_for_type(
+    ecs_entity_t type,
+    ecs_script_token_kind_t op)
+{
+    switch(op) {
+    case EcsTokAdd:
+    case EcsTokSub:
+    case EcsTokMul:
+    case EcsTokDiv:
+        return flecs_expr_is_type_number(type);
+    case EcsTokBitwiseAnd:
+    case EcsTokBitwiseOr:
+    case EcsTokShiftLeft:
+    case EcsTokShiftRight:
+        return type == ecs_id(ecs_u64_t) || 
+               type == ecs_id(ecs_u32_t) || 
+               type == ecs_id(ecs_u16_t) || 
+               type == ecs_id(ecs_u8_t);
+    case EcsTokEq:
+    case EcsTokNeq:
+    case EcsTokAnd:
+    case EcsTokOr:
+    case EcsTokGt:
+    case EcsTokGtEq:
+    case EcsTokLt:
+    case EcsTokLtEq:
+        return flecs_expr_is_type_number(type) ||
+            (type == ecs_id(ecs_bool_t)) ||
+            (type == ecs_id(ecs_char_t)) ||
+            (type == ecs_id(ecs_entity_t));
+    default: 
+        ecs_abort(ECS_INTERNAL_ERROR, NULL);
+    }
+}
+
+static
+int flecs_expr_type_for_oper(
+    ecs_script_t *script,
+    ecs_expr_binary_t *node,
+    ecs_entity_t *operand_type,
+    ecs_entity_t *result_type)
+{
+    ecs_world_t *world = script->world;
+    ecs_expr_node_t *left = node->left, *right = node->right;
+
+    switch(node->operator) {
+    case EcsTokDiv: 
+        /* Result type of a division is always a float */
+        *operand_type = ecs_id(ecs_f64_t);
+        *result_type = ecs_id(ecs_f64_t);
+        return 0;
+    case EcsTokAnd:
+    case EcsTokOr:
+        /* Result type of a condition operator is always a bool */
+        *operand_type = ecs_id(ecs_bool_t);
+        *result_type = ecs_id(ecs_bool_t);
+        return 0;
+    case EcsTokEq:
+    case EcsTokNeq:
+    case EcsTokGt:
+    case EcsTokGtEq:
+    case EcsTokLt:
+    case EcsTokLtEq:
+        /* Result type of equality operator is always bool, but operand types
+         * should not be casted to bool */
+        *result_type = ecs_id(ecs_bool_t);
+        break;
+    case EcsTokShiftLeft:
+    case EcsTokShiftRight:
+    case EcsTokBitwiseAnd:
+    case EcsTokBitwiseOr:
+    case EcsTokAdd:
+    case EcsTokSub:
+    case EcsTokMul:
+        break;
+    default:
+        ecs_throw(ECS_INTERNAL_ERROR, "invalid operator");
+    }
+
+    const EcsPrimitive *ltype_ptr = ecs_get(world, left->type, EcsPrimitive);
+    const EcsPrimitive *rtype_ptr = ecs_get(world, right->type, EcsPrimitive);
+    if (!ltype_ptr || !rtype_ptr) {
+        char *lname = ecs_get_path(world, left->type);
+        char *rname = ecs_get_path(world, right->type);
+        flecs_expr_visit_error(script, node, 
+            "invalid non-primitive type in binary expression (%s, %s)", 
+            lname, rname);
+        ecs_os_free(lname);
+        ecs_os_free(rname);
+        return 0;
+    }
+
+    ecs_entity_t ltype = flecs_expr_largest_type(ltype_ptr);
+    ecs_entity_t rtype = flecs_expr_largest_type(rtype_ptr);
+    if (ltype == rtype) {
+        *operand_type = ltype;
+        goto done;
+    }
+
+    if (flecs_expr_operator_is_equality(node->operator)) {
+        char *lname = ecs_id_str(world, ltype);
+        char *rname = ecs_id_str(world, rtype);
+        flecs_expr_visit_error(script, node, 
+            "mismatching types in equality expression (%s vs %s)", 
+            lname, rname);
+        ecs_os_free(rname);
+        ecs_os_free(lname);
+        return 0;
+    }
+
+    if (!flecs_expr_is_type_number(ltype) || !flecs_expr_is_type_number(rtype)) {
+        flecs_expr_visit_error(script, node,
+            "incompatible types in binary expression");
+        return 0;
+    }
+
+    *operand_type = flecs_expr_promote_type(ltype, rtype);
+
+done:
+    if (node->operator == EcsTokSub && *operand_type == ecs_id(ecs_u64_t)) {
+        /* Result of subtracting two unsigned ints can be negative */
+        *operand_type = ecs_id(ecs_i64_t);
+    }
+
+    if (!*result_type) {
+        *result_type = *operand_type;
+    }
+
+    return 0;
+error:
+    return -1;
+}
+
+static
+int flecs_expr_unary_visit_type(
+    ecs_script_t *script,
+    ecs_expr_unary_t *node)
+{
+    if (flecs_script_expr_visit_type(script, node->expr)) {
+        goto error;
+    }
+
+    /* The only supported unary expression is not (!) which returns a bool */
+    node->node.type = ecs_id(ecs_bool_t);
+
+    if (node->expr->type != ecs_id(ecs_bool_t)) {
+        node->expr = flecs_expr_cast(script, node->expr, ecs_id(ecs_bool_t));
+    }
+
+    return 0;
+error:
+    return -1;
+}
+
+static
+int flecs_expr_binary_visit_type(
+    ecs_script_t *script,
+    ecs_expr_binary_t *node)
+{    
+    /* Operands must be of this type or casted to it */
+    ecs_entity_t operand_type = 0;
+
+    /* Resulting type of binary expression */
+    ecs_entity_t result_type = 0;
+
+    if (flecs_script_expr_visit_type(script, node->left)) {
+        goto error;
+    }
+
+    if (flecs_script_expr_visit_type(script, node->right)) {
+        goto error;
+    }
+
+    if (flecs_expr_type_for_oper(script, node, &operand_type, &result_type)) {
+        goto error;
+    }
+
+    if (!flecs_expr_oper_valid_for_type(result_type, node->operator)) {
+        flecs_expr_visit_error(script, node, "invalid operator for type");
+        goto error;
+    }
+
+    if (operand_type != node->left->type) {
+        node->left = (ecs_expr_node_t*)flecs_expr_cast(
+            script, node->left, operand_type);
+    }
+
+    if (operand_type != node->right->type) {
+        node->right = (ecs_expr_node_t*)flecs_expr_cast(
+            script, node->right, operand_type);
+    }
+
+    node->node.type = result_type;
+
+    return 0;
+error:
+    return -1;
+}
+
+static
+int flecs_expr_identifier_visit_type(
+    ecs_script_t *script,
+    ecs_expr_identifier_t *node)
+{
+    node->node.type = ecs_id(ecs_entity_t);
+    node->id = ecs_lookup(script->world, node->value);
+    if (!node->id) {
+        flecs_expr_visit_error(script, node, 
+            "unresolved identifier '%s'", node->value);
+        goto error;
+    }
+
+    return 0;
+error:
+    return -1;
+}
+
+static
+int flecs_expr_variable_visit_type(
+    ecs_script_t *script,
+    ecs_expr_variable_t *node)
+{
+    node->node.type = ecs_id(ecs_entity_t);
+    return 0;
+}
+
+static
+int flecs_expr_member_visit_type(
+    ecs_script_t *script,
+    ecs_expr_member_t *node)
+{
+    if (flecs_script_expr_visit_type(script, node->left)) {
+        goto error;
+    }
+
+    ecs_world_t *world = script->world;
+    ecs_entity_t left_type = node->left->type;
+
+    const EcsType *type = ecs_get(world, left_type, EcsType);
+    if (!type) {
+        char *type_str = ecs_get_path(world, left_type);
+        flecs_expr_visit_error(script, node, 
+            "cannot resolve member on value of type '%s' (missing reflection data)",
+                type_str);
+        ecs_os_free(type_str);
+        goto error;
+    }
+
+    if (type->kind != EcsStructType) {
+        char *type_str = ecs_get_path(world, left_type);
+        flecs_expr_visit_error(script, node, 
+            "cannot resolve member on non-struct type '%s'",
+                type_str);
+        ecs_os_free(type_str);
+        goto error;
+    }
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, left_type, NULL);
+    ecs_meta_push(&cur); /* { */
+    int prev_log = ecs_log_set_level(-4);
+    if (ecs_meta_dotmember(&cur, node->member_name)) {
+        ecs_log_set_level(prev_log);
+        char *type_str = ecs_get_path(world, left_type);
+        flecs_expr_visit_error(script, node, 
+            "unresolved member '%s' for type '%s'", 
+                node->member_name, type_str);
+        ecs_os_free(type_str);
+        goto error;
+    }
+    ecs_log_set_level(prev_log);
+
+    node->node.type = ecs_meta_get_type(&cur);
+    ecs_meta_pop(&cur); /* } */
+
+    return 0;
+error:
+    return -1;
+}
+
+static
+int flecs_expr_element_visit_type(
+    ecs_script_t *script,
+    ecs_expr_element_t *node)
+{
+    if (flecs_script_expr_visit_type(script, node->left)) {
+        goto error;
+    }
+
+    if (flecs_script_expr_visit_type(script, node->index)) {
+        goto error;
+    }
+
+    ecs_world_t *world = script->world;
+    ecs_entity_t left_type = node->left->type;
+    const EcsType *type = ecs_get(world, left_type, EcsType);
+    if (!type) {
+        char *type_str = ecs_get_path(world, left_type);
+        flecs_expr_visit_error(script, node, 
+            "cannot use [] on value of type '%s' (missing reflection data)",
+                type_str);
+        ecs_os_free(type_str);
+        goto error;
+    }
+
+    bool is_entity_type = false;
+
+    if (type->kind == EcsPrimitiveType) {
+        const EcsPrimitive *ptype = ecs_get(world, left_type, EcsPrimitive);
+        if (ptype->kind == EcsEntity) {
+            is_entity_type = true;
+        }
+    }
+
+    if (is_entity_type) {
+        if (node->index->kind == EcsExprIdentifier) {
+            node->node.type = ((ecs_expr_identifier_t*)node->index)->id;
+        } else {
+            flecs_expr_visit_error(script, node, 
+                "invalid component expression");
+            goto error;
+        }
+    } else if (type->kind == EcsArrayType) {
+        const EcsArray *type_array = ecs_get(world, left_type, EcsArray);
+        ecs_assert(type_array != NULL, ECS_INTERNAL_ERROR, NULL);
+        node->node.type = type_array->type;
+    } else if (type->kind == EcsVectorType) {
+        const EcsVector *type_vector = ecs_get(world, left_type, EcsVector);
+        ecs_assert(type_vector != NULL, ECS_INTERNAL_ERROR, NULL);
+        node->node.type = type_vector->type;
+    } else {
+        char *type_str = ecs_get_path(script->world, node->left->type);
+        flecs_expr_visit_error(script, node, 
+            "invalid usage of [] on non collection/entity type '%s'", type_str);
+        ecs_os_free(type_str);
+        goto error;
+    }
+
+    return 0;
+error:
+    return -1;
+}
+
+int flecs_script_expr_visit_type(
+    ecs_script_t *script,
+    ecs_expr_node_t *node)
+{
+    ecs_assert(node != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    switch(node->kind) {
+    case EcsExprValue:
+        /* Value types are assigned by the AST */
+        break;
+    case EcsExprUnary:
+        if (flecs_expr_unary_visit_type(script, (ecs_expr_unary_t*)node)) {
+            goto error;
+        }
+        break;
+    case EcsExprBinary:
+        if (flecs_expr_binary_visit_type(script, (ecs_expr_binary_t*)node)) {
+            goto error;
+        }
+        break;
+    case EcsExprIdentifier:
+        if (flecs_expr_identifier_visit_type(script, (ecs_expr_identifier_t*)node)) {
+            goto error;
+        }
+        break;
+    case EcsExprVariable:
+        if (flecs_expr_variable_visit_type(script, (ecs_expr_variable_t*)node)) {
+            goto error;
+        }
+        break;
+    case EcsExprFunction:
+        break;
+    case EcsExprMember:
+        if (flecs_expr_member_visit_type(script, (ecs_expr_member_t*)node)) {
+            goto error;
+        }
+        break;
+    case EcsExprElement:
+        if (flecs_expr_element_visit_type(script, (ecs_expr_element_t*)node)) {
+            goto error;
+        }
+        break;
+    case EcsExprCast:
+        break;
+    }
+
+    return 0;
+error:
+    return -1;
+}
+
+#endif
 

@@ -6,7 +6,7 @@
 #include "flecs.h"
 
 #ifdef FLECS_SCRIPT
-#include "script.h"
+#include "../script.h"
 
 #define ECS_VALUE_GET(value, T) (*(T*)((ecs_expr_val_t*)value)->ptr)
 
@@ -103,7 +103,7 @@ int flecs_expr_unary_visit_fold(
         return 0;
     }
 
-    if (node->node.type != ecs_id(ecs_bool_t)) {
+    if (node->expr->type != ecs_id(ecs_bool_t)) {
         char *type_str = ecs_get_path(script->world, node->node.type);
         flecs_expr_visit_error(script, node, 
             "! operator cannot be applied to value of type '%s' (must be bool)");
@@ -117,7 +117,9 @@ int flecs_expr_unary_visit_fold(
     result->node.pos = node->node.pos;
     result->node.type = ecs_id(ecs_bool_t);
     result->ptr = &result->storage.bool_;
-    *(bool*)result->ptr = !(*(bool*)((ecs_expr_val_t*)node)->ptr);
+    *(bool*)result->ptr = !*(bool*)(((ecs_expr_val_t*)node->expr)->ptr);
+
+    *node_ptr = (ecs_expr_node_t*)result;
 
     return 0;
 error:

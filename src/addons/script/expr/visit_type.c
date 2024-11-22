@@ -6,7 +6,7 @@
 #include "flecs.h"
 
 #ifdef FLECS_SCRIPT
-#include "script.h"
+#include "../script.h"
 
 static
 bool flecs_expr_operator_is_equality(
@@ -248,6 +248,10 @@ int flecs_expr_unary_visit_type(
 
     /* The only supported unary expression is not (!) which returns a bool */
     node->node.type = ecs_id(ecs_bool_t);
+
+    if (node->expr->type != ecs_id(ecs_bool_t)) {
+        node->expr = flecs_expr_cast(script, node->expr, ecs_id(ecs_bool_t));
+    }
 
     return 0;
 error:
