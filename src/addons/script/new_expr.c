@@ -15,6 +15,7 @@ static int flecs_expr_precedence[] = {
     [EcsTokParenOpen] = 1,
     [EcsTokMember] = 1,
     [EcsTokBracketOpen] = 1,
+    [EcsTokNot] = 2,
     [EcsTokMul] = 3,
     [EcsTokDiv] = 3,
     [EcsTokMod] = 3,
@@ -218,6 +219,14 @@ const char* flecs_script_parse_lhs(
             })
             break;
         }
+
+        case EcsTokNot: {
+            ecs_expr_unary_t *unary = flecs_expr_unary(parser);
+            pos = flecs_script_parse_expr(parser, pos, EcsTokNot, &unary->expr);
+            unary->operator = EcsTokNot;
+            *out = (ecs_expr_node_t*)unary;
+            break;
+        }
     )
 
     TokenFramePop();
@@ -238,7 +247,7 @@ const char* flecs_script_parse_expr(
 {
     ParserBegin;
 
-    pos = flecs_script_parse_lhs(parser, pos, tokenizer, 0, out);
+    pos = flecs_script_parse_lhs(parser, pos, tokenizer, left_oper, out);
 
     EndOfRule;
 

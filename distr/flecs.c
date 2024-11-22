@@ -4910,6 +4910,12 @@ typedef struct ecs_expr_variable_t {
     const char *value;
 } ecs_expr_variable_t;
 
+typedef struct ecs_expr_unary_t {
+    ecs_expr_node_t node;
+    ecs_expr_node_t *expr;
+    ecs_script_token_kind_t operator;
+} ecs_expr_unary_t;
+
 typedef struct ecs_expr_binary_t {
     ecs_expr_node_t node;
     ecs_expr_node_t *left;
@@ -4956,6 +4962,9 @@ ecs_expr_identifier_t* flecs_expr_identifier(
 ecs_expr_variable_t* flecs_expr_variable(
     ecs_script_parser_t *parser,
     const char *value);
+
+ecs_expr_unary_t* flecs_expr_unary(
+    ecs_script_parser_t *parser);
 
 ecs_expr_binary_t* flecs_expr_binary(
     ecs_script_parser_t *parser);
@@ -56547,6 +56556,14 @@ ecs_expr_variable_t* flecs_expr_variable(
     return result;
 }
 
+ecs_expr_unary_t* flecs_expr_unary(
+    ecs_script_parser_t *parser)
+{
+    ecs_expr_binary_t *result = flecs_expr_ast_new(
+        parser, ecs_expr_binary_t, EcsExprUnary);
+    return result;
+}
+
 ecs_expr_binary_t* flecs_expr_binary(
     ecs_script_parser_t *parser)
 {
@@ -56600,6 +56617,26 @@ int flecs_expr_value_to_str(
         v->world, node->node.type, node->ptr, v->buf);
 }
 
+int flecs_expr_unary_to_str(
+    ecs_expr_str_visitor_t *v,
+    const ecs_expr_unary_t *node)
+{
+    switch(node->operator) {
+    case EcsTokNot: ecs_strbuf_appendlit(v->buf, "!"); break;
+    default:
+        ecs_err("invalid operator for unary expression");
+        return -1;
+    };
+
+    if (flecs_expr_node_to_str(v, node->expr)) {
+        goto error;
+    }
+
+    return 0;
+error:
+    return -1;
+}
+
 int flecs_expr_binary_to_str(
     ecs_expr_str_visitor_t *v,
     const ecs_expr_binary_t *node)
@@ -56631,7 +56668,7 @@ int flecs_expr_binary_to_str(
     case EcsTokShiftLeft: ecs_strbuf_appendlit(v->buf, "<<"); break;
     case EcsTokShiftRight: ecs_strbuf_appendlit(v->buf, ">>"); break;
     default:
-        ecs_err("invalid operator in expression");
+        ecs_err("invalid operator for binary expression");
         return -1;
     };
 
@@ -56713,6 +56750,9 @@ int flecs_expr_node_to_str(
         }
         break;
     case EcsExprUnary:
+        if (flecs_expr_unary_to_str(v, (ecs_expr_unary_t*)node)) {
+            goto error;
+        }
         break;
     case EcsExprBinary:
         if (flecs_expr_binary_to_str(v, (ecs_expr_binary_t*)node)) {
@@ -57014,6 +57054,23 @@ error:
 }
 
 static
+int flecs_expr_unary_visit_type(
+    ecs_script_t *script,
+    ecs_expr_unary_t *node)
+{
+    if (flecs_script_expr_visit_type(script, node->expr)) {
+        goto error;
+    }
+
+    /* The only supported unary expression is not (!) which returns a bool */
+    node->node.type = ecs_id(ecs_bool_t);
+
+    return 0;
+error:
+    return -1;
+}
+
+static
 int flecs_expr_binary_visit_type(
     ecs_script_t *script,
     ecs_expr_binary_t *node)
@@ -57199,8 +57256,12 @@ int flecs_script_expr_visit_type(
 
     switch(node->kind) {
     case EcsExprValue:
+        /* Value types are assigned by the AST */
         break;
     case EcsExprUnary:
+        if (flecs_expr_unary_visit_type(script, (ecs_expr_unary_t*)node)) {
+            goto error;
+        }
         break;
     case EcsExprBinary:
         if (flecs_expr_binary_visit_type(script, (ecs_expr_binary_t*)node)) {
@@ -57660,6 +57721,7 @@ static int flecs_expr_precedence[] = {
     [EcsTokParenOpen] = 1,
     [EcsTokMember] = 1,
     [EcsTokBracketOpen] = 1,
+    [EcsTokNot] = 2,
     [EcsTokMul] = 3,
     [EcsTokDiv] = 3,
     [EcsTokMod] = 3,
@@ -57863,6 +57925,14 @@ const char* flecs_script_parse_lhs(
             })
             break;
         }
+
+        case EcsTokNot: {
+            ecs_expr_unary_t *unary = flecs_expr_unary(parser);
+            pos = flecs_script_parse_expr(parser, pos, EcsTokNot, &unary->expr);
+            unary->operator = EcsTokNot;
+            *out = (ecs_expr_node_t*)unary;
+            break;
+        }
     )
 
     TokenFramePop();
@@ -57883,7 +57953,7 @@ const char* flecs_script_parse_expr(
 {
     ParserBegin;
 
-    pos = flecs_script_parse_lhs(parser, pos, tokenizer, 0, out);
+    pos = flecs_script_parse_lhs(parser, pos, tokenizer, left_oper, out);
 
     EndOfRule;
 

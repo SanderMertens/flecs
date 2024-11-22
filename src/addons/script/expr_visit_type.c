@@ -243,6 +243,23 @@ error:
 }
 
 static
+int flecs_expr_unary_visit_type(
+    ecs_script_t *script,
+    ecs_expr_unary_t *node)
+{
+    if (flecs_script_expr_visit_type(script, node->expr)) {
+        goto error;
+    }
+
+    /* The only supported unary expression is not (!) which returns a bool */
+    node->node.type = ecs_id(ecs_bool_t);
+
+    return 0;
+error:
+    return -1;
+}
+
+static
 int flecs_expr_binary_visit_type(
     ecs_script_t *script,
     ecs_expr_binary_t *node)
@@ -428,8 +445,12 @@ int flecs_script_expr_visit_type(
 
     switch(node->kind) {
     case EcsExprValue:
+        /* Value types are assigned by the AST */
         break;
     case EcsExprUnary:
+        if (flecs_expr_unary_visit_type(script, (ecs_expr_unary_t*)node)) {
+            goto error;
+        }
         break;
     case EcsExprBinary:
         if (flecs_expr_binary_visit_type(script, (ecs_expr_binary_t*)node)) {
