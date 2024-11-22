@@ -282,6 +282,16 @@ int flecs_expr_binary_visit_type(
         goto error;
     }
 
+    if (operand_type != node->left->type) {
+        node->left = (ecs_expr_node_t*)flecs_expr_cast(
+            script, node->left, operand_type);
+    }
+
+    if (operand_type != node->right->type) {
+        node->right = (ecs_expr_node_t*)flecs_expr_cast(
+            script, node->right, operand_type);
+    }
+
     node->node.type = result_type;
 
     return 0;
