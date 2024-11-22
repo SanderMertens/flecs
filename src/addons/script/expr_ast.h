@@ -54,6 +54,12 @@ typedef struct ecs_expr_variable_t {
     const char *value;
 } ecs_expr_variable_t;
 
+typedef struct ecs_expr_unary_t {
+    ecs_expr_node_t node;
+    ecs_expr_node_t *expr;
+    ecs_script_token_kind_t operator;
+} ecs_expr_unary_t;
+
 typedef struct ecs_expr_binary_t {
     ecs_expr_node_t node;
     ecs_expr_node_t *left;
@@ -100,6 +106,9 @@ ecs_expr_identifier_t* flecs_expr_identifier(
 ecs_expr_variable_t* flecs_expr_variable(
     ecs_script_parser_t *parser,
     const char *value);
+
+ecs_expr_unary_t* flecs_expr_unary(
+    ecs_script_parser_t *parser);
 
 ecs_expr_binary_t* flecs_expr_binary(
     ecs_script_parser_t *parser);

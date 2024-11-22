@@ -27,6 +27,26 @@ int flecs_expr_value_to_str(
         v->world, node->node.type, node->ptr, v->buf);
 }
 
+int flecs_expr_unary_to_str(
+    ecs_expr_str_visitor_t *v,
+    const ecs_expr_unary_t *node)
+{
+    switch(node->operator) {
+    case EcsTokNot: ecs_strbuf_appendlit(v->buf, "!"); break;
+    default:
+        ecs_err("invalid operator for unary expression");
+        return -1;
+    };
+
+    if (flecs_expr_node_to_str(v, node->expr)) {
+        goto error;
+    }
+
+    return 0;
+error:
+    return -1;
+}
+
 int flecs_expr_binary_to_str(
     ecs_expr_str_visitor_t *v,
     const ecs_expr_binary_t *node)
@@ -58,7 +78,7 @@ int flecs_expr_binary_to_str(
     case EcsTokShiftLeft: ecs_strbuf_appendlit(v->buf, "<<"); break;
     case EcsTokShiftRight: ecs_strbuf_appendlit(v->buf, ">>"); break;
     default:
-        ecs_err("invalid operator in expression");
+        ecs_err("invalid operator for binary expression");
         return -1;
     };
 
@@ -140,6 +160,9 @@ int flecs_expr_node_to_str(
         }
         break;
     case EcsExprUnary:
+        if (flecs_expr_unary_to_str(v, (ecs_expr_unary_t*)node)) {
+            goto error;
+        }
         break;
     case EcsExprBinary:
         if (flecs_expr_binary_to_str(v, (ecs_expr_binary_t*)node)) {
