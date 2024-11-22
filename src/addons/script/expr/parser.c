@@ -1,13 +1,13 @@
 /**
- * @file addons/script/expr.c
+ * @file addons/script/expr/parser.c
  * @brief Script expression parser.
  */
 
 #include "flecs.h"
 
 #ifdef FLECS_SCRIPT
-#include "script.h"
-#include "parser.h"
+#include "../script.h"
+#include "../parser.h"
 
 /* From https://en.cppreference.com/w/c/language/operator_precedence */
 

@@ -6,7 +6,7 @@
 #include "flecs.h"
 
 #ifdef FLECS_SCRIPT
-#include "script.h"
+#include "../script.h"
 
 typedef struct ecs_expr_str_visitor_t {
     const ecs_world_t *world;

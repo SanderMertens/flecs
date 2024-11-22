@@ -6,7 +6,7 @@
 #include "flecs.h"
 
 #ifdef FLECS_SCRIPT
-#include "script.h"
+#include "../script.h"
 
 #define flecs_expr_ast_new(parser, T, kind)\
     (T*)flecs_expr_ast_new_(parser, ECS_SIZEOF(T), kind)
