@@ -4902,6 +4902,7 @@ typedef struct ecs_expr_val_t {
 typedef struct ecs_expr_identifier_t {
     ecs_expr_node_t node;
     const char *value;
+    ecs_entity_t id;
 } ecs_expr_identifier_t;
 
 typedef struct ecs_expr_variable_t {
@@ -56700,9 +56701,9 @@ int flecs_expr_node_to_str(
     ecs_assert(node != NULL, ECS_INVALID_PARAMETER, NULL);
 
     if (node->type) {
-        ecs_strbuf_appendlit(v->buf, "(");
+        ecs_strbuf_append(v->buf, "%s", ECS_BLUE);
         ecs_strbuf_appendstr(v->buf, ecs_get_name(v->world, node->type));
-        ecs_strbuf_appendlit(v->buf, ")");
+        ecs_strbuf_append(v->buf, "%s(", ECS_NORMAL);
     }
 
     switch(node->kind) {
@@ -56742,6 +56743,10 @@ int flecs_expr_node_to_str(
         break;
     case EcsExprCast:
         break;
+    }
+
+    if (node->type) {
+        ecs_strbuf_append(v->buf, ")");
     }
 
     return 0;
@@ -57043,6 +57048,149 @@ error:
     return -1;
 }
 
+static
+int flecs_expr_identifier_visit(
+    ecs_script_t *script,
+    ecs_expr_identifier_t *node)
+{
+    node->node.type = ecs_id(ecs_entity_t);
+    node->id = ecs_lookup(script->world, node->value);
+    if (!node->id) {
+        flecs_expr_visit_error(script, node, 
+            "unresolved identifier '%s'", node->value);
+        goto error;
+    }
+
+    return 0;
+error:
+    return -1;
+}
+
+static
+int flecs_expr_variable_visit(
+    ecs_script_t *script,
+    ecs_expr_variable_t *node)
+{
+    node->node.type = ecs_id(ecs_entity_t);
+    return 0;
+}
+
+static
+int flecs_expr_member_visit(
+    ecs_script_t *script,
+    ecs_expr_member_t *node)
+{
+    if (flecs_script_expr_visit_type(script, node->left)) {
+        goto error;
+    }
+
+    ecs_world_t *world = script->world;
+    ecs_entity_t left_type = node->left->type;
+
+    const EcsType *type = ecs_get(world, left_type, EcsType);
+    if (!type) {
+        char *type_str = ecs_get_path(world, left_type);
+        flecs_expr_visit_error(script, node, 
+            "cannot resolve member on value of type '%s' (missing reflection data)",
+                type_str);
+        ecs_os_free(type_str);
+        goto error;
+    }
+
+    if (type->kind != EcsStructType) {
+        char *type_str = ecs_get_path(world, left_type);
+        flecs_expr_visit_error(script, node, 
+            "cannot resolve member on non-struct type '%s'",
+                type_str);
+        ecs_os_free(type_str);
+        goto error;
+    }
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, left_type, NULL);
+    ecs_meta_push(&cur); /* { */
+    int prev_log = ecs_log_set_level(-4);
+    if (ecs_meta_dotmember(&cur, node->member_name)) {
+        ecs_log_set_level(prev_log);
+        char *type_str = ecs_get_path(world, left_type);
+        flecs_expr_visit_error(script, node, 
+            "unresolved member '%s' for type '%s'", 
+                node->member_name, type_str);
+        ecs_os_free(type_str);
+        goto error;
+    }
+    ecs_log_set_level(prev_log);
+
+    node->node.type = ecs_meta_get_type(&cur);
+    ecs_meta_pop(&cur); /* } */
+
+    return 0;
+error:
+    return -1;
+}
+
+static
+int flecs_expr_element_visit(
+    ecs_script_t *script,
+    ecs_expr_element_t *node)
+{
+    if (flecs_script_expr_visit_type(script, node->left)) {
+        goto error;
+    }
+
+    if (flecs_script_expr_visit_type(script, node->index)) {
+        goto error;
+    }
+
+    ecs_world_t *world = script->world;
+    ecs_entity_t left_type = node->left->type;
+    const EcsType *type = ecs_get(world, left_type, EcsType);
+    if (!type) {
+        char *type_str = ecs_get_path(world, left_type);
+        flecs_expr_visit_error(script, node, 
+            "cannot use [] on value of type '%s' (missing reflection data)",
+                type_str);
+        ecs_os_free(type_str);
+        goto error;
+    }
+
+    bool is_entity_type = false;
+
+    if (type->kind == EcsPrimitiveType) {
+        const EcsPrimitive *ptype = ecs_get(world, left_type, EcsPrimitive);
+        if (ptype->kind == EcsEntity) {
+            is_entity_type = true;
+        }
+    }
+
+    if (is_entity_type) {
+        if (node->index->kind == EcsExprIdentifier) {
+            node->node.type = ((ecs_expr_identifier_t*)node->index)->id;
+        } else {
+            flecs_expr_visit_error(script, node, 
+                "invalid component expression");
+            goto error;
+        }
+    } else if (type->kind == EcsArrayType) {
+        const EcsArray *type_array = ecs_get(world, left_type, EcsArray);
+        ecs_assert(type_array != NULL, ECS_INTERNAL_ERROR, NULL);
+        node->node.type = type_array->type;
+    } else if (type->kind == EcsVectorType) {
+        const EcsVector *type_vector = ecs_get(world, left_type, EcsVector);
+        ecs_assert(type_vector != NULL, ECS_INTERNAL_ERROR, NULL);
+        node->node.type = type_vector->type;
+    } else {
+        char *type_str = ecs_get_path(script->world, node->left->type);
+        flecs_expr_visit_error(script, node, 
+            "invalid usage of [] on non collection/entity type '%s'", type_str);
+        ecs_os_free(type_str);
+        goto error;
+    }
+
+    return 0;
+error:
+    return -1;
+}
+
 int flecs_script_expr_visit_type(
     ecs_script_t *script,
     ecs_expr_node_t *node)
@@ -57060,14 +57208,26 @@ int flecs_script_expr_visit_type(
         }
         break;
     case EcsExprIdentifier:
+        if (flecs_expr_identifier_visit(script, (ecs_expr_identifier_t*)node)) {
+            goto error;
+        }
         break;
     case EcsExprVariable:
+        if (flecs_expr_variable_visit(script, (ecs_expr_variable_t*)node)) {
+            goto error;
+        }
         break;
     case EcsExprFunction:
         break;
     case EcsExprMember:
+        if (flecs_expr_member_visit(script, (ecs_expr_member_t*)node)) {
+            goto error;
+        }
         break;
     case EcsExprElement:
+        if (flecs_expr_element_visit(script, (ecs_expr_element_t*)node)) {
+            goto error;
+        }
         break;
     case EcsExprCast:
         break;

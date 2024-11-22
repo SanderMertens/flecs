@@ -46,6 +46,7 @@ typedef struct ecs_expr_val_t {
 typedef struct ecs_expr_identifier_t {
     ecs_expr_node_t node;
     const char *value;
+    ecs_entity_t id;
 } ecs_expr_identifier_t;
 
 typedef struct ecs_expr_variable_t {
