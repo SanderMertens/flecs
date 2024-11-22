@@ -128,9 +128,9 @@ int flecs_expr_node_to_str(
     ecs_assert(node != NULL, ECS_INVALID_PARAMETER, NULL);
 
     if (node->type) {
-        ecs_strbuf_appendlit(v->buf, "(");
+        ecs_strbuf_append(v->buf, "%s", ECS_BLUE);
         ecs_strbuf_appendstr(v->buf, ecs_get_name(v->world, node->type));
-        ecs_strbuf_appendlit(v->buf, ")");
+        ecs_strbuf_append(v->buf, "%s(", ECS_NORMAL);
     }
 
     switch(node->kind) {
@@ -170,6 +170,10 @@ int flecs_expr_node_to_str(
         break;
     case EcsExprCast:
         break;
+    }
+
+    if (node->type) {
+        ecs_strbuf_append(v->buf, ")");
     }
 
     return 0;
