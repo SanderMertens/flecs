@@ -179,6 +179,50 @@ struct FFlecsThread
 	
 }; // struct FFlecsThread
 
+struct FFlecsMutexPool
+{
+	static constexpr int32 StartingPoolSize = 16;
+	
+	FFlecsMutexPool()
+	{
+		for (int32 Index = 0; Index < StartingPoolSize; ++Index)
+		{
+			MutexPool.Enqueue(new FFlecsMutex());
+		}
+	}
+
+	~FFlecsMutexPool()
+	{
+		FFlecsMutex* Mutex = nullptr;
+		
+		while (MutexPool.Dequeue(Mutex))
+		{
+			delete Mutex;
+		}
+	}
+
+	
+	FORCEINLINE NO_DISCARD FFlecsMutex* ObtainMutex()
+	{
+		FFlecsMutex* Mutex = nullptr;
+		
+		if (!MutexPool.Dequeue(Mutex))
+		{
+			Mutex = new FFlecsMutex();
+		}
+		
+		return Mutex;
+	}
+
+	FORCEINLINE void ReturnMutex(FFlecsMutex* Mutex)
+	{
+		MutexPool.Enqueue(Mutex);
+	}
+
+	TQueue<FFlecsMutex*, EQueueMode::Mpsc> MutexPool;
+	
+}; // struct FFlecsMutexPool
+
 struct FOSApiInitializer
 {
 	static constexpr EThreadPriority ThreadPriority = TPri_Normal;
@@ -191,6 +235,8 @@ struct FOSApiInitializer
 	
 	void InitializeOSAPI()
 	{
+		static FFlecsMutexPool MutexPool;
+		
         ecs_os_set_api_defaults();
 		
         ecs_os_api_t os_api = ecs_os_api;
@@ -267,14 +313,13 @@ struct FOSApiInitializer
 		
 		os_api.mutex_new_ = []() -> ecs_os_mutex_t
 		{
-			FFlecsMutex* Mutex = new FFlecsMutex();
-			return reinterpret_cast<ecs_os_mutex_t>(Mutex);
+			return reinterpret_cast<ecs_os_mutex_t>(MutexPool.ObtainMutex());
 		};
 
 		os_api.mutex_free_ = [](ecs_os_mutex_t Mutex)
 		{
 			FFlecsMutex* MutexPtr = reinterpret_cast<FFlecsMutex*>(Mutex);
-			delete MutexPtr;
+			MutexPool.ReturnMutex(MutexPtr);
 		};
 
 		os_api.mutex_lock_ = [](ecs_os_mutex_t Mutex)
@@ -384,22 +429,22 @@ struct FOSApiInitializer
 			FCpuProfilerTrace::OutputEndEvent();
 		};
 
-		os_api.adec_ = [](int32_t* Value)
+		os_api.adec_ = [](int32_t* Value) -> int32
 		{
 			return FPlatformAtomics::InterlockedDecrement(Value);
 		};
 
-		os_api.ainc_ = [](int32_t* Value)
+		os_api.ainc_ = [](int32_t* Value) -> int32
 		{
 			return FPlatformAtomics::InterlockedIncrement(Value);
 		};
 
-		os_api.lainc_ = [](int64_t* Value)
+		os_api.lainc_ = [](int64_t* Value) -> int64
 		{
 			return FPlatformAtomics::InterlockedIncrement(Value);
 		};
 
-		os_api.ladec_ = [](int64_t* Value)
+		os_api.ladec_ = [](int64_t* Value) -> int64
 		{
 			return FPlatformAtomics::InterlockedDecrement(Value);
 		};
