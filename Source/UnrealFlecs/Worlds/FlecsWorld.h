@@ -198,10 +198,7 @@ struct FOSApiInitializer
 		os_api.thread_new_ = [](ecs_os_thread_callback_t Callback, void* Param) -> ecs_os_thread_t
         {
 
-            FFlecsThread* FlecsThread = static_cast<FFlecsThread*>(
-                FMemory::Malloc(sizeof(FFlecsThread), alignof(FFlecsThread)));
-            
-            new (FlecsThread) FFlecsThread();
+            FFlecsThread* FlecsThread = new FFlecsThread();
             
             FlecsThread->Runnable = new FFlecsRunnable(Callback, Param);
 
@@ -240,8 +237,7 @@ struct FOSApiInitializer
                 }
 
                 FlecsThread->bJoined = true;
-                FlecsThread->~FFlecsThread();
-                FMemory::Free(FlecsThread);
+                delete FlecsThread;
             }
             
             return nullptr;
