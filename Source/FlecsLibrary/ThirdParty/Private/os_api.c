@@ -30,9 +30,6 @@ int64_t ecs_os_api_free_count = 0;
 void ecs_os_set_api(
     ecs_os_api_t *os_api)
 {
-   // ecs_os_api = *os_api;
-  //  ecs_os_api_initialized = true;
-    
      if (!ecs_os_api_initialized) {
          ecs_os_api = *os_api;
         ecs_os_api_initialized = true;
