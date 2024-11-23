@@ -124,6 +124,7 @@ namespace _ {
 
 inline void system_init(flecs::world& world) {
     world.component<TickSource>("flecs::system::TickSource");
+    world.component<SystemPriority>("flecs::system::SystemPriority");
 }
 
 } // namespace _
