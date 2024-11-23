@@ -319,6 +319,10 @@
 #define FLECS_QUERY_SCOPE_NESTING_MAX (8)
 #endif
 
+#ifndef FLECS_DEFAULT_SYSTEM_PRIORITY
+#define FLECS_DEFAULT_SYSTEM_PRIORITY (100)
+#endif // FLECS_DEFAULT_SYSTEM_PRIORITY
+
 /** @} */
 
 #include "flecs/private/api_defines.h"

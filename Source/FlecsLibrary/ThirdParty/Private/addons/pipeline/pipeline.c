@@ -29,7 +29,7 @@ static int compare_system_priority(
 {
     if (ptr1->value == ptr2->value) {
         return flecs_entity_compare(e1, ptr1, e2, ptr2);
-    } else if (ptr1->value > ptr2->value) {
+    } else if (ptr1->value < ptr2->value) {
         return -1;
     } else {
         return 1;
@@ -950,7 +950,8 @@ void FlecsPipelineImport(
                 { .id = ecs_dependson(EcsOnStart), .trav = EcsDependsOn, .oper = EcsNot },
                 { .id = EcsDisabled, .src.id = EcsUp, .trav = EcsDependsOn, .oper = EcsNot },
                 { .id = EcsDisabled, .src.id = EcsUp, .trav = EcsChildOf, .oper = EcsNot },
-                { .id = ecs_id(EcsSystemPriority) },
+                { .id = ecs_id(EcsSystemPriority), .inout = EcsIn }
+                
             },
             .order_by_callback = (ecs_order_by_action_t)compare_system_priority,
             .order_by = ecs_id(EcsSystemPriority)

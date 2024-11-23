@@ -389,8 +389,8 @@ ecs_entity_t ecs_system_init(
             return 0;
         }
     }
-
-    ecs_set(world, entity, EcsSystemPriority, { desc->priority });
+    
+    ecs_set(world, entity, EcsSystemPriority, { desc->priority <= 0 ? FLECS_DEFAULT_SYSTEM_PRIORITY : desc->priority });
 
     flecs_poly_modified(world, entity, ecs_system_t);
 
