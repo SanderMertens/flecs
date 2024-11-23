@@ -42,13 +42,13 @@ struct FFlecsRunnableThreadWrapper final : public FRunnable
 	ecs_os_thread_callback_t Callback;
 	void* Data;
 
-	FFlecsRunnableThreadWrapper(ecs_os_thread_callback_t InCallback, void* InData)
+	FORCEINLINE FFlecsRunnableThreadWrapper(ecs_os_thread_callback_t InCallback, void* InData)
 		: Callback(InCallback)
 		, Data(InData)
 	{
 	}
 
-	virtual uint32 Run() override
+	FORCEINLINE virtual uint32 Run() override
 	{
 		Callback(Data);
 		return 0;
@@ -62,14 +62,14 @@ struct FFlecsThread
 	FFlecsRunnableThreadWrapper* Runnable;
 	bool bJoined;
 	
-	FFlecsThread(FRunnableThread* Thread, FFlecsRunnableThreadWrapper* Runnable)
+	FORCEINLINE FFlecsThread(FRunnableThread* Thread, FFlecsRunnableThreadWrapper* Runnable)
 		: Thread(Thread)
 		, Runnable(Runnable)
 		, bJoined(false)
 	{
 	}
 
-	~FFlecsThread()
+	FORCEINLINE ~FFlecsThread()
 	{
 		if (!bJoined)
 		{
@@ -92,7 +92,7 @@ struct FFlecsTask
 {
 	FGraphEventRef TaskEvent;
 
-	FFlecsTask(const ecs_os_thread_callback_t Callback, void* Data)
+	FORCEINLINE FFlecsTask(const ecs_os_thread_callback_t Callback, void* Data)
 	{
 		TaskEvent = FFunctionGraphTask::CreateAndDispatchWhenReady(
 			[Callback, Data]()
@@ -102,7 +102,7 @@ struct FFlecsTask
 			TStatId(), nullptr, ENamedThreads::AnyHiPriThreadNormalTask);
 	}
 
-	~FFlecsTask()
+	FORCEINLINE ~FFlecsTask()
 	{
 		// Ensure the task has completed before destruction
 		if (TaskEvent.IsValid())
@@ -111,7 +111,7 @@ struct FFlecsTask
 		}
 	}
 
-	void Wait()
+	FORCEINLINE void Wait() const
 	{
 		if (TaskEvent.IsValid())
 		{
@@ -132,6 +132,8 @@ struct FOSApiInitializer
 	
 	void InitializeOSAPI()
 	{
+		static constexpr EThreadPriority ThreadPriority = TPri_AboveNormal;
+		
         ecs_os_set_api_defaults();
 		
         ecs_os_api_t os_api = ecs_os_api;
@@ -176,7 +178,7 @@ struct FOSApiInitializer
 		{
 			std::condition_variable* Event = reinterpret_cast<std::condition_variable*>(Cond);
 			std::mutex* MutexPtr = reinterpret_cast<std::mutex*>(Mutex);
-			std::unique_lock<std::mutex> Lock(*MutexPtr);
+			std::unique_lock Lock(*MutexPtr);
 			Event->wait(Lock);
 		};
 		
@@ -196,7 +198,7 @@ struct FOSApiInitializer
 		{
 			FFlecsRunnableThreadWrapper* Runnable = new FFlecsRunnableThreadWrapper(Callback, Data);
 			FRunnableThread* Thread = FRunnableThread::Create(Runnable, TEXT("FlecsThread"),
-				0, TPri_Normal);
+				0, ThreadPriority);
 			FFlecsThread* FlecsThread = new FFlecsThread(Thread, Runnable);
 			return reinterpret_cast<ecs_os_thread_t>(FlecsThread);
 		};
