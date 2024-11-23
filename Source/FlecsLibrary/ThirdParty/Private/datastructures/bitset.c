@@ -26,11 +26,11 @@ void ensure(
     }
 }
 
-static __forceinline void set_bit(uint64_t *word, uint32_t lo, bool value) {
+static inline void set_bit(uint64_t *word, uint32_t lo, bool value) {
     *word = (*word & ~((uint64_t)1 << lo)) | ((uint64_t)value << lo);
 }
 
-static __forceinline bool get_bit(uint64_t word, uint32_t lo) {
+static inline bool get_bit(uint64_t word, uint32_t lo) {
     return !!(word & ((uint64_t)1 << lo));
 }
 

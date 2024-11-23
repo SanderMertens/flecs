@@ -52,9 +52,9 @@ public:
 
     // @TODO: Not implemented due to a bug
     UPROPERTY(EditAnywhere, Category = "Flecs")
-    uint8 bUseTaskThreads : 1 = true;
+    uint8 bUseTaskThreads : 1 = false;
 
-    UPROPERTY(EditAnywhere, Category = "Flecs", meta = (ClampMin = "0"))
+    UPROPERTY(EditAnywhere, Category = "Flecs", meta = (ClampMin = "1"))
     int32 DefaultWorkerThreads = 4;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Instanced, Category = "Flecs",

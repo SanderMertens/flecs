@@ -57,6 +57,11 @@ public:
 	{
 		Super::OnWorldBeginPlay(InWorld);
 
+		if (!DeveloperSettings->bEnableFlecs)
+		{
+			return;
+		}
+
 		const AGameStateBase* GameState = InWorld.GetGameState();
 		
 		if UNLIKELY_IF(!IsValid(GameState))
@@ -150,14 +155,14 @@ public:
 
 		NewFlecsWorld->SetWorldName(Name);
 
-		if (Settings.bUseTaskThreads)
-		{
-			NewFlecsWorld->SetThreads(Settings.DefaultWorkerThreads);
-		}
-		else
-		{
-			NewFlecsWorld->SetThreads(Settings.DefaultWorkerThreads);
-		}
+		// if (Settings.bUseTaskThreads)
+		// {
+		// 	NewFlecsWorld->SetTaskThreads(Settings.DefaultWorkerThreads);
+		// }
+		// else
+		// {
+		// 	NewFlecsWorld->SetThreads(Settings.DefaultWorkerThreads);
+		// }
 
 		NewFlecsWorld->WorldBeginPlay();
 

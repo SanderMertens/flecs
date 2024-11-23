@@ -33,133 +33,41 @@
 DECLARE_STATS_GROUP(TEXT("FlecsWorld"), STATGROUP_FlecsWorld, STATCAT_Advanced);
 
 DECLARE_CYCLE_STAT(TEXT("FlecsWorld::Progress"), STAT_FlecsWorldProgress, STATGROUP_FlecsWorld);
-DECLARE_CYCLE_STAT(TEXT("FlecsWorld::Progress::ProgressModule"), STAT_FlecsWorldProgressModule, STATGROUP_FlecsWorld);
+DECLARE_CYCLE_STAT(TEXT("FlecsWorld::Progress::ProgressModule"),
+	STAT_FlecsWorldProgressModule, STATGROUP_FlecsWorld);
 
-struct FFlecsTask
+
+struct FFlecsRunnableThreadWrapper final : public FRunnable
 {
-	static constexpr ENamedThreads::Type TaskPriority = ENamedThreads::Type::AnyBackgroundHiPriTask;
-	
-	FGraphEventRef TaskEvent;
+	ecs_os_thread_callback_t Callback;
+	void* Data;
 
-	FORCEINLINE FFlecsTask(ecs_os_thread_callback_t InCallback, void* InParam)
-	{
-		TaskEvent = FFunctionGraphTask::CreateAndDispatchWhenReady([InCallback, InParam]()
-		{
-			InCallback(InParam);
-		}, TStatId(), nullptr, TaskPriority);
-	}
-
-	FORCEINLINE void Wait() const
-	{
-		if LIKELY_IF(TaskEvent.IsValid())
-		{
-			FTaskGraphInterface::Get().WaitUntilTaskCompletes(TaskEvent);
-		}
-	}
-	
-}; // struct FFlecsTask
-
-struct FFlecsMutex
-{
-	FCriticalSection Mutex;
-
-	FORCEINLINE void Lock()
-	{
-		Mutex.Lock();
-	}
-
-	FORCEINLINE void Unlock()
-	{
-		Mutex.Unlock();
-	}
-	
-}; // struct FFlecsMutex
-
-struct FFlecsConditionVariable
-{
-	FEvent* Event;
-
-	FORCEINLINE FFlecsConditionVariable()
-	{
-		Event = FPlatformProcess::GetSynchEventFromPool(true);
-	}
-
-	FORCEINLINE ~FFlecsConditionVariable()
-	{
-		FPlatformProcess::ReturnSynchEventToPool(Event);
-	}
-
-	FORCEINLINE void Wait(FFlecsMutex* Mutex) const
-	{
-		Mutex->Unlock();
-		Event->Wait();
-		Mutex->Lock();
-	}
-
-	FORCEINLINE void Signal() const 
-	{
-		Broadcast();
-	}
-
-	FORCEINLINE void Broadcast() const
-	{
-		Event->Trigger();
-	}
-	
-}; // struct FFlecsConditionVariable
-
-class FFlecsRunnable final : public FRunnable
-{
-public:
-	explicit FFlecsRunnable(ecs_os_thread_callback_t InCallback, void* InParam)
+	FFlecsRunnableThreadWrapper(ecs_os_thread_callback_t InCallback, void* InData)
 		: Callback(InCallback)
-		, Param(InParam)
-		, bShouldRun(true)
+		, Data(InData)
 	{
-		solid_check(InCallback != nullptr);
-	}
-
-	virtual bool Init() override
-	{
-		return true;
 	}
 
 	virtual uint32 Run() override
 	{
-		if LIKELY_IF(Callback && bShouldRun)
-		{
-			Callback(Param);
-		}
-		
+		Callback(Data);
 		return 0;
 	}
-
-	virtual void Stop() override
-	{
-		bShouldRun.store(false);
-	}
-
-	virtual void Exit() override
-	{
-	}
-
-private:
-	ecs_os_thread_callback_t Callback;
-	void* Param;
-	std::atomic<bool> bShouldRun;
-}; // class FFlecsRunnable
+	
+}; // struct FFlecsRunnableThreadWrapper
 
 struct FFlecsThread
 {
-	FFlecsRunnable* Runnable;
 	FRunnableThread* Thread;
+	FFlecsRunnableThreadWrapper* Runnable;
 	bool bJoined;
-
-	FFlecsThread() 
-		: Runnable(nullptr)
-		, Thread(nullptr)
-		, bJoined(false) 
-	{}
+	
+	FFlecsThread(FRunnableThread* Thread, FFlecsRunnableThreadWrapper* Runnable)
+		: Thread(Thread)
+		, Runnable(Runnable)
+		, bJoined(false)
+	{
+	}
 
 	~FFlecsThread()
 	{
@@ -170,6 +78,7 @@ struct FFlecsThread
 				Thread->Kill(true);
 				delete Thread;
 			}
+			
 			if (Runnable)
 			{
 				delete Runnable;
@@ -179,53 +88,41 @@ struct FFlecsThread
 	
 }; // struct FFlecsThread
 
-struct FFlecsMutexPool
+struct FFlecsTask
 {
-	static constexpr int32 StartingPoolSize = 16;
-	
-	FFlecsMutexPool()
+	FGraphEventRef TaskEvent;
+
+	FFlecsTask(const ecs_os_thread_callback_t Callback, void* Data)
 	{
-		for (int32 Index = 0; Index < StartingPoolSize; ++Index)
+		TaskEvent = FFunctionGraphTask::CreateAndDispatchWhenReady(
+			[Callback, Data]()
+			{
+				Callback(Data);
+			},
+			TStatId(), nullptr, ENamedThreads::AnyHiPriThreadNormalTask);
+	}
+
+	~FFlecsTask()
+	{
+		// Ensure the task has completed before destruction
+		if (TaskEvent.IsValid())
 		{
-			MutexPool.Enqueue(new FFlecsMutex());
+			TaskEvent->Wait();
 		}
 	}
 
-	~FFlecsMutexPool()
+	void Wait()
 	{
-		FFlecsMutex* Mutex = nullptr;
-		
-		while (MutexPool.Dequeue(Mutex))
+		if (TaskEvent.IsValid())
 		{
-			delete Mutex;
+			FTaskGraphInterface::Get().WaitUntilTaskCompletes(TaskEvent);
 		}
 	}
-
 	
-	FORCEINLINE NO_DISCARD FFlecsMutex* ObtainMutex()
-	{
-		FFlecsMutex* Mutex = nullptr;
-		
-		if (!MutexPool.Dequeue(Mutex))
-		{
-			Mutex = new FFlecsMutex();
-		}
-		
-		return Mutex;
-	}
-
-	FORCEINLINE void ReturnMutex(FFlecsMutex* Mutex)
-	{
-		MutexPool.Enqueue(Mutex);
-	}
-
-	TQueue<FFlecsMutex*, EQueueMode::Mpsc> MutexPool;
-	
-}; // struct FFlecsMutexPool
+}; // struct FFlecsTask
 
 struct FOSApiInitializer
 {
-	static constexpr EThreadPriority ThreadPriority = TPri_Normal;
 	
 	FOSApiInitializer()
 	{
@@ -235,135 +132,126 @@ struct FOSApiInitializer
 	
 	void InitializeOSAPI()
 	{
-		static FFlecsMutexPool MutexPool;
-		
         ecs_os_set_api_defaults();
 		
         ecs_os_api_t os_api = ecs_os_api;
 
-		os_api.thread_new_ = [](ecs_os_thread_callback_t Callback, void* Param) -> ecs_os_thread_t
-        {
+	    os_api.mutex_new_ = []() -> ecs_os_mutex_t
+	    {
+	    	std::mutex* Mutex = new std::mutex();
+	        return reinterpret_cast<ecs_os_mutex_t>(Mutex);
+	    };
 
-            FFlecsThread* FlecsThread = new FFlecsThread();
+		os_api.mutex_free_ = [](ecs_os_mutex_t Mutex)
+		{
+			std::mutex* MutexPtr = reinterpret_cast<std::mutex*>(Mutex);
+			delete MutexPtr;
+		};
+
+		os_api.mutex_lock_ = [](ecs_os_mutex_t Mutex)
+		{
+			std::mutex* MutexPtr = reinterpret_cast<std::mutex*>(Mutex);
+			MutexPtr->lock();
+		};
+
+		os_api.mutex_unlock_ = [](ecs_os_mutex_t Mutex)
+		{
+			std::mutex* MutexPtr = reinterpret_cast<std::mutex*>(Mutex);
+			MutexPtr->unlock();
+		};
+
+		os_api.cond_new_ = []() -> ecs_os_cond_t
+		{
+			std::condition_variable* Event = new std::condition_variable();
+			return reinterpret_cast<ecs_os_cond_t>(Event);
+		};
+
+		os_api.cond_free_ = [](ecs_os_cond_t Cond)
+		{
+			std::condition_variable* Event = reinterpret_cast<std::condition_variable*>(Cond);
+			delete Event;
+		};
+
+		os_api.cond_wait_ = [](ecs_os_cond_t Cond, ecs_os_mutex_t Mutex)
+		{
+			std::condition_variable* Event = reinterpret_cast<std::condition_variable*>(Cond);
+			std::mutex* MutexPtr = reinterpret_cast<std::mutex*>(Mutex);
+			std::unique_lock<std::mutex> Lock(*MutexPtr);
+			Event->wait(Lock);
+		};
+		
+		os_api.cond_signal_ = [](ecs_os_cond_t Cond)
+		{
+			std::condition_variable* Event = reinterpret_cast<std::condition_variable*>(Cond);
+			Event->notify_one();
+		};
+
+		os_api.cond_broadcast_ = [](ecs_os_cond_t Cond)
+		{
+			std::condition_variable* Event = reinterpret_cast<std::condition_variable*>(Cond);
+			Event->notify_all();
+		};
+
+		os_api.thread_new_ = [](ecs_os_thread_callback_t Callback, void* Data) -> ecs_os_thread_t
+		{
+			FFlecsRunnableThreadWrapper* Runnable = new FFlecsRunnableThreadWrapper(Callback, Data);
+			FRunnableThread* Thread = FRunnableThread::Create(Runnable, TEXT("FlecsThread"),
+				0, TPri_Normal);
+			FFlecsThread* FlecsThread = new FFlecsThread(Thread, Runnable);
+			return reinterpret_cast<ecs_os_thread_t>(FlecsThread);
+		};
+
+		os_api.thread_join_ = [](ecs_os_thread_t Thread) -> void*
+		{
+			FFlecsThread* FlecsThread = reinterpret_cast<FFlecsThread*>(Thread);
+			solid_check(FlecsThread);
             
-            FlecsThread->Runnable = new FFlecsRunnable(Callback, Param);
-
-            static int32 ThreadCounter = 0;
-            const FString ThreadName = FString::Printf(TEXT("FlecsThread_%d"),
-            	FPlatformAtomics::InterlockedIncrement(&ThreadCounter));
-            
-            FlecsThread->Thread = FRunnableThread::Create(
-                FlecsThread->Runnable,
-                *ThreadName,
-                0,
-                TPri_Normal,
-                FPlatformAffinity::GetPoolThreadMask());
-
-            return reinterpret_cast<ecs_os_thread_t>(FlecsThread);
-        };
-
-        os_api.thread_join_ = [](ecs_os_thread_t Thread) -> void*
-        {
-            FFlecsThread* FlecsThread = reinterpret_cast<FFlecsThread*>(Thread);
-            
-            if (FlecsThread && !FlecsThread->bJoined)
-            {
-                if (FlecsThread->Thread)
-                {
-                    FlecsThread->Runnable->Stop();
-                    FlecsThread->Thread->WaitForCompletion();
-                    delete FlecsThread->Thread;
-                    FlecsThread->Thread = nullptr;
-                }
+			if (FlecsThread && !FlecsThread->bJoined)
+			{
+				if (FlecsThread->Thread)
+				{
+					FlecsThread->Runnable->Stop();
+					FlecsThread->Thread->WaitForCompletion();
+					delete FlecsThread->Thread;
+					FlecsThread->Thread = nullptr;
+				}
                 
-                if (FlecsThread->Runnable)
-                {
-                    delete FlecsThread->Runnable;
-                    FlecsThread->Runnable = nullptr;
-                }
+				if (FlecsThread->Runnable)
+				{
+					delete FlecsThread->Runnable;
+					FlecsThread->Runnable = nullptr;
+				}
 
-                FlecsThread->bJoined = true;
-                delete FlecsThread;
-            }
+				FlecsThread->bJoined = true;
+				delete FlecsThread;
+			}
             
-            return nullptr;
-        };
+			return nullptr;
+		};
 
 		os_api.thread_self_ = []() -> ecs_os_thread_t
 		{
 			return FPlatformTLS::GetCurrentThreadId();
 		};
-		
-		os_api.task_new_ = [](ecs_os_thread_callback_t Callback, void* Param) -> ecs_os_thread_t
+
+		os_api.task_new_ = [](ecs_os_thread_callback_t Callback, void* Data) -> ecs_os_thread_t
 		{
-			FFlecsTask* FlecsTask = new FFlecsTask(Callback, Param);
+			FFlecsTask* FlecsTask = new FFlecsTask(Callback, Data);
 			return reinterpret_cast<ecs_os_thread_t>(FlecsTask);
 		};
 
 		os_api.task_join_ = [](ecs_os_thread_t Thread) -> void*
 		{
-			if (const FFlecsTask* FlecsTask = reinterpret_cast<FFlecsTask*>(Thread))
+			FFlecsTask* FlecsTask = reinterpret_cast<FFlecsTask*>(Thread);
+			solid_check(FlecsTask);
+			
+			if (FlecsTask)
 			{
 				FlecsTask->Wait();
 				delete FlecsTask;
 			}
 			
 			return nullptr;
-		};
-		
-		os_api.mutex_new_ = []() -> ecs_os_mutex_t
-		{
-			return reinterpret_cast<ecs_os_mutex_t>(MutexPool.ObtainMutex());
-		};
-
-		os_api.mutex_free_ = [](ecs_os_mutex_t Mutex)
-		{
-			FFlecsMutex* MutexPtr = reinterpret_cast<FFlecsMutex*>(Mutex);
-			MutexPool.ReturnMutex(MutexPtr);
-		};
-
-		os_api.mutex_lock_ = [](ecs_os_mutex_t Mutex)
-		{
-			FFlecsMutex* MutexPtr = reinterpret_cast<FFlecsMutex*>(Mutex);
-			MutexPtr->Lock();
-		};
-
-		os_api.mutex_unlock_ = [](ecs_os_mutex_t Mutex)
-		{
-			FFlecsMutex* MutexPtr = reinterpret_cast<FFlecsMutex*>(Mutex);
-			MutexPtr->Unlock();
-		};
-
-		// Condition variable implementation using FEvent
-		os_api.cond_new_ = []() -> ecs_os_cond_t
-		{
-			FFlecsConditionVariable* CondVar = new FFlecsConditionVariable();
-			return reinterpret_cast<ecs_os_cond_t>(CondVar);
-		};
-
-		os_api.cond_free_ = [](ecs_os_cond_t Cond)
-		{
-			FFlecsConditionVariable* CondVar = reinterpret_cast<FFlecsConditionVariable*>(Cond);
-			delete CondVar;
-		};
-
-		os_api.cond_wait_ = [](ecs_os_cond_t Cond, ecs_os_mutex_t Mutex)
-		{
-			FFlecsConditionVariable* CondVar = reinterpret_cast<FFlecsConditionVariable*>(Cond);
-			FFlecsMutex* MutexPtr = reinterpret_cast<FFlecsMutex*>(Mutex);
-			CondVar->Wait(MutexPtr);
-		};
-
-		os_api.cond_signal_ = [](ecs_os_cond_t Cond)
-		{
-			FFlecsConditionVariable* CondVar = reinterpret_cast<FFlecsConditionVariable*>(Cond);
-			CondVar->Signal();
-		};
-
-		os_api.cond_broadcast_ = [](ecs_os_cond_t Cond)
-		{
-			FFlecsConditionVariable* CondVar = reinterpret_cast<FFlecsConditionVariable*>(Cond);
-			CondVar->Broadcast();
 		};
 		
         os_api.sleep_ = [](int32_t Seconds, int32_t Nanoseconds)
@@ -448,6 +336,26 @@ struct FOSApiInitializer
 		{
 			return FPlatformAtomics::InterlockedDecrement(Value);
 		};
+
+		os_api.malloc_ = [](int Size) -> void*
+		{
+			return FMemory::Malloc(Size);
+		};
+
+		os_api.realloc_ = [](void* Ptr, int Size) -> void*
+		{
+			return FMemory::Realloc(Ptr, Size);
+		};
+
+		os_api.calloc_ = [](int Size) -> void*
+		{
+			return FMemory::MallocZeroed(Size);
+		};
+
+		os_api.free_ = [](void* Ptr)
+		{
+			FMemory::Free(Ptr);
+		};
 		
         ecs_os_set_api(&os_api);
 	}
@@ -492,7 +400,6 @@ public:
 
 	void InitializeDefaultComponents() const
 	{
-		/* Opaque FString to flecs::string */
 		World.component<FString>()
 			.opaque(flecs::String)
 			.serialize([](const flecs::serializer* Serializer, const FString* Data)
@@ -710,6 +617,13 @@ public:
 					}
 				}
 			});
+
+		// CreateSystemWithBuilder<flecs::Component>(TEXT("TestComponentSystem"))
+		// 	.multi_threaded()
+		// 	.each([](flecs::entity InEntity, flecs::Component& InComponent)
+		// 	{
+		// 		UN_LOG(LogFlecsWorld, Log, "Test component system");
+		// 	});
 	}
 
 	FORCEINLINE_DEBUGGABLE void InitializeAssetRegistry()
@@ -889,10 +803,13 @@ public:
 		return Entity;
 	}
 	
-	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
-	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle LookupEntity(const FString& Name) const
+	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World",
+		meta = (AdvancedDisplay = "Separator, RootSeparator, bRecursive"))
+	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle LookupEntity(const FString& Name,
+		const FString& Separator = "::", const FString& RootSeparator = "::", const bool bRecursive = true) const
 	{
-		return World.lookup(StringCast<char>(*Name).Get());
+		return World.lookup(StringCast<char>(*Name).Get(), StringCast<char>(*Separator).Get(),
+			StringCast<char>(*RootSeparator).Get(), bRecursive);
 	}
 	
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
@@ -1570,7 +1487,7 @@ public:
 
 		FFlecsEntityHandle OldScope = ClearScope();
 
-		if (const FFlecsEntityHandle Handle = World.lookup(StringCast<char>(*Enum->GetName()).Get()))
+		if (const FFlecsEntityHandle Handle = LookupEntity(Enum->GetName()))
 		{
 			RegisterEnumProperties(Enum, Handle);
 			SetScope(OldScope);
@@ -1600,7 +1517,7 @@ public:
 
 		FFlecsEntityHandle OldScope = ClearScope();
 
-		if (const FFlecsEntityHandle Handle = World.lookup(StringCast<char>(*ScriptStruct->GetStructCPPName()).Get()))
+		if (const FFlecsEntityHandle Handle = LookupEntity(ScriptStruct->GetName()))
 		{
 			RegisterScriptStruct(ScriptStruct, Handle);
 			SetScope(OldScope);
@@ -1743,14 +1660,14 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs")
 	FORCEINLINE_DEBUGGABLE bool HasEntityWithName(const FString& Name) const
 	{
-		return World.lookup(StringCast<char>(*Name).Get()).is_valid();
+		return LookupEntity(Name).IsAlive();
 	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs")
 	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle GetTagEntity(const FGameplayTag& Tag) const
 	{
 		solid_checkf(Tag.IsValid(), TEXT("Tag is not valid"));
-		return World.lookup(StringCast<char>(*Tag.GetTagName().ToString()).Get(), ".", ".");
+		return LookupEntity(StringCast<char>(*Tag.GetTagName().ToString()).Get(), ".", ".");
 	}
 
 	template <typename T>
@@ -1834,7 +1751,7 @@ public:
 	FORCEINLINE_DEBUGGABLE FFlecsEntityHandle FindPrefabEntity(UFlecsPrefabAsset* InPrefabAsset) const
 	{
 		solid_checkf(IsValid(InPrefabAsset), TEXT("Prefab asset is nullptr"));
-		return World.lookup(StringCast<char>(*InPrefabAsset->GetPrimaryAssetId().ToString()).Get());
+		return LookupEntity(InPrefabAsset->GetPrimaryAssetId().ToString());
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Flecs")
