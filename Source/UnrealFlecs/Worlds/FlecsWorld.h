@@ -115,10 +115,10 @@ struct FFlecsTask
 	
 }; // struct FFlecsTask
 
-struct ConditionWrapper
+struct FFlecsConditionWrapper
 {
-	std::condition_variable cv;
-	std::mutex* mutex;
+	std::condition_variable ConditionalVariable;
+	std::mutex* Mutex;
 }; // struct ConditionWrapper
 
 struct FOSApiInitializer
@@ -164,18 +164,18 @@ struct FOSApiInitializer
 
 		os_api.cond_new_ = []() -> ecs_os_cond_t
 		{
-			ConditionWrapper* wrapper = new ConditionWrapper();
-			wrapper->mutex = new std::mutex();
-			return reinterpret_cast<ecs_os_cond_t>(wrapper);
+			FFlecsConditionWrapper* Wrapper = new FFlecsConditionWrapper();
+			Wrapper->Mutex = new std::mutex();
+			return reinterpret_cast<ecs_os_cond_t>(Wrapper);
 		};
 
 		os_api.cond_free_ = [](ecs_os_cond_t Cond)
 		{
 			if (Cond)
 			{
-				auto wrapper = reinterpret_cast<ConditionWrapper*>(Cond);
-				delete wrapper->mutex;
-				delete wrapper;
+				FFlecsConditionWrapper* Wrapper = reinterpret_cast<FFlecsConditionWrapper*>(Cond);
+				delete Wrapper->Mutex;
+				delete Wrapper;
 			}
 		};
 
@@ -183,8 +183,8 @@ struct FOSApiInitializer
 		{
 			if (Cond)
 			{
-				auto wrapper = reinterpret_cast<ConditionWrapper*>(Cond);
-				wrapper->cv.notify_one();
+				FFlecsConditionWrapper* Wrapper = reinterpret_cast<FFlecsConditionWrapper*>(Cond);
+				Wrapper->ConditionalVariable.notify_one();
 			}
 		};
 
@@ -192,8 +192,8 @@ struct FOSApiInitializer
 		{
 			if (Cond)
 			{
-				auto wrapper = reinterpret_cast<ConditionWrapper*>(Cond);
-				wrapper->cv.notify_all();
+				FFlecsConditionWrapper* Wrapper = reinterpret_cast<FFlecsConditionWrapper*>(Cond);
+				Wrapper->ConditionalVariable.notify_all();
 			}
 		};
 
@@ -201,11 +201,11 @@ struct FOSApiInitializer
 		{
 			if (Cond && Mutex)
 			{
-				ConditionWrapper* wrapper = reinterpret_cast<ConditionWrapper*>(Cond);
-				std::mutex* mutex = reinterpret_cast<std::mutex*>(Mutex);
-				std::unique_lock<std::mutex> lock(*mutex, std::adopt_lock);
-				wrapper->cv.wait(lock);
-				lock.release(); // Don't unlock on destruction since Flecs manages the lock
+				FFlecsConditionWrapper* Wrapper = reinterpret_cast<FFlecsConditionWrapper*>(Cond);
+				std::mutex* stdmutex = reinterpret_cast<std::mutex*>(Mutex);
+				std::unique_lock<std::mutex> Lock(*stdmutex, std::adopt_lock);
+				Wrapper->ConditionalVariable.wait(Lock);
+				Lock.release(); // Don't unlock on destruction since Flecs manages the lock
 			}
 		};
 
@@ -239,7 +239,7 @@ struct FOSApiInitializer
 
 		os_api.task_join_ = [](ecs_os_thread_t Thread) -> void*
 		{
-			FFlecsTask* FlecsTask = reinterpret_cast<FFlecsTask*>(Thread);
+			const FFlecsTask* FlecsTask = reinterpret_cast<FFlecsTask*>(Thread);
 			solid_check(FlecsTask);
 			
 			if (FlecsTask)
@@ -615,12 +615,13 @@ public:
 				}
 			});
 
-		// CreateSystemWithBuilder<flecs::Component>(TEXT("TestComponentSystem"))
-		// 	.multi_threaded()
-		// 	.each([](flecs::entity InEntity, flecs::Component& InComponent)
-		// 	{
-		// 		UN_LOG(LogFlecsWorld, Log, "Test component system");
-		// 	});
+		 // CreateSystemWithBuilder<flecs::Component>("TestComponentSystem")
+			// .term_at(0).read()
+			// .with(flecs::Sparse).inout_none()
+		 // 	.multi_threaded()
+		 // 	.each([](flecs::entity InEntity, flecs::Component& InComponent)
+		 // 	{
+		 // 	});
 	}
 
 	FORCEINLINE_DEBUGGABLE void InitializeAssetRegistry()
