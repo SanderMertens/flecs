@@ -614,14 +614,6 @@ public:
 					}
 				}
 			});
-
-		 // CreateSystemWithBuilder<flecs::Component>("TestComponentSystem")
-			// .term_at(0).read()
-			// .with(flecs::Sparse).inout_none()
-		 // 	.multi_threaded()
-		 // 	.each([](flecs::entity InEntity, flecs::Component& InComponent)
-		 // 	{
-		 // 	});
 	}
 
 	FORCEINLINE_DEBUGGABLE void InitializeAssetRegistry()
