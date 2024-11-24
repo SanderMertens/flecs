@@ -155,14 +155,14 @@ public:
 
 		NewFlecsWorld->SetWorldName(Name);
 
-		// if (Settings.bUseTaskThreads)
-		// {
-		// 	NewFlecsWorld->SetTaskThreads(Settings.DefaultWorkerThreads);
-		// }
-		// else
-		// {
-		// 	NewFlecsWorld->SetThreads(Settings.DefaultWorkerThreads);
-		// }
+		if (Settings.bUseTaskThreads)
+		{
+			NewFlecsWorld->SetTaskThreads(Settings.DefaultWorkerThreads);
+		}
+		else
+		{
+			NewFlecsWorld->SetThreads(Settings.DefaultWorkerThreads);
+		}
 
 		NewFlecsWorld->WorldBeginPlay();
 

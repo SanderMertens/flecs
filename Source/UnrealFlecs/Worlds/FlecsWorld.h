@@ -37,59 +37,53 @@ DECLARE_CYCLE_STAT(TEXT("FlecsWorld::Progress::ProgressModule"),
 	STAT_FlecsWorldProgressModule, STATGROUP_FlecsWorld);
 
 
-struct FFlecsRunnableThreadWrapper final : public FRunnable
+struct FFlecsThreadWrapper
 {
-	ecs_os_thread_callback_t Callback;
-	void* Data;
-
-	FORCEINLINE FFlecsRunnableThreadWrapper(ecs_os_thread_callback_t InCallback, void* InData)
-		: Callback(InCallback)
-		, Data(InData)
+	std::thread Thread;
+	std::atomic<bool> bStopped{false};
+	std::atomic<bool> bJoined{false};
+    
+	FFlecsThreadWrapper(ecs_os_thread_callback_t Callback, void* Data)
 	{
-	}
-
-	FORCEINLINE virtual uint32 Run() override
-	{
-		Callback(Data);
-		return 0;
-	}
-	
-}; // struct FFlecsRunnableThreadWrapper
-
-struct FFlecsThread
-{
-	FRunnableThread* Thread;
-	FFlecsRunnableThreadWrapper* Runnable;
-	bool bJoined;
-	
-	FORCEINLINE FFlecsThread(FRunnableThread* Thread, FFlecsRunnableThreadWrapper* Runnable)
-		: Thread(Thread)
-		, Runnable(Runnable)
-		, bJoined(false)
-	{
-	}
-
-	FORCEINLINE ~FFlecsThread()
-	{
-		if (!bJoined)
+		Thread = std::thread([this, Callback, Data]()
 		{
-			if (Thread)
+			while (!bStopped)
 			{
-				Thread->Kill(true);
-				delete Thread;
+				Callback(Data);
+				break; // Only run once unless made into a loop
 			}
-			
-			if (Runnable)
-			{
-				delete Runnable;
-			}
+		});
+	}
+    
+	~FFlecsThreadWrapper()
+	{
+		if (!bJoined && Thread.joinable())
+		{
+			Stop();
+			Thread.join();
 		}
 	}
-	
-}; // struct FFlecsThread
+    
+	void Stop()
+	{
+		bStopped = true;
+	}
+    
+	void Join()
+	{
+		if (!bJoined && Thread.joinable())
+		{
+			bStopped = true;
+			Thread.join();
+			bJoined = true;
+		}
+	}
+};
 
 struct FFlecsTask
 {
+	static constexpr ENamedThreads::Type TaskThread = ENamedThreads::AnyHiPriThreadNormalTask;
+	
 	FGraphEventRef TaskEvent;
 
 	FORCEINLINE FFlecsTask(const ecs_os_thread_callback_t Callback, void* Data)
@@ -99,7 +93,7 @@ struct FFlecsTask
 			{
 				Callback(Data);
 			},
-			TStatId(), nullptr, ENamedThreads::AnyHiPriThreadNormalTask);
+			TStatId(), nullptr, TaskThread);
 	}
 
 	FORCEINLINE ~FFlecsTask()
@@ -120,6 +114,12 @@ struct FFlecsTask
 	}
 	
 }; // struct FFlecsTask
+
+struct ConditionWrapper
+{
+	std::condition_variable cv;
+	std::mutex* mutex;
+}; // struct ConditionWrapper
 
 struct FOSApiInitializer
 {
@@ -164,70 +164,65 @@ struct FOSApiInitializer
 
 		os_api.cond_new_ = []() -> ecs_os_cond_t
 		{
-			std::condition_variable* Event = new std::condition_variable();
-			return reinterpret_cast<ecs_os_cond_t>(Event);
+			ConditionWrapper* wrapper = new ConditionWrapper();
+			wrapper->mutex = new std::mutex();
+			return reinterpret_cast<ecs_os_cond_t>(wrapper);
 		};
 
 		os_api.cond_free_ = [](ecs_os_cond_t Cond)
 		{
-			std::condition_variable* Event = reinterpret_cast<std::condition_variable*>(Cond);
-			delete Event;
+			if (Cond)
+			{
+				auto wrapper = reinterpret_cast<ConditionWrapper*>(Cond);
+				delete wrapper->mutex;
+				delete wrapper;
+			}
 		};
 
-		os_api.cond_wait_ = [](ecs_os_cond_t Cond, ecs_os_mutex_t Mutex)
-		{
-			std::condition_variable* Event = reinterpret_cast<std::condition_variable*>(Cond);
-			std::mutex* MutexPtr = reinterpret_cast<std::mutex*>(Mutex);
-			std::unique_lock Lock(*MutexPtr);
-			Event->wait(Lock);
-		};
-		
 		os_api.cond_signal_ = [](ecs_os_cond_t Cond)
 		{
-			std::condition_variable* Event = reinterpret_cast<std::condition_variable*>(Cond);
-			Event->notify_one();
+			if (Cond)
+			{
+				auto wrapper = reinterpret_cast<ConditionWrapper*>(Cond);
+				wrapper->cv.notify_one();
+			}
 		};
 
 		os_api.cond_broadcast_ = [](ecs_os_cond_t Cond)
 		{
-			std::condition_variable* Event = reinterpret_cast<std::condition_variable*>(Cond);
-			Event->notify_all();
+			if (Cond)
+			{
+				auto wrapper = reinterpret_cast<ConditionWrapper*>(Cond);
+				wrapper->cv.notify_all();
+			}
+		};
+
+		os_api.cond_wait_ = [](ecs_os_cond_t Cond, ecs_os_mutex_t Mutex)
+		{
+			if (Cond && Mutex)
+			{
+				ConditionWrapper* wrapper = reinterpret_cast<ConditionWrapper*>(Cond);
+				std::mutex* mutex = reinterpret_cast<std::mutex*>(Mutex);
+				std::unique_lock<std::mutex> lock(*mutex, std::adopt_lock);
+				wrapper->cv.wait(lock);
+				lock.release(); // Don't unlock on destruction since Flecs manages the lock
+			}
 		};
 
 		os_api.thread_new_ = [](ecs_os_thread_callback_t Callback, void* Data) -> ecs_os_thread_t
 		{
-			FFlecsRunnableThreadWrapper* Runnable = new FFlecsRunnableThreadWrapper(Callback, Data);
-			FRunnableThread* Thread = FRunnableThread::Create(Runnable, TEXT("FlecsThread"),
-				0, ThreadPriority);
-			FFlecsThread* FlecsThread = new FFlecsThread(Thread, Runnable);
-			return reinterpret_cast<ecs_os_thread_t>(FlecsThread);
+			FFlecsThreadWrapper* ThreadWrapper = new FFlecsThreadWrapper(Callback, Data);
+			return reinterpret_cast<ecs_os_thread_t>(ThreadWrapper);
 		};
 
 		os_api.thread_join_ = [](ecs_os_thread_t Thread) -> void*
 		{
-			FFlecsThread* FlecsThread = reinterpret_cast<FFlecsThread*>(Thread);
-			solid_check(FlecsThread);
-            
-			if (FlecsThread && !FlecsThread->bJoined)
+			if (FFlecsThreadWrapper* ThreadWrapper = reinterpret_cast<FFlecsThreadWrapper*>(Thread))
 			{
-				if (FlecsThread->Thread)
-				{
-					FlecsThread->Runnable->Stop();
-					FlecsThread->Thread->WaitForCompletion();
-					delete FlecsThread->Thread;
-					FlecsThread->Thread = nullptr;
-				}
-                
-				if (FlecsThread->Runnable)
-				{
-					delete FlecsThread->Runnable;
-					FlecsThread->Runnable = nullptr;
-				}
-
-				FlecsThread->bJoined = true;
-				delete FlecsThread;
+				ThreadWrapper->Join();
+				delete ThreadWrapper;
 			}
-            
+			
 			return nullptr;
 		};
 
