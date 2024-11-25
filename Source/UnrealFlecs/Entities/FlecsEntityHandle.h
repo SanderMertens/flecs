@@ -1504,6 +1504,7 @@ private:
 		}
 		
 		TraitHolder = GetFlecsWorld_Internal().entity();
+		TraitHolder.Add(flecs::PairIsTag);
 		TraitHolder.Add(flecs::Trait);
 		TraitHolder.SetParent(GetEntity());
 
@@ -1530,6 +1531,7 @@ private:
 		}
 		
 		TraitHolder = GetFlecsWorld_Internal().entity();
+		TraitHolder.Add(flecs::PairIsTag);
 		TraitHolder.Add(flecs::Trait);
 		TraitHolder.SetParent(GetEntity());
 

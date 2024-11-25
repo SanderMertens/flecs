@@ -50,7 +50,7 @@ struct FFlecsThreadWrapper
 			while (!bStopped)
 			{
 				Callback(Data);
-				break; // Only run once unless made into a loop
+				break;
 			}
 		});
 	}
@@ -78,7 +78,8 @@ struct FFlecsThreadWrapper
 			bJoined = true;
 		}
 	}
-};
+	
+}; // struct FFlecsThreadWrapper
 
 struct FFlecsTask
 {
@@ -98,7 +99,6 @@ struct FFlecsTask
 
 	FORCEINLINE ~FFlecsTask()
 	{
-		// Ensure the task has completed before destruction
 		if (TaskEvent.IsValid())
 		{
 			TaskEvent->Wait();

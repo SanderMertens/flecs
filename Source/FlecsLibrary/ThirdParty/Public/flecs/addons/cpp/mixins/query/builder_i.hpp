@@ -5,6 +5,9 @@
 
 #pragma once
 
+#include <unordered_map>
+#include <vector>
+
 #include "../term/builder_i.hpp"
 
 namespace flecs 
@@ -156,106 +159,24 @@ struct query_builder_i : term_builder_i<Base> {
     }
 
     template <typename TComponent, typename TTrait>
-    Base& with_trait() {
-        this->with<TComponent>(flecs::Trait).filter().src("$childtrait");
-        this->and_();
-        this->with<TTrait>().src("$childtrait");
-        return *this;
-    }
+    Base& with_trait() 
+    {
+        char* comp_name = const_cast<char*>(flecs::_::type_name<TComponent>());
 
-    template <typename TComponent>
-    Base& with_trait(const char *trait) {
-        this->with<TComponent>(flecs::Trait).filter().src("$childtrait");
-        this->and_();
-        this->with(trait).src("$childtrait");
-        return *this;
-    }
-
-    template <typename TComponent>
-    Base& with_trait(id_t trait) {
-        this->with<TComponent>(flecs::Trait).filter().src("$childtrait");
-        this->and_();
-        this->with(trait).src("$childtrait");
-        return *this;
-    }
-
-    Base& with_trait(const char *component, const char *trait) {
-        this->with(component, flecs::Trait).filter().src("$childtrait");
-        this->and_();
-        this->with(trait).src("$childtrait");
-        return *this;
-    }
-
-    Base& with_trait(const char *component, id_t trait) {
-        this->with(component, flecs::Trait).filter().src("$childtrait");
-        this->and_();
-        this->with(trait).src("$childtrait");
-        return *this;
-    }
-
-    Base& with_trait(id_t component, const char *trait) {
-        this->with(component, flecs::Trait).filter().src("$childtrait");
-        this->and_();
-        this->with(trait).src("$childtrait");
-        return *this;
-    }
-
-    Base& with_trait(id_t component, id_t trait) {
-        this->with(component, flecs::Trait).filter().src("$childtrait");
-        this->and_();
-        this->with(trait).src("$childtrait");
-        return *this;
-    }
-
-    template <typename TComponent, typename TTrait>
-    Base& without_trait() {
-        this->with<TComponent>(flecs::Trait).src("$childtrait");
-        this->and_();
-        this->without<TTrait>().src("$childtrait");
-        return *this;
-    }
-
-    template <typename TComponent>
-    Base& without_trait(const char *trait) {
-        this->with<TComponent>(flecs::Trait).src("$childtrait");
-        this->and_();
-        this->without(trait).src("$childtrait");
-        return *this;
-    }
-
-    template <typename TComponent>
-    Base& without_trait(id_t trait) {
-        this->with<TComponent>(flecs::Trait).src("$childtrait");
-        this->and_();
-        this->without(trait).src("$childtrait");
-        return *this;
-    }
-
-    Base& without_trait(const char *component, const char *trait) {
-        this->with(component, flecs::Trait).src("$childtrait");
-        this->and_();
-        this->without(trait).src("$childtrait");
-        return *this;
-    }
-
-    Base& without_trait(const char *component, id_t trait) {
-        this->with(component, flecs::Trait).src("$childtrait");
-        this->and_();
-        this->without(trait).src("$childtrait");
-        return *this;
-    }
-
-    Base& without_trait(id_t component, const char *trait) {
-        this->with(component, flecs::Trait).src("$childtrait");
-        this->and_();
-        this->without(trait).src("$childtrait");
-        return *this;
-    }
-
-    Base& without_trait(id_t component, id_t trait) {
-        this->with(component, flecs::Trait).src("$childtrait");
-        this->and_();
-        this->without(trait).src("$childtrait");
+        if (!trait_vars_.contains(comp_name)) {
+            // Create new trait variable name using flecs::string
+            flecs::string new_trait_var = flecs::string::format("$trait:%s", comp_name);
+            trait_vars_.emplace(comp_name, std::move(new_trait_var));
+        }
+        
+        const char* trait_var = trait_vars_.at(comp_name).c_str();
+        
+        this->with<TComponent>(trait_var);
+        this->with(flecs::Trait);
+        this->src(trait_var);
+        this->with<TTrait>();
+        this->src(trait_var);
+        
         return *this;
     }
     
@@ -477,6 +398,8 @@ protected:
     virtual flecs::world_t* world_v() override = 0;
     int32_t term_index_;
     int32_t expr_count_;
+
+    std::unordered_map<const char*, flecs::string> trait_vars_;
 
 private:
     operator Base&() {
