@@ -2216,7 +2216,8 @@
                 "add_batched_set_with",
                 "defer_emplace_after_remove",
                 "batched_w_table_change_in_observer",
-                "redefine_named_in_threaded_app"
+                "redefine_named_in_threaded_app",
+                "batched_cmd_w_component_init"
             ]
         }, {
             "id": "SingleThreadStaging",

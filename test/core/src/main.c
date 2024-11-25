@@ -2136,6 +2136,7 @@ void Commands_add_batched_set_with(void);
 void Commands_defer_emplace_after_remove(void);
 void Commands_batched_w_table_change_in_observer(void);
 void Commands_redefine_named_in_threaded_app(void);
+void Commands_batched_cmd_w_component_init(void);
 
 // Testsuite 'SingleThreadStaging'
 void SingleThreadStaging_setup(void);
@@ -10576,6 +10577,10 @@ bake_test_case Commands_testcases[] = {
     {
         "redefine_named_in_threaded_app",
         Commands_redefine_named_in_threaded_app
+    },
+    {
+        "batched_cmd_w_component_init",
+        Commands_batched_cmd_w_component_init
     }
 };
 
@@ -11460,7 +11465,7 @@ static bake_test_suite suites[] = {
         "Commands",
         NULL,
         NULL,
-        141,
+        142,
         Commands_testcases
     },
     {
