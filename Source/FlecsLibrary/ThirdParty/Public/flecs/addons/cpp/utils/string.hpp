@@ -115,7 +115,8 @@ struct string {
         const_str_ = nullptr;
     }
 
-    bool contains(const char *substr) {
+    bool contains(const char *substr) const
+    {
         if (const_str_) {
             return strstr(const_str_, substr) != nullptr;
         } else {
