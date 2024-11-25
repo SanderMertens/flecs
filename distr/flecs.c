@@ -2810,6 +2810,14 @@ ecs_allocator_t* flecs_stage_get_allocator(
 ecs_stack_t* flecs_stage_get_stack_allocator(
     ecs_world_t *world);
 
+void flecs_commands_init(    
+    ecs_stage_t *stage,
+    ecs_commands_t *cmd);
+
+void flecs_commands_fini(
+    ecs_stage_t *stage,
+    ecs_commands_t *cmd);
+
 #endif
 
 /**
@@ -2896,6 +2904,36 @@ void flecs_delete_table(
 
 void flecs_process_pending_tables(
     const ecs_world_t *world);
+
+/* Suspend/resume readonly state. To fully support implicit registration of
+ * components, it should be possible to register components while the world is
+ * in readonly mode. It is not uncommon that a component is used first from
+ * within a system, which are often ran while in readonly mode.
+ * 
+ * Suspending readonly mode is only allowed when the world is not multithreaded.
+ * When a world is multithreaded, it is not safe to (even temporarily) leave
+ * readonly mode, so a multithreaded application should always explicitly
+ * register components in advance. 
+ * 
+ * These operations also suspend deferred mode.
+ */
+typedef struct ecs_suspend_readonly_state_t {
+    bool is_readonly;
+    bool is_deferred;
+    int32_t defer_count;
+    ecs_entity_t scope;
+    ecs_entity_t with;
+    ecs_commands_t cmd;
+    ecs_stage_t *stage;
+} ecs_suspend_readonly_state_t;
+
+ecs_world_t* flecs_suspend_readonly(
+    const ecs_world_t *world,
+    ecs_suspend_readonly_state_t *state);
+
+void flecs_resume_readonly(
+    ecs_world_t *world,
+    ecs_suspend_readonly_state_t *state);
 
 /* Convenience macro's for world allocator */
 #define flecs_walloc(world, size)\
@@ -17152,7 +17190,6 @@ void flecs_stage_merge_post_frame(
     ecs_vec_clear(&stage->post_frame_actions);
 }
 
-static
 void flecs_commands_init(
     ecs_stage_t *stage,
     ecs_commands_t *cmd)
@@ -17163,13 +17200,13 @@ void flecs_commands_init(
         &stage->allocators.cmd_entry_chunk, ecs_cmd_entry_t);
 }
 
-static
 void flecs_commands_fini(
     ecs_stage_t *stage,
     ecs_commands_t *cmd)
 {
     /* Make sure stage has no unmerged data */
-    ecs_assert(ecs_vec_count(&stage->cmd->queue) == 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(ecs_vec_count(&stage->cmd->queue) == 0, 
+        ECS_INTERNAL_ERROR, NULL);
 
     flecs_stack_fini(&cmd->stack);
     ecs_vec_fini_t(&stage->allocator, &cmd->queue, ecs_cmd_t);
@@ -18133,13 +18170,11 @@ ecs_world_t* flecs_suspend_readonly(
 
     /* Hack around safety checks (this ought to look ugly) */
     state->defer_count = stage->defer;
-    state->commands = stage->cmd->queue;
-    state->defer_stack = stage->cmd->stack;
-    flecs_stack_init(&stage->cmd->stack);
+    state->cmd = *stage->cmd;
+    flecs_commands_init(stage, stage->cmd);
     state->scope = stage->scope;
     state->with = stage->with;
     stage->defer = 0;
-    ecs_vec_init_t(NULL, &stage->cmd->queue, ecs_cmd_t, 0);
 
     return world;
 }
@@ -18162,10 +18197,8 @@ void flecs_resume_readonly(
         /* Restore readonly state / defer count */
         ECS_BIT_COND(world->flags, EcsWorldReadonly, state->is_readonly);
         stage->defer = state->defer_count;
-        ecs_vec_fini_t(&stage->allocator, &stage->cmd->queue, ecs_cmd_t);
-        stage->cmd->queue = state->commands;
-        flecs_stack_fini(&stage->cmd->stack);
-        stage->cmd->stack = state->defer_stack;
+        flecs_commands_fini(stage, stage->cmd);
+        *stage->cmd = state->cmd;
         stage->scope = state->scope;
         stage->with = state->with;
     }

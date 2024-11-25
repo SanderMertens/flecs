@@ -610,7 +610,7 @@ enum Color {
 ```
 
 ## Templates
-Templates are parametrized scripts that can be used to create procedural assets. Templates can be created with the `template` keyword. Example:
+Templates are parameterized scripts that can be used to create procedural assets. Templates can be created with the `template` keyword. Example:
 
 ```c
 template Square {
@@ -640,7 +640,7 @@ Templates are commonly used in combination with the kind syntax:
 Square my_entity
 ```
 
-Templates can be parametrized with properties. Properties are variables that are exposed as component members. To create a property, use the `prop` keyword. Example:
+Templates can be parameterized with properties. Properties are variables that are exposed as component members. To create a property, use the `prop` keyword. Example:
 
 ```c
 template Square {
