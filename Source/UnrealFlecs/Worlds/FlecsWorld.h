@@ -132,8 +132,6 @@ struct FOSApiInitializer
 	
 	void InitializeOSAPI()
 	{
-		static constexpr EThreadPriority ThreadPriority = TPri_AboveNormal;
-		
         ecs_os_set_api_defaults();
 		
         ecs_os_api_t os_api = ecs_os_api;
@@ -838,40 +836,10 @@ public:
 		World.set<T>(Value);
 	}
 
-	template <typename First, typename Second>
-	FORCEINLINE_DEBUGGABLE void SetSingleton(const First& InFirst, const Second InSecond) const
-	{
-		World.set<First, Second>(InSecond, InFirst);
-	}
-
-	template <typename First, typename ...TArgs>
-	FORCEINLINE_DEBUGGABLE void SetSingleton(const First& InFirst, const TArgs&... Args) const
-	{
-		World.set(std::forward<const TArgs&>(Args)..., InFirst);
-	}
-
 	template <typename T>
 	FORCEINLINE_DEBUGGABLE void RemoveSingleton() const
 	{
 		World.remove<T>();
-	}
-
-	template <typename First, typename Second>
-	FORCEINLINE_DEBUGGABLE void RemoveSingleton() const
-	{
-		World.remove<First, Second>();
-	}
-
-	template <typename First, typename Second>
-	FORCEINLINE_DEBUGGABLE void RemoveSingleton(const Second& InSecond) const
-	{
-		World.remove<First>(InSecond);
-	}
-	
-	template <typename First>
-	FORCEINLINE_DEBUGGABLE void RemoveSingleton(const FFlecsId& InSecond) const
-	{
-		World.remove<First>(InSecond);
 	}
 	
 	template <typename T>
@@ -880,35 +848,11 @@ public:
 		return World.has<T>();
 	}
 
-	template <typename First, typename Second>
-	FORCEINLINE_DEBUGGABLE NO_DISCARD bool HasSingleton() const
-	{
-		return World.has<First, Second>();
-	}
-
-	template <typename First, typename Second>
-	FORCEINLINE_DEBUGGABLE NO_DISCARD bool HasSingleton(const Second& InSecond) const
-	{
-		return World.has<First>(InSecond);
-	}
-	
-	template <typename First>
-	FORCEINLINE_DEBUGGABLE NO_DISCARD bool HasSingleton(const FFlecsId& InSecond) const
-	{
-		return World.has<First>(InSecond);
-	}
-
 	template <typename T>
 	FORCEINLINE_DEBUGGABLE NO_DISCARD T GetSingleton() const
 	{
 		solid_checkf(HasSingleton<T>(), TEXT("Singleton %hs not found"), nameof(T).data());
 		return *World.get<T>();
-	}
-
-	template <typename First, typename Second>
-	FORCEINLINE_DEBUGGABLE NO_DISCARD First GetSingleton(const Second& InSecond) const
-	{
-		return *World.get<First, Second>(InSecond);
 	}
 
 	template <typename T>

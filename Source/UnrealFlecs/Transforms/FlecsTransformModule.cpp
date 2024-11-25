@@ -68,12 +68,12 @@ void UFlecsTransformModule::InitializeModule(UFlecsWorld* InWorld, const FFlecsE
 			}
 		});*/
 	
-	/*InWorld->CreateSystemWithBuilder(
+	InWorld->CreateSystemWithBuilder(
 		TEXT("FlecsTransformPropagateSystem"))
 		.kind(flecs::PreUpdate)
 		.with<FFlecsTransformComponent>().read_write()
 		.with<FFlecsTransformComponent>().parent().cascade()
-		.immediate()
+		.multi_threaded()
 		.run([](flecs::iter& Iter)
 		{
 			while (Iter.next())
@@ -117,7 +117,7 @@ void UFlecsTransformModule::InitializeModule(UFlecsWorld* InWorld, const FFlecsE
 					}
 				}
 			}
-		});*/
+		});
 }
 
 void UFlecsTransformModule::DeinitializeModule(UFlecsWorld* InWorld)
