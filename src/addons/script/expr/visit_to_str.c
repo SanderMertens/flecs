@@ -59,28 +59,7 @@ int flecs_expr_binary_to_str(
 
     ecs_strbuf_appendlit(v->buf, " ");
 
-    switch(node->operator) {
-    case EcsTokAdd: ecs_strbuf_appendlit(v->buf, "+"); break;
-    case EcsTokSub: ecs_strbuf_appendlit(v->buf, "-"); break;
-    case EcsTokMul: ecs_strbuf_appendlit(v->buf, "*"); break;
-    case EcsTokDiv: ecs_strbuf_appendlit(v->buf, "/"); break;
-    case EcsTokMod: ecs_strbuf_appendlit(v->buf, "%%"); break;
-    case EcsTokBitwiseOr: ecs_strbuf_appendlit(v->buf, "|"); break;
-    case EcsTokBitwiseAnd: ecs_strbuf_appendlit(v->buf, "&"); break;
-    case EcsTokEq: ecs_strbuf_appendlit(v->buf, "=="); break;
-    case EcsTokNeq: ecs_strbuf_appendlit(v->buf, "!="); break;
-    case EcsTokGt: ecs_strbuf_appendlit(v->buf, ">"); break;
-    case EcsTokGtEq: ecs_strbuf_appendlit(v->buf, ">="); break;
-    case EcsTokLt: ecs_strbuf_appendlit(v->buf, "<"); break;
-    case EcsTokLtEq: ecs_strbuf_appendlit(v->buf, "<="); break;
-    case EcsTokAnd: ecs_strbuf_appendlit(v->buf, "&&"); break;
-    case EcsTokOr: ecs_strbuf_appendlit(v->buf, "||"); break;
-    case EcsTokShiftLeft: ecs_strbuf_appendlit(v->buf, "<<"); break;
-    case EcsTokShiftRight: ecs_strbuf_appendlit(v->buf, ">>"); break;
-    default:
-        ecs_err("invalid operator for binary expression");
-        return -1;
-    };
+    ecs_strbuf_appendstr(v->buf, flecs_script_token_str(node->operator));
 
     ecs_strbuf_appendlit(v->buf, " ");
 

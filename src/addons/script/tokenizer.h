@@ -86,6 +86,9 @@ const char* flecs_script_until(
 const char* flecs_script_token_kind_str(
     ecs_script_token_kind_t kind);
 
+const char* flecs_script_token_str(
+    ecs_script_token_kind_t kind);
+
 const char* flecs_script_token(
     ecs_script_parser_t *parser,
     const char *ptr,
