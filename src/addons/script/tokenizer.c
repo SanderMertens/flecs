@@ -88,6 +88,60 @@ const char* flecs_script_token_kind_str(
     }
 }
 
+const char* flecs_script_token_str(
+    ecs_script_token_kind_t kind)
+{
+    switch(kind) {
+    case EcsTokUnknown: return "unknown token";
+    case EcsTokColon: return ":";
+    case EcsTokScopeOpen: return "{";
+    case EcsTokScopeClose: return "}";
+    case EcsTokParenOpen: return "(";
+    case EcsTokParenClose: return ")";
+    case EcsTokBracketOpen: return "[";
+    case EcsTokBracketClose: return "]";
+    case EcsTokAnnotation: return "@";
+    case EcsTokComma: return ",";
+    case EcsTokSemiColon: return ";";
+    case EcsTokAssign: return "=";
+    case EcsTokAdd: return "+";
+    case EcsTokSub: return "-";
+    case EcsTokMul: return "*";
+    case EcsTokDiv: return "/";
+    case EcsTokMod: return "%%";
+    case EcsTokBitwiseOr: return "|";
+    case EcsTokBitwiseAnd: return "&";
+    case EcsTokNot: return "!";
+    case EcsTokOptional: return "?";
+    case EcsTokEq: return "==";
+    case EcsTokNeq: return "!=";
+    case EcsTokGt: return ">";
+    case EcsTokGtEq: return ">=";
+    case EcsTokLt: return "<";
+    case EcsTokLtEq: return "<=";
+    case EcsTokAnd: return "&&";
+    case EcsTokOr: return "||";
+    case EcsTokMatch: return "~=";
+    case EcsTokShiftLeft: return "<<";
+    case EcsTokShiftRight: return ">>";
+    case EcsTokKeywordWith: return "with";
+    case EcsTokKeywordUsing: return "using";
+    case EcsTokKeywordTemplate: return "template";
+    case EcsTokKeywordProp: return "prop";
+    case EcsTokKeywordConst: return "const";
+    case EcsTokKeywordIf: return "if";
+    case EcsTokKeywordElse: return "else";
+    case EcsTokKeywordModule: return "module";
+    case EcsTokIdentifier: return "identifier";
+    case EcsTokString: return "string";
+    case EcsTokNumber: return "number";
+    case EcsTokNewline: return "newline";
+    case EcsTokEnd: return "end of script";
+    default:
+        return "<corrupt>";
+    }
+}
+
 const char* flecs_scan_whitespace(
     ecs_script_parser_t *parser,
     const char *pos) 

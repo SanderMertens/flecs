@@ -39,6 +39,21 @@ error:
 }
 
 static
+bool flecs_expr_is_type_integer(
+    ecs_entity_t type)
+{
+    if      (type == ecs_id(ecs_bool_t)) return false;
+    else if (type == ecs_id(ecs_char_t)) return false;
+    else if (type == ecs_id(ecs_u8_t)) return false;
+    else if (type == ecs_id(ecs_u64_t)) return true;
+    else if (type == ecs_id(ecs_i64_t)) return true;
+    else if (type == ecs_id(ecs_f64_t)) return false;
+    else if (type == ecs_id(ecs_string_t)) return false;
+    else if (type == ecs_id(ecs_entity_t)) return false;
+    else return false;
+}
+
+static
 bool flecs_expr_is_type_number(
     ecs_entity_t type)
 {
@@ -118,10 +133,7 @@ bool flecs_expr_oper_valid_for_type(
     case EcsTokBitwiseOr:
     case EcsTokShiftLeft:
     case EcsTokShiftRight:
-        return type == ecs_id(ecs_u64_t) || 
-               type == ecs_id(ecs_u32_t) || 
-               type == ecs_id(ecs_u16_t) || 
-               type == ecs_id(ecs_u8_t);
+        return flecs_expr_is_type_integer(type);
     case EcsTokEq:
     case EcsTokNeq:
     case EcsTokAnd:
@@ -211,13 +223,13 @@ int flecs_expr_type_for_oper(
             lname, rname);
         ecs_os_free(rname);
         ecs_os_free(lname);
-        return 0;
+        goto error;
     }
 
     if (!flecs_expr_is_type_number(ltype) || !flecs_expr_is_type_number(rtype)) {
         flecs_expr_visit_error(script, node,
             "incompatible types in binary expression");
-        return 0;
+        goto error;
     }
 
     *operand_type = flecs_expr_promote_type(ltype, rtype);
@@ -250,7 +262,8 @@ int flecs_expr_unary_visit_type(
     node->node.type = ecs_id(ecs_bool_t);
 
     if (node->expr->type != ecs_id(ecs_bool_t)) {
-        node->expr = flecs_expr_cast(script, node->expr, ecs_id(ecs_bool_t));
+        node->expr = (ecs_expr_node_t*)flecs_expr_cast(
+            script, node->expr, ecs_id(ecs_bool_t));
     }
 
     return 0;
@@ -282,7 +295,10 @@ int flecs_expr_binary_visit_type(
     }
 
     if (!flecs_expr_oper_valid_for_type(result_type, node->operator)) {
-        flecs_expr_visit_error(script, node, "invalid operator for type");
+        char *type_str = ecs_get_path(script->world, result_type);
+        flecs_expr_visit_error(script, node, "invalid operator %s for type '%s'",
+            flecs_script_token_str(node->operator), type_str);
+        ecs_os_free(type_str);
         goto error;
     }
 

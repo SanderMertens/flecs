@@ -192,11 +192,17 @@ int flecs_expr_binary_visit_fold(
     case EcsTokOr:
         ECS_BINARY_BOOL_OP(node->left, node->right, result, ||);
         break;
+    case EcsTokBitwiseAnd:
+        ECS_BINARY_INT_OP(node->left, node->right, result, &);
+        break;
+    case EcsTokBitwiseOr:
+        ECS_BINARY_INT_OP(node->left, node->right, result, |);
+        break;
     case EcsTokShiftLeft:
-        ECS_BINARY_UINT_OP(node->left, node->right, result, <<);
+        ECS_BINARY_INT_OP(node->left, node->right, result, <<);
         break;
     case EcsTokShiftRight:
-        ECS_BINARY_UINT_OP(node->left, node->right, result, >>);
+        ECS_BINARY_INT_OP(node->left, node->right, result, >>);
         break;
     default:
         flecs_expr_visit_error(script, node->left, "unsupported operator");

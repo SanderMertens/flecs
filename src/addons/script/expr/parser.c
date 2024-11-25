@@ -284,10 +284,77 @@ ecs_expr_node_t* ecs_script_parse_expr(
         goto error;
     }
 
-    flecs_script_expr_visit_type(script, out);
-    flecs_script_expr_visit_fold(script, &out);
+    if (flecs_script_expr_visit_type(script, out)) {
+        goto error;
+    }
+
+    if (flecs_script_expr_visit_fold(script, &out)) {
+        goto error;
+    }
 
     return out;
+error:
+    return NULL;
+}
+
+FLECS_API
+const char* _ecs_script_expr_run(
+    ecs_world_t *world,
+    const char *expr,
+    ecs_value_t *value,
+    const ecs_script_expr_run_desc_t *desc)
+{
+    ecs_script_t *script = flecs_script_new(world);
+
+    ecs_script_parser_t parser = {
+        .script = flecs_script_impl(script),
+        .scope = flecs_script_impl(script)->root,
+        .significant_newline = false
+    };
+
+    ecs_script_impl_t *impl = flecs_script_impl(script);
+
+    impl->token_buffer_size = ecs_os_strlen(expr) * 2 + 1;
+    impl->token_buffer = flecs_alloc(
+        &impl->allocator, impl->token_buffer_size);
+    parser.token_cur = impl->token_buffer;
+
+    ecs_expr_node_t *out = NULL;
+
+    const char *result = flecs_script_parse_expr(&parser, expr, 0, &out);
+    if (!result) {
+        goto error;
+    }
+
+    if (flecs_script_expr_visit_type(script, out)) {
+        goto error;
+    }
+
+    if (flecs_script_expr_visit_fold(script, &out)) {
+        goto error;
+    }
+
+    if (!value->type) {
+        value->type = out->type;
+    }
+
+    if (value->type && !value->ptr) {
+        value->ptr = ecs_value_new(world, value->type);
+    }
+
+    ecs_assert(value->type != 0 && value->ptr != NULL, ECS_INVALID_OPERATION, 
+        "failed to allocate storage for expression result");
+
+    if (out->kind == EcsExprValue) {
+        if (value->type == out->type) {
+            ecs_value_copy(world, value->type, value->ptr, 
+                ((ecs_expr_val_t*)out)->ptr);
+        }
+    } else {
+        ecs_abort(ECS_UNSUPPORTED, "can't evaluate dynamic expressions yet");
+    }
+
+    return result;
 error:
     return NULL;
 }
