@@ -271,9 +271,9 @@ const char* flecs_script_identifier(
 // Number token static
 static
 bool flecs_script_is_number(
-    char c)
+    const char *c)
 {
-    return isdigit(c) || (c == '-');
+    return isdigit(c[0]) || ((c[0] == '-') && isdigit(c[1]));
 }
 
 static
@@ -288,8 +288,15 @@ const char* flecs_script_number(
     bool dot_parsed = false;
     bool e_parsed = false;
 
-    ecs_assert(flecs_script_is_number(pos[0]), ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(flecs_script_is_number(pos), ECS_INTERNAL_ERROR, NULL);
     char *outpos = parser->token_cur;
+
+    if (pos[0] == '-') {
+        outpos[0] = pos[0];
+        pos ++;
+        outpos ++;
+    }
+
     do {
         char c = pos[0];
         bool valid_number = false;
@@ -568,6 +575,9 @@ const char* flecs_script_token(
         }
         return pos;
 
+    } else if (flecs_script_is_number(pos)) {
+        return flecs_script_number(parser, pos, out);
+
     Operator          (":",        EcsTokColon)
     Operator          ("{",        EcsTokScopeOpen)
     Operator          ("}",        EcsTokScopeClose)
@@ -615,9 +625,6 @@ const char* flecs_script_token(
 
     } else if (pos[0] == '"') {
         return flecs_script_string(parser, pos, out);
-
-    } else if (flecs_script_is_number(pos[0])) {
-        return flecs_script_number(parser, pos, out);
 
     } else if (flecs_script_is_identifier(pos[0])) {
         return flecs_script_identifier(parser, pos, out);

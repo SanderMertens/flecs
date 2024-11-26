@@ -1715,7 +1715,7 @@ error:
     return NULL;
 }
 
-const char* ecs_script_expr_run(
+const char* _ecs_script_expr_run(
     ecs_world_t *world,
     const char *ptr,
     ecs_value_t *value,

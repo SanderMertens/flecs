@@ -58,7 +58,7 @@ bool flecs_has_precedence(
     if (!flecs_expr_precedence[first]) {
         return false;
     }
-    return flecs_expr_precedence[first] < flecs_expr_precedence[second];
+    return flecs_expr_precedence[first] <= flecs_expr_precedence[second];
 }
 
 static
@@ -72,98 +72,98 @@ const char* flecs_script_parse_rhs(
 {
     const char *last_pos = pos;
 
-    TokenFramePush();
+    do {
+        TokenFramePush();
 
-    LookAhead(
-        case EcsTokAdd:
-        case EcsTokSub:
-        case EcsTokMul:
-        case EcsTokDiv:
-        case EcsTokMod:
-        case EcsTokBitwiseOr:
-        case EcsTokBitwiseAnd:
-        case EcsTokEq:
-        case EcsTokNeq:
-        case EcsTokGt:
-        case EcsTokGtEq:
-        case EcsTokLt:
-        case EcsTokLtEq:
-        case EcsTokAnd:
-        case EcsTokOr:
-        case EcsTokShiftLeft:
-        case EcsTokShiftRight: 
-        case EcsTokBracketOpen:
-        case EcsTokMember:
-        {
-            ecs_script_token_kind_t oper = lookahead_token.kind;
+        last_pos = pos;
 
-            /* Only consume more tokens if operator has precedence */
-            if (flecs_has_precedence(left_oper, oper)) {
-                break;
-            }
+        LookAhead(
+            case EcsTokAdd:
+            case EcsTokSub:
+            case EcsTokMul:
+            case EcsTokDiv:
+            case EcsTokMod:
+            case EcsTokBitwiseOr:
+            case EcsTokBitwiseAnd:
+            case EcsTokEq:
+            case EcsTokNeq:
+            case EcsTokGt:
+            case EcsTokGtEq:
+            case EcsTokLt:
+            case EcsTokLtEq:
+            case EcsTokAnd:
+            case EcsTokOr:
+            case EcsTokShiftLeft:
+            case EcsTokShiftRight: 
+            case EcsTokBracketOpen:
+            case EcsTokMember:
+            {
+                ecs_script_token_kind_t oper = lookahead_token.kind;
 
-            /* Consume lookahead token */
-            pos = lookahead;
-
-            switch(oper) {
-            case EcsTokBracketOpen: {
-                ecs_expr_element_t *result = flecs_expr_element(parser);
-                result->left = *out;
-
-                pos = flecs_script_parse_lhs(
-                    parser, pos, tokenizer, 0, &result->index);
-                if (!pos) {
-                    goto error;
+                /* Only consume more tokens if operator has precedence */
+                if (flecs_has_precedence(left_oper, oper)) {
+                    break;
                 }
 
-                Parse_1(']', {
-                    *out = (ecs_expr_node_t*)result;
+                /* Consume lookahead token */
+                pos = lookahead;
+
+                switch(oper) {
+                case EcsTokBracketOpen: {
+                    ecs_expr_element_t *result = flecs_expr_element(parser);
+                    result->left = *out;
+
+                    pos = flecs_script_parse_lhs(
+                        parser, pos, tokenizer, 0, &result->index);
+                    if (!pos) {
+                        goto error;
+                    }
+
+                    Parse_1(']', {
+                        *out = (ecs_expr_node_t*)result;
+                        break;
+                    });
+
                     break;
-                });
-
-                break;
-            }
-
-            case EcsTokMember: {
-                ecs_expr_member_t *result = flecs_expr_member(parser);
-                result->left = *out;
-
-                Parse_1(EcsTokIdentifier, {
-                    result->member_name = Token(1);
-                    *out = (ecs_expr_node_t*)result;
-                    break;
-                });
-
-                break;
-            }
-
-            default: {
-                ecs_expr_binary_t *result = flecs_expr_binary(parser);
-                result->left = *out;
-                result->operator = oper;
-
-                pos = flecs_script_parse_lhs(parser, pos, tokenizer,
-                    result->operator, &result->right);
-                if (!pos) {
-                    goto error;
                 }
-                *out = (ecs_expr_node_t*)result;
+
+                case EcsTokMember: {
+                    ecs_expr_member_t *result = flecs_expr_member(parser);
+                    result->left = *out;
+
+                    Parse_1(EcsTokIdentifier, {
+                        result->member_name = Token(1);
+                        *out = (ecs_expr_node_t*)result;
+                        break;
+                    });
+
+                    break;
+                }
+
+                default: {
+                    ecs_expr_binary_t *result = flecs_expr_binary(parser);
+                    result->left = *out;
+                    result->operator = oper;
+
+                    pos = flecs_script_parse_lhs(parser, pos, tokenizer,
+                        result->operator, &result->right);
+                    if (!pos) {
+                        goto error;
+                    }
+                    *out = (ecs_expr_node_t*)result;
+                    break;
+                }
+                };
+
+                /* Ensures lookahead tokens in token buffer don't get overwritten */
+                parser->token_keep = parser->token_cur;
+
                 break;
             }
-            };
+        )
 
-            /* Ensures lookahead tokens in token buffer don't get overwritten */
-            parser->token_keep = parser->token_cur;
-
-            break;
-        }
-    )
-
-    if (pos[0] && (pos != last_pos)) {
-        pos = flecs_script_parse_rhs(parser, pos, tokenizer, *out, 0, out);
-    }
-
-    TokenFramePop();
+        TokenFramePop();
+    } while (pos != last_pos);
 
     return pos;
 error:
@@ -227,10 +227,19 @@ const char* flecs_script_parse_lhs(
             *out = (ecs_expr_node_t*)unary;
             break;
         }
+
+        case EcsTokSub: {
+            ecs_expr_binary_t *binary = flecs_expr_binary(parser);
+            pos = flecs_script_parse_expr(parser, pos, 0, &binary->right);
+            binary->left = (ecs_expr_node_t*)flecs_expr_int(parser, -1);
+            binary->operator = EcsTokMul;
+            *out = (ecs_expr_node_t*)binary;
+            break;
+        }
     )
 
     TokenFramePop();
-    
+
     /* Parse right-hand side of expression if there is one */
     return flecs_script_parse_rhs(
         parser, pos, tokenizer, *out, left_oper, out);
@@ -298,7 +307,7 @@ error:
 }
 
 FLECS_API
-const char* _ecs_script_expr_run(
+const char* ecs_script_expr_run(
     ecs_world_t *world,
     const char *expr,
     ecs_value_t *value,
@@ -330,9 +339,13 @@ const char* _ecs_script_expr_run(
         goto error;
     }
 
+    // printf("%s\n", ecs_script_expr_to_str(world, out));
+
     if (flecs_script_expr_visit_fold(script, &out)) {
         goto error;
     }
+
+    // printf("%s\n", ecs_script_expr_to_str(world, out));
 
     if (!value->type) {
         value->type = out->type;
@@ -347,8 +360,22 @@ const char* _ecs_script_expr_run(
 
     if (out->kind == EcsExprValue) {
         if (value->type == out->type) {
+            // Output value is same as expression, copy value
             ecs_value_copy(world, value->type, value->ptr, 
                 ((ecs_expr_val_t*)out)->ptr);
+        } else {
+            // Cast value to desired output type
+            ecs_meta_cursor_t cur = ecs_meta_cursor(
+                script->world, value->type, value->ptr);
+
+            ecs_value_t expr_result = {
+                .type = out->type,
+                .ptr = ((ecs_expr_val_t*)out)->ptr
+            };
+
+            if (ecs_meta_set_value(&cur, &expr_result)) {
+                goto error;
+            }
         }
     } else {
         ecs_abort(ECS_UNSUPPORTED, "can't evaluate dynamic expressions yet");

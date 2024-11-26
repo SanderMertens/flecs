@@ -5,7 +5,7 @@ void Expr_add_2_int_literals(void) {
 
     ecs_value_t v = {0};
     test_assert(ecs_script_expr_run(world, "10 + 20", &v, NULL) != NULL);
-    test_assert(v.type == ecs_id(ecs_u64_t));
+    test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_uint(*(uint64_t*)v.ptr, 10 + 20);
     ecs_value_free(world, v.type, v.ptr);
@@ -18,12 +18,12 @@ void Expr_add_2_int_literals_twice(void) {
 
     ecs_value_t v = {0};
     test_assert(ecs_script_expr_run(world, "10 + 20", &v, NULL) != NULL);
-    test_assert(v.type == ecs_id(ecs_u64_t));
+    test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_uint(*(uint64_t*)v.ptr, 10 + 20);
 
     test_assert(ecs_script_expr_run(world, "10 + 20", &v, NULL) != NULL);
-    test_assert(v.type == ecs_id(ecs_u64_t));
+    test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_uint(*(uint64_t*)v.ptr, 10 + 20);
     ecs_value_free(world, v.type, v.ptr);
@@ -49,7 +49,7 @@ void Expr_mul_2_int_literals(void) {
 
     ecs_value_t v = {0};
     test_assert(ecs_script_expr_run(world, "20 * 10", &v, NULL) != NULL);
-    test_assert(v.type == ecs_id(ecs_u64_t));
+    test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_uint(*(ecs_u64_t*)v.ptr, 20 * 10);
     ecs_value_free(world, v.type, v.ptr);
@@ -75,7 +75,7 @@ void Expr_add_3_int_literals(void) {
 
     ecs_value_t v = {0};
     test_assert(ecs_script_expr_run(world, "10 + 20 + 30", &v, NULL) != NULL);
-    test_assert(v.type == ecs_id(ecs_u64_t));
+    test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_uint(*(uint64_t*)v.ptr, 10 + 20 + 30);
     ecs_value_free(world, v.type, v.ptr);
@@ -88,12 +88,12 @@ void Expr_add_3_int_literals_twice(void) {
 
     ecs_value_t v = {0};
     test_assert(ecs_script_expr_run(world, "10 + 20 + 30", &v, NULL) != NULL);
-    test_assert(v.type == ecs_id(ecs_u64_t));
+    test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_uint(*(uint64_t*)v.ptr, 10 + 20 + 30);
 
     test_assert(ecs_script_expr_run(world, "10 + 20 + 30", &v, NULL) != NULL);
-    test_assert(v.type == ecs_id(ecs_u64_t));
+    test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_uint(*(uint64_t*)v.ptr, 10 + 20 + 30);
     ecs_value_free(world, v.type, v.ptr);
@@ -119,9 +119,9 @@ void Expr_mul_3_int_literals(void) {
 
     ecs_value_t v = {0};
     test_assert(ecs_script_expr_run(world, "2 * 5 * 10", &v, NULL) != NULL);
-    test_assert(v.type == ecs_id(ecs_u64_t));
+    test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
-    test_uint(*(ecs_u64_t*)v.ptr, 2 * 5 * 10);
+    test_uint(*(ecs_i64_t*)v.ptr, 2 * 5 * 10);
     ecs_value_free(world, v.type, v.ptr);
 
     ecs_fini(world);
@@ -207,7 +207,7 @@ void Expr_add_mul_3_int_literals(void) {
 
     ecs_value_t v = {0};
     test_assert(ecs_script_expr_run(world, "10 + 20 * 2", &v, NULL) != NULL);
-    test_assert(v.type == ecs_id(ecs_u64_t));
+    test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_uint(*(uint64_t*)v.ptr, 10 + 20 * 2);
     ecs_value_free(world, v.type, v.ptr);
@@ -285,9 +285,9 @@ void Expr_mul_add_mul_add_int_literals(void) {
 
     ecs_value_t v = {0};
     test_assert(ecs_script_expr_run(world, "2 * 4 + 6 * 8 + 10", &v, NULL) != NULL);
-    test_assert(v.type == ecs_id(ecs_u64_t));
+    test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
-    test_uint(*(ecs_u64_t*)v.ptr, 2 * 4 + 6 * 8 + 10);
+    test_uint(*(ecs_i64_t*)v.ptr, 2 * 4 + 6 * 8 + 10);
     ecs_value_free(world, v.type, v.ptr);
 
     ecs_fini(world);
@@ -480,9 +480,9 @@ void Expr_mul_lparen_add_add_rparen_int_literals(void) {
 
     ecs_value_t v = {0};
     test_assert(ecs_script_expr_run(world, "10 * (20 + 30)", &v, NULL) != NULL);
-    test_assert(v.type == ecs_id(ecs_u64_t));
+    test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
-    test_uint(*(ecs_u64_t*)v.ptr, 10 * (20 + 30));
+    test_uint(*(ecs_i64_t*)v.ptr, 10 * (20 + 30));
     ecs_value_free(world, v.type, v.ptr);
 
     ecs_fini(world);
@@ -493,9 +493,9 @@ void Expr_mul_lparen_add_add_add_rparen_int_literals(void) {
 
     ecs_value_t v = {0};
     test_assert(ecs_script_expr_run(world, "10 * (20 + 30 + 40)", &v, NULL) != NULL);
-    test_assert(v.type == ecs_id(ecs_u64_t));
+    test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
-    test_uint(*(ecs_u64_t*)v.ptr, 10 * (20 + 30 + 40));
+    test_uint(*(ecs_i64_t*)v.ptr, 10 * (20 + 30 + 40));
     ecs_value_free(world, v.type, v.ptr);
 
     ecs_fini(world);
@@ -506,9 +506,9 @@ void Expr_mul_lparen_add_add_rparen_add_int_literals(void) {
 
     ecs_value_t v = {0};
     test_assert(ecs_script_expr_run(world, "10 * (20 + 30) + 40", &v, NULL) != NULL);
-    test_assert(v.type == ecs_id(ecs_u64_t));
+    test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
-    test_uint(*(ecs_u64_t*)v.ptr, 10 * (20 + 30) + 40);
+    test_uint(*(ecs_i64_t*)v.ptr, 10 * (20 + 30) + 40);
     ecs_value_free(world, v.type, v.ptr);
 
     ecs_fini(world);
@@ -519,9 +519,9 @@ void Expr_lparen_add_add_rparen_mul_int_literals(void) {
 
     ecs_value_t v = {0};
     test_assert(ecs_script_expr_run(world, "(20 + 30) * 10", &v, NULL) != NULL);
-    test_assert(v.type == ecs_id(ecs_u64_t));
+    test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
-    test_uint(*(ecs_u64_t*)v.ptr, (20 + 30) * 10);
+    test_uint(*(ecs_i64_t*)v.ptr, (20 + 30) * 10);
     ecs_value_free(world, v.type, v.ptr);
 
     ecs_fini(world);
@@ -532,9 +532,9 @@ void Expr_lparen_add_add_add_rparen_mul_int_literals(void) {
 
     ecs_value_t v = {0};
     test_assert(ecs_script_expr_run(world, "(20 + 30 + 40) * 10", &v, NULL) != NULL);
-    test_assert(v.type == ecs_id(ecs_u64_t));
+    test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
-    test_uint(*(ecs_u64_t*)v.ptr, (20 + 30 + 40) * 10);
+    test_uint(*(ecs_i64_t*)v.ptr, (20 + 30 + 40) * 10);
     ecs_value_free(world, v.type, v.ptr);
 
     ecs_fini(world);
@@ -545,9 +545,9 @@ void Expr_double_paren_add_add(void) {
 
     ecs_value_t v = {0};
     test_assert(ecs_script_expr_run(world, "((20 + 30))", &v, NULL) != NULL);
-    test_assert(v.type == ecs_id(ecs_u64_t));
+    test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
-    test_uint(*(ecs_u64_t*)v.ptr, ((20 + 30)));
+    test_uint(*(ecs_i64_t*)v.ptr, ((20 + 30)));
     ecs_value_free(world, v.type, v.ptr);
 
     ecs_fini(world);
@@ -558,9 +558,9 @@ void Expr_double_paren_literal(void) {
 
     ecs_value_t v = {0};
     test_assert(ecs_script_expr_run(world, "((20))", &v, NULL) != NULL);
-    test_assert(v.type == ecs_id(ecs_u64_t));
+    test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
-    test_uint(*(ecs_u64_t*)v.ptr, ((20)));
+    test_uint(*(ecs_i64_t*)v.ptr, ((20)));
     ecs_value_free(world, v.type, v.ptr);
 
     ecs_fini(world);
@@ -571,9 +571,9 @@ void Expr_lparen_add_add_rparen_mul_lparen_add_add_rparen(void) {
 
     ecs_value_t v = {0};
     test_assert(ecs_script_expr_run(world, "(10 + 20) * (20 + 30)", &v, NULL) != NULL);
-    test_assert(v.type == ecs_id(ecs_u64_t));
+    test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
-    test_uint(*(ecs_u64_t*)v.ptr, (10 + 20) * (20 + 30));
+    test_uint(*(ecs_i64_t*)v.ptr, (10 + 20) * (20 + 30));
     ecs_value_free(world, v.type, v.ptr);
 
     ecs_fini(world);
@@ -1692,9 +1692,9 @@ void Expr_shift_left_int(void) {
 
     ecs_value_t v = {0};
     test_assert(ecs_script_expr_run(world, "1 << 2", &v, NULL) != NULL);
-    test_assert(v.type == ecs_id(ecs_u64_t));
+    test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
-    test_uint(*(uint64_t*)v.ptr, 1 << 2);
+    test_uint(*(ecs_i64_t*)v.ptr, 1 << 2);
     ecs_value_free(world, v.type, v.ptr);
 
     ecs_fini(world);
@@ -1705,9 +1705,9 @@ void Expr_shift_right_int(void) {
 
     ecs_value_t v = {0};
     test_assert(ecs_script_expr_run(world, "4 >> 2", &v, NULL) != NULL);
-    test_assert(v.type == ecs_id(ecs_u64_t));
+    test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
-    test_uint(*(uint64_t*)v.ptr, 4 >> 2);
+    test_uint(*(ecs_i64_t*)v.ptr, 4 >> 2);
     ecs_value_free(world, v.type, v.ptr);
 
     ecs_fini(world);
@@ -1718,9 +1718,9 @@ void Expr_shift_left_int_add_int(void) {
 
     ecs_value_t v = {0};
     test_assert(ecs_script_expr_run(world, "1 << 2 + 10", &v, NULL) != NULL);
-    test_assert(v.type == ecs_id(ecs_u64_t));
+    test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
-    test_uint(*(uint64_t*)v.ptr, 1 << (2 + 10));
+    test_uint(*(ecs_i64_t*)v.ptr, 1 << (2 + 10));
     ecs_value_free(world, v.type, v.ptr);
 
     ecs_fini(world);
@@ -1731,9 +1731,9 @@ void Expr_shift_left_int_mul_int(void) {
 
     ecs_value_t v = {0};
     test_assert(ecs_script_expr_run(world, "1 << 2 * 10", &v, NULL) != NULL);
-    test_assert(v.type == ecs_id(ecs_u64_t));
+    test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
-    test_uint(*(uint64_t*)v.ptr, 1 << 2 * 10);
+    test_uint(*(ecs_i64_t*)v.ptr, 1 << 2 * 10);
     ecs_value_free(world, v.type, v.ptr);
 
     ecs_fini(world);
@@ -1744,9 +1744,9 @@ void Expr_add_int_shift_left_int(void) {
 
     ecs_value_t v = {0};
     test_assert(ecs_script_expr_run(world, "10 + 1 << 2", &v, NULL) != NULL);
-    test_assert(v.type == ecs_id(ecs_u64_t));
+    test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
-    test_uint(*(uint64_t*)v.ptr, (10 + 1) << 2);
+    test_uint(*(ecs_i64_t*)v.ptr, (10 + 1) << 2);
     ecs_value_free(world, v.type, v.ptr);
 
     ecs_fini(world);
@@ -1757,9 +1757,9 @@ void Expr_mul_int_shift_left_int(void) {
 
     ecs_value_t v = {0};
     test_assert(ecs_script_expr_run(world, "10 * 1 << 2", &v, NULL) != NULL);
-    test_assert(v.type == ecs_id(ecs_u64_t));
+    test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
-    test_uint(*(uint64_t*)v.ptr, 10 * 1 << 2);
+    test_uint(*(ecs_i64_t*)v.ptr, 10 * 1 << 2);
     ecs_value_free(world, v.type, v.ptr);
 
     ecs_fini(world);
@@ -1770,9 +1770,9 @@ void Expr_add_int_shift_left_int_add_int(void) {
 
     ecs_value_t v = {0};
     test_assert(ecs_script_expr_run(world, "10 + 1 << 2 + 2", &v, NULL) != NULL);
-    test_assert(v.type == ecs_id(ecs_u64_t));
+    test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
-    test_uint(*(uint64_t*)v.ptr, (10 + 1) << (2 + 2));
+    test_uint(*(ecs_i64_t*)v.ptr, (10 + 1) << (2 + 2));
     ecs_value_free(world, v.type, v.ptr);
 
     ecs_fini(world);
@@ -1783,9 +1783,9 @@ void Expr_mul_int_shift_left_int_mul_int(void) {
 
     ecs_value_t v = {0};
     test_assert(ecs_script_expr_run(world, "10 * 1 << 2 * 2", &v, NULL) != NULL);
-    test_assert(v.type == ecs_id(ecs_u64_t));
+    test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
-    test_uint(*(uint64_t*)v.ptr, 10 * 1 << 2 * 2);
+    test_uint(*(ecs_i64_t*)v.ptr, 10 * 1 << 2 * 2);
     ecs_value_free(world, v.type, v.ptr);
 
     ecs_fini(world);
