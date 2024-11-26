@@ -15,7 +15,8 @@ struct UNREALFLECS_API FFlecsRelativeTrait
 {
 	GENERATED_BODY()
 	
-	// How far up the hierarchy to look for the relative entity, 0 is the Parent, 1 is the Parent's Parent, etc.
+	/* How far up the hierarchy to look for the relative entity, 0 is the Parent(Which is FlecsLocalTrait),
+	 * 1 is the Parent's Parent, etc.*/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Transform")
 	int32 RelativeToIndex = 0;
 }; // struct FFlecsRelativeComponent
