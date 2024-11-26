@@ -194,7 +194,9 @@
                 __VA_ARGS__\
             }\
         )\
-        pos = old_ptr;\
+        if (pos != lookahead) {\
+            pos = old_ptr;\
+        }\
     )
 
 #define LookAhead_3(tok1, tok2, tok3, ...)\
@@ -206,7 +208,9 @@
                 __VA_ARGS__\
             }\
         )\
-        pos = old_ptr;\
+        if (pos != lookahead) {\
+            pos = old_ptr;\
+        }\
     )
 
 /* Open scope */

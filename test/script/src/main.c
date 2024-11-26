@@ -409,6 +409,13 @@ void Expr_double_paren_add_add(void);
 void Expr_double_paren_literal(void);
 void Expr_lparen_add_add_rparen_mul_lparen_add_add_rparen(void);
 void Expr_float_result_add_2_int_literals(void);
+void Expr_struct_result_implicit_members(void);
+void Expr_struct_result_explicit_members(void);
+void Expr_struct_result_explicit_members_reverse(void);
+void Expr_struct_result_nested_implicit_members(void);
+void Expr_struct_result_nested_explicit_members(void);
+void Expr_struct_result_nested_explicit_members_reverse(void);
+void Expr_struct_result_nested_explicit_dotmembers(void);
 void Expr_struct_result_add_2_int_literals(void);
 void Expr_struct_result_add_2_2_fields_int_literals(void);
 void Expr_struct_result_add_3_int_literals(void);
@@ -2230,6 +2237,34 @@ bake_test_case Expr_testcases[] = {
         Expr_float_result_add_2_int_literals
     },
     {
+        "struct_result_implicit_members",
+        Expr_struct_result_implicit_members
+    },
+    {
+        "struct_result_explicit_members",
+        Expr_struct_result_explicit_members
+    },
+    {
+        "struct_result_explicit_members_reverse",
+        Expr_struct_result_explicit_members_reverse
+    },
+    {
+        "struct_result_nested_implicit_members",
+        Expr_struct_result_nested_implicit_members
+    },
+    {
+        "struct_result_nested_explicit_members",
+        Expr_struct_result_nested_explicit_members
+    },
+    {
+        "struct_result_nested_explicit_members_reverse",
+        Expr_struct_result_nested_explicit_members_reverse
+    },
+    {
+        "struct_result_nested_explicit_dotmembers",
+        Expr_struct_result_nested_explicit_dotmembers
+    },
+    {
         "struct_result_add_2_int_literals",
         Expr_struct_result_add_2_int_literals
     },
@@ -3175,7 +3210,7 @@ static bake_test_suite suites[] = {
         "Expr",
         NULL,
         NULL,
-        128,
+        135,
         Expr_testcases
     },
     {

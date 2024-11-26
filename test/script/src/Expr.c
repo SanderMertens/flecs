@@ -595,6 +595,272 @@ void Expr_float_result_add_2_int_literals(void) {
     ecs_fini(world);
 }
 
+void Expr_struct_result_implicit_members(void) {
+    ecs_world_t *world = ecs_init();
+
+    typedef struct {
+        int32_t x;
+        int32_t y;
+    } Position;
+
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    Position v = {0};
+    const char *ptr = ecs_script_expr_run(world, "{5 + 5, 10 + 10}", &(ecs_value_t){
+        .type = t, .ptr = &v
+    }, NULL);
+    test_assert(ptr != NULL);
+    test_assert(!ptr[0]);
+
+    test_uint(v.x, 10);
+    test_uint(v.y, 20);
+
+    ecs_fini(world);
+}
+
+void Expr_struct_result_explicit_members(void) {
+    ecs_world_t *world = ecs_init();
+
+    typedef struct {
+        int32_t x;
+        int32_t y;
+    } Position;
+
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    Position v = {0};
+    const char *ptr = ecs_script_expr_run(world, "{x: 5 + 5, y: 10 + 10}", &(ecs_value_t){
+        .type = t, .ptr = &v
+    }, NULL);
+    test_assert(ptr != NULL);
+    test_assert(!ptr[0]);
+
+    test_uint(v.x, 10);
+    test_uint(v.y, 20);
+
+    ecs_fini(world);
+}
+
+
+void Expr_struct_result_explicit_members_reverse(void) {
+    ecs_world_t *world = ecs_init();
+
+    typedef struct {
+        int32_t x;
+        int32_t y;
+    } Position;
+
+    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    Position v = {0};
+    const char *ptr = ecs_script_expr_run(world, "{y: 5 + 5, x: 10 + 10}", &(ecs_value_t){
+        .type = t, .ptr = &v
+    }, NULL);
+    test_assert(ptr != NULL);
+    test_assert(!ptr[0]);
+
+    test_uint(v.y, 10);
+    test_uint(v.x, 20);
+
+    ecs_fini(world);
+}
+
+void Expr_struct_result_nested_implicit_members(void) {
+    ecs_world_t *world = ecs_init();
+
+    typedef struct {
+        int32_t x;
+        int32_t y;
+    } Point;
+
+    typedef struct {
+        Point start;
+        Point stop;
+    } Line;
+
+    ecs_entity_t point = ecs_struct(world, {
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t line = ecs_struct(world, {
+        .members = {
+            {"start", point},
+            {"stop", point}
+        }
+    });
+
+    Line v = {0};
+    const char *ptr = ecs_script_expr_run(world, "{{5 + 5, 10 + 10}, {10 + 20, 20 + 20}}", 
+        &(ecs_value_t){
+            .type = line, .ptr = &v
+        }, NULL);
+    test_assert(ptr != NULL);
+    test_assert(!ptr[0]);
+
+    test_uint(v.start.x, 10);
+    test_uint(v.start.y, 20);
+    test_uint(v.stop.x, 30);
+    test_uint(v.stop.y, 40);
+
+    ecs_fini(world);
+}
+
+void Expr_struct_result_nested_explicit_members(void) {
+    ecs_world_t *world = ecs_init();
+
+    typedef struct {
+        int32_t x;
+        int32_t y;
+    } Point;
+
+    typedef struct {
+        Point start;
+        Point stop;
+    } Line;
+
+    ecs_entity_t point = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Point" }),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t line = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Line" }),
+        .members = {
+            {"start", point},
+            {"stop", point}
+        }
+    });
+
+    Line v = {0};
+    const char *ptr = ecs_script_expr_run(world, 
+        "{start: {x: 5 + 5, y: 10 + 10}, stop: {x: 10 + 20, y: 20 + 20}}", 
+        &(ecs_value_t){
+            .type = line, .ptr = &v
+        }, NULL);
+    test_assert(ptr != NULL);
+    test_assert(!ptr[0]);
+
+    test_uint(v.start.x, 10);
+    test_uint(v.start.y, 20);
+    test_uint(v.stop.x, 30);
+    test_uint(v.stop.y, 40);
+
+    ecs_fini(world);
+}
+
+void Expr_struct_result_nested_explicit_members_reverse(void) {
+    ecs_world_t *world = ecs_init();
+
+    typedef struct {
+        int32_t x;
+        int32_t y;
+    } Point;
+
+    typedef struct {
+        Point start;
+        Point stop;
+    } Line;
+
+    ecs_entity_t point = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Point" }),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t line = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Line" }),
+        .members = {
+            {"start", point},
+            {"stop", point}
+        }
+    });
+
+    Line v = {0};
+    const char *ptr = ecs_script_expr_run(world, 
+        "{stop: {x: 5 + 5, y: 10 + 10}, start: {x: 10 + 20, y: 20 + 20}}", 
+        &(ecs_value_t){
+            .type = line, .ptr = &v
+        }, NULL);
+    test_assert(ptr != NULL);
+    test_assert(!ptr[0]);
+
+    test_uint(v.stop.x, 10);
+    test_uint(v.stop.y, 20);
+    test_uint(v.start.x, 30);
+    test_uint(v.start.y, 40);
+
+    ecs_fini(world);
+}
+
+void Expr_struct_result_nested_explicit_dotmembers(void) {
+    ecs_world_t *world = ecs_init();
+
+    typedef struct {
+        int32_t x;
+        int32_t y;
+    } Point;
+
+    typedef struct {
+        Point start;
+        Point stop;
+    } Line;
+
+    ecs_entity_t point = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Point" }),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t line = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "Line" }),
+        .members = {
+            {"start", point},
+            {"stop", point}
+        }
+    });
+
+    Line v = {0};
+    const char *ptr = ecs_script_expr_run(world, 
+        "{stop.x: 5 + 5, start.x: 10 + 10, stop.y: 10 + 20, start.y: 20 + 20}", 
+        &(ecs_value_t){
+            .type = line, .ptr = &v
+        }, NULL);
+    test_assert(ptr != NULL);
+    test_assert(!ptr[0]);
+
+    test_uint(v.stop.x, 10);
+    test_uint(v.stop.y, 30);
+    test_uint(v.start.x, 20);
+    test_uint(v.start.y, 40);
+
+    ecs_fini(world);
+}
+
 void Expr_struct_result_add_2_int_literals(void) {
     ecs_world_t *world = ecs_init();
 

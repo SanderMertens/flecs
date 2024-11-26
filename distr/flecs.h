@@ -14569,6 +14569,7 @@ typedef struct ecs_script_expr_run_desc_t {
         void *ctx);
     void *lookup_ctx;
     ecs_script_vars_t *vars;
+    ecs_entity_t type;
 } ecs_script_expr_run_desc_t;
 
 /** Parse standalone expression into value.

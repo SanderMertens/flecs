@@ -463,6 +463,7 @@ void Deserialize_enum(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t t = ecs_enum_init(world, &(ecs_enum_desc_t){
+        .entity = ecs_entity(world, { .name = "Color" }),
         .constants = {
             {"Red"}, {"Blue"}, {"Green"}
         }
@@ -510,6 +511,7 @@ void Deserialize_bitmask(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t t = ecs_bitmask_init(world, &(ecs_bitmask_desc_t){
+        .entity = ecs_entity(world, { .name = "Toppings" }),
         .constants = {
             {"Lettuce"}, {"Bacon"}, {"Tomato"}, {"Cheese"}, {"BLT", Bacon | Lettuce | Tomato}
         }
@@ -1501,7 +1503,7 @@ void Deserialize_discover_type_int(void) {
 
     ecs_value_t v = {0};
     test_assert(ecs_script_expr_run(world, "10", &v, NULL) != NULL);
-    test_uint(v.type, ecs_id(ecs_u64_t));
+    test_uint(v.type, ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_int(*(uint64_t*)v.ptr, 10);
     ecs_value_free(world, v.type, v.ptr);

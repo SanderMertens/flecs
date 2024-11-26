@@ -240,7 +240,8 @@ int ecs_meta_next(
         }
 
         if (scope->elem_cur >= get_elem_count(scope)) {
-            ecs_err("out of collection bounds (%d)", scope->elem_cur);
+            ecs_err("out of collection bounds (%d elements vs. size %d)", 
+                scope->elem_cur + 1, get_elem_count(scope));
             return -1;
         }
         return 0;
