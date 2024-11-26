@@ -2172,3 +2172,66 @@ void OrderBy_sort_w_nontrivial_component(void) {
 
     ecs_fini(world);
 }
+
+void OrderBy_order_empty_table(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, Foo);
+
+    ecs_entity_t e1 = ecs_insert(world, ecs_value(Position, {3, 0}));
+    ecs_entity_t e2 = ecs_insert(world, ecs_value(Position, {1, 0}));
+    ecs_entity_t e3 = ecs_insert(world, ecs_value(Position, {5, 0}));
+    ecs_entity_t e4 = ecs_insert(world, ecs_value(Position, {2, 0}));
+    ecs_entity_t e5 = ecs_insert(world, ecs_value(Position, {4, 0}));
+
+    // Create empty table
+    ecs_add(world, e5, Foo);
+    ecs_delete(world, e5);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "Position",
+        .order_by = ecs_id(Position),
+        .order_by_callback = compare_position,
+        .flags = EcsQueryMatchEmptyTables
+    });
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+
+    test_assert(ecs_query_next(&it));
+    test_int(it.count, 4);
+
+    test_assert(it.entities[0] == e2);
+    test_assert(it.entities[1] == e4);
+    test_assert(it.entities[2] == e1);
+    test_assert(it.entities[3] == e3);
+    test_assert(!ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void OrderBy_order_empty_table_only(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    // Create empty table
+    ecs_entity_t e = ecs_new_w(world, Position);
+    ecs_delete(world, e);
+
+    ecs_query_t *q = ecs_query(world, {
+        .expr = "Position",
+        .order_by = ecs_id(Position),
+        .order_by_callback = compare_position,
+        .flags = EcsQueryMatchEmptyTables
+    });
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_assert(!ecs_query_next(&it));
+
+    ecs_query_fini(q);
+
+    ecs_fini(world);
+}

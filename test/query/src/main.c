@@ -1496,6 +1496,14 @@ void Traversal_this_written_self_up_isa_childof(void);
 void Traversal_this_written_self_up_isa_isa_childof(void);
 void Traversal_this_written_self_up_isa_childof_isa(void);
 void Traversal_this_written_self_up_isa_childof_isa_childof(void);
+void Traversal_this_up_isa_childof_2_lvl(void);
+void Traversal_this_up_isa_childof_2_lvl_w_on_instantiate_inherit(void);
+void Traversal_this_up_isa_childof_2_lvl_w_on_instantiate_dont_inherit(void);
+void Traversal_this_up_isa_childof_2_lvl_after_remove_override(void);
+void Traversal_this_written_up_isa_childof_2_lvl(void);
+void Traversal_this_written_up_isa_childof_2_lvl_w_on_instantiate_inherit(void);
+void Traversal_this_written_up_isa_childof_2_lvl_w_on_instantiate_dont_inherit(void);
+void Traversal_this_written_up_isa_childof_2_lvl_after_remove_override(void);
 
 // Testsuite 'Cascade'
 void Cascade_parent_cascade(void);
@@ -2036,6 +2044,8 @@ void OrderBy_sort_by_wildcard(void);
 void OrderBy_sort_not_term(void);
 void OrderBy_sort_or_term(void);
 void OrderBy_sort_optional_term(void);
+void OrderBy_order_empty_table(void);
+void OrderBy_order_empty_table_only(void);
 
 // Testsuite 'OrderByEntireTable'
 void OrderByEntireTable_sort_by_component(void);
@@ -7967,6 +7977,38 @@ bake_test_case Traversal_testcases[] = {
     {
         "this_written_self_up_isa_childof_isa_childof",
         Traversal_this_written_self_up_isa_childof_isa_childof
+    },
+    {
+        "this_up_isa_childof_2_lvl",
+        Traversal_this_up_isa_childof_2_lvl
+    },
+    {
+        "this_up_isa_childof_2_lvl_w_on_instantiate_inherit",
+        Traversal_this_up_isa_childof_2_lvl_w_on_instantiate_inherit
+    },
+    {
+        "this_up_isa_childof_2_lvl_w_on_instantiate_dont_inherit",
+        Traversal_this_up_isa_childof_2_lvl_w_on_instantiate_dont_inherit
+    },
+    {
+        "this_up_isa_childof_2_lvl_after_remove_override",
+        Traversal_this_up_isa_childof_2_lvl_after_remove_override
+    },
+    {
+        "this_written_up_isa_childof_2_lvl",
+        Traversal_this_written_up_isa_childof_2_lvl
+    },
+    {
+        "this_written_up_isa_childof_2_lvl_w_on_instantiate_inherit",
+        Traversal_this_written_up_isa_childof_2_lvl_w_on_instantiate_inherit
+    },
+    {
+        "this_written_up_isa_childof_2_lvl_w_on_instantiate_dont_inherit",
+        Traversal_this_written_up_isa_childof_2_lvl_w_on_instantiate_dont_inherit
+    },
+    {
+        "this_written_up_isa_childof_2_lvl_after_remove_override",
+        Traversal_this_written_up_isa_childof_2_lvl_after_remove_override
     }
 };
 
@@ -10066,6 +10108,14 @@ bake_test_case OrderBy_testcases[] = {
     {
         "sort_optional_term",
         OrderBy_sort_optional_term
+    },
+    {
+        "order_empty_table",
+        OrderBy_order_empty_table
+    },
+    {
+        "order_empty_table_only",
+        OrderBy_order_empty_table_only
     }
 };
 
@@ -10511,7 +10561,7 @@ static bake_test_suite suites[] = {
         "Traversal",
         Traversal_setup,
         NULL,
-        147,
+        155,
         Traversal_testcases,
         1,
         Traversal_params
@@ -10584,7 +10634,7 @@ static bake_test_suite suites[] = {
         "OrderBy",
         NULL,
         NULL,
-        42,
+        44,
         OrderBy_testcases
     },
     {

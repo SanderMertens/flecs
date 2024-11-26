@@ -1550,7 +1550,15 @@
                 "this_written_self_up_isa_childof",
                 "this_written_self_up_isa_isa_childof",
                 "this_written_self_up_isa_childof_isa",
-                "this_written_self_up_isa_childof_isa_childof"
+                "this_written_self_up_isa_childof_isa_childof",
+                "this_up_isa_childof_2_lvl",
+                "this_up_isa_childof_2_lvl_w_on_instantiate_inherit",
+                "this_up_isa_childof_2_lvl_w_on_instantiate_dont_inherit",
+                "this_up_isa_childof_2_lvl_after_remove_override",
+                "this_written_up_isa_childof_2_lvl",
+                "this_written_up_isa_childof_2_lvl_w_on_instantiate_inherit",
+                "this_written_up_isa_childof_2_lvl_w_on_instantiate_dont_inherit",
+                "this_written_up_isa_childof_2_lvl_after_remove_override"
             ]
         }, {
             "id": "Cascade",
@@ -2120,7 +2128,9 @@
                 "sort_by_wildcard",
                 "sort_not_term",
                 "sort_or_term",
-                "sort_optional_term"
+                "sort_optional_term",
+                "order_empty_table",
+                "order_empty_table_only"
             ]
         }, {
             "id": "OrderByEntireTable",

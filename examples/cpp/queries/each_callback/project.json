@@ -1,0 +1,11 @@
+{
+    "id": "each_callback",
+    "type": "application",
+    "value": {
+        "use": [
+            "flecs"
+        ],
+        "language": "c++",
+        "public": false
+    }
+}

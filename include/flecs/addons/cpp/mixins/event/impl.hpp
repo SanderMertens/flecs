@@ -52,8 +52,7 @@ namespace _ {
         {
             using Delegate = _::entity_observer_delegate<Func>;
             auto ctx = FLECS_NEW(Delegate)(FLECS_FWD(f));
-            entity_observer_create(world, _::type<Evt>::id(world), entity, Delegate::run, ctx, 
-                reinterpret_cast<ecs_ctx_free_t>(_::free_obj<Delegate>));
+            entity_observer_create(world, _::type<Evt>::id(world), entity, Delegate::run, ctx, _::free_obj<Delegate>);
         }
 
         template <typename Evt, if_not_t<is_empty<Evt>::value> = 0>
@@ -64,8 +63,7 @@ namespace _ {
         {
             using Delegate = _::entity_payload_observer_delegate<Func, Evt>;
             auto ctx = FLECS_NEW(Delegate)(FLECS_FWD(f));
-            entity_observer_create(world, _::type<Evt>::id(world), entity, Delegate::run, ctx, 
-                reinterpret_cast<ecs_ctx_free_t>(_::free_obj<Delegate>));
+            entity_observer_create(world, _::type<Evt>::id(world), entity, Delegate::run, ctx, _::free_obj<Delegate>);
         }
     };
 }
@@ -76,8 +74,7 @@ inline const Self& entity_builder<Self>::observe(flecs::entity_t evt, Func&& f) 
     using Delegate = _::entity_observer_delegate<Func>;
     auto ctx = FLECS_NEW(Delegate)(FLECS_FWD(f));
 
-    _::entity_observer_create(world_, evt, id_, Delegate::run, ctx,
-        reinterpret_cast<ecs_ctx_free_t>(_::free_obj<Delegate>));
+    _::entity_observer_create(world_, evt, id_, Delegate::run, ctx, _::free_obj<Delegate>);
 
     return to_base();
 }

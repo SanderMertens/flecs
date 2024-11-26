@@ -172,6 +172,7 @@
                 "entity_from_conflicting_digit",
                 "set_version_on_nonempty_entity",
                 "set_version_while_deferred",
+                "set_version_on_not_alive",
                 "commit_w_on_add",
                 "commit_w_on_remove",
                 "commit_w_cmd_in_observer",
@@ -2215,7 +2216,8 @@
                 "add_batched_set_with",
                 "defer_emplace_after_remove",
                 "batched_w_table_change_in_observer",
-                "redefine_named_in_threaded_app"
+                "redefine_named_in_threaded_app",
+                "batched_cmd_w_component_init"
             ]
         }, {
             "id": "SingleThreadStaging",

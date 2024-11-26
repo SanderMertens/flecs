@@ -748,8 +748,8 @@ void Table_clear_table_on_remove_hooks(void) {
     });
 
     ecs_entity_t e1 = ecs_insert(world, ecs_value(Position, {10, 20}));
-    ecs_entity_t e2 = ecs_insert(world, ecs_value(Position, {10, 20}));
-    ecs_entity_t e3 = ecs_insert(world, ecs_value(Position, {10, 20}));
+    /* e2 */ ecs_insert(world, ecs_value(Position, {10, 20}));
+    /* e3 */ ecs_insert(world, ecs_value(Position, {10, 20}));
 
     ecs_table_t *table = ecs_get_table(world, e1);
     ecs_table_clear_entities(world, table);

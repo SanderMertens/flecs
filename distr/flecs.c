@@ -2810,6 +2810,14 @@ ecs_allocator_t* flecs_stage_get_allocator(
 ecs_stack_t* flecs_stage_get_stack_allocator(
     ecs_world_t *world);
 
+void flecs_commands_init(    
+    ecs_stage_t *stage,
+    ecs_commands_t *cmd);
+
+void flecs_commands_fini(
+    ecs_stage_t *stage,
+    ecs_commands_t *cmd);
+
 #endif
 
 /**
@@ -2896,6 +2904,36 @@ void flecs_delete_table(
 
 void flecs_process_pending_tables(
     const ecs_world_t *world);
+
+/* Suspend/resume readonly state. To fully support implicit registration of
+ * components, it should be possible to register components while the world is
+ * in readonly mode. It is not uncommon that a component is used first from
+ * within a system, which are often ran while in readonly mode.
+ * 
+ * Suspending readonly mode is only allowed when the world is not multithreaded.
+ * When a world is multithreaded, it is not safe to (even temporarily) leave
+ * readonly mode, so a multithreaded application should always explicitly
+ * register components in advance. 
+ * 
+ * These operations also suspend deferred mode.
+ */
+typedef struct ecs_suspend_readonly_state_t {
+    bool is_readonly;
+    bool is_deferred;
+    int32_t defer_count;
+    ecs_entity_t scope;
+    ecs_entity_t with;
+    ecs_commands_t cmd;
+    ecs_stage_t *stage;
+} ecs_suspend_readonly_state_t;
+
+ecs_world_t* flecs_suspend_readonly(
+    const ecs_world_t *world,
+    ecs_suspend_readonly_state_t *state);
+
+void flecs_resume_readonly(
+    ecs_world_t *world,
+    ecs_suspend_readonly_state_t *state);
 
 /* Convenience macro's for world allocator */
 #define flecs_walloc(world, size)\
@@ -9256,11 +9294,13 @@ void ecs_set_version(
 
     flecs_entities_make_alive(world, entity_with_generation);
 
-    ecs_record_t *r = flecs_entities_get(world, entity_with_generation);
-    if (r && r->table) {
-        int32_t row = ECS_RECORD_TO_ROW(r->row);
-        ecs_entity_t *entities = r->table->data.entities;
-        entities[row] = entity_with_generation;
+    if (flecs_entities_is_alive(world, entity_with_generation)) {
+        ecs_record_t *r = flecs_entities_get(world, entity_with_generation);
+        if (r && r->table) {
+            int32_t row = ECS_RECORD_TO_ROW(r->row);
+            ecs_entity_t *entities = r->table->data.entities;
+            entities[row] = entity_with_generation;
+        }
     }
 }
 
@@ -15052,8 +15092,8 @@ int flecs_multi_observer_init(
             term->src.id = EcsThis | EcsIsVariable | EcsSelf;
             term->second.id = 0;
         } else if (term->oper == EcsOptional) {
-            if (only_table_events) {
-                /* For table events optional terms aren't necessary */
+            if (only_table_events || desc->events[0] == EcsMonitor) {
+                /* For table events & monitors optional terms aren't necessary */
                 continue;
             }
         }
@@ -17150,7 +17190,6 @@ void flecs_stage_merge_post_frame(
     ecs_vec_clear(&stage->post_frame_actions);
 }
 
-static
 void flecs_commands_init(
     ecs_stage_t *stage,
     ecs_commands_t *cmd)
@@ -17161,13 +17200,13 @@ void flecs_commands_init(
         &stage->allocators.cmd_entry_chunk, ecs_cmd_entry_t);
 }
 
-static
 void flecs_commands_fini(
     ecs_stage_t *stage,
     ecs_commands_t *cmd)
 {
     /* Make sure stage has no unmerged data */
-    ecs_assert(ecs_vec_count(&stage->cmd->queue) == 0, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(ecs_vec_count(&stage->cmd->queue) == 0, 
+        ECS_INTERNAL_ERROR, NULL);
 
     flecs_stack_fini(&cmd->stack);
     ecs_vec_fini_t(&stage->allocator, &cmd->queue, ecs_cmd_t);
@@ -18131,13 +18170,11 @@ ecs_world_t* flecs_suspend_readonly(
 
     /* Hack around safety checks (this ought to look ugly) */
     state->defer_count = stage->defer;
-    state->commands = stage->cmd->queue;
-    state->defer_stack = stage->cmd->stack;
-    flecs_stack_init(&stage->cmd->stack);
+    state->cmd = *stage->cmd;
+    flecs_commands_init(stage, stage->cmd);
     state->scope = stage->scope;
     state->with = stage->with;
     stage->defer = 0;
-    ecs_vec_init_t(NULL, &stage->cmd->queue, ecs_cmd_t, 0);
 
     return world;
 }
@@ -18160,10 +18197,8 @@ void flecs_resume_readonly(
         /* Restore readonly state / defer count */
         ECS_BIT_COND(world->flags, EcsWorldReadonly, state->is_readonly);
         stage->defer = state->defer_count;
-        ecs_vec_fini_t(&stage->allocator, &stage->cmd->queue, ecs_cmd_t);
-        stage->cmd->queue = state->commands;
-        flecs_stack_fini(&stage->cmd->stack);
-        stage->cmd->stack = state->defer_stack;
+        flecs_commands_fini(stage, stage->cmd);
+        *stage->cmd = state->cmd;
         stage->scope = state->scope;
         stage->with = state->with;
     }
@@ -20208,6 +20243,7 @@ ecs_entity_t flecs_alert_out_of_range_kind(
     case EcsString:
     case EcsEntity:
     case EcsId:
+    default:
         return 0;
     }
 
@@ -44047,7 +44083,7 @@ bool flecs_json_serialize_table_tags(
         ecs_id_record_t *idr = (ecs_id_record_t*)tr->hdr.cache;
 
         if (src_table) {
-            if (idr->flags & EcsIdOnInstantiateDontInherit) {
+            if (!(idr->flags & EcsIdOnInstantiateInherit)) {
                 continue;
             }
         }
@@ -44114,7 +44150,7 @@ bool flecs_json_serialize_table_pairs(
         ecs_id_record_t *idr = (ecs_id_record_t*)tr->hdr.cache;
 
         if (src_table) {
-            if (idr->flags & EcsIdOnInstantiateDontInherit) {
+            if (!(idr->flags & EcsIdOnInstantiateInherit)) {
                 continue;
             }
         }
@@ -44212,7 +44248,7 @@ int flecs_json_serialize_table_components(
         ecs_id_record_t *idr = (ecs_id_record_t*)tr->hdr.cache;
 
         if (src_table) {
-            if (idr->flags & EcsIdOnInstantiateDontInherit) {
+            if (!(idr->flags & EcsIdOnInstantiateInherit)) {
                 continue;
             }
         }
@@ -68023,6 +68059,12 @@ ecs_query_cache_t* flecs_query_cache_init(
     ecs_flags32_t query_flags = const_desc->flags | world->default_query_flags;
     desc.flags |= EcsQueryMatchEmptyTables | EcsQueryTableOnly | EcsQueryNested;
 
+    /* order_by is not compatible with matching empty tables, as it causes
+     * a query to return table slices, not entire tables. */
+    if (const_desc->order_by_callback) {
+        query_flags &= ~EcsQueryMatchEmptyTables;
+    }
+
     ecs_query_t *q = result->query = ecs_query_init(world, &desc);
     if (!q) {
         goto error;
@@ -73526,7 +73568,6 @@ ecs_trav_down_t* flecs_trav_entity_down(
     ecs_trav_up_cache_t *cache,
     ecs_trav_down_t *dst,
     ecs_entity_t trav,
-    ecs_entity_t entity,
     ecs_id_record_t *idr_trav,
     ecs_id_record_t *idr_with,
     bool self,
@@ -73586,7 +73627,7 @@ ecs_trav_down_t* flecs_trav_table_down(
             }
 
             flecs_trav_entity_down(world, a, cache, dst, 
-                trav, entity, idr_trav, idr_with, self, empty);
+                trav, idr_trav, idr_with, self, empty);
         }
     }
 
@@ -73643,7 +73684,7 @@ void flecs_trav_entity_down_isa(
                     ecs_id_record_t *idr_trav = flecs_id_record_get(world, 
                         ecs_pair(trav, e));
                     if (idr_trav) {
-                        flecs_trav_entity_down(world, a, cache, dst, trav, e,
+                        flecs_trav_entity_down(world, a, cache, dst, trav,
                             idr_trav, idr_with, self, empty);
                     }
 
@@ -73662,7 +73703,6 @@ ecs_trav_down_t* flecs_trav_entity_down(
     ecs_trav_up_cache_t *cache,
     ecs_trav_down_t *dst,
     ecs_entity_t trav,
-    ecs_entity_t e,
     ecs_id_record_t *idr_trav,
     ecs_id_record_t *idr_with,
     bool self,
@@ -73671,9 +73711,6 @@ ecs_trav_down_t* flecs_trav_entity_down(
     ecs_assert(dst != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(idr_with != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(idr_trav != NULL, ECS_INTERNAL_ERROR, NULL);
-
-    flecs_trav_entity_down_isa(
-        world, a, cache, dst, trav, e, idr_with, self, empty);
 
     int32_t first = ecs_vec_count(&dst->elems);
 
@@ -73770,8 +73807,16 @@ ecs_trav_down_t* flecs_query_get_down_cache(
     }
 
     ecs_vec_init_t(a, &result->elems, ecs_trav_down_elem_t, 0);
+
+    /* Cover IsA -> trav paths. If a parent inherits a component, then children
+     * of that parent should find the component through up traversal. */
+    if (idr_with->flags & EcsIdOnInstantiateInherit) {
+        flecs_trav_entity_down_isa(
+            world, a, cache, result, trav, e, idr_with, self, empty);
+    }
+
     flecs_trav_entity_down(
-        world, a, cache, result, trav, e, idr_trav, idr_with, self, empty);
+        world, a, cache, result, trav, idr_trav, idr_with, self, empty);
     result->ready = true;
 
     return result;
@@ -73913,7 +73958,7 @@ ecs_trav_up_t* flecs_trav_table_up(
                 &up_pair, table, r_column + 1, rel, &type);
         }
 
-        if (!is_a) {
+        if (!is_a && (idr_with->flags & EcsIdOnInstantiateInherit)) {
             idr_trav = world->idr_isa_wildcard;
             r_column = flecs_trav_type_search(
                     &up_pair, table, idr_trav, &type);

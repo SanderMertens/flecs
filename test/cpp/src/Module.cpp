@@ -75,6 +75,19 @@ public:
     }
 };
 
+namespace RenamedRootModule {
+    struct Module {
+        Module(flecs::world& world) {
+            world.module<Module>("::MyModule");
+            for(int i = 0; i < 5; ++i) {
+                auto e = world.entity();
+                test_assert(e.id() == (uint32_t)e.id());
+            }
+        }
+    };
+}
+
+
 namespace ns_parent {
     struct NsType {
         float x;
@@ -505,4 +518,13 @@ void Module_rename_reparent_root_module(void) {
     test_assert(p != 0);
     test_str(p.name(), "ns");
     test_str(m.name(), "ReparentRootModule");
+}
+
+void Module_no_recycle_after_rename_reparent(void) {
+    flecs::world ecs;
+
+    flecs::entity m = ecs.import<RenamedRootModule::Module>();
+    flecs::entity p = m.parent();
+    test_assert(p == 0);
+    test_str(m.name(), "MyModule");
 }

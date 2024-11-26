@@ -674,6 +674,8 @@
                 "find",
                 "find_not_found",
                 "find_w_entity",
+                "find_w_match_empty_tables",
+                "find_w_entity_w_match_empty_tables",
                 "optional_pair_term",
                 "empty_tables_each",
                 "empty_tables_each_w_entity",
@@ -1093,7 +1095,8 @@
                 "rename_namespace_shorter",
                 "rename_namespace_longer",
                 "rename_namespace_nested",
-                "rename_reparent_root_module"
+                "rename_reparent_root_module",
+                "no_recycle_after_rename_reparent"
             ]
         }, {
             "id": "ImplicitComponents",
@@ -1400,7 +1403,12 @@
                 "struct_member_ptr",
                 "struct_member_ptr_packed_struct",
                 "component_as_array",
-                "out_of_order_member_declaration"
+                "out_of_order_member_declaration",
+                "entity_to_json",
+                "iter_to_json",
+                "query_to_json",
+                "entity_to_json_w_default_desc",
+                "query_to_json_w_default_desc"
             ]
         }, {
             "id": "Table",

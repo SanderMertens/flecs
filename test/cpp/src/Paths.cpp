@@ -292,7 +292,7 @@ void Paths_id_from_str_pair_from_str(void) {
 void Paths_id_from_str_unresolved_pair_from_str(void) {
     flecs::world ecs;
 
-    flecs::entity rel = ecs.entity("Rel");
+    ecs.entity("Rel");
 
     flecs::id id = ecs.id("(Rel, Tgt)");
     test_assert(id == 0);
@@ -321,8 +321,8 @@ void Paths_id_from_str_any_pair_from_str(void) {
 void Paths_id_from_str_invalid_pair(void) {
     flecs::world ecs;
 
-    flecs::entity rel = ecs.entity("Rel");
-    flecs::entity tgt = ecs.entity("Tgt");
+    ecs.entity("Rel");
+    ecs.entity("Tgt");
 
     flecs::id id = ecs.id("(Rel, Tgt");
     test_assert(id == 0);

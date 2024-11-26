@@ -658,6 +658,11 @@ extern "C" {
 /* Useful, but not reliable enough. It can incorrectly flag macro's as unused
  * in standalone builds. */
 #pragma clang diagnostic ignored "-Wunused-macros"
+/* This warning gets thrown by clang even when a code is handling all case
+ * values but not all cases (for example, when the switch contains a LastValue
+ * case). Adding a "default" case fixes the warning, but silences future 
+ * warnings about unhandled cases, which is worse. */
+#pragma clang diagnostic ignored "-Wswitch-default"
 #if __clang_major__ == 13
 /* clang 13 can throw this warning for a define in ctype.h */
 #pragma clang diagnostic ignored "-Wreserved-identifier"
@@ -3890,39 +3895,6 @@ int32_t flecs_table_observed_count(
 FLECS_DBG_API
 void flecs_dump_backtrace(
     void *stream);
-
-/* Suspend/resume readonly state. To fully support implicit registration of
- * components, it should be possible to register components while the world is
- * in readonly mode. It is not uncommon that a component is used first from
- * within a system, which are often ran while in readonly mode.
- * 
- * Suspending readonly mode is only allowed when the world is not multithreaded.
- * When a world is multithreaded, it is not safe to (even temporarily) leave
- * readonly mode, so a multithreaded application should always explicitly
- * register components in advance. 
- * 
- * These operations also suspend deferred mode.
- */
-typedef struct ecs_suspend_readonly_state_t {
-    bool is_readonly;
-    bool is_deferred;
-    int32_t defer_count;
-    ecs_entity_t scope;
-    ecs_entity_t with;
-    ecs_vec_t commands;
-    ecs_stack_t defer_stack;
-    ecs_stage_t *stage;
-} ecs_suspend_readonly_state_t;
-
-FLECS_API
-ecs_world_t* flecs_suspend_readonly(
-    const ecs_world_t *world,
-    ecs_suspend_readonly_state_t *state);
-
-FLECS_API
-void flecs_resume_readonly(
-    ecs_world_t *world,
-    ecs_suspend_readonly_state_t *state);
 
 FLECS_API
 int32_t flecs_poly_claim_(
@@ -13587,7 +13559,9 @@ typedef struct ecs_entity_to_json_desc_t {
 } ecs_entity_to_json_desc_t;
 
 /** Utility used to initialize JSON entity serializer. */
+#ifndef __cplusplus
 #define ECS_ENTITY_TO_JSON_INIT (ecs_entity_to_json_desc_t){\
+    .serialize_entity_id = false, \
     .serialize_doc = false, \
     .serialize_full_paths = true, \
     .serialize_inherited = false, \
@@ -13598,6 +13572,20 @@ typedef struct ecs_entity_to_json_desc_t {
     .serialize_refs = 0, \
     .serialize_matches = false, \
 }
+#else
+#define ECS_ENTITY_TO_JSON_INIT {\
+    false, \
+    false, \
+    true, \
+    false, \
+    true, \
+    false, \
+    false, \
+    false, \
+    0, \
+    false, \
+}
+#endif
 
 /** Serialize entity into JSON string.
  * This creates a JSON object with the entity's (path) name, which components
@@ -13653,6 +13641,7 @@ typedef struct ecs_iter_to_json_desc_t {
 } ecs_iter_to_json_desc_t;
 
 /** Utility used to initialize JSON iterator serializer. */
+#ifndef __cplusplus
 #define ECS_ITER_TO_JSON_INIT (ecs_iter_to_json_desc_t){\
     .serialize_entity_ids =      false, \
     .serialize_values =          true, \
@@ -13671,7 +13660,30 @@ typedef struct ecs_iter_to_json_desc_t {
     .serialize_alerts =          false, \
     .serialize_refs =            false, \
     .serialize_matches =         false, \
+    .query =                     NULL \
 }
+#else
+#define ECS_ITER_TO_JSON_INIT {\
+    false, \
+    true, \
+    false, \
+    false, \
+    true, \
+    true, \
+    false, \
+    false, \
+    false, \
+    false, \
+    false, \
+    false, \
+    false, \
+    false, \
+    false, \
+    false, \
+    false, \
+    nullptr \
+}
+#endif
 
 /** Serialize iterator into JSON string.
  * This operation will iterate the contents of the iterator and serialize them
@@ -16910,9 +16922,9 @@ namespace _
 struct placement_new_tag_t{};
 constexpr placement_new_tag_t placement_new_tag{};
 template<class Ty> inline void destruct_obj(Ty* _ptr) { _ptr->~Ty(); }
-template<class Ty> inline void free_obj(Ty* _ptr) { 
+template<class Ty> inline void free_obj(void* _ptr) { 
     if (_ptr) {
-        destruct_obj(_ptr); 
+        destruct_obj(static_cast<Ty*>(_ptr)); 
         ecs_os_free(_ptr); 
     }
 }
@@ -21624,6 +21636,14 @@ struct world {
      */
     flecs::entity make_alive(flecs::entity_t e) const;
 
+    /** Set version of entity to provided.
+     * 
+     * @see ecs_set_version()
+     */
+    void set_version(flecs::entity_t e) const {
+        ecs_set_version(world_, e);
+    }
+
     /* Run callback after completing frame */
     void run_post_frame(ecs_fini_action_t action, void *ctx) const {
         ecs_run_post_frame(world_, action, ctx);
@@ -26062,7 +26082,7 @@ struct each_delegate : public delegate {
 
     // Function that can be used as callback to free delegate
     static void destruct(void *obj) {
-        _::free_obj<each_delegate>(static_cast<each_delegate*>(obj));
+        _::free_obj<each_delegate>(obj);
     }
 
     // Static function to call for component on_add hook
@@ -26100,9 +26120,6 @@ private:
     static void invoke_callback(
         ecs_iter_t *iter, const Func& func, size_t i, Args... comps) 
     {
-        ecs_assert(iter->count > 0, ECS_INVALID_OPERATION,
-            "no entities returned, use each() without flecs::entity argument");
-
         func(flecs::entity(iter->world, iter->entities[i]),
             (ColumnType< remove_reference_t<Components> >(iter, comps, i)
                 .get_row())...);
@@ -26218,9 +26235,6 @@ private:
         ecs_world_t *world = iter->world;
         size_t count = static_cast<size_t>(iter->count);
         flecs::entity result;
-
-        ecs_assert(count > 0, ECS_INVALID_OPERATION,
-            "no entities returned, use find() without flecs::entity argument");
 
         for (size_t i = 0; i < count; i ++) {
             if (func(flecs::entity(world, iter->entities[i]),
@@ -27495,8 +27509,7 @@ struct component : untyped_component {
         BindingCtx *ctx = get_binding_ctx(h);
         h.on_add = Delegate::run_add;
         ctx->on_add = FLECS_NEW(Delegate)(FLECS_FWD(func));
-        ctx->free_on_add = reinterpret_cast<ecs_ctx_free_t>(
-            _::free_obj<Delegate>);
+        ctx->free_on_add = _::free_obj<Delegate>;
         ecs_set_hooks_id(world_, id_, &h);
         return *this;
     }
@@ -27512,8 +27525,7 @@ struct component : untyped_component {
         BindingCtx *ctx = get_binding_ctx(h);
         h.on_remove = Delegate::run_remove;
         ctx->on_remove = FLECS_NEW(Delegate)(FLECS_FWD(func));
-        ctx->free_on_remove = reinterpret_cast<ecs_ctx_free_t>(
-            _::free_obj<Delegate>);
+        ctx->free_on_remove = _::free_obj<Delegate>;
         ecs_set_hooks_id(world_, id_, &h);
         return *this;
     }
@@ -27529,8 +27541,7 @@ struct component : untyped_component {
         BindingCtx *ctx = get_binding_ctx(h);
         h.on_set = Delegate::run_set;
         ctx->on_set = FLECS_NEW(Delegate)(FLECS_FWD(func));
-        ctx->free_on_set = reinterpret_cast<ecs_ctx_free_t>(
-            _::free_obj<Delegate>);
+        ctx->free_on_set = _::free_obj<Delegate>;
         ecs_set_hooks_id(world_, id_, &h);
         return *this;
     }
@@ -27582,8 +27593,7 @@ private:
         if (!result) {
             result = FLECS_NEW(BindingCtx);
             h.binding_ctx = result;
-            h.binding_ctx_free = reinterpret_cast<ecs_ctx_free_t>(
-                _::free_obj<BindingCtx>);
+            h.binding_ctx_free = _::free_obj<BindingCtx>;
         }
         return result;
     }
@@ -30213,6 +30223,20 @@ struct query_base {
 
     operator query<>() const;
 
+#   ifdef FLECS_JSON
+
+/** Serialize query to JSON.
+ * 
+ * @memberof flecs::query_base
+ * @ingroup cpp_addons_json
+ */
+flecs::string to_json(flecs::iter_to_json_desc_t *desc = nullptr) {
+    ecs_iter_t it = ecs_query_iter(ecs_get_world(query_), query_);
+    char *json = ecs_iter_to_json(&it, desc);
+    return flecs::string(json);
+}
+#   endif
+
 protected:
     query_t *query_ = nullptr;
 };
@@ -30406,8 +30430,7 @@ public:
         auto ctx = FLECS_NEW(Delegate)(FLECS_FWD(func));
         desc_.run = Delegate::run;
         desc_.run_ctx = ctx;
-        desc_.run_ctx_free = reinterpret_cast<
-            ecs_ctx_free_t>(_::free_obj<Delegate>);
+        desc_.run_ctx_free = _::free_obj<Delegate>;
         return T(world_, &desc_);
     }
 
@@ -30419,8 +30442,7 @@ public:
         auto ctx = FLECS_NEW(Delegate)(FLECS_FWD(func));
         desc_.run = Delegate::run;
         desc_.run_ctx = ctx;
-        desc_.run_ctx_free = reinterpret_cast<
-            ecs_ctx_free_t>(_::free_obj<Delegate>);
+        desc_.run_ctx_free = _::free_obj<Delegate>;
         return each(FLECS_FWD(each_func));
     }
 
@@ -30431,8 +30453,7 @@ public:
         auto ctx = FLECS_NEW(Delegate)(FLECS_FWD(func));
         desc_.callback = Delegate::run;
         desc_.callback_ctx = ctx;
-        desc_.callback_ctx_free = reinterpret_cast<
-            ecs_ctx_free_t>(_::free_obj<Delegate>);
+        desc_.callback_ctx_free = _::free_obj<Delegate>;
         return T(world_, &desc_);
     }
 
@@ -30649,8 +30670,7 @@ namespace _ {
         {
             using Delegate = _::entity_observer_delegate<Func>;
             auto ctx = FLECS_NEW(Delegate)(FLECS_FWD(f));
-            entity_observer_create(world, _::type<Evt>::id(world), entity, Delegate::run, ctx, 
-                reinterpret_cast<ecs_ctx_free_t>(_::free_obj<Delegate>));
+            entity_observer_create(world, _::type<Evt>::id(world), entity, Delegate::run, ctx, _::free_obj<Delegate>);
         }
 
         template <typename Evt, if_not_t<is_empty<Evt>::value> = 0>
@@ -30661,8 +30681,7 @@ namespace _ {
         {
             using Delegate = _::entity_payload_observer_delegate<Func, Evt>;
             auto ctx = FLECS_NEW(Delegate)(FLECS_FWD(f));
-            entity_observer_create(world, _::type<Evt>::id(world), entity, Delegate::run, ctx, 
-                reinterpret_cast<ecs_ctx_free_t>(_::free_obj<Delegate>));
+            entity_observer_create(world, _::type<Evt>::id(world), entity, Delegate::run, ctx, _::free_obj<Delegate>);
         }
     };
 }
@@ -30673,8 +30692,7 @@ inline const Self& entity_builder<Self>::observe(flecs::entity_t evt, Func&& f) 
     using Delegate = _::entity_observer_delegate<Func>;
     auto ctx = FLECS_NEW(Delegate)(FLECS_FWD(f));
 
-    _::entity_observer_create(world_, evt, id_, Delegate::run, ctx,
-        reinterpret_cast<ecs_ctx_free_t>(_::free_obj<Delegate>));
+    _::entity_observer_create(world_, evt, id_, Delegate::run, ctx, _::free_obj<Delegate>);
 
     return to_base();
 }
@@ -30824,6 +30842,11 @@ inline flecs::entity world::module(const char *name) const {
                 ecs_iter_t it = ecs_each_id(world_, ecs_pair(EcsChildOf, cur));
                 if (!ecs_iter_is_true(&it)) {
                     cur.destruct();
+
+                    // Prevent increasing the generation count of the temporary
+                    // parent. This allows entities created during 
+                    // initialization to keep non-recycled ids.
+                    this->set_version(cur);
                 }
 
                 cur = next;

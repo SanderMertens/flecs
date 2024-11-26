@@ -41,10 +41,9 @@ int main(int, char *[]) {
     flecs::query<Position, const Velocity> q = 
         ecs.query<Position, const Velocity>();
 
-    // Serialize query to JSON. Customize serializer to only serialize entity
-    // names and component values.
-    flecs::iter_to_json_desc_t desc = {};
-    desc.serialize_values = true;
+    // Serialize query to JSON. Only serialize entity names.
+    flecs::iter_to_json_desc_t desc = ECS_ITER_TO_JSON_INIT;
+    desc.serialize_fields = false;
     std::cout << q.iter().to_json(&desc).c_str() << "\n";
 
     // Iterator returns 2 sets of results, one for each table.
@@ -52,72 +51,16 @@ int main(int, char *[]) {
     // {
     //   "results": [
     //     {
-    //       "name": "a",
-    //       "fields": [
-    //         {
-    //           "data": {
-    //             "x": 10,
-    //             "y": 20
-    //           }
-    //         },
-    //         {
-    //           "data": {
-    //             "x": 1,
-    //             "y": 2
-    //           }
-    //         }
-    //       ]
+    //       "name": "a"
     //     },
     //     {
-    //       "name": "b",
-    //       "fields": [
-    //         {
-    //           "data": {
-    //             "x": 20,
-    //             "y": 30
-    //           }
-    //         },
-    //         {
-    //           "data": {
-    //             "x": 2,
-    //             "y": 3
-    //           }
-    //         }
-    //       ]
+    //       "name": "b"
     //     },
     //     {
-    //       "name": "c",
-    //       "fields": [
-    //         {
-    //           "data": {
-    //             "x": 30,
-    //             "y": 40
-    //           }
-    //         },
-    //         {
-    //           "data": {
-    //             "x": 3,
-    //             "y": 4
-    //           }
-    //         }
-    //       ]
+    //       "name": "c"
     //     },
     //     {
-    //       "name": "d",
-    //       "fields": [
-    //         {
-    //           "data": {
-    //             "x": 30,
-    //             "y": 40
-    //           }
-    //         },
-    //         {
-    //           "data": {
-    //             "x": 4,
-    //             "y": 5
-    //           }
-    //         }
-    //       ]
+    //       "name": "d"
     //     }
     //   ]
     // }

@@ -165,6 +165,7 @@ void Entity_entity_from_digit_0_path(void);
 void Entity_entity_from_conflicting_digit(void);
 void Entity_set_version_on_nonempty_entity(void);
 void Entity_set_version_while_deferred(void);
+void Entity_set_version_on_not_alive(void);
 void Entity_commit_w_on_add(void);
 void Entity_commit_w_on_remove(void);
 void Entity_commit_w_cmd_in_observer(void);
@@ -2135,6 +2136,7 @@ void Commands_add_batched_set_with(void);
 void Commands_defer_emplace_after_remove(void);
 void Commands_batched_w_table_change_in_observer(void);
 void Commands_redefine_named_in_threaded_app(void);
+void Commands_batched_cmd_w_component_init(void);
 
 // Testsuite 'SingleThreadStaging'
 void SingleThreadStaging_setup(void);
@@ -2920,6 +2922,10 @@ bake_test_case Entity_testcases[] = {
     {
         "set_version_while_deferred",
         Entity_set_version_while_deferred
+    },
+    {
+        "set_version_on_not_alive",
+        Entity_set_version_on_not_alive
     },
     {
         "commit_w_on_add",
@@ -10571,6 +10577,10 @@ bake_test_case Commands_testcases[] = {
     {
         "redefine_named_in_threaded_app",
         Commands_redefine_named_in_threaded_app
+    },
+    {
+        "batched_cmd_w_component_init",
+        Commands_batched_cmd_w_component_init
     }
 };
 
@@ -11196,7 +11206,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        138,
+        139,
         Entity_testcases
     },
     {
@@ -11455,7 +11465,7 @@ static bake_test_suite suites[] = {
         "Commands",
         NULL,
         NULL,
-        141,
+        142,
         Commands_testcases
     },
     {

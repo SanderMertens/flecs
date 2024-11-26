@@ -123,7 +123,7 @@ ecs_trav_up_t* flecs_trav_table_up(
                 &up_pair, table, r_column + 1, rel, &type);
         }
 
-        if (!is_a) {
+        if (!is_a && (idr_with->flags & EcsIdOnInstantiateInherit)) {
             idr_trav = world->idr_isa_wildcard;
             r_column = flecs_trav_type_search(
                     &up_pair, table, idr_trav, &type);

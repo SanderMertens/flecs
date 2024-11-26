@@ -1156,6 +1156,14 @@ struct world {
      */
     flecs::entity make_alive(flecs::entity_t e) const;
 
+    /** Set version of entity to provided.
+     * 
+     * @see ecs_set_version()
+     */
+    void set_version(flecs::entity_t e) const {
+        ecs_set_version(world_, e);
+    }
+
     /* Run callback after completing frame */
     void run_post_frame(ecs_fini_action_t action, void *ctx) const {
         ecs_run_post_frame(world_, action, ctx);

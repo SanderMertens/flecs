@@ -9932,7 +9932,8 @@ void Traversal_this_up_childof_isa_childof(void) {
     /* ecs_entity_t e = */ ecs_new_w_pair(world, EcsChildOf, e2);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "Foo(up)"
+        .expr = "Foo(up)",
+        .cache_kind = cache_kind
     });
 
     test_assert(q != NULL);
@@ -9967,7 +9968,8 @@ void Traversal_this_up_isa_childof(void) {
     ecs_entity_t e = ecs_new_w_pair(world, EcsChildOf, e1);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "Foo(up)"
+        .expr = "Foo(up)",
+        .cache_kind = cache_kind
     });
 
     test_assert(q != NULL);
@@ -10005,7 +10007,8 @@ void Traversal_this_up_isa_isa_childof(void) {
     ecs_entity_t e = ecs_new_w_pair(world, EcsChildOf, e2);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "Foo(up)"
+        .expr = "Foo(up)",
+        .cache_kind = cache_kind
     });
 
     test_assert(q != NULL);
@@ -10043,7 +10046,8 @@ void Traversal_this_up_isa_childof_isa(void) {
     /* ecs_entity_t e = */ ecs_new_w_pair(world, EcsIsA, e2);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "Foo(up)"
+        .expr = "Foo(up)",
+        .cache_kind = cache_kind
     });
 
     test_assert(q != NULL);
@@ -10084,7 +10088,8 @@ void Traversal_this_up_isa_childof_isa_childof(void) {
     /* ecs_entity_t e = */ ecs_new_w_pair(world, EcsChildOf, e3);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "Foo(up)"
+        .expr = "Foo(up)",
+        .cache_kind = cache_kind
     });
 
     test_assert(q != NULL);
@@ -10122,7 +10127,8 @@ void Traversal_this_self_up_childof_isa_childof(void) {
     /* ecs_entity_t e = */ ecs_new_w_pair(world, EcsChildOf, e2);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "Foo(self|up)"
+        .expr = "Foo(self|up)",
+        .cache_kind = cache_kind
     });
 
     test_assert(q != NULL);
@@ -10162,7 +10168,8 @@ void Traversal_this_self_up_isa_childof(void) {
     ecs_entity_t e = ecs_new_w_pair(world, EcsChildOf, e1);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "Foo(self|up)"
+        .expr = "Foo(self|up)",
+        .cache_kind = cache_kind
     });
 
     test_assert(q != NULL);
@@ -10205,7 +10212,8 @@ void Traversal_this_self_up_isa_isa_childof(void) {
     ecs_entity_t e = ecs_new_w_pair(world, EcsChildOf, e2);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "Foo(self|up)"
+        .expr = "Foo(self|up)",
+        .cache_kind = cache_kind
     });
 
     test_assert(q != NULL);
@@ -10248,7 +10256,8 @@ void Traversal_this_self_up_isa_childof_isa(void) {
     /* ecs_entity_t e = */ ecs_new_w_pair(world, EcsIsA, e2);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "Foo(self|up)"
+        .expr = "Foo(self|up)",
+        .cache_kind = cache_kind
     });
 
     test_assert(q != NULL);
@@ -10294,7 +10303,8 @@ void Traversal_this_self_up_isa_childof_isa_childof(void) {
     /* ecs_entity_t e = */ ecs_new_w_pair(world, EcsChildOf, e3);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "Foo(self|up)"
+        .expr = "Foo(self|up)",
+        .cache_kind = cache_kind
     });
 
     test_assert(q != NULL);
@@ -10339,7 +10349,8 @@ void Traversal_this_written_up_childof_isa_childof(void) {
     ecs_add(world, e, Bar);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "Bar, Foo(up)"
+        .expr = "Bar, Foo(up)",
+        .cache_kind = cache_kind
     });
 
     test_assert(q != NULL);
@@ -10372,7 +10383,8 @@ void Traversal_this_written_up_isa_childof(void) {
     ecs_add(world, e, Bar);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "Bar, Foo(up)"
+        .expr = "Bar, Foo(up)",
+        .cache_kind = cache_kind
     });
 
     test_assert(q != NULL);
@@ -10413,7 +10425,8 @@ void Traversal_this_written_up_isa_isa_childof(void) {
     ecs_add(world, e, Bar);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "Bar, Foo(up)"
+        .expr = "Bar, Foo(up)",
+        .cache_kind = cache_kind
     });
 
     test_assert(q != NULL);
@@ -10454,7 +10467,8 @@ void Traversal_this_written_up_isa_childof_isa(void) {
     ecs_add(world, e, Bar);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "Bar, Foo(up)"
+        .expr = "Bar, Foo(up)",
+        .cache_kind = cache_kind
     });
 
     test_assert(q != NULL);
@@ -10493,7 +10507,8 @@ void Traversal_this_written_up_isa_childof_isa_childof(void) {
     ecs_add(world, e, Bar);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "Bar, Foo(up)"
+        .expr = "Bar, Foo(up)",
+        .cache_kind = cache_kind
     });
 
     test_assert(q != NULL);
@@ -10529,7 +10544,8 @@ void Traversal_this_written_self_up_childof_isa_childof(void) {
     ecs_add(world, e, Bar);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "Bar, Foo(self|up)"
+        .expr = "Bar, Foo(self|up)",
+        .cache_kind = cache_kind
     });
 
     test_assert(q != NULL);
@@ -10562,7 +10578,8 @@ void Traversal_this_written_self_up_isa_childof(void) {
     ecs_add(world, e, Bar);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "Bar, Foo(self|up)"
+        .expr = "Bar, Foo(self|up)",
+        .cache_kind = cache_kind
     });
 
     test_assert(q != NULL);
@@ -10602,7 +10619,8 @@ void Traversal_this_written_self_up_isa_isa_childof(void) {
     ecs_add(world, e, Bar);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "Bar, Foo(self|up)"
+        .expr = "Bar, Foo(self|up)",
+        .cache_kind = cache_kind
     });
 
     test_assert(q != NULL);
@@ -10643,7 +10661,8 @@ void Traversal_this_written_self_up_isa_childof_isa(void) {
     ecs_add(world, e, Bar);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "Bar, Foo(self|up)"
+        .expr = "Bar, Foo(self|up)",
+        .cache_kind = cache_kind
     });
 
     test_assert(q != NULL);
@@ -10682,7 +10701,8 @@ void Traversal_this_written_self_up_isa_childof_isa_childof(void) {
     ecs_add(world, e, Bar);
 
     ecs_query_t *q = ecs_query(world, {
-        .expr = "Bar, Foo(self|up)"
+        .expr = "Bar, Foo(self|up)",
+        .cache_kind = cache_kind
     });
 
     test_assert(q != NULL);
@@ -10693,6 +10713,328 @@ void Traversal_this_written_self_up_isa_childof_isa_childof(void) {
     }
 
     ecs_query_fini(q);
+
+    ecs_fini(world);
+}
+
+void Traversal_this_up_isa_childof_2_lvl(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    ecs_entity_t base = ecs_new(world);
+    ecs_add(world, base, Foo);
+    ecs_entity_t base_child = ecs_new_w_pair(world, EcsChildOf, base);
+    ecs_entity_t base_gchild = ecs_new_w_pair(world, EcsChildOf, base_child);
+
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
+    
+    ecs_entity_t inst_child = ecs_new_w_pair(world, EcsChildOf, inst);
+    ecs_add_pair(world, inst_child, EcsIsA, base_child);
+    ecs_add(world, inst_child, Bar);
+
+    ecs_entity_t inst_gchild = ecs_new_w_pair(world, EcsChildOf, inst_child);
+    ecs_add_pair(world, inst_gchild, EcsIsA, base_gchild);
+    ecs_add(world, inst_gchild, Bar);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ Foo, .src.id = EcsUp}, { Bar }},
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(inst_child, it.entities[0]);
+    test_uint(inst, ecs_field_src(&it, 0));
+    test_uint(0, ecs_field_src(&it, 1));
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(inst_gchild, it.entities[0]);
+    test_uint(inst, ecs_field_src(&it, 0));
+    test_uint(0, ecs_field_src(&it, 1));
+
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_fini(world);
+}
+
+void Traversal_this_up_isa_childof_2_lvl_w_on_instantiate_inherit(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, Foo, (OnInstantiate, Inherit));
+    ECS_TAG(world, Bar);
+
+    ecs_entity_t base = ecs_new(world);
+    ecs_add(world, base, Foo);
+    ecs_entity_t base_child = ecs_new_w_pair(world, EcsChildOf, base);
+    ecs_entity_t base_gchild = ecs_new_w_pair(world, EcsChildOf, base_child);
+
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
+    
+    ecs_entity_t inst_child = ecs_new_w_pair(world, EcsChildOf, inst);
+    ecs_add_pair(world, inst_child, EcsIsA, base_child);
+    ecs_add(world, inst_child, Bar);
+
+    ecs_entity_t inst_gchild = ecs_new_w_pair(world, EcsChildOf, inst_child);
+    ecs_add_pair(world, inst_gchild, EcsIsA, base_gchild);
+    ecs_add(world, inst_gchild, Bar);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ Foo, .src.id = EcsUp}, { Bar }},
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(inst_child, it.entities[0]);
+    test_uint(base, ecs_field_src(&it, 0));
+    test_uint(0, ecs_field_src(&it, 1));
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(inst_gchild, it.entities[0]);
+    test_uint(base, ecs_field_src(&it, 0));
+    test_uint(0, ecs_field_src(&it, 1));
+
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_fini(world);
+}
+
+void Traversal_this_up_isa_childof_2_lvl_w_on_instantiate_dont_inherit(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, Foo, (OnInstantiate, DontInherit));
+    ECS_TAG(world, Bar);
+
+    ecs_entity_t base = ecs_new(world);
+    ecs_add(world, base, Foo);
+    ecs_entity_t base_child = ecs_new_w_pair(world, EcsChildOf, base);
+    ecs_entity_t base_gchild = ecs_new_w_pair(world, EcsChildOf, base_child);
+
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
+    
+    ecs_entity_t inst_child = ecs_new_w_pair(world, EcsChildOf, inst);
+    ecs_add_pair(world, inst_child, EcsIsA, base_child);
+    ecs_add(world, inst_child, Bar);
+
+    ecs_entity_t inst_gchild = ecs_new_w_pair(world, EcsChildOf, inst_child);
+    ecs_add_pair(world, inst_gchild, EcsIsA, base_gchild);
+    ecs_add(world, inst_gchild, Bar);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ Foo, .src.id = EcsUp}, { Bar }},
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_fini(world);
+}
+
+void Traversal_this_up_isa_childof_2_lvl_after_remove_override(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    ecs_entity_t base = ecs_new(world);
+    ecs_add(world, base, Foo);
+    ecs_entity_t base_child = ecs_new_w_pair(world, EcsChildOf, base);
+    ecs_entity_t base_gchild = ecs_new_w_pair(world, EcsChildOf, base_child);
+
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
+    ecs_remove(world, inst, Foo);
+    
+    ecs_entity_t inst_child = ecs_new_w_pair(world, EcsChildOf, inst);
+    ecs_add_pair(world, inst_child, EcsIsA, base_child);
+    ecs_add(world, inst_child, Bar);
+
+    ecs_entity_t inst_gchild = ecs_new_w_pair(world, EcsChildOf, inst_child);
+    ecs_add_pair(world, inst_gchild, EcsIsA, base_gchild);
+    ecs_add(world, inst_gchild, Bar);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ Foo, .src.id = EcsUp}, { Bar }},
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_fini(world);
+}
+
+void Traversal_this_written_up_isa_childof_2_lvl(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    ecs_entity_t base = ecs_new(world);
+    ecs_add(world, base, Foo);
+    ecs_entity_t base_child = ecs_new_w_pair(world, EcsChildOf, base);
+    ecs_entity_t base_gchild = ecs_new_w_pair(world, EcsChildOf, base_child);
+
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
+    
+    ecs_entity_t inst_child = ecs_new_w_pair(world, EcsChildOf, inst);
+    ecs_add_pair(world, inst_child, EcsIsA, base_child);
+    ecs_add(world, inst_child, Bar);
+
+    ecs_entity_t inst_gchild = ecs_new_w_pair(world, EcsChildOf, inst_child);
+    ecs_add_pair(world, inst_gchild, EcsIsA, base_gchild);
+    ecs_add(world, inst_gchild, Bar);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ Bar }, { Foo, .src.id = EcsUp}},
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(inst_child, it.entities[0]);
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(inst, ecs_field_src(&it, 1));
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(inst_gchild, it.entities[0]);
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(inst, ecs_field_src(&it, 1));
+
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_fini(world);
+}
+
+void Traversal_this_written_up_isa_childof_2_lvl_w_on_instantiate_inherit(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, Foo, (OnInstantiate, Inherit));
+    ECS_TAG(world, Bar);
+
+    ecs_entity_t base = ecs_new(world);
+    ecs_add(world, base, Foo);
+    ecs_entity_t base_child = ecs_new_w_pair(world, EcsChildOf, base);
+    ecs_entity_t base_gchild = ecs_new_w_pair(world, EcsChildOf, base_child);
+
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
+    
+    ecs_entity_t inst_child = ecs_new_w_pair(world, EcsChildOf, inst);
+    ecs_add_pair(world, inst_child, EcsIsA, base_child);
+    ecs_add(world, inst_child, Bar);
+
+    ecs_entity_t inst_gchild = ecs_new_w_pair(world, EcsChildOf, inst_child);
+    ecs_add_pair(world, inst_gchild, EcsIsA, base_gchild);
+    ecs_add(world, inst_gchild, Bar);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ Bar }, { Foo, .src.id = EcsUp}},
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(inst_child, it.entities[0]);
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(base, ecs_field_src(&it, 1));
+
+    test_bool(true, ecs_query_next(&it));
+    test_int(1, it.count);
+    test_uint(inst_gchild, it.entities[0]);
+    test_uint(0, ecs_field_src(&it, 0));
+    test_uint(base, ecs_field_src(&it, 1));
+
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_fini(world);
+}
+
+void Traversal_this_written_up_isa_childof_2_lvl_w_on_instantiate_dont_inherit(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, Foo, (OnInstantiate, DontInherit));
+    ECS_TAG(world, Bar);
+
+    ecs_entity_t base = ecs_new(world);
+    ecs_add(world, base, Foo);
+    ecs_entity_t base_child = ecs_new_w_pair(world, EcsChildOf, base);
+    ecs_entity_t base_gchild = ecs_new_w_pair(world, EcsChildOf, base_child);
+
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
+    
+    ecs_entity_t inst_child = ecs_new_w_pair(world, EcsChildOf, inst);
+    ecs_add_pair(world, inst_child, EcsIsA, base_child);
+    ecs_add(world, inst_child, Bar);
+
+    ecs_entity_t inst_gchild = ecs_new_w_pair(world, EcsChildOf, inst_child);
+    ecs_add_pair(world, inst_gchild, EcsIsA, base_gchild);
+    ecs_add(world, inst_gchild, Bar);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ Bar }, { Foo, .src.id = EcsUp}},
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(false, ecs_query_next(&it));
+
+    ecs_fini(world);
+}
+
+void Traversal_this_written_up_isa_childof_2_lvl_after_remove_override(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    ecs_entity_t base = ecs_new(world);
+    ecs_add(world, base, Foo);
+    ecs_entity_t base_child = ecs_new_w_pair(world, EcsChildOf, base);
+    ecs_entity_t base_gchild = ecs_new_w_pair(world, EcsChildOf, base_child);
+
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
+    ecs_remove(world, inst, Foo);
+    
+    ecs_entity_t inst_child = ecs_new_w_pair(world, EcsChildOf, inst);
+    ecs_add_pair(world, inst_child, EcsIsA, base_child);
+    ecs_add(world, inst_child, Bar);
+
+    ecs_entity_t inst_gchild = ecs_new_w_pair(world, EcsChildOf, inst_child);
+    ecs_add_pair(world, inst_gchild, EcsIsA, base_gchild);
+    ecs_add(world, inst_gchild, Bar);
+
+    ecs_query_t *q = ecs_query(world, {
+        .terms = {{ Bar }, { Foo, .src.id = EcsUp}},
+        .cache_kind = cache_kind
+    });
+
+    test_assert(q != NULL);
+
+    ecs_iter_t it = ecs_query_iter(world, q);
+    test_bool(false, ecs_query_next(&it));
 
     ecs_fini(world);
 }

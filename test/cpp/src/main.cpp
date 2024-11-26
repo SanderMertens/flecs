@@ -650,6 +650,8 @@ void Query_iter_get_pair_w_id(void);
 void Query_find(void);
 void Query_find_not_found(void);
 void Query_find_w_entity(void);
+void Query_find_w_match_empty_tables(void);
+void Query_find_w_entity_w_match_empty_tables(void);
 void Query_optional_pair_term(void);
 void Query_empty_tables_each(void);
 void Query_empty_tables_each_w_entity(void);
@@ -1055,6 +1057,7 @@ void Module_rename_namespace_shorter(void);
 void Module_rename_namespace_longer(void);
 void Module_rename_namespace_nested(void);
 void Module_rename_reparent_root_module(void);
+void Module_no_recycle_after_rename_reparent(void);
 
 // Testsuite 'ImplicitComponents'
 void ImplicitComponents_add(void);
@@ -1350,6 +1353,11 @@ void Meta_struct_member_ptr(void);
 void Meta_struct_member_ptr_packed_struct(void);
 void Meta_component_as_array(void);
 void Meta_out_of_order_member_declaration(void);
+void Meta_entity_to_json(void);
+void Meta_iter_to_json(void);
+void Meta_query_to_json(void);
+void Meta_entity_to_json_w_default_desc(void);
+void Meta_query_to_json_w_default_desc(void);
 
 // Testsuite 'Table'
 void Table_each(void);
@@ -3914,6 +3922,14 @@ bake_test_case Query_testcases[] = {
         Query_find_w_entity
     },
     {
+        "find_w_match_empty_tables",
+        Query_find_w_match_empty_tables
+    },
+    {
+        "find_w_entity_w_match_empty_tables",
+        Query_find_w_entity_w_match_empty_tables
+    },
+    {
         "optional_pair_term",
         Query_optional_pair_term
     },
@@ -5498,6 +5514,10 @@ bake_test_case Module_testcases[] = {
     {
         "rename_reparent_root_module",
         Module_rename_reparent_root_module
+    },
+    {
+        "no_recycle_after_rename_reparent",
+        Module_no_recycle_after_rename_reparent
     }
 };
 
@@ -6644,6 +6664,26 @@ bake_test_case Meta_testcases[] = {
     {
         "out_of_order_member_declaration",
         Meta_out_of_order_member_declaration
+    },
+    {
+        "entity_to_json",
+        Meta_entity_to_json
+    },
+    {
+        "iter_to_json",
+        Meta_iter_to_json
+    },
+    {
+        "query_to_json",
+        Meta_query_to_json
+    },
+    {
+        "entity_to_json_w_default_desc",
+        Meta_entity_to_json_w_default_desc
+    },
+    {
+        "query_to_json_w_default_desc",
+        Meta_query_to_json_w_default_desc
     }
 };
 
@@ -6878,7 +6918,7 @@ static bake_test_suite suites[] = {
         "Query",
         NULL,
         NULL,
-        116,
+        118,
         Query_testcases
     },
     {
@@ -6922,7 +6962,7 @@ static bake_test_suite suites[] = {
         "Module",
         NULL,
         NULL,
-        21,
+        22,
         Module_testcases
     },
     {
@@ -6964,7 +7004,7 @@ static bake_test_suite suites[] = {
         "Meta",
         NULL,
         NULL,
-        56,
+        61,
         Meta_testcases
     },
     {

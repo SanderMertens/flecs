@@ -4209,3 +4209,37 @@ void Commands_redefine_named_in_threaded_app(void) {
 
     ecs_fini(world);
 }
+
+void Commands_batched_cmd_w_component_init(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_TAG(world, Foo);
+
+    ecs_entity_t parent = ecs_new(world);
+
+    ecs_defer_begin(world);
+
+    ecs_add(world, parent, Foo);
+
+    ecs_entity_t comp = ecs_component(world, {
+        .entity = ecs_entity(world, {
+            .parent = parent,
+            .name = "Bar"
+        }),
+        .type.size = 4,
+        .type.alignment = 4
+    });
+
+    test_assert(comp != 0);
+    test_str(ecs_get_name(world, comp), "Bar");
+    {
+        const EcsComponent *ptr = ecs_get(world, comp, EcsComponent);
+        test_assert(ptr != NULL);
+        test_int(ptr->size, 4);
+        test_int(ptr->alignment, 4);
+    }
+
+    ecs_defer_end(world);
+
+    ecs_fini(world);
+}
