@@ -115,6 +115,7 @@ public:
         return *this;
     }
 
+    /**< Priority value, lower is higher priority, 1...N */
     Base& priority(int32_t priority) {
         desc_->priority = priority;
         return *this;
