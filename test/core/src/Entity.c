@@ -14,9 +14,13 @@ void Entity_init_id_exceed_32_bits(void) {
 	install_test_abort();
     ecs_world_t *world = ecs_mini();
 
-    for (ecs_entity_t i = 0; i <= UINT32_MAX + 1; i++) {
-    	ecs_new(world);
-    }
+    ecs_set_entity_range(world, UINT32_MAX, 0);
+
+    ecs_new(world);
+
+    test_expect_abort();
+
+    ecs_new(world);
 
     ecs_fini(world);
 }

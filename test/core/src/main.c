@@ -59,6 +59,7 @@ void Id_invalid_pair(void);
 
 // Testsuite 'Entity'
 void Entity_init_id(void);
+void Entity_init_id_exceed_32_bits(void);
 void Entity_init_id_name(void);
 void Entity_init_id_path(void);
 void Entity_init_id_add_1_comp(void);
@@ -2498,6 +2499,10 @@ bake_test_case Entity_testcases[] = {
     {
         "init_id",
         Entity_init_id
+    },
+    {
+        "init_id_exceed_32_bits",
+        Entity_init_id_exceed_32_bits
     },
     {
         "init_id_name",
@@ -11206,7 +11211,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        139,
+        140,
         Entity_testcases
     },
     {

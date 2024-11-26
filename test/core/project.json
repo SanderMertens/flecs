@@ -66,6 +66,7 @@
             "id": "Entity",
             "testcases": [
                 "init_id",
+                "init_id_exceed_32_bits",
                 "init_id_name",
                 "init_id_path",
                 "init_id_add_1_comp",
