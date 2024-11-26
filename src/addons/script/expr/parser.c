@@ -62,6 +62,124 @@ bool flecs_has_precedence(
 }
 
 static
+ecs_entity_t flecs_script_default_lookup(
+    const ecs_world_t *world,
+    const char *name,
+    void *ctx)
+{
+    (void)ctx;
+    return ecs_lookup(world, name);
+}
+
+static
+const char* flecs_script_parse_initializer(
+    ecs_script_parser_t *parser,
+    const char *pos,
+    ecs_expr_initializer_t *node)
+{
+    bool first = true;
+
+    ecs_allocator_t *a = &parser->script->allocator;
+
+    do {
+        ParserBegin;
+
+        if (first) {
+            /* End of initializer */
+            LookAhead_1('}', {
+                pos = lookahead;
+                EndOfRule;
+            })
+
+            first = false;
+        }
+
+        ecs_expr_initializer_element_t *elem = ecs_vec_append_t(
+            a, &node->elements, ecs_expr_initializer_element_t);
+        ecs_os_zeromem(elem);
+
+        {
+            /* Parse member name */
+            LookAhead_2(EcsTokIdentifier, ':', {
+                elem->member = Token(0);
+                LookAhead_Keep();
+                pos = lookahead;
+                break;
+            })
+        }
+
+        pos = flecs_script_parse_expr(parser, pos, 0, &elem->value);
+        if (!pos) {
+            goto error;
+        }
+
+        {
+            /* Parse next element or end of initializer*/
+            LookAhead(
+                case ',': {
+                    pos = lookahead;
+                    break;
+                }
+                case '}': {
+                    EndOfRule;
+                }
+            )
+        }
+    } while (true);
+
+    ParserEnd;
+}
+
+static
+const char* flecs_script_parse_collection_initializer(
+    ecs_script_parser_t *parser,
+    const char *pos,
+    ecs_expr_initializer_t *node)
+{
+    bool first = true;
+
+    ecs_allocator_t *a = &parser->script->allocator;
+
+    do {
+        ParserBegin;
+
+        if (first) {
+            /* End of initializer */
+            LookAhead_1(']', {
+                pos = lookahead;
+                EndOfRule;
+            })
+
+            first = false;
+        }
+
+        ecs_expr_initializer_element_t *elem = ecs_vec_append_t(
+            a, &node->elements, ecs_expr_initializer_element_t);
+        ecs_os_zeromem(elem);
+
+        pos = flecs_script_parse_expr(parser, pos, 0, &elem->value);
+        if (!pos) {
+            goto error;
+        }
+
+        {
+            /* Parse next element or end of initializer*/
+            LookAhead(
+                case ',': {
+                    pos = lookahead;
+                    break;
+                }
+                case ']': {
+                    EndOfRule;
+                }
+            )
+        }
+    } while (true);
+
+    ParserEnd;
+}
+
+static
 const char* flecs_script_parse_rhs(
     ecs_script_parser_t *parser,
     const char *pos,
@@ -212,33 +330,81 @@ const char* flecs_script_parse_lhs(
             break;
         }
 
-        case EcsTokParenOpen: {
+        case EcsTokNot: {
+            ecs_expr_unary_t *node = flecs_expr_unary(parser);
+            pos = flecs_script_parse_expr(parser, pos, EcsTokNot, &node->expr);
+            if (!pos) {
+                goto error;
+            }
+
+            node->operator = EcsTokNot;
+            *out = (ecs_expr_node_t*)node;
+            break;
+        }
+
+        case EcsTokSub: {
+            ecs_expr_binary_t *node = flecs_expr_binary(parser);
+            pos = flecs_script_parse_expr(parser, pos, 0, &node->right);
+            if (!pos) {
+                goto error;
+            }
+
+            node->left = (ecs_expr_node_t*)flecs_expr_int(parser, -1);
+            node->operator = EcsTokMul;
+            *out = (ecs_expr_node_t*)node;
+            break;
+        }
+
+        case '(': {
             pos = flecs_script_parse_expr(parser, pos, 0, out);
-            Parse_1(EcsTokParenClose, {
+            if (!pos) {
+                goto error;
+            }
+
+            Parse_1(')', {
                 break;
             })
             break;
         }
 
-        case EcsTokNot: {
-            ecs_expr_unary_t *unary = flecs_expr_unary(parser);
-            pos = flecs_script_parse_expr(parser, pos, EcsTokNot, &unary->expr);
-            unary->operator = EcsTokNot;
-            *out = (ecs_expr_node_t*)unary;
+        case '{': {
+            ecs_expr_initializer_t *node = flecs_expr_initializer(parser);
+            pos = flecs_script_parse_initializer(parser, pos, node);
+            if (!pos) {
+                goto error;
+            }
+
+            Parse_1('}', {
+                break;
+            })
+
+            *out = (ecs_expr_node_t*)node;
             break;
         }
 
-        case EcsTokSub: {
-            ecs_expr_binary_t *binary = flecs_expr_binary(parser);
-            pos = flecs_script_parse_expr(parser, pos, 0, &binary->right);
-            binary->left = (ecs_expr_node_t*)flecs_expr_int(parser, -1);
-            binary->operator = EcsTokMul;
-            *out = (ecs_expr_node_t*)binary;
+        case '[': {
+            ecs_expr_initializer_t *node = flecs_expr_initializer(parser);
+            node->is_collection = true;
+
+            pos = flecs_script_parse_collection_initializer(parser, pos, node);
+            if (!pos) {
+                goto error;
+            }
+
+            Parse_1(']', {
+                break;
+            })
+
+            *out = (ecs_expr_node_t*)node;
             break;
         }
     )
 
     TokenFramePop();
+
+    if (!pos[0]) {
+        return pos;
+    }
 
     /* Parse right-hand side of expression if there is one */
     return flecs_script_parse_rhs(
@@ -293,11 +459,11 @@ ecs_expr_node_t* ecs_script_parse_expr(
         goto error;
     }
 
-    if (flecs_script_expr_visit_type(script, out)) {
+    if (flecs_script_expr_visit_type(script, out, NULL)) {
         goto error;
     }
 
-    if (flecs_script_expr_visit_fold(script, &out)) {
+    if (flecs_script_expr_visit_fold(script, &out, NULL)) {
         goto error;
     }
 
@@ -313,6 +479,22 @@ const char* ecs_script_expr_run(
     ecs_value_t *value,
     const ecs_script_expr_run_desc_t *desc)
 {
+    ecs_script_expr_run_desc_t priv_desc = {0};
+    if (desc) {
+        priv_desc = *desc;
+    }
+    
+    if (!priv_desc.type) {
+        priv_desc.type = value->type;
+    } else if (desc && (value->type != desc->type)) {
+        ecs_throw("type of value parameter does not match desc->type",
+            ECS_INVALID_PARAMETER, NULL);
+    }
+
+    if (!priv_desc.lookup_action) {
+        priv_desc.lookup_action = flecs_script_default_lookup;
+    }
+
     ecs_script_t *script = flecs_script_new(world);
 
     ecs_script_parser_t parser = {
@@ -335,20 +517,26 @@ const char* ecs_script_expr_run(
         goto error;
     }
 
-    if (flecs_script_expr_visit_type(script, out)) {
+    if (flecs_script_expr_visit_type(script, out, &priv_desc)) {
         goto error;
     }
 
     // printf("%s\n", ecs_script_expr_to_str(world, out));
 
-    if (flecs_script_expr_visit_fold(script, &out)) {
+    if (flecs_script_expr_visit_fold(script, &out, &priv_desc)) {
         goto error;
     }
 
     // printf("%s\n", ecs_script_expr_to_str(world, out));
 
     if (!value->type) {
-        value->type = out->type;
+        if (priv_desc.type) {
+            /* If explicit out type is provided, use that */
+            value->type = priv_desc.type;
+        } else {
+            /* Otherwise use resolved expression type */
+            value->type = out->type;
+        }
     }
 
     if (value->type && !value->ptr) {
@@ -360,11 +548,11 @@ const char* ecs_script_expr_run(
 
     if (out->kind == EcsExprValue) {
         if (value->type == out->type) {
-            // Output value is same as expression, copy value
+            /* Output value is same as expression, copy value */
             ecs_value_copy(world, value->type, value->ptr, 
                 ((ecs_expr_val_t*)out)->ptr);
         } else {
-            // Cast value to desired output type
+            /* Cast value to desired output type */
             ecs_meta_cursor_t cur = ecs_meta_cursor(
                 script->world, value->type, value->ptr);
 

@@ -85,6 +85,28 @@ ecs_expr_val_t* flecs_expr_string(
     return result;
 }
 
+ecs_expr_val_t* flecs_expr_entity(
+    ecs_script_parser_t *parser,
+    ecs_entity_t value)
+{
+    ecs_expr_val_t *result = flecs_expr_ast_new(
+        parser, ecs_expr_val_t, EcsExprValue);
+    result->storage.entity = value;
+    result->ptr = &result->storage.entity;
+    result->node.type = ecs_id(ecs_entity_t);
+    return result;
+}
+
+ecs_expr_initializer_t* flecs_expr_initializer(
+    ecs_script_parser_t *parser)
+{
+    ecs_expr_initializer_t *result = flecs_expr_ast_new(
+        parser, ecs_expr_initializer_t, EcsExprInitializer);
+    ecs_vec_init_t(&parser->script->allocator, &result->elements, 
+        ecs_expr_initializer_element_t, 0);
+    return result;
+}
+
 ecs_expr_identifier_t* flecs_expr_identifier(
     ecs_script_parser_t *parser,
     const char *value)

@@ -42,6 +42,37 @@ error:
     return -1;
 }
 
+int flecs_expr_initializer_to_str(
+    ecs_expr_str_visitor_t *v,
+    const ecs_expr_initializer_t *node)
+{
+    ecs_strbuf_appendlit(v->buf, "{");
+
+    ecs_expr_initializer_element_t *elems = ecs_vec_first(&node->elements);
+    int32_t i, count = ecs_vec_count(&node->elements);
+    for (i = 0; i < count; i ++) {
+        if (i) {
+            ecs_strbuf_appendstr(v->buf, ", ");
+        }
+
+        ecs_expr_initializer_element_t *elem = &elems[i];
+        if (elem->member) {
+            ecs_strbuf_appendstr(v->buf, elem->member);
+            ecs_strbuf_appendlit(v->buf, ":");
+        }
+
+        if (flecs_expr_node_to_str(v, elem->value)) {
+            goto error;
+        }
+    }
+
+    ecs_strbuf_appendlit(v->buf, "}");
+
+    return 0;
+error:
+    return -1;
+}
+
 int flecs_expr_binary_to_str(
     ecs_expr_str_visitor_t *v,
     const ecs_expr_binary_t *node)
@@ -73,6 +104,7 @@ int flecs_expr_identifier_to_str(
     ecs_expr_str_visitor_t *v,
     const ecs_expr_identifier_t *node)
 {
+    ecs_strbuf_appendlit(v->buf, "@");
     ecs_strbuf_appendstr(v->buf, node->value);
     return 0;
 }
@@ -128,15 +160,27 @@ int flecs_expr_node_to_str(
 {
     ecs_assert(node != NULL, ECS_INVALID_PARAMETER, NULL);
 
-    // if (node->type) {
-    //     ecs_strbuf_append(v->buf, "%s", ECS_BLUE);
-    //     ecs_strbuf_appendstr(v->buf, ecs_get_name(v->world, node->type));
-    //     ecs_strbuf_append(v->buf, "%s(", ECS_NORMAL);
-    // }
+    if (node->type) {
+        ecs_strbuf_append(v->buf, "%s", ECS_BLUE);
+        const char *name = ecs_get_name(v->world, node->type);
+        if (name) {
+            ecs_strbuf_appendstr(v->buf, name);
+        } else {
+            char *path = ecs_get_path(v->world, node->type);
+            ecs_strbuf_appendstr(v->buf, path);
+            ecs_os_free(path);
+        }
+        ecs_strbuf_append(v->buf, "%s(", ECS_NORMAL);
+    }
 
     switch(node->kind) {
     case EcsExprValue:
         if (flecs_expr_value_to_str(v, (ecs_expr_val_t*)node)) {
+            goto error;
+        }
+        break;
+    case EcsExprInitializer:
+        if (flecs_expr_initializer_to_str(v, (ecs_expr_initializer_t*)node)) {
             goto error;
         }
         break;
@@ -177,11 +221,14 @@ int flecs_expr_node_to_str(
             goto error;
         }
         break;
+    default:
+        ecs_abort(ECS_INTERNAL_ERROR, "invalid node kind");
+        break;
     }
 
-    // if (node->type) {
-    //     ecs_strbuf_append(v->buf, ")");
-    // }
+    if (node->type) {
+        ecs_strbuf_append(v->buf, ")");
+    }
 
     return 0;
 error:
