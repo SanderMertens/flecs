@@ -426,11 +426,12 @@ protected:
         }
     }
 
-private:
     void assert_term() {
         ecs_assert(term_ != NULL, ECS_INVALID_PARAMETER, 
             "no active term (call .with() first)");
     }
+
+private:
 
     operator Base&() {
         return *static_cast<Base*>(this);

@@ -6,7 +6,6 @@
 #pragma once
 
 #include <unordered_map>
-#include <vector>
 
 #include "../term/builder_i.hpp"
 
@@ -59,6 +58,9 @@ struct query_builder_i : term_builder_i<Base> {
             if (this->term_->inout == EcsInOutDefault) {
             this->inout_none();
         }
+
+        this->test_trait_scope();
+        
         return *this;
     }
 
@@ -68,6 +70,9 @@ struct query_builder_i : term_builder_i<Base> {
         if (this->term_->inout == EcsInOutDefault) {
             this->inout_none();
         }
+
+        test_trait_scope();
+        
         return *this;
     }
 
@@ -77,6 +82,9 @@ struct query_builder_i : term_builder_i<Base> {
         if (this->term_->inout == EcsInOutDefault) {
             this->inout_none();
         }
+
+        this->test_trait_scope();
+        
         return *this;
     }
 
@@ -94,6 +102,9 @@ struct query_builder_i : term_builder_i<Base> {
         if (this->term_->inout == EcsInOutDefault) {
             this->inout_none();
         }
+
+        this->test_trait_scope();
+        
         return *this;
     }
 
@@ -103,6 +114,9 @@ struct query_builder_i : term_builder_i<Base> {
         if (this->term_->inout == EcsInOutDefault) {
             this->inout_none();
         }
+
+        this->test_trait_scope();
+        
         return *this;
     }
 
@@ -112,6 +126,9 @@ struct query_builder_i : term_builder_i<Base> {
         if (this->term_->inout == EcsInOutDefault) {
             this->inout_none();
         }
+
+        this->test_trait_scope();
+        
         return *this;
     }
 
@@ -121,6 +138,9 @@ struct query_builder_i : term_builder_i<Base> {
         if (this->term_->inout == EcsInOutDefault) {
             this->inout_none();
         }
+
+        this->test_trait_scope();
+        
         return *this;
     }
 
@@ -158,13 +178,12 @@ struct query_builder_i : term_builder_i<Base> {
         return *this;
     }
 
-    template <typename TComponent, typename TTrait>
-    Base& with_trait() 
+    template <typename TComponent>
+    Base& begin_scope_traits() 
     {
-        char* comp_name = const_cast<char*>(flecs::_::type_name<TComponent>());
+        const char* comp_name = flecs::_::type_name<TComponent>();
 
         if (!trait_vars_.contains(comp_name)) {
-            // Create new trait variable name using flecs::string
             flecs::string new_trait_var = flecs::string::format("$trait:%s", comp_name);
             trait_vars_.emplace(comp_name, std::move(new_trait_var));
         }
@@ -172,11 +191,63 @@ struct query_builder_i : term_builder_i<Base> {
         const char* trait_var = trait_vars_.at(comp_name).c_str();
         
         this->with<TComponent>(trait_var);
+        this->filter();
         this->with(flecs::Trait);
-        this->src(trait_var);
-        this->with<TTrait>();
+        this->filter();
         this->src(trait_var);
         
+        trait_scope_ = trait_var;
+        
+        return *this;
+    }
+
+    Base& begin_scope_traits(flecs::entity_t comp) 
+    {
+        const char* comp_name = ecs_get_name(this->world_v(), comp);
+
+        if (!trait_vars_.contains(comp_name)) {
+            flecs::string new_trait_var = flecs::string::format("$trait:%s", comp_name);
+            trait_vars_.emplace(comp_name, std::move(new_trait_var));
+        }
+
+        const char* trait_var = trait_vars_.at(comp_name).c_str();
+
+        this->with(comp, trait_var);
+        this->filter();
+        this->with(flecs::Trait);
+        this->filter();
+        this->src(trait_var);
+
+        trait_scope_ = trait_var;
+        
+        return *this;
+    }
+
+    Base& begin_scope_traits(const char* comp_name) 
+    {
+        if (!trait_vars_.contains(comp_name)) {
+            flecs::string new_trait_var = flecs::string::format("$trait:%s", comp_name);
+            trait_vars_.emplace(comp_name, std::move(new_trait_var));
+        }
+
+        const char* trait_var = trait_vars_.at(comp_name).c_str();
+
+        this->with(comp_name, trait_var);
+        this->filter();
+        this->with(flecs::Trait);
+        this->filter();
+        this->src(trait_var);
+
+        trait_scope_ = trait_var;
+        
+        return *this;
+    }
+
+    Base& end_scope_traits() 
+    {
+        ecs_assert(!trait_scope_.empty(), ECS_INVALID_OPERATION, NULL);
+        this->assert_term();
+        trait_scope_.clear();
         return *this;
     }
     
@@ -399,7 +470,17 @@ protected:
     int32_t term_index_;
     int32_t expr_count_;
 
+    std::string trait_scope_;
+
     std::unordered_map<const char*, flecs::string> trait_vars_;
+
+    Base& test_trait_scope() {
+        this->assert_term();
+        if (!trait_scope_.empty()) {
+            this->src(trait_scope_.c_str());
+        }
+        return *this;
+    }
 
 private:
     operator Base&() {
