@@ -462,21 +462,25 @@ void flecs_rtt_init_default_hooks_array(
     bool copy_hook_required = array_ti->hooks.copy != NULL;
     ecs_type_hooks_flags_t flags = array_ti->hooks.flags;
 
-    if (!ctor_hook_required && !dtor_hook_required && !move_hook_required &&
-        !copy_hook_required) {
-        return; /* no hooks required */
-    }
-
-    ecs_rtt_array_ctx_t *rtt_ctx = ecs_os_malloc_t(ecs_rtt_array_ctx_t);
-    rtt_ctx->type_info = array_ti;
-    rtt_ctx->elem_count = array_info->count;
     ecs_type_hooks_t hooks = *ecs_get_hooks_id(world, component);
+
     if (hooks.lifecycle_ctx_free) {
         hooks.lifecycle_ctx_free(hooks.lifecycle_ctx);
+        hooks.lifecycle_ctx_free = NULL;
     }
 
-    hooks.lifecycle_ctx = rtt_ctx;
-    hooks.lifecycle_ctx_free = flecs_rtt_free_lifecycle_array_ctx;
+    if (ctor_hook_required || dtor_hook_required || move_hook_required ||
+        copy_hook_required) {
+        ecs_rtt_array_ctx_t *rtt_ctx = ecs_os_malloc_t(ecs_rtt_array_ctx_t);
+        rtt_ctx->type_info = array_ti;
+        rtt_ctx->elem_count = array_info->count;
+        if (hooks.lifecycle_ctx_free) {
+            hooks.lifecycle_ctx_free(hooks.lifecycle_ctx);
+        }
+
+        hooks.lifecycle_ctx = rtt_ctx;
+        hooks.lifecycle_ctx_free = flecs_rtt_free_lifecycle_array_ctx;
+    }
 
     if (ctor_hook_required) {
         hooks.ctor = flecs_rtt_array_ctor;
