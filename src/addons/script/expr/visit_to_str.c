@@ -31,12 +31,7 @@ int flecs_expr_unary_to_str(
     ecs_expr_str_visitor_t *v,
     const ecs_expr_unary_t *node)
 {
-    switch(node->operator) {
-    case EcsTokNot: ecs_strbuf_appendlit(v->buf, "!"); break;
-    default:
-        ecs_err("invalid operator for unary expression");
-        return -1;
-    };
+    ecs_strbuf_appendstr(v->buf, flecs_script_token_str(node->operator));
 
     if (flecs_expr_node_to_str(v, node->expr)) {
         goto error;
@@ -133,11 +128,11 @@ int flecs_expr_node_to_str(
 {
     ecs_assert(node != NULL, ECS_INVALID_PARAMETER, NULL);
 
-    if (node->type) {
-        ecs_strbuf_append(v->buf, "%s", ECS_BLUE);
-        ecs_strbuf_appendstr(v->buf, ecs_get_name(v->world, node->type));
-        ecs_strbuf_append(v->buf, "%s(", ECS_NORMAL);
-    }
+    // if (node->type) {
+    //     ecs_strbuf_append(v->buf, "%s", ECS_BLUE);
+    //     ecs_strbuf_appendstr(v->buf, ecs_get_name(v->world, node->type));
+    //     ecs_strbuf_append(v->buf, "%s(", ECS_NORMAL);
+    // }
 
     switch(node->kind) {
     case EcsExprValue:
@@ -184,9 +179,9 @@ int flecs_expr_node_to_str(
         break;
     }
 
-    if (node->type) {
-        ecs_strbuf_append(v->buf, ")");
-    }
+    // if (node->type) {
+    //     ecs_strbuf_append(v->buf, ")");
+    // }
 
     return 0;
 error:
