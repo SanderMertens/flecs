@@ -212,6 +212,7 @@ const ecs_system_t* ecs_system_get(
         desc.entity = ecs_entity_init(world, &edesc);\
         desc.query.expr = #__VA_ARGS__; \
         desc.callback = id_; \
+        desc.priority = 0; \
         ecs_id(id_) = ecs_system_init(world, &desc); \
     } \
     ecs_assert(ecs_id(id_) != 0, ECS_INVALID_PARAMETER, "failed to create system %s", #id_)
