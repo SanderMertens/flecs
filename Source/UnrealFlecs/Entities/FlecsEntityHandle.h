@@ -1531,9 +1531,9 @@ private:
 		}
 		
 		TraitHolder = GetFlecsWorld_Internal().entity();
+		TraitHolder.SetParent(GetEntity());
 		TraitHolder.Add(flecs::PairIsTag);
 		TraitHolder.Add(flecs::Trait);
-		TraitHolder.SetParent(GetEntity());
 
 		AddPair(ObtainComponentTypeStruct(StructType), TraitHolder);
 		

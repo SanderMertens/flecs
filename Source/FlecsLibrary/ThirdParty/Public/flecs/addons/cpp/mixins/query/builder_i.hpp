@@ -243,6 +243,13 @@ struct query_builder_i : term_builder_i<Base> {
         return *this;
     }
 
+    /* Relies on the last term */
+    Base& begin_scope_traits()
+    {
+        this->assert_term();
+        return this->begin_scope_traits(desc_->terms[term_index_ - 1].first.id);
+    }
+
     Base& end_scope_traits() 
     {
         ecs_assert(!trait_scope_.empty(), ECS_INVALID_OPERATION, NULL);
