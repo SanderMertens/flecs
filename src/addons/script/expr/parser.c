@@ -364,6 +364,7 @@ const char* flecs_script_parse_lhs(
             Parse_1(')', {
                 break;
             })
+
             break;
         }
 

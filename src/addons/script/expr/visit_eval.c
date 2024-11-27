@@ -71,6 +71,33 @@ int flecs_expr_value_visit_eval(
 }
 
 static
+int flecs_expr_unary_visit_eval(
+    ecs_script_t *script,
+    ecs_expr_unary_t *node,
+    const ecs_script_expr_run_desc_t *desc,
+    ecs_eval_value_t *out)
+{
+    ecs_eval_value_t expr = {{0}};
+
+    if (flecs_script_expr_visit_eval_priv(script, node->expr, desc, &expr)) {
+        goto error;
+    }
+
+    /* Initialize storage of casted-to type */
+    flecs_expr_value_alloc(script, out, node->node.type);
+
+    if (flecs_value_unary(
+        script, &expr.value, &out->value, node->operator)) 
+    {
+        goto error;
+    }
+
+    return 0;
+error:
+    return -1;
+}
+
+static
 int flecs_expr_binary_visit_eval(
     ecs_script_t *script,
     ecs_expr_binary_t *node,
@@ -145,6 +172,27 @@ error:
 }
 
 static
+int flecs_expr_member_visit_eval(
+    ecs_script_t *script,
+    ecs_expr_member_t *node,
+    const ecs_script_expr_run_desc_t *desc,
+    ecs_eval_value_t *out)
+{
+    ecs_eval_value_t expr = {{0}};
+
+    if (flecs_script_expr_visit_eval_priv(script, node->left, desc, &expr)) {
+        goto error;
+    }
+
+    out->value.ptr = ECS_OFFSET(expr.value.ptr, node->offset);
+    out->value.type = node->node.type;
+
+    return 0;
+error:
+    return -1;
+}
+
+static
 int flecs_script_expr_visit_eval_priv(
     ecs_script_t *script,
     ecs_expr_node_t *node,
@@ -164,6 +212,11 @@ int flecs_script_expr_visit_eval_priv(
     case EcsExprInitializer:
         break;
     case EcsExprUnary:
+        if (flecs_expr_unary_visit_eval(
+            script, (ecs_expr_binary_t*)node, desc, out)) 
+        {
+            goto error;
+        }
         break;
     case EcsExprBinary:
         if (flecs_expr_binary_visit_eval(
@@ -184,6 +237,11 @@ int flecs_script_expr_visit_eval_priv(
     case EcsExprFunction:
         break;
     case EcsExprMember:
+        if (flecs_expr_member_visit_eval(
+            script, (ecs_expr_member_t*)node, desc, out)) 
+        {
+            goto error;
+        }
         break;
     case EcsExprElement:
         break;

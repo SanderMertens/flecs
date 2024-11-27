@@ -459,6 +459,11 @@ void Expr_min_lparen_int_rparen_to_i32(void);
 void Expr_struct_w_min_var(void);
 void Expr_struct_w_min_lparen_int_rparen(void);
 void Expr_struct_w_min_lparen_var_rparen(void);
+void Expr_not_bool(void);
+void Expr_not_int(void);
+void Expr_not_paren_int(void);
+void Expr_not_paren_expr(void);
+void Expr_not_var(void);
 void Expr_shift_left_int(void);
 void Expr_shift_right_int(void);
 void Expr_shift_left_int_add_int(void);
@@ -2437,6 +2442,26 @@ bake_test_case Expr_testcases[] = {
         Expr_struct_w_min_lparen_var_rparen
     },
     {
+        "not_bool",
+        Expr_not_bool
+    },
+    {
+        "not_int",
+        Expr_not_int
+    },
+    {
+        "not_paren_int",
+        Expr_not_paren_int
+    },
+    {
+        "not_paren_expr",
+        Expr_not_paren_expr
+    },
+    {
+        "not_var",
+        Expr_not_var
+    },
+    {
         "shift_left_int",
         Expr_shift_left_int
     },
@@ -3210,7 +3235,7 @@ static bake_test_suite suites[] = {
         "Expr",
         NULL,
         NULL,
-        135,
+        140,
         Expr_testcases
     },
     {
