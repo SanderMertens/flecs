@@ -192,7 +192,7 @@ struct query_builder_i : term_builder_i<Base> {
         
         this->with<TComponent>(trait_var);
         this->filter();
-        this->with(flecs::Trait);
+        this->with(flecs::ChildOf);
         this->filter();
         this->src(trait_var);
         
@@ -214,7 +214,7 @@ struct query_builder_i : term_builder_i<Base> {
 
         this->with(comp, trait_var);
         this->filter();
-        this->with(flecs::Trait);
+        this->with(flecs::ChildOf);
         this->filter();
         this->src(trait_var);
 
@@ -234,7 +234,7 @@ struct query_builder_i : term_builder_i<Base> {
 
         this->with(comp_name, trait_var);
         this->filter();
-        this->with(flecs::Trait);
+        this->with(flecs::ChildOf);
         this->filter();
         this->src(trait_var);
 

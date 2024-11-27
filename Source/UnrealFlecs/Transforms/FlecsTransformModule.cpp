@@ -39,85 +39,35 @@ void UFlecsTransformModule::InitializeModule(UFlecsWorld* InWorld, const FFlecsE
 			ParentEntity
 				.SetTrait<FFlecsTransformComponent, FFlecsRelativeCacheTrait>(FFlecsRelativeCacheTrait{ RelativeEntity });
 		});
-
-	/*InWorld->CreateObserver<FFlecsTransformComponent&, const FFlecsTransformComponent&>(TEXT("TransformPropagateObserver"))
-		.term_at(0).event(flecs::OnSet)
-		.term_at(1).parent().cascade().filter()
-		.yield_existing()
-		.each([](flecs::entity InEntity, FFlecsTransformComponent& Transform,
-			const FFlecsTransformComponent& ParentTransform)
-		{
-			const FFlecsEntityHandle Entity = InEntity;
-
-			if (Entity.HasTrait<FFlecsTransformComponent, FFlecsRelativeTrait>())
-			{
-				const FFlecsTransformComponent RelativeTransform = Entity
-					.GetTrait<FFlecsTransformComponent, FFlecsRelativeCacheTrait>()
-					.RelativeEntity.Get<FFlecsTransformComponent>();
-
-				Transform.GlobalTransform = RelativeTransform.GlobalTransform * Transform.Transform;
-			}
-			else if (Entity.HasTrait<FFlecsTransformComponent>(FlecsLocalTrait))
-			{
-				Transform.GlobalTransform = ParentTransform.GlobalTransform * Transform.Transform;
-			}
-			// implied global transform
-			else
-			{
-				Transform.GlobalTransform = Transform.Transform;
-			}
-		});*/
 	
-	InWorld->CreateSystemWithBuilder(
-		TEXT("FlecsTransformPropagateSystem"))
+	InWorld->CreateSystemWithBuilder<
+		FFlecsTransformComponent>(TEXT("FlecsGlobalTransformPropagateSystem"))
 		.kind(flecs::PreUpdate)
-		.with<FFlecsTransformComponent>().read_write()
-		.with<FFlecsTransformComponent>().parent().cascade()
-		.multi_threaded()
-		.run([](flecs::iter& Iter)
+		.term_at(0).read_write()
+		.begin_scope_traits<FFlecsTransformComponent>()
+			.with(FlecsGlobalTrait)
+		.end_scope_traits()
+		.each([](flecs::iter& Iter, size_t Index, FFlecsTransformComponent& InTransform)
 		{
-			while (Iter.next())
-			{
-				if (!Iter.other_table())
-				{
-					Iter.skip();
-					continue;
-				}
-
-				flecs::field<FFlecsTransformComponent> TransformField = Iter.field<FFlecsTransformComponent>(0);
-				flecs::field<FFlecsTransformComponent> ParentTransformField = Iter.field<FFlecsTransformComponent>(1);
-
-				for (const flecs::entity_t Index : Iter)
-				{
-					FFlecsEntityHandle Entity = Iter.entity(Index);
-					FFlecsTransformComponent& Transform = TransformField[Index];
-					FFlecsTransformComponent& ParentTransform = ParentTransformField[Index];
-
-					if (Entity.HasTrait<FFlecsTransformComponent, FFlecsRelativeTrait>())
-					{
-						if (Entity.HasTrait<FFlecsTransformComponent, FFlecsRelativeCacheTrait>())
-						{
-							continue;
-						}
-
-						const FFlecsTransformComponent RelativeTransform = Entity
-							.GetTrait<FFlecsTransformComponent, FFlecsRelativeCacheTrait>()
-							.RelativeEntity.Get<FFlecsTransformComponent>();
-						
-						Transform.GlobalTransform = RelativeTransform.GlobalTransform * Transform.Transform;
-					}
-					else if (Entity.HasTrait<FFlecsTransformComponent>(FlecsLocalTrait))
-					{
-						Transform.GlobalTransform = ParentTransform.GlobalTransform * Transform.Transform;
-					}
-					// implied global transform
-					else
-					{
-						Transform.GlobalTransform = Transform.Transform;
-					}
-				}
-			}
+			InTransform.GlobalTransform = InTransform.Transform;
 		});
+
+	InWorld->CreateSystemWithBuilder<
+		FFlecsTransformComponent>(TEXT("FlecsLocalTransformPropagateSystem"))
+		.kind(flecs::PreUpdate)
+		.term_at(0).read_write()
+		.with<FFlecsTransformComponent>().parent().cascade()
+		.begin_scope_traits<FFlecsTransformComponent>()
+			.with(FlecsLocalTrait)
+		.end_scope_traits()
+		.each([](flecs::iter& Iter, size_t Index,
+			FFlecsTransformComponent& InTransform)
+		{
+			InTransform.GlobalTransform
+				= Iter.field_at<FFlecsTransformComponent>(1, Index).GetTransform() * InTransform.Transform;
+		});
+
+	
 }
 
 void UFlecsTransformModule::DeinitializeModule(UFlecsWorld* InWorld)
