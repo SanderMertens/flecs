@@ -59,6 +59,7 @@ void Id_invalid_pair(void);
 
 // Testsuite 'Entity'
 void Entity_init_id(void);
+void Entity_init_id_exceed_32_bits(void);
 void Entity_init_id_name(void);
 void Entity_init_id_path(void);
 void Entity_init_id_add_1_comp(void);
@@ -360,6 +361,8 @@ void New_new_w_table_override(void);
 void New_w_Count_empty(void);
 void New_w_Count_component(void);
 void New_w_Count_tag(void);
+void New_w_Count_bulk_ids_w_1_exceed_32_bits(void);
+void New_w_Count_bulk_ids_w_2_exceed_32_bits(void);
 void New_w_Count_bulk_init_empty(void);
 void New_w_Count_bulk_init_empty_w_entities(void);
 void New_w_Count_bulk_init_1_tag(void);
@@ -2500,6 +2503,10 @@ bake_test_case Entity_testcases[] = {
         Entity_init_id
     },
     {
+        "init_id_exceed_32_bits",
+        Entity_init_id_exceed_32_bits
+    },
+    {
         "init_id_name",
         Entity_init_id_name
     },
@@ -3668,6 +3675,14 @@ bake_test_case New_w_Count_testcases[] = {
     {
         "tag",
         New_w_Count_tag
+    },
+    {
+        "bulk_ids_w_1_exceed_32_bits",
+        New_w_Count_bulk_ids_w_1_exceed_32_bits
+    },
+    {
+        "bulk_ids_w_2_exceed_32_bits",
+        New_w_Count_bulk_ids_w_2_exceed_32_bits
     },
     {
         "bulk_init_empty",
@@ -11206,7 +11221,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        139,
+        140,
         Entity_testcases
     },
     {
@@ -11248,7 +11263,7 @@ static bake_test_suite suites[] = {
         "New_w_Count",
         NULL,
         NULL,
-        20,
+        22,
         New_w_Count_testcases
     },
     {

@@ -66,6 +66,7 @@
             "id": "Entity",
             "testcases": [
                 "init_id",
+                "init_id_exceed_32_bits",
                 "init_id_name",
                 "init_id_path",
                 "init_id_add_1_comp",
@@ -379,6 +380,8 @@
                 "empty",
                 "component",
                 "tag",
+                "bulk_ids_w_1_exceed_32_bits",
+                "bulk_ids_w_2_exceed_32_bits",
                 "bulk_init_empty",
                 "bulk_init_empty_w_entities",
                 "bulk_init_1_tag",
