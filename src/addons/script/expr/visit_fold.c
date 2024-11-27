@@ -38,11 +38,8 @@ int flecs_expr_unary_visit_fold(
         goto error;
     }
 
-    ecs_expr_val_t *result = flecs_calloc_t(
-        &((ecs_script_impl_t*)script)->allocator, ecs_expr_val_t);
-    result->node.kind = EcsExprValue;
-    result->node.pos = node->node.pos;
-    result->node.type = ecs_id(ecs_bool_t);
+    ecs_expr_val_t *result = flecs_expr_value_from(
+        script, (ecs_expr_node_t*)node, ecs_id(ecs_bool_t));
     result->ptr = &result->storage.bool_;
 
     ecs_value_t dst = { .ptr = result->ptr, .type = ecs_id(ecs_bool_t) };
@@ -82,12 +79,8 @@ int flecs_expr_binary_visit_fold(
     ecs_expr_val_t *left = (ecs_expr_val_t*)node->left;
     ecs_expr_val_t *right = (ecs_expr_val_t*)node->right;
 
-    ecs_expr_val_t *result = flecs_calloc_t(
-        &((ecs_script_impl_t*)script)->allocator, ecs_expr_val_t);
-    result->ptr = &result->storage.u64;
-    result->node.kind = EcsExprValue;
-    result->node.pos = node->node.pos;
-    result->node.type = node->node.type;
+    ecs_expr_val_t *result = flecs_expr_value_from(
+        script, (ecs_expr_node_t*)node, node->node.type);
 
     /* Handle bitmask separately since it's not done by switch */
     if (ecs_get(script->world, node->node.type, EcsBitmask) != NULL) {
@@ -149,7 +142,10 @@ int flecs_expr_cast_visit_fold(
         .ptr = expr->ptr
     };
 
-    ecs_meta_set_value(&cur, &value);
+    if (ecs_meta_set_value(&cur, &value)) {
+        flecs_expr_visit_error(script, node, "failed to assign value");
+        goto error;
+    }
 
     expr->node.type = dst_type;
 
@@ -190,7 +186,7 @@ int flecs_expr_initializer_pre_fold(
         }
     }
 
-    if (node->dynamic) {
+    if (node->is_dynamic) {
         *can_fold = false;
         return 0;
     }
@@ -259,11 +255,8 @@ int flecs_expr_initializer_visit_fold(
             goto error;
         }
 
-        ecs_expr_val_t *result = flecs_calloc_t(
-            &((ecs_script_impl_t*)script)->allocator, ecs_expr_val_t);
-        result->node.kind = EcsExprValue;
-        result->node.pos = node->node.pos;
-        result->node.type = node->node.type;
+        ecs_expr_val_t *result = flecs_expr_value_from(
+            script, (ecs_expr_node_t*)node, node->node.type);
         result->ptr = value;
         *node_ptr = (ecs_expr_node_t*)result;
     }
@@ -281,11 +274,8 @@ int flecs_expr_identifier_visit_fold(
     ecs_expr_identifier_t *node = (ecs_expr_identifier_t*)*node_ptr;
     ecs_entity_t type = node->node.type;
 
-    ecs_expr_val_t *result = flecs_calloc_t(
-        &((ecs_script_impl_t*)script)->allocator, ecs_expr_val_t);
-    result->node.kind = EcsExprValue;
-    result->node.pos = node->node.pos;
-    result->node.type = type;
+    ecs_expr_val_t *result = flecs_expr_value_from(
+        script, (ecs_expr_node_t*)node, type);
 
     if (type == ecs_id(ecs_entity_t)) {
         result->storage.entity = desc->lookup_action(

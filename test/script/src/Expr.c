@@ -1878,8 +1878,8 @@ void Expr_struct_w_min_var(void) {
     ecs_script_vars_t *vars = ecs_script_vars_init(world);
 
     ecs_script_var_t *var = ecs_script_vars_define(
-        vars, "foo", ecs_u64_t);
-    *(ecs_u64_t*)var->value.ptr = 10;
+        vars, "foo", ecs_i64_t);
+    *(ecs_i64_t*)var->value.ptr = 10;
 
     Mass v = {0};
     ecs_script_expr_run_desc_t desc = { .vars = vars };
@@ -1889,7 +1889,7 @@ void Expr_struct_w_min_var(void) {
     test_assert(ptr != NULL);
     test_assert(!ptr[0]);
 
-    test_uint(v.value, -10);
+    test_int(v.value, -10);
     ecs_script_vars_fini(vars);
 
     ecs_fini(world);
