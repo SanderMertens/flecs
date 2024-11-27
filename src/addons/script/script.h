@@ -45,8 +45,7 @@ struct ecs_script_parser_t {
 };
 
 #include "ast.h"
-#include "expr/ast.h"
-#include "expr/visit.h"
+#include "expr/expr.h"
 #include "visit.h"
 #include "visit_eval.h"
 

@@ -25,24 +25,31 @@ struct ecs_expr_node_t {
     const char *pos;
 };
 
+typedef union ecs_expr_small_val_t {
+    bool bool_;
+    char char_;
+    ecs_byte_t byte_;
+    int8_t i8;
+    int16_t i16;
+    int32_t i32;
+    int64_t i64;
+    intptr_t iptr;
+    uint8_t u8;
+    uint16_t u16;
+    uint32_t u32;
+    uint64_t u64;
+    uintptr_t uptr;
+    double f32;
+    double f64;
+    const char *string;
+    ecs_entity_t entity;
+    ecs_id_t id;
+} ecs_expr_small_val_t;
+
 typedef struct ecs_expr_val_t {
     ecs_expr_node_t node;
     void *ptr;
-    union {
-        bool bool_;
-        int8_t i8;
-        int16_t i16;
-        int32_t i32;
-        int64_t i64;
-        uint8_t u8;
-        uint16_t u16;
-        uint32_t u32;
-        uint64_t u64;
-        double f32;
-        double f64;
-        const char *string;
-        ecs_entity_t entity;
-    } storage;
+    ecs_expr_small_val_t storage;
 } ecs_expr_val_t;
 
 typedef struct ecs_expr_initializer_element_t {
@@ -66,6 +73,7 @@ typedef struct ecs_expr_identifier_t {
 typedef struct ecs_expr_variable_t {
     ecs_expr_node_t node;
     const char *value;
+    ecs_script_var_t *var;
 } ecs_expr_variable_t;
 
 typedef struct ecs_expr_unary_t {

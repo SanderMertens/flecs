@@ -444,8 +444,20 @@ int flecs_expr_variable_visit_type(
     ecs_expr_variable_t *node,
     const ecs_script_expr_run_desc_t *desc)
 {
-    node->node.type = ecs_id(ecs_entity_t);
+    ecs_script_var_t *var = ecs_script_vars_lookup(
+        desc->vars, node->value);
+    if (!var) {
+        flecs_expr_visit_error(script, node, "unresolved variable '%s'",
+            node->value);
+        goto error;
+    }
+
+    node->node.type = var->value.type;
+    node->var = var;
+
     return 0;
+error:
+    return -1;
 }
 
 static
