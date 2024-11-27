@@ -21,7 +21,10 @@ public:
 
 	FORCEINLINE void ResimulationHandlers();
 
-	FORCEINLINE virtual FString GetModuleName_Implementation() const override { return TEXT("Flecs Physics Module"); }
+	FORCEINLINE virtual FString GetModuleName_Implementation() const override
+	{
+		return TEXT("Flecs Physics Module");
+	}
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Physics")
 	bool bAllowResimulation = false;

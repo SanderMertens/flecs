@@ -23,7 +23,10 @@ public:
 
 	FORCEINLINE virtual void ProgressModule(double InDeltaTime) override;
 
-	FORCEINLINE virtual FString GetModuleName_Implementation() const override { return TEXT("Flecs Ticker Module"); }
+	FORCEINLINE virtual FString GetModuleName_Implementation() const override
+	{
+		return TEXT("Flecs Ticker Module");
+	}
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Ticker",
 		meta = (Units = "Hz", ClampMin = "1", ClampMax = "240", EditCondition = "!bUsePhysicsTick"))
