@@ -89,14 +89,22 @@ void BitmaskTypes_bitmask_w_short_notation(void);
 // Testsuite 'RuntimeTypes'
 void RuntimeTypes_trivial_struct(void);
 void RuntimeTypes_ctor(void);
+void RuntimeTypes_ctor_illegal(void);
 void RuntimeTypes_dtor(void);
+void RuntimeTypes_dtor_illegal(void);
 void RuntimeTypes_move(void);
+void RuntimeTypes_move_illegal(void);
 void RuntimeTypes_copy(void);
+void RuntimeTypes_copy_illegal(void);
 void RuntimeTypes_trivial_array(void);
 void RuntimeTypes_array_ctor(void);
+void RuntimeTypes_array_ctor_illegal(void);
 void RuntimeTypes_array_dtor(void);
+void RuntimeTypes_array_dtor_illegal(void);
 void RuntimeTypes_array_move(void);
+void RuntimeTypes_array_move_illegal(void);
 void RuntimeTypes_array_copy(void);
+void RuntimeTypes_array_copy_illegal(void);
 void RuntimeTypes_vector_lifecycle(void);
 void RuntimeTypes_vector_lifecycle_trivial_type(void);
 void RuntimeTypes_opaque(void);
@@ -1309,16 +1317,32 @@ bake_test_case RuntimeTypes_testcases[] = {
         RuntimeTypes_ctor
     },
     {
+        "ctor_illegal",
+        RuntimeTypes_ctor_illegal
+    },
+    {
         "dtor",
         RuntimeTypes_dtor
+    },
+    {
+        "dtor_illegal",
+        RuntimeTypes_dtor_illegal
     },
     {
         "move",
         RuntimeTypes_move
     },
     {
+        "move_illegal",
+        RuntimeTypes_move_illegal
+    },
+    {
         "copy",
         RuntimeTypes_copy
+    },
+    {
+        "copy_illegal",
+        RuntimeTypes_copy_illegal
     },
     {
         "trivial_array",
@@ -1329,16 +1353,32 @@ bake_test_case RuntimeTypes_testcases[] = {
         RuntimeTypes_array_ctor
     },
     {
+        "array_ctor_illegal",
+        RuntimeTypes_array_ctor_illegal
+    },
+    {
         "array_dtor",
         RuntimeTypes_array_dtor
+    },
+    {
+        "array_dtor_illegal",
+        RuntimeTypes_array_dtor_illegal
     },
     {
         "array_move",
         RuntimeTypes_array_move
     },
     {
+        "array_move_illegal",
+        RuntimeTypes_array_move_illegal
+    },
+    {
         "array_copy",
         RuntimeTypes_array_copy
+    },
+    {
+        "array_copy_illegal",
+        RuntimeTypes_array_copy_illegal
     },
     {
         "vector_lifecycle",
@@ -4900,7 +4940,7 @@ static bake_test_suite suites[] = {
         "RuntimeTypes",
         NULL,
         NULL,
-        39,
+        47,
         RuntimeTypes_testcases
     },
     {

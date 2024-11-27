@@ -204,6 +204,7 @@ static
 ecs_rtt_struct_ctx_t * flecs_rtt_configure_struct_hooks(
     ecs_world_t *world,
     const ecs_type_info_t *ti,
+    ecs_type_hooks_flags_t flags,
     bool ctor,
     bool dtor,
     bool move,
@@ -240,6 +241,7 @@ ecs_rtt_struct_ctx_t * flecs_rtt_configure_struct_hooks(
         hooks.lifecycle_ctx = NULL;
         hooks.lifecycle_ctx_free = NULL;
     }
+    hooks.flags |= flags;
     ecs_set_hooks_id(world, ti->component, &hooks);
     return rtt_ctx;
 }
@@ -268,6 +270,7 @@ void flecs_rtt_init_default_hooks_struct(
      * the struct itself will need to have that hook: */
     int i, member_count = ecs_vec_count(&struct_info->members);
     ecs_member_t *members = ecs_vec_first(&struct_info->members);
+    ecs_type_hooks_flags_t flags = 0;
     for (i = 0; i < member_count; i++) {
         ecs_member_t *m = &members[i];
         const ecs_type_info_t *member_ti = ecs_get_type_info(world, m->type);
@@ -276,6 +279,7 @@ void flecs_rtt_init_default_hooks_struct(
         dtor_hook_required |= member_ti->hooks.dtor != NULL;
         move_hook_required |= member_ti->hooks.move != NULL;
         copy_hook_required |= member_ti->hooks.copy != NULL;
+        flags |= member_ti->hooks.flags;
     }
 
     /* If any hook is required, then create a lifecycle context and configure a
@@ -283,6 +287,7 @@ void flecs_rtt_init_default_hooks_struct(
     ecs_rtt_struct_ctx_t *rtt_ctx = flecs_rtt_configure_struct_hooks(
         world,
         ti,
+        flags,
         ctor_hook_required,
         dtor_hook_required,
         move_hook_required,
@@ -455,22 +460,27 @@ void flecs_rtt_init_default_hooks_array(
     bool dtor_hook_required = array_ti->hooks.dtor != NULL;
     bool move_hook_required = array_ti->hooks.move != NULL;
     bool copy_hook_required = array_ti->hooks.copy != NULL;
+    ecs_type_hooks_flags_t flags = array_ti->hooks.flags;
 
-    if (!ctor_hook_required && !dtor_hook_required && !move_hook_required &&
-        !copy_hook_required) {
-        return; /* no hooks required */
-    }
-
-    ecs_rtt_array_ctx_t *rtt_ctx = ecs_os_malloc_t(ecs_rtt_array_ctx_t);
-    rtt_ctx->type_info = array_ti;
-    rtt_ctx->elem_count = array_info->count;
     ecs_type_hooks_t hooks = *ecs_get_hooks_id(world, component);
+
     if (hooks.lifecycle_ctx_free) {
         hooks.lifecycle_ctx_free(hooks.lifecycle_ctx);
+        hooks.lifecycle_ctx_free = NULL;
     }
 
-    hooks.lifecycle_ctx = rtt_ctx;
-    hooks.lifecycle_ctx_free = flecs_rtt_free_lifecycle_array_ctx;
+    if (ctor_hook_required || dtor_hook_required || move_hook_required ||
+        copy_hook_required) {
+        ecs_rtt_array_ctx_t *rtt_ctx = ecs_os_malloc_t(ecs_rtt_array_ctx_t);
+        rtt_ctx->type_info = array_ti;
+        rtt_ctx->elem_count = array_info->count;
+        if (hooks.lifecycle_ctx_free) {
+            hooks.lifecycle_ctx_free(hooks.lifecycle_ctx);
+        }
+
+        hooks.lifecycle_ctx = rtt_ctx;
+        hooks.lifecycle_ctx_free = flecs_rtt_free_lifecycle_array_ctx;
+    }
 
     if (ctor_hook_required) {
         hooks.ctor = flecs_rtt_array_ctor;
@@ -487,6 +497,8 @@ void flecs_rtt_init_default_hooks_array(
     if (copy_hook_required) {
         hooks.copy = flecs_rtt_array_copy;
     }
+
+    hooks.flags |= flags;
 
     ecs_set_hooks_id(world, component, &hooks);
 }
