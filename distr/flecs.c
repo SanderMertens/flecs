@@ -4914,6 +4914,7 @@ typedef struct ecs_expr_initializer_t {
     ecs_expr_node_t node;
     ecs_vec_t elements;
     bool is_collection;
+    bool dynamic;
 } ecs_expr_initializer_t;
 
 typedef struct ecs_expr_identifier_t {
@@ -75827,6 +75828,11 @@ int flecs_expr_initializer_pre_fold(
         }
     }
 
+    if (node->dynamic) {
+        *can_fold = false;
+        return 0;
+    }
+
     return 0;
 error:
     return -1;
@@ -76534,6 +76540,10 @@ int flecs_expr_initializer_visit_type(
     ecs_entity_t type = ecs_meta_get_type(cur);
     ecs_assert(type != 0, ECS_INTERNAL_ERROR, NULL);
 
+    /* Opaque types do not have deterministic offsets */
+    bool is_opaque = ecs_get(script->world, type, EcsOpaque) != NULL;
+    node->dynamic = is_opaque;
+
     ecs_meta_push(cur); /* { */
 
     if (ecs_meta_is_collection(cur) != node->is_collection) {
@@ -76579,7 +76589,9 @@ int flecs_expr_initializer_visit_type(
                 script, elem->value, elem_type);
         }
 
-        elem->offset = (uintptr_t)ecs_meta_get_ptr(cur);
+        if (!is_opaque) {
+            elem->offset = (uintptr_t)ecs_meta_get_ptr(cur);
+        }
     }
 
     node->node.type = type;

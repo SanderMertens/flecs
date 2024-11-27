@@ -306,6 +306,11 @@ int flecs_expr_initializer_pre_fold(
         }
     }
 
+    if (node->dynamic) {
+        *can_fold = false;
+        return 0;
+    }
+
     return 0;
 error:
     return -1;
