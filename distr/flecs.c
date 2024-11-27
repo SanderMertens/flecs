@@ -4562,28 +4562,28 @@ typedef enum ecs_script_token_kind_t {
     EcsTokOptional = '?',
     EcsTokAnnotation = '@',
     EcsTokNewline = '\n',
-    EcsTokEq,
-    EcsTokNeq,
-    EcsTokGt,
-    EcsTokGtEq,
-    EcsTokLt,
-    EcsTokLtEq,
-    EcsTokAnd,
-    EcsTokOr,
-    EcsTokMatch,
-    EcsTokShiftLeft,
-    EcsTokShiftRight,
-    EcsTokIdentifier,
-    EcsTokString,
-    EcsTokNumber,
-    EcsTokKeywordModule,
-    EcsTokKeywordUsing,
-    EcsTokKeywordWith,
-    EcsTokKeywordIf,
-    EcsTokKeywordElse,
-    EcsTokKeywordTemplate,
-    EcsTokKeywordProp,
-    EcsTokKeywordConst,
+    EcsTokEq = 100,
+    EcsTokNeq = 101,
+    EcsTokGt = 102,
+    EcsTokGtEq = 103,
+    EcsTokLt = 104,
+    EcsTokLtEq = 105,
+    EcsTokAnd = 106,
+    EcsTokOr = 107,
+    EcsTokMatch = 108,
+    EcsTokShiftLeft = 109,
+    EcsTokShiftRight = 110,
+    EcsTokIdentifier = 111,
+    EcsTokString = 112,
+    EcsTokNumber = 113,
+    EcsTokKeywordModule = 114,
+    EcsTokKeywordUsing = 115,
+    EcsTokKeywordWith = 116,
+    EcsTokKeywordIf = 117,
+    EcsTokKeywordElse = 118,
+    EcsTokKeywordTemplate = 119,
+    EcsTokKeywordProp = 120,
+    EcsTokKeywordConst = 121,
 } ecs_script_token_kind_t;
 
 typedef struct ecs_script_token_t {
@@ -60105,6 +60105,38 @@ const char* flecs_script_string(
     return end + 2;
 }
 
+static
+const char* flecs_script_multiline_string(
+    ecs_script_parser_t *parser,
+    const char *pos,
+    ecs_script_token_t *out) 
+{
+    char ch;
+    const char *end = pos + 1;
+    while ((ch = end[0]) && (ch != '`')) {
+        if (ch == '\\' && end[1] == '`') {
+            ch = '`';
+            end ++;
+        }
+        end ++;
+    }
+
+    if (ch != '`') {
+        return NULL;
+    }
+
+    end --;
+
+    int32_t len = flecs_ito(int32_t, end - pos);
+    ecs_os_memcpy(parser->token_cur, pos + 1, len);
+    parser->token_cur[len] = '\0';
+
+    out->kind = EcsTokString;
+    out->value = parser->token_cur;
+    parser->token_cur += len + 1;
+    return end + 2;
+}
+
 const char* flecs_script_expr(
     ecs_script_parser_t *parser,
     const char *pos,
@@ -60351,6 +60383,9 @@ const char* flecs_script_token(
 
     } else if (pos[0] == '"') {
         return flecs_script_string(parser, pos, out);
+
+    } else if (pos[0] == '`') {
+        return flecs_script_multiline_string(parser, pos, out);
 
     } else if (flecs_script_is_identifier(pos[0])) {
         return flecs_script_identifier(parser, pos, out);
