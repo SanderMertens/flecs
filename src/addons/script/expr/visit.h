@@ -8,8 +8,9 @@
 
 #define flecs_expr_visit_error(script, node, ...) \
     ecs_parser_error( \
-        script->name, script->code, ((ecs_expr_node_t*)node)->pos - script->code, \
-        __VA_ARGS__);
+        script->name, script->code, \
+            ((ecs_expr_node_t*)node)->pos - script->code, \
+                __VA_ARGS__);
 
 int flecs_script_expr_visit_type(
     ecs_script_t *script,
@@ -20,5 +21,11 @@ int flecs_script_expr_visit_fold(
     ecs_script_t *script,
     ecs_expr_node_t **node,
     const ecs_script_expr_run_desc_t *desc);
+
+int flecs_script_expr_visit_eval(
+    ecs_script_t *script,
+    ecs_expr_node_t *node,
+    const ecs_script_expr_run_desc_t *desc,
+    ecs_value_t *out);
 
 #endif

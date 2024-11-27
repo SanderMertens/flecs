@@ -8,80 +8,6 @@
 #ifdef FLECS_SCRIPT
 #include "../script.h"
 
-#define ECS_VALUE_GET(value, T) (*(T*)((ecs_expr_val_t*)value)->ptr)
-
-#define ECS_BINARY_OP_T(left, right, result, op, R, T)\
-    ECS_VALUE_GET(result, R) = ECS_VALUE_GET(left, T) op ECS_VALUE_GET(right, T)
-
-#define ECS_BINARY_INT_OP(left, right, result, op)\
-    if (left->type == ecs_id(ecs_u64_t)) { \
-        ECS_BINARY_OP_T(left, right, result, op, ecs_u64_t, ecs_u64_t);\
-    } else if (left->type == ecs_id(ecs_i64_t)) { \
-        ECS_BINARY_OP_T(left, right, result, op, ecs_i64_t, ecs_i64_t);\
-    } else {\
-        ecs_abort(ECS_INTERNAL_ERROR, "unexpected type in binary expression");\
-    }
-
-#define ECS_BINARY_OP(left, right, result, op)\
-    if (left->type == ecs_id(ecs_u64_t)) { \
-        ECS_BINARY_OP_T(left, right, result, op, ecs_u64_t, ecs_u64_t);\
-    } else if (left->type == ecs_id(ecs_i64_t)) { \
-        ECS_BINARY_OP_T(left, right, result, op, ecs_i64_t, ecs_i64_t);\
-    } else if (left->type == ecs_id(ecs_f64_t)) { \
-        ECS_BINARY_OP_T(left, right, result, op, ecs_f64_t, ecs_f64_t);\
-    } else {\
-        ecs_abort(ECS_INTERNAL_ERROR, "unexpected type in binary expression");\
-    }
-
-#define ECS_BINARY_COND_EQ_OP(left, right, result, op)\
-    if (left->type == ecs_id(ecs_u64_t)) { \
-        ECS_BINARY_OP_T(left, right, result, op, ecs_bool_t, ecs_u64_t);\
-    } else if (left->type == ecs_id(ecs_i64_t)) { \
-        ECS_BINARY_OP_T(left, right, result, op, ecs_bool_t, ecs_i64_t);\
-    } else if (left->type == ecs_id(ecs_f64_t)) { \
-        flecs_expr_visit_error(script, left, "unsupported operator for floating point");\
-        return -1;\
-    } else if (left->type == ecs_id(ecs_u8_t)) { \
-        ECS_BINARY_OP_T(left, right, result, op, ecs_bool_t, ecs_u8_t);\
-    } else if (left->type == ecs_id(ecs_char_t)) { \
-        ECS_BINARY_OP_T(left, right, result, op, ecs_bool_t, ecs_char_t);\
-    } else if (left->type == ecs_id(ecs_bool_t)) { \
-        ECS_BINARY_OP_T(left, right, result, op, ecs_bool_t, ecs_bool_t);\
-    } else {\
-        ecs_abort(ECS_INTERNAL_ERROR, "unexpected type in binary expression");\
-    }
-
-#define ECS_BINARY_COND_OP(left, right, result, op)\
-    if (left->type == ecs_id(ecs_u64_t)) { \
-        ECS_BINARY_OP_T(left, right, result, op, ecs_bool_t, ecs_u64_t);\
-    } else if (left->type == ecs_id(ecs_i64_t)) { \
-        ECS_BINARY_OP_T(left, right, result, op, ecs_bool_t, ecs_i64_t);\
-    } else if (left->type == ecs_id(ecs_f64_t)) { \
-        ECS_BINARY_OP_T(left, right, result, op, ecs_bool_t, ecs_f64_t);\
-    } else if (left->type == ecs_id(ecs_u8_t)) { \
-        ECS_BINARY_OP_T(left, right, result, op, ecs_bool_t, ecs_u8_t);\
-    } else if (left->type == ecs_id(ecs_char_t)) { \
-        ECS_BINARY_OP_T(left, right, result, op, ecs_bool_t, ecs_char_t);\
-    } else if (left->type == ecs_id(ecs_bool_t)) { \
-        ECS_BINARY_OP_T(left, right, result, op, ecs_bool_t, ecs_bool_t);\
-    } else {\
-        ecs_abort(ECS_INTERNAL_ERROR, "unexpected type in binary expression");\
-    }
-
-#define ECS_BINARY_BOOL_OP(left, right, result, op)\
-    if (left->type == ecs_id(ecs_bool_t)) { \
-        ECS_BINARY_OP_T(left, right, result, op, ecs_bool_t, ecs_bool_t);\
-    } else {\
-        ecs_abort(ECS_INTERNAL_ERROR, "unexpected type in binary expression");\
-    }
-
-#define ECS_BINARY_UINT_OP(left, right, result, op)\
-    if (left->type == ecs_id(ecs_u64_t)) { \
-        ECS_BINARY_OP_T(left, right, result, op, ecs_u64_t, ecs_u64_t);\
-    } else {\
-        ecs_abort(ECS_INTERNAL_ERROR, "unexpected type in binary expression");\
-    }
-
 int flecs_expr_unary_visit_fold(
     ecs_script_t *script,
     ecs_expr_node_t **node_ptr,
@@ -143,9 +69,12 @@ int flecs_expr_binary_visit_fold(
     }
 
     if (node->left->kind != EcsExprValue || node->right->kind != EcsExprValue) {
-        /* Only folding literals for now */
+        /* Only folding literals */
         return 0;
     }
+
+    ecs_expr_val_t *left = (ecs_expr_val_t*)node->left;
+    ecs_expr_val_t *right = (ecs_expr_val_t*)node->right;
 
     ecs_expr_val_t *result = flecs_calloc_t(
         &((ecs_script_impl_t*)script)->allocator, ecs_expr_val_t);
@@ -160,66 +89,15 @@ int flecs_expr_binary_visit_fold(
             ECS_INTERNAL_ERROR, NULL);
         ecs_assert(node->right->type == node->node.type, 
             ECS_INTERNAL_ERROR, NULL);
-        ecs_expr_val_t *left = (ecs_expr_val_t*)node->left;
-        ecs_expr_val_t *right = (ecs_expr_val_t*)node->right;
         result->storage.u32 = *(uint32_t*)left->ptr | *(uint32_t*)right->ptr;
         goto done;
     }
 
-    switch(node->operator) {
-    case EcsTokAdd:
-        ECS_BINARY_OP(node->left, node->right, result, +);
-        break;
-    case EcsTokSub:
-        ECS_BINARY_OP(node->left, node->right, result, -);
-        break;
-    case EcsTokMul:
-        ECS_BINARY_OP(node->left, node->right, result, *);
-        break;
-    case EcsTokDiv:
-        ECS_BINARY_OP(node->left, node->right, result, /);
-        break;
-    case EcsTokMod:
-        ECS_BINARY_INT_OP(node->left, node->right, result, %);
-        break;
-    case EcsTokEq:
-        ECS_BINARY_COND_EQ_OP(node->left, node->right, result, ==);
-        break;
-    case EcsTokNeq:
-        ECS_BINARY_COND_EQ_OP(node->left, node->right, result, !=);
-        break;
-    case EcsTokGt:
-        ECS_BINARY_COND_OP(node->left, node->right, result, >);
-        break;
-    case EcsTokGtEq:
-        ECS_BINARY_COND_OP(node->left, node->right, result, >=);
-        break;
-    case EcsTokLt:
-        ECS_BINARY_COND_OP(node->left, node->right, result, <);
-        break;
-    case EcsTokLtEq:
-        ECS_BINARY_COND_OP(node->left, node->right, result, <=);
-        break;
-    case EcsTokAnd:
-        ECS_BINARY_BOOL_OP(node->left, node->right, result, &&);
-        break;
-    case EcsTokOr:
-        ECS_BINARY_BOOL_OP(node->left, node->right, result, ||);
-        break;
-    case EcsTokBitwiseAnd:
-        ECS_BINARY_INT_OP(node->left, node->right, result, &);
-        break;
-    case EcsTokBitwiseOr:
-        ECS_BINARY_INT_OP(node->left, node->right, result, |);
-        break;
-    case EcsTokShiftLeft:
-        ECS_BINARY_INT_OP(node->left, node->right, result, <<);
-        break;
-    case EcsTokShiftRight:
-        ECS_BINARY_INT_OP(node->left, node->right, result, >>);
-        break;
-    default:
-        flecs_expr_visit_error(script, node->left, "unsupported operator");
+    ecs_value_t lop = { .type = left->node.type, .ptr = left->ptr };
+    ecs_value_t rop = { .type = right->node.type, .ptr = right->ptr };
+    ecs_value_t res = { .type = result->node.type, .ptr = result->ptr };
+
+    if (flecs_value_binary(script, &lop, &rop, &res, node->operator)) {
         goto error;
     }
 

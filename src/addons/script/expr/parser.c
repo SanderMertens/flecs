@@ -529,44 +529,8 @@ const char* ecs_script_expr_run(
 
     // printf("%s\n", ecs_script_expr_to_str(world, out));
 
-    if (!value->type) {
-        if (priv_desc.type) {
-            /* If explicit out type is provided, use that */
-            value->type = priv_desc.type;
-        } else {
-            /* Otherwise use resolved expression type */
-            value->type = out->type;
-        }
-    }
-
-    if (value->type && !value->ptr) {
-        value->ptr = ecs_value_new(world, value->type);
-    }
-
-    ecs_assert(value->type != 0 && value->ptr != NULL, ECS_INVALID_OPERATION, 
-        "failed to allocate storage for expression result");
-
-    if (out->kind == EcsExprValue) {
-        if (value->type == out->type) {
-            /* Output value is same as expression, copy value */
-            ecs_value_copy(world, value->type, value->ptr, 
-                ((ecs_expr_val_t*)out)->ptr);
-        } else {
-            /* Cast value to desired output type */
-            ecs_meta_cursor_t cur = ecs_meta_cursor(
-                script->world, value->type, value->ptr);
-
-            ecs_value_t expr_result = {
-                .type = out->type,
-                .ptr = ((ecs_expr_val_t*)out)->ptr
-            };
-
-            if (ecs_meta_set_value(&cur, &expr_result)) {
-                goto error;
-            }
-        }
-    } else {
-        ecs_abort(ECS_UNSUPPORTED, "can't evaluate dynamic expressions yet");
+    if (flecs_script_expr_visit_eval(script, out, desc, value)) {
+        goto error;
     }
 
     return result;
