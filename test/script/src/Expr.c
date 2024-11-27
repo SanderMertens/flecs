@@ -1953,6 +1953,112 @@ void Expr_struct_w_min_lparen_var_rparen(void) {
     ecs_fini(world);
 }
 
+void Expr_not_bool(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_value_t v = {0};
+    test_assert(ecs_script_expr_run(world, "!false", &v, NULL) != NULL);
+    test_assert(v.type == ecs_id(ecs_bool_t));
+    test_assert(v.ptr != NULL);
+    test_bool(*(bool*)v.ptr, true);
+    ecs_value_free(world, v.type, v.ptr);
+
+    test_assert(ecs_script_expr_run(world, "!true", &v, NULL) != NULL);
+    test_assert(v.type == ecs_id(ecs_bool_t));
+    test_assert(v.ptr != NULL);
+    test_bool(*(bool*)v.ptr, false);
+    ecs_value_free(world, v.type, v.ptr);
+
+    ecs_fini(world);
+}
+
+void Expr_not_int(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_value_t v = {0};
+    test_assert(ecs_script_expr_run(world, "!0", &v, NULL) != NULL);
+    test_assert(v.type == ecs_id(ecs_bool_t));
+    test_assert(v.ptr != NULL);
+    test_bool(*(bool*)v.ptr, true);
+    ecs_value_free(world, v.type, v.ptr);
+
+    test_assert(ecs_script_expr_run(world, "!10", &v, NULL) != NULL);
+    test_assert(v.type == ecs_id(ecs_bool_t));
+    test_assert(v.ptr != NULL);
+    test_bool(*(bool*)v.ptr, false);
+    ecs_value_free(world, v.type, v.ptr);
+
+    ecs_fini(world);
+}
+
+void Expr_not_paren_int(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_value_t v = {0};
+    test_assert(ecs_script_expr_run(world, "!(0)", &v, NULL) != NULL);
+    test_assert(v.type == ecs_id(ecs_bool_t));
+    test_assert(v.ptr != NULL);
+    test_bool(*(bool*)v.ptr, true);
+    ecs_value_free(world, v.type, v.ptr);
+
+    test_assert(ecs_script_expr_run(world, "!(10)", &v, NULL) != NULL);
+    test_assert(v.type == ecs_id(ecs_bool_t));
+    test_assert(v.ptr != NULL);
+    test_bool(*(bool*)v.ptr, false);
+    ecs_value_free(world, v.type, v.ptr);
+
+    ecs_fini(world);
+}
+
+void Expr_not_paren_expr(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_value_t v = {0};
+    test_assert(ecs_script_expr_run(world, "!(10 - 10)", &v, NULL) != NULL);
+    test_assert(v.type == ecs_id(ecs_bool_t));
+    test_assert(v.ptr != NULL);
+    test_bool(*(bool*)v.ptr, true);
+    ecs_value_free(world, v.type, v.ptr);
+
+    test_assert(ecs_script_expr_run(world, "!(5 + 5)", &v, NULL) != NULL);
+    test_assert(v.type == ecs_id(ecs_bool_t));
+    test_assert(v.ptr != NULL);
+    test_bool(*(bool*)v.ptr, false);
+    ecs_value_free(world, v.type, v.ptr);
+
+    ecs_fini(world);
+}
+
+void Expr_not_var(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *var = ecs_script_vars_define(
+        vars, "foo", ecs_i32_t);
+    test_assert(var != NULL);
+    *(int32_t*)var->value.ptr = 10;
+
+    ecs_value_t v = {0};
+    ecs_script_expr_run_desc_t desc = { .vars = vars };
+    test_assert(ecs_script_expr_run(world, "!$foo", &v, &desc) != NULL);
+    test_assert(v.type == ecs_id(ecs_bool_t));
+    test_assert(v.ptr != NULL);
+    test_uint(*(bool*)v.ptr, false);
+    ecs_value_free(world, v.type, v.ptr);
+
+    *(int32_t*)var->value.ptr = 0;
+    test_assert(ecs_script_expr_run(world, "!$foo", &v, &desc) != NULL);
+    test_assert(v.type == ecs_id(ecs_bool_t));
+    test_assert(v.ptr != NULL);
+    test_uint(*(bool*)v.ptr, true);
+    ecs_value_free(world, v.type, v.ptr);
+
+    ecs_script_vars_fini(vars);
+
+    ecs_fini(world);
+}
+
 void Expr_shift_left_int(void) {
     ecs_world_t *world = ecs_init();
 

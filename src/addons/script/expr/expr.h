@@ -21,6 +21,12 @@ int flecs_value_binary(
     ecs_value_t *out,
     ecs_script_token_kind_t operator);
 
+int flecs_value_unary(
+    ecs_script_t *script,
+    const ecs_value_t *expr,
+    ecs_value_t *out,
+    ecs_script_token_kind_t operator);
+
 #define ECS_VALUE_GET(value, T) (*(T*)(value)->ptr)
 
 #define ECS_BINARY_OP_T(left, right, result, op, R, T)\

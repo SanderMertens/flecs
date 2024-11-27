@@ -209,11 +209,16 @@ const char* flecs_script_identifier(
     out->value = parser->token_cur;
 
     ecs_assert(flecs_script_is_identifier(pos[0]), ECS_INTERNAL_ERROR, NULL);
+    bool is_var = pos[0] == '$';
     char *outpos = parser->token_cur;
     do {
         char c = pos[0];
         bool is_ident = flecs_script_is_identifier(c) || 
-            isdigit(c) || (c == '.') || (c == '*');
+            isdigit(c) || (c == '*');
+
+        if (!is_var) {
+            is_ident = is_ident || (c == '.');
+        }
 
         /* Retain \. for name lookup operation */
         if (!is_ident && c == '\\' && pos[1] == '.') {

@@ -26,7 +26,7 @@ int flecs_expr_unary_visit_fold(
     }
 
     if (node->expr->kind != EcsExprValue) {
-        /* Only folding literals for now */
+        /* Only folding literals */
         return 0;
     }
 
@@ -44,7 +44,13 @@ int flecs_expr_unary_visit_fold(
     result->node.pos = node->node.pos;
     result->node.type = ecs_id(ecs_bool_t);
     result->ptr = &result->storage.bool_;
-    *(bool*)result->ptr = !*(bool*)(((ecs_expr_val_t*)node->expr)->ptr);
+
+    ecs_value_t dst = { .ptr = result->ptr, .type = ecs_id(ecs_bool_t) };
+    ecs_value_t src = { 
+        .ptr = ((ecs_expr_val_t*)node->expr)->ptr, .type = ecs_id(ecs_bool_t) };
+    if (flecs_value_unary(script, &src, &dst, node->operator)) {
+        goto error;
+    }
 
     *node_ptr = (ecs_expr_node_t*)result;
 

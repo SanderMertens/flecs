@@ -93,6 +93,7 @@ typedef struct ecs_expr_member_t {
     ecs_expr_node_t node;
     ecs_expr_node_t *left;
     const char *member_name;
+    uintptr_t offset;
 } ecs_expr_member_t;
 
 typedef struct ecs_expr_element_t {

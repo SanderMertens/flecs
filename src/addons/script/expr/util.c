@@ -28,6 +28,25 @@ error:
     return -1;
 }
 
+int flecs_value_unary(
+    ecs_script_t *script,
+    const ecs_value_t *expr,
+    ecs_value_t *out,
+    ecs_script_token_kind_t operator)
+{
+    switch(operator) {
+    case EcsTokNot:
+        ecs_assert(expr->type == ecs_id(ecs_bool_t), ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(out->type == ecs_id(ecs_bool_t), ECS_INTERNAL_ERROR, NULL);
+        *(bool*)out->ptr = !*(bool*)expr->ptr;
+        break;
+    default:
+        ecs_abort(ECS_INTERNAL_ERROR, "invalid operator for binary expression");
+    }
+
+    return 0;
+}
+
 int flecs_value_binary(
     ecs_script_t *script,
     const ecs_value_t *left,
@@ -89,12 +108,9 @@ int flecs_value_binary(
         break;
     default:
         ecs_abort(ECS_INTERNAL_ERROR, "invalid operator for binary expression");
-        goto error;
     }
 
     return 0;
-error:
-    return -1;
 }
 
 #endif

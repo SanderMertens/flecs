@@ -507,6 +507,7 @@ int flecs_expr_member_visit_type(
     ecs_log_set_level(prev_log);
 
     node->node.type = ecs_meta_get_type(&cur);
+    node->offset = (uintptr_t)ecs_meta_get_ptr(&cur);
     ecs_meta_pop(&cur); /* } */
 
     return 0;
