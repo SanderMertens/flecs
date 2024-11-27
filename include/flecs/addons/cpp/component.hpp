@@ -114,7 +114,8 @@ void register_lifecycle_actions(
 
     ecs_set_hooks_id(world, component, &cl);
 
-    if (cl.flags & ECS_MOVE_ILLEGAL || cl.flags & ECS_MOVE_CTOR_ILLEGAL) {
+    if (cl.flags & (ECS_TYPE_HOOK_MOVE_ILLEGAL|ECS_TYPE_HOOK_MOVE_CTOR_ILLEGAL))
+    {
         ecs_add_id(world, component, flecs::Sparse);
     }
 }
