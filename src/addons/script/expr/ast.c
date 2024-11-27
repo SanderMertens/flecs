@@ -25,6 +25,21 @@ void* flecs_expr_ast_new_(
     return result;
 }
 
+ecs_expr_val_t* flecs_expr_value_from(
+    ecs_script_t *script,
+    ecs_expr_node_t *node,
+    ecs_entity_t type)
+{
+    ecs_expr_val_t *result = flecs_calloc_t(
+        &((ecs_script_impl_t*)script)->allocator, ecs_expr_val_t);
+    result->ptr = &result->storage.u64;
+    result->node.kind = EcsExprValue;
+    result->node.pos = node ? node->pos : NULL;
+    result->node.type = type;
+    result->node.type_info = ecs_get_type_info(script->world, type);
+    return result;
+}
+
 ecs_expr_val_t* flecs_expr_bool(
     ecs_script_parser_t *parser,
     bool value)
@@ -169,6 +184,8 @@ ecs_expr_cast_t* flecs_expr_cast(
     result->node.kind = EcsExprCast;
     result->node.pos = expr->pos;
     result->node.type = type;
+    result->node.type_info = ecs_get_type_info(script->world, type);
+    ecs_assert(result->node.type_info != NULL, ECS_INTERNAL_ERROR, NULL);
     result->expr = expr;
     return result;
 }

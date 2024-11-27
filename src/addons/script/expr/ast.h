@@ -6,6 +6,8 @@
 #ifndef FLECS_SCRIPT_EXPR_AST_H
 #define FLECS_SCRIPT_EXPR_AST_H
 
+#define FLECS_EXPR_SMALL_DATA_SIZE (24)
+
 typedef enum ecs_expr_node_kind_t {
     EcsExprValue,
     EcsExprInitializer,
@@ -22,6 +24,7 @@ typedef enum ecs_expr_node_kind_t {
 struct ecs_expr_node_t {
     ecs_expr_node_kind_t kind;
     ecs_entity_t type;
+    const ecs_type_info_t *type_info;
     const char *pos;
 };
 
@@ -44,6 +47,9 @@ typedef union ecs_expr_small_val_t {
     const char *string;
     ecs_entity_t entity;
     ecs_id_t id;
+
+    /* Avoid allocations for small trivial types */
+    char small_data[FLECS_EXPR_SMALL_DATA_SIZE];
 } ecs_expr_small_val_t;
 
 typedef struct ecs_expr_val_t {
@@ -61,8 +67,9 @@ typedef struct ecs_expr_initializer_element_t {
 typedef struct ecs_expr_initializer_t {
     ecs_expr_node_t node;
     ecs_vec_t elements;
+    const ecs_type_info_t *type_info;
     bool is_collection;
-    bool dynamic;
+    bool is_dynamic;
 } ecs_expr_initializer_t;
 
 typedef struct ecs_expr_identifier_t {
@@ -107,8 +114,10 @@ typedef struct ecs_expr_cast_t {
     ecs_expr_node_t *expr;
 } ecs_expr_cast_t;
 
-ecs_expr_val_t* flecs_expr_value(
-    ecs_script_parser_t *parser);
+ecs_expr_val_t* flecs_expr_value_from(
+    ecs_script_t *script,
+    ecs_expr_node_t *node,
+    ecs_entity_t type);
 
 ecs_expr_val_t* flecs_expr_bool(
     ecs_script_parser_t *parser,

@@ -24,37 +24,19 @@ static
 void flecs_expr_value_alloc(
     ecs_script_t *script,
     ecs_eval_value_t *val,
-    ecs_entity_t type)
+    const ecs_type_info_t *ti)
 {
-    const EcsPrimitive *p = ecs_get(script->world, type, EcsPrimitive);
-    if (!p) {
+    ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    val->value.type = ti->component;
+
+    if (ti->size <= FLECS_EXPR_SMALL_DATA_SIZE) {
+        if (!(ti->hooks.flags & ECS_TYPE_HOOK_DTOR)) {
+            val->value.ptr = val->storage.small_data;
+        }
+    } else {
         ecs_abort(ECS_UNSUPPORTED, 
-            "non-primitive temporary values not yet supported");
-    }
-
-    val->value.type = type;
-
-    switch (p->kind) {
-    case EcsBool:    val->value.ptr = &val->storage.bool_; break;
-    case EcsChar:    val->value.ptr = &val->storage.char_; break;
-    case EcsByte:    val->value.ptr = &val->storage.byte_; break;
-    case EcsU8:      val->value.ptr = &val->storage.u8; break;
-    case EcsU16:     val->value.ptr = &val->storage.u16; break;
-    case EcsU32:     val->value.ptr = &val->storage.u32; break;
-    case EcsU64:     val->value.ptr = &val->storage.u64; break;
-    case EcsI8:      val->value.ptr = &val->storage.i8; break;
-    case EcsI16:     val->value.ptr = &val->storage.i16; break;
-    case EcsI32:     val->value.ptr = &val->storage.i32; break;
-    case EcsI64:     val->value.ptr = &val->storage.i64; break;
-    case EcsF32:     val->value.ptr = &val->storage.f32; break;
-    case EcsF64:     val->value.ptr = &val->storage.f64; break;
-    case EcsUPtr:    val->value.ptr = &val->storage.uptr; break;
-    case EcsIPtr:    val->value.ptr = &val->storage.iptr; break;
-    case EcsString:  val->value.ptr = &val->storage.string; break;
-    case EcsEntity:  val->value.ptr = &val->storage.entity; break;
-    case EcsId:      val->value.ptr = &val->storage.id; break;
-    default:
-        ecs_abort(ECS_INTERNAL_ERROR, "invalid primitive kind");
+            "non-trivial temporary values not yet supported");
     }
 }
 
@@ -71,6 +53,64 @@ int flecs_expr_value_visit_eval(
 }
 
 static
+int flecs_expr_initializer_eval(
+    ecs_script_t *script,
+    ecs_expr_initializer_t *node,
+    const ecs_script_expr_run_desc_t *desc,
+    void *value)
+{
+    ecs_expr_initializer_element_t *elems = ecs_vec_first(&node->elements);
+    int32_t i, count = ecs_vec_count(&node->elements);
+    for (i = 0; i < count; i ++) {
+        ecs_expr_initializer_element_t *elem = &elems[i];
+
+        if (elem->value->kind == EcsExprInitializer) {
+            if (flecs_expr_initializer_eval(
+                script, (ecs_expr_initializer_t*)elem->value, desc, value)) 
+            {
+                goto error;
+            }
+            continue;
+        }
+
+        ecs_eval_value_t expr = {{0}};
+        if (flecs_script_expr_visit_eval_priv(
+            script, elem->value, desc, &expr)) 
+        {
+            goto error;
+        }
+
+        ecs_expr_val_t *elem_value = (ecs_expr_val_t*)elem->value;
+
+        /* Type is guaranteed to be correct, since type visitor will insert
+         * a cast to the type of the initializer element. */
+        ecs_entity_t type = elem_value->node.type;
+
+        if (ecs_value_copy(script->world, type, 
+            ECS_OFFSET(value, elem->offset), expr.value.ptr))
+        {
+            goto error;
+        }
+    }
+
+    return 0;
+error:
+    return -1;
+}
+
+static
+int flecs_expr_initializer_visit_eval(
+    ecs_script_t *script,
+    ecs_expr_initializer_t *node,
+    const ecs_script_expr_run_desc_t *desc,
+    ecs_eval_value_t *out)
+{
+    /* Initialize storage for initializer's type */
+    flecs_expr_value_alloc(script, out, node->node.type_info);
+    return flecs_expr_initializer_eval(script, node, desc, out->value.ptr);
+}
+
+static
 int flecs_expr_unary_visit_eval(
     ecs_script_t *script,
     ecs_expr_unary_t *node,
@@ -84,7 +124,7 @@ int flecs_expr_unary_visit_eval(
     }
 
     /* Initialize storage of casted-to type */
-    flecs_expr_value_alloc(script, out, node->node.type);
+    flecs_expr_value_alloc(script, out, node->node.type_info);
 
     if (flecs_value_unary(
         script, &expr.value, &out->value, node->operator)) 
@@ -116,7 +156,7 @@ int flecs_expr_binary_visit_eval(
     }
 
     /* Initialize storage of casted-to type */
-    flecs_expr_value_alloc(script, out, node->node.type);
+    flecs_expr_value_alloc(script, out, node->node.type_info);
 
     if (flecs_value_binary(
         script, &left.value, &right.value, &out->value, node->operator)) 
@@ -159,10 +199,11 @@ int flecs_expr_cast_visit_eval(
     }
 
     /* Initialize storage of casted-to type */
-    flecs_expr_value_alloc(script, out, node->node.type);
+    flecs_expr_value_alloc(script, out, node->node.type_info);
 
     /* Copy expression result to storage of casted-to type */
     if (flecs_value_copy_to(script->world, &out->value, &expr.value)) {
+        flecs_expr_visit_error(script, node, "failed to cast value");
         goto error;
     }
 
@@ -210,10 +251,15 @@ int flecs_script_expr_visit_eval_priv(
         }
         break;
     case EcsExprInitializer:
+        if (flecs_expr_initializer_visit_eval(
+            script, (ecs_expr_initializer_t*)node, desc, out)) 
+        {
+            goto error;
+        }
         break;
     case EcsExprUnary:
         if (flecs_expr_unary_visit_eval(
-            script, (ecs_expr_binary_t*)node, desc, out)) 
+            script, (ecs_expr_unary_t*)node, desc, out))
         {
             goto error;
         }
@@ -283,7 +329,10 @@ int flecs_script_expr_visit_eval(
         out->ptr = ecs_value_new(script->world, out->type);
     }
 
-    flecs_value_copy_to(script->world, out, &val.value);
+    if (flecs_value_copy_to(script->world, out, &val.value)) {
+        flecs_expr_visit_error(script, node, "failed to write to output");
+        goto error;
+    }
 
     return 0;
 error:  
