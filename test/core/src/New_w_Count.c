@@ -21,7 +21,7 @@ void New_w_Count_component(void) {
 
     const ecs_entity_t *ids = ecs_bulk_new(world, Position, 1000);
     test_assert(ids != NULL);
-    
+
     int i;
     for (i = 0; i < 1000; i ++) {
         ecs_entity_t e = ids[i];
@@ -141,7 +141,7 @@ void New_w_Count_bulk_init_1_tag_w_entities(void) {
     ecs_world_t *world = ecs_mini();
 
     ECS_TAG(world, Tag);
-    
+
     ecs_entity_t ents[] = {1000, 1001, 1002};
 
     const ecs_entity_t *entities = ecs_bulk_init(world, &(ecs_bulk_desc_t){
@@ -326,7 +326,7 @@ void New_w_Count_bulk_init_1_component_w_value(void) {
     test_assert(ecs_has(world, entities[0], Position));
     test_assert(ecs_has(world, entities[1], Position));
     test_assert(ecs_has(world, entities[2], Position));
-    
+
 
     const Position *ptr;
     ptr = ecs_get(world, entities[0], Position);
@@ -684,6 +684,33 @@ void New_w_Count_bulk_init_w_table(void) {
 
     ecs_delete_with(world, Tag);
     test_int(0, ecs_count(world, Tag));
+
+    ecs_fini(world);
+}
+
+void New_w_Count_bulk_ids_w_1_exceed_32_bits(void) {
+	install_test_abort();
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, Tag, 0);
+
+    ecs_set_entity_range(world, UINT32_MAX, 0);
+    ecs_bulk_new_w_id(world, Tag, 1);
+    test_expect_abort();
+    ecs_bulk_new_w_id(world, Tag, 1);
+
+    ecs_fini(world);
+}
+
+void New_w_Count_bulk_ids_w_2_exceed_32_bits(void) {
+	install_test_abort();
+    ecs_world_t *world = ecs_mini();
+
+    ECS_ENTITY(world, Tag, 0);
+
+    ecs_set_entity_range(world, UINT32_MAX, 0);
+    test_expect_abort();
+    ecs_bulk_new_w_id(world, Tag, 2);
 
     ecs_fini(world);
 }
