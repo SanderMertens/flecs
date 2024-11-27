@@ -23,16 +23,14 @@ static void flecs_pipeline_free(
     }
 }
 
-static int compare_system_priority(
+static inline int compare_system_priority(
     ecs_entity_t e1, const EcsSystemPriority *ptr1,
     ecs_entity_t e2, const EcsSystemPriority *ptr2)
 {
     if (ptr1->value == ptr2->value) {
         return flecs_entity_compare(e1, ptr1, e2, ptr2);
-    } else if (ptr1->value < ptr2->value) {
-        return -1;
     } else {
-        return 1;
+        return (ptr1->value < ptr2->value) ? -1 : 1;
     }
 }
 
