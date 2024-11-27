@@ -285,6 +285,10 @@ int flecs_expr_initializer_visit_type(
     ecs_entity_t type = ecs_meta_get_type(cur);
     ecs_assert(type != 0, ECS_INTERNAL_ERROR, NULL);
 
+    /* Opaque types do not have deterministic offsets */
+    bool is_opaque = ecs_get(script->world, type, EcsOpaque) != NULL;
+    node->dynamic = is_opaque;
+
     ecs_meta_push(cur); /* { */
 
     if (ecs_meta_is_collection(cur) != node->is_collection) {
@@ -330,7 +334,9 @@ int flecs_expr_initializer_visit_type(
                 script, elem->value, elem_type);
         }
 
-        elem->offset = (uintptr_t)ecs_meta_get_ptr(cur);
+        if (!is_opaque) {
+            elem->offset = (uintptr_t)ecs_meta_get_ptr(cur);
+        }
     }
 
     node->node.type = type;

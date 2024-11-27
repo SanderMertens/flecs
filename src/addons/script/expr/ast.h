@@ -55,6 +55,7 @@ typedef struct ecs_expr_initializer_t {
     ecs_expr_node_t node;
     ecs_vec_t elements;
     bool is_collection;
+    bool dynamic;
 } ecs_expr_initializer_t;
 
 typedef struct ecs_expr_identifier_t {
