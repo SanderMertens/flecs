@@ -1055,6 +1055,11 @@
                 "unit_prefix_from_suspend_defer",
                 "quantity_from_suspend_defer"
             ]
+        },{
+            "id": "Compare",
+            "testcases": [
+                "u8"
+            ]
         }]
     }
 }
