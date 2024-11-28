@@ -19033,8 +19033,9 @@ void ecs_set_hooks_id(
 {
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
 
-    ecs_check(!(h->flags & ECS_TYPE_HOOKS), ECS_INVALID_PARAMETER, 
-        "hooks flags are derived");
+    /* TODO: Refactor to enforce flags consistency: */
+    ecs_flags32_t flags = h->flags;
+    flags &= ~((ecs_flags32_t)ECS_TYPE_HOOKS);
 
     /* TODO: enable asserts once RTT API is updated */
     /*
@@ -19115,7 +19116,6 @@ void ecs_set_hooks_id(
     }
 
     /* Set default copy ctor, move ctor and merge */
-    ecs_flags32_t flags = h->flags;
     if (!h->copy_ctor) {
         if(flags & ECS_TYPE_HOOK_COPY_ILLEGAL || flags & ECS_TYPE_HOOK_CTOR_ILLEGAL) {
             flags |= ECS_TYPE_HOOK_COPY_CTOR_ILLEGAL;
