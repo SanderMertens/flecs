@@ -1056,7 +1056,7 @@
                 "quantity_from_suspend_defer"
             ]
         },{
-            "id": "Compare",
+            "id": "PrimitiveCompare",
             "testcases": [
                 "bool",
                 "char",
