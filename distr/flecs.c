@@ -19132,7 +19132,7 @@ void ecs_set_hooks_id(
     if (h->move_ctor) ti->hooks.move_ctor = h->move_ctor;
     if (h->ctor_move_dtor) ti->hooks.ctor_move_dtor = h->ctor_move_dtor;
     if (h->move_dtor) ti->hooks.move_dtor = h->move_dtor;
-    if (h->comp || flags & ECS_TYPE_HOOK_COMP_ILLEGAL) ti->hooks.comp = h->comp;
+    if (h->comp) ti->hooks.comp = h->comp;
 
     if (h->on_add) ti->hooks.on_add = h->on_add;
     if (h->on_remove) ti->hooks.on_remove = h->on_remove;
