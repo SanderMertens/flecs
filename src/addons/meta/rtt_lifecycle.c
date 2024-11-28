@@ -284,16 +284,16 @@ ecs_rtt_struct_ctx_t * flecs_rtt_configure_struct_hooks(
         ecs_vec_init_t(NULL, &rtt_ctx->vcomp, ecs_rtt_call_data_t, 0);
         hooks.lifecycle_ctx = rtt_ctx;
         hooks.lifecycle_ctx_free = flecs_rtt_free_lifecycle_struct_ctx;
-
-        hooks.ctor = ctor;
-        hooks.dtor = dtor;
-        hooks.move = move;
-        hooks.copy = copy;
-        hooks.comp = comp;
     } else {
         hooks.lifecycle_ctx = NULL;
         hooks.lifecycle_ctx_free = flecs_rtt_free_lifecycle_nop;
-    }    
+    }
+
+    hooks.ctor = ctor;
+    hooks.dtor = dtor;
+    hooks.move = move;
+    hooks.copy = copy;
+    hooks.comp = comp;
 
     hooks.flags = flags;
     hooks.flags &= ECS_TYPE_HOOKS_ILLEGAL;
