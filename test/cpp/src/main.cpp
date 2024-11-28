@@ -5550,7 +5550,7 @@ bake_test_case ComponentLifecycle_testcases[] = {
     },
     {
         "set_multiple_hooks",
-        ComponentLifecycle_set_multiple_hooks,
+        ComponentLifecycle_set_multiple_hooks
     },
     {
         "compare_WithGreaterThan",

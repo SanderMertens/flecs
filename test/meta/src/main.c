@@ -104,6 +104,7 @@ void RuntimeTypes_move(void);
 void RuntimeTypes_move_illegal(void);
 void RuntimeTypes_copy(void);
 void RuntimeTypes_copy_illegal(void);
+void RuntimeTypes_comp_illegal(void);
 void RuntimeTypes_trivial_array(void);
 void RuntimeTypes_array_ctor(void);
 void RuntimeTypes_array_ctor_illegal(void);
@@ -113,8 +114,10 @@ void RuntimeTypes_array_move(void);
 void RuntimeTypes_array_move_illegal(void);
 void RuntimeTypes_array_copy(void);
 void RuntimeTypes_array_copy_illegal(void);
+void RuntimeTypes_array_comp_illegal(void);
 void RuntimeTypes_vector_lifecycle(void);
 void RuntimeTypes_vector_lifecycle_trivial_type(void);
+void RuntimeTypes_vector_comp_illegal(void);
 void RuntimeTypes_opaque(void);
 void RuntimeTypes_struct_with_ints(void);
 void RuntimeTypes_struct_with_strings(void);
@@ -1068,6 +1071,19 @@ void RttCompare_nested_struct_with_vector_of_strings(void);
 void RttCompare_array_of_ints(void);
 void RttCompare_array_of_strings(void);
 void RttCompare_array_of_struct_with_ints(void);
+void RttCompare_array_of_struct_with_strings(void);
+void RttCompare_array_of_struct_with_opaques(void);
+void RttCompare_array_of_array_of_strings(void);
+void RttCompare_array_of_array_of_struct_with_strings(void);
+void RttCompare_array_of_vectors_of_ints(void);
+void RttCompare_array_of_vectors_of_strings(void);
+void RttCompare_array_of_opaque(void);
+void RttCompare_vector_of_ints(void);
+void RttCompare_vector_of_strings(void);
+void RttCompare_vector_of_struct_with_ints(void);
+void RttCompare_vector_of_struct_with_strings(void);
+void RttCompare_vector_of_arrays_of_strings(void);
+void RttCompare_vector_of_opaque(void);
 
 bake_test_case PrimitiveTypes_testcases[] = {
     {
@@ -1436,6 +1452,10 @@ bake_test_case RuntimeTypes_testcases[] = {
         RuntimeTypes_copy_illegal
     },
     {
+        "comp_illegal",
+        RuntimeTypes_comp_illegal
+    },
+    {
         "trivial_array",
         RuntimeTypes_trivial_array
     },
@@ -1472,12 +1492,20 @@ bake_test_case RuntimeTypes_testcases[] = {
         RuntimeTypes_array_copy_illegal
     },
     {
+        "array_comp_illegal",
+        RuntimeTypes_array_comp_illegal
+    },
+    {
         "vector_lifecycle",
         RuntimeTypes_vector_lifecycle
     },
     {
         "vector_lifecycle_trivial_type",
         RuntimeTypes_vector_lifecycle_trivial_type
+    },
+    {
+        "vector_comp_illegal",
+        RuntimeTypes_vector_comp_illegal
     },
     {
         "opaque",
@@ -5195,6 +5223,58 @@ bake_test_case RttCompare_testcases[] = {
     {
         "array_of_struct_with_ints",
         RttCompare_array_of_struct_with_ints
+    },
+    {
+        "array_of_struct_with_strings",
+        RttCompare_array_of_struct_with_strings
+    },
+    {
+        "array_of_struct_with_opaques",
+        RttCompare_array_of_struct_with_opaques
+    },
+    {
+        "array_of_array_of_strings",
+        RttCompare_array_of_array_of_strings
+    },
+    {
+        "array_of_array_of_struct_with_strings",
+        RttCompare_array_of_array_of_struct_with_strings
+    },
+    {
+        "array_of_vectors_of_ints",
+        RttCompare_array_of_vectors_of_ints
+    },
+    {
+        "array_of_vectors_of_strings",
+        RttCompare_array_of_vectors_of_strings
+    },
+    {
+        "array_of_opaque",
+        RttCompare_array_of_opaque
+    },
+    {
+        "vector_of_ints",
+        RttCompare_vector_of_ints
+    },
+    {
+        "vector_of_strings",
+        RttCompare_vector_of_strings
+    },
+    {
+        "vector_of_struct_with_ints",
+        RttCompare_vector_of_struct_with_ints
+    },
+    {
+        "vector_of_struct_with_strings",
+        RttCompare_vector_of_struct_with_strings
+    },
+    {
+        "vector_of_arrays_of_strings",
+        RttCompare_vector_of_arrays_of_strings
+    },
+    {
+        "vector_of_opaque",
+        RttCompare_vector_of_opaque
     }
 };
 
@@ -5225,7 +5305,7 @@ static bake_test_suite suites[] = {
         "RuntimeTypes",
         NULL,
         NULL,
-        47,
+        50,
         RuntimeTypes_testcases
     },
     {
@@ -5358,7 +5438,7 @@ static bake_test_suite suites[] = {
         "RttCompare",
         NULL,
         NULL,
-        13,
+        26,
         RttCompare_testcases
     }
 };

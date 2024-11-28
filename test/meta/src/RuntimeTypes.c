@@ -548,10 +548,10 @@ void RuntimeTypes_copy_illegal(void) {
     ecs_set_hooks_id(world, nested_struct, &hooks);
 
     /* Define TestStruct, which has two "NestedStruct" members.
-     * TestStruct's constructor should be set to illegal as well. */
+     * TestStruct's copy and copy ctor should be set to illegal as well. */
     const ecs_type_info_t *test_struct_ti = define_test_struct(world);
 
-    /* TestStruct should have an illegal move hook too: */
+    /* TestStruct should have an illegal copy and copy ctor hook too: */
     test_assert(test_struct_ti->hooks.flags & ECS_TYPE_HOOK_COPY_ILLEGAL);
     test_assert(test_struct_ti->hooks.flags & ECS_TYPE_HOOK_COPY_CTOR_ILLEGAL);
 
@@ -559,6 +559,31 @@ void RuntimeTypes_copy_illegal(void) {
     test_assert(test_struct_ti->hooks.ctor != NULL);
     test_assert(test_struct_ti->hooks.dtor == NULL);
     test_assert(test_struct_ti->hooks.move == NULL);
+
+    ecs_fini(world);
+}
+
+/* Tests that an illegal compare hook is set for a struct if at least a member has
+ * itself an illegal compare hook */
+void RuntimeTypes_comp_illegal(void) {
+    ecs_world_t *world = ecs_init();
+
+    /* Define NestedStruct: */
+    const ecs_type_info_t *nested_struct_ti = define_nested_struct(world);
+
+    ecs_type_hooks_t hooks = nested_struct_ti->hooks;
+    hooks.flags |= ECS_TYPE_HOOK_COMP_ILLEGAL; /* mark copy hook for "NestedStruct" as illegal */
+    hooks.comp = NULL;
+
+    hooks.flags &= ECS_TYPE_HOOKS_ILLEGAL;
+    ecs_set_hooks_id(world, nested_struct, &hooks);
+
+    /* Define TestStruct, which has two "NestedStruct" members.
+     * TestStruct's compare hook should be set to illegal as well. */
+    const ecs_type_info_t *test_struct_ti = define_test_struct(world);
+
+    /* TestStruct should have an illegal compare hook too: */
+    test_assert(test_struct_ti->hooks.flags & ECS_TYPE_HOOK_COMP_ILLEGAL);
 
     ecs_fini(world);
 }
@@ -1185,6 +1210,40 @@ void RuntimeTypes_array_copy_illegal(void) {
     ecs_fini(world);
 }
 
+/* Tests that an illegal comp hook is set for an array if its underlying type itself
+ * has an illegal comp hook */
+void RuntimeTypes_array_comp_illegal(void) {
+    ecs_world_t *world = ecs_init();
+
+    /* Define NestedStruct: */
+    const ecs_type_info_t *nested_struct_ti = define_nested_struct(world);
+
+    ecs_type_hooks_t hooks = nested_struct_ti->hooks;
+    hooks.flags |= ECS_TYPE_HOOK_COMP_ILLEGAL; /* mark compare hook 
+        for "NestedStruct" as illegal */
+    hooks.comp = NULL;
+    
+    hooks.flags &= ECS_TYPE_HOOKS_ILLEGAL;
+    ecs_set_hooks_id(world, nested_struct, &hooks);
+
+    /* Define test_arr, as an array of "NestedStruct".
+     * TestStruct's comp hook should be set to illegal as well. */
+    ecs_array_desc_t desc = {.entity = 0, .type = nested_struct, .count = 3};
+    ecs_entity_t test_arr = ecs_array_init(world, &desc);
+
+    const ecs_type_info_t* test_arr_ti = ecs_get_type_info(world, test_arr);
+
+    /* test_arr should have an illegal comp hook too: */
+    test_assert(test_arr_ti->hooks.flags & ECS_TYPE_HOOK_COMP_ILLEGAL);
+
+    /* No other hooks should've been set: */
+    test_assert(test_arr_ti->hooks.ctor != NULL);
+    test_assert(test_arr_ti->hooks.dtor == NULL);
+    test_assert(test_arr_ti->hooks.move == NULL);
+
+    ecs_fini(world);
+}
+
 /* Test vector types */
 void RuntimeTypes_vector_lifecycle(void) {
     ecs_world_t *world = ecs_init();
@@ -1313,6 +1372,35 @@ void RuntimeTypes_vector_lifecycle_trivial_type(void) {
     ecs_fini(world);
 
     free_resource_ids();
+}
+
+/* Tests that an illegal comp hook is set for an array if its underlying type itself
+ * has an illegal comp hook */
+void RuntimeTypes_vector_comp_illegal(void) {
+    ecs_world_t *world = ecs_init();
+
+    /* Define NestedStruct: */
+    const ecs_type_info_t *nested_struct_ti = define_nested_struct(world);
+
+    ecs_type_hooks_t hooks = nested_struct_ti->hooks;
+    hooks.flags |= ECS_TYPE_HOOK_COMP_ILLEGAL; /* mark compare hook 
+        for "NestedStruct" as illegal */
+    hooks.comp = NULL;
+    
+    hooks.flags &= ECS_TYPE_HOOKS_ILLEGAL;
+    ecs_set_hooks_id(world, nested_struct, &hooks);
+
+    /* Define test_vec, as a vector of "NestedStruct".
+     * TestStruct's comp hook should be set to illegal as well. */
+    ecs_vector_desc_t desc = {.entity = 0, .type = nested_struct};
+    ecs_entity_t test_vec = ecs_vector_init(world, &desc);
+
+    const ecs_type_info_t* test_vec_ti = ecs_get_type_info(world, test_vec);
+
+    /* test_vec should have an illegal comp hook too: */
+    test_assert(test_vec_ti->hooks.flags & ECS_TYPE_HOOK_COMP_ILLEGAL);
+
+    ecs_fini(world);
 }
 
 /* Configure an opaque type that consumes resources */
@@ -3350,3 +3438,4 @@ void RuntimeTypes_vector_of_opaque(void) {
 
     free_resource_ids();
 }
+
