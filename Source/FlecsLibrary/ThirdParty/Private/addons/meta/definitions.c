@@ -274,6 +274,13 @@ void flecs_meta_import_meta_definitions(
         }
     });
 
+    ecs_struct(world, {
+       .entity = ecs_id(EcsSystemPriority),
+       .members = {
+           { .name = "value", .type = ecs_id(ecs_i32_t) }
+       }
+   });
+
     /* Meta doc definitions */
 #ifdef FLECS_DOC
     ecs_entity_t meta = ecs_lookup(world, "flecs.meta");
