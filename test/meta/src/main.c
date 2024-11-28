@@ -1029,6 +1029,9 @@ void Misc_unit_from_suspend_defer(void);
 void Misc_unit_prefix_from_suspend_defer(void);
 void Misc_quantity_from_suspend_defer(void);
 
+// Testsuite 'Compare'
+void Compare_u8(void);
+
 bake_test_case PrimitiveTypes_testcases[] = {
     {
         "bool",
@@ -5008,6 +5011,13 @@ bake_test_case Misc_testcases[] = {
     }
 };
 
+bake_test_case Compare_testcases[] = {
+    {
+        "u8",
+        Compare_u8
+    }
+};
+
 
 static bake_test_suite suites[] = {
     {
@@ -5156,9 +5166,16 @@ static bake_test_suite suites[] = {
         NULL,
         40,
         Misc_testcases
+    },
+    {
+        "Compare",
+        NULL,
+        NULL,
+        1,
+        Compare_testcases
     }
 };
 
 int main(int argc, char *argv[]) {
-    return bake_test_run("meta", argc, argv, suites, 21);
+    return bake_test_run("meta", argc, argv, suites, 22);
 }
