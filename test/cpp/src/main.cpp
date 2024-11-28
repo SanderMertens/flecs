@@ -1015,6 +1015,7 @@ void ComponentLifecycle_register_parent_after_child_w_hooks_implicit(void);
 void ComponentLifecycle_sparse_component(void);
 void ComponentLifecycle_count_in_add_hook(void);
 void ComponentLifecycle_count_in_remove_hook(void);
+void ComponentLifecycle_set_multiple_hooks(void);
 
 // Testsuite 'Refs'
 void Refs_get_ref_by_ptr(void);
@@ -5356,6 +5357,10 @@ bake_test_case ComponentLifecycle_testcases[] = {
     {
         "count_in_remove_hook",
         ComponentLifecycle_count_in_remove_hook
+    },
+    {
+        "set_multiple_hooks",
+        ComponentLifecycle_set_multiple_hooks
     }
 };
 
@@ -6948,7 +6953,7 @@ static bake_test_suite suites[] = {
         "ComponentLifecycle",
         NULL,
         NULL,
-        88,
+        89,
         ComponentLifecycle_testcases
     },
     {

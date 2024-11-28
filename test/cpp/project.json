@@ -1049,7 +1049,8 @@
                 "register_parent_after_child_w_hooks_implicit",
                 "sparse_component",
                 "count_in_add_hook",
-                "count_in_remove_hook"
+                "count_in_remove_hook",
+                "set_multiple_hooks"
             ]
         }, {
             "id": "Refs",

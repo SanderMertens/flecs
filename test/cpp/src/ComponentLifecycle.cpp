@@ -2243,3 +2243,40 @@ void ComponentLifecycle_count_in_remove_hook(void) {
 
     test_int(matched, 0);
 }
+
+/* This test checks that the hook configuration API (ecs_set_hooks_id) 
+ * is invoked in a consistent manner */
+void ComponentLifecycle_set_multiple_hooks(void) {
+    flecs::world ecs;
+
+    /* `Pod` type has various lifecycle hooks */
+    auto pod = ecs.component<Pod>();
+    
+    /* It should be possible to configure other hooks afterwards: */
+    int adds = 0;
+    int sets = 0;
+    int removes = 0;
+    pod.on_add([&](Pod&) {
+        adds++;
+    });
+
+    pod.on_set([&](Pod&) {
+        sets++;
+    });
+
+    pod.on_remove([&](Pod&) {
+        removes++;
+    });
+
+    /* Test hooks actually work: */
+
+    ecs.entity().add<Pod>();
+    test_int(adds, 1);
+
+    ecs.entity().set<Pod>(Pod());
+    test_int(adds, 2);
+    test_int(sets, 1);
+
+    ecs.release(); /* destroys world */
+    test_int(removes, 2); /* two instances of `Pod` removed */
+}
