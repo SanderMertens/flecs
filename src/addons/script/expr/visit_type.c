@@ -289,7 +289,9 @@ int flecs_expr_initializer_visit_type(
     bool is_opaque = ecs_get(script->world, type, EcsOpaque) != NULL;
     node->is_dynamic = is_opaque;
 
-    ecs_meta_push(cur); /* { */
+    if (ecs_meta_push(cur)) {
+        goto error;
+    }
 
     if (ecs_meta_is_collection(cur) != node->is_collection) {
         char *type_str = ecs_get_path(script->world, type);
@@ -325,7 +327,10 @@ int flecs_expr_initializer_visit_type(
         }
 
         ecs_entity_t elem_type = ecs_meta_get_type(cur);
-        if (flecs_script_expr_visit_type_priv(script, elem->value, cur, desc)) {
+        ecs_meta_cursor_t elem_cur = *cur;
+        if (flecs_script_expr_visit_type_priv(
+            script, elem->value, &elem_cur, desc)) 
+        {
             goto error;
         }
 
@@ -341,7 +346,9 @@ int flecs_expr_initializer_visit_type(
 
     node->node.type = type;
 
-    ecs_meta_pop(cur); /* } */
+    if (ecs_meta_pop(cur)) {
+        goto error;
+    }
 
     return 0;
 error:
@@ -429,10 +436,11 @@ int flecs_expr_identifier_visit_type(
     ecs_meta_cursor_t *cur,
     const ecs_script_expr_run_desc_t *desc)
 {
-    if (cur) {
+    if (cur->valid) {
         node->node.type = ecs_meta_get_type(cur);
     } else {
         node->node.type = ecs_id(ecs_entity_t);
+        *cur = ecs_meta_cursor(script->world, ecs_id(ecs_entity_t), NULL);
     }
 
     return 0;
@@ -442,6 +450,7 @@ static
 int flecs_expr_variable_visit_type(
     ecs_script_t *script,
     ecs_expr_variable_t *node,
+    ecs_meta_cursor_t *cur,
     const ecs_script_expr_run_desc_t *desc)
 {
     ecs_script_var_t *var = ecs_script_vars_lookup(
@@ -455,6 +464,8 @@ int flecs_expr_variable_visit_type(
     node->node.type = var->value.type;
     node->var = var;
 
+    *cur = ecs_meta_cursor(script->world, var->value.type, NULL);
+
     return 0;
 error:
     return -1;
@@ -464,9 +475,10 @@ static
 int flecs_expr_member_visit_type(
     ecs_script_t *script,
     ecs_expr_member_t *node,
+    ecs_meta_cursor_t *cur,
     const ecs_script_expr_run_desc_t *desc)
 {
-    if (flecs_script_expr_visit_type_priv(script, node->left, NULL, desc)) {
+    if (flecs_script_expr_visit_type_priv(script, node->left, cur, desc)) {
         goto error;
     }
 
@@ -477,8 +489,8 @@ int flecs_expr_member_visit_type(
     if (!type) {
         char *type_str = ecs_get_path(world, left_type);
         flecs_expr_visit_error(script, node, 
-            "cannot resolve member on value of type '%s' (missing reflection data)",
-                type_str);
+            "cannot resolve member on value of type '%s' "
+                "(missing reflection data)", type_str);
         ecs_os_free(type_str);
         goto error;
     }
@@ -486,16 +498,15 @@ int flecs_expr_member_visit_type(
     if (type->kind != EcsStructType) {
         char *type_str = ecs_get_path(world, left_type);
         flecs_expr_visit_error(script, node, 
-            "cannot resolve member on non-struct type '%s'",
-                type_str);
+            "cannot resolve member on non-struct type '%s'", type_str);
         ecs_os_free(type_str);
         goto error;
     }
 
-    ecs_meta_cursor_t cur = ecs_meta_cursor(world, left_type, NULL);
-    ecs_meta_push(&cur); /* { */
+    ecs_meta_push(cur); /* { */
+
     int prev_log = ecs_log_set_level(-4);
-    if (ecs_meta_dotmember(&cur, node->member_name)) {
+    if (ecs_meta_dotmember(cur, node->member_name)) {
         ecs_log_set_level(prev_log);
         char *type_str = ecs_get_path(world, left_type);
         flecs_expr_visit_error(script, node, 
@@ -506,9 +517,10 @@ int flecs_expr_member_visit_type(
     }
     ecs_log_set_level(prev_log);
 
-    node->node.type = ecs_meta_get_type(&cur);
-    node->offset = (uintptr_t)ecs_meta_get_ptr(&cur);
-    ecs_meta_pop(&cur); /* } */
+    node->node.type = ecs_meta_get_type(cur);
+    const EcsMember *m = ecs_get(world, ecs_meta_get_member_id(cur), EcsMember);
+    ecs_assert(m != NULL, ECS_INTERNAL_ERROR, NULL);
+    node->offset = (uintptr_t)ecs_meta_get_ptr(cur);
 
     return 0;
 error:
@@ -519,9 +531,10 @@ static
 int flecs_expr_element_visit_type(
     ecs_script_t *script,
     ecs_expr_element_t *node,
+    ecs_meta_cursor_t *cur,
     const ecs_script_expr_run_desc_t *desc)
 {
-    if (flecs_script_expr_visit_type_priv(script, node->left, NULL, desc)) {
+    if (flecs_script_expr_visit_type_priv(script, node->left, cur, desc)) {
         goto error;
     }
 
@@ -531,6 +544,7 @@ int flecs_expr_element_visit_type(
 
     ecs_world_t *world = script->world;
     ecs_entity_t left_type = node->left->type;
+
     const EcsType *type = ecs_get(world, left_type, EcsType);
     if (!type) {
         char *type_str = ecs_get_path(world, left_type);
@@ -566,31 +580,30 @@ int flecs_expr_element_visit_type(
                 "invalid component expression");
             goto error;
         }
-    } else if (type->kind == EcsArrayType) {
-        const EcsArray *type_array = ecs_get(world, left_type, EcsArray);
-        ecs_assert(type_array != NULL, ECS_INTERNAL_ERROR, NULL);
-        node->node.type = type_array->type;
-        const ecs_type_info_t *elem_ti = ecs_get_type_info(
-            world, type_array->type);
-        ecs_assert(elem_ti != NULL, ECS_INTERNAL_ERROR, NULL);
-        node->elem_size = elem_ti->size;
-    } else if (type->kind == EcsVectorType) {
-        const EcsVector *type_vector = ecs_get(world, left_type, EcsVector);
-        ecs_assert(type_vector != NULL, ECS_INTERNAL_ERROR, NULL);
-        node->node.type = type_vector->type;
-        const ecs_type_info_t *elem_ti = ecs_get_type_info(
-            world, type_vector->type);
-        ecs_assert(elem_ti != NULL, ECS_INTERNAL_ERROR, NULL);
-        node->elem_size = elem_ti->size;
     } else {
-        char *type_str = ecs_get_path(script->world, node->left->type);
-        flecs_expr_visit_error(script, node, 
-            "invalid usage of [] on non collection/entity type '%s'", type_str);
-        ecs_os_free(type_str);
-        goto error;
+        if (ecs_meta_push(cur)) {
+            goto not_a_collection;
+        }
+
+        if (!ecs_meta_is_collection(cur)) {
+            goto not_a_collection;
+        }
+
+        node->node.type = ecs_meta_get_type(cur);
+
+        const ecs_type_info_t *elem_ti = ecs_get_type_info(
+            script->world, node->node.type);
+        node->elem_size = elem_ti->size;
     }
 
     return 0;
+
+not_a_collection: {
+    char *type_str = ecs_get_path(script->world, node->left->type);
+    flecs_expr_visit_error(script, node, 
+        "invalid usage of [] on non collection/entity type '%s'", type_str);
+    ecs_os_free(type_str);
+}
 error:
     return -1;
 }
@@ -638,7 +651,7 @@ int flecs_script_expr_visit_type_priv(
         break;
     case EcsExprVariable:
         if (flecs_expr_variable_visit_type(
-            script, (ecs_expr_variable_t*)node, desc)) 
+            script, (ecs_expr_variable_t*)node, cur, desc)) 
         {
             goto error;
         }
@@ -647,14 +660,14 @@ int flecs_script_expr_visit_type_priv(
         break;
     case EcsExprMember:
         if (flecs_expr_member_visit_type(
-            script, (ecs_expr_member_t*)node, desc)) 
+            script, (ecs_expr_member_t*)node, cur, desc)) 
         {
             goto error;
         }
         break;
     case EcsExprElement:
         if (flecs_expr_element_visit_type(
-            script, (ecs_expr_element_t*)node, desc)) 
+            script, (ecs_expr_element_t*)node, cur, desc)) 
         {
             goto error;
         }
@@ -685,7 +698,9 @@ int flecs_script_expr_visit_type(
             script->world, desc->type, NULL);
         return flecs_script_expr_visit_type_priv(script, node, &cur, desc);
     } else {
-        return flecs_script_expr_visit_type_priv(script, node, NULL, desc);
+        ecs_meta_cursor_t cur;
+        ecs_os_zeromem(&cur);
+        return flecs_script_expr_visit_type_priv(script, node, &cur, desc);
     }
 }
 
