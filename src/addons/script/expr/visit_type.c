@@ -570,10 +570,18 @@ int flecs_expr_element_visit_type(
         const EcsArray *type_array = ecs_get(world, left_type, EcsArray);
         ecs_assert(type_array != NULL, ECS_INTERNAL_ERROR, NULL);
         node->node.type = type_array->type;
+        const ecs_type_info_t *elem_ti = ecs_get_type_info(
+            world, type_array->type);
+        ecs_assert(elem_ti != NULL, ECS_INTERNAL_ERROR, NULL);
+        node->elem_size = elem_ti->size;
     } else if (type->kind == EcsVectorType) {
         const EcsVector *type_vector = ecs_get(world, left_type, EcsVector);
         ecs_assert(type_vector != NULL, ECS_INTERNAL_ERROR, NULL);
         node->node.type = type_vector->type;
+        const ecs_type_info_t *elem_ti = ecs_get_type_info(
+            world, type_vector->type);
+        ecs_assert(elem_ti != NULL, ECS_INTERNAL_ERROR, NULL);
+        node->elem_size = elem_ti->size;
     } else {
         char *type_str = ecs_get_path(script->world, node->left->type);
         flecs_expr_visit_error(script, node, 

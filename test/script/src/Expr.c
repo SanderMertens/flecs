@@ -1049,6 +1049,384 @@ void Expr_var_member(void) {
     ecs_fini(world);
 }
 
+void Expr_var_member_member(void) {
+    ecs_world_t *world = ecs_init();
+
+    typedef struct {
+        int32_t x;
+        int32_t y;
+    } Point;
+
+    typedef struct {
+        Point start;
+        Point stop;
+    } Line;
+
+    ecs_entity_t ecs_id(Point) = ecs_struct(world, {
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t ecs_id(Line) = ecs_struct(world, {
+        .members = {
+            {"start", ecs_id(Point)},
+            {"stop", ecs_id(Point)}
+        }
+    });
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *var = ecs_script_vars_define(
+        vars, "foo", Line);
+    *(Line*)var->value.ptr = (Line){{10, 20}, {30, 40}};
+
+    ecs_script_expr_run_desc_t desc = { .vars = vars };
+    {
+        ecs_value_t v = {0};
+        const char *ptr = ecs_script_expr_run(world, "$foo.start.x", &v, &desc);
+        test_assert(ptr != NULL);
+        test_assert(!ptr[0]);
+        test_uint(v.type, ecs_id(ecs_i32_t));
+        test_int(*(ecs_i32_t*)v.ptr, 10);
+        ecs_value_free(world, v.type, v.ptr);
+    }
+    {
+        ecs_value_t v = {0};
+        const char *ptr = ecs_script_expr_run(world, "$foo.start.y", &v, &desc);
+        test_assert(ptr != NULL);
+        test_assert(!ptr[0]);
+        test_uint(v.type, ecs_id(ecs_i32_t));
+        test_int(*(ecs_i32_t*)v.ptr, 20);
+        ecs_value_free(world, v.type, v.ptr);
+    }
+    {
+        ecs_value_t v = {0};
+        const char *ptr = ecs_script_expr_run(world, "$foo.stop.x", &v, &desc);
+        test_assert(ptr != NULL);
+        test_assert(!ptr[0]);
+        test_uint(v.type, ecs_id(ecs_i32_t));
+        test_int(*(ecs_i32_t*)v.ptr, 30);
+        ecs_value_free(world, v.type, v.ptr);
+    }
+    {
+        ecs_value_t v = {0};
+        const char *ptr = ecs_script_expr_run(world, "$foo.stop.y", &v, &desc);
+        test_assert(ptr != NULL);
+        test_assert(!ptr[0]);
+        test_uint(v.type, ecs_id(ecs_i32_t));
+        test_int(*(ecs_i32_t*)v.ptr, 40);
+        ecs_value_free(world, v.type, v.ptr);
+    }
+
+    ecs_script_vars_fini(vars);
+    ecs_fini(world);
+}
+
+void Expr_var_element(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t array = ecs_array(world, {
+        .type = ecs_id(ecs_i32_t),
+        .count = 2
+    });
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *var = ecs_script_vars_define_id(
+        vars, "foo", array);
+    ((int*)var->value.ptr)[0] = 10;
+    ((int*)var->value.ptr)[1] = 20;
+
+    ecs_script_expr_run_desc_t desc = { .vars = vars };
+    {
+        ecs_value_t v = {0};
+        const char *ptr = ecs_script_expr_run(world, "$foo[0]", &v, &desc);
+        test_assert(ptr != NULL);
+        test_assert(!ptr[0]);
+        test_uint(v.type, ecs_id(ecs_i32_t));
+        test_int(*(ecs_i32_t*)v.ptr, 10);
+        ecs_value_free(world, v.type, v.ptr);
+    }
+    {
+        ecs_value_t v = {0};
+        const char *ptr = ecs_script_expr_run(world, "$foo[1]", &v, &desc);
+        test_assert(ptr != NULL);
+        test_assert(!ptr[0]);
+        test_uint(v.type, ecs_id(ecs_i32_t));
+        test_int(*(ecs_i32_t*)v.ptr, 20);
+        ecs_value_free(world, v.type, v.ptr);
+    }
+
+    ecs_script_vars_fini(vars);
+    ecs_fini(world);
+}
+
+void Expr_var_element_element(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ints = ecs_array(world, {
+        .type = ecs_id(ecs_i32_t),
+        .count = 2
+    });
+
+    ecs_entity_t arrays = ecs_array(world, {
+        .type = ints,
+        .count = 2
+    });
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *var = ecs_script_vars_define_id(
+        vars, "foo", arrays);
+
+    typedef int32_t Ints[2];
+    Ints value[] = {{10, 20}, {30, 40}, {50, 60}};
+    ecs_os_memcpy(var->value.ptr, value, sizeof(value));
+
+    ecs_script_expr_run_desc_t desc = { .vars = vars };
+    {
+        ecs_value_t v = {0};
+        const char *ptr = ecs_script_expr_run(world, "$foo[0][0]", &v, &desc);
+        test_assert(ptr != NULL);
+        test_assert(!ptr[0]);
+        test_uint(v.type, ecs_id(ecs_i32_t));
+        test_int(*(ecs_i32_t*)v.ptr, 10);
+        ecs_value_free(world, v.type, v.ptr);
+    }
+    {
+        ecs_value_t v = {0};
+        const char *ptr = ecs_script_expr_run(world, "$foo[0][1]", &v, &desc);
+        test_assert(ptr != NULL);
+        test_assert(!ptr[0]);
+        test_uint(v.type, ecs_id(ecs_i32_t));
+        test_int(*(ecs_i32_t*)v.ptr, 20);
+        ecs_value_free(world, v.type, v.ptr);
+    }
+    {
+        ecs_value_t v = {0};
+        const char *ptr = ecs_script_expr_run(world, "$foo[1][0]", &v, &desc);
+        test_assert(ptr != NULL);
+        test_assert(!ptr[0]);
+        test_uint(v.type, ecs_id(ecs_i32_t));
+        test_int(*(ecs_i32_t*)v.ptr, 30);
+        ecs_value_free(world, v.type, v.ptr);
+    }
+    {
+        ecs_value_t v = {0};
+        const char *ptr = ecs_script_expr_run(world, "$foo[1][1]", &v, &desc);
+        test_assert(ptr != NULL);
+        test_assert(!ptr[0]);
+        test_uint(v.type, ecs_id(ecs_i32_t));
+        test_int(*(ecs_i32_t*)v.ptr, 40);
+        ecs_value_free(world, v.type, v.ptr);
+    }
+
+    ecs_script_vars_fini(vars);
+    ecs_fini(world);
+}
+
+void Expr_var_member_element(void) {
+    ecs_world_t *world = ecs_init();
+
+    typedef struct {
+        int32_t x[2];
+        int32_t y[2];
+    } Points;
+
+    ecs_entity_t Ints = ecs_array(world, {
+        .type = ecs_id(ecs_i32_t),
+        .count = 2
+    });
+
+    ecs_entity_t ecs_id(Points) = ecs_struct(world, {
+        .members = {
+            {"x", Ints },
+            {"y", Ints }
+        }
+    });
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *var = ecs_script_vars_define(
+        vars, "foo", Points);
+    *((Points*)var->value.ptr) = (Points){{10, 20}, {30, 40}};
+
+    ecs_script_expr_run_desc_t desc = { .vars = vars };
+    {
+        ecs_value_t v = {0};
+        const char *ptr = ecs_script_expr_run(world, "$foo.x[0]", &v, &desc);
+        test_assert(ptr != NULL);
+        test_assert(!ptr[0]);
+        test_uint(v.type, ecs_id(ecs_i32_t));
+        test_int(*(ecs_i32_t*)v.ptr, 10);
+        ecs_value_free(world, v.type, v.ptr);
+    }
+    {
+        ecs_value_t v = {0};
+        const char *ptr = ecs_script_expr_run(world, "$foo.x[1]", &v, &desc);
+        test_assert(ptr != NULL);
+        test_assert(!ptr[0]);
+        test_uint(v.type, ecs_id(ecs_i32_t));
+        test_int(*(ecs_i32_t*)v.ptr, 20);
+        ecs_value_free(world, v.type, v.ptr);
+    }
+    {
+        ecs_value_t v = {0};
+        const char *ptr = ecs_script_expr_run(world, "$foo.y[0]", &v, &desc);
+        test_assert(ptr != NULL);
+        test_assert(!ptr[0]);
+        test_uint(v.type, ecs_id(ecs_i32_t));
+        test_int(*(ecs_i32_t*)v.ptr, 30);
+        ecs_value_free(world, v.type, v.ptr);
+    }
+    {
+        ecs_value_t v = {0};
+        const char *ptr = ecs_script_expr_run(world, "$foo.y[1]", &v, &desc);
+        test_assert(ptr != NULL);
+        test_assert(!ptr[0]);
+        test_uint(v.type, ecs_id(ecs_i32_t));
+        test_int(*(ecs_i32_t*)v.ptr, 40);
+        ecs_value_free(world, v.type, v.ptr);
+    }
+
+    ecs_script_vars_fini(vars);
+    ecs_fini(world);
+}
+
+void Expr_var_member_element_inline(void) {
+    ecs_world_t *world = ecs_init();
+
+    typedef struct {
+        int32_t x[2];
+        int32_t y[2];
+    } Points;
+
+    ecs_entity_t ecs_id(Points) = ecs_struct(world, {
+        .members = {
+            {"x", ecs_id(ecs_i32_t), .count = 2},
+            {"y", ecs_id(ecs_i32_t), .count = 2}
+        }
+    });
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *var = ecs_script_vars_define(
+        vars, "foo", Points);
+    *((Points*)var->value.ptr) = (Points){{10, 20}, {30, 40}};
+
+    ecs_script_expr_run_desc_t desc = { .vars = vars };
+    {
+        ecs_value_t v = {0};
+        const char *ptr = ecs_script_expr_run(world, "$foo.x[0]", &v, &desc);
+        test_assert(ptr != NULL);
+        test_assert(!ptr[0]);
+        test_uint(v.type, ecs_id(ecs_i32_t));
+        test_int(*(ecs_i32_t*)v.ptr, 10);
+        ecs_value_free(world, v.type, v.ptr);
+    }
+    {
+        ecs_value_t v = {0};
+        const char *ptr = ecs_script_expr_run(world, "$foo.x[1]", &v, &desc);
+        test_assert(ptr != NULL);
+        test_assert(!ptr[0]);
+        test_uint(v.type, ecs_id(ecs_i32_t));
+        test_int(*(ecs_i32_t*)v.ptr, 20);
+        ecs_value_free(world, v.type, v.ptr);
+    }
+    {
+        ecs_value_t v = {0};
+        const char *ptr = ecs_script_expr_run(world, "$foo.y[0]", &v, &desc);
+        test_assert(ptr != NULL);
+        test_assert(!ptr[0]);
+        test_uint(v.type, ecs_id(ecs_i32_t));
+        test_int(*(ecs_i32_t*)v.ptr, 30);
+        ecs_value_free(world, v.type, v.ptr);
+    }
+    {
+        ecs_value_t v = {0};
+        const char *ptr = ecs_script_expr_run(world, "$foo.y[1]", &v, &desc);
+        test_assert(ptr != NULL);
+        test_assert(!ptr[0]);
+        test_uint(v.type, ecs_id(ecs_i32_t));
+        test_int(*(ecs_i32_t*)v.ptr, 40);
+        ecs_value_free(world, v.type, v.ptr);
+    }
+
+    ecs_script_vars_fini(vars);
+    ecs_fini(world);
+}
+
+void Expr_var_element_member(void) {
+    ecs_world_t *world = ecs_init();
+
+    typedef struct {
+        int32_t x;
+        int32_t y;
+    } Point;
+
+    ecs_entity_t ecs_id(Point) = ecs_struct(world, {
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t array = ecs_array(world, {
+        .type = ecs_id(Point),
+        .count = 2
+    });
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *var = ecs_script_vars_define_id(
+        vars, "foo", array);
+    ((Point*)var->value.ptr)[0] = (Point){10, 20};
+    ((Point*)var->value.ptr)[1] = (Point){30, 40};
+
+    ecs_script_expr_run_desc_t desc = { .vars = vars };
+    {
+        ecs_value_t v = {0};
+        const char *ptr = ecs_script_expr_run(world, "$foo[0].x", &v, &desc);
+        test_assert(ptr != NULL);
+        test_assert(!ptr[0]);
+        test_uint(v.type, ecs_id(ecs_i32_t));
+        test_int(*(ecs_i32_t*)v.ptr, 10);
+        ecs_value_free(world, v.type, v.ptr);
+    }
+    {
+        ecs_value_t v = {0};
+        const char *ptr = ecs_script_expr_run(world, "$foo[0].y", &v, &desc);
+        test_assert(ptr != NULL);
+        test_assert(!ptr[0]);
+        test_uint(v.type, ecs_id(ecs_i32_t));
+        test_int(*(ecs_i32_t*)v.ptr, 20);
+        ecs_value_free(world, v.type, v.ptr);
+    }
+    {
+        ecs_value_t v = {0};
+        const char *ptr = ecs_script_expr_run(world, "$foo[1].x", &v, &desc);
+        test_assert(ptr != NULL);
+        test_assert(!ptr[0]);
+        test_uint(v.type, ecs_id(ecs_i32_t));
+        test_int(*(ecs_i32_t*)v.ptr, 30);
+        ecs_value_free(world, v.type, v.ptr);
+    }
+    {
+        ecs_value_t v = {0};
+        const char *ptr = ecs_script_expr_run(world, "$foo[1].y", &v, &desc);
+        test_assert(ptr != NULL);
+        test_assert(!ptr[0]);
+        test_uint(v.type, ecs_id(ecs_i32_t));
+        test_int(*(ecs_i32_t*)v.ptr, 40);
+        ecs_value_free(world, v.type, v.ptr);
+    }
+
+    ecs_script_vars_fini(vars);
+    ecs_fini(world);
+}
+
 void Expr_bool_cond_and_bool(void) {
     ecs_world_t *world = ecs_init();
 
