@@ -1051,6 +1051,13 @@ void ComponentLifecycle_sparse_component(void);
 void ComponentLifecycle_count_in_add_hook(void);
 void ComponentLifecycle_count_in_remove_hook(void);
 void ComponentLifecycle_set_multiple_hooks(void);
+void ComponentLifecycle_compare_WithGreaterThan(void);
+void ComponentLifecycle_compare_WithLessThan(void);
+void ComponentLifecycle_compare_WithLessAndGreaterThan(void);
+void ComponentLifecycle_compare_WithEqualsAndGreaterThan(void);
+void ComponentLifecycle_compare_WithEqualsAndLessThan(void);
+void ComponentLifecycle_compare_WithEqualsOnly(void);
+void ComponentLifecycle_compare_WithoutOperators(void);
 
 // Testsuite 'Refs'
 void Refs_get_ref_by_ptr(void);
@@ -5543,7 +5550,35 @@ bake_test_case ComponentLifecycle_testcases[] = {
     },
     {
         "set_multiple_hooks",
-        ComponentLifecycle_set_multiple_hooks
+        ComponentLifecycle_set_multiple_hooks,
+    },
+    {
+        "compare_WithGreaterThan",
+        ComponentLifecycle_compare_WithGreaterThan
+    },
+    {
+        "compare_WithLessThan",
+        ComponentLifecycle_compare_WithLessThan
+    },
+    {
+        "compare_WithLessAndGreaterThan",
+        ComponentLifecycle_compare_WithLessAndGreaterThan
+    },
+    {
+        "compare_WithEqualsAndGreaterThan",
+        ComponentLifecycle_compare_WithEqualsAndGreaterThan
+    },
+    {
+        "compare_WithEqualsAndLessThan",
+        ComponentLifecycle_compare_WithEqualsAndLessThan
+    },
+    {
+        "compare_WithEqualsOnly",
+        ComponentLifecycle_compare_WithEqualsOnly
+    },
+    {
+        "compare_WithoutOperators",
+        ComponentLifecycle_compare_WithoutOperators
     }
 };
 
@@ -7168,7 +7203,7 @@ static bake_test_suite suites[] = {
         "ComponentLifecycle",
         NULL,
         NULL,
-        89,
+        96,
         ComponentLifecycle_testcases
     },
     {

@@ -1184,7 +1184,17 @@ void flecs_default_move_w_dtor(void *dst_ptr, void *src_ptr,
     cl->dtor(src_ptr, count, ti);
 }
 
-ECS_NORETURN static
+int flecs_default_comp(
+    const void *a_ptr,
+    const void *b_ptr,
+    const ecs_type_info_t *ti)
+{
+    (void)ti;
+    return a_ptr == b_ptr ? 0 : (a_ptr < b_ptr) ? -1 : 1;
+}
+
+ECS_NORETURN
+static
 void flecs_ctor_illegal(
     void * dst,
     int32_t count,
@@ -1324,6 +1334,7 @@ void ecs_set_hooks_id(
     if (h->move_ctor) ti->hooks.move_ctor = h->move_ctor;
     if (h->ctor_move_dtor) ti->hooks.ctor_move_dtor = h->ctor_move_dtor;
     if (h->move_dtor) ti->hooks.move_dtor = h->move_dtor;
+    if (h->comp) ti->hooks.comp = h->comp;
 
     if (h->on_add) ti->hooks.on_add = h->on_add;
     if (h->on_remove) ti->hooks.on_remove = h->on_remove;
@@ -1454,6 +1465,9 @@ void ecs_set_hooks_id(
         ti->hooks.ctor_move_dtor = flecs_move_ctor_illegal;
     }
 
+    if(ti->hooks.comp == NULL) {
+        ti->hooks.comp = flecs_default_comp;
+    }
 error:
     return;
 }

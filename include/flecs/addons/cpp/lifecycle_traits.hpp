@@ -348,5 +348,152 @@ ecs_move_t move_dtor(ecs_flags32_t &) {
     return move_dtor_impl<T>;
 }
 
+
+// Traits to check for operator<, operator>, and operator==
+template<typename...>
+using void_t = void;
+
+
+// Trait to check for operator<
+template <typename T, typename = void>
+struct has_operator_less : std::false_type {};
+
+// Only enable if T has an operator< that takes T as the right-hand side (no implicit conversion)
+template <typename T>
+struct has_operator_less<T, void_t<decltype(std::declval<const T&>() < std::declval<const T&>())>> : 
+    std::is_same<decltype(std::declval<const T&>() < std::declval<const T&>()), bool> {};
+
+// Trait to check for operator>
+template <typename T, typename = void>
+struct has_operator_greater : std::false_type {};
+
+// Only enable if T has an operator> that takes T as the right-hand side (no implicit conversion)
+template <typename T>
+struct has_operator_greater<T, void_t<decltype(std::declval<const T&>() > std::declval<const T&>())>> : 
+    std::is_same<decltype(std::declval<const T&>() > std::declval<const T&>()), bool> {};
+
+
+
+// Trait to check for operator==
+// This trait causes a "float comparison warning" in some compilers
+// when `T` is float or double.
+// Disable this warning with the following pragmas:
+#if defined(__clang__)
+    #pragma clang diagnostic push
+    #pragma clang diagnostic ignored "-Wfloat-equal"
+#elif defined(__GNUC__) && !defined(__clang__)
+    #pragma GCC diagnostic push
+    #pragma GCC diagnostic ignored "-Wfloat-equal"
+#endif
+
+template <typename T, typename = void>
+struct has_operator_equal : std::false_type {};
+
+// Only enable if T has an operator== that takes T as the right-hand side (no implicit conversion)
+template <typename T>
+struct has_operator_equal<T, void_t<decltype(std::declval<const T&>() == std::declval<const T&>())>> : 
+    std::is_same<decltype(std::declval<const T&>() == std::declval<const T&>()), bool> {};
+
+
+// re-enable the warning:
+#if defined(__clang__)
+    #pragma clang diagnostic pop
+#elif defined(__GNUC__) && !defined(__clang__)
+    #pragma GCC diagnostic pop
+#endif
+
+// 1. Compare function if `<`, `>`, are defined
+template <typename T, if_t<
+    has_operator_less<T>::value &&
+    has_operator_greater<T>::value > = 0>
+int compare_impl(const void *a, const void *b, const ecs_type_info_t *) {
+    const T& lhs = *static_cast<const T*>(a);
+    const T& rhs = *static_cast<const T*>(b);
+    if (lhs < rhs) return -1;
+    if (lhs > rhs) return 1;
+    return 0;
+}
+
+// 2. Compare function if `<` and `==` are defined, deducing `>`
+template <typename T, if_t<
+    has_operator_less<T>::value &&
+    has_operator_equal<T>::value &&
+    !has_operator_greater<T>::value > = 0>
+int compare_impl(const void *a, const void *b, const ecs_type_info_t *) {
+    const T& lhs = *static_cast<const T*>(a);
+    const T& rhs = *static_cast<const T*>(b);
+    if (lhs == rhs) return 0;
+    if (lhs < rhs) return -1;
+    return 1; // If not less and not equal, must be greater
+}
+
+// 3. Compare function if `>` and `==` are defined, deducing `<`
+template <typename T, if_t<    
+    has_operator_greater<T>::value &&
+    has_operator_equal<T>::value &&
+    !has_operator_less<T>::value > = 0>
+int compare_impl(const void *a, const void *b, const ecs_type_info_t *) {
+    const T& lhs = *static_cast<const T*>(a);
+    const T& rhs = *static_cast<const T*>(b);
+    if (lhs == rhs) return 0;
+    if (lhs > rhs) return 1;
+    return -1; // If not greater and not equal, must be less
+}
+
+// 4. Compare function if only `<` is defined, deducing the rest
+template <typename T, if_t<
+    has_operator_less<T>::value &&
+    !has_operator_greater<T>::value &&
+    !has_operator_equal<T>::value > = 0>
+int compare_impl(const void *a, const void *b, const ecs_type_info_t *) {
+    const T& lhs = *static_cast<const T*>(a);
+    const T& rhs = *static_cast<const T*>(b);
+    if (lhs < rhs) return -1;
+    if (rhs < lhs) return 1;
+    return 0; // If neither is less, they must be equal
+}
+
+// 5. Compare function if only `>` is defined, deducing the rest
+template <typename T, if_t<
+    has_operator_greater<T>::value &&
+    !has_operator_less<T>::value &&
+    !has_operator_equal<T>::value > = 0>
+int compare_impl(const void *a, const void *b, const ecs_type_info_t *) {
+    const T& lhs = *static_cast<const T*>(a);
+    const T& rhs = *static_cast<const T*>(b);
+    if (lhs > rhs) return 1;
+    if (rhs > lhs) return -1;
+    return 0; // If neither is greater, they must be equal
+}
+
+// 6. Compare function if only `==` is defined, compare pointers to decide greater or smaller
+template <typename T, if_t<
+    has_operator_equal<T>::value &&
+    !has_operator_less<T>::value &&
+    !has_operator_greater<T>::value > = 0>
+int compare_impl(const void *a, const void *b, const ecs_type_info_t *) {
+    const T& lhs = *static_cast<const T*>(a);
+    const T& rhs = *static_cast<const T*>(b);
+    if (lhs == rhs) return 0;
+    return (a < b) ? -1 : 1; // Use pointer comparison to decide order
+}
+
+template <typename T, if_t<
+    has_operator_less<T>::value ||
+    has_operator_greater<T>::value ||
+    has_operator_equal<T>::value > = 0>
+ecs_comp_t compare() {
+    return compare_impl<T>;
+}
+
+template <typename T, if_t<
+    !has_operator_less<T>::value &&
+    !has_operator_greater<T>::value &&
+    !has_operator_equal<T>::value > = 0>
+ecs_comp_t compare() {
+    return NULL;
+}
+
+
 } // _
 } // flecs

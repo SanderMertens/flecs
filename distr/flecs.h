@@ -3366,6 +3366,12 @@ typedef void (*ecs_move_t)(
     int32_t count,
     const ecs_type_info_t *type_info);
 
+/** Compare hook to compare component instances */
+typedef int (*ecs_comp_t)(
+    const void *a_ptr,
+    const void *b_ptr,
+    const ecs_type_info_t *type_info);
+
 /** Destructor function for poly objects. */
 typedef void (*flecs_poly_dtor_t)(
     ecs_poly_t *poly);
@@ -3640,11 +3646,14 @@ struct ecs_type_hooks_t {
      * not set explicitly it will be derived from other callbacks. */
     ecs_move_t move_dtor;
 
+    ecs_comp_t comp;
+    
     /** Hook flags.
      * Indicates which hooks are set for the type, and which hooks are illegal.
      * When an ILLEGAL flag is set when calling ecs_set_hooks() a hook callback
      * will be set that panics when called. */
     ecs_flags32_t flags;
+    
 
     /** Callback that is invoked when an instance of a component is added. This
      * callback is invoked before triggers are invoked. */
@@ -3899,6 +3908,12 @@ void flecs_default_ctor(
     void *ptr, 
     int32_t count, 
     const ecs_type_info_t *ctx);
+
+/* Default compare function */
+int flecs_default_comp(
+    const void *a_ptr,
+    const void *b_ptr,
+    const ecs_type_info_t *ti);
 
 /* Create allocated string from format */
 FLECS_DBG_API
@@ -21057,6 +21072,153 @@ ecs_move_t move_dtor(ecs_flags32_t &) {
     return move_dtor_impl<T>;
 }
 
+
+// Traits to check for operator<, operator>, and operator==
+template<typename...>
+using void_t = void;
+
+
+// Trait to check for operator<
+template <typename T, typename = void>
+struct has_operator_less : std::false_type {};
+
+// Only enable if T has an operator< that takes T as the right-hand side (no implicit conversion)
+template <typename T>
+struct has_operator_less<T, void_t<decltype(std::declval<const T&>() < std::declval<const T&>())>> : 
+    std::is_same<decltype(std::declval<const T&>() < std::declval<const T&>()), bool> {};
+
+// Trait to check for operator>
+template <typename T, typename = void>
+struct has_operator_greater : std::false_type {};
+
+// Only enable if T has an operator> that takes T as the right-hand side (no implicit conversion)
+template <typename T>
+struct has_operator_greater<T, void_t<decltype(std::declval<const T&>() > std::declval<const T&>())>> : 
+    std::is_same<decltype(std::declval<const T&>() > std::declval<const T&>()), bool> {};
+
+
+
+// Trait to check for operator==
+// This trait causes a "float comparison warning" in some compilers
+// when `T` is float or double.
+// Disable this warning with the following pragmas:
+#if defined(__clang__)
+    #pragma clang diagnostic push
+    #pragma clang diagnostic ignored "-Wfloat-equal"
+#elif defined(__GNUC__) && !defined(__clang__)
+    #pragma GCC diagnostic push
+    #pragma GCC diagnostic ignored "-Wfloat-equal"
+#endif
+
+template <typename T, typename = void>
+struct has_operator_equal : std::false_type {};
+
+// Only enable if T has an operator== that takes T as the right-hand side (no implicit conversion)
+template <typename T>
+struct has_operator_equal<T, void_t<decltype(std::declval<const T&>() == std::declval<const T&>())>> : 
+    std::is_same<decltype(std::declval<const T&>() == std::declval<const T&>()), bool> {};
+
+
+// re-enable the warning:
+#if defined(__clang__)
+    #pragma clang diagnostic pop
+#elif defined(__GNUC__) && !defined(__clang__)
+    #pragma GCC diagnostic pop
+#endif
+
+// 1. Compare function if `<`, `>`, are defined
+template <typename T, if_t<
+    has_operator_less<T>::value &&
+    has_operator_greater<T>::value > = 0>
+int compare_impl(const void *a, const void *b, const ecs_type_info_t *) {
+    const T& lhs = *static_cast<const T*>(a);
+    const T& rhs = *static_cast<const T*>(b);
+    if (lhs < rhs) return -1;
+    if (lhs > rhs) return 1;
+    return 0;
+}
+
+// 2. Compare function if `<` and `==` are defined, deducing `>`
+template <typename T, if_t<
+    has_operator_less<T>::value &&
+    has_operator_equal<T>::value &&
+    !has_operator_greater<T>::value > = 0>
+int compare_impl(const void *a, const void *b, const ecs_type_info_t *) {
+    const T& lhs = *static_cast<const T*>(a);
+    const T& rhs = *static_cast<const T*>(b);
+    if (lhs == rhs) return 0;
+    if (lhs < rhs) return -1;
+    return 1; // If not less and not equal, must be greater
+}
+
+// 3. Compare function if `>` and `==` are defined, deducing `<`
+template <typename T, if_t<    
+    has_operator_greater<T>::value &&
+    has_operator_equal<T>::value &&
+    !has_operator_less<T>::value > = 0>
+int compare_impl(const void *a, const void *b, const ecs_type_info_t *) {
+    const T& lhs = *static_cast<const T*>(a);
+    const T& rhs = *static_cast<const T*>(b);
+    if (lhs == rhs) return 0;
+    if (lhs > rhs) return 1;
+    return -1; // If not greater and not equal, must be less
+}
+
+// 4. Compare function if only `<` is defined, deducing the rest
+template <typename T, if_t<
+    has_operator_less<T>::value &&
+    !has_operator_greater<T>::value &&
+    !has_operator_equal<T>::value > = 0>
+int compare_impl(const void *a, const void *b, const ecs_type_info_t *) {
+    const T& lhs = *static_cast<const T*>(a);
+    const T& rhs = *static_cast<const T*>(b);
+    if (lhs < rhs) return -1;
+    if (rhs < lhs) return 1;
+    return 0; // If neither is less, they must be equal
+}
+
+// 5. Compare function if only `>` is defined, deducing the rest
+template <typename T, if_t<
+    has_operator_greater<T>::value &&
+    !has_operator_less<T>::value &&
+    !has_operator_equal<T>::value > = 0>
+int compare_impl(const void *a, const void *b, const ecs_type_info_t *) {
+    const T& lhs = *static_cast<const T*>(a);
+    const T& rhs = *static_cast<const T*>(b);
+    if (lhs > rhs) return 1;
+    if (rhs > lhs) return -1;
+    return 0; // If neither is greater, they must be equal
+}
+
+// 6. Compare function if only `==` is defined, compare pointers to decide greater or smaller
+template <typename T, if_t<
+    has_operator_equal<T>::value &&
+    !has_operator_less<T>::value &&
+    !has_operator_greater<T>::value > = 0>
+int compare_impl(const void *a, const void *b, const ecs_type_info_t *) {
+    const T& lhs = *static_cast<const T*>(a);
+    const T& rhs = *static_cast<const T*>(b);
+    if (lhs == rhs) return 0;
+    return (a < b) ? -1 : 1; // Use pointer comparison to decide order
+}
+
+template <typename T, if_t<
+    has_operator_less<T>::value ||
+    has_operator_greater<T>::value ||
+    has_operator_equal<T>::value > = 0>
+ecs_comp_t compare() {
+    return compare_impl<T>;
+}
+
+template <typename T, if_t<
+    !has_operator_less<T>::value &&
+    !has_operator_greater<T>::value &&
+    !has_operator_equal<T>::value > = 0>
+ecs_comp_t compare() {
+    return NULL;
+}
+
+
 } // _
 } // flecs
 
@@ -27439,7 +27601,21 @@ template <> inline const char* symbol_name<double>() {
 template<typename T, enable_if_t<
     std::is_trivial<T>::value == true
         >* = nullptr>
-void register_lifecycle_actions(ecs_world_t*, ecs_entity_t) { }
+void register_lifecycle_actions(
+    ecs_world_t *world,
+    ecs_entity_t component) {
+
+    const ecs_world_t* w = ecs_get_world(world);
+
+    if(ecs_id_in_use(w, component) || 
+        ecs_id_in_use(w, ecs_pair(component, EcsWildcard))) {
+        return;
+    } 
+
+    ecs_type_hooks_t cl{};
+    cl.comp = compare<T>();
+    ecs_set_hooks_id(world, component, &cl); 
+}
 
 // If the component is non-trivial, register component lifecycle actions.
 // Depending on the type not all callbacks may be available.
@@ -27461,6 +27637,8 @@ void register_lifecycle_actions(
 
     cl.ctor_move_dtor = ctor_move_dtor<T>(cl.flags);
     cl.move_dtor = move_dtor<T>(cl.flags);
+
+    cl.comp = compare<T>();
 
     ecs_set_hooks_id(world, component, &cl);
 
