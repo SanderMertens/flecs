@@ -4974,6 +4974,7 @@ typedef struct ecs_expr_element_t {
     ecs_expr_node_t node;
     ecs_expr_node_t *left;
     ecs_expr_node_t *index;
+    ecs_size_t elem_size;
 } ecs_expr_element_t;
 
 typedef struct ecs_expr_cast_t {
@@ -74220,6 +74221,33 @@ error:
 }
 
 static
+int flecs_expr_element_visit_eval(
+    ecs_script_t *script,
+    ecs_expr_element_t *node,
+    const ecs_script_expr_run_desc_t *desc,
+    ecs_eval_value_t *out)
+{
+    ecs_eval_value_t expr = {{0}};
+    if (flecs_script_expr_visit_eval_priv(script, node->left, desc, &expr)) {
+        goto error;
+    }
+
+    ecs_eval_value_t index = {{0}};
+    if (flecs_script_expr_visit_eval_priv(script, node->index, desc, &index)) {
+        goto error;
+    }
+
+    int32_t index_value = *(int64_t*)index.value.ptr;
+
+    out->value.ptr = ECS_OFFSET(expr.value.ptr, node->elem_size * index_value);
+    out->value.type = node->node.type;
+
+    return 0;
+error:
+    return -1;
+}
+
+static
 int flecs_script_expr_visit_eval_priv(
     ecs_script_t *script,
     ecs_expr_node_t *node,
@@ -74276,6 +74304,11 @@ int flecs_script_expr_visit_eval_priv(
         }
         break;
     case EcsExprElement:
+        if (flecs_expr_element_visit_eval(
+            script, (ecs_expr_element_t*)node, desc, out)) 
+        {
+            goto error;
+        }
         break;
     case EcsExprCast:
         if (flecs_expr_cast_visit_eval(
@@ -75504,10 +75537,18 @@ int flecs_expr_element_visit_type(
         const EcsArray *type_array = ecs_get(world, left_type, EcsArray);
         ecs_assert(type_array != NULL, ECS_INTERNAL_ERROR, NULL);
         node->node.type = type_array->type;
+        const ecs_type_info_t *elem_ti = ecs_get_type_info(
+            world, type_array->type);
+        ecs_assert(elem_ti != NULL, ECS_INTERNAL_ERROR, NULL);
+        node->elem_size = elem_ti->size;
     } else if (type->kind == EcsVectorType) {
         const EcsVector *type_vector = ecs_get(world, left_type, EcsVector);
         ecs_assert(type_vector != NULL, ECS_INTERNAL_ERROR, NULL);
         node->node.type = type_vector->type;
+        const ecs_type_info_t *elem_ti = ecs_get_type_info(
+            world, type_vector->type);
+        ecs_assert(elem_ti != NULL, ECS_INTERNAL_ERROR, NULL);
+        node->elem_size = elem_ti->size;
     } else {
         char *type_str = ecs_get_path(script->world, node->left->type);
         flecs_expr_visit_error(script, node, 

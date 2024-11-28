@@ -423,6 +423,12 @@ void Expr_struct_result_lparen_int_rparen(void);
 void Expr_add_to_var(void);
 void Expr_add_var_to(void);
 void Expr_var_member(void);
+void Expr_var_member_member(void);
+void Expr_var_element(void);
+void Expr_var_element_element(void);
+void Expr_var_member_element(void);
+void Expr_var_member_element_inline(void);
+void Expr_var_element_member(void);
 void Expr_bool_cond_and_bool(void);
 void Expr_bool_cond_or_bool(void);
 void Expr_int_cond_and_int(void);
@@ -2298,6 +2304,30 @@ bake_test_case Expr_testcases[] = {
         Expr_var_member
     },
     {
+        "var_member_member",
+        Expr_var_member_member
+    },
+    {
+        "var_element",
+        Expr_var_element
+    },
+    {
+        "var_element_element",
+        Expr_var_element_element
+    },
+    {
+        "var_member_element",
+        Expr_var_member_element
+    },
+    {
+        "var_member_element_inline",
+        Expr_var_member_element_inline
+    },
+    {
+        "var_element_member",
+        Expr_var_element_member
+    },
+    {
         "bool_cond_and_bool",
         Expr_bool_cond_and_bool
     },
@@ -3235,7 +3265,7 @@ static bake_test_suite suites[] = {
         "Expr",
         NULL,
         NULL,
-        140,
+        146,
         Expr_testcases
     },
     {

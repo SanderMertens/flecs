@@ -234,6 +234,33 @@ error:
 }
 
 static
+int flecs_expr_element_visit_eval(
+    ecs_script_t *script,
+    ecs_expr_element_t *node,
+    const ecs_script_expr_run_desc_t *desc,
+    ecs_eval_value_t *out)
+{
+    ecs_eval_value_t expr = {{0}};
+    if (flecs_script_expr_visit_eval_priv(script, node->left, desc, &expr)) {
+        goto error;
+    }
+
+    ecs_eval_value_t index = {{0}};
+    if (flecs_script_expr_visit_eval_priv(script, node->index, desc, &index)) {
+        goto error;
+    }
+
+    int32_t index_value = *(int64_t*)index.value.ptr;
+
+    out->value.ptr = ECS_OFFSET(expr.value.ptr, node->elem_size * index_value);
+    out->value.type = node->node.type;
+
+    return 0;
+error:
+    return -1;
+}
+
+static
 int flecs_script_expr_visit_eval_priv(
     ecs_script_t *script,
     ecs_expr_node_t *node,
@@ -290,6 +317,11 @@ int flecs_script_expr_visit_eval_priv(
         }
         break;
     case EcsExprElement:
+        if (flecs_expr_element_visit_eval(
+            script, (ecs_expr_element_t*)node, desc, out)) 
+        {
+            goto error;
+        }
         break;
     case EcsExprCast:
         if (flecs_expr_cast_visit_eval(
