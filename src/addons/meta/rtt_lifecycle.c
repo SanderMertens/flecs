@@ -846,7 +846,7 @@ void flecs_rtt_init_default_hooks(
          * a new component value does not contain uninitialized memory, which
          * could cause serializers to crash when for example inspecting string
          * fields. */
-        if(!ti->hooks.ctor) {
+        if(!ti->hooks.ctor && !(ti->hooks.flags & ECS_TYPE_HOOK_CTOR_ILLEGAL)) {
             hooks.ctor = flecs_default_ctor;
         }
 
