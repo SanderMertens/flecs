@@ -1056,12 +1056,6 @@ public:
 	{
 		World.set_time_scale(InTimeScale);
 	}
-
-	UFUNCTION(BlueprintCallable, BlueprintPure = false, Category = "Flecs | World")
-	FORCEINLINE_DEBUGGABLE void SetTargetFps(const double InTargetFps) const
-	{
-		World.set_target_fps(InTargetFps);
-	}
 	
 	FORCEINLINE_DEBUGGABLE void DestroyWorld()
 	{
