@@ -71,7 +71,10 @@ void flecs_meta_import_core_definitions(
             }),
             .type = {
                 .size = ECS_SIZEOF(const char*),
-                .alignment = ECS_ALIGNOF(const char*)
+                .alignment = ECS_ALIGNOF(const char*),
+                .hooks = {
+                    .comp = ecs_compare_string,
+                }
             }          
         }),
         .type = {

@@ -2279,4 +2279,180 @@ void ComponentLifecycle_set_multiple_hooks(void) {
 
     ecs.release(); /* destroys world */
     test_int(removes, 2); /* two instances of `Pod` removed */
+
+int compare(flecs::world& ecs, flecs::entity_t id, const void *a, const void *b) {
+    const ecs_type_info_t* ti = ecs_get_type_info(ecs, id);
+    return ti->hooks.comp(a, b, ti);
+}
+
+struct WithGreaterThan {
+    int value;
+    bool operator>(const WithGreaterThan &other) const {
+        return value > other.value;
+    }
+};
+
+struct WithLessThan {
+    int value;
+    bool operator<(const WithLessThan &other) const {
+        return value < other.value;
+    }
+};
+
+struct WithLessAndGreaterThan {
+    int value;
+    bool operator<(const WithLessAndGreaterThan &other) const {
+        return value < other.value;
+    }
+    bool operator>(const WithLessAndGreaterThan &other) const {
+        return value > other.value;
+    }
+};
+
+
+struct WithEqualsAndGreaterThan {
+    int value;
+    bool operator==(const WithEqualsAndGreaterThan &other) const {
+        return value == other.value;
+    }
+    bool operator>(const WithEqualsAndGreaterThan &other) const {
+        return value > other.value;
+    }
+};
+
+struct WithEqualsAndLessThan {
+    int value;
+    bool operator==(const WithEqualsAndLessThan &other) const {
+        return value == other.value;
+    }
+    bool operator<(const WithEqualsAndLessThan &other) const {
+        return value < other.value;
+    }
+};
+
+struct WithEqualsOnly {
+    int value;
+    bool operator==(const WithEqualsOnly &other) const {
+        return value == other.value;
+    }
+};
+
+struct WithoutOperators {
+    int value;
+};
+
+void ComponentLifecycle_compare_WithGreaterThan(void) {
+    flecs::world ecs;
+
+    auto component = ecs.component<WithGreaterThan>();
+
+    WithGreaterThan c[] = {5, 7, 7, 5};
+
+    test_assert(compare(ecs, component, &c[0], &c[1]) < 0);
+    test_assert(compare(ecs, component, &c[1], &c[0]) > 0);
+    test_assert(compare(ecs, component, &c[1], &c[2]) == 0);
+    test_assert(compare(ecs, component, &c[2], &c[3]) > 0);
+    test_assert(compare(ecs, component, &c[3], &c[2]) < 0);
+    test_assert(compare(ecs, component, &c[1], &c[1]) == 0);
+}
+
+void ComponentLifecycle_compare_WithLessThan(void) {
+    flecs::world ecs;
+
+    auto component = ecs.component<WithLessThan>();
+
+    WithLessThan c[] = {5, 7, 7, 5};
+
+    test_assert(compare(ecs, component, &c[0], &c[1]) < 0);
+    test_assert(compare(ecs, component, &c[1], &c[0]) > 0);
+    test_assert(compare(ecs, component, &c[1], &c[2]) == 0);
+    test_assert(compare(ecs, component, &c[2], &c[3]) > 0);
+    test_assert(compare(ecs, component, &c[3], &c[2]) < 0);
+    test_assert(compare(ecs, component, &c[1], &c[1]) == 0);
+}
+
+void ComponentLifecycle_compare_WithLessAndGreaterThan(void) {
+    flecs::world ecs;
+
+    auto component = ecs.component<WithLessAndGreaterThan>();
+
+    WithLessAndGreaterThan c[] = {5, 7, 7, 5};
+
+    test_assert(compare(ecs, component, &c[0], &c[1]) < 0);
+    test_assert(compare(ecs, component, &c[1], &c[0]) > 0);
+    test_assert(compare(ecs, component, &c[1], &c[2]) == 0);
+    test_assert(compare(ecs, component, &c[2], &c[3]) > 0);
+    test_assert(compare(ecs, component, &c[3], &c[2]) < 0);
+    test_assert(compare(ecs, component, &c[1], &c[1]) == 0);
+}
+
+
+void ComponentLifecycle_compare_WithEqualsAndGreaterThan(void) {
+    flecs::world ecs;
+
+    auto component = ecs.component<WithEqualsAndGreaterThan>();
+
+    WithEqualsAndGreaterThan c[] = {5, 7, 7, 5};
+
+    test_assert(compare(ecs, component, &c[0], &c[1]) < 0);
+    test_assert(compare(ecs, component, &c[1], &c[0]) > 0);
+    test_assert(compare(ecs, component, &c[1], &c[2]) == 0);
+    test_assert(compare(ecs, component, &c[2], &c[3]) > 0);
+    test_assert(compare(ecs, component, &c[3], &c[2]) < 0);
+    test_assert(compare(ecs, component, &c[1], &c[1]) == 0);
+}
+
+void ComponentLifecycle_compare_WithEqualsAndLessThan(void) {
+    flecs::world ecs;
+
+    auto component = ecs.component<WithEqualsAndLessThan>();
+
+    WithEqualsAndLessThan c[] = {5, 7, 7, 5};
+
+    test_assert(compare(ecs, component, &c[0], &c[1]) < 0);
+    test_assert(compare(ecs, component, &c[1], &c[0]) > 0);
+    test_assert(compare(ecs, component, &c[1], &c[2]) == 0);
+    test_assert(compare(ecs, component, &c[2], &c[3]) > 0);
+    test_assert(compare(ecs, component, &c[3], &c[2]) < 0);
+    test_assert(compare(ecs, component, &c[1], &c[1]) == 0);
+}
+
+void ComponentLifecycle_compare_WithEqualsOnly(void) {
+    flecs::world ecs;
+
+    auto component = ecs.component<WithEqualsOnly>();
+
+    WithEqualsOnly c[] = {5, 7, 7, 5};
+
+    /* With only a == operator, we can only test equality */
+    test_assert(compare(ecs, component, &c[1], &c[2]) == 0);
+    test_assert(compare(ecs, component, &c[1], &c[1]) == 0);
+
+    /* If values are different, compare returns greater/less than 0 depending
+     * on memory location (position in the array) */
+    test_assert(compare(ecs, component, &c[0], &c[1]) < 0);
+    test_assert(compare(ecs, component, &c[1], &c[0]) > 0);
+    test_assert(compare(ecs, component, &c[2], &c[3]) < 0);
+    test_assert(compare(ecs, component, &c[3], &c[2]) > 0);
+}
+
+void ComponentLifecycle_compare_WithoutOperators(void) {
+    flecs::world ecs;
+
+    auto component = ecs.component<WithoutOperators>();
+
+    WithoutOperators c[] = {5, 7, 7, 5};
+
+    /* Without any operator defined, we can only test equality one element
+     * with itself */
+    test_assert(compare(ecs, component, &c[1], &c[1]) == 0);
+    test_assert(compare(ecs, component, &c[3], &c[3]) == 0);
+
+    /* Other comparisons return greater/less than 0 depending
+     * on memory location (position in the array) */
+    test_assert(compare(ecs, component, &c[0], &c[1]) < 0);
+    test_assert(compare(ecs, component, &c[1], &c[0]) > 0);
+    test_assert(compare(ecs, component, &c[1], &c[2]) < 0);
+    test_assert(compare(ecs, component, &c[2], &c[3]) < 0);
+    test_assert(compare(ecs, component, &c[3], &c[2]) > 0);
 }

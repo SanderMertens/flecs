@@ -1050,7 +1050,14 @@
                 "sparse_component",
                 "count_in_add_hook",
                 "count_in_remove_hook",
-                "set_multiple_hooks"
+                "set_multiple_hooks",
+                "compare_WithGreaterThan",
+                "compare_WithLessThan",
+                "compare_WithLessAndGreaterThan",
+                "compare_WithEqualsAndGreaterThan",
+                "compare_WithEqualsAndLessThan",
+                "compare_WithEqualsOnly",
+                "compare_WithoutOperators"
             ]
         }, {
             "id": "Refs",
