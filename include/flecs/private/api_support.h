@@ -42,12 +42,6 @@ void flecs_default_ctor(
     int32_t count, 
     const ecs_type_info_t *ctx);
 
-/* Default compare function */
-int flecs_default_comp(
-    const void *a_ptr,
-    const void *b_ptr,
-    const ecs_type_info_t *ti);
-
 /* Create allocated string from format */
 FLECS_DBG_API
 char* flecs_vasprintf(
