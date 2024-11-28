@@ -3695,8 +3695,6 @@ void ComponentLifecycle_illegal_copy_and_ctor(void) {
 }
 
 void ComponentLifecycle_illegal_ctor_w_ctor(void) {
-    test_quarantine("27 Nov 2024");
-
     install_test_abort();
 
     ecs_world_t *world = ecs_mini();
@@ -3712,8 +3710,6 @@ void ComponentLifecycle_illegal_ctor_w_ctor(void) {
 }
 
 void ComponentLifecycle_illegal_dtor_w_dtor(void) {
-    test_quarantine("27 Nov 2024");
-
     install_test_abort();
 
     ecs_world_t *world = ecs_mini();
@@ -3729,8 +3725,6 @@ void ComponentLifecycle_illegal_dtor_w_dtor(void) {
 }
 
 void ComponentLifecycle_illegal_move_w_move(void) {
-    test_quarantine("27 Nov 2024");
-
     install_test_abort();
 
     ecs_world_t *world = ecs_mini();
@@ -3746,8 +3740,6 @@ void ComponentLifecycle_illegal_move_w_move(void) {
 }
 
 void ComponentLifecycle_illegal_copy_w_copy(void) {
-    test_quarantine("27 Nov 2024");
-
     install_test_abort();
 
     ecs_world_t *world = ecs_mini();
@@ -3763,8 +3755,6 @@ void ComponentLifecycle_illegal_copy_w_copy(void) {
 }
 
 void ComponentLifecycle_illegal_move_ctor_w_move_ctor(void) {
-    test_quarantine("27 Nov 2024");
-
     install_test_abort();
 
     ecs_world_t *world = ecs_mini();
@@ -3780,8 +3770,6 @@ void ComponentLifecycle_illegal_move_ctor_w_move_ctor(void) {
 }
 
 void ComponentLifecycle_illegal_copy_ctor_w_copy_ctor(void) {
-    test_quarantine("27 Nov 2024");
-
     install_test_abort();
 
     ecs_world_t *world = ecs_mini();
@@ -3797,8 +3785,6 @@ void ComponentLifecycle_illegal_copy_ctor_w_copy_ctor(void) {
 }
 
 void ComponentLifecycle_illegal_move_ctor_w_ctor_and_move(void) {
-    test_quarantine("27 Nov 2024");
-
     install_test_abort();
 
     ecs_world_t *world = ecs_mini();
@@ -3825,8 +3811,6 @@ void ComponentLifecycle_illegal_move_ctor_w_ctor_and_move(void) {
 }
 
 void ComponentLifecycle_illegal_copy_ctor_w_ctor_and_copy(void) {
-    test_quarantine("27 Nov 2024");
-
     install_test_abort();
 
     ecs_world_t *world = ecs_mini();

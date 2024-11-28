@@ -1278,26 +1278,52 @@ void ecs_set_hooks_id(
     ecs_flags32_t flags = h->flags;
     flags &= ~((ecs_flags32_t)ECS_TYPE_HOOKS);
 
-    /* TODO: enable asserts once RTT API is updated */
+    ecs_check(!(flags & ECS_TYPE_HOOK_CTOR_ILLEGAL && 
+        h->ctor != NULL && 
+        h->ctor != flecs_ctor_illegal),
+        ECS_INVALID_PARAMETER, "cannot specify both ctor hook and illegal flag");
 
-    ecs_check(!(flags & ECS_TYPE_HOOK_CTOR_ILLEGAL) || !h->ctor, 
-        ECS_INVALID_PARAMETER, "cannot specify both hook and illegal flag");
-    ecs_check(!(flags & ECS_TYPE_HOOK_DTOR_ILLEGAL) || !h->dtor, 
-        ECS_INVALID_PARAMETER, "cannot specify both hook and illegal flag");
-    ecs_check(!(flags & ECS_TYPE_HOOK_COPY_ILLEGAL) || !h->copy, 
-        ECS_INVALID_PARAMETER, "cannot specify both hook and illegal flag");
-    ecs_check(!(flags & ECS_TYPE_HOOK_MOVE_ILLEGAL) || !h->move, 
-        ECS_INVALID_PARAMETER, "cannot specify both hook and illegal flag");
-    ecs_check(!(flags & ECS_TYPE_HOOK_COPY_CTOR_ILLEGAL) || !h->copy_ctor, 
-        ECS_INVALID_PARAMETER, 
-            "cannot specify both hook and illegal flag");
-    ecs_check(!(flags & ECS_TYPE_HOOK_MOVE_CTOR_ILLEGAL) || !h->move_ctor, 
-        ECS_INVALID_PARAMETER, "cannot specify both hook and illegal flag");
-    ecs_check(!(flags & ECS_TYPE_HOOK_CTOR_MOVE_DTOR_ILLEGAL) || 
-        !h->ctor_move_dtor, ECS_INVALID_PARAMETER, 
-            "cannot specify both hook and illegal flag");
-    ecs_check(!(flags & ECS_TYPE_HOOK_MOVE_DTOR_ILLEGAL) || !h->move_dtor, 
-        ECS_INVALID_PARAMETER, "cannot specify both hook and illegal flag");
+    ecs_check(!(flags & ECS_TYPE_HOOK_DTOR_ILLEGAL && 
+        h->dtor != NULL && 
+        h->dtor != flecs_dtor_illegal),
+        ECS_INVALID_PARAMETER, "cannot specify both dtor hook and illegal flag");
+
+    ecs_check(!(flags & ECS_TYPE_HOOK_COPY_ILLEGAL && 
+        h->copy != NULL && 
+        h->copy != flecs_copy_illegal),
+        ECS_INVALID_PARAMETER, "cannot specify both copy hook and illegal flag");
+
+    ecs_check(!(flags & ECS_TYPE_HOOK_MOVE_ILLEGAL && 
+        h->move != NULL && 
+        h->move != flecs_move_illegal),
+        ECS_INVALID_PARAMETER, "cannot specify both move hook and illegal flag");
+
+    ecs_check(!(flags & ECS_TYPE_HOOK_COPY_CTOR_ILLEGAL && 
+        h->copy_ctor != NULL && 
+        h->copy_ctor != flecs_copy_ctor_illegal),
+        ECS_INVALID_PARAMETER, "cannot specify both copy ctor hook and illegal flag");
+
+    ecs_check(!(flags & ECS_TYPE_HOOK_MOVE_CTOR_ILLEGAL && 
+        h->move_ctor != NULL && 
+        h->move_ctor != flecs_move_ctor_illegal),
+        ECS_INVALID_PARAMETER, "cannot specify both move ctor hook and illegal flag");
+
+    ecs_check(!(flags & ECS_TYPE_HOOK_CTOR_MOVE_DTOR_ILLEGAL && 
+        h->ctor_move_dtor != NULL && 
+        h->ctor_move_dtor != flecs_move_ctor_illegal),
+        ECS_INVALID_PARAMETER, "cannot specify both ctor move dtor hook and illegal flag");
+
+    ecs_check(!(flags & ECS_TYPE_HOOK_MOVE_DTOR_ILLEGAL && 
+        h->move_dtor != NULL && 
+        h->move_dtor != flecs_move_ctor_illegal),
+        ECS_INVALID_PARAMETER, "cannot specify both move dtor hook and illegal flag");
+
+    ecs_check(!(flags & ECS_TYPE_HOOK_COMP_ILLEGAL && 
+        h->comp != NULL && 
+        h->comp != flecs_comp_illegal),
+        ECS_INVALID_PARAMETER, "cannot specify both compare hook and illegal flag");
+
+
 
     flecs_stage_from_world(&world);
 
@@ -1465,7 +1491,7 @@ void ecs_set_hooks_id(
     }
 
     if(ti->hooks.flags & ECS_TYPE_HOOK_MOVE_DTOR_ILLEGAL) {
-        ti->hooks.ctor_move_dtor = flecs_move_ctor_illegal;
+        ti->hooks.move_dtor = flecs_move_ctor_illegal;
     }
 
 
