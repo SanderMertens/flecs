@@ -1081,7 +1081,19 @@
         },{
             "id": "RttCompare",
             "testcases": [
-                "test1"
+                "struct_with_ints",
+                "struct_with_strings",
+                "struct_with_opaque",
+                "nested_struct_with_strings",
+                "struct_with_array_of_strings",
+                "struct_with_array_of_array_of_strings",
+                "struct_with_vector_of_ints",
+                "struct_with_vector_of_strings",
+                "nested_struct_with_vector_of_ints",
+                "nested_struct_with_vector_of_strings",
+                "array_of_ints",
+                "array_of_strings",
+                "array_of_struct_with_ints"
             ]
         }]
     }

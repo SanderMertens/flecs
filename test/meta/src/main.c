@@ -1032,7 +1032,19 @@ void PrimitiveCompare_string(void);
 void PrimitiveCompare_const_string(void);
 
 // Testsuite 'RttCompare'
-void RttCompare_test1(void);
+void RttCompare_struct_with_ints(void);
+void RttCompare_struct_with_strings(void);
+void RttCompare_struct_with_opaque(void);
+void RttCompare_nested_struct_with_strings(void);
+void RttCompare_struct_with_array_of_strings(void);
+void RttCompare_struct_with_array_of_array_of_strings(void);
+void RttCompare_struct_with_vector_of_ints(void);
+void RttCompare_struct_with_vector_of_strings(void);
+void RttCompare_nested_struct_with_vector_of_ints(void);
+void RttCompare_nested_struct_with_vector_of_strings(void);
+void RttCompare_array_of_ints(void);
+void RttCompare_array_of_strings(void);
+void RttCompare_array_of_struct_with_ints(void);
 
 bake_test_case PrimitiveTypes_testcases[] = {
     {
@@ -5018,8 +5030,56 @@ bake_test_case PrimitiveCompare_testcases[] = {
 
 bake_test_case RttCompare_testcases[] = {
     {
-        "test1",
-        RttCompare_test1
+        "struct_with_ints",
+        RttCompare_struct_with_ints
+    },
+    {
+        "struct_with_strings",
+        RttCompare_struct_with_strings
+    },
+    {
+        "struct_with_opaque",
+        RttCompare_struct_with_opaque
+    },
+    {
+        "nested_struct_with_strings",
+        RttCompare_nested_struct_with_strings
+    },
+    {
+        "struct_with_array_of_strings",
+        RttCompare_struct_with_array_of_strings
+    },
+    {
+        "struct_with_array_of_array_of_strings",
+        RttCompare_struct_with_array_of_array_of_strings
+    },
+    {
+        "struct_with_vector_of_ints",
+        RttCompare_struct_with_vector_of_ints
+    },
+    {
+        "struct_with_vector_of_strings",
+        RttCompare_struct_with_vector_of_strings
+    },
+    {
+        "nested_struct_with_vector_of_ints",
+        RttCompare_nested_struct_with_vector_of_ints
+    },
+    {
+        "nested_struct_with_vector_of_strings",
+        RttCompare_nested_struct_with_vector_of_strings
+    },
+    {
+        "array_of_ints",
+        RttCompare_array_of_ints
+    },
+    {
+        "array_of_strings",
+        RttCompare_array_of_strings
+    },
+    {
+        "array_of_struct_with_ints",
+        RttCompare_array_of_struct_with_ints
     }
 };
 
@@ -5183,7 +5243,7 @@ static bake_test_suite suites[] = {
         "RttCompare",
         NULL,
         NULL,
-        1,
+        13,
         RttCompare_testcases
     }
 };
