@@ -1033,26 +1033,26 @@ void Misc_unit_from_suspend_defer(void);
 void Misc_unit_prefix_from_suspend_defer(void);
 void Misc_quantity_from_suspend_defer(void);
 
-// Testsuite 'Compare'
-void Compare_bool(void);
-void Compare_char(void);
-void Compare_byte(void);
-void Compare_u8(void);
-void Compare_u16(void);
-void Compare_u32(void);
-void Compare_u64(void);
-void Compare_uptr(void);
-void Compare_i8(void);
-void Compare_i16(void);
-void Compare_i32(void);
-void Compare_i64(void);
-void Compare_iptr(void);
-void Compare_f32(void);
-void Compare_f64(void);
-void Compare_entity(void);
-void Compare_id(void);
-void Compare_string(void);
-void Compare_const_string(void);
+// Testsuite 'PrimitiveCompare'
+void PrimitiveCompare_bool(void);
+void PrimitiveCompare_char(void);
+void PrimitiveCompare_byte(void);
+void PrimitiveCompare_u8(void);
+void PrimitiveCompare_u16(void);
+void PrimitiveCompare_u32(void);
+void PrimitiveCompare_u64(void);
+void PrimitiveCompare_uptr(void);
+void PrimitiveCompare_i8(void);
+void PrimitiveCompare_i16(void);
+void PrimitiveCompare_i32(void);
+void PrimitiveCompare_i64(void);
+void PrimitiveCompare_iptr(void);
+void PrimitiveCompare_f32(void);
+void PrimitiveCompare_f64(void);
+void PrimitiveCompare_entity(void);
+void PrimitiveCompare_id(void);
+void PrimitiveCompare_string(void);
+void PrimitiveCompare_const_string(void);
 
 bake_test_case PrimitiveTypes_testcases[] = {
     {
@@ -5049,82 +5049,82 @@ bake_test_case Misc_testcases[] = {
     }
 };
 
-bake_test_case Compare_testcases[] = {
+bake_test_case PrimitiveCompare_testcases[] = {
     {
         "bool",
-        Compare_bool
+        PrimitiveCompare_bool
     },
     {
         "char",
-        Compare_char
+        PrimitiveCompare_char
     },
     {
         "byte",
-        Compare_byte
+        PrimitiveCompare_byte
     },
     {
         "u8",
-        Compare_u8
+        PrimitiveCompare_u8
     },
     {
         "u16",
-        Compare_u16
+        PrimitiveCompare_u16
     },
     {
         "u32",
-        Compare_u32
+        PrimitiveCompare_u32
     },
     {
         "u64",
-        Compare_u64
+        PrimitiveCompare_u64
     },
     {
         "uptr",
-        Compare_uptr
+        PrimitiveCompare_uptr
     },
     {
         "i8",
-        Compare_i8
+        PrimitiveCompare_i8
     },
     {
         "i16",
-        Compare_i16
+        PrimitiveCompare_i16
     },
     {
         "i32",
-        Compare_i32
+        PrimitiveCompare_i32
     },
     {
         "i64",
-        Compare_i64
+        PrimitiveCompare_i64
     },
     {
         "iptr",
-        Compare_iptr
+        PrimitiveCompare_iptr
     },
     {
         "f32",
-        Compare_f32
+        PrimitiveCompare_f32
     },
     {
         "f64",
-        Compare_f64
+        PrimitiveCompare_f64
     },
     {
         "entity",
-        Compare_entity
+        PrimitiveCompare_entity
     },
     {
         "id",
-        Compare_id
+        PrimitiveCompare_id
     },
     {
         "string",
-        Compare_string
+        PrimitiveCompare_string
     },
     {
         "const_string",
-        Compare_const_string
+        PrimitiveCompare_const_string
     }
 };
 
@@ -5278,11 +5278,11 @@ static bake_test_suite suites[] = {
         Misc_testcases
     },
     {
-        "Compare",
+        "PrimitiveCompare",
         NULL,
         NULL,
         19,
-        Compare_testcases
+        PrimitiveCompare_testcases
     }
 };
 
