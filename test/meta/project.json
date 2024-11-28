@@ -1101,6 +1101,11 @@
                 "string",
                 "const_string"
             ]
+        },{
+            "id": "RttCompare",
+            "testcases": [
+                "test1"
+            ]
         }]
     }
 }
