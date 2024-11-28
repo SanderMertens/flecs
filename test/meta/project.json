@@ -1081,7 +1081,25 @@
         },{
             "id": "Compare",
             "testcases": [
-                "u8"
+                "bool",
+                "char",
+                "byte",
+                "u8",
+                "u16",
+                "u32",
+                "u64",
+                "uptr",
+                "i8",
+                "i16",
+                "i32",
+                "i64",
+                "iptr",
+                "f32",
+                "f64",
+                "entity",
+                "id",
+                "string",
+                "const_string"
             ]
         }]
     }
