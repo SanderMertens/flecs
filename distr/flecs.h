@@ -20568,8 +20568,8 @@ struct has_operator_equal<T, void_t<decltype(std::declval<const T&>() == std::de
 // 1. Compare function if `<`, `>`, are defined
 template <typename T, if_t<
     has_operator_less<T>::value &&
-    has_operator_greater<T>::value > &&
-    !has_operator_equal<T>::value = 0>
+    has_operator_greater<T>::value &&
+    !has_operator_equal<T>::value > = 0>
 int compare_impl(const void *a, const void *b, const ecs_type_info_t *) {
     const T& lhs = *static_cast<const T*>(a);
     const T& rhs = *static_cast<const T*>(b);
