@@ -862,17 +862,38 @@ struct ecs_observer_t {
  * @ingroup components
  */
 
-/* Hook flags */
-#define ECS_CTOR_ILLEGAL           (1 << 0)
-#define ECS_DTOR_ILLEGAL           (1 << 1)
-#define ECS_COPY_ILLEGAL           (1 << 2)
-#define ECS_MOVE_ILLEGAL           (1 << 3)
-#define ECS_COPY_CTOR_ILLEGAL      (1 << 4)
-#define ECS_MOVE_CTOR_ILLEGAL      (1 << 5)
-#define ECS_CTOR_MOVE_DTOR_ILLEGAL (1 << 6)
-#define ECS_MOVE_DTOR_ILLEGAL      (1 << 7)
+/* Flags that can be used to check which hooks a type has set */
+#define ECS_TYPE_HOOK_CTOR                   (1 << 0)
+#define ECS_TYPE_HOOK_DTOR                   (1 << 1)
+#define ECS_TYPE_HOOK_COPY                   (1 << 2)
+#define ECS_TYPE_HOOK_MOVE                   (1 << 3)
+#define ECS_TYPE_HOOK_COPY_CTOR              (1 << 4)
+#define ECS_TYPE_HOOK_MOVE_CTOR              (1 << 5)
+#define ECS_TYPE_HOOK_CTOR_MOVE_DTOR         (1 << 6)
+#define ECS_TYPE_HOOK_MOVE_DTOR              (1 << 7)
 
-typedef uint8_t ecs_type_hooks_flags_t;
+/* Flags that can be used to set/check which hooks of a type are invalid */
+#define ECS_TYPE_HOOK_CTOR_ILLEGAL           (1 << 8)
+#define ECS_TYPE_HOOK_DTOR_ILLEGAL           (1 << 9)
+#define ECS_TYPE_HOOK_COPY_ILLEGAL           (1 << 10)
+#define ECS_TYPE_HOOK_MOVE_ILLEGAL           (1 << 11)
+#define ECS_TYPE_HOOK_COPY_CTOR_ILLEGAL      (1 << 12)
+#define ECS_TYPE_HOOK_MOVE_CTOR_ILLEGAL      (1 << 13)
+#define ECS_TYPE_HOOK_CTOR_MOVE_DTOR_ILLEGAL (1 << 14)
+#define ECS_TYPE_HOOK_MOVE_DTOR_ILLEGAL      (1 << 15)
+
+/* All valid hook flags */
+#define ECS_TYPE_HOOKS (ECS_TYPE_HOOK_CTOR|ECS_TYPE_HOOK_DTOR|\
+    ECS_TYPE_HOOK_COPY|ECS_TYPE_HOOK_MOVE|ECS_TYPE_HOOK_COPY_CTOR|\
+    ECS_TYPE_HOOK_MOVE_CTOR|ECS_TYPE_HOOK_CTOR_MOVE_DTOR|\
+    ECS_TYPE_HOOK_MOVE_DTOR)
+
+/* All invalid hook flags */
+#define ECS_TYPE_HOOKS_ILLEGAL (ECS_TYPE_HOOK_CTOR_ILLEGAL|\
+    ECS_TYPE_HOOK_DTOR_ILLEGAL|ECS_TYPE_HOOK_COPY_ILLEGAL|\
+    ECS_TYPE_HOOK_MOVE_ILLEGAL|ECS_TYPE_HOOK_COPY_CTOR_ILLEGAL|\
+    ECS_TYPE_HOOK_MOVE_CTOR_ILLEGAL|ECS_TYPE_HOOK_CTOR_MOVE_DTOR_ILLEGAL|\
+    ECS_TYPE_HOOK_MOVE_DTOR_ILLEGAL)
 
 struct ecs_type_hooks_t {
     ecs_xtor_t ctor;            /**< ctor */
@@ -898,11 +919,11 @@ struct ecs_type_hooks_t {
      * not set explicitly it will be derived from other callbacks. */
     ecs_move_t move_dtor;
 
-    /** Hook flags 
-     * Indicates if any hook is illegal.
-     * Setting any flag will configure an aborting hook
-    */
-    ecs_type_hooks_flags_t flags;
+    /** Hook flags.
+     * Indicates which hooks are set for the type, and which hooks are illegal.
+     * When an ILLEGAL flag is set when calling ecs_set_hooks() a hook callback
+     * will be set that panics when called. */
+    ecs_flags32_t flags;
 
     /** Callback that is invoked when an instance of a component is added. This
      * callback is invoked before triggers are invoked. */
@@ -925,7 +946,6 @@ struct ecs_type_hooks_t {
     ecs_ctx_free_t ctx_free;           /**< Callback to free ctx */
     ecs_ctx_free_t binding_ctx_free;   /**< Callback to free binding_ctx */
     ecs_ctx_free_t lifecycle_ctx_free; /**< Callback to free lifecycle_ctx */
-
 };
 
 /** Type that contains component information (passed to ctors/dtors/...)

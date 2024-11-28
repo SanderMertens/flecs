@@ -1143,6 +1143,28 @@ void ComponentLifecycle_new_w_table_ctor(void);
 void ComponentLifecycle_new_w_table_on_add_hook(void);
 void ComponentLifecycle_count_in_on_add(void);
 void ComponentLifecycle_count_in_on_remove(void);
+void ComponentLifecycle_illegal_ctor(void);
+void ComponentLifecycle_illegal_dtor(void);
+void ComponentLifecycle_illegal_move(void);
+void ComponentLifecycle_illegal_copy(void);
+void ComponentLifecycle_illegal_move_ctor(void);
+void ComponentLifecycle_illegal_move_and_ctor(void);
+void ComponentLifecycle_illegal_copy_ctor(void);
+void ComponentLifecycle_illegal_copy_and_ctor(void);
+void ComponentLifecycle_illegal_ctor_w_ctor(void);
+void ComponentLifecycle_illegal_dtor_w_dtor(void);
+void ComponentLifecycle_illegal_move_w_move(void);
+void ComponentLifecycle_illegal_copy_w_copy(void);
+void ComponentLifecycle_illegal_move_ctor_w_move_ctor(void);
+void ComponentLifecycle_illegal_copy_ctor_w_copy_ctor(void);
+void ComponentLifecycle_illegal_move_ctor_w_ctor_and_move(void);
+void ComponentLifecycle_illegal_copy_ctor_w_ctor_and_copy(void);
+void ComponentLifecycle_ctor_flags(void);
+void ComponentLifecycle_dtor_flags(void);
+void ComponentLifecycle_move_flags(void);
+void ComponentLifecycle_copy_flags(void);
+void ComponentLifecycle_ctor_move_dtor_flags(void);
+void ComponentLifecycle_move_dtor_flags(void);
 
 // Testsuite 'Pairs'
 void Pairs_type_w_one_pair(void);
@@ -6689,6 +6711,94 @@ bake_test_case ComponentLifecycle_testcases[] = {
     {
         "count_in_on_remove",
         ComponentLifecycle_count_in_on_remove
+    },
+    {
+        "illegal_ctor",
+        ComponentLifecycle_illegal_ctor
+    },
+    {
+        "illegal_dtor",
+        ComponentLifecycle_illegal_dtor
+    },
+    {
+        "illegal_move",
+        ComponentLifecycle_illegal_move
+    },
+    {
+        "illegal_copy",
+        ComponentLifecycle_illegal_copy
+    },
+    {
+        "illegal_move_ctor",
+        ComponentLifecycle_illegal_move_ctor
+    },
+    {
+        "illegal_move_and_ctor",
+        ComponentLifecycle_illegal_move_and_ctor
+    },
+    {
+        "illegal_copy_ctor",
+        ComponentLifecycle_illegal_copy_ctor
+    },
+    {
+        "illegal_copy_and_ctor",
+        ComponentLifecycle_illegal_copy_and_ctor
+    },
+    {
+        "illegal_ctor_w_ctor",
+        ComponentLifecycle_illegal_ctor_w_ctor
+    },
+    {
+        "illegal_dtor_w_dtor",
+        ComponentLifecycle_illegal_dtor_w_dtor
+    },
+    {
+        "illegal_move_w_move",
+        ComponentLifecycle_illegal_move_w_move
+    },
+    {
+        "illegal_copy_w_copy",
+        ComponentLifecycle_illegal_copy_w_copy
+    },
+    {
+        "illegal_move_ctor_w_move_ctor",
+        ComponentLifecycle_illegal_move_ctor_w_move_ctor
+    },
+    {
+        "illegal_copy_ctor_w_copy_ctor",
+        ComponentLifecycle_illegal_copy_ctor_w_copy_ctor
+    },
+    {
+        "illegal_move_ctor_w_ctor_and_move",
+        ComponentLifecycle_illegal_move_ctor_w_ctor_and_move
+    },
+    {
+        "illegal_copy_ctor_w_ctor_and_copy",
+        ComponentLifecycle_illegal_copy_ctor_w_ctor_and_copy
+    },
+    {
+        "ctor_flags",
+        ComponentLifecycle_ctor_flags
+    },
+    {
+        "dtor_flags",
+        ComponentLifecycle_dtor_flags
+    },
+    {
+        "move_flags",
+        ComponentLifecycle_move_flags
+    },
+    {
+        "copy_flags",
+        ComponentLifecycle_copy_flags
+    },
+    {
+        "ctor_move_dtor_flags",
+        ComponentLifecycle_ctor_move_dtor_flags
+    },
+    {
+        "move_dtor_flags",
+        ComponentLifecycle_move_dtor_flags
     }
 };
 
@@ -11389,7 +11499,7 @@ static bake_test_suite suites[] = {
         "ComponentLifecycle",
         ComponentLifecycle_setup,
         NULL,
-        98,
+        120,
         ComponentLifecycle_testcases
     },
     {

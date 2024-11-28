@@ -204,7 +204,7 @@ static
 ecs_rtt_struct_ctx_t * flecs_rtt_configure_struct_hooks(
     ecs_world_t *world,
     const ecs_type_info_t *ti,
-    ecs_type_hooks_flags_t flags,
+    ecs_flags32_t flags,
     bool ctor,
     bool dtor,
     bool move,
@@ -242,6 +242,7 @@ ecs_rtt_struct_ctx_t * flecs_rtt_configure_struct_hooks(
         hooks.lifecycle_ctx_free = NULL;
     }
     hooks.flags |= flags;
+    hooks.flags &= ECS_TYPE_HOOKS_ILLEGAL;
     ecs_set_hooks_id(world, ti->component, &hooks);
     return rtt_ctx;
 }
@@ -270,7 +271,7 @@ void flecs_rtt_init_default_hooks_struct(
      * the struct itself will need to have that hook: */
     int i, member_count = ecs_vec_count(&struct_info->members);
     ecs_member_t *members = ecs_vec_first(&struct_info->members);
-    ecs_type_hooks_flags_t flags = 0;
+    ecs_flags32_t flags = 0;
     for (i = 0; i < member_count; i++) {
         ecs_member_t *m = &members[i];
         const ecs_type_info_t *member_ti = ecs_get_type_info(world, m->type);
@@ -460,7 +461,7 @@ void flecs_rtt_init_default_hooks_array(
     bool dtor_hook_required = array_ti->hooks.dtor != NULL;
     bool move_hook_required = array_ti->hooks.move != NULL;
     bool copy_hook_required = array_ti->hooks.copy != NULL;
-    ecs_type_hooks_flags_t flags = array_ti->hooks.flags;
+    ecs_flags32_t flags = array_ti->hooks.flags;
 
     ecs_type_hooks_t hooks = *ecs_get_hooks_id(world, component);
 
@@ -499,7 +500,7 @@ void flecs_rtt_init_default_hooks_array(
     }
 
     hooks.flags |= flags;
-
+    hooks.flags &= ECS_TYPE_HOOKS_ILLEGAL;
     ecs_set_hooks_id(world, component, &hooks);
 }
 
@@ -637,6 +638,7 @@ void flecs_rtt_init_default_hooks_vector(
     hooks.dtor = flecs_rtt_vector_dtor;
     hooks.move = flecs_rtt_vector_move;
     hooks.copy = flecs_rtt_vector_copy;
+    hooks.flags &= ECS_TYPE_HOOKS_ILLEGAL;
     ecs_set_hooks_id(world, component, &hooks);
 }
 
@@ -683,10 +685,9 @@ void flecs_rtt_init_default_hooks(
          * could cause serializers to crash when for example inspecting string
          * fields. */
         if (!ti || !ti->hooks.ctor) {
-            ecs_set_hooks_id(
-                world,
-                component,
-                &(ecs_type_hooks_t){.ctor = flecs_default_ctor});
+            ecs_set_hooks_id(world, component, &(ecs_type_hooks_t){
+                .ctor = flecs_default_ctor
+            });
         }
     }
 }

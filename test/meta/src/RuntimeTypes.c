@@ -225,6 +225,7 @@ void RuntimeTypes_ctor(void) {
 
     ecs_type_hooks_t hooks = nested_struct_ti->hooks;
     hooks.ctor = test_ctor; /* only define a constructor for "NestedStruct" */
+    hooks.flags &= ECS_TYPE_HOOKS_ILLEGAL;
     ecs_set_hooks_id(world, nested_struct, &hooks);
 
     /* Define TestStruct, which has two "NestedStruct" members.
@@ -271,7 +272,8 @@ void RuntimeTypes_ctor_illegal(void) {
     const ecs_type_info_t *nested_struct_ti = define_nested_struct(world);
 
     ecs_type_hooks_t hooks = nested_struct_ti->hooks;
-    hooks.flags |= ECS_CTOR_ILLEGAL; /* mark constructor for "NestedStruct" as illegal */
+    hooks.flags |= ECS_TYPE_HOOK_CTOR_ILLEGAL; /* mark constructor for "NestedStruct" as illegal */
+    hooks.flags &= ECS_TYPE_HOOKS_ILLEGAL;
     ecs_set_hooks_id(world, nested_struct, &hooks);
 
     /* Define TestStruct, which has two "NestedStruct" members.
@@ -279,9 +281,9 @@ void RuntimeTypes_ctor_illegal(void) {
     const ecs_type_info_t *test_struct_ti = define_test_struct(world);
 
     /* TestStruct should have an illegal constructor too: */
-    test_assert(test_struct_ti->hooks.flags & ECS_CTOR_ILLEGAL);
-    test_assert(test_struct_ti->hooks.flags & ECS_COPY_CTOR_ILLEGAL);
-    test_assert(test_struct_ti->hooks.flags & ECS_MOVE_CTOR_ILLEGAL);
+    test_assert(test_struct_ti->hooks.flags & ECS_TYPE_HOOK_CTOR_ILLEGAL);
+    test_assert(test_struct_ti->hooks.flags & ECS_TYPE_HOOK_COPY_CTOR_ILLEGAL);
+    test_assert(test_struct_ti->hooks.flags & ECS_TYPE_HOOK_MOVE_CTOR_ILLEGAL);
 
     /* No other hooks should've been set: */
     test_assert(test_struct_ti->hooks.dtor == NULL);
@@ -301,7 +303,7 @@ void RuntimeTypes_dtor(void) {
 
     ecs_type_hooks_t hooks = nested_struct_ti->hooks;
     hooks.dtor = test_dtor; /* only set a destructor */
-
+    hooks.flags &= ECS_TYPE_HOOKS_ILLEGAL;
     ecs_set_hooks_id(world, nested_struct, &hooks);
 
     /* Define TestStruct, which has two "NestedStruct" members.
@@ -346,7 +348,8 @@ void RuntimeTypes_dtor_illegal(void) {
     const ecs_type_info_t *nested_struct_ti = define_nested_struct(world);
 
     ecs_type_hooks_t hooks = nested_struct_ti->hooks;
-    hooks.flags |= ECS_DTOR_ILLEGAL; /* mark destructor for "NestedStruct" as illegal */
+    hooks.flags |= ECS_TYPE_HOOK_DTOR_ILLEGAL; /* mark destructor for "NestedStruct" as illegal */
+    hooks.flags &= ECS_TYPE_HOOKS_ILLEGAL;
     ecs_set_hooks_id(world, nested_struct, &hooks);
 
     /* Define TestStruct, which has two "NestedStruct" members.
@@ -354,7 +357,7 @@ void RuntimeTypes_dtor_illegal(void) {
     const ecs_type_info_t *test_struct_ti = define_test_struct(world);
 
     /* TestStruct should have an illegal constructor too: */
-    test_assert(test_struct_ti->hooks.flags & ECS_DTOR_ILLEGAL);
+    test_assert(test_struct_ti->hooks.flags & ECS_TYPE_HOOK_DTOR_ILLEGAL);
 
     /* No other hooks should've been set: */
     test_assert(test_struct_ti->hooks.ctor != NULL);
@@ -373,8 +376,8 @@ void RuntimeTypes_move(void) {
     /* Define NestedStruct: */
     const ecs_type_info_t *nested_struct_ti = define_nested_struct(world);
     ecs_type_hooks_t hooks = nested_struct_ti->hooks;
-
     hooks.move = test_move; /* Only define a move hook. */
+    hooks.flags &= ECS_TYPE_HOOKS_ILLEGAL;
     ecs_set_hooks_id(world, nested_struct, &hooks);
 
     /* Define TestStruct, which has two "NestedStruct" members.
@@ -437,7 +440,8 @@ void RuntimeTypes_move_illegal(void) {
     const ecs_type_info_t *nested_struct_ti = define_nested_struct(world);
 
     ecs_type_hooks_t hooks = nested_struct_ti->hooks;
-    hooks.flags |= ECS_MOVE_ILLEGAL; /* mark move hook for "NestedStruct" as illegal */
+    hooks.flags |= ECS_TYPE_HOOK_MOVE_ILLEGAL; /* mark move hook for "NestedStruct" as illegal */
+    hooks.flags &= ECS_TYPE_HOOKS_ILLEGAL;
     ecs_set_hooks_id(world, nested_struct, &hooks);
 
     /* Define TestStruct, which has two "NestedStruct" members.
@@ -445,8 +449,8 @@ void RuntimeTypes_move_illegal(void) {
     const ecs_type_info_t *test_struct_ti = define_test_struct(world);
 
     /* TestStruct should have an illegal move hook too: */
-    test_assert(test_struct_ti->hooks.flags & ECS_MOVE_ILLEGAL);
-    test_assert(test_struct_ti->hooks.flags & ECS_MOVE_CTOR_ILLEGAL);
+    test_assert(test_struct_ti->hooks.flags & ECS_TYPE_HOOK_MOVE_ILLEGAL);
+    test_assert(test_struct_ti->hooks.flags & ECS_TYPE_HOOK_MOVE_CTOR_ILLEGAL);
 
     /* No other hooks should've been set: */
     test_assert(test_struct_ti->hooks.ctor != NULL);
@@ -465,8 +469,8 @@ void RuntimeTypes_copy(void) {
     define_nested_struct(world);
     const ecs_type_info_t *nested_struct_ti = define_nested_struct(world);
     ecs_type_hooks_t hooks = nested_struct_ti->hooks;
-
     hooks.copy = test_copy; /* only set a copy hook */
+    hooks.flags &= ECS_TYPE_HOOKS_ILLEGAL;
     ecs_set_hooks_id(world, nested_struct, &hooks);
 
     /* Define TestStruct, which has two "NestedStruct" members.
@@ -525,7 +529,8 @@ void RuntimeTypes_copy_illegal(void) {
     const ecs_type_info_t *nested_struct_ti = define_nested_struct(world);
 
     ecs_type_hooks_t hooks = nested_struct_ti->hooks;
-    hooks.flags |= ECS_COPY_ILLEGAL; /* mark copy hook for "NestedStruct" as illegal */
+    hooks.flags |= ECS_TYPE_HOOK_COPY_ILLEGAL; /* mark copy hook for "NestedStruct" as illegal */
+    hooks.flags &= ECS_TYPE_HOOKS_ILLEGAL;
     ecs_set_hooks_id(world, nested_struct, &hooks);
 
     /* Define TestStruct, which has two "NestedStruct" members.
@@ -533,8 +538,8 @@ void RuntimeTypes_copy_illegal(void) {
     const ecs_type_info_t *test_struct_ti = define_test_struct(world);
 
     /* TestStruct should have an illegal move hook too: */
-    test_assert(test_struct_ti->hooks.flags & ECS_COPY_ILLEGAL);
-    test_assert(test_struct_ti->hooks.flags & ECS_COPY_CTOR_ILLEGAL);
+    test_assert(test_struct_ti->hooks.flags & ECS_TYPE_HOOK_COPY_ILLEGAL);
+    test_assert(test_struct_ti->hooks.flags & ECS_TYPE_HOOK_COPY_CTOR_ILLEGAL);
 
     /* No other hooks should've been set: */
     test_assert(test_struct_ti->hooks.ctor != NULL);
@@ -722,6 +727,7 @@ void define_resource_handle(
     if (copy)
         hooks.copy = ResourceHandle_copy;
 
+    hooks.flags &= ECS_TYPE_HOOKS_ILLEGAL;
     ecs_set_hooks_id(world, resource_handle, &hooks);
 }
 
@@ -817,7 +823,8 @@ void RuntimeTypes_array_ctor_illegal(void) {
     const ecs_type_info_t *nested_struct_ti = define_nested_struct(world);
 
     ecs_type_hooks_t hooks = nested_struct_ti->hooks;
-    hooks.flags |= ECS_CTOR_ILLEGAL; /* mark constructor for "NestedStruct" as illegal */
+    hooks.flags |= ECS_TYPE_HOOK_CTOR_ILLEGAL; /* mark constructor for "NestedStruct" as illegal */
+    hooks.flags &= ECS_TYPE_HOOKS_ILLEGAL;
     ecs_set_hooks_id(world, nested_struct, &hooks);
 
     /* Define test_arr, as an array of "NestedStruct".
@@ -828,9 +835,9 @@ void RuntimeTypes_array_ctor_illegal(void) {
     const ecs_type_info_t* test_arr_ti = ecs_get_type_info(world, test_arr);
 
     /* test_arr should have an illegal constructor too: */
-    test_assert(test_arr_ti->hooks.flags & ECS_CTOR_ILLEGAL);
-    test_assert(test_arr_ti->hooks.flags & ECS_COPY_CTOR_ILLEGAL);
-    test_assert(test_arr_ti->hooks.flags & ECS_MOVE_CTOR_ILLEGAL);
+    test_assert(test_arr_ti->hooks.flags & ECS_TYPE_HOOK_CTOR_ILLEGAL);
+    test_assert(test_arr_ti->hooks.flags & ECS_TYPE_HOOK_COPY_CTOR_ILLEGAL);
+    test_assert(test_arr_ti->hooks.flags & ECS_TYPE_HOOK_MOVE_CTOR_ILLEGAL);
 
     /* No other hooks should've been set: */
     test_assert(test_arr_ti->hooks.dtor == NULL);
@@ -909,7 +916,8 @@ void RuntimeTypes_array_dtor_illegal(void) {
     const ecs_type_info_t *nested_struct_ti = define_nested_struct(world);
 
     ecs_type_hooks_t hooks = nested_struct_ti->hooks;
-    hooks.flags |= ECS_DTOR_ILLEGAL; /* mark destructor for "NestedStruct" as illegal */
+    hooks.flags |= ECS_TYPE_HOOK_DTOR_ILLEGAL; /* mark destructor for "NestedStruct" as illegal */
+    hooks.flags &= ECS_TYPE_HOOKS_ILLEGAL;
     ecs_set_hooks_id(world, nested_struct, &hooks);
 
     /* Define test_arr, as an array of "NestedStruct".
@@ -920,7 +928,7 @@ void RuntimeTypes_array_dtor_illegal(void) {
     const ecs_type_info_t* test_arr_ti = ecs_get_type_info(world, test_arr);
 
     /* test_arr should have an illegal destructor too: */
-    test_assert(test_arr_ti->hooks.flags & ECS_DTOR_ILLEGAL);
+    test_assert(test_arr_ti->hooks.flags & ECS_TYPE_HOOK_DTOR_ILLEGAL);
 
     /* No other hooks should've been set: */
     test_assert(test_arr_ti->hooks.ctor != NULL);
@@ -1039,7 +1047,8 @@ void RuntimeTypes_array_move_illegal(void) {
     const ecs_type_info_t *nested_struct_ti = define_nested_struct(world);
 
     ecs_type_hooks_t hooks = nested_struct_ti->hooks;
-    hooks.flags |= ECS_MOVE_ILLEGAL; /* mark move hook for "NestedStruct" as illegal */
+    hooks.flags |= ECS_TYPE_HOOK_MOVE_ILLEGAL; /* mark move hook for "NestedStruct" as illegal */
+    hooks.flags &= ECS_TYPE_HOOKS_ILLEGAL;
     ecs_set_hooks_id(world, nested_struct, &hooks);
 
     /* Define test_arr, as an array of "NestedStruct".
@@ -1050,8 +1059,8 @@ void RuntimeTypes_array_move_illegal(void) {
     const ecs_type_info_t* test_arr_ti = ecs_get_type_info(world, test_arr);
 
     /* test_arr should have an illegal move hook too: */
-    test_assert(test_arr_ti->hooks.flags & ECS_MOVE_ILLEGAL);
-    test_assert(test_arr_ti->hooks.flags & ECS_MOVE_CTOR_ILLEGAL);
+    test_assert(test_arr_ti->hooks.flags & ECS_TYPE_HOOK_MOVE_ILLEGAL);
+    test_assert(test_arr_ti->hooks.flags & ECS_TYPE_HOOK_MOVE_CTOR_ILLEGAL);
 
     /* No other hooks should've been set: */
     test_assert(test_arr_ti->hooks.ctor != NULL);
@@ -1143,7 +1152,8 @@ void RuntimeTypes_array_copy_illegal(void) {
     const ecs_type_info_t *nested_struct_ti = define_nested_struct(world);
 
     ecs_type_hooks_t hooks = nested_struct_ti->hooks;
-    hooks.flags |= ECS_COPY_ILLEGAL; /* mark copy hook for "NestedStruct" as illegal */
+    hooks.flags |= ECS_TYPE_HOOK_COPY_ILLEGAL; /* mark copy hook for "NestedStruct" as illegal */
+    hooks.flags &= ECS_TYPE_HOOKS_ILLEGAL;
     ecs_set_hooks_id(world, nested_struct, &hooks);
 
     /* Define test_arr, as an array of "NestedStruct".
@@ -1154,8 +1164,8 @@ void RuntimeTypes_array_copy_illegal(void) {
     const ecs_type_info_t* test_arr_ti = ecs_get_type_info(world, test_arr);
 
     /* test_arr should have an illegal copy hook too: */
-    test_assert(test_arr_ti->hooks.flags & ECS_COPY_ILLEGAL);
-    test_assert(test_arr_ti->hooks.flags & ECS_COPY_CTOR_ILLEGAL);
+    test_assert(test_arr_ti->hooks.flags & ECS_TYPE_HOOK_COPY_ILLEGAL);
+    test_assert(test_arr_ti->hooks.flags & ECS_TYPE_HOOK_COPY_CTOR_ILLEGAL);
 
     /* No other hooks should've been set: */
     test_assert(test_arr_ti->hooks.ctor != NULL);
@@ -1306,6 +1316,7 @@ ecs_entity_t define_ResourceHandle_opaque(
     hooks.dtor = ResourceHandle_dtor;
     hooks.move = ResourceHandle_move;
     hooks.copy = ResourceHandle_copy;
+    hooks.flags &= ECS_TYPE_HOOKS_ILLEGAL;
     ecs_set_hooks_id(world, ecs_id(ResourceHandle), &hooks);
 
     /* Create struct type that describes the structure of ResourceHandle */
