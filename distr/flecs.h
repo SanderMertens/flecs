@@ -27611,6 +27611,9 @@ void register_lifecycle_actions(
 
     ecs_type_hooks_t cl{};
     cl.comp = compare<T>();
+    if(cl.comp == NULL) {
+        cl.flags |= ECS_TYPE_HOOK_COMP_ILLEGAL;
+    }
     ecs_set_hooks_id(world, component, &cl); 
 }
 
@@ -27636,6 +27639,9 @@ void register_lifecycle_actions(
     cl.move_dtor = move_dtor<T>(cl.flags);
 
     cl.comp = compare<T>();
+    if(cl.comp == NULL) {
+        cl.flags |= ECS_TYPE_HOOK_COMP_ILLEGAL;
+    }
 
     ecs_set_hooks_id(world, component, &cl);
 
