@@ -229,8 +229,8 @@ int ecs_compare_string(
     const void *b_ptr,
     const ecs_type_info_t *ti) {
     (void)ti;
-    const char* str_a = *((const char *const *) a_ptr);
-    const char* str_b = *((const char *const *) b_ptr);
+    const ecs_string_t str_a = *((const ecs_string_t *) a_ptr);
+    const ecs_string_t str_b = *((const ecs_string_t *) b_ptr);
     if(str_a == str_b) {
         return 0;
     }
