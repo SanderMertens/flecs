@@ -16,7 +16,7 @@ inline void IFlecsModuleInterface::ImportModule(flecs::world& InWorld)
 
 	const FFlecsEntityHandle OldScope = World->ClearScope();
 
-	ModuleEntity = InWorld.entity(StringCast<char>(*Execute_GetModuleName(_getUObject())).Get());
+	ModuleEntity = World->CreateEntity(Execute_GetModuleName(_getUObject()));
 	solid_checkf(ModuleEntity.IsValid(), TEXT("Module entity is not valid!"));
 	
 	ModuleEntity.Add(flecs::Module);

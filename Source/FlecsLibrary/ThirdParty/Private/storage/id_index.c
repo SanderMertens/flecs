@@ -16,7 +16,7 @@
 
 #include "../private_api.h"
 
-static
+static inline
 ecs_id_record_elem_t* flecs_id_record_elem(
     ecs_id_record_t *head,
     ecs_id_record_elem_t *list,
