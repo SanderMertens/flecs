@@ -89,7 +89,21 @@ template <> inline const char* symbol_name<double>() {
 template<typename T, enable_if_t<
     std::is_trivial<T>::value == true
         >* = nullptr>
-void register_lifecycle_actions(ecs_world_t*, ecs_entity_t) { }
+void register_lifecycle_actions(
+    ecs_world_t *world,
+    ecs_entity_t component) {
+
+    const ecs_world_t* w = ecs_get_world(world);
+
+    if(ecs_id_in_use(w, component) || 
+        ecs_id_in_use(w, ecs_pair(component, EcsWildcard))) {
+        return;
+    } 
+
+    ecs_type_hooks_t cl{};
+    cl.comp = compare<T>();
+    ecs_set_hooks_id(world, component, &cl); 
+}
 
 // If the component is non-trivial, register component lifecycle actions.
 // Depending on the type not all callbacks may be available.
@@ -111,6 +125,8 @@ void register_lifecycle_actions(
 
     cl.ctor_move_dtor = ctor_move_dtor<T>(cl.flags);
     cl.move_dtor = move_dtor<T>(cl.flags);
+
+    cl.comp = compare<T>();
 
     ecs_set_hooks_id(world, component, &cl);
 
