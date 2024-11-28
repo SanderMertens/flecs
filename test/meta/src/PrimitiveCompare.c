@@ -36,7 +36,7 @@ bool str_equals(const char* a, const char* b) {
  * Comparer is demonstrated to work if it successfully sorts an array of primitives.
 */
 
-void Compare_bool(void) {
+void PrimitiveCompare_bool(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_bool_t arr[] = {true, false, true, false};
@@ -61,7 +61,7 @@ void Compare_bool(void) {
     ecs_fini(world);
 }
 
-void Compare_char(void) {
+void PrimitiveCompare_char(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_char_t arr[] = {'z', 'a', 'm', 'a', 'x', 'b'};
@@ -86,7 +86,7 @@ void Compare_char(void) {
     ecs_fini(world);
 }
 
-void Compare_byte(void) {
+void PrimitiveCompare_byte(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_byte_t arr[] = {0xFF, 0x01, 0x7F, 0x01, 0x00};
@@ -111,7 +111,7 @@ void Compare_byte(void) {
     ecs_fini(world);
 }
 
-void Compare_u8(void) {
+void PrimitiveCompare_u8(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_u8_t arr[] = {1, 79, 12, 3, 255, 79, 0, 14};
@@ -136,7 +136,7 @@ void Compare_u8(void) {
     ecs_fini(world);
 }
 
-void Compare_u16(void) {
+void PrimitiveCompare_u16(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_u16_t arr[] = {1024, 65535, 0, 1, 1024, 256};
@@ -161,7 +161,7 @@ void Compare_u16(void) {
     ecs_fini(world);
 }
 
-void Compare_u32(void) {
+void PrimitiveCompare_u32(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_u32_t arr[] = {100000, 500, 4294967295, 100000, 0};
@@ -186,7 +186,7 @@ void Compare_u32(void) {
     ecs_fini(world);
 }
 
-void Compare_u64(void) {
+void PrimitiveCompare_u64(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_u64_t arr[] = {18446744073709551615ULL, 0, 
@@ -216,7 +216,7 @@ void Compare_u64(void) {
     ecs_fini(world);
 }
 
-void Compare_uptr(void) {
+void PrimitiveCompare_uptr(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_uptr_t arr[] = {(ecs_uptr_t)0x1234, (ecs_uptr_t)0x5678, (ecs_uptr_t)0x1234, (ecs_uptr_t)0x9ABC};
@@ -241,7 +241,7 @@ void Compare_uptr(void) {
     ecs_fini(world);
 }
 
-void Compare_i8(void) {
+void PrimitiveCompare_i8(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_i8_t arr[] = {-128, 127, 0, -1, 127, 1};
@@ -266,7 +266,7 @@ void Compare_i8(void) {
     ecs_fini(world);
 }
 
-void Compare_i16(void) {
+void PrimitiveCompare_i16(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_i16_t arr[] = {-32768, 32767, 100, -100, 32767};
@@ -291,7 +291,7 @@ void Compare_i16(void) {
     ecs_fini(world);
 }
 
-void Compare_i32(void) {
+void PrimitiveCompare_i32(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_i32_t arr[] = {-100000, 50000, 0, -100000, 100000};
@@ -316,7 +316,7 @@ void Compare_i32(void) {
     ecs_fini(world);
 }
 
-void Compare_i64(void) {
+void PrimitiveCompare_i64(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_i64_t arr[] = {-9223372036854775807LL, 9223372036854775807LL,
@@ -346,7 +346,7 @@ void Compare_i64(void) {
     ecs_fini(world);
 }
 
-void Compare_iptr(void) {
+void PrimitiveCompare_iptr(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_iptr_t arr[] = {(ecs_iptr_t)-1000, (ecs_iptr_t)500, (ecs_iptr_t)0, (ecs_iptr_t)-1000};
@@ -371,7 +371,7 @@ void Compare_iptr(void) {
     ecs_fini(world);
 }
 
-void Compare_f32(void) {
+void PrimitiveCompare_f32(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_f32_t arr[] = {3.14f, 2.71f, -1.0f, 2.71f, 0.0f};
@@ -396,7 +396,7 @@ void Compare_f32(void) {
     ecs_fini(world);
 }
 
-void Compare_f64(void) {
+void PrimitiveCompare_f64(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_f64_t arr[] = {3.14159, 2.71828, -1.0, 2.71828, 0.0};
@@ -421,7 +421,7 @@ void Compare_f64(void) {
     ecs_fini(world);
 }
 
-void Compare_entity(void) {
+void PrimitiveCompare_entity(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t arr[] = {1000, 42, 1000, 500, 0};
@@ -446,7 +446,7 @@ void Compare_entity(void) {
     ecs_fini(world);
 }
 
-void Compare_id(void) {
+void PrimitiveCompare_id(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_id_t arr[] = {1000, 42, 1000, 500, 0};
@@ -471,7 +471,7 @@ void Compare_id(void) {
     ecs_fini(world);
 }
 
-void Compare_string(void) {
+void PrimitiveCompare_string(void) {
     ecs_world_t *world = ecs_init();
 
     const char* const_arr[] = {"world", "hello", NULL, "aa", "zz", "aa", "cc", "bb"};
@@ -512,7 +512,7 @@ void Compare_string(void) {
     ecs_fini(world);
 }
 
-void Compare_const_string(void) {
+void PrimitiveCompare_const_string(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t const_string = ecs_lookup(world, "flecs.core.const_string_t");
