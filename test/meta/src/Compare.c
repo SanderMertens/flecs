@@ -45,13 +45,13 @@ void Compare_bool(void) {
     const ecs_type_info_t* ti = ecs_get_type_info(world, ecs_id(ecs_bool_t));
 
     /* test "less" */
-    test_assert(cmp(&arr[1], &arr[0], ti) < 0);
+    test_assert(cmp(&arr[1], &arr[0], ti) < 0); /* false < true */
 
     /* test "greater" */
-    test_assert(cmp(&arr[0], &arr[1], ti) > 0);
+    test_assert(cmp(&arr[0], &arr[1], ti) > 0); /* true > false */
 
     /* test "equal" */
-    test_assert(cmp(&arr[0], &arr[0], ti) == 0);
+    test_assert(cmp(&arr[0], &arr[0], ti) == 0); /* true == true */
 
     /* further test by sorting the array */
     sort_array(ti, arr, 4);
@@ -70,13 +70,13 @@ void Compare_char(void) {
     const ecs_type_info_t* ti = ecs_get_type_info(world, ecs_id(ecs_char_t));
 
     /* test "less" */
-    test_assert(cmp(&arr[1], &arr[0], ti) < 0);
+    test_assert(cmp(&arr[1], &arr[0], ti) < 0); /* 'a' < 'z' */
 
     /* test "greater" */
-    test_assert(cmp(&arr[0], &arr[1], ti) > 0);
+    test_assert(cmp(&arr[0], &arr[1], ti) > 0); /* 'z' > 'a' */
 
     /* test "equal" */
-    test_assert(cmp(&arr[1], &arr[1], ti) == 0);
+    test_assert(cmp(&arr[1], &arr[1], ti) == 0); /* 'a' == 'a' */
 
     /* further test by sorting the array */
     sort_array(ti, arr, 6);
@@ -95,13 +95,13 @@ void Compare_byte(void) {
     const ecs_type_info_t* ti = ecs_get_type_info(world, ecs_id(ecs_byte_t));
 
     /* test "less" */
-    test_assert(cmp(&arr[1], &arr[0], ti) < 0);
+    test_assert(cmp(&arr[1], &arr[0], ti) < 0); /* 0x01 < 0xFF */
 
     /* test "greater" */
-    test_assert(cmp(&arr[0], &arr[1], ti) > 0);
+    test_assert(cmp(&arr[0], &arr[1], ti) > 0); /* 0xFF > 0x01 */
 
     /* test "equal" */
-    test_assert(cmp(&arr[1], &arr[1], ti) == 0);
+    test_assert(cmp(&arr[1], &arr[1], ti) == 0); /* 0x01 == 0x01 */
 
     /* further test by sorting the array */
     sort_array(ti, arr, 5);
@@ -111,23 +111,22 @@ void Compare_byte(void) {
     ecs_fini(world);
 }
 
-
 void Compare_u8(void) {
     ecs_world_t *world = ecs_init();
-    
-    ecs_u8_t arr[] = {1, 79, 12, 3, 255, 79, 0, 14 };
-    ecs_u8_t expected[] = {0, 1, 3, 12, 14, 79, 79, 255 };
+
+    ecs_u8_t arr[] = {1, 79, 12, 3, 255, 79, 0, 14};
+    ecs_u8_t expected[] = {0, 1, 3, 12, 14, 79, 79, 255};
 
     const ecs_type_info_t* ti = ecs_get_type_info(world, ecs_id(ecs_u8_t));
 
     /* test "less" */
-    test_assert(cmp(&arr[0], &arr[1], ti) < 0);
+    test_assert(cmp(&arr[0], &arr[1], ti) < 0); /* 1 < 79 */
 
     /* test "greater" */
-    test_assert(cmp(&arr[1], &arr[0], ti) > 0);
+    test_assert(cmp(&arr[1], &arr[0], ti) > 0); /* 79 > 1 */
 
     /* test "equal" */
-    test_assert(cmp(&arr[0], &arr[0], ti) == 0);
+    test_assert(cmp(&arr[5], &arr[1], ti) == 0); /* 79 == 79 */
 
     /* further test by sorting the array */
     sort_array(ti, arr, 8);
@@ -146,13 +145,13 @@ void Compare_u16(void) {
     const ecs_type_info_t* ti = ecs_get_type_info(world, ecs_id(ecs_u16_t));
 
     /* test "less" */
-    test_assert(cmp(&arr[2], &arr[1], ti) < 0);
+    test_assert(cmp(&arr[2], &arr[1], ti) < 0); /* 0 < 65535 */
 
     /* test "greater" */
-    test_assert(cmp(&arr[1], &arr[2], ti) > 0);
+    test_assert(cmp(&arr[1], &arr[2], ti) > 0); /* 65535 > 0 */
 
     /* test "equal" */
-    test_assert(cmp(&arr[0], &arr[4], ti) == 0);
+    test_assert(cmp(&arr[0], &arr[4], ti) == 0); /* 1024 == 1024 */
 
     /* further test by sorting the array */
     sort_array(ti, arr, 6);
@@ -171,13 +170,13 @@ void Compare_u32(void) {
     const ecs_type_info_t* ti = ecs_get_type_info(world, ecs_id(ecs_u32_t));
 
     /* test "less" */
-    test_assert(cmp(&arr[4], &arr[1], ti) < 0);
+    test_assert(cmp(&arr[4], &arr[1], ti) < 0); /* 0 < 500 */
 
     /* test "greater" */
-    test_assert(cmp(&arr[2], &arr[1], ti) > 0);
+    test_assert(cmp(&arr[2], &arr[1], ti) > 0); /* 4294967295 > 500 */
 
     /* test "equal" */
-    test_assert(cmp(&arr[0], &arr[3], ti) == 0);
+    test_assert(cmp(&arr[0], &arr[3], ti) == 0); /* 100000 == 100000 */
 
     /* further test by sorting the array */
     sort_array(ti, arr, 5);
@@ -190,19 +189,24 @@ void Compare_u32(void) {
 void Compare_u64(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_u64_t arr[] = {18446744073709551615ULL, 0, 1000, 18446744073709551615ULL, 42};
-    ecs_u64_t expected[] = {0, 42, 1000, 18446744073709551615ULL, 18446744073709551615ULL};
+    ecs_u64_t arr[] = {18446744073709551615ULL, 0, 
+        1000, 18446744073709551615ULL, 42};
+    ecs_u64_t expected[] = {0, 42, 1000, 
+        18446744073709551615ULL, 18446744073709551615ULL};
 
     const ecs_type_info_t* ti = ecs_get_type_info(world, ecs_id(ecs_u64_t));
 
     /* test "less" */
-    test_assert(cmp(&arr[1], &arr[0], ti) < 0);
+    /* 0 < 18446744073709551615 */
+    test_assert(cmp(&arr[1], &arr[0], ti) < 0); 
 
     /* test "greater" */
+    /* 18446744073709551615 > 1000 */
     test_assert(cmp(&arr[0], &arr[2], ti) > 0);
 
     /* test "equal" */
-    test_assert(cmp(&arr[0], &arr[3], ti) == 0);
+    /* 18446744073709551615 == 18446744073709551615 */
+    test_assert(cmp(&arr[0], &arr[3], ti) == 0); 
 
     /* further test by sorting the array */
     sort_array(ti, arr, 5);
@@ -221,13 +225,13 @@ void Compare_uptr(void) {
     const ecs_type_info_t* ti = ecs_get_type_info(world, ecs_id(ecs_uptr_t));
 
     /* test "less" */
-    test_assert(cmp(&arr[0], &arr[1], ti) < 0);
+    test_assert(cmp(&arr[0], &arr[1], ti) < 0); /* 0x1234 < 0x5678 */
 
     /* test "greater" */
-    test_assert(cmp(&arr[3], &arr[1], ti) > 0);
+    test_assert(cmp(&arr[3], &arr[1], ti) > 0); /* 0x9ABC > 0x5678 */
 
     /* test "equal" */
-    test_assert(cmp(&arr[0], &arr[2], ti) == 0);
+    test_assert(cmp(&arr[0], &arr[2], ti) == 0); /* 0x1234 == 0x1234 */
 
     /* further test by sorting the array */
     sort_array(ti, arr, 4);
@@ -246,13 +250,13 @@ void Compare_i8(void) {
     const ecs_type_info_t* ti = ecs_get_type_info(world, ecs_id(ecs_i8_t));
 
     /* test "less" */
-    test_assert(cmp(&arr[0], &arr[1], ti) < 0);
+    test_assert(cmp(&arr[0], &arr[1], ti) < 0); /* -128 < 127 */
 
     /* test "greater" */
-    test_assert(cmp(&arr[1], &arr[2], ti) > 0);
+    test_assert(cmp(&arr[1], &arr[2], ti) > 0); /* 127 > 0 */
 
     /* test "equal" */
-    test_assert(cmp(&arr[1], &arr[4], ti) == 0);
+    test_assert(cmp(&arr[1], &arr[4], ti) == 0); /* 127 == 127 */
 
     /* further test by sorting the array */
     sort_array(ti, arr, 6);
@@ -271,13 +275,13 @@ void Compare_i16(void) {
     const ecs_type_info_t* ti = ecs_get_type_info(world, ecs_id(ecs_i16_t));
 
     /* test "less" */
-    test_assert(cmp(&arr[0], &arr[2], ti) < 0);
+    test_assert(cmp(&arr[0], &arr[1], ti) < 0); /* -32768 < 32767 */
 
     /* test "greater" */
-    test_assert(cmp(&arr[1], &arr[2], ti) > 0);
+    test_assert(cmp(&arr[1], &arr[2], ti) > 0); /* 32767 > 100 */
 
     /* test "equal" */
-    test_assert(cmp(&arr[1], &arr[4], ti) == 0);
+    test_assert(cmp(&arr[1], &arr[4], ti) == 0); /* 32767 == 32767 */
 
     /* further test by sorting the array */
     sort_array(ti, arr, 5);
@@ -296,13 +300,13 @@ void Compare_i32(void) {
     const ecs_type_info_t* ti = ecs_get_type_info(world, ecs_id(ecs_i32_t));
 
     /* test "less" */
-    test_assert(cmp(&arr[0], &arr[1], ti) < 0);
+    test_assert(cmp(&arr[0], &arr[1], ti) < 0); /* -100000 < 50000 */
 
     /* test "greater" */
-    test_assert(cmp(&arr[1], &arr[2], ti) > 0);
+    test_assert(cmp(&arr[1], &arr[2], ti) > 0); /* 50000 > 0 */
 
     /* test "equal" */
-    test_assert(cmp(&arr[0], &arr[3], ti) == 0);
+    test_assert(cmp(&arr[0], &arr[3], ti) == 0); /* -100000 == -100000 */
 
     /* further test by sorting the array */
     sort_array(ti, arr, 5);
@@ -315,19 +319,24 @@ void Compare_i32(void) {
 void Compare_i64(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_i64_t arr[] = {-9223372036854775807LL, 9223372036854775807LL, 0, -1000, 9223372036854775807LL};
-    ecs_i64_t expected[] = {-9223372036854775807LL, -1000, 0, 9223372036854775807LL, 9223372036854775807LL};
+    ecs_i64_t arr[] = {-9223372036854775807LL, 9223372036854775807LL,
+         0, -1000, 9223372036854775807LL};
+    ecs_i64_t expected[] = {-9223372036854775807LL, -1000, 0,
+         9223372036854775807LL, 9223372036854775807LL};
 
     const ecs_type_info_t* ti = ecs_get_type_info(world, ecs_id(ecs_i64_t));
 
     /* test "less" */
-    test_assert(cmp(&arr[0], &arr[1], ti) < 0);
+    /* -9223372036854775807 < 9223372036854775807 */
+    test_assert(cmp(&arr[0], &arr[1], ti) < 0); 
 
     /* test "greater" */
-    test_assert(cmp(&arr[1], &arr[2], ti) > 0);
+    /* 9223372036854775807 > 0 */
+    test_assert(cmp(&arr[1], &arr[2], ti) > 0); 
 
     /* test "equal" */
-    test_assert(cmp(&arr[1], &arr[4], ti) == 0);
+    /* 9223372036854775807 == 9223372036854775807 */
+    test_assert(cmp(&arr[1], &arr[4], ti) == 0); 
 
     /* further test by sorting the array */
     sort_array(ti, arr, 5);
@@ -346,13 +355,13 @@ void Compare_iptr(void) {
     const ecs_type_info_t* ti = ecs_get_type_info(world, ecs_id(ecs_iptr_t));
 
     /* test "less" */
-    test_assert(cmp(&arr[0], &arr[1], ti) < 0);
+    test_assert(cmp(&arr[0], &arr[1], ti) < 0); /* -1000 < 500 */
 
     /* test "greater" */
-    test_assert(cmp(&arr[1], &arr[2], ti) > 0);
+    test_assert(cmp(&arr[1], &arr[2], ti) > 0); /* 500 > 0 */
 
     /* test "equal" */
-    test_assert(cmp(&arr[0], &arr[3], ti) == 0);
+    test_assert(cmp(&arr[0], &arr[3], ti) == 0); /* -1000 == -1000 */
 
     /* further test by sorting the array */
     sort_array(ti, arr, 4);
@@ -371,13 +380,13 @@ void Compare_f32(void) {
     const ecs_type_info_t* ti = ecs_get_type_info(world, ecs_id(ecs_f32_t));
 
     /* test "less" */
-    test_assert(cmp(&arr[2], &arr[0], ti) < 0);
+    test_assert(cmp(&arr[2], &arr[0], ti) < 0); /* -1.0 < 3.14 */
 
     /* test "greater" */
-    test_assert(cmp(&arr[0], &arr[4], ti) > 0);
+    test_assert(cmp(&arr[0], &arr[4], ti) > 0); /* 3.14 > 0.0 */
 
     /* test "equal" */
-    test_assert(cmp(&arr[1], &arr[3], ti) == 0);
+    test_assert(cmp(&arr[1], &arr[3], ti) == 0); /* 2.71 == 2.71 */
 
     /* further test by sorting the array */
     sort_array(ti, arr, 5);
@@ -396,13 +405,13 @@ void Compare_f64(void) {
     const ecs_type_info_t* ti = ecs_get_type_info(world, ecs_id(ecs_f64_t));
 
     /* test "less" */
-    test_assert(cmp(&arr[2], &arr[0], ti) < 0);
+    test_assert(cmp(&arr[2], &arr[0], ti) < 0); /* -1.0 < 3.14159 */
 
     /* test "greater" */
-    test_assert(cmp(&arr[0], &arr[4], ti) > 0);
+    test_assert(cmp(&arr[0], &arr[4], ti) > 0); /* 3.14159 > 0.0 */
 
     /* test "equal" */
-    test_assert(cmp(&arr[1], &arr[3], ti) == 0);
+    test_assert(cmp(&arr[1], &arr[3], ti) == 0); /* 2.71828 == 2.71828 */
 
     /* further test by sorting the array */
     sort_array(ti, arr, 5);
@@ -421,13 +430,13 @@ void Compare_entity(void) {
     const ecs_type_info_t* ti = ecs_get_type_info(world, ecs_id(ecs_entity_t));
 
     /* test "less" */
-    test_assert(cmp(&arr[4], &arr[1], ti) < 0);
+    test_assert(cmp(&arr[4], &arr[1], ti) < 0); /* 0 < 42 */
 
     /* test "greater" */
-    test_assert(cmp(&arr[0], &arr[1], ti) > 0);
+    test_assert(cmp(&arr[0], &arr[1], ti) > 0); /* 1000 > 42 */
 
     /* test "equal" */
-    test_assert(cmp(&arr[0], &arr[2], ti) == 0);
+    test_assert(cmp(&arr[0], &arr[2], ti) == 0); /* 1000 == 1000 */
 
     /* further test by sorting the array */
     sort_array(ti, arr, 5);
@@ -446,13 +455,13 @@ void Compare_id(void) {
     const ecs_type_info_t* ti = ecs_get_type_info(world, ecs_id(ecs_id_t));
 
     /* test "less" */
-    test_assert(cmp(&arr[4], &arr[1], ti) < 0);
+    test_assert(cmp(&arr[4], &arr[1], ti) < 0); /* 0 < 42 */
 
     /* test "greater" */
-    test_assert(cmp(&arr[0], &arr[1], ti) > 0);
+    test_assert(cmp(&arr[0], &arr[1], ti) > 0); /* 1000 > 42 */
 
     /* test "equal" */
-    test_assert(cmp(&arr[0], &arr[2], ti) == 0);
+    test_assert(cmp(&arr[0], &arr[2], ti) == 0); /* 1000 == 1000 */
 
     /* further test by sorting the array */
     sort_array(ti, arr, 5);
@@ -461,7 +470,6 @@ void Compare_id(void) {
 
     ecs_fini(world);
 }
-
 
 void Compare_string(void) {
     ecs_world_t *world = ecs_init();
