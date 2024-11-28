@@ -289,4 +289,52 @@ int32_t flecs_query_pivot_term(
     const ecs_world_t *world,
     const ecs_query_t *query);
 
+////////////////////////////////////////////////////////////////////////////////
+//// Visitor Fns for Json Serialization 
+////////////////////////////////////////////////////////////////////////////////
+
+void flecs_json_ser_bool(bool value, void* user_data);
+
+void flecs_json_ser_char_expression(char value, void* user_data);
+
+void flecs_json_ser_char(char value, void* user_data);
+
+void flecs_json_ser_byte(const uint8_t value, void* user_data);
+
+void flecs_json_ser_u8(const uint8_t value, void* user_data);
+
+void flecs_json_ser_u16(const uint16_t value, void* user_data);
+
+void flecs_json_ser_u32(const uint32_t value, void* user_data);
+
+void flecs_json_ser_u64(const uint64_t value, void* user_data);
+
+void flecs_json_ser_i8(const int8_t value, void* user_data);
+
+void flecs_json_ser_i16(const int16_t value, void* user_data);
+
+void flecs_json_ser_i32(const int32_t value, void* user_data);
+
+void flecs_json_ser_i64(const int64_t value, void* user_data);
+
+void flecs_json_ser_f32(const float value, void* user_data);
+
+void flecs_json_ser_f32_expression(const ecs_f32_t value, void* user_data);
+
+void flecs_json_ser_f64(const double value, void* user_data);
+
+void flecs_json_ser_f64_expression(const ecs_f64_t value, void* user_data);
+
+void flecs_json_ser_iptr(const intptr_t value, void* user_data);
+
+void flecs_json_ser_uptr(const uintptr_t value, void* user_data);
+
+void flecs_json_ser_string_expression(const char* value, void* user_data);
+
+void flecs_json_ser_string(const char* value, void* user_data);
+
+void flecs_json_ser_entity(const ecs_world_t* world, ecs_entity_t e, void* user_data);
+
+void flecs_json_ser_id(const ecs_world_t* world, ecs_id_t id, void* user_data);
+
 #endif

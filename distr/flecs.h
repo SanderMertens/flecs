@@ -15331,6 +15331,33 @@ typedef struct ecs_serializer_t {
 extern "C" {
 #endif
 
+/** Visitor Seriailzation API
+ */
+typedef struct ecs_visitor_desc_t {
+    /** Here Be Visitor Functions
+     * If the visit has a return, it has some form of flow control.
+     */
+
+    /** Visit Primitives */
+    void (*visit_f32)(const ecs_f32_t value, void* user_data);
+    void (*visit_f64)(const ecs_f64_t value, void* user_data);
+
+
+    void (*visit_string)(const char *value);
+    void (*visit_enum)(uint32_t value, const char* constant_name, void* user_data);
+    struct {
+        int (*enter)(uint32_t initial_value, void* user_data);
+        void (*value)(uint32_t value, const char* constant_name, void* user_data);
+        void (*exit)(void* user_data);
+    } visit_bitmask;
+
+    /** User Data that is handed out to each visit.
+     * Ex: JSON serialization passes a string buffer
+     */
+    void* user_data;
+} ecs_visitor_desc_t;
+
+
 /** Callback invoked serializing an opaque type. */
 typedef int (*ecs_meta_serialize_t)(
     const ecs_serializer_t *ser,

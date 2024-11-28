@@ -217,6 +217,38 @@ int flecs_expr_ser_type_op(
     ecs_strbuf_t *str,
     bool is_expr)
 {
+    ecs_visitor_desc_t visitor_desc = {
+        .visit_char = is_expr? flecs_json_ser_char_expression: flecs_json_ser_char,
+        .visit_u8 = flecs_json_ser_u8,
+        .visit_u16 = flecs_json_ser_u16,
+        .visit_u32 = flecs_json_ser_u32,
+        .visit_u64 = flecs_json_ser_u64,
+        .visit_i8 = flecs_json_ser_i8,
+        .visit_i16 = flecs_json_ser_i16,
+        .visit_i32 = flecs_json_ser_i32,
+        .visit_i64 = flecs_json_ser_i64,
+        .visit_f32 = flecs_json_ser_f32,
+        .visit_f64 = flecs_json_ser_f64,
+        .visit_bool = flecs_json_ser_bool,
+        .visit_byte = flecs_json_ser_byte,
+        .visit_uptr = flecs_json_ser_uptr,
+        .visit_iptr = flecs_json_ser_iptr,
+        .visit_string = is_expr? flecs_json_ser_string_expression: flecs_json_ser_string,
+        .visit_entity = flecs_json_ser_entity,
+        .visit_id = flecs_json_ser_id,
+
+
+        /*
+        .visit_enum = flecs_json_ser_enum,
+        .visit_bitmask = {
+            .enter = flecs_json_ser_enter_bitmask,
+            .value = flecs_json_ser_bitmask_value,
+            .exit = flecs_json_ser_exit_bitmask,
+        },
+        */
+        .user_data = str
+    };
+
     switch(op->kind) {
     case EcsOpPush:
     case EcsOpPop:
@@ -265,7 +297,8 @@ int flecs_expr_ser_type_op(
     case EcsOpString:
     case EcsOpOpaque:
         if (flecs_expr_ser_primitive(world, flecs_expr_op_to_primitive_kind(op->kind), 
-            ECS_OFFSET(ptr, op->offset), str, is_expr))
+            &visitor_desc,
+            ECS_OFFSET(ptr, op->offset)))
         {
             /* Unknown operation */
             ecs_err("unknown serializer operation kind (%d)", op->kind);

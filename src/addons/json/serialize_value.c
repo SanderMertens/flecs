@@ -8,6 +8,7 @@
 
 #ifdef FLECS_JSON
 
+
 static
 int flecs_json_ser_type_ops(
     const ecs_world_t *world,
@@ -24,13 +25,27 @@ int flecs_json_ser_type_op(
     const void *base,
     ecs_strbuf_t *str);
 
+static
+void flecs_json_ser_enum(
+    uint32_t value,
+    const char* constant_name,
+    void* user_data)
+{
+    (void)value;
+    ecs_strbuf_t *str = (ecs_strbuf_t*)user_data;
+
+    ecs_strbuf_appendch(str, '"');
+    ecs_strbuf_appendstr(str, constant_name);
+    ecs_strbuf_appendch(str, '"');
+}
+
 /* Serialize enumeration */
 static
-int flecs_json_ser_enum(
+int flecs_ser_enum(
     const ecs_world_t *world,
     ecs_meta_type_op_t *op, 
-    const void *base, 
-    ecs_strbuf_t *str) 
+    ecs_visitor_desc_t *visitor_desc,
+    const void *base) 
 {
     const EcsEnum *enum_type = ecs_get(world, op->type, EcsEnum);
     ecs_check(enum_type != NULL, ECS_INVALID_PARAMETER, NULL);
@@ -50,33 +65,53 @@ int flecs_json_ser_enum(
         goto error;
     }
 
-    ecs_strbuf_appendch(str, '"');
-    ecs_strbuf_appendstr(str, ecs_get_name(world, constant->constant));
-    ecs_strbuf_appendch(str, '"');
+    visitor_desc->visit_enum(value, ecs_get_name(world, constant->constant), visitor_desc->user_data);
 
     return 0;
 error:
     return -1;
 }
 
-/* Serialize bitmask */
+
+static int flecs_json_ser_enter_bitmask(uint32_t initial_value, void* user_data) {
+    (void)initial_value;
+    ecs_strbuf_t *str = (ecs_strbuf_t*)user_data;
+    if (!initial_value) {
+        ecs_strbuf_appendch(str, '0');
+        return 0;
+    }
+    ecs_strbuf_list_push(str, "\"", "|");
+    return 1;
+}
+
+static void flecs_json_ser_bitmask_value(uint32_t value, const char* constant_name, void* user_data) {
+    (void)value;
+    ecs_strbuf_t *str = (ecs_strbuf_t*)user_data;
+    ecs_strbuf_list_appendstr(str, constant_name);
+}
+
+static void flecs_json_ser_exit_bitmask(void* user_data) {
+    ecs_strbuf_t *str = (ecs_strbuf_t*)user_data;
+    ecs_strbuf_list_pop(str, "\"");
+}
+
 static
-int flecs_json_ser_bitmask(
+int flecs_ser_bitmask(
     const ecs_world_t *world,
     ecs_meta_type_op_t *op, 
-    const void *ptr, 
-    ecs_strbuf_t *str) 
+    ecs_visitor_desc_t *visitor_desc,
+    const void *ptr
+    ) 
 {
     const EcsBitmask *bitmask_type = ecs_get(world, op->type, EcsBitmask);
     ecs_check(bitmask_type != NULL, ECS_INVALID_PARAMETER, NULL);
 
     uint32_t value = *(const uint32_t*)ptr;
-    if (!value) {
-        ecs_strbuf_appendch(str, '0');
+
+    if (visitor_desc->visit_bitmask.enter && !visitor_desc->visit_bitmask.enter(value, visitor_desc->user_data)) {
+        // Visit Enter Bitmask can decide to skip visiting by returning 0
         return 0;
     }
-
-    ecs_strbuf_list_push(str, "\"", "|");
 
     /* Multiple flags can be set at a given time. Iterate through all the flags
      * and append the ones that are set. */
@@ -85,8 +120,13 @@ int flecs_json_ser_bitmask(
         ecs_bitmask_constant_t *constant = ecs_map_ptr(&it);
         ecs_map_key_t key = ecs_map_key(&it);
         if ((value & key) == key) {
-            ecs_strbuf_list_appendstr(str, 
-                ecs_get_name(world, constant->constant));
+            if (visitor_desc && visitor_desc->visit_bitmask.value) {
+                visitor_desc->visit_bitmask.value(
+                    (uint32_t)key,
+                    ecs_get_name(world, constant->constant),
+                    visitor_desc->user_data
+                );
+            }
             value -= (uint32_t)key;
         }
     }
@@ -100,12 +140,15 @@ int flecs_json_ser_bitmask(
         goto error;
     }
 
-    ecs_strbuf_list_pop(str, "\"");
+    if (visitor_desc->visit_bitmask.exit) {
+        visitor_desc->visit_bitmask.exit(visitor_desc->user_data);
+    }
 
     return 0;
 error:
     return -1;
 }
+
 
 /* Serialize elements of a contiguous array */
 static
@@ -296,6 +339,36 @@ int flecs_json_ser_type_op(
     const void *ptr,
     ecs_strbuf_t *str) 
 {
+    ecs_visitor_desc_t visitor_desc = {
+        .visit_char = flecs_json_ser_char_expression,
+        .visit_u8 = flecs_json_ser_u8,
+        .visit_u16 = flecs_json_ser_u16,
+        .visit_u32 = flecs_json_ser_u32,
+        .visit_u64 = flecs_json_ser_u64,
+        .visit_i8 = flecs_json_ser_i8,
+        .visit_i16 = flecs_json_ser_i16,
+        .visit_i32 = flecs_json_ser_i32,
+        .visit_i64 = flecs_json_ser_i64,
+        .visit_f32 = flecs_json_ser_f32_expression,
+        .visit_f64 = flecs_json_ser_f64_expression,
+        .visit_bool = flecs_json_ser_bool,
+        .visit_byte = flecs_json_ser_byte,
+        .visit_uptr = flecs_json_ser_uptr,
+        .visit_iptr = flecs_json_ser_iptr,
+        .visit_string = flecs_json_ser_string_expression,
+        .visit_entity = flecs_json_ser_entity,
+        .visit_id = flecs_json_ser_id,
+
+
+        .visit_enum = flecs_json_ser_enum,
+        .visit_bitmask = {
+            .enter = flecs_json_ser_enter_bitmask,
+            .value = flecs_json_ser_bitmask_value,
+            .exit = flecs_json_ser_exit_bitmask,
+        },
+        .user_data = str
+    };
+
     void *vptr = ECS_OFFSET(ptr, op->offset);
     bool large_int = false;
     if (op->kind == EcsOpI64) {
@@ -318,21 +391,14 @@ int flecs_json_ser_type_op(
         /* Should not be parsed as single op */
         ecs_throw(ECS_INVALID_PARAMETER, NULL);
         break;
-    case EcsOpF32:
-        ecs_strbuf_appendflt(str, 
-            (ecs_f64_t)*(const ecs_f32_t*)vptr, '"');
-        break;
-    case EcsOpF64:
-        ecs_strbuf_appendflt(str, 
-            *(ecs_f64_t*)vptr, '"');
-        break;
     case EcsOpEnum:
-        if (flecs_json_ser_enum(world, op, vptr, str)) {
+        if (visitor_desc.visit_enum && flecs_ser_enum(world, op, &visitor_desc, vptr)) {
             goto error;
         }
         break;
     case EcsOpBitmask:
-        if (flecs_json_ser_bitmask(world, op, vptr, str)) {
+        if ((visitor_desc.visit_bitmask.enter || visitor_desc.visit_bitmask.value)
+            && flecs_ser_bitmask(world, op, &visitor_desc, vptr)) {
             goto error;
         }
         break;
@@ -381,12 +447,15 @@ int flecs_json_ser_type_op(
     case EcsOpI8:
     case EcsOpI16:
     case EcsOpI32:
+    case EcsOpF32:
+    case EcsOpF64:
     case EcsOpUPtr:
     case EcsOpIPtr:
     case EcsOpString:
         if (flecs_expr_ser_primitive(world, 
             flecs_json_op_to_primitive_kind(op->kind), 
-            ECS_OFFSET(ptr, op->offset), str, true)) 
+            &visitor_desc,
+            ECS_OFFSET(ptr, op->offset))) 
         {
             ecs_throw(ECS_INTERNAL_ERROR, NULL);
         }

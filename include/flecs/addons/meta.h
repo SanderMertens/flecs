@@ -370,6 +370,49 @@ typedef struct ecs_serializer_t {
 extern "C" {
 #endif
 
+/** Visitor Seriailzation API
+ */
+typedef struct ecs_visitor_desc_t {
+    /** Here Be Visitor Functions
+     * If the visit has a return, it has some form of flow control.
+     */
+
+    /** visit primitives */
+    void (*visit_char)(const ecs_char_t value, void* user_data);
+    void (*visit_u8)(const ecs_u8_t value, void* user_data);
+    void (*visit_u16)(const ecs_u16_t value, void* user_data);
+    void (*visit_u32)(const ecs_u32_t value, void* user_data);
+    void (*visit_u64)(const ecs_u64_t value, void* user_data);
+    void (*visit_i8)(const ecs_i8_t value, void* user_data);
+    void (*visit_i16)(const ecs_i16_t value, void* user_data);
+    void (*visit_i32)(const ecs_i32_t value, void* user_data);
+    void (*visit_i64)(const ecs_i64_t value, void* user_data);
+    void (*visit_f32)(const ecs_f32_t value, void* user_data);
+    void (*visit_f64)(const ecs_f64_t value, void* user_data);
+    void (*visit_bool)(const ecs_bool_t value, void* user_data);
+    void (*visit_byte)(const ecs_byte_t value, void* user_data);
+    void (*visit_uptr)(const ecs_uptr_t value, void* user_data);
+    void (*visit_iptr)(const ecs_iptr_t value, void* user_data);
+    void (*visit_string)(const char* value, void* user_data);
+    void (*visit_entity)(const ecs_world_t*, const ecs_entity_t value, void* user_data);
+    void (*visit_id)(const ecs_world_t*, const ecs_id_t value, void* user_data);
+
+
+    void (*visit_enum)(uint32_t value, const char* constant_name, void* user_data);
+    struct {
+        int (*enter)(uint32_t initial_value, void* user_data);
+        void (*value)(uint32_t value, const char* constant_name, void* user_data);
+        void (*exit)(void* user_data);
+    } visit_bitmask;
+
+    /** User Data that is handed out to each visit.
+     * Ex: JSON serialization passes a string buffer
+     */
+    void* user_data;
+} ecs_visitor_desc_t;
+
+#define ecs_visit(desc, fn, T, ptr) desc->fn(*(T*)ptr);
+
 /** Callback invoked serializing an opaque type. */
 typedef int (*ecs_meta_serialize_t)(
     const ecs_serializer_t *ser,
