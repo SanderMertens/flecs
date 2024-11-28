@@ -489,9 +489,6 @@ int flecs_init_type(
           if (!ti->hooks.ctor) {
             ti->hooks.ctor = flecs_default_ctor;
           }
-          if (!ti->hooks.comp) {
-            ti->hooks.comp = flecs_default_comp;
-          }
         } 
     } else {
         if (meta_type->kind != kind) {
