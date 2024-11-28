@@ -1031,6 +1031,9 @@ void PrimitiveCompare_id(void);
 void PrimitiveCompare_string(void);
 void PrimitiveCompare_const_string(void);
 
+// Testsuite 'RttCompare'
+void RttCompare_test1(void);
+
 bake_test_case PrimitiveTypes_testcases[] = {
     {
         "bool",
@@ -5013,6 +5016,13 @@ bake_test_case PrimitiveCompare_testcases[] = {
     }
 };
 
+bake_test_case RttCompare_testcases[] = {
+    {
+        "test1",
+        RttCompare_test1
+    }
+};
+
 
 static bake_test_suite suites[] = {
     {
@@ -5168,9 +5178,16 @@ static bake_test_suite suites[] = {
         NULL,
         19,
         PrimitiveCompare_testcases
+    },
+    {
+        "RttCompare",
+        NULL,
+        NULL,
+        1,
+        RttCompare_testcases
     }
 };
 
 int main(int argc, char *argv[]) {
-    return bake_test_run("meta", argc, argv, suites, 22);
+    return bake_test_run("meta", argc, argv, suites, 23);
 }
