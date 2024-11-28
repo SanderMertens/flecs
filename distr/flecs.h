@@ -3545,29 +3545,32 @@ struct ecs_observer_t {
 #define ECS_TYPE_HOOK_MOVE_CTOR              (1 << 5)
 #define ECS_TYPE_HOOK_CTOR_MOVE_DTOR         (1 << 6)
 #define ECS_TYPE_HOOK_MOVE_DTOR              (1 << 7)
+#define ECS_TYPE_HOOK_COMP                   (1 << 8)
+
 
 /* Flags that can be used to set/check which hooks of a type are invalid */
-#define ECS_TYPE_HOOK_CTOR_ILLEGAL           (1 << 8)
-#define ECS_TYPE_HOOK_DTOR_ILLEGAL           (1 << 9)
-#define ECS_TYPE_HOOK_COPY_ILLEGAL           (1 << 10)
-#define ECS_TYPE_HOOK_MOVE_ILLEGAL           (1 << 11)
-#define ECS_TYPE_HOOK_COPY_CTOR_ILLEGAL      (1 << 12)
-#define ECS_TYPE_HOOK_MOVE_CTOR_ILLEGAL      (1 << 13)
-#define ECS_TYPE_HOOK_CTOR_MOVE_DTOR_ILLEGAL (1 << 14)
-#define ECS_TYPE_HOOK_MOVE_DTOR_ILLEGAL      (1 << 15)
+#define ECS_TYPE_HOOK_CTOR_ILLEGAL           (1 << 9)
+#define ECS_TYPE_HOOK_DTOR_ILLEGAL           (1 << 10)
+#define ECS_TYPE_HOOK_COPY_ILLEGAL           (1 << 11)
+#define ECS_TYPE_HOOK_MOVE_ILLEGAL           (1 << 12)
+#define ECS_TYPE_HOOK_COPY_CTOR_ILLEGAL      (1 << 13)
+#define ECS_TYPE_HOOK_MOVE_CTOR_ILLEGAL      (1 << 14)
+#define ECS_TYPE_HOOK_CTOR_MOVE_DTOR_ILLEGAL (1 << 15)
+#define ECS_TYPE_HOOK_MOVE_DTOR_ILLEGAL      (1 << 16)
+#define ECS_TYPE_HOOK_COMP_ILLEGAL           (1 << 17)
 
 /* All valid hook flags */
 #define ECS_TYPE_HOOKS (ECS_TYPE_HOOK_CTOR|ECS_TYPE_HOOK_DTOR|\
     ECS_TYPE_HOOK_COPY|ECS_TYPE_HOOK_MOVE|ECS_TYPE_HOOK_COPY_CTOR|\
     ECS_TYPE_HOOK_MOVE_CTOR|ECS_TYPE_HOOK_CTOR_MOVE_DTOR|\
-    ECS_TYPE_HOOK_MOVE_DTOR)
+    ECS_TYPE_HOOK_MOVE_DTOR|ECS_TYPE_HOOK_COMP)
 
 /* All invalid hook flags */
 #define ECS_TYPE_HOOKS_ILLEGAL (ECS_TYPE_HOOK_CTOR_ILLEGAL|\
     ECS_TYPE_HOOK_DTOR_ILLEGAL|ECS_TYPE_HOOK_COPY_ILLEGAL|\
     ECS_TYPE_HOOK_MOVE_ILLEGAL|ECS_TYPE_HOOK_COPY_CTOR_ILLEGAL|\
     ECS_TYPE_HOOK_MOVE_CTOR_ILLEGAL|ECS_TYPE_HOOK_CTOR_MOVE_DTOR_ILLEGAL|\
-    ECS_TYPE_HOOK_MOVE_DTOR_ILLEGAL)
+    ECS_TYPE_HOOK_MOVE_DTOR_ILLEGAL|ECS_TYPE_HOOK_COMP_ILLEGAL)
 
 struct ecs_type_hooks_t {
     ecs_xtor_t ctor;            /**< ctor */
@@ -3845,12 +3848,6 @@ void flecs_default_ctor(
     void *ptr, 
     int32_t count, 
     const ecs_type_info_t *ctx);
-
-/* Default compare function */
-int flecs_default_comp(
-    const void *a_ptr,
-    const void *b_ptr,
-    const ecs_type_info_t *ti);
 
 /* Create allocated string from format */
 FLECS_DBG_API
@@ -20571,7 +20568,8 @@ struct has_operator_equal<T, void_t<decltype(std::declval<const T&>() == std::de
 // 1. Compare function if `<`, `>`, are defined
 template <typename T, if_t<
     has_operator_less<T>::value &&
-    has_operator_greater<T>::value > = 0>
+    has_operator_greater<T>::value > &&
+    !has_operator_equal<T>::value = 0>
 int compare_impl(const void *a, const void *b, const ecs_type_info_t *) {
     const T& lhs = *static_cast<const T*>(a);
     const T& rhs = *static_cast<const T*>(b);
@@ -20580,11 +20578,11 @@ int compare_impl(const void *a, const void *b, const ecs_type_info_t *) {
     return 0;
 }
 
-// 2. Compare function if `<` and `==` are defined, deducing `>`
+// 2. Compare function if `<` and `==` are defined, ignoring `>`
+// if defined.
 template <typename T, if_t<
     has_operator_less<T>::value &&
-    has_operator_equal<T>::value &&
-    !has_operator_greater<T>::value > = 0>
+    has_operator_equal<T>::value > = 0>
 int compare_impl(const void *a, const void *b, const ecs_type_info_t *) {
     const T& lhs = *static_cast<const T*>(a);
     const T& rhs = *static_cast<const T*>(b);
@@ -20632,30 +20630,18 @@ int compare_impl(const void *a, const void *b, const ecs_type_info_t *) {
     return 0; // If neither is greater, they must be equal
 }
 
-// 6. Compare function if only `==` is defined, compare pointers to decide greater or smaller
-template <typename T, if_t<
-    has_operator_equal<T>::value &&
-    !has_operator_less<T>::value &&
-    !has_operator_greater<T>::value > = 0>
-int compare_impl(const void *a, const void *b, const ecs_type_info_t *) {
-    const T& lhs = *static_cast<const T*>(a);
-    const T& rhs = *static_cast<const T*>(b);
-    if (lhs == rhs) return 0;
-    return (a < b) ? -1 : 1; // Use pointer comparison to decide order
-}
-
+// In order to have a generated compare hook, at least
+// operator> or operator< must be defined:
 template <typename T, if_t<
     has_operator_less<T>::value ||
-    has_operator_greater<T>::value ||
-    has_operator_equal<T>::value > = 0>
+    has_operator_greater<T>::value > = 0>
 ecs_comp_t compare() {
     return compare_impl<T>;
 }
 
 template <typename T, if_t<
     !has_operator_less<T>::value &&
-    !has_operator_greater<T>::value &&
-    !has_operator_equal<T>::value > = 0>
+    !has_operator_greater<T>::value > = 0>
 ecs_comp_t compare() {
     return NULL;
 }
