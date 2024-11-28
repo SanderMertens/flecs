@@ -1128,6 +1128,7 @@ void Expr_var_element(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_entity_t array = ecs_array(world, {
+        .entity = ecs_entity(world, { .name = "array" }),
         .type = ecs_id(ecs_i32_t),
         .count = 2
     });
