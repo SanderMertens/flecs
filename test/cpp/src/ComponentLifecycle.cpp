@@ -2279,10 +2279,6 @@ void ComponentLifecycle_set_multiple_hooks(void) {
 
     ecs.release(); /* destroys world */
     test_int(removes, 2); /* two instances of `Pod` removed */
-
-int compare(flecs::world& ecs, flecs::entity_t id, const void *a, const void *b) {
-    const ecs_type_info_t* ti = ecs_get_type_info(ecs, id);
-    return ti->hooks.comp(a, b, ti);
 }
 
 struct WithGreaterThan {
@@ -2341,19 +2337,26 @@ struct WithoutOperators {
     int value;
 };
 
+int compare(flecs::world& ecs, flecs::entity_t id, const void *a, const void *b) {
+    const ecs_type_info_t* ti = ecs_get_type_info(ecs, id);
+    return ti->hooks.comp(a, b, ti);
+}
+
 void ComponentLifecycle_compare_WithGreaterThan(void) {
     flecs::world ecs;
 
     auto component = ecs.component<WithGreaterThan>();
 
-    WithGreaterThan c[] = {5, 7, 7, 5};
+    WithGreaterThan a = {1};
+    WithGreaterThan b = {2};
+    WithGreaterThan c = {1};
 
-    test_assert(compare(ecs, component, &c[0], &c[1]) < 0);
-    test_assert(compare(ecs, component, &c[1], &c[0]) > 0);
-    test_assert(compare(ecs, component, &c[1], &c[2]) == 0);
-    test_assert(compare(ecs, component, &c[2], &c[3]) > 0);
-    test_assert(compare(ecs, component, &c[3], &c[2]) < 0);
-    test_assert(compare(ecs, component, &c[1], &c[1]) == 0);
+    test_assert(compare(ecs, component, &a, &b) < 0);
+    test_assert(compare(ecs, component, &b, &a) > 0);
+    test_assert(compare(ecs, component, &a, &c) == 0);
+    test_assert(compare(ecs, component, &b, &c) > 0);
+    test_assert(compare(ecs, component, &c, &b) < 0);
+    test_assert(compare(ecs, component, &b, &b) == 0);
 }
 
 void ComponentLifecycle_compare_WithLessThan(void) {
@@ -2361,14 +2364,16 @@ void ComponentLifecycle_compare_WithLessThan(void) {
 
     auto component = ecs.component<WithLessThan>();
 
-    WithLessThan c[] = {5, 7, 7, 5};
+    WithLessThan a = {1};
+    WithLessThan b = {2};
+    WithLessThan c = {1};
 
-    test_assert(compare(ecs, component, &c[0], &c[1]) < 0);
-    test_assert(compare(ecs, component, &c[1], &c[0]) > 0);
-    test_assert(compare(ecs, component, &c[1], &c[2]) == 0);
-    test_assert(compare(ecs, component, &c[2], &c[3]) > 0);
-    test_assert(compare(ecs, component, &c[3], &c[2]) < 0);
-    test_assert(compare(ecs, component, &c[1], &c[1]) == 0);
+    test_assert(compare(ecs, component, &a, &b) < 0);
+    test_assert(compare(ecs, component, &b, &a) > 0);
+    test_assert(compare(ecs, component, &a, &c) == 0);
+    test_assert(compare(ecs, component, &b, &c) > 0);
+    test_assert(compare(ecs, component, &c, &b) < 0);
+    test_assert(compare(ecs, component, &b, &b) == 0);
 }
 
 void ComponentLifecycle_compare_WithLessAndGreaterThan(void) {
@@ -2376,30 +2381,33 @@ void ComponentLifecycle_compare_WithLessAndGreaterThan(void) {
 
     auto component = ecs.component<WithLessAndGreaterThan>();
 
-    WithLessAndGreaterThan c[] = {5, 7, 7, 5};
+    WithLessAndGreaterThan a = {1};
+    WithLessAndGreaterThan b = {2};
+    WithLessAndGreaterThan c = {1};
 
-    test_assert(compare(ecs, component, &c[0], &c[1]) < 0);
-    test_assert(compare(ecs, component, &c[1], &c[0]) > 0);
-    test_assert(compare(ecs, component, &c[1], &c[2]) == 0);
-    test_assert(compare(ecs, component, &c[2], &c[3]) > 0);
-    test_assert(compare(ecs, component, &c[3], &c[2]) < 0);
-    test_assert(compare(ecs, component, &c[1], &c[1]) == 0);
+    test_assert(compare(ecs, component, &a, &b) < 0);
+    test_assert(compare(ecs, component, &b, &a) > 0);
+    test_assert(compare(ecs, component, &a, &c) == 0);
+    test_assert(compare(ecs, component, &b, &c) > 0);
+    test_assert(compare(ecs, component, &c, &b) < 0);
+    test_assert(compare(ecs, component, &b, &b) == 0);
 }
-
 
 void ComponentLifecycle_compare_WithEqualsAndGreaterThan(void) {
     flecs::world ecs;
 
     auto component = ecs.component<WithEqualsAndGreaterThan>();
 
-    WithEqualsAndGreaterThan c[] = {5, 7, 7, 5};
+    WithEqualsAndGreaterThan a = {1};
+    WithEqualsAndGreaterThan b = {2};
+    WithEqualsAndGreaterThan c = {1};
 
-    test_assert(compare(ecs, component, &c[0], &c[1]) < 0);
-    test_assert(compare(ecs, component, &c[1], &c[0]) > 0);
-    test_assert(compare(ecs, component, &c[1], &c[2]) == 0);
-    test_assert(compare(ecs, component, &c[2], &c[3]) > 0);
-    test_assert(compare(ecs, component, &c[3], &c[2]) < 0);
-    test_assert(compare(ecs, component, &c[1], &c[1]) == 0);
+    test_assert(compare(ecs, component, &a, &b) < 0);
+    test_assert(compare(ecs, component, &b, &a) > 0);
+    test_assert(compare(ecs, component, &a, &c) == 0);
+    test_assert(compare(ecs, component, &b, &c) > 0);
+    test_assert(compare(ecs, component, &c, &b) < 0);
+    test_assert(compare(ecs, component, &b, &b) == 0);
 }
 
 void ComponentLifecycle_compare_WithEqualsAndLessThan(void) {
@@ -2407,14 +2415,16 @@ void ComponentLifecycle_compare_WithEqualsAndLessThan(void) {
 
     auto component = ecs.component<WithEqualsAndLessThan>();
 
-    WithEqualsAndLessThan c[] = {5, 7, 7, 5};
+    WithEqualsAndLessThan a = {1};
+    WithEqualsAndLessThan b = {2};
+    WithEqualsAndLessThan c = {1};
 
-    test_assert(compare(ecs, component, &c[0], &c[1]) < 0);
-    test_assert(compare(ecs, component, &c[1], &c[0]) > 0);
-    test_assert(compare(ecs, component, &c[1], &c[2]) == 0);
-    test_assert(compare(ecs, component, &c[2], &c[3]) > 0);
-    test_assert(compare(ecs, component, &c[3], &c[2]) < 0);
-    test_assert(compare(ecs, component, &c[1], &c[1]) == 0);
+    test_assert(compare(ecs, component, &a, &b) < 0);
+    test_assert(compare(ecs, component, &b, &a) > 0);
+    test_assert(compare(ecs, component, &a, &c) == 0);
+    test_assert(compare(ecs, component, &b, &c) > 0);
+    test_assert(compare(ecs, component, &c, &b) < 0);
+    test_assert(compare(ecs, component, &b, &b) == 0);
 }
 
 void ComponentLifecycle_compare_WithEqualsOnly(void) {
@@ -2435,6 +2445,7 @@ void ComponentLifecycle_compare_WithoutOperators(void) {
 
     const ecs_type_hooks_t* hooks = ecs_get_hooks_id(ecs, component);
 
-    /* can't compare if no operators are defined */
+    /* can't compare if no operators are defined at all */
     test_assert(hooks->flags & ECS_TYPE_HOOK_COMP_ILLEGAL);
 }
+
