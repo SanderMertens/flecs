@@ -2422,18 +2422,10 @@ void ComponentLifecycle_compare_WithEqualsOnly(void) {
 
     auto component = ecs.component<WithEqualsOnly>();
 
-    WithEqualsOnly c[] = {5, 7, 7, 5};
+    const ecs_type_hooks_t* hooks = ecs_get_hooks_id(ecs, component);
 
-    /* With only a == operator, we can only test equality */
-    test_assert(compare(ecs, component, &c[1], &c[2]) == 0);
-    test_assert(compare(ecs, component, &c[1], &c[1]) == 0);
-
-    /* If values are different, compare returns greater/less than 0 depending
-     * on memory location (position in the array) */
-    test_assert(compare(ecs, component, &c[0], &c[1]) < 0);
-    test_assert(compare(ecs, component, &c[1], &c[0]) > 0);
-    test_assert(compare(ecs, component, &c[2], &c[3]) < 0);
-    test_assert(compare(ecs, component, &c[3], &c[2]) > 0);
+    /* can't compare if no < or > operators are defined */
+    test_assert(hooks->flags & ECS_TYPE_HOOK_COMP_ILLEGAL);
 }
 
 void ComponentLifecycle_compare_WithoutOperators(void) {
@@ -2441,18 +2433,8 @@ void ComponentLifecycle_compare_WithoutOperators(void) {
 
     auto component = ecs.component<WithoutOperators>();
 
-    WithoutOperators c[] = {5, 7, 7, 5};
+    const ecs_type_hooks_t* hooks = ecs_get_hooks_id(ecs, component);
 
-    /* Without any operator defined, we can only test equality one element
-     * with itself */
-    test_assert(compare(ecs, component, &c[1], &c[1]) == 0);
-    test_assert(compare(ecs, component, &c[3], &c[3]) == 0);
-
-    /* Other comparisons return greater/less than 0 depending
-     * on memory location (position in the array) */
-    test_assert(compare(ecs, component, &c[0], &c[1]) < 0);
-    test_assert(compare(ecs, component, &c[1], &c[0]) > 0);
-    test_assert(compare(ecs, component, &c[1], &c[2]) < 0);
-    test_assert(compare(ecs, component, &c[2], &c[3]) < 0);
-    test_assert(compare(ecs, component, &c[3], &c[2]) > 0);
+    /* can't compare if no operators are defined */
+    test_assert(hooks->flags & ECS_TYPE_HOOK_COMP_ILLEGAL);
 }
