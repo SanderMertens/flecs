@@ -353,6 +353,16 @@ ecs_move_t move_dtor(ecs_flags32_t &) {
 template<typename...>
 using void_t = void;
 
+// These traits causes a "float comparison warning" in some compilers
+// when `T` is float or double.
+// Disable this warning with the following pragmas:
+#if defined(__clang__)
+    #pragma clang diagnostic push
+    #pragma clang diagnostic ignored "-Wfloat-equal"
+#elif defined(__GNUC__) && !defined(__clang__)
+    #pragma GCC diagnostic push
+    #pragma GCC diagnostic ignored "-Wfloat-equal"
+#endif
 
 // Trait to check for operator<
 template <typename T, typename = void>
@@ -375,16 +385,6 @@ struct has_operator_greater<T, void_t<decltype(std::declval<const T&>() > std::d
 
 
 // Trait to check for operator==
-// This trait causes a "float comparison warning" in some compilers
-// when `T` is float or double.
-// Disable this warning with the following pragmas:
-#if defined(__clang__)
-    #pragma clang diagnostic push
-    #pragma clang diagnostic ignored "-Wfloat-equal"
-#elif defined(__GNUC__) && !defined(__clang__)
-    #pragma GCC diagnostic push
-    #pragma GCC diagnostic ignored "-Wfloat-equal"
-#endif
 
 template <typename T, typename = void>
 struct has_operator_equal : std::false_type {};
@@ -393,14 +393,6 @@ struct has_operator_equal : std::false_type {};
 template <typename T>
 struct has_operator_equal<T, void_t<decltype(std::declval<const T&>() == std::declval<const T&>())>> : 
     std::is_same<decltype(std::declval<const T&>() == std::declval<const T&>()), bool> {};
-
-
-// re-enable the warning:
-#if defined(__clang__)
-    #pragma clang diagnostic pop
-#elif defined(__GNUC__) && !defined(__clang__)
-    #pragma GCC diagnostic pop
-#endif
 
 // 1. Compare function if `<`, `>`, are defined
 template <typename T, if_t<
@@ -483,6 +475,12 @@ ecs_comp_t compare() {
     return NULL;
 }
 
+// re-enable the float comparison warning:
+#if defined(__clang__)
+    #pragma clang diagnostic pop
+#elif defined(__GNUC__) && !defined(__clang__)
+    #pragma GCC diagnostic pop
+#endif
 
 } // _
 } // flecs
