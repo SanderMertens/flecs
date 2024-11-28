@@ -27,6 +27,21 @@ int __forceinline flecs_entity_compare(
 	return (e1 > e2) - (e1 < e2);
 }
 
+int __forceinline flecs_priority_compare(
+	const flecs::entity_t InEntityA, 
+	const flecs::SystemPriority* InPtrA, 
+	const flecs::entity_t InEntityB, 
+	const flecs::SystemPriority* InPtrB) 
+{
+	if (InPtrA->value == InPtrB->value) {
+		return flecs_entity_compare(InEntityA, InPtrA, InEntityB, InPtrB);
+	}
+	else // lower priority runs first
+	{
+		return InPtrA->value < InPtrB->value ? -1 : 1;
+	}
+}
+
 UFlecsTickerModule::UFlecsTickerModule(const FObjectInitializer& InObjectInitializer)
 	: Super(InObjectInitializer)
 {
@@ -50,18 +65,7 @@ void UFlecsTickerModule::InitializeModule(UFlecsWorld* InWorld, const FFlecsEnti
 		.without(flecs::Disabled).up(flecs::ChildOf)
 		.with<flecs::SystemPriority>()
 		.without(FlecsFixedTick)
-		.order_by<flecs::SystemPriority>(
-			[](flecs::entity_t InEntityA, const flecs::SystemPriority* InPtrA,
-				flecs::entity_t InEntityB, const flecs::SystemPriority* InPtrB) -> int
-		{
-			if (InPtrA->value == InPtrB->value) {
-				return flecs_entity_compare(InEntityA, InPtrA, InEntityB, InPtrB);
-			} else if (InPtrA->value > InPtrB->value) {
-				return -1; // Higher priority runs first
-			} else {
-				return 1;
-			}
-		})
+		.order_by<flecs::SystemPriority>(flecs_priority_compare)
 		.build()
 		.set_name("MainPipeline");
 
@@ -73,18 +77,7 @@ void UFlecsTickerModule::InitializeModule(UFlecsWorld* InWorld, const FFlecsEnti
 		.without(flecs::Disabled).up(flecs::DependsOn)
 		.without(flecs::Disabled).up(flecs::ChildOf)
 		.with<flecs::SystemPriority>()
-		.order_by<flecs::SystemPriority>(
-			[](flecs::entity_t InEntityA, const flecs::SystemPriority* InPtrA,
-				flecs::entity_t InEntityB, const flecs::SystemPriority* InPtrB) -> int
-		{
-			if (InPtrA->value == InPtrB->value) {
-				return flecs_entity_compare(InEntityA, InPtrA, InEntityB, InPtrB);
-			} else if (InPtrA->value > InPtrB->value) {
-				return -1; // Higher priority runs first
-			} else {
-				return 1;
-			}
-		})
+		.order_by<flecs::SystemPriority>(flecs_priority_compare)
 		.build()
 		.set_name("TickerPipeline");
 
