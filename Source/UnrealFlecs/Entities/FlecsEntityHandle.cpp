@@ -12,32 +12,6 @@
 
 FFlecsEntityHandle::FFlecsEntityHandle()
 {
-    /*if (!GWorld || !GWorld->IsGameWorld())
-    {
-        return;
-    }
-
-    if (Entity.id() == 0 || Entity.world() != nullptr)
-    {
-        return;
-    }
-
-    UFlecsWorldSubsystem* FlecsWorldSubsystem = GWorld->GetSubsystem<UFlecsWorldSubsystem>();
-    if LIKELY_IF(FlecsWorldSubsystem->HasValidFlecsWorld())
-    {
-        SetEntity(flecs::entity(FlecsWorldSubsystem->GetDefaultWorld()->World,
-            Entity.id()));
-    }
-    else
-    {
-        FDelegateHandle OnWorldCreatedHandle = FlecsWorldSubsystem
-            ->OnWorldCreated.AddLambda([&](const UFlecsWorld* InFlecsWorld)
-        {
-            SetEntity(flecs::entity(InFlecsWorld->World, Entity.id()));
-
-            FlecsWorldSubsystem->OnWorldCreated.Remove(OnWorldCreatedHandle);
-        });
-    }*/
 }
 
 FFlecsEntityHandle::FFlecsEntityHandle(const flecs::world_t* InWorld, const flecs::entity_t InEntity)
