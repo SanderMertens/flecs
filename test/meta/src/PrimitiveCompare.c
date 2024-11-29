@@ -4,7 +4,7 @@
 
 static
 int cmp(const void *a, const void *b, const ecs_type_info_t* ti) {
-    return ti->hooks.comp(a, b, ti);
+    return ti->hooks.cmp(a, b, ti);
 }
 
 const ecs_type_info_t *sort_ti = NULL;
