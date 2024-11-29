@@ -222,13 +222,6 @@ int cmp(const ecs_world_t* world, ecs_entity_t id, const void *a, const void *b)
     return ti->hooks.cmp(a, b, ti);
 }
 
-/* Tests equality of two instances of the given type */
-static
-bool equals(const ecs_world_t* world, ecs_entity_t id, const void *a, const void *b) {
-    const ecs_type_info_t* ti = ecs_get_type_info(world, id);
-    return ti->hooks.equals(a, b, ti);
-}
-
 /* Tests that a constructor is generated for a struct if at least a member has
  * itself a constructor Also tests if the generated constructor works. */
 void RuntimeTypes_ctor(void) {
@@ -580,7 +573,7 @@ void RuntimeTypes_cmp_illegal(void) {
     const ecs_type_info_t *nested_struct_ti = define_nested_struct(world);
 
     ecs_type_hooks_t hooks = nested_struct_ti->hooks;
-    hooks.flags |= ECS_TYPE_HOOK_CMP_ILLEGAL; /* mark copy hook for "NestedStruct" as illegal */
+    hooks.flags |= ECS_TYPE_HOOK_CMP_ILLEGAL; /* mark cmp hook for "NestedStruct" as illegal */
     hooks.cmp = NULL;
 
     hooks.flags &= ECS_TYPE_HOOKS_ILLEGAL;
@@ -592,6 +585,31 @@ void RuntimeTypes_cmp_illegal(void) {
 
     /* TestStruct should have an illegal compare hook too: */
     test_assert(test_struct_ti->hooks.flags & ECS_TYPE_HOOK_CMP_ILLEGAL);
+
+    ecs_fini(world);
+}
+
+/* Tests that an illegal equals hook is set for a struct if at least a member has
+ * itself an illegal equals hook */
+void RuntimeTypes_equals_illegal(void) {
+    ecs_world_t *world = ecs_init();
+
+    /* Define NestedStruct: */
+    const ecs_type_info_t *nested_struct_ti = define_nested_struct(world);
+
+    ecs_type_hooks_t hooks = nested_struct_ti->hooks;
+    hooks.flags |= ECS_TYPE_HOOK_EQUALS_ILLEGAL; /* mark equals hook for "NestedStruct" as illegal */
+    hooks.equals = NULL;
+
+    hooks.flags &= ECS_TYPE_HOOKS_ILLEGAL;
+    ecs_set_hooks_id(world, nested_struct, &hooks);
+
+    /* Define TestStruct, which has two "NestedStruct" members.
+     * TestStruct's equals hook should be set to illegal as well. */
+    const ecs_type_info_t *test_struct_ti = define_test_struct(world);
+
+    /* TestStruct should have an illegal equals hook too: */
+    test_assert(test_struct_ti->hooks.flags & ECS_TYPE_HOOK_EQUALS_ILLEGAL);
 
     ecs_fini(world);
 }

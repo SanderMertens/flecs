@@ -105,6 +105,7 @@ void RuntimeTypes_move_illegal(void);
 void RuntimeTypes_copy(void);
 void RuntimeTypes_copy_illegal(void);
 void RuntimeTypes_cmp_illegal(void);
+void RuntimeTypes_equals_illegal(void);
 void RuntimeTypes_trivial_array(void);
 void RuntimeTypes_array_ctor(void);
 void RuntimeTypes_array_ctor_illegal(void);
@@ -1454,6 +1455,10 @@ bake_test_case RuntimeTypes_testcases[] = {
     {
         "cmp_illegal",
         RuntimeTypes_cmp_illegal
+    },
+    {
+        "equals_illegal",
+        RuntimeTypes_equals_illegal
     },
     {
         "trivial_array",
@@ -5305,7 +5310,7 @@ static bake_test_suite suites[] = {
         "RuntimeTypes",
         NULL,
         NULL,
-        50,
+        51,
         RuntimeTypes_testcases
     },
     {

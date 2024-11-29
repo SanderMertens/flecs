@@ -1482,10 +1482,9 @@ void ecs_set_hooks_id(
     }
 
     if (!h->equals) {
-        if(flags & ECS_TYPE_HOOK_CMP_ILLEGAL) {
+        if(flags & (ECS_TYPE_HOOK_CMP_ILLEGAL|ECS_TYPE_HOOK_EQUALS_ILLEGAL)) {
             flags |= ECS_TYPE_HOOK_EQUALS_ILLEGAL;
         } else if(h->cmp) {
-            flags &= (ecs_flags32_t)(~ECS_TYPE_HOOK_EQUALS_ILLEGAL);
             ti->hooks.equals = flecs_default_equals;
         }
     }

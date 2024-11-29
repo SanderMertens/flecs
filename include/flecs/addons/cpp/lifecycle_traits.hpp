@@ -490,7 +490,12 @@ ecs_equals_t equals(ecs_flags32_t &) {
 template <typename T, if_t<
     !has_operator_equal<T>::value > = 0>
 ecs_equals_t equals(ecs_flags32_t &flags) {
-    flags |= ECS_TYPE_HOOK_EQUALS_ILLEGAL;
+    if(flags & ECS_TYPE_HOOK_CMP_ILLEGAL) {
+        /* Only mark equals hook as illegal if compare is also illegal 
+         * this way we let Flecs generate an equals hook
+         * from the compare hook automatically */
+        flags |= ECS_TYPE_HOOK_EQUALS_ILLEGAL;
+    }
     return NULL;
 }
 
