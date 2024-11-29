@@ -42,6 +42,11 @@ int ecs_compare_string(
     const void *str_b,
     const ecs_type_info_t *ti);
 
+bool ecs_equals_string(
+    const void *str_a,
+    const void *str_b,
+    const ecs_type_info_t *ti);
+
 #endif
 
 #endif

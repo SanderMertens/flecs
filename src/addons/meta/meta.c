@@ -38,6 +38,15 @@ int ecs_compare_bool(
 }
 
 static
+bool ecs_equals_bool(
+    const void *a_ptr,
+    const void *b_ptr,
+    const ecs_type_info_t *ti)
+{
+    return ecs_compare_bool(a_ptr, b_ptr, ti) == 0;
+}
+
+static
 int ecs_compare_char(
     const void *a_ptr,
     const void *b_ptr,
@@ -45,6 +54,15 @@ int ecs_compare_char(
 {
     (void)ti;
     return (int)(*((const ecs_char_t*)a_ptr)) - (int)(*((const ecs_char_t*)b_ptr));
+}
+
+static
+bool ecs_equals_char(
+    const void *a_ptr,
+    const void *b_ptr,
+    const ecs_type_info_t *ti)
+{
+    return ecs_compare_char(a_ptr, b_ptr, ti) == 0;
 }
 
 static
@@ -58,6 +76,15 @@ int ecs_compare_byte(
 }
 
 static
+bool ecs_equals_byte(
+    const void *a_ptr,
+    const void *b_ptr,
+    const ecs_type_info_t *ti)
+{
+    return ecs_compare_byte(a_ptr, b_ptr, ti) == 0;
+}
+
+static
 int ecs_compare_u8(
     const void *a_ptr,
     const void *b_ptr,
@@ -68,6 +95,15 @@ int ecs_compare_u8(
 }
 
 static
+bool ecs_equals_u8(
+    const void *a_ptr,
+    const void *b_ptr,
+    const ecs_type_info_t *ti)
+{
+    return ecs_compare_u8(a_ptr, b_ptr, ti) == 0;
+}
+
+static
 int ecs_compare_u16(
     const void *a_ptr,
     const void *b_ptr,
@@ -75,6 +111,15 @@ int ecs_compare_u16(
 {
     (void)ti;
     return (int)(*((const ecs_u16_t*)a_ptr)) - (int)(*((const ecs_u16_t*)b_ptr));
+}
+
+static
+bool ecs_equals_u16(
+    const void *a_ptr,
+    const void *b_ptr,
+    const ecs_type_info_t *ti)
+{
+    return ecs_compare_u16(a_ptr, b_ptr, ti) == 0;
 }
 
 static
@@ -90,6 +135,15 @@ int ecs_compare_u32(
 }
 
 static
+bool ecs_equals_u32(
+    const void *a_ptr,
+    const void *b_ptr,
+    const ecs_type_info_t *ti)
+{
+    return ecs_compare_u32(a_ptr, b_ptr, ti) == 0;
+}
+
+static
 int ecs_compare_u64(
     const void *a_ptr,
     const void *b_ptr,
@@ -99,6 +153,15 @@ int ecs_compare_u64(
     ecs_u64_t a = *((const ecs_u64_t*)a_ptr);
     ecs_u64_t b = *((const ecs_u64_t*)b_ptr);
     return (a > b) - (a < b);
+}
+
+static
+bool ecs_equals_u64(
+    const void *a_ptr,
+    const void *b_ptr,
+    const ecs_type_info_t *ti)
+{
+    return ecs_compare_u64(a_ptr, b_ptr, ti) == 0;
 }
 
 static
@@ -114,6 +177,15 @@ int ecs_compare_uptr(
 }
 
 static
+bool ecs_equals_uptr(
+    const void *a_ptr,
+    const void *b_ptr,
+    const ecs_type_info_t *ti)
+{
+    return ecs_compare_uptr(a_ptr, b_ptr, ti) == 0;
+}
+
+static
 int ecs_compare_i8(
     const void *a_ptr,
     const void *b_ptr,
@@ -125,6 +197,15 @@ int ecs_compare_i8(
 }
 
 static
+bool ecs_equals_i8(
+    const void *a_ptr,
+    const void *b_ptr,
+    const ecs_type_info_t *ti)
+{
+    return ecs_compare_i8(a_ptr, b_ptr, ti) == 0;
+}
+
+static
 int ecs_compare_i16(
     const void *a_ptr,
     const void *b_ptr,
@@ -133,6 +214,15 @@ int ecs_compare_i16(
     (void)ti;
     return (int)(*((const ecs_i16_t*)a_ptr)) - 
            (int)(*((const ecs_i16_t*)b_ptr));
+}
+
+static
+bool ecs_equals_i16(
+    const void *a_ptr,
+    const void *b_ptr,
+    const ecs_type_info_t *ti)
+{
+    return ecs_compare_i16(a_ptr, b_ptr, ti) == 0;
 }
 
 static
@@ -148,6 +238,15 @@ int ecs_compare_i32(
 }
 
 static
+bool ecs_equals_i32(
+    const void *a_ptr,
+    const void *b_ptr,
+    const ecs_type_info_t *ti)
+{
+    return ecs_compare_i32(a_ptr, b_ptr, ti) == 0;
+}
+
+static
 int ecs_compare_i64(
     const void *a_ptr,
     const void *b_ptr,
@@ -160,6 +259,15 @@ int ecs_compare_i64(
 }
 
 static
+bool ecs_equals_i64(
+    const void *a_ptr,
+    const void *b_ptr,
+    const ecs_type_info_t *ti)
+{
+    return ecs_compare_i64(a_ptr, b_ptr, ti) == 0;
+}
+
+static
 int ecs_compare_iptr(
     const void *a_ptr,
     const void *b_ptr,
@@ -169,6 +277,15 @@ int ecs_compare_iptr(
     ecs_iptr_t a = *((const ecs_iptr_t*)a_ptr);
     ecs_iptr_t b = *((const ecs_iptr_t*)b_ptr);
     return (a > b) - (a < b);
+}
+
+static
+bool ecs_equals_iptr(
+    const void *a_ptr,
+    const void *b_ptr,
+    const ecs_type_info_t *ti)
+{
+    return ecs_compare_iptr(a_ptr, b_ptr, ti) == 0;
 }
 
 static
@@ -186,6 +303,16 @@ int ecs_compare_f32(
 }
 
 static
+bool ecs_equals_f32(
+    const void *a_ptr,
+    const void *b_ptr,
+    const ecs_type_info_t *ti)
+{
+    /* intentional equal check as if it was an integer */
+    return ecs_compare_u32(a_ptr, b_ptr, ti) == 0;
+}
+
+static
 int ecs_compare_f64(
     const void *a_ptr,
     const void *b_ptr,
@@ -197,6 +324,16 @@ int ecs_compare_f64(
     if (a < b) return -1;
     if (a > b) return 1;
     return 0;
+}
+
+static
+bool ecs_equals_f64(
+    const void *a_ptr,
+    const void *b_ptr,
+    const ecs_type_info_t *ti)
+{
+    /* intentional equal check as if it was an integer */
+    return ecs_compare_u64(a_ptr, b_ptr, ti) == 0;
 }
 
 static
@@ -212,6 +349,15 @@ int ecs_compare_entity(
 }
 
 static
+bool ecs_equals_entity(
+    const void *a_ptr,
+    const void *b_ptr,
+    const ecs_type_info_t *ti)
+{
+    return ecs_compare_entity(a_ptr, b_ptr, ti) == 0;
+}
+
+static
 int ecs_compare_id(
     const void *a_ptr,
     const void *b_ptr,
@@ -223,6 +369,14 @@ int ecs_compare_id(
     return (a > b) - (a < b);
 }
 
+static
+bool ecs_equals_id(
+    const void *a_ptr,
+    const void *b_ptr,
+    const ecs_type_info_t *ti)
+{
+    return ecs_compare_id(a_ptr, b_ptr, ti) == 0;
+}
 
 int ecs_compare_string(
     const void *a_ptr,
@@ -242,6 +396,15 @@ int ecs_compare_string(
     }
     return ecs_os_strcmp(str_a, str_b);
 }
+
+bool ecs_equals_string(
+    const void *a_ptr,
+    const void *b_ptr,
+    const ecs_type_info_t *ti)
+{
+    return ecs_compare_string(a_ptr, b_ptr, ti) == 0;
+}
+
 
 /* EcsTypeSerializer lifecycle */
 
@@ -1725,7 +1888,8 @@ void FlecsMetaImport(
             .kind = primitive_kind\
         });\
         ecs_set_hooks(world, ecs_##type##_t, { \
-            .cmp = ecs_compare_##type \
+            .cmp = ecs_compare_##type, \
+            .equals = ecs_equals_##type \
         })
 
     ECS_PRIMITIVE(world, bool, EcsBool);
