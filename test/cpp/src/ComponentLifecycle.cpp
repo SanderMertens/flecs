@@ -2339,7 +2339,7 @@ struct WithoutOperators {
 
 int compare(flecs::world& ecs, flecs::entity_t id, const void *a, const void *b) {
     const ecs_type_info_t* ti = ecs_get_type_info(ecs, id);
-    return ti->hooks.comp(a, b, ti);
+    return ti->hooks.cmp(a, b, ti);
 }
 
 void ComponentLifecycle_compare_WithGreaterThan(void) {
@@ -2435,7 +2435,7 @@ void ComponentLifecycle_compare_WithEqualsOnly(void) {
     const ecs_type_hooks_t* hooks = ecs_get_hooks_id(ecs, component);
 
     /* can't compare if no < or > operators are defined */
-    test_assert(hooks->flags & ECS_TYPE_HOOK_COMP_ILLEGAL);
+    test_assert(hooks->flags & ECS_TYPE_HOOK_CMP_ILLEGAL);
 }
 
 void ComponentLifecycle_compare_WithoutOperators(void) {
@@ -2446,6 +2446,6 @@ void ComponentLifecycle_compare_WithoutOperators(void) {
     const ecs_type_hooks_t* hooks = ecs_get_hooks_id(ecs, component);
 
     /* can't compare if no operators are defined at all */
-    test_assert(hooks->flags & ECS_TYPE_HOOK_COMP_ILLEGAL);
+    test_assert(hooks->flags & ECS_TYPE_HOOK_CMP_ILLEGAL);
 }
 

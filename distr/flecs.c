@@ -18716,9 +18716,9 @@ void ecs_set_hooks_id(
         h->move_dtor != flecs_move_ctor_illegal),
         ECS_INVALID_PARAMETER, "cannot specify both move dtor hook and illegal flag");
 
-    ecs_check(!(flags & ECS_TYPE_HOOK_COMP_ILLEGAL && 
-        h->comp != NULL && 
-        h->comp != flecs_comp_illegal),
+    ecs_check(!(flags & ECS_TYPE_HOOK_CMP_ILLEGAL && 
+        h->cmp != NULL && 
+        h->cmp != flecs_comp_illegal),
         ECS_INVALID_PARAMETER, "cannot specify both compare hook and illegal flag");
 
 
@@ -18759,7 +18759,7 @@ void ecs_set_hooks_id(
     if (h->move_ctor) ti->hooks.move_ctor = h->move_ctor;
     if (h->ctor_move_dtor) ti->hooks.ctor_move_dtor = h->ctor_move_dtor;
     if (h->move_dtor) ti->hooks.move_dtor = h->move_dtor;
-    if (h->comp) ti->hooks.comp = h->comp;
+    if (h->cmp) ti->hooks.cmp = h->cmp;
 
     if (h->on_add) ti->hooks.on_add = h->on_add;
     if (h->on_remove) ti->hooks.on_remove = h->on_remove;
@@ -18868,13 +18868,13 @@ void ecs_set_hooks_id(
     if (ti->hooks.move_dtor) ti->hooks.flags |= ECS_TYPE_HOOK_MOVE_DTOR;
     if (ti->hooks.copy) ti->hooks.flags |= ECS_TYPE_HOOK_COPY;
     if (ti->hooks.copy_ctor) ti->hooks.flags |= ECS_TYPE_HOOK_COPY_CTOR;
-    if (ti->hooks.comp) ti->hooks.flags |= ECS_TYPE_HOOK_COMP;
+    if (ti->hooks.cmp) ti->hooks.flags |= ECS_TYPE_HOOK_CMP;
 
     if(flags & ECS_TYPE_HOOK_CTOR_ILLEGAL) ti->hooks.ctor = flecs_ctor_illegal;
     if(flags & ECS_TYPE_HOOK_DTOR_ILLEGAL) ti->hooks.dtor = flecs_dtor_illegal;
     if(flags & ECS_TYPE_HOOK_COPY_ILLEGAL) ti->hooks.copy = flecs_copy_illegal;
     if(flags & ECS_TYPE_HOOK_MOVE_ILLEGAL) ti->hooks.move = flecs_move_illegal;
-    if(flags & ECS_TYPE_HOOK_COMP_ILLEGAL) ti->hooks.comp = flecs_comp_illegal;
+    if(flags & ECS_TYPE_HOOK_CMP_ILLEGAL) ti->hooks.cmp = flecs_comp_illegal;
 
     if(flags & ECS_TYPE_HOOK_COPY_CTOR_ILLEGAL) {
         ti->hooks.copy_ctor = flecs_copy_ctor_illegal;
@@ -50764,7 +50764,7 @@ void flecs_meta_import_core_definitions(
                 .size = ECS_SIZEOF(const char*),
                 .alignment = ECS_ALIGNOF(const char*),
                 .hooks = {
-                    .comp = ecs_compare_string,
+                    .cmp = ecs_compare_string,
                 }
             }          
         }),
@@ -52746,7 +52746,7 @@ void FlecsMetaImport(
             .kind = primitive_kind\
         });\
         ecs_set_hooks(world, ecs_##type##_t, { \
-            .comp = ecs_compare_##type \
+            .cmp = ecs_compare_##type \
         })
 
     ECS_PRIMITIVE(world, bool, EcsBool);
@@ -52808,7 +52808,7 @@ typedef struct ecs_rtt_call_data_t {
         ecs_xtor_t xtor;
         ecs_move_t move;
         ecs_copy_t copy;
-        ecs_comp_t comp;
+        ecs_cmp_t cmp;
     } hook;
     const ecs_type_info_t *type_info;
     int32_t offset;
@@ -52998,7 +52998,7 @@ int flecs_rtt_struct_comp(
     for (i = 0; i < cb_count; i++) {
         ecs_rtt_call_data_t *comp_data =
         ecs_vec_get_t(&rtt_ctx->vcomp, ecs_rtt_call_data_t, i);
-        int c = comp_data->hook.comp(
+        int c = comp_data->hook.cmp(
             ECS_OFFSET(a_ptr, comp_data->offset),
             ECS_OFFSET(b_ptr, comp_data->offset),
             comp_data->type_info);
@@ -53044,7 +53044,7 @@ ecs_rtt_struct_ctx_t * flecs_rtt_configure_struct_hooks(
     ecs_xtor_t dtor,
     ecs_move_t move,
     ecs_copy_t copy,
-    ecs_comp_t comp)
+    ecs_cmp_t cmp)
 {
     ecs_type_hooks_t hooks = ti->hooks;
     if (hooks.lifecycle_ctx_free) {
@@ -53063,12 +53063,12 @@ ecs_rtt_struct_ctx_t * flecs_rtt_configure_struct_hooks(
     if(flags & ECS_TYPE_HOOK_COPY_ILLEGAL) {
         copy = NULL;
     }
-    if(flags & ECS_TYPE_HOOK_COMP_ILLEGAL) {
-        comp = NULL;
+    if(flags & ECS_TYPE_HOOK_CMP_ILLEGAL) {
+        cmp = NULL;
     }
 
     ecs_rtt_struct_ctx_t *rtt_ctx = NULL;
-    if (ctor || dtor || move || copy || comp) {
+    if (ctor || dtor || move || copy || cmp) {
         rtt_ctx = ecs_os_malloc_t(ecs_rtt_struct_ctx_t);
         ecs_vec_init_t(NULL, &rtt_ctx->vctor, ecs_rtt_call_data_t, 0);
         ecs_vec_init_t(NULL, &rtt_ctx->vdtor, ecs_rtt_call_data_t, 0);
@@ -53086,7 +53086,7 @@ ecs_rtt_struct_ctx_t * flecs_rtt_configure_struct_hooks(
     hooks.dtor = dtor;
     hooks.move = move;
     hooks.copy = copy;
-    hooks.comp = comp;
+    hooks.cmp = cmp;
 
     hooks.flags = flags;
     hooks.flags &= ECS_TYPE_HOOKS_ILLEGAL;
@@ -53131,7 +53131,7 @@ void flecs_rtt_init_default_hooks_struct(
 
         /* A struct is comparable if all its members 
          * are comparable */
-        comparable  &= member_ti->hooks.comp != NULL;
+        comparable  &= member_ti->hooks.cmp != NULL;
         
         flags |= member_ti->hooks.flags;
     }
@@ -53209,8 +53209,8 @@ void flecs_rtt_init_default_hooks_struct(
             comp_data->offset = m->offset;
             comp_data->type_info = member_ti;
             comp_data->count = 1;
-            ecs_assert(member_ti->hooks.comp, ECS_INTERNAL_ERROR, NULL);
-            comp_data->hook.comp = member_ti->hooks.comp; 
+            ecs_assert(member_ti->hooks.cmp, ECS_INTERNAL_ERROR, NULL);
+            comp_data->hook.cmp = member_ti->hooks.cmp; 
         }
     }
 }
@@ -53321,14 +53321,14 @@ int flecs_rtt_array_comp(
     }
 
     ecs_rtt_array_ctx_t *rtt_ctx = type_info->hooks.lifecycle_ctx;
-    ecs_comp_t comp = rtt_ctx->type_info->hooks.comp;
-    ecs_assert(comp,  ECS_INVALID_PARAMETER, NULL);
+    ecs_cmp_t cmp = rtt_ctx->type_info->hooks.cmp;
+    ecs_assert(cmp,  ECS_INVALID_PARAMETER, NULL);
     ecs_size_t element_size = rtt_ctx->type_info->size;
     int i;
     for (i = 0; i < rtt_ctx->elem_count; i++) {
         const void *a_element = ECS_ELEM(a_ptr, element_size, i);
         const void *b_element = ECS_ELEM(b_ptr, element_size, i);
-        int c = comp(a_element, b_element, rtt_ctx->type_info);
+        int c = cmp(a_element, b_element, rtt_ctx->type_info);
         if(c != 0) {
             return c;
         }
@@ -53353,7 +53353,7 @@ void flecs_rtt_init_default_hooks_array(
     bool dtor_hook_required = element_ti->hooks.dtor != NULL;
     bool move_hook_required = element_ti->hooks.move != NULL;
     bool copy_hook_required = element_ti->hooks.copy != NULL;
-    bool comparable = element_ti->hooks.comp != NULL;
+    bool comparable = element_ti->hooks.cmp != NULL;
     
     ecs_flags32_t flags = element_ti->hooks.flags;
 
@@ -53367,7 +53367,7 @@ void flecs_rtt_init_default_hooks_array(
         flecs_rtt_array_move : NULL;
     hooks.copy = copy_hook_required && !(flags & ECS_TYPE_HOOK_COPY_ILLEGAL) ? 
         flecs_rtt_array_copy : NULL;
-    hooks.comp = comparable && !(flags & ECS_TYPE_HOOK_COMP_ILLEGAL) ? 
+    hooks.cmp = comparable && !(flags & ECS_TYPE_HOOK_CMP_ILLEGAL) ? 
         flecs_rtt_array_comp : NULL;
 
     if (hooks.lifecycle_ctx_free) {
@@ -53376,7 +53376,7 @@ void flecs_rtt_init_default_hooks_array(
     }
 
     if (hooks.ctor || hooks.dtor || hooks.move ||
-        hooks.copy || hooks.comp) 
+        hooks.copy || hooks.cmp) 
     {
         ecs_rtt_array_ctx_t *rtt_ctx = ecs_os_malloc_t(ecs_rtt_array_ctx_t);
         rtt_ctx->type_info = element_ti;
@@ -53527,8 +53527,8 @@ int flecs_rtt_vector_comp(
     }
 
     ecs_rtt_vector_ctx_t *rtt_ctx = type_info->hooks.lifecycle_ctx;
-    ecs_comp_t comp = rtt_ctx->type_info->hooks.comp;
-    ecs_assert(comp,  ECS_INVALID_PARAMETER, NULL);
+    ecs_cmp_t cmp = rtt_ctx->type_info->hooks.cmp;
+    ecs_assert(cmp,  ECS_INVALID_PARAMETER, NULL);
 
     ecs_size_t element_size = rtt_ctx->type_info->size;
     const void *a = ecs_vec_first(vec_a);
@@ -53538,7 +53538,7 @@ int flecs_rtt_vector_comp(
     for (i = 0; i < count_a; i++) {
         const void *a_element = ECS_ELEM(a, element_size, i);
         const void *b_element = ECS_ELEM(b, element_size, i);
-        int c = comp(a_element, b_element, rtt_ctx->type_info);
+        int c = cmp(a_element, b_element, rtt_ctx->type_info);
         if(c != 0) {
             return c;
         }
@@ -53576,14 +53576,14 @@ void flecs_rtt_init_default_hooks_vector(
     hooks.move = flecs_rtt_vector_move;
     hooks.copy = flecs_rtt_vector_copy;
     
-    if (element_ti->hooks.comp != NULL && !(flags & ECS_TYPE_HOOK_COMP_ILLEGAL)) {
-        hooks.comp = flecs_rtt_vector_comp;
+    if (element_ti->hooks.cmp != NULL && !(flags & ECS_TYPE_HOOK_CMP_ILLEGAL)) {
+        hooks.cmp = flecs_rtt_vector_comp;
     } else {
-        hooks.comp = NULL;
+        hooks.cmp = NULL;
     }
 
     /* propagate only the compare hook illegal flag, if set */
-    hooks.flags |= flags & ECS_TYPE_HOOK_COMP_ILLEGAL;
+    hooks.flags |= flags & ECS_TYPE_HOOK_CMP_ILLEGAL;
     
     hooks.flags &= ECS_TYPE_HOOKS_ILLEGAL;
     ecs_set_hooks_id(world, component, &hooks);

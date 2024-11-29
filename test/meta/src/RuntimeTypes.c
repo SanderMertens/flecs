@@ -219,7 +219,7 @@ const ecs_type_info_t *define_test_struct(
 static
 int compare(const ecs_world_t* world, ecs_entity_t id, const void *a, const void *b) {
     const ecs_type_info_t* ti = ecs_get_type_info(world, id);
-    return ti->hooks.comp(a, b, ti);
+    return ti->hooks.cmp(a, b, ti);
 }
 
 /* Tests that a constructor is generated for a struct if at least a member has
@@ -573,8 +573,8 @@ void RuntimeTypes_comp_illegal(void) {
     const ecs_type_info_t *nested_struct_ti = define_nested_struct(world);
 
     ecs_type_hooks_t hooks = nested_struct_ti->hooks;
-    hooks.flags |= ECS_TYPE_HOOK_COMP_ILLEGAL; /* mark copy hook for "NestedStruct" as illegal */
-    hooks.comp = NULL;
+    hooks.flags |= ECS_TYPE_HOOK_CMP_ILLEGAL; /* mark copy hook for "NestedStruct" as illegal */
+    hooks.cmp = NULL;
 
     hooks.flags &= ECS_TYPE_HOOKS_ILLEGAL;
     ecs_set_hooks_id(world, nested_struct, &hooks);
@@ -584,7 +584,7 @@ void RuntimeTypes_comp_illegal(void) {
     const ecs_type_info_t *test_struct_ti = define_test_struct(world);
 
     /* TestStruct should have an illegal compare hook too: */
-    test_assert(test_struct_ti->hooks.flags & ECS_TYPE_HOOK_COMP_ILLEGAL);
+    test_assert(test_struct_ti->hooks.flags & ECS_TYPE_HOOK_CMP_ILLEGAL);
 
     ecs_fini(world);
 }
@@ -780,7 +780,7 @@ void define_resource_handle(
         hooks.copy = ResourceHandle_copy;
 
     hooks.flags &= ECS_TYPE_HOOKS_ILLEGAL;
-    hooks.comp = ResourceHandle_comp;
+    hooks.cmp = ResourceHandle_comp;
 
     ecs_set_hooks_id(world, resource_handle, &hooks);
 }
@@ -1211,8 +1211,8 @@ void RuntimeTypes_array_copy_illegal(void) {
     ecs_fini(world);
 }
 
-/* Tests that an illegal comp hook is set for an array if its underlying type itself
- * has an illegal comp hook */
+/* Tests that an illegal cmp hook is set for an array if its underlying type itself
+ * has an illegal cmp hook */
 void RuntimeTypes_array_comp_illegal(void) {
     ecs_world_t *world = ecs_init();
 
@@ -1220,22 +1220,22 @@ void RuntimeTypes_array_comp_illegal(void) {
     const ecs_type_info_t *nested_struct_ti = define_nested_struct(world);
 
     ecs_type_hooks_t hooks = nested_struct_ti->hooks;
-    hooks.flags |= ECS_TYPE_HOOK_COMP_ILLEGAL; /* mark compare hook 
+    hooks.flags |= ECS_TYPE_HOOK_CMP_ILLEGAL; /* mark compare hook 
         for "NestedStruct" as illegal */
-    hooks.comp = NULL;
+    hooks.cmp = NULL;
     
     hooks.flags &= ECS_TYPE_HOOKS_ILLEGAL;
     ecs_set_hooks_id(world, nested_struct, &hooks);
 
     /* Define test_arr, as an array of "NestedStruct".
-     * TestStruct's comp hook should be set to illegal as well. */
+     * TestStruct's cmp hook should be set to illegal as well. */
     ecs_array_desc_t desc = {.entity = 0, .type = nested_struct, .count = 3};
     ecs_entity_t test_arr = ecs_array_init(world, &desc);
 
     const ecs_type_info_t* test_arr_ti = ecs_get_type_info(world, test_arr);
 
-    /* test_arr should have an illegal comp hook too: */
-    test_assert(test_arr_ti->hooks.flags & ECS_TYPE_HOOK_COMP_ILLEGAL);
+    /* test_arr should have an illegal cmp hook too: */
+    test_assert(test_arr_ti->hooks.flags & ECS_TYPE_HOOK_CMP_ILLEGAL);
 
     /* No other hooks should've been set: */
     test_assert(test_arr_ti->hooks.ctor != NULL);
@@ -1375,8 +1375,8 @@ void RuntimeTypes_vector_lifecycle_trivial_type(void) {
     free_resource_ids();
 }
 
-/* Tests that an illegal comp hook is set for an array if its underlying type itself
- * has an illegal comp hook */
+/* Tests that an illegal cmp hook is set for an array if its underlying type itself
+ * has an illegal cmp hook */
 void RuntimeTypes_vector_comp_illegal(void) {
     ecs_world_t *world = ecs_init();
 
@@ -1384,22 +1384,22 @@ void RuntimeTypes_vector_comp_illegal(void) {
     const ecs_type_info_t *nested_struct_ti = define_nested_struct(world);
 
     ecs_type_hooks_t hooks = nested_struct_ti->hooks;
-    hooks.flags |= ECS_TYPE_HOOK_COMP_ILLEGAL; /* mark compare hook 
+    hooks.flags |= ECS_TYPE_HOOK_CMP_ILLEGAL; /* mark compare hook 
         for "NestedStruct" as illegal */
-    hooks.comp = NULL;
+    hooks.cmp = NULL;
     
     hooks.flags &= ECS_TYPE_HOOKS_ILLEGAL;
     ecs_set_hooks_id(world, nested_struct, &hooks);
 
     /* Define test_vec, as a vector of "NestedStruct".
-     * TestStruct's comp hook should be set to illegal as well. */
+     * TestStruct's cmp hook should be set to illegal as well. */
     ecs_vector_desc_t desc = {.entity = 0, .type = nested_struct};
     ecs_entity_t test_vec = ecs_vector_init(world, &desc);
 
     const ecs_type_info_t* test_vec_ti = ecs_get_type_info(world, test_vec);
 
-    /* test_vec should have an illegal comp hook too: */
-    test_assert(test_vec_ti->hooks.flags & ECS_TYPE_HOOK_COMP_ILLEGAL);
+    /* test_vec should have an illegal cmp hook too: */
+    test_assert(test_vec_ti->hooks.flags & ECS_TYPE_HOOK_CMP_ILLEGAL);
 
     ecs_fini(world);
 }
@@ -1416,7 +1416,7 @@ ecs_entity_t define_ResourceHandle_opaque(
     hooks.move = ResourceHandle_move;
     hooks.copy = ResourceHandle_copy;
     hooks.flags &= ECS_TYPE_HOOKS_ILLEGAL;
-    hooks.comp = ResourceHandle_comp;
+    hooks.cmp = ResourceHandle_comp;
 
     ecs_set_hooks_id(world, ecs_id(ResourceHandle), &hooks);
 
