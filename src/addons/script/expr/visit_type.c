@@ -538,7 +538,10 @@ int flecs_expr_element_visit_type(
         goto error;
     }
 
-    if (flecs_script_expr_visit_type_priv(script, node->index, NULL, desc)) {
+    ecs_meta_cursor_t index_cur = {0};
+    if (flecs_script_expr_visit_type_priv(
+        script, node->index, &index_cur, desc)) 
+    {
         goto error;
     }
 
@@ -575,6 +578,10 @@ int flecs_expr_element_visit_type(
                         ident->value);
                 goto error;
             }
+
+            node->node.kind = EcsExprComponent;
+
+            *cur = ecs_meta_cursor(script->world, node->node.type, NULL);
         } else {
             flecs_expr_visit_error(script, node, 
                 "invalid component expression");
@@ -673,6 +680,10 @@ int flecs_script_expr_visit_type_priv(
         }
         break;
     case EcsExprCast:
+        break;
+    case EcsExprComponent:
+        /* Component expressions are derived by type visitor */
+        ecs_abort(ECS_INTERNAL_ERROR, NULL);
         break;
     }
 

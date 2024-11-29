@@ -18,6 +18,7 @@ typedef enum ecs_expr_node_kind_t {
     EcsExprFunction,
     EcsExprMember,
     EcsExprElement,
+    EcsExprComponent,
     EcsExprCast
 } ecs_expr_node_kind_t;
 
@@ -109,6 +110,12 @@ typedef struct ecs_expr_element_t {
     ecs_expr_node_t *index;
     ecs_size_t elem_size;
 } ecs_expr_element_t;
+
+typedef struct ecs_expr_component_t {
+    ecs_expr_node_t node;
+    ecs_expr_node_t *expr;
+    ecs_id_t component;
+} ecs_expr_component_t;
 
 typedef struct ecs_expr_cast_t {
     ecs_expr_node_t node;

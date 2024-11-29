@@ -212,6 +212,7 @@ int flecs_expr_node_to_str(
         }
         break;
     case EcsExprElement:
+    case EcsExprComponent:
         if (flecs_expr_element_to_str(v, (ecs_expr_element_t*)node)) {
             goto error;
         }

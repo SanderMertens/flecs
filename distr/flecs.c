@@ -4885,6 +4885,7 @@ typedef enum ecs_expr_node_kind_t {
     EcsExprFunction,
     EcsExprMember,
     EcsExprElement,
+    EcsExprComponent,
     EcsExprCast
 } ecs_expr_node_kind_t;
 
@@ -4976,6 +4977,12 @@ typedef struct ecs_expr_element_t {
     ecs_expr_node_t *index;
     ecs_size_t elem_size;
 } ecs_expr_element_t;
+
+typedef struct ecs_expr_component_t {
+    ecs_expr_node_t node;
+    ecs_expr_node_t *expr;
+    ecs_id_t component;
+} ecs_expr_component_t;
 
 typedef struct ecs_expr_cast_t {
     ecs_expr_node_t node;
@@ -74248,6 +74255,46 @@ error:
 }
 
 static
+int flecs_expr_component_visit_eval(
+    ecs_script_t *script,
+    ecs_expr_element_t *node,
+    const ecs_script_expr_run_desc_t *desc,
+    ecs_eval_value_t *out)
+{
+    ecs_eval_value_t expr = {{0}};
+    if (flecs_script_expr_visit_eval_priv(script, node->left, desc, &expr)) {
+        goto error;
+    }
+
+    /* Left side of expression must be of entity type */
+    ecs_assert(expr.value.type == ecs_id(ecs_entity_t), 
+        ECS_INTERNAL_ERROR, NULL);
+
+    /* Component must be resolvable at parse time */
+    ecs_assert(node->index->kind == EcsExprValue, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_entity_t entity = *(ecs_entity_t*)expr.value.ptr;
+    ecs_entity_t component = ((ecs_expr_val_t*)node->index)->storage.entity;
+
+    out->value.type = node->node.type;
+    out->value.ptr = (void*)ecs_get_id(script->world, entity, component);
+
+    if (!out->value.ptr) {
+        char *estr = ecs_get_path(script->world, entity);
+        char *cstr = ecs_get_path(script->world, component);
+        flecs_expr_visit_error(script, node, 
+            "entity '%s' does not have component '%s'", estr, cstr);
+        ecs_os_free(estr);
+        ecs_os_free(cstr);
+        goto error;
+    }
+
+    return 0;
+error:
+    return -1;
+}
+
+static
 int flecs_script_expr_visit_eval_priv(
     ecs_script_t *script,
     ecs_expr_node_t *node,
@@ -74305,6 +74352,13 @@ int flecs_script_expr_visit_eval_priv(
         break;
     case EcsExprElement:
         if (flecs_expr_element_visit_eval(
+            script, (ecs_expr_element_t*)node, desc, out)) 
+        {
+            goto error;
+        }
+        break;
+    case EcsExprComponent:
+        if (flecs_expr_component_visit_eval(
             script, (ecs_expr_element_t*)node, desc, out)) 
         {
             goto error;
@@ -74662,6 +74716,42 @@ error:
     return -1;
 }
 
+int flecs_expr_member_visit_fold(
+    ecs_script_t *script,
+    ecs_expr_node_t **node_ptr,
+    const ecs_script_expr_run_desc_t *desc)
+{
+    ecs_expr_member_t *node = (ecs_expr_member_t*)*node_ptr;
+
+    if (flecs_script_expr_visit_fold(script, &node->left, desc)) {
+        goto error;
+    }
+
+    return 0;
+error:
+    return -1;
+}
+
+int flecs_expr_element_visit_fold(
+    ecs_script_t *script,
+    ecs_expr_node_t **node_ptr,
+    const ecs_script_expr_run_desc_t *desc)
+{
+    ecs_expr_element_t *node = (ecs_expr_element_t*)*node_ptr;
+
+    if (flecs_script_expr_visit_fold(script, &node->left, desc)) {
+        goto error;
+    }
+
+    if (flecs_script_expr_visit_fold(script, &node->index, desc)) {
+        goto error;
+    }
+
+    return 0;
+error:
+    return -1;
+}
+
 int flecs_script_expr_visit_fold(
     ecs_script_t *script,
     ecs_expr_node_t **node_ptr,
@@ -74698,8 +74788,15 @@ int flecs_script_expr_visit_fold(
     case EcsExprFunction:
         break;
     case EcsExprMember:
+        if (flecs_expr_member_visit_fold(script, node_ptr, desc)) {
+            goto error;
+        }
         break;
     case EcsExprElement:
+    case EcsExprComponent:
+        if (flecs_expr_element_visit_fold(script, node_ptr, desc)) {
+            goto error;
+        }
         break;
     case EcsExprCast:
         if (flecs_expr_cast_visit_fold(script, node_ptr, desc)) {
@@ -74927,6 +75024,7 @@ int flecs_expr_node_to_str(
         }
         break;
     case EcsExprElement:
+    case EcsExprComponent:
         if (flecs_expr_element_to_str(v, (ecs_expr_element_t*)node)) {
             goto error;
         }
@@ -75505,7 +75603,10 @@ int flecs_expr_element_visit_type(
         goto error;
     }
 
-    if (flecs_script_expr_visit_type_priv(script, node->index, NULL, desc)) {
+    ecs_meta_cursor_t index_cur = {0};
+    if (flecs_script_expr_visit_type_priv(
+        script, node->index, &index_cur, desc)) 
+    {
         goto error;
     }
 
@@ -75542,6 +75643,10 @@ int flecs_expr_element_visit_type(
                         ident->value);
                 goto error;
             }
+
+            node->node.kind = EcsExprComponent;
+
+            *cur = ecs_meta_cursor(script->world, node->node.type, NULL);
         } else {
             flecs_expr_visit_error(script, node, 
                 "invalid component expression");
@@ -75640,6 +75745,10 @@ int flecs_script_expr_visit_type_priv(
         }
         break;
     case EcsExprCast:
+        break;
+    case EcsExprComponent:
+        /* Component expressions are derived by type visitor */
+        ecs_abort(ECS_INTERNAL_ERROR, NULL);
         break;
     }
 
