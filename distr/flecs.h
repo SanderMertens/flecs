@@ -3372,6 +3372,12 @@ typedef int (*ecs_cmp_t)(
     const void *b_ptr,
     const ecs_type_info_t *type_info);
 
+/** Equals operator hook */
+typedef bool (*ecs_equals_t)(
+    const void *a_ptr,
+    const void *b_ptr,
+    const ecs_type_info_t *type_info);
+
 /** Destructor function for poly objects. */
 typedef void (*flecs_poly_dtor_t)(
     ecs_poly_t *poly);
@@ -3651,6 +3657,9 @@ struct ecs_type_hooks_t {
 
     /** Compare hook */
     ecs_cmp_t cmp;
+
+    /** Equals hook */
+    ecs_equals_t equals;
 
     /** Hook flags.
      * Indicates which hooks are set for the type, and which hooks are illegal.
