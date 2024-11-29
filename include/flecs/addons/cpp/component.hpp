@@ -102,6 +102,7 @@ void register_lifecycle_actions(
 
     ecs_type_hooks_t cl{};
     cl.cmp = compare<T>(cl.flags);
+    cl.equals = equals<T>(cl.flags);
     
     cl.flags &= ECS_TYPE_HOOKS_ILLEGAL;
     ecs_set_hooks_id(world, component, &cl); 
@@ -129,6 +130,7 @@ void register_lifecycle_actions(
     cl.move_dtor = move_dtor<T>(cl.flags);
 
     cl.cmp = compare<T>(cl.flags);
+    cl.equals = equals<T>(cl.flags);
     
     cl.flags &= ECS_TYPE_HOOKS_ILLEGAL;
     ecs_set_hooks_id(world, component, &cl);

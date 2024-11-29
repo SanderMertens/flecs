@@ -21207,6 +21207,28 @@ ecs_cmp_t compare(ecs_flags32_t &flags) {
     return NULL;
 }
 
+// Equals function enabled only if `==` is defined
+template <typename T, if_t<
+    has_operator_equal<T>::value > = 0>
+bool equals_impl(const void *a, const void *b, const ecs_type_info_t *) {
+    const T& lhs = *static_cast<const T*>(a);
+    const T& rhs = *static_cast<const T*>(b);
+    return lhs == rhs;
+}
+
+template <typename T, if_t<
+    has_operator_equal<T>::value > = 0>
+ecs_equals_t equals(ecs_flags32_t &) {
+    return equals_impl<T>;
+}
+
+template <typename T, if_t<
+    !has_operator_equal<T>::value > = 0>
+ecs_equals_t equals(ecs_flags32_t &flags) {
+    flags |= ECS_TYPE_HOOK_EQUALS_ILLEGAL;
+    return NULL;
+}
+
 // re-enable the float comparison warning:
 #if defined(__clang__)
     #pragma clang diagnostic pop
@@ -27609,6 +27631,7 @@ void register_lifecycle_actions(
 
     ecs_type_hooks_t cl{};
     cl.cmp = compare<T>(cl.flags);
+    cl.equals = equals<T>(cl.flags);
     
     cl.flags &= ECS_TYPE_HOOKS_ILLEGAL;
     ecs_set_hooks_id(world, component, &cl); 
@@ -27636,6 +27659,7 @@ void register_lifecycle_actions(
     cl.move_dtor = move_dtor<T>(cl.flags);
 
     cl.cmp = compare<T>(cl.flags);
+    cl.equals = equals<T>(cl.flags);
     
     cl.flags &= ECS_TYPE_HOOKS_ILLEGAL;
     ecs_set_hooks_id(world, component, &cl);

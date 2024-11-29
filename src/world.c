@@ -1280,7 +1280,7 @@ bool flecs_equals_illegal(
 {
     (void)dst; /* silence unused warning */
     (void)src;
-    ecs_abort(ECS_INVALID_OPERATION, "invalid compare hook for %s", ti->name);
+    ecs_abort(ECS_INVALID_OPERATION, "invalid equals hook for %s", ti->name);
 }
 
 void ecs_set_hooks_id(
@@ -1485,6 +1485,7 @@ void ecs_set_hooks_id(
         if(flags & ECS_TYPE_HOOK_CMP_ILLEGAL) {
             flags |= ECS_TYPE_HOOK_EQUALS_ILLEGAL;
         } else if(h->cmp) {
+            flags &= (ecs_flags32_t)(~ECS_TYPE_HOOK_EQUALS_ILLEGAL);
             ti->hooks.equals = flecs_default_equals;
         }
     }
