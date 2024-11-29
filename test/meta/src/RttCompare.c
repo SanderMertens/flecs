@@ -1,4 +1,5 @@
 #include <meta.h>
+#include "flecs.h"
 
 static
 int cmp(const ecs_world_t *world, ecs_entity_t component, ecs_entity_t ea,
@@ -9,6 +10,17 @@ int cmp(const ecs_world_t *world, ecs_entity_t component, ecs_entity_t ea,
     const void *b = ecs_get_id(world, eb, component);
 
     return ti->hooks.cmp(a, b, ti);
+}
+
+static
+bool equals(const ecs_world_t *world, ecs_entity_t component, ecs_entity_t ea,
+          ecs_entity_t eb) {
+    const ecs_type_info_t *ti = ecs_get_type_info(world, component);
+
+    const void *a = ecs_get_id(world, ea, component);
+    const void *b = ecs_get_id(world, eb, component);
+
+    return ti->hooks.equals(a, b, ti);
 }
 
 typedef struct OpaqueType {
@@ -85,7 +97,9 @@ void RttCompare_struct_with_ints(void) {
     /* Test "equal" */
     /* {10, 20} == {10, 20} */
     test_assert(cmp(world, struct_with_ints, e1, e3) == 0); 
+    test_assert(equals(world, struct_with_ints, e1, e3) == true); 
     test_assert(cmp(world, struct_with_ints, e1, e1) == 0); 
+    test_assert(equals(world, struct_with_ints, e1, e1) == true); 
 
     ecs_delete(world, e1);
     ecs_delete(world, e2);
@@ -142,7 +156,9 @@ void RttCompare_struct_with_strings(void) {
     /* Test "equal" */
     /* {"AA", 20, "CC"} == {"AA", 20, "CC"} */
     test_assert(cmp(world, struct_with_strings, e1, e3) == 0);
+    test_assert(equals(world, struct_with_strings, e1, e3) == true);
     test_assert(cmp(world, struct_with_strings, e1, e1) == 0);
+    test_assert(equals(world, struct_with_strings, e1, e1) == true);
 
     ecs_delete(world, e1);
     ecs_delete(world, e2);
@@ -191,7 +207,9 @@ void RttCompare_struct_with_opaque(void) {
     /* Test "equal" */
     /* {10} == {10} */
     test_assert(cmp(world, struct_with_opaque, e1, e3) == 0);
+    test_assert(equals(world, struct_with_opaque, e1, e3) == true);
     test_assert(cmp(world, struct_with_opaque, e1, e1) == 0);
+    test_assert(equals(world, struct_with_opaque, e1, e1) == true);
 
     ecs_delete(world, e1);
     ecs_delete(world, e2);
@@ -271,7 +289,9 @@ void RttCompare_nested_struct_with_strings(void) {
 
     /* Test "equal" */
     test_assert(cmp(world, nested_struct_with_strings, e1, e3) == 0);
+    test_assert(equals(world, nested_struct_with_strings, e1, e3) == true);
     test_assert(cmp(world, nested_struct_with_strings, e1, e1) == 0);
+    test_assert(equals(world, nested_struct_with_strings, e1, e1) == true);
 
     ecs_delete(world, e1);
     ecs_delete(world, e2);
@@ -363,7 +383,9 @@ void RttCompare_struct_with_array_of_strings(void) {
     /* Test "equal" */
     /* {"AA", "BB", "CC", 10} == {"AA", "BB", "CC", 10} */
     test_assert(cmp(world, struct_with_array_of_strings, e1, e3) == 0); 
+    test_assert(equals(world, struct_with_array_of_strings, e1, e3) == true); 
     test_assert(cmp(world, struct_with_array_of_strings, e1, e1) == 0);
+    test_assert(equals(world, struct_with_array_of_strings, e1, e1) == true);
 
     ecs_delete(world, e1);
     ecs_delete(world, e2);
@@ -470,7 +492,9 @@ void RttCompare_struct_with_array_of_array_of_strings(void) {
     /* Test "equal" */
     /* {"AA", "BB", "CC", "DD"} == {"AA", "BB", "CC", "DD"} */
     test_assert(cmp(world, struct_with_array_of_array_of_strings, e1, e3) == 0);
+    test_assert(equals(world, struct_with_array_of_array_of_strings, e1, e3) == true);
     test_assert(cmp(world, struct_with_array_of_array_of_strings, e1, e1) == 0);
+    test_assert(equals(world, struct_with_array_of_array_of_strings, e1, e1) == true);
 
     ecs_delete(world, e1);
     ecs_delete(world, e2);
@@ -547,7 +571,9 @@ void RttCompare_struct_with_vector_of_ints(void) {
     /* Test "equal" */
     /* {10, 20, 30} == {10, 20, 30} */
     test_assert(cmp(world, struct_with_vector_of_ints, e1, e3) == 0);
+    test_assert(equals(world, struct_with_vector_of_ints, e1, e3) == true);
     test_assert(cmp(world, struct_with_vector_of_ints, e1, e1) == 0);
+    test_assert(equals(world, struct_with_vector_of_ints, e1, e1) == true);
 
     ecs_delete(world, e1);
     ecs_delete(world, e2);
@@ -623,7 +649,9 @@ void RttCompare_struct_with_vector_of_strings(void) {
     /* Test "equal" */
     /* {"AA", "BB", "CC"} == {"AA", "BB", "CC"} */
     test_assert(cmp(world, struct_with_vector_of_strings, e1, e3) == 0);
+    test_assert(equals(world, struct_with_vector_of_strings, e1, e3) == true);
     test_assert(cmp(world, struct_with_vector_of_strings, e1, e1) == 0);
+    test_assert(equals(world, struct_with_vector_of_strings, e1, e1) == true);
 
     ecs_delete(world, e1);
     ecs_delete(world, e2);
@@ -793,7 +821,9 @@ void RttCompare_nested_struct_with_vector_of_ints(void) {
     /* Test "equal" */
     /* {1, 2, 3, 10, {4, 5, 15, 6}} == {1, 2, 3, 10, {4, 5, 15, 6}} */
     test_assert(cmp(world, nested_struct_with_vector_of_ints, e1, e3) == 0); 
+    test_assert(equals(world, nested_struct_with_vector_of_ints, e1, e3) == true); 
     test_assert(cmp(world, nested_struct_with_vector_of_ints, e1, e1) == 0);
+    test_assert(equals(world, nested_struct_with_vector_of_ints, e1, e1) == true);
 
     ecs_delete(world, e1);
     ecs_delete(world, e2);
@@ -962,7 +992,9 @@ void RttCompare_nested_struct_with_vector_of_strings(void) {
     /* {{"AA", "BB", "CC"}, 10, {{"XX", "YY"}, 5, {"ZZ"}}} == */
     /* {{"AA", "BB", "CC"}, 10, {{"XX", "YY"}, 5, {"ZZ"}}} */
     test_assert(cmp(world, nested_struct_with_vector_of_strings, e1, e3) == 0);
+    test_assert(equals(world, nested_struct_with_vector_of_strings, e1, e3) == true);
     test_assert(cmp(world, nested_struct_with_vector_of_strings, e1, e1) == 0);
+    test_assert(equals(world, nested_struct_with_vector_of_strings, e1, e1) == true);
 
     ecs_delete(world, e1);
     ecs_delete(world, e2);
@@ -1028,7 +1060,9 @@ void RttCompare_array_of_ints(void) {
     /* Test "equal" */
     /* {1, 2, 3} == {1, 2, 3} */
     test_assert(cmp(world, array_of_ints, e1, e3) == 0);
+    test_assert(equals(world, array_of_ints, e1, e3) == true);
     test_assert(cmp(world, array_of_ints, e1, e1) == 0);
+    test_assert(equals(world, array_of_ints, e1, e1) == true);
 
     ecs_delete(world, e1);
     ecs_delete(world, e2);
@@ -1094,7 +1128,9 @@ void RttCompare_array_of_strings(void) {
     /* Test "equal" */
     /* {"AA", "BB", "CC"} == {"AA", "BB", "CC"} */
     test_assert(cmp(world, array_of_strings, e1, e3) == 0);
+    test_assert(equals(world, array_of_strings, e1, e3) == true);
     test_assert(cmp(world, array_of_strings, e1, e1) == 0);
+    test_assert(equals(world, array_of_strings, e1, e1) == true);
 
     ecs_delete(world, e1);
     ecs_delete(world, e2);
@@ -1172,7 +1208,9 @@ void RttCompare_array_of_struct_with_ints(void) {
     /* Test "equal" */
     /* {{1, 2}, {3, 4}, {5, 6}} == {{1, 2}, {3, 4}, {5, 6}} */
     test_assert(cmp(world, array_of_struct_with_ints, e1, e3) == 0); 
+    test_assert(equals(world, array_of_struct_with_ints, e1, e3) == true); 
     test_assert(cmp(world, array_of_struct_with_ints, e1, e1) == 0);
+    test_assert(equals(world, array_of_struct_with_ints, e1, e1) == true);
 
     ecs_delete(world, e1);
     ecs_delete(world, e2);
@@ -1295,7 +1333,9 @@ void RttCompare_array_of_struct_with_strings(void) {
 
     /* Test "equal" */
     test_assert(cmp(world, struct_array_entity, e1, e3) == 0);
+    test_assert(equals(world, struct_array_entity, e1, e3) == true);
     test_assert(cmp(world, struct_array_entity, e1, e1) == 0);
+    test_assert(equals(world, struct_array_entity, e1, e1) == true);
 
     ecs_delete(world, e1);
     ecs_delete(world, e2);
@@ -1355,7 +1395,9 @@ void RttCompare_array_of_struct_with_opaques(void) {
     /* Test "equal" */
     /* {{5}, {10}, {15}} == {{5}, {10}, {15}} */
     test_assert(cmp(world, array_of_struct_with_opaques, e1, e3) == 0);
+    test_assert(equals(world, array_of_struct_with_opaques, e1, e3) == true);
     test_assert(cmp(world, array_of_struct_with_opaques, e1, e1) == 0);
+    test_assert(equals(world, array_of_struct_with_opaques, e1, e1) == true);
 
     ecs_delete(world, e1);
     ecs_delete(world, e2);
@@ -1437,7 +1479,9 @@ void RttCompare_array_of_array_of_strings(void) {
 
     /* Test "equal" */
     test_assert(cmp(world, array_of_array_of_strings, e1, e3) == 0); 
+    test_assert(equals(world, array_of_array_of_strings, e1, e3) == true); 
     test_assert(cmp(world, array_of_array_of_strings, e1, e1) == 0);
+    test_assert(equals(world, array_of_array_of_strings, e1, e1) == true);
 
 
     ecs_delete(world, e1);
@@ -1541,7 +1585,9 @@ void RttCompare_array_of_array_of_struct_with_strings(void) {
     /* Test "equal" */
     /* {{"AA", 10, "CC"}, {"BB", 20, "DD"}} == {{"AA", 10, "CC"}, {"BB", 20, "DD"}} */
     test_assert(cmp(world, array_of_array_of_struct_with_strings, e1, e3) == 0);
+    test_assert(equals(world, array_of_array_of_struct_with_strings, e1, e3) == true);
     test_assert(cmp(world, array_of_array_of_struct_with_strings, e1, e1) == 0);
+    test_assert(equals(world, array_of_array_of_struct_with_strings, e1, e1) == true);
 
     ecs_delete(world, e1);
     ecs_delete(world, e2);
@@ -1643,7 +1689,9 @@ void RttCompare_array_of_vectors_of_ints(void) {
 
     /* Test "equal" */
     test_assert(cmp(world, array_of_vectors_of_ints, e1, e2) == 0);
+    test_assert(equals(world, array_of_vectors_of_ints, e1, e2) == true);
     test_assert(cmp(world, array_of_vectors_of_ints, e1, e1) == 0);
+    test_assert(equals(world, array_of_vectors_of_ints, e1, e1) == true);
 
     /* Test when different in multiple fields */
     test_assert(cmp(world, array_of_vectors_of_ints, e1, e4) < 0);
@@ -1770,7 +1818,9 @@ void RttCompare_array_of_vectors_of_strings(void) {
 
     /* Test "equal" */
     test_assert(cmp(world, array_of_vectors_of_strings, e1, e3) == 0);
+    test_assert(equals(world, array_of_vectors_of_strings, e1, e3) == true);
     test_assert(cmp(world, array_of_vectors_of_strings, e3, e1) == 0);
+    test_assert(equals(world, array_of_vectors_of_strings, e3, e1) == true);
 
     ecs_delete(world, e1);
     ecs_delete(world, e2);
@@ -1840,7 +1890,9 @@ void RttCompare_array_of_opaque(void) {
     /* Test "equal" */
     /* {5, 10, 15} == {5, 10, 15} */
     test_assert(cmp(world, array_of_opaque, e1, e3) == 0);
+    test_assert(equals(world, array_of_opaque, e1, e3) == true);
     test_assert(cmp(world, array_of_opaque, e1, e1) == 0);
+    test_assert(equals(world, array_of_opaque, e1, e1) == true);
 
     ecs_delete(world, e1);
     ecs_delete(world, e2);
@@ -1918,7 +1970,9 @@ void RttCompare_vector_of_ints(void) {
     /* Test "equal" */
     /* {10, 20, 30} == {10, 20, 30} */
     test_assert(cmp(world, vector_of_ints, e1, e3) == 0);
+    test_assert(equals(world, vector_of_ints, e1, e3) == true);
     test_assert(cmp(world, vector_of_ints, e1, e1) == 0);
+    test_assert(equals(world, vector_of_ints, e1, e1) == true);
 
     ecs_delete(world, e1);
     ecs_delete(world, e2);
@@ -2000,7 +2054,9 @@ void RttCompare_vector_of_strings(void) {
     /* Test "equal" */
     /* {"AA", "BB", "CC"} == {"AA", "BB", "CC"} */
     test_assert(cmp(world, vector_of_strings, e1, e3) == 0);
+    test_assert(equals(world, vector_of_strings, e1, e3) == true);
     test_assert(cmp(world, vector_of_strings, e1, e1) == 0);
+    test_assert(equals(world, vector_of_strings, e1, e1) == true);
 
     ecs_delete(world, e1);
     ecs_delete(world, e2);
@@ -2066,7 +2122,9 @@ void RttCompare_vector_of_struct_with_ints(void) {
     /* Test "equal" */
     /* vec1 == vec3 as they have identical values */
     test_assert(cmp(world, vector_of_struct_with_ints, e1, e3) == 0);
+    test_assert(equals(world, vector_of_struct_with_ints, e1, e3) == true);
     test_assert(cmp(world, vector_of_struct_with_ints, e1, e1) == 0);
+    test_assert(equals(world, vector_of_struct_with_ints, e1, e1) == true);
 
     ecs_delete(world, e1);
     ecs_delete(world, e2);
@@ -2155,6 +2213,7 @@ void RttCompare_vector_of_struct_with_strings(void) {
     /* Test "equal" */
     /* vec1 == vec3, all elements are identical */
     test_assert(cmp(world, vector_of_struct_with_strings, e1, e3) == 0);
+    test_assert(equals(world, vector_of_struct_with_strings, e1, e3) == true);
 
     ecs_delete(world, e1);
     ecs_delete(world, e2);
@@ -2235,7 +2294,9 @@ void RttCompare_vector_of_arrays_of_strings(void) {
     /* Test "equal" */
     /* {"AA", "BB", "CC"} == {"AA", "BB", "CC"} */
     test_assert(cmp(world, vector_of_arrays_of_strings, e1, e2) == 0);
+    test_assert(equals(world, vector_of_arrays_of_strings, e1, e2) == true);
     test_assert(cmp(world, vector_of_arrays_of_strings, e1, e1) == 0);
+    test_assert(equals(world, vector_of_arrays_of_strings, e1, e1) == true);
 
     ecs_delete(world, e1);
     ecs_delete(world, e2);
@@ -2313,7 +2374,9 @@ void RttCompare_vector_of_opaque(void) {
     /* Test "equal" */
     /* {10, 20, 30} == {10, 20, 30} */
     test_assert(cmp(world, vector_of_opaque, e1, e3) == 0);
+    test_assert(equals(world, vector_of_opaque, e1, e3) == true);
     test_assert(cmp(world, vector_of_opaque, e1, e1) == 0);
+    test_assert(equals(world, vector_of_opaque, e1, e1) == true);
 
     ecs_delete(world, e1);
     ecs_delete(world, e2);
