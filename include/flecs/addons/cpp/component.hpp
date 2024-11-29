@@ -105,6 +105,8 @@ void register_lifecycle_actions(
     if(cl.comp == NULL) {
         cl.flags |= ECS_TYPE_HOOK_COMP_ILLEGAL;
     }
+    
+    cl.flags &= ECS_TYPE_HOOKS_ILLEGAL;
     ecs_set_hooks_id(world, component, &cl); 
 }
 
@@ -133,7 +135,8 @@ void register_lifecycle_actions(
     if(cl.comp == NULL) {
         cl.flags |= ECS_TYPE_HOOK_COMP_ILLEGAL;
     }
-
+    
+    cl.flags &= ECS_TYPE_HOOKS_ILLEGAL;
     ecs_set_hooks_id(world, component, &cl);
 
     if (cl.flags & (ECS_TYPE_HOOK_MOVE_ILLEGAL|ECS_TYPE_HOOK_MOVE_CTOR_ILLEGAL))
