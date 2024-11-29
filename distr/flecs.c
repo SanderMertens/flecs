@@ -53024,7 +53024,7 @@ typedef struct ecs_rtt_struct_ctx_t {
     ecs_vec_t vdtor;   /* vector<ecs_rtt_call_data_t> */
     ecs_vec_t vmove;   /* vector<ecs_rtt_call_data_t> */
     ecs_vec_t vcopy;   /* vector<ecs_rtt_call_data_t> */
-    ecs_vec_t vcomp;   /* vector<ecs_rtt_call_data_t> */
+    ecs_vec_t vcmp;   /* vector<ecs_rtt_call_data_t> */
     ecs_vec_t vequals; /* vector<ecs_rtt_call_data_t> */
 
 } ecs_rtt_struct_ctx_t;
@@ -53198,11 +53198,11 @@ int flecs_rtt_struct_cmp(
     ecs_rtt_struct_ctx_t *rtt_ctx = type_info->hooks.lifecycle_ctx;
     ecs_assert(rtt_ctx != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    int cb_count = ecs_vec_count(&rtt_ctx->vcomp);
+    int cb_count = ecs_vec_count(&rtt_ctx->vcmp);
     int i;
     for (i = 0; i < cb_count; i++) {
         ecs_rtt_call_data_t *comp_data =
-        ecs_vec_get_t(&rtt_ctx->vcomp, ecs_rtt_call_data_t, i);
+        ecs_vec_get_t(&rtt_ctx->vcmp, ecs_rtt_call_data_t, i);
         int c = comp_data->hook.cmp(
             ECS_OFFSET(a_ptr, comp_data->offset),
             ECS_OFFSET(b_ptr, comp_data->offset),
@@ -53224,17 +53224,17 @@ bool flecs_rtt_struct_equals(
     const ecs_type_info_t *type_info)
 {
     if(a_ptr == b_ptr) {
-        return 0;
+        return true;
     }
 
     ecs_rtt_struct_ctx_t *rtt_ctx = type_info->hooks.lifecycle_ctx;
     ecs_assert(rtt_ctx != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    int cb_count = ecs_vec_count(&rtt_ctx->vcomp);
+    int cb_count = ecs_vec_count(&rtt_ctx->vequals);
     int i;
     for (i = 0; i < cb_count; i++) {
         ecs_rtt_call_data_t *comp_data =
-        ecs_vec_get_t(&rtt_ctx->vcomp, ecs_rtt_call_data_t, i);
+        ecs_vec_get_t(&rtt_ctx->vequals, ecs_rtt_call_data_t, i);
         bool eq = comp_data->hook.equals(
             ECS_OFFSET(a_ptr, comp_data->offset),
             ECS_OFFSET(b_ptr, comp_data->offset),
@@ -53267,7 +53267,7 @@ void flecs_rtt_free_lifecycle_struct_ctx(
     ecs_vec_fini_t(NULL, &lifecycle_ctx->vdtor, ecs_rtt_call_data_t);
     ecs_vec_fini_t(NULL, &lifecycle_ctx->vmove, ecs_rtt_call_data_t);
     ecs_vec_fini_t(NULL, &lifecycle_ctx->vcopy, ecs_rtt_call_data_t);
-    ecs_vec_fini_t(NULL, &lifecycle_ctx->vcomp, ecs_rtt_call_data_t);
+    ecs_vec_fini_t(NULL, &lifecycle_ctx->vcmp, ecs_rtt_call_data_t);
     ecs_vec_fini_t(NULL, &lifecycle_ctx->vequals, ecs_rtt_call_data_t);
 
     ecs_os_free(ctx);
@@ -53315,7 +53315,7 @@ ecs_rtt_struct_ctx_t * flecs_rtt_configure_struct_hooks(
         ecs_vec_init_t(NULL, &rtt_ctx->vdtor, ecs_rtt_call_data_t, 0);
         ecs_vec_init_t(NULL, &rtt_ctx->vmove, ecs_rtt_call_data_t, 0);
         ecs_vec_init_t(NULL, &rtt_ctx->vcopy, ecs_rtt_call_data_t, 0);
-        ecs_vec_init_t(NULL, &rtt_ctx->vcomp, ecs_rtt_call_data_t, 0);
+        ecs_vec_init_t(NULL, &rtt_ctx->vcmp, ecs_rtt_call_data_t, 0);
         ecs_vec_init_t(NULL, &rtt_ctx->vequals, ecs_rtt_call_data_t, 0);
 
         hooks.lifecycle_ctx = rtt_ctx;
@@ -53453,7 +53453,7 @@ void flecs_rtt_init_default_hooks_struct(
         }
         if (valid_cmp) {
             ecs_rtt_call_data_t *comp_data =
-            ecs_vec_append_t(NULL, &rtt_ctx->vcomp, ecs_rtt_call_data_t);
+            ecs_vec_append_t(NULL, &rtt_ctx->vcmp, ecs_rtt_call_data_t);
             comp_data->offset = m->offset;
             comp_data->type_info = member_ti;
             comp_data->count = 1;
@@ -53602,7 +53602,7 @@ bool flecs_rtt_array_equals(
     const ecs_type_info_t *type_info)
 {
     if(a_ptr == b_ptr) {
-        return 0;
+        return true;
     }
 
     ecs_rtt_array_ctx_t *rtt_ctx = type_info->hooks.lifecycle_ctx;
@@ -53843,7 +53843,7 @@ bool flecs_rtt_vector_equals(
     const ecs_type_info_t *type_info)
 {
     if(a_ptr == b_ptr) {
-        return 0;
+        return true;
     }
 
     const ecs_vec_t *vec_a = a_ptr;
