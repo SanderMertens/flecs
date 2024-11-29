@@ -85,6 +85,7 @@ void flecs_meta_import_core_definitions(
                 .alignment = ECS_ALIGNOF(const char*),
                 .hooks = {
                     .cmp = ecs_compare_string,
+                    .equals = ecs_equals_string
                 }
             }          
         }),

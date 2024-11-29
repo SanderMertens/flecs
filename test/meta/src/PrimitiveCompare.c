@@ -1,10 +1,16 @@
 #include <stdlib.h>
 #include <meta.h>
+#include "flecs.h"
 
 
 static
 int cmp(const void *a, const void *b, const ecs_type_info_t* ti) {
     return ti->hooks.cmp(a, b, ti);
+}
+
+static
+bool equals(const void *a, const void *b, const ecs_type_info_t* ti) {
+    return ti->hooks.equals(a, b, ti);
 }
 
 const ecs_type_info_t *sort_ti = NULL;
@@ -51,8 +57,10 @@ void PrimitiveCompare_bool(void) {
     /* test "greater" */
     test_assert(cmp(&arr[0], &arr[1], ti) > 0); /* true > false */
 
-    /* test "equal" */
+    /* test "equal" via cmp hook */
     test_assert(cmp(&arr[0], &arr[0], ti) == 0); /* true == true */
+    /* test "equal" via equals hook */
+    test_assert(equals(&arr[0], &arr[0], ti)); /* true == true */
 
     /* further test by sorting the array */
     sort_array(ti, arr, 4);
@@ -76,8 +84,10 @@ void PrimitiveCompare_char(void) {
     /* test "greater" */
     test_assert(cmp(&arr[0], &arr[1], ti) > 0); /* 'z' > 'a' */
 
-    /* test "equal" */
+    /* test "equal" via cmp hook */
     test_assert(cmp(&arr[1], &arr[1], ti) == 0); /* 'a' == 'a' */
+    /* test "equal" via equals hook */
+    test_assert(equals(&arr[1], &arr[1], ti)); /* 'a' == 'a' */
 
     /* further test by sorting the array */
     sort_array(ti, arr, 6);
@@ -101,8 +111,10 @@ void PrimitiveCompare_byte(void) {
     /* test "greater" */
     test_assert(cmp(&arr[0], &arr[1], ti) > 0); /* 0xFF > 0x01 */
 
-    /* test "equal" */
+    /* test "equal" via cmp hook */
     test_assert(cmp(&arr[1], &arr[1], ti) == 0); /* 0x01 == 0x01 */
+    /* test "equal" via equals hook */
+    test_assert(equals(&arr[1], &arr[1], ti)); /* 0x01 == 0x01 */
 
     /* further test by sorting the array */
     sort_array(ti, arr, 5);
@@ -126,8 +138,10 @@ void PrimitiveCompare_u8(void) {
     /* test "greater" */
     test_assert(cmp(&arr[1], &arr[0], ti) > 0); /* 79 > 1 */
 
-    /* test "equal" */
+    /* test "equal" via cmp hook */
     test_assert(cmp(&arr[5], &arr[1], ti) == 0); /* 79 == 79 */
+    /* test "equal" via equals hook */
+    test_assert(equals(&arr[5], &arr[1], ti)); /* 79 == 79 */
 
     /* further test by sorting the array */
     sort_array(ti, arr, 8);
@@ -151,8 +165,10 @@ void PrimitiveCompare_u16(void) {
     /* test "greater" */
     test_assert(cmp(&arr[1], &arr[2], ti) > 0); /* 65535 > 0 */
 
-    /* test "equal" */
+    /* test "equal" via cmp hook */
     test_assert(cmp(&arr[0], &arr[4], ti) == 0); /* 1024 == 1024 */
+    /* test "equal" via equals hook */
+    test_assert(equals(&arr[0], &arr[4], ti)); /* 1024 == 1024 */
 
     /* further test by sorting the array */
     sort_array(ti, arr, 6);
@@ -176,8 +192,10 @@ void PrimitiveCompare_u32(void) {
     /* test "greater" */
     test_assert(cmp(&arr[2], &arr[1], ti) > 0); /* 4294967295 > 500 */
 
-    /* test "equal" */
+    /* test "equal" via cmp hook */
     test_assert(cmp(&arr[0], &arr[3], ti) == 0); /* 100000 == 100000 */
+    /* test "equal" via equals hook */
+    test_assert(equals(&arr[0], &arr[3], ti)); /* 100000 == 100000 */
 
     /* further test by sorting the array */
     sort_array(ti, arr, 5);
@@ -205,9 +223,11 @@ void PrimitiveCompare_u64(void) {
     /* 18446744073709551615 > 1000 */
     test_assert(cmp(&arr[0], &arr[2], ti) > 0);
 
-    /* test "equal" */
+    /* test "equal" via cmp hook */
     /* 18446744073709551615 == 18446744073709551615 */
     test_assert(cmp(&arr[0], &arr[3], ti) == 0); 
+    /* test "equal" via equals hook */
+    test_assert(equals(&arr[0], &arr[3], ti)); 
 
     /* further test by sorting the array */
     sort_array(ti, arr, 5);
@@ -231,8 +251,10 @@ void PrimitiveCompare_uptr(void) {
     /* test "greater" */
     test_assert(cmp(&arr[3], &arr[1], ti) > 0); /* 0x9ABC > 0x5678 */
 
-    /* test "equal" */
+    /* test "equal" via cmp hook */
     test_assert(cmp(&arr[0], &arr[2], ti) == 0); /* 0x1234 == 0x1234 */
+    /* test "equal" via equals hook */
+    test_assert(equals(&arr[0], &arr[2], ti)); /* 0x1234 == 0x1234 */
 
     /* further test by sorting the array */
     sort_array(ti, arr, 4);
@@ -256,8 +278,10 @@ void PrimitiveCompare_i8(void) {
     /* test "greater" */
     test_assert(cmp(&arr[1], &arr[2], ti) > 0); /* 127 > 0 */
 
-    /* test "equal" */
+    /* test "equal" via cmp hook */
     test_assert(cmp(&arr[1], &arr[4], ti) == 0); /* 127 == 127 */
+    /* test "equal" via equals hook */
+    test_assert(equals(&arr[1], &arr[4], ti)); /* 127 == 127 */
 
     /* further test by sorting the array */
     sort_array(ti, arr, 6);
@@ -281,8 +305,10 @@ void PrimitiveCompare_i16(void) {
     /* test "greater" */
     test_assert(cmp(&arr[1], &arr[2], ti) > 0); /* 32767 > 100 */
 
-    /* test "equal" */
+    /* test "equal" via cmp hook */
     test_assert(cmp(&arr[1], &arr[4], ti) == 0); /* 32767 == 32767 */
+    /* test "equal" via equals hook */
+    test_assert(equals(&arr[1], &arr[4], ti)); /* 32767 == 32767 */
 
     /* further test by sorting the array */
     sort_array(ti, arr, 5);
@@ -306,8 +332,10 @@ void PrimitiveCompare_i32(void) {
     /* test "greater" */
     test_assert(cmp(&arr[1], &arr[2], ti) > 0); /* 50000 > 0 */
 
-    /* test "equal" */
+    /* test "equal" via cmp hook */
     test_assert(cmp(&arr[0], &arr[3], ti) == 0); /* -100000 == -100000 */
+    /* test "equal" via equals hook */
+    test_assert(equals(&arr[0], &arr[3], ti)); /* -100000 == -100000 */
 
     /* further test by sorting the array */
     sort_array(ti, arr, 5);
@@ -335,9 +363,11 @@ void PrimitiveCompare_i64(void) {
     /* 9223372036854775807 > 0 */
     test_assert(cmp(&arr[1], &arr[2], ti) > 0); 
 
-    /* test "equal" */
+    /* test "equal" via cmp hook */
     /* 9223372036854775807 == 9223372036854775807 */
     test_assert(cmp(&arr[1], &arr[4], ti) == 0); 
+    /* test "equal" via equals hook */
+    test_assert(equals(&arr[1], &arr[4], ti)); 
 
     /* further test by sorting the array */
     sort_array(ti, arr, 5);
@@ -361,8 +391,10 @@ void PrimitiveCompare_iptr(void) {
     /* test "greater" */
     test_assert(cmp(&arr[1], &arr[2], ti) > 0); /* 500 > 0 */
 
-    /* test "equal" */
+    /* test "equal" via cmp hook */
     test_assert(cmp(&arr[0], &arr[3], ti) == 0); /* -1000 == -1000 */
+    /* test "equal" via equals hook */
+    test_assert(equals(&arr[0], &arr[3], ti)); /* -1000 == -1000 */
 
     /* further test by sorting the array */
     sort_array(ti, arr, 4);
@@ -386,8 +418,10 @@ void PrimitiveCompare_f32(void) {
     /* test "greater" */
     test_assert(cmp(&arr[0], &arr[4], ti) > 0); /* 3.14 > 0.0 */
 
-    /* test "equal" */
+    /* test "equal" via cmp hook */
     test_assert(cmp(&arr[1], &arr[3], ti) == 0); /* 2.71 == 2.71 */
+    /* test "equal" via equals hook */
+    test_assert(equals(&arr[1], &arr[3], ti)); /* 2.71 == 2.71 */
 
     /* further test by sorting the array */
     sort_array(ti, arr, 5);
@@ -411,8 +445,10 @@ void PrimitiveCompare_f64(void) {
     /* test "greater" */
     test_assert(cmp(&arr[0], &arr[4], ti) > 0); /* 3.14159 > 0.0 */
 
-    /* test "equal" */
+    /* test "equal" via cmp hook */
     test_assert(cmp(&arr[1], &arr[3], ti) == 0); /* 2.71828 == 2.71828 */
+    /* test "equal" via equals hook */
+    test_assert(equals(&arr[1], &arr[3], ti)); /* 2.71828 == 2.71828 */
 
     /* further test by sorting the array */
     sort_array(ti, arr, 5);
@@ -436,8 +472,10 @@ void PrimitiveCompare_entity(void) {
     /* test "greater" */
     test_assert(cmp(&arr[0], &arr[1], ti) > 0); /* 1000 > 42 */
 
-    /* test "equal" */
+    /* test "equal" via cmp hook */
     test_assert(cmp(&arr[0], &arr[2], ti) == 0); /* 1000 == 1000 */
+    /* test "equal" via equals hook */
+    test_assert(equals(&arr[0], &arr[2], ti)); /* 1000 == 1000 */
 
     /* further test by sorting the array */
     sort_array(ti, arr, 5);
@@ -461,8 +499,10 @@ void PrimitiveCompare_id(void) {
     /* test "greater" */
     test_assert(cmp(&arr[0], &arr[1], ti) > 0); /* 1000 > 42 */
 
-    /* test "equal" */
+    /* test "equal" via cmp hook */
     test_assert(cmp(&arr[0], &arr[2], ti) == 0); /* 1000 == 1000 */
+    /* test "equal" via equals hook */
+    test_assert(equals(&arr[0], &arr[2], ti)); /* 1000 == 1000 */
 
     /* further test by sorting the array */
     sort_array(ti, arr, 5);
@@ -494,9 +534,13 @@ void PrimitiveCompare_string(void) {
     /* test "greater" */
     test_assert(cmp(&arr[6], &arr[5], ti) > 0); /* "cc" > "aa" */
 
-    /* test "equal" */
+    /* test "equal" via cmp hook */
     test_assert(cmp(&arr[3], &arr[5], ti) == 0); /* "aa" == "aa" */
-    test_assert(cmp(&arr[2], &arr[5], ti) < 0); /* NULL == NULL */
+    test_assert(cmp(&arr[2], &arr[2], ti) == 0); /* NULL == NULL */
+
+    /* test "equal" via equals hook */
+    test_assert(equals(&arr[3], &arr[5], ti)); /* "aa" == "aa" */
+    test_assert(equals(&arr[2], &arr[2], ti)); /* NULL == NULL */
 
     /* further test by sorting the array */
     sort_array(ti, arr, STRING_COUNT);
@@ -530,9 +574,13 @@ void PrimitiveCompare_const_string(void) {
     /* test "greater" */
     test_assert(cmp(&arr[6], &arr[5], ti) > 0); /* "cc" > "aa" */
 
-    /* test "equal" */
+    /* test "equal" via cmp hook */
     test_assert(cmp(&arr[3], &arr[5], ti) == 0); /* "aa" == "aa" */
-    test_assert(cmp(&arr[2], &arr[5], ti) < 0); /* NULL == NULL */
+    test_assert(cmp(&arr[2], &arr[2], ti) == 0); /* NULL == NULL */
+
+    /* test "equal" via equals hook */
+    test_assert(equals(&arr[3], &arr[5], ti)); /* "aa" == "aa" */
+    test_assert(equals(&arr[2], &arr[2], ti)); /* NULL == NULL */
 
     /* further test by sorting the array */
     sort_array(ti, arr, STRING_COUNT);
