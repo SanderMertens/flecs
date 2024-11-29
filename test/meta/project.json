@@ -116,6 +116,7 @@
                 "copy",
                 "copy_illegal",
                 "cmp_illegal",
+                "equals_illegal",
                 "trivial_array",
                 "array_ctor",
                 "array_ctor_illegal",
