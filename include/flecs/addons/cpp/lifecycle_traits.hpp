@@ -348,7 +348,6 @@ ecs_move_t move_dtor(ecs_flags32_t &) {
     return move_dtor_impl<T>;
 }
 
-
 // Traits to check for operator<, operator>, and operator==
 template<typename...>
 using void_t = void;
@@ -382,10 +381,7 @@ template <typename T>
 struct has_operator_greater<T, void_t<decltype(std::declval<const T&>() > std::declval<const T&>())>> : 
     std::is_same<decltype(std::declval<const T&>() > std::declval<const T&>()), bool> {};
 
-
-
 // Trait to check for operator==
-
 template <typename T, typename = void>
 struct has_operator_equal : std::false_type {};
 

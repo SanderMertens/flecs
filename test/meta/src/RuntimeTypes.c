@@ -216,6 +216,7 @@ const ecs_type_info_t *define_test_struct(
 }
 
 /* Compares two instances of the given type */
+static
 int compare(const ecs_world_t* world, ecs_entity_t id, const void *a, const void *b) {
     const ecs_type_info_t* ti = ecs_get_type_info(world, id);
     return ti->hooks.comp(a, b, ti);

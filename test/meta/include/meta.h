@@ -64,8 +64,6 @@ void install_test_abort(void);
 #define test_json(v1, v2) _test_json(v1, v2, #v1, #v2, __FILE__, __LINE__)
 void _test_json(const char* str1, const char *str2, const char* vstr1, const char *vstr2, const char *file, int line);
 
-int cmp(const void *a, const void *b, const ecs_type_info_t* ti);
-
 #ifdef __cplusplus
 }
 #endif
