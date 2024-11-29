@@ -18942,6 +18942,11 @@ void flecs_default_move_w_dtor(void *dst_ptr, void *src_ptr,
     cl->dtor(src_ptr, count, ti);
 }
 
+static
+bool flecs_default_equals(const void *a_ptr, const void *b_ptr, const ecs_type_info_t* ti) {
+    return ti->hooks.cmp(a_ptr, b_ptr, ti) == 0;
+}
+
 ECS_NORETURN static
 void flecs_ctor_illegal(
     void * dst,
@@ -19024,6 +19029,17 @@ int flecs_comp_illegal(
     ecs_abort(ECS_INVALID_OPERATION, "invalid compare hook for %s", ti->name);
 }
 
+ECS_NORETURN static
+bool flecs_equals_illegal(
+    const void *dst,
+    const void *src,
+    const ecs_type_info_t *ti)
+{
+    (void)dst; /* silence unused warning */
+    (void)src;
+    ecs_abort(ECS_INVALID_OPERATION, "invalid compare hook for %s", ti->name);
+}
+
 void ecs_set_hooks_id(
     ecs_world_t *world,
     ecs_entity_t component,
@@ -19080,6 +19096,10 @@ void ecs_set_hooks_id(
         h->cmp != flecs_comp_illegal),
         ECS_INVALID_PARAMETER, "cannot specify both compare hook and illegal flag");
 
+    ecs_check(!(flags & ECS_TYPE_HOOK_EQUALS_ILLEGAL && 
+        h->equals != NULL && 
+        h->equals != flecs_equals_illegal),
+        ECS_INVALID_PARAMETER, "cannot specify both equals hook and illegal flag");
 
 
     flecs_stage_from_world(&world);
@@ -19119,6 +19139,7 @@ void ecs_set_hooks_id(
     if (h->ctor_move_dtor) ti->hooks.ctor_move_dtor = h->ctor_move_dtor;
     if (h->move_dtor) ti->hooks.move_dtor = h->move_dtor;
     if (h->cmp) ti->hooks.cmp = h->cmp;
+    if (h->equals) ti->hooks.equals = h->equals;
 
     if (h->on_add) ti->hooks.on_add = h->on_add;
     if (h->on_remove) ti->hooks.on_remove = h->on_remove;
@@ -19217,6 +19238,14 @@ void ecs_set_hooks_id(
         }
     }
 
+    if (!h->equals) {
+        if(flags & ECS_TYPE_HOOK_CMP_ILLEGAL) {
+            flags |= ECS_TYPE_HOOK_EQUALS_ILLEGAL;
+        } else if(h->cmp) {
+            ti->hooks.equals = flecs_default_equals;
+        }
+    }
+
     ti->hooks.flags = flags;
 
     if (ti->hooks.ctor) ti->hooks.flags |= ECS_TYPE_HOOK_CTOR;
@@ -19228,12 +19257,14 @@ void ecs_set_hooks_id(
     if (ti->hooks.copy) ti->hooks.flags |= ECS_TYPE_HOOK_COPY;
     if (ti->hooks.copy_ctor) ti->hooks.flags |= ECS_TYPE_HOOK_COPY_CTOR;
     if (ti->hooks.cmp) ti->hooks.flags |= ECS_TYPE_HOOK_CMP;
+    if (ti->hooks.equals) ti->hooks.flags |= ECS_TYPE_HOOK_EQUALS;
 
     if(flags & ECS_TYPE_HOOK_CTOR_ILLEGAL) ti->hooks.ctor = flecs_ctor_illegal;
     if(flags & ECS_TYPE_HOOK_DTOR_ILLEGAL) ti->hooks.dtor = flecs_dtor_illegal;
     if(flags & ECS_TYPE_HOOK_COPY_ILLEGAL) ti->hooks.copy = flecs_copy_illegal;
     if(flags & ECS_TYPE_HOOK_MOVE_ILLEGAL) ti->hooks.move = flecs_move_illegal;
     if(flags & ECS_TYPE_HOOK_CMP_ILLEGAL) ti->hooks.cmp = flecs_comp_illegal;
+    if(flags & ECS_TYPE_HOOK_EQUALS_ILLEGAL) ti->hooks.equals = flecs_equals_illegal;
 
     if(flags & ECS_TYPE_HOOK_COPY_CTOR_ILLEGAL) {
         ti->hooks.copy_ctor = flecs_copy_ctor_illegal;
@@ -42821,6 +42852,11 @@ int ecs_compare_string(
     const void *str_b,
     const ecs_type_info_t *ti);
 
+bool ecs_equals_string(
+    const void *str_a,
+    const void *str_b,
+    const ecs_type_info_t *ti);
+
 #endif
 
 #endif
@@ -49698,6 +49734,7 @@ void flecs_meta_import_core_definitions(
                 .alignment = ECS_ALIGNOF(const char*),
                 .hooks = {
                     .cmp = ecs_compare_string,
+                    .equals = ecs_equals_string
                 }
             }          
         }),
@@ -49985,6 +50022,15 @@ int ecs_compare_bool(
 }
 
 static
+bool ecs_equals_bool(
+    const void *a_ptr,
+    const void *b_ptr,
+    const ecs_type_info_t *ti)
+{
+    return ecs_compare_bool(a_ptr, b_ptr, ti) == 0;
+}
+
+static
 int ecs_compare_char(
     const void *a_ptr,
     const void *b_ptr,
@@ -49992,6 +50038,15 @@ int ecs_compare_char(
 {
     (void)ti;
     return (int)(*((const ecs_char_t*)a_ptr)) - (int)(*((const ecs_char_t*)b_ptr));
+}
+
+static
+bool ecs_equals_char(
+    const void *a_ptr,
+    const void *b_ptr,
+    const ecs_type_info_t *ti)
+{
+    return ecs_compare_char(a_ptr, b_ptr, ti) == 0;
 }
 
 static
@@ -50005,6 +50060,15 @@ int ecs_compare_byte(
 }
 
 static
+bool ecs_equals_byte(
+    const void *a_ptr,
+    const void *b_ptr,
+    const ecs_type_info_t *ti)
+{
+    return ecs_compare_byte(a_ptr, b_ptr, ti) == 0;
+}
+
+static
 int ecs_compare_u8(
     const void *a_ptr,
     const void *b_ptr,
@@ -50015,6 +50079,15 @@ int ecs_compare_u8(
 }
 
 static
+bool ecs_equals_u8(
+    const void *a_ptr,
+    const void *b_ptr,
+    const ecs_type_info_t *ti)
+{
+    return ecs_compare_u8(a_ptr, b_ptr, ti) == 0;
+}
+
+static
 int ecs_compare_u16(
     const void *a_ptr,
     const void *b_ptr,
@@ -50022,6 +50095,15 @@ int ecs_compare_u16(
 {
     (void)ti;
     return (int)(*((const ecs_u16_t*)a_ptr)) - (int)(*((const ecs_u16_t*)b_ptr));
+}
+
+static
+bool ecs_equals_u16(
+    const void *a_ptr,
+    const void *b_ptr,
+    const ecs_type_info_t *ti)
+{
+    return ecs_compare_u16(a_ptr, b_ptr, ti) == 0;
 }
 
 static
@@ -50037,6 +50119,15 @@ int ecs_compare_u32(
 }
 
 static
+bool ecs_equals_u32(
+    const void *a_ptr,
+    const void *b_ptr,
+    const ecs_type_info_t *ti)
+{
+    return ecs_compare_u32(a_ptr, b_ptr, ti) == 0;
+}
+
+static
 int ecs_compare_u64(
     const void *a_ptr,
     const void *b_ptr,
@@ -50046,6 +50137,15 @@ int ecs_compare_u64(
     ecs_u64_t a = *((const ecs_u64_t*)a_ptr);
     ecs_u64_t b = *((const ecs_u64_t*)b_ptr);
     return (a > b) - (a < b);
+}
+
+static
+bool ecs_equals_u64(
+    const void *a_ptr,
+    const void *b_ptr,
+    const ecs_type_info_t *ti)
+{
+    return ecs_compare_u64(a_ptr, b_ptr, ti) == 0;
 }
 
 static
@@ -50061,6 +50161,15 @@ int ecs_compare_uptr(
 }
 
 static
+bool ecs_equals_uptr(
+    const void *a_ptr,
+    const void *b_ptr,
+    const ecs_type_info_t *ti)
+{
+    return ecs_compare_uptr(a_ptr, b_ptr, ti) == 0;
+}
+
+static
 int ecs_compare_i8(
     const void *a_ptr,
     const void *b_ptr,
@@ -50072,6 +50181,15 @@ int ecs_compare_i8(
 }
 
 static
+bool ecs_equals_i8(
+    const void *a_ptr,
+    const void *b_ptr,
+    const ecs_type_info_t *ti)
+{
+    return ecs_compare_i8(a_ptr, b_ptr, ti) == 0;
+}
+
+static
 int ecs_compare_i16(
     const void *a_ptr,
     const void *b_ptr,
@@ -50080,6 +50198,15 @@ int ecs_compare_i16(
     (void)ti;
     return (int)(*((const ecs_i16_t*)a_ptr)) - 
            (int)(*((const ecs_i16_t*)b_ptr));
+}
+
+static
+bool ecs_equals_i16(
+    const void *a_ptr,
+    const void *b_ptr,
+    const ecs_type_info_t *ti)
+{
+    return ecs_compare_i16(a_ptr, b_ptr, ti) == 0;
 }
 
 static
@@ -50095,6 +50222,15 @@ int ecs_compare_i32(
 }
 
 static
+bool ecs_equals_i32(
+    const void *a_ptr,
+    const void *b_ptr,
+    const ecs_type_info_t *ti)
+{
+    return ecs_compare_i32(a_ptr, b_ptr, ti) == 0;
+}
+
+static
 int ecs_compare_i64(
     const void *a_ptr,
     const void *b_ptr,
@@ -50107,6 +50243,15 @@ int ecs_compare_i64(
 }
 
 static
+bool ecs_equals_i64(
+    const void *a_ptr,
+    const void *b_ptr,
+    const ecs_type_info_t *ti)
+{
+    return ecs_compare_i64(a_ptr, b_ptr, ti) == 0;
+}
+
+static
 int ecs_compare_iptr(
     const void *a_ptr,
     const void *b_ptr,
@@ -50116,6 +50261,15 @@ int ecs_compare_iptr(
     ecs_iptr_t a = *((const ecs_iptr_t*)a_ptr);
     ecs_iptr_t b = *((const ecs_iptr_t*)b_ptr);
     return (a > b) - (a < b);
+}
+
+static
+bool ecs_equals_iptr(
+    const void *a_ptr,
+    const void *b_ptr,
+    const ecs_type_info_t *ti)
+{
+    return ecs_compare_iptr(a_ptr, b_ptr, ti) == 0;
 }
 
 static
@@ -50133,6 +50287,16 @@ int ecs_compare_f32(
 }
 
 static
+bool ecs_equals_f32(
+    const void *a_ptr,
+    const void *b_ptr,
+    const ecs_type_info_t *ti)
+{
+    /* intentional equal check as if it was an integer */
+    return ecs_compare_u32(a_ptr, b_ptr, ti) == 0;
+}
+
+static
 int ecs_compare_f64(
     const void *a_ptr,
     const void *b_ptr,
@@ -50144,6 +50308,16 @@ int ecs_compare_f64(
     if (a < b) return -1;
     if (a > b) return 1;
     return 0;
+}
+
+static
+bool ecs_equals_f64(
+    const void *a_ptr,
+    const void *b_ptr,
+    const ecs_type_info_t *ti)
+{
+    /* intentional equal check as if it was an integer */
+    return ecs_compare_u64(a_ptr, b_ptr, ti) == 0;
 }
 
 static
@@ -50159,6 +50333,15 @@ int ecs_compare_entity(
 }
 
 static
+bool ecs_equals_entity(
+    const void *a_ptr,
+    const void *b_ptr,
+    const ecs_type_info_t *ti)
+{
+    return ecs_compare_entity(a_ptr, b_ptr, ti) == 0;
+}
+
+static
 int ecs_compare_id(
     const void *a_ptr,
     const void *b_ptr,
@@ -50170,6 +50353,14 @@ int ecs_compare_id(
     return (a > b) - (a < b);
 }
 
+static
+bool ecs_equals_id(
+    const void *a_ptr,
+    const void *b_ptr,
+    const ecs_type_info_t *ti)
+{
+    return ecs_compare_id(a_ptr, b_ptr, ti) == 0;
+}
 
 int ecs_compare_string(
     const void *a_ptr,
@@ -50189,6 +50380,15 @@ int ecs_compare_string(
     }
     return ecs_os_strcmp(str_a, str_b);
 }
+
+bool ecs_equals_string(
+    const void *a_ptr,
+    const void *b_ptr,
+    const ecs_type_info_t *ti)
+{
+    return ecs_compare_string(a_ptr, b_ptr, ti) == 0;
+}
+
 
 /* EcsTypeSerializer lifecycle */
 
@@ -51568,7 +51768,8 @@ void FlecsMetaImport(
             .kind = primitive_kind\
         });\
         ecs_set_hooks(world, ecs_##type##_t, { \
-            .cmp = ecs_compare_##type \
+            .cmp = ecs_compare_##type, \
+            .equals = ecs_equals_##type \
         })
 
     ECS_PRIMITIVE(world, bool, EcsBool);
@@ -51631,6 +51832,7 @@ typedef struct ecs_rtt_call_data_t {
         ecs_move_t move;
         ecs_copy_t copy;
         ecs_cmp_t cmp;
+        ecs_equals_t equals;
     } hook;
     const ecs_type_info_t *type_info;
     int32_t offset;
@@ -51639,11 +51841,13 @@ typedef struct ecs_rtt_call_data_t {
 
 /* Lifecycle context for runtime structs */
 typedef struct ecs_rtt_struct_ctx_t {
-    ecs_vec_t vctor; /* vector<ecs_rtt_call_data_t> */
-    ecs_vec_t vdtor; /* vector<ecs_rtt_call_data_t> */
-    ecs_vec_t vmove; /* vector<ecs_rtt_call_data_t> */
-    ecs_vec_t vcopy; /* vector<ecs_rtt_call_data_t> */
-    ecs_vec_t vcomp; /* vector<ecs_rtt_call_data_t> */
+    ecs_vec_t vctor;   /* vector<ecs_rtt_call_data_t> */
+    ecs_vec_t vdtor;   /* vector<ecs_rtt_call_data_t> */
+    ecs_vec_t vmove;   /* vector<ecs_rtt_call_data_t> */
+    ecs_vec_t vcopy;   /* vector<ecs_rtt_call_data_t> */
+    ecs_vec_t vcomp;   /* vector<ecs_rtt_call_data_t> */
+    ecs_vec_t vequals; /* vector<ecs_rtt_call_data_t> */
+
 } ecs_rtt_struct_ctx_t;
 
 /* Lifecycle context for runtime arrays */
@@ -51803,7 +52007,7 @@ void flecs_rtt_struct_copy(
  * structs's lifecycle context and call the compare hooks configured when
  * the type was created. */
 static
-int flecs_rtt_struct_comp(
+int flecs_rtt_struct_cmp(
     const void *a_ptr,
     const void *b_ptr,
     const ecs_type_info_t *type_info)
@@ -51831,6 +52035,38 @@ int flecs_rtt_struct_comp(
     return 0;
 }
 
+/* Generic equals hook. It will read hook information call data from the
+ * structs's lifecycle context and call the equals hooks configured when
+ * the type was created. */
+static
+bool flecs_rtt_struct_equals(
+    const void *a_ptr,
+    const void *b_ptr,
+    const ecs_type_info_t *type_info)
+{
+    if(a_ptr == b_ptr) {
+        return 0;
+    }
+
+    ecs_rtt_struct_ctx_t *rtt_ctx = type_info->hooks.lifecycle_ctx;
+    ecs_assert(rtt_ctx != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    int cb_count = ecs_vec_count(&rtt_ctx->vcomp);
+    int i;
+    for (i = 0; i < cb_count; i++) {
+        ecs_rtt_call_data_t *comp_data =
+        ecs_vec_get_t(&rtt_ctx->vcomp, ecs_rtt_call_data_t, i);
+        bool eq = comp_data->hook.equals(
+            ECS_OFFSET(a_ptr, comp_data->offset),
+            ECS_OFFSET(b_ptr, comp_data->offset),
+            comp_data->type_info);
+        if (!eq) {
+            return false;
+        }
+    }
+    return true;
+}
+
 static
 void flecs_rtt_free_lifecycle_nop(
     void *ctx)
@@ -51853,6 +52089,7 @@ void flecs_rtt_free_lifecycle_struct_ctx(
     ecs_vec_fini_t(NULL, &lifecycle_ctx->vmove, ecs_rtt_call_data_t);
     ecs_vec_fini_t(NULL, &lifecycle_ctx->vcopy, ecs_rtt_call_data_t);
     ecs_vec_fini_t(NULL, &lifecycle_ctx->vcomp, ecs_rtt_call_data_t);
+    ecs_vec_fini_t(NULL, &lifecycle_ctx->vequals, ecs_rtt_call_data_t);
 
     ecs_os_free(ctx);
 }
@@ -51866,7 +52103,8 @@ ecs_rtt_struct_ctx_t * flecs_rtt_configure_struct_hooks(
     ecs_xtor_t dtor,
     ecs_move_t move,
     ecs_copy_t copy,
-    ecs_cmp_t cmp)
+    ecs_cmp_t cmp,
+    ecs_equals_t equals)
 {
     ecs_type_hooks_t hooks = ti->hooks;
     if (hooks.lifecycle_ctx_free) {
@@ -51888,15 +52126,19 @@ ecs_rtt_struct_ctx_t * flecs_rtt_configure_struct_hooks(
     if(flags & ECS_TYPE_HOOK_CMP_ILLEGAL) {
         cmp = NULL;
     }
-
+    if(flags & ECS_TYPE_HOOK_EQUALS_ILLEGAL) {
+        equals = NULL;
+    }
     ecs_rtt_struct_ctx_t *rtt_ctx = NULL;
-    if (ctor || dtor || move || copy || cmp) {
+    if (ctor || dtor || move || copy || cmp || equals) {
         rtt_ctx = ecs_os_malloc_t(ecs_rtt_struct_ctx_t);
         ecs_vec_init_t(NULL, &rtt_ctx->vctor, ecs_rtt_call_data_t, 0);
         ecs_vec_init_t(NULL, &rtt_ctx->vdtor, ecs_rtt_call_data_t, 0);
         ecs_vec_init_t(NULL, &rtt_ctx->vmove, ecs_rtt_call_data_t, 0);
         ecs_vec_init_t(NULL, &rtt_ctx->vcopy, ecs_rtt_call_data_t, 0);
         ecs_vec_init_t(NULL, &rtt_ctx->vcomp, ecs_rtt_call_data_t, 0);
+        ecs_vec_init_t(NULL, &rtt_ctx->vequals, ecs_rtt_call_data_t, 0);
+
         hooks.lifecycle_ctx = rtt_ctx;
         hooks.lifecycle_ctx_free = flecs_rtt_free_lifecycle_struct_ctx;
     } else {
@@ -51909,6 +52151,7 @@ ecs_rtt_struct_ctx_t * flecs_rtt_configure_struct_hooks(
     hooks.move = move;
     hooks.copy = copy;
     hooks.cmp = cmp;
+    hooks.equals = equals;
 
     hooks.flags = flags;
     hooks.flags &= ECS_TYPE_HOOKS_ILLEGAL;
@@ -51935,7 +52178,8 @@ void flecs_rtt_init_default_hooks_struct(
     bool dtor_hook_required = false;
     bool move_hook_required = false;
     bool copy_hook_required = false;
-    bool comparable = true;
+    bool valid_cmp = true;
+    bool valid_equals = true;
 
     /* Iterate all struct members and see if any member type has hooks. If so,
      * the struct itself will need to have that hook: */
@@ -51951,10 +52195,12 @@ void flecs_rtt_init_default_hooks_struct(
         move_hook_required |= member_ti->hooks.move != NULL;
         copy_hook_required |= member_ti->hooks.copy != NULL;
 
-        /* A struct is comparable if all its members 
-         * are comparable */
-        comparable  &= member_ti->hooks.cmp != NULL;
-        
+        /* A struct has a valid cmp hook if all its members have it */
+        valid_cmp  &= member_ti->hooks.cmp != NULL;
+
+        /* A struct has a valid equals hook if all its members have it */
+        valid_equals  &= member_ti->hooks.equals != NULL;
+
         flags |= member_ti->hooks.flags;
     }
 
@@ -51968,7 +52214,8 @@ void flecs_rtt_init_default_hooks_struct(
         dtor_hook_required ? flecs_rtt_struct_dtor : NULL,
         move_hook_required ? flecs_rtt_struct_move : NULL,
         copy_hook_required ? flecs_rtt_struct_copy : NULL,
-        comparable ? flecs_rtt_struct_comp : NULL
+        valid_cmp ? flecs_rtt_struct_cmp : NULL,
+        valid_equals ? flecs_rtt_struct_equals : NULL
         );
 
     if (!rtt_ctx) {
@@ -52025,7 +52272,7 @@ void flecs_rtt_init_default_hooks_struct(
                 copy_data->hook.copy = flecs_rtt_default_copy;
             }
         }
-        if (comparable) {
+        if (valid_cmp) {
             ecs_rtt_call_data_t *comp_data =
             ecs_vec_append_t(NULL, &rtt_ctx->vcomp, ecs_rtt_call_data_t);
             comp_data->offset = m->offset;
@@ -52033,6 +52280,15 @@ void flecs_rtt_init_default_hooks_struct(
             comp_data->count = 1;
             ecs_assert(member_ti->hooks.cmp, ECS_INTERNAL_ERROR, NULL);
             comp_data->hook.cmp = member_ti->hooks.cmp; 
+        }
+        if (valid_equals) {
+            ecs_rtt_call_data_t *comp_data =
+            ecs_vec_append_t(NULL, &rtt_ctx->vequals, ecs_rtt_call_data_t);
+            comp_data->offset = m->offset;
+            comp_data->type_info = member_ti;
+            comp_data->count = 1;
+            ecs_assert(member_ti->hooks.equals, ECS_INTERNAL_ERROR, NULL);
+            comp_data->hook.equals = member_ti->hooks.equals; 
         }
     }
 }
@@ -52133,7 +52389,7 @@ void flecs_rtt_array_copy(
 /* Generic array compare hook. It will invoke the compare hook of the underlying
  * type for each element */
 static
-int flecs_rtt_array_comp(
+int flecs_rtt_array_cmp(
     const void *a_ptr,
     const void *b_ptr,
     const ecs_type_info_t *type_info)
@@ -52158,6 +52414,34 @@ int flecs_rtt_array_comp(
     return 0;
 }
 
+/* Generic array equals hook. It will invoke the equals hook of the underlying
+ * type for each element */
+static
+bool flecs_rtt_array_equals(
+    const void *a_ptr,
+    const void *b_ptr,
+    const ecs_type_info_t *type_info)
+{
+    if(a_ptr == b_ptr) {
+        return 0;
+    }
+
+    ecs_rtt_array_ctx_t *rtt_ctx = type_info->hooks.lifecycle_ctx;
+    ecs_equals_t equals = rtt_ctx->type_info->hooks.equals;
+    ecs_assert(equals,  ECS_INVALID_PARAMETER, NULL);
+    ecs_size_t element_size = rtt_ctx->type_info->size;
+    int i;
+    for (i = 0; i < rtt_ctx->elem_count; i++) {
+        const void *a_element = ECS_ELEM(a_ptr, element_size, i);
+        const void *b_element = ECS_ELEM(b_ptr, element_size, i);
+        bool eq = equals(a_element, b_element, rtt_ctx->type_info);
+        if(!eq) {
+            return false;
+        }
+    }
+    return true;
+}
+
 /* Checks if an array's underlying type has hooks installed. If so, it generates
  * and installs required hooks for the array type itself. These hooks will
  * invoke the underlying type's hook for each element in the array. */
@@ -52175,7 +52459,8 @@ void flecs_rtt_init_default_hooks_array(
     bool dtor_hook_required = element_ti->hooks.dtor != NULL;
     bool move_hook_required = element_ti->hooks.move != NULL;
     bool copy_hook_required = element_ti->hooks.copy != NULL;
-    bool comparable = element_ti->hooks.cmp != NULL;
+    bool valid_cmp = element_ti->hooks.cmp != NULL;
+    bool valid_equals = element_ti->hooks.equals != NULL;
     
     ecs_flags32_t flags = element_ti->hooks.flags;
 
@@ -52189,8 +52474,11 @@ void flecs_rtt_init_default_hooks_array(
         flecs_rtt_array_move : NULL;
     hooks.copy = copy_hook_required && !(flags & ECS_TYPE_HOOK_COPY_ILLEGAL) ? 
         flecs_rtt_array_copy : NULL;
-    hooks.cmp = comparable && !(flags & ECS_TYPE_HOOK_CMP_ILLEGAL) ? 
-        flecs_rtt_array_comp : NULL;
+    hooks.cmp = valid_cmp && !(flags & ECS_TYPE_HOOK_CMP_ILLEGAL) ? 
+        flecs_rtt_array_cmp : NULL;
+    hooks.equals = valid_equals && !(flags & ECS_TYPE_HOOK_EQUALS_ILLEGAL) ? 
+        flecs_rtt_array_equals : NULL;
+
 
     if (hooks.lifecycle_ctx_free) {
         hooks.lifecycle_ctx_free(hooks.lifecycle_ctx);
@@ -52198,7 +52486,7 @@ void flecs_rtt_init_default_hooks_array(
     }
 
     if (hooks.ctor || hooks.dtor || hooks.move ||
-        hooks.copy || hooks.cmp) 
+        hooks.copy || hooks.cmp || hooks.equals) 
     {
         ecs_rtt_array_ctx_t *rtt_ctx = ecs_os_malloc_t(ecs_rtt_array_ctx_t);
         rtt_ctx->type_info = element_ti;
@@ -52327,7 +52615,7 @@ void flecs_rtt_vector_copy(
 
 /* Generic vector compare hook. */
 static
-int flecs_rtt_vector_comp(
+int flecs_rtt_vector_cmp(
     const void *a_ptr,
     const void *b_ptr,
     const ecs_type_info_t *type_info)
@@ -52368,6 +52656,49 @@ int flecs_rtt_vector_comp(
     return 0;
 }
 
+/* Generic vector equals hook. */
+static
+bool flecs_rtt_vector_equals(
+    const void *a_ptr,
+    const void *b_ptr,
+    const ecs_type_info_t *type_info)
+{
+    if(a_ptr == b_ptr) {
+        return 0;
+    }
+
+    const ecs_vec_t *vec_a = a_ptr;
+    const ecs_vec_t *vec_b = b_ptr;
+
+    ecs_size_t count_a = ecs_vec_count(vec_a);
+    ecs_size_t count_b = ecs_vec_count(vec_b);
+    {
+        int c = count_a - count_b;
+        if(c != 0) {
+            return c;
+        }
+    }
+
+    ecs_rtt_vector_ctx_t *rtt_ctx = type_info->hooks.lifecycle_ctx;
+    ecs_equals_t equals = rtt_ctx->type_info->hooks.equals;
+    ecs_assert(equals,  ECS_INVALID_PARAMETER, NULL);
+
+    ecs_size_t element_size = rtt_ctx->type_info->size;
+    const void *a = ecs_vec_first(vec_a);
+    const void *b = ecs_vec_first(vec_b);
+
+    int i;
+    for (i = 0; i < count_a; i++) {
+        const void *a_element = ECS_ELEM(a, element_size, i);
+        const void *b_element = ECS_ELEM(b, element_size, i);
+        int eq = equals(a_element, b_element, rtt_ctx->type_info);
+        if(!eq) {
+            return false;
+        }
+    }
+    return true;
+}
+
 /* Generates and installs required hooks for managing the vector and underlying
  * type lifecycle. Vectors always have hooks because at the very least the
  * vector structure itself must be initialized/destroyed/copied/moved, even if
@@ -52399,13 +52730,20 @@ void flecs_rtt_init_default_hooks_vector(
     hooks.copy = flecs_rtt_vector_copy;
     
     if (element_ti->hooks.cmp != NULL && !(flags & ECS_TYPE_HOOK_CMP_ILLEGAL)) {
-        hooks.cmp = flecs_rtt_vector_comp;
+        hooks.cmp = flecs_rtt_vector_cmp;
     } else {
         hooks.cmp = NULL;
     }
 
-    /* propagate only the compare hook illegal flag, if set */
-    hooks.flags |= flags & ECS_TYPE_HOOK_CMP_ILLEGAL;
+    if (element_ti->hooks.equals != NULL && !(flags & ECS_TYPE_HOOK_EQUALS_ILLEGAL)) {
+        hooks.equals = flecs_rtt_vector_equals;
+    } else {
+        hooks.equals = NULL;
+    }
+
+
+    /* propagate only the compare/equals hook illegal flag, if set */
+    hooks.flags |= flags & (ECS_TYPE_HOOK_CMP_ILLEGAL|ECS_TYPE_HOOK_EQUALS_ILLEGAL);
     
     hooks.flags &= ECS_TYPE_HOOKS_ILLEGAL;
     ecs_set_hooks_id(world, component, &hooks);

@@ -96,7 +96,7 @@ void RuntimeTypes_move(void);
 void RuntimeTypes_move_illegal(void);
 void RuntimeTypes_copy(void);
 void RuntimeTypes_copy_illegal(void);
-void RuntimeTypes_comp_illegal(void);
+void RuntimeTypes_cmp_illegal(void);
 void RuntimeTypes_trivial_array(void);
 void RuntimeTypes_array_ctor(void);
 void RuntimeTypes_array_ctor_illegal(void);
@@ -106,10 +106,10 @@ void RuntimeTypes_array_move(void);
 void RuntimeTypes_array_move_illegal(void);
 void RuntimeTypes_array_copy(void);
 void RuntimeTypes_array_copy_illegal(void);
-void RuntimeTypes_array_comp_illegal(void);
+void RuntimeTypes_array_cmp_illegal(void);
 void RuntimeTypes_vector_lifecycle(void);
 void RuntimeTypes_vector_lifecycle_trivial_type(void);
-void RuntimeTypes_vector_comp_illegal(void);
+void RuntimeTypes_vector_cmp_illegal(void);
 void RuntimeTypes_opaque(void);
 void RuntimeTypes_struct_with_ints(void);
 void RuntimeTypes_struct_with_strings(void);
@@ -1397,8 +1397,8 @@ bake_test_case RuntimeTypes_testcases[] = {
         RuntimeTypes_copy_illegal
     },
     {
-        "comp_illegal",
-        RuntimeTypes_comp_illegal
+        "cmp_illegal",
+        RuntimeTypes_cmp_illegal
     },
     {
         "trivial_array",
@@ -1437,8 +1437,8 @@ bake_test_case RuntimeTypes_testcases[] = {
         RuntimeTypes_array_copy_illegal
     },
     {
-        "array_comp_illegal",
-        RuntimeTypes_array_comp_illegal
+        "array_cmp_illegal",
+        RuntimeTypes_array_cmp_illegal
     },
     {
         "vector_lifecycle",
@@ -1449,8 +1449,8 @@ bake_test_case RuntimeTypes_testcases[] = {
         RuntimeTypes_vector_lifecycle_trivial_type
     },
     {
-        "vector_comp_illegal",
-        RuntimeTypes_vector_comp_illegal
+        "vector_cmp_illegal",
+        RuntimeTypes_vector_cmp_illegal
     },
     {
         "opaque",
