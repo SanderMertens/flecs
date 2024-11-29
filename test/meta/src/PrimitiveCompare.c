@@ -1,24 +1,25 @@
-#include <stdint.h>
 #include <stdlib.h>
-#include "flecs.h"
 #include <meta.h>
 
 
-
+static
 int cmp(const void *a, const void *b, const ecs_type_info_t* ti) {
     return ti->hooks.comp(a, b, ti);
 }
 
 const ecs_type_info_t *sort_ti = NULL;
+static
 int compare_element(const void *a, const void *b) {
     return cmp(a, b, sort_ti);
 }
 
+static
 void sort_array(const ecs_type_info_t* ti, void *arr, ecs_size_t num_elements) {
     sort_ti = ti;
     qsort(arr, num_elements, sort_ti->size, compare_element);
 }
 
+static
 bool str_equals(const char* a, const char* b) {
     if(a == b) {
         return true;
@@ -471,21 +472,20 @@ void PrimitiveCompare_id(void) {
     ecs_fini(world);
 }
 
+
+#define STRING_COUNT 8
 void PrimitiveCompare_string(void) {
     ecs_world_t *world = ecs_init();
 
-    const char* const_arr[] = {"world", "hello", NULL, "aa", "zz", "aa", "cc", "bb"};
-    const char* const_expected[] = {NULL, "aa", "aa", "bb", "cc", "hello", "world", "zz"};
+    char* const_arr[] = {"world", "hello", NULL, "aa", "zz", "aa", "cc", "bb"};
+    char* const_expected[] = {NULL, "aa", "aa", "bb", "cc", "hello", "world", "zz"};
 
-    ecs_size_t count = sizeof(const_arr) / sizeof(const char*);
-    test_assert(count == sizeof(const_expected) / sizeof(const char*));
-
-    ecs_string_t arr[count];
-    ecs_string_t expected[count];
+    ecs_string_t arr[STRING_COUNT];
+    ecs_string_t expected[STRING_COUNT];
 
     const ecs_type_info_t *ti = ecs_get_type_info(world, ecs_id(ecs_string_t));
-    ti->hooks.copy_ctor(arr, const_arr, count, ti);
-    ti->hooks.copy_ctor(expected, const_expected, count, ti);
+    ti->hooks.copy_ctor(arr, const_arr, STRING_COUNT, ti);
+    ti->hooks.copy_ctor(expected, const_expected, STRING_COUNT, ti);
 
     /* test "less" */
     test_assert(cmp(&arr[3], &arr[7], ti) < 0); /* "aa < "bb" */
@@ -499,15 +499,15 @@ void PrimitiveCompare_string(void) {
     test_assert(cmp(&arr[2], &arr[5], ti) < 0); /* NULL == NULL */
 
     /* further test by sorting the array */
-    sort_array(ti, arr, count);
+    sort_array(ti, arr, STRING_COUNT);
 
     int i;
-    for(i = 0; i < count; i++) {
+    for(i = 0; i < STRING_COUNT; i++) {
         test_assert(str_equals(arr[i], expected[i]));
     }
 
-    ti->hooks.dtor(arr, count, ti);
-    ti->hooks.dtor(expected, count, ti);
+    ti->hooks.dtor(arr, STRING_COUNT, ti);
+    ti->hooks.dtor(expected, STRING_COUNT, ti);
 
     ecs_fini(world);
 }
@@ -517,13 +517,11 @@ void PrimitiveCompare_const_string(void) {
 
     ecs_entity_t const_string = ecs_lookup(world, "flecs.core.const_string_t");
 
-    const char* arr[] = {"world", "hello", NULL, "aa", "zz", "aa", "cc", "bb"};
-    const char* expected[] = {NULL, "aa", "aa", "bb", "cc", "hello", "world", "zz"};
+    char* arr[] = {"world", "hello", NULL, "aa", "zz", "aa", "cc", "bb"};
+    char* expected[] = {NULL, "aa", "aa", "bb", "cc", "hello", "world", "zz"};
 
     const ecs_type_info_t *ti = ecs_get_type_info(world, const_string);
 
-    ecs_size_t count = sizeof(arr) / sizeof(const char*);
-    test_assert(count == sizeof(expected) / sizeof(const char*));
 
     /* test "less" */
     test_assert(cmp(&arr[3], &arr[7], ti) < 0); /* "aa < "bb" */
@@ -537,10 +535,10 @@ void PrimitiveCompare_const_string(void) {
     test_assert(cmp(&arr[2], &arr[5], ti) < 0); /* NULL == NULL */
 
     /* further test by sorting the array */
-    sort_array(ti, arr, count);
+    sort_array(ti, arr, STRING_COUNT);
 
     int i;
-    for(i = 0; i < count; i++) {
+    for(i = 0; i < STRING_COUNT; i++) {
         test_assert(str_equals(arr[i], expected[i]));
     }
 

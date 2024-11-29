@@ -3596,6 +3596,7 @@ struct ecs_type_hooks_t {
      * not set explicitly it will be derived from other callbacks. */
     ecs_move_t move_dtor;
 
+    /** Compare hook */
     ecs_comp_t comp;
     
     /** Hook flags.
@@ -20511,7 +20512,6 @@ ecs_move_t move_dtor(ecs_flags32_t &) {
     return move_dtor_impl<T>;
 }
 
-
 // Traits to check for operator<, operator>, and operator==
 template<typename...>
 using void_t = void;
@@ -20545,10 +20545,7 @@ template <typename T>
 struct has_operator_greater<T, void_t<decltype(std::declval<const T&>() > std::declval<const T&>())>> : 
     std::is_same<decltype(std::declval<const T&>() > std::declval<const T&>()), bool> {};
 
-
-
 // Trait to check for operator==
-
 template <typename T, typename = void>
 struct has_operator_equal : std::false_type {};
 
@@ -26989,6 +26986,8 @@ void register_lifecycle_actions(
     if(cl.comp == NULL) {
         cl.flags |= ECS_TYPE_HOOK_COMP_ILLEGAL;
     }
+    
+    cl.flags &= ECS_TYPE_HOOKS_ILLEGAL;
     ecs_set_hooks_id(world, component, &cl); 
 }
 
@@ -27017,7 +27016,8 @@ void register_lifecycle_actions(
     if(cl.comp == NULL) {
         cl.flags |= ECS_TYPE_HOOK_COMP_ILLEGAL;
     }
-
+    
+    cl.flags &= ECS_TYPE_HOOKS_ILLEGAL;
     ecs_set_hooks_id(world, component, &cl);
 
     if (cl.flags & (ECS_TYPE_HOOK_MOVE_ILLEGAL|ECS_TYPE_HOOK_MOVE_CTOR_ILLEGAL))

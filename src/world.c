@@ -1191,8 +1191,7 @@ void flecs_default_move_w_dtor(void *dst_ptr, void *src_ptr,
     cl->dtor(src_ptr, count, ti);
 }
 
-ECS_NORETURN
-static
+ECS_NORETURN static
 void flecs_ctor_illegal(
     void * dst,
     int32_t count,

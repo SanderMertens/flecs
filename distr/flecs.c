@@ -18955,8 +18955,7 @@ void flecs_default_move_w_dtor(void *dst_ptr, void *src_ptr,
     cl->dtor(src_ptr, count, ti);
 }
 
-ECS_NORETURN
-static
+ECS_NORETURN static
 void flecs_ctor_illegal(
     void * dst,
     int32_t count,
@@ -50447,10 +50446,8 @@ int flecs_init_type(
          * serializers on uninitialized values. For runtime types (rtt), the default hooks are set
          by flecs_meta_rtt_init_default_hooks */
         ecs_type_info_t *ti = flecs_type_info_ensure(world, type);
-        if (meta_type->existing) {
-          if (!ti->hooks.ctor) {
+        if (meta_type->existing && !ti->hooks.ctor) {
             ti->hooks.ctor = flecs_default_ctor;
-          }
         } 
     } else {
         if (meta_type->kind != kind) {
@@ -51918,16 +51915,16 @@ ecs_rtt_struct_ctx_t * flecs_rtt_configure_struct_hooks(
         ecs_vec_init_t(NULL, &rtt_ctx->vcomp, ecs_rtt_call_data_t, 0);
         hooks.lifecycle_ctx = rtt_ctx;
         hooks.lifecycle_ctx_free = flecs_rtt_free_lifecycle_struct_ctx;
-
-        hooks.ctor = ctor;
-        hooks.dtor = dtor;
-        hooks.move = move;
-        hooks.copy = copy;
-        hooks.comp = comp;
     } else {
         hooks.lifecycle_ctx = NULL;
         hooks.lifecycle_ctx_free = flecs_rtt_free_lifecycle_nop;
-    }    
+    }
+
+    hooks.ctor = ctor;
+    hooks.dtor = dtor;
+    hooks.move = move;
+    hooks.copy = copy;
+    hooks.comp = comp;
 
     hooks.flags = flags;
     hooks.flags &= ECS_TYPE_HOOKS_ILLEGAL;

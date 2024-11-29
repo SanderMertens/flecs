@@ -928,6 +928,7 @@ struct ecs_type_hooks_t {
      * not set explicitly it will be derived from other callbacks. */
     ecs_move_t move_dtor;
 
+    /** Compare hook */
     ecs_comp_t comp;
     
     /** Hook flags.

@@ -483,10 +483,8 @@ int flecs_init_type(
          * serializers on uninitialized values. For runtime types (rtt), the default hooks are set
          by flecs_meta_rtt_init_default_hooks */
         ecs_type_info_t *ti = flecs_type_info_ensure(world, type);
-        if (meta_type->existing) {
-          if (!ti->hooks.ctor) {
+        if (meta_type->existing && !ti->hooks.ctor) {
             ti->hooks.ctor = flecs_default_ctor;
-          }
         } 
     } else {
         if (meta_type->kind != kind) {
