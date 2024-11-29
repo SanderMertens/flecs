@@ -566,7 +566,7 @@ void RuntimeTypes_copy_illegal(void) {
 
 /* Tests that an illegal compare hook is set for a struct if at least a member has
  * itself an illegal compare hook */
-void RuntimeTypes_comp_illegal(void) {
+void RuntimeTypes_cmp_illegal(void) {
     ecs_world_t *world = ecs_init();
 
     /* Define NestedStruct: */
@@ -1213,7 +1213,7 @@ void RuntimeTypes_array_copy_illegal(void) {
 
 /* Tests that an illegal cmp hook is set for an array if its underlying type itself
  * has an illegal cmp hook */
-void RuntimeTypes_array_comp_illegal(void) {
+void RuntimeTypes_array_cmp_illegal(void) {
     ecs_world_t *world = ecs_init();
 
     /* Define NestedStruct: */
@@ -1377,7 +1377,7 @@ void RuntimeTypes_vector_lifecycle_trivial_type(void) {
 
 /* Tests that an illegal cmp hook is set for an array if its underlying type itself
  * has an illegal cmp hook */
-void RuntimeTypes_vector_comp_illegal(void) {
+void RuntimeTypes_vector_cmp_illegal(void) {
     ecs_world_t *world = ecs_init();
 
     /* Define NestedStruct: */
