@@ -15,5 +15,4 @@ public:
 
 private:
 
-
 }; // class UUnrealFlecsObject

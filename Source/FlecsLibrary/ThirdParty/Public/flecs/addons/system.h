@@ -35,7 +35,7 @@ typedef struct EcsTickSource {
 } EcsTickSource;
 
 typedef struct EcsSystemPriority {
-	int32_t value;  /**< Priority value, lower is higher priority, 1...N, Default is 100 */
+	int32_t value;  /**< Priority value, lower is higher priority, 1...N, Default is FLECS_DEFAULT_SYSTEM_PRIORITY */
 } EcsSystemPriority;
 
 /** Use with ecs_system_init() to create or update a system. */

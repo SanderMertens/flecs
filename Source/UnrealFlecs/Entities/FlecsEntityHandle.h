@@ -1300,7 +1300,9 @@ public:
 			AddPair(InFirst, InSecond);
 		}
 		
-		GetEntity().set_ptr(ObtainComponentTypeStruct(InFirst), InValue);
+		GetEntity().set_ptr(
+			ecs_pair(ObtainComponentTypeStruct(InFirst).GetEntity(), ObtainComponentTypeStruct(InSecond).GetEntity()),
+			InValue);
 	}
 
 	SOLID_INLINE void SetPair(const UScriptStruct* InFirst, const void* InValue, const FGameplayTag& InSecond) const
@@ -1321,7 +1323,8 @@ public:
 			AddPair(InFirst, InSecond);
 		}
 		
-		GetEntity().set_ptr(ObtainComponentTypeStruct(InFirst), InValue);
+		GetEntity().set_ptr(
+			ecs_pair(ObtainComponentTypeStruct(InFirst).GetEntity(), InSecond.GetEntity()), InValue);
 	}
 
 	template <typename TFirst, typename TSecond, typename TActual>
