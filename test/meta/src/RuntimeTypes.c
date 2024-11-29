@@ -217,9 +217,16 @@ const ecs_type_info_t *define_test_struct(
 
 /* Compares two instances of the given type */
 static
-int compare(const ecs_world_t* world, ecs_entity_t id, const void *a, const void *b) {
+int cmp(const ecs_world_t* world, ecs_entity_t id, const void *a, const void *b) {
     const ecs_type_info_t* ti = ecs_get_type_info(world, id);
     return ti->hooks.cmp(a, b, ti);
+}
+
+/* Tests equality of two instances of the given type */
+static
+bool equals(const ecs_world_t* world, ecs_entity_t id, const void *a, const void *b) {
+    const ecs_type_info_t* ti = ecs_get_type_info(world, id);
+    return ti->hooks.equals(a, b, ti);
 }
 
 /* Tests that a constructor is generated for a struct if at least a member has
@@ -1048,11 +1055,11 @@ void RuntimeTypes_array_move(void) {
     handles = (ResourceHandle *) ecs_get_mut_id(world, e, arr_of_resources);
 
     /* we should retrieve the same values: */
-    test_assert(0 == compare(
+    test_assert(0 == cmp(
         world, resource_handle, &(ResourceHandle){.id = 100, .value = 111}, &handles[0]));
-    test_assert(0 == compare(
+    test_assert(0 == cmp(
         world, resource_handle, &(ResourceHandle){.id = 200, .value = 222}, &handles[1]));
-    test_assert(0 == compare(
+    test_assert(0 == cmp(
         world, resource_handle, &(ResourceHandle){.id = 300, .value = 333}, &handles[2]));
 
     test_int(10, resources_left()); /* pool stays the same */
@@ -1161,11 +1168,11 @@ void RuntimeTypes_array_copy(void) {
     ResourceHandle *handles =
         (ResourceHandle *) ecs_get_mut_id(world, e, arr_of_resources);
 
-    test_assert(0 == compare(
+    test_assert(0 == cmp(
         world, resource_handle, &prefab_handles[0], &handles[0]));
-    test_assert(0 == compare(
+    test_assert(0 == cmp(
         world, resource_handle, &prefab_handles[1], &handles[1]));
-    test_assert(0 == compare(
+    test_assert(0 == cmp(
         world, resource_handle, &prefab_handles[2], &handles[2]));
 
     ecs_delete(world, e);
@@ -1501,7 +1508,7 @@ void RuntimeTypes_struct_with_ints(void) {
     test_int(100, ptr2->a);
     test_int(101, ptr2->b);
 
-    test_assert(compare(world, struct_with_ints, ptr1, ptr2) == 0);
+    test_assert(cmp(world, struct_with_ints, ptr1, ptr2) == 0);
 
     /* Test moving by forcing an archetype change: */
     ECS_TAG(world, MakeMeMove);
@@ -1512,7 +1519,7 @@ void RuntimeTypes_struct_with_ints(void) {
     test_int(100, ptr3->a);
     test_int(101, ptr3->b);
 
-    test_assert(compare(world, struct_with_ints, ptr1, ptr3) == 0);
+    test_assert(cmp(world, struct_with_ints, ptr1, ptr3) == 0);
 
     /* Test deleting: */
     ecs_delete(world, e);
@@ -1555,7 +1562,7 @@ void RuntimeTypes_struct_with_strings(void) {
     test_int(101, ptr2->b);
     test_str("String102", ptr2->c);
 
-    test_assert(compare(world, struct_with_strings, ptr1, ptr2) == 0);
+    test_assert(cmp(world, struct_with_strings, ptr1, ptr2) == 0);
 
     /* Test moving by forcing an archetype change: */
     ECS_TAG(world, MakeMeMove);
@@ -1566,7 +1573,7 @@ void RuntimeTypes_struct_with_strings(void) {
     test_int(101, ptr3->b);
     test_str("String102", ptr3->c);
 
-    test_assert(compare(world, struct_with_strings, ptr1, ptr3) == 0);
+    test_assert(cmp(world, struct_with_strings, ptr1, ptr3) == 0);
 
     /* Test deleting: */
     ecs_delete(world, e);
@@ -1610,7 +1617,7 @@ void RuntimeTypes_struct_with_opaque(void) {
         ecs_get_id(world, instance, struct_with_opaque);
     test_int(100, ptr2->a.value);
 
-    test_assert(compare(world, struct_with_opaque, ptr1, ptr2) == 0);
+    test_assert(cmp(world, struct_with_opaque, ptr1, ptr2) == 0);
 
     /* 2 resource(s) should be in use now */
     test_int(2, initial_resources - resources_left());
@@ -1622,7 +1629,7 @@ void RuntimeTypes_struct_with_opaque(void) {
         ecs_get_id(world, instance, struct_with_opaque);
     test_int(100, ptr3->a.value);
 
-    test_assert(compare(world, struct_with_opaque, ptr1, ptr3) == 0);
+    test_assert(cmp(world, struct_with_opaque, ptr1, ptr3) == 0);
 
     /* 2 resource(s) should still be in use after a move */
     test_int(2, initial_resources - resources_left());
@@ -1702,7 +1709,7 @@ void RuntimeTypes_nested_struct_with_strings(void) {
     test_int(105, ptr2->c.b);
     test_str("String106", ptr2->c.c);
 
-    test_assert(compare(world, nested_struct_with_strings, ptr1, ptr2) == 0);
+    test_assert(cmp(world, nested_struct_with_strings, ptr1, ptr2) == 0);
 
     /* Test moving by forcing an archetype change: */
     ECS_TAG(world, MakeMeMove);
@@ -1717,7 +1724,7 @@ void RuntimeTypes_nested_struct_with_strings(void) {
     test_int(105, ptr3->c.b);
     test_str("String106", ptr3->c.c);
 
-    test_assert(compare(world, nested_struct_with_strings, ptr1, ptr3) == 0);
+    test_assert(cmp(world, nested_struct_with_strings, ptr1, ptr3) == 0);
 
     /* Test deleting: */
     ecs_delete(world, e);
@@ -1763,7 +1770,7 @@ void RuntimeTypes_struct_with_array_of_strings(void) {
     test_str("String102", ptr2->a[2]);
     test_int(103, ptr2->b);
 
-    test_assert(compare(world, struct_with_array_of_strings, ptr1, ptr2) == 0);
+    test_assert(cmp(world, struct_with_array_of_strings, ptr1, ptr2) == 0);
 
     /* Test moving by forcing an archetype change: */
     ECS_TAG(world, MakeMeMove);
@@ -1775,7 +1782,7 @@ void RuntimeTypes_struct_with_array_of_strings(void) {
     test_str("String102", ptr3->a[2]);
     test_int(103, ptr3->b);
 
-    test_assert(compare(world, struct_with_array_of_strings, ptr1, ptr3) == 0);
+    test_assert(cmp(world, struct_with_array_of_strings, ptr1, ptr3) == 0);
 
     /* Test deleting: */
     ecs_delete(world, e);
@@ -1829,7 +1836,7 @@ void RuntimeTypes_struct_with_array_of_array_of_strings(void) {
     }
     test_str("String103", ptr2->b);
 
-    test_assert(compare(world, struct_with_array_of_array_of_strings, ptr1, ptr2) == 0);
+    test_assert(cmp(world, struct_with_array_of_array_of_strings, ptr1, ptr2) == 0);
 
     /* Test moving by forcing an archetype change: */
     ECS_TAG(world, MakeMeMove);
@@ -1843,7 +1850,7 @@ void RuntimeTypes_struct_with_array_of_array_of_strings(void) {
     }
     test_str("String103", ptr3->b);
 
-    test_assert(compare(world, struct_with_array_of_array_of_strings, ptr1, ptr3) == 0);
+    test_assert(cmp(world, struct_with_array_of_array_of_strings, ptr1, ptr3) == 0);
 
     /* Test deleting: */
     ecs_delete(world, e);
@@ -1890,7 +1897,7 @@ void RuntimeTypes_struct_with_vector_of_ints(void) {
     test_int(101, va2[1]);
     test_int(102, va2[2]);
 
-    test_assert(compare(world, struct_with_vector_of_ints, ptr1, ptr2) == 0);
+    test_assert(cmp(world, struct_with_vector_of_ints, ptr1, ptr2) == 0);
 
     /* Test moving by forcing an archetype change: */
     ECS_TAG(world, MakeMeMove);
@@ -1903,7 +1910,7 @@ void RuntimeTypes_struct_with_vector_of_ints(void) {
     test_int(101, va3[1]);
     test_int(102, va3[2]);
 
-    test_assert(compare(world, struct_with_vector_of_ints, ptr1, ptr3) == 0);
+    test_assert(cmp(world, struct_with_vector_of_ints, ptr1, ptr3) == 0);
 
     /* Test deleting: */
     ecs_delete(world, e);
@@ -1952,7 +1959,7 @@ void RuntimeTypes_struct_with_vector_of_strings(void) {
     test_str("String101", va2[1]);
     test_str("String102", va2[2]);
 
-    test_assert(compare(world, struct_with_vector_of_strings, ptr1, ptr2) == 0);
+    test_assert(cmp(world, struct_with_vector_of_strings, ptr1, ptr2) == 0);
 
     /* Test moving by forcing an archetype change: */
     ECS_TAG(world, MakeMeMove);
@@ -1966,7 +1973,7 @@ void RuntimeTypes_struct_with_vector_of_strings(void) {
     test_str("String101", va3[1]);
     test_str("String102", va3[2]);
 
-    test_assert(compare(world, struct_with_vector_of_strings, ptr1, ptr3) == 0);
+    test_assert(cmp(world, struct_with_vector_of_strings, ptr1, ptr3) == 0);
 
     /* Test deleting: */
     ecs_delete(world, e);
@@ -2079,7 +2086,7 @@ void RuntimeTypes_nested_struct_with_vector_of_ints(void) {
         test_int(110, vcc[2]);
     }
 
-    test_assert(compare(world, nested_struct_with_vector_of_ints, ptr1, ptr2) == 0);
+    test_assert(cmp(world, nested_struct_with_vector_of_ints, ptr1, ptr2) == 0);
 
     /* Test moving by forcing an archetype change: */
     ECS_TAG(world, MakeMeMove);
@@ -2113,7 +2120,7 @@ void RuntimeTypes_nested_struct_with_vector_of_ints(void) {
         test_int(110, vcc[2]);
     }
 
-    test_assert(compare(world, nested_struct_with_vector_of_ints, ptr1, ptr3) == 0);
+    test_assert(cmp(world, nested_struct_with_vector_of_ints, ptr1, ptr3) == 0);
 
     /* Test deleting: */
     ecs_delete(world, e);
@@ -2226,7 +2233,7 @@ void RuntimeTypes_nested_struct_with_vector_of_strings(void) {
         test_str("String110", vcc[2]);
     }
 
-    test_assert(compare(world, nested_struct_with_vector_of_strings, ptr1, ptr2) == 0);
+    test_assert(cmp(world, nested_struct_with_vector_of_strings, ptr1, ptr2) == 0);
 
     /* Test moving by forcing an archetype change: */
     ECS_TAG(world, MakeMeMove);
@@ -2260,7 +2267,7 @@ void RuntimeTypes_nested_struct_with_vector_of_strings(void) {
         test_str("String110", vcc[2]);
     }
 
-    test_assert(compare(world, nested_struct_with_vector_of_strings, ptr1, ptr3) == 0);
+    test_assert(cmp(world, nested_struct_with_vector_of_strings, ptr1, ptr3) == 0);
 
     /* Test deleting: */
     ecs_delete(world, e);
@@ -2290,7 +2297,7 @@ void RuntimeTypes_array_of_ints(void) {
     test_int(101, arr2[1]);
     test_int(102, arr2[2]);
 
-    test_assert(compare(world, array_of_ints, arr1, arr2) == 0);
+    test_assert(cmp(world, array_of_ints, arr1, arr2) == 0);
 
     /* Test moving by forcing an archetype change: */
     ECS_TAG(world, MakeMeMove);
@@ -2300,7 +2307,7 @@ void RuntimeTypes_array_of_ints(void) {
     test_int(101, arr3[1]);
     test_int(102, arr3[2]);
 
-    test_assert(compare(world, array_of_ints, arr1, arr3) == 0);
+    test_assert(cmp(world, array_of_ints, arr1, arr3) == 0);
 
     /* Test deleting: */
     ecs_delete(world, e);
@@ -2330,7 +2337,7 @@ void RuntimeTypes_array_of_strings(void) {
     test_str("String101", arr2[1]);
     test_str("String102", arr2[2]);
 
-    test_assert(compare(world, array_of_strings, arr1, arr2) == 0);
+    test_assert(cmp(world, array_of_strings, arr1, arr2) == 0);
 
     /* Test moving by forcing an archetype change: */
     ECS_TAG(world, MakeMeMove);
@@ -2340,7 +2347,7 @@ void RuntimeTypes_array_of_strings(void) {
     test_str("String101", arr3[1]);
     test_str("String102", arr3[2]);
 
-    test_assert(compare(world, array_of_strings, arr1, arr3) == 0);
+    test_assert(cmp(world, array_of_strings, arr1, arr3) == 0);
 
     /* Test deleting: */
     ecs_delete(world, e);
@@ -2390,7 +2397,7 @@ void RuntimeTypes_array_of_struct_with_ints(void) {
     test_int(104, arr2[2].a);
     test_int(105, arr2[2].b);
 
-    test_assert(compare(world, array_of_struct_with_ints, arr1, arr2) == 0);
+    test_assert(cmp(world, array_of_struct_with_ints, arr1, arr2) == 0);
 
     /* Test moving by forcing an archetype change: */
     ECS_TAG(world, MakeMeMove);
@@ -2404,7 +2411,7 @@ void RuntimeTypes_array_of_struct_with_ints(void) {
     test_int(104, arr3[2].a);
     test_int(105, arr3[2].b);
 
-    test_assert(compare(world, array_of_struct_with_ints, arr1, arr3) == 0);
+    test_assert(cmp(world, array_of_struct_with_ints, arr1, arr3) == 0);
 
     /* Test deleting: */
     ecs_delete(world, e);
@@ -2462,7 +2469,7 @@ void RuntimeTypes_array_of_struct_with_strings(void) {
     test_int(107, arr2[2].b);
     test_str("String108", arr2[2].c);
 
-    test_assert(compare(world, array_of_struct_with_strings, arr1, arr2) == 0);
+    test_assert(cmp(world, array_of_struct_with_strings, arr1, arr2) == 0);
 
     /* Test moving by forcing an archetype change: */
     ECS_TAG(world, MakeMeMove);
@@ -2479,7 +2486,7 @@ void RuntimeTypes_array_of_struct_with_strings(void) {
     test_int(107, arr3[2].b);
     test_str("String108", arr3[2].c);
 
-    test_assert(compare(world, array_of_struct_with_strings, arr1, arr3) == 0);
+    test_assert(cmp(world, array_of_struct_with_strings, arr1, arr3) == 0);
 
     /* Test deleting: */
     ecs_delete(world, e);
@@ -2535,7 +2542,7 @@ void RuntimeTypes_array_of_struct_with_opaques(void) {
     test_int(101, arr2[1].a.value);
     test_int(102, arr2[2].a.value);
 
-    test_assert(compare(world, array_of_struct_with_opaques, arr1, arr2) == 0);
+    test_assert(cmp(world, array_of_struct_with_opaques, arr1, arr2) == 0);
 
     /* 6 resource(s) should be in use now */
     test_int(6, initial_resources - resources_left());
@@ -2549,7 +2556,7 @@ void RuntimeTypes_array_of_struct_with_opaques(void) {
     test_int(101, arr3[1].a.value);
     test_int(102, arr3[2].a.value);
 
-    test_assert(compare(world, array_of_struct_with_opaques, arr1, arr3) == 0);
+    test_assert(cmp(world, array_of_struct_with_opaques, arr1, arr3) == 0);
 
     /* 6 resource(s) should still be in use after a move */
     test_int(6, initial_resources - resources_left());
@@ -2605,7 +2612,7 @@ void RuntimeTypes_array_of_array_of_strings(void) {
         test_str("String102", arr2[i][2]);
     }
 
-    test_assert(compare(world, array_of_array_of_strings, arr1, arr2) == 0);
+    test_assert(cmp(world, array_of_array_of_strings, arr1, arr2) == 0);
 
     /* Test moving by forcing an archetype change: */
     ECS_TAG(world, MakeMeMove);
@@ -2618,7 +2625,7 @@ void RuntimeTypes_array_of_array_of_strings(void) {
         test_str("String102", arr3[i][2]);
     }
 
-    test_assert(compare(world, array_of_array_of_strings, arr1, arr3) == 0);
+    test_assert(cmp(world, array_of_array_of_strings, arr1, arr3) == 0);
 
     /* Test deleting: */
     ecs_delete(world, e);
@@ -2686,7 +2693,7 @@ void RuntimeTypes_array_of_array_of_struct_with_strings(void) {
         test_str("String108", arr2[i][2].c);
     }
 
-    test_assert(compare(world, array_of_array_of_struct_with_strings, arr1, arr2) == 0);
+    test_assert(cmp(world, array_of_array_of_struct_with_strings, arr1, arr2) == 0);
 
     /* Test moving by forcing an archetype change: */
     ECS_TAG(world, MakeMeMove);
@@ -2706,7 +2713,7 @@ void RuntimeTypes_array_of_array_of_struct_with_strings(void) {
         test_str("String108", arr3[i][2].c);
     }
 
-    test_assert(compare(world, array_of_array_of_struct_with_strings, arr1, arr3) == 0);
+    test_assert(cmp(world, array_of_array_of_struct_with_strings, arr1, arr3) == 0);
 
     /* Test deleting: */
     ecs_delete(world, e);
@@ -2786,7 +2793,7 @@ void RuntimeTypes_array_of_vectors_of_ints(void) {
         test_int(108, v[2]);
     }
 
-    test_assert(compare(world, array_of_vectors_of_ints, arr1, arr2) == 0);
+    test_assert(cmp(world, array_of_vectors_of_ints, arr1, arr2) == 0);
 
     /* Test moving by forcing an archetype change: */
     ECS_TAG(world, MakeMeMove);
@@ -2817,7 +2824,7 @@ void RuntimeTypes_array_of_vectors_of_ints(void) {
         test_int(108, v[2]);
     }
 
-    test_assert(compare(world, array_of_vectors_of_ints, arr1, arr3) == 0);
+    test_assert(cmp(world, array_of_vectors_of_ints, arr1, arr3) == 0);
 
     /* Test deleting: */
     ecs_delete(world, e);
@@ -2898,7 +2905,7 @@ void RuntimeTypes_array_of_vectors_of_strings(void) {
         test_str("String108", v[2]);
     }
 
-    test_assert(compare(world, array_of_vectors_of_strings, arr1, arr2) == 0);
+    test_assert(cmp(world, array_of_vectors_of_strings, arr1, arr2) == 0);
 
     /* Test moving by forcing an archetype change: */
     ECS_TAG(world, MakeMeMove);
@@ -2930,7 +2937,7 @@ void RuntimeTypes_array_of_vectors_of_strings(void) {
         test_str("String108", v[2]);
     }
 
-    test_assert(compare(world, array_of_vectors_of_strings, arr1, arr3) == 0);
+    test_assert(cmp(world, array_of_vectors_of_strings, arr1, arr3) == 0);
 
     /* Test deleting: */
     ecs_delete(world, e);
@@ -2974,7 +2981,7 @@ void RuntimeTypes_array_of_opaque(void) {
     test_int(101, arr2[1].value);
     test_int(102, arr2[2].value);
 
-    test_assert(compare(world, array_of_opaque, arr1, arr2) == 0);
+    test_assert(cmp(world, array_of_opaque, arr1, arr2) == 0);
 
     /* 6 resource(s) should be in use now */
     test_int(6, initial_resources - resources_left());
@@ -2987,7 +2994,7 @@ void RuntimeTypes_array_of_opaque(void) {
     test_int(101, arr3[1].value);
     test_int(102, arr3[2].value);
 
-    test_assert(compare(world, array_of_opaque, arr1, arr3) == 0);
+    test_assert(cmp(world, array_of_opaque, arr1, arr3) == 0);
 
     /* 6 resource(s) should still be in use after a move */
     test_int(6, initial_resources - resources_left());
@@ -3044,7 +3051,7 @@ void RuntimeTypes_vector_of_ints(void) {
         test_int(102, v[2]);
     }
 
-    test_assert(compare(world, vector_of_ints, vec1, vec2) == 0);
+    test_assert(cmp(world, vector_of_ints, vec1, vec2) == 0);
 
     /* Test moving by forcing an archetype change: */
     ECS_TAG(world, MakeMeMove);
@@ -3059,7 +3066,7 @@ void RuntimeTypes_vector_of_ints(void) {
         test_int(102, v[2]);
     }
 
-    test_assert(compare(world, vector_of_ints, vec1, vec3) == 0);
+    test_assert(cmp(world, vector_of_ints, vec1, vec3) == 0);
 
     /* Test deleting: */
     ecs_delete(world, e);
@@ -3100,7 +3107,7 @@ void RuntimeTypes_vector_of_strings(void) {
         test_str("String102", v[2]);
     }
 
-    test_assert(compare(world, vector_of_strings, vec1, vec2) == 0);
+    test_assert(cmp(world, vector_of_strings, vec1, vec2) == 0);
 
     /* Test moving by forcing an archetype change: */
     ECS_TAG(world, MakeMeMove);
@@ -3115,7 +3122,7 @@ void RuntimeTypes_vector_of_strings(void) {
         test_str("String102", v[2]);
     }
 
-    test_assert(compare(world, vector_of_strings, vec1, vec3) == 0);
+    test_assert(cmp(world, vector_of_strings, vec1, vec3) == 0);
 
     /* Test deleting: */
     ecs_delete(world, e);
@@ -3173,7 +3180,7 @@ void RuntimeTypes_vector_of_struct_with_ints(void) {
         test_int(104, v[2].a);
         test_int(105, v[2].b);
     }
-    test_assert(compare(world, vector_of_struct_with_ints, vec1, vec2) == 0);
+    test_assert(cmp(world, vector_of_struct_with_ints, vec1, vec2) == 0);
 
 
     /* Test moving by forcing an archetype change: */
@@ -3191,7 +3198,7 @@ void RuntimeTypes_vector_of_struct_with_ints(void) {
         test_int(104, v[2].a);
         test_int(105, v[2].b);
     }
-    test_assert(compare(world, vector_of_struct_with_ints, vec1, vec3) == 0);
+    test_assert(cmp(world, vector_of_struct_with_ints, vec1, vec3) == 0);
 
     /* Test deleting: */
     ecs_delete(world, e);
@@ -3257,7 +3264,7 @@ void RuntimeTypes_vector_of_struct_with_strings(void) {
         test_int(107, v[2].b);
         test_str("String108", v[2].c);
     }
-    test_assert(compare(world, vector_of_struct_with_strings, vec1, vec2) == 0);
+    test_assert(cmp(world, vector_of_struct_with_strings, vec1, vec2) == 0);
 
     /* Test moving by forcing an archetype change: */
     ECS_TAG(world, MakeMeMove);
@@ -3277,7 +3284,7 @@ void RuntimeTypes_vector_of_struct_with_strings(void) {
         test_int(107, v[2].b);
         test_str("String108", v[2].c);
     }
-    test_assert(compare(world, vector_of_struct_with_strings, vec1, vec3) == 0);
+    test_assert(cmp(world, vector_of_struct_with_strings, vec1, vec3) == 0);
 
     /* Test deleting: */
     ecs_delete(world, e);
@@ -3327,7 +3334,7 @@ void RuntimeTypes_vector_of_arrays_of_strings(void) {
             test_str("String102", v[i][2]);
         }
     }
-    test_assert(compare(world, vector_of_arrays_of_strings, vec1, vec2) == 0);
+    test_assert(cmp(world, vector_of_arrays_of_strings, vec1, vec2) == 0);
 
     /* Test moving by forcing an archetype change: */
     ECS_TAG(world, MakeMeMove);
@@ -3345,7 +3352,7 @@ void RuntimeTypes_vector_of_arrays_of_strings(void) {
             test_str("String102", v[i][2]);
         }
     }
-    test_assert(compare(world, vector_of_arrays_of_strings, vec1, vec3) == 0);
+    test_assert(cmp(world, vector_of_arrays_of_strings, vec1, vec3) == 0);
 
     /* Test deleting: */
     ecs_delete(world, e);
@@ -3398,7 +3405,7 @@ void RuntimeTypes_vector_of_opaque(void) {
         test_int(101, v[1].value);
         test_int(102, v[2].value);
     }
-    test_assert(compare(world, vector_of_opaque, vec1, vec2) == 0);
+    test_assert(cmp(world, vector_of_opaque, vec1, vec2) == 0);
 
     /* 6 resource(s) should be in use now */
     test_int(6, initial_resources - resources_left());
@@ -3415,7 +3422,7 @@ void RuntimeTypes_vector_of_opaque(void) {
         test_int(101, v[1].value);
         test_int(102, v[2].value);
     }
-    test_assert(compare(world, vector_of_opaque, vec1, vec3) == 0);
+    test_assert(cmp(world, vector_of_opaque, vec1, vec3) == 0);
 
     /* 6 resource(s) should still be in use after a move */
     test_int(6, initial_resources - resources_left());
