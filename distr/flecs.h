@@ -3314,7 +3314,7 @@ typedef void (*ecs_move_t)(
     const ecs_type_info_t *type_info);
 
 /** Compare hook to compare component instances */
-typedef int (*ecs_comp_t)(
+typedef int (*ecs_cmp_t)(
     const void *a_ptr,
     const void *b_ptr,
     const ecs_type_info_t *type_info);
@@ -3545,7 +3545,7 @@ struct ecs_observer_t {
 #define ECS_TYPE_HOOK_MOVE_CTOR              (1 << 5)
 #define ECS_TYPE_HOOK_CTOR_MOVE_DTOR         (1 << 6)
 #define ECS_TYPE_HOOK_MOVE_DTOR              (1 << 7)
-#define ECS_TYPE_HOOK_COMP                   (1 << 8)
+#define ECS_TYPE_HOOK_CMP                    (1 << 8)
 
 
 /* Flags that can be used to set/check which hooks of a type are invalid */
@@ -3557,20 +3557,20 @@ struct ecs_observer_t {
 #define ECS_TYPE_HOOK_MOVE_CTOR_ILLEGAL      (1 << 14)
 #define ECS_TYPE_HOOK_CTOR_MOVE_DTOR_ILLEGAL (1 << 15)
 #define ECS_TYPE_HOOK_MOVE_DTOR_ILLEGAL      (1 << 16)
-#define ECS_TYPE_HOOK_COMP_ILLEGAL           (1 << 17)
+#define ECS_TYPE_HOOK_CMP_ILLEGAL            (1 << 17)
 
 /* All valid hook flags */
 #define ECS_TYPE_HOOKS (ECS_TYPE_HOOK_CTOR|ECS_TYPE_HOOK_DTOR|\
     ECS_TYPE_HOOK_COPY|ECS_TYPE_HOOK_MOVE|ECS_TYPE_HOOK_COPY_CTOR|\
     ECS_TYPE_HOOK_MOVE_CTOR|ECS_TYPE_HOOK_CTOR_MOVE_DTOR|\
-    ECS_TYPE_HOOK_MOVE_DTOR|ECS_TYPE_HOOK_COMP)
+    ECS_TYPE_HOOK_MOVE_DTOR|ECS_TYPE_HOOK_CMP)
 
 /* All invalid hook flags */
 #define ECS_TYPE_HOOKS_ILLEGAL (ECS_TYPE_HOOK_CTOR_ILLEGAL|\
     ECS_TYPE_HOOK_DTOR_ILLEGAL|ECS_TYPE_HOOK_COPY_ILLEGAL|\
     ECS_TYPE_HOOK_MOVE_ILLEGAL|ECS_TYPE_HOOK_COPY_CTOR_ILLEGAL|\
     ECS_TYPE_HOOK_MOVE_CTOR_ILLEGAL|ECS_TYPE_HOOK_CTOR_MOVE_DTOR_ILLEGAL|\
-    ECS_TYPE_HOOK_MOVE_DTOR_ILLEGAL|ECS_TYPE_HOOK_COMP_ILLEGAL)
+    ECS_TYPE_HOOK_MOVE_DTOR_ILLEGAL|ECS_TYPE_HOOK_CMP_ILLEGAL)
 
 struct ecs_type_hooks_t {
     ecs_xtor_t ctor;            /**< ctor */
@@ -3597,8 +3597,8 @@ struct ecs_type_hooks_t {
     ecs_move_t move_dtor;
 
     /** Compare hook */
-    ecs_comp_t comp;
-    
+    ecs_cmp_t cmp;
+
     /** Hook flags.
      * Indicates which hooks are set for the type, and which hooks are illegal.
      * When an ILLEGAL flag is set when calling ecs_set_hooks() a hook callback
@@ -20624,14 +20624,15 @@ int compare_impl(const void *a, const void *b, const ecs_type_info_t *) {
 template <typename T, if_t<
     has_operator_less<T>::value ||
     has_operator_greater<T>::value > = 0>
-ecs_comp_t compare() {
+ecs_cmp_t compare(ecs_flags32_t &) {
     return compare_impl<T>;
 }
 
 template <typename T, if_t<
     !has_operator_less<T>::value &&
     !has_operator_greater<T>::value > = 0>
-ecs_comp_t compare() {
+ecs_cmp_t compare(ecs_flags32_t &flags) {
+    flags |= ECS_TYPE_HOOK_CMP_ILLEGAL;
     return NULL;
 }
 
@@ -26982,10 +26983,7 @@ void register_lifecycle_actions(
     } 
 
     ecs_type_hooks_t cl{};
-    cl.comp = compare<T>();
-    if(cl.comp == NULL) {
-        cl.flags |= ECS_TYPE_HOOK_COMP_ILLEGAL;
-    }
+    cl.cmp = compare<T>(cl.flags);
     
     cl.flags &= ECS_TYPE_HOOKS_ILLEGAL;
     ecs_set_hooks_id(world, component, &cl); 
@@ -27012,10 +27010,7 @@ void register_lifecycle_actions(
     cl.ctor_move_dtor = ctor_move_dtor<T>(cl.flags);
     cl.move_dtor = move_dtor<T>(cl.flags);
 
-    cl.comp = compare<T>();
-    if(cl.comp == NULL) {
-        cl.flags |= ECS_TYPE_HOOK_COMP_ILLEGAL;
-    }
+    cl.cmp = compare<T>(cl.flags);
     
     cl.flags &= ECS_TYPE_HOOKS_ILLEGAL;
     ecs_set_hooks_id(world, component, &cl);

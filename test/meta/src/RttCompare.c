@@ -8,7 +8,7 @@ int cmp(const ecs_world_t *world, ecs_entity_t component, ecs_entity_t ea,
     const void *a = ecs_get_id(world, ea, component);
     const void *b = ecs_get_id(world, eb, component);
 
-    return ti->hooks.comp(a, b, ti);
+    return ti->hooks.cmp(a, b, ti);
 }
 
 typedef struct OpaqueType {
@@ -25,7 +25,7 @@ ecs_entity_t define_opaque_type(ecs_world_t *world) {
     ECS_COMPONENT(world, OpaqueType);
 
     ecs_type_hooks_t hooks = *ecs_get_hooks(world, OpaqueType);
-    hooks.comp = opaque_type_compare;
+    hooks.cmp = opaque_type_compare;
 
     ecs_set_hooks_id(world, ecs_id(OpaqueType), &hooks);
 

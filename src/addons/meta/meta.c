@@ -1621,7 +1621,7 @@ void FlecsMetaImport(
             .kind = primitive_kind\
         });\
         ecs_set_hooks(world, ecs_##type##_t, { \
-            .comp = ecs_compare_##type \
+            .cmp = ecs_compare_##type \
         })
 
     ECS_PRIMITIVE(world, bool, EcsBool);

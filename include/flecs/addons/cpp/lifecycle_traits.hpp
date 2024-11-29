@@ -460,14 +460,15 @@ int compare_impl(const void *a, const void *b, const ecs_type_info_t *) {
 template <typename T, if_t<
     has_operator_less<T>::value ||
     has_operator_greater<T>::value > = 0>
-ecs_comp_t compare() {
+ecs_cmp_t compare(ecs_flags32_t &) {
     return compare_impl<T>;
 }
 
 template <typename T, if_t<
     !has_operator_less<T>::value &&
     !has_operator_greater<T>::value > = 0>
-ecs_comp_t compare() {
+ecs_cmp_t compare(ecs_flags32_t &flags) {
+    flags |= ECS_TYPE_HOOK_CMP_ILLEGAL;
     return NULL;
 }
 

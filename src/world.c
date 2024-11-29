@@ -1324,9 +1324,9 @@ void ecs_set_hooks_id(
         h->move_dtor != flecs_move_ctor_illegal),
         ECS_INVALID_PARAMETER, "cannot specify both move dtor hook and illegal flag");
 
-    ecs_check(!(flags & ECS_TYPE_HOOK_COMP_ILLEGAL && 
-        h->comp != NULL && 
-        h->comp != flecs_comp_illegal),
+    ecs_check(!(flags & ECS_TYPE_HOOK_CMP_ILLEGAL && 
+        h->cmp != NULL && 
+        h->cmp != flecs_comp_illegal),
         ECS_INVALID_PARAMETER, "cannot specify both compare hook and illegal flag");
 
 
@@ -1367,7 +1367,7 @@ void ecs_set_hooks_id(
     if (h->move_ctor) ti->hooks.move_ctor = h->move_ctor;
     if (h->ctor_move_dtor) ti->hooks.ctor_move_dtor = h->ctor_move_dtor;
     if (h->move_dtor) ti->hooks.move_dtor = h->move_dtor;
-    if (h->comp) ti->hooks.comp = h->comp;
+    if (h->cmp) ti->hooks.cmp = h->cmp;
 
     if (h->on_add) ti->hooks.on_add = h->on_add;
     if (h->on_remove) ti->hooks.on_remove = h->on_remove;
@@ -1476,13 +1476,13 @@ void ecs_set_hooks_id(
     if (ti->hooks.move_dtor) ti->hooks.flags |= ECS_TYPE_HOOK_MOVE_DTOR;
     if (ti->hooks.copy) ti->hooks.flags |= ECS_TYPE_HOOK_COPY;
     if (ti->hooks.copy_ctor) ti->hooks.flags |= ECS_TYPE_HOOK_COPY_CTOR;
-    if (ti->hooks.comp) ti->hooks.flags |= ECS_TYPE_HOOK_COMP;
+    if (ti->hooks.cmp) ti->hooks.flags |= ECS_TYPE_HOOK_CMP;
 
     if(flags & ECS_TYPE_HOOK_CTOR_ILLEGAL) ti->hooks.ctor = flecs_ctor_illegal;
     if(flags & ECS_TYPE_HOOK_DTOR_ILLEGAL) ti->hooks.dtor = flecs_dtor_illegal;
     if(flags & ECS_TYPE_HOOK_COPY_ILLEGAL) ti->hooks.copy = flecs_copy_illegal;
     if(flags & ECS_TYPE_HOOK_MOVE_ILLEGAL) ti->hooks.move = flecs_move_illegal;
-    if(flags & ECS_TYPE_HOOK_COMP_ILLEGAL) ti->hooks.comp = flecs_comp_illegal;
+    if(flags & ECS_TYPE_HOOK_CMP_ILLEGAL) ti->hooks.cmp = flecs_comp_illegal;
 
     if(flags & ECS_TYPE_HOOK_COPY_CTOR_ILLEGAL) {
         ti->hooks.copy_ctor = flecs_copy_ctor_illegal;
