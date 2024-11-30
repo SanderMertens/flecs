@@ -215,6 +215,7 @@ const char* flecs_script_parse_rhs(
             case EcsTokShiftRight: 
             case EcsTokBracketOpen:
             case EcsTokMember:
+            case EcsTokParenOpen:
             {
                 ecs_script_token_kind_t oper = lookahead_token.kind;
 
@@ -255,6 +256,16 @@ const char* flecs_script_parse_rhs(
                         break;
                     });
 
+                    break;
+                }
+
+                case EcsTokParenOpen: {
+                    ecs_expr_function_t *result = flecs_expr_function(parser);
+                    result->left = *out;
+
+                    Parse_1(EcsTokParenClose, { break; });
+
+                    *out = (ecs_expr_node_t*)result;
                     break;
                 }
 

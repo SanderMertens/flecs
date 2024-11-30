@@ -104,6 +104,13 @@ typedef struct ecs_expr_member_t {
     uintptr_t offset;
 } ecs_expr_member_t;
 
+typedef struct ecs_expr_function_t {
+    ecs_expr_node_t node;
+    ecs_expr_node_t *left;
+    const char *function_name;
+    ecs_function_calldata_t calldata;
+} ecs_expr_function_t;
+
 typedef struct ecs_expr_element_t {
     ecs_expr_node_t node;
     ecs_expr_node_t *left;
@@ -169,6 +176,9 @@ ecs_expr_binary_t* flecs_expr_binary(
     ecs_script_parser_t *parser);
 
 ecs_expr_member_t* flecs_expr_member(
+    ecs_script_parser_t *parser);
+
+ecs_expr_function_t* flecs_expr_function(
     ecs_script_parser_t *parser);
 
 ecs_expr_element_t* flecs_expr_element(

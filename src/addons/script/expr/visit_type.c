@@ -49,12 +49,12 @@ static
 bool flecs_expr_is_type_integer(
     ecs_entity_t type)
 {
-    if      (type == ecs_id(ecs_bool_t)) return false;
-    else if (type == ecs_id(ecs_char_t)) return false;
-    else if (type == ecs_id(ecs_u8_t)) return false;
-    else if (type == ecs_id(ecs_u64_t)) return true;
-    else if (type == ecs_id(ecs_i64_t)) return true;
-    else if (type == ecs_id(ecs_f64_t)) return false;
+    if      (type == ecs_id(ecs_bool_t))   return false;
+    else if (type == ecs_id(ecs_char_t))   return false;
+    else if (type == ecs_id(ecs_u8_t))     return false;
+    else if (type == ecs_id(ecs_u64_t))    return true;
+    else if (type == ecs_id(ecs_i64_t))    return true;
+    else if (type == ecs_id(ecs_f64_t))    return false;
     else if (type == ecs_id(ecs_string_t)) return false;
     else if (type == ecs_id(ecs_entity_t)) return false;
     else return false;
@@ -64,12 +64,12 @@ static
 bool flecs_expr_is_type_number(
     ecs_entity_t type)
 {
-    if      (type == ecs_id(ecs_bool_t)) return false;
-    else if (type == ecs_id(ecs_char_t)) return false;
-    else if (type == ecs_id(ecs_u8_t)) return false;
-    else if (type == ecs_id(ecs_u64_t)) return true;
-    else if (type == ecs_id(ecs_i64_t)) return true;
-    else if (type == ecs_id(ecs_f64_t)) return true;
+    if      (type == ecs_id(ecs_bool_t))   return false;
+    else if (type == ecs_id(ecs_char_t))   return false;
+    else if (type == ecs_id(ecs_u8_t))     return false;
+    else if (type == ecs_id(ecs_u64_t))    return true;
+    else if (type == ecs_id(ecs_i64_t))    return true;
+    else if (type == ecs_id(ecs_f64_t))    return true;
     else if (type == ecs_id(ecs_string_t)) return false;
     else if (type == ecs_id(ecs_entity_t)) return false;
     else return false;
@@ -404,7 +404,9 @@ int flecs_expr_binary_visit_type(
         goto error;
     }
 
-    if (!flecs_expr_oper_valid_for_type(script->world, result_type, node->operator)) {
+    if (!flecs_expr_oper_valid_for_type(
+        script->world, result_type, node->operator)) 
+    {
         char *type_str = ecs_get_path(script->world, result_type);
         flecs_expr_visit_error(script, node, "invalid operator %s for type '%s'",
             flecs_script_token_str(node->operator), type_str);
@@ -465,6 +467,75 @@ int flecs_expr_variable_visit_type(
     node->var = var;
 
     *cur = ecs_meta_cursor(script->world, var->value.type, NULL);
+
+    return 0;
+error:
+    return -1;
+}
+
+static
+int flecs_expr_function_visit_type(
+    ecs_script_t *script,
+    ecs_expr_function_t *node,
+    ecs_meta_cursor_t *cur,
+    const ecs_script_expr_run_desc_t *desc)
+{
+    bool is_method = false;
+
+    if (node->left->kind == EcsExprIdentifier) {
+        /* If identifier contains '.' separator(s), this is a method call, 
+         * otherwise it's a regular function. */
+        ecs_expr_identifier_t *ident = (ecs_expr_identifier_t*)node->left;
+        char *last_elem = strrchr(ident->value, '.');
+        if (last_elem && last_elem != ident->value && last_elem[-1] != '\\') {
+            node->function_name = last_elem + 1;
+            last_elem[0] = '\0';
+            is_method = true;
+        }
+    } else if (node->left->kind == EcsExprMember) {
+        /* This is a method. Just like identifiers, method strings can contain
+         * separators. Split off last separator to get the method. */
+        ecs_expr_member_t *member = (ecs_expr_member_t*)node->left;
+        char *last_elem = strrchr(member->member_name, '.');
+        if (!last_elem) {
+            node->left = member->left;
+            node->function_name = member->member_name;
+        } else {
+            node->function_name = last_elem + 1;
+            last_elem[0] = '\0';
+        }
+        is_method = true;
+    }
+
+    if (flecs_script_expr_visit_type_priv(script, node->left, cur, desc)) {
+        goto error;
+    }
+
+    /* If this is a method, lookup function entity in scope of type */
+    ecs_world_t *world = script->world;
+    if (is_method) {
+        ecs_entity_t func = ecs_lookup_from(
+            world, node->left->type, node->function_name);
+        if (!func) {
+            flecs_expr_visit_error(script, node, 
+                "unresolved method identifier '%s'", node->function_name);
+            goto error;
+        }
+
+        const EcsScriptMethod *method = ecs_get(world, func, EcsScriptMethod);
+        if (!method) {
+            char *path = ecs_get_path(world, func);
+            flecs_expr_visit_error(script, node, 
+                "entity '%s' is not a valid method", path);
+            ecs_os_free(path);
+            goto error;
+        }
+
+        node->node.type = method->return_type;
+        node->calldata.function = func;
+        node->calldata.callback = method->callback;
+        node->calldata.ctx = method->ctx;
+    }
 
     return 0;
 error:
@@ -664,6 +735,11 @@ int flecs_script_expr_visit_type_priv(
         }
         break;
     case EcsExprFunction:
+        if (flecs_expr_function_visit_type(
+            script, (ecs_expr_function_t*)node, cur, desc)) 
+        {
+            goto error;
+        }
         break;
     case EcsExprMember:
         if (flecs_expr_member_visit_type(

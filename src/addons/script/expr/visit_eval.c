@@ -33,6 +33,9 @@ void flecs_expr_value_alloc(
     if (ti->size <= FLECS_EXPR_SMALL_DATA_SIZE) {
         if (!(ti->hooks.flags & ECS_TYPE_HOOK_DTOR)) {
             val->value.ptr = val->storage.small_data;
+        } else {
+            ecs_abort(ECS_UNSUPPORTED, 
+                "non-trivial temporary values not yet supported");
         }
     } else {
         ecs_abort(ECS_UNSUPPORTED, 
@@ -213,6 +216,40 @@ error:
 }
 
 static
+int flecs_expr_function_visit_eval(
+    ecs_script_t *script,
+    ecs_expr_function_t *node,
+    const ecs_script_expr_run_desc_t *desc,
+    ecs_eval_value_t *out)
+{
+    if (node->left) {
+        ecs_eval_value_t expr = {{0}};
+        if (flecs_script_expr_visit_eval_priv(script, node->left, desc, &expr)) {
+            goto error;
+        }
+
+        if (!out->value.ptr) {
+            flecs_expr_value_alloc(script, out, node->node.type_info);
+        }
+
+        ecs_function_ctx_t ctx = {
+            .world = script->world,
+            .function = node->calldata.function,
+            .ctx = node->calldata.ctx
+        };
+
+        ecs_assert(expr.value.ptr != NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(out->value.ptr != NULL, ECS_INTERNAL_ERROR, NULL);
+
+        node->calldata.callback(&ctx, 1, &expr.value, &out->value);
+    }
+
+    return 0;
+error:
+    return -1;
+}
+
+static
 int flecs_expr_member_visit_eval(
     ecs_script_t *script,
     ecs_expr_member_t *node,
@@ -348,6 +385,11 @@ int flecs_script_expr_visit_eval_priv(
         }
         break;
     case EcsExprFunction:
+        if (flecs_expr_function_visit_eval(
+            script, (ecs_expr_function_t*)node, desc, out)) 
+        {
+            goto error;
+        }
         break;
     case EcsExprMember:
         if (flecs_expr_member_visit_eval(
