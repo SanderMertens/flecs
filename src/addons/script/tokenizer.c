@@ -211,6 +211,7 @@ const char* flecs_script_identifier(
     ecs_assert(flecs_script_is_identifier(pos[0]), ECS_INTERNAL_ERROR, NULL);
     bool is_var = pos[0] == '$';
     char *outpos = parser->token_cur;
+
     do {
         char c = pos[0];
         bool is_ident = flecs_script_is_identifier(c) || 
@@ -239,8 +240,9 @@ const char* flecs_script_identifier(
                         indent --;
                     } else if (!c) {
                         ecs_parser_error(parser->script->pub.name, 
-                            parser->script->pub.code, pos - parser->script->pub.code, 
-                                "< without > in identifier");
+                            parser->script->pub.code, 
+                                pos - parser->script->pub.code, 
+                                    "< without > in identifier");
                         return NULL;
                     }
 
@@ -257,8 +259,10 @@ const char* flecs_script_identifier(
                 parser->token_cur = outpos + 1;
                 return pos;
             } else if (c == '>') {
-                ecs_parser_error(parser->script->pub.name, parser->script->pub.code,
-                    pos - parser->script->pub.code, "> without < in identifier");
+                ecs_parser_error(parser->script->pub.name, 
+                    parser->script->pub.code,
+                        pos - parser->script->pub.code, 
+                            "> without < in identifier");
                 return NULL;
             } else {
                 *outpos = '\0';

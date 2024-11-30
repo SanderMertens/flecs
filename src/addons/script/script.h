@@ -44,6 +44,12 @@ struct ecs_script_parser_t {
     ecs_term_ref_t *extra_args;
 };
 
+typedef struct ecs_function_calldata_t {
+    ecs_entity_t function;
+    ecs_function_callback_t callback;
+    void *ctx;
+} ecs_function_calldata_t;
+
 #include "ast.h"
 #include "expr/expr.h"
 #include "visit.h"
@@ -100,6 +106,9 @@ const char* flecs_term_parse(
     const char *expr,
     ecs_term_t *term,
     char *token_buffer);
+
+void flecs_script_register_builtin_functions(
+    ecs_world_t *world);
 
 #endif // FLECS_SCRIPT
 #endif // FLECS_SCRIPT_PRIVATE_H

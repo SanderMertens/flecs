@@ -4646,6 +4646,12 @@ struct ecs_script_parser_t {
     ecs_term_ref_t *extra_args;
 };
 
+typedef struct ecs_function_calldata_t {
+    ecs_entity_t function;
+    ecs_function_callback_t callback;
+    void *ctx;
+} ecs_function_calldata_t;
+
 /**
  * @file addons/script/ast.h
  * @brief Script AST.
@@ -4971,6 +4977,13 @@ typedef struct ecs_expr_member_t {
     uintptr_t offset;
 } ecs_expr_member_t;
 
+typedef struct ecs_expr_function_t {
+    ecs_expr_node_t node;
+    ecs_expr_node_t *left;
+    const char *function_name;
+    ecs_function_calldata_t calldata;
+} ecs_expr_function_t;
+
 typedef struct ecs_expr_element_t {
     ecs_expr_node_t node;
     ecs_expr_node_t *left;
@@ -5036,6 +5049,9 @@ ecs_expr_binary_t* flecs_expr_binary(
     ecs_script_parser_t *parser);
 
 ecs_expr_member_t* flecs_expr_member(
+    ecs_script_parser_t *parser);
+
+ecs_expr_function_t* flecs_expr_function(
     ecs_script_parser_t *parser);
 
 ecs_expr_element_t* flecs_expr_element(
@@ -5386,6 +5402,9 @@ const char* flecs_term_parse(
     const char *expr,
     ecs_term_t *term,
     char *token_buffer);
+
+void flecs_script_register_builtin_functions(
+    ecs_world_t *world);
 
 #endif // FLECS_SCRIPT
 #endif // FLECS_SCRIPT_PRIVATE_H
@@ -54871,6 +54890,124 @@ ecs_script_if_t* flecs_script_insert_if(
 #endif
 
 /**
+ * @file addons/script/builtin_functions.c
+ * @brief Builtin script functions.
+ */
+
+
+#ifdef FLECS_SCRIPT
+
+static
+void flecs_meta_entity_name(
+    const ecs_function_ctx_t *ctx,
+    int32_t argc,
+    const ecs_value_t *argv,
+    ecs_value_t *result) 
+{
+    ecs_entity_t entity = *(ecs_entity_t*)argv[0].ptr;
+    *(char**)result->ptr = ecs_get_name(ctx->world, entity);
+}
+
+static
+void flecs_meta_entity_path(
+    const ecs_function_ctx_t *ctx,
+    int32_t argc,
+    const ecs_value_t *argv,
+    ecs_value_t *result) 
+{
+    ecs_entity_t entity = *(ecs_entity_t*)argv[0].ptr;
+    *(char**)result->ptr = ecs_get_path(ctx->world, entity);
+}
+
+static
+void flecs_meta_entity_parent(
+    const ecs_function_ctx_t *ctx,
+    int32_t argc,
+    const ecs_value_t *argv,
+    ecs_value_t *result) 
+{
+    ecs_entity_t entity = *(ecs_entity_t*)argv[0].ptr;
+    *(ecs_entity_t*)result->ptr = ecs_get_parent(ctx->world, entity);
+}
+
+#ifdef FLECS_DOC
+
+static
+void flecs_meta_entity_doc_name(
+    const ecs_function_ctx_t *ctx,
+    int32_t argc,
+    const ecs_value_t *argv,
+    ecs_value_t *result) 
+{
+    ecs_entity_t entity = *(ecs_entity_t*)argv[0].ptr;
+    *(char**)result->ptr = ecs_doc_get_name(ctx->world, entity);
+}
+
+void flecs_script_register_builtin_doc_functions(
+    ecs_world_t *world)
+{
+    ecs_entity_t name = ecs_entity(world, {
+        .name = "doc_name",
+        .parent = ecs_id(ecs_entity_t),
+        .set = ecs_values(ecs_value(EcsScriptMethod, { 
+            .return_type = ecs_id(ecs_string_t),
+            .callback = flecs_meta_entity_doc_name
+        }))
+    });
+
+    ecs_doc_set_brief(world, name, "Returns entity doc name");
+}
+
+#else
+void flecs_script_register_builtin_doc_functions(
+    ecs_world_t *world)
+{
+    (void)world;
+}
+#endif
+
+void flecs_script_register_builtin_functions(
+    ecs_world_t *world)
+{
+    ecs_entity_t name = ecs_entity(world, {
+        .name = "name",
+        .parent = ecs_id(ecs_entity_t),
+        .set = ecs_values(ecs_value(EcsScriptMethod, { 
+            .return_type = ecs_id(ecs_string_t),
+            .callback = flecs_meta_entity_name
+        }))
+    });
+
+    ecs_doc_set_brief(world, name, "Returns entity name");
+
+    ecs_entity_t path = ecs_entity(world, {
+        .name = "path",
+        .parent = ecs_id(ecs_entity_t),
+        .set = ecs_values(ecs_value(EcsScriptMethod, { 
+            .return_type = ecs_id(ecs_string_t),
+            .callback = flecs_meta_entity_path
+        }))
+    });
+
+    ecs_doc_set_brief(world, path, "Returns entity path");
+
+    ecs_entity_t parent = ecs_entity(world, {
+        .name = "parent",
+        .parent = ecs_id(ecs_entity_t),
+        .set = ecs_values(ecs_value(EcsScriptMethod, { 
+            .return_type = ecs_id(ecs_entity_t),
+            .callback = flecs_meta_entity_parent
+        }))
+    });
+
+    ecs_doc_set_brief(world, parent, "Returns entity parent");
+
+    flecs_script_register_builtin_doc_functions(world);
+}
+
+#endif
+
+/**
  * @file addons/script/interpolate.c
  * @brief String interpolation.
  */
@@ -56920,6 +57057,8 @@ error:
 #ifdef FLECS_SCRIPT
 
 ECS_COMPONENT_DECLARE(EcsScript);
+ECS_COMPONENT_DECLARE(EcsScriptFunction);
+ECS_COMPONENT_DECLARE(EcsScriptMethod);
 
 static
 ECS_MOVE(EcsScript, dst, src, {
@@ -57180,6 +57319,10 @@ void FlecsScriptImport(
     ecs_set_name_prefix(world, "Ecs");
     ECS_COMPONENT_DEFINE(world, EcsScript);
 
+    ecs_set_name_prefix(world, "EcsScript");
+    ECS_COMPONENT_DEFINE(world, EcsScriptFunction);
+    ECS_COMPONENT_DEFINE(world, EcsScriptMethod);
+
     ecs_set_hooks(world, EcsScript, {
         .ctor = flecs_default_ctor,
         .move = ecs_move(EcsScript),
@@ -57203,9 +57346,25 @@ void FlecsScriptImport(
         .type.serialize = EcsScript_serialize
     });
 
+    ecs_struct(world, {
+        .entity = ecs_id(EcsScriptFunction),
+        .members = {
+            { .name = "return_type", .type = ecs_id(ecs_entity_t) }
+        }
+    });
+
+    ecs_struct(world, {
+        .entity = ecs_id(EcsScriptMethod),
+        .members = {
+            { .name = "return_type", .type = ecs_id(ecs_entity_t) }
+        }
+    });
+
     ecs_add_id(world, ecs_id(EcsScript), EcsPairIsTag);
     ecs_add_id(world, ecs_id(EcsScript), EcsPrivate);
     ecs_add_pair(world, ecs_id(EcsScript), EcsOnInstantiate, EcsDontInherit);
+
+    flecs_script_register_builtin_functions(world);
 }
 
 #endif
@@ -58308,6 +58467,7 @@ const char* flecs_script_identifier(
     ecs_assert(flecs_script_is_identifier(pos[0]), ECS_INTERNAL_ERROR, NULL);
     bool is_var = pos[0] == '$';
     char *outpos = parser->token_cur;
+
     do {
         char c = pos[0];
         bool is_ident = flecs_script_is_identifier(c) || 
@@ -58336,8 +58496,9 @@ const char* flecs_script_identifier(
                         indent --;
                     } else if (!c) {
                         ecs_parser_error(parser->script->pub.name, 
-                            parser->script->pub.code, pos - parser->script->pub.code, 
-                                "< without > in identifier");
+                            parser->script->pub.code, 
+                                pos - parser->script->pub.code, 
+                                    "< without > in identifier");
                         return NULL;
                     }
 
@@ -58354,8 +58515,10 @@ const char* flecs_script_identifier(
                 parser->token_cur = outpos + 1;
                 return pos;
             } else if (c == '>') {
-                ecs_parser_error(parser->script->pub.name, parser->script->pub.code,
-                    pos - parser->script->pub.code, "> without < in identifier");
+                ecs_parser_error(parser->script->pub.name, 
+                    parser->script->pub.code,
+                        pos - parser->script->pub.code, 
+                            "> without < in identifier");
                 return NULL;
             } else {
                 *outpos = '\0';
@@ -73313,6 +73476,14 @@ ecs_expr_member_t* flecs_expr_member(
     return result;
 }
 
+ecs_expr_function_t* flecs_expr_function(
+    ecs_script_parser_t *parser)
+{
+    ecs_expr_function_t *result = flecs_expr_ast_new(
+        parser, ecs_expr_function_t, EcsExprFunction);
+    return result;
+}
+
 ecs_expr_element_t* flecs_expr_element(
     ecs_script_parser_t *parser)
 {
@@ -73553,6 +73724,7 @@ const char* flecs_script_parse_rhs(
             case EcsTokShiftRight: 
             case EcsTokBracketOpen:
             case EcsTokMember:
+            case EcsTokParenOpen:
             {
                 ecs_script_token_kind_t oper = lookahead_token.kind;
 
@@ -73593,6 +73765,16 @@ const char* flecs_script_parse_rhs(
                         break;
                     });
 
+                    break;
+                }
+
+                case EcsTokParenOpen: {
+                    ecs_expr_function_t *result = flecs_expr_function(parser);
+                    result->left = *out;
+
+                    Parse_1(EcsTokParenClose, { break; });
+
+                    *out = (ecs_expr_node_t*)result;
                     break;
                 }
 
@@ -74027,6 +74209,9 @@ void flecs_expr_value_alloc(
     if (ti->size <= FLECS_EXPR_SMALL_DATA_SIZE) {
         if (!(ti->hooks.flags & ECS_TYPE_HOOK_DTOR)) {
             val->value.ptr = val->storage.small_data;
+        } else {
+            ecs_abort(ECS_UNSUPPORTED, 
+                "non-trivial temporary values not yet supported");
         }
     } else {
         ecs_abort(ECS_UNSUPPORTED, 
@@ -74207,6 +74392,40 @@ error:
 }
 
 static
+int flecs_expr_function_visit_eval(
+    ecs_script_t *script,
+    ecs_expr_function_t *node,
+    const ecs_script_expr_run_desc_t *desc,
+    ecs_eval_value_t *out)
+{
+    if (node->left) {
+        ecs_eval_value_t expr = {{0}};
+        if (flecs_script_expr_visit_eval_priv(script, node->left, desc, &expr)) {
+            goto error;
+        }
+
+        if (!out->value.ptr) {
+            flecs_expr_value_alloc(script, out, node->node.type_info);
+        }
+
+        ecs_function_ctx_t ctx = {
+            .world = script->world,
+            .function = node->calldata.function,
+            .ctx = node->calldata.ctx
+        };
+
+        ecs_assert(expr.value.ptr != NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(out->value.ptr != NULL, ECS_INTERNAL_ERROR, NULL);
+
+        node->calldata.callback(&ctx, 1, &expr.value, &out->value);
+    }
+
+    return 0;
+error:
+    return -1;
+}
+
+static
 int flecs_expr_member_visit_eval(
     ecs_script_t *script,
     ecs_expr_member_t *node,
@@ -74342,6 +74561,11 @@ int flecs_script_expr_visit_eval_priv(
         }
         break;
     case EcsExprFunction:
+        if (flecs_expr_function_visit_eval(
+            script, (ecs_expr_function_t*)node, desc, out)) 
+        {
+            goto error;
+        }
         break;
     case EcsExprMember:
         if (flecs_expr_member_visit_eval(
@@ -74716,6 +74940,22 @@ error:
     return -1;
 }
 
+int flecs_expr_function_visit_fold(
+    ecs_script_t *script,
+    ecs_expr_node_t **node_ptr,
+    const ecs_script_expr_run_desc_t *desc)
+{
+    ecs_expr_function_t *node = (ecs_expr_function_t*)*node_ptr;
+
+    if (flecs_script_expr_visit_fold(script, &node->left, desc)) {
+        goto error;
+    }
+
+    return 0;
+error:
+    return -1;
+}
+
 int flecs_expr_member_visit_fold(
     ecs_script_t *script,
     ecs_expr_node_t **node_ptr,
@@ -74786,6 +75026,9 @@ int flecs_script_expr_visit_fold(
     case EcsExprVariable:
         break;
     case EcsExprFunction:
+        if (flecs_expr_function_visit_fold(script, node_ptr, desc)) {
+            goto error;
+        }
         break;
     case EcsExprMember:
         if (flecs_expr_member_visit_fold(script, node_ptr, desc)) {
@@ -74943,6 +75186,22 @@ int flecs_expr_member_to_str(
     return 0;
 }
 
+int flecs_expr_function_to_str(
+    ecs_expr_str_visitor_t *v,
+    const ecs_expr_function_t *node)
+{
+    if (node->left) {
+        if (flecs_expr_node_to_str(v, node->left)) {
+            return -1;
+        }
+        ecs_strbuf_appendlit(v->buf, ".");
+    }
+
+    ecs_strbuf_append(v->buf, "%s%s()%s", 
+        ECS_CYAN, node->function_name, ECS_NORMAL);
+    return 0;
+}
+
 int flecs_expr_element_to_str(
     ecs_expr_str_visitor_t *v,
     const ecs_expr_element_t *node)
@@ -75017,6 +75276,9 @@ int flecs_expr_node_to_str(
         }
         break;
     case EcsExprFunction:
+        if (flecs_expr_function_to_str(v, (ecs_expr_function_t*)node)) {
+            goto error;
+        }
         break;
     case EcsExprMember:
         if (flecs_expr_member_to_str(v, (ecs_expr_member_t*)node)) {
@@ -75114,12 +75376,12 @@ static
 bool flecs_expr_is_type_integer(
     ecs_entity_t type)
 {
-    if      (type == ecs_id(ecs_bool_t)) return false;
-    else if (type == ecs_id(ecs_char_t)) return false;
-    else if (type == ecs_id(ecs_u8_t)) return false;
-    else if (type == ecs_id(ecs_u64_t)) return true;
-    else if (type == ecs_id(ecs_i64_t)) return true;
-    else if (type == ecs_id(ecs_f64_t)) return false;
+    if      (type == ecs_id(ecs_bool_t))   return false;
+    else if (type == ecs_id(ecs_char_t))   return false;
+    else if (type == ecs_id(ecs_u8_t))     return false;
+    else if (type == ecs_id(ecs_u64_t))    return true;
+    else if (type == ecs_id(ecs_i64_t))    return true;
+    else if (type == ecs_id(ecs_f64_t))    return false;
     else if (type == ecs_id(ecs_string_t)) return false;
     else if (type == ecs_id(ecs_entity_t)) return false;
     else return false;
@@ -75129,12 +75391,12 @@ static
 bool flecs_expr_is_type_number(
     ecs_entity_t type)
 {
-    if      (type == ecs_id(ecs_bool_t)) return false;
-    else if (type == ecs_id(ecs_char_t)) return false;
-    else if (type == ecs_id(ecs_u8_t)) return false;
-    else if (type == ecs_id(ecs_u64_t)) return true;
-    else if (type == ecs_id(ecs_i64_t)) return true;
-    else if (type == ecs_id(ecs_f64_t)) return true;
+    if      (type == ecs_id(ecs_bool_t))   return false;
+    else if (type == ecs_id(ecs_char_t))   return false;
+    else if (type == ecs_id(ecs_u8_t))     return false;
+    else if (type == ecs_id(ecs_u64_t))    return true;
+    else if (type == ecs_id(ecs_i64_t))    return true;
+    else if (type == ecs_id(ecs_f64_t))    return true;
     else if (type == ecs_id(ecs_string_t)) return false;
     else if (type == ecs_id(ecs_entity_t)) return false;
     else return false;
@@ -75469,7 +75731,9 @@ int flecs_expr_binary_visit_type(
         goto error;
     }
 
-    if (!flecs_expr_oper_valid_for_type(script->world, result_type, node->operator)) {
+    if (!flecs_expr_oper_valid_for_type(
+        script->world, result_type, node->operator)) 
+    {
         char *type_str = ecs_get_path(script->world, result_type);
         flecs_expr_visit_error(script, node, "invalid operator %s for type '%s'",
             flecs_script_token_str(node->operator), type_str);
@@ -75530,6 +75794,75 @@ int flecs_expr_variable_visit_type(
     node->var = var;
 
     *cur = ecs_meta_cursor(script->world, var->value.type, NULL);
+
+    return 0;
+error:
+    return -1;
+}
+
+static
+int flecs_expr_function_visit_type(
+    ecs_script_t *script,
+    ecs_expr_function_t *node,
+    ecs_meta_cursor_t *cur,
+    const ecs_script_expr_run_desc_t *desc)
+{
+    bool is_method = false;
+
+    if (node->left->kind == EcsExprIdentifier) {
+        /* If identifier contains '.' separator(s), this is a method call, 
+         * otherwise it's a regular function. */
+        ecs_expr_identifier_t *ident = (ecs_expr_identifier_t*)node->left;
+        char *last_elem = strrchr(ident->value, '.');
+        if (last_elem && last_elem != ident->value && last_elem[-1] != '\\') {
+            node->function_name = last_elem + 1;
+            last_elem[0] = '\0';
+            is_method = true;
+        }
+    } else if (node->left->kind == EcsExprMember) {
+        /* This is a method. Just like identifiers, method strings can contain
+         * separators. Split off last separator to get the method. */
+        ecs_expr_member_t *member = (ecs_expr_member_t*)node->left;
+        char *last_elem = strrchr(member->member_name, '.');
+        if (!last_elem) {
+            node->left = member->left;
+            node->function_name = member->member_name;
+        } else {
+            node->function_name = last_elem + 1;
+            last_elem[0] = '\0';
+        }
+        is_method = true;
+    }
+
+    if (flecs_script_expr_visit_type_priv(script, node->left, cur, desc)) {
+        goto error;
+    }
+
+    /* If this is a method, lookup function entity in scope of type */
+    ecs_world_t *world = script->world;
+    if (is_method) {
+        ecs_entity_t func = ecs_lookup_from(
+            world, node->left->type, node->function_name);
+        if (!func) {
+            flecs_expr_visit_error(script, node, 
+                "unresolved method identifier '%s'", node->function_name);
+            goto error;
+        }
+
+        const EcsScriptMethod *method = ecs_get(world, func, EcsScriptMethod);
+        if (!method) {
+            char *path = ecs_get_path(world, func);
+            flecs_expr_visit_error(script, node, 
+                "entity '%s' is not a valid method", path);
+            ecs_os_free(path);
+            goto error;
+        }
+
+        node->node.type = method->return_type;
+        node->calldata.function = func;
+        node->calldata.callback = method->callback;
+        node->calldata.ctx = method->ctx;
+    }
 
     return 0;
 error:
@@ -75729,6 +76062,11 @@ int flecs_script_expr_visit_type_priv(
         }
         break;
     case EcsExprFunction:
+        if (flecs_expr_function_visit_type(
+            script, (ecs_expr_function_t*)node, cur, desc)) 
+        {
+            goto error;
+        }
         break;
     case EcsExprMember:
         if (flecs_expr_member_visit_type(

@@ -166,6 +166,14 @@ ecs_expr_member_t* flecs_expr_member(
     return result;
 }
 
+ecs_expr_function_t* flecs_expr_function(
+    ecs_script_parser_t *parser)
+{
+    ecs_expr_function_t *result = flecs_expr_ast_new(
+        parser, ecs_expr_function_t, EcsExprFunction);
+    return result;
+}
+
 ecs_expr_element_t* flecs_expr_element(
     ecs_script_parser_t *parser)
 {

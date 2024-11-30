@@ -33,6 +33,8 @@ extern "C" {
 
 FLECS_API
 extern ECS_COMPONENT_DECLARE(EcsScript);
+extern ECS_COMPONENT_DECLARE(EcsScriptFunction);
+extern ECS_COMPONENT_DECLARE(EcsScriptMethod);
 
 typedef struct ecs_script_template_t ecs_script_template_t;
 
@@ -55,6 +57,20 @@ typedef struct ecs_script_vars_t {
     ecs_allocator_t *allocator;
 } ecs_script_vars_t;
 
+/** Script function context */
+typedef struct ecs_function_ctx_t {
+    ecs_world_t *world;
+    ecs_entity_t function;
+    void *ctx;
+} ecs_function_ctx_t;
+
+/** Script function callback */
+typedef void(*ecs_function_callback_t)(
+    const ecs_function_ctx_t *ctx,
+    int32_t argc,
+    const ecs_value_t *argv,
+    ecs_value_t *result);
+
 /** Script object. */
 typedef struct ecs_script_t {
     ecs_world_t *world;
@@ -70,6 +86,25 @@ typedef struct EcsScript {
     ecs_script_template_t *template_; /* Only set for template scripts */
 } EcsScript;
 
+/** Function component.
+ * This component describes a function that can be called from a script.
+ */
+typedef struct EcsScriptFunction {
+    ecs_entity_t return_type;
+    ecs_function_callback_t callback;
+    void *ctx;
+} EcsScriptFunction;
+
+/** Method component. 
+ * This component describes a method that can be called from a script. Methods
+ * are functions that can be called on instances of a type. A method entity is
+ * stored in the scope of the type it belongs to.
+ */
+typedef struct EcsScriptMethod {
+    ecs_entity_t return_type;
+    ecs_function_callback_t callback;
+    void *ctx;
+} EcsScriptMethod;
 
 /* Parsing & running scripts */
 
