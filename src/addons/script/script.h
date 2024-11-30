@@ -100,5 +100,13 @@ const char* flecs_term_parse(
     ecs_term_t *term,
     char *token_buffer);
 
+
+////////////////////////////////////////////////////////////////////////////////
+//// Visitor Fns for Expr Serialization 
+////////////////////////////////////////////////////////////////////////////////
+
+void* flecs_expr_init_visitor_desc(void* visitor_desc_ptr, ecs_strbuf_t* str);
+
+
 #endif // FLECS_SCRIPT
 #endif // FLECS_SCRIPT_PRIVATE_H

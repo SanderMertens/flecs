@@ -694,10 +694,4 @@ void flecs_json_id_member(
     }
 }
 
-ecs_primitive_kind_t flecs_json_op_to_primitive_kind(
-    ecs_meta_type_op_kind_t kind) 
-{
-    return kind - EcsOpPrimitive;
-}
-
 #endif

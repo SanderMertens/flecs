@@ -18,6 +18,10 @@
 #define FLECS_SCRIPT
 #endif
 
+#ifndef FLECS_SERIALIZE
+#define FLECS_SERIALIZE
+#endif
+
 #ifndef FLECS_JSON_H
 #define FLECS_JSON_H
 

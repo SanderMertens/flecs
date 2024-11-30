@@ -247,6 +247,8 @@ int flecs_json_serialize_table_components(
     int32_t row,
     int32_t *component_count)
 {
+    ecs_visitor_desc_t visitor_desc;
+    flecs_json_init_visitor_desc(&visitor_desc, buf);
     int32_t i, count = table->type.count;
     for (i = 0; i < count; i ++) {
         if (component_count[0] == FLECS_JSON_MAX_TABLE_COMPONENTS) {
@@ -321,8 +323,8 @@ int flecs_json_serialize_table_components(
 
         if (has_reflection && (!desc || desc->serialize_values)) {
             ecs_assert(type_ser != NULL, ECS_INTERNAL_ERROR, NULL);
-            if (flecs_json_ser_type(
-                world, &type_ser->ops, ptr, buf) != 0) 
+            if (flecs_ser_type(
+                world, &type_ser->ops, ptr, &visitor_desc) != 0)
             {
                 goto error;
             }

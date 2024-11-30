@@ -3,9 +3,11 @@
  * @brief Serialize (component) values to JSON strings.
  */
 
+#include "flecs.h"
 #include "json.h"
 
 #ifdef FLECS_JSON
+#include "../serialize/serialize.h"
 
 static
 bool flecs_json_skip_variable(
@@ -408,10 +410,13 @@ void flecs_json_serialize_iter_this(
 int flecs_json_serialize_iter_result(
     const ecs_world_t *world, 
     const ecs_iter_t *it, 
-    ecs_strbuf_t *buf,
+    ecs_visitor_desc_t *visitor_desc,
     const ecs_iter_to_json_desc_t *desc,
     ecs_json_ser_ctx_t *ser_ctx)
 {
+    // TODO
+    ecs_strbuf_t* buf = (ecs_strbuf_t*)visitor_desc->user_data;
+
     char *parent_path = NULL;
     ecs_json_this_data_t this_data = {0};
 
@@ -478,7 +483,7 @@ int flecs_json_serialize_iter_result(
             goto error;
         }
     } else {
-        if (flecs_json_serialize_iter_result_query(world, it, buf, ser_ctx, 
+        if (flecs_json_serialize_iter_result_query(world, it, visitor_desc, ser_ctx,
             desc, count, has_this, parent_path, &this_data))
         {
             goto error;

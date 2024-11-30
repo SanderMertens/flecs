@@ -154,22 +154,27 @@ bool flecs_json_serialize_common_for_table(
     return result;
 }
 
+
 static
 int flecs_json_serialize_iter_result_field_values(
     const ecs_world_t *world, 
     const ecs_iter_t *it, 
     int32_t i,
-    ecs_strbuf_t *buf,
+    ecs_visitor_desc_t *visitor_desc,
     const ecs_iter_to_json_desc_t *desc,
     ecs_json_ser_ctx_t *ser_ctx)
 {
+    // TODO
+    ecs_strbuf_t* buf = (ecs_strbuf_t*)visitor_desc->user_data;
+
     int8_t f, field_count = it->field_count;
     if (!field_count) {
         return 0;
     }
 
-    ecs_strbuf_appendlit(buf, "\"values\":");
-    flecs_json_array_push(buf);
+    if (visitor_desc->visit_iter_result.enter) {
+        visitor_desc->visit_iter_result.enter(visitor_desc->user_data);
+    }
 
     ecs_termset_t fields = it->set_fields;
     if (it->query) {
@@ -211,12 +216,14 @@ int flecs_json_serialize_iter_result_field_values(
         }
 
         flecs_json_next(buf);
-        if (flecs_json_ser_type(world, &value_ctx->ser->ops, ptr, buf) != 0) {
+        if (flecs_ser_type(world, &value_ctx->ser->ops, ptr, visitor_desc) != 0) {
             return -1;
         }
     }
 
-    flecs_json_array_pop(buf);
+    if (visitor_desc->visit_iter_result.exit) {
+        visitor_desc->visit_iter_result.exit(visitor_desc->user_data);
+    }
 
     return 0;
 }
@@ -224,7 +231,7 @@ int flecs_json_serialize_iter_result_field_values(
 int flecs_json_serialize_iter_result_query(
     const ecs_world_t *world, 
     const ecs_iter_t *it, 
-    ecs_strbuf_t *buf,
+    ecs_visitor_desc_t *visitor_desc,
     ecs_json_ser_ctx_t *ser_ctx,
     const ecs_iter_to_json_desc_t *desc,
     int32_t count,
@@ -232,6 +239,8 @@ int flecs_json_serialize_iter_result_query(
     const char *parent_path,
     const ecs_json_this_data_t *this_data)
 {
+    // TODO
+    ecs_strbuf_t* buf = (ecs_strbuf_t*)visitor_desc->user_data;
     /* Serialize tags, pairs, vars once, since they're the same for each row */
     ecs_strbuf_t common_data_buf = ECS_STRBUF_INIT;
     bool common_field_data = flecs_json_serialize_common_for_table(
@@ -276,7 +285,7 @@ int flecs_json_serialize_iter_result_query(
                 }
 
                 if (flecs_json_serialize_iter_result_field_values(
-                    world, it, i, buf, desc, ser_ctx))
+                    world, it, i, visitor_desc, desc, ser_ctx))
                 {
                     ecs_os_free(common_data);
                     return -1;

@@ -30,8 +30,9 @@ void flecs_meta_import_definitions(
 int flecs_expr_ser_primitive(
     const ecs_world_t *world,
     ecs_primitive_kind_t kind,
-    ecs_visitor_desc_t *visitor_desc,
-    const void *base);
+    const void *base,
+    ecs_strbuf_t *str,
+    bool is_expr);
 
 void flecs_rtt_init_default_hooks(
     ecs_iter_t *it);

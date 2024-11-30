@@ -279,6 +279,8 @@ int ecs_iter_to_json_buf(
     ecs_strbuf_t *buf,
     const ecs_iter_to_json_desc_t *desc)
 {
+    ecs_visitor_desc_t visitor_desc;
+    flecs_json_init_visitor_desc(&visitor_desc, buf);
     ecs_world_t *world = it->real_world;
 
     /* Cache id record for flecs.doc ids */
@@ -291,7 +293,9 @@ int ecs_iter_to_json_buf(
         ecs_pair_t(EcsDocDescription, EcsDocColor));
 #endif
 
-    flecs_json_object_push(buf);
+    if (visitor_desc.visit_struct.enter) {
+        visitor_desc.visit_struct.enter(visitor_desc.user_data);
+    }
 
     /* Serialize type info if enabled */
     if (desc && desc->serialize_type_info) {
@@ -331,7 +335,7 @@ int ecs_iter_to_json_buf(
 
         ecs_iter_next_action_t next = it->next;
         while (next(it)) {
-            if (flecs_json_serialize_iter_result(world, it, buf, desc, &ser_ctx)) {
+            if (flecs_json_serialize_iter_result(world, it, &visitor_desc, desc, &ser_ctx)) {
                 ecs_strbuf_reset(buf);
                 flecs_iter_free_ser_ctx(it, &ser_ctx);
                 ecs_iter_fini(it);

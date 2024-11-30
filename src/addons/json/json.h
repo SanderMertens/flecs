@@ -9,6 +9,7 @@
 #include "../../private_api.h"
 
 #ifdef FLECS_JSON
+#include "../serialize/serialize.h"
 
 /* Deserialize from JSON */
 typedef enum ecs_json_token_t {
@@ -196,13 +197,10 @@ void flecs_json_id_member(
     ecs_id_t id,
     bool fullpath);
 
-ecs_primitive_kind_t flecs_json_op_to_primitive_kind(
-    ecs_meta_type_op_kind_t kind);
-
 int flecs_json_serialize_iter_result(
     const ecs_world_t *world,
     const ecs_iter_t *it,
-    ecs_strbuf_t *buf,
+    ecs_visitor_desc_t *visitor_desc,
     const ecs_iter_to_json_desc_t *desc,
     ecs_json_ser_ctx_t *ser_ctx);
 
@@ -252,7 +250,7 @@ int flecs_json_serialize_iter_result_table(
 int flecs_json_serialize_iter_result_query(
     const ecs_world_t *world, 
     const ecs_iter_t *it, 
-    ecs_strbuf_t *buf,
+    ecs_visitor_desc_t *visitor_desc,
     ecs_json_ser_ctx_t *ser_ctx,
     const ecs_iter_to_json_desc_t *desc,
     int32_t count,
@@ -292,6 +290,14 @@ int flecs_json_serialize_alerts(
 
 bool flecs_json_is_builtin(
     ecs_id_t id);
+
+
+////////////////////////////////////////////////////////////////////////////////
+//// Visitor Fns for Json Serialization 
+////////////////////////////////////////////////////////////////////////////////
+
+void* flecs_json_init_visitor_desc(void* visitor_desc_ptr, ecs_strbuf_t* str);
+
 
 #endif
 
