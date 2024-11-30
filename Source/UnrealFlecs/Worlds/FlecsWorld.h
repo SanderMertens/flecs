@@ -525,16 +525,18 @@ public:
 				});
 
 		ObjectComponentQuery = World.query_builder<FFlecsUObjectComponent>("UObjectComponentQuery")
+			.cached()
 			.build();
 
-		FCoreUObjectDelegates::GarbageCollectComplete.AddWeakLambda(this, [this]
+		FCoreUObjectDelegates::GarbageCollectComplete.AddWeakLambda(this, [&]
 		{
-			ObjectComponentQuery.each([this](flecs::iter& Iter, size_t Index,
-				const FFlecsUObjectComponent& InComponent)
+			ObjectComponentQuery.each([&](flecs::entity InEntity, FFlecsUObjectComponent& InUObjectComponent)
 			{
-				if (!InComponent.IsValid())
+				if (InUObjectComponent.IsStale(true, true))
 				{
-					Iter.entity(Index).destruct();
+					UN_LOGF(LogFlecsWorld, Log, "Garbage  collected %s",
+						StringCast<TCHAR>(InEntity.name().c_str()).Get());
+					InEntity.destruct();
 				}
 			});
 		});
