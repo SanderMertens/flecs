@@ -50,12 +50,12 @@ struct UNREALFLECS_API FFlecsWorldPtrComponent
 		return *this;
 	}
 
-	FORCEINLINE bool operator==(UFlecsWorld* InWorld) const
+	FORCEINLINE bool operator==(const UFlecsWorld* InWorld) const
 	{
 		return World == InWorld;
 	}
 
-	FORCEINLINE bool operator!=(UFlecsWorld* InWorld) const
+	FORCEINLINE bool operator!=(const UFlecsWorld* InWorld) const
 	{
 		return World != InWorld;
 	}
