@@ -1,12 +1,13 @@
 /**
- * @file addons/serialize/serialize_value.c
- * @brief Visit entity-component graph to serialize value.
+ * @file addons/script/serialize_value.c
+ * @brief Function definition for expr serialization-visitor functions.
  */
 
-#include "serialize.h"
+#include "script.h"
 #include "../meta/meta.h"
 
-#ifdef FLECS_SERIALIZE
+#ifdef FLECS_SCRIPT
+#include "../serialize/serialize.h"
 
 // Primitives
 static
