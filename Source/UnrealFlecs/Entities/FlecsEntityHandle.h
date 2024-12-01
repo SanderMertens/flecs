@@ -1312,7 +1312,8 @@ public:
 			AddPair(InFirst, InSecond);
 		}
 		
-		GetEntity().set_ptr(ecs_pair(ObtainComponentTypeStruct(InFirst).GetEntity(), GetTagEntity(InSecond).GetEntity()),
+		GetEntity().set_ptr(
+			ecs_pair(ObtainComponentTypeStruct(InFirst).GetEntity(), GetTagEntity(InSecond).GetEntity()),
 			InValue);
 	}
 
