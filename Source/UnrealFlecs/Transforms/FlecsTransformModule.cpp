@@ -43,7 +43,7 @@ void UFlecsTransformModule::InitializeModule(UFlecsWorld* InWorld, const FFlecsE
 	const flecs::entity_t FlecsTransformSystemKind = flecs::PreFrame;
 	
 	InWorld->CreateSystemWithBuilder<
-		FFlecsTransformComponent, FFlecsGlobalTransformComponent, const FFlecsGlobalTransformComponent>(
+		FFlecsTransformComponent, FFlecsGlobalTransformComponent*, const FFlecsGlobalTransformComponent>(
 			TEXT("FlecsTransformPropagateSystem"))
 		.kind(FlecsTransformSystemKind)
 		.term_at(0).read()
