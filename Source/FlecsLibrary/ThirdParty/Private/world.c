@@ -14,7 +14,7 @@ const ecs_id_t ECS_TOGGLE =                                        (1ull << 61);
 const ecs_entity_t ecs_id(EcsComponent) =                                   1;
 const ecs_entity_t ecs_id(EcsIdentifier) =                                  2;
 const ecs_entity_t ecs_id(EcsPoly) =                                        3;
-
+ 
 /* Poly target components */
 const ecs_entity_t EcsQuery =                                               5;
 const ecs_entity_t EcsObserver =                                            6;
@@ -180,7 +180,7 @@ const ecs_entity_t ecs_id(EcsRest) =                FLECS_HI_COMPONENT_ID + 119;
 const ecs_entity_t ecs_id(EcsSystemPriority) =               FLECS_HI_COMPONENT_ID + 120;
 
 /* Max static id:
- * #define EcsFirstUserEntityId (FLECS_HI_COMPONENT_ID + 128) */
+ * #define EcsFirstUserEntityId (FLECS_HI_COMPONENT_ID + 256) */
 
 /* Default lookup path */
 static ecs_entity_t ecs_default_lookup_path[2] = { 0, 0 };
