@@ -426,7 +426,7 @@ protected:
         }
     }
 
-    void assert_term() {
+    void assert_term() const {
         ecs_assert(term_ != NULL, ECS_INVALID_PARAMETER, 
             "no active term (call .with() first)");
     }
