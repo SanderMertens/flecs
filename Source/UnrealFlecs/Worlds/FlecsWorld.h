@@ -200,8 +200,8 @@ struct FOSApiInitializer
 			if (Cond && Mutex)
 			{
 				FFlecsConditionWrapper* Wrapper = reinterpret_cast<FFlecsConditionWrapper*>(Cond);
-				std::mutex* stdmutex = reinterpret_cast<std::mutex*>(Mutex);
-				std::unique_lock<std::mutex> Lock(*stdmutex, std::adopt_lock);
+				std::mutex* std_mutex = reinterpret_cast<std::mutex*>(Mutex);
+				std::unique_lock<std::mutex> Lock(*std_mutex, std::adopt_lock);
 				Wrapper->ConditionalVariable.wait(Lock);
 				Lock.release(); // Don't unlock on destruction since Flecs manages the lock
 			}
