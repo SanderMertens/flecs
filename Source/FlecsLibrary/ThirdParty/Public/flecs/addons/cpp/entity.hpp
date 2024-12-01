@@ -84,7 +84,7 @@ struct entity : entity_builder<entity>
     explicit entity(entity_t id)
         : entity_builder( nullptr, id ) { }
 
-    #ifndef ensure
+    #ifndef obtain
 
     /** Get mutable component value.
      * This operation returns a mutable pointer to the component. If the entity
@@ -96,7 +96,7 @@ struct entity : entity_builder<entity>
      * @return Pointer to the component value.
      */
     template <typename T>
-    T& ensure() const {
+    T& obtain() const {
         auto comp_id = _::type<T>::id(world_);
         ecs_assert(_::type<T>::size() != 0, ECS_INVALID_PARAMETER,
             "operation invalid for empty type");
@@ -112,7 +112,7 @@ struct entity : entity_builder<entity>
      * @param comp The component to get.
      * @return Pointer to the component value.
      */
-    void* ensure(entity_t comp) const {
+    void* obtain(entity_t comp) const {
         return ecs_ensure_id(world_, id_, comp);
     }
 
@@ -124,7 +124,7 @@ struct entity : entity_builder<entity>
      */
     template <typename First, typename Second, typename P = pair<First, Second>,
         typename A = actual_type_t<P>, if_not_t< flecs::is_pair<First>::value> = 0>
-    A& ensure() const {
+    A& obtain() const {
         return *static_cast<A*>(ecs_ensure_id(world_, id_, ecs_pair(
             _::type<First>::id(world_),
             _::type<Second>::id(world_))));
@@ -137,7 +137,7 @@ struct entity : entity_builder<entity>
      * @param second The second element of the pair.
      */
     template <typename First>
-    First& ensure(entity_t second) const {
+    First& obtain(entity_t second) const {
         auto first = _::type<First>::id(world_);
         ecs_assert(_::type<First>::size() != 0, ECS_INVALID_PARAMETER,
             "operation invalid for empty type");
@@ -153,7 +153,7 @@ struct entity : entity_builder<entity>
      * @param first The first element of the pair.
      * @param second The second element of the pair.
      */
-    void* ensure(entity_t first, entity_t second) const {
+    void* obtain(entity_t first, entity_t second) const {
         return ecs_ensure_id(world_, id_, ecs_pair(first, second));
     }
 
@@ -164,7 +164,7 @@ struct entity : entity_builder<entity>
      * @param first The first element of the pair.
      */
     template <typename Second>
-    Second& ensure_second(entity_t first) const {
+    Second& obtain_second(entity_t first) const {
         auto second = _::type<Second>::id(world_);
         ecs_assert( ecs_get_type_info(world_, ecs_pair(first, second)) != NULL,
             ECS_INVALID_PARAMETER, "pair is not a component");
