@@ -11,37 +11,6 @@ namespace flecs
 namespace _ 
 {
 
-inline void ecs_ctor_illegal(void *, int32_t, const ecs_type_info_t *ti) {
-    ecs_abort(ECS_INVALID_OPERATION, "invalid constructor for %s", ti->name);
-}
-
-inline void ecs_dtor_illegal(void *, int32_t, const ecs_type_info_t *ti) {
-    ecs_abort(ECS_INVALID_OPERATION, "invalid destructor for %s", ti->name);
-}
-
-inline void ecs_copy_illegal(
-    void *, const void *, int32_t, const ecs_type_info_t *ti)
-{
-    ecs_abort(ECS_INVALID_OPERATION, "invalid copy assignment for %s", ti->name);
-}
-
-inline void ecs_move_illegal(void *, void *, int32_t, const ecs_type_info_t *ti) {
-    ecs_abort(ECS_INVALID_OPERATION, "invalid move assignment for %s", ti->name);
-}
-
-inline void ecs_copy_ctor_illegal(
-    void *, const void *, int32_t, const ecs_type_info_t *ti)
-{
-    ecs_abort(ECS_INVALID_OPERATION, "invalid copy construct for %s", ti->name);
-}
-
-inline void ecs_move_ctor_illegal(
-    void *, void *, int32_t, const ecs_type_info_t *ti)
-{
-    ecs_abort(ECS_INVALID_OPERATION, "invalid move construct for %s", ti->name);
-}
-
-
 // T()
 // Can't coexist with T(flecs::entity) or T(flecs::world, flecs::entity)
 template <typename T>
@@ -193,28 +162,29 @@ namespace _
 
 // Trivially constructible
 template <typename T, if_t< std::is_trivially_constructible<T>::value > = 0>
-ecs_xtor_t ctor() {
+ecs_xtor_t ctor(ecs_flags32_t &) {
     return nullptr;
 }
 
 // Not constructible by flecs
 template <typename T, if_t< 
     ! std::is_default_constructible<T>::value > = 0>
-ecs_xtor_t ctor() {
-    return ecs_ctor_illegal;
+ecs_xtor_t ctor(ecs_flags32_t &flags) {
+    flags |= ECS_TYPE_HOOK_CTOR_ILLEGAL;
+    return nullptr;
 }
 
 // Default constructible
 template <typename T, if_t<
     ! std::is_trivially_constructible<T>::value &&
     std::is_default_constructible<T>::value > = 0>
-ecs_xtor_t ctor() {
+ecs_xtor_t ctor(ecs_flags32_t &) {
     return ctor_impl<T>;
 }
 
 // No dtor
 template <typename T, if_t< std::is_trivially_destructible<T>::value > = 0>
-ecs_xtor_t dtor() {
+ecs_xtor_t dtor(ecs_flags32_t &) {
     return nullptr;
 }
 
@@ -222,21 +192,22 @@ ecs_xtor_t dtor() {
 template <typename T, if_t<
     std::is_destructible<T>::value &&
     ! std::is_trivially_destructible<T>::value > = 0>
-ecs_xtor_t dtor() {
+ecs_xtor_t dtor(ecs_flags32_t &) {
     return dtor_impl<T>;
 }
 
 // Assert when the type cannot be destructed
 template <typename T, if_not_t< std::is_destructible<T>::value > = 0>
-ecs_xtor_t dtor() {
+ecs_xtor_t dtor(ecs_flags32_t &flags) {
     flecs_static_assert(always_false<T>::value, 
         "component type must be destructible");
-    return ecs_dtor_illegal;
+    flags |= ECS_TYPE_HOOK_DTOR_ILLEGAL;
+    return nullptr;
 }
 
 // Trivially copyable
 template <typename T, if_t< std::is_trivially_copyable<T>::value > = 0>
-ecs_copy_t copy() {
+ecs_copy_t copy(ecs_flags32_t &) {
     return nullptr;
 }
 
@@ -244,77 +215,82 @@ ecs_copy_t copy() {
 template <typename T, if_t<
     ! std::is_trivially_copyable<T>::value &&
     ! std::is_copy_assignable<T>::value > = 0>
-ecs_copy_t copy() {
-    return ecs_copy_illegal;
+ecs_copy_t copy(ecs_flags32_t &flags) {
+    flags |= ECS_TYPE_HOOK_COPY_ILLEGAL;
+    return nullptr;
 }
 
 // Copy assignment
 template <typename T, if_t<
     std::is_copy_assignable<T>::value &&
     ! std::is_trivially_copyable<T>::value > = 0>
-ecs_copy_t copy() {
+ecs_copy_t copy(ecs_flags32_t &) {
     return copy_impl<T>;
 }
 
 // Trivially move assignable
 template <typename T, if_t< std::is_trivially_move_assignable<T>::value > = 0>
-ecs_move_t move() {
+ecs_move_t move(ecs_flags32_t &) {
     return nullptr;
 }
 
 // Component types must be move assignable
 template <typename T, if_not_t< std::is_move_assignable<T>::value > = 0>
-ecs_move_t move() {
-    return ecs_move_illegal;
+ecs_move_t move(ecs_flags32_t &flags) {
+    flags |= ECS_TYPE_HOOK_MOVE_ILLEGAL;
+    return nullptr;
 }
 
 // Move assignment
 template <typename T, if_t<
     std::is_move_assignable<T>::value &&
     ! std::is_trivially_move_assignable<T>::value > = 0>
-ecs_move_t move() {
+ecs_move_t move(ecs_flags32_t &) {
     return move_impl<T>;
 }
 
 // Trivially copy constructible
 template <typename T, if_t<
     std::is_trivially_copy_constructible<T>::value > = 0>
-ecs_copy_t copy_ctor() {
+ecs_copy_t copy_ctor(ecs_flags32_t &) {
     return nullptr;
 }
 
 // No copy ctor
 template <typename T, if_t< ! std::is_copy_constructible<T>::value > = 0>
-ecs_copy_t copy_ctor() {
-    return ecs_copy_ctor_illegal;
+ecs_copy_t copy_ctor(ecs_flags32_t &flags) {
+       flags |= ECS_TYPE_HOOK_COPY_CTOR_ILLEGAL;
+    return nullptr;
+
 }
 
 // Copy ctor
 template <typename T, if_t<
     std::is_copy_constructible<T>::value &&
     ! std::is_trivially_copy_constructible<T>::value > = 0>
-ecs_copy_t copy_ctor() {
+ecs_copy_t copy_ctor(ecs_flags32_t &) {
     return copy_ctor_impl<T>;
 }
 
 // Trivially move constructible
 template <typename T, if_t<
     std::is_trivially_move_constructible<T>::value > = 0>
-ecs_move_t move_ctor() {
+ecs_move_t move_ctor(ecs_flags32_t &) {
     return nullptr;
 }
 
 // Component types must be move constructible
 template <typename T, if_not_t< std::is_move_constructible<T>::value > = 0>
-ecs_move_t move_ctor() {
-    return ecs_move_ctor_illegal;
+ecs_move_t move_ctor(ecs_flags32_t &flags) {
+    flags |= ECS_TYPE_HOOK_MOVE_CTOR_ILLEGAL;
+    return nullptr;
 }
 
 // Move ctor
 template <typename T, if_t<
     std::is_move_constructible<T>::value &&
     ! std::is_trivially_move_constructible<T>::value > = 0>
-ecs_move_t move_ctor() {
+ecs_move_t move_ctor(ecs_flags32_t &) {
     return move_ctor_impl<T>;
 }
 
@@ -322,7 +298,7 @@ ecs_move_t move_ctor() {
 template <typename T, if_t<
     std::is_trivially_move_constructible<T>::value  &&
     std::is_trivially_destructible<T>::value > = 0>
-ecs_move_t ctor_move_dtor() {
+ecs_move_t ctor_move_dtor(ecs_flags32_t &) {
     return nullptr;
 }
 
@@ -330,8 +306,9 @@ ecs_move_t ctor_move_dtor() {
 template <typename T, if_t<
     ! std::is_move_constructible<T>::value ||
     ! std::is_destructible<T>::value > = 0>
-ecs_move_t ctor_move_dtor() {
-    return ecs_move_ctor_illegal;
+ecs_move_t ctor_move_dtor(ecs_flags32_t &flags) {
+    flags |= ECS_TYPE_HOOK_CTOR_MOVE_DTOR_ILLEGAL;
+    return nullptr;
 }
 
 // Merge ctor + dtor
@@ -340,7 +317,7 @@ template <typename T, if_t<
       std::is_trivially_destructible<T>::value) &&
     std::is_move_constructible<T>::value &&
     std::is_destructible<T>::value > = 0>
-ecs_move_t ctor_move_dtor() {
+ecs_move_t ctor_move_dtor(ecs_flags32_t &) {
     return ctor_move_dtor_impl<T>;
 }
 
@@ -348,7 +325,7 @@ ecs_move_t ctor_move_dtor() {
 template <typename T, if_t<
     std::is_trivially_move_assignable<T>::value  &&
     std::is_trivially_destructible<T>::value > = 0>
-ecs_move_t move_dtor() {
+ecs_move_t move_dtor(ecs_flags32_t &) {
     return nullptr;
 }
 
@@ -356,8 +333,9 @@ ecs_move_t move_dtor() {
 template <typename T, if_t<
     ! std::is_move_assignable<T>::value ||
     ! std::is_destructible<T>::value > = 0>
-ecs_move_t move_dtor() {
-    return ecs_move_ctor_illegal;
+ecs_move_t move_dtor(ecs_flags32_t &flags) {
+    flags |= ECS_TYPE_HOOK_MOVE_DTOR_ILLEGAL;
+    return nullptr;
 }
 
 // Merge assign + dtor
@@ -366,7 +344,7 @@ template <typename T, if_t<
       std::is_trivially_destructible<T>::value) &&
     std::is_move_assignable<T>::value &&
     std::is_destructible<T>::value > = 0>
-ecs_move_t move_dtor() {
+ecs_move_t move_dtor(ecs_flags32_t &) {
     return move_dtor_impl<T>;
 }
 
