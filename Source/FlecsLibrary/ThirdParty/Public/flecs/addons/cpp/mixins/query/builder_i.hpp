@@ -178,6 +178,7 @@ struct query_builder_i : term_builder_i<Base> {
         return *this;
     }
 
+    /* Creates 2 terms */
     template <typename TComponent>
     Base& begin_scope_traits() 
     {
@@ -201,6 +202,7 @@ struct query_builder_i : term_builder_i<Base> {
         return *this;
     }
 
+    /* Creates 2 terms */
     Base& begin_scope_traits(flecs::entity_t comp) 
     {
         const char* comp_name = ecs_get_name(this->world_v(), comp);
@@ -223,6 +225,7 @@ struct query_builder_i : term_builder_i<Base> {
         return *this;
     }
 
+    /* Creates 2 terms */
     Base& begin_scope_traits(const char* comp_name) 
     {
         if (!trait_vars_.contains(comp_name)) {
@@ -249,6 +252,16 @@ struct query_builder_i : term_builder_i<Base> {
         this->assert_term();
         return this->begin_scope_traits(desc_->terms[term_index_ - 1].id == 0 
             ? desc_->terms[term_index_ - 1].first.id : desc_->terms[term_index_ - 1].id);
+    }
+
+    Base& begin_scope_traits_index(const int32_t term_index) 
+    {
+        ecs_assert(term_index >= 0, ECS_INVALID_PARAMETER, NULL);
+        const int32_t prev_index = term_index_;
+        term_index_ = term_index;
+        this->begin_scope_traits();
+        term_index_ = prev_index;
+        return *this;
     }
 
     Base& end_scope_traits() 
