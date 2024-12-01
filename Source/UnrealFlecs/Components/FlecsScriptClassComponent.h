@@ -13,17 +13,17 @@ struct FFlecsScriptClassComponent
 {
     GENERATED_BODY()
 
-    FORCEINLINE NO_DISCARD friend uint32 GetTypeHash(const FFlecsScriptClassComponent& InScriptClassComponent)
+    FORCEINLINE friend NO_DISCARD uint32 GetTypeHash(const FFlecsScriptClassComponent& InScriptClassComponent)
     {
         return GetTypeHash(InScriptClassComponent.ScriptClass);
     }
 
-    FORCEINLINE NO_DISCARD friend bool operator==(const FFlecsScriptClassComponent& Lhs, const FFlecsScriptClassComponent& Rhs)
+    FORCEINLINE friend NO_DISCARD bool operator==(const FFlecsScriptClassComponent& Lhs, const FFlecsScriptClassComponent& Rhs)
     {
         return Lhs.ScriptClass == Rhs.ScriptClass;
     }
 
-    FORCEINLINE NO_DISCARD friend bool operator!=(const FFlecsScriptClassComponent& Lhs, const FFlecsScriptClassComponent& Rhs)
+    FORCEINLINE friend NO_DISCARD bool operator!=(const FFlecsScriptClassComponent& Lhs, const FFlecsScriptClassComponent& Rhs)
     {
         return !(Lhs == Rhs);
     }

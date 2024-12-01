@@ -13,7 +13,7 @@ struct FFlecsQuery
 {
     GENERATED_BODY()
 
-    FORCEINLINE NO_DISCARD friend uint32 GetTypeHash(const FFlecsQuery& InQuery)
+    FORCEINLINE friend NO_DISCARD uint32 GetTypeHash(const FFlecsQuery& InQuery)
     {
         return GetTypeHash(InQuery.GetQuery().entity().id());
     }

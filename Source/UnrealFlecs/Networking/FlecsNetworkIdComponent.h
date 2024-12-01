@@ -11,7 +11,7 @@ struct UNREALFLECS_API FFlecsNetworkIdComponent
 {
 	GENERATED_BODY()
 
-	FORCEINLINE NO_DISCARD friend uint32 GetTypeHash(const FFlecsNetworkIdComponent& InComponent)
+	FORCEINLINE friend NO_DISCARD uint32 GetTypeHash(const FFlecsNetworkIdComponent& InComponent)
 	{
 		return GetTypeHash(InComponent.GetNetworkId());
 	}

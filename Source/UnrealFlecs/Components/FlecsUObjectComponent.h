@@ -14,7 +14,7 @@ struct alignas(8) UNREALFLECS_API FFlecsUObjectComponent
 {
 	GENERATED_BODY()
 
-	FORCEINLINE NO_DISCARD friend uint32 GetTypeHash(const FFlecsUObjectComponent& InComponent)
+	FORCEINLINE friend NO_DISCARD uint32 GetTypeHash(const FFlecsUObjectComponent& InComponent)
 	{
 		return GetTypeHash(InComponent.Object);
 	}
