@@ -28,11 +28,15 @@ public:
 	
 	FORCEINLINE NO_DISCARD UFlecsWorld* GetFlecsWorld() const
 	{
-		solid_check(IsValid(GetWorld()));
-		const UFlecsWorldSubsystem* FlecsWorldSubsystem = GetWorld()->GetSubsystem<UFlecsWorldSubsystem>();
-		solid_check(IsValid(FlecsWorldSubsystem));
-		
-		return FlecsWorldSubsystem->GetDefaultWorld();
+		if (!FlecsWorld.IsValid())
+		{
+			FlecsWorld = UFlecsWorldSubsystem::GetDefaultWorldStatic(this);
+		}
+
+		return FlecsWorld.Get();
 	}
+
+	UPROPERTY()
+	mutable TWeakObjectPtr<UFlecsWorld> FlecsWorld;
 	
 }; // class UFlecsAbstractWorldSubsystem
