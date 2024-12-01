@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "InstancedStruct.h"
+#include "StructUtils/InstancedStruct.h"
 #include "Entities/FlecsEntityHandle.h"
 #include "FlecsEntityRecord.generated.h"
 
@@ -116,10 +116,12 @@ struct UNREALFLECS_API FFlecsPair
 				
 				break;
 			case EFlecsPairNodeType::EntityHandle:
-				InEntityHandle.SetPair(First.ScriptStruct.GetScriptStruct(), First.ScriptStruct.GetMemory(), Second.EntityHandle);
+				InEntityHandle.SetPair(First.ScriptStruct.GetScriptStruct(),
+					First.ScriptStruct.GetMemory(), Second.EntityHandle);
 				break;
 			case EFlecsPairNodeType::FGameplayTag:
-				InEntityHandle.SetPair(First.ScriptStruct.GetScriptStruct(), First.ScriptStruct.GetMemory(), Second.GameplayTag);
+				InEntityHandle.SetPair(First.ScriptStruct.GetScriptStruct(),
+					First.ScriptStruct.GetMemory(), Second.GameplayTag);
 				break;
 			default: UNLIKELY_ATTRIBUTE
 				solid_checkf(false, TEXT("Invalid Second NodeType"));
