@@ -1843,7 +1843,7 @@ FLECS_API extern const ecs_entity_t EcsPhase;       /**< Phase pipeline phase. *
 
 /** The first user-defined entity starts from this id. Ids up to this number
  * are reserved for builtin entities */
-#define EcsFirstUserEntityId (FLECS_HI_COMPONENT_ID + 128)
+#define EcsFirstUserEntityId (FLECS_HI_COMPONENT_ID + 256)
 
 /* When visualized the reserved id ranges look like this:
  * - [1..8]: Builtin components
