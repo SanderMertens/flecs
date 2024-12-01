@@ -12,7 +12,7 @@ struct FFlecsWorldSettings
 {
     GENERATED_BODY()
 
-    FORCEINLINE NO_DISCARD friend uint32 GetTypeHash(const FFlecsWorldSettings& InWorldSettings)
+    FORCEINLINE friend NO_DISCARD uint32 GetTypeHash(const FFlecsWorldSettings& InWorldSettings)
     {
         return GetTypeHash(InWorldSettings.WorldName);
     }

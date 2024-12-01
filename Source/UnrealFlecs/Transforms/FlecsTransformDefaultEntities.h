@@ -8,6 +8,8 @@
 #include "FlecsTransformDefaultEntities.generated.h"
 
 DEFINE_DEFAULT_ENTITY_OPTION(FlecsLocalTrait);
+
+// May be deprecated
 DEFINE_DEFAULT_ENTITY_OPTION(FlecsGlobalTrait);
 
 USTRUCT(BlueprintType)
@@ -21,11 +23,4 @@ struct UNREALFLECS_API FFlecsRelativeTrait
 	int32 RelativeToIndex = 0;
 }; // struct FFlecsRelativeComponent
 
-USTRUCT()
-struct UNREALFLECS_API FFlecsRelativeCacheTrait
-{
-	GENERATED_BODY()
-
-	UPROPERTY()
-	FFlecsEntityHandle RelativeEntity;
-}; // struct FFlecsRelativeCacheTrait
+DEFINE_DEFAULT_ENTITY_OPTION(FFlecsRelativeRelationTrait);

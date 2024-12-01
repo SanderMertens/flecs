@@ -1,7 +1,7 @@
 ﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 #include "FlecsTransformModule.h"
-#include "FlecsLocationComponent.h"
+#include "FlecsGlobalTransformComponent.h"
 #include "FlecsTransformComponent.h"
 #include "FlecsTransformDefaultEntities.h"
 #include "Worlds/FlecsWorld.h"
@@ -20,54 +20,43 @@ void UFlecsTransformModule::InitializeModule(UFlecsWorld* InWorld, const FFlecsE
 		.yield_existing()
 		.each([](flecs::entity InEntity, const FFlecsRelativeTrait& InTrait)
 		{
-			const FFlecsEntityHandle ParentEntity = InEntity.parent();
-			solid_checkf(ParentEntity.IsValid(), TEXT("Parent entity is invalid"));
+			const FFlecsEntityHandle TraitParentEntity = InEntity.parent();
+			solid_checkf(TraitParentEntity.IsValid(), TEXT("Parent entity is invalid"));
+			solid_check(TraitParentEntity.HasPair<FFlecsTransformComponent>(InEntity));
 
 			const int32 RelativeTraitIndex = InTrait.RelativeToIndex;
 
 			static constexpr std::string_view PathSeparator = "::";
 
-			const FString Path = ParentEntity.GetPath();
+			const FString Path = TraitParentEntity.GetPath();
 			solid_checkf(Path.Len() > 0, TEXT("Entity path cannot be empty"));
 						
 			const int32 SeparatorIndex = Path.Find(PathSeparator.data(),
 				ESearchCase::IgnoreCase, ESearchDir::FromEnd, Path.Len() - RelativeTraitIndex);
 
 			const FFlecsEntityHandle RelativeEntity
-				= ParentEntity.GetFlecsWorld()->LookupEntity(Path.Left(SeparatorIndex));
+				= TraitParentEntity.GetFlecsWorld()->LookupEntity(Path.Left(SeparatorIndex));
 			solid_checkf(RelativeEntity.IsValid(), TEXT("Relative entity is invalid"));
-
-			ParentEntity
-				.SetTrait<FFlecsTransformComponent, FFlecsRelativeCacheTrait>(FFlecsRelativeCacheTrait{ RelativeEntity });
+				
 		});
+
+	const flecs::entity_t FlecsTransformSystemKind = flecs::PreFrame;
 	
 	InWorld->CreateSystemWithBuilder<
-		FFlecsTransformComponent>(TEXT("FlecsGlobalTransformPropagateSystem"))
-		.kind(flecs::PreUpdate)
-		.term_at(0).read_write()
-		.begin_scope_traits<FFlecsTransformComponent>()
-			.with(FlecsGlobalTrait)
-		.end_scope_traits()
-		.each([](flecs::iter& Iter, size_t Index, FFlecsTransformComponent& InTransform)
-		{
-			InTransform.GlobalTransform = InTransform.Transform;
-		});
-
-	InWorld->CreateSystemWithBuilder<
-		FFlecsTransformComponent>(TEXT("FlecsLocalTransformPropagateSystem"))
-		.kind(flecs::PreUpdate)
-		.term_at(0).read_write()
-		.with<FFlecsTransformComponent>().parent().cascade()
+		FFlecsTransformComponent, FFlecsGlobalTransformComponent, const FFlecsGlobalTransformComponent>(
+			TEXT("FlecsTransformPropagateSystem"))
+		.kind(FlecsTransformSystemKind)
+		.term_at(0).read()
+		.term_at(1).write().optional()
+		.term_at(2).parent().cascade()
 		.begin_scope_traits<FFlecsTransformComponent>()
 			.with(FlecsLocalTrait)
 		.end_scope_traits()
-		.each([](flecs::iter& Iter, size_t Index,
-			FFlecsTransformComponent& InTransform)
+		.each([](flecs::iter& Iter, size_t Index, FFlecsTransformComponent& InTransform,
+				FFlecsGlobalTransformComponent* InGlobalTransform,
+				const FFlecsGlobalTransformComponent& InParentTransform)
 		{
-			InTransform.GlobalTransform
-				= Iter.field_at<FFlecsTransformComponent>(1, Index).GetTransform() * InTransform.Transform;
 		});
-	
 }
 
 void UFlecsTransformModule::DeinitializeModule(UFlecsWorld* InWorld)

@@ -137,6 +137,8 @@ void UFlecsCVarModule::RegisterCVar(const TCHAR* Name, IConsoleObject* CVar)
 						UN_LOGF(LogFlecsCVarModule, Error, "Unknown CVar type for %s", Name);
 					}
 				};
+
+			CVar->AsVariable()->SetOnChangedCallback(FConsoleVariableDelegate::CreateLambda(OnChangedCVar));
 		}
 	});
 }

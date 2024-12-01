@@ -27,9 +27,6 @@ struct UNREALFLECS_API FFlecsTransformComponent
 	FORCEINLINE NO_DISCARD FTransform& GetTransform() { return Transform; }
 	FORCEINLINE NO_DISCARD const FTransform& GetTransform() const { return Transform; }
 	
-	FORCEINLINE NO_DISCARD FTransform& GetGlobalTransform() { return GlobalTransform; }
-	FORCEINLINE NO_DISCARD const FTransform& GetGlobalTransform() const { return GlobalTransform; }
-	
 	FORCEINLINE operator FTransform&() { return GetTransform(); }
 	FORCEINLINE operator const FTransform&() const { return GetTransform(); }
 
@@ -57,9 +54,6 @@ struct UNREALFLECS_API FFlecsTransformComponent
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs")
 	FTransform Transform;
-
-	UPROPERTY(BlueprintReadWrite, Category = "Flecs")
-	FTransform GlobalTransform;
 
 }; // struct FFlecsTransformComponent
 

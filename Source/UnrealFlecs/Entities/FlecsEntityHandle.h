@@ -9,18 +9,32 @@
 #include "flecs.h"
 #include "FlecsArchetype.h"
 #include "GameplayTagContainer.h"
-#include "InstancedStruct.h"
 #include "SolidMacros/Macros.h"
+#include "StructUtils/InstancedStruct.h"
 #include "FlecsEntityHandle.generated.h"
 
 class UFlecsWorld;
 
+/**
+ * @struct FFlecsEntityHandle
+ *
+ * A handle for managing flecs entities in Unreal Engine with added blueprint support.
+ * The structure provides several utility functions to interact with flecs entities,
+ * including validation, component addition/removal, and direct data access.
+ *
+ * @note This struct is aligned on an 8-byte boundary. It is 32 bytes in Editor builds and 16 bytes in Shipping builds.
+ */
 USTRUCT(BlueprintType)
 struct alignas(8) UNREALFLECS_API FFlecsEntityHandle
 {
 	GENERATED_BODY()
 
-	SOLID_INLINE NO_DISCARD friend uint32 GetTypeHash(const FFlecsEntityHandle& InEntity)
+	FORCEINLINE friend NO_DISCARD bool IsValid(const FFlecsEntityHandle& Test)
+	{
+		return Test.IsValid();
+	}
+
+	SOLID_INLINE friend NO_DISCARD uint32 GetTypeHash(const FFlecsEntityHandle& InEntity)
 	{
 		return GetTypeHash(InEntity.GetId());
 	}
@@ -98,24 +112,6 @@ public:
 
 	template <typename T>
 	SOLID_INLINE NO_DISCARD bool Has() const { return GetEntity().has<T>(); }
-
-	template <typename First, typename Second>
-	SOLID_INLINE NO_DISCARD bool Has() const { return GetEntity().has<First, Second>(); }
-
-	template <typename First>
-	SOLID_INLINE NO_DISCARD bool Has(const FFlecsEntityHandle& InSecond) const
-	{
-		return GetEntity().has<First>(InSecond.GetEntity());
-	}
-
-	template <typename First>
-	SOLID_INLINE NO_DISCARD bool Has(const flecs::id& InSecond) const
-	{
-		return GetEntity().has<First>(InSecond);
-	}
-
-	template <typename First, typename Second>
-	SOLID_INLINE NO_DISCARD bool Has(const Second& InSecond) const { return GetEntity().has<First, Second>(InSecond); }
 
 	SOLID_INLINE NO_DISCARD bool Has(const UScriptStruct* StructType) const
 	{
@@ -353,10 +349,10 @@ public:
 
 	SOLID_INLINE void SetName(const FString& InName) const { GetEntity().set_name(StringCast<char>(*InName).Get()); }
 	SOLID_INLINE NO_DISCARD FString GetName() const { return FString(GetEntity().name()); }
-	SOLID_INLINE NO_DISCARD bool HasName() const { return Has<flecs::Identifier>(flecs::Name); }
+	SOLID_INLINE NO_DISCARD bool HasName() const { return HasPair<flecs::Identifier>(flecs::Name); }
 
 	SOLID_INLINE NO_DISCARD FString GetSymbol() const { return FString(GetEntity().symbol()); }
-	SOLID_INLINE NO_DISCARD bool HasSymbol() const { return Has<flecs::Identifier>(flecs::Symbol); }
+	SOLID_INLINE NO_DISCARD bool HasSymbol() const { return HasPair<flecs::Identifier>(flecs::Symbol); }
 
 	SOLID_INLINE void SetDocBrief(const FString& InDocBrief) const { GetEntity().set_doc_brief(StringCast<char>(*InDocBrief).Get()); }
 	SOLID_INLINE NO_DISCARD FString GetDocBrief() const { return FString(GetEntity().doc_brief()); }
@@ -1431,23 +1427,6 @@ public:
 		GetEntity().modified(InEntity);
 	}
 
-	SOLID_INLINE void Modified(const UScriptStruct* StructType, const UScriptStruct* TraitType) const
-	{
-		GetEntity().modified(ObtainTraitHolderEntity(StructType),
-			ObtainTraitHolderEntity(TraitType));
-	}
-
-	SOLID_INLINE void Modified(const UScriptStruct* StructType, const FGameplayTag& InTag) const
-	{
-		GetEntity().modified(ObtainTraitHolderEntity(StructType),
-			GetTagEntity(InTag));
-	}
-
-	SOLID_INLINE void Modified(const UScriptStruct* StructType, const FFlecsEntityHandle& InTrait) const
-	{
-		GetEntity().modified(ObtainTraitHolderEntity(StructType), InTrait);
-	}
-
 	SOLID_INLINE NO_DISCARD int32 GetDepth(const FFlecsEntityHandle& InEntity) const
 	{
 		return GetEntity().depth(InEntity);
@@ -1489,6 +1468,10 @@ private:
 	SOLID_INLINE NO_DISCARD FFlecsEntityHandle GetTagEntity(const FGameplayTag& InTag) const;
 
 	SOLID_INLINE NO_DISCARD flecs::world GetFlecsWorld_Internal() const { return Entity.world(); }
+
+	SOLID_INLINE void ObtainFlecsWorld();
+
+public:
 
 	template <typename TComponent>
 	SOLID_INLINE NO_DISCARD FFlecsEntityHandle ObtainTraitHolderEntity() const
@@ -1543,10 +1526,6 @@ private:
 		
 		return TraitHolder;
 	}
-
-	SOLID_INLINE void ObtainFlecsWorld();
-
-public:
 
 	SOLID_INLINE void PostScriptConstruct();
 
@@ -1605,8 +1584,3 @@ struct TStructOpsTypeTraits<FFlecsEntityHandle> : public TStructOpsTypeTraitsBas
 	}; // enum
 	
 }; // struct TStructOpsTypeTraits<FFlecsEntityHandle>
-
-FORCEINLINE bool IsValid(const FFlecsEntityHandle& Test)
-{
-	return Test.IsValid();
-}
