@@ -67,7 +67,11 @@ flecs::entity import(world& world) {
     return flecs::entity(world, m);
 }
 
-}
+} // namespace _
+} // namespace flecs
+
+
+FLECS_API_NAMESPACE namespace flecs {
 
 /**
  * @defgroup cpp_addons_modules Modules
