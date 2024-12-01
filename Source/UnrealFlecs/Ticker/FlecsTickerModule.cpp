@@ -36,7 +36,7 @@ static FORCEINLINE NO_DISCARD int flecs_priority_compare(
 	if (InPtrA->value == InPtrB->value) {
 		return flecs_entity_compare(InEntityA, InPtrA, InEntityB, InPtrB);
 	}
-	else // lower priority runs first
+	else
 	{
 		return InPtrA->value < InPtrB->value ? -1 : 1;
 	}
