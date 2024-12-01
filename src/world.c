@@ -585,10 +585,6 @@ void flecs_init_store(
 
     /* Initialize root table */
     flecs_init_root_table(world);
-
-    /* Initialize observer sparse set */
-    flecs_sparse_init_t(&world->store.observers,
-        a, &world->allocators.sparse_chunk, ecs_observer_impl_t);
 }
 
 static
@@ -725,10 +721,6 @@ void flecs_fini_store(ecs_world_t *world) {
     flecs_table_fini(world, &world->store.root);
     flecs_entities_clear(world);
     flecs_hashmap_fini(&world->store.table_map);
-
-    ecs_assert(flecs_sparse_count(&world->store.observers) == 0, 
-        ECS_INTERNAL_ERROR, NULL);
-    flecs_sparse_fini(&world->store.observers);
 
     ecs_assert(ecs_vec_count(&world->store.marked_ids) == 0, 
         ECS_INTERNAL_ERROR, NULL);

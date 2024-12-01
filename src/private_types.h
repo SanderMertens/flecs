@@ -270,9 +270,6 @@ typedef struct ecs_store_t {
     /* Root table */
     ecs_table_t root;
 
-    /* Observers */
-    ecs_sparse_t observers;          /* sparse<observer_id, ecs_observer_t> */
-
     /* Records cache */
     ecs_vec_t records;
 

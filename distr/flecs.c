@@ -921,9 +921,6 @@ typedef struct ecs_store_t {
     /* Root table */
     ecs_table_t root;
 
-    /* Observers */
-    ecs_sparse_t observers;          /* sparse<observer_id, ecs_observer_t> */
-
     /* Records cache */
     ecs_vec_t records;
 
@@ -15149,12 +15146,13 @@ ecs_observer_t* flecs_observer_init(
         ECS_INVALID_OPERATION,
             "cannot create observer: must at least specify callback or run");
 
-    ecs_observer_impl_t *impl = flecs_sparse_add_t(
-        &world->store.observers, ecs_observer_impl_t);
+    ecs_observer_impl_t *impl = flecs_calloc_t(
+        &world->allocator, ecs_observer_impl_t);
     ecs_assert(impl != NULL, ECS_INTERNAL_ERROR, NULL);
+    impl->id = ++ world->observable.last_observer_id;
+
     flecs_poly_init(impl, ecs_observer_t);
     ecs_observer_t *o = &impl->pub;
-    impl->id = flecs_sparse_last_id(&world->store.observers);
     impl->dtor = flecs_observer_poly_fini;
 
     /* Make writeable copy of query desc so that we can set name. This will
@@ -15433,8 +15431,7 @@ void flecs_observer_fini(
     }
 
     flecs_poly_fini(o, ecs_observer_t);
-    flecs_sparse_remove_t(
-        &world->store.observers, ecs_observer_impl_t, impl->id);
+    flecs_free_t(&world->allocator, ecs_observer_impl_t, o);
 }
 
 void flecs_observer_set_disable_bit(
@@ -15765,10 +15762,10 @@ void* ecs_os_api_malloc(ecs_size_t size) {
     ecs_os_linc(&ecs_os_api_malloc_count);
     ecs_assert(size > 0, ECS_INVALID_PARAMETER, NULL);
     void *ptr = malloc((size_t)size);
-    if (size > 10000) {
-        printf("[%p] malloc(%d)\n", ptr, size);
-        flecs_dump_backtrace(stdout);
-    }
+    // if (size > 10000) {
+    //     printf("[%p] malloc(%d)\n", ptr, size);
+    //     flecs_dump_backtrace(stdout);
+    // }
     return ptr;
 }
 
@@ -15778,10 +15775,10 @@ void* ecs_os_api_calloc(ecs_size_t size) {
     ecs_assert(size > 0, ECS_INVALID_PARAMETER, NULL);
     void *ptr = calloc(1, (size_t)size);
 
-    if (size > 10000) {
-        printf("[%p] calloc(%d)\n", ptr, size);
-        flecs_dump_backtrace(stdout);
-    }
+    // if (size > 10000) {
+    //     printf("[%p] calloc(%d)\n", ptr, size);
+    //     flecs_dump_backtrace(stdout);
+    // }
     return ptr;
 }
 
@@ -15797,10 +15794,10 @@ void* ecs_os_api_realloc(void *ptr, ecs_size_t size) {
     }
     
     void *res = realloc(ptr, (size_t)size);
-    if (size > 10000) {
-        printf("[%p] realloc(%p, %d)\n", res, ptr, size);
-        flecs_dump_backtrace(stdout);
-    }
+    // if (size > 10000) {
+    //     printf("[%p] realloc(%p, %d)\n", res, ptr, size);
+    //     flecs_dump_backtrace(stdout);
+    // }
     return res;
 }
 
@@ -15808,7 +15805,7 @@ static
 void ecs_os_api_free(void *ptr) {
     if (ptr) {
         ecs_os_linc(&ecs_os_api_free_count);
-        printf("[%p] free\n");
+        // printf("[%p] free\n");
     }
     free(ptr);
 }
@@ -18366,10 +18363,6 @@ void flecs_init_store(
 
     /* Initialize root table */
     flecs_init_root_table(world);
-
-    /* Initialize observer sparse set */
-    flecs_sparse_init_t(&world->store.observers,
-        a, &world->allocators.sparse_chunk, ecs_observer_impl_t);
 }
 
 static
@@ -18506,10 +18499,6 @@ void flecs_fini_store(ecs_world_t *world) {
     flecs_table_fini(world, &world->store.root);
     flecs_entities_clear(world);
     flecs_hashmap_fini(&world->store.table_map);
-
-    ecs_assert(flecs_sparse_count(&world->store.observers) == 0, 
-        ECS_INTERNAL_ERROR, NULL);
-    flecs_sparse_fini(&world->store.observers);
 
     ecs_assert(ecs_vec_count(&world->store.marked_ids) == 0, 
         ECS_INTERNAL_ERROR, NULL);

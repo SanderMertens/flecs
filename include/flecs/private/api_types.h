@@ -45,6 +45,7 @@ struct ecs_observable_t {
     ecs_event_record_t on_set;
     ecs_event_record_t on_wildcard;
     ecs_sparse_t events;  /* sparse<event, ecs_event_record_t> */
+    uint64_t last_observer_id;
 };
 
 /** Range in table */
