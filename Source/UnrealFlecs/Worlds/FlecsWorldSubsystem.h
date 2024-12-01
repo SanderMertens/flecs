@@ -38,7 +38,7 @@ class UNREALFLECS_API UFlecsWorldSubsystem final : public UTickableWorldSubsyste
 public:
 	virtual bool ShouldCreateSubsystem(UObject* Outer) const override
 	{
-		return GetDefault<UFlecsDeveloperSettings>()->bEnableFlecs;
+		return GetDefault<UFlecsDeveloperSettings>()->bEnableFlecs && Super::ShouldCreateSubsystem(Outer);
 	}
 
 	virtual ETickableTickType GetTickableTickType() const override
