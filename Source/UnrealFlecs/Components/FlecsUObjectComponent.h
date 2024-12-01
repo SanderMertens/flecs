@@ -77,4 +77,4 @@ public:
 	
 }; // struct FFlecsUObjectComponent
 
-REGISTER_COMPONENT_TAG_PROPERTIES(FFlecsUObjectComponent, flecs::Sparse)
+REGISTER_COMPONENT_TAG_PROPERTIES(FFlecsUObjectComponent)
