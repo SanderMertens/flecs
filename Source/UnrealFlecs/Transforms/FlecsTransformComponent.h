@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "SolidMacros/Macros.h"
+#include "Standard/Hashing.h"
 #include "FlecsTransformComponent.generated.h"
 
 USTRUCT(BlueprintType)
@@ -61,3 +62,5 @@ struct UNREALFLECS_API FFlecsTransformComponent
 	FTransform GlobalTransform;
 
 }; // struct FFlecsTransformComponent
+
+DEFINE_STD_HASH(FFlecsTransformComponent);
