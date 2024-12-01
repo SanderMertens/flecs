@@ -95,10 +95,10 @@ void flecs_json_ser_exit_bitmask(uint32_t found, void* user_data);
 // Array
 
 static
-void flecs_json_ser_elements_enter(uint32_t count, void* user_data);
+void flecs_json_ser_elements_enter(size_t count, void* user_data);
 
 static
-void flecs_json_ser_elements_next_value(uint32_t index, void* user_data);
+void flecs_json_ser_elements_next_value(size_t index, void* user_data);
 
 static
 void flecs_json_ser_elements_exit(void* user_data);
@@ -497,14 +497,14 @@ void flecs_json_ser_exit_bitmask(uint32_t found, void* user_data) {
 // Array
 
 static
-void flecs_json_ser_elements_enter(uint32_t count, void* user_data) {
+void flecs_json_ser_elements_enter(size_t count, void* user_data) {
     (void)count;
     ecs_strbuf_t *str = (ecs_strbuf_t*)user_data;
     ecs_strbuf_list_push(str, "[", ", ");
 }
 
 static
-void flecs_json_ser_elements_next_value(uint32_t index, void* user_data) {
+void flecs_json_ser_elements_next_value(size_t index, void* user_data) {
     (void)index;
     ecs_strbuf_t *str = (ecs_strbuf_t*)user_data;
     ecs_strbuf_list_next(str);

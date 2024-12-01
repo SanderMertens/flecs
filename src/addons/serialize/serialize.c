@@ -133,8 +133,8 @@ int flecs_ser_elements(
 
     const void *ptr = base;
 
-    int32_t i;
-    for (i = 0; i < elem_count; i ++) {
+    size_t i;
+    for (i = 0; i < (size_t)elem_count; i ++) {
         if (visitor_desc->visit_array.next_value)
             visitor_desc->visit_array.next_value(i, visitor_desc->user_data);
         if (flecs_ser_type_ops(world, ops, op_count, ptr, visitor_desc, is_array)) {
@@ -211,7 +211,7 @@ typedef struct flecs_custom_type_serializer_ctx_t {
     ecs_visitor_desc_t *visitor_desc;
     bool is_collection;
     bool is_struct;
-    int32_t current_index; // Used for array/vector
+    size_t current_index; // Used for array/vector
 } flecs_custom_type_serializer_ctx_t;
 
 int flecs_ser_custom_value(
@@ -283,7 +283,7 @@ int flecs_ser_custom_type(
     } else if (kind == EcsArrayType || kind == EcsVectorType) {
         // If a user doesn't supply a count fn,
         // they will have to figure it out themselves.
-        uint32_t count = ct->count? ct->count(base): 0u;
+        size_t count = ct->count? ct->count(base): 0u;
         if (visitor_desc->visit_array.enter) {
             visitor_desc->visit_array.enter(count, visitor_desc->user_data);
         } 
@@ -614,7 +614,7 @@ int flecs_ser_array_w_type_data(
 
         do {
             if (visitor_desc->visit_array.next_value) {
-                visitor_desc->visit_array.next_value(count, visitor_desc->user_data);
+                visitor_desc->visit_array.next_value((size_t)count, visitor_desc->user_data);
             }
             if (flecs_ser_type(world, &ser->ops, ptr, visitor_desc)) {
                 return -1;

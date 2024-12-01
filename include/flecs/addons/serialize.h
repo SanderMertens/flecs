@@ -70,8 +70,8 @@ typedef struct ecs_visitor_desc_t {
         void (*exit)(uint32_t values_visited, void* user_data);
     } visit_bitmask;
     struct {
-        void (*enter)(uint32_t size, void* user_data);
-        void (*next_value)(uint32_t index, void* user_data);
+        void (*enter)(size_t size, void* user_data);
+        void (*next_value)(size_t index, void* user_data);
         void (*exit)(void* user_data);
     } visit_array;
     struct {
