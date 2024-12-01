@@ -301,7 +301,7 @@ struct ecs_world_t {
     /* --  Type metadata -- */
     ecs_id_record_t *id_index_lo;
     ecs_map_t id_index_hi;           /* map<id, ecs_id_record_t*> */
-    ecs_sparse_t type_info;          /* sparse<type_id, type_info_t> */
+    ecs_map_t type_info;             /* map<type_id, type_info_t> */
 
     /* -- Cached handle to id records -- */
     ecs_id_record_t *idr_wildcard;

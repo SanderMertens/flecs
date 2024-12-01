@@ -413,7 +413,7 @@ void World_dim(void) {
 
     ecs_bulk_new(world, Position, 500);
 
-    test_int(malloc_count, 2);
+    test_int(malloc_count, 4);
 
     malloc_count = 0;
 
