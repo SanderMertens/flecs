@@ -81,7 +81,6 @@ typedef struct ecs_visitor_desc_t {
 
     struct {
       void (*enter)(void* user_data);
-      // void (*next_value)(void* ptr, void* user_data);
       void (*exit)(void* user_data);
     } visit_iter_result;
 
@@ -93,7 +92,7 @@ typedef struct ecs_visitor_desc_t {
      */
     void* user_data;
     
-    /** Used to indicate an error has occured while visiting
+    /** Used to indicate an error has occurred while visiting
      */
     bool _error;
 } ecs_visitor_desc_t;
