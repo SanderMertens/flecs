@@ -16,9 +16,6 @@ static
 void flecs_json_ser_bool(bool value, void* user_data);
 
 static
-void flecs_json_ser_char_expression(char value, void* user_data);
-
-static
 void flecs_json_ser_char(char value, void* user_data);
 
 static
@@ -52,13 +49,7 @@ static
 void flecs_json_ser_f32(const float value, void* user_data);
 
 static
-void flecs_json_ser_f32_expression(const ecs_f32_t value, void* user_data);
-
-static
 void flecs_json_ser_f64(const double value, void* user_data);
-
-static
-void flecs_json_ser_f64_expression(const ecs_f64_t value, void* user_data);
 
 static
 void flecs_json_ser_iptr(const intptr_t value, void* user_data);
@@ -95,16 +86,10 @@ static
 int flecs_json_ser_enter_bitmask(uint32_t initial_value, void* user_data);
 
 static
-int flecs_json_ser_enter_bitmask_expression(uint32_t initial_value, void* user_data);
-
-static
 void flecs_json_ser_bitmask_value(uint32_t value, const char* constant_name, void* user_data);
 
 static
 void flecs_json_ser_exit_bitmask(uint32_t found, void* user_data);
-
-static
-void flecs_json_ser_exit_bitmask_expression(uint32_t found, void* user_data);
 
 
 // Array
@@ -152,7 +137,7 @@ void* ecs_ser_array(
 {
     ecs_strbuf_t str = ECS_STRBUF_INIT;
     ecs_visitor_desc_t visitor_desc = {
-        .visit_char = flecs_json_ser_char_expression,
+        .visit_char = flecs_json_ser_char,
         .visit_u8 = flecs_json_ser_u8,
         .visit_u16 = flecs_json_ser_u16,
         .visit_u32 = flecs_json_ser_u32,
@@ -161,13 +146,13 @@ void* ecs_ser_array(
         .visit_i16 = flecs_json_ser_i16,
         .visit_i32 = flecs_json_ser_i32,
         .visit_i64 = flecs_json_ser_i64,
-        .visit_f32 = flecs_json_ser_f32_expression,
-        .visit_f64 = flecs_json_ser_f64_expression,
+        .visit_f32 = flecs_json_ser_f32,
+        .visit_f64 = flecs_json_ser_f64,
         .visit_bool = flecs_json_ser_bool,
         .visit_byte = flecs_json_ser_byte,
         .visit_uptr = flecs_json_ser_uptr,
         .visit_iptr = flecs_json_ser_iptr,
-        .visit_string = flecs_json_ser_string_expression,
+        .visit_string = flecs_json_ser_string,
         .visit_entity = flecs_json_ser_entity,
         .visit_id = flecs_json_ser_id,
 
@@ -207,7 +192,7 @@ void* ecs_ser_array(
 
 void* flecs_json_init_visitor_desc(void* visitor_desc_ptr, ecs_strbuf_t* str) {
     ecs_visitor_desc_t visitor_desc = {
-        .visit_char = flecs_json_ser_char_expression,
+        .visit_char = flecs_json_ser_char,
         .visit_u8 = flecs_json_ser_u8,
         .visit_u16 = flecs_json_ser_u16,
         .visit_u32 = flecs_json_ser_u32,
@@ -216,8 +201,8 @@ void* flecs_json_init_visitor_desc(void* visitor_desc_ptr, ecs_strbuf_t* str) {
         .visit_i16 = flecs_json_ser_i16,
         .visit_i32 = flecs_json_ser_i32,
         .visit_i64 = flecs_json_ser_i64,
-        .visit_f32 = flecs_json_ser_f32_expression,
-        .visit_f64 = flecs_json_ser_f64_expression,
+        .visit_f32 = flecs_json_ser_f32,
+        .visit_f64 = flecs_json_ser_f64,
         .visit_bool = flecs_json_ser_bool,
         .visit_byte = flecs_json_ser_byte,
         .visit_uptr = flecs_json_ser_uptr,
@@ -274,26 +259,14 @@ void flecs_json_ser_bool(bool value, void* user_data) {
 }
 
 static
-void flecs_json_ser_char_expression(char value, void* user_data) {
-    ecs_strbuf_t* str = (ecs_strbuf_t*)user_data;
-    if (value) {
-        char chbuf[3];
-        flecs_chresc(chbuf, value, '"');
-        ecs_strbuf_appendch(str, '"');
-        ecs_strbuf_appendstr(str, chbuf);
-        ecs_strbuf_appendch(str, '"');
-    } else {
-        ecs_strbuf_appendch(str, '0');
-    }
-}
-
-static
 void flecs_json_ser_char(char value, void* user_data) {
     ecs_strbuf_t* str = (ecs_strbuf_t*)user_data;
     if (value) {
         char chbuf[3];
         flecs_chresc(chbuf, value, '"');
+        ecs_strbuf_appendch(str, '"');
         ecs_strbuf_appendstr(str, chbuf);
+        ecs_strbuf_appendch(str, '"');
     } else {
         ecs_strbuf_appendch(str, '0');
     }
@@ -368,25 +341,13 @@ void flecs_json_ser_i64(const int64_t value, void* user_data) {
 }
 
 static
-void flecs_json_ser_f32(const float value, void* user_data) {
-    ecs_strbuf_t* str = (ecs_strbuf_t*)user_data;
-    ecs_strbuf_appendflt(str, (double)value, 0);
-}
-
-static
-void flecs_json_ser_f32_expression(const ecs_f32_t value, void* user_data) {
+void flecs_json_ser_f32(const ecs_f32_t value, void* user_data) {
     ecs_strbuf_t* str = (ecs_strbuf_t*)user_data;
     ecs_strbuf_appendflt(str, (ecs_f64_t)value, '"');
 }
 
 static
-void flecs_json_ser_f64(const double value, void* user_data) {
-    ecs_strbuf_t* str = (ecs_strbuf_t*)user_data;
-    ecs_strbuf_appendflt(str, value, 0);
-}
-
-static
-void flecs_json_ser_f64_expression(const ecs_f64_t value, void* user_data) {
+void flecs_json_ser_f64(const ecs_f64_t value, void* user_data) {
     ecs_strbuf_t* str = (ecs_strbuf_t*)user_data;
     ecs_strbuf_appendflt(str, value, '"');
 }
@@ -452,29 +413,29 @@ void flecs_json_ser_entity(const ecs_world_t* world, ecs_entity_t e, void* user_
     }
     ecs_strbuf_appendch(str, '"');
 }
-/*
- * static
-void flecs_json_ser_entity_expression(const ecs_world_t* world, ecs_entity_t e, void* user_data) {
-    ecs_strbuf_t* str = (ecs_strbuf_t*)user_data;
-    if (!e) {
-        ecs_strbuf_appendlit(str, "#0");
-    } else {
-        ecs_get_path_w_sep_buf(world, 0, e, ".", NULL, str, false);
-    }
-}
-*/
-
 
 static
 void flecs_json_ser_id(const ecs_world_t* world, ecs_id_t id, void* user_data) {
-    ecs_strbuf_t* str = (ecs_strbuf_t*)user_data;
-    ecs_strbuf_appendch(str, '"');
-    if (!id) {
-        ecs_strbuf_appendlit(str, "#0");
+    ecs_strbuf_t* buf = (ecs_strbuf_t*)user_data;
+    ecs_strbuf_appendch(buf, '[');
+
+    if (ECS_IS_PAIR(id)) {
+        ecs_entity_t first = ecs_pair_first(world, id);
+        ecs_entity_t second = ecs_pair_second(world, id);
+        ecs_strbuf_appendch(buf, '"');
+        ecs_get_path_w_sep_buf(world, 0, first, ".", "", buf, true);
+        ecs_strbuf_appendch(buf, '"');
+        ecs_strbuf_appendch(buf, ',');
+        ecs_strbuf_appendch(buf, '"');
+        ecs_get_path_w_sep_buf(world, 0, second, ".", "", buf, true);
+        ecs_strbuf_appendch(buf, '"');
     } else {
-        ecs_id_str_buf(world, id, str);
+        ecs_strbuf_appendch(buf, '"');
+        ecs_get_path_w_sep_buf(world, 0, id & ECS_COMPONENT_MASK, ".", "", buf, true);
+        ecs_strbuf_appendch(buf, '"');
     }
-    ecs_strbuf_appendch(str, '"');
+
+    ecs_strbuf_appendch(buf, ']');
 }
 
 
@@ -519,14 +480,6 @@ int flecs_json_ser_enter_bitmask(uint32_t initial_value, void* user_data) {
 }
 
 static
-int flecs_json_ser_enter_bitmask_expression(uint32_t initial_value, void* user_data) {
-    (void)initial_value;
-    ecs_strbuf_t *str = (ecs_strbuf_t*)user_data;
-    ecs_strbuf_list_push(str, "", "|");
-    return true;
-}
-
-static
 void flecs_json_ser_bitmask_value(uint32_t value, const char* constant_name, void* user_data) {
     (void)value;
     ecs_strbuf_t *str = (ecs_strbuf_t*)user_data;
@@ -540,26 +493,19 @@ void flecs_json_ser_exit_bitmask(uint32_t found, void* user_data) {
     ecs_strbuf_list_pop(str, "\"");
 }
 
-static
-void flecs_json_ser_exit_bitmask_expression(uint32_t found, void* user_data) {
-    ecs_strbuf_t *str = (ecs_strbuf_t*)user_data;
-    if (!found) {
-        ecs_strbuf_appendch(str, '0');
-    }
-    ecs_strbuf_list_pop(str, "");
-}
-
 
 // Array
 
 static
 void flecs_json_ser_elements_enter(uint32_t count, void* user_data) {
+    (void)count;
     ecs_strbuf_t *str = (ecs_strbuf_t*)user_data;
     ecs_strbuf_list_push(str, "[", ", ");
 }
 
 static
 void flecs_json_ser_elements_next_value(uint32_t index, void* user_data) {
+    (void)index;
     ecs_strbuf_t *str = (ecs_strbuf_t*)user_data;
     ecs_strbuf_list_next(str);
 }
@@ -576,7 +522,7 @@ void flecs_json_ser_elements_exit(void* user_data) {
 static
 void flecs_json_ser_struct_enter(void* user_data) {
     ecs_strbuf_t *str = (ecs_strbuf_t*)user_data;
-    flecs_json_object_push(str);
+    ecs_strbuf_list_push(str, "{", ", ");
 }
 
 static

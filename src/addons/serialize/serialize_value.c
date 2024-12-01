@@ -156,11 +156,12 @@ void* flecs_expr_init_visitor_desc(void* visitor_desc_ptr, ecs_strbuf_t* str) {
             .enter = flecs_expr_ser_struct_enter,
             .exit = flecs_expr_ser_struct_exit
         },
+        .visit_member = flecs_expr_ser_member,
 
         .exit = flecs_expr_ser_exit,
         .error = flecs_expr_ser_error,
 
-        .user_data = &str
+        .user_data = str
     };
     *(ecs_visitor_desc_t*)visitor_desc_ptr = visitor_desc;
     return visitor_desc_ptr;
@@ -343,9 +344,7 @@ void flecs_expr_ser_enum(
     (void)value;
     ecs_strbuf_t *str = (ecs_strbuf_t*)user_data;
 
-    ecs_strbuf_appendch(str, '"');
     ecs_strbuf_appendstr(str, constant_name);
-    ecs_strbuf_appendch(str, '"');
 }
 
 
@@ -380,12 +379,14 @@ void flecs_expr_ser_exit_bitmask(uint32_t found, void* user_data) {
 
 static
 void flecs_expr_ser_elements_enter(uint32_t count, void* user_data) {
+    (void)count;
     ecs_strbuf_t *str = (ecs_strbuf_t*)user_data;
     ecs_strbuf_list_push(str, "[", ", ");
 }
 
 static
 void flecs_expr_ser_elements_next_value(uint32_t index, void* user_data) {
+    (void)index;
     ecs_strbuf_t *str = (ecs_strbuf_t*)user_data;
     ecs_strbuf_list_next(str);
 }
@@ -411,6 +412,16 @@ void flecs_expr_ser_struct_exit(void* user_data) {
     ecs_strbuf_list_pop(str, "}");
 }
 
+static
+void flecs_expr_ser_member(
+    const char *name,
+    void* user_data)
+{
+    ecs_strbuf_t *str = (ecs_strbuf_t*)user_data;
+    ecs_strbuf_list_next(str);
+    ecs_strbuf_appendstrn(str, name, ecs_os_strlen(name));
+    ecs_strbuf_appendlit(str, ": ");
+}
 
 // End-Control
 
