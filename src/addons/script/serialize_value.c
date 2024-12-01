@@ -60,6 +60,9 @@ void flecs_expr_ser_uptr(const uintptr_t value, void* user_data);
 static
 void flecs_expr_ser_string(const char* value, void* user_data);
 
+static
+void flecs_expr_ser_string_to_expr(const char* value, void* user_data);
+
 // Flecs
 
 static
@@ -121,7 +124,7 @@ static
 void* flecs_expr_ser_error(void* user_data);
 
 
-void* flecs_expr_init_visitor_desc(void* visitor_desc_ptr, ecs_strbuf_t* str) {
+void flecs_expr_string_init_visitor_desc(void* visitor_desc_ptr, ecs_strbuf_t* str) {
     ecs_visitor_desc_t visitor_desc = {
         .visit_char = flecs_expr_ser_char,
         .visit_u8 = flecs_expr_ser_u8,
@@ -165,7 +168,11 @@ void* flecs_expr_init_visitor_desc(void* visitor_desc_ptr, ecs_strbuf_t* str) {
         .user_data = str
     };
     *(ecs_visitor_desc_t*)visitor_desc_ptr = visitor_desc;
-    return visitor_desc_ptr;
+}
+
+void flecs_expr_init_visitor_desc(void* visitor_desc_ptr, ecs_strbuf_t* str) {
+    flecs_expr_string_init_visitor_desc(visitor_desc_ptr, str);
+    ((ecs_visitor_desc_t*)visitor_desc_ptr)->visit_string = flecs_expr_ser_string_to_expr;
 }
 
 // Primitives
@@ -220,14 +227,7 @@ void flecs_expr_ser_u32(const uint32_t value, void* user_data) {
 static
 void flecs_expr_ser_u64(const uint64_t value, void* user_data) {
     ecs_strbuf_t* str = (ecs_strbuf_t*)user_data;
-    bool large_int = value >= 2147483648;
-    if (large_int) {
-        ecs_strbuf_appendch(str, '"');
-    }
     ecs_strbuf_append(str, "%llu", value);
-    if (large_int) {
-        ecs_strbuf_appendch(str, '"');
-    }
 }
 
 static
@@ -264,13 +264,13 @@ void flecs_expr_ser_i64(const int64_t value, void* user_data) {
 static
 void flecs_expr_ser_f32(const ecs_f32_t value, void* user_data) {
     ecs_strbuf_t* str = (ecs_strbuf_t*)user_data;
-    ecs_strbuf_appendflt(str, (ecs_f64_t)value, '"');
+    ecs_strbuf_appendflt(str, (ecs_f64_t)value, 0);
 }
 
 static
 void flecs_expr_ser_f64(const ecs_f64_t value, void* user_data) {
     ecs_strbuf_t* str = (ecs_strbuf_t*)user_data;
-    ecs_strbuf_appendflt(str, value, '"');
+    ecs_strbuf_appendflt(str, value, 0);
 }
 
 static
@@ -291,24 +291,35 @@ static
 void flecs_expr_ser_string(const char* value, void* user_data) {
     ecs_strbuf_t* str = (ecs_strbuf_t*)user_data;
     if (value) {
-        ecs_size_t length = flecs_stresc(NULL, 0, '"', value);
-        if (length == ecs_os_strlen(value)) {
-            ecs_strbuf_appendch(str, '"');
-            ecs_strbuf_appendstrn(str, value, length);
-            ecs_strbuf_appendch(str, '"');
-        } else {
-            char *out = ecs_os_malloc(length + 3);
-            flecs_stresc(out + 1, length, '"', value);
-            out[0] = '"';
-            out[length + 1] = '"';
-            out[length + 2] = '\0';
-            ecs_strbuf_appendstr(str, out);
-            ecs_os_free(out);
-        }
+        ecs_strbuf_appendstrn(str, value, ecs_os_strlen(value));
     } else {
         ecs_strbuf_appendlit(str, "null");
     }
 }
+
+static
+void flecs_expr_ser_string_to_expr(const char* value, void* user_data) {
+    ecs_strbuf_t* str = (ecs_strbuf_t*)user_data;
+    if (value) {
+            ecs_size_t length = flecs_stresc(NULL, 0, '"', value);
+            if (length == ecs_os_strlen(value)) {
+                ecs_strbuf_appendch(str, '"');
+                ecs_strbuf_appendstrn(str, value, length);
+                ecs_strbuf_appendch(str, '"');
+            } else {
+                char *out = ecs_os_malloc(length + 3);
+                flecs_stresc(out + 1, length, '"', value);
+                out[0] = '"';
+                out[length + 1] = '"';
+                out[length + 2] = '\0';
+                ecs_strbuf_appendstr(str, out);
+                ecs_os_free(out);
+            }
+    } else {
+        ecs_strbuf_appendlit(str, "null");
+    }
+}
+
 
 // Flecs
 

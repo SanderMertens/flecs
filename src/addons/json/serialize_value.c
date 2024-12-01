@@ -190,7 +190,7 @@ void* ecs_ser_array(
 */
 
 
-void* flecs_json_init_visitor_desc(void* visitor_desc_ptr, ecs_strbuf_t* str) {
+void flecs_json_init_visitor_desc(void* visitor_desc_ptr, ecs_strbuf_t* str) {
     ecs_visitor_desc_t visitor_desc = {
         .visit_char = flecs_json_ser_char,
         .visit_u8 = flecs_json_ser_u8,
@@ -240,7 +240,6 @@ void* flecs_json_init_visitor_desc(void* visitor_desc_ptr, ecs_strbuf_t* str) {
         .user_data = str
     };
     *(ecs_visitor_desc_t*)visitor_desc_ptr = visitor_desc;
-    return visitor_desc_ptr;
 }
 
 

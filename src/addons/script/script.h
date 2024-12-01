@@ -105,7 +105,8 @@ const char* flecs_term_parse(
 //// Visitor Fns for Expr Serialization 
 ////////////////////////////////////////////////////////////////////////////////
 
-void* flecs_expr_init_visitor_desc(void* visitor_desc_ptr, ecs_strbuf_t* str);
+void flecs_expr_init_visitor_desc(void* visitor_desc_ptr, ecs_strbuf_t* str);
+void flecs_expr_string_init_visitor_desc(void* visitor_desc_ptr, ecs_strbuf_t* str);
 
 
 #endif // FLECS_SCRIPT

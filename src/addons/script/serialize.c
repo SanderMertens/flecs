@@ -66,7 +66,7 @@ int ecs_ptr_to_str_buf(
     }
 
     ecs_visitor_desc_t visitor_desc;
-    flecs_expr_init_visitor_desc(&visitor_desc, buf_out);
+    flecs_expr_string_init_visitor_desc(&visitor_desc, buf_out);
     if (flecs_ser_type(world, &ser->ops, ptr, &visitor_desc)) {
         goto error;
     }

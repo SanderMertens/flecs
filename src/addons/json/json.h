@@ -296,7 +296,7 @@ bool flecs_json_is_builtin(
 //// Visitor Fns for Json Serialization 
 ////////////////////////////////////////////////////////////////////////////////
 
-void* flecs_json_init_visitor_desc(void* visitor_desc_ptr, ecs_strbuf_t* str);
+void flecs_json_init_visitor_desc(void* visitor_desc_ptr, ecs_strbuf_t* str);
 
 
 #endif
