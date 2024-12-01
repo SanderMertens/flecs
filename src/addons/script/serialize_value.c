@@ -76,7 +76,7 @@ void flecs_expr_ser_member(const char* name, void* user_data);
 // Enum
 
 static
-void flecs_expr_ser_enum(uint32_t value, const char* constant_name, void* user_data);
+void flecs_expr_ser_enum(int32_t value, const char* constant_name, void* user_data);
 
 
 // Bitmask
@@ -338,7 +338,7 @@ void flecs_expr_ser_id(const ecs_world_t* world, ecs_id_t id, void* user_data) {
 
 static
 void flecs_expr_ser_enum(
-    uint32_t value,
+    int32_t value,
     const char* constant_name,
     void* user_data)
 {

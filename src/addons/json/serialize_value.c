@@ -78,7 +78,7 @@ void flecs_json_ser_member(const char* name, void* user_data);
 // Enum
 
 static
-void flecs_json_ser_enum(uint32_t value, const char* constant_name, void* user_data);
+void flecs_json_ser_enum(int32_t value, const char* constant_name, void* user_data);
 
 // Bitmask
 
@@ -452,7 +452,7 @@ void flecs_json_ser_member(
 
 static
 void flecs_json_ser_enum(
-    uint32_t value,
+    int32_t value,
     const char* constant_name,
     void* user_data)
 {

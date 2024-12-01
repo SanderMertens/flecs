@@ -24,6 +24,23 @@ int flecs_ser_type_op(
     const void *base,
     ecs_visitor_desc_t *visitor_desc);
 
+extern
+int flecs_ser_custom_value(
+    const ecs_serializer_t *ser,
+    ecs_entity_t type,
+    const void *value);
+
+static
+int flecs_ser_custom_member(
+    const ecs_serializer_t *ser,
+    const char *name);
+
+static
+int flecs_ser_custom_type(
+    const ecs_world_t *world,
+    ecs_meta_type_op_t *op, 
+    const void *base, 
+    ecs_visitor_desc_t *visitor_desc);
 
 
 /* Serialize enumeration */
@@ -129,7 +146,7 @@ int flecs_ser_elements(
     bool is_array)
 {
     if (visitor_desc->visit_array.enter)
-        visitor_desc->visit_array.enter(elem_count, visitor_desc->user_data);
+        visitor_desc->visit_array.enter((size_t)elem_count, visitor_desc->user_data);
 
     const void *ptr = base;
 
@@ -214,6 +231,7 @@ typedef struct flecs_custom_type_serializer_ctx_t {
     size_t current_index; // Used for array/vector
 } flecs_custom_type_serializer_ctx_t;
 
+extern
 int flecs_ser_custom_value(
     const ecs_serializer_t *ser,
     ecs_entity_t type,
@@ -316,6 +334,7 @@ int flecs_ser_custom_type(
 
 
 /* Serialize a primitive value */
+static
 int flecs_ser_primitive(
     const ecs_world_t *world,
     ecs_primitive_kind_t kind,
@@ -609,7 +628,7 @@ int flecs_ser_array_w_type_data(
         ecs_size_t size = comp->size;
 
         if (visitor_desc->visit_array.enter) {
-            visitor_desc->visit_array.enter(count, visitor_desc->user_data);
+            visitor_desc->visit_array.enter((size_t)count, visitor_desc->user_data);
         }
 
         do {

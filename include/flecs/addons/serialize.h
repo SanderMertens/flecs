@@ -63,7 +63,7 @@ typedef struct ecs_visitor_desc_t {
 
     void (*visit_member)(const char* member_name, void* user_data);
 
-    void (*visit_enum)(uint32_t value, const char* constant_name, void* user_data);
+    void (*visit_enum)(int32_t value, const char* constant_name, void* user_data);
     struct {
         int (*enter)(uint32_t initial_value, void* user_data);
         void (*value)(uint32_t value, const char* constant_name, void* user_data);
