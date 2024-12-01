@@ -38,6 +38,4 @@ struct FFlecsScriptEnumComponent
     
 }; // struct FFlecsScriptEnumComponent
 
-REGISTER_COMPONENT_TAG_PROPERTIES(FFlecsScriptEnumComponent, flecs::Sparse);
-
 DEFINE_STD_HASH(FFlecsScriptEnumComponent)

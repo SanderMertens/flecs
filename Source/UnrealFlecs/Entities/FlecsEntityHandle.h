@@ -1170,8 +1170,7 @@ public:
 
 	SOLID_INLINE void RemovePair(const FGameplayTag& InFirst, const UScriptStruct* InSecond) const
 	{
-		GetEntity().remove(GetTagEntity(InFirst),
-			ObtainComponentTypeStruct(InSecond));
+		GetEntity().remove(GetTagEntity(InFirst), ObtainComponentTypeStruct(InSecond));
 	}
 
 	SOLID_INLINE void RemovePair(const FGameplayTag& InFirst, const FGameplayTag& InSecond) const
