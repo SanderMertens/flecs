@@ -277,7 +277,7 @@ int flecs_expr_initializer_visit_type(
     ecs_meta_cursor_t *cur,
     const ecs_script_expr_run_desc_t *desc)
 {
-    if (!cur) {
+    if (!cur || !cur->valid) {
         flecs_expr_visit_error(script, node, "missing type for initializer");
         goto error;
     }
@@ -500,6 +500,9 @@ int flecs_expr_function_visit_type(
         if (!last_elem) {
             node->left = member->left;
             node->function_name = member->member_name;
+
+            member->left = NULL; /* Prevent cleanup */
+            flecs_script_expr_visit_free(script, (ecs_expr_node_t*)member);
         } else {
             node->function_name = last_elem + 1;
             last_elem[0] = '\0';

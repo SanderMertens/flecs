@@ -14,6 +14,11 @@ int flecs_value_copy_to(
     ecs_value_t *dst,
     const ecs_value_t *src);
 
+int flecs_value_move_to(
+    ecs_world_t *world,
+    ecs_value_t *dst,
+    ecs_value_t *src);
+
 int flecs_value_binary(
     ecs_script_t *script,
     const ecs_value_t *left,

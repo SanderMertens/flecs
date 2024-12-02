@@ -16,7 +16,7 @@ void flecs_meta_entity_name(
     ecs_value_t *result) 
 {
     ecs_entity_t entity = *(ecs_entity_t*)argv[0].ptr;
-    *(char**)result->ptr = ecs_get_name(ctx->world, entity);
+    *(char**)result->ptr = ecs_os_strdup(ecs_get_name(ctx->world, entity));
 }
 
 static
@@ -51,7 +51,7 @@ void flecs_meta_entity_doc_name(
     ecs_value_t *result) 
 {
     ecs_entity_t entity = *(ecs_entity_t*)argv[0].ptr;
-    *(char**)result->ptr = ecs_doc_get_name(ctx->world, entity);
+    *(char**)result->ptr = ecs_os_strdup(ecs_doc_get_name(ctx->world, entity));
 }
 
 void flecs_script_register_builtin_doc_functions(

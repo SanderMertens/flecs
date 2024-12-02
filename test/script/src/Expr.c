@@ -2341,6 +2341,8 @@ void Expr_not_bool(void) {
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, true);
     ecs_value_free(world, v.type, v.ptr);
+    
+    ecs_os_zeromem(&v);
 
     test_assert(ecs_script_expr_run(world, "!true", &v, NULL) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
@@ -2361,6 +2363,8 @@ void Expr_not_int(void) {
     test_bool(*(bool*)v.ptr, true);
     ecs_value_free(world, v.type, v.ptr);
 
+    ecs_os_zeromem(&v);
+
     test_assert(ecs_script_expr_run(world, "!10", &v, NULL) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
@@ -2380,6 +2384,8 @@ void Expr_not_paren_int(void) {
     test_bool(*(bool*)v.ptr, true);
     ecs_value_free(world, v.type, v.ptr);
 
+    ecs_os_zeromem(&v);
+
     test_assert(ecs_script_expr_run(world, "!(10)", &v, NULL) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
@@ -2398,6 +2404,8 @@ void Expr_not_paren_expr(void) {
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, true);
     ecs_value_free(world, v.type, v.ptr);
+
+    ecs_os_zeromem(&v);
 
     test_assert(ecs_script_expr_run(world, "!(5 + 5)", &v, NULL) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
@@ -2425,6 +2433,8 @@ void Expr_not_var(void) {
     test_assert(v.ptr != NULL);
     test_uint(*(bool*)v.ptr, false);
     ecs_value_free(world, v.type, v.ptr);
+
+    ecs_os_zeromem(&v);
 
     *(int32_t*)var->value.ptr = 0;
     test_assert(ecs_script_expr_run(world, "!$foo", &v, &desc) != NULL);
@@ -2679,6 +2689,25 @@ void Expr_var_parent_func(void) {
     ecs_value_free(world, v.type, v.ptr);
 
     ecs_script_vars_fini(vars);
+
+    ecs_fini(world);
+}
+
+void Expr_entity_path_func(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t parent = ecs_entity(world, { .name = "parent" });
+    test_assert(parent != 0);
+
+    ecs_entity_t foo = ecs_entity(world, { .name = "parent.foo" });
+    test_assert(foo != 0);
+
+    ecs_value_t v = {0};
+    test_assert(ecs_script_expr_run(world, "parent.foo.path()", &v, NULL) != NULL);
+    test_assert(v.type == ecs_id(ecs_string_t));
+    test_assert(v.ptr != NULL);
+    test_str(*(char**)v.ptr, "parent.foo");
+    ecs_value_free(world, v.type, v.ptr);
 
     ecs_fini(world);
 }

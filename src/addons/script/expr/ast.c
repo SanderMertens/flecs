@@ -96,7 +96,8 @@ ecs_expr_val_t* flecs_expr_string(
         parser, ecs_expr_val_t, EcsExprValue);
     result->storage.string = value;
     result->ptr = &result->storage.string;
-    result->node.type = ecs_id(ecs_string_t);
+    result->node.type = ecs_lookup(
+        parser->script->pub.world, "flecs.script.string");
     return result;
 }
 

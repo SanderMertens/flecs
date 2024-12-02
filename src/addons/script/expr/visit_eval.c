@@ -31,15 +31,36 @@ void flecs_expr_value_alloc(
     val->value.type = ti->component;
 
     if (ti->size <= FLECS_EXPR_SMALL_DATA_SIZE) {
-        if (!(ti->hooks.flags & ECS_TYPE_HOOK_DTOR)) {
-            val->value.ptr = val->storage.small_data;
-        } else {
-            ecs_abort(ECS_UNSUPPORTED, 
-                "non-trivial temporary values not yet supported");
-        }
+        val->value.ptr = val->storage.small_data;
     } else {
-        ecs_abort(ECS_UNSUPPORTED, 
-            "non-trivial temporary values not yet supported");
+        val->value.ptr = flecs_alloc(
+            &((ecs_script_impl_t*)script)->allocator, ti->size);
+    }
+
+    ecs_xtor_t ctor = ti->hooks.ctor;
+    if (ctor) {
+        ctor(val->value.ptr, 1, ti);
+    }
+}
+
+static
+void flecs_expr_value_free(
+    ecs_script_t *script,
+    ecs_eval_value_t *val,
+    const ecs_type_info_t *ti)
+{
+    ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_xtor_t dtor = ti->hooks.dtor;
+    if (dtor) {
+        dtor(val->value.ptr, 1, ti);
+    }
+
+    val->value.type = ti->component;
+
+    if (ti->size > FLECS_EXPR_SMALL_DATA_SIZE) {
+        flecs_free(&((ecs_script_impl_t*)script)->allocator, 
+            ti->size, val->value.ptr);
     }
 }
 
@@ -446,11 +467,15 @@ int flecs_script_expr_visit_eval(
         out->type = node->type;
     }
 
+    if (out->type == ecs_lookup(script->world, "flecs.script.string")) {
+        out->type = ecs_id(ecs_string_t);
+    }
+
     if (out->type && !out->ptr) {
         out->ptr = ecs_value_new(script->world, out->type);
     }
 
-    if (flecs_value_copy_to(script->world, out, &val.value)) {
+    if (flecs_value_move_to(script->world, out, &val.value)) {
         flecs_expr_visit_error(script, node, "failed to write to output");
         goto error;
     }
