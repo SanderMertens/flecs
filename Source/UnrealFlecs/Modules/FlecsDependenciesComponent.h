@@ -18,7 +18,7 @@ struct UNREALFLECS_API FFlecsDependenciesComponent
 	GENERATED_BODY()
 
 public:
-	TMap<UClass*, std::function<void(UObject*, UFlecsWorld*, FFlecsEntityHandle)>> Dependencies;
+	robin_hood::unordered_flat_map<UClass*, std::function<void(UObject*, UFlecsWorld*, FFlecsEntityHandle)>> Dependencies;
 }; // struct FFlecsDependenciesComponent
 
 REGISTER_COMPONENT_TAG_PROPERTIES(FFlecsDependenciesComponent, flecs::Sparse);

@@ -40,3 +40,5 @@ public:
 	mutable TWeakObjectPtr<UFlecsWorld> FlecsWorld;
 	
 }; // class UFlecsAbstractWorldSubsystem
+
+

@@ -11,8 +11,6 @@
 #include "flecs.h"
 
 #include "AssetRegistry/AssetRegistryModule.h"
-#include "Components/FFlecsActorComponentTag.h"
-#include "Components/FFlecsSceneComponentTag.h"
 #include "Components/FlecsGameplayTagEntityComponent.h"
 #include "Components/FlecsModuleComponent.h"
 #include "Components/FlecsPrimaryAssetComponent.h"
@@ -578,10 +576,10 @@ public:
 				DependenciesComponentQuery.each([&](flecs::entity InEntity,
 					const FFlecsDependenciesComponent& InDependenciesComponent)
 				{
-					if (InDependenciesComponent.Dependencies.Contains(InModuleComponent.ModuleClass))
+					if (InDependenciesComponent.Dependencies.contains(InModuleComponent.ModuleClass))
 					{
 						const std::function<void(UObject*, UFlecsWorld*, FFlecsEntityHandle)>& Function
-							= InDependenciesComponent.Dependencies[InModuleComponent.ModuleClass];
+							= InDependenciesComponent.Dependencies.at(InModuleComponent.ModuleClass);
 
 						InEntity.add(flecs::DependsOn, ModuleEntity);
 						
@@ -652,12 +650,20 @@ public:
 		});
 	}
 
+	/**
+	 * @brief Asynchronously Register a module dependency,
+	 * if the dependency is already imported, the function is called immediately
+	 * if the dependency is not imported, the function is called when the dependency is imported (if it is)
+	 * @param InModuleObject The module object
+	 * @param InFunction The function to call when the dependency is imported
+	 * @tparam TModule The module class
+	 */
 	template <Solid::TStaticClassConcept TModule, typename TFunction>
 	FORCEINLINE_DEBUGGABLE void RegisterModuleDependency(UObject* InModuleObject, TFunction&& InFunction)
 	{
 		RegisterModuleDependency(
 			InModuleObject, TModule::StaticClass(), [InFunction](UObject* InDependencyObject, UFlecsWorld* InWorld,
-			FFlecsEntityHandle InDependencyEntity)
+			FFlecsEntityHandle InDependencyEntity) FORCEINLINE_ATTRIBUTE
 		{
 			std::invoke(InFunction, CastChecked<TModule>(InDependencyObject), InWorld, InDependencyEntity);
 		});
@@ -686,7 +692,7 @@ public:
 
 		ModuleEntity.Add<FFlecsDependenciesComponent>();
 		const flecs::ref<FFlecsDependenciesComponent> Dependencies = ModuleEntity.GetFlecsRef<FFlecsDependenciesComponent>();
-		Dependencies->Dependencies.Add(InDependencyClass, InFunction);
+		Dependencies->Dependencies.emplace(InDependencyClass, InFunction);
 		
 		if (IsModuleImported(InDependencyClass))
 		{
@@ -1468,16 +1474,8 @@ public:
 
 		if (ScriptStruct->GetSuperStruct())
 		{
-			FFlecsEntityHandle ParentEntity;
-			
-			if (!HasScriptStruct(static_cast<UScriptStruct*>(ScriptStruct->GetSuperStruct())))
-			{
-				ParentEntity = RegisterScriptStruct(static_cast<UScriptStruct*>(ScriptStruct->GetSuperStruct()));
-			}
-			else
-			{
-				ParentEntity = GetScriptStructEntity(static_cast<UScriptStruct*>(ScriptStruct->GetSuperStruct()));
-			}
+			FFlecsEntityHandle ParentEntity = ObtainComponentTypeStruct(
+				static_cast<UScriptStruct*>(ScriptStruct->GetSuperStruct()));
 			
 			ScriptStructComponent.SetParent(ParentEntity);
 		}
