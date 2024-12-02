@@ -483,6 +483,7 @@ void Expr_entity_path_expr(void);
 void Expr_entity_parent_func(void);
 void Expr_entity_name_func(void);
 void Expr_entity_doc_name_func(void);
+void Expr_entity_path_func(void);
 void Expr_entity_chain_func(void);
 void Expr_var_parent_func(void);
 void Expr_var_name_func(void);
@@ -2544,6 +2545,10 @@ bake_test_case Expr_testcases[] = {
         Expr_entity_doc_name_func
     },
     {
+        "entity_path_func",
+        Expr_entity_path_func
+    },
+    {
         "entity_chain_func",
         Expr_entity_chain_func
     },
@@ -3265,7 +3270,7 @@ static bake_test_suite suites[] = {
         "Expr",
         NULL,
         NULL,
-        146,
+        147,
         Expr_testcases
     },
     {

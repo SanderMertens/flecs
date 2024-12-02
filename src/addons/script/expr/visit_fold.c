@@ -8,6 +8,16 @@
 #ifdef FLECS_SCRIPT
 #include "../script.h"
 
+void flecs_visit_fold_replace(
+    ecs_script_t *script,
+    ecs_expr_node_t **node_ptr,
+    ecs_expr_node_t *with)
+{
+    ecs_assert(*node_ptr != with, ECS_INTERNAL_ERROR, NULL);
+    flecs_script_expr_visit_free(script, *node_ptr);
+    *node_ptr = with;
+}
+
 int flecs_expr_unary_visit_fold(
     ecs_script_t *script,
     ecs_expr_node_t **node_ptr,
@@ -49,7 +59,7 @@ int flecs_expr_unary_visit_fold(
         goto error;
     }
 
-    *node_ptr = (ecs_expr_node_t*)result;
+    flecs_visit_fold_replace(script, node_ptr, (ecs_expr_node_t*)result);
 
     return 0;
 error:
@@ -101,7 +111,7 @@ int flecs_expr_binary_visit_fold(
     }
 
 done:
-    *node_ptr = (ecs_expr_node_t*)result;
+    flecs_visit_fold_replace(script, node_ptr, (ecs_expr_node_t*)result);
     return 0;
 error:  
     return -1;
@@ -124,10 +134,6 @@ int flecs_expr_cast_visit_fold(
     }
 
     ecs_expr_val_t *expr = (ecs_expr_val_t*)node->expr;
-
-    /* Reuse existing node to hold casted value */
-    *node_ptr = (ecs_expr_node_t*)expr;
-
     ecs_entity_t dst_type = node->node.type;
     ecs_entity_t src_type = expr->node.type;
 
@@ -148,6 +154,9 @@ int flecs_expr_cast_visit_fold(
     }
 
     expr->node.type = dst_type;
+
+    node->expr = NULL; /* Prevent cleanup */
+    flecs_visit_fold_replace(script, node_ptr, (ecs_expr_node_t*)expr);
 
     return 0;
 error:  
@@ -258,7 +267,8 @@ int flecs_expr_initializer_visit_fold(
         ecs_expr_val_t *result = flecs_expr_value_from(
             script, (ecs_expr_node_t*)node, node->node.type);
         result->ptr = value;
-        *node_ptr = (ecs_expr_node_t*)result;
+
+        flecs_visit_fold_replace(script, node_ptr, (ecs_expr_node_t*)result);
     }
 
     return 0;
@@ -281,6 +291,7 @@ int flecs_expr_identifier_visit_fold(
         result->storage.entity = desc->lookup_action(
             script->world, node->value, desc->lookup_ctx);
         if (!result->storage.entity) {
+            flecs_script_expr_visit_free(script, (ecs_expr_node_t*)result);
             flecs_expr_visit_error(script, node, 
                 "unresolved identifier '%s'", node->value);
             goto error;
@@ -290,12 +301,13 @@ int flecs_expr_identifier_visit_fold(
         ecs_meta_cursor_t cur = ecs_meta_cursor(
             script->world, type, &result->storage.u64);
         if (ecs_meta_set_string(&cur, node->value)) {
+            flecs_script_expr_visit_free(script, (ecs_expr_node_t*)result);
             goto error;
         }
         result->ptr = &result->storage.u64;
     }
 
-    *node_ptr = (ecs_expr_node_t*)result;
+    flecs_visit_fold_replace(script, node_ptr, (ecs_expr_node_t*)result);
 
     return 0;
 error:

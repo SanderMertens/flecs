@@ -51,6 +51,14 @@ const char* flecs_script_parse_lhs(
     ecs_expr_node_t **out);
 
 static
+void flecs_script_parser_expr_free(
+    ecs_script_parser_t *parser,
+    ecs_expr_node_t *node)
+{
+    flecs_script_expr_visit_free(&parser->script->pub, node);
+}
+
+static
 bool flecs_has_precedence(
     ecs_script_token_kind_t first,
     ecs_script_token_kind_t second)
@@ -231,6 +239,8 @@ const char* flecs_script_parse_rhs(
                 case EcsTokBracketOpen: {
                     ecs_expr_element_t *result = flecs_expr_element(parser);
                     result->left = *out;
+                    
+                    *out = (ecs_expr_node_t*)result;
 
                     pos = flecs_script_parse_lhs(
                         parser, pos, tokenizer, 0, &result->index);
@@ -239,7 +249,6 @@ const char* flecs_script_parse_rhs(
                     }
 
                     Parse_1(']', {
-                        *out = (ecs_expr_node_t*)result;
                         break;
                     });
 
@@ -247,10 +256,9 @@ const char* flecs_script_parse_rhs(
                 }
 
                 case EcsTokMember: {
-                    ecs_expr_member_t *result = flecs_expr_member(parser);
-                    result->left = *out;
-
                     Parse_1(EcsTokIdentifier, {
+                        ecs_expr_member_t *result = flecs_expr_member(parser);
+                        result->left = *out;
                         result->member_name = Token(1);
                         *out = (ecs_expr_node_t*)result;
                         break;
@@ -260,12 +268,13 @@ const char* flecs_script_parse_rhs(
                 }
 
                 case EcsTokParenOpen: {
-                    ecs_expr_function_t *result = flecs_expr_function(parser);
-                    result->left = *out;
+                    Parse_1(EcsTokParenClose, { 
+                        ecs_expr_function_t *result = flecs_expr_function(parser);
+                        result->left = *out;
+                        *out = (ecs_expr_node_t*)result;
+                        break; 
+                    });
 
-                    Parse_1(EcsTokParenClose, { break; });
-
-                    *out = (ecs_expr_node_t*)result;
                     break;
                 }
 
@@ -345,6 +354,7 @@ const char* flecs_script_parse_lhs(
             ecs_expr_unary_t *node = flecs_expr_unary(parser);
             pos = flecs_script_parse_expr(parser, pos, EcsTokNot, &node->expr);
             if (!pos) {
+                flecs_script_parser_expr_free(parser, (ecs_expr_node_t*)node);
                 goto error;
             }
 
@@ -357,6 +367,7 @@ const char* flecs_script_parse_lhs(
             ecs_expr_binary_t *node = flecs_expr_binary(parser);
             pos = flecs_script_parse_expr(parser, pos, 0, &node->right);
             if (!pos) {
+                flecs_script_parser_expr_free(parser, (ecs_expr_node_t*)node);
                 goto error;
             }
 
@@ -383,6 +394,7 @@ const char* flecs_script_parse_lhs(
             ecs_expr_initializer_t *node = flecs_expr_initializer(parser);
             pos = flecs_script_parse_initializer(parser, pos, node);
             if (!pos) {
+                flecs_script_parser_expr_free(parser, (ecs_expr_node_t*)node);
                 goto error;
             }
 
@@ -400,6 +412,7 @@ const char* flecs_script_parse_lhs(
 
             pos = flecs_script_parse_collection_initializer(parser, pos, node);
             if (!pos) {
+                flecs_script_parser_expr_free(parser, (ecs_expr_node_t*)node);
                 goto error;
             }
 
@@ -419,8 +432,7 @@ const char* flecs_script_parse_lhs(
     }
 
     /* Parse right-hand side of expression if there is one */
-    return flecs_script_parse_rhs(
-        parser, pos, tokenizer, *out, left_oper, out);
+    return flecs_script_parse_rhs(parser, pos, tokenizer, *out, left_oper, out);
 error:
     return NULL;
 }
@@ -499,8 +511,8 @@ const char* ecs_script_expr_run(
     if (!priv_desc.type) {
         priv_desc.type = value->type;
     } else if (desc && (value->type != desc->type)) {
-        ecs_throw("type of value parameter does not match desc->type",
-            ECS_INVALID_PARAMETER, NULL);
+        ecs_throw(ECS_INVALID_PARAMETER, 
+            "type of value parameter does not match desc->type");
     }
 
     if (!priv_desc.lookup_action) {
@@ -541,12 +553,16 @@ const char* ecs_script_expr_run(
 
     // printf("%s\n", ecs_script_expr_to_str(world, out));
 
-    if (flecs_script_expr_visit_eval(script, out, desc, value)) {
+    if (flecs_script_expr_visit_eval(script, out, &priv_desc, value)) {
         goto error;
     }
 
+    flecs_script_expr_visit_free(script, out);
+    ecs_script_free(script);
     return result;
 error:
+    flecs_script_expr_visit_free(script, out);
+    ecs_script_free(script);
     return NULL;
 }
 

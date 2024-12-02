@@ -493,6 +493,7 @@
                 "entity_parent_func",
                 "entity_name_func",
                 "entity_doc_name_func",
+                "entity_path_func",
                 "entity_chain_func",
                 "var_parent_func",
                 "var_name_func",
