@@ -278,7 +278,7 @@ void ecs_world_stats_get(
     ECS_GAUGE_RECORD(&s->components.tag_count, t, world->info.tag_id_count);
     ECS_GAUGE_RECORD(&s->components.component_count, t, world->info.component_id_count);
     ECS_GAUGE_RECORD(&s->components.pair_count, t, world->info.pair_id_count);
-    ECS_GAUGE_RECORD(&s->components.type_count, t, ecs_sparse_count(&world->type_info));
+    ECS_GAUGE_RECORD(&s->components.type_count, t, ecs_map_count(&world->type_info));
     ECS_COUNTER_RECORD(&s->components.create_count, t, world->info.id_create_total);
     ECS_COUNTER_RECORD(&s->components.delete_count, t, world->info.id_delete_total);
 
