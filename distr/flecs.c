@@ -5057,7 +5057,8 @@ const char* flecs_term_parse(
 //// Visitor Fns for Expr Serialization 
 ////////////////////////////////////////////////////////////////////////////////
 
-void* flecs_expr_init_visitor_desc(void* visitor_desc_ptr, ecs_strbuf_t* str);
+void flecs_expr_init_visitor_desc(void* visitor_desc_ptr, ecs_strbuf_t* str);
+void flecs_expr_string_init_visitor_desc(void* visitor_desc_ptr, ecs_strbuf_t* str);
 
 
 #endif // FLECS_SCRIPT
@@ -40620,161 +40621,6 @@ ecs_table_t* ecs_table_find(
 
 
 #ifdef FLECS_JSON
-/**
- * @file addons/seri/json.h
- * @brief Internal functions for SERIALIZE addon.
- */
-
-#ifndef FLECS_SERIALIZE_PRIVATE_H
-#define FLECS_SERIALIZE_PRIVATE_H
-
-
-#ifdef FLECS_SERIALIZE
-
-/**
- * @file addons/serialize.h
- * @brief Visitor-api addon.
- *
- * Implements visitor pattern to allow parsing of flecs entity-component
- * graphs.
- *
- * Used by the json parser addon to serialize to json.
- */
-
-#ifdef FLECS_SERIALIZE
-
-#ifndef FLECS_META
-#define FLECS_META
-#endif
-
-#ifndef FLECS_SCRIPT
-#define FLECS_SCRIPT
-#endif
-
-#ifndef FLECS_SERIALIZE_H
-#define FLECS_SERIALIZE_H
-
-/**
- * @defgroup c_addons_serialize Serialize
- * @ingroup c_addons
- * Functions for user-defined serialization.
- *
- * @{
- */
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-/** Visitor Seriailzation API
- */
-typedef struct ecs_visitor_desc_t {
-    /** Here Be Visitor Functions
-     * If the visit has a return, it has some form of flow control.
-     */
-
-    /** visit primitives */
-    void (*visit_char)(const ecs_char_t value, void* user_data);
-    void (*visit_u8)(const ecs_u8_t value, void* user_data);
-    void (*visit_u16)(const ecs_u16_t value, void* user_data);
-    void (*visit_u32)(const ecs_u32_t value, void* user_data);
-    void (*visit_u64)(const ecs_u64_t value, void* user_data);
-    void (*visit_i8)(const ecs_i8_t value, void* user_data);
-    void (*visit_i16)(const ecs_i16_t value, void* user_data);
-    void (*visit_i32)(const ecs_i32_t value, void* user_data);
-    void (*visit_i64)(const ecs_i64_t value, void* user_data);
-    void (*visit_f32)(const ecs_f32_t value, void* user_data);
-    void (*visit_f64)(const ecs_f64_t value, void* user_data);
-    void (*visit_bool)(const ecs_bool_t value, void* user_data);
-    void (*visit_byte)(const ecs_byte_t value, void* user_data);
-    void (*visit_uptr)(const ecs_uptr_t value, void* user_data);
-    void (*visit_iptr)(const ecs_iptr_t value, void* user_data);
-    void (*visit_string)(const char* value, void* user_data);
-    void (*visit_entity)(const ecs_world_t*, const ecs_entity_t value, void* user_data);
-    void (*visit_id)(const ecs_world_t*, const ecs_id_t value, void* user_data);
-
-    void (*visit_member)(const char* member_name, void* user_data);
-
-    void (*visit_enum)(int32_t value, const char* constant_name, void* user_data);
-    struct {
-        int (*enter)(uint32_t initial_value, void* user_data);
-        void (*value)(uint32_t value, const char* constant_name, void* user_data);
-        void (*exit)(uint32_t values_visited, void* user_data);
-    } visit_bitmask;
-    struct {
-        void (*enter)(size_t size, void* user_data);
-        void (*next_value)(size_t index, void* user_data);
-        void (*exit)(void* user_data);
-    } visit_array;
-    struct {
-        void (*enter)(void* user_data);
-        void (*exit)(void* user_data);
-    } visit_struct;
-
-    struct {
-      void (*enter)(void* user_data);
-      void (*exit)(void* user_data);
-    } visit_iter_result;
-
-    void* (*exit)(void* user_data);
-    void* (*error)(void* user_data);
-
-    /** User Data that is handed out to each visit.
-     * Ex: JSON serialization passes a string buffer
-     */
-    void* user_data;
-    
-    /** Used to indicate an error has occurred while visiting
-     */
-    bool _error;
-} ecs_visitor_desc_t;
-
-
-int ecs_ser_ptr(
-    const ecs_world_t *world,
-    ecs_entity_t type,
-    const void *ptr,
-    ecs_visitor_desc_t *visitor_desc);
-
-int ecs_ser_array(
-    const ecs_world_t *world,
-    ecs_entity_t type,
-    const void *ptr,
-    int32_t count,
-    ecs_visitor_desc_t *visitor_desc);
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif
-
-/** @} */
-
-#endif
-
-
-int flecs_ser_type(
-    const ecs_world_t *world,
-    const ecs_vec_t *v_ops,
-    const void *base, 
-    ecs_visitor_desc_t *visitor_desc);
-
-int flecs_ser_array_w_type_data(
-    const ecs_world_t *world,
-    const void *ptr,
-    int32_t count,
-    ecs_visitor_desc_t *visitor_desc,
-    const EcsComponent *comp,
-    const EcsTypeSerializer *ser);
-
-ecs_primitive_kind_t flecs_op_to_primitive_kind(
-    ecs_meta_type_op_kind_t kind);
-
-#endif
-
-#endif /* FLECS_SERIALIZE_PRIVATE_H */
-
 
 /* Deserialize from JSON */
 typedef enum ecs_json_token_t {
@@ -41061,7 +40907,7 @@ bool flecs_json_is_builtin(
 //// Visitor Fns for Json Serialization 
 ////////////////////////////////////////////////////////////////////////////////
 
-void* flecs_json_init_visitor_desc(void* visitor_desc_ptr, ecs_strbuf_t* str);
+void flecs_json_init_visitor_desc(void* visitor_desc_ptr, ecs_strbuf_t* str);
 
 
 #endif
@@ -45625,7 +45471,7 @@ void* ecs_ser_array(
 */
 
 
-void* flecs_json_init_visitor_desc(void* visitor_desc_ptr, ecs_strbuf_t* str) {
+void flecs_json_init_visitor_desc(void* visitor_desc_ptr, ecs_strbuf_t* str) {
     ecs_visitor_desc_t visitor_desc = {
         .visit_char = flecs_json_ser_char,
         .visit_u8 = flecs_json_ser_u8,
@@ -45675,7 +45521,6 @@ void* flecs_json_init_visitor_desc(void* visitor_desc_ptr, ecs_strbuf_t* str) {
         .user_data = str
     };
     *(ecs_visitor_desc_t*)visitor_desc_ptr = visitor_desc;
-    return visitor_desc_ptr;
 }
 
 
@@ -45823,17 +45668,6 @@ void flecs_json_ser_string(const char* value, void* user_data) {
         ecs_strbuf_appendlit(str, "null");
     }
 }
-/*
- * static
-void flecs_json_ser_string(const char* value, void* user_data) {
-    ecs_strbuf_t* str = (ecs_strbuf_t*)user_data;
-    if (value) {
-        ecs_strbuf_appendstr(str, value);
-    } else {
-        ecs_strbuf_appendlit(str, "null");
-    }
-}
-*/
 
 // Flecs
 
@@ -58574,6 +58408,38 @@ void FlecsScriptImport(
 
 
 #ifdef FLECS_SCRIPT
+/**
+ * @file addons/serialize/serialize.h
+ * @brief Internal functions for SERIALIZE addon.
+ */
+
+#ifndef FLECS_SERIALIZE_PRIVATE_H
+#define FLECS_SERIALIZE_PRIVATE_H
+
+
+#ifdef FLECS_SERIALIZE
+
+int flecs_ser_type(
+    const ecs_world_t *world,
+    const ecs_vec_t *v_ops,
+    const void *base, 
+    ecs_visitor_desc_t *visitor_desc);
+
+int flecs_ser_array_w_type_data(
+    const ecs_world_t *world,
+    const void *ptr,
+    int32_t count,
+    ecs_visitor_desc_t *visitor_desc,
+    const EcsComponent *comp,
+    const EcsTypeSerializer *ser);
+
+ecs_primitive_kind_t flecs_op_to_primitive_kind(
+    ecs_meta_type_op_kind_t kind);
+
+#endif
+
+#endif /* FLECS_SERIALIZE_PRIVATE_H */
+
 
 int ecs_ptr_to_expr_buf(
     const ecs_world_t *world,
@@ -58632,7 +58498,7 @@ int ecs_ptr_to_str_buf(
     }
 
     ecs_visitor_desc_t visitor_desc;
-    flecs_expr_init_visitor_desc(&visitor_desc, buf_out);
+    flecs_expr_string_init_visitor_desc(&visitor_desc, buf_out);
     if (flecs_ser_type(world, &ser->ops, ptr, &visitor_desc)) {
         goto error;
     }
@@ -58718,6 +58584,9 @@ void flecs_expr_ser_uptr(const uintptr_t value, void* user_data);
 static
 void flecs_expr_ser_string(const char* value, void* user_data);
 
+static
+void flecs_expr_ser_string_to_expr(const char* value, void* user_data);
+
 // Flecs
 
 static
@@ -58779,7 +58648,7 @@ static
 void* flecs_expr_ser_error(void* user_data);
 
 
-void* flecs_expr_init_visitor_desc(void* visitor_desc_ptr, ecs_strbuf_t* str) {
+void flecs_expr_string_init_visitor_desc(void* visitor_desc_ptr, ecs_strbuf_t* str) {
     ecs_visitor_desc_t visitor_desc = {
         .visit_char = flecs_expr_ser_char,
         .visit_u8 = flecs_expr_ser_u8,
@@ -58823,7 +58692,11 @@ void* flecs_expr_init_visitor_desc(void* visitor_desc_ptr, ecs_strbuf_t* str) {
         .user_data = str
     };
     *(ecs_visitor_desc_t*)visitor_desc_ptr = visitor_desc;
-    return visitor_desc_ptr;
+}
+
+void flecs_expr_init_visitor_desc(void* visitor_desc_ptr, ecs_strbuf_t* str) {
+    flecs_expr_string_init_visitor_desc(visitor_desc_ptr, str);
+    ((ecs_visitor_desc_t*)visitor_desc_ptr)->visit_string = flecs_expr_ser_string_to_expr;
 }
 
 // Primitives
@@ -58878,14 +58751,7 @@ void flecs_expr_ser_u32(const uint32_t value, void* user_data) {
 static
 void flecs_expr_ser_u64(const uint64_t value, void* user_data) {
     ecs_strbuf_t* str = (ecs_strbuf_t*)user_data;
-    bool large_int = value >= 2147483648;
-    if (large_int) {
-        ecs_strbuf_appendch(str, '"');
-    }
     ecs_strbuf_append(str, "%llu", value);
-    if (large_int) {
-        ecs_strbuf_appendch(str, '"');
-    }
 }
 
 static
@@ -58922,13 +58788,13 @@ void flecs_expr_ser_i64(const int64_t value, void* user_data) {
 static
 void flecs_expr_ser_f32(const ecs_f32_t value, void* user_data) {
     ecs_strbuf_t* str = (ecs_strbuf_t*)user_data;
-    ecs_strbuf_appendflt(str, (ecs_f64_t)value, '"');
+    ecs_strbuf_appendflt(str, (ecs_f64_t)value, 0);
 }
 
 static
 void flecs_expr_ser_f64(const ecs_f64_t value, void* user_data) {
     ecs_strbuf_t* str = (ecs_strbuf_t*)user_data;
-    ecs_strbuf_appendflt(str, value, '"');
+    ecs_strbuf_appendflt(str, value, 0);
 }
 
 static
@@ -58949,24 +58815,35 @@ static
 void flecs_expr_ser_string(const char* value, void* user_data) {
     ecs_strbuf_t* str = (ecs_strbuf_t*)user_data;
     if (value) {
-        ecs_size_t length = flecs_stresc(NULL, 0, '"', value);
-        if (length == ecs_os_strlen(value)) {
-            ecs_strbuf_appendch(str, '"');
-            ecs_strbuf_appendstrn(str, value, length);
-            ecs_strbuf_appendch(str, '"');
-        } else {
-            char *out = ecs_os_malloc(length + 3);
-            flecs_stresc(out + 1, length, '"', value);
-            out[0] = '"';
-            out[length + 1] = '"';
-            out[length + 2] = '\0';
-            ecs_strbuf_appendstr(str, out);
-            ecs_os_free(out);
-        }
+        ecs_strbuf_appendstrn(str, value, ecs_os_strlen(value));
     } else {
         ecs_strbuf_appendlit(str, "null");
     }
 }
+
+static
+void flecs_expr_ser_string_to_expr(const char* value, void* user_data) {
+    ecs_strbuf_t* str = (ecs_strbuf_t*)user_data;
+    if (value) {
+            ecs_size_t length = flecs_stresc(NULL, 0, '"', value);
+            if (length == ecs_os_strlen(value)) {
+                ecs_strbuf_appendch(str, '"');
+                ecs_strbuf_appendstrn(str, value, length);
+                ecs_strbuf_appendch(str, '"');
+            } else {
+                char *out = ecs_os_malloc(length + 3);
+                flecs_stresc(out + 1, length, '"', value);
+                out[0] = '"';
+                out[length + 1] = '"';
+                out[length + 2] = '\0';
+                ecs_strbuf_appendstr(str, out);
+                ecs_os_free(out);
+            }
+    } else {
+        ecs_strbuf_appendlit(str, "null");
+    }
+}
+
 
 // Flecs
 
@@ -62299,11 +62176,10 @@ error:
 
 /**
  * @file addons/serialize/serialize.c
- * @brief Serialize values.
+ * @brief Visitor API for serializing values.
  */
 
-
-#ifdef FLECS_SCRIPT
+#ifdef FLECS_SERIALIZE
 
 static
 int flecs_ser_type_ops(
@@ -63023,6 +62899,86 @@ int ecs_ser_ptr(
     ecs_visitor_desc_t *visitor_desc)
 {
     return ecs_ser_array(world, type, ptr, 0, visitor_desc);
+}
+
+
+void* ecs_ser_entity(
+    const ecs_world_t *stage,
+    ecs_entity_t entity,
+    ecs_visitor_desc_t *visitor_desc,
+    const ecs_entity_to_json_desc_t *desc)
+{
+    const ecs_world_t *world = ecs_get_world(stage);
+
+    ecs_strbuf_t* buf = (ecs_strbuf_t*)visitor_desc->user_data; // TODO
+
+    if (!entity || !ecs_is_valid(world, entity)) {
+        goto error;
+    }
+
+    /* Cache id record for flecs.doc ids */
+    ecs_json_ser_ctx_t ser_ctx;
+    ecs_os_zeromem(&ser_ctx);
+#ifdef FLECS_DOC
+    ser_ctx.idr_doc_name = flecs_id_record_get(world, 
+        ecs_pair_t(EcsDocDescription, EcsName));
+    ser_ctx.idr_doc_color = flecs_id_record_get(world, 
+        ecs_pair_t(EcsDocDescription, EcsDocColor));
+#endif
+
+    ecs_record_t *r = ecs_record_find(world, entity);
+    if (!r || !r->table) {
+        flecs_json_object_push(buf);
+        flecs_json_member(buf, "name");
+        ecs_strbuf_appendch(buf, '"');
+        ecs_strbuf_appendch(buf, '#');
+        ecs_strbuf_appendint(buf, (uint32_t)entity);
+        ecs_strbuf_appendch(buf, '"');
+        flecs_json_object_pop(buf);
+        return 0;
+    }
+
+    /* Create iterator that's populated just with entity */
+    int32_t row = ECS_RECORD_TO_ROW(r->row);
+    ecs_iter_t it = {
+        .world = ECS_CONST_CAST(ecs_world_t*, world),
+        .real_world = ECS_CONST_CAST(ecs_world_t*, world),
+        .table = r->table,
+        .offset = row,
+        .count = 1,
+        .entities = &ecs_table_entities(r->table)[row],
+        .field_count = 0
+    };
+
+    /* Initialize iterator parameters */
+    ecs_iter_to_json_desc_t iter_desc = {
+        .serialize_table = true,
+        .serialize_entity_ids =   desc ? desc->serialize_entity_id : false,
+        .serialize_values =       desc ? desc->serialize_values : true,
+        .serialize_builtin =       desc ? desc->serialize_builtin : false,
+        .serialize_doc =          desc ? desc->serialize_doc : false,
+        .serialize_matches =      desc ? desc->serialize_matches : false,
+        .serialize_refs =         desc ? desc->serialize_refs : 0,
+        .serialize_alerts =       desc ? desc->serialize_alerts : false,
+        .serialize_full_paths =   desc ? desc->serialize_full_paths : true,
+        .serialize_inherited =    desc ? desc->serialize_inherited : false,
+        .serialize_type_info =    desc ? desc->serialize_type_info : false
+    };
+
+    if (flecs_json_serialize_iter_result(
+        world, &it, visitor_desc, &iter_desc, &ser_ctx))
+    {
+        visitor_desc->_error = -1;
+        goto error;
+    }
+
+    if (visitor_desc->exit)
+        return visitor_desc->exit(visitor_desc->user_data);
+    return NULL;
+error:
+    if (visitor_desc->error)
+        return visitor_desc->error(visitor_desc->user_data);
+    return NULL;
 }
 
 #endif

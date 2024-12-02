@@ -5,9 +5,9 @@
 
 #include "script.h"
 #include "../meta/meta.h"
+#include "../../private_api.h"
 
 #ifdef FLECS_SCRIPT
-#include "../serialize/serialize.h"
 
 // Primitives
 static

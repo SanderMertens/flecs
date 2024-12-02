@@ -42,21 +42,21 @@ typedef struct ecs_visitor_desc_t {
      */
 
     /** visit primitives */
-    void (*visit_char)(const ecs_char_t value, void* user_data);
-    void (*visit_u8)(const ecs_u8_t value, void* user_data);
-    void (*visit_u16)(const ecs_u16_t value, void* user_data);
-    void (*visit_u32)(const ecs_u32_t value, void* user_data);
-    void (*visit_u64)(const ecs_u64_t value, void* user_data);
-    void (*visit_i8)(const ecs_i8_t value, void* user_data);
-    void (*visit_i16)(const ecs_i16_t value, void* user_data);
-    void (*visit_i32)(const ecs_i32_t value, void* user_data);
-    void (*visit_i64)(const ecs_i64_t value, void* user_data);
-    void (*visit_f32)(const ecs_f32_t value, void* user_data);
-    void (*visit_f64)(const ecs_f64_t value, void* user_data);
-    void (*visit_bool)(const ecs_bool_t value, void* user_data);
-    void (*visit_byte)(const ecs_byte_t value, void* user_data);
-    void (*visit_uptr)(const ecs_uptr_t value, void* user_data);
-    void (*visit_iptr)(const ecs_iptr_t value, void* user_data);
+    void (*visit_char)(const char value, void* user_data);
+    void (*visit_u8)(const uint8_t value, void* user_data);
+    void (*visit_u16)(const uint16_t value, void* user_data);
+    void (*visit_u32)(const uint32_t value, void* user_data);
+    void (*visit_u64)(const uint64_t value, void* user_data);
+    void (*visit_i8)(const int8_t value, void* user_data);
+    void (*visit_i16)(const int16_t value, void* user_data);
+    void (*visit_i32)(const int32_t value, void* user_data);
+    void (*visit_i64)(const int64_t value, void* user_data);
+    void (*visit_f32)(const float value, void* user_data);
+    void (*visit_f64)(const double value, void* user_data);
+    void (*visit_bool)(const bool value, void* user_data);
+    void (*visit_byte)(const unsigned char value, void* user_data);
+    void (*visit_uptr)(const uintptr_t value, void* user_data);
+    void (*visit_iptr)(const intptr_t value, void* user_data);
     void (*visit_string)(const char* value, void* user_data);
     void (*visit_entity)(const ecs_world_t*, const ecs_entity_t value, void* user_data);
     void (*visit_id)(const ecs_world_t*, const ecs_id_t value, void* user_data);

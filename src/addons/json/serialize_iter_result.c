@@ -7,7 +7,6 @@
 #include "json.h"
 
 #ifdef FLECS_JSON
-#include "../serialize/serialize.h"
 
 static
 bool flecs_json_skip_variable(

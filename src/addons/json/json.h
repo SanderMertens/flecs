@@ -9,7 +9,6 @@
 #include "../../private_api.h"
 
 #ifdef FLECS_JSON
-#include "../serialize/serialize.h"
 
 /* Deserialize from JSON */
 typedef enum ecs_json_token_t {

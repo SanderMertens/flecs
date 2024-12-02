@@ -7,7 +7,6 @@
 #include "../meta/meta.h"
 
 #ifdef FLECS_JSON
-#include "../serialize/serialize.h"
 
 
 // Primitives
@@ -387,17 +386,6 @@ void flecs_json_ser_string(const char* value, void* user_data) {
         ecs_strbuf_appendlit(str, "null");
     }
 }
-/*
- * static
-void flecs_json_ser_string(const char* value, void* user_data) {
-    ecs_strbuf_t* str = (ecs_strbuf_t*)user_data;
-    if (value) {
-        ecs_strbuf_appendstr(str, value);
-    } else {
-        ecs_strbuf_appendlit(str, "null");
-    }
-}
-*/
 
 // Flecs
 

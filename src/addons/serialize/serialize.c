@@ -1,12 +1,11 @@
 /**
  * @file addons/serialize/serialize.c
- * @brief Serialize values.
+ * @brief Visitor API for serializing values.
  */
 
-#include "flecs.h"
-
-#ifdef FLECS_SCRIPT
 #include "serialize.h"
+#include "../json/json.h" // TODO
+#ifdef FLECS_SERIALIZE
 
 static
 int flecs_ser_type_ops(
@@ -726,6 +725,86 @@ int ecs_ser_ptr(
     ecs_visitor_desc_t *visitor_desc)
 {
     return ecs_ser_array(world, type, ptr, 0, visitor_desc);
+}
+
+
+void* ecs_ser_entity(
+    const ecs_world_t *stage,
+    ecs_entity_t entity,
+    ecs_visitor_desc_t *visitor_desc,
+    const ecs_entity_to_json_desc_t *desc)
+{
+    const ecs_world_t *world = ecs_get_world(stage);
+
+    ecs_strbuf_t* buf = (ecs_strbuf_t*)visitor_desc->user_data; // TODO
+
+    if (!entity || !ecs_is_valid(world, entity)) {
+        goto error;
+    }
+
+    /* Cache id record for flecs.doc ids */
+    ecs_json_ser_ctx_t ser_ctx;
+    ecs_os_zeromem(&ser_ctx);
+#ifdef FLECS_DOC
+    ser_ctx.idr_doc_name = flecs_id_record_get(world, 
+        ecs_pair_t(EcsDocDescription, EcsName));
+    ser_ctx.idr_doc_color = flecs_id_record_get(world, 
+        ecs_pair_t(EcsDocDescription, EcsDocColor));
+#endif
+
+    ecs_record_t *r = ecs_record_find(world, entity);
+    if (!r || !r->table) {
+        flecs_json_object_push(buf);
+        flecs_json_member(buf, "name");
+        ecs_strbuf_appendch(buf, '"');
+        ecs_strbuf_appendch(buf, '#');
+        ecs_strbuf_appendint(buf, (uint32_t)entity);
+        ecs_strbuf_appendch(buf, '"');
+        flecs_json_object_pop(buf);
+        return 0;
+    }
+
+    /* Create iterator that's populated just with entity */
+    int32_t row = ECS_RECORD_TO_ROW(r->row);
+    ecs_iter_t it = {
+        .world = ECS_CONST_CAST(ecs_world_t*, world),
+        .real_world = ECS_CONST_CAST(ecs_world_t*, world),
+        .table = r->table,
+        .offset = row,
+        .count = 1,
+        .entities = &ecs_table_entities(r->table)[row],
+        .field_count = 0
+    };
+
+    /* Initialize iterator parameters */
+    ecs_iter_to_json_desc_t iter_desc = {
+        .serialize_table = true,
+        .serialize_entity_ids =   desc ? desc->serialize_entity_id : false,
+        .serialize_values =       desc ? desc->serialize_values : true,
+        .serialize_builtin =       desc ? desc->serialize_builtin : false,
+        .serialize_doc =          desc ? desc->serialize_doc : false,
+        .serialize_matches =      desc ? desc->serialize_matches : false,
+        .serialize_refs =         desc ? desc->serialize_refs : 0,
+        .serialize_alerts =       desc ? desc->serialize_alerts : false,
+        .serialize_full_paths =   desc ? desc->serialize_full_paths : true,
+        .serialize_inherited =    desc ? desc->serialize_inherited : false,
+        .serialize_type_info =    desc ? desc->serialize_type_info : false
+    };
+
+    if (flecs_json_serialize_iter_result(
+        world, &it, visitor_desc, &iter_desc, &ser_ctx))
+    {
+        visitor_desc->_error = -1;
+        goto error;
+    }
+
+    if (visitor_desc->exit)
+        return visitor_desc->exit(visitor_desc->user_data);
+    return NULL;
+error:
+    if (visitor_desc->error)
+        return visitor_desc->error(visitor_desc->user_data);
+    return NULL;
 }
 
 #endif

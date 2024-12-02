@@ -6,7 +6,6 @@
 #include "json.h"
 
 #ifdef FLECS_JSON
-#include "../serialize/serialize.h"
 
 static
 int json_typeinfo_ser_type(

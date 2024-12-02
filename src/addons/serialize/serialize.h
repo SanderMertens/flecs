@@ -1,5 +1,5 @@
 /**
- * @file addons/seri/json.h
+ * @file addons/serialize/serialize.h
  * @brief Internal functions for SERIALIZE addon.
  */
 
@@ -7,9 +7,9 @@
 #define FLECS_SERIALIZE_PRIVATE_H
 
 #include "../../private_api.h"
+#include "flecs.h"
 
 #ifdef FLECS_SERIALIZE
-#include "flecs/addons/serialize.h"
 
 int flecs_ser_type(
     const ecs_world_t *world,

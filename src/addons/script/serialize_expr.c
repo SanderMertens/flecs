@@ -7,6 +7,7 @@
 
 #ifdef FLECS_SCRIPT
 #include "../serialize/serialize.h"
+#include "../meta/meta.h"
 #include "script.h"
 
 int ecs_ptr_to_expr_buf(
