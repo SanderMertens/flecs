@@ -954,7 +954,8 @@ ecs_world_t *ecs_mini(void) {
 
     ecs_map_init(&world->type_info, a);
     ecs_map_init_w_params(&world->id_index_hi, &world->allocators.ptr);
-    world->id_index_lo = ecs_os_calloc_n(ecs_id_record_t, FLECS_HI_ID_RECORD_ID);
+    world->id_index_lo = ecs_os_calloc_n(
+        ecs_id_record_t*, FLECS_HI_ID_RECORD_ID);
     flecs_observable_init(&world->observable);
 
     world->pending_tables = ecs_os_calloc_t(ecs_sparse_t);
@@ -1543,6 +1544,7 @@ void flecs_fini_type_info(
     while (ecs_map_next(&it)) {
         ecs_type_info_t *ti = ecs_map_ptr(&it);
         flecs_type_info_fini(ti);
+        ecs_os_free(ti);
     }
     ecs_map_fini(&world->type_info);
 }

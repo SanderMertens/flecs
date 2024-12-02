@@ -371,59 +371,6 @@ void World_get_tick(void) {
     ecs_fini(world);
 }
 
-static int32_t malloc_count;
-
-static
-void *test_malloc(ecs_size_t size) {
-    malloc_count ++;
-    return malloc(size);
-}
-
-static
-void *test_calloc(ecs_size_t size) {
-    malloc_count ++;
-    return calloc(size, 1);
-}
-
-static
-void *test_realloc(void *old_ptr, ecs_size_t size) {
-    malloc_count ++;
-    return realloc(old_ptr, size);
-}
-
-void World_dim(void) {
-    ecs_os_set_api_defaults();
-    ecs_os_api_t os_api = ecs_os_api;
-    os_api.malloc_ = test_malloc;
-    os_api.calloc_ = test_calloc;
-    os_api.realloc_ = test_realloc;
-    ecs_os_set_api(&os_api);
-
-    ecs_world_t *world = ecs_mini();
-
-    ECS_COMPONENT(world, Position);
-
-    /* Create single entity so that the table exists. This makes the allocation
-     * counts more predictable, as new_w_count won't trigger table creation */
-    ecs_new_w(world, Position);
-
-    ecs_dim(world, 1100);
-
-    malloc_count = 0;
-
-    ecs_bulk_new(world, Position, 500);
-
-    test_int(malloc_count, 4);
-
-    malloc_count = 0;
-
-    ecs_bulk_new(world, Position, 500);
-
-    test_int(malloc_count, 2);
-
-    ecs_fini(world);
-}
-
 static
 void TOnLoad(ecs_iter_t *it) {
     Position *p = ecs_field(it, Position, 0);

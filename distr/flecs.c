@@ -947,7 +947,7 @@ struct ecs_world_t {
     ecs_header_t hdr;
 
     /* --  Type metadata -- */
-    ecs_id_record_t *id_index_lo;
+    ecs_id_record_t **id_index_lo;
     ecs_map_t id_index_hi;           /* map<id, ecs_id_record_t*> */
     ecs_map_t type_info;             /* map<type_id, type_info_t> */
 
@@ -15761,25 +15761,14 @@ static
 void* ecs_os_api_malloc(ecs_size_t size) {
     ecs_os_linc(&ecs_os_api_malloc_count);
     ecs_assert(size > 0, ECS_INVALID_PARAMETER, NULL);
-    void *ptr = malloc((size_t)size);
-    // if (size > 10000) {
-    //     printf("[%p] malloc(%d)\n", ptr, size);
-    //     flecs_dump_backtrace(stdout);
-    // }
-    return ptr;
+    return malloc((size_t)size);
 }
 
 static
 void* ecs_os_api_calloc(ecs_size_t size) {
     ecs_os_linc(&ecs_os_api_calloc_count);
     ecs_assert(size > 0, ECS_INVALID_PARAMETER, NULL);
-    void *ptr = calloc(1, (size_t)size);
-
-    // if (size > 10000) {
-    //     printf("[%p] calloc(%d)\n", ptr, size);
-    //     flecs_dump_backtrace(stdout);
-    // }
-    return ptr;
+    return calloc(1, (size_t)size);
 }
 
 static
@@ -15793,19 +15782,13 @@ void* ecs_os_api_realloc(void *ptr, ecs_size_t size) {
         ecs_os_linc(&ecs_os_api_malloc_count);
     }
     
-    void *res = realloc(ptr, (size_t)size);
-    // if (size > 10000) {
-    //     printf("[%p] realloc(%p, %d)\n", res, ptr, size);
-    //     flecs_dump_backtrace(stdout);
-    // }
-    return res;
+    return realloc(ptr, (size_t)size);
 }
 
 static
 void ecs_os_api_free(void *ptr) {
     if (ptr) {
         ecs_os_linc(&ecs_os_api_free_count);
-        // printf("[%p] free\n");
     }
     free(ptr);
 }
@@ -18732,7 +18715,8 @@ ecs_world_t *ecs_mini(void) {
 
     ecs_map_init(&world->type_info, a);
     ecs_map_init_w_params(&world->id_index_hi, &world->allocators.ptr);
-    world->id_index_lo = ecs_os_calloc_n(ecs_id_record_t, FLECS_HI_ID_RECORD_ID);
+    world->id_index_lo = ecs_os_calloc_n(
+        ecs_id_record_t*, FLECS_HI_ID_RECORD_ID);
     flecs_observable_init(&world->observable);
 
     world->pending_tables = ecs_os_calloc_t(ecs_sparse_t);
@@ -19321,6 +19305,7 @@ void flecs_fini_type_info(
     while (ecs_map_next(&it)) {
         ecs_type_info_t *ti = ecs_map_ptr(&it);
         flecs_type_info_fini(ti);
+        ecs_os_free(ti);
     }
     ecs_map_fini(&world->type_info);
 }
@@ -36064,12 +36049,12 @@ ecs_id_record_t* flecs_id_record_new(
 {
     ecs_id_record_t *idr, *idr_t = NULL;
     ecs_id_t hash = flecs_id_record_hash(id);
+    idr = flecs_bcalloc(&world->allocators.id_record);
+
     if (hash >= FLECS_HI_ID_RECORD_ID) {
-        idr = flecs_bcalloc(&world->allocators.id_record);
         ecs_map_insert_ptr(&world->id_index_hi, hash, idr);
     } else {
-        idr = &world->id_index_lo[hash];
-        ecs_os_zeromem(idr);
+        world->id_index_lo[hash] = idr;
     }
 
     ecs_table_cache_init(world, &idr->cache);
@@ -36345,10 +36330,11 @@ void flecs_id_record_free(
     ecs_id_t hash = flecs_id_record_hash(id);
     if (hash >= FLECS_HI_ID_RECORD_ID) {
         ecs_map_remove(&world->id_index_hi, hash);
-        flecs_bfree(&world->allocators.id_record, idr);
     } else {
-        idr->id = 0; /* Tombstone */
+        world->id_index_lo[hash] = NULL;
     }
+
+    flecs_bfree(&world->allocators.id_record, idr);
 
     if (ecs_should_log_1()) {
         char *id_str = ecs_id_str(world, id);
@@ -36386,10 +36372,7 @@ ecs_id_record_t* flecs_id_record_get(
     if (hash >= FLECS_HI_ID_RECORD_ID) {
         idr = ecs_map_get_deref(&world->id_index_hi, ecs_id_record_t, hash);
     } else {
-        idr = &world->id_index_lo[hash];
-        if (!idr->id) {
-            idr = NULL;
-        }
+        idr = world->id_index_lo[hash];
     }
 
     return idr;
@@ -36544,8 +36527,8 @@ void flecs_fini_id_records(
 
     int32_t i;
     for (i = 0; i < FLECS_HI_ID_RECORD_ID; i ++) {
-        ecs_id_record_t *idr = &world->id_index_lo[i];
-        if (idr->id) {
+        ecs_id_record_t *idr = world->id_index_lo[i];
+        if (idr) {
             flecs_id_record_release(world, idr);
         }
     }

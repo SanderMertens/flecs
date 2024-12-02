@@ -299,25 +299,14 @@ static
 void* ecs_os_api_malloc(ecs_size_t size) {
     ecs_os_linc(&ecs_os_api_malloc_count);
     ecs_assert(size > 0, ECS_INVALID_PARAMETER, NULL);
-    void *ptr = malloc((size_t)size);
-    // if (size > 10000) {
-    //     printf("[%p] malloc(%d)\n", ptr, size);
-    //     flecs_dump_backtrace(stdout);
-    // }
-    return ptr;
+    return malloc((size_t)size);
 }
 
 static
 void* ecs_os_api_calloc(ecs_size_t size) {
     ecs_os_linc(&ecs_os_api_calloc_count);
     ecs_assert(size > 0, ECS_INVALID_PARAMETER, NULL);
-    void *ptr = calloc(1, (size_t)size);
-
-    // if (size > 10000) {
-    //     printf("[%p] calloc(%d)\n", ptr, size);
-    //     flecs_dump_backtrace(stdout);
-    // }
-    return ptr;
+    return calloc(1, (size_t)size);
 }
 
 static
@@ -331,19 +320,13 @@ void* ecs_os_api_realloc(void *ptr, ecs_size_t size) {
         ecs_os_linc(&ecs_os_api_malloc_count);
     }
     
-    void *res = realloc(ptr, (size_t)size);
-    // if (size > 10000) {
-    //     printf("[%p] realloc(%p, %d)\n", res, ptr, size);
-    //     flecs_dump_backtrace(stdout);
-    // }
-    return res;
+    return realloc(ptr, (size_t)size);
 }
 
 static
 void ecs_os_api_free(void *ptr) {
     if (ptr) {
         ecs_os_linc(&ecs_os_api_free_count);
-        // printf("[%p] free\n");
     }
     free(ptr);
 }

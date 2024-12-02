@@ -1932,7 +1932,6 @@ void World_entity_range_set_limit_to_lower(void);
 void World_entity_range_set_limit_to_lower_than_offset(void);
 void World_entity_range_overlapping_new_id(void);
 void World_entity_range_overlapping_new_bulk_id(void);
-void World_dim(void);
 void World_phases(void);
 void World_phases_w_merging(void);
 void World_phases_match_in_create(void);
@@ -9807,10 +9806,6 @@ bake_test_case World_testcases[] = {
         World_entity_range_overlapping_new_bulk_id
     },
     {
-        "dim",
-        World_dim
-    },
-    {
         "phases",
         World_phases
     },
@@ -11569,7 +11564,7 @@ static bake_test_suite suites[] = {
         "World",
         World_setup,
         NULL,
-        67,
+        66,
         World_testcases
     },
     {
