@@ -587,10 +587,6 @@ void flecs_init_store(
 
     /* Initialize root table */
     flecs_init_root_table(world);
-
-    /* Initialize observer sparse set */
-    flecs_sparse_init_t(&world->store.observers,
-        a, &world->allocators.sparse_chunk, ecs_observer_impl_t);
 }
 
 static
@@ -727,10 +723,6 @@ void flecs_fini_store(ecs_world_t *world) {
     flecs_table_fini(world, &world->store.root);
     flecs_entities_clear(world);
     flecs_hashmap_fini(&world->store.table_map);
-
-    ecs_assert(flecs_sparse_count(&world->store.observers) == 0, 
-        ECS_INTERNAL_ERROR, NULL);
-    flecs_sparse_fini(&world->store.observers);
 
     ecs_assert(ecs_vec_count(&world->store.marked_ids) == 0, 
         ECS_INTERNAL_ERROR, NULL);
@@ -962,11 +954,10 @@ ecs_world_t *ecs_mini(void) {
     flecs_world_allocators_init(world);
     ecs_allocator_t *a = &world->allocator;
 
-    world->self = world;
-    flecs_sparse_init_t(&world->type_info, a,
-        &world->allocators.sparse_chunk, ecs_type_info_t);
+    ecs_map_init(&world->type_info, a);
     ecs_map_init_w_params(&world->id_index_hi, &world->allocators.ptr);
-    world->id_index_lo = ecs_os_calloc_n(ecs_id_record_t, FLECS_HI_ID_RECORD_ID);
+    world->id_index_lo = ecs_os_calloc_n(
+        ecs_id_record_t*, FLECS_HI_ID_RECORD_ID);
     flecs_observable_init(&world->observable);
 
     world->pending_tables = ecs_os_calloc_t(ecs_sparse_t);
@@ -1551,14 +1542,13 @@ static
 void flecs_fini_type_info(
     ecs_world_t *world)
 {
-    int32_t i, count = flecs_sparse_count(&world->type_info);
-    ecs_sparse_t *type_info = &world->type_info;
-    for (i = 0; i < count; i ++) {
-        ecs_type_info_t *ti = flecs_sparse_get_dense_t(type_info,
-            ecs_type_info_t, i);
+    ecs_map_iter_t it = ecs_map_iter(&world->type_info);
+    while (ecs_map_next(&it)) {
+        ecs_type_info_t *ti = ecs_map_ptr(&it);
         flecs_type_info_fini(ti);
+        ecs_os_free(ti);
     }
-    flecs_sparse_fini(&world->type_info);
+    ecs_map_fini(&world->type_info);
 }
 
 ecs_entity_t flecs_get_oneof(
@@ -1832,7 +1822,7 @@ const ecs_type_info_t* flecs_type_info_get(
     ecs_assert(component != 0, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(!(component & ECS_ID_FLAGS_MASK), ECS_INTERNAL_ERROR, NULL);
 
-    return flecs_sparse_try_t(&world->type_info, ecs_type_info_t, component);
+    return ecs_map_get_deref(&world->type_info, ecs_type_info_t, component);
 }
 
 ecs_type_info_t* flecs_type_info_ensure(
@@ -1845,7 +1835,7 @@ ecs_type_info_t* flecs_type_info_ensure(
     const ecs_type_info_t *ti = flecs_type_info_get(world, component);
     ecs_type_info_t *ti_mut = NULL;
     if (!ti) {
-        ti_mut = flecs_sparse_ensure_t(
+        ti_mut = ecs_map_ensure_alloc_t(
             &world->type_info, ecs_type_info_t, component);
         ecs_assert(ti_mut != NULL, ECS_INTERNAL_ERROR, NULL);
         ti_mut->component = component;
@@ -1884,7 +1874,7 @@ bool flecs_type_info_init_id(
         ecs_assert(size == 0 && alignment == 0,
             ECS_INVALID_COMPONENT_SIZE, NULL);
         ecs_assert(li == NULL, ECS_INCONSISTENT_COMPONENT_ACTION, NULL);
-        flecs_sparse_remove_t(&world->type_info, ecs_type_info_t, component);
+        ecs_map_remove_free(&world->type_info, component);
     } else {
         ti = flecs_type_info_ensure(world, component);
         ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -1966,11 +1956,11 @@ void flecs_type_info_free(
         return;
     }
 
-    ecs_type_info_t *ti = flecs_sparse_try_t(&world->type_info,
-        ecs_type_info_t, component);
+    ecs_type_info_t *ti = ecs_map_get_deref(
+        &world->type_info, ecs_type_info_t, component);
     if (ti) {
         flecs_type_info_fini(ti);
-        flecs_sparse_remove_t(&world->type_info, ecs_type_info_t, component);
+        ecs_map_remove_free(&world->type_info, component);
     }
 }
 

@@ -961,12 +961,13 @@ ecs_observer_t* flecs_observer_init(
         ECS_INVALID_OPERATION,
             "cannot create observer: must at least specify callback or run");
 
-    ecs_observer_impl_t *impl = flecs_sparse_add_t(
-        &world->store.observers, ecs_observer_impl_t);
+    ecs_observer_impl_t *impl = flecs_calloc_t(
+        &world->allocator, ecs_observer_impl_t);
     ecs_assert(impl != NULL, ECS_INTERNAL_ERROR, NULL);
+    impl->id = ++ world->observable.last_observer_id;
+
     flecs_poly_init(impl, ecs_observer_t);
     ecs_observer_t *o = &impl->pub;
-    impl->id = flecs_sparse_last_id(&world->store.observers);
     impl->dtor = flecs_observer_poly_fini;
 
     /* Make writeable copy of query desc so that we can set name. This will
@@ -1244,8 +1245,7 @@ void flecs_observer_fini(
     }
 
     flecs_poly_fini(o, ecs_observer_t);
-    flecs_sparse_remove_t(
-        &world->store.observers, ecs_observer_impl_t, impl->id);
+    flecs_free_t(&world->allocator, ecs_observer_impl_t, o);
 }
 
 void flecs_observer_set_disable_bit(
