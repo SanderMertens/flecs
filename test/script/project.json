@@ -371,7 +371,8 @@
                 "template_redeclare_const_as_const",
                 "run_template_after_error",
                 "update_template_after_error",
-                "template_in_template"
+                "template_in_template",
+                "unterminated_binary"
             ]
         }, {
             "id": "Expr",
@@ -534,7 +535,13 @@
                 "var_expr_string",
                 "var_member_expr_string",
                 "var_elem_expr_string",
-                "var_inline_elem_expr_string"
+                "var_inline_elem_expr_string",
+                "var_expr_no_desc",
+                "var_expr_desc_w_no_vars",
+                "parse_eval",
+                "parse_eval_multiple_times",
+                "parse_error",
+                "parse_eval_error"
             ]
         }, {
             "id": "Vars",

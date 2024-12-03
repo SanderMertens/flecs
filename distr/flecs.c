@@ -4519,7 +4519,9 @@ typedef struct ecs_script_impl_t {
     ecs_script_t pub;
     ecs_allocator_t allocator;
     ecs_script_scope_t *root;
+    ecs_expr_node_t *expr; /* Only set if script is just an expression */
     char *token_buffer;
+    const char *next_token; /* First character after expression */
     int32_t token_buffer_size;
     int32_t refcount;
 } ecs_script_impl_t;
@@ -5089,7 +5091,7 @@ int flecs_script_expr_visit_fold(
     const ecs_script_expr_run_desc_t *desc);
 
 int flecs_script_expr_visit_eval(
-    ecs_script_t *script,
+    const ecs_script_t *script,
     ecs_expr_node_t *node,
     const ecs_script_expr_run_desc_t *desc,
     ecs_value_t *out);
@@ -5112,14 +5114,14 @@ int flecs_value_move_to(
     ecs_value_t *src);
 
 int flecs_value_binary(
-    ecs_script_t *script,
+    const ecs_script_t *script,
     const ecs_value_t *left,
     const ecs_value_t *right,
     ecs_value_t *out,
     ecs_script_token_kind_t operator);
 
 int flecs_value_unary(
-    ecs_script_t *script,
+    const ecs_script_t *script,
     const ecs_value_t *expr,
     ecs_value_t *out,
     ecs_script_token_kind_t operator);
@@ -57178,6 +57180,7 @@ void ecs_script_free(
     ecs_check(impl->refcount > 0, ECS_INVALID_OPERATION, NULL);
     if (!--impl->refcount) {
         flecs_script_visit_free(script);
+        flecs_script_expr_visit_free(script, impl->expr);
         flecs_free(&impl->allocator, 
             impl->token_buffer_size, impl->token_buffer);
         flecs_allocator_fini(&impl->allocator);
@@ -59122,6 +59125,10 @@ ecs_script_var_t* ecs_script_vars_lookup(
     const ecs_script_vars_t *vars,
     const char *name)
 {
+    if (!vars) {
+        return NULL;
+    }
+
     uint64_t var_id = 0;
     if (ecs_vec_count(&vars->vars)) {
         var_id = flecs_name_index_find(&vars->var_index, name, 0, 0);
@@ -73805,12 +73812,14 @@ const char* flecs_script_parse_rhs(
                     result->left = *out;
                     result->operator = oper;
 
+                    *out = (ecs_expr_node_t*)result;
+
                     pos = flecs_script_parse_lhs(parser, pos, tokenizer,
                         result->operator, &result->right);
                     if (!pos) {
                         goto error;
                     }
-                    *out = (ecs_expr_node_t*)result;
+
                     break;
                 }
                 };
@@ -73975,47 +73984,84 @@ const char* flecs_script_parse_expr(
     ParserEnd;
 }
 
-ecs_expr_node_t* ecs_script_parse_expr(
+ecs_script_t* ecs_script_expr_parse(
     ecs_world_t *world,
-    ecs_script_t *script,
-    const char *name,
-    const char *expr) 
+    const char *expr,
+    const ecs_script_expr_run_desc_t *desc)
 {
-    if (!script) {
-        script = flecs_script_new(world);
+    ecs_script_expr_run_desc_t priv_desc = {0};
+    if (desc) {
+        priv_desc = *desc;
     }
 
+    if (!priv_desc.lookup_action) {
+        priv_desc.lookup_action = flecs_script_default_lookup;
+    }
+
+    ecs_script_t *script = flecs_script_new(world);
+    ecs_script_impl_t *impl = flecs_script_impl(script);
+
     ecs_script_parser_t parser = {
-        .script = flecs_script_impl(script),
-        .scope = flecs_script_impl(script)->root,
+        .script = impl,
+        .scope = impl->root,
         .significant_newline = false
     };
-
-    ecs_script_impl_t *impl = flecs_script_impl(script);
 
     impl->token_buffer_size = ecs_os_strlen(expr) * 2 + 1;
     impl->token_buffer = flecs_alloc(
         &impl->allocator, impl->token_buffer_size);
     parser.token_cur = impl->token_buffer;
 
-    ecs_expr_node_t *out = NULL;
-
-    const char *result = flecs_script_parse_expr(&parser, expr, 0, &out);
-    if (!result) {
+    const char *ptr = flecs_script_parse_expr(&parser, expr, 0, &impl->expr);
+    if (!ptr) {
         goto error;
     }
 
-    if (flecs_script_expr_visit_type(script, out, NULL)) {
+    impl->next_token = ptr;
+
+    if (flecs_script_expr_visit_type(script, impl->expr, &priv_desc)) {
         goto error;
     }
 
-    if (flecs_script_expr_visit_fold(script, &out, NULL)) {
+    // printf("%s\n", ecs_script_expr_to_str(world, out));
+
+    if (flecs_script_expr_visit_fold(script, &impl->expr, &priv_desc)) {
         goto error;
     }
 
-    return out;
+    // printf("%s\n", ecs_script_expr_to_str(world, out));
+
+    return script;
 error:
+    ecs_script_free(script);
     return NULL;
+}
+
+int ecs_script_expr_eval(
+    const ecs_script_t *script,
+    ecs_value_t *value,
+    const ecs_script_expr_run_desc_t *desc)
+{
+    ecs_assert(script != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_script_impl_t *impl = flecs_script_impl(script);
+    ecs_assert(impl->expr != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_script_expr_run_desc_t priv_desc = {0};
+    if (desc) {
+        priv_desc = *desc;
+    }
+
+    if (!priv_desc.lookup_action) {
+        priv_desc.lookup_action = flecs_script_default_lookup;
+    }
+
+    if (flecs_script_expr_visit_eval(script, impl->expr, &priv_desc, value)) {
+        goto error;
+    }
+
+    return 0;
+error:
+    return -1;
 }
 
 FLECS_API
@@ -74037,54 +74083,22 @@ const char* ecs_script_expr_run(
             "type of value parameter does not match desc->type");
     }
 
-    if (!priv_desc.lookup_action) {
-        priv_desc.lookup_action = flecs_script_default_lookup;
-    }
-
-    ecs_script_t *script = flecs_script_new(world);
-
-    ecs_script_parser_t parser = {
-        .script = flecs_script_impl(script),
-        .scope = flecs_script_impl(script)->root,
-        .significant_newline = false
-    };
-
-    ecs_script_impl_t *impl = flecs_script_impl(script);
-
-    impl->token_buffer_size = ecs_os_strlen(expr) * 2 + 1;
-    impl->token_buffer = flecs_alloc(
-        &impl->allocator, impl->token_buffer_size);
-    parser.token_cur = impl->token_buffer;
-
-    ecs_expr_node_t *out = NULL;
-
-    const char *result = flecs_script_parse_expr(&parser, expr, 0, &out);
-    if (!result) {
+    ecs_script_t *s = ecs_script_expr_parse(world, expr, &priv_desc);
+    if (!s) {
         goto error;
     }
 
-    if (flecs_script_expr_visit_type(script, out, &priv_desc)) {
+    if (ecs_script_expr_eval(s, value, &priv_desc)) {
+        ecs_script_free(s);
         goto error;
     }
 
-    // printf("%s\n", ecs_script_expr_to_str(world, out));
+    const char *result = flecs_script_impl(s)->next_token;
 
-    if (flecs_script_expr_visit_fold(script, &out, &priv_desc)) {
-        goto error;
-    }
+    ecs_script_free(s);
 
-    // printf("%s\n", ecs_script_expr_to_str(world, out));
-
-    if (flecs_script_expr_visit_eval(script, out, &priv_desc, value)) {
-        goto error;
-    }
-
-    flecs_script_expr_visit_free(script, out);
-    ecs_script_free(script);
     return result;
 error:
-    flecs_script_expr_visit_free(script, out);
-    ecs_script_free(script);
     return NULL;
 }
 
@@ -74153,7 +74167,7 @@ error:
 }
 
 int flecs_value_unary(
-    ecs_script_t *script,
+    const ecs_script_t *script,
     const ecs_value_t *expr,
     ecs_value_t *out,
     ecs_script_token_kind_t operator)
@@ -74172,7 +74186,7 @@ int flecs_value_unary(
 }
 
 int flecs_value_binary(
-    ecs_script_t *script,
+    const ecs_script_t *script,
     const ecs_value_t *left,
     const ecs_value_t *right,
     ecs_value_t *out,
@@ -74256,14 +74270,14 @@ typedef struct ecs_eval_value_t {
 
 static
 int flecs_script_expr_visit_eval_priv(
-    ecs_script_t *script,
+    const ecs_script_t *script,
     ecs_expr_node_t *node,
     const ecs_script_expr_run_desc_t *desc,
     ecs_eval_value_t *out);
 
 static
 void flecs_expr_value_alloc(
-    ecs_script_t *script,
+    const ecs_script_t *script,
     ecs_eval_value_t *val,
     const ecs_type_info_t *ti)
 {
@@ -74288,7 +74302,7 @@ void flecs_expr_value_alloc(
 
 static
 void flecs_expr_value_free(
-    ecs_script_t *script,
+    const ecs_script_t *script,
     ecs_eval_value_t *val)
 {
     const ecs_type_info_t *ti = val->type_info;
@@ -74312,7 +74326,7 @@ void flecs_expr_value_free(
 
 static
 int flecs_expr_value_visit_eval(
-    ecs_script_t *script,
+    const ecs_script_t *script,
     ecs_expr_val_t *node,
     const ecs_script_expr_run_desc_t *desc,
     ecs_eval_value_t *out)
@@ -74325,14 +74339,14 @@ int flecs_expr_value_visit_eval(
 
 static
 int flecs_expr_initializer_eval(
-    ecs_script_t *script,
+    const ecs_script_t *script,
     ecs_expr_initializer_t *node,
     const ecs_script_expr_run_desc_t *desc,
     void *value);
 
 static
 int flecs_expr_initializer_eval_static(
-    ecs_script_t *script,
+    const ecs_script_t *script,
     ecs_expr_initializer_t *node,
     const ecs_script_expr_run_desc_t *desc,
     void *value)
@@ -74380,7 +74394,7 @@ error:
 
 static
 int flecs_expr_initializer_eval_dynamic(
-    ecs_script_t *script,
+    const ecs_script_t *script,
     ecs_expr_initializer_t *node,
     const ecs_script_expr_run_desc_t *desc,
     void *value)
@@ -74441,7 +74455,7 @@ error:
 
 static
 int flecs_expr_initializer_eval(
-    ecs_script_t *script,
+    const ecs_script_t *script,
     ecs_expr_initializer_t *node,
     const ecs_script_expr_run_desc_t *desc,
     void *value)
@@ -74455,7 +74469,7 @@ int flecs_expr_initializer_eval(
 
 static
 int flecs_expr_initializer_visit_eval(
-    ecs_script_t *script,
+    const ecs_script_t *script,
     ecs_expr_initializer_t *node,
     const ecs_script_expr_run_desc_t *desc,
     ecs_eval_value_t *out)
@@ -74467,7 +74481,7 @@ int flecs_expr_initializer_visit_eval(
 
 static
 int flecs_expr_unary_visit_eval(
-    ecs_script_t *script,
+    const ecs_script_t *script,
     ecs_expr_unary_t *node,
     const ecs_script_expr_run_desc_t *desc,
     ecs_eval_value_t *out)
@@ -74494,7 +74508,7 @@ error:
 
 static
 int flecs_expr_binary_visit_eval(
-    ecs_script_t *script,
+    const ecs_script_t *script,
     ecs_expr_binary_t *node,
     const ecs_script_expr_run_desc_t *desc,
     ecs_eval_value_t *out)
@@ -74526,7 +74540,7 @@ error:
 
 static
 int flecs_expr_variable_visit_eval(
-    ecs_script_t *script,
+    const ecs_script_t *script,
     ecs_expr_variable_t *node,
     const ecs_script_expr_run_desc_t *desc,
     ecs_eval_value_t *out)
@@ -74542,7 +74556,7 @@ int flecs_expr_variable_visit_eval(
 
 static
 int flecs_expr_cast_visit_eval(
-    ecs_script_t *script,
+    const ecs_script_t *script,
     ecs_expr_cast_t *node,
     const ecs_script_expr_run_desc_t *desc,
     ecs_eval_value_t *out)
@@ -74570,7 +74584,7 @@ error:
 
 static
 int flecs_expr_function_visit_eval(
-    ecs_script_t *script,
+    const ecs_script_t *script,
     ecs_expr_function_t *node,
     const ecs_script_expr_run_desc_t *desc,
     ecs_eval_value_t *out)
@@ -74604,7 +74618,7 @@ error:
 
 static
 int flecs_expr_member_visit_eval(
-    ecs_script_t *script,
+    const ecs_script_t *script,
     ecs_expr_member_t *node,
     const ecs_script_expr_run_desc_t *desc,
     ecs_eval_value_t *out)
@@ -74626,7 +74640,7 @@ error:
 
 static
 int flecs_expr_element_visit_eval(
-    ecs_script_t *script,
+    const ecs_script_t *script,
     ecs_expr_element_t *node,
     const ecs_script_expr_run_desc_t *desc,
     ecs_eval_value_t *out)
@@ -74654,7 +74668,7 @@ error:
 
 static
 int flecs_expr_component_visit_eval(
-    ecs_script_t *script,
+    const ecs_script_t *script,
     ecs_expr_element_t *node,
     const ecs_script_expr_run_desc_t *desc,
     ecs_eval_value_t *out)
@@ -74695,7 +74709,7 @@ error:
 
 static
 int flecs_script_expr_visit_eval_priv(
-    ecs_script_t *script,
+    const ecs_script_t *script,
     ecs_expr_node_t *node,
     const ecs_script_expr_run_desc_t *desc,
     ecs_eval_value_t *out)
@@ -74783,7 +74797,7 @@ error:
 }
 
 int flecs_script_expr_visit_eval(
-    ecs_script_t *script,
+    const ecs_script_t *script,
     ecs_expr_node_t *node,
     const ecs_script_expr_run_desc_t *desc,
     ecs_value_t *out)

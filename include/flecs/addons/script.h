@@ -428,24 +428,59 @@ typedef struct ecs_script_expr_run_desc_t {
     ecs_entity_t type;
 } ecs_script_expr_run_desc_t;
 
-/** Parse standalone expression into value.
- * This operation parses a flecs expression into the provided pointer. The
- * memory pointed to must be large enough to contain a value of the used type.
+/** Run expression.
+ * This operation runs an expression and stores the result in the provided 
+ * value. If the value contains a type that is different from the type of the
+ * expression, the expression will be cast to the value.
  *
- * If no type and pointer are provided for the value argument, the operation
- * will discover the type from the expression and allocate storage for the
- * value. The allocated value must be freed with ecs_value_free().
+ * If the provided value for value.ptr is NULL, the value must be freed with 
+ * ecs_value_free() afterwards.
  *
  * @param world The world.
  * @param ptr The pointer to the expression to parse.
  * @param value The value containing type & pointer to write to.
- * @param desc Configuration parameters for deserializer.
+ * @param desc Configuration parameters for the parser.
  * @return Pointer to the character after the last one read, or NULL if failed.
  */
 FLECS_API
 const char* ecs_script_expr_run(
     ecs_world_t *world,
     const char *ptr,
+    ecs_value_t *value,
+    const ecs_script_expr_run_desc_t *desc);
+
+/** Parse expression.
+ * This operation parses an expression and returns an object that can be 
+ * evaluated multiple times with ecs_script_expr_eval().
+ * 
+ * @param world The world.
+ * @param expr The expression string.
+ * @param desc Configuration parameters for the parser.
+ * @return A script object if parsing is successful, NULL if parsing failed.
+ */
+FLECS_API
+ecs_script_t* ecs_script_expr_parse(
+    ecs_world_t *world,
+    const char *ptr,
+    const ecs_script_expr_run_desc_t *desc);
+
+/** Evaluate expression.
+ * This operation evaluates an expression parsed with ecs_script_expr_parse() 
+ * and stores the result in the provided value. If the value contains a type 
+ * that is different from the type of the expression, the expression will be 
+ * cast to the value.
+ * 
+ * If the provided value for value.ptr is NULL, the value must be freed with 
+ * ecs_value_free() afterwards.
+ * 
+ * @param script The script containing the expression.
+ * @param value The value in which to store the expression result.
+ * @param desc Configuration parameters for the parser.
+ * @return Zero if successful, non-zero if failed.
+ */
+FLECS_API
+int ecs_script_expr_eval(
+    const ecs_script_t *script,
     ecs_value_t *value,
     const ecs_script_expr_run_desc_t *desc);
 
@@ -535,18 +570,6 @@ int ecs_ptr_to_str_buf(
     ecs_strbuf_t *buf);
 
 typedef struct ecs_expr_node_t ecs_expr_node_t; 
-
-FLECS_API
-ecs_expr_node_t* ecs_script_parse_expr(
-    ecs_world_t *world,
-    ecs_script_t *script,
-    const char *name,
-    const char *expr);
-
-FLECS_API
-char* ecs_script_expr_to_str(
-    const ecs_world_t *world,
-    const ecs_expr_node_t *expr);
 
 /** Script module import function.
  * Usage:

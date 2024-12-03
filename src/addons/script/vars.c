@@ -169,6 +169,10 @@ ecs_script_var_t* ecs_script_vars_lookup(
     const ecs_script_vars_t *vars,
     const char *name)
 {
+    if (!vars) {
+        return NULL;
+    }
+
     uint64_t var_id = 0;
     if (ecs_vec_count(&vars->vars)) {
         var_id = flecs_name_index_find(&vars->var_index, name, 0, 0);
