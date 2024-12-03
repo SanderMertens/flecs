@@ -686,6 +686,8 @@
                 "struct_w_array_type_struct",
                 "struct_w_2_array_type_i32_i32",
                 "struct_w_2_array_type_struct",
+                "array_i32_2",
+                "array_string_2",
                 "discover_type_int",
                 "discover_type_negative_int",
                 "discover_type_float",

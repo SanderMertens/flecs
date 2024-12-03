@@ -475,7 +475,9 @@
                 "opaque_vec_w_opaque_elem",
                 "next_out_of_bounds",
                 "set_out_of_bounds",
-                "get_member_id"
+                "get_member_id",
+                "get_array_type",
+                "get_vector_type"
             ]
         }, {
             "id": "DeserializeFromJson",

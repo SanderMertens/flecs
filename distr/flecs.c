@@ -48500,6 +48500,10 @@ bool ecs_meta_is_collection(
 ecs_entity_t ecs_meta_get_type(
     const ecs_meta_cursor_t *cursor)
 {
+    if (cursor->depth == 0) {
+        return cursor->scope[0].type;
+    }
+
     ecs_meta_scope_t *scope = flecs_meta_cursor_get_scope(cursor);
     ecs_meta_type_op_t *op = flecs_meta_cursor_get_op(scope);
     return op->type;
@@ -75071,6 +75075,7 @@ int flecs_expr_initializer_visit_fold(
     bool can_fold = true;
 
     ecs_expr_initializer_t *node = (ecs_expr_initializer_t*)*node_ptr;
+
     if (flecs_expr_initializer_pre_fold(script, node, desc, &can_fold)) {
         goto error;
     }

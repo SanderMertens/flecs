@@ -250,6 +250,7 @@ int flecs_expr_initializer_visit_fold(
     bool can_fold = true;
 
     ecs_expr_initializer_t *node = (ecs_expr_initializer_t*)*node_ptr;
+
     if (flecs_expr_initializer_pre_fold(script, node, desc, &can_fold)) {
         goto error;
     }

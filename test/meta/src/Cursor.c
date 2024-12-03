@@ -4576,3 +4576,47 @@ void Cursor_get_member_id(void) {
 
     ecs_fini(world);
 }
+
+void Cursor_get_array_type(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_array(world, {
+        .type = ecs_id(ecs_i32_t),
+        .count = 2
+    });
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, t, NULL);
+    test_assert(ecs_meta_get_type(&cur) == t);
+    
+    test_int(0, ecs_meta_push(&cur));
+    test_assert(ecs_meta_get_type(&cur) == ecs_id(ecs_i32_t));
+    test_int(0, ecs_meta_pop(&cur));
+
+    test_assert(ecs_meta_get_type(&cur) == t);
+
+    ecs_fini(world);
+}
+
+void Cursor_get_vector_type(void) {
+    test_quarantine("2 Dec 2024");
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_vector(world, {
+        .entity = ecs_entity(world, { .name = "foo" }),
+        .type = ecs_id(ecs_i32_t)
+    });
+
+    int32_t array = 10;
+    ecs_vec_t v = { .count = 1, .array = &array };
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(world, t, &v);
+    test_assert(ecs_meta_get_type(&cur) == t);
+    
+    test_int(0, ecs_meta_push(&cur));
+    test_assert(ecs_meta_get_type(&cur) == ecs_id(ecs_i32_t));
+    test_int(0, ecs_meta_pop(&cur));
+
+    test_assert(ecs_meta_get_type(&cur) == t);
+
+    ecs_fini(world);
+}

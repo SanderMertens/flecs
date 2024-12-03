@@ -451,6 +451,8 @@ void Cursor_opaque_vec_w_opaque_elem(void);
 void Cursor_next_out_of_bounds(void);
 void Cursor_set_out_of_bounds(void);
 void Cursor_get_member_id(void);
+void Cursor_get_array_type(void);
+void Cursor_get_vector_type(void);
 
 // Testsuite 'DeserializeFromJson'
 void DeserializeFromJson_struct_bool(void);
@@ -2728,6 +2730,14 @@ bake_test_case Cursor_testcases[] = {
     {
         "get_member_id",
         Cursor_get_member_id
+    },
+    {
+        "get_array_type",
+        Cursor_get_array_type
+    },
+    {
+        "get_vector_type",
+        Cursor_get_vector_type
     }
 };
 
@@ -4989,7 +4999,7 @@ static bake_test_suite suites[] = {
         "Cursor",
         NULL,
         NULL,
-        135,
+        137,
         Cursor_testcases
     },
     {

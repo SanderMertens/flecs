@@ -1932,6 +1932,61 @@ void Deserialize_struct_w_2_array_type_struct(void) {
     ecs_fini(world);
 }
 
+void Deserialize_array_i32_2(void) {
+    typedef int32_t Ints[2];
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Ints) = ecs_array(world, {
+        .entity = ecs_entity(world, {.name = "Ints"}),
+        .type = ecs_id(ecs_i32_t),
+        .count = 2
+    });
+
+    test_assert(ecs_id(Ints) != 0);
+
+    Ints value = {0, 0};
+
+    const char *ptr = ecs_script_expr_run(world, 
+        "[10, 20]", &(ecs_value_t){ecs_id(Ints), &value}, NULL);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_int(value[0], 10);
+    test_int(value[1], 20);
+
+    ecs_fini(world);
+}
+
+void Deserialize_array_string_2(void) {
+    typedef char* Strings[2];
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Strings) = ecs_array(world, {
+        .entity = ecs_entity(world, {.name = "Strings"}),
+        .type = ecs_id(ecs_string_t),
+        .count = 2
+    });
+
+    test_assert(ecs_id(Strings) != 0);
+
+    Strings value = {0, 0};
+
+    const char *ptr = ecs_script_expr_run(world, 
+        "[\"Hello\", \"World\"]", &(ecs_value_t){ecs_id(Strings), &value}, NULL);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_str(value[0], "Hello");
+    test_str(value[1], "World");
+
+    ecs_os_free(value[0]);
+    ecs_os_free(value[1]);
+
+    ecs_fini(world);
+}
+
 void Deserialize_discover_type_int(void) {
     ecs_world_t *world = ecs_init();
 
