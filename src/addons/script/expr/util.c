@@ -63,7 +63,7 @@ error:
 }
 
 int flecs_value_unary(
-    ecs_script_t *script,
+    const ecs_script_t *script,
     const ecs_value_t *expr,
     ecs_value_t *out,
     ecs_script_token_kind_t operator)
@@ -82,7 +82,7 @@ int flecs_value_unary(
 }
 
 int flecs_value_binary(
-    ecs_script_t *script,
+    const ecs_script_t *script,
     const ecs_value_t *left,
     const ecs_value_t *right,
     ecs_value_t *out,

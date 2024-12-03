@@ -17,14 +17,14 @@ typedef struct ecs_eval_value_t {
 
 static
 int flecs_script_expr_visit_eval_priv(
-    ecs_script_t *script,
+    const ecs_script_t *script,
     ecs_expr_node_t *node,
     const ecs_script_expr_run_desc_t *desc,
     ecs_eval_value_t *out);
 
 static
 void flecs_expr_value_alloc(
-    ecs_script_t *script,
+    const ecs_script_t *script,
     ecs_eval_value_t *val,
     const ecs_type_info_t *ti)
 {
@@ -49,7 +49,7 @@ void flecs_expr_value_alloc(
 
 static
 void flecs_expr_value_free(
-    ecs_script_t *script,
+    const ecs_script_t *script,
     ecs_eval_value_t *val)
 {
     const ecs_type_info_t *ti = val->type_info;
@@ -73,7 +73,7 @@ void flecs_expr_value_free(
 
 static
 int flecs_expr_value_visit_eval(
-    ecs_script_t *script,
+    const ecs_script_t *script,
     ecs_expr_val_t *node,
     const ecs_script_expr_run_desc_t *desc,
     ecs_eval_value_t *out)
@@ -86,14 +86,14 @@ int flecs_expr_value_visit_eval(
 
 static
 int flecs_expr_initializer_eval(
-    ecs_script_t *script,
+    const ecs_script_t *script,
     ecs_expr_initializer_t *node,
     const ecs_script_expr_run_desc_t *desc,
     void *value);
 
 static
 int flecs_expr_initializer_eval_static(
-    ecs_script_t *script,
+    const ecs_script_t *script,
     ecs_expr_initializer_t *node,
     const ecs_script_expr_run_desc_t *desc,
     void *value)
@@ -141,7 +141,7 @@ error:
 
 static
 int flecs_expr_initializer_eval_dynamic(
-    ecs_script_t *script,
+    const ecs_script_t *script,
     ecs_expr_initializer_t *node,
     const ecs_script_expr_run_desc_t *desc,
     void *value)
@@ -202,7 +202,7 @@ error:
 
 static
 int flecs_expr_initializer_eval(
-    ecs_script_t *script,
+    const ecs_script_t *script,
     ecs_expr_initializer_t *node,
     const ecs_script_expr_run_desc_t *desc,
     void *value)
@@ -216,7 +216,7 @@ int flecs_expr_initializer_eval(
 
 static
 int flecs_expr_initializer_visit_eval(
-    ecs_script_t *script,
+    const ecs_script_t *script,
     ecs_expr_initializer_t *node,
     const ecs_script_expr_run_desc_t *desc,
     ecs_eval_value_t *out)
@@ -228,7 +228,7 @@ int flecs_expr_initializer_visit_eval(
 
 static
 int flecs_expr_unary_visit_eval(
-    ecs_script_t *script,
+    const ecs_script_t *script,
     ecs_expr_unary_t *node,
     const ecs_script_expr_run_desc_t *desc,
     ecs_eval_value_t *out)
@@ -255,7 +255,7 @@ error:
 
 static
 int flecs_expr_binary_visit_eval(
-    ecs_script_t *script,
+    const ecs_script_t *script,
     ecs_expr_binary_t *node,
     const ecs_script_expr_run_desc_t *desc,
     ecs_eval_value_t *out)
@@ -287,7 +287,7 @@ error:
 
 static
 int flecs_expr_variable_visit_eval(
-    ecs_script_t *script,
+    const ecs_script_t *script,
     ecs_expr_variable_t *node,
     const ecs_script_expr_run_desc_t *desc,
     ecs_eval_value_t *out)
@@ -303,7 +303,7 @@ int flecs_expr_variable_visit_eval(
 
 static
 int flecs_expr_cast_visit_eval(
-    ecs_script_t *script,
+    const ecs_script_t *script,
     ecs_expr_cast_t *node,
     const ecs_script_expr_run_desc_t *desc,
     ecs_eval_value_t *out)
@@ -331,7 +331,7 @@ error:
 
 static
 int flecs_expr_function_visit_eval(
-    ecs_script_t *script,
+    const ecs_script_t *script,
     ecs_expr_function_t *node,
     const ecs_script_expr_run_desc_t *desc,
     ecs_eval_value_t *out)
@@ -365,7 +365,7 @@ error:
 
 static
 int flecs_expr_member_visit_eval(
-    ecs_script_t *script,
+    const ecs_script_t *script,
     ecs_expr_member_t *node,
     const ecs_script_expr_run_desc_t *desc,
     ecs_eval_value_t *out)
@@ -387,7 +387,7 @@ error:
 
 static
 int flecs_expr_element_visit_eval(
-    ecs_script_t *script,
+    const ecs_script_t *script,
     ecs_expr_element_t *node,
     const ecs_script_expr_run_desc_t *desc,
     ecs_eval_value_t *out)
@@ -415,7 +415,7 @@ error:
 
 static
 int flecs_expr_component_visit_eval(
-    ecs_script_t *script,
+    const ecs_script_t *script,
     ecs_expr_element_t *node,
     const ecs_script_expr_run_desc_t *desc,
     ecs_eval_value_t *out)
@@ -456,7 +456,7 @@ error:
 
 static
 int flecs_script_expr_visit_eval_priv(
-    ecs_script_t *script,
+    const ecs_script_t *script,
     ecs_expr_node_t *node,
     const ecs_script_expr_run_desc_t *desc,
     ecs_eval_value_t *out)
@@ -544,7 +544,7 @@ error:
 }
 
 int flecs_script_expr_visit_eval(
-    ecs_script_t *script,
+    const ecs_script_t *script,
     ecs_expr_node_t *node,
     const ecs_script_expr_run_desc_t *desc,
     ecs_value_t *out)

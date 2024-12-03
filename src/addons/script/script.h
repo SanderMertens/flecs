@@ -19,7 +19,9 @@ typedef struct ecs_script_impl_t {
     ecs_script_t pub;
     ecs_allocator_t allocator;
     ecs_script_scope_t *root;
+    ecs_expr_node_t *expr; /* Only set if script is just an expression */
     char *token_buffer;
+    const char *next_token; /* First character after expression */
     int32_t token_buffer_size;
     int32_t refcount;
 } ecs_script_impl_t;

@@ -1231,3 +1231,16 @@ void Error_template_in_template(void) {
 
     ecs_fini(world);
 }
+
+void Error_unterminated_binary(void) {
+    ecs_world_t *world = ecs_init();
+
+    int32_t v = 0;
+
+    ecs_log_set_level(-4);
+    const char *ptr = ecs_script_expr_run(world, "10 +", 
+        &ecs_value_ptr(ecs_i32_t, &v), NULL);
+    test_assert(ptr == NULL);
+
+    ecs_fini(world);
+}

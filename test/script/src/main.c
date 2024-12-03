@@ -364,6 +364,7 @@ void Error_template_redeclare_const_as_const(void);
 void Error_run_template_after_error(void);
 void Error_update_template_after_error(void);
 void Error_template_in_template(void);
+void Error_unterminated_binary(void);
 
 // Testsuite 'Expr'
 void Expr_add_2_int_literals(void);
@@ -525,6 +526,12 @@ void Expr_var_expr_string(void);
 void Expr_var_member_expr_string(void);
 void Expr_var_elem_expr_string(void);
 void Expr_var_inline_elem_expr_string(void);
+void Expr_var_expr_no_desc(void);
+void Expr_var_expr_desc_w_no_vars(void);
+void Expr_parse_eval(void);
+void Expr_parse_eval_multiple_times(void);
+void Expr_parse_error(void);
+void Expr_parse_eval_error(void);
 
 // Testsuite 'Vars'
 void Vars_declare_1_var(void);
@@ -2097,6 +2104,10 @@ bake_test_case Error_testcases[] = {
     {
         "template_in_template",
         Error_template_in_template
+    },
+    {
+        "unterminated_binary",
+        Error_unterminated_binary
     }
 };
 
@@ -2736,6 +2747,30 @@ bake_test_case Expr_testcases[] = {
     {
         "var_inline_elem_expr_string",
         Expr_var_inline_elem_expr_string
+    },
+    {
+        "var_expr_no_desc",
+        Expr_var_expr_no_desc
+    },
+    {
+        "var_expr_desc_w_no_vars",
+        Expr_var_expr_desc_w_no_vars
+    },
+    {
+        "parse_eval",
+        Expr_parse_eval
+    },
+    {
+        "parse_eval_multiple_times",
+        Expr_parse_eval_multiple_times
+    },
+    {
+        "parse_error",
+        Expr_parse_error
+    },
+    {
+        "parse_eval_error",
+        Expr_parse_eval_error
     }
 };
 
@@ -3388,14 +3423,14 @@ static bake_test_suite suites[] = {
         "Error",
         NULL,
         NULL,
-        63,
+        64,
         Error_testcases
     },
     {
         "Expr",
         NULL,
         NULL,
-        159,
+        165,
         Expr_testcases
     },
     {
