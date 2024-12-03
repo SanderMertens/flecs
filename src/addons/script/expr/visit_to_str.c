@@ -114,7 +114,7 @@ int flecs_expr_variable_to_str(
     const ecs_expr_variable_t *node)
 {
     ecs_strbuf_appendlit(v->buf, "$");
-    ecs_strbuf_appendstr(v->buf, node->value);
+    ecs_strbuf_appendstr(v->buf, node->name);
     return 0;
 }
 
