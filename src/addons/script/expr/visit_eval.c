@@ -81,6 +81,13 @@ int flecs_expr_initializer_eval(
     ecs_script_t *script,
     ecs_expr_initializer_t *node,
     const ecs_script_expr_run_desc_t *desc,
+    void *value);
+
+static
+int flecs_expr_initializer_eval_static(
+    ecs_script_t *script,
+    ecs_expr_initializer_t *node,
+    const ecs_script_expr_run_desc_t *desc,
     void *value)
 {
     ecs_expr_initializer_element_t *elems = ecs_vec_first(&node->elements);
@@ -120,6 +127,79 @@ int flecs_expr_initializer_eval(
     return 0;
 error:
     return -1;
+}
+
+static
+int flecs_expr_initializer_eval_dynamic(
+    ecs_script_t *script,
+    ecs_expr_initializer_t *node,
+    const ecs_script_expr_run_desc_t *desc,
+    void *value)
+{
+    ecs_meta_cursor_t cur = ecs_meta_cursor(
+        script->world, node->node.type, value);
+    ecs_meta_push(&cur);
+
+    ecs_expr_initializer_element_t *elems = ecs_vec_first(&node->elements);
+    int32_t i, count = ecs_vec_count(&node->elements);
+    for (i = 0; i < count; i ++) {
+        ecs_expr_initializer_element_t *elem = &elems[i];
+
+        if (i) {
+            ecs_meta_next(&cur);
+        }
+
+        if (elem->value->kind == EcsExprInitializer) {
+            if (flecs_expr_initializer_eval(
+                script, (ecs_expr_initializer_t*)elem->value, desc, value)) 
+            {
+                goto error;
+            }
+            continue;
+        }
+
+        ecs_eval_value_t expr = {{0}};
+        if (flecs_script_expr_visit_eval_priv(
+            script, elem->value, desc, &expr)) 
+        {
+            goto error;
+        }
+
+        ecs_expr_val_t *elem_value = (ecs_expr_val_t*)elem->value;
+
+        if (elem->member) {
+            ecs_meta_member(&cur, elem->member);
+        }
+
+        ecs_value_t v_elem_value = {
+            .ptr = elem_value->ptr,
+            .type = elem_value->node.type
+        };
+
+        if (ecs_meta_set_value(&cur, &v_elem_value)) {
+            goto error;
+        }
+    }
+
+    ecs_meta_pop(&cur);
+
+    return 0;
+error:
+    return -1;
+}
+
+static
+int flecs_expr_initializer_eval(
+    ecs_script_t *script,
+    ecs_expr_initializer_t *node,
+    const ecs_script_expr_run_desc_t *desc,
+    void *value)
+{
+    if (node->is_dynamic) {
+        return flecs_expr_initializer_eval_dynamic(script, node, desc, value);
+    } else {
+        return flecs_expr_initializer_eval_static(script, node, desc, value);
+    }
 }
 
 static
