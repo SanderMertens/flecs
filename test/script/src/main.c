@@ -643,6 +643,7 @@ void Deserialize_struct_i32_i32(void);
 void Deserialize_struct_string(void);
 void Deserialize_struct_string_from_name(void);
 void Deserialize_struct_string_from_path(void);
+void Deserialize_struct_string_from_var(void);
 void Deserialize_struct_entity(void);
 void Deserialize_struct_id(void);
 void Deserialize_struct_nested_i32(void);
@@ -655,6 +656,13 @@ void Deserialize_struct_member_nested_i32(void);
 void Deserialize_struct_member_nested_i32_i32(void);
 void Deserialize_struct_member_2_nested_i32_i32(void);
 void Deserialize_struct_member_2_nested_i32_i32_reverse(void);
+void Deserialize_struct_from_var(void);
+void Deserialize_struct_member_from_var(void);
+void Deserialize_struct_member_auto_var(void);
+void Deserialize_struct_member_auto_vars(void);
+void Deserialize_struct_nested_member_auto_var(void);
+void Deserialize_struct_nested_member_auto_vars(void);
+void Deserialize_struct_auto_vars(void);
 void Deserialize_struct_i32_array_3(void);
 void Deserialize_struct_struct_i32_array_3(void);
 void Deserialize_struct_struct_i32_i32_array_3(void);
@@ -3185,6 +3193,10 @@ bake_test_case Deserialize_testcases[] = {
         Deserialize_struct_string_from_path
     },
     {
+        "struct_string_from_var",
+        Deserialize_struct_string_from_var
+    },
+    {
         "struct_entity",
         Deserialize_struct_entity
     },
@@ -3231,6 +3243,34 @@ bake_test_case Deserialize_testcases[] = {
     {
         "struct_member_2_nested_i32_i32_reverse",
         Deserialize_struct_member_2_nested_i32_i32_reverse
+    },
+    {
+        "struct_from_var",
+        Deserialize_struct_from_var
+    },
+    {
+        "struct_member_from_var",
+        Deserialize_struct_member_from_var
+    },
+    {
+        "struct_member_auto_var",
+        Deserialize_struct_member_auto_var
+    },
+    {
+        "struct_member_auto_vars",
+        Deserialize_struct_member_auto_vars
+    },
+    {
+        "struct_nested_member_auto_var",
+        Deserialize_struct_nested_member_auto_var
+    },
+    {
+        "struct_nested_member_auto_vars",
+        Deserialize_struct_nested_member_auto_vars
+    },
+    {
+        "struct_auto_vars",
+        Deserialize_struct_auto_vars
     },
     {
         "struct_i32_array_3",
@@ -3366,7 +3406,7 @@ static bake_test_suite suites[] = {
         "Deserialize",
         NULL,
         NULL,
-        76,
+        84,
         Deserialize_testcases
     }
 };

@@ -863,6 +863,44 @@ void Deserialize_struct_string_from_path(void) {
     ecs_fini(world);
 }
 
+void Deserialize_struct_string_from_var(void) {
+    typedef struct {
+        char *value;
+    } T;
+    
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "T"}),
+        .members = {
+            {"value", ecs_id(ecs_string_t)}
+        }
+    });
+
+    T value = {0};
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *foo = ecs_script_vars_define(vars, "foo", ecs_string_t);
+    *(char**)foo->value.ptr = "Hello World";
+
+    ecs_script_expr_run_desc_t desc = { .vars = vars };
+
+    const char *ptr = ecs_script_expr_run(world, "{$foo}", 
+        &(ecs_value_t){t, &value}, &desc);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_str(value.value, "Hello World");
+
+    ecs_os_free(value.value);
+
+    *(char**)foo->value.ptr = NULL;
+    ecs_script_vars_fini(vars);
+
+    ecs_fini(world);
+}
+
 void Deserialize_struct_entity(void) {
     typedef struct {
         ecs_entity_t entity;
@@ -1229,6 +1267,319 @@ void Deserialize_struct_member_2_nested_i32_i32(void) {
     test_int(value.n_1.y, 20);
     test_int(value.n_2.x, 30);
     test_int(value.n_2.y, 40);
+
+    ecs_fini(world);
+}
+
+void Deserialize_struct_from_var(void) {
+    typedef struct {
+        int32_t x;
+        int32_t y;
+    } T;
+
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(T) = ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "T"}),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    T value = {0};
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *foo = ecs_script_vars_define(vars, "foo", T);
+    T *var = foo->value.ptr;
+    var->x = 10;
+    var->y = 20;
+
+    ecs_script_expr_run_desc_t desc = { .vars = vars };
+
+    {
+        const char *ptr = ecs_script_expr_run(world, "$foo", 
+            &(ecs_value_t){ecs_id(T), &value}, &desc);
+        test_assert(ptr != NULL);
+        test_assert(ptr[0] == '\0');
+        test_int(value.x, 10);
+        test_int(value.y, 20);
+    }
+
+    ecs_script_vars_fini(vars);
+
+    ecs_fini(world);
+}
+
+void Deserialize_struct_member_from_var(void) {
+    typedef struct {
+        int32_t value;
+    } T;
+    
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "T"}),
+        .members = {
+            {"value", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    T value = {0};
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *foo = ecs_script_vars_define(vars, "foo", ecs_i32_t);
+    T *var = foo->value.ptr;
+    var->value = 10;
+
+    ecs_script_expr_run_desc_t desc = { .vars = vars };
+
+    {
+        const char *ptr = ecs_script_expr_run(world, "{ $foo }", 
+            &(ecs_value_t){t, &value}, &desc);
+        test_assert(ptr != NULL);
+        test_assert(ptr[0] == '\0');
+        test_int(value.value, 10);
+    }
+
+    value.value = 0;
+
+    {
+        const char *ptr = ecs_script_expr_run(world, "{ value: $foo }", 
+            &(ecs_value_t){t, &value}, &desc);
+        test_assert(ptr != NULL);
+        test_assert(ptr[0] == '\0');
+        test_int(value.value, 10);
+    }
+
+    ecs_script_vars_fini(vars);
+
+    ecs_fini(world);
+}
+
+void Deserialize_struct_member_auto_var(void) {
+    typedef struct {
+        int32_t value;
+    } T;
+    
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "T"}),
+        .members = {
+            {"value", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    T value = {0};
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *foo = ecs_script_vars_define(vars, "value", ecs_i32_t);
+    T *var = foo->value.ptr;
+    var->value = 10;
+
+    ecs_script_expr_run_desc_t desc = { .vars = vars };
+
+    {
+        const char *ptr = ecs_script_expr_run(world, "{ value: $ }", 
+            &(ecs_value_t){t, &value}, &desc);
+        test_assert(ptr != NULL);
+        test_assert(ptr[0] == '\0');
+        test_int(value.value, 10);
+    }
+
+    ecs_script_vars_fini(vars);
+
+    ecs_fini(world);
+}
+
+void Deserialize_struct_member_auto_vars(void) {
+    typedef struct {
+        int32_t x;
+        int32_t y;
+    } T;
+    
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "T"}),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    T value = {0};
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *x = ecs_script_vars_define(vars, "x", ecs_i32_t);
+    *(int32_t*)x->value.ptr = 10;
+    ecs_script_var_t *y = ecs_script_vars_define(vars, "y", ecs_i32_t);
+    *(int32_t*)y->value.ptr = 20;
+
+    ecs_script_expr_run_desc_t desc = { .vars = vars };
+
+    {
+        const char *ptr = ecs_script_expr_run(world, "{ x: $, y: $ }", 
+            &(ecs_value_t){t, &value}, &desc);
+        test_assert(ptr != NULL);
+        test_assert(ptr[0] == '\0');
+        test_int(value.x, 10);
+        test_int(value.y, 20);
+    }
+
+    ecs_script_vars_fini(vars);
+
+    ecs_fini(world);
+}
+
+void Deserialize_struct_nested_member_auto_var(void) {
+    ecs_world_t *world = ecs_init();
+
+    typedef struct {
+        int32_t x;
+        int32_t y;
+    } Point;
+
+    typedef struct {
+        Point start;
+        Point stop;
+    } Line;
+
+    ecs_entity_t point = ecs_struct(world, {
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t ecs_id(Line) = ecs_struct(world, {
+        .members = {
+            {"start", point},
+            {"stop", point}
+        }
+    });
+
+    Line value = {0};
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *foo = ecs_script_vars_define(vars, "x", ecs_i32_t);
+    *(int32_t*)foo->value.ptr = 10;
+
+    ecs_script_expr_run_desc_t desc = { .vars = vars };
+
+    {
+        const char *ptr = ecs_script_expr_run(world, "{ stop: { x: $ }}", 
+            &(ecs_value_t){ecs_id(Line), &value}, &desc);
+        test_assert(ptr != NULL);
+        test_assert(ptr[0] == '\0');
+        test_int(value.start.x, 0);
+        test_int(value.start.y, 0);
+        test_int(value.stop.x, 10);
+        test_int(value.stop.y, 0);
+    }
+
+    ecs_script_vars_fini(vars);
+
+    ecs_fini(world);
+}
+
+void Deserialize_struct_nested_member_auto_vars(void) {
+    ecs_world_t *world = ecs_init();
+
+    typedef struct {
+        int32_t x;
+        int32_t y;
+    } Point;
+
+    typedef struct {
+        Point start;
+        Point stop;
+    } Line;
+
+    ecs_entity_t point = ecs_struct(world, {
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_entity_t ecs_id(Line) = ecs_struct(world, {
+        .members = {
+            {"start", point},
+            {"stop", point}
+        }
+    });
+
+    Line value = {0};
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *x = ecs_script_vars_define(vars, "x", ecs_i32_t);
+    *(int32_t*)x->value.ptr = 10;
+    ecs_script_var_t *y = ecs_script_vars_define(vars, "y", ecs_i32_t);
+    *(int32_t*)y->value.ptr = 20;
+
+    ecs_script_expr_run_desc_t desc = { .vars = vars };
+
+    {
+        const char *ptr = ecs_script_expr_run(world, "{ stop: { x: $, y: $ }}", 
+            &(ecs_value_t){ecs_id(Line), &value}, &desc);
+        test_assert(ptr != NULL);
+        test_assert(ptr[0] == '\0');
+        test_int(value.start.x, 0);
+        test_int(value.start.y, 0);
+        test_int(value.stop.x, 10);
+        test_int(value.stop.y, 20);
+    }
+
+    ecs_script_vars_fini(vars);
+
+    ecs_fini(world);
+}
+
+void Deserialize_struct_auto_vars(void) {
+    typedef struct {
+        int32_t x;
+        int32_t y;
+    } T;
+    
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "T"}),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    T value = {0};
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *x = ecs_script_vars_define(vars, "x", ecs_i32_t);
+    *(int32_t*)x->value.ptr = 10;
+    ecs_script_var_t *y = ecs_script_vars_define(vars, "y", ecs_i32_t);
+    *(int32_t*)y->value.ptr = 20;
+
+    ecs_script_expr_run_desc_t desc = { .vars = vars };
+
+    {
+        const char *ptr = ecs_script_expr_run(world, "{ $, $ }", 
+            &(ecs_value_t){t, &value}, &desc);
+        test_assert(ptr != NULL);
+        test_assert(ptr[0] == '\0');
+        test_int(value.x, 10);
+        test_int(value.y, 20);
+    }
+
+    ecs_script_vars_fini(vars);
 
     ecs_fini(world);
 }

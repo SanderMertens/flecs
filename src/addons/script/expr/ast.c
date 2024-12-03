@@ -138,7 +138,7 @@ ecs_expr_variable_t* flecs_expr_variable(
 {
     ecs_expr_variable_t *result = flecs_expr_ast_new(
         parser, ecs_expr_variable_t, EcsExprVariable);
-    result->value = value;
+    result->name = value;
     return result;
 }
 

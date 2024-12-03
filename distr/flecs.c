@@ -4953,7 +4953,7 @@ typedef struct ecs_expr_identifier_t {
 
 typedef struct ecs_expr_variable_t {
     ecs_expr_node_t node;
-    const char *value;
+    const char *name;
     ecs_script_var_t *var;
 } ecs_expr_variable_t;
 
@@ -73457,7 +73457,7 @@ ecs_expr_variable_t* flecs_expr_variable(
 {
     ecs_expr_variable_t *result = flecs_expr_ast_new(
         parser, ecs_expr_variable_t, EcsExprVariable);
-    result->value = value;
+    result->name = value;
     return result;
 }
 
@@ -75511,7 +75511,7 @@ int flecs_expr_variable_to_str(
     const ecs_expr_variable_t *node)
 {
     ecs_strbuf_appendlit(v->buf, "$");
-    ecs_strbuf_appendstr(v->buf, node->value);
+    ecs_strbuf_appendstr(v->buf, node->name);
     return 0;
 }
 
@@ -75995,6 +75995,19 @@ int flecs_expr_initializer_visit_type(
             }
         }
 
+        /* Check for "member: $" syntax */
+        if (elem->value->kind == EcsExprVariable) {
+            ecs_expr_variable_t *var = (ecs_expr_variable_t*)elem->value;
+            if (var->name && !var->name[0]) {
+                var->name = ecs_meta_get_member(cur);
+                if (!var->name) {
+                    flecs_expr_visit_error(script, node, 
+                        "cannot deduce variable name: not a member");
+                    goto error;
+                }
+            }
+        }
+
         ecs_entity_t elem_type = ecs_meta_get_type(cur);
         ecs_meta_cursor_t elem_cur = *cur;
         if (flecs_script_expr_visit_type_priv(
@@ -76125,10 +76138,10 @@ int flecs_expr_variable_visit_type(
     const ecs_script_expr_run_desc_t *desc)
 {
     ecs_script_var_t *var = ecs_script_vars_lookup(
-        desc->vars, node->value);
+        desc->vars, node->name);
     if (!var) {
         flecs_expr_visit_error(script, node, "unresolved variable '%s'",
-            node->value);
+            node->name);
         goto error;
     }
 
@@ -76161,6 +76174,7 @@ int flecs_expr_function_visit_type(
             last_elem[0] = '\0';
             is_method = true;
         }
+
     } else if (node->left->kind == EcsExprMember) {
         /* This is a method. Just like identifiers, method strings can contain
          * separators. Split off last separator to get the method. */

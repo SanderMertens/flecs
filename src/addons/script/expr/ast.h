@@ -80,7 +80,7 @@ typedef struct ecs_expr_identifier_t {
 
 typedef struct ecs_expr_variable_t {
     ecs_expr_node_t node;
-    const char *value;
+    const char *name;
     ecs_script_var_t *var;
 } ecs_expr_variable_t;
 
