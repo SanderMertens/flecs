@@ -670,6 +670,8 @@ void Deserialize_struct_w_array_type_i32_i32(void);
 void Deserialize_struct_w_array_type_struct(void);
 void Deserialize_struct_w_2_array_type_i32_i32(void);
 void Deserialize_struct_w_2_array_type_struct(void);
+void Deserialize_array_i32_2(void);
+void Deserialize_array_string_2(void);
 void Deserialize_discover_type_int(void);
 void Deserialize_discover_type_negative_int(void);
 void Deserialize_discover_type_float(void);
@@ -3301,6 +3303,14 @@ bake_test_case Deserialize_testcases[] = {
         Deserialize_struct_w_2_array_type_struct
     },
     {
+        "array_i32_2",
+        Deserialize_array_i32_2
+    },
+    {
+        "array_string_2",
+        Deserialize_array_string_2
+    },
+    {
         "discover_type_int",
         Deserialize_discover_type_int
     },
@@ -3406,7 +3416,7 @@ static bake_test_suite suites[] = {
         "Deserialize",
         NULL,
         NULL,
-        84,
+        86,
         Deserialize_testcases
     }
 };

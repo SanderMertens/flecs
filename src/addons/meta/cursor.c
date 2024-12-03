@@ -692,6 +692,10 @@ bool ecs_meta_is_collection(
 ecs_entity_t ecs_meta_get_type(
     const ecs_meta_cursor_t *cursor)
 {
+    if (cursor->depth == 0) {
+        return cursor->scope[0].type;
+    }
+
     ecs_meta_scope_t *scope = flecs_meta_cursor_get_scope(cursor);
     ecs_meta_type_op_t *op = flecs_meta_cursor_get_op(scope);
     return op->type;
