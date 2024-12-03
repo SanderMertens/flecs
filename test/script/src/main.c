@@ -513,6 +513,18 @@ void Expr_iter_to_vars_w_1_query_var(void);
 void Expr_iter_to_vars_w_2_query_vars(void);
 void Expr_component_expr(void);
 void Expr_component_member_expr(void);
+void Expr_component_elem_expr(void);
+void Expr_component_expr_string(void);
+void Expr_component_member_expr_string(void);
+void Expr_component_elem_expr_string(void);
+void Expr_component_inline_elem_expr_string(void);
+void Expr_var_expr(void);
+void Expr_var_member_expr(void);
+void Expr_var_elem_expr(void);
+void Expr_var_expr_string(void);
+void Expr_var_member_expr_string(void);
+void Expr_var_elem_expr_string(void);
+void Expr_var_inline_elem_expr_string(void);
 
 // Testsuite 'Vars'
 void Vars_declare_1_var(void);
@@ -628,6 +640,9 @@ void Deserialize_struct_bitmask(void);
 void Deserialize_struct_i32(void);
 void Deserialize_struct_i32_neg(void);
 void Deserialize_struct_i32_i32(void);
+void Deserialize_struct_string(void);
+void Deserialize_struct_string_from_name(void);
+void Deserialize_struct_string_from_path(void);
 void Deserialize_struct_entity(void);
 void Deserialize_struct_id(void);
 void Deserialize_struct_nested_i32(void);
@@ -2663,6 +2678,54 @@ bake_test_case Expr_testcases[] = {
     {
         "component_member_expr",
         Expr_component_member_expr
+    },
+    {
+        "component_elem_expr",
+        Expr_component_elem_expr
+    },
+    {
+        "component_expr_string",
+        Expr_component_expr_string
+    },
+    {
+        "component_member_expr_string",
+        Expr_component_member_expr_string
+    },
+    {
+        "component_elem_expr_string",
+        Expr_component_elem_expr_string
+    },
+    {
+        "component_inline_elem_expr_string",
+        Expr_component_inline_elem_expr_string
+    },
+    {
+        "var_expr",
+        Expr_var_expr
+    },
+    {
+        "var_member_expr",
+        Expr_var_member_expr
+    },
+    {
+        "var_elem_expr",
+        Expr_var_elem_expr
+    },
+    {
+        "var_expr_string",
+        Expr_var_expr_string
+    },
+    {
+        "var_member_expr_string",
+        Expr_var_member_expr_string
+    },
+    {
+        "var_elem_expr_string",
+        Expr_var_elem_expr_string
+    },
+    {
+        "var_inline_elem_expr_string",
+        Expr_var_inline_elem_expr_string
     }
 };
 
@@ -3110,6 +3173,18 @@ bake_test_case Deserialize_testcases[] = {
         Deserialize_struct_i32_i32
     },
     {
+        "struct_string",
+        Deserialize_struct_string
+    },
+    {
+        "struct_string_from_name",
+        Deserialize_struct_string_from_name
+    },
+    {
+        "struct_string_from_path",
+        Deserialize_struct_string_from_path
+    },
+    {
         "struct_entity",
         Deserialize_struct_entity
     },
@@ -3270,7 +3345,7 @@ static bake_test_suite suites[] = {
         "Expr",
         NULL,
         NULL,
-        147,
+        159,
         Expr_testcases
     },
     {
@@ -3291,7 +3366,7 @@ static bake_test_suite suites[] = {
         "Deserialize",
         NULL,
         NULL,
-        73,
+        76,
         Deserialize_testcases
     }
 };

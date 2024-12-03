@@ -57369,13 +57369,6 @@ void FlecsScriptImport(
         }
     });
 
-    /* Dedicated string type used to indicate that a string is owned by the 
-     * parser and should be copied when returning to the application. */
-    ecs_primitive(world, {
-        .entity = ecs_entity(world, { .name = "string" }),
-        .kind = EcsString
-    });
-
     ecs_add_id(world, ecs_id(EcsScript), EcsPairIsTag);
     ecs_add_id(world, ecs_id(EcsScript), EcsPrivate);
     ecs_add_pair(world, ecs_id(EcsScript), EcsOnInstantiate, EcsDontInherit);
@@ -73422,8 +73415,7 @@ ecs_expr_val_t* flecs_expr_string(
         parser, ecs_expr_val_t, EcsExprValue);
     result->storage.string = value;
     result->ptr = &result->storage.string;
-    result->node.type = ecs_lookup(
-        parser->script->pub.world, "flecs.script.string");
+    result->node.type = ecs_id(ecs_string_t);
     return result;
 }
 
@@ -74254,6 +74246,8 @@ int flecs_value_binary(
 typedef struct ecs_eval_value_t {
     ecs_value_t value;
     ecs_expr_small_val_t storage;
+    const ecs_type_info_t *type_info;
+    bool can_move; /* Can value be moved to output */
 } ecs_eval_value_t;
 
 static
@@ -74272,6 +74266,8 @@ void flecs_expr_value_alloc(
     ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
 
     val->value.type = ti->component;
+    val->type_info = ti;
+    val->can_move = true;
 
     if (ti->size <= FLECS_EXPR_SMALL_DATA_SIZE) {
         val->value.ptr = val->storage.small_data;
@@ -74289,10 +74285,13 @@ void flecs_expr_value_alloc(
 static
 void flecs_expr_value_free(
     ecs_script_t *script,
-    ecs_eval_value_t *val,
-    const ecs_type_info_t *ti)
+    ecs_eval_value_t *val)
 {
-    ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
+    const ecs_type_info_t *ti = val->type_info;
+
+    if (!ti) {
+        return;
+    }
 
     ecs_xtor_t dtor = ti->hooks.dtor;
     if (dtor) {
@@ -74316,6 +74315,7 @@ int flecs_expr_value_visit_eval(
 {
     out->value.type = node->node.type;
     out->value.ptr = node->ptr;
+    out->can_move = false;
     return 0;
 }
 
@@ -74365,6 +74365,8 @@ int flecs_expr_initializer_eval_static(
         {
             goto error;
         }
+
+        flecs_expr_value_free(script, &expr);
     }
 
     return 0;
@@ -74422,6 +74424,8 @@ int flecs_expr_initializer_eval_dynamic(
         if (ecs_meta_set_value(&cur, &v_elem_value)) {
             goto error;
         }
+
+        flecs_expr_value_free(script, &expr);
     }
 
     ecs_meta_pop(&cur);
@@ -74528,6 +74532,7 @@ int flecs_expr_variable_visit_eval(
     ecs_assert(var != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(var->value.type == node->node.type, ECS_INTERNAL_ERROR, NULL);
     out->value = var->value;
+    out->can_move = false;
     return 0;
 }
 
@@ -74608,6 +74613,7 @@ int flecs_expr_member_visit_eval(
 
     out->value.ptr = ECS_OFFSET(expr.value.ptr, node->offset);
     out->value.type = node->node.type;
+    out->can_move = false;
 
     return 0;
 error:
@@ -74635,6 +74641,7 @@ int flecs_expr_element_visit_eval(
 
     out->value.ptr = ECS_OFFSET(expr.value.ptr, node->elem_size * index_value);
     out->value.type = node->node.type;
+    out->can_move = false;
 
     return 0;
 error:
@@ -74665,6 +74672,7 @@ int flecs_expr_component_visit_eval(
 
     out->value.type = node->node.type;
     out->value.ptr = (void*)ecs_get_id(script->world, entity, component);
+    out->can_move = false;
 
     if (!out->value.ptr) {
         char *estr = ecs_get_path(script->world, entity);
@@ -74790,17 +74798,20 @@ int flecs_script_expr_visit_eval(
         out->type = node->type;
     }
 
-    if (out->type == ecs_lookup(script->world, "flecs.script.string")) {
-        out->type = ecs_id(ecs_string_t);
-    }
-
     if (out->type && !out->ptr) {
         out->ptr = ecs_value_new(script->world, out->type);
     }
 
-    if (flecs_value_move_to(script->world, out, &val.value)) {
-        flecs_expr_visit_error(script, node, "failed to write to output");
-        goto error;
+    if (val.can_move) {
+        if (flecs_value_move_to(script->world, out, &val.value)) {
+            flecs_expr_visit_error(script, node, "failed to write to output");
+            goto error;
+        }
+    } else {
+        if (flecs_value_copy_to(script->world, out, &val.value)) {
+            flecs_expr_visit_error(script, node, "failed to write to output");
+            goto error;
+        }
     }
 
     return 0;
@@ -76168,6 +76179,10 @@ int flecs_expr_function_visit_type(
         is_method = true;
     }
 
+    /* Left of function expression should not inherit lvalue type, since the
+     * function return type is what's going to be assigned. */
+    ecs_os_zeromem(cur);
+
     if (flecs_script_expr_visit_type_priv(script, node->left, cur, desc)) {
         goto error;
     }
@@ -76178,8 +76193,11 @@ int flecs_expr_function_visit_type(
         ecs_entity_t func = ecs_lookup_from(
             world, node->left->type, node->function_name);
         if (!func) {
+            char *type_str = ecs_get_path(script->world, node->left->type);
             flecs_expr_visit_error(script, node, 
-                "unresolved method identifier '%s'", node->function_name);
+                "unresolved method identifier '%s' for type '%s'", 
+                node->function_name, type_str);
+            ecs_os_free(type_str);
             goto error;
         }
 

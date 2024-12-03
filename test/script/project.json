@@ -522,7 +522,19 @@
                 "iter_to_vars_w_1_query_var",
                 "iter_to_vars_w_2_query_vars",
                 "component_expr",
-                "component_member_expr"
+                "component_member_expr",
+                "component_elem_expr",
+                "component_expr_string",
+                "component_member_expr_string",
+                "component_elem_expr_string",
+                "component_inline_elem_expr_string",
+                "var_expr",
+                "var_member_expr",
+                "var_elem_expr",
+                "var_expr_string",
+                "var_member_expr_string",
+                "var_elem_expr_string",
+                "var_inline_elem_expr_string"
             ]
         }, {
             "id": "Vars",
@@ -644,6 +656,9 @@
                 "struct_i32",
                 "struct_i32_neg",
                 "struct_i32_i32",
+                "struct_string",
+                "struct_string_from_name",
+                "struct_string_from_path",
                 "struct_entity",
                 "struct_id",
                 "struct_nested_i32",
