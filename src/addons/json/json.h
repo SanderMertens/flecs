@@ -239,7 +239,7 @@ bool flecs_json_serialize_get_value_ctx(
 int flecs_json_serialize_iter_result_table(
     const ecs_world_t *world, 
     const ecs_iter_t *it, 
-    ecs_strbuf_t *buf,
+    ecs_visitor_desc_t *visitor_desc,
     const ecs_iter_to_json_desc_t *desc,
     int32_t count,
     bool has_this,
@@ -262,7 +262,7 @@ void flecs_json_serialize_iter_this(
     const char *parent_path,
     const ecs_json_this_data_t *this_data,
     int32_t row,
-    ecs_strbuf_t *buf,
+    ecs_visitor_desc_t *visitor_desc,
     const ecs_iter_to_json_desc_t *desc);
 
 bool flecs_json_serialize_vars(

@@ -6,6 +6,7 @@
 #include "json.h"
 
 #ifdef FLECS_JSON
+#include "../serialize/serialize.h"
 
 static
 bool flecs_json_serialize_iter_result_is_set(
@@ -260,7 +261,7 @@ int flecs_json_serialize_iter_result_query(
 
         if (has_this) {
             flecs_json_serialize_iter_this(
-                it, parent_path, this_data, i, buf, desc);
+                it, parent_path, this_data, i, visitor_desc, desc);
         }
 
         if (common_data) {

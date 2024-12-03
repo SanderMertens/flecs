@@ -7,7 +7,6 @@
 #define FLECS_SERIALIZE_PRIVATE_H
 
 #include "../../private_api.h"
-#include "flecs.h"
 
 #ifdef FLECS_SERIALIZE
 
@@ -27,6 +26,8 @@ int flecs_ser_array_w_type_data(
 
 ecs_primitive_kind_t flecs_op_to_primitive_kind(
     ecs_meta_type_op_kind_t kind);
+
+#define FLECS_VISIT(fn, visitor, ...) visitor->fn(..., visitor->user_data)
 
 #endif
 

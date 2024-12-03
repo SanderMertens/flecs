@@ -6,6 +6,7 @@
 #include "json.h"
 
 #ifdef FLECS_JSON
+#include "../serialize/serialize.h"
 
 int ecs_array_to_json_buf(
     const ecs_world_t *world,

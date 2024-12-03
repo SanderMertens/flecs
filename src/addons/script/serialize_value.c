@@ -112,6 +112,9 @@ static
 void flecs_expr_ser_struct_enter(void* user_data);
 
 static
+void flecs_expr_ser_struct_next_value(size_t index, void* user_data);
+
+static
 void flecs_expr_ser_struct_exit(void* user_data);
 
 
@@ -158,6 +161,7 @@ void flecs_expr_string_init_visitor_desc(void* visitor_desc_ptr, ecs_strbuf_t* s
         },
         .visit_struct = {
             .enter = flecs_expr_ser_struct_enter,
+            .next_value = flecs_expr_ser_struct_next_value,
             .exit = flecs_expr_ser_struct_exit
         },
         .visit_member = flecs_expr_ser_member,
@@ -416,6 +420,13 @@ static
 void flecs_expr_ser_struct_enter(void* user_data) {
     ecs_strbuf_t *str = (ecs_strbuf_t*)user_data;
     ecs_strbuf_list_push(str, "{", ", ");
+}
+
+static
+void flecs_expr_ser_struct_next_value(size_t index, void* user_data) {
+    (void)index;
+    ecs_strbuf_t *str = (ecs_strbuf_t*)user_data;
+    ecs_strbuf_list_next(str);
 }
 
 static

@@ -109,6 +109,9 @@ static
 void flecs_json_ser_struct_enter(void* user_data);
 
 static
+void flecs_json_ser_struct_next_value(size_t index, void* user_data);
+
+static
 void flecs_json_ser_struct_exit(void* user_data);
 
 
@@ -226,6 +229,7 @@ void flecs_json_init_visitor_desc(void* visitor_desc_ptr, ecs_strbuf_t* str) {
         },
         .visit_struct = {
             .enter = flecs_json_ser_struct_enter,
+            .next_value = flecs_json_ser_struct_next_value,
             .exit = flecs_json_ser_struct_exit,
         },
 
@@ -510,6 +514,13 @@ static
 void flecs_json_ser_struct_enter(void* user_data) {
     ecs_strbuf_t *str = (ecs_strbuf_t*)user_data;
     ecs_strbuf_list_push(str, "{", ", ");
+}
+
+static
+void flecs_json_ser_struct_next_value(size_t index, void* user_data) {
+    (void)index;
+    ecs_strbuf_t *str = (ecs_strbuf_t*)user_data;
+    ecs_strbuf_list_next(str);
 }
 
 static

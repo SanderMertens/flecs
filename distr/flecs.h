@@ -13850,6 +13850,7 @@ typedef struct ecs_visitor_desc_t {
     } visit_array;
     struct {
         void (*enter)(void* user_data);
+        void (*next_value)(size_t index, void* user_data);
         void (*exit)(void* user_data);
     } visit_struct;
 
@@ -13884,6 +13885,12 @@ int ecs_ser_array(
     const void *ptr,
     int32_t count,
     ecs_visitor_desc_t *visitor_desc);
+
+void* ecs_ser_entity(
+    const ecs_world_t *stage,
+    ecs_entity_t entity,
+    ecs_visitor_desc_t *visitor_desc,
+    const ecs_entity_to_json_desc_t *desc);
 
 #ifdef __cplusplus
 }
