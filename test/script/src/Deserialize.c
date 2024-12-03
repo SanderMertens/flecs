@@ -588,7 +588,7 @@ void Deserialize_struct_enum(void) {
 
     test_assert(e != 0);
 
-    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
+    ecs_entity_t t = ecs_struct(world, {
         .entity = ecs_entity(world, {.name = "T"}),
         .members = {
             {"v", e}
@@ -648,7 +648,7 @@ void Deserialize_struct_bitmask(void) {
 
     test_assert(b != 0);
 
-    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
+    ecs_entity_t t = ecs_struct(world, {
         .entity = ecs_entity(world, {.name = "T"}),
         .members = {
             {"v", b}
@@ -709,7 +709,7 @@ void Deserialize_struct_i32(void) {
     
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
+    ecs_entity_t t = ecs_struct(world, {
         .entity = ecs_entity(world, {.name = "T"}),
         .members = {
             {"x", ecs_id(ecs_i32_t)}
@@ -734,7 +734,7 @@ void Deserialize_struct_i32_neg(void) {
     
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
+    ecs_entity_t t = ecs_struct(world, {
         .entity = ecs_entity(world, {.name = "T"}),
         .members = {
             {"x", ecs_id(ecs_i32_t)}
@@ -760,7 +760,7 @@ void Deserialize_struct_i32_i32(void) {
     
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
+    ecs_entity_t t = ecs_struct(world, {
         .entity = ecs_entity(world, {.name = "T"}),
         .members = {
             {"x", ecs_id(ecs_i32_t)},
@@ -780,6 +780,89 @@ void Deserialize_struct_i32_i32(void) {
     ecs_fini(world);
 }
 
+void Deserialize_struct_string(void) {
+    typedef struct {
+        char *value;
+    } T;
+    
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "T"}),
+        .members = {
+            {"value", ecs_id(ecs_string_t)}
+        }
+    });
+
+    T value = {0};
+
+    const char *ptr = ecs_script_expr_run(world, "{\"Hello World\"}", &(ecs_value_t){t, &value}, NULL);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_str(value.value, "Hello World");
+
+    ecs_os_free(value.value);
+
+    ecs_fini(world);
+}
+
+void Deserialize_struct_string_from_name(void) {
+    typedef struct {
+        char *value;
+    } T;
+    
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "T"}),
+        .members = {
+            {"value", ecs_id(ecs_string_t)}
+        }
+    });
+
+    T value = {0};
+
+    const char *ptr = ecs_script_expr_run(world, "{flecs.core.name()}", 
+        &(ecs_value_t){t, &value}, NULL);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_str(value.value, "core");
+
+    ecs_os_free(value.value);
+
+    ecs_fini(world);
+}
+
+void Deserialize_struct_string_from_path(void) {
+    typedef struct {
+        char *value;
+    } T;
+    
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t t = ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "T"}),
+        .members = {
+            {"value", ecs_id(ecs_string_t)}
+        }
+    });
+
+    T value = {0};
+
+    const char *ptr = ecs_script_expr_run(world, "{flecs.core.path()}", 
+        &(ecs_value_t){t, &value}, NULL);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == '\0');
+
+    test_str(value.value, "flecs.core");
+
+    ecs_os_free(value.value);
+
+    ecs_fini(world);
+}
+
 void Deserialize_struct_entity(void) {
     typedef struct {
         ecs_entity_t entity;
@@ -787,7 +870,7 @@ void Deserialize_struct_entity(void) {
     
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
+    ecs_entity_t t = ecs_struct(world, {
         .entity = ecs_entity(world, {.name = "T"}),
         .members = {
             {"entity", ecs_id(ecs_entity_t)}
@@ -812,7 +895,7 @@ void Deserialize_struct_id(void) {
 
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
+    ecs_entity_t t = ecs_struct(world, {
         .entity = ecs_entity(world, {.name = "T"}),
         .members = {
             {"entity", ecs_id(ecs_id_t)}
@@ -841,14 +924,14 @@ void Deserialize_struct_nested_i32(void) {
 
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t n1 = ecs_struct_init(world, &(ecs_struct_desc_t){
+    ecs_entity_t n1 = ecs_struct(world, {
         .entity = ecs_entity(world, {.name = "N1"}),
         .members = {
             {"x", ecs_id(ecs_i32_t)}
         }
     });
 
-    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
+    ecs_entity_t t = ecs_struct(world, {
         .entity = ecs_entity(world, {.name = "T"}),
         .members = {
             {"n_1", n1},
@@ -878,7 +961,7 @@ void Deserialize_struct_nested_i32_i32(void) {
 
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t n1 = ecs_struct_init(world, &(ecs_struct_desc_t){
+    ecs_entity_t n1 = ecs_struct(world, {
         .entity = ecs_entity(world, {.name = "N1"}),
         .members = {
             {"x", ecs_id(ecs_i32_t)},
@@ -886,7 +969,7 @@ void Deserialize_struct_nested_i32_i32(void) {
         }
     });
 
-    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
+    ecs_entity_t t = ecs_struct(world, {
         .entity = ecs_entity(world, {.name = "T"}),
         .members = {
             {"n_1", n1},
@@ -918,7 +1001,7 @@ void Deserialize_struct_2_nested_i32_i32(void) {
 
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t n1 = ecs_struct_init(world, &(ecs_struct_desc_t){
+    ecs_entity_t n1 = ecs_struct(world, {
         .entity = ecs_entity(world, {.name = "N1"}),
         .members = {
             {"x", ecs_id(ecs_i32_t)},
@@ -926,7 +1009,7 @@ void Deserialize_struct_2_nested_i32_i32(void) {
         }
     });
 
-    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
+    ecs_entity_t t = ecs_struct(world, {
         .entity = ecs_entity(world, {.name = "T"}),
         .members = {
             {"n_1", n1},
@@ -955,7 +1038,7 @@ void Deserialize_struct_member_i32(void) {
     
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
+    ecs_entity_t t = ecs_struct(world, {
         .entity = ecs_entity(world, {.name = "T"}),
         .members = {
             {"x", ecs_id(ecs_i32_t)}
@@ -980,7 +1063,7 @@ void Deserialize_struct_member_i32_neg(void) {
     
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
+    ecs_entity_t t = ecs_struct(world, {
         .entity = ecs_entity(world, {.name = "T"}),
         .members = {
             {"x", ecs_id(ecs_i32_t)}
@@ -1006,7 +1089,7 @@ void Deserialize_struct_member_i32_i32(void) {
     
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
+    ecs_entity_t t = ecs_struct(world, {
         .entity = ecs_entity(world, {.name = "T"}),
         .members = {
             {"x", ecs_id(ecs_i32_t)},
@@ -1037,14 +1120,14 @@ void Deserialize_struct_member_nested_i32(void) {
 
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t n1 = ecs_struct_init(world, &(ecs_struct_desc_t){
+    ecs_entity_t n1 = ecs_struct(world, {
         .entity = ecs_entity(world, {.name = "N1"}),
         .members = {
             {"x", ecs_id(ecs_i32_t)}
         }
     });
 
-    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
+    ecs_entity_t t = ecs_struct(world, {
         .entity = ecs_entity(world, {.name = "T"}),
         .members = {
             {"n_1", n1},
@@ -1074,7 +1157,7 @@ void Deserialize_struct_member_nested_i32_i32(void) {
 
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t n1 = ecs_struct_init(world, &(ecs_struct_desc_t){
+    ecs_entity_t n1 = ecs_struct(world, {
         .entity = ecs_entity(world, {.name = "N1"}),
         .members = {
             {"x", ecs_id(ecs_i32_t)},
@@ -1082,7 +1165,7 @@ void Deserialize_struct_member_nested_i32_i32(void) {
         }
     });
 
-    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
+    ecs_entity_t t = ecs_struct(world, {
         .entity = ecs_entity(world, {.name = "T"}),
         .members = {
             {"n_1", n1},
@@ -1114,7 +1197,7 @@ void Deserialize_struct_member_2_nested_i32_i32(void) {
 
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t n1 = ecs_struct_init(world, &(ecs_struct_desc_t){
+    ecs_entity_t n1 = ecs_struct(world, {
         .entity = ecs_entity(world, {.name = "N1"}),
         .members = {
             {"x", ecs_id(ecs_i32_t)},
@@ -1122,7 +1205,7 @@ void Deserialize_struct_member_2_nested_i32_i32(void) {
         }
     });
 
-    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
+    ecs_entity_t t = ecs_struct(world, {
         .entity = ecs_entity(world, {.name = "T"}),
         .members = {
             {"n_1", n1},
@@ -1163,7 +1246,7 @@ void Deserialize_struct_member_2_nested_i32_i32_reverse(void) {
 
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t n1 = ecs_struct_init(world, &(ecs_struct_desc_t){
+    ecs_entity_t n1 = ecs_struct(world, {
         .entity = ecs_entity(world, {.name = "N1"}),
         .members = {
             {"x", ecs_id(ecs_i32_t)},
@@ -1171,7 +1254,7 @@ void Deserialize_struct_member_2_nested_i32_i32_reverse(void) {
         }
     });
 
-    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
+    ecs_entity_t t = ecs_struct(world, {
         .entity = ecs_entity(world, {.name = "T"}),
         .members = {
             {"n_1", n1},
@@ -1206,7 +1289,7 @@ void Deserialize_struct_i32_array_3(void) {
     
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
+    ecs_entity_t t = ecs_struct(world, {
         .entity = ecs_entity(world, {.name = "T"}),
         .members = {
             {"x", ecs_id(ecs_i32_t), 3}
@@ -1237,14 +1320,14 @@ void Deserialize_struct_struct_i32_array_3(void) {
 
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t n1 = ecs_struct_init(world, &(ecs_struct_desc_t){
+    ecs_entity_t n1 = ecs_struct(world, {
         .entity = ecs_entity(world, {.name = "N1"}),
         .members = {
             {"x", ecs_id(ecs_i32_t)}
         }
     });
 
-    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
+    ecs_entity_t t = ecs_struct(world, {
         .entity = ecs_entity(world, {.name = "T"}),
         .members = {
             {"n_1", n1, 3}
@@ -1276,7 +1359,7 @@ void Deserialize_struct_struct_i32_i32_array_3(void) {
 
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t n1 = ecs_struct_init(world, &(ecs_struct_desc_t){
+    ecs_entity_t n1 = ecs_struct(world, {
         .entity = ecs_entity(world, {.name = "N1"}),
         .members = {
             {"x", ecs_id(ecs_i32_t)},
@@ -1284,7 +1367,7 @@ void Deserialize_struct_struct_i32_i32_array_3(void) {
         }
     });
 
-    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
+    ecs_entity_t t = ecs_struct(world, {
         .entity = ecs_entity(world, {.name = "T"}),
         .members = {
             {"n_1", n1, 3}
@@ -1322,7 +1405,7 @@ void Deserialize_struct_w_array_type_i32_i32(void) {
         .count = 2
     });
 
-    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
+    ecs_entity_t t = ecs_struct(world, {
         .entity = ecs_entity(world, {.name = "T"}),
         .members = {
             {"n_1", n1}
@@ -1357,7 +1440,7 @@ void Deserialize_struct_w_2_array_type_i32_i32(void) {
         .count = 2
     });
 
-    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
+    ecs_entity_t t = ecs_struct(world, {
         .entity = ecs_entity(world, {.name = "T"}),
         .members = {
             {"n_1", n1},
@@ -1393,7 +1476,7 @@ void Deserialize_struct_w_array_type_struct(void) {
 
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t n1 = ecs_struct_init(world, &(ecs_struct_desc_t){
+    ecs_entity_t n1 = ecs_struct(world, {
         .entity = ecs_entity(world, {.name = "N1"}),
         .members = {
             {"x", ecs_id(ecs_i32_t)},
@@ -1411,7 +1494,7 @@ void Deserialize_struct_w_array_type_struct(void) {
 
     test_assert(a1 != 0);
 
-    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
+    ecs_entity_t t = ecs_struct(world, {
         .entity = ecs_entity(world, {.name = "T"}),
         .members = {
             {"n_1", a1}
@@ -1449,7 +1532,7 @@ void Deserialize_struct_w_2_array_type_struct(void) {
 
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t n1 = ecs_struct_init(world, &(ecs_struct_desc_t){
+    ecs_entity_t n1 = ecs_struct(world, {
         .entity = ecs_entity(world, {.name = "N1"}),
         .members = {
             {"x", ecs_id(ecs_i32_t)},
@@ -1467,7 +1550,7 @@ void Deserialize_struct_w_2_array_type_struct(void) {
 
     test_assert(a1 != 0);
 
-    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
+    ecs_entity_t t = ecs_struct(world, {
         .entity = ecs_entity(world, {.name = "T"}),
         .members = {
             {"n_1", a1},
@@ -1657,7 +1740,7 @@ void Deserialize_opaque_struct(void) {
 
     ECS_COMPONENT(world, OpaqueStruct);
 
-    ecs_entity_t s = ecs_struct_init(world, &(ecs_struct_desc_t){
+    ecs_entity_t s = ecs_struct(world, {
         .members = {
             {"x", ecs_id(ecs_i32_t)},
             {"y", ecs_id(ecs_i32_t)},
@@ -1687,7 +1770,7 @@ void Deserialize_opaque_struct_w_member(void) {
 
     ECS_COMPONENT(world, OpaqueStruct);
 
-    ecs_entity_t s = ecs_struct_init(world, &(ecs_struct_desc_t){
+    ecs_entity_t s = ecs_struct(world, {
         .members = {
             {"x", ecs_id(ecs_i32_t)},
             {"y", ecs_id(ecs_i32_t)},
@@ -1717,7 +1800,7 @@ void Deserialize_opaque_struct_w_member_reverse(void) {
 
     ECS_COMPONENT(world, OpaqueStruct);
 
-    ecs_entity_t s = ecs_struct_init(world, &(ecs_struct_desc_t){
+    ecs_entity_t s = ecs_struct(world, {
         .members = {
             {"x", ecs_id(ecs_i32_t)},
             {"y", ecs_id(ecs_i32_t)},
@@ -1767,7 +1850,7 @@ void Deserialize_struct_w_opaque_member(void) {
         .type.assign_string = Opaque_string_set
     });
 
-    ecs_struct_init(world, &(ecs_struct_desc_t){
+    ecs_struct(world, {
         .entity = ecs_id(Struct_w_opaque),
         .members = {
             {"str", ecs_id(Opaque_string)},

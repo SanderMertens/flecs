@@ -312,13 +312,6 @@ void FlecsScriptImport(
         }
     });
 
-    /* Dedicated string type used to indicate that a string is owned by the 
-     * parser and should be copied when returning to the application. */
-    ecs_primitive(world, {
-        .entity = ecs_entity(world, { .name = "string" }),
-        .kind = EcsString
-    });
-
     ecs_add_id(world, ecs_id(EcsScript), EcsPairIsTag);
     ecs_add_id(world, ecs_id(EcsScript), EcsPrivate);
     ecs_add_pair(world, ecs_id(EcsScript), EcsOnInstantiate, EcsDontInherit);

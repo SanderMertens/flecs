@@ -603,7 +603,7 @@ void Expr_struct_result_implicit_members(void) {
         int32_t y;
     } Position;
 
-    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
+    ecs_entity_t t = ecs_struct(world, {
         .members = {
             {"x", ecs_id(ecs_i32_t)},
             {"y", ecs_id(ecs_i32_t)}
@@ -631,7 +631,7 @@ void Expr_struct_result_explicit_members(void) {
         int32_t y;
     } Position;
 
-    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
+    ecs_entity_t t = ecs_struct(world, {
         .members = {
             {"x", ecs_id(ecs_i32_t)},
             {"y", ecs_id(ecs_i32_t)}
@@ -660,7 +660,7 @@ void Expr_struct_result_explicit_members_reverse(void) {
         int32_t y;
     } Position;
 
-    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
+    ecs_entity_t t = ecs_struct(world, {
         .members = {
             {"x", ecs_id(ecs_i32_t)},
             {"y", ecs_id(ecs_i32_t)}
@@ -868,7 +868,7 @@ void Expr_struct_result_add_2_int_literals(void) {
         int32_t value;
     } Mass;
 
-    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
+    ecs_entity_t t = ecs_struct(world, {
         .members = {
             {"value", ecs_id(ecs_i32_t)}
         }
@@ -894,7 +894,7 @@ void Expr_struct_result_add_2_2_fields_int_literals(void) {
         int32_t y;
     } Mass;
 
-    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
+    ecs_entity_t t = ecs_struct(world, {
         .members = {
             {"x", ecs_id(ecs_i32_t)},
             {"y", ecs_id(ecs_i32_t)}
@@ -921,7 +921,7 @@ void Expr_struct_result_add_3_int_literals(void) {
         int32_t value;
     } Mass;
 
-    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
+    ecs_entity_t t = ecs_struct(world, {
         .members = {
             {"value", ecs_id(ecs_i32_t)}
         }
@@ -946,7 +946,7 @@ void Expr_struct_result_lparen_int_rparen(void) {
         int32_t value;
     } Mass;
 
-    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
+    ecs_entity_t t = ecs_struct(world, {
         .members = {
             {"value", ecs_id(ecs_i32_t)}
         }
@@ -2248,7 +2248,7 @@ void Expr_struct_w_min_var(void) {
         int32_t value;
     } Mass;
 
-    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
+    ecs_entity_t t = ecs_struct(world, {
         .members = {
             {"value", ecs_id(ecs_i32_t)}
         }
@@ -2281,7 +2281,7 @@ void Expr_struct_w_min_lparen_int_rparen(void) {
         int32_t value;
     } Mass;
 
-    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
+    ecs_entity_t t = ecs_struct(world, {
         .members = {
             {"value", ecs_id(ecs_i32_t)}
         }
@@ -2306,7 +2306,7 @@ void Expr_struct_w_min_lparen_var_rparen(void) {
         int32_t value;
     } Mass;
 
-    ecs_entity_t t = ecs_struct_init(world, &(ecs_struct_desc_t){
+    ecs_entity_t t = ecs_struct(world, {
         .members = {
             {"value", ecs_id(ecs_i32_t)}
         }
@@ -3527,7 +3527,7 @@ void Expr_iter_to_vars_w_2_query_vars(void) {
 void Expr_component_expr(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Position) = ecs_struct_init(world, &(ecs_struct_desc_t){
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
         .entity = ecs_entity(world, {.name = "Position"}),
         .members = {
             {"x", ecs_id(ecs_f32_t)},
@@ -3554,7 +3554,7 @@ void Expr_component_expr(void) {
 void Expr_component_member_expr(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Position) = ecs_struct_init(world, &(ecs_struct_desc_t){
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
         .entity = ecs_entity(world, {.name = "Position"}),
         .members = {
             {"x", ecs_id(ecs_f32_t)},
@@ -3584,6 +3584,483 @@ void Expr_component_member_expr(void) {
         test_int(*ptr, 20);
         ecs_value_free(world, v.type, v.ptr);
     }
+
+    ecs_fini(world);
+}
+
+void Expr_component_expr_string(void) {
+    ecs_world_t *world = ecs_init();
+
+    typedef struct {
+        char *value;
+    } String;
+
+    ecs_entity_t ecs_id(String) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "String" }),
+        .members = {
+            {"value", ecs_id(ecs_string_t)}
+        }
+    });
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_set(world, e, String, { "Hello World" });
+
+    ecs_value_t v = {0};
+    test_assert(ecs_script_expr_run(world, "e[String]", &v, NULL) != NULL);
+    test_assert(v.type == ecs_id(String));
+    test_assert(v.ptr != NULL);
+    {
+        String *ptr = v.ptr;
+        test_str(ptr->value, "Hello World");
+        ecs_value_free(world, v.type, v.ptr);
+    }
+
+    const String *s = ecs_get(world, e, String);
+    test_assert(s != NULL);
+    test_str(s->value, "Hello World");
+
+    ecs_fini(world);
+}
+
+void Expr_component_member_expr_string(void) {
+    ecs_world_t *world = ecs_init();
+
+    typedef struct {
+        char *value;
+    } String;
+
+    ecs_entity_t ecs_id(String) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "String" }),
+        .members = {
+            {"value", ecs_id(ecs_string_t)}
+        }
+    });
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_set(world, e, String, { "Hello World" });
+
+    ecs_value_t v = {0};
+    test_assert(ecs_script_expr_run(world, "e[String].value", &v, NULL) != NULL);
+    test_assert(v.type == ecs_id(ecs_string_t));
+    test_assert(v.ptr != NULL);
+    {
+        char **ptr = v.ptr;
+        test_str(*ptr, "Hello World");
+        ecs_value_free(world, v.type, v.ptr);
+    }
+
+    ecs_fini(world);
+}
+
+void Expr_component_elem_expr(void) {
+    ecs_world_t *world = ecs_init();
+
+    typedef char* Strings[2];
+
+    ecs_entity_t ecs_id(Strings) = ecs_array(world, {
+        .entity = ecs_entity(world, { .name = "Strings" }),
+        .type = ecs_id(ecs_string_t),
+        .count = 2
+    });
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_set(world, e, Strings, { "Hello", "World" });
+
+    ecs_value_t v = {0};
+    test_assert(ecs_script_expr_run(world, "e[Strings][0]", &v, NULL) != NULL);
+    test_assert(v.type == ecs_id(ecs_string_t));
+    test_assert(v.ptr != NULL);
+    {
+        char **ptr = v.ptr;
+        test_str(*ptr, "Hello");
+        ecs_value_free(world, v.type, v.ptr);
+    }
+
+    ecs_os_zeromem(&v);
+
+    test_assert(ecs_script_expr_run(world, "e[Strings][1]", &v, NULL) != NULL);
+    test_assert(v.type == ecs_id(ecs_string_t));
+    test_assert(v.ptr != NULL);
+    {
+        char **ptr = v.ptr;
+        test_str(*ptr, "World");
+        ecs_value_free(world, v.type, v.ptr);
+    }
+
+    ecs_fini(world);
+}
+
+void Expr_component_elem_expr_string(void) {
+    ecs_world_t *world = ecs_init();
+
+    typedef struct {
+        char *value[2];
+    } String;
+
+    ecs_entity_t arr = ecs_array(world, {
+        .type = ecs_id(ecs_string_t),
+        .count = 2
+    });
+
+    ecs_entity_t ecs_id(String) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "String" }),
+        .members = {
+            {"value", arr}
+        }
+    });
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_set(world, e, String, {{ "Hello", "World" }});
+
+    ecs_value_t v = {0};
+    test_assert(ecs_script_expr_run(world, "e[String].value[0]", &v, NULL) != NULL);
+    test_assert(v.type == ecs_id(ecs_string_t));
+    test_assert(v.ptr != NULL);
+    {
+        char **ptr = v.ptr;
+        test_str(*ptr, "Hello");
+        ecs_value_free(world, v.type, v.ptr);
+    }
+
+    ecs_os_zeromem(&v);
+
+    test_assert(ecs_script_expr_run(world, "e[String].value[1]", &v, NULL) != NULL);
+    test_assert(v.type == ecs_id(ecs_string_t));
+    test_assert(v.ptr != NULL);
+    {
+        char **ptr = v.ptr;
+        test_str(*ptr, "World");
+        ecs_value_free(world, v.type, v.ptr);
+    }
+
+    ecs_fini(world);
+}
+
+void Expr_component_inline_elem_expr_string(void) {
+    ecs_world_t *world = ecs_init();
+
+    typedef struct {
+        char *value[2];
+    } String;
+
+    ecs_entity_t ecs_id(String) = ecs_struct(world, {
+        .entity = ecs_entity(world, { .name = "String" }),
+        .members = {
+            {"value", ecs_id(ecs_string_t), .count = 2}
+        }
+    });
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    ecs_set(world, e, String, {{ "Hello", "World" }});
+
+    ecs_value_t v = {0};
+    test_assert(ecs_script_expr_run(world, "e[String].value[0]", &v, NULL) != NULL);
+    test_assert(v.type == ecs_id(ecs_string_t));
+    test_assert(v.ptr != NULL);
+    {
+        char **ptr = v.ptr;
+        test_str(*ptr, "Hello");
+        ecs_value_free(world, v.type, v.ptr);
+    }
+
+    ecs_os_zeromem(&v);
+
+    test_assert(ecs_script_expr_run(world, "e[String].value[1]", &v, NULL) != NULL);
+    test_assert(v.type == ecs_id(ecs_string_t));
+    test_assert(v.ptr != NULL);
+    {
+        char **ptr = v.ptr;
+        test_str(*ptr, "World");
+        ecs_value_free(world, v.type, v.ptr);
+    }
+
+    ecs_fini(world);
+}
+
+void Expr_var_expr(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *foo = ecs_script_vars_define(vars, "foo", ecs_i32_t);
+    *(int32_t*)foo->value.ptr = 10;
+
+    int32_t v = 0;
+    ecs_script_expr_run_desc_t desc = { .vars = vars };
+    const char *ptr = ecs_script_expr_run(
+        world, "$foo", &ecs_value_ptr(ecs_i32_t, &v), &desc);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == 0);
+    test_int(v, 10);
+
+    ecs_script_vars_fini(vars);
+
+    ecs_fini(world);
+}
+
+void Expr_var_member_expr(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(PositionI) = ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "PositionI"}),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *foo = ecs_script_vars_define(vars, "foo", PositionI);
+    *(PositionI*)foo->value.ptr = (PositionI){10, 20};
+
+    int32_t v = 0;
+    ecs_script_expr_run_desc_t desc = { .vars = vars };
+
+    {
+        const char *ptr = ecs_script_expr_run(
+            world, "$foo.x", &ecs_value_ptr(ecs_i32_t, &v), &desc);
+        test_assert(ptr != NULL);
+        test_assert(ptr[0] == 0);
+        test_int(v, 10);
+    }
+
+    {
+        const char *ptr = ecs_script_expr_run(
+            world, "$foo.y", &ecs_value_ptr(ecs_i32_t, &v), &desc);
+        test_assert(ptr != NULL);
+        test_assert(ptr[0] == 0);
+        test_int(v, 20);
+    }
+
+    ecs_script_vars_fini(vars);
+
+    ecs_fini(world);
+}
+
+void Expr_var_elem_expr(void) {
+    ecs_world_t *world = ecs_init();
+
+    typedef int32_t Ints[2];
+
+    ecs_entity_t ecs_id(Ints) = ecs_array(world, {
+        .entity = ecs_entity(world, { .name = "Ints" }),
+        .type = ecs_id(ecs_i32_t),
+        .count = 2
+    });
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *foo = ecs_script_vars_define(vars, "foo", Ints);
+    Ints *var = foo->value.ptr;
+    (*var)[0] = 10;
+    (*var)[1] = 20;
+
+    int32_t v = 0;
+    ecs_script_expr_run_desc_t desc = { .vars = vars };
+
+    {
+        const char *ptr = ecs_script_expr_run(
+            world, "$foo[0]", &ecs_value_ptr(ecs_i32_t, &v), &desc);
+        test_assert(ptr != NULL);
+        test_assert(ptr[0] == 0);
+        test_int(v, 10);
+    }
+
+    {
+        const char *ptr = ecs_script_expr_run(
+            world, "$foo[1]", &ecs_value_ptr(ecs_i32_t, &v), &desc);
+        test_assert(ptr != NULL);
+        test_assert(ptr[0] == 0);
+        test_int(v, 20);
+    }
+
+    ecs_script_vars_fini(vars);
+
+    ecs_fini(world);
+}
+
+void Expr_var_expr_string(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *foo = ecs_script_vars_define(vars, "foo", ecs_string_t);
+    *(char**)foo->value.ptr = "Hello World";
+
+    char* v = NULL;
+    ecs_script_expr_run_desc_t desc = { .vars = vars };
+    const char *ptr = ecs_script_expr_run(
+        world, "$foo", &ecs_value_ptr(ecs_string_t, &v), &desc);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == 0);
+    test_str(v, "Hello World");
+    
+    ecs_os_free(v);
+
+    *(char**)foo->value.ptr = NULL;
+    ecs_script_vars_fini(vars);
+
+    ecs_fini(world);
+}
+
+void Expr_var_member_expr_string(void) {
+    ecs_world_t *world = ecs_init();
+
+    typedef struct {
+        char *x;
+        char *y;
+    } Strings;
+
+    ecs_entity_t ecs_id(Strings) = ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "Strings"}),
+        .members = {
+            {"x", ecs_id(ecs_string_t)},
+            {"y", ecs_id(ecs_string_t)}
+        }
+    });
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *foo = ecs_script_vars_define(vars, "foo", Strings);
+    Strings *var = foo->value.ptr;
+    var->x = "Hello";
+    var->y = "World";
+
+    char *v = 0;
+    ecs_script_expr_run_desc_t desc = { .vars = vars };
+
+    {
+        const char *ptr = ecs_script_expr_run(
+            world, "$foo.x", &ecs_value_ptr(ecs_string_t, &v), &desc);
+        test_assert(ptr != NULL);
+        test_assert(ptr[0] == 0);
+        test_str(v, "Hello");
+        ecs_os_free(v);
+    }
+
+    v = NULL;
+
+    {
+        const char *ptr = ecs_script_expr_run(
+            world, "$foo.y", &ecs_value_ptr(ecs_string_t, &v), &desc);
+        test_assert(ptr != NULL);
+        test_assert(ptr[0] == 0);
+        test_str(v, "World");
+        ecs_os_free(v);
+    }
+
+    test_str(var->x, "Hello");
+    test_str(var->y, "World");
+
+    var->x = NULL;
+    var->y = NULL;
+    ecs_script_vars_fini(vars);
+
+    ecs_fini(world);
+}
+
+void Expr_var_elem_expr_string(void) {
+    ecs_world_t *world = ecs_init();
+
+    typedef char* Strings[2];
+
+    ecs_entity_t ecs_id(Strings) = ecs_array(world, {
+        .entity = ecs_entity(world, { .name = "Strings" }),
+        .type = ecs_id(ecs_string_t),
+        .count = 2
+    });
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *foo = ecs_script_vars_define(vars, "foo", Strings);
+    Strings *var = foo->value.ptr;
+    (*var)[0] = "Hello";
+    (*var)[1] = "World";
+
+    char *v = NULL;
+    ecs_script_expr_run_desc_t desc = { .vars = vars };
+
+    {
+        const char *ptr = ecs_script_expr_run(
+            world, "$foo[0]", &ecs_value_ptr(ecs_string_t, &v), &desc);
+        test_assert(ptr != NULL);
+        test_assert(ptr[0] == 0);
+        test_str(v, "Hello");
+        ecs_os_free(v);
+    }
+
+    v = NULL;
+
+    {
+        const char *ptr = ecs_script_expr_run(
+            world, "$foo[1]", &ecs_value_ptr(ecs_string_t, &v), &desc);
+        test_assert(ptr != NULL);
+        test_assert(ptr[0] == 0);
+        test_str(v, "World");
+        ecs_os_free(v);
+    }
+
+    test_str((*var)[0], "Hello");
+    test_str((*var)[1], "World");
+    (*var)[0] = NULL;
+    (*var)[1] = NULL;
+
+    ecs_script_vars_fini(vars);
+
+    ecs_fini(world);
+}
+
+void Expr_var_inline_elem_expr_string(void) {
+    ecs_world_t *world = ecs_init();
+
+    typedef struct {
+        char *value[2];
+    } Strings;
+
+    ecs_entity_t ecs_id(Strings) = ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "Strings"}),
+        .members = {
+            {"value", ecs_id(ecs_string_t), .count = 2},
+        }
+    });
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *foo = ecs_script_vars_define(vars, "foo", Strings);
+    Strings *var = foo->value.ptr;
+    var->value[0] = "Hello";
+    var->value[1] = "World";
+
+    char *v = 0;
+    ecs_script_expr_run_desc_t desc = { .vars = vars };
+
+    {
+        const char *ptr = ecs_script_expr_run(
+            world, "$foo.value[0]", &ecs_value_ptr(ecs_string_t, &v), &desc);
+        test_assert(ptr != NULL);
+        test_assert(ptr[0] == 0);
+        test_str(v, "Hello");
+        ecs_os_free(v);
+    }
+
+    v = NULL;
+
+    {
+        const char *ptr = ecs_script_expr_run(
+            world, "$foo.value[1]", &ecs_value_ptr(ecs_string_t, &v), &desc);
+        test_assert(ptr != NULL);
+        test_assert(ptr[0] == 0);
+        test_str(v, "World");
+        ecs_os_free(v);
+    }
+
+    test_str(var->value[0], "Hello");
+    test_str(var->value[1], "World");
+
+    var->value[0] = NULL;
+    var->value[1] = NULL;
+    ecs_script_vars_fini(vars);
 
     ecs_fini(world);
 }

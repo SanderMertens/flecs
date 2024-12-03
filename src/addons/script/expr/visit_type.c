@@ -510,6 +510,10 @@ int flecs_expr_function_visit_type(
         is_method = true;
     }
 
+    /* Left of function expression should not inherit lvalue type, since the
+     * function return type is what's going to be assigned. */
+    ecs_os_zeromem(cur);
+
     if (flecs_script_expr_visit_type_priv(script, node->left, cur, desc)) {
         goto error;
     }
@@ -520,8 +524,11 @@ int flecs_expr_function_visit_type(
         ecs_entity_t func = ecs_lookup_from(
             world, node->left->type, node->function_name);
         if (!func) {
+            char *type_str = ecs_get_path(script->world, node->left->type);
             flecs_expr_visit_error(script, node, 
-                "unresolved method identifier '%s'", node->function_name);
+                "unresolved method identifier '%s' for type '%s'", 
+                node->function_name, type_str);
+            ecs_os_free(type_str);
             goto error;
         }
 
