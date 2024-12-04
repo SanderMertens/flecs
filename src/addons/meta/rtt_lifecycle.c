@@ -378,13 +378,9 @@ void flecs_rtt_init_default_hooks_struct(
         dtor_hook_required |= member_ti->hooks.dtor != NULL;
         move_hook_required |= member_ti->hooks.move != NULL;
         copy_hook_required |= member_ti->hooks.copy != NULL;
-
-        /* A struct has a valid cmp hook if all its members have it */
-        valid_cmp  &= member_ti->hooks.cmp != NULL;
-
-        /* A struct has a valid equals hook if all its members have it */
+        /* A struct has a valid cmp/equals hook if all its members have it: */
+        valid_cmp &= member_ti->hooks.cmp != NULL;
         valid_equals  &= member_ti->hooks.equals != NULL;
-
         flags |= member_ti->hooks.flags;
     }
 
@@ -398,7 +394,7 @@ void flecs_rtt_init_default_hooks_struct(
         dtor_hook_required ? flecs_rtt_struct_dtor : NULL,
         move_hook_required ? flecs_rtt_struct_move : NULL,
         copy_hook_required ? flecs_rtt_struct_copy : NULL,
-        valid_cmp ? flecs_rtt_struct_cmp : NULL,
+        valid_cmp ?  flecs_rtt_struct_cmp : NULL,
         valid_equals ? flecs_rtt_struct_equals : NULL
         );
 
@@ -638,15 +634,15 @@ void flecs_rtt_init_default_hooks_array(
     ecs_assert(array_info != NULL, ECS_INTERNAL_ERROR, NULL);
     const ecs_type_info_t *element_ti =
         ecs_get_type_info(world, array_info->type);
+    ecs_flags32_t flags = element_ti->hooks.flags;
     bool ctor_hook_required =
         element_ti->hooks.ctor && element_ti->hooks.ctor != flecs_default_ctor;
     bool dtor_hook_required = element_ti->hooks.dtor != NULL;
     bool move_hook_required = element_ti->hooks.move != NULL;
     bool copy_hook_required = element_ti->hooks.copy != NULL;
-    bool valid_cmp = element_ti->hooks.cmp != NULL;
-    bool valid_equals = element_ti->hooks.equals != NULL;
+    bool valid_cmp = element_ti->hooks.cmp != NULL && !(flags & ECS_TYPE_HOOK_CMP_ILLEGAL);
+    bool valid_equals = element_ti->hooks.equals != NULL && !(flags & ECS_TYPE_HOOK_CMP_ILLEGAL);
     
-    ecs_flags32_t flags = element_ti->hooks.flags;
 
     ecs_type_hooks_t hooks = *ecs_get_hooks_id(world, component);
     
@@ -987,6 +983,7 @@ void flecs_rtt_init_default_hooks(
             hooks.ctor = flecs_default_ctor;
         }
 
+        hooks.flags &= ECS_TYPE_HOOKS_ILLEGAL;
         ecs_set_hooks_id(
             world,
             component,
