@@ -90,8 +90,8 @@ template<typename T, enable_if_t<
     std::is_trivial<T>::value == true
         >* = nullptr>
 void register_lifecycle_actions(
-    ecs_world_t *world,
-    ecs_entity_t component) {}
+    ecs_world_t*,
+    ecs_entity_t) {}
 
 // If the component is non-trivial, register component lifecycle actions.
 // Depending on the type not all callbacks may be available.
@@ -298,6 +298,50 @@ struct type<T, if_t< is_pair<T>::value >>
 struct untyped_component : entity {
     using entity::entity;
 
+protected:
+
+flecs::type_hooks_t get_hooks() const {
+    const flecs::type_hooks_t* h = ecs_get_hooks_id(world_, id_);
+    if (h) {
+        return *h;
+    } else {
+        return {};
+    }
+}
+
+void set_hooks(flecs::type_hooks_t &h) {
+    h.flags &= ECS_TYPE_HOOKS_ILLEGAL;
+    ecs_set_hooks_id(world_, id_, &h);
+}
+
+public:
+
+untyped_component& op_compare(
+    ecs_cmp_t compare_callback) 
+{
+    ecs_assert(compare_callback, ECS_INVALID_PARAMETER, NULL);
+    flecs::type_hooks_t h = get_hooks();
+    h.cmp = compare_callback;
+    h.flags &= ~ECS_TYPE_HOOK_CMP_ILLEGAL;
+    if(h.flags & ECS_TYPE_HOOK_EQUALS_ILLEGAL) {
+        h.flags &= ~(ECS_TYPE_HOOK_EQUALS_ILLEGAL);
+        h.equals = NULL;
+    }
+    set_hooks(h);
+    return *this;
+}
+
+untyped_component& op_equals(
+    ecs_equals_t equals_callback) 
+{
+    ecs_assert(equals_callback, ECS_INVALID_PARAMETER, NULL);
+    flecs::type_hooks_t h = get_hooks();
+    h.equals = equals_callback;
+    h.flags &= ~ECS_TYPE_HOOK_EQUALS_ILLEGAL;
+    set_hooks(h);
+    return *this;
+}
+
 #   ifdef FLECS_META
 #   include "mixins/meta/untyped_component.inl"
 #   endif
@@ -342,7 +386,7 @@ struct component : untyped_component {
     template <typename Func>
     component<T>& on_add(Func&& func) {
         using Delegate = typename _::each_delegate<typename std::decay<Func>::type, T>;
-        flecs::type_hooks_t h = get_hooks();
+        flecs::type_hooks_t h = this->get_hooks();
         ecs_assert(h.on_add == nullptr, ECS_INVALID_OPERATION,
             "on_add hook is already set");
         BindingCtx *ctx = get_binding_ctx(h);
@@ -358,7 +402,7 @@ struct component : untyped_component {
     component<T>& on_remove(Func&& func) {
         using Delegate = typename _::each_delegate<
             typename std::decay<Func>::type, T>;
-        flecs::type_hooks_t h = get_hooks();
+        flecs::type_hooks_t h = this->get_hooks();
         ecs_assert(h.on_remove == nullptr, ECS_INVALID_OPERATION,
             "on_remove hook is already set");
         BindingCtx *ctx = get_binding_ctx(h);
@@ -374,7 +418,7 @@ struct component : untyped_component {
     component<T>& on_set(Func&& func) {
         using Delegate = typename _::each_delegate<
             typename std::decay<Func>::type, T>;
-        flecs::type_hooks_t h = get_hooks();
+        flecs::type_hooks_t h = this->get_hooks();
         ecs_assert(h.on_set == nullptr, ECS_INVALID_OPERATION,
             "on_set hook is already set");
         BindingCtx *ctx = get_binding_ctx(h);

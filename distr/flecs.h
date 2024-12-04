@@ -3596,44 +3596,44 @@ struct ecs_observer_t {
  */
 
 /* Flags that can be used to check which hooks a type has set */
-static const ecs_flags32_t ECS_TYPE_HOOK_CTOR =                    (1 << 0);
-static const ecs_flags32_t ECS_TYPE_HOOK_DTOR =                  (1 << 1);
-static const ecs_flags32_t ECS_TYPE_HOOK_COPY  =                 (1 << 2);
-static const ecs_flags32_t ECS_TYPE_HOOK_MOVE   =                (1 << 3);
-static const ecs_flags32_t ECS_TYPE_HOOK_COPY_CTOR =             (1 << 4);
-static const ecs_flags32_t ECS_TYPE_HOOK_MOVE_CTOR  =            (1 << 5);
-static const ecs_flags32_t ECS_TYPE_HOOK_CTOR_MOVE_DTOR =        (1 << 6);
-static const ecs_flags32_t ECS_TYPE_HOOK_MOVE_DTOR       =       (1 << 7);
-static const ecs_flags32_t ECS_TYPE_HOOK_CMP           =         (1 << 8);
-static const ecs_flags32_t ECS_TYPE_HOOK_EQUALS        =        (1 << 9);
+#define ECS_TYPE_HOOK_CTOR                   ((ecs_flags32_t)(1 << 0))
+#define ECS_TYPE_HOOK_DTOR                   ((ecs_flags32_t)(1 << 1))
+#define ECS_TYPE_HOOK_COPY                   ((ecs_flags32_t)(1 << 2))
+#define ECS_TYPE_HOOK_MOVE                   ((ecs_flags32_t)(1 << 3))
+#define ECS_TYPE_HOOK_COPY_CTOR              ((ecs_flags32_t)(1 << 4))
+#define ECS_TYPE_HOOK_MOVE_CTOR              ((ecs_flags32_t)(1 << 5))
+#define ECS_TYPE_HOOK_CTOR_MOVE_DTOR         ((ecs_flags32_t)(1 << 6))
+#define ECS_TYPE_HOOK_MOVE_DTOR              ((ecs_flags32_t)(1 << 7))
+#define ECS_TYPE_HOOK_CMP                    ((ecs_flags32_t)(1 << 8))
+#define ECS_TYPE_HOOK_EQUALS                 ((ecs_flags32_t)(1 << 9))
 
 
 /* Flags that can be used to set/check which hooks of a type are invalid */
-static const ecs_flags32_t ECS_TYPE_HOOK_CTOR_ILLEGAL  =         (1 << 10);
-static const ecs_flags32_t ECS_TYPE_HOOK_DTOR_ILLEGAL  =         (1 << 12);
-static const ecs_flags32_t ECS_TYPE_HOOK_COPY_ILLEGAL  =         (1 << 13);
-static const ecs_flags32_t ECS_TYPE_HOOK_MOVE_ILLEGAL  =         (1 << 14);
-static const ecs_flags32_t ECS_TYPE_HOOK_COPY_CTOR_ILLEGAL =      (1 << 15);
-static const ecs_flags32_t ECS_TYPE_HOOK_MOVE_CTOR_ILLEGAL =     (1 << 16);
-static const ecs_flags32_t ECS_TYPE_HOOK_CTOR_MOVE_DTOR_ILLEGAL= (1 << 17);
-static const ecs_flags32_t ECS_TYPE_HOOK_MOVE_DTOR_ILLEGAL =    (1 << 18);
-static const ecs_flags32_t ECS_TYPE_HOOK_CMP_ILLEGAL       =     (1 << 19);
-static const ecs_flags32_t ECS_TYPE_HOOK_EQUALS_ILLEGAL    =     (1 << 20);
+#define ECS_TYPE_HOOK_CTOR_ILLEGAL           ((ecs_flags32_t)(1 << 10))
+#define ECS_TYPE_HOOK_DTOR_ILLEGAL           ((ecs_flags32_t)(1 << 12))
+#define ECS_TYPE_HOOK_COPY_ILLEGAL           ((ecs_flags32_t)(1 << 13))
+#define ECS_TYPE_HOOK_MOVE_ILLEGAL           ((ecs_flags32_t)(1 << 14))
+#define ECS_TYPE_HOOK_COPY_CTOR_ILLEGAL      ((ecs_flags32_t)(1 << 15))
+#define ECS_TYPE_HOOK_MOVE_CTOR_ILLEGAL      ((ecs_flags32_t)(1 << 16))
+#define ECS_TYPE_HOOK_CTOR_MOVE_DTOR_ILLEGAL ((ecs_flags32_t)(1 << 17))
+#define ECS_TYPE_HOOK_MOVE_DTOR_ILLEGAL      ((ecs_flags32_t)(1 << 18))
+#define ECS_TYPE_HOOK_CMP_ILLEGAL            ((ecs_flags32_t)(1 << 19))
+#define ECS_TYPE_HOOK_EQUALS_ILLEGAL         ((ecs_flags32_t)(1 << 20))
 
 
 /* All valid hook flags */
-static const ecs_flags32_t ECS_TYPE_HOOKS = (ECS_TYPE_HOOK_CTOR|ECS_TYPE_HOOK_DTOR|
-    ECS_TYPE_HOOK_COPY|ECS_TYPE_HOOK_MOVE|ECS_TYPE_HOOK_COPY_CTOR|
-    ECS_TYPE_HOOK_MOVE_CTOR|ECS_TYPE_HOOK_CTOR_MOVE_DTOR|
-    ECS_TYPE_HOOK_MOVE_DTOR|ECS_TYPE_HOOK_CMP|ECS_TYPE_HOOK_EQUALS);
-/* All invalid hook flags */
-static const ecs_flags32_t ECS_TYPE_HOOKS_ILLEGAL = (ECS_TYPE_HOOK_CTOR_ILLEGAL|
-    ECS_TYPE_HOOK_DTOR_ILLEGAL|ECS_TYPE_HOOK_COPY_ILLEGAL|
-    ECS_TYPE_HOOK_MOVE_ILLEGAL|ECS_TYPE_HOOK_COPY_CTOR_ILLEGAL|
-    ECS_TYPE_HOOK_MOVE_CTOR_ILLEGAL|ECS_TYPE_HOOK_CTOR_MOVE_DTOR_ILLEGAL|
-    ECS_TYPE_HOOK_MOVE_DTOR_ILLEGAL|ECS_TYPE_HOOK_CMP_ILLEGAL |
-    ECS_TYPE_HOOK_EQUALS_ILLEGAL);
+#define ECS_TYPE_HOOKS (ECS_TYPE_HOOK_CTOR|ECS_TYPE_HOOK_DTOR|\
+    ECS_TYPE_HOOK_COPY|ECS_TYPE_HOOK_MOVE|ECS_TYPE_HOOK_COPY_CTOR|\
+    ECS_TYPE_HOOK_MOVE_CTOR|ECS_TYPE_HOOK_CTOR_MOVE_DTOR|\
+    ECS_TYPE_HOOK_MOVE_DTOR|ECS_TYPE_HOOK_CMP|ECS_TYPE_HOOK_EQUALS)
 
+/* All invalid hook flags */
+#define ECS_TYPE_HOOKS_ILLEGAL (ECS_TYPE_HOOK_CTOR_ILLEGAL|\
+    ECS_TYPE_HOOK_DTOR_ILLEGAL|ECS_TYPE_HOOK_COPY_ILLEGAL|\
+    ECS_TYPE_HOOK_MOVE_ILLEGAL|ECS_TYPE_HOOK_COPY_CTOR_ILLEGAL|\
+    ECS_TYPE_HOOK_MOVE_CTOR_ILLEGAL|ECS_TYPE_HOOK_CTOR_MOVE_DTOR_ILLEGAL|\
+    ECS_TYPE_HOOK_MOVE_DTOR_ILLEGAL|ECS_TYPE_HOOK_CMP_ILLEGAL|\
+    ECS_TYPE_HOOK_EQUALS_ILLEGAL)
 struct ecs_type_hooks_t {
     ecs_xtor_t ctor;            /**< ctor */
     ecs_xtor_t dtor;            /**< dtor */
@@ -27616,8 +27616,8 @@ template<typename T, enable_if_t<
     std::is_trivial<T>::value == true
         >* = nullptr>
 void register_lifecycle_actions(
-    ecs_world_t *world,
-    ecs_entity_t component) {}
+    ecs_world_t*,
+    ecs_entity_t) {}
 
 // If the component is non-trivial, register component lifecycle actions.
 // Depending on the type not all callbacks may be available.
@@ -27824,6 +27824,50 @@ struct type<T, if_t< is_pair<T>::value >>
 struct untyped_component : entity {
     using entity::entity;
 
+protected:
+
+flecs::type_hooks_t get_hooks() const {
+    const flecs::type_hooks_t* h = ecs_get_hooks_id(world_, id_);
+    if (h) {
+        return *h;
+    } else {
+        return {};
+    }
+}
+
+void set_hooks(flecs::type_hooks_t &h) {
+    h.flags &= ECS_TYPE_HOOKS_ILLEGAL;
+    ecs_set_hooks_id(world_, id_, &h);
+}
+
+public:
+
+untyped_component& op_compare(
+    ecs_cmp_t compare_callback) 
+{
+    ecs_assert(compare_callback, ECS_INVALID_PARAMETER, NULL);
+    flecs::type_hooks_t h = get_hooks();
+    h.cmp = compare_callback;
+    h.flags &= ~ECS_TYPE_HOOK_CMP_ILLEGAL;
+    if(h.flags & ECS_TYPE_HOOK_EQUALS_ILLEGAL) {
+        h.flags &= ~(ECS_TYPE_HOOK_EQUALS_ILLEGAL);
+        h.equals = NULL;
+    }
+    set_hooks(h);
+    return *this;
+}
+
+untyped_component& op_equals(
+    ecs_equals_t equals_callback) 
+{
+    ecs_assert(equals_callback, ECS_INVALID_PARAMETER, NULL);
+    flecs::type_hooks_t h = get_hooks();
+    h.equals = equals_callback;
+    h.flags &= ~ECS_TYPE_HOOK_EQUALS_ILLEGAL;
+    set_hooks(h);
+    return *this;
+}
+
 #   ifdef FLECS_META
 /**
  * @file addons/cpp/mixins/meta/untyped_component.inl
@@ -27865,22 +27909,6 @@ untyped_component& internal_member(
     e.set<Member>(m);
 
     return *this;
-}
-
-protected:
-
-flecs::type_hooks_t get_hooks() const {
-    const flecs::type_hooks_t* h = ecs_get_hooks_id(world_, id_);
-    if (h) {
-        return *h;
-    } else {
-        return {};
-    }
-}
-
-void set_hooks(flecs::type_hooks_t &h) {
-    h.flags &= ECS_TYPE_HOOKS_ILLEGAL;
-    ecs_set_hooks_id(world_, id_, &h);
 }
 
 public: 
@@ -28151,33 +28179,6 @@ untyped_component& error_range(
     return *this;
 }
 
-untyped_component& op_compare(
-    ecs_cmp_t compare_callback) 
-{
-    ecs_assert(compare_callback, ECS_INVALID_PARAMETER, NULL);
-    flecs::type_hooks_t h = get_hooks();
-    h.cmp = compare_callback;
-    h.flags &= ~ECS_TYPE_HOOK_CMP_ILLEGAL;
-    if(h.flags & ECS_TYPE_HOOK_EQUALS_ILLEGAL) {
-        h.flags &= ~(ECS_TYPE_HOOK_EQUALS_ILLEGAL);
-        h.equals = NULL;
-    }
-    set_hooks(h);
-    return *this;
-}
-
-untyped_component& op_equals(
-    ecs_equals_t equals_callback) 
-{
-    ecs_assert(equals_callback, ECS_INVALID_PARAMETER, NULL);
-    flecs::type_hooks_t h = get_hooks();
-    h.equals = equals_callback;
-    h.flags &= ~ECS_TYPE_HOOK_EQUALS_ILLEGAL;
-    set_hooks(h);
-    return *this;
-}
-
-
 /** @} */
 
 #   endif
@@ -28255,7 +28256,7 @@ struct component : untyped_component {
     template <typename Func>
     component<T>& on_add(Func&& func) {
         using Delegate = typename _::each_delegate<typename std::decay<Func>::type, T>;
-        flecs::type_hooks_t h = get_hooks();
+        flecs::type_hooks_t h = this->get_hooks();
         ecs_assert(h.on_add == nullptr, ECS_INVALID_OPERATION,
             "on_add hook is already set");
         BindingCtx *ctx = get_binding_ctx(h);
@@ -28271,7 +28272,7 @@ struct component : untyped_component {
     component<T>& on_remove(Func&& func) {
         using Delegate = typename _::each_delegate<
             typename std::decay<Func>::type, T>;
-        flecs::type_hooks_t h = get_hooks();
+        flecs::type_hooks_t h = this->get_hooks();
         ecs_assert(h.on_remove == nullptr, ECS_INVALID_OPERATION,
             "on_remove hook is already set");
         BindingCtx *ctx = get_binding_ctx(h);
@@ -28287,7 +28288,7 @@ struct component : untyped_component {
     component<T>& on_set(Func&& func) {
         using Delegate = typename _::each_delegate<
             typename std::decay<Func>::type, T>;
-        flecs::type_hooks_t h = get_hooks();
+        flecs::type_hooks_t h = this->get_hooks();
         ecs_assert(h.on_set == nullptr, ECS_INVALID_OPERATION,
             "on_set hook is already set");
         BindingCtx *ctx = get_binding_ctx(h);
