@@ -85,7 +85,7 @@ void flecs_script_expr_to_str(
     const ecs_expr_node_t *expr)
 {
     if (expr) {
-        flecs_scriptbuf_appendstr(v, "TODO");
+        flecs_script_expr_to_str_buf(v->base.script->pub.world, expr, v->buf);
     } else {
         flecs_scriptbuf_appendstr(v, "{}");
     }

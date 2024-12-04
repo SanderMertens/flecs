@@ -78,6 +78,8 @@ int flecs_expr_value_visit_eval(
     const ecs_script_expr_run_desc_t *desc,
     ecs_eval_value_t *out)
 {
+    (void)script;
+    (void)desc;
     out->value.type = node->node.type;
     out->value.ptr = node->ptr;
     out->can_move = false;
@@ -416,7 +418,7 @@ int flecs_expr_element_visit_eval(
         goto error;
     }
 
-    int32_t index_value = *(int64_t*)index.value.ptr;
+    int64_t index_value = *(int64_t*)index.value.ptr;
 
     out->value.ptr = ECS_OFFSET(expr.value.ptr, node->elem_size * index_value);
     out->value.type = node->node.type;
@@ -450,7 +452,8 @@ int flecs_expr_component_visit_eval(
     ecs_entity_t component = ((ecs_expr_val_t*)node->index)->storage.entity;
 
     out->value.type = node->node.type;
-    out->value.ptr = (void*)ecs_get_id(script->world, entity, component);
+    out->value.ptr = ECS_CONST_CAST(void*, 
+        ecs_get_id(script->world, entity, component));
     out->can_move = false;
 
     if (!out->value.ptr) {
