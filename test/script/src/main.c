@@ -532,6 +532,13 @@ void Expr_parse_eval(void);
 void Expr_parse_eval_multiple_times(void);
 void Expr_parse_error(void);
 void Expr_parse_eval_error(void);
+void Expr_remainder_after_number(void);
+void Expr_remainder_after_string(void);
+void Expr_remainder_after_unary(void);
+void Expr_remainder_after_binary(void);
+void Expr_remainder_after_parens(void);
+void Expr_remainder_after_initializer(void);
+void Expr_remainder_after_collection_initializer(void);
 
 // Testsuite 'Vars'
 void Vars_declare_1_var(void);
@@ -2771,6 +2778,34 @@ bake_test_case Expr_testcases[] = {
     {
         "parse_eval_error",
         Expr_parse_eval_error
+    },
+    {
+        "remainder_after_number",
+        Expr_remainder_after_number
+    },
+    {
+        "remainder_after_string",
+        Expr_remainder_after_string
+    },
+    {
+        "remainder_after_unary",
+        Expr_remainder_after_unary
+    },
+    {
+        "remainder_after_binary",
+        Expr_remainder_after_binary
+    },
+    {
+        "remainder_after_parens",
+        Expr_remainder_after_parens
+    },
+    {
+        "remainder_after_initializer",
+        Expr_remainder_after_initializer
+    },
+    {
+        "remainder_after_collection_initializer",
+        Expr_remainder_after_collection_initializer
     }
 };
 
@@ -3430,7 +3465,7 @@ static bake_test_suite suites[] = {
         "Expr",
         NULL,
         NULL,
-        165,
+        172,
         Expr_testcases
     },
     {
