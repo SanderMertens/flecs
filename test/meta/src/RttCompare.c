@@ -38,7 +38,8 @@ ecs_entity_t define_opaque_type(ecs_world_t *world) {
 
     ecs_type_hooks_t hooks = *ecs_get_hooks(world, OpaqueType);
     hooks.cmp = opaque_type_compare;
-
+    hooks.flags &= ~ECS_TYPE_HOOK_CMP_ILLEGAL;
+    hooks.flags &= ECS_TYPE_HOOKS_ILLEGAL;
     ecs_set_hooks_id(world, ecs_id(OpaqueType), &hooks);
 
     ecs_entity_t descriptor = ecs_struct(world, {

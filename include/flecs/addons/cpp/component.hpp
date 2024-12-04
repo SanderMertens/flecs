@@ -91,22 +91,7 @@ template<typename T, enable_if_t<
         >* = nullptr>
 void register_lifecycle_actions(
     ecs_world_t *world,
-    ecs_entity_t component) {
-
-    const ecs_world_t* w = ecs_get_world(world);
-
-    if(ecs_id_in_use(w, component) || 
-        ecs_id_in_use(w, ecs_pair(component, EcsWildcard))) {
-        return;
-    } 
-
-    ecs_type_hooks_t cl{};
-    cl.cmp = compare<T>(cl.flags);
-    cl.equals = equals<T>(cl.flags);
-    
-    cl.flags &= ECS_TYPE_HOOKS_ILLEGAL;
-    ecs_set_hooks_id(world, component, &cl); 
-}
+    ecs_entity_t component) {}
 
 // If the component is non-trivial, register component lifecycle actions.
 // Depending on the type not all callbacks may be available.
@@ -129,9 +114,6 @@ void register_lifecycle_actions(
     cl.ctor_move_dtor = ctor_move_dtor<T>(cl.flags);
     cl.move_dtor = move_dtor<T>(cl.flags);
 
-    cl.cmp = compare<T>(cl.flags);
-    cl.equals = equals<T>(cl.flags);
-    
     cl.flags &= ECS_TYPE_HOOKS_ILLEGAL;
     ecs_set_hooks_id(world, component, &cl);
 
@@ -329,6 +311,12 @@ struct untyped_component : entity {
  *
  * @ingroup cpp_components
  */
+
+template <typename T>
+int ttest() {
+    return 7;
+}
+
 template <typename T>
 struct component : untyped_component {
     /** Register a component.
@@ -361,7 +349,7 @@ struct component : untyped_component {
         h.on_add = Delegate::run_add;
         ctx->on_add = FLECS_NEW(Delegate)(FLECS_FWD(func));
         ctx->free_on_add = _::free_obj<Delegate>;
-        ecs_set_hooks_id(world_, id_, &h);
+        set_hooks(h);
         return *this;
     }
 
@@ -377,7 +365,7 @@ struct component : untyped_component {
         h.on_remove = Delegate::run_remove;
         ctx->on_remove = FLECS_NEW(Delegate)(FLECS_FWD(func));
         ctx->free_on_remove = _::free_obj<Delegate>;
-        ecs_set_hooks_id(world_, id_, &h);
+        set_hooks(h);
         return *this;
     }
 
@@ -393,7 +381,41 @@ struct component : untyped_component {
         h.on_set = Delegate::run_set;
         ctx->on_set = FLECS_NEW(Delegate)(FLECS_FWD(func));
         ctx->free_on_set = _::free_obj<Delegate>;
-        ecs_set_hooks_id(world_, id_, &h);
+        set_hooks(h);
+        return *this;
+    }
+
+    /** Register operator compare hook. */
+    using untyped_component::op_compare;
+    component<T>& op_compare() {
+        ecs_cmp_t handler = _::compare<T>();
+        ecs_assert(handler != NULL, ECS_INVALID_OPERATION, 
+            "Type does not have operator> or operator< const or is inaccessible");
+        op_compare(handler);
+        return *this;
+    }
+
+    /** Type safe variant of compare op function */
+    using cmp_hook = int(*)(const T* a, const T* b, const ecs_type_info_t *ti);
+    component<T>& op_compare(cmp_hook callback) {
+        op_compare(reinterpret_cast<ecs_cmp_t>(callback));
+        return *this;
+    }
+
+    /** Register operator equals hook. */
+    using untyped_component::op_equals;
+    component<T>& op_equals() {
+        ecs_equals_t handler = _::equals<T>();
+        ecs_assert(handler != NULL, ECS_INVALID_OPERATION, 
+            "Type does not have operator== const or is inaccessible");
+        op_equals(handler);
+        return *this;
+    }
+
+    /** Type safe variant of equals op function */
+    using equals_hook = bool(*)(const T* a, const T* b, const ecs_type_info_t *ti);
+    component<T>& op_equals(equals_hook callback) {
+        op_equals(reinterpret_cast<ecs_equals_t>(callback));
         return *this;
     }
 
@@ -412,15 +434,6 @@ private:
             h.binding_ctx_free = _::free_obj<BindingCtx>;
         }
         return result;
-    }
-
-    flecs::type_hooks_t get_hooks() {
-        const flecs::type_hooks_t* h = ecs_get_hooks_id(world_, id_);
-        if (h) {
-            return *h;
-        } else {
-            return {};
-        }
     }
 };
 

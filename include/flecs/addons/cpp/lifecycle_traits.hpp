@@ -460,15 +460,14 @@ int compare_impl(const void *a, const void *b, const ecs_type_info_t *) {
 template <typename T, if_t<
     has_operator_less<T>::value ||
     has_operator_greater<T>::value > = 0>
-ecs_cmp_t compare(ecs_flags32_t &) {
+ecs_cmp_t compare() {
     return compare_impl<T>;
 }
 
 template <typename T, if_t<
     !has_operator_less<T>::value &&
     !has_operator_greater<T>::value > = 0>
-ecs_cmp_t compare(ecs_flags32_t &flags) {
-    flags |= ECS_TYPE_HOOK_CMP_ILLEGAL;
+ecs_cmp_t compare() {
     return NULL;
 }
 
@@ -483,19 +482,13 @@ bool equals_impl(const void *a, const void *b, const ecs_type_info_t *) {
 
 template <typename T, if_t<
     has_operator_equal<T>::value > = 0>
-ecs_equals_t equals(ecs_flags32_t &) {
+ecs_equals_t equals() {
     return equals_impl<T>;
 }
 
 template <typename T, if_t<
     !has_operator_equal<T>::value > = 0>
-ecs_equals_t equals(ecs_flags32_t &flags) {
-    if(flags & ECS_TYPE_HOOK_CMP_ILLEGAL) {
-        /* Only mark equals hook as illegal if compare is also illegal 
-         * this way we let Flecs generate an equals hook
-         * from the compare hook automatically */
-        flags |= ECS_TYPE_HOOK_EQUALS_ILLEGAL;
-    }
+ecs_equals_t equals() {
     return NULL;
 }
 

@@ -18879,11 +18879,16 @@ void ecs_set_hooks_id(
         }
     }
 
-    if (!h->equals) {
-        if(flags & (ECS_TYPE_HOOK_CMP_ILLEGAL|ECS_TYPE_HOOK_EQUALS_ILLEGAL)) {
+    if(!h->cmp) {
+        flags |= ECS_TYPE_HOOK_CMP_ILLEGAL;
+    }
+
+    if (!h->equals || h->equals == flecs_equals_illegal) {
+        if(flags & ECS_TYPE_HOOK_CMP_ILLEGAL) {
             flags |= ECS_TYPE_HOOK_EQUALS_ILLEGAL;
-        } else if(h->cmp) {
+        } else {
             ti->hooks.equals = flecs_default_equals;
+            flags &= ~ECS_TYPE_HOOK_EQUALS_ILLEGAL;
         }
     }
 
@@ -52971,12 +52976,14 @@ void FlecsMetaImport(
 
     #undef ECS_PRIMITIVE
 
-    ecs_set_hooks(world, ecs_string_t, {
-        .ctor = flecs_default_ctor,
-        .copy = ecs_copy(ecs_string_t),
-        .move = ecs_move(ecs_string_t),
-        .dtor = ecs_dtor(ecs_string_t),
-    });
+    ecs_type_hooks_t string_hooks = *ecs_get_hooks(world, ecs_string_t);
+    string_hooks.ctor = flecs_default_ctor;
+    string_hooks.copy = ecs_copy(ecs_string_t);
+    string_hooks.move = ecs_move(ecs_string_t);
+    string_hooks.dtor = ecs_dtor(ecs_string_t);
+    string_hooks.flags &= ECS_TYPE_HOOKS_ILLEGAL;
+    ecs_set_hooks_id(world, ecs_id(ecs_string_t), &string_hooks);
+
 
     /* Set default child components. Can be used as hint by deserializers */
     ecs_set(world, ecs_id(EcsStruct),  EcsDefaultChildComponent, {ecs_id(EcsMember)});
@@ -53372,13 +53379,9 @@ void flecs_rtt_init_default_hooks_struct(
         dtor_hook_required |= member_ti->hooks.dtor != NULL;
         move_hook_required |= member_ti->hooks.move != NULL;
         copy_hook_required |= member_ti->hooks.copy != NULL;
-
-        /* A struct has a valid cmp hook if all its members have it */
-        valid_cmp  &= member_ti->hooks.cmp != NULL;
-
-        /* A struct has a valid equals hook if all its members have it */
+        /* A struct has a valid cmp/equals hook if all its members have it: */
+        valid_cmp &= member_ti->hooks.cmp != NULL;
         valid_equals  &= member_ti->hooks.equals != NULL;
-
         flags |= member_ti->hooks.flags;
     }
 
@@ -53392,7 +53395,7 @@ void flecs_rtt_init_default_hooks_struct(
         dtor_hook_required ? flecs_rtt_struct_dtor : NULL,
         move_hook_required ? flecs_rtt_struct_move : NULL,
         copy_hook_required ? flecs_rtt_struct_copy : NULL,
-        valid_cmp ? flecs_rtt_struct_cmp : NULL,
+        valid_cmp ?  flecs_rtt_struct_cmp : NULL,
         valid_equals ? flecs_rtt_struct_equals : NULL
         );
 
@@ -53632,15 +53635,15 @@ void flecs_rtt_init_default_hooks_array(
     ecs_assert(array_info != NULL, ECS_INTERNAL_ERROR, NULL);
     const ecs_type_info_t *element_ti =
         ecs_get_type_info(world, array_info->type);
+    ecs_flags32_t flags = element_ti->hooks.flags;
     bool ctor_hook_required =
         element_ti->hooks.ctor && element_ti->hooks.ctor != flecs_default_ctor;
     bool dtor_hook_required = element_ti->hooks.dtor != NULL;
     bool move_hook_required = element_ti->hooks.move != NULL;
     bool copy_hook_required = element_ti->hooks.copy != NULL;
-    bool valid_cmp = element_ti->hooks.cmp != NULL;
-    bool valid_equals = element_ti->hooks.equals != NULL;
+    bool valid_cmp = element_ti->hooks.cmp != NULL && !(flags & ECS_TYPE_HOOK_CMP_ILLEGAL);
+    bool valid_equals = element_ti->hooks.equals != NULL && !(flags & ECS_TYPE_HOOK_CMP_ILLEGAL);
     
-    ecs_flags32_t flags = element_ti->hooks.flags;
 
     ecs_type_hooks_t hooks = *ecs_get_hooks_id(world, component);
     
@@ -53981,6 +53984,7 @@ void flecs_rtt_init_default_hooks(
             hooks.ctor = flecs_default_ctor;
         }
 
+        hooks.flags &= ECS_TYPE_HOOKS_ILLEGAL;
         ecs_set_hooks_id(
             world,
             component,

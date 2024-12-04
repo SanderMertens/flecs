@@ -1481,11 +1481,16 @@ void ecs_set_hooks_id(
         }
     }
 
-    if (!h->equals) {
-        if(flags & (ECS_TYPE_HOOK_CMP_ILLEGAL|ECS_TYPE_HOOK_EQUALS_ILLEGAL)) {
+    if(!h->cmp) {
+        flags |= ECS_TYPE_HOOK_CMP_ILLEGAL;
+    }
+
+    if (!h->equals || h->equals == flecs_equals_illegal) {
+        if(flags & ECS_TYPE_HOOK_CMP_ILLEGAL) {
             flags |= ECS_TYPE_HOOK_EQUALS_ILLEGAL;
-        } else if(h->cmp) {
+        } else {
             ti->hooks.equals = flecs_default_equals;
+            flags &= ~ECS_TYPE_HOOK_EQUALS_ILLEGAL;
         }
     }
 
