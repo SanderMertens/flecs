@@ -541,7 +541,14 @@
                 "parse_eval",
                 "parse_eval_multiple_times",
                 "parse_error",
-                "parse_eval_error"
+                "parse_eval_error",
+                "remainder_after_number",
+                "remainder_after_string",
+                "remainder_after_unary",
+                "remainder_after_binary",
+                "remainder_after_parens",
+                "remainder_after_initializer",
+                "remainder_after_collection_initializer"
             ]
         }, {
             "id": "Vars",

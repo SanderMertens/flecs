@@ -4186,3 +4186,118 @@ void Expr_parse_eval_error(void) {
 
     ecs_fini(world);
 }
+
+void Expr_remainder_after_number(void) {
+    ecs_world_t *world = ecs_init();
+
+    int32_t v = 0;
+    const char *ptr = ecs_script_expr_run(world, "10 foo", 
+        &ecs_value_ptr(ecs_i32_t, &v), NULL);
+    test_assert(ptr != NULL);
+    test_str(ptr, " foo");
+    test_int(v, 10);
+
+    ecs_fini(world);
+}
+
+void Expr_remainder_after_string(void) {
+    ecs_world_t *world = ecs_init();
+
+    char *v = 0;
+    const char *ptr = ecs_script_expr_run(world, "\"bar\" foo", 
+        &ecs_value_ptr(ecs_string_t, &v), NULL);
+    test_assert(ptr != NULL);
+    test_str(ptr, " foo");
+    test_str(v, "bar");
+    
+    ecs_os_free(v);
+
+    ecs_fini(world);
+}
+
+void Expr_remainder_after_unary(void) {
+    ecs_world_t *world = ecs_init();
+
+    bool v = false;
+    const char *ptr = ecs_script_expr_run(world, "!false foo", 
+        &ecs_value_ptr(ecs_bool_t, &v), NULL);
+    test_assert(ptr != NULL);
+    test_str(ptr, " foo");
+    test_bool(v, true);
+
+    ecs_fini(world);
+}
+
+void Expr_remainder_after_binary(void) {
+    ecs_world_t *world = ecs_init();
+
+    int32_t v = false;
+    const char *ptr = ecs_script_expr_run(world, "10 + 20 foo", 
+        &ecs_value_ptr(ecs_i32_t, &v), NULL);
+    test_assert(ptr != NULL);
+    test_str(ptr, " foo");
+    test_int(v, 30);
+
+    ecs_fini(world);
+}
+
+void Expr_remainder_after_parens(void) {
+    ecs_world_t *world = ecs_init();
+
+    int32_t v = false;
+    const char *ptr = ecs_script_expr_run(world, "(10 + 20) foo", 
+        &ecs_value_ptr(ecs_i32_t, &v), NULL);
+    test_assert(ptr != NULL);
+    test_str(ptr, " foo");
+    test_int(v, 30);
+
+    ecs_fini(world);
+}
+
+void Expr_remainder_after_initializer(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            { "x", ecs_id(ecs_f32_t) },
+            { "y", ecs_id(ecs_f32_t) }
+        }
+    });
+
+    Position v = {0, 0};
+    const char *ptr = ecs_script_expr_run(world, "{10, 20} foo", 
+        &ecs_value_ptr(Position, &v), NULL);
+    test_assert(ptr != NULL);
+    test_str(ptr, " foo");
+    test_int(v.x, 10);
+    test_int(v.y, 20);
+
+    ecs_fini(world);
+}
+
+void Expr_remainder_after_collection_initializer(void) {
+    ecs_world_t *world = ecs_init();
+
+    typedef int32_t Ints[2];
+
+    ECS_COMPONENT(world, Ints);
+
+    ecs_array(world, {
+        .entity = ecs_id(Ints),
+        .type = ecs_id(ecs_i32_t),
+        .count = 2
+    });
+
+    Ints v = {0, 0};
+    const char *ptr = ecs_script_expr_run(world, "[10, 20] foo", 
+        &ecs_value_ptr(Ints, &v), NULL);
+    test_assert(ptr != NULL);
+    test_str(ptr, " foo");
+    test_int(v[0], 10);
+    test_int(v[1], 20);
+
+    ecs_fini(world);
+}
