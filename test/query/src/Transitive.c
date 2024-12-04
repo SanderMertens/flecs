@@ -5184,6 +5184,7 @@ void Transitive_isa_disabled(void) {
 
     ecs_entity_t prefab = ecs_new_w_id(world, EcsDisabled);
     ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, prefab);
+    ecs_remove_id(world, inst, EcsDisabled);
 
     ecs_query_t *q = ecs_query(world, {
         .terms =  {{ ecs_pair(EcsIsA, prefab) }}

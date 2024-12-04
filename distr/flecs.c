@@ -4388,7 +4388,6 @@ void flecs_bootstrap(
     /* Inherited components */
     ecs_add_pair(world, EcsIsA, EcsOnInstantiate, EcsInherit);
     ecs_add_pair(world, EcsDependsOn, EcsOnInstantiate, EcsInherit);
-    ecs_add_pair(world, EcsDisabled, EcsOnInstantiate, EcsInherit);
     
     /* Run bootstrap functions for other parts of the code */
     flecs_bootstrap_hierarchy(world);
