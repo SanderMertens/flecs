@@ -902,29 +902,29 @@ struct ecs_observer_t {
  */
 
 /* Flags that can be used to check which hooks a type has set */
-#define ECS_TYPE_HOOK_CTOR                   ((ecs_flags32_t)(1 << 0))
-#define ECS_TYPE_HOOK_DTOR                   ((ecs_flags32_t)(1 << 1))
-#define ECS_TYPE_HOOK_COPY                   ((ecs_flags32_t)(1 << 2))
-#define ECS_TYPE_HOOK_MOVE                   ((ecs_flags32_t)(1 << 3))
-#define ECS_TYPE_HOOK_COPY_CTOR              ((ecs_flags32_t)(1 << 4))
-#define ECS_TYPE_HOOK_MOVE_CTOR              ((ecs_flags32_t)(1 << 5))
-#define ECS_TYPE_HOOK_CTOR_MOVE_DTOR         ((ecs_flags32_t)(1 << 6))
-#define ECS_TYPE_HOOK_MOVE_DTOR              ((ecs_flags32_t)(1 << 7))
-#define ECS_TYPE_HOOK_CMP                    ((ecs_flags32_t)(1 << 8))
-#define ECS_TYPE_HOOK_EQUALS                 ((ecs_flags32_t)(1 << 9))
+#define ECS_TYPE_HOOK_CTOR                   ECS_CAST(ecs_flags32_t, 1 << 0)
+#define ECS_TYPE_HOOK_DTOR                   ECS_CAST(ecs_flags32_t, 1 << 1)
+#define ECS_TYPE_HOOK_COPY                   ECS_CAST(ecs_flags32_t, 1 << 2)
+#define ECS_TYPE_HOOK_MOVE                   ECS_CAST(ecs_flags32_t, 1 << 3)
+#define ECS_TYPE_HOOK_COPY_CTOR              ECS_CAST(ecs_flags32_t, 1 << 4)
+#define ECS_TYPE_HOOK_MOVE_CTOR              ECS_CAST(ecs_flags32_t, 1 << 5)
+#define ECS_TYPE_HOOK_CTOR_MOVE_DTOR         ECS_CAST(ecs_flags32_t, 1 << 6)
+#define ECS_TYPE_HOOK_MOVE_DTOR              ECS_CAST(ecs_flags32_t, 1 << 7)
+#define ECS_TYPE_HOOK_CMP                    ECS_CAST(ecs_flags32_t, 1 << 8)
+#define ECS_TYPE_HOOK_EQUALS                 ECS_CAST(ecs_flags32_t, 1 << 9)
 
 
 /* Flags that can be used to set/check which hooks of a type are invalid */
-#define ECS_TYPE_HOOK_CTOR_ILLEGAL           ((ecs_flags32_t)(1 << 10))
-#define ECS_TYPE_HOOK_DTOR_ILLEGAL           ((ecs_flags32_t)(1 << 12))
-#define ECS_TYPE_HOOK_COPY_ILLEGAL           ((ecs_flags32_t)(1 << 13))
-#define ECS_TYPE_HOOK_MOVE_ILLEGAL           ((ecs_flags32_t)(1 << 14))
-#define ECS_TYPE_HOOK_COPY_CTOR_ILLEGAL      ((ecs_flags32_t)(1 << 15))
-#define ECS_TYPE_HOOK_MOVE_CTOR_ILLEGAL      ((ecs_flags32_t)(1 << 16))
-#define ECS_TYPE_HOOK_CTOR_MOVE_DTOR_ILLEGAL ((ecs_flags32_t)(1 << 17))
-#define ECS_TYPE_HOOK_MOVE_DTOR_ILLEGAL      ((ecs_flags32_t)(1 << 18))
-#define ECS_TYPE_HOOK_CMP_ILLEGAL            ((ecs_flags32_t)(1 << 19))
-#define ECS_TYPE_HOOK_EQUALS_ILLEGAL         ((ecs_flags32_t)(1 << 20))
+#define ECS_TYPE_HOOK_CTOR_ILLEGAL           ECS_CAST(ecs_flags32_t, 1 << 10)
+#define ECS_TYPE_HOOK_DTOR_ILLEGAL           ECS_CAST(ecs_flags32_t, 1 << 12)
+#define ECS_TYPE_HOOK_COPY_ILLEGAL           ECS_CAST(ecs_flags32_t, 1 << 13)
+#define ECS_TYPE_HOOK_MOVE_ILLEGAL           ECS_CAST(ecs_flags32_t, 1 << 14)
+#define ECS_TYPE_HOOK_COPY_CTOR_ILLEGAL      ECS_CAST(ecs_flags32_t, 1 << 15)
+#define ECS_TYPE_HOOK_MOVE_CTOR_ILLEGAL      ECS_CAST(ecs_flags32_t, 1 << 16)
+#define ECS_TYPE_HOOK_CTOR_MOVE_DTOR_ILLEGAL ECS_CAST(ecs_flags32_t, 1 << 17)
+#define ECS_TYPE_HOOK_MOVE_DTOR_ILLEGAL      ECS_CAST(ecs_flags32_t, 1 << 18)
+#define ECS_TYPE_HOOK_CMP_ILLEGAL            ECS_CAST(ecs_flags32_t, 1 << 19)
+#define ECS_TYPE_HOOK_EQUALS_ILLEGAL         ECS_CAST(ecs_flags32_t, 1 << 20)
 
 
 /* All valid hook flags */
