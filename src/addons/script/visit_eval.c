@@ -333,26 +333,38 @@ int flecs_script_eval_id(
 
 int flecs_script_eval_expr(
     ecs_script_eval_visitor_t *v,
-    const char *expr,
+    ecs_expr_node_t **expr_ptr,
     ecs_value_t *value)
 {
-    if (!value->type && expr[0] == '{') {
-        expr ++;
-    }
+    ecs_expr_node_t *expr = *expr_ptr;
+    ecs_script_impl_t *impl = v->base.script;
+    ecs_script_t *script = &impl->pub;
 
     ecs_script_expr_run_desc_t desc = {
-        .name = v->base.script->pub.name,
-        .expr = expr,
+        .name = script->name,
         .lookup_action = flecs_script_find_entity_action,
         .lookup_ctx = v,
-        .vars = v->vars
+        .vars = v->vars,
+        .type = value->type
     };
 
-    if (!ecs_script_expr_run(v->world, expr, value, &desc)) {
-        return -1;
+    if (!expr->type_info) {
+        if (flecs_script_expr_visit_type(script, expr, &desc)) {
+            goto error;
+        }
+
+        if (flecs_script_expr_visit_fold(script, expr_ptr, &desc)) {
+            goto error;
+        }
+    }
+
+    if (flecs_script_expr_visit_eval(script, *expr_ptr, &desc, value)) {
+        goto error;
     }
 
     return 0;
+error:
+    return -1;
 }
 
 static
@@ -597,7 +609,7 @@ int flecs_script_eval_component(
 
     ecs_entity_t src = flecs_script_get_src(v, v->entity->eval, node->id.eval);
 
-    if (node->expr && node->expr[0]) {
+    if (node->expr) {
         const ecs_type_info_t *ti = flecs_script_get_type_info(
             v, node, node->id.eval);
         if (!ti) {
@@ -653,10 +665,8 @@ int flecs_script_eval_component(
             ti->hooks.ctor(value.ptr, 1, ti);
         }
 
-        if (ecs_os_strcmp(node->expr, "{}")) {
-            if (flecs_script_eval_expr(v, node->expr, &value)) {
-                return -1;
-            }
+        if (flecs_script_eval_expr(v, &node->expr, &value)) {
+            return -1;
         }
 
         ecs_modified_id(v->world, src, node->id.eval);
@@ -756,7 +766,7 @@ int flecs_script_eval_default_component(
         .type = default_type
     };
 
-    if (flecs_script_eval_expr(v, node->expr, &value)) {
+    if (flecs_script_eval_expr(v, &node->expr, &value)) {
         return -1;
     }
 
@@ -830,7 +840,7 @@ int flecs_script_eval_with_component(
     value->type = node->id.eval;
     value->ptr = NULL;
 
-    if (node->expr && node->expr[0]) {
+    if (node->expr) {
         if (!ti) {
             return -1;
         }
@@ -842,7 +852,7 @@ int flecs_script_eval_with_component(
             ti->hooks.ctor(value->ptr, 1, ti);
         }
 
-        if (flecs_script_eval_expr(v, node->expr, value)) {
+        if (flecs_script_eval_expr(v, &node->expr, value)) {
             return -1;
         }
 
@@ -991,7 +1001,7 @@ int flecs_script_eval_const(
             ti->hooks.ctor(var->value.ptr, 1, ti);
         }
 
-        if (flecs_script_eval_expr(v, node->expr, &var->value)) {
+        if (flecs_script_eval_expr(v, &node->expr, &var->value)) {
             flecs_script_eval_error(v, node,
                 "failed to evaluate expression for const variable '%s'", 
                     node->name);
@@ -1001,7 +1011,7 @@ int flecs_script_eval_const(
         /* We don't know the type yet, so we can't create a storage for it yet.
          * Run the expression first to deduce the type. */
         ecs_value_t value = {0};
-        if (flecs_script_eval_expr(v, node->expr, &value)) {
+        if (flecs_script_eval_expr(v, &node->expr, &value)) {
             flecs_script_eval_error(v, node,
                 "failed to evaluate expression for const variable '%s'", 
                     node->name);
@@ -1094,7 +1104,7 @@ int flecs_script_eval_if(
     ecs_script_if_t *node)
 {
     ecs_value_t condval = { .type = 0, .ptr = NULL };
-    if (flecs_script_eval_expr(v, node->expr, &condval)) {
+    if (flecs_script_eval_expr(v, &node->expr, &condval)) {
         return -1;
     }
 

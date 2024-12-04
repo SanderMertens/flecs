@@ -148,10 +148,13 @@ int flecs_expr_initializer_eval_dynamic(
 {
     ecs_meta_cursor_t cur = ecs_meta_cursor(
         script->world, node->node.type, value);
-    ecs_meta_push(&cur);
+    
+    if (ecs_meta_push(&cur)) {
+        goto error;
+    }
 
-    ecs_expr_initializer_element_t *elems = ecs_vec_first(&node->elements);
     int32_t i, count = ecs_vec_count(&node->elements);
+    ecs_expr_initializer_element_t *elems = ecs_vec_first(&node->elements);
     for (i = 0; i < count; i ++) {
         ecs_expr_initializer_element_t *elem = &elems[i];
 
@@ -193,7 +196,9 @@ int flecs_expr_initializer_eval_dynamic(
         flecs_expr_value_free(script, &expr);
     }
 
-    ecs_meta_pop(&cur);
+    if (ecs_meta_pop(&cur)) {
+        goto error;
+    }
 
     return 0;
 error:
@@ -292,13 +297,22 @@ int flecs_expr_variable_visit_eval(
     const ecs_script_expr_run_desc_t *desc,
     ecs_eval_value_t *out)
 {
-    const ecs_script_var_t *var = node->var;
+    const ecs_script_var_t *var = ecs_script_vars_lookup(
+        desc->vars, node->name);
+    if (!var) {
+        flecs_expr_visit_error(script, node, "unresolved variable '%s'",
+            node->name);
+        goto error;
+    }
+
     /* Should've been populated by type visitor */
     ecs_assert(var != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(var->value.type == node->node.type, ECS_INTERNAL_ERROR, NULL);
     out->value = var->value;
     out->can_move = false;
     return 0;
+error:
+    return -1;
 }
 
 static
@@ -470,6 +484,8 @@ int flecs_script_expr_visit_eval_priv(
         {
             goto error;
         }
+        break;
+    case EcsExprEmptyInitializer:
         break;
     case EcsExprInitializer:
         if (flecs_expr_initializer_visit_eval(

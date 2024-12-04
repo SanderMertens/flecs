@@ -4301,3 +4301,29 @@ void Expr_remainder_after_collection_initializer(void) {
 
     ecs_fini(world);
 }
+
+void Expr_space_at_start(void) {
+    ecs_world_t *world = ecs_init();
+
+    int32_t v = false;
+    const char *ptr = ecs_script_expr_run(world, " 10 + 20", 
+        &ecs_value_ptr(ecs_i32_t, &v), NULL);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == 0);
+    test_int(v, 30);
+
+    ecs_fini(world);
+}
+
+void Expr_newline_at_start(void) {
+    ecs_world_t *world = ecs_init();
+
+    int32_t v = false;
+    const char *ptr = ecs_script_expr_run(world, "\n10 + 20", 
+        &ecs_value_ptr(ecs_i32_t, &v), NULL);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == 0);
+    test_int(v, 30);
+
+    ecs_fini(world);
+}

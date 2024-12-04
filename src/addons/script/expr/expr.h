@@ -32,6 +32,18 @@ int flecs_value_unary(
     ecs_value_t *out,
     ecs_script_token_kind_t operator);
 
+const char* flecs_script_parse_expr(
+    ecs_script_parser_t *parser,
+    const char *pos,
+    ecs_script_token_kind_t left_oper,
+    ecs_expr_node_t **out);
+
+const char* flecs_script_parse_initializer(
+    ecs_script_parser_t *parser,
+    const char *pos,
+    char until,
+    ecs_expr_initializer_t **node_out);
+
 #define ECS_VALUE_GET(value, T) (*(T*)(value)->ptr)
 
 #define ECS_BINARY_OP_T(left, right, result, op, R, T)\

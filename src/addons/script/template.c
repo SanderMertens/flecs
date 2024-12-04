@@ -123,7 +123,8 @@ void flecs_script_template_on_set(
                 const ecs_member_t *member = &members[m];
 
                 /* Assign template property from template instance */
-                ecs_script_var_t *var = ecs_script_vars_declare(vars, member->name);
+                ecs_script_var_t *var = ecs_script_vars_declare(
+                    vars, member->name);
                 var->value.type = member->type;
                 var->value.ptr = ECS_OFFSET(data, member->offset);
             }
@@ -139,7 +140,8 @@ void flecs_script_template_on_set(
         ecs_suspend_readonly_state_t srs;
         ecs_world_t *real_world = NULL;
         if (is_defer) {
-            ecs_assert(flecs_poly_is(world, ecs_world_t), ECS_INTERNAL_ERROR, NULL);
+            ecs_assert(flecs_poly_is(world, ecs_world_t), 
+                ECS_INTERNAL_ERROR, NULL);
             real_world = flecs_suspend_readonly(world, &srs);
             ecs_assert(real_world != NULL, ECS_INTERNAL_ERROR, NULL);
         }
@@ -195,7 +197,7 @@ int flecs_script_template_eval_prop(
         var->value.ptr = flecs_stack_alloc(&v->stack, ti->size, ti->alignment);
         var->type_info = ti;
 
-        if (flecs_script_eval_expr(v, node->expr, &var->value)) {
+        if (flecs_script_eval_expr(v, &node->expr, &var->value)) {
             return -1;
         }
 

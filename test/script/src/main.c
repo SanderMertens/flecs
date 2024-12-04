@@ -539,6 +539,8 @@ void Expr_remainder_after_binary(void);
 void Expr_remainder_after_parens(void);
 void Expr_remainder_after_initializer(void);
 void Expr_remainder_after_collection_initializer(void);
+void Expr_space_at_start(void);
+void Expr_newline_at_start(void);
 
 // Testsuite 'Vars'
 void Vars_declare_1_var(void);
@@ -2806,6 +2808,14 @@ bake_test_case Expr_testcases[] = {
     {
         "remainder_after_collection_initializer",
         Expr_remainder_after_collection_initializer
+    },
+    {
+        "space_at_start",
+        Expr_space_at_start
+    },
+    {
+        "newline_at_start",
+        Expr_newline_at_start
     }
 };
 
@@ -3465,7 +3475,7 @@ static bake_test_suite suites[] = {
         "Expr",
         NULL,
         NULL,
-        172,
+        174,
         Expr_testcases
     },
     {
