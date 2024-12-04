@@ -1982,6 +1982,9 @@ void World_run_post_frame(void);
 void World_run_post_frame_outside_of_frame(void);
 void World_get_flags(void);
 void World_fini_queue_overflow(void);
+void World_exclusive_on_delete(void);
+void World_exclusive_on_delete_target(void);
+void World_exclusive_on_instantiate(void);
 
 // Testsuite 'WorldInfo'
 void WorldInfo_get_tick(void);
@@ -10004,6 +10007,18 @@ bake_test_case World_testcases[] = {
     {
         "fini_queue_overflow",
         World_fini_queue_overflow
+    },
+    {
+        "exclusive_on_delete",
+        World_exclusive_on_delete
+    },
+    {
+        "exclusive_on_delete_target",
+        World_exclusive_on_delete_target
+    },
+    {
+        "exclusive_on_instantiate",
+        World_exclusive_on_instantiate
     }
 };
 
@@ -11564,7 +11579,7 @@ static bake_test_suite suites[] = {
         "World",
         World_setup,
         NULL,
-        66,
+        69,
         World_testcases
     },
     {

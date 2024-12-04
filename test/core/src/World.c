@@ -1729,3 +1729,42 @@ void World_fini_queue_overflow(void) {
     
     test_assert(true); /* if ecs_fini did not crash we're good */
 }
+
+void World_exclusive_on_delete(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t r = ecs_new(world);
+    ecs_add_pair(world, r, EcsOnDelete, EcsDelete);
+    test_assert(ecs_has_pair(world, r, EcsOnDelete, EcsDelete));
+    ecs_add_pair(world, r, EcsOnDelete, EcsRemove);
+    test_assert(!ecs_has_pair(world, r, EcsOnDelete, EcsDelete));
+    test_assert(ecs_has_pair(world, r, EcsOnDelete, EcsRemove));
+
+    ecs_fini(world);
+}
+
+void World_exclusive_on_delete_target(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t r = ecs_new(world);
+    ecs_add_pair(world, r, EcsOnDeleteTarget, EcsDelete);
+    test_assert(ecs_has_pair(world, r, EcsOnDeleteTarget, EcsDelete));
+    ecs_add_pair(world, r, EcsOnDeleteTarget, EcsRemove);
+    test_assert(!ecs_has_pair(world, r, EcsOnDeleteTarget, EcsDelete));
+    test_assert(ecs_has_pair(world, r, EcsOnDeleteTarget, EcsRemove));
+
+    ecs_fini(world);
+}
+
+void World_exclusive_on_instantiate(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t r = ecs_new(world);
+    ecs_add_pair(world, r, EcsOnInstantiate, EcsInherit);
+    test_assert(ecs_has_pair(world, r, EcsOnInstantiate, EcsInherit));
+    ecs_add_pair(world, r, EcsOnInstantiate, EcsDontInherit);
+    test_assert(!ecs_has_pair(world, r, EcsOnInstantiate, EcsInherit));
+    test_assert(ecs_has_pair(world, r, EcsOnInstantiate, EcsDontInherit));
+
+    ecs_fini(world);
+}

@@ -2056,7 +2056,10 @@
                 "run_post_frame",
                 "run_post_frame_outside_of_frame",
                 "get_flags",
-                "fini_queue_overflow"
+                "fini_queue_overflow",
+                "exclusive_on_delete",
+                "exclusive_on_delete_target",
+                "exclusive_on_instantiate"
             ]
         }, {
             "id": "WorldInfo",
