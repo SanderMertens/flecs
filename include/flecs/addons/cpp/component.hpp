@@ -89,9 +89,7 @@ template <> inline const char* symbol_name<double>() {
 template<typename T, enable_if_t<
     std::is_trivial<T>::value == true
         >* = nullptr>
-void register_lifecycle_actions(
-    ecs_world_t*,
-    ecs_entity_t) {}
+void register_lifecycle_actions(ecs_world_t*, ecs_entity_t) { }
 
 // If the component is non-trivial, register component lifecycle actions.
 // Depending on the type not all callbacks may be available.
@@ -324,7 +322,7 @@ untyped_component& op_compare(
     h.cmp = compare_callback;
     h.flags &= ~ECS_TYPE_HOOK_CMP_ILLEGAL;
     if(h.flags & ECS_TYPE_HOOK_EQUALS_ILLEGAL) {
-        h.flags &= ~(ECS_TYPE_HOOK_EQUALS_ILLEGAL);
+        h.flags &= ~ECS_TYPE_HOOK_EQUALS_ILLEGAL;
         h.equals = NULL;
     }
     set_hooks(h);
@@ -355,12 +353,6 @@ untyped_component& op_equals(
  *
  * @ingroup cpp_components
  */
-
-template <typename T>
-int ttest() {
-    return 7;
-}
-
 template <typename T>
 struct component : untyped_component {
     /** Register a component.
