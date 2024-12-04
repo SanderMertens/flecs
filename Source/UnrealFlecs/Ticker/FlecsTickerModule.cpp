@@ -20,9 +20,9 @@ DECLARE_DWORD_ACCUMULATOR_STAT(TEXT("FlecsTickerModule::ProgressModule::RunPipel
 
 static FORCEINLINE NO_DISCARD int flecs_entity_compare(
 	ecs_entity_t e1, 
-	MAYBE_UNUSED const void *ptr1, 
+	MAYBE_UNUSED const void* ptr1, 
 	ecs_entity_t e2, 
-	MAYBE_UNUSED const void *ptr2) 
+	MAYBE_UNUSED const void* ptr2) 
 {
 	return (e1 > e2) - (e1 < e2);
 }
@@ -36,7 +36,7 @@ static FORCEINLINE NO_DISCARD int flecs_priority_compare(
 	if (InPtrA->value == InPtrB->value) {
 		return flecs_entity_compare(InEntityA, InPtrA, InEntityB, InPtrB);
 	}
-	else
+	else // lower value has higher priority
 	{
 		return InPtrA->value < InPtrB->value ? -1 : 1;
 	}
@@ -58,7 +58,6 @@ void UFlecsTickerModule::InitializeModule(UFlecsWorld* InWorld, const FFlecsEnti
 	solid_checkf(TickerComponentPtr, TEXT("TickerComponentRef is not valid!"));
 
 	MainPipeline = InWorld->CreatePipeline()
-		.cached()
 		.with(flecs::System)
 		.with(flecs::Phase).cascade(flecs::DependsOn)
 		.without(flecs::Disabled).up(flecs::DependsOn)
@@ -70,7 +69,6 @@ void UFlecsTickerModule::InitializeModule(UFlecsWorld* InWorld, const FFlecsEnti
 		.set_name("MainPipeline");
 
 	TickerPipeline = InWorld->CreatePipeline()
-		.cached()
 		.with(flecs::System)
 		.with(flecs::Phase).cascade(flecs::DependsOn)
 		.with(FlecsFixedTick)

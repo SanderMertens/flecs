@@ -264,7 +264,7 @@
  * determines the page size, which is (1 << bits).
  * Lower values decrease memory utilization, at the cost of more allocations. */
 #ifndef FLECS_SPARSE_PAGE_BITS
-#define FLECS_SPARSE_PAGE_BITS (6)
+#define FLECS_SPARSE_PAGE_BITS (12)
 #endif
 
 /** @def FLECS_ENTITY_PAGE_BITS
@@ -322,6 +322,43 @@
 #ifndef FLECS_DEFAULT_SYSTEM_PRIORITY
 #define FLECS_DEFAULT_SYSTEM_PRIORITY (100)
 #endif // FLECS_DEFAULT_SYSTEM_PRIORITY
+
+#define FLECS_ENABLE_PREFETCH
+
+#ifdef FLECS_ENABLE_PREFETCH
+
+	#if defined(__GNUC__) && !defined(__clang__)
+		/* GCC */
+		#define ecs_prefetch(x) __builtin_prefetch(x)
+    
+	#elif defined(__clang__)
+		/* Clang */
+		#define ecs_prefetch(x) __builtin_prefetch(x)
+    
+	#elif defined(_MSC_VER)
+		/* MSVC with SSE support */
+		#include <xmmintrin.h>
+		#define ecs_prefetch(x) _mm_prefetch((const char*)(x), _MM_HINT_T0)
+    
+	#else
+		/* Other compilers: No prefetch support */
+		#define ecs_prefetch(x)
+	#endif
+
+#else
+	/* Prefetching disabled */
+	#define ecs_prefetch(x)
+#endif
+
+#ifndef FLECS_ALIGNED
+		#if defined(__GNUC__) || defined(__clang__)
+		#define FLECS_ALIGNED(X) __attribute__((aligned(X)))
+		#elif defined(_MSC_VER)
+		#define FLECS_ALIGNED(X) __declspec(align(X))
+		#else
+		#define FLECS_ALIGNED(X)
+		#endif
+#endif
 
 /** @} */
 
