@@ -3,7 +3,6 @@
  * @brief World-level API.
  */
 
-#include "flecs.h"
 #include "private_api.h"
 
 /* Id flags */
