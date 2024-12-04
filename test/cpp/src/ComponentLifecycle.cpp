@@ -2334,7 +2334,7 @@ struct WithEqualsOnly {
 };
 
 struct WithoutOperators {
-    int value;
+    int16_t value;
 };
 
 int compare(flecs::world& ecs, flecs::entity_t id, const void *a, const void *b) {
@@ -2351,6 +2351,18 @@ void ComponentLifecycle_compare_WithGreaterThan(void) {
     flecs::world ecs;
 
     auto component = ecs.component<WithGreaterThan>();
+
+    const ecs_type_hooks_t* hooks = ecs_get_hooks_id(ecs, component);
+    test_assert(hooks->flags & ECS_TYPE_HOOK_CMP_ILLEGAL);
+    test_assert(hooks->flags & ECS_TYPE_HOOK_EQUALS_ILLEGAL);
+
+    /* generate cmp operator from C++ operator> */
+    component.op_compare(); 
+
+    hooks = ecs_get_hooks_id(ecs, component);
+    test_assert(!(hooks->flags & ECS_TYPE_HOOK_CMP_ILLEGAL));
+    /* `equals` is automatically generated: */
+    test_assert(!(hooks->flags & ECS_TYPE_HOOK_EQUALS_ILLEGAL));
 
     WithGreaterThan a = {1};
     WithGreaterThan b = {2};
@@ -2374,6 +2386,20 @@ void ComponentLifecycle_compare_WithLessThan(void) {
 
     auto component = ecs.component<WithLessThan>();
 
+    const ecs_type_hooks_t* hooks = ecs_get_hooks_id(ecs, component);
+
+    test_assert(hooks->flags & ECS_TYPE_HOOK_CMP_ILLEGAL);
+    test_assert(hooks->flags & ECS_TYPE_HOOK_EQUALS_ILLEGAL);
+
+    /* generate cmp operator from C++ operator< */
+    component.op_compare(); 
+
+    hooks = ecs_get_hooks_id(ecs, component);
+    test_assert(!(hooks->flags & ECS_TYPE_HOOK_CMP_ILLEGAL));
+    /* `equals` is automatically generated: */
+    test_assert(!(hooks->flags & ECS_TYPE_HOOK_EQUALS_ILLEGAL));
+
+
     WithLessThan a = {1};
     WithLessThan b = {2};
     WithLessThan c = {1};
@@ -2395,6 +2421,18 @@ void ComponentLifecycle_compare_WithLessAndGreaterThan(void) {
     flecs::world ecs;
 
     auto component = ecs.component<WithLessAndGreaterThan>();
+
+    const ecs_type_hooks_t* hooks = ecs_get_hooks_id(ecs, component);
+    test_assert(hooks->flags & ECS_TYPE_HOOK_CMP_ILLEGAL);
+    test_assert(hooks->flags & ECS_TYPE_HOOK_EQUALS_ILLEGAL);
+
+    /* generate cmp operator from C++ operator> and operator< */
+    component.op_compare(); 
+
+    hooks = ecs_get_hooks_id(ecs, component);
+    test_assert(!(hooks->flags & ECS_TYPE_HOOK_CMP_ILLEGAL));
+    /* `equals` is automatically generated: */
+    test_assert(!(hooks->flags & ECS_TYPE_HOOK_EQUALS_ILLEGAL));
 
     WithLessAndGreaterThan a = {1};
     WithLessAndGreaterThan b = {2};
@@ -2418,6 +2456,18 @@ void ComponentLifecycle_compare_WithEqualsAndGreaterThan(void) {
 
     auto component = ecs.component<WithEqualsAndGreaterThan>();
 
+    const ecs_type_hooks_t* hooks = ecs_get_hooks_id(ecs, component);
+    test_assert(hooks->flags & ECS_TYPE_HOOK_CMP_ILLEGAL);
+    test_assert(hooks->flags & ECS_TYPE_HOOK_EQUALS_ILLEGAL);
+
+    /* generate cmp operator from C++ operator> and operator== */
+    component.op_compare(); 
+
+    hooks = ecs_get_hooks_id(ecs, component);
+    test_assert(!(hooks->flags & ECS_TYPE_HOOK_CMP_ILLEGAL));
+    /* `equals` is automatically generated: */
+    test_assert(!(hooks->flags & ECS_TYPE_HOOK_EQUALS_ILLEGAL));
+
     WithEqualsAndGreaterThan a = {1};
     WithEqualsAndGreaterThan b = {2};
     WithEqualsAndGreaterThan c = {1};
@@ -2439,6 +2489,19 @@ void ComponentLifecycle_compare_WithEqualsAndLessThan(void) {
     flecs::world ecs;
 
     auto component = ecs.component<WithEqualsAndLessThan>();
+
+    const ecs_type_hooks_t* hooks = ecs_get_hooks_id(ecs, component);
+    test_assert(hooks->flags & ECS_TYPE_HOOK_CMP_ILLEGAL);
+    test_assert(hooks->flags & ECS_TYPE_HOOK_EQUALS_ILLEGAL);
+
+    /* generate cmp operator from C++ operator< and operator== */
+    component.op_compare(); 
+
+    hooks = ecs_get_hooks_id(ecs, component);
+    test_assert(!(hooks->flags & ECS_TYPE_HOOK_CMP_ILLEGAL));
+    /* `equals` is automatically generated: */
+    test_assert(!(hooks->flags & ECS_TYPE_HOOK_EQUALS_ILLEGAL));
+
 
     WithEqualsAndLessThan a = {1};
     WithEqualsAndLessThan b = {2};
@@ -2465,9 +2528,19 @@ void ComponentLifecycle_compare_WithEqualsOnly(void) {
     auto component = ecs.component<WithEqualsOnly>();
 
     const ecs_type_hooks_t* hooks = ecs_get_hooks_id(ecs, component);
+    test_assert(hooks->flags & ECS_TYPE_HOOK_CMP_ILLEGAL);
+    test_assert(hooks->flags & ECS_TYPE_HOOK_EQUALS_ILLEGAL);
+
+    /* generate equals operator from C++ operator== */
+    component.op_equals(); 
+
+    hooks = ecs_get_hooks_id(ecs, component);
 
     /* can't compare if no < or > operators are defined */
     test_assert(hooks->flags & ECS_TYPE_HOOK_CMP_ILLEGAL);
+
+    /* operator equals is defined: */
+    test_assert(!(hooks->flags & ECS_TYPE_HOOK_EQUALS_ILLEGAL));
 
     WithEqualsOnly a = {1};
     WithEqualsOnly b = {2};
@@ -2490,5 +2563,44 @@ void ComponentLifecycle_compare_WithoutOperators(void) {
     test_assert(hooks->flags & ECS_TYPE_HOOK_CMP_ILLEGAL);
     test_assert(hooks->flags & ECS_TYPE_HOOK_EQUALS_ILLEGAL);
 
+    /* define operator equals via a explicit callback: */
+    component.op_equals([](
+        const WithoutOperators *a, 
+        const WithoutOperators *b, 
+        const ecs_type_info_t* ti) -> bool {
+            return a->value == b->value;
+        });
+
+    hooks = ecs_get_hooks_id(ecs, component);
+
+    test_assert(hooks->flags & ECS_TYPE_HOOK_CMP_ILLEGAL);
+    test_assert(!(hooks->flags & ECS_TYPE_HOOK_EQUALS_ILLEGAL));
+
+    WithoutOperators a = {1};
+    WithoutOperators b = {2};
+    WithoutOperators c = {1};
+    
+    test_assert(equals(ecs, component, &a, &b) == false);
+    test_assert(equals(ecs, component, &a, &c) == true);
+    test_assert(equals(ecs, component, &a, &a) == true);    
+
+    component.op_compare([](
+        const WithoutOperators *a, 
+        const WithoutOperators *b, 
+        const ecs_type_info_t *ti) -> int {
+            return a->value - b->value;
+        });
+
+    hooks = ecs_get_hooks_id(ecs, component);
+
+    test_assert(!(hooks->flags & ECS_TYPE_HOOK_CMP_ILLEGAL));
+    test_assert(!(hooks->flags & ECS_TYPE_HOOK_EQUALS_ILLEGAL));
+
+    test_assert(compare(ecs, component, &a, &b) < 0);
+    test_assert(compare(ecs, component, &b, &a) > 0);
+    test_assert(compare(ecs, component, &a, &c) == 0);
+    test_assert(compare(ecs, component, &b, &c) > 0);
+    test_assert(compare(ecs, component, &c, &b) < 0);
+    test_assert(compare(ecs, component, &b, &b) == 0);    
 }
 

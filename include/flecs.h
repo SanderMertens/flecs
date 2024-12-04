@@ -902,44 +902,43 @@ struct ecs_observer_t {
  */
 
 /* Flags that can be used to check which hooks a type has set */
-#define ECS_TYPE_HOOK_CTOR                   (1 << 0)
-#define ECS_TYPE_HOOK_DTOR                   (1 << 1)
-#define ECS_TYPE_HOOK_COPY                   (1 << 2)
-#define ECS_TYPE_HOOK_MOVE                   (1 << 3)
-#define ECS_TYPE_HOOK_COPY_CTOR              (1 << 4)
-#define ECS_TYPE_HOOK_MOVE_CTOR              (1 << 5)
-#define ECS_TYPE_HOOK_CTOR_MOVE_DTOR         (1 << 6)
-#define ECS_TYPE_HOOK_MOVE_DTOR              (1 << 7)
-#define ECS_TYPE_HOOK_CMP                    (1 << 8)
-#define ECS_TYPE_HOOK_EQUALS                 (1 << 9)
+static const ecs_flags32_t ECS_TYPE_HOOK_CTOR =                    (1 << 0);
+static const ecs_flags32_t ECS_TYPE_HOOK_DTOR =                  (1 << 1);
+static const ecs_flags32_t ECS_TYPE_HOOK_COPY  =                 (1 << 2);
+static const ecs_flags32_t ECS_TYPE_HOOK_MOVE   =                (1 << 3);
+static const ecs_flags32_t ECS_TYPE_HOOK_COPY_CTOR =             (1 << 4);
+static const ecs_flags32_t ECS_TYPE_HOOK_MOVE_CTOR  =            (1 << 5);
+static const ecs_flags32_t ECS_TYPE_HOOK_CTOR_MOVE_DTOR =        (1 << 6);
+static const ecs_flags32_t ECS_TYPE_HOOK_MOVE_DTOR       =       (1 << 7);
+static const ecs_flags32_t ECS_TYPE_HOOK_CMP           =         (1 << 8);
+static const ecs_flags32_t ECS_TYPE_HOOK_EQUALS        =        (1 << 9);
 
 
 /* Flags that can be used to set/check which hooks of a type are invalid */
-#define ECS_TYPE_HOOK_CTOR_ILLEGAL           (1 << 10)
-#define ECS_TYPE_HOOK_DTOR_ILLEGAL           (1 << 12)
-#define ECS_TYPE_HOOK_COPY_ILLEGAL           (1 << 13)
-#define ECS_TYPE_HOOK_MOVE_ILLEGAL           (1 << 14)
-#define ECS_TYPE_HOOK_COPY_CTOR_ILLEGAL      (1 << 15)
-#define ECS_TYPE_HOOK_MOVE_CTOR_ILLEGAL      (1 << 16)
-#define ECS_TYPE_HOOK_CTOR_MOVE_DTOR_ILLEGAL (1 << 17)
-#define ECS_TYPE_HOOK_MOVE_DTOR_ILLEGAL      (1 << 18)
-#define ECS_TYPE_HOOK_CMP_ILLEGAL            (1 << 19)
-#define ECS_TYPE_HOOK_EQUALS_ILLEGAL         (1 << 20)
+static const ecs_flags32_t ECS_TYPE_HOOK_CTOR_ILLEGAL  =         (1 << 10);
+static const ecs_flags32_t ECS_TYPE_HOOK_DTOR_ILLEGAL  =         (1 << 12);
+static const ecs_flags32_t ECS_TYPE_HOOK_COPY_ILLEGAL  =         (1 << 13);
+static const ecs_flags32_t ECS_TYPE_HOOK_MOVE_ILLEGAL  =         (1 << 14);
+static const ecs_flags32_t ECS_TYPE_HOOK_COPY_CTOR_ILLEGAL =      (1 << 15);
+static const ecs_flags32_t ECS_TYPE_HOOK_MOVE_CTOR_ILLEGAL =     (1 << 16);
+static const ecs_flags32_t ECS_TYPE_HOOK_CTOR_MOVE_DTOR_ILLEGAL= (1 << 17);
+static const ecs_flags32_t ECS_TYPE_HOOK_MOVE_DTOR_ILLEGAL =    (1 << 18);
+static const ecs_flags32_t ECS_TYPE_HOOK_CMP_ILLEGAL       =     (1 << 19);
+static const ecs_flags32_t ECS_TYPE_HOOK_EQUALS_ILLEGAL    =     (1 << 20);
 
 
 /* All valid hook flags */
-#define ECS_TYPE_HOOKS (ECS_TYPE_HOOK_CTOR|ECS_TYPE_HOOK_DTOR|\
-    ECS_TYPE_HOOK_COPY|ECS_TYPE_HOOK_MOVE|ECS_TYPE_HOOK_COPY_CTOR|\
-    ECS_TYPE_HOOK_MOVE_CTOR|ECS_TYPE_HOOK_CTOR_MOVE_DTOR|\
-    ECS_TYPE_HOOK_MOVE_DTOR|ECS_TYPE_HOOK_CMP|ECS_TYPE_HOOK_EQUALS)
-
+static const ecs_flags32_t ECS_TYPE_HOOKS = (ECS_TYPE_HOOK_CTOR|ECS_TYPE_HOOK_DTOR|
+    ECS_TYPE_HOOK_COPY|ECS_TYPE_HOOK_MOVE|ECS_TYPE_HOOK_COPY_CTOR|
+    ECS_TYPE_HOOK_MOVE_CTOR|ECS_TYPE_HOOK_CTOR_MOVE_DTOR|
+    ECS_TYPE_HOOK_MOVE_DTOR|ECS_TYPE_HOOK_CMP|ECS_TYPE_HOOK_EQUALS);
 /* All invalid hook flags */
-#define ECS_TYPE_HOOKS_ILLEGAL (ECS_TYPE_HOOK_CTOR_ILLEGAL|\
-    ECS_TYPE_HOOK_DTOR_ILLEGAL|ECS_TYPE_HOOK_COPY_ILLEGAL|\
-    ECS_TYPE_HOOK_MOVE_ILLEGAL|ECS_TYPE_HOOK_COPY_CTOR_ILLEGAL|\
-    ECS_TYPE_HOOK_MOVE_CTOR_ILLEGAL|ECS_TYPE_HOOK_CTOR_MOVE_DTOR_ILLEGAL|\
-    ECS_TYPE_HOOK_MOVE_DTOR_ILLEGAL|ECS_TYPE_HOOK_CMP_ILLEGAL|\
-    ECS_TYPE_HOOK_EQUALS_ILLEGAL)
+static const ecs_flags32_t ECS_TYPE_HOOKS_ILLEGAL = (ECS_TYPE_HOOK_CTOR_ILLEGAL|
+    ECS_TYPE_HOOK_DTOR_ILLEGAL|ECS_TYPE_HOOK_COPY_ILLEGAL|
+    ECS_TYPE_HOOK_MOVE_ILLEGAL|ECS_TYPE_HOOK_COPY_CTOR_ILLEGAL|
+    ECS_TYPE_HOOK_MOVE_CTOR_ILLEGAL|ECS_TYPE_HOOK_CTOR_MOVE_DTOR_ILLEGAL|
+    ECS_TYPE_HOOK_MOVE_DTOR_ILLEGAL|ECS_TYPE_HOOK_CMP_ILLEGAL |
+    ECS_TYPE_HOOK_EQUALS_ILLEGAL);
 
 struct ecs_type_hooks_t {
     ecs_xtor_t ctor;            /**< ctor */
