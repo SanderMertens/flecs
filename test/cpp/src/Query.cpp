@@ -2755,6 +2755,88 @@ void Query_worker_iter_captured_query(void) {
     }();
 }
 
+
+void Query_set_group_captured_query(void) {
+    flecs::world ecs;
+
+    flecs::entity Rel = ecs.entity();
+    flecs::entity TgtA = ecs.entity();
+    flecs::entity TgtB = ecs.entity();
+
+    flecs::query<Position> q = ecs.query_builder<Position>()
+        .group_by(Rel)
+        .build();
+
+    /* flecs::entity e_1 = */ ecs.entity().set<Position>({10, 20}).add(Rel, TgtA);
+    flecs::entity e_2 = ecs.entity().set<Position>({20, 30}).add(Rel, TgtB);
+
+    [=]() {
+        int count = 0;
+        q.set_group(TgtB).each([&](flecs::entity e, Position& p) {
+            test_assert(e == e_2);
+            test_int(p.x, 20);
+            test_int(p.y, 30);
+            count ++;
+        });
+        test_int(count, 1);
+    }();
+}
+
+void Query_set_var_captured_query(void) {
+    flecs::world ecs;
+
+    flecs::entity Rel = ecs.entity();
+    flecs::entity TgtA = ecs.entity();
+    flecs::entity TgtB = ecs.entity();
+
+    flecs::query<Position> q = ecs.query_builder<Position>()
+        .with(Rel, "$var")
+        .build();
+
+    /* flecs::entity e_1 = */ ecs.entity().set<Position>({10, 20}).add(Rel, TgtA);
+    flecs::entity e_2 = ecs.entity().set<Position>({20, 30}).add(Rel, TgtB);
+
+    [=]() {
+        int count = 0;
+        q.set_var("var", TgtB).each([&](flecs::entity e, Position& p) {
+            test_assert(e == e_2);
+            test_int(p.x, 20);
+            test_int(p.y, 30);
+            count ++;
+        });
+        test_int(count, 1);
+    }();
+}
+
+void Query_set_var_id_captured_query(void) {
+    flecs::world ecs;
+
+    flecs::entity Rel = ecs.entity();
+    flecs::entity TgtA = ecs.entity();
+    flecs::entity TgtB = ecs.entity();
+
+    flecs::query<Position> q = ecs.query_builder<Position>()
+        .with(Rel, "$var")
+        .build();
+
+    int var = q.find_var("var");
+    test_assert(var != -1);
+
+    /* flecs::entity e_1 = */ ecs.entity().set<Position>({10, 20}).add(Rel, TgtA);
+    flecs::entity e_2 = ecs.entity().set<Position>({20, 30}).add(Rel, TgtB);
+
+    [=]() {
+        int count = 0;
+        q.set_var(var, TgtB).each([&](flecs::entity e, Position& p) {
+            test_assert(e == e_2);
+            test_int(p.x, 20);
+            test_int(p.y, 30);
+            count ++;
+        });
+        test_int(count, 1);
+    }();
+}
+
 void Query_iter_entities(void) {
     flecs::world ecs;
 
