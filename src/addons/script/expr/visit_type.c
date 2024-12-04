@@ -38,6 +38,36 @@ bool flecs_expr_operator_is_equality(
     case EcsTokBitwiseAnd:
     case EcsTokBitwiseOr:
         return false;
+    case EcsTokUnknown:
+    case EcsTokScopeOpen:
+    case EcsTokScopeClose:
+    case EcsTokParenOpen:
+    case EcsTokParenClose:
+    case EcsTokBracketOpen:
+    case EcsTokBracketClose:
+    case EcsTokMember:
+    case EcsTokComma:
+    case EcsTokSemiColon:
+    case EcsTokColon:
+    case EcsTokAssign:
+    case EcsTokMod:
+    case EcsTokNot:
+    case EcsTokOptional:
+    case EcsTokAnnotation:
+    case EcsTokNewline:
+    case EcsTokMatch:
+    case EcsTokIdentifier:
+    case EcsTokString:
+    case EcsTokNumber:
+    case EcsTokKeywordModule:
+    case EcsTokKeywordUsing:
+    case EcsTokKeywordWith:
+    case EcsTokKeywordIf:
+    case EcsTokKeywordElse:
+    case EcsTokKeywordTemplate:
+    case EcsTokKeywordProp:
+    case EcsTokKeywordConst:
+    case EcsTokEnd:
     default:
         ecs_throw(ECS_INTERNAL_ERROR, "invalid operator");
     }
@@ -159,6 +189,36 @@ bool flecs_expr_oper_valid_for_type(
             (type == ecs_id(ecs_bool_t)) ||
             (type == ecs_id(ecs_char_t)) ||
             (type == ecs_id(ecs_entity_t));
+    case EcsTokUnknown:
+    case EcsTokScopeOpen:
+    case EcsTokScopeClose:
+    case EcsTokParenOpen:
+    case EcsTokParenClose:
+    case EcsTokBracketOpen:
+    case EcsTokBracketClose:
+    case EcsTokMember:
+    case EcsTokComma:
+    case EcsTokSemiColon:
+    case EcsTokColon:
+    case EcsTokAssign:
+    case EcsTokMod:
+    case EcsTokNot:
+    case EcsTokOptional:
+    case EcsTokAnnotation:
+    case EcsTokNewline:
+    case EcsTokMatch:
+    case EcsTokIdentifier:
+    case EcsTokString:
+    case EcsTokNumber:
+    case EcsTokKeywordModule:
+    case EcsTokKeywordUsing:
+    case EcsTokKeywordWith:
+    case EcsTokKeywordIf:
+    case EcsTokKeywordElse:
+    case EcsTokKeywordTemplate:
+    case EcsTokKeywordProp:
+    case EcsTokKeywordConst:
+    case EcsTokEnd:
     default: 
         ecs_abort(ECS_INTERNAL_ERROR, NULL);
     }
@@ -204,6 +264,36 @@ int flecs_expr_type_for_oper(
     case EcsTokSub:
     case EcsTokMul:
         break;
+    case EcsTokUnknown:
+    case EcsTokScopeOpen:
+    case EcsTokScopeClose:
+    case EcsTokParenOpen:
+    case EcsTokParenClose:
+    case EcsTokBracketOpen:
+    case EcsTokBracketClose:
+    case EcsTokMember:
+    case EcsTokComma:
+    case EcsTokSemiColon:
+    case EcsTokColon:
+    case EcsTokAssign:
+    case EcsTokMod:
+    case EcsTokNot:
+    case EcsTokOptional:
+    case EcsTokAnnotation:
+    case EcsTokNewline:
+    case EcsTokMatch:
+    case EcsTokIdentifier:
+    case EcsTokString:
+    case EcsTokNumber:
+    case EcsTokKeywordModule:
+    case EcsTokKeywordUsing:
+    case EcsTokKeywordWith:
+    case EcsTokKeywordIf:
+    case EcsTokKeywordElse:
+    case EcsTokKeywordTemplate:
+    case EcsTokKeywordProp:
+    case EcsTokKeywordConst:
+    case EcsTokEnd:
     default:
         ecs_throw(ECS_INTERNAL_ERROR, "invalid operator");
     }
@@ -451,6 +541,7 @@ int flecs_expr_identifier_visit_type(
     ecs_meta_cursor_t *cur,
     const ecs_script_expr_run_desc_t *desc)
 {
+    (void)desc;
     if (cur->valid) {
         node->node.type = ecs_meta_get_type(cur);
     } else {

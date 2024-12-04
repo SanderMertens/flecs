@@ -44,6 +44,11 @@ const char* flecs_script_parse_initializer(
     char until,
     ecs_expr_initializer_t **node_out);
 
+void flecs_script_expr_to_str_buf(
+    const ecs_world_t *world,
+    const ecs_expr_node_t *expr,
+    ecs_strbuf_t *buf);
+
 #define ECS_VALUE_GET(value, T) (*(T*)(value)->ptr)
 
 #define ECS_BINARY_OP_T(left, right, result, op, R, T)\

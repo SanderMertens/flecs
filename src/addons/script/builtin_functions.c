@@ -15,6 +15,7 @@ void flecs_meta_entity_name(
     const ecs_value_t *argv,
     ecs_value_t *result) 
 {
+    (void)argc;
     ecs_entity_t entity = *(ecs_entity_t*)argv[0].ptr;
     *(char**)result->ptr = ecs_os_strdup(ecs_get_name(ctx->world, entity));
 }
@@ -26,6 +27,7 @@ void flecs_meta_entity_path(
     const ecs_value_t *argv,
     ecs_value_t *result) 
 {
+    (void)argc;
     ecs_entity_t entity = *(ecs_entity_t*)argv[0].ptr;
     *(char**)result->ptr = ecs_get_path(ctx->world, entity);
 }
@@ -37,6 +39,7 @@ void flecs_meta_entity_parent(
     const ecs_value_t *argv,
     ecs_value_t *result) 
 {
+    (void)argc;
     ecs_entity_t entity = *(ecs_entity_t*)argv[0].ptr;
     *(ecs_entity_t*)result->ptr = ecs_get_parent(ctx->world, entity);
 }
@@ -50,10 +53,12 @@ void flecs_meta_entity_doc_name(
     const ecs_value_t *argv,
     ecs_value_t *result) 
 {
+    (void)argc;
     ecs_entity_t entity = *(ecs_entity_t*)argv[0].ptr;
     *(char**)result->ptr = ecs_os_strdup(ecs_doc_get_name(ctx->world, entity));
 }
 
+static
 void flecs_script_register_builtin_doc_functions(
     ecs_world_t *world)
 {
@@ -70,11 +75,14 @@ void flecs_script_register_builtin_doc_functions(
 }
 
 #else
+
+static
 void flecs_script_register_builtin_doc_functions(
     ecs_world_t *world)
 {
     (void)world;
 }
+
 #endif
 
 void flecs_script_register_builtin_functions(
