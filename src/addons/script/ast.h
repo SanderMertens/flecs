@@ -54,14 +54,14 @@ typedef struct ecs_script_tag_t {
 typedef struct ecs_script_component_t {
     ecs_script_node_t node;
     ecs_script_id_t id;
-    const char *expr;
+    ecs_expr_node_t *expr;
     ecs_value_t eval;
     bool is_collection;
 } ecs_script_component_t;
 
 typedef struct ecs_script_default_component_t {
     ecs_script_node_t node;
-    const char *expr;
+    ecs_expr_node_t *expr;
     ecs_value_t eval;
 } ecs_script_default_component_t;
 
@@ -127,14 +127,14 @@ typedef struct ecs_script_var_node_t {
     ecs_script_node_t node;
     const char *name;
     const char *type;
-    const char *expr;
+    ecs_expr_node_t *expr;
 } ecs_script_var_node_t;
 
 typedef struct ecs_script_if_t {
     ecs_script_node_t node;
     ecs_script_scope_t *if_true;
     ecs_script_scope_t *if_false;
-    const char *expr;
+    ecs_expr_node_t *expr;
 } ecs_script_if_t;
 
 #define ecs_script_node(kind, node)\

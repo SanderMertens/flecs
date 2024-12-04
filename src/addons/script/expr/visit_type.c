@@ -477,7 +477,6 @@ int flecs_expr_variable_visit_type(
     }
 
     node->node.type = var->value.type;
-    node->var = var;
 
     *cur = ecs_meta_cursor(script->world, var->value.type, NULL);
 
@@ -598,7 +597,9 @@ int flecs_expr_member_visit_type(
         goto error;
     }
 
-    ecs_meta_push(cur); /* { */
+    if (ecs_meta_push(cur)) {
+        goto error;
+    }
 
     int prev_log = ecs_log_set_level(-4);
     if (ecs_meta_dotmember(cur, node->member_name)) {
@@ -723,6 +724,8 @@ int flecs_script_expr_visit_type_priv(
     case EcsExprValue:
         /* Value types are assigned by the AST */
         break;
+    case EcsExprEmptyInitializer:
+        break;
     case EcsExprInitializer:
         if (flecs_expr_initializer_visit_type(
             script, (ecs_expr_initializer_t*)node, cur, desc))
@@ -804,6 +807,14 @@ int flecs_script_expr_visit_type(
     ecs_expr_node_t *node,
     const ecs_script_expr_run_desc_t *desc)
 {
+    if (node->kind == EcsExprEmptyInitializer) {
+        node->type = desc->type;
+        if (node->type) {
+            node->type_info = ecs_get_type_info(script->world, node->type);
+        }
+        return 0;
+    }
+
     if (desc->type) {
         ecs_meta_cursor_t cur = ecs_meta_cursor(
             script->world, desc->type, NULL);

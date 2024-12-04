@@ -36,13 +36,6 @@ static int flecs_expr_precedence[] = {
 };
 
 static
-const char* flecs_script_parse_expr(
-    ecs_script_parser_t *parser,
-    const char *pos,
-    ecs_script_token_kind_t left_oper,
-    ecs_expr_node_t **out);
-
-static
 const char* flecs_script_parse_lhs(
     ecs_script_parser_t *parser,
     const char *pos,
@@ -79,14 +72,15 @@ ecs_entity_t flecs_script_default_lookup(
     return ecs_lookup(world, name);
 }
 
-static
 const char* flecs_script_parse_initializer(
     ecs_script_parser_t *parser,
     const char *pos,
-    ecs_expr_initializer_t *node)
+    char until,
+    ecs_expr_initializer_t **node_out)
 {
     bool first = true;
 
+    ecs_expr_initializer_t *node = *node_out = flecs_expr_initializer(parser);
     ecs_allocator_t *a = &parser->script->allocator;
 
     do {
@@ -94,10 +88,15 @@ const char* flecs_script_parse_initializer(
 
         if (first) {
             /* End of initializer */
-            LookAhead_1('}', {
-                pos = lookahead;
-                EndOfRule;
-            })
+            LookAhead(
+                case ')':
+                case '}': {
+                    if (lookahead_token.kind != until) {
+                        Error("expected '%c'", until);
+                    }
+                    node->node.kind = EcsExprEmptyInitializer;
+                    EndOfRule;
+                })
 
             first = false;
         }
@@ -128,7 +127,12 @@ const char* flecs_script_parse_initializer(
                     pos = lookahead;
                     break;
                 }
+                case '\n':
+                case ')':
                 case '}': {
+                    if (lookahead_token.kind != until) {
+                        Error("expected '%c'", until);
+                    }
                     EndOfRule;
                 }
             )
@@ -142,10 +146,11 @@ static
 const char* flecs_script_parse_collection_initializer(
     ecs_script_parser_t *parser,
     const char *pos,
-    ecs_expr_initializer_t *node)
+    ecs_expr_initializer_t **node_out)
 {
     bool first = true;
-
+    
+    ecs_expr_initializer_t *node = *node_out = flecs_expr_initializer(parser);
     ecs_allocator_t *a = &parser->script->allocator;
 
     do {
@@ -155,6 +160,7 @@ const char* flecs_script_parse_collection_initializer(
             /* End of initializer */
             LookAhead_1(']', {
                 pos = lookahead;
+                node->node.kind = EcsExprEmptyInitializer;
                 EndOfRule;
             })
 
@@ -297,7 +303,6 @@ const char* flecs_script_parse_rhs(
 
                 /* Ensures lookahead tokens in token buffer don't get overwritten */
                 parser->token_keep = parser->token_cur;
-
                 break;
             }
         )
@@ -393,8 +398,8 @@ const char* flecs_script_parse_lhs(
         }
 
         case '{': {
-            ecs_expr_initializer_t *node = flecs_expr_initializer(parser);
-            pos = flecs_script_parse_initializer(parser, pos, node);
+            ecs_expr_initializer_t *node = NULL;
+            pos = flecs_script_parse_initializer(parser, pos, '}', &node);
             if (!pos) {
                 flecs_script_parser_expr_free(parser, (ecs_expr_node_t*)node);
                 goto error;
@@ -409,14 +414,14 @@ const char* flecs_script_parse_lhs(
         }
 
         case '[': {
-            ecs_expr_initializer_t *node = flecs_expr_initializer(parser);
-            node->is_collection = true;
-
-            pos = flecs_script_parse_collection_initializer(parser, pos, node);
+            ecs_expr_initializer_t *node = NULL;
+            pos = flecs_script_parse_collection_initializer(parser, pos, &node);
             if (!pos) {
                 flecs_script_parser_expr_free(parser, (ecs_expr_node_t*)node);
                 goto error;
             }
+
+            node->is_collection = true;
 
             Parse_1(']', {
                 break;
@@ -439,7 +444,6 @@ error:
     return NULL;
 }
 
-static
 const char* flecs_script_parse_expr(
     ecs_script_parser_t *parser,
     const char *pos,

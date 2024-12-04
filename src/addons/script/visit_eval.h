@@ -49,7 +49,7 @@ const ecs_type_info_t* flecs_script_get_type_info(
 
 int flecs_script_eval_expr(
     ecs_script_eval_visitor_t *v,
-    const char *expr,
+    ecs_expr_node_t **expr_ptr,
     ecs_value_t *value);
 
 int flecs_script_eval_template(

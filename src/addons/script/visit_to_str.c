@@ -82,10 +82,10 @@ void flecs_script_id_to_str(
 static
 void flecs_script_expr_to_str(
     ecs_script_str_visitor_t *v,
-    const char *expr)
+    const ecs_expr_node_t *expr)
 {
     if (expr) {
-        flecs_scriptbuf_append(v, "%s%s%s", ECS_GREEN, expr, ECS_NORMAL);
+        flecs_scriptbuf_appendstr(v, "TODO");
     } else {
         flecs_scriptbuf_appendstr(v, "{}");
     }

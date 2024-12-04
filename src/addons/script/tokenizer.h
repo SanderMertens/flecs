@@ -71,12 +71,6 @@ typedef struct ecs_script_tokenizer_t {
     ecs_script_token_t *tokens;
 } ecs_script_tokenizer_t;
 
-const char* flecs_script_expr(
-    ecs_script_parser_t *parser,
-    const char *ptr,
-    ecs_script_token_t *out,
-    char until);
-
 const char* flecs_script_until(
     ecs_script_parser_t *parser,
     const char *ptr,

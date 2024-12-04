@@ -101,6 +101,7 @@ void flecs_script_expr_visit_free(
         flecs_free_t(a, ecs_expr_val_t, node);
         break;
     case EcsExprInitializer:
+    case EcsExprEmptyInitializer:
         flecs_expr_initializer_visit_free(
             script, (ecs_expr_initializer_t*)node);
         flecs_free_t(a, ecs_expr_initializer_t, node);

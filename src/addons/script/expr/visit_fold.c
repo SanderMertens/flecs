@@ -379,6 +379,7 @@ int flecs_script_expr_visit_fold(
     case EcsExprValue:
         break;
     case EcsExprInitializer:
+    case EcsExprEmptyInitializer:
         if (flecs_expr_initializer_visit_fold(script, node_ptr, desc)) {
             goto error;
         }
