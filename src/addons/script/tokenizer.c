@@ -405,7 +405,6 @@ const char* flecs_script_multiline_string(
     const char *end = pos + 1;
     while ((ch = end[0]) && (ch != '`')) {
         if (ch == '\\' && end[1] == '`') {
-            ch = '`';
             end ++;
         }
         end ++;

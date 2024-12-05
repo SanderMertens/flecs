@@ -252,6 +252,11 @@ int flecs_expr_variable_visit_eval(
     ecs_expr_variable_t *node,
     ecs_expr_value_t *out)
 {
+    ecs_assert(ctx->desc != NULL, ECS_INVALID_OPERATION,
+        "variables available at parse time are not provided");
+    ecs_assert(ctx->desc->vars != NULL, ECS_INVALID_OPERATION,
+        "variables available at parse time are not provided");
+
     const ecs_script_var_t *var = ecs_script_vars_lookup(
         ctx->desc->vars, node->name);
     if (!var) {

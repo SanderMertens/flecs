@@ -276,7 +276,6 @@ int flecs_expr_node_to_str(
         break;
     default:
         ecs_abort(ECS_INTERNAL_ERROR, "invalid node kind");
-        break;
     }
 
     if (node->type) {

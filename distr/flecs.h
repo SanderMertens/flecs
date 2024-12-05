@@ -14624,17 +14624,17 @@ void ecs_script_vars_from_iter(
 
 /** Used with ecs_script_expr_run(). */
 typedef struct ecs_script_expr_run_desc_t {
-    const char *name;
-    const char *expr;
-    ecs_entity_t (*lookup_action)(
+    const char *name;                /**< Script name */
+    const char *expr;                /**< Full expression string */
+    ecs_entity_t (*lookup_action)(   /**< Function for resolving entity identifiers */
         const ecs_world_t*,
         const char *value,
         void *ctx);
-    void *lookup_ctx;
-    ecs_script_vars_t *vars;
-    ecs_entity_t type;
-    bool disable_folding;
-    ecs_script_runtime_t *runtime;
+    void *lookup_ctx;                /**< Context passed to lookup function */
+    ecs_script_vars_t *vars;         /**< Variables accessible in expression */
+    ecs_entity_t type;               /**< Type of parsed value (optional) */
+    bool disable_folding;            /**< Disable constant folding (slower evaluation, faster parsing) */
+    ecs_script_runtime_t *runtime;   /**< Reusable runtime (optional) */
 } ecs_script_expr_run_desc_t;
 
 /** Run expression.
@@ -14670,7 +14670,7 @@ const char* ecs_script_expr_run(
 FLECS_API
 ecs_script_t* ecs_script_expr_parse(
     ecs_world_t *world,
-    const char *ptr,
+    const char *expr,
     const ecs_script_expr_run_desc_t *desc);
 
 /** Evaluate expression.
