@@ -21,6 +21,7 @@ struct UNREALFLECS_API FFlecsRelativeTrait
 	 * 1 is the Parent's Parent, etc.*/
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs | Transform")
 	int32 RelativeToIndex = 0;
+	
 }; // struct FFlecsRelativeComponent
 
 DEFINE_DEFAULT_ENTITY_OPTION(FFlecsRelativeRelationTrait);

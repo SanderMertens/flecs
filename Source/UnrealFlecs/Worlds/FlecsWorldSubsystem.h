@@ -40,7 +40,7 @@ public:
 	{
 		return GetDefault<UFlecsDeveloperSettings>()->bEnableFlecs && Super::ShouldCreateSubsystem(Outer);
 	}
-
+	
 	virtual ETickableTickType GetTickableTickType() const override
 	{
 		return ETickableTickType::Always;
@@ -132,7 +132,7 @@ public:
 		NewFlecsWorld->SetSingleton<FUWorldPtrComponent>(FUWorldPtrComponent{ GetWorld() });
 		
 		DefaultWorld->InitializeDefaultComponents();
-
+		
 		for (int32 Index = 0; Index < DefaultEntities.Num(); ++Index)
 		{
 			FString EntityName = DefaultEntities[Index].EntityRecord.Name;

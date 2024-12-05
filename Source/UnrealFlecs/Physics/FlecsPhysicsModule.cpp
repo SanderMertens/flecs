@@ -22,6 +22,8 @@ void UFlecsPhysicsModule::InitializeModule(UFlecsWorld* InWorld, const FFlecsEnt
 {
 	FPhysScene* Scene = GetFlecsWorld()->GetWorld()->GetPhysicsScene();
 	solid_check(Scene);
+	
+	Scene->GetSolver()->SetIsDeterministic(true);
 
 	GetFlecsWorld()->RegisterModuleDependency<UFlecsTickerModule>
 		(this, [&](UFlecsTickerModule* InModuleObject,
@@ -60,7 +62,7 @@ void UFlecsPhysicsModule::DeinitializeModule(UFlecsWorld* InWorld)
 	}
 }
 
-void UFlecsPhysicsModule::ResimulationHandlers()
+inline void UFlecsPhysicsModule::ResimulationHandlers()
 {
 	const FPhysScene* Scene = GetFlecsWorld()->GetWorld()->GetPhysicsScene();
 	solid_check(Scene);
@@ -97,6 +99,7 @@ void UFlecsPhysicsModule::ResimulationHandlers()
 
 		if UNLIKELY_IF(!FlecsWorld->GetWorld()->GetPhysicsScene())
 		{
+			UN_LOGF(LogFlecsPhysicsModule, Error, "Physics scene is invalid");
 			return;
 		}
 		
