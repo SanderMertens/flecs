@@ -37,6 +37,11 @@ int flecs_const_str_serialize(const ecs_serializer_t *ser, const void *ptr) {
     return 0;
 }
 
+static
+const char* flecs_const_get_string(const void *ptr) {
+    return *((const char *const *) ptr);
+}
+
 /* Initialize reflection data for core components */
 static
 void flecs_meta_import_core_definitions(
@@ -76,7 +81,8 @@ void flecs_meta_import_core_definitions(
         }),
         .type = {
             .as_type = ecs_id(ecs_string_t),
-            .serialize = flecs_const_str_serialize,       
+            .serialize = flecs_const_str_serialize,
+            .get_string = flecs_const_get_string,  
         }
     });
 
