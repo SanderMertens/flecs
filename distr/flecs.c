@@ -51711,8 +51711,16 @@ int flecs_init_type(
          * serializers on uninitialized values. For runtime types (rtt), the default hooks are set
          by flecs_meta_rtt_init_default_hooks */
         ecs_type_info_t *ti = flecs_type_info_ensure(world, type);
-        if (meta_type->existing && !ti->hooks.ctor) {
-            ti->hooks.ctor = flecs_default_ctor;
+        if (meta_type->existing) {
+            if(!ti->hooks.ctor) {
+                ti->hooks.ctor = flecs_default_ctor;
+            }
+            if(kind == EcsEnumType) {
+                ti->hooks.cmp = ecs_compare_i32;
+                ti->hooks.equals = ecs_equals_i32;
+                ti->hooks.flags &= ~(ECS_TYPE_HOOK_CMP_ILLEGAL|ECS_TYPE_HOOK_EQUALS_ILLEGAL);
+                ti->hooks.flags |= ECS_TYPE_HOOK_CMP|ECS_TYPE_HOOK_EQUALS; 
+            }
         } 
     } else {
         if (meta_type->kind != kind) {
