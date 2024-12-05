@@ -96,6 +96,8 @@ public:
 
 	virtual void Tick(float DeltaTime) override
 	{
+		Super::Tick(DeltaTime);
+		
 		const bool bResult = DefaultWorld->Progress(DeltaTime);
 
 		#if WITH_EDITOR
