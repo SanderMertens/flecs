@@ -181,7 +181,6 @@ int flecs_meta_cursor_push_type(
     if (ser == NULL) {
         char *str = ecs_id_str(world, type);
         ecs_err("cannot open scope for '%s' (missing reflection data)", str);
-        ecs_abort(ECS_INTERNAL_ERROR, NULL);
         ecs_os_free(str);
         return -1;
     }

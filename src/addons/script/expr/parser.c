@@ -91,7 +91,7 @@ const char* flecs_script_parse_initializer(
             LookAhead(
                 case ')':
                 case '}': {
-                    if (lookahead_token.kind != until) {
+                    if ((char)lookahead_token.kind != until) {
                         Error("expected '%c'", until);
                     }
                     node->node.kind = EcsExprEmptyInitializer;
@@ -130,7 +130,7 @@ const char* flecs_script_parse_initializer(
                 case '\n':
                 case ')':
                 case '}': {
-                    if (lookahead_token.kind != until) {
+                    if ((char)lookahead_token.kind != until) {
                         Error("expected '%c'", until);
                     }
                     EndOfRule;

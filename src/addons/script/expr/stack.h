@@ -27,7 +27,7 @@ typedef union ecs_expr_small_value_t {
     uintptr_t uptr;
     double f32;
     double f64;
-    const char *string;
+    char *string;
     ecs_entity_t entity;
     ecs_id_t id;
 

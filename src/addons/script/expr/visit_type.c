@@ -913,7 +913,6 @@ int flecs_script_expr_visit_type_priv(
     case EcsExprComponent:
         /* Component expressions are derived by type visitor */
         ecs_abort(ECS_INTERNAL_ERROR, NULL);
-        break;
     }
 
     ecs_assert(node->type != 0, ECS_INTERNAL_ERROR, NULL);

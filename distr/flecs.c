@@ -4896,7 +4896,7 @@ typedef union ecs_expr_small_value_t {
     uintptr_t uptr;
     double f32;
     double f64;
-    const char *string;
+    char *string;
     ecs_entity_t entity;
     ecs_id_t id;
 
@@ -7313,6 +7313,7 @@ int flecs_traverse_add(
     ecs_vec_fini_t(&world->allocator, &ids, ecs_id_t);
     return 0;
 error:
+    flecs_table_diff_builder_fini(world, &diff);
     ecs_vec_fini_t(&world->allocator, &ids, ecs_id_t);
     return -1;
 }
@@ -48061,7 +48062,6 @@ int flecs_meta_cursor_push_type(
     if (ser == NULL) {
         char *str = ecs_id_str(world, type);
         ecs_err("cannot open scope for '%s' (missing reflection data)", str);
-        ecs_abort(ECS_INTERNAL_ERROR, NULL);
         ecs_os_free(str);
         return -1;
     }
@@ -55322,7 +55322,8 @@ error:
 
 /* Definitions for parser functions */
 #define ParserBegin\
-    ecs_script_tokenizer_t _tokenizer = {{0}};\
+    ecs_script_tokenizer_t _tokenizer;\
+    ecs_os_zeromem(&_tokenizer);\
     _tokenizer.tokens = _tokenizer.stack.tokens;\
     ecs_script_tokenizer_t *tokenizer = &_tokenizer;
 
@@ -58823,7 +58824,6 @@ const char* flecs_script_multiline_string(
     const char *end = pos + 1;
     while ((ch = end[0]) && (ch != '`')) {
         if (ch == '\\' && end[1] == '`') {
-            ch = '`';
             end ++;
         }
         end ++;
@@ -73493,7 +73493,7 @@ ecs_expr_value_node_t* flecs_expr_string(
 {
     ecs_expr_value_node_t *result = flecs_expr_ast_new(
         parser, ecs_expr_value_node_t, EcsExprValue);
-    result->storage.string = value;
+    result->storage.string = ECS_CONST_CAST(char*, value);
     result->ptr = &result->storage.string;
     result->node.type = ecs_id(ecs_string_t);
     return result;
@@ -73689,7 +73689,7 @@ const char* flecs_script_parse_initializer(
             LookAhead(
                 case ')':
                 case '}': {
-                    if (lookahead_token.kind != until) {
+                    if ((char)lookahead_token.kind != until) {
                         Error("expected '%c'", until);
                     }
                     node->node.kind = EcsExprEmptyInitializer;
@@ -73728,7 +73728,7 @@ const char* flecs_script_parse_initializer(
                 case '\n':
                 case ')':
                 case '}': {
-                    if (lookahead_token.kind != until) {
+                    if ((char)lookahead_token.kind != until) {
                         Error("expected '%c'", until);
                     }
                     EndOfRule;
@@ -74781,6 +74781,11 @@ int flecs_expr_variable_visit_eval(
     ecs_expr_variable_t *node,
     ecs_expr_value_t *out)
 {
+    ecs_assert(ctx->desc != NULL, ECS_INVALID_OPERATION,
+        "variables available at parse time are not provided");
+    ecs_assert(ctx->desc->vars != NULL, ECS_INVALID_OPERATION,
+        "variables available at parse time are not provided");
+
     const ecs_script_var_t *var = ecs_script_vars_lookup(
         ctx->desc->vars, node->name);
     if (!var) {
@@ -75968,7 +75973,6 @@ int flecs_expr_node_to_str(
         break;
     default:
         ecs_abort(ECS_INTERNAL_ERROR, "invalid node kind");
-        break;
     }
 
     if (node->type) {
@@ -76906,7 +76910,6 @@ int flecs_script_expr_visit_type_priv(
     case EcsExprComponent:
         /* Component expressions are derived by type visitor */
         ecs_abort(ECS_INTERNAL_ERROR, NULL);
-        break;
     }
 
     ecs_assert(node->type != 0, ECS_INTERNAL_ERROR, NULL);

@@ -1838,6 +1838,7 @@ int flecs_traverse_add(
     ecs_vec_fini_t(&world->allocator, &ids, ecs_id_t);
     return 0;
 error:
+    flecs_table_diff_builder_fini(world, &diff);
     ecs_vec_fini_t(&world->allocator, &ids, ecs_id_t);
     return -1;
 }

@@ -37,7 +37,8 @@
 
 /* Definitions for parser functions */
 #define ParserBegin\
-    ecs_script_tokenizer_t _tokenizer = {{0}};\
+    ecs_script_tokenizer_t _tokenizer;\
+    ecs_os_zeromem(&_tokenizer);\
     _tokenizer.tokens = _tokenizer.stack.tokens;\
     ecs_script_tokenizer_t *tokenizer = &_tokenizer;
 

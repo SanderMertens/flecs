@@ -94,7 +94,7 @@ ecs_expr_value_node_t* flecs_expr_string(
 {
     ecs_expr_value_node_t *result = flecs_expr_ast_new(
         parser, ecs_expr_value_node_t, EcsExprValue);
-    result->storage.string = value;
+    result->storage.string = ECS_CONST_CAST(char*, value);
     result->ptr = &result->storage.string;
     result->node.type = ecs_id(ecs_string_t);
     return result;
