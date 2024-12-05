@@ -5123,7 +5123,7 @@ ecs_expr_cast_t* flecs_expr_cast(
 #define flecs_expr_visit_error(script, node, ...) \
     ecs_parser_error( \
         script->name, script->code, \
-            ((ecs_expr_node_t*)node)->pos - script->code, \
+            ((const ecs_expr_node_t*)node)->pos - script->code, \
                 __VA_ARGS__);
 
 int flecs_script_expr_visit_type(
@@ -58494,6 +58494,8 @@ const char* flecs_script_token_kind_str(
         return "number ";
     case EcsTokNewline:
         return "newline";
+    case EcsTokMember:
+        return "member";
     case EcsTokEnd:
         return "end of script";
     default:
@@ -58549,6 +58551,7 @@ const char* flecs_script_token_str(
     case EcsTokString: return "string";
     case EcsTokNumber: return "number";
     case EcsTokNewline: return "newline";
+    case EcsTokMember: return "member";
     case EcsTokEnd: return "end of script";
     default:
         return "<corrupt>";
@@ -60645,7 +60648,9 @@ int ecs_script_eval(
     const ecs_script_t *script)
 {
     ecs_script_eval_visitor_t v;
-    ecs_script_impl_t *impl = flecs_script_impl(script);
+    ecs_script_impl_t *impl = flecs_script_impl(
+        /* Safe, script will only be used for reading by visitor */
+        ECS_CONST_CAST(ecs_script_t*, script));
     flecs_script_eval_visit_init(impl, &v);
     int result = ecs_script_visit(impl, &v, flecs_script_eval_node);
     flecs_script_eval_visit_fini(&v);
@@ -73776,7 +73781,6 @@ const char* flecs_script_parse_rhs(
     ecs_script_parser_t *parser,
     const char *pos,
     ecs_script_tokenizer_t *tokenizer,
-    ecs_expr_node_t *left,
     ecs_script_token_kind_t left_oper,
     ecs_expr_node_t **out)
 {
@@ -73909,9 +73913,13 @@ const char* flecs_script_parse_lhs(
             if (strchr(expr, '.') || strchr(expr, 'e')) {
                 *out = (ecs_expr_node_t*)flecs_expr_float(parser, atof(expr));
             } else if (expr[0] == '-') {
-                *out = (ecs_expr_node_t*)flecs_expr_int(parser, atoll(expr));
+                char *end;
+                *out = (ecs_expr_node_t*)flecs_expr_int(parser, 
+                    strtoll(expr, &end, 10));
             } else {
-                *out = (ecs_expr_node_t*)flecs_expr_uint(parser, atoll(expr));
+                char *end;
+                *out = (ecs_expr_node_t*)flecs_expr_uint(parser, 
+                    strtoull(expr, &end, 10));
             }
             break;
         }
@@ -74017,7 +74025,7 @@ const char* flecs_script_parse_lhs(
     }
 
     /* Parse right-hand side of expression if there is one */
-    return flecs_script_parse_rhs(parser, pos, tokenizer, *out, left_oper, out);
+    return flecs_script_parse_rhs(parser, pos, tokenizer, left_oper, out);
 error:
     return NULL;
 }
@@ -74096,7 +74104,9 @@ int ecs_script_expr_eval(
     const ecs_script_expr_run_desc_t *desc)
 {
     ecs_assert(script != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_script_impl_t *impl = flecs_script_impl(script);
+    ecs_script_impl_t *impl = flecs_script_impl(
+        /* Safe, won't be writing to script */
+        ECS_CONST_CAST(ecs_script_t*, script));
     ecs_assert(impl->expr != NULL, ECS_INTERNAL_ERROR, NULL);
 
     ecs_script_expr_run_desc_t priv_desc = {0};
@@ -74185,7 +74195,6 @@ void flecs_expr_value_alloc(
 
 static
 void flecs_expr_value_free(
-    ecs_expr_stack_t *stack,
     ecs_expr_value_t *v)
 {
     const ecs_type_info_t *ti = v->type_info;
@@ -74270,7 +74279,7 @@ void flecs_expr_stack_pop(
     }
 
     for (sp = end - 1; sp >= start; sp --) {
-        flecs_expr_value_free(stack, &stack->values[sp]);
+        flecs_expr_value_free(&stack->values[sp]);
     }
 
     flecs_stack_restore_cursor(&stack->stack, stack->frames[frame].cur);
@@ -74340,18 +74349,65 @@ error:
     return -1;
 }
 
+
 int flecs_value_unary(
     const ecs_script_t *script,
     const ecs_value_t *expr,
     ecs_value_t *out,
     ecs_script_token_kind_t operator)
 {
+    (void)script;
     switch(operator) {
     case EcsTokNot:
         ecs_assert(expr->type == ecs_id(ecs_bool_t), ECS_INTERNAL_ERROR, NULL);
         ecs_assert(out->type == ecs_id(ecs_bool_t), ECS_INTERNAL_ERROR, NULL);
         *(bool*)out->ptr = !*(bool*)expr->ptr;
         break;
+    case EcsTokEnd:
+    case EcsTokUnknown:
+    case EcsTokScopeOpen:
+    case EcsTokScopeClose:
+    case EcsTokParenOpen:
+    case EcsTokParenClose:
+    case EcsTokBracketOpen:
+    case EcsTokBracketClose:
+    case EcsTokMember:
+    case EcsTokComma:
+    case EcsTokSemiColon:
+    case EcsTokColon:
+    case EcsTokAssign:
+    case EcsTokAdd:
+    case EcsTokSub:
+    case EcsTokMul:
+    case EcsTokDiv:
+    case EcsTokMod:
+    case EcsTokBitwiseOr:
+    case EcsTokBitwiseAnd:
+    case EcsTokOptional:
+    case EcsTokAnnotation:
+    case EcsTokNewline:
+    case EcsTokEq:
+    case EcsTokNeq:
+    case EcsTokGt:
+    case EcsTokGtEq:
+    case EcsTokLt:
+    case EcsTokLtEq:
+    case EcsTokAnd:
+    case EcsTokOr:
+    case EcsTokMatch:
+    case EcsTokShiftLeft:
+    case EcsTokShiftRight:
+    case EcsTokIdentifier:
+    case EcsTokString:
+    case EcsTokNumber:
+    case EcsTokKeywordModule:
+    case EcsTokKeywordUsing:
+    case EcsTokKeywordWith:
+    case EcsTokKeywordIf:
+    case EcsTokKeywordElse:
+    case EcsTokKeywordTemplate:
+    case EcsTokKeywordProp:
+    case EcsTokKeywordConst:
     default:
         ecs_abort(ECS_INTERNAL_ERROR, "invalid operator for binary expression");
     }
@@ -74418,6 +74474,35 @@ int flecs_value_binary(
     case EcsTokShiftRight:
         ECS_BINARY_INT_OP(left, right, out, >>);
         break;
+    case EcsTokEnd:
+    case EcsTokUnknown:
+    case EcsTokScopeOpen:
+    case EcsTokScopeClose:
+    case EcsTokParenOpen:
+    case EcsTokParenClose:
+    case EcsTokBracketOpen:
+    case EcsTokBracketClose:
+    case EcsTokMember:
+    case EcsTokComma:
+    case EcsTokSemiColon:
+    case EcsTokColon:
+    case EcsTokAssign:
+    case EcsTokNot:
+    case EcsTokOptional:
+    case EcsTokAnnotation:
+    case EcsTokNewline:
+    case EcsTokMatch:
+    case EcsTokIdentifier:
+    case EcsTokString:
+    case EcsTokNumber:
+    case EcsTokKeywordModule:
+    case EcsTokKeywordUsing:
+    case EcsTokKeywordWith:
+    case EcsTokKeywordIf:
+    case EcsTokKeywordElse:
+    case EcsTokKeywordTemplate:
+    case EcsTokKeywordProp:
+    case EcsTokKeywordConst:
     default:
         ecs_abort(ECS_INTERNAL_ERROR, "invalid operator for binary expression");
     }
@@ -75015,6 +75100,7 @@ error:
 
 #ifdef FLECS_SCRIPT
 
+static
 void flecs_visit_fold_replace(
     ecs_script_t *script,
     ecs_expr_node_t **node_ptr,
@@ -75025,6 +75111,7 @@ void flecs_visit_fold_replace(
     *node_ptr = with;
 }
 
+static
 int flecs_expr_unary_visit_fold(
     ecs_script_t *script,
     ecs_expr_node_t **node_ptr,
@@ -75073,6 +75160,7 @@ error:
     return -1;
 }
 
+static
 int flecs_expr_binary_visit_fold(
     ecs_script_t *script,
     ecs_expr_node_t **node_ptr,
@@ -75124,6 +75212,7 @@ error:
     return -1;
 }
 
+static
 int flecs_expr_cast_visit_fold(
     ecs_script_t *script,
     ecs_expr_node_t **node_ptr,
@@ -75170,6 +75259,7 @@ error:
     return -1;  
 }
 
+static
 int flecs_expr_initializer_pre_fold(
     ecs_script_t *script,
     ecs_expr_initializer_t *node,
@@ -75212,6 +75302,7 @@ error:
     return -1;
 }
 
+static
 int flecs_expr_initializer_post_fold(
     ecs_script_t *script,
     ecs_expr_initializer_t *node,
@@ -75249,6 +75340,7 @@ error:
     return -1;
 }
 
+static
 int flecs_expr_initializer_visit_fold(
     ecs_script_t *script,
     ecs_expr_node_t **node_ptr,
@@ -75266,7 +75358,6 @@ int flecs_expr_initializer_visit_fold(
      * be folded into a literal. */
     if (can_fold) {
         void *value = ecs_value_new(script->world, node->node.type);
-        ecs_expr_initializer_t *node = (ecs_expr_initializer_t*)*node_ptr;
 
         if (flecs_expr_initializer_post_fold(script, node, value)) {
             goto error;
@@ -75284,6 +75375,7 @@ error:
     return -1;
 }
 
+static
 int flecs_expr_identifier_visit_fold(
     ecs_script_t *script,
     ecs_expr_node_t **node_ptr,
@@ -75322,6 +75414,7 @@ error:
     return -1;
 }
 
+static
 int flecs_expr_function_visit_fold(
     ecs_script_t *script,
     ecs_expr_node_t **node_ptr,
@@ -75338,6 +75431,7 @@ error:
     return -1;
 }
 
+static
 int flecs_expr_member_visit_fold(
     ecs_script_t *script,
     ecs_expr_node_t **node_ptr,
@@ -75354,6 +75448,7 @@ error:
     return -1;
 }
 
+static
 int flecs_expr_element_visit_fold(
     ecs_script_t *script,
     ecs_expr_node_t **node_ptr,
@@ -76592,8 +76687,10 @@ int flecs_expr_member_visit_type(
     ecs_log_set_level(prev_log);
 
     node->node.type = ecs_meta_get_type(cur);
+#ifdef FLECS_DEBUG
     const EcsMember *m = ecs_get(world, ecs_meta_get_member_id(cur), EcsMember);
     ecs_assert(m != NULL, ECS_INTERNAL_ERROR, NULL);
+#endif
     node->offset = (uintptr_t)ecs_meta_get_ptr(cur);
 
     return 0;

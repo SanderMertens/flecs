@@ -28,7 +28,6 @@ void flecs_expr_value_alloc(
 
 static
 void flecs_expr_value_free(
-    ecs_expr_stack_t *stack,
     ecs_expr_value_t *v)
 {
     const ecs_type_info_t *ti = v->type_info;
@@ -113,7 +112,7 @@ void flecs_expr_stack_pop(
     }
 
     for (sp = end - 1; sp >= start; sp --) {
-        flecs_expr_value_free(stack, &stack->values[sp]);
+        flecs_expr_value_free(&stack->values[sp]);
     }
 
     flecs_stack_restore_cursor(&stack->stack, stack->frames[frame].cur);

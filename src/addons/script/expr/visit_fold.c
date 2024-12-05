@@ -8,6 +8,7 @@
 #ifdef FLECS_SCRIPT
 #include "../script.h"
 
+static
 void flecs_visit_fold_replace(
     ecs_script_t *script,
     ecs_expr_node_t **node_ptr,
@@ -18,6 +19,7 @@ void flecs_visit_fold_replace(
     *node_ptr = with;
 }
 
+static
 int flecs_expr_unary_visit_fold(
     ecs_script_t *script,
     ecs_expr_node_t **node_ptr,
@@ -66,6 +68,7 @@ error:
     return -1;
 }
 
+static
 int flecs_expr_binary_visit_fold(
     ecs_script_t *script,
     ecs_expr_node_t **node_ptr,
@@ -117,6 +120,7 @@ error:
     return -1;
 }
 
+static
 int flecs_expr_cast_visit_fold(
     ecs_script_t *script,
     ecs_expr_node_t **node_ptr,
@@ -163,6 +167,7 @@ error:
     return -1;  
 }
 
+static
 int flecs_expr_initializer_pre_fold(
     ecs_script_t *script,
     ecs_expr_initializer_t *node,
@@ -205,6 +210,7 @@ error:
     return -1;
 }
 
+static
 int flecs_expr_initializer_post_fold(
     ecs_script_t *script,
     ecs_expr_initializer_t *node,
@@ -242,6 +248,7 @@ error:
     return -1;
 }
 
+static
 int flecs_expr_initializer_visit_fold(
     ecs_script_t *script,
     ecs_expr_node_t **node_ptr,
@@ -259,7 +266,6 @@ int flecs_expr_initializer_visit_fold(
      * be folded into a literal. */
     if (can_fold) {
         void *value = ecs_value_new(script->world, node->node.type);
-        ecs_expr_initializer_t *node = (ecs_expr_initializer_t*)*node_ptr;
 
         if (flecs_expr_initializer_post_fold(script, node, value)) {
             goto error;
@@ -277,6 +283,7 @@ error:
     return -1;
 }
 
+static
 int flecs_expr_identifier_visit_fold(
     ecs_script_t *script,
     ecs_expr_node_t **node_ptr,
@@ -315,6 +322,7 @@ error:
     return -1;
 }
 
+static
 int flecs_expr_function_visit_fold(
     ecs_script_t *script,
     ecs_expr_node_t **node_ptr,
@@ -331,6 +339,7 @@ error:
     return -1;
 }
 
+static
 int flecs_expr_member_visit_fold(
     ecs_script_t *script,
     ecs_expr_node_t **node_ptr,
@@ -347,6 +356,7 @@ error:
     return -1;
 }
 
+static
 int flecs_expr_element_visit_fold(
     ecs_script_t *script,
     ecs_expr_node_t **node_ptr,

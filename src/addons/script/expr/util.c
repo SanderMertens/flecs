@@ -62,18 +62,65 @@ error:
     return -1;
 }
 
+
 int flecs_value_unary(
     const ecs_script_t *script,
     const ecs_value_t *expr,
     ecs_value_t *out,
     ecs_script_token_kind_t operator)
 {
+    (void)script;
     switch(operator) {
     case EcsTokNot:
         ecs_assert(expr->type == ecs_id(ecs_bool_t), ECS_INTERNAL_ERROR, NULL);
         ecs_assert(out->type == ecs_id(ecs_bool_t), ECS_INTERNAL_ERROR, NULL);
         *(bool*)out->ptr = !*(bool*)expr->ptr;
         break;
+    case EcsTokEnd:
+    case EcsTokUnknown:
+    case EcsTokScopeOpen:
+    case EcsTokScopeClose:
+    case EcsTokParenOpen:
+    case EcsTokParenClose:
+    case EcsTokBracketOpen:
+    case EcsTokBracketClose:
+    case EcsTokMember:
+    case EcsTokComma:
+    case EcsTokSemiColon:
+    case EcsTokColon:
+    case EcsTokAssign:
+    case EcsTokAdd:
+    case EcsTokSub:
+    case EcsTokMul:
+    case EcsTokDiv:
+    case EcsTokMod:
+    case EcsTokBitwiseOr:
+    case EcsTokBitwiseAnd:
+    case EcsTokOptional:
+    case EcsTokAnnotation:
+    case EcsTokNewline:
+    case EcsTokEq:
+    case EcsTokNeq:
+    case EcsTokGt:
+    case EcsTokGtEq:
+    case EcsTokLt:
+    case EcsTokLtEq:
+    case EcsTokAnd:
+    case EcsTokOr:
+    case EcsTokMatch:
+    case EcsTokShiftLeft:
+    case EcsTokShiftRight:
+    case EcsTokIdentifier:
+    case EcsTokString:
+    case EcsTokNumber:
+    case EcsTokKeywordModule:
+    case EcsTokKeywordUsing:
+    case EcsTokKeywordWith:
+    case EcsTokKeywordIf:
+    case EcsTokKeywordElse:
+    case EcsTokKeywordTemplate:
+    case EcsTokKeywordProp:
+    case EcsTokKeywordConst:
     default:
         ecs_abort(ECS_INTERNAL_ERROR, "invalid operator for binary expression");
     }
@@ -140,6 +187,35 @@ int flecs_value_binary(
     case EcsTokShiftRight:
         ECS_BINARY_INT_OP(left, right, out, >>);
         break;
+    case EcsTokEnd:
+    case EcsTokUnknown:
+    case EcsTokScopeOpen:
+    case EcsTokScopeClose:
+    case EcsTokParenOpen:
+    case EcsTokParenClose:
+    case EcsTokBracketOpen:
+    case EcsTokBracketClose:
+    case EcsTokMember:
+    case EcsTokComma:
+    case EcsTokSemiColon:
+    case EcsTokColon:
+    case EcsTokAssign:
+    case EcsTokNot:
+    case EcsTokOptional:
+    case EcsTokAnnotation:
+    case EcsTokNewline:
+    case EcsTokMatch:
+    case EcsTokIdentifier:
+    case EcsTokString:
+    case EcsTokNumber:
+    case EcsTokKeywordModule:
+    case EcsTokKeywordUsing:
+    case EcsTokKeywordWith:
+    case EcsTokKeywordIf:
+    case EcsTokKeywordElse:
+    case EcsTokKeywordTemplate:
+    case EcsTokKeywordProp:
+    case EcsTokKeywordConst:
     default:
         ecs_abort(ECS_INTERNAL_ERROR, "invalid operator for binary expression");
     }
