@@ -30,35 +30,11 @@ struct ecs_expr_node_t {
     const char *pos;
 };
 
-typedef union ecs_expr_small_val_t {
-    bool bool_;
-    char char_;
-    ecs_byte_t byte_;
-    int8_t i8;
-    int16_t i16;
-    int32_t i32;
-    int64_t i64;
-    intptr_t iptr;
-    uint8_t u8;
-    uint16_t u16;
-    uint32_t u32;
-    uint64_t u64;
-    uintptr_t uptr;
-    double f32;
-    double f64;
-    const char *string;
-    ecs_entity_t entity;
-    ecs_id_t id;
-
-    /* Avoid allocations for small trivial types */
-    char small_data[FLECS_EXPR_SMALL_DATA_SIZE];
-} ecs_expr_small_val_t;
-
-typedef struct ecs_expr_val_t {
+typedef struct ecs_expr_value_node_t {
     ecs_expr_node_t node;
     void *ptr;
-    ecs_expr_small_val_t storage;
-} ecs_expr_val_t;
+    ecs_expr_small_value_t storage;
+} ecs_expr_value_node_t;
 
 typedef struct ecs_expr_initializer_element_t {
     const char *member;
@@ -129,32 +105,32 @@ typedef struct ecs_expr_cast_t {
     ecs_expr_node_t *expr;
 } ecs_expr_cast_t;
 
-ecs_expr_val_t* flecs_expr_value_from(
+ecs_expr_value_node_t* flecs_expr_value_from(
     ecs_script_t *script,
     ecs_expr_node_t *node,
     ecs_entity_t type);
 
-ecs_expr_val_t* flecs_expr_bool(
+ecs_expr_value_node_t* flecs_expr_bool(
     ecs_script_parser_t *parser,
     bool value);
 
-ecs_expr_val_t* flecs_expr_int(
+ecs_expr_value_node_t* flecs_expr_int(
     ecs_script_parser_t *parser,
     int64_t value);
 
-ecs_expr_val_t* flecs_expr_uint(
+ecs_expr_value_node_t* flecs_expr_uint(
     ecs_script_parser_t *parser,
     uint64_t value);
 
-ecs_expr_val_t* flecs_expr_float(
+ecs_expr_value_node_t* flecs_expr_float(
     ecs_script_parser_t *parser,
     double value);
 
-ecs_expr_val_t* flecs_expr_string(
+ecs_expr_value_node_t* flecs_expr_string(
     ecs_script_parser_t *parser,
     const char *value);
 
-ecs_expr_val_t* flecs_expr_entity(
+ecs_expr_value_node_t* flecs_expr_entity(
     ecs_script_parser_t *parser,
     ecs_entity_t value);
 

@@ -11,7 +11,7 @@
 static
 void flecs_expr_value_visit_free(
     ecs_script_t *script,
-    ecs_expr_val_t *node)
+    ecs_expr_value_node_t *node)
 {
     if (node->ptr != &node->storage) {
         ecs_value_free(script->world, node->node.type, node->ptr);
@@ -97,8 +97,8 @@ void flecs_script_expr_visit_free(
     switch(node->kind) {
     case EcsExprValue:
         flecs_expr_value_visit_free(
-            script, (ecs_expr_val_t*)node);
-        flecs_free_t(a, ecs_expr_val_t, node);
+            script, (ecs_expr_value_node_t*)node);
+        flecs_free_t(a, ecs_expr_value_node_t, node);
         break;
     case EcsExprInitializer:
     case EcsExprEmptyInitializer:

@@ -25,13 +25,13 @@ void* flecs_expr_ast_new_(
     return result;
 }
 
-ecs_expr_val_t* flecs_expr_value_from(
+ecs_expr_value_node_t* flecs_expr_value_from(
     ecs_script_t *script,
     ecs_expr_node_t *node,
     ecs_entity_t type)
 {
-    ecs_expr_val_t *result = flecs_calloc_t(
-        &((ecs_script_impl_t*)script)->allocator, ecs_expr_val_t);
+    ecs_expr_value_node_t *result = flecs_calloc_t(
+        &((ecs_script_impl_t*)script)->allocator, ecs_expr_value_node_t);
     result->ptr = &result->storage.u64;
     result->node.kind = EcsExprValue;
     result->node.pos = node ? node->pos : NULL;
@@ -40,72 +40,72 @@ ecs_expr_val_t* flecs_expr_value_from(
     return result;
 }
 
-ecs_expr_val_t* flecs_expr_bool(
+ecs_expr_value_node_t* flecs_expr_bool(
     ecs_script_parser_t *parser,
     bool value)
 {
-    ecs_expr_val_t *result = flecs_expr_ast_new(
-        parser, ecs_expr_val_t, EcsExprValue);
+    ecs_expr_value_node_t *result = flecs_expr_ast_new(
+        parser, ecs_expr_value_node_t, EcsExprValue);
     result->storage.bool_ = value;
     result->ptr = &result->storage.bool_;
     result->node.type = ecs_id(ecs_bool_t);
     return result;
 }
 
-ecs_expr_val_t* flecs_expr_int(
+ecs_expr_value_node_t* flecs_expr_int(
     ecs_script_parser_t *parser,
     int64_t value)
 {
-    ecs_expr_val_t *result = flecs_expr_ast_new(
-        parser, ecs_expr_val_t, EcsExprValue);
+    ecs_expr_value_node_t *result = flecs_expr_ast_new(
+        parser, ecs_expr_value_node_t, EcsExprValue);
     result->storage.i64 = value;
     result->ptr = &result->storage.i64;
     result->node.type = ecs_id(ecs_i64_t);
     return result;
 }
 
-ecs_expr_val_t* flecs_expr_uint(
+ecs_expr_value_node_t* flecs_expr_uint(
     ecs_script_parser_t *parser,
     uint64_t value)
 {
-    ecs_expr_val_t *result = flecs_expr_ast_new(
-        parser, ecs_expr_val_t, EcsExprValue);
+    ecs_expr_value_node_t *result = flecs_expr_ast_new(
+        parser, ecs_expr_value_node_t, EcsExprValue);
     result->storage.u64 = value;
     result->ptr = &result->storage.u64;
     result->node.type = ecs_id(ecs_i64_t);
     return result;
 }
 
-ecs_expr_val_t* flecs_expr_float(
+ecs_expr_value_node_t* flecs_expr_float(
     ecs_script_parser_t *parser,
     double value)
 {
-    ecs_expr_val_t *result = flecs_expr_ast_new(
-        parser, ecs_expr_val_t, EcsExprValue);
+    ecs_expr_value_node_t *result = flecs_expr_ast_new(
+        parser, ecs_expr_value_node_t, EcsExprValue);
     result->storage.f64 = value;
     result->ptr = &result->storage.f64;
     result->node.type = ecs_id(ecs_f64_t);
     return result;
 }
 
-ecs_expr_val_t* flecs_expr_string(
+ecs_expr_value_node_t* flecs_expr_string(
     ecs_script_parser_t *parser,
     const char *value)
 {
-    ecs_expr_val_t *result = flecs_expr_ast_new(
-        parser, ecs_expr_val_t, EcsExprValue);
+    ecs_expr_value_node_t *result = flecs_expr_ast_new(
+        parser, ecs_expr_value_node_t, EcsExprValue);
     result->storage.string = value;
     result->ptr = &result->storage.string;
     result->node.type = ecs_id(ecs_string_t);
     return result;
 }
 
-ecs_expr_val_t* flecs_expr_entity(
+ecs_expr_value_node_t* flecs_expr_entity(
     ecs_script_parser_t *parser,
     ecs_entity_t value)
 {
-    ecs_expr_val_t *result = flecs_expr_ast_new(
-        parser, ecs_expr_val_t, EcsExprValue);
+    ecs_expr_value_node_t *result = flecs_expr_ast_new(
+        parser, ecs_expr_value_node_t, EcsExprValue);
     result->storage.entity = value;
     result->ptr = &result->storage.entity;
     result->node.type = ecs_id(ecs_entity_t);

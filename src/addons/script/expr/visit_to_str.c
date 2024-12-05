@@ -23,7 +23,7 @@ int flecs_expr_node_to_str(
 static
 int flecs_expr_value_to_str(
     ecs_expr_str_visitor_t *v,
-    const ecs_expr_val_t *node)
+    const ecs_expr_value_node_t *node)
 {
     return ecs_ptr_to_str_buf(
         v->world, node->node.type, node->ptr, v->buf);
@@ -204,7 +204,7 @@ int flecs_expr_node_to_str(
     switch(node->kind) {
     case EcsExprValue:
         if (flecs_expr_value_to_str(v, 
-            (const ecs_expr_val_t*)node)) 
+            (const ecs_expr_value_node_t*)node)) 
         {
             goto error;
         }

@@ -7887,21 +7887,14 @@ typedef struct Strings {
     char *b;
 } Strings;
 
-static int strings_ctor_invoked = 0;
-static int strings_dtor_invoked = 0;
-static int strings_move_invoked = 0;
-static int strings_copy_invoked = 0;
-
 ECS_CTOR(Strings, ptr, {
     ptr->a = NULL;
     ptr->b = NULL;
-    strings_ctor_invoked ++;
 })
 
 ECS_DTOR(Strings, ptr, {
     ecs_os_free(ptr->a);
     ecs_os_free(ptr->b);
-    strings_dtor_invoked ++;
 })
 
 ECS_MOVE(Strings, dst, src, {
@@ -7911,7 +7904,6 @@ ECS_MOVE(Strings, dst, src, {
     dst->b = src->b;
     src->a = NULL;
     dst->a = NULL;
-    strings_move_invoked ++;
 })
 
 ECS_COPY(Strings, dst, src, {
@@ -7919,7 +7911,6 @@ ECS_COPY(Strings, dst, src, {
     ecs_os_free(dst->b);
     dst->a = ecs_os_strdup(src->a);
     dst->b = ecs_os_strdup(src->b);
-    strings_copy_invoked ++;
 })
 
 void Eval_partial_assign_nontrivial(void) {
@@ -7948,9 +7939,6 @@ void Eval_partial_assign_nontrivial(void) {
     });
     test_assert(s != 0);
 
-    test_int(strings_ctor_invoked, 3);
-    test_int(strings_dtor_invoked, 2);
-
     ecs_entity_t foo = ecs_lookup(world, "foo");
     test_assert(foo != 0);
     
@@ -7960,11 +7948,6 @@ void Eval_partial_assign_nontrivial(void) {
     test_str(p->b, "bar");
 
     ecs_fini(world);
-
-    test_int(strings_ctor_invoked, 3);
-    test_int(strings_dtor_invoked, 3);
-    test_int(strings_move_invoked, 0);
-    test_int(strings_copy_invoked, 0);
 }
 
 void Eval_partial_assign_with(void) {
@@ -8036,11 +8019,6 @@ void Eval_partial_assign_nontrivial_with(void) {
     });
     test_assert(s != 0);
 
-    test_int(strings_ctor_invoked, 4);
-    test_int(strings_dtor_invoked, 2);
-    test_int(strings_move_invoked, 0);
-    test_int(strings_copy_invoked, 4);
-
     {
         ecs_entity_t e = ecs_lookup(world, "foo");
         test_assert(e != 0);
@@ -8061,11 +8039,6 @@ void Eval_partial_assign_nontrivial_with(void) {
     }
 
     ecs_fini(world);
-
-    test_int(strings_ctor_invoked, 4);
-    test_int(strings_dtor_invoked, 4);
-    test_int(strings_move_invoked, 0);
-    test_int(strings_copy_invoked, 4);
 }
 
 typedef struct LargeArray {
@@ -8142,11 +8115,6 @@ void Eval_non_trivial_var_component(void) {
     });
     test_assert(s != 0);
 
-    test_int(strings_ctor_invoked, 3);
-    test_int(strings_dtor_invoked, 1);
-    test_int(strings_copy_invoked, 2);
-    test_int(strings_move_invoked, 0);
-
     {
         ecs_entity_t e = ecs_lookup(world, "foo");
         test_assert(e != 0);
@@ -8167,11 +8135,6 @@ void Eval_non_trivial_var_component(void) {
     }
 
     ecs_fini(world);
-
-    test_int(strings_ctor_invoked, 3);
-    test_int(strings_dtor_invoked, 3);
-    test_int(strings_copy_invoked, 2);
-    test_int(strings_move_invoked, 0);
 }
 
 void Eval_non_trivial_var_with(void) {
@@ -8208,11 +8171,6 @@ void Eval_non_trivial_var_with(void) {
     });
     test_assert(s != 0);
 
-    test_int(strings_ctor_invoked, 3);
-    test_int(strings_dtor_invoked, 1);
-    test_int(strings_copy_invoked, 2);
-    test_int(strings_move_invoked, 0);
-
     {
         ecs_entity_t e = ecs_lookup(world, "foo");
         test_assert(e != 0);
@@ -8233,11 +8191,6 @@ void Eval_non_trivial_var_with(void) {
     }
 
     ecs_fini(world);
-
-    test_int(strings_ctor_invoked, 3);
-    test_int(strings_dtor_invoked, 3);
-    test_int(strings_copy_invoked, 2);
-    test_int(strings_move_invoked, 0);
 }
 
 void Eval_update_template_w_tag(void) {

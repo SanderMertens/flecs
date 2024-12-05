@@ -1,11 +1,12 @@
 /**
- * @file addons/script/exor_visit.h
- * @brief Script AST visitor utilities.
+ * @file addons/script/expr/expr.h
+ * @brief Script expression support.
  */
 
 #ifndef FLECS_EXPR_SCRIPT_H
 #define FLECS_EXPR_SCRIPT_H
 
+#include "stack.h"
 #include "ast.h"
 #include "visit.h"
 
