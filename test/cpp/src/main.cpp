@@ -1026,6 +1026,7 @@ void ComponentLifecycle_compare_WithEqualsAndGreaterThan(void);
 void ComponentLifecycle_compare_WithEqualsAndLessThan(void);
 void ComponentLifecycle_compare_WithEqualsOnly(void);
 void ComponentLifecycle_compare_WithoutOperators(void);
+void ComponentLifecycle_compare_Enum(void);
 
 // Testsuite 'Refs'
 void Refs_get_ref_by_ptr(void);
@@ -5411,6 +5412,10 @@ bake_test_case ComponentLifecycle_testcases[] = {
     {
         "compare_WithoutOperators",
         ComponentLifecycle_compare_WithoutOperators
+    },
+    {
+        "compare_Enum",
+        ComponentLifecycle_compare_Enum
     }
 };
 
@@ -7003,7 +7008,7 @@ static bake_test_suite suites[] = {
         "ComponentLifecycle",
         NULL,
         NULL,
-        96,
+        97,
         ComponentLifecycle_testcases
     },
     {
