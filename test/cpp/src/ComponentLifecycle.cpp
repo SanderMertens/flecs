@@ -2604,3 +2604,32 @@ void ComponentLifecycle_compare_WithoutOperators(void) {
     test_assert(compare(ecs, component, &b, &b) == 0);    
 }
 
+
+enum TestColorEnum {
+    Red = 1,
+    Yellow = 2,
+    Blue = 3
+};
+
+void ComponentLifecycle_compare_Enum(void) {
+
+    flecs::world ecs;
+
+    auto component = ecs.component<TestColorEnum>();
+
+    const ecs_type_hooks_t* hooks = ecs_get_hooks_id(ecs, component);
+
+    test_assert(!(hooks->flags & ECS_TYPE_HOOK_CMP_ILLEGAL));
+    test_assert(!(hooks->flags & ECS_TYPE_HOOK_EQUALS_ILLEGAL));
+
+    TestColorEnum a = TestColorEnum::Red;
+    TestColorEnum b = TestColorEnum::Yellow;
+    TestColorEnum c = TestColorEnum::Red;
+
+    test_assert(compare(ecs, component, &a, &b) < 0);
+    test_assert(compare(ecs, component, &b, &a) > 0);
+    test_assert(compare(ecs, component, &a, &c) == 0);
+    test_assert(compare(ecs, component, &b, &c) > 0);
+    test_assert(compare(ecs, component, &c, &b) < 0);
+    test_assert(compare(ecs, component, &b, &b) == 0);    
+}
