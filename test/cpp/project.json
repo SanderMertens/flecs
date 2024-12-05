@@ -1090,7 +1090,8 @@
                 "compare_WithEqualsAndGreaterThan",
                 "compare_WithEqualsAndLessThan",
                 "compare_WithEqualsOnly",
-                "compare_WithoutOperators"
+                "compare_WithoutOperators",
+                "compare_Enum"
             ]
         }, {
             "id": "Refs",
