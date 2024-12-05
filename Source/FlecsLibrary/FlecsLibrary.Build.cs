@@ -13,6 +13,40 @@ public class FlecsLibrary : ModuleRules
         
         OptimizationLevel = OptimizationMode.Speed;
         
+        PublicDefinitions.AddRange(
+            new string[]
+            {
+                "FLECS_CUSTOM_BUILD",
+                "FLECS_CPP",
+                "FLECS_MODULE",
+                "FLECS_SCRIPT",
+                "FLECS_SYSTEM",
+                "FLECS_PIPELINE",
+                "FLECS_TIMER",
+                "FLECS_META",
+                "FLECS_JSON",
+                "FLECS_UNITS",
+            }
+        );
+        
+        // Not Packaged
+        if (Target.bBuildEditor)
+        {
+            PublicDefinitions.AddRange(
+                new string[]
+                {
+                    "FLECS_STATS",
+                    "FLECS_METRICS",
+                    "FLECS_ALERTS",
+                    "FLECS_DOC",
+                    "FLECS_LOG",
+                    "FLECS_PERF_TRACE",
+                    "FLECS_HTTP",
+                    "FLECS_REST",
+                }
+            );
+        }
+        
         PublicIncludePaths.AddRange(
             new string[] {
                 ModuleDirectory + "/ThirdParty/Public",
