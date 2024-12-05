@@ -95,16 +95,6 @@ int flecs_expr_binary_visit_fold(
     ecs_expr_value_node_t *result = flecs_expr_value_from(
         script, (ecs_expr_node_t*)node, node->node.type);
 
-    /* Handle bitmask separately since it's not done by switch */
-    if (ecs_get(script->world, node->node.type, EcsBitmask) != NULL) {
-        ecs_assert(node->left->type == node->node.type, 
-            ECS_INTERNAL_ERROR, NULL);
-        ecs_assert(node->right->type == node->node.type, 
-            ECS_INTERNAL_ERROR, NULL);
-        result->storage.u32 = *(uint32_t*)left->ptr | *(uint32_t*)right->ptr;
-        goto done;
-    }
-
     ecs_value_t lop = { .type = left->node.type, .ptr = left->ptr };
     ecs_value_t rop = { .type = right->node.type, .ptr = right->ptr };
     ecs_value_t res = { .type = result->node.type, .ptr = result->ptr };
@@ -113,7 +103,6 @@ int flecs_expr_binary_visit_fold(
         goto error;
     }
 
-done:
     flecs_visit_fold_replace(script, node_ptr, (ecs_expr_node_t*)result);
     return 0;
 error:  
@@ -289,37 +278,17 @@ int flecs_expr_identifier_visit_fold(
     ecs_expr_node_t **node_ptr,
     const ecs_script_expr_run_desc_t *desc)
 {
+    (void)desc;
+
     ecs_expr_identifier_t *node = (ecs_expr_identifier_t*)*node_ptr;
-    ecs_entity_t type = node->node.type;
 
-    ecs_expr_value_node_t *result = flecs_expr_value_from(
-        script, (ecs_expr_node_t*)node, type);
-
-    if (type == ecs_id(ecs_entity_t)) {
-        result->storage.entity = desc->lookup_action(
-            script->world, node->value, desc->lookup_ctx);
-        if (!result->storage.entity) {
-            flecs_script_expr_visit_free(script, (ecs_expr_node_t*)result);
-            flecs_expr_visit_error(script, node, 
-                "unresolved identifier '%s'", node->value);
-            goto error;
-        }
-        result->ptr = &result->storage.entity;
-    } else {
-        ecs_meta_cursor_t cur = ecs_meta_cursor(
-            script->world, type, &result->storage.u64);
-        if (ecs_meta_set_string(&cur, node->value)) {
-            flecs_script_expr_visit_free(script, (ecs_expr_node_t*)result);
-            goto error;
-        }
-        result->ptr = &result->storage.u64;
+    ecs_expr_node_t *expr = node->expr;
+    if (expr) {
+        node->expr = NULL;
+        flecs_visit_fold_replace(script, node_ptr, expr);
     }
 
-    flecs_visit_fold_replace(script, node_ptr, (ecs_expr_node_t*)result);
-
     return 0;
-error:
-    return -1;
 }
 
 static

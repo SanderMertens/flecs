@@ -454,6 +454,7 @@ typedef struct ecs_script_expr_run_desc_t {
     void *lookup_ctx;
     ecs_script_vars_t *vars;
     ecs_entity_t type;
+    bool disable_folding;
     ecs_script_runtime_t *runtime;
 } ecs_script_expr_run_desc_t;
 

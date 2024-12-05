@@ -1,10 +1,26 @@
 #include <script.h>
 
+static ecs_query_cache_kind_t disable_folding = false;
+
+void Expr_setup(void) {
+    const char *folding_param = test_param("folding");
+    if (folding_param) {
+        if (!strcmp(folding_param, "disabled")) {
+            disable_folding = true;
+        } else if (!strcmp(folding_param, "enabled")) {
+            // already set to default
+        } else {
+            printf("unexpected value for folding '%s'\n", folding_param);
+        }
+    }
+}
+
 void Expr_add_2_int_literals(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
-    test_assert(ecs_script_expr_run(world, "10 + 20", &v, NULL) != NULL);
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_script_expr_run(world, "10 + 20", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_uint(*(uint64_t*)v.ptr, 10 + 20);
@@ -17,12 +33,13 @@ void Expr_add_2_int_literals_twice(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
-    test_assert(ecs_script_expr_run(world, "10 + 20", &v, NULL) != NULL);
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_script_expr_run(world, "10 + 20", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_uint(*(uint64_t*)v.ptr, 10 + 20);
 
-    test_assert(ecs_script_expr_run(world, "10 + 20", &v, NULL) != NULL);
+    test_assert(ecs_script_expr_run(world, "10 + 20", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_uint(*(uint64_t*)v.ptr, 10 + 20);
@@ -35,7 +52,8 @@ void Expr_sub_2_int_literals(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
-    test_assert(ecs_script_expr_run(world, "20 - 10", &v, NULL) != NULL);
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_script_expr_run(world, "20 - 10", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_int(*(int64_t*)v.ptr, 20 - 10);
@@ -48,7 +66,8 @@ void Expr_mul_2_int_literals(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
-    test_assert(ecs_script_expr_run(world, "20 * 10", &v, NULL) != NULL);
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_script_expr_run(world, "20 * 10", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_uint(*(ecs_u64_t*)v.ptr, 20 * 10);
@@ -61,7 +80,8 @@ void Expr_div_2_int_literals(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
-    test_assert(ecs_script_expr_run(world, "10 / 2", &v, NULL) != NULL);
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_script_expr_run(world, "10 / 2", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_f64_t));
     test_assert(v.ptr != NULL);
     test_flt(*(ecs_f64_t*)v.ptr, 10 / 2);
@@ -74,7 +94,8 @@ void Expr_add_3_int_literals(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
-    test_assert(ecs_script_expr_run(world, "10 + 20 + 30", &v, NULL) != NULL);
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_script_expr_run(world, "10 + 20 + 30", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_uint(*(uint64_t*)v.ptr, 10 + 20 + 30);
@@ -87,12 +108,13 @@ void Expr_add_3_int_literals_twice(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
-    test_assert(ecs_script_expr_run(world, "10 + 20 + 30", &v, NULL) != NULL);
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_script_expr_run(world, "10 + 20 + 30", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_uint(*(uint64_t*)v.ptr, 10 + 20 + 30);
 
-    test_assert(ecs_script_expr_run(world, "10 + 20 + 30", &v, NULL) != NULL);
+    test_assert(ecs_script_expr_run(world, "10 + 20 + 30", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_uint(*(uint64_t*)v.ptr, 10 + 20 + 30);
@@ -105,7 +127,8 @@ void Expr_sub_3_int_literals(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
-    test_assert(ecs_script_expr_run(world, "30 - 10 - 5", &v, NULL) != NULL);
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_script_expr_run(world, "30 - 10 - 5", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_int(*(ecs_i64_t*)v.ptr, 30 - 10 - 5);
@@ -118,7 +141,8 @@ void Expr_mul_3_int_literals(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
-    test_assert(ecs_script_expr_run(world, "2 * 5 * 10", &v, NULL) != NULL);
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_script_expr_run(world, "2 * 5 * 10", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_uint(*(ecs_i64_t*)v.ptr, 2 * 5 * 10);
@@ -131,7 +155,8 @@ void Expr_div_3_int_literals(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
-    test_assert(ecs_script_expr_run(world, "40 / 5 / 2", &v, NULL) != NULL);
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_script_expr_run(world, "40 / 5 / 2", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_f64_t));
     test_assert(v.ptr != NULL);
     test_flt(*(ecs_f64_t*)v.ptr, 40 / 5 / 2);
@@ -145,18 +170,18 @@ void Expr_int_to_bool(void) {
 
     bool b = false;
     ecs_value_t v = { .type = ecs_id(ecs_bool_t), .ptr = &b };
-
-    test_assert(ecs_script_expr_run(world, "10", &v, NULL) != NULL);
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_script_expr_run(world, "10", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_flt(*(ecs_bool_t*)v.ptr, true);
 
-    test_assert(ecs_script_expr_run(world, "0", &v, NULL) != NULL);
+    test_assert(ecs_script_expr_run(world, "0", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_flt(*(ecs_bool_t*)v.ptr, false);
 
-    test_assert(ecs_script_expr_run(world, "256", &v, NULL) != NULL);
+    test_assert(ecs_script_expr_run(world, "256", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_flt(*(ecs_bool_t*)v.ptr, true);
@@ -169,13 +194,13 @@ void Expr_bool_to_int(void) {
 
     int32_t i = 0;
     ecs_value_t v = { .type = ecs_id(ecs_i32_t), .ptr = &i };
-
-    test_assert(ecs_script_expr_run(world, "true", &v, NULL) != NULL);
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_script_expr_run(world, "true", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_i32_t));
     test_assert(v.ptr != NULL);
     test_flt(*(ecs_i32_t*)v.ptr, 1);
 
-    test_assert(ecs_script_expr_run(world, "false", &v, NULL) != NULL);
+    test_assert(ecs_script_expr_run(world, "false", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_i32_t));
     test_assert(v.ptr != NULL);
     test_flt(*(ecs_i32_t*)v.ptr, 0);
@@ -188,13 +213,13 @@ void Expr_bool_to_uint(void) {
 
     uint32_t i = 0;
     ecs_value_t v = { .type = ecs_id(ecs_u32_t), .ptr = &i };
-
-    test_assert(ecs_script_expr_run(world, "true", &v, NULL) != NULL);
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_script_expr_run(world, "true", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_u32_t));
     test_assert(v.ptr != NULL);
     test_flt(*(ecs_u32_t*)v.ptr, 1);
 
-    test_assert(ecs_script_expr_run(world, "false", &v, NULL) != NULL);
+    test_assert(ecs_script_expr_run(world, "false", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_u32_t));
     test_assert(v.ptr != NULL);
     test_flt(*(ecs_u32_t*)v.ptr, 0);
@@ -206,7 +231,8 @@ void Expr_add_mul_3_int_literals(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
-    test_assert(ecs_script_expr_run(world, "10 + 20 * 2", &v, NULL) != NULL);
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_script_expr_run(world, "10 + 20 * 2", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_uint(*(uint64_t*)v.ptr, 10 + 20 * 2);
@@ -219,7 +245,8 @@ void Expr_sub_mul_3_int_literals(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
-    test_assert(ecs_script_expr_run(world, "50 - 10 * 2", &v, NULL) != NULL);
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_script_expr_run(world, "50 - 10 * 2", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_int(*(int64_t*)v.ptr, 50 - 10 * 2);
@@ -232,7 +259,8 @@ void Expr_div_mul_3_int_literals(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
-    test_assert(ecs_script_expr_run(world, "10 / 5 * 2", &v, NULL) != NULL);
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_script_expr_run(world, "10 / 5 * 2", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_f64_t));
     test_assert(v.ptr != NULL);
     test_flt(*(ecs_f64_t*)v.ptr, 10 / 5 * 2);
@@ -245,7 +273,8 @@ void Expr_add_div_3_int_literals(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
-    test_assert(ecs_script_expr_run(world, "10 + 30 / 2", &v, NULL) != NULL);
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_script_expr_run(world, "10 + 30 / 2", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_f64_t));
     test_assert(v.ptr != NULL);
     test_uint(*(ecs_f64_t*)v.ptr, 10 + 30 / 2);
@@ -258,7 +287,8 @@ void Expr_sub_div_3_int_literals(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
-    test_assert(ecs_script_expr_run(world, "30 - 10 / 2", &v, NULL) != NULL);
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_script_expr_run(world, "30 - 10 / 2", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_f64_t));
     test_assert(v.ptr != NULL);
     test_uint(*(ecs_f64_t*)v.ptr, 30 - 10 / 2);
@@ -271,7 +301,8 @@ void Expr_mul_div_3_int_literals(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
-    test_assert(ecs_script_expr_run(world, "20 * 10 / 2", &v, NULL) != NULL);
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_script_expr_run(world, "20 * 10 / 2", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_f64_t));
     test_assert(v.ptr != NULL);
     test_uint(*(ecs_f64_t*)v.ptr, 20 * 10 / 2);
@@ -284,7 +315,8 @@ void Expr_mul_add_mul_add_int_literals(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
-    test_assert(ecs_script_expr_run(world, "2 * 4 + 6 * 8 + 10", &v, NULL) != NULL);
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_script_expr_run(world, "2 * 4 + 6 * 8 + 10", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_uint(*(ecs_i64_t*)v.ptr, 2 * 4 + 6 * 8 + 10);
@@ -297,7 +329,8 @@ void Expr_mul_sub_mul_sub_int_literals(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
-    test_assert(ecs_script_expr_run(world, "2 * 4 - 6 * 8 - 10", &v, NULL) != NULL);
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_script_expr_run(world, "2 * 4 - 6 * 8 - 10", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_int(*(ecs_i64_t*)v.ptr, 2 * 4 - 6 * 8 - 10);
@@ -310,7 +343,8 @@ void Expr_mul_div_mul_div_int_literals(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
-    test_assert(ecs_script_expr_run(world, "2 * 4 / 6 * 8 / 10", &v, NULL) != NULL);
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_script_expr_run(world, "2 * 4 / 6 * 8 / 10", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_f64_t));
     test_assert(v.ptr != NULL);
     test_flt(*(ecs_f64_t*)v.ptr, 2.0 * 4.0 / 6.0 * 8.0 / 10.0);
@@ -323,7 +357,8 @@ void Expr_div_add_div_add_int_literals(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
-    test_assert(ecs_script_expr_run(world, "2 / 4 + 6 / 8 + 10", &v, NULL) != NULL);
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_script_expr_run(world, "2 / 4 + 6 / 8 + 10", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_f64_t));
     test_assert(v.ptr != NULL);
     test_flt(*(ecs_f64_t*)v.ptr, 2.0 / 4.0 + 6.0 / 8.0 + 10.0);
@@ -336,7 +371,8 @@ void Expr_div_sub_div_sub_int_literals(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
-    test_assert(ecs_script_expr_run(world, "2 / 4 - 6 / 8 - 10", &v, NULL) != NULL);
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_script_expr_run(world, "2 / 4 - 6 / 8 - 10", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_f64_t));
     test_assert(v.ptr != NULL);
     test_flt(*(ecs_f64_t*)v.ptr, 2.0 / 4.0 - 6.0 / 8.0 - 10.0);
@@ -349,7 +385,8 @@ void Expr_div_mul_div_mul_int_literals(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
-    test_assert(ecs_script_expr_run(world, "2 / 4 * 6 / 8 * 10", &v, NULL) != NULL);
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_script_expr_run(world, "2 / 4 * 6 / 8 * 10", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_f64_t));
     test_assert(v.ptr != NULL);
     test_flt(*(ecs_f64_t*)v.ptr, 2.0 / 4.0 * 6.0 / 8.0 * 10.0);
@@ -362,7 +399,8 @@ void Expr_div_sub_div_mul_int_literals(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
-    test_assert(ecs_script_expr_run(world, "2 / 4 - 6 / 8 * 10", &v, NULL) != NULL);
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_script_expr_run(world, "2 / 4 - 6 / 8 * 10", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_f64_t));
     test_assert(v.ptr != NULL);
     test_flt(*(ecs_f64_t*)v.ptr, 2.0 / 4.0 - 6.0 / 8.0 * 10.0);
@@ -375,7 +413,8 @@ void Expr_add_2_flt_literals(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
-    test_assert(ecs_script_expr_run(world, "10.5 + 20.0", &v, NULL) != NULL);
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_script_expr_run(world, "10.5 + 20.0", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_f64_t));
     test_assert(v.ptr != NULL);
     test_flt(*(ecs_f64_t*)v.ptr, 10.5 + 20.0);
@@ -388,7 +427,8 @@ void Expr_sub_2_flt_literals(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
-    test_assert(ecs_script_expr_run(world, "20.5 - 10.0", &v, NULL) != NULL);
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_script_expr_run(world, "20.5 - 10.0", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_f64_t));
     test_assert(v.ptr != NULL);
     test_flt(*(ecs_f64_t*)v.ptr, 20.5 - 10.0);
@@ -401,7 +441,8 @@ void Expr_mul_2_flt_literals(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
-    test_assert(ecs_script_expr_run(world, "20.5 * 10.0", &v, NULL) != NULL);
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_script_expr_run(world, "20.5 * 10.0", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_f64_t));
     test_assert(v.ptr != NULL);
     test_flt(*(ecs_f64_t*)v.ptr, 20.5 * 10.0);
@@ -414,7 +455,8 @@ void Expr_div_2_flt_literals(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
-    test_assert(ecs_script_expr_run(world, "10.5 / 2.0", &v, NULL) != NULL);
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_script_expr_run(world, "10.5 / 2.0", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_f64_t));
     test_assert(v.ptr != NULL);
     test_flt(*(ecs_f64_t*)v.ptr, 10.5 / 2.0);
@@ -427,7 +469,8 @@ void Expr_add_2_int_neg_literals(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
-    test_assert(ecs_script_expr_run(world, "-10 + -20", &v, NULL) != NULL);
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_script_expr_run(world, "-10 + -20", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_int(*(ecs_i64_t*)v.ptr, -10 + -20);
@@ -440,7 +483,8 @@ void Expr_sub_2_int_neg_literals(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
-    test_assert(ecs_script_expr_run(world, "-10 - -20", &v, NULL) != NULL);
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_script_expr_run(world, "-10 - -20", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_int(*(ecs_i64_t*)v.ptr, -10 - -20);
@@ -453,7 +497,8 @@ void Expr_mul_2_int_neg_literals(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
-    test_assert(ecs_script_expr_run(world, "-10 * -20", &v, NULL) != NULL);
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_script_expr_run(world, "-10 * -20", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_int(*(ecs_i64_t*)v.ptr, -10 * -20);
@@ -466,7 +511,8 @@ void Expr_div_2_int_neg_literals(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
-    test_assert(ecs_script_expr_run(world, "-10 / -20", &v, NULL) != NULL);
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_script_expr_run(world, "-10 / -20", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_f64_t));
     test_assert(v.ptr != NULL);
     test_flt(*(ecs_f64_t*)v.ptr, -10.0 / -20.0);
@@ -479,7 +525,8 @@ void Expr_mul_lparen_add_add_rparen_int_literals(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
-    test_assert(ecs_script_expr_run(world, "10 * (20 + 30)", &v, NULL) != NULL);
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_script_expr_run(world, "10 * (20 + 30)", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_uint(*(ecs_i64_t*)v.ptr, 10 * (20 + 30));
@@ -492,7 +539,8 @@ void Expr_mul_lparen_add_add_add_rparen_int_literals(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
-    test_assert(ecs_script_expr_run(world, "10 * (20 + 30 + 40)", &v, NULL) != NULL);
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_script_expr_run(world, "10 * (20 + 30 + 40)", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_uint(*(ecs_i64_t*)v.ptr, 10 * (20 + 30 + 40));
@@ -505,7 +553,8 @@ void Expr_mul_lparen_add_add_rparen_add_int_literals(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
-    test_assert(ecs_script_expr_run(world, "10 * (20 + 30) + 40", &v, NULL) != NULL);
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_script_expr_run(world, "10 * (20 + 30) + 40", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_uint(*(ecs_i64_t*)v.ptr, 10 * (20 + 30) + 40);
@@ -518,7 +567,8 @@ void Expr_lparen_add_add_rparen_mul_int_literals(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
-    test_assert(ecs_script_expr_run(world, "(20 + 30) * 10", &v, NULL) != NULL);
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_script_expr_run(world, "(20 + 30) * 10", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_uint(*(ecs_i64_t*)v.ptr, (20 + 30) * 10);
@@ -531,7 +581,8 @@ void Expr_lparen_add_add_add_rparen_mul_int_literals(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
-    test_assert(ecs_script_expr_run(world, "(20 + 30 + 40) * 10", &v, NULL) != NULL);
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_script_expr_run(world, "(20 + 30 + 40) * 10", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_uint(*(ecs_i64_t*)v.ptr, (20 + 30 + 40) * 10);
@@ -544,7 +595,8 @@ void Expr_double_paren_add_add(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
-    test_assert(ecs_script_expr_run(world, "((20 + 30))", &v, NULL) != NULL);
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_script_expr_run(world, "((20 + 30))", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_uint(*(ecs_i64_t*)v.ptr, ((20 + 30)));
@@ -557,7 +609,8 @@ void Expr_double_paren_literal(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
-    test_assert(ecs_script_expr_run(world, "((20))", &v, NULL) != NULL);
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_script_expr_run(world, "((20))", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_uint(*(ecs_i64_t*)v.ptr, ((20)));
@@ -570,7 +623,8 @@ void Expr_lparen_add_add_rparen_mul_lparen_add_add_rparen(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
-    test_assert(ecs_script_expr_run(world, "(10 + 20) * (20 + 30)", &v, NULL) != NULL);
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_script_expr_run(world, "(10 + 20) * (20 + 30)", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_uint(*(ecs_i64_t*)v.ptr, (10 + 20) * (20 + 30));
@@ -587,7 +641,8 @@ void Expr_float_result_add_2_int_literals(void) {
         .type = ecs_id(ecs_f32_t),
         .ptr = &value
     };
-    test_assert(ecs_script_expr_run(world, "10 + 20", &v, NULL) != NULL);
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_script_expr_run(world, "10 + 20", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_f32_t));
     test_assert(v.ptr != NULL);
     test_flt(value, 10 + 20);
@@ -611,9 +666,10 @@ void Expr_struct_result_implicit_members(void) {
     });
 
     Position v = {0};
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
     const char *ptr = ecs_script_expr_run(world, "{5 + 5, 10 + 10}", &(ecs_value_t){
         .type = t, .ptr = &v
-    }, NULL);
+    }, &desc);
     test_assert(ptr != NULL);
     test_assert(!ptr[0]);
 
@@ -639,9 +695,10 @@ void Expr_struct_result_explicit_members(void) {
     });
 
     Position v = {0};
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
     const char *ptr = ecs_script_expr_run(world, "{x: 5 + 5, y: 10 + 10}", &(ecs_value_t){
         .type = t, .ptr = &v
-    }, NULL);
+    }, &desc);
     test_assert(ptr != NULL);
     test_assert(!ptr[0]);
 
@@ -668,9 +725,10 @@ void Expr_struct_result_explicit_members_reverse(void) {
     });
 
     Position v = {0};
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
     const char *ptr = ecs_script_expr_run(world, "{y: 5 + 5, x: 10 + 10}", &(ecs_value_t){
         .type = t, .ptr = &v
-    }, NULL);
+    }, &desc);
     test_assert(ptr != NULL);
     test_assert(!ptr[0]);
 
@@ -708,10 +766,11 @@ void Expr_struct_result_nested_implicit_members(void) {
     });
 
     Line v = {0};
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
     const char *ptr = ecs_script_expr_run(world, "{{5 + 5, 10 + 10}, {10 + 20, 20 + 20}}", 
         &(ecs_value_t){
             .type = line, .ptr = &v
-        }, NULL);
+        }, &desc);
     test_assert(ptr != NULL);
     test_assert(!ptr[0]);
 
@@ -753,11 +812,12 @@ void Expr_struct_result_nested_explicit_members(void) {
     });
 
     Line v = {0};
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
     const char *ptr = ecs_script_expr_run(world, 
         "{start: {x: 5 + 5, y: 10 + 10}, stop: {x: 10 + 20, y: 20 + 20}}", 
         &(ecs_value_t){
             .type = line, .ptr = &v
-        }, NULL);
+        }, &desc);
     test_assert(ptr != NULL);
     test_assert(!ptr[0]);
 
@@ -799,11 +859,12 @@ void Expr_struct_result_nested_explicit_members_reverse(void) {
     });
 
     Line v = {0};
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
     const char *ptr = ecs_script_expr_run(world, 
         "{stop: {x: 5 + 5, y: 10 + 10}, start: {x: 10 + 20, y: 20 + 20}}", 
         &(ecs_value_t){
             .type = line, .ptr = &v
-        }, NULL);
+        }, &desc);
     test_assert(ptr != NULL);
     test_assert(!ptr[0]);
 
@@ -845,11 +906,12 @@ void Expr_struct_result_nested_explicit_dotmembers(void) {
     });
 
     Line v = {0};
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
     const char *ptr = ecs_script_expr_run(world, 
         "{stop.x: 5 + 5, start.x: 10 + 10, stop.y: 10 + 20, start.y: 20 + 20}", 
         &(ecs_value_t){
             .type = line, .ptr = &v
-        }, NULL);
+        }, &desc);
     test_assert(ptr != NULL);
     test_assert(!ptr[0]);
 
@@ -875,9 +937,10 @@ void Expr_struct_result_add_2_int_literals(void) {
     });
 
     Mass v = {0};
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
     const char *ptr = ecs_script_expr_run(world, "{10 + 20}", &(ecs_value_t){
         .type = t, .ptr = &v
-    }, NULL);
+    }, &desc);
     test_assert(ptr != NULL);
     test_assert(!ptr[0]);
 
@@ -902,9 +965,10 @@ void Expr_struct_result_add_2_2_fields_int_literals(void) {
     });
 
     Mass v = {0};
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
     const char *ptr = ecs_script_expr_run(world, "{10 + 20, 20 + 30}", &(ecs_value_t){
         .type = t, .ptr = &v
-    }, NULL);
+    }, &desc);
     test_assert(ptr != NULL);
     test_assert(!ptr[0]);
 
@@ -928,9 +992,10 @@ void Expr_struct_result_add_3_int_literals(void) {
     });
 
     Mass v = {0};
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
     const char *ptr = ecs_script_expr_run(world, "{10 + 20 + 30}", &(ecs_value_t){
         .type = t, .ptr = &v
-    }, NULL);
+    }, &desc);
     test_assert(ptr != NULL);
     test_assert(!ptr[0]);
 
@@ -953,9 +1018,10 @@ void Expr_struct_result_lparen_int_rparen(void) {
     });
 
     Mass v = {0};
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
     const char *ptr = ecs_script_expr_run(world, "{(10)}", &(ecs_value_t){
         .type = t, .ptr = &v
-    }, NULL);
+    }, &desc);
     test_assert(ptr != NULL);
     test_assert(!ptr[0]);
 
@@ -974,7 +1040,7 @@ void Expr_add_to_var(void) {
     *(int32_t*)var->value.ptr = 10;
 
     ecs_value_t v = {0};
-    ecs_script_expr_run_desc_t desc = { .vars = vars };
+    ecs_script_expr_run_desc_t desc = { .vars = vars, .disable_folding = disable_folding };
     const char *ptr = ecs_script_expr_run(world, "$foo + 20", &v, &desc);
     test_assert(ptr != NULL);
     test_assert(!ptr[0]);
@@ -995,7 +1061,7 @@ void Expr_add_var_to(void) {
     *(int32_t*)var->value.ptr = 10;
 
     ecs_value_t v = {0};
-    ecs_script_expr_run_desc_t desc = { .vars = vars };
+    ecs_script_expr_run_desc_t desc = { .vars = vars, .disable_folding = disable_folding };
     const char *ptr = ecs_script_expr_run(world, "20 + $foo", &v, &desc);
     test_assert(ptr != NULL);
     test_assert(!ptr[0]);
@@ -1025,7 +1091,7 @@ void Expr_var_member(void) {
         vars, "foo", PositionI);
     *(PositionI*)var->value.ptr = (PositionI){10, 20};
 
-    ecs_script_expr_run_desc_t desc = { .vars = vars };
+    ecs_script_expr_run_desc_t desc = { .vars = vars, .disable_folding = disable_folding };
     {
         ecs_value_t v = {0};
         const char *ptr = ecs_script_expr_run(world, "$foo.x", &v, &desc);
@@ -1082,7 +1148,7 @@ void Expr_var_member_member(void) {
         vars, "foo", Line);
     *(Line*)var->value.ptr = (Line){{10, 20}, {30, 40}};
 
-    ecs_script_expr_run_desc_t desc = { .vars = vars };
+    ecs_script_expr_run_desc_t desc = { .vars = vars, .disable_folding = disable_folding };
     {
         ecs_value_t v = {0};
         const char *ptr = ecs_script_expr_run(world, "$foo.start.x", &v, &desc);
@@ -1140,7 +1206,7 @@ void Expr_var_element(void) {
     ((int*)var->value.ptr)[0] = 10;
     ((int*)var->value.ptr)[1] = 20;
 
-    ecs_script_expr_run_desc_t desc = { .vars = vars };
+    ecs_script_expr_run_desc_t desc = { .vars = vars, .disable_folding = disable_folding };
     {
         ecs_value_t v = {0};
         const char *ptr = ecs_script_expr_run(world, "$foo[0]", &v, &desc);
@@ -1186,7 +1252,7 @@ void Expr_var_element_element(void) {
     Ints value[] = {{10, 20}, {30, 40}, {50, 60}};
     ecs_os_memcpy(var->value.ptr, value, sizeof(value));
 
-    ecs_script_expr_run_desc_t desc = { .vars = vars };
+    ecs_script_expr_run_desc_t desc = { .vars = vars, .disable_folding = disable_folding };
     {
         ecs_value_t v = {0};
         const char *ptr = ecs_script_expr_run(world, "$foo[0][0]", &v, &desc);
@@ -1254,7 +1320,7 @@ void Expr_var_member_element(void) {
         vars, "foo", Points);
     *((Points*)var->value.ptr) = (Points){{10, 20}, {30, 40}};
 
-    ecs_script_expr_run_desc_t desc = { .vars = vars };
+    ecs_script_expr_run_desc_t desc = { .vars = vars, .disable_folding = disable_folding };
     {
         ecs_value_t v = {0};
         const char *ptr = ecs_script_expr_run(world, "$foo.x[0]", &v, &desc);
@@ -1317,7 +1383,7 @@ void Expr_var_member_element_inline(void) {
         vars, "foo", Points);
     *((Points*)var->value.ptr) = (Points){{10, 20}, {30, 40}};
 
-    ecs_script_expr_run_desc_t desc = { .vars = vars };
+    ecs_script_expr_run_desc_t desc = { .vars = vars, .disable_folding = disable_folding };
     {
         ecs_value_t v = {0};
         const char *ptr = ecs_script_expr_run(world, "$foo.x[0]", &v, &desc);
@@ -1386,7 +1452,7 @@ void Expr_var_element_member(void) {
     ((Point*)var->value.ptr)[0] = (Point){10, 20};
     ((Point*)var->value.ptr)[1] = (Point){30, 40};
 
-    ecs_script_expr_run_desc_t desc = { .vars = vars };
+    ecs_script_expr_run_desc_t desc = { .vars = vars, .disable_folding = disable_folding };
     {
         ecs_value_t v = {0};
         const char *ptr = ecs_script_expr_run(world, "$foo[0].x", &v, &desc);
@@ -1432,22 +1498,23 @@ void Expr_bool_cond_and_bool(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
-    test_assert(ecs_script_expr_run(world, "true && true", &v, NULL) != NULL);
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_script_expr_run(world, "true && true", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, true);
 
-    test_assert(ecs_script_expr_run(world, "true && false", &v, NULL) != NULL);
+    test_assert(ecs_script_expr_run(world, "true && false", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, false);
 
-    test_assert(ecs_script_expr_run(world, "false && true", &v, NULL) != NULL);
+    test_assert(ecs_script_expr_run(world, "false && true", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, false);
 
-    test_assert(ecs_script_expr_run(world, "false && false", &v, NULL) != NULL);
+    test_assert(ecs_script_expr_run(world, "false && false", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, false);
@@ -1460,22 +1527,23 @@ void Expr_bool_cond_or_bool(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
-    test_assert(ecs_script_expr_run(world, "true || true", &v, NULL) != NULL);
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_script_expr_run(world, "true || true", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, true);
 
-    test_assert(ecs_script_expr_run(world, "true || false", &v, NULL) != NULL);
+    test_assert(ecs_script_expr_run(world, "true || false", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, true);
 
-    test_assert(ecs_script_expr_run(world, "false || true", &v, NULL) != NULL);
+    test_assert(ecs_script_expr_run(world, "false || true", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, true);
 
-    test_assert(ecs_script_expr_run(world, "false || false", &v, NULL) != NULL);
+    test_assert(ecs_script_expr_run(world, "false || false", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, false);
@@ -1488,22 +1556,23 @@ void Expr_int_cond_and_int(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
-    test_assert(ecs_script_expr_run(world, "10 && 10", &v, NULL) != NULL);
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_script_expr_run(world, "10 && 10", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, true);
 
-    test_assert(ecs_script_expr_run(world, "10 && 0", &v, NULL) != NULL);
+    test_assert(ecs_script_expr_run(world, "10 && 0", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, false);
 
-    test_assert(ecs_script_expr_run(world, "0 && 10", &v, NULL) != NULL);
+    test_assert(ecs_script_expr_run(world, "0 && 10", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, false);
 
-    test_assert(ecs_script_expr_run(world, "0 && 0", &v, NULL) != NULL);
+    test_assert(ecs_script_expr_run(world, "0 && 0", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, false);
@@ -1516,22 +1585,23 @@ void Expr_int_cond_or_int(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
-    test_assert(ecs_script_expr_run(world, "10 || 10", &v, NULL) != NULL);
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_script_expr_run(world, "10 || 10", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, true);
 
-    test_assert(ecs_script_expr_run(world, "10 || 0", &v, NULL) != NULL);
+    test_assert(ecs_script_expr_run(world, "10 || 0", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, true);
 
-    test_assert(ecs_script_expr_run(world, "0 || 10", &v, NULL) != NULL);
+    test_assert(ecs_script_expr_run(world, "0 || 10", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, true);
 
-    test_assert(ecs_script_expr_run(world, "0 || 0", &v, NULL) != NULL);
+    test_assert(ecs_script_expr_run(world, "0 || 0", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, false);
@@ -1544,22 +1614,23 @@ void Expr_bool_cond_and_int(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
-    test_assert(ecs_script_expr_run(world, "true && 10", &v, NULL) != NULL);
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_script_expr_run(world, "true && 10", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, true);
 
-    test_assert(ecs_script_expr_run(world, "true && 0", &v, NULL) != NULL);
+    test_assert(ecs_script_expr_run(world, "true && 0", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, false);
 
-    test_assert(ecs_script_expr_run(world, "false && 10", &v, NULL) != NULL);
+    test_assert(ecs_script_expr_run(world, "false && 10", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, false);
 
-    test_assert(ecs_script_expr_run(world, "false && 0", &v, NULL) != NULL);
+    test_assert(ecs_script_expr_run(world, "false && 0", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, false);
@@ -1572,22 +1643,23 @@ void Expr_int_cond_and_bool(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
-    test_assert(ecs_script_expr_run(world, "10 && true", &v, NULL) != NULL);
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_script_expr_run(world, "10 && true", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, true);
 
-    test_assert(ecs_script_expr_run(world, "10 && false", &v, NULL) != NULL);
+    test_assert(ecs_script_expr_run(world, "10 && false", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, false);
 
-    test_assert(ecs_script_expr_run(world, "0 && true", &v, NULL) != NULL);
+    test_assert(ecs_script_expr_run(world, "0 && true", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, false);
 
-    test_assert(ecs_script_expr_run(world, "0 && false", &v, NULL) != NULL);
+    test_assert(ecs_script_expr_run(world, "0 && false", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, false);
@@ -1600,22 +1672,23 @@ void Expr_bool_cond_or_int(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
-    test_assert(ecs_script_expr_run(world, "true || 10", &v, NULL) != NULL);
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_script_expr_run(world, "true || 10", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, true);
 
-    test_assert(ecs_script_expr_run(world, "true || 0", &v, NULL) != NULL);
+    test_assert(ecs_script_expr_run(world, "true || 0", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, true);
 
-    test_assert(ecs_script_expr_run(world, "false || 10", &v, NULL) != NULL);
+    test_assert(ecs_script_expr_run(world, "false || 10", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, true);
 
-    test_assert(ecs_script_expr_run(world, "false || 0", &v, NULL) != NULL);
+    test_assert(ecs_script_expr_run(world, "false || 0", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, false);
@@ -1628,22 +1701,23 @@ void Expr_int_cond_or_bool(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
-    test_assert(ecs_script_expr_run(world, "10 || true", &v, NULL) != NULL);
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_script_expr_run(world, "10 || true", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, true);
 
-    test_assert(ecs_script_expr_run(world, "10 || false", &v, NULL) != NULL);
+    test_assert(ecs_script_expr_run(world, "10 || false", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, true);
 
-    test_assert(ecs_script_expr_run(world, "0 || true", &v, NULL) != NULL);
+    test_assert(ecs_script_expr_run(world, "0 || true", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, true);
 
-    test_assert(ecs_script_expr_run(world, "0 || false", &v, NULL) != NULL);
+    test_assert(ecs_script_expr_run(world, "0 || false", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, false);
@@ -1656,22 +1730,23 @@ void Expr_cond_eq_bool(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
-    test_assert(ecs_script_expr_run(world, "true == true", &v, NULL) != NULL);
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_script_expr_run(world, "true == true", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, true);
 
-    test_assert(ecs_script_expr_run(world, "true == false", &v, NULL) != NULL);
+    test_assert(ecs_script_expr_run(world, "true == false", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, false);
 
-    test_assert(ecs_script_expr_run(world, "false == true", &v, NULL) != NULL);
+    test_assert(ecs_script_expr_run(world, "false == true", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, false);
 
-    test_assert(ecs_script_expr_run(world, "false == false", &v, NULL) != NULL);
+    test_assert(ecs_script_expr_run(world, "false == false", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, true);
@@ -1684,22 +1759,23 @@ void Expr_cond_eq_int(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
-    test_assert(ecs_script_expr_run(world, "10 == 10", &v, NULL) != NULL);
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_script_expr_run(world, "10 == 10", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, true);
 
-    test_assert(ecs_script_expr_run(world, "10 == 20", &v, NULL) != NULL);
+    test_assert(ecs_script_expr_run(world, "10 == 20", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, false);
 
-    test_assert(ecs_script_expr_run(world, "10 == 0", &v, NULL) != NULL);
+    test_assert(ecs_script_expr_run(world, "10 == 0", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, false);
 
-    test_assert(ecs_script_expr_run(world, "0 == 0", &v, NULL) != NULL);
+    test_assert(ecs_script_expr_run(world, "0 == 0", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, true);
@@ -1712,22 +1788,23 @@ void Expr_cond_neq_bool(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
-    test_assert(ecs_script_expr_run(world, "true != true", &v, NULL) != NULL);
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_script_expr_run(world, "true != true", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, false);
 
-    test_assert(ecs_script_expr_run(world, "true != false", &v, NULL) != NULL);
+    test_assert(ecs_script_expr_run(world, "true != false", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, true);
 
-    test_assert(ecs_script_expr_run(world, "false != true", &v, NULL) != NULL);
+    test_assert(ecs_script_expr_run(world, "false != true", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, true);
 
-    test_assert(ecs_script_expr_run(world, "false != false", &v, NULL) != NULL);
+    test_assert(ecs_script_expr_run(world, "false != false", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, false);
@@ -1740,22 +1817,23 @@ void Expr_cond_neq_int(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
-    test_assert(ecs_script_expr_run(world, "10 != 10", &v, NULL) != NULL);
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_script_expr_run(world, "10 != 10", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, false);
 
-    test_assert(ecs_script_expr_run(world, "10 != 20", &v, NULL) != NULL);
+    test_assert(ecs_script_expr_run(world, "10 != 20", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, true);
 
-    test_assert(ecs_script_expr_run(world, "10 != 0", &v, NULL) != NULL);
+    test_assert(ecs_script_expr_run(world, "10 != 0", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, true);
 
-    test_assert(ecs_script_expr_run(world, "0 != 0", &v, NULL) != NULL);
+    test_assert(ecs_script_expr_run(world, "0 != 0", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, false);
@@ -1794,17 +1872,18 @@ void Expr_cond_eq_cond_and(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
-    test_assert(ecs_script_expr_run(world, "true == true && false", &v, NULL) != NULL);
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_script_expr_run(world, "true == true && false", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, true == true && false);
 
-    test_assert(ecs_script_expr_run(world, "true && false == false", &v, NULL) != NULL);
+    test_assert(ecs_script_expr_run(world, "true && false == false", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, true && false == false);
 
-    test_assert(ecs_script_expr_run(world, "true && true == true", &v, NULL) != NULL);
+    test_assert(ecs_script_expr_run(world, "true && true == true", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, true && true == true);
@@ -1817,12 +1896,13 @@ void Expr_cond_eq_cond_or(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
-    test_assert(ecs_script_expr_run(world, "true == true || false", &v, NULL) != NULL);
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_script_expr_run(world, "true == true || false", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, true == true || false);
 
-    test_assert(ecs_script_expr_run(world, "true || false == false", &v, NULL) != NULL);
+    test_assert(ecs_script_expr_run(world, "true || false == false", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, true || false == false);
@@ -1835,22 +1915,23 @@ void Expr_cond_gt_bool(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
-    test_assert(ecs_script_expr_run(world, "true > false", &v, NULL) != NULL);
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_script_expr_run(world, "true > false", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, true);
 
-    test_assert(ecs_script_expr_run(world, "true > true", &v, NULL) != NULL);
+    test_assert(ecs_script_expr_run(world, "true > true", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, false);
 
-    test_assert(ecs_script_expr_run(world, "false > true", &v, NULL) != NULL);
+    test_assert(ecs_script_expr_run(world, "false > true", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, false);
 
-    test_assert(ecs_script_expr_run(world, "false > false", &v, NULL) != NULL);
+    test_assert(ecs_script_expr_run(world, "false > false", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, false);
@@ -1863,22 +1944,23 @@ void Expr_cond_gt_int(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
-    test_assert(ecs_script_expr_run(world, "10 > 5", &v, NULL) != NULL);
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_script_expr_run(world, "10 > 5", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, true);
 
-    test_assert(ecs_script_expr_run(world, "10 > 10", &v, NULL) != NULL);
+    test_assert(ecs_script_expr_run(world, "10 > 10", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, false);
 
-    test_assert(ecs_script_expr_run(world, "5 > 10", &v, NULL) != NULL);
+    test_assert(ecs_script_expr_run(world, "5 > 10", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, false);
 
-    test_assert(ecs_script_expr_run(world, "5 > 5", &v, NULL) != NULL);
+    test_assert(ecs_script_expr_run(world, "5 > 5", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, false);
@@ -1891,22 +1973,23 @@ void Expr_cond_gt_flt(void) {
         ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
-    test_assert(ecs_script_expr_run(world, "10.5 > 5.5", &v, NULL) != NULL);
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_script_expr_run(world, "10.5 > 5.5", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, true);
 
-    test_assert(ecs_script_expr_run(world, "10.5 > 10.5", &v, NULL) != NULL);
+    test_assert(ecs_script_expr_run(world, "10.5 > 10.5", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, false);
 
-    test_assert(ecs_script_expr_run(world, "5.5 > 10.5", &v, NULL) != NULL);
+    test_assert(ecs_script_expr_run(world, "5.5 > 10.5", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, false);
 
-    test_assert(ecs_script_expr_run(world, "5.5 > 5.5", &v, NULL) != NULL);
+    test_assert(ecs_script_expr_run(world, "5.5 > 5.5", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, false);
@@ -1919,22 +2002,23 @@ void Expr_cond_gteq_bool(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
-    test_assert(ecs_script_expr_run(world, "true >= false", &v, NULL) != NULL);
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_script_expr_run(world, "true >= false", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, true);
 
-    test_assert(ecs_script_expr_run(world, "true >= true", &v, NULL) != NULL);
+    test_assert(ecs_script_expr_run(world, "true >= true", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, true);
 
-    test_assert(ecs_script_expr_run(world, "false >= true", &v, NULL) != NULL);
+    test_assert(ecs_script_expr_run(world, "false >= true", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, false);
 
-    test_assert(ecs_script_expr_run(world, "false >= false", &v, NULL) != NULL);
+    test_assert(ecs_script_expr_run(world, "false >= false", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, true);
@@ -1947,22 +2031,23 @@ void Expr_cond_gteq_int(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
-    test_assert(ecs_script_expr_run(world, "10 >= 5", &v, NULL) != NULL);
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_script_expr_run(world, "10 >= 5", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, true);
 
-    test_assert(ecs_script_expr_run(world, "10 >= 10", &v, NULL) != NULL);
+    test_assert(ecs_script_expr_run(world, "10 >= 10", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, true);
 
-    test_assert(ecs_script_expr_run(world, "5 >= 10", &v, NULL) != NULL);
+    test_assert(ecs_script_expr_run(world, "5 >= 10", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, false);
 
-    test_assert(ecs_script_expr_run(world, "5 >= 5", &v, NULL) != NULL);
+    test_assert(ecs_script_expr_run(world, "5 >= 5", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, true);
@@ -1975,22 +2060,23 @@ void Expr_cond_gteq_flt(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
-    test_assert(ecs_script_expr_run(world, "10.5 >= 5.5", &v, NULL) != NULL);
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_script_expr_run(world, "10.5 >= 5.5", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, true);
 
-    test_assert(ecs_script_expr_run(world, "10.5 >= 10.5", &v, NULL) != NULL);
+    test_assert(ecs_script_expr_run(world, "10.5 >= 10.5", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, true);
 
-    test_assert(ecs_script_expr_run(world, "5.5 >= 10.5", &v, NULL) != NULL);
+    test_assert(ecs_script_expr_run(world, "5.5 >= 10.5", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, false);
 
-    test_assert(ecs_script_expr_run(world, "5.5 >= 5.5", &v, NULL) != NULL);
+    test_assert(ecs_script_expr_run(world, "5.5 >= 5.5", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, true);
@@ -2003,22 +2089,23 @@ void Expr_cond_lt_bool(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
-    test_assert(ecs_script_expr_run(world, "true < false", &v, NULL) != NULL);
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_script_expr_run(world, "true < false", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, false);
 
-    test_assert(ecs_script_expr_run(world, "true < true", &v, NULL) != NULL);
+    test_assert(ecs_script_expr_run(world, "true < true", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, false);
 
-    test_assert(ecs_script_expr_run(world, "false < true", &v, NULL) != NULL);
+    test_assert(ecs_script_expr_run(world, "false < true", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, true);
 
-    test_assert(ecs_script_expr_run(world, "false < false", &v, NULL) != NULL);
+    test_assert(ecs_script_expr_run(world, "false < false", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, false);
@@ -2031,22 +2118,23 @@ void Expr_cond_lt_int(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
-    test_assert(ecs_script_expr_run(world, "10 < 5", &v, NULL) != NULL);
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_script_expr_run(world, "10 < 5", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, false);
 
-    test_assert(ecs_script_expr_run(world, "10 < 10", &v, NULL) != NULL);
+    test_assert(ecs_script_expr_run(world, "10 < 10", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, false);
 
-    test_assert(ecs_script_expr_run(world, "5 < 10", &v, NULL) != NULL);
+    test_assert(ecs_script_expr_run(world, "5 < 10", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, true);
 
-    test_assert(ecs_script_expr_run(world, "5 < 5", &v, NULL) != NULL);
+    test_assert(ecs_script_expr_run(world, "5 < 5", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, false);
@@ -2059,22 +2147,23 @@ void Expr_cond_lt_flt(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
-    test_assert(ecs_script_expr_run(world, "10.5 < 5.5", &v, NULL) != NULL);
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_script_expr_run(world, "10.5 < 5.5", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, false);
 
-    test_assert(ecs_script_expr_run(world, "10.5 < 10.5", &v, NULL) != NULL);
+    test_assert(ecs_script_expr_run(world, "10.5 < 10.5", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, false);
 
-    test_assert(ecs_script_expr_run(world, "5.5 < 10.5", &v, NULL) != NULL);
+    test_assert(ecs_script_expr_run(world, "5.5 < 10.5", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, true);
 
-    test_assert(ecs_script_expr_run(world, "5.5 < 5.5", &v, NULL) != NULL);
+    test_assert(ecs_script_expr_run(world, "5.5 < 5.5", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, false);
@@ -2087,22 +2176,23 @@ void Expr_cond_lteq_bool(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
-    test_assert(ecs_script_expr_run(world, "true <= false", &v, NULL) != NULL);
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_script_expr_run(world, "true <= false", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, false);
 
-    test_assert(ecs_script_expr_run(world, "true <= true", &v, NULL) != NULL);
+    test_assert(ecs_script_expr_run(world, "true <= true", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, true);
 
-    test_assert(ecs_script_expr_run(world, "false <= true", &v, NULL) != NULL);
+    test_assert(ecs_script_expr_run(world, "false <= true", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, true);
 
-    test_assert(ecs_script_expr_run(world, "false <= false", &v, NULL) != NULL);
+    test_assert(ecs_script_expr_run(world, "false <= false", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, true);
@@ -2115,22 +2205,23 @@ void Expr_cond_lteq_int(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
-    test_assert(ecs_script_expr_run(world, "10 <= 5", &v, NULL) != NULL);
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_script_expr_run(world, "10 <= 5", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, false);
 
-    test_assert(ecs_script_expr_run(world, "10 <= 10", &v, NULL) != NULL);
+    test_assert(ecs_script_expr_run(world, "10 <= 10", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, true);
 
-    test_assert(ecs_script_expr_run(world, "5 <= 10", &v, NULL) != NULL);
+    test_assert(ecs_script_expr_run(world, "5 <= 10", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, true);
 
-    test_assert(ecs_script_expr_run(world, "5 <= 5", &v, NULL) != NULL);
+    test_assert(ecs_script_expr_run(world, "5 <= 5", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, true);
@@ -2143,22 +2234,23 @@ void Expr_cond_lteq_flt(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
-    test_assert(ecs_script_expr_run(world, "10.5 <= 5.5", &v, NULL) != NULL);
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_script_expr_run(world, "10.5 <= 5.5", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, false);
 
-    test_assert(ecs_script_expr_run(world, "10.5 <= 10.5", &v, NULL) != NULL);
+    test_assert(ecs_script_expr_run(world, "10.5 <= 10.5", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, true);
 
-    test_assert(ecs_script_expr_run(world, "5.5 <= 10.5", &v, NULL) != NULL);
+    test_assert(ecs_script_expr_run(world, "5.5 <= 10.5", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, true);
 
-    test_assert(ecs_script_expr_run(world, "5.5 <= 5.5", &v, NULL) != NULL);
+    test_assert(ecs_script_expr_run(world, "5.5 <= 5.5", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, true);
@@ -2171,7 +2263,8 @@ void Expr_min_lparen_int_rparen(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
-    test_assert(ecs_script_expr_run(world, "-(10)", &v, NULL) != NULL);
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_script_expr_run(world, "-(10)", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_int(*(ecs_i64_t*)v.ptr, -10);
@@ -2184,7 +2277,8 @@ void Expr_min_lparen_int_add_int_rparen(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
-    test_assert(ecs_script_expr_run(world, "-(10 + 20)", &v, NULL) != NULL);
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_script_expr_run(world, "-(10 + 20)", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_int(*(ecs_i64_t*)v.ptr, -30);
@@ -2220,7 +2314,8 @@ void Expr_min_lparen_int_rparen_to_i64(void) {
 
     ecs_i64_t vi = 0;
     ecs_value_t v = { .type = ecs_id(ecs_i64_t), .ptr = &vi };
-    test_assert(ecs_script_expr_run(world, "-(10)", &v, NULL) != NULL);
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_script_expr_run(world, "-(10)", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_int(vi, -10);
@@ -2233,7 +2328,8 @@ void Expr_min_lparen_int_rparen_to_i32(void) {
 
     ecs_i32_t vi = 0;
     ecs_value_t v = { .type = ecs_id(ecs_i32_t), .ptr = &vi };
-    test_assert(ecs_script_expr_run(world, "-(10)", &v, NULL) != NULL);
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };;
+    test_assert(ecs_script_expr_run(world, "-(10)", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_i32_t));
     test_assert(v.ptr != NULL);
     test_int(vi, -10);
@@ -2261,7 +2357,7 @@ void Expr_struct_w_min_var(void) {
     *(ecs_i64_t*)var->value.ptr = 10;
 
     Mass v = {0};
-    ecs_script_expr_run_desc_t desc = { .vars = vars };
+    ecs_script_expr_run_desc_t desc = { .vars = vars, .disable_folding = disable_folding };
     const char *ptr = ecs_script_expr_run(world, "{-$foo}", &(ecs_value_t){
         .type = t, .ptr = &v
     }, &desc);
@@ -2288,9 +2384,10 @@ void Expr_struct_w_min_lparen_int_rparen(void) {
     });
 
     Mass v = {0};
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
     const char *ptr = ecs_script_expr_run(world, "{-(10)}", &(ecs_value_t){
         .type = t, .ptr = &v
-    }, NULL);
+    }, &desc);
     test_assert(ptr != NULL);
     test_assert(!ptr[0]);
 
@@ -2319,7 +2416,7 @@ void Expr_struct_w_min_lparen_var_rparen(void) {
     *(ecs_u64_t*)var->value.ptr = 10;
 
     Mass v = {0};
-    ecs_script_expr_run_desc_t desc = { .vars = vars };
+    ecs_script_expr_run_desc_t desc = { .vars = vars, .disable_folding = disable_folding };
     const char *ptr = ecs_script_expr_run(world, "{-($foo)}", &(ecs_value_t){
         .type = t, .ptr = &v
     }, &desc);
@@ -2336,7 +2433,8 @@ void Expr_not_bool(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
-    test_assert(ecs_script_expr_run(world, "!false", &v, NULL) != NULL);
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_script_expr_run(world, "!false", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, true);
@@ -2344,7 +2442,7 @@ void Expr_not_bool(void) {
     
     ecs_os_zeromem(&v);
 
-    test_assert(ecs_script_expr_run(world, "!true", &v, NULL) != NULL);
+    test_assert(ecs_script_expr_run(world, "!true", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, false);
@@ -2357,7 +2455,8 @@ void Expr_not_int(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
-    test_assert(ecs_script_expr_run(world, "!0", &v, NULL) != NULL);
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_script_expr_run(world, "!0", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, true);
@@ -2365,7 +2464,7 @@ void Expr_not_int(void) {
 
     ecs_os_zeromem(&v);
 
-    test_assert(ecs_script_expr_run(world, "!10", &v, NULL) != NULL);
+    test_assert(ecs_script_expr_run(world, "!10", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, false);
@@ -2378,7 +2477,8 @@ void Expr_not_paren_int(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
-    test_assert(ecs_script_expr_run(world, "!(0)", &v, NULL) != NULL);
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_script_expr_run(world, "!(0)", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, true);
@@ -2386,7 +2486,7 @@ void Expr_not_paren_int(void) {
 
     ecs_os_zeromem(&v);
 
-    test_assert(ecs_script_expr_run(world, "!(10)", &v, NULL) != NULL);
+    test_assert(ecs_script_expr_run(world, "!(10)", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, false);
@@ -2399,7 +2499,8 @@ void Expr_not_paren_expr(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
-    test_assert(ecs_script_expr_run(world, "!(10 - 10)", &v, NULL) != NULL);
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_script_expr_run(world, "!(10 - 10)", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, true);
@@ -2407,7 +2508,7 @@ void Expr_not_paren_expr(void) {
 
     ecs_os_zeromem(&v);
 
-    test_assert(ecs_script_expr_run(world, "!(5 + 5)", &v, NULL) != NULL);
+    test_assert(ecs_script_expr_run(world, "!(5 + 5)", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
     test_bool(*(bool*)v.ptr, false);
@@ -2427,7 +2528,7 @@ void Expr_not_var(void) {
     *(int32_t*)var->value.ptr = 10;
 
     ecs_value_t v = {0};
-    ecs_script_expr_run_desc_t desc = { .vars = vars };
+    ecs_script_expr_run_desc_t desc = { .vars = vars, .disable_folding = disable_folding };
     test_assert(ecs_script_expr_run(world, "!$foo", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_bool_t));
     test_assert(v.ptr != NULL);
@@ -2452,7 +2553,8 @@ void Expr_shift_left_int(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
-    test_assert(ecs_script_expr_run(world, "1 << 2", &v, NULL) != NULL);
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_script_expr_run(world, "1 << 2", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_uint(*(ecs_i64_t*)v.ptr, 1 << 2);
@@ -2465,7 +2567,8 @@ void Expr_shift_right_int(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
-    test_assert(ecs_script_expr_run(world, "4 >> 2", &v, NULL) != NULL);
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_script_expr_run(world, "4 >> 2", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_uint(*(ecs_i64_t*)v.ptr, 4 >> 2);
@@ -2478,7 +2581,8 @@ void Expr_shift_left_int_add_int(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
-    test_assert(ecs_script_expr_run(world, "1 << 2 + 10", &v, NULL) != NULL);
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_script_expr_run(world, "1 << 2 + 10", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_uint(*(ecs_i64_t*)v.ptr, 1 << (2 + 10));
@@ -2491,7 +2595,8 @@ void Expr_shift_left_int_mul_int(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
-    test_assert(ecs_script_expr_run(world, "1 << 2 * 10", &v, NULL) != NULL);
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_script_expr_run(world, "1 << 2 * 10", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_uint(*(ecs_i64_t*)v.ptr, 1 << 2 * 10);
@@ -2504,7 +2609,8 @@ void Expr_add_int_shift_left_int(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
-    test_assert(ecs_script_expr_run(world, "10 + 1 << 2", &v, NULL) != NULL);
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_script_expr_run(world, "10 + 1 << 2", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_uint(*(ecs_i64_t*)v.ptr, (10 + 1) << 2);
@@ -2517,7 +2623,8 @@ void Expr_mul_int_shift_left_int(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
-    test_assert(ecs_script_expr_run(world, "10 * 1 << 2", &v, NULL) != NULL);
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_script_expr_run(world, "10 * 1 << 2", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_uint(*(ecs_i64_t*)v.ptr, 10 * 1 << 2);
@@ -2530,7 +2637,8 @@ void Expr_add_int_shift_left_int_add_int(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
-    test_assert(ecs_script_expr_run(world, "10 + 1 << 2 + 2", &v, NULL) != NULL);
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_script_expr_run(world, "10 + 1 << 2 + 2", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_uint(*(ecs_i64_t*)v.ptr, (10 + 1) << (2 + 2));
@@ -2543,7 +2651,8 @@ void Expr_mul_int_shift_left_int_mul_int(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_value_t v = {0};
-    test_assert(ecs_script_expr_run(world, "10 * 1 << 2 * 2", &v, NULL) != NULL);
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_script_expr_run(world, "10 * 1 << 2 * 2", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_i64_t));
     test_assert(v.ptr != NULL);
     test_uint(*(ecs_i64_t*)v.ptr, 10 * 1 << 2 * 2);
@@ -2559,7 +2668,8 @@ void Expr_entity_expr(void) {
     test_assert(foo != 0);
 
     ecs_value_t v = {0};
-    test_assert(ecs_script_expr_run(world, "foo", &v, NULL) != NULL);
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_script_expr_run(world, "foo", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_entity_t));
     test_assert(v.ptr != NULL);
     test_uint(*(ecs_entity_t*)v.ptr, foo);
@@ -2578,7 +2688,8 @@ void Expr_entity_path_expr(void) {
     test_assert(foo != 0);
 
     ecs_value_t v = {0};
-    test_assert(ecs_script_expr_run(world, "parent.foo", &v, NULL) != NULL);
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_script_expr_run(world, "parent.foo", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_entity_t));
     test_assert(v.ptr != NULL);
     test_uint(*(ecs_entity_t*)v.ptr, foo);
@@ -2597,7 +2708,8 @@ void Expr_entity_parent_func(void) {
     test_assert(foo != 0);
 
     ecs_value_t v = {0};
-    test_assert(ecs_script_expr_run(world, "parent.foo.parent()", &v, NULL) != NULL);
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_script_expr_run(world, "parent.foo.parent()", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_entity_t));
     test_assert(v.ptr != NULL);
     test_uint(*(ecs_entity_t*)v.ptr, parent);
@@ -2616,7 +2728,8 @@ void Expr_entity_name_func(void) {
     test_assert(foo != 0);
 
     ecs_value_t v = {0};
-    test_assert(ecs_script_expr_run(world, "parent.foo.name()", &v, NULL) != NULL);
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_script_expr_run(world, "parent.foo.name()", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_string_t));
     test_assert(v.ptr != NULL);
     test_str(*(char**)v.ptr, "foo");
@@ -2636,7 +2749,8 @@ void Expr_entity_doc_name_func(void) {
     ecs_doc_set_name(world, foo, "FooDoc");
 
     ecs_value_t v = {0};
-    test_assert(ecs_script_expr_run(world, "parent.foo.doc_name()", &v, NULL) != NULL);
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_script_expr_run(world, "parent.foo.doc_name()", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_string_t));
     test_assert(v.ptr != NULL);
     test_str(*(char**)v.ptr, "FooDoc");
@@ -2655,7 +2769,8 @@ void Expr_entity_chain_func(void) {
     test_assert(foo != 0);
 
     ecs_value_t v = {0};
-    test_assert(ecs_script_expr_run(world, "parent.foo.parent().name()", &v, NULL) != NULL);
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_script_expr_run(world, "parent.foo.parent().name()", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_string_t));
     test_assert(v.ptr != NULL);
     test_str(*(char**)v.ptr, "parent");
@@ -2681,7 +2796,7 @@ void Expr_var_parent_func(void) {
     *(ecs_entity_t*)var->value.ptr = child;
 
     ecs_value_t v = {0};
-    ecs_script_expr_run_desc_t desc = { .vars = vars };
+    ecs_script_expr_run_desc_t desc = { .vars = vars, .disable_folding = disable_folding };
     test_assert(ecs_script_expr_run(world, "$foo.parent()", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_entity_t));
     test_assert(v.ptr != NULL);
@@ -2703,7 +2818,8 @@ void Expr_entity_path_func(void) {
     test_assert(foo != 0);
 
     ecs_value_t v = {0};
-    test_assert(ecs_script_expr_run(world, "parent.foo.path()", &v, NULL) != NULL);
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_script_expr_run(world, "parent.foo.path()", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_string_t));
     test_assert(v.ptr != NULL);
     test_str(*(char**)v.ptr, "parent.foo");
@@ -2729,7 +2845,7 @@ void Expr_var_name_func(void) {
     *(ecs_entity_t*)var->value.ptr = child;
 
     ecs_value_t v = {0};
-    ecs_script_expr_run_desc_t desc = { .vars = vars };
+    ecs_script_expr_run_desc_t desc = { .vars = vars, .disable_folding = disable_folding };
     test_assert(ecs_script_expr_run(world, "$foo.name()", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_string_t));
     test_assert(v.ptr != NULL);
@@ -2759,7 +2875,7 @@ void Expr_var_doc_name_func(void) {
     *(ecs_entity_t*)var->value.ptr = child;
 
     ecs_value_t v = {0};
-    ecs_script_expr_run_desc_t desc = { .vars = vars };
+    ecs_script_expr_run_desc_t desc = { .vars = vars, .disable_folding = disable_folding };
     test_assert(ecs_script_expr_run(world, "$foo.doc_name()", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_string_t));
     test_assert(v.ptr != NULL);
@@ -2788,7 +2904,7 @@ void Expr_var_chain_func(void) {
     *(ecs_entity_t*)var->value.ptr = child;
 
     ecs_value_t v = {0};
-    ecs_script_expr_run_desc_t desc = { .vars = vars };
+    ecs_script_expr_run_desc_t desc = { .vars = vars, .disable_folding = disable_folding };
     test_assert(ecs_script_expr_run(world, "$foo.parent().name()", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_string_t));
     test_assert(v.ptr != NULL);
@@ -3539,7 +3655,8 @@ void Expr_component_expr(void) {
     ecs_set(world, e, Position, {10, 20});
 
     ecs_value_t v = {0};
-    test_assert(ecs_script_expr_run(world, "e[Position]", &v, NULL) != NULL);
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_script_expr_run(world, "e[Position]", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(Position));
     test_assert(v.ptr != NULL);
 
@@ -3566,7 +3683,8 @@ void Expr_component_member_expr(void) {
     ecs_set(world, e, Position, {10, 20});
 
     ecs_value_t v = {0};
-    test_assert(ecs_script_expr_run(world, "e[Position].x", &v, NULL) != NULL);
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_script_expr_run(world, "e[Position].x", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_f32_t));
     test_assert(v.ptr != NULL);
     {
@@ -3576,7 +3694,8 @@ void Expr_component_member_expr(void) {
     }
 
     v = (ecs_value_t){0};
-    test_assert(ecs_script_expr_run(world, "e[Position].y", &v, NULL) != NULL);
+
+    test_assert(ecs_script_expr_run(world, "e[Position].y", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_f32_t));
     test_assert(v.ptr != NULL);
     {
@@ -3606,7 +3725,8 @@ void Expr_component_expr_string(void) {
     ecs_set(world, e, String, { "Hello World" });
 
     ecs_value_t v = {0};
-    test_assert(ecs_script_expr_run(world, "e[String]", &v, NULL) != NULL);
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_script_expr_run(world, "e[String]", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(String));
     test_assert(v.ptr != NULL);
     {
@@ -3640,7 +3760,8 @@ void Expr_component_member_expr_string(void) {
     ecs_set(world, e, String, { "Hello World" });
 
     ecs_value_t v = {0};
-    test_assert(ecs_script_expr_run(world, "e[String].value", &v, NULL) != NULL);
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_script_expr_run(world, "e[String].value", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_string_t));
     test_assert(v.ptr != NULL);
     {
@@ -3667,7 +3788,8 @@ void Expr_component_elem_expr(void) {
     ecs_set(world, e, Strings, { "Hello", "World" });
 
     ecs_value_t v = {0};
-    test_assert(ecs_script_expr_run(world, "e[Strings][0]", &v, NULL) != NULL);
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_script_expr_run(world, "e[Strings][0]", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_string_t));
     test_assert(v.ptr != NULL);
     {
@@ -3678,7 +3800,7 @@ void Expr_component_elem_expr(void) {
 
     ecs_os_zeromem(&v);
 
-    test_assert(ecs_script_expr_run(world, "e[Strings][1]", &v, NULL) != NULL);
+    test_assert(ecs_script_expr_run(world, "e[Strings][1]", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_string_t));
     test_assert(v.ptr != NULL);
     {
@@ -3713,7 +3835,8 @@ void Expr_component_elem_expr_string(void) {
     ecs_set(world, e, String, {{ "Hello", "World" }});
 
     ecs_value_t v = {0};
-    test_assert(ecs_script_expr_run(world, "e[String].value[0]", &v, NULL) != NULL);
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_script_expr_run(world, "e[String].value[0]", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_string_t));
     test_assert(v.ptr != NULL);
     {
@@ -3724,7 +3847,7 @@ void Expr_component_elem_expr_string(void) {
 
     ecs_os_zeromem(&v);
 
-    test_assert(ecs_script_expr_run(world, "e[String].value[1]", &v, NULL) != NULL);
+    test_assert(ecs_script_expr_run(world, "e[String].value[1]", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_string_t));
     test_assert(v.ptr != NULL);
     {
@@ -3754,7 +3877,8 @@ void Expr_component_inline_elem_expr_string(void) {
     ecs_set(world, e, String, {{ "Hello", "World" }});
 
     ecs_value_t v = {0};
-    test_assert(ecs_script_expr_run(world, "e[String].value[0]", &v, NULL) != NULL);
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_script_expr_run(world, "e[String].value[0]", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_string_t));
     test_assert(v.ptr != NULL);
     {
@@ -3765,7 +3889,7 @@ void Expr_component_inline_elem_expr_string(void) {
 
     ecs_os_zeromem(&v);
 
-    test_assert(ecs_script_expr_run(world, "e[String].value[1]", &v, NULL) != NULL);
+    test_assert(ecs_script_expr_run(world, "e[String].value[1]", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_string_t));
     test_assert(v.ptr != NULL);
     {
@@ -3786,7 +3910,7 @@ void Expr_var_expr(void) {
     *(int32_t*)foo->value.ptr = 10;
 
     int32_t v = 0;
-    ecs_script_expr_run_desc_t desc = { .vars = vars };
+    ecs_script_expr_run_desc_t desc = { .vars = vars, .disable_folding = disable_folding };
     const char *ptr = ecs_script_expr_run(
         world, "$foo", &ecs_value_ptr(ecs_i32_t, &v), &desc);
     test_assert(ptr != NULL);
@@ -3815,7 +3939,7 @@ void Expr_var_member_expr(void) {
     *(PositionI*)foo->value.ptr = (PositionI){10, 20};
 
     int32_t v = 0;
-    ecs_script_expr_run_desc_t desc = { .vars = vars };
+    ecs_script_expr_run_desc_t desc = { .vars = vars, .disable_folding = disable_folding };
 
     {
         const char *ptr = ecs_script_expr_run(
@@ -3857,7 +3981,7 @@ void Expr_var_elem_expr(void) {
     (*var)[1] = 20;
 
     int32_t v = 0;
-    ecs_script_expr_run_desc_t desc = { .vars = vars };
+    ecs_script_expr_run_desc_t desc = { .vars = vars, .disable_folding = disable_folding };
 
     {
         const char *ptr = ecs_script_expr_run(
@@ -3889,7 +4013,7 @@ void Expr_var_expr_string(void) {
     *(char**)foo->value.ptr = "Hello World";
 
     char* v = NULL;
-    ecs_script_expr_run_desc_t desc = { .vars = vars };
+    ecs_script_expr_run_desc_t desc = { .vars = vars, .disable_folding = disable_folding };
     const char *ptr = ecs_script_expr_run(
         world, "$foo", &ecs_value_ptr(ecs_string_t, &v), &desc);
     test_assert(ptr != NULL);
@@ -3928,7 +4052,7 @@ void Expr_var_member_expr_string(void) {
     var->y = "World";
 
     char *v = 0;
-    ecs_script_expr_run_desc_t desc = { .vars = vars };
+    ecs_script_expr_run_desc_t desc = { .vars = vars, .disable_folding = disable_folding };
 
     {
         const char *ptr = ecs_script_expr_run(
@@ -3979,7 +4103,7 @@ void Expr_var_elem_expr_string(void) {
     (*var)[1] = "World";
 
     char *v = NULL;
-    ecs_script_expr_run_desc_t desc = { .vars = vars };
+    ecs_script_expr_run_desc_t desc = { .vars = vars, .disable_folding = disable_folding };
 
     {
         const char *ptr = ecs_script_expr_run(
@@ -4033,7 +4157,7 @@ void Expr_var_inline_elem_expr_string(void) {
     var->value[1] = "World";
 
     char *v = 0;
-    ecs_script_expr_run_desc_t desc = { .vars = vars };
+    ecs_script_expr_run_desc_t desc = { .vars = vars, .disable_folding = disable_folding };
 
     {
         const char *ptr = ecs_script_expr_run(
@@ -4084,7 +4208,7 @@ void Expr_var_expr_desc_w_no_vars(void) {
     int32_t v = 0;
 
     ecs_log_set_level(-4);
-    ecs_script_expr_run_desc_t desc = { .vars = NULL };
+    ecs_script_expr_run_desc_t desc = { .vars = NULL, .disable_folding = disable_folding };
     const char *ptr = ecs_script_expr_run(
         world, "$foo", &ecs_value_ptr(ecs_i32_t, &v), &desc);
     test_assert(ptr == NULL);
@@ -4101,7 +4225,7 @@ void Expr_parse_eval(void) {
     *(int32_t*)foo->value.ptr = 10;
 
     int32_t v = 0;
-    ecs_script_expr_run_desc_t desc = { .vars = vars };
+    ecs_script_expr_run_desc_t desc = { .vars = vars, .disable_folding = disable_folding };
 
     ecs_script_t *s = ecs_script_expr_parse(world, "$foo + 20", &desc);
     test_assert(s != NULL);
@@ -4125,7 +4249,7 @@ void Expr_parse_eval_multiple_times(void) {
     *(int32_t*)foo->value.ptr = 10;
 
     int32_t v = 0;
-    ecs_script_expr_run_desc_t desc = { .vars = vars };
+    ecs_script_expr_run_desc_t desc = { .vars = vars, .disable_folding = disable_folding };
 
     ecs_script_t *s = ecs_script_expr_parse(world, "$foo + 20", &desc);
     test_assert(s != NULL);
@@ -4150,7 +4274,8 @@ void Expr_parse_error(void) {
     ecs_world_t *world = ecs_init();
 
     ecs_log_set_level(-4);
-    ecs_script_t *s = ecs_script_expr_parse(world, "10 +", NULL);
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
+    ecs_script_t *s = ecs_script_expr_parse(world, "10 +", &desc);
     test_assert(s == NULL);
 
     ecs_fini(world);
@@ -4173,7 +4298,8 @@ void Expr_parse_eval_error(void) {
     ecs_add(world, e, Position);
 
     ecs_log_set_level(-4);
-    ecs_script_t *s = ecs_script_expr_parse(world, "e[Position]", NULL);
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
+    ecs_script_t *s = ecs_script_expr_parse(world, "e[Position]", &desc);
     test_assert(s != NULL);
 
     ecs_remove(world, e, Position);
@@ -4191,8 +4317,9 @@ void Expr_remainder_after_number(void) {
     ecs_world_t *world = ecs_init();
 
     int32_t v = 0;
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
     const char *ptr = ecs_script_expr_run(world, "10 foo", 
-        &ecs_value_ptr(ecs_i32_t, &v), NULL);
+        &ecs_value_ptr(ecs_i32_t, &v), &desc);
     test_assert(ptr != NULL);
     test_str(ptr, " foo");
     test_int(v, 10);
@@ -4204,8 +4331,9 @@ void Expr_remainder_after_string(void) {
     ecs_world_t *world = ecs_init();
 
     char *v = 0;
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
     const char *ptr = ecs_script_expr_run(world, "\"bar\" foo", 
-        &ecs_value_ptr(ecs_string_t, &v), NULL);
+        &ecs_value_ptr(ecs_string_t, &v), &desc);
     test_assert(ptr != NULL);
     test_str(ptr, " foo");
     test_str(v, "bar");
@@ -4219,8 +4347,9 @@ void Expr_remainder_after_unary(void) {
     ecs_world_t *world = ecs_init();
 
     bool v = false;
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
     const char *ptr = ecs_script_expr_run(world, "!false foo", 
-        &ecs_value_ptr(ecs_bool_t, &v), NULL);
+        &ecs_value_ptr(ecs_bool_t, &v), &desc);
     test_assert(ptr != NULL);
     test_str(ptr, " foo");
     test_bool(v, true);
@@ -4232,8 +4361,9 @@ void Expr_remainder_after_binary(void) {
     ecs_world_t *world = ecs_init();
 
     int32_t v = false;
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
     const char *ptr = ecs_script_expr_run(world, "10 + 20 foo", 
-        &ecs_value_ptr(ecs_i32_t, &v), NULL);
+        &ecs_value_ptr(ecs_i32_t, &v), &desc);
     test_assert(ptr != NULL);
     test_str(ptr, " foo");
     test_int(v, 30);
@@ -4245,8 +4375,9 @@ void Expr_remainder_after_parens(void) {
     ecs_world_t *world = ecs_init();
 
     int32_t v = false;
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
     const char *ptr = ecs_script_expr_run(world, "(10 + 20) foo", 
-        &ecs_value_ptr(ecs_i32_t, &v), NULL);
+        &ecs_value_ptr(ecs_i32_t, &v), &desc);
     test_assert(ptr != NULL);
     test_str(ptr, " foo");
     test_int(v, 30);
@@ -4268,8 +4399,9 @@ void Expr_remainder_after_initializer(void) {
     });
 
     Position v = {0, 0};
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
     const char *ptr = ecs_script_expr_run(world, "{10, 20} foo", 
-        &ecs_value_ptr(Position, &v), NULL);
+        &ecs_value_ptr(Position, &v), &desc);
     test_assert(ptr != NULL);
     test_str(ptr, " foo");
     test_int(v.x, 10);
@@ -4292,8 +4424,9 @@ void Expr_remainder_after_collection_initializer(void) {
     });
 
     Ints v = {0, 0};
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
     const char *ptr = ecs_script_expr_run(world, "[10, 20] foo", 
-        &ecs_value_ptr(Ints, &v), NULL);
+        &ecs_value_ptr(Ints, &v), &desc);
     test_assert(ptr != NULL);
     test_str(ptr, " foo");
     test_int(v[0], 10);
@@ -4306,8 +4439,9 @@ void Expr_space_at_start(void) {
     ecs_world_t *world = ecs_init();
 
     int32_t v = false;
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
     const char *ptr = ecs_script_expr_run(world, " 10 + 20", 
-        &ecs_value_ptr(ecs_i32_t, &v), NULL);
+        &ecs_value_ptr(ecs_i32_t, &v), &desc);
     test_assert(ptr != NULL);
     test_assert(ptr[0] == 0);
     test_int(v, 30);
@@ -4319,8 +4453,9 @@ void Expr_newline_at_start(void) {
     ecs_world_t *world = ecs_init();
 
     int32_t v = false;
+    ecs_script_expr_run_desc_t desc = { .disable_folding = disable_folding };
     const char *ptr = ecs_script_expr_run(world, "\n10 + 20", 
-        &ecs_value_ptr(ecs_i32_t, &v), NULL);
+        &ecs_value_ptr(ecs_i32_t, &v), &desc);
     test_assert(ptr != NULL);
     test_assert(ptr[0] == 0);
     test_int(v, 30);

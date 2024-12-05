@@ -406,8 +406,14 @@ char* ecs_script_ast_to_str(
 {
     ecs_check(script != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_strbuf_t buf = ECS_STRBUF_INIT;
-    if (ecs_script_ast_to_buf(script, &buf)) {
-        goto error;
+
+    if (flecs_script_impl(script)->expr) {
+        flecs_script_expr_to_str_buf(
+            script->world, flecs_script_impl(script)->expr, &buf);
+    } else {
+        if (ecs_script_ast_to_buf(script, &buf)) {
+            goto error;
+        }
     }
 
     return ecs_strbuf_get(&buf);
