@@ -48,13 +48,13 @@ int flecs_expr_unary_visit_fold(
         goto error;
     }
 
-    ecs_expr_val_t *result = flecs_expr_value_from(
+    ecs_expr_value_node_t *result = flecs_expr_value_from(
         script, (ecs_expr_node_t*)node, ecs_id(ecs_bool_t));
     result->ptr = &result->storage.bool_;
 
     ecs_value_t dst = { .ptr = result->ptr, .type = ecs_id(ecs_bool_t) };
     ecs_value_t src = { 
-        .ptr = ((ecs_expr_val_t*)node->expr)->ptr, .type = ecs_id(ecs_bool_t) };
+        .ptr = ((ecs_expr_value_node_t*)node->expr)->ptr, .type = ecs_id(ecs_bool_t) };
     if (flecs_value_unary(script, &src, &dst, node->operator)) {
         goto error;
     }
@@ -86,10 +86,10 @@ int flecs_expr_binary_visit_fold(
         return 0;
     }
 
-    ecs_expr_val_t *left = (ecs_expr_val_t*)node->left;
-    ecs_expr_val_t *right = (ecs_expr_val_t*)node->right;
+    ecs_expr_value_node_t *left = (ecs_expr_value_node_t*)node->left;
+    ecs_expr_value_node_t *right = (ecs_expr_value_node_t*)node->right;
 
-    ecs_expr_val_t *result = flecs_expr_value_from(
+    ecs_expr_value_node_t *result = flecs_expr_value_from(
         script, (ecs_expr_node_t*)node, node->node.type);
 
     /* Handle bitmask separately since it's not done by switch */
@@ -133,7 +133,7 @@ int flecs_expr_cast_visit_fold(
         return 0;
     }
 
-    ecs_expr_val_t *expr = (ecs_expr_val_t*)node->expr;
+    ecs_expr_value_node_t *expr = (ecs_expr_value_node_t*)node->expr;
     ecs_entity_t dst_type = node->node.type;
     ecs_entity_t src_type = expr->node.type;
 
@@ -224,7 +224,7 @@ int flecs_expr_initializer_post_fold(
             continue;
         }
 
-        ecs_expr_val_t *elem_value = (ecs_expr_val_t*)elem->value;
+        ecs_expr_value_node_t *elem_value = (ecs_expr_value_node_t*)elem->value;
 
         /* Type is guaranteed to be correct, since type visitor will insert
          * a cast to the type of the initializer element. */
@@ -265,7 +265,7 @@ int flecs_expr_initializer_visit_fold(
             goto error;
         }
 
-        ecs_expr_val_t *result = flecs_expr_value_from(
+        ecs_expr_value_node_t *result = flecs_expr_value_from(
             script, (ecs_expr_node_t*)node, node->node.type);
         result->ptr = value;
 
@@ -285,7 +285,7 @@ int flecs_expr_identifier_visit_fold(
     ecs_expr_identifier_t *node = (ecs_expr_identifier_t*)*node_ptr;
     ecs_entity_t type = node->node.type;
 
-    ecs_expr_val_t *result = flecs_expr_value_from(
+    ecs_expr_value_node_t *result = flecs_expr_value_from(
         script, (ecs_expr_node_t*)node, type);
 
     if (type == ecs_id(ecs_entity_t)) {
