@@ -81,6 +81,8 @@ const char* flecs_script_token_kind_str(
         return "number ";
     case EcsTokNewline:
         return "newline";
+    case EcsTokMember:
+        return "member";
     case EcsTokEnd:
         return "end of script";
     default:
@@ -136,6 +138,7 @@ const char* flecs_script_token_str(
     case EcsTokString: return "string";
     case EcsTokNumber: return "number";
     case EcsTokNewline: return "newline";
+    case EcsTokMember: return "member";
     case EcsTokEnd: return "end of script";
     default:
         return "<corrupt>";

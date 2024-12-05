@@ -9,7 +9,7 @@
 #define flecs_expr_visit_error(script, node, ...) \
     ecs_parser_error( \
         script->name, script->code, \
-            ((ecs_expr_node_t*)node)->pos - script->code, \
+            ((const ecs_expr_node_t*)node)->pos - script->code, \
                 __VA_ARGS__);
 
 int flecs_script_expr_visit_type(

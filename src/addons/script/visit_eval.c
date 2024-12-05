@@ -1242,7 +1242,9 @@ int ecs_script_eval(
     const ecs_script_t *script)
 {
     ecs_script_eval_visitor_t v;
-    ecs_script_impl_t *impl = flecs_script_impl(script);
+    ecs_script_impl_t *impl = flecs_script_impl(
+        /* Safe, script will only be used for reading by visitor */
+        ECS_CONST_CAST(ecs_script_t*, script));
     flecs_script_eval_visit_init(impl, &v);
     int result = ecs_script_visit(impl, &v, flecs_script_eval_node);
     flecs_script_eval_visit_fini(&v);

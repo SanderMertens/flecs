@@ -198,7 +198,6 @@ const char* flecs_script_parse_rhs(
     ecs_script_parser_t *parser,
     const char *pos,
     ecs_script_tokenizer_t *tokenizer,
-    ecs_expr_node_t *left,
     ecs_script_token_kind_t left_oper,
     ecs_expr_node_t **out)
 {
@@ -331,9 +330,13 @@ const char* flecs_script_parse_lhs(
             if (strchr(expr, '.') || strchr(expr, 'e')) {
                 *out = (ecs_expr_node_t*)flecs_expr_float(parser, atof(expr));
             } else if (expr[0] == '-') {
-                *out = (ecs_expr_node_t*)flecs_expr_int(parser, atoll(expr));
+                char *end;
+                *out = (ecs_expr_node_t*)flecs_expr_int(parser, 
+                    strtoll(expr, &end, 10));
             } else {
-                *out = (ecs_expr_node_t*)flecs_expr_uint(parser, atoll(expr));
+                char *end;
+                *out = (ecs_expr_node_t*)flecs_expr_uint(parser, 
+                    strtoull(expr, &end, 10));
             }
             break;
         }
@@ -439,7 +442,7 @@ const char* flecs_script_parse_lhs(
     }
 
     /* Parse right-hand side of expression if there is one */
-    return flecs_script_parse_rhs(parser, pos, tokenizer, *out, left_oper, out);
+    return flecs_script_parse_rhs(parser, pos, tokenizer, left_oper, out);
 error:
     return NULL;
 }
@@ -518,7 +521,9 @@ int ecs_script_expr_eval(
     const ecs_script_expr_run_desc_t *desc)
 {
     ecs_assert(script != NULL, ECS_INTERNAL_ERROR, NULL);
-    ecs_script_impl_t *impl = flecs_script_impl(script);
+    ecs_script_impl_t *impl = flecs_script_impl(
+        /* Safe, won't be writing to script */
+        ECS_CONST_CAST(ecs_script_t*, script));
     ecs_assert(impl->expr != NULL, ECS_INTERNAL_ERROR, NULL);
 
     ecs_script_expr_run_desc_t priv_desc = {0};
