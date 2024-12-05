@@ -110,34 +110,34 @@ struct iterable {
         return this->iter().first();
     }
 
-    iter_iterable<Components...> set_var(int var_id, flecs::entity_t value) {
+    iter_iterable<Components...> set_var(int var_id, flecs::entity_t value) const {
         return this->iter().set_var(var_id, value);
     }
 
-    iter_iterable<Components...> set_var(const char *name, flecs::entity_t value) {
+    iter_iterable<Components...> set_var(const char *name, flecs::entity_t value) const {
         return this->iter().set_var(name, value);
     }
 
-    iter_iterable<Components...> set_var(const char *name, flecs::table_t *value) {
+    iter_iterable<Components...> set_var(const char *name, flecs::table_t *value) const {
         return this->iter().set_var(name, value);
     }
 
-    iter_iterable<Components...> set_var(const char *name, ecs_table_range_t value) {
+    iter_iterable<Components...> set_var(const char *name, ecs_table_range_t value) const {
         return this->iter().set_var(name, value);
     }
 
-    iter_iterable<Components...> set_var(const char *name, flecs::table_range value) {
+    iter_iterable<Components...> set_var(const char *name, flecs::table_range value) const {
         return this->iter().set_var(name, value);
     }
 
     // Limit results to tables with specified group id (grouped queries only)
-    iter_iterable<Components...> set_group(uint64_t group_id) {
+    iter_iterable<Components...> set_group(uint64_t group_id) const {
         return this->iter().set_group(group_id);
     }
 
     // Limit results to tables with specified group id (grouped queries only)
     template <typename Group>
-    iter_iterable<Components...> set_group() {
+    iter_iterable<Components...> set_group() const {
         return this->iter().template set_group<Group>();
     }
 
