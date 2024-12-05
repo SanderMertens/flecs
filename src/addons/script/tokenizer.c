@@ -215,6 +215,10 @@ const char* flecs_script_identifier(
     bool is_var = pos[0] == '$';
     char *outpos = parser->token_cur;
 
+    if (parser->merge_variable_members) {
+        is_var = false;
+    }
+
     do {
         char c = pos[0];
         bool is_ident = flecs_script_is_identifier(c) || 
