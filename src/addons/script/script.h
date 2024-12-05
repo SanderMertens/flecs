@@ -39,6 +39,7 @@ struct ecs_script_parser_t {
     char *token_cur;
     char *token_keep;
     bool significant_newline;
+    bool merge_variable_members;
 
     /* For term parser */
     ecs_term_t *term;

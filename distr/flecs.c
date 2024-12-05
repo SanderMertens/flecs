@@ -4635,6 +4635,7 @@ struct ecs_script_parser_t {
     char *token_cur;
     char *token_keep;
     bool significant_newline;
+    bool merge_variable_members;
 
     /* For term parser */
     ecs_term_t *term;
@@ -56569,25 +56570,27 @@ const char* flecs_term_parse_arg(
 
                 // Position(src|
                 //          ^
-                LookAhead_1('|',
-                    pos = lookahead;
-                    pos = flecs_term_parse_trav(parser, ref, pos);
-                    if (!pos) {
-                        goto error;
-                    }
-
-                    // Position(src|up IsA
-                    //          ^
-                    LookAhead_1(EcsTokIdentifier,
+                {
+                    LookAhead_1('|',
                         pos = lookahead;
-                        parser->term->trav = ecs_lookup(
-                            parser->script->pub.world, Token(1));
-                        if (!parser->term->trav) {
-                            Error(
-                                "unresolved trav identifier '%s'", Token(1));
+                        pos = flecs_term_parse_trav(parser, ref, pos);
+                        if (!pos) {
+                            goto error;
                         }
+
+                        // Position(src|up IsA
+                        //          ^
+                        LookAhead_1(EcsTokIdentifier,
+                            pos = lookahead;
+                            parser->term->trav = ecs_lookup(
+                                parser->script->pub.world, Token(1));
+                            if (!parser->term->trav) {
+                                Error(
+                                    "unresolved trav identifier '%s'", Token(1));
+                            }
+                        )
                     )
-                )
+                }
 
                 break;
             }
@@ -56869,7 +56872,7 @@ const char* flecs_query_term_parse(
     Parse(
         case '[':
             return flecs_term_parse_inout(parser, pos);
-        case EcsTokTermIdentifier:   
+        case EcsTokTermIdentifier: 
             return flecs_term_parse_flags(parser, Token(0), pos);
         case '(':
             return flecs_term_parse_pair(parser, pos);
@@ -56912,7 +56915,8 @@ int flecs_terms_parse(
 
     ecs_script_parser_t parser = {
         .script = flecs_script_impl(script),
-        .pos = script->code
+        .pos = script->code,
+        .merge_variable_members = true
     };
 
     parser.token_cur = flecs_script_impl(script)->token_buffer;
@@ -58628,6 +58632,10 @@ const char* flecs_script_identifier(
     ecs_assert(flecs_script_is_identifier(pos[0]), ECS_INTERNAL_ERROR, NULL);
     bool is_var = pos[0] == '$';
     char *outpos = parser->token_cur;
+
+    if (parser->merge_variable_members) {
+        is_var = false;
+    }
 
     do {
         char c = pos[0];
