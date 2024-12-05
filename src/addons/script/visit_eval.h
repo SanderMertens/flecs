@@ -9,19 +9,14 @@
 typedef struct ecs_script_eval_visitor_t {
     ecs_script_visit_t base;
     ecs_world_t *world;
-    ecs_allocator_t *allocator;
+    ecs_script_runtime_t *r;
     ecs_script_template_t *template;
     ecs_entity_t module;
     ecs_entity_t parent;
     ecs_script_entity_t *entity;
-    ecs_vec_t using;
-    ecs_vec_t with;
-    ecs_vec_t with_type_info;
-    ecs_vec_t annot;
     ecs_entity_t with_relationship;
     int32_t with_relationship_sp;
     ecs_script_vars_t *vars;
-    ecs_stack_t stack;
 } ecs_script_eval_visitor_t;
 
 void flecs_script_eval_error_(
@@ -64,7 +59,7 @@ void flecs_script_template_fini(
     ecs_script_template_t *template);
 
 void flecs_script_eval_visit_init(
-    ecs_script_impl_t *script,
+    const ecs_script_impl_t *script,
     ecs_script_eval_visitor_t *v);
 
 void flecs_script_eval_visit_fini(

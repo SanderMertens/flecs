@@ -57,6 +57,16 @@ typedef struct ecs_function_calldata_t {
 #include "visit.h"
 #include "visit_eval.h"
 
+struct ecs_script_runtime_t {
+    ecs_allocator_t allocator;
+    ecs_expr_stack_t expr_stack;
+    ecs_stack_t stack;
+    ecs_vec_t using;
+    ecs_vec_t with;
+    ecs_vec_t with_type_info;
+    ecs_vec_t annot;
+};
+
 struct ecs_script_template_t {
     /* Template handle */
     ecs_entity_t entity;

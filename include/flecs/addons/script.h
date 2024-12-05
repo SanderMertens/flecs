@@ -78,6 +78,9 @@ typedef struct ecs_script_t {
     const char *code;
 } ecs_script_t;
 
+/* Runtime for executing scripts */
+typedef struct ecs_script_runtime_t ecs_script_runtime_t;
+
 /** Script component. 
  * This component is added to the entities of managed scripts and templates.
  */
@@ -131,7 +134,7 @@ ecs_script_t* ecs_script_parse(
 */
 FLECS_API
 int ecs_script_eval(
-    ecs_script_t *script);
+    const ecs_script_t *script);
 
 /** Free script.
  * This operation frees a script object.
@@ -180,6 +183,31 @@ FLECS_API
 int ecs_script_run_file(
     ecs_world_t *world,
     const char *filename);
+
+/** Create runtime for script.
+ * A script runtime is a container for any data created during script 
+ * evaluation. By default calling ecs_script_run() or ecs_script_eval() will
+ * create a runtime on the spot. A runtime can be created in advance and reused
+ * across multiple script evaluations to improve performance.
+ * 
+ * When scripts are evaluated on multiple threads, each thread should have its
+ * own script runtime.
+ * 
+ * A script runtime must be deleted with ecs_script_runtime_free().
+ * 
+ * @return A new script runtime.
+ */
+FLECS_API
+ecs_script_runtime_t* ecs_script_runtime_new(void);
+
+/** Free script runtime.
+ * This operation frees a script runtime created by ecs_script_runtime_new().
+ * 
+ * @param runtime The runtime to free.
+ */
+FLECS_API
+void ecs_script_runtime_free(
+    ecs_script_runtime_t *runtime);
 
 /** Convert script AST to string.
  * This operation converts the script abstract syntax tree to a string, which
@@ -426,6 +454,7 @@ typedef struct ecs_script_expr_run_desc_t {
     void *lookup_ctx;
     ecs_script_vars_t *vars;
     ecs_entity_t type;
+    ecs_script_runtime_t *runtime;
 } ecs_script_expr_run_desc_t;
 
 /** Run expression.
