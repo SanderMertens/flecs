@@ -90,8 +90,8 @@ void flecs_script_template_on_set(
 
     ecs_script_eval_visitor_t v;
     flecs_script_eval_visit_init(flecs_script_impl(script->script), &v);
-    ecs_vec_t prev_using = v.using;
-    v.using = template->using_;
+    ecs_vec_t prev_using = v.r->using;
+    v.r->using = template->using_;
 
     ecs_script_scope_t *scope = template->node->scope;
 
@@ -113,7 +113,7 @@ void flecs_script_template_on_set(
 
         /* Create variables to hold template properties */
         ecs_script_vars_t *vars = flecs_script_vars_push(
-            NULL, &v.stack, v.allocator);
+            NULL, &v.r->stack, &v.r->allocator);
         vars->parent = template->vars; /* Include hoisted variables */
 
         /* Populate properties from template members */
@@ -162,7 +162,7 @@ void flecs_script_template_on_set(
         data = ECS_OFFSET(data, ti->size);
     }
 
-    v.using = prev_using;
+    v.r->using = prev_using;
     flecs_script_eval_visit_fini(&v);
 }
 
@@ -194,7 +194,8 @@ int flecs_script_template_eval_prop(
         }
 
         var->value.type = type;
-        var->value.ptr = flecs_stack_alloc(&v->stack, ti->size, ti->alignment);
+        var->value.ptr = flecs_stack_alloc(
+            &v->r->stack, ti->size, ti->alignment);
         var->type_info = ti;
 
         if (flecs_script_eval_expr(v, &node->expr, &var->value)) {
@@ -275,7 +276,7 @@ int flecs_script_template_preprocess(
     ecs_visit_action_t prev_visit = v->base.visit;
     v->template = template;
     v->base.visit = (ecs_visit_action_t)flecs_script_template_eval;
-    v->vars = flecs_script_vars_push(v->vars, &v->stack, v->allocator);
+    v->vars = flecs_script_vars_push(v->vars, &v->r->stack, &v->r->allocator);
     int result = ecs_script_visit_scope(v, template->node->scope);
     v->vars = ecs_script_vars_pop(v->vars);
     v->base.visit = prev_visit;
@@ -290,13 +291,13 @@ int flecs_script_template_hoist_using(
 {
     if (v->module) {
         ecs_vec_append_t(
-            v->allocator, &template->using_, ecs_entity_t)[0] = v->module;
+            &v->r->allocator, &template->using_, ecs_entity_t)[0] = v->module;
     }
 
-    int i, count = ecs_vec_count(&v->using);
+    int i, count = ecs_vec_count(&v->r->using);
     for (i = 0; i < count; i ++) {
-        ecs_vec_append_t(v->allocator, &template->using_, ecs_entity_t)[0] = 
-            ecs_vec_get_t(&v->using, ecs_entity_t, i)[0];
+        ecs_vec_append_t(&v->r->allocator, &template->using_, ecs_entity_t)[0] = 
+            ecs_vec_get_t(&v->r->using, ecs_entity_t, i)[0];
     }
 
     return 0;

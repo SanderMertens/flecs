@@ -514,16 +514,24 @@ int flecs_script_expr_visit_eval(
     const ecs_script_expr_run_desc_t *desc,
     ecs_value_t *out)
 {
-    ecs_expr_stack_t stack;
-    flecs_expr_stack_init(&stack);
-    flecs_expr_stack_push(&stack);
+    ecs_expr_stack_t *stack = NULL, stack_local;
+    if (desc && desc->runtime) {
+        stack = &desc->runtime->expr_stack;
+        ecs_assert(stack->frame == 0, ECS_INTERNAL_ERROR, NULL);
+    }
+    if (!stack) {
+        stack = &stack_local;
+        flecs_expr_stack_init(stack);
+    }
 
-    ecs_expr_value_t *val = flecs_expr_stack_result(&stack, node);
+    flecs_expr_stack_push(stack);
+
+    ecs_expr_value_t *val = flecs_expr_stack_result(stack, node);
 
     ecs_script_eval_ctx_t ctx = {
         .script = script,
         .world = script->world,
-        .stack = &stack,
+        .stack = stack,
         .desc = desc
     };
 
@@ -557,12 +565,16 @@ int flecs_script_expr_visit_eval(
         }
     }
 
-    flecs_expr_stack_pop(&stack);
-    flecs_expr_stack_fini(&stack);
+    flecs_expr_stack_pop(stack);
+    if (stack == &stack_local) {
+        flecs_expr_stack_fini(stack);
+    }
     return 0;
 error:
-    flecs_expr_stack_pop(&stack);
-    flecs_expr_stack_fini(&stack);
+    flecs_expr_stack_pop(stack);
+    if (stack == &stack_local) {
+        flecs_expr_stack_fini(stack);
+    }
     return -1;
 }
 

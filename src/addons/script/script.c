@@ -233,8 +233,37 @@ error:
     return 0;
 }
 
+ecs_script_runtime_t* ecs_script_runtime_new(void) 
+{
+    ecs_script_runtime_t *r = ecs_os_calloc_t(ecs_script_runtime_t);
+    flecs_expr_stack_init(&r->expr_stack);
+    flecs_allocator_init(&r->allocator);
+    flecs_stack_init(&r->stack);
+    ecs_vec_init_t(&r->allocator, &r->using, ecs_entity_t, 0);
+    ecs_vec_init_t(&r->allocator, &r->with, ecs_value_t, 0);
+    ecs_vec_init_t(&r->allocator, &r->with_type_info, ecs_type_info_t*, 0);
+    ecs_vec_init_t(&r->allocator, &r->annot, ecs_script_annot_t*, 0);
+    return r;
+}
+
+void ecs_script_runtime_free(
+    ecs_script_runtime_t *r)
+{
+    flecs_expr_stack_fini(&r->expr_stack);
+    ecs_vec_fini_t(&r->allocator, &r->annot, ecs_script_annot_t*);
+    ecs_vec_fini_t(&r->allocator, &r->with, ecs_value_t);
+    ecs_vec_fini_t(&r->allocator, &r->with_type_info, ecs_type_info_t*);
+    ecs_vec_fini_t(&r->allocator, &r->using, ecs_entity_t);
+    flecs_allocator_fini(&r->allocator);
+    flecs_stack_fini(&r->stack);
+    ecs_os_free(r);
+}
+
 static
-int EcsScript_serialize(const ecs_serializer_t *ser, const void *ptr) {
+int EcsScript_serialize(
+    const ecs_serializer_t *ser, 
+    const void *ptr) 
+{
     const EcsScript *data = ptr;
     if (data->script) {
         ser->member(ser, "name");
