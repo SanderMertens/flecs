@@ -52,6 +52,14 @@ void flecs_expr_binary_visit_free(
 }
 
 static
+void flecs_expr_identifier_visit_free(
+    ecs_script_t *script,
+    ecs_expr_identifier_t *node)
+{
+    flecs_script_expr_visit_free(script, node->expr);
+}
+
+static
 void flecs_expr_function_visit_free(
     ecs_script_t *script,
     ecs_expr_function_t *node)
@@ -117,6 +125,8 @@ void flecs_script_expr_visit_free(
         flecs_free_t(a, ecs_expr_binary_t, node);
         break;
     case EcsExprIdentifier:
+        flecs_expr_identifier_visit_free(
+            script, (ecs_expr_identifier_t*)node);
         flecs_free_t(a, ecs_expr_identifier_t, node);
         break;
     case EcsExprVariable:

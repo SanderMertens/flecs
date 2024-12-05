@@ -517,6 +517,10 @@ int flecs_expr_binary_visit_type(
         goto error;
     }
 
+    if (ecs_get(script->world, result_type, EcsBitmask) != NULL) {
+        operand_type = ecs_id(ecs_u64_t);
+    }
+
     if (operand_type != node->left->type) {
         node->left = (ecs_expr_node_t*)flecs_expr_cast(
             script, node->left, operand_type);
@@ -549,7 +553,36 @@ int flecs_expr_identifier_visit_type(
         *cur = ecs_meta_cursor(script->world, ecs_id(ecs_entity_t), NULL);
     }
 
+    ecs_entity_t type = node->node.type;
+
+    ecs_expr_value_node_t *result = flecs_expr_value_from(
+        script, (ecs_expr_node_t*)node, type);
+
+    if (type == ecs_id(ecs_entity_t)) {
+        result->storage.entity = desc->lookup_action(
+            script->world, node->value, desc->lookup_ctx);
+        if (!result->storage.entity) {
+            flecs_script_expr_visit_free(script, (ecs_expr_node_t*)result);
+            flecs_expr_visit_error(script, node, 
+                "unresolved identifier '%s'", node->value);
+            goto error;
+        }
+        result->ptr = &result->storage.entity;
+    } else {
+        ecs_meta_cursor_t tmp_cur = ecs_meta_cursor(
+            script->world, type, &result->storage.u64);
+        if (ecs_meta_set_string(&tmp_cur, node->value)) {
+            flecs_script_expr_visit_free(script, (ecs_expr_node_t*)result);
+            goto error;
+        }
+        result->ptr = &result->storage.u64;
+    }
+
+    node->expr = (ecs_expr_node_t*)result;
+
     return 0;
+error:
+    return -1;
 }
 
 static

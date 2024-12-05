@@ -501,13 +501,15 @@ ecs_script_t* ecs_script_expr_parse(
         goto error;
     }
 
-    // printf("%s\n", ecs_script_expr_to_str(world, out));
+    // printf("%s\n", ecs_script_ast_to_str(script));
 
-    if (flecs_script_expr_visit_fold(script, &impl->expr, &priv_desc)) {
-        goto error;
+    if (!desc || !desc->disable_folding) {
+        if (flecs_script_expr_visit_fold(script, &impl->expr, &priv_desc)) {
+            goto error;
+        }
     }
 
-    // printf("%s\n", ecs_script_expr_to_str(world, out));
+    // printf("%s\n", ecs_script_ast_to_str(script));
 
     return script;
 error:

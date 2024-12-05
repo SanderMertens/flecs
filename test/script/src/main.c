@@ -367,6 +367,7 @@ void Error_template_in_template(void);
 void Error_unterminated_binary(void);
 
 // Testsuite 'Expr'
+void Expr_setup(void);
 void Expr_add_2_int_literals(void);
 void Expr_add_2_int_literals_twice(void);
 void Expr_sub_2_int_literals(void);
@@ -616,6 +617,7 @@ void Serialize_escape_string_w_2_trailing_newlines(void);
 void Serialize_escape_string_w_delim(void);
 
 // Testsuite 'Deserialize'
+void Deserialize_setup(void);
 void Deserialize_bool(void);
 void Deserialize_byte(void);
 void Deserialize_char(void);
@@ -3448,6 +3450,14 @@ bake_test_case Deserialize_testcases[] = {
     }
 };
 
+const char* Expr_folding_param[] = {"enabled", "disabled"};
+bake_test_param Expr_params[] = {
+    {"folding", (char**)Expr_folding_param, 2}
+};
+const char* Deserialize_folding_param[] = {"enabled", "disabled"};
+bake_test_param Deserialize_params[] = {
+    {"folding", (char**)Deserialize_folding_param, 2}
+};
 
 static bake_test_suite suites[] = {
     {
@@ -3473,10 +3483,12 @@ static bake_test_suite suites[] = {
     },
     {
         "Expr",
-        NULL,
+        Expr_setup,
         NULL,
         174,
-        Expr_testcases
+        Expr_testcases,
+        1,
+        Expr_params
     },
     {
         "Vars",
@@ -3494,10 +3506,12 @@ static bake_test_suite suites[] = {
     },
     {
         "Deserialize",
-        NULL,
+        Deserialize_setup,
         NULL,
         86,
-        Deserialize_testcases
+        Deserialize_testcases,
+        1,
+        Deserialize_params
     }
 };
 

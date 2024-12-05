@@ -67,11 +67,9 @@ int flecs_expr_initializer_eval_static(
             goto error;
         }
 
-        ecs_expr_value_node_t *elem_value = (ecs_expr_value_node_t*)elem->value;
-
         /* Type is guaranteed to be correct, since type visitor will insert
          * a cast to the type of the initializer element. */
-        ecs_entity_t type = elem_value->node.type;
+        ecs_entity_t type = elem->value->type;
 
         if (expr->owned) {
             if (ecs_value_move(ctx->world, type, 
@@ -133,15 +131,13 @@ int flecs_expr_initializer_eval_dynamic(
             goto error;
         }
 
-        ecs_expr_value_node_t *elem_value = (ecs_expr_value_node_t*)elem->value;
-
         if (elem->member) {
             ecs_meta_member(&cur, elem->member);
         }
 
         ecs_value_t v_elem_value = {
-            .ptr = elem_value->ptr,
-            .type = elem_value->node.type
+            .ptr = expr->value.ptr,
+            .type = expr->value.type
         };
 
         if (ecs_meta_set_value(&cur, &v_elem_value)) {
@@ -239,6 +235,15 @@ int flecs_expr_binary_visit_eval(
 error:
     flecs_expr_stack_pop(ctx->stack);
     return -1;
+}
+
+static
+int flecs_expr_identifier_visit_eval(
+    ecs_script_eval_ctx_t *ctx,
+    ecs_expr_identifier_t *node,
+    ecs_expr_value_t *out)
+{
+    return flecs_script_expr_visit_eval_priv(ctx, node->expr, out);
 }
 
 static
@@ -393,10 +398,15 @@ int flecs_expr_component_visit_eval(
         ECS_INTERNAL_ERROR, NULL);
 
     /* Component must be resolvable at parse time */
-    ecs_assert(node->index->kind == EcsExprValue, ECS_INTERNAL_ERROR, NULL);
+    ecs_expr_node_t *index = node->index;
+    if (index->kind == EcsExprIdentifier) {
+        index = ((ecs_expr_identifier_t*)index)->expr;
+    }
+
+    ecs_assert(index->kind == EcsExprValue, ECS_INTERNAL_ERROR, NULL);
 
     ecs_entity_t entity = *(ecs_entity_t*)left->value.ptr;
-    ecs_entity_t component = ((ecs_expr_value_node_t*)node->index)->storage.entity;
+    ecs_entity_t component = ((ecs_expr_value_node_t*)index)->storage.entity;
 
     ecs_assert(out->value.type == node->node.type, ECS_INTERNAL_ERROR, NULL);
     out->value.ptr = ECS_CONST_CAST(void*, 
@@ -458,6 +468,11 @@ int flecs_script_expr_visit_eval_priv(
         }
         break;
     case EcsExprIdentifier:
+        if (flecs_expr_identifier_visit_eval(
+            ctx, (ecs_expr_identifier_t*)node, out)) 
+        {
+            goto error;
+        }
         break;
     case EcsExprVariable:
         if (flecs_expr_variable_visit_eval(

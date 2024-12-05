@@ -376,6 +376,10 @@
             ]
         }, {
             "id": "Expr",
+            "params": {
+                "folding": ["enabled", "disabled"]
+            },
+            "setup": true,
             "testcases": [
                 "add_2_int_literals",
                 "add_2_int_literals_twice",
@@ -631,6 +635,10 @@
             ]
         }, {
             "id": "Deserialize",
+            "params": {
+                "folding": ["enabled", "disabled"]
+            },
+            "setup": true,
             "testcases": [
                 "bool",
                 "byte",
