@@ -491,6 +491,17 @@ void Expr_var_parent_func(void);
 void Expr_var_name_func(void);
 void Expr_var_doc_name_func(void);
 void Expr_var_chain_func(void);
+void Expr_root_func_void_return(void);
+void Expr_root_func(void);
+void Expr_scoped_func(void);
+void Expr_root_func_w_1_arg(void);
+void Expr_root_func_w_1_arg_expr(void);
+void Expr_root_func_w_2_args(void);
+void Expr_root_func_w_enum_arg(void);
+void Expr_root_func_w_struct_arg(void);
+void Expr_root_func_w_array_arg(void);
+void Expr_root_func_mismatching_args(void);
+void Expr_method_w_1_arg(void);
 void Expr_interpolate_string_w_i32_var(void);
 void Expr_interpolate_string_w_string_var(void);
 void Expr_interpolate_string_w_entity_var(void);
@@ -2616,6 +2627,50 @@ bake_test_case Expr_testcases[] = {
         Expr_var_chain_func
     },
     {
+        "root_func_void_return",
+        Expr_root_func_void_return
+    },
+    {
+        "root_func",
+        Expr_root_func
+    },
+    {
+        "scoped_func",
+        Expr_scoped_func
+    },
+    {
+        "root_func_w_1_arg",
+        Expr_root_func_w_1_arg
+    },
+    {
+        "root_func_w_1_arg_expr",
+        Expr_root_func_w_1_arg_expr
+    },
+    {
+        "root_func_w_2_args",
+        Expr_root_func_w_2_args
+    },
+    {
+        "root_func_w_enum_arg",
+        Expr_root_func_w_enum_arg
+    },
+    {
+        "root_func_w_struct_arg",
+        Expr_root_func_w_struct_arg
+    },
+    {
+        "root_func_w_array_arg",
+        Expr_root_func_w_array_arg
+    },
+    {
+        "root_func_mismatching_args",
+        Expr_root_func_mismatching_args
+    },
+    {
+        "method_w_1_arg",
+        Expr_method_w_1_arg
+    },
+    {
         "interpolate_string_w_i32_var",
         Expr_interpolate_string_w_i32_var
     },
@@ -3485,7 +3540,7 @@ static bake_test_suite suites[] = {
         "Expr",
         Expr_setup,
         NULL,
-        174,
+        185,
         Expr_testcases,
         1,
         Expr_params

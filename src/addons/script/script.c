@@ -301,10 +301,6 @@ void FlecsScriptImport(
     ecs_set_name_prefix(world, "Ecs");
     ECS_COMPONENT_DEFINE(world, EcsScript);
 
-    ecs_set_name_prefix(world, "EcsScript");
-    ECS_COMPONENT_DEFINE(world, EcsScriptFunction);
-    ECS_COMPONENT_DEFINE(world, EcsScriptMethod);
-
     ecs_set_hooks(world, EcsScript, {
         .ctor = flecs_default_ctor,
         .move = ecs_move(EcsScript),
@@ -328,25 +324,11 @@ void FlecsScriptImport(
         .type.serialize = EcsScript_serialize
     });
 
-    ecs_struct(world, {
-        .entity = ecs_id(EcsScriptFunction),
-        .members = {
-            { .name = "return_type", .type = ecs_id(ecs_entity_t) }
-        }
-    });
-
-    ecs_struct(world, {
-        .entity = ecs_id(EcsScriptMethod),
-        .members = {
-            { .name = "return_type", .type = ecs_id(ecs_entity_t) }
-        }
-    });
-
     ecs_add_id(world, ecs_id(EcsScript), EcsPairIsTag);
     ecs_add_id(world, ecs_id(EcsScript), EcsPrivate);
     ecs_add_pair(world, ecs_id(EcsScript), EcsOnInstantiate, EcsDontInherit);
 
-    flecs_script_register_builtin_functions(world);
+    flecs_script_function_import(world);
 }
 
 #endif

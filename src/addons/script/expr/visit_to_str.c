@@ -151,8 +151,15 @@ int flecs_expr_function_to_str(
         ecs_strbuf_appendlit(v->buf, ".");
     }
 
-    ecs_strbuf_append(v->buf, "%s%s()%s", 
-        ECS_CYAN, node->function_name, ECS_NORMAL);
+    ecs_strbuf_append(v->buf, "%s(", node->function_name);
+
+    if (node->args) {
+        if (flecs_expr_node_to_str(v, (ecs_expr_node_t*)node->args)) {
+            return -1;
+        }
+    }
+
+    ecs_strbuf_append(v->buf, ")");
     return 0;
 }
 
@@ -246,6 +253,7 @@ int flecs_expr_node_to_str(
         }
         break;
     case EcsExprFunction:
+    case EcsExprMethod:
         if (flecs_expr_function_to_str(v, 
             (const ecs_expr_function_t*)node)) 
         {

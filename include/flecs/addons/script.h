@@ -31,11 +31,18 @@
 extern "C" {
 #endif
 
+#define FLECS_SCRIPT_FUNCTION_ARGS_MAX (16)
+
 FLECS_API
 extern ECS_COMPONENT_DECLARE(EcsScript);
+
+FLECS_API
 extern ECS_COMPONENT_DECLARE(EcsScriptFunction);
+
+FLECS_API
 extern ECS_COMPONENT_DECLARE(EcsScriptMethod);
 
+/* Script template. */
 typedef struct ecs_script_template_t ecs_script_template_t;
 
 /** Script variable. */
@@ -57,20 +64,6 @@ typedef struct ecs_script_vars_t {
     ecs_allocator_t *allocator;
 } ecs_script_vars_t;
 
-/** Script function context */
-typedef struct ecs_function_ctx_t {
-    ecs_world_t *world;
-    ecs_entity_t function;
-    void *ctx;
-} ecs_function_ctx_t;
-
-/** Script function callback */
-typedef void(*ecs_function_callback_t)(
-    const ecs_function_ctx_t *ctx,
-    int32_t argc,
-    const ecs_value_t *argv,
-    ecs_value_t *result);
-
 /** Script object. */
 typedef struct ecs_script_t {
     ecs_world_t *world;
@@ -89,11 +82,32 @@ typedef struct EcsScript {
     ecs_script_template_t *template_; /* Only set for template scripts */
 } EcsScript;
 
+/** Script function context. */
+typedef struct ecs_function_ctx_t {
+    ecs_world_t *world;
+    ecs_entity_t function;
+    void *ctx;
+} ecs_function_ctx_t;
+
+/** Script function callback. */
+typedef void(*ecs_function_callback_t)(
+    const ecs_function_ctx_t *ctx,
+    int32_t argc,
+    const ecs_value_t *argv,
+    ecs_value_t *result);
+
+/** Function argument type. */
+typedef struct ecs_script_parameter_t {
+    const char *name;
+    ecs_entity_t type;
+} ecs_script_parameter_t;
+
 /** Function component.
  * This component describes a function that can be called from a script.
  */
 typedef struct EcsScriptFunction {
     ecs_entity_t return_type;
+    ecs_vec_t params; /* vec<ecs_script_parameter_t> */
     ecs_function_callback_t callback;
     void *ctx;
 } EcsScriptFunction;
@@ -105,6 +119,7 @@ typedef struct EcsScriptFunction {
  */
 typedef struct EcsScriptMethod {
     ecs_entity_t return_type;
+    ecs_vec_t params; /* vec<ecs_script_parameter_t> */
     ecs_function_callback_t callback;
     void *ctx;
 } EcsScriptMethod;
@@ -531,6 +546,66 @@ char* ecs_script_string_interpolate(
     ecs_world_t *world,
     const char *str,
     const ecs_script_vars_t *vars);
+
+
+/* Functions */
+
+/** Used with ecs_script_function_init and ecs_script_method_init */
+typedef struct ecs_script_function_desc_t {
+    /** Function name. */
+    const char *name;
+    
+    /** Parent of function. For methods the parent is the type for which the 
+     * method will be registered. */
+    ecs_entity_t parent;
+
+    /** Function parameters. */
+    ecs_script_parameter_t params[FLECS_SCRIPT_FUNCTION_ARGS_MAX];
+
+    /** Function return type. */
+    ecs_entity_t return_type;
+
+    /** Function implementation. */
+    ecs_function_callback_t callback;
+
+    /** Context passed to function implementation. */
+    void *ctx;
+} ecs_script_function_desc_t;
+
+/** Create new function. 
+ * This operation creates a new function that can be called from a script.
+ * 
+ * @param world The world.
+ * @param desc Function init parameters.
+ * @return The function, or 0 if failed.
+*/
+FLECS_API
+ecs_entity_t ecs_script_function_init(
+    ecs_world_t *world,
+    const ecs_script_function_desc_t *desc);
+
+#define ecs_script_function(world, ...)\
+    ecs_script_function_init(world, &(ecs_script_function_desc_t)__VA_ARGS__)
+
+/** Create new method. 
+ * This operation creates a new method that can be called from a script. A 
+ * method is like a function, except that it can be called on every instance of
+ * a type.
+ * 
+ * Methods automatically receive the instance on which the method is invoked as
+ * first argument.
+ * 
+ * @param world Method The world.
+ * @param desc Method init parameters.
+ * @return The function, or 0 if failed.
+*/
+FLECS_API
+ecs_entity_t ecs_script_method_init(
+    ecs_world_t *world,
+    const ecs_script_function_desc_t *desc);
+
+#define ecs_script_method(world, ...)\
+    ecs_script_method_init(world, &(ecs_script_function_desc_t)__VA_ARGS__)
 
 
 /* Value serialization */

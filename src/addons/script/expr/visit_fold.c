@@ -292,6 +292,27 @@ int flecs_expr_identifier_visit_fold(
 }
 
 static
+int flecs_expr_arguments_visit_fold(
+    ecs_script_t *script,
+    ecs_expr_initializer_t *node,
+    const ecs_script_expr_run_desc_t *desc)
+{
+    ecs_expr_initializer_element_t *elems = ecs_vec_first(&node->elements);
+    int32_t i, count = ecs_vec_count(&node->elements);
+    for (i = 0; i < count; i ++) {
+        ecs_expr_initializer_element_t *elem = &elems[i];
+
+        if (flecs_script_expr_visit_fold(script, &elem->value, desc)) {
+            goto error;
+        }
+    }
+
+    return 0;
+error:
+    return -1;
+}
+
+static
 int flecs_expr_function_visit_fold(
     ecs_script_t *script,
     ecs_expr_node_t **node_ptr,
@@ -301,6 +322,12 @@ int flecs_expr_function_visit_fold(
 
     if (flecs_script_expr_visit_fold(script, &node->left, desc)) {
         goto error;
+    }
+
+    if (node->args) {
+        if (flecs_expr_arguments_visit_fold(script, node->args, desc)) {
+            goto error;
+        }
     }
 
     return 0;
@@ -381,6 +408,7 @@ int flecs_script_expr_visit_fold(
     case EcsExprVariable:
         break;
     case EcsExprFunction:
+    case EcsExprMethod:
         if (flecs_expr_function_visit_fold(script, node_ptr, desc)) {
             goto error;
         }
