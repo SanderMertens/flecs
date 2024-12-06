@@ -9,14 +9,14 @@
 
 #ifdef FLECS_TIMER
 
-static
+static inline
 void AddTickSource(ecs_iter_t *it) {
     for (int32_t i = 0; i < it->count; i ++) {
         ecs_set(it->world, it->entities[i], EcsTickSource, {0});
     }
 }
 
-static
+static inline
 void ProgressTimers(ecs_iter_t *it) {
     EcsTimer *timer = ecs_field(it, EcsTimer, 0);
     EcsTickSource *tick_source = ecs_field(it, EcsTickSource, 1);
@@ -54,7 +54,7 @@ void ProgressTimers(ecs_iter_t *it) {
     }
 }
 
-static
+static inline
 void ProgressRateFilters(ecs_iter_t *it) {
     EcsRateFilter *filter = ecs_field(it, EcsRateFilter, 0);
     EcsTickSource *tick_dst = ecs_field(it, EcsTickSource, 1);
@@ -92,7 +92,7 @@ void ProgressRateFilters(ecs_iter_t *it) {
     }
 }
 
-static
+static inline
 void ProgressTickSource(ecs_iter_t *it) {
     EcsTickSource *tick_src = ecs_field(it, EcsTickSource, 0);
 
@@ -264,7 +264,7 @@ error:
     return;
 }
 
-static
+static inline
 void RandomizeTimers(ecs_iter_t *it) {
     EcsTimer *timer = ecs_field(it, EcsTimer, 0);
     for (int32_t i = 0; i < it->count; i ++) {

@@ -128,11 +128,7 @@ ecs_flags32_t ecs_id_get_flags(
     ecs_id_t id)
 {
     ecs_id_record_t *idr = flecs_id_record_get(world, id);
-    if (idr) {
-        return idr->flags;
-    } else {
-        return 0;
-    }
+    return idr ? idr->flags : 0;
 }
 
 ecs_id_t ecs_id_from_str(

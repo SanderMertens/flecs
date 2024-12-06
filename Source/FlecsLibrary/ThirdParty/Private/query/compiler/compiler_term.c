@@ -59,7 +59,7 @@ ecs_var_id_t flecs_query_find_var_id(
     return flecs_query_find_var_id(query, name, EcsVarTable);
 }
 
-static
+static inline
 ecs_var_id_t flecs_query_most_specific_var(
     ecs_query_impl_t *query,
     const char *name,
@@ -86,11 +86,7 @@ ecs_var_id_t flecs_query_most_specific_var(
 
     /* If table var is written, and entity var doesn't exist or is not written,
      * return table var */
-    if (tvar != EcsVarNone) {
-        return tvar;
-    } else {
-        return evar;
-    }
+    return tvar != EcsVarNone ? tvar : evar;
 }
 
 ecs_query_lbl_t flecs_query_op_insert(

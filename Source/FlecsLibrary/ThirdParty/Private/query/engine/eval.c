@@ -11,7 +11,12 @@
 static int flecs_query_trace_indent = 0;
 #endif
 
-static
+typedef bool (*flecs_query_func_t)(
+    const ecs_query_op_t *,
+    bool,
+    ecs_query_run_ctx_t *);
+
+static inline
 bool flecs_query_dispatch(
     const ecs_query_op_t *op,
     bool redo,
@@ -134,18 +139,14 @@ bool flecs_query_with(
     return true;
 }
 
-static
+static inline
 bool flecs_query_and(
     const ecs_query_op_t *op,
     bool redo,
     const ecs_query_run_ctx_t *ctx)
 {
     const uint64_t written = ctx->written[ctx->op_index];
-    if (written & (1ull << op->src.var)) {
-        return flecs_query_with(op, redo, ctx);
-    } else {
-        return flecs_query_select(op, redo, ctx);
-    }
+    return written & 1ull << op->src.var ? flecs_query_with(op, redo, ctx) : flecs_query_select(op, redo, ctx);
 }
 
 bool flecs_query_select_id(
@@ -234,19 +235,16 @@ bool flecs_query_with_id(
     return true;
 }
 
-static
+static inline
 bool flecs_query_up(
     const ecs_query_op_t *op,
     bool redo,
     const ecs_query_run_ctx_t *ctx)
 {
     const uint64_t written = ctx->written[ctx->op_index];
-    if (flecs_ref_is_written(op, &op->src, EcsQuerySrc, written)) {
-        return flecs_query_up_with(op, redo, ctx);
-    } else {
-        return flecs_query_up_select(op, redo, ctx, 
-            FlecsQueryUpSelectUp, FlecsQueryUpSelectDefault);
-    }
+    return flecs_ref_is_written(op, &op->src, EcsQuerySrc, written)
+                ? flecs_query_up_with(op, redo, ctx) : flecs_query_up_select(op, redo, ctx, 
+                   FlecsQueryUpSelectUp, FlecsQueryUpSelectDefault);
 }
 
 static
@@ -318,7 +316,7 @@ bool flecs_query_only_any(
     }
 }
 
-static
+static inline
 bool flecs_query_triv(
     const ecs_query_op_t *op,
     bool redo,
@@ -336,7 +334,7 @@ bool flecs_query_triv(
     }
 }
 
-static
+static inline
 bool flecs_query_cache(
     const ecs_query_op_t *op,
     bool redo,
@@ -347,14 +345,10 @@ bool flecs_query_cache(
 
     const uint64_t written = ctx->written[ctx->op_index];
     ctx->written[ctx->op_index + 1] |= 1ull;
-    if (written & 1ull) {
-        return flecs_query_cache_test(ctx, redo);
-    } else {
-        return flecs_query_cache_search(ctx);
-    }
+    return written & 1ull ? flecs_query_cache_test(ctx, redo) : flecs_query_cache_search(ctx);
 }
 
-static
+static inline
 bool flecs_query_is_cache(
     const ecs_query_op_t *op,
     bool redo,
@@ -364,14 +358,10 @@ bool flecs_query_is_cache(
 
     const uint64_t written = ctx->written[ctx->op_index];
     ctx->written[ctx->op_index + 1] |= 1ull;
-    if (written & 1ull) {
-        return flecs_query_is_cache_test(ctx, redo);
-    } else {
-        return flecs_query_is_cache_search(ctx);
-    }
+    return written & 1ull ? flecs_query_is_cache_test(ctx, redo) : flecs_query_is_cache_search(ctx);
 }
 
-static
+static inline
 int32_t flecs_query_next_inheritable_id(
     ecs_world_t *world,
     ecs_type_t *type,
@@ -1312,7 +1302,7 @@ bool flecs_query_if_set(
     return flecs_query_run_block(redo, ctx, op_ctx);
 }
 
-static
+static inline
 bool flecs_query_end(
     const ecs_query_op_t *op,
     bool redo,
@@ -1322,65 +1312,67 @@ bool flecs_query_end(
     return !redo;
 }
 
-static
+static inline
 bool flecs_query_dispatch(
     const ecs_query_op_t *op,
     bool redo,
     ecs_query_run_ctx_t *ctx)
 {
-    switch(op->kind) {
-    case EcsQueryAnd: return flecs_query_and(op, redo, ctx);
-    case EcsQueryAndAny: return flecs_query_and_any(op, redo, ctx);
-    case EcsQueryTriv: return flecs_query_triv(op, redo, ctx);
-    case EcsQueryCache: return flecs_query_cache(op, redo, ctx);
-    case EcsQueryIsCache: return flecs_query_is_cache(op, redo, ctx);
-    case EcsQueryOnlyAny: return flecs_query_only_any(op, redo, ctx);
-    case EcsQueryUp: return flecs_query_up(op, redo, ctx);
-    case EcsQuerySelfUp: return flecs_query_self_up(op, redo, ctx);
-    case EcsQueryWith: return flecs_query_with(op, redo, ctx);
-    case EcsQueryTrav: return flecs_query_trav(op, redo, ctx);
-    case EcsQueryAndFrom: return flecs_query_and_from(op, redo, ctx);
-    case EcsQueryNotFrom: return flecs_query_not_from(op, redo, ctx);
-    case EcsQueryOrFrom: return flecs_query_or_from(op, redo, ctx);
-    case EcsQueryIds: return flecs_query_ids(op, redo, ctx);
-    case EcsQueryIdsRight: return flecs_query_idsright(op, redo, ctx);
-    case EcsQueryIdsLeft: return flecs_query_idsleft(op, redo, ctx);
-    case EcsQueryEach: return flecs_query_each(op, redo, ctx);
-    case EcsQueryStore: return flecs_query_store(op, redo, ctx);
-    case EcsQueryReset: return flecs_query_reset(op, redo, ctx);
-    case EcsQueryOr: return flecs_query_or(op, redo, ctx);
-    case EcsQueryOptional: return flecs_query_optional(op, redo, ctx);
-    case EcsQueryIfVar: return flecs_query_if_var(op, redo, ctx);
-    case EcsQueryIfSet: return flecs_query_if_set(op, redo, ctx);
-    case EcsQueryEnd: return flecs_query_end(op, redo, ctx);
-    case EcsQueryNot: return flecs_query_not(op, redo, ctx);
-    case EcsQueryPredEq: return flecs_query_pred_eq(op, redo, ctx);
-    case EcsQueryPredNeq: return flecs_query_pred_neq(op, redo, ctx);
-    case EcsQueryPredEqName: return flecs_query_pred_eq_name(op, redo, ctx);
-    case EcsQueryPredNeqName: return flecs_query_pred_neq_name(op, redo, ctx);
-    case EcsQueryPredEqMatch: return flecs_query_pred_eq_match(op, redo, ctx);
-    case EcsQueryPredNeqMatch: return flecs_query_pred_neq_match(op, redo, ctx);
-    case EcsQueryMemberEq: return flecs_query_member_eq(op, redo, ctx);
-    case EcsQueryMemberNeq: return flecs_query_member_neq(op, redo, ctx);
-    case EcsQueryToggle: return flecs_query_toggle(op, redo, ctx);
-    case EcsQueryToggleOption: return flecs_query_toggle_option(op, redo, ctx);
-    case EcsQueryUnionEq: return flecs_query_union(op, redo, ctx);
-    case EcsQueryUnionEqWith: return flecs_query_union_with(op, redo, ctx, false);
-    case EcsQueryUnionNeq: return flecs_query_union_neq(op, redo, ctx);
-    case EcsQueryUnionEqUp: return flecs_query_union_up(op, redo, ctx);
-    case EcsQueryUnionEqSelfUp: return flecs_query_union_self_up(op, redo, ctx);
-    case EcsQueryLookup: return flecs_query_lookup(op, redo, ctx);
-    case EcsQuerySetVars: return flecs_query_setvars(op, redo, ctx);
-    case EcsQuerySetThis: return flecs_query_setthis(op, redo, ctx);
-    case EcsQuerySetFixed: return flecs_query_setfixed(op, redo, ctx);
-    case EcsQuerySetIds: return flecs_query_setids(op, redo, ctx);
-    case EcsQuerySetId: return flecs_query_setid(op, redo, ctx);
-    case EcsQueryContain: return flecs_query_contain(op, redo, ctx);
-    case EcsQueryPairEq: return flecs_query_pair_eq(op, redo, ctx);
-    case EcsQueryYield: return false;
-    case EcsQueryNothing: return false;
-    }
-    return false;
+    static const flecs_query_func_t flecs_query_jump_table[] = {
+        [EcsQueryAnd] = flecs_query_and,
+        [EcsQueryAndAny] = flecs_query_and_any,
+        [EcsQueryTriv] = flecs_query_triv,
+        [EcsQueryCache] = flecs_query_cache,
+        [EcsQueryIsCache] = flecs_query_is_cache,
+        [EcsQueryOnlyAny] = flecs_query_only_any,
+        [EcsQueryUp] = flecs_query_up,
+        [EcsQuerySelfUp] = flecs_query_self_up,
+        [EcsQueryWith] = flecs_query_with,
+        [EcsQueryTrav] = flecs_query_trav,
+        [EcsQueryAndFrom] = flecs_query_and_from,
+        [EcsQueryNotFrom] = flecs_query_not_from,
+        [EcsQueryOrFrom] = flecs_query_or_from,
+        [EcsQueryIds] = flecs_query_ids,
+        [EcsQueryIdsRight] = flecs_query_idsright,
+        [EcsQueryIdsLeft] = flecs_query_idsleft,
+        [EcsQueryEach] = flecs_query_each,
+        [EcsQueryStore] = flecs_query_store,
+        [EcsQueryReset] = flecs_query_reset,
+        [EcsQueryOr] = flecs_query_or,
+        [EcsQueryOptional] = flecs_query_optional,
+        [EcsQueryIfVar] = flecs_query_if_var,
+        [EcsQueryIfSet] = flecs_query_if_set,
+        [EcsQueryEnd] = flecs_query_end,
+        [EcsQueryNot] = flecs_query_not,
+        [EcsQueryPredEq] = flecs_query_pred_eq,
+        [EcsQueryPredNeq] = flecs_query_pred_neq,
+        [EcsQueryPredEqName] = flecs_query_pred_eq_name,
+        [EcsQueryPredNeqName] = flecs_query_pred_neq_name,
+        [EcsQueryPredEqMatch] = flecs_query_pred_eq_match,
+        [EcsQueryPredNeqMatch] = flecs_query_pred_neq_match,
+        [EcsQueryMemberEq] = flecs_query_member_eq,
+        [EcsQueryMemberNeq] = flecs_query_member_neq,
+        [EcsQueryToggle] = flecs_query_toggle,
+        [EcsQueryToggleOption] = flecs_query_toggle_option,
+        [EcsQueryUnionEq] = flecs_query_union,
+        [EcsQueryUnionEqWith] = (flecs_query_func_t)flecs_query_union_with, // cast due to extra argument
+        [EcsQueryUnionNeq] = flecs_query_union_neq,
+        [EcsQueryUnionEqUp] = flecs_query_union_up,
+        [EcsQueryUnionEqSelfUp] = flecs_query_union_self_up,
+        [EcsQueryLookup] = flecs_query_lookup,
+        [EcsQuerySetVars] = flecs_query_setvars,
+        [EcsQuerySetThis] = flecs_query_setthis,
+        [EcsQuerySetFixed] = flecs_query_setfixed,
+        [EcsQuerySetIds] = flecs_query_setids,
+        [EcsQuerySetId] = flecs_query_setid,
+        [EcsQueryContain] = flecs_query_contain,
+        [EcsQueryPairEq] = flecs_query_pair_eq,
+        [EcsQueryYield] = NULL,   // returns false by definition
+        [EcsQueryNothing] = NULL  // returns false by definition
+    };
+
+    flecs_query_func_t fn = flecs_query_jump_table[op->kind];
+    return fn && fn(op, redo, ctx);
 }
 
 bool flecs_query_run_until(
@@ -1394,6 +1386,8 @@ bool flecs_query_run_until(
     ecs_assert(first >= -1, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(cur >= 0, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(cur > first, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_os_perf_trace_pop("flecs.query.run_until");
 
     ctx->op_index = cur;
     const ecs_query_op_t *op = &ops[ctx->op_index];
@@ -1431,6 +1425,7 @@ bool flecs_query_run_until(
             printf("%*sfalse\n", flecs_query_trace_indent*2, "");
             flecs_query_trace_indent --;
 #endif
+            ecs_os_perf_trace_pop("flecs.query.run_until");
             return false;
         }
     } while (op < last_op);
@@ -1440,5 +1435,6 @@ bool flecs_query_run_until(
         flecs_query_trace_indent --;
 #endif
 
+    ecs_os_perf_trace_pop("flecs.query.run_until");
     return true;
 }

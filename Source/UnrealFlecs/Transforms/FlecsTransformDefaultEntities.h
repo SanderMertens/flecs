@@ -9,8 +9,6 @@
 
 // Gets the closest Entity with FGlobalTransform
 DEFINE_DEFAULT_ENTITY_OPTION(FlecsLocalTrait);
-
-// Maybe deprecated
 DEFINE_DEFAULT_ENTITY_OPTION(FlecsGlobalTrait);
 
 /*USTRUCT(BlueprintType)

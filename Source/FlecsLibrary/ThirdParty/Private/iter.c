@@ -734,7 +734,7 @@ bool ecs_iter_var_is_constrained(
     return (it->constrained_vars & (flecs_uto(uint64_t, 1 << var_id))) != 0;
 }
 
-static
+static inline
 void ecs_chained_iter_fini(
     ecs_iter_t *it)
 {

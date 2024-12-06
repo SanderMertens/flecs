@@ -100,7 +100,7 @@ ecs_trav_down_t* flecs_query_up_find_next_traversable(
         op_ctx->row = row;
 
         /* Get down cache entry for traversable entity */
-        bool match_empty = (q->flags & EcsQueryMatchEmptyTables) != 0;
+        const bool match_empty = (q->flags & EcsQueryMatchEmptyTables) != 0;
         op_ctx->down = flecs_query_get_down_cache(ctx, &op_ctx->cache, 
             op_ctx->trav, entity, op_ctx->idr_with, self, match_empty);
         op_ctx->cache_elem = -1;

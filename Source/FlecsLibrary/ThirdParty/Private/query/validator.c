@@ -405,11 +405,7 @@ int flecs_term_populate_from_id(
         }
     } else {
         ecs_entity_t first_id = ecs_get_alive(world, first);
-        if (!first_id) {
-            term->first.id = first | ECS_TERM_REF_FLAGS(&term->first);
-        } else {
-            term->first.id = first_id | ECS_TERM_REF_FLAGS(&term->first);
-        }
+        term->first.id = !first_id ? first | ECS_TERM_REF_FLAGS(&term->first) : first_id | ECS_TERM_REF_FLAGS(&term->first);
     }
 
     ecs_entity_t term_second = flecs_term_ref_get_entity(&term->second);
@@ -420,11 +416,7 @@ int flecs_term_populate_from_id(
         }
     } else if (second) {
         ecs_entity_t second_id = ecs_get_alive(world, second);
-        if (!second_id) {
-            term->second.id = second | ECS_TERM_REF_FLAGS(&term->second);
-        } else {
-            term->second.id = second_id | ECS_TERM_REF_FLAGS(&term->second);
-        }
+        term->second.id = !second_id ? second | ECS_TERM_REF_FLAGS(&term->second) : second_id | ECS_TERM_REF_FLAGS(&term->second);
     }
 
     return 0;

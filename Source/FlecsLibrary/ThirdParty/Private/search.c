@@ -9,7 +9,7 @@
 
 #include "private_api.h"
 
-static
+static inline
 int32_t flecs_type_search(
     const ecs_table_t *table,
     ecs_id_record_t *idr,
@@ -30,7 +30,7 @@ int32_t flecs_type_search(
     return -1;
 }
 
-static
+static inline
 int32_t flecs_type_offset_search(
     int32_t offset,
     ecs_id_t id,
