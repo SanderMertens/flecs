@@ -15,6 +15,8 @@ int ecs_entity_to_json_buf(
     const ecs_entity_to_json_desc_t *desc)
 {
     const ecs_world_t *world = ecs_get_world(stage);
+    ecs_visitor_desc_t visitor_desc;
+    flecs_json_init_visitor_desc(&visitor_desc, buf);
 
     if (!entity || !ecs_is_valid(world, entity)) {
         return -1;
@@ -70,7 +72,7 @@ int ecs_entity_to_json_buf(
     };
 
     if (flecs_json_serialize_iter_result(
-        world, &it, buf, &iter_desc, &ser_ctx))
+        world, &it, &visitor_desc, &iter_desc, &ser_ctx))
     {
         return -1;
     }

@@ -3,9 +3,11 @@
  * @brief Serialize (component) values to JSON strings.
  */
 
+#include "flecs.h"
 #include "json.h"
 
 #ifdef FLECS_JSON
+#include "../serialize/serialize.h"
 
 static
 bool flecs_json_skip_variable(
@@ -331,32 +333,46 @@ void flecs_json_serialize_iter_this(
     const char *parent_path,
     const ecs_json_this_data_t *this_data,
     int32_t row,
-    ecs_strbuf_t *buf,
+    ecs_visitor_desc_t *visitor_desc,
     const ecs_iter_to_json_desc_t *desc)
 {
+
     ecs_assert(row < it->count, ECS_INTERNAL_ERROR, NULL);
 
     if (parent_path) {
-        flecs_json_memberl(buf, "parent");
-        flecs_json_string(buf, parent_path);
+        if (visitor_desc->visit_member)
+            visitor_desc->visit_member("parent", visitor_desc->user_data);
+        if (visitor_desc->visit_member)
+            visitor_desc->visit_member(parent_path, visitor_desc->user_data);
     }
 
-    flecs_json_memberl(buf, "name");
+    if (visitor_desc->visit_member)
+        visitor_desc->visit_member("name", visitor_desc->user_data);
     if (this_data->names) {
-        flecs_json_string(buf, this_data->names[row].value);
+        if (visitor_desc->visit_member)
+            visitor_desc->visit_member(this_data->names[row].value, visitor_desc->user_data);
     } else {
-        ecs_strbuf_appendlit(buf, "\"#");
-        ecs_strbuf_appendint(buf, flecs_uto(int64_t, 
-            (uint32_t)it->entities[row]));
-        ecs_strbuf_appendlit(buf, "\"");
+        if (visitor_desc->visit_string) {
+            ecs_strbuf_t buf = ECS_STRBUF_INIT;
+            ecs_strbuf_appendlit(&buf, "\"#");
+            ecs_strbuf_appendint(&buf, flecs_uto(int64_t, 
+                (uint32_t)it->entities[row]));
+            ecs_strbuf_appendlit(&buf, "\"");
+            visitor_desc->visit_string(ecs_strbuf_get(&buf), visitor_desc->user_data);
+        }
     }
 
     if (desc && desc->serialize_entity_ids) {
-        flecs_json_memberl(buf, "id");
-        flecs_json_u32(buf, (uint32_t)this_data->ids[row]);
+        if (visitor_desc->visit_member)
+            visitor_desc->visit_member("id", visitor_desc->user_data);
+        if (visitor_desc->visit_u32) {
+            visitor_desc->visit_u32(this_data->ids[row], visitor_desc->user_data);
+        }
     }
 
 #ifdef FLECS_DOC
+    // TODO
+    ecs_strbuf_t* buf = (ecs_strbuf_t*)visitor_desc->user_data;
     if (desc && desc->serialize_doc) {
         flecs_json_memberl(buf, "doc");
         flecs_json_object_push(buf);
@@ -400,15 +416,18 @@ void flecs_json_serialize_iter_this(
 #endif
 
     if (this_data->has_alerts) {
-        flecs_json_memberl(buf, "has_alerts");
-        flecs_json_true(buf);
+        if (visitor_desc->visit_member)
+            visitor_desc->visit_member("has_alerts", visitor_desc->user_data);
+        if (visitor_desc->visit_u32) {
+            visitor_desc->visit_bool(true, visitor_desc->user_data);
+        }
     }
 }
 
 int flecs_json_serialize_iter_result(
     const ecs_world_t *world, 
     const ecs_iter_t *it, 
-    ecs_strbuf_t *buf,
+    ecs_visitor_desc_t *visitor_desc,
     const ecs_iter_to_json_desc_t *desc,
     ecs_json_ser_ctx_t *ser_ctx)
 {
@@ -472,13 +491,13 @@ int flecs_json_serialize_iter_result(
     }
 
     if (desc && desc->serialize_table) {
-        if (flecs_json_serialize_iter_result_table(world, it, buf, 
+        if (flecs_json_serialize_iter_result_table(world, it, visitor_desc, 
             desc, count, has_this, parent_path, &this_data))
         {
             goto error;
         }
     } else {
-        if (flecs_json_serialize_iter_result_query(world, it, buf, ser_ctx, 
+        if (flecs_json_serialize_iter_result_query(world, it, visitor_desc, ser_ctx,
             desc, count, has_this, parent_path, &this_data))
         {
             goto error;

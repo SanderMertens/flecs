@@ -30,7 +30,7 @@ void flecs_meta_import_definitions(
 int flecs_expr_ser_primitive(
     const ecs_world_t *world,
     ecs_primitive_kind_t kind,
-    const void *base, 
+    const void *base,
     ecs_strbuf_t *str,
     bool is_expr);
 
