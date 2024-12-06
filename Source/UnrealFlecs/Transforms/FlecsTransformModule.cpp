@@ -14,7 +14,7 @@ UFlecsTransformModule::UFlecsTransformModule()
 
 void UFlecsTransformModule::InitializeModule(UFlecsWorld* InWorld, const FFlecsEntityHandle& InModuleEntity)
 {
-	InWorld->CreateObserver<const FFlecsRelativeTrait&>(TEXT("RelativeTransformObserver"))
+	/*InWorld->CreateObserver<const FFlecsRelativeTrait&>(TEXT("RelativeTransformObserver"))
 		.event(flecs::OnAdd)
 		.event(flecs::OnSet)
 		.yield_existing()
@@ -37,25 +37,39 @@ void UFlecsTransformModule::InitializeModule(UFlecsWorld* InWorld, const FFlecsE
 			const FFlecsEntityHandle RelativeEntity
 				= TraitParentEntity.GetFlecsWorld()->LookupEntity(Path.Left(SeparatorIndex));
 			solid_checkf(RelativeEntity.IsValid(), TEXT("Relative entity is invalid"));
-				
-		});
+		});*/
 
 	const flecs::entity_t FlecsTransformSystemKind = flecs::PreFrame;
-	
-	InWorld->CreateSystemWithBuilder<
-		FFlecsTransformComponent, FFlecsGlobalTransformComponent*, const FFlecsGlobalTransformComponent>(
-			TEXT("FlecsTransformPropagateSystem"))
+
+	InWorld->CreateSystemWithBuilder<FFlecsTransformComponent>(
+		TEXT("FlecsGlobalTransformPropagateSystem"))
 		.kind(FlecsTransformSystemKind)
 		.term_at(0).read()
-		.term_at(1).write().optional()
-		.term_at(2).parent().cascade()
+		.begin_scope_traits<FFlecsTransformComponent>()
+			.without(FlecsLocalTrait)
+		.end_scope_traits()
+		.write<FFlecsGlobalTransformComponent>().optional()
+		.each([](flecs::iter& Iter, size_t Index, FFlecsTransformComponent& InTransform)
+		{
+			Iter.entity(Index).set<FFlecsGlobalTransformComponent>(
+				InTransform.GetTransform());
+		});
+	
+	InWorld->CreateSystemWithBuilder<
+		FFlecsTransformComponent, const FFlecsGlobalTransformComponent*>(
+			TEXT("FlecsLocalTransformPropagateSystem"))
+		.kind(FlecsTransformSystemKind)
+		.term_at(0).read()
+		.term_at(1).parent().cascade().read()
 		.begin_scope_traits<FFlecsTransformComponent>()
 			.with(FlecsLocalTrait)
 		.end_scope_traits()
+		.write<FFlecsGlobalTransformComponent>().optional()
 		.each([](flecs::iter& Iter, size_t Index, FFlecsTransformComponent& InTransform,
-				FFlecsGlobalTransformComponent* InGlobalTransform,
-				const FFlecsGlobalTransformComponent& InParentTransform)
+				const FFlecsGlobalTransformComponent* InParentTransform)
 		{
+			Iter.entity(Index).set<FFlecsGlobalTransformComponent>(
+				InTransform.GetTransform() * InParentTransform->GetTransform());
 		});
 }
 
