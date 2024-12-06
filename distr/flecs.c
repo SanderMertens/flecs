@@ -29577,6 +29577,8 @@ void* flecs_bcalloc_w_dbg_info(
     ecs_block_allocator_t *ba,
     const char *type_name)
 {
+    (void)type_name;
+
 #ifdef FLECS_USE_OS_ALLOC
     ecs_assert(ba != NULL, ECS_INTERNAL_ERROR, NULL);
     return ecs_os_calloc(ba->data_size);
@@ -29618,16 +29620,16 @@ void flecs_bfree_w_dbg_info(
 
 #ifdef FLECS_SANITIZE
     memory = ECS_OFFSET(memory, -ECS_SIZEOF(int64_t));
-    ecs_block_allocator_t *actual_ba = *(ecs_block_allocator_t**)memory;
-    if (actual_ba != ba) {
+    ecs_block_allocator_t *actual = *(ecs_block_allocator_t**)memory;
+    if (actual != ba) {
         if (type_name) {
             ecs_err("chunk %p returned to wrong allocator "
                 "(chunk = %ub, allocator = %ub, type = %s)",
-                    memory, actual_ba->data_size, ba->data_size, type_name);
+                    memory, actual->data_size, ba->data_size, type_name);
         } else {
             ecs_err("chunk %p returned to wrong allocator "
                 "(chunk = %ub, allocator = %ub)",
-                    memory, actual_ba->data_size, ba->chunk_size);
+                    memory, actual->data_size, ba->chunk_size);
         }
         ecs_abort(ECS_INTERNAL_ERROR, NULL);
     }
@@ -29661,6 +29663,8 @@ void* flecs_brealloc_w_dbg_info(
     void *memory,
     const char *type_name)
 {
+    (void)type_name;
+
     void *result;
 #ifdef FLECS_USE_OS_ALLOC
     (void)src;
