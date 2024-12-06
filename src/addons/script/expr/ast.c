@@ -19,7 +19,8 @@ void* flecs_expr_ast_new_(
 {
     ecs_assert(parser->script != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_allocator_t *a = &parser->script->allocator;
-    ecs_expr_node_t *result = flecs_calloc(a, size);
+    ecs_expr_node_t *result = flecs_calloc_w_dbg_info(a, size,
+        "ecs_expr_node_t");
     result->kind = kind;
     result->pos = parser->pos;
     return result;

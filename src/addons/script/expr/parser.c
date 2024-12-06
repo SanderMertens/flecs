@@ -486,8 +486,8 @@ ecs_script_t* ecs_script_expr_parse(
     };
 
     impl->token_buffer_size = ecs_os_strlen(expr) * 2 + 1;
-    impl->token_buffer = flecs_alloc(
-        &impl->allocator, impl->token_buffer_size);
+    impl->token_buffer = flecs_alloc_w_dbg_info(
+        &impl->allocator, impl->token_buffer_size, "token buffer");
     parser.token_cur = impl->token_buffer;
 
     const char *ptr = flecs_script_parse_expr(&parser, expr, 0, &impl->expr);

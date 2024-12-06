@@ -47,7 +47,8 @@ void* ecs_value_new_w_type_info(
     ecs_check(ti != NULL, ECS_INVALID_PARAMETER, NULL);
     (void)world;
 
-    void *result = flecs_alloc(&world->allocator, ti->size);
+    void *result = flecs_alloc_w_dbg_info(
+        &world->allocator, ti->size, ti->name);
     if (ecs_value_init_w_type_info(world, ti, result) != 0) {
         flecs_free(&world->allocator, ti->size, result);
         goto error;

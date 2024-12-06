@@ -18015,7 +18015,8 @@ void* ecs_value_new_w_type_info(
     ecs_check(ti != NULL, ECS_INVALID_PARAMETER, NULL);
     (void)world;
 
-    void *result = flecs_alloc(&world->allocator, ti->size);
+    void *result = flecs_alloc_w_dbg_info(
+        &world->allocator, ti->size, ti->name);
     if (ecs_value_init_w_type_info(world, ti, result) != 0) {
         flecs_free(&world->allocator, ti->size, result);
         goto error;
@@ -29452,6 +29453,10 @@ void flecs_ballocator_init(
     ba->data_size = size;
 #ifdef FLECS_SANITIZE
     ba->alloc_count = 0;
+    if (size != 24) { /* Prevent stack overflow as map uses block allocator */
+        ba->outstanding = ecs_os_malloc_t(ecs_map_t);
+        ecs_map_init(ba->outstanding, NULL);
+    }
     size += ECS_SIZEOF(int64_t);
 #endif
     ba->chunk_size = ECS_ALIGN(size, 16);
@@ -29476,8 +29481,27 @@ void flecs_ballocator_fini(
     ecs_assert(ba != NULL, ECS_INTERNAL_ERROR, NULL);
 
 #ifdef FLECS_SANITIZE
-    ecs_assert(ba->alloc_count == 0, ECS_LEAK_DETECTED, 
-        "(size = %u)", (uint32_t)ba->data_size);
+    if (ba->alloc_count != 0) {
+        ecs_err("Leak detected! (size %u, remaining = %d)",
+            (uint32_t)ba->data_size, ba->alloc_count);
+        if (ba->outstanding) {
+            ecs_map_iter_t it = ecs_map_iter(ba->outstanding);
+            while (ecs_map_next(&it)) {
+                uint64_t key = ecs_map_key(&it);
+                char *type_name = ecs_map_ptr(&it);
+                if (type_name) {
+                    printf(" - %p (%s)\n", (void*)key, type_name);
+                } else {
+                    printf(" - %p (unknown type)\n", (void*)key);
+                }
+            }
+        }
+        ecs_abort(ECS_LEAK_DETECTED, NULL);
+    }
+    if (ba->outstanding) {
+        ecs_map_fini(ba->outstanding);
+        ecs_os_free(ba->outstanding);
+    }
 #endif
 
     ecs_block_allocator_block_t *block;
@@ -29499,8 +29523,16 @@ void flecs_ballocator_free(
 }
 
 void* flecs_balloc(
-    ecs_block_allocator_t *ba) 
+    ecs_block_allocator_t *ba)
 {
+    return flecs_balloc_w_dbg_info(ba, NULL);
+}
+
+void* flecs_balloc_w_dbg_info(
+    ecs_block_allocator_t *ba,
+    const char *type_name)
+{
+    (void)type_name;
     void *result;
 #ifdef FLECS_USE_OS_ALLOC
     result = ecs_os_malloc(ba->data_size);
@@ -29518,8 +29550,12 @@ void* flecs_balloc(
 
 #ifdef FLECS_SANITIZE
     ecs_assert(ba->alloc_count >= 0, ECS_INTERNAL_ERROR, "corrupted allocator");
+    if (ba->outstanding) {
+        uint64_t *v = ecs_map_ensure(ba->outstanding, (uintptr_t)result);
+        *(const char**)v = type_name;
+    }
     ba->alloc_count ++;
-    *(int64_t*)result = ba->chunk_size;
+    *(int64_t*)result = (uintptr_t)ba;
     result = ECS_OFFSET(result, ECS_SIZEOF(int64_t));
 #endif
 #endif
@@ -29534,12 +29570,19 @@ void* flecs_balloc(
 void* flecs_bcalloc(
     ecs_block_allocator_t *ba) 
 {
+    return flecs_bcalloc_w_dbg_info(ba, NULL);
+}
+
+void* flecs_bcalloc_w_dbg_info(
+    ecs_block_allocator_t *ba,
+    const char *type_name)
+{
 #ifdef FLECS_USE_OS_ALLOC
     ecs_assert(ba != NULL, ECS_INTERNAL_ERROR, NULL);
     return ecs_os_calloc(ba->data_size);
 #else
     if (!ba) return NULL;
-    void *result = flecs_balloc(ba);
+    void *result = flecs_balloc_w_dbg_info(ba, type_name);
     ecs_os_memset(result, 0, ba->data_size);
     return result;
 #endif
@@ -29575,27 +29618,32 @@ void flecs_bfree_w_dbg_info(
 
 #ifdef FLECS_SANITIZE
     memory = ECS_OFFSET(memory, -ECS_SIZEOF(int64_t));
-    if (*(int64_t*)memory != ba->chunk_size) {
+    ecs_block_allocator_t *actual_ba = *(ecs_block_allocator_t**)memory;
+    if (actual_ba != ba) {
         if (type_name) {
             ecs_err("chunk %p returned to wrong allocator "
                 "(chunk = %ub, allocator = %ub, type = %s)",
-                    memory, *(int64_t*)memory, ba->chunk_size, type_name);
+                    memory, actual_ba->data_size, ba->data_size, type_name);
         } else {
             ecs_err("chunk %p returned to wrong allocator "
                 "(chunk = %ub, allocator = %ub)",
-                    memory, *(int64_t*)memory, ba->chunk_size);
+                    memory, actual_ba->data_size, ba->chunk_size);
         }
         ecs_abort(ECS_INTERNAL_ERROR, NULL);
     }
 
+    if (ba->outstanding) {
+        ecs_map_remove(ba->outstanding, (uintptr_t)memory);
+    }
+
     ba->alloc_count --;
+    ecs_assert(ba->alloc_count >= 0, ECS_INTERNAL_ERROR, 
+        "corrupted allocator (size = %d)", ba->chunk_size);
 #endif
 
     ecs_block_allocator_chunk_header_t *chunk = memory;
     chunk->next = ba->head;
     ba->head = chunk;
-    ecs_assert(ba->alloc_count >= 0, ECS_INTERNAL_ERROR, 
-        "corrupted allocator (size = %d)", ba->chunk_size);
 #endif
 }
 
@@ -29603,6 +29651,15 @@ void* flecs_brealloc(
     ecs_block_allocator_t *dst, 
     ecs_block_allocator_t *src, 
     void *memory)
+{
+    return flecs_brealloc_w_dbg_info(dst, src, memory, NULL);
+}
+
+void* flecs_brealloc_w_dbg_info(
+    ecs_block_allocator_t *dst, 
+    ecs_block_allocator_t *src, 
+    void *memory,
+    const char *type_name)
 {
     void *result;
 #ifdef FLECS_USE_OS_ALLOC
@@ -29613,7 +29670,7 @@ void* flecs_brealloc(
         return memory;
     }
 
-    result = flecs_balloc(dst);
+    result = flecs_balloc_w_dbg_info(dst, type_name);
     if (result && src) {
         ecs_size_t size = src->data_size;
         if (dst->data_size < size) {
@@ -29621,7 +29678,7 @@ void* flecs_brealloc(
         }
         ecs_os_memcpy(result, memory, size);
     }
-    flecs_bfree(src, memory);
+    flecs_bfree_w_dbg_info(src, memory, type_name);
 #endif
 #ifdef FLECS_MEMSET_UNINITIALIZED
     if (dst && src && (dst->data_size > src->data_size)) {
@@ -32504,12 +32561,24 @@ void ecs_vec_init(
     ecs_size_t size,
     int32_t elem_count)
 {
+    ecs_vec_init_w_dbg_info(allocator, v, size, elem_count, NULL);
+}
+
+void ecs_vec_init_w_dbg_info(
+    struct ecs_allocator_t *allocator,
+    ecs_vec_t *v,
+    ecs_size_t size,
+    int32_t elem_count,
+    const char *type_name)
+{
+    (void)type_name;
     ecs_assert(size != 0, ECS_INVALID_PARAMETER, NULL);
     v->array = NULL;
     v->count = 0;
     if (elem_count) {
         if (allocator) {
-            v->array = flecs_alloc(allocator, size * elem_count);
+            v->array = flecs_alloc_w_dbg_info(
+                allocator, size * elem_count, type_name);
         } else {
             v->array = ecs_os_malloc(size * elem_count);
         }
@@ -32517,6 +32586,7 @@ void ecs_vec_init(
     v->size = elem_count;
 #ifdef FLECS_SANITIZE
     v->elem_size = size;
+    v->type_name = type_name;
 #endif
 }
 
@@ -32662,8 +32732,14 @@ void ecs_vec_set_size(
         }
         if (elem_count != v->size) {
             if (allocator) {
+#ifdef FLECS_SANITIZE
+                v->array = flecs_realloc_w_dbg_info(
+                    allocator, size * elem_count, size * v->size, v->array,
+                    v->type_name);
+#else
                 v->array = flecs_realloc(
                     allocator, size * elem_count, size * v->size, v->array);
+#endif
             } else {
                 v->array = ecs_os_realloc(v->array, size * elem_count);
             }
@@ -54700,7 +54776,8 @@ void* flecs_ast_new_(
 {
     ecs_assert(parser->script != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_allocator_t *a = &parser->script->allocator;
-    ecs_script_node_t *result = flecs_calloc(a, size);
+    ecs_script_node_t *result = flecs_calloc_w_dbg_info(
+        a, size, "ecs_script_node_t");
     result->kind = kind;
     result->pos = parser->pos;
     return result;
@@ -56367,8 +56444,8 @@ ecs_script_t* ecs_script_parse(
      * ensures that AST nodes don't need to do separate allocations for the data
      * they contain. */
     impl->token_buffer_size = ecs_os_strlen(code) * 2 + 1;
-    impl->token_buffer = flecs_alloc(
-        &impl->allocator, impl->token_buffer_size);
+    impl->token_buffer = flecs_alloc_w_dbg_info(
+        &impl->allocator, impl->token_buffer_size, "token buffer");
     parser.token_cur = impl->token_buffer;
 
     /* Start parsing code */
@@ -58191,7 +58268,8 @@ int flecs_script_template_eval_prop(
 
         ecs_script_var_t *value = ecs_vec_append_t(&v->base.script->allocator, 
             &template->prop_defaults, ecs_script_var_t);
-        value->value.ptr = flecs_calloc(&v->base.script->allocator, ti->size);
+        value->value.ptr = flecs_calloc_w_dbg_info(
+            &v->base.script->allocator, ti->size, ti->name);
         value->value.type = type;
         value->type_info = ti;
         ecs_value_copy_w_type_info(
@@ -58276,14 +58354,14 @@ int flecs_script_template_hoist_using(
     ecs_script_eval_visitor_t *v,
     ecs_script_template_t *template)
 {
+    ecs_allocator_t *a = &v->base.script->allocator;
     if (v->module) {
-        ecs_vec_append_t(
-            &v->r->allocator, &template->using_, ecs_entity_t)[0] = v->module;
+        ecs_vec_append_t(a, &template->using_, ecs_entity_t)[0] = v->module;
     }
 
     int i, count = ecs_vec_count(&v->r->using);
     for (i = 0; i < count; i ++) {
-        ecs_vec_append_t(&v->r->allocator, &template->using_, ecs_entity_t)[0] = 
+        ecs_vec_append_t(a, &template->using_, ecs_entity_t)[0] = 
             ecs_vec_get_t(&v->r->using, ecs_entity_t, i)[0];
     }
 
@@ -58343,6 +58421,7 @@ void flecs_script_template_fini(
     }
 
     ecs_vec_fini_t(a, &template->prop_defaults, ecs_script_var_t);
+
     ecs_vec_fini_t(a, &template->using_, ecs_entity_t);
     ecs_script_vars_fini(template->vars);
     flecs_free_t(a, ecs_script_template_t, template);
@@ -73418,7 +73497,8 @@ void* flecs_expr_ast_new_(
 {
     ecs_assert(parser->script != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_allocator_t *a = &parser->script->allocator;
-    ecs_expr_node_t *result = flecs_calloc(a, size);
+    ecs_expr_node_t *result = flecs_calloc_w_dbg_info(a, size,
+        "ecs_expr_node_t");
     result->kind = kind;
     result->pos = parser->pos;
     return result;
@@ -74084,8 +74164,8 @@ ecs_script_t* ecs_script_expr_parse(
     };
 
     impl->token_buffer_size = ecs_os_strlen(expr) * 2 + 1;
-    impl->token_buffer = flecs_alloc(
-        &impl->allocator, impl->token_buffer_size);
+    impl->token_buffer = flecs_alloc_w_dbg_info(
+        &impl->allocator, impl->token_buffer_size, "token buffer");
     parser.token_cur = impl->token_buffer;
 
     const char *ptr = flecs_script_parse_expr(&parser, expr, 0, &impl->expr);
@@ -75569,8 +75649,8 @@ void flecs_expr_initializer_visit_free(
         flecs_script_expr_visit_free(script, elem->value);
     }
 
-    ecs_vec_fini_t(&script->world->allocator, &node->elements, 
-        ecs_expr_initializer_element_t);
+    ecs_allocator_t *a = &flecs_script_impl(script)->allocator;
+    ecs_vec_fini_t(a, &node->elements, ecs_expr_initializer_element_t);
 }
 
 static
@@ -75639,7 +75719,7 @@ void flecs_script_expr_visit_free(
         return;
     }
 
-    ecs_allocator_t *a = &script->world->allocator;
+    ecs_allocator_t *a = &flecs_script_impl(script)->allocator;
 
     switch(node->kind) {
     case EcsExprValue:
