@@ -14,6 +14,11 @@ FFlecsEntityHandle::FFlecsEntityHandle()
 {
 }
 
+FFlecsEntityHandle::FFlecsEntityHandle(UFlecsWorld* InWorld, const flecs::entity_t InEntity)
+{
+    SetEntity(flecs::entity(InWorld->World, InEntity));
+}
+
 FFlecsEntityHandle::FFlecsEntityHandle(const flecs::world_t* InWorld, const flecs::entity_t InEntity)
 {
     SetEntity(flecs::entity(InWorld, InEntity));

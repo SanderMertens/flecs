@@ -63,6 +63,8 @@ public:
 		Entity = flecs::entity(InWorld, InEntity);
 	}
 
+	SOLID_INLINE FFlecsEntityHandle(UFlecsWorld* InWorld, const flecs::entity_t InEntity);
+
 	SOLID_INLINE FFlecsEntityHandle(const flecs::world_t* InWorld, const flecs::entity_t InEntity);
 	
 	SOLID_INLINE NO_DISCARD flecs::entity GetEntity() const
