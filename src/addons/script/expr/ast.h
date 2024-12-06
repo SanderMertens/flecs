@@ -17,6 +17,7 @@ typedef enum ecs_expr_node_kind_t {
     EcsExprIdentifier,
     EcsExprVariable,
     EcsExprFunction,
+    EcsExprMethod,
     EcsExprMember,
     EcsExprElement,
     EcsExprComponent,
@@ -84,6 +85,7 @@ typedef struct ecs_expr_member_t {
 typedef struct ecs_expr_function_t {
     ecs_expr_node_t node;
     ecs_expr_node_t *left;
+    ecs_expr_initializer_t *args;
     const char *function_name;
     ecs_function_calldata_t calldata;
 } ecs_expr_function_t;

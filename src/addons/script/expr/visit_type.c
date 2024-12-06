@@ -610,6 +610,45 @@ error:
 }
 
 static
+int flecs_expr_arguments_visit_type(
+    ecs_script_t *script,
+    ecs_expr_initializer_t *node,
+    const ecs_script_expr_run_desc_t *desc,
+    const ecs_vec_t *param_vec)
+{
+    ecs_expr_initializer_element_t *elems = ecs_vec_first(&node->elements);
+    int32_t i, count = ecs_vec_count(&node->elements);
+
+    if (count != ecs_vec_count(param_vec)) {
+        flecs_expr_visit_error(script, node, "expected %d arguments, got %d",
+            ecs_vec_count(param_vec), count);
+        goto error;
+    }
+
+    ecs_script_parameter_t *params = ecs_vec_first(param_vec);
+
+    for (i = 0; i < count; i ++) {
+        ecs_expr_initializer_element_t *elem = &elems[i];
+
+        ecs_meta_cursor_t cur = ecs_meta_cursor(
+            script->world, params[i].type, NULL);
+
+        if (flecs_script_expr_visit_type_priv(script, elem->value, &cur, desc)){
+            goto error;
+        }
+
+        if (elem->value->type != params[i].type) {
+            elem->value = (ecs_expr_node_t*)flecs_expr_cast(
+                script, elem->value, params[i].type);
+        }
+    }
+
+    return 0;
+error:
+    return -1;
+}
+
+static
 int flecs_expr_function_visit_type(
     ecs_script_t *script,
     ecs_expr_function_t *node,
@@ -617,23 +656,29 @@ int flecs_expr_function_visit_type(
     const ecs_script_expr_run_desc_t *desc)
 {
     bool is_method = false;
+    char *last_elem = NULL;
+    const char *func_identifier = NULL;
 
     if (node->left->kind == EcsExprIdentifier) {
         /* If identifier contains '.' separator(s), this is a method call, 
          * otherwise it's a regular function. */
         ecs_expr_identifier_t *ident = (ecs_expr_identifier_t*)node->left;
-        char *last_elem = strrchr(ident->value, '.');
+        func_identifier = ident->value;
+
+        last_elem = strrchr(func_identifier, '.');
         if (last_elem && last_elem != ident->value && last_elem[-1] != '\\') {
             node->function_name = last_elem + 1;
             last_elem[0] = '\0';
             is_method = true;
+        } else {
+            node->function_name = ident->value;   
         }
 
     } else if (node->left->kind == EcsExprMember) {
         /* This is a method. Just like identifiers, method strings can contain
          * separators. Split off last separator to get the method. */
         ecs_expr_member_t *member = (ecs_expr_member_t*)node->left;
-        char *last_elem = strrchr(member->member_name, '.');
+        last_elem = strrchr(member->member_name, '.');
         if (!last_elem) {
             node->left = member->left;
             node->function_name = member->member_name;
@@ -655,13 +700,23 @@ int flecs_expr_function_visit_type(
         goto error;
     }
 
-    /* If this is a method, lookup function entity in scope of type */
     ecs_world_t *world = script->world;
+    const ecs_vec_t *params = NULL;
+
+    /* If this is a method, lookup function entity in scope of type */
     if (is_method) {
         ecs_entity_t func = ecs_lookup_from(
             world, node->left->type, node->function_name);
         if (!func) {
-            char *type_str = ecs_get_path(script->world, node->left->type);
+            /* If identifier could be a function (not a method) try that */
+            if (func_identifier) {
+                is_method = false;
+                last_elem[0] = '.';
+                node->function_name = func_identifier;
+                goto try_function;
+            }
+
+            char *type_str = ecs_get_path(world, node->left->type);
             flecs_expr_visit_error(script, node, 
                 "unresolved method identifier '%s' for type '%s'", 
                 node->function_name, type_str);
@@ -669,8 +724,9 @@ int flecs_expr_function_visit_type(
             goto error;
         }
 
-        const EcsScriptMethod *method = ecs_get(world, func, EcsScriptMethod);
-        if (!method) {
+        const EcsScriptMethod *func_data = ecs_get(
+            world, func, EcsScriptMethod);
+        if (!func_data) {
             char *path = ecs_get_path(world, func);
             flecs_expr_visit_error(script, node, 
                 "entity '%s' is not a valid method", path);
@@ -678,10 +734,43 @@ int flecs_expr_function_visit_type(
             goto error;
         }
 
-        node->node.type = method->return_type;
+        node->node.kind = EcsExprMethod;
+        node->node.type = func_data->return_type;
         node->calldata.function = func;
-        node->calldata.callback = method->callback;
-        node->calldata.ctx = method->ctx;
+        node->calldata.callback = func_data->callback;
+        node->calldata.ctx = func_data->ctx;
+        params = &func_data->params;
+    }
+
+try_function:
+    if (!is_method) {
+        ecs_entity_t func = ecs_lookup(world, node->function_name);
+        if (!func) {
+            flecs_expr_visit_error(script, node, 
+                "unresolved function identifier '%s'", 
+                node->function_name);
+            goto error;
+        }
+
+        const EcsScriptFunction *func_data = ecs_get(
+            world, func, EcsScriptFunction);
+        if (!func_data) {
+            char *path = ecs_get_path(world, func);
+            flecs_expr_visit_error(script, node, 
+                "entity '%s' is not a valid method", path);
+            ecs_os_free(path);
+            goto error;
+        }
+
+        node->node.type = func_data->return_type;
+        node->calldata.function = func;
+        node->calldata.callback = func_data->callback;
+        node->calldata.ctx = func_data->ctx;
+        params = &func_data->params;
+    }
+
+    if (flecs_expr_arguments_visit_type(script, node->args, desc, params)) {
+        goto error;
     }
 
     return 0;
@@ -910,8 +999,9 @@ int flecs_script_expr_visit_type_priv(
         break;
     case EcsExprCast:
         break;
+    case EcsExprMethod:
     case EcsExprComponent:
-        /* Component expressions are derived by type visitor */
+        /* Expressions are derived by type visitor */
         ecs_abort(ECS_INTERNAL_ERROR, NULL);
     }
 

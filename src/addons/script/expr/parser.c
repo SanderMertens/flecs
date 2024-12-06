@@ -273,13 +273,22 @@ const char* flecs_script_parse_rhs(
                 }
 
                 case EcsTokParenOpen: {
-                    Parse_1(EcsTokParenClose, { 
-                        ecs_expr_function_t *result = flecs_expr_function(parser);
-                        result->left = *out;
-                        *out = (ecs_expr_node_t*)result;
-                        break; 
-                    });
+                    ecs_expr_function_t *result = flecs_expr_function(parser);
+                    result->left = *out;
 
+                    pos = flecs_script_parse_initializer(
+                        parser, pos, ')', &result->args);
+                    if (!pos) {
+                        goto error;
+                    }
+
+                    *out = (ecs_expr_node_t*)result;
+
+                    if (pos[0] != ')') {
+                        Error("expected end of argument list");
+                    }
+
+                    pos ++;
                     break;
                 }
 

@@ -62,13 +62,11 @@ static
 void flecs_script_register_builtin_doc_functions(
     ecs_world_t *world)
 {
-    ecs_entity_t name = ecs_entity(world, {
+    ecs_entity_t name = ecs_script_method(world, {
         .name = "doc_name",
         .parent = ecs_id(ecs_entity_t),
-        .set = ecs_values(ecs_value(EcsScriptMethod, { 
-            .return_type = ecs_id(ecs_string_t),
-            .callback = flecs_meta_entity_doc_name
-        }))
+        .return_type = ecs_id(ecs_string_t),
+        .callback = flecs_meta_entity_doc_name
     });
 
     ecs_doc_set_brief(world, name, "Returns entity doc name");
@@ -88,35 +86,29 @@ void flecs_script_register_builtin_doc_functions(
 void flecs_script_register_builtin_functions(
     ecs_world_t *world)
 {
-    ecs_entity_t name = ecs_entity(world, {
+    ecs_entity_t name = ecs_script_method(world, {
         .name = "name",
         .parent = ecs_id(ecs_entity_t),
-        .set = ecs_values(ecs_value(EcsScriptMethod, { 
-            .return_type = ecs_id(ecs_string_t),
-            .callback = flecs_meta_entity_name
-        }))
+        .return_type = ecs_id(ecs_string_t),
+        .callback = flecs_meta_entity_name
     });
 
     ecs_doc_set_brief(world, name, "Returns entity name");
 
-    ecs_entity_t path = ecs_entity(world, {
+    ecs_entity_t path = ecs_script_method(world, {
         .name = "path",
         .parent = ecs_id(ecs_entity_t),
-        .set = ecs_values(ecs_value(EcsScriptMethod, { 
-            .return_type = ecs_id(ecs_string_t),
-            .callback = flecs_meta_entity_path
-        }))
+        .return_type = ecs_id(ecs_string_t),
+        .callback = flecs_meta_entity_path
     });
 
     ecs_doc_set_brief(world, path, "Returns entity path");
 
-    ecs_entity_t parent = ecs_entity(world, {
+    ecs_entity_t parent = ecs_script_method(world, {
         .name = "parent",
         .parent = ecs_id(ecs_entity_t),
-        .set = ecs_values(ecs_value(EcsScriptMethod, { 
-            .return_type = ecs_id(ecs_entity_t),
-            .callback = flecs_meta_entity_parent
-        }))
+        .return_type = ecs_id(ecs_entity_t),
+        .callback = flecs_meta_entity_parent
     });
 
     ecs_doc_set_brief(world, parent, "Returns entity parent");

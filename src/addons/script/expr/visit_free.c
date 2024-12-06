@@ -65,6 +65,7 @@ void flecs_expr_function_visit_free(
     ecs_expr_function_t *node)
 {
     flecs_script_expr_visit_free(script, node->left);
+    flecs_script_expr_visit_free(script, (ecs_expr_node_t*)node->args);
 }
 
 static
@@ -133,6 +134,7 @@ void flecs_script_expr_visit_free(
         flecs_free_t(a, ecs_expr_variable_t, node);
         break;
     case EcsExprFunction:
+    case EcsExprMethod:
         flecs_expr_function_visit_free(
             script, (ecs_expr_function_t*)node);
         flecs_free_t(a, ecs_expr_function_t, node);
