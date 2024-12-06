@@ -660,8 +660,6 @@ void Error_entity_w_anonymous_tag(void) {
 }
 
 void Error_member_expr_without_value_end_of_scope(void) {
-    test_quarantine("Mon Aug 5"); // address when porting expressions over to new parser
-
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -674,14 +672,13 @@ void Error_member_expr_without_value_end_of_scope(void) {
         }
     });
 
+    ecs_log_set_level(-4);
     test_assert(ecs_script_run(world, NULL, "Position(x:)") != 0);
 
     ecs_fini(world);
 }
 
 void Error_member_expr_without_value_comma(void) {
-    test_quarantine("Mon Aug 5"); // address when porting expressions over to new parser
-
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -694,14 +691,13 @@ void Error_member_expr_without_value_comma(void) {
         }
     });
 
+    ecs_log_set_level(-4);
     test_assert(ecs_script_run(world, NULL, "Position(x:,0)") != 0);
 
     ecs_fini(world);
 }
 
 void Error_member_expr_without_value_newline(void) {
-    test_quarantine("Mon Aug 5"); // address when porting expressions over to new parser
-
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -714,14 +710,13 @@ void Error_member_expr_without_value_newline(void) {
         }
     });
 
+    ecs_log_set_level(-4);
     test_assert(ecs_script_run(world, NULL, "Position(x:\n)") != 0);
 
     ecs_fini(world);
 }
 
 void Error_2_member_expr_without_value(void) {
-    test_quarantine("Mon Aug 5"); // address when porting expressions over to new parser
-
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -734,6 +729,7 @@ void Error_2_member_expr_without_value(void) {
         }
     });
 
+    ecs_log_set_level(-4);
     test_assert(ecs_script_run(world, NULL, "Position(x:y:)") != 0);
 
     ecs_fini(world);
@@ -778,8 +774,6 @@ void Error_expr_junk_after_unary_minus(void) {
 }
 
 void Error_expr_comma_after_nothing(void) {
-    test_quarantine("Mon Aug 5"); // address when porting expressions over to new parser
-
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -792,6 +786,7 @@ void Error_expr_comma_after_nothing(void) {
         }
     });
 
+    ecs_log_set_level(-4);
     test_assert(ecs_script_run(world, NULL, "Position(,)") != 0);
 
     ecs_fini(world);
