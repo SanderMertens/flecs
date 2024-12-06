@@ -827,8 +827,8 @@ ecs_script_t* ecs_script_parse(
      * ensures that AST nodes don't need to do separate allocations for the data
      * they contain. */
     impl->token_buffer_size = ecs_os_strlen(code) * 2 + 1;
-    impl->token_buffer = flecs_alloc(
-        &impl->allocator, impl->token_buffer_size);
+    impl->token_buffer = flecs_alloc_w_dbg_info(
+        &impl->allocator, impl->token_buffer_size, "token buffer");
     parser.token_cur = impl->token_buffer;
 
     /* Start parsing code */

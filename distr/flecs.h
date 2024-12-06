@@ -264,7 +264,7 @@
  * When enabled, Flecs will use the OS allocator provided in the OS API directly
  * instead of the builtin block allocator. This can decrease memory utilization
  * as memory will be freed more often, at the cost of decreased performance. */
-#define FLECS_USE_OS_ALLOC
+// #define FLECS_USE_OS_ALLOC
 
 /** @def FLECS_ID_DESC_MAX
  * Maximum number of ids to add ecs_entity_desc_t / ecs_bulk_desc_t */
@@ -1097,6 +1097,7 @@ typedef struct ecs_vec_t {
     int32_t size;
 #ifdef FLECS_SANITIZE
     ecs_size_t elem_size;
+    const char *type_name;
 #endif
 } ecs_vec_t;
 
@@ -1107,8 +1108,16 @@ void ecs_vec_init(
     ecs_size_t size,
     int32_t elem_count);
 
+FLECS_API
+void ecs_vec_init_w_dbg_info(
+    struct ecs_allocator_t *allocator,
+    ecs_vec_t *vec,
+    ecs_size_t size,
+    int32_t elem_count,
+    const char *type_name);
+
 #define ecs_vec_init_t(allocator, vec, T, elem_count) \
-    ecs_vec_init(allocator, vec, ECS_SIZEOF(T), elem_count)
+    ecs_vec_init_w_dbg_info(allocator, vec, ECS_SIZEOF(T), elem_count, "vec<"#T">")
 
 FLECS_API
 void ecs_vec_init_if(
@@ -1518,6 +1527,8 @@ void* ecs_sparse_get(
 #define FLECS_BLOCK_ALLOCATOR_H
 
 
+typedef struct ecs_map_t ecs_map_t;
+
 typedef struct ecs_block_allocator_block_t {
     void *memory;
     struct ecs_block_allocator_block_t *next;
@@ -1535,7 +1546,10 @@ typedef struct ecs_block_allocator_t {
     int32_t data_size;
     int32_t chunks_per_block;
     int32_t block_size;
+#ifdef FLECS_SANITIZE
     int32_t alloc_count;
+    ecs_map_t *outstanding;
+#endif
 } ecs_block_allocator_t;
 
 FLECS_API
@@ -1570,8 +1584,18 @@ void* flecs_balloc(
     ecs_block_allocator_t *allocator);
 
 FLECS_API
+void* flecs_balloc_w_dbg_info(
+    ecs_block_allocator_t *allocator,
+    const char *type_name);
+
+FLECS_API
 void* flecs_bcalloc(
     ecs_block_allocator_t *allocator);
+
+FLECS_API
+void* flecs_bcalloc_w_dbg_info(
+    ecs_block_allocator_t *allocator,
+    const char *type_name);
 
 FLECS_API
 void flecs_bfree(
@@ -1589,6 +1613,13 @@ void* flecs_brealloc(
     ecs_block_allocator_t *dst, 
     ecs_block_allocator_t *src, 
     void *memory);
+
+FLECS_API
+void* flecs_brealloc_w_dbg_info(
+    ecs_block_allocator_t *dst, 
+    ecs_block_allocator_t *src, 
+    void *memory,
+    const char *type_name);
 
 FLECS_API
 void* flecs_bdup(
@@ -1719,7 +1750,7 @@ typedef struct ecs_bucket_t {
     ecs_bucket_entry_t *first;
 } ecs_bucket_t;
 
-typedef struct ecs_map_t {
+struct ecs_map_t {
     uint8_t bucket_shift;
     bool shared_allocator;
     ecs_bucket_t *buckets;
@@ -1727,7 +1758,7 @@ typedef struct ecs_map_t {
     int32_t count;
     struct ecs_block_allocator_t *entry_allocator;
     struct ecs_allocator_t *allocator;
-} ecs_map_t;
+};
 
 typedef struct ecs_map_iter_t {
     const ecs_map_t *map;
@@ -2016,12 +2047,14 @@ void* flecs_dup(
 #define flecs_allocator(obj) (&obj->allocators.dyn)
 
 #define flecs_alloc(a, size) flecs_balloc(flecs_allocator_get(a, size))
-#define flecs_alloc_t(a, T) flecs_alloc(a, ECS_SIZEOF(T))
-#define flecs_alloc_n(a, T, count) flecs_alloc(a, ECS_SIZEOF(T) * (count))
+#define flecs_alloc_w_dbg_info(a, size, type_name) flecs_balloc_w_dbg_info(flecs_allocator_get(a, size), type_name)
+#define flecs_alloc_t(a, T) flecs_alloc_w_dbg_info(a, ECS_SIZEOF(T), #T)
+#define flecs_alloc_n(a, T, count) flecs_alloc_w_dbg_info(a, ECS_SIZEOF(T) * (count), #T)
 
 #define flecs_calloc(a, size) flecs_bcalloc(flecs_allocator_get(a, size))
-#define flecs_calloc_t(a, T) flecs_calloc(a, ECS_SIZEOF(T))
-#define flecs_calloc_n(a, T, count) flecs_calloc(a, ECS_SIZEOF(T) * (count))
+#define flecs_calloc_w_dbg_info(a, size, type_name) flecs_bcalloc_w_dbg_info(flecs_allocator_get(a, size), type_name)
+#define flecs_calloc_t(a, T) flecs_calloc_w_dbg_info(a, ECS_SIZEOF(T), #T)
+#define flecs_calloc_n(a, T, count) flecs_calloc_w_dbg_info(a, ECS_SIZEOF(T) * (count), #T)
 
 #define flecs_free(a, size, ptr)\
     flecs_bfree((ptr) ? flecs_allocator_get(a, size) : NULL, ptr)
@@ -2035,6 +2068,11 @@ void* flecs_dup(
     flecs_brealloc(flecs_allocator_get(a, size_dst),\
     flecs_allocator_get(a, size_src),\
     ptr)
+#define flecs_realloc_w_dbg_info(a, size_dst, size_src, ptr, type_name)\
+    flecs_brealloc_w_dbg_info(flecs_allocator_get(a, size_dst),\
+    flecs_allocator_get(a, size_src),\
+    ptr,\
+    type_name)
 #define flecs_realloc_n(a, T, count_dst, count_src, ptr)\
     flecs_realloc(a, ECS_SIZEOF(T) * (count_dst), ECS_SIZEOF(T) * (count_src), ptr)
 

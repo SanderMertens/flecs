@@ -30,8 +30,8 @@ void flecs_expr_initializer_visit_free(
         flecs_script_expr_visit_free(script, elem->value);
     }
 
-    ecs_vec_fini_t(&script->world->allocator, &node->elements, 
-        ecs_expr_initializer_element_t);
+    ecs_allocator_t *a = &flecs_script_impl(script)->allocator;
+    ecs_vec_fini_t(a, &node->elements, ecs_expr_initializer_element_t);
 }
 
 static
@@ -100,7 +100,7 @@ void flecs_script_expr_visit_free(
         return;
     }
 
-    ecs_allocator_t *a = &script->world->allocator;
+    ecs_allocator_t *a = &flecs_script_impl(script)->allocator;
 
     switch(node->kind) {
     case EcsExprValue:

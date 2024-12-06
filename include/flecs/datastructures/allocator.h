@@ -50,12 +50,14 @@ void* flecs_dup(
 #define flecs_allocator(obj) (&obj->allocators.dyn)
 
 #define flecs_alloc(a, size) flecs_balloc(flecs_allocator_get(a, size))
-#define flecs_alloc_t(a, T) flecs_alloc(a, ECS_SIZEOF(T))
-#define flecs_alloc_n(a, T, count) flecs_alloc(a, ECS_SIZEOF(T) * (count))
+#define flecs_alloc_w_dbg_info(a, size, type_name) flecs_balloc_w_dbg_info(flecs_allocator_get(a, size), type_name)
+#define flecs_alloc_t(a, T) flecs_alloc_w_dbg_info(a, ECS_SIZEOF(T), #T)
+#define flecs_alloc_n(a, T, count) flecs_alloc_w_dbg_info(a, ECS_SIZEOF(T) * (count), #T)
 
 #define flecs_calloc(a, size) flecs_bcalloc(flecs_allocator_get(a, size))
-#define flecs_calloc_t(a, T) flecs_calloc(a, ECS_SIZEOF(T))
-#define flecs_calloc_n(a, T, count) flecs_calloc(a, ECS_SIZEOF(T) * (count))
+#define flecs_calloc_w_dbg_info(a, size, type_name) flecs_bcalloc_w_dbg_info(flecs_allocator_get(a, size), type_name)
+#define flecs_calloc_t(a, T) flecs_calloc_w_dbg_info(a, ECS_SIZEOF(T), #T)
+#define flecs_calloc_n(a, T, count) flecs_calloc_w_dbg_info(a, ECS_SIZEOF(T) * (count), #T)
 
 #define flecs_free(a, size, ptr)\
     flecs_bfree((ptr) ? flecs_allocator_get(a, size) : NULL, ptr)
@@ -69,6 +71,11 @@ void* flecs_dup(
     flecs_brealloc(flecs_allocator_get(a, size_dst),\
     flecs_allocator_get(a, size_src),\
     ptr)
+#define flecs_realloc_w_dbg_info(a, size_dst, size_src, ptr, type_name)\
+    flecs_brealloc_w_dbg_info(flecs_allocator_get(a, size_dst),\
+    flecs_allocator_get(a, size_src),\
+    ptr,\
+    type_name)
 #define flecs_realloc_n(a, T, count_dst, count_src, ptr)\
     flecs_realloc(a, ECS_SIZEOF(T) * (count_dst), ECS_SIZEOF(T) * (count_src), ptr)
 
