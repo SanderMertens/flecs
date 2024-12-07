@@ -1,6 +1,6 @@
 /**
  * @file addons/script/builtin_functions.c
- * @brief Builtin script functions.
+ * @brief Flecs functions for flecs script.
  */
 
 #include "flecs.h"

@@ -21,7 +21,7 @@
     },
     "lang.c": {
         "${os linux}": {
-            "lib": ["rt", "pthread"],
+            "lib": ["rt", "pthread", "m"],
             "${cfg debug}": {
                 "export-symbols": true
             },
