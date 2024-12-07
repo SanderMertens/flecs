@@ -27,7 +27,7 @@ struct Position {
   y = f32
 }
 
-Prefab SpaceShip {
+prefab SpaceShip {
   MaxSpeed: {value: 100}
 
   cockpit {
@@ -242,7 +242,7 @@ prefab SpaceShip {
 Scripts can natively specify inheritance relationships between entities, which is useful in particular for prefabs. Example:
 
 ```c
-Prefab SpaceShip {
+prefab SpaceShip {
   MaxSpeed: {value: 100}
 }
 
@@ -572,7 +572,7 @@ my_spaceship {
 }
 ```
 
-## Comma operator
+### Comma operator
 The comma operator can be used as a shortcut to create multiple entities in a scope. Example:
 
 ```c
@@ -608,6 +608,184 @@ enum Color {
   constant Blue
 }
 ```
+
+## Expressions
+Scripts can contain expressions, which allow for computing values from inputs such as component values, template properties and variables. Here are some examples of valid Flecs script expressions:
+
+```c
+const x = 10 + 20 * 30
+const x = 10 * (20 + 30)
+const x = $var * 10
+const x = pow($var, 2)
+const x = e.parent().name()
+const x = Position: {10, 20}
+const x = Position: {x: 10, y: 20}
+```
+
+The following sections describe the different features of expressions.
+
+### Operators
+The following operators are supported in expressions, in order of precedence:
+
+| **Symbol** | **Description**        | **Example**            |
+|------------|------------------------|------------------------|
+| `!`        | Logical NOT            | `!10`                  |
+| `*`        | Multiplication         | `10 * 20`              |
+| `/`        | Division               | `10 / 20`              |
+| `%`        | Modulus                | `10 % 3`               |
+| `+`        | Addition               | `10 + 20`              |
+| `-`        | Subtraction/negative   | `10 - 20`, `-(10, 20)` |
+| `<<`       | Bitwise left shift     | `10 << 1`              |
+| `>>`       | Bitwise right shift    | `10 >> 1`              |
+| `>`        | Greater than           | `10 > 20`              |
+| `>=`       | Greater than or equal  | `10 >= 20`             |
+| `<`        | Less than              | `10 < 20`              |
+| `<=`       | Less than or equal     | `10 <= 20`             |
+| `==`       | Equality               | `10 == 20`             |
+| `!=`       | Not equal              | `10 != 20`             |
+| `&`        | Bitwise AND            | `2 & 6`                |
+| `\|`       | Bitwise OR             | `2 | 4`                |
+| `&&`       | Logical AND            | `true && false`        |
+| `\|\|`     | Logical OR             | `true || false`        |
+
+### Values
+The following table lists the different kinds of values that are supported in expressions:
+
+| **Value kind**            | **Type**      | **Example**                       |
+|---------------------------|---------------|-----------------------------------|
+| **Integer**               | `i64`         | `42`, `-100`, `0`, `0x1A`         |
+| **Floating Point**        | `f64`         | `3.14`, `-2.718`, `1e6`, `0.0`    |
+| **String**                | `string`      | `"Hello, World!"`, `"123"`, `""`  |
+| **Multiline string**      | `string`      | \``Hello World`\`                 |
+| **Entity**                | `entity`      | `spaceship`, `spaceship.pilot`    |
+| **Enum/Bitmask values**   | from lvalue   | `Red`, `Blue`, `Lettuce \| Bacon` |
+| **Composites**            | from lvalue   | `{x: 10, y: 20}`, `{10, 20}`      |
+| **Collections**           | from lvalue   | `[1, 2, 3]`                       |
+
+#### Initializers
+Initializers are values that are used to initialize composite and collection members. Composite values are initialized by initializers that are delimited by `{}`, while collection initializers are delimited by `[]`. Furthermore, composite initializers can specify which member of the composite value should be initialized. Here are some examples of initializer expressions:
+
+```c
+{}
+{10, 20}
+{x: 10, y: 20}
+{{10, 20}, {30, 40}}
+{start: {x: 10, y: 20}, stop: {x: 10, y: 20}}
+[10, 20, 30]
+[{10, 20}, {30, 40}, {50, 60}]
+```
+
+Initializers must always be assigned to an lvalue of a well defined type. This can either be a typed variable, component assignment or in the case of nested initializers, an element of another initializer. For example, this is a valid usage of an initializer:
+
+```c
+const x = Position: {10, 20}
+```
+
+while this is an invalid usage of an initializer:
+
+```c
+// Invalid, unknown type for initializer
+const x = {10, 20}
+```
+
+When assigning variables to elements in a composite initializer, applications can use the following shorthand notation if the variable names are the same as the member name of the element:
+
+```c
+// Normal notation
+Tree: {color: $color, height: $height}
+
+
+// Shorthand notation
+Tree: {color: $, height: $}
+```
+
+### Types
+The type of an expression is determined by the kind of expression, its operands and the context in which the expression is evaluated. The words "type" and "component" can be used interchangeably, as every type in Flecs is a component, and every component is a type. For component types to be used with scripts, they have to be described using the meta reflection addon.
+
+The following sections go over the different kinds of expressions and how their types are derived.
+
+#### Unary expressions
+Unary expressions have a single operand, with the operator preceding it. The following table shows the different unary operators with the expression type:
+
+| **Operator** | **Expression Type**     |
+|--------------|-------------------------|
+| `!`          | `bool`                  |
+| `-`          | Same as operand.        |
+
+#### Binary expressions
+Binary expressions have two operands. The following table shows the different binary operators with the expression type. The operand type is the type to which the operands must be castable for it to be a valid expression.
+
+| **Symbol** | **Expression type**  | **Operand type**     |
+|------------|----------------------|----------------------|
+| `*`        | other (see below)    | Numbers              |
+| `/`        | `f64`                | Numbers              |
+| `+`        | other (see below)    | Numbers              |
+| `-`        | other (see below)    | Numbers              |
+| `<<`       | other (see below)    | Integers             |
+| `>>`       | other (see below)    | Integers             |
+| `>`        | `bool`               | Numbers              |
+| `>=`       | `bool`               | Numbers              |
+| `<`        | `bool`               | Numbers              |
+| `<=`       | `bool`               | Numbers              |
+| `==`       | `bool`               | Values               |
+| `!=`       | `bool`               | Values               |
+| `&`        | other (see below)    | Integers             |
+| `\|`       | other (see below)    | Integers             |
+| `&&`       | `bool`               | `bool`               |
+| `\|\|`     | `bool`               | `bool`               |
+
+For the operators where the expression type is listed as "other" the type is derived by going through these steps:
+- If the types of the operands are equal, the expression type will be the operand type.
+- If the types are different:
+  - Convert the operand types to their largest storage variant (`i8` becomes `i64`, `f32` becomes `f64`, `u16` becomes `u64`).
+  - The type of the expression becomes the most expressive of the two.
+  - Expressiveness is determined as `f64` > `i64` > `u64`.
+
+#### Lvalues
+Lvalues are the left side of assignments. There are two kinds of assignments possible in Flecs script:
+- Variable initialization
+- Initializer initialization
+
+The type of an expression can be influenced by the type of the lvalue it is assigned to. For example, if the lvalue is a variable of type `Position`, the assigned initializer will also be of type `Position`:
+
+```c
+const p = Position: {10, 20}
+```
+
+Similarly, when an initializer is used inside of an initializer, it obtains the type of the initializer element. In the following example the outer initializer is of type `Line`, while the inner initializers are of type `Point`:
+
+```c
+const l = Line: {{10, 20}, {30, 40}}
+```
+
+Another notable example where this matters is for enum and bitmask constants. Consider the following example:
+
+```c
+const c = Color: Red
+```
+
+Here, `Red` is a resolvable identifier, even though the fully qualified identifier is `Color.Red`. However, because the type of the lvalue is of enum type `Color`, the expression `Red` will be resolved in the scope of `Color`.
+
+### Functions
+Expressions can call functions. Functions in Flecs script can have arguments of any type, and must return a value. The following snippet shows examples of function calls:
+
+```c
+const x = sqrt(100)
+const x = pow(100, 2)
+const x = add({10, 20}, {30, 40})
+```
+
+Currently functions can only be defined outside of scripts by the Flecs Script API. Flecs comes with a set of builtin and math functions. Math functions are defined by the script math addon, which must be explicitly enabled by defining `FLECS_SCRIPT_MATH`.
+
+### Methods
+Methods are functions that are called on instances of the method's type. The first argument of a method is the instance on which the method is called. The following snippet shows examples of method calls:
+
+```c
+const x = v.length()
+const x = v1.add(v2)
+```
+
+Just like functions, methods can currently only be defined outside of scripts by using the Flecs Script API.
 
 ## Templates
 Templates are parameterized scripts that can be used to create procedural assets. Templates can be created with the `template` keyword. Example:
