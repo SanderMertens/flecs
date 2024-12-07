@@ -8228,3 +8228,132 @@ void Eval_update_template_w_tag(void) {
 
     ecs_fini(world);
 }
+
+static
+void func_sqr(
+    const ecs_function_ctx_t *ctx,
+    int argc,
+    const ecs_value_t *argv,
+    ecs_value_t *result)
+{
+    int32_t v = *(int32_t*)argv[0].ptr;
+    *(int32_t*)result->ptr = v * v;
+}
+
+void Eval_assign_call_func(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "Position"}),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_script_function(world, {
+        .name = "sqr",
+        .return_type = ecs_id(ecs_i32_t),
+        .params = {{ "x", ecs_id(ecs_i32_t) }},
+        .callback = func_sqr,
+    });
+
+    const char *expr =
+    HEAD "Foo = Position: {sqr(2), sqr(3)}";
+
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+
+    test_assert(foo != 0);
+
+    test_assert(ecs_has(world, foo, Position));
+
+    const Position *ptr = ecs_get(world, foo, Position);
+    test_assert(ptr != NULL);
+
+    test_int(ptr->x, 4);
+    test_int(ptr->y, 9);
+
+    ecs_fini(world);
+}
+
+void Eval_assign_call_scoped_func(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "Position"}),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t parent = ecs_entity(world, { .name = "parent" });
+
+    ecs_script_function(world, {
+        .name = "sqr",
+        .parent = parent,
+        .return_type = ecs_id(ecs_i32_t),
+        .params = {{ "x", ecs_id(ecs_i32_t) }},
+        .callback = func_sqr,
+    });
+
+    const char *expr =
+    HEAD "Foo = Position: {parent.sqr(2), parent.sqr(3)}";
+
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+
+    test_assert(foo != 0);
+
+    test_assert(ecs_has(world, foo, Position));
+
+    const Position *ptr = ecs_get(world, foo, Position);
+    test_assert(ptr != NULL);
+
+    test_int(ptr->x, 4);
+    test_int(ptr->y, 9);
+
+    ecs_fini(world);
+}
+
+void Eval_assign_call_scoped_func_w_using(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct_init(world, &(ecs_struct_desc_t){
+        .entity = ecs_entity(world, {.name = "Position"}),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_entity_t parent = ecs_entity(world, { .name = "parent" });
+
+    ecs_script_function(world, {
+        .name = "sqr",
+        .parent = parent,
+        .return_type = ecs_id(ecs_i32_t),
+        .params = {{ "x", ecs_id(ecs_i32_t) }},
+        .callback = func_sqr,
+    });
+
+    const char *expr =
+    HEAD "using parent"
+    LINE "Foo = Position: {sqr(2), sqr(3)}";
+
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+
+    test_assert(foo != 0);
+
+    test_assert(ecs_has(world, foo, Position));
+
+    const Position *ptr = ecs_get(world, foo, Position);
+    test_assert(ptr != NULL);
+
+    test_int(ptr->x, 4);
+    test_int(ptr->y, 9);
+
+    ecs_fini(world);
+}

@@ -264,7 +264,10 @@
                 "partial_assign_with_large_array",
                 "non_trivial_var_component",
                 "non_trivial_var_with",
-                "update_template_w_tag"
+                "update_template_w_tag",
+                "assign_call_func",
+                "assign_call_scoped_func",
+                "assign_call_scoped_func_w_using"
             ]
         }, {
             "id": "Template",

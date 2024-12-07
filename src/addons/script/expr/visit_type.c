@@ -744,7 +744,8 @@ int flecs_expr_function_visit_type(
 
 try_function:
     if (!is_method) {
-        ecs_entity_t func = ecs_lookup(world, node->function_name);
+        ecs_entity_t func = desc->lookup_action(
+            world, node->function_name, desc->lookup_ctx);
         if (!func) {
             flecs_expr_visit_error(script, node, 
                 "unresolved function identifier '%s'", 
