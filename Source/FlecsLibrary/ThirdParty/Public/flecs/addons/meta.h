@@ -986,7 +986,7 @@ typedef struct ecs_bitmask_desc_t {
  * @param desc The type descriptor.
  * @return The new type, 0 if failed.
  */
-FLECS_API
+FLECS_API 
 ecs_entity_t ecs_bitmask_init(
     ecs_world_t *world,
     const ecs_bitmask_desc_t *desc);

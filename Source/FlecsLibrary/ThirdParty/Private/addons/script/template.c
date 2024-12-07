@@ -281,7 +281,7 @@ int flecs_script_template_preprocess(
     return result;
 }
 
-static
+static inline
 int flecs_script_template_hoist_using(
     ecs_script_eval_visitor_t *v,
     ecs_script_template_t *template)

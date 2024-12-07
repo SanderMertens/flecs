@@ -17,7 +17,7 @@ int64_t ecs_block_allocator_free_count = 0;
 
 #ifndef FLECS_USE_OS_ALLOC
 
-static
+static inline
 ecs_block_allocator_chunk_header_t* flecs_balloc_block(
     ecs_block_allocator_t *allocator)
 {

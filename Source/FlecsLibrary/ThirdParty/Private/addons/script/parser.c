@@ -14,7 +14,7 @@
     case '\n':\
     case '\0'
 
-static
+static inline
 const char* flecs_script_stmt(
     ecs_script_parser_t *parser,
     const char *pos);
@@ -231,7 +231,7 @@ const char* flecs_script_paren_expr(
 }
 
 /* Parse a single statement */
-static
+static inline
 const char* flecs_script_stmt(
     ecs_script_parser_t *parser,
     const char *pos) 

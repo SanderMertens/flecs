@@ -131,8 +131,7 @@ void FFlecsEntityHandle::PostScriptConstruct()
         UFlecsWorldSubsystem* FlecsWorldSubsystem = GWorld->GetSubsystem<UFlecsWorldSubsystem>();
         if LIKELY_IF(FlecsWorldSubsystem->HasValidFlecsWorld())
         {
-            SetEntity(flecs::entity(FlecsWorldSubsystem->GetDefaultWorld()->World,
-                GetEntity().id()));
+            SetEntity(flecs::entity(FlecsWorldSubsystem->GetDefaultWorld()->World, GetEntity().id()));
         }
         else
         {

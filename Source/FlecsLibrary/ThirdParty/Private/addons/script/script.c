@@ -230,7 +230,7 @@ error:
     return 0;
 }
 
-static
+static inline
 int EcsScript_serialize(const ecs_serializer_t *ser, const void *ptr) {
     const EcsScript *data = ptr;
     if (data->script) {

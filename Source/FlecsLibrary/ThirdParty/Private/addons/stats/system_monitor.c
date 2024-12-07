@@ -11,7 +11,7 @@
 
 ECS_COMPONENT_DECLARE(EcsSystemStats);
 
-static
+static inline
 void flecs_system_monitor_dtor(EcsSystemStats *ptr) {
     ecs_map_iter_t it = ecs_map_iter(&ptr->stats);
     while (ecs_map_next(&it)) {

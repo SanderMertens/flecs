@@ -703,7 +703,7 @@ ecs_entity_t flecs_parse_discover_type(
  * Rather than taking the original type of a value, use the largest 
  * representation of the type so we don't have to worry about overflowing the
  * original type in the operation. */
-static
+static inline
 ecs_entity_t flecs_largest_type(
     const EcsPrimitive *type)
 {

@@ -57,7 +57,7 @@ ecs_page_t* flecs_sparse_page_new(
     return result;
 }
 
-static
+static inline
 void flecs_sparse_page_free(
     ecs_sparse_t *sparse,
     ecs_page_t *page)
@@ -65,19 +65,11 @@ void flecs_sparse_page_free(
     ecs_allocator_t *a = sparse->allocator;
     ecs_block_allocator_t *ca = sparse->page_allocator;
 
-    if (ca) {
-        flecs_bfree(ca, page->sparse);
-    } else {
-        ecs_os_free(page->sparse);
-    }
-    if (a) {
-        flecs_free(a, sparse->size * FLECS_SPARSE_PAGE_SIZE, page->data);
-    } else {
-        ecs_os_free(page->data);
-    }
+    ca ? flecs_bfree(ca, page->sparse) : ecs_os_free(page->sparse);
+    a ? flecs_free(a, sparse->size * FLECS_SPARSE_PAGE_SIZE, page->data) : ecs_os_free(page->data);
 }
 
-static
+static inline
 ecs_page_t* flecs_sparse_get_page(
     const ecs_sparse_t *sparse,
     int32_t page_index)
@@ -89,7 +81,7 @@ ecs_page_t* flecs_sparse_get_page(
     return ecs_vec_get_t(&sparse->pages, ecs_page_t, page_index);
 }
 
-static
+static inline
 ecs_page_t* flecs_sparse_get_or_create_page(
     ecs_sparse_t *sparse,
     int32_t page_index)
@@ -102,7 +94,7 @@ ecs_page_t* flecs_sparse_get_or_create_page(
     return flecs_sparse_page_new(sparse, page_index);
 }
 
-static
+static inline
 void flecs_sparse_grow_dense(
     ecs_sparse_t *sparse)
 {
@@ -122,7 +114,7 @@ uint64_t flecs_sparse_strip_generation(
     return gen;
 }
 
-static
+static inline
 void flecs_sparse_assign_index(
     ecs_page_t * page, 
     uint64_t * dense_array, 
@@ -135,7 +127,7 @@ void flecs_sparse_assign_index(
     dense_array[dense] = index;
 }
 
-static
+static inline
 uint64_t flecs_sparse_inc_gen(
     uint64_t index)
 {
@@ -144,7 +136,7 @@ uint64_t flecs_sparse_inc_gen(
     return ECS_GENERATION_INC(index);
 }
 
-static
+static inline
 uint64_t flecs_sparse_inc_id(
     ecs_sparse_t *sparse)
 {
@@ -154,7 +146,7 @@ uint64_t flecs_sparse_inc_id(
     return ++ sparse->max_id;
 }
 
-static
+static inline
 uint64_t flecs_sparse_get_id(
     const ecs_sparse_t *sparse)
 {
@@ -162,7 +154,7 @@ uint64_t flecs_sparse_get_id(
     return sparse->max_id;
 }
 
-static
+static inline
 void flecs_sparse_set_id(
     ecs_sparse_t *sparse,
     uint64_t value)

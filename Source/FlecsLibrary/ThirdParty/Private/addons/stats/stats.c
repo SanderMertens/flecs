@@ -22,21 +22,21 @@
 #define ECS_METRIC_LAST(stats)\
     ECS_CAST(ecs_metric_t*, ECS_OFFSET(&stats->last_, -ECS_SIZEOF(ecs_metric_t)))
 
-static
+static inline
 int32_t t_next(
     int32_t t)
 {
     return (t + 1) % ECS_STAT_WINDOW;
 }
 
-static
+static inline
 int32_t t_prev(
     int32_t t)
 {
     return (t - 1 + ECS_STAT_WINDOW) % ECS_STAT_WINDOW;
 }
 
-static
+static inline
 void flecs_gauge_record(
     ecs_metric_t *m,
     int32_t t,
@@ -47,7 +47,7 @@ void flecs_gauge_record(
     m->gauge.max[t] = value;
 }
 
-static
+static inline
 double flecs_counter_record(
     ecs_metric_t *m,
     int32_t t,
@@ -64,7 +64,7 @@ double flecs_counter_record(
     return gauge_value;
 }
 
-static
+static inline
 void flecs_metric_print(
     const char *name,
     ecs_float_t value)

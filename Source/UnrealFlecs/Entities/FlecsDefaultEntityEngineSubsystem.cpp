@@ -48,7 +48,9 @@ void FFlecsDefaultEntityEngine::RefreshDefaultEntities()
 
 		DefaultEntityWorld.query_builder<>()
 			.without(NoneEntity)
-			.with(flecs::Trait).or_().with(flecs::PairIsTag).or_().with_name_component()
+			.with(flecs::Trait).or_()
+			.with(flecs::PairIsTag).or_()
+			.with_name_component()
 			.each([&](flecs::entity Entity)
 			{
 				if (UNLIKELY(Entity.name().length() <= 0))

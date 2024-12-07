@@ -8,7 +8,7 @@
 
 #include "../private_api.h"
 
-static
+static inline
 void ensure(
     ecs_bitset_t *bs,
     ecs_size_t size)

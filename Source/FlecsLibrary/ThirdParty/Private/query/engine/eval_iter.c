@@ -113,7 +113,7 @@ bool ecs_query_next(
     flecs_query_iter_run_ctx_init(it, &ctx);
     const ecs_query_op_t *ops = qit->ops;
 
-    bool redo = it->flags & EcsIterIsValid;
+    const bool redo = it->flags & EcsIterIsValid;
     if (redo) {
         /* Change detection */
         if (!(it->flags & EcsIterSkip)) {
@@ -374,8 +374,8 @@ ecs_iter_t ecs_query_iter(
     /* Ok, only for stats */
     ecs_os_linc(&ECS_CONST_CAST(ecs_query_t*, q)->eval_count);
 
-    ecs_query_impl_t *impl = flecs_query_impl(q);
-    ecs_query_cache_t *cache = impl->cache;
+    const ecs_query_impl_t *impl = flecs_query_impl(q);
+    const ecs_query_cache_t *cache = impl->cache;
     if (cache) {
         /* If monitors changed, do query rematching */
         ecs_flags32_t flags = q->flags;

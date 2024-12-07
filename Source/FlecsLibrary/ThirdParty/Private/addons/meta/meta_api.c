@@ -7,7 +7,7 @@
 
 #ifdef FLECS_META
 
-static
+static inline
 bool flecs_type_is_number(
     ecs_world_t *world,
     ecs_entity_t type)

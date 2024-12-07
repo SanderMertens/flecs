@@ -203,14 +203,14 @@ const char* flecs_script_identifier(
 }
 
 // Number token static
-static
+static inline
 bool flecs_script_is_number(
     char c)
 {
     return isdigit(c) || (c == '-');
 }
 
-static
+static inline
 const char* flecs_script_number(
     ecs_script_parser_t *parser,
     const char *pos,
@@ -237,7 +237,7 @@ const char* flecs_script_number(
     return pos;
 }
 
-static
+static inline
 const char* flecs_script_skip_string(
     ecs_script_parser_t *parser,
     const char *pos, 

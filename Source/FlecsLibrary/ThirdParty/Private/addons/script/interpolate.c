@@ -9,7 +9,7 @@
 #include <ctype.h>
 #include "script.h"
 
-static
+static inline
 const char* flecs_parse_var_name(
     const char *ptr,
     char *token_out)
@@ -41,7 +41,7 @@ error:
     return NULL;
 }
 
-static
+static inline
 const char* flecs_parse_interpolated_str(
     const char *ptr,
     char *token_out)

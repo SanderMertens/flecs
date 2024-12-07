@@ -79,7 +79,7 @@ const char* flecs_term_parse_equality_pred(
     ParserEnd;
 }
 
-static
+static inline
 ecs_entity_t flecs_query_parse_trav_flags(
     const char *tok)
 {
@@ -90,7 +90,7 @@ ecs_entity_t flecs_query_parse_trav_flags(
     else return 0;
 }
 
-static
+static inline
 const char* flecs_term_parse_trav(
     ecs_script_parser_t *parser,
     ecs_term_ref_t *ref,

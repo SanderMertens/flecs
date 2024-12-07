@@ -41,7 +41,7 @@ ecs_primitive_kind_t flecs_expr_op_to_primitive_kind(ecs_meta_type_op_kind_t kin
 }
 
 /* Serialize enumeration */
-static
+static inline
 int flecs_expr_ser_enum(
     const ecs_world_t *world,
     ecs_meta_type_op_t *op, 
@@ -121,7 +121,7 @@ error:
 }
 
 /* Serialize elements of a contiguous array */
-static
+static inline
 int expr_ser_elements(
     const ecs_world_t *world,
     ecs_meta_type_op_t *ops, 
@@ -151,7 +151,7 @@ int expr_ser_elements(
     return 0;
 }
 
-static
+static inline
 int expr_ser_type_elements(
     const ecs_world_t *world,
     ecs_entity_t type, 
@@ -189,7 +189,7 @@ int expr_ser_array(
 }
 
 /* Serialize vector */
-static
+static inline
 int expr_ser_vector(
     const ecs_world_t *world,
     ecs_meta_type_op_t *op, 
