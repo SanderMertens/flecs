@@ -34,7 +34,7 @@ typedef struct {
     void *ptr;
 } flecs_component_ptr_t;
 
-static
+static inline
 flecs_component_ptr_t flecs_table_get_component(
     ecs_table_t *table,
     int32_t column_index,
@@ -50,7 +50,7 @@ error:
     return (flecs_component_ptr_t){0};
 }
 
-static
+static inline
 flecs_component_ptr_t flecs_get_component_ptr(
     ecs_table_t *table,
     int32_t row,
@@ -78,7 +78,7 @@ flecs_component_ptr_t flecs_get_component_ptr(
     return flecs_table_get_component(table, tr->column, row);
 }
 
-static
+static inline
 void* flecs_get_component(
     ecs_table_t *table,
     int32_t row,
@@ -153,7 +153,7 @@ error:
     return NULL;
 }
 
-static
+static inline
 void flecs_instantiate_slot(
     ecs_world_t *world,
     ecs_entity_t base,
@@ -231,7 +231,7 @@ error:
     return;
 }
 
-static
+static inline
 ecs_table_t* flecs_find_table_add(
     ecs_world_t *world,
     ecs_table_t *table,
@@ -247,7 +247,7 @@ error:
     return NULL;
 }
 
-static
+static inline
 ecs_table_t* flecs_find_table_remove(
     ecs_world_t *world,
     ecs_table_t *table,
@@ -263,7 +263,7 @@ error:
     return NULL;
 }
 
-static
+static inline
 int32_t flecs_child_type_insert(
     ecs_type_t *type,
     void **component_data,
@@ -299,7 +299,7 @@ int32_t flecs_child_type_insert(
     return i;
 }
 
-static
+static inline
 void flecs_instantiate_children(
     ecs_world_t *world,
     ecs_entity_t base,
@@ -561,7 +561,7 @@ void flecs_instantiate(
     }
 }
 
-static
+static inline
 void flecs_sparse_on_add(
     ecs_world_t *world,
     ecs_table_t *table,
@@ -598,7 +598,7 @@ void flecs_sparse_on_add(
     }
 }
 
-static
+static inline
 void flecs_sparse_on_remove(
     ecs_world_t *world,
     ecs_table_t *table,
@@ -633,7 +633,7 @@ void flecs_sparse_on_remove(
     }
 }
 
-static
+static inline
 void flecs_union_on_add(
     ecs_world_t *world,
     ecs_table_t *table,
@@ -659,7 +659,7 @@ void flecs_union_on_add(
     }
 }
 
-static
+static inline
 void flecs_union_on_remove(
     ecs_world_t *world,
     ecs_table_t *table,
@@ -684,7 +684,7 @@ void flecs_union_on_remove(
     }
 }
 
-static
+static inline
 void flecs_notify_on_add(
     ecs_world_t *world,
     ecs_table_t *table,
@@ -771,7 +771,7 @@ void flecs_notify_on_remove(
     }
 }
 
-static
+static inline
 void flecs_update_name_index(
     ecs_world_t *world,
     ecs_table_t *src, 
@@ -820,7 +820,7 @@ void flecs_update_name_index(
     }
 }
 
-static
+static inline
 ecs_record_t* flecs_new_entity(
     ecs_world_t *world,
     ecs_entity_t entity,
@@ -843,7 +843,7 @@ ecs_record_t* flecs_new_entity(
     return record;
 }
 
-static
+static inline
 void flecs_move_entity(
     ecs_world_t *world,
     ecs_entity_t entity,
@@ -897,7 +897,7 @@ error:
     return;
 }
 
-static
+static inline
 void flecs_delete_entity(
     ecs_world_t *world,
     ecs_record_t *record,
@@ -917,7 +917,7 @@ void flecs_delete_entity(
  * needs to be done to rematch queries, as a simple brute force approach does
  * not scale when there are many tables / queries. Therefore we need to do a bit
  * of bookkeeping that is more intelligent than simply flipping a flag */
-static
+static inline
 void flecs_update_component_monitor_w_array(
     ecs_world_t *world,
     ecs_type_t *ids)
@@ -937,7 +937,7 @@ void flecs_update_component_monitor_w_array(
     }
 }
 
-static
+static inline
 void flecs_update_component_monitors(
     ecs_world_t *world,
     ecs_type_t *added,
@@ -947,7 +947,7 @@ void flecs_update_component_monitors(
     flecs_update_component_monitor_w_array(world, removed);
 }
 
-static
+static inline
 void flecs_commit(
     ecs_world_t *world,
     ecs_entity_t entity,
@@ -1028,7 +1028,7 @@ error:
     return;
 }
 
-static
+static inline
 const ecs_entity_t* flecs_bulk_new(
     ecs_world_t *world,
     ecs_table_t *table,
@@ -1138,7 +1138,7 @@ const ecs_entity_t* flecs_bulk_new(
     }
 }
 
-static
+static inline
 void flecs_add_id_w_record(
     ecs_world_t *world,
     ecs_entity_t entity,
@@ -1157,7 +1157,7 @@ void flecs_add_id_w_record(
                            * functions that are about to set the component. */
 }
 
-static
+static inline
 void flecs_add_id(
     ecs_world_t *world,
     ecs_entity_t entity,
@@ -1180,7 +1180,7 @@ void flecs_add_id(
     flecs_defer_end(world, stage);
 }
 
-static
+static inline
 void flecs_remove_id(
     ecs_world_t *world,
     ecs_entity_t entity,
@@ -1203,7 +1203,7 @@ void flecs_remove_id(
     flecs_defer_end(world, stage);
 }
 
-static
+static inline
 flecs_component_ptr_t flecs_ensure(
     ecs_world_t *world,
     ecs_entity_t entity,
@@ -1596,7 +1596,7 @@ error:
     return 0;
 }
 
-static
+static inline
 void flecs_copy_id(
     ecs_world_t *world,
     ecs_record_t *r,
@@ -1630,7 +1630,7 @@ error:
 
 /* Traverse table graph by either adding or removing identifiers parsed from the
  * passed in expression. */
-static
+static inline
 int flecs_traverse_from_expr(
     ecs_world_t *world,
     const char *name,
@@ -1676,7 +1676,7 @@ error:
 
 /* Add/remove components based on the parsed expression. This operation is 
  * slower than flecs_traverse_from_expr, but safe to use from a deferred context. */
-static
+static inline
 void flecs_defer_from_expr(
     ecs_world_t *world,
     ecs_entity_t entity,
@@ -1705,7 +1705,7 @@ void flecs_defer_from_expr(
 
 /* If operation is not deferred, add components by finding the target
  * table and moving the entity towards it. */
-static 
+static inline 
 int flecs_traverse_add(
     ecs_world_t *world,
     ecs_entity_t result,
@@ -1841,7 +1841,7 @@ error:
 
 /* When in deferred mode, we need to add/remove components one by one using
  * the regular operations. */
-static 
+static inline 
 void flecs_deferred_add_remove(
     ecs_world_t *world,
     ecs_entity_t entity,

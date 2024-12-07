@@ -1115,7 +1115,7 @@ void flecs_default_ctor(
     ecs_os_memset(ptr, 0, ti->size * count);
 }
 
-static
+static inline
 void flecs_default_copy_ctor(void *dst_ptr, const void *src_ptr,
     int32_t count, const ecs_type_info_t *ti)
 {
@@ -1124,7 +1124,7 @@ void flecs_default_copy_ctor(void *dst_ptr, const void *src_ptr,
     cl->copy(dst_ptr, src_ptr, count, ti);
 }
 
-static
+static inline
 void flecs_default_move_ctor(void *dst_ptr, void *src_ptr,
     int32_t count, const ecs_type_info_t *ti)
 {
@@ -1133,7 +1133,7 @@ void flecs_default_move_ctor(void *dst_ptr, void *src_ptr,
     cl->move(dst_ptr, src_ptr, count, ti);
 }
 
-static
+static inline
 void flecs_default_ctor_w_move_w_dtor(void *dst_ptr, void *src_ptr,
     int32_t count, const ecs_type_info_t *ti)
 {
@@ -1143,7 +1143,7 @@ void flecs_default_ctor_w_move_w_dtor(void *dst_ptr, void *src_ptr,
     cl->dtor(src_ptr, count, ti);
 }
 
-static
+static inline
 void flecs_default_move_ctor_w_dtor(void *dst_ptr, void *src_ptr,
     int32_t count, const ecs_type_info_t *ti)
 {
@@ -1152,7 +1152,7 @@ void flecs_default_move_ctor_w_dtor(void *dst_ptr, void *src_ptr,
     cl->dtor(src_ptr, count, ti);
 }
 
-static
+static inline
 void flecs_default_move(void *dst_ptr, void *src_ptr,
     int32_t count, const ecs_type_info_t *ti)
 {
@@ -1160,7 +1160,7 @@ void flecs_default_move(void *dst_ptr, void *src_ptr,
     cl->move(dst_ptr, src_ptr, count, ti);
 }
 
-static
+static inline
 void flecs_default_dtor(void *dst_ptr, void *src_ptr,
     int32_t count, const ecs_type_info_t *ti)
 {
@@ -1172,7 +1172,7 @@ void flecs_default_dtor(void *dst_ptr, void *src_ptr,
     ecs_os_memcpy(dst_ptr, src_ptr, flecs_uto(ecs_size_t, ti->size) * count);
 }
 
-static
+static inline
 void flecs_default_move_w_dtor(void *dst_ptr, void *src_ptr,
     int32_t count, const ecs_type_info_t *ti)
 {
@@ -2140,7 +2140,7 @@ void flecs_delete_table(
     flecs_table_fini(world, table);
 }
 
-static
+static inline
 void flecs_process_empty_queries(
     ecs_world_t *world)
 {
