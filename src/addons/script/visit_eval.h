@@ -47,17 +47,6 @@ int flecs_script_eval_expr(
     ecs_expr_node_t **expr_ptr,
     ecs_value_t *value);
 
-int flecs_script_eval_template(
-    ecs_script_eval_visitor_t *v,
-    ecs_script_template_node_t *template);
-
-ecs_script_template_t* flecs_script_template_init(
-    ecs_script_impl_t *script);
-
-void flecs_script_template_fini(
-    ecs_script_impl_t *script,
-    ecs_script_template_t *template);
-
 void flecs_script_eval_visit_init(
     const ecs_script_impl_t *script,
     ecs_script_eval_visitor_t *v,
