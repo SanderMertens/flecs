@@ -48,7 +48,7 @@ void flecs_script_parser_expr_free(
     ecs_script_parser_t *parser,
     ecs_expr_node_t *node)
 {
-    flecs_script_expr_visit_free(&parser->script->pub, node);
+    flecs_expr_visit_free(&parser->script->pub, node);
 }
 
 static
@@ -471,12 +471,12 @@ const char* flecs_script_parse_expr(
     ParserEnd;
 }
 
-ecs_script_t* ecs_script_expr_parse(
+ecs_script_t* ecs_expr_parse(
     ecs_world_t *world,
     const char *expr,
-    const ecs_script_expr_run_desc_t *desc)
+    const ecs_expr_eval_desc_t *desc)
 {
-    ecs_script_expr_run_desc_t priv_desc = {0};
+    ecs_expr_eval_desc_t priv_desc = {0};
     if (desc) {
         priv_desc = *desc;
     }
@@ -506,14 +506,14 @@ ecs_script_t* ecs_script_expr_parse(
 
     impl->next_token = ptr;
 
-    if (flecs_script_expr_visit_type(script, impl->expr, &priv_desc)) {
+    if (flecs_expr_visit_type(script, impl->expr, &priv_desc)) {
         goto error;
     }
 
     // printf("%s\n", ecs_script_ast_to_str(script));
 
     if (!desc || !desc->disable_folding) {
-        if (flecs_script_expr_visit_fold(script, &impl->expr, &priv_desc)) {
+        if (flecs_expr_visit_fold(script, &impl->expr, &priv_desc)) {
             goto error;
         }
     }
@@ -526,10 +526,10 @@ error:
     return NULL;
 }
 
-int ecs_script_expr_eval(
+int ecs_expr_eval(
     const ecs_script_t *script,
     ecs_value_t *value,
-    const ecs_script_expr_run_desc_t *desc)
+    const ecs_expr_eval_desc_t *desc)
 {
     ecs_assert(script != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_script_impl_t *impl = flecs_script_impl(
@@ -537,7 +537,7 @@ int ecs_script_expr_eval(
         ECS_CONST_CAST(ecs_script_t*, script));
     ecs_assert(impl->expr != NULL, ECS_INTERNAL_ERROR, NULL);
 
-    ecs_script_expr_run_desc_t priv_desc = {0};
+    ecs_expr_eval_desc_t priv_desc = {0};
     if (desc) {
         priv_desc = *desc;
     }
@@ -546,7 +546,7 @@ int ecs_script_expr_eval(
         priv_desc.lookup_action = flecs_script_default_lookup;
     }
 
-    if (flecs_script_expr_visit_eval(script, impl->expr, &priv_desc, value)) {
+    if (flecs_expr_visit_eval(script, impl->expr, &priv_desc, value)) {
         goto error;
     }
 
@@ -556,13 +556,13 @@ error:
 }
 
 FLECS_API
-const char* ecs_script_expr_run(
+const char* ecs_expr_run(
     ecs_world_t *world,
     const char *expr,
     ecs_value_t *value,
-    const ecs_script_expr_run_desc_t *desc)
+    const ecs_expr_eval_desc_t *desc)
 {
-    ecs_script_expr_run_desc_t priv_desc = {0};
+    ecs_expr_eval_desc_t priv_desc = {0};
     if (desc) {
         priv_desc = *desc;
     }
@@ -574,12 +574,12 @@ const char* ecs_script_expr_run(
             "type of value parameter does not match desc->type");
     }
 
-    ecs_script_t *s = ecs_script_expr_parse(world, expr, &priv_desc);
+    ecs_script_t *s = ecs_expr_parse(world, expr, &priv_desc);
     if (!s) {
         goto error;
     }
 
-    if (ecs_script_expr_eval(s, value, &priv_desc)) {
+    if (ecs_expr_eval(s, value, &priv_desc)) {
         ecs_script_free(s);
         goto error;
     }

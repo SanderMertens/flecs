@@ -340,7 +340,7 @@ int flecs_script_eval_expr(
     ecs_script_impl_t *impl = v->base.script;
     ecs_script_t *script = &impl->pub;
 
-    ecs_script_expr_run_desc_t desc = {
+    ecs_expr_eval_desc_t desc = {
         .name = script->name,
         .lookup_action = flecs_script_find_entity_action,
         .lookup_ctx = v,
@@ -350,16 +350,16 @@ int flecs_script_eval_expr(
     };
 
     if (!expr->type_info) {
-        if (flecs_script_expr_visit_type(script, expr, &desc)) {
+        if (flecs_expr_visit_type(script, expr, &desc)) {
             goto error;
         }
 
-        if (flecs_script_expr_visit_fold(script, expr_ptr, &desc)) {
+        if (flecs_expr_visit_fold(script, expr_ptr, &desc)) {
             goto error;
         }
     }
 
-    if (flecs_script_expr_visit_eval(script, *expr_ptr, &desc, value)) {
+    if (flecs_expr_visit_eval(script, *expr_ptr, &desc, value)) {
         goto error;
     }
 

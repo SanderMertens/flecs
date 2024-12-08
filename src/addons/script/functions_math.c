@@ -58,7 +58,7 @@
 
 #define FLECS_MATH_FUNC_DEF_F64(_name, brief)\
     {\
-        ecs_entity_t f = ecs_script_function(world, {\
+        ecs_entity_t f = ecs_function(world, {\
             .name = #_name,\
             .parent = ecs_id(FlecsScriptMath),\
             .return_type = ecs_id(ecs_f64_t),\
@@ -70,7 +70,7 @@
 
 #define FLECS_MATH_FUNC_DEF_F64_F64(_name, brief)\
     {\
-        ecs_entity_t f = ecs_script_function(world, {\
+        ecs_entity_t f = ecs_function(world, {\
             .name = #_name,\
             .parent = ecs_id(FlecsScriptMath),\
             .return_type = ecs_id(ecs_f64_t),\
@@ -85,7 +85,7 @@
 
 #define FLECS_MATH_FUNC_DEF_F64_F32(_name, brief)\
     {\
-        ecs_entity_t f = ecs_script_function(world, {\
+        ecs_entity_t f = ecs_function(world, {\
             .name = #_name,\
             .parent = ecs_id(FlecsScriptMath),\
             .return_type = ecs_id(ecs_f64_t),\

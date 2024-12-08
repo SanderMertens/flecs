@@ -15,7 +15,7 @@ void flecs_visit_fold_replace(
     ecs_expr_node_t *with)
 {
     ecs_assert(*node_ptr != with, ECS_INTERNAL_ERROR, NULL);
-    flecs_script_expr_visit_free(script, *node_ptr);
+    flecs_expr_visit_free(script, *node_ptr);
     *node_ptr = with;
 }
 
@@ -23,7 +23,7 @@ static
 int flecs_expr_unary_visit_fold(
     ecs_script_t *script,
     ecs_expr_node_t **node_ptr,
-    const ecs_script_expr_run_desc_t *desc)
+    const ecs_expr_eval_desc_t *desc)
 {
     ecs_expr_unary_t *node = (ecs_expr_unary_t*)*node_ptr;
 
@@ -33,7 +33,7 @@ int flecs_expr_unary_visit_fold(
         goto error;
     }
 
-    if (flecs_script_expr_visit_fold(script, &node->expr, desc)) {
+    if (flecs_expr_visit_fold(script, &node->expr, desc)) {
         goto error;
     }
 
@@ -72,15 +72,15 @@ static
 int flecs_expr_binary_visit_fold(
     ecs_script_t *script,
     ecs_expr_node_t **node_ptr,
-    const ecs_script_expr_run_desc_t *desc)
+    const ecs_expr_eval_desc_t *desc)
 {
     ecs_expr_binary_t *node = (ecs_expr_binary_t*)*node_ptr;
 
-    if (flecs_script_expr_visit_fold(script, &node->left, desc)) {
+    if (flecs_expr_visit_fold(script, &node->left, desc)) {
         goto error;
     }
 
-    if (flecs_script_expr_visit_fold(script, &node->right, desc)) {
+    if (flecs_expr_visit_fold(script, &node->right, desc)) {
         goto error;
     }
 
@@ -113,11 +113,11 @@ static
 int flecs_expr_cast_visit_fold(
     ecs_script_t *script,
     ecs_expr_node_t **node_ptr,
-    const ecs_script_expr_run_desc_t *desc)
+    const ecs_expr_eval_desc_t *desc)
 {
     ecs_expr_cast_t *node = (ecs_expr_cast_t*)*node_ptr;
 
-    if (flecs_script_expr_visit_fold(script, &node->expr, desc)) {
+    if (flecs_expr_visit_fold(script, &node->expr, desc)) {
         goto error;
     }
 
@@ -160,7 +160,7 @@ static
 int flecs_expr_initializer_pre_fold(
     ecs_script_t *script,
     ecs_expr_initializer_t *node,
-    const ecs_script_expr_run_desc_t *desc,
+    const ecs_expr_eval_desc_t *desc,
     bool *can_fold)
 {
     ecs_expr_initializer_element_t *elems = ecs_vec_first(&node->elements);
@@ -180,7 +180,7 @@ int flecs_expr_initializer_pre_fold(
             continue;
         }
 
-        if (flecs_script_expr_visit_fold(script, &elem->value, desc)) {
+        if (flecs_expr_visit_fold(script, &elem->value, desc)) {
             goto error;
         }
 
@@ -241,7 +241,7 @@ static
 int flecs_expr_initializer_visit_fold(
     ecs_script_t *script,
     ecs_expr_node_t **node_ptr,
-    const ecs_script_expr_run_desc_t *desc)
+    const ecs_expr_eval_desc_t *desc)
 {
     bool can_fold = true;
 
@@ -276,7 +276,7 @@ static
 int flecs_expr_identifier_visit_fold(
     ecs_script_t *script,
     ecs_expr_node_t **node_ptr,
-    const ecs_script_expr_run_desc_t *desc)
+    const ecs_expr_eval_desc_t *desc)
 {
     (void)desc;
 
@@ -295,14 +295,14 @@ static
 int flecs_expr_arguments_visit_fold(
     ecs_script_t *script,
     ecs_expr_initializer_t *node,
-    const ecs_script_expr_run_desc_t *desc)
+    const ecs_expr_eval_desc_t *desc)
 {
     ecs_expr_initializer_element_t *elems = ecs_vec_first(&node->elements);
     int32_t i, count = ecs_vec_count(&node->elements);
     for (i = 0; i < count; i ++) {
         ecs_expr_initializer_element_t *elem = &elems[i];
 
-        if (flecs_script_expr_visit_fold(script, &elem->value, desc)) {
+        if (flecs_expr_visit_fold(script, &elem->value, desc)) {
             goto error;
         }
     }
@@ -316,11 +316,11 @@ static
 int flecs_expr_function_visit_fold(
     ecs_script_t *script,
     ecs_expr_node_t **node_ptr,
-    const ecs_script_expr_run_desc_t *desc)
+    const ecs_expr_eval_desc_t *desc)
 {
     ecs_expr_function_t *node = (ecs_expr_function_t*)*node_ptr;
 
-    if (flecs_script_expr_visit_fold(script, &node->left, desc)) {
+    if (flecs_expr_visit_fold(script, &node->left, desc)) {
         goto error;
     }
 
@@ -339,11 +339,11 @@ static
 int flecs_expr_member_visit_fold(
     ecs_script_t *script,
     ecs_expr_node_t **node_ptr,
-    const ecs_script_expr_run_desc_t *desc)
+    const ecs_expr_eval_desc_t *desc)
 {
     ecs_expr_member_t *node = (ecs_expr_member_t*)*node_ptr;
 
-    if (flecs_script_expr_visit_fold(script, &node->left, desc)) {
+    if (flecs_expr_visit_fold(script, &node->left, desc)) {
         goto error;
     }
 
@@ -356,15 +356,15 @@ static
 int flecs_expr_element_visit_fold(
     ecs_script_t *script,
     ecs_expr_node_t **node_ptr,
-    const ecs_script_expr_run_desc_t *desc)
+    const ecs_expr_eval_desc_t *desc)
 {
     ecs_expr_element_t *node = (ecs_expr_element_t*)*node_ptr;
 
-    if (flecs_script_expr_visit_fold(script, &node->left, desc)) {
+    if (flecs_expr_visit_fold(script, &node->left, desc)) {
         goto error;
     }
 
-    if (flecs_script_expr_visit_fold(script, &node->index, desc)) {
+    if (flecs_expr_visit_fold(script, &node->index, desc)) {
         goto error;
     }
 
@@ -373,10 +373,10 @@ error:
     return -1;
 }
 
-int flecs_script_expr_visit_fold(
+int flecs_expr_visit_fold(
     ecs_script_t *script,
     ecs_expr_node_t **node_ptr,
-    const ecs_script_expr_run_desc_t *desc)
+    const ecs_expr_eval_desc_t *desc)
 {
     ecs_assert(node_ptr != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_expr_node_t *node = *node_ptr;

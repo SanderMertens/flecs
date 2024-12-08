@@ -8251,7 +8251,7 @@ void Eval_assign_call_func(void) {
         }
     });
 
-    ecs_script_function(world, {
+    ecs_function(world, {
         .name = "sqr",
         .return_type = ecs_id(ecs_i32_t),
         .params = {{ "x", ecs_id(ecs_i32_t) }},
@@ -8290,7 +8290,7 @@ void Eval_assign_call_scoped_func(void) {
 
     ecs_entity_t parent = ecs_entity(world, { .name = "parent" });
 
-    ecs_script_function(world, {
+    ecs_function(world, {
         .name = "sqr",
         .parent = parent,
         .return_type = ecs_id(ecs_i32_t),
@@ -8330,7 +8330,7 @@ void Eval_assign_call_scoped_func_w_using(void) {
 
     ecs_entity_t parent = ecs_entity(world, { .name = "parent" });
 
-    ecs_script_function(world, {
+    ecs_function(world, {
         .name = "sqr",
         .parent = parent,
         .return_type = ecs_id(ecs_i32_t),

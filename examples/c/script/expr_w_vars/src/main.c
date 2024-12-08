@@ -28,15 +28,15 @@ int main(int argc, char *argv[]) {
     };
 
     // Parse expression
-    ecs_script_expr_run_desc_t desc = { .vars = vars };
-    ecs_script_t *s = ecs_script_expr_parse(world, "$x + $y", &desc);
+    ecs_expr_eval_desc_t desc = { .vars = vars };
+    ecs_script_t *s = ecs_expr_parse(world, "$x + $y", &desc);
     if (!s) {
         printf("failed to parse expression\n");
         return -1;
     }
 
     // Evaluate expression with variables
-    if (ecs_script_expr_eval(s, &result_value, &desc)) {
+    if (ecs_expr_eval(s, &result_value, &desc)) {
         printf("failed to evaluate expression\n");
         return -1;
     }
@@ -45,7 +45,7 @@ int main(int argc, char *argv[]) {
 
     // Change variable and reevaluate expression
     *(int32_t*)y->value.ptr = 30;
-    if (ecs_script_expr_eval(s, &result_value, &desc)) {
+    if (ecs_expr_eval(s, &result_value, &desc)) {
         printf("failed to evaluate expression\n");
         return -1;
     }

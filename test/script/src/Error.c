@@ -1233,7 +1233,7 @@ void Error_unterminated_binary(void) {
     int32_t v = 0;
 
     ecs_log_set_level(-4);
-    const char *ptr = ecs_script_expr_run(world, "10 +", 
+    const char *ptr = ecs_expr_run(world, "10 +", 
         &ecs_value_ptr(ecs_i32_t, &v), NULL);
     test_assert(ptr == NULL);
 

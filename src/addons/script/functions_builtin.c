@@ -62,7 +62,7 @@ static
 void flecs_script_register_builtin_doc_functions(
     ecs_world_t *world)
 {
-    ecs_entity_t name = ecs_script_method(world, {
+    ecs_entity_t name = ecs_method(world, {
         .name = "doc_name",
         .parent = ecs_id(ecs_entity_t),
         .return_type = ecs_id(ecs_string_t),
@@ -86,7 +86,7 @@ void flecs_script_register_builtin_doc_functions(
 void flecs_script_register_builtin_functions(
     ecs_world_t *world)
 {
-    ecs_entity_t name = ecs_script_method(world, {
+    ecs_entity_t name = ecs_method(world, {
         .name = "name",
         .parent = ecs_id(ecs_entity_t),
         .return_type = ecs_id(ecs_string_t),
@@ -95,7 +95,7 @@ void flecs_script_register_builtin_functions(
 
     ecs_doc_set_brief(world, name, "Returns entity name");
 
-    ecs_entity_t path = ecs_script_method(world, {
+    ecs_entity_t path = ecs_method(world, {
         .name = "path",
         .parent = ecs_id(ecs_entity_t),
         .return_type = ecs_id(ecs_string_t),
@@ -104,7 +104,7 @@ void flecs_script_register_builtin_functions(
 
     ecs_doc_set_brief(world, path, "Returns entity path");
 
-    ecs_entity_t parent = ecs_script_method(world, {
+    ecs_entity_t parent = ecs_method(world, {
         .name = "parent",
         .parent = ecs_id(ecs_entity_t),
         .return_type = ecs_id(ecs_entity_t),

@@ -12,23 +12,23 @@
             ((const ecs_expr_node_t*)node)->pos - script->code, \
                 __VA_ARGS__);
 
-int flecs_script_expr_visit_type(
+int flecs_expr_visit_type(
     ecs_script_t *script,
     ecs_expr_node_t *node,
-    const ecs_script_expr_run_desc_t *desc);
+    const ecs_expr_eval_desc_t *desc);
 
-int flecs_script_expr_visit_fold(
+int flecs_expr_visit_fold(
     ecs_script_t *script,
     ecs_expr_node_t **node,
-    const ecs_script_expr_run_desc_t *desc);
+    const ecs_expr_eval_desc_t *desc);
 
-int flecs_script_expr_visit_eval(
+int flecs_expr_visit_eval(
     const ecs_script_t *script,
     ecs_expr_node_t *node,
-    const ecs_script_expr_run_desc_t *desc,
+    const ecs_expr_eval_desc_t *desc,
     ecs_value_t *out);
 
-void flecs_script_expr_visit_free(
+void flecs_expr_visit_free(
     ecs_script_t *script,
     ecs_expr_node_t *node);
 

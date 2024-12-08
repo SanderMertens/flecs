@@ -476,8 +476,8 @@ void ecs_script_vars_from_iter(
 
 /* Standalone expression evaluation */
 
-/** Used with ecs_script_expr_run(). */
-typedef struct ecs_script_expr_run_desc_t {
+/** Used with ecs_expr_run(). */
+typedef struct ecs_expr_eval_desc_t {
     const char *name;                /**< Script name */
     const char *expr;                /**< Full expression string */
     ecs_entity_t (*lookup_action)(   /**< Function for resolving entity identifiers */
@@ -489,7 +489,7 @@ typedef struct ecs_script_expr_run_desc_t {
     ecs_entity_t type;               /**< Type of parsed value (optional) */
     bool disable_folding;            /**< Disable constant folding (slower evaluation, faster parsing) */
     ecs_script_runtime_t *runtime;   /**< Reusable runtime (optional) */
-} ecs_script_expr_run_desc_t;
+} ecs_expr_eval_desc_t;
 
 /** Run expression.
  * This operation runs an expression and stores the result in the provided 
@@ -506,15 +506,15 @@ typedef struct ecs_script_expr_run_desc_t {
  * @return Pointer to the character after the last one read, or NULL if failed.
  */
 FLECS_API
-const char* ecs_script_expr_run(
+const char* ecs_expr_run(
     ecs_world_t *world,
     const char *ptr,
     ecs_value_t *value,
-    const ecs_script_expr_run_desc_t *desc);
+    const ecs_expr_eval_desc_t *desc);
 
 /** Parse expression.
  * This operation parses an expression and returns an object that can be 
- * evaluated multiple times with ecs_script_expr_eval().
+ * evaluated multiple times with ecs_expr_eval().
  * 
  * @param world The world.
  * @param expr The expression string.
@@ -522,13 +522,13 @@ const char* ecs_script_expr_run(
  * @return A script object if parsing is successful, NULL if parsing failed.
  */
 FLECS_API
-ecs_script_t* ecs_script_expr_parse(
+ecs_script_t* ecs_expr_parse(
     ecs_world_t *world,
     const char *expr,
-    const ecs_script_expr_run_desc_t *desc);
+    const ecs_expr_eval_desc_t *desc);
 
 /** Evaluate expression.
- * This operation evaluates an expression parsed with ecs_script_expr_parse() 
+ * This operation evaluates an expression parsed with ecs_expr_parse() 
  * and stores the result in the provided value. If the value contains a type 
  * that is different from the type of the expression, the expression will be 
  * cast to the value.
@@ -542,10 +542,10 @@ ecs_script_t* ecs_script_expr_parse(
  * @return Zero if successful, non-zero if failed.
  */
 FLECS_API
-int ecs_script_expr_eval(
+int ecs_expr_eval(
     const ecs_script_t *script,
     ecs_value_t *value,
-    const ecs_script_expr_run_desc_t *desc);
+    const ecs_expr_eval_desc_t *desc);
 
 /** Evaluate interpolated expressions in string.
  * This operation evaluates expressions in a string, and replaces them with
@@ -568,8 +568,8 @@ char* ecs_script_string_interpolate(
 
 /* Functions */
 
-/** Used with ecs_script_function_init and ecs_script_method_init */
-typedef struct ecs_script_function_desc_t {
+/** Used with ecs_function_init and ecs_method_init */
+typedef struct ecs_function_desc_t {
     /** Function name. */
     const char *name;
     
@@ -588,7 +588,7 @@ typedef struct ecs_script_function_desc_t {
 
     /** Context passed to function implementation. */
     void *ctx;
-} ecs_script_function_desc_t;
+} ecs_function_desc_t;
 
 /** Create new function. 
  * This operation creates a new function that can be called from a script.
@@ -598,12 +598,12 @@ typedef struct ecs_script_function_desc_t {
  * @return The function, or 0 if failed.
 */
 FLECS_API
-ecs_entity_t ecs_script_function_init(
+ecs_entity_t ecs_function_init(
     ecs_world_t *world,
-    const ecs_script_function_desc_t *desc);
+    const ecs_function_desc_t *desc);
 
-#define ecs_script_function(world, ...)\
-    ecs_script_function_init(world, &(ecs_script_function_desc_t)__VA_ARGS__)
+#define ecs_function(world, ...)\
+    ecs_function_init(world, &(ecs_function_desc_t)__VA_ARGS__)
 
 /** Create new method. 
  * This operation creates a new method that can be called from a script. A 
@@ -618,12 +618,12 @@ ecs_entity_t ecs_script_function_init(
  * @return The function, or 0 if failed.
 */
 FLECS_API
-ecs_entity_t ecs_script_method_init(
+ecs_entity_t ecs_method_init(
     ecs_world_t *world,
-    const ecs_script_function_desc_t *desc);
+    const ecs_function_desc_t *desc);
 
-#define ecs_script_method(world, ...)\
-    ecs_script_method_init(world, &(ecs_script_function_desc_t)__VA_ARGS__)
+#define ecs_method(world, ...)\
+    ecs_method_init(world, &(ecs_function_desc_t)__VA_ARGS__)
 
 
 /* Value serialization */
