@@ -126,30 +126,48 @@ typedef struct EcsScriptMethod {
 
 /* Parsing & running scripts */
 
+/** Used with ecs_script_parse() and ecs_script_eval() */
+typedef struct ecs_script_eval_desc_t {
+    ecs_script_vars_t *vars;       /**< Variables used by script */
+    ecs_script_runtime_t *runtime; /**< Reusable runtime (optional) */
+} ecs_script_eval_desc_t;
+
 /** Parse script.
  * This operation parses a script and returns a script object upon success. To
  * run the script, call ecs_script_eval().
  * 
+ * If the script uses outside variables, an ecs_script_vars_t object must be
+ * provided in the vars member of the desc object that defines all variables 
+ * with the correct types.
+ * 
  * @param world The world.
  * @param name Name of the script (typically a file/module name).
  * @param code The script code.
+ * @param desc Parameters for script runtime.
  * @return Script object if success, NULL if failed.
 */
 FLECS_API
 ecs_script_t* ecs_script_parse(
     ecs_world_t *world,
     const char *name,
-    const char *code);
+    const char *code,
+    const ecs_script_eval_desc_t *desc);
 
 /** Evaluate script.
  * This operation evaluates (runs) a parsed script.
  * 
+ * If variables were provided to ecs_script_parse(), an application may pass
+ * a different ecs_script_vars_t object to ecs_script_eval(), as long as the
+ * object has all referenced variables and they are of the same type.
+ * 
  * @param script The script.
+ * @param desc Parameters for script runtime.
  * @return Zero if success, non-zero if failed.
 */
 FLECS_API
 int ecs_script_eval(
-    const ecs_script_t *script);
+    const ecs_script_t *script,
+    const ecs_script_eval_desc_t *desc);
 
 /** Free script.
  * This operation frees a script object.

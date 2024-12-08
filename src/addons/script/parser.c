@@ -802,8 +802,11 @@ component_expr_collection: {
 ecs_script_t* ecs_script_parse(
     ecs_world_t *world,
     const char *name,
-    const char *code) 
+    const char *code,
+    const ecs_script_eval_desc_t *desc) 
 {
+    (void)desc; /* Will be used in future to expand type checking features */
+
     if (!code) {
         code = "";
     }

@@ -60,10 +60,12 @@ void flecs_script_template_fini(
 
 void flecs_script_eval_visit_init(
     const ecs_script_impl_t *script,
-    ecs_script_eval_visitor_t *v);
+    ecs_script_eval_visitor_t *v,
+    const ecs_script_eval_desc_t *desc);
 
 void flecs_script_eval_visit_fini(
-    ecs_script_eval_visitor_t *v);
+    ecs_script_eval_visitor_t *v,
+    const ecs_script_eval_desc_t *desc);
 
 int flecs_script_eval_node(
     ecs_script_eval_visitor_t *v,

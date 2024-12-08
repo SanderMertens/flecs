@@ -5412,10 +5412,12 @@ void flecs_script_template_fini(
 
 void flecs_script_eval_visit_init(
     const ecs_script_impl_t *script,
-    ecs_script_eval_visitor_t *v);
+    ecs_script_eval_visitor_t *v,
+    const ecs_script_eval_desc_t *desc);
 
 void flecs_script_eval_visit_fini(
-    ecs_script_eval_visitor_t *v);
+    ecs_script_eval_visitor_t *v,
+    const ecs_script_eval_desc_t *desc);
 
 int flecs_script_eval_node(
     ecs_script_eval_visitor_t *v,
@@ -56765,8 +56767,11 @@ component_expr_collection: {
 ecs_script_t* ecs_script_parse(
     ecs_world_t *world,
     const char *name,
-    const char *code) 
+    const char *code,
+    const ecs_script_eval_desc_t *desc) 
 {
+    (void)desc; /* Will be used in future to expand type checking features */
+
     if (!code) {
         code = "";
     }
@@ -57676,14 +57681,14 @@ int ecs_script_run(
     const char *name,
     const char *code)
 {
-    ecs_script_t *script = ecs_script_parse(world, name, code);
+    ecs_script_t *script = ecs_script_parse(world, name, code, NULL);
     if (!script) {
         goto error;
     }
 
     ecs_entity_t prev_scope = ecs_set_scope(world, 0);
 
-    if (ecs_script_eval(script)) {
+    if (ecs_script_eval(script, NULL)) {
         goto error_free;
     }
 
@@ -57754,7 +57759,7 @@ int ecs_script_update(
         ecs_script_free(s->script);
     }
 
-    s->script = ecs_script_parse(world, name, code);
+    s->script = ecs_script_parse(world, name, code, NULL);
     if (!s->script) {
         return -1;
     }
@@ -57773,7 +57778,7 @@ int ecs_script_update(
 
     ecs_entity_t prev = ecs_set_with(world, flecs_script_tag(e, instance));
 
-    if (ecs_script_eval(s->script)) {
+    if (ecs_script_eval(s->script, NULL)) {
         ecs_delete_with(world, ecs_pair_t(EcsScript, e));
         result = -1;
     }
@@ -58481,7 +58486,7 @@ void flecs_script_template_on_set(
     void *data = ecs_field_w_size(it, flecs_ito(size_t, ti->size), 0);
 
     ecs_script_eval_visitor_t v;
-    flecs_script_eval_visit_init(flecs_script_impl(script->script), &v);
+    flecs_script_eval_visit_init(flecs_script_impl(script->script), &v, NULL);
     ecs_vec_t prev_using = v.r->using;
     v.r->using = template->using_;
 
@@ -58555,7 +58560,7 @@ void flecs_script_template_on_set(
     }
 
     v.r->using = prev_using;
-    flecs_script_eval_visit_fini(&v);
+    flecs_script_eval_visit_fini(&v, NULL);
 }
 
 static
@@ -61038,7 +61043,8 @@ int flecs_script_eval_node(
 
 void flecs_script_eval_visit_init(
     const ecs_script_impl_t *script,
-    ecs_script_eval_visitor_t *v)
+    ecs_script_eval_visitor_t *v,
+    const ecs_script_eval_desc_t *desc)
 {
     *v = (ecs_script_eval_visitor_t){
         .base = {
@@ -61046,8 +61052,18 @@ void flecs_script_eval_visit_init(
             .script = ECS_CONST_CAST(ecs_script_impl_t*, script)
         },
         .world = script->pub.world,
-        .r = ecs_script_runtime_new()
+        .r = desc ? desc->runtime : NULL
     };
+
+    if (!v->r) {
+        v->r = ecs_script_runtime_new();
+    }
+
+    if (desc && desc->vars) {
+        ecs_allocator_t *a = &v->r->allocator;
+        v->vars = flecs_script_vars_push(v->vars, &v->r->stack, a);
+        v->vars->parent = desc->vars;
+    }
 
     /* Always include flecs.meta */
     ecs_vec_append_t(&v->r->allocator, &v->r->using, ecs_entity_t)[0] = 
@@ -61055,21 +61071,29 @@ void flecs_script_eval_visit_init(
 }
 
 void flecs_script_eval_visit_fini(
-    ecs_script_eval_visitor_t *v)
+    ecs_script_eval_visitor_t *v,
+    const ecs_script_eval_desc_t *desc)
 {
-    ecs_script_runtime_free(v->r);
+    if (desc && desc->vars) {
+        v->vars = ecs_script_vars_pop(v->vars);
+    }
+
+    if (!desc || (v->r != desc->runtime)) {
+        ecs_script_runtime_free(v->r);
+    }
 }
 
 int ecs_script_eval(
-    const ecs_script_t *script)
+    const ecs_script_t *script,
+    const ecs_script_eval_desc_t *desc)
 {
     ecs_script_eval_visitor_t v;
     ecs_script_impl_t *impl = flecs_script_impl(
         /* Safe, script will only be used for reading by visitor */
         ECS_CONST_CAST(ecs_script_t*, script));
-    flecs_script_eval_visit_init(impl, &v);
+    flecs_script_eval_visit_init(impl, &v, desc);
     int result = ecs_script_visit(impl, &v, flecs_script_eval_node);
-    flecs_script_eval_visit_fini(&v);
+    flecs_script_eval_visit_fini(&v, desc);
     return result;
 }
 
