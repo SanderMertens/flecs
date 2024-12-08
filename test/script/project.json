@@ -267,7 +267,9 @@
                 "update_template_w_tag",
                 "assign_call_func",
                 "assign_call_scoped_func",
-                "assign_call_scoped_func_w_using"
+                "assign_call_scoped_func_w_using",
+                "eval_w_vars",
+                "eval_w_runtime"
             ]
         }, {
             "id": "Template",

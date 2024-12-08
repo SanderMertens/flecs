@@ -89,7 +89,7 @@ void flecs_script_template_on_set(
     void *data = ecs_field_w_size(it, flecs_ito(size_t, ti->size), 0);
 
     ecs_script_eval_visitor_t v;
-    flecs_script_eval_visit_init(flecs_script_impl(script->script), &v);
+    flecs_script_eval_visit_init(flecs_script_impl(script->script), &v, NULL);
     ecs_vec_t prev_using = v.r->using;
     v.r->using = template->using_;
 
@@ -163,7 +163,7 @@ void flecs_script_template_on_set(
     }
 
     v.r->using = prev_using;
-    flecs_script_eval_visit_fini(&v);
+    flecs_script_eval_visit_fini(&v, NULL);
 }
 
 static

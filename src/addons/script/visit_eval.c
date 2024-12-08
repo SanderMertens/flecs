@@ -1216,7 +1216,8 @@ int flecs_script_eval_node(
 
 void flecs_script_eval_visit_init(
     const ecs_script_impl_t *script,
-    ecs_script_eval_visitor_t *v)
+    ecs_script_eval_visitor_t *v,
+    const ecs_script_eval_desc_t *desc)
 {
     *v = (ecs_script_eval_visitor_t){
         .base = {
@@ -1224,8 +1225,18 @@ void flecs_script_eval_visit_init(
             .script = ECS_CONST_CAST(ecs_script_impl_t*, script)
         },
         .world = script->pub.world,
-        .r = ecs_script_runtime_new()
+        .r = desc ? desc->runtime : NULL
     };
+
+    if (!v->r) {
+        v->r = ecs_script_runtime_new();
+    }
+
+    if (desc && desc->vars) {
+        ecs_allocator_t *a = &v->r->allocator;
+        v->vars = flecs_script_vars_push(v->vars, &v->r->stack, a);
+        v->vars->parent = desc->vars;
+    }
 
     /* Always include flecs.meta */
     ecs_vec_append_t(&v->r->allocator, &v->r->using, ecs_entity_t)[0] = 
@@ -1233,21 +1244,29 @@ void flecs_script_eval_visit_init(
 }
 
 void flecs_script_eval_visit_fini(
-    ecs_script_eval_visitor_t *v)
+    ecs_script_eval_visitor_t *v,
+    const ecs_script_eval_desc_t *desc)
 {
-    ecs_script_runtime_free(v->r);
+    if (desc && desc->vars) {
+        v->vars = ecs_script_vars_pop(v->vars);
+    }
+
+    if (!desc || (v->r != desc->runtime)) {
+        ecs_script_runtime_free(v->r);
+    }
 }
 
 int ecs_script_eval(
-    const ecs_script_t *script)
+    const ecs_script_t *script,
+    const ecs_script_eval_desc_t *desc)
 {
     ecs_script_eval_visitor_t v;
     ecs_script_impl_t *impl = flecs_script_impl(
         /* Safe, script will only be used for reading by visitor */
         ECS_CONST_CAST(ecs_script_t*, script));
-    flecs_script_eval_visit_init(impl, &v);
+    flecs_script_eval_visit_init(impl, &v, desc);
     int result = ecs_script_visit(impl, &v, flecs_script_eval_node);
-    flecs_script_eval_visit_fini(&v);
+    flecs_script_eval_visit_fini(&v, desc);
     return result;
 }
 

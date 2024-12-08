@@ -264,6 +264,8 @@ void Eval_update_template_w_tag(void);
 void Eval_assign_call_func(void);
 void Eval_assign_call_scoped_func(void);
 void Eval_assign_call_scoped_func_w_using(void);
+void Eval_eval_w_vars(void);
+void Eval_eval_w_runtime(void);
 
 // Testsuite 'Template'
 void Template_template_no_scope(void);
@@ -1739,6 +1741,14 @@ bake_test_case Eval_testcases[] = {
     {
         "assign_call_scoped_func_w_using",
         Eval_assign_call_scoped_func_w_using
+    },
+    {
+        "eval_w_vars",
+        Eval_eval_w_vars
+    },
+    {
+        "eval_w_runtime",
+        Eval_eval_w_runtime
     }
 };
 
@@ -3534,7 +3544,7 @@ static bake_test_suite suites[] = {
         "Eval",
         NULL,
         NULL,
-        255,
+        257,
         Eval_testcases
     },
     {

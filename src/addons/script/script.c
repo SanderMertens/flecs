@@ -75,14 +75,14 @@ int ecs_script_run(
     const char *name,
     const char *code)
 {
-    ecs_script_t *script = ecs_script_parse(world, name, code);
+    ecs_script_t *script = ecs_script_parse(world, name, code, NULL);
     if (!script) {
         goto error;
     }
 
     ecs_entity_t prev_scope = ecs_set_scope(world, 0);
 
-    if (ecs_script_eval(script)) {
+    if (ecs_script_eval(script, NULL)) {
         goto error_free;
     }
 
@@ -153,7 +153,7 @@ int ecs_script_update(
         ecs_script_free(s->script);
     }
 
-    s->script = ecs_script_parse(world, name, code);
+    s->script = ecs_script_parse(world, name, code, NULL);
     if (!s->script) {
         return -1;
     }
@@ -172,7 +172,7 @@ int ecs_script_update(
 
     ecs_entity_t prev = ecs_set_with(world, flecs_script_tag(e, instance));
 
-    if (ecs_script_eval(s->script)) {
+    if (ecs_script_eval(s->script, NULL)) {
         ecs_delete_with(world, ecs_pair_t(EcsScript, e));
         result = -1;
     }
