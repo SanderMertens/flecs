@@ -675,7 +675,7 @@ Initializers are values that are used to initialize composite and collection mem
 [{10, 20}, {30, 40}, {50, 60}]
 ```
 
-Initializers must always be assigned to an lvalue of a well defined type. This can either be a typed variable, component assignment or in the case of nested initializers, an element of another initializer. For example, this is a valid usage of an initializer:
+Initializers must always be assigned to an lvalue of a well defined type. This can either be a typed variable, component assignment, function parameter or in the case of nested initializers, an element of another initializer. For example, this is a valid usage of an initializer:
 
 ```c
 const x = Position: {10, 20}
