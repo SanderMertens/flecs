@@ -137,7 +137,7 @@ ecs_entity_t flecs_name_to_id(
     return flecs_ito(uint64_t, atoll(name + 1));
 }
 
-static
+static inline
 ecs_entity_t flecs_get_builtin(
     const char *name)
 {
@@ -154,7 +154,7 @@ ecs_entity_t flecs_get_builtin(
     return 0;
 }
 
-static
+static inline
 bool flecs_is_sep(
     const char **ptr,
     const char *sep)
@@ -239,7 +239,7 @@ error:
     return NULL;
 }
 
-static
+static inline
 bool flecs_is_root_path(
     const char *path,
     const char *prefix)
@@ -381,9 +381,9 @@ ecs_entity_t ecs_lookup_child(
     const char *name)
 {
     ecs_check(world != NULL, ECS_INTERNAL_ERROR, NULL);
-    world = ecs_get_world(world);
 
     ecs_os_perf_trace_push("flecs.entity_name.lookup_child");
+    world = ecs_get_world(world);
 
     if (flecs_name_is_id(name)) {
         const ecs_entity_t result = flecs_name_to_id(name);
