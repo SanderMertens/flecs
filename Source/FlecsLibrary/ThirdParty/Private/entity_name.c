@@ -26,8 +26,7 @@ bool flecs_path_append(
     ecs_entity_t cur = 0;
     const char *name = NULL;
     ecs_size_t name_len = 0;
-
-    #pragma c
+    
     if (child && ecs_is_alive(world, child)) {
         const ecs_record_t *r = flecs_entities_get(world, child);
         bool hasName = false;

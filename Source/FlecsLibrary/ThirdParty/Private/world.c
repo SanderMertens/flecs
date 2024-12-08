@@ -2297,11 +2297,8 @@ bool ecs_id_in_use(
     ecs_id_t id)
 {
     ecs_id_record_t *idr = flecs_id_record_get(world, id);
-    if (!idr) {
-        return false;
-    }
-    return (flecs_table_cache_count(&idr->cache) != 0) ||
-        (flecs_table_cache_empty_count(&idr->cache) != 0);
+    return !idr ? false : flecs_table_cache_count(&idr->cache) != 0 ||
+               flecs_table_cache_empty_count(&idr->cache) != 0;
 }
 
 void ecs_run_aperiodic(
