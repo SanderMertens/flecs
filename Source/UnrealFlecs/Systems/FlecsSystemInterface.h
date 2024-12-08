@@ -5,17 +5,17 @@
 #include "CoreMinimal.h"
 #include "FlecsSystem.h"
 #include "Components/FlecsUObjectComponent.h"
-#include "UObject/Interface.h"
+#include "Interfaces/FlecsEntityInterface.h"
 #include "FlecsSystemInterface.generated.h"
 
 // This class does not need to be modified.
 UINTERFACE(BlueprintType, Blueprintable)
-class UFlecsSystemInterface : public UInterface
+class UFlecsSystemInterface : public UFlecsEntityInterface
 {
 	GENERATED_BODY()
 }; // class UFlecsSystemInterface
 
-class UNREALFLECS_API IFlecsSystemInterface
+class UNREALFLECS_API IFlecsSystemInterface : public IFlecsEntityInterface
 {
 	GENERATED_BODY()
 
@@ -38,6 +38,11 @@ public:
 	{
 	}
 
+	FORCEINLINE virtual FFlecsEntityHandle GetEntityHandle() const override final
+	{
+		return System.GetEntity();
+	}
+
 	FORCEINLINE virtual void BuildSystem(flecs::system_builder<>& Builder)
 		PURE_VIRTUAL(IFlecsSystemInterface::BuildSystem, return;);
 
@@ -54,22 +59,4 @@ public:
 	FFlecsSystem System;
 	
 }; // class IFlecsSystemInterface
-
-template <typename ...TArgs>
-struct TFlecsSystemTemplateInterface
-{
-public:
-	virtual ~TFlecsSystemTemplateInterface() = default;
-
-	void InitializeSystemTemplate(const flecs::world& InWorld)
-	{
-		auto Builder = InWorld.system<TArgs...>();
-		BuildSystemTemplate(Builder);
-		System = Builder;
-	}
-
-	virtual void BuildSystem(flecs::system& Builder) = 0;
-
-	FFlecsSystem System;
-}; // struct TFlecsSystemTemplateInterface
 

@@ -4,13 +4,14 @@
 
 #include "CoreMinimal.h"
 #include "Entities/FlecsEntityHandle.h"
+#include "Interfaces/FlecsEntityInterface.h"
 #include "UObject/Object.h"
 #include "FlecsPrefabObject.generated.h"
 
 class UFlecsWorld;
 
 UCLASS(Abstract, Blueprintable, BlueprintType, EditInlineNew, ClassGroup = (Flecs))
-class UNREALFLECS_API UFlecsPrefabObject : public UObject
+class UNREALFLECS_API UFlecsPrefabObject : public UObject, public IFlecsEntityInterface
 {
 	GENERATED_BODY()
 
@@ -26,6 +27,11 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = "Flecs")
 	FString PrefabName;
+
+	FORCEINLINE virtual FFlecsEntityHandle GetEntityHandle() const override final
+	{
+		return PrefabEntityHandle;
+	}
 
 	UPROPERTY()
 	FFlecsEntityHandle PrefabEntityHandle;

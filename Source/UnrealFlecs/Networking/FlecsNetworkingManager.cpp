@@ -25,7 +25,7 @@ void UFlecsNetworkingManager::BeginPlay()
 	/* Networked Entities require a Stable Name to begin with,
 	 this name can be changed after the entity's network ID is assigned */
 
-	if (GetOwner()->HasAuthority())
+	if (GetWorld()->IsNetMode(NM_DedicatedServer) || GetWorld()->IsNetMode(NM_ListenServer))
 	{
 		NetworkIdObserver =
 			FlecsWorld->CreateObserver<FFlecsNetworkIdComponent>(TEXT("NetworkingIdObserver"))
@@ -34,8 +34,6 @@ void UFlecsNetworkingManager::BeginPlay()
 			.yield_existing(true)
 			.read_write()
 		.with_name_component()
-			.and_()
-			.inout_none()
 		.each([this](const flecs::iter& Iterator, const uint64 Index, FFlecsNetworkIdComponent& NetworkId)
 		{
 			const FFlecsEntityHandle Entity = Iterator.entity(Index);

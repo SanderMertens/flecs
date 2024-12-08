@@ -5,20 +5,10 @@
 #include "CoreMinimal.h"
 #include "FlecsTranslationSettingTraits.generated.h"
 
-USTRUCT(BlueprintType)
-struct UNREALFLECS_API FTranslationToUnrealTrait
+UENUM(BlueprintType)
+enum class EFlecsTranslationSetting : uint8
 {
-	GENERATED_BODY()
-}; // struct FTranslationToUnrealTrait
-
-USTRUCT(BlueprintType)
-struct UNREALFLECS_API FTranslationToFlecsTrait
-{
-	GENERATED_BODY()
-}; // struct FTranslationToFlecsTrait
-
-USTRUCT(BlueprintType)
-struct UNREALFLECS_API FTranslationToBothTrait
-{
-	GENERATED_BODY()
-}; // struct FTranslationToBothTrait
+	ToUnreal = 0,
+	ToFlecs,
+	ToBoth
+}; // enum class ETranslationSetting

@@ -10,6 +10,8 @@ void flecs_query_update_node_up_trs(
     const ecs_query_run_ctx_t *ctx,
     ecs_query_cache_table_match_t *node)
 {
+    ecs_os_perf_trace_push("flecs.query.update_node_up_trs");
+    
     ecs_termset_t fields = node->up_fields & node->set_fields;
     if (fields) {
         const ecs_query_impl_t *impl = ctx->query;
@@ -38,6 +40,8 @@ void flecs_query_update_node_up_trs(
             }
         }
     }
+
+    ecs_os_perf_trace_pop("flecs.query.update_node_up_trs");
 }
 
 static
@@ -123,11 +127,15 @@ bool flecs_query_cache_search(
         return false;
     }
 
+    ecs_os_perf_trace_push("flecs.query.cache_search");
+
     flecs_query_cache_init_mapped_fields(ctx, node);
     ctx->vars[0].range.count = node->count;
     ctx->vars[0].range.offset = node->offset;
 
     flecs_query_update_node_up_trs(ctx, node);
+
+    ecs_os_perf_trace_pop("flecs.query.cache_search");
 
     return true;
 }
@@ -141,6 +149,8 @@ bool flecs_query_is_cache_search(
         return false;
     }
 
+    ecs_os_perf_trace_push("flecs.query.cache_search");
+
     ecs_iter_t *it = ctx->it;
     it->trs = node->trs;
     it->ids = node->ids;
@@ -149,6 +159,8 @@ bool flecs_query_is_cache_search(
     it->up_fields = node->up_fields;
 
     flecs_query_update_node_up_trs(ctx, node);
+
+    ecs_os_perf_trace_pop("flecs.query.cache_search");
 
     return true;
 }

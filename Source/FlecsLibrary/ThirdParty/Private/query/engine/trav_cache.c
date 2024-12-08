@@ -19,6 +19,8 @@ void flecs_query_build_down_cache(
         return;
     }
 
+    ecs_os_perf_trace_push("flecs.query.build_down_cache");
+
     ecs_trav_elem_t *elem = ecs_vec_append_t(a, &cache->entities, 
         ecs_trav_elem_t);
     elem->entity = entity;
@@ -45,6 +47,8 @@ void flecs_query_build_down_cache(
             }
         }
     }
+
+    ecs_os_perf_trace_pop("flecs.query.build_down_cache");
 }
 
 static
@@ -58,6 +62,8 @@ void flecs_query_build_up_cache(
     const ecs_table_record_t *tr,
     int32_t root_column)
 {
+    ecs_os_perf_trace_push("flecs.query.build_up_cache");
+    
     ecs_id_t *ids = table->type.array;
     int32_t i = tr->index, end = i + tr->count;
     bool is_root = root_column == -1;
@@ -86,6 +92,8 @@ void flecs_query_build_up_cache(
                 r_tr, root_column);
         }
     }
+
+    ecs_os_perf_trace_pop("flecs.query.build_up_cache");
 }
 
 void flecs_query_trav_cache_fini(
@@ -118,6 +126,9 @@ void flecs_query_get_trav_up_cache(
     ecs_table_t *table)
 {
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_os_perf_trace_push("flecs.query.get_trav_up_cache");
+    
     ecs_world_t *world = ctx->it->real_world;
     ecs_allocator_t *a = flecs_query_get_allocator(ctx->it);
 
@@ -127,6 +138,7 @@ void flecs_query_get_trav_up_cache(
             ecs_pair(trav, EcsWildcard));
         if (!idr) {
             ecs_vec_reset_t(a, &cache->entities, ecs_trav_elem_t);
+            ecs_os_perf_trace_pop("flecs.query.get_trav_up_cache");
             return;
         }
     }
@@ -134,6 +146,7 @@ void flecs_query_get_trav_up_cache(
     ecs_table_record_t *tr = flecs_id_record_get_table(idr, table);
     if (!tr) {
         ecs_vec_reset_t(a, &cache->entities, ecs_trav_elem_t);
+        ecs_os_perf_trace_pop("flecs.query.get_trav_up_cache");
         return;
     }
 
@@ -145,4 +158,6 @@ void flecs_query_get_trav_up_cache(
         cache->id = id;
         cache->up = true;
     }
+
+    ecs_os_perf_trace_pop("flecs.query.get_trav_up_cache");
 }

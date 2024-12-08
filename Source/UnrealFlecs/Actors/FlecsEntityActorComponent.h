@@ -6,11 +6,12 @@
 #include "Components/ActorComponent.h"
 #include "Entities/FlecsEntityHandle.h"
 #include "Entities/FlecsEntityRecord.h"
+#include "Interfaces/FlecsEntityInterface.h"
 #include "FlecsEntityActorComponent.generated.h"
 
 UCLASS(BlueprintType, Blueprintable, ClassGroup=(Flecs), meta=(BlueprintSpawnableComponent,
 	DisplayName = "Flecs Entity Actor Component"))
-class UNREALFLECS_API UFlecsEntityActorComponent : public UActorComponent
+class UNREALFLECS_API UFlecsEntityActorComponent : public UActorComponent, public IFlecsEntityInterface
 {
 	GENERATED_BODY()
 
@@ -24,8 +25,7 @@ public:
 
 	virtual void InitializeEntity();
 
-	UFUNCTION(BlueprintCallable, Category = "Flecs | Entity")
-	FORCEINLINE FFlecsEntityHandle GetEntityHandle() const
+	FORCEINLINE virtual FFlecsEntityHandle GetEntityHandle() const override final
 	{
 		return EntityHandle;
 	}

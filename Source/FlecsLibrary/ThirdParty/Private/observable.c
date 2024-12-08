@@ -714,7 +714,7 @@ void flecs_emit_forward_and_cache_id(
         tgt, tgt_table, column, trav);
 }
 
-static
+static inline
 int32_t flecs_emit_stack_at(
     ecs_vec_t *stack,
     ecs_id_record_t *idr)
@@ -732,7 +732,7 @@ int32_t flecs_emit_stack_at(
     return sp;
 }
 
-static
+static inline
 bool flecs_emit_stack_has(
     ecs_vec_t *stack,
     ecs_id_record_t *idr)
@@ -843,7 +843,7 @@ void flecs_emit_forward_table_up(
     /* Function may have to copy values from overridden components if an IsA
      * relationship was added together with other components. */
     const ecs_entity_t trav = ECS_PAIR_FIRST(tgt_idr->id);
-    bool inherit = trav == EcsIsA;
+    const bool inherit = trav == EcsIsA;
 
     for (int32_t i = 0; i < id_count; i ++) {
         ecs_id_t id = ids[i];
@@ -967,7 +967,7 @@ void flecs_emit_forward_up(
     ecs_assert(tgt != 0, ECS_INTERNAL_ERROR, NULL);
     ecs_record_t *tgt_record = flecs_entities_try(world, tgt);
     ecs_table_t *tgt_table;
-    if (!tgt_record || !(tgt_table = tgt_record->table)) {
+    if (!tgt_record || !((tgt_table = tgt_record->table))) {
         return;
     }
 

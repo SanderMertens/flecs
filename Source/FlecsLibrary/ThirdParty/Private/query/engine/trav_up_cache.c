@@ -11,11 +11,15 @@ ecs_trav_up_t* flecs_trav_up_ensure(
     ecs_trav_up_cache_t *cache,
     uint64_t table_id)
 {
+    ecs_os_perf_trace_push("flecs.trav.up_ensure");
+    
     ecs_trav_up_t **trav = ecs_map_ensure_ref(
         &cache->src, ecs_trav_up_t, table_id);
     if (!trav[0]) {
         trav[0] = flecs_iter_calloc_t(ctx->it, ecs_trav_up_t);
     }
+
+    ecs_os_perf_trace_pop("flecs.trav.up_ensure");
 
     return trav[0];
 }
@@ -76,6 +80,8 @@ ecs_trav_up_t* flecs_trav_table_up(
     if (up->ready) {
         return up;
     }
+
+    ecs_os_perf_trace_push("flecs.trav.table_up");
 
     ecs_record_t *src_record = flecs_entities_get_any(world, src);
     ecs_table_t *table = src_record->table;
@@ -151,6 +157,7 @@ not_found:
     up->tr = NULL;
 found:
     up->ready = true;
+    ecs_os_perf_trace_pop("flecs.trav.table_up");
     return up;
 }
 

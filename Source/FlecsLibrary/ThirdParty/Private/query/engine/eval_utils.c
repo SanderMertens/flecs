@@ -9,6 +9,8 @@ void flecs_query_set_iter_this(
     ecs_iter_t *it,
     const ecs_query_run_ctx_t *ctx)
 {
+    ecs_os_perf_trace_push("flecs.query.set_iter_this");
+    
     const ecs_var_t *var = &ctx->vars[0];
     const ecs_table_range_t *range = &var->range;
     ecs_table_t *table = range->table;
@@ -28,6 +30,8 @@ void flecs_query_set_iter_this(
         it->count = 1;
         it->entities = &ctx->vars[0].entity;
     }
+
+    ecs_os_perf_trace_pop("flecs.query.set_iter_this");
 }
 
 ecs_query_op_ctx_t* flecs_op_ctx_(
@@ -236,6 +240,8 @@ void flecs_query_set_vars(
     ecs_id_t id,
     const ecs_query_run_ctx_t *ctx)
 {
+    ecs_os_perf_trace_push("flecs.query.set_vars");
+    
     ecs_flags16_t flags_1st = flecs_query_ref_flags(op->flags, EcsQueryFirst);
     ecs_flags16_t flags_2nd = flecs_query_ref_flags(op->flags, EcsQuerySecond);
 
@@ -258,6 +264,8 @@ void flecs_query_set_vars(
                 op, var, ecs_get_alive(ctx->world, ECS_PAIR_SECOND(id)), ctx);
         }
     }
+
+    ecs_os_perf_trace_pop("flecs.query.set_vars");
 }
 
 ecs_table_range_t flecs_get_ref_range(
@@ -375,10 +383,15 @@ void flecs_query_set_match(
     ecs_iter_t *it = ctx->it;
     ecs_assert(column >= 0, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(column < table->type.count, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_os_perf_trace_push("flecs.query.set_match");
+    
     const ecs_table_record_t *tr = &table->_->records[column];
     flecs_query_it_set_tr(it, field_index, tr);
     ecs_id_t matched = flecs_query_it_set_id(it, table, field_index, tr->index);
     flecs_query_set_vars(op, matched, ctx);
+
+    ecs_os_perf_trace_pop("flecs.query.set_match");
 }
 
 void flecs_query_set_trav_match(
@@ -393,11 +406,15 @@ void flecs_query_set_trav_match(
         return;
     }
 
+    ecs_os_perf_trace_push("flecs.query.set_trav_match");
+
     ecs_iter_t *it = ctx->it;
     ecs_id_t matched = ecs_pair(trav, second);
     it->ids[op->field_index] = matched;
     flecs_query_it_set_tr(it, op->field_index, tr);
     flecs_query_set_vars(op, matched, ctx);
+
+    ecs_os_perf_trace_pop("flecs.query.set_trav_match");
 }
 
 bool flecs_query_table_filter(

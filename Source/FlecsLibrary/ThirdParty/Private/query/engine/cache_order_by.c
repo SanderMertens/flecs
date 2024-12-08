@@ -25,6 +25,8 @@ void flecs_query_cache_sort_table(
         return;
     }
 
+    ecs_os_perf_trace_push("flecs.query.cache.sort_table");
+
     ecs_entity_t *entities = table->data.entities;
     void *ptr = NULL;
     int32_t size = 0;
@@ -41,6 +43,8 @@ void flecs_query_cache_sort_table(
         flecs_query_cache_sort_table_generic(
             world, table, entities, ptr, size, 0, count - 1, compare);
     }
+
+    ecs_os_perf_trace_pop("flecs.query.cache.sort_table");
 }
 
 /* Helper struct for building sorted table ranges */
@@ -94,6 +98,8 @@ void flecs_query_cache_build_sorted_table_range(
     if (!table_count) {
         return;
     }
+
+    ecs_os_perf_trace_push("flecs.query.cache.build_sorted_table_range");
 
     ecs_vec_init_if_t(&cache->table_slices, ecs_query_cache_table_match_t);
     int32_t to_sort = 0;
@@ -216,11 +222,15 @@ void flecs_query_cache_build_sorted_table_range(
     nodes[i - 1].next = NULL;
 
     flecs_free_n(&world->allocator, sort_helper_t, table_count, helper);
+
+    ecs_os_perf_trace_pop("flecs.query.cache.build_sorted_table_range");
 }
 
 void flecs_query_cache_build_sorted_tables(
     ecs_query_cache_t *cache)
 {
+    ecs_os_perf_trace_push("flecs.query.cache.build_sorted_tables");
+    
     ecs_vec_clear(&cache->table_slices);
 
     if (cache->group_by_callback) {
@@ -244,6 +254,8 @@ void flecs_query_cache_build_sorted_tables(
     } else {
         flecs_query_cache_build_sorted_table_range(cache, &cache->list);
     }
+
+    ecs_os_perf_trace_pop("flecs.query.cache.build_sorted_tables");
 }
 
 void flecs_query_cache_sort_tables(
@@ -255,6 +267,8 @@ void flecs_query_cache_sort_tables(
     if (!compare) {
         return;
     }
+
+    ecs_os_perf_trace_push("flecs.query.cache.sort_tables");
 
     ecs_sort_table_action_t sort = cache->order_by_table_callback;
     
@@ -316,4 +330,6 @@ void flecs_query_cache_sort_tables(
         flecs_query_cache_build_sorted_tables(cache);
         cache->match_count ++; /* Increase version if tables changed */
     }
+
+    ecs_os_perf_trace_pop("flecs.query.cache.sort_tables");
 }

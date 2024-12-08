@@ -102,6 +102,8 @@ void flecs_query_cache_remove_group(
     ecs_query_cache_t *cache,
     uint64_t id)
 {
+    ecs_os_perf_trace_push("flecs.query.cache.remove_group");
+    
     if (cache->on_group_delete) {
         ecs_query_cache_table_list_t *group = ecs_map_get_deref(&cache->groups, 
             ecs_query_cache_table_list_t, id);
@@ -112,6 +114,8 @@ void flecs_query_cache_remove_group(
     }
 
     ecs_map_remove_free(&cache->groups, id);
+
+    ecs_os_perf_trace_pop("flecs.query.cache.remove_group");
 }
 
 static
@@ -138,6 +142,8 @@ ecs_query_cache_table_match_t* flecs_query_cache_find_group_insertion_node(
 {
     /* Grouping must be enabled */
     ecs_assert(cache->group_by_callback != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_os_perf_trace_push("flecs.query.cache.find_group_insertion_node");
 
     ecs_map_iter_t it = ecs_map_iter(&cache->groups);
     ecs_query_cache_table_list_t *list, *closest_list = NULL;
@@ -182,6 +188,8 @@ ecs_query_cache_table_match_t* flecs_query_cache_find_group_insertion_node(
             closest_list = list;
         }
     }
+
+    ecs_os_perf_trace_pop("flecs.query.cache.find_group_insertion_node");
 
     if (closest_list) {
         return closest_list->last;
@@ -1391,11 +1399,14 @@ void ecs_iter_set_group(
     ecs_query_cache_t *cache = q->cache;
     ecs_check(cache != NULL, ECS_INVALID_PARAMETER, NULL);
 
+    ecs_os_perf_trace_push("flecs.iter.set_group");
+
     ecs_query_cache_table_list_t *node = flecs_query_cache_get_group(
         cache, group_id);
     if (!node) {
         qit->node = NULL;
         qit->last = NULL;
+        ecs_os_perf_trace_pop("flecs.iter.set_group");
         return;
     }
 
@@ -1407,8 +1418,11 @@ void ecs_iter_set_group(
         qit->node = NULL;
         qit->last = NULL;
     }
+
+    ecs_os_perf_trace_pop("flecs.iter.set_group");
     
 error:
+    ecs_os_perf_trace_pop("flecs.iter.set_group");
     return;
 }
 

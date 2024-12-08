@@ -21,12 +21,16 @@ void flecs_query_get_column_for_field(
     ecs_assert(field < q->field_count, ECS_INTERNAL_ERROR, NULL);
     (void)q;
 
+    ecs_os_perf_trace_push("flecs.query.get_column_for_field");
+
     const ecs_table_record_t *tr = match->trs[field];
     ecs_table_t *table = tr->hdr.table;
     int32_t column = tr->column;
 
     out->table = table;
     out->column = column;
+
+    ecs_os_perf_trace_pop("flecs.query.get_column_for_field");
 }
 
 /* Get match monitor. Monitors are used to keep track of whether components 
@@ -43,6 +47,9 @@ bool flecs_query_get_match_monitor(
 
     ecs_query_cache_t *cache = impl->cache;
     ecs_assert(cache != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_os_perf_trace_push("flecs.query.get_match_monitor");
+    
     int32_t *monitor = flecs_balloc(&cache->allocators.monitors);
     monitor[0] = 0;
 
@@ -86,6 +93,8 @@ bool flecs_query_get_match_monitor(
 
     impl->pub.flags |= EcsQueryHasMonitor;
 
+    ecs_os_perf_trace_pop("flecs.query.get_match_monitor");
+
     return true;
 }
 
@@ -96,6 +105,8 @@ bool flecs_query_get_fixed_monitor(
     ecs_query_impl_t *impl,
     bool check)
 {
+    ecs_os_perf_trace_push("flecs.query.get_fixed_monitor");
+    
     ecs_query_t *q = &impl->pub;
     ecs_world_t *world = q->world;
     ecs_term_t *terms = q->terms;
@@ -145,11 +156,13 @@ bool flecs_query_get_fixed_monitor(
             impl->monitor[field_index] = dirty_state[tr->column + 1];
         } else {
             if (impl->monitor[field_index] != dirty_state[tr->column + 1]) {
+                ecs_os_perf_trace_pop("flecs.query.get_fixed_monitor");
                 return true;
             }
         }
     }
 
+    ecs_os_perf_trace_pop("flecs.query.get_fixed_monitor");
     return !check;
 }
 
@@ -364,6 +377,8 @@ void flecs_query_mark_fields_dirty(
         return;
     }
 
+    ecs_os_perf_trace_push("flecs.query.mark_fields_dirty");
+
     ecs_world_t *world = q->world;
     int16_t i, field_count = q->field_count;
     for (i = 0; i < field_count; i ++) {
@@ -402,6 +417,8 @@ void flecs_query_mark_fields_dirty(
         int32_t column = table->column_map[type_index];
         dirty_state[column + 1] ++;
     }
+
+    ecs_os_perf_trace_pop("flecs.query.mark_fields_dirty");
 }
 
 void flecs_query_mark_fixed_fields_dirty(
@@ -414,6 +431,8 @@ void flecs_query_mark_fixed_fields_dirty(
     if (!fixed_write_fields) {
         return;
     }
+
+    ecs_os_perf_trace_push("flecs.query.mark_fixed_fields_dirty");
 
     ecs_world_t *world = q->world;
     int32_t i, field_count = q->field_count;
@@ -440,6 +459,8 @@ void flecs_query_mark_fixed_fields_dirty(
         int32_t column = table->column_map[it->trs[i]->column];
         dirty_state[column + 1] ++;
     }
+
+    ecs_os_perf_trace_pop("flecs.query.mark_fixed_fields_dirty");
 }
 
 /* Synchronize match monitor with table dirty state */
@@ -456,6 +477,8 @@ void flecs_query_sync_match_monitor(
             return;
         }
     }
+
+    ecs_os_perf_trace_push("flecs.query.sync_match_monitor");
 
     ecs_query_cache_t *cache = impl->cache;
     ecs_assert(cache != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -486,6 +509,8 @@ void flecs_query_sync_match_monitor(
     }
 
     cache->prev_match_count = cache->match_count;
+
+    ecs_os_perf_trace_pop("flecs.query.sync_match_monitor");
 }
 
 bool ecs_query_changed(

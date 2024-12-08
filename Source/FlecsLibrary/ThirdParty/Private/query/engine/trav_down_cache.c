@@ -65,6 +65,8 @@ ecs_trav_down_t* flecs_trav_table_down(
 
     ecs_assert(idr_with != NULL, ECS_INTERNAL_ERROR, NULL);
 
+    ecs_os_perf_trace_push("flecs.trav.table_down");
+
     const ecs_entity_t *entities = ecs_table_entities(table);
     int32_t i, count = ecs_table_count(table);
     for (i = 0; i < count; i ++) {
@@ -87,6 +89,8 @@ ecs_trav_down_t* flecs_trav_table_down(
         }
     }
 
+    ecs_os_perf_trace_pop("flecs.trav.table_down");
+    
     return dst;
 }
 
@@ -111,6 +115,8 @@ void flecs_trav_entity_down_isa(
     if (!idr_isa) {
         return;
     }
+
+    ecs_os_perf_trace_push("flecs.trav.entity_down_isa");
 
     ecs_table_cache_iter_t it;
     if (flecs_table_cache_iter(&idr_isa->cache, &it)) {
@@ -150,6 +156,8 @@ void flecs_trav_entity_down_isa(
             }
         }
     }
+
+    ecs_os_perf_trace_pop("flecs.trav.entity_down_isa");
 }
 
 static
@@ -167,6 +175,8 @@ ecs_trav_down_t* flecs_trav_entity_down(
     ecs_assert(dst != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(idr_with != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(idr_trav != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_os_perf_trace_push("flecs.trav.entity_down");
 
     int32_t first = ecs_vec_count(&dst->elems);
 
@@ -228,6 +238,8 @@ ecs_trav_down_t* flecs_trav_entity_down(
         }
     }
 
+    ecs_os_perf_trace_pop("flecs.trav.entity_down");
+    
     return dst;
 }
 
@@ -242,6 +254,7 @@ ecs_trav_down_t* flecs_query_get_down_cache(
 {
     ecs_world_t *world = ctx->it->real_world;
     ecs_assert(cache->dir != EcsTravUp, ECS_INTERNAL_ERROR, NULL);
+    
     cache->dir = EcsTravDown;
 
     ecs_allocator_t *a = flecs_query_get_allocator(ctx->it);
@@ -282,10 +295,14 @@ void flecs_query_down_cache_fini(
     ecs_allocator_t *a,
     ecs_trav_up_cache_t *cache)
 {
+    ecs_os_perf_trace_push("flecs.query.down_cache_fini");
+    
     ecs_map_iter_t it = ecs_map_iter(&cache->src);
     while (ecs_map_next(&it)) {
         ecs_trav_down_t *t = ecs_map_ptr(&it);
         ecs_vec_fini_t(a, &t->elems, ecs_trav_down_elem_t);
     }
     ecs_map_fini(&cache->src);
+
+    ecs_os_perf_trace_pop("flecs.query.down_cache_fini");
 }

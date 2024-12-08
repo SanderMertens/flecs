@@ -14,31 +14,6 @@ UFlecsTransformModule::UFlecsTransformModule()
 
 void UFlecsTransformModule::InitializeModule(UFlecsWorld* InWorld, const FFlecsEntityHandle& InModuleEntity)
 {
-	/*InWorld->CreateObserver<const FFlecsRelativeTrait&>(TEXT("RelativeTransformObserver"))
-		.event(flecs::OnAdd)
-		.event(flecs::OnSet)
-		.yield_existing()
-		.each([](flecs::entity InEntity, const FFlecsRelativeTrait& InTrait)
-		{
-			const FFlecsEntityHandle TraitParentEntity = InEntity.parent();
-			solid_checkf(TraitParentEntity.IsValid(), TEXT("Parent entity is invalid"));
-			solid_check(TraitParentEntity.HasPair<FFlecsTransformComponent>(InEntity));
-
-			const int32 RelativeTraitIndex = InTrait.RelativeToIndex;
-
-			static constexpr std::string_view PathSeparator = "::";
-
-			const FString Path = TraitParentEntity.GetPath();
-			solid_checkf(Path.Len() > 0, TEXT("Entity path cannot be empty"));
-						
-			const int32 SeparatorIndex = Path.Find(PathSeparator.data(),
-				ESearchCase::IgnoreCase, ESearchDir::FromEnd, Path.Len() - RelativeTraitIndex);
-
-			const FFlecsEntityHandle RelativeEntity
-				= TraitParentEntity.GetFlecsWorld()->LookupEntity(Path.Left(SeparatorIndex));
-			solid_checkf(RelativeEntity.IsValid(), TEXT("Relative entity is invalid"));
-		});*/
-
 	const flecs::entity_t FlecsTransformSystemKind = flecs::PreFrame;
 
 	InWorld->CreateSystemWithBuilder<FFlecsTransformComponent>(

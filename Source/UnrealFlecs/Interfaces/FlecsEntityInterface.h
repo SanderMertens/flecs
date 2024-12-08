@@ -7,7 +7,7 @@
 #include "UObject/Interface.h"
 #include "FlecsEntityInterface.generated.h"
 
-UINTERFACE(BlueprintType, meta = (CannotImplementInterfaceInBlueprint))
+UINTERFACE(BlueprintType)
 class UFlecsEntityInterface : public UInterface
 {
 	GENERATED_BODY()

@@ -21,6 +21,8 @@ void flecs_table_cache_list_remove(
     ecs_table_cache_t *cache,
     ecs_table_cache_hdr_t *elem)
 {
+    ecs_os_perf_trace_push("flecs.table.cache.list_remove");
+    
     ecs_table_cache_hdr_t *next = elem->next;
     ecs_table_cache_hdr_t *prev = elem->prev;
 
@@ -45,6 +47,8 @@ void flecs_table_cache_list_remove(
     if (cache->tables.last == elem) {
         cache->tables.last = prev;
     }
+
+    ecs_os_perf_trace_pop("flecs.table.cache.list_remove");
 }
 
 static
@@ -52,6 +56,8 @@ void flecs_table_cache_list_insert(
     ecs_table_cache_t *cache,
     ecs_table_cache_hdr_t *elem)
 {
+    ecs_os_perf_trace_push("flecs.table.cache.list_insert");
+    
     ecs_table_cache_hdr_t *last;
     if (elem->empty) {
         last = cache->empty_tables.last;
@@ -73,6 +79,8 @@ void flecs_table_cache_list_insert(
     if (last) {
         last->next = elem;
     }
+
+    ecs_os_perf_trace_pop("flecs.table.cache.list_insert");
 }
 
 void ecs_table_cache_init(
@@ -107,6 +115,8 @@ void ecs_table_cache_insert_w_empty(
         ECS_INTERNAL_ERROR, NULL);
     ecs_assert(result != NULL, ECS_INTERNAL_ERROR, NULL);
 
+    ecs_os_perf_trace_push("flecs.table.cache.insert_w_empty");
+
     result->cache = cache;
     result->table = ECS_CONST_CAST(ecs_table_t*, table);
     result->empty = empty;
@@ -116,6 +126,8 @@ void ecs_table_cache_insert_w_empty(
     if (table) {
         ecs_map_insert_ptr(&cache->index, table->id, result);
     }
+
+    ecs_os_perf_trace_pop("flecs.table.cache.insert_w_empty");
 
     ecs_assert(empty || cache->tables.first != NULL, 
         ECS_INTERNAL_ERROR, NULL);

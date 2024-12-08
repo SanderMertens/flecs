@@ -27,6 +27,7 @@ bool flecs_path_append(
     const char *name = NULL;
     ecs_size_t name_len = 0;
 
+    #pragma c
     if (child && ecs_is_alive(world, child)) {
         const ecs_record_t *r = flecs_entities_get(world, child);
         bool hasName = false;
@@ -47,11 +48,7 @@ bool flecs_path_append(
                     }
                 }
             } else if (prefix && prefix[0]) {
-                if (!prefix[1]) {
-                    ecs_strbuf_appendch(buf, prefix[0]);
-                } else {
-                    ecs_strbuf_appendstr(buf, prefix);
-                }
+                !prefix[1] ? ecs_strbuf_appendch(buf, prefix[0]) : ecs_strbuf_appendstr(buf, prefix);
             }
 
             const EcsIdentifier *id = ecs_get_pair(
@@ -237,11 +234,7 @@ const char* flecs_path_elem(
     }
 
     ecs_os_perf_trace_pop("flecs.entity_name.path_elem");
-    if (pos) {
-        return ptr;
-    } else {
-        return NULL;
-    }
+    return pos ? ptr : NULL;
 error:
     ecs_os_perf_trace_pop("flecs.entity_name.path_elem");
     return NULL;
@@ -307,7 +300,7 @@ ecs_entity_t flecs_get_parent_from_path(
     return parent;
 }
 
-static
+static inline
 void flecs_on_set_symbol(ecs_iter_t *it) {
     const EcsIdentifier *n = ecs_field(it, EcsIdentifier, 0);
     ecs_world_t *world = it->real_world;

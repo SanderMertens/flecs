@@ -5,7 +5,7 @@
 
 #include "../../private_api.h"
 
-static
+static inline
 void flecs_query_iter_run_ctx_init(
     ecs_iter_t *it,
     ecs_query_run_ctx_t *ctx)
@@ -28,6 +28,8 @@ void flecs_query_iter_constrain(
     ecs_query_run_ctx_t ctx;
     flecs_query_iter_run_ctx_init(it, &ctx);
     ecs_assert(ctx.written != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_os_perf_trace_push("flecs.query.iter.constrain");
 
     const ecs_query_impl_t *query = ctx.query;
     const ecs_query_t *q = &query->pub;
@@ -99,6 +101,8 @@ void flecs_query_iter_constrain(
             flecs_query_setids(NULL, false, &ctx);
         }
     }
+
+    ecs_os_perf_trace_pop("flecs.query.iter.constrain");
 }
 
 bool ecs_query_next(
@@ -106,6 +110,8 @@ bool ecs_query_next(
 {
     ecs_assert(it != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(it->next == ecs_query_next, ECS_INVALID_PARAMETER, NULL);
+
+    ecs_os_perf_trace_push("flecs.query.next");
 
     ecs_query_iter_t *qit = &it->priv_.iter.query;
     ecs_query_impl_t *impl = ECS_CONST_CAST(ecs_query_impl_t*, qit->query);
@@ -188,6 +194,7 @@ bool ecs_query_next(
     }
 
     ecs_iter_fini(it);
+    ecs_os_perf_trace_pop("flecs.query.next");
     return false;
 
 trivial_search_yield:
@@ -196,10 +203,11 @@ trivial_search_yield:
     it->entities = ecs_table_entities(it->table);
 
 yield:
+    ecs_os_perf_trace_pop("flecs.query.next");
     return true;
 }
 
-static
+static inline
 void flecs_query_iter_fini_ctx(
     ecs_iter_t *it,
     ecs_query_iter_t *qit)
@@ -274,6 +282,9 @@ ecs_iter_t flecs_query_iter(
     ecs_check(q != NULL, ECS_INVALID_PARAMETER, NULL);
     
     flecs_poly_assert(q, ecs_query_t);
+
+    ecs_os_perf_trace_push("flecs.query.iter");
+    
     ecs_query_impl_t *impl = flecs_query_impl(q);
 
     int32_t i, var_count = impl->var_count;
@@ -356,6 +367,9 @@ ecs_iter_t flecs_query_iter(
     /* Set flags for unconstrained query iteration. Can be reinitialized when
      * variables are constrained on iterator. */
     flecs_query_iter_constrain(&it);
+
+    ecs_os_perf_trace_pop("flecs.query.iter");
+    
 error:
     return it;
 }

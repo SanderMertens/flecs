@@ -6,20 +6,20 @@
 #include "CoreMinimal.h"
 #include "flecs.h"
 #include "Entities/FlecsEntityHandle.h"
+#include "Interfaces/FlecsEntityInterface.h"
 #include "SolidMacros/Macros.h"
-#include "UObject/Interface.h"
 #include "FlecsModuleInterface.generated.h"
 
 class UFlecsWorld;
 
 // This class does not need to be modified.
 UINTERFACE(Blueprintable)
-class UNREALFLECS_API UFlecsModuleInterface : public UInterface
+class UNREALFLECS_API UFlecsModuleInterface : public UFlecsEntityInterface
 {
 	GENERATED_BODY()
 }; // class UFlecsModuleInterface
 
-class UNREALFLECS_API IFlecsModuleInterface
+class UNREALFLECS_API IFlecsModuleInterface : public IFlecsEntityInterface
 {
 	GENERATED_BODY()
 
@@ -42,6 +42,11 @@ public:
 	UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Flecs | Modules")
 	FString GetModuleName() const;
 	virtual FString GetModuleName_Implementation() const;
+
+	virtual FFlecsEntityHandle GetEntityHandle() const override final
+	{
+		return ModuleEntity;
+	}
 
 	FORCEINLINE NO_DISCARD UFlecsWorld* GetFlecsWorld() const
 	{

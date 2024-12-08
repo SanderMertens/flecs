@@ -1318,6 +1318,8 @@ bool flecs_query_dispatch(
     bool redo,
     ecs_query_run_ctx_t *ctx)
 {
+    ecs_os_perf_trace_push("flecs.query.dispatch");
+    
     static const flecs_query_func_t flecs_query_jump_table[] = {
         [EcsQueryAnd] = flecs_query_and,
         [EcsQueryAndAny] = flecs_query_and_any,
@@ -1372,6 +1374,8 @@ bool flecs_query_dispatch(
     };
 
     flecs_query_func_t fn = flecs_query_jump_table[op->kind];
+
+    ecs_os_perf_trace_pop("flecs.query.dispatch");
     return fn && fn(op, redo, ctx);
 }
 

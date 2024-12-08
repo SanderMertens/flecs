@@ -26,6 +26,8 @@ public class FlecsLibrary : ModuleRules
                 "FLECS_META",
                 "FLECS_JSON",
                 "FLECS_UNITS",
+                "FLECS_HTTP",
+                "FLECS_REST",
             }
         );
         
@@ -41,8 +43,6 @@ public class FlecsLibrary : ModuleRules
                     "FLECS_DOC",
                     "FLECS_LOG",
                     "FLECS_PERF_TRACE",
-                    "FLECS_HTTP",
-                    "FLECS_REST",
                 }
             );
         }
