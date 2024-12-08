@@ -57,6 +57,7 @@ typedef struct ecs_function_calldata_t {
 #include "expr/expr.h"
 #include "visit.h"
 #include "visit_eval.h"
+#include "template.h"
 
 struct ecs_script_runtime_t {
     ecs_allocator_t allocator;
@@ -66,26 +67,6 @@ struct ecs_script_runtime_t {
     ecs_vec_t with;
     ecs_vec_t with_type_info;
     ecs_vec_t annot;
-};
-
-struct ecs_script_template_t {
-    /* Template handle */
-    ecs_entity_t entity;
-
-    /* Template AST node */
-    ecs_script_template_node_t *node;
-
-    /* Hoisted using statements */
-    ecs_vec_t using_;
-
-    /* Hoisted variables */
-    ecs_script_vars_t *vars;
-
-    /* Default values for props */
-    ecs_vec_t prop_defaults;
-
-    /* Type info for template component */
-    const ecs_type_info_t *type_info;
 };
 
 ecs_script_t* flecs_script_new(

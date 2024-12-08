@@ -304,6 +304,7 @@ void Template_anonymous_template_instance_w_prop(void);
 void Template_anonymous_template_instance_w_prop_no_scope(void);
 void Template_with_after_template(void);
 void Template_with_in_scope_after_template(void);
+void Template_prefab_w_template(void);
 
 // Testsuite 'Error'
 void Error_multi_line_comment_after_newline_before_newline_scope_open(void);
@@ -370,6 +371,7 @@ void Error_run_template_after_error(void);
 void Error_update_template_after_error(void);
 void Error_template_in_template(void);
 void Error_unterminated_binary(void);
+void Error_component_in_with_scope(void);
 
 // Testsuite 'Expr'
 void Expr_setup(void);
@@ -1896,6 +1898,10 @@ bake_test_case Template_testcases[] = {
     {
         "with_in_scope_after_template",
         Template_with_in_scope_after_template
+    },
+    {
+        "prefab_w_template",
+        Template_prefab_w_template
     }
 };
 
@@ -2155,6 +2161,10 @@ bake_test_case Error_testcases[] = {
     {
         "unterminated_binary",
         Error_unterminated_binary
+    },
+    {
+        "component_in_with_scope",
+        Error_component_in_with_scope
     }
 };
 
@@ -3551,14 +3561,14 @@ static bake_test_suite suites[] = {
         "Template",
         NULL,
         NULL,
-        36,
+        37,
         Template_testcases
     },
     {
         "Error",
         NULL,
         NULL,
-        64,
+        65,
         Error_testcases
     },
     {

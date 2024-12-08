@@ -304,7 +304,8 @@ void FlecsScriptImport(
     ecs_set_hooks(world, EcsScript, {
         .ctor = flecs_default_ctor,
         .move = ecs_move(EcsScript),
-        .dtor = ecs_dtor(EcsScript)
+        .dtor = ecs_dtor(EcsScript),
+        .flags = ECS_TYPE_HOOK_COPY_ILLEGAL
     });
 
     ECS_COMPONENT(world, ecs_script_t);
@@ -328,6 +329,7 @@ void FlecsScriptImport(
     ecs_add_id(world, ecs_id(EcsScript), EcsPrivate);
     ecs_add_pair(world, ecs_id(EcsScript), EcsOnInstantiate, EcsDontInherit);
 
+    flecs_script_template_import(world);
     flecs_function_import(world);
 }
 

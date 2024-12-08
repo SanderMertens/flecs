@@ -844,6 +844,8 @@ ecs_record_t* flecs_new_entity(
     return record;
 }
 
+static int commit_indent = 0;
+
 static
 void flecs_move_entity(
     ecs_world_t *world,
@@ -981,6 +983,8 @@ void flecs_commit(
         return;
     }
 
+    commit_indent += 2;
+
     ecs_os_perf_trace_push("flecs.commit");
 
     if (src_table) {
@@ -1019,6 +1023,8 @@ void flecs_commit(
         ecs_check(entity >= world->info.min_id, 
             ECS_OUT_OF_RANGE, 0);
     }
+
+    commit_indent -=2 ;
 
     ecs_os_perf_trace_pop("flecs.commit");
 

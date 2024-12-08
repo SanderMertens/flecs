@@ -8,6 +8,26 @@
 #ifdef FLECS_SCRIPT
 #include "script.h"
 
+ECS_COMPONENT_DECLARE(EcsTemplateSetEvent);
+
+static
+ECS_MOVE(EcsTemplateSetEvent, dst, src, {
+    ecs_os_free(dst->entities);
+    ecs_os_free(dst->data);
+    dst->entities = src->entities;
+    dst->data = src->data;
+    dst->template_entity = src->template_entity;
+    dst->count = src->count;
+    src->entities = NULL;
+    src->data = NULL;
+})
+
+static
+ECS_DTOR(EcsTemplateSetEvent, ptr, {
+    ecs_os_free(ptr->entities);
+    ecs_os_free(ptr->data);
+})
+
 /* Template ctor to initialize with default property values */
 static
 void flecs_script_template_ctor(
@@ -56,6 +76,138 @@ void flecs_script_template_ctor(
     }
 }
 
+/* Defer template instantiation if we're in deferred mode. */
+static
+void flecs_script_template_defer_on_set(
+    ecs_iter_t *it,
+    ecs_entity_t template_entity,
+    const ecs_type_info_t *ti,
+    void *data)
+{
+    EcsTemplateSetEvent evt;
+    evt.entities = ecs_os_memdup_n(it->entities, ecs_entity_t, it->count);
+    evt.data = ecs_os_memdup(data, ti->size * it->count);
+    evt.count = it->count;
+    evt.template_entity = template_entity;
+
+    ecs_enqueue(it->world, &(ecs_event_desc_t){
+        .event = ecs_id(EcsTemplateSetEvent),
+        .entity = EcsAny,
+        .param = &evt
+    });
+}
+
+static
+void flecs_script_template_instantiate(
+    ecs_world_t *world,
+    ecs_entity_t template_entity,
+    const ecs_entity_t *entities,
+    void *data,
+    int32_t count)
+{
+    ecs_assert(!ecs_is_deferred(world), ECS_INTERNAL_ERROR, NULL);
+
+    ecs_record_t *r = ecs_record_find(world, template_entity);
+    if (!r) {
+        ecs_err("template entity is empty (should never happen)");
+        return;
+    }
+
+    const EcsScript *script = ecs_record_get(world, r, EcsScript);
+    if (!script) {
+        ecs_err("template is missing script component");
+        return;
+    }
+
+    ecs_script_template_t *template = script->template_;
+    ecs_assert(template != NULL, ECS_INTERNAL_ERROR, NULL);
+    const ecs_type_info_t *ti = template->type_info;
+    ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
+    const EcsStruct *st = ecs_record_get(world, r, EcsStruct);
+
+    ecs_script_eval_visitor_t v;
+    flecs_script_eval_visit_init(flecs_script_impl(script->script), &v, NULL);
+    ecs_vec_t prev_using = v.r->using;
+    v.r->using = template->using_;
+
+    ecs_script_scope_t *scope = template->node->scope;
+
+    /* Dummy entity node for instance */
+    ecs_script_entity_t instance_node = {
+        .node = {
+            .kind = EcsAstEntity,
+            .pos = template->node->node.pos
+        },
+        .scope = scope
+    };
+
+    v.entity = &instance_node;
+
+    int32_t i, m;
+    for (i = 0; i < count; i ++) {
+        v.parent = entities[i];
+        instance_node.eval = entities[i];
+
+        /* Create variables to hold template properties */
+        ecs_script_vars_t *vars = flecs_script_vars_push(
+            NULL, &v.r->stack, &v.r->allocator);
+        vars->parent = template->vars; /* Include hoisted variables */
+
+        /* Populate properties from template members */
+        if (st) {
+            const ecs_member_t *members = st->members.array;
+            for (m = 0; m < st->members.count; m ++) {
+                const ecs_member_t *member = &members[m];
+
+                /* Assign template property from template instance */
+                ecs_script_var_t *var = ecs_script_vars_declare(
+                    vars, member->name);
+                var->value.type = member->type;
+                var->value.ptr = ECS_OFFSET(data, member->offset);
+            }
+        }
+
+        /* Populate $this variable with instance entity */
+        ecs_entity_t instance = entities[i];
+        ecs_script_var_t *var = ecs_script_vars_declare(vars, "this");
+        var->value.type = ecs_id(ecs_entity_t);
+        var->value.ptr = &instance;
+
+        ecs_script_clear(world, template_entity, instance);
+
+        /* Run template code */
+        v.vars = vars;
+        ecs_script_visit_scope(&v, scope);
+
+        /* Pop variable scope */
+        ecs_script_vars_pop(vars);
+
+        data = ECS_OFFSET(data, ti->size);
+    }
+
+    v.r->using = prev_using;
+    flecs_script_eval_visit_fini(&v, NULL);
+}
+
+static
+void flecs_on_template_set_event(
+    ecs_iter_t *it)
+{
+    ecs_assert(ecs_is_deferred(it->world), ECS_INTERNAL_ERROR, NULL);
+
+    EcsTemplateSetEvent *evt = it->param;
+    ecs_suspend_readonly_state_t srs;
+    ecs_world_t *world = it->real_world;
+    ecs_assert(flecs_poly_is(world, ecs_world_t), ECS_INTERNAL_ERROR, NULL);
+  
+    flecs_suspend_readonly(world, &srs);
+
+    flecs_script_template_instantiate(
+        world, evt->template_entity, evt->entities, evt->data, evt->count);
+
+    flecs_resume_readonly(world, &srs);
+}
+
 /* Template on_set handler to update contents for new property values */
 static
 void flecs_script_template_on_set(
@@ -84,86 +236,16 @@ void flecs_script_template_on_set(
     ecs_assert(template != NULL, ECS_INTERNAL_ERROR, NULL);
     const ecs_type_info_t *ti = template->type_info;
     ecs_assert(ti != NULL, ECS_INTERNAL_ERROR, NULL);
-    const EcsStruct *st = ecs_record_get(world, r, EcsStruct);
-
     void *data = ecs_field_w_size(it, flecs_ito(size_t, ti->size), 0);
 
-    ecs_script_eval_visitor_t v;
-    flecs_script_eval_visit_init(flecs_script_impl(script->script), &v, NULL);
-    ecs_vec_t prev_using = v.r->using;
-    v.r->using = template->using_;
-
-    ecs_script_scope_t *scope = template->node->scope;
-
-    /* Dummy entity node for instance */
-    ecs_script_entity_t instance_node = {
-        .node = {
-            .kind = EcsAstEntity,
-            .pos = template->node->node.pos
-        },
-        .scope = scope
-    };
-
-    v.entity = &instance_node;
-
-    int32_t i, m;
-    for (i = 0; i < it->count; i ++) {
-        v.parent = it->entities[i];
-        instance_node.eval = it->entities[i];
-
-        /* Create variables to hold template properties */
-        ecs_script_vars_t *vars = flecs_script_vars_push(
-            NULL, &v.r->stack, &v.r->allocator);
-        vars->parent = template->vars; /* Include hoisted variables */
-
-        /* Populate properties from template members */
-        if (st) {
-            const ecs_member_t *members = st->members.array;
-            for (m = 0; m < st->members.count; m ++) {
-                const ecs_member_t *member = &members[m];
-
-                /* Assign template property from template instance */
-                ecs_script_var_t *var = ecs_script_vars_declare(
-                    vars, member->name);
-                var->value.type = member->type;
-                var->value.ptr = ECS_OFFSET(data, member->offset);
-            }
-        }
-
-        /* Populate $this variable with instance entity */
-        ecs_entity_t instance = it->entities[i];
-        ecs_script_var_t *var = ecs_script_vars_declare(vars, "this");
-        var->value.type = ecs_id(ecs_entity_t);
-        var->value.ptr = &instance;
-
-        bool is_defer = ecs_is_deferred(world);
-        ecs_suspend_readonly_state_t srs;
-        ecs_world_t *real_world = NULL;
-        if (is_defer) {
-            ecs_assert(flecs_poly_is(world, ecs_world_t), 
-                ECS_INTERNAL_ERROR, NULL);
-            real_world = flecs_suspend_readonly(world, &srs);
-            ecs_assert(real_world != NULL, ECS_INTERNAL_ERROR, NULL);
-        }
-
-        ecs_script_clear(world, template_entity, instance);
-
-        /* Run template code */
-        v.vars = vars;
-        ecs_script_visit_scope(&v, scope);
-
-        if (is_defer) {
-            flecs_resume_readonly(real_world, &srs);
-        }
-
-        /* Pop variable scope */
-        ecs_script_vars_pop(vars);
-
-        data = ECS_OFFSET(data, ti->size);
+    if (ecs_is_deferred(it->world)) {
+        flecs_script_template_defer_on_set(it, template_entity, ti, data);
+        return;
     }
 
-    v.r->using = prev_using;
-    flecs_script_eval_visit_fini(&v, NULL);
+    flecs_script_template_instantiate(
+        world, template_entity, it->entities, data, it->count);
+    return;
 }
 
 static
@@ -430,6 +512,26 @@ int flecs_script_eval_template(
 error:
     flecs_script_template_fini(v->base.script, template);
     return -1;
+}
+
+void flecs_script_template_import(
+    ecs_world_t *world)
+{
+    ECS_COMPONENT_DEFINE(world, EcsTemplateSetEvent);
+
+    ecs_set_hooks(world, EcsTemplateSetEvent, {
+        .ctor = flecs_default_ctor,
+        .move = ecs_move(EcsTemplateSetEvent),
+        .dtor = ecs_dtor(EcsTemplateSetEvent),
+        .flags = ECS_TYPE_HOOK_COPY_ILLEGAL
+    });
+
+    ecs_observer(world, {
+        .entity = ecs_entity(world, { .name = "TemplateSetObserver" }),
+        .query.terms = {{ .id = EcsAny }},
+        .events = { ecs_id(EcsTemplateSetEvent) },
+        .callback = flecs_on_template_set_event
+    });
 }
 
 #endif

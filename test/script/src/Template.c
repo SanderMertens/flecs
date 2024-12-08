@@ -1935,3 +1935,40 @@ void Template_with_in_scope_after_template(void) {
 
     ecs_fini(world);
 }
+
+void Template_prefab_w_template(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Bar);
+
+    const char *expr =
+    HEAD "Tag {}"
+    LINE ""
+    LINE "template Foo {"
+    LINE "  Tag"
+    LINE "}"
+    LINE ""
+    LINE "prefab Base {"
+    LINE "  Foo: {}"
+    LINE "}"
+    LINE ""
+    LINE "e : Base";
+
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    ecs_entity_t base = ecs_lookup(world, "Base");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    ecs_entity_t tag = ecs_lookup(world, "Tag");
+
+    test_assert(e != 0);
+    test_assert(base != 0);
+    test_assert(foo != 0);
+    test_assert(tag != 0);
+
+    test_assert(ecs_has_id(world, e, tag));
+    test_assert(ecs_has_id(world, e, foo));
+    test_assert(ecs_has_pair(world, e, EcsIsA, base));
+
+    ecs_fini(world);
+}
