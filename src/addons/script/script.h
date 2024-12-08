@@ -123,7 +123,7 @@ const char* flecs_term_parse(
 void flecs_script_register_builtin_functions(
     ecs_world_t *world);
 
-void flecs_script_function_import(
+void flecs_function_import(
     ecs_world_t *world);
 
 #endif // FLECS_SCRIPT

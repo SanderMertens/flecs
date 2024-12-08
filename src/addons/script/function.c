@@ -43,9 +43,9 @@ ECS_DTOR(EcsScriptMethod, ptr, {
     ecs_script_params_free(&ptr->params);
 })
 
-ecs_entity_t ecs_script_function_init(
+ecs_entity_t ecs_function_init(
     ecs_world_t *world,
-    const ecs_script_function_desc_t *desc)
+    const ecs_function_desc_t *desc)
 {
     flecs_poly_assert(world, ecs_world_t);
     ecs_assert(desc != NULL, ECS_INVALID_PARAMETER, NULL);
@@ -84,9 +84,9 @@ ecs_entity_t ecs_script_function_init(
     return result;
 }
 
-ecs_entity_t ecs_script_method_init(
+ecs_entity_t ecs_method_init(
     ecs_world_t *world,
-    const ecs_script_function_desc_t *desc)
+    const ecs_function_desc_t *desc)
 {
     flecs_poly_assert(world, ecs_world_t);
     ecs_assert(desc != NULL, ECS_INVALID_PARAMETER, NULL);
@@ -126,7 +126,7 @@ ecs_entity_t ecs_script_method_init(
     return result;
 }
 
-void flecs_script_function_import(
+void flecs_function_import(
     ecs_world_t *world)
 {
     ecs_set_name_prefix(world, "EcsScript");

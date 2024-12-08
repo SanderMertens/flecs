@@ -295,7 +295,7 @@ error:
     return -1;
 }
 
-void flecs_script_expr_to_str_buf(
+void flecs_expr_to_str_buf(
     const ecs_world_t *world,
     const ecs_expr_node_t *expr,
     ecs_strbuf_t *buf)

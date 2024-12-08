@@ -117,7 +117,7 @@ void ecs_script_free(
     ecs_check(impl->refcount > 0, ECS_INVALID_OPERATION, NULL);
     if (!--impl->refcount) {
         flecs_script_visit_free(script);
-        flecs_script_expr_visit_free(script, impl->expr);
+        flecs_expr_visit_free(script, impl->expr);
         flecs_free(&impl->allocator, 
             impl->token_buffer_size, impl->token_buffer);
         flecs_allocator_fini(&impl->allocator);
@@ -328,7 +328,7 @@ void FlecsScriptImport(
     ecs_add_id(world, ecs_id(EcsScript), EcsPrivate);
     ecs_add_pair(world, ecs_id(EcsScript), EcsOnInstantiate, EcsDontInherit);
 
-    flecs_script_function_import(world);
+    flecs_function_import(world);
 }
 
 #endif

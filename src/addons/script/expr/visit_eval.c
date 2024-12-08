@@ -11,12 +11,12 @@
 typedef struct ecs_script_eval_ctx_t {
     const ecs_script_t *script;
     ecs_world_t *world;
-    const ecs_script_expr_run_desc_t *desc;
+    const ecs_expr_eval_desc_t *desc;
     ecs_expr_stack_t *stack;
 } ecs_script_eval_ctx_t;
 
 static
-int flecs_script_expr_visit_eval_priv(
+int flecs_expr_visit_eval_priv(
     ecs_script_eval_ctx_t *ctx,
     ecs_expr_node_t *node,
     ecs_expr_value_t *out);
@@ -63,7 +63,7 @@ int flecs_expr_initializer_eval_static(
         }
 
         ecs_expr_value_t *expr = flecs_expr_stack_result(ctx->stack, elem->value);
-        if (flecs_script_expr_visit_eval_priv(ctx, elem->value, expr)) {
+        if (flecs_expr_visit_eval_priv(ctx, elem->value, expr)) {
             goto error;
         }
 
@@ -127,7 +127,7 @@ int flecs_expr_initializer_eval_dynamic(
         }
 
         ecs_expr_value_t *expr = flecs_expr_stack_result(ctx->stack, elem->value);
-        if (flecs_script_expr_visit_eval_priv(ctx, elem->value, expr)) {
+        if (flecs_expr_visit_eval_priv(ctx, elem->value, expr)) {
             goto error;
         }
 
@@ -188,7 +188,7 @@ int flecs_expr_unary_visit_eval(
     flecs_expr_stack_push(ctx->stack);
 
     ecs_expr_value_t *expr = flecs_expr_stack_result(ctx->stack, node->expr);
-    if (flecs_script_expr_visit_eval_priv(ctx, node->expr, expr)) {
+    if (flecs_expr_visit_eval_priv(ctx, node->expr, expr)) {
         goto error;
     }
 
@@ -215,12 +215,12 @@ int flecs_expr_binary_visit_eval(
 
     /* Evaluate left & right expressions */
     ecs_expr_value_t *left = flecs_expr_stack_result(ctx->stack, node->left);
-    if (flecs_script_expr_visit_eval_priv(ctx, node->left, left)) {
+    if (flecs_expr_visit_eval_priv(ctx, node->left, left)) {
         goto error;
     }
 
     ecs_expr_value_t *right = flecs_expr_stack_result(ctx->stack, node->right);
-    if (flecs_script_expr_visit_eval_priv(ctx, node->right, right)) {
+    if (flecs_expr_visit_eval_priv(ctx, node->right, right)) {
         goto error;
     }
 
@@ -243,7 +243,7 @@ int flecs_expr_identifier_visit_eval(
     ecs_expr_identifier_t *node,
     ecs_expr_value_t *out)
 {
-    return flecs_script_expr_visit_eval_priv(ctx, node->expr, out);
+    return flecs_expr_visit_eval_priv(ctx, node->expr, out);
 }
 
 static
@@ -285,7 +285,7 @@ int flecs_expr_cast_visit_eval(
 
     /* Evaluate expression to cast */
     ecs_expr_value_t *expr = flecs_expr_stack_result(ctx->stack, node->expr);
-    if (flecs_script_expr_visit_eval_priv(ctx, node->expr, expr)) {
+    if (flecs_expr_visit_eval_priv(ctx, node->expr, expr)) {
         goto error;
     }
 
@@ -315,7 +315,7 @@ int flecs_expr_function_args_visit_eval(
         ecs_expr_value_t *expr = flecs_expr_stack_result(
             ctx->stack, elem->value);
 
-        if (flecs_script_expr_visit_eval_priv(ctx, elem->value, expr)) {
+        if (flecs_expr_visit_eval_priv(ctx, elem->value, expr)) {
             goto error;
         }
 
@@ -372,7 +372,7 @@ int flecs_expr_method_visit_eval(
 
     if (node->left) {
         ecs_expr_value_t *expr = flecs_expr_stack_result(ctx->stack, node->left);
-        if (flecs_script_expr_visit_eval_priv(ctx, node->left, expr)) {
+        if (flecs_expr_visit_eval_priv(ctx, node->left, expr)) {
             goto error;
         }
 
@@ -417,7 +417,7 @@ int flecs_expr_member_visit_eval(
     flecs_expr_stack_push(ctx->stack);
 
     ecs_expr_value_t *expr = flecs_expr_stack_result(ctx->stack, node->left);
-    if (flecs_script_expr_visit_eval_priv(ctx, node->left, expr)) {
+    if (flecs_expr_visit_eval_priv(ctx, node->left, expr)) {
         goto error;
     }
 
@@ -439,12 +439,12 @@ int flecs_expr_element_visit_eval(
     ecs_expr_value_t *out)
 {
     ecs_expr_value_t *expr = flecs_expr_stack_result(ctx->stack, node->left);
-    if (flecs_script_expr_visit_eval_priv(ctx, node->left, expr)) {
+    if (flecs_expr_visit_eval_priv(ctx, node->left, expr)) {
         goto error;
     }
 
     ecs_expr_value_t *index = flecs_expr_stack_result(ctx->stack, node->index);
-    if (flecs_script_expr_visit_eval_priv(ctx, node->index, index)) {
+    if (flecs_expr_visit_eval_priv(ctx, node->index, index)) {
         goto error;
     }
 
@@ -466,7 +466,7 @@ int flecs_expr_component_visit_eval(
     ecs_expr_value_t *out)
 {
     ecs_expr_value_t *left = flecs_expr_stack_result(ctx->stack, node->left);
-    if (flecs_script_expr_visit_eval_priv(ctx, node->left, left)) {
+    if (flecs_expr_visit_eval_priv(ctx, node->left, left)) {
         goto error;
     }
 
@@ -506,7 +506,7 @@ error:
 }
 
 static
-int flecs_script_expr_visit_eval_priv(
+int flecs_expr_visit_eval_priv(
     ecs_script_eval_ctx_t *ctx,
     ecs_expr_node_t *node,
     ecs_expr_value_t *out)
@@ -607,10 +607,10 @@ error:
     return -1;
 }
 
-int flecs_script_expr_visit_eval(
+int flecs_expr_visit_eval(
     const ecs_script_t *script,
     ecs_expr_node_t *node,
-    const ecs_script_expr_run_desc_t *desc,
+    const ecs_expr_eval_desc_t *desc,
     ecs_value_t *out)
 {
     ecs_expr_stack_t *stack = NULL, stack_local;
@@ -634,7 +634,7 @@ int flecs_script_expr_visit_eval(
         .desc = desc
     };
 
-    if (flecs_script_expr_visit_eval_priv(&ctx, node, val)) {
+    if (flecs_expr_visit_eval_priv(&ctx, node, val)) {
         goto error;
     }
 

@@ -94,7 +94,7 @@
         if (!(pos = flecs_script_parse_initializer(\
             parser, pos, until, &_initializer))) \
         {\
-            flecs_script_expr_visit_free(\
+            flecs_expr_visit_free(\
                 &parser->script->pub, (ecs_expr_node_t*)_initializer);\
             goto error;\
         }\

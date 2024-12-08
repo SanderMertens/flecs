@@ -18,7 +18,7 @@ int main(int argc, char *argv[]) {
 
     // Run the expression. If the operation is successful it returns a pointer
     // to the character after the last parsed token.
-    if (ecs_script_expr_run(world, "10 + 20", &result_value, NULL) == NULL) {
+    if (ecs_expr_run(world, "10 + 20", &result_value, NULL) == NULL) {
         printf("expression failed to run\n");
         return -1;
     }
