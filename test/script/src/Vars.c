@@ -152,8 +152,8 @@ void Vars_i32_expr_w_i32_var(void) {
     *(int32_t*)foo->value.ptr = 10;
 
     int32_t v = 0;
-    ecs_script_expr_run_desc_t desc = { .vars = vars };
-    const char *ptr = ecs_script_expr_run(
+    ecs_expr_eval_desc_t desc = { .vars = vars };
+    const char *ptr = ecs_expr_run(
         world, "$foo", &ecs_value_ptr(ecs_i32_t, &v), &desc);
     test_assert(ptr != NULL);
     test_assert(ptr[0] == 0);
@@ -174,8 +174,8 @@ void Vars_i32_expr_w_f32_var(void) {
     *(float*)foo->value.ptr = 10.5;
 
     int32_t v = 0;
-    ecs_script_expr_run_desc_t desc = { .vars = vars };
-    const char *ptr = ecs_script_expr_run(
+    ecs_expr_eval_desc_t desc = { .vars = vars };
+    const char *ptr = ecs_expr_run(
         world, "$foo", &ecs_value_ptr(ecs_i32_t, &v), &desc);
     test_assert(ptr != NULL);
     test_assert(ptr[0] == 0);
@@ -195,8 +195,8 @@ void Vars_i32_expr_w_string_var(void) {
     *(char**)foo->value.ptr = "10";
 
     int32_t v = 0;
-    ecs_script_expr_run_desc_t desc = { .vars = vars };
-    const char *ptr = ecs_script_expr_run(
+    ecs_expr_eval_desc_t desc = { .vars = vars };
+    const char *ptr = ecs_expr_run(
         world, "$foo", &ecs_value_ptr(ecs_i32_t, &v), &desc);
     test_assert(ptr != NULL);
     test_assert(ptr[0] == 0);
@@ -217,8 +217,8 @@ void Vars_string_expr_w_string_var(void) {
     *(char**)foo->value.ptr = "Hello World";
 
     char* v = NULL;
-    ecs_script_expr_run_desc_t desc = { .vars = vars };
-    const char *ptr = ecs_script_expr_run(
+    ecs_expr_eval_desc_t desc = { .vars = vars };
+    const char *ptr = ecs_expr_run(
         world, "$foo", &ecs_value_ptr(ecs_string_t, &v), &desc);
     test_assert(ptr != NULL);
     test_assert(ptr[0] == 0);
@@ -250,8 +250,8 @@ void Vars_struct_expr_w_i32_vars(void) {
     *(int32_t*)bar->value.ptr = 20;
 
     PositionI v = {0};
-    ecs_script_expr_run_desc_t desc = { .vars = vars };
-    const char *ptr = ecs_script_expr_run(world, "{$foo, $bar}", &(ecs_value_t){point, &v}, &desc);
+    ecs_expr_eval_desc_t desc = { .vars = vars };
+    const char *ptr = ecs_expr_run(world, "{$foo, $bar}", &(ecs_value_t){point, &v}, &desc);
     test_assert(ptr != NULL);
     test_assert(ptr[0] == 0);
 
@@ -279,8 +279,8 @@ void Vars_struct_expr_w_struct_var(void) {
     *(PositionI*)foo->value.ptr = (PositionI){10, 20};
 
     PositionI v = {0};
-    ecs_script_expr_run_desc_t desc = { .vars = vars };
-    const char *ptr = ecs_script_expr_run(world, "$foo", &(ecs_value_t){point, &v}, &desc);
+    ecs_expr_eval_desc_t desc = { .vars = vars };
+    const char *ptr = ecs_expr_run(world, "$foo", &(ecs_value_t){point, &v}, &desc);
     test_assert(ptr != NULL);
     test_assert(ptr[0] == 0);
 
@@ -317,8 +317,8 @@ void Vars_nested_struct_expr_w_struct_var(void) {
     *(PositionI*)bar->value.ptr = (PositionI){30, 40};
 
     LineI v = {0};
-    ecs_script_expr_run_desc_t desc = { .vars = vars };
-    const char *ptr = ecs_script_expr_run(world, 
+    ecs_expr_eval_desc_t desc = { .vars = vars };
+    const char *ptr = ecs_expr_run(world, 
         "{start: $foo, stop: $bar}", &(ecs_value_t){line, &v}, &desc);
     test_assert(ptr != NULL);
     test_assert(ptr[0] == 0);

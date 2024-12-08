@@ -18,6 +18,9 @@
 #ifdef FLECS_NO_SCRIPT
 #undef FLECS_SCRIPT
 #endif
+#ifdef FLECS_NO_SCRIPT_MATH
+#undef FLECS_SCRIPT_MATH
+#endif
 #ifdef FLECS_NO_STATS
 #undef FLECS_STATS
 #endif
@@ -159,6 +162,13 @@
 #error "FLECS_NO_UNITS failed: UNITS is required by other addons"
 #endif
 #include "../addons/units.h"
+#endif
+
+#ifdef FLECS_SCRIPT_MATH
+#ifdef FLECS_NO_SCRIPT_MATH
+#error "FLECS_NO_SCRIPT_MATH failed: SCRIPT_MATH is required by other addons"
+#endif
+#include "../addons/script_math.h"
 #endif
 
 #ifdef FLECS_SCRIPT

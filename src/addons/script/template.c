@@ -89,9 +89,9 @@ void flecs_script_template_on_set(
     void *data = ecs_field_w_size(it, flecs_ito(size_t, ti->size), 0);
 
     ecs_script_eval_visitor_t v;
-    flecs_script_eval_visit_init(flecs_script_impl(script->script), &v);
-    ecs_vec_t prev_using = v.using;
-    v.using = template->using_;
+    flecs_script_eval_visit_init(flecs_script_impl(script->script), &v, NULL);
+    ecs_vec_t prev_using = v.r->using;
+    v.r->using = template->using_;
 
     ecs_script_scope_t *scope = template->node->scope;
 
@@ -113,7 +113,7 @@ void flecs_script_template_on_set(
 
         /* Create variables to hold template properties */
         ecs_script_vars_t *vars = flecs_script_vars_push(
-            NULL, &v.stack, v.allocator);
+            NULL, &v.r->stack, &v.r->allocator);
         vars->parent = template->vars; /* Include hoisted variables */
 
         /* Populate properties from template members */
@@ -123,7 +123,8 @@ void flecs_script_template_on_set(
                 const ecs_member_t *member = &members[m];
 
                 /* Assign template property from template instance */
-                ecs_script_var_t *var = ecs_script_vars_declare(vars, member->name);
+                ecs_script_var_t *var = ecs_script_vars_declare(
+                    vars, member->name);
                 var->value.type = member->type;
                 var->value.ptr = ECS_OFFSET(data, member->offset);
             }
@@ -139,7 +140,8 @@ void flecs_script_template_on_set(
         ecs_suspend_readonly_state_t srs;
         ecs_world_t *real_world = NULL;
         if (is_defer) {
-            ecs_assert(flecs_poly_is(world, ecs_world_t), ECS_INTERNAL_ERROR, NULL);
+            ecs_assert(flecs_poly_is(world, ecs_world_t), 
+                ECS_INTERNAL_ERROR, NULL);
             real_world = flecs_suspend_readonly(world, &srs);
             ecs_assert(real_world != NULL, ECS_INTERNAL_ERROR, NULL);
         }
@@ -160,8 +162,8 @@ void flecs_script_template_on_set(
         data = ECS_OFFSET(data, ti->size);
     }
 
-    v.using = prev_using;
-    flecs_script_eval_visit_fini(&v);
+    v.r->using = prev_using;
+    flecs_script_eval_visit_fini(&v, NULL);
 }
 
 static
@@ -192,16 +194,18 @@ int flecs_script_template_eval_prop(
         }
 
         var->value.type = type;
-        var->value.ptr = flecs_stack_alloc(&v->stack, ti->size, ti->alignment);
+        var->value.ptr = flecs_stack_alloc(
+            &v->r->stack, ti->size, ti->alignment);
         var->type_info = ti;
 
-        if (flecs_script_eval_expr(v, node->expr, &var->value)) {
+        if (flecs_script_eval_expr(v, &node->expr, &var->value)) {
             return -1;
         }
 
         ecs_script_var_t *value = ecs_vec_append_t(&v->base.script->allocator, 
             &template->prop_defaults, ecs_script_var_t);
-        value->value.ptr = flecs_calloc(&v->base.script->allocator, ti->size);
+        value->value.ptr = flecs_calloc_w_dbg_info(
+            &v->base.script->allocator, ti->size, ti->name);
         value->value.type = type;
         value->type_info = ti;
         ecs_value_copy_w_type_info(
@@ -273,7 +277,7 @@ int flecs_script_template_preprocess(
     ecs_visit_action_t prev_visit = v->base.visit;
     v->template = template;
     v->base.visit = (ecs_visit_action_t)flecs_script_template_eval;
-    v->vars = flecs_script_vars_push(v->vars, &v->stack, v->allocator);
+    v->vars = flecs_script_vars_push(v->vars, &v->r->stack, &v->r->allocator);
     int result = ecs_script_visit_scope(v, template->node->scope);
     v->vars = ecs_script_vars_pop(v->vars);
     v->base.visit = prev_visit;
@@ -286,15 +290,15 @@ int flecs_script_template_hoist_using(
     ecs_script_eval_visitor_t *v,
     ecs_script_template_t *template)
 {
+    ecs_allocator_t *a = &v->base.script->allocator;
     if (v->module) {
-        ecs_vec_append_t(
-            v->allocator, &template->using_, ecs_entity_t)[0] = v->module;
+        ecs_vec_append_t(a, &template->using_, ecs_entity_t)[0] = v->module;
     }
 
-    int i, count = ecs_vec_count(&v->using);
+    int i, count = ecs_vec_count(&v->r->using);
     for (i = 0; i < count; i ++) {
-        ecs_vec_append_t(v->allocator, &template->using_, ecs_entity_t)[0] = 
-            ecs_vec_get_t(&v->using, ecs_entity_t, i)[0];
+        ecs_vec_append_t(a, &template->using_, ecs_entity_t)[0] = 
+            ecs_vec_get_t(&v->r->using, ecs_entity_t, i)[0];
     }
 
     return 0;
@@ -353,6 +357,7 @@ void flecs_script_template_fini(
     }
 
     ecs_vec_fini_t(a, &template->prop_defaults, ecs_script_var_t);
+
     ecs_vec_fini_t(a, &template->using_, ecs_entity_t);
     ecs_script_vars_fini(template->vars);
     flecs_free_t(a, ecs_script_template_t, template);

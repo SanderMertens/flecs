@@ -11,12 +11,24 @@ void ecs_vec_init(
     ecs_size_t size,
     int32_t elem_count)
 {
+    ecs_vec_init_w_dbg_info(allocator, v, size, elem_count, NULL);
+}
+
+void ecs_vec_init_w_dbg_info(
+    struct ecs_allocator_t *allocator,
+    ecs_vec_t *v,
+    ecs_size_t size,
+    int32_t elem_count,
+    const char *type_name)
+{
+    (void)type_name;
     ecs_assert(size != 0, ECS_INVALID_PARAMETER, NULL);
     v->array = NULL;
     v->count = 0;
     if (elem_count) {
         if (allocator) {
-            v->array = flecs_alloc(allocator, size * elem_count);
+            v->array = flecs_alloc_w_dbg_info(
+                allocator, size * elem_count, type_name);
         } else {
             v->array = ecs_os_malloc(size * elem_count);
         }
@@ -24,6 +36,7 @@ void ecs_vec_init(
     v->size = elem_count;
 #ifdef FLECS_SANITIZE
     v->elem_size = size;
+    v->type_name = type_name;
 #endif
 }
 
@@ -169,8 +182,14 @@ void ecs_vec_set_size(
         }
         if (elem_count != v->size) {
             if (allocator) {
+#ifdef FLECS_SANITIZE
+                v->array = flecs_realloc_w_dbg_info(
+                    allocator, size * elem_count, size * v->size, v->array,
+                    v->type_name);
+#else
                 v->array = flecs_realloc(
                     allocator, size * elem_count, size * v->size, v->array);
+#endif
             } else {
                 v->array = ecs_os_realloc(v->array, size * elem_count);
             }

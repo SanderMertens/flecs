@@ -80,12 +80,12 @@ void flecs_script_id_to_str(
 }
 
 static
-void flecs_script_expr_to_str(
+void flecs_expr_to_str(
     ecs_script_str_visitor_t *v,
-    const char *expr)
+    const ecs_expr_node_t *expr)
 {
     if (expr) {
-        flecs_scriptbuf_append(v, "%s%s%s", ECS_GREEN, expr, ECS_NORMAL);
+        flecs_expr_to_str_buf(v->base.script->pub.world, expr, v->buf);
     } else {
         flecs_scriptbuf_appendstr(v, "{}");
     }
@@ -146,7 +146,7 @@ void flecs_script_component_to_str(
     flecs_script_id_to_str(v, &node->id);
     if (node->expr) {
         flecs_scriptbuf_appendstr(v, ": ");
-        flecs_script_expr_to_str(v, node->expr);
+        flecs_expr_to_str(v, node->expr);
     }
     flecs_scriptbuf_appendstr(v, "\n");
 }
@@ -158,7 +158,7 @@ void flecs_script_default_component_to_str(
 {
     flecs_scriptbuf_node(v, &node->node);
     if (node->expr) {
-        flecs_script_expr_to_str(v, node->expr);
+        flecs_expr_to_str(v, node->expr);
     }
     flecs_scriptbuf_appendstr(v, "\n");
 }
@@ -243,7 +243,7 @@ void flecs_script_var_node_to_str(
         flecs_scriptbuf_append(v, "%s = ", 
             node->name);
     }
-    flecs_script_expr_to_str(v, node->expr);
+    flecs_expr_to_str(v, node->expr);
     flecs_scriptbuf_appendstr(v, "\n");
 }
 
@@ -286,7 +286,7 @@ void flecs_script_if_to_str(
     ecs_script_if_t *node)
 {
     flecs_scriptbuf_node(v, &node->node);
-    flecs_script_expr_to_str(v, node->expr);
+    flecs_expr_to_str(v, node->expr);
 
     flecs_scriptbuf_appendstr(v, " {\n");
     v->depth ++;
@@ -406,8 +406,14 @@ char* ecs_script_ast_to_str(
 {
     ecs_check(script != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_strbuf_t buf = ECS_STRBUF_INIT;
-    if (ecs_script_ast_to_buf(script, &buf)) {
-        goto error;
+
+    if (flecs_script_impl(script)->expr) {
+        flecs_expr_to_str_buf(
+            script->world, flecs_script_impl(script)->expr, &buf);
+    } else {
+        if (ecs_script_ast_to_buf(script, &buf)) {
+            goto error;
+        }
     }
 
     return ecs_strbuf_get(&buf);
