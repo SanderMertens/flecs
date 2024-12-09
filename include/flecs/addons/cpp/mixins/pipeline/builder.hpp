@@ -12,12 +12,14 @@ namespace flecs {
 namespace _ {
     template <typename ... Components>
     using pipeline_builder_base = builder<
-        pipeline, ecs_pipeline_desc_t, pipeline_builder<Components...>, 
+        pipeline, ecs_pipeline_desc_t, pipeline_builder<Components...>,
         pipeline_builder_i, Components ...>;
-}
+} // namespace _
+} // namespace flecs
 
+FLECS_API_NAMESPACE namespace flecs {
 /** Pipeline builder.
- * 
+ *
  * @ingroup cpp_pipelines
  */
 template <typename ... Components>
@@ -30,4 +32,4 @@ struct pipeline_builder final : _::pipeline_builder_base<Components...> {
     }
 };
 
-}
+} // namespace flecs
