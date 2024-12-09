@@ -2098,6 +2098,116 @@ void Deserialize_struct_w_2_array_type_struct(void) {
     ecs_fini(world);
 }
 
+void Deserialize_struct_w_newline(void) {
+    ecs_world_t *world = ecs_init();
+
+    typedef struct {
+        int32_t x;
+        int32_t y;
+    } Point;
+
+    ECS_COMPONENT(world, Point);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Point),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    Point value = {0};
+
+    {
+        const char *ptr = ecs_expr_run(world, 
+            "{\n"
+            "  10, 20\n"
+            "}",
+            &(ecs_value_t){ecs_id(Point), &value}, NULL);
+
+        test_assert(ptr != NULL);
+        test_assert(ptr[0] == '\0');
+        test_int(value.x, 10);
+        test_int(value.y, 20);
+    }
+
+    ecs_fini(world);
+}
+
+void Deserialize_struct_w_members_newline(void) {
+    ecs_world_t *world = ecs_init();
+
+    typedef struct {
+        int32_t x;
+        int32_t y;
+    } Point;
+
+    ECS_COMPONENT(world, Point);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Point),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    Point value = {0};
+
+    {
+        const char *ptr = ecs_expr_run(world, 
+            "{\n"
+            "  x: 10,\n"
+            "  y: 20\n"
+            "}",
+            &(ecs_value_t){ecs_id(Point), &value}, NULL);
+
+        test_assert(ptr != NULL);
+        test_assert(ptr[0] == '\0');
+        test_int(value.x, 10);
+        test_int(value.y, 20);
+    }
+
+    ecs_fini(world);
+}
+
+void Deserialize_struct_w_trailing_comma(void) {
+    ecs_world_t *world = ecs_init();
+
+    typedef struct {
+        int32_t x;
+        int32_t y;
+    } Point;
+
+    ECS_COMPONENT(world, Point);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Point),
+        .members = {
+            {"x", ecs_id(ecs_i32_t)},
+            {"y", ecs_id(ecs_i32_t)}
+        }
+    });
+
+    Point value = {0};
+
+    {
+        const char *ptr = ecs_expr_run(world, 
+            "{\n"
+            "  x: 10,\n"
+            "  y: 20,\n"
+            "}",
+            &(ecs_value_t){ecs_id(Point), &value}, NULL);
+
+        test_assert(ptr != NULL);
+        test_assert(ptr[0] == '\0');
+        test_int(value.x, 10);
+        test_int(value.y, 20);
+    }
+
+    ecs_fini(world);
+}
+
 void Deserialize_array_i32_2(void) {
     typedef int32_t Ints[2];
 

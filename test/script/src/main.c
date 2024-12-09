@@ -135,6 +135,14 @@ void Eval_assign_pair_component(void);
 void Eval_assign_pair_component_in_scope(void);
 void Eval_assign_pair_component_in_script(void);
 void Eval_assign_pair_component_in_script_update(void);
+void Eval_assign_pair_component_w_newline(void);
+void Eval_assign_pair_component_w_newline_and_spaces(void);
+void Eval_assign_pair_component_w_empty(void);
+void Eval_assign_pair_component_w_newline_empty(void);
+void Eval_assign_pair_component_w_newline_and_spaces_empty(void);
+void Eval_assign_pair_component_after_component(void);
+void Eval_assign_pair_component_after_int_component(void);
+void Eval_assign_pair_component_after_entity_component(void);
 void Eval_set_entity_names(void);
 void Eval_oneof(void);
 void Eval_brief_annotation(void);
@@ -558,6 +566,8 @@ void Expr_remainder_after_binary(void);
 void Expr_remainder_after_parens(void);
 void Expr_remainder_after_initializer(void);
 void Expr_remainder_after_collection_initializer(void);
+void Expr_remainder_after_initializer_w_newlines(void);
+void Expr_remainder_after_initializer_before_parens(void);
 void Expr_space_at_start(void);
 void Expr_newline_at_start(void);
 
@@ -706,6 +716,9 @@ void Deserialize_struct_w_array_type_i32_i32(void);
 void Deserialize_struct_w_array_type_struct(void);
 void Deserialize_struct_w_2_array_type_i32_i32(void);
 void Deserialize_struct_w_2_array_type_struct(void);
+void Deserialize_struct_w_newline(void);
+void Deserialize_struct_w_members_newline(void);
+void Deserialize_struct_w_trailing_comma(void);
 void Deserialize_array_i32_2(void);
 void Deserialize_array_string_2(void);
 void Deserialize_discover_type_int(void);
@@ -1227,6 +1240,38 @@ bake_test_case Eval_testcases[] = {
     {
         "assign_pair_component_in_script_update",
         Eval_assign_pair_component_in_script_update
+    },
+    {
+        "assign_pair_component_w_newline",
+        Eval_assign_pair_component_w_newline
+    },
+    {
+        "assign_pair_component_w_newline_and_spaces",
+        Eval_assign_pair_component_w_newline_and_spaces
+    },
+    {
+        "assign_pair_component_w_empty",
+        Eval_assign_pair_component_w_empty
+    },
+    {
+        "assign_pair_component_w_newline_empty",
+        Eval_assign_pair_component_w_newline_empty
+    },
+    {
+        "assign_pair_component_w_newline_and_spaces_empty",
+        Eval_assign_pair_component_w_newline_and_spaces_empty
+    },
+    {
+        "assign_pair_component_after_component",
+        Eval_assign_pair_component_after_component
+    },
+    {
+        "assign_pair_component_after_int_component",
+        Eval_assign_pair_component_after_int_component
+    },
+    {
+        "assign_pair_component_after_entity_component",
+        Eval_assign_pair_component_after_entity_component
     },
     {
         "set_entity_names",
@@ -2902,6 +2947,14 @@ bake_test_case Expr_testcases[] = {
         Expr_remainder_after_collection_initializer
     },
     {
+        "remainder_after_initializer_w_newlines",
+        Expr_remainder_after_initializer_w_newlines
+    },
+    {
+        "remainder_after_initializer_before_parens",
+        Expr_remainder_after_initializer_before_parens
+    },
+    {
         "space_at_start",
         Expr_space_at_start
     },
@@ -3475,6 +3528,18 @@ bake_test_case Deserialize_testcases[] = {
         Deserialize_struct_w_2_array_type_struct
     },
     {
+        "struct_w_newline",
+        Deserialize_struct_w_newline
+    },
+    {
+        "struct_w_members_newline",
+        Deserialize_struct_w_members_newline
+    },
+    {
+        "struct_w_trailing_comma",
+        Deserialize_struct_w_trailing_comma
+    },
+    {
         "array_i32_2",
         Deserialize_array_i32_2
     },
@@ -3554,7 +3619,7 @@ static bake_test_suite suites[] = {
         "Eval",
         NULL,
         NULL,
-        257,
+        265,
         Eval_testcases
     },
     {
@@ -3575,7 +3640,7 @@ static bake_test_suite suites[] = {
         "Expr",
         Expr_setup,
         NULL,
-        185,
+        187,
         Expr_testcases,
         1,
         Expr_params
@@ -3598,7 +3663,7 @@ static bake_test_suite suites[] = {
         "Deserialize",
         Deserialize_setup,
         NULL,
-        86,
+        89,
         Deserialize_testcases,
         1,
         Deserialize_params

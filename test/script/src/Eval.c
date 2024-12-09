@@ -3796,6 +3796,388 @@ void Eval_assign_pair_component_in_script_update(void) {
     ecs_fini(world);
 }
 
+void Eval_assign_pair_component_w_newline(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    const char *expr =
+    HEAD "using flecs.meta"
+    LINE
+    LINE "struct Position {"
+    LINE "  x = f32"
+    LINE "  y = f32"
+    LINE "}"
+    LINE
+    LINE "Parent {"
+    LINE "  (Position, Foo): {\nx: 10,\n y: 20\n}"
+    LINE "  (Position, Bar): {\nx: 20,\n y: 30\n}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+
+    ecs_entity_t parent = ecs_lookup(world, "Parent");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    ecs_entity_t bar = ecs_lookup(world, "Bar");
+    ecs_entity_t ecs_id(Position) = ecs_lookup(world, "Position");
+
+    test_assert(parent != 0);
+    test_assert(foo != 0);
+    test_assert(bar != 0);
+    test_assert(ecs_id(Position) != 0);
+
+    test_assert( ecs_has_pair(world, parent, ecs_id(Position), foo));
+    test_assert( ecs_has_pair(world, parent, ecs_id(Position), bar));
+
+    const Position *
+    ptr = ecs_get_pair(world, parent, Position, foo);
+    test_assert(ptr != NULL);
+    test_int(ptr->x, 10);
+    test_int(ptr->y, 20);
+
+    ptr = ecs_get_pair(world, parent, Position, bar);
+    test_assert(ptr != NULL);
+    test_int(ptr->x, 20);
+    test_int(ptr->y, 30);
+
+    ecs_fini(world);
+}
+
+void Eval_assign_pair_component_w_newline_and_spaces(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    const char *expr =
+    HEAD "using flecs.meta"
+    LINE
+    LINE "struct Position {"
+    LINE "  x = f32"
+    LINE "  y = f32"
+    LINE "}"
+    LINE
+    LINE "Parent {"
+    LINE "  (Position, Foo): {\nx: 10,  \n y: 20\n  }"
+    LINE "  (Position, Bar): {  \nx: 20,\n y: 30  \n}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+
+    ecs_entity_t parent = ecs_lookup(world, "Parent");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    ecs_entity_t bar = ecs_lookup(world, "Bar");
+    ecs_entity_t ecs_id(Position) = ecs_lookup(world, "Position");
+
+    test_assert(parent != 0);
+    test_assert(foo != 0);
+    test_assert(bar != 0);
+    test_assert(ecs_id(Position) != 0);
+
+    test_assert( ecs_has_pair(world, parent, ecs_id(Position), foo));
+    test_assert( ecs_has_pair(world, parent, ecs_id(Position), bar));
+
+    const Position *
+    ptr = ecs_get_pair(world, parent, Position, foo);
+    test_assert(ptr != NULL);
+    test_int(ptr->x, 10);
+    test_int(ptr->y, 20);
+
+    ptr = ecs_get_pair(world, parent, Position, bar);
+    test_assert(ptr != NULL);
+    test_int(ptr->x, 20);
+    test_int(ptr->y, 30);
+
+    ecs_fini(world);
+}
+
+void Eval_assign_pair_component_w_empty(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    const char *expr =
+    HEAD "using flecs.meta"
+    LINE
+    LINE "struct Position {"
+    LINE "  x = f32"
+    LINE "  y = f32"
+    LINE "}"
+    LINE
+    LINE "Parent {"
+    LINE "  (Position, Foo): {}"
+    LINE "  (Position, Bar): {}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+
+    ecs_entity_t parent = ecs_lookup(world, "Parent");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    ecs_entity_t bar = ecs_lookup(world, "Bar");
+    ecs_entity_t ecs_id(Position) = ecs_lookup(world, "Position");
+
+    test_assert(parent != 0);
+    test_assert(foo != 0);
+    test_assert(bar != 0);
+    test_assert(ecs_id(Position) != 0);
+
+    test_assert( ecs_has_pair(world, parent, ecs_id(Position), foo));
+    test_assert( ecs_has_pair(world, parent, ecs_id(Position), bar));
+
+    const Position *
+    ptr = ecs_get_pair(world, parent, Position, foo);
+    test_assert(ptr != NULL);
+    test_int(ptr->x, 0);
+    test_int(ptr->y, 0);
+
+    ptr = ecs_get_pair(world, parent, Position, bar);
+    test_assert(ptr != NULL);
+    test_int(ptr->x, 0);
+    test_int(ptr->y, 0);
+
+    ecs_fini(world);
+}
+
+void Eval_assign_pair_component_w_newline_empty(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    const char *expr =
+    HEAD "using flecs.meta"
+    LINE
+    LINE "struct Position {"
+    LINE "  x = f32"
+    LINE "  y = f32"
+    LINE "}"
+    LINE
+    LINE "Parent {"
+    LINE "  (Position, Foo): {\n}"
+    LINE "  (Position, Bar): {\n}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+
+    ecs_entity_t parent = ecs_lookup(world, "Parent");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    ecs_entity_t bar = ecs_lookup(world, "Bar");
+    ecs_entity_t ecs_id(Position) = ecs_lookup(world, "Position");
+
+    test_assert(parent != 0);
+    test_assert(foo != 0);
+    test_assert(bar != 0);
+    test_assert(ecs_id(Position) != 0);
+
+    test_assert( ecs_has_pair(world, parent, ecs_id(Position), foo));
+    test_assert( ecs_has_pair(world, parent, ecs_id(Position), bar));
+
+    const Position *
+    ptr = ecs_get_pair(world, parent, Position, foo);
+    test_assert(ptr != NULL);
+    test_int(ptr->x, 0);
+    test_int(ptr->y, 0);
+
+    ptr = ecs_get_pair(world, parent, Position, bar);
+    test_assert(ptr != NULL);
+    test_int(ptr->x, 0);
+    test_int(ptr->y, 0);
+
+    ecs_fini(world);
+}
+
+void Eval_assign_pair_component_w_newline_and_spaces_empty(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    const char *expr =
+    HEAD "using flecs.meta"
+    LINE
+    LINE "struct Position {"
+    LINE "  x = f32"
+    LINE "  y = f32"
+    LINE "}"
+    LINE
+    LINE "Parent {"
+    LINE "  (Position, Foo): { \n}"
+    LINE "  (Position, Bar): {\n }"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+
+    ecs_entity_t parent = ecs_lookup(world, "Parent");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    ecs_entity_t bar = ecs_lookup(world, "Bar");
+    ecs_entity_t ecs_id(Position) = ecs_lookup(world, "Position");
+
+    test_assert(parent != 0);
+    test_assert(foo != 0);
+    test_assert(bar != 0);
+    test_assert(ecs_id(Position) != 0);
+
+    test_assert( ecs_has_pair(world, parent, ecs_id(Position), foo));
+    test_assert( ecs_has_pair(world, parent, ecs_id(Position), bar));
+
+    const Position *
+    ptr = ecs_get_pair(world, parent, Position, foo);
+    test_assert(ptr != NULL);
+    test_int(ptr->x, 0);
+    test_int(ptr->y, 0);
+
+    ptr = ecs_get_pair(world, parent, Position, bar);
+    test_assert(ptr != NULL);
+    test_int(ptr->x, 0);
+    test_int(ptr->y, 0);
+
+    ecs_fini(world);
+}
+
+void Eval_assign_pair_component_after_component(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    const char *expr =
+    HEAD "struct Position {"
+    LINE "  x = f32"
+    LINE "  y = f32"
+    LINE "}"
+    LINE
+    LINE "Parent {"
+    LINE "  Position: {10, 20}"
+    LINE "  (Position, Bar): {x: 20, y: 30}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+
+    ecs_entity_t parent = ecs_lookup(world, "Parent");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    ecs_entity_t bar = ecs_lookup(world, "Bar");
+    ecs_entity_t ecs_id(Position) = ecs_lookup(world, "Position");
+
+    test_assert(parent != 0);
+    test_assert(foo != 0);
+    test_assert(bar != 0);
+    test_assert(ecs_id(Position) != 0);
+
+    test_assert( ecs_has(world, parent, Position));
+    test_assert( ecs_has_pair(world, parent, ecs_id(Position), bar));
+
+    const Position *
+    ptr = ecs_get(world, parent, Position);
+    test_assert(ptr != NULL);
+    test_int(ptr->x, 10);
+    test_int(ptr->y, 20);
+
+    ptr = ecs_get_pair(world, parent, Position, bar);
+    test_assert(ptr != NULL);
+    test_int(ptr->x, 20);
+    test_int(ptr->y, 30);
+
+    ecs_fini(world);
+}
+
+void Eval_assign_pair_component_after_int_component(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    const char *expr =
+    HEAD "struct Position {"
+    LINE "  x = f32"
+    LINE "  y = f32"
+    LINE "}"
+    LINE
+    LINE "Parent {"
+    LINE "  i32: {10}"
+    LINE "  (Position, Bar): {x: 20, y: 30}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+
+    ecs_entity_t parent = ecs_lookup(world, "Parent");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    ecs_entity_t bar = ecs_lookup(world, "Bar");
+    ecs_entity_t ecs_id(Position) = ecs_lookup(world, "Position");
+
+    test_assert(parent != 0);
+    test_assert(foo != 0);
+    test_assert(bar != 0);
+    test_assert(ecs_id(Position) != 0);
+
+    test_assert( ecs_has(world, parent, ecs_i32_t));
+    test_assert( ecs_has_pair(world, parent, ecs_id(Position), bar));
+
+    {
+        const int32_t *ptr = ecs_get(world, parent, ecs_i32_t);
+        test_assert(ptr != NULL);
+        test_int(*ptr, 10);
+    }
+
+    {
+        const Position *ptr = ecs_get_pair(world, parent, Position, bar);
+        test_assert(ptr != NULL);
+        test_int(ptr->x, 20);
+        test_int(ptr->y, 30);
+    }
+
+    ecs_fini(world);
+}
+
+void Eval_assign_pair_component_after_entity_component(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Foo);
+    ECS_TAG(world, Bar);
+
+    const char *expr =
+    HEAD "struct Position {"
+    LINE "  x = f32"
+    LINE "  y = f32"
+    LINE "}"
+    LINE
+    LINE "Parent {"
+    LINE "  entity: {flecs.core}"
+    LINE "  (Position, Bar): {x: 20, y: 30}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+
+    ecs_entity_t parent = ecs_lookup(world, "Parent");
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    ecs_entity_t bar = ecs_lookup(world, "Bar");
+    ecs_entity_t ecs_id(Position) = ecs_lookup(world, "Position");
+
+    test_assert(parent != 0);
+    test_assert(foo != 0);
+    test_assert(bar != 0);
+    test_assert(ecs_id(Position) != 0);
+
+    test_assert( ecs_has(world, parent, ecs_entity_t));
+    test_assert( ecs_has_pair(world, parent, ecs_id(Position), bar));
+
+    {
+        const ecs_entity_t *ptr = ecs_get(world, parent, ecs_entity_t);
+        test_assert(ptr != NULL);
+        test_int(*ptr, EcsFlecsCore);
+    }
+
+    {
+        const Position *ptr = ecs_get_pair(world, parent, Position, bar);
+        test_assert(ptr != NULL);
+        test_int(ptr->x, 20);
+        test_int(ptr->y, 30);
+    }
+
+    ecs_fini(world);
+}
+
 void Eval_set_entity_names(void) {
     ecs_world_t *world = ecs_init();
 
