@@ -86,20 +86,21 @@ const char* flecs_script_parse_initializer(
     do {
         ParserBegin;
 
-        if (first) {
-            /* End of initializer */
-            LookAhead(
-                case ')':
-                case '}': {
-                    if ((char)lookahead_token.kind != until) {
-                        Error("expected '%c'", until);
-                    }
+        /* End of initializer */
+        LookAhead(
+            case ')':
+            case '}': {
+                if ((char)lookahead_token.kind != until) {
+                    Error("expected '%c'", until);
+                }
+                if (first) {
                     node->node.kind = EcsExprEmptyInitializer;
-                    EndOfRule;
-                })
+                }
+                pos = lookahead - 1;
+                EndOfRule;
+            })
 
-            first = false;
-        }
+        first = false;
 
         ecs_expr_initializer_element_t *elem = ecs_vec_append_t(
             a, &node->elements, ecs_expr_initializer_element_t);
@@ -127,9 +128,13 @@ const char* flecs_script_parse_initializer(
                     pos = lookahead;
                     break;
                 }
-                case '\n':
+
                 case ')':
-                case '}': {
+                case '}': 
+                    /* Return last character of initializer */
+                    pos = lookahead - 1;
+
+                case '\n': {
                     if ((char)lookahead_token.kind != until) {
                         Error("expected '%c'", until);
                     }
@@ -333,6 +338,8 @@ const char* flecs_script_parse_lhs(
 {
     TokenFramePush();
 
+    bool can_have_rhs = true;
+
     Parse(
         case EcsTokNumber: {
             const char *expr = Token(0);
@@ -421,6 +428,8 @@ const char* flecs_script_parse_lhs(
                 break;
             })
 
+            can_have_rhs = false;
+
             *out = (ecs_expr_node_t*)node;
             break;
         }
@@ -439,6 +448,8 @@ const char* flecs_script_parse_lhs(
                 break;
             })
 
+            can_have_rhs = false;
+
             *out = (ecs_expr_node_t*)node;
             break;
         }
@@ -446,7 +457,9 @@ const char* flecs_script_parse_lhs(
 
     TokenFramePop();
 
-    if (!pos[0]) {
+    /* Return if this was end of expression, or if the parsed expression cannot
+     * have a right hand side. */
+    if (!pos[0] || !can_have_rhs) {
         return pos;
     }
 

@@ -4885,6 +4885,56 @@ void Expr_remainder_after_collection_initializer(void) {
     ecs_fini(world);
 }
 
+void Expr_remainder_after_initializer_w_newlines(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            { "x", ecs_id(ecs_f32_t) },
+            { "y", ecs_id(ecs_f32_t) }
+        }
+    });
+
+    Position v = {0, 0};
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    const char *ptr = ecs_expr_run(world, "{\n10,\n 20\n} foo", 
+        &ecs_value_ptr(Position, &v), &desc);
+    test_assert(ptr != NULL);
+    test_str(ptr, " foo");
+    test_int(v.x, 10);
+    test_int(v.y, 20);
+
+    ecs_fini(world);
+}
+
+void Expr_remainder_after_initializer_before_parens(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            { "x", ecs_id(ecs_f32_t) },
+            { "y", ecs_id(ecs_f32_t) }
+        }
+    });
+
+    Position v = {0, 0};
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    const char *ptr = ecs_expr_run(world, "{10, 20} ()", 
+        &ecs_value_ptr(Position, &v), &desc);
+    test_assert(ptr != NULL);
+    test_str(ptr, " ()");
+    test_int(v.x, 10);
+    test_int(v.y, 20);
+
+    ecs_fini(world);
+}
+
 void Expr_space_at_start(void) {
     ecs_world_t *world = ecs_init();
 
