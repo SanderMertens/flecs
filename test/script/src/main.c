@@ -380,6 +380,8 @@ void Error_update_template_after_error(void);
 void Error_template_in_template(void);
 void Error_unterminated_binary(void);
 void Error_component_in_with_scope(void);
+void Error_reload_script_w_component_w_error(void);
+void Error_reload_script_w_component_w_error_again(void);
 
 // Testsuite 'Expr'
 void Expr_setup(void);
@@ -2210,6 +2212,14 @@ bake_test_case Error_testcases[] = {
     {
         "component_in_with_scope",
         Error_component_in_with_scope
+    },
+    {
+        "reload_script_w_component_w_error",
+        Error_reload_script_w_component_w_error
+    },
+    {
+        "reload_script_w_component_w_error_again",
+        Error_reload_script_w_component_w_error_again
     }
 };
 
@@ -3633,7 +3643,7 @@ static bake_test_suite suites[] = {
         "Error",
         NULL,
         NULL,
-        65,
+        67,
         Error_testcases
     },
     {

@@ -1239,3 +1239,86 @@ void Error_unterminated_binary(void) {
 
     ecs_fini(world);
 }
+
+void Error_reload_script_w_component_w_error(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t s = ecs_script(world, {
+        .code =
+            "struct Position {\n"
+            "  x = f32\n"
+            "  y = f32\n"
+            "}\n"
+            "\n"
+            "e {\n"
+            "  Position: {10, 20}\n"
+            "}\n"
+    });
+
+    test_assert(s != 0);
+
+    ecs_log_set_level(-4);
+
+    test_assert(0 != ecs_script_update(world, s, 0, 
+        "struct Position {\n"
+        "  x = f32\n"
+        "  y = f32\n"
+        "}\n"
+        "\n"
+        "e {\n"
+        "  Position: {10, 20}\n"
+        "}\n"
+        "\n"
+        "f\n"
+    ));
+
+    ecs_fini(world);
+}
+
+void Error_reload_script_w_component_w_error_again(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t s = ecs_script(world, {
+        .code =
+            "struct Position {\n"
+            "  x = f32\n"
+            "  y = f32\n"
+            "}\n"
+            "\n"
+            "e {\n"
+            "  Position: {10, 20}\n"
+            "}\n"
+    });
+
+    test_assert(s != 0);
+
+    ecs_log_set_level(-4);
+
+    test_assert(0 != ecs_script_update(world, s, 0, 
+        "struct Position {\n"
+        "  x = f32\n"
+        "  y = f32\n"
+        "}\n"
+        "\n"
+        "e {\n"
+        "  Position: {10, 20}\n"
+        "}\n"
+        "\n"
+        "f\n"
+    ));
+
+    ecs_log_set_level(-1);
+
+    test_assert(0 == ecs_script_update(world, s, 0, 
+        "struct Position {\n"
+        "  x = f32\n"
+        "  y = f32\n"
+        "}\n"
+        "\n"
+        "e {\n"
+        "  Position: {10, 20}\n"
+        "}\n"
+    ));
+
+    ecs_fini(world);
+}
