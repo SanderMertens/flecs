@@ -23,8 +23,8 @@ int main(int argc, char *argv[]) {
         printf("script failed to run\n");
     }
 
-    ecs_entity_t earth = ecs_lookup(world, "Sun");
-    ecs_iter_t it = ecs_children(world, earth);
+    ecs_entity_t sun = ecs_lookup(world, "Sun");
+    ecs_iter_t it = ecs_children(world, sun);
     while (ecs_children_next(&it)) {
         for (int i = 0; i < it.count; i ++) {
             printf(" - %s\n", ecs_get_name(world, it.entities[i]));
