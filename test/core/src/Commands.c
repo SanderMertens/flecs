@@ -4275,7 +4275,7 @@ void Commands_deep_command_nesting(void) {
     ECS_COMPONENT_DEFINE(world, TestNestEvent);
 
     ecs_observer(world, {
-        .events = {{ ecs_id(TestNestEvent) }},
+        .events = { ecs_id(TestNestEvent) },
         .query = { .terms = {{ .id = EcsAny }}},
         .callback = test_nest_observer
     });
