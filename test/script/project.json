@@ -387,7 +387,9 @@
                 "update_template_after_error",
                 "template_in_template",
                 "unterminated_binary",
-                "component_in_with_scope"
+                "component_in_with_scope",
+                "reload_script_w_component_w_error",
+                "reload_script_w_component_w_error_again"
             ]
         }, {
             "id": "Expr",

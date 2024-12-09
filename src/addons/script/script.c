@@ -173,6 +173,9 @@ int ecs_script_update(
     ecs_entity_t prev = ecs_set_with(world, flecs_script_tag(e, instance));
 
     if (ecs_script_eval(s->script, NULL)) {
+        ecs_script_free(s->script);
+        s->script = NULL;
+
         ecs_delete_with(world, ecs_pair_t(EcsScript, e));
         result = -1;
     }
