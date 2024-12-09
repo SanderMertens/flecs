@@ -791,12 +791,12 @@ An application can create custom phases, which can be (but don't need to be) bra
 
 ```c
 // Phases must have the EcsPhase tag
-ecs_entity_t Physics = ecs_new_w_id(ecs, EcsPhase);
-ecs_entity_t Collisions = ecs_new_w_id(ecs, EcsPhase);
+ecs_entity_t Physics = ecs_new_w_id(world, EcsPhase);
+ecs_entity_t Collisions = ecs_new_w_id(world, EcsPhase);
 
 // Phases can (but don't have to) depend on other phases which forces ordering
-ecs_add_pair(ecs, Physics, EcsDependsOn, EcsOnUpdate);
-ecs_add_pair(ecs, Collisions, EcsDependsOn, Physics);
+ecs_add_pair(world, Physics, EcsDependsOn, EcsOnUpdate);
+ecs_add_pair(world, Collisions, EcsDependsOn, Physics);
 
 // Custom phases can be used just like regular phases
 ECS_SYSTEM(world, Collide, Collisions, Position, Velocity);
