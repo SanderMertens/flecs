@@ -196,16 +196,15 @@ void flecs_on_template_set_event(
     ecs_assert(ecs_is_deferred(it->world), ECS_INTERNAL_ERROR, NULL);
 
     EcsTemplateSetEvent *evt = it->param;
-    ecs_suspend_readonly_state_t srs;
     ecs_world_t *world = it->real_world;
     ecs_assert(flecs_poly_is(world, ecs_world_t), ECS_INTERNAL_ERROR, NULL);
   
-    flecs_suspend_readonly(world, &srs);
+    ecs_defer_suspend(world);
 
     flecs_script_template_instantiate(
         world, evt->template_entity, evt->entities, evt->data, evt->count);
 
-    flecs_resume_readonly(world, &srs);
+    ecs_defer_resume(world);
 }
 
 /* Template on_set handler to update contents for new property values */

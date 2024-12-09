@@ -591,22 +591,6 @@ void flecs_commands_fini(
     flecs_sparse_fini(&cmd->entries);
 }
 
-void flecs_commands_push(
-    ecs_stage_t *stage)
-{
-    int32_t sp = ++ stage->cmd_sp;
-    ecs_assert(sp < ECS_MAX_DEFER_STACK, ECS_INTERNAL_ERROR, NULL);
-    stage->cmd = &stage->cmd_stack[sp];
-}
-
-void flecs_commands_pop(
-    ecs_stage_t *stage)
-{
-    int32_t sp = -- stage->cmd_sp;
-    ecs_assert(sp >= 0, ECS_INTERNAL_ERROR, NULL);
-    stage->cmd = &stage->cmd_stack[sp];
-}
-
 ecs_entity_t flecs_stage_set_system(
     ecs_stage_t *stage,
     ecs_entity_t system)
@@ -639,7 +623,7 @@ ecs_stage_t* flecs_stage_new(
     ecs_vec_init_t(a, &stage->post_frame_actions, ecs_action_elem_t, 0);
 
     int32_t i;
-    for (i = 0; i < ECS_MAX_DEFER_STACK; i ++) {
+    for (i = 0; i < 2; i ++) {
         flecs_commands_init(stage, &stage->cmd_stack[i]);
     }
 
@@ -665,7 +649,7 @@ void flecs_stage_free(
     ecs_vec_fini(NULL, &stage->operations, 0);
 
     int32_t i;
-    for (i = 0; i < ECS_MAX_DEFER_STACK; i ++) {
+    for (i = 0; i < 2; i ++) {
         flecs_commands_fini(stage, &stage->cmd_stack[i]);
     }
 

@@ -852,10 +852,10 @@ struct ecs_stage_t {
     /* Zero if not deferred, positive if deferred, negative if suspended */
     int32_t defer;
 
-    /* Command queue stack, for nested execution */
+    /* Command queue */
     ecs_commands_t *cmd;
-    ecs_commands_t cmd_stack[ECS_MAX_DEFER_STACK];
-    int32_t cmd_sp;
+    ecs_commands_t cmd_stack[2];     /* Two so we can flush one & populate the other */
+    bool cmd_flushing;               /* Ensures only one defer_end call flushes */
 
     /* Thread context */
     ecs_world_t *thread_ctx;         /* Points to stage when a thread stage */
@@ -2790,12 +2790,6 @@ void flecs_enqueue(
     ecs_world_t *world,
     ecs_stage_t *stage,
     ecs_event_desc_t *desc);
-
-void flecs_commands_push(
-    ecs_stage_t *stage);
-
-void flecs_commands_pop(
-    ecs_stage_t *stage);
 
 ecs_entity_t flecs_stage_set_system(
     ecs_stage_t *stage,
@@ -9141,26 +9135,18 @@ void ecs_enable_id(
     ecs_check(flecs_can_toggle(world, id), ECS_INVALID_OPERATION, 
         "add CanToggle trait to component");
 
+    ecs_entity_t bs_id = id | ECS_TOGGLE;
+    ecs_add_id(world, entity, bs_id);
+
     if (flecs_defer_enable(stage, entity, id, enable)) {
         return;
     }
 
-    ecs_record_t *r = flecs_entities_get(world, entity);
-    ecs_entity_t bs_id = id | ECS_TOGGLE;
-    
+    ecs_record_t *r = flecs_entities_get(world, entity);    
     ecs_table_t *table = r->table;
-    int32_t index = -1;
-    if (table) {
-        index = ecs_table_get_type_index(world, table, bs_id);
-    }
+    int32_t index = ecs_table_get_type_index(world, table, bs_id);
+    ecs_assert(index != -1, ECS_INTERNAL_ERROR, NULL);
 
-    if (index == -1) {
-        ecs_add_id(world, entity, bs_id);
-        flecs_defer_end(world, stage);
-        ecs_enable_id(world, entity, id, enable);
-        return;
-    }
-    
     ecs_assert(table->_ != NULL, ECS_INTERNAL_ERROR, NULL);
     index -= table->_->bs_offset;
     ecs_assert(index >= 0, ECS_INTERNAL_ERROR, NULL);
@@ -10611,7 +10597,7 @@ bool flecs_defer_end(
 
     ecs_assert(stage->defer > 0, ECS_INTERNAL_ERROR, NULL);
 
-    if (!--stage->defer) {
+    if (!--stage->defer && !stage->cmd_flushing) {
         ecs_os_perf_trace_push("flecs.commands.merge");
 
         /* Test whether we're flushing to another queue or whether we're 
@@ -10621,11 +10607,17 @@ bool flecs_defer_end(
             merge_to_world = world->stages[0]->defer == 0;
         }
 
-        ecs_stage_t *dst_stage = flecs_stage_from_world(&world);
-        ecs_commands_t *commands = stage->cmd;
-        ecs_vec_t *queue = &commands->queue;
+        do {
+            ecs_stage_t *dst_stage = flecs_stage_from_world(&world);
+            ecs_commands_t *commands = stage->cmd;
+            ecs_vec_t *queue = &commands->queue;
 
-        if (ecs_vec_count(queue)) {
+            if (!ecs_vec_count(queue)) {
+                break;
+            }
+
+            stage->cmd_flushing = true;
+
             /* Internal callback for capturing commands */
             if (world->on_commands_active) {
                 world->on_commands_active(stage, queue, 
@@ -10637,7 +10629,12 @@ bool flecs_defer_end(
 
             ecs_table_diff_builder_t diff;
             flecs_table_diff_builder_init(world, &diff);
-            flecs_commands_push(stage);
+
+            if (stage->cmd == &stage->cmd_stack[0]) {
+                stage->cmd = &stage->cmd_stack[1];
+            } else {
+                stage->cmd = &stage->cmd_stack[0];
+            }
 
             for (i = 0; i < count; i ++) {
                 ecs_cmd_t *cmd = &cmds[i];
@@ -10795,10 +10792,10 @@ bool flecs_defer_end(
                 }
             }
 
+            stage->cmd_flushing = false;
+
             flecs_stack_reset(&commands->stack);
             ecs_vec_clear(queue);
-            flecs_commands_pop(stage);
-
             flecs_table_diff_builder_fini(world, &diff);
 
             /* Internal callback for capturing commands, signal queue is done */
@@ -10806,7 +10803,7 @@ bool flecs_defer_end(
                 world->on_commands_active(stage, NULL, 
                     world->on_commands_ctx_active);
             }
-        }
+        } while (true);
 
         ecs_os_perf_trace_pop("flecs.commands.merge");
 
@@ -17685,22 +17682,6 @@ void flecs_commands_fini(
     flecs_sparse_fini(&cmd->entries);
 }
 
-void flecs_commands_push(
-    ecs_stage_t *stage)
-{
-    int32_t sp = ++ stage->cmd_sp;
-    ecs_assert(sp < ECS_MAX_DEFER_STACK, ECS_INTERNAL_ERROR, NULL);
-    stage->cmd = &stage->cmd_stack[sp];
-}
-
-void flecs_commands_pop(
-    ecs_stage_t *stage)
-{
-    int32_t sp = -- stage->cmd_sp;
-    ecs_assert(sp >= 0, ECS_INTERNAL_ERROR, NULL);
-    stage->cmd = &stage->cmd_stack[sp];
-}
-
 ecs_entity_t flecs_stage_set_system(
     ecs_stage_t *stage,
     ecs_entity_t system)
@@ -17733,7 +17714,7 @@ ecs_stage_t* flecs_stage_new(
     ecs_vec_init_t(a, &stage->post_frame_actions, ecs_action_elem_t, 0);
 
     int32_t i;
-    for (i = 0; i < ECS_MAX_DEFER_STACK; i ++) {
+    for (i = 0; i < 2; i ++) {
         flecs_commands_init(stage, &stage->cmd_stack[i]);
     }
 
@@ -17759,7 +17740,7 @@ void flecs_stage_free(
     ecs_vec_fini(NULL, &stage->operations, 0);
 
     int32_t i;
-    for (i = 0; i < ECS_MAX_DEFER_STACK; i ++) {
+    for (i = 0; i < 2; i ++) {
         flecs_commands_fini(stage, &stage->cmd_stack[i]);
     }
 
@@ -58624,16 +58605,15 @@ void flecs_on_template_set_event(
     ecs_assert(ecs_is_deferred(it->world), ECS_INTERNAL_ERROR, NULL);
 
     EcsTemplateSetEvent *evt = it->param;
-    ecs_suspend_readonly_state_t srs;
     ecs_world_t *world = it->real_world;
     ecs_assert(flecs_poly_is(world, ecs_world_t), ECS_INTERNAL_ERROR, NULL);
   
-    flecs_suspend_readonly(world, &srs);
+    ecs_defer_suspend(world);
 
     flecs_script_template_instantiate(
         world, evt->template_entity, evt->entities, evt->data, evt->count);
 
-    flecs_resume_readonly(world, &srs);
+    ecs_defer_resume(world);
 }
 
 /* Template on_set handler to update contents for new property values */

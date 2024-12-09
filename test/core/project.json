@@ -2244,7 +2244,8 @@
                 "defer_emplace_after_remove",
                 "batched_w_table_change_in_observer",
                 "redefine_named_in_threaded_app",
-                "batched_cmd_w_component_init"
+                "batched_cmd_w_component_init",
+                "deep_command_nesting"
             ]
         }, {
             "id": "SingleThreadStaging",
