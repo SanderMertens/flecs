@@ -74300,16 +74300,16 @@ const char* flecs_script_parse_collection_initializer(
     do {
         ParserBegin;
 
-        if (first) {
-            /* End of initializer */
-            LookAhead_1(']', {
-                pos = lookahead;
+        /* End of initializer */
+        LookAhead_1(']', {
+            if (first) {
                 node->node.kind = EcsExprEmptyInitializer;
-                EndOfRule;
-            })
+            }
+            pos = lookahead - 1;
+            EndOfRule;
+        })
 
-            first = false;
-        }
+        first = false;
 
         ecs_expr_initializer_element_t *elem = ecs_vec_append_t(
             a, &node->elements, ecs_expr_initializer_element_t);

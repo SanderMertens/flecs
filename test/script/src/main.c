@@ -379,7 +379,11 @@ void Error_run_template_after_error(void);
 void Error_update_template_after_error(void);
 void Error_template_in_template(void);
 void Error_unterminated_binary(void);
+void Error_tag_in_with_scope(void);
 void Error_component_in_with_scope(void);
+void Error_component_in_with_scope_nested(void);
+void Error_component_in_with_scope_after_entity(void);
+void Error_component_in_with_var_scope(void);
 void Error_reload_script_w_component_w_error(void);
 void Error_reload_script_w_component_w_error_again(void);
 
@@ -721,6 +725,7 @@ void Deserialize_struct_w_2_array_type_struct(void);
 void Deserialize_struct_w_newline(void);
 void Deserialize_struct_w_members_newline(void);
 void Deserialize_struct_w_trailing_comma(void);
+void Deserialize_array_w_trailing_comma(void);
 void Deserialize_array_i32_2(void);
 void Deserialize_array_string_2(void);
 void Deserialize_discover_type_int(void);
@@ -2210,8 +2215,24 @@ bake_test_case Error_testcases[] = {
         Error_unterminated_binary
     },
     {
+        "tag_in_with_scope",
+        Error_tag_in_with_scope
+    },
+    {
         "component_in_with_scope",
         Error_component_in_with_scope
+    },
+    {
+        "component_in_with_scope_nested",
+        Error_component_in_with_scope_nested
+    },
+    {
+        "component_in_with_scope_after_entity",
+        Error_component_in_with_scope_after_entity
+    },
+    {
+        "component_in_with_var_scope",
+        Error_component_in_with_var_scope
     },
     {
         "reload_script_w_component_w_error",
@@ -3550,6 +3571,10 @@ bake_test_case Deserialize_testcases[] = {
         Deserialize_struct_w_trailing_comma
     },
     {
+        "array_w_trailing_comma",
+        Deserialize_array_w_trailing_comma
+    },
+    {
         "array_i32_2",
         Deserialize_array_i32_2
     },
@@ -3643,7 +3668,7 @@ static bake_test_suite suites[] = {
         "Error",
         NULL,
         NULL,
-        67,
+        71,
         Error_testcases
     },
     {
@@ -3673,7 +3698,7 @@ static bake_test_suite suites[] = {
         "Deserialize",
         Deserialize_setup,
         NULL,
-        89,
+        90,
         Deserialize_testcases,
         1,
         Deserialize_params

@@ -387,7 +387,11 @@
                 "update_template_after_error",
                 "template_in_template",
                 "unterminated_binary",
+                "tag_in_with_scope",
                 "component_in_with_scope",
+                "component_in_with_scope_nested",
+                "component_in_with_scope_after_entity",
+                "component_in_with_var_scope",
                 "reload_script_w_component_w_error",
                 "reload_script_w_component_w_error_again"
             ]
@@ -743,6 +747,7 @@
                 "struct_w_newline",
                 "struct_w_members_newline",
                 "struct_w_trailing_comma",
+                "array_w_trailing_comma",
                 "array_i32_2",
                 "array_string_2",
                 "discover_type_int",

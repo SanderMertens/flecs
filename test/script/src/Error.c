@@ -350,7 +350,7 @@ void Error_with_value_not_a_component(void) {
     ecs_fini(world);
 }
 
-void Error_component_in_with_scope(void) {
+void Error_tag_in_with_scope(void) {
     ecs_world_t *world = ecs_init();
 
     ECS_COMPONENT(world, Position);
@@ -366,6 +366,31 @@ void Error_component_in_with_scope(void) {
     const char *expr =
     LINE "with Position(10, 20) {\n"
     LINE "  Bar\n"
+    LINE "}\n"
+    LINE "\n";
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr) != 0);
+
+    ecs_fini(world);
+}
+
+void Error_component_in_with_scope(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    LINE "with Position(10, 20) {\n"
+    LINE "  Position: {10, 20}\n"
     LINE "}\n"
     LINE "\n";
 
@@ -404,6 +429,58 @@ void Error_component_in_with_scope_nested(void) {
     LINE "  }\n"
     LINE "}\n"
     LINE "\n";
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr) != 0);
+
+    ecs_fini(world);
+}
+
+void Error_component_in_with_scope_after_entity(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "with Position(10, 20) {"
+    LINE "  _ {}"
+    LINE "  Position: {10, 20}"
+    LINE "}"
+    LINE "";
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr) != 0);
+
+    ecs_fini(world);
+}
+
+void Error_component_in_with_var_scope(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "const pos = Position: {10, 20}"
+    LINE "with $pos {"
+    LINE "  Position: {10, 20}"
+    LINE "}"
+    LINE "";
 
     ecs_log_set_level(-4);
     test_assert(ecs_script_run(world, NULL, expr) != 0);
