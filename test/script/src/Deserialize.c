@@ -2208,6 +2208,38 @@ void Deserialize_struct_w_trailing_comma(void) {
     ecs_fini(world);
 }
 
+void Deserialize_array_w_trailing_comma(void) {
+    ecs_world_t *world = ecs_init();
+
+    typedef int32_t Ints[2];
+
+    ECS_COMPONENT(world, Ints);
+
+    ecs_array(world, {
+        .entity = ecs_id(Ints),
+        .type = ecs_id(ecs_i32_t),
+        .count = 2
+    });
+
+    Ints value = {0};
+
+    {
+        const char *ptr = ecs_expr_run(world, 
+            "[\n"
+            "  10,\n"
+            "  20,\n"
+            "]",
+            &(ecs_value_t){ecs_id(Ints), &value}, NULL);
+
+        test_assert(ptr != NULL);
+        test_assert(ptr[0] == '\0');
+        test_int(value[0], 10);
+        test_int(value[1], 20);
+    }
+
+    ecs_fini(world);
+}
+
 void Deserialize_array_i32_2(void) {
     typedef int32_t Ints[2];
 
