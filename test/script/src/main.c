@@ -306,6 +306,8 @@ void Template_module_w_nested_template(void);
 void Template_template_w_pair_w_this_var(void);
 void Template_prop_without_using_meta(void);
 void Template_hoist_var(void);
+void Template_hoist_vars_nested(void);
+void Template_hoist_vars_nested_w_masked(void);
 void Template_anonymous_template_instance(void);
 void Template_anonymous_template_instance_no_scope(void);
 void Template_anonymous_template_instance_w_prop(void);
@@ -313,6 +315,7 @@ void Template_anonymous_template_instance_w_prop_no_scope(void);
 void Template_with_after_template(void);
 void Template_with_in_scope_after_template(void);
 void Template_prefab_w_template(void);
+void Template_template_in_scope(void);
 
 // Testsuite 'Error'
 void Error_multi_line_comment_after_newline_before_newline_scope_open(void);
@@ -1928,6 +1931,14 @@ bake_test_case Template_testcases[] = {
         Template_hoist_var
     },
     {
+        "hoist_vars_nested",
+        Template_hoist_vars_nested
+    },
+    {
+        "hoist_vars_nested_w_masked",
+        Template_hoist_vars_nested_w_masked
+    },
+    {
         "anonymous_template_instance",
         Template_anonymous_template_instance
     },
@@ -1954,6 +1965,10 @@ bake_test_case Template_testcases[] = {
     {
         "prefab_w_template",
         Template_prefab_w_template
+    },
+    {
+        "template_in_scope",
+        Template_template_in_scope
     }
 };
 
@@ -3661,7 +3676,7 @@ static bake_test_suite suites[] = {
         "Template",
         NULL,
         NULL,
-        37,
+        40,
         Template_testcases
     },
     {

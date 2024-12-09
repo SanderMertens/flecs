@@ -391,18 +391,23 @@ int flecs_script_template_hoist_vars(
     ecs_script_template_t *template,
     ecs_script_vars_t *vars)
 {
-    if (vars->parent) {
-        flecs_script_template_hoist_vars(v, template, vars);
-    }
-
     int32_t i, count = ecs_vec_count(&vars->vars);
     ecs_script_var_t *src_vars = ecs_vec_first(&vars->vars);
     for (i = 0; i < count; i ++) {
         ecs_script_var_t *src = &src_vars[i];
+        if (ecs_script_vars_lookup(template->vars, src->name)) {
+            /* If variable is masked, don't declare it twice */
+            continue;
+        }
         ecs_script_var_t *dst = ecs_script_vars_define_id(
             template->vars, src->name, src->value.type);
-        ecs_value_copy(v->world, 
+        ecs_assert(dst != NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_value_copy(v->world,
             src->value.type, dst->value.ptr, src->value.ptr);
+    }
+
+    if (vars->parent) {
+        flecs_script_template_hoist_vars(v, template, vars->parent);
     }
 
     return 0;
