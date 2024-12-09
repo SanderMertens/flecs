@@ -1726,6 +1726,85 @@ void Template_hoist_var(void) {
     ecs_fini(world);
 }
 
+void Template_hoist_vars_nested(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "const x = 10"
+    LINE "parent {"
+    LINE "  const y = 20"
+    LINE "  template Tree {"
+    LINE "    Position: {$x, $y}"
+    LINE "  }"
+    LINE "}"
+    LINE "parent.Tree foo()";
+
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+
+    ecs_entity_t tree = ecs_lookup(world, "parent.Tree");
+    test_assert(tree != 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "foo");
+    test_assert(foo != 0);
+
+    const Position *p = ecs_get(world, foo, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+void Template_hoist_vars_nested_w_masked(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "const x = 10"
+    LINE "parent {"
+    HEAD "  const x = 30"
+    LINE "  const y = 20"
+    LINE "  template Tree {"
+    LINE "    Position: {$x, $y}"
+    LINE "  }"
+    LINE "}"
+    LINE "parent.Tree foo()";
+
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+
+    ecs_entity_t tree = ecs_lookup(world, "parent.Tree");
+    test_assert(tree != 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "foo");
+    test_assert(foo != 0);
+
+    const Position *p = ecs_get(world, foo, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 30);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
 void Template_anonymous_template_instance(void) {
     ecs_world_t *world = ecs_init();
 
@@ -1969,6 +2048,31 @@ void Template_prefab_w_template(void) {
     test_assert(ecs_has_id(world, e, tag));
     test_assert(ecs_has_id(world, e, foo));
     test_assert(ecs_has_pair(world, e, EcsIsA, base));
+
+    ecs_fini(world);
+}
+
+void Template_template_in_scope(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    const char *expr =
+    LINE "parent {"
+    LINE "  template Foo {"
+    LINE "  }"
+    LINE "}"
+    LINE "parent.Foo ent";
+
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+
+    test_assert(ecs_lookup(world, "Foo") == 0);
+    ecs_entity_t foo = ecs_lookup(world, "parent.Foo");
+    test_assert(foo != 0);
+
+    ecs_entity_t ent = ecs_lookup(world, "ent");
+    test_assert(ent != 0);
+    test_assert(ecs_has_id(world, ent, foo));
 
     ecs_fini(world);
 }

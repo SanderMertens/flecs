@@ -312,13 +312,16 @@
                 "template_w_pair_w_this_var",
                 "prop_without_using_meta",
                 "hoist_var",
+                "hoist_vars_nested",
+                "hoist_vars_nested_w_masked",
                 "anonymous_template_instance",
                 "anonymous_template_instance_no_scope",
                 "anonymous_template_instance_w_prop",
                 "anonymous_template_instance_w_prop_no_scope",
                 "with_after_template",
                 "with_in_scope_after_template",
-                "prefab_w_template"
+                "prefab_w_template",
+                "template_in_scope"
             ]
         }, {
             "id": "Error",
