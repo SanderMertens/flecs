@@ -4243,3 +4243,53 @@ void Commands_batched_cmd_w_component_init(void) {
 
     ecs_fini(world);
 }
+
+typedef struct TestNestEvent {
+    int32_t depth;
+} TestNestEvent;
+
+static ECS_COMPONENT_DECLARE(TestNestEvent);
+
+static int test_nest_invoked = 0;
+
+static
+void test_nest_observer(ecs_iter_t *it) {
+    TestNestEvent *param = it->param;
+
+    TestNestEvent evt = { .depth = param->depth - 1 };
+
+    test_nest_invoked ++;
+
+    if (param->depth) {
+        ecs_enqueue(it->world, &(ecs_event_desc_t) {
+            .event = ecs_id(TestNestEvent),
+            .param = &evt,
+            .entity = EcsAny
+        });
+    }
+}
+
+void Commands_deep_command_nesting(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT_DEFINE(world, TestNestEvent);
+
+    ecs_observer(world, {
+        .events = {{ ecs_id(TestNestEvent) }},
+        .query = { .terms = {{ .id = EcsAny }}},
+        .callback = test_nest_observer
+    });
+
+    ecs_log_set_level(0);
+    ecs_emit(world, &(ecs_event_desc_t) {
+        .event = ecs_id(TestNestEvent),
+        .param = &(TestNestEvent){ .depth = 32 },
+        .entity = EcsAny
+    });
+
+    test_int(test_nest_invoked, 33);
+
+    ecs_log_set_level(-1);
+
+    ecs_fini(world);
+}

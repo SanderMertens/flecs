@@ -201,10 +201,10 @@ struct ecs_stage_t {
     /* Zero if not deferred, positive if deferred, negative if suspended */
     int32_t defer;
 
-    /* Command queue stack, for nested execution */
+    /* Command queue */
     ecs_commands_t *cmd;
-    ecs_commands_t cmd_stack[ECS_MAX_DEFER_STACK];
-    int32_t cmd_sp;
+    ecs_commands_t cmd_stack[2];     /* Two so we can flush one & populate the other */
+    bool cmd_flushing;               /* Ensures only one defer_end call flushes */
 
     /* Thread context */
     ecs_world_t *thread_ctx;         /* Points to stage when a thread stage */
