@@ -2181,3 +2181,41 @@ void Template_entity_w_2_template_instances(void) {
 
     ecs_fini(world);
 }
+
+void Template_template_w_prefab_and_instance(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "template Foo {"
+    LINE "  prefab Base"
+    LINE ""
+    LINE "  child {"
+    LINE "    grand_child : Base"
+    LINE "  }"
+    LINE "}"
+    LINE ""
+    LINE "e = Foo: {}"
+    ;
+
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    test_assert(foo != 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+    test_assert(ecs_has_id(world, e, foo));
+
+    ecs_entity_t e_child = ecs_lookup(world, "e.child");
+    test_assert(e_child != 0);
+
+    ecs_entity_t grand_child = ecs_lookup(world, "e.child.grand_child");
+    test_assert(grand_child != 0);
+
+    ecs_entity_t base = ecs_lookup(world, "e.Base");
+    test_assert(base != 0);
+
+    test_assert(ecs_has_pair(world, grand_child, EcsIsA, base));
+
+    ecs_fini(world);
+}

@@ -391,7 +391,9 @@ const char* flecs_script_parse_lhs(
 
         case EcsTokSub: {
             ecs_expr_binary_t *node = flecs_expr_binary(parser);
-            pos = flecs_script_parse_expr(parser, pos, 0, &node->right);
+            
+            /* Use EcsTokNot as it has the same precedence as a unary - */
+            pos = flecs_script_parse_expr(parser, pos, EcsTokNot, &node->right);
             if (!pos) {
                 flecs_script_parser_expr_free(parser, (ecs_expr_node_t*)node);
                 goto error;

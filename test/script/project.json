@@ -323,7 +323,8 @@
                 "prefab_w_template",
                 "template_in_scope",
                 "nested_templates_in_prefab",
-                "entity_w_2_template_instances"
+                "entity_w_2_template_instances",
+                "template_w_prefab_and_instance"
             ]
         }, {
             "id": "Error",
@@ -510,6 +511,10 @@
                 "min_var",
                 "min_lparen_int_rparen_to_i64",
                 "min_lparen_int_rparen_to_i32",
+                "min_var_add",
+                "min_var_sub",
+                "min_var_mul",
+                "min_var_div",
                 "struct_w_min_var",
                 "struct_w_min_lparen_int_rparen",
                 "struct_w_min_lparen_var_rparen",

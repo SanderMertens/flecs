@@ -318,6 +318,7 @@ void Template_prefab_w_template(void);
 void Template_template_in_scope(void);
 void Template_nested_templates_in_prefab(void);
 void Template_entity_w_2_template_instances(void);
+void Template_template_w_prefab_and_instance(void);
 
 // Testsuite 'Error'
 void Error_multi_line_comment_after_newline_before_newline_scope_open(void);
@@ -497,6 +498,10 @@ void Expr_min_lparen_int_add_int_rparen(void);
 void Expr_min_var(void);
 void Expr_min_lparen_int_rparen_to_i64(void);
 void Expr_min_lparen_int_rparen_to_i32(void);
+void Expr_min_var_add(void);
+void Expr_min_var_sub(void);
+void Expr_min_var_mul(void);
+void Expr_min_var_div(void);
 void Expr_struct_w_min_var(void);
 void Expr_struct_w_min_lparen_int_rparen(void);
 void Expr_struct_w_min_lparen_var_rparen(void);
@@ -1986,6 +1991,10 @@ bake_test_case Template_testcases[] = {
     {
         "entity_w_2_template_instances",
         Template_entity_w_2_template_instances
+    },
+    {
+        "template_w_prefab_and_instance",
+        Template_template_w_prefab_and_instance
     }
 };
 
@@ -2688,6 +2697,22 @@ bake_test_case Expr_testcases[] = {
     {
         "min_lparen_int_rparen_to_i32",
         Expr_min_lparen_int_rparen_to_i32
+    },
+    {
+        "min_var_add",
+        Expr_min_var_add
+    },
+    {
+        "min_var_sub",
+        Expr_min_var_sub
+    },
+    {
+        "min_var_mul",
+        Expr_min_var_mul
+    },
+    {
+        "min_var_div",
+        Expr_min_var_div
     },
     {
         "struct_w_min_var",
@@ -3721,7 +3746,7 @@ static bake_test_suite suites[] = {
         "Template",
         NULL,
         NULL,
-        42,
+        43,
         Template_testcases
     },
     {
@@ -3735,7 +3760,7 @@ static bake_test_suite suites[] = {
         "Expr",
         Expr_setup,
         NULL,
-        187,
+        191,
         Expr_testcases,
         1,
         Expr_params

@@ -2370,6 +2370,98 @@ void Expr_struct_w_min_var(void) {
     ecs_fini(world);
 }
 
+void Expr_min_var_add(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *var = ecs_script_vars_define(
+        vars, "foo", ecs_i64_t);
+    *(ecs_i64_t*)var->value.ptr = 10;
+
+    int64_t v = 0;
+    ecs_expr_eval_desc_t desc = { .vars = vars, .disable_folding = disable_folding };
+    const char *ptr = ecs_expr_run(world, "-$foo + 5", &(ecs_value_t){
+        .type = ecs_id(ecs_i64_t), .ptr = &v
+    }, &desc);
+    test_assert(ptr != NULL);
+    test_assert(!ptr[0]);
+
+    test_int(v, -5);
+    ecs_script_vars_fini(vars);
+
+    ecs_fini(world);
+}
+
+void Expr_min_var_sub(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *var = ecs_script_vars_define(
+        vars, "foo", ecs_i64_t);
+    *(ecs_i64_t*)var->value.ptr = 10;
+
+    int64_t v = 0;
+    ecs_expr_eval_desc_t desc = { .vars = vars, .disable_folding = disable_folding };
+    const char *ptr = ecs_expr_run(world, "-$foo - 5", &(ecs_value_t){
+        .type = ecs_id(ecs_i64_t), .ptr = &v
+    }, &desc);
+    test_assert(ptr != NULL);
+    test_assert(!ptr[0]);
+
+    test_int(v, -15);
+    ecs_script_vars_fini(vars);
+
+    ecs_fini(world);
+}
+
+void Expr_min_var_mul(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *var = ecs_script_vars_define(
+        vars, "foo", ecs_i64_t);
+    *(ecs_i64_t*)var->value.ptr = 10;
+
+    int64_t v = 0;
+    ecs_expr_eval_desc_t desc = { .vars = vars, .disable_folding = disable_folding };
+    const char *ptr = ecs_expr_run(world, "-$foo * 5", &(ecs_value_t){
+        .type = ecs_id(ecs_i64_t), .ptr = &v
+    }, &desc);
+    test_assert(ptr != NULL);
+    test_assert(!ptr[0]);
+
+    test_int(v, -50);
+    ecs_script_vars_fini(vars);
+
+    ecs_fini(world);
+}
+
+void Expr_min_var_div(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *var = ecs_script_vars_define(
+        vars, "foo", ecs_i64_t);
+    *(ecs_i64_t*)var->value.ptr = 10;
+
+    int64_t v = 0;
+    ecs_expr_eval_desc_t desc = { .vars = vars, .disable_folding = disable_folding };
+    const char *ptr = ecs_expr_run(world, "-$foo / 5", &(ecs_value_t){
+        .type = ecs_id(ecs_i64_t), .ptr = &v
+    }, &desc);
+    test_assert(ptr != NULL);
+    test_assert(!ptr[0]);
+
+    test_int(v, -2);
+    ecs_script_vars_fini(vars);
+
+    ecs_fini(world);
+}
+
 void Expr_struct_w_min_lparen_int_rparen(void) {
     ecs_world_t *world = ecs_init();
 
