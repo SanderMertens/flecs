@@ -1,0 +1,10 @@
+{
+    "id": "script_run",
+    "type": "application",
+    "value": {
+        "use": [
+            "flecs"
+        ],
+        "public": false
+    }
+}

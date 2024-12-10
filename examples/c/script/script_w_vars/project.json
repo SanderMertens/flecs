@@ -1,0 +1,9 @@
+{
+    "id": "script_w_vars",
+    "type": "application",
+    "value": {
+        "use": [
+            "flecs"
+        ]
+    }
+}

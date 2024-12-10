@@ -135,6 +135,14 @@ void Eval_assign_pair_component(void);
 void Eval_assign_pair_component_in_scope(void);
 void Eval_assign_pair_component_in_script(void);
 void Eval_assign_pair_component_in_script_update(void);
+void Eval_assign_pair_component_w_newline(void);
+void Eval_assign_pair_component_w_newline_and_spaces(void);
+void Eval_assign_pair_component_w_empty(void);
+void Eval_assign_pair_component_w_newline_empty(void);
+void Eval_assign_pair_component_w_newline_and_spaces_empty(void);
+void Eval_assign_pair_component_after_component(void);
+void Eval_assign_pair_component_after_int_component(void);
+void Eval_assign_pair_component_after_entity_component(void);
 void Eval_set_entity_names(void);
 void Eval_oneof(void);
 void Eval_brief_annotation(void);
@@ -196,7 +204,6 @@ void Eval_with_pair_in_scope(void);
 void Eval_with_pair_component_in_scope(void);
 void Eval_pair_w_rel_var(void);
 void Eval_pair_w_tgt_var(void);
-void Eval_component_in_with_scope_in_scope(void);
 void Eval_array_component(void);
 void Eval_on_set_w_kind_paren_no_reflection(void);
 void Eval_on_set_w_kind_paren(void);
@@ -261,6 +268,12 @@ void Eval_partial_assign_with_large_array(void);
 void Eval_non_trivial_var_component(void);
 void Eval_non_trivial_var_with(void);
 void Eval_update_template_w_tag(void);
+void Eval_assign_call_func(void);
+void Eval_assign_call_scoped_func(void);
+void Eval_assign_call_scoped_func_w_using(void);
+void Eval_eval_w_vars(void);
+void Eval_eval_w_runtime(void);
+void Eval_component_in_entity_in_with_scope(void);
 
 // Testsuite 'Template'
 void Template_template_no_scope(void);
@@ -293,12 +306,21 @@ void Template_module_w_nested_template(void);
 void Template_template_w_pair_w_this_var(void);
 void Template_prop_without_using_meta(void);
 void Template_hoist_var(void);
+void Template_hoist_vars_nested(void);
+void Template_hoist_vars_nested_w_masked(void);
 void Template_anonymous_template_instance(void);
 void Template_anonymous_template_instance_no_scope(void);
 void Template_anonymous_template_instance_w_prop(void);
 void Template_anonymous_template_instance_w_prop_no_scope(void);
 void Template_with_after_template(void);
 void Template_with_in_scope_after_template(void);
+void Template_prefab_w_template(void);
+void Template_template_in_scope(void);
+void Template_nested_templates_in_prefab(void);
+void Template_entity_w_2_template_instances(void);
+void Template_template_w_prefab_and_instance(void);
+void Template_template_w_with_var(void);
+void Template_template_w_with_prop(void);
 
 // Testsuite 'Error'
 void Error_multi_line_comment_after_newline_before_newline_scope_open(void);
@@ -364,8 +386,24 @@ void Error_template_redeclare_const_as_const(void);
 void Error_run_template_after_error(void);
 void Error_update_template_after_error(void);
 void Error_template_in_template(void);
+void Error_unterminated_binary(void);
+void Error_tag_in_with_scope(void);
+void Error_tag_in_with_scope_2(void);
+void Error_pair_tag_in_with_scope_2(void);
+void Error_component_in_with_scope(void);
+void Error_component_in_with_scope_2(void);
+void Error_component_in_with_scope_3(void);
+void Error_component_in_with_scope_4(void);
+void Error_component_in_with_scope_5(void);
+void Error_component_in_with_scope_nested(void);
+void Error_component_in_with_scope_after_entity(void);
+void Error_component_in_with_var_scope(void);
+void Error_component_in_with_in_template(void);
+void Error_reload_script_w_component_w_error(void);
+void Error_reload_script_w_component_w_error_again(void);
 
 // Testsuite 'Expr'
+void Expr_setup(void);
 void Expr_add_2_int_literals(void);
 void Expr_add_2_int_literals_twice(void);
 void Expr_sub_2_int_literals(void);
@@ -409,6 +447,13 @@ void Expr_double_paren_add_add(void);
 void Expr_double_paren_literal(void);
 void Expr_lparen_add_add_rparen_mul_lparen_add_add_rparen(void);
 void Expr_float_result_add_2_int_literals(void);
+void Expr_struct_result_implicit_members(void);
+void Expr_struct_result_explicit_members(void);
+void Expr_struct_result_explicit_members_reverse(void);
+void Expr_struct_result_nested_implicit_members(void);
+void Expr_struct_result_nested_explicit_members(void);
+void Expr_struct_result_nested_explicit_members_reverse(void);
+void Expr_struct_result_nested_explicit_dotmembers(void);
 void Expr_struct_result_add_2_int_literals(void);
 void Expr_struct_result_add_2_2_fields_int_literals(void);
 void Expr_struct_result_add_3_int_literals(void);
@@ -416,6 +461,12 @@ void Expr_struct_result_lparen_int_rparen(void);
 void Expr_add_to_var(void);
 void Expr_add_var_to(void);
 void Expr_var_member(void);
+void Expr_var_member_member(void);
+void Expr_var_element(void);
+void Expr_var_element_element(void);
+void Expr_var_member_element(void);
+void Expr_var_member_element_inline(void);
+void Expr_var_element_member(void);
 void Expr_bool_cond_and_bool(void);
 void Expr_bool_cond_or_bool(void);
 void Expr_int_cond_and_int(void);
@@ -449,9 +500,18 @@ void Expr_min_lparen_int_add_int_rparen(void);
 void Expr_min_var(void);
 void Expr_min_lparen_int_rparen_to_i64(void);
 void Expr_min_lparen_int_rparen_to_i32(void);
+void Expr_min_var_add(void);
+void Expr_min_var_sub(void);
+void Expr_min_var_mul(void);
+void Expr_min_var_div(void);
 void Expr_struct_w_min_var(void);
 void Expr_struct_w_min_lparen_int_rparen(void);
 void Expr_struct_w_min_lparen_var_rparen(void);
+void Expr_not_bool(void);
+void Expr_not_int(void);
+void Expr_not_paren_int(void);
+void Expr_not_paren_expr(void);
+void Expr_not_var(void);
 void Expr_shift_left_int(void);
 void Expr_shift_right_int(void);
 void Expr_shift_left_int_add_int(void);
@@ -465,11 +525,23 @@ void Expr_entity_path_expr(void);
 void Expr_entity_parent_func(void);
 void Expr_entity_name_func(void);
 void Expr_entity_doc_name_func(void);
+void Expr_entity_path_func(void);
 void Expr_entity_chain_func(void);
 void Expr_var_parent_func(void);
 void Expr_var_name_func(void);
 void Expr_var_doc_name_func(void);
 void Expr_var_chain_func(void);
+void Expr_root_func_void_return(void);
+void Expr_root_func(void);
+void Expr_scoped_func(void);
+void Expr_root_func_w_1_arg(void);
+void Expr_root_func_w_1_arg_expr(void);
+void Expr_root_func_w_2_args(void);
+void Expr_root_func_w_enum_arg(void);
+void Expr_root_func_w_struct_arg(void);
+void Expr_root_func_w_array_arg(void);
+void Expr_root_func_mismatching_args(void);
+void Expr_method_w_1_arg(void);
 void Expr_interpolate_string_w_i32_var(void);
 void Expr_interpolate_string_w_string_var(void);
 void Expr_interpolate_string_w_entity_var(void);
@@ -494,6 +566,35 @@ void Expr_iter_to_vars_w_1_query_var(void);
 void Expr_iter_to_vars_w_2_query_vars(void);
 void Expr_component_expr(void);
 void Expr_component_member_expr(void);
+void Expr_component_elem_expr(void);
+void Expr_component_expr_string(void);
+void Expr_component_member_expr_string(void);
+void Expr_component_elem_expr_string(void);
+void Expr_component_inline_elem_expr_string(void);
+void Expr_var_expr(void);
+void Expr_var_member_expr(void);
+void Expr_var_elem_expr(void);
+void Expr_var_expr_string(void);
+void Expr_var_member_expr_string(void);
+void Expr_var_elem_expr_string(void);
+void Expr_var_inline_elem_expr_string(void);
+void Expr_var_expr_no_desc(void);
+void Expr_var_expr_desc_w_no_vars(void);
+void Expr_parse_eval(void);
+void Expr_parse_eval_multiple_times(void);
+void Expr_parse_error(void);
+void Expr_parse_eval_error(void);
+void Expr_remainder_after_number(void);
+void Expr_remainder_after_string(void);
+void Expr_remainder_after_unary(void);
+void Expr_remainder_after_binary(void);
+void Expr_remainder_after_parens(void);
+void Expr_remainder_after_initializer(void);
+void Expr_remainder_after_collection_initializer(void);
+void Expr_remainder_after_initializer_w_newlines(void);
+void Expr_remainder_after_initializer_before_parens(void);
+void Expr_space_at_start(void);
+void Expr_newline_at_start(void);
 
 // Testsuite 'Vars'
 void Vars_declare_1_var(void);
@@ -569,6 +670,7 @@ void Serialize_escape_string_w_2_trailing_newlines(void);
 void Serialize_escape_string_w_delim(void);
 
 // Testsuite 'Deserialize'
+void Deserialize_setup(void);
 void Deserialize_bool(void);
 void Deserialize_byte(void);
 void Deserialize_char(void);
@@ -609,6 +711,10 @@ void Deserialize_struct_bitmask(void);
 void Deserialize_struct_i32(void);
 void Deserialize_struct_i32_neg(void);
 void Deserialize_struct_i32_i32(void);
+void Deserialize_struct_string(void);
+void Deserialize_struct_string_from_name(void);
+void Deserialize_struct_string_from_path(void);
+void Deserialize_struct_string_from_var(void);
 void Deserialize_struct_entity(void);
 void Deserialize_struct_id(void);
 void Deserialize_struct_nested_i32(void);
@@ -621,6 +727,13 @@ void Deserialize_struct_member_nested_i32(void);
 void Deserialize_struct_member_nested_i32_i32(void);
 void Deserialize_struct_member_2_nested_i32_i32(void);
 void Deserialize_struct_member_2_nested_i32_i32_reverse(void);
+void Deserialize_struct_from_var(void);
+void Deserialize_struct_member_from_var(void);
+void Deserialize_struct_member_auto_var(void);
+void Deserialize_struct_member_auto_vars(void);
+void Deserialize_struct_nested_member_auto_var(void);
+void Deserialize_struct_nested_member_auto_vars(void);
+void Deserialize_struct_auto_vars(void);
 void Deserialize_struct_i32_array_3(void);
 void Deserialize_struct_struct_i32_array_3(void);
 void Deserialize_struct_struct_i32_i32_array_3(void);
@@ -628,6 +741,12 @@ void Deserialize_struct_w_array_type_i32_i32(void);
 void Deserialize_struct_w_array_type_struct(void);
 void Deserialize_struct_w_2_array_type_i32_i32(void);
 void Deserialize_struct_w_2_array_type_struct(void);
+void Deserialize_struct_w_newline(void);
+void Deserialize_struct_w_members_newline(void);
+void Deserialize_struct_w_trailing_comma(void);
+void Deserialize_array_w_trailing_comma(void);
+void Deserialize_array_i32_2(void);
+void Deserialize_array_string_2(void);
 void Deserialize_discover_type_int(void);
 void Deserialize_discover_type_negative_int(void);
 void Deserialize_discover_type_float(void);
@@ -1149,6 +1268,38 @@ bake_test_case Eval_testcases[] = {
         Eval_assign_pair_component_in_script_update
     },
     {
+        "assign_pair_component_w_newline",
+        Eval_assign_pair_component_w_newline
+    },
+    {
+        "assign_pair_component_w_newline_and_spaces",
+        Eval_assign_pair_component_w_newline_and_spaces
+    },
+    {
+        "assign_pair_component_w_empty",
+        Eval_assign_pair_component_w_empty
+    },
+    {
+        "assign_pair_component_w_newline_empty",
+        Eval_assign_pair_component_w_newline_empty
+    },
+    {
+        "assign_pair_component_w_newline_and_spaces_empty",
+        Eval_assign_pair_component_w_newline_and_spaces_empty
+    },
+    {
+        "assign_pair_component_after_component",
+        Eval_assign_pair_component_after_component
+    },
+    {
+        "assign_pair_component_after_int_component",
+        Eval_assign_pair_component_after_int_component
+    },
+    {
+        "assign_pair_component_after_entity_component",
+        Eval_assign_pair_component_after_entity_component
+    },
+    {
         "set_entity_names",
         Eval_set_entity_names
     },
@@ -1391,10 +1542,6 @@ bake_test_case Eval_testcases[] = {
     {
         "pair_w_tgt_var",
         Eval_pair_w_tgt_var
-    },
-    {
-        "component_in_with_scope_in_scope",
-        Eval_component_in_with_scope_in_scope
     },
     {
         "array_component",
@@ -1651,6 +1798,30 @@ bake_test_case Eval_testcases[] = {
     {
         "update_template_w_tag",
         Eval_update_template_w_tag
+    },
+    {
+        "assign_call_func",
+        Eval_assign_call_func
+    },
+    {
+        "assign_call_scoped_func",
+        Eval_assign_call_scoped_func
+    },
+    {
+        "assign_call_scoped_func_w_using",
+        Eval_assign_call_scoped_func_w_using
+    },
+    {
+        "eval_w_vars",
+        Eval_eval_w_vars
+    },
+    {
+        "eval_w_runtime",
+        Eval_eval_w_runtime
+    },
+    {
+        "component_in_entity_in_with_scope",
+        Eval_component_in_entity_in_with_scope
     }
 };
 
@@ -1776,6 +1947,14 @@ bake_test_case Template_testcases[] = {
         Template_hoist_var
     },
     {
+        "hoist_vars_nested",
+        Template_hoist_vars_nested
+    },
+    {
+        "hoist_vars_nested_w_masked",
+        Template_hoist_vars_nested_w_masked
+    },
+    {
         "anonymous_template_instance",
         Template_anonymous_template_instance
     },
@@ -1798,6 +1977,34 @@ bake_test_case Template_testcases[] = {
     {
         "with_in_scope_after_template",
         Template_with_in_scope_after_template
+    },
+    {
+        "prefab_w_template",
+        Template_prefab_w_template
+    },
+    {
+        "template_in_scope",
+        Template_template_in_scope
+    },
+    {
+        "nested_templates_in_prefab",
+        Template_nested_templates_in_prefab
+    },
+    {
+        "entity_w_2_template_instances",
+        Template_entity_w_2_template_instances
+    },
+    {
+        "template_w_prefab_and_instance",
+        Template_template_w_prefab_and_instance
+    },
+    {
+        "template_w_with_var",
+        Template_template_w_with_var
+    },
+    {
+        "template_w_with_prop",
+        Template_template_w_with_prop
     }
 };
 
@@ -2053,6 +2260,66 @@ bake_test_case Error_testcases[] = {
     {
         "template_in_template",
         Error_template_in_template
+    },
+    {
+        "unterminated_binary",
+        Error_unterminated_binary
+    },
+    {
+        "tag_in_with_scope",
+        Error_tag_in_with_scope
+    },
+    {
+        "tag_in_with_scope_2",
+        Error_tag_in_with_scope_2
+    },
+    {
+        "pair_tag_in_with_scope_2",
+        Error_pair_tag_in_with_scope_2
+    },
+    {
+        "component_in_with_scope",
+        Error_component_in_with_scope
+    },
+    {
+        "component_in_with_scope_2",
+        Error_component_in_with_scope_2
+    },
+    {
+        "component_in_with_scope_3",
+        Error_component_in_with_scope_3
+    },
+    {
+        "component_in_with_scope_4",
+        Error_component_in_with_scope_4
+    },
+    {
+        "component_in_with_scope_5",
+        Error_component_in_with_scope_5
+    },
+    {
+        "component_in_with_scope_nested",
+        Error_component_in_with_scope_nested
+    },
+    {
+        "component_in_with_scope_after_entity",
+        Error_component_in_with_scope_after_entity
+    },
+    {
+        "component_in_with_var_scope",
+        Error_component_in_with_var_scope
+    },
+    {
+        "component_in_with_in_template",
+        Error_component_in_with_in_template
+    },
+    {
+        "reload_script_w_component_w_error",
+        Error_reload_script_w_component_w_error
+    },
+    {
+        "reload_script_w_component_w_error_again",
+        Error_reload_script_w_component_w_error_again
     }
 };
 
@@ -2230,6 +2497,34 @@ bake_test_case Expr_testcases[] = {
         Expr_float_result_add_2_int_literals
     },
     {
+        "struct_result_implicit_members",
+        Expr_struct_result_implicit_members
+    },
+    {
+        "struct_result_explicit_members",
+        Expr_struct_result_explicit_members
+    },
+    {
+        "struct_result_explicit_members_reverse",
+        Expr_struct_result_explicit_members_reverse
+    },
+    {
+        "struct_result_nested_implicit_members",
+        Expr_struct_result_nested_implicit_members
+    },
+    {
+        "struct_result_nested_explicit_members",
+        Expr_struct_result_nested_explicit_members
+    },
+    {
+        "struct_result_nested_explicit_members_reverse",
+        Expr_struct_result_nested_explicit_members_reverse
+    },
+    {
+        "struct_result_nested_explicit_dotmembers",
+        Expr_struct_result_nested_explicit_dotmembers
+    },
+    {
         "struct_result_add_2_int_literals",
         Expr_struct_result_add_2_int_literals
     },
@@ -2256,6 +2551,30 @@ bake_test_case Expr_testcases[] = {
     {
         "var_member",
         Expr_var_member
+    },
+    {
+        "var_member_member",
+        Expr_var_member_member
+    },
+    {
+        "var_element",
+        Expr_var_element
+    },
+    {
+        "var_element_element",
+        Expr_var_element_element
+    },
+    {
+        "var_member_element",
+        Expr_var_member_element
+    },
+    {
+        "var_member_element_inline",
+        Expr_var_member_element_inline
+    },
+    {
+        "var_element_member",
+        Expr_var_element_member
     },
     {
         "bool_cond_and_bool",
@@ -2390,6 +2709,22 @@ bake_test_case Expr_testcases[] = {
         Expr_min_lparen_int_rparen_to_i32
     },
     {
+        "min_var_add",
+        Expr_min_var_add
+    },
+    {
+        "min_var_sub",
+        Expr_min_var_sub
+    },
+    {
+        "min_var_mul",
+        Expr_min_var_mul
+    },
+    {
+        "min_var_div",
+        Expr_min_var_div
+    },
+    {
         "struct_w_min_var",
         Expr_struct_w_min_var
     },
@@ -2400,6 +2735,26 @@ bake_test_case Expr_testcases[] = {
     {
         "struct_w_min_lparen_var_rparen",
         Expr_struct_w_min_lparen_var_rparen
+    },
+    {
+        "not_bool",
+        Expr_not_bool
+    },
+    {
+        "not_int",
+        Expr_not_int
+    },
+    {
+        "not_paren_int",
+        Expr_not_paren_int
+    },
+    {
+        "not_paren_expr",
+        Expr_not_paren_expr
+    },
+    {
+        "not_var",
+        Expr_not_var
     },
     {
         "shift_left_int",
@@ -2454,6 +2809,10 @@ bake_test_case Expr_testcases[] = {
         Expr_entity_doc_name_func
     },
     {
+        "entity_path_func",
+        Expr_entity_path_func
+    },
+    {
         "entity_chain_func",
         Expr_entity_chain_func
     },
@@ -2472,6 +2831,50 @@ bake_test_case Expr_testcases[] = {
     {
         "var_chain_func",
         Expr_var_chain_func
+    },
+    {
+        "root_func_void_return",
+        Expr_root_func_void_return
+    },
+    {
+        "root_func",
+        Expr_root_func
+    },
+    {
+        "scoped_func",
+        Expr_scoped_func
+    },
+    {
+        "root_func_w_1_arg",
+        Expr_root_func_w_1_arg
+    },
+    {
+        "root_func_w_1_arg_expr",
+        Expr_root_func_w_1_arg_expr
+    },
+    {
+        "root_func_w_2_args",
+        Expr_root_func_w_2_args
+    },
+    {
+        "root_func_w_enum_arg",
+        Expr_root_func_w_enum_arg
+    },
+    {
+        "root_func_w_struct_arg",
+        Expr_root_func_w_struct_arg
+    },
+    {
+        "root_func_w_array_arg",
+        Expr_root_func_w_array_arg
+    },
+    {
+        "root_func_mismatching_args",
+        Expr_root_func_mismatching_args
+    },
+    {
+        "method_w_1_arg",
+        Expr_method_w_1_arg
     },
     {
         "interpolate_string_w_i32_var",
@@ -2568,6 +2971,122 @@ bake_test_case Expr_testcases[] = {
     {
         "component_member_expr",
         Expr_component_member_expr
+    },
+    {
+        "component_elem_expr",
+        Expr_component_elem_expr
+    },
+    {
+        "component_expr_string",
+        Expr_component_expr_string
+    },
+    {
+        "component_member_expr_string",
+        Expr_component_member_expr_string
+    },
+    {
+        "component_elem_expr_string",
+        Expr_component_elem_expr_string
+    },
+    {
+        "component_inline_elem_expr_string",
+        Expr_component_inline_elem_expr_string
+    },
+    {
+        "var_expr",
+        Expr_var_expr
+    },
+    {
+        "var_member_expr",
+        Expr_var_member_expr
+    },
+    {
+        "var_elem_expr",
+        Expr_var_elem_expr
+    },
+    {
+        "var_expr_string",
+        Expr_var_expr_string
+    },
+    {
+        "var_member_expr_string",
+        Expr_var_member_expr_string
+    },
+    {
+        "var_elem_expr_string",
+        Expr_var_elem_expr_string
+    },
+    {
+        "var_inline_elem_expr_string",
+        Expr_var_inline_elem_expr_string
+    },
+    {
+        "var_expr_no_desc",
+        Expr_var_expr_no_desc
+    },
+    {
+        "var_expr_desc_w_no_vars",
+        Expr_var_expr_desc_w_no_vars
+    },
+    {
+        "parse_eval",
+        Expr_parse_eval
+    },
+    {
+        "parse_eval_multiple_times",
+        Expr_parse_eval_multiple_times
+    },
+    {
+        "parse_error",
+        Expr_parse_error
+    },
+    {
+        "parse_eval_error",
+        Expr_parse_eval_error
+    },
+    {
+        "remainder_after_number",
+        Expr_remainder_after_number
+    },
+    {
+        "remainder_after_string",
+        Expr_remainder_after_string
+    },
+    {
+        "remainder_after_unary",
+        Expr_remainder_after_unary
+    },
+    {
+        "remainder_after_binary",
+        Expr_remainder_after_binary
+    },
+    {
+        "remainder_after_parens",
+        Expr_remainder_after_parens
+    },
+    {
+        "remainder_after_initializer",
+        Expr_remainder_after_initializer
+    },
+    {
+        "remainder_after_collection_initializer",
+        Expr_remainder_after_collection_initializer
+    },
+    {
+        "remainder_after_initializer_w_newlines",
+        Expr_remainder_after_initializer_w_newlines
+    },
+    {
+        "remainder_after_initializer_before_parens",
+        Expr_remainder_after_initializer_before_parens
+    },
+    {
+        "space_at_start",
+        Expr_space_at_start
+    },
+    {
+        "newline_at_start",
+        Expr_newline_at_start
     }
 };
 
@@ -3015,6 +3534,22 @@ bake_test_case Deserialize_testcases[] = {
         Deserialize_struct_i32_i32
     },
     {
+        "struct_string",
+        Deserialize_struct_string
+    },
+    {
+        "struct_string_from_name",
+        Deserialize_struct_string_from_name
+    },
+    {
+        "struct_string_from_path",
+        Deserialize_struct_string_from_path
+    },
+    {
+        "struct_string_from_var",
+        Deserialize_struct_string_from_var
+    },
+    {
         "struct_entity",
         Deserialize_struct_entity
     },
@@ -3063,6 +3598,34 @@ bake_test_case Deserialize_testcases[] = {
         Deserialize_struct_member_2_nested_i32_i32_reverse
     },
     {
+        "struct_from_var",
+        Deserialize_struct_from_var
+    },
+    {
+        "struct_member_from_var",
+        Deserialize_struct_member_from_var
+    },
+    {
+        "struct_member_auto_var",
+        Deserialize_struct_member_auto_var
+    },
+    {
+        "struct_member_auto_vars",
+        Deserialize_struct_member_auto_vars
+    },
+    {
+        "struct_nested_member_auto_var",
+        Deserialize_struct_nested_member_auto_var
+    },
+    {
+        "struct_nested_member_auto_vars",
+        Deserialize_struct_nested_member_auto_vars
+    },
+    {
+        "struct_auto_vars",
+        Deserialize_struct_auto_vars
+    },
+    {
         "struct_i32_array_3",
         Deserialize_struct_i32_array_3
     },
@@ -3089,6 +3652,30 @@ bake_test_case Deserialize_testcases[] = {
     {
         "struct_w_2_array_type_struct",
         Deserialize_struct_w_2_array_type_struct
+    },
+    {
+        "struct_w_newline",
+        Deserialize_struct_w_newline
+    },
+    {
+        "struct_w_members_newline",
+        Deserialize_struct_w_members_newline
+    },
+    {
+        "struct_w_trailing_comma",
+        Deserialize_struct_w_trailing_comma
+    },
+    {
+        "array_w_trailing_comma",
+        Deserialize_array_w_trailing_comma
+    },
+    {
+        "array_i32_2",
+        Deserialize_array_i32_2
+    },
+    {
+        "array_string_2",
+        Deserialize_array_string_2
     },
     {
         "discover_type_int",
@@ -3148,35 +3735,45 @@ bake_test_case Deserialize_testcases[] = {
     }
 };
 
+const char* Expr_folding_param[] = {"enabled", "disabled"};
+bake_test_param Expr_params[] = {
+    {"folding", (char**)Expr_folding_param, 2}
+};
+const char* Deserialize_folding_param[] = {"enabled", "disabled"};
+bake_test_param Deserialize_params[] = {
+    {"folding", (char**)Deserialize_folding_param, 2}
+};
 
 static bake_test_suite suites[] = {
     {
         "Eval",
         NULL,
         NULL,
-        252,
+        265,
         Eval_testcases
     },
     {
         "Template",
         NULL,
         NULL,
-        36,
+        45,
         Template_testcases
     },
     {
         "Error",
         NULL,
         NULL,
-        63,
+        78,
         Error_testcases
     },
     {
         "Expr",
+        Expr_setup,
         NULL,
-        NULL,
-        128,
-        Expr_testcases
+        191,
+        Expr_testcases,
+        1,
+        Expr_params
     },
     {
         "Vars",
@@ -3194,10 +3791,12 @@ static bake_test_suite suites[] = {
     },
     {
         "Deserialize",
+        Deserialize_setup,
         NULL,
-        NULL,
-        73,
-        Deserialize_testcases
+        90,
+        Deserialize_testcases,
+        1,
+        Deserialize_params
     }
 };
 

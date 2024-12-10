@@ -145,12 +145,12 @@ char* ecs_script_string_interpolate(
                 goto error;
             }
 
-            ecs_script_expr_run_desc_t expr_desc = { 
+            ecs_expr_eval_desc_t expr_desc = { 
                 .vars = ECS_CONST_CAST(ecs_script_vars_t*, vars) 
             };
 
             ecs_value_t expr_result = {0};
-            if (!ecs_script_expr_run(world, token, &expr_result, &expr_desc)) {
+            if (!ecs_expr_run(world, token, &expr_result, &expr_desc)) {
                 goto error;
             }
 

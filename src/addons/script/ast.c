@@ -8,8 +8,6 @@
 #ifdef FLECS_SCRIPT
 #include "script.h"
 
-#define flecs_ast_strdup(parser, str)\
-    (str ? flecs_strdup(&parser->script->allocator, str) : NULL)
 #define flecs_ast_new(parser, T, kind)\
     (T*)flecs_ast_new_(parser, ECS_SIZEOF(T), kind)
 #define flecs_ast_vec(parser, vec, T) \
@@ -25,7 +23,8 @@ void* flecs_ast_new_(
 {
     ecs_assert(parser->script != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_allocator_t *a = &parser->script->allocator;
-    ecs_script_node_t *result = flecs_calloc(a, size);
+    ecs_script_node_t *result = flecs_calloc_w_dbg_info(
+        a, size, "ecs_script_node_t");
     result->kind = kind;
     result->pos = parser->pos;
     return result;
