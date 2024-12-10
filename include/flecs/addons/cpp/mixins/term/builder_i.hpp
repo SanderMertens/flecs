@@ -7,7 +7,7 @@
 
 #include "../../utils/signature.hpp"
 
-namespace flecs 
+FLECS_API_NAMESPACE namespace flecs
 {
 
 /** Term identifier builder.

@@ -6,8 +6,10 @@
  * and their names. This is used to automatically register enum constants.
  */
 
+#ifndef FLECS_NO_STD_INCLUDE
 #include <string.h>
 #include <limits>
+#endif
 
 #define FLECS_ENUM_MAX(T) _::to_constant<T, 128>::value
 #define FLECS_ENUM_MAX_COUNT (FLECS_ENUM_MAX(int) + 1)
@@ -44,14 +46,17 @@ struct to_constant {
 
 template <typename E, underlying_type_t<E> Value>
 constexpr E to_constant<E, Value>::value;
-}
+} // namespace _
+} // namespace flecs
+
+FLECS_API_NAMESPACE namespace flecs {
 
 /** Convenience type with enum reflection data */
 template <typename E>
 struct enum_data;
 
 template <typename E>
-static enum_data<E> enum_type(flecs::world_t *world);
+FLECS_STATIC_IN_HEADER enum_data<E> enum_type(flecs::world_t *world);
 
 template <typename E>
 struct enum_last {
@@ -60,12 +65,15 @@ struct enum_last {
 
 /* Utility macro to override enum_last trait */
 #define FLECS_ENUM_LAST(T, Last)\
-    namespace flecs {\
+    FLECS_API_NAMESPACE namespace flecs {\
     template<>\
     struct enum_last<T> {\
         static constexpr T value = Last;\
     };\
     }
+} // namespace flecs
+
+namespace flecs {
 
 namespace _ {
 
@@ -381,15 +389,20 @@ public:
 template <typename E>
 enum_data_impl<E> enum_type<E>::data;
 
+FLECS_API_DEPENDENCY
 template <typename E, if_t< is_enum<E>::value > = 0>
-inline static void init_enum(flecs::world_t *world, flecs::entity_t id) {
+inline FLECS_STATIC_IN_HEADER void init_enum(flecs::world_t *world, flecs::entity_t id) {
     _::enum_type<E>::get().init(world, id);
 }
 
+FLECS_API_DEPENDENCY
 template <typename E, if_not_t< is_enum<E>::value > = 0>
-inline static void init_enum(flecs::world_t*, flecs::entity_t) { }
+inline FLECS_STATIC_IN_HEADER void init_enum(flecs::world_t*, flecs::entity_t) { }
 
 } // namespace _
+} // namespace flecs
+
+FLECS_API_NAMESPACE namespace flecs {
 
 /** Enumeration type data wrapper with world pointer */
 template <typename E>

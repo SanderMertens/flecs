@@ -5,7 +5,7 @@
 
 #pragma once
 
-namespace flecs {
+FLECS_API_NAMESPACE namespace flecs {
 
 /**
  * @defgroup cpp_observers Observers
@@ -16,6 +16,7 @@ namespace flecs {
  */
 
 struct observer;
+
 
 template<typename ... Components>
 struct observer_builder;
