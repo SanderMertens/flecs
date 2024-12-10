@@ -6,6 +6,7 @@
 #include "json.h"
 
 #ifdef FLECS_JSON
+#include "../serialize/serialize.h"
 
 static
 int json_typeinfo_ser_type(
@@ -252,7 +253,7 @@ int json_typeinfo_ser_type_op(
     case EcsOpId:
     case EcsOpString:
         if (json_typeinfo_ser_primitive( 
-            flecs_json_op_to_primitive_kind(op->kind), str))
+            flecs_op_to_primitive_kind(op->kind), str))
         {
             ecs_throw(ECS_INTERNAL_ERROR, NULL);
         }

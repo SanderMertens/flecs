@@ -187,6 +187,7 @@
 // #define FLECS_C          /**< C API convenience macros, always enabled */
 #define FLECS_CPP           /**< C++ API */
 #define FLECS_MODULE        /**< Module support */
+#define FLECS_SERIALIZE     /**< API for serializing/visiting entity-component graph */
 #define FLECS_SCRIPT        /**< ECS data definition format */
 #define FLECS_STATS         /**< Track runtime statistics */
 #define FLECS_METRICS       /**< Expose component data as statistics */

@@ -154,6 +154,13 @@
 #include "../addons/json.h"
 #endif
 
+#ifdef FLECS_SERIALIZE
+#ifdef FLECS_NO_SERIALIZE
+#error "FLECS_NO_SERIALIZE failed: SERIALIZE is required by other addons"
+#endif
+#include "../addons/serialize.h"
+#endif
+
 #ifdef FLECS_UNITS
 #ifdef FLECS_NO_UNITS
 #error "FLECS_NO_UNITS failed: UNITS is required by other addons"
