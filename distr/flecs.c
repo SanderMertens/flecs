@@ -58960,6 +58960,8 @@ void flecs_script_template_import(
     ECS_COMPONENT_DEFINE(world, EcsTemplateSetEvent);
     ECS_TAG_DEFINE(world, EcsTemplate);
 
+    ecs_add_id(world, EcsTemplate, EcsPairIsTag);
+
     ecs_set_hooks(world, EcsTemplateSetEvent, {
         .ctor = flecs_default_ctor,
         .move = ecs_move(EcsTemplateSetEvent),
@@ -74612,7 +74614,9 @@ const char* flecs_script_parse_lhs(
 
         case EcsTokSub: {
             ecs_expr_binary_t *node = flecs_expr_binary(parser);
-            pos = flecs_script_parse_expr(parser, pos, 0, &node->right);
+            
+            /* Use EcsTokNot as it has the same precedence as a unary - */
+            pos = flecs_script_parse_expr(parser, pos, EcsTokNot, &node->right);
             if (!pos) {
                 flecs_script_parser_expr_free(parser, (ecs_expr_node_t*)node);
                 goto error;

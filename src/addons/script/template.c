@@ -538,6 +538,8 @@ void flecs_script_template_import(
     ECS_COMPONENT_DEFINE(world, EcsTemplateSetEvent);
     ECS_TAG_DEFINE(world, EcsTemplate);
 
+    ecs_add_id(world, EcsTemplate, EcsPairIsTag);
+
     ecs_set_hooks(world, EcsTemplateSetEvent, {
         .ctor = flecs_default_ctor,
         .move = ecs_move(EcsTemplateSetEvent),
