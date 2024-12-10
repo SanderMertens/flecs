@@ -460,14 +460,21 @@ int flecs_script_eval_entity(
     }
 
     if (v->template) {
+        bool old_is_with_scope = v->is_with_scope;
+        v->is_with_scope = false;
         if (ecs_script_visit_node(v, node->scope)) {
             return -1;
         }
+        v->is_with_scope = old_is_with_scope;
         return 0;
     }
 
     node->eval = flecs_script_create_entity(v, node->name);
     node->parent = v->entity;
+
+    if (v->template_entity) {
+        ecs_add_pair(v->world, node->eval, EcsTemplate, v->template_entity);
+    }
 
     if (is_slot) {
         ecs_entity_t parent = ecs_get_target(
@@ -511,9 +518,16 @@ int flecs_script_eval_entity(
         ecs_vec_clear(&v->r->annot);
     }
 
+
+    bool old_is_with_scope = v->is_with_scope;
+    ecs_entity_t old_template_entity = v->template_entity;
+    v->is_with_scope = false;
+    v->template_entity = 0;
     if (ecs_script_visit_node(v, node->scope)) {
         return -1;
     }
+    v->template_entity = old_template_entity;
+    v->is_with_scope = old_is_with_scope;
 
     if (node->eval_kind) {
         if (!node->kind_w_expr) {
@@ -555,6 +569,11 @@ int flecs_script_eval_tag(
 
     if (v->template) {
         return 0;
+    }
+
+    if (v->is_with_scope) {
+        flecs_script_eval_error(v, node, "invalid component in with scope"); 
+        return -1;
     }
 
     if (!v->entity) {
@@ -604,8 +623,9 @@ int flecs_script_eval_component(
         return -1;
     }
 
-    if (v->template) {
-        return 0;
+    if (v->is_with_scope) {
+        flecs_script_eval_error(v, node, "invalid component in with scope"); 
+        return -1;
     }
 
     ecs_entity_t src = flecs_script_get_src(v, v->entity->eval, node->id.eval);
@@ -692,6 +712,11 @@ int flecs_script_eval_var_component(
 
     if (v->template) {
         return 0;
+    }
+
+    if (v->is_with_scope) {
+        flecs_script_eval_error(v, node, "invalid component in with scope"); 
+        return -1;
     }
 
     ecs_id_t var_id = var->value.type;
@@ -885,10 +910,15 @@ int flecs_script_eval_with(
         }
     }
 
+    bool old_is_with_scope = v->is_with_scope;
+    v->is_with_scope = true;
+
     if (ecs_script_visit_scope(v, node->scope)) {
         result = -1;
         goto error;
     }
+
+    v->is_with_scope = old_is_with_scope;
 
 error:
     flecs_script_with_set_count(a, v, prev_with_count);

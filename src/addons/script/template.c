@@ -9,6 +9,7 @@
 #include "script.h"
 
 ECS_COMPONENT_DECLARE(EcsTemplateSetEvent);
+ECS_DECLARE(EcsTemplate);
 
 static
 ECS_MOVE(EcsTemplateSetEvent, dst, src, {
@@ -130,6 +131,8 @@ void flecs_script_template_instantiate(
     ecs_vec_t prev_using = v.r->using;
     v.r->using = template->using_;
 
+    v.template_entity = template_entity;
+
     ecs_script_scope_t *scope = template->node->scope;
 
     /* Dummy entity node for instance */
@@ -146,6 +149,8 @@ void flecs_script_template_instantiate(
     int32_t i, m;
     for (i = 0; i < count; i ++) {
         v.parent = entities[i];
+        ecs_assert(ecs_is_alive(world, v.parent), ECS_INTERNAL_ERROR, NULL);
+
         instance_node.eval = entities[i];
 
         /* Create variables to hold template properties */
@@ -198,7 +203,7 @@ void flecs_on_template_set_event(
     EcsTemplateSetEvent *evt = it->param;
     ecs_world_t *world = it->real_world;
     ecs_assert(flecs_poly_is(world, ecs_world_t), ECS_INTERNAL_ERROR, NULL);
-  
+
     ecs_defer_suspend(world);
 
     flecs_script_template_instantiate(
@@ -309,10 +314,16 @@ int flecs_script_template_eval(
     ecs_script_node_t *node)
 {
     switch(node->kind) {
-    case EcsAstScope:
     case EcsAstTag:
     case EcsAstComponent:
     case EcsAstVarComponent:
+        if (v->is_with_scope) {
+            flecs_script_eval_error(v, node, "invalid component in with scope");
+            return -1;
+        }
+        break;
+    case EcsAstEntity:
+    case EcsAstScope:
     case EcsAstDefaultComponent:
     case EcsAstWithVar:
     case EcsAstWithTag:
@@ -321,20 +332,23 @@ int flecs_script_template_eval(
     case EcsAstModule:
     case EcsAstAnnotation:
     case EcsAstConst:
-    case EcsAstEntity:
     case EcsAstPairScope:
     case EcsAstTemplate:
         break;
     case EcsAstProp:
         return flecs_script_template_eval_prop(v, (ecs_script_var_node_t*)node);
-    case EcsAstWith:
+    case EcsAstWith: {
         if (ecs_script_visit_scope(v, ((ecs_script_with_t*)node)->expressions)) {
             return -1;
         }
+        bool old_is_with_scope = v->is_with_scope;
+        v->is_with_scope = true;
         if (ecs_script_visit_scope(v, ((ecs_script_with_t*)node)->scope)) {
             return -1;
         }
+        v->is_with_scope = old_is_with_scope;
         return 0;
+    }
     case EcsAstIf:
         if (ecs_script_visit_scope(v, ((ecs_script_if_t*)node)->if_true)) {
             return -1;
@@ -522,6 +536,7 @@ void flecs_script_template_import(
     ecs_world_t *world)
 {
     ECS_COMPONENT_DEFINE(world, EcsTemplateSetEvent);
+    ECS_TAG_DEFINE(world, EcsTemplate);
 
     ecs_set_hooks(world, EcsTemplateSetEvent, {
         .ctor = flecs_default_ctor,

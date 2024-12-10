@@ -5356,12 +5356,14 @@ typedef struct ecs_script_eval_visitor_t {
     ecs_script_visit_t base;
     ecs_world_t *world;
     ecs_script_runtime_t *r;
-    ecs_script_template_t *template;
+    ecs_script_template_t *template; /* Set when creating template */
+    ecs_entity_t template_entity; /* Set when creating template instance */
     ecs_entity_t module;
     ecs_entity_t parent;
     ecs_script_entity_t *entity;
     ecs_entity_t with_relationship;
     int32_t with_relationship_sp;
+    bool is_with_scope;
     ecs_script_vars_t *vars;
 } ecs_script_eval_visitor_t;
 
@@ -11293,6 +11295,8 @@ ecs_entity_t ecs_lookup_path_w_sep(
     }
 
     ecs_check(world != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_check(!parent || ecs_is_valid(world, parent), 
+        ECS_INVALID_PARAMETER, NULL);
     const ecs_world_t *stage = world;
     world = ecs_get_world(world);
 
@@ -57676,7 +57680,21 @@ void ecs_script_clear(
     ecs_entity_t script,
     ecs_entity_t instance)
 {
-    ecs_delete_with(world, flecs_script_tag(script, instance));
+    if (!instance) {
+        ecs_delete_with(world, ecs_pair_t(EcsScript, script));
+    } else {
+        ecs_defer_begin(world);
+        ecs_iter_t it = ecs_children(world, instance);
+        while (ecs_children_next(&it)) {
+            if (ecs_table_has_id(world, it.table, ecs_pair(EcsTemplate, script))) {
+                int32_t i, count = it.count;
+                for (i = 0; i < count; i ++) {
+                    ecs_delete(world, it.entities[i]);
+                }
+            }
+        }
+        ecs_defer_end(world);
+    }
 }
 
 int ecs_script_run(
@@ -57784,7 +57802,6 @@ int ecs_script_update(
     if (ecs_script_eval(s->script, NULL)) {
         ecs_script_free(s->script);
         s->script = NULL;
-
         ecs_delete_with(world, ecs_pair_t(EcsScript, e));
         result = -1;
     }
@@ -58414,6 +58431,7 @@ char* ecs_ptr_to_str(
 #ifdef FLECS_SCRIPT
 
 ECS_COMPONENT_DECLARE(EcsTemplateSetEvent);
+ECS_DECLARE(EcsTemplate);
 
 static
 ECS_MOVE(EcsTemplateSetEvent, dst, src, {
@@ -58535,6 +58553,8 @@ void flecs_script_template_instantiate(
     ecs_vec_t prev_using = v.r->using;
     v.r->using = template->using_;
 
+    v.template_entity = template_entity;
+
     ecs_script_scope_t *scope = template->node->scope;
 
     /* Dummy entity node for instance */
@@ -58551,6 +58571,8 @@ void flecs_script_template_instantiate(
     int32_t i, m;
     for (i = 0; i < count; i ++) {
         v.parent = entities[i];
+        ecs_assert(ecs_is_alive(world, v.parent), ECS_INTERNAL_ERROR, NULL);
+
         instance_node.eval = entities[i];
 
         /* Create variables to hold template properties */
@@ -58603,7 +58625,7 @@ void flecs_on_template_set_event(
     EcsTemplateSetEvent *evt = it->param;
     ecs_world_t *world = it->real_world;
     ecs_assert(flecs_poly_is(world, ecs_world_t), ECS_INTERNAL_ERROR, NULL);
-  
+
     ecs_defer_suspend(world);
 
     flecs_script_template_instantiate(
@@ -58714,10 +58736,16 @@ int flecs_script_template_eval(
     ecs_script_node_t *node)
 {
     switch(node->kind) {
-    case EcsAstScope:
     case EcsAstTag:
     case EcsAstComponent:
     case EcsAstVarComponent:
+        if (v->is_with_scope) {
+            flecs_script_eval_error(v, node, "invalid component in with scope");
+            return -1;
+        }
+        break;
+    case EcsAstEntity:
+    case EcsAstScope:
     case EcsAstDefaultComponent:
     case EcsAstWithVar:
     case EcsAstWithTag:
@@ -58726,20 +58754,23 @@ int flecs_script_template_eval(
     case EcsAstModule:
     case EcsAstAnnotation:
     case EcsAstConst:
-    case EcsAstEntity:
     case EcsAstPairScope:
     case EcsAstTemplate:
         break;
     case EcsAstProp:
         return flecs_script_template_eval_prop(v, (ecs_script_var_node_t*)node);
-    case EcsAstWith:
+    case EcsAstWith: {
         if (ecs_script_visit_scope(v, ((ecs_script_with_t*)node)->expressions)) {
             return -1;
         }
+        bool old_is_with_scope = v->is_with_scope;
+        v->is_with_scope = true;
         if (ecs_script_visit_scope(v, ((ecs_script_with_t*)node)->scope)) {
             return -1;
         }
+        v->is_with_scope = old_is_with_scope;
         return 0;
+    }
     case EcsAstIf:
         if (ecs_script_visit_scope(v, ((ecs_script_if_t*)node)->if_true)) {
             return -1;
@@ -58796,18 +58827,23 @@ int flecs_script_template_hoist_vars(
     ecs_script_template_t *template,
     ecs_script_vars_t *vars)
 {
-    if (vars->parent) {
-        flecs_script_template_hoist_vars(v, template, vars);
-    }
-
     int32_t i, count = ecs_vec_count(&vars->vars);
     ecs_script_var_t *src_vars = ecs_vec_first(&vars->vars);
     for (i = 0; i < count; i ++) {
         ecs_script_var_t *src = &src_vars[i];
+        if (ecs_script_vars_lookup(template->vars, src->name)) {
+            /* If variable is masked, don't declare it twice */
+            continue;
+        }
         ecs_script_var_t *dst = ecs_script_vars_define_id(
             template->vars, src->name, src->value.type);
-        ecs_value_copy(v->world, 
+        ecs_assert(dst != NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_value_copy(v->world,
             src->value.type, dst->value.ptr, src->value.ptr);
+    }
+
+    if (vars->parent) {
+        flecs_script_template_hoist_vars(v, template, vars->parent);
     }
 
     return 0;
@@ -58922,6 +58958,7 @@ void flecs_script_template_import(
     ecs_world_t *world)
 {
     ECS_COMPONENT_DEFINE(world, EcsTemplateSetEvent);
+    ECS_TAG_DEFINE(world, EcsTemplate);
 
     ecs_set_hooks(world, EcsTemplateSetEvent, {
         .ctor = flecs_default_ctor,
@@ -60396,14 +60433,21 @@ int flecs_script_eval_entity(
     }
 
     if (v->template) {
+        bool old_is_with_scope = v->is_with_scope;
+        v->is_with_scope = false;
         if (ecs_script_visit_node(v, node->scope)) {
             return -1;
         }
+        v->is_with_scope = old_is_with_scope;
         return 0;
     }
 
     node->eval = flecs_script_create_entity(v, node->name);
     node->parent = v->entity;
+
+    if (v->template_entity) {
+        ecs_add_pair(v->world, node->eval, EcsTemplate, v->template_entity);
+    }
 
     if (is_slot) {
         ecs_entity_t parent = ecs_get_target(
@@ -60447,9 +60491,16 @@ int flecs_script_eval_entity(
         ecs_vec_clear(&v->r->annot);
     }
 
+
+    bool old_is_with_scope = v->is_with_scope;
+    ecs_entity_t old_template_entity = v->template_entity;
+    v->is_with_scope = false;
+    v->template_entity = 0;
     if (ecs_script_visit_node(v, node->scope)) {
         return -1;
     }
+    v->template_entity = old_template_entity;
+    v->is_with_scope = old_is_with_scope;
 
     if (node->eval_kind) {
         if (!node->kind_w_expr) {
@@ -60491,6 +60542,11 @@ int flecs_script_eval_tag(
 
     if (v->template) {
         return 0;
+    }
+
+    if (v->is_with_scope) {
+        flecs_script_eval_error(v, node, "invalid component in with scope"); 
+        return -1;
     }
 
     if (!v->entity) {
@@ -60540,8 +60596,9 @@ int flecs_script_eval_component(
         return -1;
     }
 
-    if (v->template) {
-        return 0;
+    if (v->is_with_scope) {
+        flecs_script_eval_error(v, node, "invalid component in with scope"); 
+        return -1;
     }
 
     ecs_entity_t src = flecs_script_get_src(v, v->entity->eval, node->id.eval);
@@ -60628,6 +60685,11 @@ int flecs_script_eval_var_component(
 
     if (v->template) {
         return 0;
+    }
+
+    if (v->is_with_scope) {
+        flecs_script_eval_error(v, node, "invalid component in with scope"); 
+        return -1;
     }
 
     ecs_id_t var_id = var->value.type;
@@ -60821,10 +60883,15 @@ int flecs_script_eval_with(
         }
     }
 
+    bool old_is_with_scope = v->is_with_scope;
+    v->is_with_scope = true;
+
     if (ecs_script_visit_scope(v, node->scope)) {
         result = -1;
         goto error;
     }
+
+    v->is_with_scope = old_is_with_scope;
 
 error:
     flecs_script_with_set_count(a, v, prev_with_count);
@@ -61784,6 +61851,21 @@ int ecs_script_ast_to_buf(
 error:
     ecs_strbuf_reset(buf);
     return - 1;
+}
+
+char* ecs_script_ast_node_to_str(
+    ecs_script_t *script,
+    ecs_script_node_t *node)
+{
+    ecs_strbuf_t buf = ECS_STRBUF_INIT;
+    ecs_check(script != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_script_str_visitor_t v = { .buf = &buf };
+
+    flecs_script_stmt_to_str(&v, node);
+
+    return ecs_strbuf_get(&buf);
+error:
+    return NULL;
 }
 
 char* ecs_script_ast_to_str(

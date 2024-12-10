@@ -6385,46 +6385,6 @@ void Eval_pair_w_tgt_var(void) {
     ecs_fini(world);
 }
 
-void Eval_component_in_with_scope_in_scope(void) {
-    ecs_world_t *world = ecs_init();
-
-    ECS_COMPONENT(world, Position);
-    ECS_TAG(world, Bar);
-
-    ecs_struct(world, {
-        .entity = ecs_id(Position),
-        .members = {
-            {"x", ecs_id(ecs_f32_t)},
-            {"y", ecs_id(ecs_f32_t)}
-        }
-    });
-
-    const char *expr =
-    LINE "foo {\n"
-    LINE "  Position: {10, 20}\n"
-    LINE "  with Position(30, 40) {\n"
-    LINE "    Bar\n"
-    LINE "  }\n"
-    LINE "}\n";
-
-    test_assert(ecs_script_run(world, NULL, expr) == 0);
-
-    ecs_entity_t foo = ecs_lookup(world, "foo");
-    test_assert(foo != 0);
-    ecs_entity_t bar = ecs_lookup(world, "Bar");
-    test_assert(bar != 0);
-
-    test_assert(ecs_has(world, foo, Position));
-    test_assert(ecs_has_id(world, foo, bar));
-
-    const Position *p = ecs_get(world, foo, Position);
-    test_assert(p != NULL);
-    test_int(p->x, 10);
-    test_int(p->y, 20);
-
-    ecs_fini(world);
-}
-
 void Eval_array_component(void) {
     ecs_world_t *world = ecs_init();
 
@@ -8836,6 +8796,44 @@ void Eval_eval_w_runtime(void) {
 
     ecs_script_runtime_free(rt);
     ecs_script_free(s);
+
+    ecs_fini(world);
+}
+
+void Eval_component_in_entity_in_with_scope(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "Position"}),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "Foo {}"
+    LINE "with Foo {"
+    LINE "  e {"
+    LINE "    Position: {10, 20}"
+    LINE "  }"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    test_assert(foo != 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    test_assert(ecs_has_id(world, e, foo));
+    test_assert(ecs_has(world, e, Position));
+
+    const Position *p = ecs_get(world, e, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
 
     ecs_fini(world);
 }
