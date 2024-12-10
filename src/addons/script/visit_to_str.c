@@ -401,21 +401,6 @@ error:
     return - 1;
 }
 
-char* ecs_script_ast_node_to_str(
-    ecs_script_t *script,
-    ecs_script_node_t *node)
-{
-    ecs_strbuf_t buf = ECS_STRBUF_INIT;
-    ecs_check(script != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_script_str_visitor_t v = { .buf = &buf };
-
-    flecs_script_stmt_to_str(&v, node);
-
-    return ecs_strbuf_get(&buf);
-error:
-    return NULL;
-}
-
 char* ecs_script_ast_to_str(
     ecs_script_t *script)
 {

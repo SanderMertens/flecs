@@ -196,6 +196,7 @@
                 "entity_init_w_set_1_comp_existing_defer",
                 "entity_init_w_set_1_comp_existing_empty_defer",
                 "entity_init_w_set_1_comp_1_tag_w_set_defer",
+                "entity_init_w_set_1_comp_suspend_defer",
                 "insert_1_comp",
                 "insert_2_comp",
                 "insert_1_comp_1_tag",

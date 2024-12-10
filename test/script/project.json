@@ -324,7 +324,9 @@
                 "template_in_scope",
                 "nested_templates_in_prefab",
                 "entity_w_2_template_instances",
-                "template_w_prefab_and_instance"
+                "template_w_prefab_and_instance",
+                "template_w_with_var",
+                "template_w_with_prop"
             ]
         }, {
             "id": "Error",
