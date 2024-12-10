@@ -2306,8 +2306,73 @@ void Template_template_w_with_prop(void) {
 
     const Position *p = ecs_get(world, child, Position);
     test_assert(p != NULL);
-    test_int(p->x, 10);
-    test_int(p->y, 20);
+    test_int(p->x, 30);
+    test_int(p->y, 40);
+
+    ecs_fini(world);
+}
+
+void Template_fold_const(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "template Foo {"
+    LINE "  prop size = i32: 10"
+    LINE "  const size_h = $size / 2"
+    LINE "  const size_h_2 = $size_h + 2"
+    LINE "  Position: {$size_h, $size_h_2}"
+    LINE "}"
+    LINE ""
+    LINE "Foo e1(6)"
+    LINE "Foo e2(10)"
+    LINE "Foo e3(16)"
+    ;
+
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    test_assert(foo != 0);
+
+    ecs_entity_t e1 = ecs_lookup(world, "e1");
+    ecs_entity_t e2 = ecs_lookup(world, "e2");
+    ecs_entity_t e3 = ecs_lookup(world, "e3");
+    test_assert(e1 != 0);
+    test_assert(e2 != 0);
+    test_assert(e3 != 0);
+    test_assert(ecs_has_id(world, e1, foo));
+    test_assert(ecs_has_id(world, e2, foo));
+    test_assert(ecs_has_id(world, e3, foo));
+
+    {
+        const Position *p = ecs_get(world, e1, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 3);
+        test_int(p->y, 5);
+    }
+
+    {
+        const Position *p = ecs_get(world, e2, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 5);
+        test_int(p->y, 7);
+    }
+
+    {
+        const Position *p = ecs_get(world, e3, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 8);
+        test_int(p->y, 10);
+    }
 
     ecs_fini(world);
 }

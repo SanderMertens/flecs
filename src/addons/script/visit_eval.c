@@ -1066,6 +1066,12 @@ int flecs_script_eval_const(
         flecs_free(&v->world->allocator, ti->size, value.ptr);
     }
 
+    /* If variable resolves to a constant expression, mark it as const so that
+     * its value can be folded. */
+    if (node->expr->kind == EcsExprValue) {
+        var->is_const = true;
+    }
+
     return 0;
 }
 

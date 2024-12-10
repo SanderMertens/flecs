@@ -53,6 +53,7 @@ typedef struct ecs_script_var_t {
     const char *name;
     ecs_value_t value;
     const ecs_type_info_t *type_info;
+    bool is_const;
 } ecs_script_var_t;
 
 /** Script variable scope. */

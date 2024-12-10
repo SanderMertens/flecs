@@ -3989,6 +3989,7 @@ void flecs_bootstrap(
     ecs_make_alive(world, EcsChildOf);
     ecs_make_alive(world, EcsFlecs);
     ecs_make_alive(world, EcsFlecsCore);
+    ecs_make_alive(world, EcsFlecsInternals);
     ecs_make_alive(world, EcsOnAdd);
     ecs_make_alive(world, EcsOnRemove);
     ecs_make_alive(world, EcsOnSet);
@@ -7526,6 +7527,8 @@ ecs_entity_t ecs_entity_init(
     /* Parent field takes precedence over scope */
     if (desc->parent) {
         scope = desc->parent;
+        ecs_check(ecs_is_valid(world, desc->parent), 
+            ECS_INVALID_PARAMETER, "ecs_entity_desc_t::parent is not valid");
     }
 
     /* Find or create entity */
@@ -59675,6 +59678,7 @@ ecs_script_var_t* ecs_script_vars_declare(
     var->value.ptr = NULL;
     var->value.type = 0;
     var->type_info = NULL;
+    var->is_const = false;
 
     flecs_name_index_ensure(&vars->var_index,
         flecs_ito(uint64_t, ecs_vec_count(&vars->vars)), name, 0, 0);
@@ -61039,6 +61043,12 @@ int flecs_script_eval_const(
         ecs_value_copy_w_type_info(v->world, ti, var->value.ptr, value.ptr);
         ecs_value_fini_w_type_info(v->world, ti, value.ptr);
         flecs_free(&v->world->allocator, ti->size, value.ptr);
+    }
+
+    /* If variable resolves to a constant expression, mark it as const so that
+     * its value can be folded. */
+    if (node->expr->kind == EcsExprValue) {
+        var->is_const = true;
     }
 
     return 0;
@@ -76134,6 +76144,35 @@ int flecs_expr_identifier_visit_fold(
 }
 
 static
+int flecs_expr_variable_visit_fold(
+    ecs_script_t *script,
+    ecs_expr_node_t **node_ptr,
+    const ecs_expr_eval_desc_t *desc)
+{
+    (void)desc;
+
+    ecs_expr_variable_t *node = (ecs_expr_variable_t*)*node_ptr;
+
+    ecs_script_var_t *var = ecs_script_vars_lookup(
+        desc->vars, node->name);
+    /* Should've been caught by type visitor */
+    ecs_assert(var != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(var->value.type == node->node.type, ECS_INTERNAL_ERROR, NULL);
+    ecs_entity_t type = node->node.type;
+
+    // if (var->is_const) {
+    //     ecs_expr_value_node_t *result = flecs_expr_value_from(
+    //         script, (ecs_expr_node_t*)node, type);
+    //     void *value = ecs_value_new(script->world, type);
+    //     ecs_value_copy(script->world, type, value, var->value.ptr);
+    //     result->ptr = value;
+    //     flecs_visit_fold_replace(script, node_ptr, (ecs_expr_node_t*)result);
+    // }
+
+    return 0;
+}
+
+static
 int flecs_expr_arguments_visit_fold(
     ecs_script_t *script,
     ecs_expr_initializer_t *node,
@@ -76248,6 +76287,9 @@ int flecs_expr_visit_fold(
         }
         break;
     case EcsExprVariable:
+        if (flecs_expr_variable_visit_fold(script, node_ptr, desc)) {
+            goto error;
+        }
         break;
     case EcsExprFunction:
     case EcsExprMethod:
@@ -76465,8 +76507,11 @@ int flecs_expr_value_to_str(
     ecs_expr_str_visitor_t *v,
     const ecs_expr_value_node_t *node)
 {
-    return ecs_ptr_to_str_buf(
+    ecs_strbuf_appendstr(v->buf, ECS_YELLOW);
+    int ret = ecs_ptr_to_str_buf(
         v->world, node->node.type, node->ptr, v->buf);
+    ecs_strbuf_appendstr(v->buf, ECS_NORMAL);
+    return ret;
 }
 
 static
@@ -76560,8 +76605,10 @@ int flecs_expr_variable_to_str(
     ecs_expr_str_visitor_t *v,
     const ecs_expr_variable_t *node)
 {
+    ecs_strbuf_appendlit(v->buf, ECS_GREEN);
     ecs_strbuf_appendlit(v->buf, "$");
     ecs_strbuf_appendstr(v->buf, node->name);
+    ecs_strbuf_appendlit(v->buf, ECS_NORMAL);
     return 0;
 }
 
@@ -76625,7 +76672,25 @@ int flecs_expr_cast_to_str(
     ecs_expr_str_visitor_t *v,
     const ecs_expr_cast_t *node)
 {
-    return flecs_expr_node_to_str(v, node->expr);
+    ecs_entity_t type = node->node.type;
+    ecs_strbuf_append(v->buf, "%s", ECS_BLUE);
+    const char *name = ecs_get_name(v->world, type);
+    if (name) {
+        ecs_strbuf_appendstr(v->buf, name);
+    } else {
+        char *path = ecs_get_path(v->world, type);
+        ecs_strbuf_appendstr(v->buf, path);
+        ecs_os_free(path);
+    }
+    ecs_strbuf_append(v->buf, "%s(", ECS_NORMAL);
+
+    if (flecs_expr_node_to_str(v, node->expr)) {
+        return -1;
+    }
+
+    ecs_strbuf_append(v->buf, ")");
+
+    return 0;
 }
 
 static
@@ -76634,19 +76699,6 @@ int flecs_expr_node_to_str(
     const ecs_expr_node_t *node)
 {
     ecs_assert(node != NULL, ECS_INVALID_PARAMETER, NULL);
-
-    if (node->type) {
-        ecs_strbuf_append(v->buf, "%s", ECS_BLUE);
-        const char *name = ecs_get_name(v->world, node->type);
-        if (name) {
-            ecs_strbuf_appendstr(v->buf, name);
-        } else {
-            char *path = ecs_get_path(v->world, node->type);
-            ecs_strbuf_appendstr(v->buf, path);
-            ecs_os_free(path);
-        }
-        ecs_strbuf_append(v->buf, "%s(", ECS_NORMAL);
-    }
 
     switch(node->kind) {
     case EcsExprValue:
@@ -76724,10 +76776,6 @@ int flecs_expr_node_to_str(
         break;
     default:
         ecs_abort(ECS_INTERNAL_ERROR, "invalid node kind");
-    }
-
-    if (node->type) {
-        ecs_strbuf_append(v->buf, ")");
     }
 
     return 0;

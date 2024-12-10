@@ -2025,6 +2025,8 @@ ecs_entity_t ecs_entity_init(
     /* Parent field takes precedence over scope */
     if (desc->parent) {
         scope = desc->parent;
+        ecs_check(ecs_is_valid(world, desc->parent), 
+            ECS_INVALID_PARAMETER, "ecs_entity_desc_t::parent is not valid");
     }
 
     /* Find or create entity */

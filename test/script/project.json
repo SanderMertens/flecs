@@ -326,7 +326,8 @@
                 "entity_w_2_template_instances",
                 "template_w_prefab_and_instance",
                 "template_w_with_var",
-                "template_w_with_prop"
+                "template_w_with_prop",
+                "fold_const"
             ]
         }, {
             "id": "Error",

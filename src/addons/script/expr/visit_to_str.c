@@ -25,8 +25,11 @@ int flecs_expr_value_to_str(
     ecs_expr_str_visitor_t *v,
     const ecs_expr_value_node_t *node)
 {
-    return ecs_ptr_to_str_buf(
+    ecs_strbuf_appendstr(v->buf, ECS_YELLOW);
+    int ret = ecs_ptr_to_str_buf(
         v->world, node->node.type, node->ptr, v->buf);
+    ecs_strbuf_appendstr(v->buf, ECS_NORMAL);
+    return ret;
 }
 
 static
@@ -120,8 +123,10 @@ int flecs_expr_variable_to_str(
     ecs_expr_str_visitor_t *v,
     const ecs_expr_variable_t *node)
 {
+    ecs_strbuf_appendlit(v->buf, ECS_GREEN);
     ecs_strbuf_appendlit(v->buf, "$");
     ecs_strbuf_appendstr(v->buf, node->name);
+    ecs_strbuf_appendlit(v->buf, ECS_NORMAL);
     return 0;
 }
 
@@ -185,7 +190,25 @@ int flecs_expr_cast_to_str(
     ecs_expr_str_visitor_t *v,
     const ecs_expr_cast_t *node)
 {
-    return flecs_expr_node_to_str(v, node->expr);
+    ecs_entity_t type = node->node.type;
+    ecs_strbuf_append(v->buf, "%s", ECS_BLUE);
+    const char *name = ecs_get_name(v->world, type);
+    if (name) {
+        ecs_strbuf_appendstr(v->buf, name);
+    } else {
+        char *path = ecs_get_path(v->world, type);
+        ecs_strbuf_appendstr(v->buf, path);
+        ecs_os_free(path);
+    }
+    ecs_strbuf_append(v->buf, "%s(", ECS_NORMAL);
+
+    if (flecs_expr_node_to_str(v, node->expr)) {
+        return -1;
+    }
+
+    ecs_strbuf_append(v->buf, ")");
+
+    return 0;
 }
 
 static
@@ -194,19 +217,6 @@ int flecs_expr_node_to_str(
     const ecs_expr_node_t *node)
 {
     ecs_assert(node != NULL, ECS_INVALID_PARAMETER, NULL);
-
-    if (node->type) {
-        ecs_strbuf_append(v->buf, "%s", ECS_BLUE);
-        const char *name = ecs_get_name(v->world, node->type);
-        if (name) {
-            ecs_strbuf_appendstr(v->buf, name);
-        } else {
-            char *path = ecs_get_path(v->world, node->type);
-            ecs_strbuf_appendstr(v->buf, path);
-            ecs_os_free(path);
-        }
-        ecs_strbuf_append(v->buf, "%s(", ECS_NORMAL);
-    }
 
     switch(node->kind) {
     case EcsExprValue:
@@ -284,10 +294,6 @@ int flecs_expr_node_to_str(
         break;
     default:
         ecs_abort(ECS_INTERNAL_ERROR, "invalid node kind");
-    }
-
-    if (node->type) {
-        ecs_strbuf_append(v->buf, ")");
     }
 
     return 0;
