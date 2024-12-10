@@ -2076,3 +2076,108 @@ void Template_template_in_scope(void) {
 
     ecs_fini(world);
 }
+
+void Template_nested_templates_in_prefab(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    const char *expr =
+    HEAD "template Frame {"
+    LINE "  wall {}"
+    LINE "}"
+    LINE ""
+    LINE "template Room { }"
+    LINE ""
+    LINE "template House {"
+    LINE "  building {"
+    LINE "    walls = Frame: {}"
+    LINE "  }"
+    LINE "}"
+    LINE ""
+    LINE "prefab HousePrefab {"
+    LINE "  House: {}"
+    LINE "  room {"
+    LINE "    Room: {}"
+    LINE "  }"
+    LINE "}"
+    LINE ""
+    LINE "e : HousePrefab"
+    ;
+
+    // ecs_log_set_level(0);
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+
+    ecs_entity_t frame = ecs_lookup(world, "Frame");
+    test_assert(frame != 0);
+
+    ecs_entity_t room = ecs_lookup(world, "Room");
+    test_assert(room != 0);
+
+    ecs_entity_t house = ecs_lookup(world, "House");
+    test_assert(house != 0);
+
+    ecs_entity_t house_prefab = ecs_lookup(world, "HousePrefab");
+    test_assert(house_prefab != 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    ecs_entity_t e_room = ecs_lookup(world, "e.room");
+    test_assert(e_room != 0);
+
+    ecs_entity_t e_building = ecs_lookup(world, "e.building");
+    test_assert(e_building != 0);
+
+    ecs_entity_t e_building_walls = ecs_lookup(world, "e.building.walls");
+    test_assert(e_building_walls != 0);
+
+    ecs_entity_t e_building_walls_wall = ecs_lookup(world, "e.building.walls.wall");
+    test_assert(e_building_walls_wall != 0);
+
+    ecs_fini(world);
+}
+
+void Template_entity_w_2_template_instances(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    const char *expr =
+    HEAD "template Foo {"
+    LINE "  child_a {}"
+    LINE "}"
+    LINE ""
+    LINE "template Bar {"
+    LINE "  child_b {}"
+    LINE "}"
+    LINE ""
+    LINE "e {"
+    LINE "  Foo: {}"
+    LINE "  Bar: {}"
+    LINE "}"
+    ;
+
+    // ecs_log_set_level(0);
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    test_assert(foo != 0);
+
+    ecs_entity_t bar = ecs_lookup(world, "Bar");
+    test_assert(bar != 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    ecs_entity_t child_a = ecs_lookup(world, "e.child_a");
+    test_assert(child_a != 0);
+
+    ecs_entity_t child_b = ecs_lookup(world, "e.child_b");
+    test_assert(child_b != 0);
+
+    test_assert(ecs_has_id(world, e, foo));
+    test_assert(ecs_has_id(world, e, bar));
+
+    ecs_fini(world);
+}

@@ -204,7 +204,6 @@ void Eval_with_pair_in_scope(void);
 void Eval_with_pair_component_in_scope(void);
 void Eval_pair_w_rel_var(void);
 void Eval_pair_w_tgt_var(void);
-void Eval_component_in_with_scope_in_scope(void);
 void Eval_array_component(void);
 void Eval_on_set_w_kind_paren_no_reflection(void);
 void Eval_on_set_w_kind_paren(void);
@@ -274,6 +273,7 @@ void Eval_assign_call_scoped_func(void);
 void Eval_assign_call_scoped_func_w_using(void);
 void Eval_eval_w_vars(void);
 void Eval_eval_w_runtime(void);
+void Eval_component_in_entity_in_with_scope(void);
 
 // Testsuite 'Template'
 void Template_template_no_scope(void);
@@ -316,6 +316,8 @@ void Template_with_after_template(void);
 void Template_with_in_scope_after_template(void);
 void Template_prefab_w_template(void);
 void Template_template_in_scope(void);
+void Template_nested_templates_in_prefab(void);
+void Template_entity_w_2_template_instances(void);
 
 // Testsuite 'Error'
 void Error_multi_line_comment_after_newline_before_newline_scope_open(void);
@@ -383,10 +385,17 @@ void Error_update_template_after_error(void);
 void Error_template_in_template(void);
 void Error_unterminated_binary(void);
 void Error_tag_in_with_scope(void);
+void Error_tag_in_with_scope_2(void);
+void Error_pair_tag_in_with_scope_2(void);
 void Error_component_in_with_scope(void);
+void Error_component_in_with_scope_2(void);
+void Error_component_in_with_scope_3(void);
+void Error_component_in_with_scope_4(void);
+void Error_component_in_with_scope_5(void);
 void Error_component_in_with_scope_nested(void);
 void Error_component_in_with_scope_after_entity(void);
 void Error_component_in_with_var_scope(void);
+void Error_component_in_with_in_template(void);
 void Error_reload_script_w_component_w_error(void);
 void Error_reload_script_w_component_w_error_again(void);
 
@@ -1528,10 +1537,6 @@ bake_test_case Eval_testcases[] = {
         Eval_pair_w_tgt_var
     },
     {
-        "component_in_with_scope_in_scope",
-        Eval_component_in_with_scope_in_scope
-    },
-    {
         "array_component",
         Eval_array_component
     },
@@ -1806,6 +1811,10 @@ bake_test_case Eval_testcases[] = {
     {
         "eval_w_runtime",
         Eval_eval_w_runtime
+    },
+    {
+        "component_in_entity_in_with_scope",
+        Eval_component_in_entity_in_with_scope
     }
 };
 
@@ -1969,6 +1978,14 @@ bake_test_case Template_testcases[] = {
     {
         "template_in_scope",
         Template_template_in_scope
+    },
+    {
+        "nested_templates_in_prefab",
+        Template_nested_templates_in_prefab
+    },
+    {
+        "entity_w_2_template_instances",
+        Template_entity_w_2_template_instances
     }
 };
 
@@ -2234,8 +2251,32 @@ bake_test_case Error_testcases[] = {
         Error_tag_in_with_scope
     },
     {
+        "tag_in_with_scope_2",
+        Error_tag_in_with_scope_2
+    },
+    {
+        "pair_tag_in_with_scope_2",
+        Error_pair_tag_in_with_scope_2
+    },
+    {
         "component_in_with_scope",
         Error_component_in_with_scope
+    },
+    {
+        "component_in_with_scope_2",
+        Error_component_in_with_scope_2
+    },
+    {
+        "component_in_with_scope_3",
+        Error_component_in_with_scope_3
+    },
+    {
+        "component_in_with_scope_4",
+        Error_component_in_with_scope_4
+    },
+    {
+        "component_in_with_scope_5",
+        Error_component_in_with_scope_5
     },
     {
         "component_in_with_scope_nested",
@@ -2248,6 +2289,10 @@ bake_test_case Error_testcases[] = {
     {
         "component_in_with_var_scope",
         Error_component_in_with_var_scope
+    },
+    {
+        "component_in_with_in_template",
+        Error_component_in_with_in_template
     },
     {
         "reload_script_w_component_w_error",
@@ -3676,14 +3721,14 @@ static bake_test_suite suites[] = {
         "Template",
         NULL,
         NULL,
-        40,
+        42,
         Template_testcases
     },
     {
         "Error",
         NULL,
         NULL,
-        71,
+        78,
         Error_testcases
     },
     {

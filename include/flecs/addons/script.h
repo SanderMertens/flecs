@@ -37,6 +37,9 @@ FLECS_API
 extern ECS_COMPONENT_DECLARE(EcsScript);
 
 FLECS_API
+extern ECS_DECLARE(EcsTemplate);
+
+FLECS_API
 extern ECS_COMPONENT_DECLARE(EcsScriptFunction);
 
 FLECS_API

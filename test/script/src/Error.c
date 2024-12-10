@@ -375,6 +375,49 @@ void Error_tag_in_with_scope(void) {
     ecs_fini(world);
 }
 
+void Error_tag_in_with_scope_2(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    const char *expr =
+    HEAD "Foo {}"
+    LINE ""
+    LINE "e {"
+    LINE "  with Foo {"
+    LINE "    Foo"
+    LINE "  }"
+    LINE "}"
+    ;
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr) != 0);
+
+    ecs_fini(world);
+}
+
+void Error_pair_tag_in_with_scope_2(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    const char *expr =
+    HEAD "Foo {}"
+    LINE "Bar"
+    LINE ""
+    LINE "e {"
+    LINE "  with Foo {"
+    LINE "    (Foo, Bar)"
+    LINE "  }"
+    LINE "}"
+    ;
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr) != 0);
+
+    ecs_fini(world);
+}
+
 void Error_component_in_with_scope(void) {
     ecs_world_t *world = ecs_init();
 
@@ -393,6 +436,187 @@ void Error_component_in_with_scope(void) {
     LINE "  Position: {10, 20}\n"
     LINE "}\n"
     LINE "\n";
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr) != 0);
+
+    ecs_fini(world);
+}
+
+void Error_component_in_with_scope_2(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "template Frame {\n"
+    LINE "  with Position {\n"
+    LINE "    Position: {}\n"
+    LINE "  }\n"
+    LINE "}\n"
+    LINE "\n"
+    LINE "template Room { }\n"
+    LINE "\n"
+    LINE "template House {\n"
+    LINE "  building {\n"
+    LINE "    walls = Frame: {}\n"
+    LINE "  }\n"
+    LINE "}\n"
+    LINE "\n"
+    LINE "prefab HouseWithSide {\n"
+    LINE "  House: {}\n"
+    LINE "  _ {\n"
+    LINE "    Room: {}\n"
+    LINE "  }\n"
+    LINE "}\n"
+    LINE "\n"
+    LINE "e : HouseWithSide\n"
+    ;
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr) != 0);
+
+    ecs_fini(world);
+}
+
+void Error_component_in_with_scope_3(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    LINE "struct Position {"
+    LINE "  x = f32"
+    LINE "  y = f32"
+    LINE "}"
+    LINE ""
+    LINE "e {"
+    LINE "  with Position {"
+    LINE "    Position: {10, 20}"
+    LINE "  }"
+    LINE "}"
+    ;
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr) != 0);
+
+    ecs_fini(world);
+}
+
+void Error_component_in_with_scope_4(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    LINE "struct Position {"
+    LINE "  x = f32"
+    LINE "  y = f32"
+    LINE "}"
+    LINE ""
+    LINE "Foo {}"
+    LINE ""
+    LINE "e {"
+    LINE "  with Position {"
+    LINE "    (Foo, Position): {10, 20}"
+    LINE "  }"
+    LINE "}"
+    ;
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr) != 0);
+
+    ecs_fini(world);
+}
+
+void Error_component_in_with_scope_5(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    LINE "struct Position {"
+    LINE "  x = f32"
+    LINE "  y = f32"
+    LINE "}"
+    LINE ""
+    LINE "Foo {}"
+    LINE ""
+    LINE "e {"
+    LINE "  const pos = Position: {10, 20}"
+    LINE "  with Position {"
+    LINE "    $pos"
+    LINE "  }"
+    LINE "}"
+    ;
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr) != 0);
+
+    ecs_fini(world);
+}
+
+void Error_component_in_with_in_template(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "struct Position {"
+    LINE "  x = f32"
+    LINE "  y = f32"
+    LINE "}"
+    LINE ""
+    LINE "template Foo {"
+    LINE "  with Position {"
+    LINE "    Position: {10, 20}"
+    LINE "  }"
+    LINE "}"
+    LINE ""
+    LINE "e {"
+    LINE "  Foo: {}"
+    LINE "}"
+    ;
 
     ecs_log_set_level(-4);
     test_assert(ecs_script_run(world, NULL, expr) != 0);

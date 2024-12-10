@@ -67,7 +67,21 @@ void ecs_script_clear(
     ecs_entity_t script,
     ecs_entity_t instance)
 {
-    ecs_delete_with(world, flecs_script_tag(script, instance));
+    if (!instance) {
+        ecs_delete_with(world, ecs_pair_t(EcsScript, script));
+    } else {
+        ecs_defer_begin(world);
+        ecs_iter_t it = ecs_children(world, instance);
+        while (ecs_children_next(&it)) {
+            if (ecs_table_has_id(world, it.table, ecs_pair(EcsTemplate, script))) {
+                int32_t i, count = it.count;
+                for (i = 0; i < count; i ++) {
+                    ecs_delete(world, it.entities[i]);
+                }
+            }
+        }
+        ecs_defer_end(world);
+    }
 }
 
 int ecs_script_run(
@@ -175,7 +189,6 @@ int ecs_script_update(
     if (ecs_script_eval(s->script, NULL)) {
         ecs_script_free(s->script);
         s->script = NULL;
-
         ecs_delete_with(world, ecs_pair_t(EcsScript, e));
         result = -1;
     }
