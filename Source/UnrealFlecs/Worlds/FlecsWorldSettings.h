@@ -25,7 +25,6 @@ public:
         const TArray<TObjectPtr<UObject>>& InModules = {})
         : WorldName(InWorldName)
         , bAutoTickWorld(bInAutoTickWorld)
-        , bDefaultAutoMerge(bInDefaultAutoMerge)
         , DefaultWorkerThreads(InDefaultWorkerThreads)
         , Modules(InModules)
     {
@@ -48,9 +47,6 @@ public:
     uint8 bAutoTickWorld : 1 = true;
     
     UPROPERTY(EditAnywhere, Category = "Flecs")
-    uint8 bDefaultAutoMerge : 1 = true;
-    
-    UPROPERTY(EditAnywhere, Category = "Flecs")
     uint8 bUseTaskThreads : 1 = true;
 
     UPROPERTY(EditAnywhere, Category = "Flecs", meta = (ClampMin = "1"))
@@ -59,10 +55,6 @@ public:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Instanced, Category = "Flecs",
         meta = (MustImplement = "/Script/UnrealFlecs.FlecsModuleInterface"))
     TArray<TObjectPtr<UObject>> Modules;
-
-   // UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Flecs",
-   //     meta = (MustImplement = "/Script/UnrealFlecs.FlecsModuleStructInterface"))
-    //TArray<FInstancedStruct> ModuleStructs;
     
 }; // struct FFlecsWorldSettings
 

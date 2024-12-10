@@ -489,7 +489,7 @@ private:
             count = 1;
         }
 
-        flecs::iter it(iter);
+        [[maybe_unused]] flecs::iter it(iter);
         flecs::entity result;
 
         ECS_TABLE_LOCK(iter->world, iter->table);

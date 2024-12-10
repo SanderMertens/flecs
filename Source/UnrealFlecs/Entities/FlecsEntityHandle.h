@@ -1496,7 +1496,15 @@ public:
 		TraitHolder.Add(flecs::Trait);
 		TraitHolder.SetParent(GetEntity());
 
-		GetEntity().add<TComponent>(TraitHolder);
+		#if WITH_EDITORONLY_DATA
+
+		std::string TypeName = nameof(TComponent).data();
+		TypeName += " Trait Holder";
+		TraitHolder.SetDocName(TypeName.c_str());
+
+		#endif // WITH_EDITORONLY_DATA
+
+		AddPair<TComponent>(TraitHolder);
 		
 		return TraitHolder;
 	}
@@ -1522,6 +1530,12 @@ public:
 		TraitHolder.SetParent(GetEntity());
 		TraitHolder.Add(flecs::PairIsTag);
 		TraitHolder.Add(flecs::Trait);
+
+		#if WITH_EDITORONLY_DATA
+
+		TraitHolder.SetDocName(StructType->GetFName().ToString() + TEXT(" Trait Holder"));
+
+		#endif // WITH_EDITORONLY_DATA
 
 		AddPair(ObtainComponentTypeStruct(StructType), TraitHolder);
 		

@@ -5,7 +5,6 @@
 #include "CoreMinimal.h"
 #include "Standard/Hashing.h"
 #include "flecs.h"
-#include "Properties/FlecsComponentProperties.h"
 #include "FlecsScriptClassComponent.generated.h"
 
 USTRUCT(BlueprintType)

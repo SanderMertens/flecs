@@ -3,12 +3,29 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Properties/FlecsComponentProperties.h"
 #include "FlecsTranslationSettingTraits.generated.h"
 
-UENUM(BlueprintType)
-enum class EFlecsTranslationSetting : uint8
+USTRUCT(BlueprintType)
+struct UNREALFLECS_API FFlecsToUnreal
 {
-	ToUnreal = 0,
-	ToFlecs,
-	ToBoth
-}; // enum class ETranslationSetting
+	GENERATED_BODY()
+}; // struct FFlecsToUnreal
+
+REGISTER_COMPONENT_TAG_PROPERTIES(FFlecsToUnreal, flecs::PairIsTag)
+
+USTRUCT(BlueprintType)
+struct UNREALFLECS_API FUnrealToFlecs
+{
+	GENERATED_BODY()
+}; // struct FUnrealToFlecs
+
+REGISTER_COMPONENT_TAG_PROPERTIES(FUnrealToFlecs, flecs::PairIsTag)
+
+USTRUCT(BlueprintType)
+struct UNREALFLECS_API FFlecsToBoth
+{
+	GENERATED_BODY()
+}; // struct FFlecsToBoth
+
+REGISTER_COMPONENT_TAG_PROPERTIES(FFlecsToBoth, flecs::PairIsTag)

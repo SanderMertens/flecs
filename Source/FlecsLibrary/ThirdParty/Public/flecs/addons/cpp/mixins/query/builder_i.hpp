@@ -177,8 +177,7 @@ struct query_builder_i : term_builder_i<Base> {
         *this->term_ = term;
         return *this;
     }
-
-    /* Creates 2 terms */
+    
     template <typename TComponent>
     Base& begin_scope_traits() 
     {
@@ -192,17 +191,11 @@ struct query_builder_i : term_builder_i<Base> {
         const char* trait_var = trait_vars_.at(comp_name).c_str();
         
         this->with<TComponent>(trait_var);
-        this->filter();
-        this->with(flecs::ChildOf);
-        this->filter();
-        this->src(trait_var);
-        
         trait_scope_ = trait_var;
         
         return *this;
     }
-
-    /* Creates 2 terms */
+    
     Base& begin_scope_traits(flecs::entity_t comp) 
     {
         const char* comp_name = ecs_get_name(this->world_v(), comp);
@@ -215,17 +208,11 @@ struct query_builder_i : term_builder_i<Base> {
         const char* trait_var = trait_vars_.at(comp_name).c_str();
 
         this->with(comp, trait_var);
-        this->filter();
-        this->with(flecs::ChildOf);
-        this->filter();
-        this->src(trait_var);
-
         trait_scope_ = trait_var;
         
         return *this;
     }
-
-    /* Creates 2 terms */
+    
     Base& begin_scope_traits(const char* comp_name) 
     {
         if (!trait_vars_.contains(comp_name)) {
@@ -236,10 +223,6 @@ struct query_builder_i : term_builder_i<Base> {
         const char* trait_var = trait_vars_.at(comp_name).c_str();
 
         this->with(comp_name, trait_var);
-        this->filter();
-        this->with(flecs::ChildOf);
-        this->filter();
-        this->src(trait_var);
 
         trait_scope_ = trait_var;
         
@@ -267,6 +250,8 @@ struct query_builder_i : term_builder_i<Base> {
     Base& end_scope_traits() 
     {
         ecs_assert(!trait_scope_.empty(), ECS_INVALID_OPERATION, NULL);
+        this->with(flecs::ChildOf, flecs::Wildcard);
+        this->src(trait_scope_.c_str());
         this->assert_term();
         trait_scope_.clear();
         return *this;

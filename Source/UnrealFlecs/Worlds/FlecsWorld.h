@@ -357,7 +357,7 @@ struct FOSApiInitializer
 static FOSApiInitializer OSApiInitializer;
 
 UCLASS(BlueprintType)
-class UNREALFLECS_API UFlecsWorld : public UObject
+class UNREALFLECS_API UFlecsWorld final : public UObject
 {
 	GENERATED_BODY()
 
@@ -373,7 +373,7 @@ public:
 		FCoreUObjectDelegates::GarbageCollectComplete.RemoveAll(this);
 
 		const FAssetRegistryModule* AssetRegistryModule
-			= FModuleManager::LoadModulePtr<FAssetRegistryModule>(TEXT("AssetRegistry"));
+			= FModuleManager::LoadModulePtr<FAssetRegistryModule>("AssetRegistry");
 
 		if (AssetRegistryModule && AssetRegistryModule->IsValid())
 		{
@@ -522,13 +522,18 @@ public:
 					EntityHandle.Remove<flecs::_::type_impl_struct_event_info>();
 				});
 
-		ObjectComponentQuery = World.query_builder<FFlecsUObjectComponent>("UObjectComponentQuery")
+		ObjectDestructionComponentQuery = World.query_builder<FFlecsUObjectComponent>("UObjectDestructionComponentQuery")
+			.without<FFlecsUObjectComponent>(DontDeleteUObjectEntity)
+			.begin_scope_traits<FFlecsUObjectComponent>().optional()
+				.without(DontDeleteUObjectEntity)
+			.end_scope_traits()
 			.cached()
 			.build();
 
 		FCoreUObjectDelegates::GarbageCollectComplete.AddWeakLambda(this, [&]
 		{
-			ObjectComponentQuery.each([&](flecs::entity InEntity, FFlecsUObjectComponent& InUObjectComponent)
+			ObjectDestructionComponentQuery.each([&](
+				flecs::entity InEntity, FFlecsUObjectComponent& InUObjectComponent)
 			{
 				if (InUObjectComponent.IsStale(true, true))
 				{
@@ -1076,7 +1081,7 @@ public:
 
 		ModuleComponentQuery.destruct();
 		DependenciesComponentQuery.destruct();
-		ObjectComponentQuery.destruct();
+		ObjectDestructionComponentQuery.destruct();
 		
 		const FAssetRegistryModule* AssetRegistryModule
 			= FModuleManager::LoadModulePtr<FAssetRegistryModule>(TEXT("AssetRegistry"));
@@ -1736,7 +1741,7 @@ public:
 	TArray<TWeakObjectPtr<UObject>> ProgressModules;
 
 	flecs::query<FFlecsModuleComponent> ModuleComponentQuery;
-	flecs::query<FFlecsUObjectComponent> ObjectComponentQuery;
+	flecs::query<FFlecsUObjectComponent> ObjectDestructionComponentQuery;
 	flecs::query<FFlecsDependenciesComponent> DependenciesComponentQuery;
 
 	FFlecsTypeMapComponent* TypeMapComponent;

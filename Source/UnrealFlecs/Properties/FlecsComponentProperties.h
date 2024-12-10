@@ -50,8 +50,10 @@ public:
 			ComponentProperties[Name] = FFlecsComponentProperties{ Name, Entities,
 				ComponentPropertyStructs };
 			
-			UN_LOGF(LogFlecsComponentProperties, Log,
-				"Registered component properties: %s", *FString(Name.data()));
+			UN_LOGF(LogFlecsComponentProperties,
+				Log,
+				"Registered component properties: %s",
+				*FString(Name.data()));
 		}
 		else
 		{
@@ -95,11 +97,11 @@ public:
 	FOnComponentPropertiesRegistered OnComponentPropertiesRegistered;
 }; // struct FFlecsComponentPropertiesRegistry
 
-/** Do not use this macro directly, use REGISTER_COMPONENT_TAG_PROPERTIES or REGISTER_COMPONENT_TRAIT_PROPERTIES
- *
- *
+/**
+ * Do not use this macro directly, use REGISTER_COMPONENT_TAG_PROPERTIES or REGISTER_COMPONENT_TRAIT_PROPERTIES
  */
-#define REGISTER_FLECS_PROPERTIES(ComponentType, EntitiesArray, ComponentPropertyStructsArray) \
+// Private macro that should never be called directly by users
+#define _REGISTER_FLECS_PROPERTIES_IMPL(ComponentType, EntitiesArray, ComponentPropertyStructsArray) \
 	namespace \
 	{ \
 		struct FAutoRegister##ComponentType \
@@ -114,8 +116,13 @@ public:
 		static FAutoRegister##ComponentType AutoRegister##ComponentType##_Instance; \
 	}
 
+// @Deprecated
+#define REGISTER_FLECS_PROPERTIES(ComponentType, EntitiesArray, ComponentPropertyStructsArray) \
+	static_assert(false, \
+		"Do not use REGISTER_FLECS_PROPERTIES directly! Use REGISTER_COMPONENT_TAG_PROPERTIES or REGISTER_COMPONENT_TRAIT_PROPERTIES instead.")
+
 #define REGISTER_COMPONENT_TAG_PROPERTIES(ComponentType, ...) \
-	REGISTER_FLECS_PROPERTIES(ComponentType, { __VA_ARGS__ }, {})
+	_REGISTER_FLECS_PROPERTIES_IMPL(ComponentType, { __VA_ARGS__ }, {})
 
 #define REGISTER_COMPONENT_TRAIT_PROPERTIES(ComponentType, ...) \
-	REGISTER_FLECS_PROPERTIES(ComponentType, {}, { __VA_ARGS__ })
+	_REGISTER_FLECS_PROPERTIES_IMPL(ComponentType, {}, { __VA_ARGS__ })

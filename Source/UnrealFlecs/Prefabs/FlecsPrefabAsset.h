@@ -27,7 +27,6 @@ public:
 	FFlecsEntityHandle PrefabEntityHandle;
 
 	FORCEINLINE virtual void OnEntityCreated(const FFlecsEntityHandle& InEntityHandle, UFlecsWorld* World) override final;
-
 	FORCEINLINE virtual void OnEntityDestroyed(const FFlecsEntityHandle& InEntityHandle, UFlecsWorld* World) override final;
 
 

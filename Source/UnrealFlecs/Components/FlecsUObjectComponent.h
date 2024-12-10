@@ -4,6 +4,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Entities/FlecsDefaultEntityEngineSubsystem.h"
 #include "SolidMacros/Macros.h"
 #include "UObject/Object.h"
 #include "Properties/FlecsComponentProperties.h"
@@ -77,4 +78,6 @@ public:
 	
 }; // struct FFlecsUObjectComponent
 
-REGISTER_COMPONENT_TAG_PROPERTIES(FFlecsUObjectComponent)
+REGISTER_COMPONENT_TAG_PROPERTIES(FFlecsUObjectComponent, flecs::PairIsTag)
+
+DEFINE_DEFAULT_ENTITY_OPTION(DontDeleteUObjectEntity);
