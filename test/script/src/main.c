@@ -319,6 +319,8 @@ void Template_template_in_scope(void);
 void Template_nested_templates_in_prefab(void);
 void Template_entity_w_2_template_instances(void);
 void Template_template_w_prefab_and_instance(void);
+void Template_template_w_with_var(void);
+void Template_template_w_with_prop(void);
 
 // Testsuite 'Error'
 void Error_multi_line_comment_after_newline_before_newline_scope_open(void);
@@ -1995,6 +1997,14 @@ bake_test_case Template_testcases[] = {
     {
         "template_w_prefab_and_instance",
         Template_template_w_prefab_and_instance
+    },
+    {
+        "template_w_with_var",
+        Template_template_w_with_var
+    },
+    {
+        "template_w_with_prop",
+        Template_template_w_with_prop
     }
 };
 
@@ -3746,7 +3756,7 @@ static bake_test_suite suites[] = {
         "Template",
         NULL,
         NULL,
-        43,
+        45,
         Template_testcases
     },
     {

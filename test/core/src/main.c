@@ -189,6 +189,7 @@ void Entity_entity_init_w_set_1_comp_w_name_defer(void);
 void Entity_entity_init_w_set_1_comp_existing_defer(void);
 void Entity_entity_init_w_set_1_comp_existing_empty_defer(void);
 void Entity_entity_init_w_set_1_comp_1_tag_w_set_defer(void);
+void Entity_entity_init_w_set_1_comp_suspend_defer(void);
 void Entity_insert_1_comp(void);
 void Entity_insert_2_comp(void);
 void Entity_insert_1_comp_1_tag(void);
@@ -3046,6 +3047,10 @@ bake_test_case Entity_testcases[] = {
     {
         "entity_init_w_set_1_comp_1_tag_w_set_defer",
         Entity_entity_init_w_set_1_comp_1_tag_w_set_defer
+    },
+    {
+        "entity_init_w_set_1_comp_suspend_defer",
+        Entity_entity_init_w_set_1_comp_suspend_defer
     },
     {
         "insert_1_comp",
@@ -11346,7 +11351,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        140,
+        141,
         Entity_testcases
     },
     {

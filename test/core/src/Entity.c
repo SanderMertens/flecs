@@ -2864,6 +2864,40 @@ void Entity_entity_init_w_set_1_comp_1_tag_w_set_defer(void) {
     ecs_fini(world);
 }
 
+void Entity_entity_init_w_set_1_comp_suspend_defer(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, TagA);
+
+    ecs_defer_begin(world);
+
+    ecs_defer_suspend(world);
+
+    ecs_entity_t e = ecs_entity(world, {
+        .set = ecs_values( ecs_value(Position, {10, 20}), {TagA} )
+    });
+
+    test_assert(e != 0);
+
+    test_assert(ecs_has(world, e, Position));
+    test_assert(ecs_has(world, e, TagA));
+
+    const Position *p = ecs_get(world, e, Position);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_defer_resume(world);
+
+    ecs_defer_end(world);
+
+    p = ecs_get(world, e, Position);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
 void Entity_insert_1_comp(void) {
     ecs_world_t *world = ecs_mini();
 
