@@ -457,6 +457,53 @@ typedef struct EcsOpaque {
     void (*resize)(
         void *dst,
         size_t count);
+
+    /* Getter interface */
+
+    /** Get bool value */
+    bool (*get_bool)(
+        const void *src);
+
+    /** Get char value */
+    char (*get_char)(
+        const void *src);
+
+    /** Get int value */
+    int64_t (*get_int)(
+        const void *src);
+
+    /** Get unsigned int value */
+    uint64_t (*get_uint)(
+        const void *src);
+
+    /** Get float value */
+    double (*get_float)(
+        const void *src);
+
+    /** Get string value */
+    const char* (*get_string)(
+        const void *src);
+
+    /** Get entity value */
+    ecs_entity_t (*get_entity)(
+        const void *src,
+        const ecs_world_t *world);
+
+    /** Get (component) id value */
+    ecs_id_t (*get_id)(
+        const void *src,
+        const ecs_world_t *world);
+
+    /** get collection element */
+    const void* (*get_element)(
+        const void *src,
+        size_t elem);
+
+    /** get element */
+    const void* (*get_member)(
+        const void *src,
+        const char *member);
+
 } EcsOpaque;
 
 
@@ -611,13 +658,22 @@ ecs_meta_cursor_t ecs_meta_cursor(
     ecs_entity_t type,
     void *ptr);
 
-/** Get pointer to current field.
+/** Get pointer to current field for writing.
  * 
  * @param cursor The cursor.
- * @return A pointer to the current field.
+ * @return A pointer to the current field for writing.
  */
 FLECS_API
-void* ecs_meta_get_ptr(
+void* ecs_meta_get_write_ptr(
+    ecs_meta_cursor_t *cursor);
+
+/** Get pointer to current field for reading.
+ * 
+ * @param cursor The cursor.
+ * @return A pointer to the current field. NULL if element does not exist.
+ */
+FLECS_API
+const void* ecs_meta_get_read_ptr(
     ecs_meta_cursor_t *cursor);
 
 /** Move cursor to next field.
@@ -922,6 +978,7 @@ ecs_entity_t ecs_meta_get_entity(
  * @param cursor The cursor.
  * @return The value of the current field.
  */
+FLECS_API
 ecs_id_t ecs_meta_get_id(
     const ecs_meta_cursor_t *cursor);
 
