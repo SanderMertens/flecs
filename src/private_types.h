@@ -230,11 +230,6 @@ struct ecs_stage_t {
     /* Caches for query creation */
     ecs_vec_t variables;
     ecs_vec_t operations;
-
-    /* Temporary token storage for DSL parser. This allows for parsing and 
-     * interpreting a term without having to do allocations. */
-    char parser_tokens[1024];
-    char *parser_token; /* Pointer to next token */
 };
 
 /* Component monitor */
