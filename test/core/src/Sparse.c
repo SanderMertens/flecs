@@ -1295,7 +1295,7 @@ void Sparse_on_add_observer(void) {
 
     ecs_add_id(world, ecs_id(Position), EcsSparse);
 
-    Probe ctx;
+    Probe ctx = {0};
 
     ecs_observer(world, {
         .query.terms = {{ .id = ecs_id(Position) }},
@@ -1324,7 +1324,7 @@ void Sparse_on_set_observer_set(void) {
 
     ecs_add_id(world, ecs_id(Position), EcsSparse);
 
-    Probe ctx;
+    Probe ctx = {0};
     
     ecs_observer(world, {
         .query.terms = {{ .id = ecs_id(Position) }},
@@ -1355,7 +1355,7 @@ void Sparse_on_set_observer_modified(void) {
 
     ecs_add_id(world, ecs_id(Position), EcsSparse);
 
-    Probe ctx;
+    Probe ctx = {0};
     
     ecs_observer(world, {
         .query.terms = {{ .id = ecs_id(Position) }},
@@ -1391,7 +1391,7 @@ void Sparse_on_set_observer_insert(void) {
 
     ecs_add_id(world, ecs_id(Position), EcsSparse);
 
-    Probe ctx;
+    Probe ctx = {0};
     
     ecs_observer(world, {
         .query.terms = {{ .id = ecs_id(Position) }},
@@ -1421,7 +1421,7 @@ void Sparse_on_remove_observer_remove(void) {
 
     ecs_add_id(world, ecs_id(Position), EcsSparse);
 
-    Probe ctx;
+    Probe ctx = {0};
     
     ecs_observer(world, {
         .query.terms = {{ .id = ecs_id(Position) }},
@@ -1453,7 +1453,7 @@ void Sparse_on_remove_observer_clear(void) {
 
     ecs_add_id(world, ecs_id(Position), EcsSparse);
 
-    Probe ctx;
+    Probe ctx = {0};
     
     ecs_observer(world, {
         .query.terms = {{ .id = ecs_id(Position) }},
@@ -1485,7 +1485,7 @@ void Sparse_on_remove_observer_delete(void) {
 
     ecs_add_id(world, ecs_id(Position), EcsSparse);
 
-    Probe ctx;
+    Probe ctx = {0};
     
     ecs_observer(world, {
         .query.terms = {{ .id = ecs_id(Position) }},
@@ -1517,7 +1517,7 @@ void Sparse_on_remove_observer_fini(void) {
 
     ecs_add_id(world, ecs_id(Position), EcsSparse);
 
-    Probe ctx;
+    Probe ctx = {0};
     
     ecs_observer(world, {
         .query.terms = {{ .id = ecs_id(Position) }},
@@ -1565,7 +1565,7 @@ void Sparse_on_set_after_remove_override(void) {
 
     ecs_set(world, e, Position, {30, 40});
 
-    Probe ctx;
+    Probe ctx = {0};
 
     ecs_observer(world, {
         .query.terms = {{ ecs_id(Position) }},
@@ -1618,7 +1618,7 @@ void Sparse_on_add_observer_2_terms(void) {
     ecs_add_id(world, ecs_id(Position), EcsSparse);
     ecs_add_id(world, ecs_id(Velocity), EcsSparse);
 
-    Probe ctx;
+    Probe ctx = {0};
 
     ecs_observer(world, {
         .query.terms = {{ .id = ecs_id(Position) }, { .id = ecs_id(Velocity) }},
@@ -1652,7 +1652,7 @@ void Sparse_on_set_observer_2_terms(void) {
     ecs_add_id(world, ecs_id(Position), EcsSparse);
     ecs_add_id(world, ecs_id(Velocity), EcsSparse);
 
-    Probe ctx;
+    Probe ctx = {0};
 
     ecs_observer(world, {
         .query.terms = {{ .id = ecs_id(Position) }, { .id = ecs_id(Velocity) }},
@@ -1687,7 +1687,7 @@ void Sparse_on_remove_observer_2_terms(void) {
     ecs_add_id(world, ecs_id(Position), EcsSparse);
     ecs_add_id(world, ecs_id(Velocity), EcsSparse);
 
-    Probe ctx;
+    Probe ctx = {0};
 
     ecs_observer(world, {
         .query.terms = {{ .id = ecs_id(Position) }, { .id = ecs_id(Velocity) }},

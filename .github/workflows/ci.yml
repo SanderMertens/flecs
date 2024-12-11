@@ -295,7 +295,7 @@ jobs:
         working-directory: meson_build
         run: |
           meson compile
-  
+
   build-bazel-linux:
     needs: build-linux
     runs-on: ubuntu-latest
@@ -308,7 +308,7 @@ jobs:
       - name: build examples
         run: bazel build //examples/...
       - name: run tests
-        run: bazel test //test/...
+        run: bazel test --test_output=all //test/...
     
   build-bazel-windows:
     needs: build-windows
@@ -322,7 +322,7 @@ jobs:
       - name: build examples
         run: bazel build //examples/...
       - name: run tests
-        run: bazel test //test/...
+        run: bazel test --test_output=all //test/...
 
   build-custom:
     needs: build-linux

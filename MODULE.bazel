@@ -14,7 +14,7 @@ cc_library(
     deps = [":util", ":bake"],
     defines = ["__BAKE__", "bake_test_EXPORTS"],
 
-    srcs = glob(["drivers/test/src/**/*.c", "drivers/test/src/**/*.h"]),
+    srcs = glob(["drivers/test/src/**/*.c"]),
     hdrs = glob(["drivers/test/include/**/*.h"]),
     includes = ["drivers/test/include"],
 )

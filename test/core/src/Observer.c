@@ -7455,7 +7455,7 @@ void Observer_register_comp_in_emit_named_entity(void) {
     ECS_TAG(world, TagA);
     ECS_TAG(world, Event);
 
-    Probe ctx;
+    Probe ctx = {0};
 
     ecs_observer(world, {
         .query.terms = {
@@ -7498,7 +7498,7 @@ void Observer_register_comp_w_macro_in_emit_named_entity(void) {
     ECS_TAG(world, TagA);
     ECS_TAG(world, Event);
 
-    Probe ctx;
+    Probe ctx = {0};
 
     ecs_observer(world, {
         .query.terms = {
@@ -7544,7 +7544,7 @@ void Observer_add_to_self_in_emit_entity(void) {
     ECS_TAG(world, Event);
     ECS_TAG_DEFINE(world, Foo);
 
-    Probe ctx;
+    Probe ctx = {0};
 
     ecs_observer(world, {
         .query.terms = {
@@ -7574,7 +7574,7 @@ void Observer_on_set_w_not_tag(void) {
     ECS_COMPONENT(world, Position);
     ECS_TAG(world, Foo);
 
-    Probe ctx;
+    Probe ctx = {0};
 
     ecs_observer(world, {
         .query.terms = {
@@ -7608,7 +7608,7 @@ void Observer_on_set_w_not_component(void) {
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 
-    Probe ctx;
+    Probe ctx = {0};
 
     ecs_observer(world, {
         .query.terms = {
