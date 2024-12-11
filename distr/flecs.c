@@ -23405,11 +23405,10 @@ const char* ecs_http_get_param(
 ecs_http_server_t* ecs_http_server_init(
     const ecs_http_server_desc_t *desc) 
 {
-    ecs_check(ecs_os_has_threading(), ECS_UNSUPPORTED, 
-        "missing OS API implementation");
-
     ecs_http_server_t* srv = ecs_os_calloc_t(ecs_http_server_t);
-    srv->lock = ecs_os_mutex_new();
+    if (ecs_os_has_threading()) {
+        srv->lock = ecs_os_mutex_new();
+    }
     srv->sock = HTTP_SOCKET_INVALID;
 
     srv->should_run = false;
@@ -23452,8 +23451,6 @@ ecs_http_server_t* ecs_http_server_init(
 #endif
 
     return srv;
-error:
-    return NULL;
 }
 
 void ecs_http_server_fini(
@@ -23462,7 +23459,9 @@ void ecs_http_server_fini(
     if (srv->should_run) {
         ecs_http_server_stop(srv);
     }
-    ecs_os_mutex_free(srv->lock);
+    if (ecs_os_has_threading()) {
+        ecs_os_mutex_free(srv->lock);
+    }
     http_purge_request_cache(srv, true);
     flecs_sparse_fini(&srv->requests);
     flecs_sparse_fini(&srv->connections);
@@ -23476,6 +23475,8 @@ int ecs_http_server_start(
     ecs_check(srv->initialized, ECS_INVALID_PARAMETER, NULL);
     ecs_check(!srv->should_run, ECS_INVALID_PARAMETER, NULL);
     ecs_check(!srv->thread, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(ecs_os_has_threading(), ECS_UNSUPPORTED,
+        "missing OS API implementation");
 
     srv->should_run = true;
 
@@ -23504,6 +23505,8 @@ void ecs_http_server_stop(
         "cannot stop HTTP server: not initialized");
     ecs_check(srv->should_run, ECS_INVALID_PARAMETER, 
         "cannot stop HTTP server: already stopped/stopping");
+    ecs_check(ecs_os_has_threading(), ECS_UNSUPPORTED,
+        "missing OS API implementation");
 
     /* Stop server thread */
     ecs_dbg("http: shutting down server thread");
