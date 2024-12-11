@@ -4863,3 +4863,41 @@ void Entity_get_ref_pair_second_invalid_type(void) {
     test_expect_abort();
     world.entity().get_ref_second<Position>(v);
 }
+
+void Entity_iter_type(void) {
+    flecs::world world;
+
+    flecs::entity e = world.entity().add<Position>().add<Velocity>();
+
+    int32_t count = 0;
+    bool pos_found = false;
+    bool velocity_found = false;
+
+    for (auto id : e.type()) {
+        count ++;
+        if (id == world.id<Position>()) {
+            pos_found = true;
+        }
+        if (id == world.id<Velocity>()) {
+            velocity_found = true;
+        }
+    }
+
+    test_int(count, 2);
+    test_assert(pos_found == true);
+    test_assert(velocity_found == true);
+}
+
+void Entity_iter_empty_type(void) {
+    flecs::world world;
+
+    flecs::entity e = world.entity();
+
+    int32_t count = 0;
+
+    for (auto id : e.type()) {
+        count ++;
+    }
+
+    test_int(count, 0);
+}

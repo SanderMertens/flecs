@@ -296,7 +296,9 @@
                 "get_mut_pair_second_invalid_type",
                 "ensure_pair_second_invalid_type",
                 "set_pair_second_invalid_type",
-                "get_ref_pair_second_invalid_type"
+                "get_ref_pair_second_invalid_type",
+                "iter_type",
+                "iter_empty_type"
             ]
         }, {
             "id": "Pairs",
