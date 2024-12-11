@@ -287,7 +287,7 @@ int EcsScript_serialize(
         ser->member(ser, "code");
         ser->value(ser, ecs_id(ecs_string_t), &data->script->code);
 
-        char *ast = ecs_script_ast_to_str(data->script);
+        char *ast = ecs_script_ast_to_str(data->script, true);
         ser->member(ser, "ast");
         ser->value(ser, ecs_id(ecs_string_t), &ast);
         ecs_os_free(ast);

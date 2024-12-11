@@ -13,6 +13,7 @@ typedef struct ecs_script_str_visitor_t {
     ecs_strbuf_t *buf;
     int32_t depth;
     bool newline;
+    bool colors;
 } ecs_script_str_visitor_t;
 
 static
@@ -85,7 +86,8 @@ void flecs_expr_to_str(
     const ecs_expr_node_t *expr)
 {
     if (expr) {
-        flecs_expr_to_str_buf(v->base.script->pub.world, expr, v->buf);
+        flecs_expr_to_str_buf(
+            v->base.script->pub.world, expr, v->buf, v->colors);
     } else {
         flecs_scriptbuf_appendstr(v, "{}");
     }
@@ -386,11 +388,12 @@ int flecs_script_stmt_to_str(
 
 int ecs_script_ast_to_buf(
     ecs_script_t *script,
-    ecs_strbuf_t *buf)
+    ecs_strbuf_t *buf,
+    bool colors)
 {
     ecs_check(script != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(buf != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_script_str_visitor_t v = { .buf = buf };
+    ecs_script_str_visitor_t v = { .buf = buf, .colors = colors };
     if (ecs_script_visit(flecs_script_impl(script), &v, flecs_script_stmt_to_str)) {
         goto error;
     }
@@ -402,16 +405,17 @@ error:
 }
 
 char* ecs_script_ast_to_str(
-    ecs_script_t *script)
+    ecs_script_t *script,
+    bool colors)
 {
     ecs_check(script != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_strbuf_t buf = ECS_STRBUF_INIT;
 
     if (flecs_script_impl(script)->expr) {
         flecs_expr_to_str_buf(
-            script->world, flecs_script_impl(script)->expr, &buf);
+            script->world, flecs_script_impl(script)->expr, &buf, colors);
     } else {
-        if (ecs_script_ast_to_buf(script, &buf)) {
+        if (ecs_script_ast_to_buf(script, &buf, colors)) {
             goto error;
         }
     }

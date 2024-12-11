@@ -16,66 +16,6 @@ int flecs_expr_visit_type_priv(
     const ecs_expr_eval_desc_t *desc);
 
 static
-bool flecs_expr_operator_is_equality(
-    ecs_script_token_kind_t op)
-{
-    switch(op) {
-    case EcsTokEq:
-    case EcsTokNeq:
-    case EcsTokGt:
-    case EcsTokGtEq:
-    case EcsTokLt:
-    case EcsTokLtEq:
-        return true;
-    case EcsTokAnd:
-    case EcsTokOr:
-    case EcsTokShiftLeft:
-    case EcsTokShiftRight:
-    case EcsTokAdd:
-    case EcsTokSub:
-    case EcsTokMul:
-    case EcsTokDiv:
-    case EcsTokBitwiseAnd:
-    case EcsTokBitwiseOr:
-        return false;
-    case EcsTokUnknown:
-    case EcsTokScopeOpen:
-    case EcsTokScopeClose:
-    case EcsTokParenOpen:
-    case EcsTokParenClose:
-    case EcsTokBracketOpen:
-    case EcsTokBracketClose:
-    case EcsTokMember:
-    case EcsTokComma:
-    case EcsTokSemiColon:
-    case EcsTokColon:
-    case EcsTokAssign:
-    case EcsTokMod:
-    case EcsTokNot:
-    case EcsTokOptional:
-    case EcsTokAnnotation:
-    case EcsTokNewline:
-    case EcsTokMatch:
-    case EcsTokIdentifier:
-    case EcsTokString:
-    case EcsTokNumber:
-    case EcsTokKeywordModule:
-    case EcsTokKeywordUsing:
-    case EcsTokKeywordWith:
-    case EcsTokKeywordIf:
-    case EcsTokKeywordElse:
-    case EcsTokKeywordTemplate:
-    case EcsTokKeywordProp:
-    case EcsTokKeywordConst:
-    case EcsTokEnd:
-    default:
-        ecs_throw(ECS_INTERNAL_ERROR, "invalid operator");
-    }
-error:
-    return false;
-}
-
-static
 bool flecs_expr_is_type_integer(
     ecs_entity_t type)
 {
@@ -96,63 +36,188 @@ bool flecs_expr_is_type_number(
 {
     if      (type == ecs_id(ecs_bool_t))   return false;
     else if (type == ecs_id(ecs_char_t))   return false;
-    else if (type == ecs_id(ecs_u8_t))     return false;
+    else if (type == ecs_id(ecs_u8_t))     return true;
+    else if (type == ecs_id(ecs_u16_t))    return true;
+    else if (type == ecs_id(ecs_u32_t))    return true;
     else if (type == ecs_id(ecs_u64_t))    return true;
+    else if (type == ecs_id(ecs_uptr_t))   return true;
+    else if (type == ecs_id(ecs_i8_t))     return true;
+    else if (type == ecs_id(ecs_i16_t))    return true;
+    else if (type == ecs_id(ecs_i32_t))    return true;
     else if (type == ecs_id(ecs_i64_t))    return true;
+    else if (type == ecs_id(ecs_iptr_t))   return true;
+    else if (type == ecs_id(ecs_f32_t))    return true;
     else if (type == ecs_id(ecs_f64_t))    return true;
     else if (type == ecs_id(ecs_string_t)) return false;
     else if (type == ecs_id(ecs_entity_t)) return false;
     else return false;
 }
 
+/* Returns how expressive a type is. This is used to determine whether an 
+ * implicit cast is allowed, where only casts from less to more expressive types
+ * are valid. */
 static
-ecs_entity_t flecs_expr_largest_type(
-    const EcsPrimitive *type)
+int32_t flecs_expr_expressiveness_score(
+    ecs_entity_t type)
 {
-    switch(type->kind) {
-    case EcsBool:   return ecs_id(ecs_bool_t);
-    case EcsChar:   return ecs_id(ecs_char_t);
-    case EcsByte:   return ecs_id(ecs_u8_t);
-    case EcsU8:     return ecs_id(ecs_u64_t);
-    case EcsU16:    return ecs_id(ecs_u64_t);
-    case EcsU32:    return ecs_id(ecs_u64_t);
-    case EcsU64:    return ecs_id(ecs_u64_t);
-    case EcsI8:     return ecs_id(ecs_i64_t);
-    case EcsI16:    return ecs_id(ecs_i64_t);
-    case EcsI32:    return ecs_id(ecs_i64_t);
-    case EcsI64:    return ecs_id(ecs_i64_t);
-    case EcsF32:    return ecs_id(ecs_f64_t);
-    case EcsF64:    return ecs_id(ecs_f64_t);
-    case EcsUPtr:   return ecs_id(ecs_u64_t);
-    case EcsIPtr:   return ecs_id(ecs_i64_t);
-    case EcsString: return ecs_id(ecs_string_t);
-    case EcsEntity: return ecs_id(ecs_entity_t);
-    case EcsId:     return ecs_id(ecs_id_t);
-    default: ecs_throw(ECS_INTERNAL_ERROR, NULL);
-    }
-error:
-    return 0;
+    if      (type == ecs_id(ecs_bool_t))   return 1;
+    else if (type == ecs_id(ecs_char_t))   return 2;
+
+    else if (type == ecs_id(ecs_u8_t))     return 2;
+    else if (type == ecs_id(ecs_u16_t))    return 3;
+    else if (type == ecs_id(ecs_u32_t))    return 4;
+    else if (type == ecs_id(ecs_uptr_t))   return 5;
+    else if (type == ecs_id(ecs_u64_t))    return 6;
+
+    else if (type == ecs_id(ecs_i8_t))     return 7;
+    else if (type == ecs_id(ecs_i16_t))    return 8;
+    else if (type == ecs_id(ecs_i32_t))    return 9;
+    else if (type == ecs_id(ecs_iptr_t))   return 10;
+    else if (type == ecs_id(ecs_i64_t))    return 11;
+
+    else if (type == ecs_id(ecs_f32_t))    return 12;
+    else if (type == ecs_id(ecs_f64_t))    return 13;
+
+    else if (type == ecs_id(ecs_string_t)) return -1;
+    else if (type == ecs_id(ecs_entity_t)) return -1;
+    else return false;
 }
 
-/** Promote type to most expressive (f64 > i64 > u64) */
+/* Returns a score based on the storage size of a type. This is used in 
+ * combination with expressiveness to determine whether a type can be implicitly
+ * casted. An implicit cast is only valid if the destination type is both more
+ * expressive and has a larger storage size. */
 static
-ecs_entity_t flecs_expr_promote_type(
-    ecs_entity_t type,
-    ecs_entity_t promote_to)
+ecs_size_t flecs_expr_storage_score(
+    ecs_entity_t type)
 {
-    if (type == ecs_id(ecs_u64_t)) {
-        return promote_to;
+    if      (type == ecs_id(ecs_bool_t))   return 1;
+    else if (type == ecs_id(ecs_char_t))   return 1;
+
+    /* Unsigned integers have a larger storage size than signed integers, since
+     * the unsigned range of a signed integer is smaller. */
+    else if (type == ecs_id(ecs_u8_t))     return 2;
+    else if (type == ecs_id(ecs_u16_t))    return 3;
+    else if (type == ecs_id(ecs_u32_t))    return 4;
+    else if (type == ecs_id(ecs_uptr_t))   return 6;
+    else if (type == ecs_id(ecs_u64_t))    return 7;
+
+    else if (type == ecs_id(ecs_i8_t))     return 1;
+    else if (type == ecs_id(ecs_i16_t))    return 2;
+    else if (type == ecs_id(ecs_i32_t))    return 3;
+    else if (type == ecs_id(ecs_iptr_t))   return 5;
+    else if (type == ecs_id(ecs_i64_t))    return 6;
+
+    /* Floating points have a smaller storage score, since the largest integer 
+     * that can be represented exactly is lower than the actual storage size. */
+    else if (type == ecs_id(ecs_f32_t))    return 3;
+    else if (type == ecs_id(ecs_f64_t))    return 4;
+
+    else if (type == ecs_id(ecs_string_t)) return -1;
+    else if (type == ecs_id(ecs_entity_t)) return -1;
+    else return false;
+}
+
+/* This function returns true if an type can be casted without changing the 
+ * precision of the value. It is used to determine a type for operands in a 
+ * binary expression in case they are of different types. */
+static
+bool flecs_expr_implicit_cast_allowed(
+    ecs_entity_t from,
+    ecs_entity_t to)
+{
+    int32_t from_e = flecs_expr_expressiveness_score(from);
+    int32_t to_e = flecs_expr_expressiveness_score(to);
+    if (from_e == -1 || to_e == -1) {
+        return false;
     }
-    if (promote_to == ecs_id(ecs_u64_t)) {
+
+    if (to_e >= from_e) {
+        return flecs_expr_storage_score(to) >= flecs_expr_storage_score(from);
+    }
+
+    return false;
+}
+
+static
+ecs_entity_t flecs_expr_cast_to_lvalue(
+    ecs_entity_t lvalue,
+    ecs_entity_t operand)
+{
+    if (flecs_expr_implicit_cast_allowed(operand, lvalue)) {
+        return lvalue;
+    }
+
+    return operand;
+}
+
+static
+ecs_entity_t flecs_expr_narrow_type(
+    ecs_entity_t lvalue,
+    ecs_expr_node_t *node)
+{
+    ecs_entity_t type = node->type;
+
+    if (node->kind != EcsExprValue) {
         return type;
     }
-    if (type == ecs_id(ecs_f64_t)) {
+
+    if (!flecs_expr_is_type_number(type)) {
         return type;
     }
-    if (promote_to == ecs_id(ecs_f64_t)) {
-        return promote_to;
+
+    void *ptr = ((ecs_expr_value_node_t*)node)->ptr;
+
+    uint64_t uval;
+
+    if (type == ecs_id(ecs_u8_t)) {
+        uval = *(ecs_u8_t*)ptr;
+    } else if (type == ecs_id(ecs_u16_t)) {
+        uval = *(ecs_u16_t*)ptr;
+    } else if (type == ecs_id(ecs_u32_t)) {
+        uval = *(ecs_u32_t*)ptr;
+    } else if (type == ecs_id(ecs_u64_t)) {
+        uval = *(ecs_u32_t*)ptr;
+    } else {
+        int64_t ival;
+
+        if (type == ecs_id(ecs_i8_t)) {
+            ival = *(ecs_i8_t*)ptr;
+        } else if (type == ecs_id(ecs_i16_t)) {
+            ival = *(ecs_i16_t*)ptr;
+        } else if (type == ecs_id(ecs_i32_t)) {
+            ival = *(ecs_i32_t*)ptr;
+        } else if (type == ecs_id(ecs_i64_t)) {
+            ival = *(ecs_i64_t*)ptr;
+        } else {
+            /* If the lvalue type is a floating point type we can narrow the
+             * literal to that since we'll lose double precision anyway. */
+            if (lvalue == ecs_id(ecs_f32_t)) {
+                return ecs_id(ecs_f32_t);
+            }
+            return type;
+        }
+
+        if (ival <= INT8_MAX && ival >= INT8_MIN) {
+            return ecs_id(ecs_i8_t);
+        } else if (ival <= INT16_MAX && ival >= INT16_MIN) {
+            return ecs_id(ecs_i16_t);
+        } else if (ival <= INT32_MAX && ival >= INT32_MIN) {
+            return ecs_id(ecs_i32_t);
+        } else {
+            return ecs_id(ecs_i64_t);
+        }
     }
-    return ecs_id(ecs_i64_t);
+
+    if (uval <= UINT8_MAX) {
+        return ecs_id(ecs_u8_t);
+    } else if (uval <= UINT16_MAX) {
+        return ecs_id(ecs_u16_t);
+    } else if (uval <= UINT32_MAX) {
+        return ecs_id(ecs_u32_t);
+    } else {
+        return ecs_id(ecs_u64_t);
+    }
 }
 
 static
@@ -237,8 +302,13 @@ int flecs_expr_type_for_oper(
     switch(node->operator) {
     case EcsTokDiv: 
         /* Result type of a division is always a float */
-        *operand_type = ecs_id(ecs_f64_t);
-        *result_type = ecs_id(ecs_f64_t);
+        if (left->type != ecs_id(ecs_f32_t) && left->type != ecs_id(ecs_f64_t)){
+            *operand_type = ecs_id(ecs_f64_t);
+            *result_type = ecs_id(ecs_f64_t);
+        } else {
+            *operand_type = left->type;
+            *result_type = left->type;
+        }
         return 0;
     case EcsTokAnd:
     case EcsTokOr:
@@ -319,31 +389,105 @@ int flecs_expr_type_for_oper(
         goto error;
     }
 
-    ecs_entity_t ltype = flecs_expr_largest_type(ltype_ptr);
-    ecs_entity_t rtype = flecs_expr_largest_type(rtype_ptr);
+    /* If left and right type are the same, do nothing */
+    if (left->type == right->type) {
+        *operand_type = left->type;
+        goto done;
+    }
+
+    /* If types are not the same, find the smallest type for literals that can
+     * represent the value without losing precision. */
+    ecs_entity_t ltype = flecs_expr_narrow_type(node->node.type, left);
+    ecs_entity_t rtype = flecs_expr_narrow_type(node->node.type, right);
+
+    /* If types are not the same, try to implicitly cast to expression type */
+    ltype = flecs_expr_cast_to_lvalue(node->node.type, ltype);
+    rtype = flecs_expr_cast_to_lvalue(node->node.type, rtype);
+
     if (ltype == rtype) {
         *operand_type = ltype;
         goto done;
     }
 
-    if (flecs_expr_operator_is_equality(node->operator)) {
-        char *lname = ecs_id_str(world, ltype);
-        char *rname = ecs_id_str(world, rtype);
-        flecs_expr_visit_error(script, node, 
-            "mismatching types in equality expression (%s vs %s)", 
-            lname, rname);
-        ecs_os_free(rname);
-        ecs_os_free(lname);
-        goto error;
+    if (node->operator == EcsTokEq || node->operator == EcsTokNeq) {
+        /* If this is an equality comparison and one of the operands is a bool, 
+         * cast the other operand to a bool as well. This ensures that 
+         * expressions such as true == 2 evaluate to true. */
+        if (ltype == ecs_id(ecs_bool_t) || rtype == ecs_id(ecs_bool_t)) {
+            *operand_type = ecs_id(ecs_bool_t);
+            goto done;
+        }
+
+        /* Equality comparisons between floating point types are invalid */
+        if (ltype == ecs_id(ecs_f32_t) || ltype == ecs_id(ecs_f64_t)) {
+            flecs_expr_visit_error(script, node,
+                "floating point value is invalid in equality comparison");
+            goto error;
+        }
+
+        if (rtype == ecs_id(ecs_f32_t) || rtype == ecs_id(ecs_f64_t)) {
+            flecs_expr_visit_error(script, node,
+                "floating point value is invalid in equality comparison");
+            goto error;
+        }
     }
 
-    if (!flecs_expr_is_type_number(ltype) || !flecs_expr_is_type_number(rtype)) {
-        flecs_expr_visit_error(script, node,
-            "incompatible types in binary expression");
-        goto error;
+    /* If after the implicit cast types are not the same, try to implicitly cast
+     * to the most expressive type. */
+    if (flecs_expr_expressiveness_score(ltype) >= 
+        flecs_expr_expressiveness_score(rtype)) 
+    {
+        if (flecs_expr_implicit_cast_allowed(rtype, ltype)) {
+            *operand_type = ltype;
+            goto done;
+        }
+    } else {
+        if (flecs_expr_implicit_cast_allowed(ltype, rtype)) {
+            *operand_type = rtype;
+            goto done;
+        }
     }
 
-    *operand_type = flecs_expr_promote_type(ltype, rtype);
+    /* If we get here one or both operands cannot be coerced to the same type
+     * while guaranteeing no loss of precision. Pick the type that's least 
+     * likely to cause trouble. */
+
+    if (flecs_expr_is_type_number(ltype) && flecs_expr_is_type_number(rtype)) {
+
+        /* If one of the types is a floating point, use f64 */
+        if (ltype == ecs_id(ecs_f32_t) || ltype == ecs_id(ecs_f64_t) ||
+            rtype == ecs_id(ecs_f32_t) || rtype == ecs_id(ecs_f64_t))
+        {
+            *operand_type = ecs_id(ecs_f64_t);
+            goto done;
+        }
+
+        /* If one of the types is an integer, use i64 */
+        if (ltype == ecs_id(ecs_i8_t) || ltype == ecs_id(ecs_i16_t) ||
+            ltype == ecs_id(ecs_i32_t) || ltype == ecs_id(ecs_i64_t))
+        {
+            *operand_type = ecs_id(ecs_i64_t);
+            goto done;
+        }
+        if (rtype == ecs_id(ecs_i8_t) || rtype == ecs_id(ecs_i16_t) ||
+            rtype == ecs_id(ecs_i32_t) || rtype == ecs_id(ecs_i64_t))
+        {
+            *operand_type = ecs_id(ecs_i64_t);
+            goto done;
+        }
+    }
+
+    /* If all of that didn't work, give up */
+
+    char *ltype_str = ecs_id_str(world, ltype);
+    char *rtype_str = ecs_id_str(world, rtype);
+    flecs_expr_visit_error(script, node,
+        "incompatible types in binary expression (%s vs %s)", 
+            ltype_str, rtype_str);
+    ecs_os_free(ltype_str);
+    ecs_os_free(rtype_str);
+error:
+    return -1;
 
 done:
     if (node->operator == EcsTokSub && *operand_type == ecs_id(ecs_u64_t)) {
@@ -356,8 +500,6 @@ done:
     }
 
     return 0;
-error:
-    return -1;
 }
 
 static
@@ -494,6 +636,12 @@ int flecs_expr_binary_visit_type(
 
     /* Resulting type of binary expression */
     ecs_entity_t result_type = 0;
+
+    if (cur->valid) {
+        /* Provides a hint to the type visitor. The lvalue type will be used to
+         * reduce the number of casts where possible. */
+        node->node.type = ecs_meta_get_type(cur);
+    }
 
     if (flecs_expr_visit_type_priv(script, node->left, cur, desc)) {
         goto error;

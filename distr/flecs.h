@@ -14531,7 +14531,8 @@ void ecs_script_runtime_free(
 FLECS_API
 int ecs_script_ast_to_buf(
     ecs_script_t *script,
-    ecs_strbuf_t *buf);
+    ecs_strbuf_t *buf,
+    bool colors);
 
 /** Convert script AST to string.
  * This operation converts the script abstract syntax tree to a string, which
@@ -14542,7 +14543,8 @@ int ecs_script_ast_to_buf(
  */
 FLECS_API
 char* ecs_script_ast_to_str(
-    ecs_script_t *script);
+    ecs_script_t *script,
+    bool colors);
 
 
 /* Managed scripts (script associated with entity that outlives the function) */

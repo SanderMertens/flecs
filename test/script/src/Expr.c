@@ -1845,12 +1845,47 @@ void Expr_cond_neq_int(void) {
 void Expr_cond_eq_bool_int(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_value_t v = {0};
+    {
+        ecs_value_t v = {0};
+        test_assert(ecs_expr_run(world, "true == 1", &v, NULL) != NULL);
+        test_assert(v.type == ecs_id(ecs_bool_t));
+        test_assert(*(bool*)v.ptr == true);
+    }
 
-    ecs_log_set_level(-4);
-    test_assert(ecs_expr_run(world, "true == 1", &v, NULL) == NULL);
-    test_assert(ecs_expr_run(world, "true == 0", &v, NULL) == NULL);
-    test_assert(ecs_expr_run(world, "false == 0", &v, NULL) == NULL);
+    {
+        ecs_value_t v = {0};
+        test_assert(ecs_expr_run(world, "true == 2", &v, NULL) != NULL);
+        test_assert(v.type == ecs_id(ecs_bool_t));
+        test_assert(*(bool*)v.ptr == true);
+    }
+
+    {
+        ecs_value_t v = {0};
+        test_assert(ecs_expr_run(world, "true == 0", &v, NULL) != NULL);
+        test_assert(v.type == ecs_id(ecs_bool_t));
+        test_assert(*(bool*)v.ptr == false);
+    }
+
+    {
+        ecs_value_t v = {0};
+        test_assert(ecs_expr_run(world, "false == 1", &v, NULL) != NULL);
+        test_assert(v.type == ecs_id(ecs_bool_t));
+        test_assert(*(bool*)v.ptr == false);
+    }
+
+    {
+        ecs_value_t v = {0};
+        test_assert(ecs_expr_run(world, "false == 2", &v, NULL) != NULL);
+        test_assert(v.type == ecs_id(ecs_bool_t));
+        test_assert(*(bool*)v.ptr == false);
+    }
+
+    {
+        ecs_value_t v = {0};
+        test_assert(ecs_expr_run(world, "false == 0", &v, NULL) != NULL);
+        test_assert(v.type == ecs_id(ecs_bool_t));
+        test_assert(*(bool*)v.ptr == true);
+    }
 
     ecs_fini(world);
 }
@@ -1864,6 +1899,10 @@ void Expr_cond_eq_int_flt(void) {
     test_assert(ecs_expr_run(world, "1 == 1.0", &v, NULL) == NULL);
     test_assert(ecs_expr_run(world, "1 == 0.0", &v, NULL) == NULL);
     test_assert(ecs_expr_run(world, "0 == 0.0", &v, NULL) == NULL);
+
+    test_assert(ecs_expr_run(world, "1 != 1.0", &v, NULL) == NULL);
+    test_assert(ecs_expr_run(world, "1 != 0.0", &v, NULL) == NULL);
+    test_assert(ecs_expr_run(world, "0 != 0.0", &v, NULL) == NULL);
 
     ecs_fini(world);
 }

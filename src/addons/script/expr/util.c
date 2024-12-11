@@ -135,6 +135,8 @@ int flecs_value_binary(
     ecs_value_t *out,
     ecs_script_token_kind_t operator)
 {
+    (void)script;
+
     switch(operator) {
     case EcsTokAdd:
         ECS_BINARY_OP(left, right, out, +);

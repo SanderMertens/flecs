@@ -597,6 +597,13 @@ void Expr_remainder_after_initializer_before_parens(void);
 void Expr_space_at_start(void);
 void Expr_newline_at_start(void);
 
+// Testsuite 'ExprAst'
+void ExprAst_binary_f32_var_add_f32_var(void);
+void ExprAst_binary_f32_var_add_int(void);
+void ExprAst_binary_f32_var_div_int(void);
+void ExprAst_binary_f32_var_add_flt(void);
+void ExprAst_binary_f32_var_div_by_int_sub_int(void);
+
 // Testsuite 'Vars'
 void Vars_declare_1_var(void);
 void Vars_declare_2_vars(void);
@@ -3095,6 +3102,29 @@ bake_test_case Expr_testcases[] = {
     }
 };
 
+bake_test_case ExprAst_testcases[] = {
+    {
+        "binary_f32_var_add_f32_var",
+        ExprAst_binary_f32_var_add_f32_var
+    },
+    {
+        "binary_f32_var_add_int",
+        ExprAst_binary_f32_var_add_int
+    },
+    {
+        "binary_f32_var_div_int",
+        ExprAst_binary_f32_var_div_int
+    },
+    {
+        "binary_f32_var_add_flt",
+        ExprAst_binary_f32_var_add_flt
+    },
+    {
+        "binary_f32_var_div_by_int_sub_int",
+        ExprAst_binary_f32_var_div_by_int_sub_int
+    }
+};
+
 bake_test_case Vars_testcases[] = {
     {
         "declare_1_var",
@@ -3781,6 +3811,13 @@ static bake_test_suite suites[] = {
         Expr_params
     },
     {
+        "ExprAst",
+        NULL,
+        NULL,
+        5,
+        ExprAst_testcases
+    },
+    {
         "Vars",
         NULL,
         NULL,
@@ -3806,5 +3843,5 @@ static bake_test_suite suites[] = {
 };
 
 int main(int argc, char *argv[]) {
-    return bake_test_run("script", argc, argv, suites, 7);
+    return bake_test_run("script", argc, argv, suites, 8);
 }
