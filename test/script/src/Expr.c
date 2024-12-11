@@ -1850,6 +1850,7 @@ void Expr_cond_eq_bool_int(void) {
         test_assert(ecs_expr_run(world, "true == 1", &v, NULL) != NULL);
         test_assert(v.type == ecs_id(ecs_bool_t));
         test_assert(*(bool*)v.ptr == true);
+        ecs_value_free(world, v.type, v.ptr);
     }
 
     {
@@ -1857,6 +1858,7 @@ void Expr_cond_eq_bool_int(void) {
         test_assert(ecs_expr_run(world, "true == 2", &v, NULL) != NULL);
         test_assert(v.type == ecs_id(ecs_bool_t));
         test_assert(*(bool*)v.ptr == true);
+        ecs_value_free(world, v.type, v.ptr);
     }
 
     {
@@ -1864,6 +1866,7 @@ void Expr_cond_eq_bool_int(void) {
         test_assert(ecs_expr_run(world, "true == 0", &v, NULL) != NULL);
         test_assert(v.type == ecs_id(ecs_bool_t));
         test_assert(*(bool*)v.ptr == false);
+        ecs_value_free(world, v.type, v.ptr);
     }
 
     {
@@ -1871,6 +1874,7 @@ void Expr_cond_eq_bool_int(void) {
         test_assert(ecs_expr_run(world, "false == 1", &v, NULL) != NULL);
         test_assert(v.type == ecs_id(ecs_bool_t));
         test_assert(*(bool*)v.ptr == false);
+        ecs_value_free(world, v.type, v.ptr);
     }
 
     {
@@ -1878,6 +1882,7 @@ void Expr_cond_eq_bool_int(void) {
         test_assert(ecs_expr_run(world, "false == 2", &v, NULL) != NULL);
         test_assert(v.type == ecs_id(ecs_bool_t));
         test_assert(*(bool*)v.ptr == false);
+        ecs_value_free(world, v.type, v.ptr);
     }
 
     {
@@ -1885,6 +1890,7 @@ void Expr_cond_eq_bool_int(void) {
         test_assert(ecs_expr_run(world, "false == 0", &v, NULL) != NULL);
         test_assert(v.type == ecs_id(ecs_bool_t));
         test_assert(*(bool*)v.ptr == true);
+        ecs_value_free(world, v.type, v.ptr);
     }
 
     ecs_fini(world);

@@ -135,7 +135,9 @@ int flecs_expr_cast_visit_fold(
         return 0;
     }
 
-    ecs_meta_cursor_t cur = ecs_meta_cursor(script->world, dst_type, expr->ptr);
+    void *dst_ptr = ecs_value_new(script->world, dst_type);
+
+    ecs_meta_cursor_t cur = ecs_meta_cursor(script->world, dst_type, dst_ptr);
     ecs_value_t value = {
         .type = src_type,
         .ptr = expr->ptr
@@ -143,10 +145,16 @@ int flecs_expr_cast_visit_fold(
 
     if (ecs_meta_set_value(&cur, &value)) {
         flecs_expr_visit_error(script, node, "failed to assign value");
+        ecs_value_free(script->world, dst_type, dst_ptr);
         goto error;
     }
 
+    if (expr->ptr != &expr->storage) {
+        ecs_value_free(script->world, expr->node.type, expr->ptr);
+    }
+
     expr->node.type = dst_type;
+    expr->ptr = dst_ptr;
 
     node->expr = NULL; /* Prevent cleanup */
     flecs_visit_fold_replace(script, node_ptr, (ecs_expr_node_t*)expr);
