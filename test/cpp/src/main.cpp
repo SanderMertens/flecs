@@ -289,6 +289,8 @@ void Entity_get_mut_pair_second_invalid_type(void);
 void Entity_ensure_pair_second_invalid_type(void);
 void Entity_set_pair_second_invalid_type(void);
 void Entity_get_ref_pair_second_invalid_type(void);
+void Entity_iter_type(void);
+void Entity_iter_empty_type(void);
 
 // Testsuite 'Pairs'
 void Pairs_add_component_pair(void);
@@ -2520,6 +2522,14 @@ bake_test_case Entity_testcases[] = {
     {
         "get_ref_pair_second_invalid_type",
         Entity_get_ref_pair_second_invalid_type
+    },
+    {
+        "iter_type",
+        Entity_iter_type
+    },
+    {
+        "iter_empty_type",
+        Entity_iter_empty_type
     }
 };
 
@@ -6882,7 +6892,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        276,
+        278,
         Entity_testcases
     },
     {
