@@ -28,12 +28,18 @@ struct ecs_script_template_t {
     const ecs_type_info_t *type_info;
 };
 
+#define ECS_TEMPLATE_SMALL_SIZE (36)
+
 /* Event used for deferring template instantiation */
 typedef struct EcsTemplateSetEvent {
     ecs_entity_t template_entity;
     ecs_entity_t *entities;
     void *data;
     int32_t count;
+
+    /* Storage for small template types */
+    char data_storage[ECS_TEMPLATE_SMALL_SIZE];
+    ecs_entity_t entity_storage;
 } EcsTemplateSetEvent;
 
 int flecs_script_eval_template(

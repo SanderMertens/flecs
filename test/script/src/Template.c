@@ -2376,3 +2376,67 @@ void Template_fold_const(void) {
 
     ecs_fini(world);
 }
+
+void Template_bulk_create_template(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_struct(world, {
+        .entity = ecs_id(Velocity),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "template Position {"
+    LINE "  prop x = f32: 0"
+    LINE "  prop y = f32: 0"
+    LINE "  Velocity: {$x + 5, $y + 5}"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+
+    Position p[] = {
+        {10, 20},
+        {30, 40}
+    };
+
+    void *data[] = {p};
+
+    const ecs_entity_t *entities = ecs_bulk_init(world, &(ecs_bulk_desc_t) {
+        .count = 2,
+        .ids = {ecs_id(Position)},
+        .data = data
+    });
+
+    test_assert(entities[0] != 0);
+    test_assert(entities[1] != 0);
+
+    {
+        const Velocity *v = ecs_get(world, entities[0], Velocity);
+        test_assert(v != NULL);
+        test_int(v->x, 15);
+        test_int(v->y, 25);
+    }
+
+    {
+        const Velocity *v = ecs_get(world, entities[1], Velocity);
+        test_assert(v != NULL);
+        test_int(v->x, 35);
+        test_int(v->y, 45);
+    }
+
+    ecs_fini(world);
+}

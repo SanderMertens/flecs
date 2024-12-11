@@ -1300,9 +1300,19 @@ int ecs_script_eval(
     ecs_script_impl_t *impl = flecs_script_impl(
         /* Safe, script will only be used for reading by visitor */
         ECS_CONST_CAST(ecs_script_t*, script));
-    flecs_script_eval_visit_init(impl, &v, desc);
+
+    ecs_script_eval_desc_t priv_desc = {0};
+    if (desc) {
+        priv_desc = *desc;
+    }
+
+    if (!priv_desc.runtime) {
+        priv_desc.runtime = flecs_script_runtime_get(script->world);
+    }
+
+    flecs_script_eval_visit_init(impl, &v, &priv_desc);
     int result = ecs_script_visit(impl, &v, flecs_script_eval_node);
-    flecs_script_eval_visit_fini(&v, desc);
+    flecs_script_eval_visit_fini(&v, &priv_desc);
     return result;
 }
 

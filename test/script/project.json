@@ -327,7 +327,8 @@
                 "template_w_prefab_and_instance",
                 "template_w_with_var",
                 "template_w_with_prop",
-                "fold_const"
+                "fold_const",
+                "bulk_create_template"
             ]
         }, {
             "id": "Error",

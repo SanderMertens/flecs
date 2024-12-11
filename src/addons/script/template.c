@@ -12,21 +12,36 @@ ECS_COMPONENT_DECLARE(EcsTemplateSetEvent);
 ECS_DECLARE(EcsTemplate);
 
 static
+void flecs_template_set_event_free(EcsTemplateSetEvent *ptr) {
+    if (ptr->entities != &ptr->entity_storage) {
+        ecs_os_free(ptr->entities);
+    }
+    if (ptr->data != ptr->data_storage) {
+        ecs_os_free(ptr->data);
+    }
+}
+
+static
 ECS_MOVE(EcsTemplateSetEvent, dst, src, {
-    ecs_os_free(dst->entities);
-    ecs_os_free(dst->data);
-    dst->entities = src->entities;
-    dst->data = src->data;
-    dst->template_entity = src->template_entity;
-    dst->count = src->count;
+    flecs_template_set_event_free(dst);
+
+    *dst = *src;
+
+    if (src->entities == &src->entity_storage) {
+        dst->entities = &dst->entity_storage;
+    }
+
+    if (src->data == src->data_storage) {
+        dst->data = &dst->data_storage;
+    }
+
     src->entities = NULL;
     src->data = NULL;
 })
 
 static
 ECS_DTOR(EcsTemplateSetEvent, ptr, {
-    ecs_os_free(ptr->entities);
-    ecs_os_free(ptr->data);
+    flecs_template_set_event_free(ptr);
 })
 
 /* Template ctor to initialize with default property values */
@@ -86,8 +101,18 @@ void flecs_script_template_defer_on_set(
     void *data)
 {
     EcsTemplateSetEvent evt;
-    evt.entities = ecs_os_memdup_n(it->entities, ecs_entity_t, it->count);
-    evt.data = ecs_os_memdup(data, ti->size * it->count);
+
+    if ((it->count == 1) && ti->size <= ECS_TEMPLATE_SMALL_SIZE && !ti->hooks.dtor) {
+        /* This should be true for the vast majority of templates */
+        evt.entities = &evt.entity_storage;
+        evt.data = evt.data_storage;
+        evt.entity_storage = it->entities[0];
+        ecs_os_memcpy(evt.data, data, ti->size);
+    } else {
+        evt.entities = ecs_os_memdup_n(it->entities, ecs_entity_t, it->count);
+        evt.data = ecs_os_memdup(data, ti->size * it->count);
+    }
+
     evt.count = it->count;
     evt.template_entity = template_entity;
 
@@ -127,7 +152,11 @@ void flecs_script_template_instantiate(
     const EcsStruct *st = ecs_record_get(world, r, EcsStruct);
 
     ecs_script_eval_visitor_t v;
-    flecs_script_eval_visit_init(flecs_script_impl(script->script), &v, NULL);
+    ecs_script_eval_desc_t desc = {
+        .runtime = flecs_script_runtime_get(world)
+    };
+
+    flecs_script_eval_visit_init(flecs_script_impl(script->script), &v, &desc);
     ecs_vec_t prev_using = v.r->using;
     v.r->using = template->using_;
 
@@ -191,7 +220,7 @@ void flecs_script_template_instantiate(
     }
 
     v.r->using = prev_using;
-    flecs_script_eval_visit_fini(&v, NULL);
+    flecs_script_eval_visit_fini(&v, &desc);
 }
 
 static

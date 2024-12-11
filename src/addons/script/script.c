@@ -275,6 +275,25 @@ void ecs_script_runtime_free(
     ecs_os_free(r);
 }
 
+ecs_script_runtime_t* flecs_script_runtime_get(
+    ecs_world_t *world)
+{
+    ecs_stage_t *stage;
+    if (flecs_poly_is(world, ecs_stage_t)) {
+        stage = (ecs_stage_t*)world;
+    } else {
+        stage = world->stages[0];
+    }
+
+    ecs_assert(stage != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    if (!stage->runtime) {
+        stage->runtime = ecs_script_runtime_new();
+    }
+
+    return stage->runtime;
+}
+
 static
 int EcsScript_serialize(
     const ecs_serializer_t *ser, 

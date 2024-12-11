@@ -653,6 +653,12 @@ void flecs_stage_free(
         flecs_commands_fini(stage, &stage->cmd_stack[i]);
     }
 
+#ifdef FLECS_SCRIPT
+    if (stage->runtime) {
+        ecs_script_runtime_free(stage->runtime);
+    }
+#endif
+
     flecs_stack_fini(&stage->allocators.iter_stack);
     flecs_stack_fini(&stage->allocators.deser_stack);
     flecs_ballocator_fini(&stage->allocators.cmd_entry_chunk);

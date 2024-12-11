@@ -101,6 +101,9 @@ const char* flecs_term_parse(
     ecs_term_t *term,
     char *token_buffer);
 
+ecs_script_runtime_t* flecs_script_runtime_get(
+    ecs_world_t *world);
+
 void flecs_script_register_builtin_functions(
     ecs_world_t *world);
 

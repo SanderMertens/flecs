@@ -322,6 +322,7 @@ void Template_template_w_prefab_and_instance(void);
 void Template_template_w_with_var(void);
 void Template_template_w_with_prop(void);
 void Template_fold_const(void);
+void Template_bulk_create_template(void);
 
 // Testsuite 'Error'
 void Error_multi_line_comment_after_newline_before_newline_scope_open(void);
@@ -2017,6 +2018,10 @@ bake_test_case Template_testcases[] = {
     {
         "fold_const",
         Template_fold_const
+    },
+    {
+        "bulk_create_template",
+        Template_bulk_create_template
     }
 };
 
@@ -3791,7 +3796,7 @@ static bake_test_suite suites[] = {
         "Template",
         NULL,
         NULL,
-        46,
+        47,
         Template_testcases
     },
     {

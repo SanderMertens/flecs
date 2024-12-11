@@ -230,6 +230,11 @@ struct ecs_stage_t {
     /* Caches for query creation */
     ecs_vec_t variables;
     ecs_vec_t operations;
+
+#ifdef FLECS_SCRIPT
+    /* Thread specific runtime for script execution */
+    ecs_script_runtime_t *runtime;
+#endif
 };
 
 /* Component monitor */
