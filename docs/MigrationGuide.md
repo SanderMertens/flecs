@@ -26,6 +26,7 @@ Additionally the following things have changed:
 - `ecs_query_desc_t::group_by` has been renamed to `ecs_query_desc_t::group_by_callback`
 - `ecs_query_desc_t::order_by_component` has been renamed to `ecs_query_desc_t::order_by`
 - `ecs_query_desc_t::order_by` has been renamed to `ecs_query_desc_t::order_by_callback`
+- `ecs_query_desc_t::filter::terms` has been moved to `ecs_query_desc_t::terms`
 - The `ecs_query_next_table` and `ecs_query_populate` functions have been removed.
 - The `ecs_query_table_count` and `ecs_query_empty_table_count` functions have been replaced with `ecs_query_count`, which now returns a struct.
 - The `ecs_query_t` struct is now public, which means that many of the old accessor functions (like `ecs_query_get_ctx`, `ecs_query_get_binding_ctx`) are no longer necessary.
@@ -138,7 +139,7 @@ ecs_query_t *q = ecs_query(world, {
 
 // Create cached query with cache kind
 ecs_query_t *q = ecs_query(world, {
-    .filter.terms = {
+    .terms = {
         { .id = ecs_id(Position) },
         { .id = ecs_id(Velocity) },
     },
@@ -357,6 +358,7 @@ The following changes were made to the `new` family of functions in the C API:
 
 - `ecs_new(world, T)` got renamed to `ecs_new_w`
 - `ecs_new_id` got renamed to `ecs_new`
+- `ecs_new_entity(world, "EntityName")` got renamed to `ecs_entity(world, { .name = "EntityName" })`
 
 In v3, `ecs_new` took into account values set by `ecs_set_scope` and `ecs_set_with`. In v4 this is no longer the case, and the `ecs_new_w` function will only return the entity with the specified component. To get the old behavior that takes into account scope and with, use `ecs_entity_init`.
 
@@ -519,3 +521,9 @@ The following addons have been removed/merged with other addons:
 - The `ecs_term_copy`/`ecs_term_move`/`ecs_term_fini` functions have been removed. Terms no longer exist by themselves, and term resources are now owned by the query object.
 - The `ecs_iter_poly` function has been removed. To iterate all entities in the world, now use `ecs_get_entities`.
 - `ecs_field_column` has been renamed to `ecs_field_column_index`.
+- `FLECS_TERM_DESC_MAX` has been renamed to `FLECS_TERM_COUNT_MAX`.
+- `ecs_app_desc_t::enable_monitor` has been renamed to `ecs_app_desc_t::enable_stats`.
+- `ecs_singleton_ensure` has been renamed to `ecs_singleton_add`.
+- `ecs_query_fini()` won't be called automatically for standalone queries.
+- `EcsMetaType` and `EcsMetaTypeSerialized` have been renamed to `EcsType` and `EcsTypeSerialized`, respectively.
+- `ecs_iter_t::terms` has been moved to `ecs_iter_t::query::terms`.
