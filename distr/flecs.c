@@ -20662,8 +20662,13 @@ ecs_entities_t ecs_get_entities(
 ecs_flags32_t ecs_world_get_flags(
     const ecs_world_t *world)
 {
-    flecs_poly_assert(world, ecs_world_t);
-    return world->flags;
+    if (flecs_poly_is(world, ecs_world_t)) {
+        return world->flags;
+    } else {
+        flecs_poly_assert(world, ecs_stage_t);
+        const ecs_stage_t *stage = (const ecs_stage_t*)world;
+        return stage->world->flags;
+    }
 }
 
 /**
@@ -29984,7 +29989,7 @@ void flecs_hashmap_fini(
         ecs_hm_bucket_t *bucket = ecs_map_ptr(&it);
         ecs_vec_fini(a, &bucket->keys, map->key_size);
         ecs_vec_fini(a, &bucket->values, map->value_size);
-#ifdef FLECS_SANITIZE        
+#if defined(FLECS_SANITIZE) || defined(FLECS_USE_OS_ALLOC)
         flecs_bfree(&map->bucket_allocator, bucket);
 #endif
     }
@@ -30439,7 +30444,7 @@ void ecs_map_fini(
     }
 
     bool sanitize = false;
-#ifdef FLECS_SANITIZE
+#if defined(FLECS_SANITIZE) || defined(FLECS_USE_OS_ALLOC)
     sanitize = true;
 #endif
 
@@ -71024,7 +71029,9 @@ ecs_iter_t ecs_query_iter(
     if (cache) {
         /* If monitors changed, do query rematching */
         ecs_flags32_t flags = q->flags;
-        if (!(world->flags & EcsWorldReadonly) && flags & EcsQueryHasRefs) {
+        if (!(ecs_world_get_flags(world) & EcsWorldReadonly) && 
+             (flags & EcsQueryHasRefs)) 
+        {
             flecs_eval_component_monitors(q->world);
         }
     }
