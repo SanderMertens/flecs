@@ -2872,7 +2872,7 @@ void OnDelete_delete_with_inherited_tag_w_observer(void) {
     ecs_entity_t base = ecs_new_w(world, Tag);
     ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, base);
     
-    Probe ctx;
+    Probe ctx = {0};
     ecs_entity_t o = ecs_observer_init(world, &(ecs_observer_desc_t){
         .query.terms = {{ Tag }},
         .events = { EcsOnRemove },
