@@ -527,3 +527,4 @@ The following addons have been removed/merged with other addons:
 - `ecs_query_fini()` won't be called automatically for standalone queries.
 - `EcsMetaType` and `EcsMetaTypeSerialized` have been renamed to `EcsType` and `EcsTypeSerialized`, respectively.
 - `ecs_iter_t::terms` has been moved to `ecs_iter_t::query::terms`.
+- `ecs_entity_desc_t::add` and `ecs_entity_desc_t::set` are no longer arrays but pointers to zero-terminated arrays. 
