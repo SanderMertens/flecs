@@ -1946,6 +1946,8 @@ void flecs_type_info_free(
     ecs_world_t *world,
     ecs_entity_t component)
 {
+    flecs_poly_assert(world, ecs_world_t);
+
     if (world->flags & EcsWorldQuit) {
         /* If world is in the final teardown stages, cleanup policies are no
          * longer applied and it can't be guaranteed that a component is not

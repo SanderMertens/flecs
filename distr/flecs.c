@@ -15786,7 +15786,7 @@ ecs_entity_t ecs_observer_init(
     const ecs_observer_desc_t *desc)
 {
     ecs_entity_t entity = 0;
-    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    flecs_poly_assert(world, ecs_world_t);
     ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(desc->_canary == 0, ECS_INVALID_PARAMETER,
         "ecs_observer_desc_t was not initialized to zero");
@@ -17205,7 +17205,7 @@ void flecs_stage_merge(
     bool is_stage = flecs_poly_is(world, ecs_stage_t);
     ecs_stage_t *stage = flecs_stage_from_world(&world);
 
-    bool measure_frame_time = ECS_BIT_IS_SET(world->flags, 
+    bool measure_frame_time = ECS_BIT_IS_SET(ecs_world_get_flags(world), 
         EcsWorldMeasureFrameTime);
 
     ecs_time_t t_start = {0};
@@ -20208,6 +20208,8 @@ void flecs_type_info_free(
     ecs_world_t *world,
     ecs_entity_t component)
 {
+    flecs_poly_assert(world, ecs_world_t);
+
     if (world->flags & EcsWorldQuit) {
         /* If world is in the final teardown stages, cleanup policies are no
          * longer applied and it can't be guaranteed that a component is not
@@ -25867,6 +25869,7 @@ ecs_entity_t ecs_import(
     ecs_module_action_t module,
     const char *module_name)
 {
+    flecs_poly_assert(world, ecs_world_t);
     ecs_check(!(world->flags & EcsWorldReadonly), 
         ECS_INVALID_WHILE_READONLY, NULL);
 
@@ -33230,7 +33233,7 @@ void flecs_query_fini(
 
         ecs_id_record_t *idr = flecs_id_record_get(q->real_world, term->id);
         if (idr) {
-            if (!(q->world->flags & EcsWorldQuit)) {
+            if (!(ecs_world_get_flags(q->world) & EcsWorldQuit)) {
                 if (ecs_os_has_threading()) {
                     int32_t idr_keep_alive = ecs_os_adec(&idr->keep_alive);
                     ecs_assert(idr_keep_alive >= 0, ECS_INTERNAL_ERROR, NULL);
@@ -38177,6 +38180,8 @@ void flecs_table_fini(
     ecs_world_t *world,
     ecs_table_t *table)
 {
+    flecs_poly_assert(world, ecs_world_t);
+
     bool is_root = table == &world->store.root;
     ecs_assert(!table->_->lock, ECS_LOCKED_STORAGE, FLECS_LOCKED_STORAGE_MSG);
     ecs_assert(is_root || table->id != 0, ECS_INTERNAL_ERROR, NULL);
@@ -38499,6 +38504,8 @@ int32_t flecs_table_grow_data(
     int32_t size,
     const ecs_entity_t *ids)
 {
+    flecs_poly_assert(world, ecs_world_t);
+
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
     int32_t count = ecs_table_count(table);
@@ -39361,6 +39368,8 @@ void flecs_table_notify(
     ecs_id_t id,
     ecs_table_event_t *event)
 {
+    flecs_poly_assert(world, ecs_world_t);
+
     if (world->flags & EcsWorldFini) {
         return;
     }
@@ -63694,6 +63703,7 @@ ecs_entity_t flecs_run_intern(
     ecs_ftime_t delta_time,
     void *param) 
 {
+    flecs_poly_assert(world, ecs_world_t);
     ecs_ftime_t time_elapsed = delta_time;
     ecs_entity_t tick_source = system_data->tick_source;
 
@@ -63742,6 +63752,8 @@ ecs_entity_t flecs_run_intern(
     } else {
         stage = world->stages[0];
     }
+
+    flecs_poly_assert(stage, ecs_stage_t);
 
     /* Prepare the query iterator */
     ecs_iter_t wit, qit = ecs_query_iter(thread_ctx, system_data->query);
@@ -67534,6 +67546,8 @@ void flecs_query_cache_rematch_tables(
     ecs_world_t *world,
     ecs_query_impl_t *impl)
 {
+    flecs_poly_assert(world, ecs_world_t);
+
     ecs_iter_t it;
     ecs_table_t *table = NULL;
     ecs_query_cache_table_t *qt = NULL;
@@ -67893,7 +67907,11 @@ ecs_query_cache_t* flecs_query_cache_init(
     const ecs_query_desc_t *const_desc)
 {
     ecs_world_t *world = impl->pub.real_world;
+    flecs_poly_assert(world, ecs_world_t);
+
     ecs_stage_t *stage = impl->stage;
+    flecs_poly_assert(stage, ecs_stage_t);
+
     ecs_check(world != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_check(const_desc != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(const_desc->_canary == 0, ECS_INVALID_PARAMETER,
@@ -68393,6 +68411,7 @@ void flecs_query_cache_build_sorted_table_range(
     ecs_query_cache_table_list_t *list)
 {
     ecs_world_t *world = cache->query->world;
+    flecs_poly_assert(world, ecs_world_t);
     ecs_assert(!(world->flags & EcsWorldMultiThreaded), ECS_UNSUPPORTED,
         "cannot sort query in multithreaded mode");
 

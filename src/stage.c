@@ -76,7 +76,7 @@ void flecs_stage_merge(
     bool is_stage = flecs_poly_is(world, ecs_stage_t);
     ecs_stage_t *stage = flecs_stage_from_world(&world);
 
-    bool measure_frame_time = ECS_BIT_IS_SET(world->flags, 
+    bool measure_frame_time = ECS_BIT_IS_SET(ecs_world_get_flags(world), 
         EcsWorldMeasureFrameTime);
 
     ecs_time_t t_start = {0};

@@ -1084,7 +1084,7 @@ ecs_entity_t ecs_observer_init(
     const ecs_observer_desc_t *desc)
 {
     ecs_entity_t entity = 0;
-    ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    flecs_poly_assert(world, ecs_world_t);
     ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(desc->_canary == 0, ECS_INVALID_PARAMETER,
         "ecs_observer_desc_t was not initialized to zero");
