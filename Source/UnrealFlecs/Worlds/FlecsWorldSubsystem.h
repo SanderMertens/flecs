@@ -38,12 +38,7 @@ class UNREALFLECS_API UFlecsWorldSubsystem final : public UTickableWorldSubsyste
 public:
 	virtual bool ShouldCreateSubsystem(UObject* Outer) const override
 	{
-		return GetDefault<UFlecsDeveloperSettings>()->bEnableFlecs && Super::ShouldCreateSubsystem(Outer);
-	}
-	
-	virtual ETickableTickType GetTickableTickType() const override
-	{
-		return ETickableTickType::Always;
+		return Super::ShouldCreateSubsystem(Outer) && GetDefault<UFlecsDeveloperSettings>()->bEnableFlecs;
 	}
 	
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override
@@ -62,6 +57,8 @@ public:
 			return;
 		}
 
+		SetTickableTickType(ETickableTickType::Always);
+
 		const AGameStateBase* GameState = InWorld.GetGameState();
 		
 		if UNLIKELY_IF(!IsValid(GameState))
@@ -70,15 +67,18 @@ public:
 		}
 
 		const UFlecsWorldStartComponent* StartComponent = GameState->FindComponentByClass<UFlecsWorldStartComponent>();
-		solid_checkf(IsValid(StartComponent), TEXT("StartComponent must be valid"));
+		
+		if UNLIKELY_IF(!IsValid(StartComponent))
+		{
+			UN_LOGF(LogFlecsCore, Warning, "Failed to find Flecs world start component");
+			return;
+		}
 
 		CreateWorld(StartComponent->DefaultWorld->WorldSettings.WorldName, StartComponent->DefaultWorld->WorldSettings);
 	}
 
 	virtual void Deinitialize() override
 	{
-		Super::Deinitialize();
-
 		if (IsValid(DefaultWorld))
 		{
 			DefaultWorld->RemoveSingleton<FFlecsWorldPtrComponent>();
@@ -87,6 +87,8 @@ public:
 		}
 
 		DefaultWorld = nullptr;
+
+		Super::Deinitialize();
 	}
 
 	FORCEINLINE virtual TStatId GetStatId() const override
@@ -215,7 +217,9 @@ public:
 	
 	virtual bool DoesSupportWorldType(const EWorldType::Type WorldType) const override
 	{
-		return WorldType == EWorldType::Game || WorldType == EWorldType::PIE || WorldType == EWorldType::GameRPC;
+		return WorldType == EWorldType::Game
+		|| WorldType == EWorldType::PIE
+		|| WorldType == EWorldType::GameRPC;
 	}
 	
 	FOnWorldCreated OnWorldCreated;

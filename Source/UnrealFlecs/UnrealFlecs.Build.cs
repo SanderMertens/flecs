@@ -13,6 +13,8 @@ public class UnrealFlecs : ModuleRules
 		OptimizationLevel = OptimizationMode.Speed;
 
 		bUseUnity = false;
+
+		IWYUSupport = IWYUSupport.Full;
 		
 		PublicIncludePaths.AddRange(
 			new string[] {

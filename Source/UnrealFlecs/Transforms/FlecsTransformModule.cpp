@@ -14,8 +14,6 @@ UFlecsTransformModule::UFlecsTransformModule()
 void UFlecsTransformModule::InitializeModule(UFlecsWorld* InWorld, const FFlecsEntityHandle& InModuleEntity)
 {
 	const flecs::entity_t FlecsTransformSystemKind = flecs::PostUpdate;
-
-	
 }
 
 void UFlecsTransformModule::DeinitializeModule(UFlecsWorld* InWorld)

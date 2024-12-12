@@ -14,6 +14,8 @@ public class UnrealFlecsTests : ModuleRules
                 "SolidMacros",
                 "FlecsLibrary",
                 "UnrealFlecs",
+                "UnrealEd",
+                "AutomationUtils",
             }
         );
 

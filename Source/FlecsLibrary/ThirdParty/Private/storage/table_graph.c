@@ -12,7 +12,7 @@
 
 /* Id sequence (type) utilities */
 
-static
+static inline
 uint64_t flecs_type_hash(const void *ptr) {
     const ecs_type_t *type = ptr;
     const ecs_id_t *ids = type->array;
