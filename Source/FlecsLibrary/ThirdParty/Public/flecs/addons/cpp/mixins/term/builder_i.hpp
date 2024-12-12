@@ -281,7 +281,7 @@ struct term_builder_i : term_ref_builder_i<Base> {
     /** Set read/write access of term. */
     Base& inout(flecs::inout_kind_t inout) {
         this->assert_term();
-        term_->inout = static_cast<ecs_inout_kind_t>(inout);
+        term_->inout = static_cast<int16_t>(inout);
         return *this;
     }
 
@@ -295,7 +295,7 @@ struct term_builder_i : term_ref_builder_i<Base> {
      */
     Base& inout_stage(flecs::inout_kind_t inout) {
         this->assert_term();
-        term_->inout = static_cast<ecs_inout_kind_t>(inout);
+        term_->inout = static_cast<int16_t>(inout);
         if (term_->oper != EcsNot) {
             this->src().entity(0);
         }
@@ -346,7 +346,7 @@ struct term_builder_i : term_ref_builder_i<Base> {
     /** Set operator of term. */
     Base& oper(flecs::oper_kind_t oper) {
         this->assert_term();
-        term_->oper = static_cast<ecs_oper_kind_t>(oper);
+        term_->oper = static_cast<int16_t>(oper);
         return *this;
     }
 
