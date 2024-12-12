@@ -329,6 +329,29 @@ int flecs_expr_variable_visit_fold(
 }
 
 static
+int flecs_expr_global_variable_visit_fold(
+    ecs_script_t *script,
+    ecs_expr_node_t **node_ptr,
+    const ecs_expr_eval_desc_t *desc)
+{
+    (void)desc;
+
+    ecs_expr_variable_t *node = (ecs_expr_variable_t*)*node_ptr;
+    ecs_entity_t type = node->node.type;
+
+    /* Global const variables are always const, so we can always fold */
+
+    ecs_expr_value_node_t *result = flecs_expr_value_from(
+        script, (ecs_expr_node_t*)node, type);
+    void *value = ecs_value_new(script->world, type);
+    ecs_value_copy(script->world, type, value, node->global_value.ptr);
+    result->ptr = value;
+    flecs_visit_fold_replace(script, node_ptr, (ecs_expr_node_t*)result);
+
+    return 0;
+}
+
+static
 int flecs_expr_arguments_visit_fold(
     ecs_script_t *script,
     ecs_expr_initializer_t *node,
@@ -444,6 +467,11 @@ int flecs_expr_visit_fold(
         break;
     case EcsExprVariable:
         if (flecs_expr_variable_visit_fold(script, node_ptr, desc)) {
+            goto error;
+        }
+        break;
+    case EcsExprGlobalVariable:
+        if (flecs_expr_global_variable_visit_fold(script, node_ptr, desc)) {
             goto error;
         }
         break;

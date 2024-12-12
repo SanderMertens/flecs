@@ -32,4 +32,8 @@ void flecs_expr_visit_free(
     ecs_script_t *script,
     ecs_expr_node_t *node);
 
+ecs_script_var_t flecs_expr_find_var(
+    ecs_script_t *script,
+    const char *name);
+
 #endif

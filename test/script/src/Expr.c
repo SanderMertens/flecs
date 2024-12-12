@@ -5099,3 +5099,51 @@ void Expr_newline_at_start(void) {
 
     ecs_fini(world);
 }
+
+void Expr_global_const_var(void) {
+    ecs_world_t *world = ecs_init();
+
+    int32_t v = 10;
+
+    test_assert(0 != ecs_const_var(world, {
+        .name = "FOO",
+        .type = ecs_id(ecs_i32_t),
+        .value = &v
+    }));
+
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    const char *ptr = ecs_expr_run(world, "$FOO + 20",
+        &ecs_value_ptr(ecs_i32_t, &v), &desc);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == 0);
+    test_int(v, 30);
+
+    ecs_fini(world);
+}
+
+void Expr_scoped_global_const_var(void) {
+    ecs_world_t *world = ecs_init();
+
+    int32_t v = 10;
+
+    ecs_entity_t parent = ecs_entity(world, {
+        .name = "parent"
+    });
+
+    test_assert(0 != ecs_const_var(world, {
+        .name = "FOO",
+        .parent = parent,
+        .type = ecs_id(ecs_i32_t),
+        .value = &v
+    }));
+
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    const char *ptr = ecs_expr_run(world, 
+        "parent.$FOO + 20",
+        &ecs_value_ptr(ecs_i32_t, &v), &desc);
+    test_assert(ptr != NULL);
+    test_assert(ptr[0] == 0);
+    test_int(v, 30);
+
+    ecs_fini(world);
+}

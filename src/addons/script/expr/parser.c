@@ -371,7 +371,18 @@ const char* flecs_script_parse_lhs(
             } else if (!ecs_os_strcmp(expr, "false")) {
                 *out = (ecs_expr_node_t*)flecs_expr_bool(parser, false);
             } else {
-                *out = (ecs_expr_node_t*)flecs_expr_identifier(parser, expr);
+                char *last_elem = strrchr(expr, '.');
+                if (last_elem && last_elem[1] == '$') {
+                    /* Scoped global variable */
+                    ecs_expr_variable_t *v = flecs_expr_variable(parser, expr);
+                    memmove(&last_elem[1], &last_elem[2], 
+                        ecs_os_strlen(&last_elem[2]) + 1);
+                    v->node.kind = EcsExprGlobalVariable;
+                    *out = (ecs_expr_node_t*)v;
+                } else {
+                    /* Entity identifier */
+                    *out = (ecs_expr_node_t*)flecs_expr_identifier(parser, expr);
+                }
             }
             break;
         }

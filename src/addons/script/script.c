@@ -9,6 +9,7 @@
 #include "script.h"
 
 ECS_COMPONENT_DECLARE(EcsScript);
+ECS_COMPONENT_DECLARE(EcsScriptConstVar);
 ECS_COMPONENT_DECLARE(EcsScriptFunction);
 ECS_COMPONENT_DECLARE(EcsScriptMethod);
 
@@ -73,7 +74,7 @@ void ecs_script_clear(
         ecs_defer_begin(world);
         ecs_iter_t it = ecs_children(world, instance);
         while (ecs_children_next(&it)) {
-            if (ecs_table_has_id(world, it.table, ecs_pair(EcsTemplate, script))) {
+            if (ecs_table_has_id(world, it.table, ecs_pair(EcsScriptTemplate, script))) {
                 int32_t i, count = it.count;
                 for (i = 0; i < count; i ++) {
                     ecs_delete(world, it.entities[i]);

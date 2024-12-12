@@ -37,7 +37,10 @@ FLECS_API
 extern ECS_COMPONENT_DECLARE(EcsScript);
 
 FLECS_API
-extern ECS_DECLARE(EcsTemplate);
+extern ECS_DECLARE(EcsScriptTemplate);
+
+FLECS_API
+extern ECS_COMPONENT_DECLARE(EcsScriptConstVar);
 
 FLECS_API
 extern ECS_COMPONENT_DECLARE(EcsScriptFunction);
@@ -105,6 +108,14 @@ typedef struct ecs_script_parameter_t {
     const char *name;
     ecs_entity_t type;
 } ecs_script_parameter_t;
+
+/** Const component.
+ * This component describes a const variable that can be used from scripts.
+ */
+typedef struct EcsScriptConstVar {
+    ecs_value_t value;
+    const ecs_type_info_t *type_info;
+} EcsScriptConstVar;
 
 /** Function component.
  * This component describes a function that can be called from a script.
@@ -571,6 +582,38 @@ char* ecs_script_string_interpolate(
     const char *str,
     const ecs_script_vars_t *vars);
 
+
+/* Global const variables */
+
+/** Used with ecs_const_var_init */
+typedef struct ecs_const_var_desc_t {
+    /* Variable name. */
+    const char *name;
+
+    /* Variable parent (namespace). */
+    ecs_entity_t parent;
+
+    /* Variable type. */
+    ecs_entity_t type;
+
+    /* Pointer to value of variable. The value will be copied to an internal
+     * storage and does not need to be kept alive. */
+    void *value;
+} ecs_const_var_desc_t;
+
+/** Create a const variable that can be accessed by scripts. 
+ * 
+ * @param world The world.
+ * @param desc Const var parameters.
+ * @return The const var, or 0 if failed.
+ */
+FLECS_API
+ecs_entity_t ecs_const_var_init(
+    ecs_world_t *world,
+    ecs_const_var_desc_t *desc);
+
+#define ecs_const_var(world, ...)\
+    ecs_const_var_init(world, &(ecs_const_var_desc_t)__VA_ARGS__)
 
 /* Functions */
 

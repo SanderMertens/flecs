@@ -141,6 +141,23 @@ void FlecsScriptMathImport(
 
     ECS_IMPORT(world, FlecsScript);
 
+    /* Constants */
+    double E = 2.71828182845904523536028747135266250;
+    ecs_const_var(world, {
+        .name = "E",
+        .parent = ecs_id(FlecsScriptMath),
+        .type = ecs_id(ecs_f64_t),
+        .value = &E
+    });
+
+    double PI = 3.14159265358979323846264338327950288;
+    ecs_const_var(world, {
+        .name = "PI",
+        .parent = ecs_id(FlecsScriptMath),
+        .type = ecs_id(ecs_f64_t),
+        .value = &PI
+    });
+
     /* Trigonometric functions */
     FLECS_MATH_FUNC_DEF_F64(cos, "Compute cosine");
     FLECS_MATH_FUNC_DEF_F64(sin, "Compute sine");

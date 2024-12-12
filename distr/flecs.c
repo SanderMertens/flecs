@@ -4957,6 +4957,7 @@ typedef enum ecs_expr_node_kind_t {
     EcsExprBinary,
     EcsExprIdentifier,
     EcsExprVariable,
+    EcsExprGlobalVariable,
     EcsExprFunction,
     EcsExprMethod,
     EcsExprMember,
@@ -5001,6 +5002,7 @@ typedef struct ecs_expr_identifier_t {
 typedef struct ecs_expr_variable_t {
     ecs_expr_node_t node;
     const char *name;
+    ecs_value_t global_value; /* Only set for global variables */
 } ecs_expr_variable_t;
 
 typedef struct ecs_expr_unary_t {
@@ -5144,6 +5146,10 @@ int flecs_expr_visit_eval(
 void flecs_expr_visit_free(
     ecs_script_t *script,
     ecs_expr_node_t *node);
+
+ecs_script_var_t flecs_expr_find_var(
+    ecs_script_t *script,
+    const char *name);
 
 #endif
 
@@ -5437,7 +5443,7 @@ int flecs_script_eval_node(
 #ifndef FLECS_SCRIPT_TEMPLATE_H
 #define FLECS_SCRIPT_TEMPLATE_H
 
-extern ECS_COMPONENT_DECLARE(EcsTemplateSetEvent);
+extern ECS_COMPONENT_DECLARE(EcsScriptTemplateSetEvent);
 
 struct ecs_script_template_t {
     /* Template handle */
@@ -5462,7 +5468,7 @@ struct ecs_script_template_t {
 #define ECS_TEMPLATE_SMALL_SIZE (36)
 
 /* Event used for deferring template instantiation */
-typedef struct EcsTemplateSetEvent {
+typedef struct EcsScriptTemplateSetEvent {
     ecs_entity_t template_entity;
     ecs_entity_t *entities;
     void *data;
@@ -5471,7 +5477,7 @@ typedef struct EcsTemplateSetEvent {
     /* Storage for small template types */
     char data_storage[ECS_TEMPLATE_SMALL_SIZE];
     ecs_entity_t entity_storage;
-} EcsTemplateSetEvent;
+} EcsScriptTemplateSetEvent;
 
 int flecs_script_eval_template(
     ecs_script_eval_visitor_t *v,
@@ -55144,6 +55150,26 @@ void ecs_script_params_free(ecs_vec_t *params) {
 }
 
 static
+ECS_MOVE(EcsScriptConstVar, dst, src, {
+    if (dst->type_info->hooks.dtor) {
+        dst->type_info->hooks.dtor(dst->value.ptr, 1, dst->type_info);
+    }
+    
+    *dst = *src;
+
+    src->value.ptr = NULL;
+    src->value.type = 0;
+    src->type_info = NULL;
+})
+
+static
+ECS_DTOR(EcsScriptConstVar, ptr, {
+    if (ptr->type_info->hooks.dtor) {
+        ptr->type_info->hooks.dtor(ptr->value.ptr, 1, ptr->type_info);
+    }
+})
+
+static
 ECS_MOVE(EcsScriptFunction, dst, src, {
     ecs_script_params_free(&dst->params);
     *dst = *src;
@@ -55167,20 +55193,60 @@ ECS_DTOR(EcsScriptMethod, ptr, {
     ecs_script_params_free(&ptr->params);
 })
 
-ecs_entity_t ecs_function_init(
+ecs_entity_t ecs_const_var_init(
     ecs_world_t *world,
-    const ecs_function_desc_t *desc)
+    ecs_const_var_desc_t *desc)
 {
     flecs_poly_assert(world, ecs_world_t);
-    ecs_assert(desc != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(desc->name != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(desc->callback != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(desc->return_type != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(desc->name != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(desc->type != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(desc->value != NULL, ECS_INVALID_PARAMETER, NULL);
+
+    const ecs_type_info_t *ti = ecs_get_type_info(world, desc->type);
+    ecs_check(ti != NULL, ECS_INVALID_PARAMETER, 
+        "ecs_const_var_desc_t::type is not a valid type");
 
     ecs_entity_t result = ecs_entity(world, { 
         .name = desc->name,
         .parent = desc->parent
     });
+
+    if (!result) {
+        goto error;
+    }
+
+    EcsScriptConstVar *v = ecs_ensure(world, result, EcsScriptConstVar);
+    v->value.ptr = ecs_os_malloc(ti->size);
+    v->value.type = desc->type;
+    v->type_info = ti;
+    ecs_value_init(world, desc->type, v->value.ptr);
+    ecs_value_copy(world, desc->type, v->value.ptr, desc->value);
+    ecs_modified(world, result, EcsScriptConstVar);
+
+    return result;
+error:
+    return 0;
+}
+
+ecs_entity_t ecs_function_init(
+    ecs_world_t *world,
+    const ecs_function_desc_t *desc)
+{
+    flecs_poly_assert(world, ecs_world_t);
+    ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(desc->name != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(desc->callback != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(desc->return_type != 0, ECS_INVALID_PARAMETER, NULL);
+
+    ecs_entity_t result = ecs_entity(world, { 
+        .name = desc->name,
+        .parent = desc->parent
+    });
+
+    if (!result) {
+        goto error;
+    }
 
     EcsScriptFunction *f = ecs_ensure(world, result, EcsScriptFunction);
     f->return_type = desc->return_type;
@@ -55206,6 +55272,8 @@ ecs_entity_t ecs_function_init(
     ecs_modified(world, result, EcsScriptFunction);
 
     return result;
+error:
+    return 0;
 }
 
 ecs_entity_t ecs_method_init(
@@ -55213,16 +55281,20 @@ ecs_entity_t ecs_method_init(
     const ecs_function_desc_t *desc)
 {
     flecs_poly_assert(world, ecs_world_t);
-    ecs_assert(desc != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(desc->name != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(desc->callback != NULL, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(desc->parent != 0, ECS_INVALID_PARAMETER, NULL);
-    ecs_assert(desc->return_type != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(desc != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(desc->name != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(desc->callback != NULL, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(desc->parent != 0, ECS_INVALID_PARAMETER, NULL);
+    ecs_check(desc->return_type != 0, ECS_INVALID_PARAMETER, NULL);
 
     ecs_entity_t result = ecs_entity(world, { 
         .name = desc->name,
         .parent = desc->parent
     });
+
+    if (!result) {
+        goto error;
+    }
 
     EcsScriptMethod *f = ecs_ensure(world, result, EcsScriptMethod);
     f->return_type = desc->return_type;
@@ -55248,12 +55320,15 @@ ecs_entity_t ecs_method_init(
     ecs_modified(world, result, EcsScriptMethod);
 
     return result;
+error:
+    return 0;
 }
 
 void flecs_function_import(
     ecs_world_t *world)
 {
     ecs_set_name_prefix(world, "EcsScript");
+    ECS_COMPONENT_DEFINE(world, EcsScriptConstVar);
     ECS_COMPONENT_DEFINE(world, EcsScriptFunction);
     ECS_COMPONENT_DEFINE(world, EcsScriptMethod);
 
@@ -55269,6 +55344,13 @@ void flecs_function_import(
         .members = {
             { .name = "return_type", .type = ecs_id(ecs_entity_t) }
         }
+    });
+
+    ecs_set_hooks(world, EcsScriptConstVar, {
+        .ctor = flecs_default_ctor,
+        .dtor = ecs_dtor(EcsScriptConstVar),
+        .move = ecs_move(EcsScriptConstVar),
+        .flags = ECS_TYPE_HOOK_COPY_ILLEGAL
     });
 
     ecs_set_hooks(world, EcsScriptFunction, {
@@ -55548,6 +55630,23 @@ void FlecsScriptMathImport(
     ECS_MODULE(world, FlecsScriptMath);
 
     ECS_IMPORT(world, FlecsScript);
+
+    /* Constants */
+    double E = 2.71828182845904523536028747135266250;
+    ecs_const_var(world, {
+        .name = "E",
+        .parent = ecs_id(FlecsScriptMath),
+        .type = ecs_id(ecs_f64_t),
+        .value = &E
+    });
+
+    double PI = 3.14159265358979323846264338327950288;
+    ecs_const_var(world, {
+        .name = "PI",
+        .parent = ecs_id(FlecsScriptMath),
+        .type = ecs_id(ecs_f64_t),
+        .value = &PI
+    });
 
     /* Trigonometric functions */
     FLECS_MATH_FUNC_DEF_F64(cos, "Compute cosine");
@@ -57676,6 +57775,7 @@ error:
 #ifdef FLECS_SCRIPT
 
 ECS_COMPONENT_DECLARE(EcsScript);
+ECS_COMPONENT_DECLARE(EcsScriptConstVar);
 ECS_COMPONENT_DECLARE(EcsScriptFunction);
 ECS_COMPONENT_DECLARE(EcsScriptMethod);
 
@@ -57740,7 +57840,7 @@ void ecs_script_clear(
         ecs_defer_begin(world);
         ecs_iter_t it = ecs_children(world, instance);
         while (ecs_children_next(&it)) {
-            if (ecs_table_has_id(world, it.table, ecs_pair(EcsTemplate, script))) {
+            if (ecs_table_has_id(world, it.table, ecs_pair(EcsScriptTemplate, script))) {
                 int32_t i, count = it.count;
                 for (i = 0; i < count; i ++) {
                     ecs_delete(world, it.entities[i]);
@@ -58503,11 +58603,11 @@ char* ecs_ptr_to_str(
 
 #ifdef FLECS_SCRIPT
 
-ECS_COMPONENT_DECLARE(EcsTemplateSetEvent);
-ECS_DECLARE(EcsTemplate);
+ECS_COMPONENT_DECLARE(EcsScriptTemplateSetEvent);
+ECS_DECLARE(EcsScriptTemplate);
 
 static
-void flecs_template_set_event_free(EcsTemplateSetEvent *ptr) {
+void flecs_template_set_event_free(EcsScriptTemplateSetEvent *ptr) {
     if (ptr->entities != &ptr->entity_storage) {
         ecs_os_free(ptr->entities);
     }
@@ -58517,7 +58617,7 @@ void flecs_template_set_event_free(EcsTemplateSetEvent *ptr) {
 }
 
 static
-ECS_MOVE(EcsTemplateSetEvent, dst, src, {
+ECS_MOVE(EcsScriptTemplateSetEvent, dst, src, {
     flecs_template_set_event_free(dst);
 
     *dst = *src;
@@ -58535,7 +58635,7 @@ ECS_MOVE(EcsTemplateSetEvent, dst, src, {
 })
 
 static
-ECS_DTOR(EcsTemplateSetEvent, ptr, {
+ECS_DTOR(EcsScriptTemplateSetEvent, ptr, {
     flecs_template_set_event_free(ptr);
 })
 
@@ -58595,7 +58695,7 @@ void flecs_script_template_defer_on_set(
     const ecs_type_info_t *ti,
     void *data)
 {
-    EcsTemplateSetEvent evt;
+    EcsScriptTemplateSetEvent evt;
 
     if ((it->count == 1) && ti->size <= ECS_TEMPLATE_SMALL_SIZE && !ti->hooks.dtor) {
         /* This should be true for the vast majority of templates */
@@ -58612,7 +58712,7 @@ void flecs_script_template_defer_on_set(
     evt.template_entity = template_entity;
 
     ecs_enqueue(it->world, &(ecs_event_desc_t){
-        .event = ecs_id(EcsTemplateSetEvent),
+        .event = ecs_id(EcsScriptTemplateSetEvent),
         .entity = EcsAny,
         .param = &evt
     });
@@ -58724,7 +58824,7 @@ void flecs_on_template_set_event(
 {
     ecs_assert(ecs_is_deferred(it->world), ECS_INTERNAL_ERROR, NULL);
 
-    EcsTemplateSetEvent *evt = it->param;
+    EcsScriptTemplateSetEvent *evt = it->param;
     ecs_world_t *world = it->real_world;
     ecs_assert(flecs_poly_is(world, ecs_world_t), ECS_INTERNAL_ERROR, NULL);
 
@@ -59059,22 +59159,22 @@ error:
 void flecs_script_template_import(
     ecs_world_t *world)
 {
-    ECS_COMPONENT_DEFINE(world, EcsTemplateSetEvent);
-    ECS_TAG_DEFINE(world, EcsTemplate);
+    ECS_COMPONENT_DEFINE(world, EcsScriptTemplateSetEvent);
+    ECS_TAG_DEFINE(world, EcsScriptTemplate);
 
-    ecs_add_id(world, EcsTemplate, EcsPairIsTag);
+    ecs_add_id(world, EcsScriptTemplate, EcsPairIsTag);
 
-    ecs_set_hooks(world, EcsTemplateSetEvent, {
+    ecs_set_hooks(world, EcsScriptTemplateSetEvent, {
         .ctor = flecs_default_ctor,
-        .move = ecs_move(EcsTemplateSetEvent),
-        .dtor = ecs_dtor(EcsTemplateSetEvent),
+        .move = ecs_move(EcsScriptTemplateSetEvent),
+        .dtor = ecs_dtor(EcsScriptTemplateSetEvent),
         .flags = ECS_TYPE_HOOK_COPY_ILLEGAL
     });
 
     ecs_observer(world, {
         .entity = ecs_entity(world, { .name = "TemplateSetObserver" }),
         .query.terms = {{ .id = EcsAny }},
-        .events = { ecs_id(EcsTemplateSetEvent) },
+        .events = { ecs_id(EcsScriptTemplateSetEvent) },
         .callback = flecs_on_template_set_event
     });
 }
@@ -60551,7 +60651,7 @@ int flecs_script_eval_entity(
     node->parent = v->entity;
 
     if (v->template_entity) {
-        ecs_add_pair(v->world, node->eval, EcsTemplate, v->template_entity);
+        ecs_add_pair(v->world, node->eval, EcsScriptTemplate, v->template_entity);
     }
 
     if (is_slot) {
@@ -74714,7 +74814,18 @@ const char* flecs_script_parse_lhs(
             } else if (!ecs_os_strcmp(expr, "false")) {
                 *out = (ecs_expr_node_t*)flecs_expr_bool(parser, false);
             } else {
-                *out = (ecs_expr_node_t*)flecs_expr_identifier(parser, expr);
+                char *last_elem = strrchr(expr, '.');
+                if (last_elem && last_elem[1] == '$') {
+                    /* Scoped global variable */
+                    ecs_expr_variable_t *v = flecs_expr_variable(parser, expr);
+                    memmove(&last_elem[1], &last_elem[2], 
+                        ecs_os_strlen(&last_elem[2]) + 1);
+                    v->node.kind = EcsExprGlobalVariable;
+                    *out = (ecs_expr_node_t*)v;
+                } else {
+                    /* Entity identifier */
+                    *out = (ecs_expr_node_t*)flecs_expr_identifier(parser, expr);
+                }
             }
             break;
         }
@@ -75576,6 +75687,23 @@ error:
 }
 
 static
+int flecs_expr_global_variable_visit_eval(
+    ecs_script_eval_ctx_t *ctx,
+    ecs_expr_variable_t *node,
+    ecs_expr_value_t *out)
+{
+    ecs_assert(ctx->desc != NULL, ECS_INVALID_OPERATION,
+        "variables available at parse time are not provided");
+
+    ecs_assert(node->global_value.type == node->node.type, 
+        ECS_INTERNAL_ERROR, NULL);
+    out->value = node->global_value;
+    out->owned = false;
+
+    return 0;
+}
+
+static
 int flecs_expr_cast_visit_eval(
     ecs_script_eval_ctx_t *ctx,
     ecs_expr_cast_t *node,
@@ -75853,6 +75981,13 @@ int flecs_expr_visit_eval_priv(
         break;
     case EcsExprVariable:
         if (flecs_expr_variable_visit_eval(
+            ctx, (ecs_expr_variable_t*)node, out)) 
+        {
+            goto error;
+        }
+        break;
+    case EcsExprGlobalVariable:
+        if (flecs_expr_global_variable_visit_eval(
             ctx, (ecs_expr_variable_t*)node, out)) 
         {
             goto error;
@@ -76308,6 +76443,29 @@ int flecs_expr_variable_visit_fold(
 }
 
 static
+int flecs_expr_global_variable_visit_fold(
+    ecs_script_t *script,
+    ecs_expr_node_t **node_ptr,
+    const ecs_expr_eval_desc_t *desc)
+{
+    (void)desc;
+
+    ecs_expr_variable_t *node = (ecs_expr_variable_t*)*node_ptr;
+    ecs_entity_t type = node->node.type;
+
+    /* Global const variables are always const, so we can always fold */
+
+    ecs_expr_value_node_t *result = flecs_expr_value_from(
+        script, (ecs_expr_node_t*)node, type);
+    void *value = ecs_value_new(script->world, type);
+    ecs_value_copy(script->world, type, value, node->global_value.ptr);
+    result->ptr = value;
+    flecs_visit_fold_replace(script, node_ptr, (ecs_expr_node_t*)result);
+
+    return 0;
+}
+
+static
 int flecs_expr_arguments_visit_fold(
     ecs_script_t *script,
     ecs_expr_initializer_t *node,
@@ -76423,6 +76581,11 @@ int flecs_expr_visit_fold(
         break;
     case EcsExprVariable:
         if (flecs_expr_variable_visit_fold(script, node_ptr, desc)) {
+            goto error;
+        }
+        break;
+    case EcsExprGlobalVariable:
+        if (flecs_expr_global_variable_visit_fold(script, node_ptr, desc)) {
             goto error;
         }
         break;
@@ -76588,6 +76751,7 @@ void flecs_expr_visit_free(
         flecs_free_t(a, ecs_expr_identifier_t, node);
         break;
     case EcsExprVariable:
+    case EcsExprGlobalVariable:
         flecs_free_t(a, ecs_expr_variable_t, node);
         break;
     case EcsExprFunction:
@@ -76884,6 +77048,7 @@ int flecs_expr_node_to_str(
         }
         break;
     case EcsExprVariable:
+    case EcsExprGlobalVariable:
         if (flecs_expr_variable_to_str(v, 
             (const ecs_expr_variable_t*)node)) 
         {
@@ -77677,6 +77842,39 @@ error:
 }
 
 static
+int flecs_expr_global_variable_resolve(
+    ecs_script_t *script,
+    ecs_expr_variable_t *node,
+    const ecs_expr_eval_desc_t *desc)
+{
+    ecs_world_t *world = script->world;
+    ecs_entity_t global = desc->lookup_action(
+        world, node->name, desc->lookup_ctx);
+    if (!global) {
+        flecs_expr_visit_error(script, node, "unresolved variable '%s'",
+            node->name);
+        goto error;
+    }
+
+    const EcsScriptConstVar *v = ecs_get(world, global, EcsScriptConstVar);
+    if (!v) {
+        char *str = ecs_get_path(world, global);
+        flecs_expr_visit_error(script, node, 
+            "entity '%s' is not a variable", node->name);
+        ecs_os_free(str);
+        goto error;
+    }
+
+    node->node.kind = EcsExprGlobalVariable;
+    node->node.type = v->value.type;
+    node->global_value = v->value;
+
+    return 0;
+error:
+    return -1;
+}
+
+static
 int flecs_expr_variable_visit_type(
     ecs_script_t *script,
     ecs_expr_variable_t *node,
@@ -77685,15 +77883,33 @@ int flecs_expr_variable_visit_type(
 {
     ecs_script_var_t *var = ecs_script_vars_lookup(
         desc->vars, node->name);
-    if (!var) {
-        flecs_expr_visit_error(script, node, "unresolved variable '%s'",
-            node->name);
-        goto error;
+    if (var) {
+        node->node.type = var->value.type;
+    } else {
+        if (flecs_expr_global_variable_resolve(script, node, desc)) {
+            goto error;
+        }
     }
 
-    node->node.type = var->value.type;
+    *cur = ecs_meta_cursor(script->world, node->node.type, NULL);
 
-    *cur = ecs_meta_cursor(script->world, var->value.type, NULL);
+    return 0;
+error:
+    return -1;
+}
+
+static
+int flecs_expr_global_variable_visit_type(
+    ecs_script_t *script,
+    ecs_expr_variable_t *node,
+    ecs_meta_cursor_t *cur,
+    const ecs_expr_eval_desc_t *desc)
+{
+    (void)cur;
+
+    if (flecs_expr_global_variable_resolve(script, node, desc)) {
+        goto error;
+    }
 
     return 0;
 error:
@@ -78063,6 +78279,13 @@ int flecs_expr_visit_type_priv(
         break;
     case EcsExprVariable:
         if (flecs_expr_variable_visit_type(
+            script, (ecs_expr_variable_t*)node, cur, desc)) 
+        {
+            goto error;
+        }
+        break;
+    case EcsExprGlobalVariable:
+        if (flecs_expr_global_variable_visit_type(
             script, (ecs_expr_variable_t*)node, cur, desc)) 
         {
             goto error;

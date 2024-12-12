@@ -276,6 +276,23 @@ error:
 }
 
 static
+int flecs_expr_global_variable_visit_eval(
+    ecs_script_eval_ctx_t *ctx,
+    ecs_expr_variable_t *node,
+    ecs_expr_value_t *out)
+{
+    ecs_assert(ctx->desc != NULL, ECS_INVALID_OPERATION,
+        "variables available at parse time are not provided");
+
+    ecs_assert(node->global_value.type == node->node.type, 
+        ECS_INTERNAL_ERROR, NULL);
+    out->value = node->global_value;
+    out->owned = false;
+
+    return 0;
+}
+
+static
 int flecs_expr_cast_visit_eval(
     ecs_script_eval_ctx_t *ctx,
     ecs_expr_cast_t *node,
@@ -553,6 +570,13 @@ int flecs_expr_visit_eval_priv(
         break;
     case EcsExprVariable:
         if (flecs_expr_variable_visit_eval(
+            ctx, (ecs_expr_variable_t*)node, out)) 
+        {
+            goto error;
+        }
+        break;
+    case EcsExprGlobalVariable:
+        if (flecs_expr_global_variable_visit_eval(
             ctx, (ecs_expr_variable_t*)node, out)) 
         {
             goto error;

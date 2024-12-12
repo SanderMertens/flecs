@@ -8,11 +8,11 @@
 #ifdef FLECS_SCRIPT
 #include "script.h"
 
-ECS_COMPONENT_DECLARE(EcsTemplateSetEvent);
-ECS_DECLARE(EcsTemplate);
+ECS_COMPONENT_DECLARE(EcsScriptTemplateSetEvent);
+ECS_DECLARE(EcsScriptTemplate);
 
 static
-void flecs_template_set_event_free(EcsTemplateSetEvent *ptr) {
+void flecs_template_set_event_free(EcsScriptTemplateSetEvent *ptr) {
     if (ptr->entities != &ptr->entity_storage) {
         ecs_os_free(ptr->entities);
     }
@@ -22,7 +22,7 @@ void flecs_template_set_event_free(EcsTemplateSetEvent *ptr) {
 }
 
 static
-ECS_MOVE(EcsTemplateSetEvent, dst, src, {
+ECS_MOVE(EcsScriptTemplateSetEvent, dst, src, {
     flecs_template_set_event_free(dst);
 
     *dst = *src;
@@ -40,7 +40,7 @@ ECS_MOVE(EcsTemplateSetEvent, dst, src, {
 })
 
 static
-ECS_DTOR(EcsTemplateSetEvent, ptr, {
+ECS_DTOR(EcsScriptTemplateSetEvent, ptr, {
     flecs_template_set_event_free(ptr);
 })
 
@@ -100,7 +100,7 @@ void flecs_script_template_defer_on_set(
     const ecs_type_info_t *ti,
     void *data)
 {
-    EcsTemplateSetEvent evt;
+    EcsScriptTemplateSetEvent evt;
 
     if ((it->count == 1) && ti->size <= ECS_TEMPLATE_SMALL_SIZE && !ti->hooks.dtor) {
         /* This should be true for the vast majority of templates */
@@ -117,7 +117,7 @@ void flecs_script_template_defer_on_set(
     evt.template_entity = template_entity;
 
     ecs_enqueue(it->world, &(ecs_event_desc_t){
-        .event = ecs_id(EcsTemplateSetEvent),
+        .event = ecs_id(EcsScriptTemplateSetEvent),
         .entity = EcsAny,
         .param = &evt
     });
@@ -229,7 +229,7 @@ void flecs_on_template_set_event(
 {
     ecs_assert(ecs_is_deferred(it->world), ECS_INTERNAL_ERROR, NULL);
 
-    EcsTemplateSetEvent *evt = it->param;
+    EcsScriptTemplateSetEvent *evt = it->param;
     ecs_world_t *world = it->real_world;
     ecs_assert(flecs_poly_is(world, ecs_world_t), ECS_INTERNAL_ERROR, NULL);
 
@@ -564,22 +564,22 @@ error:
 void flecs_script_template_import(
     ecs_world_t *world)
 {
-    ECS_COMPONENT_DEFINE(world, EcsTemplateSetEvent);
-    ECS_TAG_DEFINE(world, EcsTemplate);
+    ECS_COMPONENT_DEFINE(world, EcsScriptTemplateSetEvent);
+    ECS_TAG_DEFINE(world, EcsScriptTemplate);
 
-    ecs_add_id(world, EcsTemplate, EcsPairIsTag);
+    ecs_add_id(world, EcsScriptTemplate, EcsPairIsTag);
 
-    ecs_set_hooks(world, EcsTemplateSetEvent, {
+    ecs_set_hooks(world, EcsScriptTemplateSetEvent, {
         .ctor = flecs_default_ctor,
-        .move = ecs_move(EcsTemplateSetEvent),
-        .dtor = ecs_dtor(EcsTemplateSetEvent),
+        .move = ecs_move(EcsScriptTemplateSetEvent),
+        .dtor = ecs_dtor(EcsScriptTemplateSetEvent),
         .flags = ECS_TYPE_HOOK_COPY_ILLEGAL
     });
 
     ecs_observer(world, {
         .entity = ecs_entity(world, { .name = "TemplateSetObserver" }),
         .query.terms = {{ .id = EcsAny }},
-        .events = { ecs_id(EcsTemplateSetEvent) },
+        .events = { ecs_id(EcsScriptTemplateSetEvent) },
         .callback = flecs_on_template_set_event
     });
 }

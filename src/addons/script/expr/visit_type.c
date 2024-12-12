@@ -734,6 +734,39 @@ error:
 }
 
 static
+int flecs_expr_global_variable_resolve(
+    ecs_script_t *script,
+    ecs_expr_variable_t *node,
+    const ecs_expr_eval_desc_t *desc)
+{
+    ecs_world_t *world = script->world;
+    ecs_entity_t global = desc->lookup_action(
+        world, node->name, desc->lookup_ctx);
+    if (!global) {
+        flecs_expr_visit_error(script, node, "unresolved variable '%s'",
+            node->name);
+        goto error;
+    }
+
+    const EcsScriptConstVar *v = ecs_get(world, global, EcsScriptConstVar);
+    if (!v) {
+        char *str = ecs_get_path(world, global);
+        flecs_expr_visit_error(script, node, 
+            "entity '%s' is not a variable", node->name);
+        ecs_os_free(str);
+        goto error;
+    }
+
+    node->node.kind = EcsExprGlobalVariable;
+    node->node.type = v->value.type;
+    node->global_value = v->value;
+
+    return 0;
+error:
+    return -1;
+}
+
+static
 int flecs_expr_variable_visit_type(
     ecs_script_t *script,
     ecs_expr_variable_t *node,
@@ -742,15 +775,33 @@ int flecs_expr_variable_visit_type(
 {
     ecs_script_var_t *var = ecs_script_vars_lookup(
         desc->vars, node->name);
-    if (!var) {
-        flecs_expr_visit_error(script, node, "unresolved variable '%s'",
-            node->name);
-        goto error;
+    if (var) {
+        node->node.type = var->value.type;
+    } else {
+        if (flecs_expr_global_variable_resolve(script, node, desc)) {
+            goto error;
+        }
     }
 
-    node->node.type = var->value.type;
+    *cur = ecs_meta_cursor(script->world, node->node.type, NULL);
 
-    *cur = ecs_meta_cursor(script->world, var->value.type, NULL);
+    return 0;
+error:
+    return -1;
+}
+
+static
+int flecs_expr_global_variable_visit_type(
+    ecs_script_t *script,
+    ecs_expr_variable_t *node,
+    ecs_meta_cursor_t *cur,
+    const ecs_expr_eval_desc_t *desc)
+{
+    (void)cur;
+
+    if (flecs_expr_global_variable_resolve(script, node, desc)) {
+        goto error;
+    }
 
     return 0;
 error:
@@ -1120,6 +1171,13 @@ int flecs_expr_visit_type_priv(
         break;
     case EcsExprVariable:
         if (flecs_expr_variable_visit_type(
+            script, (ecs_expr_variable_t*)node, cur, desc)) 
+        {
+            goto error;
+        }
+        break;
+    case EcsExprGlobalVariable:
+        if (flecs_expr_global_variable_visit_type(
             script, (ecs_expr_variable_t*)node, cur, desc)) 
         {
             goto error;

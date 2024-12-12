@@ -267,6 +267,7 @@ int flecs_expr_node_to_str(
         }
         break;
     case EcsExprVariable:
+    case EcsExprGlobalVariable:
         if (flecs_expr_variable_to_str(v, 
             (const ecs_expr_variable_t*)node)) 
         {

@@ -473,7 +473,7 @@ int flecs_script_eval_entity(
     node->parent = v->entity;
 
     if (v->template_entity) {
-        ecs_add_pair(v->world, node->eval, EcsTemplate, v->template_entity);
+        ecs_add_pair(v->world, node->eval, EcsScriptTemplate, v->template_entity);
     }
 
     if (is_slot) {

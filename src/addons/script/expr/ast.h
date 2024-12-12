@@ -16,6 +16,7 @@ typedef enum ecs_expr_node_kind_t {
     EcsExprBinary,
     EcsExprIdentifier,
     EcsExprVariable,
+    EcsExprGlobalVariable,
     EcsExprFunction,
     EcsExprMethod,
     EcsExprMember,
@@ -60,6 +61,7 @@ typedef struct ecs_expr_identifier_t {
 typedef struct ecs_expr_variable_t {
     ecs_expr_node_t node;
     const char *name;
+    ecs_value_t global_value; /* Only set for global variables */
 } ecs_expr_variable_t;
 
 typedef struct ecs_expr_unary_t {

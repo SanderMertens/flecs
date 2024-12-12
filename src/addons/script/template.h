@@ -6,7 +6,7 @@
 #ifndef FLECS_SCRIPT_TEMPLATE_H
 #define FLECS_SCRIPT_TEMPLATE_H
 
-extern ECS_COMPONENT_DECLARE(EcsTemplateSetEvent);
+extern ECS_COMPONENT_DECLARE(EcsScriptTemplateSetEvent);
 
 struct ecs_script_template_t {
     /* Template handle */
@@ -31,7 +31,7 @@ struct ecs_script_template_t {
 #define ECS_TEMPLATE_SMALL_SIZE (36)
 
 /* Event used for deferring template instantiation */
-typedef struct EcsTemplateSetEvent {
+typedef struct EcsScriptTemplateSetEvent {
     ecs_entity_t template_entity;
     ecs_entity_t *entities;
     void *data;
@@ -40,7 +40,7 @@ typedef struct EcsTemplateSetEvent {
     /* Storage for small template types */
     char data_storage[ECS_TEMPLATE_SMALL_SIZE];
     ecs_entity_t entity_storage;
-} EcsTemplateSetEvent;
+} EcsScriptTemplateSetEvent;
 
 int flecs_script_eval_template(
     ecs_script_eval_visitor_t *v,

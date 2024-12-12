@@ -131,6 +131,7 @@ void flecs_expr_visit_free(
         flecs_free_t(a, ecs_expr_identifier_t, node);
         break;
     case EcsExprVariable:
+    case EcsExprGlobalVariable:
         flecs_free_t(a, ecs_expr_variable_t, node);
         break;
     case EcsExprFunction:

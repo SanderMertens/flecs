@@ -609,7 +609,9 @@
                 "remainder_after_initializer_w_newlines",
                 "remainder_after_initializer_before_parens",
                 "space_at_start",
-                "newline_at_start"
+                "newline_at_start",
+                "global_const_var",
+                "scoped_global_const_var"
             ]
         }, {
             "id": "ExprAst",

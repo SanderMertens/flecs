@@ -597,6 +597,8 @@ void Expr_remainder_after_initializer_w_newlines(void);
 void Expr_remainder_after_initializer_before_parens(void);
 void Expr_space_at_start(void);
 void Expr_newline_at_start(void);
+void Expr_global_const_var(void);
+void Expr_scoped_global_const_var(void);
 
 // Testsuite 'ExprAst'
 void ExprAst_binary_f32_var_add_f32_var(void);
@@ -3104,6 +3106,14 @@ bake_test_case Expr_testcases[] = {
     {
         "newline_at_start",
         Expr_newline_at_start
+    },
+    {
+        "global_const_var",
+        Expr_global_const_var
+    },
+    {
+        "scoped_global_const_var",
+        Expr_scoped_global_const_var
     }
 };
 
@@ -3810,7 +3820,7 @@ static bake_test_suite suites[] = {
         "Expr",
         Expr_setup,
         NULL,
-        191,
+        193,
         Expr_testcases,
         1,
         Expr_params
