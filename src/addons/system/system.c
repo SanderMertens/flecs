@@ -31,6 +31,7 @@ ecs_entity_t flecs_run_intern(
     ecs_ftime_t delta_time,
     void *param) 
 {
+    flecs_poly_assert(world, ecs_world_t);
     ecs_ftime_t time_elapsed = delta_time;
     ecs_entity_t tick_source = system_data->tick_source;
 
@@ -79,6 +80,8 @@ ecs_entity_t flecs_run_intern(
     } else {
         stage = world->stages[0];
     }
+
+    flecs_poly_assert(stage, ecs_stage_t);
 
     /* Prepare the query iterator */
     ecs_iter_t wit, qit = ecs_query_iter(thread_ctx, system_data->query);

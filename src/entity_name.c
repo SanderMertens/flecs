@@ -447,6 +447,8 @@ ecs_entity_t ecs_lookup_path_w_sep(
     }
 
     ecs_check(world != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_check(!parent || ecs_is_valid(world, parent), 
+        ECS_INVALID_PARAMETER, NULL);
     const ecs_world_t *stage = world;
     world = ecs_get_world(world);
 
@@ -633,6 +635,10 @@ ecs_entity_t ecs_add_path_w_sep(
     const char *prefix)
 {
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    const ecs_world_t *real_world = world;
+    if (flecs_poly_is(world, ecs_stage_t)) {
+        real_world = ecs_get_world(world);
+    }
 
     if (!sep) {
         sep = ".";
@@ -663,7 +669,7 @@ ecs_entity_t ecs_add_path_w_sep(
      * immediately updated. Without this, we could create multiple entities for
      * the same name in a single command queue. */
     bool suspend_defer = ecs_is_deferred(world) &&
-        !(world->flags & EcsWorldMultiThreaded);
+        !(real_world->flags & EcsWorldMultiThreaded);
         
     ecs_entity_t cur = parent;
     char *name = NULL;

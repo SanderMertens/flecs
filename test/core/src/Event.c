@@ -1215,9 +1215,11 @@ void Event_enqueue_event_not_alive_w_data_copy(void) {
 
 static
 void system_delete_callback(ecs_iter_t *it) {
+    ecs_defer_suspend(it->world);
     for (int i = 0; i < it->count; i ++) {
         ecs_delete(it->world, it->entities[i]);
     }
+    ecs_defer_resume(it->world);
 }
 
 void Event_enqueue_event_not_alive_after_delete_during_merge(void) {

@@ -85,6 +85,7 @@ void flecs_query_cache_build_sorted_table_range(
     ecs_query_cache_table_list_t *list)
 {
     ecs_world_t *world = cache->query->world;
+    flecs_poly_assert(world, ecs_world_t);
     ecs_assert(!(world->flags & EcsWorldMultiThreaded), ECS_UNSUPPORTED,
         "cannot sort query in multithreaded mode");
 

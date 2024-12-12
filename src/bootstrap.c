@@ -708,6 +708,7 @@ void flecs_bootstrap(
     ecs_make_alive(world, EcsChildOf);
     ecs_make_alive(world, EcsFlecs);
     ecs_make_alive(world, EcsFlecsCore);
+    ecs_make_alive(world, EcsFlecsInternals);
     ecs_make_alive(world, EcsOnAdd);
     ecs_make_alive(world, EcsOnRemove);
     ecs_make_alive(world, EcsOnSet);

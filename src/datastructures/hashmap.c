@@ -53,7 +53,7 @@ void flecs_hashmap_fini(
         ecs_hm_bucket_t *bucket = ecs_map_ptr(&it);
         ecs_vec_fini(a, &bucket->keys, map->key_size);
         ecs_vec_fini(a, &bucket->values, map->value_size);
-#ifdef FLECS_SANITIZE        
+#if defined(FLECS_SANITIZE) || defined(FLECS_USE_OS_ALLOC)
         flecs_bfree(&map->bucket_allocator, bucket);
 #endif
     }

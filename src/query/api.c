@@ -277,7 +277,7 @@ void flecs_query_fini(
 
         ecs_id_record_t *idr = flecs_id_record_get(q->real_world, term->id);
         if (idr) {
-            if (!(q->world->flags & EcsWorldQuit)) {
+            if (!(ecs_world_get_flags(q->world) & EcsWorldQuit)) {
                 if (ecs_os_has_threading()) {
                     int32_t idr_keep_alive = ecs_os_adec(&idr->keep_alive);
                     ecs_assert(idr_keep_alive >= 0, ECS_INTERNAL_ERROR, NULL);

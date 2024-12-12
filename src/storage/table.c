@@ -1008,6 +1008,8 @@ void flecs_table_fini(
     ecs_world_t *world,
     ecs_table_t *table)
 {
+    flecs_poly_assert(world, ecs_world_t);
+
     bool is_root = table == &world->store.root;
     ecs_assert(!table->_->lock, ECS_LOCKED_STORAGE, FLECS_LOCKED_STORAGE_MSG);
     ecs_assert(is_root || table->id != 0, ECS_INTERNAL_ERROR, NULL);
@@ -1330,6 +1332,8 @@ int32_t flecs_table_grow_data(
     int32_t size,
     const ecs_entity_t *ids)
 {
+    flecs_poly_assert(world, ecs_world_t);
+
     ecs_assert(table != NULL, ECS_INTERNAL_ERROR, NULL);
 
     int32_t count = ecs_table_count(table);
@@ -2192,6 +2196,8 @@ void flecs_table_notify(
     ecs_id_t id,
     ecs_table_event_t *event)
 {
+    flecs_poly_assert(world, ecs_world_t);
+
     if (world->flags & EcsWorldFini) {
         return;
     }
