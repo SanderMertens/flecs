@@ -57,3 +57,13 @@ public:
 	}
 	
 }; // class FFlecsTestFixture
+
+#define FLECS_FIXTURE_LIFECYCLE(FixtureName) \
+	BeforeEach([this]() \
+	{ \
+		FixtureName.SetUp(); \
+	}); \
+	AfterEach([this]() \
+	{ \
+		FixtureName.TearDown(); \
+	});

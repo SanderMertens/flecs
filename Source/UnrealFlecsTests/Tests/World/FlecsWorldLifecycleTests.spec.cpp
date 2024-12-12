@@ -1,7 +1,8 @@
-﻿#include "UnrealFlecsTests/Fixtures/FlecsWorldFixture.h"
+﻿
 #if WITH_AUTOMATION_TESTS
 
 #include "Misc/AutomationTest.h"
+#include "Fixtures/FlecsWorldFixture.h"
 
 BEGIN_DEFINE_SPEC(FFlecsWorldLifecycleTestsSpec, "UnrealFlecs.World.LifecycleTests",
 	EAutomationTestFlags::EditorContext | EAutomationTestFlags::EngineFilter)
@@ -12,15 +13,7 @@ END_DEFINE_SPEC(FFlecsWorldLifecycleTestsSpec)
 
 void FFlecsWorldLifecycleTestsSpec::Define()
 {
-	BeforeEach([this]()
-	{
-		Fixture.SetUp();
-	});
-
-	AfterEach([this]()
-	{
-		Fixture.TearDown();
-	});
+	FLECS_FIXTURE_LIFECYCLE(Fixture);
 	
 	Describe("World Creation", [this]()
 	{

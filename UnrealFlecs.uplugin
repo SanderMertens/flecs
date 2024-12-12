@@ -43,6 +43,10 @@
 		{
 			"Name": "StructUtils",
 			"Enabled": true
+		},
+		{
+			"Name": "AutomationUtils",
+			"Enabled": true
 		}
 	],
 	"SupportURL": ""

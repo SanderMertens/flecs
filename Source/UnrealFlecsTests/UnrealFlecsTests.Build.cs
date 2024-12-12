@@ -5,6 +5,13 @@ public class UnrealFlecsTests : ModuleRules
     public UnrealFlecsTests(ReadOnlyTargetRules Target) : base(Target)
     {
         PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
+        
+        PublicIncludePaths.AddRange(
+            new string[]
+            {
+                ModuleDirectory
+            }
+        );
             
         PublicDependencyModuleNames.AddRange(
             new string[]
