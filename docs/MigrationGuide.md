@@ -524,6 +524,12 @@ The following addons have been removed/merged with other addons:
 - `ecs_field_column` has been renamed to `ecs_field_column_index`.
 - `FLECS_TERM_DESC_MAX` has been renamed to `FLECS_TERM_COUNT_MAX`.
 - `ecs_app_desc_t::enable_monitor` has been renamed to `ecs_app_desc_t::enable_stats`.
-- `EcsMetaType` and `EcsMetaTypeSerialized` have been renamed to `EcsType` and `EcsTypeSerialized`, respectively.
+- `EcsMetaType` and `EcsMetaTypeSerialized` have been renamed to `EcsType` and `EcsTypeSerializer`, respectively.
 - `ecs_iter_t::terms` got removed and is now accessible through `ecs_iter_t::query::terms`.
 - `ecs_entity_desc_t::add` and `ecs_entity_desc_t::set` are no longer arrays but pointers to zero-terminated arrays.
+- `ecs_default_ctor` has been renamed to `flecs_default_ctor`.
+- `ecs_ensure` has been renamed to `ecs_make_alive`.
+- `binding_ctx` has been renamed in various structs to `callback_ctx`.
+- `ecs_pair_object` has been renamed to `ecs_pair_target`.
+- `ecs_get_context` and `ecs_set_context` have been renamed to `ecs_get_ctx` and `ecs_set_ctx`, respectively; and an `ecs_ctx_free_t` parameter has been added to `ecs_set_ctx`.
+- `ecs_get_stage_id` has been renamed to `ecs_stage_get_id`.
