@@ -287,7 +287,11 @@
                 "entity_w_string_name_w_kind_value",
                 "entity_w_string_name_w_kind_scope",
                 "entity_w_string_name_w_kind_value_scope",
-                "entity_w_interpolated_name_w_var_in_scope"
+                "entity_w_interpolated_name_w_var_in_scope",
+                "for_range",
+                "for_range_vars",
+                "for_range_1_4",
+                "for_range_min_1_2"
             ]
         }, {
             "id": "Template",

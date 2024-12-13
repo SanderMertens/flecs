@@ -310,4 +310,18 @@ ecs_script_if_t* flecs_script_insert_if(
     return result;
 }
 
+ecs_script_for_range_t* flecs_script_insert_for_range(
+    ecs_script_parser_t *parser)
+{
+    ecs_script_scope_t *scope = parser->scope;
+    ecs_assert(scope != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_script_for_range_t *result = flecs_ast_new(
+        parser, ecs_script_for_range_t, EcsAstFor);
+    result->scope = flecs_script_scope_new(parser);
+
+    flecs_ast_append(parser, scope->stmts, ecs_script_for_range_t, result);
+    return result;
+}
+
 #endif

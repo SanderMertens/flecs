@@ -4569,19 +4569,22 @@ typedef enum ecs_script_token_kind_t {
     EcsTokAnd = 106,
     EcsTokOr = 107,
     EcsTokMatch = 108,
-    EcsTokShiftLeft = 109,
-    EcsTokShiftRight = 110,
-    EcsTokIdentifier = 111,
-    EcsTokString = 112,
-    EcsTokNumber = 113,
-    EcsTokKeywordModule = 114,
-    EcsTokKeywordUsing = 115,
-    EcsTokKeywordWith = 116,
-    EcsTokKeywordIf = 117,
-    EcsTokKeywordElse = 118,
-    EcsTokKeywordTemplate = 119,
-    EcsTokKeywordProp = 120,
-    EcsTokKeywordConst = 121,
+    EcsTokRange = 109,
+    EcsTokShiftLeft = 110,
+    EcsTokShiftRight = 111,
+    EcsTokIdentifier = 112,
+    EcsTokString = 113,
+    EcsTokNumber = 114,
+    EcsTokKeywordModule = 115,
+    EcsTokKeywordUsing = 116,
+    EcsTokKeywordWith = 117,
+    EcsTokKeywordIf = 118,
+    EcsTokKeywordFor = 119,
+    EcsTokKeywordIn = 120,
+    EcsTokKeywordElse = 121,
+    EcsTokKeywordTemplate = 122,
+    EcsTokKeywordProp = 130,
+    EcsTokKeywordConst = 131,
 } ecs_script_token_kind_t;
 
 typedef struct ecs_script_token_t {
@@ -4676,7 +4679,8 @@ typedef enum ecs_script_node_kind_t {
     EcsAstConst,
     EcsAstEntity,
     EcsAstPairScope,
-    EcsAstIf
+    EcsAstIf,
+    EcsAstFor
 } ecs_script_node_kind_t;
 
 typedef struct ecs_script_node_t {
@@ -4790,6 +4794,14 @@ typedef struct ecs_script_if_t {
     ecs_expr_node_t *expr;
 } ecs_script_if_t;
 
+typedef struct ecs_script_for_range_t {
+    ecs_script_node_t node;
+    const char *loop_var;
+    ecs_expr_node_t *from;
+    ecs_expr_node_t *to;
+    ecs_script_scope_t *scope;
+} ecs_script_for_range_t;
+
 #define ecs_script_node(kind, node)\
     ((ecs_script_##kind##_t*)node)
 
@@ -4859,6 +4871,9 @@ ecs_script_var_component_t* flecs_script_insert_var_component(
     const char *name);
 
 ecs_script_if_t* flecs_script_insert_if(
+    ecs_script_parser_t *parser);
+
+ecs_script_for_range_t* flecs_script_insert_for_range(
     ecs_script_parser_t *parser);
 
 #endif
@@ -55208,6 +55223,20 @@ ecs_script_if_t* flecs_script_insert_if(
     return result;
 }
 
+ecs_script_for_range_t* flecs_script_insert_for_range(
+    ecs_script_parser_t *parser)
+{
+    ecs_script_scope_t *scope = parser->scope;
+    ecs_assert(scope != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_script_for_range_t *result = flecs_ast_new(
+        parser, ecs_script_for_range_t, EcsAstFor);
+    result->scope = flecs_script_scope_new(parser);
+
+    flecs_ast_append(parser, scope->stmts, ecs_script_for_range_t, result);
+    return result;
+}
+
 #endif
 
 /**
@@ -56288,6 +56317,7 @@ const char* flecs_script_stmt(
         case EcsTokKeywordProp:       goto prop_var;
         case EcsTokKeywordConst:      goto const_var;
         case EcsTokKeywordIf:         goto if_stmt;
+        case EcsTokKeywordFor:        goto for_stmt;
         EcsTokEndOfStatement:         EndOfRule;
     );
 
@@ -56545,6 +56575,34 @@ if_stmt: {
             EndOfRule;
         });
     )
+}
+
+// for
+for_stmt: {
+    // for $i
+    Parse_2(EcsTokIdentifier, EcsTokKeywordIn, {
+        if (Token(1)[0] != '$') {
+            Error("expected loop variable name");
+        }
+
+        Expr(0, {
+            ecs_expr_node_t *from = EXPR;
+            Parse_1(EcsTokRange, {
+                Expr(0, {
+                    ecs_expr_node_t *to = EXPR;
+                    ecs_script_for_range_t *stmt = flecs_script_insert_for_range(parser);
+                    stmt->loop_var = &Token(1)[1];
+                    stmt->from = from;
+                    stmt->to = to;
+
+                    Parse_1('{', {
+                        return flecs_script_scope(parser, stmt->scope, pos);
+                    });
+                });
+            });
+        });
+
+    });
 }
 
 // (
@@ -58921,6 +58979,11 @@ int flecs_script_template_eval(
             }
         }
         return 0;
+    case EcsAstFor:
+        if (ecs_script_visit_scope(v, ((ecs_script_for_range_t*)node)->scope)) {
+            return -1;
+        }
+        return 0;
     }
 
     return flecs_script_eval_node(v, node);
@@ -59180,6 +59243,7 @@ const char* flecs_script_token_kind_str(
     case EcsTokAnd:
     case EcsTokOr:
     case EcsTokMatch:
+    case EcsTokRange:
     case EcsTokShiftLeft:
     case EcsTokShiftRight:
         return "";
@@ -59190,6 +59254,8 @@ const char* flecs_script_token_kind_str(
     case EcsTokKeywordConst:
     case EcsTokKeywordIf:
     case EcsTokKeywordElse:
+    case EcsTokKeywordFor:
+    case EcsTokKeywordIn:
     case EcsTokKeywordModule:
         return "keyword ";
     case EcsTokIdentifier:
@@ -59243,6 +59309,7 @@ const char* flecs_script_token_str(
     case EcsTokAnd: return "&&";
     case EcsTokOr: return "||";
     case EcsTokMatch: return "~=";
+    case EcsTokRange: return "..";
     case EcsTokShiftLeft: return "<<";
     case EcsTokShiftRight: return ">>";
     case EcsTokKeywordWith: return "with";
@@ -59252,6 +59319,8 @@ const char* flecs_script_token_str(
     case EcsTokKeywordConst: return "const";
     case EcsTokKeywordIf: return "if";
     case EcsTokKeywordElse: return "else";
+    case EcsTokKeywordFor: return "for";
+    case EcsTokKeywordIn: return "in";
     case EcsTokKeywordModule: return "module";
     case EcsTokIdentifier: return "identifier";
     case EcsTokString: return "string";
@@ -59652,6 +59721,8 @@ const char* flecs_script_token(
     Operator          ("/",        EcsTokDiv)
     Operator          ("%%",       EcsTokMod)
     Operator          ("?",        EcsTokOptional)
+    
+    OperatorMultiChar ("..",       EcsTokRange)
     Operator          (".",        EcsTokMember)
 
     OperatorMultiChar ("==",       EcsTokEq)
@@ -59679,6 +59750,8 @@ const char* flecs_script_token(
     Keyword           ("const",    EcsTokKeywordConst)
     Keyword           ("if",       EcsTokKeywordIf)
     Keyword           ("else",     EcsTokKeywordElse)
+    Keyword           ("for",      EcsTokKeywordFor)
+    Keyword           ("in",       EcsTokKeywordIn)
     Keyword           ("module",   EcsTokKeywordModule)
 
     } else if (pos[0] == '"') {
@@ -61333,6 +61406,45 @@ int flecs_script_eval_if(
 }
 
 static
+int flecs_script_eval_for_range(
+    ecs_script_eval_visitor_t *v,
+    ecs_script_for_range_t *node)
+{
+    ecs_value_t from_val = { .type = ecs_id(ecs_i32_t) };
+    ecs_value_t to_val = { .type = ecs_id(ecs_i32_t) };
+
+    if (flecs_script_eval_expr(v, &node->from, &from_val)) {
+        return -1;
+    }
+
+    if (flecs_script_eval_expr(v, &node->to, &to_val)) {
+        return -1;
+    }
+
+    int32_t from = *(int32_t*)from_val.ptr;
+    int32_t to = *(int32_t*)to_val.ptr;
+
+    v->vars = flecs_script_vars_push(v->vars, &v->r->stack, &v->r->allocator);
+
+    ecs_script_var_t *var = ecs_script_vars_declare(v->vars, node->loop_var);
+    var->value.ptr = flecs_stack_calloc(&v->r->stack, 4, 4);
+    var->value.type = ecs_id(ecs_i32_t);
+    var->type_info = ecs_get_type_info(v->world, ecs_id(ecs_i32_t));
+    
+    int32_t i;
+    for (i = from; i < to; i ++) {
+        *(int32_t*)var->value.ptr = i;
+        if (flecs_script_eval_scope(v, node->scope)) {
+            return -1;
+        }
+    }
+
+    v->vars = ecs_script_vars_pop(v->vars);
+
+    return 0;
+}
+
+static
 int flecs_script_eval_annot(
     ecs_script_eval_visitor_t *v,
     ecs_script_annot_t *node)
@@ -61414,6 +61526,9 @@ int flecs_script_eval_node(
     case EcsAstIf:
         return flecs_script_eval_if(
             v, (ecs_script_if_t*)node);
+    case EcsAstFor:
+        return flecs_script_eval_for_range(
+            v, (ecs_script_for_range_t*)node);
     }
 
     ecs_abort(ECS_INTERNAL_ERROR, "corrupt AST node kind");
@@ -61552,6 +61667,16 @@ void flecs_script_if_free(
 }
 
 static
+void flecs_script_for_range_free(
+    ecs_script_visit_t *v,
+    ecs_script_for_range_t *node)
+{
+    flecs_expr_visit_free(&v->script->pub, node->from);
+    flecs_expr_visit_free(&v->script->pub, node->to);
+    flecs_script_scope_free(v, node->scope);
+}
+
+static
 void flecs_script_component_free(
     ecs_script_visit_t *v,
     ecs_script_component_t *node)
@@ -61604,6 +61729,10 @@ int flecs_script_stmt_free(
     case EcsAstIf:
         flecs_script_if_free(v, (ecs_script_if_t*)node);
         flecs_free_t(a, ecs_script_if_t, node);
+        break;
+    case EcsAstFor:
+        flecs_script_for_range_free(v, (ecs_script_for_range_t*)node);
+        flecs_free_t(a, ecs_script_for_range_t, node);
         break;
     case EcsAstTag:
         flecs_free_t(a, ecs_script_tag_t, node);
@@ -61783,6 +61912,7 @@ const char* flecs_script_node_to_str(
     case EcsAstEntity:             return "entity";
     case EcsAstPairScope:          return "pair_scope";
     case EcsAstIf:                 return "if";
+    case EcsAstFor:                return "for";
     }
     return "???";
 }
@@ -61968,6 +62098,25 @@ void flecs_script_if_to_str(
 }
 
 static
+void flecs_script_for_range_to_str(
+    ecs_script_str_visitor_t *v,
+    ecs_script_for_range_t *node)
+{
+    flecs_scriptbuf_node(v, &node->node);
+    flecs_scriptbuf_appendstr(v, node->loop_var);
+    flecs_scriptbuf_appendstr(v, " ");
+    flecs_expr_to_str(v, node->from);
+    flecs_scriptbuf_appendstr(v, " .. ");
+    flecs_expr_to_str(v, node->to);
+
+    flecs_scriptbuf_appendstr(v, " {\n");
+    v->depth ++;
+    flecs_script_scope_to_str(v, node->scope);
+    v->depth --;
+    flecs_scriptbuf_appendstr(v, "}\n");
+}
+
+static
 int flecs_script_scope_to_str(
     ecs_script_str_visitor_t *v,
     ecs_script_scope_t *scope)
@@ -62047,6 +62196,9 @@ int flecs_script_stmt_to_str(
         break;
     case EcsAstIf:
         flecs_script_if_to_str(v, (ecs_script_if_t*)node);
+        break;
+    case EcsAstFor:
+        flecs_script_for_range_to_str(v, (ecs_script_for_range_t*)node);
         break;
     }
 
@@ -75357,6 +75509,7 @@ int flecs_value_unary(
     case EcsTokAnd:
     case EcsTokOr:
     case EcsTokMatch:
+    case EcsTokRange:
     case EcsTokShiftLeft:
     case EcsTokShiftRight:
     case EcsTokIdentifier:
@@ -75367,6 +75520,8 @@ int flecs_value_unary(
     case EcsTokKeywordWith:
     case EcsTokKeywordIf:
     case EcsTokKeywordElse:
+    case EcsTokKeywordFor:
+    case EcsTokKeywordIn:
     case EcsTokKeywordTemplate:
     case EcsTokKeywordProp:
     case EcsTokKeywordConst:
@@ -75456,6 +75611,7 @@ int flecs_value_binary(
     case EcsTokAnnotation:
     case EcsTokNewline:
     case EcsTokMatch:
+    case EcsTokRange:
     case EcsTokIdentifier:
     case EcsTokString:
     case EcsTokNumber:
@@ -75464,6 +75620,8 @@ int flecs_value_binary(
     case EcsTokKeywordWith:
     case EcsTokKeywordIf:
     case EcsTokKeywordElse:
+    case EcsTokKeywordFor:
+    case EcsTokKeywordIn:
     case EcsTokKeywordTemplate:
     case EcsTokKeywordProp:
     case EcsTokKeywordConst:
@@ -77707,6 +77865,7 @@ bool flecs_expr_oper_valid_for_type(
     case EcsTokAnnotation:
     case EcsTokNewline:
     case EcsTokMatch:
+    case EcsTokRange:
     case EcsTokIdentifier:
     case EcsTokString:
     case EcsTokNumber:
@@ -77715,6 +77874,8 @@ bool flecs_expr_oper_valid_for_type(
     case EcsTokKeywordWith:
     case EcsTokKeywordIf:
     case EcsTokKeywordElse:
+    case EcsTokKeywordFor:
+    case EcsTokKeywordIn:
     case EcsTokKeywordTemplate:
     case EcsTokKeywordProp:
     case EcsTokKeywordConst:
@@ -77787,6 +77948,7 @@ int flecs_expr_type_for_oper(
     case EcsTokAnnotation:
     case EcsTokNewline:
     case EcsTokMatch:
+    case EcsTokRange:
     case EcsTokIdentifier:
     case EcsTokString:
     case EcsTokNumber:
@@ -77795,6 +77957,8 @@ int flecs_expr_type_for_oper(
     case EcsTokKeywordWith:
     case EcsTokKeywordIf:
     case EcsTokKeywordElse:
+    case EcsTokKeywordFor:
+    case EcsTokKeywordIn:
     case EcsTokKeywordTemplate:
     case EcsTokKeywordProp:
     case EcsTokKeywordConst:

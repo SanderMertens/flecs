@@ -272,6 +272,7 @@ bool flecs_expr_oper_valid_for_type(
     case EcsTokAnnotation:
     case EcsTokNewline:
     case EcsTokMatch:
+    case EcsTokRange:
     case EcsTokIdentifier:
     case EcsTokString:
     case EcsTokNumber:
@@ -280,6 +281,8 @@ bool flecs_expr_oper_valid_for_type(
     case EcsTokKeywordWith:
     case EcsTokKeywordIf:
     case EcsTokKeywordElse:
+    case EcsTokKeywordFor:
+    case EcsTokKeywordIn:
     case EcsTokKeywordTemplate:
     case EcsTokKeywordProp:
     case EcsTokKeywordConst:
@@ -352,6 +355,7 @@ int flecs_expr_type_for_oper(
     case EcsTokAnnotation:
     case EcsTokNewline:
     case EcsTokMatch:
+    case EcsTokRange:
     case EcsTokIdentifier:
     case EcsTokString:
     case EcsTokNumber:
@@ -360,6 +364,8 @@ int flecs_expr_type_for_oper(
     case EcsTokKeywordWith:
     case EcsTokKeywordIf:
     case EcsTokKeywordElse:
+    case EcsTokKeywordFor:
+    case EcsTokKeywordIn:
     case EcsTokKeywordTemplate:
     case EcsTokKeywordProp:
     case EcsTokKeywordConst:

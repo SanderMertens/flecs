@@ -1205,6 +1205,45 @@ int flecs_script_eval_if(
 }
 
 static
+int flecs_script_eval_for_range(
+    ecs_script_eval_visitor_t *v,
+    ecs_script_for_range_t *node)
+{
+    ecs_value_t from_val = { .type = ecs_id(ecs_i32_t) };
+    ecs_value_t to_val = { .type = ecs_id(ecs_i32_t) };
+
+    if (flecs_script_eval_expr(v, &node->from, &from_val)) {
+        return -1;
+    }
+
+    if (flecs_script_eval_expr(v, &node->to, &to_val)) {
+        return -1;
+    }
+
+    int32_t from = *(int32_t*)from_val.ptr;
+    int32_t to = *(int32_t*)to_val.ptr;
+
+    v->vars = flecs_script_vars_push(v->vars, &v->r->stack, &v->r->allocator);
+
+    ecs_script_var_t *var = ecs_script_vars_declare(v->vars, node->loop_var);
+    var->value.ptr = flecs_stack_calloc(&v->r->stack, 4, 4);
+    var->value.type = ecs_id(ecs_i32_t);
+    var->type_info = ecs_get_type_info(v->world, ecs_id(ecs_i32_t));
+    
+    int32_t i;
+    for (i = from; i < to; i ++) {
+        *(int32_t*)var->value.ptr = i;
+        if (flecs_script_eval_scope(v, node->scope)) {
+            return -1;
+        }
+    }
+
+    v->vars = ecs_script_vars_pop(v->vars);
+
+    return 0;
+}
+
+static
 int flecs_script_eval_annot(
     ecs_script_eval_visitor_t *v,
     ecs_script_annot_t *node)
@@ -1286,6 +1325,9 @@ int flecs_script_eval_node(
     case EcsAstIf:
         return flecs_script_eval_if(
             v, (ecs_script_if_t*)node);
+    case EcsAstFor:
+        return flecs_script_eval_for_range(
+            v, (ecs_script_for_range_t*)node);
     }
 
     ecs_abort(ECS_INTERNAL_ERROR, "corrupt AST node kind");

@@ -255,6 +255,7 @@ const char* flecs_script_stmt(
         case EcsTokKeywordProp:       goto prop_var;
         case EcsTokKeywordConst:      goto const_var;
         case EcsTokKeywordIf:         goto if_stmt;
+        case EcsTokKeywordFor:        goto for_stmt;
         EcsTokEndOfStatement:         EndOfRule;
     );
 
@@ -512,6 +513,34 @@ if_stmt: {
             EndOfRule;
         });
     )
+}
+
+// for
+for_stmt: {
+    // for $i
+    Parse_2(EcsTokIdentifier, EcsTokKeywordIn, {
+        if (Token(1)[0] != '$') {
+            Error("expected loop variable name");
+        }
+
+        Expr(0, {
+            ecs_expr_node_t *from = EXPR;
+            Parse_1(EcsTokRange, {
+                Expr(0, {
+                    ecs_expr_node_t *to = EXPR;
+                    ecs_script_for_range_t *stmt = flecs_script_insert_for_range(parser);
+                    stmt->loop_var = &Token(1)[1];
+                    stmt->from = from;
+                    stmt->to = to;
+
+                    Parse_1('{', {
+                        return flecs_script_scope(parser, stmt->scope, pos);
+                    });
+                });
+            });
+        });
+
+    });
 }
 
 // (

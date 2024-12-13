@@ -284,6 +284,10 @@ void Eval_entity_w_string_name_w_kind_value(void);
 void Eval_entity_w_string_name_w_kind_scope(void);
 void Eval_entity_w_string_name_w_kind_value_scope(void);
 void Eval_entity_w_interpolated_name_w_var_in_scope(void);
+void Eval_for_range(void);
+void Eval_for_range_vars(void);
+void Eval_for_range_1_4(void);
+void Eval_for_range_min_1_2(void);
 
 // Testsuite 'Template'
 void Template_template_no_scope(void);
@@ -1899,6 +1903,22 @@ bake_test_case Eval_testcases[] = {
     {
         "entity_w_interpolated_name_w_var_in_scope",
         Eval_entity_w_interpolated_name_w_var_in_scope
+    },
+    {
+        "for_range",
+        Eval_for_range
+    },
+    {
+        "for_range_vars",
+        Eval_for_range_vars
+    },
+    {
+        "for_range_1_4",
+        Eval_for_range_1_4
+    },
+    {
+        "for_range_min_1_2",
+        Eval_for_range_min_1_2
     }
 };
 
@@ -3929,7 +3949,7 @@ static bake_test_suite suites[] = {
         "Eval",
         NULL,
         NULL,
-        275,
+        279,
         Eval_testcases
     },
     {

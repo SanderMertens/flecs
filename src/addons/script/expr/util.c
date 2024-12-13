@@ -108,6 +108,7 @@ int flecs_value_unary(
     case EcsTokAnd:
     case EcsTokOr:
     case EcsTokMatch:
+    case EcsTokRange:
     case EcsTokShiftLeft:
     case EcsTokShiftRight:
     case EcsTokIdentifier:
@@ -118,6 +119,8 @@ int flecs_value_unary(
     case EcsTokKeywordWith:
     case EcsTokKeywordIf:
     case EcsTokKeywordElse:
+    case EcsTokKeywordFor:
+    case EcsTokKeywordIn:
     case EcsTokKeywordTemplate:
     case EcsTokKeywordProp:
     case EcsTokKeywordConst:
@@ -207,6 +210,7 @@ int flecs_value_binary(
     case EcsTokAnnotation:
     case EcsTokNewline:
     case EcsTokMatch:
+    case EcsTokRange:
     case EcsTokIdentifier:
     case EcsTokString:
     case EcsTokNumber:
@@ -215,6 +219,8 @@ int flecs_value_binary(
     case EcsTokKeywordWith:
     case EcsTokKeywordIf:
     case EcsTokKeywordElse:
+    case EcsTokKeywordFor:
+    case EcsTokKeywordIn:
     case EcsTokKeywordTemplate:
     case EcsTokKeywordProp:
     case EcsTokKeywordConst:

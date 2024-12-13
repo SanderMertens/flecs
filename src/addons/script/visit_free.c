@@ -65,6 +65,16 @@ void flecs_script_if_free(
 }
 
 static
+void flecs_script_for_range_free(
+    ecs_script_visit_t *v,
+    ecs_script_for_range_t *node)
+{
+    flecs_expr_visit_free(&v->script->pub, node->from);
+    flecs_expr_visit_free(&v->script->pub, node->to);
+    flecs_script_scope_free(v, node->scope);
+}
+
+static
 void flecs_script_component_free(
     ecs_script_visit_t *v,
     ecs_script_component_t *node)
@@ -117,6 +127,10 @@ int flecs_script_stmt_free(
     case EcsAstIf:
         flecs_script_if_free(v, (ecs_script_if_t*)node);
         flecs_free_t(a, ecs_script_if_t, node);
+        break;
+    case EcsAstFor:
+        flecs_script_for_range_free(v, (ecs_script_for_range_t*)node);
+        flecs_free_t(a, ecs_script_for_range_t, node);
         break;
     case EcsAstTag:
         flecs_free_t(a, ecs_script_tag_t, node);

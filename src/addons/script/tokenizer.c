@@ -61,6 +61,7 @@ const char* flecs_script_token_kind_str(
     case EcsTokAnd:
     case EcsTokOr:
     case EcsTokMatch:
+    case EcsTokRange:
     case EcsTokShiftLeft:
     case EcsTokShiftRight:
         return "";
@@ -71,6 +72,8 @@ const char* flecs_script_token_kind_str(
     case EcsTokKeywordConst:
     case EcsTokKeywordIf:
     case EcsTokKeywordElse:
+    case EcsTokKeywordFor:
+    case EcsTokKeywordIn:
     case EcsTokKeywordModule:
         return "keyword ";
     case EcsTokIdentifier:
@@ -124,6 +127,7 @@ const char* flecs_script_token_str(
     case EcsTokAnd: return "&&";
     case EcsTokOr: return "||";
     case EcsTokMatch: return "~=";
+    case EcsTokRange: return "..";
     case EcsTokShiftLeft: return "<<";
     case EcsTokShiftRight: return ">>";
     case EcsTokKeywordWith: return "with";
@@ -133,6 +137,8 @@ const char* flecs_script_token_str(
     case EcsTokKeywordConst: return "const";
     case EcsTokKeywordIf: return "if";
     case EcsTokKeywordElse: return "else";
+    case EcsTokKeywordFor: return "for";
+    case EcsTokKeywordIn: return "in";
     case EcsTokKeywordModule: return "module";
     case EcsTokIdentifier: return "identifier";
     case EcsTokString: return "string";
@@ -533,6 +539,8 @@ const char* flecs_script_token(
     Operator          ("/",        EcsTokDiv)
     Operator          ("%%",       EcsTokMod)
     Operator          ("?",        EcsTokOptional)
+    
+    OperatorMultiChar ("..",       EcsTokRange)
     Operator          (".",        EcsTokMember)
 
     OperatorMultiChar ("==",       EcsTokEq)
@@ -560,6 +568,8 @@ const char* flecs_script_token(
     Keyword           ("const",    EcsTokKeywordConst)
     Keyword           ("if",       EcsTokKeywordIf)
     Keyword           ("else",     EcsTokKeywordElse)
+    Keyword           ("for",      EcsTokKeywordFor)
+    Keyword           ("in",       EcsTokKeywordIn)
     Keyword           ("module",   EcsTokKeywordModule)
 
     } else if (pos[0] == '"') {

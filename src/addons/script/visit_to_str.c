@@ -116,6 +116,7 @@ const char* flecs_script_node_to_str(
     case EcsAstEntity:             return "entity";
     case EcsAstPairScope:          return "pair_scope";
     case EcsAstIf:                 return "if";
+    case EcsAstFor:                return "for";
     }
     return "???";
 }
@@ -301,6 +302,25 @@ void flecs_script_if_to_str(
 }
 
 static
+void flecs_script_for_range_to_str(
+    ecs_script_str_visitor_t *v,
+    ecs_script_for_range_t *node)
+{
+    flecs_scriptbuf_node(v, &node->node);
+    flecs_scriptbuf_appendstr(v, node->loop_var);
+    flecs_scriptbuf_appendstr(v, " ");
+    flecs_expr_to_str(v, node->from);
+    flecs_scriptbuf_appendstr(v, " .. ");
+    flecs_expr_to_str(v, node->to);
+
+    flecs_scriptbuf_appendstr(v, " {\n");
+    v->depth ++;
+    flecs_script_scope_to_str(v, node->scope);
+    v->depth --;
+    flecs_scriptbuf_appendstr(v, "}\n");
+}
+
+static
 int flecs_script_scope_to_str(
     ecs_script_str_visitor_t *v,
     ecs_script_scope_t *scope)
@@ -380,6 +400,9 @@ int flecs_script_stmt_to_str(
         break;
     case EcsAstIf:
         flecs_script_if_to_str(v, (ecs_script_if_t*)node);
+        break;
+    case EcsAstFor:
+        flecs_script_for_range_to_str(v, (ecs_script_for_range_t*)node);
         break;
     }
 

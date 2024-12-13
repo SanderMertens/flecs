@@ -388,6 +388,11 @@ int flecs_script_template_eval(
             }
         }
         return 0;
+    case EcsAstFor:
+        if (ecs_script_visit_scope(v, ((ecs_script_for_range_t*)node)->scope)) {
+            return -1;
+        }
+        return 0;
     }
 
     return flecs_script_eval_node(v, node);
