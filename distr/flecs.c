@@ -4516,6 +4516,7 @@ typedef struct ecs_script_impl_t {
     ecs_script_scope_t *root;
     ecs_expr_node_t *expr; /* Only set if script is just an expression */
     char *token_buffer;
+    char *token_remaining; /* Remaining space in token buffer */
     const char *next_token; /* First character after expression */
     int32_t token_buffer_size;
     int32_t refcount;
@@ -4620,6 +4621,11 @@ const char* flecs_scan_whitespace(
     ecs_script_parser_t *parser,
     const char *pos);
 
+const char* flecs_script_identifier(
+    ecs_script_parser_t *parser,
+    const char *pos,
+    ecs_script_token_t *out);
+
 #endif
 
 
@@ -4670,7 +4676,7 @@ typedef enum ecs_script_node_kind_t {
     EcsAstConst,
     EcsAstEntity,
     EcsAstPairScope,
-    EcsAstIf,
+    EcsAstIf
 } ecs_script_node_kind_t;
 
 typedef struct ecs_script_node_t {
@@ -4951,6 +4957,7 @@ void flecs_expr_stack_pop(
 
 typedef enum ecs_expr_node_kind_t {
     EcsExprValue,
+    EcsExprInterpolatedString,
     EcsExprInitializer,
     EcsExprEmptyInitializer,
     EcsExprUnary,
@@ -4978,6 +4985,15 @@ typedef struct ecs_expr_value_node_t {
     void *ptr;
     ecs_expr_small_value_t storage;
 } ecs_expr_value_node_t;
+
+typedef struct ecs_expr_interpolated_string_t {
+    ecs_expr_node_t node;
+    char *value;              /* modified by parser */
+    char *buffer;             /* for storing expr tokens */
+    ecs_size_t buffer_size;
+    ecs_vec_t fragments;      /* vec<char*> */
+    ecs_vec_t expressions;    /* vec<ecs_expr_node_t*> */
+} ecs_expr_interpolated_string_t;
 
 typedef struct ecs_expr_initializer_element_t {
     const char *member;
@@ -5056,6 +5072,11 @@ ecs_expr_value_node_t* flecs_expr_value_from(
     ecs_expr_node_t *node,
     ecs_entity_t type);
 
+ecs_expr_variable_t* flecs_expr_variable_from(
+    ecs_script_t *script,
+    ecs_expr_node_t *node,
+    const char *name);
+
 ecs_expr_value_node_t* flecs_expr_bool(
     ecs_script_parser_t *parser,
     bool value);
@@ -5073,6 +5094,10 @@ ecs_expr_value_node_t* flecs_expr_float(
     double value);
 
 ecs_expr_value_node_t* flecs_expr_string(
+    ecs_script_parser_t *parser,
+    const char *value);
+
+ecs_expr_interpolated_string_t* flecs_expr_interpolated_string(
     ecs_script_parser_t *parser,
     const char *value);
 
@@ -5194,6 +5219,12 @@ void flecs_expr_to_str_buf(
     const ecs_expr_node_t *expr,
     ecs_strbuf_t *buf,
     bool colors);
+
+bool flecs_string_is_interpolated(
+    const char *str);
+
+char* flecs_string_escape(
+    char *str);
 
 #define ECS_VALUE_GET(value, T) (*(T*)(value)->ptr)
 
@@ -48040,6 +48071,7 @@ error:
  * @brief API for assigning values of runtime types with reflection.
  */
 
+#include <inttypes.h>
 #include <ctype.h>
 
 #ifdef FLECS_META
@@ -48925,6 +48957,16 @@ int ecs_meta_set_bool(
     cases_T_bool(ptr, value);
     cases_T_signed(ptr, value, ecs_meta_bounds_signed);
     cases_T_unsigned(ptr, value, ecs_meta_bounds_unsigned);
+    case EcsOpString: {
+        char *result;
+        if (value) {
+            result = ecs_os_strdup("true");
+        } else {
+            result = ecs_os_strdup("false");
+        }
+        set_T(ecs_string_t, ptr, result);
+        break;
+    }
     case EcsOpOpaque: {
         const EcsOpaque *ot = ecs_get(cursor->world, op->type, EcsOpaque);
         if (ot && ot->assign_bool) {
@@ -48941,7 +48983,6 @@ int ecs_meta_set_bool(
     case EcsOpPrimitive:
     case EcsOpF32:
     case EcsOpF64:
-    case EcsOpString:
         flecs_meta_conversion_error(cursor, op, "bool");
         return -1;
     default:
@@ -48964,6 +49005,11 @@ int ecs_meta_set_char(
     switch(op->kind) {
     cases_T_bool(ptr, value);
     cases_T_signed(ptr, value, ecs_meta_bounds_signed);
+    case EcsOpString: {
+        char *result = flecs_asprintf("%c", value);
+        set_T(ecs_string_t, ptr, result);
+        break;
+    }
     case EcsOpOpaque: {
         const EcsOpaque *opaque = ecs_get(cursor->world, op->type, EcsOpaque);
         ecs_assert(opaque != NULL, ECS_INVALID_OPERATION, 
@@ -48996,7 +49042,6 @@ int ecs_meta_set_char(
     case EcsOpF32:
     case EcsOpF64:
     case EcsOpUPtr:
-    case EcsOpString:
     case EcsOpEntity:
     case EcsOpId:
         flecs_meta_conversion_error(cursor, op, "char");
@@ -49023,6 +49068,11 @@ int ecs_meta_set_int(
     cases_T_signed(ptr, value, ecs_meta_bounds_signed);
     cases_T_unsigned(ptr, value, ecs_meta_bounds_signed);
     cases_T_float(ptr, value);
+    case EcsOpString: {
+        char *result = flecs_asprintf("%"PRId64, value);
+        set_T(ecs_string_t, ptr, result);
+        break;
+    }
     case EcsOpOpaque: {
         const EcsOpaque *opaque = ecs_get(cursor->world, op->type, EcsOpaque);
         ecs_assert(opaque != NULL, ECS_INVALID_OPERATION, 
@@ -49048,8 +49098,7 @@ int ecs_meta_set_int(
     case EcsOpPush:
     case EcsOpPop:
     case EcsOpScope:
-    case EcsOpPrimitive:
-    case EcsOpString: {
+    case EcsOpPrimitive: {
         if(!value) return ecs_meta_set_null(cursor);
         flecs_meta_conversion_error(cursor, op, "int");
         return -1;
@@ -49076,6 +49125,11 @@ int ecs_meta_set_uint(
     cases_T_signed(ptr, value, ecs_meta_bounds_unsigned);
     cases_T_unsigned(ptr, value, ecs_meta_bounds_unsigned);
     cases_T_float(ptr, value);
+    case EcsOpString: {
+        char *result = flecs_asprintf("%"PRIu64, value);
+        set_T(ecs_string_t, ptr, result);
+        break;
+    }
     case EcsOpOpaque: {
         const EcsOpaque *opaque = ecs_get(cursor->world, op->type, EcsOpaque);
         ecs_assert(opaque != NULL, ECS_INVALID_OPERATION, 
@@ -49102,7 +49156,6 @@ int ecs_meta_set_uint(
     case EcsOpPop:
     case EcsOpScope:
     case EcsOpPrimitive:
-    case EcsOpString:
         if(!value) return ecs_meta_set_null(cursor);
         flecs_meta_conversion_error(cursor, op, "uint");
         return -1;
@@ -49134,6 +49187,11 @@ int ecs_meta_set_float(
     cases_T_signed(ptr, value, ecs_meta_bounds_float);
     cases_T_unsigned(ptr, value, ecs_meta_bounds_float);
     cases_T_float(ptr, value);
+    case EcsOpString: {
+        char *result = flecs_asprintf("%f", value);
+        set_T(ecs_string_t, ptr, result);
+        break;
+    }
     case EcsOpOpaque: {
         const EcsOpaque *opaque = ecs_get(cursor->world, op->type, EcsOpaque);
         ecs_assert(opaque != NULL, ECS_INVALID_OPERATION, 
@@ -49164,7 +49222,6 @@ int ecs_meta_set_float(
     case EcsOpPop:
     case EcsOpScope:
     case EcsOpPrimitive:
-    case EcsOpString:
         flecs_meta_conversion_error(cursor, op, "float");
         return -1;
     default:
@@ -49602,6 +49659,11 @@ int ecs_meta_set_entity(
     case EcsOpId:
         set_T(ecs_id_t, ptr, value); /* entities are valid ids */
         break;
+    case EcsOpString: {
+        char *result = ecs_get_path(cursor->world, value);
+        set_T(ecs_string_t, ptr, result);
+        break;
+    }   
     case EcsOpOpaque: {
         const EcsOpaque *opaque = ecs_get(cursor->world, op->type, EcsOpaque);
         if (opaque && opaque->assign_entity) {
@@ -49634,7 +49696,6 @@ int ecs_meta_set_entity(
     case EcsOpF64:
     case EcsOpUPtr:
     case EcsOpIPtr:
-    case EcsOpString:
         flecs_meta_conversion_error(cursor, op, "entity");
         goto error;
     default:
@@ -49659,6 +49720,11 @@ int ecs_meta_set_id(
     case EcsOpId:
         set_T(ecs_id_t, ptr, value);
         break;
+    case EcsOpString: {
+        char *result = ecs_id_str(cursor->world, value);
+        set_T(ecs_string_t, ptr, result);
+        break;
+    }
     case EcsOpOpaque: {
         const EcsOpaque *opaque = ecs_get(cursor->world, op->type, EcsOpaque);
         if (opaque && opaque->assign_id) {
@@ -49691,7 +49757,6 @@ int ecs_meta_set_id(
     case EcsOpF64:
     case EcsOpUPtr:
     case EcsOpIPtr:
-    case EcsOpString:
     case EcsOpEntity:
         flecs_meta_conversion_error(cursor, op, "id");
         goto error;
@@ -55154,6 +55219,8 @@ ECS_MOVE(EcsScriptConstVar, dst, src, {
     if (dst->type_info->hooks.dtor) {
         dst->type_info->hooks.dtor(dst->value.ptr, 1, dst->type_info);
     }
+
+    ecs_os_free(dst->value.ptr);
     
     *dst = *src;
 
@@ -55167,6 +55234,7 @@ ECS_DTOR(EcsScriptConstVar, ptr, {
     if (ptr->type_info->hooks.dtor) {
         ptr->type_info->hooks.dtor(ptr->value.ptr, 1, ptr->type_info);
     }
+    ecs_os_free(ptr->value.ptr);
 })
 
 static
@@ -55682,181 +55750,6 @@ void FlecsScriptMathImport(
     FLECS_MATH_FUNC_DEF_F64(ceil, "Round up value");
     FLECS_MATH_FUNC_DEF_F64(floor, "Round down value");
     FLECS_MATH_FUNC_DEF_F64(round, "Round to nearest");
-}
-
-#endif
-
-/**
- * @file addons/script/interpolate.c
- * @brief String interpolation.
- */
-
-
-#ifdef FLECS_SCRIPT
-#include <ctype.h>
-
-static
-const char* flecs_parse_var_name(
-    const char *ptr,
-    char *token_out)
-{
-    char ch, *bptr = token_out;
-
-    while ((ch = *ptr)) {
-        if (bptr - token_out > ECS_MAX_TOKEN_SIZE) {
-            goto error;
-        }
-
-        if (isalpha(ch) || isdigit(ch) || ch == '_') {
-            *bptr = ch;
-            bptr ++;
-            ptr ++;
-        } else {
-            break;
-        }
-    }
-
-    if (bptr == token_out) {
-        goto error;
-    }
-
-    *bptr = '\0';
-
-    return ptr;
-error:
-    return NULL;
-}
-
-static
-const char* flecs_parse_interpolated_str(
-    const char *ptr,
-    char *token_out)
-{
-    char ch, *bptr = token_out;
-
-    while ((ch = *ptr)) {
-        if (bptr - token_out > ECS_MAX_TOKEN_SIZE) {
-            goto error;
-        }
-
-        if (ch == '\\') {
-            if (ptr[1] == '}') {
-                *bptr = '}';
-                bptr ++;
-                ptr += 2;
-                continue;
-            }
-        }
-
-        if (ch != '}') {
-            *bptr = ch;
-            bptr ++;
-            ptr ++;
-        } else {
-            ptr ++;
-            break;
-        }
-    }
-
-    if (bptr == token_out) {
-        goto error;
-    }
-
-    *bptr = '\0';
-
-    return ptr;
-error:
-    return NULL;
-}
-
-char* ecs_script_string_interpolate(
-    ecs_world_t *world,
-    const char *str,
-    const ecs_script_vars_t *vars)
-{
-    char token[ECS_MAX_TOKEN_SIZE];
-    ecs_strbuf_t result = ECS_STRBUF_INIT;
-    const char *ptr;
-    char ch;
-
-    for(ptr = str; (ch = *ptr); ptr++) {
-        if (ch == '\\') {
-            ptr ++;
-            if (ptr[0] == '$') {
-                ecs_strbuf_appendch(&result, '$');
-                continue;
-            }
-            if (ptr[0] == '\\') {
-                ecs_strbuf_appendch(&result, '\\');
-                continue;
-            }
-            if (ptr[0] == '{') {
-                ecs_strbuf_appendch(&result, '{');
-                continue;
-            }
-            if (ptr[0] == '}') {
-                ecs_strbuf_appendch(&result, '}');
-                continue;
-            }
-            ptr --;
-        }
-
-        if (ch == '$') {
-            ptr = flecs_parse_var_name(ptr + 1, token);
-            if (!ptr) {
-                ecs_parser_error(NULL, str, ptr - str, 
-                    "invalid variable name '%s'", ptr);
-                goto error;
-            }
-
-            ecs_script_var_t *var = ecs_script_vars_lookup(vars, token);
-            if (!var) {
-                ecs_parser_error(NULL, str, ptr - str, 
-                    "unresolved variable '%s'", token);
-                goto error;
-            }
-
-            if (ecs_ptr_to_str_buf(
-                world, var->value.type, var->value.ptr, &result)) 
-            {
-                goto error;
-            }
-
-            ptr --;
-        } else if (ch == '{') {
-            ptr = flecs_parse_interpolated_str(ptr + 1, token);
-            if (!ptr) {
-                ecs_parser_error(NULL, str, ptr - str, 
-                    "invalid interpolated expression");
-                goto error;
-            }
-
-            ecs_expr_eval_desc_t expr_desc = { 
-                .vars = ECS_CONST_CAST(ecs_script_vars_t*, vars) 
-            };
-
-            ecs_value_t expr_result = {0};
-            if (!ecs_expr_run(world, token, &expr_result, &expr_desc)) {
-                goto error;
-            }
-
-            if (ecs_ptr_to_str_buf(
-                world, expr_result.type, expr_result.ptr, &result)) 
-            {
-                goto error;
-            }
-
-            ecs_value_free(world, expr_result.type, expr_result.ptr);
-
-            ptr --;
-        } else {
-            ecs_strbuf_appendch(&result, ch);
-        }
-    }
-
-    return ecs_strbuf_get(&result);
-error:
-    return NULL;
 }
 
 #endif
@@ -56974,6 +56867,8 @@ ecs_script_t* ecs_script_parse(
             break;
         }
     } while (true);
+
+    impl->token_remaining = parser.token_cur;
 
     return script;
 error:
@@ -59383,21 +59278,24 @@ bool flecs_script_is_identifier(
     return isalpha(c) || (c == '_') || (c == '$') || (c == '#');
 }
 
-static
 const char* flecs_script_identifier(
     ecs_script_parser_t *parser,
     const char *pos,
     ecs_script_token_t *out) 
 {
-    out->kind = EcsTokIdentifier;
-    out->value = parser->token_cur;
+    if (out) {
+        out->kind = EcsTokIdentifier;
+        out->value = parser->token_cur;
+    }
 
     ecs_assert(flecs_script_is_identifier(pos[0]), ECS_INTERNAL_ERROR, NULL);
     bool is_var = pos[0] == '$';
-    char *outpos = parser->token_cur;
-
-    if (parser->merge_variable_members) {
-        is_var = false;
+    char *outpos = NULL;
+    if (parser) {
+        outpos = parser->token_cur;
+        if (parser->merge_variable_members) {
+            is_var = false;
+        }
     }
 
     do {
@@ -59434,8 +59332,10 @@ const char* flecs_script_identifier(
                         return NULL;
                     }
 
-                    *outpos = c;
-                    outpos ++;
+                    if (outpos) {
+                        *outpos = c;
+                        outpos ++;
+                    }
                     pos ++;
 
                     if (!indent) {
@@ -59443,8 +59343,10 @@ const char* flecs_script_identifier(
                     }
                 } while (true);
 
-                *outpos = '\0';
-                parser->token_cur = outpos + 1;
+                if (outpos && parser) {
+                    *outpos = '\0';
+                    parser->token_cur = outpos + 1;
+                }
                 return pos;
             } else if (c == '>') {
                 ecs_parser_error(parser->script->pub.name, 
@@ -59453,14 +59355,19 @@ const char* flecs_script_identifier(
                             "> without < in identifier");
                 return NULL;
             } else {
-                *outpos = '\0';
-                parser->token_cur = outpos + 1;
+                if (outpos && parser) {
+                    *outpos = '\0';
+                    parser->token_cur = outpos + 1;
+                }
                 return pos;
             }
         }
 
-        *outpos = *pos;
-        outpos ++;
+        if (outpos) {
+            *outpos = *pos;
+            outpos ++;
+        }
+
         pos ++;
     } while (true);
 }
@@ -74284,6 +74191,19 @@ ecs_expr_value_node_t* flecs_expr_value_from(
     return result;
 }
 
+ecs_expr_variable_t* flecs_expr_variable_from(
+    ecs_script_t *script,
+    ecs_expr_node_t *node,
+    const char *name)
+{
+    ecs_expr_variable_t *result = flecs_calloc_t(
+        &((ecs_script_impl_t*)script)->allocator, ecs_expr_variable_t);
+    result->name = name;
+    result->node.kind = EcsExprVariable;
+    result->node.pos = node ? node->pos : NULL;
+    return result;
+}
+
 ecs_expr_value_node_t* flecs_expr_bool(
     ecs_script_parser_t *parser,
     bool value)
@@ -74336,11 +74256,34 @@ ecs_expr_value_node_t* flecs_expr_string(
     ecs_script_parser_t *parser,
     const char *value)
 {
+    char *str = ECS_CONST_CAST(char*, value);
     ecs_expr_value_node_t *result = flecs_expr_ast_new(
         parser, ecs_expr_value_node_t, EcsExprValue);
-    result->storage.string = ECS_CONST_CAST(char*, value);
+    result->storage.string = str;
     result->ptr = &result->storage.string;
     result->node.type = ecs_id(ecs_string_t);
+
+    if (!flecs_string_escape(str)) {
+        return NULL;
+    }
+
+    return result;
+}
+
+ecs_expr_interpolated_string_t* flecs_expr_interpolated_string(
+    ecs_script_parser_t *parser,
+    const char *value)
+{
+    ecs_expr_interpolated_string_t *result = flecs_expr_ast_new(
+        parser, ecs_expr_interpolated_string_t, EcsExprInterpolatedString);
+    result->value = ECS_CONST_CAST(char*, value);
+    result->buffer = flecs_strdup(&parser->script->allocator, value);
+    result->buffer_size = ecs_os_strlen(result->buffer) + 1;
+    result->node.type = ecs_id(ecs_string_t);
+    ecs_vec_init_t(&parser->script->allocator, &result->fragments, char*, 0);
+    ecs_vec_init_t(&parser->script->allocator, &result->expressions, 
+        ecs_expr_node_t*, 0);
+
     return result;
 }
 
@@ -74801,7 +74744,12 @@ const char* flecs_script_parse_lhs(
         }
 
         case EcsTokString: {
-            *out = (ecs_expr_node_t*)flecs_expr_string(parser, Token(0));
+            if (flecs_string_is_interpolated(Token(0))) {
+                *out = (ecs_expr_node_t*)flecs_expr_interpolated_string(
+                    parser, Token(0));
+            } else {
+                *out = (ecs_expr_node_t*)flecs_expr_string(parser, Token(0));
+            }
             break;
         }
 
@@ -74818,7 +74766,7 @@ const char* flecs_script_parse_lhs(
                 if (last_elem && last_elem[1] == '$') {
                     /* Scoped global variable */
                     ecs_expr_variable_t *v = flecs_expr_variable(parser, expr);
-                    memmove(&last_elem[1], &last_elem[2], 
+                    ecs_os_memmove(&last_elem[1], &last_elem[2],
                         ecs_os_strlen(&last_elem[2]) + 1);
                     v->node.kind = EcsExprGlobalVariable;
                     *out = (ecs_expr_node_t*)v;
@@ -74974,6 +74922,7 @@ ecs_script_t* ecs_expr_parse(
     }
 
     impl->next_token = ptr;
+    impl->token_remaining = parser.token_cur;
 
     if (flecs_expr_visit_type(script, impl->expr, &priv_desc)) {
         goto error;
@@ -74987,7 +74936,7 @@ ecs_script_t* ecs_expr_parse(
         }
     }
 
-    // printf("%s\n", ecs_script_ast_to_str(script));
+    // printf("%s\n", ecs_script_ast_to_str(script, true));
 
     return script;
 error:
@@ -75060,6 +75009,35 @@ const char* ecs_expr_run(
     return result;
 error:
     return NULL;
+}
+
+FLECS_API
+char* ecs_script_string_interpolate(
+    ecs_world_t *world,
+    const char *str,
+    const ecs_script_vars_t *vars)
+{
+    if (!flecs_string_is_interpolated(str)) {
+        char *result = ecs_os_strdup(str);
+        if (!flecs_string_escape(result)) {
+            ecs_os_free(result);
+            return NULL;
+        }
+        return result;
+    }
+
+    char *expr = flecs_asprintf("\"%s\"", str);
+
+    ecs_expr_eval_desc_t desc = { .vars = vars };
+    char *r = NULL;
+    if (!ecs_expr_run(world, expr, &ecs_value_ptr(ecs_string_t, &r), &desc)) {
+        ecs_os_free(expr);
+        return NULL;
+    }
+
+    ecs_os_free(expr);
+
+    return r;
 }
 
 #endif
@@ -75409,6 +75387,75 @@ int flecs_value_binary(
     return 0;
 }
 
+bool flecs_string_is_interpolated(
+    const char *value)
+{
+    const char *ptr = value;
+
+    for (ptr = strchr(ptr, '$'); ptr; ptr = strchr(ptr + 1, '$')) {
+        if (ptr != value) {
+            if (ptr[-1] == '\\') {
+                continue; /* Escaped */
+            }
+        }
+
+        if (isspace(ptr[1]) || !ptr[1]) {
+            continue; /* $ by itself */
+        }
+
+        return true;
+    }
+
+    ptr = value;
+
+    for (ptr = strchr(ptr, '{'); ptr; ptr = strchr(ptr + 1, '{')) {
+        if (ptr != value) {
+            if (ptr[-1] == '\\') {
+                continue; /* Escaped */
+            }
+        }
+
+        return true;
+    }
+
+    return false;
+}
+
+char* flecs_string_escape(
+    char *str)
+{
+    const char *ptr;
+    char *out = str, ch;
+
+    for (ptr = str; ptr[0]; ) {
+        if (ptr[0] == '\\') {
+            if (ptr[1] == '{') { /* Escape string interpolation delimiter */
+                ch = '{';
+                ptr += 2;
+            } else if (ptr[1] == '$') { /* Escape string interpolation var */
+                ch = '$';
+                ptr += 2;
+            } else {
+                ptr = flecs_chrparse(ptr, &ch);
+                if (!ptr) {
+                    ecs_err("invalid escape sequence in string '%s'", str);
+                    return NULL;
+                }
+            }
+        } else {
+            ch = ptr[0];
+            ptr ++;
+        }
+
+        out[0] = ch;
+        out ++;
+    }
+
+    out[0] = '\0';
+
+    return out + 1;
+}
+
 #endif
 
 /**
@@ -75443,6 +75490,53 @@ int flecs_expr_value_visit_eval(
     out->value.ptr = node->ptr;
     out->owned = false;
     return 0;
+}
+
+static
+int flecs_expr_interpolated_string_visit_eval(
+    ecs_script_eval_ctx_t *ctx,
+    ecs_expr_interpolated_string_t *node,
+    ecs_expr_value_t *out)
+{
+    ecs_assert(node->node.type == ecs_id(ecs_string_t), 
+        ECS_INTERNAL_ERROR, NULL);
+
+    ecs_strbuf_t buf = ECS_STRBUF_INIT;
+
+    flecs_expr_stack_push(ctx->stack);
+
+    int32_t i, e = 0, count = ecs_vec_count(&node->fragments);
+    char **fragments = ecs_vec_first(&node->fragments);
+    for (i = 0; i < count; i ++) {
+        char *fragment = fragments[i];
+        if (fragment) {
+            ecs_strbuf_appendstr(&buf, fragment);
+        } else {
+            ecs_expr_node_t *expr = ecs_vec_get_t(
+                &node->expressions, ecs_expr_node_t*, e ++)[0];
+            
+            ecs_expr_value_t *val = flecs_expr_stack_result(ctx->stack, 
+                (ecs_expr_node_t*)node);
+            val->owned = true;
+            if (flecs_expr_visit_eval_priv(ctx, expr, val)) {
+                goto error;
+            }
+
+            ecs_assert(val->value.type == ecs_id(ecs_string_t), 
+                ECS_INTERNAL_ERROR, NULL);
+
+            ecs_strbuf_appendstr(&buf, *(char**)val->value.ptr);
+        }
+    }
+
+    *(char**)out->value.ptr = ecs_strbuf_get(&buf);
+    out->owned = true;
+
+    flecs_expr_stack_pop(ctx->stack);
+    return 0;
+error:
+    flecs_expr_stack_pop(ctx->stack);
+    return -1;
 }
 
 static
@@ -75692,6 +75786,8 @@ int flecs_expr_global_variable_visit_eval(
     ecs_expr_variable_t *node,
     ecs_expr_value_t *out)
 {
+    (void)ctx;
+
     ecs_assert(ctx->desc != NULL, ECS_INVALID_OPERATION,
         "variables available at parse time are not provided");
 
@@ -75945,6 +76041,13 @@ int flecs_expr_visit_eval_priv(
     case EcsExprValue:
         if (flecs_expr_value_visit_eval(
             ctx, (ecs_expr_value_node_t*)node, out)) 
+        {
+            goto error;
+        }
+        break;
+    case EcsExprInterpolatedString: 
+        if (flecs_expr_interpolated_string_visit_eval(
+            ctx, (ecs_expr_interpolated_string_t*)node, out))
         {
             goto error;
         }
@@ -76279,6 +76382,70 @@ error:
 }
 
 static
+int flecs_expr_interpolated_string_visit_fold(
+    ecs_script_t *script,
+    ecs_expr_node_t **node_ptr,
+    const ecs_expr_eval_desc_t *desc)
+{
+    ecs_expr_interpolated_string_t *node = 
+        (ecs_expr_interpolated_string_t*)*node_ptr;
+
+    bool can_fold = true;
+    
+    int32_t i, e = 0, count = ecs_vec_count(&node->fragments);
+    char **fragments = ecs_vec_first(&node->fragments);
+    for (i = 0; i < count; i ++) {
+        char *fragment = fragments[i];
+        if (!fragment) {
+            ecs_expr_node_t **expr_ptr = ecs_vec_get_t(
+                &node->expressions, ecs_expr_node_t*, e ++);
+
+            if (flecs_expr_visit_fold(script, expr_ptr, desc)) {
+                goto error;
+            }
+
+            if (expr_ptr[0]->kind != EcsExprValue) {
+                can_fold = false;
+            }
+        }
+    }
+
+    if (can_fold) {
+        ecs_strbuf_t buf = ECS_STRBUF_INIT;
+        e = 0;
+
+        for (i = 0; i < count; i ++) {
+            char *fragment = fragments[i];
+            if (fragment) {
+                ecs_strbuf_appendstr(&buf, fragment);
+            } else {
+                ecs_expr_node_t *expr = ecs_vec_get_t(
+                    &node->expressions, ecs_expr_node_t*, e ++)[0];
+                ecs_assert(expr->kind == EcsExprValue, 
+                    ECS_INTERNAL_ERROR, NULL);
+                ecs_assert(expr->type == ecs_id(ecs_string_t),
+                    ECS_INTERNAL_ERROR, NULL);
+                ecs_expr_value_node_t *val = (ecs_expr_value_node_t*)expr;
+                ecs_strbuf_appendstr(&buf, *(char**)val->ptr);
+            }
+        }
+
+        char **value = ecs_value_new(script->world, ecs_id(ecs_string_t));
+        *value = ecs_strbuf_get(&buf);
+
+        ecs_expr_value_node_t *result = flecs_expr_value_from(
+            script, (ecs_expr_node_t*)node, ecs_id(ecs_string_t));
+        result->ptr = value;
+
+        flecs_visit_fold_replace(script, node_ptr, (ecs_expr_node_t*)result);
+    }
+
+    return 0;
+error:
+    return -1;
+}
+
+static
 int flecs_expr_initializer_pre_fold(
     ecs_script_t *script,
     ecs_expr_initializer_t *node,
@@ -76558,6 +76725,11 @@ int flecs_expr_visit_fold(
     switch(node->kind) {
     case EcsExprValue:
         break;
+    case EcsExprInterpolatedString:
+        if (flecs_expr_interpolated_string_visit_fold(script, node_ptr, desc)) {
+            goto error;
+        }
+        break;
     case EcsExprInitializer:
     case EcsExprEmptyInitializer:
         if (flecs_expr_initializer_visit_fold(script, node_ptr, desc)) {
@@ -76636,6 +76808,25 @@ void flecs_expr_value_visit_free(
     if (node->ptr != &node->storage) {
         ecs_value_free(script->world, node->node.type, node->ptr);
     }
+}
+
+static
+void flecs_expr_interpolated_string_visit_free(
+    ecs_script_t *script,
+    ecs_expr_interpolated_string_t *node)
+{
+    int32_t i, count = ecs_vec_count(&node->expressions);
+    ecs_expr_node_t **expressions = ecs_vec_first(&node->expressions);
+    for (i = 0; i < count; i ++) {
+        flecs_expr_visit_free(script, expressions[i]);
+    }
+
+    ecs_vec_fini_t(&flecs_script_impl(script)->allocator, 
+        &node->fragments, char*);
+    ecs_vec_fini_t(&flecs_script_impl(script)->allocator, 
+        &node->expressions, ecs_expr_node_t*);
+    flecs_free_n(&flecs_script_impl(script)->allocator,
+        char, node->buffer_size, node->buffer);
 }
 
 static
@@ -76729,6 +76920,11 @@ void flecs_expr_visit_free(
             script, (ecs_expr_value_node_t*)node);
         flecs_free_t(a, ecs_expr_value_node_t, node);
         break;
+    case EcsExprInterpolatedString:
+        flecs_expr_interpolated_string_visit_free(
+            script, (ecs_expr_interpolated_string_t*)node);
+        flecs_free_t(a, ecs_expr_interpolated_string_t, node);
+        break;
     case EcsExprInitializer:
     case EcsExprEmptyInitializer:
         flecs_expr_initializer_visit_free(
@@ -76820,6 +77016,43 @@ int flecs_expr_value_to_str(
         v->world, node->node.type, node->ptr, v->buf);
     flecs_expr_color_to_str(v, ECS_NORMAL);
     return ret;
+}
+
+static
+int flecs_expr_interpolated_string_to_str(
+    ecs_expr_str_visitor_t *v,
+    const ecs_expr_interpolated_string_t *node)
+{
+    int32_t i, e = 0, count = ecs_vec_count(&node->fragments);
+    char **fragments = ecs_vec_first(&node->fragments);
+    ecs_expr_node_t **expressions = ecs_vec_first(&node->expressions);
+
+    ecs_strbuf_appendlit(v->buf, "interpolated(");
+
+    for (i = 0; i < count; i ++) {
+        char *fragment = fragments[i];
+
+        if (i) {
+            ecs_strbuf_appendlit(v->buf, ", ");
+        }
+
+        if (fragment) {
+            flecs_expr_color_to_str(v, ECS_YELLOW);
+            ecs_strbuf_appendlit(v->buf, "\"");
+            ecs_strbuf_appendstr(v->buf, fragment);
+            ecs_strbuf_appendlit(v->buf, "\"");
+            flecs_expr_color_to_str(v, ECS_NORMAL);
+        } else {
+            ecs_expr_node_t *expr = expressions[e ++];
+            if (flecs_expr_node_to_str(v, expr)) {
+                return -1;
+            }
+        }
+    }
+
+    ecs_strbuf_appendlit(v->buf, ")");
+    
+    return 0;
 }
 
 static
@@ -77014,6 +77247,13 @@ int flecs_expr_node_to_str(
     case EcsExprValue:
         if (flecs_expr_value_to_str(v, 
             (const ecs_expr_value_node_t*)node)) 
+        {
+            goto error;
+        }
+        break;
+    case EcsExprInterpolatedString:
+        if (flecs_expr_interpolated_string_to_str(v, 
+            (const ecs_expr_interpolated_string_t*)node)) 
         {
             goto error;
         }
@@ -77608,6 +77848,133 @@ done:
     }
 
     return 0;
+}
+
+static
+int flecs_expr_interpolated_string_visit_type(
+    ecs_script_t *script,
+    ecs_expr_interpolated_string_t *node,
+    ecs_meta_cursor_t *cur,
+    const ecs_expr_eval_desc_t *desc)
+{
+    char *ptr, *frag = NULL;
+    char ch;
+
+    for (ptr = node->value; (ch = ptr[0]); ptr ++) {
+        if (ch == '\\') {
+            ptr ++;
+            /* Next character is escaped, ignore */
+            continue;
+        }
+
+        if ((ch == '$') && (isspace(ptr[1]) || !ptr[1])) {
+            /* $ by itself */
+            continue;
+        }
+
+        if (ch == '$' || ch == '{') {
+            if (!frag) {
+                frag = node->value;
+            }
+
+            char *frag_end = ptr;
+
+            ecs_expr_node_t *result = NULL;
+
+            if (ch == '$') {
+                char *var_name = ++ ptr;
+                ptr = ECS_CONST_CAST(char*, flecs_script_identifier(
+                    NULL, ptr, NULL));
+                if (!ptr) {
+                    goto error;
+                }
+
+                /* Fiddly, but reduces need for allocations */
+                ecs_size_t offset = flecs_ito(
+                    int32_t, node->buffer - node->value);
+                var_name = ECS_OFFSET(var_name, offset);
+                (*(char*)ECS_OFFSET(ptr, offset)) = '\0';
+
+                ecs_expr_variable_t *var = flecs_expr_variable_from(
+                    script, (ecs_expr_node_t*)node, var_name);
+                if (!var) {
+                    goto error;
+                }
+
+                result = (ecs_expr_node_t*)var;
+            } else {
+                ecs_script_impl_t *impl = flecs_script_impl(script);
+
+                ecs_script_parser_t parser = {
+                    .script = impl,
+                    .scope = impl->root,
+                    .significant_newline = false,
+                    .token_cur = impl->token_remaining
+                };
+
+                ptr = ECS_CONST_CAST(char*, flecs_script_parse_expr(
+                    &parser, ptr + 1, 0, &result));
+                if (!ptr) {
+                    goto error;
+                }
+
+                if (ptr[0] != '}') {
+                    flecs_expr_visit_error(script, node,
+                        "expected '}' at end of interpolated expression");
+                    goto error;
+                }
+
+                ptr ++;
+            }
+
+            ecs_assert(result != NULL, ECS_INTERNAL_ERROR, NULL);
+
+            ecs_expr_eval_desc_t priv_desc = *desc;
+            priv_desc.type = ecs_id(ecs_string_t); /* String output */
+
+            if (flecs_expr_visit_type_priv(script, result, cur, &priv_desc)) {
+                flecs_expr_visit_free(script, result);
+                goto error;
+            }
+
+            if (result->type != ecs_id(ecs_string_t)) {
+                result = (ecs_expr_node_t*)flecs_expr_cast(script, 
+                    (ecs_expr_node_t*)result, ecs_id(ecs_string_t));
+            }
+
+            ecs_vec_append_t(&((ecs_script_impl_t*)script)->allocator, 
+                &node->expressions, ecs_expr_node_t*)[0] = result;
+
+            frag_end[0] = '\0';
+
+            if (frag != frag_end) {
+                ecs_vec_append_t(&((ecs_script_impl_t*)script)->allocator, 
+                    &node->fragments, char*)[0] = frag;
+            }
+
+            ecs_vec_append_t(&((ecs_script_impl_t*)script)->allocator, 
+                &node->fragments, char*)[0] = NULL;
+
+            frag = ptr; /* Point to next fragment */
+            if (!ptr[0]) {
+                break; /* We already parsed the end of the string */
+            }
+        }
+    }
+
+    /* This would mean it's not an interpolated string, which means the parser
+     * messed up when creating the node. */
+    ecs_assert(frag != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    /* Add remaining fragment */
+    if (frag != ptr) {
+        ecs_vec_append_t(&((ecs_script_impl_t*)script)->allocator, 
+            &node->fragments, char*)[0] = frag;
+    }
+
+    return 0;
+error:
+    return -1;
 }
 
 static
@@ -78245,7 +78612,13 @@ int flecs_expr_visit_type_priv(
 
     switch(node->kind) {
     case EcsExprValue:
-        /* Value types are assigned by the AST */
+        break;
+    case EcsExprInterpolatedString:
+        if (flecs_expr_interpolated_string_visit_type(
+            script, (ecs_expr_interpolated_string_t*)node, cur, desc))
+        {
+            goto error;
+        }
         break;
     case EcsExprEmptyInitializer:
         break;

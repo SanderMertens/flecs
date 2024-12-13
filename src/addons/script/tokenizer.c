@@ -202,21 +202,24 @@ bool flecs_script_is_identifier(
     return isalpha(c) || (c == '_') || (c == '$') || (c == '#');
 }
 
-static
 const char* flecs_script_identifier(
     ecs_script_parser_t *parser,
     const char *pos,
     ecs_script_token_t *out) 
 {
-    out->kind = EcsTokIdentifier;
-    out->value = parser->token_cur;
+    if (out) {
+        out->kind = EcsTokIdentifier;
+        out->value = parser->token_cur;
+    }
 
     ecs_assert(flecs_script_is_identifier(pos[0]), ECS_INTERNAL_ERROR, NULL);
     bool is_var = pos[0] == '$';
-    char *outpos = parser->token_cur;
-
-    if (parser->merge_variable_members) {
-        is_var = false;
+    char *outpos = NULL;
+    if (parser) {
+        outpos = parser->token_cur;
+        if (parser->merge_variable_members) {
+            is_var = false;
+        }
     }
 
     do {
@@ -253,8 +256,10 @@ const char* flecs_script_identifier(
                         return NULL;
                     }
 
-                    *outpos = c;
-                    outpos ++;
+                    if (outpos) {
+                        *outpos = c;
+                        outpos ++;
+                    }
                     pos ++;
 
                     if (!indent) {
@@ -262,8 +267,10 @@ const char* flecs_script_identifier(
                     }
                 } while (true);
 
-                *outpos = '\0';
-                parser->token_cur = outpos + 1;
+                if (outpos && parser) {
+                    *outpos = '\0';
+                    parser->token_cur = outpos + 1;
+                }
                 return pos;
             } else if (c == '>') {
                 ecs_parser_error(parser->script->pub.name, 
@@ -272,14 +279,19 @@ const char* flecs_script_identifier(
                             "> without < in identifier");
                 return NULL;
             } else {
-                *outpos = '\0';
-                parser->token_cur = outpos + 1;
+                if (outpos && parser) {
+                    *outpos = '\0';
+                    parser->token_cur = outpos + 1;
+                }
                 return pos;
             }
         }
 
-        *outpos = *pos;
-        outpos ++;
+        if (outpos) {
+            *outpos = *pos;
+            outpos ++;
+        }
+
         pos ++;
     } while (true);
 }

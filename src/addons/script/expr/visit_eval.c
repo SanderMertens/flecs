@@ -35,6 +35,53 @@ int flecs_expr_value_visit_eval(
 }
 
 static
+int flecs_expr_interpolated_string_visit_eval(
+    ecs_script_eval_ctx_t *ctx,
+    ecs_expr_interpolated_string_t *node,
+    ecs_expr_value_t *out)
+{
+    ecs_assert(node->node.type == ecs_id(ecs_string_t), 
+        ECS_INTERNAL_ERROR, NULL);
+
+    ecs_strbuf_t buf = ECS_STRBUF_INIT;
+
+    flecs_expr_stack_push(ctx->stack);
+
+    int32_t i, e = 0, count = ecs_vec_count(&node->fragments);
+    char **fragments = ecs_vec_first(&node->fragments);
+    for (i = 0; i < count; i ++) {
+        char *fragment = fragments[i];
+        if (fragment) {
+            ecs_strbuf_appendstr(&buf, fragment);
+        } else {
+            ecs_expr_node_t *expr = ecs_vec_get_t(
+                &node->expressions, ecs_expr_node_t*, e ++)[0];
+            
+            ecs_expr_value_t *val = flecs_expr_stack_result(ctx->stack, 
+                (ecs_expr_node_t*)node);
+            val->owned = true;
+            if (flecs_expr_visit_eval_priv(ctx, expr, val)) {
+                goto error;
+            }
+
+            ecs_assert(val->value.type == ecs_id(ecs_string_t), 
+                ECS_INTERNAL_ERROR, NULL);
+
+            ecs_strbuf_appendstr(&buf, *(char**)val->value.ptr);
+        }
+    }
+
+    *(char**)out->value.ptr = ecs_strbuf_get(&buf);
+    out->owned = true;
+
+    flecs_expr_stack_pop(ctx->stack);
+    return 0;
+error:
+    flecs_expr_stack_pop(ctx->stack);
+    return -1;
+}
+
+static
 int flecs_expr_initializer_eval(
     ecs_script_eval_ctx_t *ctx,
     ecs_expr_initializer_t *node,
@@ -281,6 +328,8 @@ int flecs_expr_global_variable_visit_eval(
     ecs_expr_variable_t *node,
     ecs_expr_value_t *out)
 {
+    (void)ctx;
+
     ecs_assert(ctx->desc != NULL, ECS_INVALID_OPERATION,
         "variables available at parse time are not provided");
 
@@ -534,6 +583,13 @@ int flecs_expr_visit_eval_priv(
     case EcsExprValue:
         if (flecs_expr_value_visit_eval(
             ctx, (ecs_expr_value_node_t*)node, out)) 
+        {
+            goto error;
+        }
+        break;
+    case EcsExprInterpolatedString: 
+        if (flecs_expr_interpolated_string_visit_eval(
+            ctx, (ecs_expr_interpolated_string_t*)node, out))
         {
             goto error;
         }

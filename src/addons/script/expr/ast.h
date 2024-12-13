@@ -10,6 +10,7 @@
 
 typedef enum ecs_expr_node_kind_t {
     EcsExprValue,
+    EcsExprInterpolatedString,
     EcsExprInitializer,
     EcsExprEmptyInitializer,
     EcsExprUnary,
@@ -37,6 +38,15 @@ typedef struct ecs_expr_value_node_t {
     void *ptr;
     ecs_expr_small_value_t storage;
 } ecs_expr_value_node_t;
+
+typedef struct ecs_expr_interpolated_string_t {
+    ecs_expr_node_t node;
+    char *value;              /* modified by parser */
+    char *buffer;             /* for storing expr tokens */
+    ecs_size_t buffer_size;
+    ecs_vec_t fragments;      /* vec<char*> */
+    ecs_vec_t expressions;    /* vec<ecs_expr_node_t*> */
+} ecs_expr_interpolated_string_t;
 
 typedef struct ecs_expr_initializer_element_t {
     const char *member;
@@ -115,6 +125,11 @@ ecs_expr_value_node_t* flecs_expr_value_from(
     ecs_expr_node_t *node,
     ecs_entity_t type);
 
+ecs_expr_variable_t* flecs_expr_variable_from(
+    ecs_script_t *script,
+    ecs_expr_node_t *node,
+    const char *name);
+
 ecs_expr_value_node_t* flecs_expr_bool(
     ecs_script_parser_t *parser,
     bool value);
@@ -132,6 +147,10 @@ ecs_expr_value_node_t* flecs_expr_float(
     double value);
 
 ecs_expr_value_node_t* flecs_expr_string(
+    ecs_script_parser_t *parser,
+    const char *value);
+
+ecs_expr_interpolated_string_t* flecs_expr_interpolated_string(
     ecs_script_parser_t *parser,
     const char *value);
 

@@ -503,6 +503,133 @@ done:
 }
 
 static
+int flecs_expr_interpolated_string_visit_type(
+    ecs_script_t *script,
+    ecs_expr_interpolated_string_t *node,
+    ecs_meta_cursor_t *cur,
+    const ecs_expr_eval_desc_t *desc)
+{
+    char *ptr, *frag = NULL;
+    char ch;
+
+    for (ptr = node->value; (ch = ptr[0]); ptr ++) {
+        if (ch == '\\') {
+            ptr ++;
+            /* Next character is escaped, ignore */
+            continue;
+        }
+
+        if ((ch == '$') && (isspace(ptr[1]) || !ptr[1])) {
+            /* $ by itself */
+            continue;
+        }
+
+        if (ch == '$' || ch == '{') {
+            if (!frag) {
+                frag = node->value;
+            }
+
+            char *frag_end = ptr;
+
+            ecs_expr_node_t *result = NULL;
+
+            if (ch == '$') {
+                char *var_name = ++ ptr;
+                ptr = ECS_CONST_CAST(char*, flecs_script_identifier(
+                    NULL, ptr, NULL));
+                if (!ptr) {
+                    goto error;
+                }
+
+                /* Fiddly, but reduces need for allocations */
+                ecs_size_t offset = flecs_ito(
+                    int32_t, node->buffer - node->value);
+                var_name = ECS_OFFSET(var_name, offset);
+                (*(char*)ECS_OFFSET(ptr, offset)) = '\0';
+
+                ecs_expr_variable_t *var = flecs_expr_variable_from(
+                    script, (ecs_expr_node_t*)node, var_name);
+                if (!var) {
+                    goto error;
+                }
+
+                result = (ecs_expr_node_t*)var;
+            } else {
+                ecs_script_impl_t *impl = flecs_script_impl(script);
+
+                ecs_script_parser_t parser = {
+                    .script = impl,
+                    .scope = impl->root,
+                    .significant_newline = false,
+                    .token_cur = impl->token_remaining
+                };
+
+                ptr = ECS_CONST_CAST(char*, flecs_script_parse_expr(
+                    &parser, ptr + 1, 0, &result));
+                if (!ptr) {
+                    goto error;
+                }
+
+                if (ptr[0] != '}') {
+                    flecs_expr_visit_error(script, node,
+                        "expected '}' at end of interpolated expression");
+                    goto error;
+                }
+
+                ptr ++;
+            }
+
+            ecs_assert(result != NULL, ECS_INTERNAL_ERROR, NULL);
+
+            ecs_expr_eval_desc_t priv_desc = *desc;
+            priv_desc.type = ecs_id(ecs_string_t); /* String output */
+
+            if (flecs_expr_visit_type_priv(script, result, cur, &priv_desc)) {
+                flecs_expr_visit_free(script, result);
+                goto error;
+            }
+
+            if (result->type != ecs_id(ecs_string_t)) {
+                result = (ecs_expr_node_t*)flecs_expr_cast(script, 
+                    (ecs_expr_node_t*)result, ecs_id(ecs_string_t));
+            }
+
+            ecs_vec_append_t(&((ecs_script_impl_t*)script)->allocator, 
+                &node->expressions, ecs_expr_node_t*)[0] = result;
+
+            frag_end[0] = '\0';
+
+            if (frag != frag_end) {
+                ecs_vec_append_t(&((ecs_script_impl_t*)script)->allocator, 
+                    &node->fragments, char*)[0] = frag;
+            }
+
+            ecs_vec_append_t(&((ecs_script_impl_t*)script)->allocator, 
+                &node->fragments, char*)[0] = NULL;
+
+            frag = ptr; /* Point to next fragment */
+            if (!ptr[0]) {
+                break; /* We already parsed the end of the string */
+            }
+        }
+    }
+
+    /* This would mean it's not an interpolated string, which means the parser
+     * messed up when creating the node. */
+    ecs_assert(frag != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    /* Add remaining fragment */
+    if (frag != ptr) {
+        ecs_vec_append_t(&((ecs_script_impl_t*)script)->allocator, 
+            &node->fragments, char*)[0] = frag;
+    }
+
+    return 0;
+error:
+    return -1;
+}
+
+static
 int flecs_expr_initializer_visit_type(
     ecs_script_t *script,
     ecs_expr_initializer_t *node,
@@ -1137,7 +1264,13 @@ int flecs_expr_visit_type_priv(
 
     switch(node->kind) {
     case EcsExprValue:
-        /* Value types are assigned by the AST */
+        break;
+    case EcsExprInterpolatedString:
+        if (flecs_expr_interpolated_string_visit_type(
+            script, (ecs_expr_interpolated_string_t*)node, cur, desc))
+        {
+            goto error;
+        }
         break;
     case EcsExprEmptyInitializer:
         break;

@@ -4426,7 +4426,7 @@ void Eval_multiline_string(void) {
     HEAD "Foo { String: {value: `start"
     LINE "Hello World"
     LINE "Foo Bar"
-    LINE "Special characters }{\"\"'',"
+    LINE "Special characters }\\{\"\"'',"
     LINE "`}}";
 
     test_assert(ecs_script_run(world, NULL, expr) == 0);

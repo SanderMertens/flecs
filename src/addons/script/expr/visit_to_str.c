@@ -42,6 +42,43 @@ int flecs_expr_value_to_str(
 }
 
 static
+int flecs_expr_interpolated_string_to_str(
+    ecs_expr_str_visitor_t *v,
+    const ecs_expr_interpolated_string_t *node)
+{
+    int32_t i, e = 0, count = ecs_vec_count(&node->fragments);
+    char **fragments = ecs_vec_first(&node->fragments);
+    ecs_expr_node_t **expressions = ecs_vec_first(&node->expressions);
+
+    ecs_strbuf_appendlit(v->buf, "interpolated(");
+
+    for (i = 0; i < count; i ++) {
+        char *fragment = fragments[i];
+
+        if (i) {
+            ecs_strbuf_appendlit(v->buf, ", ");
+        }
+
+        if (fragment) {
+            flecs_expr_color_to_str(v, ECS_YELLOW);
+            ecs_strbuf_appendlit(v->buf, "\"");
+            ecs_strbuf_appendstr(v->buf, fragment);
+            ecs_strbuf_appendlit(v->buf, "\"");
+            flecs_expr_color_to_str(v, ECS_NORMAL);
+        } else {
+            ecs_expr_node_t *expr = expressions[e ++];
+            if (flecs_expr_node_to_str(v, expr)) {
+                return -1;
+            }
+        }
+    }
+
+    ecs_strbuf_appendlit(v->buf, ")");
+    
+    return 0;
+}
+
+static
 int flecs_expr_unary_to_str(
     ecs_expr_str_visitor_t *v,
     const ecs_expr_unary_t *node)
@@ -233,6 +270,13 @@ int flecs_expr_node_to_str(
     case EcsExprValue:
         if (flecs_expr_value_to_str(v, 
             (const ecs_expr_value_node_t*)node)) 
+        {
+            goto error;
+        }
+        break;
+    case EcsExprInterpolatedString:
+        if (flecs_expr_interpolated_string_to_str(v, 
+            (const ecs_expr_interpolated_string_t*)node)) 
         {
             goto error;
         }

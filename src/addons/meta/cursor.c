@@ -4,6 +4,7 @@
  */
 
 #include "meta.h"
+#include <inttypes.h>
 #include <ctype.h>
 
 #ifdef FLECS_META
@@ -890,6 +891,16 @@ int ecs_meta_set_bool(
     cases_T_bool(ptr, value);
     cases_T_signed(ptr, value, ecs_meta_bounds_signed);
     cases_T_unsigned(ptr, value, ecs_meta_bounds_unsigned);
+    case EcsOpString: {
+        char *result;
+        if (value) {
+            result = ecs_os_strdup("true");
+        } else {
+            result = ecs_os_strdup("false");
+        }
+        set_T(ecs_string_t, ptr, result);
+        break;
+    }
     case EcsOpOpaque: {
         const EcsOpaque *ot = ecs_get(cursor->world, op->type, EcsOpaque);
         if (ot && ot->assign_bool) {
@@ -906,7 +917,6 @@ int ecs_meta_set_bool(
     case EcsOpPrimitive:
     case EcsOpF32:
     case EcsOpF64:
-    case EcsOpString:
         flecs_meta_conversion_error(cursor, op, "bool");
         return -1;
     default:
@@ -929,6 +939,11 @@ int ecs_meta_set_char(
     switch(op->kind) {
     cases_T_bool(ptr, value);
     cases_T_signed(ptr, value, ecs_meta_bounds_signed);
+    case EcsOpString: {
+        char *result = flecs_asprintf("%c", value);
+        set_T(ecs_string_t, ptr, result);
+        break;
+    }
     case EcsOpOpaque: {
         const EcsOpaque *opaque = ecs_get(cursor->world, op->type, EcsOpaque);
         ecs_assert(opaque != NULL, ECS_INVALID_OPERATION, 
@@ -961,7 +976,6 @@ int ecs_meta_set_char(
     case EcsOpF32:
     case EcsOpF64:
     case EcsOpUPtr:
-    case EcsOpString:
     case EcsOpEntity:
     case EcsOpId:
         flecs_meta_conversion_error(cursor, op, "char");
@@ -988,6 +1002,11 @@ int ecs_meta_set_int(
     cases_T_signed(ptr, value, ecs_meta_bounds_signed);
     cases_T_unsigned(ptr, value, ecs_meta_bounds_signed);
     cases_T_float(ptr, value);
+    case EcsOpString: {
+        char *result = flecs_asprintf("%"PRId64, value);
+        set_T(ecs_string_t, ptr, result);
+        break;
+    }
     case EcsOpOpaque: {
         const EcsOpaque *opaque = ecs_get(cursor->world, op->type, EcsOpaque);
         ecs_assert(opaque != NULL, ECS_INVALID_OPERATION, 
@@ -1013,8 +1032,7 @@ int ecs_meta_set_int(
     case EcsOpPush:
     case EcsOpPop:
     case EcsOpScope:
-    case EcsOpPrimitive:
-    case EcsOpString: {
+    case EcsOpPrimitive: {
         if(!value) return ecs_meta_set_null(cursor);
         flecs_meta_conversion_error(cursor, op, "int");
         return -1;
@@ -1041,6 +1059,11 @@ int ecs_meta_set_uint(
     cases_T_signed(ptr, value, ecs_meta_bounds_unsigned);
     cases_T_unsigned(ptr, value, ecs_meta_bounds_unsigned);
     cases_T_float(ptr, value);
+    case EcsOpString: {
+        char *result = flecs_asprintf("%"PRIu64, value);
+        set_T(ecs_string_t, ptr, result);
+        break;
+    }
     case EcsOpOpaque: {
         const EcsOpaque *opaque = ecs_get(cursor->world, op->type, EcsOpaque);
         ecs_assert(opaque != NULL, ECS_INVALID_OPERATION, 
@@ -1067,7 +1090,6 @@ int ecs_meta_set_uint(
     case EcsOpPop:
     case EcsOpScope:
     case EcsOpPrimitive:
-    case EcsOpString:
         if(!value) return ecs_meta_set_null(cursor);
         flecs_meta_conversion_error(cursor, op, "uint");
         return -1;
@@ -1099,6 +1121,11 @@ int ecs_meta_set_float(
     cases_T_signed(ptr, value, ecs_meta_bounds_float);
     cases_T_unsigned(ptr, value, ecs_meta_bounds_float);
     cases_T_float(ptr, value);
+    case EcsOpString: {
+        char *result = flecs_asprintf("%f", value);
+        set_T(ecs_string_t, ptr, result);
+        break;
+    }
     case EcsOpOpaque: {
         const EcsOpaque *opaque = ecs_get(cursor->world, op->type, EcsOpaque);
         ecs_assert(opaque != NULL, ECS_INVALID_OPERATION, 
@@ -1129,7 +1156,6 @@ int ecs_meta_set_float(
     case EcsOpPop:
     case EcsOpScope:
     case EcsOpPrimitive:
-    case EcsOpString:
         flecs_meta_conversion_error(cursor, op, "float");
         return -1;
     default:
@@ -1567,6 +1593,11 @@ int ecs_meta_set_entity(
     case EcsOpId:
         set_T(ecs_id_t, ptr, value); /* entities are valid ids */
         break;
+    case EcsOpString: {
+        char *result = ecs_get_path(cursor->world, value);
+        set_T(ecs_string_t, ptr, result);
+        break;
+    }   
     case EcsOpOpaque: {
         const EcsOpaque *opaque = ecs_get(cursor->world, op->type, EcsOpaque);
         if (opaque && opaque->assign_entity) {
@@ -1599,7 +1630,6 @@ int ecs_meta_set_entity(
     case EcsOpF64:
     case EcsOpUPtr:
     case EcsOpIPtr:
-    case EcsOpString:
         flecs_meta_conversion_error(cursor, op, "entity");
         goto error;
     default:
@@ -1624,6 +1654,11 @@ int ecs_meta_set_id(
     case EcsOpId:
         set_T(ecs_id_t, ptr, value);
         break;
+    case EcsOpString: {
+        char *result = ecs_id_str(cursor->world, value);
+        set_T(ecs_string_t, ptr, result);
+        break;
+    }
     case EcsOpOpaque: {
         const EcsOpaque *opaque = ecs_get(cursor->world, op->type, EcsOpaque);
         if (opaque && opaque->assign_id) {
@@ -1656,7 +1691,6 @@ int ecs_meta_set_id(
     case EcsOpF64:
     case EcsOpUPtr:
     case EcsOpIPtr:
-    case EcsOpString:
     case EcsOpEntity:
         flecs_meta_conversion_error(cursor, op, "id");
         goto error;

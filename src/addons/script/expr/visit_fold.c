@@ -165,6 +165,70 @@ error:
 }
 
 static
+int flecs_expr_interpolated_string_visit_fold(
+    ecs_script_t *script,
+    ecs_expr_node_t **node_ptr,
+    const ecs_expr_eval_desc_t *desc)
+{
+    ecs_expr_interpolated_string_t *node = 
+        (ecs_expr_interpolated_string_t*)*node_ptr;
+
+    bool can_fold = true;
+    
+    int32_t i, e = 0, count = ecs_vec_count(&node->fragments);
+    char **fragments = ecs_vec_first(&node->fragments);
+    for (i = 0; i < count; i ++) {
+        char *fragment = fragments[i];
+        if (!fragment) {
+            ecs_expr_node_t **expr_ptr = ecs_vec_get_t(
+                &node->expressions, ecs_expr_node_t*, e ++);
+
+            if (flecs_expr_visit_fold(script, expr_ptr, desc)) {
+                goto error;
+            }
+
+            if (expr_ptr[0]->kind != EcsExprValue) {
+                can_fold = false;
+            }
+        }
+    }
+
+    if (can_fold) {
+        ecs_strbuf_t buf = ECS_STRBUF_INIT;
+        e = 0;
+
+        for (i = 0; i < count; i ++) {
+            char *fragment = fragments[i];
+            if (fragment) {
+                ecs_strbuf_appendstr(&buf, fragment);
+            } else {
+                ecs_expr_node_t *expr = ecs_vec_get_t(
+                    &node->expressions, ecs_expr_node_t*, e ++)[0];
+                ecs_assert(expr->kind == EcsExprValue, 
+                    ECS_INTERNAL_ERROR, NULL);
+                ecs_assert(expr->type == ecs_id(ecs_string_t),
+                    ECS_INTERNAL_ERROR, NULL);
+                ecs_expr_value_node_t *val = (ecs_expr_value_node_t*)expr;
+                ecs_strbuf_appendstr(&buf, *(char**)val->ptr);
+            }
+        }
+
+        char **value = ecs_value_new(script->world, ecs_id(ecs_string_t));
+        *value = ecs_strbuf_get(&buf);
+
+        ecs_expr_value_node_t *result = flecs_expr_value_from(
+            script, (ecs_expr_node_t*)node, ecs_id(ecs_string_t));
+        result->ptr = value;
+
+        flecs_visit_fold_replace(script, node_ptr, (ecs_expr_node_t*)result);
+    }
+
+    return 0;
+error:
+    return -1;
+}
+
+static
 int flecs_expr_initializer_pre_fold(
     ecs_script_t *script,
     ecs_expr_initializer_t *node,
@@ -443,6 +507,11 @@ int flecs_expr_visit_fold(
 
     switch(node->kind) {
     case EcsExprValue:
+        break;
+    case EcsExprInterpolatedString:
+        if (flecs_expr_interpolated_string_visit_fold(script, node_ptr, desc)) {
+            goto error;
+        }
         break;
     case EcsExprInitializer:
     case EcsExprEmptyInitializer:

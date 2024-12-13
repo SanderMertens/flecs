@@ -432,7 +432,7 @@ void Cursor_set_string_to_null_as_signed(void) {
     ecs_meta_cursor_t cur = ecs_meta_cursor(world, ecs_id(ecs_string_t), &value);
     test_ok( ecs_meta_set_int(&cur, 0) );
 
-    test_str(value, 0);
+    test_str(value, "0");
 
     ecs_fini(world);
 }
@@ -445,7 +445,7 @@ void Cursor_set_string_to_null_as_unsigned(void) {
     ecs_meta_cursor_t cur = ecs_meta_cursor(world, ecs_id(ecs_string_t), &value);
     test_ok( ecs_meta_set_uint(&cur, 0) );
 
-    test_str(value, 0);
+    test_str(value, "0");
 
     ecs_fini(world);
 }

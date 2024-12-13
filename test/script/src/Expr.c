@@ -3825,6 +3825,273 @@ void Expr_interpolate_string_w_func_chain(void) {
     ecs_fini(world);
 }
 
+void Expr_interpolate_in_expr_var_name(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *foo = ecs_script_vars_define(
+        vars, "foo", ecs_string_t);
+    test_assert(foo != NULL);
+    *(char**)foo->value.ptr = ecs_os_strdup("World");
+
+    ecs_expr_eval_desc_t desc = { .vars = vars, .disable_folding = disable_folding };
+
+    char *v = NULL;
+    test_assert(NULL != ecs_expr_run(world, "\"$foo\"", 
+        &ecs_value_ptr(ecs_string_t, &v), &desc));
+    test_str(v, "World");
+    ecs_os_free(v);
+
+    ecs_script_vars_fini(vars);
+
+    ecs_fini(world);
+}
+
+void Expr_interpolate_in_expr_var_name_w_pre(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *foo = ecs_script_vars_define(
+        vars, "foo", ecs_string_t);
+    test_assert(foo != NULL);
+    *(char**)foo->value.ptr = ecs_os_strdup("World");
+
+    ecs_expr_eval_desc_t desc = { .vars = vars, .disable_folding = disable_folding };
+
+    char *v = NULL;
+    test_assert(NULL != ecs_expr_run(world, "\"Hello $foo\"", 
+        &ecs_value_ptr(ecs_string_t, &v), &desc));
+    test_str(v, "Hello World");
+    ecs_os_free(v);
+
+    ecs_script_vars_fini(vars);
+
+    ecs_fini(world);
+}
+
+void Expr_interpolate_in_expr_var_name_w_post(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *foo = ecs_script_vars_define(
+        vars, "foo", ecs_string_t);
+    test_assert(foo != NULL);
+    *(char**)foo->value.ptr = ecs_os_strdup("World");
+
+    ecs_expr_eval_desc_t desc = { .vars = vars, .disable_folding = disable_folding };
+
+    char *v = NULL;
+    test_assert(NULL != ecs_expr_run(world, "\"$foo Hello\"", 
+        &ecs_value_ptr(ecs_string_t, &v), &desc));
+    test_str(v, "World Hello");
+    ecs_os_free(v);
+
+    ecs_script_vars_fini(vars);
+
+    ecs_fini(world);
+}
+
+void Expr_interpolate_in_expr_var_name_w_pre_post(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *foo = ecs_script_vars_define(
+        vars, "foo", ecs_string_t);
+    test_assert(foo != NULL);
+    *(char**)foo->value.ptr = ecs_os_strdup("World");
+
+    ecs_expr_eval_desc_t desc = { .vars = vars, .disable_folding = disable_folding };
+
+    char *v = NULL;
+    test_assert(NULL != ecs_expr_run(world, "\"Hello $foo!\"", 
+        &ecs_value_ptr(ecs_string_t, &v), &desc));
+    test_str(v, "Hello World!");
+    ecs_os_free(v);
+
+    ecs_script_vars_fini(vars);
+
+    ecs_fini(world);
+}
+
+void Expr_interpolate_in_expr_var_name_bool(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *foo = ecs_script_vars_define(
+        vars, "foo", ecs_bool_t);
+    test_assert(foo != NULL);
+    *(bool*)foo->value.ptr = true;
+
+    ecs_expr_eval_desc_t desc = { .vars = vars, .disable_folding = disable_folding };
+
+    char *v = NULL;
+    test_assert(NULL != ecs_expr_run(world, "\"$foo\"", 
+        &ecs_value_ptr(ecs_string_t, &v), &desc));
+    test_str(v, "true");
+    ecs_os_free(v);
+
+    ecs_script_vars_fini(vars);
+
+    ecs_fini(world);
+}
+
+void Expr_interpolate_in_expr_var_name_char(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *foo = ecs_script_vars_define(
+        vars, "foo", ecs_char_t);
+    test_assert(foo != NULL);
+    *(char*)foo->value.ptr = 'a';
+
+    ecs_expr_eval_desc_t desc = { .vars = vars, .disable_folding = disable_folding };
+
+    char *v = NULL;
+    test_assert(NULL != ecs_expr_run(world, "\"$foo\"", 
+        &ecs_value_ptr(ecs_string_t, &v), &desc));
+    test_str(v, "a");
+    ecs_os_free(v);
+
+    ecs_script_vars_fini(vars);
+
+    ecs_fini(world);
+}
+
+void Expr_interpolate_in_expr_var_name_i32(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *foo = ecs_script_vars_define(
+        vars, "foo", ecs_i32_t);
+    test_assert(foo != NULL);
+    *(int32_t*)foo->value.ptr = 10;
+
+    ecs_expr_eval_desc_t desc = { .vars = vars, .disable_folding = disable_folding };
+
+    char *v = NULL;
+    test_assert(NULL != ecs_expr_run(world, "\"$foo\"", 
+        &ecs_value_ptr(ecs_string_t, &v), &desc));
+    test_str(v, "10");
+    ecs_os_free(v);
+
+    ecs_script_vars_fini(vars);
+
+    ecs_fini(world);
+}
+
+void Expr_interpolate_in_expr_var_name_u32(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *foo = ecs_script_vars_define(
+        vars, "foo", ecs_u32_t);
+    test_assert(foo != NULL);
+    *(ecs_u32_t*)foo->value.ptr = 10;
+
+    ecs_expr_eval_desc_t desc = { .vars = vars, .disable_folding = disable_folding };
+
+    char *v = NULL;
+    test_assert(NULL != ecs_expr_run(world, "\"$foo\"", 
+        &ecs_value_ptr(ecs_string_t, &v), &desc));
+    test_str(v, "10");
+    ecs_os_free(v);
+
+    ecs_script_vars_fini(vars);
+
+    ecs_fini(world);
+}
+
+void Expr_interpolate_in_expr_var_name_f32(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *foo = ecs_script_vars_define(
+        vars, "foo", ecs_f32_t);
+    test_assert(foo != NULL);
+    *(ecs_f32_t*)foo->value.ptr = 10.5;
+
+    ecs_expr_eval_desc_t desc = { .vars = vars, .disable_folding = disable_folding };
+
+    char *v = NULL;
+    test_assert(NULL != ecs_expr_run(world, "\"$foo\"", 
+        &ecs_value_ptr(ecs_string_t, &v), &desc));
+    test_str(v, "10.500000");
+    ecs_os_free(v);
+
+    ecs_script_vars_fini(vars);
+
+    ecs_fini(world);
+}
+
+void Expr_interpolate_in_expr_var_name_entity(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *foo = ecs_script_vars_define(
+        vars, "foo", ecs_entity_t);
+    test_assert(foo != NULL);
+    *(ecs_entity_t*)foo->value.ptr = EcsFlecsCore;
+
+    ecs_expr_eval_desc_t desc = { .vars = vars, .disable_folding = disable_folding };
+
+    char *v = NULL;
+    test_assert(NULL != ecs_expr_run(world, "\"$foo\"", 
+        &ecs_value_ptr(ecs_string_t, &v), &desc));
+    test_str(v, "flecs.core");
+    ecs_os_free(v);
+
+    ecs_script_vars_fini(vars);
+
+    ecs_fini(world);
+}
+
+void Expr_interpolate_in_expr_w_curly_brackets(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+
+    char *v = NULL;
+    test_assert(NULL != ecs_expr_run(world, "\"{10 + 20}\"", 
+        &ecs_value_ptr(ecs_string_t, &v), &desc));
+    test_str(v, "30");
+    ecs_os_free(v);
+
+    ecs_fini(world);
+}
+
+void Expr_interpolate_in_expr_w_curly_brackets_w_var(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+
+    ecs_script_var_t *foo = ecs_script_vars_define(
+        vars, "foo", ecs_i32_t);
+    test_assert(foo != NULL);
+    *(int32_t*)foo->value.ptr = 10;
+
+    ecs_expr_eval_desc_t desc = { .vars = vars, .disable_folding = disable_folding };
+
+    char *v = NULL;
+    test_assert(NULL != ecs_expr_run(world, "\"{$foo * 2}\"", 
+        &ecs_value_ptr(ecs_string_t, &v), &desc));
+    test_str(v, "20");
+    ecs_os_free(v);
+
+    ecs_script_vars_fini(vars);
+
+    ecs_fini(world);
+}
+
 void Expr_iter_to_vars_no_data(void) {
     ecs_world_t *world = ecs_init();
 
@@ -5144,6 +5411,19 @@ void Expr_scoped_global_const_var(void) {
     test_assert(ptr != NULL);
     test_assert(ptr[0] == 0);
     test_int(v, 30);
+
+    ecs_fini(world);
+}
+
+void Expr_escape_newline(void) {
+    ecs_world_t *world = ecs_init();
+
+    char *v = NULL;
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_expr_run(world, "\"Hello\\nWorld\"",
+        &ecs_value_ptr(ecs_string_t, &v), &desc) != NULL);
+    test_str(v, "Hello\nWorld");
+    ecs_os_free(v);
 
     ecs_fini(world);
 }

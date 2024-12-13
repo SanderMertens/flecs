@@ -502,7 +502,7 @@ typedef struct ecs_expr_eval_desc_t {
         const char *value,
         void *ctx);
     void *lookup_ctx;                /**< Context passed to lookup function */
-    ecs_script_vars_t *vars;         /**< Variables accessible in expression */
+    const ecs_script_vars_t *vars;   /**< Variables accessible in expression */
     ecs_entity_t type;               /**< Type of parsed value (optional) */
     bool disable_folding;            /**< Disable constant folding (slower evaluation, faster parsing) */
     ecs_script_runtime_t *runtime;   /**< Reusable runtime (optional) */

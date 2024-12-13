@@ -24,6 +24,8 @@ ECS_MOVE(EcsScriptConstVar, dst, src, {
     if (dst->type_info->hooks.dtor) {
         dst->type_info->hooks.dtor(dst->value.ptr, 1, dst->type_info);
     }
+
+    ecs_os_free(dst->value.ptr);
     
     *dst = *src;
 
@@ -37,6 +39,7 @@ ECS_DTOR(EcsScriptConstVar, ptr, {
     if (ptr->type_info->hooks.dtor) {
         ptr->type_info->hooks.dtor(ptr->value.ptr, 1, ptr->type_info);
     }
+    ecs_os_free(ptr->value.ptr);
 })
 
 static

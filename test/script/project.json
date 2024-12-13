@@ -573,6 +573,18 @@
                 "interpolate_string_w_escape_curly_brackets",
                 "interpolate_string_w_func",
                 "interpolate_string_w_func_chain",
+                "interpolate_in_expr_var_name",
+                "interpolate_in_expr_var_name_w_pre",
+                "interpolate_in_expr_var_name_w_post",
+                "interpolate_in_expr_var_name_w_pre_post",
+                "interpolate_in_expr_var_name_bool",
+                "interpolate_in_expr_var_name_char",
+                "interpolate_in_expr_var_name_i32",
+                "interpolate_in_expr_var_name_u32",
+                "interpolate_in_expr_var_name_f32",
+                "interpolate_in_expr_var_name_entity",
+                "interpolate_in_expr_w_curly_brackets",
+                "interpolate_in_expr_w_curly_brackets_w_var",
                 "iter_to_vars_no_data",
                 "iter_to_vars_1_comp",
                 "iter_to_vars_2_comps",
@@ -611,7 +623,8 @@
                 "space_at_start",
                 "newline_at_start",
                 "global_const_var",
-                "scoped_global_const_var"
+                "scoped_global_const_var",
+                "escape_newline"
             ]
         }, {
             "id": "ExprAst",
@@ -620,7 +633,10 @@
                 "binary_f32_var_add_int",
                 "binary_f32_var_div_int",
                 "binary_f32_var_add_flt",
-                "binary_f32_var_div_by_int_sub_int"
+                "binary_f32_var_div_by_int_sub_int",
+                "interpolated_string_var",
+                "interpolated_string_curly_brackets",
+                "interpolated_string_curly_brackets_w_var"
             ]
         }, {
             "id": "Vars",

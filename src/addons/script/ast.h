@@ -24,7 +24,7 @@ typedef enum ecs_script_node_kind_t {
     EcsAstConst,
     EcsAstEntity,
     EcsAstPairScope,
-    EcsAstIf,
+    EcsAstIf
 } ecs_script_node_kind_t;
 
 typedef struct ecs_script_node_t {

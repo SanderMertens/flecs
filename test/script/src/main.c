@@ -560,6 +560,18 @@ void Expr_interpolate_string_w_escape_var_operator(void);
 void Expr_interpolate_string_w_escape_curly_brackets(void);
 void Expr_interpolate_string_w_func(void);
 void Expr_interpolate_string_w_func_chain(void);
+void Expr_interpolate_in_expr_var_name(void);
+void Expr_interpolate_in_expr_var_name_w_pre(void);
+void Expr_interpolate_in_expr_var_name_w_post(void);
+void Expr_interpolate_in_expr_var_name_w_pre_post(void);
+void Expr_interpolate_in_expr_var_name_bool(void);
+void Expr_interpolate_in_expr_var_name_char(void);
+void Expr_interpolate_in_expr_var_name_i32(void);
+void Expr_interpolate_in_expr_var_name_u32(void);
+void Expr_interpolate_in_expr_var_name_f32(void);
+void Expr_interpolate_in_expr_var_name_entity(void);
+void Expr_interpolate_in_expr_w_curly_brackets(void);
+void Expr_interpolate_in_expr_w_curly_brackets_w_var(void);
 void Expr_iter_to_vars_no_data(void);
 void Expr_iter_to_vars_1_comp(void);
 void Expr_iter_to_vars_2_comps(void);
@@ -599,6 +611,7 @@ void Expr_space_at_start(void);
 void Expr_newline_at_start(void);
 void Expr_global_const_var(void);
 void Expr_scoped_global_const_var(void);
+void Expr_escape_newline(void);
 
 // Testsuite 'ExprAst'
 void ExprAst_binary_f32_var_add_f32_var(void);
@@ -606,6 +619,9 @@ void ExprAst_binary_f32_var_add_int(void);
 void ExprAst_binary_f32_var_div_int(void);
 void ExprAst_binary_f32_var_add_flt(void);
 void ExprAst_binary_f32_var_div_by_int_sub_int(void);
+void ExprAst_interpolated_string_var(void);
+void ExprAst_interpolated_string_curly_brackets(void);
+void ExprAst_interpolated_string_curly_brackets_w_var(void);
 
 // Testsuite 'Vars'
 void Vars_declare_1_var(void);
@@ -2960,6 +2976,54 @@ bake_test_case Expr_testcases[] = {
         Expr_interpolate_string_w_func_chain
     },
     {
+        "interpolate_in_expr_var_name",
+        Expr_interpolate_in_expr_var_name
+    },
+    {
+        "interpolate_in_expr_var_name_w_pre",
+        Expr_interpolate_in_expr_var_name_w_pre
+    },
+    {
+        "interpolate_in_expr_var_name_w_post",
+        Expr_interpolate_in_expr_var_name_w_post
+    },
+    {
+        "interpolate_in_expr_var_name_w_pre_post",
+        Expr_interpolate_in_expr_var_name_w_pre_post
+    },
+    {
+        "interpolate_in_expr_var_name_bool",
+        Expr_interpolate_in_expr_var_name_bool
+    },
+    {
+        "interpolate_in_expr_var_name_char",
+        Expr_interpolate_in_expr_var_name_char
+    },
+    {
+        "interpolate_in_expr_var_name_i32",
+        Expr_interpolate_in_expr_var_name_i32
+    },
+    {
+        "interpolate_in_expr_var_name_u32",
+        Expr_interpolate_in_expr_var_name_u32
+    },
+    {
+        "interpolate_in_expr_var_name_f32",
+        Expr_interpolate_in_expr_var_name_f32
+    },
+    {
+        "interpolate_in_expr_var_name_entity",
+        Expr_interpolate_in_expr_var_name_entity
+    },
+    {
+        "interpolate_in_expr_w_curly_brackets",
+        Expr_interpolate_in_expr_w_curly_brackets
+    },
+    {
+        "interpolate_in_expr_w_curly_brackets_w_var",
+        Expr_interpolate_in_expr_w_curly_brackets_w_var
+    },
+    {
         "iter_to_vars_no_data",
         Expr_iter_to_vars_no_data
     },
@@ -3114,6 +3178,10 @@ bake_test_case Expr_testcases[] = {
     {
         "scoped_global_const_var",
         Expr_scoped_global_const_var
+    },
+    {
+        "escape_newline",
+        Expr_escape_newline
     }
 };
 
@@ -3137,6 +3205,18 @@ bake_test_case ExprAst_testcases[] = {
     {
         "binary_f32_var_div_by_int_sub_int",
         ExprAst_binary_f32_var_div_by_int_sub_int
+    },
+    {
+        "interpolated_string_var",
+        ExprAst_interpolated_string_var
+    },
+    {
+        "interpolated_string_curly_brackets",
+        ExprAst_interpolated_string_curly_brackets
+    },
+    {
+        "interpolated_string_curly_brackets_w_var",
+        ExprAst_interpolated_string_curly_brackets_w_var
     }
 };
 
@@ -3820,7 +3900,7 @@ static bake_test_suite suites[] = {
         "Expr",
         Expr_setup,
         NULL,
-        193,
+        206,
         Expr_testcases,
         1,
         Expr_params
@@ -3829,7 +3909,7 @@ static bake_test_suite suites[] = {
         "ExprAst",
         NULL,
         NULL,
-        5,
+        8,
         ExprAst_testcases
     },
     {

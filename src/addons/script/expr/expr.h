@@ -51,6 +51,12 @@ void flecs_expr_to_str_buf(
     ecs_strbuf_t *buf,
     bool colors);
 
+bool flecs_string_is_interpolated(
+    const char *str);
+
+char* flecs_string_escape(
+    char *str);
+
 #define ECS_VALUE_GET(value, T) (*(T*)(value)->ptr)
 
 #define ECS_BOP(left, right, result, op, R, T)\

@@ -225,4 +225,73 @@ int flecs_value_binary(
     return 0;
 }
 
+bool flecs_string_is_interpolated(
+    const char *value)
+{
+    const char *ptr = value;
+
+    for (ptr = strchr(ptr, '$'); ptr; ptr = strchr(ptr + 1, '$')) {
+        if (ptr != value) {
+            if (ptr[-1] == '\\') {
+                continue; /* Escaped */
+            }
+        }
+
+        if (isspace(ptr[1]) || !ptr[1]) {
+            continue; /* $ by itself */
+        }
+
+        return true;
+    }
+
+    ptr = value;
+
+    for (ptr = strchr(ptr, '{'); ptr; ptr = strchr(ptr + 1, '{')) {
+        if (ptr != value) {
+            if (ptr[-1] == '\\') {
+                continue; /* Escaped */
+            }
+        }
+
+        return true;
+    }
+
+    return false;
+}
+
+char* flecs_string_escape(
+    char *str)
+{
+    const char *ptr;
+    char *out = str, ch;
+
+    for (ptr = str; ptr[0]; ) {
+        if (ptr[0] == '\\') {
+            if (ptr[1] == '{') { /* Escape string interpolation delimiter */
+                ch = '{';
+                ptr += 2;
+            } else if (ptr[1] == '$') { /* Escape string interpolation var */
+                ch = '$';
+                ptr += 2;
+            } else {
+                ptr = flecs_chrparse(ptr, &ch);
+                if (!ptr) {
+                    ecs_err("invalid escape sequence in string '%s'", str);
+                    return NULL;
+                }
+            }
+        } else {
+            ch = ptr[0];
+            ptr ++;
+        }
+
+        out[0] = ch;
+        out ++;
+    }
+
+    out[0] = '\0';
+
+    return out + 1;
+}
+
 #endif

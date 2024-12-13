@@ -62,7 +62,6 @@ flecs_src = files(
     'src/addons/script/function.c',
     'src/addons/script/functions_builtin.c',
     'src/addons/script/functions_math.c',
-    'src/addons/script/interpolate.c',
     'src/addons/script/parser.c',
     'src/addons/script/query_parser.c',
     'src/addons/script/script.c',

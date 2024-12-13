@@ -21,6 +21,7 @@ typedef struct ecs_script_impl_t {
     ecs_script_scope_t *root;
     ecs_expr_node_t *expr; /* Only set if script is just an expression */
     char *token_buffer;
+    char *token_remaining; /* Remaining space in token buffer */
     const char *next_token; /* First character after expression */
     int32_t token_buffer_size;
     int32_t refcount;

@@ -358,7 +358,12 @@ const char* flecs_script_parse_lhs(
         }
 
         case EcsTokString: {
-            *out = (ecs_expr_node_t*)flecs_expr_string(parser, Token(0));
+            if (flecs_string_is_interpolated(Token(0))) {
+                *out = (ecs_expr_node_t*)flecs_expr_interpolated_string(
+                    parser, Token(0));
+            } else {
+                *out = (ecs_expr_node_t*)flecs_expr_string(parser, Token(0));
+            }
             break;
         }
 
@@ -375,7 +380,7 @@ const char* flecs_script_parse_lhs(
                 if (last_elem && last_elem[1] == '$') {
                     /* Scoped global variable */
                     ecs_expr_variable_t *v = flecs_expr_variable(parser, expr);
-                    memmove(&last_elem[1], &last_elem[2], 
+                    ecs_os_memmove(&last_elem[1], &last_elem[2],
                         ecs_os_strlen(&last_elem[2]) + 1);
                     v->node.kind = EcsExprGlobalVariable;
                     *out = (ecs_expr_node_t*)v;
@@ -531,6 +536,7 @@ ecs_script_t* ecs_expr_parse(
     }
 
     impl->next_token = ptr;
+    impl->token_remaining = parser.token_cur;
 
     if (flecs_expr_visit_type(script, impl->expr, &priv_desc)) {
         goto error;
@@ -544,7 +550,7 @@ ecs_script_t* ecs_expr_parse(
         }
     }
 
-    // printf("%s\n", ecs_script_ast_to_str(script));
+    // printf("%s\n", ecs_script_ast_to_str(script, true));
 
     return script;
 error:
@@ -617,6 +623,35 @@ const char* ecs_expr_run(
     return result;
 error:
     return NULL;
+}
+
+FLECS_API
+char* ecs_script_string_interpolate(
+    ecs_world_t *world,
+    const char *str,
+    const ecs_script_vars_t *vars)
+{
+    if (!flecs_string_is_interpolated(str)) {
+        char *result = ecs_os_strdup(str);
+        if (!flecs_string_escape(result)) {
+            ecs_os_free(result);
+            return NULL;
+        }
+        return result;
+    }
+
+    char *expr = flecs_asprintf("\"%s\"", str);
+
+    ecs_expr_eval_desc_t desc = { .vars = vars };
+    char *r = NULL;
+    if (!ecs_expr_run(world, expr, &ecs_value_ptr(ecs_string_t, &r), &desc)) {
+        ecs_os_free(expr);
+        return NULL;
+    }
+
+    ecs_os_free(expr);
+
+    return r;
 }
 
 #endif

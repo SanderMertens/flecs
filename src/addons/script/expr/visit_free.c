@@ -19,6 +19,25 @@ void flecs_expr_value_visit_free(
 }
 
 static
+void flecs_expr_interpolated_string_visit_free(
+    ecs_script_t *script,
+    ecs_expr_interpolated_string_t *node)
+{
+    int32_t i, count = ecs_vec_count(&node->expressions);
+    ecs_expr_node_t **expressions = ecs_vec_first(&node->expressions);
+    for (i = 0; i < count; i ++) {
+        flecs_expr_visit_free(script, expressions[i]);
+    }
+
+    ecs_vec_fini_t(&flecs_script_impl(script)->allocator, 
+        &node->fragments, char*);
+    ecs_vec_fini_t(&flecs_script_impl(script)->allocator, 
+        &node->expressions, ecs_expr_node_t*);
+    flecs_free_n(&flecs_script_impl(script)->allocator,
+        char, node->buffer_size, node->buffer);
+}
+
+static
 void flecs_expr_initializer_visit_free(
     ecs_script_t *script,
     ecs_expr_initializer_t *node)
@@ -108,6 +127,11 @@ void flecs_expr_visit_free(
         flecs_expr_value_visit_free(
             script, (ecs_expr_value_node_t*)node);
         flecs_free_t(a, ecs_expr_value_node_t, node);
+        break;
+    case EcsExprInterpolatedString:
+        flecs_expr_interpolated_string_visit_free(
+            script, (ecs_expr_interpolated_string_t*)node);
+        flecs_free_t(a, ecs_expr_interpolated_string_t, node);
         break;
     case EcsExprInitializer:
     case EcsExprEmptyInitializer:

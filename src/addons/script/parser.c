@@ -850,6 +850,8 @@ ecs_script_t* ecs_script_parse(
         }
     } while (true);
 
+    impl->token_remaining = parser.token_cur;
+
     return script;
 error:
     ecs_script_free(script);

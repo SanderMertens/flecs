@@ -93,4 +93,9 @@ const char* flecs_scan_whitespace(
     ecs_script_parser_t *parser,
     const char *pos);
 
+const char* flecs_script_identifier(
+    ecs_script_parser_t *parser,
+    const char *pos,
+    ecs_script_token_t *out);
+
 #endif
