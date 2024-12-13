@@ -133,6 +133,8 @@ FLECS_MATH_FUNC_F64(ceil, ceil(x))
 FLECS_MATH_FUNC_F64(floor, floor(x))
 FLECS_MATH_FUNC_F64(round, round(x))
 
+FLECS_MATH_FUNC_F64(abs, fabs(x))
+
 FLECS_API
 void FlecsScriptMathImport(
     ecs_world_t *world)
@@ -192,6 +194,8 @@ void FlecsScriptMathImport(
     FLECS_MATH_FUNC_DEF_F64(ceil, "Round up value");
     FLECS_MATH_FUNC_DEF_F64(floor, "Round down value");
     FLECS_MATH_FUNC_DEF_F64(round, "Round to nearest");
+
+    FLECS_MATH_FUNC_DEF_F64(abs, "Compute absolute value");
 }
 
 #endif
