@@ -1690,6 +1690,8 @@
                 "on_remove_multi_optional",
                 "on_add_multi_only_optional",
                 "on_remove_multi_only_optional",
+                "on_add_multi_observers_w_prefab_instance",
+                "on_add_overlapping_multi_observers_w_prefab_instance",
                 "cache_test_1",
                 "cache_test_2",
                 "cache_test_3",
