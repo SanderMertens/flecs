@@ -239,10 +239,38 @@ struct query_builder_i : term_builder_i<Base> {
 
     Base& begin_scope_traits_index(const int32_t term_index) 
     {
-        ecs_assert(term_index >= 0, ECS_INVALID_PARAMETER, NULL);
+        // Validate term index is within bounds
+        ecs_assert(term_index >= 0, ECS_INVALID_PARAMETER, "Term index must be non-negative");
+        ecs_assert(term_index < term_index_, ECS_INVALID_PARAMETER, "Term index exceeds number of defined terms");
+
         const int32_t prev_index = term_index_;
         term_index_ = term_index;
-        this->begin_scope_traits();
+
+        // Get the term we're scoping to
+        const ecs_term_t& term = desc_->terms[term_index];
+    
+        // Validate we have a valid term
+        ecs_assert(ecs_term_is_initialized(&term), ECS_INVALID_PARAMETER, 
+            "Term at provided index is not initialized");
+
+        // Get the component ID we're scoping to
+        flecs::entity_t comp_id = term.id;
+        if (comp_id == 0) {
+            comp_id = term.first.id;
+        }
+
+        // Validate we have a valid component ID
+        ecs_assert(comp_id != 0, ECS_INVALID_PARAMETER, 
+            "Term at provided index has no valid component ID");
+    
+        // Check if the entity is alive before trying to get its name
+        ecs_assert(ecs_is_alive(this->world_v(), comp_id), ECS_INVALID_PARAMETER,
+            "Component entity is not alive");
+
+        // Now we can safely proceed with the trait scope
+        this->begin_scope_traits(comp_id);
+    
+        // Restore the original term index
         term_index_ = prev_index;
         return *this;
     }

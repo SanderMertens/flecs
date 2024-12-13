@@ -3944,7 +3944,7 @@ error:
     return -1;
 }
 
-static
+static inline
 const char* flecs_get_identifier(
     const ecs_world_t *world,
     ecs_entity_t entity,
@@ -3956,11 +3956,7 @@ const char* flecs_get_identifier(
     const EcsIdentifier *ptr = ecs_get_pair(
         world, entity, EcsIdentifier, tag);
 
-    if (ptr) {
-        return ptr->value;
-    } else {
-        return NULL;
-    }
+    return ptr ? ptr->value : NULL;
 error:
     return NULL;
 }

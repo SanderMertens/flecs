@@ -1479,16 +1479,22 @@ public:
 	{
 		solid_checkf(Has<TComponent>(), TEXT("Entity does not have component"));
 
-		FFlecsEntityHandle TraitHolder = GetEntity().target_for<TComponent>(flecs::ChildOf);
+		FFlecsEntityHandle TraitHolder;
 
-		if LIKELY_IF(TraitHolder.IsValid())
+		if LIKELY_IF(HasPair<TComponent>(flecs::Wildcard))
 		{
+			do
+			{
+				TraitHolder = GetEntity().target<TComponent>();
+			} while (!TraitHolder.Has(flecs::Trait));
+
 			return TraitHolder;
 		}
 		
 		TraitHolder = GetFlecsWorld_Internal().entity();
-		TraitHolder.SetParent(GetEntity());
 		TraitHolder.Add(flecs::Trait);
+		TraitHolder.Add(flecs::PairIsTag);
+		TraitHolder.SetParent(GetEntity());
 
 		#if WITH_EDITORONLY_DATA
 
@@ -1507,17 +1513,23 @@ public:
 	{
 		solid_checkf(Has(StructType), TEXT("Entity does not have component"));
 		
-		FFlecsEntityHandle TraitHolder = GetEntity().target_for(
-				flecs::ChildOf, ObtainComponentTypeStruct(StructType));
+		FFlecsEntityHandle TraitHolder;
 
-		if LIKELY_IF(TraitHolder.IsValid())
+		if LIKELY_IF(HasPair(StructType, flecs::Wildcard))
 		{
+			do
+			{
+				TraitHolder = GetEntity().target(
+					ObtainComponentTypeStruct(StructType));
+			} while (!TraitHolder.Has(flecs::Trait));
+
 			return TraitHolder;
 		}
 		
 		TraitHolder = GetFlecsWorld_Internal().entity();
-		TraitHolder.SetParent(GetEntity());
 		TraitHolder.Add(flecs::Trait);
+		TraitHolder.Add(flecs::PairIsTag);
+		TraitHolder.SetParent(GetEntity());
 
 		#if WITH_EDITORONLY_DATA
 

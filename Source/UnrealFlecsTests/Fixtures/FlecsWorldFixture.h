@@ -11,6 +11,8 @@
 #define FLECS_LOAD_OBJECT(AssetType, AssetPath) \
 	StaticLoadObject(AssetType::StaticClass(), nullptr, AssetPath, nullptr, LOAD_None, nullptr)
 
+UNLOG_CATEGORY(LogFlecsTests);
+
 class FFlecsTestFixture
 {
 public:

@@ -8,7 +8,7 @@
 
 // This class does not need to be modified.
 UINTERFACE(meta = (CannotImplementInterfaceInBlueprint))
-class UFlecsModuleProgressInterface : public UInterface
+class UNREALFLECS_API UFlecsModuleProgressInterface : public UInterface
 {
 	GENERATED_BODY()
 }; // class UFlecsModuleProgressInterface
