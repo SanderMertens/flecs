@@ -8837,3 +8837,199 @@ void Eval_component_in_entity_in_with_scope(void) {
 
     ecs_fini(world);
 }
+
+void Eval_entity_w_string_name(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "\"e\" { }";
+
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    ecs_fini(world);
+}
+
+void Eval_entity_w_interpolated_name(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "\"e_{10 + 20}\" { }";
+
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e_30");
+    test_assert(e != 0);
+
+    ecs_fini(world);
+}
+
+void Eval_entity_w_interpolated_name_w_var(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "const i = 10"
+    LINE "\"e_{$i + 20}\" { }";
+
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e_30");
+    test_assert(e != 0);
+
+    ecs_fini(world);
+}
+
+void Eval_entity_w_string_name_w_inherit(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Foo);
+
+    const char *expr =
+    HEAD "\"e_{10 + 20}\" : Foo";
+
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e_30");
+    test_assert(e != 0);
+    test_assert(ecs_has_pair(world, e, EcsIsA, Foo));
+
+    ecs_fini(world);
+}
+
+void Eval_entity_w_string_name_w_inherit_scope(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Foo);
+
+    const char *expr =
+    HEAD "\"e_{10 + 20}\" : Foo { }";
+
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e_30");
+    test_assert(e != 0);
+    test_assert(ecs_has_pair(world, e, EcsIsA, Foo));
+
+    ecs_fini(world);
+}
+
+void Eval_entity_w_string_name_w_kind(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "Position"}),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "Position \"e_{10 + 20}\"";
+
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e_30");
+    test_assert(e != 0);
+    test_assert(ecs_has(world, e, Position));
+
+    ecs_fini(world);
+}
+
+void Eval_entity_w_string_name_w_kind_value(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "Position"}),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "Position \"e_{10 + 20}\"(10, 20)";
+
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e_30");
+    test_assert(e != 0);
+    test_assert(ecs_has(world, e, Position));
+
+    const Position *p = ecs_get(world, e, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+void Eval_entity_w_string_name_w_kind_scope(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "Position"}),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "Position \"e_{10 + 20}\" { }";
+
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e_30");
+    test_assert(e != 0);
+    test_assert(ecs_has(world, e, Position));
+
+    ecs_fini(world);
+}
+
+void Eval_entity_w_string_name_w_kind_value_scope(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "Position"}),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "Position \"e_{10 + 20}\"(10, 20) { }";
+
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e_30");
+    test_assert(e != 0);
+    test_assert(ecs_has(world, e, Position));
+
+    const Position *p = ecs_get(world, e, Position);
+    test_assert(p != NULL);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
+void Eval_entity_w_interpolated_name_w_var_in_scope(void) {
+    ecs_world_t *world = ecs_init();
+
+    const char *expr =
+    HEAD "parent {"
+    LINE "  const i = 10"
+    LINE "  \"e_{$i + 20}\" { }"
+    LINE "}";
+
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+
+    ecs_entity_t e = ecs_lookup(world, "parent.e_30");
+    test_assert(e != 0);
+
+    ecs_fini(world);
+}

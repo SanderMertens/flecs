@@ -274,6 +274,16 @@ void Eval_assign_call_scoped_func_w_using(void);
 void Eval_eval_w_vars(void);
 void Eval_eval_w_runtime(void);
 void Eval_component_in_entity_in_with_scope(void);
+void Eval_entity_w_string_name(void);
+void Eval_entity_w_interpolated_name(void);
+void Eval_entity_w_interpolated_name_w_var(void);
+void Eval_entity_w_string_name_w_inherit(void);
+void Eval_entity_w_string_name_w_inherit_scope(void);
+void Eval_entity_w_string_name_w_kind(void);
+void Eval_entity_w_string_name_w_kind_value(void);
+void Eval_entity_w_string_name_w_kind_scope(void);
+void Eval_entity_w_string_name_w_kind_value_scope(void);
+void Eval_entity_w_interpolated_name_w_var_in_scope(void);
 
 // Testsuite 'Template'
 void Template_template_no_scope(void);
@@ -1849,6 +1859,46 @@ bake_test_case Eval_testcases[] = {
     {
         "component_in_entity_in_with_scope",
         Eval_component_in_entity_in_with_scope
+    },
+    {
+        "entity_w_string_name",
+        Eval_entity_w_string_name
+    },
+    {
+        "entity_w_interpolated_name",
+        Eval_entity_w_interpolated_name
+    },
+    {
+        "entity_w_interpolated_name_w_var",
+        Eval_entity_w_interpolated_name_w_var
+    },
+    {
+        "entity_w_string_name_w_inherit",
+        Eval_entity_w_string_name_w_inherit
+    },
+    {
+        "entity_w_string_name_w_inherit_scope",
+        Eval_entity_w_string_name_w_inherit_scope
+    },
+    {
+        "entity_w_string_name_w_kind",
+        Eval_entity_w_string_name_w_kind
+    },
+    {
+        "entity_w_string_name_w_kind_value",
+        Eval_entity_w_string_name_w_kind_value
+    },
+    {
+        "entity_w_string_name_w_kind_scope",
+        Eval_entity_w_string_name_w_kind_scope
+    },
+    {
+        "entity_w_string_name_w_kind_value_scope",
+        Eval_entity_w_string_name_w_kind_value_scope
+    },
+    {
+        "entity_w_interpolated_name_w_var_in_scope",
+        Eval_entity_w_interpolated_name_w_var_in_scope
     }
 };
 
@@ -3879,7 +3929,7 @@ static bake_test_suite suites[] = {
         "Eval",
         NULL,
         NULL,
-        265,
+        275,
         Eval_testcases
     },
     {

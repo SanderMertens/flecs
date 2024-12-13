@@ -57,7 +57,8 @@ ecs_script_scope_t* flecs_script_insert_scope(
 
 ecs_script_entity_t* flecs_script_insert_entity(
     ecs_script_parser_t *parser,
-    const char *name)
+    const char *name,
+    bool name_is_expr)
 {
     ecs_script_scope_t *scope = parser->scope;
     ecs_assert(scope != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -71,12 +72,24 @@ ecs_script_entity_t* flecs_script_insert_entity(
 
     result->name = name;
 
+    if (name_is_expr) {
+        parser->significant_newline = false;
+        result->name_expr = (ecs_expr_node_t*)
+            flecs_expr_interpolated_string(parser, name);
+        if (!result->name_expr) {
+            goto error;
+        }
+        parser->significant_newline = true;
+    }
+
     ecs_script_scope_t *entity_scope = flecs_script_scope_new(parser);
     ecs_assert(entity_scope != NULL, ECS_INTERNAL_ERROR, NULL);
     result->scope = entity_scope;
 
     flecs_ast_append(parser, scope->stmts, ecs_script_entity_t, result);
     return result;
+error:
+    return NULL;
 }
 
 static

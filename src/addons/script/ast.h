@@ -77,6 +77,7 @@ struct ecs_script_entity_t {
     bool name_is_var;
     bool kind_w_expr;
     ecs_script_scope_t *scope;
+    ecs_expr_node_t *name_expr;
 
     // Populated during eval
     ecs_script_entity_t *parent;
@@ -148,7 +149,8 @@ ecs_script_scope_t* flecs_script_insert_scope(
 
 ecs_script_entity_t* flecs_script_insert_entity(
     ecs_script_parser_t *parser,
-    const char *name);
+    const char *name,
+    bool name_is_expr);
 
 ecs_script_pair_scope_t* flecs_script_insert_pair_scope(
     ecs_script_parser_t *parser,

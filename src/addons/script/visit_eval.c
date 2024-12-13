@@ -469,7 +469,48 @@ int flecs_script_eval_entity(
         return 0;
     }
 
-    node->eval = flecs_script_create_entity(v, node->name);
+    ecs_expr_node_t *name_expr = node->name_expr;
+    if (name_expr) {
+        ecs_script_t *script = &v->base.script->pub;
+        ecs_expr_eval_desc_t desc = {
+            .name = script->name,
+            .lookup_action = flecs_script_find_entity_action,
+            .lookup_ctx = v,
+            .vars = v->vars,
+            .type = ecs_id(ecs_string_t),
+            .runtime = v->r
+        };
+
+        if (!name_expr->type_info) {
+            if (flecs_expr_visit_type(script, name_expr, &desc)) {
+                return -1;
+            }
+
+            if (flecs_expr_visit_fold(script, &node->name_expr, &desc)) {
+                return -1;
+            }
+
+            name_expr = node->name_expr;
+        }
+
+        ecs_value_t value = { .type = ecs_id(ecs_string_t) };
+        if (flecs_expr_visit_eval(script, name_expr, &desc, &value)) {
+            return -1;
+        }
+
+        char *name = *(char**)value.ptr;
+        if (!name) {
+            flecs_script_eval_error(v, node, "failed to evaluate entity name");
+            return -1;
+        }
+
+        node->eval = flecs_script_create_entity(v, name);
+
+        ecs_value_free(script->world, value.type, value.ptr);
+    } else {
+        node->eval = flecs_script_create_entity(v, node->name);
+    }
+
     node->parent = v->entity;
 
     if (v->template_entity) {

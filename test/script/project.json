@@ -277,7 +277,17 @@
                 "assign_call_scoped_func_w_using",
                 "eval_w_vars",
                 "eval_w_runtime",
-                "component_in_entity_in_with_scope"
+                "component_in_entity_in_with_scope",
+                "entity_w_string_name",
+                "entity_w_interpolated_name",
+                "entity_w_interpolated_name_w_var",
+                "entity_w_string_name_w_inherit",
+                "entity_w_string_name_w_inherit_scope",
+                "entity_w_string_name_w_kind",
+                "entity_w_string_name_w_kind_value",
+                "entity_w_string_name_w_kind_scope",
+                "entity_w_string_name_w_kind_value_scope",
+                "entity_w_interpolated_name_w_var_in_scope"
             ]
         }, {
             "id": "Template",

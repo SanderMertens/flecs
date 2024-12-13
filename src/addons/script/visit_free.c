@@ -41,6 +41,9 @@ void flecs_script_entity_free(
     ecs_script_entity_t *node)
 {
     flecs_script_scope_free(v, node->scope);
+    if (node->name_expr) {
+        flecs_expr_visit_free(&v->script->pub, node->name_expr);
+    }
 }
 
 static
