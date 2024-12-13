@@ -281,7 +281,7 @@ struct FOSApiInitializer
 						StringCast<TCHAR>(Message).Get());
                     break;
                 case -3: // Error
-                	UN_LOGF(LogFlecsCore, Warning, "Flecs - File: %s, Line: %d, Message: %s",
+                	UN_LOGF(LogFlecsCore, Error, "Flecs - File: %s, Line: %d, Message: %s",
 						StringCast<TCHAR>(File).Get(), Line, StringCast<TCHAR>(Message).Get());
                     break;
                 case -2: // Warning
@@ -449,6 +449,38 @@ public:
             {
                 *Handle = FFlecsEntityHandle(World, Entity);
             });
+
+		World.component<FObjectPtr>()
+			.opaque(flecs::Uptr)
+			.serialize([](const flecs::serializer* Serializer, const FObjectPtr* Data)
+			{
+				const UObject* Object = Data->Get();
+				return Serializer->value(flecs::Uptr, Object);
+			});
+
+		World.component<FWeakObjectPtr>()
+			.opaque(flecs::Uptr)
+			.serialize([](const flecs::serializer* Serializer, const FWeakObjectPtr* Data)
+			{
+				const UObject* Object = Data->Get();
+				return Serializer->value(flecs::Uptr, Object);
+			});
+
+		World.component<FSoftObjectPtr>()
+			.opaque(flecs::Uptr)
+			.serialize([](const flecs::serializer* Serializer, const FSoftObjectPtr* Data)
+			{
+				const UObject* Object = Data->Get();
+				return Serializer->value(flecs::Uptr, Object);
+			});
+
+		World.component<TSubclassOf<UObject>>()
+			.opaque(flecs::Uptr)
+			.serialize([](const flecs::serializer* Serializer, const TSubclassOf<UObject>* Data)
+			{
+				const UClass* Class = Data->Get();
+				return Serializer->value(flecs::Uptr, Class);
+			});
 	}
 
 	void InitializeSystems()
