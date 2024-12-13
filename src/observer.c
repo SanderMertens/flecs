@@ -459,8 +459,6 @@ void flecs_multi_observer_invoke(
         return;
     }
 
-    impl->last_event_id[0] = world->event_id;
-
     ecs_table_t *table = it->table;
     ecs_table_t *prev_table = it->other_table;
     int8_t pivot_term = it->term_index;
@@ -512,6 +510,8 @@ void flecs_multi_observer_invoke(
                 goto done;
             }
         }
+
+        impl->last_event_id[0] = it->event_cur;
 
         /* Patch data from original iterator. If the observer query has 
          * wildcards which triggered the original event, the component id that

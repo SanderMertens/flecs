@@ -9612,3 +9612,98 @@ void Observer_on_remove_multi_only_optional(void) {
 
     ecs_fini(world);
 }
+
+void Observer_on_add_multi_observers_w_prefab_instance(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+    ECS_COMPONENT(world, Mass);
+
+    Probe ctx = {0};
+
+    ecs_entity_t prefab = ecs_new_w_id(world, EcsPrefab);
+    ecs_add(world, prefab, Position);
+
+    ecs_observer(world, {
+        .query.terms = {{ ecs_id(Mass) }, { ecs_id(Velocity) }},
+        .events = { EcsOnAdd },
+        .callback = Observer
+    });
+
+
+    ecs_entity_t o = ecs_observer(world, {
+        .query.terms = {{ ecs_id(Position) }, { ecs_isa(prefab) }},
+        .events = { EcsOnAdd },
+        .callback = Observer,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, prefab);
+    ecs_add(world, child, Velocity);
+    ecs_add(world, child, Mass);
+    ecs_set_name(world, child, "child");
+    test_int(ctx.invoked, 0);
+
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, prefab);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, o);
+    test_int(ctx.event, EcsOnAdd);
+    test_uint(ctx.s[0][0], 0);
+
+    test_assert(ecs_has(world, inst, Position));
+    ecs_entity_t inst_child = ecs_lookup_from(world, inst, "child");
+    test_assert(inst_child != 0);
+    test_assert(ecs_has(world, inst_child, Velocity));
+    test_assert(ecs_has(world, inst_child, Mass));
+
+    ecs_fini(world);
+}
+
+void Observer_on_add_overlapping_multi_observers_w_prefab_instance(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    Probe ctx = {0};
+
+    ecs_entity_t prefab = ecs_new_w_id(world, EcsPrefab);
+    ecs_add(world, prefab, Position);
+
+    ecs_observer(world, {
+        .query.terms = {{ ecs_id(Position) }, { ecs_id(Velocity) }},
+        .events = { EcsOnAdd },
+        .callback = Observer
+    });
+
+
+    ecs_entity_t o = ecs_observer(world, {
+        .query.terms = {{ ecs_id(Position) }, { ecs_isa(prefab) }},
+        .events = { EcsOnAdd },
+        .callback = Observer,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, prefab);
+    ecs_add(world, child, Velocity);
+    ecs_add(world, child, Position);
+    ecs_set_name(world, child, "child");
+    test_int(ctx.invoked, 0);
+
+    ecs_entity_t inst = ecs_new_w_pair(world, EcsIsA, prefab);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.system, o);
+    test_int(ctx.event, EcsOnAdd);
+    test_uint(ctx.s[0][0], 0);
+
+    test_assert(ecs_has(world, inst, Position));
+    ecs_entity_t inst_child = ecs_lookup_from(world, inst, "child");
+    test_assert(inst_child != 0);
+    test_assert(ecs_has(world, inst_child, Velocity));
+    test_assert(ecs_has(world, inst_child, Position));
+
+    ecs_fini(world);
+}
