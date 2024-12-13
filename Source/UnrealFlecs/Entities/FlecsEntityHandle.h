@@ -1090,7 +1090,7 @@ public:
 	template <typename TFirst>
 	SOLID_INLINE void AddPair(const FFlecsEntityHandle& InSecond) const
 	{
-		GetEntity().add<TFirst>(InSecond);
+		GetEntity().add<TFirst>(InSecond.GetEntity());
 	}
 
 	template <typename TFirst>
@@ -1479,22 +1479,16 @@ public:
 	{
 		solid_checkf(Has<TComponent>(), TEXT("Entity does not have component"));
 
-		FFlecsEntityHandle TraitHolder;
+		FFlecsEntityHandle TraitHolder = GetEntity().target_for<TComponent>(flecs::ChildOf);
 
-		if LIKELY_IF(HasPair<TComponent>(flecs::Wildcard))
+		if LIKELY_IF(TraitHolder.IsValid())
 		{
-			TraitHolder = GetEntity().target_for<TComponent>(flecs::ChildOf);
-
-			if LIKELY_IF(TraitHolder.IsValid())
-			{
-				return TraitHolder;
-			}
+			return TraitHolder;
 		}
 		
 		TraitHolder = GetFlecsWorld_Internal().entity();
-		TraitHolder.Add(flecs::PairIsTag);
-		TraitHolder.Add(flecs::Trait);
 		TraitHolder.SetParent(GetEntity());
+		TraitHolder.Add(flecs::Trait);
 
 		#if WITH_EDITORONLY_DATA
 
@@ -1513,22 +1507,16 @@ public:
 	{
 		solid_checkf(Has(StructType), TEXT("Entity does not have component"));
 		
-		FFlecsEntityHandle TraitHolder;
+		FFlecsEntityHandle TraitHolder = GetEntity().target_for(
+				flecs::ChildOf, ObtainComponentTypeStruct(StructType));
 
-		if LIKELY_IF(HasPair(ObtainComponentTypeStruct(StructType), flecs::Wildcard))
+		if LIKELY_IF(TraitHolder.IsValid())
 		{
-			TraitHolder = GetEntity().target_for(
-					flecs::ChildOf, ObtainComponentTypeStruct(StructType));
-
-			if LIKELY_IF(TraitHolder.IsValid())
-			{
-				return TraitHolder;
-			}
+			return TraitHolder;
 		}
 		
 		TraitHolder = GetFlecsWorld_Internal().entity();
 		TraitHolder.SetParent(GetEntity());
-		TraitHolder.Add(flecs::PairIsTag);
 		TraitHolder.Add(flecs::Trait);
 
 		#if WITH_EDITORONLY_DATA
