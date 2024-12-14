@@ -344,7 +344,8 @@
                 "fold_const",
                 "bulk_create_template",
                 "template_w_expr_w_self_ref",
-                "entity_w_assign_with_nested_template"
+                "entity_w_assign_with_nested_template",
+                "template_w_for"
             ]
         }, {
             "id": "Error",

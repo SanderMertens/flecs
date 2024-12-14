@@ -60628,13 +60628,17 @@ int flecs_script_check_for_range(
     v->vars = flecs_script_vars_push(v->vars, &v->r->stack, &v->r->allocator);
 
     ecs_script_var_t *var = ecs_script_vars_declare(v->vars, node->loop_var);
-    var->value.ptr = NULL;
+    const ecs_type_info_t *ti = ecs_get_type_info(v->world, ecs_id(ecs_i32_t));
+    int32_t dummy = 0;
+    var->value.ptr = &dummy;
     var->value.type = ecs_id(ecs_i32_t);
-    var->type_info = ecs_get_type_info(v->world, ecs_id(ecs_i32_t));
+    var->type_info = ti;
 
     if (flecs_script_eval_scope(v, node->scope)) {
         return -1;
     }
+
+    var->value.ptr = NULL;
 
     v->vars = ecs_script_vars_pop(v->vars);
 

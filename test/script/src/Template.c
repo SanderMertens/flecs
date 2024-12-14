@@ -2540,3 +2540,62 @@ void Template_entity_w_assign_with_nested_template(void) {
 
     ecs_fini(world);
 }
+
+void Template_template_w_for(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Position),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "template Foo {"
+    LINE "  for i in 0..2 {"
+    LINE"     const t = $i"
+    LINE "    \"child_$i\" = Position: {$t, $t + 2}"
+    LINE "  }"
+    LINE "}"
+    LINE "Foo e()";
+
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+
+    ecs_entity_t foo = ecs_lookup(world, "Foo");
+    test_assert(foo != 0);
+
+    ecs_entity_t e = ecs_lookup(world, "e");
+    test_assert(e != 0);
+
+    ecs_entity_t child_0 = ecs_lookup(world, "e.child_0");
+    test_assert(child_0 != 0);
+    ecs_entity_t child_1 = ecs_lookup(world, "e.child_1");
+    test_assert(child_1 != 0);
+
+    test_assert(ecs_has_id(world, e, foo));
+    test_assert(!ecs_has(world, e, Position));
+
+    test_assert(ecs_has(world, child_0, Position));
+    test_assert(ecs_has(world, child_1, Position));
+
+    {
+        const Position *p = ecs_get(world, child_0, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 0);
+        test_int(p->y, 2);
+    }
+
+    {
+        const Position *p = ecs_get(world, child_1, Position);
+        test_assert(p != NULL);
+        test_int(p->x, 1);
+        test_int(p->y, 3);
+    }
+
+    ecs_fini(world);
+}
