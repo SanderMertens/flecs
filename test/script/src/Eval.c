@@ -9046,7 +9046,7 @@ void Eval_for_range(void) {
     });
 
     const char *expr =
-    HEAD "for $i in 0..3 {"
+    HEAD "for i in 0..3 {"
     LINE "  \"e_{$i}\" {"
     LINE "    Position: {$i, $i * 2}"
     LINE "  }"
@@ -9102,7 +9102,7 @@ void Eval_for_range_vars(void) {
     const char *expr =
     HEAD "const x = 0"
     LINE "const y = 3"
-    LINE "for $i in $x..$y {"
+    LINE "for i in $x..$y {"
     LINE "  \"e_{$i}\" {"
     LINE "    Position: {$i, $i * 2}"
     LINE "  }"
@@ -9156,7 +9156,7 @@ void Eval_for_range_1_4(void) {
     });
 
     const char *expr =
-    HEAD "for $i in 1..4 {"
+    HEAD "for i in 1..4 {"
     LINE "  \"e_{$i}\" {"
     LINE "    Position: {$i, $i * 2}"
     LINE "  }"
@@ -9212,7 +9212,7 @@ void Eval_for_range_min_1_2(void) {
     });
 
     const char *expr =
-    HEAD "for $i in -1..2 {"
+    HEAD "for i in -1..2 {"
     LINE "  \"e_{$i}\" {"
     LINE "    Position: {$i, $i * 2}"
     LINE "  }"

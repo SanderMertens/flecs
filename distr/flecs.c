@@ -56650,19 +56650,15 @@ if_stmt: {
 
 // for
 for_stmt: {
-    // for $i
+    // for i
     Parse_2(EcsTokIdentifier, EcsTokKeywordIn, {
-        if (Token(1)[0] != '$') {
-            Error("expected loop variable name");
-        }
-
         Expr(0, {
             ecs_expr_node_t *from = EXPR;
             Parse_1(EcsTokRange, {
                 Expr(0, {
                     ecs_expr_node_t *to = EXPR;
                     ecs_script_for_range_t *stmt = flecs_script_insert_for_range(parser);
-                    stmt->loop_var = &Token(1)[1];
+                    stmt->loop_var = Token(1);
                     stmt->from = from;
                     stmt->to = to;
 
@@ -58820,9 +58816,12 @@ void flecs_script_template_instantiate(
 
     flecs_script_eval_visit_init(flecs_script_impl(script->script), &v, &desc);
     ecs_vec_t prev_using = v.r->using;
+    ecs_vec_t prev_with = desc.runtime->with;
+    ecs_vec_t prev_with_type_info = desc.runtime->with_type_info;
     v.r->using = template->using_;
-
     v.template_entity = template_entity;
+    ecs_vec_init_t(NULL, &desc.runtime->with, ecs_value_t, 0);
+    ecs_vec_init_t(NULL, &desc.runtime->with_type_info, ecs_type_info_t*, 0);
 
     ecs_script_scope_t *scope = template->node->scope;
 
@@ -58881,6 +58880,13 @@ void flecs_script_template_instantiate(
         data = ECS_OFFSET(data, ti->size);
     }
 
+    ecs_vec_fini_t(&desc.runtime->allocator, 
+        &desc.runtime->with, ecs_value_t);
+    ecs_vec_fini_t(&desc.runtime->allocator, 
+        &desc.runtime->with_type_info, ecs_type_info_t*);
+
+    v.r->with = prev_with;
+    v.r->with_type_info = prev_with_type_info;
     v.r->using = prev_using;
     flecs_script_eval_visit_fini(&v, &desc);
 }
@@ -61251,7 +61257,8 @@ int flecs_script_eval_entity(
     node->parent = v->entity;
 
     if (v->template_entity) {
-        ecs_add_pair(v->world, node->eval, EcsScriptTemplate, v->template_entity);
+        ecs_add_pair(
+            v->world, node->eval, EcsScriptTemplate, v->template_entity);
     }
 
     if (is_slot) {

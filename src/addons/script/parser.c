@@ -517,19 +517,15 @@ if_stmt: {
 
 // for
 for_stmt: {
-    // for $i
+    // for i
     Parse_2(EcsTokIdentifier, EcsTokKeywordIn, {
-        if (Token(1)[0] != '$') {
-            Error("expected loop variable name");
-        }
-
         Expr(0, {
             ecs_expr_node_t *from = EXPR;
             Parse_1(EcsTokRange, {
                 Expr(0, {
                     ecs_expr_node_t *to = EXPR;
                     ecs_script_for_range_t *stmt = flecs_script_insert_for_range(parser);
-                    stmt->loop_var = &Token(1)[1];
+                    stmt->loop_var = Token(1);
                     stmt->from = from;
                     stmt->to = to;
 

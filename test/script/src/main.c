@@ -338,6 +338,7 @@ void Template_template_w_with_prop(void);
 void Template_fold_const(void);
 void Template_bulk_create_template(void);
 void Template_template_w_expr_w_self_ref(void);
+void Template_entity_w_assign_with_nested_template(void);
 
 // Testsuite 'Error'
 void Error_multi_line_comment_after_newline_before_newline_scope_open(void);
@@ -2125,6 +2126,10 @@ bake_test_case Template_testcases[] = {
     {
         "template_w_expr_w_self_ref",
         Template_template_w_expr_w_self_ref
+    },
+    {
+        "entity_w_assign_with_nested_template",
+        Template_entity_w_assign_with_nested_template
     }
 };
 
@@ -4011,7 +4016,7 @@ static bake_test_suite suites[] = {
         "Template",
         NULL,
         NULL,
-        48,
+        49,
         Template_testcases
     },
     {
