@@ -49090,6 +49090,7 @@ int ecs_meta_set_bool(
         } else {
             result = ecs_os_strdup("false");
         }
+        ecs_os_free(*(ecs_string_t*)ptr);
         set_T(ecs_string_t, ptr, result);
         break;
     }
@@ -49133,6 +49134,7 @@ int ecs_meta_set_char(
     cases_T_signed(ptr, value, ecs_meta_bounds_signed);
     case EcsOpString: {
         char *result = flecs_asprintf("%c", value);
+        ecs_os_free(*(ecs_string_t*)ptr);
         set_T(ecs_string_t, ptr, result);
         break;
     }
@@ -49196,6 +49198,7 @@ int ecs_meta_set_int(
     cases_T_float(ptr, value);
     case EcsOpString: {
         char *result = flecs_asprintf("%"PRId64, value);
+        ecs_os_free(*(ecs_string_t*)ptr);
         set_T(ecs_string_t, ptr, result);
         break;
     }
@@ -49253,6 +49256,7 @@ int ecs_meta_set_uint(
     cases_T_float(ptr, value);
     case EcsOpString: {
         char *result = flecs_asprintf("%"PRIu64, value);
+        ecs_os_free(*(ecs_string_t*)ptr);
         set_T(ecs_string_t, ptr, result);
         break;
     }
@@ -49315,6 +49319,7 @@ int ecs_meta_set_float(
     cases_T_float(ptr, value);
     case EcsOpString: {
         char *result = flecs_asprintf("%f", value);
+        ecs_os_free(*(ecs_string_t*)ptr);
         set_T(ecs_string_t, ptr, result);
         break;
     }
@@ -49710,6 +49715,10 @@ int ecs_meta_set_string_literal(
     ecs_meta_type_op_t *op = flecs_meta_cursor_get_op(scope);
     void *ptr = flecs_meta_cursor_get_ptr(cursor->world, scope);
 
+    if (!value) {
+        return -1;
+    }
+
     ecs_size_t len = ecs_os_strlen(value);
     if (value[0] != '\"' || value[len - 1] != '\"') {
         ecs_err("invalid string literal '%s'", value);
@@ -49787,6 +49796,7 @@ int ecs_meta_set_entity(
         break;
     case EcsOpString: {
         char *result = ecs_get_path(cursor->world, value);
+        ecs_os_free(*(ecs_string_t*)ptr);
         set_T(ecs_string_t, ptr, result);
         break;
     }   
@@ -49848,6 +49858,7 @@ int ecs_meta_set_id(
         break;
     case EcsOpString: {
         char *result = ecs_id_str(cursor->world, value);
+        ecs_os_free(*(ecs_string_t*)ptr);
         set_T(ecs_string_t, ptr, result);
         break;
     }
