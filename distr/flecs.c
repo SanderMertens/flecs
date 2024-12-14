@@ -26762,7 +26762,7 @@ bool flecs_rest_script(
         char *err = flecs_rest_get_captured_log();
         char *escaped_err = flecs_astresc('"', err);
         if (escaped_err) {
-            flecs_reply_error(reply, escaped_err);
+            flecs_reply_error(reply, "%s", escaped_err);
         } else {
             flecs_reply_error(reply, "error parsing script");
         }
@@ -26789,7 +26789,7 @@ void flecs_rest_reply_set_captured_log(
     char *err = flecs_rest_get_captured_log();
     if (err) {
         char *escaped_err = flecs_astresc('"', err);
-        flecs_reply_error(reply, escaped_err);
+        flecs_reply_error(reply, "%s", escaped_err);
         ecs_os_free(escaped_err);
         ecs_os_free(err);
     }
