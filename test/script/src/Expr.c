@@ -193,6 +193,239 @@ void Expr_mod_2_flt_literals(void) {
     ecs_fini(world);
 }
 
+void Expr_add_no_space(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_value_t v = {0};
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_expr_run(world, "10+20", &v, &desc) != NULL);
+    test_assert(v.type == ecs_id(ecs_i64_t));
+    test_assert(v.ptr != NULL);
+    test_uint(*(uint64_t*)v.ptr, 10 + 20);
+    ecs_value_free(world, v.type, v.ptr);
+
+    ecs_fini(world);
+}
+
+void Expr_sub_no_space(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_value_t v = {0};
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_expr_run(world, "20-10", &v, &desc) != NULL);
+    test_assert(v.type == ecs_id(ecs_i64_t));
+    test_assert(v.ptr != NULL);
+    test_uint(*(uint64_t*)v.ptr, 20 - 10);
+    ecs_value_free(world, v.type, v.ptr);
+
+    ecs_fini(world);
+}
+
+void Expr_div_no_space(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_value_t v = {0};
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_expr_run(world, "20/2", &v, &desc) != NULL);
+    test_assert(v.type == ecs_id(ecs_f64_t));
+    test_assert(v.ptr != NULL);
+    test_uint(*(double*)v.ptr, 20 / 2);
+    ecs_value_free(world, v.type, v.ptr);
+
+    ecs_fini(world);
+}
+
+void Expr_mul_no_space(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_value_t v = {0};
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_expr_run(world, "10*2", &v, &desc) != NULL);
+    test_assert(v.type == ecs_id(ecs_i64_t));
+    test_assert(v.ptr != NULL);
+    test_uint(*(uint64_t*)v.ptr, 10 * 2);
+    ecs_value_free(world, v.type, v.ptr);
+
+    ecs_fini(world);
+}
+
+
+void Expr_add_no_space_var(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+    ecs_script_var_t *var = ecs_script_vars_define(
+        vars, "foo", ecs_i64_t);
+    *(int32_t*)var->value.ptr = 20;
+
+    ecs_expr_eval_desc_t desc = { .vars = vars, .disable_folding = disable_folding };
+
+    ecs_value_t v = {0};
+    test_assert(ecs_expr_run(world, "10+$foo", &v, &desc) != NULL);
+    test_assert(v.type == ecs_id(ecs_i64_t));
+    test_assert(v.ptr != NULL);
+    test_uint(*(int64_t*)v.ptr, 10 + 20);
+    ecs_value_free(world, v.type, v.ptr);
+
+    ecs_script_vars_fini(vars);
+
+    ecs_fini(world);
+}
+
+void Expr_sub_no_space_var(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+    ecs_script_var_t *var = ecs_script_vars_define(
+        vars, "foo", ecs_i64_t);
+    *(int32_t*)var->value.ptr = 10;
+
+    ecs_expr_eval_desc_t desc = { .vars = vars, .disable_folding = disable_folding };
+
+    ecs_value_t v = {0};
+    test_assert(ecs_expr_run(world, "20-$foo", &v, &desc) != NULL);
+    test_assert(v.type == ecs_id(ecs_i64_t));
+    test_assert(v.ptr != NULL);
+    test_uint(*(int64_t*)v.ptr, 20 - 10);
+    ecs_value_free(world, v.type, v.ptr);
+
+    ecs_script_vars_fini(vars);
+
+    ecs_fini(world);
+}
+
+void Expr_div_no_space_var(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+    ecs_script_var_t *var = ecs_script_vars_define(
+        vars, "foo", ecs_i64_t);
+    *(int32_t*)var->value.ptr = 2;
+
+    ecs_expr_eval_desc_t desc = { .vars = vars, .disable_folding = disable_folding };
+
+    ecs_value_t v = {0};
+    test_assert(ecs_expr_run(world, "20/$foo", &v, &desc) != NULL);
+    test_assert(v.type == ecs_id(ecs_f64_t));
+    test_assert(v.ptr != NULL);
+    test_uint(*(double*)v.ptr, 20 / 2);
+    ecs_value_free(world, v.type, v.ptr);
+
+    ecs_script_vars_fini(vars);
+
+    ecs_fini(world);
+}
+
+void Expr_mul_no_space_var(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+    ecs_script_var_t *var = ecs_script_vars_define(
+        vars, "foo", ecs_i64_t);
+    *(int32_t*)var->value.ptr = 2;
+
+    ecs_expr_eval_desc_t desc = { .vars = vars, .disable_folding = disable_folding };
+
+    ecs_value_t v = {0};
+    test_assert(ecs_expr_run(world, "10*$foo", &v, &desc) != NULL);
+    test_assert(v.type == ecs_id(ecs_i64_t));
+    test_assert(v.ptr != NULL);
+    test_uint(*(int64_t*)v.ptr, 10 * 2);
+    ecs_value_free(world, v.type, v.ptr);
+
+    ecs_script_vars_fini(vars);
+
+    ecs_fini(world);
+}
+
+void Expr_add_no_space_var_reverse(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+    ecs_script_var_t *var = ecs_script_vars_define(
+        vars, "foo", ecs_i64_t);
+    *(int32_t*)var->value.ptr = 20;
+
+    ecs_expr_eval_desc_t desc = { .vars = vars, .disable_folding = disable_folding };
+
+    ecs_value_t v = {0};
+    test_assert(ecs_expr_run(world, "$foo+10", &v, &desc) != NULL);
+    test_assert(v.type == ecs_id(ecs_i64_t));
+    test_assert(v.ptr != NULL);
+    test_uint(*(int64_t*)v.ptr, 10 + 20);
+    ecs_value_free(world, v.type, v.ptr);
+
+    ecs_script_vars_fini(vars);
+
+    ecs_fini(world);
+}
+
+void Expr_sub_no_space_var_reverse(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+    ecs_script_var_t *var = ecs_script_vars_define(
+        vars, "foo", ecs_i64_t);
+    *(int32_t*)var->value.ptr = 20;
+
+    ecs_expr_eval_desc_t desc = { .vars = vars, .disable_folding = disable_folding };
+
+    ecs_value_t v = {0};
+    test_assert(ecs_expr_run(world, "$foo-10", &v, &desc) != NULL);
+    test_assert(v.type == ecs_id(ecs_i64_t));
+    test_assert(v.ptr != NULL);
+    test_uint(*(int64_t*)v.ptr, 20 - 10);
+    ecs_value_free(world, v.type, v.ptr);
+
+    ecs_script_vars_fini(vars);
+
+    ecs_fini(world);
+}
+
+void Expr_div_no_space_var_reverse(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+    ecs_script_var_t *var = ecs_script_vars_define(
+        vars, "foo", ecs_i64_t);
+    *(int32_t*)var->value.ptr = 20;
+
+    ecs_expr_eval_desc_t desc = { .vars = vars, .disable_folding = disable_folding };
+
+    ecs_value_t v = {0};
+    test_assert(ecs_expr_run(world, "$foo/2", &v, &desc) != NULL);
+    test_assert(v.type == ecs_id(ecs_f64_t));
+    test_assert(v.ptr != NULL);
+    test_uint(*(double*)v.ptr, 20 / 2);
+    ecs_value_free(world, v.type, v.ptr);
+
+    ecs_script_vars_fini(vars);
+
+    ecs_fini(world);
+}
+
+void Expr_mul_no_space_var_reverse(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+    ecs_script_var_t *var = ecs_script_vars_define(
+        vars, "foo", ecs_i64_t);
+    *(int32_t*)var->value.ptr = 10;
+
+    ecs_expr_eval_desc_t desc = { .vars = vars, .disable_folding = disable_folding };
+
+    ecs_value_t v = {0};
+    test_assert(ecs_expr_run(world, "$foo*2", &v, &desc) != NULL);
+    test_assert(v.type == ecs_id(ecs_i64_t));
+    test_assert(v.ptr != NULL);
+    test_uint(*(int64_t*)v.ptr, 10 * 2);
+    ecs_value_free(world, v.type, v.ptr);
+
+    ecs_script_vars_fini(vars);
+
+    ecs_fini(world);
+}
+
 void Expr_div_by_0(void) {
     ecs_world_t *world = ecs_init();
 

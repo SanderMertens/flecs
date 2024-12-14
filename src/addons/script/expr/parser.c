@@ -214,6 +214,13 @@ const char* flecs_script_parse_rhs(
         last_pos = pos;
 
         LookAhead(
+            case EcsTokNumber:
+                if (pos[0] == '-') {
+                    lookahead = &pos[1];
+                    lookahead_token.kind = EcsTokSub;
+                } else {
+                    Error("unexpected number");
+                }
             case EcsTokAdd:
             case EcsTokSub:
             case EcsTokMul:

@@ -438,6 +438,18 @@ void Expr_mul_3_int_literals(void);
 void Expr_div_3_int_literals(void);
 void Expr_mod_2_int_literals(void);
 void Expr_mod_2_flt_literals(void);
+void Expr_add_no_space(void);
+void Expr_sub_no_space(void);
+void Expr_div_no_space(void);
+void Expr_mul_no_space(void);
+void Expr_add_no_space_var(void);
+void Expr_sub_no_space_var(void);
+void Expr_div_no_space_var(void);
+void Expr_mul_no_space_var(void);
+void Expr_add_no_space_var_reverse(void);
+void Expr_sub_no_space_var_reverse(void);
+void Expr_div_no_space_var_reverse(void);
+void Expr_mul_no_space_var_reverse(void);
 void Expr_div_by_0(void);
 void Expr_div_by_0_var(void);
 void Expr_mod_by_0(void);
@@ -2515,6 +2527,54 @@ bake_test_case Expr_testcases[] = {
         Expr_mod_2_flt_literals
     },
     {
+        "add_no_space",
+        Expr_add_no_space
+    },
+    {
+        "sub_no_space",
+        Expr_sub_no_space
+    },
+    {
+        "div_no_space",
+        Expr_div_no_space
+    },
+    {
+        "mul_no_space",
+        Expr_mul_no_space
+    },
+    {
+        "add_no_space_var",
+        Expr_add_no_space_var
+    },
+    {
+        "sub_no_space_var",
+        Expr_sub_no_space_var
+    },
+    {
+        "div_no_space_var",
+        Expr_div_no_space_var
+    },
+    {
+        "mul_no_space_var",
+        Expr_mul_no_space_var
+    },
+    {
+        "add_no_space_var_reverse",
+        Expr_add_no_space_var_reverse
+    },
+    {
+        "sub_no_space_var_reverse",
+        Expr_sub_no_space_var_reverse
+    },
+    {
+        "div_no_space_var_reverse",
+        Expr_div_no_space_var_reverse
+    },
+    {
+        "mul_no_space_var_reverse",
+        Expr_mul_no_space_var_reverse
+    },
+    {
         "div_by_0",
         Expr_div_by_0
     },
@@ -4035,7 +4095,7 @@ static bake_test_suite suites[] = {
         "Expr",
         Expr_setup,
         NULL,
-        212,
+        224,
         Expr_testcases,
         1,
         Expr_params

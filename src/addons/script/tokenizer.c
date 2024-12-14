@@ -221,6 +221,7 @@ const char* flecs_script_identifier(
     ecs_assert(flecs_script_is_identifier(pos[0]), ECS_INTERNAL_ERROR, NULL);
     bool is_var = pos[0] == '$';
     char *outpos = NULL;
+    const char *start = pos;
     if (parser) {
         outpos = parser->token_cur;
         if (parser->merge_variable_members) {
@@ -230,8 +231,7 @@ const char* flecs_script_identifier(
 
     do {
         char c = pos[0];
-        bool is_ident = flecs_script_is_identifier(c) || 
-            isdigit(c) || (c == '*');
+        bool is_ident = flecs_script_is_identifier(c) || isdigit(c);
 
         if (!is_var) {
             is_ident = is_ident || (c == '.');
@@ -240,6 +240,13 @@ const char* flecs_script_identifier(
         /* Retain \. for name lookup operation */
         if (!is_ident && c == '\\' && pos[1] == '.') {
             is_ident = true;
+        }
+
+        /* Retain .* for using wildcard expressions */
+        if (!is_ident && c == '*') {
+            if (pos != start && pos[-1] == '.') {
+                is_ident = true;
+            }
         }
 
         if (!is_ident) {
