@@ -425,7 +425,9 @@
                 "component_in_with_var_scope",
                 "component_in_with_in_template",
                 "reload_script_w_component_w_error",
-                "reload_script_w_component_w_error_again"
+                "reload_script_w_component_w_error_again",
+                "initializer_w_int_to_struct",
+                "script_initializer_w_int_to_struct"
             ]
         }, {
             "id": "Expr",

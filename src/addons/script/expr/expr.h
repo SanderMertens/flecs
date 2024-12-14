@@ -60,6 +60,12 @@ char* flecs_string_escape(
 bool flecs_value_is_0(
     const ecs_value_t *value);
 
+bool flecs_expr_is_type_integer(
+    ecs_entity_t type);
+
+bool flecs_expr_is_type_number(
+    ecs_entity_t type);
+
 #define ECS_VALUE_GET(value, T) (*(T*)(value)->ptr)
 
 #define ECS_BOP(left, right, result, op, R, T)\

@@ -219,11 +219,93 @@ ecs_expr_element_t* flecs_expr_element(
     return result;
 }
 
+static
+bool flecs_expr_explicit_cast_allowed(
+    ecs_world_t *world,
+    ecs_entity_t from,
+    ecs_entity_t to)
+{
+    if (from == to) {
+        return true;
+    }
+
+    const EcsType *from_type = ecs_get(world, from, EcsType);
+    const EcsType *to_type = ecs_get(world, to, EcsType);
+    ecs_assert(from_type != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_assert(to_type != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    /* Treat opaque types asthe types that they're pretending to be*/
+    if (from_type->kind == EcsOpaqueType) {
+        const EcsOpaque *o = ecs_get(world, from, EcsOpaque);
+        ecs_assert(o != NULL, ECS_INTERNAL_ERROR, NULL);
+        from_type = ecs_get(world, o->as_type, EcsType);
+        ecs_assert(from_type != NULL, ECS_INTERNAL_ERROR, NULL);
+    }
+    if (to_type->kind == EcsOpaqueType) {
+        const EcsOpaque *o = ecs_get(world, to, EcsOpaque);
+        ecs_assert(o != NULL, ECS_INTERNAL_ERROR, NULL);
+        to_type = ecs_get(world, o->as_type, EcsType);
+        ecs_assert(to_type != NULL, ECS_INTERNAL_ERROR, NULL);
+    }
+
+    if (from_type->kind != EcsPrimitiveType || 
+        to_type->kind != EcsPrimitiveType) 
+    {
+        if (from_type->kind == EcsEnumType || 
+            from_type->kind == EcsBitmaskType)
+        {
+            if (flecs_expr_is_type_integer(to)) {
+                /* Can cast enums/bitmasks to integers */
+                return true;
+            }
+        }
+
+        if (flecs_expr_is_type_integer(from)) {
+            if (to_type->kind == EcsEnumType || 
+                to_type->kind == EcsBitmaskType)
+            {
+                /* Can integers to enums/bitmasks */
+                return true;
+            }
+        }
+
+        /* Cannot cast complex types that are not the same */
+        return false;
+    }
+
+    /* Anything can be casted to a number */
+    if (flecs_expr_is_type_number(to)) {
+        return true;
+    }
+
+    /* Anything can be casted to a number */
+    if (to == ecs_id(ecs_string_t)) {
+        return true;
+    }
+
+    // const EcsPrimitive *from_ptype = ecs_get(world, from, EcsPrimitive);
+    // const EcsPrimitive *to_ptype = ecs_get(world, to, EcsPrimitive);
+    // ecs_assert(from_ptype != NULL, ECS_INTERNAL_ERROR, NULL);
+    // ecs_assert(to_ptype != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    return true;
+}
+
 ecs_expr_cast_t* flecs_expr_cast(
     ecs_script_t *script,
     ecs_expr_node_t *expr,
     ecs_entity_t type)
 {
+    if (!flecs_expr_explicit_cast_allowed(script->world, expr->type, type)) {
+        char *from = ecs_id_str(script->world, expr->type);
+        char *to = ecs_id_str(script->world, type);
+        flecs_expr_visit_error(script, expr, "invalid cast from %s to %s", 
+            from, to);
+        ecs_os_free(from);
+        ecs_os_free(to);
+        return NULL;
+    }
+
     ecs_allocator_t *a = &((ecs_script_impl_t*)script)->allocator;
     ecs_expr_cast_t *result = flecs_calloc_t(a, ecs_expr_cast_t);
     result->node.kind = EcsExprCast;

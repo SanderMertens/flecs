@@ -1648,3 +1648,52 @@ void Error_template_w_invalid_var_in_expr(void) {
 
     ecs_fini(world);
 }
+
+void Error_initializer_w_int_to_struct(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "Position"}),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    Position v = {0};
+    ecs_log_set_level(-4);
+    test_assert(NULL == ecs_expr_run(world, "10", 
+        &ecs_value_ptr(Position, &v), NULL));
+
+    ecs_fini(world);
+}
+
+void Error_script_initializer_w_int_to_struct(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "Position"}),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "Line"}),
+        .members = {
+            {"start", ecs_id(Position)},
+            {"stop", ecs_id(Position)}
+        }
+    });
+
+    const char *expr =
+    HEAD "e {"
+    LINE "  Line: {10}"
+    LINE "}";
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr) != 0);
+
+    ecs_fini(world);
+}

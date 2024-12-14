@@ -15,7 +15,6 @@ int flecs_expr_visit_type_priv(
     ecs_meta_cursor_t *cur,
     const ecs_expr_eval_desc_t *desc);
 
-static
 bool flecs_expr_is_type_integer(
     ecs_entity_t type)
 {
@@ -30,7 +29,6 @@ bool flecs_expr_is_type_integer(
     else return false;
 }
 
-static
 bool flecs_expr_is_type_number(
     ecs_entity_t type)
 {
@@ -618,6 +616,9 @@ int flecs_expr_interpolated_string_visit_type(
             if (result->type != ecs_id(ecs_string_t)) {
                 result = (ecs_expr_node_t*)flecs_expr_cast(script, 
                     (ecs_expr_node_t*)result, ecs_id(ecs_string_t));
+                if (!result) {
+                    goto error;
+                }
             }
 
             ecs_vec_append_t(&((ecs_script_impl_t*)script)->allocator, 
@@ -735,6 +736,9 @@ int flecs_expr_initializer_visit_type(
         if (elem->value->type != elem_type) {
             elem->value = (ecs_expr_node_t*)flecs_expr_cast(
                 script, elem->value, elem_type);
+            if (!elem->value) {
+                goto error;
+            }
         }
 
         if (!is_opaque) {
@@ -770,6 +774,9 @@ int flecs_expr_unary_visit_type(
     if (node->expr->type != ecs_id(ecs_bool_t)) {
         node->expr = (ecs_expr_node_t*)flecs_expr_cast(
             script, node->expr, ecs_id(ecs_bool_t));
+        if (!node->expr) {
+            goto error;
+        }
     }
 
     return 0;
@@ -825,11 +832,17 @@ int flecs_expr_binary_visit_type(
     if (operand_type != node->left->type) {
         node->left = (ecs_expr_node_t*)flecs_expr_cast(
             script, node->left, operand_type);
+        if (!node->left) {
+            goto error;
+        }
     }
 
     if (operand_type != node->right->type) {
         node->right = (ecs_expr_node_t*)flecs_expr_cast(
             script, node->right, operand_type);
+        if (!node->right) {
+            goto error;
+        }
     }
 
     node->node.type = result_type;
@@ -992,6 +1005,9 @@ int flecs_expr_arguments_visit_type(
         if (elem->value->type != params[i].type) {
             elem->value = (ecs_expr_node_t*)flecs_expr_cast(
                 script, elem->value, params[i].type);
+            if (!elem->value) {
+                goto error;
+            }
         }
     }
 

@@ -418,6 +418,8 @@ void Error_component_in_with_var_scope(void);
 void Error_component_in_with_in_template(void);
 void Error_reload_script_w_component_w_error(void);
 void Error_reload_script_w_component_w_error_again(void);
+void Error_initializer_w_int_to_struct(void);
+void Error_script_initializer_w_int_to_struct(void);
 
 // Testsuite 'Expr'
 void Expr_setup(void);
@@ -2437,6 +2439,14 @@ bake_test_case Error_testcases[] = {
     {
         "reload_script_w_component_w_error_again",
         Error_reload_script_w_component_w_error_again
+    },
+    {
+        "initializer_w_int_to_struct",
+        Error_initializer_w_int_to_struct
+    },
+    {
+        "script_initializer_w_int_to_struct",
+        Error_script_initializer_w_int_to_struct
     }
 };
 
@@ -4003,7 +4013,7 @@ static bake_test_suite suites[] = {
         "Error",
         NULL,
         NULL,
-        79,
+        81,
         Error_testcases
     },
     {
