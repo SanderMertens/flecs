@@ -205,7 +205,10 @@
                 "entity_w_parent_w_add",
                 "entity_w_parent_w_add_w_parent",
                 "entity_w_parent_w_set",
-                "entity_w_parent_w_set_w_parent"
+                "entity_w_parent_w_set_w_parent",
+                "entity_w_new_id_and_double_dot",
+                "entity_w_existing_id_and_double_dot",
+                "entity_w_large_id_name"
             ]
         }, {
             "id": "Each",

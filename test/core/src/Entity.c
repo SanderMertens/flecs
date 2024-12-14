@@ -3081,3 +3081,43 @@ void Entity_entity_w_parent_w_set_w_parent(void) {
 
     ecs_fini(world);
 }
+
+void Entity_entity_w_new_id_and_double_dot(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t e = ecs_entity(world, {
+        .name = "#400..bar"
+    });
+
+    test_assert(e != 0);
+
+    ecs_fini(world);
+}
+
+void Entity_entity_w_existing_id_and_double_dot(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t e = ecs_entity(world, {
+        .name = "#10..bar"
+    });
+
+    test_assert(e != 0);
+
+    ecs_fini(world);
+}
+
+void Entity_entity_w_large_id_name(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t e = ecs_entity(world, {
+        .name = "#44444444444444444444a"
+    });
+
+    test_assert(e == 0);
+    
+    ecs_entity_t f = ecs_new(world);
+
+    test_assert(f != 0);
+
+    ecs_fini(world);
+}

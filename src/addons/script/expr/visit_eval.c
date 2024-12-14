@@ -293,6 +293,8 @@ int flecs_expr_identifier_visit_eval(
     if (node->expr) {
         return flecs_expr_visit_eval_priv(ctx, node->expr, out);
     } else {
+        ecs_assert(ctx->desc != NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(ctx->desc->lookup_action != NULL, ECS_INTERNAL_ERROR, NULL);
         ecs_entity_t e = ctx->desc->lookup_action(
             ctx->world, node->value, ctx->desc->lookup_ctx);
         if (!e) {

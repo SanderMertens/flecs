@@ -7377,7 +7377,12 @@ int flecs_traverse_add(
 
     /* If a name is provided but not yet assigned, add the Name component */
     if (name && !name_assigned) {
-        ecs_add_path_w_sep(world, result, scope, name, sep, root_sep);
+        if (!ecs_add_path_w_sep(world, result, scope, name, sep, root_sep)) {
+            if (name[0] == '#') {
+                /* Numerical ids should always return, unless it's invalid */
+                goto error;
+            }
+        }
     } else if (new_entity && scope) {
         ecs_add_pair(world, result, EcsChildOf, scope);
     }
@@ -11104,7 +11109,11 @@ ecs_entity_t flecs_name_to_id(
 {
     ecs_assert(name != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(name[0] == '#', ECS_INVALID_PARAMETER, NULL);
-    return flecs_ito(uint64_t, atoll(name + 1));
+    ecs_entity_t res = flecs_ito(uint64_t, atoll(name + 1));
+    if (res >= UINT32_MAX) {
+        return 0; /* Invalid id */
+    }
+    return res;
 }
 
 static
@@ -11178,7 +11187,7 @@ const char* flecs_path_elem(
         }
 
         if (buffer) {
-            if (pos == (size - 1)) {
+            if (pos >= (size - 1)) {
                 if (size == ECS_NAME_BUFFER_LENGTH) { /* stack buffer */
                     char *new_buffer = ecs_os_malloc(size * 2 + 1);
                     ecs_os_memcpy(new_buffer, buffer, size);
@@ -11201,7 +11210,7 @@ const char* flecs_path_elem(
         *size_out = size;
     }
 
-    if (pos) {
+    if (pos || ptr[0]) {
         return ptr;
     } else {
         return NULL;
@@ -11229,8 +11238,11 @@ ecs_entity_t flecs_get_parent_from_path(
     const char **path_ptr,
     const char *sep,
     const char *prefix,
-    bool new_entity)
+    bool new_entity,
+    bool *error)
 {
+    ecs_assert(error != NULL, ECS_INTERNAL_ERROR, NULL);
+
     bool start_from_root = false;
     const char *path = *path_ptr;
 
@@ -11242,6 +11254,10 @@ ecs_entity_t flecs_get_parent_from_path(
 
     if (path[0] == '#') {
         parent = flecs_name_to_id(path);
+        if (!parent && ecs_os_strncmp(path, "#0", 2)) {
+            *error = true;
+            return 0;
+        }
 
         path ++;
         while (path[0] && isdigit(path[0])) {
@@ -11451,8 +11467,12 @@ ecs_entity_t ecs_lookup_path_w_sep(
         sep = ".";
     }
 
+    bool error = false;
     parent = flecs_get_parent_from_path(
-        stage, parent, &path, sep, prefix, true);
+        stage, parent, &path, sep, prefix, true, &error);
+    if (error) {
+        return 0;
+    }
 
     if (parent && !(parent = ecs_get_alive(world, parent))) {
         return 0;
@@ -11630,8 +11650,13 @@ ecs_entity_t ecs_add_path_w_sep(
     }
 
     bool root_path = flecs_is_root_path(path, prefix);
+    bool error = false;
     parent = flecs_get_parent_from_path(
-        world, parent, &path, sep, prefix, !entity);
+        world, parent, &path, sep, prefix, !entity, &error);
+    if (error) {
+        /* Invalid id */
+        return 0;
+    }
 
     char buff[ECS_NAME_BUFFER_LENGTH];
     const char *ptr = path;
@@ -13816,7 +13841,8 @@ void flecs_emit_forward_up(
     ecs_table_t *table,
     ecs_id_record_t *idr,
     ecs_vec_t *stack,
-    ecs_vec_t *reachable_ids);
+    ecs_vec_t *reachable_ids,
+    int32_t depth);
 
 static
 void flecs_emit_forward_id(
@@ -14055,7 +14081,8 @@ void flecs_emit_forward_table_up(
     ecs_record_t *tgt_record,
     ecs_id_record_t *tgt_idr,
     ecs_vec_t *stack,
-    ecs_vec_t *reachable_ids)
+    ecs_vec_t *reachable_ids,
+    int32_t depth)
 {
     ecs_allocator_t *a = &world->allocator;
     int32_t i, id_count = tgt_table->type.count;
@@ -14092,6 +14119,13 @@ void flecs_emit_forward_table_up(
             continue;
         }
 
+        if (idr == tgt_idr) {
+            char *idstr = ecs_id_str(world, idr->id);
+            ecs_assert(idr != tgt_idr, ECS_CYCLE_DETECTED, idstr);
+            ecs_os_free(idstr);
+            return;
+        }
+
         /* Id has the same relationship, traverse to find ids for forwarding */
         if (ECS_PAIR_FIRST(id) == trav || ECS_PAIR_FIRST(id) == EcsIsA) {
             ecs_table_t **t = ecs_vec_append_t(&world->allocator, stack, 
@@ -14116,7 +14150,7 @@ void flecs_emit_forward_table_up(
                 /* Cache is dirty, traverse upwards */
                 do {
                     flecs_emit_forward_up(world, er, er_onset, emit_ids, it, 
-                        table, idr, stack, reachable_ids);
+                        table, idr, stack, reachable_ids, depth);
                     if (++i >= id_count) {
                         break;
                     }
@@ -14198,8 +14232,16 @@ void flecs_emit_forward_up(
     ecs_table_t *table,
     ecs_id_record_t *idr,
     ecs_vec_t *stack,
-    ecs_vec_t *reachable_ids)
+    ecs_vec_t *reachable_ids,
+    int32_t depth)
 {
+    if (depth >= FLECS_DAG_DEPTH_MAX) {
+        char *idstr = ecs_id_str(world, idr->id);
+        ecs_assert(depth < FLECS_DAG_DEPTH_MAX, ECS_CYCLE_DETECTED, idstr);
+        ecs_os_free(idstr);
+        return;
+    }
+
     ecs_id_t id = idr->id;
     ecs_entity_t tgt = ECS_PAIR_SECOND(id);
     tgt = flecs_entities_get_alive(world, tgt);
@@ -14211,7 +14253,7 @@ void flecs_emit_forward_up(
     }
 
     flecs_emit_forward_table_up(world, er, er_onset, emit_ids, it, table, 
-        tgt, tgt_table, tgt_record, idr, stack, reachable_ids);
+        tgt, tgt_table, tgt_record, idr, stack, reachable_ids, depth + 1);
 }
 
 static
@@ -14239,7 +14281,7 @@ void flecs_emit_forward(
         ecs_vec_init_t(&world->allocator, &stack, ecs_table_t*, 0);
         ecs_vec_reset_t(&world->allocator, &rc->ids, ecs_reachable_elem_t);
         flecs_emit_forward_up(world, er, er_onset, emit_ids, it, table, 
-            idr, &stack, &rc->ids);
+            idr, &stack, &rc->ids, 0);
         it->sources[0] = 0;
         ecs_vec_fini_t(&world->allocator, &stack, ecs_table_t*);
 
@@ -76656,6 +76698,8 @@ int flecs_expr_identifier_visit_eval(
     if (node->expr) {
         return flecs_expr_visit_eval_priv(ctx, node->expr, out);
     } else {
+        ecs_assert(ctx->desc != NULL, ECS_INTERNAL_ERROR, NULL);
+        ecs_assert(ctx->desc->lookup_action != NULL, ECS_INTERNAL_ERROR, NULL);
         ecs_entity_t e = ctx->desc->lookup_action(
             ctx->world, node->value, ctx->desc->lookup_ctx);
         if (!e) {

@@ -828,6 +828,22 @@ void Deserialize_opaque_struct_w_member(void);
 void Deserialize_opaque_struct_w_member_reverse(void);
 void Deserialize_struct_w_opaque_member(void);
 
+// Testsuite 'Fuzzing'
+void Fuzzing_1(void);
+void Fuzzing_2(void);
+void Fuzzing_3(void);
+void Fuzzing_4(void);
+void Fuzzing_5(void);
+void Fuzzing_6(void);
+void Fuzzing_7(void);
+void Fuzzing_8(void);
+void Fuzzing_9(void);
+void Fuzzing_10(void);
+void Fuzzing_11(void);
+void Fuzzing_12(void);
+void Fuzzing_13(void);
+void Fuzzing_14(void);
+
 bake_test_case Eval_testcases[] = {
     {
         "null",
@@ -4060,6 +4076,65 @@ bake_test_case Deserialize_testcases[] = {
     }
 };
 
+bake_test_case Fuzzing_testcases[] = {
+    {
+        "1",
+        Fuzzing_1
+    },
+    {
+        "2",
+        Fuzzing_2
+    },
+    {
+        "3",
+        Fuzzing_3
+    },
+    {
+        "4",
+        Fuzzing_4
+    },
+    {
+        "5",
+        Fuzzing_5
+    },
+    {
+        "6",
+        Fuzzing_6
+    },
+    {
+        "7",
+        Fuzzing_7
+    },
+    {
+        "8",
+        Fuzzing_8
+    },
+    {
+        "9",
+        Fuzzing_9
+    },
+    {
+        "10",
+        Fuzzing_10
+    },
+    {
+        "11",
+        Fuzzing_11
+    },
+    {
+        "12",
+        Fuzzing_12
+    },
+    {
+        "13",
+        Fuzzing_13
+    },
+    {
+        "14",
+        Fuzzing_14
+    }
+};
+
 const char* Expr_folding_param[] = {"enabled", "disabled"};
 bake_test_param Expr_params[] = {
     {"folding", (char**)Expr_folding_param, 2}
@@ -4129,9 +4204,16 @@ static bake_test_suite suites[] = {
         Deserialize_testcases,
         1,
         Deserialize_params
+    },
+    {
+        "Fuzzing",
+        NULL,
+        NULL,
+        14,
+        Fuzzing_testcases
     }
 };
 
 int main(int argc, char *argv[]) {
-    return bake_test_run("script", argc, argv, suites, 8);
+    return bake_test_run("script", argc, argv, suites, 9);
 }

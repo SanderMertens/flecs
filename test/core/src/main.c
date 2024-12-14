@@ -199,6 +199,9 @@ void Entity_entity_w_parent_w_add(void);
 void Entity_entity_w_parent_w_add_w_parent(void);
 void Entity_entity_w_parent_w_set(void);
 void Entity_entity_w_parent_w_set_w_parent(void);
+void Entity_entity_w_new_id_and_double_dot(void);
+void Entity_entity_w_existing_id_and_double_dot(void);
+void Entity_entity_w_large_id_name(void);
 
 // Testsuite 'Each'
 void Each_each_tag(void);
@@ -3087,6 +3090,18 @@ bake_test_case Entity_testcases[] = {
     {
         "entity_w_parent_w_set_w_parent",
         Entity_entity_w_parent_w_set_w_parent
+    },
+    {
+        "entity_w_new_id_and_double_dot",
+        Entity_entity_w_new_id_and_double_dot
+    },
+    {
+        "entity_w_existing_id_and_double_dot",
+        Entity_entity_w_existing_id_and_double_dot
+    },
+    {
+        "entity_w_large_id_name",
+        Entity_entity_w_large_id_name
     }
 };
 
@@ -11351,7 +11366,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        141,
+        144,
         Entity_testcases
     },
     {

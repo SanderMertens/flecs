@@ -1753,7 +1753,12 @@ int flecs_traverse_add(
 
     /* If a name is provided but not yet assigned, add the Name component */
     if (name && !name_assigned) {
-        ecs_add_path_w_sep(world, result, scope, name, sep, root_sep);
+        if (!ecs_add_path_w_sep(world, result, scope, name, sep, root_sep)) {
+            if (name[0] == '#') {
+                /* Numerical ids should always return, unless it's invalid */
+                goto error;
+            }
+        }
     } else if (new_entity && scope) {
         ecs_add_pair(world, result, EcsChildOf, scope);
     }
