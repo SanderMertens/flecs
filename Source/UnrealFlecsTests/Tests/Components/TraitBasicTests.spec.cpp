@@ -89,18 +89,16 @@ void FTraitBasicTestsSpec::Define()
 			Entity.Add<FTestComponent>();
 			Entity.AddTrait<FTestComponent, FTestTrait>();
 
-			bool bFound = false;
-
 			Fixture.FlecsWorld->Progress();
 
-			flecs::query<> query = Fixture.FlecsWorld->World.query_builder<>()
+			const flecs::query<> query = Fixture.FlecsWorld->World.query_builder<>()
 				.with<FTestComponent>()
 				.begin_scope_traits()
 					.with<FTestTrait>()
 				.end_scope_traits()
 				.build();
 
-			bFound = query.is_true();
+			const bool bFound = query.is_true();
 			
 			TestTrue("Trait should be found", bFound);
 		});
@@ -112,11 +110,9 @@ void FTraitBasicTestsSpec::Define()
 			Entity.AddTrait<FTestComponent, FTestTrait>();
 			Entity.AddTrait<FTestComponent, FTestTrait2>();
 
-			bool bFound = false;
-
 			Fixture.FlecsWorld->Progress();
 
-			flecs::query<> query = Fixture.FlecsWorld->World.query_builder<>()
+			const flecs::query<> query = Fixture.FlecsWorld->World.query_builder<>()
 				.with<FTestComponent>()
 				.begin_scope_traits()
 					.with<FTestTrait>()
@@ -124,7 +120,7 @@ void FTraitBasicTestsSpec::Define()
 				.end_scope_traits()
 				.build();
 
-			bFound = query.is_true();
+			const bool bFound = query.is_true();
 			
 			TestTrue("Traits should be found", bFound);
 		});
@@ -135,17 +131,15 @@ void FTraitBasicTestsSpec::Define()
 			Entity.Add<FTestComponent>();
 			Entity.AddTrait<FTestComponent, FTestTrait>();
 
-			bool bFound = false;
-
 			Fixture.FlecsWorld->Progress();
 
-			flecs::query<> query = Fixture.FlecsWorld->World.query_builder<FTestComponent>()
+			const flecs::query<> query = Fixture.FlecsWorld->World.query_builder<FTestComponent>()
 				.begin_scope_traits<FTestComponent>()
 					.with<FTestTrait>()
 				.end_scope_traits()
 				.build();
 
-			bFound = query.is_true();
+			const bool bFound = query.is_true();
 			
 			TestTrue("Trait should be found", bFound);
 		});
@@ -158,17 +152,15 @@ void FTraitBasicTestsSpec::Define()
 			Entity.AddTrait<FTestComponent, FTestTrait>();
 			Entity.AddTrait<FTestComponent, FTestTrait2>();
 
-			bool bFound = false;
-
 			Fixture.FlecsWorld->Progress();
 
-			flecs::query<> query = Fixture.FlecsWorld->World.query_builder<FTestComponent>()
+			const flecs::query<> query = Fixture.FlecsWorld->World.query_builder<FTestComponent>()
 				.begin_scope_traits()
 					.with<FTestTrait2>()
 				.end_scope_traits()
 				.build();
 
-			bFound = query.is_true();
+			const bool bFound = query.is_true();
 			
 			TestTrue("Traits should be found", bFound);
 		});
@@ -180,18 +172,16 @@ void FTraitBasicTestsSpec::Define()
 				Entity.Add<FTestComponent>();
 				Entity.AddTrait<FTestComponent, FTestTrait>();
 
-				bool bFound = false;
-
 				Fixture.FlecsWorld->Progress();
 
-				flecs::query<> query = Fixture.FlecsWorld->World.query_builder()
+				const flecs::query<> query = Fixture.FlecsWorld->World.query_builder()
 					.with<FTestComponent>()
 					.begin_scope_traits()
 						.with<FTestTrait>()
 					.end_scope_traits()
 					.build();
 
-				bFound = query.is_true();
+				const bool bFound = query.is_true();
 			
 				TestTrue("Traits should be found", bFound);
 		});
@@ -204,17 +194,15 @@ void FTraitBasicTestsSpec::Define()
 			Entity.AddTrait<FTestComponent, FTestTrait>();
 			Entity.AddTrait<FTestComponent, FTestTrait2>();
 
-			bool bFound = false;
-
 			Fixture.FlecsWorld->Progress();
 
-			flecs::query<> query = Fixture.FlecsWorld->World.query_builder<FTestComponent>()
+			const flecs::query<> query = Fixture.FlecsWorld->World.query_builder<FTestComponent>()
 				.begin_scope_traits_index(0)
 					.with<FTestTrait2>()
 				.end_scope_traits()
 				.build();
 
-			bFound = query.is_true();
+			const bool bFound = query.is_true();
 			
 			TestTrue("Traits should be found", bFound);
 		});
@@ -227,18 +215,16 @@ void FTraitBasicTestsSpec::Define()
 			Entity.AddTrait<FTestComponent, FTestTrait>();
 			Entity.AddTrait<FTestComponent2, FTestTrait2>();
 
-			bool bFound = false;
-
 			Fixture.FlecsWorld->Progress();
 
-			flecs::query<> query = Fixture.FlecsWorld->World.query_builder<FTestComponent>()
+			const flecs::query<> query = Fixture.FlecsWorld->World.query_builder<FTestComponent>()
 				.with<FTestComponent2>()
 				.begin_scope_traits_index(1)
 					.with<FTestTrait2>()
 				.end_scope_traits()
 				.build();
 
-			bFound = query.is_true();
+			const bool bFound = query.is_true();
 
 			TestTrue("Traits should be found", bFound);
 		});
