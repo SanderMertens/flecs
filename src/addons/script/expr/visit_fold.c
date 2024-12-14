@@ -92,11 +92,21 @@ int flecs_expr_binary_visit_fold(
     ecs_expr_value_node_t *left = (ecs_expr_value_node_t*)node->left;
     ecs_expr_value_node_t *right = (ecs_expr_value_node_t*)node->right;
 
-    ecs_expr_value_node_t *result = flecs_expr_value_from(
-        script, (ecs_expr_node_t*)node, node->node.type);
-
     ecs_value_t lop = { .type = left->node.type, .ptr = left->ptr };
     ecs_value_t rop = { .type = right->node.type, .ptr = right->ptr };
+
+    /* flecs_value_binary will detect division by 0, but we have more 
+     * information about where it happens here. */
+    if (node->operator == EcsTokDiv || node->operator == EcsTokMod) {
+        if (flecs_value_is_0(&rop)) {
+            flecs_expr_visit_error(script, node, 
+                "invalid division by zero");
+            goto error;
+        }
+    }
+
+    ecs_expr_value_node_t *result = flecs_expr_value_from(
+        script, (ecs_expr_node_t*)node, node->node.type);
     ecs_value_t res = { .type = result->node.type, .ptr = result->ptr };
 
     if (flecs_value_binary(script, &lop, &rop, &res, node->operator)) {
