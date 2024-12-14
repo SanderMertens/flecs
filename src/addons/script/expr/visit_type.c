@@ -875,13 +875,17 @@ int flecs_expr_identifier_visit_type(
     if (type == ecs_id(ecs_entity_t)) {
         result->storage.entity = desc->lookup_action(
             script->world, node->value, desc->lookup_ctx);
+        result->ptr = &result->storage.entity;
         if (!result->storage.entity) {
             flecs_expr_visit_free(script, (ecs_expr_node_t*)result);
-            flecs_expr_visit_error(script, node, 
-                "unresolved identifier '%s'", node->value);
-            goto error;
+            if (!desc->allow_unresolved_identifiers) {
+                flecs_expr_visit_error(script, node, 
+                    "unresolved identifier '%s'", node->value);
+                goto error;
+            }
+
+            result = NULL;
         }
-        result->ptr = &result->storage.entity;
     } else {
         ecs_meta_cursor_t tmp_cur = ecs_meta_cursor(
             script->world, type, &result->storage.u64);

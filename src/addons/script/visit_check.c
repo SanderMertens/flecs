@@ -23,7 +23,8 @@ int flecs_script_check_expr(
         .lookup_ctx = v,
         .vars = v->vars,
         .type = type ? type[0] : 0,
-        .runtime = v->r
+        .runtime = v->r,
+        .allow_unresolved_identifiers = true
     };
 
     ecs_assert(expr->type_info == NULL, ECS_INTERNAL_ERROR, NULL);

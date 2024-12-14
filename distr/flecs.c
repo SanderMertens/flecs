@@ -60276,7 +60276,8 @@ int flecs_script_check_expr(
         .lookup_ctx = v,
         .vars = v->vars,
         .type = type ? type[0] : 0,
-        .runtime = v->r
+        .runtime = v->r,
+        .allow_unresolved_identifiers = true
     };
 
     ecs_assert(expr->type_info == NULL, ECS_INTERNAL_ERROR, NULL);
@@ -76627,7 +76628,25 @@ int flecs_expr_identifier_visit_eval(
     ecs_expr_identifier_t *node,
     ecs_expr_value_t *out)
 {
-    return flecs_expr_visit_eval_priv(ctx, node->expr, out);
+    if (node->expr) {
+        return flecs_expr_visit_eval_priv(ctx, node->expr, out);
+    } else {
+        ecs_entity_t e = ctx->desc->lookup_action(
+            ctx->world, node->value, ctx->desc->lookup_ctx);
+        if (!e) {
+            flecs_expr_visit_error(ctx->script, node, 
+                "unresolved identifier '%s'", node->value);
+            goto error;
+        }
+
+        ecs_assert(out->value.type == ecs_id(ecs_entity_t), 
+            ECS_INTERNAL_ERROR, NULL);
+        *(ecs_entity_t*)out->value.ptr = e;
+    }
+
+    return 0;
+error:
+    return -1;
 }
 
 static
@@ -79112,13 +79131,17 @@ int flecs_expr_identifier_visit_type(
     if (type == ecs_id(ecs_entity_t)) {
         result->storage.entity = desc->lookup_action(
             script->world, node->value, desc->lookup_ctx);
+        result->ptr = &result->storage.entity;
         if (!result->storage.entity) {
             flecs_expr_visit_free(script, (ecs_expr_node_t*)result);
-            flecs_expr_visit_error(script, node, 
-                "unresolved identifier '%s'", node->value);
-            goto error;
+            if (!desc->allow_unresolved_identifiers) {
+                flecs_expr_visit_error(script, node, 
+                    "unresolved identifier '%s'", node->value);
+                goto error;
+            }
+
+            result = NULL;
         }
-        result->ptr = &result->storage.entity;
     } else {
         ecs_meta_cursor_t tmp_cur = ecs_meta_cursor(
             script->world, type, &result->storage.u64);

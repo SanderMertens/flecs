@@ -290,7 +290,25 @@ int flecs_expr_identifier_visit_eval(
     ecs_expr_identifier_t *node,
     ecs_expr_value_t *out)
 {
-    return flecs_expr_visit_eval_priv(ctx, node->expr, out);
+    if (node->expr) {
+        return flecs_expr_visit_eval_priv(ctx, node->expr, out);
+    } else {
+        ecs_entity_t e = ctx->desc->lookup_action(
+            ctx->world, node->value, ctx->desc->lookup_ctx);
+        if (!e) {
+            flecs_expr_visit_error(ctx->script, node, 
+                "unresolved identifier '%s'", node->value);
+            goto error;
+        }
+
+        ecs_assert(out->value.type == ecs_id(ecs_entity_t), 
+            ECS_INTERNAL_ERROR, NULL);
+        *(ecs_entity_t*)out->value.ptr = e;
+    }
+
+    return 0;
+error:
+    return -1;
 }
 
 static

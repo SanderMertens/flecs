@@ -342,7 +342,8 @@
                 "template_w_with_var",
                 "template_w_with_prop",
                 "fold_const",
-                "bulk_create_template"
+                "bulk_create_template",
+                "template_w_expr_w_self_ref"
             ]
         }, {
             "id": "Error",

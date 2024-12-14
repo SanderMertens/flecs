@@ -504,7 +504,14 @@ typedef struct ecs_expr_eval_desc_t {
     void *lookup_ctx;                /**< Context passed to lookup function */
     const ecs_script_vars_t *vars;   /**< Variables accessible in expression */
     ecs_entity_t type;               /**< Type of parsed value (optional) */
-    bool disable_folding;            /**< Disable constant folding (slower evaluation, faster parsing) */
+    
+    /* Disable constant folding (slower evaluation, faster parsing) */
+    bool disable_folding;
+    
+    /* Allow for unresolved identifiers when parsing. Useful when entities can
+     * be created in between parsing & evaluating. */
+    bool allow_unresolved_identifiers;
+
     ecs_script_runtime_t *runtime;   /**< Reusable runtime (optional) */
 } ecs_expr_eval_desc_t;
 

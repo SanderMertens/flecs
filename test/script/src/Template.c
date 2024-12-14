@@ -2440,3 +2440,47 @@ void Template_bulk_create_template(void) {
 
     ecs_fini(world);
 }
+
+void Template_template_w_expr_w_self_ref(void) {
+    ecs_world_t *world = ecs_init();
+
+    typedef struct Ref {
+        ecs_entity_t e;
+    } Ref;
+
+    ECS_COMPONENT(world, Ref);
+
+    ecs_struct(world, {
+        .entity = ecs_id(Ref),
+        .members = {{ .name = "e", .type = ecs_id(ecs_entity_t) }}
+    });
+
+    const char *expr =
+    HEAD "template Foo {"
+    LINE "  a {}"
+    LINE "  b = Ref: {a}"
+    LINE "}"
+    LINE "Foo ent()";
+
+    test_assert(ecs_script_run(world, NULL, expr) == 0);
+
+    ecs_entity_t tree = ecs_lookup(world, "Foo");
+    test_assert(tree != 0);
+
+    ecs_entity_t ent = ecs_lookup(world, "ent");
+    test_assert(ent != 0);
+
+    ecs_entity_t a = ecs_lookup(world, "ent.a");
+    test_assert(a != 0);
+
+    ecs_entity_t b = ecs_lookup(world, "ent.b");
+    test_assert(b != 0);
+
+    {
+        const Ref *r = ecs_get(world, b, Ref);
+        test_assert(r != NULL);
+        test_assert(r->e == a);
+    }
+
+    ecs_fini(world);
+}
