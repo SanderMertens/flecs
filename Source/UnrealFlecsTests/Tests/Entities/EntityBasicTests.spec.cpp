@@ -127,6 +127,28 @@ void FEntityBasicTestsSpec::Define()
 			TestEqual("Entity name should be NewName", EntityHandle.GetName(),
 				TEXT("NewName"));
 		});
+
+		It("Should create a path of entities using the '::' Separator", [this]()
+		{
+			FFlecsEntityHandle ParentEntity = Fixture.FlecsWorld->CreateEntity("Parent");
+			FFlecsEntityHandle ChildEntity1 = Fixture.FlecsWorld->CreateEntity("Child1");
+			ChildEntity1.SetParent(ParentEntity);
+			FFlecsEntityHandle ChildEntity2 = Fixture.FlecsWorld->CreateEntity("Child2");
+			ChildEntity2.SetParent(ChildEntity1);
+			FFlecsEntityHandle ChildEntity3 = Fixture.FlecsWorld->CreateEntity("Child3");
+			ChildEntity3.SetParent(ChildEntity2);
+
+			TestTrue("Parent entity should be valid",
+				Fixture.FlecsWorld->LookupEntity("Parent").IsValid());
+			TestTrue("Child entity 1 should be valid",
+				Fixture.FlecsWorld->LookupEntity("Parent::Child1").IsValid());
+			TestFalse("Child entity 1 should not be valid",
+				Fixture.FlecsWorld->LookupEntity("Child1").IsValid());
+			TestTrue("Child entity 1 should be valid",
+				Fixture.FlecsWorld->LookupEntity("Parent::Child1::Child2").IsValid());
+			TestFalse("Child entity 1 should not be valid",
+				Fixture.FlecsWorld->LookupEntity("Child2").IsValid());
+		});
 	});
 }
 
