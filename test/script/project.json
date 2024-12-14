@@ -407,6 +407,7 @@
                 "template_redeclare_prop_as_const",
                 "template_redeclare_prop_as_prop",
                 "template_redeclare_const_as_const",
+                "template_w_invalid_var_in_expr",
                 "run_template_after_error",
                 "update_template_after_error",
                 "template_in_template",
@@ -656,7 +657,8 @@
                 "binary_f32_var_div_by_int_sub_int",
                 "interpolated_string_var",
                 "interpolated_string_curly_brackets",
-                "interpolated_string_curly_brackets_w_var"
+                "interpolated_string_curly_brackets_w_var",
+                "template_w_foldable_const"
             ]
         }, {
             "id": "Vars",

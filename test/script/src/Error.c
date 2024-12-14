@@ -1623,3 +1623,28 @@ void Error_reload_script_w_component_w_error_again(void) {
 
     ecs_fini(world);
 }
+
+void Error_template_w_invalid_var_in_expr(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "Position"}),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "template Tree {"
+    LINE "  prop height = f32: 10"
+    LINE "  e {"
+    LINE "    Position: {0, $h / 2, 0}"
+    LINE "  }"
+    LINE "}";
+
+    ecs_log_set_level(-4);
+    test_assert(ecs_script_run(world, NULL, expr) != 0);
+
+    ecs_fini(world);
+}

@@ -399,6 +399,7 @@ void Error_template_w_composite_prop_invalid_assignment(void);
 void Error_template_redeclare_prop_as_const(void);
 void Error_template_redeclare_prop_as_prop(void);
 void Error_template_redeclare_const_as_const(void);
+void Error_template_w_invalid_var_in_expr(void);
 void Error_run_template_after_error(void);
 void Error_update_template_after_error(void);
 void Error_template_in_template(void);
@@ -642,6 +643,7 @@ void ExprAst_binary_f32_var_div_by_int_sub_int(void);
 void ExprAst_interpolated_string_var(void);
 void ExprAst_interpolated_string_curly_brackets(void);
 void ExprAst_interpolated_string_curly_brackets_w_var(void);
+void ExprAst_template_w_foldable_const(void);
 
 // Testsuite 'Vars'
 void Vars_declare_1_var(void);
@@ -2361,6 +2363,10 @@ bake_test_case Error_testcases[] = {
         Error_template_redeclare_const_as_const
     },
     {
+        "template_w_invalid_var_in_expr",
+        Error_template_w_invalid_var_in_expr
+    },
+    {
         "run_template_after_error",
         Error_run_template_after_error
     },
@@ -3317,6 +3323,10 @@ bake_test_case ExprAst_testcases[] = {
     {
         "interpolated_string_curly_brackets_w_var",
         ExprAst_interpolated_string_curly_brackets_w_var
+    },
+    {
+        "template_w_foldable_const",
+        ExprAst_template_w_foldable_const
     }
 };
 
@@ -3993,7 +4003,7 @@ static bake_test_suite suites[] = {
         "Error",
         NULL,
         NULL,
-        78,
+        79,
         Error_testcases
     },
     {
@@ -4009,7 +4019,7 @@ static bake_test_suite suites[] = {
         "ExprAst",
         NULL,
         NULL,
-        8,
+        9,
         ExprAst_testcases
     },
     {

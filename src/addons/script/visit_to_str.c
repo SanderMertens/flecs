@@ -22,6 +22,14 @@ int flecs_script_scope_to_str(
     ecs_script_scope_t *scope);
 
 static
+void flecs_script_color_to_str(
+    ecs_script_str_visitor_t *v,
+    const char *color)
+{
+    if (v->colors) ecs_strbuf_appendstr(v->buf, color);
+}
+
+static
 void flecs_scriptbuf_append(
     ecs_script_str_visitor_t *v,
     const char *fmt,
@@ -126,8 +134,9 @@ void flecs_scriptbuf_node(
     ecs_script_str_visitor_t *v,
     ecs_script_node_t *node)
 {
-    flecs_scriptbuf_append(v, "%s%s%s: ", 
-        ECS_BLUE, flecs_script_node_to_str(node), ECS_NORMAL);
+    flecs_script_color_to_str(v, ECS_BLUE);
+    flecs_scriptbuf_append(v, "%s: ", flecs_script_node_to_str(node));
+    flecs_script_color_to_str(v, ECS_NORMAL);
 }
 
 static
@@ -185,9 +194,13 @@ void flecs_script_with_to_str(
     
     flecs_scriptbuf_appendstr(v, "{\n");
     v->depth ++;
-    flecs_scriptbuf_append(v, "%sexpressions%s: ", ECS_CYAN, ECS_NORMAL);
+    flecs_script_color_to_str(v, ECS_CYAN);
+    flecs_scriptbuf_appendstr(v, "expressions: ");
+    flecs_script_color_to_str(v, ECS_NORMAL);
     flecs_script_scope_to_str(v, node->expressions);
-    flecs_scriptbuf_append(v, "%sscope%s: ", ECS_CYAN, ECS_NORMAL);
+    flecs_script_color_to_str(v, ECS_CYAN);
+    flecs_scriptbuf_append(v, "scope: ");
+    flecs_script_color_to_str(v, ECS_NORMAL);
     flecs_script_scope_to_str(v, node->scope);
     v->depth --;
     flecs_scriptbuf_appendstr(v, "}\n");
@@ -217,8 +230,9 @@ void flecs_script_annot_to_str(
     ecs_script_annot_t *node)
 {
     flecs_scriptbuf_node(v, &node->node);
-    flecs_scriptbuf_append(v, "%s = %s\"%s\"%s", node->name, 
-        ECS_GREEN, node->expr, ECS_NORMAL);
+    flecs_script_color_to_str(v, ECS_GREEN);
+    flecs_scriptbuf_append(v, "%s = \"%s\"", node->name, node->expr);
+    flecs_script_color_to_str(v, ECS_NORMAL);
     flecs_scriptbuf_appendstr(v, "\n");
 }
 
@@ -293,9 +307,13 @@ void flecs_script_if_to_str(
 
     flecs_scriptbuf_appendstr(v, " {\n");
     v->depth ++;
-    flecs_scriptbuf_append(v, "%strue%s: ", ECS_CYAN, ECS_NORMAL);
+    flecs_script_color_to_str(v, ECS_CYAN);
+    flecs_scriptbuf_appendstr(v, "true: ");
+    flecs_script_color_to_str(v, ECS_NORMAL);
     flecs_script_scope_to_str(v, node->if_true);
-    flecs_scriptbuf_append(v, "%sfalse%s: ", ECS_CYAN, ECS_NORMAL);
+    flecs_script_color_to_str(v, ECS_CYAN);
+    flecs_scriptbuf_appendstr(v, "false: ");
+    flecs_script_color_to_str(v, ECS_NORMAL);
     flecs_script_scope_to_str(v, node->if_false);
     v->depth --;
     flecs_scriptbuf_appendstr(v, "}\n");

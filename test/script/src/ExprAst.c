@@ -246,3 +246,67 @@ void ExprAst_interpolated_string_curly_brackets_w_var(void) {
 
     ecs_fini(world);
 }
+
+void ExprAst_template_w_foldable_const(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+        .entity = ecs_entity(world, {.name = "Position"}),
+        .members = {
+            {"x", ecs_id(ecs_f32_t)},
+            {"y", ecs_id(ecs_f32_t)}
+        }
+    });
+
+    const char *expr =
+    HEAD "Foo {}"
+    LINE
+    LINE "template Bar {"
+    LINE "  const a = 10"
+    LINE "  const b = $a + 10"
+    LINE "  Position: {$a, $b}"
+    LINE "}"
+    LINE
+    LINE "Bar e";
+
+    const char *result_before =
+    HEAD "{"
+    LINE "  entity: Foo "
+    LINE "  template: Bar {"
+    LINE "    const: a = 10"
+    LINE "    const: b = ($a + 10)"
+    LINE "    component: Position: {$a, $b}"
+    LINE "  }"
+    LINE "  entity: Bar e "
+    LINE "}\n";
+
+    const char *result_after =
+    HEAD "{"
+    LINE "  entity: Foo "
+    LINE "  template: Bar {"
+    LINE "    const: a = 10"
+    LINE "    const: b = 20"
+    LINE "    component: Position: {x: 10, y: 20}"
+    LINE "  }"
+    LINE "  entity: Bar e "
+    LINE "}\n";
+
+    ecs_script_t *script = ecs_script_parse(world, NULL, expr, NULL);
+    test_assert(script != NULL);
+    {
+        char *ast = ecs_script_ast_to_str(script, false);
+        test_str(ast, result_before);
+        ecs_os_free(ast);
+    }
+
+    test_assert(ecs_script_eval(script, NULL) == 0);
+    {
+        char *ast = ecs_script_ast_to_str(script, false);
+        test_str(ast, result_after);
+        ecs_os_free(ast);
+    }
+
+    ecs_script_free(script);
+
+    ecs_fini(world);
+}

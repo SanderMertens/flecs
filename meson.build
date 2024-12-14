@@ -68,6 +68,7 @@ flecs_src = files(
     'src/addons/script/serialize.c',
     'src/addons/script/tokenizer.c',
     'src/addons/script/vars.c',
+    'src/addons/script/visit_check.c',
     'src/addons/script/visit_eval.c',
     'src/addons/script/visit_free.c',
     'src/addons/script/visit_to_str.c',
