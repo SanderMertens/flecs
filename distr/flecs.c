@@ -60274,6 +60274,7 @@ int ecs_script_visit_(
 
 #ifdef FLECS_SCRIPT
 
+static
 int flecs_script_check_expr(
     ecs_script_eval_visitor_t *v,
     ecs_expr_node_t **expr_ptr,
@@ -61930,8 +61931,10 @@ int flecs_script_eval_for_range(
     ecs_script_eval_visitor_t *v,
     ecs_script_for_range_t *node)
 {
-    ecs_value_t from_val = { .type = ecs_id(ecs_i32_t) };
-    ecs_value_t to_val = { .type = ecs_id(ecs_i32_t) };
+    int32_t from;
+    int32_t to;
+    ecs_value_t from_val = { .type = ecs_id(ecs_i32_t), .ptr = &from };
+    ecs_value_t to_val = { .type = ecs_id(ecs_i32_t), .ptr = &to };
 
     if (flecs_script_eval_expr(v, &node->from, &from_val)) {
         return -1;
@@ -61940,9 +61943,6 @@ int flecs_script_eval_for_range(
     if (flecs_script_eval_expr(v, &node->to, &to_val)) {
         return -1;
     }
-
-    int32_t from = *(int32_t*)from_val.ptr;
-    int32_t to = *(int32_t*)to_val.ptr;
 
     v->vars = flecs_script_vars_push(v->vars, &v->r->stack, &v->r->allocator);
 
@@ -78847,10 +78847,10 @@ int flecs_expr_interpolated_string_visit_type(
                 }
 
                 /* Fiddly, but reduces need for allocations */
-                ecs_size_t offset = flecs_ito(
-                    int32_t, node->buffer - node->value);
-                var_name = ECS_OFFSET(var_name, offset);
-                (*(char*)ECS_OFFSET(ptr, offset)) = '\0';
+                ecs_size_t var_name_pos = flecs_ito(int32_t, var_name - node->value);
+                var_name = &node->buffer[var_name_pos];
+                ecs_size_t var_name_end = flecs_ito(int32_t, ptr - node->value);
+                node->buffer[var_name_end] = '\0';
 
                 ecs_expr_variable_t *var = flecs_expr_variable_from(
                     script, (ecs_expr_node_t*)node, var_name);
@@ -78898,6 +78898,7 @@ int flecs_expr_interpolated_string_visit_type(
                 result = (ecs_expr_node_t*)flecs_expr_cast(script, 
                     (ecs_expr_node_t*)result, ecs_id(ecs_string_t));
                 if (!result) {
+                    /* Cast failed */
                     goto error;
                 }
             }
@@ -79015,11 +79016,12 @@ int flecs_expr_initializer_visit_type(
         }
 
         if (elem->value->type != elem_type) {
-            elem->value = (ecs_expr_node_t*)flecs_expr_cast(
+            ecs_expr_node_t *cast = (ecs_expr_node_t*)flecs_expr_cast(
                 script, elem->value, elem_type);
-            if (!elem->value) {
+            if (!cast) {
                 goto error;
             }
+            elem->value = cast;
         }
 
         if (!is_opaque) {

@@ -8,6 +8,7 @@
 #ifdef FLECS_SCRIPT
 #include "script.h"
 
+static
 int flecs_script_check_expr(
     ecs_script_eval_visitor_t *v,
     ecs_expr_node_t **expr_ptr,

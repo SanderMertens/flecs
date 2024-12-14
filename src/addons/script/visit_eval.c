@@ -1166,8 +1166,10 @@ int flecs_script_eval_for_range(
     ecs_script_eval_visitor_t *v,
     ecs_script_for_range_t *node)
 {
-    ecs_value_t from_val = { .type = ecs_id(ecs_i32_t) };
-    ecs_value_t to_val = { .type = ecs_id(ecs_i32_t) };
+    int32_t from;
+    int32_t to;
+    ecs_value_t from_val = { .type = ecs_id(ecs_i32_t), .ptr = &from };
+    ecs_value_t to_val = { .type = ecs_id(ecs_i32_t), .ptr = &to };
 
     if (flecs_script_eval_expr(v, &node->from, &from_val)) {
         return -1;
@@ -1176,9 +1178,6 @@ int flecs_script_eval_for_range(
     if (flecs_script_eval_expr(v, &node->to, &to_val)) {
         return -1;
     }
-
-    int32_t from = *(int32_t*)from_val.ptr;
-    int32_t to = *(int32_t*)to_val.ptr;
 
     v->vars = flecs_script_vars_push(v->vars, &v->r->stack, &v->r->allocator);
 

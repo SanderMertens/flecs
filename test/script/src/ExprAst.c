@@ -250,7 +250,7 @@ void ExprAst_interpolated_string_curly_brackets_w_var(void) {
 void ExprAst_template_w_foldable_const(void) {
     ecs_world_t *world = ecs_init();
 
-    ecs_entity_t ecs_id(Position) = ecs_struct(world, {
+    ecs_struct(world, {
         .entity = ecs_entity(world, {.name = "Position"}),
         .members = {
             {"x", ecs_id(ecs_f32_t)},
