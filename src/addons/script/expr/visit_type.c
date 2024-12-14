@@ -231,6 +231,7 @@ bool flecs_expr_oper_valid_for_type(
     case EcsTokSub:
     case EcsTokMul:
     case EcsTokDiv:
+    case EcsTokMod:
         return flecs_expr_is_type_number(type);
     case EcsTokBitwiseAnd:
     case EcsTokBitwiseOr:
@@ -266,7 +267,6 @@ bool flecs_expr_oper_valid_for_type(
     case EcsTokSemiColon:
     case EcsTokColon:
     case EcsTokAssign:
-    case EcsTokMod:
     case EcsTokNot:
     case EcsTokOptional:
     case EcsTokAnnotation:
@@ -302,6 +302,18 @@ int flecs_expr_type_for_oper(
     ecs_world_t *world = script->world;
     ecs_expr_node_t *left = node->left, *right = node->right;
 
+    if (node->operator == EcsTokDiv || node->operator == EcsTokMod) {
+        if (right->kind == EcsExprValue) {
+            ecs_expr_value_node_t *val = (ecs_expr_value_node_t*)right;
+            ecs_value_t v = { .type = val->node.type, .ptr = val->ptr };
+            if (flecs_value_is_0(&v)) {
+                flecs_expr_visit_error(script, node, 
+                    "invalid division by zero");
+                return -1;
+            }
+        }
+    }
+
     switch(node->operator) {
     case EcsTokDiv: 
         /* Result type of a division is always a float */
@@ -312,6 +324,15 @@ int flecs_expr_type_for_oper(
             *operand_type = left->type;
             *result_type = left->type;
         }
+
+        return 0;
+    case EcsTokMod:
+        /* Mod only accepts integer operands, and results in an integer. We 
+         * could disallow doing mod on floating point types, but in practice
+         * that would likely just result in code having to do a manual 
+         * conversion to an integer. */
+        *operand_type = ecs_id(ecs_i64_t);
+        *result_type = ecs_id(ecs_i64_t);
         return 0;
     case EcsTokAnd:
     case EcsTokOr:
@@ -349,7 +370,6 @@ int flecs_expr_type_for_oper(
     case EcsTokSemiColon:
     case EcsTokColon:
     case EcsTokAssign:
-    case EcsTokMod:
     case EcsTokNot:
     case EcsTokOptional:
     case EcsTokAnnotation:

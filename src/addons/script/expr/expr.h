@@ -57,6 +57,9 @@ bool flecs_string_is_interpolated(
 char* flecs_string_escape(
     char *str);
 
+bool flecs_value_is_0(
+    const ecs_value_t *value);
+
 #define ECS_VALUE_GET(value, T) (*(T*)(value)->ptr)
 
 #define ECS_BOP(left, right, result, op, R, T)\

@@ -5243,6 +5243,9 @@ bool flecs_string_is_interpolated(
 char* flecs_string_escape(
     char *str);
 
+bool flecs_value_is_0(
+    const ecs_value_t *value);
+
 #define ECS_VALUE_GET(value, T) (*(T*)(value)->ptr)
 
 #define ECS_BOP(left, right, result, op, R, T)\
@@ -26272,6 +26275,16 @@ static ECS_DTOR(EcsRest, ptr, {
 
 static char *rest_last_err;
 static ecs_os_api_log_t rest_prev_log;
+static ecs_os_api_log_t rest_prev_fatal_log;
+
+static
+void flecs_set_prev_log(
+    ecs_os_api_log_t prev_log,
+    bool try)
+{
+    rest_prev_log = try ? NULL : prev_log;
+    rest_prev_fatal_log = prev_log;
+}
 
 static 
 void flecs_rest_capture_log(
@@ -26282,7 +26295,20 @@ void flecs_rest_capture_log(
 {
     (void)file; (void)line;
 
+    if (level <= -4) {
+        /* Make sure to always log fatal errors */
+        if (rest_prev_fatal_log) {
+            ecs_log_enable_colors(true);
+            rest_prev_fatal_log(level, file, line, msg);
+            ecs_log_enable_colors(false);
+            return;
+        } else {
+            fprintf(stderr, "%s:%d: %s", file, line, msg);
+        }
+    }
+
 #ifdef FLECS_DEBUG
+    /* In debug mode, log unexpected errors and warnings to the console */
     if (level < 0) {
         /* Also log to previous log function in debug mode */
         if (rest_prev_log) {
@@ -26724,7 +26750,7 @@ bool flecs_rest_script(
 
     bool prev_color = ecs_log_enable_colors(false);
     ecs_os_api_log_t prev_log = ecs_os_api.log_;
-    rest_prev_log = try ? NULL : prev_log;
+    flecs_set_prev_log(ecs_os_api.log_, try);
     ecs_os_api.log_ = flecs_rest_capture_log;
 
     script = ecs_script(world, {
@@ -26815,6 +26841,9 @@ bool flecs_rest_reply_existing_query(
         return true;
     }
 
+    bool try = false;
+    flecs_rest_bool_param(req, "try", &try);
+
     ecs_query_t *q = NULL;
     const EcsPoly *poly_comp = ecs_get_pair(world, qe, EcsPoly, EcsQuery);
     if (!poly_comp) {
@@ -26841,7 +26870,7 @@ bool flecs_rest_reply_existing_query(
 
     ecs_dbg_2("rest: request query '%s'", name);
     bool prev_color = ecs_log_enable_colors(false);
-    rest_prev_log = ecs_os_api.log_;
+    flecs_set_prev_log(ecs_os_api.log_, try);
     ecs_os_api.log_ = flecs_rest_capture_log;
 
     const char *vars = ecs_http_get_param(req, "vars");
@@ -26891,7 +26920,7 @@ bool flecs_rest_get_query(
     ecs_dbg_2("rest: request query '%s'", expr);
     bool prev_color = ecs_log_enable_colors(false);
     ecs_os_api_log_t prev_log = ecs_os_api.log_;
-    rest_prev_log = try ? NULL : prev_log;
+    flecs_set_prev_log(ecs_os_api.log_, try);
     ecs_os_api.log_ = flecs_rest_capture_log;
 
     ecs_query_t *q = ecs_query(world, { .expr = expr });
@@ -75545,6 +75574,14 @@ int flecs_value_binary(
 {
     (void)script;
 
+    if (operator == EcsTokDiv || operator == EcsTokMod) {
+        if (flecs_value_is_0(right)) {
+            ecs_err("%s: division by zero", 
+                script->name ? script->name : "anonymous script");
+            return -1;
+        }
+    }
+
     switch(operator) {
     case EcsTokAdd:
         ECS_BINARY_OP(left, right, out, +);
@@ -75703,6 +75740,40 @@ char* flecs_string_escape(
     out[0] = '\0';
 
     return out + 1;
+}
+
+bool flecs_value_is_0(
+    const ecs_value_t *value)
+{
+    ecs_entity_t type = value->type;
+    void *ptr = value->ptr;
+           if (type == ecs_id(ecs_i8_t)) {
+        return *(ecs_i8_t*)ptr == 0;
+    } else if (type == ecs_id(ecs_i16_t)) {
+        return *(ecs_i16_t*)ptr == 0;
+    } else if (type == ecs_id(ecs_i32_t)) {
+        return *(ecs_i32_t*)ptr == 0;
+    } else if (type == ecs_id(ecs_i64_t)) {
+        return *(ecs_i64_t*)ptr == 0;
+    } else if (type == ecs_id(ecs_iptr_t)) {
+        return *(ecs_iptr_t*)ptr == 0;
+    } else if (type == ecs_id(ecs_u8_t)) {
+        return *(ecs_u8_t*)ptr == 0;
+    } else if (type == ecs_id(ecs_u16_t)) {
+        return *(ecs_u16_t*)ptr == 0;
+    } else if (type == ecs_id(ecs_u32_t)) {
+        return *(ecs_u32_t*)ptr == 0;
+    } else if (type == ecs_id(ecs_u64_t)) {
+        return *(ecs_u64_t*)ptr == 0;
+    } else if (type == ecs_id(ecs_uptr_t)) {
+        return *(ecs_uptr_t*)ptr == 0;
+    } else if (type == ecs_id(ecs_f32_t)) {
+        return ECS_EQZERO(*(ecs_f32_t*)ptr);
+    } else if (type == ecs_id(ecs_f64_t)) {
+        return ECS_EQZERO(*(ecs_f64_t*)ptr);
+    } else {
+        return true;
+    }
 }
 
 #endif
@@ -77828,6 +77899,7 @@ bool flecs_expr_oper_valid_for_type(
     case EcsTokSub:
     case EcsTokMul:
     case EcsTokDiv:
+    case EcsTokMod:
         return flecs_expr_is_type_number(type);
     case EcsTokBitwiseAnd:
     case EcsTokBitwiseOr:
@@ -77863,7 +77935,6 @@ bool flecs_expr_oper_valid_for_type(
     case EcsTokSemiColon:
     case EcsTokColon:
     case EcsTokAssign:
-    case EcsTokMod:
     case EcsTokNot:
     case EcsTokOptional:
     case EcsTokAnnotation:
@@ -77899,6 +77970,18 @@ int flecs_expr_type_for_oper(
     ecs_world_t *world = script->world;
     ecs_expr_node_t *left = node->left, *right = node->right;
 
+    if (node->operator == EcsTokDiv || node->operator == EcsTokMod) {
+        if (right->kind == EcsExprValue) {
+            ecs_expr_value_node_t *val = (ecs_expr_value_node_t*)right;
+            ecs_value_t v = { .type = val->node.type, .ptr = val->ptr };
+            if (flecs_value_is_0(&v)) {
+                flecs_expr_visit_error(script, node, 
+                    "invalid division by zero");
+                return -1;
+            }
+        }
+    }
+
     switch(node->operator) {
     case EcsTokDiv: 
         /* Result type of a division is always a float */
@@ -77909,6 +77992,15 @@ int flecs_expr_type_for_oper(
             *operand_type = left->type;
             *result_type = left->type;
         }
+
+        return 0;
+    case EcsTokMod:
+        /* Mod only accepts integer operands, and results in an integer. We 
+         * could disallow doing mod on floating point types, but in practice
+         * that would likely just result in code having to do a manual 
+         * conversion to an integer. */
+        *operand_type = ecs_id(ecs_i64_t);
+        *result_type = ecs_id(ecs_i64_t);
         return 0;
     case EcsTokAnd:
     case EcsTokOr:
@@ -77946,7 +78038,6 @@ int flecs_expr_type_for_oper(
     case EcsTokSemiColon:
     case EcsTokColon:
     case EcsTokAssign:
-    case EcsTokMod:
     case EcsTokNot:
     case EcsTokOptional:
     case EcsTokAnnotation:

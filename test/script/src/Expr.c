@@ -165,6 +165,92 @@ void Expr_div_3_int_literals(void) {
     ecs_fini(world);
 }
 
+void Expr_mod_2_int_literals(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_value_t v = {0};
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_expr_run(world, "10 % 3", &v, &desc) != NULL);
+    test_assert(v.type == ecs_id(ecs_i64_t));
+    test_assert(v.ptr != NULL);
+    test_flt(*(ecs_i64_t*)v.ptr, 1);
+    ecs_value_free(world, v.type, v.ptr);
+
+    ecs_fini(world);
+}
+
+void Expr_mod_2_flt_literals(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_value_t v = {0};
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_expr_run(world, "10.5 % 3.5", &v, &desc) != NULL);
+    test_assert(v.type == ecs_id(ecs_i64_t));
+    test_assert(v.ptr != NULL);
+    test_flt(*(ecs_i64_t*)v.ptr, 1);
+    ecs_value_free(world, v.type, v.ptr);
+
+    ecs_fini(world);
+}
+
+void Expr_div_by_0(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    ecs_log_set_level(-4);
+    test_assert(ecs_expr_parse(world, "10 / 0", &desc) == NULL);
+
+    ecs_fini(world);
+}
+
+void Expr_div_by_0_var(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+    ecs_script_var_t *var = ecs_script_vars_define(
+        vars, "foo", ecs_i32_t);
+    *(int32_t*)var->value.ptr = 0;
+
+    ecs_expr_eval_desc_t desc = { .vars = vars, .disable_folding = disable_folding };
+
+    ecs_value_t v = {0};
+    ecs_log_set_level(-4);
+    test_assert(ecs_expr_run(world, "10 / $foo", &v, &desc) == NULL);
+
+    ecs_script_vars_fini(vars);
+
+    ecs_fini(world);
+}
+
+void Expr_mod_by_0(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    ecs_log_set_level(-4);
+    test_assert(ecs_expr_parse(world, "10 % 0", &desc) == NULL);
+
+    ecs_fini(world);
+}
+
+void Expr_mod_by_0_var(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_script_vars_t *vars = ecs_script_vars_init(world);
+    ecs_script_var_t *var = ecs_script_vars_define(
+        vars, "foo", ecs_i32_t);
+    *(int32_t*)var->value.ptr = 0;
+
+    ecs_expr_eval_desc_t desc = { .vars = vars, .disable_folding = disable_folding };
+
+    ecs_value_t v = {0};
+    ecs_log_set_level(-4);
+    test_assert(ecs_expr_run(world, "10 % $foo", &v, &desc) == NULL);
+
+    ecs_script_vars_fini(vars);
+
+    ecs_fini(world);
+}
+
 void Expr_int_to_bool(void) {
     ecs_world_t *world = ecs_init();
 
