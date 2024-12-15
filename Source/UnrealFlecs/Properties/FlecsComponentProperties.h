@@ -101,16 +101,29 @@ public:
  * Do not use this macro directly, use REGISTER_COMPONENT_TAG_PROPERTIES or REGISTER_COMPONENT_TRAIT_PROPERTIES
  */
 // Private macro that should never be called directly by users
-#define _REGISTER_FLECS_PROPERTIES_IMPL(ComponentType, EntitiesArray, ComponentPropertyStructsArray) \
+#define _REGISTER_FLECS_PROPERTIES_TAGS_IMPL(ComponentType, ...) \
 	namespace \
 	{ \
 		struct FAutoRegister##ComponentType \
 		{ \
 			FAutoRegister##ComponentType() \
 			{ \
-			std::vector<flecs::entity_t> Entities = EntitiesArray; \
-			TArray<FInstancedStruct> ComponentPropertyStructs = ComponentPropertyStructsArray; \
-			FFlecsComponentPropertiesRegistry::Get().RegisterComponentProperties(#ComponentType, Entities, ComponentPropertyStructs); \
+			std::vector<flecs::entity_t> Entities = { __VA_ARGS__ } ; \
+			FFlecsComponentPropertiesRegistry::Get().RegisterComponentProperties(#ComponentType, Entities, {}); \
+			} \
+		}; \
+		static FAutoRegister##ComponentType AutoRegister##ComponentType##_Instance; \
+	}
+
+#define _REGISTER_FLECS_PROPERTIES_TRAITS_IMPL(ComponentType, ...) \
+	namespace \
+	{ \
+		struct FAutoRegister##ComponentType \
+		{ \
+			FAutoRegister##ComponentType() \
+			{ \
+			TArray<FInstancedStruct> ComponentPropertyStructs = { __VA_ARGS__ }; \
+			FFlecsComponentPropertiesRegistry::Get().RegisterComponentProperties(#ComponentType, {}, ComponentPropertyStructs); \
 			} \
 		}; \
 		static FAutoRegister##ComponentType AutoRegister##ComponentType##_Instance; \
@@ -122,7 +135,7 @@ public:
 		"Do not use REGISTER_FLECS_PROPERTIES directly! Use REGISTER_COMPONENT_TAG_PROPERTIES or REGISTER_COMPONENT_TRAIT_PROPERTIES instead.")
 
 #define REGISTER_COMPONENT_TAG_PROPERTIES(ComponentType, ...) \
-	_REGISTER_FLECS_PROPERTIES_IMPL(ComponentType, { __VA_ARGS__ }, {})
+	_REGISTER_FLECS_PROPERTIES_TAGS_IMPL(ComponentType, __VA_ARGS__ )
 
 #define REGISTER_COMPONENT_TRAIT_PROPERTIES(ComponentType, ...) \
-	_REGISTER_FLECS_PROPERTIES_IMPL(ComponentType, {}, { __VA_ARGS__ })
+	_REGISTER_FLECS_PROPERTIES_TRAITS_IMPL(ComponentType, __VA_ARGS__ )

@@ -7,12 +7,18 @@
 #include "FlecsTranslationSettingTraits.generated.h"
 
 USTRUCT(BlueprintType)
+struct UNREALFLECS_API FFlecsTranslationPropertyTrait
+{
+	GENERATED_BODY()
+}; // struct FFlecsTranslationPropertyTrait
+
+REGISTER_COMPONENT_TAG_PROPERTIES(FFlecsTranslationPropertyTrait, flecs::PairIsTag, flecs::Trait)
+
+USTRUCT(BlueprintType)
 struct UNREALFLECS_API FFlecsToUnreal
 {
 	GENERATED_BODY()
 }; // struct FFlecsToUnreal
-
-REGISTER_COMPONENT_TAG_PROPERTIES(FFlecsToUnreal, flecs::PairIsTag)
 
 USTRUCT(BlueprintType)
 struct UNREALFLECS_API FUnrealToFlecs

@@ -1480,7 +1480,7 @@ public:
 
 		if (ScriptStruct->GetSuperStruct())
 		{
-			FFlecsEntityHandle ParentEntity = ObtainComponentTypeStruct(
+			const FFlecsEntityHandle ParentEntity = ObtainComponentTypeStruct(
 				static_cast<UScriptStruct*>(ScriptStruct->GetSuperStruct()));
 			
 			ScriptStructComponent.SetParent(ParentEntity);

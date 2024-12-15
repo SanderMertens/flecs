@@ -230,7 +230,7 @@ static ECS_DTOR(EcsUnitPrefix, ptr, { dtor_unit_prefix(ptr); })
 
 /* Type initialization */
 
-static
+static inline
 const char* flecs_type_kind_str(
     ecs_type_kind_t kind)
 {
@@ -927,7 +927,7 @@ void flecs_set_vector(ecs_iter_t *it) {
     }
 }
 
-static
+static inline
 void flecs_set_custom_type(ecs_iter_t *it) {
     ecs_world_t *world = it->world;
     const EcsOpaque *serialize = ecs_field(it, EcsOpaque, 0);
@@ -1108,7 +1108,7 @@ void flecs_unit_quantity_monitor(ecs_iter_t *it) {
     }
 }
 
-static
+static inline
 void flecs_member_on_set(ecs_iter_t *it) {
     EcsMember *mbr = ecs_field(it, EcsMember, 0);
     if (!mbr->count) {
