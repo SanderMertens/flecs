@@ -957,6 +957,79 @@ ecs_method(world, {
 });
 ```
 
+### Builtin functions and constants
+The following table lists builtin core functions in the `flecs.script.core` namespace:
+
+| **Function Name** | **Description**             | **Return Type** | **Arguments**               |
+|-------------------|-----------------------------|-----------------|-----------------------------|
+| `pair`            | Returns a pair identifier   | `id`            | (`entity`, `entity`)        |
+
+The following table lists builtin methods on the `flecs.meta.entity` type:
+
+| **Method Name**   | **Description**                        | **Return Type** | **Arguments**        |
+|-------------------|----------------------------------------|-----------------|----------------------|
+| `name`            | Returns entity name                    | `string`        | `()`                 |
+| `path`            | Returns entity path                    | `string`        | `()`                 |
+| `parent`          | Returns entity parent                  | `entity`        | `()`                 |
+| `has`             | Returns whether entity has component   | `bool`          | `(id)`               |
+
+The following table lists doc methods on the `flecs.meta.entity` type:
+
+| **Method Name**  | **Description**                           | **Return Type**  | **Arguments**        |
+|-------------------|------------------------------------------|------------------|----------------------|
+| `doc_name`        | Returns entity doc name                  | `string`         | `()`                 |
+| `doc_uuid`        | Returns entity doc uuid                  | `string`         | `()`                 |
+| `doc_brief`       | Returns entity doc brief description     | `string`         | `()`                 |
+| `doc_detail`      | Returns entity doc detailed description  | `string`         | `()`                 |
+| `doc_link`        | Returns entity doc link                  | `string`         | `()`                 |
+| `doc_color`       | Returns entity doc color                 | `string`         | `()`                 |
+
+To use the doc functions, make sure to use a Flecs build compiled with `FLECS_DOC` (enabled by default).
+
+The following table lists math functions in the `flecs.script.math` namespace:
+
+| **Function Name** | **Description**                          | **Return Type** | **Arguments**       |
+|--------------------|-----------------------------------------|-----------------|---------------------|
+| `cos`             | Compute cosine                           | `f64`           | `(f64)`             |
+| `sin`             | Compute sine                             | `f64`           | `(f64)`             |
+| `tan`             | Compute tangent                          | `f64`           | `(f64)`             |
+| `acos`            | Compute arc cosine                       | `f64`           | `(f64)`             |
+| `asin`            | Compute arc sine                         | `f64`           | `(f64)`             |
+| `atan`            | Compute arc tangent                      | `f64`           | `(f64)`             |
+| `atan2`           | Compute arc tangent with two parameters  | `f64`           | `(f64, f64)`        |
+| `cosh`            | Compute hyperbolic cosine                | `f64`           | `(f64)`             |
+| `sinh`            | Compute hyperbolic sine                  | `f64`           | `(f64)`             |
+| `tanh`            | Compute hyperbolic tangent               | `f64`           | `(f64)`             |
+| `acosh`           | Compute area hyperbolic cosine           | `f64`           | `(f64)`             |
+| `asinh`           | Compute area hyperbolic sine             | `f64`           | `(f64)`             |
+| `atanh`           | Compute area hyperbolic tangent          | `f64`           | `(f64)`             |
+| `exp`             | Compute exponential function             | `f64`           | `(f64)`             |
+| `ldexp`           | Generate value from significant and exponent | `f64`       | `(f64, f32)`        |
+| `log`             | Compute natural logarithm                | `f64`           | `(f64)`             |
+| `log10`           | Compute common logarithm                 | `f64`           | `(f64)`             |
+| `exp2`            | Compute binary exponential function      | `f64`           | `(f64)`             |
+| `log2`            | Compute binary logarithm                 | `f64`           | `(f64)`             |
+| `pow`             | Raise to power                           | `f64`           | `(f64, f64)`        |
+| `sqrt`            | Compute square root                      | `f64`           | `(f64)`             |
+| `sqr`             | Compute square                           | `f64`           | `(f64)`             |
+| `ceil`            | Round up value                           | `f64`           | `(f64)`             |
+| `floor`           | Round down value                         | `f64`           | `(f64)`             |
+| `round`           | Round to nearest                         | `f64`           | `(f64)`             |
+| `abs`             | Compute absolute value                   | `f64`           | `(f64)`             |
+
+The following table lists the constants in the `flecs.script.math` namespace:
+
+| **Function Name** | **Description**                           | **Type** | **Value**            |
+|-------------------|-------------------------------------------|----------|----------------------|
+| `E`               | Euler's number                            | `f64`    | `2.71828182845904523536028747135266250` |
+| `PI`              | Ratio of circle circumference to diameter | `f64`    | `3.14159265358979323846264338327950288` |
+
+To use the math functions, make sure to use a Flecs build compiled with the `FLECS_SCRIPT_MATH` addon (disabled by default) and that the module is imported:
+
+```c
+ECS_IMPORT(world, FlecsScriptMath);
+```
+
 ## Templates
 Templates are parameterized scripts that can be used to create procedural assets. Templates can be created with the `template` keyword. Example:
 

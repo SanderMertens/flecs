@@ -564,7 +564,15 @@ void Expr_entity_expr(void);
 void Expr_entity_path_expr(void);
 void Expr_entity_parent_func(void);
 void Expr_entity_name_func(void);
+void Expr_entity_has_func(void);
+void Expr_entity_has_func_w_pair(void);
+void Expr_entity_has_func_w_pair_pair_invalid(void);
 void Expr_entity_doc_name_func(void);
+void Expr_entity_doc_uuid_func(void);
+void Expr_entity_doc_brief_func(void);
+void Expr_entity_doc_detail_func(void);
+void Expr_entity_doc_link_func(void);
+void Expr_entity_doc_color_func(void);
 void Expr_entity_path_func(void);
 void Expr_entity_chain_func(void);
 void Expr_var_parent_func(void);
@@ -3047,8 +3055,40 @@ bake_test_case Expr_testcases[] = {
         Expr_entity_name_func
     },
     {
+        "entity_has_func",
+        Expr_entity_has_func
+    },
+    {
+        "entity_has_func_w_pair",
+        Expr_entity_has_func_w_pair
+    },
+    {
+        "entity_has_func_w_pair_pair_invalid",
+        Expr_entity_has_func_w_pair_pair_invalid
+    },
+    {
         "entity_doc_name_func",
         Expr_entity_doc_name_func
+    },
+    {
+        "entity_doc_uuid_func",
+        Expr_entity_doc_uuid_func
+    },
+    {
+        "entity_doc_brief_func",
+        Expr_entity_doc_brief_func
+    },
+    {
+        "entity_doc_detail_func",
+        Expr_entity_doc_detail_func
+    },
+    {
+        "entity_doc_link_func",
+        Expr_entity_doc_link_func
+    },
+    {
+        "entity_doc_color_func",
+        Expr_entity_doc_color_func
     },
     {
         "entity_path_func",
@@ -4170,7 +4210,7 @@ static bake_test_suite suites[] = {
         "Expr",
         Expr_setup,
         NULL,
-        224,
+        232,
         Expr_testcases,
         1,
         Expr_params

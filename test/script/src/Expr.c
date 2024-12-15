@@ -3194,6 +3194,99 @@ void Expr_entity_name_func(void) {
     ecs_fini(world);
 }
 
+void Expr_entity_has_func(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    test_assert(e != 0);
+
+    ecs_add(world, e, Position);
+
+    {
+        ecs_value_t v = {0};
+        ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+        test_assert(ecs_expr_run(world, "e.has(Position)", &v, &desc) != NULL);
+        test_assert(v.type == ecs_id(ecs_bool_t));
+        test_assert(v.ptr != NULL);
+        test_bool(*(bool*)v.ptr, true);
+        ecs_value_free(world, v.type, v.ptr);
+    }
+
+    {
+        ecs_value_t v = {0};
+        ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+        test_assert(ecs_expr_run(world, "e.has(Velocity)", &v, &desc) != NULL);
+        test_assert(v.type == ecs_id(ecs_bool_t));
+        test_assert(v.ptr != NULL);
+        test_bool(*(bool*)v.ptr, false);
+        ecs_value_free(world, v.type, v.ptr);
+    }
+
+    ecs_fini(world);
+}
+
+void Expr_entity_has_func_w_pair(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Likes);
+    ECS_TAG(world, Apples);
+    ECS_TAG(world, Pears);
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    test_assert(e != 0);
+
+    ecs_add_pair(world, e, Likes, Apples);
+
+    {
+        ecs_value_t v = {0};
+        ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+        test_assert(ecs_expr_run(world, "e.has(flecs.script.core.pair(Likes, Apples))", &v, &desc) != NULL);
+        test_assert(v.type == ecs_id(ecs_bool_t));
+        test_assert(v.ptr != NULL);
+        test_bool(*(bool*)v.ptr, true);
+        ecs_value_free(world, v.type, v.ptr);
+    }
+
+    {
+        ecs_value_t v = {0};
+        ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+        test_assert(ecs_expr_run(world, "e.has(flecs.script.core.pair(Likes, Pears))", &v, &desc) != NULL);
+        test_assert(v.type == ecs_id(ecs_bool_t));
+        test_assert(v.ptr != NULL);
+        test_bool(*(bool*)v.ptr, false);
+        ecs_value_free(world, v.type, v.ptr);
+    }
+
+    ecs_fini(world);
+}
+
+void Expr_entity_has_func_w_pair_pair_invalid(void) {
+    ecs_world_t *world = ecs_init();
+
+    ECS_TAG(world, Likes);
+    ECS_TAG(world, Apples);
+    ECS_TAG(world, Pears);
+
+    ecs_entity_t e = ecs_entity(world, { .name = "e" });
+    test_assert(e != 0);
+
+    ecs_add_pair(world, e, Likes, Apples);
+
+    {
+        ecs_value_t v = {0};
+        ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+        ecs_log_set_level(-4);
+        test_assert(ecs_expr_run(world, 
+            "e.has(flecs.script.core.pair(flecs.script.core.pair(Likes, Apples), Pears))", 
+            &v, &desc) == NULL);
+    }
+
+    ecs_fini(world);
+}
+
 void Expr_entity_doc_name_func(void) {
     ecs_world_t *world = ecs_init();
 
@@ -3202,14 +3295,149 @@ void Expr_entity_doc_name_func(void) {
 
     ecs_entity_t foo = ecs_entity(world, { .name = "parent.foo" });
     test_assert(foo != 0);
-    ecs_doc_set_name(world, foo, "FooDoc");
+    ecs_doc_set_name(world, foo, "FooName");
+    ecs_doc_set_uuid(world, foo, "FooUuid");
+    ecs_doc_set_brief(world, foo, "FooBrief");
+    ecs_doc_set_detail(world, foo, "FooDetail");
+    ecs_doc_set_link(world, foo, "FooLink");
+    ecs_doc_set_color(world, foo, "FooColor");
 
     ecs_value_t v = {0};
     ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
     test_assert(ecs_expr_run(world, "parent.foo.doc_name()", &v, &desc) != NULL);
     test_assert(v.type == ecs_id(ecs_string_t));
     test_assert(v.ptr != NULL);
-    test_str(*(char**)v.ptr, "FooDoc");
+    test_str(*(char**)v.ptr, "FooName");
+    ecs_value_free(world, v.type, v.ptr);
+
+    ecs_fini(world);
+}
+
+void Expr_entity_doc_uuid_func(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t parent = ecs_entity(world, { .name = "parent" });
+    test_assert(parent != 0);
+
+    ecs_entity_t foo = ecs_entity(world, { .name = "parent.foo" });
+    test_assert(foo != 0);
+    ecs_doc_set_name(world, foo, "FooName");
+    ecs_doc_set_uuid(world, foo, "FooUuid");
+    ecs_doc_set_brief(world, foo, "FooBrief");
+    ecs_doc_set_detail(world, foo, "FooDetail");
+    ecs_doc_set_link(world, foo, "FooLink");
+    ecs_doc_set_color(world, foo, "FooColor");
+
+    ecs_value_t v = {0};
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_expr_run(world, "parent.foo.doc_uuid()", &v, &desc) != NULL);
+    test_assert(v.type == ecs_id(ecs_string_t));
+    test_assert(v.ptr != NULL);
+    test_str(*(char**)v.ptr, "FooUuid");
+    ecs_value_free(world, v.type, v.ptr);
+
+    ecs_fini(world);
+}
+
+void Expr_entity_doc_brief_func(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t parent = ecs_entity(world, { .name = "parent" });
+    test_assert(parent != 0);
+
+    ecs_entity_t foo = ecs_entity(world, { .name = "parent.foo" });
+    test_assert(foo != 0);
+    ecs_doc_set_name(world, foo, "FooName");
+    ecs_doc_set_uuid(world, foo, "FooUuid");
+    ecs_doc_set_brief(world, foo, "FooBrief");
+    ecs_doc_set_detail(world, foo, "FooDetail");
+    ecs_doc_set_link(world, foo, "FooLink");
+    ecs_doc_set_color(world, foo, "FooColor");
+
+    ecs_value_t v = {0};
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_expr_run(world, "parent.foo.doc_brief()", &v, &desc) != NULL);
+    test_assert(v.type == ecs_id(ecs_string_t));
+    test_assert(v.ptr != NULL);
+    test_str(*(char**)v.ptr, "FooBrief");
+    ecs_value_free(world, v.type, v.ptr);
+
+    ecs_fini(world);
+}
+
+void Expr_entity_doc_detail_func(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t parent = ecs_entity(world, { .name = "parent" });
+    test_assert(parent != 0);
+
+    ecs_entity_t foo = ecs_entity(world, { .name = "parent.foo" });
+    test_assert(foo != 0);
+    ecs_doc_set_name(world, foo, "FooName");
+    ecs_doc_set_uuid(world, foo, "FooUuid");
+    ecs_doc_set_brief(world, foo, "FooBrief");
+    ecs_doc_set_detail(world, foo, "FooDetail");
+    ecs_doc_set_link(world, foo, "FooLink");
+    ecs_doc_set_color(world, foo, "FooColor");
+
+    ecs_value_t v = {0};
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_expr_run(world, "parent.foo.doc_detail()", &v, &desc) != NULL);
+    test_assert(v.type == ecs_id(ecs_string_t));
+    test_assert(v.ptr != NULL);
+    test_str(*(char**)v.ptr, "FooDetail");
+    ecs_value_free(world, v.type, v.ptr);
+
+    ecs_fini(world);
+}
+
+void Expr_entity_doc_link_func(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t parent = ecs_entity(world, { .name = "parent" });
+    test_assert(parent != 0);
+
+    ecs_entity_t foo = ecs_entity(world, { .name = "parent.foo" });
+    test_assert(foo != 0);
+    ecs_doc_set_name(world, foo, "FooName");
+    ecs_doc_set_uuid(world, foo, "FooUuid");
+    ecs_doc_set_brief(world, foo, "FooBrief");
+    ecs_doc_set_detail(world, foo, "FooDetail");
+    ecs_doc_set_link(world, foo, "FooLink");
+    ecs_doc_set_color(world, foo, "FooColor");
+
+    ecs_value_t v = {0};
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_expr_run(world, "parent.foo.doc_link()", &v, &desc) != NULL);
+    test_assert(v.type == ecs_id(ecs_string_t));
+    test_assert(v.ptr != NULL);
+    test_str(*(char**)v.ptr, "FooLink");
+    ecs_value_free(world, v.type, v.ptr);
+
+    ecs_fini(world);
+}
+
+void Expr_entity_doc_color_func(void) {
+    ecs_world_t *world = ecs_init();
+
+    ecs_entity_t parent = ecs_entity(world, { .name = "parent" });
+    test_assert(parent != 0);
+
+    ecs_entity_t foo = ecs_entity(world, { .name = "parent.foo" });
+    test_assert(foo != 0);
+    ecs_doc_set_name(world, foo, "FooName");
+    ecs_doc_set_uuid(world, foo, "FooUuid");
+    ecs_doc_set_brief(world, foo, "FooBrief");
+    ecs_doc_set_detail(world, foo, "FooDetail");
+    ecs_doc_set_link(world, foo, "FooLink");
+    ecs_doc_set_color(world, foo, "FooColor");
+
+    ecs_value_t v = {0};
+    ecs_expr_eval_desc_t desc = { .disable_folding = disable_folding };
+    test_assert(ecs_expr_run(world, "parent.foo.doc_color()", &v, &desc) != NULL);
+    test_assert(v.type == ecs_id(ecs_string_t));
+    test_assert(v.ptr != NULL);
+    test_str(*(char**)v.ptr, "FooColor");
     ecs_value_free(world, v.type, v.ptr);
 
     ecs_fini(world);

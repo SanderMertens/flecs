@@ -179,7 +179,7 @@ void FlecsScriptMathImport(
 
     /* Exponential and logarithmic functions */
     FLECS_MATH_FUNC_DEF_F64(exp, "Compute exponential function");
-    FLECS_MATH_FUNC_DEF_F64_F32(ldexp, "Generate value from significand and exponent");
+    FLECS_MATH_FUNC_DEF_F64_F32(ldexp, "Generate value from significant and exponent");
     FLECS_MATH_FUNC_DEF_F64(log, "Compute natural logarithm");
     FLECS_MATH_FUNC_DEF_F64(log10, "Compute common logarithm");
     FLECS_MATH_FUNC_DEF_F64(exp2, "Compute binary exponential function");
