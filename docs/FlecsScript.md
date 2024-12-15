@@ -68,6 +68,20 @@ _ {
 }
 ```
 
+Entity names can be specified using a string. This allows for entities with names that contain special characters, like spaces:
+
+```c
+"my parent" {
+  "my child" {}
+}
+```
+
+String names can be combined with string interpolation (see below) to create names that are computed when the script is evaluated:
+
+```c
+"USS_$name" {}
+```
+
 ### Tags
 A tag can be added to an entity by simply specifying the tag's identifier in an entity scope. Example:
 
@@ -491,6 +505,52 @@ lantern {
 }
 ```
 
+### For statement
+Parts of a script can be repeated with a for loop. Example:
+
+```c
+for i in 0..10 {
+  Lantern() {
+    Position: {x: $i * 5}
+  }
+}
+```
+
+The values specified in the range can be an expression:
+
+```c
+for i in 0..$count {
+  // ...
+}
+```
+
+When creating entities in a for loop, ensure that they are unique or the for loop will overwrite the same entity:
+
+```c
+for i in 0..10 {
+  // overwrites entity "e" 10 times
+  e: { Position: {x: $i * 5} }
+}
+```
+
+To avoid this, scripts can either create anonymous entities:
+
+```c
+for i in 0..10 {
+  // creates 10 anonymous entities
+  _ { Position: {x: $i * 5} }
+}
+```
+
+Or use a unique string expression for the entity name:
+
+```c
+for i in 0..10 {
+  // creates entities with names e_0, e_1, ... e_9
+  "e_$i" { Position: {x: $i * 5} }
+}
+```
+
 ### Default components
 A scope can have a default component, which means entities in that scope can assign values of that component without having to specify the component name. 
 
@@ -699,6 +759,25 @@ Tree: {color: $color, height: $height}
 Tree: {color: $, height: $}
 ```
 
+### String interpolation
+Flecs script supports interpolated strings, which are strings that can contain expressions. String interpolation supports two forms, where one allows for easy embedding of variables, whereas the other allows for embedding any kind of expression. The following example shows an embedded variable:
+
+```c
+const x = "The value of PI is $PI"
+```
+
+The following example shows how to use an expression:
+
+```c
+const x = "The circumference of the circle is {2 * $PI * $r}"
+```
+
+To prevent evaluating expressions in an interpolated string, the `$` and `{` characters can be escaped:
+
+```c
+const x = "The value of variable \$x is $x"
+```
+
 ### Types
 The type of an expression is determined by the kind of expression, its operands and the context in which the expression is evaluated. The words "type" and "component" can be used interchangeably, as every type in Flecs is a component, and every component is a type. For component types to be used with scripts, they have to be described using the meta reflection addon.
 
@@ -721,6 +800,7 @@ Binary expressions have two operands. The following table shows the different bi
 | `/`        | `f64`                | Numbers              |
 | `+`        | other (see below)    | Numbers              |
 | `-`        | other (see below)    | Numbers              |
+| `%`        | `i64`                | `i64`                |
 | `<<`       | other (see below)    | Integers             |
 | `>>`       | other (see below)    | Integers             |
 | `>`        | `bool`               | Numbers              |
@@ -737,9 +817,71 @@ Binary expressions have two operands. The following table shows the different bi
 For the operators where the expression type is listed as "other" the type is derived by going through these steps:
 - If the types of the operands are equal, the expression type will be the operand type.
 - If the types are different:
-  - Convert the operand types to their largest storage variant (`i8` becomes `i64`, `f32` becomes `f64`, `u16` becomes `u64`).
-  - The type of the expression becomes the most expressive of the two.
-  - Expressiveness is determined as `f64` > `i64` > `u64`.
+  - For literal values, find the smallest storage type without losing precision. If operand types are now equal, use that.
+  - Find the most expressive type of the two operands (see below)
+  - If a cast to the most expressive type does not result in a loss of precision, use that.
+  - If the types are both numbers follow these rules in order:
+    - If one of the types is a floating point, use `f64`
+    - If one of the types is an integer, use `i64`
+    - If neither, throw a type incompatible error
+
+For equality expressions (using the `==` or `!=` operators), additional rules are used:
+ - If one of the operands is a bool, cast the other operand to a bool as well. This ensures that expressions such as `2 == true` evaluate to true.
+ - Equality expressions between floating point numbers are invalid
+
+Type expressiveness is determined by the kind of type and its storage size. The following tables show the expressiveness and storage scores:
+
+| **Type**     | **Expressiveness Score** |
+|--------------|---------------------------|
+| bool         | 1                         |
+| char         | 2                         |
+| u8           | 2                         |
+| u16          | 3                         |
+| u32          | 4                         |
+| uptr         | 5                         |
+| u64          | 6                         |
+| i8           | 7                         |
+| i16          | 8                         |
+| i32          | 9                         |
+| iptr         | 10                        |
+| i64          | 11                        |
+| f32          | 12                        |
+| f64          | 13                        |
+| string       | -1                        |
+| entity       | -1                        |
+
+| **Type**     | **Storage Score** |
+|--------------|-------------------|
+| bool         | 1                 |
+| char         | 1                 |
+| u8           | 2                 |
+| u16          | 3                 |
+| u32          | 4                 |
+| uptr         | 6                 |
+| u64          | 7                 |
+| i8           | 1                 |
+| i16          | 2                 |
+| i32          | 3                 |
+| iptr         | 5                 |
+| i64          | 6                 |
+| f32          | 3                 |
+| f64          | 4                 |
+| string       | -1                |
+| entity       | -1                |
+
+The function to determine whether a type is implicitly castable is:
+
+```c
+bool implicit_cast_allowed(from, to) {
+  if (expressiveness(to) >= expressiveness(from)) {
+    return storage(to) >= storage(from);
+  } else {
+    return false;
+  }
+}
+```
+
+If either the expressiveness or storage scores are negative, the operand types are not implicitly castable.
 
 #### Lvalues
 Lvalues are the left side of assignments. There are two kinds of assignments possible in Flecs script:
@@ -777,6 +919,20 @@ const x = add({10, 20}, {30, 40})
 
 Currently functions can only be defined outside of scripts by the Flecs Script API. Flecs comes with a set of builtin and math functions. Math functions are defined by the script math addon, which must be explicitly enabled by defining `FLECS_SCRIPT_MATH`.
 
+A function can be created in code by doing:
+
+```c
+ecs_function(world, {
+    .name = "sum",
+    .return_type = ecs_id(ecs_i64_t),
+    .params = {
+        { .name = "a", .type = ecs_id(ecs_i64_t) },
+        { .name = "b", .type = ecs_id(ecs_i64_t) }
+    },
+    .callback = sum
+});
+```
+
 ### Methods
 Methods are functions that are called on instances of the method's type. The first argument of a method is the instance on which the method is called. The following snippet shows examples of method calls:
 
@@ -786,6 +942,20 @@ const x = v1.add(v2)
 ```
 
 Just like functions, methods can currently only be defined outside of scripts by using the Flecs Script API.
+
+A method can be created in code by doing:
+
+```c
+ecs_method(world, {
+    .name = "add",
+    .parent = ecs_id(ecs_i64_t), // Add method to i64
+    .return_type = ecs_id(ecs_i64_t),
+    .params = {
+        { .name = "a", .type = ecs_id(ecs_i64_t) }
+    },
+    .callback = sum
+});
+```
 
 ## Templates
 Templates are parameterized scripts that can be used to create procedural assets. Templates can be created with the `template` keyword. Example:
