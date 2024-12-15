@@ -57,8 +57,8 @@ int main(int argc, char *argv[]) {
     printf("{x: %d, y: %d}\n", p->x, p->y);
 
     // Change values for variables and reevaluate
-    *(int32_t*)x->value.ptr = 1;
-    *(int32_t*)y->value.ptr = 2;
+    *(int32_t*)x->value.ptr = 2;
+    *(int32_t*)y->value.ptr = 3;
     if (ecs_script_eval(script, &desc) != 0) {
         printf("script failed to run\n");
         return -1;
