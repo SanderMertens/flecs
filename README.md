@@ -116,6 +116,9 @@ If you have a project you'd like to share, let me know on [Discord](https://disc
 ### Territory Control 2
 [![image](docs/img/projects/territory_control.jpg)](https://store.steampowered.com/app/690290/Territory_Control_2/)
 
+### Resistance is Brutal
+[![image](docs/img/projects/resistance_is_brutal.jpg)](https://store.steampowered.com/app/3378140/Resistance_Is_Brutal/)
+
 ### Age of Respair
 [![image](docs/img/projects/age_of_respair.png)](https://store.steampowered.com/app/3164360/Age_of_Respair/)
 
