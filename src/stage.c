@@ -24,6 +24,7 @@ ecs_cmd_t* flecs_cmd_new(
     ecs_cmd_t *cmd = ecs_vec_append_t(&stage->allocator, &stage->cmd->queue, 
         ecs_cmd_t);
     cmd->is._1.value = NULL;
+    cmd->id = 0;
     cmd->next_for_entity = 0;
     cmd->entry = NULL;
     cmd->system = stage->system;
