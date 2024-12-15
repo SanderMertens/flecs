@@ -69,7 +69,7 @@ bool flecs_expr_is_type_number(
 #define ECS_VALUE_GET(value, T) (*(T*)(value)->ptr)
 
 #define ECS_BOP(left, right, result, op, R, T)\
-    ECS_VALUE_GET(result, R) = ECS_VALUE_GET(left, T) op ECS_VALUE_GET(right, T)
+    ECS_VALUE_GET(result, R) = (R)(ECS_VALUE_GET(left, T) op ECS_VALUE_GET(right, T))
 
 #define ECS_BOP_COND(left, right, result, op, R, T)\
     ECS_VALUE_GET(result, ecs_bool_t) = ECS_VALUE_GET(left, T) op ECS_VALUE_GET(right, T)
