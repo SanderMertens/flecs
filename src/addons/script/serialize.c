@@ -217,6 +217,8 @@ int flecs_expr_ser_type_op(
     ecs_strbuf_t *str,
     bool is_expr)
 {
+    ecs_assert(ptr != NULL, ECS_INVALID_PARAMETER, NULL);
+
     switch(op->kind) {
     case EcsOpPush:
     case EcsOpPop:

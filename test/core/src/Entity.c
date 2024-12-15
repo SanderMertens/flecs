@@ -2864,6 +2864,40 @@ void Entity_entity_init_w_set_1_comp_1_tag_w_set_defer(void) {
     ecs_fini(world);
 }
 
+void Entity_entity_init_w_set_1_comp_suspend_defer(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+    ECS_TAG(world, TagA);
+
+    ecs_defer_begin(world);
+
+    ecs_defer_suspend(world);
+
+    ecs_entity_t e = ecs_entity(world, {
+        .set = ecs_values( ecs_value(Position, {10, 20}), {TagA} )
+    });
+
+    test_assert(e != 0);
+
+    test_assert(ecs_has(world, e, Position));
+    test_assert(ecs_has(world, e, TagA));
+
+    const Position *p = ecs_get(world, e, Position);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_defer_resume(world);
+
+    ecs_defer_end(world);
+
+    p = ecs_get(world, e, Position);
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+
+    ecs_fini(world);
+}
+
 void Entity_insert_1_comp(void) {
     ecs_world_t *world = ecs_mini();
 
@@ -3044,6 +3078,46 @@ void Entity_entity_w_parent_w_set_w_parent(void) {
     test_assert(ecs_has_pair(world, e, EcsChildOf, parent));
     test_assert(ecs_has(world, e, TagA));
     test_str(ecs_get_name(world, e), "Foo");
+
+    ecs_fini(world);
+}
+
+void Entity_entity_w_new_id_and_double_dot(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t e = ecs_entity(world, {
+        .name = "#400..bar"
+    });
+
+    test_assert(e != 0);
+
+    ecs_fini(world);
+}
+
+void Entity_entity_w_existing_id_and_double_dot(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t e = ecs_entity(world, {
+        .name = "#10..bar"
+    });
+
+    test_assert(e != 0);
+
+    ecs_fini(world);
+}
+
+void Entity_entity_w_large_id_name(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t e = ecs_entity(world, {
+        .name = "#44444444444444444444a"
+    });
+
+    test_assert(e == 0);
+    
+    ecs_entity_t f = ecs_new(world);
+
+    test_assert(f != 0);
 
     ecs_fini(world);
 }

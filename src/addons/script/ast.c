@@ -8,8 +8,6 @@
 #ifdef FLECS_SCRIPT
 #include "script.h"
 
-#define flecs_ast_strdup(parser, str)\
-    (str ? flecs_strdup(&parser->script->allocator, str) : NULL)
 #define flecs_ast_new(parser, T, kind)\
     (T*)flecs_ast_new_(parser, ECS_SIZEOF(T), kind)
 #define flecs_ast_vec(parser, vec, T) \
@@ -25,7 +23,8 @@ void* flecs_ast_new_(
 {
     ecs_assert(parser->script != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_allocator_t *a = &parser->script->allocator;
-    ecs_script_node_t *result = flecs_calloc(a, size);
+    ecs_script_node_t *result = flecs_calloc_w_dbg_info(
+        a, size, "ecs_script_node_t");
     result->kind = kind;
     result->pos = parser->pos;
     return result;
@@ -58,7 +57,8 @@ ecs_script_scope_t* flecs_script_insert_scope(
 
 ecs_script_entity_t* flecs_script_insert_entity(
     ecs_script_parser_t *parser,
-    const char *name)
+    const char *name,
+    bool name_is_expr)
 {
     ecs_script_scope_t *scope = parser->scope;
     ecs_assert(scope != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -72,12 +72,24 @@ ecs_script_entity_t* flecs_script_insert_entity(
 
     result->name = name;
 
+    if (name_is_expr) {
+        parser->significant_newline = false;
+        result->name_expr = (ecs_expr_node_t*)
+            flecs_expr_interpolated_string(parser, name);
+        if (!result->name_expr) {
+            goto error;
+        }
+        parser->significant_newline = true;
+    }
+
     ecs_script_scope_t *entity_scope = flecs_script_scope_new(parser);
     ecs_assert(entity_scope != NULL, ECS_INTERNAL_ERROR, NULL);
     result->scope = entity_scope;
 
     flecs_ast_append(parser, scope->stmts, ecs_script_entity_t, result);
     return result;
+error:
+    return NULL;
 }
 
 static
@@ -295,6 +307,20 @@ ecs_script_if_t* flecs_script_insert_if(
     result->if_false = flecs_script_scope_new(parser);
 
     flecs_ast_append(parser, scope->stmts, ecs_script_if_t, result);
+    return result;
+}
+
+ecs_script_for_range_t* flecs_script_insert_for_range(
+    ecs_script_parser_t *parser)
+{
+    ecs_script_scope_t *scope = parser->scope;
+    ecs_assert(scope != NULL, ECS_INTERNAL_ERROR, NULL);
+
+    ecs_script_for_range_t *result = flecs_ast_new(
+        parser, ecs_script_for_range_t, EcsAstFor);
+    result->scope = flecs_script_scope_new(parser);
+
+    flecs_ast_append(parser, scope->stmts, ecs_script_for_range_t, result);
     return result;
 }
 

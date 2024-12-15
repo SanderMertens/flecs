@@ -16,31 +16,47 @@ typedef enum ecs_script_token_kind_t {
     EcsTokParenClose = ')',
     EcsTokBracketOpen = '[',
     EcsTokBracketClose = ']',
-    EcsTokMul = '*',
+    EcsTokMember = '.',
     EcsTokComma = ',',
     EcsTokSemiColon = ';',
     EcsTokColon = ':',
     EcsTokAssign = '=',
+    EcsTokAdd = '+',
+    EcsTokSub = '-',
+    EcsTokMul = '*',
+    EcsTokDiv = '/',
+    EcsTokMod = '%',
     EcsTokBitwiseOr = '|',
+    EcsTokBitwiseAnd = '&',
     EcsTokNot = '!',
     EcsTokOptional = '?',
     EcsTokAnnotation = '@',
     EcsTokNewline = '\n',
-    EcsTokEq,
-    EcsTokNeq,
-    EcsTokMatch,
-    EcsTokOr,
-    EcsTokIdentifier,
-    EcsTokString,
-    EcsTokNumber,
-    EcsTokKeywordModule,
-    EcsTokKeywordUsing,
-    EcsTokKeywordWith,
-    EcsTokKeywordIf,
-    EcsTokKeywordElse,
-    EcsTokKeywordTemplate,
-    EcsTokKeywordProp,
-    EcsTokKeywordConst,
+    EcsTokEq = 100,
+    EcsTokNeq = 101,
+    EcsTokGt = 102,
+    EcsTokGtEq = 103,
+    EcsTokLt = 104,
+    EcsTokLtEq = 105,
+    EcsTokAnd = 106,
+    EcsTokOr = 107,
+    EcsTokMatch = 108,
+    EcsTokRange = 109,
+    EcsTokShiftLeft = 110,
+    EcsTokShiftRight = 111,
+    EcsTokIdentifier = 112,
+    EcsTokString = 113,
+    EcsTokNumber = 114,
+    EcsTokKeywordModule = 115,
+    EcsTokKeywordUsing = 116,
+    EcsTokKeywordWith = 117,
+    EcsTokKeywordIf = 118,
+    EcsTokKeywordFor = 119,
+    EcsTokKeywordIn = 120,
+    EcsTokKeywordElse = 121,
+    EcsTokKeywordTemplate = 122,
+    EcsTokKeywordProp = 130,
+    EcsTokKeywordConst = 131,
 } ecs_script_token_kind_t;
 
 typedef struct ecs_script_token_t {
@@ -53,11 +69,10 @@ typedef struct ecs_script_tokens_t {
     ecs_script_token_t tokens[256];
 } ecs_script_tokens_t;
 
-const char* flecs_script_expr(
-    ecs_script_parser_t *parser,
-    const char *ptr,
-    ecs_script_token_t *out,
-    char until);
+typedef struct ecs_script_tokenizer_t {
+    ecs_script_tokens_t stack;
+    ecs_script_token_t *tokens;
+} ecs_script_tokenizer_t;
 
 const char* flecs_script_until(
     ecs_script_parser_t *parser,
@@ -66,6 +81,9 @@ const char* flecs_script_until(
     char until);
 
 const char* flecs_script_token_kind_str(
+    ecs_script_token_kind_t kind);
+
+const char* flecs_script_token_str(
     ecs_script_token_kind_t kind);
 
 const char* flecs_script_token(
@@ -77,5 +95,10 @@ const char* flecs_script_token(
 const char* flecs_scan_whitespace(
     ecs_script_parser_t *parser,
     const char *pos);
+
+const char* flecs_script_identifier(
+    ecs_script_parser_t *parser,
+    const char *pos,
+    ecs_script_token_t *out);
 
 #endif

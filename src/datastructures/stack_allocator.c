@@ -24,6 +24,7 @@ ecs_stack_page_t* flecs_stack_page_new(uint32_t page_id) {
     result->data = ECS_OFFSET(result, FLECS_STACK_PAGE_OFFSET);
     result->next = NULL;
     result->id = page_id + 1;
+    result->sp = 0;
     ecs_os_linc(&ecs_stack_allocator_alloc_count);
     return result;
 }
@@ -36,10 +37,7 @@ void* flecs_stack_alloc(
     ecs_assert(size > 0, ECS_INTERNAL_ERROR, NULL);
 
     ecs_stack_page_t *page = stack->tail_page;
-    if (page == &stack->first && !page->data) {
-        page->data = ecs_os_malloc(ECS_STACK_PAGE_SIZE);
-        ecs_os_linc(&ecs_stack_allocator_alloc_count);
-    }
+    ecs_assert(page->data != NULL, ECS_INTERNAL_ERROR, NULL);
 
     int16_t sp = flecs_ito(int16_t, ECS_ALIGN(page->sp, align));
     int16_t next_sp = flecs_ito(int16_t, sp + size);
@@ -65,6 +63,7 @@ void* flecs_stack_alloc(
     result = ECS_OFFSET(page->data, sp);
 
 done:
+    ecs_assert(result != NULL, ECS_INTERNAL_ERROR, NULL);
 #ifdef FLECS_SANITIZE
     ecs_os_memset(result, 0xAA, size);
 #endif
@@ -158,7 +157,7 @@ void flecs_stack_restore_cursor(
     /* If the cursor count is zero, stack should be empty
      * if the cursor count is non-zero, stack should not be empty */
     ecs_dbg_assert((stack->cursor_count == 0) == 
-        (stack->tail_page == &stack->first && stack->tail_page->sp == 0), 
+        (stack->tail_page == stack->first && stack->tail_page->sp == 0), 
             ECS_LEAK_DETECTED, FLECS_STACK_LEAK_MSG);
 }
 
@@ -167,8 +166,8 @@ void flecs_stack_reset(
 {
     ecs_dbg_assert(stack->cursor_count == 0, ECS_LEAK_DETECTED, 
         FLECS_STACK_LEAK_MSG);
-    stack->tail_page = &stack->first;
-    stack->first.sp = 0;
+    stack->tail_page = stack->first;
+    stack->first->sp = 0;
     stack->tail_cursor = NULL;
 }
 
@@ -176,31 +175,25 @@ void flecs_stack_init(
     ecs_stack_t *stack)
 {
     ecs_os_zeromem(stack);
-    stack->tail_page = &stack->first;
-    stack->first.data = NULL;
+    stack->first = flecs_stack_page_new(0);
+    stack->first->sp = 0;
+    stack->tail_page = stack->first;
 }
 
 void flecs_stack_fini(
     ecs_stack_t *stack)
 {
-    ecs_stack_page_t *next, *cur = &stack->first;
+    ecs_stack_page_t *next, *cur = stack->first;
     ecs_dbg_assert(stack->cursor_count == 0, ECS_LEAK_DETECTED, 
         FLECS_STACK_LEAK_MSG);
-    ecs_assert(stack->tail_page == &stack->first, ECS_LEAK_DETECTED, 
+    ecs_assert(stack->tail_page == stack->first, ECS_LEAK_DETECTED, 
         FLECS_STACK_LEAK_MSG);
     ecs_assert(stack->tail_page->sp == 0, ECS_LEAK_DETECTED, 
         FLECS_STACK_LEAK_MSG);
 
     do {
         next = cur->next;
-        if (cur == &stack->first) {
-            if (cur->data) {
-                ecs_os_linc(&ecs_stack_allocator_free_count);
-            }
-            ecs_os_free(cur->data);
-        } else {
-            ecs_os_linc(&ecs_stack_allocator_free_count);
-            ecs_os_free(cur);
-        }
+        ecs_os_linc(&ecs_stack_allocator_free_count);
+        ecs_os_free(cur);
     } while ((cur = next));
 }

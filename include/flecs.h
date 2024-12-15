@@ -134,7 +134,7 @@
  */
 // #define FLECS_KEEP_ASSERT
 
-/** \def FLECS_CPP_NO_AUTO_REGISTRATION
+/** @def FLECS_CPP_NO_AUTO_REGISTRATION
  * When set, the C++ API will require that components are registered before they
  * are used. This is useful in multithreaded applications, where components need
  * to be registered beforehand, and to catch issues in projects where component 
@@ -144,7 +144,7 @@
  */
 // #define FLECS_CPP_NO_AUTO_REGISTRATION
 
-/** \def FLECS_CUSTOM_BUILD
+/** @def FLECS_CUSTOM_BUILD
  * This macro lets you customize which addons to build flecs with.
  * Without any addons Flecs is just a minimal ECS storage, but addons add
  * features such as systems, scheduling and reflection. If an addon is disabled,
@@ -173,38 +173,29 @@
  */
 // #define FLECS_CUSTOM_BUILD
 
-/** @def FLECS_CPP_NO_AUTO_REGISTRATION
- * When set, the C++ API will require that components are registered before they
- * are used. This is useful in multithreaded applications, where components need
- * to be registered beforehand, and to catch issues in projects where component
- * registration is mandatory. Disabling automatic component registration also
- * slightly improves performance.
- * The C API is not affected by this feature.
- */
-// #define FLECS_CPP_NO_AUTO_REGISTRATION
-
 #ifndef FLECS_CUSTOM_BUILD
-// #define FLECS_C          /**< C API convenience macros, always enabled */
-#define FLECS_CPP           /**< C++ API */
-#define FLECS_MODULE        /**< Module support */
-#define FLECS_SCRIPT        /**< ECS data definition format */
-#define FLECS_STATS         /**< Track runtime statistics */
-#define FLECS_METRICS       /**< Expose component data as statistics */
-#define FLECS_ALERTS        /**< Monitor conditions for errors */
-#define FLECS_SYSTEM        /**< System support */
-#define FLECS_PIPELINE      /**< Pipeline support */
-#define FLECS_TIMER         /**< Timer support */
-#define FLECS_META          /**< Reflection support */
-#define FLECS_UNITS         /**< Builtin standard units */
-#define FLECS_JSON          /**< Parsing JSON to/from component values */
-#define FLECS_DOC           /**< Document entities & components */
-#define FLECS_LOG           /**< When enabled ECS provides more detailed logs */
-#define FLECS_APP           /**< Application addon */
-#define FLECS_OS_API_IMPL   /**< Default implementation for OS API */
-#define FLECS_HTTP          /**< Tiny HTTP server for connecting to remote UI */
-#define FLECS_REST          /**< REST API for querying application data */
-// #define FLECS_JOURNAL    /**< Journaling addon (disabled by default) */
-// #define FLECS_PERF_TRACE /**< Enable performance tracing (disabled by default) */
+#define FLECS_ALERTS         /**< Monitor conditions for errors */
+#define FLECS_APP            /**< Application addon */
+// #define FLECS_C           /**< C API convenience macros, always enabled */
+#define FLECS_CPP            /**< C++ API */
+#define FLECS_DOC            /**< Document entities & components */
+// #define FLECS_JOURNAL     /**< Journaling addon (disabled by default) */
+#define FLECS_JSON           /**< Parsing JSON to/from component values */
+#define FLECS_HTTP           /**< Tiny HTTP server for connecting to remote UI */
+#define FLECS_LOG            /**< When enabled ECS provides more detailed logs */
+#define FLECS_META           /**< Reflection support */
+#define FLECS_METRICS        /**< Expose component data as statistics */
+#define FLECS_MODULE         /**< Module support */
+#define FLECS_OS_API_IMPL    /**< Default implementation for OS API */
+// #define FLECS_PERF_TRACE  /**< Enable performance tracing (disabled by default) */
+#define FLECS_PIPELINE       /**< Pipeline support */
+#define FLECS_REST           /**< REST API for querying application data */
+#define FLECS_SCRIPT         /**< Flecs entity notation language */
+// #define FLECS_SCRIPT_MATH /**< Math functions for flecs script (may require linking with libm) */
+#define FLECS_SYSTEM         /**< System support */
+#define FLECS_STATS          /**< Track runtime statistics */
+#define FLECS_TIMER          /**< Timer support */
+#define FLECS_UNITS          /**< Builtin standard units */
 #endif // ifndef FLECS_CUSTOM_BUILD
 
 /** @def FLECS_LOW_FOOTPRINT
@@ -270,7 +261,7 @@
 #define FLECS_ID_DESC_MAX (32)
 #endif
 
-/** \def FLECS_EVENT_DESC_MAX
+/** @def FLECS_EVENT_DESC_MAX
  * Maximum number of events in ecs_observer_desc_t */
 #ifndef FLECS_EVENT_DESC_MAX
 #define FLECS_EVENT_DESC_MAX (8)
@@ -280,19 +271,19 @@
  * Maximum number of query variables per query */
 #define FLECS_VARIABLE_COUNT_MAX (64)
 
-/** \def FLECS_TERM_COUNT_MAX 
+/** @def FLECS_TERM_COUNT_MAX 
  * Maximum number of terms in queries. Should not exceed 64. */
 #ifndef FLECS_TERM_COUNT_MAX
 #define FLECS_TERM_COUNT_MAX 32
 #endif
 
-/** \def FLECS_TERM_ARG_COUNT_MAX 
+/** @def FLECS_TERM_ARG_COUNT_MAX 
  * Maximum number of arguments for a term. */
 #ifndef FLECS_TERM_ARG_COUNT_MAX
 #define FLECS_TERM_ARG_COUNT_MAX (16)
 #endif
 
-/** \def FLECS_QUERY_VARIABLE_COUNT_MAX
+/** @def FLECS_QUERY_VARIABLE_COUNT_MAX
  * Maximum number of query variables per query. Should not exceed 128. */
 #ifndef FLECS_QUERY_VARIABLE_COUNT_MAX
 #define FLECS_QUERY_VARIABLE_COUNT_MAX (64)
@@ -302,6 +293,14 @@
  * Maximum nesting depth of query scopes */
 #ifndef FLECS_QUERY_SCOPE_NESTING_MAX
 #define FLECS_QUERY_SCOPE_NESTING_MAX (8)
+#endif
+
+/** @def FLECS_DAG_DEPTH_MAX
+ * Maximum of levels in a DAG (acyclic relationship graph). If a graph with a
+ * depth larger than this is encountered, a CYCLE_DETECTED panic is thrown.
+ */
+#ifndef FLECS_DAG_DEPTH_MAX
+#define FLECS_DAG_DEPTH_MAX (128)
 #endif
 
 /** @} */

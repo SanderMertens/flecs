@@ -136,7 +136,7 @@
  */
 // #define FLECS_KEEP_ASSERT
 
-/** \def FLECS_CPP_NO_AUTO_REGISTRATION
+/** @def FLECS_CPP_NO_AUTO_REGISTRATION
  * When set, the C++ API will require that components are registered before they
  * are used. This is useful in multithreaded applications, where components need
  * to be registered beforehand, and to catch issues in projects where component 
@@ -146,7 +146,7 @@
  */
 // #define FLECS_CPP_NO_AUTO_REGISTRATION
 
-/** \def FLECS_CUSTOM_BUILD
+/** @def FLECS_CUSTOM_BUILD
  * This macro lets you customize which addons to build flecs with.
  * Without any addons Flecs is just a minimal ECS storage, but addons add
  * features such as systems, scheduling and reflection. If an addon is disabled,
@@ -175,38 +175,29 @@
  */
 // #define FLECS_CUSTOM_BUILD
 
-/** @def FLECS_CPP_NO_AUTO_REGISTRATION
- * When set, the C++ API will require that components are registered before they
- * are used. This is useful in multithreaded applications, where components need
- * to be registered beforehand, and to catch issues in projects where component
- * registration is mandatory. Disabling automatic component registration also
- * slightly improves performance.
- * The C API is not affected by this feature.
- */
-// #define FLECS_CPP_NO_AUTO_REGISTRATION
-
 #ifndef FLECS_CUSTOM_BUILD
-// #define FLECS_C          /**< C API convenience macros, always enabled */
-#define FLECS_CPP           /**< C++ API */
-#define FLECS_MODULE        /**< Module support */
-#define FLECS_SCRIPT        /**< ECS data definition format */
-#define FLECS_STATS         /**< Track runtime statistics */
-#define FLECS_METRICS       /**< Expose component data as statistics */
-#define FLECS_ALERTS        /**< Monitor conditions for errors */
-#define FLECS_SYSTEM        /**< System support */
-#define FLECS_PIPELINE      /**< Pipeline support */
-#define FLECS_TIMER         /**< Timer support */
-#define FLECS_META          /**< Reflection support */
-#define FLECS_UNITS         /**< Builtin standard units */
-#define FLECS_JSON          /**< Parsing JSON to/from component values */
-#define FLECS_DOC           /**< Document entities & components */
-#define FLECS_LOG           /**< When enabled ECS provides more detailed logs */
-#define FLECS_APP           /**< Application addon */
-#define FLECS_OS_API_IMPL   /**< Default implementation for OS API */
-#define FLECS_HTTP          /**< Tiny HTTP server for connecting to remote UI */
-#define FLECS_REST          /**< REST API for querying application data */
-// #define FLECS_JOURNAL    /**< Journaling addon (disabled by default) */
-// #define FLECS_PERF_TRACE /**< Enable performance tracing (disabled by default) */
+#define FLECS_ALERTS         /**< Monitor conditions for errors */
+#define FLECS_APP            /**< Application addon */
+// #define FLECS_C           /**< C API convenience macros, always enabled */
+#define FLECS_CPP            /**< C++ API */
+#define FLECS_DOC            /**< Document entities & components */
+// #define FLECS_JOURNAL     /**< Journaling addon (disabled by default) */
+#define FLECS_JSON           /**< Parsing JSON to/from component values */
+#define FLECS_HTTP           /**< Tiny HTTP server for connecting to remote UI */
+#define FLECS_LOG            /**< When enabled ECS provides more detailed logs */
+#define FLECS_META           /**< Reflection support */
+#define FLECS_METRICS        /**< Expose component data as statistics */
+#define FLECS_MODULE         /**< Module support */
+#define FLECS_OS_API_IMPL    /**< Default implementation for OS API */
+// #define FLECS_PERF_TRACE  /**< Enable performance tracing (disabled by default) */
+#define FLECS_PIPELINE       /**< Pipeline support */
+#define FLECS_REST           /**< REST API for querying application data */
+#define FLECS_SCRIPT         /**< Flecs entity notation language */
+// #define FLECS_SCRIPT_MATH /**< Math functions for flecs script (may require linking with libm) */
+#define FLECS_SYSTEM         /**< System support */
+#define FLECS_STATS          /**< Track runtime statistics */
+#define FLECS_TIMER          /**< Timer support */
+#define FLECS_UNITS          /**< Builtin standard units */
 #endif // ifndef FLECS_CUSTOM_BUILD
 
 /** @def FLECS_LOW_FOOTPRINT
@@ -272,7 +263,7 @@
 #define FLECS_ID_DESC_MAX (32)
 #endif
 
-/** \def FLECS_EVENT_DESC_MAX
+/** @def FLECS_EVENT_DESC_MAX
  * Maximum number of events in ecs_observer_desc_t */
 #ifndef FLECS_EVENT_DESC_MAX
 #define FLECS_EVENT_DESC_MAX (8)
@@ -282,19 +273,19 @@
  * Maximum number of query variables per query */
 #define FLECS_VARIABLE_COUNT_MAX (64)
 
-/** \def FLECS_TERM_COUNT_MAX 
+/** @def FLECS_TERM_COUNT_MAX 
  * Maximum number of terms in queries. Should not exceed 64. */
 #ifndef FLECS_TERM_COUNT_MAX
 #define FLECS_TERM_COUNT_MAX 32
 #endif
 
-/** \def FLECS_TERM_ARG_COUNT_MAX 
+/** @def FLECS_TERM_ARG_COUNT_MAX 
  * Maximum number of arguments for a term. */
 #ifndef FLECS_TERM_ARG_COUNT_MAX
 #define FLECS_TERM_ARG_COUNT_MAX (16)
 #endif
 
-/** \def FLECS_QUERY_VARIABLE_COUNT_MAX
+/** @def FLECS_QUERY_VARIABLE_COUNT_MAX
  * Maximum number of query variables per query. Should not exceed 128. */
 #ifndef FLECS_QUERY_VARIABLE_COUNT_MAX
 #define FLECS_QUERY_VARIABLE_COUNT_MAX (64)
@@ -304,6 +295,14 @@
  * Maximum nesting depth of query scopes */
 #ifndef FLECS_QUERY_SCOPE_NESTING_MAX
 #define FLECS_QUERY_SCOPE_NESTING_MAX (8)
+#endif
+
+/** @def FLECS_DAG_DEPTH_MAX
+ * Maximum of levels in a DAG (acyclic relationship graph). If a graph with a
+ * depth larger than this is encountered, a CYCLE_DETECTED panic is thrown.
+ */
+#ifndef FLECS_DAG_DEPTH_MAX
+#define FLECS_DAG_DEPTH_MAX (128)
 #endif
 
 /** @} */
@@ -1097,6 +1096,7 @@ typedef struct ecs_vec_t {
     int32_t size;
 #ifdef FLECS_SANITIZE
     ecs_size_t elem_size;
+    const char *type_name;
 #endif
 } ecs_vec_t;
 
@@ -1107,8 +1107,16 @@ void ecs_vec_init(
     ecs_size_t size,
     int32_t elem_count);
 
+FLECS_API
+void ecs_vec_init_w_dbg_info(
+    struct ecs_allocator_t *allocator,
+    ecs_vec_t *vec,
+    ecs_size_t size,
+    int32_t elem_count,
+    const char *type_name);
+
 #define ecs_vec_init_t(allocator, vec, T, elem_count) \
-    ecs_vec_init(allocator, vec, ECS_SIZEOF(T), elem_count)
+    ecs_vec_init_w_dbg_info(allocator, vec, ECS_SIZEOF(T), elem_count, "vec<"#T">")
 
 FLECS_API
 void ecs_vec_init_if(
@@ -1518,6 +1526,8 @@ void* ecs_sparse_get(
 #define FLECS_BLOCK_ALLOCATOR_H
 
 
+typedef struct ecs_map_t ecs_map_t;
+
 typedef struct ecs_block_allocator_block_t {
     void *memory;
     struct ecs_block_allocator_block_t *next;
@@ -1535,7 +1545,10 @@ typedef struct ecs_block_allocator_t {
     int32_t data_size;
     int32_t chunks_per_block;
     int32_t block_size;
+#ifdef FLECS_SANITIZE
     int32_t alloc_count;
+    ecs_map_t *outstanding;
+#endif
 } ecs_block_allocator_t;
 
 FLECS_API
@@ -1570,8 +1583,18 @@ void* flecs_balloc(
     ecs_block_allocator_t *allocator);
 
 FLECS_API
+void* flecs_balloc_w_dbg_info(
+    ecs_block_allocator_t *allocator,
+    const char *type_name);
+
+FLECS_API
 void* flecs_bcalloc(
     ecs_block_allocator_t *allocator);
+
+FLECS_API
+void* flecs_bcalloc_w_dbg_info(
+    ecs_block_allocator_t *allocator,
+    const char *type_name);
 
 FLECS_API
 void flecs_bfree(
@@ -1589,6 +1612,13 @@ void* flecs_brealloc(
     ecs_block_allocator_t *dst, 
     ecs_block_allocator_t *src, 
     void *memory);
+
+FLECS_API
+void* flecs_brealloc_w_dbg_info(
+    ecs_block_allocator_t *dst, 
+    ecs_block_allocator_t *src, 
+    void *memory,
+    const char *type_name);
 
 FLECS_API
 void* flecs_bdup(
@@ -1626,7 +1656,7 @@ typedef struct ecs_stack_cursor_t {
 } ecs_stack_cursor_t;
 
 typedef struct ecs_stack_t {
-    ecs_stack_page_t first;
+    ecs_stack_page_t *first;
     ecs_stack_page_t *tail_page;
     ecs_stack_cursor_t *tail_cursor;
 #ifdef FLECS_DEBUG
@@ -1719,7 +1749,7 @@ typedef struct ecs_bucket_t {
     ecs_bucket_entry_t *first;
 } ecs_bucket_t;
 
-typedef struct ecs_map_t {
+struct ecs_map_t {
     uint8_t bucket_shift;
     bool shared_allocator;
     ecs_bucket_t *buckets;
@@ -1727,7 +1757,7 @@ typedef struct ecs_map_t {
     int32_t count;
     struct ecs_block_allocator_t *entry_allocator;
     struct ecs_allocator_t *allocator;
-} ecs_map_t;
+};
 
 typedef struct ecs_map_iter_t {
     const ecs_map_t *map;
@@ -2016,12 +2046,14 @@ void* flecs_dup(
 #define flecs_allocator(obj) (&obj->allocators.dyn)
 
 #define flecs_alloc(a, size) flecs_balloc(flecs_allocator_get(a, size))
-#define flecs_alloc_t(a, T) flecs_alloc(a, ECS_SIZEOF(T))
-#define flecs_alloc_n(a, T, count) flecs_alloc(a, ECS_SIZEOF(T) * (count))
+#define flecs_alloc_w_dbg_info(a, size, type_name) flecs_balloc_w_dbg_info(flecs_allocator_get(a, size), type_name)
+#define flecs_alloc_t(a, T) flecs_alloc_w_dbg_info(a, ECS_SIZEOF(T), #T)
+#define flecs_alloc_n(a, T, count) flecs_alloc_w_dbg_info(a, ECS_SIZEOF(T) * (count), #T)
 
 #define flecs_calloc(a, size) flecs_bcalloc(flecs_allocator_get(a, size))
-#define flecs_calloc_t(a, T) flecs_calloc(a, ECS_SIZEOF(T))
-#define flecs_calloc_n(a, T, count) flecs_calloc(a, ECS_SIZEOF(T) * (count))
+#define flecs_calloc_w_dbg_info(a, size, type_name) flecs_bcalloc_w_dbg_info(flecs_allocator_get(a, size), type_name)
+#define flecs_calloc_t(a, T) flecs_calloc_w_dbg_info(a, ECS_SIZEOF(T), #T)
+#define flecs_calloc_n(a, T, count) flecs_calloc_w_dbg_info(a, ECS_SIZEOF(T) * (count), #T)
 
 #define flecs_free(a, size, ptr)\
     flecs_bfree((ptr) ? flecs_allocator_get(a, size) : NULL, ptr)
@@ -2035,6 +2067,11 @@ void* flecs_dup(
     flecs_brealloc(flecs_allocator_get(a, size_dst),\
     flecs_allocator_get(a, size_src),\
     ptr)
+#define flecs_realloc_w_dbg_info(a, size_dst, size_src, ptr, type_name)\
+    flecs_brealloc_w_dbg_info(flecs_allocator_get(a, size_dst),\
+    flecs_allocator_get(a, size_src),\
+    ptr,\
+    type_name)
 #define flecs_realloc_n(a, T, count_dst, count_src, ptr)\
     flecs_realloc(a, ECS_SIZEOF(T) * (count_dst), ECS_SIZEOF(T) * (count_src), ptr)
 
@@ -10357,6 +10394,9 @@ int ecs_value_move_ctor(
 #ifdef FLECS_NO_SCRIPT
 #undef FLECS_SCRIPT
 #endif
+#ifdef FLECS_NO_SCRIPT_MATH
+#undef FLECS_SCRIPT_MATH
+#endif
 #ifdef FLECS_NO_STATS
 #undef FLECS_STATS
 #endif
@@ -14173,6 +14213,59 @@ void FlecsUnitsImport(
 
 #endif
 
+#ifdef FLECS_SCRIPT_MATH
+#ifdef FLECS_NO_SCRIPT_MATH
+#error "FLECS_NO_SCRIPT_MATH failed: SCRIPT_MATH is required by other addons"
+#endif
+/**
+ * @file addons/script_math.h
+ * @brief Math functions for flecs script.
+ */
+
+#ifdef FLECS_SCRIPT_MATH
+
+#ifndef FLECS_SCRIPT
+#define FLECS_SCRIPT
+#endif
+
+/**
+ * @defgroup c_addons_script_math Script Math
+ * @ingroup c_addons
+ * Math functions for flecs script.
+ * @{
+ */
+
+#ifndef FLECS_SCRIPT_MATH_H
+#define FLECS_SCRIPT_MATH_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/** Script math import function.
+ * Usage:
+ * @code
+ * ECS_IMPORT(world, FlecsScriptMath)
+ * @endcode
+ * 
+ * @param world The world.
+ */
+FLECS_API
+void FlecsScriptMathImport(
+    ecs_world_t *world);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif
+
+/** @} */
+
+#endif
+
+#endif
+
 #ifdef FLECS_SCRIPT
 #ifdef FLECS_NO_SCRIPT
 #error "FLECS_NO_SCRIPT failed: SCRIPT is required by other addons"
@@ -14210,9 +14303,24 @@ void FlecsUnitsImport(
 extern "C" {
 #endif
 
+#define FLECS_SCRIPT_FUNCTION_ARGS_MAX (16)
+
 FLECS_API
 extern ECS_COMPONENT_DECLARE(EcsScript);
 
+FLECS_API
+extern ECS_DECLARE(EcsScriptTemplate);
+
+FLECS_API
+extern ECS_COMPONENT_DECLARE(EcsScriptConstVar);
+
+FLECS_API
+extern ECS_COMPONENT_DECLARE(EcsScriptFunction);
+
+FLECS_API
+extern ECS_COMPONENT_DECLARE(EcsScriptMethod);
+
+/* Script template. */
 typedef struct ecs_script_template_t ecs_script_template_t;
 
 /** Script variable. */
@@ -14220,6 +14328,7 @@ typedef struct ecs_script_var_t {
     const char *name;
     ecs_value_t value;
     const ecs_type_info_t *type_info;
+    bool is_const;
 } ecs_script_var_t;
 
 /** Script variable scope. */
@@ -14241,6 +14350,9 @@ typedef struct ecs_script_t {
     const char *code;
 } ecs_script_t;
 
+/* Runtime for executing scripts */
+typedef struct ecs_script_runtime_t ecs_script_runtime_t;
+
 /** Script component. 
  * This component is added to the entities of managed scripts and templates.
  */
@@ -14249,33 +14361,100 @@ typedef struct EcsScript {
     ecs_script_template_t *template_; /* Only set for template scripts */
 } EcsScript;
 
+/** Script function context. */
+typedef struct ecs_function_ctx_t {
+    ecs_world_t *world;
+    ecs_entity_t function;
+    void *ctx;
+} ecs_function_ctx_t;
+
+/** Script function callback. */
+typedef void(*ecs_function_callback_t)(
+    const ecs_function_ctx_t *ctx,
+    int32_t argc,
+    const ecs_value_t *argv,
+    ecs_value_t *result);
+
+/** Function argument type. */
+typedef struct ecs_script_parameter_t {
+    const char *name;
+    ecs_entity_t type;
+} ecs_script_parameter_t;
+
+/** Const component.
+ * This component describes a const variable that can be used from scripts.
+ */
+typedef struct EcsScriptConstVar {
+    ecs_value_t value;
+    const ecs_type_info_t *type_info;
+} EcsScriptConstVar;
+
+/** Function component.
+ * This component describes a function that can be called from a script.
+ */
+typedef struct EcsScriptFunction {
+    ecs_entity_t return_type;
+    ecs_vec_t params; /* vec<ecs_script_parameter_t> */
+    ecs_function_callback_t callback;
+    void *ctx;
+} EcsScriptFunction;
+
+/** Method component. 
+ * This component describes a method that can be called from a script. Methods
+ * are functions that can be called on instances of a type. A method entity is
+ * stored in the scope of the type it belongs to.
+ */
+typedef struct EcsScriptMethod {
+    ecs_entity_t return_type;
+    ecs_vec_t params; /* vec<ecs_script_parameter_t> */
+    ecs_function_callback_t callback;
+    void *ctx;
+} EcsScriptMethod;
 
 /* Parsing & running scripts */
+
+/** Used with ecs_script_parse() and ecs_script_eval() */
+typedef struct ecs_script_eval_desc_t {
+    ecs_script_vars_t *vars;       /**< Variables used by script */
+    ecs_script_runtime_t *runtime; /**< Reusable runtime (optional) */
+} ecs_script_eval_desc_t;
 
 /** Parse script.
  * This operation parses a script and returns a script object upon success. To
  * run the script, call ecs_script_eval().
  * 
+ * If the script uses outside variables, an ecs_script_vars_t object must be
+ * provided in the vars member of the desc object that defines all variables 
+ * with the correct types.
+ * 
  * @param world The world.
  * @param name Name of the script (typically a file/module name).
  * @param code The script code.
+ * @param desc Parameters for script runtime.
  * @return Script object if success, NULL if failed.
 */
 FLECS_API
 ecs_script_t* ecs_script_parse(
     ecs_world_t *world,
     const char *name,
-    const char *code);
+    const char *code,
+    const ecs_script_eval_desc_t *desc);
 
 /** Evaluate script.
  * This operation evaluates (runs) a parsed script.
  * 
+ * If variables were provided to ecs_script_parse(), an application may pass
+ * a different ecs_script_vars_t object to ecs_script_eval(), as long as the
+ * object has all referenced variables and they are of the same type.
+ * 
  * @param script The script.
+ * @param desc Parameters for script runtime.
  * @return Zero if success, non-zero if failed.
 */
 FLECS_API
 int ecs_script_eval(
-    ecs_script_t *script);
+    const ecs_script_t *script,
+    const ecs_script_eval_desc_t *desc);
 
 /** Free script.
  * This operation frees a script object.
@@ -14325,6 +14504,31 @@ int ecs_script_run_file(
     ecs_world_t *world,
     const char *filename);
 
+/** Create runtime for script.
+ * A script runtime is a container for any data created during script 
+ * evaluation. By default calling ecs_script_run() or ecs_script_eval() will
+ * create a runtime on the spot. A runtime can be created in advance and reused
+ * across multiple script evaluations to improve performance.
+ * 
+ * When scripts are evaluated on multiple threads, each thread should have its
+ * own script runtime.
+ * 
+ * A script runtime must be deleted with ecs_script_runtime_free().
+ * 
+ * @return A new script runtime.
+ */
+FLECS_API
+ecs_script_runtime_t* ecs_script_runtime_new(void);
+
+/** Free script runtime.
+ * This operation frees a script runtime created by ecs_script_runtime_new().
+ * 
+ * @param runtime The runtime to free.
+ */
+FLECS_API
+void ecs_script_runtime_free(
+    ecs_script_runtime_t *runtime);
+
 /** Convert script AST to string.
  * This operation converts the script abstract syntax tree to a string, which
  * can be used to debug a script.
@@ -14336,7 +14540,8 @@ int ecs_script_run_file(
 FLECS_API
 int ecs_script_ast_to_buf(
     ecs_script_t *script,
-    ecs_strbuf_t *buf);
+    ecs_strbuf_t *buf,
+    bool colors);
 
 /** Convert script AST to string.
  * This operation converts the script abstract syntax tree to a string, which
@@ -14347,7 +14552,8 @@ int ecs_script_ast_to_buf(
  */
 FLECS_API
 char* ecs_script_ast_to_str(
-    ecs_script_t *script);
+    ecs_script_t *script,
+    bool colors);
 
 
 /* Managed scripts (script associated with entity that outlives the function) */
@@ -14559,38 +14765,83 @@ void ecs_script_vars_from_iter(
 
 /* Standalone expression evaluation */
 
-/** Used with ecs_script_expr_run(). */
-typedef struct ecs_script_expr_run_desc_t {
-    const char *name;
-    const char *expr;
-    ecs_entity_t (*lookup_action)(
+/** Used with ecs_expr_run(). */
+typedef struct ecs_expr_eval_desc_t {
+    const char *name;                /**< Script name */
+    const char *expr;                /**< Full expression string */
+    ecs_entity_t (*lookup_action)(   /**< Function for resolving entity identifiers */
         const ecs_world_t*,
         const char *value,
         void *ctx);
-    void *lookup_ctx;
-    ecs_script_vars_t *vars;
-} ecs_script_expr_run_desc_t;
+    void *lookup_ctx;                /**< Context passed to lookup function */
+    const ecs_script_vars_t *vars;   /**< Variables accessible in expression */
+    ecs_entity_t type;               /**< Type of parsed value (optional) */
+    
+    /* Disable constant folding (slower evaluation, faster parsing) */
+    bool disable_folding;
+    
+    /* Allow for unresolved identifiers when parsing. Useful when entities can
+     * be created in between parsing & evaluating. */
+    bool allow_unresolved_identifiers;
 
-/** Parse standalone expression into value.
- * This operation parses a flecs expression into the provided pointer. The
- * memory pointed to must be large enough to contain a value of the used type.
+    ecs_script_runtime_t *runtime;   /**< Reusable runtime (optional) */
+} ecs_expr_eval_desc_t;
+
+/** Run expression.
+ * This operation runs an expression and stores the result in the provided 
+ * value. If the value contains a type that is different from the type of the
+ * expression, the expression will be cast to the value.
  *
- * If no type and pointer are provided for the value argument, the operation
- * will discover the type from the expression and allocate storage for the
- * value. The allocated value must be freed with ecs_value_free().
+ * If the provided value for value.ptr is NULL, the value must be freed with 
+ * ecs_value_free() afterwards.
  *
  * @param world The world.
  * @param ptr The pointer to the expression to parse.
  * @param value The value containing type & pointer to write to.
- * @param desc Configuration parameters for deserializer.
+ * @param desc Configuration parameters for the parser.
  * @return Pointer to the character after the last one read, or NULL if failed.
  */
 FLECS_API
-const char* ecs_script_expr_run(
+const char* ecs_expr_run(
     ecs_world_t *world,
     const char *ptr,
     ecs_value_t *value,
-    const ecs_script_expr_run_desc_t *desc);
+    const ecs_expr_eval_desc_t *desc);
+
+/** Parse expression.
+ * This operation parses an expression and returns an object that can be 
+ * evaluated multiple times with ecs_expr_eval().
+ * 
+ * @param world The world.
+ * @param expr The expression string.
+ * @param desc Configuration parameters for the parser.
+ * @return A script object if parsing is successful, NULL if parsing failed.
+ */
+FLECS_API
+ecs_script_t* ecs_expr_parse(
+    ecs_world_t *world,
+    const char *expr,
+    const ecs_expr_eval_desc_t *desc);
+
+/** Evaluate expression.
+ * This operation evaluates an expression parsed with ecs_expr_parse() 
+ * and stores the result in the provided value. If the value contains a type 
+ * that is different from the type of the expression, the expression will be 
+ * cast to the value.
+ * 
+ * If the provided value for value.ptr is NULL, the value must be freed with 
+ * ecs_value_free() afterwards.
+ * 
+ * @param script The script containing the expression.
+ * @param value The value in which to store the expression result.
+ * @param desc Configuration parameters for the parser.
+ * @return Zero if successful, non-zero if failed.
+ */
+FLECS_API
+int ecs_expr_eval(
+    const ecs_script_t *script,
+    ecs_value_t *value,
+    const ecs_expr_eval_desc_t *desc);
 
 /** Evaluate interpolated expressions in string.
  * This operation evaluates expressions in a string, and replaces them with
@@ -14609,6 +14860,98 @@ char* ecs_script_string_interpolate(
     ecs_world_t *world,
     const char *str,
     const ecs_script_vars_t *vars);
+
+
+/* Global const variables */
+
+/** Used with ecs_const_var_init */
+typedef struct ecs_const_var_desc_t {
+    /* Variable name. */
+    const char *name;
+
+    /* Variable parent (namespace). */
+    ecs_entity_t parent;
+
+    /* Variable type. */
+    ecs_entity_t type;
+
+    /* Pointer to value of variable. The value will be copied to an internal
+     * storage and does not need to be kept alive. */
+    void *value;
+} ecs_const_var_desc_t;
+
+/** Create a const variable that can be accessed by scripts. 
+ * 
+ * @param world The world.
+ * @param desc Const var parameters.
+ * @return The const var, or 0 if failed.
+ */
+FLECS_API
+ecs_entity_t ecs_const_var_init(
+    ecs_world_t *world,
+    ecs_const_var_desc_t *desc);
+
+#define ecs_const_var(world, ...)\
+    ecs_const_var_init(world, &(ecs_const_var_desc_t)__VA_ARGS__)
+
+/* Functions */
+
+/** Used with ecs_function_init and ecs_method_init */
+typedef struct ecs_function_desc_t {
+    /** Function name. */
+    const char *name;
+    
+    /** Parent of function. For methods the parent is the type for which the 
+     * method will be registered. */
+    ecs_entity_t parent;
+
+    /** Function parameters. */
+    ecs_script_parameter_t params[FLECS_SCRIPT_FUNCTION_ARGS_MAX];
+
+    /** Function return type. */
+    ecs_entity_t return_type;
+
+    /** Function implementation. */
+    ecs_function_callback_t callback;
+
+    /** Context passed to function implementation. */
+    void *ctx;
+} ecs_function_desc_t;
+
+/** Create new function. 
+ * This operation creates a new function that can be called from a script.
+ * 
+ * @param world The world.
+ * @param desc Function init parameters.
+ * @return The function, or 0 if failed.
+*/
+FLECS_API
+ecs_entity_t ecs_function_init(
+    ecs_world_t *world,
+    const ecs_function_desc_t *desc);
+
+#define ecs_function(world, ...)\
+    ecs_function_init(world, &(ecs_function_desc_t)__VA_ARGS__)
+
+/** Create new method. 
+ * This operation creates a new method that can be called from a script. A 
+ * method is like a function, except that it can be called on every instance of
+ * a type.
+ * 
+ * Methods automatically receive the instance on which the method is invoked as
+ * first argument.
+ * 
+ * @param world Method The world.
+ * @param desc Method init parameters.
+ * @return The function, or 0 if failed.
+*/
+FLECS_API
+ecs_entity_t ecs_method_init(
+    ecs_world_t *world,
+    const ecs_function_desc_t *desc);
+
+#define ecs_method(world, ...)\
+    ecs_method_init(world, &(ecs_function_desc_t)__VA_ARGS__)
 
 
 /* Value serialization */
@@ -14676,6 +15019,8 @@ int ecs_ptr_to_str_buf(
     ecs_entity_t type,
     const void *data,
     ecs_strbuf_t *buf);
+
+typedef struct ecs_expr_node_t ecs_expr_node_t; 
 
 /** Script module import function.
  * Usage:

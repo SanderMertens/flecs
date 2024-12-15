@@ -373,6 +373,15 @@
                 "set_unsigned_as_signed_out_of_range",
                 "set_string_to_null_as_signed",
                 "set_string_to_null_as_unsigned",
+                "set_string_to_bool",
+                "set_string_to_char",
+                "set_string_to_signed",
+                "set_string_to_unsigned",
+                "set_string_to_float",
+                "set_string_to_string",
+                "set_string_to_string_literal",
+                "set_string_to_entity",
+                "set_string_to_id",
                 "set_entity_as_signed",
                 "set_entity_as_unsigned",
                 "set_entity_as_signed_out_of_range",
@@ -475,7 +484,9 @@
                 "opaque_vec_w_opaque_elem",
                 "next_out_of_bounds",
                 "set_out_of_bounds",
-                "get_member_id"
+                "get_member_id",
+                "get_array_type",
+                "get_vector_type"
             ]
         }, {
             "id": "DeserializeFromJson",

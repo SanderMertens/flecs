@@ -196,6 +196,7 @@
                 "entity_init_w_set_1_comp_existing_defer",
                 "entity_init_w_set_1_comp_existing_empty_defer",
                 "entity_init_w_set_1_comp_1_tag_w_set_defer",
+                "entity_init_w_set_1_comp_suspend_defer",
                 "insert_1_comp",
                 "insert_2_comp",
                 "insert_1_comp_1_tag",
@@ -204,7 +205,10 @@
                 "entity_w_parent_w_add",
                 "entity_w_parent_w_add_w_parent",
                 "entity_w_parent_w_set",
-                "entity_w_parent_w_set_w_parent"
+                "entity_w_parent_w_set_w_parent",
+                "entity_w_new_id_and_double_dot",
+                "entity_w_existing_id_and_double_dot",
+                "entity_w_large_id_name"
             ]
         }, {
             "id": "Each",
@@ -2246,7 +2250,8 @@
                 "defer_emplace_after_remove",
                 "batched_w_table_change_in_observer",
                 "redefine_named_in_threaded_app",
-                "batched_cmd_w_component_init"
+                "batched_cmd_w_component_init",
+                "deep_command_nesting"
             ]
         }, {
             "id": "SingleThreadStaging",

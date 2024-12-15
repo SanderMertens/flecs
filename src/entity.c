@@ -844,6 +844,8 @@ ecs_record_t* flecs_new_entity(
     return record;
 }
 
+static int commit_indent = 0;
+
 static
 void flecs_move_entity(
     ecs_world_t *world,
@@ -981,6 +983,8 @@ void flecs_commit(
         return;
     }
 
+    commit_indent += 2;
+
     ecs_os_perf_trace_push("flecs.commit");
 
     if (src_table) {
@@ -1019,6 +1023,8 @@ void flecs_commit(
         ecs_check(entity >= world->info.min_id, 
             ECS_OUT_OF_RANGE, 0);
     }
+
+    commit_indent -=2 ;
 
     ecs_os_perf_trace_pop("flecs.commit");
 
@@ -1747,7 +1753,12 @@ int flecs_traverse_add(
 
     /* If a name is provided but not yet assigned, add the Name component */
     if (name && !name_assigned) {
-        ecs_add_path_w_sep(world, result, scope, name, sep, root_sep);
+        if (!ecs_add_path_w_sep(world, result, scope, name, sep, root_sep)) {
+            if (name[0] == '#') {
+                /* Numerical ids should always return, unless it's invalid */
+                goto error;
+            }
+        }
     } else if (new_entity && scope) {
         ecs_add_pair(world, result, EcsChildOf, scope);
     }
@@ -1838,6 +1849,7 @@ int flecs_traverse_add(
     ecs_vec_fini_t(&world->allocator, &ids, ecs_id_t);
     return 0;
 error:
+    flecs_table_diff_builder_fini(world, &diff);
     ecs_vec_fini_t(&world->allocator, &ids, ecs_id_t);
     return -1;
 }
@@ -2018,6 +2030,8 @@ ecs_entity_t ecs_entity_init(
     /* Parent field takes precedence over scope */
     if (desc->parent) {
         scope = desc->parent;
+        ecs_check(ecs_is_valid(world, desc->parent), 
+            ECS_INVALID_PARAMETER, "ecs_entity_desc_t::parent is not valid");
     }
 
     /* Find or create entity */
@@ -2088,7 +2102,7 @@ ecs_entity_t ecs_entity_init(
         world, result, ecs_id(EcsIdentifier), EcsName),
             ECS_INTERNAL_ERROR, NULL);
 
-    if (stage->defer) {
+    if (ecs_is_deferred(world)) {
         flecs_deferred_add_remove((ecs_world_t*)stage, result, name, desc, 
             scope, with, flecs_new_entity, name_assigned);
     } else {
@@ -3629,26 +3643,18 @@ void ecs_enable_id(
     ecs_check(flecs_can_toggle(world, id), ECS_INVALID_OPERATION, 
         "add CanToggle trait to component");
 
+    ecs_entity_t bs_id = id | ECS_TOGGLE;
+    ecs_add_id(world, entity, bs_id);
+
     if (flecs_defer_enable(stage, entity, id, enable)) {
         return;
     }
 
-    ecs_record_t *r = flecs_entities_get(world, entity);
-    ecs_entity_t bs_id = id | ECS_TOGGLE;
-    
+    ecs_record_t *r = flecs_entities_get(world, entity);    
     ecs_table_t *table = r->table;
-    int32_t index = -1;
-    if (table) {
-        index = ecs_table_get_type_index(world, table, bs_id);
-    }
+    int32_t index = ecs_table_get_type_index(world, table, bs_id);
+    ecs_assert(index != -1, ECS_INTERNAL_ERROR, NULL);
 
-    if (index == -1) {
-        ecs_add_id(world, entity, bs_id);
-        flecs_defer_end(world, stage);
-        ecs_enable_id(world, entity, id, enable);
-        return;
-    }
-    
     ecs_assert(table->_ != NULL, ECS_INTERNAL_ERROR, NULL);
     index -= table->_->bs_offset;
     ecs_assert(index >= 0, ECS_INTERNAL_ERROR, NULL);
@@ -5099,7 +5105,7 @@ bool flecs_defer_end(
 
     ecs_assert(stage->defer > 0, ECS_INTERNAL_ERROR, NULL);
 
-    if (!--stage->defer) {
+    if (!--stage->defer && !stage->cmd_flushing) {
         ecs_os_perf_trace_push("flecs.commands.merge");
 
         /* Test whether we're flushing to another queue or whether we're 
@@ -5109,11 +5115,17 @@ bool flecs_defer_end(
             merge_to_world = world->stages[0]->defer == 0;
         }
 
-        ecs_stage_t *dst_stage = flecs_stage_from_world(&world);
-        ecs_commands_t *commands = stage->cmd;
-        ecs_vec_t *queue = &commands->queue;
+        do {
+            ecs_stage_t *dst_stage = flecs_stage_from_world(&world);
+            ecs_commands_t *commands = stage->cmd;
+            ecs_vec_t *queue = &commands->queue;
 
-        if (ecs_vec_count(queue)) {
+            if (!ecs_vec_count(queue)) {
+                break;
+            }
+
+            stage->cmd_flushing = true;
+
             /* Internal callback for capturing commands */
             if (world->on_commands_active) {
                 world->on_commands_active(stage, queue, 
@@ -5125,7 +5137,12 @@ bool flecs_defer_end(
 
             ecs_table_diff_builder_t diff;
             flecs_table_diff_builder_init(world, &diff);
-            flecs_commands_push(stage);
+
+            if (stage->cmd == &stage->cmd_stack[0]) {
+                stage->cmd = &stage->cmd_stack[1];
+            } else {
+                stage->cmd = &stage->cmd_stack[0];
+            }
 
             for (i = 0; i < count; i ++) {
                 ecs_cmd_t *cmd = &cmds[i];
@@ -5283,10 +5300,10 @@ bool flecs_defer_end(
                 }
             }
 
+            stage->cmd_flushing = false;
+
             flecs_stack_reset(&commands->stack);
             ecs_vec_clear(queue);
-            flecs_commands_pop(stage);
-
             flecs_table_diff_builder_fini(world, &diff);
 
             /* Internal callback for capturing commands, signal queue is done */
@@ -5294,7 +5311,7 @@ bool flecs_defer_end(
                 world->on_commands_active(stage, NULL, 
                     world->on_commands_ctx_active);
             }
-        }
+        } while (true);
 
         ecs_os_perf_trace_pop("flecs.commands.merge");
 

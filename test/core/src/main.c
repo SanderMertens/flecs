@@ -189,6 +189,7 @@ void Entity_entity_init_w_set_1_comp_w_name_defer(void);
 void Entity_entity_init_w_set_1_comp_existing_defer(void);
 void Entity_entity_init_w_set_1_comp_existing_empty_defer(void);
 void Entity_entity_init_w_set_1_comp_1_tag_w_set_defer(void);
+void Entity_entity_init_w_set_1_comp_suspend_defer(void);
 void Entity_insert_1_comp(void);
 void Entity_insert_2_comp(void);
 void Entity_insert_1_comp_1_tag(void);
@@ -198,6 +199,9 @@ void Entity_entity_w_parent_w_add(void);
 void Entity_entity_w_parent_w_add_w_parent(void);
 void Entity_entity_w_parent_w_set(void);
 void Entity_entity_w_parent_w_set_w_parent(void);
+void Entity_entity_w_new_id_and_double_dot(void);
+void Entity_entity_w_existing_id_and_double_dot(void);
+void Entity_entity_w_large_id_name(void);
 
 // Testsuite 'Each'
 void Each_each_tag(void);
@@ -2166,6 +2170,7 @@ void Commands_defer_emplace_after_remove(void);
 void Commands_batched_w_table_change_in_observer(void);
 void Commands_redefine_named_in_threaded_app(void);
 void Commands_batched_cmd_w_component_init(void);
+void Commands_deep_command_nesting(void);
 
 // Testsuite 'SingleThreadStaging'
 void SingleThreadStaging_setup(void);
@@ -3049,6 +3054,10 @@ bake_test_case Entity_testcases[] = {
         Entity_entity_init_w_set_1_comp_1_tag_w_set_defer
     },
     {
+        "entity_init_w_set_1_comp_suspend_defer",
+        Entity_entity_init_w_set_1_comp_suspend_defer
+    },
+    {
         "insert_1_comp",
         Entity_insert_1_comp
     },
@@ -3083,6 +3092,18 @@ bake_test_case Entity_testcases[] = {
     {
         "entity_w_parent_w_set_w_parent",
         Entity_entity_w_parent_w_set_w_parent
+    },
+    {
+        "entity_w_new_id_and_double_dot",
+        Entity_entity_w_new_id_and_double_dot
+    },
+    {
+        "entity_w_existing_id_and_double_dot",
+        Entity_entity_w_existing_id_and_double_dot
+    },
+    {
+        "entity_w_large_id_name",
+        Entity_entity_w_large_id_name
     }
 };
 
@@ -10726,6 +10747,10 @@ bake_test_case Commands_testcases[] = {
     {
         "batched_cmd_w_component_init",
         Commands_batched_cmd_w_component_init
+    },
+    {
+        "deep_command_nesting",
+        Commands_deep_command_nesting
     }
 };
 
@@ -11351,7 +11376,7 @@ static bake_test_suite suites[] = {
         "Entity",
         NULL,
         NULL,
-        140,
+        144,
         Entity_testcases
     },
     {
@@ -11610,7 +11635,7 @@ static bake_test_suite suites[] = {
         "Commands",
         NULL,
         NULL,
-        142,
+        143,
         Commands_testcases
     },
     {

@@ -27,7 +27,7 @@ struct Position {
   y = f32
 }
 
-Prefab SpaceShip {
+prefab SpaceShip {
   MaxSpeed: {value: 100}
 
   cockpit {
@@ -66,6 +66,20 @@ To create anonymous entities, use the `_` identifier:
 _ {
   my_child {} // named child with anonymous parent
 }
+```
+
+Entity names can be specified using a string. This allows for entities with names that contain special characters, like spaces:
+
+```c
+"my parent" {
+  "my child" {}
+}
+```
+
+String names can be combined with string interpolation (see below) to create names that are computed when the script is evaluated:
+
+```c
+"USS_$name" {}
 ```
 
 ### Tags
@@ -242,7 +256,7 @@ prefab SpaceShip {
 Scripts can natively specify inheritance relationships between entities, which is useful in particular for prefabs. Example:
 
 ```c
-Prefab SpaceShip {
+prefab SpaceShip {
   MaxSpeed: {value: 100}
 }
 
@@ -491,6 +505,52 @@ lantern {
 }
 ```
 
+### For statement
+Parts of a script can be repeated with a for loop. Example:
+
+```c
+for i in 0..10 {
+  Lantern() {
+    Position: {x: $i * 5}
+  }
+}
+```
+
+The values specified in the range can be an expression:
+
+```c
+for i in 0..$count {
+  // ...
+}
+```
+
+When creating entities in a for loop, ensure that they are unique or the for loop will overwrite the same entity:
+
+```c
+for i in 0..10 {
+  // overwrites entity "e" 10 times
+  e: { Position: {x: $i * 5} }
+}
+```
+
+To avoid this, scripts can either create anonymous entities:
+
+```c
+for i in 0..10 {
+  // creates 10 anonymous entities
+  _ { Position: {x: $i * 5} }
+}
+```
+
+Or use a unique string expression for the entity name:
+
+```c
+for i in 0..10 {
+  // creates entities with names e_0, e_1, ... e_9
+  "e_$i" { Position: {x: $i * 5} }
+}
+```
+
 ### Default components
 A scope can have a default component, which means entities in that scope can assign values of that component without having to specify the component name. 
 
@@ -572,7 +632,7 @@ my_spaceship {
 }
 ```
 
-## Comma operator
+### Comma operator
 The comma operator can be used as a shortcut to create multiple entities in a scope. Example:
 
 ```c
@@ -607,6 +667,367 @@ enum Color {
   constant Green
   constant Blue
 }
+```
+
+## Expressions
+Scripts can contain expressions, which allow for computing values from inputs such as component values, template properties and variables. Here are some examples of valid Flecs script expressions:
+
+```c
+const x = 10 + 20 * 30
+const x = 10 * (20 + 30)
+const x = $var * 10
+const x = pow($var, 2)
+const x = e.parent().name()
+const x = Position: {10, 20}
+const x = Position: {x: 10, y: 20}
+```
+
+The following sections describe the different features of expressions.
+
+### Operators
+The following operators are supported in expressions, in order of precedence:
+
+| **Symbol** | **Description**        | **Example**            |
+|------------|------------------------|------------------------|
+| `!`        | Logical NOT            | `!10`                  |
+| `*`        | Multiplication         | `10 * 20`              |
+| `/`        | Division               | `10 / 20`              |
+| `%`        | Modulus                | `10 % 3`               |
+| `+`        | Addition               | `10 + 20`              |
+| `-`        | Subtraction/negative   | `10 - 20`, `-(10, 20)` |
+| `<<`       | Bitwise left shift     | `10 << 1`              |
+| `>>`       | Bitwise right shift    | `10 >> 1`              |
+| `>`        | Greater than           | `10 > 20`              |
+| `>=`       | Greater than or equal  | `10 >= 20`             |
+| `<`        | Less than              | `10 < 20`              |
+| `<=`       | Less than or equal     | `10 <= 20`             |
+| `==`       | Equality               | `10 == 20`             |
+| `!=`       | Not equal              | `10 != 20`             |
+| `&`        | Bitwise AND            | `2 & 6`                |
+| `\|`       | Bitwise OR             | `2 | 4`                |
+| `&&`       | Logical AND            | `true && false`        |
+| `\|\|`     | Logical OR             | `true || false`        |
+
+### Values
+The following table lists the different kinds of values that are supported in expressions:
+
+| **Value kind**            | **Type**      | **Example**                       |
+|---------------------------|---------------|-----------------------------------|
+| **Integer**               | `i64`         | `42`, `-100`, `0`, `0x1A`         |
+| **Floating Point**        | `f64`         | `3.14`, `-2.718`, `1e6`, `0.0`    |
+| **String**                | `string`      | `"Hello, World!"`, `"123"`, `""`  |
+| **Multiline string**      | `string`      | \``Hello World`\`                 |
+| **Entity**                | `entity`      | `spaceship`, `spaceship.pilot`    |
+| **Enum/Bitmask values**   | from lvalue   | `Red`, `Blue`, `Lettuce \| Bacon` |
+| **Composites**            | from lvalue   | `{x: 10, y: 20}`, `{10, 20}`      |
+| **Collections**           | from lvalue   | `[1, 2, 3]`                       |
+
+#### Initializers
+Initializers are values that are used to initialize composite and collection members. Composite values are initialized by initializers that are delimited by `{}`, while collection initializers are delimited by `[]`. Furthermore, composite initializers can specify which member of the composite value should be initialized. Here are some examples of initializer expressions:
+
+```c
+{}
+{10, 20}
+{x: 10, y: 20}
+{{10, 20}, {30, 40}}
+{start: {x: 10, y: 20}, stop: {x: 10, y: 20}}
+[10, 20, 30]
+[{10, 20}, {30, 40}, {50, 60}]
+```
+
+Initializers must always be assigned to an lvalue of a well defined type. This can either be a typed variable, component assignment, function parameter or in the case of nested initializers, an element of another initializer. For example, this is a valid usage of an initializer:
+
+```c
+const x = Position: {10, 20}
+```
+
+while this is an invalid usage of an initializer:
+
+```c
+// Invalid, unknown type for initializer
+const x = {10, 20}
+```
+
+When assigning variables to elements in a composite initializer, applications can use the following shorthand notation if the variable names are the same as the member name of the element:
+
+```c
+// Normal notation
+Tree: {color: $color, height: $height}
+
+
+// Shorthand notation
+Tree: {color: $, height: $}
+```
+
+### String interpolation
+Flecs script supports interpolated strings, which are strings that can contain expressions. String interpolation supports two forms, where one allows for easy embedding of variables, whereas the other allows for embedding any kind of expression. The following example shows an embedded variable:
+
+```c
+const x = "The value of PI is $PI"
+```
+
+The following example shows how to use an expression:
+
+```c
+const x = "The circumference of the circle is {2 * $PI * $r}"
+```
+
+To prevent evaluating expressions in an interpolated string, the `$` and `{` characters can be escaped:
+
+```c
+const x = "The value of variable \$x is $x"
+```
+
+### Types
+The type of an expression is determined by the kind of expression, its operands and the context in which the expression is evaluated. The words "type" and "component" can be used interchangeably, as every type in Flecs is a component, and every component is a type. For component types to be used with scripts, they have to be described using the meta reflection addon.
+
+The following sections go over the different kinds of expressions and how their types are derived.
+
+#### Unary expressions
+Unary expressions have a single operand, with the operator preceding it. The following table shows the different unary operators with the expression type:
+
+| **Operator** | **Expression Type**     |
+|--------------|-------------------------|
+| `!`          | `bool`                  |
+| `-`          | Same as operand.        |
+
+#### Binary expressions
+Binary expressions have two operands. The following table shows the different binary operators with the expression type. The operand type is the type to which the operands must be castable for it to be a valid expression.
+
+| **Symbol** | **Expression type**  | **Operand type**     |
+|------------|----------------------|----------------------|
+| `*`        | other (see below)    | Numbers              |
+| `/`        | `f64`                | Numbers              |
+| `+`        | other (see below)    | Numbers              |
+| `-`        | other (see below)    | Numbers              |
+| `%`        | `i64`                | `i64`                |
+| `<<`       | other (see below)    | Integers             |
+| `>>`       | other (see below)    | Integers             |
+| `>`        | `bool`               | Numbers              |
+| `>=`       | `bool`               | Numbers              |
+| `<`        | `bool`               | Numbers              |
+| `<=`       | `bool`               | Numbers              |
+| `==`       | `bool`               | Values               |
+| `!=`       | `bool`               | Values               |
+| `&`        | other (see below)    | Integers             |
+| `\|`       | other (see below)    | Integers             |
+| `&&`       | `bool`               | `bool`               |
+| `\|\|`     | `bool`               | `bool`               |
+
+For the operators where the expression type is listed as "other" the type is derived by going through these steps:
+- If the types of the operands are equal, the expression type will be the operand type.
+- If the types are different:
+  - For literal values, find the smallest storage type without losing precision. If operand types are now equal, use that.
+  - Find the most expressive type of the two operands (see below)
+  - If a cast to the most expressive type does not result in a loss of precision, use that.
+  - If the types are both numbers follow these rules in order:
+    - If one of the types is a floating point, use `f64`
+    - If one of the types is an integer, use `i64`
+    - If neither, throw a type incompatible error
+
+For equality expressions (using the `==` or `!=` operators), additional rules are used:
+ - If one of the operands is a bool, cast the other operand to a bool as well. This ensures that expressions such as `2 == true` evaluate to true.
+ - Equality expressions between floating point numbers are invalid
+
+Type expressiveness is determined by the kind of type and its storage size. The following tables show the expressiveness and storage scores:
+
+| **Type**     | **Expressiveness Score** |
+|--------------|---------------------------|
+| bool         | 1                         |
+| char         | 2                         |
+| u8           | 2                         |
+| u16          | 3                         |
+| u32          | 4                         |
+| uptr         | 5                         |
+| u64          | 6                         |
+| i8           | 7                         |
+| i16          | 8                         |
+| i32          | 9                         |
+| iptr         | 10                        |
+| i64          | 11                        |
+| f32          | 12                        |
+| f64          | 13                        |
+| string       | -1                        |
+| entity       | -1                        |
+
+| **Type**     | **Storage Score** |
+|--------------|-------------------|
+| bool         | 1                 |
+| char         | 1                 |
+| u8           | 2                 |
+| u16          | 3                 |
+| u32          | 4                 |
+| uptr         | 6                 |
+| u64          | 7                 |
+| i8           | 1                 |
+| i16          | 2                 |
+| i32          | 3                 |
+| iptr         | 5                 |
+| i64          | 6                 |
+| f32          | 3                 |
+| f64          | 4                 |
+| string       | -1                |
+| entity       | -1                |
+
+The function to determine whether a type is implicitly castable is:
+
+```c
+bool implicit_cast_allowed(from, to) {
+  if (expressiveness(to) >= expressiveness(from)) {
+    return storage(to) >= storage(from);
+  } else {
+    return false;
+  }
+}
+```
+
+If either the expressiveness or storage scores are negative, the operand types are not implicitly castable.
+
+#### Lvalues
+Lvalues are the left side of assignments. There are two kinds of assignments possible in Flecs script:
+- Variable initialization
+- Initializer initialization
+
+The type of an expression can be influenced by the type of the lvalue it is assigned to. For example, if the lvalue is a variable of type `Position`, the assigned initializer will also be of type `Position`:
+
+```c
+const p = Position: {10, 20}
+```
+
+Similarly, when an initializer is used inside of an initializer, it obtains the type of the initializer element. In the following example the outer initializer is of type `Line`, while the inner initializers are of type `Point`:
+
+```c
+const l = Line: {{10, 20}, {30, 40}}
+```
+
+Another notable example where this matters is for enum and bitmask constants. Consider the following example:
+
+```c
+const c = Color: Red
+```
+
+Here, `Red` is a resolvable identifier, even though the fully qualified identifier is `Color.Red`. However, because the type of the lvalue is of enum type `Color`, the expression `Red` will be resolved in the scope of `Color`.
+
+### Functions
+Expressions can call functions. Functions in Flecs script can have arguments of any type, and must return a value. The following snippet shows examples of function calls:
+
+```c
+const x = sqrt(100)
+const x = pow(100, 2)
+const x = add({10, 20}, {30, 40})
+```
+
+Currently functions can only be defined outside of scripts by the Flecs Script API. Flecs comes with a set of builtin and math functions. Math functions are defined by the script math addon, which must be explicitly enabled by defining `FLECS_SCRIPT_MATH`.
+
+A function can be created in code by doing:
+
+```c
+ecs_function(world, {
+    .name = "sum",
+    .return_type = ecs_id(ecs_i64_t),
+    .params = {
+        { .name = "a", .type = ecs_id(ecs_i64_t) },
+        { .name = "b", .type = ecs_id(ecs_i64_t) }
+    },
+    .callback = sum
+});
+```
+
+### Methods
+Methods are functions that are called on instances of the method's type. The first argument of a method is the instance on which the method is called. The following snippet shows examples of method calls:
+
+```c
+const x = v.length()
+const x = v1.add(v2)
+```
+
+Just like functions, methods can currently only be defined outside of scripts by using the Flecs Script API.
+
+A method can be created in code by doing:
+
+```c
+ecs_method(world, {
+    .name = "add",
+    .parent = ecs_id(ecs_i64_t), // Add method to i64
+    .return_type = ecs_id(ecs_i64_t),
+    .params = {
+        { .name = "a", .type = ecs_id(ecs_i64_t) }
+    },
+    .callback = sum
+});
+```
+
+### Builtin functions and constants
+The following table lists builtin core functions in the `flecs.script.core` namespace:
+
+| **Function Name** | **Description**             | **Return Type** | **Arguments**               |
+|-------------------|-----------------------------|-----------------|-----------------------------|
+| `pair`            | Returns a pair identifier   | `id`            | (`entity`, `entity`)        |
+
+The following table lists builtin methods on the `flecs.meta.entity` type:
+
+| **Method Name**   | **Description**                        | **Return Type** | **Arguments**        |
+|-------------------|----------------------------------------|-----------------|----------------------|
+| `name`            | Returns entity name                    | `string`        | `()`                 |
+| `path`            | Returns entity path                    | `string`        | `()`                 |
+| `parent`          | Returns entity parent                  | `entity`        | `()`                 |
+| `has`             | Returns whether entity has component   | `bool`          | `(id)`               |
+
+The following table lists doc methods on the `flecs.meta.entity` type:
+
+| **Method Name**  | **Description**                           | **Return Type**  | **Arguments**        |
+|-------------------|------------------------------------------|------------------|----------------------|
+| `doc_name`        | Returns entity doc name                  | `string`         | `()`                 |
+| `doc_uuid`        | Returns entity doc uuid                  | `string`         | `()`                 |
+| `doc_brief`       | Returns entity doc brief description     | `string`         | `()`                 |
+| `doc_detail`      | Returns entity doc detailed description  | `string`         | `()`                 |
+| `doc_link`        | Returns entity doc link                  | `string`         | `()`                 |
+| `doc_color`       | Returns entity doc color                 | `string`         | `()`                 |
+
+To use the doc functions, make sure to use a Flecs build compiled with `FLECS_DOC` (enabled by default).
+
+The following table lists math functions in the `flecs.script.math` namespace:
+
+| **Function Name** | **Description**                          | **Return Type** | **Arguments**       |
+|--------------------|-----------------------------------------|-----------------|---------------------|
+| `cos`             | Compute cosine                           | `f64`           | `(f64)`             |
+| `sin`             | Compute sine                             | `f64`           | `(f64)`             |
+| `tan`             | Compute tangent                          | `f64`           | `(f64)`             |
+| `acos`            | Compute arc cosine                       | `f64`           | `(f64)`             |
+| `asin`            | Compute arc sine                         | `f64`           | `(f64)`             |
+| `atan`            | Compute arc tangent                      | `f64`           | `(f64)`             |
+| `atan2`           | Compute arc tangent with two parameters  | `f64`           | `(f64, f64)`        |
+| `cosh`            | Compute hyperbolic cosine                | `f64`           | `(f64)`             |
+| `sinh`            | Compute hyperbolic sine                  | `f64`           | `(f64)`             |
+| `tanh`            | Compute hyperbolic tangent               | `f64`           | `(f64)`             |
+| `acosh`           | Compute area hyperbolic cosine           | `f64`           | `(f64)`             |
+| `asinh`           | Compute area hyperbolic sine             | `f64`           | `(f64)`             |
+| `atanh`           | Compute area hyperbolic tangent          | `f64`           | `(f64)`             |
+| `exp`             | Compute exponential function             | `f64`           | `(f64)`             |
+| `ldexp`           | Generate value from significant and exponent | `f64`       | `(f64, f32)`        |
+| `log`             | Compute natural logarithm                | `f64`           | `(f64)`             |
+| `log10`           | Compute common logarithm                 | `f64`           | `(f64)`             |
+| `exp2`            | Compute binary exponential function      | `f64`           | `(f64)`             |
+| `log2`            | Compute binary logarithm                 | `f64`           | `(f64)`             |
+| `pow`             | Raise to power                           | `f64`           | `(f64, f64)`        |
+| `sqrt`            | Compute square root                      | `f64`           | `(f64)`             |
+| `sqr`             | Compute square                           | `f64`           | `(f64)`             |
+| `ceil`            | Round up value                           | `f64`           | `(f64)`             |
+| `floor`           | Round down value                         | `f64`           | `(f64)`             |
+| `round`           | Round to nearest                         | `f64`           | `(f64)`             |
+| `abs`             | Compute absolute value                   | `f64`           | `(f64)`             |
+
+The following table lists the constants in the `flecs.script.math` namespace:
+
+| **Function Name** | **Description**                           | **Type** | **Value**            |
+|-------------------|-------------------------------------------|----------|----------------------|
+| `E`               | Euler's number                            | `f64`    | `2.71828182845904523536028747135266250` |
+| `PI`              | Ratio of circle circumference to diameter | `f64`    | `3.14159265358979323846264338327950288` |
+
+To use the math functions, make sure to use a Flecs build compiled with the `FLECS_SCRIPT_MATH` addon (disabled by default) and that the module is imported:
+
+```c
+ECS_IMPORT(world, FlecsScriptMath);
 ```
 
 ## Templates

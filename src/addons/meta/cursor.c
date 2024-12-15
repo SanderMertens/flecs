@@ -4,6 +4,7 @@
  */
 
 #include "meta.h"
+#include <inttypes.h>
 #include <ctype.h>
 
 #ifdef FLECS_META
@@ -240,7 +241,8 @@ int ecs_meta_next(
         }
 
         if (scope->elem_cur >= get_elem_count(scope)) {
-            ecs_err("out of collection bounds (%d)", scope->elem_cur);
+            ecs_err("out of collection bounds (%d elements vs. size %d)", 
+                scope->elem_cur + 1, get_elem_count(scope));
             return -1;
         }
         return 0;
@@ -691,6 +693,10 @@ bool ecs_meta_is_collection(
 ecs_entity_t ecs_meta_get_type(
     const ecs_meta_cursor_t *cursor)
 {
+    if (cursor->depth == 0) {
+        return cursor->scope[0].type;
+    }
+
     ecs_meta_scope_t *scope = flecs_meta_cursor_get_scope(cursor);
     ecs_meta_type_op_t *op = flecs_meta_cursor_get_op(scope);
     return op->type;
@@ -885,6 +891,17 @@ int ecs_meta_set_bool(
     cases_T_bool(ptr, value);
     cases_T_signed(ptr, value, ecs_meta_bounds_signed);
     cases_T_unsigned(ptr, value, ecs_meta_bounds_unsigned);
+    case EcsOpString: {
+        char *result;
+        if (value) {
+            result = ecs_os_strdup("true");
+        } else {
+            result = ecs_os_strdup("false");
+        }
+        ecs_os_free(*(ecs_string_t*)ptr);
+        set_T(ecs_string_t, ptr, result);
+        break;
+    }
     case EcsOpOpaque: {
         const EcsOpaque *ot = ecs_get(cursor->world, op->type, EcsOpaque);
         if (ot && ot->assign_bool) {
@@ -901,7 +918,6 @@ int ecs_meta_set_bool(
     case EcsOpPrimitive:
     case EcsOpF32:
     case EcsOpF64:
-    case EcsOpString:
         flecs_meta_conversion_error(cursor, op, "bool");
         return -1;
     default:
@@ -924,6 +940,12 @@ int ecs_meta_set_char(
     switch(op->kind) {
     cases_T_bool(ptr, value);
     cases_T_signed(ptr, value, ecs_meta_bounds_signed);
+    case EcsOpString: {
+        char *result = flecs_asprintf("%c", value);
+        ecs_os_free(*(ecs_string_t*)ptr);
+        set_T(ecs_string_t, ptr, result);
+        break;
+    }
     case EcsOpOpaque: {
         const EcsOpaque *opaque = ecs_get(cursor->world, op->type, EcsOpaque);
         ecs_assert(opaque != NULL, ECS_INVALID_OPERATION, 
@@ -956,7 +978,6 @@ int ecs_meta_set_char(
     case EcsOpF32:
     case EcsOpF64:
     case EcsOpUPtr:
-    case EcsOpString:
     case EcsOpEntity:
     case EcsOpId:
         flecs_meta_conversion_error(cursor, op, "char");
@@ -983,6 +1004,12 @@ int ecs_meta_set_int(
     cases_T_signed(ptr, value, ecs_meta_bounds_signed);
     cases_T_unsigned(ptr, value, ecs_meta_bounds_signed);
     cases_T_float(ptr, value);
+    case EcsOpString: {
+        char *result = flecs_asprintf("%"PRId64, value);
+        ecs_os_free(*(ecs_string_t*)ptr);
+        set_T(ecs_string_t, ptr, result);
+        break;
+    }
     case EcsOpOpaque: {
         const EcsOpaque *opaque = ecs_get(cursor->world, op->type, EcsOpaque);
         ecs_assert(opaque != NULL, ECS_INVALID_OPERATION, 
@@ -1008,8 +1035,7 @@ int ecs_meta_set_int(
     case EcsOpPush:
     case EcsOpPop:
     case EcsOpScope:
-    case EcsOpPrimitive:
-    case EcsOpString: {
+    case EcsOpPrimitive: {
         if(!value) return ecs_meta_set_null(cursor);
         flecs_meta_conversion_error(cursor, op, "int");
         return -1;
@@ -1036,6 +1062,12 @@ int ecs_meta_set_uint(
     cases_T_signed(ptr, value, ecs_meta_bounds_unsigned);
     cases_T_unsigned(ptr, value, ecs_meta_bounds_unsigned);
     cases_T_float(ptr, value);
+    case EcsOpString: {
+        char *result = flecs_asprintf("%"PRIu64, value);
+        ecs_os_free(*(ecs_string_t*)ptr);
+        set_T(ecs_string_t, ptr, result);
+        break;
+    }
     case EcsOpOpaque: {
         const EcsOpaque *opaque = ecs_get(cursor->world, op->type, EcsOpaque);
         ecs_assert(opaque != NULL, ECS_INVALID_OPERATION, 
@@ -1062,7 +1094,6 @@ int ecs_meta_set_uint(
     case EcsOpPop:
     case EcsOpScope:
     case EcsOpPrimitive:
-    case EcsOpString:
         if(!value) return ecs_meta_set_null(cursor);
         flecs_meta_conversion_error(cursor, op, "uint");
         return -1;
@@ -1094,6 +1125,12 @@ int ecs_meta_set_float(
     cases_T_signed(ptr, value, ecs_meta_bounds_float);
     cases_T_unsigned(ptr, value, ecs_meta_bounds_float);
     cases_T_float(ptr, value);
+    case EcsOpString: {
+        char *result = flecs_asprintf("%f", value);
+        ecs_os_free(*(ecs_string_t*)ptr);
+        set_T(ecs_string_t, ptr, result);
+        break;
+    }
     case EcsOpOpaque: {
         const EcsOpaque *opaque = ecs_get(cursor->world, op->type, EcsOpaque);
         ecs_assert(opaque != NULL, ECS_INVALID_OPERATION, 
@@ -1124,7 +1161,6 @@ int ecs_meta_set_float(
     case EcsOpPop:
     case EcsOpScope:
     case EcsOpPrimitive:
-    case EcsOpString:
         flecs_meta_conversion_error(cursor, op, "float");
         return -1;
     default:
@@ -1487,6 +1523,10 @@ int ecs_meta_set_string_literal(
     ecs_meta_type_op_t *op = flecs_meta_cursor_get_op(scope);
     void *ptr = flecs_meta_cursor_get_ptr(cursor->world, scope);
 
+    if (!value) {
+        return -1;
+    }
+
     ecs_size_t len = ecs_os_strlen(value);
     if (value[0] != '\"' || value[len - 1] != '\"') {
         ecs_err("invalid string literal '%s'", value);
@@ -1562,6 +1602,12 @@ int ecs_meta_set_entity(
     case EcsOpId:
         set_T(ecs_id_t, ptr, value); /* entities are valid ids */
         break;
+    case EcsOpString: {
+        char *result = ecs_get_path(cursor->world, value);
+        ecs_os_free(*(ecs_string_t*)ptr);
+        set_T(ecs_string_t, ptr, result);
+        break;
+    }   
     case EcsOpOpaque: {
         const EcsOpaque *opaque = ecs_get(cursor->world, op->type, EcsOpaque);
         if (opaque && opaque->assign_entity) {
@@ -1594,7 +1640,6 @@ int ecs_meta_set_entity(
     case EcsOpF64:
     case EcsOpUPtr:
     case EcsOpIPtr:
-    case EcsOpString:
         flecs_meta_conversion_error(cursor, op, "entity");
         goto error;
     default:
@@ -1619,6 +1664,12 @@ int ecs_meta_set_id(
     case EcsOpId:
         set_T(ecs_id_t, ptr, value);
         break;
+    case EcsOpString: {
+        char *result = ecs_id_str(cursor->world, value);
+        ecs_os_free(*(ecs_string_t*)ptr);
+        set_T(ecs_string_t, ptr, result);
+        break;
+    }
     case EcsOpOpaque: {
         const EcsOpaque *opaque = ecs_get(cursor->world, op->type, EcsOpaque);
         if (opaque && opaque->assign_id) {
@@ -1651,7 +1702,6 @@ int ecs_meta_set_id(
     case EcsOpF64:
     case EcsOpUPtr:
     case EcsOpIPtr:
-    case EcsOpString:
     case EcsOpEntity:
         flecs_meta_conversion_error(cursor, op, "id");
         goto error;

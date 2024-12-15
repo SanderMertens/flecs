@@ -37,9 +37,10 @@
 
 /* Definitions for parser functions */
 #define ParserBegin\
-    ecs_script_tokens_t token_stack = {0};\
-    ecs_script_token_t *tokens = token_stack.tokens;\
-    (void)tokens
+    ecs_script_tokenizer_t _tokenizer;\
+    ecs_os_zeromem(&_tokenizer);\
+    _tokenizer.tokens = _tokenizer.stack.tokens;\
+    ecs_script_tokenizer_t *tokenizer = &_tokenizer;
 
 #define ParserEnd\
         Error("unexpected end of rule (parser error)");\
@@ -47,7 +48,14 @@
         return NULL
 
 /* Get token */
-#define Token(n) (tokens[n].value)
+#define Token(n) (tokenizer->tokens[n].value)
+
+/* Push/pop token frame (allows token stack reuse in recursive functions) */
+#define TokenFramePush() \
+    tokenizer->tokens = &tokenizer->stack.tokens[tokenizer->stack.count];
+
+#define TokenFramePop() \
+    tokenizer->tokens = tokenizer->stack.tokens;
 
 /* Error */
 #define Error(...)\
@@ -58,23 +66,52 @@
 /* Parse expression */
 #define Expr(until, ...)\
     {\
-        ecs_assert(token_stack.count < 256, ECS_INTERNAL_ERROR, NULL);\
-        ecs_script_token_t *t = &token_stack.tokens[token_stack.count ++];\
-        if (!(pos = flecs_script_expr(parser, pos, t, until))) {\
+        ecs_expr_node_t *EXPR = NULL;\
+        if (until == '}' || until == ']') {\
+            pos --;\
+            if (until == '}') {\
+                ecs_assert(pos[0] == '{', ECS_INTERNAL_ERROR, NULL);\
+            } else if (until == ']') {\
+                ecs_assert(pos[0] == '[', ECS_INTERNAL_ERROR, NULL);\
+            }\
+        }\
+        parser->significant_newline = false;\
+        if (!(pos = flecs_script_parse_expr(parser, pos, 0, &EXPR))) {\
             goto error;\
         }\
-        if (!t->value[0] && (until == '\n' || until == '{')) {\
-            pos ++;\
-            Error("empty expression");\
+        parser->significant_newline = true;\
+        __VA_ARGS__\
+    }
+
+/* Parse initializer */
+#define Initializer(until, ...)\
+    {\
+        ecs_expr_node_t *INITIALIZER = NULL;\
+        ecs_expr_initializer_t *_initializer = NULL;\
+        if (until != '\n') {\
+            parser->significant_newline = false;\
         }\
-    }\
-    Parse_1(until, __VA_ARGS__)
+        if (!(pos = flecs_script_parse_initializer(\
+            parser, pos, until, &_initializer))) \
+        {\
+            flecs_expr_visit_free(\
+                &parser->script->pub, (ecs_expr_node_t*)_initializer);\
+            goto error;\
+        }\
+        parser->significant_newline = true;\
+        if (pos[0] != until) {\
+            Error("expected '%c'", until);\
+        }\
+        INITIALIZER = (ecs_expr_node_t*)_initializer;\
+        pos ++;\
+        __VA_ARGS__\
+    }
 
 /* Parse token until character */
 #define Until(until, ...)\
     {\
-        ecs_assert(token_stack.count < 256, ECS_INTERNAL_ERROR, NULL);\
-        ecs_script_token_t *t = &token_stack.tokens[token_stack.count ++];\
+        ecs_assert(tokenizer->stack.count < 256, ECS_INTERNAL_ERROR, NULL);\
+        ecs_script_token_t *t = &tokenizer->stack.tokens[tokenizer->stack.count ++];\
         if (!(pos = flecs_script_until(parser, pos, t, until))) {\
             goto error;\
         }\
@@ -84,8 +121,8 @@
 /* Parse next token */
 #define Parse(...)\
     {\
-        ecs_assert(token_stack.count < 256, ECS_INTERNAL_ERROR, NULL);\
-        ecs_script_token_t *t = &token_stack.tokens[token_stack.count ++];\
+        ecs_assert(tokenizer->stack.count < 256, ECS_INTERNAL_ERROR, NULL);\
+        ecs_script_token_t *t = &tokenizer->stack.tokens[tokenizer->stack.count ++];\
         if (!(pos = flecs_script_token(parser, pos, t, false))) {\
             goto error;\
         }\
@@ -156,11 +193,11 @@
     ecs_script_token_t lookahead_token;\
     const char *old_lh_token_cur = parser->token_cur;\
     if ((lookahead = flecs_script_token(parser, pos, &lookahead_token, true))) {\
-        token_stack.tokens[token_stack.count ++] = lookahead_token;\
+        tokenizer->stack.tokens[tokenizer->stack.count ++] = lookahead_token;\
         switch(lookahead_token.kind) {\
             __VA_ARGS__\
         default:\
-            token_stack.count --;\
+            tokenizer->stack.count --;\
             break;\
         }\
         if (old_lh_token_cur > parser->token_keep) {\
@@ -187,7 +224,9 @@
                 __VA_ARGS__\
             }\
         )\
-        pos = old_ptr;\
+        if (pos != lookahead) {\
+            pos = old_ptr;\
+        }\
     )
 
 #define LookAhead_3(tok1, tok2, tok3, ...)\
@@ -199,7 +238,9 @@
                 __VA_ARGS__\
             }\
         )\
-        pos = old_ptr;\
+        if (pos != lookahead) {\
+            pos = old_ptr;\
+        }\
     )
 
 /* Open scope */
@@ -212,9 +253,9 @@
 
 /* Parser loop */
 #define Loop(...)\
-    int32_t token_stack_count = token_stack.count;\
+    int32_t token_stack_count = tokenizer->stack.count;\
     do {\
-        token_stack.count = token_stack_count;\
+        tokenizer->stack.count = token_stack_count;\
         __VA_ARGS__\
     } while (true);
 
