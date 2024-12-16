@@ -293,382 +293,6 @@ By default entity hierarchies are created with the `ChildOf` relationship. Other
 }
 ```
 
-## Advanced Features
-
-### Module statement
-The `module` statement puts all contents of a script in a module. Example:
-
-```c
-module components.transform
-
-// Creates components.transform.Position
-struct Position {
-  x = f32
-  y = f32
-}
-```
-
-The `components.transform` entity will be created with the `Module` tag.
-
-### Using statement
-The `using` keyword imports a namespace into the current namespace. Example:
-
-```c
-// Without using
-flecs.meta.struct Position {
-  x = flecs.meta.f32
-  y = flecs.meta.f32
-}
-```
-```c
-// With using
-using flecs.meta
-
-struct Position {
-  x = f32
-  y = f32
-}
-```
-
-The `using` keyword only applies to the scope in which it is specified. Example:
-
-```c
-// Scope without using
-my_engine {
-  game.engines.FtlEngine: {active: true}
-}
-```
-```c
-// Scope with using
-my_spaceship {
-  using game.engines
-
-  FtlEngine: {active: true}
-}
-```
-
-A `using` statement may end with a wildcard (`*`). This will import all namespaces matching the path. Example:
-
-```c
-using flecs.*
-
-struct Position {
-  x = f32
-  y = f32
-}
-```
-
-### With statement
-When you're building a scene or asset you may find yourself often repeating the same components for multiple entities. To avoid this, a `with` statement can be used. For example:
-
-```c
-with SpaceShip {
-  MillenniumFalcon {}
-  UssEnterprise {}
-  UssVoyager {}
-  Rocinante {}
-}
-```
-
-This is equivalent to doing:
-
-```c
-MillenniumFalcon {
-  SpaceShip
-}
-
-UssEnterprise {
-  SpaceShip
-}
-
-UssVoyager {
-  SpaceShip
-}
-
-Rocinante {
-  SpaceShip
-}
-```
-
-With statements can contain multiple tags:
-
-```c
-with SpaceShip, HasWeapons {
-  MillenniumFalcon {}
-  UssEnterprise {}
-  UssVoyager {}
-  Rocinante {}
-}
-```
-
-With statements can contain component values, specified between parentheses:
-
-```c
-with Color(38, 25, 13) {
-  pillar_1 {}
-  pillar_2 {}
-  pillar_3 {}
-}
-```
-
-### Variables
-Scripts can contain variables, which are useful for often repeated values. Variables are created with the `const` keyword. Example:
-
-```c
-const pi = 3.1415926
-
-my_entity {
-  Rotation: {angle: $pi}
-}
-```
-
-Variables can be combined with expressions:
-
-```c
-const pi = 3.1415926
-const pi_2 = $pi * 2
-
-my_entity {
-  Rotation: {angle: $pi / 2}
-}
-```
-
-In the above examples, the type of the variable is inferred. Variables can also be provided with an explicit type:
-
-```c
-const wood = Color: {38, 25, 13}
-```
-
-Variables can be used in component values as shown in the previous examples, or can be used directly as component. Example:
-
-```c
-const wood = Color: {38, 25, 13}
-
-my_entity {
-  $wood
-}
-
-// is equivalent to
-
-my_entity {
-  Color: {38, 25, 13}
-}
-```
-
-Additionally, variables can also be used in combination with `with` statements:
-
-```c
-const wood = Color: {38, 25, 13}
-
-with $color {
-  pillar_1 {}
-  pillar_2 {}
-  pillar_3 {}
-}
-```
-
-### Component values
-A script can use the value of a component that is looked up on a specific entity. The following example fetches the `width` and `depth` members from the `Level` component, that is fetched from the `Game` entity:
-
-```c
-grid {
-  Grid: { Game[Level].width, Game[Level].depth }
-}
-```
-
-To reduce the number of component lookups in a script, the component value can be stored in a variable:
-
-```c
-const level = Game[Level]
-
-tiles {
-  Grid: { width: $level.width, $level.depth, prefab: Tile }
-}
-```
-
-The requested component is stored by value, not by reference. Adding or removing components to the entity will not invalidate the component data. If the requested component does not exist on the entity, script execution will fail.
-
-### If statement
-Parts of a script can be conditionally executed with an if statement. Example:
-
-```c
-const daytime = bool: false
-
-lantern {
-  Color: {210, 255, 200}
-
-  if $daytime {
-    Emissive: { value: 0 }
-  } else {
-    Emissive: { value: 1 }
-  }
-}
-```
-
-### For statement
-Parts of a script can be repeated with a for loop. Example:
-
-```c
-for i in 0..10 {
-  Lantern() {
-    Position: {x: $i * 5}
-  }
-}
-```
-
-The values specified in the range can be an expression:
-
-```c
-for i in 0..$count {
-  // ...
-}
-```
-
-When creating entities in a for loop, ensure that they are unique or the for loop will overwrite the same entity:
-
-```c
-for i in 0..10 {
-  // overwrites entity "e" 10 times
-  e: { Position: {x: $i * 5} }
-}
-```
-
-To avoid this, scripts can either create anonymous entities:
-
-```c
-for i in 0..10 {
-  // creates 10 anonymous entities
-  _ { Position: {x: $i * 5} }
-}
-```
-
-Or use a unique string expression for the entity name:
-
-```c
-for i in 0..10 {
-  // creates entities with names e_0, e_1, ... e_9
-  "e_$i" { Position: {x: $i * 5} }
-}
-```
-
-### Default components
-A scope can have a default component, which means entities in that scope can assign values of that component without having to specify the component name. 
-
-There are different ways to specify a default component. One way is to use a `with` statement. Default component values are assigned with the `=` operator, and don't need a `{}` surrounding the value. Example:
-
-```c
-with Position {
-  ent_a = 10, 20
-  ent_b = 20, 30
-}
-```
-
-Another way a default components are derived is from the entity kind. If an entity is specified with a kind, a `DefaultChildComponent` component will be looked up on the kind to find the default component for the scope, if any. For example:
-
-```c
-// Create a PositionList tag with a DefaultChildComponent
-PositionList {
-  DefaultChildComponent: {Position}
-}
-
-// Derive default component for scope from PositionList
-PositionList plist {
-  ent_a = 10, 20
-  ent_b = 10, 20
-  ent_c = 10, 20
-}
-```
-
-A common use of default components is when creating structs. `struct` is a component with `member` as default child component. Example:
-
-```c
-struct Position {
-  x = f32
-  y = f32
-}
-
-// is equivalent to
-
-struct Position {
-  member x(f32)
-  member y(f32)
-}
-```
-
-Note how `member` is also used as kind for the children. This means that children of `x` and `y` derive their default child component from `member`, which is set to `member`. This makes it easy to create nested members:
-
-```c
-struct Line {
-  start {
-    x = f32
-    y = f32
-  }
-  stop {
-    x = f32
-    y = f32
-  }
-}
-
-// is equivalent to
-
-struct Line {
-  member start {
-    member x(f32)
-    member y(f32)
-  }
-  member stop {
-    member x(f32)
-    member y(f32)
-  }
-}
-```
-
-### Semicolon operator
-Multiple statements can be combined on a single line when using the semicolon operator. Example:
-
-```c
-my_spaceship {
-  SpaceShip; HasFtl
-}
-```
-
-### Comma operator
-The comma operator can be used as a shortcut to create multiple entities in a scope. Example:
-
-```c
-my_spaceship {
-  pilot_a,
-  pilot_b,
-  pilot_c
-}
-
-// is equivalent to
-
-my_spaceship {
-  pilot_a {}
-  pilot_b {}
-  pilot_c {}
-}
-```
-
-This allows for a more natural way to describe things like enum types:
-
-```c
-enum Color {
-  Red,
-  Green,
-  Blue
-}
-
-// is equivalent to
-
-enum Color {
-  constant Red
-  constant Green
-  constant Blue
-}
-```
-
 ## Expressions
 Scripts can contain expressions, which allow for computing values from inputs such as component values, template properties and variables. Here are some examples of valid Flecs script expressions:
 
@@ -704,9 +328,9 @@ The following operators are supported in expressions, in order of precedence:
 | `==`       | Equality               | `10 == 20`             |
 | `!=`       | Not equal              | `10 != 20`             |
 | `&`        | Bitwise AND            | `2 & 6`                |
-| `\|`       | Bitwise OR             | `2 | 4`                |
+| `\|`       | Bitwise OR             | `2 \| 4`               |
 | `&&`       | Logical AND            | `true && false`        |
-| `\|\|`     | Logical OR             | `true || false`        |
+| `\|\|`     | Logical OR             | `true \|\| false`      |
 
 ### Values
 The following table lists the different kinds of values that are supported in expressions:
@@ -1118,6 +742,382 @@ template Forest {
 }
 
 Forest my_forest
+```
+
+## Advanced Features
+
+### Module statement
+The `module` statement puts all contents of a script in a module. Example:
+
+```c
+module components.transform
+
+// Creates components.transform.Position
+struct Position {
+  x = f32
+  y = f32
+}
+```
+
+The `components.transform` entity will be created with the `Module` tag.
+
+### Using statement
+The `using` keyword imports a namespace into the current namespace. Example:
+
+```c
+// Without using
+flecs.meta.struct Position {
+  x = flecs.meta.f32
+  y = flecs.meta.f32
+}
+```
+```c
+// With using
+using flecs.meta
+
+struct Position {
+  x = f32
+  y = f32
+}
+```
+
+The `using` keyword only applies to the scope in which it is specified. Example:
+
+```c
+// Scope without using
+my_engine {
+  game.engines.FtlEngine: {active: true}
+}
+```
+```c
+// Scope with using
+my_spaceship {
+  using game.engines
+
+  FtlEngine: {active: true}
+}
+```
+
+A `using` statement may end with a wildcard (`*`). This will import all namespaces matching the path. Example:
+
+```c
+using flecs.*
+
+struct Position {
+  x = f32
+  y = f32
+}
+```
+
+### With statement
+When you're building a scene or asset you may find yourself often repeating the same components for multiple entities. To avoid this, a `with` statement can be used. For example:
+
+```c
+with SpaceShip {
+  MillenniumFalcon {}
+  UssEnterprise {}
+  UssVoyager {}
+  Rocinante {}
+}
+```
+
+This is equivalent to doing:
+
+```c
+MillenniumFalcon {
+  SpaceShip
+}
+
+UssEnterprise {
+  SpaceShip
+}
+
+UssVoyager {
+  SpaceShip
+}
+
+Rocinante {
+  SpaceShip
+}
+```
+
+With statements can contain multiple tags:
+
+```c
+with SpaceShip, HasWeapons {
+  MillenniumFalcon {}
+  UssEnterprise {}
+  UssVoyager {}
+  Rocinante {}
+}
+```
+
+With statements can contain component values, specified between parentheses:
+
+```c
+with Color(38, 25, 13) {
+  pillar_1 {}
+  pillar_2 {}
+  pillar_3 {}
+}
+```
+
+### Variables
+Scripts can contain variables, which are useful for often repeated values. Variables are created with the `const` keyword. Example:
+
+```c
+const pi = 3.1415926
+
+my_entity {
+  Rotation: {angle: $pi}
+}
+```
+
+Variables can be combined with expressions:
+
+```c
+const pi = 3.1415926
+const pi_2 = $pi * 2
+
+my_entity {
+  Rotation: {angle: $pi / 2}
+}
+```
+
+In the above examples, the type of the variable is inferred. Variables can also be provided with an explicit type:
+
+```c
+const wood = Color: {38, 25, 13}
+```
+
+Variables can be used in component values as shown in the previous examples, or can be used directly as component. Example:
+
+```c
+const wood = Color: {38, 25, 13}
+
+my_entity {
+  $wood
+}
+
+// is equivalent to
+
+my_entity {
+  Color: {38, 25, 13}
+}
+```
+
+Additionally, variables can also be used in combination with `with` statements:
+
+```c
+const wood = Color: {38, 25, 13}
+
+with $color {
+  pillar_1 {}
+  pillar_2 {}
+  pillar_3 {}
+}
+```
+
+### Component values
+A script can use the value of a component that is looked up on a specific entity. The following example fetches the `width` and `depth` members from the `Level` component, that is fetched from the `Game` entity:
+
+```c
+grid {
+  Grid: { Game[Level].width, Game[Level].depth }
+}
+```
+
+To reduce the number of component lookups in a script, the component value can be stored in a variable:
+
+```c
+const level = Game[Level]
+
+tiles {
+  Grid: { width: $level.width, $level.depth, prefab: Tile }
+}
+```
+
+The requested component is stored by value, not by reference. Adding or removing components to the entity will not invalidate the component data. If the requested component does not exist on the entity, script execution will fail.
+
+### If statement
+Parts of a script can be conditionally executed with an if statement. Example:
+
+```c
+const daytime = bool: false
+
+lantern {
+  Color: {210, 255, 200}
+
+  if $daytime {
+    Emissive: { value: 0 }
+  } else {
+    Emissive: { value: 1 }
+  }
+}
+```
+
+### For statement
+Parts of a script can be repeated with a for loop. Example:
+
+```c
+for i in 0..10 {
+  Lantern() {
+    Position: {x: $i * 5}
+  }
+}
+```
+
+The values specified in the range can be an expression:
+
+```c
+for i in 0..$count {
+  // ...
+}
+```
+
+When creating entities in a for loop, ensure that they are unique or the for loop will overwrite the same entity:
+
+```c
+for i in 0..10 {
+  // overwrites entity "e" 10 times
+  e: { Position: {x: $i * 5} }
+}
+```
+
+To avoid this, scripts can either create anonymous entities:
+
+```c
+for i in 0..10 {
+  // creates 10 anonymous entities
+  _ { Position: {x: $i * 5} }
+}
+```
+
+Or use a unique string expression for the entity name:
+
+```c
+for i in 0..10 {
+  // creates entities with names e_0, e_1, ... e_9
+  "e_$i" { Position: {x: $i * 5} }
+}
+```
+
+### Default components
+A scope can have a default component, which means entities in that scope can assign values of that component without having to specify the component name. 
+
+There are different ways to specify a default component. One way is to use a `with` statement. Default component values are assigned with the `=` operator, and don't need a `{}` surrounding the value. Example:
+
+```c
+with Position {
+  ent_a = 10, 20
+  ent_b = 20, 30
+}
+```
+
+Another way a default components are derived is from the entity kind. If an entity is specified with a kind, a `DefaultChildComponent` component will be looked up on the kind to find the default component for the scope, if any. For example:
+
+```c
+// Create a PositionList tag with a DefaultChildComponent
+PositionList {
+  DefaultChildComponent: {Position}
+}
+
+// Derive default component for scope from PositionList
+PositionList plist {
+  ent_a = 10, 20
+  ent_b = 10, 20
+  ent_c = 10, 20
+}
+```
+
+A common use of default components is when creating structs. `struct` is a component with `member` as default child component. Example:
+
+```c
+struct Position {
+  x = f32
+  y = f32
+}
+
+// is equivalent to
+
+struct Position {
+  member x(f32)
+  member y(f32)
+}
+```
+
+Note how `member` is also used as kind for the children. This means that children of `x` and `y` derive their default child component from `member`, which is set to `member`. This makes it easy to create nested members:
+
+```c
+struct Line {
+  start {
+    x = f32
+    y = f32
+  }
+  stop {
+    x = f32
+    y = f32
+  }
+}
+
+// is equivalent to
+
+struct Line {
+  member start {
+    member x(f32)
+    member y(f32)
+  }
+  member stop {
+    member x(f32)
+    member y(f32)
+  }
+}
+```
+
+### Semicolon operator
+Multiple statements can be combined on a single line when using the semicolon operator. Example:
+
+```c
+my_spaceship {
+  SpaceShip; HasFtl
+}
+```
+
+### Comma operator
+The comma operator can be used as a shortcut to create multiple entities in a scope. Example:
+
+```c
+my_spaceship {
+  pilot_a,
+  pilot_b,
+  pilot_c
+}
+
+// is equivalent to
+
+my_spaceship {
+  pilot_a {}
+  pilot_b {}
+  pilot_c {}
+}
+```
+
+This allows for a more natural way to describe things like enum types:
+
+```c
+enum Color {
+  Red,
+  Green,
+  Blue
+}
+
+// is equivalent to
+
+enum Color {
+  constant Red
+  constant Green
+  constant Blue
+}
 ```
 
 ## API
