@@ -2036,6 +2036,12 @@ void Commands_defer_add_two(void);
 void Commands_defer_remove(void);
 void Commands_defer_remove_two(void);
 void Commands_defer_set(void);
+void Commands_defer_set_large(void);
+void Commands_defer_set_large_non_trivial(void);
+void Commands_defer_set_non_trivial(void);
+void Commands_defer_batched_set_large(void);
+void Commands_defer_batched_set_large_non_trivial(void);
+void Commands_defer_batched_set_non_trivial(void);
 void Commands_defer_delete(void);
 void Commands_defer_twice(void);
 void Commands_defer_twice_in_progress(void);
@@ -10214,6 +10220,30 @@ bake_test_case Commands_testcases[] = {
         Commands_defer_set
     },
     {
+        "defer_set_large",
+        Commands_defer_set_large
+    },
+    {
+        "defer_set_large_non_trivial",
+        Commands_defer_set_large_non_trivial
+    },
+    {
+        "defer_set_non_trivial",
+        Commands_defer_set_non_trivial
+    },
+    {
+        "defer_batched_set_large",
+        Commands_defer_batched_set_large
+    },
+    {
+        "defer_batched_set_large_non_trivial",
+        Commands_defer_batched_set_large_non_trivial
+    },
+    {
+        "defer_batched_set_non_trivial",
+        Commands_defer_batched_set_non_trivial
+    },
+    {
         "defer_delete",
         Commands_defer_delete
     },
@@ -11640,7 +11670,7 @@ static bake_test_suite suites[] = {
         "Commands",
         NULL,
         NULL,
-        143,
+        149,
         Commands_testcases
     },
     {

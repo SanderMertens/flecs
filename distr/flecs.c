@@ -10647,15 +10647,17 @@ void flecs_cmd_batch_for_entity(
                         ecs_xtor_t dtor = ti->hooks.dtor;
                         if (dtor) {
                             dtor(cmd->is._1.value, 1, ti);
-                            cmd->is._1.value = NULL;
                         }
                     } else {
                         ecs_os_memcpy(ptr.ptr, cmd->is._1.value, ti->size);
                     }
 
+                    flecs_stack_free(cmd->is._1.value, cmd->is._1.size);
+                    cmd->is._1.value = NULL;
+
                     if (cmd->kind == EcsCmdSet) {
                         /* A set operation is add + copy + modified. We just did
-                         * the add the copy, so the only thing that's left is a 
+                         * the add and copy, so the only thing that's left is a 
                          * modified command, which will call the OnSet 
                          * observers. */
                         cmd->kind = EcsCmdModified;
