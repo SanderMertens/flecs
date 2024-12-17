@@ -1635,6 +1635,7 @@ void Observer_on_add_multi_only_optional(void);
 void Observer_on_remove_multi_only_optional(void);
 void Observer_on_add_multi_observers_w_prefab_instance(void);
 void Observer_on_add_overlapping_multi_observers_w_prefab_instance(void);
+void Observer_mask_propagated_component_after_reparent(void);
 void Observer_cache_test_1(void);
 void Observer_cache_test_2(void);
 void Observer_cache_test_3(void);
@@ -8675,6 +8676,10 @@ bake_test_case Observer_testcases[] = {
         Observer_on_add_overlapping_multi_observers_w_prefab_instance
     },
     {
+        "mask_propagated_component_after_reparent",
+        Observer_mask_propagated_component_after_reparent
+    },
+    {
         "cache_test_1",
         Observer_cache_test_1
     },
@@ -11565,7 +11570,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        231,
+        232,
         Observer_testcases
     },
     {

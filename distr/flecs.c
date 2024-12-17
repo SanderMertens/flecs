@@ -14361,6 +14361,11 @@ void flecs_emit_forward(
                 ecs_dbg_assert(r->table == elem->table, ECS_INTERNAL_ERROR, NULL);
                 (void)r;
 
+                /* If entities already have the component, don't propagate */
+                if (flecs_id_record_get_table(rc_idr, it->table)) {
+                    continue;
+                }
+
                 ecs_event_id_record_t *iders[5] = {0};
                 int32_t ider_count = flecs_event_observers_get(
                     er, rc_idr->id, iders);
