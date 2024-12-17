@@ -450,6 +450,54 @@ public:
             {
                 *Handle = FFlecsEntityHandle(World, Entity);
             });
+
+		World.component<FObjectPtr>()
+			.opaque(flecs::Uptr)
+			.serialize([](const flecs::serializer* Serializer, const FObjectPtr* Data)
+			{
+				const UObject* Object = Data->Get();
+				return Serializer->value(flecs::Uptr, Object);
+			})
+			.assign_null([](FObjectPtr* Data)
+			{
+				
+			});
+
+		World.component<FWeakObjectPtr>()
+			.opaque(flecs::Uptr)
+			.serialize([](const flecs::serializer* Serializer, const FWeakObjectPtr* Data)
+			{
+				const UObject* Object = Data->Get();
+				return Serializer->value(flecs::Uptr, Object);
+			})
+			.assign_null([](FWeakObjectPtr* Data)
+			{
+				Data->Reset();
+			});
+
+		World.component<FSoftObjectPtr>()
+			.opaque(flecs::Uptr)
+			.serialize([](const flecs::serializer* Serializer, const FSoftObjectPtr* Data)
+			{
+				const UObject* Object = Data->Get();
+				return Serializer->value(flecs::Uptr, Object);
+			})
+			.assign_null([](FSoftObjectPtr* Data)
+			{
+				Data->Reset();
+			});
+
+		World.component<TSubclassOf<UObject>>()
+			.opaque(flecs::Uptr)
+			.serialize([](const flecs::serializer* Serializer, const TSubclassOf<UObject>* Data)
+			{
+				const UClass* Class = Data->Get();
+				return Serializer->value(flecs::Uptr, Class);
+			})
+			.assign_null([](TSubclassOf<UObject>* Data)
+			{
+				
+			});
 	}
 
 	void InitializeSystems()
