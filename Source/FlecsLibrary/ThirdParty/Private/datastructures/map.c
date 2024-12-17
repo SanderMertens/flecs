@@ -243,7 +243,7 @@ void ecs_map_fini(
     }
 
     bool sanitize = false;
-#ifdef FLECS_SANITIZE
+#if defined(FLECS_SANITIZE) || defined(FLECS_USE_OS_ALLOC)
     sanitize = true;
 #endif
 

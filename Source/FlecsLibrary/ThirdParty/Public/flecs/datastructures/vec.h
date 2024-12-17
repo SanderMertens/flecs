@@ -19,6 +19,7 @@ typedef struct ecs_vec_t {
     int32_t size;
 #ifdef FLECS_SANITIZE
     ecs_size_t elem_size;
+    const char *type_name;
 #endif
 } ecs_vec_t;
 
@@ -29,8 +30,16 @@ void ecs_vec_init(
     ecs_size_t size,
     int32_t elem_count);
 
+FLECS_API
+void ecs_vec_init_w_dbg_info(
+    struct ecs_allocator_t *allocator,
+    ecs_vec_t *vec,
+    ecs_size_t size,
+    int32_t elem_count,
+    const char *type_name);
+
 #define ecs_vec_init_t(allocator, vec, T, elem_count) \
-    ecs_vec_init(allocator, vec, ECS_SIZEOF(T), elem_count)
+    ecs_vec_init_w_dbg_info(allocator, vec, ECS_SIZEOF(T), elem_count, "vec<"#T">")
 
 FLECS_API
 void ecs_vec_init_if(

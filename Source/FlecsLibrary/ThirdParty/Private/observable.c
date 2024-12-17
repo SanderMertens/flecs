@@ -577,7 +577,8 @@ void flecs_emit_forward_up(
     ecs_table_t *table,
     ecs_id_record_t *idr,
     ecs_vec_t *stack,
-    ecs_vec_t *reachable_ids);
+    ecs_vec_t *reachable_ids,
+    int32_t depth);
 
 static
 void flecs_emit_forward_id(
@@ -816,7 +817,8 @@ void flecs_emit_forward_table_up(
     ecs_record_t *tgt_record,
     ecs_id_record_t *tgt_idr,
     ecs_vec_t *stack,
-    ecs_vec_t *reachable_ids)
+    ecs_vec_t *reachable_ids,
+    int32_t depth)
 {
     ecs_allocator_t *a = &world->allocator;
     const int32_t id_count = tgt_table->type.count;
@@ -853,6 +855,13 @@ void flecs_emit_forward_table_up(
             continue;
         }
 
+        if (idr == tgt_idr) {
+            char *idstr = ecs_id_str(world, idr->id);
+            ecs_assert(idr != tgt_idr, ECS_CYCLE_DETECTED, idstr);
+            ecs_os_free(idstr);
+            return;
+        }
+
         /* Id has the same relationship, traverse to find ids for forwarding */
         if (ECS_PAIR_FIRST(id) == trav || ECS_PAIR_FIRST(id) == EcsIsA) {
             ecs_table_t **t = ecs_vec_append_t(&world->allocator, stack, 
@@ -877,7 +886,7 @@ void flecs_emit_forward_table_up(
                 /* Cache is dirty, traverse upwards */
                 do {
                     flecs_emit_forward_up(world, er, er_onset, emit_ids, it, 
-                        table, idr, stack, reachable_ids);
+                        table, idr, stack, reachable_ids, depth);
                     if (++i >= id_count) {
                         break;
                     }
@@ -959,9 +968,17 @@ void flecs_emit_forward_up(
     ecs_table_t *table,
     ecs_id_record_t *idr,
     ecs_vec_t *stack,
-    ecs_vec_t *reachable_ids)
+    ecs_vec_t *reachable_ids,
+    int32_t depth)
 {
-    const ecs_id_t id = idr->id;
+    if (depth >= FLECS_DAG_DEPTH_MAX) {
+        char *idstr = ecs_id_str(world, idr->id);
+        ecs_assert(depth < FLECS_DAG_DEPTH_MAX, ECS_CYCLE_DETECTED, idstr);
+        ecs_os_free(idstr);
+        return;
+    }
+
+    ecs_id_t id = idr->id;
     ecs_entity_t tgt = ECS_PAIR_SECOND(id);
     tgt = flecs_entities_get_alive(world, tgt);
     ecs_assert(tgt != 0, ECS_INTERNAL_ERROR, NULL);
@@ -972,7 +989,7 @@ void flecs_emit_forward_up(
     }
 
     flecs_emit_forward_table_up(world, er, er_onset, emit_ids, it, table, 
-        tgt, tgt_table, tgt_record, idr, stack, reachable_ids);
+        tgt, tgt_table, tgt_record, idr, stack, reachable_ids, depth + 1);
 }
 
 static
@@ -1000,7 +1017,7 @@ void flecs_emit_forward(
         ecs_vec_init_t(&world->allocator, &stack, ecs_table_t*, 0);
         ecs_vec_reset_t(&world->allocator, &rc->ids, ecs_reachable_elem_t);
         flecs_emit_forward_up(world, er, er_onset, emit_ids, it, table, 
-            idr, &stack, &rc->ids);
+            idr, &stack, &rc->ids, 0);
         it->sources[0] = 0;
         ecs_vec_fini_t(&world->allocator, &stack, ecs_table_t*);
 
@@ -1079,6 +1096,11 @@ void flecs_emit_forward(
                     ECS_INTERNAL_ERROR, NULL);
                 ecs_dbg_assert(r->table == elem->table, ECS_INTERNAL_ERROR, NULL);
                 (void)r;
+
+                /* If entities already have the component, don't propagate */
+                if (flecs_id_record_get_table(rc_idr, it->table)) {
+                    continue;
+                }
 
                 ecs_event_id_record_t *iders[5] = {0};
                 const int32_t ider_count = flecs_event_observers_get(

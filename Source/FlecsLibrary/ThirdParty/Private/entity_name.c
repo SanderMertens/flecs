@@ -134,7 +134,11 @@ ecs_entity_t flecs_name_to_id(
 {
     ecs_assert(name != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_assert(name[0] == '#', ECS_INVALID_PARAMETER, NULL);
-    return flecs_ito(uint64_t, atoll(name + 1));
+    ecs_entity_t res = flecs_ito(uint64_t, atoll(name + 1));
+    if (res >= UINT32_MAX) {
+        return 0; /* Invalid id */
+    }
+    return res;
 }
 
 static inline
@@ -209,7 +213,7 @@ const char* flecs_path_elem(
         }
 
         if (buffer) {
-            if (pos == (size - 1)) {
+            if (pos >= (size - 1)) {
                 if (size == ECS_NAME_BUFFER_LENGTH) { /* stack buffer */
                     char *new_buffer = ecs_os_malloc(size * 2 + 1);
                     ecs_os_memcpy(new_buffer, buffer, size);
@@ -233,7 +237,7 @@ const char* flecs_path_elem(
     }
 
     ecs_os_perf_trace_pop("flecs.entity_name.path_elem");
-    return pos ? ptr : NULL;
+    return pos || ptr[0] ? ptr : NULL;
 error:
     ecs_os_perf_trace_pop("flecs.entity_name.path_elem");
     return NULL;
@@ -258,8 +262,11 @@ ecs_entity_t flecs_get_parent_from_path(
     const char **path_ptr,
     const char *sep,
     const char *prefix,
-    bool new_entity)
+    bool new_entity,
+    bool *error)
 {
+    ecs_assert(error != NULL, ECS_INTERNAL_ERROR, NULL);
+
     ecs_os_perf_trace_push("flecs.entity_name.get_parent_from_path");
     
     bool start_from_root = false;
@@ -273,6 +280,10 @@ ecs_entity_t flecs_get_parent_from_path(
 
     if (path[0] == '#') {
         parent = flecs_name_to_id(path);
+        if (!parent && ecs_os_strncmp(path, "#0", 2)) {
+            *error = true;
+            return 0;
+        }
 
         path ++;
         while (path[0] && isdigit(path[0])) {
@@ -458,6 +469,8 @@ ecs_entity_t ecs_lookup_path_w_sep(
     }
 
     ecs_check(world != NULL, ECS_INTERNAL_ERROR, NULL);
+    ecs_check(!parent || ecs_is_valid(world, parent), 
+        ECS_INVALID_PARAMETER, NULL);
     const ecs_world_t *stage = world;
     world = ecs_get_world(world);
 
@@ -487,8 +500,12 @@ ecs_entity_t ecs_lookup_path_w_sep(
         sep = ".";
     }
 
+    bool error = false;
     parent = flecs_get_parent_from_path(
-        stage, parent, &path, sep, prefix, true);
+        stage, parent, &path, sep, prefix, true, &error);
+    if (error) {
+        return 0;
+    }
 
     if (parent && !(parent = ecs_get_alive(world, parent))) {
         ecs_os_perf_trace_pop("flecs.entity_name.lookup_path");
@@ -653,6 +670,10 @@ ecs_entity_t ecs_add_path_w_sep(
     const char *prefix)
 {
     ecs_check(world != NULL, ECS_INVALID_PARAMETER, NULL);
+    const ecs_world_t *real_world = world;
+    if (flecs_poly_is(world, ecs_stage_t)) {
+        real_world = ecs_get_world(world);
+    }
 
     ecs_os_perf_trace_push("flecs.entity_name.add_path_w_sep");
 
@@ -674,8 +695,13 @@ ecs_entity_t ecs_add_path_w_sep(
     }
 
     bool root_path = flecs_is_root_path(path, prefix);
+    bool error = false;
     parent = flecs_get_parent_from_path(
-        world, parent, &path, sep, prefix, !entity);
+        world, parent, &path, sep, prefix, !entity, &error);
+    if (error) {
+        /* Invalid id */
+        return 0;
+    }
 
     char buff[ECS_NAME_BUFFER_LENGTH];
     const char *ptr = path;
@@ -686,7 +712,7 @@ ecs_entity_t ecs_add_path_w_sep(
      * immediately updated. Without this, we could create multiple entities for
      * the same name in a single command queue. */
     bool suspend_defer = ecs_is_deferred(world) &&
-        !(world->flags & EcsWorldMultiThreaded);
+        !(real_world->flags & EcsWorldMultiThreaded);
         
     ecs_entity_t cur = parent;
     char *name = NULL;

@@ -126,6 +126,7 @@ ecs_script_var_t* ecs_script_vars_declare(
     var->value.ptr = NULL;
     var->value.type = 0;
     var->type_info = NULL;
+    var->is_const = false;
 
     flecs_name_index_ensure(&vars->var_index,
         flecs_ito(uint64_t, ecs_vec_count(&vars->vars)), name, 0, 0);
@@ -169,6 +170,10 @@ ecs_script_var_t* ecs_script_vars_lookup(
     const ecs_script_vars_t *vars,
     const char *name)
 {
+    if (!vars) {
+        return NULL;
+    }
+
     uint64_t var_id = 0;
     if (ecs_vec_count(&vars->vars)) {
         var_id = flecs_name_index_find(&vars->var_index, name, 0, 0);

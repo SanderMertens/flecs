@@ -393,7 +393,9 @@ ecs_iter_t ecs_query_iter(
     if (cache) {
         /* If monitors changed, do query rematching */
         ecs_flags32_t flags = q->flags;
-        if (!(world->flags & EcsWorldReadonly) && flags & EcsQueryHasRefs) {
+        if (!(ecs_world_get_flags(world) & EcsWorldReadonly) && 
+             (flags & EcsQueryHasRefs)) 
+        {
             flecs_eval_component_monitors(q->world);
         }
     }

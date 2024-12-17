@@ -24,6 +24,7 @@ ecs_cmd_t* flecs_cmd_new(
     ecs_cmd_t *cmd = ecs_vec_append_t(&stage->allocator, &stage->cmd->queue, 
         ecs_cmd_t);
     cmd->is._1.value = NULL;
+    cmd->id = 0;
     cmd->next_for_entity = 0;
     cmd->entry = NULL;
     cmd->system = stage->system;
@@ -76,7 +77,7 @@ void flecs_stage_merge(
     bool is_stage = flecs_poly_is(world, ecs_stage_t);
     ecs_stage_t *stage = flecs_stage_from_world(&world);
 
-    bool measure_frame_time = ECS_BIT_IS_SET(world->flags, 
+    bool measure_frame_time = ECS_BIT_IS_SET(ecs_world_get_flags(world), 
         EcsWorldMeasureFrameTime);
 
     ecs_time_t t_start = {0};
@@ -590,22 +591,6 @@ void flecs_commands_fini(
     flecs_sparse_fini(&cmd->entries);
 }
 
-void flecs_commands_push(
-    ecs_stage_t *stage)
-{
-    const int32_t sp = ++ stage->cmd_sp;
-    ecs_assert(sp < ECS_MAX_DEFER_STACK, ECS_INTERNAL_ERROR, NULL);
-    stage->cmd = &stage->cmd_stack[sp];
-}
-
-void flecs_commands_pop(
-    ecs_stage_t *stage)
-{
-    const int32_t sp = -- stage->cmd_sp;
-    ecs_assert(sp >= 0, ECS_INTERNAL_ERROR, NULL);
-    stage->cmd = &stage->cmd_stack[sp];
-}
-
 ecs_entity_t flecs_stage_set_system(
     ecs_stage_t *stage,
     ecs_entity_t system)
@@ -637,7 +622,7 @@ ecs_stage_t* flecs_stage_new(
     ecs_allocator_t *a = &stage->allocator;
     ecs_vec_init_t(a, &stage->post_frame_actions, ecs_action_elem_t, 0);
 
-    for (int32_t i = 0; i < ECS_MAX_DEFER_STACK; i ++) {
+    for (int32_t i = 0; i < 2; i ++) {
         flecs_commands_init(stage, &stage->cmd_stack[i]);
     }
 
@@ -662,9 +647,15 @@ void flecs_stage_free(
     ecs_vec_fini(NULL, &stage->variables, 0);
     ecs_vec_fini(NULL, &stage->operations, 0);
 
-    for (int32_t i = 0; i < ECS_MAX_DEFER_STACK; i ++) {
+    for (int32_t i = 0; i < 2; i ++) {
         flecs_commands_fini(stage, &stage->cmd_stack[i]);
     }
+
+#ifdef FLECS_SCRIPT
+    if (stage->runtime) {
+        ecs_script_runtime_free(stage->runtime);
+    }
+#endif
 
     flecs_stack_fini(&stage->allocators.iter_stack);
     flecs_stack_fini(&stage->allocators.deser_stack);

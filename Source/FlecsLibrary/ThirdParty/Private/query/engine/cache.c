@@ -856,6 +856,8 @@ void flecs_query_cache_rematch_tables(
     ecs_world_t *world,
     ecs_query_impl_t *impl)
 {
+    flecs_poly_assert(world, ecs_world_t);
+
     ecs_iter_t it;
     ecs_table_t *table = NULL;
     ecs_query_cache_table_t *qt = NULL;
@@ -1224,7 +1226,11 @@ ecs_query_cache_t* flecs_query_cache_init(
     const ecs_query_desc_t *const_desc)
 {
     ecs_world_t *world = impl->pub.real_world;
+    flecs_poly_assert(world, ecs_world_t);
+
     ecs_stage_t *stage = impl->stage;
+    flecs_poly_assert(stage, ecs_stage_t);
+
     ecs_check(world != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_check(const_desc != NULL, ECS_INVALID_PARAMETER, NULL);
     ecs_check(const_desc->_canary == 0, ECS_INVALID_PARAMETER,

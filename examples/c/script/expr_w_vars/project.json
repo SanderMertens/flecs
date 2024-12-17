@@ -1,0 +1,10 @@
+{
+    "id": "expr_w_vars",
+    "type": "application",
+    "value": {
+        "use": [
+            "flecs"
+        ],
+        "public": false
+    }
+}

@@ -1948,6 +1948,8 @@ void flecs_type_info_free(
     ecs_world_t *world,
     ecs_entity_t component)
 {
+    flecs_poly_assert(world, ecs_world_t);
+
     if (world->flags & EcsWorldQuit) {
         /* If world is in the final teardown stages, cleanup policies are no
          * longer applied and it can't be guaranteed that a component is not
@@ -2399,6 +2401,11 @@ ecs_entities_t ecs_get_entities(
 ecs_flags32_t ecs_world_get_flags(
     const ecs_world_t *world)
 {
-    flecs_poly_assert(world, ecs_world_t);
-    return world->flags;
+    if (flecs_poly_is(world, ecs_world_t)) {
+        return world->flags;
+    } else {
+        flecs_poly_assert(world, ecs_stage_t);
+        const ecs_stage_t *stage = (const ecs_stage_t*)world;
+        return stage->world->flags;
+    }
 }
