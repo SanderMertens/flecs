@@ -98,10 +98,12 @@ void flecs_process_pending_tables(
 typedef struct ecs_suspend_readonly_state_t {
     bool is_readonly;
     bool is_deferred;
+    bool cmd_flushing;
     int32_t defer_count;
     ecs_entity_t scope;
     ecs_entity_t with;
-    ecs_commands_t cmd;
+    ecs_commands_t cmd_stack[2];
+    ecs_commands_t *cmd;
     ecs_stage_t *stage;
 } ecs_suspend_readonly_state_t;
 

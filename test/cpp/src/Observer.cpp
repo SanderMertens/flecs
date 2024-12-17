@@ -1474,3 +1474,73 @@ void Observer_on_set_w_override_after_clear(void) {
 
     test_int(count, 0);
 }
+
+void Observer_trigger_on_set_in_on_add_implicit_registration(void) {
+  flecs::world world;
+
+  struct Tag {};
+  
+  world.observer<Tag>()
+    .event(flecs::OnAdd)
+    .each([](flecs::entity e, Tag) {
+        e.set<Position>({ 10, 20 });
+    });
+
+  world.observer<Position>()
+    .event(flecs::OnSet)
+    .each([](flecs::entity e, Position&) {
+        e.set<Velocity>({ 1, 2 });
+    });
+
+  auto e = world.entity().add<Tag>();
+
+  {
+    const Position *p = e.get<Position>();
+    test_int(p->x, 10);
+    test_int(p->y, 20);
+  }
+
+  {
+    const Velocity *v = e.get<Velocity>();
+    test_int(v->x, 1);
+    test_int(v->y, 2);
+  }
+}
+
+namespace ns {
+    struct Velocity {
+        float x, y;
+    };
+}
+
+void Observer_trigger_on_set_in_on_add_implicit_registration_namespaced(void) {
+    flecs::world world;
+
+    struct Tag { };
+    
+    world.observer<Tag>()
+        .event(flecs::OnAdd)
+        .each([](flecs::entity e, Tag) {
+            e.set<Position>({ 10, 20 });
+        });
+
+    world.observer<Position>()
+        .event(flecs::OnSet)
+        .each([](flecs::entity e, Position&) {
+            e.set<ns::Velocity>({ 1, 2 });
+        });
+
+    auto e = world.entity().add<Tag>();
+
+    {
+        const Position *p = e.get<Position>();
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+    }
+
+    {
+        const ns::Velocity *v = e.get<ns::Velocity>();
+        test_int(v->x, 1);
+        test_int(v->y, 2);
+    }
+}

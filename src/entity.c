@@ -2276,7 +2276,7 @@ ecs_entity_t ecs_component_init(
     }
 
     flecs_resume_readonly(world, &readonly_state);
-    
+
     ecs_assert(result != 0, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(ecs_has(world, result, EcsComponent), ECS_INTERNAL_ERROR, NULL);
 
@@ -5122,6 +5122,12 @@ bool flecs_defer_end(
             ecs_commands_t *commands = stage->cmd;
             ecs_vec_t *queue = &commands->queue;
 
+            if (stage->cmd == &stage->cmd_stack[0]) {
+                stage->cmd = &stage->cmd_stack[1];
+            } else {
+                stage->cmd = &stage->cmd_stack[0];
+            }
+
             if (!ecs_vec_count(queue)) {
                 break;
             }
@@ -5139,12 +5145,6 @@ bool flecs_defer_end(
 
             ecs_table_diff_builder_t diff;
             flecs_table_diff_builder_init(world, &diff);
-
-            if (stage->cmd == &stage->cmd_stack[0]) {
-                stage->cmd = &stage->cmd_stack[1];
-            } else {
-                stage->cmd = &stage->cmd_stack[0];
-            }
 
             for (i = 0; i < count; i ++) {
                 ecs_cmd_t *cmd = &cmds[i];
