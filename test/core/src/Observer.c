@@ -6,6 +6,15 @@ void Observer(ecs_iter_t *it) {
 }
 
 static
+void Observer_w_field(ecs_iter_t *it) {
+    probe_system_w_ctx(it, it->ctx);
+
+    Position *p = ecs_field(it, Position, 0);
+    test_assert(p != NULL);
+    // data is uninitialized
+}
+
+static
 void Observer_w_value_1(ecs_iter_t *it) {
     probe_system_w_ctx(it, it->ctx);
 
@@ -8405,10 +8414,8 @@ void Observer_cache_test_9(void) {
 
     ecs_clear(world, base_2);
 
-    /* Once for Position of base_2, twice because Position is reachable through
-     * two paths. */
-    test_int(ctx.invoked, 2);
-    test_int(ctx.count, 2);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
     test_int(ctx.e[0], inst);
     test_int(ctx.s[0][0], base_2);
     test_int(ctx.c[0][0], ecs_id(Position));
@@ -8418,10 +8425,8 @@ void Observer_cache_test_9(void) {
 
     ecs_clear(world, base_3);
 
-    /* Once for Position of base_2, twice because Position is reachable through
-     * two paths. */
-    test_int(ctx.invoked, 2);
-    test_int(ctx.count, 2);
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
     test_int(ctx.e[0], inst);
     test_int(ctx.s[0][0], base_3);
     test_int(ctx.c[0][0], ecs_id(Position));
@@ -9704,6 +9709,54 @@ void Observer_on_add_overlapping_multi_observers_w_prefab_instance(void) {
     test_assert(inst_child != 0);
     test_assert(ecs_has(world, inst_child, Velocity));
     test_assert(ecs_has(world, inst_child, Position));
+
+    ecs_fini(world);
+}
+
+void Observer_mask_propagated_component_after_reparent(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    Probe ctx = {0};
+
+    ecs_entity_t o = ecs_observer(world, {
+        .query.terms = {
+            { ecs_id(Position), .src.id = EcsUp },
+            { ecs_id(Position) }
+        },
+        .events = { EcsOnAdd },
+        .callback = Observer_w_field,
+        .ctx = &ctx
+    });
+
+    ecs_entity_t root = ecs_new_w(world, Position);
+    ecs_entity_t parent = ecs_new_w(world, Position);
+
+    test_int(ctx.invoked, 0);
+
+    ecs_entity_t child = ecs_new_w_pair(world, EcsChildOf, parent);
+    ecs_add(world, child, Position);
+
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.e[0], child);
+    test_int(ctx.system, o);
+    test_int(ctx.event, EcsOnAdd);
+    test_uint(ctx.s[0][0], parent);
+    test_uint(ctx.s[0][1], 0);
+
+    ecs_os_zeromem(&ctx);
+
+    ecs_add_pair(world, parent, EcsChildOf, root);
+
+    test_int(ctx.invoked, 1);
+    test_int(ctx.count, 1);
+    test_int(ctx.e[0], parent);
+    test_int(ctx.system, o);
+    test_int(ctx.event, EcsOnAdd);
+    test_uint(ctx.s[0][0], root);
+    test_uint(ctx.s[0][1], 0);
 
     ecs_fini(world);
 }
