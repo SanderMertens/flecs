@@ -541,3 +541,16 @@ const ecs_query_t* ecs_query_get_cache_query(
         return impl->cache->query;
     }
 }
+
+const ecs_query_t* ecs_query_get(
+    const ecs_world_t *world,
+    ecs_entity_t query)
+{
+    const EcsPoly *poly_comp = ecs_get_pair(world, query, EcsPoly, EcsQuery);
+    if (!poly_comp) {
+        return NULL;
+    } else {
+        flecs_poly_assert(poly_comp->poly, ecs_query_t);
+        return poly_comp->poly;
+    }
+}

@@ -11428,3 +11428,33 @@ void Basic_get_cache_query_partially_cached(void) {
 
     ecs_fini(world);
 }
+
+void Basic_get_query(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ECS_COMPONENT(world, Position);
+
+    ecs_entity_t qe = ecs_new(world);
+
+    ecs_query_t *q = ecs_query(world, {
+        .entity = qe,
+        .expr = "Position",
+        .cache_kind = EcsQueryCacheAuto
+    });
+
+    test_assert(q != NULL);
+    test_assert(q->entity == qe);
+    test_assert(ecs_query_get(world, qe) == q);
+
+    ecs_fini(world);
+}
+
+void Basic_get_query_not_a_query(void) {
+    ecs_world_t *world = ecs_mini();
+
+    ecs_entity_t qe = ecs_new(world);
+
+    test_assert(ecs_query_get(world, qe) == NULL);
+
+    ecs_fini(world);
+}
