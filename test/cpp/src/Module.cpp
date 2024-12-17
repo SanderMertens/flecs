@@ -528,3 +528,21 @@ void Module_no_recycle_after_rename_reparent(void) {
     test_assert(p == 0);
     test_str(m.name(), "MyModule");
 }
+
+void Module_reimport_after_delete(void) {
+    flecs::world ecs;
+
+    {
+        auto m = ecs.import<Module>();
+        test_assert(m.lookup("Position") == ecs.component<Position>());
+        test_assert(m == ecs.entity<Module>());
+    }
+
+    ecs.entity<Module>().destruct();
+
+    {
+        auto m = ecs.import<Module>();
+        test_assert(m.lookup("Position") == ecs.component<Position>());
+        test_assert(m == ecs.entity<Module>());
+    }
+}

@@ -1066,6 +1066,7 @@ void Module_rename_namespace_longer(void);
 void Module_rename_namespace_nested(void);
 void Module_rename_reparent_root_module(void);
 void Module_no_recycle_after_rename_reparent(void);
+void Module_reimport_after_delete(void);
 
 // Testsuite 'ImplicitComponents'
 void ImplicitComponents_add(void);
@@ -1122,6 +1123,7 @@ void World_different_comp_same_name(void);
 void World_reregister_after_reset(void);
 void World_reregister_after_reset_w_namespace(void);
 void World_reregister_namespace(void);
+void World_reregister_after_delete(void);
 void World_implicit_reregister_after_reset(void);
 void World_reregister_after_reset_different_name(void);
 void World_register_short_template(void);
@@ -5558,6 +5560,10 @@ bake_test_case Module_testcases[] = {
     {
         "no_recycle_after_rename_reparent",
         Module_no_recycle_after_rename_reparent
+    },
+    {
+        "reimport_after_delete",
+        Module_reimport_after_delete
     }
 };
 
@@ -5767,6 +5773,10 @@ bake_test_case World_testcases[] = {
     {
         "reregister_namespace",
         World_reregister_namespace
+    },
+    {
+        "reregister_after_delete",
+        World_reregister_after_delete
     },
     {
         "implicit_reregister_after_reset",
@@ -7002,7 +7012,7 @@ static bake_test_suite suites[] = {
         "Module",
         NULL,
         NULL,
-        22,
+        23,
         Module_testcases
     },
     {
@@ -7023,7 +7033,7 @@ static bake_test_suite suites[] = {
         "World",
         NULL,
         NULL,
-        116,
+        117,
         World_testcases
     },
     {

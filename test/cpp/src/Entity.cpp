@@ -4896,6 +4896,7 @@ void Entity_iter_empty_type(void) {
     int32_t count = 0;
 
     for (auto id : e.type()) {
+        test_assert(id != 0);
         count ++;
     }
 
