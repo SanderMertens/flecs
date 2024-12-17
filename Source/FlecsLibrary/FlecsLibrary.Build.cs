@@ -28,6 +28,7 @@ public class FlecsLibrary : ModuleRules
                 "FLECS_UNITS",
                 "FLECS_HTTP",
                 "FLECS_REST",
+                //"flecs_EXPORTS"
             }
         );
         
@@ -43,6 +44,8 @@ public class FlecsLibrary : ModuleRules
                     "FLECS_DOC",
                     "FLECS_LOG",
                     "FLECS_PERF_TRACE",
+                    "FLECS_ACCURATE_COUNTERS",
+                    
                 }
             );
         }

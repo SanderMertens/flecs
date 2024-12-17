@@ -8,7 +8,7 @@
 #ifdef FLECS_SCRIPT
 #include "script.h"
 
-static
+static inline
 void ecs_script_params_free(ecs_vec_t *params) {
     ecs_script_parameter_t *array = ecs_vec_first(params);
     int32_t i, count = ecs_vec_count(params);

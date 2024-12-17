@@ -5,7 +5,7 @@
 
 #include "../../private_api.h"
 
-static __forceinline
+static inline
 bool flecs_query_var_is_anonymous(
     const ecs_query_impl_t *query,
     ecs_var_id_t var_id)
@@ -55,11 +55,7 @@ ecs_var_id_t flecs_query_add_var(
             }
         }
 
-        if (kind == EcsVarTable) {
-            var_index = &query->tvar_index;
-        } else {
-            var_index = &query->evar_index;
-        }
+        var_index = kind == EcsVarTable ? &query->tvar_index : &query->evar_index;
 
         /* If we're creating an entity var, check if it has a table variant */
         if (kind == EcsVarEntity && var_id == EcsVarNone) {

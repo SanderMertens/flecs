@@ -205,7 +205,6 @@ ecs_entity_t flecs_script_create_entity(
     return ecs_entity_init(v->world, &desc);
 }
 
-static inline
 ecs_entity_t flecs_script_find_entity_action(
     const ecs_world_t *world,
     const char *path,

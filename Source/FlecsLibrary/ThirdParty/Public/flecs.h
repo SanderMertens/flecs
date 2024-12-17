@@ -74,9 +74,7 @@
  * allocation counters in the OS API) are accurate in multithreaded
  * applications, at the cost of increased overhead.
  */
-#if WITH_EDITOR || defined(FLECS_SANITIZE)
-#define FLECS_ACCURATE_COUNTERS
-#endif
+// #define FLECS_ACCURATE_COUNTERS
 
 #if (!defined(FLECS_DEBUG)) && WITH_EDITOR
    #define FLECS_DEBUG

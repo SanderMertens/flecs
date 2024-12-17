@@ -217,8 +217,8 @@ public:
 	virtual bool DoesSupportWorldType(const EWorldType::Type WorldType) const override
 	{
 		return WorldType == EWorldType::Game
-		|| WorldType == EWorldType::PIE
-		|| WorldType == EWorldType::GameRPC;
+			|| WorldType == EWorldType::PIE
+			|| WorldType == EWorldType::GameRPC;
 	}
 	
 	FOnWorldCreated OnWorldCreated;

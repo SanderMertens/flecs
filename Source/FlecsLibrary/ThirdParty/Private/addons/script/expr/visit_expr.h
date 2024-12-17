@@ -6,6 +6,8 @@
 #ifndef FLECS_EXPR_SCRIPT_VISIT_H
 #define FLECS_EXPR_SCRIPT_VISIT_H
 
+#include "../script.h"
+
 #define flecs_expr_visit_error(script, node, ...) \
     ecs_parser_error( \
         script->name, script->code, \

@@ -27,11 +27,7 @@ static inline int compare_system_priority(
     ecs_entity_t e1, const EcsSystemPriority *ptr1,
     ecs_entity_t e2, const EcsSystemPriority *ptr2)
 {
-    if (ptr1->value == ptr2->value) {
-        return flecs_entity_compare(e1, ptr1, e2, ptr2);
-    } else {
-        return (ptr1->value < ptr2->value) ? -1 : 1;
-    }
+    return ptr1->value == ptr2->value ? flecs_entity_compare(e1, ptr1, e2, ptr2) : ptr1->value < ptr2->value ? -1 : 1;
 }
 
 static ECS_MOVE(EcsPipeline, dst, src, {
@@ -114,16 +110,12 @@ void flecs_pipeline_set_write_state(
     }
 
     ecs_map_t *ids;
-    if (ecs_id_is_wildcard(id)) {
-        ids = &write_state->wildcard_ids;
-    } else {
-        ids = &write_state->ids;
-    }
+    ids = ecs_id_is_wildcard(id) ? &write_state->wildcard_ids : &write_state->ids;
 
     ecs_map_ensure(ids, id)[0] = true;
 }
 
-static
+static inline
 void flecs_pipeline_reset_write_state(
     ecs_write_state_t *write_state)
 {

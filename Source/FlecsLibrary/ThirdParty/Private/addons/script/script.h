@@ -55,7 +55,7 @@ typedef struct ecs_function_calldata_t {
 } ecs_function_calldata_t;
 
 #include "ast.h"
-#include "expr/expr.h"
+#include "expr/expr_expr.h"
 #include "visit.h"
 #include "visit_eval.h"
 #include "template.h"

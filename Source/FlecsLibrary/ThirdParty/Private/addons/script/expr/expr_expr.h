@@ -6,9 +6,9 @@
 #ifndef FLECS_EXPR_SCRIPT_H
 #define FLECS_EXPR_SCRIPT_H
 
-#include "stack.h"
-#include "ast.h"
-#include "visit.h"
+#include "stack_expr.h"
+#include "ast_expr.h"
+#include "visit_expr.h"
 
 int flecs_value_copy_to(
     ecs_world_t *world,
