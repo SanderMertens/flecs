@@ -1104,7 +1104,8 @@
                 "rename_namespace_longer",
                 "rename_namespace_nested",
                 "rename_reparent_root_module",
-                "no_recycle_after_rename_reparent"
+                "no_recycle_after_rename_reparent",
+                "reimport_after_delete"
             ]
         }, {
             "id": "ImplicitComponents",
@@ -1167,6 +1168,7 @@
                 "reregister_after_reset",
                 "reregister_after_reset_w_namespace",
                 "reregister_namespace",
+                "reregister_after_delete",
                 "implicit_reregister_after_reset",
                 "reregister_after_reset_different_name",
                 "register_short_template",

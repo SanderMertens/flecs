@@ -27282,7 +27282,7 @@ struct type_impl {
         // component has not yet been registered, or the component is used
         // across more than one binary), or if the id does not exists in the
         // world (indicating a multi-world application), register it.
-        if (!s_id || (world && !ecs_exists(world, s_id))) {
+        if (!s_id || (world && !ecs_is_alive(world, s_id))) {
             init(s_id ? s_id : id, allow_tag);
 
             ecs_assert(!id || s_id == id, ECS_INTERNAL_ERROR, NULL);
@@ -31188,7 +31188,6 @@ flecs::entity import(world& world) {
     ecs_entity_t m = ecs_lookup_symbol(world, symbol, true, false);
 
     if (!_::type<T>::registered(world)) {
-
         /* Module is registered with world, initialize static data */
         if (m) {
             _::type<T>::init(m, false);

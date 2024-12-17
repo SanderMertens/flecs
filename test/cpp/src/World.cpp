@@ -291,6 +291,27 @@ void World_reregister_after_reset_different_name(void) {
     ecs.component<Position>("Velocity");
 }
 
+void World_reregister_after_delete(void) {
+    flecs::world ecs;
+
+    auto c = ecs.component<Position>();
+    test_str(c.name(), "Position");
+    test_str(c.path(), "::Position");
+    test_str(c.symbol(), "Position");
+
+    c.destruct();
+
+    test_assert(!c.is_alive());
+
+    auto d = ecs.component<Position>();
+    test_assert(c == d);
+    test_assert(c.is_alive());
+
+    test_str(c.name(), "Position");
+    test_str(c.path(), "::Position");
+    test_str(c.symbol(), "Position");
+}
+
 void World_register_component_w_reset_in_multithreaded(void) {
     flecs::world ecs;
 
