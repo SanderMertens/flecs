@@ -838,7 +838,7 @@ const Position *p = ecs_get_pair_second(world, e, Serializable, Position);
 ```cpp
 // Ensure that Serializable never contains data
 ecs.component<Serializable>()
-  .add<flecs::PairIsTag>();
+  .add(flecs::PairIsTag);
 
 auto e = ecs.entity()
   .set<Position>({10, 20})
