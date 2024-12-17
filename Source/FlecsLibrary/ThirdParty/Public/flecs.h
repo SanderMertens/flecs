@@ -4967,6 +4967,19 @@ FLECS_API
 bool ecs_query_changed(
     ecs_query_t *query);
 
+/** Get query object.
+ * Returns the query object. Can be used to access various information about
+ * the query.
+ *
+ * @param world The world.
+ * @param query The query.
+ * @return The query object.
+ */
+FLECS_API
+const ecs_query_t* ecs_query_get(
+    const ecs_world_t *world,
+    ecs_entity_t query);
+
 /** Skip a table while iterating.
  * This operation lets the query iterator know that a table was skipped while
  * iterating. A skipped table will not reset its changed state, and the query
