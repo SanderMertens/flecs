@@ -930,6 +930,8 @@ void Observer_on_set_after_remove_override(void);
 void Observer_on_set_after_remove_override_create_observer_before(void);
 void Observer_on_set_w_override_after_delete(void);
 void Observer_on_set_w_override_after_clear(void);
+void Observer_trigger_on_set_in_on_add_implicit_registration(void);
+void Observer_trigger_on_set_in_on_add_implicit_registration_namespaced(void);
 
 // Testsuite 'ComponentLifecycle'
 void ComponentLifecycle_ctor_on_add(void);
@@ -5027,6 +5029,14 @@ bake_test_case Observer_testcases[] = {
     {
         "on_set_w_override_after_clear",
         Observer_on_set_w_override_after_clear
+    },
+    {
+        "trigger_on_set_in_on_add_implicit_registration",
+        Observer_trigger_on_set_in_on_add_implicit_registration
+    },
+    {
+        "trigger_on_set_in_on_add_implicit_registration_namespaced",
+        Observer_trigger_on_set_in_on_add_implicit_registration_namespaced
     }
 };
 
@@ -6971,7 +6981,7 @@ static bake_test_suite suites[] = {
         "Observer",
         NULL,
         NULL,
-        59,
+        61,
         Observer_testcases
     },
     {
