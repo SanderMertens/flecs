@@ -946,6 +946,7 @@ void flecs_set_custom_type(ecs_iter_t *it) {
         if (!comp || !comp->size || !comp->alignment) {
             ecs_err("custom type '%s' has no size/alignment, register as component first",
                 ecs_get_name(world, e));
+            flecs_dump_backtrace(stdout);
             continue;
         }
 

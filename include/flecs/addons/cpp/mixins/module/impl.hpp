@@ -50,7 +50,7 @@ flecs::entity import(world& world) {
     if (!_::type<T>::registered(world)) {
         /* Module is registered with world, initialize static data */
         if (m) {
-            _::type<T>::init(m, false);
+            _::type<T>::init_builtin(world, m, false);
 
         /* Module is not yet registered, register it now */
         } else {
@@ -78,7 +78,7 @@ flecs::entity import(world& world) {
 
 template <typename Module>
 inline flecs::entity world::module(const char *name) const {
-    flecs::entity result = this->entity(_::type<Module>::id(
+    flecs::entity result = this->entity(_::type<Module>::register_id(
         world_, nullptr, false));
 
     if (name) {

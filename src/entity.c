@@ -1745,7 +1745,8 @@ int flecs_traverse_add(
         const char *sym = ecs_get_symbol(world, result);
         if (sym) {
             ecs_assert(!ecs_os_strcmp(desc->symbol, sym),
-                ECS_INCONSISTENT_NAME, desc->symbol);
+                ECS_INCONSISTENT_NAME, "%s (provided) vs. %s (existing)",
+                    desc->symbol, sym);
         } else {
             ecs_set_symbol(world, result, desc->symbol);
         }

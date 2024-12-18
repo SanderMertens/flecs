@@ -23,7 +23,13 @@ typedef struct TestInteropModule {
 static
 void TestInteropModuleImport(ecs_world_t *world) {
     ECS_MODULE(world, TestInteropModule);
+    ECS_COMPONENT(world, Position);
+    ECS_COMPONENT(world, Velocity);
+}
 
+static
+void TestInteropModule2Import(ecs_world_t *world) {
+    ECS_MODULE(world, TestInteropModule2);
     ECS_COMPONENT(world, Position);
     ECS_COMPONENT(world, Velocity);
 }
@@ -41,6 +47,19 @@ public:
         ecs.module<test::interop::module>();
         ecs.component<Position>("::test::interop::module::Position");
         ecs.component<Velocity>("::test::interop::module::Velocity");
+    }
+};
+
+class module2 {
+public:
+    struct Velocity : ::Velocity { };
+
+    module2(flecs::world& ecs) {
+        TestInteropModule2Import(ecs);
+
+        ecs.module<test::interop::module2>();
+        ecs.component<Position>();
+        ecs.component<Velocity>();
     }
 };
 
@@ -109,13 +128,52 @@ void World_multi_world_component(void) {
     auto v_1 = w1.component<Velocity>();
     auto v_2 = w2.component<Velocity>();
     auto m_2 = w2.component<Mass>();
+    w2.component<Mass>();
 
-    test_assert(v_1.id() == v_2.id());
-    test_assert(p_1.id() != m_2.id());
-    test_assert(m_2.id() > v_2.id());
+    test_assert(p_1 == v_2);
+    test_assert(v_1 == m_2);
 
-    auto m_1 = w2.component<Mass>();
-    test_assert(m_1.id() == m_2.id());
+    flecs::entity w1_e = w1.entity()
+        .set(Position{10, 20})
+        .set(Velocity{1, 2})
+        .set(Mass{100});
+
+    flecs::entity w2_e = w2.entity()
+        .set(Position{10, 20})
+        .set(Velocity{1, 2})
+        .set(Mass{100});
+
+    {
+        const Position *p = w1_e.get<Position>();
+        test_assert(p != nullptr);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+
+        const Velocity *v = w1_e.get<Velocity>();
+        test_assert(v != nullptr);
+        test_int(v->x, 1);
+        test_int(v->y, 2);
+
+        const Mass *m = w1_e.get<Mass>();
+        test_assert(m != nullptr);
+        test_int(m->value, 100);
+    }
+
+    {
+        const Position *p = w2_e.get<Position>();
+        test_assert(p != nullptr);
+        test_int(p->x, 10);
+        test_int(p->y, 20);
+
+        const Velocity *v = w2_e.get<Velocity>();
+        test_assert(v != nullptr);
+        test_int(v->x, 1);
+        test_int(v->y, 2);
+
+        const Mass *m = w2_e.get<Mass>();
+        test_assert(m != nullptr);
+        test_int(m->value, 100);
+    }
 }
 
 namespace A {
@@ -157,23 +215,6 @@ void World_multi_world_module(void) {
     test_int(ns::namespace_module::system_invoke_count, 2);
 }
 
-void World_multi_world_recycled_component(void) {
-    flecs::entity c;
-    {
-        flecs::world ecs;
-        for (int i = 0; i < FLECS_HI_COMPONENT_ID; i ++) {
-            ecs_new_low_id(ecs);
-        }
-
-        ecs.entity().destruct();
-        c = ecs.component<Position>();
-    }
-    {
-        flecs::world ecs;
-        test_assert((c == ecs.component<Position>()));
-    }
-}
-
 void World_multi_world_recycled_component_different_generation(void) {
     flecs::entity c;
     {
@@ -201,7 +242,7 @@ void World_type_id(void) {
 
     auto p = ecs.component<Position>();
 
-    test_assert(p.id() == flecs::type_id<Position>());
+    test_assert(p.id() == ecs.id<Position>());
 }
 
 void World_different_comp_same_name(void) {
@@ -233,14 +274,14 @@ void World_implicit_reregister_after_reset(void) {
 
     ecs.entity().add<Position>();
 
-    flecs::entity_t p_id_1 = flecs::type_id<Position>();
+    flecs::entity_t p_id_1 = ecs.id<Position>();
 
     // Simulate different binary
     flecs::_::type<Position>::reset();
 
     ecs.entity().add<Position>();
 
-    flecs::entity_t p_id_2 = flecs::type_id<Position>();
+    flecs::entity_t p_id_2 = ecs.id<Position>();
 
     test_assert(p_id_1 == p_id_2);
 }
@@ -250,14 +291,14 @@ void World_reregister_after_reset_w_namespace(void) {
 
     ecs.component<ns::FooComp>();
 
-    flecs::entity_t p_id_1 = flecs::type_id<ns::FooComp>();
+    flecs::entity_t p_id_1 = ecs.id<ns::FooComp>();
 
     // Simulate different binary
     flecs::_::type<ns::FooComp>::reset();
 
     ecs.component<ns::FooComp>();
 
-    flecs::entity_t p_id_2 = flecs::type_id<ns::FooComp>();
+    flecs::entity_t p_id_2 = ecs.id<ns::FooComp>();
 
     test_assert(p_id_1 == p_id_2);
 }
@@ -267,11 +308,11 @@ void World_reregister_namespace(void) {
 
     ecs.component<ns::FooComp>();
 
-    flecs::entity_t p_id_1 = flecs::type_id<ns::FooComp>();
+    flecs::entity_t p_id_1 = ecs.id<ns::FooComp>();
 
     ecs.component<ns::FooComp>();
 
-    flecs::entity_t p_id_2 = flecs::type_id<ns::FooComp>();
+    flecs::entity_t p_id_2 = ecs.id<ns::FooComp>();
 
     test_assert(p_id_1 == p_id_2);
 }
@@ -304,12 +345,12 @@ void World_reregister_after_delete(void) {
     test_assert(!c.is_alive());
 
     auto d = ecs.component<Position>();
-    test_assert(c == d);
-    test_assert(c.is_alive());
+    test_assert(!c.is_alive());
+    test_assert(d.is_alive());
 
-    test_str(c.name(), "Position");
-    test_str(c.path(), "::Position");
-    test_str(c.symbol(), "Position");
+    test_str(d.name(), "Position");
+    test_str(d.path(), "::Position");
+    test_str(d.symbol(), "Position");
 }
 
 void World_register_component_w_reset_in_multithreaded(void) {
@@ -440,6 +481,15 @@ void World_c_interop_after_reset(void) {
     ecs.import<test::interop::module>();
 }
 
+void World_c_interop_module_no_names(void) {
+    flecs::world ecs;
+
+    ecs.import<test::interop::module2>();
+
+    auto e_pos = ecs.lookup("test::interop::module2::Position");
+    test_assert(e_pos.id() != 0);
+}
+
 void World_implicit_register_w_new_world(void) {
     {
         flecs::world ecs;
@@ -471,7 +521,7 @@ void World_implicit_register_after_reset_register_w_custom_name(void) {
     flecs::entity c = ecs.component<Position>("MyPosition");
     test_str(c.name(), "MyPosition");
 
-    flecs::reset(); // Simulate working across boundary
+    flecs::_::type<Position>().reset(); // Simulate working across boundary
 
     auto e = ecs.entity().add<Position>();
     test_assert(e.has<Position>());
@@ -484,7 +534,7 @@ void World_register_after_reset_register_w_custom_name(void) {
     flecs::entity c1 = ecs.component<Position>("MyPosition");
     test_str(c1.name(), "MyPosition");
 
-    flecs::reset(); // Simulate working across boundary
+    flecs::_::type<Position>().reset(); // Simulate working across boundary
 
     flecs::entity c2 = ecs.component<Position>();
     test_str(c2.name(), "MyPosition");
@@ -496,7 +546,7 @@ void World_register_builtin_after_reset(void) {
     auto c1 = ecs.component<flecs::Component>();
     test_assert(c1 == ecs_id(EcsComponent));
 
-    flecs::reset(); // Simulate working across boundary
+    flecs::_::type<flecs::Component>().reset(); // Simulate working across boundary
 
     auto c2 = ecs.component<flecs::Component>();
     test_assert(c2 == ecs_id(EcsComponent));
@@ -508,7 +558,7 @@ void World_register_meta_after_reset(void) {
 
     auto c1 = ecs.component<Position>();
 
-    flecs::reset(); // Simulate working across boundary
+    flecs::_::type<Position>().reset(); // Simulate working across boundary
 
     auto c2 = ecs.component<Position>()
         .member<float>("x")
@@ -1555,27 +1605,7 @@ void World_make_alive(void) {
 }
 
 void World_reset_all(void) {
-    flecs::entity pos, vel;
 
-    {
-        flecs::world ecs;
-        pos = ecs.component<Position>();
-        vel = ecs.component<Velocity>();
-    }
-
-    test_assert(flecs::type_id<Position>() == pos);
-    test_assert(flecs::type_id<Velocity>() == vel);
-
-    flecs::reset();
-
-    test_assert(flecs::type_id<Position>() == 0);
-
-    /* Register components in opposite order, should result in different ids */
-    {
-        flecs::world ecs;
-        test_assert(ecs.component<Position>() != 0);
-        test_assert(ecs.component<Velocity>() != 0);
-    }
 }
 
 void World_get_tick(void) {
@@ -1696,7 +1726,7 @@ void World_reregister_after_reset_w_hooks_and_in_use(void) {
     ecs.entity().add<Pod>();
     test_int(1, Pod::ctor_invoked);
 
-    flecs::reset();
+    flecs::_::type<Pod>().reset();
 
     ecs.component<Pod>();
 
@@ -1712,7 +1742,7 @@ void World_reregister_after_reset_w_hooks_and_in_use_implicit(void) {
     ecs.entity().add<Pod>();
     test_int(1, Pod::ctor_invoked);
 
-    flecs::reset();
+    flecs::_::type<Pod>().reset();
 
     ecs.entity().add<Pod>();
     test_int(2, Pod::ctor_invoked);
@@ -1884,8 +1914,8 @@ void World_register_nested_component_in_module(void) {
 
     ecs.import<nested_component_module>();
 
-    test_assert(flecs::type_id<nested_component_module::Foo>() != 0);
-    test_assert(flecs::type_id<nested_component_module::Foo::Bar>() != 0);
+    test_assert(ecs.id<nested_component_module::Foo>() != 0);
+    test_assert(ecs.id<nested_component_module::Foo::Bar>() != 0);
 
     flecs::entity foo = ecs.component<nested_component_module::Foo>();
     flecs::entity bar = ecs.component<nested_component_module::Foo::Bar>();

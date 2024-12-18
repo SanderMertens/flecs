@@ -415,7 +415,8 @@
                 "component_registered_as_enum",
                 "mixed_auto_manual_constants",
                 "enum_class_mixed_auto_manual_constants",
-                "enum_child_count"
+                "enum_child_count",
+                "multi_world_constant_ids"
             ]
         }, {
             "id": "Union",
@@ -1161,7 +1162,6 @@
                 "multi_world_component",
                 "multi_world_component_namespace",
                 "multi_world_module",
-                "multi_world_recycled_component",
                 "multi_world_recycled_component_different_generation",
                 "type_id",
                 "different_comp_same_name",
@@ -1178,6 +1178,7 @@
                 "reimport_namespaced_module",
                 "c_interop_module",
                 "c_interop_after_reset",
+                "c_interop_module_no_names",
                 "implicit_register_w_new_world",
                 "implicit_register_after_reset_register_w_custom_name",
                 "register_after_reset_register_w_custom_name",
@@ -1243,7 +1244,6 @@
                 "exists",
                 "get_alive",
                 "make_alive",
-                "reset_all",
                 "get_tick",
                 "register_from_scope",
                 "register_nested_from_scope",

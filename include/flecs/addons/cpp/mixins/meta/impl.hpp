@@ -65,18 +65,14 @@ inline void init(flecs::world& world) {
     // specific types.
 
     if (!flecs::is_same<i32_t, iptr_t>() && !flecs::is_same<i64_t, iptr_t>()) {
-        flecs::_::type<iptr_t>::init(flecs::Iptr, true);
-        ecs_assert(flecs::type_id<iptr_t>() == flecs::Iptr, 
-            ECS_INTERNAL_ERROR, NULL);
+        flecs::_::type<iptr_t>::init_builtin(world, flecs::Iptr, true);
         // Remove symbol to prevent validation errors, as it doesn't match with 
         // the typename
         ecs_remove_pair(world, flecs::Iptr, ecs_id(EcsIdentifier), EcsSymbol);
     }
 
     if (!flecs::is_same<u32_t, uptr_t>() && !flecs::is_same<u64_t, uptr_t>()) {
-        flecs::_::type<uptr_t>::init(flecs::Uptr, true);
-        ecs_assert(flecs::type_id<uptr_t>() == flecs::Uptr, 
-            ECS_INTERNAL_ERROR, NULL);
+        flecs::_::type<uptr_t>::init_builtin(world, flecs::Uptr, true);
         // Remove symbol to prevent validation errors, as it doesn't match with 
         // the typename
         ecs_remove_pair(world, flecs::Uptr, ecs_id(EcsIdentifier), EcsSymbol);

@@ -145,7 +145,7 @@ void Singleton_get_singleton(void) {
 
     auto s = world.singleton<Position>();
     test_assert(s.has<Position>());
-    test_assert(s.id() == flecs::type_id<Position>());
+    test_assert(s.id() == world.id<Position>());
 
     const Position* p = s.get<Position>();
     test_int(p->x, 10);
@@ -158,11 +158,11 @@ void Singleton_type_id_from_world(void) {
     world.set<Position>({10, 20});
 
     flecs::entity_t id = world.id<Position>();
-    test_assert(id == flecs::type_id<Position>());
+    test_assert(id == world.id<Position>());
 
     auto s = world.singleton<Position>();
-    test_assert(s.id() == flecs::type_id<Position>());
-    test_assert(s.id() == flecs::type_id<Position>());
+    test_assert(s.id() == world.id<Position>());
+    test_assert(s.id() == world.id<Position>());
 }
 
 void Singleton_set_lambda(void) {
