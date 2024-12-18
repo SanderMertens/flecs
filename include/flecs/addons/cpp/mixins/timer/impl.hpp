@@ -5,7 +5,7 @@
 
 #pragma once
 
-namespace flecs {
+FLECS_API_NAMESPACE namespace flecs {
 
 // Timer class
 struct timer final : entity {
@@ -94,6 +94,9 @@ inline void system::set_tick_source(flecs::entity e) {
     ecs_set_tick_source(world_, id_, e);
 }
 
+} // namespace flecs
+
+namespace flecs {
 namespace _ {
 
 inline void timer_init(flecs::world& world) {
@@ -101,5 +104,5 @@ inline void timer_init(flecs::world& world) {
     world.component<Timer>("flecs::timer::Timer");
 }
 
-}
-}
+} // namespace _
+} // namespace flecs

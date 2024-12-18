@@ -5,7 +5,7 @@
 
 #pragma once
 
-namespace flecs 
+FLECS_API_NAMESPACE namespace flecs
 {
 
 inline void world::init_builtin_components() {

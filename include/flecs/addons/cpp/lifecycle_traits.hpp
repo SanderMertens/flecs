@@ -148,7 +148,11 @@ void move_dtor_impl(void *dst_ptr, void *src_ptr, int32_t count,
     }
 }
 
-} // _
+} // namespace _
+} // namespace flecs
+
+FLECS_API_NAMESPACE namespace flecs
+{
 
 // Trait to test if type is constructible by flecs
 template <typename T>
@@ -157,6 +161,9 @@ struct is_flecs_constructible {
         std::is_default_constructible<actual_type_t<T>>::value;
 };
 
+} // namespace flecs
+
+namespace flecs {
 namespace _
 {
 

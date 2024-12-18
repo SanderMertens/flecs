@@ -7,6 +7,7 @@ option(FLECS_STATIC "Build static flecs lib" ON)
 option(FLECS_SHARED "Build shared flecs lib" ON)
 option(FLECS_PIC "Compile static flecs lib with position independent code (PIC)" ON)
 option(FLECS_TESTS "Build flecs tests" OFF)
+option(FLECS_M0DULE "Build flecs C++20 module" OFF)
 
 include(cmake/target_default_compile_warnings.cmake)
 include(cmake/target_default_compile_options.cmake)
@@ -73,6 +74,10 @@ endif()
 if(FLECS_TESTS)
     enable_testing()
     add_subdirectory(test)
+endif()
+
+if(FLECS_M0DULE)
+    add_subdirectory(module)
 endif()
 
 message(STATUS "Targets: ${FLECS_TARGETS}")

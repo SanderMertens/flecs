@@ -93,8 +93,10 @@ template <typename T>
 struct function_traits
     : function_traits_no_cv< decay_t<T> > {};
 
-} // _
+} // namespace _
+} // namespace flecs
 
+FLECS_API_NAMESPACE namespace flecs {
 
 template <typename T>
 struct is_callable {

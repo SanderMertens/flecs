@@ -7,7 +7,7 @@
 
 #include "builder.hpp"
 
-namespace flecs {
+FLECS_API_NAMESPACE namespace flecs {
 
 /**
  * @defgroup cpp_addons_metrics Metrics
@@ -17,6 +17,7 @@ namespace flecs {
  *
  * @{
  */
+
 
 struct metrics {
     using Value = EcsMetricValue;
