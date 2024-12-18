@@ -405,6 +405,7 @@ void Enum_mixed_auto_manual_constants(void);
 void Enum_enum_class_mixed_auto_manual_constants(void);
 void Enum_enum_child_count(void);
 void Enum_multi_world_constant_ids(void);
+void Enum_empty_enum(void);
 
 // Testsuite 'Union'
 void Union_add_case(void);
@@ -2980,6 +2981,10 @@ bake_test_case Enum_testcases[] = {
     {
         "multi_world_constant_ids",
         Enum_multi_world_constant_ids
+    },
+    {
+        "empty_enum",
+        Enum_empty_enum
     }
 };
 
@@ -6926,7 +6931,7 @@ static bake_test_suite suites[] = {
         "Enum",
         NULL,
         NULL,
-        40,
+        41,
         Enum_testcases
     },
     {

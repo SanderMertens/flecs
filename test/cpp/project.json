@@ -416,7 +416,8 @@
                 "mixed_auto_manual_constants",
                 "enum_class_mixed_auto_manual_constants",
                 "enum_child_count",
-                "multi_world_constant_ids"
+                "multi_world_constant_ids",
+                "empty_enum"
             ]
         }, {
             "id": "Union",

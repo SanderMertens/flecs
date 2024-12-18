@@ -90,6 +90,8 @@ enum class EnumClassWithLargeConstant {
     X, Y, Z = 1000
 };
 
+enum EmptyEnum { };
+
 /* Optional, but improves compile time */
 FLECS_ENUM_LAST(StandardEnum, Blue)
 FLECS_ENUM_LAST(SparseEnum, Grey)
@@ -1204,4 +1206,12 @@ void Enum_multi_world_constant_ids(void) {
     test_assert(red_a == world_a.to_entity(StandardEnum::Red));
     test_assert(green_a == world_a.to_entity(StandardEnum::Green));
     test_assert(blue_a == world_a.to_entity(StandardEnum::Blue));
+}
+
+void Enum_empty_enum(void) {
+    flecs::world ecs;
+
+    auto enum_type = flecs::enum_type<EmptyEnum>(ecs);
+    
+    test_int(enum_type.index_by_value(0), -1);
 }
