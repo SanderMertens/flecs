@@ -1122,6 +1122,9 @@ void Operators_or_from_empty(void);
 void Operators_and_from_empty_w_tag(void);
 void Operators_not_from_empty_w_tag(void);
 void Operators_or_from_empty_w_tag(void);
+void Operators_and_from_existing_and_new_table(void);
+void Operators_not_from_existing_and_new_table(void);
+void Operators_or_from_existing_and_new_table(void);
 void Operators_or_w_wildcard(void);
 void Operators_or_w_component_and_tag(void);
 void Operators_or_w_tag_and_component(void);
@@ -6531,6 +6534,18 @@ bake_test_case Operators_testcases[] = {
         Operators_or_from_empty_w_tag
     },
     {
+        "and_from_existing_and_new_table",
+        Operators_and_from_existing_and_new_table
+    },
+    {
+        "not_from_existing_and_new_table",
+        Operators_not_from_existing_and_new_table
+    },
+    {
+        "or_from_existing_and_new_table",
+        Operators_or_from_existing_and_new_table
+    },
+    {
         "or_w_wildcard",
         Operators_or_w_wildcard
     },
@@ -10521,7 +10536,7 @@ static bake_test_suite suites[] = {
         "Operators",
         Operators_setup,
         NULL,
-        149,
+        152,
         Operators_testcases,
         1,
         Operators_params
