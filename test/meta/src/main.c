@@ -416,14 +416,14 @@ void Cursor_array_struct_3(void);
 void Cursor_array_move_primitive(void);
 void Cursor_array_move_struct(void);
 void Cursor_array_move_out_of_range(void);
-void Cursor_opaque_set_bool(void);
-void Cursor_opaque_set_char(void);
-void Cursor_opaque_set_int(void);
-void Cursor_opaque_set_uint(void);
-void Cursor_opaque_set_float(void);
+void Cursor_opaque_get_set_bool(void);
+void Cursor_opaque_get_set_char(void);
+void Cursor_opaque_get_set_int(void);
+void Cursor_opaque_get_set_uint(void);
+void Cursor_opaque_get_set_float(void);
 void Cursor_opaque_get_set_string(void);
-void Cursor_opaque_set_entity(void);
-void Cursor_opaque_set_id(void);
+void Cursor_opaque_get_set_entity(void);
+void Cursor_opaque_get_set_id(void);
 void Cursor_opaque_set_int_vec(void);
 void Cursor_opaque_set_int_vec_empty(void);
 void Cursor_opaque_set_int_vec_resize_smaller(void);
@@ -961,12 +961,19 @@ void MetaUtils_enum_constant_w_name_type_prefix(void);
 
 // Testsuite 'OpaqueTypes'
 void OpaqueTypes_ser_i32_type_to_json(void);
+void OpaqueTypes_ser_i32_type_to_json_auto(void);
 void OpaqueTypes_ser_string_type_to_json(void);
+void OpaqueTypes_ser_string_type_to_json_auto(void);
 void OpaqueTypes_ser_vec_i32_type_to_json(void);
+void OpaqueTypes_ser_vec_i32_type_to_json_auto(void);
 void OpaqueTypes_ser_vec_string_type_to_json(void);
+void OpaqueTypes_ser_vec_string_type_to_json_auto(void);
+void OpaqueTypes_ser_arr_i32_type_to_json(void);
+void OpaqueTypes_ser_arr_i32_type_to_json_auto(void);
 void OpaqueTypes_ser_struct_1_member(void);
 void OpaqueTypes_ser_struct_2_members(void);
 void OpaqueTypes_ser_struct_3_members(void);
+void OpaqueTypes_ser_struct_3_members_auto(void);
 void OpaqueTypes_deser_bool_from_json(void);
 void OpaqueTypes_deser_char_from_json(void);
 void OpaqueTypes_deser_int_from_json(void);
@@ -2601,36 +2608,36 @@ bake_test_case Cursor_testcases[] = {
         Cursor_array_move_out_of_range
     },
     {
-        "opaque_set_bool",
-        Cursor_opaque_set_bool
+        "opaque_get_set_bool",
+        Cursor_opaque_get_set_bool
     },
     {
-        "opaque_set_char",
-        Cursor_opaque_set_char
+        "opaque_get_set_char",
+        Cursor_opaque_get_set_char
     },
     {
-        "opaque_set_int",
-        Cursor_opaque_set_int
+        "opaque_get_set_int",
+        Cursor_opaque_get_set_int
     },
     {
-        "opaque_set_uint",
-        Cursor_opaque_set_uint
+        "opaque_get_set_uint",
+        Cursor_opaque_get_set_uint
     },
     {
-        "opaque_set_float",
-        Cursor_opaque_set_float
+        "opaque_get_set_float",
+        Cursor_opaque_get_set_float
     },
     {
         "opaque_get_set_string",
         Cursor_opaque_get_set_string
     },
     {
-        "opaque_set_entity",
-        Cursor_opaque_set_entity
+        "opaque_get_set_entity",
+        Cursor_opaque_get_set_entity
     },
     {
-        "opaque_set_id",
-        Cursor_opaque_set_id
+        "opaque_get_set_id",
+        Cursor_opaque_get_set_id
     },
     {
         "opaque_set_int_vec",
@@ -4736,16 +4743,40 @@ bake_test_case OpaqueTypes_testcases[] = {
         OpaqueTypes_ser_i32_type_to_json
     },
     {
+        "ser_i32_type_to_json_auto",
+        OpaqueTypes_ser_i32_type_to_json_auto
+    },
+    {
         "ser_string_type_to_json",
         OpaqueTypes_ser_string_type_to_json
+    },
+    {
+        "ser_string_type_to_json_auto",
+        OpaqueTypes_ser_string_type_to_json_auto
     },
     {
         "ser_vec_i32_type_to_json",
         OpaqueTypes_ser_vec_i32_type_to_json
     },
     {
+        "ser_vec_i32_type_to_json_auto",
+        OpaqueTypes_ser_vec_i32_type_to_json_auto
+    },
+    {
         "ser_vec_string_type_to_json",
         OpaqueTypes_ser_vec_string_type_to_json
+    },
+    {
+        "ser_vec_string_type_to_json_auto",
+        OpaqueTypes_ser_vec_string_type_to_json_auto
+    },
+    {
+        "ser_arr_i32_type_to_json",
+        OpaqueTypes_ser_arr_i32_type_to_json
+    },
+    {
+        "ser_arr_i32_type_to_json_auto",
+        OpaqueTypes_ser_arr_i32_type_to_json_auto
     },
     {
         "ser_struct_1_member",
@@ -4758,6 +4789,10 @@ bake_test_case OpaqueTypes_testcases[] = {
     {
         "ser_struct_3_members",
         OpaqueTypes_ser_struct_3_members
+    },
+    {
+        "ser_struct_3_members_auto",
+        OpaqueTypes_ser_struct_3_members_auto
     },
     {
         "deser_bool_from_json",
@@ -5107,7 +5142,7 @@ static bake_test_suite suites[] = {
         "OpaqueTypes",
         NULL,
         NULL,
-        18,
+        25,
         OpaqueTypes_testcases
     },
     {
