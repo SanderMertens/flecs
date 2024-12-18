@@ -398,18 +398,27 @@ ecs_world_t* flecs_suspend_readonly(
 
     /* Cannot suspend when running with multiple threads */
     ecs_assert(!(world->flags & EcsWorldReadonly) ||
-        !(world->flags & EcsWorldMultiThreaded), ECS_INVALID_WHILE_READONLY, NULL);
+        !(world->flags & EcsWorldMultiThreaded), 
+            ECS_INVALID_WHILE_READONLY, NULL);
 
     state->is_readonly = is_readonly;
     state->is_deferred = stage->defer != 0;
+    state->cmd_flushing = stage->cmd_flushing;
 
     /* Silence readonly checks */
     world->flags &= ~EcsWorldReadonly;
+    stage->cmd_flushing = false;
 
     /* Hack around safety checks (this ought to look ugly) */
     state->defer_count = stage->defer;
-    state->cmd = *stage->cmd;
-    flecs_commands_init(stage, stage->cmd);
+    state->cmd_stack[0] = stage->cmd_stack[0];
+    state->cmd_stack[1] = stage->cmd_stack[1];
+    state->cmd = stage->cmd;
+
+    flecs_commands_init(stage, &stage->cmd_stack[0]);
+    flecs_commands_init(stage, &stage->cmd_stack[1]);
+    stage->cmd = &stage->cmd_stack[0];
+
     state->scope = stage->scope;
     state->with = stage->with;
     stage->defer = 0;
@@ -435,8 +444,13 @@ void flecs_resume_readonly(
         /* Restore readonly state / defer count */
         ECS_BIT_COND(world->flags, EcsWorldReadonly, state->is_readonly);
         stage->defer = state->defer_count;
-        flecs_commands_fini(stage, stage->cmd);
-        *stage->cmd = state->cmd;
+        stage->cmd_flushing = state->cmd_flushing;
+        flecs_commands_fini(stage, &stage->cmd_stack[0]);
+        flecs_commands_fini(stage, &stage->cmd_stack[1]);
+        stage->cmd_stack[0] = state->cmd_stack[0];
+        stage->cmd_stack[1] = state->cmd_stack[1];
+        stage->cmd = state->cmd;
+        
         stage->scope = state->scope;
         stage->with = state->with;
     }
