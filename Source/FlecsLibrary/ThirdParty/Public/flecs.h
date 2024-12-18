@@ -367,6 +367,10 @@
 		#endif
 #endif
 
+#ifndef FLECS_RESTRICT
+		#define FLECS_RESTRICT restrict
+#endif
+
 /** @} */
 
 #include "flecs/private/api_defines.h"
@@ -6313,6 +6317,314 @@ int ecs_value_move_ctor(
 /** @} */
 
 /** @} */
+
+	/* SIMD support */
+
+	#ifdef ECS_SIMD
+
+	#define FLECS_SIMD_INTEL   (1)  /* Intel (SSE, AVX) */
+	#define FLECS_SIMD_ARM     (2)  /* ARM NEON */
+	#define FLECS_SIMD_WASM    (3)  /* WebAssembly SIMD */
+	#define FLECS_SIMD_NONE    (4)  /* No SIMD support */
+
+	/* Detect architecture & features */
+	#if defined(__AVX512F__)
+	    #define FLECS_SIMD_ARCH FLECS_SIMD_INTEL
+	    #define FLECS_SIMD_AVX512
+	    #define FLECS_SIMD_AVX2
+	    #define FLECS_SIMD_AVX
+	    #define FLECS_SIMD_SSE
+	    #include <immintrin.h>
+	#elif defined(__AVX2__)
+	    #define FLECS_SIMD_ARCH FLECS_SIMD_INTEL
+	    #define FLECS_SIMD_AVX2  
+	    #define FLECS_SIMD_AVX
+	    #define FLECS_SIMD_SSE
+	    #include <immintrin.h>
+	#elif defined(__AVX__)
+	    #define FLECS_SIMD_ARCH FLECS_SIMD_INTEL
+	    #define FLECS_SIMD_AVX
+	    #define FLECS_SIMD_SSE  
+	    #include <immintrin.h>
+	#elif defined(__SSE2__) || (defined(_MSC_VER) && (defined(_M_AMD64) || defined(_M_X64)))
+	    #define FLECS_SIMD_ARCH FLECS_SIMD_INTEL
+	    #define FLECS_SIMD_SSE
+	    #include <emmintrin.h>
+		#include <intrin.h>
+	#elif defined(__ARM_NEON)
+	    #define FLECS_SIMD_ARCH FLECS_SIMD_ARM
+	    #define FLECS_SIMD_NEON
+	    #include <arm_neon.h>
+	#elif defined(__wasm_simd128__)
+	    #define FLECS_SIMD_ARCH FLECS_SIMD_WASM
+	    #include <wasm_simd128.h>
+	#else
+	    #define FLECS_SIMD_ARCH FLECS_SIMD_NONE
+	#endif
+
+	/* Architecture-specific settings */
+	#if FLECS_SIMD_ARCH == FLECS_SIMD_INTEL
+	    #ifdef FLECS_SIMD_AVX512
+	        #define FLECS_SIMD_WIDTH 64  /* 512 bits */
+	        #define FLECS_SIMD_DOUBLE 8  /* 8 doubles */
+	        #define FLECS_SIMD_FLOAT 16  /* 16 floats */ 
+	    #elif defined(FLECS_SIMD_AVX2) || defined(FLECS_SIMD_AVX)
+	        #define FLECS_SIMD_WIDTH 32  /* 256 bits */
+	        #define FLECS_SIMD_DOUBLE 4  /* 4 doubles */
+	        #define FLECS_SIMD_FLOAT 8   /* 8 floats */
+	    #else
+	        #define FLECS_SIMD_WIDTH 16  /* 128 bits */ 
+	        #define FLECS_SIMD_DOUBLE 2  /* 2 doubles */
+	        #define FLECS_SIMD_FLOAT 4   /* 4 floats */
+	    #endif
+	#elif FLECS_SIMD_ARCH == FLECS_SIMD_ARM
+	    #define FLECS_SIMD_WIDTH 16      /* 128 bits */
+	    #define FLECS_SIMD_DOUBLE 2      /* 2 doubles */ 
+	    #define FLECS_SIMD_FLOAT 4       /* 4 floats */
+	#else
+	    #define FLECS_SIMD_WIDTH 0
+	    #define FLECS_SIMD_DOUBLE 1  
+	    #define FLECS_SIMD_FLOAT 1
+	#endif
+
+	/* Vector types that abstract away architecture differences */
+	typedef union ecs_simd_double_t {
+	#if FLECS_SIMD_ARCH == FLECS_SIMD_INTEL
+	    #ifdef FLECS_SIMD_AVX512 
+	        __m512d v512;
+	    #endif
+	    #ifdef FLECS_SIMD_AVX
+	        __m256d v256;
+	    #endif
+	    #ifdef FLECS_SIMD_SSE
+	        __m128d v128;
+	    #endif
+	#elif FLECS_SIMD_ARCH == FLECS_SIMD_ARM
+	    float64x2_t vneon;
+	#endif
+	    double f64[FLECS_SIMD_DOUBLE];
+	} ecs_simd_double_t;
+
+	typedef union ecs_simd_float_t {
+	#if FLECS_SIMD_ARCH == FLECS_SIMD_INTEL  
+	    #ifdef FLECS_SIMD_AVX512
+	        __m512 v512;
+	    #endif
+	    #ifdef FLECS_SIMD_AVX  
+	        __m256 v256;
+	    #endif
+	    #ifdef FLECS_SIMD_SSE
+	        __m128 v128;
+	    #endif
+	#elif FLECS_SIMD_ARCH == FLECS_SIMD_ARM
+	    float32x4_t vneon;
+	#endif
+	    float f32[FLECS_SIMD_FLOAT];
+	} ecs_simd_float_t;
+
+	/* Core vector operations */
+	static inline ecs_simd_double_t ecs_simd_double_load(const double *ptr) {
+	    ecs_simd_double_t result;
+	#if FLECS_SIMD_ARCH == FLECS_SIMD_INTEL
+	    #ifdef FLECS_SIMD_AVX512
+	        result.v512 = _mm512_loadu_pd(ptr);
+	    #elif defined(FLECS_SIMD_AVX)
+	        result.v256 = _mm256_loadu_pd(ptr); 
+	    #elif defined(FLECS_SIMD_SSE)
+	        result.v128 = _mm_loadu_pd(ptr);
+	    #endif
+	#elif FLECS_SIMD_ARCH == FLECS_SIMD_ARM
+	    result.vneon = vld1q_f64(ptr);
+	#else
+	    result.f64[0] = *ptr;
+	#endif
+	    return result;
+	}
+
+	static inline void ecs_simd_double_store(double *ptr, ecs_simd_double_t v) {
+	#if FLECS_SIMD_ARCH == FLECS_SIMD_INTEL
+	    #ifdef FLECS_SIMD_AVX512
+	        _mm512_storeu_pd(ptr, v.v512);
+	    #elif defined(FLECS_SIMD_AVX)
+	        _mm256_storeu_pd(ptr, v.v256);
+	    #elif defined(FLECS_SIMD_SSE) 
+	        _mm_storeu_pd(ptr, v.v128);
+	    #endif
+	#elif FLECS_SIMD_ARCH == FLECS_SIMD_ARM
+	    vst1q_f64(ptr, v.vneon);
+	#else
+	    ptr[0] = v.f64[0];
+	#endif
+	}
+
+	static inline ecs_simd_double_t ecs_simd_double_add(
+	    ecs_simd_double_t a, 
+	    ecs_simd_double_t b) 
+	{
+	    ecs_simd_double_t result;
+	#if FLECS_SIMD_ARCH == FLECS_SIMD_INTEL
+	    #ifdef FLECS_SIMD_AVX512
+	        result.v512 = _mm512_add_pd(a.v512, b.v512);
+	    #elif defined(FLECS_SIMD_AVX)
+	        result.v256 = _mm256_add_pd(a.v256, b.v256);
+	    #elif defined(FLECS_SIMD_SSE)
+	        result.v128 = _mm_add_pd(a.v128, b.v128);
+	    #endif
+	#elif FLECS_SIMD_ARCH == FLECS_SIMD_ARM
+	    result.vneon = vaddq_f64(a.vneon, b.vneon);
+	#else
+	    result.f64[0] = a.f64[0] + b.f64[0];
+	#endif
+	    return result;
+	}
+
+	static inline ecs_simd_double_t ecs_simd_double_sub(
+	ecs_simd_double_t a, 
+	ecs_simd_double_t b) 
+	{
+		ecs_simd_double_t result;
+		#if FLECS_SIMD_ARCH == FLECS_SIMD_INTEL
+		#ifdef FLECS_SIMD_AVX512
+		result.v512 = _mm512_sub_pd(a.v512, b.v512);
+		#elif defined(FLECS_SIMD_AVX)
+		result.v256 = _mm256_sub_pd(a.v256, b.v256);
+		#elif defined(FLECS_SIMD_SSE)
+		result.v128 = _mm_sub_pd(a.v128, b.v128);
+		#endif
+		#elif FLECS_SIMD_ARCH == FLECS_SIMD_ARM
+		result.vneon = vsubq_f64(a.vneon, b.vneon);
+		#else
+		result.f64[0] = a.f64[0] - b.f64[0];
+		#endif
+		return result;
+	}
+
+	/* Optimized batch processing with SIMD */
+	#define ECS_SIMD_LOOP(count, width, body, cleanup) \
+		{ \
+			int32_t i, batch_count = count - (count % width); \
+			for (i = 0; i < batch_count; i += width) { \
+				body \
+			} \
+			for (; i < count; i++) { \
+				cleanup \
+			} \
+		}
+
+	/* Helper to prefetch data */
+	#if FLECS_SIMD_ARCH == FLECS_SIMD_INTEL  
+	    #if defined(__GNUC__) || defined(__clang__)
+	        #define ecs_simd_prefetch(addr) __builtin_prefetch(addr)
+	    #elif defined(_MSC_VER)
+	        #define ecs_simd_prefetch(addr) _mm_prefetch((const char*)addr, _MM_HINT_T0)
+	    #endif
+	#else
+	    #define ecs_simd_prefetch(addr)
+	#endif
+
+	static inline double ecs_simd_double_hadd(ecs_simd_double_t v) {
+		double result = 0;
+		#if FLECS_SIMD_ARCH == FLECS_SIMD_INTEL
+		#ifdef FLECS_SIMD_AVX512
+		result = _mm512_reduce_add_pd(v.v512);
+		#elif defined(FLECS_SIMD_AVX)
+		__m128d sum = _mm_add_pd(
+			_mm256_extractf128_pd(v.v256, 0),
+			_mm256_extractf128_pd(v.v256, 1));
+		result = _mm_cvtsd_f64(_mm_hadd_pd(sum, sum));
+		#elif defined(FLECS_SIMD_SSE)
+		result = _mm_cvtsd_f64(_mm_hadd_pd(v.v128, v.v128));
+		#endif
+		#elif FLECS_SIMD_ARCH == FLECS_SIMD_ARM
+		result = vaddvq_f64(v.vneon);
+		#else
+		result = v.f64[0];
+		#endif
+		return result;
+	}
+
+	static inline ecs_simd_double_t ecs_simd_double_broadcast(double value) {
+		ecs_simd_double_t result;
+		#if FLECS_SIMD_ARCH == FLECS_SIMD_INTEL
+		#ifdef FLECS_SIMD_AVX512
+		result.v512 = _mm512_set1_pd(value);
+		#elif defined(FLECS_SIMD_AVX)
+		result.v256 = _mm256_set1_pd(value);
+		#elif defined(FLECS_SIMD_SSE)
+		result.v128 = _mm_set1_pd(value);
+		#endif
+		#elif FLECS_SIMD_ARCH == FLECS_SIMD_ARM
+		result.vneon = vdupq_n_f64(value);
+		#else
+		result.f64[0] = value;
+		#endif
+		return result;
+	}
+
+	static inline ecs_simd_double_t ecs_simd_double_mul(
+	ecs_simd_double_t a,
+	ecs_simd_double_t b)
+	{
+		ecs_simd_double_t result;
+		#if FLECS_SIMD_ARCH == FLECS_SIMD_INTEL
+		#ifdef FLECS_SIMD_AVX512
+		result.v512 = _mm512_mul_pd(a.v512, b.v512); 
+		#elif defined(FLECS_SIMD_AVX)
+		result.v256 = _mm256_mul_pd(a.v256, b.v256);
+		#elif defined(FLECS_SIMD_SSE)
+		result.v128 = _mm_mul_pd(a.v128, b.v128);
+		#endif
+		#elif FLECS_SIMD_ARCH == FLECS_SIMD_ARM
+		result.vneon = vmulq_f64(a.vneon, b.vneon);
+		#else
+		result.f64[0] = a.f64[0] * b.f64[0];
+		#endif
+		return result;
+	}
+
+	static inline ecs_simd_double_t ecs_simd_double_min(
+	ecs_simd_double_t a,
+	ecs_simd_double_t b)
+	{
+		ecs_simd_double_t result;
+		#if FLECS_SIMD_ARCH == FLECS_SIMD_INTEL
+		#ifdef FLECS_SIMD_AVX512
+		result.v512 = _mm512_min_pd(a.v512, b.v512);
+		#elif defined(FLECS_SIMD_AVX)
+		result.v256 = _mm256_min_pd(a.v256, b.v256);
+		#elif defined(FLECS_SIMD_SSE)
+		result.v128 = _mm_min_pd(a.v128, b.v128);
+		#endif
+		#elif FLECS_SIMD_ARCH == FLECS_SIMD_ARM
+		result.vneon = vminq_f64(a.vneon, b.vneon);
+		#else
+		result.f64[0] = a.f64[0] < b.f64[0] ? a.f64[0] : b.f64[0];
+		#endif
+		return result;
+	}
+
+	static inline ecs_simd_double_t ecs_simd_double_cmplt(
+	ecs_simd_double_t a,
+	ecs_simd_double_t b)
+	{
+		ecs_simd_double_t result;
+		#if FLECS_SIMD_ARCH == FLECS_SIMD_INTEL
+		#ifdef FLECS_SIMD_AVX512
+		result.v512 = (__m512d)_mm512_cmp_pd(a.v512, b.v512, _CMP_LT_OS);
+		#elif defined(FLECS_SIMD_AVX)
+		result.v256 = _mm256_cmp_pd(a.v256, b.v256, _CMP_LT_OS);
+		#elif defined(FLECS_SIMD_SSE)
+		result.v128 = _mm_cmplt_pd(a.v128, b.v128);
+		#endif
+		#elif FLECS_SIMD_ARCH == FLECS_SIMD_ARM
+		result.vneon = vcltq_f64(a.vneon, b.vneon);
+		#else
+		result.f64[0] = a.f64[0] < b.f64[0] ? -1.0 : 0.0;
+		#endif
+		return result;
+	}
+
+	#endif // ECS_SIMD
 
 /**
  * @defgroup c_addons Addons

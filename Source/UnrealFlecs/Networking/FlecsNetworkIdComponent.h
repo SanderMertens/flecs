@@ -20,7 +20,7 @@ public:
 	FORCEINLINE FFlecsNetworkIdComponent() = default;
 	FORCEINLINE FFlecsNetworkIdComponent(const uint32 InNetworkId) : NetworkId(InNetworkId) {}
 
-	FORCEINLINE NO_DISCARD uint32 GetNetworkId() const { return NetworkId.Get(std::numeric_limits<uint32>::max()); }
+	FORCEINLINE NO_DISCARD uint32 GetNetworkId() const { return NetworkId.Get(INDEX_NONE); }
 	FORCEINLINE void SetNetworkId(const uint32 InNetworkId) { NetworkId = InNetworkId; }
 
 	FORCEINLINE NO_DISCARD bool IsValid() const { return NetworkId.IsSet(); }
@@ -52,14 +52,12 @@ public:
 
 	FORCEINLINE NO_DISCARD FString ToString() const
 	{
-		return FString::Printf(TEXT("NetworkId: %lu"), NetworkId.Get(std::numeric_limits<uint32>::max()));
+		return FString::Printf(TEXT("NetworkId: %lu"), NetworkId.Get(INDEX_NONE));
 	}
 
 	FORCEINLINE bool NetSerialize(FArchive& Ar, MAYBE_UNUSED UPackageMap* Map, bool& bOutSuccess)
 	{
-		const TOptional InvalidNetworkId = std::numeric_limits<uint32>::max();
-		
-		SerializeOptionalValue<TOptional<uint32>>(Ar.IsSaving(), Ar, NetworkId, InvalidNetworkId);
+		SerializeOptionalValue<TOptional<uint32>>(Ar.IsSaving(), Ar, NetworkId, TOptional<uint32>());
 
 		bOutSuccess = true;
 		return true;

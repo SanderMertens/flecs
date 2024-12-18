@@ -4,7 +4,7 @@
 #include "FlecsEntityHandle.h"
 #include "Components/FlecsWorldPtrComponent.h"
 #include "Components/UWorldPtrComponent.h"
-#include "Networking/FlecsNetworkingActorComponent.h"
+#include "Networking/FlecsNetworkIdComponent.h"
 #include "Worlds/FlecsWorld.h"
 #include "Worlds/FlecsWorldSubsystem.h"
 
@@ -42,9 +42,8 @@ FString FFlecsEntityHandle::GetWorldName() const
 
 bool FFlecsEntityHandle::NetSerialize(FArchive& Ar, UPackageMap* Map, bool& bOutSuccess)
 {
-    if (Ar.IsLoading())
+    /*if (Ar.IsLoading())
     {
-        FNetworkedEntityInfo Info;
         Info.NetSerialize(Ar, Map, bOutSuccess);
 
         const UFlecsWorldSubsystem* FlecsWorldSubsystem = GWorld->GetSubsystem<UFlecsWorldSubsystem>();
@@ -83,7 +82,9 @@ bool FFlecsEntityHandle::NetSerialize(FArchive& Ar, UPackageMap* Map, bool& bOut
         Info.NetSerialize(Ar, Map, bOutSuccess);
         bOutSuccess = true;
         return true;
-    }
+    }*/
+
+    return false;
 }
 
 FFlecsEntityHandle FFlecsEntityHandle::ObtainComponentTypeStruct(const UScriptStruct* StructType) const

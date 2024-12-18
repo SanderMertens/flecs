@@ -13,6 +13,8 @@ class UNREALFLECS_API UUnrealFlecsObject : public UObject, public IFlecsEntityIn
 	GENERATED_BODY()
 
 public:
+	UUnrealFlecsObject();
+	UUnrealFlecsObject(const FObjectInitializer& ObjectInitializer);
 	
 
 	FORCEINLINE virtual FFlecsEntityHandle GetEntityHandle() const override
@@ -20,8 +22,7 @@ public:
 		return ObjectEntityHandle;
 	}
 	
-private:
+protected:
 	UPROPERTY()
 	FFlecsEntityHandle ObjectEntityHandle;
-
 }; // class UUnrealFlecsObject

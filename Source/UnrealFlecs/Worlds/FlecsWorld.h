@@ -363,8 +363,7 @@ class UNREALFLECS_API UFlecsWorld final : public UObject
 	GENERATED_BODY()
 
 public:
-	UFlecsWorld()
-		: TypeMapComponent(nullptr)
+	UFlecsWorld() : TypeMapComponent(nullptr)
 	{
 		World = flecs::world();
 	}

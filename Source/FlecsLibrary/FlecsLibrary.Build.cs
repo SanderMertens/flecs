@@ -28,7 +28,7 @@ public class FlecsLibrary : ModuleRules
                 "FLECS_UNITS",
                 "FLECS_HTTP",
                 "FLECS_REST",
-                //"flecs_EXPORTS"
+                //"ECS_SIMD"
             }
         );
         

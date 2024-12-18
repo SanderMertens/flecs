@@ -1,5 +1,6 @@
 ﻿// Fill out your copyright notice in the Description page of Project Settings.
 
+// ReSharper disable CppExpressionWithoutSideEffects
 #include "FlecsModuleInterface.h"
 #include "FlecsModuleInitEvent.h"
 #include "Components/FlecsModuleComponent.h"
@@ -9,7 +10,7 @@
 
 #include UE_INLINE_GENERATED_CPP_BY_NAME(FlecsModuleInterface)
 
-inline void IFlecsModuleInterface::ImportModule(flecs::world& InWorld)
+void IFlecsModuleInterface::ImportModule(flecs::world& InWorld)
 {
 	World = ToFlecsWorld(InWorld);
 	solid_checkf(World.IsValid(), TEXT("World is not valid!"));
