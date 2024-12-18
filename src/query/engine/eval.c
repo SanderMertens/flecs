@@ -398,13 +398,15 @@ bool flecs_query_x_from(
     ecs_query_xfrom_ctx_t *op_ctx = flecs_op_ctx(ctx, xfrom);
     ecs_world_t *world = ctx->world;
     ecs_type_t *type;
+    ecs_entity_t type_id;
     int32_t i;
 
     if (!redo) {
         /* Find entity that acts as the template from which we match the ids */
-        ecs_id_t id = flecs_query_op_get_id(op, ctx);
-        ecs_assert(ecs_is_alive(world, id), ECS_INTERNAL_ERROR, NULL);
-        ecs_record_t *r = flecs_entities_get(world, id);
+        type_id = flecs_query_op_get_id(op, ctx);
+        op_ctx->type_id = type_id;
+        ecs_assert(ecs_is_alive(world, type_id), ECS_INTERNAL_ERROR, NULL);
+        ecs_record_t *r = flecs_entities_get(world, type_id);
         ecs_table_t *table;
         if (!r || !(table = r->table)) {
             /* Nothing to match */
@@ -421,6 +423,7 @@ bool flecs_query_x_from(
             return false; /* No ids to filter on */
         }
     } else {
+        type_id = op_ctx->type_id;
         type = op_ctx->type;
     }
 
@@ -466,7 +469,7 @@ bool flecs_query_x_from(
         if (!src_table) {
             continue;
         }
-        
+
         redo = true;
 
         if (!src_written && oper == EcsOrFrom) {
@@ -492,7 +495,7 @@ bool flecs_query_x_from(
                     continue;
                 }
             }
-            return true;
+            goto match;
         }
 
         if (oper == EcsAndFrom || oper == EcsNotFrom || src_written) {
@@ -518,7 +521,7 @@ bool flecs_query_x_from(
                     if (oper == EcsNotFrom) {
                         break; /* Must have none of the ids */
                     } else if (oper == EcsOrFrom) {
-                        return true; /* Single match is enough */
+                        goto match; /* Single match is enough */
                     }
                 }
             }
@@ -531,6 +534,8 @@ bool flecs_query_x_from(
         }
     } while (true);
 
+match:
+    ctx->it->ids[op->field_index] = type_id;
     return true;
 }
 

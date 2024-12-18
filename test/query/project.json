@@ -1152,6 +1152,9 @@
                 "and_from_empty_w_tag",
                 "not_from_empty_w_tag",
                 "or_from_empty_w_tag",
+                "and_from_existing_and_new_table",
+                "not_from_existing_and_new_table",
+                "or_from_existing_and_new_table",
                 "or_w_wildcard",
                 "or_w_component_and_tag",
                 "or_w_tag_and_component"
