@@ -16,41 +16,41 @@
 
 typedef char ecs_meta_token_t[ECS_META_IDENTIFIER_LENGTH];
 
-typedef struct meta_parse_ctx_t {
+typedef struct flecs_meta_utils_parse_ctx_t {
     const char *name;
     const char *desc;
-} meta_parse_ctx_t;
+} flecs_meta_utils_parse_ctx_t;
 
-typedef struct meta_type_t {
+typedef struct flecs_meta_utils_type_t {
     ecs_meta_token_t type;
     ecs_meta_token_t params;
     bool is_const;
     bool is_ptr;
-} meta_type_t;
+} flecs_meta_utils_type_t;
 
-typedef struct meta_member_t {
-    meta_type_t type;
+typedef struct flecs_meta_utils_member_t {
+    flecs_meta_utils_type_t type;
     ecs_meta_token_t name;
     int64_t count;
     bool is_partial;
-} meta_member_t;
+} flecs_meta_utils_member_t;
 
-typedef struct meta_constant_t {
+typedef struct flecs_meta_utils_constant_t {
     ecs_meta_token_t name;
     int64_t value;
     bool is_value_set;
-} meta_constant_t;
+} flecs_meta_utils_constant_t;
 
-typedef struct meta_params_t {
-    meta_type_t key_type;
-    meta_type_t type;
+typedef struct flecs_meta_utils_params_t {
+    flecs_meta_utils_type_t key_type;
+    flecs_meta_utils_type_t type;
     int64_t count;
     bool is_key_value;
     bool is_fixed_size;
-} meta_params_t;
+} flecs_meta_utils_params_t;
 
 static
-const char* skip_scope(const char *ptr, meta_parse_ctx_t *ctx) {
+const char* skip_scope(const char *ptr, flecs_meta_utils_parse_ctx_t *ctx) {
     /* Keep track of which characters were used to open the scope */
     char stack[256];
     int32_t sp = 0;
@@ -111,7 +111,7 @@ const char* parse_c_identifier(
     const char *ptr, 
     char *buff,
     char *params,
-    meta_parse_ctx_t *ctx) 
+    flecs_meta_utils_parse_ctx_t *ctx) 
 {
     ecs_assert(ptr != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(buff != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -167,9 +167,9 @@ error:
 }
 
 static
-const char * meta_open_scope(
+const char * flecs_meta_utils_open_scope(
     const char *ptr,
-    meta_parse_ctx_t *ctx)    
+    flecs_meta_utils_parse_ctx_t *ctx)    
 {
     /* Skip initial whitespaces */
     ptr = flecs_parse_ws_eol(ptr);
@@ -208,12 +208,12 @@ error:
 }
 
 static
-const char* meta_parse_constant(
+const char* flecs_meta_utils_parse_constant(
     const char *ptr,
-    meta_constant_t *token,
-    meta_parse_ctx_t *ctx)
+    flecs_meta_utils_constant_t *token,
+    flecs_meta_utils_parse_ctx_t *ctx)
 {    
-    ptr = meta_open_scope(ptr, ctx);
+    ptr = flecs_meta_utils_open_scope(ptr, ctx);
     if (!ptr) {
         return NULL;
     }
@@ -255,10 +255,10 @@ error:
 }
 
 static
-const char* meta_parse_type(
+const char* flecs_meta_utils_parse_type(
     const char *ptr,
-    meta_type_t *token,
-    meta_parse_ctx_t *ctx)
+    flecs_meta_utils_type_t *token,
+    flecs_meta_utils_parse_ctx_t *ctx)
 {
     token->is_ptr = false;
     token->is_const = false;
@@ -299,12 +299,12 @@ error:
 }
 
 static
-const char* meta_parse_member(
+const char* flecs_meta_utils_parse_member(
     const char *ptr,
-    meta_member_t *token,
-    meta_parse_ctx_t *ctx)
+    flecs_meta_utils_member_t *token,
+    flecs_meta_utils_parse_ctx_t *ctx)
 {
-    ptr = meta_open_scope(ptr, ctx);
+    ptr = flecs_meta_utils_open_scope(ptr, ctx);
     if (!ptr) {
         return NULL;
     }
@@ -313,7 +313,7 @@ const char* meta_parse_member(
     token->is_partial = false;
 
     /* Parse member type */
-    ptr = meta_parse_type(ptr, &token->type, ctx);
+    ptr = flecs_meta_utils_parse_type(ptr, &token->type, ctx);
     if (!ptr) {
         token->is_partial = true;
         goto error;
@@ -378,10 +378,10 @@ error:
 }
 
 static
-int meta_parse_desc(
+int flecs_meta_utils_parse_desc(
     const char *ptr,
-    meta_params_t *token,
-    meta_parse_ctx_t *ctx)
+    flecs_meta_utils_params_t *token,
+    flecs_meta_utils_parse_ctx_t *ctx)
 {
     token->is_key_value = false;
     token->is_fixed_size = false;
@@ -396,7 +396,7 @@ int meta_parse_desc(
     ptr ++;
 
     /* Parse type identifier */
-    ptr = meta_parse_type(ptr, &token->type, ctx);
+    ptr = flecs_meta_utils_parse_type(ptr, &token->type, ctx);
     if (!ptr) {
         goto error;
     }
@@ -420,7 +420,7 @@ int meta_parse_desc(
             token->key_type = token->type;
 
             /* Parse element type */
-            ptr = meta_parse_type(ptr, &token->type, ctx);
+            ptr = flecs_meta_utils_parse_type(ptr, &token->type, ctx);
             ptr = flecs_parse_ws_eol(ptr);
 
             token->is_key_value = true;
@@ -439,27 +439,27 @@ error:
 }
 
 static
-ecs_entity_t meta_lookup(
+ecs_entity_t flecs_meta_utils_lookup(
     ecs_world_t *world,
-    meta_type_t *token,
+    flecs_meta_utils_type_t *token,
     const char *ptr,
     int64_t count,
-    meta_parse_ctx_t *ctx);
+    flecs_meta_utils_parse_ctx_t *ctx);
 
 static
-ecs_entity_t meta_lookup_array(
+ecs_entity_t flecs_meta_utils_lookup_array(
     ecs_world_t *world,
     ecs_entity_t e,
     const char *params_decl,
-    meta_parse_ctx_t *ctx)
+    flecs_meta_utils_parse_ctx_t *ctx)
 {
-    meta_parse_ctx_t param_ctx = {
+    flecs_meta_utils_parse_ctx_t param_ctx = {
         .name = ctx->name,
         .desc = params_decl
     };
 
-    meta_params_t params;
-    if (meta_parse_desc(params_decl, &params, &param_ctx)) {
+    flecs_meta_utils_params_t params;
+    if (flecs_meta_utils_parse_desc(params_decl, &params, &param_ctx)) {
         goto error;
     }
     if (!params.is_fixed_size) {
@@ -493,19 +493,19 @@ error:
 }
 
 static
-ecs_entity_t meta_lookup_vector(
+ecs_entity_t flecs_meta_utils_lookup_vector(
     ecs_world_t *world,
     ecs_entity_t e,
     const char *params_decl,
-    meta_parse_ctx_t *ctx)
+    flecs_meta_utils_parse_ctx_t *ctx)
 {
-    meta_parse_ctx_t param_ctx = {
+    flecs_meta_utils_parse_ctx_t param_ctx = {
         .name = ctx->name,
         .desc = params_decl
     };
 
-    meta_params_t params;
-    if (meta_parse_desc(params_decl, &params, &param_ctx)) {
+    flecs_meta_utils_params_t params;
+    if (flecs_meta_utils_parse_desc(params_decl, &params, &param_ctx)) {
         goto error;
     }
 
@@ -515,7 +515,7 @@ ecs_entity_t meta_lookup_vector(
         goto error;
     }
 
-    ecs_entity_t element_type = meta_lookup(
+    ecs_entity_t element_type = flecs_meta_utils_lookup(
         world, &params.type, params_decl, 1, &param_ctx);
 
     if (!e) {
@@ -530,21 +530,21 @@ error:
 }
 
 static
-ecs_entity_t meta_lookup_bitmask(
+ecs_entity_t flecs_meta_utils_lookup_bitmask(
     ecs_world_t *world,
     ecs_entity_t e,
     const char *params_decl,
-    meta_parse_ctx_t *ctx)
+    flecs_meta_utils_parse_ctx_t *ctx)
 {
     (void)e;
 
-    meta_parse_ctx_t param_ctx = {
+    flecs_meta_utils_parse_ctx_t param_ctx = {
         .name = ctx->name,
         .desc = params_decl
     };
 
-    meta_params_t params;
-    if (meta_parse_desc(params_decl, &params, &param_ctx)) {
+    flecs_meta_utils_params_t params;
+    if (flecs_meta_utils_parse_desc(params_decl, &params, &param_ctx)) {
         goto error;
     }
 
@@ -560,7 +560,7 @@ ecs_entity_t meta_lookup_bitmask(
         goto error;
     }
 
-    ecs_entity_t bitmask_type = meta_lookup(
+    ecs_entity_t bitmask_type = flecs_meta_utils_lookup(
         world, &params.type, params_decl, 1, &param_ctx);
     ecs_check(bitmask_type != 0, ECS_INVALID_PARAMETER, NULL);
 
@@ -577,12 +577,12 @@ error:
 }
 
 static
-ecs_entity_t meta_lookup(
+ecs_entity_t flecs_meta_utils_lookup(
     ecs_world_t *world,
-    meta_type_t *token,
+    flecs_meta_utils_type_t *token,
     const char *ptr,
     int64_t count,
-    meta_parse_ctx_t *ctx)
+    flecs_meta_utils_parse_ctx_t *ctx)
 {
     ecs_assert(world != NULL, ECS_INTERNAL_ERROR, NULL);
     ecs_assert(token != NULL, ECS_INTERNAL_ERROR, NULL);
@@ -595,15 +595,15 @@ ecs_entity_t meta_lookup(
     /* Parse vector type */
     if (!token->is_ptr) {
         if (!ecs_os_strcmp(typename, "ecs_array")) {
-            type = meta_lookup_array(world, 0, token->params, ctx);
+            type = flecs_meta_utils_lookup_array(world, 0, token->params, ctx);
 
         } else if (!ecs_os_strcmp(typename, "ecs_vector") || 
                 !ecs_os_strcmp(typename, "flecs::vector")) 
         {
-            type = meta_lookup_vector(world, 0, token->params, ctx);
+            type = flecs_meta_utils_lookup_vector(world, 0, token->params, ctx);
 
         } else if (!ecs_os_strcmp(typename, "flecs::bitmask")) {
-            type = meta_lookup_bitmask(world, 0, token->params, ctx);
+            type = flecs_meta_utils_lookup_bitmask(world, 0, token->params, ctx);
 
         } else if (!ecs_os_strcmp(typename, "flecs::byte")) {
             type = ecs_id(ecs_byte_t);
@@ -683,7 +683,7 @@ error:
 }
 
 static
-int meta_parse_struct(
+int flecs_meta_utils_parse_struct(
     ecs_world_t *world,
     ecs_entity_t t,
     const char *desc)
@@ -691,20 +691,20 @@ int meta_parse_struct(
     const char *ptr = desc;
     const char *name = ecs_get_name(world, t);
 
-    meta_member_t token;
-    meta_parse_ctx_t ctx = {
+    flecs_meta_utils_member_t token;
+    flecs_meta_utils_parse_ctx_t ctx = {
         .name = name,
         .desc = ptr
     };
 
     ecs_entity_t old_scope = ecs_set_scope(world, t);
 
-    while ((ptr = meta_parse_member(ptr, &token, &ctx)) && ptr[0]) {
+    while ((ptr = flecs_meta_utils_parse_member(ptr, &token, &ctx)) && ptr[0]) {
         ecs_entity_t m = ecs_entity(world, {
             .name = token.name
         });
 
-        ecs_entity_t type = meta_lookup(
+        ecs_entity_t type = flecs_meta_utils_lookup(
             world, &token.type, ptr, 1, &ctx);
         if (!type) {
             goto error;
@@ -724,7 +724,7 @@ error:
 }
 
 static
-int meta_parse_constants(
+int flecs_meta_utils_parse_constants(
     ecs_world_t *world,
     ecs_entity_t t,
     const char *desc,
@@ -741,17 +741,17 @@ int meta_parse_constants(
     const char *name_prefix = info->name_prefix;
     int32_t name_prefix_len = name_prefix ? ecs_os_strlen(name_prefix) : 0;
 
-    meta_parse_ctx_t ctx = {
+    flecs_meta_utils_parse_ctx_t ctx = {
         .name = name,
         .desc = ptr
     };
 
-    meta_constant_t token;
+    flecs_meta_utils_constant_t token;
     int64_t last_value = 0;
 
     ecs_entity_t old_scope = ecs_set_scope(world, t);
 
-    while ((ptr = meta_parse_constant(ptr, &token, &ctx))) {
+    while ((ptr = flecs_meta_utils_parse_constant(ptr, &token, &ctx))) {
         if (token.is_value_set) {
             last_value = token.value;
         } else if (is_bitmask) {
@@ -795,23 +795,23 @@ error:
 }
 
 static
-int meta_parse_enum(
+int flecs_meta_utils_parse_enum(
     ecs_world_t *world,
     ecs_entity_t t,
     const char *desc)
 {
-    ecs_add(world, t, EcsEnum);
-    return meta_parse_constants(world, t, desc, false);
+    ecs_set(world, t, EcsEnum, { .underlying_type = ecs_id(ecs_i32_t) });
+    return flecs_meta_utils_parse_constants(world, t, desc, false);
 }
 
 static
-int meta_parse_bitmask(
+int flecs_meta_utils_parse_bitmask(
     ecs_world_t *world,
     ecs_entity_t t,
     const char *desc)
 {
     ecs_add(world, t, EcsBitmask);
-    return meta_parse_constants(world, t, desc, true);
+    return flecs_meta_utils_parse_constants(world, t, desc, true);
 }
 
 int ecs_meta_from_desc(
@@ -822,17 +822,17 @@ int ecs_meta_from_desc(
 {
     switch(kind) {
     case EcsStructType:
-        if (meta_parse_struct(world, component, desc)) {
+        if (flecs_meta_utils_parse_struct(world, component, desc)) {
             goto error;
         }
         break;
     case EcsEnumType:
-        if (meta_parse_enum(world, component, desc)) {
+        if (flecs_meta_utils_parse_enum(world, component, desc)) {
             goto error;
         }
         break;
     case EcsBitmaskType:
-        if (meta_parse_bitmask(world, component, desc)) {
+        if (flecs_meta_utils_parse_bitmask(world, component, desc)) {
             goto error;
         }
         break;

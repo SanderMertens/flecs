@@ -9,7 +9,9 @@
 #include <string.h>
 #include <limits>
 
-#define FLECS_ENUM_MAX(T) _::to_constant<T, 128>::value
+// 126, so that FLECS_ENUM_MAX_COUNT is 127 which is the largest value 
+// representable by an int8_t.
+#define FLECS_ENUM_MAX(T) _::to_constant<T, 126>::value
 #define FLECS_ENUM_MAX_COUNT (FLECS_ENUM_MAX(int) + 1)
 
 #ifndef FLECS_CPP_ENUM_REFLECTION_SUPPORT
@@ -319,7 +321,7 @@ private:
             // Constant is valid, so fill reflection data.
             auto v = Value;
             const char *name = enum_constant_to_name<E, flecs_enum_cast(E, Value)>();
-            
+
             ++enum_type<E>::data.max; // Increment cursor as we build constants array.
 
             // If the enum was previously contiguous, and continues to be through the current value...
@@ -341,7 +343,7 @@ private:
             }
             
             flecs::entity_t constant = ecs_cpp_enum_constant_register(
-                world, type<E>::id(world), 0, name, static_cast<int32_t>(v));
+                world, type<E>::id(world), 0, name, &v, type<U>::id(world), sizeof(U));
             flecs_component_ids_set(world, 
                 enum_type<E>::data.constants[enum_type<E>::data.max].index, 
                 constant);
@@ -377,7 +379,7 @@ public:
         data.contiguous_until = 0;
 
         ecs_log_push();
-        ecs_cpp_enum_init(world, id);
+        ecs_cpp_enum_init(world, id, type<U>::id(world));
         // data.id = id;
 
         // Generate reflection data

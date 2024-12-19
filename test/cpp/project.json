@@ -403,7 +403,6 @@
                 "add_enum_constant_w_tag",
                 "remove_enum_constant_w_tag",
                 "set_enum_constant_w_tag",
-                "enum_w_incorrect_size",
                 "add_union_enum",
                 "add_2_union_enums",
                 "add_2_union_enums_reverse",
@@ -417,7 +416,15 @@
                 "enum_class_mixed_auto_manual_constants",
                 "enum_child_count",
                 "multi_world_constant_ids",
-                "empty_enum"
+                "empty_enum",
+                "enum_i8",
+                "enum_i16",
+                "enum_i32",
+                "enum_i64",
+                "enum_u8",
+                "enum_u16",
+                "enum_u32",
+                "enum_u64"
             ]
         }, {
             "id": "Union",

@@ -371,14 +371,16 @@ ecs_entity_t ecs_cpp_component_register(
 
 void ecs_cpp_enum_init(
     ecs_world_t *world,
-    ecs_entity_t id)
+    ecs_entity_t id,
+    ecs_entity_t underlying_type)
 {
     (void)world;
     (void)id;
+    (void)underlying_type;
 #ifdef FLECS_META
     ecs_suspend_readonly_state_t readonly_state;
     world = flecs_suspend_readonly(world, &readonly_state);
-    ecs_set(world, id, EcsEnum, {0});
+    ecs_set(world, id, EcsEnum, { .underlying_type = underlying_type });
     flecs_resume_readonly(world, &readonly_state);
 #endif
 }
@@ -388,8 +390,11 @@ ecs_entity_t ecs_cpp_enum_constant_register(
     ecs_entity_t parent,
     ecs_entity_t id,
     const char *name,
-    int value)
+    void *value,
+    ecs_entity_t value_type,
+    size_t value_size)
 {
+#ifdef FLECS_META
     ecs_suspend_readonly_state_t readonly_state;
     world = flecs_suspend_readonly(world, &readonly_state);
 
@@ -410,24 +415,38 @@ ecs_entity_t ecs_cpp_enum_constant_register(
     ecs_assert(id != 0, ECS_INVALID_OPERATION, name);
     ecs_set_scope(world, prev);
 
-    #ifdef FLECS_DEBUG
+#ifdef FLECS_DEBUG
     const EcsComponent *cptr = ecs_get(world, parent, EcsComponent);
     ecs_assert(cptr != NULL, ECS_INVALID_PARAMETER, "enum is not a component");
-    ecs_assert(cptr->size == ECS_SIZEOF(int32_t), ECS_UNSUPPORTED,
-        "enum component must have 32bit size");
-    #endif
-
-#ifdef FLECS_META
-    ecs_set_id(world, id, ecs_pair(EcsConstant, ecs_id(ecs_i32_t)), 
-        sizeof(ecs_i32_t), &value);
 #endif
+
+    ecs_set_id(world, id, ecs_pair(EcsConstant, value_type), value_size, value);
 
     flecs_resume_readonly(world, &readonly_state);
 
-    ecs_trace("#[green]constant#[reset] %s.%s created with value %d", 
-        ecs_get_name(world, parent), name, value);
+    if (ecs_should_log(0)) {
+        ecs_value_t v = { .type = value_type, .ptr = value };
+        char *str;
+        ecs_meta_cursor_t cur = ecs_meta_cursor(world, 
+            ecs_id(ecs_string_t), &str);
+        ecs_meta_set_value(&cur, &v);
+        ecs_trace("#[green]constant#[reset] %s.%s created with value %s", 
+            ecs_get_name(world, parent), name, str);
+        ecs_os_free(str);
+    }
 
     return id;
+#else
+    (void)world;
+    (void)parent;
+    (void)id;
+    (void)name;
+    (void)value;
+    (void)value_type;
+    (void)value_size;
+    ecs_err("enum reflection not supported without FLECS_META addon");
+    return 0;
+#endif
 }
 
 #ifdef FLECS_META
