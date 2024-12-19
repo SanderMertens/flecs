@@ -495,7 +495,7 @@ public:
 			})
 			.assign_null([](TSubclassOf<UObject>* Data)
 			{
-				
+				*Data = nullptr;
 			});
 	}
 
